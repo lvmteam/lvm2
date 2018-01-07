@@ -129,8 +129,9 @@ struct find_labeller_params {
 	int ret;
 };
 
-static void _set_label_read_result(int failed, struct find_labeller_params *flp)
+static void _set_label_read_result(int failed, void *context, void *data)
 {
+	struct find_labeller_params *flp = context;
 	struct label **result = flp->result;
 
 	if (failed)
@@ -219,10 +220,9 @@ static void _find_labeller(int failed, void *context, void *data)
 			_update_lvmcache_orphan(info);
 		log_very_verbose("%s: No label detected", dev_name(dev));
 		flp->ret = 0;
+		_set_label_read_result(1, flp, NULL);
 	} else
-		flp->ret = (l->ops->read)(l, dev, labelbuf, result);
-
-	_set_label_read_result(!flp->ret, flp);
+		flp->ret = (l->ops->read)(l, dev, labelbuf, result, &_set_label_read_result, flp);
 }
 
 /* FIXME Also wipe associated metadata area headers? */
@@ -339,7 +339,7 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 
 	if (!(readbuf = dev_read(dev, scan_sector << SECTOR_SHIFT, LABEL_SCAN_SIZE, DEV_IO_LABEL))) {
 		log_debug_devs("%s: Failed to read label area", dev_name(dev));
-		_set_label_read_result(1, flp);
+		_set_label_read_result(1, flp, NULL);
 		return 0;
 	}
 

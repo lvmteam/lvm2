@@ -329,6 +329,8 @@ static void _xlate_mdah(struct mda_header *mdah)
 struct process_raw_mda_header_params {
 	struct mda_header *mdah;
 	struct device_area dev_area;
+	lvm_callback_fn_t mdah_callback_fn;
+	void *mdah_callback_context;
 	int ret;
 };
 
@@ -338,10 +340,13 @@ static void _process_raw_mda_header(int failed, void *context, void *data)
 	struct mda_header *mdah = prmp->mdah;
 	struct device_area *dev_area = &prmp->dev_area;
 
-	if (!dev_close(dev_area->dev)) {
-		prmp->ret = 0;
-		goto_out;
-	}
+	if (!dev_close(dev_area->dev))
+		goto_bad;
+
+	if (failed)
+		goto_bad;
+
+	memcpy(mdah, data, MDA_HEADER_SIZE);
 
 	if (mdah->checksum_xl != xlate32(calc_crc(INITIAL_CRC, (uint8_t *)mdah->magic,
 						  MDA_HEADER_SIZE -
@@ -349,8 +354,7 @@ static void _process_raw_mda_header(int failed, void *context, void *data)
 		log_error("Incorrect metadata area header checksum on %s"
 			  " at offset " FMTu64, dev_name(dev_area->dev),
 			  dev_area->start);
-		prmp->ret = 0;
-		goto out;
+		goto bad;
 	}
 
 	_xlate_mdah(mdah);
@@ -359,31 +363,37 @@ static void _process_raw_mda_header(int failed, void *context, void *data)
 		log_error("Wrong magic number in metadata area header on %s"
 			  " at offset " FMTu64, dev_name(dev_area->dev),
 			  dev_area->start);
-		prmp->ret = 0;
-		goto out;
+		goto bad;
 	}
 
 	if (mdah->version != FMTT_VERSION) {
 		log_error("Incompatible metadata area header version: %d on %s"
 			  " at offset " FMTu64, mdah->version,
 			  dev_name(dev_area->dev), dev_area->start);
-		prmp->ret = 0;
-		goto out;
+		goto bad;
 	}
 
 	if (mdah->start != dev_area->start) {
 		log_error("Incorrect start sector in metadata area header: "
 			  FMTu64 " on %s at offset " FMTu64, mdah->start,
 			  dev_name(dev_area->dev), dev_area->start);
-		prmp->ret = 0;
-		goto out;
+		goto bad;
 	}
 
+	goto out;
+
+bad:
+	prmp->ret = 0;
 out:
-	;
+	if (!failed)
+		dm_free(data);
+
+	if (prmp->ret && prmp->mdah_callback_fn)
+		prmp->mdah_callback_fn(0, prmp->mdah_callback_context, mdah);
 }
 
-static struct mda_header *_raw_read_mda_header(struct dm_pool *mem, struct device_area *dev_area, int primary_mda)
+static struct mda_header *_raw_read_mda_header(struct dm_pool *mem, struct device_area *dev_area, int primary_mda,
+					       lvm_callback_fn_t mdah_callback_fn, void *mdah_callback_context)
 {
 	struct mda_header *mdah;
 	struct process_raw_mda_header_params *prmp;
@@ -406,15 +416,13 @@ static struct mda_header *_raw_read_mda_header(struct dm_pool *mem, struct devic
 
 	prmp->mdah = mdah;
 	prmp->dev_area = *dev_area;
+	prmp->mdah_callback_fn = mdah_callback_fn;
+	prmp->mdah_callback_context = mdah_callback_context;
 	prmp->ret = 1;
 
-	if (!dev_read_buf(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, MDA_HEADER_REASON(primary_mda), mdah)) {
-		if (!dev_close(dev_area->dev))
-			stack;
-		return_NULL;
-	}
-
-	_process_raw_mda_header(0, prmp, NULL);
+	if (!dev_read_callback(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, MDA_HEADER_REASON(primary_mda),
+			       _process_raw_mda_header, prmp))
+		stack;
 
 	if (!prmp->ret)
 		return_NULL;
@@ -424,7 +432,16 @@ static struct mda_header *_raw_read_mda_header(struct dm_pool *mem, struct devic
 
 struct mda_header *raw_read_mda_header(struct dm_pool *mem, struct device_area *dev_area, int primary_mda)
 {
-	return _raw_read_mda_header(mem, dev_area, primary_mda);
+	return _raw_read_mda_header(mem, dev_area, primary_mda, NULL, NULL);
+}
+
+int raw_read_mda_header_callback(struct dm_pool *mem, struct device_area *dev_area, int primary_mda,
+				 lvm_callback_fn_t mdah_callback_fn, void *mdah_callback_context)
+{
+	if (!_raw_read_mda_header(mem, dev_area, primary_mda, mdah_callback_fn, mdah_callback_context))
+		return_0;
+
+	return 1;
 }
 
 static int _raw_write_mda_header(const struct format_type *fmt,
@@ -2002,7 +2019,7 @@ static int _mda_export_text_raw(struct metadata_area *mda,
 {
 	struct mda_context *mdc = (struct mda_context *) mda->metadata_locn;
 
-	if (!mdc || !_raw_read_mda_header(cft->mem, &mdc->area, mda_is_primary(mda)))
+	if (!mdc || !_raw_read_mda_header(cft->mem, &mdc->area, mda_is_primary(mda), NULL, NULL))
 		return 1; /* pretend the MDA does not exist */
 
 	return config_make_nodes(cft, parent, NULL,

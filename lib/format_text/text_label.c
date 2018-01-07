@@ -322,6 +322,9 @@ static int _text_initialise_label(struct labeller *l __attribute__((unused)),
 struct update_mda_baton {
 	struct lvmcache_info *info;
 	struct label *label;
+	int nr_outstanding_mdas;
+	lvm_callback_fn_t read_label_callback_fn;
+	void *read_label_callback_context;
 	int ret;
 };
 
@@ -337,6 +340,8 @@ static void _process_vgsummary(int failed, void *context, void *data)
 {
 	struct process_mda_header_params *pmp = context;
 	struct lvmcache_vgsummary *vgsummary = data;
+
+	--pmp->umb->nr_outstanding_mdas;
 
 	if (!lvmcache_update_vgname_and_id(pmp->umb->info, vgsummary)) {
 		pmp->umb->ret = 0;
@@ -358,12 +363,16 @@ static void _process_mda_header(int failed, void *context, void *data)
 	struct metadata_area *mda = pmp->mda;
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 
+	if (failed)
+		return;
+
 	mda_set_ignored(mda, rlocn_is_ignored(mdah->raw_locns));
 
 	if (mda_is_ignored(mda)) {
 		log_debug_metadata("Ignoring mda on device %s at offset " FMTu64,
 				   dev_name(mdac->area.dev),
 				   mdac->area.start);
+		--pmp->umb->nr_outstanding_mdas;
 		if (!dev_close(pmp->dev))
 			stack;
 		return;
@@ -373,6 +382,7 @@ static void _process_mda_header(int failed, void *context, void *data)
 			     &mdac->free_sectors)) {
 		/* FIXME Separate fatal and non-fatal error cases? */
 		stack;
+		--pmp->umb->nr_outstanding_mdas;
 		if (!dev_close(pmp->dev))
 			stack;
 		return;
@@ -388,7 +398,6 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 	const struct format_type *fmt = umb->label->labeller->fmt;
 	struct dm_pool *mem = umb->label->labeller->fmt->cmd->mem;
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
-	struct mda_header *mdah;
 
 	if (!(pmp = dm_pool_zalloc(mem, sizeof(*pmp)))) {
 		log_error("struct process_mda_header_params allocation failed");
@@ -408,25 +417,26 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 		return 1;
 	}
 
+	umb->nr_outstanding_mdas++;
 	pmp->dev = mdac->area.dev;
 
 	pmp->umb = umb;
 	pmp->mda = mda;
 	pmp->ret = 1;
 
-	if (!(mdah = raw_read_mda_header(fmt->cmd->mem, &mdac->area, mda_is_primary(mda)))) {
+	if (!raw_read_mda_header_callback(fmt->cmd->mem, &mdac->area, mda_is_primary(mda), _process_mda_header, pmp)) {
 		stack;
+		--pmp->umb->nr_outstanding_mdas;
 		if (!dev_close(pmp->dev))
 			stack;
 		return 1;
 	}
 
-	_process_mda_header(0, pmp, mdah);
-
 	return pmp->ret;
 }
 
-static int _text_read(struct labeller *l, struct device *dev, void *buf, struct label **label)
+static int _text_read(struct labeller *l, struct device *dev, void *buf, struct label **label,
+		      lvm_callback_fn_t read_label_callback_fn, void *read_label_callback_context)
 {
 	struct label_header *lh = (struct label_header *) buf;
 	struct pv_header *pvhdr;
@@ -503,17 +513,28 @@ out:
 
 	umb->info = info;
 	umb->label = *label;
+	umb->read_label_callback_fn = read_label_callback_fn;
+	umb->read_label_callback_context = read_label_callback_context;
+	umb->nr_outstanding_mdas = 1;
+
 	umb->ret = 1;
 
 	if (!lvmcache_foreach_mda(info, _update_mda, umb))
 		return_0;
 
-	if (umb->ret)
-		lvmcache_make_valid(info);
+	if (!--umb->nr_outstanding_mdas)
+		if (umb->ret)
+			lvmcache_make_valid(info);
+
+	if (umb->read_label_callback_fn)
+		umb->read_label_callback_fn(!umb->ret, umb->read_label_callback_context, NULL);
 
 	return 1;
 
 bad:
+	if (read_label_callback_fn)
+		read_label_callback_fn(1, read_label_callback_context, NULL);
+
 	return 0;
 }
 

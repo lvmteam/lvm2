@@ -82,6 +82,8 @@ struct mda_header {
 } __attribute__ ((packed));
 
 struct mda_header *raw_read_mda_header(struct dm_pool *mem, struct device_area *dev_area, int primary_mda);
+int raw_read_mda_header_callback(struct dm_pool *mem, struct device_area *dev_area, int primary_mda,
+				 lvm_callback_fn_t mdah_callback_fn, void *mdah_callback_context);
 
 struct mda_lists {
 	struct dm_list dirs;
