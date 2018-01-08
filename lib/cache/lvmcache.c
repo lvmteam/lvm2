@@ -1095,6 +1095,14 @@ next:
 	goto next;
 }
 
+/* Track the number of outstanding label reads */
+static void _process_label_data(int failed, void *context, void *data)
+{
+	int *nr_labels_outstanding = context;
+
+	(*nr_labels_outstanding)--;
+}
+
 int lvmcache_label_scan(struct cmd_context *cmd)
 {
 	struct dm_list del_cache_devs;
@@ -1106,6 +1114,7 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	struct device *dev;
 	struct format_type *fmt;
 	int dev_count = 0;
+	int nr_labels_outstanding = 0;
 
 	int r = 0;
 
@@ -1144,13 +1153,15 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	_destroy_duplicate_device_list(&_found_duplicate_devs);
 
 	while ((dev = dev_iter_get(iter))) {
-		(void) label_read(dev, &label, UINT64_C(0));
+		nr_labels_outstanding++;
+		if (!label_read_callback(cmd->mem, dev, UINT64_C(0), _process_label_data, &nr_labels_outstanding))
+			nr_labels_outstanding--;
 		dev_count++;
 	}
 
 	dev_iter_destroy(iter);
 
-	log_very_verbose("Scanned %d device labels", dev_count);
+	log_very_verbose("Scanned %d device labels (%d outstanding)", dev_count, nr_labels_outstanding);
 
 	/*
 	 * _choose_preferred_devs() returns:

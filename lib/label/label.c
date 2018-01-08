@@ -122,8 +122,10 @@ static void _update_lvmcache_orphan(struct lvmcache_info *info)
 struct find_labeller_params {
 	struct device *dev;
 	uint64_t scan_sector;	/* Sector to be scanned */
-
 	uint64_t label_sector;	/* Sector where label found */
+	lvm_callback_fn_t process_label_data_fn;
+	void *process_label_data_context;
+
 	struct label **result;
 
 	int ret;
@@ -134,8 +136,10 @@ static void _set_label_read_result(int failed, void *context, void *data)
 	struct find_labeller_params *flp = context;
 	struct label **result = flp->result;
 
-	if (failed)
+	if (failed) {
+		flp->ret = 0;
 		goto_out;
+	}
 
 	if (result && *result) {
 		(*result)->dev = flp->dev;
@@ -145,6 +149,9 @@ static void _set_label_read_result(int failed, void *context, void *data)
 out:
 	if (!dev_close(flp->dev))
 		stack;
+
+	if (flp->ret && flp->process_label_data_fn)
+		flp->process_label_data_fn(0, flp->process_label_data_context, NULL);
 }
 
 static void _find_labeller(int failed, void *context, void *data)
@@ -160,6 +167,12 @@ static void _find_labeller(int failed, void *context, void *data)
 	struct label_header *lh;
 	struct lvmcache_info *info;
 	uint64_t sector;
+
+	if (failed) {
+		log_debug_devs("%s: Failed to read label area", dev_name(dev));
+		_set_label_read_result(1, flp, NULL);
+		return;
+	}
 
 	/* Scan a few sectors for a valid label */
 	for (sector = 0; sector < LABEL_SCAN_SECTORS;
@@ -222,7 +235,7 @@ static void _find_labeller(int failed, void *context, void *data)
 		flp->ret = 0;
 		_set_label_read_result(1, flp, NULL);
 	} else
-		flp->ret = (l->ops->read)(l, dev, labelbuf, result, &_set_label_read_result, flp);
+		(void) (l->ops->read)(l, dev, labelbuf, result, &_set_label_read_result, flp);
 }
 
 /* FIXME Also wipe associated metadata area headers? */
@@ -300,7 +313,8 @@ int label_remove(struct device *dev)
 	return r;
 }
 
-static int _label_read(struct device *dev, uint64_t scan_sector, struct label **result)
+static int _label_read(struct device *dev, uint64_t scan_sector, struct label **result,
+		       lvm_callback_fn_t process_label_data_fn, void *process_label_data_context)
 {
 	struct lvmcache_info *info;
 	struct find_labeller_params *flp;
@@ -309,6 +323,8 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 	if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 1))) {
 		log_debug_devs("Reading label from lvmcache for %s", dev_name(dev));
 		*result = lvmcache_get_label(info);
+		if (process_label_data_fn)
+			process_label_data_fn(0, process_label_data_context, NULL);
 		return 1;
 	}
 
@@ -320,6 +336,8 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 	flp->dev = dev;
 	flp->scan_sector = scan_sector;
 	flp->result = result;
+	flp->process_label_data_fn = process_label_data_fn;
+	flp->process_label_data_context = process_label_data_context;
 	flp->ret = 1;
 
 	/* Ensure result is always wiped as a precaution */
@@ -337,19 +355,31 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 		return 0;
 	}
 
-	if (!(readbuf = dev_read(dev, scan_sector << SECTOR_SHIFT, LABEL_SCAN_SIZE, DEV_IO_LABEL))) {
+	if (!(dev_read_callback(dev, scan_sector << SECTOR_SHIFT, LABEL_SCAN_SIZE, DEV_IO_LABEL, _find_labeller, flp))) {
 		log_debug_devs("%s: Failed to read label area", dev_name(dev));
 		_set_label_read_result(1, flp, NULL);
 		return 0;
 	}
 
-	_find_labeller(0, flp, readbuf);
 	return flp->ret;
 }
 
 int label_read(struct device *dev, struct label **result, uint64_t scan_sector)
 {
-	return _label_read(dev, scan_sector, result);
+	return _label_read(dev, scan_sector, result, NULL, NULL);
+}
+
+int label_read_callback(struct dm_pool *mem, struct device *dev, uint64_t scan_sector,
+		       lvm_callback_fn_t process_label_data_fn, void *process_label_data_context)
+{
+	struct label **result;	/* FIXME Eliminate this */
+
+	if (!(result = dm_zalloc(sizeof(*result)))) {
+		log_error("Couldn't allocate memory for internal result pointer.");
+		return 0;
+	}
+
+	return _label_read(dev, scan_sector, result, process_label_data_fn, process_label_data_context);
 }
 
 /* Caller may need to use label_get_handler to create label struct! */
