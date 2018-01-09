@@ -318,7 +318,6 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 {
 	struct lvmcache_info *info;
 	struct find_labeller_params *flp;
-	char *readbuf = NULL;
 
 	if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 1))) {
 		log_debug_devs("Reading label from lvmcache for %s", dev_name(dev));

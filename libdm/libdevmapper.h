@@ -2075,6 +2075,8 @@ uint32_t dm_tree_get_cookie(struct dm_tree_node *node);
  */
 void *dm_malloc_wrapper(size_t s, const char *file, int line)
 	__attribute__((__malloc__)) __attribute__((__warn_unused_result__));
+void *dm_malloc_aligned_wrapper(size_t s, size_t a, const char *file, int line)
+	__attribute__((__malloc__)) __attribute__((__warn_unused_result__));
 void *dm_zalloc_wrapper(size_t s, const char *file, int line)
 	__attribute__((__malloc__)) __attribute__((__warn_unused_result__));
 void *dm_realloc_wrapper(void *p, unsigned int s, const char *file, int line)
@@ -2086,6 +2088,7 @@ int dm_dump_memory_wrapper(void);
 void dm_bounds_check_wrapper(void);
 
 #define dm_malloc(s) dm_malloc_wrapper((s), __FILE__, __LINE__)
+#define dm_malloc_aligned(s, a) dm_malloc_aligned_wrapper((s), (a),  __FILE__, __LINE__)
 #define dm_zalloc(s) dm_zalloc_wrapper((s), __FILE__, __LINE__)
 #define dm_strdup(s) dm_strdup_wrapper((s), __FILE__, __LINE__)
 #define dm_free(p) dm_free_wrapper(p)

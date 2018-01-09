@@ -257,6 +257,13 @@ static int _aligned_io(struct device_area *where, char *buffer,
 		/* Perform the I/O directly. */
 		return _io(where, buffer, should_write, reason);
 
+#ifndef DEBUG_MEM
+	/* Allocate a bounce buffer with an extra block */
+	if (!(bounce_buf = bounce = dm_malloc_aligned((size_t) widened.size, 0))) {
+		log_error("Bounce buffer malloc failed");
+		return 0;
+	}
+#else
 	/* Allocate a bounce buffer with an extra block */
 	if (!(bounce_buf = bounce = dm_malloc((size_t) widened.size + block_size))) {
 		log_error("Bounce buffer malloc failed");
@@ -268,6 +275,7 @@ static int _aligned_io(struct device_area *where, char *buffer,
 	 */
 	if (((uintptr_t) bounce) & mask)
 		bounce = (char *) ((((uintptr_t) bounce) + mask) & ~mask);
+#endif
 
 	/* Do we need to read into the bounce buffer? */
 	if ((!should_write || buffer_was_widened) &&
@@ -887,7 +895,7 @@ int dev_write(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t r
 int dev_set(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, int value)
 {
 	size_t s;
-	char buffer[4096] __attribute__((aligned(8)));
+	char buffer[4096] __attribute__((aligned(4096)));
 
 	if (!dev_open(dev))
 		return_0;
