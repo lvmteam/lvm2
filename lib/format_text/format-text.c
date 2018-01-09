@@ -1360,6 +1360,8 @@ struct vgname_from_mda_params{
 	int primary_mda;
 	struct lvmcache_vgsummary *vgsummary;
 	uint64_t *mda_free_sectors;
+	lvm_callback_fn_t update_vgsummary_fn;
+	void *update_vgsummary_context;
 	uint32_t wrap;
 	unsigned used_cached_metadata;
 	int ret;
@@ -1374,6 +1376,11 @@ static void _vgname_from_mda_process(int failed, void *context, void *data)
 	uint64_t *mda_free_sectors = vfmp->mda_free_sectors;
 	struct raw_locn *rlocn = mdah->raw_locns;
 	uint64_t buffer_size, current_usage;
+
+	if (failed) {
+		vfmp->ret = 0;
+		goto_out;
+	}
 
 	/* Ignore this entry if the characters aren't permissible */
 	if (!validate_name(vgsummary->vgname)) {
@@ -1402,7 +1409,8 @@ static void _vgname_from_mda_process(int failed, void *context, void *data)
 	}
 
 out:
-	;
+	if (vfmp->ret)
+		vfmp->update_vgsummary_fn(0, vfmp->update_vgsummary_context, vfmp->vgsummary);
 }
 
 static void _vgname_from_mda_validate(int failed, void *context, void *data)
@@ -1417,7 +1425,12 @@ static void _vgname_from_mda_validate(int failed, void *context, void *data)
 	unsigned len = 0;
 	char buf[NAME_LEN + 1] __attribute__((aligned(8)));
 
-	memcpy(buf, buffer, NAME_LEN + 1);
+	if (failed) {
+		vfmp->ret = 0;
+		goto_out;
+	}
+
+	memcpy(buf, buffer, NAME_LEN);
 
 	while (buf[len] && !isspace(buf[len]) && buf[len] != '{' &&
 	       len < (NAME_LEN - 1))
@@ -1455,23 +1468,22 @@ static void _vgname_from_mda_validate(int failed, void *context, void *data)
 				(uint32_t) (rlocn->size - vfmp->wrap),
 				(off_t) (dev_area->start + MDA_HEADER_SIZE),
 				vfmp->wrap, calc_crc, vgsummary->vgname ? 1 : 0,
-				vgsummary)) {
+				vgsummary, _vgname_from_mda_process, vfmp)) {
 		vfmp->ret = 0;
 		goto_out;
 	}
 
-	_vgname_from_mda_process(0, vfmp, NULL);
-
 out:
-	;
+	if (!failed)
+		dm_free(data);
 }
 
 int vgname_from_mda(const struct format_type *fmt,
 		    struct mda_header *mdah, int primary_mda, struct device_area *dev_area,
-		    struct lvmcache_vgsummary *vgsummary, uint64_t *mda_free_sectors)
+		    struct lvmcache_vgsummary *vgsummary, uint64_t *mda_free_sectors,
+		    lvm_callback_fn_t update_vgsummary_fn, void *update_vgsummary_context)
 {
 	struct raw_locn *rlocn;
-	char buf[NAME_LEN + 1] __attribute__((aligned(8)));
 	struct vgname_from_mda_params *vfmp;
 
 	if (mda_free_sectors)
@@ -1505,15 +1517,15 @@ int vgname_from_mda(const struct format_type *fmt,
 	vfmp->vgsummary = vgsummary;
 	vfmp->primary_mda = primary_mda;
 	vfmp->mda_free_sectors = mda_free_sectors;
+	vfmp->update_vgsummary_fn = update_vgsummary_fn;
+	vfmp->update_vgsummary_context = update_vgsummary_context;
 	vfmp->ret = 1;
 
 	/* Do quick check for a vgname */
 	/* We cannot read the full metadata here because the name has to be validated before we use the size field */
-	if (!dev_read_buf(dev_area->dev, dev_area->start + rlocn->offset,
-			  NAME_LEN, MDA_CONTENT_REASON(primary_mda), buf))
+	if (!dev_read_callback(dev_area->dev, dev_area->start + rlocn->offset, NAME_LEN, MDA_CONTENT_REASON(primary_mda),
+			       _vgname_from_mda_validate, vfmp))
 		return_0;
-
-	_vgname_from_mda_validate(0, vfmp, buf);
 
 	return vfmp->ret;
 }
@@ -1546,7 +1558,7 @@ static int _scan_raw(const struct format_type *fmt, const char *vgname __attribu
 		}
 
 		/* TODO: caching as in vgname_from_mda() (trigger this code?) */
-		if (vgname_from_mda(fmt, mdah, 0, &rl->dev_area, &vgsummary, NULL)) {
+		if (vgname_from_mda(fmt, mdah, 0, &rl->dev_area, &vgsummary, NULL, NULL, NULL)) {
 			vg = _vg_read_raw_area(&fid, vgsummary.vgname, &rl->dev_area, NULL, NULL, 0, 0, 0);
 			if (vg)
 				lvmcache_update_vg(vg, 0);

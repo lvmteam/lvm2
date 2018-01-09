@@ -343,6 +343,9 @@ static void _process_vgsummary(int failed, void *context, void *data)
 
 	--pmp->umb->nr_outstanding_mdas;
 
+	if (failed)
+		goto_out;
+
 	if (!lvmcache_update_vgname_and_id(pmp->umb->info, vgsummary)) {
 		pmp->umb->ret = 0;
 		pmp->ret = 0;
@@ -372,23 +375,19 @@ static void _process_mda_header(int failed, void *context, void *data)
 		log_debug_metadata("Ignoring mda on device %s at offset " FMTu64,
 				   dev_name(mdac->area.dev),
 				   mdac->area.start);
-		--pmp->umb->nr_outstanding_mdas;
-		if (!dev_close(pmp->dev))
-			stack;
-		return;
+		goto bad;
 	}
 
-	if (!vgname_from_mda(fmt, mdah, mda_is_primary(mda), &mdac->area, &pmp->vgsummary,
-			     &mdac->free_sectors)) {
+	if (!vgname_from_mda(fmt, mdah, mda_is_primary(mda), &mdac->area, &pmp->vgsummary, &mdac->free_sectors, _process_vgsummary, pmp)) {
 		/* FIXME Separate fatal and non-fatal error cases? */
-		stack;
-		--pmp->umb->nr_outstanding_mdas;
-		if (!dev_close(pmp->dev))
-			stack;
-		return;
+		goto_bad;
 	}
 
-	_process_vgsummary(0, pmp, &pmp->vgsummary);
+	return;
+
+bad:
+	_process_vgsummary(1, pmp, NULL);
+	return;
 }
 
 static int _update_mda(struct metadata_area *mda, void *baton)

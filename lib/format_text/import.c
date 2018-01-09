@@ -38,6 +38,8 @@ struct import_vgsummary_params {
 	struct dm_config_tree *cft;
 	int checksum_only;
 	struct lvmcache_vgsummary *vgsummary;
+	lvm_callback_fn_t process_vgsummary_fn;
+	void *process_vgsummary_context;
 	int ret;
 };
 
@@ -75,6 +77,9 @@ static void _import_vgsummary(int failed, void *context, void *data)
 
 out:
 	config_destroy(ivsp->cft);
+
+	if (ivsp->ret && ivsp->process_vgsummary_fn)
+		ivsp->process_vgsummary_fn(0, ivsp->process_vgsummary_context, NULL);
 }
 
 /*
@@ -86,7 +91,9 @@ int text_vgsummary_import(const struct format_type *fmt,
 		       off_t offset2, uint32_t size2,
 		       checksum_fn_t checksum_fn,
 		       int checksum_only,
-		       struct lvmcache_vgsummary *vgsummary)
+		       struct lvmcache_vgsummary *vgsummary,
+		       lvm_callback_fn_t process_vgsummary_fn,
+		       void *process_vgsummary_context)
 {
 	struct import_vgsummary_params *ivsp;
 
@@ -103,6 +110,8 @@ int text_vgsummary_import(const struct format_type *fmt,
 	ivsp->fmt = fmt;
 	ivsp->checksum_only = checksum_only;
 	ivsp->vgsummary = vgsummary;
+	ivsp->process_vgsummary_fn = process_vgsummary_fn;
+	ivsp->process_vgsummary_context = process_vgsummary_context;
 	ivsp->ret = 1;
 
 	if (!dev) {

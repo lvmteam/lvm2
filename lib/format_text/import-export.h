@@ -89,6 +89,8 @@ int text_vgsummary_import(const struct format_type *fmt,
 		       off_t offset2, uint32_t size2,
 		       checksum_fn_t checksum_fn,
 		       int checksum_only,
-		       struct lvmcache_vgsummary *vgsummary);
+		       struct lvmcache_vgsummary *vgsummary,
+		       lvm_callback_fn_t process_vgsummary_fn,
+		       void *process_vgsummary_context);
 
 #endif

@@ -91,8 +91,8 @@ static int _lvm1_read(struct labeller *l, struct device *dev, void *buf, struct 
 	r = 1;
 
 out:
-        if (read_label_callback_fn)
-                read_label_callback_fn(!r, read_label_callback_context, NULL);
+	if (read_label_callback_fn)
+		read_label_callback_fn(!r, read_label_callback_context, NULL);
 
 	return r;
 }

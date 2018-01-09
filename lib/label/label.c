@@ -374,7 +374,7 @@ int label_read_callback(struct dm_pool *mem, struct device *dev, uint64_t scan_s
 {
 	struct label **result;	/* FIXME Eliminate this */
 
-	if (!(result = dm_zalloc(sizeof(*result)))) {
+	if (!(result = dm_pool_zalloc(mem, sizeof(*result)))) {
 		log_error("Couldn't allocate memory for internal result pointer.");
 		return 0;
 	}
