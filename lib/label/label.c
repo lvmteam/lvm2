@@ -248,7 +248,7 @@ int label_remove(struct device *dev)
 	struct labeller_i *li;
 	struct label_header *lh;
 	struct lvmcache_info *info;
-	char *buf = NULL;
+	char *readbuf = NULL;
 
 	memset(labelbuf, 0, LABEL_SIZE);
 
@@ -263,7 +263,7 @@ int label_remove(struct device *dev)
 	 */
 	dev_flush(dev);
 
-	if (!(buf = dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, DEV_IO_LABEL))) {
+	if (!(readbuf = dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, DEV_IO_LABEL))) {
 		log_debug_devs("%s: Failed to read label area", dev_name(dev));
 		goto out;
 	}
@@ -271,7 +271,7 @@ int label_remove(struct device *dev)
 	/* Scan first few sectors for anything looking like a label */
 	for (sector = 0; sector < LABEL_SCAN_SECTORS;
 	     sector += LABEL_SIZE >> SECTOR_SHIFT) {
-		lh = (struct label_header *) (buf + (sector << SECTOR_SHIFT));
+		lh = (struct label_header *) (readbuf + (sector << SECTOR_SHIFT));
 
 		wipe = 0;
 
@@ -309,7 +309,7 @@ int label_remove(struct device *dev)
 	if (!dev_close(dev))
 		stack;
 
-	dm_free(buf);
+	dm_free(readbuf);
 	return r;
 }
 
