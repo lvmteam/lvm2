@@ -187,7 +187,7 @@
 # OO_ALL is included in every command automatically.
 #
 OO_ALL: --commandprofile String, --config String, --debug,
---driverloaded Bool, --help, --longhelp, --profile String, --quiet,
+--driverloaded Bool, --help, --lockopt String, --longhelp, --profile String, --quiet,
 --verbose, --version, --yes, --test
 
 #
@@ -1524,19 +1524,18 @@ ID: vgchange_systemid
 DESC: Change the system ID of a VG.
 
 vgchange --lockstart
-OO: --lockopt String, --select String
+OO: --select String
 OP: VG|Tag|Select ...
 ID: vgchange_lockstart
 DESC: Start the lockspace of a shared VG in lvmlockd.
 
 vgchange --lockstop
-OO: --lockopt String, --select String
+OO: --select String
 OP: VG|Tag|Select ...
 ID: vgchange_lockstop
 DESC: Stop the lockspace of a shared VG in lvmlockd.
 
 vgchange --locktype LockType VG
-OO: --lockopt String
 ID: vgchange_locktype
 DESC: Change the lock type for a shared VG.
 
@@ -1563,7 +1562,7 @@ OO: --addtag Tag, --alloc Alloc, --autobackup Bool, --clustered Bool, --maxlogic
 --physicalextentsize SizeMB, --force, --zero Bool, --labelsector Number,
 --metadatasize SizeMB, --pvmetadatacopies MetadataCopiesPV, --vgmetadatacopies MetadataCopiesVG,
 --reportformat ReportFmt, --dataalignment SizeKB, --dataalignmentoffset SizeKB,
---shared, --systemid String, --locktype LockType, --lockopt String
+--shared, --systemid String, --locktype LockType
 ID: vgcreate_general
 
 ---

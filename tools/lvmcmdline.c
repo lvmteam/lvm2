@@ -2682,6 +2682,16 @@ static int _init_lvmlockd(struct cmd_context *cmd)
 		return 1;
 	}
 
+	if (use_lvmlockd && arg_is_set(cmd, lockopt_ARG)) {
+		const char *opts = arg_str_value(cmd, lockopt_ARG, "");
+		if (strstr(opts, "skiplv"))
+			cmd->lockd_lv_disable = 1;
+		if (strstr(opts, "skipvg"))
+			cmd->lockd_vg_disable = 1;
+		if (strstr(opts, "skipgl"))
+			cmd->lockd_gl_disable = 1;
+	}
+
 	if (use_lvmlockd && locking_is_clustered()) {
 		log_error("ERROR: configuration setting use_lvmlockd cannot be used with clustered locking_type 3.");
 		return 0;
