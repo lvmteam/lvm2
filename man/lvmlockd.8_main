@@ -862,9 +862,6 @@ vgsplit
 .br
 \[bu]
 vgmerge
-.br
-\[bu]
-resizing an LV that is active in the shared mode on multiple hosts
 
 
 .SS lvmlockd changes from clvmd
