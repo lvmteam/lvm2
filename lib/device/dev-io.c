@@ -817,7 +817,7 @@ static int _dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_rea
 			/* Reuse this buffer */
 			devbuf->data = (char *) devbuf->buf + (offset - devbuf->where.start);
 			log_debug_io("Cached read for %" PRIu64 " bytes at %" PRIu64 " on %s (for %s)",
-				     len, (uint64_t) offset, dev_name(dev), _reason_text(reason));
+				     (uint64_t) len, (uint64_t) offset, dev_name(dev), _reason_text(reason));
 			return 1;
 		}
 	}
@@ -833,27 +833,18 @@ static int _dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_rea
 	return ret;
 }
 
-/* Caller is responsible for dm_free */
+/* Returns pointer to read-only buffer. Caller does not free it.  */
 char *dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason)
 {
-	char *buf;
-
-	if (!(buf = dm_malloc(len))) {
-		log_error("Buffer allocation failed for device read.");
-		return NULL;
-	}
-
 	if (!_dev_read(dev, offset, len, reason)) {
 		log_error("Read from %s failed", dev_name(dev));
-		dm_free(buf);
 		return NULL;
 	}
 
-	memcpy(buf, DEV_DEVBUF(dev, reason)->data, len);
-
-	return buf;
+	return DEV_DEVBUF(dev, reason)->data;
 }
 
+/* Obtains data requested then passes it (read-only) to dev_read_callback_fn() */
 int dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason,
 		      lvm_callback_fn_t dev_read_callback_fn, void *callback_context)
 {
@@ -873,17 +864,15 @@ out:
 	return r;
 }
 
-/* Read into supplied retbuf */
+/* Read into supplied retbuf owned by the caller. */
 int dev_read_buf(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *retbuf)
 {
-	char *buf = NULL;
-
-	if (!(buf = dev_read(dev, offset, len, reason)))
-		return_0;
+	if (!_dev_read(dev, offset, len, reason)) {
+		log_error("Read from %s failed", dev_name(dev));
+		return 0;
+	}
 	
-	memcpy(retbuf, buf, len);
-
-	dm_free(buf);
+	memcpy(retbuf, DEV_DEVBUF(dev, reason)->data, len);
 
 	return 1;
 }
@@ -902,21 +891,17 @@ char *dev_read_circular(struct device *dev, uint64_t offset, size_t len,
 		return NULL;
 	}
 
-	if (!_dev_read(dev, offset, len, reason)) {
+	if (!dev_read_buf(dev, offset, len, reason, buf)) {
 		log_error("Read from %s failed", dev_name(dev));
 		dm_free(buf);
 		return NULL;
 	}
 
-	memcpy(buf, DEV_DEVBUF(dev, reason)->data, len);
-
-	if (!_dev_read(dev, offset2, len2, reason)) {
+	if (!dev_read_buf(dev, offset2, len2, reason, buf + len)) {
 		log_error("Circular read from %s failed", dev_name(dev));
 		dm_free(buf);
 		return NULL;
 	}
-
-	memcpy(buf + len, DEV_DEVBUF(dev, reason)->data, len2);
 
 	return buf;
 }

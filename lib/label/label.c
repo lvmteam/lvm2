@@ -307,7 +307,6 @@ int label_remove(struct device *dev)
 	if (!dev_close(dev))
 		stack;
 
-	dm_free(readbuf);
 	return r;
 }
 

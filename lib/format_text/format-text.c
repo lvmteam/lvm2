@@ -272,19 +272,19 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 				size += SECTOR_SIZE;
 			}
 		}
-		dm_free(buf);
+		if (circular)
+			dm_free(buf);
 		buf = NULL;
 	}
 
 	r = 1;
  out:
-	dm_free(buf);
+	if (circular)
+		dm_free(buf);
 	if (!dev_close(area->dev))
 		stack;
 	return r;
 }
-
-
 
 static int _text_lv_setup(struct format_instance *fid __attribute__((unused)),
 			  struct logical_volume *lv)
@@ -512,12 +512,8 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 		goto_bad;
 
 	if (!strncmp(buf, vgname, len = strlen(vgname)) &&
-	    (isspace(*(buf + len)) || *(buf + len) == '{')) {
-		dm_free(buf);
+	    (isspace(*(buf + len)) || *(buf + len) == '{'))
 		return rlocn;
-	}
-
-	dm_free(buf);
 
 	log_debug_metadata("Volume group name found in %smetadata on %s at " FMTu64 " does "
 			   "not match expected name %s.", 
