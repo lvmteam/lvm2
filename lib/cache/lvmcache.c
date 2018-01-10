@@ -141,6 +141,8 @@ void lvmcache_seed_infos_from_lvmetad(struct cmd_context *cmd)
 /* Volume Group metadata cache functions */
 static void _free_cached_vgmetadata(struct lvmcache_vginfo *vginfo)
 {
+	struct lvmcache_info *info;
+
 	if (!vginfo || !vginfo->vgmetadata)
 		return;
 
@@ -153,6 +155,10 @@ static void _free_cached_vgmetadata(struct lvmcache_vginfo *vginfo)
 		dm_config_destroy(vginfo->cft);
 		vginfo->cft = NULL;
 	}
+
+	/* Invalidate any cached device buffers */
+	dm_list_iterate_items(info, &vginfo->infos)
+		devbufs_release(info->dev);
 
 	log_debug_cache("lvmcache: VG %s wiped.", vginfo->vgname);
 

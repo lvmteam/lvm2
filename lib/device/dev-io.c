@@ -85,6 +85,9 @@ static void _release_devbuf(struct device_buffer *devbuf)
 
 void devbufs_release(struct device *dev)
 {
+	if ((dev->flags & DEV_REGULAR))
+		return;
+
 	_release_devbuf(&dev->last_devbuf);
 	_release_devbuf(&dev->last_extra_devbuf);
 }
@@ -706,6 +709,7 @@ static void _close(struct device *dev)
 	dev->phys_block_size = -1;
 	dev->block_size = -1;
 	dm_list_del(&dev->open_list);
+	devbufs_release(dev);
 
 	log_debug_devs("Closed %s", dev_name(dev));
 
