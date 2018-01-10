@@ -284,7 +284,7 @@ static int _aligned_io(struct device_area *where, char *buffer,
 			     where->size, (uint64_t) where->start, widened.size, (uint64_t) widened.start, dev_name(where->dev), _reason_text(reason));
 	} 
 
-	if (!buffer_was_widened && !((uintptr_t) buffer & mask))
+	if (should_write && !buffer_was_widened && !((uintptr_t) buffer & mask))
 		/* Perform the I/O directly. */
 		bounce = buffer;
 #ifndef DEBUG_MEM
@@ -308,7 +308,7 @@ static int _aligned_io(struct device_area *where, char *buffer,
 	}
 #endif
 
-	devbuf = EXTRA_IO(reason) ? &where->dev->last_extra_devbuf : &where->dev->last_devbuf;
+	devbuf = DEV_DEVBUF(where->dev, reason);
  	_release_devbuf(devbuf);
 	devbuf->malloc_address = bounce_buf;
 	devbuf->buf = bounce;
@@ -345,9 +345,6 @@ static int _aligned_io(struct device_area *where, char *buffer,
 	}
 
 	/* read */
-	if (bounce_buf)
-		memcpy(buffer, bounce + (where->start - widened.start),
-		       (size_t) where->size);
 
 	/* We store what we just read as it often also satisfies the next request */
 	devbuf->data = bounce + (where->start - widened.start);
@@ -782,7 +779,10 @@ static void _dev_inc_error_count(struct device *dev)
 			 dev->max_error_count, dev_name(dev));
 }
 
-static int _dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, char *buf)
+/*
+ * Data is returned (read-only) at dev->last_[extra_]devbuf->data
+ */
+static int _dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason)
 {
 	struct device_area where;
 	int ret;
@@ -797,7 +797,7 @@ static int _dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_rea
 	where.start = offset;
 	where.size = len;
 
-	ret = _aligned_io(&where, buf, 0, reason);
+	ret = _aligned_io(&where, NULL, 0, reason);
 	if (!ret)
 		_dev_inc_error_count(dev);
 
@@ -814,30 +814,24 @@ char *dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t 
 		return NULL;
 	}
 
-	if (!_dev_read(dev, offset, len, reason, buf)) {
+	if (!_dev_read(dev, offset, len, reason)) {
 		log_error("Read from %s failed", dev_name(dev));
 		dm_free(buf);
 		return NULL;
 	}
 
+	memcpy(buf, DEV_DEVBUF(dev, reason)->data, len);
+
 	return buf;
 }
 
-/* Callback fn is responsible for dm_free */
 int dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason,
 		      lvm_callback_fn_t dev_read_callback_fn, void *callback_context)
 {
-	char *buf;
 	int r = 0;
 
-	if (!(buf = dm_malloc(len))) {
-		log_error("Buffer allocation failed for device read.");
-		goto out;
-	}
-
-	if (!_dev_read(dev, offset, len, reason, buf)) {
+	if (!_dev_read(dev, offset, len, reason)) {
 		log_error("Read from %s failed", dev_name(dev));
-		dm_free(buf);
 		goto out;
 	}
 
@@ -845,7 +839,7 @@ int dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_re
 
 out:
 	if (dev_read_callback_fn)
-		dev_read_callback_fn(!r, callback_context, buf);
+		dev_read_callback_fn(!r, callback_context, DEV_DEVBUF(dev, reason)->data);
 
 	return r;
 }
@@ -879,17 +873,21 @@ char *dev_read_circular(struct device *dev, uint64_t offset, size_t len,
 		return NULL;
 	}
 
-	if (!_dev_read(dev, offset, len, reason, buf)) {
+	if (!_dev_read(dev, offset, len, reason)) {
 		log_error("Read from %s failed", dev_name(dev));
 		dm_free(buf);
 		return NULL;
 	}
 
-	if (!_dev_read(dev, offset2, len2, reason, buf + len)) {
+	memcpy(buf, DEV_DEVBUF(dev, reason)->data, len);
+
+	if (!_dev_read(dev, offset2, len2, reason)) {
 		log_error("Circular read from %s failed", dev_name(dev));
 		dm_free(buf);
 		return NULL;
 	}
+
+	memcpy(buf + len, DEV_DEVBUF(dev, reason)->data, len2);
 
 	return buf;
 }

@@ -226,8 +226,6 @@ static void _find_labeller(int failed, void *context, void *data)
 		}
 	}
 
-	dm_free(readbuf);
-
 	if (!l) {
 		if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 0)))
 			_update_lvmcache_orphan(info);

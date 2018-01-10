@@ -385,9 +385,6 @@ static void _process_raw_mda_header(int failed, void *context, void *data)
 bad:
 	prmp->ret = 0;
 out:
-	if (!failed)
-		dm_free(data);
-
 	if (prmp->ret && prmp->mdah_callback_fn)
 		prmp->mdah_callback_fn(0, prmp->mdah_callback_context, mdah);
 }
@@ -1474,8 +1471,7 @@ static void _vgname_from_mda_validate(int failed, void *context, void *data)
 	}
 
 out:
-	if (!failed)
-		dm_free(data);
+	;
 }
 
 int vgname_from_mda(const struct format_type *fmt,

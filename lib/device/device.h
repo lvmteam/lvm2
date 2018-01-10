@@ -124,6 +124,7 @@ typedef enum dev_io_reason {
  * Is this I/O for a device's extra metadata area?
  */
 #define EXTRA_IO(reason) ((reason) == DEV_IO_MDA_EXTRA_HEADER || (reason) == DEV_IO_MDA_EXTRA_CONTENT)
+#define DEV_DEVBUF(dev, reason) (EXTRA_IO((reason)) ? &(dev)->last_extra_devbuf : &(dev)->last_devbuf)
 
 struct device_list {
 	struct dm_list list;

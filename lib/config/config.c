@@ -534,9 +534,6 @@ static void _process_config_file_buffer(int failed, void *context, void *data)
 	}
 
 out:
-	if (!failed && !pcfp->use_mmap)
-		dm_free(data);
-
 	if (pcfp->config_file_read_fd_callback)
 		pcfp->config_file_read_fd_callback(!pcfp->ret, pcfp->config_file_read_fd_context, NULL);
 }
@@ -612,6 +609,7 @@ int config_file_read_fd(struct dm_pool *mem, struct dm_config_tree *cft, struct 
 			if (!(buf = dev_read_circular(dev, (uint64_t) offset, size, (uint64_t) offset2, size2, reason)))
 				goto_out;
 			_process_config_file_buffer(0, pcfp, buf);
+			dm_free(buf);
 		} else if (!dev_read_callback(dev, (uint64_t) offset, size, reason, _process_config_file_buffer, pcfp))
 			goto_out;
 		r = pcfp->ret;
