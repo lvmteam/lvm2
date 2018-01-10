@@ -74,37 +74,32 @@ static const char *_reason_text(dev_io_reason_t reason)
 	return _reasons[(unsigned) reason];
 }
 
+/*
+ * Release the memory holding the last data we read
+ */
+static void _release_devbuf(struct device_buffer *devbuf)
+{
+	dm_free(devbuf->malloc_address);
+	devbuf->malloc_address = NULL;
+}
+
+void devbufs_release(struct device *dev)
+{
+	_release_devbuf(&dev->last_devbuf);
+	_release_devbuf(&dev->last_extra_devbuf);
+}
+
 /*-----------------------------------------------------------------
  * The standard io loop that keeps submitting an io until it's
  * all gone.
  *---------------------------------------------------------------*/
-static int _io(struct device_area *where, char *buffer, int should_write, dev_io_reason_t reason)
+static int _io_sync(struct device_buffer *devbuf)
 {
+	struct device_area *where = &devbuf->where;
 	int fd = dev_fd(where->dev);
+	char *buffer = devbuf->buf;
 	ssize_t n = 0;
 	size_t total = 0;
-
-	if (fd < 0) {
-		log_error("Attempt to read an unopened device (%s).",
-			  dev_name(where->dev));
-		return 0;
-	}
-
-	log_debug_io("%s %s:%8" PRIu64 " bytes (sync) at %" PRIu64 "%s (for %s)",
-		     should_write ? "Write" : "Read ", dev_name(where->dev),
-		     where->size, (uint64_t) where->start,
-		     (should_write && test_mode()) ? " (test mode - suppressed)" : "", _reason_text(reason));
-
-	/*
-	 * Skip all writes in test mode.
-	 */
-	if (should_write && test_mode())
-		return 1;
-
-	if (where->size > SSIZE_MAX) {
-		log_error("Read size too large: %" PRIu64, where->size);
-		return 0;
-	}
 
 	if (lseek(fd, (off_t) where->start, SEEK_SET) == (off_t) -1) {
 		log_error("%s: lseek %" PRIu64 " failed: %s",
@@ -115,7 +110,7 @@ static int _io(struct device_area *where, char *buffer, int should_write, dev_io
 
 	while (total < (size_t) where->size) {
 		do
-			n = should_write ?
+			n = devbuf->write ?
 			    write(fd, buffer, (size_t) where->size - total) :
 			    read(fd, buffer, (size_t) where->size - total);
 		while ((n < 0) && ((errno == EINTR) || (errno == EAGAIN)));
@@ -123,7 +118,7 @@ static int _io(struct device_area *where, char *buffer, int should_write, dev_io
 		if (n < 0)
 			log_error_once("%s: %s failed after %" PRIu64 " of %" PRIu64
 				       " at %" PRIu64 ": %s", dev_name(where->dev),
-				       should_write ? "write" : "read",
+				       devbuf->write ? "write" : "read",
 				       (uint64_t) total,
 				       (uint64_t) where->size,
 				       (uint64_t) where->start, strerror(errno));
@@ -136,6 +131,36 @@ static int _io(struct device_area *where, char *buffer, int should_write, dev_io
 	}
 
 	return (total == (size_t) where->size);
+}
+
+static int _io(struct device_buffer *devbuf, dev_io_reason_t reason)
+{
+	struct device_area *where = &devbuf->where;
+	int fd = dev_fd(where->dev);
+
+	if (fd < 0) {
+		log_error("Attempt to read an unopened device (%s).",
+			  dev_name(where->dev));
+		return 0;
+	}
+
+	log_debug_io("%s %s(fd %d):%8" PRIu64 " bytes (sync) at %" PRIu64 "%s (for %s)",
+		     devbuf->write ? "Write" : "Read ", dev_name(where->dev), fd,
+		     where->size, (uint64_t) where->start,
+		     (devbuf->write && test_mode()) ? " (test mode - suppressed)" : "", _reason_text(reason));
+
+	/*
+	 * Skip all writes in test mode.
+	 */
+	if (devbuf->write && test_mode())
+		return 1;
+
+	if (where->size > SSIZE_MAX) {
+		log_error("Read size too large: %" PRIu64, where->size);
+		return 0;
+	}
+
+	return _io_sync(devbuf);
 }
 
 /*-----------------------------------------------------------------
@@ -230,12 +255,13 @@ static void _widen_region(unsigned int block_size, struct device_area *region,
 static int _aligned_io(struct device_area *where, char *buffer,
 		       int should_write, dev_io_reason_t reason)
 {
-	char *bounce, *bounce_buf;
+	char *bounce, *bounce_buf = NULL;
 	unsigned int physical_block_size = 0;
 	unsigned int block_size = 0;
 	unsigned buffer_was_widened = 0;
 	uintptr_t mask;
 	struct device_area widened;
+	struct device_buffer *devbuf;
 	int r = 0;
 
 	if (!(where->dev->flags & DEV_REGULAR) &&
@@ -253,59 +279,81 @@ static int _aligned_io(struct device_area *where, char *buffer,
 		buffer_was_widened = 1;
 		log_debug_io("Widening request for %" PRIu64 " bytes at %" PRIu64 " to %" PRIu64 " bytes at %" PRIu64 " on %s (for %s)",
 			     where->size, (uint64_t) where->start, widened.size, (uint64_t) widened.start, dev_name(where->dev), _reason_text(reason));
-	} else if (!((uintptr_t) buffer & mask))
-		/* Perform the I/O directly. */
-		return _io(where, buffer, should_write, reason);
+	} 
 
+	if (!buffer_was_widened && !((uintptr_t) buffer & mask))
+		/* Perform the I/O directly. */
+		bounce = buffer;
 #ifndef DEBUG_MEM
-	/* Allocate a bounce buffer with an extra block */
-	if (!(bounce_buf = bounce = dm_malloc_aligned((size_t) widened.size, 0))) {
+	else if (!(bounce_buf = bounce = dm_malloc_aligned((size_t) widened.size, 0))) {
 		log_error("Bounce buffer malloc failed");
 		return 0;
 	}
 #else
-	/* Allocate a bounce buffer with an extra block */
-	if (!(bounce_buf = bounce = dm_malloc((size_t) widened.size + block_size))) {
-		log_error("Bounce buffer malloc failed");
-		return 0;
-	}
+	else {
+		/* Allocate a bounce buffer with an extra block */
+		if (!(bounce_buf = bounce = dm_malloc((size_t) widened.size + block_size))) {
+			log_error("Bounce buffer malloc failed");
+			return 0;
+		}
 
-	/*
-	 * Realign start of bounce buffer (using the extra sector)
-	 */
-	if (((uintptr_t) bounce) & mask)
-		bounce = (char *) ((((uintptr_t) bounce) + mask) & ~mask);
+		/*
+		 * Realign start of bounce buffer (using the extra sector)
+		 */
+		if (((uintptr_t) bounce) & mask)
+			bounce = (char *) ((((uintptr_t) bounce) + mask) & ~mask);
+	}
 #endif
+
+	devbuf = EXTRA_IO(reason) ? &where->dev->last_extra_devbuf : &where->dev->last_devbuf;
+ 	_release_devbuf(devbuf);
+	devbuf->malloc_address = bounce_buf;
+	devbuf->buf = bounce;
+	devbuf->where.dev = where->dev;
+	devbuf->where.start = widened.start;
+	devbuf->where.size = widened.size;
+	devbuf->write = 0;
 
 	/* Do we need to read into the bounce buffer? */
 	if ((!should_write || buffer_was_widened) &&
-	    !_io(&widened, bounce, 0, reason)) {
+	    !_io(devbuf, reason)) {
 		if (!should_write)
-			goto_out;
+			goto_bad;
 		/* FIXME Handle errors properly! */
 		/* FIXME pre-extend the file */
 		memset(bounce, '\n', widened.size);
 	}
 
 	if (should_write) {
-		memcpy(bounce + (where->start - widened.start), buffer,
-		       (size_t) where->size);
+		if (bounce_buf) {
+			memcpy(bounce + (where->start - widened.start), buffer,
+			       (size_t) where->size);
+			log_debug_io("Overwriting %" PRIu64 " bytes at %" PRIu64 " (for %s)", where->size,
+				     (uint64_t) where->start, _reason_text(reason));
+		}
 
 		/* ... then we write */
-		if (!(r = _io(&widened, bounce, 1, reason)))
-			stack;
+		devbuf->write = 1;
+		if (!(r = _io(devbuf, reason)))
+			goto_bad;
 			
-		goto out;
+		_release_devbuf(devbuf);
+		return 1;
 	}
 
-	memcpy(buffer, bounce + (where->start - widened.start),
-	       (size_t) where->size);
+	/* read */
+	if (bounce_buf)
+		memcpy(buffer, bounce + (where->start - widened.start),
+		       (size_t) where->size);
 
-	r = 1;
+	/* We store what we just read as it often also satisfies the next request */
+	devbuf->data = bounce + (where->start - widened.start);
 
-out:
-	dm_free(bounce_buf);
-	return r;
+	return 1;
+
+bad:
+	_release_devbuf(devbuf);
+	return 0;
 }
 
 static int _dev_get_size_file(struct device *dev, uint64_t *size)

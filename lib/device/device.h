@@ -56,6 +56,22 @@ struct dev_ext {
 	void *handle;
 };
 
+struct device_area {
+	struct device *dev;
+	uint64_t start;		/* Bytes */
+	uint64_t size;		/* Bytes */
+};
+
+struct device_buffer {
+	void *data;             /* Location of start of requested data (inside buf) */
+
+	/* Private */
+	void *malloc_address;   /* Start of allocated memory */
+	void *buf;              /* Aligned buffer that contains data within it */
+	struct device_area where;       /* Location of buf */
+	unsigned write:1;       /* 1 if write; 0 if read */
+};
+
 /*
  * All devices in LVM will be represented by one of these.
  * pointer comparisons are valid.
@@ -78,6 +94,8 @@ struct device {
 	uint64_t end;
 	struct dm_list open_list;
 	struct dev_ext ext;
+	struct device_buffer last_devbuf;       /* Last data buffer read from the device */
+	struct device_buffer last_extra_devbuf; /* Last data buffer read from the device for extra metadata area */
 
 	const char *vgid; /* if device is an LV */
 	const char *lvid; /* if device is an LV */
@@ -102,15 +120,14 @@ typedef enum dev_io_reason {
 	DEV_IO_LOG		/* Logging messages */
 } dev_io_reason_t;
 
+/*
+ * Is this I/O for a device's extra metadata area?
+ */
+#define EXTRA_IO(reason) ((reason) == DEV_IO_MDA_EXTRA_HEADER || (reason) == DEV_IO_MDA_EXTRA_CONTENT)
+
 struct device_list {
 	struct dm_list list;
 	struct device *dev;
-};
-
-struct device_area {
-	struct device *dev;
-	uint64_t start;		/* Bytes */
-	uint64_t size;		/* Bytes */
 };
 
 /*
@@ -173,6 +190,8 @@ void dev_flush(struct device *dev);
 struct device *dev_create_file(const char *filename, struct device *dev,
 			       struct dm_str_list *alias, int use_malloc);
 void dev_destroy_file(struct device *dev);
+
+void devbufs_release(struct device *dev);
 
 /* Return a valid device name from the alias list; NULL otherwise */
 const char *dev_name_confirmed(struct device *dev, int quiet);
