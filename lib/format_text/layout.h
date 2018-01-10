@@ -107,7 +107,7 @@ struct mda_context {
 #define MDA_ORIGINAL_ALIGNMENT 512	/* Original alignment used for start of VG metadata content */
 #define MDA_ALIGNMENT 4096	/* Default alignment in bytes since 2.02.177 for start of VG metadata content. */
 
-int vgname_from_mda(const struct format_type *fmt, struct mda_header *mdah, int primary_mda, 
+int vgname_from_mda(const struct format_type *fmt, const struct mda_header *mdah, int primary_mda, 
 		    struct device_area *dev_area, struct lvmcache_vgsummary *vgsummary,
 		    uint64_t *mda_free_sectors,
 		    lvm_callback_fn_t update_vgsummary_callback_fn, void *update_vgsummary_callback_context);

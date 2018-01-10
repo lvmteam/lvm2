@@ -506,10 +506,10 @@ struct process_config_file_params {
 	int ret;
 };
 
-static void _process_config_file_buffer(int failed, void *context, void *data)
+static void _process_config_file_buffer(int failed, void *context, const void *data)
 {
 	struct process_config_file_params *pcfp = context;
-	char *fb = data, *fe;
+	const char *fb = data, *fe;
 
 	if (failed) {
 		pcfp->ret = 0;
@@ -552,7 +552,7 @@ int config_file_read_fd(struct dm_pool *mem, struct dm_config_tree *cft, struct 
 	char *fb;
 	int r = 0;
 	off_t mmap_offset = 0;
-	char *buf = NULL;
+	const char *buf = NULL;
 	unsigned circular = size2 ? 1 : 0;	/* Wrapped around end of disk metadata buffer? */
 	struct config_source *cs = dm_config_get_custom(cft);
 	struct process_config_file_params *pcfp;
@@ -609,7 +609,7 @@ int config_file_read_fd(struct dm_pool *mem, struct dm_config_tree *cft, struct 
 			if (!(buf = dev_read_circular(dev, (uint64_t) offset, size, (uint64_t) offset2, size2, reason)))
 				goto_out;
 			_process_config_file_buffer(0, pcfp, buf);
-			dm_free(buf);
+			dm_free((void *)buf);
 		} else if (!dev_read_callback(dev, (uint64_t) offset, size, reason, _process_config_file_buffer, pcfp))
 			goto_out;
 		r = pcfp->ret;

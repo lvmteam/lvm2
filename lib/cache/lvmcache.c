@@ -1102,7 +1102,7 @@ next:
 }
 
 /* Track the number of outstanding label reads */
-static void _process_label_data(int failed, void *context, void *data)
+static void _process_label_data(int failed, void *context, const void *data)
 {
 	int *nr_labels_outstanding = context;
 
@@ -1996,7 +1996,7 @@ int lvmcache_add_orphan_vginfo(const char *vgname, struct format_type *fmt)
 	return _lvmcache_update_vgname(NULL, vgname, vgname, 0, "", fmt);
 }
 
-int lvmcache_update_vgname_and_id(struct lvmcache_info *info, struct lvmcache_vgsummary *vgsummary)
+int lvmcache_update_vgname_and_id(struct lvmcache_info *info, const struct lvmcache_vgsummary *vgsummary)
 {
 	const char *vgname = vgsummary->vgname;
 	const char *vgid = (char *)&vgsummary->vgid;

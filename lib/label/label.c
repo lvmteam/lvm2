@@ -131,7 +131,7 @@ struct find_labeller_params {
 	int ret;
 };
 
-static void _set_label_read_result(int failed, void *context, void *data)
+static void _set_label_read_result(int failed, void *context, const void *data)
 {
 	struct find_labeller_params *flp = context;
 	struct label **result = flp->result;
@@ -154,17 +154,17 @@ out:
 		flp->process_label_data_fn(0, flp->process_label_data_context, NULL);
 }
 
-static void _find_labeller(int failed, void *context, void *data)
+static void _find_labeller(int failed, void *context, const void *data)
 {
 	struct find_labeller_params *flp = context;
-	char *readbuf = data;
+	const char *readbuf = data;
 	struct device *dev = flp->dev;
 	uint64_t scan_sector = flp->scan_sector;
 	struct label **result = flp->result;
 	char labelbuf[LABEL_SIZE] __attribute__((aligned(8)));
 	struct labeller_i *li;
 	struct labeller *l = NULL;	/* Set when a labeller claims the label */
-	struct label_header *lh;
+	const struct label_header *lh;
 	struct lvmcache_info *info;
 	uint64_t sector;
 
@@ -246,7 +246,7 @@ int label_remove(struct device *dev)
 	struct labeller_i *li;
 	struct label_header *lh;
 	struct lvmcache_info *info;
-	char *readbuf = NULL;
+	const char *readbuf = NULL;
 
 	memset(labelbuf, 0, LABEL_SIZE);
 

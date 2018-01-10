@@ -336,10 +336,10 @@ struct process_mda_header_params {
 	int ret;
 };
 
-static void _process_vgsummary(int failed, void *context, void *data)
+static void _process_vgsummary(int failed, void *context, const void *data)
 {
 	struct process_mda_header_params *pmp = context;
-	struct lvmcache_vgsummary *vgsummary = data;
+	const struct lvmcache_vgsummary *vgsummary = data;
 
 	--pmp->umb->nr_outstanding_mdas;
 
@@ -357,10 +357,10 @@ out:
 		stack;
 }
 
-static void _process_mda_header(int failed, void *context, void *data)
+static void _process_mda_header(int failed, void *context, const void *data)
 {
 	struct process_mda_header_params *pmp = context;
-	struct mda_header *mdah = data;
+	const struct mda_header *mdah = data;
 	struct update_mda_baton *umb = pmp->umb;
 	const struct format_type *fmt = umb->label->labeller->fmt;
 	struct metadata_area *mda = pmp->mda;

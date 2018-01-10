@@ -43,7 +43,7 @@ struct import_vgsummary_params {
 	int ret;
 };
 
-static void _import_vgsummary(int failed, void *context, void *data)
+static void _import_vgsummary(int failed, void *context, const void *data)
 {
 	struct import_vgsummary_params *ivsp = context;
 	struct text_vg_version_ops **vsn;
@@ -150,7 +150,7 @@ struct import_vg_params {
 	char **desc;
 };
 
-static void _import_vg(int failed, void *context, void *data)
+static void _import_vg(int failed, void *context, const void *data)
 {
 	struct import_vg_params *ivp = context;
 	struct text_vg_version_ops **vsn;

@@ -182,7 +182,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 	uint64_t offset2;
 	size_t size;
 	size_t size2;
-	char *buf = NULL;
+	const char *buf = NULL;
 	struct device_area *area;
 	struct mda_context *mdac;
 	unsigned circular = 0;
@@ -273,14 +273,14 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 			}
 		}
 		if (circular)
-			dm_free(buf);
+			dm_free((void *)buf);
 		buf = NULL;
 	}
 
 	r = 1;
  out:
 	if (circular)
-		dm_free(buf);
+		dm_free((void *)buf);
 	if (!dev_close(area->dev))
 		stack;
 	return r;
@@ -334,7 +334,7 @@ struct process_raw_mda_header_params {
 	int ret;
 };
 
-static void _process_raw_mda_header(int failed, void *context, void *data)
+static void _process_raw_mda_header(int failed, void *context, const void *data)
 {
 	struct process_raw_mda_header_params *prmp = context;
 	struct mda_header *mdah = prmp->mdah;
@@ -472,7 +472,7 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 		.vgname = FMT_TEXT_ORPHAN_VG_NAME,
 	};
 	int rlocn_was_ignored;
-	char *buf;
+	const char *buf;
 
 	memcpy(&vgsummary_orphan.vgid, FMT_TEXT_ORPHAN_VG_NAME, sizeof(FMT_TEXT_ORPHAN_VG_NAME));
 
@@ -1348,7 +1348,7 @@ static int _scan_file(const struct format_type *fmt, const char *vgname)
 
 struct vgname_from_mda_params{
 	const struct format_type *fmt;
-	struct mda_header *mdah;
+	const struct mda_header *mdah;
 	struct device_area *dev_area;
 	int primary_mda;
 	struct lvmcache_vgsummary *vgsummary;
@@ -1360,14 +1360,14 @@ struct vgname_from_mda_params{
 	int ret;
 };
 
-static void _vgname_from_mda_process(int failed, void *context, void *data)
+static void _vgname_from_mda_process(int failed, void *context, const void *data)
 {
 	struct vgname_from_mda_params *vfmp = context;
-	struct mda_header *mdah = vfmp->mdah;
+	const struct mda_header *mdah = vfmp->mdah;
 	struct device_area *dev_area = vfmp->dev_area;
 	struct lvmcache_vgsummary *vgsummary = vfmp->vgsummary;
 	uint64_t *mda_free_sectors = vfmp->mda_free_sectors;
-	struct raw_locn *rlocn = mdah->raw_locns;
+	const struct raw_locn *rlocn = mdah->raw_locns;
 	uint64_t buffer_size, current_usage;
 
 	if (failed) {
@@ -1406,15 +1406,15 @@ out:
 		vfmp->update_vgsummary_fn(0, vfmp->update_vgsummary_context, vfmp->vgsummary);
 }
 
-static void _vgname_from_mda_validate(int failed, void *context, void *data)
+static void _vgname_from_mda_validate(int failed, void *context, const void *data)
 {
 	struct vgname_from_mda_params *vfmp = context;
-	char *buffer = data;
+	const char *buffer = data;
 	const struct format_type *fmt = vfmp->fmt;
-	struct mda_header *mdah = vfmp->mdah;
+	const struct mda_header *mdah = vfmp->mdah;
 	struct device_area *dev_area = vfmp->dev_area;
 	struct lvmcache_vgsummary *vgsummary = vfmp->vgsummary;
-	struct raw_locn *rlocn = mdah->raw_locns;
+	const struct raw_locn *rlocn = mdah->raw_locns;
 	unsigned len = 0;
 	char buf[NAME_LEN + 1] __attribute__((aligned(8)));
 
@@ -1471,11 +1471,11 @@ out:
 }
 
 int vgname_from_mda(const struct format_type *fmt,
-		    struct mda_header *mdah, int primary_mda, struct device_area *dev_area,
+		    const struct mda_header *mdah, int primary_mda, struct device_area *dev_area,
 		    struct lvmcache_vgsummary *vgsummary, uint64_t *mda_free_sectors,
 		    lvm_callback_fn_t update_vgsummary_fn, void *update_vgsummary_context)
 {
-	struct raw_locn *rlocn;
+	const struct raw_locn *rlocn;
 	struct vgname_from_mda_params *vfmp;
 
 	if (mda_free_sectors)
