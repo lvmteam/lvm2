@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Avoid exceeding array bounds in allocation tag processing.
   Refactor metadata reading code to use callback functions.
   Move memory allocation for the key dev_reads into the device layer.
 

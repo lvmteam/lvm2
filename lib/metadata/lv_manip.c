@@ -2737,7 +2737,8 @@ static int _limit_to_one_area_per_tag(struct alloc_handle *ah, struct alloc_stat
 		s++;
 	}
 
-	alloc_state->areas[u].pva = NULL;
+	if (u < alloc_state->areas_size)
+		alloc_state->areas[u].pva = NULL;
 
 	return 1;
 }
