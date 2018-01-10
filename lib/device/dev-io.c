@@ -53,6 +53,12 @@
 #  endif
 #endif
 
+/*
+ * Always read at least 8k from disk.
+ * This seems to be a good compromise for the existing LVM2 metadata layout.
+ */
+#define MIN_READ_SIZE (8 * 1024)
+
 static DM_LIST_INIT(_open_devices);
 static unsigned _dev_size_seqno = 1;
 
@@ -273,6 +279,11 @@ static int _aligned_io(struct device_area *where, char *buffer,
 
 	if (!block_size)
 		block_size = lvm_getpagesize();
+
+	/* Apply minimum read size */
+	if (!should_write && block_size < MIN_READ_SIZE)
+		block_size = MIN_READ_SIZE;
+
 	mask = block_size - 1;
 
 	_widen_region(block_size, where, &widened);
@@ -785,13 +796,31 @@ static void _dev_inc_error_count(struct device *dev)
 static int _dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason)
 {
 	struct device_area where;
+	struct device_buffer *devbuf;
+	uint64_t buf_end;
 	int ret;
 
-	if (!dev->open_count)
-		return_0;
+	if (!dev->open_count) {
+		log_error(INTERNAL_ERROR "Attempt to access device %s while closed.", dev_name(dev));
+		return 0;
+	}
 
 	if (!_dev_is_valid(dev))
 		return 0;
+
+	/*
+	 * Can we satisfy this from data we stored last time we read?
+	 */
+	if ((devbuf = DEV_DEVBUF(dev, reason)) && devbuf->malloc_address) {
+		buf_end = devbuf->where.start + devbuf->where.size - 1;
+		if (offset >= devbuf->where.start && offset <= buf_end && offset + len - 1 <= buf_end) {
+			/* Reuse this buffer */
+			devbuf->data = (char *) devbuf->buf + (offset - devbuf->where.start);
+			log_debug_io("Cached read for %" PRIu64 " bytes at %" PRIu64 " on %s (for %s)",
+				     len, (uint64_t) offset, dev_name(dev), _reason_text(reason));
+			return 1;
+		}
+	}
 
 	where.dev = dev;
 	where.start = offset;
