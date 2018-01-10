@@ -500,7 +500,6 @@ struct process_config_file_params {
 	uint32_t checksum;
 	int checksum_only;
 	int no_dup_node_check;
-	int use_mmap;
 	lvm_callback_fn_t config_file_read_fd_callback;
 	void *config_file_read_fd_context;
 	int ret;
@@ -552,6 +551,7 @@ int config_file_read_fd(struct dm_pool *mem, struct dm_config_tree *cft, struct 
 	char *fb;
 	int r = 0;
 	off_t mmap_offset = 0;
+	int use_mmap = 1;
 	const char *buf = NULL;
 	unsigned circular = size2 ? 1 : 0;	/* Wrapped around end of disk metadata buffer? */
 	struct config_source *cs = dm_config_get_custom(cft);
@@ -581,14 +581,13 @@ int config_file_read_fd(struct dm_pool *mem, struct dm_config_tree *cft, struct 
 	pcfp->no_dup_node_check = no_dup_node_check;
 	pcfp->config_file_read_fd_callback = config_file_read_fd_callback;
 	pcfp->config_file_read_fd_context = config_file_read_fd_context;
-	pcfp->use_mmap = 1;
 	pcfp->ret = 1;
 
 	/* Only use mmap with regular files */
 	if (!(dev->flags & DEV_REGULAR) || circular)
-		pcfp->use_mmap = 0;
+		use_mmap = 0;
 
-	if (pcfp->use_mmap) {
+	if (use_mmap) {
 		mmap_offset = offset % lvm_getpagesize();
 		/* memory map the file */
 		fb = mmap((caddr_t) 0, size + mmap_offset, PROT_READ,
