@@ -371,16 +371,6 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		if (lv_name && strcmp(lv->name, top_level_lv_name(vg, lv_name)))
 			continue;
 
-		/*
-		 * RAID, thin and snapshot-related LVs are not
-		 * processed in a cluster, so we don't have to
-		 * worry about avoiding certain PVs in that context.
-		 *
-		 * Allow clustered mirror, but not raid mirror.
-		 */
-		if (vg_is_clustered(vg) && !lv_is_mirror_type(lv))
-			continue;
-
 		if (!lv_is_on_pvs(lv, source_pvl))
 			continue;
 
