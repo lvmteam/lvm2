@@ -22,7 +22,7 @@ aux have_raid 1 3 5 || skip
 aux prepare_pvs 5 20
 get_devs
 
-vgcreate -c n -s 128k "$vg" "${DEVICES[@]}"
+vgcreate -s 128k "$vg" "${DEVICES[@]}"
 
 for mode in "--atomic" ""
 do
@@ -33,8 +33,8 @@ do
 # 3) Move only the second LV by name
 
 # Testing pvmove of RAID1 LV
-lvcreate -l 2 -n ${lv1}_foo $vg "$dev1"
-lvcreate --regionsize 16K -l 2 --type raid1 -m 1 -n $lv1 $vg "$dev1" "$dev2"
+lvcreate -aey -l 2 -n ${lv1}_foo $vg "$dev1"
+lvcreate -aey --regionsize 16K -l 2 --type raid1 -m 1 -n $lv1 $vg "$dev1" "$dev2"
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg $lv1 "$dev1" "$dev2"
 aux mkdev_md5sum $vg $lv1
@@ -49,8 +49,8 @@ check dev_md5sum $vg $lv1
 lvremove -ff $vg
 
 # Testing pvmove of RAID10 LV
-lvcreate -l 2 -n ${lv1}_foo $vg "$dev1"
-lvcreate -l 4 --type raid10 -i 2 -m 1 -n $lv1 $vg \
+lvcreate -aey -l 2 -n ${lv1}_foo $vg "$dev1"
+lvcreate -aey -l 4 --type raid10 -i 2 -m 1 -n $lv1 $vg \
                 "$dev1" "$dev2" "$dev3" "$dev4"
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg $lv1 "$dev1" "$dev2" "$dev3" "$dev4"
@@ -75,8 +75,8 @@ check dev_md5sum $vg $lv1
 lvremove -ff $vg
 
 # Testing pvmove of RAID5 LV
-lvcreate -l 2 -n ${lv1}_foo $vg "$dev1"
-lvcreate -l 4 --type raid5 -i 2 -n $lv1 $vg \
+lvcreate -aey -l 2 -n ${lv1}_foo $vg "$dev1"
+lvcreate -aey -l 4 --type raid5 -i 2 -n $lv1 $vg \
                 "$dev1" "$dev2" "$dev3"
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg $lv1 "$dev1" "$dev2" "$dev3"

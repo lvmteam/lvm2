@@ -26,15 +26,15 @@ which md5sum || skip
 # Utilities
 
 create_vg_() {
-	vgcreate -c n -s 128k "$vg" "${DEVICES[@]}"
+	vgcreate -s 128k "$vg" "${DEVICES[@]}"
 }
 
 # ---------------------------------------------------------------------
 # Common environment setup/cleanup for each sub testcases
 prepare_lvs_() {
-	lvcreate -l2 -n $lv1 $vg "$dev1"
+	lvcreate -aey -l2 -n $lv1 $vg "$dev1"
 	check lv_on $vg $lv1 "$dev1"
-	lvcreate -l9 -i3 -n $lv2 $vg "$dev2" "$dev3" "$dev4"
+	lvcreate -aey -l9 -i3 -n $lv2 $vg "$dev2" "$dev3" "$dev4"
 	check lv_on $vg $lv2 "$dev2" "$dev3" "$dev4"
 	lvextend -l+2 $vg/$lv1 "$dev2"
 	check lv_on $vg $lv1 "$dev1" "$dev2"
@@ -57,7 +57,7 @@ prepare_lvs_() {
 # original content should be preserved
 restore_lvs_() {
 	vgcfgrestore -f bak-$$ $vg
-	vgchange -ay $vg
+	vgchange -aey $vg
 }
 
 lvs_not_changed_() {
@@ -348,7 +348,7 @@ vgremove -ff $vg
 pvcreate "${DEVICES[@]}"
 pvcreate --metadatacopies 0 "$dev1" "$dev2"
 create_vg_
-lvcreate -l4 -n $lv1 $vg "$dev1"
+lvcreate -aey -l4 -n $lv1 $vg "$dev1"
 pvmove $mode "$dev1"
 
 #COMM "pvmove fails activating mirror, properly restores state before pvmove"

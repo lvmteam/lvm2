@@ -24,7 +24,7 @@ aux have_raid 1 3 5 || skip
 aux prepare_pvs 5 20
 get_devs
 
-vgcreate -c n -s 128k "$vg" "${DEVICES[@]}" 
+vgcreate -s 128k "$vg" "${DEVICES[@]}"
 
 for mode in "--atomic" ""
 do
@@ -37,8 +37,8 @@ do
 
 
 # Testing pvmove of thin LV
-lvcreate -l 2 -n ${lv1}_foo $vg "$dev1"
-lvcreate -T $vg/${lv1}_pool -l 4 -V 8 -n $lv1 "$dev1"
+lvcreate -aey -l 2 -n ${lv1}_foo $vg "$dev1"
+lvcreate -aey -T $vg/${lv1}_pool -l 4 -V 8 -n $lv1 "$dev1"
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg $lv1 "$dev1"
 aux mkdev_md5sum $vg $lv1
@@ -53,12 +53,12 @@ check dev_md5sum $vg $lv1
 lvremove -ff $vg
 
 # Testing pvmove of thin LV on RAID
-lvcreate -l 2 -n ${lv1}_foo $vg "$dev1"
-lvcreate --type raid1 -m 1 -l 4 -n ${lv1}_raid1_pool $vg "$dev1" "$dev2"
-lvcreate --type raid1 -m 1 -L 2 -n ${lv1}_raid1_meta $vg "$dev1" "$dev2"
+lvcreate -aey -l 2 -n ${lv1}_foo $vg "$dev1"
+lvcreate -aey --type raid1 -m 1 -l 4 -n ${lv1}_raid1_pool $vg "$dev1" "$dev2"
+lvcreate -aey --type raid1 -m 1 -L 2 -n ${lv1}_raid1_meta $vg "$dev1" "$dev2"
 lvconvert --yes --thinpool $vg/${lv1}_raid1_pool \
         --poolmetadata ${lv1}_raid1_meta
-lvcreate -T $vg/${lv1}_raid1_pool -V 8 -n $lv1
+lvcreate -aey -T $vg/${lv1}_raid1_pool -V 8 -n $lv1
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg $lv1 "$dev1" "$dev2"
 aux mkdev_md5sum $vg $lv1
