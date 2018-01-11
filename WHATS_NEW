@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Fix trimming sibling PVs when doing a pvmove of raid subLVs.
   Preserve exclusive activation during thin snaphost merge.
   Suppress some repeated reads of the same disk data at the device layer.
   Avoid exceeding array bounds in allocation tag processing.

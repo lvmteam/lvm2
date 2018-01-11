@@ -145,6 +145,7 @@ static int _remove_sibling_pvs_from_trim_list(struct logical_volume *lv,
 					      struct dm_list *trim_list)
 {
 	char *idx, *suffix;
+	const char *sibling;
 	char sublv_name[NAME_LEN];
 	struct logical_volume *sublv;
 	struct dm_list untrim_list, *pvh1, *pvh2;
@@ -159,7 +160,16 @@ static int _remove_sibling_pvs_from_trim_list(struct logical_volume *lv,
 
 	dm_list_init(&untrim_list);
 
-	if (!(suffix = first_substring(lv_name, "_rimage_", "_rmeta_", NULL))) {
+	if (!dm_strncpy(sublv_name, lv_name, sizeof(sublv_name))) {
+		log_error(INTERNAL_ERROR "LV name %s is too long.", lv_name);
+		return 0;
+	}
+
+	if ((suffix = strstr(sublv_name, "_rimage_")))
+		sibling = "meta";
+	else if ((suffix = strstr(sublv_name, "_rmeta_")))
+		sibling = "image";
+	else {
 		log_error("Can't find rimage or rmeta suffix.");
 		return 0;
 	}
@@ -171,8 +181,8 @@ static int _remove_sibling_pvs_from_trim_list(struct logical_volume *lv,
 	idx++;
 
 	/* Create the siblings name (e.g. "raidlv_rmeta_N" -> "raidlv_rimage_N" */
-	if (dm_snprintf(sublv_name, sizeof(sublv_name), "%s_r%s_%s", lv_name,
-			strstr(suffix, "_rimage_") ? "meta" : "image", idx) < 0) {
+	if (dm_snprintf(suffix + 2, sizeof(sublv_name) - 2 - (suffix - sublv_name),
+			"%s_%s", sibling, idx) < 0) {
 		log_error("Raid sublv for name %s too long.", lv_name);
 		return 0;
 	}
