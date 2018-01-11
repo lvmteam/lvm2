@@ -406,7 +406,8 @@ int activate_lvs(struct cmd_context *cmd, struct dm_list *lvs)
 
 	dm_list_iterate_items(lvl, lvs) {
 		if (!activate_lv_excl_local(cmd, lvl->lv)) {
-			log_error("Failed to activate %s", display_lvname(lvl->lv));
+			log_error("Failed to locally exclusively activate %s.",
+				  display_lvname(lvl->lv));
 			dm_list_uniterate(lvh, lvs, &lvl->list) {
 				lvl = dm_list_item(lvh, struct lv_list);
 				if (!deactivate_lv(cmd, lvl->lv))

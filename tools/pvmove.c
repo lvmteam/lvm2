@@ -375,9 +375,9 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			continue;
 
 		if (lv_is_converting(lv) || lv_is_merging(lv)) {
-			log_error("Unable to pvmove when %s volumes are present.",
-				  lv_is_converting(lv) ?
-				  "converting" : "merging");
+			log_error("Unable to pvmove when %s volume %s is present.",
+				  lv_is_converting(lv) ? "converting" : "merging",
+				  display_lvname(lv));
 			return NULL;
 		}
 
@@ -389,13 +389,13 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 				return_NULL;
 
 			/*
- 			 * Remove any PVs holding SubLV siblings to allow
- 			 * for collocation (e.g. *rmeta_0 -> *rimage_0).
- 			 *
- 			 * Callee checks for lv_name and valid raid segment type.
- 			 *
- 			 * FIXME: don't rely on namespace
- 			 */
+			 * Remove any PVs holding SubLV siblings to allow
+			 * for collocation (e.g. *rmeta_0 -> *rimage_0).
+			 *
+			 * Callee checks for lv_name and valid raid segment type.
+			 *
+			 * FIXME: don't rely on namespace
+			 */
 			if (!_remove_sibling_pvs_from_trim_list(lv, lv_name, &trim_list))
 				return_NULL;
 
@@ -436,7 +436,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 
 		if (lv_is_locked(lv)) {
 			lv_skipped = 1;
-			log_print_unless_silent("Skipping locked LV %s.", lv->name);
+			log_print_unless_silent("Skipping locked LV %s.", display_lvname(lv));
 			continue;
 		}
 
@@ -445,8 +445,9 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		    lv_is_active(lv) &&
 		    !lv_is_active_exclusive_locally(lv)) {
 			lv_skipped = 1;
-			log_print_unless_silent("Skipping LV %s which is activated "
-						"exclusively on remote node.", lv->name);
+			log_print_unless_silent("Skipping LV %s which is active, "
+						"but not locally exclusively.",
+						display_lvname(lv));
 			continue;
 		}
 
