@@ -304,7 +304,7 @@ static void *_dm_malloc_aligned_aux(size_t s, size_t a, const char *file __attri
 	}
 
 	if ((r = posix_memalign(&memptr, a, s))) {
-		log_error("Failed to allocate %" PRIsize_t " bytes aligned to %d: %s", s, a, strerror(r));
+		log_error("Failed to allocate %" PRIsize_t " bytes aligned to %" PRIsize_t ": %s", s, a, strerror(r));
 		return 0;
 	}
 
