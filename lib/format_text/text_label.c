@@ -321,7 +321,7 @@ static int _text_initialise_label(struct labeller *l __attribute__((unused)),
 
 struct update_mda_baton {
 	struct lvmcache_info *info;
-	struct label *label;
+	struct labeller *labeller;
 	int nr_outstanding_mdas;
 	lvm_callback_fn_t read_label_callback_fn;
 	void *read_label_callback_context;
@@ -362,7 +362,7 @@ static void _process_mda_header(int failed, void *context, const void *data)
 	struct process_mda_header_params *pmp = context;
 	const struct mda_header *mdah = data;
 	struct update_mda_baton *umb = pmp->umb;
-	const struct format_type *fmt = umb->label->labeller->fmt;
+	const struct format_type *fmt = umb->labeller->fmt;
 	struct metadata_area *mda = pmp->mda;
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 
@@ -394,8 +394,8 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 {
 	struct process_mda_header_params *pmp;
 	struct update_mda_baton *umb = baton;
-	const struct format_type *fmt = umb->label->labeller->fmt;
-	struct dm_pool *mem = umb->label->labeller->fmt->cmd->mem;
+	const struct format_type *fmt = umb->labeller->fmt;
+	struct dm_pool *mem = umb->labeller->fmt->cmd->mem;
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 
 	if (!(pmp = dm_pool_zalloc(mem, sizeof(*pmp)))) {
@@ -434,7 +434,7 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 	return pmp->ret;
 }
 
-static int _text_read(struct labeller *l, struct device *dev, void *buf, struct label **label,
+static int _text_read(struct labeller *l, struct device *dev, void *buf, 
 		      lvm_callback_fn_t read_label_callback_fn, void *read_label_callback_context)
 {
 	struct label_header *lh = (struct label_header *) buf;
@@ -446,6 +446,7 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf, struct 
 	uint32_t ext_version;
 	struct dm_pool *mem = l->fmt->cmd->mem;
 	struct update_mda_baton *umb;
+	struct label *label = NULL;
 
 	/*
 	 * PV header base
@@ -457,7 +458,7 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf, struct 
 				  FMT_TEXT_ORPHAN_VG_NAME, 0)))
 		goto_bad;
 
-	*label = lvmcache_get_label(info);
+	label = lvmcache_get_label(info);
 
 	lvmcache_set_device_size(info, xlate64(pvhdr->device_size_xl));
 
@@ -511,7 +512,7 @@ out:
 	}
 
 	umb->info = info;
-	umb->label = *label;
+	umb->labeller = label->labeller;
 	umb->read_label_callback_fn = read_label_callback_fn;
 	umb->read_label_callback_context = read_label_callback_context;
 	umb->nr_outstanding_mdas = 1;
@@ -526,13 +527,13 @@ out:
 			lvmcache_make_valid(info);
 
 	if (umb->read_label_callback_fn)
-		umb->read_label_callback_fn(!umb->ret, umb->read_label_callback_context, NULL);
+		umb->read_label_callback_fn(!umb->ret, umb->read_label_callback_context, label);
 
 	return 1;
 
 bad:
 	if (read_label_callback_fn)
-		read_label_callback_fn(1, read_label_callback_context, NULL);
+		read_label_callback_fn(1, read_label_callback_context, label);
 
 	return 0;
 }

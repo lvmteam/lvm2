@@ -548,7 +548,6 @@ const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd,
 {
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_info *info;
-	struct label *label;
 	struct dm_list *devh, *tmp;
 	struct dm_list devs;
 	struct device_list *devl;
@@ -593,7 +592,7 @@ const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd,
 
 	dm_list_iterate_safe(devh, tmp, &devs) {
 		devl = dm_list_item(devh, struct device_list);
-		(void) label_read(devl->dev, &label, UINT64_C(0));
+		(void) label_read(devl->dev, NULL, UINT64_C(0));
 		dm_list_del(&devl->list);
 		dm_free(devl);
 	}
@@ -776,10 +775,8 @@ char *lvmcache_vgname_from_pvid(struct cmd_context *cmd, const char *pvid)
 
 static void _rescan_entry(struct lvmcache_info *info)
 {
-	struct label *label;
-
 	if (info->status & CACHE_INVALID)
-		(void) label_read(info->dev, &label, UINT64_C(0));
+		(void) label_read(info->dev, NULL, UINT64_C(0));
 }
 
 static int _scan_invalid(void)
@@ -1115,7 +1112,6 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	struct dm_list add_cache_devs;
 	struct lvmcache_info *info;
 	struct device_list *devl;
-	struct label *label;
 	struct dev_iter *iter;
 	struct device *dev;
 	struct format_type *fmt;
@@ -1160,7 +1156,7 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 
 	while ((dev = dev_iter_get(iter))) {
 		nr_labels_outstanding++;
-		if (!label_read_callback(cmd->mem, dev, UINT64_C(0), _process_label_data, &nr_labels_outstanding))
+		if (!label_read_callback(dev, UINT64_C(0), _process_label_data, &nr_labels_outstanding))
 			nr_labels_outstanding--;
 		dev_count++;
 	}
@@ -1201,7 +1197,7 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 
 		dm_list_iterate_items(devl, &add_cache_devs) {
 			log_debug_cache("Rescan preferred device %s for lvmcache", dev_name(devl->dev));
-			(void) label_read(devl->dev, &label, UINT64_C(0));
+			(void) label_read(devl->dev, NULL, UINT64_C(0));
 		}
 
 		dm_list_splice(&_unused_duplicate_devs, &del_cache_devs);
@@ -1522,7 +1518,6 @@ const char *lvmcache_pvid_from_devname(struct cmd_context *cmd,
 				       const char *devname)
 {
 	struct device *dev;
-	struct label *label;
 
 	if (!(dev = dev_cache_get(devname, cmd->filter))) {
 		log_error("%s: Couldn't find device.  Check your filters?",
@@ -1530,7 +1525,7 @@ const char *lvmcache_pvid_from_devname(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	if (!(label_read(dev, &label, UINT64_C(0))))
+	if (!(label_read(dev, NULL, UINT64_C(0))))
 		return NULL;
 
 	return dev->pvid;

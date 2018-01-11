@@ -491,7 +491,6 @@ static int _pvremove_check(struct cmd_context *cmd, const char *name,
 {
 	static const char really_wipe_msg[] = "Really WIPE LABELS from physical volume";
 	struct device *dev;
-	struct label *label;
 	struct pv_list *pvl;
 	struct physical_volume *pv = NULL;
 	int used;
@@ -506,7 +505,7 @@ static int _pvremove_check(struct cmd_context *cmd, const char *name,
 
 	/* Is there a pv here already? */
 	/* If not, this is an error unless you used -f. */
-	if (!label_read(dev, &label, 0)) {
+	if (!label_read(dev, NULL, 0)) {
 		if (force_count)
 			return 1;
 		log_error("No PV label found on %s.", name);

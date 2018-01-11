@@ -135,16 +135,21 @@ static void _set_label_read_result(int failed, void *context, const void *data)
 {
 	struct find_labeller_params *flp = context;
 	struct label **result = flp->result;
+	struct label *label = (struct label *) data;
 
 	if (failed) {
 		flp->ret = 0;
 		goto_out;
 	}
 
-	if (result && *result) {
-		(*result)->dev = flp->dev;
-		(*result)->sector = flp->label_sector;
+	/* Fix up device and label sector which the low-level code doesn't set */
+	if (label) {
+		label->dev = flp->dev;
+		label->sector = flp->label_sector;
 	}
+
+	if (result)
+		*result = (struct label *) label;
 
 out:
 	if (!dev_close(flp->dev))
@@ -160,7 +165,6 @@ static void _find_labeller(int failed, void *context, const void *data)
 	const char *readbuf = data;
 	struct device *dev = flp->dev;
 	uint64_t scan_sector = flp->scan_sector;
-	struct label **result = flp->result;
 	char labelbuf[LABEL_SIZE] __attribute__((aligned(8)));
 	struct labeller_i *li;
 	struct labeller *l = NULL;	/* Set when a labeller claims the label */
@@ -233,7 +237,7 @@ static void _find_labeller(int failed, void *context, const void *data)
 		flp->ret = 0;
 		_set_label_read_result(1, flp, NULL);
 	} else
-		(void) (l->ops->read)(l, dev, labelbuf, result, &_set_label_read_result, flp);
+		(void) (l->ops->read)(l, dev, labelbuf, &_set_label_read_result, flp);
 }
 
 /* FIXME Also wipe associated metadata area headers? */
@@ -318,7 +322,8 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 
 	if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 1))) {
 		log_debug_devs("Reading label from lvmcache for %s", dev_name(dev));
-		*result = lvmcache_get_label(info);
+		if (result)
+			*result = lvmcache_get_label(info);
 		if (process_label_data_fn)
 			process_label_data_fn(0, process_label_data_context, NULL);
 		return 1;
@@ -360,22 +365,16 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 	return flp->ret;
 }
 
+/* result may be NULL if caller doesn't need it */
 int label_read(struct device *dev, struct label **result, uint64_t scan_sector)
 {
 	return _label_read(dev, scan_sector, result, NULL, NULL);
 }
 
-int label_read_callback(struct dm_pool *mem, struct device *dev, uint64_t scan_sector,
+int label_read_callback(struct device *dev, uint64_t scan_sector,
 		       lvm_callback_fn_t process_label_data_fn, void *process_label_data_context)
 {
-	struct label **result;	/* FIXME Eliminate this */
-
-	if (!(result = dm_pool_zalloc(mem, sizeof(*result)))) {
-		log_error("Couldn't allocate memory for internal result pointer.");
-		return 0;
-	}
-
-	return _label_read(dev, scan_sector, result, process_label_data_fn, process_label_data_context);
+	return _label_read(dev, scan_sector, NULL, process_label_data_fn, process_label_data_context);
 }
 
 /* Caller may need to use label_get_handler to create label struct! */
