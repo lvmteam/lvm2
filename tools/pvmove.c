@@ -329,8 +329,6 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 	uint32_t log_count = 0;
 	int lv_found = 0;
 	int lv_skipped = 0;
-	int lv_active_count = 0;
-	int lv_exclusive_count = 0;
 
 	/* FIXME Cope with non-contiguous => splitting existing segments */
 	if (!(lv_mirr = lv_create_empty("pvmove%d", NULL,
@@ -449,13 +447,6 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 						"but not locally exclusively.",
 						display_lvname(lv));
 			continue;
-		}
-
-		if (vg_is_clustered(vg)) {
-			if (lv_is_active_exclusive_locally(lv))
-				lv_exclusive_count++;
-			else if (lv_is_active(lv))
-				lv_active_count++;
 		}
 
 		if (!_insert_pvmove_mirrors(cmd, lv_mirr, source_pvl, lv,
