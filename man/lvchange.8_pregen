@@ -101,6 +101,10 @@ lvchange - Change the attributes of logical volume(s)
 .ad b
 .br
 .ad l
+    \fB--lockopt\fP \fIString\fP
+.ad b
+.br
+.ad l
     \fB--longhelp\fP
 .ad b
 .br
@@ -564,6 +568,10 @@ Common options for lvm:
 .ad b
 .br
 .ad l
+[    \fB--lockopt\fP \fIString\fP ]
+.ad b
+.br
+.ad l
 [    \fB--longhelp\fP ]
 .ad b
 .br
@@ -806,6 +814,13 @@ Do not use this if dmeventd is already monitoring a device.
 .br
 Use to avoid exiting with an non-zero status code if the command is run
 without clustered locking and clustered VGs are skipped.
+.ad b
+.HP
+.ad l
+\fB--lockopt\fP \fIString\fP
+.br
+Used to pass options for special cases to lvmlockd.
+See \fBlvmlockd\fP(8) for more information.
 .ad b
 .HP
 .ad l

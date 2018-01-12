@@ -99,6 +99,10 @@ lvcreate - Create a logical volume
 .ad b
 .br
 .ad l
+    \fB--lockopt\fP \fIString\fP
+.ad b
+.br
+.ad l
     \fB--longhelp\fP
 .ad b
 .br
@@ -904,6 +908,10 @@ Common options for lvm:
 .ad b
 .br
 .ad l
+[    \fB--lockopt\fP \fIString\fP ]
+.ad b
+.br
+.ad l
 [    \fB--longhelp\fP ]
 .ad b
 .br
@@ -1144,6 +1152,13 @@ to allow LVs with the flag set to be activated.
 .br
 Do not interact with dmeventd unless --monitor is specified.
 Do not use this if dmeventd is already monitoring a device.
+.ad b
+.HP
+.ad l
+\fB--lockopt\fP \fIString\fP
+.br
+Used to pass options for special cases to lvmlockd.
+See \fBlvmlockd\fP(8) for more information.
 .ad b
 .HP
 .ad l

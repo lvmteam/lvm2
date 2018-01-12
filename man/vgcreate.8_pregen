@@ -100,10 +100,6 @@ devices are also available with vgcreate.
 [    \fB--locktype\fP \fBsanlock\fP|\fBdlm\fP|\fBnone\fP ]
 .ad b
 .br
-.ad l
-[    \fB--lockopt\fP \fIString\fP ]
-.ad b
-.br
 [ COMMON_OPTIONS ]
 .RE
 .br
@@ -145,6 +141,10 @@ Common options for lvm:
 .br
 .ad l
 [    \fB--driverloaded\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--lockopt\fP \fIString\fP ]
 .ad b
 .br
 .ad l

@@ -43,6 +43,10 @@ vgcfgrestore - Restore volume group configuration
 .ad b
 .br
 .ad l
+    \fB--lockopt\fP \fIString\fP
+.ad b
+.br
+.ad l
     \fB--longhelp\fP
 .ad b
 .br
@@ -185,6 +189,10 @@ Common options for lvm:
 .ad b
 .br
 .ad l
+[    \fB--lockopt\fP \fIString\fP ]
+.ad b
+.br
+.ad l
 [    \fB--longhelp\fP ]
 .ad b
 .br
@@ -256,6 +264,13 @@ Display help text.
 .br
 List metadata backup and archive files pertaining to the VG.
 May be used with --file. Does not restore the VG.
+.ad b
+.HP
+.ad l
+\fB--lockopt\fP \fIString\fP
+.br
+Used to pass options for special cases to lvmlockd.
+See \fBlvmlockd\fP(8) for more information.
 .ad b
 .HP
 .ad l

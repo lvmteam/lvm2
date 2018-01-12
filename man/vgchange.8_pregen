@@ -547,10 +547,6 @@ Start the lockspace of a shared VG in lvmlockd.
 [ \fB-S\fP|\fB--select\fP \fIString\fP ]
 .ad b
 .br
-.ad l
-[    \fB--lockopt\fP \fIString\fP ]
-.ad b
-.br
 [ COMMON_OPTIONS ]
 .RE
 .br
@@ -569,10 +565,6 @@ Stop the lockspace of a shared VG in lvmlockd.
 [ \fB-S\fP|\fB--select\fP \fIString\fP ]
 .ad b
 .br
-.ad l
-[    \fB--lockopt\fP \fIString\fP ]
-.ad b
-.br
 [ COMMON_OPTIONS ]
 .RE
 .br
@@ -587,10 +579,6 @@ Change the lock type for a shared VG.
 \fBvgchange\fP \fB--locktype\fP \fBsanlock\fP|\fBdlm\fP|\fBnone\fP \fIVG\fP
 .br
 .RS 4
-.ad l
-[    \fB--lockopt\fP \fIString\fP ]
-.ad b
-.br
 [ COMMON_OPTIONS ]
 .RE
 .br
@@ -638,6 +626,10 @@ Common options for lvm:
 .br
 .ad l
 [    \fB--driverloaded\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--lockopt\fP \fIString\fP ]
 .ad b
 .br
 .ad l
