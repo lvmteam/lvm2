@@ -451,7 +451,9 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		}
 
 		if (vg_is_clustered(vg) &&
-		    lv_is_active_exclusive_remotely(lv)) {
+		    lv_is_visible(lv) &&
+		    lv_is_active(lv) &&
+		    !lv_is_active_exclusive_locally(lv)) {
 			lv_skipped = 1;
 			log_print_unless_silent("Skipping LV %s which is activated "
 						"exclusively on remote node.", lv->name);
