@@ -1970,14 +1970,14 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 		log_warn("WARNING: %s not zeroed.", snap_name);
 	else {
 		lv->status |= LV_TEMPORARY;
-		if (!activate_lv_local(cmd, lv) ||
+		if (!activate_lv_excl_local(cmd, lv) ||
 		    !wipe_lv(lv, (struct wipe_params) { .do_zero = 1 })) {
 			log_error("Aborting. Failed to wipe snapshot exception store.");
 			return 0;
 		}
 		lv->status &= ~LV_TEMPORARY;
 		/* Deactivates cleared metadata LV */
-		if (!deactivate_lv_local(lv->vg->cmd, lv)) {
+		if (!deactivate_lv(lv->vg->cmd, lv)) {
 			log_error("Failed to deactivate zeroed snapshot exception store.");
 			return 0;
 		}
@@ -2170,7 +2170,7 @@ static int _lvconvert_merge_thin_snapshot(struct cmd_context *cmd,
 		log_print_unless_silent("Volume %s replaced origin %s.",
 					display_lvname(origin), display_lvname(lv));
 
-		if (origin_is_active && !activate_lv(cmd, lv)) {
+		if (origin_is_active && !activate_lv_excl_local(cmd, lv)) {
 			log_error("Failed to reactivate origin %s.",
 				  display_lvname(lv));
 			return 0;
@@ -2278,13 +2278,13 @@ static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!activate_lv_local(cmd, pmslv)) {
+	if (!activate_lv_excl_local(cmd, pmslv)) {
 		log_error("Cannot activate pool metadata spare volume %s.",
 			  pmslv->name);
 		return 0;
 	}
 
-	if (!activate_lv_local(cmd, mlv)) {
+	if (!activate_lv_excl_local(cmd, mlv)) {
 		log_error("Cannot activate thin pool metadata volume %s.",
 			  mlv->name);
 		goto deactivate_pmslv;
@@ -2476,13 +2476,13 @@ static int _lvconvert_cache_repair(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!activate_lv_local(cmd, pmslv)) {
+	if (!activate_lv_excl_local(cmd, pmslv)) {
 		log_error("Cannot activate pool metadata spare volume %s.",
 			  pmslv->name);
 		return 0;
 	}
 
-	if (!activate_lv_local(cmd, mlv)) {
+	if (!activate_lv_excl_local(cmd, mlv)) {
 		log_error("Cannot activate cache pool metadata volume %s.",
 			  mlv->name);
 		goto deactivate_pmslv;
@@ -3130,7 +3130,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 
 		if (zero_metadata) {
 			metadata_lv->status |= LV_TEMPORARY;
-			if (!activate_lv_local(cmd, metadata_lv)) {
+			if (!activate_lv_excl_local(cmd, metadata_lv)) {
 				log_error("Aborting. Failed to activate metadata lv.");
 				goto bad;
 			}

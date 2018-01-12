@@ -960,7 +960,7 @@ int wipe_cache_pool(struct logical_volume *cache_pool_lv)
 	}
 
 	cache_pool_lv->status |= LV_TEMPORARY;
-	if (!activate_lv_local(cache_pool_lv->vg->cmd, cache_pool_lv)) {
+	if (!activate_lv_excl_local(cache_pool_lv->vg->cmd, cache_pool_lv)) {
 		log_error("Aborting. Failed to activate cache pool %s.",
 			  display_lvname(cache_pool_lv));
 		return 0;
