@@ -1356,12 +1356,10 @@ static void _create_opt_names_alpha(void)
 	qsort(opt_names_alpha, ARG_COUNT, sizeof(long), _long_name_compare);
 }
 
-static int _copy_line(char *line, int max_line, int *position)
+static int _copy_line(char *line, int max_line, int *position, int *len)
 {
 	int p = *position;
 	int i = 0;
-
-	memset(line, 0, max_line);
 
 	while (1) {
 		line[i] = _command_input[p];
@@ -1376,7 +1374,9 @@ static int _copy_line(char *line, int max_line, int *position)
 		if (i == (max_line - 1))
 			break;
 	}
+	line[i] = '\0';
 	*position = p;
+	*len = i + 1;
 	return 1;
 }
 
@@ -1394,6 +1394,7 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 	int prev_was_oo = 0;
 	int prev_was_op = 0;
 	int copy_pos = 0;
+	int copy_len = 0;
 	int skip = 0;
 	int i;
 
@@ -1404,14 +1405,14 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 
 	/* Process each line of command-lines-input.h (from command-lines.in) */
 
-	while (_copy_line(line, MAX_LINE, &copy_pos)) {
+	while (_copy_line(line, MAX_LINE, &copy_pos, &copy_len)) {
 		if (line[0] == '\n')
 			break;
 
 		if ((n = strchr(line, '\n')))
 			*n = '\0';
 
-		memcpy(line_orig, line, sizeof(line));
+		memcpy(line_orig, line, copy_len);
 		_split_line(line, &line_argc, line_argv, ' ');
 
 		if (!line_argc)
