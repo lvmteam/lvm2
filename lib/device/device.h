@@ -56,6 +56,28 @@ struct dev_ext {
 	void *handle;
 };
 
+/*
+ * All I/O is annotated with the reason it is performed.
+ */
+typedef enum dev_io_reason {
+	DEV_IO_SIGNATURES = 0,	/* Scanning device signatures */
+	DEV_IO_LABEL,		/* LVM PV disk label */
+	DEV_IO_MDA_HEADER,	/* Text format metadata area header */
+	DEV_IO_MDA_CONTENT,	/* Text format metadata area content */
+	DEV_IO_MDA_EXTRA_HEADER,	/* Header of any extra metadata areas on device */
+	DEV_IO_MDA_EXTRA_CONTENT,	/* Content of any extra metadata areas on device */
+	DEV_IO_FMT1,		/* Original LVM1 metadata format */
+	DEV_IO_POOL,		/* Pool metadata format */
+	DEV_IO_LV,		/* Content written to an LV */
+	DEV_IO_LOG		/* Logging messages */
+} dev_io_reason_t;
+
+/*
+ * Is this I/O for a device's extra metadata area?
+ */
+#define EXTRA_IO(reason) ((reason) == DEV_IO_MDA_EXTRA_HEADER || (reason) == DEV_IO_MDA_EXTRA_CONTENT)
+#define DEV_DEVBUF(dev, reason) (EXTRA_IO((reason)) ? &(dev)->last_extra_devbuf : &(dev)->last_devbuf)
+
 struct device_area {
 	struct device *dev;
 	uint64_t start;		/* Bytes */
@@ -63,13 +85,11 @@ struct device_area {
 };
 
 struct device_buffer {
-	const void *data;             /* Location of start of requested data (inside buf) */
-
-	/* Private */
-	void *malloc_address;   /* Start of allocated memory */
-	void *buf;              /* Aligned buffer that contains data within it */
-	struct device_area where;       /* Location of buf */
-	unsigned write:1;       /* 1 if write; 0 if read */
+	const void *data;	/* Location of start of requested data (inside buf) */
+	void *malloc_address;	/* Start of allocated memory */
+	void *buf;		/* Aligned buffer that contains data within it */
+	struct device_area where;	/* Location of buf */
+	unsigned write:1;	/* 1 if write; 0 if read */
 };
 
 /*
@@ -103,28 +123,6 @@ struct device {
 	char pvid[ID_LEN + 1]; /* if device is a PV */
 	char _padding[7];
 };
-
-/*
- * All I/O is annotated with the reason it is performed.
- */
-typedef enum dev_io_reason {
-	DEV_IO_SIGNATURES = 0,	/* Scanning device signatures */
-	DEV_IO_LABEL,		/* LVM PV disk label */
-	DEV_IO_MDA_HEADER,	/* Text format metadata area header */
-	DEV_IO_MDA_CONTENT,	/* Text format metadata area content */
-	DEV_IO_MDA_EXTRA_HEADER,	/* Header of any extra metadata areas on device */
-	DEV_IO_MDA_EXTRA_CONTENT,	/* Content of any extra metadata areas on device */
-	DEV_IO_FMT1,		/* Original LVM1 metadata format */
-	DEV_IO_POOL,		/* Pool metadata format */
-	DEV_IO_LV,		/* Content written to an LV */
-	DEV_IO_LOG		/* Logging messages */
-} dev_io_reason_t;
-
-/*
- * Is this I/O for a device's extra metadata area?
- */
-#define EXTRA_IO(reason) ((reason) == DEV_IO_MDA_EXTRA_HEADER || (reason) == DEV_IO_MDA_EXTRA_CONTENT)
-#define DEV_DEVBUF(dev, reason) (EXTRA_IO((reason)) ? &(dev)->last_extra_devbuf : &(dev)->last_devbuf)
 
 struct device_list {
 	struct dm_list list;
