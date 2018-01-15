@@ -180,8 +180,8 @@ prepare_clvmd() {
 	LVM_LOG_FILE_EPOCH=CLVMD LVM_LOG_FILE_MAX_LINES=1000000 LVM_BINARY=$(which lvm) $run_valgrind clvmd -Isinglenode -d 1 -f &
 	echo $! > LOCAL_CLVMD
 
-	for i in {1..100} ; do
-		test "$i" -eq 100 && die "Startup of clvmd is too slow."
+	for i in {200..0} ; do
+		test "$i" -eq 0 && die "Startup of clvmd is too slow."
 		test -e "$CLVMD_PIDFILE" && test -e "${CLVMD_PIDFILE%/*}/lvm/clvmd.sock" && break
 		echo -n .
 		sleep .1
@@ -205,8 +205,8 @@ prepare_dmeventd() {
 	echo $! > LOCAL_DMEVENTD
 
 	# FIXME wait for pipe in /var/run instead
-	for i in {1..100} ; do
-		test "$i" -eq 100 && die "Startup of dmeventd is too slow."
+	for i in {200..0} ; do
+		test "$i" -eq 0 && die "Startup of dmeventd is too slow."
 		test -e "${DMEVENTD_PIDFILE}" && break
 		echo -n .
 		sleep .1
@@ -230,8 +230,8 @@ prepare_lvmetad() {
 	$run_valgrind lvmetad -f "$@" -s "$TESTDIR/lvmetad.socket" \
 		${LVM_TEST_LVMETAD_DEBUG_OPTS--l all} &
 	echo $! > LOCAL_LVMETAD
-	for i in {1..100} ; do
-		test "$i" -eq 100 && die "Startup of lvmetad is too slow."
+	for i in {200..0} ; do
+		test "$i" -eq 0 && die "Startup of lvmetad is too slow."
 		test -e "$TESTDIR/lvmetad.socket" && break
 		echo -n .
 		sleep .1;
@@ -280,8 +280,8 @@ prepare_lvmpolld() {
 	echo -n "## preparing lvmpolld..."
 	$run_valgrind lvmpolld -f "$@" -s "$TESTDIR/lvmpolld.socket" -B "$TESTDIR/lib/lvm" -l all &
 	echo $! > LOCAL_LVMPOLLD
-	for i in {1..100} ; do
-		test "$i" -eq 100 && die "Startup of lvmpolld is too slow."
+	for i in {200..0} ; do
+		test "$i" -eq 0 && die "Startup of lvmpolld is too slow."
 		test -e "$TESTDIR/lvmpolld.socket" && break
 		echo -n .;
 		sleep .1;
