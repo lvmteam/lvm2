@@ -2568,6 +2568,16 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	struct lvinfo info;
 	int r = 0;
 
+	if (!laopts->exclusive &&
+	    (lv_is_origin(lv) ||
+	     lv_is_pvmove(lv) ||
+	     seg_only_exclusive(first_seg(lv))))  {
+		log_error(INTERNAL_ERROR "Trying non-exlusive activation of %s with "
+			  "a volume type %s requiring exclusive activation.",
+			  display_lvname(lv), lvseg_name(first_seg(lv)));
+		return 0;
+	}
+
 	if (!activation())
 		return 1;
 
