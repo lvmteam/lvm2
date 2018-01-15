@@ -358,7 +358,7 @@ static int _aligned_io(struct device_area *where, char *buffer,
 	/* read */
 
 	/* We store what we just read as it often also satisfies the next request */
-	devbuf->data = bounce + (where->start - widened.start);
+	devbuf->data_offset = where->start - widened.start;
 
 	return 1;
 
@@ -791,7 +791,7 @@ static void _dev_inc_error_count(struct device *dev)
 }
 
 /*
- * Data is returned (read-only) at dev->last_[extra_]devbuf->data
+ * Data is returned (read-only) at DEV_DEVBUF_DATA(dev, reason)
  */
 static int _dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason)
 {
@@ -815,7 +815,7 @@ static int _dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_rea
 		buf_end = devbuf->where.start + devbuf->where.size - 1;
 		if (offset >= devbuf->where.start && offset <= buf_end && offset + len - 1 <= buf_end) {
 			/* Reuse this buffer */
-			devbuf->data = (char *) devbuf->buf + (offset - devbuf->where.start);
+			devbuf->data_offset = offset - devbuf->where.start;
 			log_debug_io("Cached read for %" PRIu64 " bytes at %" PRIu64 " on %s (for %s)",
 				     (uint64_t) len, (uint64_t) offset, dev_name(dev), _reason_text(reason));
 			return 1;
@@ -841,7 +841,7 @@ const char *dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_rea
 		return NULL;
 	}
 
-	return DEV_DEVBUF(dev, reason)->data;
+	return DEV_DEVBUF_DATA(dev, reason);
 }
 
 /* Obtains data requested then passes it (read-only) to dev_read_callback_fn() */
@@ -859,7 +859,7 @@ int dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_re
 
 out:
 	if (dev_read_callback_fn)
-		dev_read_callback_fn(!r, callback_context, DEV_DEVBUF(dev, reason)->data);
+		dev_read_callback_fn(!r, callback_context, DEV_DEVBUF_DATA(dev, reason));
 
 	return r;
 }
@@ -872,7 +872,7 @@ int dev_read_buf(struct device *dev, uint64_t offset, size_t len, dev_io_reason_
 		return 0;
 	}
 	
-	memcpy(retbuf, DEV_DEVBUF(dev, reason)->data, len);
+	memcpy(retbuf, DEV_DEVBUF_DATA(dev, reason), len);
 
 	return 1;
 }

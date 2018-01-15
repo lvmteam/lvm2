@@ -77,6 +77,7 @@ typedef enum dev_io_reason {
  */
 #define EXTRA_IO(reason) ((reason) == DEV_IO_MDA_EXTRA_HEADER || (reason) == DEV_IO_MDA_EXTRA_CONTENT)
 #define DEV_DEVBUF(dev, reason) (EXTRA_IO((reason)) ? &(dev)->last_extra_devbuf : &(dev)->last_devbuf)
+#define DEV_DEVBUF_DATA(dev, reason) ((char *) DEV_DEVBUF((dev), (reason))->buf + DEV_DEVBUF((dev), (reason))->data_offset)
 
 struct device_area {
 	struct device *dev;
@@ -85,7 +86,7 @@ struct device_area {
 };
 
 struct device_buffer {
-	const void *data;	/* Location of start of requested data (inside buf) */
+	uint64_t data_offset;	/* Offset to start of requested data within buf */
 	void *malloc_address;	/* Start of allocated memory */
 	void *buf;		/* Aligned buffer that contains data within it */
 	struct device_area where;	/* Location of buf */
