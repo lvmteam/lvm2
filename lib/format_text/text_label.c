@@ -349,12 +349,17 @@ static void _process_vgsummary(int failed, void *context, const void *data)
 	if (!lvmcache_update_vgname_and_id(pmp->umb->info, vgsummary)) {
 		pmp->umb->ret = 0;
 		pmp->ret = 0;
-		goto_out;
 	}
 
 out:
+	if (!pmp->umb->nr_outstanding_mdas && pmp->umb->ret)
+		lvmcache_make_valid(pmp->umb->info);
+
 	if (!dev_close(pmp->dev))
 		stack;
+
+	if (!pmp->umb->nr_outstanding_mdas && pmp->umb->read_label_callback_fn)
+		pmp->umb->read_label_callback_fn(!pmp->umb->ret, pmp->umb->read_label_callback_context, pmp->umb->label);
 }
 
 static void _process_mda_header(int failed, void *context, const void *data)
@@ -367,7 +372,7 @@ static void _process_mda_header(int failed, void *context, const void *data)
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 
 	if (failed)
-		return;
+		goto_bad;
 
 	mda_set_ignored(mda, rlocn_is_ignored(mdah->raw_locns));
 
@@ -390,6 +395,15 @@ bad:
 	return;
 }
 
+static int _count_mda(struct metadata_area *mda, void *baton)
+{
+	struct update_mda_baton *umb = baton;
+
+	umb->nr_outstanding_mdas++;
+
+	return 1;
+}
+
 static int _update_mda(struct metadata_area *mda, void *baton)
 {
 	struct process_mda_header_params *pmp;
@@ -410,24 +424,23 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 	 * TODO: make lvmcache smarter and move this cache logic there
 	 */
 
+	pmp->dev = mdac->area.dev;
+	pmp->umb = umb;
+	pmp->mda = mda;
+
 	if (!dev_open_readonly(mdac->area.dev)) {
 		mda_set_ignored(mda, 1);
 		stack;
+		if (!--umb->nr_outstanding_mdas && umb->read_label_callback_fn)
+			umb->read_label_callback_fn(!umb->ret, umb->read_label_callback_context, umb->label);
 		return 1;
 	}
 
-	umb->nr_outstanding_mdas++;
-	pmp->dev = mdac->area.dev;
-
-	pmp->umb = umb;
-	pmp->mda = mda;
 	pmp->ret = 1;
 
 	if (!raw_read_mda_header_callback(fmt->cmd->mem, &mdac->area, mda_is_primary(mda), _process_mda_header, pmp)) {
+		_process_vgsummary(1, pmp, NULL);
 		stack;
-		--pmp->umb->nr_outstanding_mdas;
-		if (!dev_close(pmp->dev))
-			stack;
 		return 1;
 	}
 
@@ -446,7 +459,7 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 	uint32_t ext_version;
 	struct dm_pool *mem = l->fmt->cmd->mem;
 	struct update_mda_baton *umb;
-	struct label *label = NULL;
+	struct label *label;
 
 	/*
 	 * PV header base
@@ -515,19 +528,21 @@ out:
 	umb->label = label;
 	umb->read_label_callback_fn = read_label_callback_fn;
 	umb->read_label_callback_context = read_label_callback_context;
-	umb->nr_outstanding_mdas = 1;
 
 	umb->ret = 1;
 
+	if (!lvmcache_foreach_mda(info, _count_mda, umb))
+		goto_bad;
+
+	if (!umb->nr_outstanding_mdas) {
+		lvmcache_make_valid(info);
+		if (read_label_callback_fn)
+			read_label_callback_fn(0, read_label_callback_context, label);
+		return 1;
+	}
+
 	if (!lvmcache_foreach_mda(info, _update_mda, umb))
-		return_0;
-
-	if (!--umb->nr_outstanding_mdas)
-		if (umb->ret)
-			lvmcache_make_valid(info);
-
-	if (umb->read_label_callback_fn)
-		umb->read_label_callback_fn(!umb->ret, umb->read_label_callback_context, label);
+		goto_bad;
 
 	return 1;
 
