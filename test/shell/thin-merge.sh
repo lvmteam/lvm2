@@ -30,6 +30,15 @@ aux have_thin 1 0 0 || skip
 aux prepare_vg 2
 
 lvcreate -T -L8M $vg/pool -V10M -n $lv1
+lvcreate -s -K -n snap $vg/$lv1
+# check exclusive lock is preserved after merge
+check lv_field "$vg/$lv1" lv_active_exclusively "active exclusively"
+lvconvert --merge $vg/snap
+check lv_field "$vg/$lv1" lv_active_exclusively "active exclusively"
+lvremove -ff $vg
+
+
+lvcreate -T -L8M $vg/pool -V10M -n $lv1
 lvchange --addtag tagL $vg/$lv1
 
 mkdir mnt

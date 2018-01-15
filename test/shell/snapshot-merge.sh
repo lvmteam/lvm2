@@ -54,7 +54,11 @@ setup_merge_ $vg $lv1
 
 # make sure lvconvert --merge requires explicit LV listing
 not lvconvert --merge
+
+# check exclusive lock is preserved after merge
+check lv_field "$vg/$lv1" lv_active_exclusively "active exclusively"
 lvconvert --merge "$vg/$(snap_lv_name_ "$lv1")"
+check lv_field "$vg/$lv1" lv_active_exclusively "active exclusively"
 lvremove -f $vg/$lv1
 
 setup_merge_ $vg $lv1
