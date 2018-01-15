@@ -261,10 +261,9 @@ static void _widen_region(unsigned int block_size, struct device_area *region,
 		result->size += block_size - delta;
 }
 
-static int _aligned_io(struct device_area *where, char *buffer,
+static int _aligned_io(struct device_area *where, char *write_buffer,
 		       int should_write, dev_io_reason_t reason)
 {
-	char *bounce, *bounce_buf = NULL;
 	unsigned int physical_block_size = 0;
 	unsigned int block_size = 0;
 	unsigned buffer_was_widened = 0;
@@ -295,18 +294,30 @@ static int _aligned_io(struct device_area *where, char *buffer,
 			     where->size, (uint64_t) where->start, widened.size, (uint64_t) widened.start, dev_name(where->dev), _reason_text(reason));
 	} 
 
-	if (should_write && !buffer_was_widened && !((uintptr_t) buffer & mask))
+	devbuf = DEV_DEVBUF(where->dev, reason);
+ 	_release_devbuf(devbuf);
+	devbuf->where.dev = where->dev;
+	devbuf->where.start = widened.start;
+	devbuf->where.size = widened.size;
+	devbuf->write = should_write;
+	devbuf->reason = reason;
+
+	/* Store location of requested data relative to start of buf */
+	devbuf->data_offset = where->start - devbuf->where.start;
+
+	if (should_write && !buffer_was_widened && !((uintptr_t) write_buffer & mask)) {
 		/* Perform the I/O directly. */
-		bounce = buffer;
+		devbuf->buf = write_buffer;
+		devbuf->malloc_address = NULL;
 #ifndef DEBUG_MEM
-	else if (!(bounce_buf = bounce = dm_malloc_aligned((size_t) widened.size, 0))) {
+	} else if (!(devbuf->malloc_address = devbuf->buf = dm_malloc_aligned((size_t) devbuf->where.size, 0))) {
 		log_error("Bounce buffer malloc failed");
 		return 0;
 	}
 #else
-	else {
+	} else {
 		/* Allocate a bounce buffer with an extra block */
-		if (!(bounce_buf = bounce = dm_malloc((size_t) widened.size + block_size))) {
+		if (!(devbuf->malloc_address = devbuf->buf = dm_malloc((size_t) devbuf->where.size + block_size))) {
 			log_error("Bounce buffer malloc failed");
 			return 0;
 		}
@@ -314,53 +325,39 @@ static int _aligned_io(struct device_area *where, char *buffer,
 		/*
 		 * Realign start of bounce buffer (using the extra sector)
 		 */
-		if (((uintptr_t) bounce) & mask)
-			bounce = (char *) ((((uintptr_t) bounce) + mask) & ~mask);
+		if (((uintptr_t) devbuf->buf) & mask)
+			devbuf->buf = (char *) ((((uintptr_t) devbuf->buf) + mask) & ~mask);
 	}
 #endif
 
-	devbuf = DEV_DEVBUF(where->dev, reason);
- 	_release_devbuf(devbuf);
-	devbuf->malloc_address = bounce_buf;
-	devbuf->buf = bounce;
-	devbuf->where.dev = where->dev;
-	devbuf->where.start = widened.start;
-	devbuf->where.size = widened.size;
 	devbuf->write = 0;
-	devbuf->reason = reason;
 
 	/* Do we need to read into the bounce buffer? */
-	if ((!should_write || buffer_was_widened) &&
-	    !_io(devbuf)) {
+	if ((!should_write || buffer_was_widened) && !_io(devbuf)) {
 		if (!should_write)
 			goto_bad;
 		/* FIXME Handle errors properly! */
 		/* FIXME pre-extend the file */
-		memset(bounce, '\n', widened.size);
+		memset(devbuf->buf, '\n', devbuf->where.size);
 	}
 
-	if (should_write) {
-		if (bounce_buf) {
-			memcpy(bounce + (where->start - widened.start), buffer,
-			       (size_t) where->size);
-			log_debug_io("Overwriting %" PRIu64 " bytes at %" PRIu64 " (for %s)", where->size,
-				     (uint64_t) where->start, _reason_text(reason));
-		}
-
-		/* ... then we write */
-		devbuf->write = 1;
-		if (!(r = _io(devbuf)))
-			goto_bad;
-			
-		_release_devbuf(devbuf);
+	if (!should_write)
 		return 1;
+
+	/* writes */
+
+	if (devbuf->malloc_address) {
+		memcpy((char *) devbuf->buf + devbuf->data_offset, write_buffer, (size_t) where->size);
+		log_debug_io("Overwriting %" PRIu64 " bytes at %" PRIu64 " (for %s)", where->size,
+			     (uint64_t) where->start, _reason_text(devbuf->reason));
 	}
 
-	/* read */
+	/* ... then we write */
+	devbuf->write = 1;
+	if (!(r = _io(devbuf)))
+		goto_bad;
 
-	/* We store what we just read as it often also satisfies the next request */
-	devbuf->data_offset = where->start - widened.start;
-
+	_release_devbuf(devbuf);
 	return 1;
 
 bad:
