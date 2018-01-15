@@ -90,6 +90,7 @@ struct device_buffer {
 	void *malloc_address;	/* Start of allocated memory */
 	void *buf;		/* Aligned buffer that contains data within it */
 	struct device_area where;	/* Location of buf */
+	dev_io_reason_t reason;
 	unsigned write:1;	/* 1 if write; 0 if read */
 };
 

@@ -142,7 +142,7 @@ static int _io_sync(struct device_buffer *devbuf)
 	return (total == (size_t) where->size);
 }
 
-static int _io(struct device_buffer *devbuf, dev_io_reason_t reason)
+static int _io(struct device_buffer *devbuf)
 {
 	struct device_area *where = &devbuf->where;
 	int fd = dev_fd(where->dev);
@@ -156,7 +156,7 @@ static int _io(struct device_buffer *devbuf, dev_io_reason_t reason)
 	log_debug_io("%s %s(fd %d):%8" PRIu64 " bytes (sync) at %" PRIu64 "%s (for %s)",
 		     devbuf->write ? "Write" : "Read ", dev_name(where->dev), fd,
 		     where->size, (uint64_t) where->start,
-		     (devbuf->write && test_mode()) ? " (test mode - suppressed)" : "", _reason_text(reason));
+		     (devbuf->write && test_mode()) ? " (test mode - suppressed)" : "", _reason_text(devbuf->reason));
 
 	/*
 	 * Skip all writes in test mode.
@@ -327,10 +327,11 @@ static int _aligned_io(struct device_area *where, char *buffer,
 	devbuf->where.start = widened.start;
 	devbuf->where.size = widened.size;
 	devbuf->write = 0;
+	devbuf->reason = reason;
 
 	/* Do we need to read into the bounce buffer? */
 	if ((!should_write || buffer_was_widened) &&
-	    !_io(devbuf, reason)) {
+	    !_io(devbuf)) {
 		if (!should_write)
 			goto_bad;
 		/* FIXME Handle errors properly! */
@@ -348,7 +349,7 @@ static int _aligned_io(struct device_area *where, char *buffer,
 
 		/* ... then we write */
 		devbuf->write = 1;
-		if (!(r = _io(devbuf, reason)))
+		if (!(r = _io(devbuf)))
 			goto_bad;
 			
 		_release_devbuf(devbuf);
