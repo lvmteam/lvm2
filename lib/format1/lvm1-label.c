@@ -64,7 +64,7 @@ static int _lvm1_read(struct labeller *l, struct device *dev, void *buf,
 	const char *vgid = FMT_LVM1_ORPHAN_VG_NAME;
 	const char *vgname = FMT_LVM1_ORPHAN_VG_NAME;
 	unsigned exported = 0;
-	int r;
+	int r = 0;
 
 	munge_pvd(dev, pvd);
 
