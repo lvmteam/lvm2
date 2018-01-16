@@ -153,6 +153,13 @@ static int _io(struct device_buffer *devbuf)
 		return 0;
 	}
 
+#ifndef DEBUG_MEM
+	if (!devbuf->buf && !(devbuf->malloc_address = devbuf->buf = dm_malloc_aligned((size_t) devbuf->where.size, 0))) {
+		log_error("Bounce buffer malloc failed");
+		return 0;
+	}
+#endif
+
 	log_debug_io("%s %s(fd %d):%8" PRIu64 " bytes (sync) at %" PRIu64 "%s (for %s)",
 		     devbuf->write ? "Write" : "Read ", dev_name(where->dev), fd,
 		     where->size, (uint64_t) where->start,
@@ -305,17 +312,15 @@ static int _aligned_io(struct device_area *where, char *write_buffer,
 	/* Store location of requested data relative to start of buf */
 	devbuf->data_offset = where->start - devbuf->where.start;
 
-	if (should_write && !buffer_was_widened && !((uintptr_t) write_buffer & mask)) {
+	if (should_write && !buffer_was_widened && !((uintptr_t) write_buffer & mask))
 		/* Perform the I/O directly. */
 		devbuf->buf = write_buffer;
-		devbuf->malloc_address = NULL;
+	else
 #ifndef DEBUG_MEM
-	} else if (!(devbuf->malloc_address = devbuf->buf = dm_malloc_aligned((size_t) devbuf->where.size, 0))) {
-		log_error("Bounce buffer malloc failed");
-		return 0;
-	}
+		/* Postpone buffer allocation until we're about to issue the I/O */
+		devbuf->buf = NULL;
 #else
-	} else {
+	else {
 		/* Allocate a bounce buffer with an extra block */
 		if (!(devbuf->malloc_address = devbuf->buf = dm_malloc((size_t) devbuf->where.size + block_size))) {
 			log_error("Bounce buffer malloc failed");
