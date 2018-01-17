@@ -2568,6 +2568,12 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	struct lvinfo info;
 	int r = 0;
 
+	if (!activation())
+		return 1;
+
+	if (!lv && !(lv_to_free = lv = lv_from_lvid(cmd, lvid_s, 0)))
+		goto out;
+
 	if (!laopts->exclusive &&
 	    (lv_is_origin(lv) ||
 	     lv_is_pvmove(lv) ||
@@ -2577,12 +2583,6 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 			  display_lvname(lv), lvseg_name(first_seg(lv)));
 		return 0;
 	}
-
-	if (!activation())
-		return 1;
-
-	if (!lv && !(lv_to_free = lv = lv_from_lvid(cmd, lvid_s, 0)))
-		goto out;
 
 	if (filter && !_passes_activation_filter(cmd, lv)) {
 		log_verbose("Not activating %s since it does not pass "
