@@ -131,7 +131,7 @@ struct find_labeller_params {
 	int ret;
 };
 
-static void _set_label_read_result(int failed, void *context, const void *data)
+static void _set_label_read_result(int failed, unsigned ioflags, void *context, const void *data)
 {
 	struct find_labeller_params *flp = context;
 	struct label **result = flp->result;
@@ -155,11 +155,11 @@ out:
 	if (!dev_close(flp->dev))
 		stack;
 
-	if (flp->ret && flp->process_label_data_fn)
-		flp->process_label_data_fn(0, flp->process_label_data_context, NULL);
+	if (flp->process_label_data_fn)
+		flp->process_label_data_fn(0, ioflags, flp->process_label_data_context, NULL);
 }
 
-static void _find_labeller(int failed, void *context, const void *data)
+static void _find_labeller(int failed, unsigned ioflags, void *context, const void *data)
 {
 	struct find_labeller_params *flp = context;
 	const char *readbuf = data;
@@ -174,7 +174,7 @@ static void _find_labeller(int failed, void *context, const void *data)
 
 	if (failed) {
 		log_debug_devs("%s: Failed to read label area", dev_name(dev));
-		_set_label_read_result(1, flp, NULL);
+		_set_label_read_result(1, ioflags, flp, NULL);
 		return;
 	}
 
@@ -235,9 +235,9 @@ static void _find_labeller(int failed, void *context, const void *data)
 			_update_lvmcache_orphan(info);
 		log_very_verbose("%s: No label detected", dev_name(dev));
 		flp->ret = 0;
-		_set_label_read_result(1, flp, NULL);
+		_set_label_read_result(1, ioflags, flp, NULL);
 	} else
-		(void) (l->ops->read)(l, dev, labelbuf, &_set_label_read_result, flp);
+		(void) (l->ops->read)(l, dev, labelbuf, ioflags, &_set_label_read_result, flp);
 }
 
 /* FIXME Also wipe associated metadata area headers? */
@@ -315,7 +315,7 @@ int label_remove(struct device *dev)
 }
 
 static int _label_read(struct device *dev, uint64_t scan_sector, struct label **result,
-		       lvm_callback_fn_t process_label_data_fn, void *process_label_data_context)
+		       unsigned ioflags, lvm_callback_fn_t process_label_data_fn, void *process_label_data_context)
 {
 	struct lvmcache_info *info;
 	struct find_labeller_params *flp;
@@ -325,7 +325,7 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 		if (result)
 			*result = lvmcache_get_label(info);
 		if (process_label_data_fn)
-			process_label_data_fn(0, process_label_data_context, NULL);
+			process_label_data_fn(0, ioflags, process_label_data_context, NULL);
 		return 1;
 	}
 
@@ -356,9 +356,9 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 		return 0;
 	}
 
-	if (!(dev_read_callback(dev, scan_sector << SECTOR_SHIFT, LABEL_SCAN_SIZE, DEV_IO_LABEL, _find_labeller, flp))) {
+	if (!(dev_read_callback(dev, scan_sector << SECTOR_SHIFT, LABEL_SCAN_SIZE, DEV_IO_LABEL, ioflags, _find_labeller, flp))) {
 		log_debug_devs("%s: Failed to read label area", dev_name(dev));
-		_set_label_read_result(1, flp, NULL);
+		_set_label_read_result(1, ioflags, flp, NULL);
 		return 0;
 	}
 
@@ -368,13 +368,13 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 /* result may be NULL if caller doesn't need it */
 int label_read(struct device *dev, struct label **result, uint64_t scan_sector)
 {
-	return _label_read(dev, scan_sector, result, NULL, NULL);
+	return _label_read(dev, scan_sector, result, 0, NULL, NULL);
 }
 
-int label_read_callback(struct device *dev, uint64_t scan_sector,
+int label_read_callback(struct device *dev, uint64_t scan_sector, unsigned ioflags,
 		       lvm_callback_fn_t process_label_data_fn, void *process_label_data_context)
 {
-	return _label_read(dev, scan_sector, NULL, process_label_data_fn, process_label_data_context);
+	return _label_read(dev, scan_sector, NULL, ioflags, process_label_data_fn, process_label_data_context);
 }
 
 /* Caller may need to use label_get_handler to create label struct! */

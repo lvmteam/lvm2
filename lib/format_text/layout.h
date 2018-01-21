@@ -83,7 +83,7 @@ struct mda_header {
 
 struct mda_header *raw_read_mda_header(struct dm_pool *mem, struct device_area *dev_area, int primary_mda);
 int raw_read_mda_header_callback(struct dm_pool *mem, struct device_area *dev_area, int primary_mda,
-				 lvm_callback_fn_t mdah_callback_fn, void *mdah_callback_context);
+				 unsigned ioflags, lvm_callback_fn_t mdah_callback_fn, void *mdah_callback_context);
 
 struct mda_lists {
 	struct dm_list dirs;
@@ -109,7 +109,7 @@ struct mda_context {
 
 int vgname_from_mda(const struct format_type *fmt, const struct mda_header *mdah, int primary_mda, 
 		    struct device_area *dev_area, struct lvmcache_vgsummary *vgsummary,
-		    uint64_t *mda_free_sectors,
+		    uint64_t *mda_free_sectors, unsigned ioflags,
 		    lvm_callback_fn_t update_vgsummary_callback_fn, void *update_vgsummary_callback_context);
 
 #endif

@@ -142,7 +142,7 @@ static int _io_sync(struct device_buffer *devbuf)
 	return (total == (size_t) where->size);
 }
 
-static int _io(struct device_buffer *devbuf)
+static int _io(struct device_buffer *devbuf, unsigned ioflags)
 {
 	struct device_area *where = &devbuf->where;
 	int fd = dev_fd(where->dev);
@@ -269,7 +269,8 @@ static void _widen_region(unsigned int block_size, struct device_area *region,
 }
 
 static int _aligned_io(struct device_area *where, char *write_buffer,
-		       int should_write, dev_io_reason_t reason)
+		       int should_write, dev_io_reason_t reason,
+		       unsigned ioflags)
 {
 	unsigned int physical_block_size = 0;
 	unsigned int block_size = 0;
@@ -338,7 +339,7 @@ static int _aligned_io(struct device_area *where, char *write_buffer,
 	devbuf->write = 0;
 
 	/* Do we need to read into the bounce buffer? */
-	if ((!should_write || buffer_was_widened) && !_io(devbuf)) {
+	if ((!should_write || buffer_was_widened) && !_io(devbuf, ioflags)) {
 		if (!should_write)
 			goto_bad;
 		/* FIXME Handle errors properly! */
@@ -359,7 +360,7 @@ static int _aligned_io(struct device_area *where, char *write_buffer,
 
 	/* ... then we write */
 	devbuf->write = 1;
-	if (!(r = _io(devbuf)))
+	if (!(r = _io(devbuf, 0)))
 		goto_bad;
 
 	_release_devbuf(devbuf);
@@ -797,7 +798,7 @@ static void _dev_inc_error_count(struct device *dev)
  * Data is returned (read-only) at DEV_DEVBUF_DATA(dev, reason)
  */
 int dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason,
-		      lvm_callback_fn_t dev_read_callback_fn, void *callback_context)
+		      unsigned ioflags, lvm_callback_fn_t dev_read_callback_fn, void *callback_context)
 {
 	struct device_area where;
 	struct device_buffer *devbuf;
@@ -836,7 +837,7 @@ int dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_re
 	where.start = offset;
 	where.size = len;
 
-	ret = _aligned_io(&where, NULL, 0, reason);
+	ret = _aligned_io(&where, NULL, 0, reason, ioflags);
 	if (!ret) {
 		log_error("Read from %s failed.", dev_name(dev));
 		_dev_inc_error_count(dev);
@@ -844,7 +845,7 @@ int dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_re
 
 out:
 	if (dev_read_callback_fn)
-		dev_read_callback_fn(!ret, callback_context, DEV_DEVBUF_DATA(dev, reason));
+		dev_read_callback_fn(!ret, ioflags, callback_context, DEV_DEVBUF_DATA(dev, reason));
 
 	return ret;
 }
@@ -852,7 +853,7 @@ out:
 /* Returns pointer to read-only buffer. Caller does not free it.  */
 const char *dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason)
 {
-	if (!dev_read_callback(dev, offset, len, reason, NULL, NULL))
+	if (!dev_read_callback(dev, offset, len, reason, 0, NULL, NULL))
 		return_NULL;
 
 	return DEV_DEVBUF_DATA(dev, reason);
@@ -861,7 +862,7 @@ const char *dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_rea
 /* Read into supplied retbuf owned by the caller. */
 int dev_read_buf(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *retbuf)
 {
-	if (!dev_read_callback(dev, offset, len, reason, NULL, NULL))
+	if (!dev_read_callback(dev, offset, len, reason, 0, NULL, NULL))
 		return_0;
 	
 	memcpy(retbuf, DEV_DEVBUF_DATA(dev, reason), len);
@@ -941,7 +942,7 @@ int dev_write(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t r
 
 	dev->flags |= DEV_ACCESSED_W;
 
-	ret = _aligned_io(&where, buffer, 1, reason);
+	ret = _aligned_io(&where, buffer, 1, reason, 0);
 	if (!ret)
 		_dev_inc_error_count(dev);
 

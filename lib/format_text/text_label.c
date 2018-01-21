@@ -323,6 +323,7 @@ struct update_mda_baton {
 	struct lvmcache_info *info;
 	struct label *label;
 	int nr_outstanding_mdas;
+	unsigned ioflags;
 	lvm_callback_fn_t read_label_callback_fn;
 	void *read_label_callback_context;
 	int ret;
@@ -336,7 +337,7 @@ struct process_mda_header_params {
 	int ret;
 };
 
-static void _process_vgsummary(int failed, void *context, const void *data)
+static void _process_vgsummary(int failed, unsigned ioflags, void *context, const void *data)
 {
 	struct process_mda_header_params *pmp = context;
 	const struct lvmcache_vgsummary *vgsummary = data;
@@ -359,10 +360,10 @@ out:
 		stack;
 
 	if (!pmp->umb->nr_outstanding_mdas && pmp->umb->read_label_callback_fn)
-		pmp->umb->read_label_callback_fn(!pmp->umb->ret, pmp->umb->read_label_callback_context, pmp->umb->label);
+		pmp->umb->read_label_callback_fn(!pmp->umb->ret, ioflags, pmp->umb->read_label_callback_context, pmp->umb->label);
 }
 
-static void _process_mda_header(int failed, void *context, const void *data)
+static void _process_mda_header(int failed, unsigned ioflags, void *context, const void *data)
 {
 	struct process_mda_header_params *pmp = context;
 	const struct mda_header *mdah = data;
@@ -383,7 +384,7 @@ static void _process_mda_header(int failed, void *context, const void *data)
 		goto bad;
 	}
 
-	if (!vgname_from_mda(fmt, mdah, mda_is_primary(mda), &mdac->area, &pmp->vgsummary, &mdac->free_sectors, _process_vgsummary, pmp)) {
+	if (!vgname_from_mda(fmt, mdah, mda_is_primary(mda), &mdac->area, &pmp->vgsummary, &mdac->free_sectors, ioflags, _process_vgsummary, pmp)) {
 		/* FIXME Separate fatal and non-fatal error cases? */
 		goto_bad;
 	}
@@ -391,7 +392,7 @@ static void _process_mda_header(int failed, void *context, const void *data)
 	return;
 
 bad:
-	_process_vgsummary(1, pmp, NULL);
+	_process_vgsummary(1, ioflags, pmp, NULL);
 	return;
 }
 
@@ -411,6 +412,7 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 	const struct format_type *fmt = umb->label->labeller->fmt;
 	struct dm_pool *mem = umb->label->labeller->fmt->cmd->mem;
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
+	unsigned ioflags = umb->ioflags;
 
 	if (!(pmp = dm_pool_zalloc(mem, sizeof(*pmp)))) {
 		log_error("struct process_mda_header_params allocation failed");
@@ -432,14 +434,14 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 		mda_set_ignored(mda, 1);
 		stack;
 		if (!--umb->nr_outstanding_mdas && umb->read_label_callback_fn)
-			umb->read_label_callback_fn(!umb->ret, umb->read_label_callback_context, umb->label);
+			umb->read_label_callback_fn(!umb->ret, ioflags, umb->read_label_callback_context, umb->label);
 		return 1;
 	}
 
 	pmp->ret = 1;
 
-	if (!raw_read_mda_header_callback(fmt->cmd->mem, &mdac->area, mda_is_primary(mda), _process_mda_header, pmp)) {
-		_process_vgsummary(1, pmp, NULL);
+	if (!raw_read_mda_header_callback(fmt->cmd->mem, &mdac->area, mda_is_primary(mda), ioflags, _process_mda_header, pmp)) {
+		_process_vgsummary(1, ioflags, pmp, NULL);
 		stack;
 		return 1;
 	}
@@ -447,7 +449,7 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 	return pmp->ret;
 }
 
-static int _text_read(struct labeller *l, struct device *dev, void *buf, 
+static int _text_read(struct labeller *l, struct device *dev, void *buf, unsigned ioflags,
 		      lvm_callback_fn_t read_label_callback_fn, void *read_label_callback_context)
 {
 	struct label_header *lh = (struct label_header *) buf;
@@ -526,6 +528,7 @@ out:
 
 	umb->info = info;
 	umb->label = label;
+	umb->ioflags = ioflags;
 	umb->read_label_callback_fn = read_label_callback_fn;
 	umb->read_label_callback_context = read_label_callback_context;
 
@@ -537,7 +540,7 @@ out:
 	if (!umb->nr_outstanding_mdas) {
 		lvmcache_make_valid(info);
 		if (read_label_callback_fn)
-			read_label_callback_fn(0, read_label_callback_context, label);
+			read_label_callback_fn(0, ioflags, read_label_callback_context, label);
 		return 1;
 	}
 
@@ -548,7 +551,7 @@ out:
 
 bad:
 	if (read_label_callback_fn)
-		read_label_callback_fn(1, read_label_callback_context, label);
+		read_label_callback_fn(1, ioflags, read_label_callback_context, label);
 
 	return 0;
 }

@@ -334,7 +334,7 @@ struct process_raw_mda_header_params {
 	int ret;
 };
 
-static void _process_raw_mda_header(int failed, void *context, const void *data)
+static void _process_raw_mda_header(int failed, unsigned ioflags, void *context, const void *data)
 {
 	struct process_raw_mda_header_params *prmp = context;
 	struct mda_header *mdah = prmp->mdah;
@@ -386,11 +386,11 @@ bad:
 	prmp->ret = 0;
 out:
 	if (prmp->ret && prmp->mdah_callback_fn)
-		prmp->mdah_callback_fn(0, prmp->mdah_callback_context, mdah);
+		prmp->mdah_callback_fn(0, ioflags, prmp->mdah_callback_context, mdah);
 }
 
 static struct mda_header *_raw_read_mda_header(struct dm_pool *mem, struct device_area *dev_area, int primary_mda,
-					       lvm_callback_fn_t mdah_callback_fn, void *mdah_callback_context)
+					       unsigned ioflags, lvm_callback_fn_t mdah_callback_fn, void *mdah_callback_context)
 {
 	struct mda_header *mdah;
 	struct process_raw_mda_header_params *prmp;
@@ -418,7 +418,7 @@ static struct mda_header *_raw_read_mda_header(struct dm_pool *mem, struct devic
 	prmp->ret = 1;
 
 	if (!dev_read_callback(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, MDA_HEADER_REASON(primary_mda),
-			       _process_raw_mda_header, prmp))
+			       ioflags, _process_raw_mda_header, prmp))
 		stack;
 
 	if (!prmp->ret)
@@ -429,13 +429,13 @@ static struct mda_header *_raw_read_mda_header(struct dm_pool *mem, struct devic
 
 struct mda_header *raw_read_mda_header(struct dm_pool *mem, struct device_area *dev_area, int primary_mda)
 {
-	return _raw_read_mda_header(mem, dev_area, primary_mda, NULL, NULL);
+	return _raw_read_mda_header(mem, dev_area, primary_mda, 0, NULL, NULL);
 }
 
 int raw_read_mda_header_callback(struct dm_pool *mem, struct device_area *dev_area, int primary_mda,
-				 lvm_callback_fn_t mdah_callback_fn, void *mdah_callback_context)
+				 unsigned ioflags, lvm_callback_fn_t mdah_callback_fn, void *mdah_callback_context)
 {
-	if (!_raw_read_mda_header(mem, dev_area, primary_mda, mdah_callback_fn, mdah_callback_context))
+	if (!_raw_read_mda_header(mem, dev_area, primary_mda, ioflags, mdah_callback_fn, mdah_callback_context))
 		return_0;
 
 	return 1;
@@ -599,7 +599,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 					      struct device_area *area,
 					      struct cached_vg_fmtdata **vg_fmtdata,
 					      unsigned *use_previous_vg,
-					      int precommitted,
+					      int precommitted, unsigned ioflags,
 					      int single_device, int primary_mda)
 {
 	struct volume_group *vg = NULL;
@@ -632,7 +632,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 				     (off_t) (area->start + rlocn->offset),
 				     (uint32_t) (rlocn->size - wrap),
 				     (off_t) (area->start + MDA_HEADER_SIZE),
-				     wrap, calc_crc, rlocn->checksum, &when,
+				     wrap, calc_crc, rlocn->checksum, ioflags, &when,
 				     &desc)) && (!use_previous_vg || !*use_previous_vg))
 		goto_out;
 
@@ -659,7 +659,7 @@ static struct volume_group *_vg_read_raw(struct format_instance *fid,
 					 struct metadata_area *mda,
 					 struct cached_vg_fmtdata **vg_fmtdata,
 					 unsigned *use_previous_vg,
-					 int single_device)
+					 int single_device, unsigned ioflags)
 {
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct volume_group *vg;
@@ -667,7 +667,7 @@ static struct volume_group *_vg_read_raw(struct format_instance *fid,
 	if (!dev_open_readonly(mdac->area.dev))
 		return_NULL;
 
-	vg = _vg_read_raw_area(fid, vgname, &mdac->area, vg_fmtdata, use_previous_vg, 0, single_device, mda_is_primary(mda));
+	vg = _vg_read_raw_area(fid, vgname, &mdac->area, vg_fmtdata, use_previous_vg, 0, ioflags, single_device, mda_is_primary(mda));
 
 	if (!dev_close(mdac->area.dev))
 		stack;
@@ -679,7 +679,7 @@ static struct volume_group *_vg_read_precommit_raw(struct format_instance *fid,
 						   const char *vgname,
 						   struct metadata_area *mda,
 						   struct cached_vg_fmtdata **vg_fmtdata,
-						   unsigned *use_previous_vg)
+						   unsigned *use_previous_vg, unsigned ioflags)
 {
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct volume_group *vg;
@@ -687,7 +687,7 @@ static struct volume_group *_vg_read_precommit_raw(struct format_instance *fid,
 	if (!dev_open_readonly(mdac->area.dev))
 		return_NULL;
 
-	vg = _vg_read_raw_area(fid, vgname, &mdac->area, vg_fmtdata, use_previous_vg, 1, 0, mda_is_primary(mda));
+	vg = _vg_read_raw_area(fid, vgname, &mdac->area, vg_fmtdata, use_previous_vg, 1, ioflags, 0, mda_is_primary(mda));
 
 	if (!dev_close(mdac->area.dev))
 		stack;
@@ -1101,7 +1101,8 @@ static struct volume_group *_vg_read_file(struct format_instance *fid,
 					  struct metadata_area *mda,
 					  struct cached_vg_fmtdata **vg_fmtdata,
 					  unsigned *use_previous_vg __attribute__((unused)),
-					  int single_device __attribute__((unused)))
+					  int single_device __attribute__((unused)),
+					  unsigned ioflags __attribute__((unused)))
 {
 	struct text_context *tc = (struct text_context *) mda->metadata_locn;
 
@@ -1112,7 +1113,8 @@ static struct volume_group *_vg_read_precommit_file(struct format_instance *fid,
 						    const char *vgname,
 						    struct metadata_area *mda,
 						    struct cached_vg_fmtdata **vg_fmtdata,
-						    unsigned *use_previous_vg __attribute__((unused)))
+						    unsigned *use_previous_vg __attribute__((unused)),
+						    unsigned ioflags __attribute__((unused)))
 {
 	struct text_context *tc = (struct text_context *) mda->metadata_locn;
 	struct volume_group *vg;
@@ -1360,7 +1362,7 @@ struct vgname_from_mda_params{
 	int ret;
 };
 
-static void _vgname_from_mda_process(int failed, void *context, const void *data)
+static void _vgname_from_mda_process(int failed, unsigned ioflags, void *context, const void *data)
 {
 	struct vgname_from_mda_params *vfmp = context;
 	const struct mda_header *mdah = vfmp->mdah;
@@ -1403,10 +1405,10 @@ static void _vgname_from_mda_process(int failed, void *context, const void *data
 
 out:
 	if (vfmp->ret)
-		vfmp->update_vgsummary_fn(0, vfmp->update_vgsummary_context, vfmp->vgsummary);
+		vfmp->update_vgsummary_fn(0, ioflags, vfmp->update_vgsummary_context, vfmp->vgsummary);
 }
 
-static void _vgname_from_mda_validate(int failed, void *context, const void *data)
+static void _vgname_from_mda_validate(int failed, unsigned ioflags, void *context, const void *data)
 {
 	struct vgname_from_mda_params *vfmp = context;
 	const char *buffer = data;
@@ -1460,7 +1462,7 @@ static void _vgname_from_mda_validate(int failed, void *context, const void *dat
 				(off_t) (dev_area->start + rlocn->offset),
 				(uint32_t) (rlocn->size - vfmp->wrap),
 				(off_t) (dev_area->start + MDA_HEADER_SIZE),
-				vfmp->wrap, calc_crc, vgsummary->vgname ? 1 : 0,
+				vfmp->wrap, calc_crc, vgsummary->vgname ? 1 : 0, ioflags,
 				vgsummary, _vgname_from_mda_process, vfmp)) {
 		vfmp->ret = 0;
 		goto_out;
@@ -1472,7 +1474,7 @@ out:
 
 int vgname_from_mda(const struct format_type *fmt,
 		    const struct mda_header *mdah, int primary_mda, struct device_area *dev_area,
-		    struct lvmcache_vgsummary *vgsummary, uint64_t *mda_free_sectors,
+		    struct lvmcache_vgsummary *vgsummary, uint64_t *mda_free_sectors, unsigned ioflags,
 		    lvm_callback_fn_t update_vgsummary_fn, void *update_vgsummary_context)
 {
 	const struct raw_locn *rlocn;
@@ -1516,7 +1518,7 @@ int vgname_from_mda(const struct format_type *fmt,
 	/* Do quick check for a vgname */
 	/* We cannot read the full metadata here because the name has to be validated before we use the size field */
 	if (!dev_read_callback(dev_area->dev, dev_area->start + rlocn->offset, NAME_LEN, MDA_CONTENT_REASON(primary_mda),
-			       _vgname_from_mda_validate, vfmp))
+			       ioflags, _vgname_from_mda_validate, vfmp))
 		return_0;
 
 	return vfmp->ret;
@@ -1550,8 +1552,8 @@ static int _scan_raw(const struct format_type *fmt, const char *vgname __attribu
 		}
 
 		/* TODO: caching as in vgname_from_mda() (trigger this code?) */
-		if (vgname_from_mda(fmt, mdah, 0, &rl->dev_area, &vgsummary, NULL, NULL, NULL)) {
-			vg = _vg_read_raw_area(&fid, vgsummary.vgname, &rl->dev_area, NULL, NULL, 0, 0, 0);
+		if (vgname_from_mda(fmt, mdah, 0, &rl->dev_area, &vgsummary, NULL, 0, NULL, NULL)) {
+			vg = _vg_read_raw_area(&fid, vgsummary.vgname, &rl->dev_area, NULL, NULL, 0, 0, 0, 0);
 			if (vg)
 				lvmcache_update_vg(vg, 0);
 		}
@@ -2023,7 +2025,7 @@ static int _mda_export_text_raw(struct metadata_area *mda,
 {
 	struct mda_context *mdc = (struct mda_context *) mda->metadata_locn;
 
-	if (!mdc || !_raw_read_mda_header(cft->mem, &mdc->area, mda_is_primary(mda), NULL, NULL))
+	if (!mdc || !_raw_read_mda_header(cft->mem, &mdc->area, mda_is_primary(mda), 0, NULL, NULL))
 		return 1; /* pretend the MDA does not exist */
 
 	return config_make_nodes(cft, parent, NULL,

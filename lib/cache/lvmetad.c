@@ -1771,7 +1771,7 @@ static int _lvmetad_pvscan_single(struct metadata_area *mda, void *baton)
 	struct volume_group *vg;
 
 	if (mda_is_ignored(mda) ||
-	    !(vg = mda->ops->vg_read(b->fid, "", mda, NULL, NULL, 1)))
+	    !(vg = mda->ops->vg_read(b->fid, "", mda, NULL, NULL, 1, 0)))
 		return 1;
 
 	/* FIXME Also ensure contents match etc. */

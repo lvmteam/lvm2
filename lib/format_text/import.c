@@ -43,7 +43,7 @@ struct import_vgsummary_params {
 	int ret;
 };
 
-static void _import_vgsummary(int failed, void *context, const void *data)
+static void _import_vgsummary(int failed, unsigned ioflags, void *context, const void *data)
 {
 	struct import_vgsummary_params *ivsp = context;
 	struct text_vg_version_ops **vsn;
@@ -79,7 +79,7 @@ out:
 	config_destroy(ivsp->cft);
 
 	if (ivsp->ret && ivsp->process_vgsummary_fn)
-		ivsp->process_vgsummary_fn(0, ivsp->process_vgsummary_context, NULL);
+		ivsp->process_vgsummary_fn(0, ioflags, ivsp->process_vgsummary_context, NULL);
 }
 
 /*
@@ -90,7 +90,7 @@ int text_vgsummary_import(const struct format_type *fmt,
 		       off_t offset, uint32_t size,
 		       off_t offset2, uint32_t size2,
 		       checksum_fn_t checksum_fn,
-		       int checksum_only,
+		       int checksum_only, unsigned ioflags,
 		       struct lvmcache_vgsummary *vgsummary,
 		       lvm_callback_fn_t process_vgsummary_fn,
 		       void *process_vgsummary_context)
@@ -119,11 +119,11 @@ int text_vgsummary_import(const struct format_type *fmt,
 			log_error("Couldn't read volume group metadata.");
 			ivsp->ret = 0;
 		}
-		_import_vgsummary(!ivsp->ret, ivsp, NULL);
+		_import_vgsummary(!ivsp->ret, ioflags, ivsp, NULL);
 	} else if (!config_file_read_fd(fmt->cmd->mem, ivsp->cft, dev, reason, offset, size,
 					offset2, size2, checksum_fn,
 					vgsummary->mda_checksum,
-					checksum_only, 1, &_import_vgsummary, ivsp)) {
+					checksum_only, 1, ioflags, &_import_vgsummary, ivsp)) {
 		log_error("Couldn't read volume group metadata.");
 		return 0;
 	}
@@ -150,7 +150,7 @@ struct import_vg_params {
 	char **desc;
 };
 
-static void _import_vg(int failed, void *context, const void *data)
+static void _import_vg(int failed, unsigned ioflags, void *context, const void *data)
 {
 	struct import_vg_params *ivp = context;
 	struct text_vg_version_ops **vsn;
@@ -198,7 +198,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 				       off_t offset, uint32_t size,
 				       off_t offset2, uint32_t size2,
 				       checksum_fn_t checksum_fn,
-				       uint32_t checksum,
+				       uint32_t checksum, unsigned ioflags,
 				       time_t *when, char **desc)
 {
 	struct import_vg_params *ivp;
@@ -243,12 +243,12 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	if (dev) {
 		if (!config_file_read_fd(fid->mem, ivp->cft, dev, MDA_CONTENT_REASON(primary_mda), offset, size,
 					offset2, size2, checksum_fn, checksum,
-					ivp->skip_parse, 1, &_import_vg, ivp)) {
+					ivp->skip_parse, 1, ioflags, &_import_vg, ivp)) {
 			config_destroy(ivp->cft);
 			return_NULL;
 		}
 	} else
-		_import_vg(0, ivp, NULL);
+		_import_vg(0, 0, ivp, NULL);
 
 	return ivp->vg;
 }
@@ -258,7 +258,7 @@ struct volume_group *text_vg_import_file(struct format_instance *fid,
 					 time_t *when, char **desc)
 {
 	return text_vg_import_fd(fid, file, NULL, NULL, 0, NULL, 0, (off_t)0, 0, (off_t)0, 0, NULL, 0,
-				 when, desc);
+				 0, when, desc);
 }
 
 static struct volume_group *_import_vg_from_config_tree(const struct dm_config_tree *cft,

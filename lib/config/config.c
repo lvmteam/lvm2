@@ -505,7 +505,7 @@ struct process_config_file_params {
 	int ret;
 };
 
-static void _process_config_file_buffer(int failed, void *context, const void *data)
+static void _process_config_file_buffer(int failed, unsigned ioflags, void *context, const void *data)
 {
 	struct process_config_file_params *pcfp = context;
 	const char *fb = data, *fe;
@@ -534,7 +534,7 @@ static void _process_config_file_buffer(int failed, void *context, const void *d
 
 out:
 	if (pcfp->config_file_read_fd_callback)
-		pcfp->config_file_read_fd_callback(!pcfp->ret, pcfp->config_file_read_fd_context, NULL);
+		pcfp->config_file_read_fd_callback(!pcfp->ret, ioflags, pcfp->config_file_read_fd_context, NULL);
 }
 
 /*
@@ -545,7 +545,7 @@ out:
 int config_file_read_fd(struct dm_pool *mem, struct dm_config_tree *cft, struct device *dev, dev_io_reason_t reason,
 			off_t offset, size_t size, off_t offset2, size_t size2,
 			checksum_fn_t checksum_fn, uint32_t checksum,
-			int checksum_only, int no_dup_node_check,
+			int checksum_only, int no_dup_node_check, unsigned ioflags,
 			lvm_callback_fn_t config_file_read_fd_callback, void *config_file_read_fd_context)
 {
 	char *fb;
@@ -596,7 +596,7 @@ int config_file_read_fd(struct dm_pool *mem, struct dm_config_tree *cft, struct 
 			log_sys_error("mmap", dev_name(dev));
 			goto bad;
 		}
-		_process_config_file_buffer(0, pcfp, fb + mmap_offset);
+		_process_config_file_buffer(0, ioflags, pcfp, fb + mmap_offset);
 		r = pcfp->ret;
 		/* unmap the file */
 		if (munmap(fb, size + mmap_offset)) {
@@ -607,9 +607,9 @@ int config_file_read_fd(struct dm_pool *mem, struct dm_config_tree *cft, struct 
 		if (circular) {
 			if (!(buf = dev_read_circular(dev, (uint64_t) offset, size, (uint64_t) offset2, size2, reason)))
 				goto_out;
-			_process_config_file_buffer(0, pcfp, buf);
+			_process_config_file_buffer(0, ioflags, pcfp, buf);
 			dm_free((void *)buf);
-		} else if (!dev_read_callback(dev, (uint64_t) offset, size, reason, _process_config_file_buffer, pcfp))
+		} else if (!dev_read_callback(dev, (uint64_t) offset, size, reason, ioflags, _process_config_file_buffer, pcfp))
 			goto_out;
 		r = pcfp->ret;
 	}
@@ -619,7 +619,7 @@ out:
 
 bad:
 	if (config_file_read_fd_callback)
-		config_file_read_fd_callback(1, config_file_read_fd_context, NULL);
+		config_file_read_fd_callback(1, ioflags, config_file_read_fd_context, NULL);
 
 	return 0;
 }
@@ -653,7 +653,7 @@ int config_file_read(struct dm_pool *mem, struct dm_config_tree *cft)
 	}
 
 	r = config_file_read_fd(mem, cft, cf->dev, DEV_IO_MDA_CONTENT, 0, (size_t) info.st_size, 0, 0,
-				(checksum_fn_t) NULL, 0, 0, 0, NULL, NULL);
+				(checksum_fn_t) NULL, 0, 0, 0, 0, NULL, NULL);
 
 	if (!cf->keep_open) {
 		if (!dev_close(cf->dev))

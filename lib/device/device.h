@@ -37,7 +37,7 @@
  * When provided, callback functions are called exactly once.
  * If failed is set, data cannot be accessed.
  */
-typedef void (*lvm_callback_fn_t)(int failed, void *context, const void *data);
+typedef void (*lvm_callback_fn_t)(int failed, unsigned ioflags, void *context, const void *data);
 
 /*
  * Support for external device info.
@@ -177,7 +177,7 @@ const char *dev_read_circular(struct device *dev, uint64_t offset, size_t len,
 
 /* Passes the data to dev_read_callback_fn */
 int dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason,
-		      lvm_callback_fn_t dev_read_callback_fn, void *callback_context);
+		      unsigned ioflags, lvm_callback_fn_t dev_read_callback_fn, void *callback_context);
 
 /* Read data and copy it into a supplied private buffer. */
 /* Only use for tiny reads or on unimportant code paths. */

@@ -1099,7 +1099,7 @@ next:
 }
 
 /* Track the number of outstanding label reads */
-static void _process_label_data(int failed, void *context, const void *data)
+static void _process_label_data(int failed, unsigned ioflags, void *context, const void *data)
 {
 	int *nr_labels_outstanding = context;
 
@@ -1156,7 +1156,7 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 
 	while ((dev = dev_iter_get(iter))) {
 		nr_labels_outstanding++;
-		if (!label_read_callback(dev, UINT64_C(0), _process_label_data, &nr_labels_outstanding))
+		if (!label_read_callback(dev, UINT64_C(0), 0, _process_label_data, &nr_labels_outstanding))
 			nr_labels_outstanding--;
 		dev_count++;
 	}

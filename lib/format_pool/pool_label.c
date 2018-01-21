@@ -55,7 +55,7 @@ static int _pool_write(struct label *label __attribute__((unused)), void *buf __
 	return 0;
 }
 
-static int _pool_read(struct labeller *l, struct device *dev, void *buf,
+static int _pool_read(struct labeller *l, struct device *dev, void *buf, unsigned ioflags,
 		      lvm_callback_fn_t read_label_callback_fn, void *read_label_callback_context)
 {
 	struct pool_list pl;
@@ -65,7 +65,7 @@ static int _pool_read(struct labeller *l, struct device *dev, void *buf,
 	r = read_pool_label(&pl, l, dev, buf, &label);
 
 	if (read_label_callback_fn)
-		read_label_callback_fn(!r, read_label_callback_context, label);
+		read_label_callback_fn(!r, 0, read_label_callback_context, label);
 
 	return r;
 }
