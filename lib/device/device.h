@@ -32,6 +32,11 @@
 #define DEV_ASSUMED_FOR_LV	0x00000200	/* Is device assumed for an LV */
 #define DEV_NOT_O_NOATIME	0x00000400	/* Don't use O_NOATIME */
 
+/* ioflags */
+#define AIO_SUPPORTED_CODE_PATH	0x00000001	/* Set if the code path supports AIO */
+
+#define aio_supported_code_path(ioflags)       (((ioflags) & AIO_SUPPORTED_CODE_PATH) ? 1 : 0)
+
 /*
  * Standard format for callback functions.
  * When provided, callback functions are called exactly once.
