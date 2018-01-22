@@ -304,7 +304,9 @@ static int _lvm_lv_activate(lv_t lv)
 		return -1;
 	}
 
-	if (lv_is_origin(lv)) {
+	if (lv_is_origin(lv) ||
+	    lv_is_pvmove(lv) ||
+	    seg_only_exclusive(first_seg(lv))) {
 		log_verbose("Activating logical volume \"%s\" "
 			    "exclusively", lv->name);
 		if (!activate_lv_excl(lv->vg->cmd, lv)) {
