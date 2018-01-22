@@ -551,7 +551,7 @@ out:
 
 bad:
 	if (read_label_callback_fn)
-		read_label_callback_fn(1, ioflags, read_label_callback_context, label);
+		read_label_callback_fn(1, ioflags, read_label_callback_context, NULL);
 
 	return 0;
 }

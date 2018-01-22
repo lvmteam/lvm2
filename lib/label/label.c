@@ -156,7 +156,7 @@ out:
 		stack;
 
 	if (flp->process_label_data_fn)
-		flp->process_label_data_fn(0, ioflags, flp->process_label_data_context, NULL);
+		flp->process_label_data_fn(!flp->ret, ioflags, flp->process_label_data_context, NULL);
 }
 
 static void _find_labeller(int failed, unsigned ioflags, void *context, const void *data)
@@ -362,7 +362,10 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 		return 0;
 	}
 
-	return flp->ret;
+	if (process_label_data_fn)
+		return 1;
+	else
+		return flp->ret;
 }
 
 /* result may be NULL if caller doesn't need it */

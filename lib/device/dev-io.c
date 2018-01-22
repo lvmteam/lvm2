@@ -154,7 +154,7 @@ static int _io(struct device_buffer *devbuf, unsigned ioflags)
 	}
 
 	if (!devbuf->buf && !(devbuf->malloc_address = devbuf->buf = dm_malloc_aligned((size_t) devbuf->where.size, 0))) {
-		log_error("Bounce buffer malloc failed");
+		log_error("I/O buffer malloc failed");
 		return 0;
 	}
 

@@ -60,7 +60,7 @@ static int _lvm1_read(struct labeller *l, struct device *dev, void *buf, unsigne
 	struct pv_disk *pvd = (struct pv_disk *) buf;
 	struct vg_disk vgd;
 	struct lvmcache_info *info;
-	struct label *label;
+	struct label *label = NULL;
 	const char *vgid = FMT_LVM1_ORPHAN_VG_NAME;
 	const char *vgname = FMT_LVM1_ORPHAN_VG_NAME;
 	unsigned exported = 0;
