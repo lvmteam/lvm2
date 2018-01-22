@@ -202,4 +202,9 @@ void devbufs_release(struct device *dev);
 /* Return a valid device name from the alias list; NULL otherwise */
 const char *dev_name_confirmed(struct device *dev, int quiet);
 
+struct cmd_context;
+int dev_async_setup(struct cmd_context *cmd);
+void dev_async_exit(void);
+int dev_async_reset(struct cmd_context *cmd);
+
 #endif

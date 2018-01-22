@@ -98,6 +98,85 @@ void devbufs_release(struct device *dev)
 	_release_devbuf(&dev->last_extra_devbuf);
 }
 
+#ifdef AIO_SUPPORT
+
+#  include <libaio.h>
+
+static io_context_t _aio_ctx = 0;
+static int _aio_max = 128;
+
+int dev_async_setup(struct cmd_context *cmd)
+{
+	int r;
+
+	/* Already set up? */
+	if (_aio_ctx)
+		return 1;
+
+	log_debug_io("Setting up aio context for up to %d events.", _aio_max);
+
+	if ((r = io_setup(_aio_max, &_aio_ctx)) < 0) {
+		/*
+		 * Possible errors:
+		 *   ENOSYS - aio not available in current kernel
+		 *   EAGAIN - _aio_max is too big
+		 *   EFAULT - invalid pointer
+		 *   EINVAL - _aio_ctx != 0 or kernel aio limits exceeded
+		 *   ENOMEM
+		 */
+		log_warn("WARNING: Asynchronous I/O setup for %d events failed: %s", _aio_max, strerror(-r));
+		log_warn("WARNING: Using only synchronous I/O.");
+		_aio_ctx = 0;
+		return 0;
+	}
+
+	return 1;
+}
+
+/* Reset aio context after fork */
+int dev_async_reset(struct cmd_context *cmd)
+{
+	log_debug_io("Resetting asynchronous I/O context.");
+	_aio_ctx = 0;
+
+	return dev_async_setup(cmd);
+}
+
+void dev_async_exit(void)
+{
+	int r;
+
+	if (!_aio_ctx)
+		return;
+
+	log_debug_io("Destroying aio context.");
+	if ((r = io_destroy(_aio_ctx)) < 0)
+		/* Returns -ENOSYS if aio not in kernel or -EINVAL if _aio_ctx invalid */
+		log_error("Failed to destroy asynchronous I/O context: %s", strerror(-r));
+
+	_aio_ctx = 0;
+}
+
+#else
+
+static int _aio_ctx = 0;
+
+int dev_async_setup(struct cmd_context *cmd)
+{
+	return 1;
+}
+
+int dev_async_reset(struct cmd_context *cmd)
+{
+	return 1;
+}
+
+void dev_async_exit(void)
+{
+}
+
+#endif /* AIO_SUPPORT */
+
 /*-----------------------------------------------------------------
  * The standard io loop that keeps submitting an io until it's
  * all gone.

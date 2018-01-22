@@ -164,6 +164,7 @@ struct cmd_context {
 	unsigned vg_notify:1;
 	unsigned lv_notify:1;
 	unsigned pv_notify:1;
+	unsigned use_aio:1;
 
 	/*
 	 * Filtering.

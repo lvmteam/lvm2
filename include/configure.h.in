@@ -1,5 +1,8 @@
 /* include/configure.h.in.  Generated from configure.in by autoheader.  */
 
+/* Define to 1 if aio is available. */
+#undef AIO_SUPPORT
+
 /* Define to 1 to use libblkid detection of signatures when wiping. */
 #undef BLKID_WIPING_SUPPORT
 

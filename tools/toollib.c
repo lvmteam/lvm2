@@ -116,6 +116,7 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 			/* FIXME Clean up properly here */
 			_exit(ECMD_FAILED);
 	}
+	dev_async_reset(cmd);
 	dev_close_all();
 
 	return 1;
