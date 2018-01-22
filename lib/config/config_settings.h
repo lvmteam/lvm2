@@ -229,6 +229,13 @@ cfg_array(devices_scan_CFG, "scan", devices_CFG_SECTION, CFG_ADVANCED, CFG_TYPE_
 cfg(devices_use_aio_CFG, "use_aio", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_USE_AIO, vsn(2, 2, 178), NULL, 0, NULL,
 	"Use linux asynchronous I/O for parallel device access where possible.\n")
 
+cfg(devices_aio_max_CFG, "aio_max", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_AIO_MAX, vsn(2, 2, 178), NULL, 0, NULL,
+	"Maximum number of asynchronous I/Os to issue concurrently.\n")
+
+cfg(devices_aio_memory_CFG, "aio_memory", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_AIO_MEMORY, vsn(2, 2, 178), NULL, 0, NULL,
+	"Approximate maximum total amount of memory (in MB) used\n"
+	"for asynchronous I/O buffers.\n")
+
 cfg_array(devices_loopfiles_CFG, "loopfiles", devices_CFG_SECTION, CFG_DEFAULT_UNDEFINED | CFG_UNSUPPORTED, CFG_TYPE_STRING, NULL, vsn(1, 2, 0), NULL, 0, NULL, NULL)
 
 cfg(devices_obtain_device_list_from_udev_CFG, "obtain_device_list_from_udev", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_OBTAIN_DEVICE_LIST_FROM_UDEV, vsn(2, 2, 85), NULL, 0, NULL,

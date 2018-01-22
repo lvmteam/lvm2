@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Add devices/use_aio, aio_max, aio_memory to configure AIO limits.
   Support asynchronous I/O when scanning devices.
   Detect asynchronous I/O capability in configure or accept --disable-aio.
   Add AIO_SUPPORTED_CODE_PATH to indicate whether AIO may be used.

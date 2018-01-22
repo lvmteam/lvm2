@@ -100,6 +100,7 @@ struct device_buffer {
 
 	lvm_callback_fn_t dev_read_callback_fn;
 	void *dev_read_callback_context;
+	struct dm_list aio_queued;	/* Queue of async I/O waiting to be issued */
 };
 
 /*

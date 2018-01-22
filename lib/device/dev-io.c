@@ -104,7 +104,11 @@ void devbufs_release(struct device *dev)
 
 static io_context_t _aio_ctx = 0;
 static struct io_event *_aio_events = NULL;
-static int _aio_max = 128;
+static int _aio_max = 0;
+static int64_t _aio_memory_max = 0;
+static int _aio_must_queue = 0;		/* Have we reached AIO capacity? */
+
+static DM_LIST_INIT(_aio_queue);
 
 #define DEFAULT_AIO_COLLECTION_EVENTS 32
 
@@ -112,11 +116,21 @@ int dev_async_setup(struct cmd_context *cmd)
 {
 	int r;
 
+	_aio_max = find_config_tree_int(cmd, devices_aio_max_CFG, NULL);
+	_aio_memory_max = find_config_tree_int(cmd, devices_aio_memory_CFG, NULL) * 1024 * 1024;
+
+	/* Threshold is zero? */
+	if (!_aio_max || !_aio_memory_max) {
+		if (_aio_ctx)
+			dev_async_exit();
+		return 1;
+	}
+
 	/* Already set up? */
 	if (_aio_ctx)
 		return 1;
 
-	log_debug_io("Setting up aio context for up to %d events.", _aio_max);
+	log_debug_io("Setting up aio context for up to %" PRId64 " MB across %d events.", _aio_memory_max, _aio_max);
 
 	if (!_aio_events && !(_aio_events = dm_zalloc(sizeof(*_aio_events) * DEFAULT_AIO_COLLECTION_EVENTS))) {
 		log_error("Failed to allocate io_event array for asynchronous I/O.");
@@ -154,11 +168,29 @@ int dev_async_reset(struct cmd_context *cmd)
 	return dev_async_setup(cmd);
 }
 
+/*
+ * Track the amount of in-flight async I/O.
+ * If it exceeds the defined threshold set _aio_must_queue.
+ */
+static void _update_aio_counters(int nr, ssize_t bytes)
+{
+	static int64_t aio_bytes = 0;
+	static int aio_count = 0;
+
+	aio_bytes += bytes;
+	aio_count += nr;
+
+	if (aio_count >= _aio_max || aio_bytes > _aio_memory_max)
+		_aio_must_queue = 1;
+	else
+		_aio_must_queue = 0;
+}
+
 static int _io(struct device_buffer *devbuf, unsigned ioflags);
 
 int dev_async_getevents(void)
 {
-	struct device_buffer *devbuf;
+	struct device_buffer *devbuf, *tmp;
 	lvm_callback_fn_t dev_read_callback_fn;
 	void *dev_read_callback_context;
 	int r, event_nr;
@@ -192,6 +224,8 @@ int dev_async_getevents(void)
 		devbuf = _aio_events[event_nr].obj->data;
 		dm_free(_aio_events[event_nr].obj);
 
+		_update_aio_counters(-1, -devbuf->where.size);
+
 		dev_read_callback_fn = devbuf->dev_read_callback_fn;
 		dev_read_callback_context = devbuf->dev_read_callback_context;
 
@@ -215,6 +249,14 @@ int dev_async_getevents(void)
 		}
 	}
 
+	/* Submit further queued events if we can */
+        dm_list_iterate_items_gen_safe(devbuf, tmp, &_aio_queue, aio_queued) {
+		if (_aio_must_queue)
+			break;
+                dm_list_del(&devbuf->aio_queued);
+		_io(devbuf, 1);
+        }
+
 	return 1;
 }
 
@@ -223,6 +265,8 @@ static int _io_async(struct device_buffer *devbuf)
 	struct device_area *where = &devbuf->where;
 	struct iocb *iocb;
 	int r;
+
+	_update_aio_counters(1, devbuf->where.size);
 
 	if (!(iocb = dm_malloc(sizeof(*iocb)))) {
 		log_error("Failed to allocate I/O control block array for asynchronous I/O.");
@@ -260,10 +304,28 @@ static int _io_async(struct device_buffer *devbuf)
 
 void dev_async_exit(void)
 {
+	struct device_buffer *devbuf, *tmp;
+	lvm_callback_fn_t dev_read_callback_fn;
+	void *dev_read_callback_context;
 	int r;
 
 	if (!_aio_ctx)
 		return;
+
+	/* Discard any queued requests */
+        dm_list_iterate_items_gen_safe(devbuf, tmp, &_aio_queue, aio_queued) {
+                dm_list_del(&devbuf->aio_queued);
+
+		_update_aio_counters(-1, -devbuf->where.size);
+
+		dev_read_callback_fn = devbuf->dev_read_callback_fn;
+		dev_read_callback_context = devbuf->dev_read_callback_context;
+
+		_release_devbuf(devbuf);
+
+		if (dev_read_callback_fn)
+			dev_read_callback_fn(1, AIO_SUPPORTED_CODE_PATH, dev_read_callback_context, NULL);
+        }
 
 	log_debug_io("Destroying aio context.");
 	if ((r = io_destroy(_aio_ctx)) < 0)
@@ -276,9 +338,16 @@ void dev_async_exit(void)
 	_aio_ctx = 0;
 }
 
+static void _queue_aio(struct device_buffer *devbuf)
+{
+	dm_list_add(&_aio_queue, &devbuf->aio_queued);
+	log_debug_io("Queueing aio.");
+}
+
 #else
 
 static int _aio_ctx = 0;
+static int _aio_must_queue = 0;
 
 int dev_async_setup(struct cmd_context *cmd)
 {
@@ -302,6 +371,10 @@ void dev_async_exit(void)
 static int _io_async(struct device_buffer *devbuf)
 {
 	return 0;
+}
+
+static void _queue_aio(struct device_buffer *devbuf)
+{
 }
 
 #endif /* AIO_SUPPORT */
@@ -540,6 +613,12 @@ static int _aligned_io(struct device_area *where, char *write_buffer,
 		 */
 		if (((uintptr_t) devbuf->buf) & mask)
 			devbuf->buf = (char *) ((((uintptr_t) devbuf->buf) + mask) & ~mask);
+	}
+
+	/* If we've reached our concurrent AIO limit, add this request to the queue */
+	if (!devbuf->write && _aio_ctx && aio_supported_code_path(ioflags) && dev_read_callback_fn && _aio_must_queue) {
+		_queue_aio(devbuf);
+		return 1;
 	}
 
 	devbuf->write = 0;
