@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Support asynchronous I/O when scanning devices.
   Detect asynchronous I/O capability in configure or accept --disable-aio.
   Add AIO_SUPPORTED_CODE_PATH to indicate whether AIO may be used.
   Configure ensures /usr/bin dir is checked for dmpd tools.

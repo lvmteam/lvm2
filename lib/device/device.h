@@ -97,6 +97,9 @@ struct device_buffer {
 	struct device_area where;	/* Location of buf */
 	dev_io_reason_t reason;
 	unsigned write:1;	/* 1 if write; 0 if read */
+
+	lvm_callback_fn_t dev_read_callback_fn;
+	void *dev_read_callback_context;
 };
 
 /*
@@ -203,6 +206,7 @@ void devbufs_release(struct device *dev);
 const char *dev_name_confirmed(struct device *dev, int quiet);
 
 struct cmd_context;
+int dev_async_getevents(void);
 int dev_async_setup(struct cmd_context *cmd);
 void dev_async_exit(void);
 int dev_async_reset(struct cmd_context *cmd);

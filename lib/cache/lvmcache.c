@@ -1103,6 +1103,11 @@ static void _process_label_data(int failed, unsigned ioflags, void *context, con
 {
 	int *nr_labels_outstanding = context;
 
+	if (!*nr_labels_outstanding) {
+		log_error(INTERNAL_ERROR "_process_label_data called too many times");
+		return;
+	}
+
 	(*nr_labels_outstanding)--;
 }
 
@@ -1162,6 +1167,12 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	}
 
 	dev_iter_destroy(iter);
+
+	while (nr_labels_outstanding) {
+		log_very_verbose("Scanned %d device labels (%d outstanding)", dev_count, nr_labels_outstanding);
+		if (!dev_async_getevents())
+			return_0;
+	}
 
 	log_very_verbose("Scanned %d device labels (%d outstanding)", dev_count, nr_labels_outstanding);
 
