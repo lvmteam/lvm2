@@ -47,8 +47,8 @@ check lv_field $vg/${lv1}_foo seg_count 2
 check lv_field $vg/$lv1 seg_count 2
 check dev_md5sum $vg $lv1
 pvmove -n $lv1 "$dev5" "$dev4"
-check lv_tree_on $vg $lv1 "$dev4"
-check lv_tree_on $vg ${lv1}_foo "$dev5"
+check lv_tree_on $vg $lv1 "$dev3" "$dev4"
+check lv_tree_on $vg ${lv1}_foo "$dev2" "$dev5"
 check dev_md5sum $vg $lv1
 lvremove -ff $vg
 
