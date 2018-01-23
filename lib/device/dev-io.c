@@ -303,7 +303,7 @@ static int _aligned_io(struct device_area *where, char *write_buffer,
 	} 
 
 	devbuf = DEV_DEVBUF(where->dev, reason);
- 	_release_devbuf(devbuf);
+	_release_devbuf(devbuf);
 	devbuf->where.dev = where->dev;
 	devbuf->where.start = widened.start;
 	devbuf->where.size = widened.size;
@@ -317,24 +317,8 @@ static int _aligned_io(struct device_area *where, char *write_buffer,
 		/* Perform the I/O directly. */
 		devbuf->buf = write_buffer;
 	else
-#ifndef DEBUG_MEM
 		/* Postpone buffer allocation until we're about to issue the I/O */
 		devbuf->buf = NULL;
-#else
-	else {
-		/* Allocate a bounce buffer with an extra block */
-		if (!(devbuf->malloc_address = devbuf->buf = dm_malloc((size_t) devbuf->where.size + block_size))) {
-			log_error("Bounce buffer malloc failed");
-			return 0;
-		}
-
-		/*
-		 * Realign start of bounce buffer (using the extra sector)
-		 */
-		if (((uintptr_t) devbuf->buf) & mask)
-			devbuf->buf = (char *) ((((uintptr_t) devbuf->buf) + mask) & ~mask);
-	}
-#endif
 
 	devbuf->write = 0;
 
