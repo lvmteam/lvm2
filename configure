@@ -4369,6 +4369,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 CFLAGS=$save_CFLAGS
 CXXFLAGS=$save_CXXFLAGS
+PATH_SBIN="$PATH:/usr/sbin:/sbin"
 
 
 ac_ext=c
@@ -8672,7 +8673,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
@@ -8715,7 +8716,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
@@ -8796,7 +8797,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
@@ -8839,7 +8840,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
@@ -8903,7 +8904,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
@@ -8946,7 +8947,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
@@ -9010,7 +9011,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
@@ -9053,7 +9054,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
@@ -9221,7 +9222,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
@@ -9264,7 +9265,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
@@ -9357,7 +9358,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
@@ -9400,7 +9401,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
@@ -9464,7 +9465,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
@@ -9507,7 +9508,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
@@ -9571,7 +9572,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
@@ -9614,7 +9615,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
@@ -15310,7 +15311,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
@@ -15353,7 +15354,7 @@ else
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in $PATH_SBIN
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.

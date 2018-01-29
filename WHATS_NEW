@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Configure ensures /usr/bin dir is checked for dmpd tools.
   Restore pvmove support for wide-clustered active volumes (2.02.177).
   Avoid non-exclusive activation of exclusive segment types.
   Fix trimming sibling PVs when doing a pvmove of raid subLVs.
