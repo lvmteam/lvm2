@@ -186,10 +186,11 @@ static const char *_get_snapshot_dso_path(struct cmd_context *cmd)
 }
 
 /* FIXME Cache this */
-static int _target_registered(struct lv_segment *seg, int *pending)
+static int _target_registered(struct lv_segment *seg, int *pending, int *monitored)
 {
-	return target_registered_with_dmeventd(seg->lv->vg->cmd, _get_snapshot_dso_path(seg->lv->vg->cmd),
-					       seg->cow, pending);
+	return target_registered_with_dmeventd(seg->lv->vg->cmd,
+					       _get_snapshot_dso_path(seg->lv->vg->cmd),
+					       seg->cow, pending, monitored);
 }
 
 /* FIXME This gets run while suspended and performs banned operations. */

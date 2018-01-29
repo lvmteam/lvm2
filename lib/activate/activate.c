@@ -1681,6 +1681,7 @@ static struct dm_event_handler *_create_dm_event_handler(struct cmd_context *cmd
 
 bad:
 	dm_event_handler_destroy(dmevh);
+
 	return NULL;
 }
 
@@ -1712,13 +1713,18 @@ static char *_build_target_uuid(struct cmd_context *cmd, const struct logical_vo
 	return build_dm_uuid(cmd->mem, lv, layer);
 }
 
-static int _device_registered_with_dmeventd(struct cmd_context *cmd, const struct logical_volume *lv, int *pending, const char **dso)
+static int _device_registered_with_dmeventd(struct cmd_context *cmd,
+					    const struct logical_volume *lv,
+					    const char **dso,
+					    int *pending, int *monitored)
 {
 	char *uuid;
-	enum dm_event_mask evmask = 0;
+	enum dm_event_mask evmask;
 	struct dm_event_handler *dmevh;
+	int r;
 
 	*pending = 0;
+	*monitored = 0;
 
 	if (!(uuid = _build_target_uuid(cmd, lv)))
 		return_0;
@@ -1726,9 +1732,20 @@ static int _device_registered_with_dmeventd(struct cmd_context *cmd, const struc
 	if (!(dmevh = _create_dm_event_handler(cmd, uuid, NULL, 0, DM_EVENT_ALL_ERRORS)))
 		return_0;
 
-	if (dm_event_get_registered_device(dmevh, 0)) {
-		dm_event_handler_destroy(dmevh);
-		return 0;
+	if ((r = dm_event_get_registered_device(dmevh, 0))) {
+		if (r == -ENOENT) {
+			r = 1;
+			goto out;
+		}
+		r = 0;
+		goto_out;
+	}
+
+	/* FIXME: why do we care which 'dso' is monitoring? */
+	if (dso && (*dso = dm_event_handler_get_dso(dmevh)) &&
+	    !(*dso = dm_pool_strdup(cmd->mem, *dso))) {
+		r = 0;
+		goto_out;
 	}
 
 	evmask = dm_event_handler_get_event_mask(dmevh);
@@ -1737,21 +1754,25 @@ static int _device_registered_with_dmeventd(struct cmd_context *cmd, const struc
 		evmask &= ~DM_EVENT_REGISTRATION_PENDING;
 	}
 
-	if (dso && (*dso = dm_event_handler_get_dso(dmevh)) && !(*dso = dm_pool_strdup(cmd->mem, *dso)))
-		log_error("Failed to duplicate dso name.");
-
+	*monitored = evmask;
+	r = 1;
+out:
 	dm_event_handler_destroy(dmevh);
 
-	return evmask;
+	return r;
 }
 
 int target_registered_with_dmeventd(struct cmd_context *cmd, const char *dso,
-				    const struct logical_volume *lv, int *pending)
+				    const struct logical_volume *lv,
+				    int *pending, int *monitored)
 {
 	char *uuid;
-	enum dm_event_mask evmask = 0;
+	enum dm_event_mask evmask;
 	struct dm_event_handler *dmevh;
+	int r;
+
 	*pending = 0;
+	*monitored = 0;
 
 	if (!dso)
 		return_0;
@@ -1762,9 +1783,13 @@ int target_registered_with_dmeventd(struct cmd_context *cmd, const char *dso,
 	if (!(dmevh = _create_dm_event_handler(cmd, uuid, dso, 0, DM_EVENT_ALL_ERRORS)))
 		return_0;
 
-	if (dm_event_get_registered_device(dmevh, 0)) {
-		dm_event_handler_destroy(dmevh);
-		return 0;
+	if ((r = dm_event_get_registered_device(dmevh, 0))) {
+		if (r == -ENOENT) {
+			r = 1;
+			goto out;
+		}
+		r = 0;
+		goto_out;
 	}
 
 	evmask = dm_event_handler_get_event_mask(dmevh);
@@ -1773,9 +1798,12 @@ int target_registered_with_dmeventd(struct cmd_context *cmd, const char *dso,
 		evmask &= ~DM_EVENT_REGISTRATION_PENDING;
 	}
 
+	*monitored = evmask;
+	r = 1;
+out:
 	dm_event_handler_destroy(dmevh);
 
-	return evmask;
+	return r;
 }
 
 int target_register_events(struct cmd_context *cmd, const char *dso, const struct logical_volume *lv,
@@ -1818,7 +1846,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 			   const struct lv_activate_opts *laopts, int monitor)
 {
 #ifdef DMEVENTD
-	int i, pending = 0, monitored;
+	int i, pending = 0, monitored = 0;
 	int r = 1;
 	struct dm_list *snh, *snht;
 	struct lv_segment *seg;
@@ -1964,11 +1992,21 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 		    !seg->segtype->ops->target_monitored) /* doesn't support registration */
 			continue;
 
-		if (!monitor)
+		if (!monitor) {
 			/* When unmonitoring, obtain existing dso being used. */
-			monitored = _device_registered_with_dmeventd(cmd, seg_is_snapshot(seg) ? seg->cow : seg->lv, &pending, &dso);
-		else
-			monitored = seg->segtype->ops->target_monitored(seg, &pending);
+			if (!_device_registered_with_dmeventd(cmd, seg_is_snapshot(seg) ? seg->cow : seg->lv,
+							      &dso, &pending, &monitored)) {
+				log_warn("WARNING: Failed to %smonitor %s.",
+					 monitor ? "" : "un",
+					 display_lvname(seg_is_snapshot(seg) ? seg->cow : seg->lv));
+				return 0;
+			}
+		} else if (!seg->segtype->ops->target_monitored(seg, &pending, &monitored)) {
+			log_warn("WARNING: Failed to %smonitor %s.",
+				 monitor ? "" : "un",
+				 display_lvname(seg->lv));
+			return 0;
+		}
 
 		/* FIXME: We should really try again if pending */
 		monitored = (pending) ? 0 : monitored;
@@ -2021,7 +2059,11 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 		/* Try a couple times if pending, but not forever... */
 		for (i = 0;; i++) {
 			pending = 0;
-			monitored = seg->segtype->ops->target_monitored(seg, &pending);
+			if (!seg->segtype->ops->target_monitored(seg, &pending, &monitored)) {
+				stack;
+				r = 0;
+				break;
+			}
 			if (!pending || i >= 40)
 				break;
 			log_very_verbose("%s %smonitoring still pending: waiting...",

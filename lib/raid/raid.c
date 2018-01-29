@@ -544,12 +544,12 @@ static const char *_get_raid_dso_path(struct cmd_context *cmd)
 	return get_monitor_dso_path(cmd, config_str);
 }
 
-static int _raid_target_monitored(struct lv_segment *seg, int *pending)
+static int _raid_target_monitored(struct lv_segment *seg, int *pending, int *monitored)
 {
 	struct cmd_context *cmd = seg->lv->vg->cmd;
 	const char *dso_path = _get_raid_dso_path(cmd);
 
-	return target_registered_with_dmeventd(cmd, dso_path, seg->lv, pending);
+	return target_registered_with_dmeventd(cmd, dso_path, seg->lv, pending, monitored);
 }
 
 static int _raid_set_events(struct lv_segment *seg, int evmask, int set)

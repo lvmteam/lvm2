@@ -259,7 +259,7 @@ struct segtype_handler {
 			       const struct lv_segment *seg,
 			       struct dm_list *modules);
 	void (*destroy) (struct segment_type * segtype);
-	int (*target_monitored) (struct lv_segment *seg, int *pending);
+	int (*target_monitored) (struct lv_segment *seg, int *pending, int *monitored);
 	int (*target_monitor_events) (struct lv_segment *seg, int events);
 	int (*target_unmonitor_events) (struct lv_segment *seg, int events);
 };

@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Separate reporting of monitoring status and error status.
   Improve validation of created strings in vgimportclone.
   Add missing initialisation of mem pool in systemd generator.
   Do not reopen output streams for multithreaded users of liblvm.

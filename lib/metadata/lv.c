@@ -298,7 +298,7 @@ char *lvseg_monitor_dup(struct dm_pool *mem, const struct lv_segment *seg)
 
 #ifdef DMEVENTD
 	struct lvinfo info;
-	int pending = 0, monitored;
+	int pending = 0, monitored = 0;
 	struct lv_segment *segm = (struct lv_segment *) seg;
 
 	if (lv_is_cow(seg->lv) && !lv_is_merging_cow(seg->lv))
@@ -314,11 +314,13 @@ char *lvseg_monitor_dup(struct dm_pool *mem, const struct lv_segment *seg)
 	else if (!seg_monitored(segm) || (segm->status & PVMOVE))
 		s = "not monitored";
 	else if (lv_info(seg->lv->vg->cmd, seg->lv, 1, &info, 0, 0) && info.exists) {
-		monitored = segm->segtype->ops->target_monitored(segm, &pending);
-		if (pending)
-			s = "pending";
-		else
-			s = (monitored) ? "monitored" : "not monitored";
+		if (segm->segtype->ops->target_monitored(segm, &pending, &monitored)) {
+			if (pending)
+				s = "pending";
+			else
+				s = (monitored) ? "monitored" : "not monitored";
+		} else
+			s = "not monitored";
 	} // else log_debug("Not active");
 #endif
 	return dm_pool_strdup(mem, s);
