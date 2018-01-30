@@ -55,6 +55,7 @@ SOURCES =\
 	config/config.c \
 	datastruct/btree.c \
 	datastruct/str_list.c \
+	device/bcache.c \
 	device/dev-cache.c \
 	device/dev-ext.c \
 	device/dev-io.c \

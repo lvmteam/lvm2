@@ -1,3 +1,17 @@
+/*
+ * Copyright (C) 2018 Red Hat, Inc. All rights reserved.
+ *
+ * This file is part of LVM2.
+ *
+ * This copyrighted material is made available to anyone wishing to use,
+ * modify, copy, or redistribute it subject to the terms and conditions
+ * of the GNU Lesser General Public License v.2.1.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
 #define _GNU_SOURCE
 
 #include <errno.h>
@@ -21,6 +35,11 @@
 #define SECTOR_SHIFT 9L
 
 //----------------------------------------------------------------
+
+static void log_sys_warn(const char *syscall)
+{
+	log_warn("%s failed: %s", syscall, strerror(errno));
+}
 
 // Assumes the list is not empty.
 static inline struct dm_list *_list_pop(struct dm_list *head)
@@ -49,14 +68,14 @@ struct cb_set {
 static struct cb_set *_cb_set_create(unsigned nr)
 {
 	int i;
-	struct cb_set *cbs = malloc(sizeof(*cbs));
+	struct cb_set *cbs = dm_malloc(sizeof(*cbs));
 
 	if (!cbs)
 		return NULL;
 
-	cbs->vec = malloc(nr * sizeof(*cbs->vec));
+	cbs->vec = dm_malloc(nr * sizeof(*cbs->vec));
 	if (!cbs->vec) {
-		free(cbs);
+		dm_free(cbs);
 		return NULL;
 	}
 
@@ -69,17 +88,18 @@ static struct cb_set *_cb_set_create(unsigned nr)
 	return cbs;
 }
 
-static bool _cb_set_destroy(struct cb_set *cbs)
+static void _cb_set_destroy(struct cb_set *cbs)
 {
+	// We know this is always called after a wait_all.  So there should
+	// never be in flight IO.
 	if (!dm_list_empty(&cbs->allocated)) {
-		// FIXME: I think we should propogate this up.
+		// bail out
 		log_error("async io still in flight");
-		return false;
+		return;
 	}
 
-	free(cbs->vec);
-	free(cbs);
-	return 0;
+	dm_free(cbs->vec);
+	dm_free(cbs);
 }
 
 static struct control_block *_cb_alloc(struct cb_set *cbs, void *context)
@@ -123,7 +143,7 @@ struct io_engine {
 static struct io_engine *_engine_create(unsigned max_io)
 {
 	int r;
-	struct io_engine *e = malloc(sizeof(*e));
+	struct io_engine *e = dm_malloc(sizeof(*e));
 
 	if (!e)
 		return NULL;
@@ -138,7 +158,7 @@ static struct io_engine *_engine_create(unsigned max_io)
 	e->cbs = _cb_set_create(max_io);
 	if (!e->cbs) {
 		log_warn("couldn't create control block set");
-		free(e);
+		dm_free(e);
 		return NULL;
 	}
 
@@ -149,7 +169,7 @@ static void _engine_destroy(struct io_engine *e)
 {
 	_cb_set_destroy(e->cbs);
 	io_destroy(e->aio_context);
-	free(e);
+	dm_free(e);
 }
 
 static bool _engine_issue(struct io_engine *e, int fd, enum dir d,
@@ -160,13 +180,13 @@ static bool _engine_issue(struct io_engine *e, int fd, enum dir d,
 	struct control_block *cb;
 
 	if (((uint64_t) data) & (PAGE_SIZE - 1)) {
-		log_err("misaligned data buffer");
+		log_warn("misaligned data buffer");
 		return false;
 	}
 
 	cb = _cb_alloc(e->cbs, context);
 	if (!cb) {
-		log_err("couldn't allocate control block");
+		log_warn("couldn't allocate control block");
 		return false;
 	}
 
@@ -181,7 +201,7 @@ static bool _engine_issue(struct io_engine *e, int fd, enum dir d,
 	cb_array[0] = &cb->cb;
 	r = io_submit(e->aio_context, 1, cb_array);
 	if (r < 0) {
-		log_sys_error("io_submit", "");
+		log_sys_warn("io_submit");
 		_cb_free(e->cbs, cb);
 		return false;
 	}
@@ -201,7 +221,7 @@ static bool _engine_wait(struct io_engine *e, complete_fn fn)
 	memset(&event, 0, sizeof(event));
 	r = io_getevents(e->aio_context, 1, MAX_IO, event, NULL);
 	if (r < 0) {
-		log_sys_error("io_getevents", "");
+		log_sys_warn("io_getevents");
 		return false;
 	}
 
@@ -217,7 +237,7 @@ static bool _engine_wait(struct io_engine *e, complete_fn fn)
 			fn(cb->context, (int) ev->res);
 
 		else {
-			log_err("short io");
+			log_warn("short io");
 			fn(cb->context, -ENODATA);
 		}
 
@@ -341,7 +361,7 @@ static void _hash_insert(struct block *b)
 	dm_list_add_h(b->cache->buckets + h, &b->hash);
 }
 
-static void _hash_remove(struct block *b)
+static inline void _hash_remove(struct block *b)
 {
 	dm_list_del(&b->hash);
 }
@@ -363,30 +383,30 @@ static unsigned _calc_nr_buckets(unsigned nr_blocks)
 	return r;
 }
 
-static int _hash_table_init(struct bcache *cache, unsigned nr_entries)
+static bool _hash_table_init(struct bcache *cache, unsigned nr_entries)
 {
 	unsigned i;
 
 	cache->nr_buckets = _calc_nr_buckets(nr_entries);
 	cache->hash_mask = cache->nr_buckets - 1;
-	cache->buckets = malloc(cache->nr_buckets * sizeof(*cache->buckets));
+	cache->buckets = dm_malloc(cache->nr_buckets * sizeof(*cache->buckets));
 	if (!cache->buckets)
-		return -ENOMEM;
+		return false;
 
 	for (i = 0; i < cache->nr_buckets; i++)
 		dm_list_init(cache->buckets + i);
 
-	return 0;
+	return true;
 }
 
 static void _hash_table_exit(struct bcache *cache)
 {
-	free(cache->buckets);
+	dm_free(cache->buckets);
 }
 
 //----------------------------------------------------------------
 
-static int _init_free_list(struct bcache *cache, unsigned count)
+static bool _init_free_list(struct bcache *cache, unsigned count)
 {
 	unsigned i;
 	size_t block_size = cache->block_sectors << SECTOR_SHIFT;
@@ -395,13 +415,13 @@ static int _init_free_list(struct bcache *cache, unsigned count)
 
 	/* Allocate the data for each block.  We page align the data. */
 	if (!data)
-		return -ENOMEM;
+		return false;
 
 	cache->raw_data = data;
-	cache->raw_blocks = malloc(count * sizeof(*cache->raw_blocks));
+	cache->raw_blocks = dm_malloc(count * sizeof(*cache->raw_blocks));
 
 	if (!cache->raw_blocks)
-		free(cache->raw_data);
+		dm_free(cache->raw_data);
 
 	for (i = 0; i < count; i++) {
 		struct block *b = cache->raw_blocks + i;
@@ -410,13 +430,13 @@ static int _init_free_list(struct bcache *cache, unsigned count)
 		dm_list_add(&cache->free, &b->list);
 	}
 
-	return 0;
+	return true;
 }
 
 static void _exit_free_list(struct bcache *cache)
 {
-	free(cache->raw_data);
-	free(cache->raw_blocks);
+	dm_free(cache->raw_data);
+	dm_free(cache->raw_blocks);
 }
 
 static struct block *_alloc_block(struct bcache *cache)
@@ -519,7 +539,7 @@ static void _complete_io(void *context, int err)
 	}
 }
 
-static int _wait_io(struct bcache *cache)
+static bool _wait_io(struct bcache *cache)
 {
 	return _engine_wait(cache->engine, _complete_io);
 }
@@ -646,7 +666,7 @@ static struct block *_lookup_or_read_block(struct bcache *cache,
 		// FIXME: this is insufficient.  We need to also catch a read
 		// lock of a write locked block.  Ref count needs to distinguish.
 		if (b->ref_count && (flags & (GF_DIRTY | GF_ZERO))) {
-			log_err("concurrent write lock attempted");
+			log_warn("concurrent write lock attempted");
 			return NULL;
 		}
 
@@ -706,10 +726,9 @@ static void _preemptive_writeback(struct bcache *cache)
  *--------------------------------------------------------------*/
 struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks)
 {
-	int r;
 	struct bcache *cache;
 
-	cache = malloc(sizeof(*cache));
+	cache = dm_malloc(sizeof(*cache));
 	if (!cache)
 		return NULL;
 
@@ -718,7 +737,7 @@ struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks)
 
 	cache->engine = _engine_create(nr_cache_blocks < 1024u ? nr_cache_blocks : 1024u);
 	if (!cache->engine) {
-		free(cache);
+		dm_free(cache);
 		return NULL;
 	}
 
@@ -732,9 +751,10 @@ struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks)
 	dm_list_init(&cache->clean);
 	dm_list_init(&cache->io_pending);
 
-	if (_hash_table_init(cache, nr_cache_blocks)) {
+	if (!_hash_table_init(cache, nr_cache_blocks)) {
 		_engine_destroy(cache->engine);
-		free(cache);
+		dm_free(cache);
+		return NULL;
 	}
 
 	cache->read_hits = 0;
@@ -744,11 +764,11 @@ struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks)
 	cache->write_misses = 0;
 	cache->prefetches = 0;
 
-	r = _init_free_list(cache, nr_cache_blocks);
-	if (r) {
+	if (!_init_free_list(cache, nr_cache_blocks)) {
 		_engine_destroy(cache->engine);
 		_hash_table_exit(cache);
-		free(cache);
+		dm_free(cache);
+		return NULL;
 	}
 
 	return cache;
@@ -757,14 +777,14 @@ struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks)
 void bcache_destroy(struct bcache *cache)
 {
 	if (cache->nr_locked)
-		log_warn("some blocks are still locked\n");
+		log_warn("some blocks are still locked");
 
 	bcache_flush(cache);
 	_wait_all(cache);
 	_exit_free_list(cache);
 	_hash_table_exit(cache);
 	_engine_destroy(cache->engine);
-	free(cache);
+	dm_free(cache);
 }
 
 void bcache_prefetch(struct bcache *cache, int fd, block_address index)
@@ -794,14 +814,14 @@ bool bcache_get(struct bcache *cache, int fd, block_address index,
 	}
 
 	*result = NULL;
-	log_err("couldn't get block");
+	log_warn("couldn't get block");
 	return false;
 }
 
 void bcache_put(struct block *b)
 {
 	if (!b->ref_count) {
-		log_err("ref count on bcache block already zero");
+		log_warn("ref count on bcache block already zero");
 		return;
 	}
 
