@@ -262,6 +262,6 @@ int sync_dev_names(struct cmd_context* cmd);
 
 /* Process list of LVs */
 struct volume_group;
-int activate_lvs(struct cmd_context *cmd, struct dm_list *lvs);
+int activate_lvs(struct cmd_context *cmd, struct dm_list *lvs, unsigned exclusive);
 
 #endif

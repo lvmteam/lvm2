@@ -399,15 +399,19 @@ int activate_lv_excl(struct cmd_context *cmd, const struct logical_volume *lv)
 }
 
 /* Lock a list of LVs */
-int activate_lvs(struct cmd_context *cmd, struct dm_list *lvs)
+int activate_lvs(struct cmd_context *cmd, struct dm_list *lvs, unsigned exclusive)
 {
 	struct dm_list *lvh;
 	struct lv_list *lvl;
 
 	dm_list_iterate_items(lvl, lvs) {
-		if (!activate_lv_excl_local(cmd, lvl->lv)) {
-			log_error("Failed to locally exclusively activate %s.",
-				  display_lvname(lvl->lv));
+		if (!exclusive && !lv_is_active_exclusive(lvl->lv)) {
+			if (!activate_lv(cmd, lvl->lv)) {
+				log_error("Failed to activate %s", display_lvname(lvl->lv));
+				return 0;
+			}
+		} else if (!activate_lv_excl(cmd, lvl->lv)) {
+			log_error("Failed to activate %s", display_lvname(lvl->lv));
 			dm_list_uniterate(lvh, lvs, &lvl->list) {
 				lvl = dm_list_item(lvh, struct lv_list);
 				if (!deactivate_lv(cmd, lvl->lv))
