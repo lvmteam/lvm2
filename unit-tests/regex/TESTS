@@ -1,3 +1,0 @@
-dfa matching:$TEST_TOOL ./matcher_t --fingerprint dev_patterns < devices.list > matcher_t.output && diff -u matcher_t.expected matcher_t.output
-dfa matching:$TEST_TOOL ./matcher_t --fingerprint random_regexes < /dev/null > matcher_t.output && diff -u matcher_t.expected2 matcher_t.output
-dfa with non-print regex chars:$TEST_TOOL ./matcher_t nonprint_regexes < nonprint_input > matcher_t.output && diff -u matcher_t.expected3 matcher_t.output
