@@ -508,6 +508,11 @@ int dm_get_status_mirror(struct dm_pool *mem, const char *params,
 	if (!(pos = _skip_fields(pos, argc)))
 		goto_out;
 
+	if (strncmp(pos, "userspace", 9) == 0) {
+		pos += 9;
+		/* FIXME: support status of userspace mirror implementation */
+	}
+
 	if (sscanf(pos, "%u %n", &argc, &used) != 1)
 		goto_out;
 	pos += used;
