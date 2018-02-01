@@ -47,7 +47,7 @@ $(TARGETS): $(OBJECTS) $(top_builddir)/libdm/libdevmapper.$(LIB_SUFFIX)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) -L$(top_builddir)/libdm \
 	      -o $@ $(OBJECTS) $(LDLIBS)
 
-unit: $(TARGETS)
+unit: $(TARGETS) $(top_builddir)/lib/liblvm-internal.a
 	@echo Running unit tests
 	LD_LIBRARY_PATH=$(top_builddir)/libdm ./$(TARGETS)
 endif

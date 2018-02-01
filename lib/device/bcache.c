@@ -167,12 +167,19 @@ static struct io_engine *_engine_create(unsigned max_io)
 
 static void _engine_destroy(struct io_engine *e)
 {
+	int r;
+
 	_cb_set_destroy(e->cbs);
-	io_destroy(e->aio_context);
+
+	// io_destroy is really slow
+	r = io_destroy(e->aio_context);
+	if (r)
+		log_sys_warn("io_destroy");
+
 	dm_free(e);
 }
 
-static bool _engine_issue(struct io_engine *e, int fd, enum dir d,
+static bool _engine_issue(struct io_engine *e, enum dir d, int fd,
 			  sector_t sb, sector_t se, void *data, void *context)
 {
 	int r;
@@ -290,7 +297,6 @@ enum block_flags {
 };
 
 struct bcache {
-	int fd;
 	sector_t block_sectors;
 	uint64_t nr_data_blocks;
 	uint64_t nr_cache_blocks;
@@ -488,33 +494,6 @@ static void _relink(struct block *b)
  *
  *--------------------------------------------------------------*/
 
-/*
- * |b->list| should be valid (either pointing to itself, on one of the other
- * lists.
- */
-static bool _issue_low_level(struct block *b, enum dir d)
-{
-	struct bcache *cache = b->cache;
-	sector_t sb = b->index * cache->block_sectors;
-	sector_t se = sb + cache->block_sectors;
-
-	if (_test_flags(b, BF_IO_PENDING))
-		return false;
-
-	_set_flags(b, BF_IO_PENDING);
-	return _engine_issue(cache->engine, cache->fd, d, sb, se, b->data, b);
-}
-
-static inline bool _issue_read(struct block *b)
-{
-	return _issue_low_level(b, DIR_READ);
-}
-
-static inline bool _issue_write(struct block *b)
-{
-	return _issue_low_level(b, DIR_WRITE);
-}
-
 static void _complete_io(void *context, int err)
 {
 	struct block *b = context;
@@ -537,6 +516,39 @@ static void _complete_io(void *context, int err)
 		_clear_flags(b, BF_DIRTY);
 		_link_block(b);
 	}
+}
+
+/*
+ * |b->list| should be valid (either pointing to itself, on one of the other
+ * lists.
+ */
+static bool _issue_low_level(struct block *b, enum dir d)
+{
+	struct bcache *cache = b->cache;
+	sector_t sb = b->index * cache->block_sectors;
+	sector_t se = sb + cache->block_sectors;
+
+	if (_test_flags(b, BF_IO_PENDING))
+		return false;
+
+	_set_flags(b, BF_IO_PENDING);
+	if (!_engine_issue(cache->engine, d, b->fd, sb, se, b->data, b)) {
+		_complete_io(b, -EIO);
+		return false;
+	}
+
+	return true;
+
+}
+
+static inline bool _issue_read(struct block *b)
+{
+	return _issue_low_level(b, DIR_READ);
+}
+
+static inline bool _issue_write(struct block *b)
+{
+	return _issue_low_level(b, DIR_WRITE);
 }
 
 static bool _wait_io(struct bcache *cache)
@@ -598,7 +610,7 @@ static struct block *_find_unused_clean_block(struct bcache *cache)
 	return NULL;
 }
 
-static struct block *_new_block(struct bcache *cache, block_address index)
+static struct block *_new_block(struct bcache *cache, int fd, block_address index)
 {
 	struct block *b;
 
@@ -616,6 +628,7 @@ static struct block *_new_block(struct bcache *cache, block_address index)
 		dm_list_init(&b->list);
 		dm_list_init(&b->hash);
 		b->flags = 0;
+		b->fd = fd;
 		b->index = index;
 		b->ref_count = 0;
 		b->error = 0;
@@ -685,7 +698,7 @@ static struct block *_lookup_or_read_block(struct bcache *cache,
 	} else {
 		_miss(cache, flags);
 
-		b = _new_block(cache, index);
+		b = _new_block(cache, fd, index);
 		if (b) {
 			if (flags & GF_ZERO)
 				_zero_block(b);
@@ -727,6 +740,21 @@ static void _preemptive_writeback(struct bcache *cache)
 struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks)
 {
 	struct bcache *cache;
+
+	if (!nr_cache_blocks) {
+		log_warn("bcache must have at least one cache block");
+		return NULL;
+	}
+
+	if (!block_sectors) {
+		log_warn("bcache must have a non zero block size");
+		return NULL;
+	}
+
+	if (block_sectors & ((PAGE_SIZE >> SECTOR_SHIFT) - 1)) {
+		log_warn("bcache block size must be a multiple of page size");
+		return NULL;
+	}
 
 	cache = dm_malloc(sizeof(*cache));
 	if (!cache)
@@ -787,6 +815,11 @@ void bcache_destroy(struct bcache *cache)
 	dm_free(cache);
 }
 
+unsigned bcache_nr_cache_blocks(struct bcache *cache)
+{
+	return cache->nr_cache_blocks;
+}
+
 void bcache_prefetch(struct bcache *cache, int fd, block_address index)
 {
 	struct block *b = _hash_lookup(cache, fd, index);
@@ -794,7 +827,7 @@ void bcache_prefetch(struct bcache *cache, int fd, block_address index)
 	if (!b) {
 		cache->prefetches++;
 
-		b = _new_block(cache, index);
+		b = _new_block(cache, fd, index);
 		if (b)
 			_issue_read(b);
 	}
@@ -803,7 +836,9 @@ void bcache_prefetch(struct bcache *cache, int fd, block_address index)
 bool bcache_get(struct bcache *cache, int fd, block_address index,
 	        unsigned flags, struct block **result)
 {
-	struct block *b = _lookup_or_read_block(cache, fd, index, flags);
+	struct block *b;
+
+	b = _lookup_or_read_block(cache, fd, index, flags);
 	if (b) {
 		if (!b->ref_count)
 			cache->nr_locked++;

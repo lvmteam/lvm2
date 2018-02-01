@@ -61,7 +61,7 @@ enum bcache_get_flags {
 
 typedef uint64_t block_address;
 
-unsigned bcache_get_max_prefetches(struct bcache *cache);
+unsigned bcache_nr_cache_blocks(struct bcache *cache);
 
 /*
  * Use the prefetch method to take advantage of asynchronous IO.  For example,
