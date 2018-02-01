@@ -14,6 +14,7 @@
 @top_srcdir@/lib/config/defaults.h
 @top_srcdir@/lib/datastruct/btree.h
 @top_srcdir@/lib/datastruct/str_list.h
+@top_srcdir@/lib/device/bcache.h
 @top_srcdir@/lib/device/dev-cache.h
 @top_srcdir@/lib/device/dev-ext-udev-constants.h
 @top_srcdir@/lib/device/dev-type.h

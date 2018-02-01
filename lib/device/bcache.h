@@ -16,6 +16,7 @@
 #define BCACHE_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "libdevmapper.h"
 

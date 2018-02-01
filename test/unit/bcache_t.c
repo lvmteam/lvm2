@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2018 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -12,24 +12,27 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef _UNITS_H
-#define _UNITS_H
+#include "units.h"
+#include "bcache.h"
 
-#include "libdevmapper.h"
-#include <CUnit/CUnit.h>
+int bcache_init(void)
+{
+	return 0;
+}
 
-#define DECL(n) \
-	extern CU_TestInfo n ## _list[];\
-	int n ## _init(void); \
-	int n ## _fini(void);
+int bcache_fini(void)
+{
+	return 0;
+}
 
-DECL(bcache);
-DECL(bitset);
-DECL(config);
-DECL(dmlist);
-DECL(dmstatus);
-DECL(regex);
-DECL(percent);
-DECL(string);
+static void test_create(void)
+{
+	struct bcache *cache = bcache_create(8, 16);
+	CU_ASSERT_PTR_NOT_NULL(cache);
+	bcache_destroy(cache);
+}
 
-#endif
+CU_TestInfo bcache_list[] = {
+	{ (char*)"create", test_create },
+	CU_TEST_INFO_NULL
+};

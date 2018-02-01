@@ -13,6 +13,7 @@
 	.pTests = n##_list }
 
 CU_SuiteInfo suites[] = {
+	USE(bcache),
 	USE(bitset),
 	USE(config),
 	USE(dmlist),

@@ -16,6 +16,7 @@ top_builddir = @top_builddir@
 
 VPATH = $(srcdir)
 UNITS = \
+	bcache_t.c \
 	bitset_t.c\
 	config_t.c\
 	dmlist_t.c\
@@ -37,7 +38,7 @@ SOURCES = $(UNITS)
 endif
 
 ifeq ("$(TESTING)", "yes")
-LDLIBS += -ldevmapper @CUNIT_LIBS@
+LDLIBS += $(LVMINTERNAL_LIBS) -ldevmapper -laio @CUNIT_LIBS@
 CFLAGS += @CUNIT_CFLAGS@
 
 check: unit
