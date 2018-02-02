@@ -93,6 +93,19 @@ void bcache_put(struct block *b);
 
 int bcache_flush(struct bcache *cache);
 
+/*
+ * Removes a block from the cache.  If the block is dirty it will be written
+ * back first.  If the block is currently held a warning will be issued, and it
+ * will not be removed.
+ */
+void bcache_invalidate(struct bcache *cache, int fd, block_address index);
+
+/*
+ * Invalidates all blocks on the given descriptor.  Call this before closing
+ * the descriptor to make sure everything is written back.
+ */
+void bcache_invalidate_fd(struct bcache *cache, int fd);
+
 /*----------------------------------------------------------------*/
 
 #endif

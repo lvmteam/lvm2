@@ -884,5 +884,65 @@ int bcache_flush(struct bcache *cache)
 	return dm_list_empty(&cache->errored) ? 0 : -EIO;
 }
 
+static void _recycle_block(struct bcache *cache, struct block *b)
+{
+	_unlink_block(b);
+	_hash_remove(b);
+	dm_list_add(&cache->free, &b->list);
+}
+
+/*
+ * You can safely call this with a NULL block.
+ */
+static void _invalidate_block(struct bcache *cache, struct block *b)
+{
+	if (!b)
+		return;
+
+	if (_test_flags(b, BF_IO_PENDING))
+		_wait_specific(b);
+
+	if (b->ref_count)
+		log_warn("bcache_invalidate: block (%d, %llu) still held",
+			 b->fd, (unsigned long long) index);
+	else {
+		if (_test_flags(b, BF_DIRTY)) {
+			_issue_write(b);
+			_wait_specific(b);
+		}
+
+		_recycle_block(cache, b);
+	}
+}
+
+void bcache_invalidate(struct bcache *cache, int fd, block_address index)
+{
+	_invalidate_block(cache, _hash_lookup(cache, fd, index));
+}
+
+// FIXME: switch to a trie, or maybe 1 hash table per fd?  To save iterating
+// through the whole cache.
+void bcache_invalidate_fd(struct bcache *cache, int fd)
+{
+	struct block *b, *tmp;
+
+	// Start writing back any dirty blocks on this fd.
+	dm_list_iterate_items_safe (b, tmp, &cache->dirty)
+		if (b->fd == fd)
+			_issue_write(b);
+
+	_wait_all(cache);
+
+	// Everything should be in the clean list now.
+	dm_list_iterate_items_safe (b, tmp, &cache->clean)
+		if (b->fd == fd)
+			_invalidate_block(cache, b);
+
+	// Except they could be in the errored list :)
+	dm_list_iterate_items_safe (b, tmp, &cache->errored)
+		if (b->fd == fd)
+			_recycle_block(cache, b);
+}
+
 //----------------------------------------------------------------
 
