@@ -212,28 +212,7 @@ endif
 endif
 
 ifeq ("$(TESTING)", "yes")
-# testing and report generation
-RUBY=ruby1.9 -Ireport-generators/lib -Ireport-generators/test
-
-.PHONY: unit-test ruby-test test-programs
-
-# FIXME: put dependencies on libdm and liblvm
-# FIXME: Should be handled by Makefiles in subdirs, not here at top level.
-test-programs:
-	cd unit-tests/regex && $(MAKE)
-	cd unit-tests/datastruct && $(MAKE)
-	cd unit-tests/mm && $(MAKE)
-
-unit-test: test-programs
-	$(RUBY) report-generators/unit_test.rb $(shell find . -name TESTS)
-	$(RUBY) report-generators/title_page.rb
-
-memcheck: test-programs
-	$(RUBY) report-generators/memcheck.rb $(shell find . -name TESTS)
-	$(RUBY) report-generators/title_page.rb
-
-ruby-test:
-	$(RUBY) report-generators/test/ts.rb
+include test/unit/Makefile
 endif
 
 ifneq ($(shell which ctags),)
