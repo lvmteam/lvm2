@@ -216,17 +216,18 @@ static bool _engine_issue(struct io_engine *e, enum dir d, int fd,
 	return true;
 }
 
-#define MAX_IO 64
+#define MAX_IO 1024
+#define MAX_EVENT 64
 typedef void complete_fn(void *context, int io_error);
 
 static bool _engine_wait(struct io_engine *e, complete_fn fn)
 {
 	int i, r;
-	struct io_event event[MAX_IO];
+	struct io_event event[MAX_EVENT];
 	struct control_block *cb;
 
 	memset(&event, 0, sizeof(event));
-	r = io_getevents(e->aio_context, 1, MAX_IO, event, NULL);
+	r = io_getevents(e->aio_context, 1, MAX_EVENT, event, NULL);
 	if (r < 0) {
 		log_sys_warn("io_getevents");
 		return false;
@@ -300,6 +301,7 @@ struct bcache {
 	sector_t block_sectors;
 	uint64_t nr_data_blocks;
 	uint64_t nr_cache_blocks;
+	unsigned max_io;
 
 	struct io_engine *engine;
 
@@ -762,8 +764,8 @@ struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks)
 
 	cache->block_sectors = block_sectors;
 	cache->nr_cache_blocks = nr_cache_blocks;
-
-	cache->engine = _engine_create(nr_cache_blocks < 1024u ? nr_cache_blocks : 1024u);
+	cache->max_io = nr_cache_blocks < MAX_IO ? nr_cache_blocks : MAX_IO;
+	cache->engine = _engine_create(cache->max_io);
 	if (!cache->engine) {
 		dm_free(cache);
 		return NULL;
@@ -820,16 +822,21 @@ unsigned bcache_nr_cache_blocks(struct bcache *cache)
 	return cache->nr_cache_blocks;
 }
 
+unsigned bcache_max_prefetches(struct bcache *cache)
+{
+	return cache->max_io;
+}
+
 void bcache_prefetch(struct bcache *cache, int fd, block_address index)
 {
 	struct block *b = _hash_lookup(cache, fd, index);
 
 	if (!b) {
-		cache->prefetches++;
-
 		b = _new_block(cache, fd, index);
-		if (b)
+		if (b && (cache->nr_io_pending < cache->max_io)) {
+			cache->prefetches++;
 			_issue_read(b);
+		}
 	}
 }
 
