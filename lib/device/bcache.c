@@ -449,8 +449,10 @@ static void _exit_free_list(struct bcache *cache)
 
 static struct block *_alloc_block(struct bcache *cache)
 {
-	struct block *b = dm_list_struct_base(_list_pop(&cache->free), struct block, list);
-	return b;
+	if (dm_list_empty(&cache->free))
+		return NULL;
+
+	return dm_list_struct_base(_list_pop(&cache->free), struct block, list);
 }
 
 /*----------------------------------------------------------------
