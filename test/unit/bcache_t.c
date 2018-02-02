@@ -175,7 +175,7 @@ static void test_prefetch_works(void)
 }
 
 #define NR_FILES 4
-static void test_multiple_files(void)
+static void test_read_multiple_files(void)
 {
 	unsigned i;
 	int fd[NR_FILES];
@@ -226,6 +226,6 @@ CU_TestInfo bcache_list[] = {
 	{ (char*)"block size must be multiple of page size", test_block_size_must_be_multiple_of_page_size },
 	{ (char*)"reads work", test_reads_work },
 	{ (char*)"prefetch works", test_prefetch_works },
-	{ (char*)"multiple files", test_multiple_files },
+	{ (char*)"read multiple files", test_read_multiple_files },
 	CU_TEST_INFO_NULL
 };
