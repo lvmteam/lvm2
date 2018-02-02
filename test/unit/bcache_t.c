@@ -50,7 +50,7 @@ static int _prep_file(const char *path)
 	if (fd < 0)
 		return -1;
 
-	r = fallocate(fd, FALLOC_FL_ZERO_RANGE, 0, (16 * MEG) << SECTOR_SHIFT);
+	r = fallocate(fd, FALLOC_FL_ZERO_RANGE, 0, (1 * MEG) << SECTOR_SHIFT);
 	if (r) {
 		close(fd);
 		return -1;
@@ -174,6 +174,51 @@ static void test_prefetch_works(void)
 	test_exit();
 }
 
+#define NR_FILES 4
+static void test_multiple_files(void)
+{
+	unsigned i;
+	int fd[NR_FILES];
+	char buffer[128];
+
+
+	// FIXME: add fixtures.
+	test_init();
+	for (i = 0; i < NR_FILES; i++) {
+		snprintf(buffer, sizeof(buffer), "./test%u.bin", i);
+		unlink(buffer);
+		_prep_file(buffer);
+		fd[i] = open_file(buffer);
+		CU_ASSERT(fd[i] >= 0);
+	}
+
+	{
+		struct block *b;
+		struct bcache *cache = bcache_create(8, 16);
+
+		for (i = 0; i < 64; i++) {
+			if (!bcache_get(cache, fd[i % NR_FILES], i, 0, &b)) {
+				CU_ASSERT(false);
+			} else
+				bcache_put(b);
+		}
+
+		bcache_destroy(cache);
+	}
+
+	for (i = 0; i < NR_FILES; i++)
+		close(fd[i]);
+
+	test_exit();
+}
+
+// Tests to be written
+// Open multiple files and prove the blocks are coming from the correct file
+// show invalidate works
+// show invalidate_fd works
+// show writeback is working
+// check zeroing
+//
 CU_TestInfo bcache_list[] = {
 	{ (char*)"create", test_create },
 	{ (char*)"nr cache block must be positive", test_nr_cache_blocks_must_be_positive },
@@ -181,5 +226,6 @@ CU_TestInfo bcache_list[] = {
 	{ (char*)"block size must be multiple of page size", test_block_size_must_be_multiple_of_page_size },
 	{ (char*)"reads work", test_reads_work },
 	{ (char*)"prefetch works", test_prefetch_works },
+	{ (char*)"multiple files", test_multiple_files },
 	CU_TEST_INFO_NULL
 };
