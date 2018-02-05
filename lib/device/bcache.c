@@ -966,5 +966,64 @@ void bcache_invalidate_fd(struct bcache *cache, int fd)
 			_recycle_block(cache, b);
 }
 
+static void byte_range_to_block_range(struct bcache *cache, off_t start, size_t len,
+				      block_address *bb, block_address *be)
+{
+	block_address block_size = cache->block_sectors << SECTOR_SHIFT;
+	*bb = start / block_size;
+	*be = (start + len + block_size - 1) / block_size;
+}
+
+void bcache_prefetch_bytes(struct bcache *cache, int fd, off_t start, size_t len)
+{
+	block_address bb, be;
+
+	byte_range_to_block_range(cache, start, len, &bb, &be);
+	while (bb < be) {
+		bcache_prefetch(cache, fd, bb);
+		bb++;
+	}
+}
+
+static off_t _min(off_t lhs, off_t rhs)
+{
+	if (rhs > lhs)
+		return rhs;
+
+	return lhs;
+}
+
+bool bcache_read_bytes(struct bcache *cache, int fd, off_t start, size_t len, void *data)
+{
+	struct block *b;
+	block_address bb, be, i;
+	unsigned char *udata = data;
+	off_t block_size = cache->block_sectors << SECTOR_SHIFT;
+
+	byte_range_to_block_range(cache, start, len, &bb, &be);
+	for (i = bb; i < be; i++)
+		bcache_prefetch(cache, fd, i);
+
+	for (i = bb; i < be; i++) {
+		if (!bcache_get(cache, fd, i, 0, &b))
+			return false;
+
+		if (i == bb) {
+			off_t block_offset = start % block_size;
+			size_t blen = _min(block_size - block_offset, len);
+			memcpy(udata, ((unsigned char *) b->data) + block_offset, blen);
+			len -= blen;
+			udata += blen;
+		} else {
+			size_t blen = _min(block_size, len);
+			memcpy(udata, b->data, blen);
+			len -= blen;
+			udata += blen;
+		}
+	}
+
+	return true;
+}
+
 //----------------------------------------------------------------
 

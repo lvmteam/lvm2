@@ -137,6 +137,16 @@ void bcache_invalidate(struct bcache *cache, int fd, block_address index);
  */
 void bcache_invalidate_fd(struct bcache *cache, int fd);
 
+/*
+ * Prefetches the blocks neccessary to satisfy a byte range.
+ */
+void bcache_prefetch_bytes(struct bcache *cache, int fd, off_t start, size_t len);
+
+/*
+ * Reads the bytes.
+ */
+bool bcache_read_bytes(struct bcache *cache, int fd, off_t start, size_t len, void *data);
+
 /*----------------------------------------------------------------*/
 
 #endif
