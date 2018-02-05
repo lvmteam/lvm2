@@ -12,22 +12,28 @@
 
 UNIT_SOURCE=\
 	test/unit/bcache_t.c \
-	test/unit/bitset_t.c\
-	test/unit/config_t.c\
-	test/unit/dmlist_t.c\
-	test/unit/dmstatus_t.c\
-	test/unit/matcher_t.c\
-	test/unit/percent_t.c\
-	test/unit/string_t.c\
-	test/unit/run.c
+
+
+#	test/unit/run.c
+
+#	test/unit/bitset_t.c\
+#	test/unit/config_t.c\
+#	test/unit/dmlist_t.c\
+#	test/unit/dmstatus_t.c\
+#	test/unit/matcher_t.c\
+#	test/unit/percent_t.c\
+#	test/unit/string_t.c\
+
 UNIT_OBJECTS=$(UNIT_SOURCE:%.c=%.o)
 
-UNIT_LDLIBS += $(LVMINTERNAL_LIBS) -ldevmapper -laio -lcunit
+UNIT_LDLIBS += $(LVMINTERNAL_LIBS) -ldevmapper -laio
 
 test/unit/run: $(UNIT_OBJECTS) libdm/libdevmapper.$(LIB_SUFFIX) lib/liblvm-internal.a
-	$(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) -L$(top_builddir)/libdm \
+	@echo "    [LD] $@"
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) -L$(top_builddir)/libdm \
 	      -o $@ $(UNIT_OBJECTS) $(UNIT_LDLIBS)
 
+.PHONEY: unit-test
 unit-test: test/unit/run
 	@echo Running unit tests
 	LD_LIBRARY_PATH=libdm test/unit/run

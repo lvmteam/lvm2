@@ -15,6 +15,7 @@
 #ifndef BCACHE_H
 #define BCACHE_H
 
+#include <linux/fs.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -22,8 +23,33 @@
 
 /*----------------------------------------------------------------*/
 
+// FIXME: move somewhere more sensible
+#define container_of(v, t, head) \
+    ((t *)((const char *)(v) - (const char *)&((t *) 0)->head))
+
+/*----------------------------------------------------------------*/
+
+enum dir {
+	DIR_READ,
+	DIR_WRITE
+};
+
 typedef uint64_t block_address;
 typedef uint64_t sector_t;
+
+typedef void io_complete_fn(void *context, int io_error);
+
+struct io_engine {
+	void (*destroy)(struct io_engine *e);
+	bool (*issue)(struct io_engine *e, enum dir d, int fd,
+		      sector_t sb, sector_t se, void *data, void *context);
+	bool (*wait)(struct io_engine *e, io_complete_fn fn);
+	unsigned (*max_io)(struct io_engine *e);
+};
+
+struct io_engine *create_async_io_engine(unsigned max_io);
+
+/*----------------------------------------------------------------*/
 
 struct bcache;
 struct block {
@@ -41,7 +67,11 @@ struct block {
 	int error;
 };
 
-struct bcache *bcache_create(sector_t block_size, unsigned nr_cache_blocks);
+/*
+ * Ownership of engine passes.  Engine will be destroyed even if this fails.
+ */
+struct bcache *bcache_create(sector_t block_size, unsigned nr_cache_blocks,
+			     struct io_engine *engine);
 void bcache_destroy(struct bcache *cache);
 
 enum bcache_get_flags {

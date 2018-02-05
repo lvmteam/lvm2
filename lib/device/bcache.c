@@ -130,44 +130,21 @@ static struct control_block *_iocb_to_cb(struct iocb *icb)
 //----------------------------------------------------------------
 
 // FIXME: write a sync engine too
-enum dir {
-	DIR_READ,
-	DIR_WRITE
-};
-
-struct io_engine {
+struct async_engine {
+	struct io_engine e;
 	io_context_t aio_context;
 	struct cb_set *cbs;
 };
 
-static struct io_engine *_engine_create(unsigned max_io)
+static struct async_engine *_to_async(struct io_engine *e)
 {
-	int r;
-	struct io_engine *e = dm_malloc(sizeof(*e));
-
-	if (!e)
-		return NULL;
-
-	e->aio_context = 0;
-	r = io_setup(max_io, &e->aio_context);
-	if (r < 0) {
-		log_warn("io_setup failed");
-		return NULL;
-	}
-
-	e->cbs = _cb_set_create(max_io);
-	if (!e->cbs) {
-		log_warn("couldn't create control block set");
-		dm_free(e);
-		return NULL;
-	}
-
-	return e;
+	return container_of(e, struct async_engine, e);
 }
 
-static void _engine_destroy(struct io_engine *e)
+static void _async_destroy(struct io_engine *ioe)
 {
 	int r;
+	struct async_engine *e = _to_async(ioe);
 
 	_cb_set_destroy(e->cbs);
 
@@ -179,12 +156,13 @@ static void _engine_destroy(struct io_engine *e)
 	dm_free(e);
 }
 
-static bool _engine_issue(struct io_engine *e, enum dir d, int fd,
-			  sector_t sb, sector_t se, void *data, void *context)
+static bool _async_issue(struct io_engine *ioe, enum dir d, int fd,
+			 sector_t sb, sector_t se, void *data, void *context)
 {
 	int r;
 	struct iocb *cb_array[1];
 	struct control_block *cb;
+	struct async_engine *e = _to_async(ioe);
 
 	if (((uint64_t) data) & (PAGE_SIZE - 1)) {
 		log_warn("misaligned data buffer");
@@ -218,13 +196,13 @@ static bool _engine_issue(struct io_engine *e, enum dir d, int fd,
 
 #define MAX_IO 1024
 #define MAX_EVENT 64
-typedef void complete_fn(void *context, int io_error);
 
-static bool _engine_wait(struct io_engine *e, complete_fn fn)
+static bool _async_wait(struct io_engine *ioe, io_complete_fn fn)
 {
 	int i, r;
 	struct io_event event[MAX_EVENT];
 	struct control_block *cb;
+	struct async_engine *e = _to_async(ioe);
 
 	memset(&event, 0, sizeof(event));
 	r = io_getevents(e->aio_context, 1, MAX_EVENT, event, NULL);
@@ -253,6 +231,36 @@ static bool _engine_wait(struct io_engine *e, complete_fn fn)
 	}
 
 	return true;
+}
+
+struct io_engine *create_async_io_engine(unsigned max_io)
+{
+	int r;
+	struct async_engine *e = dm_malloc(sizeof(*e));
+
+	if (!e)
+		return NULL;
+
+	e->e.destroy = _async_destroy;
+	e->e.issue = _async_issue;
+	e->e.wait = _async_wait;
+
+	e->aio_context = 0;
+	r = io_setup(max_io, &e->aio_context);
+	if (r < 0) {
+		log_warn("io_setup failed");
+		dm_free(e);
+		return NULL;
+	}
+
+	e->cbs = _cb_set_create(max_io);
+	if (!e->cbs) {
+		log_warn("couldn't create control block set");
+		dm_free(e);
+		return NULL;
+	}
+
+	return &e->e;
 }
 
 //----------------------------------------------------------------
@@ -536,7 +544,9 @@ static bool _issue_low_level(struct block *b, enum dir d)
 		return false;
 
 	_set_flags(b, BF_IO_PENDING);
-	if (!_engine_issue(cache->engine, d, b->fd, sb, se, b->data, b)) {
+	dm_list_add(&cache->io_pending, &b->list);
+
+	if (!cache->engine->issue(cache->engine, d, b->fd, sb, se, b->data, b)) {
 		_complete_io(b, -EIO);
 		return false;
 	}
@@ -557,7 +567,7 @@ static inline bool _issue_write(struct block *b)
 
 static bool _wait_io(struct bcache *cache)
 {
-	return _engine_wait(cache->engine, _complete_io);
+	return cache->engine->wait(cache->engine, _complete_io);
 }
 
 /*----------------------------------------------------------------
@@ -614,17 +624,20 @@ static struct block *_find_unused_clean_block(struct bcache *cache)
 	return NULL;
 }
 
-static struct block *_new_block(struct bcache *cache, int fd, block_address index)
+static struct block *_new_block(struct bcache *cache, int fd, block_address index, bool can_wait)
 {
 	struct block *b;
 
 	b = _alloc_block(cache);
-	while (!b && cache->nr_locked < cache->nr_cache_blocks) {
+	while (!b && !dm_list_empty(&cache->clean)) {
 		b = _find_unused_clean_block(cache);
 		if (!b) {
-			if (dm_list_empty(&cache->io_pending))
-				_writeback(cache, 16);
-			_wait_io(cache);
+			if (can_wait) {
+				if (dm_list_empty(&cache->io_pending))
+					_writeback(cache, 16);  // FIXME: magic number
+				_wait_io(cache);
+			} else
+				return NULL;
 		}
 	}
 
@@ -702,7 +715,7 @@ static struct block *_lookup_or_read_block(struct bcache *cache,
 	} else {
 		_miss(cache, flags);
 
-		b = _new_block(cache, fd, index);
+		b = _new_block(cache, fd, index, true);
 		if (b) {
 			if (flags & GF_ZERO)
 				_zero_block(b);
@@ -741,9 +754,11 @@ static void _preemptive_writeback(struct bcache *cache)
 /*----------------------------------------------------------------
  * Public interface
  *--------------------------------------------------------------*/
-struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks)
+struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks,
+			     struct io_engine *engine)
 {
 	struct bcache *cache;
+	unsigned max_io = engine->max_io(engine);
 
 	if (!nr_cache_blocks) {
 		log_warn("bcache must have at least one cache block");
@@ -766,13 +781,8 @@ struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks)
 
 	cache->block_sectors = block_sectors;
 	cache->nr_cache_blocks = nr_cache_blocks;
-	cache->max_io = nr_cache_blocks < MAX_IO ? nr_cache_blocks : MAX_IO;
-	cache->engine = _engine_create(cache->max_io);
-	if (!cache->engine) {
-		dm_free(cache);
-		return NULL;
-	}
-
+	cache->max_io = nr_cache_blocks < max_io ? nr_cache_blocks : max_io;
+	cache->engine = engine;
 	cache->nr_locked = 0;
 	cache->nr_dirty = 0;
 	cache->nr_io_pending = 0;
@@ -784,7 +794,7 @@ struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks)
 	dm_list_init(&cache->io_pending);
 
 	if (!_hash_table_init(cache, nr_cache_blocks)) {
-		_engine_destroy(cache->engine);
+		cache->engine->destroy(cache->engine);
 		dm_free(cache);
 		return NULL;
 	}
@@ -797,7 +807,7 @@ struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks)
 	cache->prefetches = 0;
 
 	if (!_init_free_list(cache, nr_cache_blocks)) {
-		_engine_destroy(cache->engine);
+		cache->engine->destroy(cache->engine);
 		_hash_table_exit(cache);
 		dm_free(cache);
 		return NULL;
@@ -815,7 +825,7 @@ void bcache_destroy(struct bcache *cache)
 	_wait_all(cache);
 	_exit_free_list(cache);
 	_hash_table_exit(cache);
-	_engine_destroy(cache->engine);
+	cache->engine->destroy(cache->engine);
 	dm_free(cache);
 }
 
@@ -834,10 +844,12 @@ void bcache_prefetch(struct bcache *cache, int fd, block_address index)
 	struct block *b = _hash_lookup(cache, fd, index);
 
 	if (!b) {
-		b = _new_block(cache, fd, index);
-		if (b && (cache->nr_io_pending < cache->max_io)) {
-			cache->prefetches++;
-			_issue_read(b);
+		if (cache->nr_io_pending < cache->max_io) {
+			b = _new_block(cache, fd, index, false);
+			if (b) {
+				cache->prefetches++;
+				_issue_read(b);
+			}
 		}
 	}
 }
@@ -881,9 +893,10 @@ int bcache_flush(struct bcache *cache)
 {
 	while (!dm_list_empty(&cache->dirty)) {
 		struct block *b = dm_list_item(_list_pop(&cache->dirty), struct block);
-		if (b->ref_count || _test_flags(b, BF_IO_PENDING))
+		if (b->ref_count || _test_flags(b, BF_IO_PENDING)) {
 			// The superblock may well be still locked.
 			continue;
+		}
 
 		_issue_write(b);
 	}
