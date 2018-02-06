@@ -23,6 +23,7 @@
 #include "toolcontext.h"
 #include "lvm-file.h"
 #include "memlock.h"
+#include "label.h"
 
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -532,10 +533,15 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 			log_error("Failed to allocate circular buffer.");
 			return 0;
 		}
-		if (!dev_read_circular(dev, (uint64_t) offset, size,
-				       (uint64_t) offset2, size2, reason, buf)) {
+
+		if (!bcache_read_bytes(scan_bcache, dev->fd, offset, size, buf))
 			goto out;
+
+		if (size2) {
+			if (!bcache_read_bytes(scan_bcache, dev->fd, offset2, size2, buf + size))
+				goto out;
 		}
+
 		fb = buf;
 	}
 

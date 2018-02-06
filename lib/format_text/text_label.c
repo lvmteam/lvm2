@@ -323,7 +323,7 @@ struct _update_mda_baton {
 	struct label *label;
 };
 
-static int _update_mda(struct metadata_area *mda, void *baton)
+static int _read_mda_header_and_metadata(struct metadata_area *mda, void *baton)
 {
 	struct _update_mda_baton *p = baton;
 	const struct format_type *fmt = p->label->labeller->fmt;
@@ -360,7 +360,7 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 		return 1;
 	}
 
-	if (vgname_from_mda(fmt, mdah, mda_is_primary(mda), &mdac->area, &vgsummary,
+	if (read_metadata_location_summary(fmt, mdah, mda_is_primary(mda), &mdac->area, &vgsummary,
 			     &mdac->free_sectors) &&
 	    !lvmcache_update_vgname_and_id(p->info, &vgsummary)) {
 		if (!dev_close(mdac->area.dev))
@@ -375,10 +375,10 @@ close_dev:
 	return 1;
 }
 
-static int _text_read(struct labeller *l, struct device *dev, void *buf,
-		 struct label **label)
+static int _text_read(struct labeller *l, struct device *dev, void *label_buf,
+		      struct label **label)
 {
-	struct label_header *lh = (struct label_header *) buf;
+	struct label_header *lh = (struct label_header *) label_buf;
 	struct pv_header *pvhdr;
 	struct pv_header_extension *pvhdr_ext;
 	struct lvmcache_info *info;
@@ -390,7 +390,7 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 	/*
 	 * PV header base
 	 */
-	pvhdr = (struct pv_header *) ((char *) buf + xlate32(lh->offset_xl));
+	pvhdr = (struct pv_header *) ((char *) label_buf + xlate32(lh->offset_xl));
 
 	if (!(info = lvmcache_add(l, (char *)pvhdr->pv_uuid, dev,
 				  FMT_TEXT_ORPHAN_VG_NAME,
@@ -447,8 +447,7 @@ out:
 	baton.info = info;
 	baton.label = *label;
 
-	if (!lvmcache_foreach_mda(info, _update_mda, &baton))
-		return_0;
+	lvmcache_foreach_mda(info, _read_mda_header_and_metadata, &baton);
 
 	lvmcache_make_valid(info);
 

@@ -80,8 +80,7 @@ struct metadata_area_ops {
 					 const char *vg_name,
 					 struct metadata_area * mda,
 					 struct cached_vg_fmtdata **vg_fmtdata,
-					 unsigned *use_previous_vg,
-					 int single_device);
+					 unsigned *use_previous_vg);
 	struct volume_group *(*vg_read_precommit) (struct format_instance * fi,
 					 const char *vg_name,
 					 struct metadata_area * mda,
@@ -182,6 +181,11 @@ unsigned mda_is_ignored(struct metadata_area *mda);
 void mda_set_ignored(struct metadata_area *mda, unsigned mda_ignored);
 unsigned mda_locns_match(struct metadata_area *mda1, struct metadata_area *mda2);
 struct device *mda_get_device(struct metadata_area *mda);
+
+/*
+ * fic is used to create an fid.  It's used to pass fmt/vgname/vgid args
+ * to create_instance() which creates an fid for the specified vg.
+ */
 
 struct format_instance_ctx {
 	uint32_t type;

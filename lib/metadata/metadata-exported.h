@@ -377,6 +377,19 @@ struct pv_segment {
  */
 #define FMT_INSTANCE_PRIVATE_MDAS	0x00000008U
 
+/*
+ * Each VG has its own fid struct.  The fid for a VG describes where
+ * the metadata for that VG can be found.  The lists hold mda locations.
+ *
+ * label scan finds the metadata locations (devs and offsets) for a VG,
+ * and saves this info in lvmcache vginfo/info lists.
+ *
+ * vg_read() then creates an fid for a given VG, and the mda locations
+ * from lvmcache are copied onto the fid lists.  Those mda locations
+ * are read again by vg_read() to get VG metadata that is used to
+ * create the 'vg' struct.
+ */
+
 struct format_instance {
 	unsigned ref_count;	/* Refs to this fid from VG and PV structs */
 	struct dm_pool *mem;

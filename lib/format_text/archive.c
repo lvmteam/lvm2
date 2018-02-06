@@ -320,7 +320,7 @@ static void _display_archive(struct cmd_context *cmd, struct archive_file *af)
 	 * retrieve the archive time and description.
 	 */
 	/* FIXME Use variation on _vg_read */
-	if (!(vg = text_vg_import_file(tf, af->path, &when, &desc))) {
+	if (!(vg = text_read_metadata_file(tf, af->path, &when, &desc))) {
 		log_error("Unable to read archive file.");
 		tf->fmt->ops->destroy_instance(tf);
 		return;

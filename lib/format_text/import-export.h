@@ -49,7 +49,6 @@ struct text_vg_version_ops {
 	int (*check_version) (const struct dm_config_tree * cf);
 	struct volume_group *(*read_vg) (struct format_instance * fid,
 					 const struct dm_config_tree *cf,
-					 unsigned use_cached_pvs,
 					 unsigned allow_lvmetad_extensions);
 	void (*read_desc) (struct dm_pool * mem, const struct dm_config_tree *cf,
 			   time_t *when, char **desc);
@@ -68,14 +67,13 @@ int read_segtype_lvflags(uint64_t *status, char *segtype_str);
 
 int text_vg_export_file(struct volume_group *vg, const char *desc, FILE *fp);
 size_t text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf);
-struct volume_group *text_vg_import_file(struct format_instance *fid,
+struct volume_group *text_read_metadata_file(struct format_instance *fid,
 					 const char *file,
 					 time_t *when, char **desc);
-struct volume_group *text_vg_import_fd(struct format_instance *fid,
+struct volume_group *text_read_metadata(struct format_instance *fid,
 				       const char *file,
 				       struct cached_vg_fmtdata **vg_fmtdata,
 				       unsigned *use_previous_vg,
-				       int single_device,
 				       struct device *dev, int primary_mda,
 				       off_t offset, uint32_t size,
 				       off_t offset2, uint32_t size2,
@@ -83,7 +81,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 				       uint32_t checksum,
 				       time_t *when, char **desc);
 
-int text_vgsummary_import(const struct format_type *fmt,
+int text_read_metadata_summary(const struct format_type *fmt,
 		       struct device *dev, dev_io_reason_t reason,
 		       off_t offset, uint32_t size,
 		       off_t offset2, uint32_t size2,

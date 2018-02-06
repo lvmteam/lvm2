@@ -223,7 +223,11 @@ static bool _async_wait(struct io_engine *ioe, io_complete_fn fn)
 		else if ((int) ev->res < 0)
 			fn(cb->context, (int) ev->res);
 
-		else {
+		else if (ev->res >= (1 << SECTOR_SHIFT)) {
+			/* minimum acceptable read is 1 sector */
+			fn((void *) cb->context, 0);
+
+		} else {
 			log_warn("short io");
 			fn(cb->context, -ENODATA);
 		}

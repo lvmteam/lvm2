@@ -18,6 +18,8 @@
 
 #include "uuid.h"
 #include "device.h"
+#include "bcache.h"
+#include "toolcontext.h"
 
 #define LABEL_ID "LABELONE"
 #define LABEL_SIZE SECTOR_SIZE	/* Think very carefully before changing this */
@@ -63,7 +65,7 @@ struct label_ops {
 	 * Read a label from a volume.
 	 */
 	int (*read) (struct labeller * l, struct device * dev,
-		     void *buf, struct label ** label);
+		     void *label_buf, struct label ** label);
 
 	/*
 	 * Populate label_type etc.
@@ -94,10 +96,17 @@ int label_register_handler(struct labeller *handler);
 struct labeller *label_get_handler(const char *name);
 
 int label_remove(struct device *dev);
-int label_read(struct device *dev, struct label **result,
-		uint64_t scan_sector);
 int label_write(struct device *dev, struct label *label);
 struct label *label_create(struct labeller *labeller);
 void label_destroy(struct label *label);
+
+extern struct bcache *scan_bcache;
+
+int label_scan(struct cmd_context *cmd);
+int label_scan_devs(struct cmd_context *cmd, struct dm_list *devs);
+void label_scan_invalidate(struct device *dev);
+void label_scan_destroy(struct cmd_context *cmd);
+int label_read(struct device *dev, struct label **labelp, uint64_t unused_sector);
+int label_read_sector(struct device *dev, struct label **labelp, uint64_t scan_sector);
 
 #endif

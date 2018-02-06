@@ -31,6 +31,7 @@
 #define DEV_USED_FOR_LV		0x00000100	/* Is device used for an LV */
 #define DEV_ASSUMED_FOR_LV	0x00000200	/* Is device assumed for an LV */
 #define DEV_NOT_O_NOATIME	0x00000400	/* Don't use O_NOATIME */
+#define DEV_IN_BCACHE		0x00000800      /* dev fd is open and used in bcache */
 
 /*
  * Support for external device info.

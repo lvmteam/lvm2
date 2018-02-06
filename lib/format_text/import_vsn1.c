@@ -32,9 +32,7 @@ typedef int (*section_fn) (struct format_instance * fid,
 			   struct volume_group * vg, const struct dm_config_node * pvn,
 			   const struct dm_config_node * vgn,
 			   struct dm_hash_table * pv_hash,
-			   struct dm_hash_table * lv_hash,
-			   unsigned *scan_done_once,
-			   unsigned report_missing_devices);
+			   struct dm_hash_table * lv_hash);
 
 #define _read_int32(root, path, result) \
 	dm_config_get_uint32(root, path, (uint32_t *) (result))
@@ -180,9 +178,7 @@ static int _read_pv(struct format_instance *fid,
 		    struct volume_group *vg, const struct dm_config_node *pvn,
 		    const struct dm_config_node *vgn __attribute__((unused)),
 		    struct dm_hash_table *pv_hash,
-		    struct dm_hash_table *lv_hash __attribute__((unused)),
-		    unsigned *scan_done_once,
-		    unsigned report_missing_devices)
+		    struct dm_hash_table *lv_hash __attribute__((unused)))
 {
 	struct dm_pool *mem = vg->vgmem;
 	struct physical_volume *pv;
@@ -226,10 +222,7 @@ static int _read_pv(struct format_instance *fid,
 
 		if (!id_write_format(&pv->id, buffer, sizeof(buffer)))
 			buffer[0] = '\0';
-		if (report_missing_devices)
-			log_error_once("Couldn't find device with uuid %s.", buffer);
-		else
-			log_very_verbose("Couldn't find device with uuid %s.", buffer);
+		log_error_once("Couldn't find device with uuid %s.", buffer);
 	}
 
 	if (!(pv->vg_name = dm_pool_strdup(mem, vg->name)))
@@ -574,9 +567,7 @@ static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 			 struct volume_group *vg, const struct dm_config_node *lvn,
 			 const struct dm_config_node *vgn __attribute__((unused)),
 			 struct dm_hash_table *pv_hash __attribute__((unused)),
-			 struct dm_hash_table *lv_hash,
-			 unsigned *scan_done_once __attribute__((unused)),
-			 unsigned report_missing_devices __attribute__((unused)))
+			 struct dm_hash_table *lv_hash)
 {
 	struct dm_pool *mem = vg->vgmem;
 	struct logical_volume *lv;
@@ -731,9 +722,7 @@ static int _read_historical_lvnames(struct format_instance *fid __attribute__((u
 				     struct volume_group *vg, const struct dm_config_node *hlvn,
 				     const struct dm_config_node *vgn __attribute__((unused)),
 				     struct dm_hash_table *pv_hash __attribute__((unused)),
-				     struct dm_hash_table *lv_hash __attribute__((unused)),
-				     unsigned *scan_done_once __attribute__((unused)),
-				     unsigned report_missing_devices __attribute__((unused)))
+				     struct dm_hash_table *lv_hash __attribute__((unused)))
 {
 	struct dm_pool *mem = vg->vgmem;
 	struct generic_logical_volume *glv;
@@ -802,9 +791,7 @@ static int _read_historical_lvnames_interconnections(struct format_instance *fid
 						 struct volume_group *vg, const struct dm_config_node *hlvn,
 						 const struct dm_config_node *vgn __attribute__((unused)),
 						 struct dm_hash_table *pv_hash __attribute__((unused)),
-						 struct dm_hash_table *lv_hash __attribute__((unused)),
-						 unsigned *scan_done_once __attribute__((unused)),
-						 unsigned report_missing_devices __attribute__((unused)))
+						 struct dm_hash_table *lv_hash __attribute__((unused)))
 {
 	struct dm_pool *mem = vg->vgmem;
 	const char *historical_lv_name, *origin_name = NULL;
@@ -914,9 +901,7 @@ static int _read_lvsegs(struct format_instance *fid,
 			struct volume_group *vg, const struct dm_config_node *lvn,
 			const struct dm_config_node *vgn __attribute__((unused)),
 			struct dm_hash_table *pv_hash,
-			struct dm_hash_table *lv_hash,
-			unsigned *scan_done_once __attribute__((unused)),
-			unsigned report_missing_devices __attribute__((unused)))
+			struct dm_hash_table *lv_hash)
 {
 	struct logical_volume *lv;
 
@@ -977,12 +962,9 @@ static int _read_sections(struct format_instance *fid,
 			  struct volume_group *vg, const struct dm_config_node *vgn,
 			  struct dm_hash_table *pv_hash,
 			  struct dm_hash_table *lv_hash,
-			  int optional,
-			  unsigned *scan_done_once)
+			  int optional)
 {
 	const struct dm_config_node *n;
-	/* Only report missing devices when doing a scan */
-	unsigned report_missing_devices = scan_done_once ? !*scan_done_once : 1;
 
 	if (!dm_config_get_section(vgn, section, &n)) {
 		if (!optional) {
@@ -994,8 +976,7 @@ static int _read_sections(struct format_instance *fid,
 	}
 
 	for (n = n->child; n; n = n->sib) {
-		if (!fn(fid, vg, n, vgn, pv_hash, lv_hash,
-			scan_done_once, report_missing_devices))
+		if (!fn(fid, vg, n, vgn, pv_hash, lv_hash))
 			return_0;
 	}
 
@@ -1004,7 +985,6 @@ static int _read_sections(struct format_instance *fid,
 
 static struct volume_group *_read_vg(struct format_instance *fid,
 				     const struct dm_config_tree *cft,
-				     unsigned use_cached_pvs,
 				     unsigned allow_lvmetad_extensions)
 {
 	const struct dm_config_node *vgn;
@@ -1012,7 +992,6 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	const char *str, *format_str, *system_id;
 	struct volume_group *vg;
 	struct dm_hash_table *pv_hash = NULL, *lv_hash = NULL;
-	unsigned scan_done_once = use_cached_pvs;
 	uint64_t vgstatus;
 
 	/* skip any top-level values */
@@ -1167,7 +1146,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	}
 
 	if (!_read_sections(fid, "physical_volumes", _read_pv, vg,
-			    vgn, pv_hash, lv_hash, 0, &scan_done_once)) {
+			    vgn, pv_hash, lv_hash, 0)) {
 		log_error("Couldn't find all physical volumes for volume "
 			  "group %s.", vg->name);
 		goto bad;
@@ -1175,7 +1154,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 
 	if (allow_lvmetad_extensions)
 		_read_sections(fid, "outdated_pvs", _read_pv, vg,
-			       vgn, pv_hash, lv_hash, 1, &scan_done_once);
+			       vgn, pv_hash, lv_hash, 1);
 	else if (dm_config_has_node(vgn, "outdated_pvs"))
 		log_error(INTERNAL_ERROR "Unexpected outdated_pvs section in metadata of VG %s.", vg->name);
 
@@ -1187,28 +1166,28 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	}
 
 	if (!_read_sections(fid, "logical_volumes", _read_lvnames, vg,
-			    vgn, pv_hash, lv_hash, 1, NULL)) {
+			    vgn, pv_hash, lv_hash, 1)) {
 		log_error("Couldn't read all logical volume names for volume "
 			  "group %s.", vg->name);
 		goto bad;
 	}
 
 	if (!_read_sections(fid, "historical_logical_volumes", _read_historical_lvnames, vg,
-			    vgn, pv_hash, lv_hash, 1, NULL)) {
+			    vgn, pv_hash, lv_hash, 1)) {
 		log_error("Couldn't read all historical logical volumes for volume "
 			  "group %s.", vg->name);
 		goto bad;
 	}
 
 	if (!_read_sections(fid, "logical_volumes", _read_lvsegs, vg,
-			    vgn, pv_hash, lv_hash, 1, NULL)) {
+			    vgn, pv_hash, lv_hash, 1)) {
 		log_error("Couldn't read all logical volumes for "
 			  "volume group %s.", vg->name);
 		goto bad;
 	}
 
 	if (!_read_sections(fid, "historical_logical_volumes", _read_historical_lvnames_interconnections,
-			    vg, vgn, pv_hash, lv_hash, 1, NULL)) {
+			    vg, vgn, pv_hash, lv_hash, 1)) {
 		log_error("Couldn't read all removed logical volume interconnections "
 			  "for volume group %s.", vg->name);
 		goto bad;

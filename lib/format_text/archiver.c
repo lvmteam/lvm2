@@ -320,7 +320,7 @@ struct volume_group *backup_read_vg(struct cmd_context *cmd,
 	}
 
 	dm_list_iterate_items(mda, &tf->metadata_areas_in_use) {
-		if (!(vg = mda->ops->vg_read(tf, vg_name, mda, NULL, NULL, 0)))
+		if (!(vg = mda->ops->vg_read(tf, vg_name, mda, NULL, NULL)))
 			stack;
 		break;
 	}
