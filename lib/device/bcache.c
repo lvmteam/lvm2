@@ -365,7 +365,7 @@ static struct block *_hash_lookup(struct bcache *cache, int fd, uint64_t index)
 	unsigned h = _hash(cache, fd, index);
 
 	dm_list_iterate_items_gen (b, cache->buckets + h, hash)
-		if (b->index == index)
+		if (b->fd == fd && b->index == index)
 			return b;
 
 	return NULL;
