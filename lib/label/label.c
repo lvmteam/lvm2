@@ -155,8 +155,10 @@ out:
 	if (!dev_close(flp->dev))
 		stack;
 
-	if (flp->process_label_data_fn)
+	if (flp->process_label_data_fn) {
+		log_debug_io("Completed label reading for %s", dev_name(flp->dev));
 		flp->process_label_data_fn(!flp->ret, ioflags, flp->process_label_data_context, NULL);
+	}
 }
 
 static void _find_labeller(int failed, unsigned ioflags, void *context, const void *data)
@@ -324,8 +326,10 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 		log_debug_devs("Reading label from lvmcache for %s", dev_name(dev));
 		if (result)
 			*result = lvmcache_get_label(info);
-		if (process_label_data_fn)
+		if (process_label_data_fn) {
+			log_debug_io("Completed label reading for %s", dev_name(dev));
 			process_label_data_fn(0, ioflags, process_label_data_context, NULL);
+		}
 		return 1;
 	}
 
@@ -356,12 +360,7 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 		return 0;
 	}
 
-	if (!(dev_read_callback(dev, scan_sector << SECTOR_SHIFT, LABEL_SCAN_SIZE, DEV_IO_LABEL, ioflags, _find_labeller, flp))) {
-		log_debug_devs("%s: Failed to read label area", dev_name(dev));
-		_set_label_read_result(1, ioflags, flp, NULL);
-		return 0;
-	}
-
+	dev_read_callback(dev, scan_sector << SECTOR_SHIFT, LABEL_SCAN_SIZE, DEV_IO_LABEL, ioflags, _find_labeller, flp);
 	if (process_label_data_fn)
 		return 1;
 	else

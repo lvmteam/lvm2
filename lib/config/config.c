@@ -609,8 +609,11 @@ int config_file_read_fd(struct dm_pool *mem, struct dm_config_tree *cft, struct 
 				goto_out;
 			_process_config_file_buffer(0, ioflags, pcfp, buf);
 			dm_free((void *)buf);
-		} else if (!dev_read_callback(dev, (uint64_t) offset, size, reason, ioflags, _process_config_file_buffer, pcfp))
-			goto_out;
+		} else {
+			dev_read_callback(dev, (uint64_t) offset, size, reason, ioflags, _process_config_file_buffer, pcfp);
+			if (config_file_read_fd_callback)
+				return 1;
+		}
 		r = pcfp->ret;
 	}
 

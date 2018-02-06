@@ -184,9 +184,9 @@ const char *dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_rea
 const char *dev_read_circular(struct device *dev, uint64_t offset, size_t len,
 			      uint64_t offset2, size_t len2, dev_io_reason_t reason);
 
-/* Passes the data to dev_read_callback_fn */
-int dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason,
-		      unsigned ioflags, lvm_callback_fn_t dev_read_callback_fn, void *callback_context);
+/* Passes the data (or error) to dev_read_callback_fn */
+void dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason,
+		       unsigned ioflags, lvm_callback_fn_t dev_read_callback_fn, void *callback_context);
 
 /* Read data and copy it into a supplied private buffer. */
 /* Only use for tiny reads or on unimportant code paths. */

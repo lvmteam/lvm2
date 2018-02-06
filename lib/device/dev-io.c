@@ -245,7 +245,8 @@ int dev_async_getevents(void)
 			_release_devbuf(devbuf);
 			if (dev_read_callback_fn)
 				dev_read_callback_fn(1, AIO_SUPPORTED_CODE_PATH, dev_read_callback_context, NULL);
-			r = 0;
+			else
+				r = 0;
 		}
 	}
 
@@ -1080,24 +1081,28 @@ static void _dev_inc_error_count(struct device *dev)
 }
 
 /*
- * Data is returned (read-only) at DEV_DEVBUF_DATA(dev, reason)
+ * Data is returned (read-only) at DEV_DEVBUF_DATA(dev, reason).
+ * If dev_read_callback_fn is supplied, we always return 1 and take
+ * responsibility for calling it exactly once.  This might happen before the
+ * function returns (if there's an error or the I/O is synchronous) or after.
+ * Any error is passed to that function, which must track it if required.
  */
-int dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason,
-		      unsigned ioflags, lvm_callback_fn_t dev_read_callback_fn, void *callback_context)
+static int _dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason,
+			      unsigned ioflags, lvm_callback_fn_t dev_read_callback_fn, void *callback_context)
 {
 	struct device_area where;
 	struct device_buffer *devbuf;
 	uint64_t buf_end;
 	int cached = 0;
-	int ret = 1;
+	int ret = 0;
 
 	if (!dev->open_count) {
 		log_error(INTERNAL_ERROR "Attempt to access device %s while closed.", dev_name(dev));
-		return 0;
+		goto out;
 	}
 
 	if (!_dev_is_valid(dev))
-		return 0;
+		goto_out;
 
 	/*
 	 * Can we satisfy this from data we stored last time we read?
@@ -1110,6 +1115,7 @@ int dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_re
 			devbuf->data_offset = offset - devbuf->where.start;
 			log_debug_io("Cached read for %" PRIu64 " bytes at %" PRIu64 " on %s (for %s)",
 				     (uint64_t) len, (uint64_t) offset, dev_name(dev), _reason_text(reason));
+			ret = 1;
 			goto out;
 		}
 	}
@@ -1126,16 +1132,26 @@ int dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_re
 
 out:
 	/* If we had an error or this was sync I/O, pass the result to any callback fn */
-	if ((!ret || !_aio_ctx || !aio_supported_code_path(ioflags) || cached) && dev_read_callback_fn)
+	if ((!ret || !_aio_ctx || !aio_supported_code_path(ioflags) || cached) && dev_read_callback_fn) {
 		dev_read_callback_fn(!ret, ioflags, callback_context, DEV_DEVBUF_DATA(dev, reason));
+		return 1;
+	}
 
 	return ret;
+}
+
+void dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason,
+		      unsigned ioflags, lvm_callback_fn_t dev_read_callback_fn, void *callback_context)
+{
+	/* Always returns 1 if callback fn is supplied */
+	if (!_dev_read_callback(dev, offset, len, reason, ioflags, dev_read_callback_fn, callback_context))
+		log_error(INTERNAL_ERROR "_dev_read_callback failed");
 }
 
 /* Returns pointer to read-only buffer. Caller does not free it.  */
 const char *dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason)
 {
-	if (!dev_read_callback(dev, offset, len, reason, 0, NULL, NULL))
+	if (!_dev_read_callback(dev, offset, len, reason, 0, NULL, NULL))
 		return_NULL;
 
 	return DEV_DEVBUF_DATA(dev, reason);
@@ -1144,7 +1160,7 @@ const char *dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_rea
 /* Read into supplied retbuf owned by the caller. */
 int dev_read_buf(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *retbuf)
 {
-	if (!dev_read_callback(dev, offset, len, reason, 0, NULL, NULL)) {
+	if (!_dev_read_callback(dev, offset, len, reason, 0, NULL, NULL)) {
 		log_error("Read from %s failed", dev_name(dev));
 		return 0;
 	}

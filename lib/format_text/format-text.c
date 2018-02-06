@@ -385,8 +385,8 @@ static void _process_raw_mda_header(int failed, unsigned ioflags, void *context,
 bad:
 	prmp->ret = 0;
 out:
-	if (prmp->ret && prmp->mdah_callback_fn)
-		prmp->mdah_callback_fn(0, ioflags, prmp->mdah_callback_context, mdah);
+	if (prmp->mdah_callback_fn)
+		prmp->mdah_callback_fn(!prmp->ret, ioflags, prmp->mdah_callback_context, mdah);
 }
 
 static struct mda_header *_raw_read_mda_header(struct dm_pool *mem, struct device_area *dev_area, int primary_mda,
@@ -417,14 +417,15 @@ static struct mda_header *_raw_read_mda_header(struct dm_pool *mem, struct devic
 	prmp->mdah_callback_context = mdah_callback_context;
 	prmp->ret = 1;
 
-	if (!dev_read_callback(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, MDA_HEADER_REASON(primary_mda),
-			       ioflags, _process_raw_mda_header, prmp))
-		stack;
+	dev_read_callback(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, MDA_HEADER_REASON(primary_mda),
+			  ioflags, _process_raw_mda_header, prmp);
+	if (mdah_callback_fn)
+		return mdah;
 
 	if (!prmp->ret)
 		return_NULL;
-
-	return mdah;
+	else
+		return mdah;
 }
 
 struct mda_header *raw_read_mda_header(struct dm_pool *mem, struct device_area *dev_area, int primary_mda)
@@ -1404,8 +1405,7 @@ static void _vgname_from_mda_process(int failed, unsigned ioflags, void *context
 	}
 
 out:
-	if (vfmp->ret)
-		vfmp->update_vgsummary_fn(0, ioflags, vfmp->update_vgsummary_context, vfmp->vgsummary);
+	vfmp->update_vgsummary_fn(!vfmp->ret, ioflags, vfmp->update_vgsummary_context, vfmp->vgsummary);
 }
 
 static void _vgname_from_mda_validate(int failed, unsigned ioflags, void *context, const void *data)
@@ -1469,7 +1469,8 @@ static void _vgname_from_mda_validate(int failed, unsigned ioflags, void *contex
 	}
 
 out:
-	;
+	if (!vfmp->ret && vfmp->update_vgsummary_fn)
+		vfmp->update_vgsummary_fn(1, ioflags, vfmp->update_vgsummary_context, vfmp->vgsummary);
 }
 
 int vgname_from_mda(const struct format_type *fmt,
@@ -1517,11 +1518,12 @@ int vgname_from_mda(const struct format_type *fmt,
 
 	/* Do quick check for a vgname */
 	/* We cannot read the full metadata here because the name has to be validated before we use the size field */
-	if (!dev_read_callback(dev_area->dev, dev_area->start + rlocn->offset, NAME_LEN, MDA_CONTENT_REASON(primary_mda),
-			       ioflags, _vgname_from_mda_validate, vfmp))
-		return_0;
-
-	return vfmp->ret;
+	dev_read_callback(dev_area->dev, dev_area->start + rlocn->offset, NAME_LEN, MDA_CONTENT_REASON(primary_mda),
+			       ioflags, _vgname_from_mda_validate, vfmp);
+	if (update_vgsummary_fn)
+		return 1;
+	else
+		return vfmp->ret;
 }
 
 static int _scan_raw(const struct format_type *fmt, const char *vgname __attribute__((unused)))

@@ -344,6 +344,7 @@ static void _process_vgsummary(int failed, unsigned ioflags, void *context, cons
 
 	--pmp->umb->nr_outstanding_mdas;
 
+	/* FIXME Need to distinguish genuine errors here */
 	if (failed)
 		goto_out;
 
@@ -446,7 +447,10 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 		return 1;
 	}
 
-	return pmp->ret;
+	if (umb->read_label_callback_fn)
+		return 1;
+	else
+		return pmp->ret;
 }
 
 static int _text_read(struct labeller *l, struct device *dev, void *buf, unsigned ioflags,

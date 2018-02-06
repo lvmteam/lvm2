@@ -78,8 +78,8 @@ static void _import_vgsummary(int failed, unsigned ioflags, void *context, const
 out:
 	config_destroy(ivsp->cft);
 
-	if (ivsp->ret && ivsp->process_vgsummary_fn)
-		ivsp->process_vgsummary_fn(0, ioflags, ivsp->process_vgsummary_context, NULL);
+	if (ivsp->process_vgsummary_fn)
+		ivsp->process_vgsummary_fn(!ivsp->ret, ioflags, ivsp->process_vgsummary_context, NULL);
 }
 
 /*
