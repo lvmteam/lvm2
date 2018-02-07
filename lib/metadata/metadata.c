@@ -3859,20 +3859,28 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		correct_vg = NULL;
 	}
 
+	/*
+	 * Rescan the devices that are associated with this vg in lvmcache.
+	 * This repeats what was done by the command's initial label scan,
+	 * but only the devices associated with this VG.
+	 *
+	 * The lvmcache info about these devs is from the initial label scan
+	 * performed by the command before the vg lock was held.  Now the VG
+	 * lock is held, so we rescan all the info from the devs in case
+	 * something changed between the initial scan and now that the lock
+	 * is held.
+	 */
+	log_debug_metadata("Reading VG rereading labels for %s", vgname);
 
-	/* Find the vgname in the cache */
-	/* If it's not there we must do full scan to be completely sure */
-	if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 1))) {
+	if (!lvmcache_label_rescan_vg(cmd, vgname, vgid)) {
+		/* The VG wasn't found, so force a full label scan. */
+		lvmcache_force_next_label_scan();
 		lvmcache_label_scan(cmd);
-		if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 1))) {
-			/* Independent MDAs aren't supported under low memory */
-			if (!cmd->independent_metadata_areas && prioritized_section())
-				return_NULL;
-			lvmcache_force_next_label_scan();
-			lvmcache_label_scan(cmd);
-			if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 0)))
-				return_NULL;
-		}
+	}
+
+	if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 0))) {
+		log_debug_metadata("Cache did not find fmt for vgname %s", vgname);
+		return_NULL;
 	}
 
 	/* Now determine the correct vgname if none was supplied */
@@ -3889,6 +3897,36 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 	if (use_precommitted && !(fmt->features & FMT_PRECOMMIT))
 		use_precommitted = 0;
+
+	/*
+	 * A "format instance" is an abstraction for a VG location,
+	 * i.e. where a VG's metadata exists on disk.
+	 *
+	 * An fic (format_instance_ctx) is a temporary struct used
+	 * to create an fid (format_instance).  The fid hangs around
+	 * and is used to create a 'vg' to which it connected (vg->fid).
+	 *
+	 * The 'fic' describes a VG in terms of fmt/name/id.
+	 *
+	 * The 'fid' describes a VG in more detail than the fic,
+	 * holding information about where to find the VG metadata.
+	 *
+	 * The 'vg' describes the VG in the most detail representing
+	 * all the VG metadata.
+	 *
+	 * The fic and fid are set up by create_instance() to describe
+	 * the VG location.  This happens before the VG metadata is
+	 * assembled into the more familiar struct volume_group "vg".
+	 *
+	 * The fid has one main purpose: to keep track of the metadata
+	 * locations for a given VG.  It does this by putting 'mda'
+	 * structs on fid->metadata_areas_in_use, which specify where
+	 * metadata is located on disk.  It gets this information
+	 * (metadata locations for a specific VG) from the command's
+	 * initial label scan.  The info is passed indirectly via
+	 * lvmcache info/vginfo structs, which are created by the
+	 * label scan and then copied into fid by create_instance().
+	 */
 
 	/* create format instance with appropriate metadata area */
 	fic.type = FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;

@@ -2228,14 +2228,10 @@ int process_each_vg(struct cmd_context *cmd,
 	}
 
 	/*
-	 * First rescan for available devices, then force the next
-	 * label scan to be done.  get_vgnameids() will scan labels
-	 * (when not using lvmetad).
+	 * Scan all devices to populate lvmcache with initial
+	 * list of PVs and VGs.
 	 */
-	if (cmd->cname->flags & REQUIRES_FULL_LABEL_SCAN) {
-		dev_cache_full_scan(cmd->full_filter);
-		lvmcache_force_next_label_scan();
-	}
+	lvmcache_label_scan(cmd);
 
 	/*
 	 * A list of all VGs on the system is needed when:
@@ -3745,6 +3741,12 @@ int process_each_lv(struct cmd_context *cmd,
 	}
 
 	/*
+	 * Scan all devices to populate lvmcache with initial
+	 * list of PVs and VGs.
+	 */
+	lvmcache_label_scan(cmd);
+
+	/*
 	 * A list of all VGs on the system is needed when:
 	 * . processing all VGs on the system
 	 * . A VG name is specified which may refer to one
@@ -4453,7 +4455,12 @@ int process_each_pv(struct cmd_context *cmd,
 	if (!trust_cache() && !orphans_locked) {
 		log_debug("Scanning for available devices");
 		lvmcache_destroy(cmd, 1, 0);
-		dev_cache_full_scan(cmd->full_filter);
+
+		/*
+		 * Scan all devices to populate lvmcache with initial
+		 * list of PVs and VGs.
+		 */
+		lvmcache_label_scan(cmd);
 	}
 
 	if (!get_vgnameids(cmd, &all_vgnameids, only_this_vgname, 1)) {
@@ -5467,6 +5474,8 @@ int pvcreate_each_device(struct cmd_context *cmd,
 
 	dev_cache_full_scan(cmd->full_filter);
 
+	lvmcache_label_scan(cmd);
+
 	/*
 	 * Translate arg names into struct device's.
 	 */
@@ -5620,6 +5629,8 @@ int pvcreate_each_device(struct cmd_context *cmd,
 		log_error("Can't get lock for orphan PVs.");
 		goto out;
 	}
+
+	lvmcache_label_scan(cmd);
 
 	/*
 	 * The device args began on the arg_devices list, then the first check

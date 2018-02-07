@@ -1436,8 +1436,6 @@ int lvmcache_get_vgnameids(struct cmd_context *cmd, int include_internal,
 	struct vgnameid_list *vgnl;
 	struct lvmcache_vginfo *vginfo;
 
-	lvmcache_label_scan(cmd);
-
 	dm_list_iterate_items(vginfo, &_vginfos) {
 		if (!include_internal && is_orphan_vg(vginfo->vgname))
 			continue;

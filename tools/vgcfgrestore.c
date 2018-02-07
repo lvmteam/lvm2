@@ -74,6 +74,8 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	lvmcache_label_scan(cmd);
+
 	cmd->handles_unknown_segments = 1;
 
 	if (!(arg_is_set(cmd, file_ARG) ?
