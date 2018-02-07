@@ -2534,7 +2534,7 @@ static int _get_config_disk_area(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!(dev_area.dev = lvmcache_device_from_pvid(cmd, &id, NULL, NULL))) {
+	if (!(dev_area.dev = lvmcache_device_from_pvid(cmd, &id, NULL))) {
 		char buffer[64] __attribute__((aligned(8)));
 
 		if (!id_write_format(&id, buffer, sizeof(buffer)))

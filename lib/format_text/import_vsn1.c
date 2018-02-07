@@ -216,8 +216,7 @@ static int _read_pv(struct format_instance *fid,
 	/*
 	 * Convert the uuid into a device.
 	 */
-	if (!(pv->dev = lvmcache_device_from_pvid(fid->fmt->cmd, &pv->id, scan_done_once,
-                                         &pv->label_sector))) {
+	if (!(pv->dev = lvmcache_device_from_pvid(fid->fmt->cmd, &pv->id, &pv->label_sector))) {
 		char buffer[64] __attribute__((aligned(8)));
 
 		if (!id_write_format(&pv->id, buffer, sizeof(buffer)))

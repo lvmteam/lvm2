@@ -314,7 +314,7 @@ struct physical_volume *pvcreate_vol(struct cmd_context *cmd, const char *pv_nam
 	}
 
 	if (pp->pva.idp) {
-		if ((dev = lvmcache_device_from_pvid(cmd, pp->pva.idp, NULL, NULL)) &&
+		if ((dev = lvmcache_device_from_pvid(cmd, pp->pva.idp, NULL)) &&
 		    (dev != dev_cache_get(pv_name, cmd->full_filter))) {
 			if (!id_write_format((const struct id*)&pp->pva.idp->uuid,
 			    buffer, sizeof(buffer)))
