@@ -2240,8 +2240,11 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 	struct label *label;
 	struct lvmcache_info *info;
 	struct _lvmetad_pvscan_baton baton;
+	const struct format_type *fmt;
 	/* Create a dummy instance. */
 	struct format_instance_ctx fic = { .type = 0 };
+
+	log_debug_lvmetad("Scan metadata from dev %s", dev_name(dev));
 
 	if (!lvmetad_used()) {
 		log_error("Cannot proceed since lvmetad is not active.");
@@ -2253,23 +2256,31 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 		return 1;
 	}
 
-	if (!label_read(dev, &label, 0)) {
-		log_print_unless_silent("No PV label found on %s.", dev_name(dev));
+	if (!(info = lvmcache_info_from_pvid(dev->pvid, dev, 0))) {
+		log_print_unless_silent("No PV info found on %s for PVID %s.", dev_name(dev), dev->pvid);
 		if (!lvmetad_pv_gone_by_dev(dev))
 			goto_bad;
 		return 1;
 	}
 
-	info = (struct lvmcache_info *) label->info;
+	if (!(label = lvmcache_get_label(info))) {
+		log_print_unless_silent("No PV label found for %s.", dev_name(dev));
+		if (!lvmetad_pv_gone_by_dev(dev))
+			goto_bad;
+		return 1;
+	}
 
+	fmt = lvmcache_fmt(info);
+
+	baton.cmd = cmd;
 	baton.vg = NULL;
-	baton.fid = lvmcache_fmt(info)->ops->create_instance(lvmcache_fmt(info), &fic);
+	baton.fid = fmt->ops->create_instance(fmt, &fic);
 
 	if (!baton.fid)
 		goto_bad;
 
-	if (baton.fid->fmt->features & FMT_OBSOLETE) {
-		lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
+	if (fmt->features & FMT_OBSOLETE) {
+		fmt->ops->destroy_instance(baton.fid);
 		log_warn("WARNING: Disabling lvmetad cache which does not support obsolete (lvm1) metadata.");
 		lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_LVM1);
 		_found_lvm1_metadata = 1;
@@ -2283,9 +2294,9 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 	lvmcache_foreach_mda(info, _lvmetad_pvscan_single, &baton);
 
 	if (!baton.vg)
-		lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
+		fmt->ops->destroy_instance(baton.fid);
 
-	if (!lvmetad_pv_found(cmd, (const struct id *) &dev->pvid, dev, lvmcache_fmt(info),
+	if (!lvmetad_pv_found(cmd, (const struct id *) &dev->pvid, dev, fmt,
 			      label->sector, baton.vg, found_vgnames, changed_vgnames)) {
 		release_vg(baton.vg);
 		goto_bad;
@@ -2349,6 +2360,13 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
 	if (do_wait && _lvmetad_is_updating(cmd, 1)) {
 		log_warn("WARNING: lvmetad update is interrupting another update in progress.");
 		replacing_other_update = 1;
+	}
+
+	label_scan(cmd);
+
+	if (lvmcache_found_duplicate_pvs()) {
+		log_warn("WARNING: Scan found duplicate PVs.");
+		return 0;
 	}
 
 	log_verbose("Scanning all devices to update lvmetad.");
@@ -2721,6 +2739,8 @@ void lvmetad_validate_global_cache(struct cmd_context *cmd, int force)
 	 */
 	_lvmetad_get_pv_cache_list(cmd, &pvc_before);
 
+	log_debug_lvmetad("Rescan all devices to validate global cache.");
+
 	/*
 	 * Update the local lvmetad cache so it correctly reflects any
 	 * changes made on remote hosts.  (It's possible that this command
@@ -2789,7 +2809,7 @@ void lvmetad_validate_global_cache(struct cmd_context *cmd, int force)
 		_update_changed_pvs_in_udev(cmd, &pvc_before, &pvc_after);
 	}
 
-	log_debug_lvmetad("Validating global lvmetad cache finished");
+	log_debug_lvmetad("Rescanned all devices");
 }
 
 int lvmetad_vg_is_foreign(struct cmd_context *cmd, const char *vgname, const char *vgid)

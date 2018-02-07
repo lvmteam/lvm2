@@ -221,7 +221,11 @@ static int _read_pv(struct format_instance *fid,
 
 		if (!id_write_format(&pv->id, buffer, sizeof(buffer)))
 			buffer[0] = '\0';
-		log_error_once("Couldn't find device with uuid %s.", buffer);
+
+		if (fid->fmt->cmd && !fid->fmt->cmd->pvscan_cache_single)
+			log_error_once("Couldn't find device with uuid %s.", buffer);
+		else
+			log_debug_metadata("Couldn't find device with uuid %s.", buffer);
 	}
 
 	if (!(pv->vg_name = dm_pool_strdup(mem, vg->name)))
