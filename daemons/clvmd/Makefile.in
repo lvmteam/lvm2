@@ -74,7 +74,7 @@ TARGETS = \
 
 include $(top_builddir)/make.tmpl
 
-LIBS += $(LVMINTERNAL_LIBS) -ldevmapper $(PTHREAD_LIBS)
+LIBS += $(LVMINTERNAL_LIBS) -ldevmapper $(PTHREAD_LIBS) -laio
 CFLAGS += -fno-strict-aliasing $(EXTRA_EXEC_CFLAGS)
 
 INSTALL_TARGETS = \

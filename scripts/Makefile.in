@@ -28,7 +28,7 @@ ifeq ("@APPLIB@", "yes")
 ifeq ("@BUILD_DMEVENTD@", "yes")
 	LDFLAGS += -Wl,-rpath-link,$(top_builddir)/daemons/dmeventd
 endif
-	LVMLIBS = @LVM2APP_LIB@ -ldevmapper
+	LVMLIBS = @LVM2APP_LIB@ -ldevmapper -laio
 endif
 
 LVM_SCRIPTS = lvmdump.sh lvmconf.sh

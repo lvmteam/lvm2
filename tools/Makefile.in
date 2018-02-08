@@ -95,7 +95,7 @@ ifeq ("@STATIC_LINK@", "yes")
   INSTALL_CMDLIB_TARGETS += install_cmdlib_static
 endif
 
-LVMLIBS = $(LVMINTERNAL_LIBS) -ldevmapper
+LVMLIBS = $(LVMINTERNAL_LIBS) -ldevmapper -laio
 LIB_VERSION = $(LIB_VERSION_LVM)
 
 CLEAN_TARGETS = liblvm2cmd.$(LIB_SUFFIX) $(TARGETS_DM) \
