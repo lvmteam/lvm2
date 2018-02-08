@@ -134,6 +134,7 @@ struct async_engine {
 	struct io_engine e;
 	io_context_t aio_context;
 	struct cb_set *cbs;
+	unsigned max_io;
 };
 
 static struct async_engine *_to_async(struct io_engine *e)
@@ -233,6 +234,12 @@ static bool _async_wait(struct io_engine *ioe, io_complete_fn fn)
 	return true;
 }
 
+static unsigned _async_max_io(struct io_engine *ioe)
+{
+	struct async_engine *e = _to_async(ioe);
+	return e->max_io;
+}
+
 struct io_engine *create_async_io_engine(unsigned max_io)
 {
 	int r;
@@ -241,9 +248,12 @@ struct io_engine *create_async_io_engine(unsigned max_io)
 	if (!e)
 		return NULL;
 
+	e->max_io = max_io;
+
 	e->e.destroy = _async_destroy;
 	e->e.issue = _async_issue;
 	e->e.wait = _async_wait;
+	e->e.max_io = _async_max_io;
 
 	e->aio_context = 0;
 	r = io_setup(max_io, &e->aio_context);
