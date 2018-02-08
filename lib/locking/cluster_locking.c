@@ -211,11 +211,10 @@ static int _cluster_request(char clvmd_cmd, const char *node, void *data, int le
 
 	*num = 0;
 
-	if (_clvmd_sock == -1)
-		_clvmd_sock = _open_local_sock(0);
-
-	if (_clvmd_sock == -1)
-		return 0;
+	if (_clvmd_sock == -1) {
+		if ((_clvmd_sock = _open_local_sock(0)) == -1)
+			return_0;
+	}
 
 	/* 1 byte is used from struct clvm_header.args[1], so -> len - 1 */
 	_build_header(head, clvmd_cmd, node, len - 1);
@@ -224,7 +223,7 @@ static int _cluster_request(char clvmd_cmd, const char *node, void *data, int le
 	status = _send_request(outbuf, sizeof(struct clvm_header) +
 			      strlen(head->node) + len - 1, &retbuf);
 	if (!status)
-		goto out;
+		goto_out;
 
 	/* Count the number of responses we got */
 	head = (struct clvm_header *) retbuf;
@@ -245,7 +244,7 @@ static int _cluster_request(char clvmd_cmd, const char *node, void *data, int le
 	if (!(rarray = dm_malloc(sizeof(lvm_response_t) * num_responses))) {
 		errno = ENOMEM;
 		status = 0;
-		goto out;
+		goto_out;
 	}
 
 	/* Unpack the response into an lvm_response_t array */
@@ -267,7 +266,7 @@ static int _cluster_request(char clvmd_cmd, const char *node, void *data, int le
 			dm_free(rarray);
 			errno = ENOMEM;
 			status = 0;
-			goto out;
+			goto_out;
 		}
 
 		strcpy(rarray[i].response, inptr);
