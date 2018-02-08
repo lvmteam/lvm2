@@ -1009,14 +1009,17 @@ bool bcache_read_bytes(struct bcache *cache, int fd, off_t start, size_t len, vo
 	block_address bb, be, i;
 	unsigned char *udata = data;
 	off_t block_size = cache->block_sectors << SECTOR_SHIFT;
+	int errors = 0;
 
 	byte_range_to_block_range(cache, start, len, &bb, &be);
 	for (i = bb; i < be; i++)
 		bcache_prefetch(cache, fd, i);
 
 	for (i = bb; i < be; i++) {
-		if (!bcache_get(cache, fd, i, 0, &b))
-			return false;
+		if (!bcache_get(cache, fd, i, 0, &b)) {
+			errors++;
+			continue;
+		}
 
 		if (i == bb) {
 			off_t block_offset = start % block_size;
@@ -1030,9 +1033,11 @@ bool bcache_read_bytes(struct bcache *cache, int fd, off_t start, size_t len, vo
 			len -= blen;
 			udata += blen;
 		}
+
+		bcache_put(b);
 	}
 
-	return true;
+	return errors ? false : true;
 }
 
 //----------------------------------------------------------------
