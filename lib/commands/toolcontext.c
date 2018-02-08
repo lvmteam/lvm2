@@ -46,6 +46,7 @@
 
 #include <locale.h>
 #include <sys/stat.h>
+#include <sys/syscall.h>
 #include <sys/utsname.h>
 #include <syslog.h>
 #include <time.h>
@@ -1883,7 +1884,13 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 
 #ifndef VALGRIND_POOL
 	/* Set in/out stream buffering before glibc */
-	if (set_buffering) {
+	if (set_buffering
+#ifdef SYS_gettid
+	    /* For threaded programs no changes of streams */
+            /* On linux gettid() is implemented only via syscall */
+	    && (syscall(SYS_gettid) == getpid())
+#endif
+	   ) {
 		/* Allocate 2 buffers */
 		if (!(cmd->linebuffer = dm_malloc(2 * _linebuffer_size))) {
 			log_error("Failed to allocate line buffer.");
@@ -1914,7 +1921,7 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 			}
 		}
 		/* Buffers are used for lines without '\n' */
-	} else
+	} else if (!set_buffering)
 		/* Without buffering, must not use stdin/stdout */
 		init_silent(1);
 #endif
