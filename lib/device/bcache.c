@@ -997,7 +997,7 @@ void bcache_prefetch_bytes(struct bcache *cache, int fd, off_t start, size_t len
 
 static off_t _min(off_t lhs, off_t rhs)
 {
-	if (rhs > lhs)
+	if (rhs < lhs)
 		return rhs;
 
 	return lhs;
