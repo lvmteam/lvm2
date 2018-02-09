@@ -1262,6 +1262,15 @@ static const struct command_function *_find_command_id_function(int command_enum
 	return NULL;
 }
 
+static void _unregister_commands(void)
+{
+	_cmdline.commands = NULL;
+	_cmdline.num_commands = 0;
+	_cmdline.command_names = NULL;
+	_cmdline.num_command_names = 0;
+	memset(&commands, 0, sizeof(commands));
+}
+
 int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
 {
 	int i;
@@ -1269,6 +1278,8 @@ int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
 	/* already initialized */
 	if (_cmdline.commands)
 		return 1;
+
+	memset(&commands, 0, sizeof(commands));
 
 	/*
 	 * populate commands[] array with command definitions
@@ -3324,6 +3335,7 @@ struct cmd_context *init_lvm(unsigned set_connections, unsigned set_filters)
 
 void lvm_fin(struct cmd_context *cmd)
 {
+	_unregister_commands();
 	destroy_toolcontext(cmd);
 	udev_fin_library_context();
 }
