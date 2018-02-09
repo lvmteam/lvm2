@@ -2562,6 +2562,25 @@ int lvmcache_foreach_ba(struct lvmcache_info *info,
 	return 1;
 }
 
+struct label *lvmcache_get_dev_label(struct device *dev)
+{
+	struct lvmcache_info *info;
+
+	if ((info = lvmcache_info_from_pvid(dev->pvid, NULL, 0))) {
+		/* dev would be different for a duplicate */
+		if (info->dev == dev)
+			return info->label;
+	}
+	return NULL;
+}
+
+int lvmcache_has_dev_info(struct device *dev)
+{
+	if (lvmcache_info_from_pvid(dev->pvid, NULL, 0))
+		return 1;
+	return 0;
+}
+
 /*
  * The lifetime of the label returned is tied to the lifetime of the
  * lvmcache_info which is the same as lvmcache itself.

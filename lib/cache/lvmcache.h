@@ -160,6 +160,8 @@ uint32_t lvmcache_ext_flags(struct lvmcache_info *info);
 
 const struct format_type *lvmcache_fmt(struct lvmcache_info *info);
 struct label *lvmcache_get_label(struct lvmcache_info *info);
+struct label *lvmcache_get_dev_label(struct device *dev);
+int lvmcache_has_dev_info(struct device *dev);
 
 void lvmcache_update_pv(struct lvmcache_info *info, struct physical_volume *pv,
 			const struct format_type *fmt);

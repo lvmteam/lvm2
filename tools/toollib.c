@@ -5292,14 +5292,12 @@ static int _pvremove_check_single(struct cmd_context *cmd,
 	 * Is there a pv here already?
 	 * If not, this is an error unless you used -f.
 	 */
-	if (!label_read(pd->dev, &label, 0)) {
+	if (!lvmcache_has_dev_info(pv->dev)) {
 		if (pp->force) {
 			dm_list_move(&pp->arg_process, &pd->list);
 			return 1;
 		} else {
-			log_error("No PV label found on %s.", pd->name);
-			dm_list_move(&pp->arg_fail, &pd->list);
-			return 1;
+			pd->is_not_pv = 1;
 		}
 	}
 
@@ -5308,7 +5306,11 @@ static int _pvremove_check_single(struct cmd_context *cmd,
 	 * device, a PV used in a VG.
 	 */
 
-	if (vg && !is_orphan_vg(vg->name)) {
+	if (pd->is_not_pv) {
+		/* Device is not a PV. */
+		log_debug("Found pvremove arg %s: device is not a PV.", pd->name);
+
+	} else if (vg && !is_orphan_vg(vg->name)) {
 		/* Device is a PV used in a VG. */
 		log_debug("Found pvremove arg %s: pv is used in %s.", pd->name, vg->name);
 		pd->is_vg_pv = 1;
@@ -5330,6 +5332,7 @@ static int _pvremove_check_single(struct cmd_context *cmd,
 		else
 			pp->orphan_vg_name = FMT_TEXT_ORPHAN_VG_NAME;
 	} else {
+		/* FIXME: is it possible to reach here? */
 		log_debug("Found pvremove arg %s: device is not a PV.", pd->name);
 		/* Device is not a PV. */
 		pd->is_not_pv = 1;
