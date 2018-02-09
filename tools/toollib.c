@@ -1493,12 +1493,18 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 	struct label *label;
 	struct dev_iter *iter;
 	struct device *dev;
-
+	struct lvmcache_info *info;
+	struct dm_list process_duplicates;
+	struct device_list *devl;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
 	int opt = 0;
 
+	dm_list_init(&process_duplicates);
+
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_LABEL);
+
+	lvmcache_label_scan(cmd);
 
 	if (argc) {
 		for (; opt < argc; opt++) {
@@ -1509,14 +1515,54 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 				continue;
 			}
 
-			log_set_report_object_name_and_id(dev_name(dev), NULL);
-
-			if (!label_read(dev, &label, 0)) {
-				log_error("No physical volume label read from %s.",
-					  argv[opt]);
-				ret_max = ECMD_FAILED;
+			if (!(label = lvmcache_get_dev_label(dev))) {
+				if (!lvmcache_dev_is_unchosen_duplicate(dev)) {
+					log_error("No physical volume label read from %s.", argv[opt]);
+					ret_max = ECMD_FAILED;
+				} else {
+					if (!(devl = dm_malloc(sizeof(*devl))))
+						return_0;
+					devl->dev = dev;
+					dm_list_add(&process_duplicates, &devl->list);
+				}
 				continue;
 			}
+
+			log_set_report_object_name_and_id(dev_name(dev), NULL);
+
+			ret = process_single_label(cmd, label, handle);
+			report_log_ret_code(ret);
+
+			if (ret > ret_max)
+				ret_max = ret;
+
+			log_set_report_object_name_and_id(NULL, NULL);
+
+			if (sigint_caught())
+				break;
+		}
+
+		dm_list_iterate_items(devl, &process_duplicates) {
+			/* 
+			 * remove the existing dev for this pvid from lvmcache
+			 * so that the duplicate dev can replace it.
+			 */
+			if ((info = lvmcache_info_from_pvid(devl->dev->pvid, NULL, 0)))
+				lvmcache_del(info);
+
+			/*
+			 * add info to lvmcache from the duplicate dev.
+			 */
+			label_read(devl->dev, NULL, 0);
+
+			/*
+			 * the info/label should now be found because
+			 * the label_read should have added it.
+			 */
+			if (!(label = lvmcache_get_dev_label(devl->dev)))
+				continue;
+
+			log_set_report_object_name_and_id(dev_name(dev), NULL);
 
 			ret = process_single_label(cmd, label, handle);
 			report_log_ret_code(ret);
@@ -1541,7 +1587,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 
 	while ((dev = dev_iter_get(iter)))
 	{
-		if (!label_read(dev, &label, 0))
+		if (!(label = lvmcache_get_dev_label(dev)))
 			continue;
 
 		log_set_report_object_name_and_id(dev_name(label->dev), NULL);
