@@ -42,6 +42,7 @@ struct config_info {
 	int cache_vgmetadata;
 	const char *msg_prefix;
 	const char *fmt_name;
+	const char *dmeventd_executable;
 	uint64_t unit_factor;
 	int cmd_name;		/* Show command name? */
 	mode_t umask;
