@@ -1831,7 +1831,7 @@ int target_register_events(struct cmd_context *cmd, const char *dso, const struc
 	if (!r)
 		return_0;
 
-	log_very_verbose("%s %s for events", set ? "Monitored" : "Unmonitored", uuid);
+	log_verbose("%s %s for events", set ? "Monitored" : "Unmonitored", uuid);
 
 	return 1;
 }
@@ -2016,7 +2016,9 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 			if (monitored)
 				log_verbose("%s already monitored.", display_lvname(lv));
 			else if (seg->segtype->ops->target_monitor_events) {
-				log_verbose("Monitoring %s%s", display_lvname(lv), test_mode() ? " [Test mode: skipping this]" : "");
+				log_very_verbose("Monitoring %s with %s.%s", display_lvname(lv),
+						 seg->segtype->dso,
+						 test_mode() ? " [Test mode: skipping this]" : "");
 				monitor_fn = seg->segtype->ops->target_monitor_events;
 			}
 		} else {

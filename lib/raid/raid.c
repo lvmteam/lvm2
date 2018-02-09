@@ -538,26 +538,16 @@ static int _raid_modules_needed(struct dm_pool *mem,
 }
 
 #  ifdef DMEVENTD
-static const char *_get_raid_dso_path(struct cmd_context *cmd)
-{
-	const char *config_str = find_config_tree_str(cmd, dmeventd_raid_library_CFG, NULL);
-	return get_monitor_dso_path(cmd, config_str);
-}
-
 static int _raid_target_monitored(struct lv_segment *seg, int *pending, int *monitored)
 {
-	struct cmd_context *cmd = seg->lv->vg->cmd;
-	const char *dso_path = _get_raid_dso_path(cmd);
-
-	return target_registered_with_dmeventd(cmd, dso_path, seg->lv, pending, monitored);
+	return target_registered_with_dmeventd(seg->lv->vg->cmd, seg->segtype->dso,
+					       seg->lv, pending, monitored);
 }
 
 static int _raid_set_events(struct lv_segment *seg, int evmask, int set)
 {
-	struct cmd_context *cmd = seg->lv->vg->cmd;
-	const char *dso_path = _get_raid_dso_path(cmd);
-
-	return target_register_events(cmd, dso_path, seg->lv, evmask, set, 0);
+	return target_register_events(seg->lv->vg->cmd, seg->segtype->dso,
+				      seg->lv, evmask, set, 0);
 }
 
 static int _raid_target_monitor_events(struct lv_segment *seg, int events)
@@ -623,6 +613,7 @@ static const struct raid_type {
 
 static struct segment_type *_init_raid_segtype(struct cmd_context *cmd,
 					       const struct raid_type *rt,
+					       const char *dso,
 					       uint64_t monitored)
 {
 	struct segment_type *segtype = dm_zalloc(sizeof(*segtype));
@@ -638,8 +629,10 @@ static struct segment_type *_init_raid_segtype(struct cmd_context *cmd,
 	segtype->flags = SEG_RAID | SEG_ONLY_EXCLUSIVE | rt->extra_flags;
 
 	/* Never monitor raid0 or raid0_meta LVs */
-	if (!segtype_is_any_raid0(segtype))
+	if (!segtype_is_any_raid0(segtype)) {
+		segtype->dso = dso;
 		segtype->flags |= monitored;
+	}
 
 	segtype->parity_devs = rt->parity;
 
@@ -657,18 +650,22 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 #endif
 {
 	struct segment_type *segtype;
+	const char *dso;
 	unsigned i;
 	uint64_t monitored = 0;
 
 #ifdef DEVMAPPER_SUPPORT
 #  ifdef DMEVENTD
-	if (_get_raid_dso_path(cmd))
+	dso = get_monitor_dso_path(cmd,
+		find_config_tree_str(cmd, dmeventd_raid_library_CFG, NULL));
+
+	if (dso)
 		monitored = SEG_MONITORED;
 #  endif
 #endif
 
 	for (i = 0; i < DM_ARRAY_SIZE(_raid_types); ++i)
-		if ((segtype = _init_raid_segtype(cmd, &_raid_types[i], monitored)) &&
+		if ((segtype = _init_raid_segtype(cmd, &_raid_types[i], dso, monitored)) &&
 		    !lvm_register_segtype(seglib, segtype))
 			/* segtype is already destroyed */
 			return_0;
