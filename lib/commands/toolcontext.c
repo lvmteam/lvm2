@@ -1792,6 +1792,8 @@ void destroy_config_context(struct cmd_context *cmd)
 /*
  * A "config context" is a very light weight toolcontext that
  * is only used for reading config settings from lvm.conf.
+ *
+ * FIXME: this needs to go back to parametrized create_toolcontext()
  */
 struct cmd_context *create_config_context(void)
 {
@@ -1807,6 +1809,9 @@ struct cmd_context *create_config_context(void)
 
 	if (!(cmd->libmem = dm_pool_create("library", 4 * 1024)))
 		goto_out;
+
+	if (!(cmd->mem = dm_pool_create("command", 4 * 1024)))
+		goto out;
 
 	dm_list_init(&cmd->config_files);
 	dm_list_init(&cmd->tags);

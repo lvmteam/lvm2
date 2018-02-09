@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Add missing initialisation of mem pool in systemd generator.
   Do not reopen output streams for multithreaded users of liblvm.
   Use versionsort to fix archive file expiry beyond 100000 files.
   Add devices/use_aio, aio_max, aio_memory to configure AIO limits.
