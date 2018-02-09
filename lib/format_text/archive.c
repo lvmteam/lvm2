@@ -136,8 +136,8 @@ static struct dm_list *_scan_archive(struct dm_pool *mem,
 
 	dm_list_init(results);
 
-	/* Sort fails beyond 5-digit indexes */
-	if ((count = scandir(dir, &dirent, NULL, alphasort)) < 0) {
+	/* Use versionsort to handle numbers beyond 5 digits */
+	if ((count = scandir(dir, &dirent, NULL, versionsort)) < 0) {
 		log_error("Couldn't scan the archive directory (%s).", dir);
 		return 0;
 	}
