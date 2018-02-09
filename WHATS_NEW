@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Improve validation of created strings in vgimportclone.
   Add missing initialisation of mem pool in systemd generator.
   Do not reopen output streams for multithreaded users of liblvm.
   Use versionsort to fix archive file expiry beyond 100000 files.

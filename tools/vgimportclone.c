@@ -283,12 +283,22 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 	 */
 
 	if (arg_is_set(cmd, basevgname_ARG)) {
-		snprintf(base_vgname, sizeof(base_vgname) - 1, "%s", arg_str_value(cmd, basevgname_ARG, ""));
-		memcpy(tmp_vgname, base_vgname, NAME_LEN);
+		vgname = arg_str_value(cmd, basevgname_ARG, "");
+		if (dm_snprintf(base_vgname, sizeof(base_vgname), "%s", vgname) < 0) {
+			log_error("Base vg name %s is too long.", vgname);
+			goto out;
+		}
+		(void) dm_strncpy(tmp_vgname, base_vgname, NAME_LEN);
 		vgname_count = 0;
 	} else {
-		snprintf(base_vgname, sizeof(base_vgname) - 1, "%s", vp.old_vgname);
-		snprintf(tmp_vgname, sizeof(tmp_vgname) - 1, "%s1", vp.old_vgname);
+		if (dm_snprintf(base_vgname, sizeof(base_vgname), "%s", vp.old_vgname) < 0) {
+			log_error(INTERNAL_ERROR "Old vg name %s is too long.", vp.old_vgname);
+			goto out;
+		}
+		if (dm_snprintf(tmp_vgname, sizeof(tmp_vgname), "%s1", vp.old_vgname) < 0) {
+			log_error("Temporary vg name %s1 is too long.", vp.old_vgname);
+			goto out;
+		}
 		vgname_count = 1;
 	}
 
@@ -299,7 +309,10 @@ retry_name:
 	dm_list_iterate_items(vgnl, &vgnameids_on_system) {
 		if (!strcmp(vgnl->vg_name, tmp_vgname)) {
 			vgname_count++;
-			snprintf(tmp_vgname, sizeof(tmp_vgname) - 1, "%s%u", base_vgname, vgname_count);
+			if (dm_snprintf(tmp_vgname, sizeof(tmp_vgname), "%s%u", base_vgname, vgname_count) < 0) {
+				log_error("Failed to generated temporary vg name, %s%u is too long.", base_vgname, vgname_count);
+				goto out;
+			}
 			goto retry_name;
 		}
 	}
