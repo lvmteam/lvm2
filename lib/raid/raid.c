@@ -656,8 +656,7 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 
 #ifdef DEVMAPPER_SUPPORT
 #  ifdef DMEVENTD
-	dso = get_monitor_dso_path(cmd,
-		find_config_tree_str(cmd, dmeventd_raid_library_CFG, NULL));
+	dso = get_monitor_dso_path(cmd, dmeventd_raid_library_CFG);
 
 	if (dso)
 		monitored = SEG_MONITORED;

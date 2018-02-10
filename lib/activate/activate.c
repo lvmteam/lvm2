@@ -1685,18 +1685,14 @@ bad:
 	return NULL;
 }
 
-char *get_monitor_dso_path(struct cmd_context *cmd, const char *libpath)
+char *get_monitor_dso_path(struct cmd_context *cmd, int id)
 {
-	char *path;
+	const char *libpath = find_config_tree_str(cmd, id, NULL);
+	char path[PATH_MAX];
 
-	if (!(path = dm_pool_alloc(cmd->mem, PATH_MAX))) {
-		log_error("Failed to allocate dmeventd library path.");
-		return NULL;
-	}
+	get_shared_library_path(cmd, libpath, path, sizeof(path));
 
-	get_shared_library_path(cmd, libpath, path, PATH_MAX);
-
-	return path;
+	return dm_pool_strdup(cmd->mem, path);
 }
 
 static char *_build_target_uuid(struct cmd_context *cmd, const struct logical_volume *lv)

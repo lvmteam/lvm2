@@ -263,8 +263,7 @@ struct segment_type *init_segtype(struct cmd_context *cmd)
 
 #ifdef DEVMAPPER_SUPPORT
 #  ifdef DMEVENTD
-	segtype->dso = get_monitor_dso_path(cmd,
-		find_config_tree_str(cmd, dmeventd_snapshot_library_CFG, NULL));
+	segtype->dso = get_monitor_dso_path(cmd, dmeventd_snapshot_library_CFG);
 
 	if (segtype->dso)
 		segtype->flags |= SEG_MONITORED;
