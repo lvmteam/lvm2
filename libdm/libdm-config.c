@@ -244,7 +244,7 @@ static int _line_append(struct config_output *out, const char *fmt, ...)
 	 */
 
 	va_start(ap, fmt);
-	n = vsnprintf(&buf[0], sizeof buf - 1, fmt, ap);
+	n = vsnprintf(buf, sizeof(buf), fmt, ap);
 	va_end(ap);
 
 	if (n < 0) {

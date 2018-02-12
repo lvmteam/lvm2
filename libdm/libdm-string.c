@@ -611,7 +611,7 @@ const char *dm_size_to_string(struct dm_pool *mem, uint64_t size,
 		precision = 2;
 	}
 
-	snprintf(size_buf, SIZE_BUF - 1, "%s%.*f%s", prefix, precision,
+	snprintf(size_buf, SIZE_BUF, "%s%.*f%s", prefix, precision,
 		 (double) size / byte, include_suffix ? size_str[base + s][suffix_type] : "");
 
 	return size_buf;

@@ -1069,10 +1069,10 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 	 * and appending "lockctl" to get /path/to/lvmlockctl.
 	 */
 	memset(killpath, 0, sizeof(killpath));
-	snprintf(killpath, SANLK_PATH_LEN - 1, "%slockctl", LVM_PATH);
+	snprintf(killpath, SANLK_PATH_LEN, "%slockctl", LVM_PATH);
 
 	memset(killargs, 0, sizeof(killargs));
-	snprintf(killargs, SANLK_PATH_LEN - 1, "--kill %s", ls->vg_name);
+	snprintf(killargs, SANLK_PATH_LEN, "--kill %s", ls->vg_name);
 
 	rv = check_args_version(ls->vg_args, VG_LOCK_ARGS_MAJOR);
 	if (rv < 0) {

@@ -699,7 +699,7 @@ int lm_hosts_dlm(struct lockspace *ls, int notify)
 		return 0;
 
 	memset(ls_nodes_path, 0, sizeof(ls_nodes_path));
-	snprintf(ls_nodes_path, PATH_MAX-1, "%s/%s/nodes",
+	snprintf(ls_nodes_path, PATH_MAX, "%s/%s/nodes",
 		 DLM_LOCKSPACES_PATH, ls->name);
 
 	if (!(ls_dir = opendir(ls_nodes_path)))

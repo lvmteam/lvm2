@@ -187,8 +187,7 @@ retry_fcntl:
 		goto fail_close_unlink;
 	}
 
-	memset(buffer, 0, sizeof(buffer));
-	snprintf(buffer, sizeof(buffer)-1, "%u\n", getpid());
+	snprintf(buffer, sizeof(buffer), "%u\n", getpid());
 
 	bufferlen = strlen(buffer);
 	write_out = write(fd, buffer, bufferlen);

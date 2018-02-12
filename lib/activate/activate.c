@@ -606,7 +606,7 @@ int module_present(struct cmd_context *cmd, const char *target_name)
 #endif
 	struct stat st;
 	char path[PATH_MAX];
-	int i = dm_snprintf(path, (sizeof(path) - 1), "%smodule/dm_%s",
+	int i = dm_snprintf(path, sizeof(path), "%smodule/dm_%s",
 			    dm_sysfs_dir(), target_name);
 
 	if (i > 0) {
