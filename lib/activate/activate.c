@@ -1955,9 +1955,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 				continue;
 			if (!monitor_dev_for_events(cmd, seg_lv(seg, s), NULL,
 						    monitor)) {
-				log_error("Failed to %smonitor %s",
-					  monitor ? "" : "un",
-					  display_lvname(seg_lv(seg, s)));
+				stack;
 				r = 0;
 			}
 		}
@@ -2040,16 +2038,15 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 
 		if (new_unmonitor) {
 			if (!target_register_events(cmd, dso, seg_is_snapshot(seg) ? seg->cow : lv, 0, 0, 10)) {
-				log_error("%s: segment unmonitoring failed.",
-					  display_lvname(lv));
- 
+				log_warn("WARNING: %s: segment unmonitoring failed.",
+					 display_lvname(lv));
 				return 0;
 			}
 		} else if (monitor_fn) {
 			/* FIXME specify events */
 			if (!monitor_fn(seg, 0)) {
-				log_error("%s: %s segment monitoring function failed.",
-					  display_lvname(lv), lvseg_name(seg));
+				log_warn("WARNING: %s: %s segment monitoring function failed.",
+					 display_lvname(lv), lvseg_name(seg));
 				return 0;
 			}
 		} else
@@ -2076,8 +2073,8 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 	}
 
 	if (!r && !error_message_produced())
-		log_error("%sonitoring %s failed.", monitor ? "M" : "Not m",
-			  display_lvname(lv));
+		log_warn("WARNING: %sonitoring %s failed.", monitor ? "M" : "Not m",
+			 display_lvname(lv));
 	return r;
 #else
 	return 1;
