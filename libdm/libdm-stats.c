@@ -1894,10 +1894,10 @@ static int _stats_set_aux(struct dm_stats *dms,
 		}
 	}
 
-	if (!dm_snprintf(msg, sizeof(msg), "@stats_set_aux " FMTu64 " %s%s%s ",
-			 region_id, (group_tag) ? group_tag : "",
-			 (group_tag) ? DMS_AUX_SEP : "",
-			 (strlen(aux_data)) ? aux_data : "-")) {
+	if (dm_snprintf(msg, sizeof(msg), "@stats_set_aux " FMTu64 " %s%s%s ",
+			region_id, (group_tag) ? group_tag : "",
+			(group_tag) ? DMS_AUX_SEP : "",
+			(strlen(aux_data)) ? aux_data : "-") < 0) {
 		log_error("Could not prepare @stats_set_aux message");
 		goto bad;
 	}
@@ -1940,8 +1940,8 @@ static int _stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 		program_id = dms->program_id;
 
 	if (start || len) {
-		if (!dm_snprintf(range, sizeof(range), FMTu64 "+" FMTu64,
-				 start, len)) {
+		if (dm_snprintf(range, sizeof(range), FMTu64 "+" FMTu64,
+				start, len) < 0) {
 			log_error(err_fmt, "range");
 			return 0;
 		}
@@ -1971,11 +1971,11 @@ static int _stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 	} else
 		opt_args = dm_strdup("");
 
-	if (!dm_snprintf(msg, sizeof(msg), "@stats_create %s %s" FMTu64
-			 " %s %s %s", (start || len) ? range : "-",
-			 (step < 0) ? "/" : "",
-			 (uint64_t)llabs(step),
-			 opt_args, program_id, aux_data)) {
+	if (dm_snprintf(msg, sizeof(msg), "@stats_create %s %s" FMTu64
+			" %s %s %s", (start || len) ? range : "-",
+			(step < 0) ? "/" : "",
+			(uint64_t)llabs(step),
+			opt_args, program_id, aux_data) < 0) {
 		log_error(err_fmt, "message");
 		dm_free((void *) opt_args);
 		return 0;
@@ -2079,7 +2079,7 @@ static int _stats_delete_region(struct dm_stats *dms, uint64_t region_id)
 			return 0;
 		}
 
-	if (!dm_snprintf(msg, sizeof(msg), "@stats_delete " FMTu64, region_id)) {
+	if (dm_snprintf(msg, sizeof(msg), "@stats_delete " FMTu64, region_id) < 0) {
 		log_error("Could not prepare @stats_delete message.");
 		return 0;
 	}
@@ -2163,7 +2163,7 @@ int dm_stats_clear_region(struct dm_stats *dms, uint64_t region_id)
 	if (!_stats_bound(dms))
 		return_0;
 
-	if (!dm_snprintf(msg, sizeof(msg), "@stats_clear " FMTu64, region_id)) {
+	if (dm_snprintf(msg, sizeof(msg), "@stats_clear " FMTu64, region_id) < 0) {
 		log_error("Could not prepare @stats_clear message.");
 		return 0;
 	}
@@ -2188,15 +2188,15 @@ static struct dm_task *_stats_print_region(struct dm_stats *dms,
 	struct dm_task *dmt = NULL;
 
 	if (start_line || num_lines)
-		if (!dm_snprintf(lines, sizeof(lines),
-				 "%u %u", start_line, num_lines)) {
+		if (dm_snprintf(lines, sizeof(lines),
+				"%u %u", start_line, num_lines) < 0) {
 			log_error(err_fmt, "row specification");
 			return NULL;
 		}
 
-	if (!dm_snprintf(msg, sizeof(msg), "@stats_print%s " FMTu64 " %s",
-			 (clear) ? "_clear" : "",
-			 region_id, (start_line || num_lines) ? lines : "")) {
+	if (dm_snprintf(msg, sizeof(msg), "@stats_print%s " FMTu64 " %s",
+			(clear) ? "_clear" : "",
+			region_id, (start_line || num_lines) ? lines : "") < 0) {
 		log_error(err_fmt, "message");
 		return NULL;
 	}

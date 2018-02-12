@@ -1,5 +1,6 @@
 Version 1.02.147 - 
 =====================================
+  Fix tests for failing dm_snprintf() in stats code.
   Parsing mirror status accepts 'userspace' keyword in status.
   Introduce dm_malloc_aligned for page alignment of buffers.
 

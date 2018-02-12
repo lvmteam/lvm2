@@ -4051,7 +4051,7 @@ static int _dm_stats_rrqm_disp(struct dm_report *rh,
 					    DM_STATS_AREA_CURRENT))
 		return_0;
 
-	if (!dm_snprintf(buf, sizeof(buf), "%.2f", rrqm))
+	if (dm_snprintf(buf, sizeof(buf), "%.2f", rrqm) < 0)
 		return_0;
 
 	if (!(repstr = dm_pool_strdup(mem, buf)))
@@ -4082,7 +4082,7 @@ static int _dm_stats_wrqm_disp(struct dm_report *rh,
 					    DM_STATS_AREA_CURRENT))
 		return_0;
 
-	if (!dm_snprintf(buf, sizeof(buf), "%.2f", wrqm))
+	if (dm_snprintf(buf, sizeof(buf), "%.2f", wrqm) < 0)
 		return_0;
 
 	if (!(repstr = dm_pool_strdup(mem, buf)))
@@ -4113,7 +4113,7 @@ static int _dm_stats_rs_disp(struct dm_report *rh,
 					DM_STATS_AREA_CURRENT))
 		return_0;
 
-	if (!dm_snprintf(buf, sizeof(buf), "%.2f", rs))
+	if (dm_snprintf(buf, sizeof(buf), "%.2f", rs) < 0)
 		return_0;
 
 	if (!(repstr = dm_pool_strdup(mem, buf)))
@@ -4144,7 +4144,7 @@ static int _dm_stats_ws_disp(struct dm_report *rh,
 					 DM_STATS_AREA_CURRENT))
 		return_0;
 
-	if (!dm_snprintf(buf, sizeof(buf), "%.2f", ws))
+	if (dm_snprintf(buf, sizeof(buf), "%.2f", ws) < 0)
 		return_0;
 
 	if (!(repstr = dm_pool_strdup(mem, buf)))
@@ -4265,7 +4265,7 @@ static int _dm_stats_qusz_disp(struct dm_report *rh,
 					     DM_STATS_AREA_CURRENT))
 		return_0;
 
-	if (!dm_snprintf(buf, sizeof(buf), "%.2f", qusz))
+	if (dm_snprintf(buf, sizeof(buf), "%.2f", qusz) < 0)
 		return_0;
 
 	if (!(repstr = dm_pool_strdup(mem, buf)))
@@ -4299,7 +4299,7 @@ static int _dm_stats_await_disp(struct dm_report *rh,
 	/* display in msecs */
 	await /= NSEC_PER_MSEC;
 
-	if (!dm_snprintf(buf, sizeof(buf), "%.2f", await))
+	if (dm_snprintf(buf, sizeof(buf), "%.2f", await) < 0)
 		return_0;
 
 	if (!(repstr = dm_pool_strdup(mem, buf)))
@@ -4333,7 +4333,7 @@ static int _dm_stats_r_await_disp(struct dm_report *rh,
 	/* display in msecs */
 	r_await /= NSEC_PER_MSEC;
 
-	if (!dm_snprintf(buf, sizeof(buf), "%.2f", r_await))
+	if (dm_snprintf(buf, sizeof(buf), "%.2f", r_await) < 0)
 		return_0;
 
 	if (!(repstr = dm_pool_strdup(mem, buf)))
@@ -4367,7 +4367,7 @@ static int _dm_stats_w_await_disp(struct dm_report *rh,
 	/* display in msecs */
 	w_await /= NSEC_PER_MSEC;
 
-	if (!dm_snprintf(buf, sizeof(buf), "%.2f", w_await))
+	if (dm_snprintf(buf, sizeof(buf), "%.2f", w_await) < 0)
 		return_0;
 
 	if (!(repstr = dm_pool_strdup(mem, buf)))
@@ -4397,7 +4397,7 @@ static int _dm_stats_tput_disp(struct dm_report *rh,
 				     DM_STATS_AREA_CURRENT))
 		return_0;
 
-	if (!dm_snprintf(buf, sizeof(buf), "%.2f", tput))
+	if (dm_snprintf(buf, sizeof(buf), "%.2f", tput) < 0)
 		return_0;
 
 	if (!(repstr = dm_pool_strdup(mem, buf)))
@@ -4431,7 +4431,7 @@ static int _dm_stats_svctm_disp(struct dm_report *rh,
 	/* display in msecs */
 	svctm /= NSEC_PER_MSEC;
 
-	if (!dm_snprintf(buf, sizeof(buf), "%.2f", svctm))
+	if (dm_snprintf(buf, sizeof(buf), "%.2f", svctm) < 0)
 		return_0;
 
 	if (!(repstr = dm_pool_strdup(mem, buf)))
@@ -4487,7 +4487,7 @@ static int _dm_stats_sample_interval_disp(struct dm_report *rh,
 
 	*sortval = (double)_last_interval / (double) NSEC_PER_SEC;
 
-	if (!dm_snprintf(buf, sizeof(buf), "%2.6f", *sortval))
+	if (dm_snprintf(buf, sizeof(buf), "%2.6f", *sortval) < 0)
 		return_0;
 
 	if (!(repstr = dm_pool_strdup(mem, buf)))
