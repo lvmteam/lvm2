@@ -575,7 +575,7 @@ static int _pvremove_single(struct cmd_context *cmd, const char *pv_name,
 			    unsigned prompt, struct dm_list *pvslist)
 {
 	struct device *dev;
-	struct lvmcache_info *info;
+	//struct lvmcache_info *info;
 	int r = 0;
 
 	if (!_pvremove_check(cmd, pv_name, force_count, prompt, pvslist))
@@ -587,7 +587,8 @@ static int _pvremove_single(struct cmd_context *cmd, const char *pv_name,
 		goto out;
 	}
 
-	info = lvmcache_info_from_pvid(dev->pvid, dev, 0);
+	// FIXME: why is this called if info is not used?
+	//info = lvmcache_info_from_pvid(dev->pvid, dev, 0);
 
 	if (!dev_test_excl(dev)) {
 		/* FIXME Detect whether device-mapper is still using the device */
