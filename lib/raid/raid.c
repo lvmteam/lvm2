@@ -363,6 +363,7 @@ static int _raid_target_status_compatible(const char *type)
 
 static void _raid_destroy(struct segment_type *segtype)
 {
+	dm_free(segtype->dso);
 	dm_free((void *) segtype);
 }
 
@@ -629,7 +630,8 @@ static struct segment_type *_init_raid_segtype(struct cmd_context *cmd,
 	segtype->flags = SEG_RAID | SEG_ONLY_EXCLUSIVE | rt->extra_flags;
 
 	/* Never monitor raid0 or raid0_meta LVs */
-	if (!segtype_is_any_raid0(segtype)) {
+	if (!segtype_is_any_raid0(segtype) &&
+	    dso && (dso = dm_strdup(dso))) {
 		segtype->dso = dso;
 		segtype->flags |= monitored;
 	}
@@ -650,7 +652,7 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 #endif
 {
 	struct segment_type *segtype;
-	const char *dso;
+	const char *dso = NULL;
 	unsigned i;
 	uint64_t monitored = 0;
 
@@ -668,6 +670,8 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 		    !lvm_register_segtype(seglib, segtype))
 			/* segtype is already destroyed */
 			return_0;
+
+	dm_free(dso);
 
 	return 1;
 }

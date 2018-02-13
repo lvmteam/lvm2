@@ -224,6 +224,7 @@ static int _snap_modules_needed(struct dm_pool *mem,
 
 static void _snap_destroy(struct segment_type *segtype)
 {
+	dm_free(segtype->dso);
 	dm_free(segtype);
 }
 

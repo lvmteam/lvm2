@@ -1692,7 +1692,7 @@ char *get_monitor_dso_path(struct cmd_context *cmd, int id)
 
 	get_shared_library_path(cmd, libpath, path, sizeof(path));
 
-	return dm_pool_strdup(cmd->mem, path);
+	return dm_strdup(path);
 }
 
 static char *_build_target_uuid(struct cmd_context *cmd, const struct logical_volume *lv)
