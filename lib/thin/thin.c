@@ -745,7 +745,7 @@ static int _thin_target_present(struct cmd_context *cmd,
 
 static void _thin_destroy(struct segment_type *segtype)
 {
-	dm_free(segtype->dso);
+	dm_free((void *) segtype->dso);
 	dm_free(segtype);
 }
 

@@ -363,8 +363,8 @@ static int _raid_target_status_compatible(const char *type)
 
 static void _raid_destroy(struct segment_type *segtype)
 {
-	dm_free(segtype->dso);
-	dm_free((void *) segtype);
+	dm_free((void *) segtype->dso);
+	dm_free(segtype);
 }
 
 #ifdef DEVMAPPER_SUPPORT
@@ -652,7 +652,7 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 #endif
 {
 	struct segment_type *segtype;
-	const char *dso = NULL;
+	char *dso = NULL;
 	unsigned i;
 	uint64_t monitored = 0;
 

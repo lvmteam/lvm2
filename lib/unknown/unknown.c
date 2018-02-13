@@ -49,7 +49,7 @@ static int _unknown_text_export(const struct lv_segment *seg, struct formatter *
 
 static void _unknown_destroy(struct segment_type *segtype)
 {
-	dm_free(segtype->name);
+	dm_free((void *) segtype->name);
 	dm_free(segtype);
 }
 
