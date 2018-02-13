@@ -320,6 +320,8 @@ static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev
 	log_debug_metadata("Reading mda header sector from %s at %llu",
 			   dev_name(dev_area->dev), (unsigned long long)dev_area->start);
 
+	label_scan_confirm(dev_area->dev);  /* FIXME: remove this, ensures dev is in bcache */
+
 	if (!bcache_read_bytes(scan_bcache, dev_area->dev->bcache_fd, dev_area->start, MDA_HEADER_SIZE, mdah)) {
 		log_error("Failed to read metadata area header on %s at %llu",
 			  dev_name(dev_area->dev), (unsigned long long)dev_area->start);
@@ -461,6 +463,8 @@ static struct raw_locn *_read_metadata_location_vg(struct device_area *dev_area,
 	 * begins with a valid vgname.
 	 */
 	memset(vgnamebuf, 0, sizeof(vgnamebuf));
+
+	label_scan_confirm(dev_area->dev);  /* FIXME: remove this, ensures dev is in bcache */
 
 	bcache_read_bytes(scan_bcache, dev_area->dev->bcache_fd, dev_area->start + rlocn->offset, NAME_LEN, vgnamebuf);
 
@@ -1208,6 +1212,8 @@ int read_metadata_location_summary(const struct format_type *fmt,
 				   (unsigned long long)(dev_area->start + rlocn->offset));
 		return 0;
 	}
+
+	label_scan_confirm(dev_area->dev);  /* FIXME: remove this, ensures dev is in bcache */
 
 	bcache_read_bytes(scan_bcache, dev_area->dev->bcache_fd, dev_area->start + rlocn->offset, NAME_LEN, buf);
 

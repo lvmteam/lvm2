@@ -786,3 +786,21 @@ int label_read_sector(struct device *dev, struct label **labelp, uint64_t scan_s
 	return label_read(dev, labelp, 0);
 }
 
+/*
+ * FIXME: remove this.  It should not be needed once writes are going through
+ * bcache.  As it is now, the write path involves multiple writes to a device,
+ * and later writes want to read previous writes from disk.  They do these
+ * reads using the standard read paths which require the devs to be in bcache,
+ * but the bcache reads do not find the dev because the writes have gone around
+ * bcache.  To work around this for now, check if each dev is in bcache before
+ * reading it, and if not add it first.
+ */
+
+void label_scan_confirm(struct device *dev)
+{
+	if (!_in_bcache(dev)) {
+		log_warn("add dev %s to bcache", dev_name(dev));
+		label_read(dev, NULL, 0);
+	}
+}
+

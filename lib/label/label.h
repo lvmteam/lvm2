@@ -109,5 +109,6 @@ void label_scan_invalidate(struct device *dev);
 void label_scan_destroy(struct cmd_context *cmd);
 int label_read(struct device *dev, struct label **labelp, uint64_t unused_sector);
 int label_read_sector(struct device *dev, struct label **labelp, uint64_t scan_sector);
+void label_scan_confirm(struct device *dev);
 
 #endif
