@@ -802,9 +802,7 @@ int label_read_sector(struct device *dev, struct label **labelp, uint64_t scan_s
 
 void label_scan_confirm(struct device *dev)
 {
-	if (!_in_bcache(dev)) {
-		log_warn("add dev %s to bcache", dev_name(dev));
+	if (!_in_bcache(dev))
 		label_read(dev, NULL, 0);
-	}
 }
 
