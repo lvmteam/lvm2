@@ -5279,7 +5279,6 @@ static int _pvremove_check_single(struct cmd_context *cmd,
 	struct pvcreate_params *pp = (struct pvcreate_params *) handle->custom_handle;
 	struct pvcreate_device *pd;
 	struct pvcreate_prompt *prompt;
-	struct label *label;
 	int found = 0;
 
 	if (!pv->dev)
