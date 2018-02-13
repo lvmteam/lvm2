@@ -37,7 +37,14 @@ lvcreate -n$lv3 -l4 --permission r -s $vg/$lv1
 cleanup_lvs
 
 # Skip the rest for cluster
-test -e LOCAL_CLVMD && exit 0
+if test -e LOCAL_CLVMD; then
+
+# ---
+# Create mirror on two devices with mirrored log using --alloc anywhere - should always fail in cluster
+not lvcreate --type mirror -m 1 -l4 -n $lv1 --mirrorlog mirrored $vg --alloc anywhere "$dev1" "$dev2"
+cleanup_lvs
+
+else
 
 # ---
 # Create mirror on two devices with mirrored log using --alloc anywhere
@@ -48,5 +55,7 @@ cleanup_lvs
 # Create mirror on one dev with mirrored log using --alloc anywhere, should fail
 not lvcreate --type mirror -m 1 -l4 -n $lv1 --mirrorlog mirrored $vg --alloc anywhere "$dev1"
 cleanup_lvs
+
+fi
 
 vgremove -ff $vg
