@@ -49,6 +49,7 @@ static int _unknown_text_export(const struct lv_segment *seg, struct formatter *
 
 static void _unknown_destroy(struct segment_type *segtype)
 {
+	dm_free(segtype->name);
 	dm_free(segtype);
 }
 
@@ -68,7 +69,12 @@ struct segment_type *init_unknown_segtype(struct cmd_context *cmd, const char *n
 	}
 
 	segtype->ops = &_unknown_ops;
-	segtype->name = dm_pool_strdup(cmd->libmem, name);
+	if (!(segtype->name = dm_strdup(name))) {
+		log_error("Failed to allocate name.");
+		dm_free(segtype);
+		return NULL;
+	}
+
 	segtype->flags = SEG_UNKNOWN | SEG_VIRTUAL | SEG_CANNOT_BE_ZEROED;
 
 	log_very_verbose("Initialised segtype: %s", segtype->name);
