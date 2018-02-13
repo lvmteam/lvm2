@@ -241,6 +241,7 @@ static int _pvcreate_check(struct cmd_context *cmd, const char *name,
 			  name);
 		goto out;
 	}
+	dev_close(dev);
 
 	if (!wipe_known_signatures(cmd, dev, name,
 				   TYPE_LVM1_MEMBER | TYPE_LVM2_MEMBER,

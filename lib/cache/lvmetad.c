@@ -2551,10 +2551,17 @@ static int _lvmetad_get_pv_cache_list(struct cmd_context *cmd, struct dm_list *p
  */
 static void _update_pv_in_udev(struct cmd_context *cmd, dev_t devt)
 {
-	struct device *dev;
 
-	log_debug_devs("device %d:%d open to update udev",
+	/*
+	 * FIXME: this is diabled as part of removing dev_opens
+	 * to integrate bcache.  If this is really needed, we
+	 * can do a separate open/close here.
+	 */
+	log_debug_devs("SKIP device %d:%d open to update udev",
 		       (int)MAJOR(devt), (int)MINOR(devt));
+
+#if 0
+	struct device *dev;
 
 	if (!(dev = dev_cache_get_by_devt(devt, cmd->lvmetad_filter))) {
 		log_error("_update_pv_in_udev no dev found");
@@ -2568,6 +2575,7 @@ static void _update_pv_in_udev(struct cmd_context *cmd, dev_t devt)
 
 	if (!dev_close(dev))
 		stack;
+#endif
 }
 
 /*

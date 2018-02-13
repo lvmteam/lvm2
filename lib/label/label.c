@@ -116,6 +116,8 @@ int label_remove(struct device *dev)
 
 	log_very_verbose("Scanning for labels to wipe from %s", dev_name(dev));
 
+	label_scan_invalidate(dev);
+
 	if (!dev_open(dev))
 		return_0;
 
@@ -124,8 +126,6 @@ int label_remove(struct device *dev)
 	 * enough to be trying to import an open pv into lvm.
 	 */
 	dev_flush(dev);
-
-	label_scan_invalidate(dev);
 
 	if (!dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, DEV_IO_LABEL, readbuf)) {
 		log_debug_devs("%s: Failed to read label area", dev_name(dev));
@@ -396,6 +396,71 @@ static int _process_block(struct device *dev, struct block *bb, int *is_lvm_devi
 	return ret;
 }
 
+static int _scan_dev_open(struct device *dev)
+{
+	const char *name;
+	int flags = 0;
+	int fd;
+
+	if (dev->flags & DEV_IN_BCACHE) {
+		log_error("scan_dev_open %s DEV_IN_BCACHE already set", dev_name(dev));
+		dev->flags &= ~DEV_IN_BCACHE;
+	}
+
+	if (dev->bcache_fd > 0) {
+		log_error("scan_dev_open %s already open with fd %d",
+			  dev_name(dev), dev->bcache_fd);
+		return 0;
+	}
+
+	if (!(name = dev_name_confirmed(dev, 1))) {
+		log_error("scan_dev_open %s no name", dev_name(dev));
+		return 0;
+	}
+
+	flags |= O_RDWR;
+	flags |= O_DIRECT;
+	flags |= O_NOATIME;
+
+	if (dev->flags & DEV_BCACHE_EXCL)
+		flags |= O_EXCL;
+
+	fd = open(name, flags, 0777);
+
+	if (fd < 0) {
+		if ((errno == EBUSY) && (flags & O_EXCL)) {
+			log_error("Can't open %s exclusively.  Mounted filesystem?",
+				  dev_name(dev));
+		} else {
+			log_error("scan_dev_open %s failed errno %d", dev_name(dev), errno);
+		}
+		return 0;
+	}
+
+	dev->flags |= DEV_IN_BCACHE;
+	dev->bcache_fd = fd;
+	return 1;
+}
+
+static int _scan_dev_close(struct device *dev)
+{
+	if (!(dev->flags & DEV_IN_BCACHE))
+		log_error("scan_dev_close %s no DEV_IN_BCACHE set", dev_name(dev));
+
+	dev->flags &= ~DEV_IN_BCACHE;
+	dev->flags &= ~DEV_BCACHE_EXCL;
+
+	if (dev->bcache_fd < 0) {
+		log_error("scan_dev_close %s already closed", dev_name(dev));
+		return 0;
+	}
+
+	if (close(dev->bcache_fd))
+		log_warn("close %s errno %d", dev_name(dev), errno);
+	dev->bcache_fd = -1;
+	return 1;
+}
+
 /*
  * Read or reread label/metadata from selected devs.
  *
@@ -407,7 +472,7 @@ static int _process_block(struct device *dev, struct block *bb, int *is_lvm_devi
  * its info is removed from lvmcache.
  */
 
-static int _scan_list(struct dm_list *devs)
+static int _scan_list(struct dm_list *devs, int *failed)
 {
 	struct dm_list wait_devs;
 	struct dm_list done_devs;
@@ -439,19 +504,16 @@ static int _scan_list(struct dm_list *devs)
 		if (!rem_prefetches)
 			break;
 
-		/*
-		 * The in-bcache flag corresponds with this dev_open.
-		 * Clearing the in-bcache flag should be paired with
-		 * a dev_close.  (This dev may already be in bcache.)
-		 */
 		if (!_in_bcache(devl->dev)) {
-			if (!dev_open_readonly(devl->dev)) {
+			if (!_scan_dev_open(devl->dev)) {
 				log_debug_devs("%s: Failed to open device.", dev_name(devl->dev));
+				dm_list_del(&devl->list);
+				scan_failed_count++;
 				continue;
 			}
 		}
 
-		bcache_prefetch(scan_bcache, devl->dev->fd, 0);
+		bcache_prefetch(scan_bcache, devl->dev->bcache_fd, 0);
 
 		rem_prefetches--;
 
@@ -462,12 +524,12 @@ static int _scan_list(struct dm_list *devs)
 	dm_list_iterate_items_safe(devl, devl2, &wait_devs) {
 		bb = NULL;
 
-		if (!bcache_get(scan_bcache, devl->dev->fd, 0, 0, &bb)) {
+		if (!bcache_get(scan_bcache, devl->dev->bcache_fd, 0, 0, &bb)) {
 			log_debug_devs("%s: Failed to scan device.", dev_name(devl->dev));
 			scan_failed_count++;
 			scan_failed = 1;
 		} else {
-			log_debug_devs("Processing data from device %s fd %d block %p", dev_name(devl->dev), devl->dev->fd, bb);
+			log_debug_devs("Processing data from device %s fd %d block %p", dev_name(devl->dev), devl->dev->bcache_fd, bb);
 			_process_block(devl->dev, bb, &is_lvm_device);
 			scan_lvm_count++;
 			scan_failed = 0;
@@ -483,12 +545,8 @@ static int _scan_list(struct dm_list *devs)
 		 * drop it from bcache.
 		 */
 		if (scan_failed || !is_lvm_device) {
-			devl->dev->flags &= ~DEV_IN_BCACHE;
-			bcache_invalidate_fd(scan_bcache, devl->dev->fd);
-			dev_close(devl->dev);
-		} else {
-			/* The device must be kept open while it's in bcache. */
-			devl->dev->flags |= DEV_IN_BCACHE;
+			bcache_invalidate_fd(scan_bcache, devl->dev->bcache_fd);
+			_scan_dev_close(devl->dev);
 		}
 
 		dm_list_del(&devl->list);
@@ -498,12 +556,13 @@ static int _scan_list(struct dm_list *devs)
 	if (!dm_list_empty(devs))
 		goto scan_more;
 
-	/* FIXME: let the caller know if some lvm devices failed to be scanned. */
-
 	log_debug_devs("Scanned %d devices: %d for lvm, %d failed.",
 			dm_list_size(&done_devs), scan_lvm_count, scan_failed_count);
 
-	return 0;
+	if (failed)
+		*failed = scan_failed_count;
+
+	return 1;
 }
 
 /*
@@ -548,8 +607,10 @@ int label_scan(struct cmd_context *cmd)
 		 * label_scan should not generally be called a second time,
 		 * so this will usually not be true.
 		 */
-		if (_in_bcache(dev))
-			bcache_invalidate_fd(scan_bcache, dev->fd);
+		if (_in_bcache(dev)) {
+			bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
+			_scan_dev_close(dev);
+		}
 	};
 	dev_iter_destroy(iter);
 
@@ -573,7 +634,9 @@ int label_scan(struct cmd_context *cmd)
 			return 0;
 	}
 
-	return _scan_list(&all_devs);
+	_scan_list(&all_devs, NULL);
+
+	return 1;
 }
 
 /*
@@ -589,19 +652,48 @@ int label_scan_devs(struct cmd_context *cmd, struct dm_list *devs)
 	struct device_list *devl;
 
 	dm_list_iterate_items(devl, devs) {
-		if (_in_bcache(devl->dev))
-			bcache_invalidate_fd(scan_bcache, devl->dev->fd);
+		if (_in_bcache(devl->dev)) {
+			bcache_invalidate_fd(scan_bcache, devl->dev->bcache_fd);
+			_scan_dev_close(devl->dev);
+		}
 	}
 
-	return _scan_list(devs);
+	_scan_list(devs, NULL);
+
+	/* FIXME: this function should probably fail if any devs couldn't be scanned */
+
+	return 1;
+}
+
+int label_scan_devs_excl(struct dm_list *devs)
+{
+	struct device_list *devl;
+	int failed = 0;
+
+	dm_list_iterate_items(devl, devs) {
+		if (_in_bcache(devl->dev)) {
+			bcache_invalidate_fd(scan_bcache, devl->dev->bcache_fd);
+			_scan_dev_close(devl->dev);
+		}
+		/*
+		 * With this flag set, _scan_dev_open() done by
+		 * _scan_list() will do open EXCL
+		 */
+		devl->dev->flags |= DEV_BCACHE_EXCL;
+	}
+
+	_scan_list(devs, &failed);
+
+	if (failed)
+		return 0;
+	return 1;
 }
 
 void label_scan_invalidate(struct device *dev)
 {
 	if (_in_bcache(dev)) {
-		dev->flags &= ~DEV_IN_BCACHE;
-		bcache_invalidate_fd(scan_bcache, dev->fd);
-		dev_close(dev);
+		bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
+		_scan_dev_close(dev);
 	}
 }
 
@@ -645,7 +737,7 @@ int label_read(struct device *dev, struct label **labelp, uint64_t unused_sector
 {
 	struct dm_list one_dev;
 	struct device_list *devl;
-	int ret;
+	int failed = 0;
 
 	/* scanning is done by list, so make a single item list for this dev */
 	if (!(devl = dm_zalloc(sizeof(*devl))))
@@ -654,10 +746,12 @@ int label_read(struct device *dev, struct label **labelp, uint64_t unused_sector
 	dm_list_init(&one_dev);
 	dm_list_add(&one_dev, &devl->list);
 
-	if (_in_bcache(dev))
-		bcache_invalidate_fd(scan_bcache, dev->fd);
+	if (_in_bcache(dev)) {
+		bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
+		_scan_dev_close(dev);
+	}
 
-	ret = _scan_list(&one_dev);
+	_scan_list(&one_dev, &failed);
 
 	/*
 	 * FIXME: this ugliness of returning a pointer to the label is
@@ -671,7 +765,9 @@ int label_read(struct device *dev, struct label **labelp, uint64_t unused_sector
 			*labelp = lvmcache_get_label(info);
 	}
 
-	return ret;
+	if (failed)
+		return 0;
+	return 1;
 }
 
 /*

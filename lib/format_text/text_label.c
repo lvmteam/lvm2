@@ -338,12 +338,6 @@ static int _read_mda_header_and_metadata(struct metadata_area *mda, void *baton)
 	 * TODO: make lvmcache smarter and move this cache logic there
 	 */
 
-	if (!dev_open_readonly(mdac->area.dev)) {
-		mda_set_ignored(mda, 1);
-		stack;
-		return 1;
-	}
-
 	if (!(mdah = raw_read_mda_header(fmt, &mdac->area, mda_is_primary(mda)))) {
 		stack;
 		goto close_dev;
@@ -355,23 +349,16 @@ static int _read_mda_header_and_metadata(struct metadata_area *mda, void *baton)
 		log_debug_metadata("Ignoring mda on device %s at offset " FMTu64,
 				   dev_name(mdac->area.dev),
 				   mdac->area.start);
-		if (!dev_close(mdac->area.dev))
-			stack;
 		return 1;
 	}
 
 	if (read_metadata_location_summary(fmt, mdah, mda_is_primary(mda), &mdac->area, &vgsummary,
 			     &mdac->free_sectors) &&
 	    !lvmcache_update_vgname_and_id(p->info, &vgsummary)) {
-		if (!dev_close(mdac->area.dev))
-			stack;
 		return_0;
 	}
 
 close_dev:
-	if (!dev_close(mdac->area.dev))
-		stack;
-
 	return 1;
 }
 

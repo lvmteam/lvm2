@@ -320,7 +320,7 @@ static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev
 	log_debug_metadata("Reading mda header sector from %s at %llu",
 			   dev_name(dev_area->dev), (unsigned long long)dev_area->start);
 
-	if (!bcache_read_bytes(scan_bcache, dev_area->dev->fd, dev_area->start, MDA_HEADER_SIZE, mdah)) {
+	if (!bcache_read_bytes(scan_bcache, dev_area->dev->bcache_fd, dev_area->start, MDA_HEADER_SIZE, mdah)) {
 		log_error("Failed to read metadata area header on %s at %llu",
 			  dev_name(dev_area->dev), (unsigned long long)dev_area->start);
 		return 0;
@@ -462,7 +462,7 @@ static struct raw_locn *_read_metadata_location_vg(struct device_area *dev_area,
 	 */
 	memset(vgnamebuf, 0, sizeof(vgnamebuf));
 
-	bcache_read_bytes(scan_bcache, dev_area->dev->fd, dev_area->start + rlocn->offset, NAME_LEN, vgnamebuf);
+	bcache_read_bytes(scan_bcache, dev_area->dev->bcache_fd, dev_area->start + rlocn->offset, NAME_LEN, vgnamebuf);
 
 	if (!strncmp(vgnamebuf, vgname, len = strlen(vgname)) &&
 	    (isspace(vgnamebuf[len]) || vgnamebuf[len] == '{'))
@@ -510,17 +510,11 @@ static int _raw_holds_vgname(struct format_instance *fid,
 	int noprecommit = 0;
 	struct mda_header *mdah;
 
-	if (!dev_open_readonly(dev_area->dev))
-		return_0;
-
 	if (!(mdah = raw_read_mda_header(fid->fmt, dev_area, 0)))
 		return_0;
 
 	if (_read_metadata_location_vg(dev_area, mdah, 0, vgname, &noprecommit))
 		r = 1;
-
-	if (!dev_close(dev_area->dev))
-		stack;
 
 	return r;
 }
@@ -595,13 +589,7 @@ static struct volume_group *_vg_read_raw(struct format_instance *fid,
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct volume_group *vg;
 
-	if (!dev_open_readonly(mdac->area.dev))
-		return_NULL;
-
 	vg = _vg_read_raw_area(fid, vgname, &mdac->area, vg_fmtdata, use_previous_vg, 0, mda_is_primary(mda));
-
-	if (!dev_close(mdac->area.dev))
-		stack;
 
 	return vg;
 }
@@ -615,13 +603,7 @@ static struct volume_group *_vg_read_precommit_raw(struct format_instance *fid,
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct volume_group *vg;
 
-	if (!dev_open_readonly(mdac->area.dev))
-		return_NULL;
-
 	vg = _vg_read_raw_area(fid, vgname, &mdac->area, vg_fmtdata, use_previous_vg, 1, mda_is_primary(mda));
-
-	if (!dev_close(mdac->area.dev))
-		stack;
 
 	return vg;
 }
@@ -652,9 +634,6 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 
 	if (!found)
 		return 1;
-
-	if (!dev_open(mdac->area.dev))
-		return_0;
 
 	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area, mda_is_primary(mda))))
 		goto_out;
@@ -693,6 +672,9 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 			    mdac->rlocn.offset, mdac->rlocn.size - new_wrap, mdac->rlocn.size);
 
 	label_scan_invalidate(mdac->area.dev);
+
+	if (!dev_open(mdac->area.dev))
+		return_0;
 
 	/* Write text out, circularly */
 	if (!dev_write(mdac->area.dev, mdac->area.start + mdac->rlocn.offset,
@@ -879,9 +861,6 @@ static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 	int r = 0;
 	int noprecommit = 0;
 
-	if (!dev_open(mdac->area.dev))
-		return_0;
-
 	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area, mda_is_primary(mda))))
 		goto_out;
 
@@ -894,6 +873,9 @@ static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 	rlocn->size = 0;
 	rlocn->checksum = 0;
 	rlocn_set_ignored(mdah->raw_locns, mda_is_ignored(mda));
+
+	if (!dev_open(mdac->area.dev))
+		return_0;
 
 	if (!_raw_write_mda_header(fid->fmt, mdac->area.dev, mda_is_primary(mda), mdac->area.start,
 				   mdah)) {
@@ -1227,7 +1209,7 @@ int read_metadata_location_summary(const struct format_type *fmt,
 		return 0;
 	}
 
-	bcache_read_bytes(scan_bcache, dev_area->dev->fd, dev_area->start + rlocn->offset, NAME_LEN, buf);
+	bcache_read_bytes(scan_bcache, dev_area->dev->bcache_fd, dev_area->start + rlocn->offset, NAME_LEN, buf);
 
 	while (buf[len] && !isspace(buf[len]) && buf[len] != '{' &&
 	       len < (NAME_LEN - 1))
@@ -1338,15 +1320,9 @@ static int _scan_raw(const struct format_type *fmt, const char *vgname __attribu
 	dm_list_iterate_items(rl, raw_list) {
 		log_debug_metadata("Scanning independent dev %s", dev_name(rl->dev_area.dev));
 
-		/* FIXME We're reading mdah twice here... */
-		if (!dev_open_readonly(rl->dev_area.dev)) {
-			stack;
-			continue;
-		}
-
 		if (!(mdah = raw_read_mda_header(fmt, &rl->dev_area, 0))) {
 			stack;
-			goto close_dev;
+			continue;
 		}
 
 		if (read_metadata_location_summary(fmt, mdah, 0, &rl->dev_area, &vgsummary, NULL)) {
@@ -1356,9 +1332,6 @@ static int _scan_raw(const struct format_type *fmt, const char *vgname __attribu
 				lvmcache_set_independent_location(vg->name);
 			}
 		}
-	close_dev:
-		if (!dev_close(rl->dev_area.dev))
-			stack;
 	}
 
 	return 1;
@@ -1488,9 +1461,6 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	if (!lvmcache_update_das(info, pv))
 		return_0;
 
-	if (!dev_open(pv->dev))
-		return_0;
-
 	baton.pv = pv;
 	baton.fmt = fmt;
 
@@ -1502,8 +1472,6 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 
 	if (!label_write(pv->dev, label)) {
 		stack;
-		if (!dev_close(pv->dev))
-			stack;
 		return 0;
 	}
 
@@ -1512,9 +1480,6 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	 *        areas for label_write and only if it's successful,
 	 *        update the cache afterwards?
 	 */
-
-	if (!dev_close(pv->dev))
-		return_0;
 
 	return 1;
 }

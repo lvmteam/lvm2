@@ -330,6 +330,8 @@ static int _dev_get_size_file(struct device *dev, uint64_t *size)
 static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 {
 	const char *name = dev_name(dev);
+	int fd = dev->bcache_fd;
+	int do_close = 0;
 
 	if (dev->size_seqno == _dev_size_seqno) {
 		log_very_verbose("%s: using cached size %" PRIu64 " sectors",
@@ -338,12 +340,16 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 		return 1;
 	}
 
-	if (!dev_open_readonly(dev))
-		return_0;
+	if (fd <= 0) {
+		if (!dev_open_readonly(dev))
+			return_0;
+		fd = dev_fd(dev);
+		do_close = 1;
+	}
 
-	if (ioctl(dev_fd(dev), BLKGETSIZE64, size) < 0) {
+	if (ioctl(fd, BLKGETSIZE64, size) < 0) {
 		log_sys_error("ioctl BLKGETSIZE64", name);
-		if (!dev_close(dev))
+		if (do_close && !dev_close(dev))
 			log_sys_error("close", name);
 		return 0;
 	}
@@ -352,7 +358,7 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 	dev->size = *size;
 	dev->size_seqno = _dev_size_seqno;
 
-	if (!dev_close(dev))
+	if (do_close && !dev_close(dev))
 		log_sys_error("close", name);
 
 	log_very_verbose("%s: size is %" PRIu64 " sectors", name, *size);
@@ -629,17 +635,12 @@ int dev_open_readonly_quiet(struct device *dev)
 
 int dev_test_excl(struct device *dev)
 {
-	int flags;
-	int r;
+	int flags = 0;
 
-	flags = vg_write_lock_held() ? O_RDWR : O_RDONLY;
 	flags |= O_EXCL;
+	flags |= O_RDWR;
 
-	r = dev_open_flags(dev, flags, 1, 1);
-	if (r)
-		dev_close_immediate(dev);
-
-	return r;
+	return dev_open_flags(dev, flags, 1, 1);
 }
 
 static void _close(struct device *dev)
@@ -659,7 +660,6 @@ static void _close(struct device *dev)
 
 static int _dev_close(struct device *dev, int immediate)
 {
-
 	if (dev->fd < 0) {
 		log_error("Attempt to close device '%s' "
 			  "which is not open.", dev_name(dev));
