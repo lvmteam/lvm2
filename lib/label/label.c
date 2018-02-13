@@ -577,6 +577,7 @@ int label_scan(struct cmd_context *cmd)
 	struct device_list *devl;
 	struct device *dev;
 	struct io_engine *ioe;
+	int cache_blocks;
 
 	log_debug_devs("Finding devices to scan");
 
@@ -615,6 +616,9 @@ int label_scan(struct cmd_context *cmd)
 	dev_iter_destroy(iter);
 
 	if (!scan_bcache) {
+		/* No devices can happen, just create bcache with any small number. */
+		if (!(cache_blocks = dm_list_size(&all_devs)))
+			cache_blocks = 8;
 
 		/*
 		 * 100 is arbitrary, it's the max number of concurrent aio's
@@ -630,7 +634,7 @@ int label_scan(struct cmd_context *cmd)
 		 * of the devs will not be lvm devices, and we don't need
 		 * an entry for those.  We might want to change this.
 		 */
-		if (!(scan_bcache = bcache_create(BCACHE_BLOCK_SIZE_IN_SECTORS, dm_list_size(&all_devs), ioe)))
+		if (!(scan_bcache = bcache_create(BCACHE_BLOCK_SIZE_IN_SECTORS, cache_blocks, ioe)))
 			return 0;
 	}
 
