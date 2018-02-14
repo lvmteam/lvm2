@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Do not report LV as remotely active when it's locally exclusive in cluster.
   Add deprecate messages for usage of mirrors with mirrorlog.
   Separate reporting of monitoring status and error status.
   Improve validation of created strings in vgimportclone.

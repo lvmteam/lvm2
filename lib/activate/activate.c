@@ -1543,8 +1543,11 @@ static int _lv_is_active(const struct logical_volume *lv,
 	if (skip_cluster_query)
 		goto out;
 
-	if ((r = cluster_lock_held(lv->lvid.s, "", &e)) >= 0)
+	if ((r = cluster_lock_held(lv->lvid.s, "", &e)) >= 0) {
+		if (l && e)
+			r = 0; /* exclusive locally */
 		goto out;
+	}
 
 	/*
 	 * If lock query is not supported (due to interfacing with old
