@@ -4080,8 +4080,6 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		/* Independent MDAs aren't supported under low memory */
 		if (!cmd->independent_metadata_areas && prioritized_section())
 			return_NULL;
-		lvmcache_force_next_label_scan();
-		lvmcache_label_scan(cmd);
 		if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 0)))
 			return_NULL;
 
