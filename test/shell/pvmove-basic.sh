@@ -41,7 +41,7 @@ prepare_lvs_() {
 	lvextend -l+2 $vg/$lv1 "$dev3"
 	lvextend -l+2 $vg/$lv1 "$dev1"
 	check lv_on $vg $lv1 "$dev1" "$dev2" "$dev3"
-	lvcreate -l1 -n $lv3 $vg "$dev2"
+	lvcreate -aey -l1 -n $lv3 $vg "$dev2"
 	check lv_on $vg $lv3 "$dev2"
 	aux mkdev_md5sum $vg $lv1
 	aux mkdev_md5sum $vg $lv2
