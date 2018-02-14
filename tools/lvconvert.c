@@ -1216,6 +1216,11 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 	    (old_log_count == new_log_count))
 		return 1;
 
+	if ((old_log_count != new_log_count) &&
+	    (new_log_count == MIRROR_LOG_MIRRORED)) {
+		log_warn("Log type \"mirrored\" is DEPRECATED and will be removed in the future. Use RAID1 LV or disk log instead.");
+	}
+
 	if (!_lvconvert_mirrors_aux(cmd, lv, lp, NULL,
 				    new_mimage_count, new_log_count, lp->pvh))
 		return_0;
