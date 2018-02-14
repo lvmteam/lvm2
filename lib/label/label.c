@@ -678,18 +678,6 @@ int label_scan_devs(struct cmd_context *cmd, struct dm_list *devs)
 {
 	struct device_list *devl;
 
-	if (!scan_bcache) {
-		/*
-		 * This is only needed when commands are using lvmetad, in
-		 * which case they don't do an initial label_scan, but may
-		 * later need to rescan certain devs from disk and call this
-		 * function.
-		 * FIXME: is there some better number to choose here?
-		 */
-		if (!_setup_bcache(32))
-			return 0;
-	}
-
 	dm_list_iterate_items(devl, devs) {
 		if (_in_bcache(devl->dev)) {
 			bcache_invalidate_fd(scan_bcache, devl->dev->bcache_fd);
@@ -839,5 +827,22 @@ void label_scan_confirm(struct device *dev)
 {
 	if (!_in_bcache(dev))
 		label_read(dev, NULL, 0);
+}
+
+/*
+ * This is only needed when commands are using lvmetad, in which case they
+ * don't do an initial label_scan, but may later need to rescan certain devs
+ * from disk and call this function.  FIXME: is there some better number to
+ * choose here?
+ */
+
+int label_scan_setup_bcache(void)
+{
+	if (!scan_bcache) {
+		if (!_setup_bcache(32))
+			return 0;
+	}
+
+	return 1;
 }
 

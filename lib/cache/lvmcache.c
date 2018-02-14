@@ -1241,8 +1241,11 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 
 	int r = 0;
 
-	if (lvmetad_used())
+	if (lvmetad_used()) {
+		if (!label_scan_setup_bcache())
+			return 0;
 		return 1;
+	}
 
 	/* Avoid recursion when a PVID can't be found! */
 	if (_scanning_in_progress)
