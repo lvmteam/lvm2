@@ -865,12 +865,28 @@ static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 	int r = 0;
 	int noprecommit = 0;
 
-	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area, mda_is_primary(mda))))
-		goto_out;
+	if (!(mdah = dm_pool_alloc(fid->fmt->cmd->mem, MDA_HEADER_SIZE))) {
+		log_error("struct mda_header allocation failed");
+		return 0;
+	}
 
-	if (!(rlocn = _read_metadata_location_vg(&mdac->area, mdah, mda_is_primary(mda), vg->name, &noprecommit))) {
+	/*
+	 * FIXME: what's the point of reading the mda_header and metadata,
+	 * since we zero the rlocn fields whether we can read them or not.
+	 */
+
+	if (!_raw_read_mda_header(mdah, &mdac->area, mda_is_primary(mda))) {
+		log_warn("WARNING: Removing metadata location on %s with bad mda header.",
+			  dev_name(mdac->area.dev));
 		rlocn = &mdah->raw_locns[0];
 		mdah->raw_locns[1].offset = 0;
+	} else {
+		if (!(rlocn = _read_metadata_location_vg(&mdac->area, mdah, mda_is_primary(mda), vg->name, &noprecommit))) {
+			log_warn("WARNING: Removing metadata location on %s with bad metadata.",
+				 dev_name(mdac->area.dev));
+			rlocn = &mdah->raw_locns[0];
+			mdah->raw_locns[1].offset = 0;
+		}
 	}
 
 	rlocn->offset = 0;
