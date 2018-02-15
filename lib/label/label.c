@@ -513,6 +513,7 @@ static int _scan_list(struct dm_list *devs, int *failed)
 			if (!_scan_dev_open(devl->dev)) {
 				log_debug_devs("%s: Failed to open device.", dev_name(devl->dev));
 				dm_list_del(&devl->list);
+				dm_list_add(&done_devs, &devl->list);
 				scan_failed_count++;
 				continue;
 			}
@@ -561,8 +562,8 @@ static int _scan_list(struct dm_list *devs, int *failed)
 	if (!dm_list_empty(devs))
 		goto scan_more;
 
-	log_debug_devs("Scanned %d devices: %d for lvm, %d failed.",
-			dm_list_size(&done_devs), scan_lvm_count, scan_failed_count);
+	log_debug_devs("Scanned devices: %d lvm, %d failed.",
+			scan_lvm_count, scan_failed_count);
 
 	if (failed)
 		*failed = scan_failed_count;
