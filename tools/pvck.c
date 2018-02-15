@@ -23,6 +23,8 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 	/* FIXME: validate cmdline options */
 	/* FIXME: what does the cmdline look like? */
 
+	label_scan_setup_bcache();
+
 	/*
 	 * Use what's on the cmdline directly, and avoid calling into
 	 * some of the other infrastructure functions, so as to avoid

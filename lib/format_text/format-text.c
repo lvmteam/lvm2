@@ -187,9 +187,6 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 		  FMTu64, mdac->area.start, mdac->area.size);
 	area = &mdac->area;
 
-	if (!dev_open_readonly(area->dev))
-		return_0;
-
 	if (!(mdah = raw_read_mda_header(fmt, area, mda_is_primary(mda))))
 		goto_out;
 
@@ -230,8 +227,23 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 		if (!(buf = dm_malloc(size + size2)))
 			goto_out;
 
-		if (!dev_read_circular(area->dev, offset, size, offset2, size2, MDA_CONTENT_REASON(mda_is_primary(mda)), buf))
-			goto_out;
+		if (!bcache_read_bytes(scan_bcache, area->dev->bcache_fd, offset, size, buf)) {
+			log_error("Failed to read dev %s offset %llu size %llu",
+				  dev_name(area->dev),
+				  (unsigned long long)offset,
+				  (unsigned long long)size);
+			goto out;
+		}
+
+		if (size2) {
+			if (!bcache_read_bytes(scan_bcache, area->dev->bcache_fd, offset2, size2, buf + size)) {
+				log_error("Failed to read dev %s offset %llu size %llu",
+				  	  dev_name(area->dev),
+					  (unsigned long long)offset2,
+				          (unsigned long long)size2);
+				goto out;
+			}
+		}
 
 		/*
 		 * FIXME: We could add more sophisticated metadata detection
@@ -268,8 +280,6 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 	r = 1;
  out:
 	dm_free(buf);
-	if (!dev_close(area->dev))
-		stack;
 	return r;
 }
 
