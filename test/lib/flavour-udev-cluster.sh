@@ -1,3 +1,2 @@
 export LVM_TEST_LOCKING=3
 export LVM_TEST_DEVDIR=/dev
-export LVM_TEST_LVM1=1
