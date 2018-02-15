@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Add deprecate messages for usage of mirrors with mirrorlog.
   Separate reporting of monitoring status and error status.
   Improve validation of created strings in vgimportclone.
   Add missing initialisation of mem pool in systemd generator.

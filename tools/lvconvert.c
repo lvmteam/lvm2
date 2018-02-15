@@ -686,7 +686,7 @@ static void _remove_missing_empty_pv(struct volume_group *vg, struct dm_list *re
 			stack;
 			return;
 		}
-		log_warn("%d missing and now unallocated Physical Volumes removed from VG.", removed);
+		log_warn("WARNING: %d missing and now unallocated Physical Volumes removed from VG.", removed);
 	}
 }
 
@@ -828,7 +828,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 	uint32_t old_log_count = _get_log_count(lv);
 
 	if ((lp->mirrors == 1) && !lv_is_mirrored(lv)) {
-		log_warn("Logical volume %s is already not mirrored.",
+		log_warn("WARNING: Logical volume %s is already not mirrored.",
 			 display_lvname(lv));
 		return 1;
 	}
@@ -1100,7 +1100,7 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 	log_count = replace_logs ? original_logs : (original_logs - failed_logs);
 
 	while (replace_mimages || replace_logs) {
-		log_warn("Trying to up-convert to %d images, %d logs.", lp->mirrors, log_count);
+		log_warn("WARNING: Trying to up-convert to %d images, %d logs.", lp->mirrors, log_count);
 		if (_lvconvert_mirrors_aux(cmd, lv, lp, NULL,
 					   lp->mirrors, log_count, pvh))
 			break;
@@ -1218,7 +1218,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 
 	if ((old_log_count != new_log_count) &&
 	    (new_log_count == MIRROR_LOG_MIRRORED)) {
-		log_warn("Log type \"mirrored\" is DEPRECATED and will be removed in the future. Use RAID1 LV or disk log instead.");
+		log_warn("WARNING: Log type \"mirrored\" is DEPRECATED and will be removed in the future. Use RAID1 LV or disk log instead.");
 	}
 
 	if (!_lvconvert_mirrors_aux(cmd, lv, lp, NULL,
