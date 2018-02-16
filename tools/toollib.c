@@ -3009,7 +3009,6 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	log_report_t saved_log_report_state = log_get_report_state();
 	char lv_uuid[64] __attribute__((aligned(8)));
 	char vg_uuid[64] __attribute__((aligned(8)));
-	struct lvinfo lvinfo;
 	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
 	int whole_selected = 0;
@@ -3026,8 +3025,6 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	struct lv_list *final_lvl;
 	struct dm_list found_arg_lvnames;
 	struct glv_list *glvl, *tglvl;
-	struct device *dev;
-	dev_t devt;
 	int do_report_ret_code = 1;
 
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_LV);
@@ -3170,12 +3167,8 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	 * in bcache, and needs to be closed so the open fd doesn't
 	 * interfere with processing the LV.
 	 */
-	dm_list_iterate_items(lvl, &final_lvs) {
-		lv_info(cmd, lvl->lv, 0, &lvinfo, 0, 0);
-		devt = MKDEV(lvinfo.major, lvinfo.minor);
-		if ((dev = dev_cache_get_by_devt(devt, cmd->filter)))
-			label_scan_invalidate(dev);
-	}
+	dm_list_iterate_items(lvl, &final_lvs)
+		label_scan_invalidate_lv(cmd, lvl->lv);
 
 	dm_list_iterate_items(lvl, &final_lvs) {
 		lv_uuid[0] = '\0';
