@@ -1121,7 +1121,7 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 		goto fail;
 	}
 
-	if ((rv = build_dm_path(disk_path, SANLK_PATH_LEN, ls->vg_name, lock_lv_name)))
+	if ((ret = build_dm_path(disk_path, SANLK_PATH_LEN, ls->vg_name, lock_lv_name)))
 		goto fail;
 
 	/*
