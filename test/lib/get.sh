@@ -47,7 +47,7 @@ lv_field() {
 
 lv_first_seg_field() {
 	local r
-	r=$(lvs --config 'log{prefix=""}' --noheadings -o "$2" "${@:3}" "$1" | head -1)
+	r=$(head -1 < <(lvs --config 'log{prefix=""}' --unbuffered --noheadings -o "$2" "${@:3}" "$1"))
 	trim_ "$r"
 }
 
@@ -74,7 +74,7 @@ lv_field_lv_() {
 lv_tree_devices_() {
 	local lv="$1/$2"
 	local type
-	type=$(lv_field "$lv" segtype -a --unbuffered | head -n 1)
+	type=$(lv_first_seg_field "$lv" segtype -a)
 	#local orig
 	#orig=$(lv_field_lv_ "$lv" origin)
 	# FIXME: should we count in also origins ?
