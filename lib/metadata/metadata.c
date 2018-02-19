@@ -692,6 +692,7 @@ int check_pv_dev_sizes(struct volume_group *vg)
  * . lvmcache_get_vgids()
  * . lvmcache_get_vgnames()
  * . the vg->pvs_to_write list and pv_to_write struct
+ * . _pvcreate_write()
  */
 
 int vg_extend_each_pv(struct volume_group *vg, struct pvcreate_params *pp)
@@ -1414,28 +1415,24 @@ static int _pvcreate_write(struct cmd_context *cmd, struct pv_to_write *pvw)
 	struct device *dev = pv->dev;
 	const char *pv_name = dev_name(dev);
 
+	if (!label_scan_open(dev)) {
+		log_error("%s not opened: device not written", pv_name);
+		return 0;
+	}
+
 	if (pvw->new_pv) {
 		/* Wipe existing label first */
-		if (!label_remove(pv_dev(pv))) {
+		if (!label_remove(dev)) {
 			log_error("Failed to wipe existing label on %s", pv_name);
 			return 0;
 		}
 
 		if (pvw->pp->zero) {
 			log_verbose("Zeroing start of device %s", pv_name);
-			if (!dev_open_quiet(dev)) {
-				log_error("%s not opened: device not zeroed", pv_name);
-				return 0;
-			}
-
-			if (!dev_set(dev, UINT64_C(0), (size_t) 2048, DEV_IO_LABEL, 0)) {
+			if (!bcache_write_zeros(scan_bcache, dev->bcache_fd, 0, 2048)) {
 				log_error("%s not wiped: aborting", pv_name);
-				if (!dev_close(dev))
-					stack;
 				return 0;
 			}
-			if (!dev_close(dev))
-				stack;
 		}
 	}
 

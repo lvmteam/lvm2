@@ -330,8 +330,6 @@ static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev
 	log_debug_metadata("Reading mda header sector from %s at %llu",
 			   dev_name(dev_area->dev), (unsigned long long)dev_area->start);
 
-	label_scan_confirm(dev_area->dev);  /* FIXME: remove this, ensures dev is in bcache */
-
 	if (!bcache_read_bytes(scan_bcache, dev_area->dev->bcache_fd, dev_area->start, MDA_HEADER_SIZE, mdah)) {
 		log_error("Failed to read metadata area header on %s at %llu",
 			  dev_name(dev_area->dev), (unsigned long long)dev_area->start);
@@ -397,23 +395,15 @@ static int _raw_write_mda_header(const struct format_type *fmt,
 	mdah->version = FMTT_VERSION;
 	mdah->start = start_byte;
 
-	label_scan_invalidate(dev);
-
-	if (!dev_open(dev))
-		return_0;
-
 	_xlate_mdah(mdah);
 	mdah->checksum_xl = xlate32(calc_crc(INITIAL_CRC, (uint8_t *)mdah->magic,
 					     MDA_HEADER_SIZE -
 					     sizeof(mdah->checksum_xl)));
 
-	if (!dev_write(dev, start_byte, MDA_HEADER_SIZE, MDA_HEADER_REASON(primary_mda), mdah)) {
-		dev_close(dev);
-		return_0;
+	if (!bcache_write_bytes(scan_bcache, dev->bcache_fd, start_byte, MDA_HEADER_SIZE, mdah)) {
+		log_error("Failed to write mda header to %s fd %d", dev_name(dev), dev->bcache_fd);
+		return 0;
 	}
-
-	if (dev_close(dev))
-		stack;
 
 	return 1;
 }
@@ -473,8 +463,6 @@ static struct raw_locn *_read_metadata_location_vg(struct device_area *dev_area,
 	 * begins with a valid vgname.
 	 */
 	memset(vgnamebuf, 0, sizeof(vgnamebuf));
-
-	label_scan_confirm(dev_area->dev);  /* FIXME: remove this, ensures dev is in bcache */
 
 	bcache_read_bytes(scan_bcache, dev_area->dev->bcache_fd, dev_area->start + rlocn->offset, NAME_LEN, vgnamebuf);
 
@@ -681,30 +669,32 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		goto out;
 	}
 
-	log_debug_metadata("Writing %s metadata to %s at " FMTu64 " len " FMTu64 " of " FMTu64,
-			    vg->name, dev_name(mdac->area.dev), mdac->area.start +
-			    mdac->rlocn.offset, mdac->rlocn.size - new_wrap, mdac->rlocn.size);
+	log_debug_metadata("Writing metadata for VG %s to %s at %llu len %llu (wrap %llu)", 
+			    vg->name, dev_name(mdac->area.dev),
+			    (unsigned long long)(mdac->area.start + mdac->rlocn.offset),
+			    (unsigned long long)(mdac->rlocn.size - new_wrap),
+			    (unsigned long long)new_wrap);
 
-	label_scan_invalidate(mdac->area.dev);
-
-	if (!dev_open(mdac->area.dev))
-		return_0;
-
-	/* Write text out, circularly */
-	if (!dev_write(mdac->area.dev, mdac->area.start + mdac->rlocn.offset,
-		       (size_t) (mdac->rlocn.size - new_wrap), MDA_CONTENT_REASON(mda_is_primary(mda)),
-		       fidtc->raw_metadata_buf))
-		goto_out;
+	if (!bcache_write_bytes(scan_bcache, mdac->area.dev->bcache_fd, mdac->area.start + mdac->rlocn.offset,
+		                (size_t) (mdac->rlocn.size - new_wrap),
+		                fidtc->raw_metadata_buf)) {
+		log_error("Failed to write metadata to %s fd %d", dev_name(mdac->area.dev), mdac->area.dev->bcache_fd);
+		goto out;
+	}
 
 	if (new_wrap) {
-		log_debug_metadata("Writing wrapped metadata to %s at " FMTu64 " len " FMTu64 " of " FMTu64,
-				  dev_name(mdac->area.dev), mdac->area.start +
-				  MDA_HEADER_SIZE, new_wrap, mdac->rlocn.size);
+		log_debug_metadata("Writing metadata for VG %s to %s at %llu len %llu (wrapped)",
+				   vg->name, dev_name(mdac->area.dev),
+				   (unsigned long long)(mdac->area.start + MDA_HEADER_SIZE),
+				   (unsigned long long)new_wrap);
 
-		if (!dev_write(mdac->area.dev, mdac->area.start + MDA_HEADER_SIZE,
-			       (size_t) new_wrap, MDA_CONTENT_REASON(mda_is_primary(mda)),
-			       fidtc->raw_metadata_buf + mdac->rlocn.size - new_wrap))
-			goto_out;
+		if (!bcache_write_bytes(scan_bcache, mdac->area.dev->bcache_fd,
+			                mdac->area.start + MDA_HEADER_SIZE,
+			                (size_t) new_wrap,
+			                fidtc->raw_metadata_buf + mdac->rlocn.size - new_wrap)) {
+			log_error("Failed to write metadata wrap to %s fd %d", dev_name(mdac->area.dev), mdac->area.dev->bcache_fd);
+			goto out;
+		}
 	}
 
 	mdac->rlocn.checksum = calc_crc(INITIAL_CRC, (uint8_t *)fidtc->raw_metadata_buf,
@@ -720,9 +710,6 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 
       out:
 	if (!r) {
-		if (!dev_close(mdac->area.dev))
-			stack;
-
 		dm_free(fidtc->raw_metadata_buf);
 		fidtc->raw_metadata_buf = NULL;
 	}
@@ -819,9 +806,6 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 
       out:
 	if (!precommit) {
-		if (!dev_close(mdac->area.dev))
-			stack;
-
 		dm_free(fidtc->raw_metadata_buf);
 		fidtc->raw_metadata_buf = NULL;
 	}
@@ -904,9 +888,6 @@ static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 	rlocn->checksum = 0;
 	rlocn_set_ignored(mdah->raw_locns, mda_is_ignored(mda));
 
-	if (!dev_open(mdac->area.dev))
-		return_0;
-
 	if (!_raw_write_mda_header(fid->fmt, mdac->area.dev, mda_is_primary(mda), mdac->area.start,
 				   mdah)) {
 		dm_pool_free(fid->fmt->cmd->mem, mdah);
@@ -917,9 +898,6 @@ static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 	r = 1;
 
       out:
-	if (!dev_close(mdac->area.dev))
-		stack;
-
 	return r;
 }
 
@@ -1239,8 +1217,6 @@ int read_metadata_location_summary(const struct format_type *fmt,
 		return 0;
 	}
 
-	label_scan_confirm(dev_area->dev);  /* FIXME: remove this, ensures dev is in bcache */
-
 	bcache_read_bytes(scan_bcache, dev_area->dev->bcache_fd, dev_area->start + rlocn->offset, NAME_LEN, buf);
 
 	while (buf[len] && !isspace(buf[len]) && buf[len] != '{' &&
@@ -1397,8 +1373,6 @@ static int _write_single_mda(struct metadata_area *mda, void *baton)
 
 	if (!_raw_write_mda_header(p->fmt, mdac->area.dev, mda_is_primary(mda),
 				   mdac->area.start, mdah)) {
-		if (!dev_close(p->pv->dev))
-			stack;
 		return_0;
 	}
 	return 1;
@@ -2123,6 +2097,7 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 	uint64_t mda_start;
 	uint64_t adjustment, limit, tmp_mda_size;
 	uint64_t wipe_size = 8 << SECTOR_SHIFT;
+	uint64_t zero_len;
 	size_t page_size = lvm_getpagesize();
 	struct metadata_area *mda;
 	struct mda_context *mdac;
@@ -2330,13 +2305,14 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 		}
 
 		/* Wipe metadata area with zeroes. */
-		if (!dev_set(pv->dev, mda_start,
-			     (size_t) ((mda_size > wipe_size) ?  wipe_size : mda_size),
-			     MDA_HEADER_REASON(!mda_index), 0)) {
-			log_error("Failed to wipe new metadata area "
-				  "at the %s of the %s",
-				   mda_index ? "end" : "start",
-				   pv_dev_name(pv));
+
+		zero_len = (mda_size > wipe_size) ? wipe_size : mda_size;
+
+		if (!bcache_write_zeros(scan_bcache, pv->dev->bcache_fd, mda_start, zero_len)) {
+			log_error("Failed to wipe new metadata area on %s at %llu len %llu",
+				   pv_dev_name(pv),
+				   (unsigned long long)mda_start,
+				   (unsigned long long)zero_len);
 			return 0;
 		}
 

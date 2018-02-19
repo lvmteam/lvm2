@@ -104,8 +104,7 @@ struct labeller *label_get_handler(const char *name)
 /* FIXME Also wipe associated metadata area headers? */
 int label_remove(struct device *dev)
 {
-	char buf[LABEL_SIZE] __attribute__((aligned(8)));
-	char readbuf[LABEL_SCAN_SIZE] __attribute__((aligned(8)));
+	char readbuf[LABEL_SIZE] __attribute__((aligned(8)));
 	int r = 1;
 	uint64_t sector;
 	int wipe;
@@ -113,31 +112,27 @@ int label_remove(struct device *dev)
 	struct label_header *lh;
 	struct lvmcache_info *info;
 
-	memset(buf, 0, LABEL_SIZE);
-
 	log_very_verbose("Scanning for labels to wipe from %s", dev_name(dev));
 
-	label_scan_invalidate(dev);
-
-	if (!dev_open(dev))
-		return_0;
-
-	/*
-	 * We flush the device just in case someone is stupid
-	 * enough to be trying to import an open pv into lvm.
-	 */
-	dev_flush(dev);
-
-	if (!dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, DEV_IO_LABEL, readbuf)) {
-		log_debug_devs("%s: Failed to read label area", dev_name(dev));
-		goto out;
+	if (!label_scan_open(dev)) {
+		log_error("Failed to open device %s", dev_name(dev));
+		return 0;
 	}
 
 	/* Scan first few sectors for anything looking like a label */
 	for (sector = 0; sector < LABEL_SCAN_SECTORS;
 	     sector += LABEL_SIZE >> SECTOR_SHIFT) {
-		lh = (struct label_header *) (readbuf +
-					      (sector << SECTOR_SHIFT));
+
+		memset(readbuf, 0, sizeof(readbuf));
+
+		if (!bcache_read_bytes(scan_bcache, dev->bcache_fd,
+				       sector << SECTOR_SHIFT, LABEL_SIZE, readbuf)) {
+			log_error("Failed to read label from %s sector %llu",
+				  dev_name(dev), (unsigned long long)sector);
+			continue;
+		}
+
+		lh = (struct label_header *)readbuf;
 
 		wipe = 0;
 
@@ -146,8 +141,7 @@ int label_remove(struct device *dev)
 				wipe = 1;
 		} else {
 			dm_list_iterate_items(li, &_labellers) {
-				if (li->l->ops->can_handle(li->l, (char *) lh,
-							   sector)) {
+				if (li->l->ops->can_handle(li->l, (char *)lh, sector)) {
 					wipe = 1;
 					break;
 				}
@@ -155,27 +149,24 @@ int label_remove(struct device *dev)
 		}
 
 		if (wipe) {
-			log_very_verbose("%s: Wiping label at sector %" PRIu64,
-					 dev_name(dev), sector);
-			if (dev_write(dev, sector << SECTOR_SHIFT, LABEL_SIZE, DEV_IO_LABEL,
-				       buf)) {
+			log_very_verbose("%s: Wiping label at sector %llu",
+					 dev_name(dev), (unsigned long long)sector);
+
+			if (!bcache_write_zeros(scan_bcache, dev->bcache_fd,
+						sector << SECTOR_SHIFT, LABEL_SIZE)) {
+				log_error("Failed to remove label from %s at sector %llu",
+					  dev_name(dev), (unsigned long long)sector);
+				r = 0;
+			} else {
 				/* Also remove the PV record from cache. */
 				info = lvmcache_info_from_pvid(dev->pvid, dev, 0);
 				if (info)
 					lvmcache_del(info);
-			} else {
-				log_error("Failed to remove label from %s at "
-					  "sector %" PRIu64, dev_name(dev),
-					  sector);
-				r = 0;
 			}
 		}
 	}
 
       out:
-	if (!dev_close(dev))
-		stack;
-
 	return r;
 }
 
@@ -197,8 +188,6 @@ int label_write(struct device *dev, struct label *label)
 		return 0;
 	}
 
-	label_scan_invalidate(dev);
-
 	memset(buf, 0, LABEL_SIZE);
 
 	strncpy((char *)lh->id, LABEL_ID, sizeof(lh->id));
@@ -211,19 +200,20 @@ int label_write(struct device *dev, struct label *label)
 	lh->crc_xl = xlate32(calc_crc(INITIAL_CRC, (uint8_t *)&lh->offset_xl, LABEL_SIZE -
 				      ((uint8_t *) &lh->offset_xl - (uint8_t *) lh)));
 
-	if (!dev_open(dev))
-		return_0;
-
 	log_very_verbose("%s: Writing label to sector %" PRIu64 " with stored offset %"
 			 PRIu32 ".", dev_name(dev), label->sector,
 			 xlate32(lh->offset_xl));
-	if (!dev_write(dev, label->sector << SECTOR_SHIFT, LABEL_SIZE, DEV_IO_LABEL, buf)) {
+
+	if (!label_scan_open(dev)) {
+		log_error("Failed to open device %s", dev_name(dev));
+		return 0;
+	}
+
+	if (!bcache_write_bytes(scan_bcache, dev->bcache_fd,
+				label->sector << SECTOR_SHIFT, LABEL_SIZE, buf)) {
 		log_debug_devs("Failed to write label to %s", dev_name(dev));
 		r = 0;
 	}
-
-	if (!dev_close(dev))
-		stack;
 
 	return r;
 }
@@ -763,8 +753,10 @@ void label_scan_destroy(struct cmd_context *cmd)
 		return;
 	}
 
-	while ((dev = dev_iter_get(iter)))
-		label_scan_invalidate(dev);
+	while ((dev = dev_iter_get(iter))) {
+		if (_in_bcache(dev))
+			_scan_dev_close(dev);
+	}
 	dev_iter_destroy(iter);
 
 	bcache_destroy(scan_bcache);
@@ -834,22 +826,6 @@ int label_read_sector(struct device *dev, struct label **labelp, uint64_t scan_s
 }
 
 /*
- * FIXME: remove this.  It should not be needed once writes are going through
- * bcache.  As it is now, the write path involves multiple writes to a device,
- * and later writes want to read previous writes from disk.  They do these
- * reads using the standard read paths which require the devs to be in bcache,
- * but the bcache reads do not find the dev because the writes have gone around
- * bcache.  To work around this for now, check if each dev is in bcache before
- * reading it, and if not add it first.
- */
-
-void label_scan_confirm(struct device *dev)
-{
-	if (!_in_bcache(dev))
-		label_read(dev, NULL, 0);
-}
-
-/*
  * This is only needed when commands are using lvmetad, in which case they
  * don't do an initial label_scan, but may later need to rescan certain devs
  * from disk and call this function.  FIXME: is there some better number to
@@ -863,6 +839,20 @@ int label_scan_setup_bcache(void)
 			return 0;
 	}
 
+	return 1;
+}
+
+/*
+ * This is needed to write to a new non-lvm device.
+ * Scanning that dev would not keep it open or in
+ * bcache, but to use bcache_write we need the dev
+ * to be open so we can use dev->bcache_fd to write.
+ */
+
+int label_scan_open(struct device *dev)
+{
+	if (!_in_bcache(dev))
+		return _scan_dev_open(dev);
 	return 1;
 }
 

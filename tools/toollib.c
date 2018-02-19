@@ -5728,6 +5728,8 @@ do_command:
 	 * Wipe signatures on devices being created.
 	 */
 	dm_list_iterate_items_safe(pd, pd2, &pp->arg_create) {
+		label_scan_open(pd->dev);
+
 		log_verbose("Wiping signatures on new PV %s.", pd->name);
 
 		if (!wipe_known_signatures(cmd, pd->dev, pd->name, TYPE_LVM1_MEMBER | TYPE_LVM2_MEMBER,
@@ -5805,6 +5807,8 @@ do_command:
 
 		pv_name = pd->name;
 
+		label_scan_open(pd->dev);
+
 		log_debug("Creating a new PV on %s.", pv_name);
 
 		if (!(pv = pv_create(cmd, pd->dev, &pp->pva))) {
@@ -5816,6 +5820,7 @@ do_command:
 		log_verbose("Set up physical volume for \"%s\" with %" PRIu64
 			    " available sectors.", pv_name, pv_size(pv));
 
+
 		if (!label_remove(pv->dev)) {
 			log_error("Failed to wipe existing label on %s.", pv_name);
 			dm_list_move(&pp->arg_fail, &pd->list);
@@ -5825,21 +5830,11 @@ do_command:
 		if (pp->zero) {
 			log_verbose("Zeroing start of device %s.", pv_name);
 
-			if (!dev_open_quiet(pv->dev)) {
-				log_error("%s not opened: device not zeroed.", pv_name);
-				dm_list_move(&pp->arg_fail, &pd->list);
-				continue;
-			}
-
-			if (!dev_set(pv->dev, UINT64_C(0), (size_t) 2048, DEV_IO_LABEL, 0)) {
+			if (!bcache_write_zeros(scan_bcache, pv->dev->bcache_fd, 0, 2048)) {
 				log_error("%s not wiped: aborting.", pv_name);
-				if (!dev_close(pv->dev))
-					stack;
 				dm_list_move(&pp->arg_fail, &pd->list);
 				continue;
 			}
-			if (!dev_close(pv->dev))
-				stack;
 		}
 
 		log_verbose("Writing physical volume data to disk \"%s\".", pv_name);

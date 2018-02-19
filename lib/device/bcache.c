@@ -897,7 +897,7 @@ bool bcache_get(struct bcache *cache, int fd, block_address index,
 	return false;
 }
 
-void bcache_put(struct block *b)
+static void _put_ref(struct block *b)
 {
 	if (!b->ref_count) {
 		log_warn("ref count on bcache block already zero");
@@ -907,6 +907,11 @@ void bcache_put(struct block *b)
 	b->ref_count--;
 	if (!b->ref_count)
 		b->cache->nr_locked--;
+}
+
+void bcache_put(struct block *b)
+{
+	_put_ref(b);
 
 	if (_test_flags(b, BF_DIRTY))
 		_preemptive_writeback(b->cache);
@@ -925,7 +930,7 @@ bool bcache_flush(struct bcache *cache)
 			// The superblock may well be still locked.
 			continue;
 		}
-
+		
 		_issue_write(b);
 	}
 
@@ -1057,6 +1062,83 @@ bool bcache_read_bytes(struct bcache *cache, int fd, off_t start, size_t len, vo
 
 	return errors ? false : true;
 }
+
+bool bcache_write_bytes(struct bcache *cache, int fd, off_t start, size_t len, void *data)
+{
+	struct block *b;
+	block_address bb, be, i;
+	unsigned char *udata = data;
+	off_t block_size = cache->block_sectors << SECTOR_SHIFT;
+	int errors = 0;
+
+	byte_range_to_block_range(cache, start, len, &bb, &be);
+	for (i = bb; i < be; i++)
+		bcache_prefetch(cache, fd, i);
+
+	for (i = bb; i < be; i++) {
+		if (!bcache_get(cache, fd, i, 0, &b)) {
+			errors++;
+			break;
+		}
+
+		if (i == bb) {
+			off_t block_offset = start % block_size;
+			size_t blen = _min(block_size - block_offset, len);
+			memcpy(((unsigned char *) b->data) + block_offset, udata, blen);
+			len -= blen;
+			udata += blen;
+		} else {
+			size_t blen = _min(block_size, len);
+			memcpy(b->data, udata, blen);
+			len -= blen;
+			udata += blen;
+		}
+
+		_set_flags(b, BF_DIRTY);
+		_unlink_block(b);
+		_link_block(b);
+		_put_ref(b);
+	}
+
+	if (!bcache_flush(cache))
+		errors++;
+
+	return errors ? false : true;
+}
+
+#define ZERO_BUF_LEN 4096
+
+bool bcache_write_zeros(struct bcache *cache, int fd, off_t start, size_t len)
+{
+	char zerobuf[ZERO_BUF_LEN];
+	size_t plen;
+	size_t poff;
+
+	memset(zerobuf, 0, sizeof(zerobuf));
+
+	if (len <= ZERO_BUF_LEN)
+		return bcache_write_bytes(cache, fd, start, len, &zerobuf);
+
+	poff = 0;
+	plen = ZERO_BUF_LEN;
+
+	while (1) {
+		if (!bcache_write_bytes(cache, fd, start + poff, plen, &zerobuf))
+			return false;
+
+		poff += plen;
+		len -= plen;
+
+		if (!len)
+			break;
+
+		if (len < ZERO_BUF_LEN)
+			plen = len;
+	}
+
+	return true;
+}
+
 
 //----------------------------------------------------------------
 

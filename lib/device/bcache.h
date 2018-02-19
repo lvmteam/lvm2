@@ -148,9 +148,11 @@ void bcache_invalidate_fd(struct bcache *cache, int fd);
 void bcache_prefetch_bytes(struct bcache *cache, int fd, off_t start, size_t len);
 
 /*
- * Reads the bytes.
+ * Reads and writes the bytes.  Returns false if errors occur.
  */
 bool bcache_read_bytes(struct bcache *cache, int fd, off_t start, size_t len, void *data);
+bool bcache_write_bytes(struct bcache *cache, int fd, off_t start, size_t len, void *data);
+bool bcache_write_zeros(struct bcache *cache, int fd, off_t start, size_t len);
 
 /*----------------------------------------------------------------*/
 

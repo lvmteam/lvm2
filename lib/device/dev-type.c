@@ -17,6 +17,8 @@
 #include "xlate.h"
 #include "config.h"
 #include "metadata.h"
+#include "bcache.h"
+#include "label.h"
 
 #include <libgen.h>
 #include <ctype.h>
@@ -675,7 +677,7 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 	} else
 		log_verbose(_msg_wiping, type, name);
 
-	if (!dev_set(dev, offset_value, len, DEV_IO_SIGNATURES, 0)) {
+	if (!bcache_write_zeros(scan_bcache, dev->bcache_fd, offset_value, len)) {
 		log_error("Failed to wipe %s signature on %s.", type, name);
 		return 0;
 	}
@@ -772,7 +774,7 @@ static int _wipe_signature(struct device *dev, const char *type, const char *nam
 	}
 
 	log_print_unless_silent("Wiping %s on %s.", type, name);
-	if (!dev_set(dev, offset_found, wipe_len, DEV_IO_SIGNATURES, 0)) {
+	if (!bcache_write_zeros(scan_bcache, dev->bcache_fd, offset_found, wipe_len)) {
 		log_error("Failed to wipe %s on %s.", type, name);
 		return 0;
 	}
