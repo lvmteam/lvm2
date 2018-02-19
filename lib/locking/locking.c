@@ -264,7 +264,7 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 	}
 
 	if ((is_orphan_vg(resource) || is_global_vg(resource)) && (flags & LCK_CACHE)) {
-		log_error(INTERNAL_ERROR "P_%s referenced", resource);
+		log_error(INTERNAL_ERROR "P_%s referenced.", resource);
 		goto out;
 	}
 
@@ -358,8 +358,10 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 		return 0;
 	}
 
-	strncpy(resource, vol, sizeof(resource) - 1);
-	resource[sizeof(resource) - 1] = '\0';
+	if (!dm_strncpy(resource, vol, sizeof(resource))) {
+		log_error(INTERNAL_ERROR "Resource name %s is too long.", vol);
+		return 0;
+	}
 
 	if (!_lock_vol(cmd, resource, flags, lv_op, lv))
 		return_0;
