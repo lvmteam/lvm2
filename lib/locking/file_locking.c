@@ -60,11 +60,8 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 			return_0;
 		break;
 	case LCK_VG:
-		if (!strcmp(resource, VG_SYNC_NAMES)) {
+		if (!strcmp(resource, VG_SYNC_NAMES))
 			fs_unlock();
-		} else if (strcmp(resource, VG_GLOBAL))
-			/* Skip cache refresh for VG_GLOBAL - the caller handles it */
-			lvmcache_drop_metadata(resource, 0);
 
 		/* LCK_CACHE does not require a real lock */
 		if (flags & LCK_CACHE)

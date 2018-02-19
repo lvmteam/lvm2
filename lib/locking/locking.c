@@ -336,6 +336,13 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 		    !lvmcache_verify_lock_order(vol))
 			return_0;
 
+		if ((flags == LCK_VG_DROP_CACHE) ||
+		    (strcmp(vol, VG_GLOBAL) && strcmp(vol, VG_SYNC_NAMES))) {
+			/* Skip dropping cache for internal VG names #global, #sync_names */
+			log_debug_locking("Dropping cache for %s.", vol);
+			lvmcache_drop_metadata(vol, 0);
+		}
+
 		/* Lock VG to change on-disk metadata. */
 		/* If LVM1 driver knows about the VG, it can't be accessed. */
 		if (!check_lvm1_vg_inactive(cmd, vol))
