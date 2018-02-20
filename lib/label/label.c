@@ -587,7 +587,7 @@ static int _setup_bcache(int cache_blocks)
 	 * possible, i.e, the number of devices that can be read at
 	 * once.  Should this be configurable?
 	 */
-	if (!(ioe = create_async_io_engine(100))) {
+	if (!(ioe = create_async_io_engine())) {
 		log_error("Failed to create bcache io engine.");
 		return 0;
 	}

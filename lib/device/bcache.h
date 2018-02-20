@@ -47,7 +47,7 @@ struct io_engine {
 	unsigned (*max_io)(struct io_engine *e);
 };
 
-struct io_engine *create_async_io_engine(unsigned max_io);
+struct io_engine *create_async_io_engine(void);
 
 /*----------------------------------------------------------------*/
 
@@ -65,6 +65,7 @@ struct block {
 	unsigned flags;
 	unsigned ref_count;
 	int error;
+	enum dir io_dir;
 };
 
 /*
@@ -122,7 +123,11 @@ bool bcache_get(struct bcache *cache, int fd, block_address index,
 	        unsigned flags, struct block **result);
 void bcache_put(struct block *b);
 
-int bcache_flush(struct bcache *cache);
+/*
+ * flush() does not attempt to writeback locked blocks.  flush will fail
+ * (return false), if any unlocked dirty data cannot be written back.
+ */
+bool bcache_flush(struct bcache *cache);
 
 /*
  * Removes a block from the cache.  If the block is dirty it will be written
