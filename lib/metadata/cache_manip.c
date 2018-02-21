@@ -540,7 +540,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	}
 
 	if (lv_is_pending_delete(cache_lv)) {
-		log_error(INTERNAL_ERROR "LV %s is already dropped cache volume.",
+		log_debug(INTERNAL_ERROR "LV %s is already dropped cache volume.",
 			  display_lvname(cache_lv));
 		goto remove;  /* Already dropped */
 	}
