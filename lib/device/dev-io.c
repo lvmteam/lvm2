@@ -117,7 +117,7 @@ int dev_async_setup(struct cmd_context *cmd)
 	int r;
 
 	_aio_max = find_config_tree_int(cmd, devices_aio_max_CFG, NULL);
-	_aio_memory_max = find_config_tree_int(cmd, devices_aio_memory_CFG, NULL) * 1024 * 1024;
+	_aio_memory_max = find_config_tree_int(cmd, devices_aio_memory_CFG, NULL) * INT64_C(1024 * 1024);
 
 	/* Threshold is zero? */
 	if (!_aio_max || !_aio_memory_max) {
