@@ -655,6 +655,7 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 	char *dso = NULL;
 	unsigned i;
 	uint64_t monitored = 0;
+	int r = 1;
 
 #ifdef DEVMAPPER_SUPPORT
 #  ifdef DMEVENTD
@@ -667,11 +668,14 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 
 	for (i = 0; i < DM_ARRAY_SIZE(_raid_types); ++i)
 		if ((segtype = _init_raid_segtype(cmd, &_raid_types[i], dso, monitored)) &&
-		    !lvm_register_segtype(seglib, segtype))
+		    !lvm_register_segtype(seglib, segtype)) {
 			/* segtype is already destroyed */
-			return_0;
+			stack;
+			r = 0;
+			break;
+		}
 
 	dm_free(dso);
 
-	return 1;
+	return r;
 }
