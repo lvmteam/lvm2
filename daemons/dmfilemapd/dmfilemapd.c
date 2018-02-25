@@ -802,7 +802,7 @@ bad:
 	return 1;
 }
 
-static const char * _mode_names[] = {
+static const char * const _mode_names[] = {
 	"inode",
 	"path"
 };
@@ -827,8 +827,10 @@ int main(int argc, char **argv)
 		 "mode=%s, path=%s", fm.fd, fm.group_id,
 		 _mode_names[fm.mode], fm.path);
 
-	if (!_foreground && !_daemonise(&fm))
+	if (!_foreground && !_daemonise(&fm)) {
+		dm_free(fm.path);
 		return 1;
+	}
 
 	return _dmfilemapd(&fm);
 }
