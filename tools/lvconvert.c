@@ -1948,7 +1948,7 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 	 * LV_foo specification because this LV is not processed by process_each_lv.
 	 */
 	if (!validate_snapshot_origin(org))
-                return_0;
+		return_0;
 
 	log_warn("WARNING: Converting logical volume %s to snapshot exception store.",
 		 snap_name);

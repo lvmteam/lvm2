@@ -1049,12 +1049,13 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 	}
 
 	if (lv_is_raid_image(lv)) {
-		/* Calculate the amount of extents to reduce per rmate/rimage LV */
+		/* Calculate the amount of extents to reduce per rmeta/rimage LV */
 		uint32_t rimage_extents;
 		struct lv_segment *seg1 = first_seg(lv);
 
 		/* FIXME: avoid extra seg_is_*() conditionals here */
-		rimage_extents = raid_rimage_extents(seg1->segtype, area_reduction, seg_is_any_raid0(seg) ? 0 : _raid_stripes_count(seg),
+		rimage_extents = raid_rimage_extents(seg1->segtype, area_reduction,
+						     seg_is_any_raid0(seg) ? 0 : _raid_stripes_count(seg),
 						     seg_is_raid10(seg) ? 1 :_raid_data_copies(seg));
 		if (!rimage_extents)
 			return 0;

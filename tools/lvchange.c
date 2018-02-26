@@ -1374,6 +1374,7 @@ static int _lvchange_activate_check(struct cmd_context *cmd,
 int lvchange_activate_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
 	int ret;
+	int do_activate = is_change_activating((activation_change_t)arg_uint_value(cmd, activate_ARG, CHANGE_AY));
 
 	init_background_polling(arg_is_set(cmd, sysinit_ARG) ? 0 : arg_int_value(cmd, poll_ARG, DEFAULT_BACKGROUND_POLLING));
 	cmd->handles_missing_pvs = 1;
@@ -1387,7 +1388,7 @@ int lvchange_activate_cmd(struct cmd_context *cmd, int argc, char **argv)
 	cmd->include_active_foreign_vgs = 1;
 
 	/* Allow deactivating if locks fail. */
-	if (is_change_activating((activation_change_t)arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
+	if (do_activate)
 		cmd->lockd_vg_enforce_sh = 1;
 
 	ret = process_each_lv(cmd, argc, argv, NULL, NULL, 0,
