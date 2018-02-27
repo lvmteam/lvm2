@@ -871,11 +871,16 @@ bool dev_read_bytes(struct device *dev, off_t start, size_t len, void *data)
 	}
 
 	if (dev->bcache_fd <= 0) {
-		log_error("dev_read_bytes %s with invalid bcache_fd", dev_name(dev));
+		log_error("dev_read_bytes %s with invalid fd %d", dev_name(dev), dev->bcache_fd);
 		return false;
 	}
 
-	return bcache_read_bytes(scan_bcache, dev->bcache_fd, start, len, data);
+	if (!bcache_read_bytes(scan_bcache, dev->bcache_fd, start, len, data)) {
+		label_scan_invalidate(dev);
+		return false;
+	}
+	return true;
+
 }
 
 bool dev_write_bytes(struct device *dev, off_t start, size_t len, void *data)
@@ -895,11 +900,15 @@ bool dev_write_bytes(struct device *dev, off_t start, size_t len, void *data)
 	}
 
 	if (dev->bcache_fd <= 0) {
-		log_error("dev_write_bytes %s with invalid bcache_fd", dev_name(dev));
+		log_error("dev_write_bytes %s with invalid fd %d", dev_name(dev), dev->bcache_fd);
 		return false;
 	}
 
-	return bcache_write_bytes(scan_bcache, dev->bcache_fd, start, len, data);
+	if (!bcache_write_bytes(scan_bcache, dev->bcache_fd, start, len, data)) {
+		label_scan_invalidate(dev);
+		return false;
+	}
+	return true;
 }
 
 bool dev_write_zeros(struct device *dev, off_t start, size_t len)
@@ -919,10 +928,14 @@ bool dev_write_zeros(struct device *dev, off_t start, size_t len)
 	}
 
 	if (dev->bcache_fd <= 0) {
-		log_error("dev_write_bytes %s with invalid bcache_fd", dev_name(dev));
+		log_error("dev_write_bytes %s with invalid fd %d", dev_name(dev), dev->bcache_fd);
 		return false;
 	}
 
-	return bcache_write_zeros(scan_bcache, dev->bcache_fd, start, len);
+	if (!bcache_write_zeros(scan_bcache, dev->bcache_fd, start, len)) {
+		label_scan_invalidate(dev);
+		return false;
+	}
+	return true;
 }
 
