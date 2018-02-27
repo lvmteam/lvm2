@@ -560,13 +560,15 @@ static int _scan_list(struct dm_list *devs, int *failed)
 	return 1;
 }
 
+#define MIN_BCACHE_BLOCKS 32
+
 static int _setup_bcache(int cache_blocks)
 {
 	struct io_engine *ioe;
 
 	/* No devices can happen, just create bcache with any small number. */
-	if (!cache_blocks)
-		cache_blocks = 8;
+	if (cache_blocks < MIN_BCACHE_BLOCKS)
+		cache_blocks = MIN_BCACHE_BLOCKS;
 
 	/*
 	 * 100 is arbitrary, it's the max number of concurrent aio's
@@ -831,7 +833,7 @@ int label_read_sector(struct device *dev, struct label **labelp, uint64_t scan_s
 int label_scan_setup_bcache(void)
 {
 	if (!scan_bcache) {
-		if (!_setup_bcache(32))
+		if (!_setup_bcache(0))
 			return 0;
 	}
 
