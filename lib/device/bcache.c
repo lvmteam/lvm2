@@ -659,8 +659,11 @@ static struct block *_new_block(struct bcache *cache, int fd, block_address inde
 				if (dm_list_empty(&cache->io_pending))
 					_writeback(cache, 16);  // FIXME: magic number
 				_wait_io(cache);
-			} else
+			} else {
+				log_error("bcache no new blocks for fd %d index %u",
+					  fd, (uint32_t)index);
 				return NULL;
+			}
 		}
 	}
 
@@ -674,6 +677,18 @@ static struct block *_new_block(struct bcache *cache, int fd, block_address inde
 		b->error = 0;
 
 		_hash_insert(b);
+	}
+
+	if (!b) {
+		log_error("bcache no new blocks for fd %d index %u "
+			  "clean %u free %u dirty %u pending %u nr_data_blocks %u nr_cache_blocks %u",
+			  fd, (uint32_t)index,
+			  dm_list_size(&cache->clean),
+			  dm_list_size(&cache->free),
+			  dm_list_size(&cache->dirty),
+			  dm_list_size(&cache->io_pending),
+			  (uint32_t)cache->nr_data_blocks,
+			  (uint32_t)cache->nr_cache_blocks);
 	}
 
 	return b;
@@ -893,7 +908,7 @@ bool bcache_get(struct bcache *cache, int fd, block_address index,
 	}
 
 	*result = NULL;
-	log_warn("couldn't get block");
+	log_error("bcache failed to get block %u fd %d", (uint32_t)index, fd);
 	return false;
 }
 
@@ -1077,6 +1092,8 @@ bool bcache_write_bytes(struct bcache *cache, int fd, off_t start, size_t len, v
 
 	for (i = bb; i < be; i++) {
 		if (!bcache_get(cache, fd, i, 0, &b)) {
+			log_error("bcache_write failed to get block %u fd %d bb %u be %u",
+				  (uint32_t)i, fd, (uint32_t)bb, (uint32_t)be);
 			errors++;
 			break;
 		}
