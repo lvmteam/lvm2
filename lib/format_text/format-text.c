@@ -227,7 +227,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 		if (!(buf = dm_malloc(size + size2)))
 			goto_out;
 
-		if (!bcache_read_bytes(scan_bcache, area->dev->bcache_fd, offset, size, buf)) {
+		if (!dev_read_bytes(area->dev, offset, size, buf)) {
 			log_error("Failed to read dev %s offset %llu size %llu",
 				  dev_name(area->dev),
 				  (unsigned long long)offset,
@@ -236,7 +236,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 		}
 
 		if (size2) {
-			if (!bcache_read_bytes(scan_bcache, area->dev->bcache_fd, offset2, size2, buf + size)) {
+			if (!dev_read_bytes(area->dev, offset2, size2, buf + size)) {
 				log_error("Failed to read dev %s offset %llu size %llu",
 				  	  dev_name(area->dev),
 					  (unsigned long long)offset2,
@@ -330,7 +330,7 @@ static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev
 	log_debug_metadata("Reading mda header sector from %s at %llu",
 			   dev_name(dev_area->dev), (unsigned long long)dev_area->start);
 
-	if (!bcache_read_bytes(scan_bcache, dev_area->dev->bcache_fd, dev_area->start, MDA_HEADER_SIZE, mdah)) {
+	if (!dev_read_bytes(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, mdah)) {
 		log_error("Failed to read metadata area header on %s at %llu",
 			  dev_name(dev_area->dev), (unsigned long long)dev_area->start);
 		return 0;
@@ -400,7 +400,7 @@ static int _raw_write_mda_header(const struct format_type *fmt,
 					     MDA_HEADER_SIZE -
 					     sizeof(mdah->checksum_xl)));
 
-	if (!bcache_write_bytes(scan_bcache, dev->bcache_fd, start_byte, MDA_HEADER_SIZE, mdah)) {
+	if (!dev_write_bytes(dev, start_byte, MDA_HEADER_SIZE, mdah)) {
 		log_error("Failed to write mda header to %s fd %d", dev_name(dev), dev->bcache_fd);
 		return 0;
 	}
@@ -464,7 +464,7 @@ static struct raw_locn *_read_metadata_location_vg(struct device_area *dev_area,
 	 */
 	memset(vgnamebuf, 0, sizeof(vgnamebuf));
 
-	bcache_read_bytes(scan_bcache, dev_area->dev->bcache_fd, dev_area->start + rlocn->offset, NAME_LEN, vgnamebuf);
+	dev_read_bytes(dev_area->dev, dev_area->start + rlocn->offset, NAME_LEN, vgnamebuf);
 
 	if (!strncmp(vgnamebuf, vgname, len = strlen(vgname)) &&
 	    (isspace(vgnamebuf[len]) || vgnamebuf[len] == '{'))
@@ -675,7 +675,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 			    (unsigned long long)(mdac->rlocn.size - new_wrap),
 			    (unsigned long long)new_wrap);
 
-	if (!bcache_write_bytes(scan_bcache, mdac->area.dev->bcache_fd, mdac->area.start + mdac->rlocn.offset,
+	if (!dev_write_bytes(mdac->area.dev, mdac->area.start + mdac->rlocn.offset,
 		                (size_t) (mdac->rlocn.size - new_wrap),
 		                fidtc->raw_metadata_buf)) {
 		log_error("Failed to write metadata to %s fd %d", dev_name(mdac->area.dev), mdac->area.dev->bcache_fd);
@@ -688,8 +688,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 				   (unsigned long long)(mdac->area.start + MDA_HEADER_SIZE),
 				   (unsigned long long)new_wrap);
 
-		if (!bcache_write_bytes(scan_bcache, mdac->area.dev->bcache_fd,
-			                mdac->area.start + MDA_HEADER_SIZE,
+		if (!dev_write_bytes(mdac->area.dev, mdac->area.start + MDA_HEADER_SIZE,
 			                (size_t) new_wrap,
 			                fidtc->raw_metadata_buf + mdac->rlocn.size - new_wrap)) {
 			log_error("Failed to write metadata wrap to %s fd %d", dev_name(mdac->area.dev), mdac->area.dev->bcache_fd);
@@ -1217,7 +1216,7 @@ int read_metadata_location_summary(const struct format_type *fmt,
 		return 0;
 	}
 
-	bcache_read_bytes(scan_bcache, dev_area->dev->bcache_fd, dev_area->start + rlocn->offset, NAME_LEN, buf);
+	dev_read_bytes(dev_area->dev, dev_area->start + rlocn->offset, NAME_LEN, buf);
 
 	while (buf[len] && !isspace(buf[len]) && buf[len] != '{' &&
 	       len < (NAME_LEN - 1))
@@ -2308,7 +2307,7 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 
 		zero_len = (mda_size > wipe_size) ? wipe_size : mda_size;
 
-		if (!bcache_write_zeros(scan_bcache, pv->dev->bcache_fd, mda_start, zero_len)) {
+		if (!dev_write_zeros(pv->dev, mda_start, zero_len)) {
 			log_error("Failed to wipe new metadata area on %s at %llu len %llu",
 				   pv_dev_name(pv),
 				   (unsigned long long)mda_start,

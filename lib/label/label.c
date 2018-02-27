@@ -125,8 +125,7 @@ int label_remove(struct device *dev)
 
 		memset(readbuf, 0, sizeof(readbuf));
 
-		if (!bcache_read_bytes(scan_bcache, dev->bcache_fd,
-				       sector << SECTOR_SHIFT, LABEL_SIZE, readbuf)) {
+		if (!dev_read_bytes(dev, sector << SECTOR_SHIFT, LABEL_SIZE, readbuf)) {
 			log_error("Failed to read label from %s sector %llu",
 				  dev_name(dev), (unsigned long long)sector);
 			continue;
@@ -152,8 +151,7 @@ int label_remove(struct device *dev)
 			log_very_verbose("%s: Wiping label at sector %llu",
 					 dev_name(dev), (unsigned long long)sector);
 
-			if (!bcache_write_zeros(scan_bcache, dev->bcache_fd,
-						sector << SECTOR_SHIFT, LABEL_SIZE)) {
+			if (!dev_write_zeros(dev, sector << SECTOR_SHIFT, LABEL_SIZE)) {
 				log_error("Failed to remove label from %s at sector %llu",
 					  dev_name(dev), (unsigned long long)sector);
 				r = 0;
@@ -166,7 +164,6 @@ int label_remove(struct device *dev)
 		}
 	}
 
-      out:
 	return r;
 }
 
@@ -209,8 +206,7 @@ int label_write(struct device *dev, struct label *label)
 		return 0;
 	}
 
-	if (!bcache_write_bytes(scan_bcache, dev->bcache_fd,
-				label->sector << SECTOR_SHIFT, LABEL_SIZE, buf)) {
+	if (!dev_write_bytes(dev, label->sector << SECTOR_SHIFT, LABEL_SIZE, buf)) {
 		log_debug_devs("Failed to write label to %s", dev_name(dev));
 		r = 0;
 	}
@@ -854,5 +850,77 @@ int label_scan_open(struct device *dev)
 	if (!_in_bcache(dev))
 		return _scan_dev_open(dev);
 	return 1;
+}
+
+bool dev_read_bytes(struct device *dev, off_t start, size_t len, void *data)
+{
+	int ret;
+
+	if (!scan_bcache) {
+		if (!dev_open_readonly(dev))
+			return false;
+
+		ret = dev_read(dev, start, len, 0, data);
+
+		if (!dev_close(dev))
+			stack;
+
+		return ret ? true : false;
+	}
+
+	if (dev->bcache_fd <= 0) {
+		log_error("dev_read_bytes %s with invalid bcache_fd", dev_name(dev));
+		return false;
+	}
+
+	return bcache_read_bytes(scan_bcache, dev->bcache_fd, start, len, data);
+}
+
+bool dev_write_bytes(struct device *dev, off_t start, size_t len, void *data)
+{
+	int ret;
+
+	if (!scan_bcache) {
+		if (!dev_open(dev))
+			return false;
+
+		ret = dev_write(dev, start, len, 0, data);
+
+		if (!dev_close(dev))
+			stack;
+
+		return ret ? true : false;
+	}
+
+	if (dev->bcache_fd <= 0) {
+		log_error("dev_write_bytes %s with invalid bcache_fd", dev_name(dev));
+		return false;
+	}
+
+	return bcache_write_bytes(scan_bcache, dev->bcache_fd, start, len, data);
+}
+
+bool dev_write_zeros(struct device *dev, off_t start, size_t len)
+{
+	int ret;
+
+	if (!scan_bcache) {
+		if (!dev_open(dev))
+			return false;
+
+		ret = dev_set(dev, start, len, 0, 0);
+
+		if (!dev_close(dev))
+			stack;
+
+		return ret ? true : false;
+	}
+
+	if (dev->bcache_fd <= 0) {
+		log_error("dev_write_bytes %s with invalid bcache_fd", dev_name(dev));
+		return false;
+	}
+
+	return bcache_write_zeros(scan_bcache, dev->bcache_fd, start, len);
 }
 

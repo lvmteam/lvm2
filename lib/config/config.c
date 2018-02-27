@@ -534,11 +534,11 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 			return 0;
 		}
 
-		if (!bcache_read_bytes(scan_bcache, dev->bcache_fd, offset, size, buf))
+		if (!dev_read_bytes(dev, offset, size, buf))
 			goto out;
 
 		if (size2) {
-			if (!bcache_read_bytes(scan_bcache, dev->bcache_fd, offset2, size2, buf + size))
+			if (!dev_read_bytes(dev, offset2, size2, buf + size))
 				goto out;
 		}
 

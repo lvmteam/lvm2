@@ -489,7 +489,7 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 			log_verbose("Zeroing start of device %s", pv_name);
 
-			if (!bcache_write_zeros(scan_bcache, dev->bcache_fd, 0, 2048)) {
+			if (!dev_write_zeros(dev, 0, 2048)) {
 				log_error("%s not wiped: aborting", pv_name);
 				return 0;
 			}

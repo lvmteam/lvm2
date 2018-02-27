@@ -114,4 +114,12 @@ void label_scan_confirm(struct device *dev);
 int label_scan_setup_bcache(void);
 int label_scan_open(struct device *dev);
 
+/*
+ * Wrappers around bcache equivalents.
+ * (these make it easier to disable bcache and revert to direct rw if needed)
+ */
+bool dev_read_bytes(struct device *dev, off_t start, size_t len, void *data);
+bool dev_write_bytes(struct device *dev, off_t start, size_t len, void *data);
+bool dev_write_zeros(struct device *dev, off_t start, size_t len);
+
 #endif

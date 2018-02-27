@@ -5830,7 +5830,7 @@ do_command:
 		if (pp->zero) {
 			log_verbose("Zeroing start of device %s.", pv_name);
 
-			if (!bcache_write_zeros(scan_bcache, pv->dev->bcache_fd, 0, 2048)) {
+			if (!dev_write_zeros(pv->dev, 0, 2048)) {
 				log_error("%s not wiped: aborting.", pv_name);
 				dm_list_move(&pp->arg_fail, &pd->list);
 				continue;
