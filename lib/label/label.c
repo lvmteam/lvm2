@@ -733,19 +733,14 @@ void label_scan_invalidate_lv(struct cmd_context *cmd, struct logical_volume *lv
 }
 
 /*
- * Undo label_scan()
- *
- * Close devices that are open because bcache is holding blocks for them.
- * Destroy the bcache.
+ * Empty the bcache of all blocks and close all open fds,
+ * but keep the bcache set up.
  */
 
-void label_scan_destroy(struct cmd_context *cmd)
+void label_scan_drop(struct cmd_context *cmd)
 {
 	struct dev_iter *iter;
 	struct device *dev;
-
-	if (!scan_bcache)
-		return;
 
 	if (!(iter = dev_iter_create(cmd->full_filter, 0))) {
 		return;
@@ -756,6 +751,19 @@ void label_scan_destroy(struct cmd_context *cmd)
 			_scan_dev_close(dev);
 	}
 	dev_iter_destroy(iter);
+}
+
+/*
+ * Close devices that are open because bcache is holding blocks for them.
+ * Destroy the bcache.
+ */
+
+void label_scan_destroy(struct cmd_context *cmd)
+{
+	if (!scan_bcache)
+		return;
+
+	label_scan_drop(cmd);
 
 	bcache_destroy(scan_bcache);
 	scan_bcache = NULL;
