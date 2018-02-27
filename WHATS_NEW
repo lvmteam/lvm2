@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Extend internal library to recognize and work with component LV.
   Skip duplicate check for active LV when prompting for its removal.
   Activate correct lock holding LV when it is cached.
   Do not modify archived metadata when removing striped raid.

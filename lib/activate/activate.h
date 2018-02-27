@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
- * Copyright (C) 2004-2016 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2018 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -197,6 +197,11 @@ int lv_is_active_but_not_locally(const struct logical_volume *lv);
 int lv_is_active_exclusive(const struct logical_volume *lv);
 int lv_is_active_exclusive_locally(const struct logical_volume *lv);
 int lv_is_active_exclusive_remotely(const struct logical_volume *lv);
+
+/* Check is any component LV is active */
+const struct logical_volume *lv_component_is_active(const struct logical_volume *lv);
+const struct logical_volume *lv_holder_is_active(const struct logical_volume *lv);
+int deactivate_lv_with_sub_lv(const struct logical_volume *lv);
 
 int lv_has_target_type(struct dm_pool *mem, const struct logical_volume *lv,
 		       const char *layer, const char *target_type);

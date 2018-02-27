@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2018 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -2860,3 +2860,112 @@ void activation_exit(void)
 	dev_manager_exit();
 }
 #endif
+
+static int _component_cb(struct logical_volume *lv, void *data)
+{
+	struct logical_volume **component_lv = (struct logical_volume **) data;
+
+	if (lv_is_locked(lv) || lv_is_pvmove(lv) ||/* ignoring */
+	    /* thin-pool is special and it's using layered device */
+	    (lv_is_thin_pool(lv) && pool_is_active(lv)))
+		return -1;
+
+	if (lv_is_active(lv)) {
+		if (!lv_is_component(lv) || lv_is_visible(lv))
+			return -1;	/* skip whole subtree */
+
+		log_debug_activation("Found active component LV %s.", display_lvname(lv));
+		*component_lv = lv;
+		return 0;	/* break any further processing */
+	}
+
+	return 1;
+}
+
+/*
+ * Finds out for any LV if any of its component LVs are active.
+ * Function first checks if an existing LV is visible and active eventually
+ * it's lock holding LV is already active. In such case sub LV cannot be
+ * actived alone and no further checking is needed.
+ *
+ * Returns active component LV if there is such.
+ */
+const struct logical_volume *lv_component_is_active(const struct logical_volume *lv)
+{
+	const struct logical_volume *component_lv = NULL;
+	const struct logical_volume *holder_lv = lv_lock_holder(lv);
+
+	if ((holder_lv != lv) && lv_is_active(holder_lv))
+                return NULL; /* Lock holding LV is active, do not check components */
+
+	if (_component_cb((struct logical_volume *) lv, &holder_lv) == 1)
+		(void) for_each_sub_lv((struct logical_volume *) lv, _component_cb,
+				       (void*) &component_lv);
+
+	return component_lv;
+}
+
+/*
+ * Finds out if any LV above is active, as stacked device tree can be composed of
+ * chained set of LVs.
+ *
+ * Returns active holder LV if there is such.
+ */
+const struct logical_volume *lv_holder_is_active(const struct logical_volume *lv)
+{
+	const struct logical_volume *holder;
+	const struct seg_list *sl;
+
+	if (lv_is_locked(lv) || lv_is_pvmove(lv))
+		return NULL; /* Skip pvmove/locked LV tracking */
+
+	dm_list_iterate_items(sl, &lv->segs_using_this_lv) {
+		/* Recursive call for upper-stack holder */
+		if ((holder = lv_holder_is_active(sl->seg->lv)))
+			return holder;
+
+		if (lv_is_active(sl->seg->lv)) {
+			log_debug_activation("Found active holder LV %s.", display_lvname(sl->seg->lv));
+			return sl->seg->lv;
+		}
+	}
+
+	return NULL;
+}
+
+static int _deactivate_sub_lv_cb(struct logical_volume *lv, void *data)
+{
+	struct logical_volume **slv = data;
+
+	if (lv_is_thin_pool(lv) || lv_is_external_origin(lv))
+		return -1;
+
+	if (!deactivate_lv(lv->vg->cmd, lv)) {
+		*slv = lv;
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * Deactivates LV toghether with explicit deactivation call made also for all its component LVs.
+ */
+int deactivate_lv_with_sub_lv(const struct logical_volume *lv)
+{
+	struct logical_volume *flv;
+
+	if (!deactivate_lv(lv->vg->cmd, lv)) {
+		log_error("Cannot deactivate logical volume %s.",
+			  display_lvname(lv));
+		return 0;
+	}
+
+	if (!for_each_sub_lv((struct logical_volume *)lv, _deactivate_sub_lv_cb, &flv)) {
+		log_error("Cannot deactivate subvolume %s of logical volume %s.",
+			  display_lvname(flv), display_lvname(lv));
+		return 0;
+	}
+
+	return 1;
+}
