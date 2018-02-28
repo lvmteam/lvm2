@@ -5334,7 +5334,7 @@ static int _lvresize_check_type(const struct logical_volume *lv,
 
 		/* Validate thin target supports bigger size of thin volume then external origin */
 		if (lv_is_thin_volume(lv) && first_seg(lv)->external_lv &&
-		    (lv->size > first_seg(lv)->external_lv->size) &&
+		    (lp->extents > first_seg(lv)->external_lv->le_count) &&
 		    !thin_pool_feature_supported(first_seg(lv)->pool_lv, THIN_FEATURE_EXTERNAL_ORIGIN_EXTEND)) {
 			log_error("Thin target does not support external origin smaller then thin volume.");
 			return 0;

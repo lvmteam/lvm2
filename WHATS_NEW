@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Fix compatibility size test of extended external origin.
   Add external_origin visiting in for_each_sub_lv().
   Ensure cluster commands drop their device cache before locking VG.
   Do not report LV as remotely active when it's locally exclusive in cluster.
