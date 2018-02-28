@@ -4341,53 +4341,62 @@ static int _rename_cb(struct logical_volume *lv, void *data)
 	return _rename_sub_lv(lv, lv_names->old, lv_names->new);
 }
 
+static int _rename_skip_pools_externals_cb(struct logical_volume *lv, void *data)
+{
+	if (lv_is_pool(lv) || lv_is_external_origin(lv))
+		return -1; /* and skip subLVs */
+
+	return _rename_cb(lv, data);
+}
+
 /*
  * Loop down sub LVs and call fn for each.
  * fn is responsible to log necessary information on failure.
+ * Return value '0' stops whole traversal.
+ * Return value '-1' stops subtree traversal.
  */
-static int _for_each_sub_lv(struct logical_volume *lv, int skip_pools,
+static int _for_each_sub_lv(struct logical_volume *lv, int level,
 			    int (*fn)(struct logical_volume *lv, void *data),
 			    void *data)
 {
 	struct logical_volume *org;
 	struct lv_segment *seg;
 	uint32_t s;
+	int r;
+
+	if (!lv)
+		return 1;
+
+	if (level++) {
+		if (!(r = fn(lv, data)))
+			return_0;
+		/* Only r == 1 lets you run for_each... */
+		if (r == -1)
+			return 1;
+	}
 
 	if (lv_is_cow(lv) && lv_is_virtual_origin(org = origin_from_cow(lv))) {
-		if (!fn(org, data))
-			return_0;
-		if (!_for_each_sub_lv(org, skip_pools, fn, data))
+		if (!_for_each_sub_lv(org, level, fn, data))
 			return_0;
 	}
 
 	dm_list_iterate_items(seg, &lv->segments) {
-		if (seg->log_lv) {
-			if (!fn(seg->log_lv, data))
-				return_0;
-			if (!_for_each_sub_lv(seg->log_lv, skip_pools, fn, data))
-				return_0;
-		}
+		if (!_for_each_sub_lv(seg->external_lv, level, fn, data))
+			return_0;
 
-		if (seg->metadata_lv) {
-			if (!fn(seg->metadata_lv, data))
-				return_0;
-			if (!_for_each_sub_lv(seg->metadata_lv, skip_pools, fn, data))
-				return_0;
-		}
+		if (!_for_each_sub_lv(seg->log_lv, level, fn, data))
+			return_0;
 
-		if (seg->pool_lv && !skip_pools) {
-			if (!fn(seg->pool_lv, data))
-				return_0;
-			if (!_for_each_sub_lv(seg->pool_lv, skip_pools, fn, data))
-				return_0;
-		}
+		if (!_for_each_sub_lv(seg->metadata_lv, level, fn, data))
+			return_0;
+
+		if (!_for_each_sub_lv(seg->pool_lv, level, fn, data))
+			return_0;
 
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) != AREA_LV)
 				continue;
-			if (!fn(seg_lv(seg, s), data))
-				return_0;
-			if (!_for_each_sub_lv(seg_lv(seg, s), skip_pools, fn, data))
+			if (!_for_each_sub_lv(seg_lv(seg, s), level, fn, data))
 				return_0;
 		}
 
@@ -4398,9 +4407,7 @@ static int _for_each_sub_lv(struct logical_volume *lv, int skip_pools,
 		for (s = 0; s < seg->area_count; s++) {
 			if ((seg_metatype(seg, s) != AREA_LV) || !seg_metalv(seg, s))
 				continue;
-			if (!fn(seg_metalv(seg, s), data))
-				return_0;
-			if (!_for_each_sub_lv(seg_metalv(seg, s), skip_pools, fn, data))
+			if (!_for_each_sub_lv(seg_metalv(seg, s), level, fn, data))
 				return_0;
 		}
 	}
@@ -4413,13 +4420,6 @@ int for_each_sub_lv(struct logical_volume *lv,
 		    void *data)
 {
 	return _for_each_sub_lv(lv, 0, fn, data);
-}
-
-int for_each_sub_lv_except_pools(struct logical_volume *lv,
-				 int (*fn)(struct logical_volume *lv, void *data),
-				 void *data)
-{
-	return _for_each_sub_lv(lv, 1, fn, data);
 }
 
 /*
@@ -4475,7 +4475,7 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 
 		/* rename sub LVs */
-		if (!for_each_sub_lv_except_pools(lv, _rename_cb, (void *) &lv_names))
+		if (!for_each_sub_lv(lv, _rename_skip_pools_externals_cb, (void *) &lv_names))
 			return_0;
 
 		/* rename main LV */

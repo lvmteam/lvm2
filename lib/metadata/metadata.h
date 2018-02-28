@@ -444,9 +444,6 @@ int add_glv_to_indirect_glvs(struct dm_pool *mem,
 int remove_glv_from_indirect_glvs(struct generic_logical_volume *origin_glv,
 				  struct generic_logical_volume *glv);
 
-int for_each_sub_lv_except_pools(struct logical_volume *lv,
-				 int (*fn)(struct logical_volume *lv, void *data),
-				 void *data);
 int for_each_sub_lv(struct logical_volume *lv,
 		    int (*fn)(struct logical_volume *lv, void *data),
 		    void *data);
