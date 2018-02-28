@@ -6084,7 +6084,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* Used cache pool, COW or historical LV cannot be activated */
-	if ((!lv_is_cache_pool(lv) || dm_list_empty(&lv->segs_using_this_lv)) &&
+	if (!lv_is_used_cache_pool(lv) &&
 	    !lv_is_cow(lv) && !lv_is_historical(lv) &&
 	    !deactivate_lv(cmd, lv)) {
 		/* FIXME Review and fix the snapshot error paths! */
@@ -6134,16 +6134,14 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
-	if (lv_is_cache_pool(lv)) {
+	if (lv_is_used_cache_pool(lv)) {
 		/* Cache pool removal drops cache layer
 		 * If the cache pool is not linked, we can simply remove it. */
-		if (!dm_list_empty(&lv->segs_using_this_lv)) {
-			if (!(cache_seg = get_only_segment_using_this_lv(lv)))
-				return_0;
-			/* TODO: polling */
-			if (!lv_cache_remove(cache_seg->lv))
-				return_0;
-		}
+		if (!(cache_seg = get_only_segment_using_this_lv(lv)))
+			return_0;
+		/* TODO: polling */
+		if (!lv_cache_remove(cache_seg->lv))
+			return_0;
 	}
 
 	visible = lv_is_visible(lv);
