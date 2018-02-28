@@ -43,8 +43,15 @@ not lvresize -L+10 $vg/$lv1
 lvresize -L-5 -f $vg/$lv1
 check lv_field $vg/$lv1 lv_size "5.00" --units m --nosuffix
 
+# Inactive LV cannot be resized as well
+lvchange -an $vg
 not lvresize -L+15 -y $vg/$lv1
 check lv_field $vg/$lv1 lv_size "5.00" --units m --nosuffix
+lvchange -ay $vg/$lv1
+
+not lvresize -L+15 -y $vg/$lv1
+check lv_field $vg/$lv1 lv_size "5.00" --units m --nosuffix
+
 
 # Try to resize again back up to the size of external origin
 lvresize -L+5 -f $vg/$lv1
