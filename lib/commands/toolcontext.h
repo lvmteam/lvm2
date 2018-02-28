@@ -166,6 +166,8 @@ struct cmd_context {
 	unsigned lv_notify:1;
 	unsigned pv_notify:1;
 	unsigned use_aio:1;
+	unsigned activate_component:1;		/* command activates component LV */
+	unsigned process_component_lvs:1;	/* command processes also component LVs */
 
 	/*
 	 * Filtering.

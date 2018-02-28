@@ -2673,7 +2673,11 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 	}
 
-	if (filter)
+	/* Component LV activation is enforced to be 'read-only' */
+	/* TODO: should not apply for LVs in maintenance mode */
+	if (!lv_is_visible(lv) && lv_is_component(lv)) {
+		laopts->read_only = 1;
+	} else if (filter)
 		laopts->read_only = _passes_readonly_filter(cmd, lv);
 
 	log_debug_activation("Activating %s%s%s%s%s.", display_lvname(lv),

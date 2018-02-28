@@ -252,6 +252,7 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 	uint32_t lck_type = flags & LCK_TYPE_MASK;
 	uint32_t lck_scope = flags & LCK_SCOPE_MASK;
 	int ret = 0;
+	const struct logical_volume *active_lv;
 
 	block_signals(flags);
 	_lock_memory(cmd, lv_op);
@@ -265,6 +266,16 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 
 	if ((is_orphan_vg(resource) || is_global_vg(resource)) && (flags & LCK_CACHE)) {
 		log_error(INTERNAL_ERROR "P_%s referenced.", resource);
+		goto out;
+	}
+
+	/* When trying activating component LV, make sure none of
+	 * sub component LV or  LVs that are using it are active */
+	if (lv && ((lck_type == LCK_READ) || (lck_type == LCK_EXCL)) &&
+	    ((!lv_is_visible(lv) && (active_lv = lv_holder_is_active(lv))) ||
+	     (active_lv = lv_component_is_active(lv)))) {
+		log_error("Activation of logical volume %s is prohibited while logical volume %s is active.",
+			  display_lvname(lv), display_lvname(active_lv));
 		goto out;
 	}
 

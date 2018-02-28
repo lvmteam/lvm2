@@ -92,7 +92,7 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 		lv = lvl->lv;
 
-		if (!lv_is_visible(lv))
+		if (!lv_is_visible(lv) && (!cmd->process_component_lvs || !lv_is_component(lv)))
 			continue;
 
 		/* If LV is sparse, activate origin instead */
@@ -222,6 +222,8 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 	/* FIXME Move into library where clvmd can use it */
 	if (do_activate)
 		check_current_backup(vg);
+	else /* Component LVs might be active, support easy deactivation */
+		cmd->process_component_lvs = 1;
 
 	if (do_activate && (active = lvs_in_vg_activated(vg))) {
 		log_verbose("%d logical volume(s) in volume group \"%s\" "

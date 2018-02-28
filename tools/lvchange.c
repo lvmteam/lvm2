@@ -1266,6 +1266,11 @@ int lvchange_properties_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
 	int ret;
 
+	if (cmd->activate_component) {
+		log_error("Cannot change LV properties when activating component LVs.");
+		return 0;
+	}
+
 	/*
 	 * A command def rule allows only some options when LV is partial,
 	 * so handles_missing_pvs will only affect those.
@@ -1362,7 +1367,10 @@ static int _lvchange_activate_check(struct cmd_context *cmd,
 				     struct processing_handle *handle,
 				     int lv_is_named_arg)
 {
-	if (!lv_is_visible(lv)) {
+	if (!lv_is_visible(lv) &&
+	    !cmd->activate_component && /* activation of named component LV */
+	    ((first_seg(lv)->status & MERGING) || /* merging already started */
+	     !cmd->process_component_lvs)) { /* deactivation of a component LV */
 		if (lv_is_named_arg)
 			log_error("Operation not permitted on hidden LV %s.", display_lvname(lv));
 		return 0;
@@ -1390,6 +1398,23 @@ int lvchange_activate_cmd(struct cmd_context *cmd, int argc, char **argv)
 	/* Allow deactivating if locks fail. */
 	if (do_activate)
 		cmd->lockd_vg_enforce_sh = 1;
+
+	/* When activating, check if given LV is a component LV */
+	if (do_activate) {
+		if ((argc == 1) && is_component_lvname(argv[0])) {
+			/* With single arg with reserved name prompt for component activation */
+			if (arg_is_set(cmd, yes_ARG) ||
+			    (yes_no_prompt("Do you want to activate component LV "
+					   "in read-only mode? [y/n]: ") == 'y')) {
+				log_print_unless_silent("Allowing activation of component LV.");
+				cmd->activate_component = 1;
+			}
+
+			if (sigint_caught())
+				return_ECMD_FAILED;
+		}
+	} else /* Component LVs might be active, support easy deactivation */
+		cmd->process_component_lvs = 1;
 
 	ret = process_each_lv(cmd, argc, argv, NULL, NULL, 0,
 			      NULL, &_lvchange_activate_check, &_lvchange_activate_single);
