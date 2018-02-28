@@ -72,6 +72,7 @@ struct dev_manager {
 struct lv_layer {
 	const struct logical_volume *lv;
 	const char *old_name;
+	int visible_component;
 };
 
 int read_only_lv(const struct logical_volume *lv, const struct lv_activate_opts *laopts)
@@ -1590,7 +1591,8 @@ int dev_manager_mknodes(const struct logical_volume *lv)
 		return_0;
 
 	if (dminfo.exists) {
-		if (_lv_has_mknode(lv))
+		/* read-only component LV is also made visible */
+		if (_lv_has_mknode(lv) || (dminfo.read_only && lv_is_component(lv)))
 			r = _dev_manager_lv_mknodes(lv);
 	} else
 		r = _dev_manager_lv_rmnodes(lv);
@@ -1652,7 +1654,8 @@ static int _check_udev_fallback(struct cmd_context *cmd)
 #endif /* UDEV_SYNC_SUPPORT */
 
 static uint16_t _get_udev_flags(struct dev_manager *dm, const struct logical_volume *lv,
-				const char *layer, int noscan, int temporary)
+				const char *layer, int noscan, int temporary,
+				int visible_component)
 {
 	uint16_t udev_flags = 0;
 
@@ -1668,7 +1671,7 @@ static uint16_t _get_udev_flags(struct dev_manager *dm, const struct logical_vol
 	 * If not, create just the /dev/mapper content.
 	 */
 	/* FIXME: add target's method for this */
-	if (lv_is_new_thin_pool(lv))
+	if (lv_is_new_thin_pool(lv) || visible_component)
 		/* New thin-pool is regular LV with -tpool UUID suffix. */
 		udev_flags |= DM_UDEV_DISABLE_DISK_RULES_FLAG |
 		              DM_UDEV_DISABLE_OTHER_RULES_FLAG;
@@ -1866,7 +1869,8 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	}
 
 	if (info.exists && !dm_tree_add_dev_with_udev_flags(dtree, info.major, info.minor,
-							_get_udev_flags(dm, lv, layer, 0, 0))) {
+							    _get_udev_flags(dm, lv, layer,
+									    0, 0, 0))) {
 		log_error("Failed to add device (%" PRIu32 ":%" PRIu32") to dtree.",
 			  info.major, info.minor);
 		return 0;
@@ -2806,6 +2810,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	}
 
 	lvlayer->lv = lv;
+	lvlayer->visible_component = (laopts->component_lv == lv) ? 1 : 0;
 
 	/*
 	 * Add LV to dtree.
@@ -2822,7 +2827,8 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 					     read_only_lv(lv, laopts),
 					     ((lv->vg->status & PRECOMMITTED) | laopts->revert) ? 1 : 0,
 					     lvlayer,
-					     _get_udev_flags(dm, lv, layer, laopts->noscan, laopts->temporary))))
+					     _get_udev_flags(dm, lv, layer, laopts->noscan, laopts->temporary,
+							     lvlayer->visible_component))))
 		return_0;
 
 	/* Store existing name so we can do rename later */
@@ -2966,7 +2972,7 @@ static int _create_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 				r = 0;
 			continue;
 		}
-		if (_lv_has_mknode(lvlayer->lv)) {
+		if (_lv_has_mknode(lvlayer->lv) || lvlayer->visible_component) {
 			if (!_dev_manager_lv_mknodes(lvlayer->lv))
 				r = 0;
 			continue;

@@ -83,6 +83,7 @@ struct lv_activate_opts {
 				 * flags are persistent in udev db for any spurious event
 				 * that follows. */
 	unsigned resuming;	/* Set when resuming after a suspend. */
+	const struct logical_volume *component_lv;
 };
 
 void set_activation(int activation, int silent);
