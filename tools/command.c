@@ -334,13 +334,15 @@ static char *_split_line(char *buf, int *argc, char **argv, char sep)
 
 static int _val_str_to_num(char *str)
 {
-	char name[32];
+	char name[MAX_LINE_ARGC];
 	char *new;
 	int i;
 
 	/* compare the name before any suffix like _new or _<lvtype> */
 
-	dm_strncpy(name, str, sizeof(name));
+	if (!dm_strncpy(name, str, sizeof(name)))
+		return 0; /* Buffer is too short */
+
 	if ((new = strchr(name, '_')))
 		*new = '\0';
 
