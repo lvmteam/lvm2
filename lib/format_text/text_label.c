@@ -331,16 +331,9 @@ static int _read_mda_header_and_metadata(struct metadata_area *mda, void *baton)
 	struct mda_header *mdah;
 	struct lvmcache_vgsummary vgsummary = { 0 };
 
-	/*
-	 * Using the labeller struct to preserve info about
-	 * the last parsed vgname, vgid, creation host
-	 *
-	 * TODO: make lvmcache smarter and move this cache logic there
-	 */
-
 	if (!(mdah = raw_read_mda_header(fmt, &mdac->area, mda_is_primary(mda)))) {
-		stack;
-		goto close_dev;
+		log_error("Failed to read mda header from %s", dev_name(mdac->area.dev));
+		goto fail;
 	}
 
 	mda_set_ignored(mda, rlocn_is_ignored(mdah->raw_locns));
@@ -352,14 +345,25 @@ static int _read_mda_header_and_metadata(struct metadata_area *mda, void *baton)
 		return 1;
 	}
 
-	if (read_metadata_location_summary(fmt, mdah, mda_is_primary(mda), &mdac->area, &vgsummary,
-			     &mdac->free_sectors) &&
-	    !lvmcache_update_vgname_and_id(p->info, &vgsummary)) {
-		return_0;
+	if (!read_metadata_location_summary(fmt, mdah, mda_is_primary(mda), &mdac->area,
+					    &vgsummary, &mdac->free_sectors)) {
+		if (vgsummary.zero_offset)
+			return 1;
+
+		log_error("Failed to read metadata summary from %s", dev_name(mdac->area.dev));
+		goto fail;
 	}
 
-close_dev:
+	if (!lvmcache_update_vgname_and_id(p->info, &vgsummary)) {
+		log_error("Failed to save lvm summary for %s", dev_name(mdac->area.dev));
+		goto fail;
+	}
+
 	return 1;
+
+fail:
+	lvmcache_del(p->info);
+	return 0;
 }
 
 static int _text_read(struct labeller *l, struct device *dev, void *label_buf,
@@ -434,10 +438,12 @@ out:
 	baton.info = info;
 	baton.label = *label;
 
-	lvmcache_foreach_mda(info, _read_mda_header_and_metadata, &baton);
+	if (!lvmcache_foreach_mda(info, _read_mda_header_and_metadata, &baton)) {
+		log_error("Failed to scan VG from %s", dev_name(dev));
+		return 0;
+	}
 
 	lvmcache_make_valid(info);
-
 	return 1;
 }
 

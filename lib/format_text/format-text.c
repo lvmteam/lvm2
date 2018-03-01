@@ -536,8 +536,10 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 	char *desc;
 	uint32_t wrap = 0;
 
-	if (!(mdah = raw_read_mda_header(fid->fmt, area, primary_mda)))
+	if (!(mdah = raw_read_mda_header(fid->fmt, area, primary_mda))) {
+		log_error("Failed to read vg %s from %s", vgname, dev_name(area->dev));
 		goto_out;
+	}
 
 	if (!(rlocn = _read_metadata_location_vg(area, mdah, primary_mda, vgname, &precommitted))) {
 		log_debug_metadata("VG %s not found on %s", vgname, dev_name(area->dev));
@@ -1213,6 +1215,7 @@ int read_metadata_location_summary(const struct format_type *fmt,
 		log_debug_metadata("Metadata location on %s at %llu has offset 0.",
 				   dev_name(dev_area->dev),
 				   (unsigned long long)(dev_area->start + rlocn->offset));
+		vgsummary->zero_offset = 1;
 		return 0;
 	}
 
