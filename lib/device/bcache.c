@@ -539,6 +539,14 @@ static void _complete_io(void *context, int err)
 	dm_list_del(&b->list);
 
 	if (b->error) {
+		log_warn("bcache io error %d fd %d", b->error, b->fd);
+		memset(b->data, 0, cache->block_sectors << SECTOR_SHIFT);
+	}
+
+	/* Things don't work with this block of code, but work without it. */
+#if 0
+	if (b->error) {
+		log_warn("bcache io error %d fd %d", b->error, b->fd);
 		if (b->io_dir == DIR_READ) {
 			// We can just forget about this block, since there's
 			// no dirty data to be written back.
@@ -552,6 +560,9 @@ static void _complete_io(void *context, int err)
 		_clear_flags(b, BF_DIRTY);
 		_link_block(b);
 	}
+#endif
+	_clear_flags(b, BF_DIRTY);
+	_link_block(b);
 }
 
 /*
@@ -768,7 +779,7 @@ static struct block *_lookup_or_read_block(struct bcache *cache,
 		}
 	}
 
-	if (b && !b->error) {
+	if (b) {
 		if (flags & (GF_DIRTY | GF_ZERO))
 			_set_flags(b, BF_DIRTY);
 
@@ -904,6 +915,9 @@ bool bcache_get(struct bcache *cache, int fd, block_address index,
 		b->ref_count++;
 
 		*result = b;
+
+		if (b->error)
+			return false;
 		return true;
 	}
 
