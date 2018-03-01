@@ -4530,10 +4530,15 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 
 	consistent = 0;
 
+	label_scan_setup_bcache();
+
 	if ((vg = _vg_read(cmd, vgname, vgid, warn_flags, &consistent, precommitted))) {
 		/* Does it matter if consistent is 0 or 1? */
+		label_scan_destroy(cmd);
 		return vg;
 	}
+
+	label_scan_destroy(cmd);
 
 	log_debug_metadata("Reading VG by vgid %.8s not found.", vgid);
 	return NULL;
