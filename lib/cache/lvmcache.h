@@ -59,6 +59,7 @@ struct lvmcache_vgsummary {
 	const char *lock_type;
 	uint32_t mda_checksum;
 	size_t mda_size;
+	int zero_offset;
 };
 
 int lvmcache_init(void);
@@ -83,6 +84,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 				   uint32_t vgstatus);
 int lvmcache_add_orphan_vginfo(const char *vgname, struct format_type *fmt);
 void lvmcache_del(struct lvmcache_info *info);
+void lvmcache_del_dev(struct device *dev);
 
 /* Update things */
 int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
