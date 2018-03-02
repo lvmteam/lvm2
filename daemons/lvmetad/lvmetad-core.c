@@ -2705,9 +2705,8 @@ static response handler(daemon_state s, client_handle h, request r)
 		if (!prev_in_progress && this_in_progress) {
 			/* New update is starting (filter token is replaced by update token) */
 
-			memcpy(prev_token, state->token, 128);
-			strncpy(state->token, token, 128);
-			state->token[127] = 0;
+			(void) dm_strncpy(prev_token, state->token, sizeof(prev_token));
+			(void) dm_strncpy(state->token, token, sizeof(state->token));
 			state->update_begin = _monotonic_seconds();
 			state->update_timeout = update_timeout;
 			state->update_pid = pid;
@@ -2728,9 +2727,8 @@ static response handler(daemon_state s, client_handle h, request r)
 				 (int)(_monotonic_seconds() - state->update_begin),
 				 state->update_cmd);
 
-			memcpy(prev_token, state->token, 128);
-			strncpy(state->token, token, 128);
-			state->token[127] = 0;
+			(void) dm_strncpy(prev_token, state->token, sizeof(prev_token));
+			(void) dm_strncpy(state->token, token, sizeof(state->token));
 			state->update_begin = _monotonic_seconds();
 			state->update_timeout = update_timeout;
 			state->update_pid = pid;
@@ -2762,9 +2760,8 @@ static response handler(daemon_state s, client_handle h, request r)
 				 (int)(_monotonic_seconds() - state->update_begin),
 				 state->update_pid, token);
 
-			memcpy(prev_token, state->token, 128);
-			strncpy(state->token, token, 128);
-			state->token[127] = 0;
+			(void) dm_strncpy(prev_token, state->token, sizeof(prev_token));
+			(void) dm_strncpy(state->token, token, sizeof(state->token));
 			state->update_begin = 0;
 			state->update_timeout = 0;
 			state->update_pid = 0;

@@ -807,8 +807,7 @@ static void lvm2_log_fn(int level, const char *file, int line, int dm_errno,
 	if (level != _LOG_ERR && level != _LOG_FATAL)
 		return;
 
-	strncpy(last_error, message, sizeof(last_error));
-	last_error[sizeof(last_error)-1] = '\0';
+	(void) dm_strncpy(last_error, message, sizeof(last_error));
 }
 
 /* This checks some basic cluster-LVM configuration stuff */

@@ -617,8 +617,7 @@ struct lvmcache_vginfo *lvmcache_vginfo_from_vgid(const char *vgid)
 	}
 
 	/* vgid not necessarily NULL-terminated */
-	strncpy(&id[0], vgid, ID_LEN);
-	id[ID_LEN] = '\0';
+	(void) dm_strncpy(id, vgid, sizeof(id));
 
 	if (!(vginfo = dm_hash_lookup(_vgid_hash, id))) {
 		log_debug_cache("lvmcache has no info for vgid \"%s\"", id);
@@ -719,8 +718,7 @@ struct lvmcache_info *lvmcache_info_from_pvid(const char *pvid, struct device *d
 	if (!_pvid_hash || !pvid)
 		return NULL;
 
-	strncpy(&id[0], pvid, ID_LEN);
-	id[ID_LEN] = '\0';
+	(void) dm_strncpy(id, pvid, sizeof(id));
 
 	if (!(info = dm_hash_lookup(_pvid_hash, id)))
 		return NULL;
@@ -1646,8 +1644,7 @@ static int _lvmcache_update_vgid(struct lvmcache_info *info,
 		return 1;
 	}
 
-	strncpy(vginfo->vgid, vgid, ID_LEN);
-	vginfo->vgid[ID_LEN] = '\0';
+	(void) dm_strncpy(vginfo->vgid, vgid, sizeof(vginfo->vgid));
 	if (!dm_hash_insert(_vgid_hash, vginfo->vgid, vginfo)) {
 		log_error("_lvmcache_update: vgid hash insertion failed: %s",
 			  vginfo->vgid);
@@ -2055,10 +2052,8 @@ int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted)
 		.lock_type = vg->lock_type
 	};
 
-	pvid_s[sizeof(pvid_s) - 1] = '\0';
-
 	dm_list_iterate_items(pvl, &vg->pvs) {
-		strncpy(pvid_s, (char *) &pvl->pv->id, sizeof(pvid_s) - 1);
+		(void) dm_strncpy(pvid_s, (char *) &pvl->pv->id, sizeof(pvid_s));
 		/* FIXME Could pvl->pv->dev->pvid ever be different? */
 		if ((info = lvmcache_info_from_pvid(pvid_s, pvl->pv->dev, 0)) &&
 		    !lvmcache_update_vgname_and_id(info, &vgsummary))
@@ -2162,8 +2157,8 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller,
 	struct device_list *devl;
 	int created = 0;
 
-	strncpy(pvid_s, pvid, sizeof(pvid_s) - 1);
-	pvid_s[sizeof(pvid_s) - 1] = '\0';
+	(void) dm_strncpy(pvid_s, pvid, sizeof(pvid_s));
+
 	if (!id_write_format((const struct id *)&pvid_s, uuid, sizeof(uuid)))
 		stack;
 

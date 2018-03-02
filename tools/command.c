@@ -492,8 +492,7 @@ static uint64_t _lv_to_bits(struct command *cmd, char *name)
 	int argc;
 	int i;
 
-	memset(buf, 0, sizeof(buf));
-	strncpy(buf, name, LVTYPE_LEN-1);
+	(void) dm_strncpy(buf, name, LVTYPE_LEN);
 
 	_split_line(buf, &argc, argv, '_');
 
