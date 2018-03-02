@@ -4371,9 +4371,9 @@ static int _for_each_sub_lv(struct logical_volume *lv, int level,
 	if (level++) {
 		if (!(r = fn(lv, data)))
 			return_0;
-		/* Only r == 1 lets you run for_each... */
 		if (r == -1)
 			return 1;
+		/* Only r != -1 continues with for_each_sub_lv()... */
 	}
 
 	if (lv_is_cow(lv) && lv_is_virtual_origin(org = origin_from_cow(lv))) {
