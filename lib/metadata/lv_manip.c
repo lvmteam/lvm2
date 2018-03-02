@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2018 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -6086,12 +6086,9 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	/* Used cache pool, COW or historical LV cannot be activated */
 	if (!lv_is_used_cache_pool(lv) &&
 	    !lv_is_cow(lv) && !lv_is_historical(lv) &&
-	    !deactivate_lv(cmd, lv)) {
+	    !deactivate_lv_with_sub_lv(lv))
 		/* FIXME Review and fix the snapshot error paths! */
-		log_error("Unable to deactivate logical volume %s.",
-			  display_lvname(lv));
-		return 0;
-	}
+		return_0;
 
 	if (!archive(vg))
 		return 0;
