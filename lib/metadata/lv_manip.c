@@ -4872,6 +4872,12 @@ static int _lvresize_check(struct logical_volume *lv,
 		lp->mirrors = 0;
 	}
 
+	if (lv_component_is_active(lv)) {
+		log_error("Cannot resize logical volume %s with active component LV(s).",
+			  display_lvname(lv));
+		return 0;
+	}
+
 	return 1;
 }
 

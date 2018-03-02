@@ -833,6 +833,12 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 		return 1;
 	}
 
+	if (lv_component_is_active(lv)) {
+		log_error("Cannot convert logical volume %s with active component LV(s).",
+			  display_lvname(lv));
+		return 0;
+	}
+
 	region_size = adjusted_mirror_region_size(cmd, lv->vg->extent_size,
 						  lv->le_count,
 						  lp->region_size ? : seg->region_size, 0,
@@ -1949,6 +1955,12 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 	 */
 	if (!validate_snapshot_origin(org))
 		return_0;
+
+	if (lv_component_is_active(org)) {
+		log_error("Cannot use logical volume %s with active component LVs for snapshot origin.",
+			  display_lvname(org));
+		return 0;
+	}
 
 	log_warn("WARNING: Converting logical volume %s to snapshot exception store.",
 		 snap_name);

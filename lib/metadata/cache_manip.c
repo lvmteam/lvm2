@@ -548,11 +548,8 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	/* Localy active volume is needed for writeback */
 	if (!lv_info(cache_lv->vg->cmd, cache_lv, 1, NULL, 0, 0)) {
 		/* Give up any remote locks */
-		if (!deactivate_lv(cache_lv->vg->cmd, cache_lv)) {
-			log_error("Cannot deactivate remotely active cache volume %s.",
-				  display_lvname(cache_lv));
-			return 0;
-		}
+		if (!deactivate_lv_with_sub_lv(cache_lv))
+			return_0;
 
 		switch (first_seg(cache_seg->pool_lv)->cache_mode) {
 		case CACHE_MODE_WRITETHROUGH:
