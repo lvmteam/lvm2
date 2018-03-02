@@ -1518,6 +1518,13 @@ int lv_reduce(struct logical_volume *lv, uint32_t extents)
 	if (lv_is_raid(lv) && extents != lv->le_count)
 		extents =_round_to_stripe_boundary(lv->vg, extents,
 						   seg_is_raid1(seg) ? 0 : _raid_stripes_count(seg), 0);
+
+	if ((extents == lv->le_count) && lv_is_component(lv) && lv_is_active(lv)) {
+		/* When LV is removed, make sure it is inactive */
+		log_error(INTERNAL_ERROR "Removing still active LV %s.", display_lvname(lv));
+		return 0;
+	}
+
 	return _lv_reduce(lv, extents, 1);
 }
 
