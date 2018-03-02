@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Fix memleak on error path when obtaining lv_raid_data_offset.
   Fix compatibility size test of extended external origin.
   Add external_origin visiting in for_each_sub_lv().
   Ensure cluster commands drop their device cache before locking VG.

@@ -1006,8 +1006,10 @@ int lv_raid_data_offset(const struct logical_volume *lv, uint64_t *data_offset)
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
 
-	if (!(r = dev_manager_raid_status(dm, lv, &status)))
-		stack;
+	if (!(r = dev_manager_raid_status(dm, lv, &status))) {
+		dev_manager_destroy(dm);
+		return_0;
+	}
 
 	*data_offset = status->data_offset;
 
