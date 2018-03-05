@@ -1222,6 +1222,8 @@ static int _determine_cache_argument(struct volume_group *vg,
 			return_0; /* FIXME */
 
 		/* Put origin into resulting activation state first */
+		lv = (struct logical_volume *)lv_lock_holder(lv);
+
 		if (is_change_activating(lp->activate)) {
 			if ((lp->activate == CHANGE_AAY) &&
 			    !lv_passes_auto_activation_filter(cmd, lv)) {
