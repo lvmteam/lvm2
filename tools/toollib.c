@@ -1505,6 +1505,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_LABEL);
 
 	lvmcache_label_scan(cmd);
+	lvmcache_seed_infos_from_lvmetad(cmd);
 
 	if (argc) {
 		for (; opt < argc; opt++) {
