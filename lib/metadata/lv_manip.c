@@ -6040,8 +6040,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 		if ((force == PROMPT) &&
 		    !lv_is_pending_delete(lv) &&
-		    lv_is_visible(lv) &&
-		    lv_is_active(lv)) {
+		    lv_is_visible(lv)) {
 			if (yes_no_prompt("Do you really want to remove%s active "
 					  "%slogical volume %s? [y/n]: ",
 					  ask_discard ? " and DISCARD" : "",
