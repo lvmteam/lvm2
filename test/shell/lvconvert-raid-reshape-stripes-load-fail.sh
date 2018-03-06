@@ -15,6 +15,9 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+# FIXME - skippping until properly kernel is released
+skip
+
 # Test reshaping under io load
 
 which mkfs.ext4 || skip
