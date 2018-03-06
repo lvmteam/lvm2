@@ -675,6 +675,13 @@ int label_scan_devs(struct cmd_context *cmd, struct dm_list *devs)
 {
 	struct device_list *devl;
 
+	/* FIXME: get rid of this, it's only needed for lvmetad in which
+	   case we should be setting up bcache in one place. */
+	if (!scan_bcache) {
+		if (!_setup_bcache(0))
+			return 0;
+	}
+
 	dm_list_iterate_items(devl, devs) {
 		if (_in_bcache(devl->dev)) {
 			bcache_invalidate_fd(scan_bcache, devl->dev->bcache_fd);
