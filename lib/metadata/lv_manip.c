@@ -7384,6 +7384,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	struct logical_volume *lv, *origin_lv = NULL;
 	struct logical_volume *pool_lv = NULL;
 	struct logical_volume *tmp_lv;
+	const struct logical_volume *lock_lv;
 	struct lv_segment *seg, *pool_seg;
 	int thin_pool_was_active = -1; /* not scanned, inactive, active */
 	int historical;
@@ -7547,11 +7548,12 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 
 		/* Validate cache origin is exclusively active */
+		lock_lv = lv_lock_holder(origin_lv);
 		if (vg_is_clustered(origin_lv->vg) &&
 		    locking_is_clustered() &&
 		    locking_supports_remote_queries() &&
-		    lv_is_active(origin_lv) &&
-		    !lv_is_active_exclusive(origin_lv)) {
+		    lv_is_active(lock_lv) &&
+		    !lv_is_active_exclusive(lock_lv)) {
 			log_error("Cannot cache not exclusively active origin volume %s.",
 				  display_lvname(origin_lv));
 			return NULL;
