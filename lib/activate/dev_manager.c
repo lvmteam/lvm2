@@ -531,15 +531,38 @@ static int _ignore_invalid_snapshot(const char *params)
 {
 	struct dm_status_snapshot *s;
 	struct dm_pool *mem;
-	int r;
+	int r = 0;
 
 	if (!(mem = dm_pool_create("invalid snapshots", 128)))
 		return_0;
 
 	if (!dm_get_status_snapshot(mem, params, &s))
+		stack;
+        else
+		r = s->invalid;
+
+	dm_pool_destroy(mem);
+
+	return r;
+}
+
+static int _ignore_frozen_raid(struct device *dev, const char *params)
+{
+	struct dm_status_raid *s;
+	struct dm_pool *mem;
+	int r = 0;
+
+	if (!(mem = dm_pool_create("frozen raid", 128)))
 		return_0;
 
-	r = s->invalid;
+	if (!dm_get_status_raid(mem, params, &s))
+		stack;
+	else if (s->sync_action && !strcmp(s->sync_action, "frozen")) {
+		log_warn("WARNING: %s frozen raid device (%d:%d) needs inspection.",
+			  dev_name(dev), (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
+		r = 1;
+	}
+
 	dm_pool_destroy(mem);
 
 	return r;
@@ -666,6 +689,12 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 		if (!strcmp(target_type, TARGET_NAME_SNAPSHOT) &&
 		    _ignore_invalid_snapshot(params)) {
 			log_debug_activation("%s: Invalid %s device %s not usable.", dev_name(dev), target_type, name);
+			goto out;
+		}
+
+		if (!strncmp(target_type, TARGET_NAME_RAID, 4) && _ignore_frozen_raid(dev, params)) {
+			log_debug_activation("%s: Frozen %s device %s not usable.",
+					     dev_name(dev), target_type, name);
 			goto out;
 		}
 

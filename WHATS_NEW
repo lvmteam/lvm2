@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Skip frozen raid devices from scanning.
   Activate RAID SubLVs on read_only_volume_list readwrite
   Offer convenience type raid5_n converting to raid10
   Automatically avoid reading invalid snapshots during device scan.
