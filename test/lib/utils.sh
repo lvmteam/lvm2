@@ -228,6 +228,10 @@ dm_info() {
 	should dmsetup info --noheadings -c -o "$@"
 }
 
+dm_status() {
+	should dmsetup status --noheadings "$@"
+}
+
 dm_table() {
 	should dmsetup table "$@"
 }
