@@ -518,6 +518,24 @@ out:
         return r;
 }
 
+static int _ignore_invalid_snapshot(const char *params)
+{
+	struct dm_status_snapshot *s;
+	struct dm_pool *mem;
+	int r;
+
+	if (!(mem = dm_pool_create("invalid snapshots", 128)))
+		return_0;
+
+	if (!dm_get_status_snapshot(mem, params, &s))
+		return_0;
+
+	r = s->invalid;
+	dm_pool_destroy(mem);
+
+	return r;
+}
+
 /*
  * device_is_usable
  * @dev
@@ -630,6 +648,12 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 		    (!strcmp(target_type, TARGET_NAME_SNAPSHOT) || !strcmp(target_type, TARGET_NAME_SNAPSHOT_ORIGIN)) &&
 		    _ignore_suspended_snapshot_component(dev)) {
 			log_debug_activation("%s: %s device %s not usable.", dev_name(dev), target_type, name);
+			goto out;
+		}
+
+		if (target_type && !strcmp(target_type, TARGET_NAME_SNAPSHOT) &&
+		    _ignore_invalid_snapshot(params)) {
+			log_debug_activation("%s: Invalid %s device %s not usable.", dev_name(dev), target_type, name);
 			goto out;
 		}
 

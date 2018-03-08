@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Automatically avoid reading invalid snapshots during device scan.
   Ensure COW device is writable even for read-only thick snapshots.
   Support activation of component LVs in read-only mode.
   Extend internal library to recognize and work with component LV.
