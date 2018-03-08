@@ -447,13 +447,15 @@ static int _ignore_suspended_snapshot_component(struct device *dev)
 		next = dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
 		if (!target_type || !strcmp(target_type, TARGET_NAME_SNAPSHOT)) {
 			if (!params || sscanf(params, "%d:%d %d:%d", &major1, &minor1, &major2, &minor2) != 4) {
-				log_error("Incorrect snapshot table found.");
+				log_warn("WARNING: Incorrect snapshot table found for %d:%d.",
+					 (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
 				goto out;
 			}
 			r = r || _device_is_suspended(major1, minor1) || _device_is_suspended(major2, minor2);
 		} else if (!strcmp(target_type, TARGET_NAME_SNAPSHOT_ORIGIN)) {
 			if (!params || sscanf(params, "%d:%d", &major1, &minor1) != 2) {
-				log_error("Incorrect snapshot-origin table found.");
+				log_warn("WARNING: Incorrect snapshot-origin table found for %d:%d.",
+					 (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
 				goto out;
 			}
 			r = r || _device_is_suspended(major1, minor1);
@@ -488,7 +490,7 @@ static int _ignore_unusable_thins(struct device *dev)
 
 	dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
 	if (!params || sscanf(params, "%d:%d", &major, &minor) != 2) {
-		log_error("Failed to get thin-pool major:minor for thin device %d:%d.",
+		log_warn("WARNING: Cannot get thin-pool major:minor for thin device %d:%d.",
 			  (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
 		goto out;
 	}
