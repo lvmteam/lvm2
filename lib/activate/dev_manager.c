@@ -75,8 +75,11 @@ struct lv_layer {
 	int visible_component;
 };
 
-int read_only_lv(const struct logical_volume *lv, const struct lv_activate_opts *laopts)
+int read_only_lv(const struct logical_volume *lv, const struct lv_activate_opts *laopts, const char *layer)
 {
+	if (layer && lv_is_cow(lv))
+		return 0; /* Keep snapshot's COW volume writable */
+
 	return (laopts->read_only || !(lv->status & LVM_WRITE));
 }
 
@@ -2824,7 +2827,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (!(dnode = dm_tree_add_new_dev_with_udev_flags(dtree, name, dlid,
 					     layer ? UINT32_C(0) : (uint32_t) lv->major,
 					     layer ? UINT32_C(0) : (uint32_t) lv->minor,
-					     read_only_lv(lv, laopts),
+					     read_only_lv(lv, laopts, layer),
 					     ((lv->vg->status & PRECOMMITTED) | laopts->revert) ? 1 : 0,
 					     lvlayer,
 					     _get_udev_flags(dm, lv, layer, laopts->noscan, laopts->temporary,

@@ -27,7 +27,7 @@ struct dm_info;
 struct device;
 struct lv_seg_status;
 
-int read_only_lv(const struct logical_volume *lv, const struct lv_activate_opts *laopts);
+int read_only_lv(const struct logical_volume *lv, const struct lv_activate_opts *laopts, const char *layer);
 
 /*
  * Constructor and destructor.
