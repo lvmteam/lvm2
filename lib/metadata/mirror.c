@@ -270,7 +270,7 @@ int shift_mirror_images(struct lv_segment *mirrored_seg, unsigned mimage)
 static int _write_log_header(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	struct device *dev;
-	char *name;
+	char name[PATH_MAX];
 	struct { /* The mirror log header */
 		uint32_t magic;
 		uint32_t version;
@@ -281,20 +281,14 @@ static int _write_log_header(struct cmd_context *cmd, struct logical_volume *lv)
 	log_header.version = xlate32(MIRROR_DISK_VERSION);
 	log_header.nr_regions = xlate64((uint64_t)-1);
 
-	if (!(name = dm_pool_alloc(cmd->mem, PATH_MAX))) {
-		log_error("Name allocation failed - log header not written (%s).",
+	if (dm_snprintf(name, sizeof(name), "%s%s/%s", cmd->dev_dir,
+			lv->vg->name, lv->name) < 0) {
+		log_error("Device path name too long - log header not written (%s).",
 			  display_lvname(lv));
 		return 0;
 	}
 
-	if (dm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
-			 lv->vg->name, lv->name) < 0) {
-		log_error("Name too long - log header not written (%s).",
-			  display_lvname(lv));
-		return 0;
-	}
-
-	log_verbose("Writing log header to device %s.", display_lvname(lv));
+	log_verbose("Writing log header for LV %s to device %s.", display_lvname(lv), name);
 
 	if (!(dev = dev_cache_get(name, NULL))) {
 		log_error("%s: not found: log header not written.", name);
