@@ -32,6 +32,8 @@
 
 #define MAX_TARGET_PARAMSIZE 50000
 #define LVM_UDEV_NOSCAN_FLAG DM_SUBSYSTEM_UDEV_FLAG0
+#define CRYPT_TEMP	"CRYPT-TEMP"
+#define STRATIS		"stratis-"
 
 typedef enum {
 	PRELOAD,
@@ -635,6 +637,17 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 					     dev_name(dev), vgname, lvname, *layer ? "-" : "", layer);
 			goto out;
 		}
+	}
+
+	if (check.check_reserved && uuid &&
+	    (!strncmp(uuid, CRYPT_TEMP, sizeof(CRYPT_TEMP) - 1) ||
+	     !strncmp(uuid, STRATIS, sizeof(STRATIS) - 1))) {
+		/* Skip private crypto devices */
+		log_debug_activation("%s: Reserved uuid %s on %s device %s not usable.",
+				     dev_name(dev), uuid,
+				     uuid[0] == 'C' ? "crypto" : "stratis",
+				     name);
+		goto out;
 	}
 
 	/* FIXME Also check for mpath no paths */
