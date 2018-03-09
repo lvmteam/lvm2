@@ -6119,7 +6119,7 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 				return 0;
 			}
 
-			seg_flag = SEG_RAID0_META;
+			seg_flag = seg_is_raid5_n(seg_from) ? SEG_RAID0_META : SEG_RAID5_N;
 
 		} else if (segtype_is_any_raid6(*segtype)) {
 			if (seg_from->area_count < 4) {
