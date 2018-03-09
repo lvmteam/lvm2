@@ -515,7 +515,7 @@ static int _scan_list(struct dm_list *devs, int *failed)
 		bb = NULL;
 
 		if (!bcache_get(scan_bcache, devl->dev->bcache_fd, 0, 0, &bb)) {
-			log_error("Scan failed to read %s.", dev_name(devl->dev));
+			log_debug_devs("Scan failed to read %s.", dev_name(devl->dev));
 			scan_failed_count++;
 			scan_failed = 1;
 			lvmcache_del_dev(devl->dev);
@@ -525,7 +525,7 @@ static int _scan_list(struct dm_list *devs, int *failed)
 			ret = _process_block(devl->dev, bb, &is_lvm_device);
 
 			if (!ret && is_lvm_device) {
-				log_error("Scan failed to process %s", dev_name(devl->dev));
+				log_debug_devs("Scan failed to process %s", dev_name(devl->dev));
 				scan_failed_count++;
 				scan_failed = 1;
 				lvmcache_del_dev(devl->dev);
@@ -893,8 +893,11 @@ bool dev_read_bytes(struct device *dev, off_t start, size_t len, void *data)
 	}
 
 	if (dev->bcache_fd <= 0) {
-		log_error("dev_read_bytes %s with invalid fd %d", dev_name(dev), dev->bcache_fd);
-		return false;
+		/* This is not often needed, perhaps only with lvmetad. */
+		if (!label_scan_open(dev)) {
+			log_error("dev_read_bytes %s cannot open dev", dev_name(dev));
+			return false;
+		}
 	}
 
 	if (!bcache_read_bytes(scan_bcache, dev->bcache_fd, start, len, data)) {
@@ -924,8 +927,11 @@ bool dev_write_bytes(struct device *dev, off_t start, size_t len, void *data)
 	}
 
 	if (dev->bcache_fd <= 0) {
-		log_error("dev_write_bytes %s with invalid fd %d", dev_name(dev), dev->bcache_fd);
-		return false;
+		/* This is not often needed, perhaps only with lvmetad. */
+		if (!label_scan_open(dev)) {
+			log_error("dev_write_bytes %s cannot open dev", dev_name(dev));
+			return false;
+		}
 	}
 
 	if (!bcache_write_bytes(scan_bcache, dev->bcache_fd, start, len, data)) {
@@ -954,8 +960,11 @@ bool dev_write_zeros(struct device *dev, off_t start, size_t len)
 	}
 
 	if (dev->bcache_fd <= 0) {
-		log_error("dev_write_zeros %s with invalid fd %d", dev_name(dev), dev->bcache_fd);
-		return false;
+		/* This is not often needed, perhaps only with lvmetad. */
+		if (!label_scan_open(dev)) {
+			log_error("dev_write_zeros %s cannot open dev", dev_name(dev));
+			return false;
+		}
 	}
 
 	if (!bcache_write_zeros(scan_bcache, dev->bcache_fd, start, len)) {

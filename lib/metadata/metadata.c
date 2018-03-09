@@ -3809,6 +3809,18 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				release_vg(correct_vg);
 				return_NULL;
 			}
+
+			/*
+		 	 * When a command reads the vg from lvmetad, and then
+			 * writes the vg, the write path does some disk reads
+		 	 * of the devs.
+		 	 * FIXME: when a command is going to write the vg,
+		 	 * we should just read the vg from disk entirely
+		 	 * and skip reading it from lvmetad.
+		 	 */
+			dm_list_iterate_items(pvl, &correct_vg->pvs)
+				label_scan_open(pvl->pv->dev);
+
 		}
 
 		return correct_vg;
