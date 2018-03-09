@@ -2191,7 +2191,7 @@ static int _error_device(CMD_ARGS)
 	name = names ? names->name : argv[0];
 
 	if (!name || !*name) {
-		printf("No device specified\n");
+		err("No device specified.");
 		return_0;
 	}
 		
