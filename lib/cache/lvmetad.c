@@ -1677,7 +1677,7 @@ int lvmetad_pv_found(struct cmd_context *cmd, const struct id *pvid, struct devi
 
 	if (vg && result) {
 		seqno_after = daemon_reply_int(reply, "seqno_after", -1);
-		if ((seqno_after != vg->seqno) ||
+		if ((seqno_after != (int) vg->seqno) ||
 		    (seqno_after != daemon_reply_int(reply, "seqno_before", -1)))
 			log_warn("WARNING: Inconsistent metadata found for VG %s", vg->name);
 	}

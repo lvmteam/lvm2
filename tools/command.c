@@ -2927,7 +2927,8 @@ static void _print_man_option_desc(struct command_name *cname, int opt_enum)
 	char buf[DESC_LINE];
 	int started_cname = 0;
 	int line_count = 0;
-	int di, bi = 0;
+	int bi = 0;
+	unsigned di;
 
 	if (desc[0] != '#') {
 		printf("%s", desc);
@@ -3246,7 +3247,7 @@ static void _print_man_all_positions_desc(struct command_name *cname)
 static void _print_desc_man(const char *desc)
 {
 	char buf[DESC_LINE] = {0};
-	int di = 0;
+	unsigned di;
 	int bi = 0;
 
 	for (di = 0; di < strlen(desc); di++) {
