@@ -2297,7 +2297,6 @@ static int _mknodes(CMD_ARGS)
 
 static int _exec_command(const char *name)
 {
-	int n;
 	static char path[PATH_MAX];
 	static char *args[ARGS_MAX + 1];
 	static int argc = 0;
@@ -2310,8 +2309,7 @@ static int _exec_command(const char *name)
 	if (!dm_mknodes(name))
 		return_0;
 
-	n = snprintf(path, sizeof(path), "%s/%s", dm_dir(), name);
-	if (n < 0 || n > (int) sizeof(path) - 1)
+	if (dm_snprintf(path, sizeof(path), "%s/%s", dm_dir(), name) < 0)
 		return_0;
 
 	if (!argc) {
