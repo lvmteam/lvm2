@@ -2473,7 +2473,7 @@ static int _status(CMD_ARGS)
 					printf("%s: ", name);
 			} else if (!matched) {
 				/*
- 				 * Before first target of device in concise output,
+				 * Before first target of device in concise output,
 				 * print basic device information in the appropriate format.
 				 * Separate devices by a semi-colon.
 				 */
