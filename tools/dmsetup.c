@@ -863,11 +863,6 @@ static int _display_info_cols(struct dm_task *dmt, struct dm_info *info)
 	int selected;
 	char *device_name;
 
-	if (!info->exists) {
-		fprintf(stderr, "Device does not exist.\n");
-		return 0;
-	}
-
 	obj.task = dmt;
 	obj.info = info;
 	obj.deps_task = NULL;
@@ -971,11 +966,6 @@ static void _display_info_long(struct dm_task *dmt, struct dm_info *info)
 	const char *uuid;
 	uint32_t read_ahead;
 
-	if (!info->exists) {
-		fprintf(stderr, "Device does not exist.\n");
-		return;
-	}
-
 	printf("Name:              %s\n", dm_task_get_name(dmt));
 
 	printf("State:             %s%s%s\n",
@@ -1013,17 +1003,22 @@ static void _display_info_long(struct dm_task *dmt, struct dm_info *info)
 static int _display_info(struct dm_task *dmt)
 {
 	struct dm_info info;
+	int r = 1;
 
 	if (!dm_task_get_info(dmt, &info))
 		return_0;
 
+	if (!info.exists) {
+		log_error("Device does not exist.");
+		return 0;
+	}
+
 	if (!_switches[COLS_ARG])
 		_display_info_long(dmt, &info);
 	else
-		/* FIXME return code */
-		_display_info_cols(dmt, &info);
+		r = _display_info_cols(dmt, &info);
 
-	return info.exists ? 1 : 0;
+	return r;
 }
 
 static int _set_task_device(struct dm_task *dmt, const char *name, int optional)
