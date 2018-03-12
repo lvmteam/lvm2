@@ -80,6 +80,9 @@ int read_only_lv(const struct logical_volume *lv, const struct lv_activate_opts 
 	if (layer && lv_is_cow(lv))
 		return 0; /* Keep snapshot's COW volume writable */
 
+	if (lv_is_raid_image(lv) || lv_is_raid_metadata(lv))
+		return 0; /* Keep RAID SubLvs writable */
+
 	return (laopts->read_only || !(lv->status & LVM_WRITE));
 }
 
