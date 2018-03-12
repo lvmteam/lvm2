@@ -5437,7 +5437,7 @@ static int _stats_create_file(CMD_ARGS)
 	}
 
 	if (close(fd))
-		log_error("Error closing %s.", abspath);
+		log_sys_debug("close", abspath);
 
 	fd = -1;
 
@@ -5466,7 +5466,7 @@ bad:
 	dm_free(bounds);
 
 	if ((fd > -1) && close(fd))
-		log_error("Error closing %s", path);
+		log_sys_debug("close", path);
 
 	if (dms)
 		dm_stats_destroy(dms);
@@ -6065,7 +6065,7 @@ static int _stats_update_file(CMD_ARGS)
 
 out:
 	if (close(fd))
-		log_error("Error closing %s", abspath);
+		log_sys_debug("close", abspath);
 
 	dm_free(regions);
 	dm_free(abspath);
@@ -6076,7 +6076,7 @@ bad:
 	dm_free(abspath);
 
 	if ((fd > -1) && close(fd))
-		log_error("Error closing %s", path);
+		log_sys_debug("close", path);
 
 	dm_stats_destroy(dms);
 
@@ -6614,7 +6614,7 @@ bad:
 	if (fd > -1 && close(fd))
 		log_sys_error("close", file);
 
-	return_0;
+	return 0;
 }
 
 static int _process_losetup_switches(const char *base, int *argcp, char ***argvp,
