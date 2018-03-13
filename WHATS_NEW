@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Enhance mirror log initialization for old mirror target.
   Skip private crypto and stratis devices.
   Skip frozen raid devices from scanning.
   Activate RAID SubLVs on read_only_volume_list readwrite
