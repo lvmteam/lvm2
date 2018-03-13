@@ -17,6 +17,9 @@ SKIP_WITH_LVMPOLLD=1
 
 # Test reshaping under io load
 
+# FIXME: This test requires 3GB in /dev/shm!
+test $(aux total_mem) -gt $((4096*1024)) || skip
+
 which mkfs.ext4 || skip
 aux have_raid 1 13 2 || skip
 
@@ -49,10 +52,13 @@ mount "$DM_DEV_DIR/$vg/$lv1" $mount_dir
 mkdir -p $mount_dir/1 $mount_dir/2
 
 echo 3 >/proc/sys/vm/drop_caches
+# FIXME: This is filling up ram disk. Use sane amount of data please! Rate limit the data written!
 cp -r /usr/bin $mount_dir/1 >/dev/null 2>/dev/null &
 cp -r /usr/bin $mount_dir/2 >/dev/null 2>/dev/null &
+# FIXME: should this wait for above two processes and sync then?
 sync &
 
+# FIXME: wait_for_sync - is this really testing anything under load?
 aux wait_for_sync $vg $lv1
 aux delay_dev "$dev2" 0 200
 

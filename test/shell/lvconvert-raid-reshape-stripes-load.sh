@@ -17,6 +17,9 @@ SKIP_WITH_LVMPOLLD=1
 
 # Test reshaping under io load
 
+# FIXME: This test requires 3GB in /dev/shm!
+test $(aux total_mem) -gt $((4096*1024)) || skip
+
 which mkfs.ext4 || skip
 aux have_raid 1 13 1 || skip
 
