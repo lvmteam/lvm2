@@ -1185,13 +1185,13 @@ const char *dev_read_circular(struct device *dev, uint64_t offset, size_t len,
 	}
 
 	if (!dev_read_buf(dev, offset, len, reason, buf)) {
-		log_error("Read from %s failed", dev_name(dev));
+		log_error("Read from %s failed.", dev_name(dev));
 		dm_free(buf);
 		return NULL;
 	}
 
 	if (!dev_read_buf(dev, offset2, len2, reason, buf + len)) {
-		log_error("Circular read from %s failed", dev_name(dev));
+		log_error("Circular read from %s failed.", dev_name(dev));
 		dm_free(buf);
 		return NULL;
 	}

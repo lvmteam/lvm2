@@ -5623,10 +5623,8 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 			}
 			lvmcache_force_next_label_scan();
 			lvmcache_label_scan(cmd);
-			if (!lvmcache_fmt_from_vgname(cmd, vgname, NULL, 0)) {
-				/* vgname not found after scanning */
-				return SUCCESS;
-			}
+			if (!lvmcache_fmt_from_vgname(cmd, vgname, NULL, 0))
+				return SUCCESS; /* vgname not found after scanning */
 		}
 	}
 
