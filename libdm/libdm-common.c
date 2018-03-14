@@ -108,12 +108,12 @@ void dm_lib_init(void)
  */
 
 __attribute__((format(printf, 5, 0)))
-static void _default_log_line(int level,
-	    const char *file __attribute__((unused)),
-	    int line __attribute__((unused)), int dm_errno_or_class,
-	    const char *f, va_list ap)
+static void _default_log_line(int level, const char *file,
+			      int line, int dm_errno_or_class,
+			      const char *f, va_list ap)
 {
 	static int _abort_on_internal_errors = -1;
+	static int _debug_with_line_numbers = -1;
 	FILE *out = log_stderr(level) ? stderr : stdout;
 
 	level = log_level(level);
@@ -121,6 +121,15 @@ static void _default_log_line(int level,
 	if (level <= _LOG_WARN || _verbose) {
 		if (level < _LOG_WARN)
 			out = stderr;
+
+		if (_debug_with_line_numbers < 0)
+			/* Set when env DM_DEBUG_WITH_LINE_NUMBERS is not "0" */
+			_debug_with_line_numbers =
+				strcmp(getenv("DM_DEBUG_WITH_LINE_NUMBERS") ? : "0", "0");
+
+		if (_debug_with_line_numbers)
+			fprintf(out, "%s:%d     ", file, line);
+
 		vfprintf(out, f, ap);
 		fputc('\n', out);
 	}

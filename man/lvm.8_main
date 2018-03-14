@@ -481,6 +481,9 @@ Abort processing if the code detects a non-fatal internal error.
 .B DM_DISABLE_UDEV
 Avoid interaction with udev.  LVM will manage the relevant nodes in /dev
 directly.
+.TP
+.B DM_DEBUG_WITH_LINE_NUMBERS
+Prepends source file name and code line number with libdm debugging.
 .
 .SH FILES
 .
