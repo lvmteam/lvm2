@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Enhance error messages when read error happens.
   Enhance mirror log initialization for old mirror target.
   Skip private crypto and stratis devices.
   Skip frozen raid devices from scanning.

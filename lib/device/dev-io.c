@@ -238,10 +238,11 @@ int dev_async_getevents(void)
 				dev_read_callback_fn(0, AIO_SUPPORTED_CODE_PATH, dev_read_callback_context, (char *)devbuf->buf + devbuf->data_offset);
 		} else {
 			/* FIXME If partial read is possible, resubmit remainder */
-			log_error_once("%s: Asynchronous I/O failed: read only %" PRIu64 " of %" PRIu64 " bytes at %" PRIu64,
-				       dev_name(devbuf->where.dev),
-				       (uint64_t) _aio_events[event_nr].res, (uint64_t) devbuf->where.size,
-				       (uint64_t) devbuf->where.start);
+			log_error("%s: asynchronous read only I/O failed (" FMTd64 ") of " FMTu64 " bytes at " FMTu64 " (for %s): %s",
+				  dev_name(devbuf->where.dev), _aio_events[event_nr].res,
+				  (uint64_t) devbuf->where.size, (uint64_t) devbuf->where.start,
+				  _reason_text(devbuf->reason),
+				  ((int64_t)_aio_events[event_nr].res < 0) ? strerror(-(int64_t)_aio_events[event_nr].res) : 0);
 			_release_devbuf(devbuf);
 			if (dev_read_callback_fn)
 				dev_read_callback_fn(1, AIO_SUPPORTED_CODE_PATH, dev_read_callback_context, NULL);
@@ -407,12 +408,13 @@ static int _io_sync(struct device_buffer *devbuf)
 		while ((n < 0) && ((errno == EINTR) || (errno == EAGAIN)));
 
 		if (n < 0)
-			log_error_once("%s: %s failed after %" PRIu64 " of %" PRIu64
-				       " at %" PRIu64 ": %s", dev_name(where->dev),
-				       devbuf->write ? "write" : "read",
-				       (uint64_t) total,
-				       (uint64_t) where->size,
-				       (uint64_t) where->start, strerror(errno));
+			log_error("%s: synchronous %s failed after %" PRIu64 " of %" PRIu64
+				  " at %" PRIu64 " (for %s): %s", dev_name(where->dev),
+				  devbuf->write ? "write" : "read",
+				  (uint64_t) total,
+				  (uint64_t) where->size, (uint64_t) where->start,
+				  _reason_text(devbuf->reason),
+				  strerror(errno));
 
 		if (n <= 0)
 			break;
@@ -1126,7 +1128,7 @@ static int _dev_read_callback(struct device *dev, uint64_t offset, size_t len, d
 
 	ret = _aligned_io(&where, NULL, 0, reason, ioflags, dev_read_callback_fn, callback_context);
 	if (!ret) {
-		log_error("Read from %s failed", dev_name(dev));
+		log_debug("Read from %s failed (for %s).", dev_name(dev), _reason_text(reason));
 		_dev_inc_error_count(dev);
 	}
 
@@ -1160,11 +1162,9 @@ const char *dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_rea
 /* Read into supplied retbuf owned by the caller. */
 int dev_read_buf(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *retbuf)
 {
-	if (!_dev_read_callback(dev, offset, len, reason, 0, NULL, NULL)) {
-		log_error("Read from %s failed", dev_name(dev));
-		return 0;
-	}
-	
+	if (!_dev_read_callback(dev, offset, len, reason, 0, NULL, NULL))
+		return_0;
+
 	memcpy(retbuf, DEV_DEVBUF_DATA(dev, reason), len);
 
 	return 1;
