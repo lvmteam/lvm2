@@ -403,7 +403,7 @@ static int _stats_bound(const struct dm_stats *dms)
 	if (dms->bind_major > 0 || dms->bind_name || dms->bind_uuid)
 		return 1;
 	/* %p format specifier expects a void pointer. */
-	log_debug("Stats handle at %p is not bound.", dms);
+	log_error("Stats handle at %p is not bound.", dms);
 	return 0;
 }
 
@@ -2336,6 +2336,11 @@ int dm_stats_populate(struct dm_stats *dms, const char *program_id,
 		return 0;
 	}
 
+	if (!dms->nr_regions) {
+		log_error("No regions registered.");
+		return 0;
+	}
+
 	/* allow zero-length program_id for populate */
 	if (!program_id)
 		program_id = dms->program_id;
@@ -2346,10 +2351,6 @@ int dm_stats_populate(struct dm_stats *dms, const char *program_id,
 	} else if (!_stats_set_name_cache(dms)) {
 		goto_bad;
 	}
-
-	/* successful list but no regions registered */
-	if (!dms->nr_regions)
-		return 0;
 
 	dms->walk_flags = DM_STATS_WALK_REGION;
 	dm_stats_walk_start(dms);
