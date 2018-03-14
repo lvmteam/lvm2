@@ -1,5 +1,6 @@
 Version 1.02.147 - 
 =====================================
+  Avoid calling dm_stats_populat() for DM devices without any stats regions.
   Support DM_DEBUG_WITH_LINE_NUMBERS envvar for debug msg with source:line.
   Configured command for thin pool threshold handling gets whole environment.
   Fix tests for failing dm_snprintf() in stats code.

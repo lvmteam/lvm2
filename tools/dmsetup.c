@@ -910,6 +910,12 @@ static int _display_info_cols(struct dm_task *dmt, struct dm_info *info)
 		if (!(obj.stats = dm_stats_create(DM_STATS_PROGRAM_ID)))
 			goto_out;
 
+		if (!dm_stats_get_nr_regions(obj.stats)) {
+			log_debug("Skipping %s with no regions.", dm_task_get_name(dmt));
+			r = 1;
+			goto out;
+		}
+
 		dm_stats_bind_devno(obj.stats, info->major, info->minor);
 
 		if (!dm_stats_populate(obj.stats, _program_id, DM_STATS_REGIONS_ALL))
