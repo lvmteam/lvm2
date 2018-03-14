@@ -241,7 +241,7 @@ skip() {
 	if test "$#" -eq 0; then
 		stacktrace
 	else
-		echo "TEST SKIPPED:" "$@"
+		echo -e "TEST SKIPPED:" "$@"
 	fi
 	touch SKIP_THIS_TEST
 	exit 200

@@ -127,7 +127,7 @@ echo "$TESTNAME" >TESTNAME
 
 # Require 50M of free space in testdir
 test $(df -k -P . | awk '/\// {print $4}') -gt 51200  ||
-	die "Testing requires more then 50M of free space in directory $TESTDIR!\n$(df -H)"
+	skip "Testing requires more then 50M of free space in directory $TESTDIR!\n$(df -H | sed -e 's,^,## DF:   ,')"
 
 echo "Kernel is $(uname -a)"
 # Report SELinux mode
