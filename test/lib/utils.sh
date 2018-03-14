@@ -209,8 +209,8 @@ init_udev_transaction() {
 }
 
 finish_udev_transaction() {
-	if test "$DM_UDEV_SYNCHRONISATION" = 1 && test -n "$DM_UDEV_COOKIE" ; then
-		dmsetup udevreleasecookie
+	if test "$DM_UDEV_SYNCHRONISATION" = 1 && test -n "${DM_UDEV_COOKIE-}" ; then
+		dmsetup udevreleasecookie || true
 		unset DM_UDEV_COOKIE
 	fi
 }
