@@ -6606,7 +6606,7 @@ static int _loop_table(char *table, size_t tlen, char *file,
 		return_0;
 
 	if (_switches[VERBOSE_ARG] > 1)
-		log_error("Table: %s", table);
+		log_verbose("Table: %s", table);
 
 	return 1;
 
