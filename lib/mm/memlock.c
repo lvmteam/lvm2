@@ -87,6 +87,7 @@ static void *_malloc_mem = NULL;
 static int _mem_locked = 0;
 static int _priority_raised = 0;
 static int _critical_section = 0;
+static int _prioritized_section = 0;
 static int _memlock_count_daemon = 0;
 static int _priority;
 static int _default_priority;
@@ -618,6 +619,7 @@ void critical_section_inc(struct cmd_context *cmd, const char *reason)
 		log_debug_activation("Entering prioritized section (%s).", reason);
 
 	_raise_priority(cmd);
+	_prioritized_section++;
 }
 
 void critical_section_dec(struct cmd_context *cmd, const char *reason)
@@ -627,6 +629,9 @@ void critical_section_dec(struct cmd_context *cmd, const char *reason)
 		log_debug_activation("Leaving critical section (%s).", reason);
 	} else
 		log_debug_activation("Leaving section (%s).", reason);
+
+	if (_prioritized_section > 0)
+		_prioritized_section--;
 }
 
 int critical_section(void)
@@ -636,7 +641,7 @@ int critical_section(void)
 
 int prioritized_section(void)
 {
-	return _priority_raised;
+	return _prioritized_section;
 }
 
 /*
@@ -680,6 +685,7 @@ void memlock_reset(void)
 	_mem_locked = 0;
 	_priority_raised = 0;
 	_critical_section = 0;
+	_prioritized_section = 0;
 	_memlock_count_daemon = 0;
 }
 
