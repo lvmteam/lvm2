@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Add prioritized_section() to restore cookie boundaries (2.02.177).
   Enhance error messages when read error happens.
   Enhance mirror log initialization for old mirror target.
   Skip private crypto and stratis devices.

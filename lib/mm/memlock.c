@@ -634,6 +634,11 @@ int critical_section(void)
 	return _critical_section;
 }
 
+int prioritized_section(void)
+{
+	return _priority_raised;
+}
+
 /*
  * The memlock_*_daemon functions will force the mlockall() call that we need
  * to stay in memory, but they will have no effect on device scans (unlike

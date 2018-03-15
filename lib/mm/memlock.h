@@ -34,6 +34,7 @@ struct cmd_context;
 void critical_section_inc(struct cmd_context *cmd, const char *reason);
 void critical_section_dec(struct cmd_context *cmd, const char *reason);
 int critical_section(void);
+int prioritized_section(void);
 void memlock_inc_daemon(struct cmd_context *cmd);
 void memlock_dec_daemon(struct cmd_context *cmd);
 int memlock_count_daemon(void);
