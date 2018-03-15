@@ -441,7 +441,7 @@ static int _fs_op(fs_op_t type, const char *dev_dir, const char *vg_name,
 		  const char *lv_name, const char *dev, const char *old_lv_name,
 		  int check_udev)
 {
-	if (critical_section()) {
+	if (prioritized_section()) {
 		if (!_stack_fs_op(type, dev_dir, vg_name, lv_name, dev,
 				  old_lv_name, check_udev))
 			return_0;
@@ -487,7 +487,7 @@ int fs_rename_lv(const struct logical_volume *lv, const char *dev,
 
 void fs_unlock(void)
 {
-	if (!critical_section()) {
+	if (!prioritized_section()) {
 		log_debug_activation("Syncing device names");
 		/* Wait for all processed udev devices */
 		if (!dm_udev_wait(_fs_cookie))

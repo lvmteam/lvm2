@@ -3862,7 +3862,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		lvmcache_label_scan(cmd);
 		if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 1))) {
 			/* Independent MDAs aren't supported under low memory */
-			if (!cmd->independent_metadata_areas && critical_section())
+			if (!cmd->independent_metadata_areas && prioritized_section())
 				return_NULL;
 			lvmcache_force_next_label_scan();
 			lvmcache_label_scan(cmd);
@@ -4034,7 +4034,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			log_debug_metadata("Cached VG %s had incorrect PV list",
 					   vgname);
 
-			if (critical_section())
+			if (prioritized_section())
 				inconsistent = 1;
 			else {
 				release_vg(correct_vg);
@@ -4074,7 +4074,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		inconsistent = 0;
 
 		/* Independent MDAs aren't supported under low memory */
-		if (!cmd->independent_metadata_areas && critical_section())
+		if (!cmd->independent_metadata_areas && prioritized_section())
 			return_NULL;
 		lvmcache_force_next_label_scan();
 		lvmcache_label_scan(cmd);
