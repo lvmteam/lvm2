@@ -4100,9 +4100,16 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 				str_list_wipe(&meta_lv->tags);
 			}
 
-			if (fail)
+			if (fail) {
 				/* Fail, after trying to deactivate all we could */
+				struct volume_group *vg = lv->vg;
+
+				if (!lv_remove(lv))
+					log_error("Failed to remove LV");
+				else if (!vg_write(vg) || !vg_commit(vg))
+					log_error("Failed to commit VG %s", vg->name);
 				return_0;
+			}
 		}
 
 		for (s = 0; s < seg->area_count; s++)
@@ -7155,7 +7162,7 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 	}
 
 	if (!lv_is_active_locally(lv)) {
-		log_error("Volume \"%s/%s\" is not active locally.",
+		log_error("Volume \"%s/%s\" is not active locally (volume_list activation filter?).",
 			  lv->vg->name, lv->name);
 		return 0;
 	}
