@@ -30,7 +30,6 @@ lvcreate -L1 -s -n $lv3 $vg/$lv2
 lvcreate -l1 -n $lv4 $vg
 lvcreate -L1 -n $lv5 $vg
 lvcreate -L1 -n $lv6 $vg
-lvcreate -L1 -i2 -n $lv7 $vg
 
 not lvconvert -s $vg/$lv1 $vg/not_exist
 
@@ -60,6 +59,13 @@ grep "smaller" err
 # This should pass
 lvconvert --yes -s $vg/$lv2 $vg/$lv5
 lvconvert --yes --type snapshot $vg/$lv2 $vg/$lv6
+
+vgremove -f $vg
+
+# FIXME: older stripe target can't handle 1K chunks
+vgcreate -s 4k "$vg" "${DEVICES[@]}"
+lvcreate -aey -L1 -n $lv2 $vg
+lvcreate -L1 -i2 -n $lv7 $vg
 
 # Striped LV is also supported
 lvconvert --yes --snapshot $vg/$lv2 $vg/$lv7
