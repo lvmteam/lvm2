@@ -21,7 +21,6 @@
 #include "defaults.h"
 #include "lvm-string.h"
 #include "lvm-flock.h"
-#include "lvmcache.h"
 
 #include <limits.h>
 #include <unistd.h>
