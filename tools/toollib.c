@@ -3088,7 +3088,11 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		if (lvargs_supplied && str_list_match_item(arg_lvnames, lvl->lv->name)) {
 			/* Remove LV from list of unprocessed LV names */
 			str_list_del(arg_lvnames, lvl->lv->name);
-			str_list_add(cmd->mem, &found_arg_lvnames, lvl->lv->name);
+			if (!str_list_add(cmd->mem, &found_arg_lvnames, lvl->lv->name)) {
+				log_error("strlist allocation failed.");
+				ret_max = ECMD_FAILED;
+				goto out;
+			}
 			process_lv = 1;
 		}
 
