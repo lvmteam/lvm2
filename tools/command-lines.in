@@ -626,7 +626,7 @@ FLAGS: SECONDARY_SYNTAX
 # will not be checked.
 
 # alternate form of lvconvert --snapshot
-lvconvert --type snapshot LV LV_linear
+lvconvert --type snapshot LV LV_linear_striped
 OO: --snapshot, --chunksize SizeKB, --zero Bool, OO_LVCONVERT
 ID: lvconvert_combine_split_snapshot
 DESC: Combine a former COW snapshot (second arg) with a former
@@ -634,7 +634,7 @@ DESC: origin LV (first arg) to reverse a splitsnapshot command.
 RULE: all not lv_is_locked lv_is_pvmove
 RULE: all and lv_is_visible
 
-lvconvert --snapshot LV LV_linear
+lvconvert --snapshot LV LV_linear_striped
 OO: --type snapshot, --chunksize SizeKB, --zero Bool, OO_LVCONVERT
 ID: lvconvert_combine_split_snapshot
 DESC: Combine a former COW snapshot (second arg) with a former

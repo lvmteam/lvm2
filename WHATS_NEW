@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Again accept striped LV as COW LV with lvconvert -s (2.02.169).
   Fix raid target version testing for supported features.
   Allow activation of pools when thin/cache_check tool is missing.
   Remove RaidLV on creation failure when rmeta devices can't be activated.

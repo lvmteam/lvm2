@@ -760,7 +760,7 @@ Combine a former COW snapshot (second arg) with a former
 origin LV (first arg) to reverse a splitsnapshot command.
 .br
 .P
-\fBlvconvert\fP \fB--type\fP \fBsnapshot\fP \fILV\fP \fILV\fP\fI_linear\fP
+\fBlvconvert\fP \fB--type\fP \fBsnapshot\fP \fILV\fP \fILV\fP\fI_linear_striped\fP
 .br
 .RS 4
 .ad l
@@ -1694,7 +1694,7 @@ Combine a former COW snapshot (second arg) with a former
 origin LV (first arg) to reverse a splitsnapshot command.
 .br
 .P
-\fBlvconvert\fP \fB-s\fP|\fB--snapshot\fP \fILV\fP \fILV\fP\fI_linear\fP
+\fBlvconvert\fP \fB-s\fP|\fB--snapshot\fP \fILV\fP \fILV\fP\fI_linear_striped\fP
 .br
 .RS 4
 .ad l
