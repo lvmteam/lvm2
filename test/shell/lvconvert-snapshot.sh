@@ -17,7 +17,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-aux prepare_pvs 1
+aux prepare_pvs 2
 get_devs
 
 vgcreate -s 1k "$vg" "${DEVICES[@]}"
@@ -30,6 +30,7 @@ lvcreate -L1 -s -n $lv3 $vg/$lv2
 lvcreate -l1 -n $lv4 $vg
 lvcreate -L1 -n $lv5 $vg
 lvcreate -L1 -n $lv6 $vg
+lvcreate -L1 -i2 -n $lv7 $vg
 
 not lvconvert -s $vg/$lv1 $vg/not_exist
 
@@ -59,5 +60,8 @@ grep "smaller" err
 # This should pass
 lvconvert --yes -s $vg/$lv2 $vg/$lv5
 lvconvert --yes --type snapshot $vg/$lv2 $vg/$lv6
+
+# Striped LV is also supported
+lvconvert --yes --snapshot $vg/$lv2 $vg/$lv7
 
 vgremove -f $vg
