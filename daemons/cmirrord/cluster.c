@@ -166,6 +166,7 @@ int cluster_send(struct clog_request *rq)
 {
 	int r;
 	int found = 0;
+	int count = 0;
 	struct iovec iov;
 	struct clog_cpg *entry;
 
@@ -203,8 +204,6 @@ int cluster_send(struct clog_request *rq)
 
 #if CMIRROR_HAS_CHECKPOINT
 	do {
-		int count = 0;
-
 		r = cpg_mcast_joined(entry->handle, CPG_TYPE_AGREED, &iov, 1);
 		if (r != SA_AIS_ERR_TRY_AGAIN)
 			break;
