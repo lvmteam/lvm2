@@ -1999,6 +1999,9 @@ static int send_message(void *buf, int msglen, const char *csid, int fd,
 		return clops->cluster_send_message(buf, msglen, csid, errtext);
 	}
 
+	if (fd < 0)
+		return 0;
+
 	/* Make sure it all goes */
 	for (ptr = 0; ptr < msglen;) {
 		if ((len = write(fd, (char*)buf + ptr, msglen - ptr)) <= 0) {
