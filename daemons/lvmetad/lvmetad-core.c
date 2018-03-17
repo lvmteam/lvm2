@@ -2421,13 +2421,10 @@ static response set_global_info(lvmetad_state *s, request r)
 
 static response get_global_info(lvmetad_state *s, request r)
 {
-	char reason[REASON_BUF_SIZE];
+	/* This buffer should be large enough to hold all the possible reasons. */
+	char reason[REASON_BUF_SIZE] = { 0 };
 	char flag_str[64];
 	int pid;
-
-	/* This buffer should be large enough to hold all the possible reasons. */
-
-	memset(reason, 0, sizeof(reason));
 
 	pid = (int)daemon_request_int(r, "pid", 0);
 
