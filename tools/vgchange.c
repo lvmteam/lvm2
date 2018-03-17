@@ -955,7 +955,7 @@ static int _vgchange_locktype(struct cmd_context *cmd, struct volume_group *vg)
 			vg->lock_type = "none";
 	}
 
-	if (!strcmp(vg->lock_type, lock_type)) {
+	if (lock_type && !strcmp(vg->lock_type, lock_type)) {
 		log_warn("New lock type %s matches the current lock type %s.",
 			 lock_type, vg->lock_type);
 		return 1;
@@ -1180,7 +1180,7 @@ int vgchange_locktype_cmd(struct cmd_context *cmd, int argc, char **argv)
 	 * just return success when they see the disable flag set.
 	 */
 	if (lockopt && !strcmp(lockopt, "force")) {
-		if (strcmp(lock_type, "none")) {
+		if (lock_type && strcmp(lock_type, "none")) {
 			log_error("Lock type can only be forced to \"none\" for recovery.");
 			return 0;
 		}
