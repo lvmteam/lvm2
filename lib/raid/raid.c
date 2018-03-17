@@ -464,7 +464,7 @@ struct raid_feature {
 static int _check_feature(const struct raid_feature *feature, uint32_t maj, uint32_t min, uint32_t patchlevel)
 {
 	return (maj > feature->maj) ||
-	       (maj == feature->maj && min >= feature->min) ||
+	       (maj == feature->maj && min > feature->min) ||
 	       (maj == feature->maj && min == feature->min && patchlevel >= feature->patchlevel);
 }
 
