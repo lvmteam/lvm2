@@ -649,14 +649,10 @@ static int _aligned_io(struct device_area *where, char *write_buffer,
 	/* ... then we write */
 	devbuf->write = 1;
 	if (!(r = _io(devbuf, 0)))
-		goto_bad;
-
-	_release_devbuf(devbuf);
-	return 1;
-
+		stack;
 bad:
 	_release_devbuf(devbuf);
-	return 0;
+	return r;
 }
 
 static int _dev_get_size_file(struct device *dev, uint64_t *size)
