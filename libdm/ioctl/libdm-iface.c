@@ -1156,10 +1156,8 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	while (repeat_count--)
 		len *= 2;
 
-	if (!(dmi = dm_malloc(len)))
+	if (!(dmi = dm_zalloc(len)))
 		return NULL;
-
-	memset(dmi, 0, len);
 
 	version = &_cmd_data_v4[dmt->type].version;
 

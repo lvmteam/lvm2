@@ -2528,10 +2528,8 @@ inval:
 
 	info = dm_hash_lookup(s->vgid_to_info, uuid);
 	if (!info) {
-		info = malloc(sizeof(struct vg_info));
-		if (!info)
+		if (!(info = dm_zalloc(sizeof(struct vg_info))))
 			goto bad;
-		memset(info, 0, sizeof(struct vg_info));
 		if (!dm_hash_insert(s->vgid_to_info, uuid, (void*)info))
 			goto bad;
 	}

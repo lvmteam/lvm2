@@ -102,11 +102,9 @@ struct dm_hash_table *dm_hash_create(unsigned size_hint)
 
 	hc->num_slots = new_size;
 	len = sizeof(*(hc->slots)) * new_size;
-	if (!(hc->slots = dm_malloc(len))) {
-		stack;
-		goto bad;
-	}
-	memset(hc->slots, 0, len);
+	if (!(hc->slots = dm_zalloc(len)))
+		goto_bad;
+
 	return hc;
 
       bad:
