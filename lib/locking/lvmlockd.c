@@ -20,7 +20,6 @@
 
 static daemon_handle _lvmlockd;
 static const char *_lvmlockd_socket = NULL;
-static struct cmd_context *_lvmlockd_cmd = NULL;
 static int _use_lvmlockd = 0;         /* is 1 if command is configured to use lvmlockd */
 static int _lvmlockd_connected = 0;   /* is 1 if command is connected to lvmlockd */
 static int _lvmlockd_init_failed = 0; /* used to suppress further warnings */
@@ -69,8 +68,6 @@ void lvmlockd_init(struct cmd_context *cmd)
 	} else {
 		_lvmlockd_init_failed = 0;
 	}
-
-	_lvmlockd_cmd = cmd;
 }
 
 void lvmlockd_connect(void)
@@ -103,7 +100,6 @@ void lvmlockd_disconnect(void)
 	if (_lvmlockd_connected)
 		daemon_close(_lvmlockd);
 	_lvmlockd_connected = 0;
-	_lvmlockd_cmd = NULL;
 }
 
 /* Translate the result strings from lvmlockd to bit flags. */
