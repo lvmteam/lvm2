@@ -1650,7 +1650,7 @@ kernel_at_least() {
 	version_at_least "$(uname -r)" "$@"
 }
 
-test -z "${LVM_TEST_AUX_TRACE-}" || set -x
+test "${LVM_TEST_AUX_TRACE-0}" = "0" || set -x
 
 test -f DEVICES && devs=$(< DEVICES)
 
