@@ -841,6 +841,18 @@ int cache_set_metadata_format(struct lv_segment *seg, cache_metadata_format_t fo
 		return 0;
 	}
 
+	/*
+	 * If policy is unselected, but format 2 is selected, policy smq is enforced.
+	 * ATM no other then smq policy is allowed to select format 2.
+	 */
+	if (!seg->policy_name) {
+		if (format == CACHE_METADATA_FORMAT_2)
+			seg->policy_name = "smq";
+	} else if (strcmp(seg->policy_name, "smq")) {
+		seg->cache_metadata_format = CACHE_METADATA_FORMAT_1;
+		return 1;
+	}
+
 	/* Check if we need to search for configured cache metadata format */
 	if (format == CACHE_METADATA_FORMAT_UNSELECTED) {
 		if (seg->cache_metadata_format != CACHE_METADATA_FORMAT_UNSELECTED)
@@ -894,13 +906,13 @@ int cache_set_params(struct lv_segment *seg,
 	struct lv_segment *pool_seg;
 	struct cmd_context *cmd = seg->lv->vg->cmd;
 
-	if (!cache_set_metadata_format(seg, format))
-		return_0;
-
 	if (!cache_set_cache_mode(seg, mode))
 		return_0;
 
 	if (!cache_set_policy(seg, policy_name, policy_settings))
+		return_0;
+
+	if (!cache_set_metadata_format(seg, format))
 		return_0;
 
 	pool_seg = seg_is_cache(seg) ? first_seg(seg->pool_lv) : seg;

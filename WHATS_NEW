@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Disallow usage of cache format 2 with mq cache policy.
   Again accept striped LV as COW LV with lvconvert -s (2.02.169).
   Fix raid target version testing for supported features.
   Allow activation of pools when thin/cache_check tool is missing.
