@@ -2109,7 +2109,7 @@ static int _pool_callback(struct dm_tree_node *node,
 	if (!(ret = exec_cmd(pool_lv->vg->cmd, (const char * const *)argv,
 			     &status, 0))) {
 		if (status == ENOENT) {
-			log_warn("WARNING: Check is skipped, please install recomended missing binary %s!",
+			log_warn("WARNING: Check is skipped, please install recommended missing binary %s!",
 				 argv[0]);
 			return 1;
 		}
