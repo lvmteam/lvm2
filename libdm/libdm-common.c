@@ -1742,6 +1742,10 @@ static int _mountinfo_parse_line(const char *line, unsigned *maj, unsigned *min,
 {
 	char root[PATH_MAX + 1]; /* sscanf needs extra '\0' */
 	char target[PATH_MAX + 1];
+	char *devmapper;
+	struct dm_task *dmt;
+	struct dm_info info;
+	unsigned i;
 
 	/* TODO: maybe detect availability of  %ms  glib support ? */
 	if (sscanf(line, "%*u %*u %u:%u %" DM_TO_STRING(PATH_MAX)
@@ -1749,6 +1753,32 @@ static int _mountinfo_parse_line(const char *line, unsigned *maj, unsigned *min,
 		   maj, min, root, target) < 4) {
 		log_error("Failed to parse mountinfo line.");
 		return 0;
+	}
+
+	/* btrfs fakes device numbers, but there is still /dev/mapper name
+	 * placed in mountinfo, so try to detect proper major:minor via this */
+	if (*maj == 0 && (devmapper = strstr(line, "/dev/mapper/"))) {
+		if (!(dmt = dm_task_create(DM_DEVICE_INFO))) {
+			log_error("Mount info task creation failed.");
+			return 0;
+		}
+		devmapper += 12; /* skip fixed prefix */
+		for (i = 0; devmapper[i] && devmapper[i] != ' ' && i < sizeof(root); ++i)
+			root[i] = devmapper[i];
+		root[i] = 0;
+		_unmangle_mountinfo_string(root, buf);
+		buf[DM_NAME_LEN] = 0; /* cut away */
+
+		if (dm_task_set_name(dmt, buf) &&
+		    dm_task_no_open_count(dmt) &&
+		    dm_task_run(dmt) &&
+		    dm_task_get_info(dmt, &info)) {
+			log_debug("Replacing mountinfo device (%u:%u) with matching DM device %s (%u:%u).",
+				  *maj, *min, buf, info.major, info.minor);
+			*maj = info.major;
+			*min = info.minor;
+		}
+		dm_task_destroy(dmt);
 	}
 
 	_unmangle_mountinfo_string(target, buf);
