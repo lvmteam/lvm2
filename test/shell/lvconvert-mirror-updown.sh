@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2014 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2018 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -16,26 +16,27 @@ SKIP_WITH_LVMLOCKD=1
 
 . lib/inittest
 
-aux prepare_pvs 3
+aux prepare_pvs 3 100
 get_devs
 
 vgcreate -s 64k "$vg" "${DEVICES[@]}"
 
-lvcreate -aey -l10 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2"
+# Use zero devices for big mirror legs
+aux zero_dev "$dev2" $(get first_extent_sector "$dev2"):
+aux zero_dev "$dev3" $(get first_extent_sector "$dev3"):
 
-# Slow down device so we are able to start next conversion in parallel
-aux delay_dev "$dev3" 0 200
+lvcreate -aey -L90 --type mirror --corelog --regionsize 16k -m1 -n $lv1 $vg "$dev1" "$dev2"
 
 lvconvert -m+1 -b $vg/$lv1 "$dev3"
 
-# To fix - wait helps here....
-#lvconvert $vg/$lv1
+
+# We want here ongoing conversion
+
+lvs -a -o+seg_pe_ranges $vg
+
+# Now it should be able to drop 2nd. leg
+lvconvert -m-1 $vg/$lv1 "$dev2"
 
 lvs -a $vg
-
-#
-# It fails so use 'should' and -vvvv for now
-#
-should lvconvert -vvvv -m-1 $vg/$lv1 "$dev2"
 
 vgremove -f $vg
