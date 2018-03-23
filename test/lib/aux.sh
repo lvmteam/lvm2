@@ -1107,7 +1107,9 @@ prepare_vg() {
 }
 
 extend_filter() {
-	local filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
+	local filter
+
+	filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
 	for rx in "$@"; do
 		filter=$(echo "$filter" | sed -e "s:\\[:[ \"$rx\", :")
 	done
@@ -1119,7 +1121,9 @@ extend_filter_LVMTEST() {
 }
 
 hide_dev() {
-	local filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
+	local filter
+
+	filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
 	for dev in "$@"; do
 		filter=$(echo "$filter" | sed -e "s:\\[:[ \"r|$dev|\", :")
 	done
@@ -1127,7 +1131,9 @@ hide_dev() {
 }
 
 unhide_dev() {
-	local filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
+	local filter
+
+	filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
 	for dev in "$@"; do
 		filter=$(echo "$filter" | sed -e "s:\"r|$dev|\", ::")
 	done
