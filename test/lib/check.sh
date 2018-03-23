@@ -65,8 +65,8 @@ lv_on_diff_() {
 	local diff_e
 
 	# Find diff between 2 shell arrays, print them as stdin files
-	printf "%s\n" "${expect[@]}" | sort | uniq >_lv_on_diff1
-	printf "%s\n" "${xdevs[@]}" >_lv_on_diff2
+	printf "%s\\n" "${expect[@]}" | sort | uniq >_lv_on_diff1
+	printf "%s\\n" "${xdevs[@]}" >_lv_on_diff2
 	diff_e=$(diff _lv_on_diff1 _lv_on_diff2) ||
 		die "LV $2/$3 $(lv_err_list_ "^>" "${diff_e}" found)$(lv_err_list_ "^<" "${diff_e}" "not found")."
 }

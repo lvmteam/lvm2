@@ -885,7 +885,7 @@ prepare_devs() {
 	#	dmsetup table $name
 	#done
 
-	printf "%s\n" "${DEVICES[@]}" > DEVICES
+	printf "%s\\n" "${DEVICES[@]}" > DEVICES
 #	( IFS=$'\n'; echo "${DEVICES[*]}" ) >DEVICES
 	echo "ok"
 
@@ -1109,7 +1109,7 @@ prepare_vg() {
 extend_filter() {
 	local filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
 	for rx in "$@"; do
-		filter=$(echo "$filter" | sed -e "s:\[:[ \"$rx\", :")
+		filter=$(echo "$filter" | sed -e "s:\\[:[ \"$rx\", :")
 	done
 	lvmconf "$filter"
 }
@@ -1121,7 +1121,7 @@ extend_filter_LVMTEST() {
 hide_dev() {
 	local filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
 	for dev in "$@"; do
-		filter=$(echo "$filter" | sed -e "s:\[:[ \"r|$dev|\", :")
+		filter=$(echo "$filter" | sed -e "s:\\[:[ \"r|$dev|\", :")
 	done
 	lvmconf "$filter"
 }
@@ -1223,7 +1223,7 @@ EOF
 
 	# append all parameters  (avoid adding empty \n)
 	local v
-	test $# -gt 0 && printf "%s\n" "$@" >> "$config_values"
+	test $# -gt 0 && printf "%s\\n" "$@" >> "$config_values"
 
 	declare -A CONF 2>/dev/null || {
 		# Associative arrays is not available
@@ -1249,7 +1249,7 @@ EOF
 	done < "$config_values"
 
 	# sort by section and iterate through them
-	printf "%s\n" "${!CONF[@]}" | sort | while read -r v ; do
+	printf "%s\\n" "${!CONF[@]}" | sort | while read -r v ; do
 		sec=${v%%/*} # split on section'/'param_name
 		test "$sec" = "$last_sec" || {
 			test -z "$last_sec" || echo "}"
