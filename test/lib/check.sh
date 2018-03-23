@@ -240,10 +240,10 @@ in_sync() {
 	fi
 
 	if [[ ${a[$(( idx - 1 ))]} =~ a ]] ; then
-		[ $ignore_a -eq 0 ] && \
+		[ "$ignore_a" = 0 ] && \
 			die "$lvm_name ($type$snap) in-sync, but 'a' characters in health status"
 		echo "$lvm_name ($type$snap) is not in-sync"
-		[ $ignore_a -eq 1 ] && return 0
+		[ "$ignore_a" = 1 ] && return 0
 		return 1
 	fi
 

@@ -39,7 +39,7 @@ rand_bytes() {
 
 	# Ensure that $data has length at least 50+$n
 	while :; do
-		len=$(echo "$data" | wc -c)
+		len=${#data} # number of chars in $data
 		test "$n_plus_50" -le "$len" && break;
 		data=$( (echo "$data"; eval "$cmds") 2>&1 | gzip )
 	done
@@ -112,7 +112,7 @@ stacktrace() {
 	# i=1 - ignoring innermost frame - it is always stacktrace function
 	local i=1 n=${#BASH_LINENO[*]}
 	# n-=1 - ignoring last frame as well - it is not interesting
-	let n-=1
+	n=$(( n - 1 ))
 
 	echo "## - $0:${BASH_LINENO[$((n-1))]}"
 	while [[ $i -lt $n ]]; do
