@@ -399,7 +399,7 @@ teardown_devs_prefixed() {
 	local once=1
 	local dm
 
-	rm -rf "$TESTDIR/dev/$prefix*"
+	rm -rf "${TESTDIR:?}/dev/$prefix*"
 
 	# Send idle message to frozen raids (with hope to unfreeze them)
 	for dm in $(dm_status | egrep "$prefix.*raid.*frozen"); do
