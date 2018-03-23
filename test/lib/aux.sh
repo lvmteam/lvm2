@@ -402,7 +402,7 @@ teardown_devs_prefixed() {
 	rm -rf "${TESTDIR:?}/dev/$prefix*"
 
 	# Send idle message to frozen raids (with hope to unfreeze them)
-	for dm in $(dm_status | egrep "$prefix.*raid.*frozen"); do
+	for dm in $(dm_status | grep -E "$prefix.*raid.*frozen"); do
 		echo "## unfreezing: dmsetup message \"${dm%:*}\""
 		dmsetup message "${dm%:*}" 0 "idle" &
 	done
