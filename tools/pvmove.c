@@ -393,10 +393,15 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		}
 
 		seg = first_seg(lv);
-
-		/* Presence of exclusive LV decides whether pvmove must be also exclusive */
-		if ((seg_only_exclusive(seg) || lv_is_origin(lv) || lv_is_cow(lv)))
-			needs_exclusive = 1;
+		if (!needs_exclusive) {
+			/* Presence of exclusive LV decides whether pvmove must be also exclusive */
+			if (!seg_only_exclusive(seg)) {
+				holder = lv_lock_holder(lv);
+				if (seg_only_exclusive(first_seg(holder)) || lv_is_origin(holder) || lv_is_cow(holder))
+					needs_exclusive = 1;
+			} else
+				needs_exclusive = 1;
+		}
 
 		if (seg_is_raid(seg) || seg_is_mirrored(seg)) {
 			dm_list_init(&trim_list);
