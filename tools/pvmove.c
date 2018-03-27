@@ -465,7 +465,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			/* With exclusive pvmove skip LV when:
 			 *  - is active remotely
 			 *  - is not active locally and cannot be activated exclusively locally
-                         *
+			 *
 			 * Note: lvm2 can proceed with exclusive pvmove for 'just' locally active LVs
 			 * in the case it's NOT active anywhere else, since LOCKED LVs cannot be
 			 * later activated by user.
