@@ -1,5 +1,6 @@
 Version 1.02.147 - 
 =====================================
+  Reuse uname() result for mirror target.
   Recognize also mounted btrfs through dm_device_has_mounted_fs().
   Add missing log_error() into dm_stats_populate() returning 0.
   Avoid calling dm_stats_populat() for DM devices without any stats regions.
