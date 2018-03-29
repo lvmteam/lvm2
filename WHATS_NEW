@@ -1,5 +1,7 @@
 Version 2.02.178 - 
 =====================================
+  Reload whole device stack when reinitilizing mirror log.
+  Mirrors without monitoring are WARNING and not blocking on error.
   Detect too big region_size with clustered mirrors.
   Fix evaluation of maximal region size for mirror log.
   Enhance mirror log size estimation and use smaller size when possible.

@@ -315,6 +315,7 @@ static int _write_log_header(struct cmd_context *cmd, struct logical_volume *lv)
  * Initialize mirror log contents
  */
 static int _init_mirror_log(struct cmd_context *cmd,
+			    struct logical_volume *lock_holder,
 			    struct logical_volume *log_lv, int in_sync,
 			    struct dm_list *tagsl, int remove_on_failure)
 {
@@ -346,7 +347,10 @@ static int _init_mirror_log(struct cmd_context *cmd,
 		}
 
 	/* store mirror log on disk(s) */
-	if (!vg_write(log_lv->vg) || !vg_commit(log_lv->vg))
+	if (!lock_holder) {
+		if (!vg_write(log_lv->vg) || !vg_commit(log_lv->vg))
+			return_0;
+	} else if (!lv_update_and_reload((struct logical_volume*) lock_holder))
 		return_0;
 
 	if (!activate_lv_excl_local(cmd, log_lv)) {
@@ -1021,7 +1025,9 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	/* Mirror with only 1 area is 'in sync'. */
 	if (new_area_count == 1 && is_temporary_mirror_layer(lv)) {
 		detached_log_lv = detach_mirror_log(mirrored_seg);
-		if (!_init_mirror_log(lv->vg->cmd, detached_log_lv,
+		if (!_init_mirror_log(lv->vg->cmd,
+				      (struct logical_volume*)lv_lock_holder(mirrored_seg->lv),
+				      detached_log_lv,
 				      1, &lv->tags, 0)) {
 			/* As a result, unnecessary sync may run after
 			 * collapsing. But safe.*/
@@ -1822,7 +1828,7 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 		}
 	}
 
-	if (!_init_mirror_log(cmd, log_lv, in_sync, &lv->tags, 1)) {
+	if (!_init_mirror_log(cmd, NULL, log_lv, in_sync, &lv->tags, 1)) {
 		log_error("Failed to initialise mirror log.");
 		return NULL;
 	}
@@ -1870,7 +1876,7 @@ struct logical_volume *prepare_mirror_log(struct logical_volume *lv,
 		goto out;
 	}
 
-	if (!_init_mirror_log(cmd, log_lv, in_sync, &lv->tags, 1)) {
+	if (!_init_mirror_log(cmd, NULL, log_lv, in_sync, &lv->tags, 1)) {
 		log_error("Failed to initialise mirror log.");
 		log_lv = NULL;
 		goto out;
