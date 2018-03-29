@@ -166,7 +166,9 @@ int cluster_send(struct clog_request *rq)
 {
 	int r;
 	int found = 0;
+#if CMIRROR_HAS_CHECKPOINT
 	int count = 0;
+#endif
 	struct iovec iov;
 	struct clog_cpg *entry;
 
