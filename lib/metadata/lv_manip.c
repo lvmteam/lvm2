@@ -7149,16 +7149,16 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 		/* nothing to do */
 		return 1;
 
+	if (!lv_is_active_locally(lv)) {
+		log_error("Volume \"%s/%s\" is not active locally (volume_list activation filter?).",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
 	/* Wait until devices are available */
 	if (!sync_local_dev_names(lv->vg->cmd)) {
 		log_error("Failed to sync local devices before wiping LV %s.",
 			  display_lvname(lv));
-		return 0;
-	}
-
-	if (!lv_is_active_locally(lv)) {
-		log_error("Volume \"%s/%s\" is not active locally (volume_list activation filter?).",
-			  lv->vg->name, lv->name);
 		return 0;
 	}
 
