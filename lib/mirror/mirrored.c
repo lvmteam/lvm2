@@ -314,8 +314,14 @@ static int _add_log(struct dm_pool *mem, struct lv_segment *seg,
 	if (mirror_in_sync() && !(seg->status & PVMOVE))
 		log_flags |= DM_NOSYNC;
 
-	if (_block_on_error_available && !(seg->status & PVMOVE))
-		log_flags |= DM_BLOCK_ON_ERROR;
+	if (_block_on_error_available && !(seg->status & PVMOVE)) {
+		if (dmeventd_monitor_mode() > 0)
+			log_flags |= DM_BLOCK_ON_ERROR;
+		else {
+			log_warn_suppress(seg->lv->vg->cmd->mirror_warn_printed, "WARNING: Mirrors without monitoring will not react on failures.");
+			seg->lv->vg->cmd->mirror_warn_printed = 1;
+		}
+	}
 
 	return dm_tree_node_add_mirror_target_log(node, region_size, clustered, log_dlid, area_count, log_flags);
 }

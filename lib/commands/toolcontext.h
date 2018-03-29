@@ -169,6 +169,7 @@ struct cmd_context {
 	unsigned activate_component:1;		/* command activates component LV */
 	unsigned process_component_lvs:1;	/* command processes also component LVs */
 
+	unsigned mirror_warn_printed:1;		/* command already printed warning about non-monitored mirrors */
 	/*
 	 * Filtering.
 	 */
