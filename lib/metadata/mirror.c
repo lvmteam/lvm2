@@ -341,7 +341,7 @@ static int _init_mirror_log(struct cmd_context *cmd,
 
 	/* Temporary tag mirror log for activation */
 	dm_list_iterate_items(sl, tagsl)
-		if (!str_list_add(cmd->mem, &log_lv->tags, sl->str)) {
+		if (!str_list_add(log_lv->vg->vgmem, &log_lv->tags, sl->str)) {
 			log_error("Aborting. Unable to tag mirror log.");
 			return 0;
 		}
