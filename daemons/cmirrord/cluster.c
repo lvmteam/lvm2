@@ -1631,7 +1631,7 @@ int create_cluster_cpg(char *uuid, uint64_t luid)
 
 	size = ((strlen(uuid) + 1) > CPG_MAX_NAME_LENGTH) ?
 		CPG_MAX_NAME_LENGTH : (strlen(uuid) + 1);
-	strncpy(new->name.value, uuid, size);
+	(void) dm_strncpy(new->name.value, uuid, size);
 	new->name.length = (uint32_t)size;
 	new->luid = luid;
 

@@ -451,15 +451,19 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 	lc->skip_bit_warning = region_count;
 	lc->disk_fd = -1;
 	lc->log_dev_failed = 0;
-	strncpy(lc->uuid, uuid, DM_UUID_LEN);
+	if (!dm_strncpy(lc->uuid, uuid, DM_UUID_LEN)) {
+		LOG_ERROR("Cannot use too long UUID %s.", uuid);
+		r = -EINVAL;
+		goto fail;
+	}
 	lc->luid = luid;
 
 	if (get_log(lc->uuid, lc->luid) ||
 	    get_pending_log(lc->uuid, lc->luid)) {
 		LOG_ERROR("[%s/%" PRIu64 "u] Log already exists, unable to create.",
 			  SHORT_UUID(lc->uuid), lc->luid);
-		dm_free(lc);
-		return -EINVAL;
+		r = -EINVAL;
+		goto fail;
 	}
 
 	dm_list_init(&lc->mark_list);
