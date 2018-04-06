@@ -59,11 +59,6 @@ static int _vgrename_single(struct cmd_context *cmd, const char *vg_name,
 	/*
 	 * Check if a VG already exists with the new VG name.
 	 *
-	 * When not using lvmetad, it's essential that a full scan has
-	 * been done to ensure we see all existing VG names, so we
-	 * do not use an existing name.  This has been done by
-	 * process_each_vg REQUIRES_FULL_LABEL_SCAN.
-	 *
 	 * (FIXME: We could look for the new name in the list of all
 	 * VGs that process_each_vg created, but we don't have access
 	 * to that list here, so we have to look in lvmcache.

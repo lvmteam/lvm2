@@ -134,13 +134,12 @@ static inline int configtype_arg(struct cmd_context *cmd __attribute__((unused))
 #define ALLOW_UUID_AS_NAME      0x00000010
 #define LOCKD_VG_SH             0x00000020
 #define NO_METADATA_PROCESSING  0x00000040
-#define REQUIRES_FULL_LABEL_SCAN 0x00000080
+#define IGNORE_PERSISTENT_FILTER 0x00000080
 #define MUST_USE_ALL_ARGS        0x00000100
 #define NO_LVMETAD_AUTOSCAN      0x00000200
 #define ENABLE_DUPLICATE_DEVS    0x00000400
 #define DISALLOW_TAG_ARGS        0x00000800
 #define GET_VGNAME_FROM_OPTIONS  0x00001000
-#define IGNORE_PERSISTENT_FILTER 0x00002000
 
 /* create foo_CMD enums for command def ID's in command-lines.in */
 

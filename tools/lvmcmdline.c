@@ -2727,11 +2727,6 @@ static int _cmd_no_lvmetad_autoscan(struct cmd_context *cmd)
 	return cmd->cname->flags & NO_LVMETAD_AUTOSCAN;
 }
 
-static int _cmd_requires_full_label_scan(struct cmd_context *cmd)
-{
-	return cmd->cname->flags & REQUIRES_FULL_LABEL_SCAN;
-}
-
 static int _cmd_ignores_persistent_filter(struct cmd_context *cmd)
 {
 	return cmd->cname->flags & IGNORE_PERSISTENT_FILTER;
@@ -2865,7 +2860,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	 * Similarly ignore the persistent cache if the command is going to discard it regardless.
 	 */
 	if (!cmd->initialized.filters && !_cmd_no_meta_proc(cmd) &&
-	    !init_filters(cmd, !(refresh_done || _cmd_requires_full_label_scan(cmd) || _cmd_ignores_persistent_filter(cmd))))
+	    !init_filters(cmd, !(refresh_done || _cmd_ignores_persistent_filter(cmd))))
 		return_ECMD_FAILED;
 
 	if (arg_is_set(cmd, readonly_ARG))

@@ -225,7 +225,7 @@ xx(vgremove,
 
 xx(vgrename,
    "Rename a volume group",
-   ALLOW_UUID_AS_NAME | REQUIRES_FULL_LABEL_SCAN)
+   ALLOW_UUID_AS_NAME)
 
 xx(vgs,
    "Display information about volume groups",
