@@ -234,7 +234,6 @@ static bool _async_wait(struct io_engine *ioe, io_complete_fn fn)
 			fn((void *) cb->context, 0);
 
 		} else {
-			log_warn("short io");
 			fn(cb->context, -ENODATA);
 		}
 
@@ -538,10 +537,8 @@ static void _complete_io(void *context, int err)
 	 */
 	dm_list_del(&b->list);
 
-	if (b->error) {
-		log_warn("bcache io error %d fd %d", b->error, b->fd);
+	if (b->error)
 		memset(b->data, 0, cache->block_sectors << SECTOR_SHIFT);
-	}
 
 	/* Things don't work with this block of code, but work without it. */
 #if 0
@@ -583,6 +580,7 @@ static void _issue_low_level(struct block *b, enum dir d)
 	dm_list_add(&cache->io_pending, &b->list);
 
 	if (!cache->engine->issue(cache->engine, d, b->fd, sb, se, b->data, b)) {
+		/* FIXME: if io_submit() set an errno, return that instead of EIO? */
 		_complete_io(b, -EIO);
 		return;
 	}
@@ -904,7 +902,7 @@ void bcache_prefetch(struct bcache *cache, int fd, block_address index)
 }
 
 bool bcache_get(struct bcache *cache, int fd, block_address index,
-	        unsigned flags, struct block **result)
+	        unsigned flags, struct block **result, int *error)
 {
 	struct block *b;
 
@@ -916,12 +914,19 @@ bool bcache_get(struct bcache *cache, int fd, block_address index,
 
 		*result = b;
 
+		if (error)
+			*error = b->error;
+
 		if (b->error)
 			return false;
 		return true;
 	}
 
 	*result = NULL;
+
+	if (error)
+		*error = -BCACHE_NO_BLOCK;
+
 	log_error("bcache failed to get block %u fd %d", (uint32_t)index, fd);
 	return false;
 }
@@ -1068,7 +1073,9 @@ bool bcache_read_bytes(struct bcache *cache, int fd, off_t start, size_t len, vo
 		bcache_prefetch(cache, fd, i);
 
 	for (i = bb; i < be; i++) {
-		if (!bcache_get(cache, fd, i, 0, &b)) {
+		if (!bcache_get(cache, fd, i, 0, &b, NULL)) {
+			log_error("bcache_read failed to get block %u fd %d bb %u be %u",
+				  (uint32_t)i, fd, (uint32_t)bb, (uint32_t)be);
 			errors++;
 			continue;
 		}
@@ -1105,7 +1112,7 @@ bool bcache_write_bytes(struct bcache *cache, int fd, off_t start, size_t len, v
 		bcache_prefetch(cache, fd, i);
 
 	for (i = bb; i < be; i++) {
-		if (!bcache_get(cache, fd, i, 0, &b)) {
+		if (!bcache_get(cache, fd, i, 0, &b, NULL)) {
 			log_error("bcache_write failed to get block %u fd %d bb %u be %u",
 				  (uint32_t)i, fd, (uint32_t)bb, (uint32_t)be);
 			errors++;
