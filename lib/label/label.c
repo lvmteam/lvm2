@@ -466,17 +466,20 @@ static int _scan_list(struct dm_list *devs, int *failed)
 	struct dm_list done_devs;
 	struct device_list *devl, *devl2;
 	struct block *bb;
+	int scan_open_errors = 0;
+	int scan_read_errors = 0;
+	int scan_process_errors = 0;
 	int scan_failed_count = 0;
-	int scan_lvm_count = 0;
 	int rem_prefetches;
 	int scan_failed;
 	int is_lvm_device;
+	int error;
 	int ret;
 
 	dm_list_init(&wait_devs);
 	dm_list_init(&done_devs);
 
-	log_debug_devs("Scanning %d devices.", dm_list_size(devs));
+	log_debug_devs("Scanning %d devices for VG info", dm_list_size(devs));
 
  scan_more:
 	rem_prefetches = bcache_max_prefetches(scan_bcache);
@@ -498,6 +501,7 @@ static int _scan_list(struct dm_list *devs, int *failed)
 				log_debug_devs("Scan failed to open %s.", dev_name(devl->dev));
 				dm_list_del(&devl->list);
 				dm_list_add(&done_devs, &devl->list);
+				scan_open_errors++;
 				scan_failed_count++;
 				continue;
 			}
@@ -513,11 +517,15 @@ static int _scan_list(struct dm_list *devs, int *failed)
 
 	dm_list_iterate_items_safe(devl, devl2, &wait_devs) {
 		bb = NULL;
+		error = 0;
+		scan_failed = 0;
+		is_lvm_device = 0;
 
-		if (!bcache_get(scan_bcache, devl->dev->bcache_fd, 0, 0, &bb)) {
-			log_debug_devs("Scan failed to read %s.", dev_name(devl->dev));
-			scan_failed_count++;
+		if (!bcache_get(scan_bcache, devl->dev->bcache_fd, 0, 0, &bb, &error)) {
+			log_debug_devs("Scan failed to read %s error %d.", dev_name(devl->dev), error);
 			scan_failed = 1;
+			scan_read_errors++;
+			scan_failed_count++;
 			lvmcache_del_dev(devl->dev);
 		} else {
 			log_debug_devs("Processing data from device %s fd %d block %p", dev_name(devl->dev), devl->dev->bcache_fd, bb);
@@ -526,12 +534,10 @@ static int _scan_list(struct dm_list *devs, int *failed)
 
 			if (!ret && is_lvm_device) {
 				log_debug_devs("Scan failed to process %s", dev_name(devl->dev));
-				scan_failed_count++;
 				scan_failed = 1;
+				scan_process_errors++;
+				scan_failed_count++;
 				lvmcache_del_dev(devl->dev);
-			} else {
-				scan_lvm_count++;
-				scan_failed = 0;
 			}
 		}
 
@@ -556,8 +562,8 @@ static int _scan_list(struct dm_list *devs, int *failed)
 	if (!dm_list_empty(devs))
 		goto scan_more;
 
-	log_debug_devs("Scanned devices: %d lvm, %d failed.",
-			scan_lvm_count, scan_failed_count);
+	log_debug_devs("Scanned devices: open errors %d read errors %d process errors %d",
+			scan_open_errors, scan_read_errors, scan_process_errors);
 
 	if (failed)
 		*failed = scan_failed_count;
@@ -648,6 +654,8 @@ int label_scan(struct cmd_context *cmd)
 		}
 	};
 	dev_iter_destroy(iter);
+
+	log_debug_devs("Found %d devices to scan", dm_list_size(&all_devs));
 
 	if (!scan_bcache) {
 		/*
