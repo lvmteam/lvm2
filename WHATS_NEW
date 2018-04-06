@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Add test for activation/volume_list (Sub)LV remnants.
   Disallow usage of cache format 2 with mq cache policy.
   Again accept striped LV as COW LV with lvconvert -s (2.02.169).
   Fix raid target version testing for supported features.
