@@ -3013,10 +3013,9 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		lvmnotify_send(cmd);
 
       out:
-	if (test_mode()) {
-		log_verbose("Test mode: Wiping internal cache");
-		lvmcache_destroy(cmd, 1, 0);
-	}
+
+	lvmcache_destroy(cmd, 1, 1);
+	label_scan_destroy(cmd);
 
 	if ((config_string_cft = remove_config_tree_by_source(cmd, CONFIG_STRING)))
 		dm_config_destroy(config_string_cft);

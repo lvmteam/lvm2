@@ -406,7 +406,7 @@ int lvmcache_verify_lock_order(const char *vgname)
 		return 1;
 
 	if (!_lock_hash)
-		return_0;
+		return 1;
 
 	dm_hash_iterate(n, _lock_hash) {
 		if (!dm_hash_get_data(_lock_hash, n))
@@ -836,6 +836,9 @@ static int _label_scan_invalid(struct cmd_context *cmd)
 		dev_count++;
 	}
 
+	if (dm_list_empty(&devs))
+		return 1;
+
 	log_debug_cache("Scanning %d devs with invalid info.", dev_count);
 
 	ret = label_scan_devs(cmd, &devs);
@@ -1236,8 +1239,10 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	struct dm_list del_cache_devs;
 	struct dm_list add_cache_devs;
 	struct lvmcache_info *info;
+	struct lvmcache_vginfo *vginfo;
 	struct device_list *devl;
 	struct format_type *fmt;
+	int vginfo_count = 0;
 
 	int r = 0;
 
@@ -1246,6 +1251,8 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 			return 0;
 		return 1;
 	}
+
+	log_debug_cache("Finding VG info");
 
 	/* Avoid recursion when a PVID can't be found! */
 	if (_scanning_in_progress)
@@ -1315,6 +1322,8 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 		dm_list_init(&del_cache_devs);
 		dm_list_init(&add_cache_devs);
 
+		log_debug_cache("Resolving duplicate devices");
+
 		_choose_preferred_devs(cmd, &del_cache_devs, &add_cache_devs);
 
 		dm_list_iterate_items(devl, &del_cache_devs) {
@@ -1353,6 +1362,14 @@ int lvmcache_label_scan(struct cmd_context *cmd)
       out:
 	_scanning_in_progress = 0;
 	_force_label_scan = 0;
+
+	dm_list_iterate_items(vginfo, &_vginfos) {
+		if (is_orphan_vg(vginfo->vgname))
+			continue;
+		vginfo_count++;
+	}
+
+	log_debug_cache("Found VG info for %d VGs", vginfo_count);
 
 	return r;
 }
@@ -2291,7 +2308,8 @@ static void _lvmcache_destroy_lockname(struct dm_hash_node *n)
 void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 {
 	struct dm_hash_node *n;
-	log_verbose("Wiping internal VG cache");
+
+	log_debug_cache("Dropping VG info");
 
 	_has_scanned = 0;
 

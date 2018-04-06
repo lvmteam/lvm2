@@ -4508,7 +4508,6 @@ int process_each_pv(struct cmd_context *cmd,
 	 * before process_each_pv is called.
 	 */
 	if (!trust_cache() && !orphans_locked) {
-		log_debug("Scanning for available devices");
 		lvmcache_destroy(cmd, 1, 0);
 
 		/*
