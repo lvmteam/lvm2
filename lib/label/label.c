@@ -631,7 +631,7 @@ int label_scan(struct cmd_context *cmd)
 	 * on it.  This info will be used by the vg_read() phase of the
 	 * command.
 	 */
-	dev_cache_full_scan(cmd->full_filter);
+	dev_cache_scan();
 
 	if (!(iter = dev_iter_create(cmd->full_filter, 0))) {
 		log_error("Scanning failed to get devices.");

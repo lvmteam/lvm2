@@ -48,11 +48,7 @@ static void _persistent_filter_wipe(struct dev_filter *f)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 
-	log_verbose("Wiping cache of LVM-capable devices");
 	dm_hash_wipe(pf->devices);
-
-	/* Trigger complete device scan */
-	dev_cache_scan(1);
 }
 
 static int _read_array(struct pfilter *pf, struct dm_config_tree *cft,
@@ -125,15 +121,6 @@ int persistent_filter_load(struct dev_filter *f, struct dm_config_tree **cft_out
 	/* We don't gain anything by holding invalid devices */
 	/* _read_array(pf, cft, "persistent_filter_cache/invalid_devices",
 	   PF_BAD_DEVICE); */
-
-	/* Did we find anything? */
-	if (dm_hash_get_num_entries(pf->devices)) {
-		/* We populated dev_cache ourselves */
-		dev_cache_scan(0);
-		if (!dev_cache_index_devs())
-			stack;
-		r = 1;
-	}
 
 	log_very_verbose("Loaded persistent filter cache from %s", pf->file);
 

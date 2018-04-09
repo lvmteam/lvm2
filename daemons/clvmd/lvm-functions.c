@@ -661,7 +661,6 @@ int do_refresh_cache(void)
 		return -1;
 	}
 
-	init_full_scan_done(0);
 	init_ignore_suspended_devices(1);
 	lvmcache_force_next_label_scan();
 	lvmcache_label_scan(cmd);

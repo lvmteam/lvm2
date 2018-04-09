@@ -157,6 +157,8 @@ void lvmcache_seed_infos_from_lvmetad(struct cmd_context *cmd)
 	if (!lvmetad_used() || _has_scanned)
 		return;
 
+	dev_cache_scan();
+
 	if (!lvmetad_pv_list_to_lvmcache(cmd)) {
 		stack;
 		return;
@@ -357,9 +359,6 @@ void lvmcache_drop_metadata(const char *vgname, int drop_precommitted)
 		_drop_metadata(FMT_TEXT_ORPHAN_VG_NAME, 0);
 		_drop_metadata(FMT_LVM1_ORPHAN_VG_NAME, 0);
 		_drop_metadata(FMT_POOL_ORPHAN_VG_NAME, 0);
-
-		/* Indicate that PVs could now be missing from the cache */
-		init_full_scan_done(0);
 	} else
 		_drop_metadata(vgname, drop_precommitted);
 }

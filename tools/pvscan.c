@@ -288,8 +288,6 @@ static int _pvscan_autoactivate(struct cmd_context *cmd, struct pvscan_aa_params
 		pp->refresh_all = 1;
 	}
 
-	dev_cache_full_scan(cmd->full_filter);
-
 	ret = process_each_vg(cmd, 0, NULL, NULL, vgnames, 0, 0, handle, _pvscan_autoactivate_single);
 
 	destroy_processing_handle(cmd, handle);
@@ -495,6 +493,7 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (!dm_list_empty(&single_devs)) {
+		dev_cache_scan();
 		label_scan_devs(cmd, &single_devs);
 
 		dm_list_iterate_items(devl, &single_devs) {
@@ -540,6 +539,7 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (!dm_list_empty(&single_devs)) {
+		dev_cache_scan();
 		label_scan_devs(cmd, &single_devs);
 
 		dm_list_iterate_items(devl, &single_devs) {

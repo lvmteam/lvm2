@@ -28,7 +28,6 @@ static int _md_filtering = 0;
 static int _internal_filtering = 0;
 static int _fwraid_filtering = 0;
 static int _pvmove = 0;
-static int _full_scan_done = 0;	/* Restrict to one full scan during each cmd */
 static int _obtain_device_list_from_udev = DEFAULT_OBTAIN_DEVICE_LIST_FROM_UDEV;
 static enum dev_ext_e _external_device_info_source = DEV_EXT_NONE;
 static int _trust_cache = 0; /* Don't scan when incomplete VGs encountered */
@@ -90,11 +89,6 @@ void init_fwraid_filtering(int level)
 void init_pvmove(int level)
 {
 	_pvmove = level;
-}
-
-void init_full_scan_done(int level)
-{
-	_full_scan_done = level;
 }
 
 void init_obtain_device_list_from_udev(int device_list_from_udev)
@@ -251,11 +245,6 @@ int fwraid_filtering(void)
 int pvmove_mode(void)
 {
 	return _pvmove;
-}
-
-int full_scan_done(void)
-{
-	return _full_scan_done;
 }
 
 int obtain_device_list_from_udev(void)

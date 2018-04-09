@@ -1648,7 +1648,6 @@ static void _init_rand(struct cmd_context *cmd)
 
 static void _init_globals(struct cmd_context *cmd)
 {
-	init_full_scan_done(0);
 	init_mirror_in_sync(0);
 }
 

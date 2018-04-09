@@ -5503,8 +5503,6 @@ int pvcreate_each_device(struct cmd_context *cmd,
 		return 0;
 	}
 
-	dev_cache_full_scan(cmd->full_filter);
-
 	lvmcache_label_scan(cmd);
 
 	/*

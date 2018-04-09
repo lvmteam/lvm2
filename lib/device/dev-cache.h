@@ -46,10 +46,8 @@ int dev_cache_exit(void);
  */
 int dev_cache_check_for_open_devices(void);
 
-/* Trigger(1) or avoid(0) a scan */
-void dev_cache_scan(int do_scan);
+void dev_cache_scan(void);
 int dev_cache_has_scanned(void);
-void dev_cache_full_scan(struct dev_filter *f);
 
 int dev_cache_add_dir(const char *path);
 int dev_cache_add_loopfile(const char *path);
@@ -66,7 +64,7 @@ void dev_set_preferred_name(struct dm_str_list *sl, struct device *dev);
  * Object for iterating through the cache.
  */
 struct dev_iter;
-struct dev_iter *dev_iter_create(struct dev_filter *f, int dev_scan);
+struct dev_iter *dev_iter_create(struct dev_filter *f, int unused);
 void dev_iter_destroy(struct dev_iter *iter);
 struct device *dev_iter_get(struct dev_iter *iter);
 

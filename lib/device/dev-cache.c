@@ -1077,12 +1077,11 @@ static int _insert(const char *path, const struct stat *info,
 	return 1;
 }
 
-static void _full_scan(int dev_scan)
+void dev_cache_scan(void)
 {
 	struct dir_list *dl;
 
-	if (_cache.has_scanned && !dev_scan)
-		return;
+	_cache.has_scanned = 1;
 
 	_insert_dirs(&_cache.dirs);
 
@@ -1090,22 +1089,11 @@ static void _full_scan(int dev_scan)
 
 	dm_list_iterate_items(dl, &_cache.files)
 		_insert_file(dl->dir);
-
-	_cache.has_scanned = 1;
-	init_full_scan_done(1);
 }
 
 int dev_cache_has_scanned(void)
 {
 	return _cache.has_scanned;
-}
-
-void dev_cache_scan(int do_scan)
-{
-	if (!do_scan)
-		_cache.has_scanned = 1;
-	else
-		_full_scan(1);
 }
 
 static int _init_preferred_names(struct cmd_context *cmd)
@@ -1171,7 +1159,6 @@ out:
 int dev_cache_init(struct cmd_context *cmd)
 {
 	_cache.names = NULL;
-	_cache.has_scanned = 0;
 
 	if (!(_cache.mem = dm_pool_create("dev_cache", 10 * 1024)))
 		return_0;
@@ -1413,7 +1400,7 @@ struct device *dev_cache_get(const char *name, struct dev_filter *f)
 		_insert(name, info_available ? &buf : NULL, 0, obtain_device_list_from_udev());
 		d = (struct device *) dm_hash_lookup(_cache.names, name);
 		if (!d) {
-			_full_scan(0);
+			dev_cache_scan();
 			d = (struct device *) dm_hash_lookup(_cache.names, name);
 		}
 	}
@@ -1469,7 +1456,7 @@ struct device *dev_cache_get_by_devt(dev_t dev, struct dev_filter *f)
 			}
 		}
 
-		_full_scan(0);
+		dev_cache_scan();
 		d = _dev_cache_seek_devt(dev);
 	}
 
@@ -1477,17 +1464,7 @@ struct device *dev_cache_get_by_devt(dev_t dev, struct dev_filter *f)
 		      f->passes_filter(f, d))) ? d : NULL;
 }
 
-void dev_cache_full_scan(struct dev_filter *f)
-{
-	if (f && f->wipe) {
-		f->wipe(f); /* might call _full_scan(1) */
-		if (!full_scan_done())
-			_full_scan(1);
-	} else
-		_full_scan(1);
-}
-
-struct dev_iter *dev_iter_create(struct dev_filter *f, int dev_scan)
+struct dev_iter *dev_iter_create(struct dev_filter *f, int unused)
 {
 	struct dev_iter *di = dm_malloc(sizeof(*di));
 
@@ -1495,13 +1472,6 @@ struct dev_iter *dev_iter_create(struct dev_filter *f, int dev_scan)
 		log_error("dev_iter allocation failed");
 		return NULL;
 	}
-
-	if (dev_scan && !trust_cache()) {
-		/* Flag gets reset between each command */
-		if (!full_scan_done())
-			dev_cache_full_scan(f);
-	} else
-		_full_scan(0);
 
 	di->current = btree_first(_cache.devices);
 	di->filter = f;

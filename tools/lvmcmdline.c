@@ -2446,7 +2446,6 @@ static void _apply_current_settings(struct cmd_context *cmd)
 	_apply_current_output_settings(cmd);
 
 	init_test(cmd->current_settings.test);
-	init_full_scan_done(0);
 	init_mirror_in_sync(0);
 	init_dmeventd_monitor(DEFAULT_DMEVENTD_MONITOR);
 

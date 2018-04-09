@@ -332,7 +332,6 @@ retry_name:
 	dm_list_iterate_items(vd, &vp.arg_import)
 		internal_filter_allow(cmd->mem, vd->dev);
 	lvmcache_destroy(cmd, 1, 0);
-	dev_cache_full_scan(cmd->full_filter);
 
 	log_debug("Changing VG %s to %s.", vp.old_vgname, vp.new_vgname);
 
