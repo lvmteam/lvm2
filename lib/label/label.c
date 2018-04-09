@@ -922,6 +922,9 @@ bool dev_write_bytes(struct device *dev, off_t start, size_t len, void *data)
 {
 	int ret;
 
+	if (test_mode())
+		return true;
+
 	if (!scan_bcache) {
 		if (!dev_open(dev))
 			return false;
@@ -954,6 +957,9 @@ bool dev_write_bytes(struct device *dev, off_t start, size_t len, void *data)
 bool dev_write_zeros(struct device *dev, off_t start, size_t len)
 {
 	int ret;
+
+	if (test_mode())
+		return true;
 
 	if (!scan_bcache) {
 		if (!dev_open(dev))
