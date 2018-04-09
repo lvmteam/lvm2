@@ -443,7 +443,6 @@ out:
 		return 0;
 	}
 
-	lvmcache_make_valid(info);
 	return 1;
 }
 

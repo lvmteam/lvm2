@@ -67,13 +67,6 @@ void lvmcache_allow_reads_with_lvmetad(void);
 
 void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset);
 
-/*
- * lvmcache_label_scan() will scan labels the first time it's
- * called, but not on subsequent calls, unless
- * lvmcache_force_next_label_scan() is called first
- * to force the next lvmcache_label_scan() to scan again.
- */
-void lvmcache_force_next_label_scan(void);
 int lvmcache_label_scan(struct cmd_context *cmd);
 int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const char *vgid);
 
@@ -187,7 +180,6 @@ int lvmcache_foreach_pv(struct lvmcache_vginfo *vginfo,
 uint64_t lvmcache_device_size(struct lvmcache_info *info);
 void lvmcache_set_device_size(struct lvmcache_info *info, uint64_t size);
 struct device *lvmcache_device(struct lvmcache_info *info);
-void lvmcache_make_valid(struct lvmcache_info *info);
 int lvmcache_is_orphan(struct lvmcache_info *info);
 int lvmcache_uncertain_ownership(struct lvmcache_info *info);
 unsigned lvmcache_mda_count(struct lvmcache_info *info);

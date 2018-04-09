@@ -3392,8 +3392,6 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	struct pv_list head;
 
 	dm_list_init(&head.list);
-	lvmcache_label_scan(cmd);
-	lvmcache_seed_infos_from_lvmetad(cmd);
 
 	if (!(vginfo = lvmcache_vginfo_from_vgname(orphan_vgname, NULL)))
 		return_NULL;
@@ -3839,11 +3837,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	 */
 	log_debug_metadata("Reading VG rereading labels for %s", vgname);
 
-	if (!lvmcache_label_rescan_vg(cmd, vgname, vgid)) {
-		/* The VG wasn't found, so force a full label scan. */
-		lvmcache_force_next_label_scan();
-		lvmcache_label_scan(cmd);
-	}
+	lvmcache_label_rescan_vg(cmd, vgname, vgid);
 
 	if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 0))) {
 		log_debug_metadata("Cache did not find fmt for vgname %s", vgname);
@@ -4531,7 +4525,6 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 	if (!(vgname = lvmcache_vgname_from_vgid(cmd->mem, vgid))) {
 		log_debug_metadata("Reading VG by vgid %.8s no VG name found, retrying.", vgid);
 		lvmcache_destroy(cmd, 0, 0);
-		lvmcache_force_next_label_scan();
 		lvmcache_label_scan(cmd);
 	}
 
@@ -5572,7 +5565,6 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 				unlock_vg(cmd, NULL, vgname);
 				return FAILED_LOCKING;
 			}
-			lvmcache_force_next_label_scan();
 			lvmcache_label_scan(cmd);
 			if (!lvmcache_fmt_from_vgname(cmd, vgname, NULL, 0))
 				return SUCCESS; /* vgname not found after scanning */

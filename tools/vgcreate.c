@@ -82,7 +82,6 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	lvmcache_force_next_label_scan();
 	lvmcache_label_scan(cmd);              /* Does nothing when using lvmetad. */
 	lvmcache_seed_infos_from_lvmetad(cmd); /* Does nothing unless using lvmetad. */
 

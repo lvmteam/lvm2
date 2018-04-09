@@ -662,7 +662,6 @@ int do_refresh_cache(void)
 	}
 
 	init_ignore_suspended_devices(1);
-	lvmcache_force_next_label_scan();
 	lvmcache_label_scan(cmd);
 	label_scan_destroy(cmd); /* destroys bcache (to close devs), keeps lvmcache */
 	dm_pool_empty(cmd->mem);

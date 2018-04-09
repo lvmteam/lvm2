@@ -512,7 +512,6 @@ int lvm_scan(lvm_t libh)
 	int rc = 0;
 	struct saved_env e = store_user_env((struct cmd_context *)libh);
 
-	lvmcache_force_next_label_scan();
 	if (!lvmcache_label_scan((struct cmd_context *)libh))
 		rc = -1;
 

@@ -273,7 +273,6 @@ out:
 		}
 
 	if (scan_needed) {
-		lvmcache_force_next_label_scan();
 		if (!lvmcache_label_scan(cmd)) {
 			stack;
 			r = 0;

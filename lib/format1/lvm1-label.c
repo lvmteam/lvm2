@@ -84,7 +84,6 @@ static int _lvm1_read(struct labeller *l, struct device *dev, void *buf,
 	lvmcache_set_ext_flags(info, 0);
 	lvmcache_del_mdas(info);
 	lvmcache_del_bas(info);
-	lvmcache_make_valid(info);
 
 	return 1;
 }

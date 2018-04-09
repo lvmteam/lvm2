@@ -1485,6 +1485,12 @@ int change_tag(struct cmd_context *cmd, struct volume_group *vg,
 	return 1;
 }
 
+/*
+ * FIXME: replace process_each_label() with process_each_vg() which is
+ * based on performing vg_read(), which provides a correct representation
+ * of VGs/PVs, that is not provided by lvmcache_label_scan().
+ */
+
 int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 		       struct processing_handle *handle,
 		       process_single_label_fn_t process_single_label)

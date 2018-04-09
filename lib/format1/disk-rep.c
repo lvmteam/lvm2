@@ -337,7 +337,6 @@ static void __update_lvmcache(const struct format_type *fmt,
 
 	lvmcache_set_device_size(info, ((uint64_t)xlate32(dl->pvd.pv_size)) << SECTOR_SHIFT);
 	lvmcache_del_mdas(info);
-	lvmcache_make_valid(info);
 }
 
 static struct disk_list *__read_disk(const struct format_type *fmt,
