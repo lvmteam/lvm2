@@ -242,7 +242,7 @@ int dev_async_getevents(void)
 				  dev_name(devbuf->where.dev), _aio_events[event_nr].res,
 				  (uint64_t) devbuf->where.size, (uint64_t) devbuf->where.start,
 				  _reason_text(devbuf->reason),
-				  ((int64_t)_aio_events[event_nr].res < 0) ? strerror(-(int64_t)_aio_events[event_nr].res) : 0);
+				  (((int64_t)_aio_events[event_nr].res) < 0) ? strerror(-(int64_t)_aio_events[event_nr].res) : 0);
 			_release_devbuf(devbuf);
 			if (dev_read_callback_fn)
 				dev_read_callback_fn(1, AIO_SUPPORTED_CODE_PATH, dev_read_callback_context, NULL);
