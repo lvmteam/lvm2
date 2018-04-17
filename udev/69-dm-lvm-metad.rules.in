@@ -88,6 +88,23 @@ LABEL="lvm_scan"
 #  loop  |          |      X      |       X*       |                   |
 #  other |    X     |             |       X        |                   |   X
 ENV{SYSTEMD_READY}="1"
-(PVSCAN_RULE)
+
+# The method for invoking pvscan is selected at build time with the option
+# --(enable|disable)-udev-systemd-background-jobs to "configure".
+# On modern distributions with recent systemd, it's "systemd_background";
+# on others, "direct_pvscan".
+GOTO="(PVSCAN_RULE)"
+
+LABEL="systemd_background"
+
+ACTION!="remove", ENV{LVM_PV_GONE}=="1", RUN+="(BINDIR)/systemd-run (LVM_EXEC)/lvm pvscan --cache $major:$minor", GOTO="lvm_end"
+ENV{SYSTEMD_ALIAS}="/dev/block/$major:$minor"
+ENV{ID_MODEL}="LVM PV $env{ID_FS_UUID_ENC} on /dev/$name"
+ENV{SYSTEMD_WANTS}+="lvm2-pvscan@$major:$minor.service"
+GOTO="lvm_end"
+
+LABEL="direct_pvscan"
+
+RUN+="(LVM_EXEC)/lvm pvscan --background --cache --activate ay --major $major --minor $minor", ENV{LVM_SCANNED}="1"
 
 LABEL="lvm_end"
