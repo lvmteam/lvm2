@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Keep systemd vars on change event in 69-dm-lvm-metad.rules for systemd reload.
   Write systemd and non-systemd rule in 69-dm-lvm-metad.rules, GOTO active one.
   Add test for activation/volume_list (Sub)LV remnants.
   Disallow usage of cache format 2 with mq cache policy.
