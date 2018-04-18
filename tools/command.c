@@ -115,7 +115,7 @@ static inline int segtype_arg(struct cmd_context *cmd, struct arg_values *av) { 
 static inline int alloc_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int locktype_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int readahead_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
-static inline int regionsize_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
+static inline int regionsize_mb_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int vgmetadatacopies_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av) { return 0; }
 static inline int pvmetadatacopies_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av) { return 0; }
 static inline int metadatacopies_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av) { return 0; }
@@ -2264,7 +2264,7 @@ static void _print_val_man(struct command_name *cname, int opt_enum, int val_enu
 		return;
 	}
 
-	if (val_enum == regionsize_VAL) {
+	if (val_enum == regionsizemb_VAL) {
 		printf("\\fISize\\fP[m|UNIT]");
 		return;
 	}

@@ -1295,7 +1295,7 @@ arg(resizefs_ARG, 'r', "resizefs", 0, 0, 0,
 /* Not used */
 arg(reset_ARG, 'R', "reset", 0, 0, 0, NULL)
 
-arg(regionsize_ARG, 'R', "regionsize", regionsize_VAL, 0, 0,
+arg(regionsize_ARG, 'R', "regionsize", regionsizemb_VAL, 0, 0,
     "Size of each raid or mirror synchronization region.\n"
     "lvm.conf activation/raid_region_size can be used to\n"
     "configure a default.\n")

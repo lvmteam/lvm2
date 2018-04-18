@@ -929,7 +929,7 @@ int readahead_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_va
 	return 1;
 }
 
-int regionsize_arg(struct cmd_context *cmd, struct arg_values *av)
+int regionsize_mb_arg(struct cmd_context *cmd, struct arg_values *av)
 {
 	int pagesize = lvm_getpagesize();
 	uint32_t num;
