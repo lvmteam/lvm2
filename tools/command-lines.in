@@ -701,8 +701,8 @@ RULE: all and lv_is_converting
 lvconvert LV_mirror_raid
 OO: OO_LVCONVERT
 ID: lvconvert_start_poll
-DESC: Poll LV to continue conversion (also see --startpoll).
-RULE: all and lv_is_converting
+DESC: Poll LV to continue conversion (also see --startpoll)
+DESC: or waits till conversion/mirror syncing is finished
 FLAGS: SECONDARY_SYNTAX
 
 ---
