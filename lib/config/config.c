@@ -545,6 +545,12 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 		fb = buf;
 	}
 
+	/*
+	 * The checksum passed in is the checksum from the mda_header
+	 * preceding this metadata.  They should always match.
+	 * FIXME: handle case where mda_header checksum is bad,
+	 * but the checksum calculated here is correct.
+	 */
 	if (checksum_fn && checksum !=
 	    (checksum_fn(checksum_fn(INITIAL_CRC, (const uint8_t *)fb, size),
 			 (const uint8_t *)(fb + size), size2))) {

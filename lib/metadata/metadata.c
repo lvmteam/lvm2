@@ -3761,6 +3761,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct pv_list *pvl;
 	struct dm_list all_pvs;
 	char uuid[64] __attribute__((aligned(8)));
+	int skipped_rescan = 0;
 
 	int reappeared = 0;
 	struct cached_vg_fmtdata *vg_fmtdata = NULL;	/* Additional format-specific data about the vg */
@@ -3834,10 +3835,42 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	 * lock is held, so we rescan all the info from the devs in case
 	 * something changed between the initial scan and now that the lock
 	 * is held.
+	 *
+	 * Some commands (e.g. reporting) are fine reporting data read by
+	 * the label scan.  It doesn't matter if the devs changed between
+	 * the label scan and here, we can report what was seen in the
+	 * scan, even though it is the old state, since we will not be
+	 * making any modifications.  If the VG was being modified during
+	 * the scan, and caused us to see inconsistent metadata on the
+	 * different PVs in the VG, then we do want to rescan the devs
+	 * here to get a consistent view of the VG.  Note that we don't
+	 * know if the scan found all the PVs in the VG at this point.
+	 * We don't know that until vg_read looks at the list of PVs in
+	 * the metadata and compares that to the devices found by the scan.
+	 *
+	 * It's possible that a change made to the VG during scan was
+	 * adding or removing a PV from the VG.  In this case, the list
+	 * of devices associated with the VG in lvmcache would change
+	 * due to the rescan.
+	 *
+	 * The devs in the VG may be persistently inconsistent due to some
+	 * previous problem.  In this case, rescanning the labels here will
+	 * find the same inconsistency.  The VG repair (mistakenly done by
+	 * vg_read below) is supposed to fix that.
+	 *
+	 * FIXME: sort out the usage of the global lock (which is mixed up
+	 * with the orphan lock), and when we can tell that the global
+	 * lock is taken prior to the label scan, and still held here,
+	 * we can also skip the rescan in that case.
 	 */
-	log_debug_metadata("Reading VG rereading labels for %s", vgname);
-
-	lvmcache_label_rescan_vg(cmd, vgname, vgid);
+	if (!cmd->can_use_one_scan || lvmcache_scan_mismatch(cmd, vgname, vgid)) {
+		skipped_rescan = 0;
+		log_debug_metadata("Rescanning devices for for %s", vgname);
+		lvmcache_label_rescan_vg(cmd, vgname, vgid);
+	} else {
+		log_debug_metadata("Skipped rescanning devices for %s", vgname);
+		skipped_rescan = 1;
+	}
 
 	if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 0))) {
 		log_debug_metadata("Cache did not find fmt for vgname %s", vgname);
@@ -3940,10 +3973,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 		/* FIXME Also ensure contents same - checksum compare? */
 		if (correct_vg->seqno != vg->seqno) {
-			if (cmd->metadata_read_only)
-				log_very_verbose("Not repairing VG %s metadata seqno (%d != %d) "
-						  "as global/metadata_read_only is set.",
-						  vgname, vg->seqno, correct_vg->seqno);
+			if (cmd->metadata_read_only || skipped_rescan)
+				log_warn("Not repairing metadata for VG %s.", vgname);
 			else
 				inconsistent = 1;
 
@@ -4004,7 +4035,29 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 						return_NULL;
 					}
 
-					log_debug_metadata("Empty mda found for VG %s.", vgname);
+					log_debug_metadata("Empty mda found for VG %s on %s.",
+							   vgname, dev_name(pvl->pv->dev));
+
+#if 0
+					/*
+					 * If we are going to do any repair we have to be using 
+					 * the latest metadata on disk, so we have to rescan devs
+					 * if we skipped that at the start of the vg_read.  We'll
+					 * likely come back through here, but without having
+					 * skipped_rescan.
+					 *
+					 * FIXME: in some cases we don't want to do this.
+					 */
+					if (skipped_rescan && cmd->can_use_one_scan) {
+						log_debug_metadata("Restarting read to rescan devs.");
+						cmd->can_use_one_scan = 0;
+						release_vg(correct_vg);
+						correct_vg = NULL;
+						lvmcache_del(info);
+						label_read(pvl->pv->dev, NULL, 0);
+						goto restart_scan;
+					}
+#endif
 
 					if (inconsistent_mdas)
 						continue;
@@ -4142,10 +4195,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			/* FIXME Also ensure contents same - checksums same? */
 			if (correct_vg->seqno != vg->seqno) {
 				/* Ignore inconsistent seqno if told to skip repair logic */
-				if (cmd->metadata_read_only)
-					log_very_verbose("Not repairing VG %s metadata seqno (%d != %d) "
-							  "as global/metadata_read_only is set.",
-							  vgname, vg->seqno, correct_vg->seqno);
+				if (cmd->metadata_read_only || skipped_rescan)
+					log_warn("Not repairing metadata for VG %s.", vgname);
 				else
 					inconsistent = 1;
 
@@ -4225,6 +4276,13 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			return correct_vg;
 		}
 
+		if (skipped_rescan) {
+			log_warn("Not repairing metadata for VG %s.", vgname);
+			_free_pv_list(&all_pvs);
+			release_vg(correct_vg);
+			return_NULL;
+		}
+
 		/* Don't touch if vgids didn't match */
 		if (inconsistent_vgid) {
 			log_warn("WARNING: Inconsistent metadata UUIDs found for "
@@ -4271,14 +4329,16 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	}
 
 	/* We have the VG now finally, check if PV ext info is in sync with VG metadata. */
-	if (!_check_or_repair_pv_ext(cmd, correct_vg, *consistent, &inconsistent_pvs)) {
+	if (!_check_or_repair_pv_ext(cmd, correct_vg,
+				     skipped_rescan ? 0 : *consistent,
+				     &inconsistent_pvs)) {
 		release_vg(correct_vg);
 		return_NULL;
 	}
 
 	*consistent = !inconsistent_pvs;
 
-	if (correct_vg && *consistent) {
+	if (correct_vg && *consistent && !skipped_rescan) {
 		if (update_old_pv_ext && !_vg_update_old_pv_ext_if_needed(correct_vg)) {
 			release_vg(correct_vg);
 			return_NULL;

@@ -438,6 +438,13 @@ out:
 	baton.info = info;
 	baton.label = *label;
 
+	/*
+	 * In the vg_read phase, we compare all mdas and decide which to use
+	 * which are bad and need repair.
+	 *
+	 * FIXME: this quits if the first mda is bad, but we need something
+	 * smarter to be able to use the second mda if it's good.
+	 */
 	if (!lvmcache_foreach_mda(info, _read_mda_header_and_metadata, &baton)) {
 		log_error("Failed to scan VG from %s", dev_name(dev));
 		return 0;

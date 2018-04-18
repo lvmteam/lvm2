@@ -1292,6 +1292,12 @@ static int _read_vgsummary(const struct format_type *fmt, const struct dm_config
 	    (!(vgsummary->lock_type = dm_pool_strdup(mem, str))))
 		return_0;
 
+	if (!_read_int32(vgn, "seqno", &vgsummary->seqno)) {
+		log_error("Couldn't read seqno for volume group %s.",
+			  vgsummary->vgname);
+		return 0;
+	}
+
 	return 1;
 }
 

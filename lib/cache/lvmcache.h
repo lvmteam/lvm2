@@ -60,6 +60,7 @@ struct lvmcache_vgsummary {
 	uint32_t mda_checksum;
 	size_t mda_size;
 	int zero_offset;
+	int seqno;
 };
 
 int lvmcache_init(void);
@@ -215,5 +216,7 @@ void lvmcache_set_independent_location(const char *vgname);
 void lvmcache_save_suspended_vg(struct volume_group *vg, int precommitted);
 struct volume_group *lvmcache_get_suspended_vg(const char *vgid);
 void lvmcache_drop_suspended_vg(struct volume_group *vg);
+
+int lvmcache_scan_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid);
 
 #endif

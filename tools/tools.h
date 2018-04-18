@@ -136,6 +136,10 @@ struct arg_value_group_list {
 #define DISALLOW_TAG_ARGS        0x00000800
 /* Command may need to find VG name in an option value. */
 #define GET_VGNAME_FROM_OPTIONS  0x00001000
+/* The data read from disk by label scan can be used for vg_read. */
+#define CAN_USE_ONE_SCAN	 0x00002000
+
+
 void usage(const char *name);
 
 /* the argument verify/normalise functions */

@@ -2291,6 +2291,9 @@ static int _get_current_settings(struct cmd_context *cmd)
 	if (cmd->cname->flags & LOCKD_VG_SH)
 		cmd->lockd_vg_default_sh = 1;
 
+	if (cmd->cname->flags & CAN_USE_ONE_SCAN)
+		cmd->can_use_one_scan = 1;
+
 	cmd->partial_activation = 0;
 	cmd->degraded_activation = 0;
 	activation_mode = find_config_tree_str(cmd, activation_mode_CFG, NULL);

@@ -1261,8 +1261,27 @@ int read_metadata_location_summary(const struct format_type *fmt,
 	 * which also matches the checksum saved in vginfo from
 	 * another device, then it skips parsing the metadata into
 	 * a config tree, which saves considerable cpu time.
+	 *
+	 * (NB. there can be different VGs with different metadata
+	 * and checksums, but with the same name.)
+	 *
+	 * FIXME: handle the case where mda_header checksum is bad
+	 * but metadata checksum is good.
 	 */
 
+	/*
+	 * If the checksum we compute of the metadata differs from
+	 * the checksum from mda_header that we save here, then we
+	 * ignore the device.  FIXME: we need to classify a device
+	 * with errors like this as defective.
+	 *
+	 * If the checksum from mda_header and computed from metadata
+	 * does not match the checksum saved in lvmcache from a prev
+	 * device, then we do not skip parsing/saving metadata from
+	 * this dev.  It's parsed, fields saved in vgsummary, which
+	 * is passed into lvmcache (update_vgname_and_id), and
+	 * there we'll see a checksum mismatch.
+	 */
 	vgsummary->mda_checksum = rlocn->checksum;
 	vgsummary->mda_size = rlocn->size;
 	lvmcache_lookup_mda(vgsummary);

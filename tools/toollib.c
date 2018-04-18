@@ -2032,7 +2032,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 		    (!dm_list_empty(arg_tags) && str_list_match_list(arg_tags, &vg->tags, NULL))) &&
 		    select_match_vg(cmd, handle, vg) && _select_matches(handle)) {
 
-			log_very_verbose("Processing VG %s %s", vg_name, vg_uuid ? uuid : "");
+			log_very_verbose("Running command for VG %s %s", vg_name, vg_uuid ? uuid : "");
 
 			ret = process_single_vg(cmd, vg_name, vg, handle);
 			_update_selection_result(handle, &whole_selected);

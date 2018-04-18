@@ -62,7 +62,9 @@ struct lvmcache_vginfo {
 	char *lock_type;
 	uint32_t mda_checksum;
 	size_t mda_size;
+	int seqno;
 	int independent_metadata_location; /* metadata read from independent areas */
+	int scan_summary_mismatch; /* vgsummary from devs had mismatching seqno or checksum */
 
 	/*
 	 * The following are not related to lvmcache or vginfo,
@@ -1057,25 +1059,34 @@ next:
  * the labels/metadata for each device in the VG now that we hold the
  * lock, and use this for processing the VG.
  *
- * FIXME: In some cases, the data read by label_scan may be fine, and not
- * need to be reread here. e.g. a reporting command, possibly with a
- * special option, could skip this second reread.  Or, we could look
- * at the VG seqno in each copy of the metadata read in the first label
- * scan, and if they all match, consider it good enough to use for
- * reporting without rereading it.  (A command modifying the VG would
- * always want to reread while the lock is held before modifying.)
- *
  * A label scan is ultimately creating associations between devices
  * and VGs so that when vg_read wants to get VG metadata, it knows
- * which devices to read.  In the special case where VG metadata is
- * stored in files on the file system (configured in lvm.conf), the
+ * which devices to read.
+ *
+ * It's possible that a VG is being modified during the first label
+ * scan, causing the scan to see inconsistent metadata on different
+ * devs in the VG.  It's possible that those modifications are
+ * adding/removing devs from the VG, in which case the device/VG
+ * associations in lvmcache after the scan are not correct.
+ * NB. It's even possible the VG was removed completely between
+ * label scan and here, in which case we'd not find the VG in
+ * lvmcache after this rescan.
+ *
+ * A scan will also create in incorrect/incomplete picture of a VG
+ * when devices have no metadata areas.  The scan does not use
+ * VG metadata to figure out that a dev with no metadata belongs
+ * to a particular VG, so a device with no mdas will not be linked
+ * to that VG after a scan.
+ *
+ * (In the special case where VG metadata is stored in files on the
+ * file system (configured in lvm.conf), the
  * vginfo->independent_metadata_location flag is set during label scan.
  * When we get here to rescan, we are revalidating the device to VG
  * mapping from label scan by repeating the label scan on a subset of
  * devices.  If we see independent_metadata_location is set from the
  * initial label scan, we know that there is nothing to do because
  * there is no device to VG mapping to revalidate, since the VG metadata
- * comes directly from files.
+ * comes directly from files.)
  */
 
 int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const char *vgid)
@@ -1083,7 +1094,7 @@ int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const 
 	struct dm_list devs;
 	struct device_list *devl;
 	struct lvmcache_vginfo *vginfo;
-	struct lvmcache_info *info;
+	struct lvmcache_info *info, *info2;
 
 	if (lvmetad_used())
 		return 1;
@@ -1112,14 +1123,17 @@ int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const 
 		dm_list_add(&devs, &devl->list);
 	}
 
-	label_scan_devs(cmd, &devs);
+	dm_list_iterate_items_safe(info, info2, &vginfo->infos)
+		lvmcache_del(info);
 
-	/*
-	 * TODO: grab vginfo again, and compare vginfo->infos
-	 * to what was found above before rereading labels.
-	 * If there are any info->devs now that were not in the
-	 * first devs list, then do label_read on those also.
-	 */
+	/* Dropping the last info struct is supposed to drop vginfo. */
+	if ((vginfo = lvmcache_vginfo_from_vgname(vgname, vgid)))
+		log_warn("VG info not dropped before rescan of %s", vgname);
+
+	/* FIXME: should we also rescan unused_duplicate_devs for devs
+	   being rescanned here and then repeat resolving the duplicates? */
+
+	label_scan_devs(cmd, &devs);
 
 	return 1;
 }
@@ -1803,28 +1817,6 @@ out:
 	return 1;
 }
 
-static int _lvmcache_update_vg_mda_info(struct lvmcache_info *info, uint32_t mda_checksum,
-					size_t mda_size)
-{
-	if (!info || !info->vginfo || !mda_size)
-		return 1;
-
-	if (info->vginfo->mda_checksum == mda_checksum || info->vginfo->mda_size == mda_size) 
-		return 1;
-
-	info->vginfo->mda_checksum = mda_checksum;
-	info->vginfo->mda_size = mda_size;
-
-	/* FIXME Add checksum index */
-
-	log_debug_cache("lvmcache %s: VG %s: stored metadata checksum 0x%08"
-			PRIx32 " with size %" PRIsize_t ".",
-			dev_name(info->dev), info->vginfo->vgname,
-			mda_checksum, mda_size);
-
-	return 1;
-}
-
 int lvmcache_add_orphan_vginfo(const char *vgname, struct format_type *fmt)
 {
 	if (!_lock_hash && !lvmcache_init()) {
@@ -1835,10 +1827,18 @@ int lvmcache_add_orphan_vginfo(const char *vgname, struct format_type *fmt)
 	return _lvmcache_update_vgname(NULL, vgname, vgname, 0, "", fmt);
 }
 
+/*
+ * FIXME: get rid of other callers of this function which call it
+ * in odd cases to "fix up" some bit of lvmcache state.  Make those
+ * callers fix up what they need to directly, and leave this function
+ * with one purpose and caller.
+ */
+
 int lvmcache_update_vgname_and_id(struct lvmcache_info *info, struct lvmcache_vgsummary *vgsummary)
 {
 	const char *vgname = vgsummary->vgname;
 	const char *vgid = (char *)&vgsummary->vgid;
+	struct lvmcache_vginfo *vginfo;
 
 	if (!vgname && !info->vginfo) {
 		log_error(INTERNAL_ERROR "NULL vgname handed to cache");
@@ -1853,12 +1853,80 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info, struct lvmcache_vg
 	    !is_orphan_vg(info->vginfo->vgname) && critical_section())
 		return 1;
 
-	if (!_lvmcache_update_vgname(info, vgname, vgid, vgsummary->vgstatus,
-				     vgsummary->creation_host, info->fmt) ||
-	    !_lvmcache_update_vgid(info, info->vginfo, vgid) ||
-	    !_lvmcache_update_vgstatus(info, vgsummary->vgstatus, vgsummary->creation_host, vgsummary->lock_type, vgsummary->system_id) ||
-	    !_lvmcache_update_vg_mda_info(info, vgsummary->mda_checksum, vgsummary->mda_size))
-		return_0;
+	/*
+	 * Creates a new vginfo struct for this vgname/vgid if none exists,
+	 * and attaches the info struct for the dev to the vginfo.
+	 * Puts the vginfo into the vgname hash table.
+	 */
+	if (!_lvmcache_update_vgname(info, vgname, vgid, vgsummary->vgstatus, vgsummary->creation_host, info->fmt)) {
+		log_error("Failed to update VG %s info in lvmcache.", vgname);
+		return 0;
+	}
+
+	/*
+	 * Puts the vginfo into the vgid hash table.
+	 */
+	if (!_lvmcache_update_vgid(info, info->vginfo, vgid)) {
+		log_error("Failed to update VG %s info in lvmcache.", vgname);
+		return 0;
+	}
+
+	/*
+	 * FIXME: identify which case this is and why this is needed, then
+	 * change that so it doesn't use this function and we can remove
+	 * this special case.
+	 * (I think this distinguishes the scan path, where these things
+	 * are set from the vg_read path where lvmcache_update_vg() is
+	 * called which calls this function without seqno/mda_size/mda_checksum.)
+	 */
+	if (!vgsummary->seqno && !vgsummary->mda_size && !vgsummary->mda_checksum)
+		return 1;
+
+	if (!(vginfo = info->vginfo))
+		return 1;
+
+	if (!vginfo->seqno) {
+		vginfo->seqno = vgsummary->seqno;
+
+		log_debug_cache("lvmcache %s: VG %s: set seqno to %d",
+				dev_name(info->dev), vginfo->vgname, vginfo->seqno);
+
+	} else if (vgsummary->seqno != vginfo->seqno) {
+		log_warn("Scan of VG %s from %s found metadata seqno %d vs previous %d.",
+			 vgname, dev_name(info->dev), vgsummary->seqno, vginfo->seqno);
+		vginfo->scan_summary_mismatch = 1;
+		/* If we don't return success, this dev info will be removed from lvmcache,
+		   and then we won't be able to rescan it or repair it. */
+		return 1;
+	}
+
+	if (!vginfo->mda_size) {
+		vginfo->mda_checksum = vgsummary->mda_checksum;
+		vginfo->mda_size = vgsummary->mda_size;
+
+		log_debug_cache("lvmcache %s: VG %s: set mda_checksum to %x mda_size to %zu",
+				dev_name(info->dev), vginfo->vgname,
+				vginfo->mda_checksum, vginfo->mda_size);
+
+	} else if ((vginfo->mda_size != vgsummary->mda_size) || (vginfo->mda_checksum != vgsummary->mda_checksum)) {
+		log_warn("Scan of VG %s from %s found mda_checksum %x mda_size %zu vs previous %x %zu",
+			 vgname, dev_name(info->dev), vgsummary->mda_checksum, vgsummary->mda_size,
+			 vginfo->mda_checksum, vginfo->mda_size);
+		vginfo->scan_summary_mismatch = 1;
+		/* If we don't return success, this dev info will be removed from lvmcache,
+		   and then we won't be able to rescan it or repair it. */
+		return 1;
+	}
+
+	/*
+	 * If a dev has an unmatching checksum, ignore the other
+	 * info from it, keeping the info we already saved.
+	 */
+	if (!_lvmcache_update_vgstatus(info, vgsummary->vgstatus, vgsummary->creation_host,
+				       vgsummary->lock_type, vgsummary->system_id)) {
+		log_error("Failed to update VG %s info in lvmcache.", vgname);
+		return 0;
+	}
 
 	return 1;
 }
@@ -2532,6 +2600,7 @@ int lvmcache_lookup_mda(struct lvmcache_vgsummary *vgsummary)
 			vgsummary->vgname = vginfo->vgname;
 			vgsummary->creation_host = vginfo->creation_host;
 			vgsummary->vgstatus = vginfo->status;
+			vgsummary->seqno = vginfo->seqno;
 			/* vginfo->vgid has 1 extra byte then vgsummary->vgid */
 			memcpy(&vgsummary->vgid, vginfo->vgid, sizeof(vgsummary->vgid));
 
@@ -2590,5 +2659,49 @@ int lvmcache_vg_is_foreign(struct cmd_context *cmd, const char *vgname, const ch
 		ret = !is_system_id_allowed(cmd, vginfo->system_id);
 
 	return ret;
+}
+
+/*
+ * Example of reading four devs in sequence from the same VG:
+ *
+ * dev1:
+ *    lvmcache: creates vginfo with initial values
+ *
+ * dev2: all checksums match.
+ *    mda_header checksum matches vginfo from dev1
+ *    metadata checksum matches vginfo from dev1
+ *    metadata is not parsed, and the vgsummary values copied
+ *    from lvmcache from dev1 and passed back to lvmcache for dev2.
+ *    lvmcache: attach info for dev2 to existing vginfo
+ *
+ * dev3: mda_header and metadata have unmatching checksums.
+ *    mda_header checksum matches vginfo from dev1
+ *    metadata checksum doesn't match vginfo from dev1
+ *    produces read error in config.c
+ *    lvmcache: info for dev3 is deleted, FIXME: use a defective state
+ *
+ * dev4: mda_header and metadata have matching checksums, but
+ *       does not match checksum in lvmcache from prev dev.
+ *    mda_header checksum doesn't match vginfo from dev1
+ *    lvmcache_lookup_mda returns 0, no vgname, no checksum_only
+ *    lvmcache: update_vgname_and_id sees checksum from dev4 does not
+ *    match vginfo from dev1, so vginfo->scan_summary_mismatch is set.
+ *    attach info for dev4 to existing vginfo
+ *
+ * dev5: config parsing error.
+ *    lvmcache: info for dev5 is deleted, FIXME: use a defective state
+ */
+
+int lvmcache_scan_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid)
+{
+	struct lvmcache_vginfo *vginfo;
+
+	if (!vgname || !vgid)
+		return 1;
+
+	if ((vginfo = lvmcache_vginfo_from_vgid(vgid)))
+		return vginfo->scan_summary_mismatch;
+
+	return 1;
 }
 
