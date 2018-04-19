@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Extend validation of region_size for mirror segment.
   Reload whole device stack when reinitilizing mirror log.
   Mirrors without monitoring are WARNING and not blocking on error.
   Detect too big region_size with clustered mirrors.

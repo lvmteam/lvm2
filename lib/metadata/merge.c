@@ -391,6 +391,14 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 			if (!(seg2 = first_seg(seg->log_lv)) || (find_mirror_seg(seg2) != seg))
 				seg_error("log LV does not point back to mirror segment");
 		}
+		if (seg_is_mirror(seg)) {
+			if (!seg->region_size)
+				seg_error("region size is zero");
+			else if (seg->region_size > seg->lv->size)
+				seg_error("region size is bigger then LV itself");
+			else if (!is_power_of_2(seg->region_size))
+				seg_error("region size is non power of 2");
+		}
 	} else { /* !mirrored */
 		if (seg->log_lv) {
 			if (lv_is_raid_image(lv))
