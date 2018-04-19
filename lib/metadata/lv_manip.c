@@ -1667,9 +1667,9 @@ struct alloc_handle {
 #define BYTE_SHIFT 3
 static uint32_t _mirror_log_extents(uint32_t region_size, uint32_t pe_size, uint32_t area_len)
 {
-	size_t area_size, bitset_size, log_size, region_count;
+	uint64_t area_size, region_count, bitset_size, log_size;
 
-	area_size = (size_t)area_len * pe_size;
+	area_size = (uint64_t) area_len * pe_size;
 	region_count = dm_div_up(area_size, region_size);
 
 	/* Work out how many "unsigned long"s we need to hold the bitset. */
