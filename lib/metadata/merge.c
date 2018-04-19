@@ -71,12 +71,12 @@ int lv_merge_segments(struct logical_volume *lv)
 	if (error_count++ > ERROR_MAX)	\
 		goto out
 
-#define seg_error(msg) { \
+#define seg_error(msg) do { \
 		log_error("LV %s, segment %u invalid: %s for %s segment.", \
 			  seg->lv->name, seg_count, (msg), lvseg_name(seg)); \
 		if ((*error_count)++ > ERROR_MAX) \
 			return; \
-	}
+	} while (0)
 
 /*
  * RAID segment property checks.
@@ -84,19 +84,19 @@ int lv_merge_segments(struct logical_volume *lv)
  * Checks in here shall catch any
  * bogus segment structure setup.
  */
-#define raid_seg_error(msg) { \
+#define raid_seg_error(msg) do { \
 	log_error("LV %s invalid: %s for %s segment", \
 		  seg->lv->name, (msg), lvseg_name(seg)); \
 	if ((*error_count)++ > ERROR_MAX) \
 		return; \
-}
+} while (0)
 
-#define raid_seg_error_val(msg, val) { \
+#define raid_seg_error_val(msg, val) do { \
 	log_error("LV %s invalid: %s (is %u) for %s segment", \
 		  seg->lv->name, (msg), (val), lvseg_name(seg)); \
 	if ((*error_count)++ > ERROR_MAX) \
 		return; \
-}
+} while(0)
 
 /* Check segment LV for reshape flags. */
 static int _check_raid_seg_reshape_flags(struct lv_segment *seg)
@@ -354,7 +354,7 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 			case CACHE_MODE_PASSTHROUGH:
 				break;
 			default:
-				seg_error("has invalid cache's feature flag")
+				seg_error("has invalid cache's feature flag");
 			}
 			if (!seg->policy_name)
 				seg_error("is missing cache policy name");
