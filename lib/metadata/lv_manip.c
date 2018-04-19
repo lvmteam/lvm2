@@ -3439,11 +3439,12 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 					    (existing_extents + new_extents) / ah->area_multiple);
 	}
 
-	log_debug("Adjusted allocation request to %" PRIu32 " logical extents. Existing size %" PRIu32 ". New size %" PRIu32 ".",
-		  total_extents, existing_extents, total_extents + existing_extents);
+	if (total_extents || existing_extents)
+		log_debug("Adjusted allocation request to " FMTu32 " logical extents. Existing size " FMTu32 ". New size " FMTu32 ".",
+			  total_extents, existing_extents, total_extents + existing_extents);
 	if (ah->log_len)
-		log_debug("Mirror log of %" PRIu32 " extents of size %" PRIu32 " sectors needed for region size %" PRIu32  ".",
-			  ah->log_len, extent_size, ah->region_size);
+		log_debug("Mirror log of " FMTu32 " extents of size " FMTu32 " sectors needed for region size %s.",
+			  ah->log_len, extent_size, display_size(cmd, (uint64_t)ah->region_size));
 
 	if (mirrors || stripes)
 		total_extents += existing_extents;
