@@ -4585,6 +4585,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 	if (!(vgname = lvmcache_vgname_from_vgid(cmd->mem, vgid))) {
 		log_debug_metadata("Reading VG by vgid %.8s no VG name found, retrying.", vgid);
 		lvmcache_destroy(cmd, 0, 0);
+		label_scan_destroy(cmd);
 		lvmcache_label_scan(cmd);
 	}
 
@@ -4597,14 +4598,33 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 
 	label_scan_setup_bcache();
 
-	if ((vg = _vg_read(cmd, vgname, vgid, warn_flags, &consistent, precommitted))) {
-		/* Does it matter if consistent is 0 or 1? */
-		label_scan_destroy(cmd);
-		return vg;
+	if (!(vg = _vg_read(cmd, vgname, vgid, warn_flags, &consistent, precommitted))) {
+		log_error("Rescan devices to look for missing VG.");
+		goto scan;
 	}
 
-	label_scan_destroy(cmd);
+	if (vg_missing_pv_count(vg)) {
+		log_error("Rescan devices to look for missing PVs.");
+		release_vg(vg);
+		goto scan;
+	}
 
+	label_scan_destroy(cmd); /* drop bcache to close devs, keep lvmcache */
+	return vg;
+
+ scan:
+	lvmcache_destroy(cmd, 0, 0);
+	label_scan_destroy(cmd);
+	lvmcache_label_scan(cmd);
+
+	if (!(vg = _vg_read(cmd, vgname, vgid, warn_flags, &consistent, precommitted)))
+		goto fail;
+
+	label_scan_destroy(cmd); /* drop bcache to close devs, keep lvmcache */
+	return vg;
+
+ fail:
+	label_scan_destroy(cmd); /* drop bache to close devs, keep lvmcache */
 	log_debug_metadata("Reading VG by vgid %.8s not found.", vgid);
 	return NULL;
 }
