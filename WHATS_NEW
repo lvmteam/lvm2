@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Fix evaluation of maximal region size for mirror log.
   Enhance mirror log size estimation and use smaller size when possible.
   Fix incorrect mirror log size calculation on 32bit arch.
   Enhnace preloading tree creating.

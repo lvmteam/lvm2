@@ -161,17 +161,17 @@ uint32_t adjusted_mirror_region_size(struct cmd_context *cmd,
 				     uint32_t extent_size, uint32_t extents,
 				     uint32_t region_size, int internal, int clustered)
 {
-	uint64_t region_max;
-	uint64_t region_min, region_min_pow2;
+	uint64_t region_max, region_min;
+	uint32_t region_min_pow2;
 
-	region_max = (UINT64_C(1) << (ffs((int)extents) - 1)) * (UINT64_C(1) << (ffs((int)extent_size) - 1));
+	region_max = (uint64_t) extents * extent_size;
 
 	if (region_max < UINT32_MAX && region_size > region_max) {
-		region_size = (uint32_t) region_max;
+		region_size =  UINT64_C(1) << (31 - clz(region_max));
 		if (!internal)
 			log_print_unless_silent("Using reduced mirror region size of %s",
 						display_size(cmd, region_size));
-                else
+		else
 			log_verbose("Using reduced mirror region size of %s",
 				    display_size(cmd, region_size));
 	}
