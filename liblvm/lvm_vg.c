@@ -219,6 +219,8 @@ static vg_t _lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
 		return NULL;
 	}
 
+	lvmcache_label_scan((struct cmd_context *)libh);
+
 	vg = vg_read((struct cmd_context *)libh, vgname, NULL, internal_flags, 0);
 	if (vg_read_error(vg)) {
 		/* FIXME: use log_errno either here in inside vg_read */
