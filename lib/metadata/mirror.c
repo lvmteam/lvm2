@@ -193,10 +193,12 @@ uint32_t adjusted_mirror_region_size(struct cmd_context *cmd,
 		 * This code should be removed when the CPG restriction is
 		 * lifted.
 		 */
-		region_min = (uint64_t) extents * extent_size / CMIRROR_REGION_COUNT_LIMIT;
-		region_min_pow2 = 1;
-		while (region_min_pow2 < region_min)
-			region_min_pow2 *= 2;
+		region_min = region_max / CMIRROR_REGION_COUNT_LIMIT;
+		if (region_min > UINT32_MAX / 2) {
+			log_error("Can't find proper region size for too big mirror.");
+			return 0;
+		}
+		region_min_pow2 = UINT64_C(1) << (1 + 31 - clz(region_min));
 
 		if (region_size < region_min_pow2) {
 			if (internal)
@@ -1591,11 +1593,12 @@ static int _add_mirrors_that_preserve_segments(struct logical_volume *lv,
 	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_MIRROR)))
 		return_0;
 
-	adjusted_region_size = adjusted_mirror_region_size(cmd,
-							   lv->vg->extent_size,
-							   lv->le_count,
-							   region_size, 1,
-							   vg_is_clustered(lv->vg));
+	if (!(adjusted_region_size = adjusted_mirror_region_size(cmd,
+								lv->vg->extent_size,
+								lv->le_count,
+								region_size, 1,
+								vg_is_clustered(lv->vg))))
+		return_0;
 
 	if (!(ah = allocate_extents(lv->vg, NULL, segtype, 1, mirrors, 0, 0,
 				    lv->le_count, allocatable_pvs, alloc, 0,

@@ -628,10 +628,11 @@ static int _lv_update_log_type(struct cmd_context *cmd,
 
 	/* Adding redundancy to the log */
 	if (old_log_count < log_count) {
-		region_size = adjusted_mirror_region_size(cmd, lv->vg->extent_size,
-							  lv->le_count,
-							  region_size, 0,
-							  vg_is_clustered(lv->vg));
+		if (!(region_size = adjusted_mirror_region_size(cmd, lv->vg->extent_size,
+								lv->le_count,
+								region_size, 0,
+								vg_is_clustered(lv->vg))))
+			return_0;
 
 		if (!add_mirror_log(cmd, original_lv, log_count,
 				    region_size, operable_pvs, alloc))
@@ -833,16 +834,17 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 		return 1;
 	}
 
+	if (!(region_size = adjusted_mirror_region_size(cmd, lv->vg->extent_size,
+							lv->le_count,
+							lp->region_size ? : seg->region_size, 0,
+							vg_is_clustered(lv->vg))))
+		return_0;
+
 	if (lv_component_is_active(lv)) {
 		log_error("Cannot convert logical volume %s with active component LV(s).",
 			  display_lvname(lv));
 		return 0;
 	}
-
-	region_size = adjusted_mirror_region_size(cmd, lv->vg->extent_size,
-						  lv->le_count,
-						  lp->region_size ? : seg->region_size, 0,
-						  vg_is_clustered(lv->vg));
 
 	if (!operable_pvs)
 		operable_pvs = pvh;

@@ -511,8 +511,9 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	if (!lv_add_mirrors(cmd, lv_mirr, 1, 1, 0, 0, log_count,
-			    allocatable_pvs, alloc,
+	if (!lv_add_mirrors(cmd, lv_mirr, 1, 1, 0,
+			    get_default_region_size(cmd),
+			    log_count, allocatable_pvs, alloc,
 			    (arg_is_set(cmd, atomic_ARG)) ?
 			    MIRROR_BY_SEGMENTED_LV : MIRROR_BY_SEG)) {
 		log_error("Failed to convert pvmove LV to mirrored.");

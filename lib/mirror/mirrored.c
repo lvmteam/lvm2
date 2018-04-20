@@ -378,12 +378,12 @@ static int _mirrored_add_target_line(struct dev_manager *dm, struct dm_pool *mem
 		}
 		region_size = seg->region_size;
 
-	} else
-		region_size = adjusted_mirror_region_size(cmd,
-							  seg->lv->vg->extent_size,
-							  seg->area_len,
-							  mirr_state->default_region_size, 1,
-							  vg_is_clustered(seg->lv->vg));
+	} else if (!(region_size = adjusted_mirror_region_size(cmd,
+							       seg->lv->vg->extent_size,
+							       seg->area_len,
+							       mirr_state->default_region_size, 1,
+							       vg_is_clustered(seg->lv->vg))))
+		return_0;
 
 	if (!dm_tree_node_add_mirror_target(node, len))
 		return_0;

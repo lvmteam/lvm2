@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Detect too big region_size with clustered mirrors.
   Fix evaluation of maximal region size for mirror log.
   Enhance mirror log size estimation and use smaller size when possible.
   Fix incorrect mirror log size calculation on 32bit arch.
