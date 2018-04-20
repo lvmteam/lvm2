@@ -41,7 +41,6 @@ lvdevices() {
 mirror_images_redundant() {
 	local vg=$1
 	local lv="$vg/$2"
-	lvs -a "$vg" -o+devices
 	for i in $(lvdevices "$lv"); do
 		echo "# $i:"
 		lvdevices "$vg/$i" | sort | uniq
@@ -158,7 +157,7 @@ mirror_nonredundant() {
 	attr=$(get lv_field "$lv" attr)
 	(echo "$attr" | grep "^......m...$" >/dev/null) || {
 		if (echo "$attr" | grep "^o.........$" >/dev/null) &&
-		   lvs -a | grep -F "[${2}_mimage" >/dev/null; then
+		   lvs -a $1 | grep -F "[${2}_mimage" >/dev/null; then
 			echo "TEST WARNING: $lv is a snapshot origin and looks like a mirror,"
 			echo "assuming it is actually a mirror"
 		else
