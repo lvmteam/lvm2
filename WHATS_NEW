@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Enhnace preloading tree creating.
   Fix regression on acceptance of any LV on lvconvert.
   Restore usability of thin LV to be again external origin for another thin.
   Keep systemd vars on change event in 69-dm-lvm-metad.rules for systemd reload.

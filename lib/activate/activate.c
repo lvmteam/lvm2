@@ -2108,6 +2108,12 @@ static int _preload_detached_lv(struct logical_volume *lv, void *data)
 			return_0;
 	}
 
+	if (!lv_is_visible(lv) && (lv_pre = find_lv(detached->lv_pre->vg, lv->name)) &&
+	    lv_is_visible(lv_pre)) {
+		if (!_lv_preload(lv_pre, detached->laopts, detached->flush_required))
+			return_0;
+	}
+
 	/* FIXME: condition here should be far more limiting to really
 	 *        detect detached LVs */
 	if ((lv_pre = find_lv(detached->lv_pre->vg, lv->name))) {
