@@ -4187,7 +4187,7 @@ int lv_extend(struct logical_volume *lv,
 	if (segtype_is_pool(segtype)) {
 		if (!(r = create_pool(lv, segtype, ah, stripes, stripe_size)))
 			stack;
-	} else if (!segtype_is_mirrored(segtype) && !segtype_is_raid(segtype)) {
+	} else if (!segtype_is_mirror(segtype) && !segtype_is_raid(segtype)) {
 		if (!(r = lv_add_segment(ah, 0, ah->area_count, lv, segtype,
 					 stripe_size, 0u, 0)))
 			stack;
@@ -7337,7 +7337,7 @@ static int _vg_check_features(struct volume_group *vg,
 	if (!(features & FMT_SEGMENTS) &&
 	    (seg_is_cache(lp) ||
 	     seg_is_cache_pool(lp) ||
-	     seg_is_mirrored(lp) ||
+	     seg_is_mirror(lp) ||
 	     seg_is_raid(lp) ||
 	     seg_is_thin(lp))) {
 		log_error("Metadata does not support %s segments.",
@@ -7778,8 +7778,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		return_NULL;
 
 	/* FIXME Log allocation and attachment should have happened inside lv_extend. */
-	if (lp->log_count &&
-	    !seg_is_raid(first_seg(lv)) && seg_is_mirrored(first_seg(lv))) {
+	if (lp->log_count && segtype_is_mirror(create_segtype)) {
 		if (!add_mirror_log(cmd, lv, lp->log_count,
 				    first_seg(lv)->region_size,
 				    lp->pvh, lp->alloc)) {
