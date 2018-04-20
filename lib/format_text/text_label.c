@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2018 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -19,7 +19,6 @@
 #include "label.h"
 #include "xlate.h"
 #include "lvmcache.h"
-#include "toolcontext.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -36,14 +35,14 @@ static int _text_can_handle(struct labeller *l __attribute__((unused)),
 	return 0;
 }
 
-struct dl_setup_baton {
+struct _dl_setup_baton {
 	struct disk_locn *pvh_dlocn_xl;
 	struct device *dev;
 };
 
 static int _da_setup(struct disk_locn *da, void *baton)
 {
-	struct dl_setup_baton *p = baton;
+	struct _dl_setup_baton *p = baton;
 	p->pvh_dlocn_xl->offset = xlate64(da->offset);
 	p->pvh_dlocn_xl->size = xlate64(da->size);
 	p->pvh_dlocn_xl++;
@@ -57,7 +56,7 @@ static int _ba_setup(struct disk_locn *ba, void *baton)
 
 static int _mda_setup(struct metadata_area *mda, void *baton)
 {
-	struct dl_setup_baton *p = baton;
+	struct _dl_setup_baton *p = baton;
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 
 	if (mdac->area.dev != p->dev)
@@ -72,7 +71,7 @@ static int _mda_setup(struct metadata_area *mda, void *baton)
 
 static int _dl_null_termination(void *baton)
 {
-	struct dl_setup_baton *p = baton;
+	struct _dl_setup_baton *p = baton;
 
 	p->pvh_dlocn_xl->offset = xlate64(UINT64_C(0));
 	p->pvh_dlocn_xl->size = xlate64(UINT64_C(0));
@@ -87,7 +86,7 @@ static int _text_write(struct label *label, void *buf)
 	struct pv_header *pvhdr;
 	struct pv_header_extension *pvhdr_ext;
 	struct lvmcache_info *info;
-	struct dl_setup_baton baton;
+	struct _dl_setup_baton baton;
 	char buffer[64] __attribute__((aligned(8)));
 	int ba1, da1, mda1, mda2;
 
@@ -319,106 +318,18 @@ static int _text_initialise_label(struct labeller *l __attribute__((unused)),
 	return 1;
 }
 
-struct update_mda_baton {
+struct _update_mda_baton {
 	struct lvmcache_info *info;
 	struct label *label;
-	int nr_outstanding_mdas;
-	unsigned ioflags;
-	lvm_callback_fn_t read_label_callback_fn;
-	void *read_label_callback_context;
-	int ret;
 };
-
-struct process_mda_header_params {
-	struct update_mda_baton *umb;
-	struct metadata_area *mda;
-	struct device *dev;
-	struct lvmcache_vgsummary vgsummary;
-	int ret;
-};
-
-static void _process_vgsummary(int failed, unsigned ioflags, void *context, const void *data)
-{
-	struct process_mda_header_params *pmp = context;
-	const struct lvmcache_vgsummary *vgsummary = data;
-
-	--pmp->umb->nr_outstanding_mdas;
-
-	/* FIXME Need to distinguish genuine errors here */
-	if (failed)
-		goto_out;
-
-	if (!lvmcache_update_vgname_and_id(pmp->umb->info, vgsummary)) {
-		pmp->umb->ret = 0;
-		pmp->ret = 0;
-	}
-
-out:
-	if (!pmp->umb->nr_outstanding_mdas && pmp->umb->ret)
-		lvmcache_make_valid(pmp->umb->info);
-
-	if (!dev_close(pmp->dev))
-		stack;
-
-	if (!pmp->umb->nr_outstanding_mdas && pmp->umb->read_label_callback_fn)
-		pmp->umb->read_label_callback_fn(!pmp->umb->ret, ioflags, pmp->umb->read_label_callback_context, pmp->umb->label);
-}
-
-static void _process_mda_header(int failed, unsigned ioflags, void *context, const void *data)
-{
-	struct process_mda_header_params *pmp = context;
-	const struct mda_header *mdah = data;
-	struct update_mda_baton *umb = pmp->umb;
-	const struct format_type *fmt = umb->label->labeller->fmt;
-	struct metadata_area *mda = pmp->mda;
-	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
-
-	if (failed)
-		goto_bad;
-
-	mda_set_ignored(mda, rlocn_is_ignored(mdah->raw_locns));
-
-	if (mda_is_ignored(mda)) {
-		log_debug_metadata("Ignoring mda on device %s at offset " FMTu64,
-				   dev_name(mdac->area.dev),
-				   mdac->area.start);
-		goto bad;
-	}
-
-	if (!vgname_from_mda(fmt, mdah, mda_is_primary(mda), &mdac->area, &pmp->vgsummary, &mdac->free_sectors, ioflags, _process_vgsummary, pmp)) {
-		/* FIXME Separate fatal and non-fatal error cases? */
-		goto_bad;
-	}
-
-	return;
-
-bad:
-	_process_vgsummary(1, ioflags, pmp, NULL);
-	return;
-}
-
-static int _count_mda(struct metadata_area *mda, void *baton)
-{
-	struct update_mda_baton *umb = baton;
-
-	umb->nr_outstanding_mdas++;
-
-	return 1;
-}
 
 static int _update_mda(struct metadata_area *mda, void *baton)
 {
-	struct process_mda_header_params *pmp;
-	struct update_mda_baton *umb = baton;
-	const struct format_type *fmt = umb->label->labeller->fmt;
-	struct dm_pool *mem = umb->label->labeller->fmt->cmd->mem;
+	struct _update_mda_baton *p = baton;
+	const struct format_type *fmt = p->label->labeller->fmt;
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
-	unsigned ioflags = umb->ioflags;
-
-	if (!(pmp = dm_pool_zalloc(mem, sizeof(*pmp)))) {
-		log_error("struct process_mda_header_params allocation failed");
-		return 0;
-	}
+	struct mda_header *mdah;
+	struct lvmcache_vgsummary vgsummary = { 0 };
 
 	/*
 	 * Using the labeller struct to preserve info about
@@ -427,34 +338,45 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 	 * TODO: make lvmcache smarter and move this cache logic there
 	 */
 
-	pmp->dev = mdac->area.dev;
-	pmp->umb = umb;
-	pmp->mda = mda;
-
 	if (!dev_open_readonly(mdac->area.dev)) {
 		mda_set_ignored(mda, 1);
 		stack;
-		if (!--umb->nr_outstanding_mdas && umb->read_label_callback_fn)
-			umb->read_label_callback_fn(!umb->ret, ioflags, umb->read_label_callback_context, umb->label);
 		return 1;
 	}
 
-	pmp->ret = 1;
-
-	if (!raw_read_mda_header_callback(fmt->cmd->mem, &mdac->area, mda_is_primary(mda), ioflags, _process_mda_header, pmp)) {
-		_process_vgsummary(1, ioflags, pmp, NULL);
+	if (!(mdah = raw_read_mda_header(fmt, &mdac->area, mda_is_primary(mda)))) {
 		stack;
+		goto close_dev;
+	}
+
+	mda_set_ignored(mda, rlocn_is_ignored(mdah->raw_locns));
+
+	if (mda_is_ignored(mda)) {
+		log_debug_metadata("Ignoring mda on device %s at offset " FMTu64,
+				   dev_name(mdac->area.dev),
+				   mdac->area.start);
+		if (!dev_close(mdac->area.dev))
+			stack;
 		return 1;
 	}
 
-	if (umb->read_label_callback_fn)
-		return 1;
-	else
-		return pmp->ret;
+	if (vgname_from_mda(fmt, mdah, mda_is_primary(mda), &mdac->area, &vgsummary,
+			     &mdac->free_sectors) &&
+	    !lvmcache_update_vgname_and_id(p->info, &vgsummary)) {
+		if (!dev_close(mdac->area.dev))
+			stack;
+		return_0;
+	}
+
+close_dev:
+	if (!dev_close(mdac->area.dev))
+		stack;
+
+	return 1;
 }
 
-static int _text_read(struct labeller *l, struct device *dev, void *buf, unsigned ioflags,
-		      lvm_callback_fn_t read_label_callback_fn, void *read_label_callback_context)
+static int _text_read(struct labeller *l, struct device *dev, void *buf,
+		 struct label **label)
 {
 	struct label_header *lh = (struct label_header *) buf;
 	struct pv_header *pvhdr;
@@ -463,9 +385,7 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf, unsigne
 	struct disk_locn *dlocn_xl;
 	uint64_t offset;
 	uint32_t ext_version;
-	struct dm_pool *mem = l->fmt->cmd->mem;
-	struct update_mda_baton *umb;
-	struct label *label;
+	struct _update_mda_baton baton;
 
 	/*
 	 * PV header base
@@ -475,9 +395,9 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf, unsigne
 	if (!(info = lvmcache_add(l, (char *)pvhdr->pv_uuid, dev,
 				  FMT_TEXT_ORPHAN_VG_NAME,
 				  FMT_TEXT_ORPHAN_VG_NAME, 0)))
-		goto_bad;
+		return_0;
 
-	label = lvmcache_get_label(info);
+	*label = lvmcache_get_label(info);
 
 	lvmcache_set_device_size(info, xlate64(pvhdr->device_size_xl));
 
@@ -523,41 +443,16 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf, unsigne
 		lvmcache_add_ba(info, offset, xlate64(dlocn_xl->size));
 		dlocn_xl++;
 	}
-
 out:
-	if (!(umb = dm_pool_zalloc(mem, sizeof(*umb)))) {
-		log_error("baton allocation failed");
-		goto_bad;
-	}
+	baton.info = info;
+	baton.label = *label;
 
-	umb->info = info;
-	umb->label = label;
-	umb->ioflags = ioflags;
-	umb->read_label_callback_fn = read_label_callback_fn;
-	umb->read_label_callback_context = read_label_callback_context;
+	if (!lvmcache_foreach_mda(info, _update_mda, &baton))
+		return_0;
 
-	umb->ret = 1;
-
-	if (!lvmcache_foreach_mda(info, _count_mda, umb))
-		goto_bad;
-
-	if (!umb->nr_outstanding_mdas) {
-		lvmcache_make_valid(info);
-		if (read_label_callback_fn)
-			read_label_callback_fn(0, ioflags, read_label_callback_context, label);
-		return 1;
-	}
-
-	if (!lvmcache_foreach_mda(info, _update_mda, umb))
-		goto_bad;
+	lvmcache_make_valid(info);
 
 	return 1;
-
-bad:
-	if (read_label_callback_fn)
-		read_label_callback_fn(1, ioflags, read_label_callback_context, NULL);
-
-	return 0;
 }
 
 static void _text_destroy_label(struct labeller *l __attribute__((unused)),

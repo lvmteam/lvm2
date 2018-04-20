@@ -53,12 +53,6 @@
 #  endif
 #endif
 
-/*
- * Always read at least 8k from disk.
- * This seems to be a good compromise for the existing LVM2 metadata layout.
- */
-#define MIN_READ_SIZE (8 * 1024)
-
 static DM_LIST_INIT(_open_devices);
 static unsigned _dev_size_seqno = 1;
 
@@ -80,318 +74,37 @@ static const char *_reason_text(dev_io_reason_t reason)
 	return _reasons[(unsigned) reason];
 }
 
-/*
- * Release the memory holding the last data we read
- */
-static void _release_devbuf(struct device_buffer *devbuf)
-{
-	dm_free(devbuf->malloc_address);
-	devbuf->malloc_address = NULL;
-}
-
-void devbufs_release(struct device *dev)
-{
-	if ((dev->flags & DEV_REGULAR))
-		return;
-
-	_release_devbuf(&dev->last_devbuf);
-	_release_devbuf(&dev->last_extra_devbuf);
-}
-
-#ifdef AIO_SUPPORT
-
-#  include <libaio.h>
-
-static io_context_t _aio_ctx = 0;
-static struct io_event *_aio_events = NULL;
-static int _aio_max = 0;
-static int64_t _aio_memory_max = 0;
-static int _aio_must_queue = 0;		/* Have we reached AIO capacity? */
-
-static DM_LIST_INIT(_aio_queue);
-
-#define DEFAULT_AIO_COLLECTION_EVENTS 32
-
-int dev_async_setup(struct cmd_context *cmd)
-{
-	int r;
-
-	_aio_max = find_config_tree_int(cmd, devices_aio_max_CFG, NULL);
-	_aio_memory_max = find_config_tree_int(cmd, devices_aio_memory_CFG, NULL) * INT64_C(1024 * 1024);
-
-	/* Threshold is zero? */
-	if (!_aio_max || !_aio_memory_max) {
-		if (_aio_ctx)
-			dev_async_exit();
-		return 1;
-	}
-
-	/* Already set up? */
-	if (_aio_ctx)
-		return 1;
-
-	log_debug_io("Setting up aio context for up to %" PRId64 " MB across %d events.", _aio_memory_max, _aio_max);
-
-	if (!_aio_events && !(_aio_events = dm_zalloc(sizeof(*_aio_events) * DEFAULT_AIO_COLLECTION_EVENTS))) {
-		log_error("Failed to allocate io_event array for asynchronous I/O.");
-		return 0;
-	}
-
-	if ((r = io_setup(_aio_max, &_aio_ctx)) < 0) {
-		/*
-		 * Possible errors:
-		 *   ENOSYS - aio not available in current kernel
-		 *   EAGAIN - _aio_max is too big
-		 *   EFAULT - invalid pointer
-		 *   EINVAL - _aio_ctx != 0 or kernel aio limits exceeded
-		 *   ENOMEM
-		 */
-		log_warn("WARNING: Asynchronous I/O setup for %d events failed: %s", _aio_max, strerror(-r));
-		log_warn("WARNING: Using only synchronous I/O.");
-		dm_free(_aio_events);
-		_aio_events = NULL;
-		_aio_ctx = 0;
-		return 0;
-	}
-
-	return 1;
-}
-
-/* Reset aio context after fork */
-int dev_async_reset(struct cmd_context *cmd)
-{
-	log_debug_io("Resetting asynchronous I/O context.");
-	_aio_ctx = 0;
-	dm_free(_aio_events);
-	_aio_events = NULL;
-
-	return dev_async_setup(cmd);
-}
-
-/*
- * Track the amount of in-flight async I/O.
- * If it exceeds the defined threshold set _aio_must_queue.
- */
-static void _update_aio_counters(int nr, ssize_t bytes)
-{
-	static int64_t aio_bytes = 0;
-	static int aio_count = 0;
-
-	aio_bytes += bytes;
-	aio_count += nr;
-
-	if (aio_count >= _aio_max || aio_bytes > _aio_memory_max)
-		_aio_must_queue = 1;
-	else
-		_aio_must_queue = 0;
-}
-
-static int _io(struct device_buffer *devbuf, unsigned ioflags);
-
-int dev_async_getevents(void)
-{
-	struct device_buffer *devbuf, *tmp;
-	lvm_callback_fn_t dev_read_callback_fn;
-	void *dev_read_callback_context;
-	int r, event_nr;
-
-	if (!_aio_ctx)
-		return 1;
-
-	do {
-		/* FIXME Add timeout - currently NULL - waits for ever for at least 1 item */
-		r = io_getevents(_aio_ctx, 1, DEFAULT_AIO_COLLECTION_EVENTS, _aio_events, NULL);
-		if (r > 0)
-			break;
-		if (!r)
-			return 1; /* Timeout elapsed */
-		if (r == -EINTR)
-			continue;
-		if (r == -EAGAIN) {
-			usleep(100);
-			return 1; /* Give the caller the opportunity to do other work before repeating */
-		}
-		/*
-		 * ENOSYS - not supported by kernel
-		 * EFAULT - memory invalid
-		 * EINVAL - _aio_ctx invalid or min_nr/nr/timeout out of range
-		 */
-		log_error("Asynchronous event collection failed: %s", strerror(-r));
-		return 0;
-	} while (1);
-
-	for (event_nr = 0; event_nr < r; event_nr++) {
-		devbuf = _aio_events[event_nr].obj->data;
-		dm_free(_aio_events[event_nr].obj);
-
-		_update_aio_counters(-1, -devbuf->where.size);
-
-		dev_read_callback_fn = devbuf->dev_read_callback_fn;
-		dev_read_callback_context = devbuf->dev_read_callback_context;
-
-		/* Clear the callbacks as a precaution */
-		devbuf->dev_read_callback_context = NULL;
-		devbuf->dev_read_callback_fn = NULL;
-
-		if (_aio_events[event_nr].res == devbuf->where.size) {
-			if (dev_read_callback_fn)
-				dev_read_callback_fn(0, AIO_SUPPORTED_CODE_PATH, dev_read_callback_context, (char *)devbuf->buf + devbuf->data_offset);
-		} else {
-			/* FIXME If partial read is possible, resubmit remainder */
-			log_error("%s: asynchronous read only I/O failed (" FMTd64 ") of " FMTu64 " bytes at " FMTu64 " (for %s): %s",
-				  dev_name(devbuf->where.dev), _aio_events[event_nr].res,
-				  (uint64_t) devbuf->where.size, (uint64_t) devbuf->where.start,
-				  _reason_text(devbuf->reason),
-				  (((int64_t)_aio_events[event_nr].res) < 0) ? strerror(-(int64_t)_aio_events[event_nr].res) : 0);
-			_release_devbuf(devbuf);
-			if (dev_read_callback_fn)
-				dev_read_callback_fn(1, AIO_SUPPORTED_CODE_PATH, dev_read_callback_context, NULL);
-			else
-				r = 0;
-		}
-	}
-
-	/* Submit further queued events if we can */
-        dm_list_iterate_items_gen_safe(devbuf, tmp, &_aio_queue, aio_queued) {
-		if (_aio_must_queue)
-			break;
-                dm_list_del(&devbuf->aio_queued);
-		_io(devbuf, 1);
-        }
-
-	return 1;
-}
-
-static int _io_async(struct device_buffer *devbuf)
-{
-	struct device_area *where = &devbuf->where;
-	struct iocb *iocb;
-	int r;
-
-	_update_aio_counters(1, devbuf->where.size);
-
-	if (!(iocb = dm_malloc(sizeof(*iocb)))) {
-		log_error("Failed to allocate I/O control block array for asynchronous I/O.");
-		return 0;
-	}
-
-	io_prep_pread(iocb, dev_fd(where->dev), devbuf->buf, where->size, where->start);
-	iocb->data = devbuf;
-
-	do {
-		r = io_submit(_aio_ctx, 1L, &iocb);
-		if (r ==1)
-			break;	/* Success */
-		if (r == -EAGAIN) {
-			/* Try to release some resources then retry */
-			usleep(100);
-			if (dev_async_getevents())
-				return_0;
-			/* FIXME Add counter/timeout so we can't get stuck here for ever */
-			continue;
-		}
-		/*
-		 * Possible errors:
-		 *   EFAULT - invalid data
-		 *   ENOSYS - no aio support in kernel
-		 *   EBADF  - bad file descriptor in iocb
-		 *   EINVAL - invalid _aio_ctx / iocb not initialised / invalid operation for this fd
-		 */
-		log_error("Asynchronous event submission failed: %s", strerror(-r));
-		return 0;
-	} while (1);
-
-	return 1;
-}
-
-void dev_async_exit(void)
-{
-	struct device_buffer *devbuf, *tmp;
-	lvm_callback_fn_t dev_read_callback_fn;
-	void *dev_read_callback_context;
-	int r;
-
-	if (!_aio_ctx)
-		return;
-
-	/* Discard any queued requests */
-        dm_list_iterate_items_gen_safe(devbuf, tmp, &_aio_queue, aio_queued) {
-                dm_list_del(&devbuf->aio_queued);
-
-		_update_aio_counters(-1, -devbuf->where.size);
-
-		dev_read_callback_fn = devbuf->dev_read_callback_fn;
-		dev_read_callback_context = devbuf->dev_read_callback_context;
-
-		_release_devbuf(devbuf);
-
-		if (dev_read_callback_fn)
-			dev_read_callback_fn(1, AIO_SUPPORTED_CODE_PATH, dev_read_callback_context, NULL);
-        }
-
-	log_debug_io("Destroying aio context.");
-	if ((r = io_destroy(_aio_ctx)) < 0)
-		/* Returns -ENOSYS if aio not in kernel or -EINVAL if _aio_ctx invalid */
-		log_error("Failed to destroy asynchronous I/O context: %s", strerror(-r));
-
-	dm_free(_aio_events);
-	_aio_events = NULL;
-
-	_aio_ctx = 0;
-}
-
-static void _queue_aio(struct device_buffer *devbuf)
-{
-	dm_list_add(&_aio_queue, &devbuf->aio_queued);
-	log_debug_io("Queueing aio.");
-}
-
-#else
-
-static int _aio_ctx = 0;
-static int _aio_must_queue = 0;
-
-int dev_async_setup(struct cmd_context *cmd)
-{
-	return 1;
-}
-
-int dev_async_reset(struct cmd_context *cmd)
-{
-	return 1;
-}
-
-int dev_async_getevents(void)
-{
-	return 1;
-}
-
-void dev_async_exit(void)
-{
-}
-
-static int _io_async(struct device_buffer *devbuf)
-{
-	return 0;
-}
-
-static void _queue_aio(struct device_buffer *devbuf)
-{
-}
-
-#endif /* AIO_SUPPORT */
-
 /*-----------------------------------------------------------------
  * The standard io loop that keeps submitting an io until it's
  * all gone.
  *---------------------------------------------------------------*/
-static int _io_sync(struct device_buffer *devbuf)
+static int _io(struct device_area *where, char *buffer, int should_write, dev_io_reason_t reason)
 {
-	struct device_area *where = &devbuf->where;
 	int fd = dev_fd(where->dev);
-	char *buffer = devbuf->buf;
 	ssize_t n = 0;
 	size_t total = 0;
+
+	if (fd < 0) {
+		log_error("Attempt to read an unopened device (%s).",
+			  dev_name(where->dev));
+		return 0;
+	}
+
+	log_debug_io("%s %s:%8" PRIu64 " bytes (sync) at %" PRIu64 "%s (for %s)",
+		     should_write ? "Write" : "Read ", dev_name(where->dev),
+		     where->size, (uint64_t) where->start,
+		     (should_write && test_mode()) ? " (test mode - suppressed)" : "", _reason_text(reason));
+
+	/*
+	 * Skip all writes in test mode.
+	 */
+	if (should_write && test_mode())
+		return 1;
+
+	if (where->size > SSIZE_MAX) {
+		log_error("Read size too large: %" PRIu64, where->size);
+		return 0;
+	}
 
 	if (lseek(fd, (off_t) where->start, SEEK_SET) == (off_t) -1) {
 		log_error("%s: lseek %" PRIu64 " failed: %s",
@@ -402,19 +115,18 @@ static int _io_sync(struct device_buffer *devbuf)
 
 	while (total < (size_t) where->size) {
 		do
-			n = devbuf->write ?
+			n = should_write ?
 			    write(fd, buffer, (size_t) where->size - total) :
 			    read(fd, buffer, (size_t) where->size - total);
 		while ((n < 0) && ((errno == EINTR) || (errno == EAGAIN)));
 
 		if (n < 0)
-			log_error("%s: synchronous %s failed after %" PRIu64 " of %" PRIu64
-				  " at %" PRIu64 " (for %s): %s", dev_name(where->dev),
-				  devbuf->write ? "write" : "read",
-				  (uint64_t) total,
-				  (uint64_t) where->size, (uint64_t) where->start,
-				  _reason_text(devbuf->reason),
-				  strerror(errno));
+			log_error_once("%s: %s failed after %" PRIu64 " of %" PRIu64
+				       " at %" PRIu64 ": %s", dev_name(where->dev),
+				       should_write ? "write" : "read",
+				       (uint64_t) total,
+				       (uint64_t) where->size,
+				       (uint64_t) where->start, strerror(errno));
 
 		if (n <= 0)
 			break;
@@ -424,42 +136,6 @@ static int _io_sync(struct device_buffer *devbuf)
 	}
 
 	return (total == (size_t) where->size);
-}
-
-static int _io(struct device_buffer *devbuf, unsigned ioflags)
-{
-	struct device_area *where = &devbuf->where;
-	int fd = dev_fd(where->dev);
-	int async = (!devbuf->write && _aio_ctx && aio_supported_code_path(ioflags) && devbuf->dev_read_callback_fn) ? 1 : 0;
-
-	if (fd < 0) {
-		log_error("Attempt to read an unopened device (%s).",
-			  dev_name(where->dev));
-		return 0;
-	}
-
-	if (!devbuf->buf && !(devbuf->malloc_address = devbuf->buf = dm_malloc_aligned((size_t) devbuf->where.size, 0))) {
-		log_error("I/O buffer malloc failed");
-		return 0;
-	}
-
-	log_debug_io("%s %s(fd %d):%8" PRIu64 " bytes (%ssync) at %" PRIu64 "%s (for %s)",
-		     devbuf->write ? "Write" : "Read ", dev_name(where->dev), fd,
-		     where->size, async ? "a" : "", (uint64_t) where->start,
-		     (devbuf->write && test_mode()) ? " (test mode - suppressed)" : "", _reason_text(devbuf->reason));
-
-	/*
-	 * Skip all writes in test mode.
-	 */
-	if (devbuf->write && test_mode())
-		return 1;
-
-	if (where->size > SSIZE_MAX) {
-		log_error("Read size too large: %" PRIu64, where->size);
-		return 0;
-	}
-
-	return async ? _io_async(devbuf) : _io_sync(devbuf);
 }
 
 /*-----------------------------------------------------------------
@@ -551,16 +227,15 @@ static void _widen_region(unsigned int block_size, struct device_area *region,
 		result->size += block_size - delta;
 }
 
-static int _aligned_io(struct device_area *where, char *write_buffer,
-		       int should_write, dev_io_reason_t reason,
-		       unsigned ioflags, lvm_callback_fn_t dev_read_callback_fn, void *dev_read_callback_context)
+static int _aligned_io(struct device_area *where, char *buffer,
+		       int should_write, dev_io_reason_t reason)
 {
+	char *bounce, *bounce_buf;
 	unsigned int physical_block_size = 0;
 	unsigned int block_size = 0;
 	unsigned buffer_was_widened = 0;
 	uintptr_t mask;
 	struct device_area widened;
-	struct device_buffer *devbuf;
 	int r = 0;
 
 	if (!(where->dev->flags & DEV_REGULAR) &&
@@ -569,11 +244,6 @@ static int _aligned_io(struct device_area *where, char *write_buffer,
 
 	if (!block_size)
 		block_size = lvm_getpagesize();
-
-	/* Apply minimum read size */
-	if (!should_write && block_size < MIN_READ_SIZE)
-		block_size = MIN_READ_SIZE;
-
 	mask = block_size - 1;
 
 	_widen_region(block_size, where, &widened);
@@ -583,75 +253,50 @@ static int _aligned_io(struct device_area *where, char *write_buffer,
 		buffer_was_widened = 1;
 		log_debug_io("Widening request for %" PRIu64 " bytes at %" PRIu64 " to %" PRIu64 " bytes at %" PRIu64 " on %s (for %s)",
 			     where->size, (uint64_t) where->start, widened.size, (uint64_t) widened.start, dev_name(where->dev), _reason_text(reason));
-	} 
-
-	devbuf = DEV_DEVBUF(where->dev, reason);
-	_release_devbuf(devbuf);
-	devbuf->where.dev = where->dev;
-	devbuf->where.start = widened.start;
-	devbuf->where.size = widened.size;
-	devbuf->write = should_write;
-	devbuf->reason = reason;
-	devbuf->dev_read_callback_fn = dev_read_callback_fn;
-	devbuf->dev_read_callback_context = dev_read_callback_context;
-
-	/* Store location of requested data relative to start of buf */
-	devbuf->data_offset = where->start - devbuf->where.start;
-
-	if (should_write && !buffer_was_widened && !((uintptr_t) write_buffer & mask))
+	} else if (!((uintptr_t) buffer & mask))
 		/* Perform the I/O directly. */
-		devbuf->buf = write_buffer;
-	else if (!should_write)
-		/* Postpone buffer allocation until we're about to issue the I/O */
-		devbuf->buf = NULL;
-	else {
-		/* Allocate a bounce buffer with an extra block */
-		if (!(devbuf->malloc_address = devbuf->buf = dm_malloc((size_t) devbuf->where.size + block_size))) {
-			log_error("Bounce buffer malloc failed");
-			return 0;
-		}
+		return _io(where, buffer, should_write, reason);
 
-		/*
-		 * Realign start of bounce buffer (using the extra sector)
-		 */
-		if (((uintptr_t) devbuf->buf) & mask)
-			devbuf->buf = (char *) ((((uintptr_t) devbuf->buf) + mask) & ~mask);
+	/* Allocate a bounce buffer with an extra block */
+	if (!(bounce_buf = bounce = dm_malloc((size_t) widened.size + block_size))) {
+		log_error("Bounce buffer malloc failed");
+		return 0;
 	}
 
-	/* If we've reached our concurrent AIO limit, add this request to the queue */
-	if (!devbuf->write && _aio_ctx && aio_supported_code_path(ioflags) && dev_read_callback_fn && _aio_must_queue) {
-		_queue_aio(devbuf);
-		return 1;
-	}
-
-	devbuf->write = 0;
+	/*
+	 * Realign start of bounce buffer (using the extra sector)
+	 */
+	if (((uintptr_t) bounce) & mask)
+		bounce = (char *) ((((uintptr_t) bounce) + mask) & ~mask);
 
 	/* Do we need to read into the bounce buffer? */
-	if ((!should_write || buffer_was_widened) && !_io(devbuf, ioflags)) {
+	if ((!should_write || buffer_was_widened) &&
+	    !_io(&widened, bounce, 0, reason)) {
 		if (!should_write)
-			goto_bad;
+			goto_out;
 		/* FIXME Handle errors properly! */
 		/* FIXME pre-extend the file */
-		memset(devbuf->buf, '\n', devbuf->where.size);
+		memset(bounce, '\n', widened.size);
 	}
 
-	if (!should_write)
-		return 1;
+	if (should_write) {
+		memcpy(bounce + (where->start - widened.start), buffer,
+		       (size_t) where->size);
 
-	/* writes */
-
-	if (devbuf->malloc_address) {
-		memcpy((char *) devbuf->buf + devbuf->data_offset, write_buffer, (size_t) where->size);
-		log_debug_io("Overwriting %" PRIu64 " bytes at %" PRIu64 " (for %s)", where->size,
-			     (uint64_t) where->start, _reason_text(devbuf->reason));
+		/* ... then we write */
+		if (!(r = _io(&widened, bounce, 1, reason)))
+			stack;
+			
+		goto out;
 	}
 
-	/* ... then we write */
-	devbuf->write = 1;
-	if (!(r = _io(devbuf, 0)))
-		stack;
-bad:
-	_release_devbuf(devbuf);
+	memcpy(buffer, bounce + (where->start - widened.start),
+	       (size_t) where->size);
+
+	r = 1;
+
+out:
+	dm_free(bounce_buf);
 	return r;
 }
 
@@ -1005,7 +650,6 @@ static void _close(struct device *dev)
 	dev->phys_block_size = -1;
 	dev->block_size = -1;
 	dm_list_del(&dev->open_list);
-	devbufs_release(dev);
 
 	log_debug_devs("Closed %s", dev_name(dev));
 
@@ -1078,121 +722,55 @@ static void _dev_inc_error_count(struct device *dev)
 			 dev->max_error_count, dev_name(dev));
 }
 
-/*
- * Data is returned (read-only) at DEV_DEVBUF_DATA(dev, reason).
- * If dev_read_callback_fn is supplied, we always return 1 and take
- * responsibility for calling it exactly once.  This might happen before the
- * function returns (if there's an error or the I/O is synchronous) or after.
- * Any error is passed to that function, which must track it if required.
- */
-static int _dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason,
-			      unsigned ioflags, lvm_callback_fn_t dev_read_callback_fn, void *callback_context)
+int dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *buffer)
 {
 	struct device_area where;
-	struct device_buffer *devbuf;
-	uint64_t buf_end;
-	int cached = 0;
-	int ret = 0;
+	int ret;
 
-	if (!dev->open_count) {
-		log_error(INTERNAL_ERROR "Attempt to access device %s while closed.", dev_name(dev));
-		goto out;
-	}
+	if (!dev->open_count)
+		return_0;
 
 	if (!_dev_is_valid(dev))
-		goto_out;
-
-	/*
-	 * Can we satisfy this from data we stored last time we read?
-	 */
-	if ((devbuf = DEV_DEVBUF(dev, reason)) && devbuf->malloc_address) {
-		buf_end = devbuf->where.start + devbuf->where.size - 1;
-		if (offset >= devbuf->where.start && offset <= buf_end && offset + len - 1 <= buf_end) {
-			/* Reuse this buffer */
-			cached = 1;
-			devbuf->data_offset = offset - devbuf->where.start;
-			log_debug_io("Cached read for %" PRIu64 " bytes at %" PRIu64 " on %s (for %s)",
-				     (uint64_t) len, (uint64_t) offset, dev_name(dev), _reason_text(reason));
-			ret = 1;
-			goto out;
-		}
-	}
+		return 0;
 
 	where.dev = dev;
 	where.start = offset;
 	where.size = len;
 
-	ret = _aligned_io(&where, NULL, 0, reason, ioflags, dev_read_callback_fn, callback_context);
-	if (!ret) {
-		log_debug("Read from %s failed (for %s).", dev_name(dev), _reason_text(reason));
+	ret = _aligned_io(&where, buffer, 0, reason);
+	if (!ret)
 		_dev_inc_error_count(dev);
-	}
-
-out:
-	/* If we had an error or this was sync I/O, pass the result to any callback fn */
-	if ((!ret || !_aio_ctx || !aio_supported_code_path(ioflags) || cached) && dev_read_callback_fn) {
-		dev_read_callback_fn(!ret, ioflags, callback_context, DEV_DEVBUF_DATA(dev, reason));
-		return 1;
-	}
 
 	return ret;
 }
 
-void dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason,
-		      unsigned ioflags, lvm_callback_fn_t dev_read_callback_fn, void *callback_context)
+/*
+ * Read from 'dev' into 'buf', possibly in 2 distinct regions, denoted
+ * by (offset,len) and (offset2,len2).  Thus, the total size of
+ * 'buf' should be len+len2.
+ */
+int dev_read_circular(struct device *dev, uint64_t offset, size_t len,
+		      uint64_t offset2, size_t len2, dev_io_reason_t reason, char *buf)
 {
-	/* Always returns 1 if callback fn is supplied */
-	if (!_dev_read_callback(dev, offset, len, reason, ioflags, dev_read_callback_fn, callback_context))
-		log_error(INTERNAL_ERROR "_dev_read_callback failed");
-}
+	if (!dev_read(dev, offset, len, reason, buf)) {
+		log_error("Read from %s failed", dev_name(dev));
+		return 0;
+	}
 
-/* Returns pointer to read-only buffer. Caller does not free it.  */
-const char *dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason)
-{
-	if (!_dev_read_callback(dev, offset, len, reason, 0, NULL, NULL))
-		return_NULL;
+	/*
+	 * The second region is optional, and allows for
+	 * a circular buffer on the device.
+	 */
+	if (!len2)
+		return 1;
 
-	return DEV_DEVBUF_DATA(dev, reason);
-}
-
-/* Read into supplied retbuf owned by the caller. */
-int dev_read_buf(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *retbuf)
-{
-	if (!_dev_read_callback(dev, offset, len, reason, 0, NULL, NULL))
-		return_0;
-
-	memcpy(retbuf, DEV_DEVBUF_DATA(dev, reason), len);
+	if (!dev_read(dev, offset2, len2, reason, buf + len)) {
+		log_error("Circular read from %s failed",
+			  dev_name(dev));
+		return 0;
+	}
 
 	return 1;
-}
-
-/*
- * Read from 'dev' in 2 distinct regions, denoted by (offset,len) and (offset2,len2).
- * Caller is responsible for dm_free().
- */
-const char *dev_read_circular(struct device *dev, uint64_t offset, size_t len,
-			uint64_t offset2, size_t len2, dev_io_reason_t reason)
-{
-	char *buf = NULL;
-
-	if (!(buf = dm_malloc(len + len2))) {
-		log_error("Buffer allocation failed for split metadata.");
-		return NULL;
-	}
-
-	if (!dev_read_buf(dev, offset, len, reason, buf)) {
-		log_error("Read from %s failed.", dev_name(dev));
-		dm_free(buf);
-		return NULL;
-	}
-
-	if (!dev_read_buf(dev, offset2, len2, reason, buf + len)) {
-		log_error("Circular read from %s failed.", dev_name(dev));
-		dm_free(buf);
-		return NULL;
-	}
-
-	return buf;
 }
 
 /* FIXME If O_DIRECT can't extend file, dev_extend first; dev_truncate after.
@@ -1238,7 +816,7 @@ int dev_write(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t r
 
 	dev->flags |= DEV_ACCESSED_W;
 
-	ret = _aligned_io(&where, buffer, 1, reason, 0, NULL, NULL);
+	ret = _aligned_io(&where, buffer, 1, reason);
 	if (!ret)
 		_dev_inc_error_count(dev);
 
@@ -1248,7 +826,7 @@ int dev_write(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t r
 int dev_set(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, int value)
 {
 	size_t s;
-	char buffer[4096] __attribute__((aligned(4096)));
+	char buffer[4096] __attribute__((aligned(8)));
 
 	if (!dev_open(dev))
 		return_0;

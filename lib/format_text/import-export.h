@@ -80,7 +80,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 				       off_t offset, uint32_t size,
 				       off_t offset2, uint32_t size2,
 				       checksum_fn_t checksum_fn,
-				       uint32_t checksum, unsigned ioflags,
+				       uint32_t checksum,
 				       time_t *when, char **desc);
 
 int text_vgsummary_import(const struct format_type *fmt,
@@ -88,9 +88,7 @@ int text_vgsummary_import(const struct format_type *fmt,
 		       off_t offset, uint32_t size,
 		       off_t offset2, uint32_t size2,
 		       checksum_fn_t checksum_fn,
-		       int checksum_only, unsigned ioflags,
-		       struct lvmcache_vgsummary *vgsummary,
-		       lvm_callback_fn_t process_vgsummary_fn,
-		       void *process_vgsummary_context);
+		       int checksum_only,
+		       struct lvmcache_vgsummary *vgsummary);
 
 #endif

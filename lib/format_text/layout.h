@@ -17,7 +17,6 @@
 #define _LVM_TEXT_LAYOUT_H
 
 #include "config.h"
-#include "format-text.h"
 #include "metadata.h"
 #include "lvmcache.h"
 #include "uuid.h"
@@ -81,9 +80,8 @@ struct mda_header {
 	struct raw_locn raw_locns[0];	/* NULL-terminated list */
 } __attribute__ ((packed));
 
-struct mda_header *raw_read_mda_header(struct dm_pool *mem, struct device_area *dev_area, int primary_mda);
-int raw_read_mda_header_callback(struct dm_pool *mem, struct device_area *dev_area, int primary_mda,
-				 unsigned ioflags, lvm_callback_fn_t mdah_callback_fn, void *mdah_callback_context);
+struct mda_header *raw_read_mda_header(const struct format_type *fmt,
+				       struct device_area *dev_area, int primary_mda);
 
 struct mda_lists {
 	struct dm_list dirs;
@@ -105,11 +103,9 @@ struct mda_context {
 #define LVM2_LABEL "LVM2 001"
 #define MDA_SIZE_MIN (8 * (unsigned) lvm_getpagesize())
 #define MDA_ORIGINAL_ALIGNMENT 512	/* Original alignment used for start of VG metadata content */
-#define MDA_ALIGNMENT 4096	/* Default alignment in bytes since 2.02.177 for start of VG metadata content. */
 
-int vgname_from_mda(const struct format_type *fmt, const struct mda_header *mdah, int primary_mda, 
+int vgname_from_mda(const struct format_type *fmt, struct mda_header *mdah, int primary_mda, 
 		    struct device_area *dev_area, struct lvmcache_vgsummary *vgsummary,
-		    uint64_t *mda_free_sectors, unsigned ioflags,
-		    lvm_callback_fn_t update_vgsummary_callback_fn, void *update_vgsummary_callback_context);
+		    uint64_t *mda_free_sectors);
 
 #endif

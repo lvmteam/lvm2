@@ -62,8 +62,8 @@ struct label_ops {
 	/*
 	 * Read a label from a volume.
 	 */
-	int (*read) (struct labeller *l, struct device *dev, void *buf,
-		     unsigned ioflags, lvm_callback_fn_t label_read_callback_fn, void *label_read_callback_context);
+	int (*read) (struct labeller * l, struct device * dev,
+		     void *buf, struct label ** label);
 
 	/*
 	 * Populate label_type etc.
@@ -96,8 +96,6 @@ struct labeller *label_get_handler(const char *name);
 int label_remove(struct device *dev);
 int label_read(struct device *dev, struct label **result,
 		uint64_t scan_sector);
-int label_read_callback(struct device *dev, uint64_t scan_sector,
-			unsigned ioflags, lvm_callback_fn_t process_label_data_fn, void *process_label_data_context);
 int label_write(struct device *dev, struct label *label);
 struct label *label_create(struct labeller *labeller);
 void label_destroy(struct label *label);

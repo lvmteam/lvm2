@@ -53,6 +53,6 @@ typedef enum {
 } filter_mode_t;
 struct dev_filter *usable_filter_create(struct dev_types *dt, filter_mode_t mode);
 
-int persistent_filter_load(struct dm_pool *mem, struct dev_filter *f, struct dm_config_tree **cft_out);
+int persistent_filter_load(struct dev_filter *f, struct dm_config_tree **cft_out);
 
 #endif 	/* _LVM_FILTER_H */

@@ -54,17 +54,15 @@ static int _lvm1_write(struct label *label __attribute__((unused)), void *buf __
 	return 0;
 }
 
-static int _lvm1_read(struct labeller *l, struct device *dev, void *buf, unsigned ioflags,
-		      lvm_callback_fn_t read_label_callback_fn, void *read_label_callback_context)
+static int _lvm1_read(struct labeller *l, struct device *dev, void *buf,
+		 struct label **label)
 {
 	struct pv_disk *pvd = (struct pv_disk *) buf;
 	struct vg_disk vgd;
 	struct lvmcache_info *info;
-	struct label *label = NULL;
 	const char *vgid = FMT_LVM1_ORPHAN_VG_NAME;
 	const char *vgname = FMT_LVM1_ORPHAN_VG_NAME;
 	unsigned exported = 0;
-	int r = 0;
 
 	munge_pvd(dev, pvd);
 
@@ -78,9 +76,8 @@ static int _lvm1_read(struct labeller *l, struct device *dev, void *buf, unsigne
 
 	if (!(info = lvmcache_add(l, (char *)pvd->pv_uuid, dev, vgname, vgid,
 				  exported)))
-		goto_out;
-
-	label = lvmcache_get_label(info);
+		return_0;
+	*label = lvmcache_get_label(info);
 
 	lvmcache_set_device_size(info, ((uint64_t)xlate32(pvd->pv_size)) << SECTOR_SHIFT);
 	lvmcache_set_ext_version(info, 0);
@@ -89,13 +86,7 @@ static int _lvm1_read(struct labeller *l, struct device *dev, void *buf, unsigne
 	lvmcache_del_bas(info);
 	lvmcache_make_valid(info);
 
-	r = 1;
-
-out:
-	if (read_label_callback_fn)
-		read_label_callback_fn(!r, 0, read_label_callback_context, label);
-
-	return r;
+	return 1;
 }
 
 static int _lvm1_initialise_label(struct labeller *l __attribute__((unused)), struct label *label)

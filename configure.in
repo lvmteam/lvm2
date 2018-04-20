@@ -39,7 +39,6 @@ case "$host_os" in
 		LDDEPS="$LDDEPS .export.sym"
 		LIB_SUFFIX=so
 		DEVMAPPER=yes
-		AIO=yes
 		BUILD_LVMETAD=no
 		BUILD_LVMPOLLD=no
 		LOCKDSANLOCK=no
@@ -59,7 +58,6 @@ case "$host_os" in
 		CLDNOWHOLEARCHIVE=
 		LIB_SUFFIX=dylib
 		DEVMAPPER=yes
-		AIO=no
 		ODIRECT=no
 		DM_IOCTLS=no
 		SELINUX=no
@@ -1125,24 +1123,6 @@ if test "$DEVMAPPER" = yes; then
 fi
 
 ################################################################################
-dnl -- Disable aio
-AC_MSG_CHECKING(whether to use asynchronous I/O)
-AC_ARG_ENABLE(aio,
-	      AC_HELP_STRING([--disable-aio],
-			     [disable asynchronous I/O]),
-	      AIO=$enableval)
-AC_MSG_RESULT($AIO)
-
-if test "$AIO" = yes; then
-	AC_CHECK_LIB(aio, io_setup,
-		[AC_DEFINE([AIO_SUPPORT], 1, [Define to 1 if aio is available.])
-		AIO_LIBS="-laio"
-		AIO_SUPPORT=yes],
-		[AIO_LIBS=
-		AIO_SUPPORT=no ])
-fi
-
-################################################################################
 dnl -- Build lvmetad
 AC_MSG_CHECKING(whether to build LVMetaD)
 AC_ARG_ENABLE(lvmetad,
@@ -2081,11 +2061,9 @@ AC_SUBST(DEFAULT_USE_LVMETAD)
 AC_SUBST(DEFAULT_USE_LVMPOLLD)
 AC_SUBST(DEFAULT_USE_LVMLOCKD)
 AC_SUBST(DEVMAPPER)
-AC_SUBST(AIO)
 AC_SUBST(DLM_CFLAGS)
 AC_SUBST(DLM_LIBS)
 AC_SUBST(DL_LIBS)
-AC_SUBST(AIO_LIBS)
 AC_SUBST(DMEVENTD_PATH)
 AC_SUBST(DM_LIB_PATCHLEVEL)
 AC_SUBST(ELDFLAGS)

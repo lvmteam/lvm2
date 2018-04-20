@@ -59,22 +59,6 @@ devices {
 	# This configuration option is advanced.
 	scan = [ "/dev" ]
 
-	# Configuration option devices/use_aio.
-	# Use linux asynchronous I/O for parallel device access where possible.
-	# This configuration option has an automatic default value.
-	# use_aio = 1
-
-	# Configuration option devices/aio_max.
-	# Maximum number of asynchronous I/Os to issue concurrently.
-	# This configuration option has an automatic default value.
-	# aio_max = 128
-
-	# Configuration option devices/aio_memory.
-	# Approximate maximum total amount of memory (in MB) used
-	# for asynchronous I/O buffers.
-	# This configuration option has an automatic default value.
-	# aio_memory = 10
-
 	# Configuration option devices/obtain_device_list_from_udev.
 	# Obtain the list of available devices from udev.
 	# This avoids opening or using any inapplicable non-block devices or

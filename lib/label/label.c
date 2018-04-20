@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2018 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -24,8 +24,6 @@
 #include <unistd.h>
 
 /* FIXME Allow for larger labels?  Restricted to single sector currently */
-
-static struct dm_pool *_labeller_mem;
 
 /*
  * Internal labeller struct.
@@ -59,13 +57,7 @@ static struct labeller_i *_alloc_li(const char *name, struct labeller *l)
 
 int label_init(void)
 {
-	if (!(_labeller_mem = dm_pool_create("label scan", 128))) {
-		log_error("Labeller pool creation failed.");
-		return 0;
-	}
-
 	dm_list_init(&_labellers);
-
 	return 1;
 }
 
@@ -80,8 +72,6 @@ void label_exit(void)
 	}
 
 	dm_list_init(&_labellers);
-
-	dm_pool_destroy(_labeller_mem);
 }
 
 int label_register_handler(struct labeller *handler)
@@ -118,74 +108,32 @@ static void _update_lvmcache_orphan(struct lvmcache_info *info)
 		stack;
 }
 
-struct find_labeller_params {
-	struct device *dev;
-	uint64_t scan_sector;	/* Sector to be scanned */
-	uint64_t label_sector;	/* Sector where label found */
-	lvm_callback_fn_t process_label_data_fn;
-	void *process_label_data_context;
-
-	struct label **result;
-
-	int ret;
-};
-
-static void _set_label_read_result(int failed, unsigned ioflags, void *context, const void *data)
+static struct labeller *_find_labeller(struct device *dev, char *buf,
+				       uint64_t *label_sector,
+				       uint64_t scan_sector)
 {
-	struct find_labeller_params *flp = context;
-	struct label **result = flp->result;
-	struct label *label = (struct label *) data;
-
-	if (failed) {
-		flp->ret = 0;
-		goto_out;
-	}
-
-	/* Fix up device and label sector which the low-level code doesn't set */
-	if (label) {
-		label->dev = flp->dev;
-		label->sector = flp->label_sector;
-	}
-
-	if (result)
-		*result = (struct label *) label;
-
-out:
-	if (!dev_close(flp->dev))
-		stack;
-
-	if (flp->process_label_data_fn) {
-		log_debug_io("Completed label reading for %s", dev_name(flp->dev));
-		flp->process_label_data_fn(!flp->ret, ioflags, flp->process_label_data_context, NULL);
-	}
-}
-
-static void _find_labeller(int failed, unsigned ioflags, void *context, const void *data)
-{
-	struct find_labeller_params *flp = context;
-	const char *readbuf = data;
-	struct device *dev = flp->dev;
-	uint64_t scan_sector = flp->scan_sector;
-	char labelbuf[LABEL_SIZE] __attribute__((aligned(8)));
 	struct labeller_i *li;
-	struct labeller *l = NULL;	/* Set when a labeller claims the label */
-	const struct label_header *lh;
+	struct labeller *r = NULL;
+	struct label_header *lh;
 	struct lvmcache_info *info;
 	uint64_t sector;
+	int found = 0;
+	char readbuf[LABEL_SCAN_SIZE] __attribute__((aligned(8)));
 
-	if (failed) {
+	if (!dev_read(dev, scan_sector << SECTOR_SHIFT,
+		      LABEL_SCAN_SIZE, DEV_IO_LABEL, readbuf)) {
 		log_debug_devs("%s: Failed to read label area", dev_name(dev));
-		_set_label_read_result(1, ioflags, flp, NULL);
-		return;
+		goto out;
 	}
 
 	/* Scan a few sectors for a valid label */
 	for (sector = 0; sector < LABEL_SCAN_SECTORS;
 	     sector += LABEL_SIZE >> SECTOR_SHIFT) {
-		lh = (struct label_header *) (readbuf + (sector << SECTOR_SHIFT));
+		lh = (struct label_header *) (readbuf +
+					      (sector << SECTOR_SHIFT));
 
 		if (!strncmp((char *)lh->id, LABEL_ID, sizeof(lh->id))) {
-			if (l) {
+			if (found) {
 				log_error("Ignoring additional label on %s at "
 					  "sector %" PRIu64, dev_name(dev),
 					  sector + scan_sector);
@@ -205,7 +153,7 @@ static void _find_labeller(int failed, unsigned ioflags, void *context, const vo
 						 "ignoring", dev_name(dev));
 				continue;
 			}
-			if (l)
+			if (found)
 				continue;
 		}
 
@@ -216,44 +164,46 @@ static void _find_labeller(int failed, unsigned ioflags, void *context, const vo
 					         "sector %" PRIu64, 
 						 dev_name(dev), li->name,
 						 sector + scan_sector);
-				if (l) {
+				if (found) {
 					log_error("Ignoring additional label "
 						  "on %s at sector %" PRIu64,
 						  dev_name(dev),
 						  sector + scan_sector);
 					continue;
 				}
-				memcpy(labelbuf, lh, LABEL_SIZE);
-				flp->label_sector = sector + scan_sector;
-				l = li->l;
+				r = li->l;
+				memcpy(buf, lh, LABEL_SIZE);
+				if (label_sector)
+					*label_sector = sector + scan_sector;
+				found = 1;
 				break;
 			}
 		}
 	}
 
-	if (!l) {
+      out:
+	if (!found) {
 		if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 0)))
 			_update_lvmcache_orphan(info);
 		log_very_verbose("%s: No label detected", dev_name(dev));
-		flp->ret = 0;
-		_set_label_read_result(1, ioflags, flp, NULL);
-	} else
-		(void) (l->ops->read)(l, dev, labelbuf, ioflags, &_set_label_read_result, flp);
+	}
+
+	return r;
 }
 
 /* FIXME Also wipe associated metadata area headers? */
 int label_remove(struct device *dev)
 {
-	char labelbuf[LABEL_SIZE] __attribute__((aligned(8)));
+	char buf[LABEL_SIZE] __attribute__((aligned(8)));
+	char readbuf[LABEL_SCAN_SIZE] __attribute__((aligned(8)));
 	int r = 1;
 	uint64_t sector;
 	int wipe;
 	struct labeller_i *li;
 	struct label_header *lh;
 	struct lvmcache_info *info;
-	const char *readbuf = NULL;
 
-	memset(labelbuf, 0, LABEL_SIZE);
+	memset(buf, 0, LABEL_SIZE);
 
 	log_very_verbose("Scanning for labels to wipe from %s", dev_name(dev));
 
@@ -266,7 +216,7 @@ int label_remove(struct device *dev)
 	 */
 	dev_flush(dev);
 
-	if (!(readbuf = dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, DEV_IO_LABEL))) {
+	if (!dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, DEV_IO_LABEL, readbuf)) {
 		log_debug_devs("%s: Failed to read label area", dev_name(dev));
 		goto out;
 	}
@@ -274,7 +224,8 @@ int label_remove(struct device *dev)
 	/* Scan first few sectors for anything looking like a label */
 	for (sector = 0; sector < LABEL_SCAN_SECTORS;
 	     sector += LABEL_SIZE >> SECTOR_SHIFT) {
-		lh = (struct label_header *) (readbuf + (sector << SECTOR_SHIFT));
+		lh = (struct label_header *) (readbuf +
+					      (sector << SECTOR_SHIFT));
 
 		wipe = 0;
 
@@ -294,7 +245,8 @@ int label_remove(struct device *dev)
 		if (wipe) {
 			log_very_verbose("%s: Wiping label at sector %" PRIu64,
 					 dev_name(dev), sector);
-			if (dev_write(dev, sector << SECTOR_SHIFT, LABEL_SIZE, DEV_IO_LABEL, labelbuf)) {
+			if (dev_write(dev, sector << SECTOR_SHIFT, LABEL_SIZE, DEV_IO_LABEL,
+				       buf)) {
 				/* Also remove the PV record from cache. */
 				info = lvmcache_info_from_pvid(dev->pvid, dev, 0);
 				if (info)
@@ -315,38 +267,20 @@ int label_remove(struct device *dev)
 	return r;
 }
 
-static int _label_read(struct device *dev, uint64_t scan_sector, struct label **result,
-		       unsigned ioflags, lvm_callback_fn_t process_label_data_fn, void *process_label_data_context)
+int label_read(struct device *dev, struct label **result,
+		uint64_t scan_sector)
 {
+	char buf[LABEL_SIZE] __attribute__((aligned(8)));
+	struct labeller *l;
+	uint64_t sector;
 	struct lvmcache_info *info;
-	struct find_labeller_params *flp;
+	int r = 0;
 
 	if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 1))) {
 		log_debug_devs("Reading label from lvmcache for %s", dev_name(dev));
-		if (result)
-			*result = lvmcache_get_label(info);
-		if (process_label_data_fn) {
-			log_debug_io("Completed label reading for %s", dev_name(dev));
-			process_label_data_fn(0, ioflags, process_label_data_context, NULL);
-		}
+		*result = lvmcache_get_label(info);
 		return 1;
 	}
-
-	if (!(flp = dm_pool_zalloc(_labeller_mem, sizeof *flp))) {
-		log_error("find_labeller_params allocation failed.");
-		return 0;
-	}
-
-	flp->dev = dev;
-	flp->scan_sector = scan_sector;
-	flp->result = result;
-	flp->process_label_data_fn = process_label_data_fn;
-	flp->process_label_data_context = process_label_data_context;
-	flp->ret = 1;
-
-	/* Ensure result is always wiped as a precaution */
-	if (result)
-		*result = NULL;
 
 	log_debug_devs("Reading label from device %s", dev_name(dev));
 
@@ -356,26 +290,19 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 		if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 0)))
 			_update_lvmcache_orphan(info);
 
-		return 0;
+		return r;
 	}
 
-	dev_read_callback(dev, scan_sector << SECTOR_SHIFT, LABEL_SCAN_SIZE, DEV_IO_LABEL, ioflags, _find_labeller, flp);
-	if (process_label_data_fn)
-		return 1;
-	else
-		return flp->ret;
-}
+	if ((l = _find_labeller(dev, buf, &sector, scan_sector)))
+		if ((r = (l->ops->read)(l, dev, buf, result)) && result && *result) {
+			(*result)->dev = dev;
+			(*result)->sector = sector;
+		}
 
-/* result may be NULL if caller doesn't need it */
-int label_read(struct device *dev, struct label **result, uint64_t scan_sector)
-{
-	return _label_read(dev, scan_sector, result, 0, NULL, NULL);
-}
+	if (!dev_close(dev))
+		stack;
 
-int label_read_callback(struct device *dev, uint64_t scan_sector, unsigned ioflags,
-		       lvm_callback_fn_t process_label_data_fn, void *process_label_data_context)
-{
-	return _label_read(dev, scan_sector, NULL, ioflags, process_label_data_fn, process_label_data_context);
+	return r;
 }
 
 /* Caller may need to use label_get_handler to create label struct! */

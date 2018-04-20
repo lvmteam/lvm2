@@ -1245,23 +1245,11 @@ int dev_cache_check_for_open_devices(void)
 
 int dev_cache_exit(void)
 {
-	struct btree_iter *b;
 	int num_open = 0;
-
-	dev_async_exit();
 
 	if (_cache.names)
 		if ((num_open = _check_for_open_devices(1)) > 0)
 			log_error(INTERNAL_ERROR "%d device(s) were left open and have been closed.", num_open);
-
-	if (_cache.devices) {
-		/* FIXME Replace with structured devbuf cache */
-		b = btree_first(_cache.devices);
-		while (b) {
-			devbufs_release(btree_get_data(b));
-			b = btree_next(b);
-		}
-	}
 
 	if (_cache.mem)
 		dm_pool_destroy(_cache.mem);
