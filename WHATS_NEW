@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Enhance mirror log size estimation and use smaller size when possible.
   Fix incorrect mirror log size calculation on 32bit arch.
   Enhnace preloading tree creating.
   Fix regression on acceptance of any LV on lvconvert.

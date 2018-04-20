@@ -1805,10 +1805,18 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	if ((log_count > 1) &&
-	    !_form_mirror(cmd, ah, log_lv, log_count-1, 1, 0, region_size, 2)) {
-		log_error("Failed to form mirrored log.");
-		return NULL;
+	if (log_count > 1) {
+		/* Kernel requires a mirror to be at least 1 region large. */
+		if (region_size > log_lv->size) {
+			region_size = UINT64_C(1) << (31 - clz(log_lv->size));
+			log_debug("Adjusting region_size to %s for mirrored log.",
+				  display_size(cmd, (uint64_t)region_size));
+		}
+
+		if (!_form_mirror(cmd, ah, log_lv, log_count-1, 1, 0, region_size, 2)) {
+			log_error("Failed to form mirrored log.");
+			return NULL;
+		}
 	}
 
 	if (!_init_mirror_log(cmd, log_lv, in_sync, &lv->tags, 1)) {

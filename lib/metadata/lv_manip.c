@@ -1681,19 +1681,14 @@ static uint32_t _mirror_log_extents(uint32_t region_size, uint32_t pe_size, uint
 	log_size >>= SECTOR_SHIFT;
 	log_size = dm_div_up(log_size, pe_size);
 
-	/*
-	 * Kernel requires a mirror to be at least 1 region large.  So,
-	 * if our mirror log is itself a mirror, it must be at least
-	 * 1 region large.  This restriction may not be necessary for
-	 * non-mirrored logs, but we apply the rule anyway.
-	 *
-	 * (The other option is to make the region size of the log
-	 * mirror smaller than the mirror it is acting as a log for,
-	 * but that really complicates things.  It's much easier to
-	 * keep the region_size the same for both.)
-	 */
-	return (log_size > (region_size / pe_size)) ? log_size :
-		(region_size / pe_size);
+	if (log_size > UINT32_MAX) {
+		log_error("Log size needs too many extents "FMTu64" with region size of %u sectors.",
+			  log_size,  region_size);
+		log_size = UINT32_MAX;
+		/* VG likely will not have enough free space for this allocation -> error */
+	}
+
+	return (uint32_t) log_size;
 }
 
 /* Is there enough total space or should we give up immediately? */
