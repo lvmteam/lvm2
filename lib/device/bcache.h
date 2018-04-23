@@ -97,8 +97,6 @@ enum bcache_get_flags {
 	GF_DIRTY = (1 << 1)
 };
 
-typedef uint64_t block_address;
-
 unsigned bcache_nr_cache_blocks(struct bcache *cache);
 unsigned bcache_max_prefetches(struct bcache *cache);
 
