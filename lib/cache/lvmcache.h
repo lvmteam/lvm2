@@ -214,8 +214,10 @@ int lvmcache_get_vg_devs(struct cmd_context *cmd,
 void lvmcache_set_independent_location(const char *vgname);
 
 void lvmcache_save_vg(struct volume_group *vg, int precommitted);
-struct volume_group *lvmcache_get_saved_vg(const char *vgid);
+struct volume_group *lvmcache_get_saved_vg(const char *vgid, int precommitted);
+struct volume_group *lvmcache_get_saved_vg_latest(const char *vgid);
 void lvmcache_drop_saved_vg(struct volume_group *vg);
+void lvmcache_drop_saved_vgid(const char *vgid);
 
 int lvmcache_scan_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid);
 

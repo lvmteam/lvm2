@@ -50,6 +50,7 @@ struct volume_group {
 	uint32_t seqno;		/* Metadata sequence number */
 	unsigned skip_validate_lock_args : 1;
 	unsigned lvmetad_update_pending: 1;
+	unsigned saved_in_clvmd: 1;
 
 	/*
 	 * The parsed committed (on-disk) copy of this VG; is NULL if this VG is committed

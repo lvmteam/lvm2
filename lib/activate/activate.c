@@ -29,6 +29,7 @@
 #include "segtype.h"
 #include "sharedlib.h"
 #include "lvmcache.h"
+#include "metadata.h"
 
 #include <limits.h>
 #include <fcntl.h>
@@ -2144,11 +2145,52 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	struct dm_pool *mem = NULL;
 	struct dm_list suspend_lvs;
 	struct lv_list *lvl;
+	const union lvid *lvid = (const union lvid *) lvid_s;
+	const char *vgid = (const char *)lvid->id[0].uuid;
+	struct volume_group *vg;
+	struct volume_group *vg_pre;
 	int found;
 
 	if (!activation())
 		return 1;
 
+	if (lv && lv_pre)
+		goto skip_read;
+
+	vg = lvmcache_get_saved_vg(vgid, 0);
+	vg_pre = lvmcache_get_saved_vg(vgid, 1);
+
+	if (!vg || !vg_pre) {
+		lvmcache_drop_saved_vgid(vgid);
+
+		vg = vg_read_by_vgid(cmd, vgid, 0);
+		vg_pre = vg_read_by_vgid(cmd, vgid, 1);
+
+		if (!vg || !vg_pre) {
+			log_error("lv_suspend could not find vgid %.8s vg %p vg_pre %p",
+				  vgid, vg, vg_pre);
+			goto out;
+		}
+
+		log_debug("lv_suspend found vg %s vg %p vg_pre %p",
+			  vg->name, vg, vg_pre);
+
+		if ((vg->status & EXPORTED_VG) || (vg_pre->status & EXPORTED_VG)) {
+			log_error("Volume group \"%s\" is exported", vg->name);
+			goto out;
+		}
+	}
+
+	lv = lv_to_free = find_lv_in_vg_by_lvid(vg, lvid);
+	lv_pre = lv_pre_to_free = find_lv_in_vg_by_lvid(vg_pre, lvid);
+
+	if (!lv || !lv_pre) {
+		log_error("lv_suspend could not find lv %p lv_pre %p vg %p vg_pre %p vgid %s",
+			  lv, lv_pre, vg, vg_pre, vgid);
+		goto out;
+	}
+
+skip_read:
 	/* lv comes from committed metadata */
 	if (!lv && !(lv_to_free = lv = lv_from_lvid(cmd, lvid_s, 0)))
 		goto_out;
@@ -2405,16 +2447,16 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	 * When called in clvmd, lvid_s is set and lv is not.  We need to
 	 * get the VG metadata without reading disks because devs are
 	 * suspended.  lv_suspend() saved old and new VG metadata for us
-	 * to use here.  If vg_commit() happened, lvmcache_get_saved_vg
+	 * to use here.  If vg_commit() happened, lvmcache_get_saved_vg_latest
 	 * will return the new metadata for us to use in resuming LVs.
-	 * If vg_commit() did not happen, lvmcache_get_saved_vg
+	 * If vg_commit() did not happen, lvmcache_get_saved_vg_latest
 	 * returns the old metadata which we use to resume LVs.
 	 */
 	if (!lv && lvid_s) {
 		lvid = (const union lvid *) lvid_s;
 		vgid = (const char *)lvid->id[0].uuid;
 
-		if ((vg = lvmcache_get_saved_vg(vgid))) {
+		if ((vg = lvmcache_get_saved_vg_latest(vgid))) {
 			log_debug_activation("Resuming LVID %s found saved vg seqno %d %s", lvid_s, vg->seqno, vg->name);
 			if ((lv_found = find_lv_in_vg_by_lvid(vg, lvid))) {
 				log_debug_activation("Resuming LVID %s found saved LV %s", lvid_s, display_lvname(lv_found));
@@ -2635,33 +2677,11 @@ int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 			 int *activate_lv, const struct logical_volume *lv)
 {
 	const struct logical_volume *lv_to_free = NULL;
-	struct volume_group *vg = NULL;
-	struct logical_volume *lv_found = NULL;
-	const union lvid *lvid;
-	const char *vgid;
 	int r = 0;
 
 	if (!activation()) {
 		*activate_lv = 1;
 		return 1;
-	}
-
-	/*
-	 * This function is called while devices are suspended,
-	 * so try to use the copy of the vg that was saved in
-	 * lv_suspend.
-	 */
-	if (!lv && lvid_s) {
-		lvid = (const union lvid *) lvid_s;
-		vgid = (const char *)lvid->id[0].uuid;
-
-		if ((vg = lvmcache_get_saved_vg(vgid))) {
-			log_debug_activation("activation_filter for %s found saved VG seqno %d %s", lvid_s, vg->seqno, vg->name);
-			if ((lv_found = find_lv_in_vg_by_lvid(vg, lvid))) {
-				log_debug_activation("activation_filter for %s found saved LV %s", lvid_s, display_lvname(lv_found));
-				lv = lv_found;
-			}
-		}
 	}
 
 	if (!lv && !(lv_to_free = lv = lv_from_lvid(cmd, lvid_s, 0)))

@@ -97,6 +97,11 @@ void release_vg(struct volume_group *vg)
 	if (!vg || (vg->fid && vg == vg->fid->fmt->orphan_vg))
 		return;
 
+	if (vg->saved_in_clvmd) {
+		log_debug("release_vg skip saved %s %p", vg->name, vg);
+		return;
+	}
+
 	release_vg(vg->vg_committed);
 	release_vg(vg->vg_precommitted);
 	_free_vg(vg);

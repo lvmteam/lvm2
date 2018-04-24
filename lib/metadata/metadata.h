@@ -374,6 +374,10 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 struct logical_volume *find_lv_in_vg_by_lvid(struct volume_group *vg,
 					     const union lvid *lvid);
 
+struct volume_group *vg_read_by_vgid(struct cmd_context *cmd,
+                                     const char *vgid,
+                                     unsigned precommitted);
+
 struct lv_list *find_lv_in_lv_list(const struct dm_list *ll,
 				   const struct logical_volume *lv);
 

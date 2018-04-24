@@ -4559,9 +4559,9 @@ void free_pv_fid(struct physical_volume *pv)
  * activate.c so we know the appropriate VG lock is already held and
  * the vg_read_internal is therefore safe.
  */
-static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
-					    const char *vgid,
-					    unsigned precommitted)
+struct volume_group *vg_read_by_vgid(struct cmd_context *cmd,
+				     const char *vgid,
+				     unsigned precommitted)
 {
 	const char *vgname;
 	struct volume_group *vg;
@@ -4577,6 +4577,12 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 	 */
 	if (lvmlockd_use())
 		log_error(INTERNAL_ERROR "vg_read_by_vgid failed with lvmlockd");
+
+	if ((vg = lvmcache_get_saved_vg(vgid, precommitted))) {
+		log_debug_metadata("lvmcache: using saved_vg %s seqno %d pre %d %p",
+				   vg->name, vg->seqno, precommitted, vg);
+		return vg;
+	}
 
 	/* Mustn't scan if memory locked: ensure cache gets pre-populated! */
 	if (critical_section())
@@ -4610,6 +4616,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 	}
 
 	label_scan_destroy(cmd); /* drop bcache to close devs, keep lvmcache */
+	lvmcache_save_vg(vg, precommitted);
 	return vg;
 
  scan:
@@ -4621,6 +4628,8 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 		goto fail;
 
 	label_scan_destroy(cmd); /* drop bcache to close devs, keep lvmcache */
+
+	lvmcache_save_vg(vg, precommitted);
 	return vg;
 
  fail:
@@ -4640,12 +4649,12 @@ struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s,
 	lvid = (const union lvid *) lvid_s;
 
 	log_very_verbose("Finding %svolume group for uuid %s", precommitted ? "precommitted " : "", lvid_s);
-	if (!(vg = _vg_read_by_vgid(cmd, (const char *)lvid->id[0].uuid, precommitted))) {
+	if (!(vg = vg_read_by_vgid(cmd, (const char *)lvid->id[0].uuid, precommitted))) {
 		log_error("Reading VG not found for LVID %s", lvid_s);
 		return NULL;
 	}
 
-	log_verbose("Found volume group \"%s\"", vg->name);
+	log_verbose("Found volume group \"%s\" %p", vg->name, vg);
 	if (vg->status & EXPORTED_VG) {
 		log_error("Volume group \"%s\" is exported", vg->name);
 		goto out;

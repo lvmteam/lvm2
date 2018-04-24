@@ -197,6 +197,14 @@ static void _update_cache_lock_state(const char *vgname, int locked)
 static void _saved_vg_free(struct lvmcache_vginfo *vginfo, int free_old, int free_new)
 {
 	if (free_old) {
+		if (vginfo->saved_vg_old) {
+			log_debug_cache("lvmcache: free saved_vg %s old %p",
+					vginfo->saved_vg_old->name,
+					vginfo->saved_vg_old);
+
+			vginfo->saved_vg_old->saved_in_clvmd = 0;
+		}
+
 		if (vginfo->saved_vg_old_buf)
 			dm_free(vginfo->saved_vg_old_buf);
 		if (vginfo->saved_vg_old_cft)
@@ -210,6 +218,14 @@ static void _saved_vg_free(struct lvmcache_vginfo *vginfo, int free_old, int fre
 	}
 
 	if (free_new) {
+		if (vginfo->saved_vg_new) {
+			log_debug_cache("lvmcache: free saved_vg %s new pre %p",
+					vginfo->saved_vg_new->name,
+					vginfo->saved_vg_new);
+
+			vginfo->saved_vg_new->saved_in_clvmd = 0;
+		}
+
 		if (vginfo->saved_vg_new_buf)
 			dm_free(vginfo->saved_vg_new_buf);
 		if (vginfo->saved_vg_new_cft)
@@ -230,6 +246,8 @@ static void _drop_metadata(const char *vgname, int drop_precommitted)
 	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, NULL)))
 		return;
 
+	log_debug_cache("lvmcache: dropping saved_vg %s pre %d", vgname, drop_precommitted);
+
 	if (drop_precommitted)
 		_saved_vg_free(vginfo, 0, 1);
 	else
@@ -241,7 +259,7 @@ void lvmcache_save_vg(struct volume_group *vg, int precommitted)
 	struct lvmcache_vginfo *vginfo;
 	struct format_instance *fid;
 	struct format_instance_ctx fic;
-	struct volume_group *susp_vg = NULL;
+	struct volume_group *save_vg = NULL;
 	struct dm_config_tree *susp_cft = NULL;
 	char *susp_buf = NULL;
 	size_t size;
@@ -275,39 +293,67 @@ void lvmcache_save_vg(struct volume_group *vg, int precommitted)
 	if (!(susp_cft = config_tree_from_string_without_dup_node_check(susp_buf)))
 		goto_bad;
 
-	if (!(susp_vg = import_vg_from_config_tree(susp_cft, fid)))
+	if (!(save_vg = import_vg_from_config_tree(susp_cft, fid)))
 		goto_bad;
+
+	save_vg->saved_in_clvmd = 1;
 
 	if (old) {
 		vginfo->saved_vg_old_buf = susp_buf;
 		vginfo->saved_vg_old_cft = susp_cft;
-		vginfo->saved_vg_old = susp_vg;
-		log_debug_cache("lvmcache saved suspended vg old seqno %d %s", vg->seqno, vg->name);
+		vginfo->saved_vg_old = save_vg;
+		log_debug_cache("lvmcache saved vg %s seqno %d %p",
+				save_vg->name, save_vg->seqno, save_vg);
 	} else {
 		vginfo->saved_vg_new_buf = susp_buf;
 		vginfo->saved_vg_new_cft = susp_cft;
-		vginfo->saved_vg_new = susp_vg;
-		log_debug_cache("lvmcache saved suspended vg new seqno %d %s", vg->seqno, vg->name);
+		vginfo->saved_vg_new = save_vg;
+		log_debug_cache("lvmcache saved pre vg %s seqno %d %p",
+				save_vg->name, save_vg->seqno, save_vg);
 	}
 	return;
 
 bad:
 	_saved_vg_free(vginfo, old, new);
-	log_debug_cache("lvmcache failed to save suspended pre %d vg %s", precommitted, vg->name);
+	log_debug_cache("lvmcache failed to save pre %d vg %s", precommitted, vg->name);
 }
 
-struct volume_group *lvmcache_get_saved_vg(const char *vgid)
+struct volume_group *lvmcache_get_saved_vg(const char *vgid, int precommitted)
 {
 	struct lvmcache_vginfo *vginfo;
+	struct volume_group *vg = NULL;
+	int new = precommitted;
+	int old = !precommitted;
 
 	if (!(vginfo = lvmcache_vginfo_from_vgid(vgid)))
-		return_NULL;
+		goto out;
 
+	if (new)
+		vg = vginfo->saved_vg_new;
+	else if (old)
+		vg = vginfo->saved_vg_old;
+out:
+	if (!vg)
+		log_debug_cache("lvmcache no saved vg %s pre %d", vgid, precommitted);
+	return vg;
+}
+
+struct volume_group *lvmcache_get_saved_vg_latest(const char *vgid)
+{
+	struct lvmcache_vginfo *vginfo;
+	struct volume_group *vg = NULL;
+
+	if (!(vginfo = lvmcache_vginfo_from_vgid(vgid)))
+		goto out;
 
 	if (vginfo->saved_vg_committed)
-		return vginfo->saved_vg_new;
+		vg = vginfo->saved_vg_new;
 	else
-		return vginfo->saved_vg_old;
+		vg = vginfo->saved_vg_old;
+out:
+	if (!vg)
+		log_debug_cache("lvmcache no saved vg %s", vgid);
+	return vg;
 }
 
 void lvmcache_drop_saved_vg(struct volume_group *vg)
@@ -315,6 +361,16 @@ void lvmcache_drop_saved_vg(struct volume_group *vg)
 	struct lvmcache_vginfo *vginfo;
 
 	if (!(vginfo = lvmcache_vginfo_from_vgid((const char *)&vg->id)))
+		return;
+
+	_saved_vg_free(vginfo, 1, 1);
+}
+
+void lvmcache_drop_saved_vgid(const char *vgid)
+{
+	struct lvmcache_vginfo *vginfo;
+
+	if (!(vginfo = lvmcache_vginfo_from_vgid(vgid)))
 		return;
 
 	_saved_vg_free(vginfo, 1, 1);
