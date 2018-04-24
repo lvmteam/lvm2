@@ -3864,6 +3864,10 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	 * we can also skip the rescan in that case.
 	 */
 	if (!cmd->can_use_one_scan || lvmcache_scan_mismatch(cmd, vgname, vgid)) {
+		/* the skip rescan special case is for clvmd vg_read_by_vgid */
+		/* FIXME: this is not a warn flag, pass this differently */
+		if (warn_flags & SKIP_RESCAN)
+			goto find_vg;
 		skipped_rescan = 0;
 		log_debug_metadata("Rescanning devices for for %s", vgname);
 		lvmcache_label_rescan_vg(cmd, vgname, vgid);
@@ -3871,6 +3875,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		log_debug_metadata("Skipped rescanning devices for %s", vgname);
 		skipped_rescan = 1;
 	}
+
+ find_vg:
 
 	if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 0))) {
 		log_debug_metadata("Cache did not find fmt for vgname %s", vgname);
@@ -4593,6 +4599,7 @@ struct volume_group *vg_read_by_vgid(struct cmd_context *cmd,
 		lvmcache_destroy(cmd, 0, 0);
 		label_scan_destroy(cmd);
 		lvmcache_label_scan(cmd);
+		warn_flags |= SKIP_RESCAN;
 	}
 
 	if (!(vgname = lvmcache_vgname_from_vgid(cmd->mem, vgid))) {
@@ -4623,6 +4630,7 @@ struct volume_group *vg_read_by_vgid(struct cmd_context *cmd,
 	lvmcache_destroy(cmd, 0, 0);
 	label_scan_destroy(cmd);
 	lvmcache_label_scan(cmd);
+	warn_flags |= SKIP_RESCAN;
 
 	if (!(vg = _vg_read(cmd, vgname, vgid, warn_flags, &consistent, precommitted)))
 		goto fail;

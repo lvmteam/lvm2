@@ -645,6 +645,7 @@ void pvcreate_params_set_defaults(struct pvcreate_params *pp);
  */ 
 #define WARN_PV_READ      0x00000001
 #define WARN_INCONSISTENT 0x00000002
+#define SKIP_RESCAN       0x00000004
 
 /*
 * Utility functions
