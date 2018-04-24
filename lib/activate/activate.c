@@ -2181,8 +2181,8 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	 * did happen (or failed), and it will resume LVs using the
 	 * new/precommitted metadata if the vg_commit succeeded.
 	 */
-	lvmcache_save_suspended_vg(lv->vg, 0);
-	lvmcache_save_suspended_vg(lv_pre->vg, 1);
+	lvmcache_save_vg(lv->vg, 0);
+	lvmcache_save_vg(lv_pre->vg, 1);
 
 	if (!info.exists || info.suspended) {
 		if (!error_if_not_suspended) {
@@ -2405,16 +2405,16 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	 * When called in clvmd, lvid_s is set and lv is not.  We need to
 	 * get the VG metadata without reading disks because devs are
 	 * suspended.  lv_suspend() saved old and new VG metadata for us
-	 * to use here.  If vg_commit() happened, lvmcache_get_suspended_vg
+	 * to use here.  If vg_commit() happened, lvmcache_get_saved_vg
 	 * will return the new metadata for us to use in resuming LVs.
-	 * If vg_commit() did not happen, lvmcache_get_suspended_vg
+	 * If vg_commit() did not happen, lvmcache_get_saved_vg
 	 * returns the old metadata which we use to resume LVs.
 	 */
 	if (!lv && lvid_s) {
 		lvid = (const union lvid *) lvid_s;
 		vgid = (const char *)lvid->id[0].uuid;
 
-		if ((vg = lvmcache_get_suspended_vg(vgid))) {
+		if ((vg = lvmcache_get_saved_vg(vgid))) {
 			log_debug_activation("Resuming LVID %s found saved vg seqno %d %s", lvid_s, vg->seqno, vg->name);
 			if ((lv_found = find_lv_in_vg_by_lvid(vg, lvid))) {
 				log_debug_activation("Resuming LVID %s found saved LV %s", lvid_s, display_lvname(lv_found));
@@ -2655,7 +2655,7 @@ int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 		lvid = (const union lvid *) lvid_s;
 		vgid = (const char *)lvid->id[0].uuid;
 
-		if ((vg = lvmcache_get_suspended_vg(vgid))) {
+		if ((vg = lvmcache_get_saved_vg(vgid))) {
 			log_debug_activation("activation_filter for %s found saved VG seqno %d %s", lvid_s, vg->seqno, vg->name);
 			if ((lv_found = find_lv_in_vg_by_lvid(vg, lvid))) {
 				log_debug_activation("activation_filter for %s found saved LV %s", lvid_s, display_lvname(lv_found));

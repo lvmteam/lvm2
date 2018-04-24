@@ -213,9 +213,9 @@ int lvmcache_get_vg_devs(struct cmd_context *cmd,
 			 struct dm_list *devs);
 void lvmcache_set_independent_location(const char *vgname);
 
-void lvmcache_save_suspended_vg(struct volume_group *vg, int precommitted);
-struct volume_group *lvmcache_get_suspended_vg(const char *vgid);
-void lvmcache_drop_suspended_vg(struct volume_group *vg);
+void lvmcache_save_vg(struct volume_group *vg, int precommitted);
+struct volume_group *lvmcache_get_saved_vg(const char *vgid);
+void lvmcache_drop_saved_vg(struct volume_group *vg);
 
 int lvmcache_scan_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid);
 
