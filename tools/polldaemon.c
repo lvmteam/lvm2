@@ -377,8 +377,6 @@ static void _poll_for_all_vgs(struct cmd_context *cmd,
 		process_each_vg(cmd, 0, NULL, NULL, NULL, READ_FOR_UPDATE, 0, handle, _poll_vg);
 		if (!parms->outstanding_count)
 			break;
-		if (parms->interval)
-			dev_close_all();
 		_nanosleep(parms->interval, 1);
 	}
 }
@@ -618,6 +616,12 @@ static int _poll_daemon(struct cmd_context *cmd, struct poll_operation_id *id,
 	/*
 	 * Process one specific task or all incomplete tasks?
 	 */
+
+	/* clear lvmcache/bcache/fds from the parent */
+	lvmcache_destroy(cmd, 1, 0);
+	label_scan_destroy(cmd);
+	dev_close_all();
+
 	if (id) {
 		if (!wait_for_single_lv(cmd, id, parms)) {
 			stack;
@@ -626,6 +630,7 @@ static int _poll_daemon(struct cmd_context *cmd, struct poll_operation_id *id,
 	} else {
 		if (!parms->interval)
 			parms->interval = find_config_tree_int(cmd, activation_polling_interval_CFG, NULL);
+
 		if (!(handle = init_processing_handle(cmd, NULL))) {
 			log_error("Failed to initialize processing handle.");
 			ret = ECMD_FAILED;
