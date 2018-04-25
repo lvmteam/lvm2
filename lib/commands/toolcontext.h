@@ -170,6 +170,7 @@ struct cmd_context {
 	unsigned mirror_warn_printed:1;		/* command already printed warning about non-monitored mirrors */
 	unsigned pvscan_cache_single:1;
 	unsigned can_use_one_scan:1;
+	unsigned is_clvmd:1;
 
 	/*
 	 * Filtering.

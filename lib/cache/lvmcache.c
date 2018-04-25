@@ -246,8 +246,6 @@ static void _drop_metadata(const char *vgname, int drop_precommitted)
 	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, NULL)))
 		return;
 
-	log_debug_cache("lvmcache: dropping saved_vg %s pre %d", vgname, drop_precommitted);
-
 	if (drop_precommitted)
 		_saved_vg_free(vginfo, 0, 1);
 	else

@@ -2154,6 +2154,9 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	if (!activation())
 		return 1;
 
+	if (!cmd->is_clvmd)
+		goto skip_read;
+
 	if (lv && lv_pre)
 		goto skip_read;
 
@@ -2223,8 +2226,10 @@ skip_read:
 	 * did happen (or failed), and it will resume LVs using the
 	 * new/precommitted metadata if the vg_commit succeeded.
 	 */
-	lvmcache_save_vg(lv->vg, 0);
-	lvmcache_save_vg(lv_pre->vg, 1);
+	if (cmd->is_clvmd) {
+		lvmcache_save_vg(lv->vg, 0);
+		lvmcache_save_vg(lv_pre->vg, 1);
+	}
 
 	if (!info.exists || info.suspended) {
 		if (!error_if_not_suspended) {
