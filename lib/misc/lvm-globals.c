@@ -28,7 +28,6 @@ static int _md_filtering = 0;
 static int _internal_filtering = 0;
 static int _fwraid_filtering = 0;
 static int _pvmove = 0;
-static int _full_scan_done = 0;	/* Restrict to one full scan during each cmd */
 static int _obtain_device_list_from_udev = DEFAULT_OBTAIN_DEVICE_LIST_FROM_UDEV;
 static enum dev_ext_e _external_device_info_source = DEV_EXT_NONE;
 static int _trust_cache = 0; /* Don't scan when incomplete VGs encountered */
@@ -53,8 +52,6 @@ static int _activation_checks = 0;
 static char _sysfs_dir_path[PATH_MAX] = "";
 static int _dev_disable_after_error_count = DEFAULT_DISABLE_AFTER_ERROR_COUNT;
 static uint64_t _pv_min_size = (DEFAULT_PV_MIN_SIZE_KB * 1024L >> SECTOR_SHIFT);
-static int _detect_internal_vg_cache_corruption =
-	DEFAULT_DETECT_INTERNAL_VG_CACHE_CORRUPTION;
 static const char *_unknown_device_name = DEFAULT_UNKNOWN_DEVICE_NAME;
 
 void init_verbose(int level)
@@ -92,11 +89,6 @@ void init_fwraid_filtering(int level)
 void init_pvmove(int level)
 {
 	_pvmove = level;
-}
-
-void init_full_scan_done(int level)
-{
-	_full_scan_done = level;
 }
 
 void init_obtain_device_list_from_udev(int device_list_from_udev)
@@ -197,11 +189,6 @@ void init_pv_min_size(uint64_t sectors)
 	_pv_min_size = sectors;
 }
 
-void init_detect_internal_vg_cache_corruption(int detect)
-{
-	_detect_internal_vg_cache_corruption = detect;
-}
-
 void set_cmd_name(const char *cmd)
 {
 	(void) dm_strncpy(_cmd_name, cmd, sizeof(_cmd_name));
@@ -258,11 +245,6 @@ int fwraid_filtering(void)
 int pvmove_mode(void)
 {
 	return _pvmove;
-}
-
-int full_scan_done(void)
-{
-	return _full_scan_done;
 }
 
 int obtain_device_list_from_udev(void)
@@ -382,11 +364,6 @@ int dev_disable_after_error_count(void)
 uint64_t pv_min_size(void)
 {
 	return _pv_min_size;
-}
-
-int detect_internal_vg_cache_corruption(void)
-{
-	return _detect_internal_vg_cache_corruption;
 }
 
 const char *unknown_device_name(void)

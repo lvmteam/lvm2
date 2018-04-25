@@ -209,14 +209,19 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
         cmd->handles_missing_pvs = 1;
 
 	/* FIXME: Force argument to deactivate them? */
-	if (!do_activate && (lv_open = lvs_in_vg_opened(vg))) {
+	if (!do_activate) {
 		dm_list_iterate_items(lvl, &vg->lvs)
-			if (lv_is_visible(lvl->lv) &&
-			    !lv_check_not_in_use(lvl->lv, 1)) {
-				log_error("Can't deactivate volume group \"%s\" with %d open "
-					  "logical volume(s)", vg->name, lv_open);
-				return 0;
+			label_scan_invalidate_lv(cmd, lvl->lv);
+
+	       	if ((lv_open = lvs_in_vg_opened(vg))) {
+			dm_list_iterate_items(lvl, &vg->lvs) {
+				if (lv_is_visible(lvl->lv) && !lv_check_not_in_use(lvl->lv, 1)) {
+					log_error("Can't deactivate volume group \"%s\" with %d open logical volume(s)",
+						  vg->name, lv_open);
+					return 0;
+				}
 			}
+		}
 	}
 
 	/* FIXME Move into library where clvmd can use it */

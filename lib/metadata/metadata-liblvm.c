@@ -241,6 +241,7 @@ static int _pvcreate_check(struct cmd_context *cmd, const char *name,
 			  name);
 		goto out;
 	}
+	dev_close(dev);
 
 	if (!wipe_known_signatures(cmd, dev, name,
 				   TYPE_LVM1_MEMBER | TYPE_LVM2_MEMBER,
@@ -272,7 +273,6 @@ out:
 		}
 
 	if (scan_needed) {
-		lvmcache_force_next_label_scan();
 		if (!lvmcache_label_scan(cmd)) {
 			stack;
 			r = 0;
@@ -314,7 +314,7 @@ struct physical_volume *pvcreate_vol(struct cmd_context *cmd, const char *pv_nam
 	}
 
 	if (pp->pva.idp) {
-		if ((dev = lvmcache_device_from_pvid(cmd, pp->pva.idp, NULL, NULL)) &&
+		if ((dev = lvmcache_device_from_pvid(cmd, pp->pva.idp, NULL)) &&
 		    (dev != dev_cache_get(pv_name, cmd->full_filter))) {
 			if (!id_write_format((const struct id*)&pp->pva.idp->uuid,
 			    buffer, sizeof(buffer)))
@@ -491,6 +491,7 @@ static int _pvremove_check(struct cmd_context *cmd, const char *name,
 {
 	static const char really_wipe_msg[] = "Really WIPE LABELS from physical volume";
 	struct device *dev;
+	struct label *label;
 	struct pv_list *pvl;
 	struct physical_volume *pv = NULL;
 	int used;
@@ -505,7 +506,7 @@ static int _pvremove_check(struct cmd_context *cmd, const char *name,
 
 	/* Is there a pv here already? */
 	/* If not, this is an error unless you used -f. */
-	if (!label_read(dev, NULL, 0)) {
+	if (!label_read(dev, &label, 0)) {
 		if (force_count)
 			return 1;
 		log_error("No PV label found on %s.", name);

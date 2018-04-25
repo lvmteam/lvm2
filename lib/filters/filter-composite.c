@@ -52,13 +52,13 @@ static void _composite_destroy(struct dev_filter *f)
 	dm_free(f);
 }
 
-static int _dump(struct dev_filter *f, struct dm_pool *mem, int merge_existing)
+static int _dump(struct dev_filter *f, int merge_existing)
 {
 	struct dev_filter **filters;
 
 	for (filters = (struct dev_filter **) f->private; *filters; ++filters)
 		if ((*filters)->dump &&
-		    !(*filters)->dump(*filters, mem, merge_existing))
+		    !(*filters)->dump(*filters, merge_existing))
 			return_0;
 
 	return 1;

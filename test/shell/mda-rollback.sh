@@ -25,6 +25,9 @@ vgextend $vg1 "$dev1"
 
 dd if=badmda of="$dev1" bs=256K count=1
 
+# the vg_read in vgck (and other commands) will repair the metadata
+vgck $vg1
+
 # dev1 is part of vg1 (as witnessed by metadata on dev2 and dev3), but its mda
 # was corrupt (written over by a backup from time dev1 was an orphan)
 check pv_field "$dev1" vg_name $vg1

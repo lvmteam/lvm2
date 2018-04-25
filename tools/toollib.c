@@ -116,7 +116,6 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 			/* FIXME Clean up properly here */
 			_exit(ECMD_FAILED);
 	}
-	dev_async_reset(cmd);
 	dev_close_all();
 
 	return 1;
@@ -1486,6 +1485,12 @@ int change_tag(struct cmd_context *cmd, struct volume_group *vg,
 	return 1;
 }
 
+/*
+ * FIXME: replace process_each_label() with process_each_vg() which is
+ * based on performing vg_read(), which provides a correct representation
+ * of VGs/PVs, that is not provided by lvmcache_label_scan().
+ */
+
 int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 		       struct processing_handle *handle,
 		       process_single_label_fn_t process_single_label)
@@ -1494,12 +1499,19 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 	struct label *label;
 	struct dev_iter *iter;
 	struct device *dev;
-
+	struct lvmcache_info *info;
+	struct dm_list process_duplicates;
+	struct device_list *devl;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
 	int opt = 0;
 
+	dm_list_init(&process_duplicates);
+
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_LABEL);
+
+	lvmcache_label_scan(cmd);
+	lvmcache_seed_infos_from_lvmetad(cmd);
 
 	if (argc) {
 		for (; opt < argc; opt++) {
@@ -1510,14 +1522,54 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 				continue;
 			}
 
-			log_set_report_object_name_and_id(dev_name(dev), NULL);
-
-			if (!label_read(dev, &label, 0)) {
-				log_error("No physical volume label read from %s.",
-					  argv[opt]);
-				ret_max = ECMD_FAILED;
+			if (!(label = lvmcache_get_dev_label(dev))) {
+				if (!lvmcache_dev_is_unchosen_duplicate(dev)) {
+					log_error("No physical volume label read from %s.", argv[opt]);
+					ret_max = ECMD_FAILED;
+				} else {
+					if (!(devl = dm_malloc(sizeof(*devl))))
+						return_0;
+					devl->dev = dev;
+					dm_list_add(&process_duplicates, &devl->list);
+				}
 				continue;
 			}
+
+			log_set_report_object_name_and_id(dev_name(dev), NULL);
+
+			ret = process_single_label(cmd, label, handle);
+			report_log_ret_code(ret);
+
+			if (ret > ret_max)
+				ret_max = ret;
+
+			log_set_report_object_name_and_id(NULL, NULL);
+
+			if (sigint_caught())
+				break;
+		}
+
+		dm_list_iterate_items(devl, &process_duplicates) {
+			/* 
+			 * remove the existing dev for this pvid from lvmcache
+			 * so that the duplicate dev can replace it.
+			 */
+			if ((info = lvmcache_info_from_pvid(devl->dev->pvid, NULL, 0)))
+				lvmcache_del(info);
+
+			/*
+			 * add info to lvmcache from the duplicate dev.
+			 */
+			label_read(devl->dev, NULL, 0);
+
+			/*
+			 * the info/label should now be found because
+			 * the label_read should have added it.
+			 */
+			if (!(label = lvmcache_get_dev_label(devl->dev)))
+				continue;
+
+			log_set_report_object_name_and_id(dev_name(dev), NULL);
 
 			ret = process_single_label(cmd, label, handle);
 			report_log_ret_code(ret);
@@ -1542,7 +1594,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 
 	while ((dev = dev_iter_get(iter)))
 	{
-		if (!label_read(dev, &label, 0))
+		if (!(label = lvmcache_get_dev_label(dev)))
 			continue;
 
 		log_set_report_object_name_and_id(dev_name(label->dev), NULL);
@@ -1980,7 +2032,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 		    (!dm_list_empty(arg_tags) && str_list_match_list(arg_tags, &vg->tags, NULL))) &&
 		    select_match_vg(cmd, handle, vg) && _select_matches(handle)) {
 
-			log_very_verbose("Processing VG %s %s", vg_name, vg_uuid ? uuid : "");
+			log_very_verbose("Running command for VG %s %s", vg_name, vg_uuid ? uuid : "");
 
 			ret = process_single_vg(cmd, vg_name, vg, handle);
 			_update_selection_result(handle, &whole_selected);
@@ -2229,14 +2281,10 @@ int process_each_vg(struct cmd_context *cmd,
 	}
 
 	/*
-	 * First rescan for available devices, then force the next
-	 * label scan to be done.  get_vgnameids() will scan labels
-	 * (when not using lvmetad).
+	 * Scan all devices to populate lvmcache with initial
+	 * list of PVs and VGs.
 	 */
-	if (cmd->cname->flags & REQUIRES_FULL_LABEL_SCAN) {
-		dev_cache_full_scan(cmd->full_filter);
-		lvmcache_force_next_label_scan();
-	}
+	lvmcache_label_scan(cmd);
 
 	/*
 	 * A list of all VGs on the system is needed when:
@@ -3121,6 +3169,14 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	}
 	log_set_report_object_name_and_id(NULL, NULL);
 
+	/*
+	 * If a PV is stacked on an LV, then the LV is kept open
+	 * in bcache, and needs to be closed so the open fd doesn't
+	 * interfere with processing the LV.
+	 */
+	dm_list_iterate_items(lvl, &final_lvs)
+		label_scan_invalidate_lv(cmd, lvl->lv);
+
 	dm_list_iterate_items(lvl, &final_lvs) {
 		lv_uuid[0] = '\0';
 		if (!id_write_format(&lvl->lv->lvid.id[1], lv_uuid, sizeof(lv_uuid)))
@@ -3744,6 +3800,12 @@ int process_each_lv(struct cmd_context *cmd,
 		ret_max = ECMD_FAILED;
 		goto_out;
 	}
+
+	/*
+	 * Scan all devices to populate lvmcache with initial
+	 * list of PVs and VGs.
+	 */
+	lvmcache_label_scan(cmd);
 
 	/*
 	 * A list of all VGs on the system is needed when:
@@ -4452,9 +4514,13 @@ int process_each_pv(struct cmd_context *cmd,
 	 * before process_each_pv is called.
 	 */
 	if (!trust_cache() && !orphans_locked) {
-		log_debug("Scanning for available devices");
 		lvmcache_destroy(cmd, 1, 0);
-		dev_cache_full_scan(cmd->full_filter);
+
+		/*
+		 * Scan all devices to populate lvmcache with initial
+		 * list of PVs and VGs.
+		 */
+		lvmcache_label_scan(cmd);
 	}
 
 	if (!get_vgnameids(cmd, &all_vgnameids, only_this_vgname, 1)) {
@@ -5030,16 +5096,6 @@ static int _pvcreate_check_single(struct cmd_context *cmd,
 	log_debug("Checking pvcreate arg %s which has existing PVID: %.32s.",
 		  pv_dev_name(pv), pv->dev->pvid[0] ? pv->dev->pvid : "<none>");
 
-	/*
-	 * This test will fail if the device belongs to an MD array.
-	 */
-	if (!dev_test_excl(pv->dev)) {
-		/* FIXME Detect whether device-mapper itself is still using it */
-		log_error("Can't open %s exclusively.  Mounted filesystem?",
-			  pv_dev_name(pv));
-		dm_list_move(&pp->arg_fail, &pd->list);
-		return 1;
-	}
 
 	/*
 	 * Don't allow using a device with duplicates.
@@ -5171,14 +5227,6 @@ static int _pv_confirm_single(struct cmd_context *cmd,
 	if (!found)
 		return 1;
 
-	/* Repeat the same from check_single. */
-	if (!dev_test_excl(pv->dev)) {
-		/* FIXME Detect whether device-mapper itself is still using it */
-		log_error("Can't open %s exclusively.  Mounted filesystem?",
-			  pv_dev_name(pv));
-		goto fail;
-	}
-
 	/*
 	 * What kind of device is this: an orphan PV, an uninitialized/unused
 	 * device, a PV used in a VG.
@@ -5245,7 +5293,6 @@ static int _pvremove_check_single(struct cmd_context *cmd,
 	struct pvcreate_params *pp = (struct pvcreate_params *) handle->custom_handle;
 	struct pvcreate_device *pd;
 	struct pvcreate_prompt *prompt;
-	struct label *label;
 	int found = 0;
 
 	if (!pv->dev)
@@ -5271,29 +5318,17 @@ static int _pvremove_check_single(struct cmd_context *cmd,
 	log_debug("Checking device %s for pvremove %.32s.",
 		  pv_dev_name(pv), pv->dev->pvid[0] ? pv->dev->pvid : "");
 
-	/*
-	 * This test will fail if the device belongs to an MD array.
-	 */
-	if (!dev_test_excl(pv->dev)) {
-		/* FIXME Detect whether device-mapper itself is still using it */
-		log_error("Can't open %s exclusively.  Mounted filesystem?",
-			  pv_dev_name(pv));
-		dm_list_move(&pp->arg_fail, &pd->list);
-		return 1;
-	}
 
 	/*
 	 * Is there a pv here already?
 	 * If not, this is an error unless you used -f.
 	 */
-	if (!label_read(pd->dev, &label, 0)) {
+	if (!lvmcache_has_dev_info(pv->dev)) {
 		if (pp->force) {
 			dm_list_move(&pp->arg_process, &pd->list);
 			return 1;
 		} else {
-			log_error("No PV label found on %s.", pd->name);
-			dm_list_move(&pp->arg_fail, &pd->list);
-			return 1;
+			pd->is_not_pv = 1;
 		}
 	}
 
@@ -5302,7 +5337,11 @@ static int _pvremove_check_single(struct cmd_context *cmd,
 	 * device, a PV used in a VG.
 	 */
 
-	if (vg && !is_orphan_vg(vg->name)) {
+	if (pd->is_not_pv) {
+		/* Device is not a PV. */
+		log_debug("Found pvremove arg %s: device is not a PV.", pd->name);
+
+	} else if (vg && !is_orphan_vg(vg->name)) {
 		/* Device is a PV used in a VG. */
 		log_debug("Found pvremove arg %s: pv is used in %s.", pd->name, vg->name);
 		pd->is_vg_pv = 1;
@@ -5324,6 +5363,7 @@ static int _pvremove_check_single(struct cmd_context *cmd,
 		else
 			pp->orphan_vg_name = FMT_TEXT_ORPHAN_VG_NAME;
 	} else {
+		/* FIXME: is it possible to reach here? */
 		log_debug("Found pvremove arg %s: device is not a PV.", pd->name);
 		/* Device is not a PV. */
 		pd->is_not_pv = 1;
@@ -5403,8 +5443,10 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	struct volume_group *orphan_vg;
 	struct dm_list remove_duplicates;
 	struct dm_list arg_sort;
+	struct dm_list rescan_devs;
 	struct pv_list *pvl;
 	struct pv_list *vgpvl;
+	struct device_list *devl;
 	const char *pv_name;
 	int consistent = 0;
 	int must_use_all = (cmd->cname->flags & MUST_USE_ALL_ARGS);
@@ -5415,6 +5457,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 
 	dm_list_init(&remove_duplicates);
 	dm_list_init(&arg_sort);
+	dm_list_init(&rescan_devs);
 
 	handle->custom_handle = pp;
 
@@ -5466,7 +5509,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 		return 0;
 	}
 
-	dev_cache_full_scan(cmd->full_filter);
+	lvmcache_label_scan(cmd);
 
 	/*
 	 * Translate arg names into struct device's.
@@ -5622,6 +5665,8 @@ int pvcreate_each_device(struct cmd_context *cmd,
 		goto out;
 	}
 
+	lvmcache_label_scan(cmd);
+
 	/*
 	 * The device args began on the arg_devices list, then the first check
 	 * loop moved those entries to arg_process as they were found.  Devices
@@ -5656,6 +5701,19 @@ int pvcreate_each_device(struct cmd_context *cmd,
 
 do_command:
 
+	dm_list_iterate_items(pd, &pp->arg_process) {
+		if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
+			goto bad;
+		devl->dev = pd->dev;
+		dm_list_add(&rescan_devs, &devl->list);
+	}
+
+	log_debug("Rescanning devices with exclusive open");
+	if (!label_scan_devs_excl(&rescan_devs)) {
+		log_debug("Failed to rescan devs excl");
+		goto bad;
+	}
+
 	/*
 	 * Reorder arg_process entries to match the original order of args.
 	 */
@@ -5674,6 +5732,8 @@ do_command:
 	 * Wipe signatures on devices being created.
 	 */
 	dm_list_iterate_items_safe(pd, pd2, &pp->arg_create) {
+		label_scan_open(pd->dev);
+
 		log_verbose("Wiping signatures on new PV %s.", pd->name);
 
 		if (!wipe_known_signatures(cmd, pd->dev, pd->name, TYPE_LVM1_MEMBER | TYPE_LVM2_MEMBER,
@@ -5751,6 +5811,8 @@ do_command:
 
 		pv_name = pd->name;
 
+		label_scan_open(pd->dev);
+
 		log_debug("Creating a new PV on %s.", pv_name);
 
 		if (!(pv = pv_create(cmd, pd->dev, &pp->pva))) {
@@ -5762,6 +5824,7 @@ do_command:
 		log_verbose("Set up physical volume for \"%s\" with %" PRIu64
 			    " available sectors.", pv_name, pv_size(pv));
 
+
 		if (!label_remove(pv->dev)) {
 			log_error("Failed to wipe existing label on %s.", pv_name);
 			dm_list_move(&pp->arg_fail, &pd->list);
@@ -5771,21 +5834,11 @@ do_command:
 		if (pp->zero) {
 			log_verbose("Zeroing start of device %s.", pv_name);
 
-			if (!dev_open_quiet(pv->dev)) {
-				log_error("%s not opened: device not zeroed.", pv_name);
-				dm_list_move(&pp->arg_fail, &pd->list);
-				continue;
-			}
-
-			if (!dev_set(pv->dev, UINT64_C(0), (size_t) 2048, DEV_IO_LABEL, 0)) {
+			if (!dev_write_zeros(pv->dev, 0, 2048)) {
 				log_error("%s not wiped: aborting.", pv_name);
-				if (!dev_close(pv->dev))
-					stack;
 				dm_list_move(&pp->arg_fail, &pd->list);
 				continue;
 			}
-			if (!dev_close(pv->dev))
-				stack;
 		}
 
 		log_verbose("Writing physical volume data to disk \"%s\".", pv_name);

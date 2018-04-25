@@ -23,7 +23,6 @@
 #include "lvm-version.h"
 #include "toolcontext.h"
 #include "config-util.h"
-#include "layout.h"
 
 #include <stdarg.h>
 #include <time.h>
@@ -124,12 +123,11 @@ static int _extend_buffer(struct formatter *f)
 
 	log_debug_metadata("Doubling metadata output buffer to " FMTu32,
 			   f->data.buf.size * 2);
-	if (!(newbuf = dm_malloc_aligned(f->data.buf.size * 2, 0)))
-		return_0;
-
-	memcpy(newbuf, f->data.buf.start, f->data.buf.size);
-	free(f->data.buf.start);
-
+	if (!(newbuf = dm_realloc(f->data.buf.start,
+				   f->data.buf.size * 2))) {
+		log_error("Buffer reallocation failed.");
+		return 0;
+	}
 	f->data.buf.start = newbuf;
 	f->data.buf.size *= 2;
 
@@ -1066,7 +1064,7 @@ size_t text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
 		return_0;
 
 	f->data.buf.size = 65536;	/* Initial metadata limit */
-	if (!(f->data.buf.start = dm_malloc_aligned(f->data.buf.size, 0))) {
+	if (!(f->data.buf.start = dm_malloc(f->data.buf.size))) {
 		log_error("text_export buffer allocation failed");
 		goto out;
 	}
@@ -1081,12 +1079,7 @@ size_t text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
 		goto_out;
 	}
 
-	f->data.buf.used += 1;	/* Terminating NUL */
-
-	/* Zero fill up to next alignment boundary */
-	memset(f->data.buf.start + f->data.buf.used, 0, MDA_ALIGNMENT - f->data.buf.used % MDA_ALIGNMENT);
-
-	r = f->data.buf.used;
+	r = f->data.buf.used + 1;
 	*buf = f->data.buf.start;
 
       out:

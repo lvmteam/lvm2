@@ -1,8 +1,5 @@
 /* include/configure.h.in.  Generated from configure.in by autoheader.  */
 
-/* Define to 1 if aio is available. */
-#undef AIO_SUPPORT
-
 /* Define to 1 to use libblkid detection of signatures when wiping. */
 #undef BLKID_WIPING_SUPPORT
 
@@ -350,9 +347,6 @@
 /* Define to 1 if the system has the type `ptrdiff_t'. */
 #undef HAVE_PTRDIFF_T
 
-/* Define to 1 if the compiler has the `__builtin_clz` builtin. */
-#undef HAVE___BUILTIN_CLZ
-
 /* Define to 1 if you have the <readline/history.h> header file. */
 #undef HAVE_READLINE_HISTORY_H
 
@@ -481,8 +475,15 @@
 /* Define to 1 if you have the `strtoull' function. */
 #undef HAVE_STRTOULL
 
+/* Define to 1 if `st_blocks' is a member of `struct stat'. */
+#undef HAVE_STRUCT_STAT_ST_BLOCKS
+
 /* Define to 1 if `st_rdev' is a member of `struct stat'. */
 #undef HAVE_STRUCT_STAT_ST_RDEV
+
+/* Define to 1 if your `struct stat' has `st_blocks'. Deprecated, use
+   `HAVE_STRUCT_STAT_ST_BLOCKS' instead. */
+#undef HAVE_ST_BLOCKS
 
 /* Define to 1 if you have the <syslog.h> header file. */
 #undef HAVE_SYSLOG_H
@@ -555,6 +556,9 @@
 /* Define to 1 if you have the <sys/utsname.h> header file. */
 #undef HAVE_SYS_UTSNAME_H
 
+/* Define to 1 if you have the <sys/vfs.h> header file. */
+#undef HAVE_SYS_VFS_H
+
 /* Define to 1 if you have the <sys/wait.h> header file. */
 #undef HAVE_SYS_WAIT_H
 
@@ -593,6 +597,9 @@
 
 /* Define to 1 if the system has the type `_Bool'. */
 #undef HAVE__BOOL
+
+/* Define to 1 if the system has the `__builtin_clz' built-in function */
+#undef HAVE___BUILTIN_CLZ
 
 /* Internalization package */
 #undef INTL_PACKAGE

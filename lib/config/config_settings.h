@@ -226,16 +226,6 @@ cfg(devices_dir_CFG, "dir", devices_CFG_SECTION, CFG_ADVANCED, CFG_TYPE_STRING, 
 cfg_array(devices_scan_CFG, "scan", devices_CFG_SECTION, CFG_ADVANCED, CFG_TYPE_STRING, "#S/dev", vsn(1, 0, 0), NULL, 0, NULL,
 	"Directories containing device nodes to use with LVM.\n")
 
-cfg(devices_use_aio_CFG, "use_aio", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_USE_AIO, vsn(2, 2, 178), NULL, 0, NULL,
-	"Use linux asynchronous I/O for parallel device access where possible.\n")
-
-cfg(devices_aio_max_CFG, "aio_max", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_AIO_MAX, vsn(2, 2, 178), NULL, 0, NULL,
-	"Maximum number of asynchronous I/Os to issue concurrently.\n")
-
-cfg(devices_aio_memory_CFG, "aio_memory", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_AIO_MEMORY, vsn(2, 2, 178), NULL, 0, NULL,
-	"Approximate maximum total amount of memory (in MB) used\n"
-	"for asynchronous I/O buffers.\n")
-
 cfg_array(devices_loopfiles_CFG, "loopfiles", devices_CFG_SECTION, CFG_DEFAULT_UNDEFINED | CFG_UNSUPPORTED, CFG_TYPE_STRING, NULL, vsn(1, 2, 0), NULL, 0, NULL, NULL)
 
 cfg(devices_obtain_device_list_from_udev_CFG, "obtain_device_list_from_udev", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_OBTAIN_DEVICE_LIST_FROM_UDEV, vsn(2, 2, 85), NULL, 0, NULL,
@@ -878,11 +868,8 @@ cfg(global_abort_on_internal_errors_CFG, "abort_on_internal_errors", global_CFG_
 	"Treat any internal errors as fatal errors, aborting the process that\n"
 	"encountered the internal error. Please only enable for debugging.\n")
 
-cfg(global_detect_internal_vg_cache_corruption_CFG, "detect_internal_vg_cache_corruption", global_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_DETECT_INTERNAL_VG_CACHE_CORRUPTION, vsn(2, 2, 96), NULL, 0, NULL,
-	"Internal verification of VG structures.\n"
-	"Check if CRC matches when a parsed VG is used multiple times. This\n"
-	"is useful to catch unexpected changes to cached VG structures.\n"
-	"Please only enable for debugging.\n")
+cfg(global_detect_internal_vg_cache_corruption_CFG, "detect_internal_vg_cache_corruption", global_CFG_SECTION, 0, CFG_TYPE_BOOL, 0, vsn(2, 2, 96), NULL, vsn(2, 2, 174), NULL,
+	"No longer used.\n")
 
 cfg(global_metadata_read_only_CFG, "metadata_read_only", global_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_METADATA_READ_ONLY, vsn(2, 2, 75), NULL, 0, NULL,
 	"No operations that change on-disk metadata are permitted.\n"

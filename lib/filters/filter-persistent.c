@@ -48,11 +48,7 @@ static void _persistent_filter_wipe(struct dev_filter *f)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 
-	log_verbose("Wiping cache of LVM-capable devices");
 	dm_hash_wipe(pf->devices);
-
-	/* Trigger complete device scan */
-	dev_cache_scan(1);
 }
 
 static int _read_array(struct pfilter *pf, struct dm_config_tree *cft,
@@ -87,7 +83,7 @@ static int _read_array(struct pfilter *pf, struct dm_config_tree *cft,
 	return 1;
 }
 
-int persistent_filter_load(struct dm_pool *mem, struct dev_filter *f, struct dm_config_tree **cft_out)
+int persistent_filter_load(struct dev_filter *f, struct dm_config_tree **cft_out)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 	struct dm_config_tree *cft;
@@ -116,7 +112,7 @@ int persistent_filter_load(struct dm_pool *mem, struct dev_filter *f, struct dm_
 	if (!(cft = config_open(CONFIG_FILE_SPECIAL, pf->file, 1)))
 		return_0;
 
-	if (!config_file_read(mem, cft))
+	if (!config_file_read(cft))
 		goto_out;
 
 	log_debug_devs("Loading persistent filter cache from %s", pf->file);
@@ -125,15 +121,6 @@ int persistent_filter_load(struct dm_pool *mem, struct dev_filter *f, struct dm_
 	/* We don't gain anything by holding invalid devices */
 	/* _read_array(pf, cft, "persistent_filter_cache/invalid_devices",
 	   PF_BAD_DEVICE); */
-
-	/* Did we find anything? */
-	if (dm_hash_get_num_entries(pf->devices)) {
-		/* We populated dev_cache ourselves */
-		dev_cache_scan(0);
-		if (!dev_cache_index_devs())
-			stack;
-		r = 1;
-	}
 
 	log_very_verbose("Loaded persistent filter cache from %s", pf->file);
 
@@ -175,7 +162,7 @@ static void _write_array(struct pfilter *pf, FILE *fp, const char *path,
 		fprintf(fp, "\n\t]\n");
 }
 
-static int _persistent_filter_dump(struct dev_filter *f, struct dm_pool *mem, int merge_existing)
+static int _persistent_filter_dump(struct dev_filter *f, int merge_existing)
 {
 	struct pfilter *pf;
 	char *tmp_file;
@@ -234,7 +221,7 @@ static int _persistent_filter_dump(struct dev_filter *f, struct dm_pool *mem, in
 	lvm_stat_ctim(&ts, &info);
 	if (merge_existing && timespeccmp(&ts, &pf->ctime, !=))
 		/* Keep cft open to avoid losing lock */
-		persistent_filter_load(mem, f, &cft);
+		persistent_filter_load(f, &cft);
 
 	tmp_file = alloca(strlen(pf->file) + 5);
 	sprintf(tmp_file, "%s.tmp", pf->file);

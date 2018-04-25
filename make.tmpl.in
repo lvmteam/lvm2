@@ -13,6 +13,12 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+ifeq ($(V),1)
+	Q=
+else
+	Q=@
+endif
+
 SHELL = @SHELL@
 
 @SET_MAKE@
@@ -62,8 +68,7 @@ CLDFLAGS += @CLDFLAGS@
 ELDFLAGS += @ELDFLAGS@
 LDDEPS += @LDDEPS@
 LIB_SUFFIX = @LIB_SUFFIX@
-LVMINTERNAL_LIBS = -llvm-internal $(DMEVENT_LIBS) $(DAEMON_LIBS) $(SYSTEMD_LIBS) $(UDEV_LIBS) $(DL_LIBS) $(BLKID_LIBS) $(AIO_LIBS)
-AIO_LIBS = @AIO_LIBS@
+LVMINTERNAL_LIBS = -llvm-internal $(DMEVENT_LIBS) $(DAEMON_LIBS) $(SYSTEMD_LIBS) $(UDEV_LIBS) $(DL_LIBS) $(BLKID_LIBS)
 DL_LIBS = @DL_LIBS@
 RT_LIBS = @RT_LIBS@
 M_LIBS = @M_LIBS@
@@ -439,59 +444,70 @@ endif
 .LIBPATTERNS = lib%.so lib%.a
 
 %.o: %.c
-	$(CC) -c $(INCLUDES) $(VALGRIND_CFLAGS) $(PROGS_CFLAGS) $(DEFS) $(DEFS_$@) $(WFLAGS) $(WCFLAGS) $(CFLAGS) $(CFLAGS_$@) $< -o $@
+	@echo "    [CC] $<"
+	$(Q) $(CC) -c $(INCLUDES) $(VALGRIND_CFLAGS) $(PROGS_CFLAGS) $(DEFS) $(DEFS_$@) $(WFLAGS) $(WCFLAGS) $(CFLAGS) $(CFLAGS_$@) $< -o $@
 
 %.o: %.cpp
-	$(CXX) -c $(INCLUDES) $(VALGRIND_CFLAGS) $(DEFS) $(DEFS_$@) $(WFLAGS) $(CXXFLAGS) $(CXXFLAGS_$@) $< -o $@
+	@echo "    [CXX] $<"
+	$(Q) $(CXX) -c $(INCLUDES) $(VALGRIND_CFLAGS) $(DEFS) $(DEFS_$@) $(WFLAGS) $(CXXFLAGS) $(CXXFLAGS_$@) $< -o $@
 
 %.pot: %.c Makefile
-	$(CC) -E $(INCLUDES) $(VALGRIND_CFLAGS) $(PROGS_CFLAGS) -include $(top_builddir)/include/pogen.h $(DEFS) $(WFLAGS) $(CFLAGS) $< >$@
+	@echo "    [CC] $@"
+	$(Q) $(CC) -E $(INCLUDES) $(VALGRIND_CFLAGS) $(PROGS_CFLAGS) -include $(top_builddir)/include/pogen.h $(DEFS) $(WFLAGS) $(CFLAGS) $< >$@
 
 %.so: %.o
-	$(CC) -c $(CFLAGS) $(CLDFLAGS) $< $(LIBS) -o $@
+	@echo "    [CC] $<"
+	$(Q) $(CC) -c $(CFLAGS) $(CLDFLAGS) $< $(LIBS) -o $@
 
 ifneq (,$(LIB_SHARED))
 
 TARGETS += $(LIB_SHARED).$(LIB_VERSION)
 $(LIB_SHARED).$(LIB_VERSION): $(OBJECTS) $(LDDEPS)
+	@echo "    [CC] $@"
 ifeq ("@LIB_SUFFIX@","so")
-	$(CC) -shared -Wl,-soname,$(notdir $@) \
+	$(Q) $(CC) -shared -Wl,-soname,$(notdir $@) \
 		$(CFLAGS) $(CLDFLAGS) $(OBJECTS) $(LIBS) -o $@
 endif
 ifeq ("@LIB_SUFFIX@","dylib")
-	$(CC) -dynamiclib -dylib_current_version,$(LIB_VERSION) \
+	$(Q) $(CC) -dynamiclib -dylib_current_version,$(LIB_VERSION) \
 		$(CFLAGS) $(CLDFLAGS) $(OBJECTS) $(LIBS) -o $@
 endif
 
 $(LIB_SHARED): $(LIB_SHARED).$(LIB_VERSION)
-	$(LN_S) -f $(<F) $@
+	@echo "    [LN] $<"
+	$(Q) $(LN_S) -f $(<F) $@
 
 CLEAN_TARGETS += $(LDDEPS) .exported_symbols_generated
 
 install_lib_shared: $(LIB_SHARED)
-	$(INSTALL_PROGRAM) -D $< $(libdir)/$(<F).$(LIB_VERSION)
-	$(INSTALL_DIR) $(usrlibdir)
-	$(LN_S) -f $(USRLIB_RELPATH)$(<F).$(LIB_VERSION) $(usrlibdir)/$(<F)
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_PROGRAM) -D $< $(libdir)/$(<F).$(LIB_VERSION)
+	$(Q) $(INSTALL_DIR) $(usrlibdir)
+	$(Q) $(LN_S) -f $(USRLIB_RELPATH)$(<F).$(LIB_VERSION) $(usrlibdir)/$(<F)
 
 # FIXME: plugins are installed to subdirs
 #        and for compatibility links in libdir are created
 #        when the code is fixed links could be removed.
 install_dm_plugin: $(LIB_SHARED)
-	$(INSTALL_PROGRAM) -D $< $(libdir)/device-mapper/$(<F)
-	$(LN_S) -f device-mapper/$(<F) $(libdir)/$(<F)
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_PROGRAM) -D $< $(libdir)/device-mapper/$(<F)
+	$(Q) $(LN_S) -f device-mapper/$(<F) $(libdir)/$(<F)
 
 install_lvm2_plugin: $(LIB_SHARED)
-	$(INSTALL_PROGRAM) -D $< $(libdir)/lvm2/$(<F)
-	$(LN_S) -f lvm2/$(<F) $(libdir)/$(<F)
-	$(LN_S) -f $(<F) $(libdir)/$(<F).$(LIB_VERSION)
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_PROGRAM) -D $< $(libdir)/lvm2/$(<F)
+	$(Q) $(LN_S) -f lvm2/$(<F) $(libdir)/$(<F)
+	$(Q) $(LN_S) -f $(<F) $(libdir)/$(<F).$(LIB_VERSION)
 endif
 
 $(LIB_STATIC): $(OBJECTS)
-	$(RM) $@
-	$(AR) rsv $@ $(OBJECTS)
+	@echo "    [AR] $@"
+	$(Q) $(RM) $@
+	$(Q) $(AR) rsv $@ $(OBJECTS) > /dev/null
 
 %.d: %.c $(INC_LNS)
-	$(MKDIR_P) $(dir $@); \
+	@echo "    [DEP] $<"
+	$(Q) $(MKDIR_P) $(dir $@); \
 	set -e; \
 	FILE=`echo $@ | sed 's/\\//\\\\\\//g;s/\\.d//g'`; \
 	DEPS=`echo $(DEPS) | sed -e 's/\\//\\\\\\//g'`; \
@@ -502,7 +518,8 @@ $(LIB_STATIC): $(OBJECTS)
 	[ -s $@ ] || $(RM) $@
 
 %.mo: %.po
-	$(MSGFMT) -o $@ $<
+	@echo "    [MSGFMT] $<"
+	$(Q) $(MSGFMT) -o $@ $<
 
 CLEAN_TARGETS += \
 	$(SOURCES:%.c=%.d) $(SOURCES:%.c=%.gcno) $(SOURCES:%.c=%.gcda) \
@@ -524,7 +541,7 @@ endif
 	$(RM) $(DISTCLEAN_TARGETS) Makefile
 
 .exported_symbols_generated: $(EXPORTED_HEADER) .exported_symbols $(DEPS)
-	set -e; \
+	$(Q) set -e; \
 	( cat $(srcdir)/.exported_symbols; \
 	  if test -n "$(EXPORTED_HEADER)"; then \
 		$(CC) -E -P $(INCLUDES) $(DEFS) $(EXPORTED_HEADER) | \
@@ -537,13 +554,13 @@ EXPORTED_SYMBOLS := $(wildcard $(srcdir)/.exported_symbols.Base $(srcdir)/.expor
 
 .export.sym: .exported_symbols_generated $(EXPORTED_SYMBOLS)
 ifeq (,$(firstword $(EXPORTED_SYMBOLS)))
-	set -e; (echo "Base {"; echo "	global:";\
+	$(Q) set -e; (echo "Base {"; echo "	global:";\
 		 $(SED) "s/^/		/;s/$$/;/" $<;\
 		 echo "};";\
 		 echo "Local {"; echo "	local:"; echo "		*;"; echo "};";\
 		 ) > $@
 else
-	set -e;\
+	$(Q) set -e;\
 	R=$$($(SORT) $^ | uniq -u);\
 	test -z "$$R" || { echo "Mismatch between symbols in shared library and lists in .exported_symbols.* files: $$R"; false; } ;\
 	( for i in $$(echo $(EXPORTED_SYMBOLS) | tr ' ' '\n' | $(SORT) -rnt_ -k5 ); do\

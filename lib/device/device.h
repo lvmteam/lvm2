@@ -31,18 +31,8 @@
 #define DEV_USED_FOR_LV		0x00000100	/* Is device used for an LV */
 #define DEV_ASSUMED_FOR_LV	0x00000200	/* Is device assumed for an LV */
 #define DEV_NOT_O_NOATIME	0x00000400	/* Don't use O_NOATIME */
-
-/* ioflags */
-#define AIO_SUPPORTED_CODE_PATH	0x00000001	/* Set if the code path supports AIO */
-
-#define aio_supported_code_path(ioflags)       (((ioflags) & AIO_SUPPORTED_CODE_PATH) ? 1 : 0)
-
-/*
- * Standard format for callback functions.
- * When provided, callback functions are called exactly once.
- * If failed is set, data cannot be accessed.
- */
-typedef void (*lvm_callback_fn_t)(int failed, unsigned ioflags, void *context, const void *data);
+#define DEV_IN_BCACHE		0x00000800      /* dev fd is open and used in bcache */
+#define DEV_BCACHE_EXCL		0x00001000      /* bcache_fd should be open EXCL */
 
 /*
  * Support for external device info.
@@ -62,48 +52,6 @@ struct dev_ext {
 };
 
 /*
- * All I/O is annotated with the reason it is performed.
- */
-typedef enum dev_io_reason {
-	DEV_IO_SIGNATURES = 0,	/* Scanning device signatures */
-	DEV_IO_LABEL,		/* LVM PV disk label */
-	DEV_IO_MDA_HEADER,	/* Text format metadata area header */
-	DEV_IO_MDA_CONTENT,	/* Text format metadata area content */
-	DEV_IO_MDA_EXTRA_HEADER,	/* Header of any extra metadata areas on device */
-	DEV_IO_MDA_EXTRA_CONTENT,	/* Content of any extra metadata areas on device */
-	DEV_IO_FMT1,		/* Original LVM1 metadata format */
-	DEV_IO_POOL,		/* Pool metadata format */
-	DEV_IO_LV,		/* Content written to an LV */
-	DEV_IO_LOG		/* Logging messages */
-} dev_io_reason_t;
-
-/*
- * Is this I/O for a device's extra metadata area?
- */
-#define EXTRA_IO(reason) ((reason) == DEV_IO_MDA_EXTRA_HEADER || (reason) == DEV_IO_MDA_EXTRA_CONTENT)
-#define DEV_DEVBUF(dev, reason) (EXTRA_IO((reason)) ? &(dev)->last_extra_devbuf : &(dev)->last_devbuf)
-#define DEV_DEVBUF_DATA(dev, reason) ((char *) DEV_DEVBUF((dev), (reason))->buf + DEV_DEVBUF((dev), (reason))->data_offset)
-
-struct device_area {
-	struct device *dev;
-	uint64_t start;		/* Bytes */
-	uint64_t size;		/* Bytes */
-};
-
-struct device_buffer {
-	uint64_t data_offset;	/* Offset to start of requested data within buf */
-	void *malloc_address;	/* Start of allocated memory */
-	void *buf;		/* Aligned buffer that contains data within it */
-	struct device_area where;	/* Location of buf */
-	dev_io_reason_t reason;
-	unsigned write:1;	/* 1 if write; 0 if read */
-
-	lvm_callback_fn_t dev_read_callback_fn;
-	void *dev_read_callback_context;
-	struct dm_list aio_queued;	/* Queue of async I/O waiting to be issued */
-};
-
-/*
  * All devices in LVM will be represented by one of these.
  * pointer comparisons are valid.
  */
@@ -119,14 +67,13 @@ struct device {
 	int phys_block_size;
 	int block_size;
 	int read_ahead;
+	int bcache_fd;
 	uint32_t flags;
 	unsigned size_seqno;
 	uint64_t size;
 	uint64_t end;
 	struct dm_list open_list;
 	struct dev_ext ext;
-	struct device_buffer last_devbuf;       /* Last data buffer read from the device */
-	struct device_buffer last_extra_devbuf; /* Last data buffer read from the device for extra metadata area */
 
 	const char *vgid; /* if device is an LV */
 	const char *lvid; /* if device is an LV */
@@ -135,9 +82,31 @@ struct device {
 	char _padding[7];
 };
 
+/*
+ * All I/O is annotated with the reason it is performed.
+ */
+typedef enum dev_io_reason {
+	DEV_IO_SIGNATURES = 0,	/* Scanning device signatures */
+	DEV_IO_LABEL,		/* LVM PV disk label */
+	DEV_IO_MDA_HEADER,	/* Text format metadata area header */
+	DEV_IO_MDA_CONTENT,	/* Text format metadata area content */
+	DEV_IO_MDA_EXTRA_HEADER,	/* Header of any extra metadata areas on device */
+	DEV_IO_MDA_EXTRA_CONTENT,	/* Content of any extra metadata areas on device */
+	DEV_IO_FMT1,		/* Original LVM1 metadata format */
+	DEV_IO_POOL,		/* Pool metadata format */
+	DEV_IO_LV,		/* Content written to an LV */
+	DEV_IO_LOG		/* Logging messages */
+} dev_io_reason_t;
+
 struct device_list {
 	struct dm_list list;
 	struct device *dev;
+};
+
+struct device_area {
+	struct device *dev;
+	uint64_t start;		/* Bytes */
+	uint64_t size;		/* Bytes */
 };
 
 /*
@@ -179,19 +148,9 @@ int dev_test_excl(struct device *dev);
 int dev_fd(struct device *dev);
 const char *dev_name(const struct device *dev);
 
-/* Returns a read-only buffer */
-const char *dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason);
-const char *dev_read_circular(struct device *dev, uint64_t offset, size_t len,
-			      uint64_t offset2, size_t len2, dev_io_reason_t reason);
-
-/* Passes the data (or error) to dev_read_callback_fn */
-void dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason,
-		       unsigned ioflags, lvm_callback_fn_t dev_read_callback_fn, void *callback_context);
-
-/* Read data and copy it into a supplied private buffer. */
-/* Only use for tiny reads or on unimportant code paths. */
-int dev_read_buf(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *retbuf);
-
+int dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *buffer);
+int dev_read_circular(struct device *dev, uint64_t offset, size_t len,
+		      uint64_t offset2, size_t len2, dev_io_reason_t reason, char *buf);
 int dev_write(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *buffer);
 int dev_append(struct device *dev, size_t len, dev_io_reason_t reason, char *buffer);
 int dev_set(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, int value);
@@ -201,15 +160,7 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 			       struct dm_str_list *alias, int use_malloc);
 void dev_destroy_file(struct device *dev);
 
-void devbufs_release(struct device *dev);
-
 /* Return a valid device name from the alias list; NULL otherwise */
 const char *dev_name_confirmed(struct device *dev, int quiet);
-
-struct cmd_context;
-int dev_async_getevents(void);
-int dev_async_setup(struct cmd_context *cmd);
-void dev_async_exit(void);
-int dev_async_reset(struct cmd_context *cmd);
 
 #endif

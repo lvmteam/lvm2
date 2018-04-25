@@ -1,1 +1,0 @@
-valgrind pool awareness:valgrind ./pool_valgrind_t 2>&1 | ./check_results

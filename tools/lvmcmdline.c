@@ -2281,7 +2281,6 @@ static int _get_current_settings(struct cmd_context *cmd)
 
 	cmd->current_settings.archive = arg_int_value(cmd, autobackup_ARG, cmd->current_settings.archive);
 	cmd->current_settings.backup = arg_int_value(cmd, autobackup_ARG, cmd->current_settings.backup);
-	cmd->current_settings.cache_vgmetadata = cmd->cname->flags & CACHE_VGMETADATA ? 1 : 0;
 
 	if (arg_is_set(cmd, readonly_ARG)) {
 		cmd->current_settings.activation = 0;
@@ -2291,6 +2290,9 @@ static int _get_current_settings(struct cmd_context *cmd)
 
 	if (cmd->cname->flags & LOCKD_VG_SH)
 		cmd->lockd_vg_default_sh = 1;
+
+	if (cmd->cname->flags & CAN_USE_ONE_SCAN)
+		cmd->can_use_one_scan = 1;
 
 	cmd->partial_activation = 0;
 	cmd->degraded_activation = 0;
@@ -2447,7 +2449,6 @@ static void _apply_current_settings(struct cmd_context *cmd)
 	_apply_current_output_settings(cmd);
 
 	init_test(cmd->current_settings.test);
-	init_full_scan_done(0);
 	init_mirror_in_sync(0);
 	init_dmeventd_monitor(DEFAULT_DMEVENTD_MONITOR);
 
@@ -2728,11 +2729,6 @@ static int _cmd_no_lvmetad_autoscan(struct cmd_context *cmd)
 	return cmd->cname->flags & NO_LVMETAD_AUTOSCAN;
 }
 
-static int _cmd_requires_full_label_scan(struct cmd_context *cmd)
-{
-	return cmd->cname->flags & REQUIRES_FULL_LABEL_SCAN;
-}
-
 static int _cmd_ignores_persistent_filter(struct cmd_context *cmd)
 {
 	return cmd->cname->flags & IGNORE_PERSISTENT_FILTER;
@@ -2866,7 +2862,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	 * Similarly ignore the persistent cache if the command is going to discard it regardless.
 	 */
 	if (!cmd->initialized.filters && !_cmd_no_meta_proc(cmd) &&
-	    !init_filters(cmd, !(refresh_done || _cmd_requires_full_label_scan(cmd) || _cmd_ignores_persistent_filter(cmd))))
+	    !init_filters(cmd, !(refresh_done || _cmd_ignores_persistent_filter(cmd))))
 		return_ECMD_FAILED;
 
 	if (arg_is_set(cmd, readonly_ARG))
@@ -3014,10 +3010,9 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		lvmnotify_send(cmd);
 
       out:
-	if (test_mode()) {
-		log_verbose("Test mode: Wiping internal cache");
-		lvmcache_destroy(cmd, 1, 0);
-	}
+
+	lvmcache_destroy(cmd, 1, 1);
+	label_scan_destroy(cmd);
 
 	if ((config_string_cft = remove_config_tree_by_source(cmd, CONFIG_STRING)))
 		dm_config_destroy(config_string_cft);

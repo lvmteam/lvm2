@@ -135,8 +135,8 @@ static struct dm_list *_scan_archive(struct dm_pool *mem,
 
 	dm_list_init(results);
 
-	/* Use versionsort to handle numbers beyond 5 digits */
-	if ((count = scandir(dir, &dirent, NULL, versionsort)) < 0) {
+	/* Sort fails beyond 5-digit indexes */
+	if ((count = scandir(dir, &dirent, NULL, alphasort)) < 0) {
 		log_error("Couldn't scan the archive directory (%s).", dir);
 		return 0;
 	}
@@ -320,7 +320,7 @@ static void _display_archive(struct cmd_context *cmd, struct archive_file *af)
 	 * retrieve the archive time and description.
 	 */
 	/* FIXME Use variation on _vg_read */
-	if (!(vg = text_vg_import_file(tf, af->path, &when, &desc))) {
+	if (!(vg = text_read_metadata_file(tf, af->path, &when, &desc))) {
 		log_error("Unable to read archive file.");
 		tf->fmt->ops->destroy_instance(tf);
 		return;

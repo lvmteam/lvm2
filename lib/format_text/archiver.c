@@ -320,7 +320,7 @@ struct volume_group *backup_read_vg(struct cmd_context *cmd,
 	}
 
 	dm_list_iterate_items(mda, &tf->metadata_areas_in_use) {
-		if (!(vg = mda->ops->vg_read(tf, vg_name, mda, NULL, NULL, 0, 0)))
+		if (!(vg = mda->ops->vg_read(tf, vg_name, mda, NULL, NULL)))
 			stack;
 		break;
 	}
@@ -488,19 +488,11 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg,
 			}
 
 			log_verbose("Zeroing start of device %s", pv_name);
-			if (!dev_open_quiet(dev)) {
-				log_error("%s not opened: device not zeroed", pv_name);
-				return 0;
-			}
 
-			if (!dev_set(dev, UINT64_C(0), (size_t) 2048, DEV_IO_LABEL, 0)) {
+			if (!dev_write_zeros(dev, 0, 2048)) {
 				log_error("%s not wiped: aborting", pv_name);
-				if (!dev_close(dev))
-					stack;
 				return 0;
 			}
-			if (!dev_close(dev))
-				stack;
 		}
 	}
 

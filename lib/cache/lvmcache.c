@@ -29,7 +29,6 @@
 #include "lvmetad.h"
 #include "lvmetad-client.h"
 
-#define CACHE_INVALID	0x00000001
 #define CACHE_LOCKED	0x00000002
 
 /* One per device */
@@ -63,15 +62,44 @@ struct lvmcache_vginfo {
 	char *lock_type;
 	uint32_t mda_checksum;
 	size_t mda_size;
-	size_t vgmetadata_size;
-	char *vgmetadata;	/* Copy of VG metadata as format_text string */
-	struct dm_config_tree *cft; /* Config tree created from vgmetadata */
-				    /* Lifetime is directly tied to vgmetadata */
-	struct volume_group *cached_vg;
-	unsigned holders;
-	unsigned vg_use_count;	/* Counter of vg reusage */
-	unsigned precommitted;	/* Is vgmetadata live or precommitted? */
-	unsigned cached_vg_invalidated;	/* Signal to regenerate cached_vg */
+	int seqno;
+	int independent_metadata_location; /* metadata read from independent areas */
+	int scan_summary_mismatch; /* vgsummary from devs had mismatching seqno or checksum */
+
+	/*
+	 * The following are not related to lvmcache or vginfo,
+	 * but are borrowing the vginfo to store the data.
+	 *
+	 * suspended_vg_* are used only by clvmd suspend/resume.
+	 * In suspend, both old (current) and new (precommitted)
+	 * metadata is saved.  (Each in three forms: buffer, cft,
+	 * and vg).  In resume, if the vg was committed
+	 * (suspended_vg_committed is set), then LVs are resumed
+	 * using the new metadata, but if the vg wasn't committed,
+	 * then LVs are resumed using the old metadata.
+	 *
+	 * suspended_vg_committed is set to 1 when clvmd gets
+	 * LCK_VG_COMMIT from vg_commit().
+	 *
+	 * These fields are only used between suspend and resume
+	 * in clvmd, and should never be used in any other way.
+	 * The contents of this data are never changed.  This
+	 * data does not really belong in lvmcache, it's unrelated
+	 * to lvmcache or vginfo, but it's just a convenient place
+	 * for clvmd to stash the VG between suspend and resume
+	 * (since the same caller isn't present to pass the VG to
+	 * both suspend and resume in the case of clvmd.)
+	 *
+	 * This data is not really a "cache" of the VG, it is just
+	 * a location to pass the VG between suspend and resume.
+	 */
+	int suspended_vg_committed;
+	char *suspended_vg_old_buf;
+	struct dm_config_tree *suspended_vg_old_cft;
+	struct volume_group *suspended_vg_old;
+	char *suspended_vg_new_buf;
+	struct dm_config_tree *suspended_vg_new_cft;
+	struct volume_group *suspended_vg_new;
 };
 
 static struct dm_hash_table *_pvid_hash = NULL;
@@ -130,6 +158,8 @@ void lvmcache_seed_infos_from_lvmetad(struct cmd_context *cmd)
 	if (!lvmetad_used() || _has_scanned)
 		return;
 
+	dev_cache_scan();
+
 	if (!lvmetad_pv_list_to_lvmcache(cmd)) {
 		stack;
 		return;
@@ -138,91 +168,8 @@ void lvmcache_seed_infos_from_lvmetad(struct cmd_context *cmd)
 	_has_scanned = 1;
 }
 
-/* Volume Group metadata cache functions */
-static void _free_cached_vgmetadata(struct lvmcache_vginfo *vginfo)
+static void _update_cache_info_lock_state(struct lvmcache_info *info, int locked)
 {
-	struct lvmcache_info *info;
-
-	if (!vginfo || !vginfo->vgmetadata)
-		return;
-
-	dm_free(vginfo->vgmetadata);
-
-	vginfo->vgmetadata = NULL;
-
-	/* Release also cached config tree */
-	if (vginfo->cft) {
-		dm_config_destroy(vginfo->cft);
-		vginfo->cft = NULL;
-	}
-
-	/* Invalidate any cached device buffers */
-	dm_list_iterate_items(info, &vginfo->infos)
-		devbufs_release(info->dev);
-
-	log_debug_cache("lvmcache: VG %s wiped.", vginfo->vgname);
-
-	release_vg(vginfo->cached_vg);
-}
-
-/*
- * Cache VG metadata against the vginfo with matching vgid.
- */
-static void _store_metadata(struct volume_group *vg, unsigned precommitted)
-{
-	char uuid[64] __attribute__((aligned(8)));
-	struct lvmcache_vginfo *vginfo;
-	char *data;
-	size_t size;
-
-	if (!(vginfo = lvmcache_vginfo_from_vgid((const char *)&vg->id))) {
-		stack;
-		return;
-	}
-
-	if (!(size = export_vg_to_buffer(vg, &data))) {
-		stack;
-		_free_cached_vgmetadata(vginfo);
-		return;
-	}
-
-	/* Avoid reparsing of the same data string */
-	if (vginfo->vgmetadata && vginfo->vgmetadata_size == size &&
-	    strcmp(vginfo->vgmetadata, data) == 0)
-		dm_free(data);
-	else {
-		_free_cached_vgmetadata(vginfo);
-		vginfo->vgmetadata_size = size;
-		vginfo->vgmetadata = data;
-	}
-
-	vginfo->precommitted = precommitted;
-
-	if (!id_write_format((const struct id *)vginfo->vgid, uuid, sizeof(uuid))) {
-		stack;
-		return;
-	}
-
-	log_debug_cache("lvmcache: VG %s (%s) stored (%" PRIsize_t " bytes%s).",
-			vginfo->vgname, uuid, size,
-			precommitted ? ", precommitted" : "");
-}
-
-static void _update_cache_info_lock_state(struct lvmcache_info *info,
-					  int locked,
-					  int *cached_vgmetadata_valid)
-{
-	int was_locked = (info->status & CACHE_LOCKED) ? 1 : 0;
-
-	/*
-	 * Cache becomes invalid whenever lock state changes unless
-	 * exclusive VG_GLOBAL is held (i.e. while scanning).
-	 */
-	if (!lvmcache_vgname_is_locked(VG_GLOBAL) && (was_locked != locked)) {
-		info->status |= CACHE_INVALID;
-		*cached_vgmetadata_valid = 0;
-	}
-
 	if (locked)
 		info->status |= CACHE_LOCKED;
 	else
@@ -233,14 +180,9 @@ static void _update_cache_vginfo_lock_state(struct lvmcache_vginfo *vginfo,
 					    int locked)
 {
 	struct lvmcache_info *info;
-	int cached_vgmetadata_valid = 1;
 
 	dm_list_iterate_items(info, &vginfo->infos)
-		_update_cache_info_lock_state(info, locked,
-					      &cached_vgmetadata_valid);
-
-	if (!cached_vgmetadata_valid)
-		_free_cached_vgmetadata(vginfo);
+		_update_cache_info_lock_state(info, locked);
 }
 
 static void _update_cache_lock_state(const char *vgname, int locked)
@@ -253,33 +195,130 @@ static void _update_cache_lock_state(const char *vgname, int locked)
 	_update_cache_vginfo_lock_state(vginfo, locked);
 }
 
+static void _suspended_vg_free(struct lvmcache_vginfo *vginfo, int free_old, int free_new)
+{
+	if (free_old) {
+		if (vginfo->suspended_vg_old_buf)
+			dm_free(vginfo->suspended_vg_old_buf);
+		if (vginfo->suspended_vg_old_cft)
+			dm_config_destroy(vginfo->suspended_vg_old_cft);
+		if (vginfo->suspended_vg_old)
+			release_vg(vginfo->suspended_vg_old);
+
+		vginfo->suspended_vg_old_buf = NULL;
+		vginfo->suspended_vg_old_cft = NULL;
+		vginfo->suspended_vg_old = NULL;
+	}
+
+	if (free_new) {
+		if (vginfo->suspended_vg_new_buf)
+			dm_free(vginfo->suspended_vg_new_buf);
+		if (vginfo->suspended_vg_new_cft)
+			dm_config_destroy(vginfo->suspended_vg_new_cft);
+		if (vginfo->suspended_vg_new)
+			release_vg(vginfo->suspended_vg_new);
+
+		vginfo->suspended_vg_new_buf = NULL;
+		vginfo->suspended_vg_new_cft = NULL;
+		vginfo->suspended_vg_new = NULL;
+	}
+}
+
 static void _drop_metadata(const char *vgname, int drop_precommitted)
 {
 	struct lvmcache_vginfo *vginfo;
-	struct lvmcache_info *info;
 
 	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, NULL)))
 		return;
 
-	/*
-	 * Invalidate cached PV labels.
-	 * If cached precommitted metadata exists that means we
-	 * already invalidated the PV labels (before caching it)
-	 * and we must not do it again.
-	 */
-	if (!drop_precommitted && vginfo->precommitted && !vginfo->vgmetadata)
-		log_error(INTERNAL_ERROR "metadata commit (or revert) missing before "
-			  "dropping metadata from cache.");
-
-	if (drop_precommitted || !vginfo->precommitted)
-		dm_list_iterate_items(info, &vginfo->infos)
-			info->status |= CACHE_INVALID;
-
-	_free_cached_vgmetadata(vginfo);
-
-	/* VG revert */
 	if (drop_precommitted)
-		vginfo->precommitted = 0;
+		_suspended_vg_free(vginfo, 0, 1);
+	else
+		_suspended_vg_free(vginfo, 1, 1);
+}
+
+void lvmcache_save_suspended_vg(struct volume_group *vg, int precommitted)
+{
+	struct lvmcache_vginfo *vginfo;
+	struct format_instance *fid;
+	struct format_instance_ctx fic;
+	struct volume_group *susp_vg = NULL;
+	struct dm_config_tree *susp_cft = NULL;
+	char *susp_buf = NULL;
+	size_t size;
+	int new = precommitted;
+	int old = !precommitted;
+
+	if (!(vginfo = lvmcache_vginfo_from_vgid((const char *)&vg->id)))
+		goto_bad;
+
+	/* already saved */
+	if (old && vginfo->suspended_vg_old &&
+	    (vginfo->suspended_vg_old->seqno == vg->seqno))
+		return;
+
+	/* already saved */
+	if (new && vginfo->suspended_vg_new &&
+	    (vginfo->suspended_vg_new->seqno == vg->seqno))
+		return;
+
+	_suspended_vg_free(vginfo, old, new);
+
+	if (!(size = export_vg_to_buffer(vg, &susp_buf)))
+		goto_bad;
+
+	fic.type = FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
+	fic.context.vg_ref.vg_name = vginfo->vgname;
+	fic.context.vg_ref.vg_id = vginfo->vgid;
+	if (!(fid = vginfo->fmt->ops->create_instance(vginfo->fmt, &fic)))
+		goto_bad;
+
+	if (!(susp_cft = config_tree_from_string_without_dup_node_check(susp_buf)))
+		goto_bad;
+
+	if (!(susp_vg = import_vg_from_config_tree(susp_cft, fid)))
+		goto_bad;
+
+	if (old) {
+		vginfo->suspended_vg_old_buf = susp_buf;
+		vginfo->suspended_vg_old_cft = susp_cft;
+		vginfo->suspended_vg_old = susp_vg;
+		log_debug_cache("lvmcache saved suspended vg old seqno %d %s", vg->seqno, vg->name);
+	} else {
+		vginfo->suspended_vg_new_buf = susp_buf;
+		vginfo->suspended_vg_new_cft = susp_cft;
+		vginfo->suspended_vg_new = susp_vg;
+		log_debug_cache("lvmcache saved suspended vg new seqno %d %s", vg->seqno, vg->name);
+	}
+	return;
+
+bad:
+	_suspended_vg_free(vginfo, old, new);
+	log_debug_cache("lvmcache failed to save suspended pre %d vg %s", precommitted, vg->name);
+}
+
+struct volume_group *lvmcache_get_suspended_vg(const char *vgid)
+{
+	struct lvmcache_vginfo *vginfo;
+
+	if (!(vginfo = lvmcache_vginfo_from_vgid(vgid)))
+		return_NULL;
+
+
+	if (vginfo->suspended_vg_committed)
+		return vginfo->suspended_vg_new;
+	else
+		return vginfo->suspended_vg_old;
+}
+
+void lvmcache_drop_suspended_vg(struct volume_group *vg)
+{
+	struct lvmcache_vginfo *vginfo;
+
+	if (!(vginfo = lvmcache_vginfo_from_vgid((const char *)&vg->id)))
+		return;
+
+	_suspended_vg_free(vginfo, 1, 1);
 }
 
 /*
@@ -294,11 +333,7 @@ void lvmcache_commit_metadata(const char *vgname)
 	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, NULL)))
 		return;
 
-	if (vginfo->precommitted) {
-		log_debug_cache("lvmcache: Upgraded pre-committed VG %s metadata to committed.",
-				vginfo->vgname);
-		vginfo->precommitted = 0;
-	}
+	vginfo->suspended_vg_committed = 1;
 }
 
 void lvmcache_drop_metadata(const char *vgname, int drop_precommitted)
@@ -311,9 +346,6 @@ void lvmcache_drop_metadata(const char *vgname, int drop_precommitted)
 		_drop_metadata(FMT_TEXT_ORPHAN_VG_NAME, 0);
 		_drop_metadata(FMT_LVM1_ORPHAN_VG_NAME, 0);
 		_drop_metadata(FMT_POOL_ORPHAN_VG_NAME, 0);
-
-		/* Indicate that PVs could now be missing from the cache */
-		init_full_scan_done(0);
 	} else
 		_drop_metadata(vgname, drop_precommitted);
 }
@@ -360,7 +392,7 @@ int lvmcache_verify_lock_order(const char *vgname)
 		return 1;
 
 	if (!_lock_hash)
-		return_0;
+		return 1;
 
 	dm_hash_iterate(n, _lock_hash) {
 		if (!dm_hash_get_data(_lock_hash, n))
@@ -592,7 +624,7 @@ const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd,
 
 	dm_list_iterate_safe(devh, tmp, &devs) {
 		devl = dm_list_item(devh, struct device_list);
-		(void) label_read(devl->dev, NULL, UINT64_C(0));
+		label_read(devl->dev, NULL, UINT64_C(0));
 		dm_list_del(&devl->list);
 		dm_free(devl);
 	}
@@ -658,51 +690,6 @@ const char *lvmcache_vgid_from_vgname(struct cmd_context *cmd, const char *vgnam
 	return NULL;
 }
 
-static int _info_is_valid(struct lvmcache_info *info)
-{
-	if (info->status & CACHE_INVALID)
-		return 0;
-
-	/*
-	 * The caller must hold the VG lock to manipulate metadata.
-	 * In a cluster, remote nodes sometimes read metadata in the
-	 * knowledge that the controlling node is holding the lock.
-	 * So if the VG appears to be unlocked here, it should be safe
-	 * to use the cached value.
-	 */
-	if (info->vginfo && !lvmcache_vgname_is_locked(info->vginfo->vgname))
-		return 1;
-
-	if (!(info->status & CACHE_LOCKED))
-		return 0;
-
-	return 1;
-}
-
-static int _vginfo_is_valid(struct lvmcache_vginfo *vginfo)
-{
-	struct lvmcache_info *info;
-
-	/* Invalid if any info is invalid */
-	dm_list_iterate_items(info, &vginfo->infos)
-		if (!_info_is_valid(info))
-			return 0;
-
-	return 1;
-}
-
-/* vginfo is invalid if it does not contain at least one valid info */
-static int _vginfo_is_invalid(struct lvmcache_vginfo *vginfo)
-{
-	struct lvmcache_info *info;
-
-	dm_list_iterate_items(info, &vginfo->infos)
-		if (_info_is_valid(info))
-			return 0;
-
-	return 1;
-}
-
 /*
  * If valid_only is set, data will only be returned if the cached data is
  * known still to be valid.
@@ -732,9 +719,6 @@ struct lvmcache_info *lvmcache_info_from_pvid(const char *pvid, struct device *d
 		return NULL;
 	}
 
-	if (valid_only && !_info_is_valid(info))
-		return NULL;
-
 	return info;
 }
 
@@ -755,7 +739,7 @@ char *lvmcache_vgname_from_pvid(struct cmd_context *cmd, const char *pvid)
 	struct lvmcache_info *info;
 	char *vgname;
 
-	if (!lvmcache_device_from_pvid(cmd, (const struct id *)pvid, NULL, NULL)) {
+	if (!lvmcache_device_from_pvid(cmd, (const struct id *)pvid, NULL)) {
 		log_error("Couldn't find device with uuid %s.", pvid);
 		return NULL;
 	}
@@ -769,36 +753,6 @@ char *lvmcache_vgname_from_pvid(struct cmd_context *cmd, const char *pvid)
 		return NULL;
 	}
 	return vgname;
-}
-
-static void _rescan_entry(struct lvmcache_info *info)
-{
-	if (info->status & CACHE_INVALID)
-		(void) label_read(info->dev, NULL, UINT64_C(0));
-}
-
-static int _scan_invalid(void)
-{
-	dm_hash_iter(_pvid_hash, (dm_hash_iterate_fn) _rescan_entry);
-
-	return 1;
-}
-
-/*
- * lvmcache_label_scan() remembers that it has already
- * been called, and will not scan labels if it's called
- * again.  (It will rescan "INVALID" devices if called again.)
- *
- * To force lvmcache_label_scan() to rescan labels on all devices,
- * call lvmcache_force_next_label_scan() before calling
- * lvmcache_label_scan().
- */
-
-static int _force_label_scan;
-
-void lvmcache_force_next_label_scan(void)
-{
-	_force_label_scan = 1;
 }
 
 /*
@@ -1096,36 +1050,137 @@ next:
 	goto next;
 }
 
-/* Track the number of outstanding label reads */
-/* FIXME Switch to struct and also track failed */
-static void _process_label_data(int failed, unsigned ioflags, void *context, const void *data)
-{
-	int *nr_labels_outstanding = context;
+/*
+ * The initial label_scan at the start of the command is done without
+ * holding VG locks.  Then for each VG identified during the label_scan,
+ * vg_read(vgname) is called while holding the VG lock.  The labels
+ * and metadata on this VG's devices could have changed between the
+ * initial unlocked label_scan and the current vg_read().  So, we reread
+ * the labels/metadata for each device in the VG now that we hold the
+ * lock, and use this for processing the VG.
+ *
+ * A label scan is ultimately creating associations between devices
+ * and VGs so that when vg_read wants to get VG metadata, it knows
+ * which devices to read.
+ *
+ * It's possible that a VG is being modified during the first label
+ * scan, causing the scan to see inconsistent metadata on different
+ * devs in the VG.  It's possible that those modifications are
+ * adding/removing devs from the VG, in which case the device/VG
+ * associations in lvmcache after the scan are not correct.
+ * NB. It's even possible the VG was removed completely between
+ * label scan and here, in which case we'd not find the VG in
+ * lvmcache after this rescan.
+ *
+ * A scan will also create in incorrect/incomplete picture of a VG
+ * when devices have no metadata areas.  The scan does not use
+ * VG metadata to figure out that a dev with no metadata belongs
+ * to a particular VG, so a device with no mdas will not be linked
+ * to that VG after a scan.
+ *
+ * (In the special case where VG metadata is stored in files on the
+ * file system (configured in lvm.conf), the
+ * vginfo->independent_metadata_location flag is set during label scan.
+ * When we get here to rescan, we are revalidating the device to VG
+ * mapping from label scan by repeating the label scan on a subset of
+ * devices.  If we see independent_metadata_location is set from the
+ * initial label scan, we know that there is nothing to do because
+ * there is no device to VG mapping to revalidate, since the VG metadata
+ * comes directly from files.)
+ */
 
-	if (!*nr_labels_outstanding) {
-		log_error(INTERNAL_ERROR "_process_label_data called too many times");
-		return;
+int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const char *vgid)
+{
+	struct dm_list devs;
+	struct device_list *devl;
+	struct lvmcache_vginfo *vginfo;
+	struct lvmcache_info *info, *info2;
+
+	if (lvmetad_used())
+		return 1;
+
+	dm_list_init(&devs);
+
+	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid)))
+		return_0;
+
+	/*
+	 * When the VG metadata is from an independent location,
+	 * then rescanning the devices in the VG won't find the
+	 * metadata, and will destroy the vginfo/info associations
+	 * that were created during label scan when the
+	 * independent locations were read.
+	 */
+	if (vginfo->independent_metadata_location)
+		return 1;
+
+	dm_list_iterate_items(info, &vginfo->infos) {
+		if (!(devl = dm_malloc(sizeof(*devl)))) {
+			log_error("device_list element allocation failed");
+			return 0;
+		}
+		devl->dev = info->dev;
+		dm_list_add(&devs, &devl->list);
 	}
 
-	(*nr_labels_outstanding)--;
+	dm_list_iterate_items_safe(info, info2, &vginfo->infos)
+		lvmcache_del(info);
+
+	/* Dropping the last info struct is supposed to drop vginfo. */
+	if ((vginfo = lvmcache_vginfo_from_vgname(vgname, vgid)))
+		log_warn("VG info not dropped before rescan of %s", vgname);
+
+	/* FIXME: should we also rescan unused_duplicate_devs for devs
+	   being rescanned here and then repeat resolving the duplicates? */
+
+	label_scan_devs(cmd, &devs);
+
+	return 1;
 }
+
+/*
+ * Uses label_scan to populate lvmcache with 'vginfo' struct for each VG
+ * and associated 'info' structs for those VGs.  Only VG summary information
+ * is used to assemble the vginfo/info during the scan, so the resulting
+ * representation of VG/PV state is incomplete and even incorrect.
+ * Specifically, PVs with no MDAs are considered orphans and placed in the
+ * orphan vginfo by lvmcache_label_scan.  This is corrected during the
+ * processing phase as each vg_read() uses VG metadata for each VG to correct
+ * the lvmcache state, i.e. it moves no-MDA PVs from the orphan vginfo onto
+ * the correct vginfo.  Once vg_read() is finished for all VGs, all of the
+ * incorrectly placed PVs should have been moved from the orphan vginfo
+ * onto their correct vginfo's, and the orphan vginfo should (in theory)
+ * represent only real orphan PVs.  (Note: if lvmcache_label_scan is run
+ * after vg_read udpates to lvmcache state, then the lvmcache will be
+ * incorrect again, so do not run lvmcache_label_scan during the
+ * processing phase.)
+ *
+ * TODO: in this label scan phase, don't stash no-MDA PVs into the
+ * orphan VG.  We know that's a fiction, and it can have harmful/damaging
+ * results.  Instead, put them into a temporary list where they can be
+ * pulled from later when vg_read uses metadata to resolve which VG
+ * they actually belong to.
+ */
 
 int lvmcache_label_scan(struct cmd_context *cmd)
 {
 	struct dm_list del_cache_devs;
 	struct dm_list add_cache_devs;
 	struct lvmcache_info *info;
+	struct lvmcache_vginfo *vginfo;
 	struct device_list *devl;
-	struct dev_iter *iter;
-	struct device *dev;
 	struct format_type *fmt;
-	int dev_count = 0;
-	int nr_labels_outstanding = 0;
+	int vginfo_count = 0;
 
 	int r = 0;
 
-	if (lvmetad_used())
+	if (lvmetad_used()) {
+		if (!label_scan_setup_bcache())
+			return 0;
 		return 1;
+	}
+
+	log_debug_cache("Finding VG info");
 
 	/* Avoid recursion when a PVID can't be found! */
 	if (_scanning_in_progress)
@@ -1138,43 +1193,26 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 		goto out;
 	}
 
-	if (_has_scanned && !_force_label_scan) {
-		r = _scan_invalid();
+	if (!cmd->full_filter) {
+		log_error("label scan is missing full filter");
 		goto out;
 	}
-
-	if (_force_label_scan && (cmd->full_filter && !cmd->full_filter->use_count) && !refresh_filters(cmd))
-		goto_out;
-
-	if (!cmd->full_filter || !(iter = dev_iter_create(cmd->full_filter, _force_label_scan))) {
-		log_error("dev_iter creation failed");
-		goto out;
-	}
-
-	log_very_verbose("Scanning device labels");
 
 	/*
 	 * Duplicates found during this label scan are added to _found_duplicate_devs().
 	 */
 	_destroy_duplicate_device_list(&_found_duplicate_devs);
 
-	while ((dev = dev_iter_get(iter))) {
-		log_debug_io("Scanning device %s", dev_name(dev));
-		nr_labels_outstanding++;
-		if (!label_read_callback(dev, UINT64_C(0), AIO_SUPPORTED_CODE_PATH, _process_label_data, &nr_labels_outstanding))
-			nr_labels_outstanding--;
-		dev_count++;
-	}
-
-	dev_iter_destroy(iter);
-
-	while (nr_labels_outstanding) {
-		log_very_verbose("Scanned %d device labels (%d outstanding)", dev_count, nr_labels_outstanding);
-		if (!dev_async_getevents())
-			return_0;
-	}
-
-	log_very_verbose("Scanned %d device labels (%d outstanding)", dev_count, nr_labels_outstanding);
+	/*
+	 * Do the actual scanning.  This populates lvmcache
+	 * with infos/vginfos based on reading headers from
+	 * each device, and a vg summary from each mda.
+	 *
+	 * Note that this will *skip* scanning a device if
+	 * an info struct already exists in lvmcache for
+	 * the device.
+	 */
+	label_scan(cmd);
 
 	/*
 	 * _choose_preferred_devs() returns:
@@ -1198,6 +1236,8 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 		dm_list_init(&del_cache_devs);
 		dm_list_init(&add_cache_devs);
 
+		log_debug_cache("Resolving duplicate devices");
+
 		_choose_preferred_devs(cmd, &del_cache_devs, &add_cache_devs);
 
 		dm_list_iterate_items(devl, &del_cache_devs) {
@@ -1208,13 +1248,11 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 
 		dm_list_iterate_items(devl, &add_cache_devs) {
 			log_debug_cache("Rescan preferred device %s for lvmcache", dev_name(devl->dev));
-			(void) label_read(devl->dev, NULL, UINT64_C(0));
+			label_read(devl->dev, NULL, UINT64_C(0));
 		}
 
 		dm_list_splice(&_unused_duplicate_devs, &del_cache_devs);
 	}
-
-	_has_scanned = 1;
 
 	/* Perform any format-specific scanning e.g. text files */
 	if (cmd->independent_metadata_areas)
@@ -1222,146 +1260,27 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 			if (fmt->ops->scan && !fmt->ops->scan(fmt, NULL))
 				goto out;
 
-	/*
-	 * If we are a long-lived process, write out the updated persistent
-	 * device cache for the benefit of short-lived processes.
-	 */
-	if (_force_label_scan && cmd->is_long_lived &&
-	    cmd->dump_filter && cmd->full_filter && cmd->full_filter->dump &&
-	    !cmd->full_filter->dump(cmd->full_filter, cmd->mem, 0))
-		stack;
-
 	r = 1;
 
       out:
 	_scanning_in_progress = 0;
-	_force_label_scan = 0;
+
+	dm_list_iterate_items(vginfo, &_vginfos) {
+		if (is_orphan_vg(vginfo->vgname))
+			continue;
+		vginfo_count++;
+	}
+
+	log_debug_cache("Found VG info for %d VGs", vginfo_count);
 
 	return r;
 }
-
-struct volume_group *lvmcache_get_vg(struct cmd_context *cmd, const char *vgname,
-				     const char *vgid, unsigned precommitted)
-{
-	struct lvmcache_vginfo *vginfo;
-	struct volume_group *vg = NULL;
-	struct format_instance *fid;
-	struct format_instance_ctx fic;
-
-	/*
-	 * We currently do not store precommitted metadata in lvmetad at
-	 * all. This means that any request for precommitted metadata is served
-	 * using the classic scanning mechanics, and read from disk or from
-	 * lvmcache.
-	 */
-	if (lvmetad_used() && !precommitted) {
-		/* Still serve the locally cached VG if available */
-		if (vgid && (vginfo = lvmcache_vginfo_from_vgid(vgid)) &&
-		    vginfo->vgmetadata && (vg = vginfo->cached_vg))
-			goto out;
-		return lvmetad_vg_lookup(cmd, vgname, vgid);
-	}
-
-	if (!vgid || !(vginfo = lvmcache_vginfo_from_vgid(vgid)) || !vginfo->vgmetadata)
-		return NULL;
-
-	if (!_vginfo_is_valid(vginfo))
-		return NULL;
-
-	/*
-	 * Don't return cached data if either:
-	 * (i)  precommitted metadata is requested but we don't have it cached
-	 *      - caller should read it off disk;
-	 * (ii) live metadata is requested but we have precommitted metadata cached
-	 *      and no devices are suspended so caller may read it off disk.
-	 *
-	 * If live metadata is requested but we have precommitted metadata cached
-	 * and devices are suspended, we assume this precommitted metadata has
-	 * already been preloaded and committed so it's OK to return it as live.
-	 * Note that we do not clear the PRECOMMITTED flag.
-	 */
-	if ((precommitted && !vginfo->precommitted) ||
-	    (!precommitted && vginfo->precommitted && !critical_section()))
-		return NULL;
-
-	/* Use already-cached VG struct when available */
-	if ((vg = vginfo->cached_vg) && !vginfo->cached_vg_invalidated)
-		goto out;
-
-	release_vg(vginfo->cached_vg);
-
-	fic.type = FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
-	fic.context.vg_ref.vg_name = vginfo->vgname;
-	fic.context.vg_ref.vg_id = vgid;
-	if (!(fid = vginfo->fmt->ops->create_instance(vginfo->fmt, &fic)))
-		return_NULL;
-
-	/* Build config tree from vgmetadata, if not yet cached */
-	if (!vginfo->cft &&
-	    !(vginfo->cft =
-	      config_tree_from_string_without_dup_node_check(vginfo->vgmetadata)))
-		goto_bad;
-
-	if (!(vg = import_vg_from_config_tree(vginfo->cft, fid)))
-		goto_bad;
-
-	/* Cache VG struct for reuse */
-	vginfo->cached_vg = vg;
-	vginfo->holders = 1;
-	vginfo->vg_use_count = 0;
-	vginfo->cached_vg_invalidated = 0;
-	vg->vginfo = vginfo;
-
-	if (!dm_pool_lock(vg->vgmem, detect_internal_vg_cache_corruption()))
-		goto_bad;
-
-out:
-	vginfo->holders++;
-	vginfo->vg_use_count++;
-	log_debug_cache("Using cached %smetadata for VG %s with %u holder(s).",
-			vginfo->precommitted ? "pre-committed " : "",
-			vginfo->vgname, vginfo->holders);
-
-	return vg;
-
-bad:
-	_free_cached_vgmetadata(vginfo);
-	return NULL;
-}
-
-// #if 0
-int lvmcache_vginfo_holders_dec_and_test_for_zero(struct lvmcache_vginfo *vginfo)
-{
-	log_debug_cache("VG %s decrementing %d holder(s) at %p.",
-			vginfo->cached_vg->name, vginfo->holders, vginfo->cached_vg);
-
-	if (--vginfo->holders)
-		return 0;
-
-	if (vginfo->vg_use_count > 1)
-		log_debug_cache("VG %s reused %d times.",
-				vginfo->cached_vg->name, vginfo->vg_use_count);
-
-	/* Debug perform crc check only when it's been used more then once */
-	if (!dm_pool_unlock(vginfo->cached_vg->vgmem,
-			    detect_internal_vg_cache_corruption() &&
-			    (vginfo->vg_use_count > 1)))
-		stack;
-
-	vginfo->cached_vg->vginfo = NULL;
-	vginfo->cached_vg = NULL;
-
-	return 1;
-}
-// #endif
 
 int lvmcache_get_vgnameids(struct cmd_context *cmd, int include_internal,
 			   struct dm_list *vgnameids)
 {
 	struct vgnameid_list *vgnl;
 	struct lvmcache_vginfo *vginfo;
-
-	lvmcache_label_scan(cmd);
 
 	dm_list_iterate_items(vginfo, &_vginfos) {
 		if (!include_internal && is_orphan_vg(vginfo->vgname))
@@ -1467,61 +1386,45 @@ struct dm_list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
 	return pvids;
 }
 
-static struct device *_device_from_pvid(const struct id *pvid,
-					uint64_t *label_sector)
+int lvmcache_get_vg_devs(struct cmd_context *cmd,
+			 struct lvmcache_vginfo *vginfo,
+			 struct dm_list *devs)
 {
 	struct lvmcache_info *info;
-	struct label *label;
+	struct device_list *devl;
+
+	dm_list_iterate_items(info, &vginfo->infos) {
+		if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
+			return_0;
+
+		devl->dev = info->dev;
+		dm_list_add(devs, &devl->list);
+	}
+	return 1;
+}
+
+static struct device *_device_from_pvid(const struct id *pvid, uint64_t *label_sector)
+{
+	struct lvmcache_info *info;
 
 	if ((info = lvmcache_info_from_pvid((const char *) pvid, NULL, 0))) {
-		if (lvmetad_used()) {
-			if (info->label && label_sector)
-				*label_sector = info->label->sector;
-			return info->dev;
-		}
-
-		if (label_read(info->dev, &label, UINT64_C(0))) {
-			info = (struct lvmcache_info *) label->info;
-			if (id_equal(pvid, (struct id *) &info->dev->pvid)) {
-				if (label_sector)
-					*label_sector = label->sector;
-				return info->dev;
-                        }
-		}
+		if (info->label && label_sector)
+			*label_sector = info->label->sector;
+		return info->dev;
 	}
+
 	return NULL;
 }
 
-struct device *lvmcache_device_from_pvid(struct cmd_context *cmd, const struct id *pvid,
-				unsigned *scan_done_once, uint64_t *label_sector)
+struct device *lvmcache_device_from_pvid(struct cmd_context *cmd, const struct id *pvid, uint64_t *label_sector)
 {
 	struct device *dev;
 
-	/* Already cached ? */
 	dev = _device_from_pvid(pvid, label_sector);
 	if (dev)
 		return dev;
 
-	lvmcache_label_scan(cmd);
-
-	/* Try again */
-	dev = _device_from_pvid(pvid, label_sector);
-	if (dev)
-		return dev;
-
-	if (critical_section() || (scan_done_once && *scan_done_once))
-		return NULL;
-
-	lvmcache_force_next_label_scan();
-	lvmcache_label_scan(cmd);
-	if (scan_done_once)
-		*scan_done_once = 1;
-
-	/* Try again */
-	dev = _device_from_pvid(pvid, label_sector);
-	if (dev)
-		return dev;
-
+	log_debug_devs("No device with uuid %s.", (const char *)pvid);
 	return NULL;
 }
 
@@ -1558,8 +1461,6 @@ static int _free_vginfo(struct lvmcache_vginfo *vginfo)
 	struct lvmcache_vginfo *primary_vginfo, *vginfo2;
 	int r = 1;
 
-	_free_cached_vgmetadata(vginfo);
-
 	vginfo2 = primary_vginfo = lvmcache_vginfo_from_vgname(vginfo->vgname, NULL);
 
 	if (vginfo == primary_vginfo) {
@@ -1582,6 +1483,7 @@ static int _free_vginfo(struct lvmcache_vginfo *vginfo)
 	dm_free(vginfo->system_id);
 	dm_free(vginfo->vgname);
 	dm_free(vginfo->creation_host);
+	_suspended_vg_free(vginfo, 1, 1);
 
 	if (*vginfo->vgid && _vgid_hash &&
 	    lvmcache_vginfo_from_vgid(vginfo->vgid) == vginfo)
@@ -1623,6 +1525,14 @@ void lvmcache_del(struct lvmcache_info *info)
 	info->label->labeller->ops->destroy_label(info->label->labeller,
 						  info->label);
 	dm_free(info);
+}
+
+void lvmcache_del_dev(struct device *dev)
+{
+	struct lvmcache_info *info;
+
+	if ((info = lvmcache_info_from_pvid((const char *)dev->pvid, dev, 0)))
+		lvmcache_del(info);
 }
 
 /*
@@ -1761,10 +1671,8 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 				   uint32_t vgstatus, const char *creation_host,
 				   const struct format_type *fmt)
 {
-	struct lvmcache_vginfo *vginfo, *primary_vginfo, *orphan_vginfo;
-	struct lvmcache_info *info2, *info3;
+	struct lvmcache_vginfo *vginfo, *primary_vginfo;
 	char mdabuf[32];
-	// struct lvmcache_vginfo  *old_vginfo, *next;
 
 	if (!vgname || (info && info->vginfo && !strcmp(info->vginfo->vgname, vgname)))
 		return 1;
@@ -1773,44 +1681,12 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 	if (info)
 		_drop_vginfo(info, info->vginfo);
 
-	/* Get existing vginfo or create new one */
 	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
-/*** FIXME - vginfo ends up duplicated instead of renamed.
-		// Renaming?  This lookup fails.
-		if ((vginfo = vginfo_from_vgid(vgid))) {
-			next = vginfo->next;
-			old_vginfo = vginfo_from_vgname(vginfo->vgname, NULL);
-			if (old_vginfo == vginfo) {
-				dm_hash_remove(_vgname_hash, old_vginfo->vgname);
-				if (old_vginfo->next) {
-					if (!dm_hash_insert(_vgname_hash, old_vginfo->vgname, old_vginfo->next)) {
-						log_error("vg hash re-insertion failed: %s",
-							  old_vginfo->vgname);
-						return 0;
-					}
-				}
-			} else do {
-				if (old_vginfo->next == vginfo) {
-					old_vginfo->next = vginfo->next;
-					break;
-				}
-			} while ((old_vginfo = old_vginfo->next));
-			vginfo->next = NULL;
+		/*
+	 	 * Create a vginfo struct for this VG and put the vginfo
+	 	 * into the hash table.
+	 	 */
 
-			dm_free(vginfo->vgname);
-			if (!(vginfo->vgname = dm_strdup(vgname))) {
-				log_error("cache vgname alloc failed for %s", vgname);
-				return 0;
-			}
-
-			// Rename so can assume new name does not already exist
-			if (!dm_hash_insert(_vgname_hash, vginfo->vgname, vginfo->next)) {
-				log_error("vg hash re-insertion failed: %s",
-					  vginfo->vgname);
-		      		return 0;
-			}
-		} else {
-***/
 		if (!(vginfo = dm_zalloc(sizeof(*vginfo)))) {
 			log_error("lvmcache_update_vgname: list alloc failed");
 			return 0;
@@ -1823,52 +1699,24 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 		dm_list_init(&vginfo->infos);
 
 		/*
-		 * If we're scanning and there's an invalidated entry, remove it.
-		 * Otherwise we risk bogus warnings of duplicate VGs.
+		 * A different VG (different uuid) can exist with the same name.
+		 * In this case, the two VGs will have separate vginfo structs,
+		 * but the second will be linked onto the existing vginfo->next,
+		 * not in the hash.
 		 */
-		while ((primary_vginfo = lvmcache_vginfo_from_vgname(vgname, NULL)) &&
-		       _scanning_in_progress && _vginfo_is_invalid(primary_vginfo)) {
-			orphan_vginfo = lvmcache_vginfo_from_vgname(primary_vginfo->fmt->orphan_vg_name, NULL);
-			if (!orphan_vginfo) {
-				log_error(INTERNAL_ERROR "Orphan vginfo %s lost from cache.",
-					  primary_vginfo->fmt->orphan_vg_name);
-				dm_free(vginfo->vgname);
-				dm_free(vginfo);
-				return 0;
-			}
-			dm_list_iterate_items_safe(info2, info3, &primary_vginfo->infos) {
-				_vginfo_detach_info(info2);
-				_vginfo_attach_info(orphan_vginfo, info2);
-				if (info2->mdas.n)
-					sprintf(mdabuf, " with %u mdas",
-						dm_list_size(&info2->mdas));
-				else
-					mdabuf[0] = '\0';
-				log_debug_cache("lvmcache: %s: now in VG %s%s%s%s%s",
-						dev_name(info2->dev),
-						vgname, orphan_vginfo->vgid[0] ? " (" : "",
-						orphan_vginfo->vgid[0] ? orphan_vginfo->vgid : "",
-						orphan_vginfo->vgid[0] ? ")" : "", mdabuf);
-			}
+		primary_vginfo = lvmcache_vginfo_from_vgname(vgname, NULL);
 
-			if (!_drop_vginfo(NULL, primary_vginfo))
-				return_0;
-		}
-
-		if (!_insert_vginfo(vginfo, vgid, vgstatus, creation_host,
-				    primary_vginfo)) {
+		if (!_insert_vginfo(vginfo, vgid, vgstatus, creation_host, primary_vginfo)) {
 			dm_free(vginfo->vgname);
 			dm_free(vginfo);
 			return 0;
 		}
+
 		/* Ensure orphans appear last on list_iterate */
 		if (is_orphan_vg(vgname))
 			dm_list_add(&_vginfos, &vginfo->list);
 		else
 			dm_list_add_h(&_vginfos, &vginfo->list);
-/***
-		}
-***/
 	}
 
 	if (info)
@@ -1969,28 +1817,6 @@ out:
 	return 1;
 }
 
-static int _lvmcache_update_vg_mda_info(struct lvmcache_info *info, uint32_t mda_checksum,
-					size_t mda_size)
-{
-	if (!info || !info->vginfo || !mda_size)
-		return 1;
-
-	if (info->vginfo->mda_checksum == mda_checksum || info->vginfo->mda_size == mda_size) 
-		return 1;
-
-	info->vginfo->mda_checksum = mda_checksum;
-	info->vginfo->mda_size = mda_size;
-
-	/* FIXME Add checksum index */
-
-	log_debug_cache("lvmcache %s: VG %s: stored metadata checksum 0x%08"
-			PRIx32 " with size %" PRIsize_t ".",
-			dev_name(info->dev), info->vginfo->vgname,
-			mda_checksum, mda_size);
-
-	return 1;
-}
-
 int lvmcache_add_orphan_vginfo(const char *vgname, struct format_type *fmt)
 {
 	if (!_lock_hash && !lvmcache_init()) {
@@ -2001,10 +1827,18 @@ int lvmcache_add_orphan_vginfo(const char *vgname, struct format_type *fmt)
 	return _lvmcache_update_vgname(NULL, vgname, vgname, 0, "", fmt);
 }
 
-int lvmcache_update_vgname_and_id(struct lvmcache_info *info, const struct lvmcache_vgsummary *vgsummary)
+/*
+ * FIXME: get rid of other callers of this function which call it
+ * in odd cases to "fix up" some bit of lvmcache state.  Make those
+ * callers fix up what they need to directly, and leave this function
+ * with one purpose and caller.
+ */
+
+int lvmcache_update_vgname_and_id(struct lvmcache_info *info, struct lvmcache_vgsummary *vgsummary)
 {
 	const char *vgname = vgsummary->vgname;
 	const char *vgid = (char *)&vgsummary->vgid;
+	struct lvmcache_vginfo *vginfo;
 
 	if (!vgname && !info->vginfo) {
 		log_error(INTERNAL_ERROR "NULL vgname handed to cache");
@@ -2019,22 +1853,80 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info, const struct lvmca
 	    !is_orphan_vg(info->vginfo->vgname) && critical_section())
 		return 1;
 
-	/* If making a PV into an orphan, any cached VG metadata may become
-	 * invalid, incorrectly still referencing device structs.
-	 * (Example: pvcreate -ff) */
-	if (is_orphan_vg(vgname) && info->vginfo && !is_orphan_vg(info->vginfo->vgname))
-		info->vginfo->cached_vg_invalidated = 1;
+	/*
+	 * Creates a new vginfo struct for this vgname/vgid if none exists,
+	 * and attaches the info struct for the dev to the vginfo.
+	 * Puts the vginfo into the vgname hash table.
+	 */
+	if (!_lvmcache_update_vgname(info, vgname, vgid, vgsummary->vgstatus, vgsummary->creation_host, info->fmt)) {
+		log_error("Failed to update VG %s info in lvmcache.", vgname);
+		return 0;
+	}
 
-	/* If moving PV from orphan to real VG, always mark it valid */
-	if (!is_orphan_vg(vgname))
-		info->status &= ~CACHE_INVALID;
+	/*
+	 * Puts the vginfo into the vgid hash table.
+	 */
+	if (!_lvmcache_update_vgid(info, info->vginfo, vgid)) {
+		log_error("Failed to update VG %s info in lvmcache.", vgname);
+		return 0;
+	}
 
-	if (!_lvmcache_update_vgname(info, vgname, vgid, vgsummary->vgstatus,
-				     vgsummary->creation_host, info->fmt) ||
-	    !_lvmcache_update_vgid(info, info->vginfo, vgid) ||
-	    !_lvmcache_update_vgstatus(info, vgsummary->vgstatus, vgsummary->creation_host, vgsummary->lock_type, vgsummary->system_id) ||
-	    !_lvmcache_update_vg_mda_info(info, vgsummary->mda_checksum, vgsummary->mda_size))
-		return_0;
+	/*
+	 * FIXME: identify which case this is and why this is needed, then
+	 * change that so it doesn't use this function and we can remove
+	 * this special case.
+	 * (I think this distinguishes the scan path, where these things
+	 * are set from the vg_read path where lvmcache_update_vg() is
+	 * called which calls this function without seqno/mda_size/mda_checksum.)
+	 */
+	if (!vgsummary->seqno && !vgsummary->mda_size && !vgsummary->mda_checksum)
+		return 1;
+
+	if (!(vginfo = info->vginfo))
+		return 1;
+
+	if (!vginfo->seqno) {
+		vginfo->seqno = vgsummary->seqno;
+
+		log_debug_cache("lvmcache %s: VG %s: set seqno to %d",
+				dev_name(info->dev), vginfo->vgname, vginfo->seqno);
+
+	} else if (vgsummary->seqno != vginfo->seqno) {
+		log_warn("Scan of VG %s from %s found metadata seqno %d vs previous %d.",
+			 vgname, dev_name(info->dev), vgsummary->seqno, vginfo->seqno);
+		vginfo->scan_summary_mismatch = 1;
+		/* If we don't return success, this dev info will be removed from lvmcache,
+		   and then we won't be able to rescan it or repair it. */
+		return 1;
+	}
+
+	if (!vginfo->mda_size) {
+		vginfo->mda_checksum = vgsummary->mda_checksum;
+		vginfo->mda_size = vgsummary->mda_size;
+
+		log_debug_cache("lvmcache %s: VG %s: set mda_checksum to %x mda_size to %zu",
+				dev_name(info->dev), vginfo->vgname,
+				vginfo->mda_checksum, vginfo->mda_size);
+
+	} else if ((vginfo->mda_size != vgsummary->mda_size) || (vginfo->mda_checksum != vgsummary->mda_checksum)) {
+		log_warn("Scan of VG %s from %s found mda_checksum %x mda_size %zu vs previous %x %zu",
+			 vgname, dev_name(info->dev), vgsummary->mda_checksum, vgsummary->mda_size,
+			 vginfo->mda_checksum, vginfo->mda_size);
+		vginfo->scan_summary_mismatch = 1;
+		/* If we don't return success, this dev info will be removed from lvmcache,
+		   and then we won't be able to rescan it or repair it. */
+		return 1;
+	}
+
+	/*
+	 * If a dev has an unmatching checksum, ignore the other
+	 * info from it, keeping the info we already saved.
+	 */
+	if (!_lvmcache_update_vgstatus(info, vgsummary->vgstatus, vgsummary->creation_host,
+				       vgsummary->lock_type, vgsummary->system_id)) {
+		log_error("Failed to update VG %s info in lvmcache.", vgname);
+		return 0;
+	}
 
 	return 1;
 }
@@ -2059,10 +1951,6 @@ int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted)
 		    !lvmcache_update_vgname_and_id(info, &vgsummary))
 			return_0;
 	}
-
-	/* store text representation of vg to cache */
-	if (vg->cmd->current_settings.cache_vgmetadata)
-		_store_metadata(vg, precommitted);
 
 	return 1;
 }
@@ -2233,8 +2121,6 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller,
 		}
 	}
 
-	info->status |= CACHE_INVALID;
-
 	/*
 	 * Add or update the _pvid_hash mapping, pvid to info.
 	 */
@@ -2310,7 +2196,8 @@ static void _lvmcache_destroy_lockname(struct dm_hash_node *n)
 void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 {
 	struct dm_hash_node *n;
-	log_verbose("Wiping internal VG cache");
+
+	log_debug_cache("Dropping VG info");
 
 	_has_scanned = 0;
 
@@ -2397,55 +2284,28 @@ int lvmcache_fid_add_mdas_vg(struct lvmcache_vginfo *vginfo, struct format_insta
 	return 1;
 }
 
-static int _get_pv_if_in_vg(struct lvmcache_info *info,
-			    struct physical_volume *pv)
-{
-	char vgname[NAME_LEN + 1];
-	char vgid[ID_LEN + 1];
-
-	if (info->vginfo && info->vginfo->vgname &&
-	    !is_orphan_vg(info->vginfo->vgname)) {
-		/*
-		 * get_pv_from_vg_by_id() may call
-		 * lvmcache_label_scan() and drop cached
-		 * vginfo so make a local copy of string.
-		 */
-		(void) dm_strncpy(vgname, info->vginfo->vgname, sizeof(vgname));
-		memcpy(vgid, info->vginfo->vgid, sizeof(vgid));
-
-		if (get_pv_from_vg_by_id(info->fmt, vgname, vgid,
-					 info->dev->pvid, pv))
-			return 1;
-	}
-
-	return 0;
-}
-
 int lvmcache_populate_pv_fields(struct lvmcache_info *info,
-				struct physical_volume *pv,
-				int scan_label_only)
+				struct volume_group *vg,
+				struct physical_volume *pv)
 {
 	struct data_area_list *da;
-
-	/* Have we already cached vgname? */
-	if (!scan_label_only && _get_pv_if_in_vg(info, pv))
-		return 1;
-
-	/* Perform full scan (just the first time) and try again */
-	if (!scan_label_only && !critical_section() && !full_scan_done()) {
-		lvmcache_force_next_label_scan();
-		lvmcache_label_scan(info->fmt->cmd);
-
-		if (_get_pv_if_in_vg(info, pv))
-			return 1;
+	
+	if (!info->label) {
+		log_error("No cached label for orphan PV %s", pv_dev_name(pv));
+		return 0;
 	}
 
-	/* Orphan */
+	pv->label_sector = info->label->sector;
 	pv->dev = info->dev;
 	pv->fmt = info->fmt;
 	pv->size = info->device_size >> SECTOR_SHIFT;
 	pv->vg_name = FMT_TEXT_ORPHAN_VG_NAME;
 	memcpy(&pv->id, &info->dev->pvid, sizeof(pv->id));
+
+	if (!pv->size) {
+		log_error("PV %s size is zero.", dev_name(info->dev));
+		return 0;
+	}
 
 	/* Currently only support exactly one data area */
 	if (dm_list_size(&info->das) != 1) {
@@ -2619,16 +2479,31 @@ int lvmcache_foreach_ba(struct lvmcache_info *info,
 	return 1;
 }
 
+struct label *lvmcache_get_dev_label(struct device *dev)
+{
+	struct lvmcache_info *info;
+
+	if ((info = lvmcache_info_from_pvid(dev->pvid, NULL, 0))) {
+		/* dev would be different for a duplicate */
+		if (info->dev == dev)
+			return info->label;
+	}
+	return NULL;
+}
+
+int lvmcache_has_dev_info(struct device *dev)
+{
+	if (lvmcache_info_from_pvid(dev->pvid, NULL, 0))
+		return 1;
+	return 0;
+}
+
 /*
  * The lifetime of the label returned is tied to the lifetime of the
  * lvmcache_info which is the same as lvmcache itself.
  */
 struct label *lvmcache_get_label(struct lvmcache_info *info) {
 	return info->label;
-}
-
-void lvmcache_make_valid(struct lvmcache_info *info) {
-	info->status &= ~CACHE_INVALID;
 }
 
 uint64_t lvmcache_device_size(struct lvmcache_info *info) {
@@ -2682,6 +2557,14 @@ int lvmcache_vgid_is_cached(const char *vgid) {
 	return 1;
 }
 
+void lvmcache_set_independent_location(const char *vgname)
+{
+	struct lvmcache_vginfo *vginfo;
+
+	if ((vginfo = lvmcache_vginfo_from_vgname(vgname, NULL)))
+		vginfo->independent_metadata_location = 1;
+}
+
 /*
  * Return true iff it is impossible to find out from this info alone whether the
  * PV in question is or is not an orphan.
@@ -2717,6 +2600,7 @@ int lvmcache_lookup_mda(struct lvmcache_vgsummary *vgsummary)
 			vgsummary->vgname = vginfo->vgname;
 			vgsummary->creation_host = vginfo->creation_host;
 			vgsummary->vgstatus = vginfo->status;
+			vgsummary->seqno = vginfo->seqno;
 			/* vginfo->vgid has 1 extra byte then vgsummary->vgid */
 			memcpy(&vgsummary->vgid, vginfo->vgid, sizeof(vgsummary->vgid));
 
@@ -2775,5 +2659,49 @@ int lvmcache_vg_is_foreign(struct cmd_context *cmd, const char *vgname, const ch
 		ret = !is_system_id_allowed(cmd, vginfo->system_id);
 
 	return ret;
+}
+
+/*
+ * Example of reading four devs in sequence from the same VG:
+ *
+ * dev1:
+ *    lvmcache: creates vginfo with initial values
+ *
+ * dev2: all checksums match.
+ *    mda_header checksum matches vginfo from dev1
+ *    metadata checksum matches vginfo from dev1
+ *    metadata is not parsed, and the vgsummary values copied
+ *    from lvmcache from dev1 and passed back to lvmcache for dev2.
+ *    lvmcache: attach info for dev2 to existing vginfo
+ *
+ * dev3: mda_header and metadata have unmatching checksums.
+ *    mda_header checksum matches vginfo from dev1
+ *    metadata checksum doesn't match vginfo from dev1
+ *    produces read error in config.c
+ *    lvmcache: info for dev3 is deleted, FIXME: use a defective state
+ *
+ * dev4: mda_header and metadata have matching checksums, but
+ *       does not match checksum in lvmcache from prev dev.
+ *    mda_header checksum doesn't match vginfo from dev1
+ *    lvmcache_lookup_mda returns 0, no vgname, no checksum_only
+ *    lvmcache: update_vgname_and_id sees checksum from dev4 does not
+ *    match vginfo from dev1, so vginfo->scan_summary_mismatch is set.
+ *    attach info for dev4 to existing vginfo
+ *
+ * dev5: config parsing error.
+ *    lvmcache: info for dev5 is deleted, FIXME: use a defective state
+ */
+
+int lvmcache_scan_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid)
+{
+	struct lvmcache_vginfo *vginfo;
+
+	if (!vgname || !vgid)
+		return 1;
+
+	if ((vginfo = lvmcache_vginfo_from_vgid(vgid)))
+		return vginfo->scan_summary_mismatch;
+
+	return 1;
 }
 

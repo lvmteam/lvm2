@@ -184,6 +184,7 @@ check pvlv_counts $vg1 2 1 0
 vgremove -f $vg1
 
 # vgsplit rejects split because metadata types differ
+if test -n "$LVM_TEST_LVM1" ; then
 pvcreate -ff -M1 "$dev3" "$dev4"
 pvcreate -ff "$dev1" "$dev2"
 vgcreate -M1 $vg1 "$dev3" "$dev4"
@@ -191,4 +192,5 @@ vgcreate $vg2 "$dev1" "$dev2"
 not vgsplit $vg1 $vg2 "$dev3" 2>err;
 grep "Metadata types differ" err
 vgremove -f $vg1 $vg2
+fi
 fi

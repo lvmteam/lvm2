@@ -123,13 +123,20 @@ static void _nanosleep(unsigned secs, unsigned allow_zero_time)
 	while (!nanosleep(&wtime, &wtime) && errno == EINTR) {}
 }
 
-static void _sleep_and_rescan_devices(struct daemon_parms *parms)
+static void _sleep_and_rescan_devices(struct cmd_context *cmd, struct daemon_parms *parms)
 {
 	if (parms->interval && !parms->aborting) {
+		/*
+		 * FIXME: do we really need to drop everything and then rescan
+		 * everything between each iteration?  What change exactly does
+		 * each iteration check for, and does seeing that require
+		 * rescanning everything?
+		 */
+		lvmcache_destroy(cmd, 1, 0);
+		label_scan_destroy(cmd);
 		dev_close_all();
 		_nanosleep(parms->interval, 1);
-		/* Devices might have changed while we slept */
-		init_full_scan_done(0);
+		lvmcache_label_scan(cmd);
 	}
 }
 
@@ -142,10 +149,13 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 	uint32_t lockd_state = 0;
 	int ret;
 
+	if (!parms->wait_before_testing)
+		lvmcache_label_scan(cmd);
+
 	/* Poll for completion */
 	while (!finished) {
 		if (parms->wait_before_testing)
-			_sleep_and_rescan_devices(parms);
+			_sleep_and_rescan_devices(cmd, parms);
 
 		/*
 		 * An ex VG lock is needed because the check can call finish_copy
@@ -218,7 +228,7 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 		 * continue polling an LV that doesn't have a "status".
 		 */
 		if (!parms->wait_before_testing && !finished)
-			_sleep_and_rescan_devices(parms);
+			_sleep_and_rescan_devices(cmd, parms);
 	}
 
 	return 1;

@@ -758,6 +758,13 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 	if (*old_mimage_count != *new_mimage_count)
 		log_verbose("Adjusting mirror image count of %s", lv->name);
 
+	/* If region size is not given by user - use value from mirror */
+	if (lv_is_mirrored(lv) && !lp->region_size_supplied) {
+		lp->region_size = first_seg(lv)->region_size;
+		log_debug("Copying region size %s from existing mirror.",
+			  display_size(lv->vg->cmd, lp->region_size));
+	}
+
 	/*
 	 * Adjust log type
 	 *

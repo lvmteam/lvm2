@@ -28,6 +28,7 @@
 #include "config.h"
 #include "segtype.h"
 #include "sharedlib.h"
+#include "lvmcache.h"
 
 #include <limits.h>
 #include <fcntl.h>
@@ -2172,6 +2173,17 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	if (!lv_info(cmd, lv, laopts->origin_only, &info, 0, 0))
 		goto_out;
 
+	/*
+	 * Save old and new (current and precommitted) versions of the
+	 * VG metadata for lv_resume() to use, since lv_resume can't
+	 * read metadata given that devices are suspended.  lv_resume()
+	 * will resume LVs using the old/current metadata if the vg_commit
+	 * did happen (or failed), and it will resume LVs using the
+	 * new/precommitted metadata if the vg_commit succeeded.
+	 */
+	lvmcache_save_suspended_vg(lv->vg, 0);
+	lvmcache_save_suspended_vg(lv_pre->vg, 1);
+
 	if (!info.exists || info.suspended) {
 		if (!error_if_not_suspended) {
 			r = 1;
@@ -2378,16 +2390,55 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		      struct lv_activate_opts *laopts, int error_if_not_active,
 	              const struct logical_volume *lv)
 {
-	const struct logical_volume *lv_to_free = NULL;
 	struct dm_list *snh;
+	struct volume_group *vg = NULL;
+	struct logical_volume *lv_found = NULL;
+	const union lvid *lvid;
+	const char *vgid;
 	struct lvinfo info;
 	int r = 0;
 
 	if (!activation())
 		return 1;
 
-	if (!lv && !(lv_to_free = lv = lv_from_lvid(cmd, lvid_s, 0)))
-		goto_out;
+	/*
+	 * When called in clvmd, lvid_s is set and lv is not.  We need to
+	 * get the VG metadata without reading disks because devs are
+	 * suspended.  lv_suspend() saved old and new VG metadata for us
+	 * to use here.  If vg_commit() happened, lvmcache_get_suspended_vg
+	 * will return the new metadata for us to use in resuming LVs.
+	 * If vg_commit() did not happen, lvmcache_get_suspended_vg
+	 * returns the old metadata which we use to resume LVs.
+	 */
+	if (!lv && lvid_s) {
+		lvid = (const union lvid *) lvid_s;
+		vgid = (const char *)lvid->id[0].uuid;
+
+		if ((vg = lvmcache_get_suspended_vg(vgid))) {
+			log_debug_activation("Resuming LVID %s found saved vg seqno %d %s", lvid_s, vg->seqno, vg->name);
+			if ((lv_found = find_lv_in_vg_by_lvid(vg, lvid))) {
+				log_debug_activation("Resuming LVID %s found saved LV %s", lvid_s, display_lvname(lv_found));
+				lv = lv_found;
+			} else
+				log_debug_activation("Resuming LVID %s did not find saved LV", lvid_s);
+		} else
+			log_debug_activation("Resuming LVID %s did not find saved VG", lvid_s);
+
+		/*
+		 * resume must have been called without a preceding suspend,
+		 * so we need to read the vg.
+		 */
+
+		if (!lv) {
+			log_debug_activation("Resuming LVID %s reading VG", lvid_s);
+			if (!(lv_found = lv_from_lvid(cmd, lvid_s, 0))) {
+				log_debug_activation("Resuming LVID %s failed to read VG", lvid_s);
+				goto out;
+			}
+
+			lv = lv_found;
+		}
+	}
 
 	if (!lv_is_origin(lv) && !lv_is_thin_volume(lv) && !lv_is_thin_pool(lv))
 		laopts->origin_only = 0;
@@ -2448,9 +2499,6 @@ needs_resume:
 
 	r = 1;
 out:
-	if (lv_to_free)
-		release_vg(lv_to_free->vg);
-
 	return r;
 }
 
@@ -2587,11 +2635,33 @@ int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 			 int *activate_lv, const struct logical_volume *lv)
 {
 	const struct logical_volume *lv_to_free = NULL;
+	struct volume_group *vg = NULL;
+	struct logical_volume *lv_found = NULL;
+	const union lvid *lvid;
+	const char *vgid;
 	int r = 0;
 
 	if (!activation()) {
 		*activate_lv = 1;
 		return 1;
+	}
+
+	/*
+	 * This function is called while devices are suspended,
+	 * so try to use the copy of the vg that was saved in
+	 * lv_suspend.
+	 */
+	if (!lv && lvid_s) {
+		lvid = (const union lvid *) lvid_s;
+		vgid = (const char *)lvid->id[0].uuid;
+
+		if ((vg = lvmcache_get_suspended_vg(vgid))) {
+			log_debug_activation("activation_filter for %s found saved VG seqno %d %s", lvid_s, vg->seqno, vg->name);
+			if ((lv_found = find_lv_in_vg_by_lvid(vg, lvid))) {
+				log_debug_activation("activation_filter for %s found saved LV %s", lvid_s, display_lvname(lv_found));
+				lv = lv_found;
+			}
+		}
 	}
 
 	if (!lv && !(lv_to_free = lv = lv_from_lvid(cmd, lvid_s, 0)))

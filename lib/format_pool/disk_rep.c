@@ -40,7 +40,7 @@ static int __read_pool_disk(const struct format_type *fmt, struct device *dev,
 	char buf[512] __attribute__((aligned(8)));
 
 	/* FIXME: Need to check the cache here first */
-	if (!dev_read_buf(dev, UINT64_C(0), 512, DEV_IO_POOL, buf)) {
+	if (!dev_read(dev, UINT64_C(0), 512, DEV_IO_POOL, buf)) {
 		log_very_verbose("Failed to read PV data from %s",
 				 dev_name(dev));
 		return 0;
@@ -111,7 +111,6 @@ int read_pool_label(struct pool_list *pl, struct labeller *l,
 	lvmcache_set_ext_flags(info, 0);
 	lvmcache_del_mdas(info);
 	lvmcache_del_bas(info);
-	lvmcache_make_valid(info);
 
 	pl->dev = dev;
 	pl->pv = NULL;
@@ -379,8 +378,6 @@ int read_pool_pds(const struct format_type *fmt, const char *vg_name,
 					   vg_name);
 			return 0;
 		}
-		if (full_scan > 0)
-			lvmcache_force_next_label_scan();
 		lvmcache_label_scan(fmt->cmd);
 
 	} while (1);

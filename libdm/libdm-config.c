@@ -963,7 +963,7 @@ static const char *_find_config_str(const void *start, node_lookup_fn find_fn,
 	if (n && n->v) {
 		if ((n->v->type == DM_CFG_STRING) &&
 		    (allow_empty || (*n->v->v.str))) {
-			log_very_verbose("Setting %s to %s", path, n->v->v.str);
+			/* log_very_verbose("Setting %s to %s", path, n->v->v.str); */
 			return n->v->v.str;
 		}
 		if ((n->v->type != DM_CFG_STRING) || (!allow_empty && fail))
@@ -994,7 +994,7 @@ static int64_t _find_config_int64(const void *start, node_lookup_fn find,
 	const struct dm_config_node *n = find(start, path);
 
 	if (n && n->v && n->v->type == DM_CFG_INT) {
-		log_very_verbose("Setting %s to %" PRId64, path, n->v->v.i);
+		/* log_very_verbose("Setting %s to %" PRId64, path, n->v->v.i); */
 		return n->v->v.i;
 	}
 
@@ -1009,7 +1009,7 @@ static float _find_config_float(const void *start, node_lookup_fn find,
 	const struct dm_config_node *n = find(start, path);
 
 	if (n && n->v && n->v->type == DM_CFG_FLOAT) {
-		log_very_verbose("Setting %s to %f", path, n->v->v.f);
+		/* log_very_verbose("Setting %s to %f", path, n->v->v.f); */
 		return n->v->v.f;
 	}
 
@@ -1058,12 +1058,12 @@ static int _find_config_bool(const void *start, node_lookup_fn find,
 		switch (v->type) {
 		case DM_CFG_INT:
 			b = v->v.i ? 1 : 0;
-			log_very_verbose("Setting %s to %d", path, b);
+			/* log_very_verbose("Setting %s to %d", path, b); */
 			return b;
 
 		case DM_CFG_STRING:
 			b = _str_to_bool(v->v.str, fail);
-			log_very_verbose("Setting %s to %d", path, b);
+			/* log_very_verbose("Setting %s to %d", path, b); */
 			return b;
 		default:
 			;

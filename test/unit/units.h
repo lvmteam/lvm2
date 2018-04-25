@@ -23,6 +23,7 @@
 	int n ## _init(void); \
 	int n ## _fini(void);
 
+DECL(bcache);
 DECL(bitset);
 DECL(config);
 DECL(dmlist);

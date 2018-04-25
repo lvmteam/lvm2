@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2018 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -18,14 +18,17 @@
 #include "crc.h"
 #include "xlate.h"
 #include "lvmcache.h"
+#include "bcache.h"
+#include "toolcontext.h"
+#include "activate.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/time.h>
+
 
 /* FIXME Allow for larger labels?  Restricted to single sector currently */
-
-static struct dm_pool *_labeller_mem;
 
 /*
  * Internal labeller struct.
@@ -59,13 +62,7 @@ static struct labeller_i *_alloc_li(const char *name, struct labeller *l)
 
 int label_init(void)
 {
-	if (!(_labeller_mem = dm_pool_create("label scan", 128))) {
-		log_error("Labeller pool creation failed.");
-		return 0;
-	}
-
 	dm_list_init(&_labellers);
-
 	return 1;
 }
 
@@ -80,8 +77,6 @@ void label_exit(void)
 	}
 
 	dm_list_init(&_labellers);
-
-	dm_pool_destroy(_labeller_mem);
 }
 
 int label_register_handler(struct labeller *handler)
@@ -106,175 +101,37 @@ struct labeller *label_get_handler(const char *name)
 	return NULL;
 }
 
-static void _update_lvmcache_orphan(struct lvmcache_info *info)
-{
-	struct lvmcache_vgsummary vgsummary_orphan = {
-		.vgname = lvmcache_fmt(info)->orphan_vg_name,
-	};
-
-        memcpy(&vgsummary_orphan.vgid, lvmcache_fmt(info)->orphan_vg_name, strlen(lvmcache_fmt(info)->orphan_vg_name));
-
-	if (!lvmcache_update_vgname_and_id(info, &vgsummary_orphan))
-		stack;
-}
-
-struct find_labeller_params {
-	struct device *dev;
-	uint64_t scan_sector;	/* Sector to be scanned */
-	uint64_t label_sector;	/* Sector where label found */
-	lvm_callback_fn_t process_label_data_fn;
-	void *process_label_data_context;
-
-	struct label **result;
-
-	int ret;
-};
-
-static void _set_label_read_result(int failed, unsigned ioflags, void *context, const void *data)
-{
-	struct find_labeller_params *flp = context;
-	struct label **result = flp->result;
-	struct label *label = (struct label *) data;
-
-	if (failed) {
-		flp->ret = 0;
-		goto_out;
-	}
-
-	/* Fix up device and label sector which the low-level code doesn't set */
-	if (label) {
-		label->dev = flp->dev;
-		label->sector = flp->label_sector;
-	}
-
-	if (result)
-		*result = (struct label *) label;
-
-out:
-	if (!dev_close(flp->dev))
-		stack;
-
-	if (flp->process_label_data_fn) {
-		log_debug_io("Completed label reading for %s", dev_name(flp->dev));
-		flp->process_label_data_fn(!flp->ret, ioflags, flp->process_label_data_context, NULL);
-	}
-}
-
-static void _find_labeller(int failed, unsigned ioflags, void *context, const void *data)
-{
-	struct find_labeller_params *flp = context;
-	const char *readbuf = data;
-	struct device *dev = flp->dev;
-	uint64_t scan_sector = flp->scan_sector;
-	char labelbuf[LABEL_SIZE] __attribute__((aligned(8)));
-	struct labeller_i *li;
-	struct labeller *l = NULL;	/* Set when a labeller claims the label */
-	const struct label_header *lh;
-	struct lvmcache_info *info;
-	uint64_t sector;
-
-	if (failed) {
-		log_debug_devs("%s: Failed to read label area", dev_name(dev));
-		_set_label_read_result(1, ioflags, flp, NULL);
-		return;
-	}
-
-	/* Scan a few sectors for a valid label */
-	for (sector = 0; sector < LABEL_SCAN_SECTORS;
-	     sector += LABEL_SIZE >> SECTOR_SHIFT) {
-		lh = (struct label_header *) (readbuf + (sector << SECTOR_SHIFT));
-
-		if (!strncmp((char *)lh->id, LABEL_ID, sizeof(lh->id))) {
-			if (l) {
-				log_error("Ignoring additional label on %s at "
-					  "sector %" PRIu64, dev_name(dev),
-					  sector + scan_sector);
-			}
-			if (xlate64(lh->sector_xl) != sector + scan_sector) {
-				log_very_verbose("%s: Label for sector %" PRIu64
-						 " found at sector %" PRIu64
-						 " - ignoring", dev_name(dev),
-						 (uint64_t)xlate64(lh->sector_xl),
-						 sector + scan_sector);
-				continue;
-			}
-			if (calc_crc(INITIAL_CRC, (uint8_t *)&lh->offset_xl, LABEL_SIZE -
-				     ((uint8_t *) &lh->offset_xl - (uint8_t *) lh)) !=
-			    xlate32(lh->crc_xl)) {
-				log_very_verbose("Label checksum incorrect on %s - "
-						 "ignoring", dev_name(dev));
-				continue;
-			}
-			if (l)
-				continue;
-		}
-
-		dm_list_iterate_items(li, &_labellers) {
-			if (li->l->ops->can_handle(li->l, (char *) lh,
-						   sector + scan_sector)) {
-				log_very_verbose("%s: %s label detected at "
-					         "sector %" PRIu64, 
-						 dev_name(dev), li->name,
-						 sector + scan_sector);
-				if (l) {
-					log_error("Ignoring additional label "
-						  "on %s at sector %" PRIu64,
-						  dev_name(dev),
-						  sector + scan_sector);
-					continue;
-				}
-				memcpy(labelbuf, lh, LABEL_SIZE);
-				flp->label_sector = sector + scan_sector;
-				l = li->l;
-				break;
-			}
-		}
-	}
-
-	if (!l) {
-		if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 0)))
-			_update_lvmcache_orphan(info);
-		log_very_verbose("%s: No label detected", dev_name(dev));
-		flp->ret = 0;
-		_set_label_read_result(1, ioflags, flp, NULL);
-	} else
-		(void) (l->ops->read)(l, dev, labelbuf, ioflags, &_set_label_read_result, flp);
-}
-
 /* FIXME Also wipe associated metadata area headers? */
 int label_remove(struct device *dev)
 {
-	char labelbuf[LABEL_SIZE] __attribute__((aligned(8)));
+	char readbuf[LABEL_SIZE] __attribute__((aligned(8)));
 	int r = 1;
 	uint64_t sector;
 	int wipe;
 	struct labeller_i *li;
 	struct label_header *lh;
 	struct lvmcache_info *info;
-	const char *readbuf = NULL;
-
-	memset(labelbuf, 0, LABEL_SIZE);
 
 	log_very_verbose("Scanning for labels to wipe from %s", dev_name(dev));
 
-	if (!dev_open(dev))
-		return_0;
-
-	/*
-	 * We flush the device just in case someone is stupid
-	 * enough to be trying to import an open pv into lvm.
-	 */
-	dev_flush(dev);
-
-	if (!(readbuf = dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, DEV_IO_LABEL))) {
-		log_debug_devs("%s: Failed to read label area", dev_name(dev));
-		goto out;
+	if (!label_scan_open(dev)) {
+		log_error("Failed to open device %s", dev_name(dev));
+		return 0;
 	}
 
 	/* Scan first few sectors for anything looking like a label */
 	for (sector = 0; sector < LABEL_SCAN_SECTORS;
 	     sector += LABEL_SIZE >> SECTOR_SHIFT) {
-		lh = (struct label_header *) (readbuf + (sector << SECTOR_SHIFT));
+
+		memset(readbuf, 0, sizeof(readbuf));
+
+		if (!dev_read_bytes(dev, sector << SECTOR_SHIFT, LABEL_SIZE, readbuf)) {
+			log_error("Failed to read label from %s sector %llu",
+				  dev_name(dev), (unsigned long long)sector);
+			continue;
+		}
+
+		lh = (struct label_header *)readbuf;
 
 		wipe = 0;
 
@@ -283,8 +140,7 @@ int label_remove(struct device *dev)
 				wipe = 1;
 		} else {
 			dm_list_iterate_items(li, &_labellers) {
-				if (li->l->ops->can_handle(li->l, (char *) lh,
-							   sector)) {
+				if (li->l->ops->can_handle(li->l, (char *)lh, sector)) {
 					wipe = 1;
 					break;
 				}
@@ -292,90 +148,23 @@ int label_remove(struct device *dev)
 		}
 
 		if (wipe) {
-			log_very_verbose("%s: Wiping label at sector %" PRIu64,
-					 dev_name(dev), sector);
-			if (dev_write(dev, sector << SECTOR_SHIFT, LABEL_SIZE, DEV_IO_LABEL, labelbuf)) {
+			log_very_verbose("%s: Wiping label at sector %llu",
+					 dev_name(dev), (unsigned long long)sector);
+
+			if (!dev_write_zeros(dev, sector << SECTOR_SHIFT, LABEL_SIZE)) {
+				log_error("Failed to remove label from %s at sector %llu",
+					  dev_name(dev), (unsigned long long)sector);
+				r = 0;
+			} else {
 				/* Also remove the PV record from cache. */
 				info = lvmcache_info_from_pvid(dev->pvid, dev, 0);
 				if (info)
 					lvmcache_del(info);
-			} else {
-				log_error("Failed to remove label from %s at "
-					  "sector %" PRIu64, dev_name(dev),
-					  sector);
-				r = 0;
 			}
 		}
 	}
 
-      out:
-	if (!dev_close(dev))
-		stack;
-
 	return r;
-}
-
-static int _label_read(struct device *dev, uint64_t scan_sector, struct label **result,
-		       unsigned ioflags, lvm_callback_fn_t process_label_data_fn, void *process_label_data_context)
-{
-	struct lvmcache_info *info;
-	struct find_labeller_params *flp;
-
-	if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 1))) {
-		log_debug_devs("Reading label from lvmcache for %s", dev_name(dev));
-		if (result)
-			*result = lvmcache_get_label(info);
-		if (process_label_data_fn) {
-			log_debug_io("Completed label reading for %s", dev_name(dev));
-			process_label_data_fn(0, ioflags, process_label_data_context, NULL);
-		}
-		return 1;
-	}
-
-	if (!(flp = dm_pool_zalloc(_labeller_mem, sizeof *flp))) {
-		log_error("find_labeller_params allocation failed.");
-		return 0;
-	}
-
-	flp->dev = dev;
-	flp->scan_sector = scan_sector;
-	flp->result = result;
-	flp->process_label_data_fn = process_label_data_fn;
-	flp->process_label_data_context = process_label_data_context;
-	flp->ret = 1;
-
-	/* Ensure result is always wiped as a precaution */
-	if (result)
-		*result = NULL;
-
-	log_debug_devs("Reading label from device %s", dev_name(dev));
-
-	if (!dev_open_readonly(dev)) {
-		stack;
-
-		if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 0)))
-			_update_lvmcache_orphan(info);
-
-		return 0;
-	}
-
-	dev_read_callback(dev, scan_sector << SECTOR_SHIFT, LABEL_SCAN_SIZE, DEV_IO_LABEL, ioflags, _find_labeller, flp);
-	if (process_label_data_fn)
-		return 1;
-	else
-		return flp->ret;
-}
-
-/* result may be NULL if caller doesn't need it */
-int label_read(struct device *dev, struct label **result, uint64_t scan_sector)
-{
-	return _label_read(dev, scan_sector, result, 0, NULL, NULL);
-}
-
-int label_read_callback(struct device *dev, uint64_t scan_sector, unsigned ioflags,
-		       lvm_callback_fn_t process_label_data_fn, void *process_label_data_context)
-{
-	return _label_read(dev, scan_sector, NULL, ioflags, process_label_data_fn, process_label_data_context);
 }
 
 /* Caller may need to use label_get_handler to create label struct! */
@@ -408,19 +197,19 @@ int label_write(struct device *dev, struct label *label)
 	lh->crc_xl = xlate32(calc_crc(INITIAL_CRC, (uint8_t *)&lh->offset_xl, LABEL_SIZE -
 				      ((uint8_t *) &lh->offset_xl - (uint8_t *) lh)));
 
-	if (!dev_open(dev))
-		return_0;
-
 	log_very_verbose("%s: Writing label to sector %" PRIu64 " with stored offset %"
 			 PRIu32 ".", dev_name(dev), label->sector,
 			 xlate32(lh->offset_xl));
-	if (!dev_write(dev, label->sector << SECTOR_SHIFT, LABEL_SIZE, DEV_IO_LABEL, buf)) {
+
+	if (!label_scan_open(dev)) {
+		log_error("Failed to open device %s", dev_name(dev));
+		return 0;
+	}
+
+	if (!dev_write_bytes(dev, label->sector << SECTOR_SHIFT, LABEL_SIZE, buf)) {
 		log_debug_devs("Failed to write label to %s", dev_name(dev));
 		r = 0;
 	}
-
-	if (!dev_close(dev))
-		stack;
 
 	return r;
 }
@@ -446,3 +235,758 @@ struct label *label_create(struct labeller *labeller)
 
 	return label;
 }
+
+
+/* global variable for accessing the bcache populated by label scan */
+struct bcache *scan_bcache;
+
+#define BCACHE_BLOCK_SIZE_IN_SECTORS 256 /* 256*512 = 128K */
+
+static bool _in_bcache(struct device *dev)
+{
+	if (!dev)
+		return NULL;
+	return (dev->flags & DEV_IN_BCACHE) ? true : false;
+}
+
+static struct labeller *_find_lvm_header(struct device *dev,
+				   char *scan_buf,
+				   char *label_buf,
+				   uint64_t *label_sector,
+				   uint64_t scan_sector)
+{
+	struct labeller_i *li;
+	struct labeller *labeller_ret = NULL;
+	struct label_header *lh;
+	uint64_t sector;
+	int found = 0;
+
+	/*
+	 * Find which sector in scan_buf starts with a valid label,
+	 * and copy it into label_buf.
+	 */
+
+	for (sector = 0; sector < LABEL_SCAN_SECTORS;
+	     sector += LABEL_SIZE >> SECTOR_SHIFT) {
+		lh = (struct label_header *) (scan_buf + (sector << SECTOR_SHIFT));
+
+		if (!strncmp((char *)lh->id, LABEL_ID, sizeof(lh->id))) {
+			if (found) {
+				log_error("Ignoring additional label on %s at sector %llu",
+					  dev_name(dev), (unsigned long long)(sector + scan_sector));
+			}
+			if (xlate64(lh->sector_xl) != sector + scan_sector) {
+				log_very_verbose("%s: Label for sector %llu found at sector %llu - ignoring.",
+						 dev_name(dev),
+						 (unsigned long long)xlate64(lh->sector_xl),
+						 (unsigned long long)(sector + scan_sector));
+				continue;
+			}
+			if (calc_crc(INITIAL_CRC, (uint8_t *)&lh->offset_xl, LABEL_SIZE -
+				     ((uint8_t *) &lh->offset_xl - (uint8_t *) lh)) !=
+			    xlate32(lh->crc_xl)) {
+				log_very_verbose("Label checksum incorrect on %s - ignoring", dev_name(dev));
+				continue;
+			}
+			if (found)
+				continue;
+		}
+
+		dm_list_iterate_items(li, &_labellers) {
+			if (li->l->ops->can_handle(li->l, (char *) lh, sector + scan_sector)) {
+				log_very_verbose("%s: %s label detected at sector %llu", 
+						 dev_name(dev), li->name,
+						 (unsigned long long)(sector + scan_sector));
+				if (found) {
+					log_error("Ignoring additional label on %s at sector %llu",
+						  dev_name(dev),
+						  (unsigned long long)(sector + scan_sector));
+					continue;
+				}
+
+				labeller_ret = li->l;
+				found = 1;
+
+				memcpy(label_buf, lh, LABEL_SIZE);
+				if (label_sector)
+					*label_sector = sector + scan_sector;
+				break;
+			}
+		}
+	}
+
+	return labeller_ret;
+}
+
+/*
+ * Process/parse the headers from the data read from a device.
+ * Populates lvmcache with device / mda locations / vgname
+ * so that vg_read(vgname) will know which devices/locations
+ * to read metadata from.
+ *
+ * If during processing, headers/metadata are found to be needed
+ * beyond the range of the scanned block, then additional reads
+ * are performed in the processing functions to get that data.
+ */
+static int _process_block(struct device *dev, struct block *bb, int *is_lvm_device)
+{
+	char label_buf[LABEL_SIZE] __attribute__((aligned(8)));
+	struct label *label = NULL;
+	struct labeller *labeller;
+	uint64_t sector;
+	int ret = 0;
+
+	/*
+	 * Finds the data sector containing the label and copies into label_buf.
+	 * label_buf: struct label_header + struct pv_header + struct pv_header_extension
+	 *
+	 * FIXME: we don't need to copy one sector from bb->data into label_buf,
+	 * we can just point label_buf at one sector in ld->buf.
+	 */
+	if (!(labeller = _find_lvm_header(dev, bb->data, label_buf, &sector, 0))) {
+
+		/*
+		 * Non-PVs exit here
+		 *
+		 * FIXME: check for PVs with errors that also exit here!
+		 * i.e. this code cannot distinguish between a non-lvm
+		 * device an an lvm device with errors.
+		 */
+
+		log_very_verbose("%s: No lvm label detected", dev_name(dev));
+
+		lvmcache_del_dev(dev); /* FIXME: if this is needed, fix it. */
+
+		*is_lvm_device = 0;
+		goto_out;
+	}
+
+	*is_lvm_device = 1;
+
+	/*
+	 * This is the point where the scanning code dives into the rest of
+	 * lvm.  ops->read() is usually _text_read() which reads the pv_header,
+	 * mda locations, mda contents.  As these bits of data are read, they
+	 * are saved into lvmcache as info/vginfo structs.
+	 */
+
+	if ((ret = (labeller->ops->read)(labeller, dev, label_buf, &label)) && label) {
+		label->dev = dev;
+		label->sector = sector;
+	} else {
+		/* FIXME: handle errors */
+		lvmcache_del_dev(dev);
+	}
+ out:
+	return ret;
+}
+
+static int _scan_dev_open(struct device *dev)
+{
+	const char *name;
+	int flags = 0;
+	int fd;
+
+	if (!dev)
+		return 0;
+
+	if (dev->flags & DEV_IN_BCACHE) {
+		log_error("scan_dev_open %s DEV_IN_BCACHE already set", dev_name(dev));
+		dev->flags &= ~DEV_IN_BCACHE;
+	}
+
+	if (dev->bcache_fd > 0) {
+		log_error("scan_dev_open %s already open with fd %d",
+			  dev_name(dev), dev->bcache_fd);
+		return 0;
+	}
+
+	if (!(name = dev_name_confirmed(dev, 1))) {
+		log_error("scan_dev_open %s no name", dev_name(dev));
+		return 0;
+	}
+
+	flags |= O_RDWR;
+	flags |= O_DIRECT;
+	flags |= O_NOATIME;
+
+	if (dev->flags & DEV_BCACHE_EXCL)
+		flags |= O_EXCL;
+
+	fd = open(name, flags, 0777);
+
+	if (fd < 0) {
+		if ((errno == EBUSY) && (flags & O_EXCL)) {
+			log_error("Can't open %s exclusively.  Mounted filesystem?",
+				  dev_name(dev));
+		} else {
+			log_error("scan_dev_open %s failed errno %d", dev_name(dev), errno);
+		}
+		return 0;
+	}
+
+	dev->flags |= DEV_IN_BCACHE;
+	dev->bcache_fd = fd;
+	return 1;
+}
+
+static int _scan_dev_close(struct device *dev)
+{
+	if (!(dev->flags & DEV_IN_BCACHE))
+		log_error("scan_dev_close %s no DEV_IN_BCACHE set", dev_name(dev));
+
+	dev->flags &= ~DEV_IN_BCACHE;
+	dev->flags &= ~DEV_BCACHE_EXCL;
+
+	if (dev->bcache_fd < 0) {
+		log_error("scan_dev_close %s already closed", dev_name(dev));
+		return 0;
+	}
+
+	if (close(dev->bcache_fd))
+		log_warn("close %s errno %d", dev_name(dev), errno);
+	dev->bcache_fd = -1;
+	return 1;
+}
+
+/*
+ * Read or reread label/metadata from selected devs.
+ *
+ * Reads and looks at label_header, pv_header, pv_header_extension,
+ * mda_header, raw_locns, vg metadata from each device.
+ *
+ * Effect is populating lvmcache with latest info/vginfo (PV/VG) data
+ * from the devs.  If a scanned device does not have a label_header,
+ * its info is removed from lvmcache.
+ */
+
+static int _scan_list(struct dm_list *devs, int *failed)
+{
+	struct dm_list wait_devs;
+	struct dm_list done_devs;
+	struct device_list *devl, *devl2;
+	struct block *bb;
+	int scan_open_errors = 0;
+	int scan_read_errors = 0;
+	int scan_process_errors = 0;
+	int scan_failed_count = 0;
+	int rem_prefetches;
+	int scan_failed;
+	int is_lvm_device;
+	int error;
+	int ret;
+
+	dm_list_init(&wait_devs);
+	dm_list_init(&done_devs);
+
+	log_debug_devs("Scanning %d devices for VG info", dm_list_size(devs));
+
+ scan_more:
+	rem_prefetches = bcache_max_prefetches(scan_bcache);
+
+	dm_list_iterate_items_safe(devl, devl2, devs) {
+
+		/*
+		 * If we prefetch more devs than blocks in the cache, then the
+		 * cache will wait for earlier reads to complete, toss the
+		 * results, and reuse those blocks before we've had a chance to
+		 * use them.  So, prefetch as many as are available, wait for
+		 * and process them, then repeat.
+		 */
+		if (!rem_prefetches)
+			break;
+
+		if (!_in_bcache(devl->dev)) {
+			if (!_scan_dev_open(devl->dev)) {
+				log_debug_devs("Scan failed to open %s.", dev_name(devl->dev));
+				dm_list_del(&devl->list);
+				dm_list_add(&done_devs, &devl->list);
+				scan_open_errors++;
+				scan_failed_count++;
+				continue;
+			}
+		}
+
+		bcache_prefetch(scan_bcache, devl->dev->bcache_fd, 0);
+
+		rem_prefetches--;
+
+		dm_list_del(&devl->list);
+		dm_list_add(&wait_devs, &devl->list);
+	}
+
+	dm_list_iterate_items_safe(devl, devl2, &wait_devs) {
+		bb = NULL;
+		error = 0;
+		scan_failed = 0;
+		is_lvm_device = 0;
+
+		if (!bcache_get(scan_bcache, devl->dev->bcache_fd, 0, 0, &bb, &error)) {
+			log_debug_devs("Scan failed to read %s error %d.", dev_name(devl->dev), error);
+			scan_failed = 1;
+			scan_read_errors++;
+			scan_failed_count++;
+			lvmcache_del_dev(devl->dev);
+		} else {
+			log_debug_devs("Processing data from device %s fd %d block %p", dev_name(devl->dev), devl->dev->bcache_fd, bb);
+
+			ret = _process_block(devl->dev, bb, &is_lvm_device);
+
+			if (!ret && is_lvm_device) {
+				log_debug_devs("Scan failed to process %s", dev_name(devl->dev));
+				scan_failed = 1;
+				scan_process_errors++;
+				scan_failed_count++;
+				lvmcache_del_dev(devl->dev);
+			}
+		}
+
+		if (bb)
+			bcache_put(bb);
+
+		/*
+		 * Keep the bcache block of lvm devices we have processed so
+		 * that the vg_read phase can reuse it.  If bcache failed to
+		 * read the block, or the device does not belong to lvm, then
+		 * drop it from bcache.
+		 */
+		if (scan_failed || !is_lvm_device) {
+			bcache_invalidate_fd(scan_bcache, devl->dev->bcache_fd);
+			_scan_dev_close(devl->dev);
+		}
+
+		dm_list_del(&devl->list);
+		dm_list_add(&done_devs, &devl->list);
+	}
+
+	if (!dm_list_empty(devs))
+		goto scan_more;
+
+	log_debug_devs("Scanned devices: open errors %d read errors %d process errors %d",
+			scan_open_errors, scan_read_errors, scan_process_errors);
+
+	if (failed)
+		*failed = scan_failed_count;
+
+	dm_list_splice(devs, &done_devs);
+
+	return 1;
+}
+
+#define MIN_BCACHE_BLOCKS 32
+
+static int _setup_bcache(int cache_blocks)
+{
+	struct io_engine *ioe;
+
+	/* No devices can happen, just create bcache with any small number. */
+	if (cache_blocks < MIN_BCACHE_BLOCKS)
+		cache_blocks = MIN_BCACHE_BLOCKS;
+
+	/*
+	 * 100 is arbitrary, it's the max number of concurrent aio's
+	 * possible, i.e, the number of devices that can be read at
+	 * once.  Should this be configurable?
+	 */
+	if (!(ioe = create_async_io_engine())) {
+		log_error("Failed to create bcache io engine.");
+		return 0;
+	}
+
+	/*
+	 * Configure one cache block for each device on the system.
+	 * We won't generally need to cache that many because some
+	 * of the devs will not be lvm devices, and we don't need
+	 * an entry for those.  We might want to change this.
+	 */
+	if (!(scan_bcache = bcache_create(BCACHE_BLOCK_SIZE_IN_SECTORS, cache_blocks, ioe))) {
+		log_error("Failed to create bcache with %d cache blocks.", cache_blocks);
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * Scan and cache lvm data from all devices on the system.
+ * The cache should be empty/reset before calling this.
+ */
+
+int label_scan(struct cmd_context *cmd)
+{
+	struct dm_list all_devs;
+	struct dev_iter *iter;
+	struct device_list *devl;
+	struct device *dev;
+
+	log_debug_devs("Finding devices to scan");
+
+	dm_list_init(&all_devs);
+
+	/*
+	 * Iterate through all the devices in dev-cache (block devs that appear
+	 * under /dev that could possibly hold a PV and are not excluded by
+	 * filters).  Read each to see if it's an lvm device, and if so
+	 * populate lvmcache with some basic info about the device and the VG
+	 * on it.  This info will be used by the vg_read() phase of the
+	 * command.
+	 */
+	dev_cache_scan();
+
+	if (!(iter = dev_iter_create(cmd->full_filter, 0))) {
+		log_error("Scanning failed to get devices.");
+		return 0;
+	}
+
+	while ((dev = dev_iter_get(iter))) {
+		if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
+			return 0;
+		devl->dev = dev;
+		dm_list_add(&all_devs, &devl->list);
+
+		/*
+		 * label_scan should not generally be called a second time,
+		 * so this will usually not be true.
+		 */
+		if (_in_bcache(dev)) {
+			bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
+			_scan_dev_close(dev);
+		}
+	};
+	dev_iter_destroy(iter);
+
+	log_debug_devs("Found %d devices to scan", dm_list_size(&all_devs));
+
+	if (!scan_bcache) {
+		/*
+		 * FIXME: there should probably be some max number of
+		 * cache blocks we use when setting up bcache.
+		 */
+		if (!_setup_bcache(dm_list_size(&all_devs)))
+			return 0;
+	}
+
+	_scan_list(&all_devs, NULL);
+
+	return 1;
+}
+
+/*
+ * Scan and cache lvm data from the listed devices.  If a device is already
+ * scanned and cached, this replaces the previously cached lvm data for the
+ * device.  This is called when vg_read() wants to guarantee that it is using
+ * the latest data from the devices in the VG (since the scan populated bcache
+ * without a lock.)
+ */
+
+int label_scan_devs(struct cmd_context *cmd, struct dm_list *devs)
+{
+	struct device_list *devl;
+
+	/* FIXME: get rid of this, it's only needed for lvmetad in which
+	   case we should be setting up bcache in one place. */
+	if (!scan_bcache) {
+		if (!_setup_bcache(0))
+			return 0;
+	}
+
+	dm_list_iterate_items(devl, devs) {
+		if (_in_bcache(devl->dev)) {
+			bcache_invalidate_fd(scan_bcache, devl->dev->bcache_fd);
+			_scan_dev_close(devl->dev);
+		}
+	}
+
+	_scan_list(devs, NULL);
+
+	/* FIXME: this function should probably fail if any devs couldn't be scanned */
+
+	return 1;
+}
+
+int label_scan_devs_excl(struct dm_list *devs)
+{
+	struct device_list *devl;
+	int failed = 0;
+
+	dm_list_iterate_items(devl, devs) {
+		if (_in_bcache(devl->dev)) {
+			bcache_invalidate_fd(scan_bcache, devl->dev->bcache_fd);
+			_scan_dev_close(devl->dev);
+		}
+		/*
+		 * With this flag set, _scan_dev_open() done by
+		 * _scan_list() will do open EXCL
+		 */
+		devl->dev->flags |= DEV_BCACHE_EXCL;
+	}
+
+	_scan_list(devs, &failed);
+
+	if (failed)
+		return 0;
+	return 1;
+}
+
+void label_scan_invalidate(struct device *dev)
+{
+	if (_in_bcache(dev)) {
+		bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
+		_scan_dev_close(dev);
+	}
+}
+
+/*
+ * If a PV is stacked on an LV, then the LV is kept open
+ * in bcache, and needs to be closed so the open fd doesn't
+ * interfere with processing the LV.
+ */
+
+void label_scan_invalidate_lv(struct cmd_context *cmd, struct logical_volume *lv)
+{
+	struct lvinfo lvinfo;
+	struct device *dev;
+	dev_t devt;
+
+	lv_info(cmd, lv, 0, &lvinfo, 0, 0);
+	devt = MKDEV(lvinfo.major, lvinfo.minor);
+	if ((dev = dev_cache_get_by_devt(devt, cmd->filter)))
+		label_scan_invalidate(dev);
+}
+
+/*
+ * Empty the bcache of all blocks and close all open fds,
+ * but keep the bcache set up.
+ */
+
+void label_scan_drop(struct cmd_context *cmd)
+{
+	struct dev_iter *iter;
+	struct device *dev;
+
+	if (!(iter = dev_iter_create(cmd->full_filter, 0))) {
+		return;
+	}
+
+	while ((dev = dev_iter_get(iter))) {
+		if (_in_bcache(dev))
+			_scan_dev_close(dev);
+	}
+	dev_iter_destroy(iter);
+}
+
+/*
+ * Close devices that are open because bcache is holding blocks for them.
+ * Destroy the bcache.
+ */
+
+void label_scan_destroy(struct cmd_context *cmd)
+{
+	if (!scan_bcache)
+		return;
+
+	label_scan_drop(cmd);
+
+	bcache_destroy(scan_bcache);
+	scan_bcache = NULL;
+}
+
+/*
+ * Read (or re-read) and process (or re-process) the data for a device.  This
+ * will reset (clear and repopulate) the bcache and lvmcache info for this
+ * device.  There are only a couple odd places that want to reread a specific
+ * device, this is not a commonly used function.
+ */
+
+/* FIXME: remove unused_sector arg */
+
+int label_read(struct device *dev, struct label **labelp, uint64_t unused_sector)
+{
+	struct dm_list one_dev;
+	struct device_list *devl;
+	int failed = 0;
+
+	/* scanning is done by list, so make a single item list for this dev */
+	if (!(devl = dm_zalloc(sizeof(*devl))))
+		return 0;
+	devl->dev = dev;
+	dm_list_init(&one_dev);
+	dm_list_add(&one_dev, &devl->list);
+
+	if (_in_bcache(dev)) {
+		bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
+		_scan_dev_close(dev);
+	}
+
+	_scan_list(&one_dev, &failed);
+
+	/*
+	 * FIXME: this ugliness of returning a pointer to the label is
+	 * temporary until the callers can be updated to not use this.
+	 */
+	if (labelp) {
+		struct lvmcache_info *info;
+
+		info = lvmcache_info_from_pvid(dev->pvid, dev, 1);
+		if (info)
+			*labelp = lvmcache_get_label(info);
+	}
+
+	if (failed)
+		return 0;
+	return 1;
+}
+
+/*
+ * Read a label from a specfic, non-zero sector.  This is used in only
+ * one place: pvck -> pv_analyze.
+ */
+
+int label_read_sector(struct device *dev, struct label **labelp, uint64_t scan_sector)
+{
+	if (scan_sector) {
+		/* TODO: not yet implemented */
+		/* When is this done?  When does it make sense?  Is it actually possible? */
+		return 0;
+	}
+
+	return label_read(dev, labelp, 0);
+}
+
+/*
+ * This is only needed when commands are using lvmetad, in which case they
+ * don't do an initial label_scan, but may later need to rescan certain devs
+ * from disk and call this function.  FIXME: is there some better number to
+ * choose here?
+ */
+
+int label_scan_setup_bcache(void)
+{
+	if (!scan_bcache) {
+		if (!_setup_bcache(0))
+			return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * This is needed to write to a new non-lvm device.
+ * Scanning that dev would not keep it open or in
+ * bcache, but to use bcache_write we need the dev
+ * to be open so we can use dev->bcache_fd to write.
+ */
+
+int label_scan_open(struct device *dev)
+{
+	if (!_in_bcache(dev))
+		return _scan_dev_open(dev);
+	return 1;
+}
+
+bool dev_read_bytes(struct device *dev, off_t start, size_t len, void *data)
+{
+	int ret;
+
+	if (!scan_bcache) {
+		if (!dev_open_readonly(dev))
+			return false;
+
+		ret = dev_read(dev, start, len, 0, data);
+
+		if (!dev_close(dev))
+			stack;
+
+		return ret ? true : false;
+	}
+
+	if (dev->bcache_fd <= 0) {
+		/* This is not often needed, perhaps only with lvmetad. */
+		if (!label_scan_open(dev)) {
+			log_error("dev_read_bytes %s cannot open dev", dev_name(dev));
+			return false;
+		}
+	}
+
+	if (!bcache_read_bytes(scan_bcache, dev->bcache_fd, start, len, data)) {
+		log_error("dev_read_bytes %s at %u failed invalidate fd %d",
+			  dev_name(dev), (uint32_t)start, dev->bcache_fd);
+		label_scan_invalidate(dev);
+		return false;
+	}
+	return true;
+
+}
+
+bool dev_write_bytes(struct device *dev, off_t start, size_t len, void *data)
+{
+	int ret;
+
+	if (test_mode())
+		return true;
+
+	if (!scan_bcache) {
+		if (!dev_open(dev))
+			return false;
+
+		ret = dev_write(dev, start, len, 0, data);
+
+		if (!dev_close(dev))
+			stack;
+
+		return ret ? true : false;
+	}
+
+	if (dev->bcache_fd <= 0) {
+		/* This is not often needed, perhaps only with lvmetad. */
+		if (!label_scan_open(dev)) {
+			log_error("dev_write_bytes %s cannot open dev", dev_name(dev));
+			return false;
+		}
+	}
+
+	if (!bcache_write_bytes(scan_bcache, dev->bcache_fd, start, len, data)) {
+		log_error("dev_write_bytes %s at %u failed invalidate fd %d",
+			  dev_name(dev), (uint32_t)start, dev->bcache_fd);
+		label_scan_invalidate(dev);
+		return false;
+	}
+	return true;
+}
+
+bool dev_write_zeros(struct device *dev, off_t start, size_t len)
+{
+	int ret;
+
+	if (test_mode())
+		return true;
+
+	if (!scan_bcache) {
+		if (!dev_open(dev))
+			return false;
+
+		ret = dev_set(dev, start, len, 0, 0);
+
+		if (!dev_close(dev))
+			stack;
+
+		return ret ? true : false;
+	}
+
+	if (dev->bcache_fd <= 0) {
+		/* This is not often needed, perhaps only with lvmetad. */
+		if (!label_scan_open(dev)) {
+			log_error("dev_write_zeros %s cannot open dev", dev_name(dev));
+			return false;
+		}
+	}
+
+	if (!bcache_write_zeros(scan_bcache, dev->bcache_fd, start, len)) {
+		log_error("dev_write_zeros %s at %u failed invalidate fd %d",
+			  dev_name(dev), (uint32_t)start, dev->bcache_fd);
+		label_scan_invalidate(dev);
+		return false;
+	}
+	return true;
+}
+

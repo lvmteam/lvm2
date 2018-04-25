@@ -3805,7 +3805,7 @@ int lv_add_mirror_lvs(struct logical_volume *lv,
 			return_0;
 
 	if (region_size && region_size != seg->region_size) {
-		log_error("Conflicting region_size.");
+		log_error("Conflicting region_size %u != %u.", region_size, seg->region_size);
 		return 0;
 	}
 

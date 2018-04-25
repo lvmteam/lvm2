@@ -48,6 +48,7 @@
  */
 #define dm_round_up(n, sz) (dm_div_up((n), (sz)) * (sz))
 
+
 /* Various flags */
 /* See metadata-exported.h for the complete list. */
 /* Note that the bits no longer necessarily correspond to LVM1 disk format */
@@ -79,13 +80,12 @@ struct metadata_area_ops {
 					 const char *vg_name,
 					 struct metadata_area * mda,
 					 struct cached_vg_fmtdata **vg_fmtdata,
-					 unsigned *use_previous_vg,
-					 int single_device, unsigned ioflags);
+					 unsigned *use_previous_vg);
 	struct volume_group *(*vg_read_precommit) (struct format_instance * fi,
 					 const char *vg_name,
 					 struct metadata_area * mda,
 					 struct cached_vg_fmtdata **vg_fmtdata,
-					 unsigned *use_previous_vg, unsigned ioflags);
+					 unsigned *use_previous_vg);
 	/*
 	 * Write out complete VG metadata.  You must ensure internal
 	 * consistency before calling. eg. PEs can't refer to PVs not
@@ -181,6 +181,11 @@ unsigned mda_is_ignored(struct metadata_area *mda);
 void mda_set_ignored(struct metadata_area *mda, unsigned mda_ignored);
 unsigned mda_locns_match(struct metadata_area *mda1, struct metadata_area *mda2);
 struct device *mda_get_device(struct metadata_area *mda);
+
+/*
+ * fic is used to create an fid.  It's used to pass fmt/vgname/vgid args
+ * to create_instance() which creates an fid for the specified vg.
+ */
 
 struct format_instance_ctx {
 	uint32_t type;
@@ -365,12 +370,6 @@ int check_pv_dev_sizes(struct volume_group *vg);
 uint32_t vg_bad_status_bits(const struct volume_group *vg, uint64_t status);
 int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 		 struct physical_volume *pv, int new_pv);
-
-
-/* Find a PV within a given VG */
-int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
-			 const char *vgid, const char *pvid,
-			 struct physical_volume *pv);
 
 struct logical_volume *find_lv_in_vg_by_lvid(struct volume_group *vg,
 					     const union lvid *lvid);

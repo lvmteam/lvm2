@@ -26,7 +26,6 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	const char *clustered_message = "";
 	char *vg_name;
 	struct arg_value_group_list *current_group;
-	uint32_t rc;
 
 	if (!argc) {
 		log_error("Please provide volume group name and "
@@ -66,17 +65,29 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return_ECMD_FAILED;
 	cmd->lockd_gl_disable = 1;
 
-	lvmcache_seed_infos_from_lvmetad(cmd);
-
 	/*
 	 * Check if the VG name already exists.  This should be done before
 	 * creating PVs on any of the devices.
+	 *
+	 * When searching if a VG name exists, acquire the VG lock,
+	 * then do the initial label scan which reads all devices and
+	 * populates lvmcache with any VG name it finds.  If the VG name
+	 * we want to use exists, then the label scan will find it,
+	 * and the fmt_from_vgname call (used to check if the name exists)
+	 * will return non-NULL.
 	 */
-	if ((rc = vg_lock_newname(cmd, vp_new.vg_name)) != SUCCESS) {
-		if (rc == FAILED_EXIST)
-			log_error("A volume group called %s already exists.", vp_new.vg_name);
-		else
-			log_error("Can't get lock for %s.", vp_new.vg_name);
+
+	if (!lock_vol(cmd, vp_new.vg_name, LCK_VG_WRITE, NULL)) {
+		log_error("Can't get lock for %s.", vp_new.vg_name);
+		return ECMD_FAILED;
+	}
+
+	lvmcache_label_scan(cmd);              /* Does nothing when using lvmetad. */
+	lvmcache_seed_infos_from_lvmetad(cmd); /* Does nothing unless using lvmetad. */
+
+	if (lvmcache_fmt_from_vgname(cmd, vp_new.vg_name, NULL, 0)) {
+		unlock_vg(cmd, NULL, vp_new.vg_name);
+		log_error("A volume group called %s already exists.", vp_new.vg_name);
 		return ECMD_FAILED;
 	}
 

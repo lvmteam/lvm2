@@ -18,6 +18,8 @@
 
 #include "uuid.h"
 #include "device.h"
+#include "bcache.h"
+#include "toolcontext.h"
 
 #define LABEL_ID "LABELONE"
 #define LABEL_SIZE SECTOR_SIZE	/* Think very carefully before changing this */
@@ -62,8 +64,8 @@ struct label_ops {
 	/*
 	 * Read a label from a volume.
 	 */
-	int (*read) (struct labeller *l, struct device *dev, void *buf,
-		     unsigned ioflags, lvm_callback_fn_t label_read_callback_fn, void *label_read_callback_context);
+	int (*read) (struct labeller * l, struct device * dev,
+		     void *label_buf, struct label ** label);
 
 	/*
 	 * Populate label_type etc.
@@ -94,12 +96,31 @@ int label_register_handler(struct labeller *handler);
 struct labeller *label_get_handler(const char *name);
 
 int label_remove(struct device *dev);
-int label_read(struct device *dev, struct label **result,
-		uint64_t scan_sector);
-int label_read_callback(struct device *dev, uint64_t scan_sector,
-			unsigned ioflags, lvm_callback_fn_t process_label_data_fn, void *process_label_data_context);
 int label_write(struct device *dev, struct label *label);
 struct label *label_create(struct labeller *labeller);
 void label_destroy(struct label *label);
+
+extern struct bcache *scan_bcache;
+
+int label_scan(struct cmd_context *cmd);
+int label_scan_devs(struct cmd_context *cmd, struct dm_list *devs);
+int label_scan_devs_excl(struct dm_list *devs);
+void label_scan_invalidate(struct device *dev);
+void label_scan_invalidate_lv(struct cmd_context *cmd, struct logical_volume *lv);
+void label_scan_drop(struct cmd_context *cmd);
+void label_scan_destroy(struct cmd_context *cmd);
+int label_read(struct device *dev, struct label **labelp, uint64_t unused_sector);
+int label_read_sector(struct device *dev, struct label **labelp, uint64_t scan_sector);
+void label_scan_confirm(struct device *dev);
+int label_scan_setup_bcache(void);
+int label_scan_open(struct device *dev);
+
+/*
+ * Wrappers around bcache equivalents.
+ * (these make it easier to disable bcache and revert to direct rw if needed)
+ */
+bool dev_read_bytes(struct device *dev, off_t start, size_t len, void *data);
+bool dev_write_bytes(struct device *dev, off_t start, size_t len, void *data);
+bool dev_write_zeros(struct device *dev, off_t start, size_t len);
 
 #endif

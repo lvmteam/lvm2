@@ -113,7 +113,6 @@ struct arg_value_group_list {
 	uint32_t prio;
 };
 
-#define CACHE_VGMETADATA	0x00000001
 #define PERMITTED_READ_ONLY 	0x00000002
 /* Process all VGs if none specified on the command line. */
 #define ALL_VGS_IS_DEFAULT	0x00000004
@@ -125,8 +124,8 @@ struct arg_value_group_list {
 #define LOCKD_VG_SH		0x00000020
 /* Command does not process any metadata. */
 #define NO_METADATA_PROCESSING	0x00000040
-/* Command wants to scan for new devices and force labels to be read from them all. */
-#define REQUIRES_FULL_LABEL_SCAN 0x00000080
+/* Command must not load the contents saved by the persistent filter */
+#define IGNORE_PERSISTENT_FILTER 0x00000080
 /* Command must use all specified arg names and fail if all cannot be used. */
 #define MUST_USE_ALL_ARGS        0x00000100
 /* Command wants to control the device scan for lvmetad itself. */
@@ -137,8 +136,9 @@ struct arg_value_group_list {
 #define DISALLOW_TAG_ARGS        0x00000800
 /* Command may need to find VG name in an option value. */
 #define GET_VGNAME_FROM_OPTIONS  0x00001000
-/* Command must not load the contents saved by the persistent filter */
-#define IGNORE_PERSISTENT_FILTER 0x00002000
+/* The data read from disk by label scan can be used for vg_read. */
+#define CAN_USE_ONE_SCAN	 0x00002000
+
 
 void usage(const char *name);
 

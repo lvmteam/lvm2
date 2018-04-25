@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2018 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -23,6 +23,7 @@
 #include "toolcontext.h"
 #include "lvm-file.h"
 #include "memlock.h"
+#include "label.h"
 
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -279,7 +280,7 @@ struct dm_config_tree *config_file_open_and_read(const char *config_file,
 	}
 
 	log_very_verbose("Loading config file: %s", config_file);
-	if (!config_file_read(cmd->mem, cft)) {
+	if (!config_file_read(cft)) {
 		log_error("Failed to load config file %s", config_file);
 		goto bad;
 	}
@@ -489,102 +490,32 @@ int override_config_tree_from_profile(struct cmd_context *cmd,
 	return 0;
 }
 
-struct process_config_file_params {
-	struct dm_config_tree *cft;
-	struct device *dev;
-	off_t offset;
-	size_t size;
-	off_t offset2;
-	size_t size2;
-	checksum_fn_t checksum_fn;
-	uint32_t checksum;
-	int checksum_only;
-	int no_dup_node_check;
-	lvm_callback_fn_t config_file_read_fd_callback;
-	void *config_file_read_fd_context;
-	int ret;
-};
-
-static void _process_config_file_buffer(int failed, unsigned ioflags, void *context, const void *data)
-{
-	struct process_config_file_params *pcfp = context;
-	const char *fb = data, *fe;
-
-	if (failed) {
-		pcfp->ret = 0;
-		goto_out;
-	}
-
-	if (pcfp->checksum_fn && pcfp->checksum !=
-	    (pcfp->checksum_fn(pcfp->checksum_fn(INITIAL_CRC, (const uint8_t *)fb, pcfp->size),
-			 (const uint8_t *)(fb + pcfp->size), pcfp->size2))) {
-		log_error("%s: Checksum error at offset %" PRIu64, dev_name(pcfp->dev), (uint64_t) pcfp->offset);
-		pcfp->ret = 0;
-		goto out;
-	}
-
-	if (!pcfp->checksum_only) {
-		fe = fb + pcfp->size + pcfp->size2;
-		if (pcfp->no_dup_node_check) {
-			if (!dm_config_parse_without_dup_node_check(pcfp->cft, fb, fe))
-				pcfp->ret = 0;
-		} else if (!dm_config_parse(pcfp->cft, fb, fe))
-			pcfp->ret = 0;
-	}
-
-out:
-	if (pcfp->config_file_read_fd_callback)
-		pcfp->config_file_read_fd_callback(!pcfp->ret, ioflags, pcfp->config_file_read_fd_context, NULL);
-}
-
 /*
  * When checksum_only is set, the checksum of buffer is only matched
  * and function avoids parsing of mda into config tree which
  * remains unmodified and should not be used.
  */
-int config_file_read_fd(struct dm_pool *mem, struct dm_config_tree *cft, struct device *dev, dev_io_reason_t reason,
+int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_reason_t reason,
 			off_t offset, size_t size, off_t offset2, size_t size2,
 			checksum_fn_t checksum_fn, uint32_t checksum,
-			int checksum_only, int no_dup_node_check, unsigned ioflags,
-			lvm_callback_fn_t config_file_read_fd_callback, void *config_file_read_fd_context)
+			int checksum_only, int no_dup_node_check)
 {
-	char *fb;
+	char *fb, *fe;
 	int r = 0;
-	off_t mmap_offset = 0;
 	int use_mmap = 1;
-	const char *buf = NULL;
-	unsigned circular = size2 ? 1 : 0;	/* Wrapped around end of disk metadata buffer? */
+	off_t mmap_offset = 0;
+	char *buf = NULL;
 	struct config_source *cs = dm_config_get_custom(cft);
-	struct process_config_file_params *pcfp;
 
 	if (!_is_file_based_config_source(cs->type)) {
 		log_error(INTERNAL_ERROR "config_file_read_fd: expected file, special file "
 					 "or profile config source, found %s config source.",
 					 _config_source_names[cs->type]);
-		goto bad;
+		return 0;
 	}
-
-	if (!(pcfp = dm_pool_zalloc(mem, sizeof(*pcfp)))) {
-		log_debug("config_file_read_fd: process_config_file_params struct allocation failed");
-		goto bad;
-	}
-
-	pcfp->cft = cft;
-	pcfp->dev = dev;
-	pcfp->offset = offset;
-	pcfp->size = size;
-	pcfp->offset2 = offset2;
-	pcfp->size2 = size2;
-	pcfp->checksum_fn = checksum_fn;
-	pcfp->checksum = checksum;
-	pcfp->checksum_only = checksum_only;
-	pcfp->no_dup_node_check = no_dup_node_check;
-	pcfp->config_file_read_fd_callback = config_file_read_fd_callback;
-	pcfp->config_file_read_fd_context = config_file_read_fd_context;
-	pcfp->ret = 1;
 
 	/* Only use mmap with regular files */
-	if (!(dev->flags & DEV_REGULAR) || circular)
+	if (!(dev->flags & DEV_REGULAR) || size2)
 		use_mmap = 0;
 
 	if (use_mmap) {
@@ -594,40 +525,67 @@ int config_file_read_fd(struct dm_pool *mem, struct dm_config_tree *cft, struct 
 			  MAP_PRIVATE, dev_fd(dev), offset - mmap_offset);
 		if (fb == (caddr_t) (-1)) {
 			log_sys_error("mmap", dev_name(dev));
-			goto bad;
+			goto out;
 		}
-		_process_config_file_buffer(0, ioflags, pcfp, fb + mmap_offset);
-		r = pcfp->ret;
+		fb = fb + mmap_offset;
+	} else {
+		if (!(buf = dm_malloc(size + size2))) {
+			log_error("Failed to allocate circular buffer.");
+			return 0;
+		}
+
+		if (!dev_read_bytes(dev, offset, size, buf))
+			goto out;
+
+		if (size2) {
+			if (!dev_read_bytes(dev, offset2, size2, buf + size))
+				goto out;
+		}
+
+		fb = buf;
+	}
+
+	/*
+	 * The checksum passed in is the checksum from the mda_header
+	 * preceding this metadata.  They should always match.
+	 * FIXME: handle case where mda_header checksum is bad,
+	 * but the checksum calculated here is correct.
+	 */
+	if (checksum_fn && checksum !=
+	    (checksum_fn(checksum_fn(INITIAL_CRC, (const uint8_t *)fb, size),
+			 (const uint8_t *)(fb + size), size2))) {
+		log_error("%s: Checksum error at offset %" PRIu64, dev_name(dev), (uint64_t) offset);
+		goto out;
+	}
+
+	if (!checksum_only) {
+		fe = fb + size + size2;
+		if (no_dup_node_check) {
+			if (!dm_config_parse_without_dup_node_check(cft, fb, fe))
+				goto_out;
+		} else {
+			if (!dm_config_parse(cft, fb, fe))
+				goto_out;
+		}
+	}
+
+	r = 1;
+
+      out:
+	if (!use_mmap)
+		dm_free(buf);
+	else {
 		/* unmap the file */
-		if (munmap(fb, size + mmap_offset)) {
+		if (munmap(fb - mmap_offset, size + mmap_offset)) {
 			log_sys_error("munmap", dev_name(dev));
 			r = 0;
 		}
-	} else {
-		if (circular) {
-			if (!(buf = dev_read_circular(dev, (uint64_t) offset, size, (uint64_t) offset2, size2, reason)))
-				goto_out;
-			_process_config_file_buffer(0, ioflags, pcfp, buf);
-			dm_free((void *)buf);
-		} else {
-			dev_read_callback(dev, (uint64_t) offset, size, reason, ioflags, _process_config_file_buffer, pcfp);
-			if (config_file_read_fd_callback)
-				return 1;
-		}
-		r = pcfp->ret;
 	}
 
-out:
 	return r;
-
-bad:
-	if (config_file_read_fd_callback)
-		config_file_read_fd_callback(1, ioflags, config_file_read_fd_context, NULL);
-
-	return 0;
 }
 
-int config_file_read(struct dm_pool *mem, struct dm_config_tree *cft)
+int config_file_read(struct dm_config_tree *cft)
 {
 	const char *filename = NULL;
 	struct config_source *cs = dm_config_get_custom(cft);
@@ -655,8 +613,8 @@ int config_file_read(struct dm_pool *mem, struct dm_config_tree *cft)
 		}
 	}
 
-	r = config_file_read_fd(mem, cft, cf->dev, DEV_IO_MDA_CONTENT, 0, (size_t) info.st_size, 0, 0,
-				(checksum_fn_t) NULL, 0, 0, 0, 0, NULL, NULL);
+	r = config_file_read_fd(cft, cf->dev, DEV_IO_MDA_CONTENT, 0, (size_t) info.st_size, 0, 0,
+				(checksum_fn_t) NULL, 0, 0, 0);
 
 	if (!cf->keep_open) {
 		if (!dev_close(cf->dev))

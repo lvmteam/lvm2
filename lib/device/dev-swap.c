@@ -60,7 +60,8 @@ int dev_is_swap(struct device *dev, uint64_t *offset_found)
 			continue;
 		if (size < (page >> SECTOR_SHIFT))
 			break;
-		if (!dev_read_buf(dev, page - SIGNATURE_SIZE, SIGNATURE_SIZE, DEV_IO_SIGNATURES, buf)) {
+		if (!dev_read(dev, page - SIGNATURE_SIZE,
+			      SIGNATURE_SIZE, DEV_IO_SIGNATURES, buf)) {
 			ret = -1;
 			break;
 		}

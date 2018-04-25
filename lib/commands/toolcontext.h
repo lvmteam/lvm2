@@ -165,11 +165,12 @@ struct cmd_context {
 	unsigned vg_notify:1;
 	unsigned lv_notify:1;
 	unsigned pv_notify:1;
-	unsigned use_aio:1;
 	unsigned activate_component:1;		/* command activates component LV */
 	unsigned process_component_lvs:1;	/* command processes also component LVs */
-
 	unsigned mirror_warn_printed:1;		/* command already printed warning about non-monitored mirrors */
+	unsigned pvscan_cache_single:1;
+	unsigned can_use_one_scan:1;
+
 	/*
 	 * Filtering.
 	 */
