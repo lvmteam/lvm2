@@ -639,7 +639,7 @@ int label_scan(struct cmd_context *cmd)
 	}
 
 	while ((dev = dev_iter_get(iter))) {
-		if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
+		if (!(devl = dm_zalloc(sizeof(*devl))))
 			return 0;
 		devl->dev = dev;
 		dm_list_add(&all_devs, &devl->list);
