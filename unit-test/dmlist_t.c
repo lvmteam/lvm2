@@ -13,23 +13,14 @@
  */
 
 #include "units.h"
+#include "libdevmapper.h"
 
-int dmlist_init(void)
+static void test_dmlist_splice(void *fixture)
 {
-	return 0;
-}
-
-int dmlist_fini(void)
-{
-	return 0;
-}
-
-static void test_dmlist_splice(void)
-{
+	unsigned i;
 	struct dm_list a[10];
 	struct dm_list list1;
 	struct dm_list list2;
-	unsigned i;
 
 	dm_list_init(&list1);
 	dm_list_init(&list2);
@@ -38,12 +29,21 @@ static void test_dmlist_splice(void)
 		dm_list_add(&list1, &a[i]);
 
 	dm_list_splice(&list2, &list1);
-	CU_ASSERT_EQUAL(dm_list_size(&list1), 0);
-	CU_ASSERT_EQUAL(dm_list_size(&list2), 10);
+	T_ASSERT(dm_list_size(&list1) == 0);
+	T_ASSERT(dm_list_size(&list2) == 10);
 }
 
-CU_TestInfo dmlist_list[] = {
-	{ (char*)"dmlist_splice", test_dmlist_splice },
-	//{ (char*)"dmlist", test_strncpy },
-	CU_TEST_INFO_NULL
-};
+#define T(path, desc, fn) register_test(ts, "/base/data-struct/list/" path, desc, fn)
+
+void dm_list_tests(struct dm_list *all_tests)
+{
+	struct test_suite *ts = test_suite_create(NULL, NULL);
+	if (!ts) {
+		fprintf(stderr, "out of memory\n");
+		exit(1);
+	}
+
+	T("splice", "joining lists together", test_dmlist_splice);
+
+	dm_list_add(all_tests, &ts->list);
+}

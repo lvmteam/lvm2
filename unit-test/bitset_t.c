@@ -13,30 +13,36 @@
  */
 
 #include "units.h"
+#include "libdevmapper.h"
 
 enum {
         NR_BITS = 137
 };
 
-static struct dm_pool *mem;
+static void *_mem_init(void) {
+	struct dm_pool *mem = dm_pool_create("bitset test", 1024);
+	if (!mem) {
+		fprintf(stderr, "out of memory\n");
+		exit(1);
+	}
 
-int bitset_init(void) {
-	mem = dm_pool_create("bitset test", 1024);
-	return mem == NULL;
+	return mem;
 }
 
-int bitset_fini(void) {
-	dm_pool_destroy(mem);
-	return 0;
-}
-
-static void test_get_next(void)
+static void _mem_exit(void *mem)
 {
+	dm_pool_destroy(mem);
+}
+
+static void test_get_next(void *fixture)
+{
+	struct dm_pool *mem = fixture;
+
         int i, j, last = 0, first;
         dm_bitset_t bs = dm_bitset_create(mem, NR_BITS);
 
         for (i = 0; i < NR_BITS; i++)
-                CU_ASSERT(!dm_bit(bs, i));
+                T_ASSERT(!dm_bit(bs, i));
 
         for (i = 0, j = 1; i < NR_BITS; i += j, j++)
                 dm_bit_set(bs, i);
@@ -49,10 +55,10 @@ static void test_get_next(void)
                 } else
                         last = dm_bit_get_next(bs, last);
 
-                CU_ASSERT(last == i);
+                T_ASSERT(last == i);
         }
 
-        CU_ASSERT(dm_bit_get_next(bs, last) == -1);
+        T_ASSERT(dm_bit_get_next(bs, last) == -1);
 }
 
 static void bit_flip(dm_bitset_t bs, int bit)
@@ -64,8 +70,9 @@ static void bit_flip(dm_bitset_t bs, int bit)
                 dm_bit_set(bs, bit);
 }
 
-static void test_equal(void)
+static void test_equal(void *fixture)
 {
+	struct dm_pool *mem = fixture;
         dm_bitset_t bs1 = dm_bitset_create(mem, NR_BITS);
         dm_bitset_t bs2 = dm_bitset_create(mem, NR_BITS);
 
@@ -75,21 +82,22 @@ static void test_equal(void)
                 dm_bit_set(bs2, i);
         }
 
-        CU_ASSERT(dm_bitset_equal(bs1, bs2));
-        CU_ASSERT(dm_bitset_equal(bs2, bs1));
+        T_ASSERT(dm_bitset_equal(bs1, bs2));
+        T_ASSERT(dm_bitset_equal(bs2, bs1));
 
         for (i = 0; i < NR_BITS; i++) {
                 bit_flip(bs1, i);
-                CU_ASSERT(!dm_bitset_equal(bs1, bs2));
-                CU_ASSERT(!dm_bitset_equal(bs2, bs1));
+                T_ASSERT(!dm_bitset_equal(bs1, bs2));
+                T_ASSERT(!dm_bitset_equal(bs2, bs1));
 
-                CU_ASSERT(dm_bitset_equal(bs1, bs1)); /* comparing with self */
+                T_ASSERT(dm_bitset_equal(bs1, bs1)); /* comparing with self */
                 bit_flip(bs1, i);
         }
 }
 
-static void test_and(void)
+static void test_and(void *fixture)
 {
+	struct dm_pool *mem = fixture;
         dm_bitset_t bs1 = dm_bitset_create(mem, NR_BITS);
         dm_bitset_t bs2 = dm_bitset_create(mem, NR_BITS);
         dm_bitset_t bs3 = dm_bitset_create(mem, NR_BITS);
@@ -102,9 +110,9 @@ static void test_and(void)
 
         dm_bit_and(bs3, bs1, bs2);
 
-        CU_ASSERT(dm_bitset_equal(bs1, bs2));
-        CU_ASSERT(dm_bitset_equal(bs1, bs3));
-        CU_ASSERT(dm_bitset_equal(bs2, bs3));
+        T_ASSERT(dm_bitset_equal(bs1, bs2));
+        T_ASSERT(dm_bitset_equal(bs1, bs3));
+        T_ASSERT(dm_bitset_equal(bs2, bs3));
 
         dm_bit_clear_all(bs1);
         dm_bit_clear_all(bs2);
@@ -118,12 +126,23 @@ static void test_and(void)
 
         dm_bit_and(bs3, bs1, bs2);
         for (i = 0; i < NR_BITS; i++)
-                CU_ASSERT(!dm_bit(bs3, i));
+                T_ASSERT(!dm_bit(bs3, i));
 }
 
-CU_TestInfo bitset_list[] = {
-	{ (char*)"get_next", test_get_next },
-	{ (char*)"equal", test_equal },
-	{ (char*)"and", test_and },
-	CU_TEST_INFO_NULL
-};
+#define T(path, desc, fn) register_test(ts, "/base/data-struct/bitset/" path, desc, fn)
+
+void bitset_tests(struct dm_list *all_tests)
+{
+	struct test_suite *ts = test_suite_create(_mem_init, _mem_exit);
+	if (!ts) {
+		fprintf(stderr, "out of memory\n");
+		exit(1);
+	}
+
+	T("get_next", "get next set bit", test_get_next);
+	T("equal", "equality", test_equal);
+	T("and", "and all bits", test_and);
+
+	dm_list_add(all_tests, &ts->list);
+}
+

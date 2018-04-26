@@ -79,3 +79,5 @@ test/lib/vgrename
 test/lib/vgs
 test/lib/vgscan
 test/lib/vgsplit
+
+unit-test/unit-test

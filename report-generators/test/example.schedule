@@ -1,4 +1,0 @@
-# This is a comment
-description number 1:$TEST_TOOL ls
-foo bar:   $TEST_TOOL du -hs .
-   	this comment is prefixed with whitespace: $TEST_TOOL date

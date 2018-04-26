@@ -43,8 +43,7 @@ endif
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS = conf include man test scripts \
     libdaemon lib tools daemons libdm \
-    udev po liblvm python \
-    unit-tests/datastruct unit-tests/mm unit-tests/regex
+    udev po liblvm python
 tools.distclean: test.distclean
 endif
 DISTCLEAN_DIRS += lcov_reports*
@@ -97,7 +96,7 @@ endif
 DISTCLEAN_TARGETS += cscope.out
 CLEAN_DIRS += autom4te.cache
 
-check check_system check_cluster check_local check_lvmetad check_lvmpolld check_lvmlockd_test check_lvmlockd_dlm check_lvmlockd_sanlock unit: all
+check check_system check_cluster check_local check_lvmetad check_lvmpolld check_lvmlockd_test check_lvmlockd_dlm check_lvmlockd_sanlock unit-test: all
 	$(MAKE) -C test $(@)
 
 conf.generate man.generate: tools
@@ -212,7 +211,7 @@ endif
 endif
 
 ifeq ("$(TESTING)", "yes")
-include test/unit/Makefile
+include unit-test/Makefile
 endif
 
 ifneq ($(shell which ctags),)

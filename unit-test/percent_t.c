@@ -13,21 +13,12 @@
  */
 
 #include "units.h"
+#include "libdevmapper.h"
 
 #include <stdio.h>
 #include <string.h>
 
-int percent_init(void)
-{
-	return 0;
-}
-
-int percent_fini(void)
-{
-	return 0;
-}
-
-static void test_percent_100(void)
+static void test_percent_100(void *fixture)
 {
 	char buf[32];
 
@@ -36,33 +27,33 @@ static void test_percent_100(void)
         dm_percent_t p1_100 = dm_make_percent(100000, 100000);
         dm_percent_t n_100 = dm_make_percent(999999, 1000000);
 
-	CU_ASSERT_EQUAL(p_100, DM_PERCENT_100);
-	CU_ASSERT_EQUAL(p1_100, DM_PERCENT_100);
-	CU_ASSERT_NOT_EQUAL(n_100, DM_PERCENT_100);
+	T_ASSERT_EQUAL(p_100, DM_PERCENT_100);
+	T_ASSERT_EQUAL(p1_100, DM_PERCENT_100);
+	T_ASSERT_NOT_EQUAL(n_100, DM_PERCENT_100);
 
         dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(p_100));
-	CU_ASSERT_EQUAL(strcmp(buf, "100.00"), 0);
+	T_ASSERT_EQUAL(strcmp(buf, "100.00"), 0);
 
 	dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(p1_100));
-	CU_ASSERT_EQUAL(strcmp(buf, "100.00"), 0);
+	T_ASSERT_EQUAL(strcmp(buf, "100.00"), 0);
 
 	dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(n_100));
-	CU_ASSERT_NOT_EQUAL(strcmp(buf, "99.99"), 0); /* Would like to gett */
+	T_ASSERT_NOT_EQUAL(strcmp(buf, "99.99"), 0); /* Would like to gett */
 
 	dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_round_float(n_100, 2));
-	CU_ASSERT_EQUAL(strcmp(buf, "99.99"), 0);
+	T_ASSERT_EQUAL(strcmp(buf, "99.99"), 0);
 
 	dm_snprintf(buf, sizeof(buf), "%.3f", dm_percent_to_round_float(n_100, 3));
-	CU_ASSERT_EQUAL(strcmp(buf, "99.999"), 0);
+	T_ASSERT_EQUAL(strcmp(buf, "99.999"), 0);
 
 	dm_snprintf(buf, sizeof(buf), "%.4f", dm_percent_to_round_float(n_100, 4));
-	CU_ASSERT_EQUAL(strcmp(buf, "99.9999"), 0);
+	T_ASSERT_EQUAL(strcmp(buf, "99.9999"), 0);
 
 	dm_snprintf(buf, sizeof(buf), "%d", (int)dm_percent_to_round_float(n_100, 0));
-	CU_ASSERT_EQUAL(strcmp(buf, "99"), 0);
+	T_ASSERT_EQUAL(strcmp(buf, "99"), 0);
 }
 
-static void test_percent_0(void)
+static void test_percent_0(void *fixture)
 {
 	char buf[32];
 
@@ -71,31 +62,41 @@ static void test_percent_0(void)
         dm_percent_t p1_0 = dm_make_percent(0, 100000);
         dm_percent_t n_0 = dm_make_percent(1, 1000000);
 
-	CU_ASSERT_EQUAL(p_0, DM_PERCENT_0);
-	CU_ASSERT_EQUAL(p1_0, DM_PERCENT_0);
-	CU_ASSERT_NOT_EQUAL(n_0, DM_PERCENT_0);
+	T_ASSERT_EQUAL(p_0, DM_PERCENT_0);
+	T_ASSERT_EQUAL(p1_0, DM_PERCENT_0);
+	T_ASSERT_NOT_EQUAL(n_0, DM_PERCENT_0);
 
         dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(p_0));
-	CU_ASSERT_EQUAL(strcmp(buf, "0.00"), 0);
+	T_ASSERT_EQUAL(strcmp(buf, "0.00"), 0);
 
 	dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(p1_0));
-	CU_ASSERT_EQUAL(strcmp(buf, "0.00"), 0);
+	T_ASSERT_EQUAL(strcmp(buf, "0.00"), 0);
 
 	dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(n_0));
-	CU_ASSERT_NOT_EQUAL(strcmp(buf, "0.01"), 0);
+	T_ASSERT_NOT_EQUAL(strcmp(buf, "0.01"), 0);
 
 	dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_round_float(n_0, 2));
-	CU_ASSERT_EQUAL(strcmp(buf, "0.01"), 0);
+	T_ASSERT_EQUAL(strcmp(buf, "0.01"), 0);
 
 	dm_snprintf(buf, sizeof(buf), "%.3f", dm_percent_to_round_float(n_0, 3));
-	CU_ASSERT_EQUAL(strcmp(buf, "0.001"), 0);
+	T_ASSERT_EQUAL(strcmp(buf, "0.001"), 0);
 
 	dm_snprintf(buf, sizeof(buf), "%d", (int)dm_percent_to_round_float(n_0, 0));
-	CU_ASSERT_EQUAL(strcmp(buf, "1"), 0);
+	T_ASSERT_EQUAL(strcmp(buf, "1"), 0);
 }
 
-CU_TestInfo percent_list[] = {
-	{ (char*)"percent_100", test_percent_100 },
-	{ (char*)"percent_0", test_percent_0 },
-	CU_TEST_INFO_NULL
-};
+#define T(path, desc, fn) register_test(ts, "/base/formatting/percent/" path, desc, fn)
+
+void percent_tests(struct dm_list *all_tests)
+{
+	struct test_suite *ts = test_suite_create(NULL, NULL);
+	if (!ts) {
+		fprintf(stderr, "out of memory\n");
+		exit(1);
+	}
+
+	T("100", "Pretty printing of percentages near 100%", test_percent_100);
+	T("0", "Pretty printing of percentages near 0%", test_percent_0);
+
+	dm_list_add(all_tests, &ts->list);
+}

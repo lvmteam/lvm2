@@ -12,39 +12,16 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <setjmp.h>
 
 #include "bcache.h"
+#include "framework.h"
+#include "units.h"
 
 #define SHOW_MOCK_CALLS 0
-
-/*----------------------------------------------------------------
- * Assertions
- *--------------------------------------------------------------*/
-
-static jmp_buf _test_k;
-#define TEST_FAILED 1
-
-static void _fail(const char *fmt, ...)
-	__attribute__((format (printf, 1, 2)));
-
-
-static void _fail(const char *fmt, ...)
-{
-	va_list ap;
-
-	va_start(ap, fmt);
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
-	fprintf(stderr, "\n");
-
-	longjmp(_test_k, TEST_FAILED);
-}
-
-#define T_ASSERT(e) if (!(e)) {_fail("assertion failed: '%s'", # e);}
 
 /*----------------------------------------------------------------
  * Mock engine
@@ -72,6 +49,8 @@ struct mock_call {
 	enum dir d;
 	int fd;
 	block_address b;
+	bool issue_r;
+	bool wait_r;
 };
 
 struct mock_io {
@@ -81,6 +60,7 @@ struct mock_io {
 	sector_t se;
 	void *data;
 	void *context;
+	bool r;
 };
 
 static const char *_show_method(enum method m)
@@ -115,6 +95,8 @@ static void _expect_read(struct mock_engine *e, int fd, block_address b)
 	mc->d = DIR_READ;
 	mc->fd = fd;
 	mc->b = b;
+	mc->issue_r = true;
+	mc->wait_r = true;
 	dm_list_add(&e->expected_calls, &mc->list);
 }
 
@@ -126,6 +108,60 @@ static void _expect_write(struct mock_engine *e, int fd, block_address b)
 	mc->d = DIR_WRITE;
 	mc->fd = fd;
 	mc->b = b;
+	mc->issue_r = true;
+	mc->wait_r = true;
+	dm_list_add(&e->expected_calls, &mc->list);
+}
+
+static void _expect_read_bad_issue(struct mock_engine *e, int fd, block_address b)
+{
+	struct mock_call *mc = malloc(sizeof(*mc));
+	mc->m = E_ISSUE;
+	mc->match_args = true;
+	mc->d = DIR_READ;
+	mc->fd = fd;
+	mc->b = b;
+	mc->issue_r = false;
+	mc->wait_r = true;
+	dm_list_add(&e->expected_calls, &mc->list);
+}
+
+static void _expect_write_bad_issue(struct mock_engine *e, int fd, block_address b)
+{
+	struct mock_call *mc = malloc(sizeof(*mc));
+	mc->m = E_ISSUE;
+	mc->match_args = true;
+	mc->d = DIR_WRITE;
+	mc->fd = fd;
+	mc->b = b;
+	mc->issue_r = false;
+	mc->wait_r = true;
+	dm_list_add(&e->expected_calls, &mc->list);
+}
+
+static void _expect_read_bad_wait(struct mock_engine *e, int fd, block_address b)
+{
+	struct mock_call *mc = malloc(sizeof(*mc));
+	mc->m = E_ISSUE;
+	mc->match_args = true;
+	mc->d = DIR_READ;
+	mc->fd = fd;
+	mc->b = b;
+	mc->issue_r = true;
+	mc->wait_r = false;
+	dm_list_add(&e->expected_calls, &mc->list);
+}
+
+static void _expect_write_bad_wait(struct mock_engine *e, int fd, block_address b)
+{
+	struct mock_call *mc = malloc(sizeof(*mc));
+	mc->m = E_ISSUE;
+	mc->match_args = true;
+	mc->d = DIR_WRITE;
+	mc->fd = fd;
+	mc->b = b;
+	mc->issue_r = true;
+	mc->wait_r = false;
 	dm_list_add(&e->expected_calls, &mc->list);
 }
 
@@ -135,13 +171,13 @@ static struct mock_call *_match_pop(struct mock_engine *e, enum method m)
 	struct mock_call *mc;
 
 	if (dm_list_empty(&e->expected_calls))
-		_fail("unexpected call to method %s\n", _show_method(m));
+		test_fail("unexpected call to method %s\n", _show_method(m));
 
 	mc = dm_list_item(e->expected_calls.n, struct mock_call);
 	dm_list_del(&mc->list);
 
 	if (mc->m != m)
-		_fail("expected %s, but got %s\n", _show_method(mc->m), _show_method(m));
+		test_fail("expected %s, but got %s\n", _show_method(mc->m), _show_method(m));
 #if SHOW_MOCK_CALLS
 	else
 		fprintf(stderr, "%s called (expected)\n", _show_method(m));
@@ -185,6 +221,7 @@ static void _mock_destroy(struct io_engine *e)
 static bool _mock_issue(struct io_engine *e, enum dir d, int fd,
 	      		sector_t sb, sector_t se, void *data, void *context)
 {
+	bool r, wait_r;
 	struct mock_io *io;
 	struct mock_call *mc;
 	struct mock_engine *me = _to_mock(e);
@@ -196,20 +233,26 @@ static bool _mock_issue(struct io_engine *e, enum dir d, int fd,
 		T_ASSERT(sb == mc->b * me->block_size);
 		T_ASSERT(se == (mc->b + 1) * me->block_size);
 	}
+	r = mc->issue_r;
+	wait_r = mc->wait_r;
 	free(mc);
 
-	io = malloc(sizeof(*io));
-	if (!io)
-		abort();
+	if (r) {
+		io = malloc(sizeof(*io));
+		if (!io)
+			abort();
 
-	io->fd = fd;
-	io->sb = sb;
-	io->se = se;
-	io->data = data;
-	io->context = context;
+		io->fd = fd;
+		io->sb = sb;
+		io->se = se;
+		io->data = data;
+		io->context = context;
+		io->r = wait_r;
 
-	dm_list_add(&me->issued_io, &io->list);
-	return true;
+		dm_list_add(&me->issued_io, &io->list);
+	}
+
+	return r;
 }
 
 static bool _mock_wait(struct io_engine *e, io_complete_fn fn)
@@ -223,7 +266,9 @@ static bool _mock_wait(struct io_engine *e, io_complete_fn fn)
 	T_ASSERT(!dm_list_empty(&me->issued_io));
 	io = dm_list_item(me->issued_io.n, struct mock_io);
 	dm_list_del(&io->list);
-	fn(io->context, 0);
+	fn(io->context, io->r ? 0 : -EIO);
+	free(io);
+
 	return true;
 }
 
@@ -363,6 +408,7 @@ static void test_block_size_must_be_multiple_of_page_size(void *fixture)
 
 static void test_get_triggers_read(void *context)
 {
+        int err;
 	struct fixture *f = context;
 
 	int fd = 17;   // arbitrary key
@@ -370,12 +416,13 @@ static void test_get_triggers_read(void *context)
 
 	_expect_read(f->me, fd, 0);
 	_expect(f->me, E_WAIT);
-	T_ASSERT(bcache_get(f->cache, fd, 0, 0, &b));
+	T_ASSERT(bcache_get(f->cache, fd, 0, 0, &b, &err));
 	bcache_put(b);
 }
 
 static void test_repeated_reads_are_cached(void *context)
 {
+        int err;
 	struct fixture *f = context;
 
 	int fd = 17;   // arbitrary key
@@ -385,7 +432,7 @@ static void test_repeated_reads_are_cached(void *context)
 	_expect_read(f->me, fd, 0);
 	_expect(f->me, E_WAIT);
 	for (i = 0; i < 100; i++) {
-		T_ASSERT(bcache_get(f->cache, fd, 0, 0, &b));
+		T_ASSERT(bcache_get(f->cache, fd, 0, 0, &b, &err));
 		bcache_put(b);
 	}
 }
@@ -394,6 +441,7 @@ static void test_block_gets_evicted_with_many_reads(void *context)
 {
 	struct fixture *f = context;
 
+	int err;
 	struct mock_engine *me = f->me;
 	struct bcache *cache = f->cache;
 	const unsigned nr_cache_blocks = 16;
@@ -405,14 +453,14 @@ static void test_block_gets_evicted_with_many_reads(void *context)
 	for (i = 0; i < nr_cache_blocks; i++) {
 		_expect_read(me, fd, i);
 		_expect(me, E_WAIT);
-		T_ASSERT(bcache_get(cache, fd, i, 0, &b));
+		T_ASSERT(bcache_get(cache, fd, i, 0, &b, &err));
 		bcache_put(b);
 	}
 
 	// Not enough cache blocks to hold this one
 	_expect_read(me, fd, nr_cache_blocks);
 	_expect(me, E_WAIT);
-	T_ASSERT(bcache_get(cache, fd, nr_cache_blocks, 0, &b));
+	T_ASSERT(bcache_get(cache, fd, nr_cache_blocks, 0, &b, &err));
 	bcache_put(b);
 
 	// Now if we run through we should find one block has been
@@ -421,7 +469,7 @@ static void test_block_gets_evicted_with_many_reads(void *context)
 	_expect(me, E_ISSUE);
 	_expect(me, E_WAIT);
 	for (i = nr_cache_blocks; i; i--) {
-		T_ASSERT(bcache_get(cache, fd, i - 1, 0, &b));
+		T_ASSERT(bcache_get(cache, fd, i - 1, 0, &b, &err));
 		bcache_put(b);
 	}
 }
@@ -433,6 +481,7 @@ static void test_prefetch_issues_a_read(void *context)
 	struct bcache *cache = f->cache;
 	const unsigned nr_cache_blocks = 16;
 
+	int err;
 	int fd = 17;   // arbitrary key
 	unsigned i;
 	struct block *b;
@@ -446,7 +495,7 @@ static void test_prefetch_issues_a_read(void *context)
 
 	for (i = 0; i < nr_cache_blocks; i++) {
 		_expect(me, E_WAIT);
-		T_ASSERT(bcache_get(cache, fd, i, 0, &b));
+		T_ASSERT(bcache_get(cache, fd, i, 0, &b, &err));
 		bcache_put(b);
 	}
 }
@@ -479,13 +528,14 @@ static void test_dirty_data_gets_written_back(void *context)
 	struct mock_engine *me = f->me;
 	struct bcache *cache = f->cache;
 
+	int err;
 	int fd = 17;   // arbitrary key
 	struct block *b;
 
 	// Expect the read
 	_expect_read(me, fd, 0);
 	_expect(me, E_WAIT);
-	T_ASSERT(bcache_get(cache, fd, 0, GF_DIRTY, &b));
+	T_ASSERT(bcache_get(cache, fd, 0, GF_DIRTY, &b, &err));
 	bcache_put(b);
 
 	// Expect the write
@@ -499,11 +549,12 @@ static void test_zeroed_data_counts_as_dirty(void *context)
 	struct mock_engine *me = f->me;
 	struct bcache *cache = f->cache;
 
+	int err;
 	int fd = 17;   // arbitrary key
 	struct block *b;
 
 	// No read
-	T_ASSERT(bcache_get(cache, fd, 0, GF_ZERO, &b));
+	T_ASSERT(bcache_get(cache, fd, 0, GF_ZERO, &b, &err));
 	bcache_put(b);
 
 	// Expect the write
@@ -518,17 +569,18 @@ static void test_flush_waits_for_all_dirty(void *context)
 	struct bcache *cache = f->cache;
 
 	const unsigned count = 16;
+	int err;
 	int fd = 17;   // arbitrary key
 	unsigned i;
 	struct block *b;
 
 	for (i = 0; i < count; i++) {
 		if (i % 2) {
-			T_ASSERT(bcache_get(cache, fd, i, GF_ZERO, &b));
+			T_ASSERT(bcache_get(cache, fd, i, GF_ZERO, &b, &err));
 		} else {
 			_expect_read(me, fd, i);
 			_expect(me, E_WAIT);
-			T_ASSERT(bcache_get(cache, fd, i, 0, &b));
+			T_ASSERT(bcache_get(cache, fd, i, 0, &b, &err));
 		}
 		bcache_put(b);
 	}
@@ -547,10 +599,11 @@ static void test_flush_waits_for_all_dirty(void *context)
 	_no_outstanding_expectations(me);
 }
 
-static void test_multiple_files(void * context)
+static void test_multiple_files(void *context)
 {
 	static int _fds[] = {1, 128, 345, 678, 890};
 
+	int err;
 	struct fixture *f = context;
 	struct mock_engine *me = f->me;
 	struct bcache *cache = f->cache;
@@ -561,76 +614,170 @@ static void test_multiple_files(void * context)
 		_expect_read(me, _fds[i], 0);
 		_expect(me, E_WAIT);
 
-		T_ASSERT(bcache_get(cache, _fds[i], 0, 0, &b));
+		T_ASSERT(bcache_get(cache, _fds[i], 0, 0, &b, &err));
 		bcache_put(b);
 	}
 }
 
+static void test_read_bad_issue(void *context)
+{
+	struct fixture *f = context;
+	struct mock_engine *me = f->me;
+	struct bcache *cache = f->cache;
+	struct block *b;
+	int err;
+
+	_expect_read_bad_issue(me, 17, 0);
+	T_ASSERT(!bcache_get(cache, 17, 0, 0, &b, &err));
+}
+
+static void test_read_bad_issue_intermittent(void *context)
+{
+	struct fixture *f = context;
+	struct mock_engine *me = f->me;
+	struct bcache *cache = f->cache;
+	struct block *b;
+	int fd = 17;
+	int err;
+
+	_expect_read_bad_issue(me, fd, 0);
+	T_ASSERT(!bcache_get(cache, fd, 0, 0, &b, &err));
+
+	_expect_read(me, fd, 0);
+	_expect(me, E_WAIT);
+	T_ASSERT(bcache_get(cache, fd, 0, 0, &b, &err));
+	bcache_put(b);
+}
+
+static void test_read_bad_wait(void *context)
+{
+	struct fixture *f = context;
+	struct mock_engine *me = f->me;
+	struct bcache *cache = f->cache;
+	struct block *b;
+	int fd = 17;
+	int err;
+
+	_expect_read_bad_wait(me, fd, 0);
+	_expect(me, E_WAIT);
+	T_ASSERT(!bcache_get(cache, fd, 0, 0, &b, &err));
+}
+
+static void test_read_bad_wait_intermittent(void *context)
+{
+	struct fixture *f = context;
+	struct mock_engine *me = f->me;
+	struct bcache *cache = f->cache;
+	struct block *b;
+	int fd = 17;
+	int err;
+
+	_expect_read_bad_wait(me, fd, 0);
+	_expect(me, E_WAIT);
+	T_ASSERT(!bcache_get(cache, fd, 0, 0, &b, &err));
+
+	_expect_read(me, fd, 0);
+	_expect(me, E_WAIT);
+	T_ASSERT(bcache_get(cache, fd, 0, 0, &b, &err));
+	bcache_put(b);
+}
+
+static void test_write_bad_issue_stops_flush(void *context)
+{
+	struct fixture *f = context;
+	struct mock_engine *me = f->me;
+	struct bcache *cache = f->cache;
+	struct block *b;
+	int fd = 17;
+	int err;
+
+	T_ASSERT(bcache_get(cache, fd, 0, GF_ZERO, &b, &err));
+	_expect_write_bad_issue(me, fd, 0);
+	bcache_put(b);
+	T_ASSERT(!bcache_flush(cache));
+
+	// we'll let it succeed the second time
+	_expect_write(me, fd, 0);
+	_expect(me, E_WAIT);
+	T_ASSERT(bcache_flush(cache));
+}
+
+static void test_write_bad_io_stops_flush(void *context)
+{
+	struct fixture *f = context;
+	struct mock_engine *me = f->me;
+	struct bcache *cache = f->cache;
+	struct block *b;
+	int fd = 17;
+	int err;
+
+	T_ASSERT(bcache_get(cache, fd, 0, GF_ZERO, &b, &err));
+	_expect_write_bad_wait(me, fd, 0);
+	_expect(me, E_WAIT);
+	bcache_put(b);
+	T_ASSERT(!bcache_flush(cache));
+
+	// we'll let it succeed the second time
+	_expect_write(me, fd, 0);
+	_expect(me, E_WAIT);
+	T_ASSERT(bcache_flush(cache));
+}
+
 // Tests to be written
-// Open multiple files and prove the blocks are coming from the correct file
 // show invalidate works
 // show invalidate_fd works
 // show writeback is working
-// check zeroing
 
-struct test_details {
-	const char *path;
-	const char *desc;
-	void (*fn)(void *);
-	void *(*fixture_init)(void);
-	void (*fixture_exit)(void *);
-};
+/*----------------------------------------------------------------
+ * Top level
+ *--------------------------------------------------------------*/
+#define T(path, desc, fn) register_test(ts, "/base/device/bcache/" path, desc, fn)
 
-#define PATH "device/bcache/"
-#define TEST(path, name, fn) {PATH path, name, fn, NULL, NULL}
-#define TEST_S(path, name, fn) {PATH path, name, fn, _small_fixture_init, _small_fixture_exit}
-#define TEST_L(path, name, fn) {PATH path, name, fn, _large_fixture_init, _large_fixture_exit}
-
-int main(int argc, char **argv)
+static struct test_suite *_small_tests(void)
 {
-	static struct test_details _tests[] = {
-		TEST("create-destroy", "simple create/destroy", test_create),
-		TEST("cache-blocks-positive", "nr cache blocks must be positive", test_nr_cache_blocks_must_be_positive),
-		TEST("block-size-positive", "block size must be positive", test_block_size_must_be_positive),
-		TEST("block-size-multiple-page", "block size must be a multiple of page size", test_block_size_must_be_multiple_of_page_size),
-		TEST_S("get-reads", "bcache_get() triggers read", test_get_triggers_read),
-		TEST_S("reads-cached", "repeated reads are cached", test_repeated_reads_are_cached),
-		TEST_S("blocks-get-evicted", "block get evicted with many reads", test_block_gets_evicted_with_many_reads),
-		TEST_S("prefetch-reads", "prefetch issues a read", test_prefetch_issues_a_read),
-		TEST_S("prefetch-never-waits", "too many prefetches does not trigger a wait", test_too_many_prefetches_does_not_trigger_a_wait),
-		TEST_S("writeback-occurs", "dirty data gets written back", test_dirty_data_gets_written_back),
-		TEST_S("zero-flag-dirties", "zeroed data counts as dirty", test_zeroed_data_counts_as_dirty),
-		TEST_L("flush waits for all dirty", "flush waits for all dirty", test_flush_waits_for_all_dirty),
-		TEST_S("read-multiple-files", "read from multiple files", test_multiple_files),
-	};
-
-	// We have to declare these as volatile because of the setjmp()
-	volatile unsigned i = 0, passed = 0;
-
-	for (i = 0; i < DM_ARRAY_SIZE(_tests); i++) {
-		void *fixture;
-		struct test_details *t = _tests + i;
-		fprintf(stderr, "[RUN    ] %s\n", t->path);
-
-		if (setjmp(_test_k))
-			fprintf(stderr, "[   FAIL] %s\n", t->path);
-		else {
-			if (t->fixture_init)
-				fixture = t->fixture_init();
-			else
-				fixture = NULL;
-
-			t->fn(fixture);
-
-			if (t->fixture_exit)
-				t->fixture_exit(fixture);
-
-			passed++;
-			fprintf(stderr, "[     OK] %s\n", t->path);
-		}
+	struct test_suite *ts = test_suite_create(_small_fixture_init, _small_fixture_exit);
+	if (!ts) {
+		fprintf(stderr, "out of memory\n");
+		exit(1);
 	}
 
-	fprintf(stderr, "\n%u/%lu tests passed\n", passed, DM_ARRAY_SIZE(_tests));
+	T("create-destroy", "simple create/destroy", test_create);
+	T("cache-blocks-positive", "nr cache blocks must be positive", test_nr_cache_blocks_must_be_positive);
+	T("block-size-positive", "block size must be positive", test_block_size_must_be_positive);
+	T("block-size-multiple-page", "block size must be a multiple of page size", test_block_size_must_be_multiple_of_page_size);
+	T("get-reads", "bcache_get() triggers read", test_get_triggers_read);
+	T("reads-cached", "repeated reads are cached", test_repeated_reads_are_cached);
+	T("blocks-get-evicted", "block get evicted with many reads", test_block_gets_evicted_with_many_reads);
+	T("prefetch-reads", "prefetch issues a read", test_prefetch_issues_a_read);
+	T("prefetch-never-waits", "too many prefetches does not trigger a wait", test_too_many_prefetches_does_not_trigger_a_wait);
+	T("writeback-occurs", "dirty data gets written back", test_dirty_data_gets_written_back);
+	T("zero-flag-dirties", "zeroed data counts as dirty", test_zeroed_data_counts_as_dirty);
+	T("read-multiple-files", "read from multiple files", test_multiple_files);
+	T("read-bad-issue", "read fails if io engine unable to issue", test_read_bad_issue);
+	T("read-bad-issue-intermittent", "failed issue, followed by succes", test_read_bad_issue_intermittent);
+	T("read-bad-io", "read issued ok, but io fails", test_read_bad_wait);
+	T("read-bad-io-intermittent", "failed io, followed by success", test_read_bad_wait_intermittent);
+	T("write-bad-issue-stops-flush", "flush fails temporarily if any block fails to write", test_write_bad_issue_stops_flush);
+	T("write-bad-io-stops-flush", "flush fails temporarily if any block fails to write", test_write_bad_io_stops_flush);
 
-	return 0;
+	return ts;
+}
+
+static struct test_suite *_large_tests(void)
+{
+	struct test_suite *ts = test_suite_create(_large_fixture_init, _large_fixture_exit);
+	if (!ts) {
+		fprintf(stderr, "out of memory\n");
+		exit(1);
+	}
+
+	T("flush-waits", "flush waits for all dirty", test_flush_waits_for_all_dirty);
+
+	return ts;
+}
+
+void bcache_tests(struct dm_list *all_tests)
+{
+	dm_list_add(all_tests, &_small_tests()->list);
+	dm_list_add(all_tests, &_large_tests()->list);
 }

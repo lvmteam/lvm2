@@ -707,9 +707,7 @@ FSADM
 ELDFLAGS
 DM_LIB_PATCHLEVEL
 DMEVENTD_PATH
-AIO_LIBS
 DL_LIBS
-AIO
 DEVMAPPER
 DEFAULT_USE_LVMLOCKD
 DEFAULT_USE_LVMPOLLD
@@ -783,8 +781,6 @@ LOCKD_SANLOCK_LIBS
 LOCKD_SANLOCK_CFLAGS
 VALGRIND_LIBS
 VALGRIND_CFLAGS
-CUNIT_LIBS
-CUNIT_CFLAGS
 GENPNG
 GENHTML
 LCOV
@@ -957,7 +953,6 @@ enable_profiling
 enable_testing
 enable_valgrind_pool
 enable_devmapper
-enable_aio
 enable_lvmetad
 enable_lvmpolld
 enable_lvmlockd_sanlock
@@ -1047,8 +1042,6 @@ DLM_CFLAGS
 DLM_LIBS
 SACKPT_CFLAGS
 SACKPT_LIBS
-CUNIT_CFLAGS
-CUNIT_LIBS
 VALGRIND_CFLAGS
 VALGRIND_LIBS
 LOCKD_SANLOCK_CFLAGS
@@ -1707,7 +1700,6 @@ Optional Features:
   --enable-testing        enable testing targets in the makefile
   --enable-valgrind-pool  enable valgrind awareness of pools
   --disable-devmapper     disable LVM2 device-mapper interaction
-  --disable-aio           disable asynchronous I/O
   --enable-lvmetad        enable the LVM Metadata Daemon
   --enable-lvmpolld       enable the LVM Polling Daemon
   --enable-lvmlockd-sanlock
@@ -1894,9 +1886,6 @@ Some influential environment variables:
   SACKPT_CFLAGS
               C compiler flags for SACKPT, overriding pkg-config
   SACKPT_LIBS linker flags for SACKPT, overriding pkg-config
-  CUNIT_CFLAGS
-              C compiler flags for CUNIT, overriding pkg-config
-  CUNIT_LIBS  linker flags for CUNIT, overriding pkg-config
   VALGRIND_CFLAGS
               C compiler flags for VALGRIND, overriding pkg-config
   VALGRIND_LIBS
@@ -3195,7 +3184,6 @@ case "$host_os" in
 		LDDEPS="$LDDEPS .export.sym"
 		LIB_SUFFIX=so
 		DEVMAPPER=yes
-		AIO=yes
 		BUILD_LVMETAD=no
 		BUILD_LVMPOLLD=no
 		LOCKDSANLOCK=no
@@ -3215,7 +3203,6 @@ case "$host_os" in
 		CLDNOWHOLEARCHIVE=
 		LIB_SUFFIX=dylib
 		DEVMAPPER=yes
-		AIO=no
 		ODIRECT=no
 		DM_IOCTLS=no
 		SELINUX=no
@@ -11623,101 +11610,6 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $TESTING" >&5
 $as_echo "$TESTING" >&6; }
 
-if test "$TESTING" = yes; then
-	pkg_config_init
-
-pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for CUNIT" >&5
-$as_echo_n "checking for CUNIT... " >&6; }
-
-if test -n "$CUNIT_CFLAGS"; then
-    pkg_cv_CUNIT_CFLAGS="$CUNIT_CFLAGS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"cunit >= 2.0\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "cunit >= 2.0") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_CUNIT_CFLAGS=`$PKG_CONFIG --cflags "cunit >= 2.0" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-if test -n "$CUNIT_LIBS"; then
-    pkg_cv_CUNIT_LIBS="$CUNIT_LIBS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"cunit >= 2.0\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "cunit >= 2.0") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_CUNIT_LIBS=`$PKG_CONFIG --libs "cunit >= 2.0" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-
-
-
-if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        CUNIT_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "cunit >= 2.0" 2>&1`
-        else
-	        CUNIT_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "cunit >= 2.0" 2>&1`
-        fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$CUNIT_PKG_ERRORS" >&5
-
-	as_fn_error $? "Package requirements (cunit >= 2.0) were not met:
-
-$CUNIT_PKG_ERRORS
-
-Consider adjusting the PKG_CONFIG_PATH environment variable if you
-installed software in a non-standard prefix.
-
-Alternatively, you may set the environment variables CUNIT_CFLAGS
-and CUNIT_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details." "$LINENO" 5
-elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
-is in your PATH or set the PKG_CONFIG environment variable to the full
-path to pkg-config.
-
-Alternatively, you may set the environment variables CUNIT_CFLAGS
-and CUNIT_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-
-To get pkg-config, see <http://pkg-config.freedesktop.org/>.
-See \`config.log' for more details" "$LINENO" 5; }
-else
-	CUNIT_CFLAGS=$pkg_cv_CUNIT_CFLAGS
-	CUNIT_LIBS=$pkg_cv_CUNIT_LIBS
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-
-fi
-fi
-
 ################################################################################
 TESTSUITE_DATA='${datarootdir}/lvm2-testsuite'
 # double eval needed ${datarootdir} -> ${prefix}/share -> real path
@@ -11841,67 +11733,6 @@ $as_echo "$DEVMAPPER" >&6; }
 if test "$DEVMAPPER" = yes; then
 
 $as_echo "#define DEVMAPPER_SUPPORT 1" >>confdefs.h
-
-fi
-
-################################################################################
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use asynchronous I/O" >&5
-$as_echo_n "checking whether to asynchronous I/O... " >&6; }
-# Check whether --enable-aio was given.
-if test "${enable_aio+set}" = set; then :
-  enableval=$enable_aio; AIO=$enableval
-fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $AIO" >&5
-$as_echo "$AIO" >&6; }
-
-if test "$AIO" = yes; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for io_setup in -laio" >&5
-$as_echo_n "checking for io_setup in -laio... " >&6; }
-if ${ac_cv_lib_aio_io_setup+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-laio  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char io_setup ();
-int
-main ()
-{
-return io_setup ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_aio_io_setup=yes
-else
-  ac_cv_lib_aio_io_setup=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_aio_io_setup" >&5
-$as_echo "$ac_cv_lib_aio_io_setup" >&6; }
-if test "x$ac_cv_lib_aio_io_setup" = xyes; then :
-
-$as_echo "#define AIO_SUPPORT 1" >>confdefs.h
-
-		AIO_LIBS="-laio"
-		AIO_SUPPORT=yes
-else
-  AIO_LIBS=
-		AIO_SUPPORT=no
-fi
 
 fi
 
@@ -15857,10 +15688,8 @@ _ACEOF
 
 
 
-
-
 ################################################################################
-ac_config_files="$ac_config_files Makefile make.tmpl daemons/Makefile daemons/clvmd/Makefile daemons/cmirrord/Makefile daemons/dmeventd/Makefile daemons/dmeventd/libdevmapper-event.pc daemons/dmeventd/plugins/Makefile daemons/dmeventd/plugins/lvm2/Makefile daemons/dmeventd/plugins/raid/Makefile daemons/dmeventd/plugins/mirror/Makefile daemons/dmeventd/plugins/snapshot/Makefile daemons/dmeventd/plugins/thin/Makefile daemons/dmfilemapd/Makefile daemons/lvmdbusd/Makefile daemons/lvmdbusd/lvmdbusd daemons/lvmdbusd/lvmdb.py daemons/lvmdbusd/lvm_shell_proxy.py daemons/lvmdbusd/path.py daemons/lvmetad/Makefile daemons/lvmpolld/Makefile daemons/lvmlockd/Makefile conf/Makefile conf/example.conf conf/lvmlocal.conf conf/command_profile_template.profile conf/metadata_profile_template.profile include/.symlinks include/Makefile lib/Makefile lib/format1/Makefile lib/format_pool/Makefile lib/locking/Makefile lib/mirror/Makefile include/lvm-version.h lib/raid/Makefile lib/snapshot/Makefile lib/thin/Makefile lib/cache_segtype/Makefile libdaemon/Makefile libdaemon/client/Makefile libdaemon/server/Makefile libdm/Makefile libdm/libdevmapper.pc liblvm/Makefile liblvm/liblvm2app.pc man/Makefile po/Makefile python/Makefile python/setup.py scripts/blkdeactivate.sh scripts/blk_availability_init_red_hat scripts/blk_availability_systemd_red_hat.service scripts/clvmd_init_red_hat scripts/cmirrord_init_red_hat scripts/com.redhat.lvmdbus1.service scripts/dm_event_systemd_red_hat.service scripts/dm_event_systemd_red_hat.socket scripts/lvm2_cluster_activation_red_hat.sh scripts/lvm2_cluster_activation_systemd_red_hat.service scripts/lvm2_clvmd_systemd_red_hat.service scripts/lvm2_cmirrord_systemd_red_hat.service scripts/lvm2_lvmdbusd_systemd_red_hat.service scripts/lvm2_lvmetad_init_red_hat scripts/lvm2_lvmetad_systemd_red_hat.service scripts/lvm2_lvmetad_systemd_red_hat.socket scripts/lvm2_lvmpolld_init_red_hat scripts/lvm2_lvmpolld_systemd_red_hat.service scripts/lvm2_lvmpolld_systemd_red_hat.socket scripts/lvm2_lvmlockd_systemd_red_hat.service scripts/lvm2_lvmlocking_systemd_red_hat.service scripts/lvm2_monitoring_init_red_hat scripts/lvm2_monitoring_systemd_red_hat.service scripts/lvm2_pvscan_systemd_red_hat@.service scripts/lvm2_tmpfiles_red_hat.conf scripts/lvmdump.sh scripts/Makefile test/Makefile test/api/Makefile test/unit/Makefile tools/Makefile udev/Makefile"
+ac_config_files="$ac_config_files Makefile make.tmpl daemons/Makefile daemons/clvmd/Makefile daemons/cmirrord/Makefile daemons/dmeventd/Makefile daemons/dmeventd/libdevmapper-event.pc daemons/dmeventd/plugins/Makefile daemons/dmeventd/plugins/lvm2/Makefile daemons/dmeventd/plugins/raid/Makefile daemons/dmeventd/plugins/mirror/Makefile daemons/dmeventd/plugins/snapshot/Makefile daemons/dmeventd/plugins/thin/Makefile daemons/dmfilemapd/Makefile daemons/lvmdbusd/Makefile daemons/lvmdbusd/lvmdbusd daemons/lvmdbusd/lvmdb.py daemons/lvmdbusd/lvm_shell_proxy.py daemons/lvmdbusd/path.py daemons/lvmetad/Makefile daemons/lvmpolld/Makefile daemons/lvmlockd/Makefile conf/Makefile conf/example.conf conf/lvmlocal.conf conf/command_profile_template.profile conf/metadata_profile_template.profile include/.symlinks include/Makefile lib/Makefile lib/format1/Makefile lib/format_pool/Makefile lib/locking/Makefile lib/mirror/Makefile include/lvm-version.h lib/raid/Makefile lib/snapshot/Makefile lib/thin/Makefile lib/cache_segtype/Makefile libdaemon/Makefile libdaemon/client/Makefile libdaemon/server/Makefile libdm/Makefile libdm/libdevmapper.pc liblvm/Makefile liblvm/liblvm2app.pc man/Makefile po/Makefile python/Makefile python/setup.py scripts/blkdeactivate.sh scripts/blk_availability_init_red_hat scripts/blk_availability_systemd_red_hat.service scripts/clvmd_init_red_hat scripts/cmirrord_init_red_hat scripts/com.redhat.lvmdbus1.service scripts/dm_event_systemd_red_hat.service scripts/dm_event_systemd_red_hat.socket scripts/lvm2_cluster_activation_red_hat.sh scripts/lvm2_cluster_activation_systemd_red_hat.service scripts/lvm2_clvmd_systemd_red_hat.service scripts/lvm2_cmirrord_systemd_red_hat.service scripts/lvm2_lvmdbusd_systemd_red_hat.service scripts/lvm2_lvmetad_init_red_hat scripts/lvm2_lvmetad_systemd_red_hat.service scripts/lvm2_lvmetad_systemd_red_hat.socket scripts/lvm2_lvmpolld_init_red_hat scripts/lvm2_lvmpolld_systemd_red_hat.service scripts/lvm2_lvmpolld_systemd_red_hat.socket scripts/lvm2_lvmlockd_systemd_red_hat.service scripts/lvm2_lvmlocking_systemd_red_hat.service scripts/lvm2_monitoring_init_red_hat scripts/lvm2_monitoring_systemd_red_hat.service scripts/lvm2_pvscan_systemd_red_hat@.service scripts/lvm2_tmpfiles_red_hat.conf scripts/lvmdump.sh scripts/Makefile test/Makefile test/api/Makefile unit-test/Makefile tools/Makefile udev/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -16634,7 +16463,7 @@ do
     "scripts/Makefile") CONFIG_FILES="$CONFIG_FILES scripts/Makefile" ;;
     "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
     "test/api/Makefile") CONFIG_FILES="$CONFIG_FILES test/api/Makefile" ;;
-    "test/unit/Makefile") CONFIG_FILES="$CONFIG_FILES test/unit/Makefile" ;;
+    "unit-test/Makefile") CONFIG_FILES="$CONFIG_FILES unit-test/Makefile" ;;
     "tools/Makefile") CONFIG_FILES="$CONFIG_FILES tools/Makefile" ;;
     "udev/Makefile") CONFIG_FILES="$CONFIG_FILES udev/Makefile" ;;
 
