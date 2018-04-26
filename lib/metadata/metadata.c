@@ -3869,7 +3869,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		if (warn_flags & SKIP_RESCAN)
 			goto find_vg;
 		skipped_rescan = 0;
-		log_debug_metadata("Rescanning devices for for %s", vgname);
+		log_debug_metadata("Rescanning devices for %s", vgname);
 		lvmcache_label_rescan_vg(cmd, vgname, vgid);
 	} else {
 		log_debug_metadata("Skipped rescanning devices for %s", vgname);

@@ -300,7 +300,7 @@ void lvmcache_save_vg(struct volume_group *vg, int precommitted)
 		vginfo->saved_vg_old_buf = susp_buf;
 		vginfo->saved_vg_old_cft = susp_cft;
 		vginfo->saved_vg_old = save_vg;
-		log_debug_cache("lvmcache saved vg %s seqno %d %p",
+		log_debug_cache("lvmcache saved old vg %s seqno %d %p",
 				save_vg->name, save_vg->seqno, save_vg);
 	} else {
 		vginfo->saved_vg_new_buf = susp_buf;
@@ -326,10 +326,57 @@ struct volume_group *lvmcache_get_saved_vg(const char *vgid, int precommitted)
 	if (!(vginfo = lvmcache_vginfo_from_vgid(vgid)))
 		goto out;
 
+	/*
+	 * Once new is returned, then also return new if old is requested,
+	 * i.e. new becomes both old and new once it's used.
+	 */
+
 	if (new)
 		vg = vginfo->saved_vg_new;
 	else if (old)
 		vg = vginfo->saved_vg_old;
+
+	if (vg && old) {
+		if (!vginfo->saved_vg_new)
+			log_debug_cache("lvmcache: get old saved_vg %d %s %p",
+					vg->seqno, vg->name, vg);
+		else
+			log_debug_cache("lvmcache: get old saved_vg %d %s %p new is %d %p",
+					vg->seqno, vg->name, vg,
+					vginfo->saved_vg_new->seqno,
+					vginfo->saved_vg_new);
+	}
+
+	if (vg && new) {
+		if (!vginfo->saved_vg_old)
+			log_debug_cache("lvmcache: get new (pre) saved_vg %d %s %p",
+					vg->seqno, vg->name, vg);
+		else
+			log_debug_cache("lvmcache: get new (pre) saved_vg %d %s %p old is %d %p",
+					vg->seqno, vg->name, vg,
+					vginfo->saved_vg_old->seqno,
+					vginfo->saved_vg_old);
+
+		/* Do we need to actually set saved_vg_old to match saved_vg_new?
+		 * By just dropping old, we force a subsequent request for old to
+		 * reread it rather than just using new. */
+		if (vginfo->saved_vg_old) {
+			log_debug_cache("lvmcache: drop saved_vg_old because new invalidates");
+			_saved_vg_free(vginfo, 1, 0);
+		}
+	}
+
+	if (!vg && new && vginfo->saved_vg_old)
+		log_warn("lvmcache_get_saved_vg pre %d wanted new but only have old %d %s",
+			 precommitted,
+			 vginfo->saved_vg_old->seqno,
+			 vginfo->saved_vg_old->name);
+
+	if (!vg && old && vginfo->saved_vg_new)
+		log_warn("lvmcache_get_saved_vg pre %d wanted old but only have new %d %s",
+			 precommitted,
+			 vginfo->saved_vg_new->seqno,
+			 vginfo->saved_vg_new->name);
 out:
 	if (!vg)
 		log_debug_cache("lvmcache no saved vg %s pre %d", vgid, precommitted);
@@ -340,14 +387,49 @@ struct volume_group *lvmcache_get_saved_vg_latest(const char *vgid)
 {
 	struct lvmcache_vginfo *vginfo;
 	struct volume_group *vg = NULL;
+	int old = 0;
+	int new = 0;
 
 	if (!(vginfo = lvmcache_vginfo_from_vgid(vgid)))
 		goto out;
 
-	if (vginfo->saved_vg_committed)
+	if (vginfo->saved_vg_committed) {
 		vg = vginfo->saved_vg_new;
-	else
+		new = 1;
+	} else {
 		vg = vginfo->saved_vg_old;
+		old = 1;
+	}
+
+	if (vg && old) {
+		if (!vginfo->saved_vg_new)
+			log_debug_cache("lvmcache: get_latest old saved_vg %d %s %p",
+					vg->seqno, vg->name, vg);
+		else
+			log_debug_cache("lvmcache: get_latest old saved_vg %d %s %p new is %d %p",
+					vg->seqno, vg->name, vg,
+					vginfo->saved_vg_new->seqno,
+					vginfo->saved_vg_new);
+	}
+
+	if (vg && new) {
+		if (!vginfo->saved_vg_old)
+			log_debug_cache("lvmcache: get_latest new (pre) saved_vg %d %s %p",
+					vg->seqno, vg->name, vg);
+		else
+			log_debug_cache("lvmcache: get_latest new (pre) saved_vg %d %s %p old is %d %p",
+					vg->seqno, vg->name, vg,
+					vginfo->saved_vg_old->seqno,
+					vginfo->saved_vg_old);
+
+		/* Do we need to actually set saved_vg_old to match saved_vg_new?
+		 * By just dropping old, we force a subsequent request for old to
+		 * reread it rather than just using new. */
+		if (vginfo->saved_vg_old) {
+			log_debug_cache("lvmcache: drop saved_vg_old because new invalidates");
+			_saved_vg_free(vginfo, 1, 0);
+		}
+	}
 out:
 	if (!vg)
 		log_debug_cache("lvmcache no saved vg %s", vgid);
@@ -1246,6 +1328,7 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 		goto out;
 	}
 
+	/* FIXME: can this happen? */
 	if (!cmd->full_filter) {
 		log_error("label scan is missing full filter");
 		goto out;

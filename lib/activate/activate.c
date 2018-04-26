@@ -2164,6 +2164,8 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	vg_pre = lvmcache_get_saved_vg(vgid, 1);
 
 	if (!vg || !vg_pre) {
+		log_debug("lv_suspend dropping both saved vgs and rereading");
+
 		lvmcache_drop_saved_vgid(vgid);
 
 		vg = vg_read_by_vgid(cmd, vgid, 0);
@@ -2175,8 +2177,14 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 			goto out;
 		}
 
-		log_debug("lv_suspend found vg %s vg %p vg_pre %p",
-			  vg->name, vg, vg_pre);
+		/*
+		 * Note that vg and vg_pre returned by vg_read_by_vgid will
+		 * not be the same as saved_vg_old/saved_vg_new that would
+		 * be returned by lvmcache_get_saved_vg() because the saved_vg's
+		 * are copies of the vg struct that is created by _vg_read.
+		 * (Should we grab and use the saved_vg to use here instead of
+		 * the vg returned by vg_read_by_vgid?)
+		 */
 
 		if ((vg->status & EXPORTED_VG) || (vg_pre->status & EXPORTED_VG)) {
 			log_error("Volume group \"%s\" is exported", vg->name);
