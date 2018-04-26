@@ -537,29 +537,16 @@ static void _complete_io(void *context, int err)
 	 */
 	dm_list_del(&b->list);
 
-	if (b->error)
-		memset(b->data, 0, cache->block_sectors << SECTOR_SHIFT);
-
 	/* Things don't work with this block of code, but work without it. */
-#if 0
 	if (b->error) {
 		log_warn("bcache io error %d fd %d", b->error, b->fd);
-		if (b->io_dir == DIR_READ) {
-			// We can just forget about this block, since there's
-			// no dirty data to be written back.
-			_hash_remove(b);
-			dm_list_add(&cache->free, &b->list);
 
-		} else
-			dm_list_add(&cache->errored, &b->list);
+		dm_list_add(&cache->errored, &b->list);
 
 	} else {
 		_clear_flags(b, BF_DIRTY);
 		_link_block(b);
 	}
-#endif
-	_clear_flags(b, BF_DIRTY);
-	_link_block(b);
 }
 
 /*
@@ -908,17 +895,23 @@ bool bcache_get(struct bcache *cache, int fd, block_address index,
 
 	b = _lookup_or_read_block(cache, fd, index, flags);
 	if (b) {
+		if (b->error) {
+			if (b->io_dir == DIR_READ) {
+				// Now we know the read failed we can just forget
+				// about this block, since there's no dirty data to
+				// be written back.
+				_hash_remove(b);
+				dm_list_add(&cache->free, &b->list);
+			}
+			*error = b->error;
+			return false;
+		}
+
 		if (!b->ref_count)
 			cache->nr_locked++;
 		b->ref_count++;
 
 		*result = b;
-
-		if (error)
-			*error = b->error;
-
-		if (b->error)
-			return false;
 		return true;
 	}
 
