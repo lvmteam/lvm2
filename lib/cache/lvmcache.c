@@ -1251,6 +1251,9 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 		goto out;
 	}
 
+	if (!refresh_filters(cmd))
+		log_error("Scan failed to refresh device filter.");
+
 	/*
 	 * Duplicates found during this label scan are added to _found_duplicate_devs().
 	 */
