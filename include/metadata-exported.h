@@ -1,0 +1,1 @@
+../lib/metadata/metadata-exported.h

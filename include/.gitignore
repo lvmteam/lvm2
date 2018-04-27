@@ -1,4 +1,2 @@
-.symlinks
-.symlinks_created
-
-*.h
+configure.h
+lvm-version.h
