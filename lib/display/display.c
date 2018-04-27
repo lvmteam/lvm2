@@ -705,13 +705,10 @@ void vgdisplay_full(const struct volume_group *vg)
 
 	log_print("--- Volume group ---");
 	log_print("VG Name               %s", vg->name);
-	log_print("System ID             %s", (vg->system_id && *vg->system_id) ? vg->system_id : vg->lvm1_system_id ? : "");
+	log_print("System ID             %s", (vg->system_id && *vg->system_id) ? vg->system_id : "");
 	log_print("Format                %s", vg->fid->fmt->name);
-	if (vg->fid->fmt->features & FMT_MDAS) {
-		log_print("Metadata Areas        %d",
-			  vg_mda_count(vg));
-		log_print("Metadata Sequence No  %d", vg->seqno);
-	}
+	log_print("Metadata Areas        %d", vg_mda_count(vg));
+	log_print("Metadata Sequence No  %d", vg->seqno);
 	access_str = vg->status & (LVM_READ | LVM_WRITE);
 	log_print("VG Access             %s%s%s%s",
 		  access_str == (LVM_READ | LVM_WRITE) ? "read/write" : "",

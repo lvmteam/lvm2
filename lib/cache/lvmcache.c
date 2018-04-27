@@ -22,8 +22,6 @@
 #include "memlock.h"
 #include "str_list.h"
 #include "format-text.h"
-#include "format_pool.h"
-#include "format1.h"
 #include "config.h"
 
 #include "lvmetad.h"
@@ -481,8 +479,6 @@ void lvmcache_drop_metadata(const char *vgname, int drop_precommitted)
 	/* For VG_ORPHANS, we need to invalidate all labels on orphan PVs. */
 	if (!strcmp(vgname, VG_ORPHANS)) {
 		_drop_metadata(FMT_TEXT_ORPHAN_VG_NAME, 0);
-		_drop_metadata(FMT_LVM1_ORPHAN_VG_NAME, 0);
-		_drop_metadata(FMT_POOL_ORPHAN_VG_NAME, 0);
 	} else
 		_drop_metadata(vgname, drop_precommitted);
 }

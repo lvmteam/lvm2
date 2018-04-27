@@ -23,7 +23,6 @@
 
 #include "stub.h"
 #include "last-path-component.h"
-#include "format1.h"
 
 #include <signal.h>
 #include <sys/stat.h>
@@ -2900,13 +2899,6 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
-	if (!strcmp(cmd->fmt->name, FMT_LVM1_NAME) && lvmetad_used()) {
-		log_warn("WARNING: Disabling lvmetad cache which does not support obsolete metadata.");
-		lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_LVM1);
-		log_warn("WARNING: Not using lvmetad because lvm1 format is used.");
-		lvmetad_make_unused(cmd);
-	}
-
 	if (cmd->command->command_enum == lvconvert_repair_CMD) {
 		log_warn("WARNING: Disabling lvmetad cache for repair command.");
 		lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_REPAIR);
@@ -2971,7 +2963,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	 *   by different token values.)
 	 *
 	 * lvmetad may have been previously disabled (or disabled during the
-	 * rescan done here) because duplicate devices or lvm1 metadata were seen.
+	 * rescan done here) because duplicate devices were seen.
 	 * In this case, disable the *use* of lvmetad by this command, reverting to
 	 * disk scanning.
 	 */
@@ -3396,41 +3388,6 @@ static int _run_script(struct cmd_context *cmd, int argc, char **argv)
 	return ret;
 }
 
-/*
- * Determine whether we should fall back and exec the equivalent LVM1 tool
- */
-static int _lvm1_fallback(struct cmd_context *cmd)
-{
-	char vsn[80];
-	int dm_present;
-
-	if (!find_config_tree_bool(cmd, global_fallback_to_lvm1_CFG, NULL) ||
-	    strncmp(cmd->kernel_vsn, "2.4.", 4))
-		return 0;
-
-	log_suppress(1);
-	dm_present = driver_version(vsn, sizeof(vsn));
-	log_suppress(0);
-
-	if (dm_present || !lvm1_present(cmd))
-		return 0;
-
-	return 1;
-}
-
-static void _exec_lvm1_command(char **argv)
-{
-	char path[PATH_MAX];
-
-	if (dm_snprintf(path, sizeof(path), "%s.lvm1", argv[0]) < 0) {
-		log_error("Failed to create LVM1 tool pathname");
-		return;
-	}
-
-	execvp(path, argv);
-	log_sys_error("execvp", path);
-}
-
 static void _nonroot_warning(void)
 {
 	if (getuid() || geteuid())
@@ -3519,19 +3476,6 @@ int lvm2_main(int argc, char **argv)
 		run_name = argv[0];
 	} else
 		run_name = dm_basename(argv[0]);
-
-	if (_lvm1_fallback(cmd)) {
-		/* Attempt to run equivalent LVM1 tool instead */
-		if (!argc) {
-			log_error("Falling back to LVM1 tools, but no "
-				  "command specified.");
-			ret = ECMD_FAILED;
-			goto out;
-		}
-		_exec_lvm1_command(argv);
-		ret = ECMD_FAILED;
-		goto_out;
-	}
 
 	/*
 	 * Decide if we are running a shell or a command or a script.  When

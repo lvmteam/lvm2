@@ -36,14 +36,6 @@
 #include "sharedlib.h"
 #endif
 
-#ifdef LVM1_INTERNAL
-#include "format1.h"
-#endif
-
-#ifdef POOL_INTERNAL
-#include "format_pool.h"
-#endif
-
 #include <locale.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
@@ -1339,20 +1331,6 @@ static int _init_formats(struct cmd_context *cmd)
 
 #ifdef HAVE_LIBDL
 	const struct dm_config_node *cn;
-#endif
-
-#ifdef LVM1_INTERNAL
-	if (!(fmt = init_lvm1_format(cmd)))
-		return 0;
-	fmt->library = NULL;
-	dm_list_add(&cmd->formats, &fmt->list);
-#endif
-
-#ifdef POOL_INTERNAL
-	if (!(fmt = init_pool_format(cmd)))
-		return 0;
-	fmt->library = NULL;
-	dm_list_add(&cmd->formats, &fmt->list);
 #endif
 
 #ifdef HAVE_LIBDL

@@ -534,13 +534,6 @@ static int _vgchange_system_id(struct cmd_context *cmd, struct volume_group *vg)
 	const char *system_id;
 	const char *system_id_arg_str = arg_str_value(cmd, systemid_ARG, NULL);
 
-	/* FIXME Merge with vg_set_system_id() */
-	if (systemid_on_pvs(vg)) {
-		log_error("Metadata format %s does not support this type of system ID.",
-			  vg->fid->fmt->name);
-		return 0;
-	}
-
 	if (!(system_id = system_id_from_string(cmd, system_id_arg_str))) {
 		log_error("Unable to set system ID.");
 		return 0;
@@ -590,9 +583,6 @@ static int _vgchange_system_id(struct cmd_context *cmd, struct volume_group *vg)
 
 	vg->system_id = system_id;
 	
-	if (vg->lvm1_system_id)
-		*vg->lvm1_system_id = '\0';
-
 	return 1;
 }
 

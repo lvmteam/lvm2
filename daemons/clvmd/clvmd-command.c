@@ -108,7 +108,6 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 		lock_flags = args[1];
 		lockname = &args[2];
 		/* Check to see if the VG is in use by LVM1 */
-		status = do_check_lvm1(lockname);
 		do_lock_vg(lock_cmd, lock_flags, lockname);
 		break;
 

@@ -2845,7 +2845,7 @@ static int _vgsystemid_disp(struct dm_report *rh, struct dm_pool *mem,
 			    const void *data, void *private)
 {
 	const struct volume_group *vg = (const struct volume_group *) data;
-	const char *repstr = (vg->system_id && *vg->system_id) ? vg->system_id : vg->lvm1_system_id ? : "";
+	const char *repstr = (vg->system_id && *vg->system_id) ? vg->system_id : "";
 
 	return _field_string(rh, field, repstr);
 }
@@ -3822,7 +3822,6 @@ static struct volume_group _dummy_vg = {
 	.fid = &_dummy_fid,
 	.name = "",
 	.system_id = (char *) "",
-	.lvm1_system_id = (char *) "",
 	.pvs = DM_LIST_HEAD_INIT(_dummy_vg.pvs),
 	.lvs = DM_LIST_HEAD_INIT(_dummy_vg.lvs),
 	.historical_lvs = DM_LIST_HEAD_INIT(_dummy_vg.historical_lvs),
@@ -3833,7 +3832,6 @@ static struct volume_group _unknown_vg = {
 	.fid = &_dummy_fid,
 	.name = "[unknown]",
 	.system_id = (char *) "",
-	.lvm1_system_id = (char *) "",
 	.pvs = DM_LIST_HEAD_INIT(_unknown_vg.pvs),
 	.lvs = DM_LIST_HEAD_INIT(_unknown_vg.lvs),
 	.historical_lvs = DM_LIST_HEAD_INIT(_unknown_vg.historical_lvs),

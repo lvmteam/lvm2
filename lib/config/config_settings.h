@@ -767,26 +767,14 @@ cfg(global_activation_CFG, "activation", global_CFG_SECTION, 0, CFG_TYPE_BOOL, D
 	"is not present in the kernel, disabling this should suppress\n"
 	"the error messages.\n")
 
-cfg(global_fallback_to_lvm1_CFG, "fallback_to_lvm1", global_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_FALLBACK_TO_LVM1, vsn(1, 0, 18), "@DEFAULT_FALLBACK_TO_LVM1@", 0, NULL,
-	"Try running LVM1 tools if LVM cannot communicate with DM.\n"
-	"This option only applies to 2.4 kernels and is provided to help\n"
-	"switch between device-mapper kernels and LVM1 kernels. The LVM1\n"
-	"tools need to be installed with .lvm1 suffices, e.g. vgscan.lvm1.\n"
-	"They will stop working once the lvm2 on-disk metadata format is used.\n")
+cfg(global_fallback_to_lvm1_CFG, "fallback_to_lvm1", global_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, 0, vsn(1, 0, 18), NULL, 0, NULL,
+	"This setting setting no longer used.\n")
 
 cfg(global_format_CFG, "format", global_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_FORMAT, vsn(1, 0, 0), NULL, 0, NULL,
-	"The default metadata format that commands should use.\n"
-	"The -M 1|2 option overrides this setting.\n"
-	"#\n"
-	"Accepted values:\n"
-	"  lvm1\n"
-	"  lvm2\n"
-	"#\n")
+	"This setting is no longer used.\n")
 
 cfg_array(global_format_libraries_CFG, "format_libraries", global_CFG_SECTION, CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, NULL, vsn(1, 0, 0), NULL, 0, NULL,
-	"Shared libraries that process different metadata formats.\n"
-	"If support for LVM1 metadata was compiled as a shared library use\n"
-	"format_libraries = \"liblvm2format1.so\"\n")
+	"This setting is no longer used.")
 
 cfg_array(global_segment_libraries_CFG, "segment_libraries", global_CFG_SECTION, CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, NULL, vsn(1, 0, 18), NULL, 0, NULL, NULL)
 

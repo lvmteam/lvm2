@@ -1,6 +1,3 @@
-vgconvert converts VG metadata from one format to another.  The new
-metadata format must be able to fit into the space provided by the old
+vgconvert converts VG metadata from one format to another.  This command
+is no longer used because this version of lvm no longer supports the LVM1
 format.
-
-Because the LVM1 format should no longer be used, this command is no
-longer needed in general.

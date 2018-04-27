@@ -70,7 +70,6 @@ struct volume_group {
 	const char *name;
 	const char *old_name;		/* Set during vgrename and vgcfgrestore */
 	const char *system_id;
-	char *lvm1_system_id;
 	const char *lock_type;
 	const char *lock_args;
 

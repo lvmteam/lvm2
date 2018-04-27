@@ -37,8 +37,6 @@ static const char *_lvmetad_socket = NULL;
 static struct cmd_context *_lvmetad_cmd = NULL;
 static int64_t _lvmetad_update_timeout;
 
-static int _found_lvm1_metadata = 0;
-
 static struct volume_group *_lvmetad_pvscan_vg(struct cmd_context *cmd, struct volume_group *vg, const char *vgid, struct format_type *fmt);
 
 static uint64_t _monotonic_seconds(void)
@@ -2279,18 +2277,6 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 	if (!baton.fid)
 		goto_bad;
 
-	if (fmt->features & FMT_OBSOLETE) {
-		fmt->ops->destroy_instance(baton.fid);
-		log_warn("WARNING: Disabling lvmetad cache which does not support obsolete (lvm1) metadata.");
-		lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_LVM1);
-		_found_lvm1_metadata = 1;
-		/*
-		 * return 1 (success) so that we'll continue to populate lvmetad
-		 * instead of leaving the update incomplete.
-		 */
-		return 1;
-	}
-
 	lvmcache_foreach_mda(info, _lvmetad_pvscan_single, &baton);
 
 	if (!baton.vg)
@@ -2452,11 +2438,9 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
 	}
 
 	/*
-	 * If lvmetad is disabled, and no lvm1 metadata was seen and no
-	 * duplicate PVs were seen, then re-enable lvmetad.
+	 * If lvmetad is disabled, and no duplicate PVs were seen, then re-enable lvmetad.
 	 */
-	if (lvmetad_is_disabled(cmd, &reason) &&
-	    !lvmcache_found_duplicate_pvs() && !_found_lvm1_metadata) {
+	if (lvmetad_is_disabled(cmd, &reason) && !lvmcache_found_duplicate_pvs()) {
 		log_debug_lvmetad("Enabling lvmetad which was previously disabled.");
 		lvmetad_clear_disabled(cmd);
 	}
@@ -3071,9 +3055,6 @@ int lvmetad_is_disabled(struct cmd_context *cmd, const char **reason)
 
 		} else if (strstr(reply_reason, LVMETAD_DISABLE_REASON_REPAIR)) {
 			*reason = "a repair command was run";
-
-		} else if (strstr(reply_reason, LVMETAD_DISABLE_REASON_LVM1)) {
-			*reason = "LVM1 metadata was found";
 
 		} else if (strstr(reply_reason, LVMETAD_DISABLE_REASON_DUPLICATES)) {
 			*reason = "duplicate PVs were found";

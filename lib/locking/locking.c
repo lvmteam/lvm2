@@ -207,42 +207,6 @@ void fin_locking(void)
 }
 
 /*
- * Does the LVM1 driver know of this VG name?
- */
-int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname)
-{
-	struct stat info;
-	char path[PATH_MAX];
-
-	/* We'll allow operations on orphans */
-	if (!is_real_vg(vgname))
-		return 1;
-
-	/* LVM1 is only present in 2.4 kernels. */
-	if (strncmp(cmd->kernel_vsn, "2.4.", 4))
-		return 1;
-
-	if (dm_snprintf(path, sizeof(path), "%s/lvm/VGs/%s", cmd->proc_dir,
-			 vgname) < 0) {
-		log_error("LVM1 proc VG pathname too long for %s", vgname);
-		return 0;
-	}
-
-	if (stat(path, &info) == 0) {
-		log_error("%s exists: Is the original LVM driver using "
-			  "this volume group?", path);
-		return 0;
-	}
-
-	if (errno != ENOENT && errno != ENOTDIR) {
-		log_sys_error("stat", path);
-		return 0;
-	}
-
-	return 1;
-}
-
-/*
  * VG locking is by VG name.
  * FIXME This should become VG uuid.
  */
@@ -354,10 +318,6 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 			lvmcache_drop_metadata(vol, 0);
 		}
 
-		/* Lock VG to change on-disk metadata. */
-		/* If LVM1 driver knows about the VG, it can't be accessed. */
-		if (!check_lvm1_vg_inactive(cmd, vol))
-			return_0;
 		break;
 	case LCK_LV:
 		/* All LV locks are non-blocking. */

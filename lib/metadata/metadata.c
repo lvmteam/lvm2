@@ -1011,8 +1011,6 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 
 	vg->status = (RESIZEABLE_VG | LVM_READ | LVM_WRITE);
 	vg->system_id = NULL;
-	if (!(vg->lvm1_system_id = dm_pool_zalloc(vg->vgmem, NAME_LEN + 1)))
-		goto_bad;
 
 	vg->extent_size = DEFAULT_EXTENT_SIZE * 2;
 	vg->max_lv = DEFAULT_MAX_LV;
@@ -2973,7 +2971,7 @@ int vg_write(struct volume_group *vg)
 		return 0;
 	}
 
-	if ((vg->fid->fmt->features & FMT_MDAS) && !_vg_adjust_ignored_mdas(vg))
+	if (!_vg_adjust_ignored_mdas(vg))
 		return_0;
 
 	if (!vg_mda_used_count(vg)) {
@@ -5357,15 +5355,6 @@ int is_system_id_allowed(struct cmd_context *cmd, const char *system_id)
 static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
 {
 	/*
-	 * LVM1 VGs must not be accessed if a new-style LVM2 system ID is set.
-	 */
-	if (cmd->system_id && systemid_on_pvs(vg)) {
-		log_error("Cannot access VG %s with LVM1 system ID %s when host system ID is set.",
-			  vg->name, vg->lvm1_system_id);
-		return 0;
-	}
-
-	/*
 	 * A few commands allow read-only access to foreign VGs.
 	 */
 	if (cmd->include_foreign_vgs)
@@ -5417,11 +5406,6 @@ static int _vg_access_permitted(struct cmd_context *cmd, struct volume_group *vg
 				uint32_t lockd_state, uint32_t *failure)
 {
 	if (!is_real_vg(vg->name)) {
-		/* Disallow use of LVM1 orphans when a host system ID is set. */
-		if (cmd->system_id && *cmd->system_id && systemid_on_pvs(vg)) {
-			*failure |= FAILED_SYSTEMID;
-			return_0;
-		}
 		return 1;
 	}
 
