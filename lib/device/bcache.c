@@ -537,10 +537,8 @@ static void _complete_io(void *context, int err)
 	 */
 	dm_list_del(&b->list);
 
-	/* Things don't work with this block of code, but work without it. */
 	if (b->error) {
 		log_warn("bcache io error %d fd %d", b->error, b->fd);
-
 		dm_list_add(&cache->errored, &b->list);
 
 	} else {
@@ -564,14 +562,14 @@ static void _issue_low_level(struct block *b, enum dir d)
 
 	b->io_dir = d;
 	_set_flags(b, BF_IO_PENDING);
-	dm_list_add(&cache->io_pending, &b->list);
+
+	dm_list_move(&cache->io_pending, &b->list);
 
 	if (!cache->engine->issue(cache->engine, d, b->fd, sb, se, b->data, b)) {
 		/* FIXME: if io_submit() set an errno, return that instead of EIO? */
 		_complete_io(b, -EIO);
 		return;
 	}
-
 }
 
 static inline void _issue_read(struct block *b)
@@ -675,6 +673,7 @@ static struct block *_new_block(struct bcache *cache, int fd, block_address inde
 		_hash_insert(b);
 	}
 
+#if 0
 	if (!b) {
 		log_error("bcache no new blocks for fd %d index %u "
 			  "clean %u free %u dirty %u pending %u nr_data_blocks %u nr_cache_blocks %u",
@@ -686,6 +685,7 @@ static struct block *_new_block(struct bcache *cache, int fd, block_address inde
 			  (uint32_t)cache->nr_data_blocks,
 			  (uint32_t)cache->nr_cache_blocks);
 	}
+#endif
 
 	return b;
 }
@@ -888,6 +888,13 @@ void bcache_prefetch(struct bcache *cache, int fd, block_address index)
 	}
 }
 
+static void _recycle_block(struct bcache *cache, struct block *b)
+{
+	_unlink_block(b);
+	_hash_remove(b);
+	dm_list_add(&cache->free, &b->list);
+}
+
 bool bcache_get(struct bcache *cache, int fd, block_address index,
 	        unsigned flags, struct block **result, int *error)
 {
@@ -896,14 +903,13 @@ bool bcache_get(struct bcache *cache, int fd, block_address index,
 	b = _lookup_or_read_block(cache, fd, index, flags);
 	if (b) {
 		if (b->error) {
+			*error = b->error;
 			if (b->io_dir == DIR_READ) {
 				// Now we know the read failed we can just forget
 				// about this block, since there's no dirty data to
 				// be written back.
-				_hash_remove(b);
-				dm_list_add(&cache->free, &b->list);
+				_recycle_block(cache, b);
 			}
-			*error = b->error;
 			return false;
 		}
 
@@ -957,7 +963,7 @@ bool bcache_flush(struct bcache *cache)
 			// The superblock may well be still locked.
 			continue;
 		}
-		
+
 		_issue_write(b);
 	}
 
@@ -966,47 +972,47 @@ bool bcache_flush(struct bcache *cache)
 	return dm_list_empty(&cache->errored);
 }
 
-static void _recycle_block(struct bcache *cache, struct block *b)
-{
-	_unlink_block(b);
-	_hash_remove(b);
-	dm_list_add(&cache->free, &b->list);
-}
-
 /*
  * You can safely call this with a NULL block.
  */
-static void _invalidate_block(struct bcache *cache, struct block *b)
+static bool _invalidate_block(struct bcache *cache, struct block *b)
 {
 	if (!b)
-		return;
+		return true;
 
 	if (_test_flags(b, BF_IO_PENDING))
 		_wait_specific(b);
 
-	if (b->ref_count)
+	if (b->ref_count) {
 		log_warn("bcache_invalidate: block (%d, %llu) still held",
 			 b->fd, (unsigned long long) index);
-	else {
-		if (_test_flags(b, BF_DIRTY)) {
-			_issue_write(b);
-			_wait_specific(b);
-		}
-
-		_recycle_block(cache, b);
+		return false;
 	}
+
+	if (_test_flags(b, BF_DIRTY)) {
+		_issue_write(b);
+		_wait_specific(b);
+
+		if (b->error)
+        		return false;
+	}
+
+	_recycle_block(cache, b);
+
+	return true;
 }
 
-void bcache_invalidate(struct bcache *cache, int fd, block_address index)
+bool bcache_invalidate(struct bcache *cache, int fd, block_address index)
 {
-	_invalidate_block(cache, _hash_lookup(cache, fd, index));
+	return _invalidate_block(cache, _hash_lookup(cache, fd, index));
 }
 
 // FIXME: switch to a trie, or maybe 1 hash table per fd?  To save iterating
 // through the whole cache.
-void bcache_invalidate_fd(struct bcache *cache, int fd)
+bool bcache_invalidate_fd(struct bcache *cache, int fd)
 {
 	struct block *b, *tmp;
+	bool r = true;
 
 	// Start writing back any dirty blocks on this fd.
 	dm_list_iterate_items_safe (b, tmp, &cache->dirty)
@@ -1018,12 +1024,9 @@ void bcache_invalidate_fd(struct bcache *cache, int fd)
 	// Everything should be in the clean list now.
 	dm_list_iterate_items_safe (b, tmp, &cache->clean)
 		if (b->fd == fd)
-			_invalidate_block(cache, b);
+			r = _invalidate_block(cache, b) && r;
 
-	// Except they could be in the errored list :)
-	dm_list_iterate_items_safe (b, tmp, &cache->errored)
-		if (b->fd == fd)
-			_recycle_block(cache, b);
+       return r;
 }
 
 static void byte_range_to_block_range(struct bcache *cache, off_t start, size_t len,

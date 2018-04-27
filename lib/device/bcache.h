@@ -135,17 +135,20 @@ void bcache_put(struct block *b);
 bool bcache_flush(struct bcache *cache);
 
 /*
- * Removes a block from the cache.  If the block is dirty it will be written
- * back first.  If the block is currently held a warning will be issued, and it
- * will not be removed.
+ * Removes a block from the cache.
+ * 
+ * If the block is dirty it will be written back first.  If the writeback fails
+ * false will be returned.
+ * 
+ * If the block is currently held false will be returned.
  */
-void bcache_invalidate(struct bcache *cache, int fd, block_address index);
+bool bcache_invalidate(struct bcache *cache, int fd, block_address index);
 
 /*
  * Invalidates all blocks on the given descriptor.  Call this before closing
  * the descriptor to make sure everything is written back.
  */
-void bcache_invalidate_fd(struct bcache *cache, int fd);
+bool bcache_invalidate_fd(struct bcache *cache, int fd);
 
 /*
  * Prefetches the blocks neccessary to satisfy a byte range.

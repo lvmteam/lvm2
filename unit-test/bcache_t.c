@@ -729,7 +729,7 @@ static void test_invalidate_not_present(void *context)
 	struct bcache *cache = f->cache;
 	int fd = 17;
 
-	bcache_invalidate(cache, fd, 0);
+	T_ASSERT(bcache_invalidate(cache, fd, 0));
 }
 
 static void test_invalidate_present(void *context)
@@ -746,10 +746,10 @@ static void test_invalidate_present(void *context)
 	T_ASSERT(bcache_get(cache, fd, 0, 0, &b, &err));
 	bcache_put(b);
 
-	bcache_invalidate(cache, fd, 0);
+	T_ASSERT(bcache_invalidate(cache, fd, 0));
 }
 
-static void test_invalidate_after_error(void *context)
+static void test_invalidate_after_read_error(void *context)
 {
 	struct fixture *f = context;
 	struct mock_engine *me = f->me;
@@ -760,13 +760,56 @@ static void test_invalidate_after_error(void *context)
 
 	_expect_read_bad_issue(me, fd, 0);
 	T_ASSERT(!bcache_get(cache, fd, 0, 0, &b, &err));
-	bcache_invalidate(cache, fd, 0);
+	T_ASSERT(bcache_invalidate(cache, fd, 0));
 }
 
-// Tests to be written
-// show invalidate works
-// show invalidate_fd works
-// show writeback is working
+static void test_invalidate_after_write_error(void *context)
+{
+	struct fixture *f = context;
+	struct mock_engine *me = f->me;
+	struct bcache *cache = f->cache;
+	struct block *b;
+	int fd = 17;
+	int err;
+
+	T_ASSERT(bcache_get(cache, fd, 0, GF_ZERO, &b, &err));
+	bcache_put(b);
+
+	// invalidate should fail if the write fails
+	_expect_write_bad_wait(me, fd, 0);
+	_expect(me, E_WAIT);
+	T_ASSERT(!bcache_invalidate(cache, fd, 0));
+
+	// and should succeed if the write does
+	_expect_write(me, fd, 0);
+	_expect(me, E_WAIT);
+	T_ASSERT(bcache_invalidate(cache, fd, 0));
+
+	// a read is not required to get the block
+	_expect_read(me, fd, 0);
+	_expect(me, E_WAIT);
+	T_ASSERT(bcache_get(cache, fd, 0, 0, &b, &err));
+	bcache_put(b);
+}
+
+static void test_invalidate_held_block(void *context)
+{
+
+	struct fixture *f = context;
+	struct mock_engine *me = f->me;
+	struct bcache *cache = f->cache;
+	struct block *b;
+	int fd = 17;
+	int err;
+
+	T_ASSERT(bcache_get(cache, fd, 0, GF_ZERO, &b, &err));
+
+	T_ASSERT(!bcache_invalidate(cache, fd, 0));
+
+	_expect_write(me, fd, 0);
+	_expect(me, E_WAIT);
+	bcache_put(b);
+}
 
 /*----------------------------------------------------------------
  * Top level
@@ -801,7 +844,9 @@ static struct test_suite *_small_tests(void)
 	T("write-bad-io-stops-flush", "flush fails temporarily if any block fails to write", test_write_bad_io_stops_flush);
 	T("invalidate-not-present", "invalidate a block that isn't in the cache", test_invalidate_not_present);
 	T("invalidate-present", "invalidate a block that is in the cache", test_invalidate_present);
-	T("invalidate-error", "invalidate a block that errored", test_invalidate_after_error);
+	T("invalidate-read-error", "invalidate a block that errored", test_invalidate_after_read_error);
+	T("invalidate-write-error", "invalidate a block that errored", test_invalidate_after_write_error);
+	T("invalidate-fails-in-held", "invalidating a held block fails", test_invalidate_held_block);
 
 	return ts;
 }
