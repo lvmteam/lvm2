@@ -11,31 +11,31 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 UNIT_SOURCE=\
-	unit-test/bcache_t.c \
-	unit-test/bitset_t.c \
-	unit-test/config_t.c \
-	unit-test/dmlist_t.c \
-	unit-test/dmstatus_t.c \
-	unit-test/io_engine_t.c \
-	unit-test/matcher_t.c \
-	unit-test/framework.c \
-	unit-test/percent_t.c \
-	unit-test/run.c \
-	unit-test/string_t.c
+	test/unit/bcache_t.c \
+	test/unit/bitset_t.c \
+	test/unit/config_t.c \
+	test/unit/dmlist_t.c \
+	test/unit/dmstatus_t.c \
+	test/unit/io_engine_t.c \
+	test/unit/matcher_t.c \
+	test/unit/framework.c \
+	test/unit/percent_t.c \
+	test/unit/run.c \
+	test/unit/string_t.c
 
 UNIT_DEPENDS=$(subst .c,.d,$(UNIT_SOURCE))
 UNIT_OBJECTS=$(UNIT_SOURCE:%.c=%.o)
 CLEAN_TARGETS+=$(UNIT_DEPENDS) $(UNIT_OBJECTS)
 UNIT_LDLIBS += $(LVMINTERNAL_LIBS) -ldevmapper -laio
 
-unit-test/unit-test: $(UNIT_OBJECTS) libdm/libdevmapper.$(LIB_SUFFIX) lib/liblvm-internal.a
+test/unit/unit-test: $(UNIT_OBJECTS) libdm/libdevmapper.$(LIB_SUFFIX) lib/liblvm-internal.a
 	@echo "    [LD] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) -L$(top_builddir)/libdm \
 	      -o $@ $(UNIT_OBJECTS) $(UNIT_LDLIBS)
 
 .PHONEY: run-unit-test
-run-unit-test: unit-test/unit-test
+run-unit-test: test/unit/unit-test
 	@echo Running unit tests
-	LD_LIBRARY_PATH=libdm unit-test/unit-test run
+	LD_LIBRARY_PATH=libdm test/unit/unit-test run
 
 -include $(UNIT_DEPENDS)

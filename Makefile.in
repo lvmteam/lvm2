@@ -96,7 +96,7 @@ endif
 DISTCLEAN_TARGETS += cscope.out
 CLEAN_DIRS += autom4te.cache
 
-check check_system check_cluster check_local check_lvmetad check_lvmpolld check_lvmlockd_test check_lvmlockd_dlm check_lvmlockd_sanlock unit-test: all
+check check_system check_cluster check_local check_lvmetad check_lvmpolld check_lvmlockd_test check_lvmlockd_dlm check_lvmlockd_sanlock: all
 	$(MAKE) -C test $(@)
 
 conf.generate man.generate: tools
@@ -211,7 +211,7 @@ endif
 endif
 
 ifeq ("$(TESTING)", "yes")
-include unit-test/Makefile
+include test/unit/Makefile
 endif
 
 ifneq ($(shell which ctags),)

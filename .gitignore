@@ -80,4 +80,4 @@ test/lib/vgs
 test/lib/vgscan
 test/lib/vgsplit
 
-unit-test/unit-test
+test/unit/unit-test

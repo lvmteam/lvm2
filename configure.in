@@ -2245,7 +2245,7 @@ scripts/lvmdump.sh
 scripts/Makefile
 test/Makefile
 test/api/Makefile
-unit-test/Makefile
+test/unit/Makefile
 tools/Makefile
 udev/Makefile
 ])
