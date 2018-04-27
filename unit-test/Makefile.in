@@ -16,6 +16,7 @@ UNIT_SOURCE=\
 	unit-test/config_t.c \
 	unit-test/dmlist_t.c \
 	unit-test/dmstatus_t.c \
+	unit-test/io_engine_t.c \
 	unit-test/matcher_t.c \
 	unit-test/framework.c \
 	unit-test/percent_t.c \
