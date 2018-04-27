@@ -309,8 +309,10 @@ LIB_VERSION_APP := $(shell $(AWK) -F '[(). ]' '{printf "%s.%s",$$1,$$4}' $(top_s
 
 INCLUDES += -I$(srcdir) -I$(top_builddir)/include
 
+INC_LNS = $(top_builddir)/include/.symlinks_created
+
 DEPS = $(top_builddir)/make.tmpl $(top_srcdir)/VERSION \
-       $(top_builddir)/Makefile
+       $(top_builddir)/Makefile $(INC_LNS)
 
 OBJECTS = $(SOURCES:%.c=%.o) $(CXXSOURCES:%.cpp=%.o)
 POTFILES = $(SOURCES:%.c=%.pot)
@@ -503,7 +505,7 @@ $(LIB_STATIC): $(OBJECTS)
 	$(Q) $(RM) $@
 	$(Q) $(AR) rsv $@ $(OBJECTS) > /dev/null
 
-%.d: %.c
+%.d: %.c $(INC_LNS)
 	@echo "    [DEP] $<"
 	$(Q) $(MKDIR_P) $(dir $@); \
 	set -e; \
