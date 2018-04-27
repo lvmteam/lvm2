@@ -723,6 +723,46 @@ static void test_write_bad_io_stops_flush(void *context)
 	T_ASSERT(bcache_flush(cache));
 }
 
+static void test_invalidate_not_present(void *context)
+{
+	struct fixture *f = context;
+	struct bcache *cache = f->cache;
+	int fd = 17;
+
+	bcache_invalidate(cache, fd, 0);
+}
+
+static void test_invalidate_present(void *context)
+{
+	struct fixture *f = context;
+	struct mock_engine *me = f->me;
+	struct bcache *cache = f->cache;
+	struct block *b;
+	int fd = 17;
+	int err;
+
+	_expect_read(me, fd, 0);
+	_expect(me, E_WAIT);
+	T_ASSERT(bcache_get(cache, fd, 0, 0, &b, &err));
+	bcache_put(b);
+
+	bcache_invalidate(cache, fd, 0);
+}
+
+static void test_invalidate_after_error(void *context)
+{
+	struct fixture *f = context;
+	struct mock_engine *me = f->me;
+	struct bcache *cache = f->cache;
+	struct block *b;
+	int fd = 17;
+	int err;
+
+	_expect_read_bad_issue(me, fd, 0);
+	T_ASSERT(!bcache_get(cache, fd, 0, 0, &b, &err));
+	bcache_invalidate(cache, fd, 0);
+}
+
 // Tests to be written
 // show invalidate works
 // show invalidate_fd works
@@ -759,6 +799,9 @@ static struct test_suite *_small_tests(void)
 	T("read-bad-io-intermittent", "failed io, followed by success", test_read_bad_wait_intermittent);
 	T("write-bad-issue-stops-flush", "flush fails temporarily if any block fails to write", test_write_bad_issue_stops_flush);
 	T("write-bad-io-stops-flush", "flush fails temporarily if any block fails to write", test_write_bad_io_stops_flush);
+	T("invalidate-not-present", "invalidate a block that isn't in the cache", test_invalidate_not_present);
+	T("invalidate-present", "invalidate a block that is in the cache", test_invalidate_present);
+	T("invalidate-error", "invalidate a block that errored", test_invalidate_after_error);
 
 	return ts;
 }
