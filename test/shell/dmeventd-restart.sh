@@ -24,6 +24,9 @@ lvchange --monitor y $vg/4way
 lvcreate -aey --type mirror -m 2 --nosync --ignoremonitoring -l1 -n 3way $vg
 lvchange --monitor y $vg/3way
 
+lvcreate -aey -l1 -n $lv1 $vg
+lvcreate -s -l1 -n $lv2 $vg/$lv1
+
 dmeventd -R -f &
 echo $! >LOCAL_DMEVENTD
 sleep 2 # wait a bit, so we talk to the new dmeventd later
@@ -48,6 +51,9 @@ rm LOCAL_DMEVENTD
 
 lvchange --monitor y --verbose $vg/3way 2>&1 | tee lvchange.out
 pgrep -o dmeventd >LOCAL_DMEVENTD
+not grep 'already monitored' lvchange.out
+
+lvchange --monitor y --verbose $vg/$lv2 2>&1 | tee lvchange.out
 not grep 'already monitored' lvchange.out
 
 vgremove -ff $vg
