@@ -214,6 +214,8 @@ ifeq ("$(TESTING)", "yes")
 include test/unit/Makefile
 endif
 
+include device-mapper/Makefile
+
 ifneq ($(shell which ctags),)
 .PHONY: tags
 tags:
