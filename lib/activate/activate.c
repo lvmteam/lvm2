@@ -1857,6 +1857,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 	int (*monitor_fn) (struct lv_segment *s, int e);
 	uint32_t s;
 	static const struct lv_activate_opts zlaopts = { 0 };
+	struct lv_activate_opts mirr_laopts = { .origin_only = 1 };
 	struct lvinfo info;
 	const char *dso = NULL;
 	int new_unmonitor;
@@ -2056,6 +2057,19 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 			}
 		} else
 			continue;
+
+		if (!vg_write_lock_held() && lv_is_mirror(lv)) {
+			mirr_laopts.exclusive = lv_is_active_exclusive_locally(lv) ? 1 : 0;
+			/*
+			 * Commands vgchange and lvchange do use read-only lock when changing
+			 * monitoring (--monitor y|n). All other use cases hold 'write-lock'
+			 * so they skip this dm mirror table refreshing step.
+			 */
+			if (!_lv_activate_lv(lv, &mirr_laopts)) {
+				stack;
+				r = 0;
+			}
+		}
 
 		/* Check [un]monitor results */
 		/* Try a couple times if pending, but not forever... */

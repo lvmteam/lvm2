@@ -442,19 +442,20 @@ teardown_devs_prefixed() {
 			# HACK: sort also by minors - so we try to close 'possibly later' created device first
 			test "$i" = 0 || sortby="-minor"
 
-			for dm in $(dm_info name,open --separator ';'  --nameprefixes --sort open,"$sortby" -S "name=~$prefix") ; do
+			for dm in $(dm_info name,open --separator ';'  --nameprefixes --unquoted --sort open,"$sortby" -S "name=~$prefix" --mangle none || true) ; do
 				test "$dm" != "No devices found" || break 2
-				eval "$dm"
-
+				DM_NAME=${dm##DM_NAME=}
+				DM_NAME=${DM_NAME%%;DM_OPEN*}
+				DM_OPEN=${dm##*;DM_OPEN=}
 				if test "$i" = 0; then
 					if test "$once" = 1 ; then
 						once=0
 						echo "## removing stray mapped devices with names beginning with $prefix: "
 					fi
 					test "$DM_OPEN" = 0 || break  # stop loop with 1st. opened device
-					dmsetup remove "$DM_NAME" &>/dev/null || touch REMOVE_FAILED &
+					dmsetup remove "$DM_NAME" --mangle none || true # &>/dev/null || touch REMOVE_FAILED &
 				else
-					dmsetup remove -f "$DM_NAME" || true
+					dmsetup remove -f "$DM_NAME" --mangle none || true
 				fi
 
 				num_devs=$(( num_devs + 1 ))

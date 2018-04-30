@@ -1603,10 +1603,6 @@ static int _lvchange_monitor_poll_single(struct cmd_context *cmd,
 				         struct logical_volume *lv,
 				         struct processing_handle *handle)
 {
-	/* Mirror is using different table line when un/monitored */
-	if (lv_is_mirror(lv) && !lv_refresh(cmd, lv))
-		return_ECMD_FAILED;
-
 	if (arg_is_set(cmd, monitor_ARG) &&
 	    !_lvchange_monitoring(cmd, lv))
 		return_ECMD_FAILED;
