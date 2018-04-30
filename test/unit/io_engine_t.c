@@ -46,8 +46,8 @@ static void *_fix_init(void)
         T_ASSERT(f);
         f->e = create_async_io_engine();
         T_ASSERT(f->e);
-        f->data = aligned_alloc(4096, SECTOR_SIZE * BLOCK_SIZE_SECTORS);
-        T_ASSERT(f->data);
+	if (posix_memalign(&f->data, 4096, SECTOR_SIZE * BLOCK_SIZE_SECTORS))
+        	test_fail("posix_memalign failed");
 
         snprintf(f->fname, sizeof(f->fname), "unit-test-XXXXXX");
 	f->fd = mkostemp(f->fname, O_RDWR | O_CREAT | O_EXCL);
