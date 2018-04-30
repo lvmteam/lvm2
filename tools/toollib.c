@@ -1569,7 +1569,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 			if (!(label = lvmcache_get_dev_label(devl->dev)))
 				continue;
 
-			log_set_report_object_name_and_id(dev_name(dev), NULL);
+			log_set_report_object_name_and_id(dev_name(devl->dev), NULL);
 
 			ret = process_single_label(cmd, label, handle);
 			report_log_ret_code(ret);
