@@ -4282,6 +4282,11 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			return correct_vg;
 		}
 
+		if (cmd->is_clvmd) {
+			_free_pv_list(&all_pvs);
+			return correct_vg;
+		}
+
 		if (skipped_rescan) {
 			log_warn("Not repairing metadata for VG %s.", vgname);
 			_free_pv_list(&all_pvs);
@@ -4335,7 +4340,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	}
 
 	/* We have the VG now finally, check if PV ext info is in sync with VG metadata. */
-	if (!_check_or_repair_pv_ext(cmd, correct_vg,
+	if (!cmd->is_clvmd && !_check_or_repair_pv_ext(cmd, correct_vg,
 				     skipped_rescan ? 0 : *consistent,
 				     &inconsistent_pvs)) {
 		release_vg(correct_vg);
@@ -4344,7 +4349,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 	*consistent = !inconsistent_pvs;
 
-	if (correct_vg && *consistent && !skipped_rescan) {
+	if (!cmd->is_clvmd && correct_vg && *consistent && !skipped_rescan) {
 		if (update_old_pv_ext && !_vg_update_old_pv_ext_if_needed(correct_vg)) {
 			release_vg(correct_vg);
 			return_NULL;
