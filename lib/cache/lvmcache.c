@@ -360,7 +360,8 @@ struct volume_group *lvmcache_get_saved_vg(const char *vgid, int precommitted)
 		/* Do we need to actually set saved_vg_old to match saved_vg_new?
 		 * By just dropping old, we force a subsequent request for old to
 		 * reread it rather than just using new. */
-		if (vginfo->saved_vg_old) {
+
+		if (vginfo->saved_vg_old && (vginfo->saved_vg_old < vg->seqno)) {
 			log_debug_cache("lvmcache: drop saved_vg_old because new invalidates");
 			_saved_vg_free(vginfo, 1, 0);
 		}
@@ -425,7 +426,8 @@ struct volume_group *lvmcache_get_saved_vg_latest(const char *vgid)
 		/* Do we need to actually set saved_vg_old to match saved_vg_new?
 		 * By just dropping old, we force a subsequent request for old to
 		 * reread it rather than just using new. */
-		if (vginfo->saved_vg_old) {
+
+		if (vginfo->saved_vg_old && (vginfo->saved_vg_old->seqno < vg->seqno)) {
 			log_debug_cache("lvmcache: drop saved_vg_old because new invalidates");
 			_saved_vg_free(vginfo, 1, 0);
 		}
