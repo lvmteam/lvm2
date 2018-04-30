@@ -2199,12 +2199,7 @@ lib/Makefile
 lib/format1/Makefile
 lib/format_pool/Makefile
 lib/locking/Makefile
-lib/mirror/Makefile
 include/lvm-version.h
-lib/raid/Makefile
-lib/snapshot/Makefile
-lib/thin/Makefile
-lib/cache_segtype/Makefile
 libdaemon/Makefile
 libdaemon/client/Makefile
 libdaemon/server/Makefile
