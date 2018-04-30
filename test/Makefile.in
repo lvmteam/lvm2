@@ -275,9 +275,6 @@ lib/flavour-%: $(srcdir)/lib/flavour-%.sh .lib-dir-stamp
 
 lib/paths-common: $(srcdir)/Makefile.in .lib-dir-stamp Makefile
 	echo 'DM_UDEV_SYNCHRONISATION=$(dm_udev_synchronisation)' >> $@-t
-	echo 'THIN=@THIN@' >> $@-t
-	echo 'RAID=@RAID@' >> $@-t
-	echo 'CACHE=@CACHE@' >> $@-t
 	echo 'LVMETAD_PIDFILE="@LVMETAD_PIDFILE@"' >> $@-t
 	echo 'LVMPOLLD_PIDFILE="@LVMPOLLD_PIDFILE@"' >> $@-t
 	echo 'DMEVENTD_PIDFILE="@DMEVENTD_PIDFILE@"' >> $@-t

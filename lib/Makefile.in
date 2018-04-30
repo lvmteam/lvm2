@@ -24,26 +24,6 @@ ifeq ("@POOL@", "shared")
   SUBDIRS += format_pool
 endif
 
-ifeq ("@SNAPSHOTS@", "shared")
-  SUBDIRS += snapshot
-endif
-
-ifeq ("@MIRRORS@", "shared")
-  SUBDIRS += mirror
-endif
-
-ifeq ("@RAID@", "shared")
-  SUBDIRS += raid
-endif
-
-ifeq ("@THIN@", "shared")
-  SUBDIRS += thin
-endif
-
-ifeq ("@CACHE@", "shared")
-  SUBDIRS += cache_segtype
-endif
-
 ifeq ("@CLUSTER@", "shared")
   SUBDIRS += locking
 endif
@@ -51,6 +31,7 @@ endif
 SOURCES =\
 	activate/activate.c \
 	cache/lvmcache.c \
+	cache_segtype/cache.c \
 	commands/toolcontext.c \
 	config/config.c \
 	datastruct/btree.c \
@@ -108,6 +89,7 @@ SOURCES =\
 	metadata/snapshot_manip.c \
 	metadata/thin_manip.c \
 	metadata/vg.c \
+	mirror/mirrored.c \
 	misc/crc.c \
 	misc/lvm-exec.c \
 	misc/lvm-file.c \
@@ -121,9 +103,12 @@ SOURCES =\
 	mm/memlock.c \
 	notify/lvmnotify.c \
 	properties/prop_common.c \
+	raid/raid.c \
 	report/properties.c \
 	report/report.c \
+	snapshot/snapshot.c \
 	striped/striped.c \
+	thin/thin.c \
 	uuid/uuid.c \
 	zero/zero.c
 
@@ -148,26 +133,6 @@ endif
 
 ifeq ("@CLUSTER@", "internal")
   SOURCES += locking/cluster_locking.c
-endif
-
-ifeq ("@SNAPSHOTS@", "internal")
-  SOURCES += snapshot/snapshot.c
-endif
-
-ifeq ("@MIRRORS@", "internal")
-  SOURCES += mirror/mirrored.c
-endif
-
-ifeq ("@RAID@", "internal")
-  SOURCES += raid/raid.c
-endif
-
-ifeq ("@THIN@", "internal")
-  SOURCES += thin/thin.c
-endif
-
-ifeq ("@CACHE@", "internal")
-  SOURCES += cache_segtype/cache.c
 endif
 
 ifeq ("@DEVMAPPER@", "yes")
@@ -204,12 +169,7 @@ ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS =\
 	format1 \
 	format_pool \
-	snapshot \
-	mirror \
 	notify \
-	raid \
-	thin \
-	cache_segtype \
 	locking
 endif
 

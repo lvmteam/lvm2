@@ -64,7 +64,6 @@ ifeq ($(MAN_ALL),"yes")
   MAN8+=$(FSADMMAN) $(LVMETADMAN) $(LVMPOLLDMAN) $(LVMLOCKDMAN) $(LVMDBUSDMAN)
   MAN8DM+=$(BLKDEACTIVATEMAN) $(DMEVENTDMAN) $(DMFILEMAPDMAN)
   MAN8CLUSTER+=$(CLVMDMAN) $(CMIRRORDMAN)
-  MAN7+=$(LVMCACHEMAN) $(LVMTHINMAN) $(LVMRAIDMAN)
 else
   ifeq ("@FSADM@", "yes")
     MAN8+=$(FSADMMAN)
@@ -105,20 +104,9 @@ else
   ifeq ("@BUILD_CMIRRORD@", "yes")
     MAN8CLUSTER+=$(CMIRRORDMAN)
   endif
-
-  ifneq ("@CACHE@", "none")
-    MAN7+=$(LVMCACHEMAN)
-  endif
-
-  ifneq ("@THIN@", "none")
-    MAN7+=$(LVMTHINMAN)
-  endif
-
-  ifneq ("@RAID@", "none")
-    MAN7+=$(LVMRAIDMAN)
-  endif
 endif
 
+MAN7+=$(LVMCACHEMAN) $(LVMTHINMAN) $(LVMRAIDMAN)
 MAN5DIR=$(mandir)/man5
 MAN7DIR=$(mandir)/man7
 MAN8DIR=$(mandir)/man8
