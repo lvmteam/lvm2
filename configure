@@ -653,7 +653,6 @@ UDEV_RULES
 UDEV_PC
 THIN
 TESTSUITE_DATA
-TESTING
 STATIC_LINK
 STATICDIR
 SNAPSHOTS
@@ -950,7 +949,6 @@ with_cmirrord_pidfile
 enable_debug
 with_optimisation
 enable_profiling
-enable_testing
 enable_valgrind_pool
 enable_devmapper
 enable_lvmetad
@@ -1697,7 +1695,6 @@ Optional Features:
   --enable-cmirrord       enable the cluster mirror log daemon
   --enable-debug          enable debugging
   --enable-profiling      gather gcov profiling data
-  --enable-testing        enable testing targets in the makefile
   --enable-valgrind-pool  enable valgrind awareness of pools
   --disable-devmapper     disable LVM2 device-mapper interaction
   --enable-lvmetad        enable the LVM Metadata Daemon
@@ -11598,19 +11595,6 @@ $as_echo "$as_me: WARNING: GD.pm perl module is not installed" >&2;}
 fi
 
 ################################################################################
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable unit testing" >&5
-$as_echo_n "checking whether to enable unit testing... " >&6; }
-# Check whether --enable-testing was given.
-if test "${enable_testing+set}" = set; then :
-  enableval=$enable_testing; TESTING=$enableval
-else
-  TESTING=no
-fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $TESTING" >&5
-$as_echo "$TESTING" >&6; }
-
-################################################################################
 TESTSUITE_DATA='${datarootdir}/lvm2-testsuite'
 # double eval needed ${datarootdir} -> ${prefix}/share -> real path
 
@@ -15525,7 +15509,6 @@ _ACEOF
 
 
 ################################################################################
-
 
 
 

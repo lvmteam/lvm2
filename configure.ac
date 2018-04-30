@@ -1068,15 +1068,6 @@ if test "$PROFILING" = yes; then
 fi
 
 ################################################################################
-dnl -- Enable testing
-AC_MSG_CHECKING(whether to enable unit testing)
-AC_ARG_ENABLE(testing,
-	      AC_HELP_STRING([--enable-testing],
-			     [enable testing targets in the makefile]),
-	      TESTING=$enableval, TESTING=no)
-AC_MSG_RESULT($TESTING)
-
-################################################################################
 dnl -- Set LVM2 testsuite data
 TESTSUITE_DATA='${datarootdir}/lvm2-testsuite'
 # double eval needed ${datarootdir} -> ${prefix}/share -> real path
@@ -2123,7 +2114,6 @@ AC_SUBST(SYSTEMD_LIBS)
 AC_SUBST(SNAPSHOTS)
 AC_SUBST(STATICDIR)
 AC_SUBST(STATIC_LINK)
-AC_SUBST(TESTING)
 AC_SUBST(TESTSUITE_DATA)
 AC_SUBST(THIN)
 AC_SUBST(THIN_CHECK_CMD)

@@ -210,9 +210,7 @@ endif
 
 endif
 
-ifeq ("$(TESTING)", "yes")
 include test/unit/Makefile
-endif
 
 ifneq ($(shell which ctags),)
 .PHONY: tags
