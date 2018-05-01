@@ -306,10 +306,12 @@ LIB_VERSION_DM := $(shell $(AWK) -F '.' '{printf "%s.%s",$$1,$$2}' $(top_srcdir)
 
 LIB_VERSION_APP := $(shell $(AWK) -F '[(). ]' '{printf "%s.%s",$$1,$$4}' $(top_srcdir)/VERSION)
 
-INCLUDES += -I$(srcdir) -I$(top_srcdir)/include -I$(top_builddir)/include
+INCLUDES += -I$(srcdir) -I$(top_builddir)/include
+
+INC_LNS = $(top_builddir)/include/.symlinks_created
 
 DEPS = $(top_builddir)/make.tmpl $(top_srcdir)/VERSION \
-       $(top_builddir)/Makefile
+       $(top_builddir)/Makefile $(INC_LNS)
 
 OBJECTS = $(SOURCES:%.c=%.o) $(CXXSOURCES:%.cpp=%.o)
 POTFILES = $(SOURCES:%.c=%.pot)
@@ -504,9 +506,9 @@ $(LIB_STATIC): $(OBJECTS)
 	$(Q) $(RM) $@
 	$(Q) $(AR) rsv $@ $(OBJECTS) > /dev/null
 
-%.d: ;
+%.d: $(INC_LNS)
 .PRECIOUS: %.d
-
+	
 %.mo: %.po
 	@echo "    [MSGFMT] $<"
 	$(Q) $(MSGFMT) -o $@ $<
