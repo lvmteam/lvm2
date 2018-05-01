@@ -68,10 +68,6 @@ vgcreate $vg "$dev1" "$dev2"
 not vgcreate $vg "$dev1" "$dev2"
 vgremove -ff $vg
 
-#COMM 'vgcreate rejects MaxLogicalVolumes > 255'
-not vgcreate --metadatatype 1 --maxlogicalvolumes 1024 $vg "$dev1" "$dev2" 2>err
-grep "Number of volumes may not exceed 255" err
-
 #COMM "vgcreate fails when the only pv has --metadatacopies 0"
 not vgcreate $vg "$dev3"
 
