@@ -100,6 +100,16 @@ static void _expect_read(struct mock_engine *e, int fd, block_address b)
 	dm_list_add(&e->expected_calls, &mc->list);
 }
 
+static void _expect_read_any(struct mock_engine *e)
+{
+	struct mock_call *mc = malloc(sizeof(*mc));
+	mc->m = E_ISSUE;
+	mc->match_args = false;
+	mc->issue_r = true;
+	mc->wait_r = true;
+	dm_list_add(&e->expected_calls, &mc->list);
+}
+
 static void _expect_write(struct mock_engine *e, int fd, block_address b)
 {
 	struct mock_call *mc = malloc(sizeof(*mc));
@@ -466,7 +476,7 @@ static void test_block_gets_evicted_with_many_reads(void *context)
 	// Now if we run through we should find one block has been
 	// evicted.  We go backwards because the oldest is normally
 	// evicted first.
-	_expect(me, E_ISSUE);
+	_expect_read_any(me);
 	_expect(me, E_WAIT);
 	for (i = nr_cache_blocks; i; i--) {
 		T_ASSERT(bcache_get(cache, fd, i - 1, 0, &b, &err));
