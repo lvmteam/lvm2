@@ -428,6 +428,13 @@ static void test_get_triggers_read(void *context)
 	_expect(f->me, E_WAIT);
 	T_ASSERT(bcache_get(f->cache, fd, 0, 0, &b, &err));
 	bcache_put(b);
+
+	_expect_read(f->me, fd, 1);
+	_expect(f->me, E_WAIT);
+	T_ASSERT(bcache_get(f->cache, fd, 1, GF_DIRTY, &b, &err));
+	_expect_write(f->me, fd, 1);
+	_expect(f->me, E_WAIT);
+	bcache_put(b);
 }
 
 static void test_repeated_reads_are_cached(void *context)

@@ -1056,6 +1056,9 @@ static off_t _min(off_t lhs, off_t rhs)
 	return lhs;
 }
 
+// These functions are all utilities, they should only use the public
+// interface to bcache.
+// FIXME: there's common code that can be factored out of these 3
 bool bcache_read_bytes(struct bcache *cache, int fd, off_t start, size_t len, void *data)
 {
 	struct block *b;
@@ -1070,7 +1073,7 @@ bool bcache_read_bytes(struct bcache *cache, int fd, off_t start, size_t len, vo
 
 	for (i = bb; i < be; i++) {
 		if (!bcache_get(cache, fd, i, 0, &b, NULL)) {
-			log_error("bcache_read failed to get block %u fd %d bb %u be %u",
+			log_error("bcache_read_bytes failed to get block %u fd %d bb %u be %u",
 				  (uint32_t)i, fd, (uint32_t)bb, (uint32_t)be);
 			errors++;
 			continue;
@@ -1108,11 +1111,11 @@ bool bcache_write_bytes(struct bcache *cache, int fd, off_t start, size_t len, v
 		bcache_prefetch(cache, fd, i);
 
 	for (i = bb; i < be; i++) {
-		if (!bcache_get(cache, fd, i, 0, &b, NULL)) {
-			log_error("bcache_write failed to get block %u fd %d bb %u be %u",
+		if (!bcache_get(cache, fd, i, GF_DIRTY, &b, NULL)) {
+			log_error("bcache_write_bytes failed to get block %u fd %d bb %u be %u",
 				  (uint32_t)i, fd, (uint32_t)bb, (uint32_t)be);
 			errors++;
-			break;
+			continue;
 		}
 
 		if (i == bb) {
@@ -1128,49 +1131,46 @@ bool bcache_write_bytes(struct bcache *cache, int fd, off_t start, size_t len, v
 			udata += blen;
 		}
 
-		_set_flags(b, BF_DIRTY);
-		_unlink_block(b);
-		_link_block(b);
-		_put_ref(b);
+		bcache_put(b);
 	}
-
-	if (!bcache_flush(cache))
-		errors++;
 
 	return errors ? false : true;
 }
 
-#define ZERO_BUF_LEN 4096
-
 bool bcache_write_zeros(struct bcache *cache, int fd, off_t start, size_t len)
 {
-	char zerobuf[ZERO_BUF_LEN];
-	size_t plen;
-	size_t poff;
+	struct block *b;
+	block_address bb, be, i;
+	off_t block_size = cache->block_sectors << SECTOR_SHIFT;
+	int errors = 0;
 
-	memset(zerobuf, 0, sizeof(zerobuf));
+	byte_range_to_block_range(cache, start, len, &bb, &be);
+	for (i = bb; i < be; i++)
+		bcache_prefetch(cache, fd, i);
 
-	if (len <= ZERO_BUF_LEN)
-		return bcache_write_bytes(cache, fd, start, len, &zerobuf);
+	for (i = bb; i < be; i++) {
+		if (!bcache_get(cache, fd, i, GF_DIRTY, &b, NULL)) {
+			log_error("bcache_write_bytes failed to get block %u fd %d bb %u be %u",
+				  (uint32_t)i, fd, (uint32_t)bb, (uint32_t)be);
+			errors++;
+			continue;
+		}
 
-	poff = 0;
-	plen = ZERO_BUF_LEN;
+		if (i == bb) {
+			off_t block_offset = start % block_size;
+			size_t blen = _min(block_size - block_offset, len);
+			memset(((unsigned char *) b->data) + block_offset, 0, blen);
+			len -= blen;
+		} else {
+			size_t blen = _min(block_size, len);
+			memset(b->data, 0, blen);
+			len -= blen;
+		}
 
-	while (1) {
-		if (!bcache_write_bytes(cache, fd, start + poff, plen, &zerobuf))
-			return false;
-
-		poff += plen;
-		len -= plen;
-
-		if (!len)
-			break;
-
-		if (len < ZERO_BUF_LEN)
-			plen = len;
+		bcache_put(b);
 	}
 
-	return true;
+	return errors ? false : true;
 }
 
 

@@ -92,7 +92,7 @@ static void *_fix_init(void)
 	f->fd = mkostemp(f->fname, O_RDWR | O_CREAT | O_EXCL);
 	T_ASSERT(f->fd >= 0);
 
-	_fill_buffer(f->data, 123, sizeof(f->data));
+	_fill_buffer(f->data, 123, SECTOR_SIZE * BLOCK_SIZE_SECTORS);
 
 	write(f->fd, f->data, SECTOR_SIZE * BLOCK_SIZE_SECTORS);
 	lseek(f->fd, 0, SEEK_SET);
@@ -198,8 +198,8 @@ static struct test_suite *_tests(void)
         }
 
         T("create-destroy", "simple create/destroy", _test_create);
-        T("create-read", "read sanity check", _test_read);
-        T("create-write", "write sanity check", _test_write);
+        T("read", "read sanity check", _test_read);
+        T("write", "write sanity check", _test_write);
         T("bcache-write-bytes", "test the utility fns", _test_write_bytes);
 
         return ts;
