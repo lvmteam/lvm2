@@ -412,7 +412,7 @@ static void test_block_size_must_be_multiple_of_page_size(void *fixture)
 	for (i = 0; i < DM_ARRAY_SIZE(_bad_examples); i++)
 		bad_create(_bad_examples[i], 16);
 
-	for (i = 1; i < 1000; i++)
+	for (i = 1; i < 100; i++)
 		good_create(i * 8, 16);
 }
 
