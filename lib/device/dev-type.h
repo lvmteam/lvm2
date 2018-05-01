@@ -62,6 +62,9 @@ int dev_is_luks(struct device *dev, uint64_t *signature);
 int dasd_is_cdl_formatted(struct device *dev);
 int udev_dev_is_mpath_component(struct device *dev);
 
+int dev_is_lvm1(struct device *dev, char *buf, int buflen);
+int dev_is_pool(struct device *dev, char *buf, int buflen);
+
 /* Signature wiping. */
 #define TYPE_LVM1_MEMBER	0x001
 #define TYPE_LVM2_MEMBER	0x002

@@ -1134,6 +1134,13 @@ static struct dev_filter *_init_lvmetad_filter_chain(struct cmd_context *cmd)
 	}
 	nr_filt++;
 
+	/* signature filter. Required. */
+	if (!(filters[nr_filt] = signature_filter_create(cmd->dev_types))) {
+		log_error("Failed to create signature device filter");
+		goto bad;
+	}
+	nr_filt++;
+
 	/* md component filter. Optional, non-critical. */
 	if (find_config_tree_bool(cmd, devices_md_component_detection_CFG, NULL)) {
 		init_md_filtering(1);

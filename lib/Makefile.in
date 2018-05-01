@@ -37,6 +37,7 @@ SOURCES =\
 	device/dev-type.c \
 	device/dev-luks.c \
 	device/dev-dasd.c \
+	device/dev-lvm1-pool.c \
 	display/display.c \
 	error/errseg.c \
 	unknown/unknown.c \
@@ -51,6 +52,7 @@ SOURCES =\
 	filters/filter-type.c \
 	filters/filter-usable.c \
 	filters/filter-internal.c \
+	filters/filter-signature.c \
 	format_text/archive.c \
 	format_text/archiver.c \
 	format_text/export.c \
