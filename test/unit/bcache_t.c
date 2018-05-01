@@ -834,9 +834,9 @@ static void test_invalidate_held_block(void *context)
  *--------------------------------------------------------------*/
 #define T(path, desc, fn) register_test(ts, "/base/device/bcache/" path, desc, fn)
 
-static struct test_suite *_small_tests(void)
+static struct test_suite *_tiny_tests(void)
 {
-	struct test_suite *ts = test_suite_create(_small_fixture_init, _small_fixture_exit);
+	struct test_suite *ts = test_suite_create(NULL, NULL);
 	if (!ts) {
 		fprintf(stderr, "out of memory\n");
 		exit(1);
@@ -846,6 +846,18 @@ static struct test_suite *_small_tests(void)
 	T("cache-blocks-positive", "nr cache blocks must be positive", test_nr_cache_blocks_must_be_positive);
 	T("block-size-positive", "block size must be positive", test_block_size_must_be_positive);
 	T("block-size-multiple-page", "block size must be a multiple of page size", test_block_size_must_be_multiple_of_page_size);
+
+	return ts;
+}
+
+static struct test_suite *_small_tests(void)
+{
+	struct test_suite *ts = test_suite_create(_small_fixture_init, _small_fixture_exit);
+	if (!ts) {
+		fprintf(stderr, "out of memory\n");
+		exit(1);
+	}
+
 	T("get-reads", "bcache_get() triggers read", test_get_triggers_read);
 	T("reads-cached", "repeated reads are cached", test_repeated_reads_are_cached);
 	T("blocks-get-evicted", "block get evicted with many reads", test_block_gets_evicted_with_many_reads);
@@ -884,6 +896,7 @@ static struct test_suite *_large_tests(void)
 
 void bcache_tests(struct dm_list *all_tests)
 {
+        dm_list_add(all_tests, &_tiny_tests()->list);
 	dm_list_add(all_tests, &_small_tests()->list);
 	dm_list_add(all_tests, &_large_tests()->list);
 }
