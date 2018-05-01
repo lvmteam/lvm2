@@ -22,8 +22,6 @@
 #include "memlock.h"
 #include "str_list.h"
 #include "format-text.h"
-#include "format_pool.h"
-#include "format1.h"
 #include "config.h"
 
 #include "lvmetad.h"
@@ -360,7 +358,8 @@ struct volume_group *lvmcache_get_saved_vg(const char *vgid, int precommitted)
 		/* Do we need to actually set saved_vg_old to match saved_vg_new?
 		 * By just dropping old, we force a subsequent request for old to
 		 * reread it rather than just using new. */
-		if (vginfo->saved_vg_old) {
+
+		if (vginfo->saved_vg_old && (vginfo->saved_vg_old < vg->seqno)) {
 			log_debug_cache("lvmcache: drop saved_vg_old because new invalidates");
 			_saved_vg_free(vginfo, 1, 0);
 		}
@@ -425,7 +424,8 @@ struct volume_group *lvmcache_get_saved_vg_latest(const char *vgid)
 		/* Do we need to actually set saved_vg_old to match saved_vg_new?
 		 * By just dropping old, we force a subsequent request for old to
 		 * reread it rather than just using new. */
-		if (vginfo->saved_vg_old) {
+
+		if (vginfo->saved_vg_old && (vginfo->saved_vg_old->seqno < vg->seqno)) {
 			log_debug_cache("lvmcache: drop saved_vg_old because new invalidates");
 			_saved_vg_free(vginfo, 1, 0);
 		}
@@ -479,8 +479,6 @@ void lvmcache_drop_metadata(const char *vgname, int drop_precommitted)
 	/* For VG_ORPHANS, we need to invalidate all labels on orphan PVs. */
 	if (!strcmp(vgname, VG_ORPHANS)) {
 		_drop_metadata(FMT_TEXT_ORPHAN_VG_NAME, 0);
-		_drop_metadata(FMT_LVM1_ORPHAN_VG_NAME, 0);
-		_drop_metadata(FMT_POOL_ORPHAN_VG_NAME, 0);
 	} else
 		_drop_metadata(vgname, drop_precommitted);
 }

@@ -1802,11 +1802,6 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 		return 0;
 	}
 
-	if (!(vg->fid->fmt->features & FMT_MDAS)) {
-		log_error("Unable to split off snapshot %s using old LVM1-style metadata.", cow_name);
-		return 0;
-	}
-
 	if (is_lockd_type(vg->lock_type)) {
 		/* FIXME: we need to create a lock for the new LV. */
 		log_error("Unable to split snapshots in VG with lock_type %s.", vg->lock_type);

@@ -1207,8 +1207,7 @@ arg(mirrors_ARG, 'm', "mirrors", number_VAL, 0, 0,
 arg(metadatatype_ARG, 'M', "metadatatype", metadatatype_VAL, 0, 0,
     "Specifies the type of on-disk metadata to use.\n"
     "\\fBlvm2\\fP (or just \\fB2\\fP) is the current, standard format.\n"
-    "\\fBlvm1\\fP (or just \\fB1\\fP) is a historical format that\n"
-    "can be used for accessing old data.\n")
+    "\\fBlvm1\\fP (or just \\fB1\\fP) is no longer used.\n")
 
 arg(name_ARG, 'n', "name", string_VAL, 0, 0,
     "#lvcreate\n"

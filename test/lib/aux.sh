@@ -1472,10 +1472,6 @@ driver_at_least() {
 }
 
 have_thin() {
-	test "$THIN" = shared -o "$THIN" = internal || {
-		echo "Thin is not built-in." >&2
-		return 1;
-	}
 	target_at_least dm-thin-pool "$@"
 
 	declare -a CONF=()

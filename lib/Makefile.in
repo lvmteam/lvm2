@@ -16,14 +16,6 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
-ifeq ("@LVM1@", "shared")
-  SUBDIRS = format1
-endif
-
-ifeq ("@POOL@", "shared")
-  SUBDIRS += format_pool
-endif
-
 ifeq ("@CLUSTER@", "shared")
   SUBDIRS += locking
 endif
@@ -112,25 +104,6 @@ SOURCES =\
 	uuid/uuid.c \
 	zero/zero.c
 
-ifeq ("@LVM1@", "internal")
-  SOURCES +=\
-	format1/disk-rep.c \
-	format1/format1.c \
-	format1/import-export.c \
-	format1/import-extents.c \
-	format1/layout.c \
-	format1/lvm1-label.c \
-	format1/vg_number.c
-endif
-
-ifeq ("@POOL@", "internal")
-  SOURCES +=\
-	format_pool/disk_rep.c \
-	format_pool/format_pool.c \
-	format_pool/import_export.c \
-	format_pool/pool_label.c
-endif
-
 ifeq ("@CLUSTER@", "internal")
   SOURCES += locking/cluster_locking.c
 endif
@@ -167,8 +140,6 @@ LIB_STATIC = $(LIB_NAME).a
 
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS =\
-	format1 \
-	format_pool \
 	notify \
 	locking
 endif

@@ -37,19 +37,6 @@
 
 #define _skip(fmt, args...) log_very_verbose("Skipping: " fmt , ## args)
 
-int lvm1_present(struct cmd_context *cmd)
-{
-	static char path[PATH_MAX];
-
-	if (dm_snprintf(path, sizeof(path), "%s/lvm/global", cmd->proc_dir)
-	    < 0) {
-		log_error("LVM1 proc global snprintf failed");
-		return 0;
-	}
-
-	return (path_exists(path)) ? 1 : 0;
-}
-
 int list_segment_modules(struct dm_pool *mem, const struct lv_segment *seg,
 			 struct dm_list *modules)
 {

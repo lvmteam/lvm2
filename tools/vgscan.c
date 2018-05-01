@@ -44,7 +44,7 @@ static int _vgscan_single(struct cmd_context *cmd, const char *vg_name,
  * display the VG info.
  *
  * iii. If lvmetad is being used, but has been disabled (because of
- * duplicate devs or lvm1 metadata), or has a non-matching token
+ * duplicate devs), or has a non-matching token
  * (because the device filter is different from the device filter last
  * used to populate lvmetad), then 'vgscan' will begin by rescanning
  * devices to repopulate lvmetad.  If lvmetad is enabled after the
@@ -57,7 +57,7 @@ static int _vgscan_single(struct cmd_context *cmd, const char *vg_name,
  * the lvmetad cache by rescanning all devs (regardless of whether
  * lvmetad was previously disabled or had an unmatching token.)
  * lvmetad may be enabled or disabled after the rescan (depending
- * on whether duplicate devs or lvm1 metadata was found).
+ * on whether duplicate devs were found).
  * If enabled, then it will simply read and display VG info from the
  * lvmetad cache (like case 1.i.).  If disabled, then it will
  * read all devices to display VG info (like case 1.ii.)
