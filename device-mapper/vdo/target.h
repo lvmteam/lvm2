@@ -42,7 +42,7 @@ enum vdo_index_state {
 };
 
 struct vdo_status {
-	const char *device;
+	char *device;
 	enum vdo_operating_mode operating_mode;
 	bool recovering;
 	enum vdo_index_state index_state;
