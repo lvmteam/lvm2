@@ -444,6 +444,9 @@ endif
 
 DEPFLAGS=-MT $@ -MMD -MP -MF $*.d
 
+# still needed in 2018 for 32bit builds
+DEFS+=-D_FILE_OFFSET_BITS=64
+
 %.o: %.c
 	@echo "    [CC] $<"
 	$(Q) $(CC) $(DEPFLAGS) -c $(INCLUDES) $(VALGRIND_CFLAGS) $(PROGS_CFLAGS) $(DEFS) $(DEFS_$@) $(WFLAGS) $(WCFLAGS) $(CFLAGS) $(CFLAGS_$@) $< -o $@
