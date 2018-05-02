@@ -74,18 +74,20 @@ static void test_matching(void *fixture)
 
 static void test_kabi_query(void *fixture)
 {
+        // Remember, matches regexes from last to first.
         static const char *_patterns[] = {
-                "loop", "/dev/md.*", ".*"
+                ".*", ".*/dev/md.*", "loop"
         };
 
         static struct {
                 const char *input;
                 int r;
         } _cases[] = {
-		{"foo", 2},
-		{"/dev/mapper/vg-lvol1", 2},
-		{"/dev/mapper/vglvol1", 2},
-		{"loop", 0},
+		{"foo", 0},
+		{"/dev/mapper/vg-lvol1", 0},
+		{"/dev/mapper/vglvol1", 0},
+		{"/dev/md1", 1},
+		{"loop", 2},
         };
 
 	int r;
