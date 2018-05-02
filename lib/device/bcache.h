@@ -15,11 +15,11 @@
 #ifndef BCACHE_H
 #define BCACHE_H
 
+#include "libdevmapper.h"
+
 #include <linux/fs.h>
 #include <stdint.h>
 #include <stdbool.h>
-
-#include "libdevmapper.h"
 
 /*----------------------------------------------------------------*/
 
