@@ -14,6 +14,10 @@
 
 #define _GNU_SOURCE
 
+#include "bcache.h"
+#include "dm-logging.h"
+#include "log.h"
+
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -27,10 +31,6 @@
 #include <linux/fs.h>
 #include <sys/ioctl.h>
 #include <sys/user.h>
-
-#include "bcache.h"
-#include "dm-logging.h"
-#include "log.h"
 
 #define SECTOR_SHIFT 9L
 
