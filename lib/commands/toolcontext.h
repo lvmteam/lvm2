@@ -236,7 +236,7 @@ struct cmd_context {
  * system_dir may be NULL to use the default value.
  * The environment variable LVM_SYSTEM_DIR always takes precedence.
  */
-struct cmd_context *create_toolcontext(unsigned is_long_lived,
+struct cmd_context *create_toolcontext(unsigned is_clvmd,
 				       const char *system_dir,
 				       unsigned set_buffering,
 				       unsigned threaded,

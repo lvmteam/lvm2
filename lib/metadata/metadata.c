@@ -4599,7 +4599,7 @@ struct volume_group *vg_read_by_vgid(struct cmd_context *cmd,
 
 	if (!(vgname = lvmcache_vgname_from_vgid(cmd->mem, vgid))) {
 		log_debug_metadata("Reading VG by vgid %.8s no VG name found, retrying.", vgid);
-		lvmcache_destroy(cmd, 0, 0);
+		lvmcache_destroy(cmd, 1, 0);
 		label_scan_destroy(cmd);
 		lvmcache_label_scan(cmd);
 		warn_flags |= SKIP_RESCAN;
@@ -4630,7 +4630,7 @@ struct volume_group *vg_read_by_vgid(struct cmd_context *cmd,
 	return vg;
 
  scan:
-	lvmcache_destroy(cmd, 0, 0);
+	lvmcache_destroy(cmd, 1, 0);
 	label_scan_destroy(cmd);
 	lvmcache_label_scan(cmd);
 	warn_flags |= SKIP_RESCAN;
