@@ -36,14 +36,6 @@
 #include "sharedlib.h"
 #endif
 
-#ifdef LVM1_INTERNAL
-#include "format1.h"
-#endif
-
-#ifdef POOL_INTERNAL
-#include "format_pool.h"
-#endif
-
 #include <locale.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
@@ -1142,6 +1134,13 @@ static struct dev_filter *_init_lvmetad_filter_chain(struct cmd_context *cmd)
 	}
 	nr_filt++;
 
+	/* signature filter. Required. */
+	if (!(filters[nr_filt] = signature_filter_create(cmd->dev_types))) {
+		log_error("Failed to create signature device filter");
+		goto bad;
+	}
+	nr_filt++;
+
 	/* md component filter. Optional, non-critical. */
 	if (find_config_tree_bool(cmd, devices_md_component_detection_CFG, NULL)) {
 		init_md_filtering(1);
@@ -1339,20 +1338,6 @@ static int _init_formats(struct cmd_context *cmd)
 
 #ifdef HAVE_LIBDL
 	const struct dm_config_node *cn;
-#endif
-
-#ifdef LVM1_INTERNAL
-	if (!(fmt = init_lvm1_format(cmd)))
-		return 0;
-	fmt->library = NULL;
-	dm_list_add(&cmd->formats, &fmt->list);
-#endif
-
-#ifdef POOL_INTERNAL
-	if (!(fmt = init_pool_format(cmd)))
-		return 0;
-	fmt->library = NULL;
-	dm_list_add(&cmd->formats, &fmt->list);
 #endif
 
 #ifdef HAVE_LIBDL

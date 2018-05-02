@@ -18,4 +18,22 @@ top_builddir = @top_builddir@
 
 include $(top_builddir)/make.tmpl
 
-DISTCLEAN_TARGETS += configure.h lvm-version.h
+all: .symlinks_created
+
+LINKS := $(shell find . -maxdepth 1 -type l)
+
+.symlinks_created: .symlinks
+ifneq (,$(firstword $(LINKS)))
+	$(RM) $(LINKS)
+endif
+	for i in `cat $<`; do $(LN_S) $$i ; done
+	touch $@
+
+pofile: all
+
+device-mapper: all
+
+cflow: all
+
+DISTCLEAN_TARGETS += .symlinks configure.h lvm-version.h
+CLEAN_TARGETS += $(LINKS) .include_symlinks .symlinks_created

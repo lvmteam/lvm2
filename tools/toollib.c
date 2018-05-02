@@ -14,7 +14,6 @@
  */
 
 #include "tools.h"
-#include "format1.h"
 #include "format-text.h"
 
 #include <sys/stat.h>
@@ -1569,7 +1568,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 			if (!(label = lvmcache_get_dev_label(devl->dev)))
 				continue;
 
-			log_set_report_object_name_and_id(dev_name(dev), NULL);
+			log_set_report_object_name_and_id(dev_name(devl->dev), NULL);
 
 			ret = process_single_label(cmd, label, handle);
 			report_log_ret_code(ret);
@@ -4112,7 +4111,6 @@ static int _process_duplicate_pvs(struct cmd_context *cmd,
 		.fid = &dummy_fid,
 		.name = "",
 		.system_id = (char *) "",
-		.lvm1_system_id = (char *) "",
 		.pvs = DM_LIST_HEAD_INIT(dummy_vg.pvs),
 		.lvs = DM_LIST_HEAD_INIT(dummy_vg.lvs),
 		.historical_lvs = DM_LIST_HEAD_INIT(dummy_vg.historical_lvs),
@@ -4750,23 +4748,6 @@ int pvcreate_params_from_args(struct cmd_context *cmd, struct pvcreate_params *p
 	pp->pva.label_sector = arg_int64_value(cmd, labelsector_ARG,
 					       DEFAULT_LABELSECTOR);
 
-	if (!(cmd->fmt->features & FMT_MDAS) &&
-	    (arg_is_set(cmd, pvmetadatacopies_ARG) ||
-	     arg_is_set(cmd, metadatasize_ARG)   ||
-	     arg_is_set(cmd, dataalignment_ARG)  ||
-	     arg_is_set(cmd, dataalignmentoffset_ARG))) {
-		log_error("Metadata and data alignment parameters only "
-			  "apply to text format.");
-		return 0;
-	}
-
-	if (!(cmd->fmt->features & FMT_BAS) &&
-	    arg_is_set(cmd, bootloaderareasize_ARG)) {
-		log_error("Bootloader area parameters only "
-			  "apply to text format.");
-		return 0;
-	}
-
 	if (arg_is_set(cmd, metadataignore_ARG))
 		pp->pva.metadataignore = arg_int_value(cmd, metadataignore_ARG,
 						   DEFAULT_PVMETADATAIGNORE);
@@ -5126,10 +5107,7 @@ static int _pvcreate_check_single(struct cmd_context *cmd,
 			pd->is_orphan_pv = 1;
 		}
 
-		if (!strcmp(vg->name, FMT_LVM1_ORPHAN_VG_NAME))
-			pp->orphan_vg_name = FMT_LVM1_ORPHAN_VG_NAME;
-		else
-			pp->orphan_vg_name = FMT_TEXT_ORPHAN_VG_NAME;
+		pp->orphan_vg_name = FMT_TEXT_ORPHAN_VG_NAME;
 	} else {
 		log_debug("Found pvcreate arg %s: device is not a PV.", pd->name);
 		/* Device is not a PV. */
@@ -5358,10 +5336,7 @@ static int _pvremove_check_single(struct cmd_context *cmd,
 			pd->is_orphan_pv = 1;
 		}
 
-		if (!strcmp(vg->name, FMT_LVM1_ORPHAN_VG_NAME))
-			pp->orphan_vg_name = FMT_LVM1_ORPHAN_VG_NAME;
-		else
-			pp->orphan_vg_name = FMT_TEXT_ORPHAN_VG_NAME;
+		pp->orphan_vg_name = FMT_TEXT_ORPHAN_VG_NAME;
 	} else {
 		/* FIXME: is it possible to reach here? */
 		log_debug("Found pvremove arg %s: device is not a PV.", pd->name);

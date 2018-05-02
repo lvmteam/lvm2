@@ -149,7 +149,7 @@
 
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
-#define FMT_MDAS		0x00000002U	/* Proper metadata areas? */
+// #define FMT_MDAS		0x00000002U	/* Proper metadata areas? */
 #define FMT_TAGS		0x00000004U	/* Tagging? */
 #define FMT_UNLIMITED_VOLS	0x00000008U	/* Unlimited PVs/LVs? */
 #define FMT_RESTRICTED_LVIDS	0x00000010U	/* LVID <= 255 */
@@ -158,14 +158,12 @@
 #define FMT_RESIZE_PV		0x00000080U	/* Supports pvresize? */
 #define FMT_UNLIMITED_STRIPESIZE 0x00000100U	/* Unlimited stripe size? */
 #define FMT_RESTRICTED_READAHEAD 0x00000200U	/* Readahead restricted to 2-120? */
-#define FMT_BAS			0x000000400U	/* Supports bootloader areas? */
+// #define FMT_BAS			0x000000400U	/* Supports bootloader areas? */
 #define FMT_CONFIG_PROFILE	0x000000800U	/* Supports configuration profiles? */
-#define FMT_OBSOLETE		0x000001000U	/* Obsolete format? */
+// #define FMT_OBSOLETE		0x000001000U	/* Obsolete format? */
 #define FMT_NON_POWER2_EXTENTS	0x000002000U	/* Non-power-of-2 extent sizes? */
-#define FMT_SYSTEMID_ON_PVS	0x000004000U	/* System ID is stored on PVs not VG */
+// #define FMT_SYSTEMID_ON_PVS	0x000004000U	/* System ID is stored on PVs not VG */
 #define FMT_PV_FLAGS		0x000008000U	/* Supports PV flags */
-
-#define systemid_on_pvs(vg)	((vg)->fid->fmt->features & FMT_SYSTEMID_ON_PVS)
 
 /* Mirror conversion type flags */
 #define MIRROR_BY_SEG		0x00000001U	/* segment-by-segment mirror */

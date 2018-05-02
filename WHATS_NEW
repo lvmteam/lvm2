@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  --enable-testing switch for ./configure has been removed.
   --with-snapshots switch for ./configure has been removed.
   --with-mirrors switch for ./configure has been removed.
   --with-raid switch for ./configure has been removed.

@@ -467,8 +467,6 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
  
 	if (vg->system_id && *vg->system_id)
 		outf(f, "system_id = \"%s\"", vg->system_id);
-	else if (vg->lvm1_system_id && *vg->lvm1_system_id)
-		outf(f, "system_id = \"%s\"", vg->lvm1_system_id);
 
 	if (vg->lock_type) {
 		outf(f, "lock_type = \"%s\"", vg->lock_type);

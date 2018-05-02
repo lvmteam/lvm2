@@ -100,6 +100,16 @@ static void _expect_read(struct mock_engine *e, int fd, block_address b)
 	dm_list_add(&e->expected_calls, &mc->list);
 }
 
+static void _expect_read_any(struct mock_engine *e)
+{
+	struct mock_call *mc = malloc(sizeof(*mc));
+	mc->m = E_ISSUE;
+	mc->match_args = false;
+	mc->issue_r = true;
+	mc->wait_r = true;
+	dm_list_add(&e->expected_calls, &mc->list);
+}
+
 static void _expect_write(struct mock_engine *e, int fd, block_address b)
 {
 	struct mock_call *mc = malloc(sizeof(*mc));
@@ -402,7 +412,7 @@ static void test_block_size_must_be_multiple_of_page_size(void *fixture)
 	for (i = 0; i < DM_ARRAY_SIZE(_bad_examples); i++)
 		bad_create(_bad_examples[i], 16);
 
-	for (i = 1; i < 1000; i++)
+	for (i = 1; i < 100; i++)
 		good_create(i * 8, 16);
 }
 
@@ -417,6 +427,13 @@ static void test_get_triggers_read(void *context)
 	_expect_read(f->me, fd, 0);
 	_expect(f->me, E_WAIT);
 	T_ASSERT(bcache_get(f->cache, fd, 0, 0, &b, &err));
+	bcache_put(b);
+
+	_expect_read(f->me, fd, 1);
+	_expect(f->me, E_WAIT);
+	T_ASSERT(bcache_get(f->cache, fd, 1, GF_DIRTY, &b, &err));
+	_expect_write(f->me, fd, 1);
+	_expect(f->me, E_WAIT);
 	bcache_put(b);
 }
 
@@ -466,7 +483,7 @@ static void test_block_gets_evicted_with_many_reads(void *context)
 	// Now if we run through we should find one block has been
 	// evicted.  We go backwards because the oldest is normally
 	// evicted first.
-	_expect(me, E_ISSUE);
+	_expect_read_any(me);
 	_expect(me, E_WAIT);
 	for (i = nr_cache_blocks; i; i--) {
 		T_ASSERT(bcache_get(cache, fd, i - 1, 0, &b, &err));
@@ -811,14 +828,15 @@ static void test_invalidate_held_block(void *context)
 	bcache_put(b);
 }
 
+
 /*----------------------------------------------------------------
  * Top level
  *--------------------------------------------------------------*/
 #define T(path, desc, fn) register_test(ts, "/base/device/bcache/" path, desc, fn)
 
-static struct test_suite *_small_tests(void)
+static struct test_suite *_tiny_tests(void)
 {
-	struct test_suite *ts = test_suite_create(_small_fixture_init, _small_fixture_exit);
+	struct test_suite *ts = test_suite_create(NULL, NULL);
 	if (!ts) {
 		fprintf(stderr, "out of memory\n");
 		exit(1);
@@ -828,6 +846,18 @@ static struct test_suite *_small_tests(void)
 	T("cache-blocks-positive", "nr cache blocks must be positive", test_nr_cache_blocks_must_be_positive);
 	T("block-size-positive", "block size must be positive", test_block_size_must_be_positive);
 	T("block-size-multiple-page", "block size must be a multiple of page size", test_block_size_must_be_multiple_of_page_size);
+
+	return ts;
+}
+
+static struct test_suite *_small_tests(void)
+{
+	struct test_suite *ts = test_suite_create(_small_fixture_init, _small_fixture_exit);
+	if (!ts) {
+		fprintf(stderr, "out of memory\n");
+		exit(1);
+	}
+
 	T("get-reads", "bcache_get() triggers read", test_get_triggers_read);
 	T("reads-cached", "repeated reads are cached", test_repeated_reads_are_cached);
 	T("blocks-get-evicted", "block get evicted with many reads", test_block_gets_evicted_with_many_reads);
@@ -866,6 +896,7 @@ static struct test_suite *_large_tests(void)
 
 void bcache_tests(struct dm_list *all_tests)
 {
+        dm_list_add(all_tests, &_tiny_tests()->list);
 	dm_list_add(all_tests, &_small_tests()->list);
 	dm_list_add(all_tests, &_large_tests()->list);
 }

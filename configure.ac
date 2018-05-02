@@ -283,58 +283,6 @@ AC_MSG_RESULT($MANGLING)
 AC_DEFINE_UNQUOTED([DEFAULT_DM_NAME_MANGLING], $mangling, [Define default name mangling behaviour])
 
 ################################################################################
-dnl -- LVM1 tool fallback option
-AC_MSG_CHECKING(whether to enable lvm1 fallback)
-AC_ARG_ENABLE(lvm1_fallback,
-	      AC_HELP_STRING([--enable-lvm1_fallback],
-			     [use this to fall back and use LVM1 binaries if
-			      device-mapper is missing from the kernel]),
-	      LVM1_FALLBACK=$enableval, LVM1_FALLBACK=no)
-AC_MSG_RESULT($LVM1_FALLBACK)
-
-if test "$LVM1_FALLBACK" = yes; then
-	DEFAULT_FALLBACK_TO_LVM1=1
-	AC_DEFINE([LVM1_FALLBACK], 1, [Define to 1 if 'lvm' should fall back to using LVM1 binaries if device-mapper is missing from the kernel])
-else
-	DEFAULT_FALLBACK_TO_LVM1=0
-fi
-AC_DEFINE_UNQUOTED(DEFAULT_FALLBACK_TO_LVM1, [$DEFAULT_FALLBACK_TO_LVM1],
-		   [Fall back to LVM1 by default if device-mapper is missing from the kernel.])
-
-################################################################################
-dnl -- format1 inclusion type
-AC_MSG_CHECKING(whether to include support for lvm1 metadata)
-AC_ARG_WITH(lvm1,
-	    AC_HELP_STRING([--with-lvm1=TYPE],
-			   [LVM1 metadata support: internal/shared/none [internal]]),
-	    LVM1=$withval, LVM1=internal)
-
-AC_MSG_RESULT($LVM1)
-
-case "$LVM1" in
-  none|shared) ;;
-  internal) AC_DEFINE([LVM1_INTERNAL], 1,
-		      [Define to 1 to include built-in support for LVM1 metadata.]) ;;
-  *) AC_MSG_ERROR([--with-lvm1 parameter invalid]) ;;
-esac
-
-################################################################################
-dnl -- format_pool inclusion type
-AC_MSG_CHECKING(whether to include support for GFS pool metadata)
-AC_ARG_WITH(pool,
-	    AC_HELP_STRING([--with-pool=TYPE],
-			   [GFS pool read-only support: internal/shared/none [internal]]),
-	    POOL=$withval, POOL=internal)
-AC_MSG_RESULT($POOL)
-
-case "$POOL" in
-  none|shared) ;;
-  internal) AC_DEFINE([POOL_INTERNAL], 1,
-		      [Define to 1 to include built-in support for GFS pool metadata.]) ;;
-  *) AC_MSG_ERROR([--with-pool parameter invalid])
-esac
-
-################################################################################
 dnl -- cluster_locking inclusion type
 AC_MSG_CHECKING(whether to include support for cluster locking)
 AC_ARG_WITH(cluster,
@@ -1066,15 +1014,6 @@ if test "$PROFILING" = yes; then
     fi
   fi
 fi
-
-################################################################################
-dnl -- Enable testing
-AC_MSG_CHECKING(whether to enable unit testing)
-AC_ARG_ENABLE(testing,
-	      AC_HELP_STRING([--enable-testing],
-			     [enable testing targets in the makefile]),
-	      TESTING=$enableval, TESTING=no)
-AC_MSG_RESULT($TESTING)
 
 ################################################################################
 dnl -- Set LVM2 testsuite data
@@ -2042,7 +1981,6 @@ AC_SUBST(DEFAULT_CACHE_SUBDIR)
 AC_SUBST(DEFAULT_DATA_ALIGNMENT)
 AC_SUBST(DEFAULT_DM_RUN_DIR)
 AC_SUBST(DEFAULT_LOCK_DIR)
-AC_SUBST(DEFAULT_FALLBACK_TO_LVM1)
 AC_SUBST(DEFAULT_MIRROR_SEGTYPE)
 AC_SUBST(DEFAULT_PID_DIR)
 AC_SUBST(DEFAULT_PROFILE_SUBDIR)
@@ -2073,8 +2011,6 @@ AC_SUBST(JOBS)
 AC_SUBST(LDDEPS)
 AC_SUBST(LIBS)
 AC_SUBST(LIB_SUFFIX)
-AC_SUBST(LVM1)
-AC_SUBST(LVM1_FALLBACK)
 AC_SUBST(LVM_VERSION)
 AC_SUBST(LVM_LIBAPI)
 AC_SUBST(LVM_MAJOR)
@@ -2091,7 +2027,6 @@ AC_SUBST(OCF)
 AC_SUBST(OCFDIR)
 AC_SUBST(ODIRECT)
 AC_SUBST(PKGCONFIG)
-AC_SUBST(POOL)
 AC_SUBST(M_LIBS)
 AC_SUBST(PTHREAD_LIBS)
 AC_SUBST(PYTHON2)
@@ -2123,7 +2058,6 @@ AC_SUBST(SYSTEMD_LIBS)
 AC_SUBST(SNAPSHOTS)
 AC_SUBST(STATICDIR)
 AC_SUBST(STATIC_LINK)
-AC_SUBST(TESTING)
 AC_SUBST(TESTSUITE_DATA)
 AC_SUBST(THIN)
 AC_SUBST(THIN_CHECK_CMD)
@@ -2194,10 +2128,9 @@ conf/example.conf
 conf/lvmlocal.conf
 conf/command_profile_template.profile
 conf/metadata_profile_template.profile
+include/.symlinks
 include/Makefile
 lib/Makefile
-lib/format1/Makefile
-lib/format_pool/Makefile
 lib/locking/Makefile
 include/lvm-version.h
 libdaemon/Makefile

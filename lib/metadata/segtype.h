@@ -32,7 +32,7 @@ struct dev_manager;
 #define SEG_AREAS_STRIPED	(1ULL <<  1)
 #define SEG_AREAS_MIRRORED	(1ULL <<  2)
 #define SEG_SNAPSHOT		(1ULL <<  3)
-#define SEG_FORMAT1_SUPPORT	(1ULL <<  4)
+/* #define SEG_FORMAT1_SUPPORT	(1ULL <<  4) */
 #define SEG_VIRTUAL		(1ULL <<  5)
 #define SEG_CANNOT_BE_ZEROED	(1ULL <<  6)
 #define SEG_MONITORED		(1ULL <<  7)

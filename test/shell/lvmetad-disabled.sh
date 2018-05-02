@@ -24,10 +24,12 @@ test ! -e "$LVM_LVMETAD_PIDFILE"
 
 aux lvmconf "global/use_lvmetad = 0"
 
-pvcreate --metadatatype 1 "$dev1"
+pvcreate "$dev1"
 pvcreate "$dev2"
-vgcreate -M1 $vg1 "$dev1"
+vgcreate $vg1 "$dev1"
 vgcreate $vg2 "$dev2"
+
+lvcreate -n $lv1 -l1 $vg1
 
 pvs 2>&1 | tee out
 grep "$dev1" out
@@ -43,10 +45,21 @@ while ! test -e "$TESTDIR/lvmetad.socket"; do echo -n .; sleep .1; done # wait f
 test -e "$LVM_LVMETAD_PIDFILE"
 cp "$LVM_LVMETAD_PIDFILE" LOCAL_LVMETAD
 
-pvscan --cache 2>&1 | tee out
+pvscan --cache
+pvs 2>&1 | tee out
+grep "$dev1" out
+grep "$dev2" out
+not grep "WARNING: Not using lvmetad" out
+
+# We don't care about the repair, and we know it's
+# not valid on this lv.  We are just running repair
+# because we know one side effect is to disable lvmetad.
+# FIXME: we should install lvmetactl so that we can
+# use that to directly disable lvmetad for tests like this.
+not lvconvert --repair $vg1/$lv1 2>&1 | tee out
 grep "WARNING: Disabling lvmetad cache" out
 
-pvs  2>&1 | tee out
+pvs  -vvvv 2>&1 | tee out
 grep "$dev1" out
 grep "$dev2" out
 grep "WARNING: Not using lvmetad" out
@@ -56,7 +69,8 @@ grep $vg1 out
 grep $vg2 out
 grep "WARNING: Not using lvmetad" out
 
-vgremove $vg1 2>&1 | tee out
+vgchange -an $vg1
+vgremove -y $vg1 2>&1 | tee out
 grep "WARNING: Not using lvmetad" out
 
 pvremove "$dev1" 2>&1 | tee out

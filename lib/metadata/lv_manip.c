@@ -5976,8 +5976,6 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		     force_t force, int suppress_remove_message)
 {
 	struct volume_group *vg;
-	struct logical_volume *format1_origin = NULL;
-	int format1_reload_required = 0;
 	int visible, historical;
 	struct logical_volume *pool_lv = NULL;
 	struct logical_volume *lock_lv = lv;
@@ -6130,10 +6128,6 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 
 	if (lv_is_cow(lv)) {
-		/* Old format1 code */
-		if (!(lv->vg->fid->fmt->features & FMT_MDAS))
-			format1_origin = origin_from_cow(lv);
-
 		log_verbose("Removing snapshot volume %s.", display_lvname(lv));
 		/* vg_remove_snapshot() will preload origin/former snapshots */
 		if (!vg_remove_snapshot(lv))
@@ -6189,29 +6183,9 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
-	/*
-	 * Old format1 code: If no snapshots left reload without -real.
-	 */
-	if (format1_origin && !lv_is_origin(format1_origin)) {
-		log_warn("WARNING: Support for snapshots with old LVM1-style metadata is deprecated.");
-		log_warn("WARNING: Please use lvconvert to update to lvm2 metadata at your convenience.");
-		format1_reload_required = 1;
-	}
-
 	/* store it on disks */
 	if (!vg_write(vg) || !vg_commit(vg))
 		return_0;
-
-	/* format1 */
-	if (format1_reload_required) {
-		if (!suspend_lv(cmd, format1_origin))
-			log_error("Failed to refresh %s without snapshot.", format1_origin->name);
-
-		if (!resume_lv(cmd, format1_origin)) {
-			log_error("Failed to resume %s.", format1_origin->name);
-			return 0;
-		}
-	}
 
 	/* Release unneeded blocks in thin pool */
 	/* TODO: defer when multiple LVs relased at once */

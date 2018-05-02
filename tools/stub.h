@@ -37,7 +37,6 @@ int pvdata(struct cmd_context *cmd __attribute__((unused)),
 {
 	log_error("There's no 'pvdata' command in LVM2.");
 	log_error("Use lvs, pvs, vgs instead; or use vgcfgbackup and read the text file backup.");
-	log_error("Metadata in LVM1 format can still be displayed using LVM1's pvdata command.");
 	return ECMD_FAILED;
 }
 

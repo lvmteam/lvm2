@@ -72,10 +72,6 @@
 /* Default system configuration directory. */
 #undef DEFAULT_ETC_DIR
 
-/* Fall back to LVM1 by default if device-mapper is missing from the kernel.
-   */
-#undef DEFAULT_FALLBACK_TO_LVM1
-
 /* Name of default locking directory. */
 #undef DEFAULT_LOCK_DIR
 
@@ -617,13 +613,6 @@
    slash. */
 #undef LSTAT_FOLLOWS_SLASHED_SYMLINK
 
-/* Define to 1 if 'lvm' should fall back to using LVM1 binaries if
-   device-mapper is missing from the kernel */
-#undef LVM1_FALLBACK
-
-/* Define to 1 to include built-in support for LVM1 metadata. */
-#undef LVM1_INTERNAL
-
 /* Path to lvmetad pidfile. */
 #undef LVMETAD_PIDFILE
 
@@ -685,9 +674,6 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
-
-/* Define to 1 to include built-in support for GFS pool metadata. */
-#undef POOL_INTERNAL
 
 /* Define to 1 to include built-in support for raid. */
 #undef RAID_INTERNAL

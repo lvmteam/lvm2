@@ -332,17 +332,6 @@ int vg_remove_snapshot(struct logical_volume *cow)
 	cow->snapshot = NULL;
 	lv_set_visible(cow);
 
-	/* format1 must do the change in one step, with the commit last. */
-	if (!(origin->vg->fid->fmt->features & FMT_MDAS)) {
-		/* Get the lock for COW volume */
-		if (is_origin_active && !activate_lv(cow->vg->cmd, cow)) {
-			log_error("Unable to activate logical volume \"%s\"",
-				  cow->name);
-			return 0;
-		}
-		return 1;
-	}
-
 	if (!vg_write(origin->vg))
 		return_0;
 

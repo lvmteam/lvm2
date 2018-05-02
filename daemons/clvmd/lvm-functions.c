@@ -639,16 +639,6 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 	return 0;
 }
 
-/* Check if a VG is in use by LVM1 so we don't stomp on it */
-int do_check_lvm1(const char *vgname)
-{
-	int status;
-
-	status = check_lvm1_vg_inactive(cmd, vgname);
-
-	return status == 1 ? 0 : EBUSY;
-}
-
 int do_refresh_cache(void)
 {
 	DEBUGLOG("Refreshing context\n");

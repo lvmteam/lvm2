@@ -34,29 +34,25 @@ static int _vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
-	if (cmd->fmt->features & FMT_MDAS) {
-		if (arg_sign_value(cmd, metadatasize_ARG, SIGN_NONE) == SIGN_MINUS) {
-			log_error("Metadata size may not be negative");
-			return EINVALID_CMD_LINE;
-		}
-
-		pva.pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG, UINT64_C(0));
-		if (!pva.pvmetadatasize)
-			pva.pvmetadatasize = find_config_tree_int(cmd, metadata_pvmetadatasize_CFG, NULL);
-
-		pva.pvmetadatacopies = arg_int_value(cmd, pvmetadatacopies_ARG, -1);
-		if (pva.pvmetadatacopies < 0)
-			pva.pvmetadatacopies = find_config_tree_int(cmd, metadata_pvmetadatacopies_CFG, NULL);
+	if (arg_sign_value(cmd, metadatasize_ARG, SIGN_NONE) == SIGN_MINUS) {
+		log_error("Metadata size may not be negative");
+		return EINVALID_CMD_LINE;
 	}
 
-	if (cmd->fmt->features & FMT_BAS) {
-		if (arg_sign_value(cmd, bootloaderareasize_ARG, SIGN_NONE) == SIGN_MINUS) {
-			log_error("Bootloader area size may not be negative");
-			return EINVALID_CMD_LINE;
-		}
+	pva.pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG, UINT64_C(0));
+	if (!pva.pvmetadatasize)
+		pva.pvmetadatasize = find_config_tree_int(cmd, metadata_pvmetadatasize_CFG, NULL);
 
-		pva.ba_size = arg_uint64_value(cmd, bootloaderareasize_ARG, UINT64_C(0));
+	pva.pvmetadatacopies = arg_int_value(cmd, pvmetadatacopies_ARG, -1);
+	if (pva.pvmetadatacopies < 0)
+		pva.pvmetadatacopies = find_config_tree_int(cmd, metadata_pvmetadatacopies_CFG, NULL);
+
+	if (arg_sign_value(cmd, bootloaderareasize_ARG, SIGN_NONE) == SIGN_MINUS) {
+		log_error("Bootloader area size may not be negative");
+		return EINVALID_CMD_LINE;
 	}
+
+	pva.ba_size = arg_uint64_value(cmd, bootloaderareasize_ARG, UINT64_C(0));
 
 	if (!vg_check_new_extent_size(cmd->fmt, vg->extent_size))
 		return_ECMD_FAILED;
@@ -85,13 +81,6 @@ static int _vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 					  " metadata format.", lvl->lv->name);
 				return ECMD_FAILED;
 			}
-
-	/* New-style system ID supported? */ 
-	if (vg->system_id && *vg->system_id && (cmd->fmt->features & FMT_SYSTEMID_ON_PVS)) {
-		log_error("Unable to convert VG %s while it has a system ID set (%s).", vg->name,
-			  vg->system_id);
-		return ECMD_FAILED;
-	}
 
 	/* Attempt to change any LVIDs that are too big */
 	if (cmd->fmt->features & FMT_RESTRICTED_LVIDS) {
@@ -154,18 +143,6 @@ int vgconvert(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_int_value(cmd, labelsector_ARG, 0) >= LABEL_SCAN_SECTORS) {
 		log_error("labelsector must be less than %lu",
 			  LABEL_SCAN_SECTORS);
-		return EINVALID_CMD_LINE;
-	}
-
-	if (!(cmd->fmt->features & FMT_MDAS) &&
-	    arg_is_set(cmd, pvmetadatacopies_ARG)) {
-		log_error("Metadata parameters only apply to text format");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (!(cmd->fmt->features & FMT_BAS) &&
-		arg_is_set(cmd, bootloaderareasize_ARG)) {
-		log_error("Bootloader area parameters only apply to text format");
 		return EINVALID_CMD_LINE;
 	}
 

@@ -1084,15 +1084,8 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		goto bad;
 	}
 
-	/*
-	 * A system id without WRITE_LOCKED is an old lvm1 system id.
-	 */
 	if (dm_config_get_str(vgn, "system_id", &system_id)) {
-		if (!(vgstatus & LVM_WRITE_LOCKED)) {
-			if (!(vg->lvm1_system_id = dm_pool_zalloc(vg->vgmem, NAME_LEN + 1)))
-				goto_bad;
-			strncpy(vg->lvm1_system_id, system_id, NAME_LEN);
-		} else if (!(vg->system_id = dm_pool_strdup(vg->vgmem, system_id))) {
+		if (!(vg->system_id = dm_pool_strdup(vg->vgmem, system_id))) {
 			log_error("Failed to allocate memory for system_id in _read_vg.");
 			goto bad;
 		}

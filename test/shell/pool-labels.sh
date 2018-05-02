@@ -36,13 +36,10 @@ aux prepare_devs 2
 create_pool_label_ 0 "$dev1"
 create_pool_label_ 1 "$dev2"
 
+# verify that lvm will ignore and not use a gfs-pool device
+
+not pvs "$dev1"
+
 # check that pvcreate fails without -ff on the pool device
 not pvcreate "$dev1"
 
-# check that vgdisplay and pvcreate -ff works with the pool device
-vgdisplay --config 'global { locking_type = 0 }'
-aux disable_dev "$dev2"
-# FIXME! since pool1 cannot be opened, vgdisplay gives error... should we say
-# "not" there instead, checking that it indeed does fail?
-vgdisplay --config 'global { locking_type = 0 }' || true
-pvcreate -ff -y "$dev1"

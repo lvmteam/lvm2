@@ -2545,9 +2545,9 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 	fmt->name = FMT_TEXT_NAME;
 	fmt->alias = FMT_TEXT_ALIAS;
 	fmt->orphan_vg_name = ORPHAN_VG_NAME(FMT_TEXT_NAME);
-	fmt->features = FMT_SEGMENTS | FMT_MDAS | FMT_TAGS | FMT_PRECOMMIT |
+	fmt->features = FMT_SEGMENTS | FMT_TAGS | FMT_PRECOMMIT |
 			FMT_UNLIMITED_VOLS | FMT_RESIZE_PV |
-			FMT_UNLIMITED_STRIPESIZE | FMT_BAS | FMT_CONFIG_PROFILE |
+			FMT_UNLIMITED_STRIPESIZE | FMT_CONFIG_PROFILE |
 			FMT_NON_POWER2_EXTENTS | FMT_PV_FLAGS;
 
 	if (!(mda_lists = dm_malloc(sizeof(struct mda_lists)))) {
