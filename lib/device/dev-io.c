@@ -358,10 +358,10 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 	dev->size = *size;
 	dev->size_seqno = _dev_size_seqno;
 
+	log_very_verbose("%s: size is %" PRIu64 " sectors", name, *size);
+
 	if (do_close && !dev_close(dev))
 		log_sys_error("close", name);
-
-	log_very_verbose("%s: size is %" PRIu64 " sectors", name, *size);
 
 	return 1;
 }

@@ -26,14 +26,16 @@ static int _ignore_signature(struct dev_filter *f __attribute__((unused)),
 	char buf[BUFSIZE];
 	int ret = 0;
 
-	if (!dev_open_readonly(dev)) {
-		stack;
-		return -1;
+	if (!scan_bcache) {
+		/* let pass, call again after scan */
+		log_debug_devs("filter signature deferred %s", dev_name(dev));
+		dev->flags |= DEV_FILTER_AFTER_SCAN;
+		return 1;
 	}
 
 	memset(buf, 0, BUFSIZE);
 
-	if (!dev_read(dev, 0, BUFSIZE, DEV_IO_SIGNATURES, buf)) {
+	if (!dev_read_bytes(dev, 0, BUFSIZE, buf)) {
 		log_debug_devs("%s: Skipping: error in signature detection",
 			       dev_name(dev));
 		ret = 0;
@@ -54,8 +56,6 @@ static int _ignore_signature(struct dev_filter *f __attribute__((unused)),
 	ret = 1;
 
 out:
-	dev_close(dev);
-
 	return ret;
 }
 

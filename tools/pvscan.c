@@ -302,6 +302,7 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	struct dm_list found_vgnames;
 	struct device *dev;
 	struct device_list *devl;
+	struct dev_filter *f;
 	const char *pv_name;
 	const char *reason = NULL;
 	int32_t major = -1;
@@ -439,6 +440,9 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 		cmd->pvscan_cache_single = 1;
 	}
 
+	/* Creates a list of dev names from /dev, sysfs, etc; does not read any. */
+	dev_cache_scan();
+
 	dm_list_init(&single_devs);
 
 	while (argc--) {
@@ -455,7 +459,11 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 					ret = ECMD_FAILED;
 				}
 			} else {
-				/* Add device path to lvmetad. */
+				/*
+				 * Scan device.  This dev could still be
+				 * removed from lvmetad below if it doesn't
+				 * pass other filters.
+				 */
 				log_debug("Scanning dev %s for lvmetad cache.", pv_name);
 
 				if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
@@ -476,7 +484,11 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 				if (!_lvmetad_clear_dev(devno, major, minor))
 					remove_errors++;
 			} else {
-				/* Add major:minor to lvmetad. */
+				/*
+				 * Scan device.  This dev could still be
+				 * removed from lvmetad below if it doesn't
+				 * pass other filters.
+				 */
 				log_debug("Scanning dev %d:%d for lvmetad cache.", major, minor);
 
 				if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
@@ -493,11 +505,25 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (!dm_list_empty(&single_devs)) {
-		dev_cache_scan();
-		label_scan_devs(cmd, &single_devs);
+		label_scan_devs(cmd, cmd->lvmetad_filter, &single_devs);
+
+		f = cmd->lvmetad_filter;
 
 		dm_list_iterate_items(devl, &single_devs) {
-			if (!lvmetad_pvscan_single(cmd, devl->dev, &found_vgnames, &pp.changed_vgnames))
+			dev = devl->dev;
+
+			if (dev->flags & DEV_FILTER_OUT_SCAN) {
+				log_debug("Removing dev %s from lvmetad cache after scan.", dev_name(dev));
+				if (!_lvmetad_clear_dev(dev->dev, MAJOR(dev->dev), MINOR(dev->dev)))
+					remove_errors++;
+				continue;
+			}
+
+			/*
+			 * Devices that exist and pass the lvmetad filter
+			 * are added to lvmetad.
+			 */
+			if (!lvmetad_pvscan_single(cmd, dev, &found_vgnames, &pp.changed_vgnames))
 				add_errors++;
 		}
 	}
@@ -539,10 +565,24 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (!dm_list_empty(&single_devs)) {
-		dev_cache_scan();
-		label_scan_devs(cmd, &single_devs);
+		label_scan_devs(cmd, cmd->lvmetad_filter, &single_devs);
+
+		f = cmd->lvmetad_filter;
 
 		dm_list_iterate_items(devl, &single_devs) {
+			dev = devl->dev;
+
+			if (dev->flags & DEV_FILTER_OUT_SCAN) {
+				log_debug("Removing dev %s from lvmetad cache after scan.", dev_name(dev));
+				if (!_lvmetad_clear_dev(dev->dev, MAJOR(dev->dev), MINOR(dev->dev)))
+					remove_errors++;
+				continue;
+			}
+
+			/*
+			 * Devices that exist and pass the lvmetad filter
+			 * are added to lvmetad.
+			 */
 			if (!lvmetad_pvscan_single(cmd, devl->dev, &found_vgnames, &pp.changed_vgnames))
 				add_errors++;
 		}

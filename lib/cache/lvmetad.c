@@ -1878,7 +1878,7 @@ static struct volume_group *_lvmetad_pvscan_vg(struct cmd_context *cmd, struct v
 	 */
 	log_debug_lvmetad("Rescan VG %s scanning data from devs in previous metadata.", vg->name);
 
-	label_scan_devs(cmd, &pvs_scan);
+	label_scan_devs(cmd, cmd->full_filter, &pvs_scan);
 
 	/*
 	 * Check if any pvs_scan entries are no longer PVs.

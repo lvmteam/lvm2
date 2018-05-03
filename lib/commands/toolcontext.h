@@ -171,6 +171,7 @@ struct cmd_context {
 	unsigned pvscan_cache_single:1;
 	unsigned can_use_one_scan:1;
 	unsigned is_clvmd:1;
+	unsigned use_full_md_check:1;
 
 	/*
 	 * Filtering.

@@ -1320,7 +1320,7 @@ int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const 
 	/* FIXME: should we also rescan unused_duplicate_devs for devs
 	   being rescanned here and then repeat resolving the duplicates? */
 
-	label_scan_devs(cmd, &devs);
+	label_scan_devs(cmd, cmd->filter, &devs);
 
 	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
 		log_warn("VG info not found after rescan of %s", vgname);

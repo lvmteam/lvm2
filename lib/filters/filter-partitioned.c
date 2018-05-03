@@ -21,8 +21,18 @@
 static int _passes_partitioned_filter(struct dev_filter *f, struct device *dev)
 {
 	struct dev_types *dt = (struct dev_types *) f->private;
+	int ret;
 
-	if (dev_is_partitioned(dt, dev)) {
+	ret = dev_is_partitioned(dt, dev);
+
+	if (ret == -EAGAIN) {
+		/* let pass, call again after scan */
+		log_debug_devs("filter partitioned deferred %s", dev_name(dev));
+		dev->flags |= DEV_FILTER_AFTER_SCAN;
+		return 1;
+	}
+
+	if (ret) {
 		if (dev->ext.src == DEV_EXT_NONE)
 			log_debug_devs(MSG_SKIPPING, dev_name(dev));
 		else

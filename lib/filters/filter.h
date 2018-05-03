@@ -23,7 +23,7 @@
 struct dev_filter *composite_filter_create(int n, int use_dev_ext_info, struct dev_filter **filters);
 
 struct dev_filter *lvm_type_filter_create(struct dev_types *dt);
-struct dev_filter *md_filter_create(struct dev_types *dt);
+struct dev_filter *md_filter_create(struct cmd_context *cmd, struct dev_types *dt);
 struct dev_filter *fwraid_filter_create(struct dev_types *dt);
 struct dev_filter *mpath_filter_create(struct dev_types *dt);
 struct dev_filter *partitioned_filter_create(struct dev_types *dt);

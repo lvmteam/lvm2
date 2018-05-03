@@ -103,7 +103,7 @@ void label_destroy(struct label *label);
 extern struct bcache *scan_bcache;
 
 int label_scan(struct cmd_context *cmd);
-int label_scan_devs(struct cmd_context *cmd, struct dm_list *devs);
+int label_scan_devs(struct cmd_context *cmd, struct dev_filter *f, struct dm_list *devs);
 int label_scan_devs_excl(struct dm_list *devs);
 void label_scan_invalidate(struct device *dev);
 void label_scan_invalidate_lv(struct cmd_context *cmd, struct logical_volume *lv);

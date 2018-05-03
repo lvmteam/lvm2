@@ -5059,30 +5059,19 @@ static int _analyze_mda(struct metadata_area *mda, void *baton)
  *  0 - fail
  *  1 - success
  */
-int pv_analyze(struct cmd_context *cmd, const char *pv_name,
+int pv_analyze(struct cmd_context *cmd, struct device *dev,
 	       uint64_t label_sector)
 {
 	struct label *label;
-	struct device *dev;
 	struct lvmcache_info *info;
 
-	dev = dev_cache_get(pv_name, cmd->filter);
-	if (!dev) {
-		log_error("Device %s %s.", pv_name, dev_cache_filtered_reason(pv_name));
-		return 0;
-	}
-
-	/*
-	 * First, scan for LVM labels.
-	 */
-	if (!label_read(dev, &label, label_sector)) {
-		log_error("Could not find LVM label on %s",
-			  pv_name);
+	if (!(label = lvmcache_get_dev_label(dev))) {
+		log_error("Could not find LVM label on %s", dev_name(dev));
 		return 0;
 	}
 
 	log_print("Found label on %s, sector %"PRIu64", type=%.8s",
-		  pv_name, label->sector, label->type);
+		  dev_name(dev), label->sector, label->type);
 
 	/*
 	 * Next, loop through metadata areas

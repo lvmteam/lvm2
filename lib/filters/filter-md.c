@@ -20,15 +20,21 @@
 
 #define MSG_SKIPPING "%s: Skipping md component device"
 
-static int _ignore_md(struct dev_filter *f __attribute__((unused)),
-		      struct device *dev)
+static int _ignore_md(struct device *dev, int full)
 {
 	int ret;
 	
 	if (!md_filtering())
 		return 1;
 	
-	ret = dev_is_md(dev, NULL);
+	ret = dev_is_md(dev, NULL, full);
+
+	if (ret == -EAGAIN) {
+		/* let pass, call again after scan */
+		dev->flags |= DEV_FILTER_AFTER_SCAN;
+		log_debug_devs("filter md deferred %s", dev_name(dev));
+		return 1;
+	}
 
 	if (ret == 1) {
 		if (dev->ext.src == DEV_EXT_NONE)
@@ -48,6 +54,18 @@ static int _ignore_md(struct dev_filter *f __attribute__((unused)),
 	return 1;
 }
 
+static int _ignore_md_lite(struct dev_filter *f __attribute__((unused)),
+		           struct device *dev)
+{
+	return _ignore_md(dev, 0);
+}
+
+static int _ignore_md_full(struct dev_filter *f __attribute__((unused)),
+		           struct device *dev)
+{
+	return _ignore_md(dev, 1);
+}
+
 static void _destroy(struct dev_filter *f)
 {
 	if (f->use_count)
@@ -56,7 +74,7 @@ static void _destroy(struct dev_filter *f)
 	dm_free(f);
 }
 
-struct dev_filter *md_filter_create(struct dev_types *dt)
+struct dev_filter *md_filter_create(struct cmd_context *cmd, struct dev_types *dt)
 {
 	struct dev_filter *f;
 
@@ -65,7 +83,18 @@ struct dev_filter *md_filter_create(struct dev_types *dt)
 		return NULL;
 	}
 
-	f->passes_filter = _ignore_md;
+	/*
+	 * FIXME: for commands that want a full md check (pvcreate, vgcreate,
+	 * vgextend), we do an extra read at the end of every device that the
+	 * filter looks at.  This isn't necessary; we only need to do the full
+	 * md check on the PVs that these commands are trying to use.
+	 */
+
+	if (cmd->use_full_md_check)
+		f->passes_filter = _ignore_md_full;
+	else
+		f->passes_filter = _ignore_md_lite;
+
 	f->destroy = _destroy;
 	f->use_count = 0;
 	f->private = dt;

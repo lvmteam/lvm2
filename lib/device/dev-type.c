@@ -365,7 +365,7 @@ static int _has_partition_table(struct device *dev)
 		uint16_t magic;
 	} __attribute__((packed)) buf; /* sizeof() == SECTOR_SIZE */
 
-	if (!dev_read(dev, UINT64_C(0), sizeof(buf), DEV_IO_SIGNATURES, &buf))
+	if (!dev_read_bytes(dev, UINT64_C(0), sizeof(buf), &buf))
 		return_0;
 
 	/* FIXME Check for other types of partition table too */
@@ -434,6 +434,9 @@ static int _native_dev_is_partitioned(struct dev_types *dt, struct device *dev)
 {
 	int r;
 
+	if (!scan_bcache)
+		return -EAGAIN;
+
 	if (!_is_partitionable(dt, dev))
 		return 0;
 
@@ -441,16 +444,7 @@ static int _native_dev_is_partitioned(struct dev_types *dt, struct device *dev)
 	if ((MAJOR(dev->dev) == dt->dasd_major) && dasd_is_cdl_formatted(dev))
 		return 1;
 
-	if (!dev_open_readonly_quiet(dev)) {
-		log_debug_devs("%s: failed to open device, considering device "
-			       "is partitioned", dev_name(dev));
-		return 1;
-	}
-
 	r = _has_partition_table(dev);
-
-	if (!dev_close(dev))
-		stack;
 
 	return r;
 }
@@ -750,12 +744,12 @@ out:
 
 static int _wipe_signature(struct device *dev, const char *type, const char *name,
 			   int wipe_len, int yes, force_t force, int *wiped,
-			   int (*signature_detection_fn)(struct device *dev, uint64_t *offset_found))
+			   int (*signature_detection_fn)(struct device *dev, uint64_t *offset_found, int full))
 {
 	int wipe;
 	uint64_t offset_found;
 
-	wipe = signature_detection_fn(dev, &offset_found);
+	wipe = signature_detection_fn(dev, &offset_found, 1);
 	if (wipe == -1) {
 		log_error("Fatal error while trying to detect %s on %s.",
 			  type, name);

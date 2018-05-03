@@ -1378,6 +1378,7 @@ struct device *dev_cache_get(const char *name, struct dev_filter *f)
 	struct stat buf;
 	struct device *d = (struct device *) dm_hash_lookup(_cache.names, name);
 	int info_available = 0;
+	int ret = 1;
 
 	if (d && (d->flags & DEV_REGULAR))
 		return d;
@@ -1405,10 +1406,25 @@ struct device *dev_cache_get(const char *name, struct dev_filter *f)
 		}
 	}
 
-	if (!d || (f && !(d->flags & DEV_REGULAR) && !(f->passes_filter(f, d))))
+	if (!d)
 		return NULL;
 
-	log_debug_devs("%s: Using device (%d:%d)", dev_name(d), (int) MAJOR(d->dev), (int) MINOR(d->dev));
+	if (d && (d->flags & DEV_REGULAR))
+		return d;
+
+	if (f && !(d->flags & DEV_REGULAR)) {
+		ret = f->passes_filter(f, d);
+
+		if (ret == -EAGAIN) {
+			log_debug_devs("get device by name defer filter %s", dev_name(d));
+			d->flags |= DEV_FILTER_AFTER_SCAN;
+			ret = 1;
+		}
+	}
+
+	if (f && !(d->flags & DEV_REGULAR) && !ret)
+		return NULL;
+
 	return d;
 }
 
@@ -1435,6 +1451,7 @@ struct device *dev_cache_get_by_devt(dev_t dev, struct dev_filter *f)
 	const char *sysfs_dir;
 	struct stat info;
 	struct device *d = _dev_cache_seek_devt(dev);
+	int ret;
 
 	if (d && (d->flags & DEV_REGULAR))
 		return d;
@@ -1450,8 +1467,8 @@ struct device *dev_cache_get_by_devt(dev_t dev, struct dev_filter *f)
 			}
 
 			if (lstat(path, &info)) {
-				log_debug("No sysfs entry for %d:%d.",
-					  (int)MAJOR(dev), (int)MINOR(dev));
+				log_debug("No sysfs entry for %d:%d errno %d at %s.",
+					  (int)MAJOR(dev), (int)MINOR(dev), errno, path);
 				return NULL;
 			}
 		}
@@ -1460,8 +1477,27 @@ struct device *dev_cache_get_by_devt(dev_t dev, struct dev_filter *f)
 		d = _dev_cache_seek_devt(dev);
 	}
 
-	return (d && (!f || (d->flags & DEV_REGULAR) ||
-		      f->passes_filter(f, d))) ? d : NULL;
+	if (!d)
+		return NULL;
+
+	if (d->flags & DEV_REGULAR)
+		return d;
+
+	if (!f)
+		return d;
+
+	ret = f->passes_filter(f, d);
+
+	if (ret == -EAGAIN) {
+		log_debug_devs("get device by number defer filter %s", dev_name(d));
+		d->flags |= DEV_FILTER_AFTER_SCAN;
+		ret = 1;
+	}
+
+	if (ret)
+		return d;
+
+	return NULL;
 }
 
 struct dev_iter *dev_iter_create(struct dev_filter *f, int unused)
@@ -1497,13 +1533,27 @@ static struct device *_iter_next(struct dev_iter *iter)
 
 struct device *dev_iter_get(struct dev_iter *iter)
 {
+	struct dev_filter *f;
+	int ret;
+
 	while (iter->current) {
 		struct device *d = _iter_next(iter);
-		if (!iter->filter || (d->flags & DEV_REGULAR) ||
-		    iter->filter->passes_filter(iter->filter, d)) {
-			log_debug_devs("%s: Using device (%d:%d)", dev_name(d), (int) MAJOR(d->dev), (int) MINOR(d->dev));
-			return d;
+		ret = 1;
+
+		f = iter->filter;
+
+		if (f && !(d->flags & DEV_REGULAR)) {
+			ret = f->passes_filter(f, d);
+
+			if (ret == -EAGAIN) {
+				log_debug_devs("get device by iter defer filter %s", dev_name(d));
+				d->flags |= DEV_FILTER_AFTER_SCAN;
+				ret = 1;
+			}
 		}
+
+		if (!f || (d->flags & DEV_REGULAR) || ret)
+			return d;
 	}
 
 	return NULL;

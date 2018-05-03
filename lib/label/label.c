@@ -328,13 +328,44 @@ static struct labeller *_find_lvm_header(struct device *dev,
  * beyond the range of the scanned block, then additional reads
  * are performed in the processing functions to get that data.
  */
-static int _process_block(struct device *dev, struct block *bb, int *is_lvm_device)
+static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
+			  struct device *dev, struct block *bb, int *is_lvm_device)
 {
 	char label_buf[LABEL_SIZE] __attribute__((aligned(8)));
 	struct label *label = NULL;
 	struct labeller *labeller;
 	uint64_t sector;
 	int ret = 0;
+	int pass;
+
+	/*
+	 * The device may have signatures that exclude it from being processed.
+	 * If filters were applied before bcache data was available, some
+	 * filters may have deferred their check until the point where bcache
+	 * data had been read (here).  They set this flag to indicate that the
+	 * filters should be retested now that data from the device is ready.
+	 */
+	if (cmd && (dev->flags & DEV_FILTER_AFTER_SCAN)) {
+		dev->flags &= ~DEV_FILTER_AFTER_SCAN;
+
+		log_debug_devs("Scan filtering %s", dev_name(dev));
+		
+		pass = f->passes_filter(f, dev);
+
+		if ((pass == -EAGAIN) || (dev->flags & DEV_FILTER_AFTER_SCAN)) {
+			/* Shouldn't happen */
+			dev->flags &= ~DEV_FILTER_OUT_SCAN;
+			log_debug_devs("Scan filter should not be deferred %s", dev_name(dev));
+			pass = 1;
+		}
+
+		if (!pass) {
+			log_very_verbose("%s: Not processing filtered", dev_name(dev));
+			dev->flags |= DEV_FILTER_OUT_SCAN;
+			*is_lvm_device = 0;
+			goto_out;
+		}
+	}
 
 	/*
 	 * Finds the data sector containing the label and copies into label_buf.
@@ -460,7 +491,8 @@ static int _scan_dev_close(struct device *dev)
  * its info is removed from lvmcache.
  */
 
-static int _scan_list(struct dm_list *devs, int *failed)
+static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
+		      struct dm_list *devs, int *failed)
 {
 	struct dm_list wait_devs;
 	struct dm_list done_devs;
@@ -471,6 +503,7 @@ static int _scan_list(struct dm_list *devs, int *failed)
 	int scan_process_errors = 0;
 	int scan_failed_count = 0;
 	int rem_prefetches;
+	int submit_count;
 	int scan_failed;
 	int is_lvm_device;
 	int error;
@@ -483,6 +516,7 @@ static int _scan_list(struct dm_list *devs, int *failed)
 
  scan_more:
 	rem_prefetches = bcache_max_prefetches(scan_bcache);
+	submit_count = 0;
 
 	dm_list_iterate_items_safe(devl, devl2, devs) {
 
@@ -510,10 +544,13 @@ static int _scan_list(struct dm_list *devs, int *failed)
 		bcache_prefetch(scan_bcache, devl->dev->bcache_fd, 0);
 
 		rem_prefetches--;
+		submit_count++;
 
 		dm_list_del(&devl->list);
 		dm_list_add(&wait_devs, &devl->list);
 	}
+
+	log_debug_devs("Scanning submitted %d reads", submit_count);
 
 	dm_list_iterate_items_safe(devl, devl2, &wait_devs) {
 		bb = NULL;
@@ -530,7 +567,7 @@ static int _scan_list(struct dm_list *devs, int *failed)
 		} else {
 			log_debug_devs("Processing data from device %s fd %d block %p", dev_name(devl->dev), devl->dev->bcache_fd, bb);
 
-			ret = _process_block(devl->dev, bb, &is_lvm_device);
+			ret = _process_block(cmd, f, devl->dev, bb, &is_lvm_device);
 
 			if (!ret && is_lvm_device) {
 				log_debug_devs("Scan failed to process %s", dev_name(devl->dev));
@@ -666,7 +703,7 @@ int label_scan(struct cmd_context *cmd)
 			return 0;
 	}
 
-	_scan_list(&all_devs, NULL);
+	_scan_list(cmd, cmd->full_filter, &all_devs, NULL);
 
 	return 1;
 }
@@ -679,7 +716,7 @@ int label_scan(struct cmd_context *cmd)
  * without a lock.)
  */
 
-int label_scan_devs(struct cmd_context *cmd, struct dm_list *devs)
+int label_scan_devs(struct cmd_context *cmd, struct dev_filter *f, struct dm_list *devs)
 {
 	struct device_list *devl;
 
@@ -697,7 +734,7 @@ int label_scan_devs(struct cmd_context *cmd, struct dm_list *devs)
 		}
 	}
 
-	_scan_list(devs, NULL);
+	_scan_list(cmd, f, devs, NULL);
 
 	/* FIXME: this function should probably fail if any devs couldn't be scanned */
 
@@ -721,7 +758,7 @@ int label_scan_devs_excl(struct dm_list *devs)
 		devl->dev->flags |= DEV_BCACHE_EXCL;
 	}
 
-	_scan_list(devs, &failed);
+	_scan_list(NULL, NULL, devs, &failed);
 
 	if (failed)
 		return 0;
@@ -750,7 +787,7 @@ void label_scan_invalidate_lv(struct cmd_context *cmd, struct logical_volume *lv
 
 	lv_info(cmd, lv, 0, &lvinfo, 0, 0);
 	devt = MKDEV(lvinfo.major, lvinfo.minor);
-	if ((dev = dev_cache_get_by_devt(devt, cmd->filter)))
+	if ((dev = dev_cache_get_by_devt(devt, NULL)))
 		label_scan_invalidate(dev);
 }
 
@@ -764,9 +801,8 @@ void label_scan_drop(struct cmd_context *cmd)
 	struct dev_iter *iter;
 	struct device *dev;
 
-	if (!(iter = dev_iter_create(cmd->full_filter, 0))) {
+	if (!(iter = dev_iter_create(NULL, 0)))
 		return;
-	}
 
 	while ((dev = dev_iter_get(iter))) {
 		if (_in_bcache(dev))
@@ -818,7 +854,7 @@ int label_read(struct device *dev, struct label **labelp, uint64_t unused_sector
 		_scan_dev_close(dev);
 	}
 
-	_scan_list(&one_dev, &failed);
+	_scan_list(NULL, NULL, &one_dev, &failed);
 
 	/*
 	 * FIXME: this ugliness of returning a pointer to the label is
