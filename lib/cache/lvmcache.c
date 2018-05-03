@@ -211,33 +211,32 @@ static void _saved_vg_inval(struct saved_vg *svg, int inval_old, int inval_new)
 {
 	struct vg_list *vgl;
 
-	if (inval_old) {
-		if (svg->saved_vg_old)
-			log_debug_cache("lvmcache: inval saved_vg %s old %p",
-					svg->saved_vg_old->name, svg->saved_vg_old);
+	/* 
+	 * In practice there appears to only ever be a single invalidated vg,
+	 * so making saved_vg_to_free a list instead of a pointer is overkill.
+	 * But, without proof otherwise, safer to keep the list.
+	 */
 
-		if (svg->saved_vg_old) {
-			if ((vgl = dm_zalloc(sizeof(*vgl)))) {
-				vgl->vg = svg->saved_vg_old;
-				dm_list_add(&svg->saved_vg_to_free, &vgl->list);
-			}
+	if (inval_old && svg->saved_vg_old) {
+		log_debug_cache("lvmcache: inval saved_vg %s old %p",
+				svg->saved_vg_old->name, svg->saved_vg_old);
+
+		if ((vgl = dm_zalloc(sizeof(*vgl)))) {
+			vgl->vg = svg->saved_vg_old;
+			dm_list_add(&svg->saved_vg_to_free, &vgl->list);
 		}
 
 		svg->saved_vg_old = NULL;
 	}
 
-	if (inval_new) {
-		if (svg->saved_vg_new)
-			log_debug_cache("lvmcache: inval saved_vg %s new pre %p",
-					svg->saved_vg_new->name, svg->saved_vg_new);
+	if (inval_new && svg->saved_vg_new) {
+		log_debug_cache("lvmcache: inval saved_vg %s new pre %p",
+				svg->saved_vg_new->name, svg->saved_vg_new);
 
-		if (svg->saved_vg_new) {
-			if ((vgl = dm_zalloc(sizeof(*vgl)))) {
-				vgl->vg = svg->saved_vg_new;
-				dm_list_add(&svg->saved_vg_to_free, &vgl->list);
-			}
+		if ((vgl = dm_zalloc(sizeof(*vgl)))) {
+			vgl->vg = svg->saved_vg_new;
+			dm_list_add(&svg->saved_vg_to_free, &vgl->list);
 		}
-
 		svg->saved_vg_new = NULL;
 	}
 }
@@ -245,23 +244,22 @@ static void _saved_vg_inval(struct saved_vg *svg, int inval_old, int inval_new)
 static void _saved_vg_free(struct saved_vg *svg, int free_old, int free_new)
 {
 	struct vg_list *vgl, *vgl2;
+	struct volume_group *vg;
 
 	if (free_old) {
-		if (svg->saved_vg_old) {
-			log_debug_cache("lvmcache: free saved_vg %s old %p",
-					svg->saved_vg_old->name, svg->saved_vg_old);
+		if ((vg = svg->saved_vg_old)) {
+			log_debug_cache("lvmcache: free saved_vg old %s %.8s %d old %p",
+					vg->name, (char *)&vg->id, vg->seqno, vg);
 
-			svg->saved_vg_old->saved_in_clvmd = 0;
+			vg->saved_in_clvmd = 0;
+			release_vg(vg);
+			svg->saved_vg_old = NULL;
+			vg = NULL;
 		}
 
-		if (svg->saved_vg_old)
-			release_vg(svg->saved_vg_old);
-
-		svg->saved_vg_old = NULL;
-
 		dm_list_iterate_items_safe(vgl, vgl2, &svg->saved_vg_to_free) {
-			log_debug_cache("lvmcache: free saved_vg_to_free %s %p",
-					vgl->vg->name, vgl->vg);
+			log_debug_cache("lvmcache: free saved_vg_to_free %s %.8s %d %p",
+					vgl->vg->name, (char *)&vgl->vg->id, vgl->vg->seqno, vgl->vg);
 
 			dm_list_del(&vgl->list);
 			vgl->vg->saved_in_clvmd = 0;
@@ -270,17 +268,15 @@ static void _saved_vg_free(struct saved_vg *svg, int free_old, int free_new)
 	}
 
 	if (free_new) {
-		if (svg->saved_vg_new) {
-			log_debug_cache("lvmcache: free saved_vg %s new pre %p",
-					svg->saved_vg_new->name, svg->saved_vg_new);
+		if ((vg = svg->saved_vg_new)) {
+			log_debug_cache("lvmcache: free saved_vg pre %s %.8s %d %p",
+					vg->name, (char *)&vg->id, vg->seqno, vg);
 
-			svg->saved_vg_new->saved_in_clvmd = 0;
+			vg->saved_in_clvmd = 0;
+			release_vg(vg);
+			svg->saved_vg_new = NULL;
+			vg = NULL;
 		}
-
-		if (svg->saved_vg_new)
-			release_vg(svg->saved_vg_new);
-
-		svg->saved_vg_new = NULL;
 	}
 }
 
@@ -419,10 +415,10 @@ struct volume_group *lvmcache_get_saved_vg(const char *vgid, int precommitted)
 
 	if (vg && new) {
 		if (!svg->saved_vg_old)
-			log_debug_cache("lvmcache: get new (pre) saved_vg %d %s %p",
+			log_debug_cache("lvmcache: get new saved_vg %d %s %p",
 					vg->seqno, vg->name, vg);
 		else
-			log_debug_cache("lvmcache: get new (pre) saved_vg %d %s %p old is %d %p",
+			log_debug_cache("lvmcache: get new saved_vg %d %s %p old is %d %p",
 					vg->seqno, vg->name, vg,
 					svg->saved_vg_old->seqno,
 					svg->saved_vg_old);
@@ -484,10 +480,10 @@ struct volume_group *lvmcache_get_saved_vg_latest(const char *vgid)
 
 	if (vg && new) {
 		if (!svg->saved_vg_old)
-			log_debug_cache("lvmcache: get_latest new (pre) saved_vg %d %s %p",
+			log_debug_cache("lvmcache: get_latest new saved_vg %d %s %p",
 					vg->seqno, vg->name, vg);
 		else
-			log_debug_cache("lvmcache: get_latest new (pre) saved_vg %d %s %p old is %d %p",
+			log_debug_cache("lvmcache: get_latest new saved_vg %d %s %p old is %d %p",
 					vg->seqno, vg->name, vg,
 					svg->saved_vg_old->seqno,
 					svg->saved_vg_old);
