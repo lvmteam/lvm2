@@ -151,7 +151,7 @@ static bool _zero_partial(struct bcache *cache, int fd, block_address bb, uint64
 	return true;
 }
 
-bool bcache_write_zeros(struct bcache *cache, int fd, uint64_t start, size_t len)
+bool bcache_zero_bytes(struct bcache *cache, int fd, uint64_t start, size_t len)
 {
 	block_address bb, be;
 	uint64_t block_size = bcache_block_sectors(cache) << SECTOR_SHIFT;

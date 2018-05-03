@@ -161,7 +161,7 @@ void bcache_prefetch_bytes(struct bcache *cache, int fd, uint64_t start, size_t 
 // Reads, writes and zeroes bytes.  Returns false if errors occur.
 bool bcache_read_bytes(struct bcache *cache, int fd, uint64_t start, size_t len, void *data);
 bool bcache_write_bytes(struct bcache *cache, int fd, uint64_t start, size_t len, void *data);
-bool bcache_write_zeros(struct bcache *cache, int fd, uint64_t start, size_t len);
+bool bcache_zero_bytes(struct bcache *cache, int fd, uint64_t start, size_t len);
 
 //----------------------------------------------------------------
 
