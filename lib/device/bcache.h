@@ -150,18 +150,18 @@ bool bcache_invalidate(struct bcache *cache, int fd, block_address index);
  */
 bool bcache_invalidate_fd(struct bcache *cache, int fd);
 
-/*
- * Prefetches the blocks neccessary to satisfy a byte range.
- */
+
+//----------------------------------------------------------------
+// The next four functions are utilities written in terms of the above api.
+ 
+// Prefetches the blocks neccessary to satisfy a byte range.
 void bcache_prefetch_bytes(struct bcache *cache, int fd, off_t start, size_t len);
 
-/*
- * Reads and writes the bytes.  Returns false if errors occur.
- */
+// Reads, writes and zeroes bytes.  Returns false if errors occur.
 bool bcache_read_bytes(struct bcache *cache, int fd, off_t start, size_t len, void *data);
 bool bcache_write_bytes(struct bcache *cache, int fd, off_t start, size_t len, void *data);
 bool bcache_write_zeros(struct bcache *cache, int fd, off_t start, size_t len);
 
-/*----------------------------------------------------------------*/
+//----------------------------------------------------------------
 
 #endif
