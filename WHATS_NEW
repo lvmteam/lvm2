@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  lvconvert: don't return success on degraded -m raid1 conversion
   --enable-testing switch for ./configure has been removed.
   --with-snapshots switch for ./configure has been removed.
   --with-mirrors switch for ./configure has been removed.
