@@ -21,6 +21,7 @@
 
 // Declare the function that adds tests suites here ...
 void bcache_tests(struct dm_list *suites);
+void bcache_utils_tests(struct dm_list *suites);
 void bitset_tests(struct dm_list *suites);
 void config_tests(struct dm_list *suites);
 void dm_list_tests(struct dm_list *suites);
@@ -34,6 +35,7 @@ void string_tests(struct dm_list *suites);
 static inline void register_all_tests(struct dm_list *suites)
 {
 	bcache_tests(suites);
+	bcache_utils_tests(suites);
 	bitset_tests(suites);
 	config_tests(suites);
 	dm_list_tests(suites);
