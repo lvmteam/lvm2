@@ -6789,10 +6789,8 @@ static int _lv_raid_rebuild_or_replace(struct logical_volume *lv,
 			return 0;
 		}
 
-		if (lv_is_virtual(seg_lv(raid_seg, s)) ||
-		    lv_is_virtual(seg_metalv(raid_seg, s)) ||
-		    lv_is_partial(seg_lv(raid_seg, s)) ||
-		    lv_is_partial(seg_metalv(raid_seg, s)) ||
+		if (_sublv_is_degraded(seg_lv(raid_seg, s)) ||
+		    _sublv_is_degraded(seg_metalv(raid_seg, s)) ||
 		    lv_is_on_pvs(seg_lv(raid_seg, s), remove_pvs) ||
 		    lv_is_on_pvs(seg_metalv(raid_seg, s), remove_pvs)) {
 			match_count++;
@@ -7122,10 +7120,8 @@ static int _partial_raid_lv_is_redundant(const struct logical_volume *lv)
 			if (!(i % copies))
 				rebuilds_per_group = 0;
 
-			if (lv_is_partial(seg_lv(raid_seg, s)) ||
-			    lv_is_partial(seg_metalv(raid_seg, s)) ||
-			    lv_is_virtual(seg_lv(raid_seg, s)) ||
-			    lv_is_virtual(seg_metalv(raid_seg, s)))
+			if (_sublv_is_degraded(seg_lv(raid_seg, s)) ||
+			    _sublv_is_degraded(seg_metalv(raid_seg, s)))
 				rebuilds_per_group++;
 
 			if (rebuilds_per_group >= copies) {
@@ -7138,14 +7134,7 @@ static int _partial_raid_lv_is_redundant(const struct logical_volume *lv)
 		return 1; /* Redundant */
 	}
 
-	for (s = 0; s < raid_seg->area_count; s++) {
-		if (lv_is_partial(seg_lv(raid_seg, s)) ||
-		    lv_is_partial(seg_metalv(raid_seg, s)) ||
-		    lv_is_virtual(seg_lv(raid_seg, s)) ||
-		    lv_is_virtual(seg_metalv(raid_seg, s)))
-			failed_components++;
-	}
-
+	failed_components = _lv_get_nr_failed_components(lv);
 	if (failed_components == raid_seg->area_count) {
 		log_verbose("All components of raid LV %s have failed.",
 			    display_lvname(lv));
