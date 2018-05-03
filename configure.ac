@@ -342,7 +342,7 @@ AC_ARG_WITH(default-raid10-segtype,
 			   DEFAULT_RAID10_SEGTYPE=$withval, DEFAULT_RAID10_SEGTYPE="raid10")
 
 AC_DEFINE([RAID_INTERNAL], 1,
-	  [Define to 1 to include built-in support for raid.]) ;;
+	  [Define to 1 to include built-in support for raid.])
 
 AC_DEFINE_UNQUOTED([DEFAULT_MIRROR_SEGTYPE], ["$DEFAULT_MIRROR_SEGTYPE"],
 		   [Default segtype used for mirror volumes.])
