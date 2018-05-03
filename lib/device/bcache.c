@@ -863,6 +863,11 @@ void bcache_destroy(struct bcache *cache)
 	dm_free(cache);
 }
 
+sector_t bcache_block_sectors(struct bcache *cache)
+{
+	return cache->block_sectors;
+}
+
 unsigned bcache_nr_cache_blocks(struct bcache *cache)
 {
 	return cache->nr_cache_blocks;
