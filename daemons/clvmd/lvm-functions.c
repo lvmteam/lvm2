@@ -903,7 +903,6 @@ int init_clvm(struct dm_hash_table *excl_uuid)
 		return 0;
 	}
 
-	cmd->is_clvmd = 1;
 	cmd->cmd_line = "clvmd";
 
 	/* Check lvm.conf is setup for cluster-LVM */

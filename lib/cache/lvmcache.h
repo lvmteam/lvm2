@@ -63,7 +63,7 @@ struct lvmcache_vgsummary {
 	int seqno;
 };
 
-int lvmcache_init(void);
+int lvmcache_init(struct cmd_context *cmd);
 void lvmcache_allow_reads_with_lvmetad(void);
 
 void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset);
@@ -213,12 +213,15 @@ int lvmcache_get_vg_devs(struct cmd_context *cmd,
 			 struct dm_list *devs);
 void lvmcache_set_independent_location(const char *vgname);
 
+int lvmcache_scan_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid);
+
+/*
+ * These are clvmd-specific functions and are not related to lvmcache.
+ * FIXME: rename these with a clvm_ prefix in place of lvmcache_
+ */
 void lvmcache_save_vg(struct volume_group *vg, int precommitted);
 struct volume_group *lvmcache_get_saved_vg(const char *vgid, int precommitted);
 struct volume_group *lvmcache_get_saved_vg_latest(const char *vgid);
-void lvmcache_drop_saved_vg(struct volume_group *vg);
 void lvmcache_drop_saved_vgid(const char *vgid);
-
-int lvmcache_scan_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid);
 
 #endif

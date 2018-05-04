@@ -111,7 +111,7 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 	if (!skip_lvm) {
 		reset_locking();
 		lvmcache_destroy(cmd, 1, 1);
-		if (!lvmcache_init())
+		if (!lvmcache_init(cmd))
 			/* FIXME Clean up properly here */
 			_exit(ECMD_FAILED);
 	}
@@ -4622,7 +4622,7 @@ int process_each_pv(struct cmd_context *cmd,
 		log_verbose("Some PVs were not found in first search, retrying.");
 
 		lvmcache_destroy(cmd, 0, 0);
-		if (!lvmcache_init()) {
+		if (!lvmcache_init(cmd)) {
 			log_error("Failed to initalize lvm cache.");
 			ret_max = ECMD_FAILED;
 			goto out;
