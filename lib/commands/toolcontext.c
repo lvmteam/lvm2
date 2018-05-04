@@ -1053,7 +1053,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	return 1;
 }
 
-#define MAX_FILTERS 9
+#define MAX_FILTERS 10
 
 static struct dev_filter *_init_lvmetad_filter_chain(struct cmd_context *cmd)
 {
@@ -1814,7 +1814,7 @@ out:
 }
 
 /* Entry point */
-struct cmd_context *create_toolcontext(unsigned is_long_lived,
+struct cmd_context *create_toolcontext(unsigned is_clvmd,
 				       const char *system_dir,
 				       unsigned set_buffering,
 				       unsigned threaded,
@@ -1841,7 +1841,8 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 		log_error("Failed to allocate command context");
 		return NULL;
 	}
-	cmd->is_long_lived = is_long_lived;
+	cmd->is_long_lived = is_clvmd;
+	cmd->is_clvmd = is_clvmd;
 	cmd->threaded = threaded ? 1 : 0;
 	cmd->handles_missing_pvs = 0;
 	cmd->handles_unknown_segments = 0;
@@ -1970,6 +1971,10 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 	if (!_init_formats(cmd))
 		goto_out;
 
+	if (!lvmcache_init(cmd))
+		goto_out;
+
+	/* FIXME: move into lvmcache_init */
 	if (!init_lvmcache_orphans(cmd))
 		goto_out;
 
@@ -2189,6 +2194,9 @@ int refresh_toolcontext(struct cmd_context *cmd)
 		return_0;
 
 	if (!_init_formats(cmd))
+		return_0;
+
+	if (!lvmcache_init(cmd))
 		return_0;
 
 	if (!init_lvmcache_orphans(cmd))

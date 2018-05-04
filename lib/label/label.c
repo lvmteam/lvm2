@@ -988,7 +988,7 @@ bool dev_write_zeros(struct device *dev, off_t start, size_t len)
 		}
 	}
 
-	if (!bcache_write_zeros(scan_bcache, dev->bcache_fd, start, len)) {
+	if (!bcache_zero_bytes(scan_bcache, dev->bcache_fd, start, len)) {
 		log_error("dev_write_zeros %s at %u bcache write failed invalidate fd %d",
 			  dev_name(dev), (uint32_t)start, dev->bcache_fd);
 		label_scan_invalidate(dev);

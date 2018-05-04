@@ -15,11 +15,11 @@
 #ifndef BCACHE_H
 #define BCACHE_H
 
+#include "libdevmapper.h"
+
 #include <linux/fs.h>
 #include <stdint.h>
 #include <stdbool.h>
-
-#include "libdevmapper.h"
 
 /*----------------------------------------------------------------*/
 
@@ -97,6 +97,7 @@ enum bcache_get_flags {
 	GF_DIRTY = (1 << 1)
 };
 
+sector_t bcache_block_sectors(struct bcache *cache);
 unsigned bcache_nr_cache_blocks(struct bcache *cache);
 unsigned bcache_max_prefetches(struct bcache *cache);
 
@@ -150,18 +151,18 @@ bool bcache_invalidate(struct bcache *cache, int fd, block_address index);
  */
 bool bcache_invalidate_fd(struct bcache *cache, int fd);
 
-/*
- * Prefetches the blocks neccessary to satisfy a byte range.
- */
-void bcache_prefetch_bytes(struct bcache *cache, int fd, off_t start, size_t len);
 
-/*
- * Reads and writes the bytes.  Returns false if errors occur.
- */
-bool bcache_read_bytes(struct bcache *cache, int fd, off_t start, size_t len, void *data);
-bool bcache_write_bytes(struct bcache *cache, int fd, off_t start, size_t len, void *data);
-bool bcache_write_zeros(struct bcache *cache, int fd, off_t start, size_t len);
+//----------------------------------------------------------------
+// The next four functions are utilities written in terms of the above api.
+ 
+// Prefetches the blocks neccessary to satisfy a byte range.
+void bcache_prefetch_bytes(struct bcache *cache, int fd, uint64_t start, size_t len);
 
-/*----------------------------------------------------------------*/
+// Reads, writes and zeroes bytes.  Returns false if errors occur.
+bool bcache_read_bytes(struct bcache *cache, int fd, uint64_t start, size_t len, void *data);
+bool bcache_write_bytes(struct bcache *cache, int fd, uint64_t start, size_t len, void *data);
+bool bcache_zero_bytes(struct bcache *cache, int fd, uint64_t start, size_t len);
+
+//----------------------------------------------------------------
 
 #endif

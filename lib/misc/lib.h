@@ -23,7 +23,6 @@
 
 #define _REENTRANT
 #define _GNU_SOURCE
-#define _FILE_OFFSET_BITS 64
 
 /*
  * Symbol export control macros

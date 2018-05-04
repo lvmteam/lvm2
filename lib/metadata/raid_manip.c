@@ -3200,6 +3200,27 @@ static int _raid_remove_images(struct logical_volume *lv, int yes,
 	return 1;
 }
 
+/* Check if single SubLV @slv is degraded. */
+static int _sublv_is_degraded(const struct logical_volume *slv)
+{
+	return !slv || lv_is_partial(slv) || lv_is_virtual(slv);
+}
+
+/* Return failed component SubLV count for @lv. */
+static uint32_t _lv_get_nr_failed_components(const struct logical_volume *lv)
+{
+	uint32_t r = 0, s;
+	struct lv_segment *seg = first_seg(lv);
+
+	for (s = 0; s < seg->area_count; s++)
+		if (_sublv_is_degraded(seg_lv(seg, s)) ||
+		    (seg->meta_areas &&
+		     _sublv_is_degraded(seg_metalv(seg, s))))
+			r++;
+
+	return r;
+}
+
 /*
  * _lv_raid_change_image_count
  * new_count: The absolute count of images (e.g. '2' for a 2-way mirror)
@@ -3215,12 +3236,25 @@ static int _lv_raid_change_image_count(struct logical_volume *lv, int yes, uint3
 				       struct dm_list *allocate_pvs, struct dm_list *removal_lvs,
 				       int commit, int use_existing_area_len)
 {
+	int r;
 	uint32_t old_count = lv_raid_image_count(lv);
+
+	/* If there's failed component SubLVs, require repair first! */
+	if (lv_is_raid(lv) &&
+	    _lv_get_nr_failed_components(lv) &&
+	    new_count >= old_count) {
+		log_error("Can't change number of mirrors of degraded %s.",
+			  display_lvname(lv));
+		log_error("Please run \"lvconvert --repair %s\" first.",
+			  display_lvname(lv));
+		r = 0;
+	} else
+		r = 1;
 
 	if (old_count == new_count) {
 		log_warn("WARNING: %s already has image count of %d.",
 			 display_lvname(lv), new_count);
-		return 1;
+		return r;
 	}
 
 	/*
@@ -6755,10 +6789,8 @@ static int _lv_raid_rebuild_or_replace(struct logical_volume *lv,
 			return 0;
 		}
 
-		if (lv_is_virtual(seg_lv(raid_seg, s)) ||
-		    lv_is_virtual(seg_metalv(raid_seg, s)) ||
-		    lv_is_partial(seg_lv(raid_seg, s)) ||
-		    lv_is_partial(seg_metalv(raid_seg, s)) ||
+		if (_sublv_is_degraded(seg_lv(raid_seg, s)) ||
+		    _sublv_is_degraded(seg_metalv(raid_seg, s)) ||
 		    lv_is_on_pvs(seg_lv(raid_seg, s), remove_pvs) ||
 		    lv_is_on_pvs(seg_metalv(raid_seg, s), remove_pvs)) {
 			match_count++;
@@ -7088,10 +7120,8 @@ static int _partial_raid_lv_is_redundant(const struct logical_volume *lv)
 			if (!(i % copies))
 				rebuilds_per_group = 0;
 
-			if (lv_is_partial(seg_lv(raid_seg, s)) ||
-			    lv_is_partial(seg_metalv(raid_seg, s)) ||
-			    lv_is_virtual(seg_lv(raid_seg, s)) ||
-			    lv_is_virtual(seg_metalv(raid_seg, s)))
+			if (_sublv_is_degraded(seg_lv(raid_seg, s)) ||
+			    _sublv_is_degraded(seg_metalv(raid_seg, s)))
 				rebuilds_per_group++;
 
 			if (rebuilds_per_group >= copies) {
@@ -7104,14 +7134,7 @@ static int _partial_raid_lv_is_redundant(const struct logical_volume *lv)
 		return 1; /* Redundant */
 	}
 
-	for (s = 0; s < raid_seg->area_count; s++) {
-		if (lv_is_partial(seg_lv(raid_seg, s)) ||
-		    lv_is_partial(seg_metalv(raid_seg, s)) ||
-		    lv_is_virtual(seg_lv(raid_seg, s)) ||
-		    lv_is_virtual(seg_metalv(raid_seg, s)))
-			failed_components++;
-	}
-
+	failed_components = _lv_get_nr_failed_components(lv);
 	if (failed_components == raid_seg->area_count) {
 		log_verbose("All components of raid LV %s have failed.",
 			    display_lvname(lv));

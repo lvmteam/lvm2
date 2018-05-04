@@ -2161,36 +2161,40 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	if (lv && lv_pre)
 		goto skip_read;
 
-	vg = lvmcache_get_saved_vg(vgid, 0);
-	vg_pre = lvmcache_get_saved_vg(vgid, 1);
-
-	if (!vg || !vg_pre) {
-		log_debug("lv_suspend dropping both saved vgs and rereading");
-
-		lvmcache_drop_saved_vgid(vgid);
-
-		vg = vg_read_by_vgid(cmd, vgid, 0);
-		vg_pre = vg_read_by_vgid(cmd, vgid, 1);
-
-		if (!vg || !vg_pre) {
-			log_error("lv_suspend could not find vgid %.8s vg %p vg_pre %p",
-				  vgid, vg, vg_pre);
+	if (!(vg = lvmcache_get_saved_vg(vgid, 0))) {
+		log_debug("lv_suspend did not find saved_vg %.8s so reading", vgid);
+		if (!(vg = vg_read_by_vgid(cmd, vgid, 0))) {
+			log_error("lv_suspend could not read vgid %.8s", vgid);
 			goto out;
 		}
+		log_debug("lv_suspend using read vg %s %d %p", vg->name, vg->seqno, vg);
+	} else {
+		log_debug("lv_suspend using saved_vg %s %d %p", vg->name, vg->seqno, vg);
+	}
 
-		/*
-		 * Note that vg and vg_pre returned by vg_read_by_vgid will
-		 * not be the same as saved_vg_old/saved_vg_new that would
-		 * be returned by lvmcache_get_saved_vg() because the saved_vg's
-		 * are copies of the vg struct that is created by _vg_read.
-		 * (Should we grab and use the saved_vg to use here instead of
-		 * the vg returned by vg_read_by_vgid?)
-		 */
-
-		if ((vg->status & EXPORTED_VG) || (vg_pre->status & EXPORTED_VG)) {
-			log_error("Volume group \"%s\" is exported", vg->name);
+	if (!(vg_pre = lvmcache_get_saved_vg(vgid, 1))) {
+		log_debug("lv_suspend did not find pre saved_vg %.8s so reading", vgid);
+		if (!(vg_pre = vg_read_by_vgid(cmd, vgid, 1))) {
+			log_error("lv_suspend could not read pre vgid %.8s", vgid);
 			goto out;
 		}
+		log_debug("lv_suspend using pre read vg %s %d %p", vg_pre->name, vg_pre->seqno, vg_pre);
+	} else {
+		log_debug("lv_suspend using pre saved_vg %s %d %p", vg_pre->name, vg_pre->seqno, vg_pre);
+	}
+
+	/*
+	 * Note that vg and vg_pre returned by vg_read_by_vgid will
+	 * not be the same as saved_vg_old/saved_vg_new that would
+	 * be returned by lvmcache_get_saved_vg() because the saved_vg's
+	 * are copies of the vg struct that is created by _vg_read.
+	 * (Should we grab and use the saved_vg to use here instead of
+	 * the vg returned by vg_read_by_vgid?)
+	 */
+
+	if ((vg->status & EXPORTED_VG) || (vg_pre->status & EXPORTED_VG)) {
+		log_error("Volume group \"%s\" is exported", vg->name);
+		goto out;
 	}
 
 	lv = lv_to_free = find_lv_in_vg_by_lvid(vg, lvid);

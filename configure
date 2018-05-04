@@ -663,7 +663,6 @@ SBINDIR
 REPLICATORS
 READLINE_LIBS
 RT_LIBS
-RAID
 PYTHON3DIR
 PYTHON2DIR
 PYTHON3_LIBDIRS
@@ -912,7 +911,6 @@ with_default_name_mangling
 with_cluster
 with_snapshots
 with_mirrors
-with_raid
 with_default_mirror_segtype
 with_default_raid10_segtype
 with_default_sparse_segtype
@@ -1745,7 +1743,6 @@ Optional Packages:
                           [internal]
   --with-snapshots=TYPE   snapshot support: internal/shared/none [internal]
   --with-mirrors=TYPE     mirror support: internal/shared/none [internal]
-  --with-raid=TYPE        raid support: internal/shared/none [internal]
   --with-default-mirror-segtype=TYPE
                           default mirror segtype: raid1/mirror [raid1]
   --with-default-raid10-segtype=TYPE
@@ -8439,19 +8436,6 @@ $as_echo "#define MIRRORED_INTERNAL 1" >>confdefs.h
 esac
 
 ################################################################################
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to include raid" >&5
-$as_echo_n "checking whether to include raid... " >&6; }
-
-# Check whether --with-raid was given.
-if test "${with_raid+set}" = set; then :
-  withval=$with_raid; RAID=$withval
-else
-  RAID=internal
-fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $RAID" >&5
-$as_echo "$RAID" >&6; }
-
 
 # Check whether --with-default-mirror-segtype was given.
 if test "${with_default_mirror_segtype+set}" = set; then :
@@ -8468,15 +8452,10 @@ else
   DEFAULT_RAID10_SEGTYPE="raid10"
 fi
 
-case "$RAID" in
-  none)  test "$DEFAULT_MIRROR_SEGTYPE" = "raid1" && DEFAULT_MIRROR_SEGTYPE="mirror"
-	test "$DEFAULT_RAID10_SEGTYPE" = "raid10" && DEFAULT_RAID10_SEGTYPE="mirror" ;;
-  shared) ;;
-  internal)
+
+
 $as_echo "#define RAID_INTERNAL 1" >>confdefs.h
- ;;
-  *) as_fn_error $? "--with-raid parameter invalid" "$LINENO" 5 ;;
-esac
+
 
 
 cat >>confdefs.h <<_ACEOF
@@ -13883,8 +13862,6 @@ fi
 
 ################################################################################
 if [ \( "$LVM1" = shared -o "$POOL" = shared -o "$CLUSTER" = shared \
-      -o "$SNAPSHOTS" = shared -o "$MIRRORS" = shared \
-      -o "$RAID" = shared -o "$CACHE" = shared \
       \) -a "$STATIC_LINK" = yes ]; then
 	as_fn_error $? "Features cannot be 'shared' when building statically" "$LINENO" 5
 fi
@@ -15424,7 +15401,6 @@ _ACEOF
 
 
 ################################################################################
-
 
 
 

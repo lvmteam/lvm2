@@ -1492,10 +1492,6 @@ have_thin() {
 }
 
 have_raid() {
-	test "$RAID" = shared -o "$RAID" = internal || {
-		echo "Raid is not built-in." >&2
-		return 1;
-	}
 	target_at_least dm-raid "$@"
 
 	# some kernels have broken mdraid bitmaps, don't use them!
