@@ -503,6 +503,7 @@ teardown_devs() {
 			udev_wait
 		}
 	}
+	restore_dm_mirror
 }
 
 kill_sleep_kill_() {
@@ -1053,6 +1054,22 @@ enable_dev() {
 		notify_lvmetad "$dev"
 	done
 }
+
+# Throttle down performance of kcopyd when mirroring i.e. disk image
+throttle_sys="/sys/module/dm_mirror/parameters/raid1_resync_throttle"
+throttle_dm_mirror() {
+	test -f THROTTLE || cat "$throttle_sys" > THROTTLE
+	echo ${1-1} > "$throttle_sys"
+}
+
+# Restore original kcopyd throttle value and have mirroring fast again
+restore_dm_mirror() {
+	test ! -f THROTTLE || {
+		cat THROTTLE > "$throttle_sys"
+		rm -f THROTTLE
+	}
+}
+
 
 # Once there is $name.devtable
 # this is a quick way to restore to this table entry
