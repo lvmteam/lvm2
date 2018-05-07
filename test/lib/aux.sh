@@ -1556,10 +1556,6 @@ have_raid4 () {
 }
 
 have_cache() {
-	test "$CACHE" = shared -o "$CACHE" = internal || {
-		echo "Cache is not built-in." >&2
-		return 1;
-	}
 	target_at_least dm-cache "$@"
 
 	declare -a CONF=()
