@@ -80,6 +80,8 @@ static int _check_lv_status(struct cmd_context *cmd,
 	}
 
 	progress = parms->poll_fns->poll_progress(cmd, lv, name, parms);
+	fflush(stdout);
+
 	if (progress == PROGRESS_CHECK_FAILED)
 		return_0;
 
@@ -448,6 +450,7 @@ static int _report_progress(struct cmd_context *cmd, struct poll_operation_id *i
 		ret = 0;
 		goto out;
 	}
+	fflush(stdout);
 
 	ret = 1;
 
