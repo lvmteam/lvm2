@@ -477,6 +477,7 @@ teardown_devs() {
 
 	test ! -f MD_DEV || cleanup_md_dev
 	test ! -f DEVICES || teardown_devs_prefixed "$PREFIX"
+	test ! -f RAMDISK || { modprobe -r brd || true ; }
 
 	# NOTE: SCSI_DEBUG_DEV test must come before the LOOP test because
 	# prepare_scsi_debug_dev() also sets LOOP to short-circuit prepare_loop()
@@ -489,7 +490,7 @@ teardown_devs() {
 	fi
 
 	not diff LOOP BACKING_DEV >/dev/null 2>&1 || rm -f BACKING_DEV
-	rm -f DEVICES LOOP
+	rm -f DEVICES LOOP RAMDISK
 
 	# Attempt to remove any loop devices that failed to get torn down if earlier tests aborted
 	test "${LVM_TEST_PARALLEL:-0}" -eq 1 || test -z "$COMMON_PREFIX" || {
@@ -638,7 +639,7 @@ teardown() {
 }
 
 prepare_loop() {
-	local size=${1=32}
+	local size=$1
 	shift # all other params are directly passed to all 'losetup' calls
 	local i
 	local slash
@@ -689,6 +690,17 @@ prepare_loop() {
 	echo "$LOOP" > LOOP
 	echo "$LOOP" > BACKING_DEV
 	echo "ok ($LOOP)"
+}
+
+prepare_ramdisk() {
+	local size=$1
+
+	echo -n "## preparing ramdisk device..."
+	modprobe brd rd_size=$((size * 1024)) || return
+
+	BACKING_DEV=/dev/ram0
+	echo "ok ($BACKING_DEV)"
+	touch RAMDISK
 }
 
 # A drop-in replacement for prepare_loop() that uses scsi_debug to create
@@ -818,14 +830,24 @@ cleanup_md_dev() {
 }
 
 prepare_backing_dev() {
+	local size=${1=32}
+	shift
+
 	if test -f BACKING_DEV; then
 		BACKING_DEV=$(< BACKING_DEV)
+		return 0
 	elif test -b "$LVM_TEST_BACKING_DEVICE"; then
 		BACKING_DEV=$LVM_TEST_BACKING_DEVICE
 		echo "$BACKING_DEV" > BACKING_DEV
-	else
-		prepare_loop "$@"
+		return 0
+	elif test "${LVM_TEST_PREFER_BRD-1}" = "1" && test ! -d /sys/block/ram0 && test "$size" -lt 16384; then
+		# try to use ramdisk if possible, but for
+		# big allocs (>16G) do not try to use ramdisk
+		prepare_ramdisk "$size" "$@" && return
+		echo "(failed)"
 	fi
+
+	prepare_loop "$size" "$@"
 }
 
 prepare_devs() {
@@ -870,7 +892,7 @@ prepare_devs() {
 	fi
 
 	# non-ephemeral devices need to be cleared between tests
-	test -f LOOP || for d in "${DEVICES[@]}"; do
+	test -f LOOP -o -f RAMDISK || for d in "${DEVICES[@]}"; do
 		blkdiscard "$d" 2>/dev/null || true
 		# ensure disk header is always zeroed
 		dd if=/dev/zero of="$d" bs=32k count=1
