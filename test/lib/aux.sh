@@ -867,6 +867,7 @@ prepare_devs() {
 	prepare_backing_dev $(( n * devsize ))
 	# shift start of PV devices on /dev/loopXX by 1M
 	not diff LOOP BACKING_DEV >/dev/null 2>&1 || shift=2048
+	blkdiscard "$BACKING_DEV" 2>/dev/null || true
 	echo -n "## preparing $n devices..."
 
 	local size=$(( devsize * 2048 )) # sectors
@@ -894,7 +895,6 @@ prepare_devs() {
 
 	# non-ephemeral devices need to be cleared between tests
 	test -f LOOP -o -f RAMDISK || for d in "${DEVICES[@]}"; do
-		blkdiscard "$d" 2>/dev/null || true
 		# ensure disk header is always zeroed
 		dd if=/dev/zero of="$d" bs=32k count=1
 		wipefs -a "$d" 2>/dev/null || true
