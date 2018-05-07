@@ -20,18 +20,19 @@ export DM_ABORT_ON_INTERNAL_ERRORS=0
 
 . lib/inittest
 
+aux lvmconf 'activation/raid_region_size = 16'
+
 aux prepare_pvs 6 60
 
-vgcreate -s 128k $vg "$dev1" "$dev2"
+vgcreate -s 512k $vg "$dev1" "$dev2"
 pvcreate --metadatacopies 0 "$dev3"
 vgextend $vg "$dev3"
-vgcreate -s 128k $vg1 "$dev4" "$dev5"
+vgcreate -s 512k $vg1 "$dev4" "$dev5"
 pvcreate --metadatacopies 0 "$dev6"
 vgextend $vg1 "$dev6"
 
-# Slowdown writes
-aux delay_dev "$dev3" 0 800 "$(get first_extent_sector "$dev3"):"
-aux delay_dev "$dev6" 0 800 "$(get first_extent_sector "$dev6"):"
+# Throttle mirroring
+aux throttle_dm_mirror
 
 for mode in "--atomic" "" ;
 do
@@ -48,7 +49,6 @@ cmd1=(pvmove -i1 $backgroundarg $mode "$dev1" "$dev3")
 cmd2=(pvmove -i1 $backgroundarg $mode "$dev2" "$dev3")
 cmd3=(pvmove -i1 $backgroundarg $mode -n $vg1/$lv1 "$dev4" "$dev6")
 
-if test -e HAVE_DM_DELAY; then
 
 if test -z "$backgroundarg" ; then
 	"${cmd1[@]}" &
@@ -62,8 +62,6 @@ else
 	LVM_TEST_TAG="kill_me_$PREFIX" "${cmd1[@]}"
 	LVM_TEST_TAG="kill_me_$PREFIX" "${cmd2[@]}"
 	LVM_TEST_TAG="kill_me_$PREFIX" "${cmd3[@]}"
-fi
-
 fi
 
 # test removal of all pvmove LVs
@@ -82,7 +80,7 @@ aux kill_tagged_processes
 done
 done
 
-# Restore delayed device back
-aux enable_dev "$dev3" "$dev6"
+# Restore throttling
+aux restore_dm_mirror
 
 vgremove -ff $vg $vg1
