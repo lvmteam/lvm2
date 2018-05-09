@@ -884,7 +884,7 @@ int label_scan_open(struct device *dev)
 	return 1;
 }
 
-bool dev_read_bytes(struct device *dev, off_t start, size_t len, void *data)
+bool dev_read_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 {
 	int ret;
 
@@ -918,7 +918,7 @@ bool dev_read_bytes(struct device *dev, off_t start, size_t len, void *data)
 
 }
 
-bool dev_write_bytes(struct device *dev, off_t start, size_t len, void *data)
+bool dev_write_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 {
 	int ret;
 
@@ -961,7 +961,7 @@ bool dev_write_bytes(struct device *dev, off_t start, size_t len, void *data)
 	return true;
 }
 
-bool dev_write_zeros(struct device *dev, off_t start, size_t len)
+bool dev_write_zeros(struct device *dev, uint64_t start, size_t len)
 {
 	int ret;
 
@@ -969,15 +969,8 @@ bool dev_write_zeros(struct device *dev, off_t start, size_t len)
 		return true;
 
 	if (!scan_bcache) {
-		if (!dev_open(dev))
-			return false;
-
-		ret = dev_set(dev, start, len, 0, 0);
-
-		if (!dev_close(dev))
-			stack;
-
-		return ret ? true : false;
+		log_error("dev_write_zeros %s bcache not set up", dev_name(dev));
+		return false;
 	}
 
 	if (dev->bcache_fd <= 0) {
@@ -997,6 +990,42 @@ bool dev_write_zeros(struct device *dev, off_t start, size_t len)
 
 	if (!bcache_flush(scan_bcache)) {
 		log_error("dev_write_zeros %s at %u bcache flush failed invalidate fd %d",
+			  dev_name(dev), (uint32_t)start, dev->bcache_fd);
+		label_scan_invalidate(dev);
+		return false;
+	}
+	return true;
+}
+
+bool dev_set_bytes(struct device *dev, uint64_t start, size_t len, uint8_t val)
+{
+	int ret;
+
+	if (test_mode())
+		return true;
+
+	if (!scan_bcache) {
+		log_error("dev_set_bytes %s bcache not set up", dev_name(dev));
+		return false;
+	}
+
+	if (dev->bcache_fd <= 0) {
+		/* This is not often needed, perhaps only with lvmetad. */
+		if (!label_scan_open(dev)) {
+			log_error("dev_set_bytes %s cannot open dev", dev_name(dev));
+			return false;
+		}
+	}
+
+	if (!bcache_set_bytes(scan_bcache, dev->bcache_fd, start, len, val)) {
+		log_error("dev_set_bytes %s at %u bcache write failed invalidate fd %d",
+			  dev_name(dev), (uint32_t)start, dev->bcache_fd);
+		label_scan_invalidate(dev);
+		return false;
+	}
+
+	if (!bcache_flush(scan_bcache)) {
+		log_error("dev_set_bytes %s at %u bcache flush failed invalidate fd %d",
 			  dev_name(dev), (uint32_t)start, dev->bcache_fd);
 		label_scan_invalidate(dev);
 		return false;
