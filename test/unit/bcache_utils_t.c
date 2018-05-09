@@ -102,11 +102,6 @@ static void _verify_bytes(struct block *b, uint64_t base,
 		T_ASSERT_EQUAL(((uint8_t *) b->data)[offset + i], _pattern_at(pat, base + offset + i));
 }
 
-static void _zero_bytes(struct block *b, uint64_t offset, uint64_t len)
-{
-	memset(((uint8_t *) b->data) + offset, 0, len);
-}
-
 static uint64_t _min(uint64_t lhs, uint64_t rhs)
 {
 	return rhs < lhs ? rhs : lhs;
@@ -179,30 +174,13 @@ static void _do_write(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uint8
         for (i = 0; i < len; i++)
 		buffer[i] = _pattern_at(pat, byte_b + i);
 
-        T_ASSERT(bcache_write_bytes(f->cache, f->fd, byte_b, i, buffer));
+        T_ASSERT(bcache_write_bytes(f->cache, f->fd, byte_b, byte_e - byte_b, buffer));
 	free(buffer);
 }
 
 static void _do_zero(struct fixture *f, uint64_t byte_b, uint64_t byte_e)
 {
-        int err;
-	struct block *b;
-	block_address bb = byte_b / T_BLOCK_SIZE;
-	block_address be = (byte_e + T_BLOCK_SIZE - 1) / T_BLOCK_SIZE;
-	uint64_t offset = byte_b % T_BLOCK_SIZE;
-	uint64_t blen, len = byte_e - byte_b;
-
-	for (; bb != be; bb++) {
-        	T_ASSERT(bcache_get(f->cache, f->fd, bb, GF_DIRTY, &b, &err));
-
-		blen = _min(T_BLOCK_SIZE - offset, len);
-		_zero_bytes(b, offset, blen);
-
-        	offset = 0;
-        	len -= blen;
-
-        	bcache_put(b);
-	}
+	T_ASSERT(bcache_zero_bytes(f->cache, f->fd, byte_b, byte_e - byte_b));
 }
 
 static void _reopen(struct fixture *f)
