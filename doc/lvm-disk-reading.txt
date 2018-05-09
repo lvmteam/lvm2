@@ -187,3 +187,45 @@ For each VG name:
   command-specific work
 
 
+
+Filter i/o
+----------
+
+Some filters must be applied before reading a device, and other filters
+must be applied after reading a device.  In all cases, the filters must be
+applied before lvm processes the device, i.e. before it looks for an lvm
+label.
+
+1. Some filters need to be applied prior to reading any devices
+   because the purpose of the filter is to avoid submitting any
+   io on the excluded devices.  The regex filter is the primary
+   example.  Other filters benefit from being applied prior to
+   reading devices because they can tell which devices to
+   exclude without doing io to the device.  An example of this
+   is the mpath filter.
+
+2. Some filters need to be applied after reading a device because
+   they are based on data/signatures seen on the device.
+   The partitioned filter is an example of this; lvm needs to
+   read a device to see if it has a partition table before it can
+   know whether to exclude the device from further processing.
+
+We apply filters from 1 before reading devices, and we apply filters from
+2 after populating bcache, but before processing the device (i.e. before
+checking for an lvm label, which is the first step in processing.)
+
+The current implementation of this makes filters return -EAGAIN if they
+want to read the device, but bcache data is not yet available.  This will
+happen when filtering runs prior to populating bcache.  In this case the
+device is flagged.  After bcache is populated, the filters are reapplied
+to the flagged devices.  The filters which need to look at device content
+are now able to get it from bcache.  Devices that do not pass filters at
+this point are excluded just like devices which were excluded earlier.
+
+(Some filters from 2 can be skipped by consulting udev for the information
+instead of reading the device.  This is not entirely reliable, so it is
+disabled by default with the config setting external_device_info_source.
+It may be worthwhile to change the filters to use the udev info as a hint,
+or only use udev info for filtering in reporting commands where
+inaccuracies are not a big problem.)
+
