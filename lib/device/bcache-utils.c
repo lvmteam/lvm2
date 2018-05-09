@@ -227,3 +227,46 @@ bool bcache_zero_bytes(struct bcache *cache, int fd, uint64_t start, size_t len)
 }
 
 //----------------------------------------------------------------
+
+static bool _set_partial(struct updater *u, int fd, block_address bb, uint64_t offset, size_t len)
+{
+	struct block *b;
+	uint8_t val = *((uint8_t *) u->data);
+
+	if (!bcache_get(u->cache, fd, bb, GF_DIRTY, &b, NULL))
+		return false;
+
+	memset(((unsigned char *) b->data) + offset, val, len);
+	bcache_put(b);
+
+	return true;
+}
+
+static bool _set_whole(struct updater *u, int fd, block_address bb, block_address be)
+{
+	struct block *b;
+	uint8_t val = *((uint8_t *) u->data);
+        uint64_t len = bcache_block_sectors(u->cache) * 512;
+
+	for (; bb != be; bb++) {
+		if (!bcache_get(u->cache, fd, bb, GF_ZERO, &b, NULL))
+        		return false;
+        	memset((unsigned char *) b->data, val, len);
+        	bcache_put(b);
+	}
+
+	return true;
+}
+
+bool bcache_set_bytes(struct bcache *cache, int fd, uint64_t start, size_t len, uint8_t val)
+{
+        struct updater u;
+
+        u.cache = cache;
+        u.partial_fn = _set_partial;
+        u.whole_fn = _set_whole;
+        u.data = &val;
+
+	return _update_bytes(&u, fd, start, len);
+}
+

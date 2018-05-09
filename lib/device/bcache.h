@@ -162,6 +162,7 @@ void bcache_prefetch_bytes(struct bcache *cache, int fd, uint64_t start, size_t 
 bool bcache_read_bytes(struct bcache *cache, int fd, uint64_t start, size_t len, void *data);
 bool bcache_write_bytes(struct bcache *cache, int fd, uint64_t start, size_t len, void *data);
 bool bcache_zero_bytes(struct bcache *cache, int fd, uint64_t start, size_t len);
+bool bcache_set_bytes(struct bcache *cache, int fd, uint64_t start, size_t len, uint8_t val);
 
 //----------------------------------------------------------------
 
