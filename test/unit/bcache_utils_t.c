@@ -48,10 +48,9 @@ static uint64_t byte(block_address b, uint64_t offset)
 	return b * T_BLOCK_SIZE + offset;
 }
 
-static void *_fix_init(void)
+static void *_fix_init(struct io_engine *engine)
 {
         uint8_t buffer[T_BLOCK_SIZE];
-        struct io_engine *engine;
         struct fixture *f = malloc(sizeof(*f));
         unsigned b, i;
 
@@ -72,13 +71,24 @@ static void *_fix_init(void)
 	f->fd = open(f->fname, O_RDWR | O_DIRECT);
 	T_ASSERT(f->fd >= 0);
 
-	engine = create_async_io_engine();
-	T_ASSERT(engine);
-
 	f->cache = bcache_create(T_BLOCK_SIZE / 512, NR_BLOCKS, engine);
 	T_ASSERT(f->cache);
 
         return f;
+}
+
+static void *_async_init(void)
+{
+	struct io_engine *e = create_async_io_engine();
+	T_ASSERT(e);
+	return _fix_init(e);
+}
+
+static void *_sync_init(void)
+{
+	struct io_engine *e = create_sync_io_engine();
+	T_ASSERT(e);
+	return _fix_init(e);
 }
 
 static void _fix_exit(void *fixture)
@@ -123,6 +133,7 @@ static void _verify(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uint8_t
 		T_ASSERT(bcache_read_bytes(f->cache, f->fd, byte_b, len2, buffer));
 		for (i = 0; i < len; i++)
         		T_ASSERT_EQUAL(buffer[i], _pattern_at(pat, byte_b + i));
+        	free(buffer);
 	}
 
 	// Verify again, driving bcache directly
@@ -349,16 +360,17 @@ static void _test_set_many_boundaries(void *fixture)
 
 //----------------------------------------------------------------
 
-#define T(path, desc, fn) register_test(ts, "/base/device/bcache/utils/" path, desc, fn)
+#define T(path, desc, fn) register_test(ts, "/base/device/bcache/utils/async/" path, desc, fn)
 
-static struct test_suite *_tests(void)
+static struct test_suite *_async_tests(void)
 {
-        struct test_suite *ts = test_suite_create(_fix_init, _fix_exit);
+        struct test_suite *ts = test_suite_create(_async_init, _fix_exit);
         if (!ts) {
                 fprintf(stderr, "out of memory\n");
                 exit(1);
         }
 
+#define T(path, desc, fn) register_test(ts, "/base/device/bcache/utils/async/" path, desc, fn)
         T("rw-first-block", "read/write/verify the first block", _test_rw_first_block);
         T("rw-last-block", "read/write/verify the last block", _test_rw_last_block);
         T("rw-several-blocks", "read/write/verify several whole blocks", _test_rw_several_whole_blocks);
@@ -379,12 +391,49 @@ static struct test_suite *_tests(void)
         T("set-within-single-block", "set within single block", _test_set_within_single_block);
         T("set-cross-one-boundary", "set across one boundary", _test_set_cross_one_boundary);
         T("set-many-boundaries", "set many boundaries", _test_set_many_boundaries);
+#undef T
+
+        return ts;
+}
+
+
+static struct test_suite *_sync_tests(void)
+{
+        struct test_suite *ts = test_suite_create(_sync_init, _fix_exit);
+        if (!ts) {
+                fprintf(stderr, "out of memory\n");
+                exit(1);
+        }
+
+#define T(path, desc, fn) register_test(ts, "/base/device/bcache/utils/sync/" path, desc, fn)
+        T("rw-first-block", "read/write/verify the first block", _test_rw_first_block);
+        T("rw-last-block", "read/write/verify the last block", _test_rw_last_block);
+        T("rw-several-blocks", "read/write/verify several whole blocks", _test_rw_several_whole_blocks);
+        T("rw-within-single-block", "read/write/verify within single block", _test_rw_within_single_block);
+        T("rw-cross-one-boundary", "read/write/verify across one boundary", _test_rw_cross_one_boundary);
+        T("rw-many-boundaries", "read/write/verify many boundaries", _test_rw_many_boundaries);
+
+        T("zero-first-block", "zero the first block", _test_zero_first_block);
+        T("zero-last-block", "zero the last block", _test_zero_last_block);
+        T("zero-several-blocks", "zero several whole blocks", _test_zero_several_whole_blocks);
+        T("zero-within-single-block", "zero within single block", _test_zero_within_single_block);
+        T("zero-cross-one-boundary", "zero across one boundary", _test_zero_cross_one_boundary);
+        T("zero-many-boundaries", "zero many boundaries", _test_zero_many_boundaries);
+
+        T("set-first-block", "set the first block", _test_set_first_block);
+        T("set-last-block", "set the last block", _test_set_last_block);
+        T("set-several-blocks", "set several whole blocks", _test_set_several_whole_blocks);
+        T("set-within-single-block", "set within single block", _test_set_within_single_block);
+        T("set-cross-one-boundary", "set across one boundary", _test_set_cross_one_boundary);
+        T("set-many-boundaries", "set many boundaries", _test_set_many_boundaries);
+#undef T
 
         return ts;
 }
 
 void bcache_utils_tests(struct dm_list *all_tests)
 {
-	dm_list_add(all_tests, &_tests()->list);
+	dm_list_add(all_tests, &_async_tests()->list);
+	dm_list_add(all_tests, &_sync_tests()->list);
 }
 

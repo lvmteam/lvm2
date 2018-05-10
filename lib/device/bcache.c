@@ -129,7 +129,6 @@ static struct control_block *_iocb_to_cb(struct iocb *icb)
 
 //----------------------------------------------------------------
 
-// FIXME: write a sync engine too
 struct async_engine {
 	struct io_engine e;
 	io_context_t aio_context;
@@ -277,6 +276,97 @@ struct io_engine *create_async_io_engine(void)
 	}
 
 	return &e->e;
+}
+
+//----------------------------------------------------------------
+
+struct sync_io {
+        struct dm_list list;
+	void *context;
+	int err;
+};
+
+struct sync_engine {
+	struct io_engine e;
+	struct dm_list complete;
+};
+
+static struct sync_engine *_to_sync(struct io_engine *e)
+{
+        return container_of(e, struct sync_engine, e);
+}
+
+static void _sync_destroy(struct io_engine *ioe)
+{
+        struct sync_engine *e = _to_sync(ioe);
+        dm_free(e);
+}
+
+static bool _sync_issue(struct io_engine *ioe, enum dir d, int fd,
+                        sector_t sb, sector_t se, void *data, void *context)
+{
+        int r;
+        uint64_t len = (se - sb) * 512;
+	struct sync_engine *e = _to_sync(ioe);
+	struct sync_io *io = malloc(sizeof(*io));
+	if (!io)
+        	return false;
+
+	r = lseek(fd, sb * 512, SEEK_SET);
+	if (r < 0)
+        	return false;
+
+	do {
+        	if (d == DIR_READ)
+                        r = read(fd, data, len);
+                else
+                        r = write(fd, data, len);
+
+	} while (r == EINTR || r == EAGAIN);
+
+	if (r != len)
+        	r = -EIO;
+
+	dm_list_add(&e->complete, &io->list);
+	io->context = context;
+	io->err = r < 0 ? r : 0;
+
+	return true;
+}
+
+static bool _sync_wait(struct io_engine *ioe, io_complete_fn fn)
+{
+        struct sync_io *io, *tmp;
+	struct sync_engine *e = _to_sync(ioe);
+
+	dm_list_iterate_items_safe(io, tmp, &e->complete) {
+		fn(io->context, io->err);
+		dm_list_del(&io->list);
+		dm_free(io);
+	}
+
+	return true;
+}
+
+static unsigned _sync_max_io(struct io_engine *e)
+{
+        return 1;
+}
+
+struct io_engine *create_sync_io_engine(void)
+{
+	struct sync_engine *e = dm_malloc(sizeof(*e));
+
+	if (!e)
+        	return NULL;
+
+        e->e.destroy = _sync_destroy;
+        e->e.issue = _sync_issue;
+        e->e.wait = _sync_wait;
+        e->e.max_io = _sync_max_io;
+
+        dm_list_init(&e->complete);
+        return &e->e;
 }
 
 //----------------------------------------------------------------

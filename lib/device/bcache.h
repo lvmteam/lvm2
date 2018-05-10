@@ -48,6 +48,7 @@ struct io_engine {
 };
 
 struct io_engine *create_async_io_engine(void);
+struct io_engine *create_sync_io_engine(void);
 
 /*----------------------------------------------------------------*/
 
