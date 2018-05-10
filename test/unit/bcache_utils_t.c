@@ -102,11 +102,6 @@ static void _verify_bytes(struct block *b, uint64_t base,
 		T_ASSERT_EQUAL(((uint8_t *) b->data)[offset + i], _pattern_at(pat, base + offset + i));
 }
 
-static void _zero_bytes(struct block *b, uint64_t offset, uint64_t len)
-{
-	memset(((uint8_t *) b->data) + offset, 0, len);
-}
-
 static uint64_t _min(uint64_t lhs, uint64_t rhs)
 {
 	return rhs < lhs ? rhs : lhs;
@@ -145,7 +140,7 @@ static void _verify(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uint8_t
 	}
 }
 
-static void _verify_zeroes(struct fixture *f, uint64_t byte_b, uint64_t byte_e)
+static void _verify_set(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uint8_t val)
 {
         int err;
         unsigned i;
@@ -160,13 +155,18 @@ static void _verify_zeroes(struct fixture *f, uint64_t byte_b, uint64_t byte_e)
 
 		blen = _min(T_BLOCK_SIZE - offset, len);
 		for (i = 0; i < blen; i++)
-        		T_ASSERT(((uint8_t *) b->data)[offset + i] == 0);
+        		T_ASSERT(((uint8_t *) b->data)[offset + i] == val);
 
         	offset = 0;
         	len -= blen;
 
         	bcache_put(b);
 	}
+}
+
+static void _verify_zeroes(struct fixture *f, uint64_t byte_b, uint64_t byte_e)
+{
+        _verify_set(f, byte_b, byte_e, 0);
 }
 
 static void _do_write(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uint8_t pat)
@@ -179,30 +179,18 @@ static void _do_write(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uint8
         for (i = 0; i < len; i++)
 		buffer[i] = _pattern_at(pat, byte_b + i);
 
-        T_ASSERT(bcache_write_bytes(f->cache, f->fd, byte_b, i, buffer));
+        T_ASSERT(bcache_write_bytes(f->cache, f->fd, byte_b, byte_e - byte_b, buffer));
 	free(buffer);
 }
 
 static void _do_zero(struct fixture *f, uint64_t byte_b, uint64_t byte_e)
 {
-        int err;
-	struct block *b;
-	block_address bb = byte_b / T_BLOCK_SIZE;
-	block_address be = (byte_e + T_BLOCK_SIZE - 1) / T_BLOCK_SIZE;
-	uint64_t offset = byte_b % T_BLOCK_SIZE;
-	uint64_t blen, len = byte_e - byte_b;
+	T_ASSERT(bcache_zero_bytes(f->cache, f->fd, byte_b, byte_e - byte_b));
+}
 
-	for (; bb != be; bb++) {
-        	T_ASSERT(bcache_get(f->cache, f->fd, bb, GF_DIRTY, &b, &err));
-
-		blen = _min(T_BLOCK_SIZE - offset, len);
-		_zero_bytes(b, offset, blen);
-
-        	offset = 0;
-        	len -= blen;
-
-        	bcache_put(b);
-	}
+static void _do_set(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uint8_t val)
+{
+	T_ASSERT(bcache_set_bytes(f->cache, f->fd, byte_b, byte_e - byte_b, val));
 }
 
 static void _reopen(struct fixture *f)
@@ -318,6 +306,51 @@ static void _test_zero_many_boundaries(void *fixture)
 
 //----------------------------------------------------------------
 
+static void _set_cycle(struct fixture *f, uint64_t b, uint64_t e)
+{
+	uint8_t val = random();
+
+	_verify(f, b, e, INIT_PATTERN);
+	_do_set(f, b, e, val); 
+	_reopen(f);
+	_verify(f, b < 128 ? 0 : b - 128, b, INIT_PATTERN);
+	_verify_set(f, b, e, val);
+	_verify(f, e, _min(e + 128, _max_byte()), INIT_PATTERN);
+}
+
+static void _test_set_first_block(void *fixture)
+{
+	_set_cycle(fixture, byte(0, 0), byte(0, T_BLOCK_SIZE));
+}
+
+static void _test_set_last_block(void *fixture)
+{
+        uint64_t last_block = NR_BLOCKS - 1;
+	_set_cycle(fixture, byte(last_block, 0), byte(last_block, T_BLOCK_SIZE)); 
+}
+
+static void _test_set_several_whole_blocks(void *fixture)
+{
+        _set_cycle(fixture, byte(5, 0), byte(10, 0));
+}
+
+static void _test_set_within_single_block(void *fixture)
+{
+        _set_cycle(fixture, byte(7, 3), byte(7, T_BLOCK_SIZE / 2));
+}
+
+static void _test_set_cross_one_boundary(void *fixture)
+{
+        _set_cycle(fixture, byte(13, 43), byte(14, 43));
+}
+
+static void _test_set_many_boundaries(void *fixture)
+{
+        _set_cycle(fixture, byte(13, 13), byte(23, 13));
+}
+
+//----------------------------------------------------------------
+
 #define T(path, desc, fn) register_test(ts, "/base/device/bcache/utils/" path, desc, fn)
 
 static struct test_suite *_tests(void)
@@ -341,6 +374,13 @@ static struct test_suite *_tests(void)
         T("zero-within-single-block", "zero within single block", _test_zero_within_single_block);
         T("zero-cross-one-boundary", "zero across one boundary", _test_zero_cross_one_boundary);
         T("zero-many-boundaries", "zero many boundaries", _test_zero_many_boundaries);
+
+        T("set-first-block", "set the first block", _test_set_first_block);
+        T("set-last-block", "set the last block", _test_set_last_block);
+        T("set-several-blocks", "set several whole blocks", _test_set_several_whole_blocks);
+        T("set-within-single-block", "set within single block", _test_set_within_single_block);
+        T("set-cross-one-boundary", "set across one boundary", _test_set_cross_one_boundary);
+        T("set-many-boundaries", "set many boundaries", _test_set_many_boundaries);
 
         return ts;
 }
