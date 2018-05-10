@@ -302,7 +302,6 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	struct dm_list found_vgnames;
 	struct device *dev;
 	struct device_list *devl;
-	struct dev_filter *f;
 	const char *pv_name;
 	const char *reason = NULL;
 	int32_t major = -1;
@@ -507,8 +506,6 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	if (!dm_list_empty(&single_devs)) {
 		label_scan_devs(cmd, cmd->lvmetad_filter, &single_devs);
 
-		f = cmd->lvmetad_filter;
-
 		dm_list_iterate_items(devl, &single_devs) {
 			dev = devl->dev;
 
@@ -566,8 +563,6 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!dm_list_empty(&single_devs)) {
 		label_scan_devs(cmd, cmd->lvmetad_filter, &single_devs);
-
-		f = cmd->lvmetad_filter;
 
 		dm_list_iterate_items(devl, &single_devs) {
 			dev = devl->dev;
