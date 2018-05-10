@@ -100,6 +100,7 @@ static void _check_good(struct example_good *es, unsigned count)
                 fprintf(stderr, "\n");
 #endif
                 T_ASSERT(_status_eq(&e->status, pr.status));
+                free(pr.status);
         }
 }
 
