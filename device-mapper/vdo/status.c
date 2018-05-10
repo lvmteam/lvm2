@@ -14,9 +14,11 @@ static char *_tok_cpy(const char *b, const char *e)
 	char *new = malloc((e - b) + 1);
 	char *ptr = new;
 
-	if (new)
+	if (new) {
         	while (b != e)
                 	*ptr++ = *b++;
+                *ptr = '\0';
+	}
 
 	return new;
 }
@@ -131,7 +133,7 @@ static bool _parse_uint64(const char *b, const char *e, void *context)
         	if (!isdigit(*b))
                 	return false;
 
-		n = (n << 1) + (*b - '0');
+		n = (n * 10) + (*b - '0');
 		b++;
 	}
 
@@ -149,16 +151,17 @@ static const char *_eat_space(const char *b, const char *e)
 
 static const char *_next_tok(const char *b, const char *e)
 {
-	while (b != e && !isspace(*b))
-        	b++;
+        const char *te = b;
+	while (te != e && !isspace(*te))
+        	te++;
 
-        return b == e ? NULL : b;
+        return te == b ? NULL : te;
 }
 
-static void _set_error(struct parse_result *result, const char *fmt, ...)
+static void _set_error(struct vdo_status_parse_result *result, const char *fmt, ...)
 	__attribute__ ((format(printf, 2, 3)));
 
-static void _set_error(struct parse_result *result, const char *fmt, ...)
+static void _set_error(struct vdo_status_parse_result *result, const char *fmt, ...)
 {
         va_list ap;
 
@@ -170,7 +173,7 @@ static void _set_error(struct parse_result *result, const char *fmt, ...)
 static bool _parse_field(const char **b, const char *e,
                          bool (*p_fn)(const char *, const char *, void *),
                          void *field, const char *field_name,
-                         struct parse_result *result)
+                         struct vdo_status_parse_result *result)
 {
         const char *te;
 
@@ -190,7 +193,7 @@ static bool _parse_field(const char **b, const char *e,
 
 }
 
-bool parse_vdo_status(const char *input, struct parse_result *result)
+bool vdo_status_parse(const char *input, struct vdo_status_parse_result *result)
 {
 	const char *b = b = input;
 	const char *e = input + strlen(input);
@@ -228,7 +231,12 @@ bool parse_vdo_status(const char *input, struct parse_result *result)
 	XX(_parse_uint64, &s->total_blocks, "total blocks");
 #undef XX
 
-        result->result = s;
+	if (b != e) {
+		_set_error(result, "too many tokens");
+		goto bad;
+	}
+
+        result->status = s;
         return true;
 
 bad:

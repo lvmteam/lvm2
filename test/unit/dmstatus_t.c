@@ -78,7 +78,7 @@ void dm_status_tests(struct dm_list *all_tests)
 		exit(1);
 	}
 
-	register_test(ts, "/dm/target/mirror/status", "parsing mirror status", _test_mirror_status);
+	register_test(ts, "/device-mapper/mirror/status", "parsing mirror status", _test_mirror_status);
 	dm_list_add(all_tests, &ts->list);
 }
 

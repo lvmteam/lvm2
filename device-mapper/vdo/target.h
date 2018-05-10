@@ -55,14 +55,13 @@ void vdo_status_destroy(struct vdo_status *s);
 
 #define VDO_MAX_ERROR 256
 
-struct parse_result {
+struct vdo_status_parse_result {
 	char error[VDO_MAX_ERROR];
-	struct vdo_status *result;
+	struct vdo_status *status;
 };
 
 // Parses the status line from the kernel target.
-bool parse_vdo_status(const char *input, struct parse_result *result);
-
+bool vdo_status_parse(const char *input, struct vdo_status_parse_result *result);
 
 //----------------------------------------------------------------
 
