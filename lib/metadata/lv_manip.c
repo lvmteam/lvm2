@@ -7155,8 +7155,10 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 		return 0;
 	}
 
-	if (!dev_open_quiet(dev))
-		return_0;
+	if (!label_scan_open(dev)) {
+		log_error("Failed to open %s/%s for wiping and zeroing.", lv->vg->name, lv->name);
+		goto out;
+	}
 
 	if (wp.do_wipe_signatures) {
 		log_verbose("Wiping known signatures on logical volume \"%s/%s\"",
@@ -7177,15 +7179,17 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 			    display_size(lv->vg->cmd, zero_sectors),
 			    lv->vg->name, lv->name, wp.zero_value);
 
-		if (!dev_set(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT, DEV_IO_LV, wp.zero_value))
-			stack;
+		if (!wp.zero_value) {
+			if (!dev_write_zeros(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT))
+				stack;
+		} else {
+			if (!dev_set_bytes(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT, (uint8_t)wp.zero_value))
+				stack;
+		}
 	}
 
-	dev_flush(dev);
-
-	if (!dev_close_immediate(dev))
-		stack;
-
+	label_scan_invalidate(dev);
+out:
 	lv->status &= ~LV_NOSCAN;
 
 	return 1;

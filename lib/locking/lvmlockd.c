@@ -403,22 +403,17 @@ static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, 
 		return 0;
 	}
 
-	if (!dev_open_quiet(dev)) {
+	if (!label_scan_open(dev)) {
 		log_error("Extend sanlock LV %s cannot open device.", display_lvname(lv));
 		return 0;
 	}
 
-	if (!dev_set(dev, old_size_bytes, new_size_bytes - old_size_bytes, DEV_IO_LV, 0)) {
+	if (!dev_write_zeros(dev, old_size_bytes, new_size_bytes - old_size_bytes)) {
 		log_error("Extend sanlock LV %s cannot zero device.", display_lvname(lv));
-		dev_close_immediate(dev);
 		return 0;
 	}
 
-	dev_flush(dev);
-
-	if (!dev_close_immediate(dev))
-		stack;
-
+	label_scan_invalidate(dev);
 	return 1;
 }
 
