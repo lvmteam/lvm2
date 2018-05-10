@@ -29,13 +29,6 @@
 
 /*----------------------------------------------------------------*/
 
-/*
- * bcache-specific error numbers
- * These supplement standard -EXXX error numbers and
- * should not overlap.
- */
-#define BCACHE_NO_BLOCK 201
-
 enum dir {
 	DIR_READ,
 	DIR_WRITE
@@ -126,7 +119,7 @@ void bcache_prefetch(struct bcache *cache, int fd, block_address index);
  * Returns true on success.
  */
 bool bcache_get(struct bcache *cache, int fd, block_address index,
-	        unsigned flags, struct block **result, int *error);
+	        unsigned flags, struct block **result);
 void bcache_put(struct block *b);
 
 /*

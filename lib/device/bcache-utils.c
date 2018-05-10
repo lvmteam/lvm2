@@ -64,7 +64,7 @@ bool bcache_read_bytes(struct bcache *cache, int fd, uint64_t start, size_t len,
 	byte_range_to_block_range(cache, start, len, &bb, &be);
 
 	for (; bb != be; bb++) {
-        	if (!bcache_get(cache, fd, bb, 0, &b, NULL))
+        	if (!bcache_get(cache, fd, bb, 0, &b))
 			return false;
 
 		size_t blen = _min(block_size - block_offset, len);
@@ -146,7 +146,7 @@ static bool _write_partial(struct updater *u, int fd, block_address bb,
 {
 	struct block *b;
 
-	if (!bcache_get(u->cache, fd, bb, GF_DIRTY, &b, NULL))
+	if (!bcache_get(u->cache, fd, bb, GF_DIRTY, &b))
 		return false;
 
 	memcpy(((unsigned char *) b->data) + offset, u->data, len);
@@ -164,7 +164,7 @@ static bool _write_whole(struct updater *u, int fd, block_address bb, block_addr
 	for (; bb != be; bb++) {
         	// We don't need to read the block since we are overwriting
         	// it completely.
-		if (!bcache_get(u->cache, fd, bb, GF_ZERO, &b, NULL))
+		if (!bcache_get(u->cache, fd, bb, GF_ZERO, &b))
         		return false;
 		memcpy(b->data, u->data, block_size);
 		u->data = ((unsigned char *) u->data) + block_size;
@@ -192,7 +192,7 @@ static bool _zero_partial(struct updater *u, int fd, block_address bb, uint64_t 
 {
 	struct block *b;
 
-	if (!bcache_get(u->cache, fd, bb, GF_DIRTY, &b, NULL))
+	if (!bcache_get(u->cache, fd, bb, GF_DIRTY, &b))
 		return false;
 
 	memset(((unsigned char *) b->data) + offset, 0, len);
@@ -206,7 +206,7 @@ static bool _zero_whole(struct updater *u, int fd, block_address bb, block_addre
 	struct block *b;
 
 	for (; bb != be; bb++) {
-		if (!bcache_get(u->cache, fd, bb, GF_ZERO, &b, NULL))
+		if (!bcache_get(u->cache, fd, bb, GF_ZERO, &b))
         		return false;
         	bcache_put(b);
 	}
@@ -233,7 +233,7 @@ static bool _set_partial(struct updater *u, int fd, block_address bb, uint64_t o
 	struct block *b;
 	uint8_t val = *((uint8_t *) u->data);
 
-	if (!bcache_get(u->cache, fd, bb, GF_DIRTY, &b, NULL))
+	if (!bcache_get(u->cache, fd, bb, GF_DIRTY, &b))
 		return false;
 
 	memset(((unsigned char *) b->data) + offset, val, len);
@@ -249,7 +249,7 @@ static bool _set_whole(struct updater *u, int fd, block_address bb, block_addres
         uint64_t len = bcache_block_sectors(u->cache) * 512;
 
 	for (; bb != be; bb++) {
-		if (!bcache_get(u->cache, fd, bb, GF_ZERO, &b, NULL))
+		if (!bcache_get(u->cache, fd, bb, GF_ZERO, &b))
         		return false;
         	memset((unsigned char *) b->data, val, len);
         	bcache_put(b);

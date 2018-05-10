@@ -418,7 +418,6 @@ static void test_block_size_must_be_multiple_of_page_size(void *fixture)
 
 static void test_get_triggers_read(void *context)
 {
-        int err;
 	struct fixture *f = context;
 
 	int fd = 17;   // arbitrary key
@@ -426,12 +425,12 @@ static void test_get_triggers_read(void *context)
 
 	_expect_read(f->me, fd, 0);
 	_expect(f->me, E_WAIT);
-	T_ASSERT(bcache_get(f->cache, fd, 0, 0, &b, &err));
+	T_ASSERT(bcache_get(f->cache, fd, 0, 0, &b));
 	bcache_put(b);
 
 	_expect_read(f->me, fd, 1);
 	_expect(f->me, E_WAIT);
-	T_ASSERT(bcache_get(f->cache, fd, 1, GF_DIRTY, &b, &err));
+	T_ASSERT(bcache_get(f->cache, fd, 1, GF_DIRTY, &b));
 	_expect_write(f->me, fd, 1);
 	_expect(f->me, E_WAIT);
 	bcache_put(b);
@@ -439,7 +438,6 @@ static void test_get_triggers_read(void *context)
 
 static void test_repeated_reads_are_cached(void *context)
 {
-        int err;
 	struct fixture *f = context;
 
 	int fd = 17;   // arbitrary key
@@ -449,7 +447,7 @@ static void test_repeated_reads_are_cached(void *context)
 	_expect_read(f->me, fd, 0);
 	_expect(f->me, E_WAIT);
 	for (i = 0; i < 100; i++) {
-		T_ASSERT(bcache_get(f->cache, fd, 0, 0, &b, &err));
+		T_ASSERT(bcache_get(f->cache, fd, 0, 0, &b));
 		bcache_put(b);
 	}
 }
@@ -458,7 +456,6 @@ static void test_block_gets_evicted_with_many_reads(void *context)
 {
 	struct fixture *f = context;
 
-	int err;
 	struct mock_engine *me = f->me;
 	struct bcache *cache = f->cache;
 	const unsigned nr_cache_blocks = 16;
@@ -470,14 +467,14 @@ static void test_block_gets_evicted_with_many_reads(void *context)
 	for (i = 0; i < nr_cache_blocks; i++) {
 		_expect_read(me, fd, i);
 		_expect(me, E_WAIT);
-		T_ASSERT(bcache_get(cache, fd, i, 0, &b, &err));
+		T_ASSERT(bcache_get(cache, fd, i, 0, &b));
 		bcache_put(b);
 	}
 
 	// Not enough cache blocks to hold this one
 	_expect_read(me, fd, nr_cache_blocks);
 	_expect(me, E_WAIT);
-	T_ASSERT(bcache_get(cache, fd, nr_cache_blocks, 0, &b, &err));
+	T_ASSERT(bcache_get(cache, fd, nr_cache_blocks, 0, &b));
 	bcache_put(b);
 
 	// Now if we run through we should find one block has been
@@ -486,7 +483,7 @@ static void test_block_gets_evicted_with_many_reads(void *context)
 	_expect_read_any(me);
 	_expect(me, E_WAIT);
 	for (i = nr_cache_blocks; i; i--) {
-		T_ASSERT(bcache_get(cache, fd, i - 1, 0, &b, &err));
+		T_ASSERT(bcache_get(cache, fd, i - 1, 0, &b));
 		bcache_put(b);
 	}
 }
@@ -498,7 +495,6 @@ static void test_prefetch_issues_a_read(void *context)
 	struct bcache *cache = f->cache;
 	const unsigned nr_cache_blocks = 16;
 
-	int err;
 	int fd = 17;   // arbitrary key
 	unsigned i;
 	struct block *b;
@@ -512,7 +508,7 @@ static void test_prefetch_issues_a_read(void *context)
 
 	for (i = 0; i < nr_cache_blocks; i++) {
 		_expect(me, E_WAIT);
-		T_ASSERT(bcache_get(cache, fd, i, 0, &b, &err));
+		T_ASSERT(bcache_get(cache, fd, i, 0, &b));
 		bcache_put(b);
 	}
 }
@@ -545,14 +541,13 @@ static void test_dirty_data_gets_written_back(void *context)
 	struct mock_engine *me = f->me;
 	struct bcache *cache = f->cache;
 
-	int err;
 	int fd = 17;   // arbitrary key
 	struct block *b;
 
 	// Expect the read
 	_expect_read(me, fd, 0);
 	_expect(me, E_WAIT);
-	T_ASSERT(bcache_get(cache, fd, 0, GF_DIRTY, &b, &err));
+	T_ASSERT(bcache_get(cache, fd, 0, GF_DIRTY, &b));
 	bcache_put(b);
 
 	// Expect the write
@@ -566,12 +561,11 @@ static void test_zeroed_data_counts_as_dirty(void *context)
 	struct mock_engine *me = f->me;
 	struct bcache *cache = f->cache;
 
-	int err;
 	int fd = 17;   // arbitrary key
 	struct block *b;
 
 	// No read
-	T_ASSERT(bcache_get(cache, fd, 0, GF_ZERO, &b, &err));
+	T_ASSERT(bcache_get(cache, fd, 0, GF_ZERO, &b));
 	bcache_put(b);
 
 	// Expect the write
@@ -586,18 +580,17 @@ static void test_flush_waits_for_all_dirty(void *context)
 	struct bcache *cache = f->cache;
 
 	const unsigned count = 16;
-	int err;
 	int fd = 17;   // arbitrary key
 	unsigned i;
 	struct block *b;
 
 	for (i = 0; i < count; i++) {
 		if (i % 2) {
-			T_ASSERT(bcache_get(cache, fd, i, GF_ZERO, &b, &err));
+			T_ASSERT(bcache_get(cache, fd, i, GF_ZERO, &b));
 		} else {
 			_expect_read(me, fd, i);
 			_expect(me, E_WAIT);
-			T_ASSERT(bcache_get(cache, fd, i, 0, &b, &err));
+			T_ASSERT(bcache_get(cache, fd, i, 0, &b));
 		}
 		bcache_put(b);
 	}
@@ -620,7 +613,6 @@ static void test_multiple_files(void *context)
 {
 	static int _fds[] = {1, 128, 345, 678, 890};
 
-	int err;
 	struct fixture *f = context;
 	struct mock_engine *me = f->me;
 	struct bcache *cache = f->cache;
@@ -631,7 +623,7 @@ static void test_multiple_files(void *context)
 		_expect_read(me, _fds[i], 0);
 		_expect(me, E_WAIT);
 
-		T_ASSERT(bcache_get(cache, _fds[i], 0, 0, &b, &err));
+		T_ASSERT(bcache_get(cache, _fds[i], 0, 0, &b));
 		bcache_put(b);
 	}
 }
@@ -642,10 +634,9 @@ static void test_read_bad_issue(void *context)
 	struct mock_engine *me = f->me;
 	struct bcache *cache = f->cache;
 	struct block *b;
-	int err;
 
 	_expect_read_bad_issue(me, 17, 0);
-	T_ASSERT(!bcache_get(cache, 17, 0, 0, &b, &err));
+	T_ASSERT(!bcache_get(cache, 17, 0, 0, &b));
 }
 
 static void test_read_bad_issue_intermittent(void *context)
@@ -655,14 +646,13 @@ static void test_read_bad_issue_intermittent(void *context)
 	struct bcache *cache = f->cache;
 	struct block *b;
 	int fd = 17;
-	int err;
 
 	_expect_read_bad_issue(me, fd, 0);
-	T_ASSERT(!bcache_get(cache, fd, 0, 0, &b, &err));
+	T_ASSERT(!bcache_get(cache, fd, 0, 0, &b));
 
 	_expect_read(me, fd, 0);
 	_expect(me, E_WAIT);
-	T_ASSERT(bcache_get(cache, fd, 0, 0, &b, &err));
+	T_ASSERT(bcache_get(cache, fd, 0, 0, &b));
 	bcache_put(b);
 }
 
@@ -673,11 +663,10 @@ static void test_read_bad_wait(void *context)
 	struct bcache *cache = f->cache;
 	struct block *b;
 	int fd = 17;
-	int err;
 
 	_expect_read_bad_wait(me, fd, 0);
 	_expect(me, E_WAIT);
-	T_ASSERT(!bcache_get(cache, fd, 0, 0, &b, &err));
+	T_ASSERT(!bcache_get(cache, fd, 0, 0, &b));
 }
 
 static void test_read_bad_wait_intermittent(void *context)
@@ -687,15 +676,14 @@ static void test_read_bad_wait_intermittent(void *context)
 	struct bcache *cache = f->cache;
 	struct block *b;
 	int fd = 17;
-	int err;
 
 	_expect_read_bad_wait(me, fd, 0);
 	_expect(me, E_WAIT);
-	T_ASSERT(!bcache_get(cache, fd, 0, 0, &b, &err));
+	T_ASSERT(!bcache_get(cache, fd, 0, 0, &b));
 
 	_expect_read(me, fd, 0);
 	_expect(me, E_WAIT);
-	T_ASSERT(bcache_get(cache, fd, 0, 0, &b, &err));
+	T_ASSERT(bcache_get(cache, fd, 0, 0, &b));
 	bcache_put(b);
 }
 
@@ -706,9 +694,8 @@ static void test_write_bad_issue_stops_flush(void *context)
 	struct bcache *cache = f->cache;
 	struct block *b;
 	int fd = 17;
-	int err;
 
-	T_ASSERT(bcache_get(cache, fd, 0, GF_ZERO, &b, &err));
+	T_ASSERT(bcache_get(cache, fd, 0, GF_ZERO, &b));
 	_expect_write_bad_issue(me, fd, 0);
 	bcache_put(b);
 	T_ASSERT(!bcache_flush(cache));
@@ -726,9 +713,8 @@ static void test_write_bad_io_stops_flush(void *context)
 	struct bcache *cache = f->cache;
 	struct block *b;
 	int fd = 17;
-	int err;
 
-	T_ASSERT(bcache_get(cache, fd, 0, GF_ZERO, &b, &err));
+	T_ASSERT(bcache_get(cache, fd, 0, GF_ZERO, &b));
 	_expect_write_bad_wait(me, fd, 0);
 	_expect(me, E_WAIT);
 	bcache_put(b);
@@ -756,11 +742,10 @@ static void test_invalidate_present(void *context)
 	struct bcache *cache = f->cache;
 	struct block *b;
 	int fd = 17;
-	int err;
 
 	_expect_read(me, fd, 0);
 	_expect(me, E_WAIT);
-	T_ASSERT(bcache_get(cache, fd, 0, 0, &b, &err));
+	T_ASSERT(bcache_get(cache, fd, 0, 0, &b));
 	bcache_put(b);
 
 	T_ASSERT(bcache_invalidate(cache, fd, 0));
@@ -773,10 +758,9 @@ static void test_invalidate_after_read_error(void *context)
 	struct bcache *cache = f->cache;
 	struct block *b;
 	int fd = 17;
-	int err;
 
 	_expect_read_bad_issue(me, fd, 0);
-	T_ASSERT(!bcache_get(cache, fd, 0, 0, &b, &err));
+	T_ASSERT(!bcache_get(cache, fd, 0, 0, &b));
 	T_ASSERT(bcache_invalidate(cache, fd, 0));
 }
 
@@ -787,9 +771,8 @@ static void test_invalidate_after_write_error(void *context)
 	struct bcache *cache = f->cache;
 	struct block *b;
 	int fd = 17;
-	int err;
 
-	T_ASSERT(bcache_get(cache, fd, 0, GF_ZERO, &b, &err));
+	T_ASSERT(bcache_get(cache, fd, 0, GF_ZERO, &b));
 	bcache_put(b);
 
 	// invalidate should fail if the write fails
@@ -805,7 +788,7 @@ static void test_invalidate_after_write_error(void *context)
 	// a read is not required to get the block
 	_expect_read(me, fd, 0);
 	_expect(me, E_WAIT);
-	T_ASSERT(bcache_get(cache, fd, 0, 0, &b, &err));
+	T_ASSERT(bcache_get(cache, fd, 0, 0, &b));
 	bcache_put(b);
 }
 
@@ -817,9 +800,8 @@ static void test_invalidate_held_block(void *context)
 	struct bcache *cache = f->cache;
 	struct block *b;
 	int fd = 17;
-	int err;
 
-	T_ASSERT(bcache_get(cache, fd, 0, GF_ZERO, &b, &err));
+	T_ASSERT(bcache_get(cache, fd, 0, GF_ZERO, &b));
 
 	T_ASSERT(!bcache_invalidate(cache, fd, 0));
 

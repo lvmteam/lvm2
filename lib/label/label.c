@@ -521,7 +521,7 @@ static int _scan_list(struct dm_list *devs, int *failed)
 		scan_failed = 0;
 		is_lvm_device = 0;
 
-		if (!bcache_get(scan_bcache, devl->dev->bcache_fd, 0, 0, &bb, &error)) {
+		if (!bcache_get(scan_bcache, devl->dev->bcache_fd, 0, 0, &bb)) {
 			log_debug_devs("Scan failed to read %s error %d.", dev_name(devl->dev), error);
 			scan_failed = 1;
 			scan_read_errors++;

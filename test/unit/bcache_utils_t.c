@@ -109,7 +109,6 @@ static uint64_t _min(uint64_t lhs, uint64_t rhs)
 
 static void _verify(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uint8_t pat)
 {
-        int err;
 	struct block *b;
 	block_address bb = byte_b / T_BLOCK_SIZE;
 	block_address be = (byte_e + T_BLOCK_SIZE - 1) / T_BLOCK_SIZE;
@@ -128,7 +127,7 @@ static void _verify(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uint8_t
 
 	// Verify again, driving bcache directly
 	for (; bb != be; bb++) {
-        	T_ASSERT(bcache_get(f->cache, f->fd, bb, 0, &b, &err));
+        	T_ASSERT(bcache_get(f->cache, f->fd, bb, 0, &b));
 
 		blen = _min(T_BLOCK_SIZE - offset, len);
         	_verify_bytes(b, bb * T_BLOCK_SIZE, offset, blen, pat);
@@ -142,7 +141,6 @@ static void _verify(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uint8_t
 
 static void _verify_set(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uint8_t val)
 {
-        int err;
         unsigned i;
 	struct block *b;
 	block_address bb = byte_b / T_BLOCK_SIZE;
@@ -151,7 +149,7 @@ static void _verify_set(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uin
 	uint64_t blen, len = byte_e - byte_b;
 
 	for (; bb != be; bb++) {
-        	T_ASSERT(bcache_get(f->cache, f->fd, bb, 0, &b, &err));
+        	T_ASSERT(bcache_get(f->cache, f->fd, bb, 0, &b));
 
 		blen = _min(T_BLOCK_SIZE - offset, len);
 		for (i = 0; i < blen; i++)

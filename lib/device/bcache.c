@@ -901,14 +901,13 @@ static void _recycle_block(struct bcache *cache, struct block *b)
 }
 
 bool bcache_get(struct bcache *cache, int fd, block_address i,
-	        unsigned flags, struct block **result, int *error)
+	        unsigned flags, struct block **result)
 {
 	struct block *b;
 
 	b = _lookup_or_read_block(cache, fd, i, flags);
 	if (b) {
 		if (b->error) {
-			*error = b->error;
 			if (b->io_dir == DIR_READ) {
 				// Now we know the read failed we can just forget
 				// about this block, since there's no dirty data to
@@ -927,9 +926,6 @@ bool bcache_get(struct bcache *cache, int fd, block_address i,
 	}
 
 	*result = NULL;
-
-	if (error)
-		*error = -BCACHE_NO_BLOCK;
 
 	log_error("bcache failed to get block %u fd %d", (uint32_t) i, fd);
 	return false;
