@@ -30,6 +30,7 @@
 #include "lvm-exec.h"
 #include "memlock.h"
 #include "lvmlockd.h"
+#include "label.h"
 
 typedef enum {
 	PREFERRED,

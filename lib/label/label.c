@@ -963,8 +963,6 @@ bool dev_write_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 
 bool dev_write_zeros(struct device *dev, uint64_t start, size_t len)
 {
-	int ret;
-
 	if (test_mode())
 		return true;
 
@@ -999,8 +997,6 @@ bool dev_write_zeros(struct device *dev, uint64_t start, size_t len)
 
 bool dev_set_bytes(struct device *dev, uint64_t start, size_t len, uint8_t val)
 {
-	int ret;
-
 	if (test_mode())
 		return true;
 
