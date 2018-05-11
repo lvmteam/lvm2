@@ -348,7 +348,7 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 
 	if (ioctl(fd, BLKGETSIZE64, size) < 0) {
 		log_sys_error("ioctl BLKGETSIZE64", name);
-		if (do_close && !dev_close(dev))
+		if (do_close && !dev_close_immediate(dev))
 			log_sys_error("close", name);
 		return 0;
 	}
@@ -359,7 +359,7 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 
 	log_very_verbose("%s: size is %" PRIu64 " sectors", name, *size);
 
-	if (do_close && !dev_close(dev))
+	if (do_close && !dev_close_immediate(dev))
 		log_sys_error("close", name);
 
 	return 1;
@@ -379,7 +379,7 @@ static int _dev_read_ahead_dev(struct device *dev, uint32_t *read_ahead)
 
 	if (ioctl(dev->fd, BLKRAGET, &read_ahead_long) < 0) {
 		log_sys_error("ioctl BLKRAGET", dev_name(dev));
-		if (!dev_close(dev))
+		if (!dev_close_immediate(dev))
 			stack;
 		return 0;
 	}
@@ -390,7 +390,7 @@ static int _dev_read_ahead_dev(struct device *dev, uint32_t *read_ahead)
 	log_very_verbose("%s: read_ahead is %u sectors",
 			 dev_name(dev), *read_ahead);
 
-	if (!dev_close(dev))
+	if (!dev_close_immediate(dev))
 		stack;
 
 	return 1;
@@ -411,13 +411,13 @@ static int _dev_discard_blocks(struct device *dev, uint64_t offset_bytes, uint64
 	if (ioctl(dev->fd, BLKDISCARD, &discard_range) < 0) {
 		log_error("%s: BLKDISCARD ioctl at offset %" PRIu64 " size %" PRIu64 " failed: %s.",
 			  dev_name(dev), offset_bytes, size_bytes, strerror(errno));
-		if (!dev_close(dev))
+		if (!dev_close_immediate(dev))
 			stack;
 		/* It doesn't matter if discard failed, so return success. */
 		return 1;
 	}
 
-	if (!dev_close(dev))
+	if (!dev_close_immediate(dev))
 		stack;
 
 	return 1;
