@@ -19,7 +19,7 @@
 
 //----------------------------------------------------------------
 
-static void *rt_init()
+static void *rt_init(void)
 {
 	struct radix_tree *rt = radix_tree_create();
 	T_ASSERT(rt);
