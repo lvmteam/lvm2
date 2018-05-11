@@ -847,9 +847,7 @@ void label_scan_destroy(struct cmd_context *cmd)
  * device, this is not a commonly used function.
  */
 
-/* FIXME: remove unused_sector arg */
-
-int label_read(struct device *dev, struct label **labelp, uint64_t unused_sector)
+int label_read(struct device *dev)
 {
 	struct dm_list one_dev;
 	struct device_list *devl;
@@ -868,18 +866,6 @@ int label_read(struct device *dev, struct label **labelp, uint64_t unused_sector
 	}
 
 	_scan_list(NULL, NULL, &one_dev, &failed);
-
-	/*
-	 * FIXME: this ugliness of returning a pointer to the label is
-	 * temporary until the callers can be updated to not use this.
-	 */
-	if (labelp) {
-		struct lvmcache_info *info;
-
-		info = lvmcache_info_from_pvid(dev->pvid, dev, 1);
-		if (info)
-			*labelp = lvmcache_get_label(info);
-	}
 
 	if (failed)
 		return 0;

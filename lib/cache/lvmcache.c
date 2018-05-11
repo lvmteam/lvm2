@@ -810,7 +810,7 @@ const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd,
 
 	dm_list_iterate_safe(devh, tmp, &devs) {
 		devl = dm_list_item(devh, struct device_list);
-		label_read(devl->dev, NULL, UINT64_C(0));
+		label_read(devl->dev);
 		dm_list_del(&devl->list);
 		dm_free(devl);
 	}
@@ -1438,7 +1438,7 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 
 		dm_list_iterate_items(devl, &add_cache_devs) {
 			log_debug_cache("Rescan preferred device %s for lvmcache", dev_name(devl->dev));
-			label_read(devl->dev, NULL, UINT64_C(0));
+			label_read(devl->dev);
 		}
 
 		dm_list_splice(&_unused_duplicate_devs, &del_cache_devs);
@@ -1629,7 +1629,7 @@ const char *lvmcache_pvid_from_devname(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	if (!(label_read(dev, NULL, UINT64_C(0))))
+	if (!label_read(dev))
 		return NULL;
 
 	return dev->pvid;
