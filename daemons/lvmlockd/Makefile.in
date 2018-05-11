@@ -27,6 +27,8 @@ ifeq ("@BUILD_LOCKDDLM@", "yes")
   LOCK_LIBS += -ldlm_lt
 endif
 
+SOURCES2 = lvmlockctl.c
+
 TARGETS = lvmlockd lvmlockctl
 
 .PHONY: install_lvmlockd
