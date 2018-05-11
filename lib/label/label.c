@@ -978,15 +978,9 @@ bool dev_read_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 	int ret;
 
 	if (!scan_bcache) {
-		if (!dev_open_readonly(dev))
-			return false;
-
-		ret = dev_read(dev, start, len, 0, data);
-
-		if (!dev_close(dev))
-			stack;
-
-		return ret ? true : false;
+		/* Should not happen */
+		log_error("dev_read bcache not set up %s", dev_name(dev));
+		return false;
 	}
 
 	if (dev->bcache_fd <= 0) {
@@ -1015,15 +1009,9 @@ bool dev_write_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 		return true;
 
 	if (!scan_bcache) {
-		if (!dev_open(dev))
-			return false;
-
-		ret = dev_write(dev, start, len, 0, data);
-
-		if (!dev_close(dev))
-			stack;
-
-		return ret ? true : false;
+		/* Should not happen */
+		log_error("dev_write bcache not set up %s", dev_name(dev));
+		return false;
 	}
 
 	if (dev->bcache_fd <= 0) {
@@ -1056,7 +1044,7 @@ bool dev_write_zeros(struct device *dev, uint64_t start, size_t len)
 		return true;
 
 	if (!scan_bcache) {
-		log_error("dev_write_zeros %s bcache not set up", dev_name(dev));
+		log_error("dev_write_zeros bcache not set up %s", dev_name(dev));
 		return false;
 	}
 
@@ -1090,7 +1078,7 @@ bool dev_set_bytes(struct device *dev, uint64_t start, size_t len, uint8_t val)
 		return true;
 
 	if (!scan_bcache) {
-		log_error("dev_set_bytes %s bcache not set up", dev_name(dev));
+		log_error("dev_set_bytes bcache not set up %s", dev_name(dev));
 		return false;
 	}
 
