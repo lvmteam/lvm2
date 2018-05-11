@@ -16,7 +16,6 @@
 #include "lib.h"
 #include "device.h"
 #include "metadata.h"
-#include "lvmcache.h"
 #include "memlock.h"
 #include "locking.h"
 
@@ -674,9 +673,7 @@ static int _dev_close(struct device *dev, int immediate)
 		log_debug_devs("%s: Immediate close attempt while still referenced",
 			       dev_name(dev));
 
-	/* Close unless device is known to belong to a locked VG */
-	if (immediate ||
-	    (dev->open_count < 1 && !lvmcache_pvid_is_locked(dev->pvid)))
+	if (immediate || (dev->open_count < 1))
 		_close(dev);
 
 	return 1;

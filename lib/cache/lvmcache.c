@@ -2456,15 +2456,6 @@ void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 	}
 }
 
-int lvmcache_pvid_is_locked(const char *pvid) {
-	struct lvmcache_info *info;
-	info = lvmcache_info_from_pvid(pvid, NULL, 0);
-	if (!info || !info->vginfo)
-		return 0;
-
-	return lvmcache_vgname_is_locked(info->vginfo->vgname);
-}
-
 int lvmcache_fid_add_mdas(struct lvmcache_info *info, struct format_instance *fid,
 			  const char *id, int id_len)
 {
