@@ -283,7 +283,6 @@ struct io_engine *create_async_io_engine(void)
 struct sync_io {
         struct dm_list list;
 	void *context;
-	int err;
 };
 
 struct sync_engine {
@@ -306,30 +305,46 @@ static bool _sync_issue(struct io_engine *ioe, enum dir d, int fd,
                         sector_t sb, sector_t se, void *data, void *context)
 {
         int r;
-        uint64_t len = (se - sb) * 512;
+        uint64_t len = (se - sb) * 512, where;
 	struct sync_engine *e = _to_sync(ioe);
 	struct sync_io *io = malloc(sizeof(*io));
-	if (!io)
+	if (!io) {
+		log_warn("unable to allocate sync_io");
         	return false;
+	}
 
-	r = lseek(fd, sb * 512, SEEK_SET);
-	if (r < 0)
+	where = sb * 512;
+	r = lseek(fd, where, SEEK_SET);
+	if (r < 0) {
+        	log_warn("unable to seek to position %llu", (unsigned long long) where);
         	return false;
+	}
 
-	do {
-        	if (d == DIR_READ)
-                        r = read(fd, data, len);
-                else
-                        r = write(fd, data, len);
+	while (len) {
+        	do {
+                	if (d == DIR_READ)
+                                r = read(fd, data, len);
+                        else
+                                r = write(fd, data, len);
 
-	} while (r == EINTR || r == EAGAIN);
+        	} while ((r < 0) && ((r == EINTR) || (r == EAGAIN)));
 
-	if (r != len)
-        	r = -EIO;
+        	if (r < 0) {
+                	log_warn("io failed %d", r);
+                	return false;
+        	}
+
+                len -= r;
+	}
+
+	if (len) {
+        	log_warn("short io %u bytes remaining", (unsigned) len);
+        	return false;
+	}
+
 
 	dm_list_add(&e->complete, &io->list);
 	io->context = context;
-	io->err = r < 0 ? r : 0;
 
 	return true;
 }
@@ -340,7 +355,7 @@ static bool _sync_wait(struct io_engine *ioe, io_complete_fn fn)
 	struct sync_engine *e = _to_sync(ioe);
 
 	dm_list_iterate_items_safe(io, tmp, &e->complete) {
-		fn(io->context, io->err);
+		fn(io->context, 0);
 		dm_list_del(&io->list);
 		dm_free(io);
 	}
