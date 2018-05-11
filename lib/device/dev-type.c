@@ -215,6 +215,9 @@ int dev_subsystem_part_major(struct dev_types *dt, struct device *dev)
 	if (MAJOR(dev->dev) == dt->device_mapper_major)
 		return 1;
 
+	if (MAJOR(dev->dev) == dt->md_major)
+		return 1;
+
 	if (MAJOR(dev->dev) == dt->drbd_major)
 		return 1;
 
