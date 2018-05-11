@@ -226,11 +226,13 @@ LIB_SHARED = check aux inittest utils get lvm-wrapper
 
 install: .tests-stamp lib/paths-installed
 	@echo $(srcdir)
-	$(INSTALL_DIR) $(DATADIR)/{shell,api,lib,dbus} $(EXECDIR)
+	$(INSTALL_DIR) $(DATADIR)/{shell,api,unit,lib,dbus} $(EXECDIR)
 	$(INSTALL_DATA) shell/*.sh $(DATADIR)/shell
 	$(INSTALL_DATA) api/*.sh $(DATADIR)/api
+	$(INSTALL_DATA) unit/*.sh $(DATADIR)/unit
 	$(INSTALL_DATA) lib/mke2fs.conf $(DATADIR)/lib
 	$(INSTALL_PROGRAM) api/*.{t,py} $(DATADIR)/api
+	$(INSTALL_PROGRAM) unit/unit-test $(DATADIR)/unit
 	$(INSTALL_PROGRAM) dbus/*.py $(DATADIR)/dbus/
 	$(INSTALL_DATA) lib/paths-installed $(DATADIR)/lib/paths
 	cd lib && $(INSTALL_DATA) \
