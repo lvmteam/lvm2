@@ -27,8 +27,9 @@ void config_tests(struct dm_list *suites);
 void dm_list_tests(struct dm_list *suites);
 void dm_status_tests(struct dm_list *suites);
 void io_engine_tests(struct dm_list *suites);
-void regex_tests(struct dm_list *suites);
 void percent_tests(struct dm_list *suites);
+void radix_tree_tests(struct dm_list *suites);
+void regex_tests(struct dm_list *suites);
 void string_tests(struct dm_list *suites);
 void vdo_tests(struct dm_list *suites);
 
@@ -42,11 +43,13 @@ static inline void register_all_tests(struct dm_list *suites)
 	dm_list_tests(suites);
 	dm_status_tests(suites);
 	io_engine_tests(suites);
-	regex_tests(suites);
 	percent_tests(suites);
+	radix_tree_tests(suites);
+	regex_tests(suites);
 	string_tests(suites);
 	vdo_tests(suites);
 }
 
 //-----------------------------------------------------------------
+
 #endif
