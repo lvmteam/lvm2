@@ -198,7 +198,7 @@ int dev_get_block_size(struct device *dev, unsigned int *physical_block_size, un
 	*physical_block_size = (unsigned int) dev->phys_block_size;
 	*block_size = (unsigned int) dev->block_size;
 out:
-	if (needs_open && !dev_close(dev))
+	if (needs_open && !dev_close_immediate(dev))
 		stack;
 
 	return r;
