@@ -2108,6 +2108,7 @@ daemons/lvmdbusd/path.py
 daemons/lvmetad/Makefile
 daemons/lvmpolld/Makefile
 daemons/lvmlockd/Makefile
+device_mapper/Makefile
 conf/Makefile
 conf/example.conf
 conf/lvmlocal.conf

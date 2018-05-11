@@ -18,7 +18,7 @@ top_builddir = @top_builddir@
 abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
 
-SUBDIRS = conf daemons include lib libdaemon libdm man scripts tools
+SUBDIRS = conf daemons include lib libdaemon libdm man scripts device_mapper tools
 
 ifeq ("@UDEV_RULES@", "yes")
   SUBDIRS += udev
@@ -43,7 +43,7 @@ endif
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS = conf include man test scripts \
     libdaemon lib tools daemons libdm \
-    udev po liblvm python
+    udev po liblvm python device_mapper
 tools.distclean: test.distclean
 endif
 DISTCLEAN_DIRS += lcov_reports*
@@ -61,7 +61,7 @@ po: tools daemons
 man: tools
 all_man: tools
 scripts: liblvm libdm
-test: lib
+test: tools daemons
 unit-test: lib
 run-unit-test: unit-test
 
@@ -99,7 +99,7 @@ endif
 DISTCLEAN_TARGETS += cscope.out
 CLEAN_DIRS += autom4te.cache
 
-check check_system check_cluster check_local check_lvmetad check_lvmpolld check_lvmlockd_test check_lvmlockd_dlm check_lvmlockd_sanlock unit-test run-unit-test: all
+check check_system check_cluster check_local check_lvmetad check_lvmpolld check_lvmlockd_test check_lvmlockd_dlm check_lvmlockd_sanlock unit-test run-unit-test: test
 	$(MAKE) -C test $(@)
 
 conf.generate man.generate: tools

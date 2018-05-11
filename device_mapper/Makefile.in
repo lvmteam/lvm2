@@ -10,11 +10,14 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-DM_SOURCE=\
-	device-mapper/vdo/status.c
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+top_builddir = @top_builddir@
 
-DM_DEPENDS=$(subst .c,.d,$(DM_SOURCE))
-DM_OBJECTS=$(DM_SOURCE:%.c=%.o)
-CLEAN_TARGETS+=$(DM_DEPENDS) $(DM_OBJECTS)
+SOURCES=\
+	vdo/status.c
 
--include $(DM_DEPENDS)
+include $(top_builddir)/make.tmpl
+
+LIB_NAME = libdevicemapper
+LIB_STATIC = $(LIB_NAME).a

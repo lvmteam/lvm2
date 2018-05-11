@@ -40,7 +40,7 @@ TARGETS += unit-test
 # via usage of vpath
 vpath %.c \
 	$(top_srcdir)/base/data-struct \
-	$(top_srcdir)/device-mapper/vdo
+	$(top_srcdir)/device_mapper/vdo
 
 include $(top_builddir)/make.tmpl
 
