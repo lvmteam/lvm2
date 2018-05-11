@@ -171,6 +171,7 @@ install_tmpfiles_configuration:
 
 LCOV_TRACES = libdm.info lib.info liblvm.info tools.info \
 	libdaemon/client.info libdaemon/server.info \
+	test/unit.info \
 	daemons/clvmd.info \
 	daemons/dmeventd.info \
 	daemons/lvmetad.info \
