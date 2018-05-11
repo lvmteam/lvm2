@@ -643,7 +643,6 @@ void lvmcache_unlock_vgname(const char *vgname)
 
 	/* FIXME Do this per-VG */
 	if (strcmp(vgname, VG_GLOBAL) && !--_vgs_locked) {
-		dev_close_all();
 		dev_size_seqno_inc(); /* invalidate all cached dev sizes */
 	}
 }

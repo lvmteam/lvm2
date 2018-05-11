@@ -5192,8 +5192,6 @@ static struct volume_group *_recover_vg(struct cmd_context *cmd,
 
 	unlock_vg(cmd, NULL, vg_name);
 
-	dev_close_all();
-
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE, NULL))
 		return_NULL;
 

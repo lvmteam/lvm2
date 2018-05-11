@@ -975,8 +975,6 @@ int label_scan_open(struct device *dev)
 
 bool dev_read_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 {
-	int ret;
-
 	if (!scan_bcache) {
 		/* Should not happen */
 		log_error("dev_read bcache not set up %s", dev_name(dev));
@@ -1003,8 +1001,6 @@ bool dev_read_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 
 bool dev_write_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 {
-	int ret;
-
 	if (test_mode())
 		return true;
 

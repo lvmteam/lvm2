@@ -53,7 +53,6 @@
 #  endif
 #endif
 
-static DM_LIST_INIT(_open_devices);
 static unsigned _dev_size_seqno = 1;
 
 static const char *_reasons[] = {
@@ -597,8 +596,6 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 	if ((flags & O_CREAT) && !(flags & O_TRUNC))
 		dev->end = lseek(dev->fd, (off_t) 0, SEEK_END);
 
-	dm_list_add(&_open_devices, &dev->open_list);
-
 	log_debug_devs("Opened %s %s%s%s", dev_name(dev),
 		       dev->flags & DEV_OPENED_RW ? "RW" : "RO",
 		       dev->flags & DEV_OPENED_EXCL ? " O_EXCL" : "",
@@ -650,7 +647,6 @@ static void _close(struct device *dev)
 	dev->fd = -1;
 	dev->phys_block_size = -1;
 	dev->block_size = -1;
-	dm_list_del(&dev->open_list);
 
 	log_debug_devs("Closed %s", dev_name(dev));
 
@@ -694,18 +690,6 @@ int dev_close(struct device *dev)
 int dev_close_immediate(struct device *dev)
 {
 	return _dev_close(dev, 1);
-}
-
-void dev_close_all(void)
-{
-	struct dm_list *doh, *doht;
-	struct device *dev;
-
-	dm_list_iterate_safe(doh, doht, &_open_devices) {
-		dev = dm_list_struct_base(doh, struct device, open_list);
-		if (dev->open_count < 1)
-			_close(dev);
-	}
 }
 
 static inline int _dev_is_valid(struct device *dev)
