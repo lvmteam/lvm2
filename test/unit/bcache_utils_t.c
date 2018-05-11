@@ -14,6 +14,10 @@
 
 #define _GNU_SOURCE
 
+#include "bcache.h"
+#include "framework.h"
+#include "units.h"
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,10 +25,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-
-#include "bcache.h"
-#include "framework.h"
-#include "units.h"
+#include <sys/statvfs.h>
 
 //----------------------------------------------------------------
 
@@ -53,6 +54,16 @@ static void *_fix_init(struct io_engine *engine)
         uint8_t buffer[T_BLOCK_SIZE];
         struct fixture *f = malloc(sizeof(*f));
         unsigned b, i;
+	struct statvfs fsdata;
+	static int _runs_is_tmpfs = -1;
+
+	if (_runs_is_tmpfs == -1) {
+		// With testing in tmpfs directory O_DIRECT cannot be used
+		// tmpfs has  f_fsid == 0  (unsure if this is best guess)
+		_runs_is_tmpfs = (statvfs(".", &fsdata) == 0 && !fsdata.f_fsid) ? 1 : 0;
+		if (_runs_is_tmpfs)
+			printf("  Running test in tmpfs, *NOT* using O_DIRECT\n");
+	}
 
         T_ASSERT(f);
 
@@ -65,11 +76,13 @@ static void *_fix_init(struct io_engine *engine)
                 	buffer[i] = _pattern_at(INIT_PATTERN, byte(b, i));
 		T_ASSERT(write(f->fd, buffer, T_BLOCK_SIZE) > 0);
 	}
-	close(f->fd);
 
-	// reopen with O_DIRECT
-	f->fd = open(f->fname, O_RDWR | O_DIRECT);
-	T_ASSERT(f->fd >= 0);
+	if (!_runs_is_tmpfs) {
+		close(f->fd);
+		// reopen with O_DIRECT
+		f->fd = open(f->fname, O_RDWR | O_DIRECT);
+		T_ASSERT(f->fd >= 0);
+	}
 
 	f->cache = bcache_create(T_BLOCK_SIZE / 512, NR_BLOCKS, engine);
 	T_ASSERT(f->cache);
