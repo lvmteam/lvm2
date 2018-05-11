@@ -633,7 +633,7 @@ teardown() {
 	test -n "$TESTDIR" && {
 		cd "$TESTOLDPWD" || die "Failed to enter $TESTOLDPWD"
 		# after this delete no further write is possible
-		rm -rf "$TESTDIR" || echo BLA
+		rm -rf "${TESTDIR:?}" || echo BLA
 	}
 
 	echo "ok"
