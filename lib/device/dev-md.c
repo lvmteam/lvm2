@@ -134,8 +134,7 @@ static int _native_dev_is_md(struct device *dev, uint64_t *offset_found, int ful
 	 * Those checks can't be satisfied with the initial bcache data, and
 	 * would require an extra read i/o at the end of every device.  Issuing
 	 * an extra read to every device in every command, just to check for
-	 * the old md format is a bad tradeoff.  It's also not a big issue if
-	 * one happens to exist and we don't filter it out.
+	 * the old md format is a bad tradeoff.
 	 *
 	 * When "full" is set, we check a the start and end of the device for
 	 * md magic numbers.  When "full" is not set, we only check at the
@@ -143,6 +142,13 @@ static int _native_dev_is_md(struct device *dev, uint64_t *offset_found, int ful
 	 * command if it should do a full check (cmd->use_full_md_check),
 	 * and set it for commands that could possibly write to an md dev
 	 * (pvcreate/vgcreate/vgextend).
+	 *
+	 * For old md versions with magic numbers at the end of devices,
+	 * the md dev components won't be filtered out here when full is 0,
+	 * so they will be scanned, and appear as duplicate PVs in lvmcache.
+	 * The md device itself will be chosen as the primary duplicate,
+	 * and the components are dropped from the list of duplicates in,
+	 * i.e. a kind of post-scan filtering.
 	 */
 	if (!full) {
 		sb_offset = 0;

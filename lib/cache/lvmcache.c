@@ -977,6 +977,35 @@ int lvmcache_dev_is_unchosen_duplicate(struct device *dev)
 }
 
 /*
+ * Treat some duplicate devs as if they were filtered out by filters.
+ * The actual filters are evaluated too early, before a complete
+ * picture of all PVs is available, to eliminate these duplicates.
+ *
+ * By removing the filtered duplicates from unused_duplicate_devs, we remove
+ * the restrictions that are placed on using duplicate devs or VGs with
+ * duplicate devs.
+ *
+ * There may other kinds of duplicates that we want to ignore.
+ */
+
+static void _filter_duplicate_devs(struct cmd_context *cmd)
+{
+	struct dev_types *dt = cmd->dev_types;
+	struct lvmcache_info *info;
+	struct device_list *devl, *devl2;
+
+	dm_list_iterate_items_safe(devl, devl2, &_unused_duplicate_devs) {
+
+		info = lvmcache_info_from_pvid(devl->dev->pvid, NULL, 0);
+
+		if (MAJOR(info->dev->dev) == dt->md_major) {
+			log_debug_devs("Ignoring md component duplicate %s", dev_name(devl->dev));
+			dm_list_del(&devl->list);
+		}
+	}
+}
+
+/*
  * Compare _found_duplicate_devs entries with the corresponding duplicate dev
  * in lvmcache.  There may be multiple duplicates in _found_duplicate_devs for
  * a given pvid.  If a dev from _found_duplicate_devs is preferred over the dev
@@ -1442,6 +1471,13 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 		}
 
 		dm_list_splice(&_unused_duplicate_devs, &del_cache_devs);
+
+		/*
+		 * We might want to move the duplicate device warnings until
+		 * after this filtering so that we can skip warning about
+		 * duplicates that we are filtering out.
+		 */
+		_filter_duplicate_devs(cmd);
 	}
 
 	/* Perform any format-specific scanning e.g. text files */
