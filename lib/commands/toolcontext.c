@@ -1144,7 +1144,7 @@ static struct dev_filter *_init_lvmetad_filter_chain(struct cmd_context *cmd)
 	/* md component filter. Optional, non-critical. */
 	if (find_config_tree_bool(cmd, devices_md_component_detection_CFG, NULL)) {
 		init_md_filtering(1);
-		if ((filters[nr_filt] = md_filter_create(cmd->dev_types)))
+		if ((filters[nr_filt] = md_filter_create(cmd, cmd->dev_types)))
 			nr_filt++;
 	}
 

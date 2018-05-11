@@ -97,14 +97,15 @@ int lvmdiskscan(struct cmd_context *cmd, int argc __attribute__((unused)),
 	if (arg_is_set(cmd, lvmpartition_ARG))
 		log_warn("WARNING: only considering LVM devices");
 
+	/* Call before using dev_iter which uses filters which want bcache data. */
+	label_scan(cmd);
+
 	max_len = _get_max_dev_name_len(cmd->full_filter);
 
 	if (!(iter = dev_iter_create(cmd->full_filter, 0))) {
 		log_error("dev_iter_create failed");
 		return ECMD_FAILED;
 	}
-
-	label_scan(cmd);
 
 	for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
 		if (lvmcache_has_dev_info(dev)) {

@@ -723,7 +723,7 @@ int pv_resize_single(struct cmd_context *cmd,
 			     const uint64_t new_size,
 			     int yes);
 
-int pv_analyze(struct cmd_context *cmd, const char *pv_name,
+int pv_analyze(struct cmd_context *cmd, struct device *dev,
 	       uint64_t label_sector);
 
 /* FIXME: move internal to library */

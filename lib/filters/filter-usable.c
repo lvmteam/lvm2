@@ -27,12 +27,6 @@ static int _native_check_pv_min_size(struct device *dev)
 	uint64_t size;
 	int ret = 0;
 
-	/* Check it's accessible */
-	if (!dev_open_readonly_quiet(dev)) {
-		log_debug_devs("%s: Skipping: open failed", dev_name(dev));
-		return 0;
-	}
-
 	/* Check it's not too small */
 	if (!dev_get_size(dev, &size)) {
 		log_debug_devs("%s: Skipping: dev_get_size failed", dev_name(dev));
@@ -47,9 +41,6 @@ static int _native_check_pv_min_size(struct device *dev)
 
 	ret = 1;
 out:
-	if (!dev_close(dev))
-		stack;
-
 	return ret;
 }
 

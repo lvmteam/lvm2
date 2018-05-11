@@ -37,9 +37,12 @@ static int _dev_has_md_magic(struct device *dev, uint64_t sb_offset)
 	uint32_t md_magic;
 
 	/* Version 1 is little endian; version 0.90.0 is machine endian */
-	if (dev_read(dev, sb_offset, sizeof(uint32_t), DEV_IO_SIGNATURES, &md_magic) &&
-	    ((md_magic == MD_SB_MAGIC) ||
-	     ((MD_SB_MAGIC != xlate32(MD_SB_MAGIC)) && (md_magic == xlate32(MD_SB_MAGIC)))))
+
+	if (!dev_read_bytes(dev, sb_offset, sizeof(uint32_t), &md_magic))
+		return_0;
+
+	if ((md_magic == MD_SB_MAGIC) ||
+	     ((MD_SB_MAGIC != xlate32(MD_SB_MAGIC)) && (md_magic == xlate32(MD_SB_MAGIC))))
 		return 1;
 
 	return 0;
@@ -109,11 +112,14 @@ static int _udev_dev_is_md(struct device *dev)
 /*
  * Returns -1 on error
  */
-static int _native_dev_is_md(struct device *dev, uint64_t *offset_found)
+static int _native_dev_is_md(struct device *dev, uint64_t *offset_found, int full)
 {
-	int ret = 1;
 	md_minor_version_t minor;
 	uint64_t size, sb_offset;
+	int ret;
+
+	if (!scan_bcache)
+		return -EAGAIN;
 
 	if (!dev_get_size(dev, &size)) {
 		stack;
@@ -123,38 +129,67 @@ static int _native_dev_is_md(struct device *dev, uint64_t *offset_found)
 	if (size < MD_RESERVED_SECTORS * 2)
 		return 0;
 
-	if (!dev_open_readonly(dev)) {
-		stack;
-		return -1;
+	/*
+	 * Old md versions locate the magic number at the end of the device.
+	 * Those checks can't be satisfied with the initial bcache data, and
+	 * would require an extra read i/o at the end of every device.  Issuing
+	 * an extra read to every device in every command, just to check for
+	 * the old md format is a bad tradeoff.  It's also not a big issue if
+	 * one happens to exist and we don't filter it out.
+	 *
+	 * When "full" is set, we check a the start and end of the device for
+	 * md magic numbers.  When "full" is not set, we only check at the
+	 * start of the device for the magic numbers.  We decide for each
+	 * command if it should do a full check (cmd->use_full_md_check),
+	 * and set it for commands that could possibly write to an md dev
+	 * (pvcreate/vgcreate/vgextend).
+	 */
+	if (!full) {
+		sb_offset = 0;
+		if (_dev_has_md_magic(dev, sb_offset)) {
+			log_debug_devs("Found md magic number at offset 0 of %s.", dev_name(dev));
+			ret = 1;
+			goto out;
+		}
+
+		sb_offset = 8 << SECTOR_SHIFT;
+		if (_dev_has_md_magic(dev, sb_offset)) {
+			log_debug_devs("Found md magic number at offset %d of %s.", (int)sb_offset, dev_name(dev));
+			ret = 1;
+			goto out;
+		}
+
+		ret = 0;
+		goto out;
 	}
 
 	/* Check if it is an md component device. */
 	/* Version 0.90.0 */
 	sb_offset = MD_NEW_SIZE_SECTORS(size) << SECTOR_SHIFT;
-	if (_dev_has_md_magic(dev, sb_offset))
+	if (_dev_has_md_magic(dev, sb_offset)) {
+		ret = 1;
 		goto out;
+	}
 
 	minor = MD_MINOR_VERSION_MIN;
 	/* Version 1, try v1.0 -> v1.2 */
 	do {
 		sb_offset = _v1_sb_offset(size, minor);
-		if (_dev_has_md_magic(dev, sb_offset))
+		if (_dev_has_md_magic(dev, sb_offset)) {
+			ret = 1;
 			goto out;
+		}
 	} while (++minor <= MD_MINOR_VERSION_MAX);
 
 	ret = 0;
-
 out:
-	if (!dev_close(dev))
-		stack;
-
 	if (ret && offset_found)
 		*offset_found = sb_offset;
 
 	return ret;
 }
 
-int dev_is_md(struct device *dev, uint64_t *offset_found)
+int dev_is_md(struct device *dev, uint64_t *offset_found, int full)
 {
 
 	/*
@@ -163,7 +198,7 @@ int dev_is_md(struct device *dev, uint64_t *offset_found)
 	 * information is not in udev db.
 	 */
 	if ((dev->ext.src == DEV_EXT_NONE) || offset_found)
-		return _native_dev_is_md(dev, offset_found);
+		return _native_dev_is_md(dev, offset_found, full);
 
 	if (dev->ext.src == DEV_EXT_UDEV)
 		return _udev_dev_is_md(dev);

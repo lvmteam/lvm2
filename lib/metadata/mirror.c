@@ -297,16 +297,17 @@ static int _write_log_header(struct cmd_context *cmd, struct logical_volume *lv)
 		return 0;
 	}
 
-	if (!dev_open_quiet(dev))
-		return 0;
-
-	if (!dev_write(dev, UINT64_C(0), sizeof(log_header), DEV_IO_LV, &log_header)) {
-		log_error("Failed to write log header to %s.", name);
-		dev_close_immediate(dev);
+	if (!label_scan_open(dev)) {
+		log_error("Failed to open %s/%s to write log header.", lv->vg->name, lv->name);
 		return 0;
 	}
 
-	dev_close_immediate(dev);
+	if (!dev_write_bytes(dev, UINT64_C(0), sizeof(log_header), &log_header)) {
+		log_error("Failed to write log header to %s.", name);
+		return 0;
+	}
+
+	label_scan_invalidate(dev);
 
 	return 1;
 }

@@ -154,6 +154,9 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	/* pvcreate within vgextend cannot be forced. */
 	pp->force = 0;
 
+	/* Check for old md signatures at the end of devices. */
+	cmd->use_full_md_check = 1;
+
 	/*
 	 * Needed to change the set of orphan PVs.
 	 * (disable afterward to prevent process_each_pv from doing

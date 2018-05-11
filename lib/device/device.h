@@ -33,6 +33,8 @@
 #define DEV_NOT_O_NOATIME	0x00000400	/* Don't use O_NOATIME */
 #define DEV_IN_BCACHE		0x00000800      /* dev fd is open and used in bcache */
 #define DEV_BCACHE_EXCL		0x00001000      /* bcache_fd should be open EXCL */
+#define DEV_FILTER_AFTER_SCAN	0x00002000	/* apply filter after bcache has data */
+#define DEV_FILTER_OUT_SCAN	0x00004000	/* filtered out during label scan */
 
 /*
  * Support for external device info.

@@ -65,6 +65,9 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return_ECMD_FAILED;
 	cmd->lockd_gl_disable = 1;
 
+	/* Check for old md signatures at the end of devices. */
+	cmd->use_full_md_check = 1;
+
 	/*
 	 * Check if the VG name already exists.  This should be done before
 	 * creating PVs on any of the devices.

@@ -27,6 +27,30 @@ struct pfilter {
 };
 
 /*
+ * The persistent filter is filter layer that sits above the other filters and
+ * caches the final result of those other filters.  When a device is first
+ * checked against filters, it will not be in this cache, so this filter will
+ * pass the device down to the other filters to check it.  The other filters
+ * will run and either include the device (good/pass) or exclude the device
+ * (bad/fail).  That good or bad result propagates up through this filter which
+ * saves the result.  The next time some code checks the filters against the
+ * device, this persistent/cache filter is checked first.  This filter finds
+ * the previous result in its cache and returns it without reevaluating the
+ * other real filters.
+ *
+ * FIXME: a cache like this should not be needed.  The fact it's needed is a
+ * symptom of code that should be fixed to not reevaluate filters multiple
+ * times.  A device should be checked against the filter once, and then not
+ * need to be checked again.  With scanning now controlled, we could probably
+ * do this.
+ *
+ * FIXME: "persistent" isn't a great name for this caching filter.  This filter
+ * at one time saved its cache results to a file, which is how it got the name.
+ * That .cache file does not work well, causes problems, and is no longer used
+ * by default.  The old code for it should be removed.
+ */
+
+/*
  * The hash table holds one of these two states
  * against each entry.
  */
@@ -264,27 +288,51 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 	struct pfilter *pf = (struct pfilter *) f->private;
 	void *l = dm_hash_lookup(pf->devices, dev_name(dev));
 	struct dm_str_list *sl;
+	int pass = 1;
 
-	/* Cached BAD? */
+	/* Cached bad, skip dev */
 	if (l == PF_BAD_DEVICE) {
-		log_debug_devs("%s: Skipping (cached)", dev_name(dev));
+		log_debug_devs("%s: filter cache skipping (cached bad)", dev_name(dev));
 		return 0;
 	}
 
-	/* Test dm devices every time, so cache them as GOOD. */
-	if (MAJOR(dev->dev) == pf->dt->device_mapper_major) {
-		if (!l)
-			dm_list_iterate_items(sl, &dev->aliases)
-				if (!dm_hash_insert(pf->devices, sl->str, PF_GOOD_DEVICE)) {
-					log_error("Failed to hash device to filter.");
-					return 0;
-				}
-		return pf->real->passes_filter(pf->real, dev);
+	/* Cached good, use dev */
+	if (l == PF_GOOD_DEVICE) {
+		log_debug_devs("%s: filter cache using (cached good)", dev_name(dev));
+		return 1;
 	}
 
-	/* Uncached */
+	/* Uncached, check filters and cache the result */
 	if (!l) {
-		l = pf->real->passes_filter(pf->real, dev) ?  PF_GOOD_DEVICE : PF_BAD_DEVICE;
+		dev->flags &= ~DEV_FILTER_AFTER_SCAN;
+
+		pass = pf->real->passes_filter(pf->real, dev);
+
+		if (!pass) {
+			/*
+			 * A device that does not pass one filter is excluded
+			 * even if the result of another filter is deferred,
+			 * because the deferred result won't change the exclude.
+			 */
+			l = PF_BAD_DEVICE;
+
+		} else if ((pass == -EAGAIN) || (dev->flags & DEV_FILTER_AFTER_SCAN)) {
+			/*
+			 * When the filter result is deferred, we let the device
+			 * pass for now, but do not cache the result.  We need to
+			 * rerun the filters later.  At that point the final result
+			 * will be cached.
+			 */
+			log_debug_devs("filter cache deferred %s", dev_name(dev));
+			dev->flags |= DEV_FILTER_AFTER_SCAN;
+			pass = 1;
+			goto out;
+
+		} else if (pass) {
+			l = PF_GOOD_DEVICE;
+		}
+
+		log_debug_devs("filter caching %s %s", pass ? "good" : "bad", dev_name(dev));
 
 		dm_list_iterate_items(sl, &dev->aliases)
 			if (!dm_hash_insert(pf->devices, sl->str, l)) {
@@ -292,8 +340,8 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 				return 0;
 			}
 	}
-
-	return (l == PF_BAD_DEVICE) ? 0 : 1;
+ out:
+	return pass;
 }
 
 static void _persistent_destroy(struct dev_filter *f)

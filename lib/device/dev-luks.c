@@ -18,27 +18,22 @@
 #define LUKS_SIGNATURE "LUKS\xba\xbe"
 #define LUKS_SIGNATURE_SIZE 6
 
-int dev_is_luks(struct device *dev, uint64_t *offset_found)
+int dev_is_luks(struct device *dev, uint64_t *offset_found, int full)
 {
 	char buf[LUKS_SIGNATURE_SIZE];
 	int ret = -1;
 
-	if (!dev_open_readonly(dev)) {
-		stack;
-		return -1;
-	}
+	if (!scan_bcache)
+		return -EAGAIN;
 
 	if (offset_found)
 		*offset_found = 0;
 
-	if (!dev_read(dev, 0, LUKS_SIGNATURE_SIZE, DEV_IO_SIGNATURES, buf))
+	if (!dev_read_bytes(dev, 0, LUKS_SIGNATURE_SIZE, buf))
 		goto_out;
 
 	ret = memcmp(buf, LUKS_SIGNATURE, LUKS_SIGNATURE_SIZE) ? 0 : 1;
 
 out:
-	if (!dev_close(dev))
-		stack;
-
 	return ret;
 }
