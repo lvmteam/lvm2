@@ -15,7 +15,7 @@
 #define _GNU_SOURCE
 
 #include "bcache.h"
-#include "dm-logging.h"
+#include "lvm-logging.h"
 #include "log.h"
 
 #include <errno.h>
