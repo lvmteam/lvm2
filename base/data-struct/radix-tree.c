@@ -12,9 +12,6 @@
 
 #include "radix-tree.h"
 
-#include "dm-logging.h"
-#include "log.h"
-
 #include "base/memory/container_of.h"
 #include "base/memory/zalloc.h"
 
