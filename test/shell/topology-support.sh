@@ -23,7 +23,7 @@ lvdev_() {
 
 test_snapshot_mount() {
     lvcreate -aey -L4M -n $lv1 $vg "$dev1"
-    mkfs.ext3 "$(lvdev_ $vg $lv1)"
+    mkfs.ext3 -b4096 "$(lvdev_ $vg $lv1)"
     mkdir test_mnt
     mount "$(lvdev_ $vg $lv1)" test_mnt
     lvcreate -L4M -n $lv2 -s $vg/$lv1
