@@ -10,38 +10,49 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-UNIT_SOURCE=\
-	base/data-struct/radix-tree.c \
-	device-mapper/vdo/status.c \
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+top_builddir = @top_builddir@
+
+SOURCES=\
+	radix-tree.c \
+	status.c \
 	\
-	test/unit/bcache_t.c \
-	test/unit/bcache_utils_t.c \
-	test/unit/bitset_t.c \
-	test/unit/config_t.c \
-	test/unit/dmlist_t.c \
-	test/unit/dmstatus_t.c \
-	test/unit/io_engine_t.c \
-	test/unit/radix_tree_t.c \
-	test/unit/matcher_t.c \
-	test/unit/framework.c \
-	test/unit/percent_t.c \
-	test/unit/run.c \
-	test/unit/string_t.c \
-	test/unit/vdo_t.c
+	bcache_t.c \
+	bcache_utils_t.c \
+	bitset_t.c \
+	config_t.c \
+	dmlist_t.c \
+	dmstatus_t.c \
+	framework.c \
+	io_engine_t.c \
+	matcher_t.c \
+	percent_t.c \
+	radix_tree_t.c \
+	run.c \
+	string_t.c \
+	vdo_t.c
 
-UNIT_DEPENDS=$(subst .c,.d,$(UNIT_SOURCE))
-UNIT_OBJECTS=$(UNIT_SOURCE:%.c=%.o)
-CLEAN_TARGETS+=$(UNIT_DEPENDS) $(UNIT_OBJECTS)
+TARGETS += unit-test
+
+# Using vpath for other src dirs
+# FIXME: hopefully later we will just link libs without need to extract sources
+# via usage of vpath
+vpath %.c \
+	$(top_srcdir)/base/data-struct \
+	$(top_srcdir)/device-mapper/vdo
+
+include $(top_builddir)/make.tmpl
+
 UNIT_LDLIBS += $(LVMINTERNAL_LIBS) -ldevmapper -laio
+INCLUDES += -I$(top_srcdir)
 
-test/unit/unit-test: $(UNIT_OBJECTS) libdm/libdevmapper.$(LIB_SUFFIX) lib/liblvm-internal.a
+unit-test: $(OBJECTS) $(top_builddir)/libdm/libdevmapper.$(LIB_SUFFIX) $(top_builddir)/lib/liblvm-internal.a
 	@echo "    [LD] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) -L$(top_builddir)/libdm \
-	      -o $@ $(UNIT_OBJECTS) $(UNIT_LDLIBS)
+	      -o $@ $(OBJECTS) $(UNIT_LDLIBS)
 
-.PHONEY: run-unit-test
-run-unit-test: test/unit/unit-test
+.PHONY: run-unit-test
+run-unit-test: unit-test
 	@echo Running unit tests
-	LD_LIBRARY_PATH=libdm test/unit/unit-test run
-
--include $(UNIT_DEPENDS)
+	LD_LIBRARY_PATH=$(top_builddir)/libdm ./unit-test run
