@@ -1516,6 +1516,10 @@ driver_at_least() {
 }
 
 have_thin() {
+	lvm segtypes 2>/dev/null | grep -q thin$ || {
+		echo "Thin is not built-in." >&2
+		return 1
+	}
 	target_at_least dm-thin-pool "$@"
 
 	declare -a CONF=()
@@ -1556,6 +1560,10 @@ have_raid4 () {
 }
 
 have_cache() {
+	lvm segtypes 2>/dev/null | grep -q cache$ || {
+		echo "Cache is not built-in." >&2
+		return 1
+	}
 	target_at_least dm-cache "$@"
 
 	declare -a CONF=()
