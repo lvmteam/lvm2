@@ -68,7 +68,7 @@ static void *_fix_init(struct io_engine *engine)
         T_ASSERT(f);
 
         snprintf(f->fname, sizeof(f->fname), "unit-test-XXXXXX");
-	f->fd = mkostemp(f->fname, O_RDWR | O_CREAT | O_EXCL);
+	f->fd = mkstemp(f->fname);
 	T_ASSERT(f->fd >= 0);
 
 	for (b = 0; b < NR_BLOCKS; b++) {
