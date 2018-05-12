@@ -123,8 +123,7 @@ check_missing()
 }
 
 get_crypt_kname() {
-	lsblk -r -n -o KNAME,NAME | tee out
-	grep "$1" out | cut -d ' ' -f 1
+	lsblk -r -n -o KNAME,NAME | grep "$1" | cut -d ' ' -f 1
 }
 
 
