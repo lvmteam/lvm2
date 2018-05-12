@@ -702,29 +702,17 @@ global {
 	activation = 1
 
 	# Configuration option global/fallback_to_lvm1.
-	# Try running LVM1 tools if LVM cannot communicate with DM.
-	# This option only applies to 2.4 kernels and is provided to help
-	# switch between device-mapper kernels and LVM1 kernels. The LVM1
-	# tools need to be installed with .lvm1 suffices, e.g. vgscan.lvm1.
-	# They will stop working once the lvm2 on-disk metadata format is used.
+	# This setting setting no longer used.
 	# This configuration option has an automatic default value.
-	# fallback_to_lvm1 = @DEFAULT_FALLBACK_TO_LVM1@
+	# fallback_to_lvm1 = 0
 
 	# Configuration option global/format.
-	# The default metadata format that commands should use.
-	# The -M 1|2 option overrides this setting.
-	# 
-	# Accepted values:
-	#   lvm1
-	#   lvm2
-	# 
+	# This setting is no longer used.
 	# This configuration option has an automatic default value.
 	# format = "lvm2"
 
 	# Configuration option global/format_libraries.
-	# Shared libraries that process different metadata formats.
-	# If support for LVM1 metadata was compiled as a shared library use
-	# format_libraries = "liblvm2format1.so"
+	# This setting is no longer used.
 	# This configuration option does not have a default value defined.
 
 	# Configuration option global/segment_libraries.
@@ -820,13 +808,6 @@ global {
 	# Treat any internal errors as fatal errors, aborting the process that
 	# encountered the internal error. Please only enable for debugging.
 	abort_on_internal_errors = 0
-
-	# Configuration option global/detect_internal_vg_cache_corruption.
-	# Internal verification of VG structures.
-	# Check if CRC matches when a parsed VG is used multiple times. This
-	# is useful to catch unexpected changes to cached VG structures.
-	# Please only enable for debugging.
-	detect_internal_vg_cache_corruption = 0
 
 	# Configuration option global/metadata_read_only.
 	# No operations that change on-disk metadata are permitted.
