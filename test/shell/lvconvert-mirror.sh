@@ -319,11 +319,13 @@ fi
 #
 aux zero_dev "$dev2" $(get first_extent_sector "$dev2"):
 aux zero_dev "$dev4" $(get first_extent_sector "$dev4"):
-aux throttle_dm_mirror
+
+SHOULD=
+aux throttle_dm_mirror || SHOULD=should
 
 # Use large enough mirror that takes time to sychronize with small regionsize
 lvcreate -aey -L20 -Zn -Wn --type mirror --regionsize 16k -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev4" "$dev3:$DEVRANGE"
-not lvconvert -m-1 $vg/$lv1 "$dev1" 2>&1 | tee out
+$SHOULD not lvconvert -m-1 $vg/$lv1 "$dev1" 2>&1 | tee out
 aux restore_dm_mirror
 grep "not in-sync" out
 
@@ -337,7 +339,7 @@ check lv_on $vg $lv1 "$dev4"
 lvremove -ff $vg
 
 
-aux throttle_dm_mirror
+aux throttle_dm_mirror || :
 # No parallel lvconverts on a single LV please
 # Use big enough mirror size and small regionsize to run on all test machines succesfully
 lvcreate -aey -Zn -Wn -L20 --type mirror --regionsize 16k -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:0-8"
@@ -348,7 +350,7 @@ LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -b $vg/$lv1 "$dev4"
 # ATM upconversion should be running
 
 # Next convert should fail b/c we can't have 2 at once
-not lvconvert -m+1 $vg/$lv1 "$dev5"  2>&1 | tee out
+$SHOULD not lvconvert -m+1 $vg/$lv1 "$dev5"  2>&1 | tee out
 aux restore_dm_mirror
 grep "is already being converted" out
 

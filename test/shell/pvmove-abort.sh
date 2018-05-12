@@ -18,14 +18,15 @@ SKIP_WITH_LVMLOCKD=1
 
 aux lvmconf 'activation/raid_region_size = 16'
 
+aux target_at_least dm-mirror 1 10 0 || skip
+# Throttle mirroring
+aux throttle_dm_mirror || skip
+
 aux prepare_pvs 3 60
 
 vgcreate -s 512k $vg "$dev1" "$dev2"
 pvcreate --metadatacopies 0 "$dev3"
 vgextend $vg "$dev3"
-
-# Throttle mirroring
-aux throttle_dm_mirror
 
 for mode in "--atomic" "" ;
 do

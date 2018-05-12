@@ -22,6 +22,10 @@ export DM_ABORT_ON_INTERNAL_ERRORS=0
 
 aux lvmconf 'activation/raid_region_size = 16'
 
+aux target_at_least dm-mirror 1 10 0 || skip
+# Throttle mirroring
+aux throttle_dm_mirror || skip
+
 aux prepare_pvs 6 60
 
 vgcreate -s 512k $vg "$dev1" "$dev2"
@@ -30,9 +34,6 @@ vgextend $vg "$dev3"
 vgcreate -s 512k $vg1 "$dev4" "$dev5"
 pvcreate --metadatacopies 0 "$dev6"
 vgextend $vg1 "$dev6"
-
-# Throttle mirroring
-aux throttle_dm_mirror
 
 for mode in "--atomic" "" ;
 do
