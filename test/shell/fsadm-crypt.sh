@@ -14,6 +14,10 @@ test_description='Exercise fsadm filesystem resize on crypt devices'
 SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
+# FIXME: cannot use brd (ramdisk)  - lsblk is NOT listing it
+# so lsblk usage should be replaced
+export LVM_TEST_PREFER_BRD=0
+
 . lib/inittest
 
 aux prepare_vg 1 300
@@ -119,7 +123,8 @@ check_missing()
 }
 
 get_crypt_kname() {
-	lsblk -r -n -o KNAME,NAME | grep "$1" | cut -d ' ' -f 1
+	lsblk -r -n -o KNAME,NAME | tee out
+	grep "$1" out | cut -d ' ' -f 1
 }
 
 
