@@ -1351,6 +1351,11 @@ apitest() {
 	"$TESTOLDPWD/api/$1.t" "${@:2}" && rm -f debug.log strace.log
 }
 
+unittest() {
+	test -x "$TESTOLDPWD/unit/unit-test" || skip
+	"$TESTOLDPWD/unit/unit-test" "${@}"
+}
+
 mirror_recovery_works() {
 	case "$(uname -r)" in
 	  3.3.4-5.fc17.i686|3.3.4-5.fc17.x86_64) return 1 ;;
