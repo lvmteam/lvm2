@@ -1310,7 +1310,7 @@ int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const 
 	struct dm_list devs;
 	struct device_list *devl, *devl2;
 	struct lvmcache_vginfo *vginfo;
-	struct lvmcache_info *info, *info2;
+	struct lvmcache_info *info;
 
 	if (lvmetad_used())
 		return 1;
@@ -1339,9 +1339,9 @@ int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const 
 		dm_list_add(&devs, &devl->list);
 	}
 
-	/* Deleting the last info will delete vginfo. */
-	dm_list_iterate_items_safe(info, info2, &vginfo->infos)
-		lvmcache_del(info);
+	/* Delete info for each dev, deleting the last info will delete vginfo. */
+	dm_list_iterate_items(devl, &devs)
+		lvmcache_del_dev(devl->dev);
 
 	/* Dropping the last info struct is supposed to drop vginfo. */
 	if ((vginfo = lvmcache_vginfo_from_vgname(vgname, vgid)))
