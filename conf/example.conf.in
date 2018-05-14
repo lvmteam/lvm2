@@ -702,7 +702,7 @@ global {
 	activation = 1
 
 	# Configuration option global/fallback_to_lvm1.
-	# This setting setting no longer used.
+	# This setting is no longer used.
 	# This configuration option has an automatic default value.
 	# fallback_to_lvm1 = 0
 
