@@ -32,15 +32,17 @@ CFLAGS_lvmetactl.o += $(EXTRA_EXEC_CFLAGS)
 CFLAGS_lvmetad-core.o += $(EXTRA_EXEC_CFLAGS)
 INCLUDES += -I$(top_srcdir)/libdaemon/server
 LDFLAGS += -L$(top_builddir)/libdaemon/server $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS)
-LIBS += $(RT_LIBS) $(DAEMON_LIBS) -ldevmapper $(PTHREAD_LIBS)
+LIBS += $(RT_LIBS) $(DAEMON_LIBS) $(PTHREAD_LIBS) -lm
 
 lvmetad: $(OBJECTS) $(top_builddir)/libdaemon/client/libdaemonclient.a \
-		    $(top_builddir)/libdaemon/server/libdaemonserver.a
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) -ldaemonserver $(LIBS)
+		    $(top_builddir)/libdaemon/server/libdaemonserver.a \
+		    $(top_builddir)/device_mapper/libdevice-mapper.a
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) $(top_builddir)/device_mapper/libdevice-mapper.a -ldaemonserver $(LIBS)
 
 lvmetactl: lvmetactl.o $(top_builddir)/libdaemon/client/libdaemonclient.a \
-	$(top_builddir)/libdaemon/server/libdaemonserver.a
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ lvmetactl.o $(LIBS)
+	$(top_builddir)/libdaemon/server/libdaemonserver.a \
+	$(top_builddir)/device_mapper/libdevice-mapper.a
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ lvmetactl.o $(top_builddir)/device_mapper/libdevice-mapper.a $(LIBS)
 
 CLEAN_TARGETS += lvmetactl.o
 

@@ -41,9 +41,12 @@ endif
 include $(top_builddir)/make.tmpl
 
 DEFS += -D_REENTRANT
-DEPLIBS += $(top_builddir)/liblvm/liblvm2app.so $(top_builddir)/libdm/libdevmapper.so
-LDFLAGS += -L$(top_builddir)/liblvm -L$(top_builddir)/daemons/dmeventd
-LIBS += @LVM2APP_LIB@ $(DMEVENT_LIBS) -ldevmapper
+DEPLIBS += $(top_builddir)/liblvm/liblvm2app.so
+LDFLAGS+=\
+	-L$(top_builddir)/liblvm \
+	-L$(top_builddir)/daemons/dmeventd \
+	-L$(top_builddir)/device_mapper/libdevice-mapper.a
+LIBS += @LVM2APP_LIB@ $(DMEVENT_LIBS)
 
 %.t: %.o $(DEPLIBS)
 	$(CC) -o $@ $(<) $(CFLAGS) $(LDFLAGS) $(ELDFLAGS) $(LIBS)

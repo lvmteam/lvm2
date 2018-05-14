@@ -16,7 +16,7 @@
 
 #include "tools/tool.h"
 
-#include "libdm/misc/dm-logging.h"
+#include "device_mapper/misc/dm-logging.h"
 
 #include "lib/config/defaults.h"
 

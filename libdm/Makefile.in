@@ -52,7 +52,7 @@ CFLOW_LIST_TARGET = libdevmapper.cflow
 EXPORTED_HEADER = $(srcdir)/libdevmapper.h
 EXPORTED_FN_PREFIX = dm
 
-include $(top_builddir)/make.tmpl
+include $(top_builddir)/libdm/make.tmpl
 
 PROGS_CFLAGS = $(UDEV_CFLAGS)
 

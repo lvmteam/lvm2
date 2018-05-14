@@ -13,7 +13,7 @@
  */
 
 #include "lvm_prop.h"
-#include "libdm/libdevmapper.h"
+#include "device_mapper/libdevmapper.h"
 #include "lib/metadata/metadata.h"
 
 /* lv create parameters */

@@ -26,7 +26,7 @@ LIB_VERSION = $(LIB_VERSION_LVM)
 
 include $(top_builddir)/make.tmpl
 
-LIBS += -ldevmapper-event-lvm2 -ldevmapper
+LIBS += -ldevmapper-event-lvm2
 
 install_lvm2: install_dm_plugin
 

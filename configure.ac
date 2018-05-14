@@ -2088,6 +2088,7 @@ dnl -- keep utility scripts running properly
 AC_CONFIG_FILES([
 Makefile
 make.tmpl
+libdm/make.tmpl
 daemons/Makefile
 daemons/clvmd/Makefile
 daemons/cmirrord/Makefile

@@ -12,8 +12,8 @@
 #ifndef _LVM_CLOG_CLUSTER_H
 #define _LVM_CLOG_CLUSTER_H
 
-#include "libdm/misc/dm-log-userspace.h"
-#include "libdm/libdevmapper.h"
+#include "device_mapper/misc/dm-log-userspace.h"
+#include "device_mapper/libdevmapper.h"
 
 #define DM_ULOG_RESPONSE 0x1000U /* in last byte of 32-bit value */
 #define DM_ULOG_CHECKPOINT_READY 21

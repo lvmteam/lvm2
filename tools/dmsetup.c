@@ -17,7 +17,7 @@
  */
 #include "tools/tool.h"
 
-#include "libdm/misc/dm-logging.h"
+#include "device_mapper/misc/dm-logging.h"
 
 #include <ctype.h>
 #include <dirent.h>

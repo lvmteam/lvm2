@@ -211,8 +211,7 @@ endif
 endif
 
 include test/unit/Makefile
-
-include device-mapper/Makefile
+include device_mapper/Makefile
 
 ifneq ($(shell which ctags),)
 .PHONY: tags

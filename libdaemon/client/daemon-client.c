@@ -18,7 +18,7 @@
 
 #include "libdaemon/client/daemon-io.h"
 #include "libdaemon/client/daemon-client.h"
-#include "libdm/misc/dm-logging.h"
+#include "device_mapper/misc/dm-logging.h"
 
 #include <sys/un.h>
 #include <sys/socket.h>

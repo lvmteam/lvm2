@@ -16,7 +16,7 @@
  * dmeventd - dm event daemon to monitor active mapped devices
  */
 
-#include "libdm/misc/dm-logging.h"
+#include "device_mapper/misc/dm-logging.h"
 
 #include "daemons/dmeventd/libdevmapper-event.h"
 #include "dmeventd.h"

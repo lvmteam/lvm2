@@ -19,7 +19,7 @@
 #include "lvm-version.h"
 #include "daemons/lvmetad/lvmetad-client.h"
 #include "daemons/lvmlockd/lvmlockd-client.h"
-#include "libdm/misc/dm-ioctl.h"
+#include "device_mapper/misc/dm-ioctl.h"
 
 /* #include <assert.h> */
 #include <errno.h>

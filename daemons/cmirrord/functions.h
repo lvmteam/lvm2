@@ -12,7 +12,7 @@
 #ifndef _LVM_CLOG_FUNCTIONS_H
 #define _LVM_CLOG_FUNCTIONS_H
 
-#include "libdm/misc/dm-log-userspace.h"
+#include "device_mapper/misc/dm-log-userspace.h"
 #include "cluster.h"
 
 #define LOG_RESUMED   1

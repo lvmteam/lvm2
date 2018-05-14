@@ -17,7 +17,7 @@
 #include "lib/datastruct/btree.h"
 #include "lib/config/config.h"
 #include "lib/commands/toolcontext.h"
-#include "libdm/misc/dm-ioctl.h"
+#include "device_mapper/misc/dm-ioctl.h"
 #include "lib/misc/lvm-string.h"
 
 #ifdef UDEV_SYNC_SUPPORT

@@ -14,7 +14,7 @@
 #ifndef _LVM2APP_MISC_H
 #define _LVM2APP_MISC_H
 
-#include "libdm/libdevmapper.h"
+#include "device_mapper/libdevmapper.h"
 #include "liblvm/lvm2app.h"
 #include "lib/metadata/metadata-exported.h"
 #include "lib/commands/toolcontext.h"

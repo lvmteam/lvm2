@@ -15,7 +15,7 @@
 #ifndef BCACHE_H
 #define BCACHE_H
 
-#include "libdm/libdevmapper.h"
+#include "device_mapper/libdevmapper.h"
 
 #include <linux/fs.h>
 #include <stdint.h>

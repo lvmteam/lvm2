@@ -12,10 +12,11 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "libdm/misc/dm-logging.h"
-#include "libdm/misc/dmlib.h"
+#include "device_mapper/misc/dm-logging.h"
+#include "device_mapper/misc/dmlib.h"
 #include "daemons/dmeventd/libdevmapper-event.h"
 #include "dmeventd.h"
+#include "lib/misc/intl.h"
 
 #include <fcntl.h>
 #include <sys/file.h>
@@ -25,6 +26,7 @@
 #include <arpa/inet.h>		/* for htonl, ntohl */
 #include <pthread.h>
 #include <syslog.h>
+#include <unistd.h>
 
 static int _debug_level = 0;
 static int _use_syslog = 0;

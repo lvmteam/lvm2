@@ -57,13 +57,13 @@ all: device-mapper
 device-mapper: $(TARGETS)
 
 CFLAGS_dmeventd.o += $(EXTRA_EXEC_CFLAGS)
-LIBS += -ldevmapper $(PTHREAD_LIBS)
+LIBS += $(PTHREAD_LIBS)
 
 dmeventd: $(LIB_SHARED) dmeventd.o
 	$(CC) $(CFLAGS) -L. $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) dmeventd.o \
-		-o $@ $(DL_LIBS) $(DMEVENT_LIBS) $(LIBS)
+		-o $@ $(DL_LIBS) $(DMEVENT_LIBS) $(top_builddir)/device_mapper/libdevice-mapper.a $(LIBS) -lm
 
-dmeventd.static: $(LIB_STATIC) dmeventd.o $(interfacebuilddir)/libdevmapper.a
+dmeventd.static: $(LIB_STATIC) dmeventd.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -static -L. -L$(interfacebuilddir) dmeventd.o \
 		-o $@ $(DL_LIBS) $(DMEVENT_LIBS) $(LIBS) $(STATIC_LIBS)
 
@@ -73,7 +73,6 @@ endif
 
 ifneq ("$(CFLOW_CMD)", "")
 CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))
--include $(top_builddir)/libdm/libdevmapper.cflow
 -include $(top_builddir)/lib/liblvm-internal.cflow
 -include $(top_builddir)/lib/liblvm2cmd.cflow
 -include $(top_builddir)/daemons/dmeventd/$(LIB_NAME).cflow

@@ -1,7 +1,7 @@
 #ifndef TEST_UNIT_FRAMEWORK_H
 #define TEST_UNIT_FRAMEWORK_H
 
-#include "libdm/libdevmapper.h"
+#include "device_mapper/libdevmapper.h"
 
 #include <stdbool.h>
 #include <stdint.h>

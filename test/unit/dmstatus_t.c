@@ -13,7 +13,7 @@
  */
 
 #include "units.h"
-#include "libdm/libdevmapper.h"
+#include "device_mapper/libdevmapper.h"
 
 static void *_mem_init(void)
 {

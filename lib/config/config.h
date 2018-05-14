@@ -16,7 +16,7 @@
 #ifndef _LVM_CONFIG_H
 #define _LVM_CONFIG_H
 
-#include "libdm/libdevmapper.h"
+#include "device_mapper/libdevmapper.h"
 #include "lib/device/device.h"
 
 /* 16 bits: 3 bits for major, 4 bits for minor, 9 bits for patchlevel */

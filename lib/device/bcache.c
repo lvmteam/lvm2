@@ -15,7 +15,7 @@
 #define _GNU_SOURCE
 
 #include "lib/device/bcache.h"
-#include "libdm/misc/dm-logging.h"
+#include "device_mapper/misc/dm-logging.h"
 #include "lib/log/log.h"
 
 #include <errno.h>

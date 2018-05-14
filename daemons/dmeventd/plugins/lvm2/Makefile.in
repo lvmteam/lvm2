@@ -24,7 +24,7 @@ LIB_VERSION = $(LIB_VERSION_LVM)
 
 include $(top_builddir)/make.tmpl
 
-LIBS += @LVM2CMD_LIB@ -ldevmapper $(PTHREAD_LIBS)
+LIBS += @LVM2CMD_LIB@ $(PTHREAD_LIBS)
 
 install_lvm2: install_lib_shared
 

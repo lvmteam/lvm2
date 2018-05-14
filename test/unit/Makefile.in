@@ -12,7 +12,7 @@
 
 UNIT_SOURCE=\
 	base/data-struct/radix-tree.c \
-	device-mapper/vdo/status.c \
+	device_mapper/vdo/status.c \
 	\
 	test/unit/bcache_t.c \
 	test/unit/bcache_utils_t.c \
@@ -32,9 +32,9 @@ UNIT_SOURCE=\
 UNIT_DEPENDS=$(subst .c,.d,$(UNIT_SOURCE))
 UNIT_OBJECTS=$(UNIT_SOURCE:%.c=%.o)
 CLEAN_TARGETS+=$(UNIT_DEPENDS) $(UNIT_OBJECTS)
-UNIT_LDLIBS += $(LVMINTERNAL_LIBS) -ldevmapper -laio
+UNIT_LDLIBS += $(LVMINTERNAL_LIBS) -laio
 
-test/unit/unit-test: $(UNIT_OBJECTS) libdm/libdevmapper.$(LIB_SUFFIX) lib/liblvm-internal.a
+test/unit/unit-test: $(UNIT_OBJECTS) device_mapper/libdevice-mapper.a lib/liblvm-internal.a
 	@echo "    [LD] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) -L$(top_builddir)/libdm \
 	      -o $@ $(UNIT_OBJECTS) $(UNIT_LDLIBS)

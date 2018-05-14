@@ -43,7 +43,7 @@ LDDEPS += $(top_builddir)/lib/liblvm-internal.a
 include $(top_builddir)/make.tmpl
 
 LDFLAGS += -L$(top_builddir)/lib -L$(top_builddir)/daemons/dmeventd
-LIBS += $(LVMINTERNAL_LIBS) -ldevmapper -laio
+LIBS += $(LVMINTERNAL_LIBS) -laio
 
 .PHONY: install_dynamic install_static install_include install_pkgconfig
 

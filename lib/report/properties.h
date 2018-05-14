@@ -14,7 +14,7 @@
 #ifndef _LVM_PROPERTIES_H
 #define _LVM_PROPERTIES_H
 
-#include "libdm/libdevmapper.h"
+#include "device_mapper/libdevmapper.h"
 #include "lib/metadata/metadata.h"
 #include "lib/report/report.h"
 #include "lib/properties/prop_common.h"

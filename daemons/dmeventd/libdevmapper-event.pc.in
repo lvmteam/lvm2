@@ -8,4 +8,3 @@ Description: device-mapper event library
 Version: @DM_LIB_PATCHLEVEL@
 Cflags: -I${includedir}
 Libs: -L${libdir} -ldevmapper-event
-Requires.private: devmapper

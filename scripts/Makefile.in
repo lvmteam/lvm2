@@ -23,12 +23,12 @@ endif
 include $(top_builddir)/make.tmpl
 
 ifeq ("@APPLIB@", "yes")
-	DEPLIBS += $(top_builddir)/liblvm/liblvm2app.so $(top_builddir)/libdm/libdevmapper.so
+	DEPLIBS += $(top_builddir)/liblvm/liblvm2app.so
 	LDFLAGS += -L$(top_builddir)/liblvm
 ifeq ("@BUILD_DMEVENTD@", "yes")
 	LDFLAGS += -Wl,-rpath-link,$(top_builddir)/daemons/dmeventd
 endif
-	LVMLIBS = @LVM2APP_LIB@ -ldevmapper -laio
+	LVMLIBS = @LVM2APP_LIB@ -laio
 endif
 
 LVM_SCRIPTS = lvmdump.sh lvmconf.sh

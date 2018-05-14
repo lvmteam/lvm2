@@ -30,7 +30,7 @@ include $(top_builddir)/make.tmpl
 CFLAGS += $(EXTRA_EXEC_CFLAGS)
 INCLUDES += -I$(top_srcdir)/libdaemon/server
 LDFLAGS += -L$(top_builddir)/libdaemon/server $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS)
-LIBS += $(DAEMON_LIBS) -ldaemonserver -ldevmapper $(PTHREAD_LIBS)
+LIBS += $(DAEMON_LIBS) -ldaemonserver $(PTHREAD_LIBS)
 
 lvmpolld: $(OBJECTS) $(top_builddir)/libdaemon/client/libdaemonclient.a \
 		    $(top_builddir)/libdaemon/server/libdaemonserver.a

@@ -95,7 +95,7 @@ ifeq ("@STATIC_LINK@", "yes")
   INSTALL_CMDLIB_TARGETS += install_cmdlib_static
 endif
 
-LVMLIBS = $(LVMINTERNAL_LIBS) -ldevmapper -laio
+LVMLIBS = $(LVMINTERNAL_LIBS) -laio
 LIB_VERSION = $(LIB_VERSION_LVM)
 
 CLEAN_TARGETS = liblvm2cmd.$(LIB_SUFFIX) $(TARGETS_DM) \
@@ -122,15 +122,15 @@ device-mapper: $(TARGETS_DM)
 
 CFLAGS_dmsetup.o += $(UDEV_CFLAGS) $(EXTRA_EXEC_CFLAGS)
 
-dmsetup: dmsetup.o $(top_builddir)/libdm/libdevmapper.$(LIB_SUFFIX)
+dmsetup: dmsetup.o $(top_builddir)/device_mapper/libdevice-mapper.a
 	@echo "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) \
-	      -o $@ dmsetup.o -ldevmapper $(LIBS)
+	      -o $@ $+ $(LIBS) -lm
 
-dmsetup.static: dmsetup.o $(interfacebuilddir)/libdevmapper.a
+dmsetup.static: dmsetup.o $(top_builddir)/device_mapper/libdevice-mapper.a
 	@echo "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -static -L$(interfacebuilddir) \
-	      -o $@ dmsetup.o -ldevmapper $(M_LIBS) $(PTHREAD_LIBS) $(STATIC_LIBS) $(LIBS)
+	      -o $@ $+ $(M_LIBS) $(PTHREAD_LIBS) $(STATIC_LIBS) $(LIBS)
 
 all: device-mapper
 
@@ -138,10 +138,10 @@ CFLAGS_lvm.o += $(EXTRA_EXEC_CFLAGS)
 
 INCLUDES += -I$(top_builddir)/tools
 
-lvm: $(OBJECTS) lvm.o $(top_builddir)/lib/liblvm-internal.a
+lvm: $(OBJECTS) lvm.o $(top_builddir)/lib/liblvm-internal.a $(top_builddir)/device_mapper/libdevice-mapper.a
 	@echo "    [CC] $@"
-	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $(OBJECTS) lvm.o \
-		$(LVMLIBS) $(READLINE_LIBS) $(LIBS)
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $+ \
+		$(LVMLIBS) $(READLINE_LIBS) $(LIBS) -lm
 
 DEFS_man-generator.o += -DMAN_PAGE_GENERATOR
 
@@ -157,7 +157,7 @@ ifeq ("@BUILD_LVMETAD@", "yes")
 lvm: $(top_builddir)/libdaemon/client/libdaemonclient.a
 endif
 
-lvm.static: $(OBJECTS) lvm-static.o $(top_builddir)/lib/liblvm-internal.a  $(interfacebuilddir)/libdevmapper.a
+lvm.static: $(OBJECTS) lvm-static.o $(top_builddir)/lib/liblvm-internal.a  $(top_builddir)/device_mapper/libdevice-mapper.a
 	@echo "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -static -L$(interfacebuilddir) -o $@ \
 	      $(OBJECTS) lvm-static.o $(LVMLIBS) $(STATIC_LIBS) $(LIBS)
@@ -222,7 +222,6 @@ $(SOURCES:%.c=%.o) $(SOURCES2:%.c=%.o): command-lines-input.h command-count.h cm
 
 ifneq ("$(CFLOW_CMD)", "")
 CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))
--include $(top_builddir)/libdm/libdevmapper.cflow
 -include $(top_builddir)/lib/liblvm-internal.cflow
 endif
 
