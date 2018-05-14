@@ -16,8 +16,8 @@
 #ifndef _LVM_TOOLCONTEXT_H
 #define _LVM_TOOLCONTEXT_H
 
-#include "dev-cache.h"
-#include "dev-type.h"
+#include "lib/device/dev-cache.h"
+#include "lib/device/dev-type.h"
 
 #include <limits.h>
 

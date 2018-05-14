@@ -13,12 +13,12 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "format-text.h"
+#include "lib/misc/lib.h"
+#include "lib/format_text/format-text.h"
 #include "layout.h"
-#include "label.h"
-#include "xlate.h"
-#include "lvmcache.h"
+#include "lib/label/label.h"
+#include "lib/mm/xlate.h"
+#include "lib/cache/lvmcache.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>

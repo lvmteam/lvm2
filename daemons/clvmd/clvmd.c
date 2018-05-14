@@ -20,7 +20,7 @@
 #include "clvmd-common.h"
 
 #include "clvmd-comms.h"
-#include "clvm.h"
+#include "daemons/clvmd/clvm.h"
 #include "clvmd.h"
 #include "lvm-functions.h"
 #include "lvm-version.h"

@@ -13,10 +13,10 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
+#include "lib/misc/lib.h"
 
-#include "crc.h"
-#include "xlate.h"
+#include "lib/misc/crc.h"
+#include "lib/mm/xlate.h"
 
 /* Calculate an endian-independent CRC of supplied buffer */
 #ifndef DEBUG_CRC32

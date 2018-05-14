@@ -21,7 +21,7 @@
 #include <unistd.h>
 #include <inttypes.h>
 
-#include "lvm2app.h"
+#include "liblvm/lvm2app.h"
 
 lvm_t handle;
 vg_t vg;

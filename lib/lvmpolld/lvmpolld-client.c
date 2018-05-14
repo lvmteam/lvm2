@@ -12,15 +12,15 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
+#include "lib/misc/lib.h"
 
-#include "daemon-io.h"
-#include "lvmpolld-client.h"
-#include "lvmpolld-protocol.h"
-#include "metadata-exported.h"
-#include "polldaemon.h"
-#include "toolcontext.h"
-#include "lvm2cmd.h"
+#include "libdaemon/client/daemon-io.h"
+#include "lib/lvmpolld/lvmpolld-client.h"
+#include "daemons/lvmpolld/lvmpolld-protocol.h"
+#include "lib/metadata/metadata-exported.h"
+#include "lib/lvmpolld/polldaemon.h"
+#include "lib/commands/toolcontext.h"
+#include "tools/lvm2cmd.h"
 
 struct progress_info {
 	unsigned error:1;

@@ -15,7 +15,7 @@
 /*
  * Helper program to generate table included in crc.c.
  */
-#include "lib.h"
+#include "lib/misc/lib.h"
 
 int main(int argc, char **argv)
 {

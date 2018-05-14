@@ -20,8 +20,8 @@
 
 #define _REENTRANT
 
-#include "tool.h"
+#include "tools/tool.h"
 
-#include "lvm-logging.h"
+#include "lib/log/lvm-logging.h"
 
 #endif

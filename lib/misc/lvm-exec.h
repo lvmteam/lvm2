@@ -16,7 +16,7 @@
 #ifndef _LVM_EXEC_H
 #define _LVM_EXEC_H
 
-#include "lib.h"
+#include "lib/misc/lib.h"
 
 struct cmd_context;
 

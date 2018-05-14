@@ -15,7 +15,7 @@
 
 #include "tools.h"
 
-#include "memlock.h"
+#include "lib/mm/memlock.h"
 
 /*
  * Passed back from callee to request caller to

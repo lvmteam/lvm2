@@ -13,12 +13,12 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "btree.h"
-#include "config.h"
-#include "toolcontext.h"
-#include "dm-ioctl.h" /* for DM_UUID_LEN */
-#include "lvm-string.h" /* for LVM's UUID_PREFIX */
+#include "lib/misc/lib.h"
+#include "lib/datastruct/btree.h"
+#include "lib/config/config.h"
+#include "lib/commands/toolcontext.h"
+#include "libdm/misc/dm-ioctl.h"
+#include "lib/misc/lvm-string.h"
 
 #ifdef UDEV_SYNC_SUPPORT
 #include <libudev.h>

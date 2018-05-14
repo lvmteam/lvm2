@@ -12,10 +12,10 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "segtype.h"
-#include "str_list.h"
-#include "activate.h"
+#include "lib/misc/lib.h"
+#include "lib/metadata/segtype.h"
+#include "lib/datastruct/str_list.h"
+#include "lib/activate/activate.h"
 
 static int _zero_merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
 {

@@ -13,7 +13,7 @@
  */
 
 #include "lvm2cmdline.h"
-#include "lvm2cmd.h"
+#include "tools/lvm2cmd.h"
 
 void *lvm2_init(void)
 {

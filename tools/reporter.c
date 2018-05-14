@@ -15,7 +15,7 @@
 
 #include "tools.h"
 
-#include "report.h"
+#include "lib/report/report.h"
 
 typedef enum {
 	REPORT_IDX_NULL = -1,

@@ -14,9 +14,9 @@
 
 #define _REENTRANT
 
-#include "tool.h"
+#include "tools/tool.h"
 
-#include "daemon-io.h"
+#include "libdaemon/client/daemon-io.h"
 
 #include <errno.h>
 

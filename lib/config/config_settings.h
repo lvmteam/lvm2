@@ -117,7 +117,7 @@
  * default values, the new defaults are used by LVM unless
  * the previous default value was set (uncommented) in lvm.conf.
  */
-#include "defaults.h"
+#include "lib/config/defaults.h"
 
 cfg_section(root_CFG_SECTION, "(root)", root_CFG_SECTION, 0, vsn(0, 0, 0), 0, NULL, NULL)
 

@@ -29,8 +29,8 @@
 #include <corosync/corotypes.h>
 #include <corosync/cpg.h>
 
-#include "locking.h"
-#include "clvm.h"
+#include "lib/locking/locking.h"
+#include "daemons/clvmd/clvm.h"
 #include "clvmd-comms.h"
 #include "lvm-functions.h"
 #include "clvmd.h"

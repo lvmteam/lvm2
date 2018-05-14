@@ -21,8 +21,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <limits.h>		/* For PATH_MAX for musl libc */
-#include "lvm2app.h"
-#include "configure.h"		/* for LVM_PATH */
+#include "liblvm/lvm2app.h"
+#include "configure.h"
 
 #define KMSG_DEV_PATH		"/dev/kmsg"
 #define LVM_CONF_USE_LVMETAD	"global/use_lvmetad"

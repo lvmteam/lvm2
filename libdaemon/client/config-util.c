@@ -14,10 +14,10 @@
 
 #define _REENTRANT
 
-#include "tool.h"
+#include "tools/tool.h"
 
-#include "daemon-io.h"
-#include "dm-logging.h"
+#include "libdaemon/client/daemon-io.h"
+#include "libdm/misc/dm-logging.h"
 
 #include <math.h>  /* fabs() */
 #include <float.h> /* DBL_EPSILON */

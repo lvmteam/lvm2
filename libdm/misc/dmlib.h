@@ -21,6 +21,6 @@
 
 #define DM
 
-#include "lib.h"
+#include "lib/misc/lib.h"
 
 #endif

@@ -16,7 +16,7 @@
 #ifndef _LVM_TOOL_POLLDAEMON_H
 #define _LVM_TOOL_POLLDAEMON_H
 
-#include "metadata-exported.h"
+#include "lib/metadata/metadata-exported.h"
 
 typedef enum {
 	PROGRESS_CHECK_FAILED = 0,

@@ -13,22 +13,22 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "metadata.h"
-#include "toolcontext.h"
-#include "segtype.h"
-#include "display.h"
-#include "archiver.h"
-#include "activate.h"
-#include "lv_alloc.h"
-#include "lvm-string.h"
-#include "str_list.h"
-#include "locking.h"	/* FIXME Should not be used in this file */
+#include "lib/misc/lib.h"
+#include "lib/metadata/metadata.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/metadata/segtype.h"
+#include "lib/display/display.h"
+#include "lib/format_text/archiver.h"
+#include "lib/activate/activate.h"
+#include "lib/metadata/lv_alloc.h"
+#include "lib/misc/lvm-string.h"
+#include "lib/datastruct/str_list.h"
+#include "lib/locking/locking.h"
 
-#include "defaults.h" /* FIXME: should this be defaults.h? */
+#include "lib/config/defaults.h"
 
 /* These are necessary for _write_log_header() */
-#include "xlate.h"
+#include "lib/mm/xlate.h"
 #define MIRROR_MAGIC 0x4D695272
 #define MIRROR_DISK_VERSION 2
 

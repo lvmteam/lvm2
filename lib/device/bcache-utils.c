@@ -12,7 +12,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "bcache.h"
+#include "lib/device/bcache.h"
 
 // FIXME: need to define this in a common place (that doesn't pull in deps)
 #ifndef SECTOR_SHIFT

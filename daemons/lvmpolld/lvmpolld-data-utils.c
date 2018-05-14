@@ -14,7 +14,7 @@
 
 #include "lvmpolld-common.h"
 
-#include "config-util.h"
+#include "libdaemon/client/config-util.h"
 
 #include <fcntl.h>
 #include <signal.h>

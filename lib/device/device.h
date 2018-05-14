@@ -16,7 +16,7 @@
 #ifndef _LVM_DEVICE_H
 #define _LVM_DEVICE_H
 
-#include "uuid.h"
+#include "lib/uuid/uuid.h"
 
 #include <fcntl.h>
 

@@ -15,8 +15,8 @@
 #ifndef _LVM_VG_H
 #define _LVM_VG_H
 
-#include "uuid.h"
-#include "libdevmapper.h"
+#include "lib/uuid/uuid.h"
+#include "libdm/libdevmapper.h"
 
 struct cmd_context;
 struct format_instance;

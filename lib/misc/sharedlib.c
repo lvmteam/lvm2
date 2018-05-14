@@ -13,10 +13,10 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "config.h"
-#include "sharedlib.h"
-#include "toolcontext.h"
+#include "lib/misc/lib.h"
+#include "lib/config/config.h"
+#include "lib/misc/sharedlib.h"
+#include "lib/commands/toolcontext.h"
 
 #include <limits.h>
 #include <sys/stat.h>

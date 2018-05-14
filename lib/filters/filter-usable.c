@@ -12,12 +12,12 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "filter.h"
-#include "activate.h" /* device_is_usable */
+#include "lib/misc/lib.h"
+#include "lib/filters/filter.h"
+#include "lib/activate/activate.h"
 #ifdef UDEV_SYNC_SUPPORT
 #include <libudev.h>
-#include "dev-ext-udev-constants.h"
+#include "lib/device/dev-ext-udev-constants.h"
 #endif
 
 static const char *_too_small_to_hold_pv_msg = "Too small to hold a PV";

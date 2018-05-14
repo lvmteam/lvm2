@@ -16,9 +16,9 @@
 #ifndef _LVM_TEXT_IMPORT_EXPORT_H
 #define _LVM_TEXT_IMPORT_EXPORT_H
 
-#include "config.h"
-#include "metadata.h"
-#include "lvmcache.h"
+#include "lib/config/config.h"
+#include "lib/metadata/metadata.h"
+#include "lib/cache/lvmcache.h"
 
 #include <stdio.h>
 

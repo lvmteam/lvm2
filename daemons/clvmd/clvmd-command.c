@@ -52,12 +52,12 @@
 
 #include "clvmd-common.h"
 #include "clvmd-comms.h"
-#include "clvm.h"
+#include "daemons/clvmd/clvm.h"
 #include "clvmd.h"
-#include "lvm-globals.h"
+#include "lib/misc/lvm-globals.h"
 #include "lvm-functions.h"
 
-#include "locking.h"
+#include "lib/locking/locking.h"
 
 #include <sys/utsname.h>
 

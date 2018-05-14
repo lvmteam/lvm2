@@ -13,16 +13,16 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "locking.h"
+#include "lib/misc/lib.h"
+#include "lib/locking/locking.h"
 #include "locking_types.h"
-#include "lvm-string.h"
-#include "activate.h"
-#include "toolcontext.h"
-#include "memlock.h"
-#include "defaults.h"
-#include "lvmcache.h"
-#include "lvm-signal.h"
+#include "lib/misc/lvm-string.h"
+#include "lib/activate/activate.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/mm/memlock.h"
+#include "lib/config/defaults.h"
+#include "lib/cache/lvmcache.h"
+#include "lib/misc/lvm-signal.h"
 
 #include <assert.h>
 #include <sys/stat.h>

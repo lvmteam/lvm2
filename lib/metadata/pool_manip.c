@@ -16,16 +16,16 @@
  * This file holds common pool functions.
  */
 
-#include "lib.h"
-#include "activate.h"
-#include "locking.h"
-#include "metadata.h"
-#include "segtype.h"
-#include "lv_alloc.h"
-#include "defaults.h"
-#include "dev-type.h"
-#include "display.h"
-#include "toolcontext.h"
+#include "lib/misc/lib.h"
+#include "lib/activate/activate.h"
+#include "lib/locking/locking.h"
+#include "lib/metadata/metadata.h"
+#include "lib/metadata/segtype.h"
+#include "lib/metadata/lv_alloc.h"
+#include "lib/config/defaults.h"
+#include "lib/device/dev-type.h"
+#include "lib/display/display.h"
+#include "lib/commands/toolcontext.h"
 #include <stddef.h>
 
 int attach_pool_metadata_lv(struct lv_segment *pool_seg,

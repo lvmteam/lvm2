@@ -16,7 +16,7 @@
 #ifndef _LVM_FORMAT_TEXT_H
 #define _LVM_FORMAT_TEXT_H
 
-#include "metadata.h"
+#include "lib/metadata/metadata.h"
 
 #define FMT_TEXT_NAME "lvm2"
 #define FMT_TEXT_ALIAS "text"

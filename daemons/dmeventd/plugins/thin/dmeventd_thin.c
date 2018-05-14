@@ -12,16 +12,16 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"	/* using here lvm log */
+#include "lib/misc/lib.h"
 #include "dmeventd_lvm.h"
-#include "libdevmapper-event.h"
+#include "daemons/dmeventd/libdevmapper-event.h"
 
 #include <sys/wait.h>
 #include <stdarg.h>
 
 /* TODO - move this mountinfo code into library to be reusable */
 #ifdef __linux__
-#  include "kdev_t.h"
+#  include "libdm/misc/kdev_t.h"
 #else
 #  define MAJOR(x) major((x))
 #  define MINOR(x) minor((x))

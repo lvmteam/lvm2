@@ -11,13 +11,13 @@
 #define _XOPEN_SOURCE 500  /* pthread */
 #define _ISOC99_SOURCE
 
-#include "tool.h"
+#include "tools/tool.h"
 
 #include "daemon-server.h"
-#include "xlate.h"
+#include "lib/mm/xlate.h"
 
 #include "lvmlockd-internal.h"
-#include "lvmlockd-client.h"
+#include "daemons/lvmlockd/lvmlockd-client.h"
 
 #include "sanlock.h"
 #include "sanlock_rv.h"

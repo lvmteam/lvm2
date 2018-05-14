@@ -13,11 +13,11 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "config.h"
-#include "lvm-flock.h"
-#include "lvm-signal.h"
-#include "locking.h"
+#include "lib/misc/lib.h"
+#include "lib/config/config.h"
+#include "lib/misc/lvm-flock.h"
+#include "lib/misc/lvm-signal.h"
+#include "lib/locking/locking.h"
 
 #include <sys/file.h>
 #include <fcntl.h>

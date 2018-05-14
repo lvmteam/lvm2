@@ -12,9 +12,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
+#include "lib/misc/lib.h"
 #include "dmeventd_lvm.h"
-#include "libdevmapper-event.h"
+#include "daemons/dmeventd/libdevmapper-event.h"
 
 #include <sys/sysmacros.h>
 #include <sys/wait.h>

@@ -11,7 +11,7 @@
 #ifndef _LVM_LVMLOCKD_CLIENT_H
 #define _LVM_LVMLOCKD_CLIENT_H
 
-#include "daemon-client.h"
+#include "libdaemon/client/daemon-client.h"
 
 #define LVMLOCKD_SOCKET DEFAULT_RUN_DIR "/lvmlockd.socket"
 

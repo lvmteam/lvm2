@@ -13,13 +13,13 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
+#include "lib/misc/lib.h"
 #include "fs.h"
-#include "activate.h"
-#include "toolcontext.h"
-#include "lvm-string.h"
-#include "lvm-file.h"
-#include "memlock.h"
+#include "lib/activate/activate.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/misc/lvm-string.h"
+#include "lib/misc/lvm-file.h"
+#include "lib/mm/memlock.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>

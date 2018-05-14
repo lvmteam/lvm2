@@ -17,18 +17,18 @@
 
 #include <pthread.h>
 
-#include "clvm.h"
+#include "daemons/clvmd/clvm.h"
 #include "clvmd-comms.h"
 #include "clvmd.h"
 #include "lvm-functions.h"
 
 /* LVM2 headers */
-#include "toolcontext.h"
-#include "lvmcache.h"
-#include "lvm-globals.h"
-#include "activate.h"
-#include "archiver.h"
-#include "memlock.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/cache/lvmcache.h"
+#include "lib/misc/lvm-globals.h"
+#include "lib/activate/activate.h"
+#include "lib/format_text/archiver.h"
+#include "lib/mm/memlock.h"
 
 #include <syslog.h>
 

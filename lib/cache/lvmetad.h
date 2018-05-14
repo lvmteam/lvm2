@@ -15,7 +15,7 @@
 #ifndef _LVM_METAD_H
 #define _LVM_METAD_H
 
-#include "config-util.h"
+#include "libdaemon/client/config-util.h"
 
 #include <stdint.h>
 

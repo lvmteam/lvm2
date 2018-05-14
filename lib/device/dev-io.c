@@ -13,12 +13,12 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "device.h"
-#include "metadata.h"
-#include "lvmcache.h"
-#include "memlock.h"
-#include "locking.h"
+#include "lib/misc/lib.h"
+#include "lib/device/device.h"
+#include "lib/metadata/metadata.h"
+#include "lib/cache/lvmcache.h"
+#include "lib/mm/memlock.h"
+#include "lib/locking/locking.h"
 
 #include <limits.h>
 #include <sys/stat.h>

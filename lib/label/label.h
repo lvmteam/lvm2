@@ -16,10 +16,10 @@
 #ifndef _LVM_LABEL_H
 #define _LVM_LABEL_H
 
-#include "uuid.h"
-#include "device.h"
-#include "bcache.h"
-#include "toolcontext.h"
+#include "lib/uuid/uuid.h"
+#include "lib/device/device.h"
+#include "lib/device/bcache.h"
+#include "lib/commands/toolcontext.h"
 
 #define LABEL_ID "LABELONE"
 #define LABEL_SIZE SECTOR_SIZE	/* Think very carefully before changing this */

@@ -14,10 +14,10 @@
 #ifndef _LVM_PROPERTIES_H
 #define _LVM_PROPERTIES_H
 
-#include "libdevmapper.h"
-#include "metadata.h"
-#include "report.h"
-#include "prop_common.h"
+#include "libdm/libdevmapper.h"
+#include "lib/metadata/metadata.h"
+#include "lib/report/report.h"
+#include "lib/properties/prop_common.h"
 
 int lvseg_get_property(const struct lv_segment *lvseg,
 		       struct lvm_property_type *prop);

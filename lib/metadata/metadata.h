@@ -22,9 +22,9 @@
 #define _LVM_METADATA_H
 
 #include "ctype.h"
-#include "dev-cache.h"
-#include "lvm-string.h"
-#include "metadata-exported.h"
+#include "lib/device/dev-cache.h"
+#include "lib/misc/lvm-string.h"
+#include "lib/metadata/metadata-exported.h"
 
 //#define MAX_STRIPES 128U
 //#define SECTOR_SHIFT 9L

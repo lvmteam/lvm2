@@ -16,7 +16,7 @@
 #ifndef _LVM_TOOL_ARCHIVE_H
 #define _LVM_TOOL_ARCHIVE_H
 
-#include "metadata-exported.h"
+#include "lib/metadata/metadata-exported.h"
 
 /*
  * There are two operations that come under the general area of

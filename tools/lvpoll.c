@@ -14,10 +14,10 @@
 
 #include "tools.h"
 
-#include "polldaemon.h"
+#include "lib/lvmpolld/polldaemon.h"
 #include "pvmove_poll.h"
 #include "lvconvert_poll.h"
-#include "polling_ops.h"
+#include "daemons/lvmpolld/polling_ops.h"
 
 static struct poll_functions _pvmove_fns = {
 	.poll_progress = poll_mirror_progress,

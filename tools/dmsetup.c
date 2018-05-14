@@ -15,9 +15,9 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-#include "tool.h"
+#include "tools/tool.h"
 
-#include "dm-logging.h"
+#include "libdm/misc/dm-logging.h"
 
 #include <ctype.h>
 #include <dirent.h>
@@ -79,7 +79,7 @@ extern char *optarg;
 #endif
 
 #ifdef __linux__
-#  include "kdev_t.h"
+#  include "libdm/misc/kdev_t.h"
 #else
 #  define MAJOR(x) major((x))
 #  define MINOR(x) minor((x))

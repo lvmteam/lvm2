@@ -13,9 +13,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "lvm-signal.h"
-#include "memlock.h"
+#include "lib/misc/lib.h"
+#include "lib/misc/lvm-signal.h"
+#include "lib/mm/memlock.h"
 
 #include <signal.h>
 

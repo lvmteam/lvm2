@@ -12,17 +12,17 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "toolcontext.h"
-#include "metadata.h"
-#include "archiver.h"
-#include "locking.h"
-#include "lvmcache.h"
-#include "lvmetad.h"
+#include "lib/misc/lib.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/metadata/metadata.h"
+#include "lib/format_text/archiver.h"
+#include "lib/locking/locking.h"
+#include "lib/cache/lvmcache.h"
+#include "lib/cache/lvmetad.h"
 #include "lvm_misc.h"
-#include "lvm2app.h"
-#include "display.h"
-#include "lvmetad.h"
+#include "liblvm/lvm2app.h"
+#include "lib/display/display.h"
+#include "lib/cache/lvmetad.h"
 
 int lvm_vg_add_tag(vg_t vg, const char *tag)
 {

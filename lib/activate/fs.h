@@ -16,7 +16,7 @@
 #ifndef _LVM_FS_H
 #define _LVM_FS_H
 
-#include "metadata.h"
+#include "lib/metadata/metadata.h"
 
 /*
  * These calls, private to the activate unit, set

@@ -12,8 +12,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "lvm-percent.h"
+#include "lib/misc/lib.h"
+#include "lib/misc/lvm-percent.h"
 
 uint32_t percent_of_extents(uint32_t percents, uint32_t count, int roundup)
 {

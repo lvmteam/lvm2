@@ -13,11 +13,11 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "locking.h"
+#include "lib/misc/lib.h"
+#include "lib/locking/locking.h"
 #include "locking_types.h"
-#include "lvm-string.h"
-#include "activate.h"
+#include "lib/misc/lvm-string.h"
+#include "lib/activate/activate.h"
 
 /*
  * No locking

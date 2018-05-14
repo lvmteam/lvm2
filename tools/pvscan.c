@@ -15,8 +15,8 @@
 
 #include "tools.h"
 
-#include "lvmetad.h"
-#include "lvmcache.h"
+#include "lib/cache/lvmetad.h"
+#include "lib/cache/lvmcache.h"
 
 struct pvscan_params {
 	int new_pvs_found;

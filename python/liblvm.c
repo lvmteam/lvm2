@@ -23,8 +23,8 @@
 
 #include <Python.h>
 #define _BUILDING_LVM
-#include "lvm2app.h"
-#include "defaults.h"
+#include "liblvm/lvm2app.h"
+#include "lib/config/defaults.h"
 
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K

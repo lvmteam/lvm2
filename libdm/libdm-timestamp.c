@@ -18,7 +18,7 @@
  * the results of these routines should stay in-core.  
  */
 
-#include "dmlib.h"
+#include "libdm/misc/dmlib.h"
 
 #include <stdlib.h>
 

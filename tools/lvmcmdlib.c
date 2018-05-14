@@ -16,10 +16,10 @@
 #include "tools.h"
 
 #include "lvm2cmdline.h"
-#include "label.h"
-#include "memlock.h"
+#include "lib/label/label.h"
+#include "lib/mm/memlock.h"
 
-#include "lvm2cmd.h"
+#include "tools/lvm2cmd.h"
 
 #include <signal.h>
 #include <sys/stat.h>

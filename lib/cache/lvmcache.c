@@ -13,19 +13,19 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "lvmcache.h"
-#include "toolcontext.h"
-#include "dev-cache.h"
-#include "locking.h"
-#include "metadata.h"
-#include "memlock.h"
-#include "str_list.h"
-#include "format-text.h"
-#include "config.h"
+#include "lib/misc/lib.h"
+#include "lib/cache/lvmcache.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/device/dev-cache.h"
+#include "lib/locking/locking.h"
+#include "lib/metadata/metadata.h"
+#include "lib/mm/memlock.h"
+#include "lib/datastruct/str_list.h"
+#include "lib/format_text/format-text.h"
+#include "lib/config/config.h"
 
-#include "lvmetad.h"
-#include "lvmetad-client.h"
+#include "lib/cache/lvmetad.h"
+#include "daemons/lvmetad/lvmetad-client.h"
 
 #define CACHE_LOCKED	0x00000002
 

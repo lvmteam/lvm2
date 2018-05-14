@@ -13,12 +13,12 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
+#include "lib/misc/lib.h"
 #include "locking_types.h"
-#include "defaults.h"
-#include "sharedlib.h"
-#include "toolcontext.h"
-#include "activate.h"
+#include "lib/config/defaults.h"
+#include "lib/misc/sharedlib.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/activate/activate.h"
 
 static void *_locking_lib = NULL;
 static void (*_reset_fn) (void) = NULL;

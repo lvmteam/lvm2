@@ -13,20 +13,20 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "metadata.h"
+#include "lib/misc/lib.h"
+#include "lib/metadata/metadata.h"
 #include "import-export.h"
-#include "display.h"
-#include "toolcontext.h"
-#include "lvmcache.h"
-#include "lvmetad.h"
-#include "lvmlockd.h"
-#include "lv_alloc.h"
-#include "pv_alloc.h"
-#include "segtype.h"
-#include "text_import.h"
-#include "defaults.h"
-#include "str_list.h"
+#include "lib/display/display.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/cache/lvmcache.h"
+#include "lib/cache/lvmetad.h"
+#include "lib/locking/lvmlockd.h"
+#include "lib/metadata/lv_alloc.h"
+#include "lib/metadata/pv_alloc.h"
+#include "lib/metadata/segtype.h"
+#include "lib/format_text/text_import.h"
+#include "lib/config/defaults.h"
+#include "lib/datastruct/str_list.h"
 
 typedef int (*section_fn) (struct format_instance * fid,
 			   struct volume_group * vg, const struct dm_config_node * pvn,

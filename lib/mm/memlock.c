@@ -13,11 +13,11 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "memlock.h"
-#include "defaults.h"
-#include "config.h"
-#include "toolcontext.h"
+#include "lib/misc/lib.h"
+#include "lib/mm/memlock.h"
+#include "lib/config/defaults.h"
+#include "lib/config/config.h"
+#include "lib/commands/toolcontext.h"
 
 #include <limits.h>
 #include <fcntl.h>

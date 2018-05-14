@@ -13,9 +13,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "uuid.h"
-#include "lvm-wrappers.h"
+#include "lib/misc/lib.h"
+#include "lib/uuid/uuid.h"
+#include "lib/misc/lvm-wrappers.h"
 
 #include <assert.h>
 #include <sys/stat.h>

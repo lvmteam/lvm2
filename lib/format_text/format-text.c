@@ -13,23 +13,23 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "format-text.h"
+#include "lib/misc/lib.h"
+#include "lib/format_text/format-text.h"
 #include "import-export.h"
-#include "device.h"
-#include "lvm-file.h"
-#include "config.h"
-#include "display.h"
-#include "toolcontext.h"
-#include "lvm-string.h"
-#include "uuid.h"
+#include "lib/device/device.h"
+#include "lib/misc/lvm-file.h"
+#include "lib/config/config.h"
+#include "lib/display/display.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/misc/lvm-string.h"
+#include "lib/uuid/uuid.h"
 #include "layout.h"
-#include "crc.h"
-#include "xlate.h"
-#include "label.h"
-#include "lvmcache.h"
-#include "lvmetad.h"
-#include "memlock.h"
+#include "lib/misc/crc.h"
+#include "lib/mm/xlate.h"
+#include "lib/label/label.h"
+#include "lib/cache/lvmcache.h"
+#include "lib/cache/lvmetad.h"
+#include "lib/mm/memlock.h"
 
 #include <unistd.h>
 #include <sys/param.h>

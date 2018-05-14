@@ -16,10 +16,10 @@
 #ifndef _LVM_TEXT_LAYOUT_H
 #define _LVM_TEXT_LAYOUT_H
 
-#include "config.h"
-#include "metadata.h"
-#include "lvmcache.h"
-#include "uuid.h"
+#include "lib/config/config.h"
+#include "lib/metadata/metadata.h"
+#include "lib/cache/lvmcache.h"
+#include "lib/uuid/uuid.h"
 
 /* disk_locn and data_area_list are defined in format-text.h */
 

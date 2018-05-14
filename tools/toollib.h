@@ -16,8 +16,8 @@
 #ifndef _LVM_TOOLLIB_H
 #define _LVM_TOOLLIB_H
 
-#include "metadata-exported.h"
-#include "report.h"
+#include "lib/metadata/metadata-exported.h"
+#include "lib/report/report.h"
 
 int become_daemon(struct cmd_context *cmd, int skip_lvm);
 

@@ -15,7 +15,7 @@
 #ifndef _LVM_LVCONVERT_H
 #define _LVM_LVCONVERT_H
 
-#include "polldaemon.h"
+#include "lib/lvmpolld/polldaemon.h"
 
 struct cmd_context;
 struct logical_volume;

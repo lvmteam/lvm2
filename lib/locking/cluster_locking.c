@@ -19,12 +19,12 @@
  * management operations across a cluster.
  */
 
-#include "lib.h"
-#include "clvm.h"
-#include "lvm-string.h"
-#include "locking.h"
+#include "lib/misc/lib.h"
+#include "daemons/clvmd/clvm.h"
+#include "lib/misc/lvm-string.h"
+#include "lib/locking/locking.h"
 #include "locking_types.h"
-#include "toolcontext.h"
+#include "lib/commands/toolcontext.h"
 
 #include <assert.h>
 #include <stddef.h>

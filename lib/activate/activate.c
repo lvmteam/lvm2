@@ -13,23 +13,23 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "metadata.h"
-#include "activate.h"
-#include "memlock.h"
-#include "display.h"
+#include "lib/misc/lib.h"
+#include "lib/metadata/metadata.h"
+#include "lib/activate/activate.h"
+#include "lib/mm/memlock.h"
+#include "lib/display/display.h"
 #include "fs.h"
-#include "lvm-exec.h"
-#include "lvm-file.h"
-#include "lvm-string.h"
-#include "toolcontext.h"
+#include "lib/misc/lvm-exec.h"
+#include "lib/misc/lvm-file.h"
+#include "lib/misc/lvm-string.h"
+#include "lib/commands/toolcontext.h"
 #include "dev_manager.h"
-#include "str_list.h"
-#include "config.h"
-#include "segtype.h"
-#include "sharedlib.h"
-#include "lvmcache.h"
-#include "metadata.h"
+#include "lib/datastruct/str_list.h"
+#include "lib/config/config.h"
+#include "lib/metadata/segtype.h"
+#include "lib/misc/sharedlib.h"
+#include "lib/cache/lvmcache.h"
+#include "lib/metadata/metadata.h"
 
 #include <limits.h>
 #include <fcntl.h>
@@ -413,7 +413,7 @@ void fs_unlock(void)
 {
 }
 /* dev_manager.c */
-#include "targets.h"
+#include "lib/activate/targets.h"
 int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 		   struct dm_tree_node *node, uint32_t start_area,
 		   uint32_t areas)

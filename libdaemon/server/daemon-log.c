@@ -12,7 +12,7 @@
 
 #define _REENTRANT
 
-#include "tool.h"
+#include "tools/tool.h"
 
 #include "daemon-server.h"
 #include "daemon-log.h"

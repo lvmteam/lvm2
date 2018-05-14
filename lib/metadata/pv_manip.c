@@ -13,14 +13,14 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "metadata.h"
-#include "pv_alloc.h"
-#include "toolcontext.h"
-#include "locking.h"
-#include "defaults.h"
-#include "display.h"
-#include "archiver.h"
+#include "lib/misc/lib.h"
+#include "lib/metadata/metadata.h"
+#include "lib/metadata/pv_alloc.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/locking/locking.h"
+#include "lib/config/defaults.h"
+#include "lib/display/display.h"
+#include "lib/format_text/archiver.h"
 
 static struct pv_segment *_alloc_pv_segment(struct dm_pool *mem,
 					    struct physical_volume *pv,

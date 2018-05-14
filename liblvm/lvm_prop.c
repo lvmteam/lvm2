@@ -13,8 +13,8 @@
  */
 
 #include "lvm_prop.h"
-#include "libdevmapper.h"
-#include "metadata.h"
+#include "libdm/libdevmapper.h"
+#include "lib/metadata/metadata.h"
 
 /* lv create parameters */
 GET_LVCREATEPARAMS_NUM_PROPERTY_FN(skip_zero, lvcp->zero)

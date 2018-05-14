@@ -16,9 +16,9 @@
 #ifndef _LVM_REPORT_H
 #define _LVM_REPORT_H
 
-#include "metadata-exported.h"
-#include "label.h"
-#include "activate.h"
+#include "lib/metadata/metadata-exported.h"
+#include "lib/label/label.h"
+#include "lib/activate/activate.h"
 
 typedef enum {
 	CMDLOG		= 1,

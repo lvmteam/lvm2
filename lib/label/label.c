@@ -13,14 +13,14 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "label.h"
-#include "crc.h"
-#include "xlate.h"
-#include "lvmcache.h"
-#include "bcache.h"
-#include "toolcontext.h"
-#include "activate.h"
+#include "lib/misc/lib.h"
+#include "lib/label/label.h"
+#include "lib/misc/crc.h"
+#include "lib/mm/xlate.h"
+#include "lib/cache/lvmcache.h"
+#include "lib/device/bcache.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/activate/activate.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>

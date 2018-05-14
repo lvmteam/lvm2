@@ -12,10 +12,10 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "libdevmapper-event.h"
+#include "lib/misc/lib.h"
+#include "daemons/dmeventd/libdevmapper-event.h"
 #include "dmeventd_lvm.h"
-#include "activate.h"	/* For TARGET_NAME* */
+#include "lib/activate/activate.h"
 
 /* FIXME Reformat to 80 char lines. */
 

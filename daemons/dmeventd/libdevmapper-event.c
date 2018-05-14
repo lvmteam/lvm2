@@ -12,9 +12,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "dm-logging.h"
-#include "dmlib.h"
-#include "libdevmapper-event.h"
+#include "libdm/misc/dm-logging.h"
+#include "libdm/misc/dmlib.h"
+#include "daemons/dmeventd/libdevmapper-event.h"
 #include "dmeventd.h"
 
 #include <fcntl.h>

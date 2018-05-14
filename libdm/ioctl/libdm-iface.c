@@ -13,7 +13,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "dmlib.h"
+#include "libdm/misc/dmlib.h"
 #include "libdm-targets.h"
 #include "libdm-common.h"
 
@@ -25,7 +25,7 @@
 #include <limits.h>
 
 #ifdef __linux__
-#  include "kdev_t.h"
+#  include "libdm/misc/kdev_t.h"
 #  include <linux/limits.h>
 #else
 #  define MAJOR(x) major((x))
@@ -33,7 +33,7 @@
 #  define MKDEV(x,y) makedev((x),(y))
 #endif
 
-#include "dm-ioctl.h"
+#include "libdm/misc/dm-ioctl.h"
 
 /*
  * Ensure build compatibility.  

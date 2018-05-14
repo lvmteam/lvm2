@@ -21,11 +21,11 @@
 #ifndef _LVM_METADATA_EXPORTED_H
 #define _LVM_METADATA_EXPORTED_H
 
-#include "uuid.h"
-#include "pv.h"
-#include "vg.h"
-#include "lv.h"
-#include "lvm-percent.h"
+#include "lib/uuid/uuid.h"
+#include "lib/metadata/pv.h"
+#include "lib/metadata/vg.h"
+#include "lib/metadata/lv.h"
+#include "lib/misc/lvm-percent.h"
 
 #define MAX_STRIPES 128U
 #define SECTOR_SHIFT 9L

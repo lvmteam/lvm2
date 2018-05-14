@@ -13,18 +13,18 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "toolcontext.h"
-#include "metadata.h"
-#include "segtype.h"
-#include "display.h"
-#include "text_export.h"
-#include "text_import.h"
-#include "config.h"
-#include "lvm-string.h"
-#include "targets.h"
-#include "activate.h"
-#include "str_list.h"
+#include "lib/misc/lib.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/metadata/metadata.h"
+#include "lib/metadata/segtype.h"
+#include "lib/display/display.h"
+#include "lib/format_text/text_export.h"
+#include "lib/format_text/text_import.h"
+#include "lib/config/config.h"
+#include "lib/misc/lvm-string.h"
+#include "lib/activate/targets.h"
+#include "lib/activate/activate.h"
+#include "lib/datastruct/str_list.h"
 
 #include <sys/utsname.h>
 

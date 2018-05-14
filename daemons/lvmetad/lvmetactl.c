@@ -8,9 +8,9 @@
  * of the GNU Lesser General Public License v.2.1.
  */
 
-#include "tool.h"
+#include "tools/tool.h"
 
-#include "lvmetad-client.h"
+#include "daemons/lvmetad/lvmetad-client.h"
 
 daemon_handle h;
 

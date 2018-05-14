@@ -9,7 +9,7 @@
 
 #include <inttypes.h>
 
-#include "dm-ioctl.h" /* For DM_UUID_LEN */
+#include "libdm/misc/dm-ioctl.h"
 
 /*
  * The device-mapper userspace log module consists of a kernel component and

@@ -14,11 +14,11 @@
 
 #define _REENTRANT
 
-#include "tool.h"
+#include "tools/tool.h"
 
-#include "daemon-io.h"
-#include "daemon-client.h"
-#include "dm-logging.h"
+#include "libdaemon/client/daemon-io.h"
+#include "libdaemon/client/daemon-client.h"
+#include "libdm/misc/dm-logging.h"
 
 #include <sys/un.h>
 #include <sys/socket.h>

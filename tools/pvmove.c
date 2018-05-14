@@ -15,10 +15,10 @@
 
 #include "tools.h"
 
-#include "polldaemon.h"
-#include "display.h"
+#include "lib/lvmpolld/polldaemon.h"
+#include "lib/display/display.h"
 #include "pvmove_poll.h"
-#include "lvmpolld-client.h"
+#include "lib/lvmpolld/lvmpolld-client.h"
 
 #define PVMOVE_FIRST_TIME   0x00000001      /* Called for first time */
 

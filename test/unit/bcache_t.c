@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "bcache.h"
+#include "lib/device/bcache.h"
 #include "framework.h"
 #include "units.h"
 

@@ -12,10 +12,10 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "properties.h"
+#include "lib/misc/lib.h"
+#include "lib/report/properties.h"
 #include "lvm_misc.h"
-#include "lvm2app.h"
+#include "liblvm/lvm2app.h"
 #include "lvm_prop.h"
 
 struct dm_list *tag_list_copy(struct dm_pool *p, struct dm_list *tag_list)

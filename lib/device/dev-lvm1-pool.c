@@ -12,9 +12,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "dev-type.h"
-#include "xlate.h"
+#include "lib/misc/lib.h"
+#include "lib/device/dev-type.h"
+#include "lib/mm/xlate.h"
 
 /*
  * These lvm1 structs just used NAME_LEN in the previous format1 lvm2 code, but

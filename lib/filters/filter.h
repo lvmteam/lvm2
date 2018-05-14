@@ -17,8 +17,8 @@
 #ifndef _LVM_FILTER_H
 #define _LVM_FILTER_H
 
-#include "dev-cache.h"
-#include "dev-type.h"
+#include "lib/device/dev-cache.h"
+#include "lib/device/dev-type.h"
 
 struct dev_filter *composite_filter_create(int n, int use_dev_ext_info, struct dev_filter **filters);
 

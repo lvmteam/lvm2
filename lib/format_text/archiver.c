@@ -13,15 +13,15 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "archiver.h"
-#include "format-text.h"
-#include "lvm-string.h"
-#include "lvmcache.h"
-#include "lvmetad.h"
-#include "memlock.h"
-#include "toolcontext.h"
-#include "locking.h"
+#include "lib/misc/lib.h"
+#include "lib/format_text/archiver.h"
+#include "lib/format_text/format-text.h"
+#include "lib/misc/lvm-string.h"
+#include "lib/cache/lvmcache.h"
+#include "lib/cache/lvmetad.h"
+#include "lib/mm/memlock.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/locking/locking.h"
 
 #include <unistd.h>
 

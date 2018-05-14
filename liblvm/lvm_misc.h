@@ -14,10 +14,10 @@
 #ifndef _LVM2APP_MISC_H
 #define _LVM2APP_MISC_H
 
-#include "libdevmapper.h"
-#include "lvm2app.h"
-#include "metadata-exported.h"
-#include "toolcontext.h"
+#include "libdm/libdevmapper.h"
+#include "liblvm/lvm2app.h"
+#include "lib/metadata/metadata-exported.h"
+#include "lib/commands/toolcontext.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>

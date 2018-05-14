@@ -11,12 +11,12 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-#include "tool.h"
+#include "tools/tool.h"
 
-#include "lvmetad-client.h"
-#include "label.h"
-#include "lvmcache.h"
-#include "metadata.h"
+#include "daemons/lvmetad/lvmetad-client.h"
+#include "lib/label/label.h"
+#include "lib/cache/lvmcache.h"
+#include "lib/metadata/metadata.h"
 
 const char *uuid1 = "abcd-efgh";
 const char *uuid2 = "bbcd-efgh";

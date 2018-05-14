@@ -15,8 +15,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "dmlib.h"
-#include "kdev_t.h"
+#include "libdm/misc/dmlib.h"
+#include "libdm/misc/kdev_t.h"
 
 #include "math.h" /* log10() */
 

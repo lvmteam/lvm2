@@ -13,13 +13,13 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include <defaults.h>
-#include "metadata.h"
-#include "lv_alloc.h"
-#include "pv_alloc.h"
-#include "str_list.h"
-#include "segtype.h"
+#include "lib/misc/lib.h"
+#include "lib/config/defaults.h"
+#include "lib/metadata/metadata.h"
+#include "lib/metadata/lv_alloc.h"
+#include "lib/metadata/pv_alloc.h"
+#include "lib/datastruct/str_list.h"
+#include "lib/metadata/segtype.h"
 
 /*
  * Attempt to merge two adjacent segments.

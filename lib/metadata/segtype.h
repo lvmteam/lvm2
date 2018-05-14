@@ -16,7 +16,7 @@
 #ifndef _SEGTYPES_H
 #define _SEGTYPES_H
 
-#include "metadata-exported.h"
+#include "lib/metadata/metadata-exported.h"
 
 struct segtype_handler;
 struct cmd_context;

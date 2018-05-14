@@ -13,10 +13,10 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "metadata.h"
+#include "lib/misc/lib.h"
+#include "lib/metadata/metadata.h"
 #include "import-export.h"
-#include "lvm-string.h"
+#include "lib/misc/lvm-string.h"
 
 /*
  * Bitsets held in the 'status' flags get

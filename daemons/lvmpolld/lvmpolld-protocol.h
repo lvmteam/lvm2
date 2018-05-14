@@ -15,7 +15,7 @@
 #ifndef _LVM_LVMPOLLD_PROTOCOL_H
 #define _LVM_LVMPOLLD_PROTOCOL_H
 
-#include "polling_ops.h"
+#include "daemons/lvmpolld/polling_ops.h"
 
 #define LVMPOLLD_PROTOCOL "lvmpolld"
 #define LVMPOLLD_PROTOCOL_VERSION 1

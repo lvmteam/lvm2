@@ -14,8 +14,8 @@
 
 #include "tools.h"
 
-#include "polldaemon.h"
-#include "lv_alloc.h"
+#include "lib/lvmpolld/polldaemon.h"
+#include "lib/metadata/lv_alloc.h"
 #include "lvconvert_poll.h"
 
 #define MAX_PDATA_ARGS	10	/* Max number of accepted args for d-m-p-d tools */

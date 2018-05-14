@@ -14,7 +14,7 @@
  */
 
 #include "tools.h"
-#include "format-text.h"
+#include "lib/format_text/format-text.h"
 
 #include <sys/stat.h>
 #include <signal.h>

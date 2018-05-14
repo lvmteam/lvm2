@@ -13,19 +13,19 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
+#include "lib/misc/lib.h"
 #include "dev_manager.h"
-#include "lvm-string.h"
+#include "lib/misc/lvm-string.h"
 #include "fs.h"
-#include "defaults.h"
-#include "segtype.h"
-#include "display.h"
-#include "toolcontext.h"
-#include "targets.h"
-#include "config.h"
-#include "activate.h"
-#include "lvm-exec.h"
-#include "str_list.h"
+#include "lib/config/defaults.h"
+#include "lib/metadata/segtype.h"
+#include "lib/display/display.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/activate/targets.h"
+#include "lib/config/config.h"
+#include "lib/activate/activate.h"
+#include "lib/misc/lvm-exec.h"
+#include "lib/datastruct/str_list.h"
 
 #include <limits.h>
 #include <dirent.h>

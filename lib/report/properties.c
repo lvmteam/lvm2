@@ -12,10 +12,10 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "properties.h"
-#include "activate.h"
-#include "metadata.h"
+#include "lib/misc/lib.h"
+#include "lib/report/properties.h"
+#include "lib/activate/activate.h"
+#include "lib/metadata/metadata.h"
 
 
 #define GET_VG_NUM_PROPERTY_FN(NAME, VALUE) \

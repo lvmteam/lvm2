@@ -15,7 +15,7 @@
 #ifndef _LVM_DAEMON_SERVER_H
 #define _LVM_DAEMON_SERVER_H
 
-#include "daemon-client.h"
+#include "libdaemon/client/daemon-client.h"
 
 typedef struct {
 	int socket_fd; /* the fd we use to talk to the client */

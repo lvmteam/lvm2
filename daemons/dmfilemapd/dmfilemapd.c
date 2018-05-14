@@ -14,11 +14,11 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "tool.h"
+#include "tools/tool.h"
 
-#include "dm-logging.h"
+#include "libdm/misc/dm-logging.h"
 
-#include "defaults.h"
+#include "lib/config/defaults.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>

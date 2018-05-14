@@ -13,16 +13,16 @@
  */
 
 #include <stddef.h>
-#include "lib.h"
-#include "metadata-exported.h"
-#include "lvm-string.h"
-#include "str_list.h"
+#include "lib/misc/lib.h"
+#include "lib/metadata/metadata-exported.h"
+#include "lib/misc/lvm-string.h"
+#include "lib/datastruct/str_list.h"
 #include "lvm_misc.h"
-#include "lvm2app.h"
-#include "locking.h"
-#include "toolcontext.h"
+#include "liblvm/lvm2app.h"
+#include "lib/locking/locking.h"
+#include "lib/commands/toolcontext.h"
 #include "lvm_misc.h"
-#include "lvmetad.h"
+#include "lib/cache/lvmetad.h"
 
 struct lvm_pv_create_params
 {

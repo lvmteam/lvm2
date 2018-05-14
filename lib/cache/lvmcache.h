@@ -16,11 +16,11 @@
 #ifndef _LVM_CACHE_H
 #define _LVM_CACHE_H
 
-#include "dev-cache.h"
-#include "dev-type.h"
-#include "uuid.h"
-#include "label.h"
-#include "locking.h"
+#include "lib/device/dev-cache.h"
+#include "lib/device/dev-type.h"
+#include "lib/uuid/uuid.h"
+#include "lib/label/label.h"
+#include "lib/locking/locking.h"
 
 #define ORPHAN_PREFIX VG_ORPHANS
 #define ORPHAN_VG_NAME(fmt) ORPHAN_PREFIX "_" fmt

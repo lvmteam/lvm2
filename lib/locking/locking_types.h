@@ -13,8 +13,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "metadata.h"
-#include "config.h"
+#include "lib/metadata/metadata.h"
+#include "lib/config/config.h"
 
 typedef int (*lock_resource_fn) (struct cmd_context * cmd, const char *resource,
 				 uint32_t flags, const struct logical_volume *lv);

@@ -12,8 +12,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "filter.h"
+#include "lib/misc/lib.h"
+#include "lib/filters/filter.h"
 
 static DM_LIST_INIT(_allow_devs);
 

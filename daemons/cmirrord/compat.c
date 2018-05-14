@@ -8,7 +8,7 @@
 #include "logging.h"
 #include "cluster.h"
 #include "compat.h"
-#include "xlate.h"
+#include "lib/mm/xlate.h"
 
 #include <errno.h>
 

@@ -12,12 +12,12 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "toolcontext.h"
-#include "locking.h"
+#include "lib/misc/lib.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/locking/locking.h"
 #include "lvm-version.h"
-#include "metadata-exported.h"
-#include "lvm2app.h"
+#include "lib/metadata/metadata-exported.h"
+#include "liblvm/lvm2app.h"
 #include "lvm_misc.h"
 
 const char *lvm_library_get_version(void)

@@ -15,7 +15,7 @@
 #ifndef _LVM_DAEMON_IO_H
 #define _LVM_DAEMON_IO_H
 
-#include "config-util.h"
+#include "libdaemon/client/config-util.h"
 
 /* TODO function names */
 

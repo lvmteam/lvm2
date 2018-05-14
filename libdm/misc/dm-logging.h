@@ -16,7 +16,7 @@
 #ifndef _DM_LOGGING_H
 #define _DM_LOGGING_H
 
-#include "libdevmapper.h"
+#include "libdm/libdevmapper.h"
 
 extern dm_log_with_errno_fn dm_log_with_errno;
 
@@ -29,6 +29,6 @@ extern dm_log_with_errno_fn dm_log_with_errno;
 /* Debug messages may have a type instead of an errno */
 #define LOG_LINE_WITH_CLASS(l, c, x...) LOG_MESG(l, __FILE__, __LINE__, c, ## x)
 
-#include "log.h"
+#include "lib/log/log.h"
 
 #endif

@@ -17,7 +17,7 @@
 #include "memcheck.h"
 #endif
 
-#include "dmlib.h"
+#include "libdm/misc/dmlib.h"
 #include <stddef.h>	/* For musl libc */
 #include <malloc.h>
 

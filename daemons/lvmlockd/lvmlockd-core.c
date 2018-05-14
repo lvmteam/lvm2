@@ -12,14 +12,14 @@
 #define _ISOC99_SOURCE
 #define _REENTRANT
 
-#include "tool.h"
+#include "tools/tool.h"
 
-#include "daemon-io.h"
+#include "libdaemon/client/daemon-io.h"
 #include "daemon-server.h"
 #include "lvm-version.h"
-#include "lvmetad-client.h"
-#include "lvmlockd-client.h"
-#include "dm-ioctl.h" /* for DM_UUID_LEN */
+#include "daemons/lvmetad/lvmetad-client.h"
+#include "daemons/lvmlockd/lvmlockd-client.h"
+#include "libdm/misc/dm-ioctl.h"
 
 /* #include <assert.h> */
 #include <errno.h>

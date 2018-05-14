@@ -16,8 +16,8 @@
 
 #include <pthread.h>
 
-#include "locking.h"
-#include "clvm.h"
+#include "lib/locking/locking.h"
+#include "daemons/clvmd/clvm.h"
 #include "clvmd-comms.h"
 #include "clvmd.h"
 

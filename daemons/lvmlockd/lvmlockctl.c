@@ -8,9 +8,9 @@
  * of the GNU Lesser General Public License v.2.1.
  */
 
-#include "tool.h"
+#include "tools/tool.h"
 
-#include "lvmlockd-client.h"
+#include "daemons/lvmlockd/lvmlockd-client.h"
 
 #include <stddef.h>
 #include <getopt.h>

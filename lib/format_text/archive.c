@@ -13,14 +13,14 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "format-text.h"
+#include "lib/misc/lib.h"
+#include "lib/format_text/format-text.h"
 
-#include "config.h"
+#include "lib/config/config.h"
 #include "import-export.h"
-#include "lvm-string.h"
-#include "lvm-file.h"
-#include "toolcontext.h"
+#include "lib/misc/lvm-string.h"
+#include "lib/misc/lvm-file.h"
+#include "lib/commands/toolcontext.h"
 
 #include <dirent.h>
 #include <unistd.h>

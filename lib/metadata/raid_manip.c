@@ -12,15 +12,15 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "archiver.h"
-#include "metadata.h"
-#include "toolcontext.h"
-#include "segtype.h"
-#include "display.h"
-#include "activate.h"
-#include "lv_alloc.h"
-#include "lvm-string.h"
+#include "lib/misc/lib.h"
+#include "lib/format_text/archiver.h"
+#include "lib/metadata/metadata.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/metadata/segtype.h"
+#include "lib/display/display.h"
+#include "lib/activate/activate.h"
+#include "lib/metadata/lv_alloc.h"
+#include "lib/misc/lvm-string.h"
 
 typedef int (*fn_on_lv_t)(struct logical_volume *lv, void *data);
 static int _eliminate_extracted_lvs_optional_write_vg(struct volume_group *vg,

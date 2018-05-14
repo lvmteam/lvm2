@@ -15,14 +15,14 @@
 #ifndef _LVM_DEV_TYPE_H
 #define _LVM_DEV_TYPE_H
 
-#include "device.h"
-#include "display.h"
-#include "label.h"
+#include "lib/device/device.h"
+#include "lib/display/display.h"
+#include "lib/label/label.h"
 
 #define NUMBER_OF_MAJORS 4096
 
 #ifdef __linux__
-#  include "kdev_t.h"
+#  include "libdm/misc/kdev_t.h"
 #else
 #  define MAJOR(x) major((x))
 #  define MINOR(x) minor((x))

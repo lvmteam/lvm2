@@ -16,9 +16,9 @@
 #ifndef _LVM_DISPLAY_H
 #define _LVM_DISPLAY_H
 
-#include "metadata-exported.h"
-#include "locking.h"
-#include "lvm-string.h"
+#include "lib/metadata/metadata-exported.h"
+#include "lib/locking/locking.h"
+#include "lib/misc/lvm-string.h"
 
 #include <stdint.h>
 

@@ -15,7 +15,7 @@
 #ifndef _LVM_LVMETAD_CLIENT_H
 #define _LVM_LVMETAD_CLIENT_H
 
-#include "daemon-client.h"
+#include "libdaemon/client/daemon-client.h"
 
 #define LVMETAD_SOCKET DEFAULT_RUN_DIR "/lvmetad.socket"
 

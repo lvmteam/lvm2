@@ -13,10 +13,10 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "lvm-string.h"
-#include "metadata-exported.h"
-#include "display.h"
+#include "lib/misc/lib.h"
+#include "lib/misc/lvm-string.h"
+#include "lib/metadata/metadata-exported.h"
+#include "lib/display/display.h"
 
 #include <ctype.h>
 #include <stdarg.h>

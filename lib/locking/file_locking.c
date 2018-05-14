@@ -13,14 +13,14 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "locking.h"
+#include "lib/misc/lib.h"
+#include "lib/locking/locking.h"
 #include "locking_types.h"
-#include "activate.h"
-#include "config.h"
-#include "defaults.h"
-#include "lvm-string.h"
-#include "lvm-flock.h"
+#include "lib/activate/activate.h"
+#include "lib/config/config.h"
+#include "lib/config/defaults.h"
+#include "lib/misc/lvm-string.h"
+#include "lib/misc/lvm-flock.h"
 
 #include <limits.h>
 #include <unistd.h>

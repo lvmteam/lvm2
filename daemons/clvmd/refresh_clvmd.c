@@ -21,7 +21,7 @@
 
 #include "clvmd-common.h"
 
-#include "clvm.h"
+#include "daemons/clvmd/clvm.h"
 #include "refresh_clvmd.h"
 
 #include <stddef.h>

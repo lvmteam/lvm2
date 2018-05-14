@@ -16,8 +16,8 @@
 #ifndef _LVM_DEV_CACHE_H
 #define _LVM_DEV_CACHE_H
 
-#include "device.h"
-#include "lvm-wrappers.h"
+#include "lib/device/device.h"
+#include "lib/misc/lvm-wrappers.h"
 
 /*
  * predicate for devices.

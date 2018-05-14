@@ -16,13 +16,13 @@
 #include "tools.h"
 
 #include "lvm2cmdline.h"
-#include "label.h"
+#include "lib/label/label.h"
 #include "lvm-version.h"
-#include "lvmlockd.h"
-#include "lvmetad-client.h"
+#include "lib/locking/lvmlockd.h"
+#include "daemons/lvmetad/lvmetad-client.h"
 
 #include "stub.h"
-#include "last-path-component.h"
+#include "lib/misc/last-path-component.h"
 
 #include <signal.h>
 #include <sys/stat.h>

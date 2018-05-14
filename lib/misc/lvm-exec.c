@@ -13,11 +13,11 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "device.h"
-#include "locking.h"
-#include "lvm-exec.h"
-#include "toolcontext.h"
+#include "lib/misc/lib.h"
+#include "lib/device/device.h"
+#include "lib/locking/locking.h"
+#include "lib/misc/lvm-exec.h"
+#include "lib/commands/toolcontext.h"
 
 #include <unistd.h>
 #include <sys/wait.h>

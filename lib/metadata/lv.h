@@ -15,7 +15,7 @@
 #ifndef _LVM_LV_H
 #define _LVM_LV_H
 
-#include "vg.h"
+#include "lib/metadata/vg.h"
 
 union lvid;
 struct lv_segment;

@@ -13,14 +13,14 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "metadata.h"
-#include "display.h"
-#include "activate.h"
-#include "toolcontext.h"
-#include "lvmcache.h"
-#include "archiver.h"
-#include "lvmetad.h"
+#include "lib/misc/lib.h"
+#include "lib/metadata/metadata.h"
+#include "lib/display/display.h"
+#include "lib/activate/activate.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/cache/lvmcache.h"
+#include "lib/format_text/archiver.h"
+#include "lib/cache/lvmetad.h"
 
 struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
 			      const char *vg_name)

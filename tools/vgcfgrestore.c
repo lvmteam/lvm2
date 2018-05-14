@@ -14,7 +14,7 @@
  */
 
 #include "tools.h"
-#include "lvmetad-client.h"
+#include "daemons/lvmetad/lvmetad-client.h"
 
 int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 {

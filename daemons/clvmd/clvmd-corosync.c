@@ -21,12 +21,12 @@
 
 #include <pthread.h>
 
-#include "clvm.h"
+#include "daemons/clvmd/clvm.h"
 #include "clvmd-comms.h"
 #include "clvmd.h"
 #include "lvm-functions.h"
 
-#include "locking.h"
+#include "lib/locking/locking.h"
 
 #include <corosync/cpg.h>
 #include <corosync/quorum.h>

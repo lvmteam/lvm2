@@ -8,9 +8,9 @@
  * of the GNU Lesser General Public License v.2.1.
  */
 
-#include "lib.h"
-#include "toolcontext.h"
-#include "lvmnotify.h"
+#include "lib/misc/lib.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/notify/lvmnotify.h"
 
 #define LVM_DBUS_DESTINATION "com.redhat.lvmdbus1"
 #define LVM_DBUS_PATH        "/com/redhat/lvmdbus1/Manager"

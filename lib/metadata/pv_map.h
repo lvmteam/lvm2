@@ -16,7 +16,7 @@
 #ifndef _LVM_PV_MAP_H
 #define _LVM_PV_MAP_H
 
-#include "metadata.h"
+#include "lib/metadata/metadata.h"
 
 /*
  * The in core rep. only stores a mapping from

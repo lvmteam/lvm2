@@ -15,9 +15,9 @@
 
 #include "tools.h"
 
-#include "polldaemon.h"
+#include "lib/lvmpolld/polldaemon.h"
 #include "lvm2cmdline.h"
-#include "lvmpolld-client.h"
+#include "lib/lvmpolld/lvmpolld-client.h"
 
 #include <time.h>
 

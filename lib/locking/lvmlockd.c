@@ -8,15 +8,15 @@
  * of the GNU Lesser General Public License v.2.1.
  */
 
-#include "lib.h"
-#include "toolcontext.h"
-#include "metadata.h"
-#include "segtype.h"
-#include "activate.h"
-#include "lvmetad.h"
-#include "lvmlockd.h"
-#include "lvmcache.h"
-#include "lvmlockd-client.h"
+#include "lib/misc/lib.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/metadata/metadata.h"
+#include "lib/metadata/segtype.h"
+#include "lib/activate/activate.h"
+#include "lib/cache/lvmetad.h"
+#include "lib/locking/lvmlockd.h"
+#include "lib/cache/lvmcache.h"
+#include "daemons/lvmlockd/lvmlockd-client.h"
 
 static daemon_handle _lvmlockd;
 static const char *_lvmlockd_socket = NULL;

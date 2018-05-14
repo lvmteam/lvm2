@@ -12,8 +12,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "prop_common.h"
+#include "lib/misc/lib.h"
+#include "lib/properties/prop_common.h"
 
 int prop_not_implemented_get(const void *obj, struct lvm_property_type *prop)
 {

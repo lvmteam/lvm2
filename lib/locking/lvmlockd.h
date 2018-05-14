@@ -11,8 +11,8 @@
 #ifndef _LVMLOCKD_H
 #define _LVMLOCKD_H
 
-#include "config-util.h"
-#include "daemon-client.h"
+#include "libdaemon/client/config-util.h"
+#include "libdaemon/client/daemon-client.h"
 
 #define LOCKD_SANLOCK_LV_NAME "lvmlock"
 

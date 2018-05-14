@@ -24,7 +24,7 @@
 
 #include <unistd.h>
 
-#include "libdevmapper.h"
-#include "util.h"
+#include "libdm/libdevmapper.h"
+#include "lib/misc/util.h"
 
 #endif	/* _LVM_TOOL_H */

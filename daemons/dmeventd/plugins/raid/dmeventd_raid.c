@@ -12,10 +12,10 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "defaults.h"
+#include "lib/misc/lib.h"
+#include "lib/config/defaults.h"
 #include "dmeventd_lvm.h"
-#include "libdevmapper-event.h"
+#include "daemons/dmeventd/libdevmapper-event.h"
 
 /* Hold enough elements for the mximum number of RAID images */
 #define	RAID_DEVS_ELEMS	((DEFAULT_RAID_MAX_IMAGES + 63) / 64)

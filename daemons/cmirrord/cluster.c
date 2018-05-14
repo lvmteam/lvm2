@@ -16,7 +16,7 @@
 #include "functions.h"
 #include "link_mon.h"
 #include "local.h"
-#include "xlate.h"
+#include "lib/mm/xlate.h"
 
 #include <corosync/cpg.h>
 #include <errno.h>

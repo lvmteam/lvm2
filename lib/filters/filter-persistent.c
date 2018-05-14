@@ -13,10 +13,10 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib.h"
-#include "filter.h"
-#include "config.h"
-#include "lvm-file.h"
+#include "lib/misc/lib.h"
+#include "lib/filters/filter.h"
+#include "lib/config/config.h"
+#include "lib/misc/lvm-file.h"
 
 struct pfilter {
 	char *file;

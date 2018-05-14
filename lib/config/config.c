@@ -14,16 +14,16 @@
  */
 
 
-#include "lib.h"
+#include "lib/misc/lib.h"
 
-#include "config.h"
-#include "crc.h"
-#include "device.h"
-#include "str_list.h"
-#include "toolcontext.h"
-#include "lvm-file.h"
-#include "memlock.h"
-#include "label.h"
+#include "lib/config/config.h"
+#include "lib/misc/crc.h"
+#include "lib/device/device.h"
+#include "lib/datastruct/str_list.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/misc/lvm-file.h"
+#include "lib/mm/memlock.h"
+#include "lib/label/label.h"
 
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -71,7 +71,7 @@ static struct cfg_def_item _cfg_def_items[CFG_COUNT + 1] = {
 #define cfg_runtime(id, name, parent, flags, type, since_version, deprecated_since_version, deprecation_comment, comment) {id, parent, name, type, {.fn_##type = get_default_##id}, (flags) | CFG_DEFAULT_RUN_TIME, since_version, {.fn_UNCONFIGURED = get_default_unconfigured_##id}, deprecated_since_version, (deprecation_comment), comment},
 #define cfg_array(id, name, parent, flags, types, default_value, since_version, unconfigured_value, deprecated_since_version, deprecation_comment, comment) {id, parent, name, CFG_TYPE_ARRAY | (types), {.v_CFG_TYPE_STRING = (default_value)}, (flags), (since_version), {.v_UNCONFIGURED = (unconfigured_value)}, deprecated_since_version, deprecation_comment, comment},
 #define cfg_array_runtime(id, name, parent, flags, types, since_version, deprecated_since_version, deprecation_comment, comment) {id, parent, name, CFG_TYPE_ARRAY | (types), {.fn_CFG_TYPE_STRING = get_default_##id}, (flags) | CFG_DEFAULT_RUN_TIME, (since_version), {.fn_UNCONFIGURED = get_default_unconfigured_##id}, deprecated_since_version, deprecation_comment, comment},
-#include "config_settings.h"
+#include "lib/config/config_settings.h"
 #undef cfg_section
 #undef cfg
 #undef cfg_runtime

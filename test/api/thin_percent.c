@@ -14,7 +14,7 @@
 
 #undef NDEBUG
 
-#include "lvm2app.h"
+#include "liblvm/lvm2app.h"
 #include "assert.h"
 
 int main(int argc, char *argv[])

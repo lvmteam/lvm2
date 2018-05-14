@@ -12,7 +12,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lvm2cmd.h"
+#include "tools/lvm2cmd.h"
 #include <stdio.h>
 
 /* All output gets passed to this function line-by-line */

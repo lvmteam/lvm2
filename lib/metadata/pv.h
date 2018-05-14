@@ -15,8 +15,8 @@
 #ifndef _LVM_PV_H
 #define _LVM_PV_H
 
-#include "uuid.h"
-#include "libdevmapper.h"
+#include "lib/uuid/uuid.h"
+#include "libdm/libdevmapper.h"
 
 struct device;
 struct format_type;

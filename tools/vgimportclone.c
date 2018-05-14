@@ -13,9 +13,9 @@
  */
 
 #include "tools.h"
-#include "lvmcache.h"
-#include "lvmetad-client.h"
-#include "filter.h"
+#include "lib/cache/lvmcache.h"
+#include "daemons/lvmetad/lvmetad-client.h"
+#include "lib/filters/filter.h"
 
 struct vgimportclone_params {
 	unsigned done;
