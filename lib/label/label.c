@@ -666,7 +666,7 @@ int label_scan(struct cmd_context *cmd)
 {
 	struct dm_list all_devs;
 	struct dev_iter *iter;
-	struct device_list *devl;
+	struct device_list *devl, *devl2;
 	struct device *dev;
 
 	log_debug_devs("Finding devices to scan");
@@ -717,6 +717,11 @@ int label_scan(struct cmd_context *cmd)
 	}
 
 	_scan_list(cmd, cmd->full_filter, &all_devs, NULL);
+
+	dm_list_iterate_items_safe(devl, devl2, &all_devs) {
+		dm_list_del(&devl->list);
+		dm_free(devl);
+	}
 
 	return 1;
 }
@@ -866,6 +871,8 @@ int label_read(struct device *dev)
 	}
 
 	_scan_list(NULL, NULL, &one_dev, &failed);
+
+	dm_free(devl);
 
 	if (failed)
 		return 0;

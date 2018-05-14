@@ -1001,6 +1001,7 @@ static void _filter_duplicate_devs(struct cmd_context *cmd)
 		if (MAJOR(info->dev->dev) == dt->md_major) {
 			log_debug_devs("Ignoring md component duplicate %s", dev_name(devl->dev));
 			dm_list_del(&devl->list);
+			dm_free(devl);
 		}
 	}
 }
@@ -1307,7 +1308,7 @@ next:
 int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const char *vgid)
 {
 	struct dm_list devs;
-	struct device_list *devl;
+	struct device_list *devl, *devl2;
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_info *info, *info2;
 
@@ -1338,6 +1339,7 @@ int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const 
 		dm_list_add(&devs, &devl->list);
 	}
 
+	/* Deleting the last info will delete vginfo. */
 	dm_list_iterate_items_safe(info, info2, &vginfo->infos)
 		lvmcache_del(info);
 
@@ -1349,6 +1351,11 @@ int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const 
 	   being rescanned here and then repeat resolving the duplicates? */
 
 	label_scan_devs(cmd, cmd->filter, &devs);
+
+	dm_list_iterate_items_safe(devl, devl2, &devs) {
+		dm_list_del(&devl->list);
+		dm_free(devl);
+	}
 
 	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
 		log_warn("VG info not found after rescan of %s", vgname);
@@ -1749,6 +1756,7 @@ void lvmcache_del(struct lvmcache_info *info)
 
 	info->label->labeller->ops->destroy_label(info->label->labeller,
 						  info->label);
+	label_destroy(info->label);
 	dm_free(info);
 }
 
