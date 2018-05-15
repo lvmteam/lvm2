@@ -360,10 +360,6 @@ check mirror_no_temporaries $vg $lv1
 check mirror_legs $vg $lv1 3
 lvremove -ff $vg
 
-lvs -a $vg
-dmsetup table
-losetup -a
-ls -lRa $PWD
 
 # "rhbz440405: lvconvert -m0 incorrectly fails if all PEs allocated"
 lvcreate -aey -l "$(get pv_field "$dev1" pe_count)" --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:$DEVRANGE"
@@ -372,6 +368,5 @@ aux wait_for_sync $vg $lv1
 lvconvert -m0 $vg/$lv1 "$dev1"
 check linear $vg $lv1
 lvremove -ff $vg
-
 
 vgremove -ff $vg
