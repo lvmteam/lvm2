@@ -841,9 +841,18 @@ prepare_backing_dev() {
 		BACKING_DEV=$LVM_TEST_BACKING_DEVICE
 		echo "$BACKING_DEV" > BACKING_DEV
 		return 0
-	elif test "${LVM_TEST_PREFER_BRD-1}" = "1" && test ! -d /sys/block/ram0 && test "$size" -lt 16384; then
+	elif test "${LVM_TEST_PREFER_BRD-1}" = "1" && \
+	     test ! -d /sys/block/ram0 && \
+	     test kernel_at_least 4 16 && \
+	     test "$size" -lt 16384; then
 		# try to use ramdisk if possible, but for
 		# big allocs (>16G) do not try to use ramdisk
+		# Also we can't use BRD device prior kernel 4.16
+		# since they were DAX based and lvm2 often relies
+		# in save table loading between exiting backend device
+		# and  bio-based 'error' device.
+		# However with request based DAX brd device we get this:
+		# device-mapper: ioctl: can't change device type after initial table load.
 		prepare_ramdisk "$size" "$@" && return
 		echo "(failed)"
 	fi
