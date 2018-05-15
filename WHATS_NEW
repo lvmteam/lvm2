@@ -1,5 +1,9 @@
 Version 2.02.178 - 
 =====================================
+  Remove lvm1 and pool format handling and add filter to ignore them.
+  Move some filter checks to after disks are read.
+  Rework disk scanning and when it is used.
+  Add new io layer and shift code to using it.
   lvconvert: don't return success on degraded -m raid1 conversion
   --enable-testing switch for ./configure has been removed.
   --with-snapshots switch for ./configure has been removed.
