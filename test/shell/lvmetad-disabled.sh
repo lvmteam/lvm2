@@ -19,7 +19,11 @@ SKIP_WITH_LVMPOLLD=1
 aux prepare_devs 2
 
 kill "$(< LOCAL_LVMETAD)"
-while test -e "$TESTDIR/lvmetad.socket"; do echo -n .; sleep .1; done # wait for the socket close
+for i in {200..0} ; do
+	test -e "$TESTDIR/lvmetad.socket" || break
+	test "$i" -eq 0 && die "Too slow closing of lvmetad.socket. Aborting test."
+	echo -n .; sleep .1;
+done # wait for the socket close
 test ! -e "$LVM_LVMETAD_PIDFILE"
 
 aux lvmconf "global/use_lvmetad = 0"
