@@ -189,7 +189,7 @@ lvremove -f $vg1/snap
 # Undeleted header would trigger attempt to access
 # beyond end of COW device
 # Fails to create when chunk size is different
-lvcreate -s -pr -l12 -n snap $vg1/$lv
+lvcreate -s -pr -l3 -n snap $vg1/$lv
 
 # When header is undelete, fails to read snapshot without read errors
 #dd if="$DM_DEV_DIR/$vg1/snap" of=/dev/null bs=1M count=2
