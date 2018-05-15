@@ -843,7 +843,7 @@ prepare_backing_dev() {
 		return 0
 	elif test "${LVM_TEST_PREFER_BRD-1}" = "1" && \
 	     test ! -d /sys/block/ram0 && \
-	     test kernel_at_least 4 16 && \
+	     kernel_at_least 4 16 && \
 	     test "$size" -lt 16384; then
 		# try to use ramdisk if possible, but for
 		# big allocs (>16G) do not try to use ramdisk
@@ -1067,6 +1067,7 @@ enable_dev() {
 # Throttle down performance of kcopyd when mirroring i.e. disk image
 throttle_sys="/sys/module/dm_mirror/parameters/raid1_resync_throttle"
 throttle_dm_mirror() {
+	test -e "$throttle_sys" || return
 	test -f THROTTLE || cat "$throttle_sys" > THROTTLE
 	echo ${1-1} > "$throttle_sys"
 }
