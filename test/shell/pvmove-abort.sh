@@ -16,14 +16,17 @@ SKIP_WITH_LVMLOCKD=1
 
 . lib/inittest
 
+aux lvmconf 'activation/raid_region_size = 16'
+
+aux target_at_least dm-mirror 1 10 0 || skip
+# Throttle mirroring
+aux throttle_dm_mirror || skip
+
 aux prepare_pvs 3 60
 
-vgcreate -s 128k $vg "$dev1" "$dev2"
+vgcreate -s 512k $vg "$dev1" "$dev2"
 pvcreate --metadatacopies 0 "$dev3"
 vgextend $vg "$dev3"
-
-# Slowdown read/writes
-aux delay_dev "$dev3" 0 800 "$(get first_extent_sector "$dev3"):"
 
 for mode in "--atomic" "" ;
 do
@@ -32,12 +35,10 @@ do
 
 # Create multisegment LV
 lvcreate -an -Zn -l30 -n $lv1 $vg "$dev1"
-lvcreate -an -Zn -l30 -n $lv2 $vg "$dev2"
+lvcreate -an -Zn -l40 -n $lv2 $vg "$dev2"
 
 cmd1=(pvmove -i1 $backgroundarg $mode "$dev1" "$dev3")
 cmd2=(pvmove -i1 $backgroundarg $mode "$dev2" "$dev3")
-
-if test -e HAVE_DM_DELAY; then
 
 if test -z "$backgroundarg" ; then
 	"${cmd1[@]}" &
@@ -57,8 +58,6 @@ get lv_field $vg name -a | tee out
 not grep -E "^\[?pvmove0" out
 grep -E "^\[?pvmove1" out
 
-fi
-
 # remove any remaining pvmoves in progress
 pvmove --abort
 
@@ -69,7 +68,7 @@ aux kill_tagged_processes
 done
 done
 
-# Restore delayed device back
-aux enable_dev "$dev3"
+# Restore throttling
+aux restore_dm_mirror
 
 vgremove -ff $vg

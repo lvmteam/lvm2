@@ -16,7 +16,6 @@
 #include "lib.h"
 #include "device.h"
 #include "metadata.h"
-#include "lvmcache.h"
 #include "memlock.h"
 #include "locking.h"
 
@@ -53,7 +52,6 @@
 #  endif
 #endif
 
-static DM_LIST_INIT(_open_devices);
 static unsigned _dev_size_seqno = 1;
 
 static const char *_reasons[] = {
@@ -199,7 +197,7 @@ int dev_get_block_size(struct device *dev, unsigned int *physical_block_size, un
 	*physical_block_size = (unsigned int) dev->phys_block_size;
 	*block_size = (unsigned int) dev->block_size;
 out:
-	if (needs_open && !dev_close(dev))
+	if (needs_open && !dev_close_immediate(dev))
 		stack;
 
 	return r;
@@ -349,7 +347,7 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 
 	if (ioctl(fd, BLKGETSIZE64, size) < 0) {
 		log_sys_error("ioctl BLKGETSIZE64", name);
-		if (do_close && !dev_close(dev))
+		if (do_close && !dev_close_immediate(dev))
 			log_sys_error("close", name);
 		return 0;
 	}
@@ -360,7 +358,7 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 
 	log_very_verbose("%s: size is %" PRIu64 " sectors", name, *size);
 
-	if (do_close && !dev_close(dev))
+	if (do_close && !dev_close_immediate(dev))
 		log_sys_error("close", name);
 
 	return 1;
@@ -380,7 +378,7 @@ static int _dev_read_ahead_dev(struct device *dev, uint32_t *read_ahead)
 
 	if (ioctl(dev->fd, BLKRAGET, &read_ahead_long) < 0) {
 		log_sys_error("ioctl BLKRAGET", dev_name(dev));
-		if (!dev_close(dev))
+		if (!dev_close_immediate(dev))
 			stack;
 		return 0;
 	}
@@ -391,7 +389,7 @@ static int _dev_read_ahead_dev(struct device *dev, uint32_t *read_ahead)
 	log_very_verbose("%s: read_ahead is %u sectors",
 			 dev_name(dev), *read_ahead);
 
-	if (!dev_close(dev))
+	if (!dev_close_immediate(dev))
 		stack;
 
 	return 1;
@@ -412,13 +410,13 @@ static int _dev_discard_blocks(struct device *dev, uint64_t offset_bytes, uint64
 	if (ioctl(dev->fd, BLKDISCARD, &discard_range) < 0) {
 		log_error("%s: BLKDISCARD ioctl at offset %" PRIu64 " size %" PRIu64 " failed: %s.",
 			  dev_name(dev), offset_bytes, size_bytes, strerror(errno));
-		if (!dev_close(dev))
+		if (!dev_close_immediate(dev))
 			stack;
 		/* It doesn't matter if discard failed, so return success. */
 		return 1;
 	}
 
-	if (!dev_close(dev))
+	if (!dev_close_immediate(dev))
 		stack;
 
 	return 1;
@@ -597,8 +595,6 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 	if ((flags & O_CREAT) && !(flags & O_TRUNC))
 		dev->end = lseek(dev->fd, (off_t) 0, SEEK_END);
 
-	dm_list_add(&_open_devices, &dev->open_list);
-
 	log_debug_devs("Opened %s %s%s%s", dev_name(dev),
 		       dev->flags & DEV_OPENED_RW ? "RW" : "RO",
 		       dev->flags & DEV_OPENED_EXCL ? " O_EXCL" : "",
@@ -650,7 +646,6 @@ static void _close(struct device *dev)
 	dev->fd = -1;
 	dev->phys_block_size = -1;
 	dev->block_size = -1;
-	dm_list_del(&dev->open_list);
 
 	log_debug_devs("Closed %s", dev_name(dev));
 
@@ -678,9 +673,7 @@ static int _dev_close(struct device *dev, int immediate)
 		log_debug_devs("%s: Immediate close attempt while still referenced",
 			       dev_name(dev));
 
-	/* Close unless device is known to belong to a locked VG */
-	if (immediate ||
-	    (dev->open_count < 1 && !lvmcache_pvid_is_locked(dev->pvid)))
+	if (immediate || (dev->open_count < 1))
 		_close(dev);
 
 	return 1;
@@ -694,18 +687,6 @@ int dev_close(struct device *dev)
 int dev_close_immediate(struct device *dev)
 {
 	return _dev_close(dev, 1);
-}
-
-void dev_close_all(void)
-{
-	struct dm_list *doh, *doht;
-	struct device *dev;
-
-	dm_list_iterate_safe(doh, doht, &_open_devices) {
-		dev = dm_list_struct_base(doh, struct device, open_list);
-		if (dev->open_count < 1)
-			_close(dev);
-	}
 }
 
 static inline int _dev_is_valid(struct device *dev)

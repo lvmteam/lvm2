@@ -8,12 +8,9 @@ vgconvert - Change volume group metadata format
     [ \fIoption_args\fP ]
 .br
 .SH DESCRIPTION
-vgconvert converts VG metadata from one format to another.  The new
-metadata format must be able to fit into the space provided by the old
+vgconvert converts VG metadata from one format to another.  This command
+is no longer used because this version of lvm no longer supports the LVM1
 format.
-
-Because the LVM1 format should no longer be used, this command is no
-longer needed in general.
 .SH USAGE
 \fBvgconvert\fP \fIVG\fP ...
 .br
@@ -23,7 +20,7 @@ longer needed in general.
 .ad b
 .br
 .ad l
-[ \fB-M\fP|\fB--metadatatype\fP \fBlvm2\fP|\fBlvm1\fP ]
+[ \fB-M\fP|\fB--metadatatype\fP \fBlvm2\fP ]
 .ad b
 .br
 .ad l
@@ -194,12 +191,11 @@ The size may be rounded.
 .ad b
 .HP
 .ad l
-\fB-M\fP|\fB--metadatatype\fP \fBlvm2\fP|\fBlvm1\fP
+\fB-M\fP|\fB--metadatatype\fP \fBlvm2\fP
 .br
 Specifies the type of on-disk metadata to use.
 \fBlvm2\fP (or just \fB2\fP) is the current, standard format.
-\fBlvm1\fP (or just \fB1\fP) is a historical format that
-can be used for accessing old data.
+\fBlvm1\fP (or just \fB1\fP) is no longer used.
 .ad b
 .HP
 .ad l

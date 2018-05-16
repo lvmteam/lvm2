@@ -18,20 +18,20 @@ SKIP_WITH_LVMPOLLD=1
 aux prepare_pvs
 get_devs
 
-vgcreate -s 1k "$vg" "${DEVICES[@]}"
+vgcreate -s 4k "$vg" "${DEVICES[@]}"
 
 # 3 Chunks
 lvcreate -aey -n one -l 10 $vg
-lvcreate -s -l 12 -n snapA $vg/one
-lvcreate -s -c 4k -l 12 -n snapX1 $vg/one
-lvcreate -s -c 8k -l 24 -n snapX2 $vg/one
+lvcreate -s -l 3 -n snapA $vg/one
+lvcreate -s -c 4k -l 3 -n snapX1 $vg/one
+lvcreate -s -c 8k -l 6 -n snapX2 $vg/one
 
 # Check that snapshots that are too small are caught with correct error.
-not lvcreate -s -c 8k -l 8 -n snapX3 $vg/one 2>&1 | tee lvcreate.out
+not lvcreate -s -c 8k -l 2 -n snapX3 $vg/one 2>&1 | tee lvcreate.out
 not grep "suspend origin one" lvcreate.out
 grep "smaller" lvcreate.out
 
-not lvcreate -s -l 4 -n snapB $vg/one 2>&1 | tee lvcreate.out
+not lvcreate -s -l 1 -n snapB $vg/one 2>&1 | tee lvcreate.out
 not grep "suspend origin one" lvcreate.out
 grep "smaller" lvcreate.out
 

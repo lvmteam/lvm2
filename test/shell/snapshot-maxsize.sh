@@ -21,7 +21,7 @@ SKIP_WITH_LVMPOLLD=1
 aux prepare_pvs 1
 get_devs
 
-vgcreate -s 1K "$vg" "${DEVICES[@]}"
+vgcreate -s 4K "$vg" "${DEVICES[@]}"
 
 lvcreate -aey -L1 -n $lv1 $vg
 # Snapshot should be large enough to handle any writes

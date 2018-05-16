@@ -422,10 +422,11 @@ sysfs() {
 	# read maj min and also convert hex to decimal
 	local maj
 	local min
-	local P="/sys/dev/block/$maj:$min/$2"
+	local P
 	local val
 	maj=$(($(stat -L --printf=0x%t "$1")))
 	min=$(($(stat -L --printf=0x%T "$1")))
+	P="/sys/dev/block/$maj:$min/$2"
 	val=$(< "$P") || return 0 # no sysfs ?
 	test "$val" -eq "$3" || \
 		die "$1: $P = $val differs from expected value $3!"

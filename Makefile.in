@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
-# Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2004-2018 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -18,7 +18,7 @@ top_builddir = @top_builddir@
 abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
 
-SUBDIRS = conf daemons include lib libdaemon libdm man scripts tools
+SUBDIRS = conf daemons include lib libdaemon libdm man scripts device_mapper tools
 
 ifeq ("@UDEV_RULES@", "yes")
   SUBDIRS += udev
@@ -43,7 +43,7 @@ endif
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS = conf include man test scripts \
     libdaemon lib tools daemons libdm \
-    udev po liblvm python
+    udev po liblvm python device_mapper
 tools.distclean: test.distclean
 endif
 DISTCLEAN_DIRS += lcov_reports*
@@ -61,6 +61,9 @@ po: tools daemons
 man: tools
 all_man: tools
 scripts: liblvm libdm
+test: tools daemons
+unit-test: lib
+run-unit-test: unit-test
 
 lib.device-mapper: include.device-mapper
 libdm.device-mapper: include.device-mapper
@@ -96,7 +99,7 @@ endif
 DISTCLEAN_TARGETS += cscope.out
 CLEAN_DIRS += autom4te.cache
 
-check check_system check_cluster check_local check_lvmetad check_lvmpolld check_lvmlockd_test check_lvmlockd_dlm check_lvmlockd_sanlock: all
+check check_system check_cluster check_local check_lvmetad check_lvmpolld check_lvmlockd_test check_lvmlockd_dlm check_lvmlockd_sanlock unit-test run-unit-test: test
 	$(MAKE) -C test $(@)
 
 conf.generate man.generate: tools
@@ -145,7 +148,7 @@ install_system_dirs:
 	$(INSTALL_ROOT_DIR) $(DESTDIR)$(DEFAULT_RUN_DIR)
 	$(INSTALL_ROOT_DATA) /dev/null $(DESTDIR)$(DEFAULT_CACHE_DIR)/.cache
 
-install_initscripts: 
+install_initscripts:
 	$(MAKE) -C scripts install_initscripts
 
 install_systemd_generators:
@@ -168,6 +171,7 @@ install_tmpfiles_configuration:
 
 LCOV_TRACES = libdm.info lib.info liblvm.info tools.info \
 	libdaemon/client.info libdaemon/server.info \
+	test/unit.info \
 	daemons/clvmd.info \
 	daemons/dmeventd.info \
 	daemons/lvmetad.info \
@@ -209,10 +213,6 @@ lcov: $(LCOV_TRACES)
 endif
 
 endif
-
-include test/unit/Makefile
-
-include device-mapper/Makefile
 
 ifneq ($(shell which ctags),)
 .PHONY: tags

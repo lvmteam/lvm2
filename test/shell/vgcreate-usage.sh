@@ -73,10 +73,10 @@ not vgcreate $vg "$dev3"
 
 # Test default (4MB) vg_extent_size as well as limits of extent_size
 not vgcreate --physicalextentsize 0k $vg "$dev1" "$dev2"
-vgcreate --physicalextentsize 1k $vg "$dev1" "$dev2"
-check vg_field $vg vg_extent_size 1.00k
+vgcreate --physicalextentsize 4k $vg "$dev1" "$dev2"
+check vg_field $vg vg_extent_size 4.00k
 vgremove -ff $vg
-not vgcreate --physicalextentsize 3K $vg "$dev1" "$dev2"
+not vgcreate --physicalextentsize 7K $vg "$dev1" "$dev2"
 not vgcreate --physicalextentsize 1024t $vg "$dev1" "$dev2"
 #not vgcreate --physicalextentsize 1T $vg "$dev1" "$dev2"
 # FIXME: vgcreate allows physicalextentsize larger than pv size!

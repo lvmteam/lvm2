@@ -503,7 +503,7 @@ Merge LV images that were split from a raid1 LV.
 Convert LV to a thin LV, using the original LV as an external origin.
 .br
 .P
-\fBlvconvert\fP \fB--type\fP \fBthin\fP \fB--thinpool\fP \fILV\fP \fILV\fP\fI_linear_striped_cache_raid\fP
+\fBlvconvert\fP \fB--type\fP \fBthin\fP \fB--thinpool\fP \fILV\fP \fILV\fP\fI_linear_striped_thin_cache_raid\fP
 .br
 .RS 4
 .ad l
@@ -1530,7 +1530,7 @@ Convert LV to a thin LV, using the original LV as an external origin
 (infers --type thin).
 .br
 .P
-\fBlvconvert\fP \fB-T\fP|\fB--thin\fP \fB--thinpool\fP \fILV\fP \fILV\fP\fI_linear_striped_cache_raid\fP
+\fBlvconvert\fP \fB-T\fP|\fB--thin\fP \fB--thinpool\fP \fILV\fP \fILV\fP\fI_linear_striped_thin_cache_raid\fP
 .br
 .RS 4
 .ad l
@@ -1714,7 +1714,9 @@ origin LV (first arg) to reverse a splitsnapshot command.
 .br
 -
 
-Poll LV to continue conversion (also see --startpoll).
+Poll LV to continue conversion (also see --startpoll) 
+.br
+or waits till conversion/mirror syncing is finished
 .br
 .P
 \fBlvconvert\fP \fILV\fP\fI_mirror_raid\fP

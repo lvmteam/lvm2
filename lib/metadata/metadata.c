@@ -4058,7 +4058,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 						release_vg(correct_vg);
 						correct_vg = NULL;
 						lvmcache_del(info);
-						label_read(pvl->pv->dev, NULL, 0);
+						label_read(pvl->pv->dev);
 						goto restart_scan;
 					}
 #endif
@@ -5191,8 +5191,6 @@ static struct volume_group *_recover_vg(struct cmd_context *cmd,
 	struct volume_group *vg;
 
 	unlock_vg(cmd, NULL, vg_name);
-
-	dev_close_all();
 
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE, NULL))
 		return_NULL;

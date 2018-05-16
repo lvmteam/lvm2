@@ -477,6 +477,7 @@ teardown_devs() {
 
 	test ! -f MD_DEV || cleanup_md_dev
 	test ! -f DEVICES || teardown_devs_prefixed "$PREFIX"
+	test ! -f RAMDISK || { modprobe -r brd || true ; }
 
 	# NOTE: SCSI_DEBUG_DEV test must come before the LOOP test because
 	# prepare_scsi_debug_dev() also sets LOOP to short-circuit prepare_loop()
@@ -489,7 +490,7 @@ teardown_devs() {
 	fi
 
 	not diff LOOP BACKING_DEV >/dev/null 2>&1 || rm -f BACKING_DEV
-	rm -f DEVICES LOOP
+	rm -f DEVICES LOOP RAMDISK
 
 	# Attempt to remove any loop devices that failed to get torn down if earlier tests aborted
 	test "${LVM_TEST_PARALLEL:-0}" -eq 1 || test -z "$COMMON_PREFIX" || {
@@ -502,6 +503,7 @@ teardown_devs() {
 			udev_wait
 		}
 	}
+	restore_dm_mirror
 }
 
 kill_sleep_kill_() {
@@ -631,14 +633,14 @@ teardown() {
 	test -n "$TESTDIR" && {
 		cd "$TESTOLDPWD" || die "Failed to enter $TESTOLDPWD"
 		# after this delete no further write is possible
-		rm -rf "$TESTDIR" || echo BLA
+		rm -rf "${TESTDIR:?}" || echo BLA
 	}
 
 	echo "ok"
 }
 
 prepare_loop() {
-	local size=${1=32}
+	local size=$1
 	shift # all other params are directly passed to all 'losetup' calls
 	local i
 	local slash
@@ -689,6 +691,17 @@ prepare_loop() {
 	echo "$LOOP" > LOOP
 	echo "$LOOP" > BACKING_DEV
 	echo "ok ($LOOP)"
+}
+
+prepare_ramdisk() {
+	local size=$1
+
+	echo -n "## preparing ramdisk device..."
+	modprobe brd rd_size=$((size * 1024)) || return
+
+	BACKING_DEV=/dev/ram0
+	echo "ok ($BACKING_DEV)"
+	touch RAMDISK
 }
 
 # A drop-in replacement for prepare_loop() that uses scsi_debug to create
@@ -818,14 +831,33 @@ cleanup_md_dev() {
 }
 
 prepare_backing_dev() {
+	local size=${1=32}
+	shift
+
 	if test -f BACKING_DEV; then
 		BACKING_DEV=$(< BACKING_DEV)
+		return 0
 	elif test -b "$LVM_TEST_BACKING_DEVICE"; then
 		BACKING_DEV=$LVM_TEST_BACKING_DEVICE
 		echo "$BACKING_DEV" > BACKING_DEV
-	else
-		prepare_loop "$@"
+		return 0
+	elif test "${LVM_TEST_PREFER_BRD-1}" = "1" && \
+	     test ! -d /sys/block/ram0 && \
+	     kernel_at_least 4 16 && \
+	     test "$size" -lt 16384; then
+		# try to use ramdisk if possible, but for
+		# big allocs (>16G) do not try to use ramdisk
+		# Also we can't use BRD device prior kernel 4.16
+		# since they were DAX based and lvm2 often relies
+		# in save table loading between exiting backend device
+		# and  bio-based 'error' device.
+		# However with request based DAX brd device we get this:
+		# device-mapper: ioctl: can't change device type after initial table load.
+		prepare_ramdisk "$size" "$@" && return
+		echo "(failed)"
 	fi
+
+	prepare_loop "$size" "$@"
 }
 
 prepare_devs() {
@@ -844,6 +876,7 @@ prepare_devs() {
 	prepare_backing_dev $(( n * devsize ))
 	# shift start of PV devices on /dev/loopXX by 1M
 	not diff LOOP BACKING_DEV >/dev/null 2>&1 || shift=2048
+	blkdiscard "$BACKING_DEV" 2>/dev/null || true
 	echo -n "## preparing $n devices..."
 
 	local size=$(( devsize * 2048 )) # sectors
@@ -870,8 +903,7 @@ prepare_devs() {
 	fi
 
 	# non-ephemeral devices need to be cleared between tests
-	test -f LOOP || for d in "${DEVICES[@]}"; do
-		blkdiscard "$d" 2>/dev/null || true
+	test -f LOOP -o -f RAMDISK || for d in "${DEVICES[@]}"; do
 		# ensure disk header is always zeroed
 		dd if=/dev/zero of="$d" bs=32k count=1
 		wipefs -a "$d" 2>/dev/null || true
@@ -1031,6 +1063,23 @@ enable_dev() {
 		notify_lvmetad "$dev"
 	done
 }
+
+# Throttle down performance of kcopyd when mirroring i.e. disk image
+throttle_sys="/sys/module/dm_mirror/parameters/raid1_resync_throttle"
+throttle_dm_mirror() {
+	test -e "$throttle_sys" || return
+	test -f THROTTLE || cat "$throttle_sys" > THROTTLE
+	echo ${1-1} > "$throttle_sys"
+}
+
+# Restore original kcopyd throttle value and have mirroring fast again
+restore_dm_mirror() {
+	test ! -f THROTTLE || {
+		cat THROTTLE > "$throttle_sys"
+		rm -f THROTTLE
+	}
+}
+
 
 # Once there is $name.devtable
 # this is a quick way to restore to this table entry
@@ -1312,6 +1361,11 @@ apitest() {
 	"$TESTOLDPWD/api/$1.t" "${@:2}" && rm -f debug.log strace.log
 }
 
+unittest() {
+	test -x "$TESTOLDPWD/unit/unit-test" || skip
+	"$TESTOLDPWD/unit/unit-test" "${@}"
+}
+
 mirror_recovery_works() {
 	case "$(uname -r)" in
 	  3.3.4-5.fc17.i686|3.3.4-5.fc17.x86_64) return 1 ;;
@@ -1472,6 +1526,10 @@ driver_at_least() {
 }
 
 have_thin() {
+	lvm segtypes 2>/dev/null | grep -q thin$ || {
+		echo "Thin is not built-in." >&2
+		return 1
+	}
 	target_at_least dm-thin-pool "$@"
 
 	declare -a CONF=()
@@ -1512,9 +1570,9 @@ have_raid4 () {
 }
 
 have_cache() {
-	test "$CACHE" = shared -o "$CACHE" = internal || {
+	lvm segtypes 2>/dev/null | grep -q cache$ || {
 		echo "Cache is not built-in." >&2
-		return 1;
+		return 1
 	}
 	target_at_least dm-cache "$@"
 

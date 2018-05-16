@@ -17,7 +17,7 @@ export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
 
 . lib/inittest
 
-aux prepare_pvs 5 100
+aux prepare_pvs 5
 get_devs
 
 # proper DEVRANGE needs to be set according to extent size
@@ -320,9 +320,13 @@ fi
 aux zero_dev "$dev2" $(get first_extent_sector "$dev2"):
 aux zero_dev "$dev4" $(get first_extent_sector "$dev4"):
 
+SHOULD=
+aux throttle_dm_mirror || SHOULD=should
+
 # Use large enough mirror that takes time to sychronize with small regionsize
-lvcreate -aey -L80 -Zn -Wn --type mirror --regionsize 16k -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev4" "$dev3:$DEVRANGE"
-not lvconvert -m-1 $vg/$lv1 "$dev1" 2>&1 | tee out
+lvcreate -aey -L20 -Zn -Wn --type mirror --regionsize 16k -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev4" "$dev3:$DEVRANGE"
+$SHOULD not lvconvert -m-1 $vg/$lv1 "$dev1" 2>&1 | tee out
+aux restore_dm_mirror
 grep "not in-sync" out
 
 lvconvert $vg/$lv1 # wait
@@ -334,9 +338,11 @@ check linear $vg $lv1
 check lv_on $vg $lv1 "$dev4"
 lvremove -ff $vg
 
+
+aux throttle_dm_mirror || :
 # No parallel lvconverts on a single LV please
 # Use big enough mirror size and small regionsize to run on all test machines succesfully
-lvcreate -aey -Zn -Wn -L80 --type mirror --regionsize 16k -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:0-8"
+lvcreate -aey -Zn -Wn -L20 --type mirror --regionsize 16k -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:0-8"
 check mirror $vg $lv1
 check mirror_legs $vg $lv1 2
 
@@ -344,7 +350,8 @@ LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -b $vg/$lv1 "$dev4"
 # ATM upconversion should be running
 
 # Next convert should fail b/c we can't have 2 at once
-not lvconvert -m+1 $vg/$lv1 "$dev5"  2>&1 | tee out
+$SHOULD not lvconvert -m+1 $vg/$lv1 "$dev5"  2>&1 | tee out
+aux restore_dm_mirror
 grep "is already being converted" out
 
 lvconvert $vg/$lv1 # wait
@@ -353,10 +360,6 @@ check mirror_no_temporaries $vg $lv1
 check mirror_legs $vg $lv1 3
 lvremove -ff $vg
 
-lvs -a $vg
-dmsetup table
-losetup -a
-ls -lRa $PWD
 
 # "rhbz440405: lvconvert -m0 incorrectly fails if all PEs allocated"
 lvcreate -aey -l "$(get pv_field "$dev1" pe_count)" --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:$DEVRANGE"
@@ -365,6 +368,5 @@ aux wait_for_sync $vg $lv1
 lvconvert -m0 $vg/$lv1 "$dev1"
 check linear $vg $lv1
 lvremove -ff $vg
-
 
 vgremove -ff $vg

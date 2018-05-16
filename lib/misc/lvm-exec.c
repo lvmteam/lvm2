@@ -78,7 +78,6 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[],
 	if (!pid) {
 		/* Child */
 		reset_locking();
-		dev_close_all();
 		/* FIXME Fix effect of reset_locking on cache then include this */
 		/* destroy_toolcontext(cmd); */
 		/* FIXME Use execve directly */

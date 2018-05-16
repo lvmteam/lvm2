@@ -89,13 +89,14 @@ static void *_fix_init(void)
         	test_fail("posix_memalign failed");
 
         snprintf(f->fname, sizeof(f->fname), "unit-test-XXXXXX");
-	f->fd = mkostemp(f->fname, O_RDWR | O_CREAT | O_EXCL);
+	f->fd = mkstemp(f->fname);
 	T_ASSERT(f->fd >= 0);
 
 	_fill_buffer(f->data, 123, SECTOR_SIZE * BLOCK_SIZE_SECTORS);
 
-	write(f->fd, f->data, SECTOR_SIZE * BLOCK_SIZE_SECTORS);
-	lseek(f->fd, 0, SEEK_SET);
+	T_ASSERT(write(f->fd, f->data, SECTOR_SIZE * BLOCK_SIZE_SECTORS) > 0);
+	T_ASSERT(lseek(f->fd, 0, SEEK_SET) != -1);
+
         return f;
 }
 
