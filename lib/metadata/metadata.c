@@ -1413,7 +1413,7 @@ static int _pvcreate_write(struct cmd_context *cmd, struct pv_to_write *pvw)
 	struct device *dev = pv->dev;
 	const char *pv_name = dev_name(dev);
 
-	if (!label_scan_open(dev)) {
+	if (!label_scan_open_excl(dev)) {
 		log_error("%s not opened: device not written", pv_name);
 		return 0;
 	}
