@@ -504,7 +504,7 @@ static void test_prefetch_issues_a_read(void *context)
 		_expect_read(me, fd, i);
 		bcache_prefetch(cache, fd, i);
 	}
-
+	_no_outstanding_expectations(me);
 
 	for (i = 0; i < nr_cache_blocks; i++) {
 		_expect(me, E_WAIT);
@@ -810,6 +810,47 @@ static void test_invalidate_held_block(void *context)
 	bcache_put(b);
 }
 
+//----------------------------------------------------------------
+// Chasing a bug reported by dct
+
+static void _cycle(struct fixture *f, unsigned nr_cache_blocks)
+{
+	struct mock_engine *me = f->me;
+	struct bcache *cache = f->cache;
+
+	unsigned i;
+	struct block *b;
+
+	for (i = 0; i < nr_cache_blocks; i++) {
+		// prefetch should not wait
+		_expect_read(me, i, 0);
+		bcache_prefetch(cache, i, 0);
+	}
+
+	// This double checks the reads occur in response to the prefetch
+	_no_outstanding_expectations(me);
+
+	for (i = 0; i < nr_cache_blocks; i++) {
+		_expect(me, E_WAIT);
+		T_ASSERT(bcache_get(cache, i, 0, 0, &b));
+		bcache_put(b);
+	}
+
+	_no_outstanding_expectations(me);
+}
+
+static void test_concurrent_reads_after_invalidate(void *context)
+{
+	struct fixture *f = context;
+	unsigned i, nr_cache_blocks = 16;
+
+	_cycle(f, nr_cache_blocks);
+	fprintf(stderr, "cycle 1 complete\n");
+	for (i = 0; i < nr_cache_blocks; i++)
+        	bcache_invalidate_fd(f->cache, i);
+        _cycle(f, nr_cache_blocks);
+	fprintf(stderr, "cycle 2 complete\n");
+}
 
 /*----------------------------------------------------------------
  * Top level
@@ -859,6 +900,8 @@ static struct test_suite *_small_tests(void)
 	T("invalidate-read-error", "invalidate a block that errored", test_invalidate_after_read_error);
 	T("invalidate-write-error", "invalidate a block that errored", test_invalidate_after_write_error);
 	T("invalidate-fails-in-held", "invalidating a held block fails", test_invalidate_held_block);
+	T("concurrent-reads-after-invalidate", "prefetch should still issue concurrent reads after invalidate",
+          test_concurrent_reads_after_invalidate);
 
 	return ts;
 }

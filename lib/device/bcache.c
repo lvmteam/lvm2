@@ -667,6 +667,7 @@ static void _issue_low_level(struct block *b, enum dir d)
 
 	b->io_dir = d;
 	_set_flags(b, BF_IO_PENDING);
+	cache->nr_io_pending++;
 
 	dm_list_move(&cache->io_pending, &b->list);
 
