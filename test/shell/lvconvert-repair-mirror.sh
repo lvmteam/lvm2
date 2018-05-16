@@ -54,7 +54,7 @@ dd if=/dev/zero of=mnt/zero bs=4K count=100 conv=fdatasync 2>err &
 
 PERCENT=$(get lv_field $vg/$lv1 copy_percent)
 PERCENT=${PERCENT%%\.*}  # cut decimal
-# and check less then 50% mirror is in sync (could be unusable delay_dev ?)
+# and check less than 50% mirror is in sync (could be unusable delay_dev ?)
 test "$PERCENT" -lt 50 || skip
 #lvs -a -o+devices $vg
 
