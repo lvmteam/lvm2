@@ -845,11 +845,9 @@ static void test_concurrent_reads_after_invalidate(void *context)
 	unsigned i, nr_cache_blocks = 16;
 
 	_cycle(f, nr_cache_blocks);
-	fprintf(stderr, "cycle 1 complete\n");
 	for (i = 0; i < nr_cache_blocks; i++)
         	bcache_invalidate_fd(f->cache, i);
         _cycle(f, nr_cache_blocks);
-	fprintf(stderr, "cycle 2 complete\n");
 }
 
 /*----------------------------------------------------------------
