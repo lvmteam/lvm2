@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
-# Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2004-2018 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -61,6 +61,7 @@ po: tools daemons
 man: tools
 all_man: tools
 scripts: liblvm libdm
+test: tools daemons
 
 lib.device-mapper: include.device-mapper
 libdm.device-mapper: include.device-mapper
@@ -96,7 +97,7 @@ endif
 DISTCLEAN_TARGETS += cscope.out
 CLEAN_DIRS += autom4te.cache
 
-check check_system check_cluster check_local check_lvmetad check_lvmpolld check_lvmlockd_test check_lvmlockd_dlm check_lvmlockd_sanlock: all
+check check_system check_cluster check_local check_lvmetad check_lvmpolld check_lvmlockd_test check_lvmlockd_dlm check_lvmlockd_sanlock: test
 	$(MAKE) -C test $(@)
 
 conf.generate man.generate: tools
@@ -145,7 +146,7 @@ install_system_dirs:
 	$(INSTALL_ROOT_DIR) $(DESTDIR)$(DEFAULT_RUN_DIR)
 	$(INSTALL_ROOT_DATA) /dev/null $(DESTDIR)$(DEFAULT_CACHE_DIR)/.cache
 
-install_initscripts: 
+install_initscripts:
 	$(MAKE) -C scripts install_initscripts
 
 install_systemd_generators:
@@ -168,6 +169,7 @@ install_tmpfiles_configuration:
 
 LCOV_TRACES = libdm.info lib.info liblvm.info tools.info \
 	libdaemon/client.info libdaemon/server.info \
+	test/unit.info \
 	daemons/clvmd.info \
 	daemons/dmeventd.info \
 	daemons/lvmetad.info \

@@ -34,10 +34,10 @@ UNIT_OBJECTS=$(UNIT_SOURCE:%.c=%.o)
 CLEAN_TARGETS+=$(UNIT_DEPENDS) $(UNIT_OBJECTS)
 UNIT_LDLIBS += $(LVMINTERNAL_LIBS) -laio
 
-test/unit/unit-test: $(UNIT_OBJECTS) device_mapper/libdevice-mapper.a lib/liblvm-internal.a
+test/unit/unit-test: $(UNIT_OBJECTS) lib/liblvm-internal.a device_mapper/libdevice-mapper.a
 	@echo "    [LD] $@"
-	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) -L$(top_builddir)/libdm \
-	      -o $@ $(UNIT_OBJECTS) $(UNIT_LDLIBS)
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) \
+	      -o $@ $+ $(UNIT_LDLIBS) -lm
 
 .PHONEY: run-unit-test
 run-unit-test: test/unit/unit-test

@@ -20,7 +20,7 @@ SKIP_WITH_LVMPOLLD=1
 aux prepare_pvs 2
 get_devs
 
-vgcreate -s 1k "$vg" "${DEVICES[@]}"
+vgcreate -s 4k "$vg" "${DEVICES[@]}"
 
 lvcreate --type snapshot -V50 -L1 -n $lv1 -s $vg
 

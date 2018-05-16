@@ -103,7 +103,7 @@ AC_HEADER_SYS_WAIT
 AC_HEADER_TIME
 
 AC_CHECK_HEADERS([assert.h ctype.h dirent.h errno.h fcntl.h float.h \
-  getopt.h inttypes.h langinfo.h libgen.h limits.h locale.h paths.h \
+  getopt.h inttypes.h langinfo.h libaio.h libgen.h limits.h locale.h paths.h \
   signal.h stdarg.h stddef.h stdio.h stdlib.h string.h sys/file.h \
   sys/ioctl.h syslog.h sys/mman.h sys/param.h sys/resource.h sys/stat.h \
   sys/time.h sys/types.h sys/utsname.h sys/wait.h time.h \
@@ -2158,6 +2158,7 @@ scripts/lvmdump.sh
 scripts/Makefile
 test/Makefile
 test/api/Makefile
+test/api/python_lvm_unit.py
 test/unit/Makefile
 tools/Makefile
 udev/Makefile

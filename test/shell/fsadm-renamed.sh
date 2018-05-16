@@ -70,7 +70,7 @@ lvcreate -n $lv1 -L20M $vg
 
 case "$i" in
 *ext3)		MKFS_ARGS="-b1024 -j" ;;
-*xfs)		MKFS_ARGS="-l internal,size=1000b -f" ;;
+*xfs)		MKFS_ARGS="-l internal,size=1700b -f" ;;
 *reiserfs)	MKFS_ARGS="-s 513 -f" ;;
 esac
 

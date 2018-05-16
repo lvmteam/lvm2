@@ -80,6 +80,8 @@ static int _check_lv_status(struct cmd_context *cmd,
 	}
 
 	progress = parms->poll_fns->poll_progress(cmd, lv, name, parms);
+	fflush(stdout);
+
 	if (progress == PROGRESS_CHECK_FAILED)
 		return_0;
 
@@ -134,7 +136,6 @@ static void _sleep_and_rescan_devices(struct cmd_context *cmd, struct daemon_par
 		 */
 		lvmcache_destroy(cmd, 1, 0);
 		label_scan_destroy(cmd);
-		dev_close_all();
 		_nanosleep(parms->interval, 1);
 		lvmcache_label_scan(cmd);
 	}
@@ -449,6 +450,7 @@ static int _report_progress(struct cmd_context *cmd, struct poll_operation_id *i
 		ret = 0;
 		goto out;
 	}
+	fflush(stdout);
 
 	ret = 1;
 
@@ -530,9 +532,6 @@ static void _lvmpolld_poll_for_all_vgs(struct cmd_context *cmd,
 				_report_progress(cmd, idl->id, lpdp.parms);
 		}
 
-		if (lpdp.parms->interval)
-			dev_close_all();
-
 		_nanosleep(lpdp.parms->interval, 0);
 	}
 
@@ -558,9 +557,6 @@ static int _lvmpoll_daemon(struct cmd_context *cmd, struct poll_operation_id *id
 				    finished ||
 				    (!parms->aborting && !(r = _report_progress(cmd, id, parms))))
 					break;
-
-				if (parms->interval)
-					dev_close_all();
 
 				_nanosleep(parms->interval, 0);
 			}
@@ -620,7 +616,6 @@ static int _poll_daemon(struct cmd_context *cmd, struct poll_operation_id *id,
 	/* clear lvmcache/bcache/fds from the parent */
 	lvmcache_destroy(cmd, 1, 0);
 	label_scan_destroy(cmd);
-	dev_close_all();
 
 	if (id) {
 		if (!wait_for_single_lv(cmd, id, parms)) {

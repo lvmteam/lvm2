@@ -51,18 +51,6 @@ lv_convert_lv_() {
 	get lv_field "$1" convert_lv | tr -d []
 }
 
-enable_devs() {
-	for i in "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" ; do
-		aux enable_dev "$i"
-	done
-}
-
-delay_devs() {
-	for i in "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" ; do
-		aux delay_dev "$i" 0 1000 "$(get first_extent_sector "$i"):"
-	done
-}
-
 # ---------------------------------------------------------------------
 # Common environment setup/cleanup for each sub testcases
 
@@ -122,14 +110,14 @@ check_and_cleanup_lvs_
 
 #COMM "converting mirror names is ${lv1}_mimagetmp_2"
 lvcreate -aey -l2 --type mirror -m1 -n $lv1 $vg
-delay_devs
+# Use large enough polling interval so mirror is keeping mimagetmp
 LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -i+40 -b $vg/$lv1
 convlv=$(lv_convert_lv_ $vg/$lv1)
 test "$convlv" = "${lv1}_mimagetmp_2"
 lv_devices_ $vg/$lv1 $convlv ${lv1}_mimage_2
 lv_devices_ $vg/$convlv ${lv1}_mimage_0 ${lv1}_mimage_1
 lv_mirror_log_ $vg/$convlv ${lv1}_mlog
-enable_devs
+check lv_exists $vg ${lv1}_mimagetmp_2
 
 #COMM "mirror log name after re-adding is ${lv1}_mlog"
 lvconvert -f --mirrorlog core $vg/$lv1

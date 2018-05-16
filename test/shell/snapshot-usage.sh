@@ -27,7 +27,7 @@ fill() {
 
 cleanup_tail()
 {
-	test -z "$SLEEP_PID" || kill $SLEEP_PID || true
+	test -z "${SLEEP_PID-}" || kill $SLEEP_PID || true
 	wait
 	vgremove -ff $vg1 || true
 	vgremove -ff $vg
@@ -83,8 +83,7 @@ aux lvmconf "activation/snapshot_autoextend_percent = 20" \
 # Check usability with smallest (1k) extent size ($lv has 15P)
 pvcreate --yes --setphysicalvolumesize 4T "$DM_DEV_DIR/$vg/$lv"
 trap 'cleanup_tail' EXIT
-vgcreate -s 1K $vg1 "$DM_DEV_DIR/$vg/$lv"
-
+vgcreate -s 4K $vg1 "$DM_DEV_DIR/$vg/$lv"
 
 # Play with small 1k 128 extents
 lvcreate -aey -L128K -n $lv $vg1
@@ -135,29 +134,30 @@ check lv_not_exists $vg1 $lv1
 # Check border size
 lvcreate -aey -L4095G $vg1
 lvcreate -s -L100K $vg1/lvol0
-fill 1K
+fill 4K
 check lv_field $vg1/lvol1 data_percent "12.00"
 
 lvremove -ff $vg1
 
-# Create 1KB snapshot, does not need to be active here
+# Create 4KB snapshot, does not need to be active here
 lvcreate -an -Zn -l1 -n $lv1 $vg1
 not lvcreate -s -l1 $vg1/$lv1
-not lvcreate -s -l3 $vg1/$lv1
+# snapshot cannot be smaller then 3 chunks (12K)
+not lvcreate -s -l2 $vg1/$lv1
 lvcreate -s -l30 -n $lv2 $vg1/$lv1
 check lv_field $vg1/$lv2 size "$EXPECT1"
 
-not lvcreate -s -c512 -l512 $vg1/$lv1
+not lvcreate -s -c512 -l128 $vg1/$lv1
 lvcreate -s -c128 -l1700 -n $lv3 $vg1/$lv1
 # 3 * 128
 check lv_field $vg1/$lv3 size "$EXPECT2"
 lvremove -ff $vg1
 
-lvcreate -aey -l20 $vg1
-lvcreate -s -l12 $vg1/lvol0
+lvcreate -aey -l5 $vg1
+lvcreate -s -l3 $vg1/lvol0
 
-# Fill 1KB -> 100% snapshot (1x 4KB chunk)
-fill 1K
+# Fill 4KB -> 100% snapshot (1x 4KB chunk)
+fill 4K
 check lv_field $vg1/lvol1 data_percent "100.00"
 
 # Check it resizes 100% full valid snapshot to fit threshold
@@ -168,7 +168,7 @@ fill 4K
 lvextend --use-policies $vg1/lvol1
 check lv_field $vg1/lvol1 size "24.00k"
 
-lvextend -l+33 $vg1/lvol1
+lvextend -l+8 $vg1/lvol1
 check lv_field $vg1/lvol1 size "$EXPECT3"
 
 fill 20K
@@ -189,7 +189,7 @@ lvremove -f $vg1/snap
 # Undeleted header would trigger attempt to access
 # beyond end of COW device
 # Fails to create when chunk size is different
-lvcreate -s -pr -l12 -n snap $vg1/$lv
+lvcreate -s -pr -l3 -n snap $vg1/$lv
 
 # When header is undelete, fails to read snapshot without read errors
 #dd if="$DM_DEV_DIR/$vg1/snap" of=/dev/null bs=1M count=2

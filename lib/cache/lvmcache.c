@@ -643,7 +643,6 @@ void lvmcache_unlock_vgname(const char *vgname)
 
 	/* FIXME Do this per-VG */
 	if (strcmp(vgname, VG_GLOBAL) && !--_vgs_locked) {
-		dev_close_all();
 		dev_size_seqno_inc(); /* invalidate all cached dev sizes */
 	}
 }
@@ -811,7 +810,7 @@ const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd,
 
 	dm_list_iterate_safe(devh, tmp, &devs) {
 		devl = dm_list_item(devh, struct device_list);
-		label_read(devl->dev, NULL, UINT64_C(0));
+		label_read(devl->dev);
 		dm_list_del(&devl->list);
 		dm_free(devl);
 	}
@@ -975,6 +974,36 @@ static int _dev_in_device_list(struct device *dev, struct dm_list *head)
 int lvmcache_dev_is_unchosen_duplicate(struct device *dev)
 {
 	return _dev_in_device_list(dev, &_unused_duplicate_devs);
+}
+
+/*
+ * Treat some duplicate devs as if they were filtered out by filters.
+ * The actual filters are evaluated too early, before a complete
+ * picture of all PVs is available, to eliminate these duplicates.
+ *
+ * By removing the filtered duplicates from unused_duplicate_devs, we remove
+ * the restrictions that are placed on using duplicate devs or VGs with
+ * duplicate devs.
+ *
+ * There may other kinds of duplicates that we want to ignore.
+ */
+
+static void _filter_duplicate_devs(struct cmd_context *cmd)
+{
+	struct dev_types *dt = cmd->dev_types;
+	struct lvmcache_info *info;
+	struct device_list *devl, *devl2;
+
+	dm_list_iterate_items_safe(devl, devl2, &_unused_duplicate_devs) {
+
+		info = lvmcache_info_from_pvid(devl->dev->pvid, NULL, 0);
+
+		if (MAJOR(info->dev->dev) == dt->md_major) {
+			log_debug_devs("Ignoring md component duplicate %s", dev_name(devl->dev));
+			dm_list_del(&devl->list);
+			dm_free(devl);
+		}
+	}
 }
 
 /*
@@ -1279,9 +1308,9 @@ next:
 int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const char *vgid)
 {
 	struct dm_list devs;
-	struct device_list *devl;
+	struct device_list *devl, *devl2;
 	struct lvmcache_vginfo *vginfo;
-	struct lvmcache_info *info, *info2;
+	struct lvmcache_info *info;
 
 	if (lvmetad_used())
 		return 1;
@@ -1310,8 +1339,9 @@ int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const 
 		dm_list_add(&devs, &devl->list);
 	}
 
-	dm_list_iterate_items_safe(info, info2, &vginfo->infos)
-		lvmcache_del(info);
+	/* Delete info for each dev, deleting the last info will delete vginfo. */
+	dm_list_iterate_items(devl, &devs)
+		lvmcache_del_dev(devl->dev);
 
 	/* Dropping the last info struct is supposed to drop vginfo. */
 	if ((vginfo = lvmcache_vginfo_from_vgname(vgname, vgid)))
@@ -1321,6 +1351,11 @@ int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const 
 	   being rescanned here and then repeat resolving the duplicates? */
 
 	label_scan_devs(cmd, cmd->filter, &devs);
+
+	dm_list_iterate_items_safe(devl, devl2, &devs) {
+		dm_list_del(&devl->list);
+		dm_free(devl);
+	}
 
 	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
 		log_warn("VG info not found after rescan of %s", vgname);
@@ -1439,10 +1474,17 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 
 		dm_list_iterate_items(devl, &add_cache_devs) {
 			log_debug_cache("Rescan preferred device %s for lvmcache", dev_name(devl->dev));
-			label_read(devl->dev, NULL, UINT64_C(0));
+			label_read(devl->dev);
 		}
 
 		dm_list_splice(&_unused_duplicate_devs, &del_cache_devs);
+
+		/*
+		 * We might want to move the duplicate device warnings until
+		 * after this filtering so that we can skip warning about
+		 * duplicates that we are filtering out.
+		 */
+		_filter_duplicate_devs(cmd);
 	}
 
 	/* Perform any format-specific scanning e.g. text files */
@@ -1630,7 +1672,7 @@ const char *lvmcache_pvid_from_devname(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	if (!(label_read(dev, NULL, UINT64_C(0))))
+	if (!label_read(dev))
 		return NULL;
 
 	return dev->pvid;
@@ -1714,6 +1756,7 @@ void lvmcache_del(struct lvmcache_info *info)
 
 	info->label->labeller->ops->destroy_label(info->label->labeller,
 						  info->label);
+	label_destroy(info->label);
 	dm_free(info);
 }
 
@@ -2455,15 +2498,6 @@ void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 				stack;
 		}
 	}
-}
-
-int lvmcache_pvid_is_locked(const char *pvid) {
-	struct lvmcache_info *info;
-	info = lvmcache_info_from_pvid(pvid, NULL, 0);
-	if (!info || !info->vginfo)
-		return 0;
-
-	return lvmcache_vgname_is_locked(info->vginfo->vgname);
 }
 
 int lvmcache_fid_add_mdas(struct lvmcache_info *info, struct format_instance *fid,

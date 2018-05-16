@@ -115,7 +115,6 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 			/* FIXME Clean up properly here */
 			_exit(ECMD_FAILED);
 	}
-	dev_close_all();
 
 	return 1;
 }
@@ -1559,7 +1558,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 			/*
 			 * add info to lvmcache from the duplicate dev.
 			 */
-			label_read(devl->dev, NULL, 0);
+			label_read(devl->dev);
 
 			/*
 			 * the info/label should now be found because

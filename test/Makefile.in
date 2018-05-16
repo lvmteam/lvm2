@@ -27,7 +27,7 @@ datarootdir = @datarootdir@
 
 LVM_TEST_RESULTS ?= results
 
-SUBDIRS = api
+SUBDIRS = api unit
 SOURCES = lib/not.c lib/harness.c
 CXXSOURCES = lib/runner.cpp
 CXXFLAGS += $(EXTRA_EXEC_CFLAGS)
@@ -37,9 +37,9 @@ include $(top_builddir)/make.tmpl
 T ?= .
 S ?= @ # never match anything by default
 VERBOSE ?= 0
-ALL := $(shell find -L $(srcdir) \( -path \*/shell/\*.sh -or -path \*/api/\*.sh \) | $(SORT))
+ALL := $(shell find -L $(srcdir) \( -path \*/shell/\*.sh -or -path \*/api/\*.sh -or -path \*/unit/\*.sh \) | $(SORT))
 comma = ,
-RUN := $(shell find -L $(srcdir) -regextype posix-egrep \( -path \*/shell/\*.sh -or -path \*/api/\*.sh \) -and -regex "$(srcdir)/.*($(subst $(comma),|,$(T))).*" -and -not -regex "$(srcdir)/.*($(subst $(comma),|,$(S))).*" | $(SORT))
+RUN := $(shell find -L $(srcdir) -regextype posix-egrep \( -path \*/shell/\*.sh -or -path \*/api/\*.sh -or -path \*/unit/\*.sh \) -and -regex "$(srcdir)/.*($(subst $(comma),|,$(T))).*" -and -not -regex "$(srcdir)/.*($(subst $(comma),|,$(S))).*" | $(SORT))
 RUN_BASE = $(subst $(srcdir)/,,$(RUN))
 
 ifeq ("@BUILD_LVMETAD@", "yes")
@@ -83,6 +83,7 @@ help:
 	@echo "  check_lvmlockd_sanlock Run tests with lvmlockd and sanlock."
 	@echo "  check_lvmlockd_dlm     Run tests with lvmlockd and dlm."
 	@echo "  check_lvmlockd_test    Run tests with lvmlockd --test."
+	@echo "  run-unit-test          Run only unit tests (root not needed)."
 	@echo "  clean			Clean dir."
 	@echo "  help			Display callable targets."
 	@echo -e "\nSupported variables:"
@@ -90,6 +91,7 @@ help:
 	@echo "  LVM_TEST_BACKING_DEVICE Set device used for testing (see also LVM_TEST_DIR)."
 	@echo "  LVM_TEST_CAN_CLOBBER_DMESG Allow to clobber dmesg buffer without /dev/kmsg. (1)"
 	@echo "  LVM_TEST_DEVDIR	Set to '/dev' to run on real /dev."
+	@echo "  LVM_TEST_PREFER_BRD	Prefer using brd (ramdisk) over loop for testing [1]."
 	@echo "  LVM_TEST_DIR		Where to create test files  [$(LVM_TEST_DIR)]."
 	@echo "  LVM_TEST_LOCKING	Normal (1), Cluster (3)."
 	@echo "  LVM_TEST_LVMETAD	Start lvmetad (1)."
@@ -189,6 +191,9 @@ check_lvmlockd_test: .tests-stamp
 		--flavours udev-lvmlockd-test --only $(T) --skip $(S)
 endif
 
+run-unit-test unit-test:
+	$(MAKE) -C unit $(@)
+
 DATADIR = $(datadir)/lvm2-testsuite
 EXECDIR = $(libexecdir)/lvm2-testsuite
 
@@ -221,11 +226,13 @@ LIB_SHARED = check aux inittest utils get lvm-wrapper
 
 install: .tests-stamp lib/paths-installed
 	@echo $(srcdir)
-	$(INSTALL_DIR) $(DATADIR)/{shell,api,lib,dbus} $(EXECDIR)
+	$(INSTALL_DIR) $(DATADIR)/{shell,api,unit,lib,dbus} $(EXECDIR)
 	$(INSTALL_DATA) shell/*.sh $(DATADIR)/shell
 	$(INSTALL_DATA) api/*.sh $(DATADIR)/api
+	$(INSTALL_DATA) unit/*.sh $(DATADIR)/unit
 	$(INSTALL_DATA) lib/mke2fs.conf $(DATADIR)/lib
 	$(INSTALL_PROGRAM) api/*.{t,py} $(DATADIR)/api
+	$(INSTALL_PROGRAM) unit/unit-test $(DATADIR)/unit
 	$(INSTALL_PROGRAM) dbus/*.py $(DATADIR)/dbus/
 	$(INSTALL_DATA) lib/paths-installed $(DATADIR)/lib/paths
 	cd lib && $(INSTALL_DATA) \

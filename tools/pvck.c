@@ -25,16 +25,7 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 	int i;
 	int ret_max = ECMD_PROCESSED;
 
-	/* FIXME: validate cmdline options */
-	/* FIXME: what does the cmdline look like? */
-
 	labelsector = arg_uint64_value(cmd, labelsector_ARG, UINT64_C(0));
-
-	if (labelsector) {
-		/* FIXME: see label_read_sector */
-		log_error("TODO: reading label from non-zero sector");
-		return ECMD_FAILED;
-	}
 
 	dm_list_init(&devs);
 
@@ -61,6 +52,25 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 	label_scan_devs(cmd, cmd->filter, &devs);
 
 	dm_list_iterate_items(devl, &devs) {
+
+		/*
+		 * The scan above will populate lvmcache with any info from the
+		 * standard locations at the start of the device.  Now populate
+		 * lvmcache with any info from non-standard offsets.
+		 *
+		 * FIXME: is it possible for a real lvm label sector to be
+		 * anywhere other than the first four sectors of the disk?
+		 * If not, drop the code in label_read_sector/find_lvm_header
+		 * that supports searching at any sector.
+		 */
+		if (labelsector) {
+			if (!label_read_sector(devl->dev, labelsector)) {
+				stack;
+				ret_max = ECMD_FAILED;
+				continue;
+			}
+		}
+
 		if (!pv_analyze(cmd, devl->dev, labelsector)) {
 			stack;
 			ret_max = ECMD_FAILED;

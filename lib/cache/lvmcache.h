@@ -132,7 +132,6 @@ struct dm_list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
 void lvmcache_drop_metadata(const char *vgname, int drop_precommitted);
 void lvmcache_commit_metadata(const char *vgname);
 
-int lvmcache_pvid_is_locked(const char *pvid);
 int lvmcache_fid_add_mdas(struct lvmcache_info *info, struct format_instance *fid,
 			  const char *id, int id_len);
 int lvmcache_fid_add_mdas_pv(struct lvmcache_info *info, struct format_instance *fid);

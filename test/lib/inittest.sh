@@ -47,13 +47,14 @@ SKIP_WITH_LVMETAD=${SKIP_WITH_LVMETAD-}
 
 SKIP_WITH_LVMPOLLD=${SKIP_WITH_LVMPOLLD-}
 SKIP_WITH_LVMLOCKD=${SKIP_WITH_LVMLOCKD-}
+SKIP_ROOT_DM_CHECK=${SKIP_ROOT_DM_CHECK-}
 
 if test -n "$LVM_TEST_FLAVOUR"; then
 	. "lib/flavour-$LVM_TEST_FLAVOUR"
 fi
 
 test -n "$SKIP_WITHOUT_CLVMD" && test "$LVM_TEST_LOCKING" -ne 3 && initskip
-test -n "$SKIP_WITH_CLVMD" && test "$LVM_TEST_LOCKING" -eq 3 && initskip
+test -n "$SKIP_WITH_CLVMD" && test "$LVM_TEST_LOCKING" = 3 && initskip
 
 test -n "$SKIP_WITHOUT_LVMETAD" && test -z "$LVM_TEST_LVMETAD" && initskip
 test -n "$SKIP_WITH_LVMETAD" && test -n "$LVM_TEST_LVMETAD" && initskip
@@ -75,7 +76,9 @@ COMMON_PREFIX="LVMTEST"
 PREFIX="${COMMON_PREFIX}$$"
 
 # Check we are not conflickting with some exiting setup
-dmsetup table | not grep "${PREFIX}[^0-9]" || die "DM table already has devices with prefix $PREFIX!"
+if test -z "$SKIP_ROOT_DM_CHECK" ; then
+	dmsetup table | not grep "${PREFIX}[^0-9]" || die "DM table already has devices with prefix $PREFIX!"
+fi
 
 if test -z "$LVM_TEST_DIR"; then LVM_TEST_DIR=$TMPDIR; fi
 TESTDIR=$(mkdtemp "${LVM_TEST_DIR:-/tmp}" "$PREFIX.XXXXXXXXXX") || \
@@ -88,8 +91,13 @@ LVM_LOG_FILE_MAX_LINES=${LVM_LOG_FILE_MAX_LINES-1000000}
 LVM_EXPECTED_EXIT_STATUS=1
 export LVM_LOG_FILE_EPOCH LVM_LOG_FILE_MAX_LINES LVM_EXPECTED_EXIT_STATUS
 
-test -n "$BASH" && trap 'set +vx; STACKTRACE; set -vx' ERR
-trap 'aux teardown' EXIT # don't forget to clean up
+if test -z "$SKIP_ROOT_DM_CHECK" ; then
+	# Teardown only with root
+	test -n "$BASH" && trap 'set +vx; STACKTRACE; set -vx' ERR
+	trap 'aux teardown' EXIT # don't forget to clean up
+else
+	trap 'cd $TESTOLDPWD; rm -rf "${TESTDIR:?}"' EXIT
+fi
 
 cd "$TESTDIR"
 mkdir lib
@@ -114,7 +122,7 @@ mkdir "$LVM_SYSTEM_DIR" "$DM_DEV_DIR"
 if test -n "$LVM_TEST_DEVDIR" ; then
 	test -d "$LVM_TEST_DEVDIR" || die "Test device directory LVM_TEST_DEVDIR=\"$LVM_TEST_DEVDIR\" is not valid."
 	DM_DEV_DIR=$LVM_TEST_DEVDIR
-else
+elif test -z "$SKIP_ROOT_DM_CHECK" ; then
 	mknod "$DM_DEV_DIR/testnull" c 1 3 || die "mknod failed"
 	echo >"$DM_DEV_DIR/testnull" || \
 		die "Filesystem does support devices in $DM_DEV_DIR (mounted with nodev?)"
@@ -151,7 +159,7 @@ if test -n "$LVM_TEST_LVMETAD" ; then
 	export LVM_LVMETAD_SOCKET="$TESTDIR/lvmetad.socket"
 	export LVM_LVMETAD_PIDFILE="$TESTDIR/lvmetad.pid"
 	aux prepare_lvmetad
-else
+elif test -z "$SKIP_ROOT_DM_CHECK" ; then
 	# lvmetad prepares its own lvmconf
 	export LVM_LVMETAD_PIDFILE="$TESTDIR/non-existing-file"
 	aux lvmconf

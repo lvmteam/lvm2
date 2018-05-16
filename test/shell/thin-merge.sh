@@ -22,6 +22,7 @@ MKFS=mkfs.ext2
 which $MKFS  || skip
 which fsck || skip
 
+MKFS="$MKFS -b4096"
 #
 # Main
 #

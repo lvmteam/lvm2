@@ -21,7 +21,7 @@ from distutils.core import setup, Extension
 liblvm = Extension('lvm',
                     sources = ['liblvm_python.c'],
                     libraries= ['lvm2app', 'devmapper'],
-                    library_dirs= ['@top_builddir@/liblvm'],
+                    library_dirs= ['@top_builddir@/liblvm', '@top_builddir@/libdm'],
                     include_dirs= ['@top_builddir@/include'])
 
 setup (name='lvm',

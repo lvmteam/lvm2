@@ -186,6 +186,8 @@ int lvm_vg_close(vg_t vg)
 	struct saved_env e = store_user_env(vg->cmd);
 	if (vg_read_error(vg) == FAILED_LOCKING)
 		release_vg(vg);
+	else if (!lvmcache_vgname_is_locked(vg->name))
+		release_vg(vg);
 	else
 		unlock_and_release_vg(vg->cmd, vg, vg->name);
 	restore_user_env(&e);
