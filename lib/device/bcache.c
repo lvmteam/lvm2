@@ -133,6 +133,7 @@ struct async_engine {
 	struct io_engine e;
 	io_context_t aio_context;
 	struct cb_set *cbs;
+	unsigned page_mask;
 };
 
 static struct async_engine *_to_async(struct io_engine *e)
@@ -162,9 +163,8 @@ static bool _async_issue(struct io_engine *ioe, enum dir d, int fd,
 	struct iocb *cb_array[1];
 	struct control_block *cb;
 	struct async_engine *e = _to_async(ioe);
-	long pgsize = sysconf(_SC_PAGESIZE);
 
-	if (((uintptr_t) data) & (pgsize - 1)) {
+	if (((uintptr_t) data) & e->page_mask) {
 		log_warn("misaligned data buffer");
 		return false;
 	}
@@ -275,6 +275,8 @@ struct io_engine *create_async_io_engine(void)
 		dm_free(e);
 		return NULL;
 	}
+
+	e->page_mask = sysconf(_SC_PAGESIZE) - 1;
 
 	return &e->e;
 }
@@ -544,11 +546,10 @@ static void _hash_table_exit(struct bcache *cache)
 
 //----------------------------------------------------------------
 
-static bool _init_free_list(struct bcache *cache, unsigned count)
+static bool _init_free_list(struct bcache *cache, unsigned count, unsigned pgsize)
 {
 	unsigned i;
 	size_t block_size = cache->block_sectors << SECTOR_SHIFT;
-	long pgsize = sysconf(_SC_PAGESIZE);
 	unsigned char *data =
 		(unsigned char *) _alloc_aligned(count * block_size, pgsize);
 
@@ -949,7 +950,7 @@ struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks,
 	cache->write_misses = 0;
 	cache->prefetches = 0;
 
-	if (!_init_free_list(cache, nr_cache_blocks)) {
+	if (!_init_free_list(cache, nr_cache_blocks, pgsize)) {
 		cache->engine->destroy(cache->engine);
 		_hash_table_exit(cache);
 		dm_free(cache);
