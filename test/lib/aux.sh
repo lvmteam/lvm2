@@ -843,7 +843,7 @@ prepare_backing_dev() {
 		return 0
 	elif test "${LVM_TEST_PREFER_BRD-1}" = "1" && \
 	     test ! -d /sys/block/ram0 && \
-	     kernel_at_least 4 16 && \
+	     kernel_at_least 4 16 0 && \
 	     test "$size" -lt 16384; then
 		# try to use ramdisk if possible, but for
 		# big allocs (>16G) do not try to use ramdisk
