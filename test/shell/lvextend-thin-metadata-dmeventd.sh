@@ -75,7 +75,7 @@ lvcreate -L32M -n $lv3 $vg
 lvchange -an $vg/thin $vg/thin2 $vg/pool
 
 # Filling 2M metadata volume
-# (Test for less then 25% free space in metadata)
+# (Test for less than 25% free space in metadata)
 fake_metadata_ 400 2 >data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 
@@ -89,7 +89,7 @@ fail lvcreate -V20 $vg/pool
 lvchange -an $vg/pool
 
 # Consume more then (100% - 4MiB) out of 32MiB metadata volume  (>87.5%)
-# (Test for less then 4MiB free space in metadata, which is less then 25%)
+# (Test for less than 4MiB free space in metadata, which is less than 25%)
 fake_metadata_ 7400 2 >data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv2"
 # Swap volume with restored fake metadata

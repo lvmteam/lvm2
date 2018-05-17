@@ -5785,7 +5785,7 @@ do_command:
 
 		pv_name = pd->name;
 
-		label_scan_open(pd->dev);
+		label_scan_open_excl(pd->dev);
 
 		log_debug("Creating a new PV on %s.", pv_name);
 

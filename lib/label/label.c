@@ -114,7 +114,7 @@ int label_remove(struct device *dev)
 
 	log_very_verbose("Scanning for labels to wipe from %s", dev_name(dev));
 
-	if (!label_scan_open(dev)) {
+	if (!label_scan_open_excl(dev)) {
 		log_error("Failed to open device %s", dev_name(dev));
 		return 0;
 	}
@@ -975,6 +975,12 @@ int label_scan_open(struct device *dev)
 	if (!_in_bcache(dev))
 		return _scan_dev_open(dev);
 	return 1;
+}
+
+int label_scan_open_excl(struct device *dev)
+{
+	dev->flags |= DEV_BCACHE_EXCL;
+	return label_scan_open(dev);
 }
 
 bool dev_read_bytes(struct device *dev, uint64_t start, size_t len, void *data)

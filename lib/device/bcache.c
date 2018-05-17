@@ -162,8 +162,9 @@ static bool _async_issue(struct io_engine *ioe, enum dir d, int fd,
 	struct iocb *cb_array[1];
 	struct control_block *cb;
 	struct async_engine *e = _to_async(ioe);
+	long pgsize = sysconf(_SC_PAGESIZE);
 
-	if (((uintptr_t) data) & (PAGE_SIZE - 1)) {
+	if (((uintptr_t) data) & (pgsize - 1)) {
 		log_warn("misaligned data buffer");
 		return false;
 	}
@@ -547,8 +548,9 @@ static bool _init_free_list(struct bcache *cache, unsigned count)
 {
 	unsigned i;
 	size_t block_size = cache->block_sectors << SECTOR_SHIFT;
+	long pgsize = sysconf(_SC_PAGESIZE);
 	unsigned char *data =
-		(unsigned char *) _alloc_aligned(count * block_size, PAGE_SIZE);
+		(unsigned char *) _alloc_aligned(count * block_size, pgsize);
 
 	/* Allocate the data for each block.  We page align the data. */
 	if (!data)
@@ -899,6 +901,7 @@ struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks,
 {
 	struct bcache *cache;
 	unsigned max_io = engine->max_io(engine);
+	long pgsize = sysconf(_SC_PAGESIZE);
 
 	if (!nr_cache_blocks) {
 		log_warn("bcache must have at least one cache block");
@@ -910,7 +913,7 @@ struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks,
 		return NULL;
 	}
 
-	if (block_sectors & ((PAGE_SIZE >> SECTOR_SHIFT) - 1)) {
+	if (block_sectors & ((pgsize >> SECTOR_SHIFT) - 1)) {
 		log_warn("bcache block size must be a multiple of page size");
 		return NULL;
 	}

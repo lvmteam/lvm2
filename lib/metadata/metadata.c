@@ -1050,7 +1050,7 @@ uint32_t extents_from_size(struct cmd_context *cmd, uint64_t size,
 
 	if (size > (uint64_t) MAX_EXTENT_COUNT * extent_size) {
 		log_error("Volume too large (%s) for extent size %s. "
-			  "Upper limit is less then %s.",
+			  "Upper limit is less than %s.",
 			  display_size(cmd, size),
 			  display_size(cmd, (uint64_t) extent_size),
 			  display_size(cmd, (uint64_t) MAX_EXTENT_COUNT *
@@ -1413,7 +1413,7 @@ static int _pvcreate_write(struct cmd_context *cmd, struct pv_to_write *pvw)
 	struct device *dev = pv->dev;
 	const char *pv_name = dev_name(dev);
 
-	if (!label_scan_open(dev)) {
+	if (!label_scan_open_excl(dev)) {
 		log_error("%s not opened: device not written", pv_name);
 		return 0;
 	}
