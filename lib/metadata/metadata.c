@@ -4830,7 +4830,7 @@ static int _get_pvs(struct cmd_context *cmd, uint32_t warn_flags,
 		struct dm_list *pvslist, struct dm_list *vgslist)
 {
 	struct dm_str_list *strl;
-	const char *vgname, *vgid;
+	const char *vgname, *name, *vgid;
 	struct pv_list *pvl, *pvl_copy;
 	struct dm_list *vgids;
 	struct volume_group *vg;
@@ -4856,10 +4856,12 @@ static int _get_pvs(struct cmd_context *cmd, uint32_t warn_flags,
 		if (!vgid)
 			continue;	/* FIXME Unnecessary? */
 		consistent = 0;
-		if (!(vgname = lvmcache_vgname_from_vgid(NULL, vgid))) {
+		if (!(name = lvmcache_vgname_from_vgid(NULL, vgid))) {
 			stack;
 			continue;
 		}
+
+		vgname = dm_pool_strdup(cmd->mem, name);
 
 		/*
 		 * When we are retrieving a list to return toliblvm we need
