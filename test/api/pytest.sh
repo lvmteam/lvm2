@@ -31,7 +31,11 @@ aux prepare_dmeventd
 
 #Locate the python binding library to use.
 if [[ -n "${abs_top_builddir+varset}" ]]; then
-  python_lib=($(find "$abs_top_builddir" -name lvm*.so))
+  # For python2 look for  lvm.so, python3 uses some lengthy names
+  case "$(head -1 $(which python_lvm_unit.py) )" in
+  *2) python_lib=($(find "$abs_top_builddir" -name lvm.so)) ;;
+  *) python_lib=($(find "$abs_top_builddir" -name lvm*gnu.so)) ;;
+  esac
   if [[ ${#python_lib[*]} -ne 1 ]]; then
     if [[ ${#python_lib[*]} -gt 1 ]]; then
       # Unable to test python bindings if multiple libraries found:
@@ -58,9 +62,9 @@ aux prepare_pvs 6
 PY_UNIT_PVS=$(cat DEVICES)
 export PY_UNIT_PVS
 
-python_lvm_unit.py -v -f TestLvm.test_lv_persistence
-exit
-#python_lvm_unit.py -v -f
+#When needed to run 1 single individual python test
+#python_lvm_unit.py -v -f TestLvm.test_lv_persistence
+#exit
 
 # Run individual tests for shorter error trace
 for i in \
