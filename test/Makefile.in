@@ -32,6 +32,18 @@ SOURCES = lib/not.c lib/harness.c
 CXXSOURCES = lib/runner.cpp
 CXXFLAGS += $(EXTRA_EXEC_CFLAGS)
 
+CLEAN_DIRS += dbus/__pycache__ $(LVM_TEST_RESULTS)
+ifneq (.,$(firstword $(srcdir)))
+CLEAN_TARGETS += $(RUN_BASE) $(addprefix lib/,$(LIB_LVMLOCKD_CONF))
+endif
+
+CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,\
+	$(CMDS) clvmd dmeventd dmsetup dmstats lvmetad lvmpolld \
+	harness lvmdbusd.profile thin-performance.profile fsadm \
+	dm-version-expected version-expected \
+	paths-installed paths-installed-t paths-common paths-common-t)
+
+
 include $(top_builddir)/make.tmpl
 
 T ?= .
@@ -351,17 +363,6 @@ LIB = $(addprefix lib/, $(LIB_SHARED) $(LIB_LOCAL) $(LIB_NOT) $(LIB_LINK_NOT) $(
 	test "$(srcdir)" = . || for i in $(LIB_LVMLOCKD_CONF); do \
 		$(LN_S) -f $(abs_top_srcdir)/test/lib/$$i lib/; done
 	touch $@
-
-CLEAN_DIRS += $(LVM_TEST_RESULTS)
-ifneq (.,$(firstword $(srcdir)))
-CLEAN_TARGETS += $(RUN_BASE) $(addprefix lib/,$(LIB_LVMLOCKD_CONF))
-endif
-
-CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,\
-	$(CMDS) clvmd dmeventd dmsetup dmstats lvmetad lvmpolld \
-	harness lvmdbusd.profile thin-performance.profile fsadm \
-	dm-version-expected version-expected \
-	paths-installed paths-installed-t paths-common paths-common-t)
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
