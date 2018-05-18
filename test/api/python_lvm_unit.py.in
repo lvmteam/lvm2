@@ -112,7 +112,7 @@ class TestLvm(unittest.TestCase):
 		for d in device_list:
 			vg.extend(d)
 
-		vg.createLvLinear(name, vg.getSize() / 2)
+		vg.createLvLinear(name, vg.getSize() // 2)
 		vg.close()
 		vg = None
 
@@ -124,14 +124,14 @@ class TestLvm(unittest.TestCase):
 			vg.extend(d)
 
 		vg.createLvThinpool(
-			pool_name, vg.getSize() / 2, 0, 0, lvm.THIN_DISCARDS_PASSDOWN, 1)
+			pool_name, vg.getSize() // 2, 0, 0, lvm.THIN_DISCARDS_PASSDOWN, 1)
 		return vg
 
 	@staticmethod
 	def _create_thin_lv(pv_devices, name):
 		thin_pool_name = 'thin_vg_pool_' + rs(4)
 		vg = TestLvm._create_thin_pool(pv_devices, thin_pool_name)
-		vg.createLvThin(thin_pool_name, name, vg.getSize() / 8)
+		vg.createLvThin(thin_pool_name, name, vg.getSize() // 8)
 		vg.close()
 		vg = None
 
@@ -231,7 +231,7 @@ class TestLvm(unittest.TestCase):
 			curr_size = pv.getSize()
 			dev_size = pv.getDevSize()
 			self.assertTrue(curr_size == dev_size)
-			pv.resize(curr_size / 2)
+			pv.resize(curr_size // 2)
 		with AllowedPVS() as pvs:
 			pv = pvs[0]
 			resized_size = pv.getSize()
@@ -718,7 +718,7 @@ class TestLvm(unittest.TestCase):
 	def test_percent_to_float(self):
 		self.assertEqual(lvm.percentToFloat(0), 0.0)
 		self.assertEqual(lvm.percentToFloat(1000000), 1.0)
-		self.assertEqual(lvm.percentToFloat(1000000 / 2), 0.5)
+		self.assertEqual(lvm.percentToFloat(1000000 // 2), 0.5)
 
 	def test_scan(self):
 		self.assertEqual(lvm.scan(), None)

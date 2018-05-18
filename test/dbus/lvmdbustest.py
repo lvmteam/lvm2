@@ -1027,7 +1027,7 @@ class TestDbusService(unittest.TestCase):
 			vg.Move(
 				dbus.ObjectPath(location),
 				dbus.Struct((0, 0), signature='tt'),
-				dbus.Array([(dst, pv.PeCount / 2, 0), ], '(ott)'),
+				dbus.Array([(dst, pv.PeCount // 2, 0), ], '(ott)'),
 				dbus.Int32(g_tmo),
 				EOD))
 		self.assertEqual(job, '/')
@@ -1320,7 +1320,7 @@ class TestDbusService(unittest.TestCase):
 
 			original_size = pv.SizeBytes
 
-			new_size = original_size / 2
+			new_size = original_size // 2
 
 			self.handle_return(
 				pv.ReSize(
@@ -1454,7 +1454,7 @@ class TestDbusService(unittest.TestCase):
 
 	@staticmethod
 	def _write_some_data(device_path, size):
-		blocks = int(size / 512)
+		blocks = int(size // 512)
 		block = bytearray(512)
 		for i in range(0, 512):
 			block[i] = i % 255
@@ -1481,7 +1481,7 @@ class TestDbusService(unittest.TestCase):
 							interfaces=(LV_COMMON_INT, LV_INT, SNAPSHOT_INT, ))
 
 		# Write some data to snapshot so merge takes some time
-		TestDbusService._write_some_data(ss.LvCommon.Path, ss_size / 2)
+		TestDbusService._write_some_data(ss.LvCommon.Path, ss_size // 2)
 
 		job_path = self.handle_return(
 			ss.Snapshot.Merge(
