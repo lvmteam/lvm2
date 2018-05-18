@@ -3765,13 +3765,9 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct cached_vg_fmtdata *vg_fmtdata = NULL;	/* Additional format-specific data about the vg */
 	unsigned use_previous_vg;
 
-	uuid[0] = '\0';
-	if (vgid && !id_write_format((const struct id*)vgid, uuid, sizeof(uuid)))
-		stack;
-
-	log_very_verbose("Reading VG %s %s", vgname ?: "<no name>", vgid ? uuid : "<no vgid>");
-
 	if (is_orphan_vg(vgname)) {
+		log_very_verbose("Reading VG %s", vgname);
+
 		if (use_precommitted) {
 			log_error(INTERNAL_ERROR "vg_read_internal requires vgname "
 				  "with pre-commit.");
@@ -3779,6 +3775,12 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		}
 		return _vg_read_orphans(cmd, warn_flags, vgname, consistent);
 	}
+
+	uuid[0] = '\0';
+	if (vgid && !id_write_format((const struct id*)vgid, uuid, sizeof(uuid)))
+		stack;
+
+	log_very_verbose("Reading VG %s %s", vgname ?: "<no name>", vgid ? uuid : "<no vgid>");
 
 	if (lvmetad_used() && !use_precommitted) {
 		if ((correct_vg = lvmetad_vg_lookup(cmd, vgname, vgid))) {
