@@ -1421,6 +1421,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv, report_type_t
 		return ECMD_FAILED;
 	}
 
+	lvmcache_seed_infos_from_lvmetad(cmd);
+
 	if (single_args->report_type == FULL) {
 		handle->custom_handle = &args;
 		r = process_each_vg(cmd, argc, argv, NULL, NULL, 0, 1, handle, &_full_report_single);
