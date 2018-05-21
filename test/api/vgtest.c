@@ -28,7 +28,7 @@ vg_t vg;
 const char *vg_name;
 #define MAX_DEVICES 16
 const char *device[MAX_DEVICES];
-uint64_t size = 1024;
+uint64_t size = 4096;
 
 #define vg_create(vg_name) \
 	printf("Creating VG %s\n", vg_name); \
