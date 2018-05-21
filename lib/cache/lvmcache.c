@@ -981,11 +981,25 @@ int lvmcache_dev_is_unchosen_duplicate(struct device *dev)
  * The actual filters are evaluated too early, before a complete
  * picture of all PVs is available, to eliminate these duplicates.
  *
- * By removing the filtered duplicates from unused_duplicate_devs, we remove
+ * By removing some duplicates from unused_duplicate_devs here, we remove
  * the restrictions that are placed on using duplicate devs or VGs with
  * duplicate devs.
  *
- * There may other kinds of duplicates that we want to ignore.
+ * In cases where we know that two duplicates refer to the same underlying
+ * storage, and we know which dev path to use, it's best for us to just
+ * use that one preferred device path and ignore the others.  It is the cases
+ * where we are unsure whether dups refer to the same underlying storage where
+ * we need to keep the unused duplicate referenced in the
+ * unused_duplicate_devs list, and restrict what we allow done with it.
+ *
+ * In the case of md components, we usually filter these out in filter-md,
+ * but in the special case of md superblocks <= 1.0 where the superblock
+ * is at the end of the device, filter-md doesn't always eliminate them
+ * first, so we eliminate them here.
+ *
+ * There may other kinds of duplicates that we want to eliminate at
+ * this point (using the knowledge from the scan) that we couldn't
+ * eliminate in the filters prior to the scan.
  */
 
 static void _filter_duplicate_devs(struct cmd_context *cmd)
@@ -1003,6 +1017,34 @@ static void _filter_duplicate_devs(struct cmd_context *cmd)
 			dm_list_del(&devl->list);
 			dm_free(devl);
 		}
+	}
+
+	if (dm_list_empty(&_unused_duplicate_devs))
+		_found_duplicate_pvs = 0;
+}
+
+static void _warn_duplicate_devs(struct cmd_context *cmd)
+{
+	char uuid[64] __attribute__((aligned(8)));
+	struct lvmcache_info *info;
+	struct device_list *devl, *devl2;
+
+	dm_list_iterate_items_safe(devl, devl2, &_unused_duplicate_devs) {
+		if (!id_write_format((const struct id *)devl->dev->pvid, uuid, sizeof(uuid)))
+			stack;
+
+		log_warn("WARNING: Not using device %s for PV %s.", dev_name(devl->dev), uuid);
+	}
+
+	dm_list_iterate_items_safe(devl, devl2, &_unused_duplicate_devs) {
+		/* info for the preferred device that we're actually using */
+		info = lvmcache_info_from_pvid(devl->dev->pvid, NULL, 0);
+
+		if (!id_write_format((const struct id *)info->dev->pvid, uuid, sizeof(uuid)))
+			stack;
+
+		log_warn("WARNING: PV %s prefers device %s because %s.",
+			 uuid, dev_name(info->dev), info->dev->duplicate_prefer_reason);
 	}
 }
 
@@ -1028,7 +1070,6 @@ static void _choose_preferred_devs(struct cmd_context *cmd,
 				   struct dm_list *del_cache_devs,
 				   struct dm_list *add_cache_devs)
 {
-	char uuid[64] __attribute__((aligned(8)));
 	const char *reason;
 	struct dm_list altdevs;
 	struct dm_list new_unused;
@@ -1229,9 +1270,7 @@ next:
 			alt = devl;
 		}
 
-		if (!id_write_format((const struct id *)dev1->pvid, uuid, sizeof(uuid)))
-			stack;
-		log_warn("WARNING: PV %s prefers device %s because %s.", uuid, dev_name(dev1), reason);
+		dev1->duplicate_prefer_reason = reason;
 	}
 
 	if (dev1 != info->dev) {
@@ -1480,11 +1519,21 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 		dm_list_splice(&_unused_duplicate_devs, &del_cache_devs);
 
 		/*
-		 * We might want to move the duplicate device warnings until
-		 * after this filtering so that we can skip warning about
-		 * duplicates that we are filtering out.
+		 * This may remove some entries from the unused_duplicates list for
+		 * devs that we know are the same underlying dev.
 		 */
 		_filter_duplicate_devs(cmd);
+
+		/*
+		 * Warn about remaining duplicates that may actually be separate copies of
+		 * the same device.
+		 */
+		_warn_duplicate_devs(cmd);
+
+		if (!_found_duplicate_pvs && lvmetad_used()) {
+			log_warn("WARNING: Disabling lvmetad cache which does not support duplicate PVs.");
+			lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_DUPLICATES);
+		}
 	}
 
 	/* Perform any format-specific scanning e.g. text files */
@@ -1507,6 +1556,53 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	log_debug_cache("Found VG info for %d VGs", vginfo_count);
 
 	return r;
+}
+
+/*
+ * When not using lvmetad, lvmcache_label_scan() detects duplicates in
+ * the basic label_scan(), then filters out some dups, and chooses
+ * preferred duplicates to use.
+ *
+ * When using lvmetad, pvscan --cache does not use lvmcache_label_scan(),
+ * only label_scan() which detects the duplicates.  This function is used
+ * after pvscan's label_scan() to filter out some dups, print any warnings,
+ * and disable lvmetad if any dups are left.
+ */
+
+void lvmcache_pvscan_duplicate_check(struct cmd_context *cmd)
+{
+	struct device_list *devl;
+
+	/* Check if label_scan() detected any dups. */
+	if (!_found_duplicate_pvs)
+		return;
+
+	/*
+	 * Once all the dups are identified, they are moved from the
+	 * "found" list to the "unused" list to sort out.
+	 */
+	dm_list_splice(&_unused_duplicate_devs, &_found_duplicate_devs);
+
+	/*
+	 * Remove items from the dups list that we know are the same
+	 * underlying dev, e.g. md components, that we want to just ignore.
+	 */
+	_filter_duplicate_devs(cmd);
+
+	/*
+	 * If no more dups after ignoring some, then we can use lvmetad.
+	 */
+	if (!_found_duplicate_pvs)
+		return;
+
+	/* Duplicates are found where we would have to pick one, so disable lvmetad. */
+
+	dm_list_iterate_items(devl, &_unused_duplicate_devs)
+		log_warn("WARNING: found device with duplicate %s", dev_name(devl->dev));
+
+	log_warn("WARNING: Disabling lvmetad cache which does not support duplicate PVs.");
+	lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_DUPLICATES);
+	lvmetad_make_unused(cmd);
 }
 
 int lvmcache_get_vgnameids(struct cmd_context *cmd, int include_internal,
@@ -2303,14 +2399,8 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller,
 	 */
 	if (!created) {
 		if (info->dev != dev) {
-			log_warn("WARNING: PV %s on %s was already found on %s.",
-				  uuid, dev_name(dev), dev_name(info->dev));
-
-			if (!_found_duplicate_pvs && lvmetad_used()) {
-				log_warn("WARNING: Disabling lvmetad cache which does not support duplicate PVs."); 
-				lvmetad_set_disabled(labeller->fmt->cmd, LVMETAD_DISABLE_REASON_DUPLICATES);
-			}
-			_found_duplicate_pvs = 1;
+			log_debug_cache("PV %s on %s was already found on %s.",
+				        uuid, dev_name(dev), dev_name(info->dev));
 
 			strncpy(dev->pvid, pvid_s, sizeof(dev->pvid));
 
@@ -2328,6 +2418,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller,
 			devl->dev = dev;
 
 			dm_list_add(&_found_duplicate_devs, &devl->list);
+			_found_duplicate_pvs = 1;
 			return NULL;
 		}
 
