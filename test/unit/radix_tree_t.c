@@ -256,7 +256,6 @@ static void test_remove_prefix_keys_reversed(void *fixture)
 	}
 
 	for (i = 0; i < 32; i++) {
-        	fprintf(stderr, "removing %u\n", i);
         	T_ASSERT(radix_tree_remove(rt, k, k + (31 - i)));
         	for (j = 0; j < 31 - i; j++) {
                 	T_ASSERT(radix_tree_lookup(rt, k, k + j, &v));
