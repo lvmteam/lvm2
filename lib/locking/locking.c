@@ -148,15 +148,29 @@ int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 		}
 #endif
 
-#ifdef CLUSTER_LOCKING_INTERNAL
 		log_very_verbose("Falling back to internal clustered locking.");
 		/* Fall through */
 
 	case 3:
+#ifdef CLUSTER_LOCKING_INTERNAL
 		log_very_verbose("Cluster locking selected.");
 		if (!init_cluster_locking(&_locking, cmd, suppress_messages)) {
 			log_error_suppress(suppress_messages,
 					   "Internal cluster locking initialisation failed.");
+			break;
+		}
+		return 1;
+#else
+		log_warn("WARNING: Using locking_type=1, ignoring locking_type=3.");
+		log_warn("WARNING: See lvmlockd(8) for information on using cluster/clvm VGs.");
+		type = 1;
+
+		log_very_verbose("%sFile-based locking selected.",
+				 _blocking_supported ? "" : "Non-blocking ");
+
+		if (!init_file_locking(&_locking, cmd, suppress_messages)) {
+			log_error_suppress(suppress_messages,
+					   "File-based locking initialisation failed.");
 			break;
 		}
 		return 1;
