@@ -59,7 +59,7 @@ test -n "$SKIP_WITH_CLVMD" && test "$LVM_TEST_LOCKING" = 3 && initskip
 test -n "$SKIP_WITHOUT_LVMETAD" && test -z "$LVM_TEST_LVMETAD" && initskip
 test -n "$SKIP_WITH_LVMETAD" && test -n "$LVM_TEST_LVMETAD" && initskip
 
-test -n "$SKIP_WITH_LVMPOLLD" && test -n "$LVM_TEST_LVMPOLLD" && initskip
+test -n "$SKIP_WITH_LVMPOLLD" && test -n "$LVM_TEST_LVMPOLLD" && test -z "$LVM_TEST_LVMLOCKD" && initskip
 
 test -n "$SKIP_WITH_LVMLOCKD" && test -n "$LVM_TEST_LVMLOCKD" && initskip
 
@@ -171,6 +171,8 @@ test -n "$LVM_TEST_LVMPOLLD" && {
 	export LVM_LVMPOLLD_PIDFILE="$TESTDIR/lvmpolld.pid"
 	aux prepare_lvmpolld
 }
+
+export SHARED=""
 
 if test -n "$LVM_TEST_LVMLOCKD" ; then
 	if test -n "$LVM_TEST_LOCK_TYPE_SANLOCK" ; then
