@@ -188,6 +188,8 @@ uint64_t lvmcache_smallest_mda_size(struct lvmcache_info *info);
 
 int lvmcache_found_duplicate_pvs(void);
 
+void lvmcache_pvscan_duplicate_check(struct cmd_context *cmd);
+
 int lvmcache_get_unused_duplicate_devs(struct cmd_context *cmd, struct dm_list *head);
 
 int vg_has_duplicate_pvs(struct volume_group *vg);

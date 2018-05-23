@@ -26,7 +26,6 @@ pvcreate --config "devices{filter=[\"a|$dev3|\",\"r|.*|\"]} global/use_lvmetad=0
 pvscan --cache 2>&1 | tee out
 
 if test -e LOCAL_LVMETAD; then
-	grep "was already found" out
 	grep "WARNING: Disabling lvmetad cache which does not support duplicate PVs." out
 fi
 
@@ -37,7 +36,7 @@ grep -v WARNING out > main || true
 
 test "$(grep -c $UUID1 main)" -eq 1
 
-COUNT=$(grep --count "was already found" warn)
+COUNT=$(grep --count "Not using device" warn)
 [ "$COUNT" -eq 2 ]
 
 pvs -o+uuid --config "devices{filter=[\"a|$dev2|\",\"r|.*|\"]}" 2>&1 | tee out
@@ -50,5 +49,5 @@ not grep "$dev1" main
 grep "$dev2" main
 not grep "$dev3" main
 
-not grep "was already found" warn
+not grep "Not using device" warn
 
