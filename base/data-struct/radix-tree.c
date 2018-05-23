@@ -68,6 +68,7 @@ struct node48 {
 };
 
 struct node256 {
+        uint32_t nr_entries;
 	struct value values[256];
 };
 
@@ -397,10 +398,13 @@ static bool _insert_node48(struct value *v, uint8_t *kb, uint8_t *ke, union radi
 static bool _insert_node256(struct value *v, uint8_t *kb, uint8_t *ke, union radix_value rv)
 {
 	struct node256 *n256 = v->value.ptr;
-	if (!_insert(n256->values + *kb, kb + 1, ke, rv)) {
-		n256->values[*kb].type = UNSET;
+	bool was_unset = n256->values[*kb].type == UNSET;
+
+	if (!_insert(n256->values + *kb, kb + 1, ke, rv))
 		return false;
-	}
+
+	if (was_unset)
+        	n256->nr_entries++;
 
 	return true;
 }
@@ -538,9 +542,180 @@ bool radix_tree_insert(struct radix_tree *rt, uint8_t *kb, uint8_t *ke, union ra
 	return false;
 }
 
-void radix_tree_delete(struct radix_tree *rt, uint8_t *key_begin, uint8_t *key_end)
+// Note the degrade functions also free the original node.
+static void _degrade_to_n4(struct node16 *n16, struct value *result)
 {
-	assert(0);
+        struct node4 *n4 = zalloc(sizeof(*n4));
+
+        n4->nr_entries = n16->nr_entries;
+        memcpy(n4->keys, n16->keys, n16->nr_entries * sizeof(*n4->keys));
+        memcpy(n4->values, n16->values, n16->nr_entries * sizeof(*n4->values));
+        free(n16);
+
+	result->type = NODE4;
+	result->value.ptr = n4;
+}
+
+static void _degrade_to_n16(struct node48 *n48, struct value *result)
+{
+        struct node4 *n16 = zalloc(sizeof(*n16));
+
+        n16->nr_entries = n48->nr_entries;
+        memcpy(n16->keys, n48->keys, n48->nr_entries * sizeof(*n16->keys));
+        memcpy(n16->values, n48->values, n48->nr_entries * sizeof(*n16->values));
+        free(n48);
+
+	result->type = NODE16;
+	result->value.ptr = n16;
+}
+
+static void _degrade_to_n48(struct node256 *n256, struct value *result)
+{
+        unsigned i, count = 0;
+        struct node4 *n48 = zalloc(sizeof(*n48));
+
+        n48->nr_entries = n256->nr_entries;
+        for (i = 0; i < 256; i++) {
+		if (n256->values[i].type == UNSET)
+        		continue;
+
+		n48->keys[count] = i;
+		n48->values[count] = n256->values[i];
+		count++;
+        }
+        free(n256);
+
+	result->type = NODE48;
+	result->value.ptr = n48;
+}
+
+static bool _remove(struct value *root, uint8_t *kb, uint8_t *ke)
+{
+	bool r;
+	unsigned i;
+	struct value_chain *vc;
+	struct prefix_chain *pc;
+	struct node4 *n4;
+	struct node16 *n16;
+	struct node48 *n48;
+	struct node256 *n256;
+
+	if (kb == ke) {
+        	if (root->type == VALUE) {
+                	root->type = UNSET;
+                	return true;
+
+                } else if (root->type == VALUE_CHAIN) {
+			vc = root->value.ptr;
+			memcpy(root, &vc->child, sizeof(*root));
+			free(vc);
+			return true;
+
+                } else
+			return false;
+	}
+
+	switch (root->type) {
+	case UNSET:
+	case VALUE:
+        	// this is a value for a prefix of the key
+        	return false;
+
+	case VALUE_CHAIN:
+		vc = root->value.ptr;
+		r = _remove(&vc->child, kb, ke);
+		if (r && (vc->child.type == UNSET)) {
+			memcpy(root, &vc->child, sizeof(*root));
+			free(vc);
+		}
+		return r;
+
+	case PREFIX_CHAIN:
+		pc = root->value.ptr;
+		if (ke - kb < pc->len)
+        		return false;
+
+		for (i = 0; i < pc->len; i++)
+			if (kb[i] != pc->prefix[i])
+        			return false;
+
+		return _remove(&pc->child, kb + pc->len, ke);
+
+	case NODE4:
+		n4 = root->value.ptr;
+		for (i = 0; i < n4->nr_entries; i++) {
+			if (n4->keys[i] == *kb) {
+				r = _remove(n4->values + i, kb + 1, ke);
+				if (r && n4->values[i].type == UNSET) {
+        				n4->nr_entries--;
+        				if (i < n4->nr_entries)
+                				// slide the entries down
+        					memmove(n4->keys + i, n4->keys + i + 1,
+                                                       sizeof(*n4->keys) * (n4->nr_entries - i));
+					if (!n4->nr_entries)
+						root->type = UNSET;
+				}
+				return r;
+			}
+		}
+		return false;
+
+	case NODE16:
+        	n16 = root->value.ptr;
+		for (i = 0; i < n16->nr_entries; i++) {
+			if (n16->keys[i] == *kb) {
+				r = _remove(n16->values + i, kb + 1, ke);
+				if (r && n16->values[i].type == UNSET) {
+        				n16->nr_entries--;
+        				if (i < n16->nr_entries)
+                				// slide the entries down
+        					memmove(n16->keys + i, n16->keys + i + 1,
+                                                        sizeof(*n16->keys) * (n16->nr_entries - i));
+					if (n16->nr_entries <= 4)
+        					_degrade_to_n4(n16, root);
+				}
+				return r;
+			}
+		}
+		return false;
+
+	case NODE48:
+		n48 = root->value.ptr;
+		i = n48->keys[*kb];
+		if (i < 48) {
+        		r = _remove(n48->values + i, kb + 1, ke);
+        		if (r && n48->values[i].type == UNSET) {
+                		n48->keys[*kb] = 48;
+				n48->nr_entries--;
+				if (n48->nr_entries <= 16)
+        				_degrade_to_n16(n48, root);
+        		}
+        		return r;
+		}
+		return false;
+
+	case NODE256:
+		n256 = root->value.ptr;
+		r = _remove(n256->values + (*kb), kb + 1, ke);
+		if (r && n256->values[*kb].type == UNSET) {
+			n256->nr_entries--;
+			if (n256->nr_entries <= 48)
+        			_degrade_to_n48(n256, root);
+		}
+		return r;
+	}
+
+	return false;
+}
+
+bool radix_tree_remove(struct radix_tree *rt, uint8_t *key_begin, uint8_t *key_end)
+{
+	if (_remove(&rt->root, key_begin, key_end)) {
+        	rt->nr_entries--;
+        	return true;
+	}
+
+	return false;
 }
 
 bool radix_tree_lookup(struct radix_tree *rt,

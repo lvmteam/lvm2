@@ -152,20 +152,120 @@ static void test_prefix_keys_reversed(void *fixture)
 	T_ASSERT_EQUAL(v.n, 2345);
 }
 
+static void _gen_key(uint8_t *b, uint8_t *e)
+{
+	for (; b != e; b++)
+		*b = rand() % 256;
+}
+
 static void test_sparse_keys(void *fixture)
 {
-	unsigned i, n;
+	unsigned n;
 	struct radix_tree *rt = fixture;
 	union radix_value v;
 	uint8_t k[32];
 
 	for (n = 0; n < 100000; n++) {
-		for (i = 0; i < 32; i++)
-			k[i] = rand() % 256;
-
+		_gen_key(k, k + sizeof(k));
 		v.n = 1234;
 		T_ASSERT(radix_tree_insert(rt, k, k + 32, v));
 	}
+}
+
+static void test_remove_one(void *fixture)
+{
+	struct radix_tree *rt = fixture;
+	uint8_t k[4];
+	union radix_value v;
+
+	_gen_key(k, k + sizeof(k));
+	v.n = 1234;
+	T_ASSERT(radix_tree_insert(rt, k, k + sizeof(k), v));
+	T_ASSERT(radix_tree_remove(rt, k, k + sizeof(k)));
+	T_ASSERT(!radix_tree_lookup(rt, k, k + sizeof(k), &v));
+}
+
+static void test_remove_one_byte_keys(void *fixture)
+{
+        struct radix_tree *rt = fixture;
+        unsigned i, j;
+	uint8_t k[1];
+	union radix_value v;
+
+	for (i = 0; i < 256; i++) {
+        	k[0] = i;
+        	v.n = i + 1000;
+		T_ASSERT(radix_tree_insert(rt, k, k + 1, v));
+	}
+
+	for (i = 0; i < 256; i++) {
+        	k[0] = i;
+		T_ASSERT(radix_tree_remove(rt, k, k + 1));
+
+		for (j = i + 1; j < 256; j++) {
+        		k[0] = j;
+			T_ASSERT(radix_tree_lookup(rt, k, k + 1, &v));
+			T_ASSERT_EQUAL(v.n, j + 1000);
+		}
+	}
+
+	for (i = 0; i < 256; i++) {
+        	k[0] = i;
+		T_ASSERT(!radix_tree_lookup(rt, k, k + 1, &v));
+	}
+}
+
+static void test_remove_prefix_keys(void *fixture)
+{
+	struct radix_tree *rt = fixture;
+	unsigned i, j;
+	uint8_t k[32];
+	union radix_value v;
+
+	_gen_key(k, k + sizeof(k));
+
+	for (i = 0; i < 32; i++) {
+		v.n = i;
+		T_ASSERT(radix_tree_insert(rt, k, k + i, v));
+	}
+
+	for (i = 0; i < 32; i++) {
+        	T_ASSERT(radix_tree_remove(rt, k, k + i));
+        	for (j = i + 1; j < 32; j++) {
+                	T_ASSERT(radix_tree_lookup(rt, k, k + j, &v));
+                	T_ASSERT_EQUAL(v.n, j);
+        	}
+	}
+
+        for (i = 0; i < 32; i++)
+                T_ASSERT(!radix_tree_lookup(rt, k, k + i, &v));
+}
+
+static void test_remove_prefix_keys_reversed(void *fixture)
+{
+	struct radix_tree *rt = fixture;
+	unsigned i, j;
+	uint8_t k[32];
+	union radix_value v;
+
+	_gen_key(k, k + sizeof(k));
+
+	for (i = 0; i < 32; i++) {
+		v.n = i;
+		T_ASSERT(radix_tree_insert(rt, k, k + i, v));
+	}
+
+	for (i = 0; i < 32; i++) {
+        	fprintf(stderr, "removing %u\n", i);
+        	T_ASSERT(radix_tree_remove(rt, k, k + (31 - i)));
+        	for (j = 0; j < 31 - i; j++) {
+                	T_ASSERT(radix_tree_lookup(rt, k, k + j, &v));
+                	T_ASSERT_EQUAL(v.n, j);
+        	}
+	}
+
+        for (i = 0; i < 32; i++)
+                T_ASSERT(!radix_tree_lookup(rt, k, k + i, &v));
 }
 
 //----------------------------------------------------------------
@@ -188,6 +288,10 @@ void radix_tree_tests(struct dm_list *all_tests)
 	T("prefix-keys", "prefixes of other keys are valid keys", test_prefix_keys);
 	T("prefix-keys-reversed", "prefixes of other keys are valid keys", test_prefix_keys_reversed);
 	T("sparse-keys", "see what the memory usage is for sparsely distributed keys", test_sparse_keys);
+	T("remove-one", "remove one entry", test_remove_one);
+	T("remove-one-byte-keys", "remove many one byte keys", test_remove_one_byte_keys);
+	T("remove-prefix-keys", "remove a set of keys that have common prefixes", test_remove_prefix_keys);
+	T("remove-prefix-keys-reversed", "remove a set of keys that have common prefixes (reversed)", test_remove_prefix_keys_reversed);
 
 	dm_list_add(all_tests, &ts->list);
 }
