@@ -134,7 +134,7 @@ Variable is set by thin plugin and is available to executed program. Value prese
 actual usage of thin pool data volume. Variable is not set when error event
 is processed.
 .TP
-.B DMEVENTD_THIN_POOL_DATA
+.B DMEVENTD_THIN_POOL_METADATA
 Variable is set by thin plugin and is available to executed program. Value present
 actual usage of thin pool metadata volume. Variable is not set when error event
 is processed.
