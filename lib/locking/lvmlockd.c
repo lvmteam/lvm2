@@ -1547,6 +1547,16 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 		}
 	}
 
+	if (result == -EALREADY) {
+		/*
+		 * This should generally not happen because commands should be coded
+		 * to avoid reacquiring the global lock.  If there is a case that's
+		 * missed which causes the command to request the gl when it's already
+		 * held, it's not a problem, so let it go.
+		 */
+		log_debug("lockd global mode %s already held.", mode);
+		return 1;
+	}
 
 	if (!strcmp(mode, "un"))
 		return 1;
