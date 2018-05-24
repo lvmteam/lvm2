@@ -22,7 +22,7 @@ Almost all IO uses libaio now.
 Rewrite label scanning
 ----------------------
 
-Dave Tiegland has reworked the label scanning and metadata reading
+Dave Teigland has reworked the label scanning and metadata reading
 logic to minimise the amount a IOs issued.  Combined with the aio changes 
 this can greatly improve scanning speed for some systems.
 
