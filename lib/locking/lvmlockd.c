@@ -2105,8 +2105,9 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (result == -EEXIST) {
 		/*
-		 * This happens if lvchange tries to modify the LV with an ex
-		 * LV lock when the LV is already active with a sh LV lock.
+		 * This happens if a command like lvchange tries to modify the
+		 * LV with an ex LV lock when the LV is already active with a
+		 * sh LV lock.
 		 */
 		log_error("LV is already locked with incompatible mode: %s/%s", vg->name, lv_name);
 		return 0;

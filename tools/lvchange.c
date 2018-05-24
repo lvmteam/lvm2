@@ -1056,9 +1056,11 @@ static int _lvchange_properties_single(struct cmd_context *cmd,
 	int i, opt_enum;
 	uint32_t mr = 0;
 
-	/* If LV is inactive here, ensure it's not active elsewhere. */
-	if (!lockd_lv(cmd, lv, "ex", 0))
-		return_ECMD_FAILED;
+	/*
+	 * We do not acquire an lvmlockd lock on the LV here because these are
+	 * VG metadata changes that do not conflict with the LV being active on
+	 * another host.
+	 */
 
 	/* First group of options which allow for one metadata commit/update for the whole group */
 	for (i = 0; i < cmd->command->ro_count; i++) {
