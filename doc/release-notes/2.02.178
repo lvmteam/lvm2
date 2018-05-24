@@ -23,7 +23,7 @@ Rewrite label scanning
 ----------------------
 
 Dave Teigland has reworked the label scanning and metadata reading
-logic to minimise the amount a IOs issued.  Combined with the aio changes 
+logic to minimise the amount of IOs issued.  Combined with the aio changes 
 this can greatly improve scanning speed for some systems.
 
 ./configure options
@@ -31,16 +31,16 @@ this can greatly improve scanning speed for some systems.
 
 We're going to try and remove as many options from ./configure as we
 can.  Each option multiplies the number of possible configurations
-that we should test (this testing is currently not occuring).
+that we should test (this testing is currently not occurring).
 
 The first batch to be removed are:
 
-  --enable-testing switch for ./configure has been removed.
-  --with-snapshots switch for ./configure has been removed.
-  --with-mirrors switch for ./configure has been removed.
-  --with-raid switch for ./configure has been removed.
-  --with-thin switch for ./configure has been removed.
-  --with-cache switch for ./configure has been removed.
+  --enable-testing
+  --with-snapshots
+  --with-mirrors
+  --with-raid
+  --with-thin
+  --with-cache
 
 Stable targets that are in the upstream kernel will just be supported.
 
