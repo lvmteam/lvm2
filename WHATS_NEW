@@ -1,4 +1,10 @@
+Version 2.02.179 -
+====================================
+
 Version 2.02.178 - 13th June 2018
+=================================
+
+Version 2.02.178-rc1 - 24th May 2018
 ====================================
   Add libaio dependency for build.
   Remove lvm1 and pool format handling and add filter to ignore them.

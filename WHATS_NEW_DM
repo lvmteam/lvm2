@@ -1,4 +1,10 @@
+Version 1.02.148 -
+====================================
+
 Version 1.02.147 - 13th June 2018
+=================================
+
+Version 1.02.147-rc1 - 24th May 2018
 ====================================
   Reuse uname() result for mirror target.
   Recognize also mounted btrfs through dm_device_has_mounted_fs().
