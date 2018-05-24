@@ -33,7 +33,7 @@ aux prepare_md_dev 1 64 2 "$dev1" "$dev2"
 
 mddev=$(< MD_DEV)
 pvdev=$(< MD_DEV_PV)
-
+sleep 3
 mdadm --stop "$mddev"
 
 # copy fake PV/VG header PV3 -> PV2 (which is however md raid1 leg)
@@ -52,7 +52,7 @@ sleep 3
 # print what  blkid thinks about each PV
 for i in "$dev1" "$dev2" "$dev3" "$dev4"
 do
-   blkid "$i"
+	blkid -c /dev/null -w /dev/null "$i" || echo "Unknown signature"
 done
 
 # expect open count for each PV to be 0
@@ -74,20 +74,21 @@ sleep 3
 dmsetup info -c
 
 # if for any reason array went up - stop it again
-mdadm --detail "$mddev" && {
+if mdadm --detail "$mddev" ; then
 	mdadm --stop "$mddev"
 	aux udev_wait
 	should not mdadm --detail "$mddev"
-}
+fi
 
-# now reassemble array from  PV1 & PV2 
+# now reassemble array from  PV1 & PV2
 mdadm --assemble --verbose "$mddev" "$dev1" "$dev2"
 aux udev_wait
 sleep 1
 
 # and let 'fake hdr' to be fixed from master/primary leg
-mdadm --action=repair "$mddev"
-sleep 1
-
-# should be showing correctly PV3 & PV4
-pvs
+# (when mdadm supports repair)
+if mdadm --action=repair "$mddev" ; then
+	sleep 1
+	# should be showing correctly PV3 & PV4
+	pvs
+fi
