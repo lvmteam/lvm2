@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -18,7 +18,7 @@ SKIP_WITH_LVMPOLLD=1
 aux prepare_pvs
 get_devs
 
-vgcreate -s 4k "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 4k "$vg" "${DEVICES[@]}"
 
 # 3 Chunks
 lvcreate -aey -n one -l 10 $vg

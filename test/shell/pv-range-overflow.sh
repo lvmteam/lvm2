@@ -12,7 +12,7 @@
 
 # 'Ensure that pvmove diagnoses PE-range values 2^32 and larger.'
 
-SKIP_WITH_LVMLOCKD=1
+
 
 . lib/inittest
 

@@ -17,7 +17,7 @@
 # http://www.redhat.com/archives/dm-devel/2014-March/msg00005.html
 #
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

@@ -13,7 +13,7 @@
 # test support of thin discards
 #
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
@@ -80,10 +80,10 @@ vgremove -ff $vg
 # device below does not support it, the kernel value
 # of discards actually used will be "nopassdown".
 # This is why we have "-o discards" and "-o kernel_discards".
-vgcreate -s 1m "${vg}_1" "${DEVICES[@]}"
+vgcreate $SHARED -s 1m "${vg}_1" "${DEVICES[@]}"
 lvcreate -l 10 -T ${vg}_1/pool --discards ignore
 lvcreate -V 9m -T ${vg}_1/pool -n device_with_ignored_discards
-vgcreate -s 1m ${vg}_2 "$DM_DEV_DIR/${vg}_1/device_with_ignored_discards"
+vgcreate $SHARED -s 1m ${vg}_2 "$DM_DEV_DIR/${vg}_1/device_with_ignored_discards"
 lvcreate -l 1 -T ${vg}_2/pool --discards passdown
 lvcreate -V 1 -T ${vg}_2/pool
 check lv_field ${vg}_1/pool discards "ignore"

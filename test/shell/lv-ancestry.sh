@@ -11,7 +11,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 SKIP_WITH_LVMPOLLD=1
-SKIP_WITH_LVMLOCKD=1
+
 
 . lib/inittest
 
@@ -21,7 +21,7 @@ get_devs
 
 aux lvmconf "metadata/record_lvs_history=1"
 
-vgcreate -s 64K "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 64K "$vg" "${DEVICES[@]}"
 
 lvcreate -l100%FREE -T ${vg}/pool
 

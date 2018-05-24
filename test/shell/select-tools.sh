@@ -10,15 +10,15 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
 aux prepare_pvs 4 12
 
-vgcreate -s 4m $vg1 "$dev1" "$dev2"
-vgcreate -s 4m $vg2 "$dev3" "$dev4"
+vgcreate $SHARED -s 4m $vg1 "$dev1" "$dev2"
+vgcreate $SHARED -s 4m $vg2 "$dev3" "$dev4"
 
 # vg1/lv1 mapped onto dev1
 lvcreate -l1 -n "lv1" $vg1 "$dev1"

@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
@@ -21,8 +21,8 @@ aux have_thin 1 0 0 || skip
 
 aux prepare_pvs 3
 
-vgcreate -s 128k $vg  "$dev1" "$dev2"
-vgcreate -s 128k $vg2 "$dev3"
+vgcreate $SHARED -s 128k $vg  "$dev1" "$dev2"
+vgcreate $SHARED -s 128k $vg2 "$dev3"
 
 lvcreate -L10M -T $vg/pool
 

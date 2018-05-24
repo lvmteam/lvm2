@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -30,7 +30,7 @@ aux have_raid4 && RAID4=raid4
 aux prepare_pvs 6 20  # 6 devices for RAID10 (2-mirror,3-stripe) test
 get_devs
 
-vgcreate -s 512k "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 512k "$vg" "${DEVICES[@]}"
 
 ###########################################
 # Create, wait for sync, remove tests

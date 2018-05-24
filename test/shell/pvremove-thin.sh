@@ -13,7 +13,7 @@
 # Checks we are not reading our own devices
 # https://bugzilla.redhat.com/show_bug.cgi?id=1064374
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

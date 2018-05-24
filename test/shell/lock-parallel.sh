@@ -13,7 +13,7 @@
 # Test parallel use of lvm commands and check locks aren't dropped
 # RHBZ: https://bugzilla.redhat.com/show_bug.cgi?id=1049296
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

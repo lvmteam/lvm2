@@ -12,7 +12,7 @@
 
 # 'Exercise some lvcreate diagnostics'
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -27,7 +27,7 @@ aux prepare_pvs 2
 get_devs
 
 aux pvcreate --metadatacopies 0 "$dev1"
-aux vgcreate "$vg" "${DEVICES[@]}"
+aux vgcreate $SHARED "$vg" "${DEVICES[@]}"
 
 # ---
 # Create snapshots of LVs on --metadatacopies 0 PV (bz450651)

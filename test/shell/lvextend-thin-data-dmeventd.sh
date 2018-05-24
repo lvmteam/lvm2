@@ -12,7 +12,7 @@
 
 # Test autoextension of thin data volume
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
@@ -38,7 +38,7 @@ aux lvmconf "activation/thin_pool_autoextend_percent = 10" \
 aux prepare_pvs 3 256
 get_devs
 
-vgcreate -s 256K "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 256K "$vg" "${DEVICES[@]}"
 
 lvcreate -L1M -c 64k -T $vg/pool
 lvcreate -V1M $vg/pool -n $lv1

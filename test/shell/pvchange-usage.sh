@@ -12,7 +12,7 @@
 
 # 'Test pvchange option values'
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -26,7 +26,7 @@ aux prepare_pvs 4
 # check 'allocatable' pv attribute
 pvcreate "$dev1"
 check pv_field "$dev1" pv_attr ---
-vgcreate $vg1 "$dev1"
+vgcreate $SHARED $vg1 "$dev1"
 check pv_field "$dev1" pv_attr a--
 pvchange --allocatable n "$dev1"
 check pv_field "$dev1" pv_attr u--
@@ -41,7 +41,7 @@ do
 # cannot change allocatability for orphan PVs
 	fail pvchange "$dev1" -x y
 	fail pvchange "$dev1" -x n
-	vgcreate $vg1 "$dev4" "$dev1"
+	vgcreate $SHARED $vg1 "$dev4" "$dev1"
 
 # "pvchange adds/dels tag to pvs with metadatacopies = $mda "
 	pvchange "$dev1" --addtag test$mda
@@ -72,7 +72,7 @@ done
 # "pvchange uuid"
 pvcreate --metadatacopies 0 "$dev1"
 pvcreate --metadatacopies 2 "$dev2"
-vgcreate $vg1 "$dev1" "$dev2"
+vgcreate $SHARED $vg1 "$dev1" "$dev2"
 
 # Checking for different UUID after pvchange
 UUID1=$(get pv_field "$dev1" uuid)
@@ -117,7 +117,7 @@ fail pvchange "$dev1" --deltag test
 if test -n "$LVM_TEST_LVM1" ; then
 # cannot add PV tag to lvm1 format
 pvcreate -M1 "$dev1"
-vgcreate -M1 $vg1 "$dev1"
+vgcreate $SHARED -M1 $vg1 "$dev1"
 fail pvchange "$dev1" --addtag test
 fi
 

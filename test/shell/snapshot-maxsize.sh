@@ -13,7 +13,7 @@
 # Testing calculation of snapshot space
 # https://bugzilla.redhat.com/show_bug.cgi?id=1035871
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -21,7 +21,7 @@ SKIP_WITH_LVMPOLLD=1
 aux prepare_pvs 1
 get_devs
 
-vgcreate -s 4K "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 4K "$vg" "${DEVICES[@]}"
 
 lvcreate -aey -L1 -n $lv1 $vg
 # Snapshot should be large enough to handle any writes

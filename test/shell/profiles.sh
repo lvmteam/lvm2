@@ -13,7 +13,7 @@
 # test basic profile functionality
 #
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -100,7 +100,7 @@ not grep "$MSG_IGNORING_INVALID_MDA_PROFILE" msg
 # attaching/detaching profiles to VG/LV
 aux prepare_pvs 1 8
 pvcreate "$dev1"
-vgcreate $vg1 "$dev1"
+vgcreate $SHARED $vg1 "$dev1"
 check vg_field $vg1 vg_profile ""
 lvcreate -l 1 -n $lv1 $vg1
 check lv_field $vg1/$lv1 lv_profile ""

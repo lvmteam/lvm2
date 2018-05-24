@@ -10,7 +10,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -24,7 +23,7 @@ pvcreate --metadatacopies 0 "$dev3"
 pvcreate "$dev4"
 pvcreate --metadatacopies 0 "$dev5"
 
-vgcreate "$vg" "${DEVICES[@]}"
+vgcreate $SHARED "$vg" "${DEVICES[@]}"
 lvcreate -n $lv -l 1 -i5 -I256 $vg
 
 pvchange -x n "$dev1"
@@ -38,7 +37,7 @@ vgremove -f $vg
 for mdacp in 1 0; do
 	pvcreate --metadatacopies "$mdacp" "${DEVICES[@]}"
 	pvcreate "$dev1"
-	vgcreate "$vg" "${DEVICES[@]}"
+	vgcreate $SHARED "$vg" "${DEVICES[@]}"
 	lvcreate -n $lv1 -l 2 -i5 -I256 $vg
 	lvcreate -aey -n $lv2 --type mirror -m2 -l 2  $vg
 	lvchange -an $vg/$lv1 $vg/$lv2
@@ -53,7 +52,7 @@ if test -n "$LVM_TEST_LVM1" ; then
 
 pvcreate -M1 "$dev1" "$dev2" "$dev3"
 pv3_uuid=$(get pv_field "$dev3" pv_uuid)
-vgcreate -M1 $vg "$dev1" "$dev2" "$dev3"
+vgcreate $SHARED -M1 $vg "$dev1" "$dev2" "$dev3"
 pvchange --uuid "$dev1"
 
 # verify pe_start of all M1 PVs

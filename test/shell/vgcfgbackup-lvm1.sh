@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -28,7 +28,7 @@ aux lvmconf "backup/backup = 0"
 # vgcfgbackup correctly stores metadata LVM1 with missing PVs
 
 pvcreate -M1 "${DEVICES[@]}"
-vgcreate -M1 -c n "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -M1 -c n "$vg" "${DEVICES[@]}"
 lvcreate -l1 -n $lv1 $vg "$dev1"
 pvremove -ff -y "$dev2"
 not lvcreate -l1 -n $lv1 $vg "$dev3"

@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -34,7 +34,7 @@ aux have_raid 1 3 1 || skip
 aux prepare_pvs 9 80
 get_devs
 
-vgcreate -s 256k "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 256k "$vg" "${DEVICES[@]}"
 
 lvcreate --type raid10 -m 1 -i 3 -l 3 -n $lv1 $vg
 aux wait_for_sync $vg $lv1

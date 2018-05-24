@@ -1161,7 +1161,7 @@ prepare_vg() {
 	teardown_devs
 
 	prepare_devs "$@"
-	vgcreate -s 512K "$vg" "${DEVICES[@]}"
+	vgcreate $SHARED -s 512K "$vg" "${DEVICES[@]}"
 }
 
 extend_filter() {

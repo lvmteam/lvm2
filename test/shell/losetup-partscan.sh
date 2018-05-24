@@ -12,7 +12,7 @@
 
 # Check how lvm2 handles partitions over losetup -P devices
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -37,7 +37,7 @@ aux extend_filter "a|$LOOP|"
 
 # creation should fail for 'partitioned' loop device
 not pvcreate -y "$LOOP"
-not vgcreate vg "$LOOP"
+not vgcreate $SHARED vg "$LOOP"
 
 aux teardown_devs
 
@@ -61,4 +61,4 @@ aux extend_filter "a|$LOOP|"
 # creation should pass for 'non-partitioned' loop device
 pvcreate -y "$LOOP"
 
-vgcreate vg "$LOOP"
+vgcreate $SHARED vg "$LOOP"

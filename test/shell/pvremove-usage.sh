@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -34,7 +34,7 @@ pvs -a -o+devices
 pvcreate  --metadatacopies 0 "$dev2"
 
 # check pvremove refuses to remove pv in a vg
-vgcreate $vg "$dev1" "$dev2"
+vgcreate $SHARED $vg "$dev1" "$dev2"
 not pvremove "$dev2" "$dev3"
 
 for mdacp in 0 1 2; do
@@ -53,7 +53,7 @@ for mdacp in 0 1 2; do
     vgremove -ff $vg
     pvcreate --metadatacopies $mdacp "$dev1"
     pvcreate "$dev2"
-    vgcreate $vg "$dev1" "$dev2"
+    vgcreate $SHARED $vg "$dev1" "$dev2"
 
     # pvremove -f fails when pv in a vg (---metadatacopies $mdacp)
     not pvremove -f "$dev1" 2>&1 | tee out

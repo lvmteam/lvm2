@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -62,7 +62,7 @@ check sysfs "$(< SCSI_DEBUG_DEV)" queue/logical_block_size "$LOGICAL_BLOCK_SIZE"
 aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
 get_devs
 
-vgcreate $vg "${DEVICES[@]}"
+vgcreate $SHARED $vg "${DEVICES[@]}"
 test_snapshot_mount
 vgremove $vg
 
@@ -77,7 +77,7 @@ aux prepare_scsi_debug_dev $DEV_SIZE \
 check sysfs "$(< SCSI_DEBUG_DEV)" queue/logical_block_size $LOGICAL_BLOCK_SIZE
 
 aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
-vgcreate $vg "${DEVICES[@]}"
+vgcreate $SHARED $vg "${DEVICES[@]}"
 test_snapshot_mount
 vgremove $vg
 
@@ -92,7 +92,7 @@ aux prepare_scsi_debug_dev $DEV_SIZE \
 check sysfs "$(< SCSI_DEBUG_DEV)" queue/logical_block_size $LOGICAL_BLOCK_SIZE
 
 aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
-vgcreate $vg "${DEVICES[@]}"
+vgcreate $SHARED $vg "${DEVICES[@]}"
 test_snapshot_mount
 vgremove $vg
 

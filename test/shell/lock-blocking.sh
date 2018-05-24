@@ -11,7 +11,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 test_description='test some blocking / non-blocking multi-vg operations'
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_CLVMD=1
 SKIP_WITH_LVMPOLLD=1
 
@@ -19,7 +19,7 @@ SKIP_WITH_LVMPOLLD=1
 
 aux prepare_devs 3
 pvcreate "$dev1" "$dev2"
-vgcreate $vg "$dev1" "$dev2"
+vgcreate $SHARED $vg "$dev1" "$dev2"
 
 # if wait_for_locks set, vgremove should wait for orphan lock
 # flock process should have exited by the time first vgremove completes
@@ -33,7 +33,7 @@ test ! -f "$TESTDIR/var/lock/lvm/P_orphans"
 
 # if wait_for_locks not set, vgremove should fail on non-blocking lock
 # we must wait for flock process at the end - vgremove won't wait
-vgcreate $vg "$dev1" "$dev2"
+vgcreate $SHARED $vg "$dev1" "$dev2"
 flock -w 5 "$TESTDIR/var/lock/lvm/P_orphans" sleep 10 &
 
 while ! test -f "$TESTDIR/var/lock/lvm/P_orphans" ; do sleep .1 ; done

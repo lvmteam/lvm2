@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -23,9 +23,9 @@ aux prepare_pvs 6 16
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # create $VGS with assorted tags
-vgcreate $vg1 --vgmetadatacopies 2 --addtag "vg_tag3" --addtag "vg_tag2" -s 4m "$dev1" "$dev2" "$dev3"
-vgcreate $vg2 --addtag "vg_tag2" -s 4m "$dev4" "$dev5"
-vgcreate $vg3 --addtag "vg_tag1" -s 4m "$dev6"
+vgcreate $SHARED $vg1 --vgmetadatacopies 2 --addtag "vg_tag3" --addtag "vg_tag2" -s 4m "$dev1" "$dev2" "$dev3"
+vgcreate $SHARED $vg2 --addtag "vg_tag2" -s 4m "$dev4" "$dev5"
+vgcreate $SHARED $vg3 --addtag "vg_tag1" -s 4m "$dev6"
 
 # add PV assorted tags
 pvchange --addtag "pv_tag3" --addtag "pv_tag1" --addtag "pv_tag2" "$dev1"

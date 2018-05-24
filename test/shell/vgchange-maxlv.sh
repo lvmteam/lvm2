@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -19,13 +19,13 @@ aux prepare_dmeventd
 aux prepare_pvs 3
 get_devs
 
-vgcreate -l 2 "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -l 2 "$vg" "${DEVICES[@]}"
 lvcreate -aey -n one -l 1 $vg
 lvcreate -n two -l 1 $vg
 not lvcreate -n three -l 1 $vg
 vgremove -ff $vg
 
-vgcreate -l 3 "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -l 3 "$vg" "${DEVICES[@]}"
 lvcreate -aey -n one -l 1 $vg
 lvcreate -n snap -s -l 1 $vg/one
 lvcreate -n two -l 1 $vg

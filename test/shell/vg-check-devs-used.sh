@@ -11,7 +11,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 SKIP_WITH_LVMPOLLD=1
-SKIP_WITH_LVMLOCKD=1
+
 
 . lib/inittest
 
@@ -20,7 +20,7 @@ aux driver_at_least 4 15 || skip
 
 aux prepare_devs 3 8
 
-vgcreate "$vg" "$dev1" "$dev2"
+vgcreate $SHARED "$vg" "$dev1" "$dev2"
 lvcreate -l100%FREE -n $lv $vg
 dd if="$dev1" of="$dev3" bs=1M
 pvs --config "devices/global_filter = [ \"a|$dev2|\", \"a|$dev3|\", \"r|.*|\" ]" 2>err

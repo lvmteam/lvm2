@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -20,7 +20,7 @@ get_devs
 
 cp -r "$dev1" "$DM_DEV_DIR/stray"
 
-vgcreate "$vg" "${DEVICES[@]}"
+vgcreate $SHARED "$vg" "${DEVICES[@]}"
 lvcreate -an -Zn --type mirror -m 1 -l 1 -n mirror $vg
 aux disable_dev "$dev1"
 # FIXME:

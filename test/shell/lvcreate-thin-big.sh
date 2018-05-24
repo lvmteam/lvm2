@@ -13,7 +13,7 @@
 # test currently needs to drop
 # 'return NULL' in _lv_create_an_lv after log_error("Can't create %s without using "
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
@@ -27,7 +27,7 @@ aux have_thin 1 0 0 || skip
 aux prepare_pvs 10 16500
 get_devs
 
-vgcreate -s 64K "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 64K "$vg" "${DEVICES[@]}"
 
 # Size 0 is not valid
 invalid lvcreate -L4M --chunksize 128 --poolmetadatasize 0 -T $vg/pool1 2>out

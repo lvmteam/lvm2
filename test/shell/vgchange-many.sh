@@ -11,7 +11,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 # Check perfomance of activation and deactivation
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -26,7 +26,7 @@ test "$(aux total_mem)" -gt 524288 || TEST_DEVS=256
 aux prepare_pvs 1 400
 get_devs
 
-vgcreate -s 128K "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 128K "$vg" "${DEVICES[@]}"
 
 vgcfgbackup -f data $vg
 

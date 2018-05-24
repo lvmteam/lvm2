@@ -17,7 +17,7 @@
 #   instead lvconvert --repair them?)
 # - linear LVs with bits missing are not activated
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

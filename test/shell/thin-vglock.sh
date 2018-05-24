@@ -13,7 +13,7 @@
 # Test locking works and doesn't update metadata
 # RHBZ: https://bugzilla.redhat.com/show_bug.cgi?id=1063542
 
-SKIP_WITH_LVMLOCKD=1
+
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
