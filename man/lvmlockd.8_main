@@ -852,7 +852,10 @@ using lvcreate to create cache pools or cache LVs (use lvconvert)
 using external origins for thin LVs
 .br
 \[bu]
-splitting mirrors and snapshots from LVs
+splitting snapshots from LVs
+.br
+\[bu]
+splitting mirrors in sanlock VGs
 .br
 \[bu]
 pvmove of entire PVs, or under LVs activated with shared locks

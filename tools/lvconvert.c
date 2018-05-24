@@ -716,8 +716,8 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 	*old_mimage_count = lv_mirror_count(lv);
 	*old_log_count = _get_log_count(lv);
 
-	if (is_lockd_type(lv->vg->lock_type) && lp->keep_mimages) {
-		/* FIXME: we need to create a lock for the new LV. */
+	if (lv->vg->lock_type && !strcmp(lv->vg->lock_type, "sanlock") && lp->keep_mimages) {
+		/* FIXME: we need to create a sanlock lock on disk for the new LV. */
 		log_error("Unable to split mirrors in VG with lock_type %s", lv->vg->lock_type);
 		return 0;
 	}

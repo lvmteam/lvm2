@@ -424,6 +424,11 @@ revert_new_lv:
 static int _activate_lv_like_model(struct logical_volume *model,
 				   struct logical_volume *lv)
 {
+	/* FIXME: run all cases through lv_active_change when clvm variants are gone. */
+
+	if (is_lockd_type(lv->vg->lock_type))
+		return lv_active_change(lv->vg->cmd, lv, CHANGE_AEY, 0);
+
 	if (lv_is_active_exclusive(model)) {
 		if (!activate_lv_excl(lv->vg->cmd, lv))
 			return_0;
@@ -704,6 +709,9 @@ static int _split_mirror_images(struct logical_volume *lv,
 		log_error("Unable to rename newly split LV.");
 		return 0;
 	}
+
+	if (!strcmp(lv->vg->lock_type, "dlm"))
+		new_lv->lock_args = lv->lock_args;
 
 	if (!dm_list_empty(&split_images)) {
 		/*

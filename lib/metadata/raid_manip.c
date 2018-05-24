@@ -21,6 +21,7 @@
 #include "activate.h"
 #include "lv_alloc.h"
 #include "lvm-string.h"
+#include "lvmlockd.h"
 
 typedef int (*fn_on_lv_t)(struct logical_volume *lv, void *data);
 static int _eliminate_extracted_lvs_optional_write_vg(struct volume_group *vg,
@@ -3315,7 +3316,7 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 	dm_list_init(&removal_lvs);
 	dm_list_init(&data_list);
 
-	if (is_lockd_type(lv->vg->lock_type)) {
+	if (lv->vg->lock_type && !strcmp(lv->vg->lock_type, "sanlock")) {
 		log_error("Splitting raid image is not allowed with lock_type %s.",
 			  lv->vg->lock_type);
 		return 0;
@@ -3394,6 +3395,9 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 
 	lvl->lv->name = split_name;
 
+	if (!strcmp(lv->vg->lock_type, "dlm"))
+		lvl->lv->lock_args = lv->lock_args;
+
 	if (!vg_write(lv->vg)) {
 		log_error("Failed to write changes for %s.",
 			  display_lvname(lv));
@@ -3419,7 +3423,13 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 	 * the original RAID LV having possibly had sub-LVs that have been
 	 * shifted and renamed.
 	 */
-	if (!activate_lv_excl_local(cmd, lvl->lv))
+
+	/* FIXME: run all cases through lv_active_change when clvm variants are gone. */
+
+	if (is_lockd_type(lvl->lv->vg->lock_type)) {
+		if (!lv_active_change(lv->vg->cmd, lvl->lv, CHANGE_AEY, 0))
+			return_0;
+	} else if (!activate_lv_excl_local(cmd, lvl->lv))
 		return_0;
 
 	dm_list_iterate_items(lvl, &removal_lvs)
@@ -3473,7 +3483,7 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 	int s;
 	struct lv_segment *seg = first_seg(lv);
 
-	if (is_lockd_type(lv->vg->lock_type)) {
+	if (lv->vg->lock_type && !strcmp(lv->vg->lock_type, "sanlock")) {
 		log_error("Splitting raid image is not allowed with lock_type %s.",
 			  lv->vg->lock_type);
 		return 0;
@@ -3573,6 +3583,10 @@ int lv_raid_merge(struct logical_volume *image_lv)
 			  display_lvname(image_lv));
 		return 0;
 	}
+
+	/* Ensure primary LV is not active elsewhere. */
+	if (!lockd_lv(vg->cmd, lvl->lv, "ex", 0))
+		return_0;
 
 	lv = lvl->lv;
 	seg = first_seg(lv);
