@@ -1175,7 +1175,7 @@ extend_filter() {
 }
 
 extend_filter_LVMTEST() {
-	extend_filter "a|$DM_DEV_DIR/$PREFIX|"
+	extend_filter "a|$DM_DEV_DIR/$PREFIX|" "$@"
 }
 
 hide_dev() {
