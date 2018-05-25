@@ -10,14 +10,13 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
 aux prepare_devs 2
 
-vgcreate --metadatasize 128k $vg1 "$dev1"
+vgcreate $SHARED --metadatasize 128k $vg1 "$dev1"
 lvcreate -l100%FREE -n $lv1 $vg1
 
 # Test plain vgexport vgimport tools
@@ -76,7 +75,7 @@ vgremove -ff $vg1 $vg2
 
 # Verify that if we provide the -n|--basevgname,
 # the number suffix is not added unnecessarily.
-vgcreate --metadatasize 128k A${vg1}B "$dev1"
+vgcreate $SHARED --metadatasize 128k A${vg1}B "$dev1"
 
 # vg1B is not the same as Avg1B - we don't need number suffix
 dd if="$dev1" of="$dev2" bs=256K count=1
