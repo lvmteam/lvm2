@@ -2416,10 +2416,6 @@ int lockd_init_lv_args(struct cmd_context *cmd, struct volume_group *vg,
  * an LV with no lock_args will do nothing (unless the LV type causes the lock
  * request to be directed to another LV with a lock, e.g. to the thin pool LV
  * for thin LVs.)
- *
- * Current limitations:
- * - cache-type LV's in a lockd VG must be created with lvconvert.
- * - creating a thin pool and thin lv in one command is not allowed.
  */
 
 int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logical_volume *lv,
@@ -2448,7 +2444,17 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 		/* needs_lock_init is set for LVs that need a lockd lock. */
 		return 1;
 
-	} else if (seg_is_cache(lp) || seg_is_cache_pool(lp)) {
+	} else if (seg_is_cache_pool(lp)) {
+		/*
+		 * A cache pool does not use a lockd lock because it cannot be
+		 * used by itself.  When a cache pool is attached to an actual
+		 * LV, the lockd lock for that LV covers the LV and the cache
+		 * pool attached to it.
+		 */
+		lv->lock_args = NULL;
+		return 1;
+
+	} else if (seg_is_cache(lp)) {
 		/*
 		 * This should not happen because the command defs are
 		 * checked and excluded for shared VGs early in lvcreate.
