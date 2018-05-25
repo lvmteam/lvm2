@@ -90,6 +90,12 @@ EOF
 	maj=$(($(stat -L --printf=0x%t "${mddev}p1")))
 	min=$(($(stat -L --printf=0x%T "${mddev}p1")))
 
+	ls /sys/dev/block/$maj:$min/
+	ls /sys/dev/block/$maj:$min/holders/
+	cat /sys/dev/block/$maj:$min/dev
+	cat /sys/dev/block/$maj:$min/stat
+	cat /sys/dev/block/$maj:$min/size
+
 	sysfs_alignment_offset="/sys/dev/block/$maj:$min/alignment_offset"
 	[ -f "$sysfs_alignment_offset" ] && \
 		alignment_offset=$(< "$sysfs_alignment_offset") || \

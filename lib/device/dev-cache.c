@@ -1079,6 +1079,8 @@ static int _insert(const char *path, const struct stat *info,
 void dev_cache_scan(void)
 {
 	struct dir_list *dl;
+	
+	log_debug_devs("Creating list of system devices.");
 
 	_cache.has_scanned = 1;
 
