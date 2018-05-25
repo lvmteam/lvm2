@@ -11,7 +11,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 test_description='Exercise some vgchange diagnostics'
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -19,7 +19,7 @@ SKIP_WITH_LVMPOLLD=1
 aux prepare_pvs 4
 
 pvcreate --metadatacopies 0 "$dev1"
-vgcreate -s 4M $vg "$dev1" "$dev2" "$dev3"
+vgcreate $SHARED -s 4M $vg "$dev1" "$dev2" "$dev3"
 
 # cannot change anything in exported vg
 vgexport $vg
@@ -96,6 +96,9 @@ check vg_attr_bit resizeable $vg "-"
 fail vgchange -x n $vg
 fail vgextend $vg "$dev4"
 vgremove -ff $vg
+
+# skip cluster tests with lvmlockd
+test -n "$LVM_TEST_LVMLOCKD" && exit 0
 
 # set cluster bit
 vgcreate -cn $vg "$dev1" "$dev2" "$dev3"
