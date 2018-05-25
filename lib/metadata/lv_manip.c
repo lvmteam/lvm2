@@ -8025,8 +8025,14 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 			if (!(lp->segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_THIN_POOL)))
 				return_NULL;
 
+			/* We want a lockd lock for the new thin pool, but not the thin lv. */
+			lp->needs_lockd_init = 1;
+
 			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name)))
 				return_NULL;
+
+			lp->needs_lockd_init = 0;
+
 		} else if (seg_is_cache(lp)) {
 			if (!lp->origin_name) {
 				/* Until we have --pooldatasize we are lost */
