@@ -1,16 +1,22 @@
-Version 2.02.178 - 
-=====================================
+Version 2.02.178 -
+====================================
+  Use versionsort to fix archive file expiry beyond 100000 files.
+
+Version 2.02.178-rc1 - 24th May 2018
+====================================
+  Add libaio dependency for build.
   Remove lvm1 and pool format handling and add filter to ignore them.
   Move some filter checks to after disks are read.
   Rework disk scanning and when it is used.
   Add new io layer and shift code to using it.
-  lvconvert: don't return success on degraded -m raid1 conversion
+  Fix lvconvert's return code on degraded -m raid1 conversion.
   --enable-testing switch for ./configure has been removed.
   --with-snapshots switch for ./configure has been removed.
   --with-mirrors switch for ./configure has been removed.
   --with-raid switch for ./configure has been removed.
   --with-thin switch for ./configure has been removed.
   --with-cache switch for ./configure has been removed.
+  Include new unit-test framework and unit tests.
   Extend validation of region_size for mirror segment.
   Reload whole device stack when reinitilizing mirror log.
   Mirrors without monitoring are WARNING and not blocking on error.
@@ -34,8 +40,8 @@ Version 2.02.178 -
   Enhance mirror log initialization for old mirror target.
   Skip private crypto and stratis devices.
   Skip frozen raid devices from scanning.
-  Activate RAID SubLVs on read_only_volume_list readwrite
-  Offer convenience type raid5_n converting to raid10
+  Activate RAID SubLVs on read_only_volume_list readwrite.
+  Offer convenience type raid5_n converting to raid10.
   Automatically avoid reading invalid snapshots during device scan.
   Ensure COW device is writable even for read-only thick snapshots.
   Support activation of component LVs in read-only mode.
@@ -53,20 +59,13 @@ Version 2.02.178 -
   Improve validation of created strings in vgimportclone.
   Add missing initialisation of mem pool in systemd generator.
   Do not reopen output streams for multithreaded users of liblvm.
-  Use versionsort to fix archive file expiry beyond 100000 files.
-  Add devices/use_aio, aio_max, aio_memory to configure AIO limits.
-  Support asynchronous I/O when scanning devices.
-  Detect asynchronous I/O capability in configure or accept --disable-aio.
-  Add AIO_SUPPORTED_CODE_PATH to indicate whether AIO may be used.
   Configure ensures /usr/bin dir is checked for dmpd tools.
   Restore pvmove support for wide-clustered active volumes (2.02.177).
   Avoid non-exclusive activation of exclusive segment types.
   Fix trimming sibling PVs when doing a pvmove of raid subLVs.
   Preserve exclusive activation during thin snaphost merge.
-  Suppress some repeated reads of the same disk data at the device layer.
   Avoid exceeding array bounds in allocation tag processing.
-  Refactor metadata reading code to use callback functions.
-  Move memory allocation for the key dev_reads into the device layer.
+  Add --lockopt to common options and add option to skip selected locks.
 
 Version 2.02.177 - 18th December 2017
 =====================================

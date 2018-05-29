@@ -25,12 +25,11 @@ union radix_value {
 	uint64_t n;
 };
 
-struct radix_tree *radix_tree_create(void);
-
 typedef void (*radix_value_dtr)(void *context, union radix_value v);
 
-// dtr may be NULL
-void radix_tree_destroy(struct radix_tree *rt, radix_value_dtr dtr, void *context);
+// dtr will be called on any deleted entries.  dtr may be NULL.
+struct radix_tree *radix_tree_create(radix_value_dtr dtr, void *dtr_context);
+void radix_tree_destroy(struct radix_tree *rt);
 
 unsigned radix_tree_size(struct radix_tree *rt);
 bool radix_tree_insert(struct radix_tree *rt, uint8_t *kb, uint8_t *ke, union radix_value v);

@@ -123,7 +123,7 @@ Command is executed with environmental variable
 in this environment will not try to interact with dmeventd.
 To see the fullness of a thin pool command may check these
 two environmental variables
-\fBDMEVENTD_THIN_POOL_DATA\fP and \fBDMEVENTD_THIN_POOL_DATA\fP.
+\fBDMEVENTD_THIN_POOL_DATA\fP and \fBDMEVENTD_THIN_POOL_METADATA\fP.
 Command can also read status with tools like \fBlvs\fP(8).
 .
 .SH ENVIRONMENT VARIABLES
@@ -134,7 +134,7 @@ Variable is set by thin plugin and is available to executed program. Value prese
 actual usage of thin pool data volume. Variable is not set when error event
 is processed.
 .TP
-.B DMEVENTD_THIN_POOL_DATA
+.B DMEVENTD_THIN_POOL_METADATA
 Variable is set by thin plugin and is available to executed program. Value present
 actual usage of thin pool metadata volume. Variable is not set when error event
 is processed.

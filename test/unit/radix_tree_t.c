@@ -21,14 +21,14 @@
 
 static void *rt_init(void)
 {
-	struct radix_tree *rt = radix_tree_create();
+	struct radix_tree *rt = radix_tree_create(NULL, NULL);
 	T_ASSERT(rt);
 	return rt;
 }
 
 static void rt_exit(void *fixture)
 {
-	radix_tree_destroy(fixture, NULL, NULL);
+	radix_tree_destroy(fixture);
 }
 
 static void test_create_destroy(void *fixture)

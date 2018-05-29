@@ -25,8 +25,7 @@ aux prepare_devs 2
 aux prepare_md_dev 0 64 2 "$dev1" "$dev2"
 
 aux lvmconf 'devices/md_component_detection = 1'
-aux extend_filter_LVMTEST
-aux extend_filter "a|/dev/md.*|"
+aux extend_filter_LVMTEST "a|/dev/md|"
 
 pvdev=$(< MD_DEV_PV)
 
