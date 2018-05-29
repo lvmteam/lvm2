@@ -501,15 +501,6 @@ retry_open:
 					       (int)MAJOR(sbuf.st_rdev), (int)MINOR(sbuf.st_rdev));
 			}
 
-			/*
-			 * FIXME: do we want to try opening this device using
-			 * one of the other path aliases for the same
-			 * major:minor from dev->aliases?  We could iterate
-			 * through those aliases to try opening each of them to
-			 * find one that works.  What are the consequences of
-			 * using a different, non-preferred alias to a device?
-			 */
-
 			if (!retried) {
 				/*
 				 * FIXME: remove this, the theory for this retry is that
@@ -548,6 +539,37 @@ static int _scan_dev_close(struct device *dev)
 		log_warn("close %s errno %d", dev_name(dev), errno);
 	dev->bcache_fd = -1;
 	return 1;
+}
+
+static void _drop_bad_aliases(struct device *dev)
+{
+	struct dm_str_list *strl, *strl2;
+	const char *name;
+	struct stat sbuf;
+	int major = (int)MAJOR(dev->dev);
+	int minor = (int)MINOR(dev->dev);
+	int bad;
+
+	dm_list_iterate_items_safe(strl, strl2, &dev->aliases) {
+		name = strl->str;
+		bad = 0;
+
+		if (stat(name, &sbuf)) {
+			bad = 1;
+			log_debug_devs("Device path check %d:%d %s stat failed errno %d",
+					major, minor, name, errno);
+		} else if (sbuf.st_rdev != dev->dev) {
+			bad = 1;
+			log_debug_devs("Device path check %d:%d %s stat %d:%d does not match.",
+				       major, minor, name,
+				       (int)MAJOR(sbuf.st_rdev), (int)MINOR(sbuf.st_rdev));
+		}
+
+		if (bad) {
+			log_debug_devs("Device path check %d:%d dropping path %s.", major, minor, name);
+			dev_cache_failed_path(dev, name);
+		}
+	}
 }
 
 /*
@@ -635,7 +657,11 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 			scan_failed_count++;
 			lvmcache_del_dev(devl->dev);
 		} else {
-			log_debug_devs("Processing data from device %s fd %d block %p", dev_name(devl->dev), devl->dev->bcache_fd, bb);
+			log_debug_devs("Processing data from device %s %d:%d fd %d block %p",
+				       dev_name(devl->dev),
+				       (int)MAJOR(devl->dev->dev),
+				       (int)MINOR(devl->dev->dev),
+				       devl->dev->bcache_fd, bb);
 
 			ret = _process_block(cmd, f, devl->dev, bb, 0, 0, &is_lvm_device);
 
@@ -675,11 +701,6 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 	 * to open the devs on the reopen_devs list.
 	 *
 	 * FIXME: it's not clear if or why this helps.
-	 *
-	 * FIXME: should we delete the first path name from dev->aliases that
-	 * we failed to open the first time before retrying?  If that path
-	 * still exists on the system, dev_cache_scan should put it back, but
-	 * if it doesn't exist we don't want to try using it again.
 	 */
 	if (!dm_list_empty(&reopen_devs)) {
 		if (retried_open) {
@@ -689,6 +710,20 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 			goto out;
 		}
 		retried_open = 1;
+
+		dm_list_iterate_items_safe(devl, devl2, &reopen_devs) {
+			_drop_bad_aliases(devl->dev);
+
+			if (dm_list_empty(&devl->dev->aliases)) {
+				log_warn("WARNING: Scan ignoring device %d:%d with no paths.",
+					 (int)MAJOR(devl->dev->dev),
+					 (int)MINOR(devl->dev->dev));
+					 
+				dm_list_del(&devl->list);
+				lvmcache_del_dev(devl->dev);
+				scan_failed_count++;
+			}
+		}
 
 		/*
 		 * This will search the system's /dev for new path names and
