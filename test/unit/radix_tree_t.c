@@ -11,6 +11,7 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  
 #include "base/data-struct/radix-tree.h"
+#include "base/memory/container_of.h"
 
 #include "units.h"
 
@@ -288,6 +289,84 @@ static void test_remove_prefix(void *fixture)
 	T_ASSERT_EQUAL(radix_tree_remove_prefix(rt, k, k + 1), count);
 }
 
+static void test_size(void *fixture)
+{
+	struct radix_tree *rt = fixture;
+	unsigned i, dup_count = 0;
+	uint8_t k[2];
+	union radix_value v;
+
+	// populate some random 16bit keys
+	for (i = 0; i < 10000; i++) {
+        	_gen_key(k, k + sizeof(k));
+        	if (radix_tree_lookup(rt, k, k + sizeof(k), &v))
+                	dup_count++;
+		v.n = i;
+		T_ASSERT(radix_tree_insert(rt, k, k + sizeof(k), v));
+	}
+
+	T_ASSERT_EQUAL(radix_tree_size(rt), 10000 - dup_count);
+}
+
+struct visitor {
+	struct radix_tree_iterator it;
+	unsigned count;
+};
+
+static bool _visit(struct radix_tree_iterator *it,
+                   uint8_t *kb, uint8_t *ke, union radix_value v)
+{
+	struct visitor *vt = container_of(it, struct visitor, it);
+	vt->count++;
+	return true;
+}
+
+static void test_iterate_all(void *fixture)
+{
+	struct radix_tree *rt = fixture;
+	unsigned i;
+	uint8_t k[4];
+	union radix_value v;
+	struct visitor vt;
+
+	// populate some random 32bit keys
+	for (i = 0; i < 100000; i++) {
+        	_gen_key(k, k + sizeof(k));
+		v.n = i;
+		T_ASSERT(radix_tree_insert(rt, k, k + sizeof(k), v));
+	}
+
+	vt.count = 0;
+	vt.it.visit = _visit;
+	radix_tree_iterate(rt, NULL, NULL, &vt.it);
+	T_ASSERT_EQUAL(vt.count, radix_tree_size(rt));
+}
+
+static void test_iterate_subset(void *fixture)
+{
+	struct radix_tree *rt = fixture;
+	unsigned i, subset_count = 0;
+	uint8_t k[3];
+	union radix_value v;
+	struct visitor vt;
+
+	// populate some random 32bit keys
+	for (i = 0; i < 100000; i++) {
+        	_gen_key(k, k + sizeof(k));
+        	if (k[0] == 21 && k[1] == 12)
+                	subset_count++;
+		v.n = i;
+		T_ASSERT(radix_tree_insert(rt, k, k + sizeof(k), v));
+	}
+
+	vt.count = 0;
+	vt.it.visit = _visit;
+	k[0] = 21;
+	k[1] = 12;
+	radix_tree_iterate(rt, k, k + 2, &vt.it);
+	T_ASSERT_EQUAL(vt.count, subset_count);
+}
+
 //----------------------------------------------------------------
 
 #define T(path, desc, fn) register_test(ts, "/base/data-struct/radix-tree/" path, desc, fn)
@@ -313,6 +392,9 @@ void radix_tree_tests(struct dm_list *all_tests)
 	T("remove-prefix-keys", "remove a set of keys that have common prefixes", test_remove_prefix_keys);
 	T("remove-prefix-keys-reversed", "remove a set of keys that have common prefixes (reversed)", test_remove_prefix_keys_reversed);
 	T("remove-prefix", "remove a subrange", test_remove_prefix);
+	T("size-spots-duplicates", "duplicate entries aren't counted twice", test_size);
+	T("iterate-all", "iterate all entries in tree", test_iterate_all);
+	T("iterate-subset", "iterate a subset of entries in tree", test_iterate_subset);
 
 	dm_list_add(all_tests, &ts->list);
 }

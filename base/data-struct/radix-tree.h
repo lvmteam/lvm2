@@ -41,6 +41,18 @@ unsigned radix_tree_remove_prefix(struct radix_tree *rt, uint8_t *prefix_b, uint
 bool radix_tree_lookup(struct radix_tree *rt,
 		       uint8_t *kb, uint8_t *ke, union radix_value *result);
 
+// The radix tree stores entries in lexicographical order.  Which means
+// we can iterate entries, in order.  Or iterate entries with a particular
+// prefix.
+struct radix_tree_iterator {
+        // Returns false if the iteration should end.
+	bool (*visit)(struct radix_tree_iterator *it,
+                      uint8_t *kb, uint8_t *ke, union radix_value v);
+};
+
+void radix_tree_iterate(struct radix_tree *rt, uint8_t *kb, uint8_t *ke,
+                        struct radix_tree_iterator *it);
+
 //----------------------------------------------------------------
 
 #endif
