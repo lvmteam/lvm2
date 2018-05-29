@@ -74,17 +74,21 @@ struct node256 {
 struct radix_tree {
 	unsigned nr_entries;
 	struct value root;
+	radix_value_dtr dtr;
+	void *dtr_context;
 };
 
 //----------------------------------------------------------------
 
-struct radix_tree *radix_tree_create(void)
+struct radix_tree *radix_tree_create(radix_value_dtr dtr, void *dtr_context)
 {
 	struct radix_tree *rt = malloc(sizeof(*rt));
 
 	if (rt) {
 		rt->nr_entries = 0;
 		rt->root.type = UNSET;
+		rt->dtr = dtr;
+		rt->dtr_context = dtr_context;
 	}
 
 	return rt;
@@ -153,9 +157,9 @@ static void _free_node(struct value v, radix_value_dtr dtr, void *context)
 	}
 }
 
-void radix_tree_destroy(struct radix_tree *rt, radix_value_dtr dtr, void *context)
+void radix_tree_destroy(struct radix_tree *rt)
 {
-	_free_node(rt->root, dtr, context);
+	_free_node(rt->root, rt->dtr, rt->dtr_context);
 	free(rt);
 }
 
