@@ -267,6 +267,27 @@ static void test_remove_prefix_keys_reversed(void *fixture)
                 T_ASSERT(!radix_tree_lookup(rt, k, k + i, &v));
 }
 
+static void test_remove_prefix(void *fixture)
+{
+	struct radix_tree *rt = fixture;
+	unsigned i, count = 0;
+	uint8_t k[4];
+	union radix_value v;
+
+	// populate some random 32bit keys
+	for (i = 0; i < 100000; i++) {
+        	_gen_key(k, k + sizeof(k));
+        	if (k[0] == 21)
+                	count++;
+		v.n = i;
+		T_ASSERT(radix_tree_insert(rt, k, k + sizeof(k), v));
+	}
+
+	// remove keys in a sub range 
+	k[0] = 21;
+	T_ASSERT_EQUAL(radix_tree_remove_prefix(rt, k, k + 1), count);
+}
+
 //----------------------------------------------------------------
 
 #define T(path, desc, fn) register_test(ts, "/base/data-struct/radix-tree/" path, desc, fn)
@@ -291,6 +312,7 @@ void radix_tree_tests(struct dm_list *all_tests)
 	T("remove-one-byte-keys", "remove many one byte keys", test_remove_one_byte_keys);
 	T("remove-prefix-keys", "remove a set of keys that have common prefixes", test_remove_prefix_keys);
 	T("remove-prefix-keys-reversed", "remove a set of keys that have common prefixes (reversed)", test_remove_prefix_keys_reversed);
+	T("remove-prefix", "remove a subrange", test_remove_prefix);
 
 	dm_list_add(all_tests, &ts->list);
 }

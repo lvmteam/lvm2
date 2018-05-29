@@ -34,6 +34,10 @@ void radix_tree_destroy(struct radix_tree *rt);
 unsigned radix_tree_size(struct radix_tree *rt);
 bool radix_tree_insert(struct radix_tree *rt, uint8_t *kb, uint8_t *ke, union radix_value v);
 bool radix_tree_remove(struct radix_tree *rt, uint8_t *kb, uint8_t *ke);
+
+// Returns the number of values removed
+unsigned radix_tree_remove_prefix(struct radix_tree *rt, uint8_t *prefix_b, uint8_t *prefix_e);
+
 bool radix_tree_lookup(struct radix_tree *rt,
 		       uint8_t *kb, uint8_t *ke, union radix_value *result);
 

@@ -101,9 +101,10 @@ static inline void _dtr(struct radix_tree *rt, union radix_value v)
         	rt->dtr(rt->dtr_context, v);
 }
 
-static void _free_node(struct radix_tree *rt, struct value v)
+// Returns the number of values removed
+static unsigned _free_node(struct radix_tree *rt, struct value v)
 {
-	unsigned i;
+	unsigned i, nr = 0;
 	struct value_chain *vc;
 	struct prefix_chain *pc;
 	struct node4 *n4;
@@ -117,49 +118,52 @@ static void _free_node(struct radix_tree *rt, struct value v)
 
 	case VALUE:
         	_dtr(rt, v.value);
+        	nr = 1;
 		break;
 
 	case VALUE_CHAIN:
 		vc = v.value.ptr;
 		_dtr(rt, vc->value);
-		_free_node(rt, vc->child);
+		nr = 1 + _free_node(rt, vc->child);
 		free(vc);
 		break;
 
 	case PREFIX_CHAIN:
 		pc = v.value.ptr;
-		_free_node(rt, pc->child);
+		nr = _free_node(rt, pc->child);
 		free(pc);
 		break;
 
 	case NODE4:
 		n4 = (struct node4 *) v.value.ptr;
 		for (i = 0; i < n4->nr_entries; i++)
-			_free_node(rt, n4->values[i]);
+			nr += _free_node(rt, n4->values[i]);
 		free(n4);
 		break;
 
 	case NODE16:
 		n16 = (struct node16 *) v.value.ptr;
 		for (i = 0; i < n16->nr_entries; i++)
-			_free_node(rt, n16->values[i]);
+			nr += _free_node(rt, n16->values[i]);
 		free(n16);
 		break;
 
 	case NODE48:
 		n48 = (struct node48 *) v.value.ptr;
 		for (i = 0; i < n48->nr_entries; i++)
-			_free_node(rt, n48->values[i]);
+			nr += _free_node(rt, n48->values[i]);
 		free(n48);
 		break;
 
 	case NODE256:
 		n256 = (struct node256 *) v.value.ptr;
 		for (i = 0; i < 256; i++)
-			_free_node(rt, n256->values[i]);
+			nr += _free_node(rt, n256->values[i]);
 		free(n256);
 		break;
 	}
+
+	return nr;
 }
 
 void radix_tree_destroy(struct radix_tree *rt)
@@ -726,6 +730,19 @@ bool radix_tree_remove(struct radix_tree *rt, uint8_t *key_begin, uint8_t *key_e
 	}
 
 	return false;
+}
+
+unsigned radix_tree_remove_prefix(struct radix_tree *rt, uint8_t *kb, uint8_t *ke)
+{
+        unsigned count = 0;
+	struct lookup_result lr = _lookup_prefix(&rt->root, kb, ke);
+	if (lr.kb == ke) {
+        	count = _free_node(rt, *lr.v);
+        	lr.v->type = UNSET;
+	}
+
+	rt->nr_entries -= count;
+	return count;
 }
 
 bool radix_tree_lookup(struct radix_tree *rt,
