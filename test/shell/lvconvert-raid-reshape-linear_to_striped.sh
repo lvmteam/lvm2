@@ -14,6 +14,8 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+aux lvmconf 'activation/raid_region_size = 512'
+
 which mkfs.ext4 || skip
 aux have_raid 1 12 0 || skip
 

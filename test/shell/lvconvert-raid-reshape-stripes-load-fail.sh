@@ -46,6 +46,7 @@ check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
 check lv_first_seg_field $vg/$lv1 data_stripes 10
 check lv_first_seg_field $vg/$lv1 stripes 11
 echo y|mkfs -t ext4 /dev/$vg/$lv1
+fsck -fn /dev/$vg/$lv1
 
 mkdir -p $mount_dir
 mount "$DM_DEV_DIR/$vg/$lv1" $mount_dir
@@ -53,8 +54,8 @@ mkdir -p $mount_dir/1 $mount_dir/2
 
 
 echo 3 >/proc/sys/vm/drop_caches
-cp -r /usr/bin $mount_dir/1 >/dev/null 2>/dev/null &
-cp -r /usr/bin $mount_dir/2 >/dev/null 2>/dev/null &
+cp -r /usr/bin $mount_dir/1 &>/dev/null &
+cp -r /usr/bin $mount_dir/2 &>/dev/null &
 sync &
 
 aux wait_for_sync $vg $lv1
@@ -69,11 +70,11 @@ check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
 check lv_first_seg_field $vg/$lv1 data_stripes 15
 check lv_first_seg_field $vg/$lv1 stripes 16
 
-rm -fr $mount_dir/2
-sync
 kill -9 %%
 wait
+rm -fr $mount_dir/[12]
 
+sync
 umount $mount_dir
 
 fsck -fn "$DM_DEV_DIR/$vg/$lv1"

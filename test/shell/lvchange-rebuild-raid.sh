@@ -17,7 +17,7 @@ SKIP_WITH_LVMPOLLD=1
 
 aux have_raid 1 3 2 || skip
 v1_9_0=0
-aux have_raid 1 9 && v1_9_0=1
+aux have_raid 1 9 0 && v1_9_0=1
 
 aux prepare_vg 8
 get_devs
