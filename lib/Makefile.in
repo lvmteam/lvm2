@@ -21,6 +21,7 @@ ifeq ("@CLUSTER@", "shared")
 endif
 
 SOURCES =\
+	../base/data-struct/radix-tree.c \
 	activate/activate.c \
 	cache/lvmcache.c \
 	cache_segtype/cache.c \
