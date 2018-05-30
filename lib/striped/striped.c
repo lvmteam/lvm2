@@ -230,7 +230,7 @@ static struct segtype_handler _striped_ops = {
 	.destroy = _striped_destroy,
 };
 
-struct segment_type *init_striped_segtype(struct cmd_context *cmd)
+static struct segment_type *_init_segtype(struct cmd_context *cmd, const char *name, uint64_t target)
 {
 	struct segment_type *segtype = dm_zalloc(sizeof(*segtype));
 
@@ -238,11 +238,20 @@ struct segment_type *init_striped_segtype(struct cmd_context *cmd)
 		return_NULL;
 
 	segtype->ops = &_striped_ops;
-	segtype->name = SEG_TYPE_NAME_STRIPED;
-	segtype->flags = SEG_STRIPED_TARGET |
-	    SEG_CAN_SPLIT | SEG_AREAS_STRIPED;
+	segtype->name = name;
+	segtype->flags = target | SEG_CAN_SPLIT | SEG_AREAS_STRIPED;
 
 	log_very_verbose("Initialised segtype: %s", segtype->name);
-
 	return segtype;
+}
+
+struct segment_type *init_striped_segtype(struct cmd_context *cmd)
+{
+	return _init_segtype(cmd, SEG_TYPE_NAME_STRIPED, SEG_STRIPED_TARGET);
+}
+
+
+struct segment_type *init_linear_segtype(struct cmd_context *cmd)
+{
+	return _init_segtype(cmd, SEG_TYPE_NAME_LINEAR, SEG_LINEAR_TARGET);
 }

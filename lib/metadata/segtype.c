@@ -22,10 +22,6 @@ struct segment_type *get_segtype_from_string(struct cmd_context *cmd,
 {
 	struct segment_type *segtype;
 
-	/* FIXME Register this properly within striped.c */
-	if (!strcmp(str, SEG_TYPE_NAME_LINEAR))
-		str = SEG_TYPE_NAME_STRIPED;
-
 	dm_list_iterate_items(segtype, &cmd->segtypes)
 		if (!strcmp(segtype->name, str))
 			return segtype;
