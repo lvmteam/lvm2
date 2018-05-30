@@ -736,11 +736,29 @@ bool radix_tree_remove(struct radix_tree *rt, uint8_t *key_begin, uint8_t *key_e
 	return false;
 }
 
+static bool _prefix_chain_matches(struct lookup_result *lr, uint8_t *ke)
+{
+        // It's possible the top node is a prefix chain, and
+        // the remaining key matches part of it.
+        if (lr->v->type == PREFIX_CHAIN) {
+                unsigned i, rlen = ke - lr->kb;
+                struct prefix_chain *pc = lr->v->value.ptr;
+                if (rlen < pc->len) {
+                        for (i = 0; i < rlen; i++)
+                                if (pc->prefix[i] != lr->kb[i])
+                                        return false;
+                        return true;
+		}
+        }
+
+        return false;
+}
+
 unsigned radix_tree_remove_prefix(struct radix_tree *rt, uint8_t *kb, uint8_t *ke)
 {
         unsigned count = 0;
 	struct lookup_result lr = _lookup_prefix(&rt->root, kb, ke);
-	if (lr.kb == ke) {
+	if (lr.kb == ke || _prefix_chain_matches(&lr, ke)) {
         	count = _free_node(rt, *lr.v);
         	lr.v->type = UNSET;
 	}
@@ -837,7 +855,7 @@ void radix_tree_iterate(struct radix_tree *rt, uint8_t *kb, uint8_t *ke,
                         struct radix_tree_iterator *it)
 {
 	struct lookup_result lr = _lookup_prefix(&rt->root, kb, ke);
-	if (lr.kb == ke)
+	if (lr.kb == ke || _prefix_chain_matches(&lr, ke))
         	_iterate(lr.v, it);
 }
 
