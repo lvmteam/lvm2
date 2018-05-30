@@ -12,7 +12,6 @@
 
 # Exercise creation of snapshot of cached LV
 
-SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -25,7 +24,7 @@ aux have_cache 1 5 0 || skip
 aux prepare_vg 2
 
 lvcreate --type cache-pool -L1 $vg/cpool
-lvcreate -H -L4 -n $lv1 $vg/cpool
+lvcreate -H -L4 -n $lv1 --cachepool $vg/cpool $vg
 
 lvcreate -s -L2 -n $lv2 $vg/$lv1
 check lv_field $vg/$lv1 segtype cache

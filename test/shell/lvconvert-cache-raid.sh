@@ -12,7 +12,6 @@
 
 # Exercise usage of stacked cache volume using raid volume
 
-SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -86,7 +85,7 @@ lvremove -f $vg
 
 # Test up/down raid conversion of cache pool data and metadata
 lvcreate --type cache-pool $vg/cpool -l 10
-lvcreate -n corigin -H $vg/cpool -l 20
+lvcreate -H -n corigin --cachepool $vg/cpool -l 20 $vg
 
 lvconvert -y -m +1 --type raid1 $vg/cpool_cmeta
 check lv_field $vg/cpool_cmeta layout "raid,raid1"

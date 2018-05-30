@@ -12,7 +12,7 @@
 
 # Exercise usage of older metadata which are missing some new settings
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -24,7 +24,7 @@ aux prepare_vg 5 80
 
 
 lvcreate -l 10 --type cache-pool $vg/cpool
-lvcreate -l 20 -H -n $lv1 $vg/cpool
+lvcreate -l 20 -H -n $lv1 --cachepool $vg/cpool $vg
 
 vgcfgbackup -f backup $vg
 
