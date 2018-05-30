@@ -68,6 +68,7 @@ struct dev_manager;
 #define SEG_RAID6		SEG_RAID6_ZR
 
 #define SEG_STRIPED_TARGET	(1ULL << 39)
+#define SEG_LINEAR_TARGET	(1ULL << 40)
 
 #define SEG_UNKNOWN		(1ULL << 63)
 
@@ -105,7 +106,7 @@ struct dev_manager;
 #define SEG_TYPE_NAME_RAID6_RS_6	"raid6_rs_6"
 #define SEG_TYPE_NAME_RAID6_N_6		"raid6_n_6"
 
-#define segtype_is_linear(segtype)	(!strcmp(segtype->name, SEG_TYPE_NAME_LINEAR))
+#define segtype_is_linear(segtype)	(!strcmp((segtype)->name, SEG_TYPE_NAME_LINEAR))
 #define segtype_is_striped_target(segtype)	((segtype)->flags & SEG_STRIPED_TARGET ? 1 : 0)
 #define segtype_is_cache(segtype)	((segtype)->flags & SEG_CACHE ? 1 : 0)
 #define segtype_is_cache_pool(segtype)	((segtype)->flags & SEG_CACHE_POOL ? 1 : 0)
@@ -274,6 +275,7 @@ struct segtype_library;
 int lvm_register_segtype(struct segtype_library *seglib,
 			 struct segment_type *segtype);
 
+struct segment_type *init_linear_segtype(struct cmd_context *cmd);
 struct segment_type *init_striped_segtype(struct cmd_context *cmd);
 struct segment_type *init_zero_segtype(struct cmd_context *cmd);
 struct segment_type *init_error_segtype(struct cmd_context *cmd);
