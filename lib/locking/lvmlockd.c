@@ -2454,14 +2454,6 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 		lv->lock_args = NULL;
 		return 1;
 
-	} else if (seg_is_cache(lp)) {
-		/*
-		 * This should not happen because the command defs are
-		 * checked and excluded for shared VGs early in lvcreate.
-		 */
-		log_error("Use lvconvert for cache with lock type %s", vg->lock_type);
-		return 0;
-
 	} else if (!seg_is_thin_volume(lp) && lp->snapshot) {
 		struct logical_volume *origin_lv;
 

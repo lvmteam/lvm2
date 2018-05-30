@@ -1638,8 +1638,7 @@ static int _lvcreate_single(struct cmd_context *cmd, const char *vg_name,
 			    lp->snapshot ? lp->origin_name : "", lp->segtype->name);
 
 	if (is_lockd_type(vg->lock_type)) {
-		if (cmd->command->command_enum == lvcreate_cache_vol_with_new_origin_CMD ||
-		    cmd->command->command_enum == lvcreate_thin_vol_with_thinpool_or_sparse_snapshot_CMD ||
+		if (cmd->command->command_enum == lvcreate_thin_vol_with_thinpool_or_sparse_snapshot_CMD ||
 		    cmd->command->command_enum == lvcreate_cache_vol_with_new_origin_or_convert_to_cache_vol_with_cachepool_CMD) {
 			log_error("Use lvconvert to create thin pools and cache pools in a shared VG.");
 			goto out;

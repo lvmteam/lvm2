@@ -7801,10 +7801,20 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		lv->status |= LV_TEMPORARY;
 
 	if (seg_is_cache(lp)) {
+		if (is_lockd_type(lv->vg->lock_type)) {
+			if (is_change_activating(lp->activate)) {
+				if (!lv_active_change(cmd, lv, CHANGE_AEY, 0)) {
+					log_error("Aborting. Failed to activate LV %s.",
+						  display_lvname(lv));
+					goto revert_new_lv;
+				}
+			}
+		}
+
 		/* FIXME Support remote exclusive activation? */
 		/* Not yet 'cache' LV, it is stripe volume for wiping */
-		if (is_change_activating(lp->activate) &&
-		    !activate_lv_excl_local(cmd, lv)) {
+
+		else if (is_change_activating(lp->activate) && !activate_lv_excl_local(cmd, lv)) {
 			log_error("Aborting. Failed to activate LV %s locally exclusively.",
 				  display_lvname(lv));
 			goto revert_new_lv;
