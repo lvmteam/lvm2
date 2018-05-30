@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -74,7 +74,7 @@ vgremove -f $vg
 pvremove -ff "${DEVICES[@]}"
 pvcreate "${DEVICES[@]}"
 aux backup_dev "$dev2"
-vgcreate $vg "$dev1"
+vgcreate $SHARED $vg "$dev1"
 vgextend $vg "$dev2"
 aux restore_dev "$dev2"
 vgscan $cache

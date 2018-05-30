@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 
 . lib/inittest
 
@@ -32,7 +32,7 @@ vgremove -ff $vg
 
 # 3-way, disk log
 # multiple failures, partial replace
-vgcreate $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
+vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 lvcreate -aey --mirrorlog disk --type mirror -m 2 --ignoremonitoring --nosync -L 1 -n 3way $vg "$dev1" "$dev2" "$dev3" "$dev4"
 aux disable_dev "$dev1" "$dev2"
 lvconvert -y --repair $vg/3way 2>&1 | tee 3way.out
@@ -43,7 +43,7 @@ check mirror $vg 3way
 aux enable_dev "$dev1" "$dev2"
 vgremove -ff $vg
 
-vgcreate $vg "$dev1" "$dev2" "$dev3"
+vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3"
 lvcreate -aey --mirrorlog disk --type mirror -m 1 --ignoremonitoring --nosync -l 1 -n 2way $vg "$dev1" "$dev2" "$dev3"
 aux disable_dev "$dev1"
 lvconvert -y --repair $vg/2way 2>&1 | tee 2way.out
@@ -61,7 +61,7 @@ test -e LOCAL_CLVMD && exit 0
 
 # Test repair of inactive mirror with log failure
 #  Replacement should fail, but convert should succeed (switch to corelog)
-vgcreate $vg "$dev1" "$dev2" "$dev3" "$dev4"
+vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4"
 lvcreate -aey --type mirror -m 2 --ignoremonitoring -l 2 -n mirror2 $vg "$dev1" "$dev2" "$dev3" "$dev4":0
 vgchange -a n $vg
 pvremove -ff -y "$dev4"
@@ -73,7 +73,7 @@ vgremove -ff $vg
 if aux kernel_at_least 3 0 0; then
 	# 2-way, mirrored log
 	# Double log failure, full replace
-	vgcreate $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6"
+	vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6"
 	lvcreate -aey --mirrorlog mirrored --type mirror -m 1 --ignoremonitoring --nosync -L 1 -n 2way $vg \
 	    "$dev1" "$dev2" "$dev3":0 "$dev4":0
 	aux disable_dev "$dev3" "$dev4"
@@ -88,7 +88,7 @@ fi
 
 # 3-way, mirrored log
 # Single log failure, replace
-vgcreate $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6"
+vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6"
 lvcreate -aey --mirrorlog mirrored --type mirror -m 2 --ignoremonitoring --nosync -L 1 -n 3way $vg \
     "$dev1" "$dev2" "$dev3" "$dev4":0 "$dev5":0
 aux disable_dev "$dev4"
