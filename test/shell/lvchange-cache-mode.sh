@@ -12,7 +12,7 @@
 
 # Exercise changing of caching mode on both cache pool and cached LV.
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

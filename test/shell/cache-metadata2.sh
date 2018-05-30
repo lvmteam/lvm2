@@ -12,7 +12,7 @@
 
 # Exercise usage of metadata2 cache metadata format
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 # Until new version of cache_check tools - no integrity validation
