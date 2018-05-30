@@ -238,6 +238,14 @@ static int _read_params(struct cmd_context *cmd, struct lvconvert_params *lp)
                 break;
 
 	case CONV_OTHER:
+		if (arg_is_set(cmd, regionsize_ARG)) {
+			lp->region_size = arg_uint_value(cmd, regionsize_ARG, 0);
+			lp->region_size_supplied = 1;
+		} else {
+			lp->region_size = get_default_region_size(cmd);
+			lp->region_size_supplied = 0;
+		}
+
 		if (_mirror_or_raid_type_requested(cmd, lp->type_str) ||
 			   lp->mirrorlog || lp->corelog) { /* Mirrors (and some RAID functions) */
 			if (arg_is_set(cmd, chunksize_ARG)) {
@@ -250,14 +258,6 @@ static int _read_params(struct cmd_context *cmd, struct lvconvert_params *lp)
 				return 0;
 			}
 
-			if (arg_is_set(cmd, regionsize_ARG)) {
-				lp->region_size = arg_uint_value(cmd, regionsize_ARG, 0);
-				lp->region_size_supplied = 1;
-			} else {
-				lp->region_size = get_default_region_size(cmd);
-				lp->region_size_supplied = 0;
-			}
-
 			/* FIXME man page says in one place that --type and --mirrors can't be mixed */
 			if (lp->mirrors_supplied && !lp->mirrors)
 				/* down-converting to linear/stripe? */
@@ -265,7 +265,7 @@ static int _read_params(struct cmd_context *cmd, struct lvconvert_params *lp)
 
 		} else if (_raid0_type_requested(lp->type_str) || _striped_type_requested(lp->type_str)) { /* striped or linear or raid0 */
 			if (arg_from_list_is_set(cmd, "cannot be used with --type raid0 or --type striped or --type linear",
-						 chunksize_ARG, corelog_ARG, mirrors_ARG, mirrorlog_ARG, regionsize_ARG, zero_ARG,
+						 chunksize_ARG, corelog_ARG, mirrors_ARG, mirrorlog_ARG, zero_ARG,
 						 -1))
 				return_0;
 		} /* else segtype will default to current type */
@@ -1258,11 +1258,11 @@ static int _is_valid_raid_conversion(const struct segment_type *from_segtype,
 	if (!from_segtype)
 		return 1;
 
-	if (from_segtype == to_segtype)
-		return 1;
-
-	/* Support raid0 <-> striped conversions */
+	/* linear/striped/raid0 <-> striped/raid0/linear (restriping via raid) */
 	if (segtype_is_striped(from_segtype) && segtype_is_striped(to_segtype))
+		return 0;
+
+	if (from_segtype == to_segtype)
 		return 1;
 
 	if (!segtype_is_raid(from_segtype) && !segtype_is_raid(to_segtype))
@@ -1305,45 +1305,18 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		lp->mirrors = 0;
 	}
 
-	/* Can only change image count for raid1 and linear */
-	if (lp->mirrors_supplied) {
-		if (_raid0_type_requested(lp->type_str)) {
-			log_error("--mirrors/-m is not compatible with conversion to %s.",
-				  lp->type_str);
-			return 0;
-		}
-		if (!seg_is_mirrored(seg) && !seg_is_linear(seg)) {
-			log_error("--mirrors/-m is not compatible with %s.",
-				  lvseg_name(seg));
-			return 0;
-		}
-		if (seg_is_raid10(seg)) {
-			log_error("--mirrors/-m cannot be changed with %s.",
-				  lvseg_name(seg));
-			return 0;
-		}
-	}
-
 	if (!_lvconvert_validate_thin(lv, lp))
 		return_0;
 
-	if (!_is_valid_raid_conversion(seg->segtype, lp->segtype))
+	if (!_is_valid_raid_conversion(seg->segtype, lp->segtype) &&
+	    !lp->mirrors_supplied)
 		goto try_new_takeover_or_reshape;
 
-	if (seg_is_linear(seg) && !lp->mirrors_supplied) {
-		if (_raid0_type_requested(lp->type_str)) {
-			log_error("Linear LV %s cannot be converted to %s.",
-				  display_lvname(lv), lp->type_str);
-			return 0;
-		}
-
-		if (!strcmp(lp->type_str, SEG_TYPE_NAME_RAID1)) {
-			log_error("Raid conversions of LV %s require -m/--mirrors.",
-				  display_lvname(lv));
-			return 0;
-		}
+	if (seg_is_striped(seg) && !lp->mirrors_supplied)
 		goto try_new_takeover_or_reshape;
-	}
+
+	if (seg_is_linear(seg) && !lp->mirrors_supplied)
+		goto try_new_takeover_or_reshape;
 
 	/* Change number of RAID1 images */
 	if (lp->mirrors_supplied || lp->keep_mimages) {
@@ -1381,6 +1354,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		return lv_raid_split(lv, lp->yes, lp->lv_split_name, image_count, lp->pvh);
 
 	if (lp->mirrors_supplied) {
+		if ((seg_is_striped(seg) && seg->area_count == 1) || seg_is_raid1(seg)) { /* ??? */
 		if (!*lp->type_str || !strcmp(lp->type_str, SEG_TYPE_NAME_RAID1) || !strcmp(lp->type_str, SEG_TYPE_NAME_LINEAR) ||
 		    (!strcmp(lp->type_str, SEG_TYPE_NAME_STRIPED) && image_count == 1)) {
 			if (image_count > DEFAULT_RAID1_MAX_IMAGES) {
@@ -1397,6 +1371,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 						display_lvname(lv));
 
 			return 1;
+		}
 		}
 		goto try_new_takeover_or_reshape;
 	}
@@ -1440,7 +1415,6 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	}
 
 try_new_takeover_or_reshape:
-
 	if (!_raid4_conversion_supported(lv, lp))
 		return 0;
 
@@ -1450,24 +1424,15 @@ try_new_takeover_or_reshape:
 	if (!arg_is_set(cmd, type_ARG))
 	       lp->segtype = NULL;
 
-	/* Only let raid4 through for now. */
-	if (!lp->segtype ||
-	    (lp->type_str && lp->type_str[0] && lp->segtype != seg->segtype &&
-	     ((seg_is_raid4(seg) && seg_is_striped(lp) && lp->stripes > 1) ||
-	     (seg_is_striped(seg) && seg->area_count > 1 && seg_is_raid4(lp))))) {
-		if (!lv_raid_convert(lv, lp->segtype,
-				     lp->yes, lp->force, lp->stripes, lp->stripe_size_supplied, lp->stripe_size,
-				     (lp->region_size_supplied || !seg->region_size) ?
-				     lp->region_size : seg->region_size , lp->pvh))
-			return_0;
+	if (!lv_raid_convert(lv, lp->segtype,
+			     lp->yes, lp->force, lp->stripes, lp->stripe_size_supplied, lp->stripe_size,
+			     (lp->region_size_supplied || !seg->region_size) ?
+			     lp->region_size : seg->region_size , lp->pvh))
+		return_0;
 
-		log_print_unless_silent("Logical volume %s successfully converted.",
-					display_lvname(lv));
-		return 1;
-	}
-
-	log_error("Conversion operation not yet supported.");
-	return 0;
+	log_print_unless_silent("Logical volume %s successfully converted.",
+				display_lvname(lv));
+	return 1;
 }
 
 /*
@@ -1692,19 +1657,22 @@ static int _convert_striped(struct cmd_context *cmd, struct logical_volume *lv,
 			    struct lvconvert_params *lp)
 {
 	const char *mirrors_type = find_config_tree_str(cmd, global_mirror_segtype_default_CFG, NULL);
+	int raid_type = *lp->type_str && !strncmp(lp->type_str, "raid", 4);
 
-	if (!strcmp(lp->type_str, SEG_TYPE_NAME_MIRROR))
-		return _convert_striped_mirror(cmd, lv, lp);
+	if (!raid_type) {
+		if (!strcmp(lp->type_str, SEG_TYPE_NAME_MIRROR))
+			return _convert_striped_mirror(cmd, lv, lp);
 
-	if (segtype_is_raid(lp->segtype))
-		return _convert_striped_raid(cmd, lv, lp);
+		/* --mirrors can mean --type mirror or --type raid1 depending on config setting. */
 
-	/* --mirrors can mean --type mirror or --type raid1 depending on config setting. */
-
-	if (arg_is_set(cmd, mirrors_ARG) && mirrors_type && !strcmp(mirrors_type, SEG_TYPE_NAME_MIRROR))
-		return _convert_striped_mirror(cmd, lv, lp);
+		if (arg_is_set(cmd, mirrors_ARG) && mirrors_type && !strcmp(mirrors_type, SEG_TYPE_NAME_MIRROR))
+			return _convert_striped_mirror(cmd, lv, lp);
+	}
 
 	if (arg_is_set(cmd, mirrors_ARG) && mirrors_type && !strcmp(mirrors_type, SEG_TYPE_NAME_RAID1))
+		return _convert_striped_raid(cmd, lv, lp);
+
+	if (segtype_is_striped(lp->segtype) || segtype_is_raid(lp->segtype))
 		return _convert_striped_raid(cmd, lv, lp);
 
 	log_error("Unknown operation on striped or linear LV %s.", display_lvname(lv));
