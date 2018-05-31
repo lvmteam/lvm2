@@ -10,14 +10,12 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
-
 . lib/inittest
 
 recreate_vg_()
 {
 	vgremove -ff $vg
-	vgcreate "$vg" "$@" "${DEVICES[@]}"
+	vgcreate $SHARED "$vg" "$@" "${DEVICES[@]}"
 }
 
 _check_mlog()
@@ -70,7 +68,11 @@ vgreduce --removemissing $vg
 aux enable_dev "$dev4"
 
 # 3-way, mirrored log => 3-way, core log
+if test -n "$LVM_TEST_LVMLOCKD"; then
+recreate_vg_
+else
 recreate_vg_ -c n
+fi
 lvcreate -aey --type mirror -m 2 --mirrorlog mirrored --ignoremonitoring -L 1 -n 3way $vg \
     "$dev1" "$dev2" "$dev3" "$dev4":0 "$dev5":0
 aux disable_dev "$dev4" "$dev5"
