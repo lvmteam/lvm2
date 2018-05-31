@@ -12,7 +12,7 @@
 
 # Exercise creation of cache and raids
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

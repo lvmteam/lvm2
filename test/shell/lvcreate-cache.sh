@@ -15,7 +15,7 @@
 # Full CLI uses  --type
 # Shorthand CLI uses -H | --cache
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

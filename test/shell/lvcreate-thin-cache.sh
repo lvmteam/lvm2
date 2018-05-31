@@ -12,7 +12,7 @@
 
 # Exercise caching thin-pool's data LV
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
@@ -30,7 +30,7 @@ which mkfs.ext4 || skip
 aux prepare_pvs 2 64
 get_devs
 
-vgcreate -s 64K "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 64K "$vg" "${DEVICES[@]}"
 
 lvcreate -L10M -V10M -T $vg/pool --name $lv1
 
