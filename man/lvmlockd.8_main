@@ -843,12 +843,6 @@ to a lockd VG".
 Things that do not yet work in lockd VGs:
 .br
 \[bu]
-creating a new thin pool and a new thin LV in a single command
-.br
-\[bu]
-using lvcreate to create cache pools or cache LVs (use lvconvert)
-.br
-\[bu]
 using external origins for thin LVs
 .br
 \[bu]
@@ -861,10 +855,7 @@ splitting mirrors in sanlock VGs
 pvmove of entire PVs, or under LVs activated with shared locks
 .br
 \[bu]
-vgsplit
-.br
-\[bu]
-vgmerge
+vgsplit and vgmerge (convert to a local VG to do this)
 
 
 .SS lvmlockd changes from clvmd
