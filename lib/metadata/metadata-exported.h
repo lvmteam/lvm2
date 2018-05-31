@@ -1310,6 +1310,7 @@ int validate_vg_rename_params(struct cmd_context *cmd,
 			      const char *vg_name_new);
 
 int is_lockd_type(const char *lock_type);
+int vg_is_shared(const struct volume_group *vg);
 
 int is_system_id_allowed(struct cmd_context *cmd, const char *system_id);
 
