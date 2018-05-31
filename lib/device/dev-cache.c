@@ -333,10 +333,8 @@ static int _add_alias(struct device *dev, const char *path)
 
 	/* Is name already there? */
 	dm_list_iterate_items(strl, &dev->aliases) {
-		if (!strcmp(strl->str, path)) {
-			log_debug_devs("%s: Already in device cache", path);
+		if (!strcmp(strl->str, path))
 			return 1;
-		}
 	}
 
 	sl->str = path;
@@ -344,13 +342,7 @@ static int _add_alias(struct device *dev, const char *path)
 	if (!dm_list_empty(&dev->aliases)) {
 		oldpath = dm_list_item(dev->aliases.n, struct dm_str_list)->str;
 		prefer_old = _compare_paths(path, oldpath);
-		log_debug_devs("%s: Aliased to %s in device cache%s (%d:%d)",
-			       path, oldpath, prefer_old ? "" : " (preferred name)",
-			       (int) MAJOR(dev->dev), (int) MINOR(dev->dev));
-
-	} else
-		log_debug_devs("%s: Added to device cache (%d:%d)", path,
-			       (int) MAJOR(dev->dev), (int) MINOR(dev->dev));
+	}
 
 	if (prefer_old)
 		dm_list_add(&dev->aliases, &sl->list);
@@ -667,12 +659,37 @@ struct dm_list *dev_cache_get_dev_list_for_lvid(const char *lvid)
 }
 
 /*
+ * Scanning code calls this when it fails to open a device using
+ * this path.  The path is dropped from dev-cache.  In the next
+ * dev_cache_scan it may be added again, but it could be for a
+ * different device.
+ */
+
+void dev_cache_failed_path(struct device *dev, const char *path)
+{
+	struct device *dev_by_path;
+	struct dm_str_list *strl;
+
+	if ((dev_by_path = (struct device *) dm_hash_lookup(_cache.names, path)))
+		dm_hash_remove(_cache.names, path);
+
+	dm_list_iterate_items(strl, &dev->aliases) {
+		if (!strcmp(strl->str, path)) {
+			dm_list_del(&strl->list);
+			break;
+		}
+	}
+}
+
+/*
  * Either creates a new dev, or adds an alias to
  * an existing dev.
  */
 static int _insert_dev(const char *path, dev_t d)
 {
 	struct device *dev;
+	struct device *dev_by_devt;
+	struct device *dev_by_path;
 	static dev_t loopfile_count = 0;
 	int loopfile = 0;
 	char *path_copy;
@@ -685,8 +702,26 @@ static int _insert_dev(const char *path, dev_t d)
 		loopfile = 1;
 	}
 
-	/* is this device already registered ? */
-	if (!(dev = (struct device *) btree_lookup(_cache.devices, (uint32_t) d))) {
+	dev_by_devt = (struct device *) btree_lookup(_cache.devices, (uint32_t) d);
+	dev_by_path = (struct device *) dm_hash_lookup(_cache.names, path);
+	dev = dev_by_devt;
+
+	/*
+	 * Existing device, existing path points to the same device.
+	 */
+	if (dev_by_devt && dev_by_path && (dev_by_devt == dev_by_path)) {
+		log_debug_devs("Found dev %d:%d %s - exists. %.8s",
+			       (int)MAJOR(d), (int)MINOR(d), path, dev->pvid);
+		return 1;
+	}
+
+	/*
+	 * No device or path found, add devt to cache.devices, add name to cache.names.
+	 */
+	if (!dev_by_devt && !dev_by_path) {
+		log_debug_devs("Found dev %d:%d %s - new.",
+			       (int)MAJOR(d), (int)MINOR(d), path);
+
 		if (!(dev = (struct device *) btree_lookup(_cache.sysfs_only_devices, (uint32_t) d))) {
 			/* create new device */
 			if (loopfile) {
@@ -701,30 +736,126 @@ static int _insert_dev(const char *path, dev_t d)
 			_free(dev);
 			return 0;
 		}
-	}
 
-	if (dm_hash_lookup(_cache.names, path) == dev) {
-		/* Hash already has matching entry present */
-		log_debug("%s: Path already cached.", path);
+		if (!(path_copy = dm_pool_strdup(_cache.mem, path))) {
+			log_error("Failed to duplicate path string.");
+			return 0;
+		}
+
+		if (!loopfile && !_add_alias(dev, path_copy)) {
+			log_error("Couldn't add alias to dev cache.");
+			return 0;
+		}
+
+		if (!dm_hash_insert(_cache.names, path_copy, dev)) {
+			log_error("Couldn't add name to hash in dev cache.");
+			return 0;
+		}
+
 		return 1;
 	}
 
-	if (!(path_copy = dm_pool_strdup(_cache.mem, path))) {
-		log_error("Failed to duplicate path string.");
-		return 0;
+	/*
+	 * Existing device, path is new, add path as a new alias for the device.
+	 */
+	if (dev_by_devt && !dev_by_path) {
+		log_debug_devs("Found dev %d:%d %s - new alias.",
+			       (int)MAJOR(d), (int)MINOR(d), path);
+
+		if (!(path_copy = dm_pool_strdup(_cache.mem, path))) {
+			log_error("Failed to duplicate path string.");
+			return 0;
+		}
+
+		if (!loopfile && !_add_alias(dev, path_copy)) {
+			log_error("Couldn't add alias to dev cache.");
+			return 0;
+		}
+
+		if (!dm_hash_insert(_cache.names, path_copy, dev)) {
+			log_error("Couldn't add name to hash in dev cache.");
+			return 0;
+		}
+
+		return 1;
 	}
 
-	if (!loopfile && !_add_alias(dev, path_copy)) {
-		log_error("Couldn't add alias to dev cache.");
-		return 0;
+	/*
+	 * No existing device, but path exists and previously pointed
+	 * to a different device.
+	 */
+	if (!dev_by_devt && dev_by_path) {
+		log_debug_devs("Found dev %d:%d %s - new device, path was previously %d:%d.",
+			       (int)MAJOR(d), (int)MINOR(d), path,
+			       (int)MAJOR(dev_by_path->dev), (int)MINOR(dev_by_path->dev));
+
+		if (!(dev = (struct device *) btree_lookup(_cache.sysfs_only_devices, (uint32_t) d))) {
+			/* create new device */
+			if (loopfile) {
+				if (!(dev = dev_create_file(path, NULL, NULL, 0)))
+					return_0;
+			} else if (!(dev = _dev_create(d)))
+				return_0;
+		}
+
+		if (!(btree_insert(_cache.devices, (uint32_t) d, dev))) {
+			log_error("Couldn't insert device into binary tree.");
+			_free(dev);
+			return 0;
+		}
+
+		if (!(path_copy = dm_pool_strdup(_cache.mem, path))) {
+			log_error("Failed to duplicate path string.");
+			return 0;
+		}
+
+		if (!loopfile && !_add_alias(dev, path_copy)) {
+			log_error("Couldn't add alias to dev cache.");
+			return 0;
+		}
+
+		dm_hash_remove(_cache.names, path);
+
+		if (!dm_hash_insert(_cache.names, path_copy, dev)) {
+			log_error("Couldn't add name to hash in dev cache.");
+			return 0;
+		}
+
+		return 1;
+
 	}
 
-	if (!dm_hash_insert(_cache.names, path_copy, dev)) {
-		log_error("Couldn't add name to hash in dev cache.");
-		return 0;
+	/*
+	 * Existing device, and path exists and previously pointed to
+	 * a different device.
+	 */
+	if (dev_by_devt && dev_by_path) {
+		log_debug_devs("Found dev %d:%d %s - existing device, path was previously %d:%d.",
+			       (int)MAJOR(d), (int)MINOR(d), path,
+			       (int)MAJOR(dev_by_path->dev), (int)MINOR(dev_by_path->dev));
+
+		if (!(path_copy = dm_pool_strdup(_cache.mem, path))) {
+			log_error("Failed to duplicate path string.");
+			return 0;
+		}
+
+		if (!loopfile && !_add_alias(dev, path_copy)) {
+			log_error("Couldn't add alias to dev cache.");
+			return 0;
+		}
+
+		dm_hash_remove(_cache.names, path);
+
+		if (!dm_hash_insert(_cache.names, path_copy, dev)) {
+			log_error("Couldn't add name to hash in dev cache.");
+			return 0;
+		}
+
+		return 1;
 	}
 
-	return 1;
+	log_error("Found dev %d:%d %s - failed to use.", (int)MAJOR(d), (int)MINOR(d), path);
+	return 0;
 }
 
 static char *_join(const char *dir, const char *name)
@@ -1064,10 +1195,8 @@ static int _insert(const char *path, const struct stat *info,
 		if (rec && !_insert_dir(path))
 			return_0;
 	} else {		/* add a device */
-		if (!S_ISBLK(info->st_mode)) {
-			log_debug_devs("%s: Not a block device", path);
+		if (!S_ISBLK(info->st_mode))
 			return 1;
-		}
 
 		if (!_insert_dev(path, info->st_rdev))
 			return_0;
