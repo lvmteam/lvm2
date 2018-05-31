@@ -548,6 +548,9 @@ static int _init_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
 	case -EPROTONOSUPPORT:
 		log_error("VG %s init failed: lock manager dlm is not supported by lvmlockd", vg->name);
 		break;
+	case -EEXIST:
+		log_error("VG %s init failed: a lockspace with the same name exists", vg->name);
+		break;
 	default:
 		log_error("VG %s init failed: %d", vg->name, result);
 	}
@@ -670,6 +673,9 @@ static int _init_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg, in
 		break;
 	case -EMSGSIZE:
 		log_error("VG %s init failed: no disk space for leases", vg->name);
+		break;
+	case -EEXIST:
+		log_error("VG %s init failed: a lockspace with the same name exists", vg->name);
 		break;
 	default:
 		log_error("VG %s init failed: %d", vg->name, result);
