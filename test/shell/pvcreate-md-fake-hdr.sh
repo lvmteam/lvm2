@@ -12,7 +12,7 @@
 
 
 # TODO: once code get fixed, add matching 'check' calls
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -25,7 +25,7 @@ aux extend_filter_LVMTEST "a|/dev/md|"
 
 aux prepare_devs 4
 
-vgcreate $vg "$dev3" "$dev4"
+vgcreate $SHARED $vg "$dev3" "$dev4"
 
 # create 2 disk MD raid1 array
 # by default using metadata format 1.0 with data at the end of device

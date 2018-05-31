@@ -15,7 +15,7 @@
 # 'dmsetup status' for RAID LVs - especially during various sync action
 # transitions, like: recover, resync, check, repair, idle, reshape, etc
 #######################################################################
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
@@ -33,7 +33,7 @@ aux have_raid 1 13 0 || skip
 aux prepare_pvs 9
 get_devs
 
-vgcreate -s 2m "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 2m "$vg" "${DEVICES[@]}"
 
 ###########################################
 # Upconverted RAID1 should never have all 'a's in status output

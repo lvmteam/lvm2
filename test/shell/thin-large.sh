@@ -12,7 +12,7 @@
 
 # 'Exercise logic around boundary sizes of thin-pool data and chunksize
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

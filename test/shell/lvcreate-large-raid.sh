@@ -12,7 +12,7 @@
 
 # 'Exercise some lvcreate diagnostics'
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -31,7 +31,7 @@ aux have_raid4 && segtypes="raid4 raid5"
 aux prepare_pvs 5 1000000000
 get_devs
 
-vgcreate "$vg1" "${DEVICES[@]}"
+vgcreate $SHARED "$vg1" "${DEVICES[@]}"
 
 aux lvmconf 'devices/issue_discards = 1'
 

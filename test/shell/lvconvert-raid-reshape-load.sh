@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA2110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -35,7 +35,7 @@ aux prepare_pvs 16 32
 
 get_devs
 
-vgcreate -s 1M "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 1M "$vg" "${DEVICES[@]}"
 
 trap 'cleanup_mounted_and_teardown' EXIT
 
