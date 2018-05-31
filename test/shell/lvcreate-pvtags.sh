@@ -10,7 +10,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -24,7 +23,7 @@ aux lvmconf 'allocation/maximise_cling = 0' \
 # not required, just testing
 aux pvcreate --metadatacopies 0 "$dev1"
 
-vgcreate "$vg" "${DEVICES[@]}"
+vgcreate $SHARED "$vg" "${DEVICES[@]}"
 pvchange --addtag fast "${DEVICES[@]}"
 
 # 3 stripes with 3 PVs (selected by tag, @fast) is fine
