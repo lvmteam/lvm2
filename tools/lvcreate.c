@@ -1231,7 +1231,7 @@ static int _determine_cache_argument(struct volume_group *vg,
 					    display_lvname(lv));
 				return 1;
 
-			} else if (is_lockd_type(vg->lock_type)) {
+			} else if (vg_is_shared(vg)) {
 				if (!lv_active_change(cmd, lv, CHANGE_AEY, 0)) {
 					log_error("Cannot activate cache origin %s.",
 						   display_lvname(lv));
@@ -1645,7 +1645,7 @@ static int _lvcreate_single(struct cmd_context *cmd, const char *vg_name,
 			    lp->snapshot ? " as snapshot of " : "",
 			    lp->snapshot ? lp->origin_name : "", lp->segtype->name);
 
-	if (is_lockd_type(vg->lock_type)) {
+	if (vg_is_shared(vg)) {
 		if (cmd->command->command_enum == lvcreate_thin_vol_with_thinpool_or_sparse_snapshot_CMD) {
 			log_error("Use lvconvert to create thin pools and cache pools in a shared VG.");
 			goto out;

@@ -28,7 +28,7 @@ static int vgexport_single(struct cmd_context *cmd __attribute__((unused)),
 		goto bad;
 	}
 
-	if (is_lockd_type(vg->lock_type)) {
+	if (vg_is_shared(vg)) {
 		struct lv_list *lvl;
 		dm_list_iterate_items(lvl, &vg->lvs) {
 			if (!lockd_lv_uses_lock(lvl->lv))

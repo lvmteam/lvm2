@@ -517,7 +517,7 @@ static struct volume_group *_vgsplit_from(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	if (is_lockd_type(vg_from->lock_type)) {
+	if (vg_is_shared(vg_from)) {
 		log_error("vgsplit not allowed for lock_type %s", vg_from->lock_type);
 		unlock_and_release_vg(cmd, vg_from, vg_name_from);
 		return NULL;

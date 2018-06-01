@@ -426,7 +426,7 @@ static int _activate_lv_like_model(struct logical_volume *model,
 {
 	/* FIXME: run all cases through lv_active_change when clvm variants are gone. */
 
-	if (is_lockd_type(lv->vg->lock_type))
+	if (vg_is_shared(vg))
 		return lv_active_change(lv->vg->cmd, lv, CHANGE_AEY, 0);
 
 	if (lv_is_active_exclusive(model)) {

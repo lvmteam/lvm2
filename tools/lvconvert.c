@@ -1802,7 +1802,7 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 		return 0;
 	}
 
-	if (is_lockd_type(vg->lock_type)) {
+	if (vg_is_shared(vg)) {
 		/* FIXME: we need to create a lock for the new LV. */
 		log_error("Unable to split snapshots in VG with lock_type %s.", vg->lock_type);
 		return 0;
@@ -2622,7 +2622,7 @@ static int _lvconvert_to_thin_with_external(struct cmd_context *cmd,
 	 */
 	lvc.lv_name = origin_name;
 
-	if (is_lockd_type(vg->lock_type)) {
+	if (vg_is_shared(vg)) {
 		/*
 		 * FIXME: external origins don't work in lockd VGs.
 		 * Prior to the lvconvert, there's a lock associated with
@@ -2936,7 +2936,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	zero_metadata = (to_cachepool) ? arg_int_value(cmd, zero_ARG, 1) : 1;
 
 	/* An existing LV needs to have its lock freed once it becomes a data LV. */
-	if (is_lockd_type(vg->lock_type) && lv->lock_args) {
+	if (vg_is_shared(vg) && lv->lock_args) {
 		lockd_data_args = dm_pool_strdup(cmd->mem, lv->lock_args);
 		lockd_data_name = dm_pool_strdup(cmd->mem, lv->name);
 		memcpy(&lockd_data_id, &lv->lvid.id[1], sizeof(struct id));
@@ -2975,7 +2975,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		}
 
 		/* An existing LV needs to have its lock freed once it becomes a meta LV. */
-		if (is_lockd_type(vg->lock_type) && metadata_lv->lock_args) {
+		if (vg_is_shared(vg) && metadata_lv->lock_args) {
 			lockd_meta_args = dm_pool_strdup(cmd->mem, metadata_lv->lock_args);
 			lockd_meta_name = dm_pool_strdup(cmd->mem, metadata_lv->name);
 			memcpy(&lockd_meta_id, &metadata_lv->lvid.id[1], sizeof(struct id));
@@ -3241,7 +3241,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	 * Locks are removed from existing LVs that are being converted to
 	 * data and meta LVs (they are unlocked and deleted below.)
 	 */
-	if (is_lockd_type(vg->lock_type)) {
+	if (vg_is_shared(vg)) {
 		if (to_cachepool) {
 			data_lv->lock_args = NULL;
 			metadata_lv->lock_args = NULL;
@@ -3851,7 +3851,7 @@ static int _lvconvert_combine_split_snapshot_single(struct cmd_context *cmd,
 {
 	const char *origin_name = cmd->position_argv[0];
 
-	if (is_lockd_type(lv->vg->lock_type)) {
+	if (vg_is_shared(lv->vg)) {
 		log_error("Unable to combine split snapshots in VG with lock_type %s", lv->vg->lock_type);
 		return ECMD_FAILED;
 	}
@@ -4225,7 +4225,7 @@ static int _lvconvert_swap_pool_metadata_single(struct cmd_context *cmd,
 	struct logical_volume *metadata_lv;
 	const char *metadata_name;
 
-	if (is_lockd_type(lv->vg->lock_type)) {
+	if (vg_is_shared(lv->vg)) {
 		/* FIXME: need to swap locks betwen LVs? */
 		log_error("Unable to swap pool metadata in VG with lock_type %s", lv->vg->lock_type);
 		goto out;
