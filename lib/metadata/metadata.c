@@ -2929,13 +2929,15 @@ int vg_write(struct volume_group *vg)
 	struct lv_list *lvl;
 	int revert = 0, wrote = 0;
 
-	dm_list_iterate_items(lvl, &vg->lvs) {
-		if (lvl->lv->lock_args && !strcmp(lvl->lv->lock_args, "pending")) {
-			if (!lockd_init_lv_args(vg->cmd, vg, lvl->lv, vg->lock_type, &lvl->lv->lock_args)) {
-				log_error("Cannot allocate lock for new LV.");
-				return 0;
+	if (vg_is_shared(vg)) {
+		dm_list_iterate_items(lvl, &vg->lvs) {
+			if (lvl->lv->lock_args && !strcmp(lvl->lv->lock_args, "pending")) {
+				if (!lockd_init_lv_args(vg->cmd, vg, lvl->lv, vg->lock_type, &lvl->lv->lock_args)) {
+					log_error("Cannot allocate lock for new LV.");
+					return 0;
+				}
+				lvl->lv->new_lock_args = 1;
 			}
-			lvl->lv->new_lock_args = 1;
 		}
 	}
 
