@@ -2350,6 +2350,8 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
 
 	label_scan(cmd);
 
+	lvmcache_pvscan_duplicate_check(cmd);
+
 	if (lvmcache_found_duplicate_pvs()) {
 		log_warn("WARNING: Scan found duplicate PVs.");
 		return 0;

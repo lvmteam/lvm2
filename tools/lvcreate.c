@@ -1230,6 +1230,14 @@ static int _determine_cache_argument(struct volume_group *vg,
 				log_verbose("Skipping activation of cache origin %s.",
 					    display_lvname(lv));
 				return 1;
+
+			} else if (is_lockd_type(vg->lock_type)) {
+				if (!lv_active_change(cmd, lv, CHANGE_AEY, 0)) {
+					log_error("Cannot activate cache origin %s.",
+						   display_lvname(lv));
+					return 0;
+				}
+
 			} else if (!activate_lv_excl_local(cmd, lv)) {
 				log_error("Cannot activate cache origin %s.",
 					  display_lvname(lv));
@@ -1638,11 +1646,7 @@ static int _lvcreate_single(struct cmd_context *cmd, const char *vg_name,
 			    lp->snapshot ? lp->origin_name : "", lp->segtype->name);
 
 	if (is_lockd_type(vg->lock_type)) {
-		if (cmd->command->command_enum == lvcreate_thin_vol_and_thinpool_CMD ||
-		    cmd->command->command_enum == lvcreate_cachepool_CMD ||
-		    cmd->command->command_enum == lvcreate_cache_vol_with_new_origin_CMD ||
-		    cmd->command->command_enum == lvcreate_thin_vol_with_thinpool_or_sparse_snapshot_CMD ||
-		    cmd->command->command_enum == lvcreate_cache_vol_with_new_origin_or_convert_to_cache_vol_with_cachepool_CMD) {
+		if (cmd->command->command_enum == lvcreate_thin_vol_with_thinpool_or_sparse_snapshot_CMD) {
 			log_error("Use lvconvert to create thin pools and cache pools in a shared VG.");
 			goto out;
 		}

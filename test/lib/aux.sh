@@ -755,11 +755,14 @@ prepare_md_dev() {
 	local coption="--chunk"
 	local maj
 	local mddev
+	local mddir="md/"
+	local mdname
+	local mddevdir
 	maj=$(mdadm --version 2>&1) || skip "mdadm tool is missing!"
 
 	cleanup_md_dev
 
-	rm -f debug.log strace.log MD_DEV MD_DEV_PV MD_DEVICES
+	rm -f debug.log strace.log
 
 	case "$level" in
 	"1")  coption="--bitmap-chunk" ;;
@@ -770,9 +773,11 @@ prepare_md_dev() {
 	# - newer mdadm _completely_ defers to udev to create the associated device node
 	maj=${maj##*- v}
 	maj=${maj%%.*}
-	[ "$maj" -ge 3 ] && \
-		mddev=/dev/md/md_lvm_test0 || \
-		mddev=/dev/md_lvm_test0
+	[ "$maj" -ge 3 ] || mddir=""
+
+	mdname="md_lvm_test0"
+	mddev="/dev/${mddir}$mdname"
+	mddevdir="$DM_DEV_DIR/$mddir"
 
 	mdadm --create --metadata=1.0 "$mddev" --auto=md --level "$level" $with_bitmap "$coption"="$rchunk" --raid-devices="$rdevs" "${@:4}" || {
 		# Some older 'mdadm' version managed to open and close devices internaly
@@ -791,10 +796,11 @@ prepare_md_dev() {
 
 	# LVM/DM will see this device
 	case "$DM_DEV_DIR" in
-	"/dev") readlink -f "$mddev" ;;
-	*)	cp -LR "$mddev" "$DM_DEV_DIR"
-		echo "$DM_DEV_DIR/md_lvm_test0" ;;
-	esac > MD_DEV_PV
+	"/dev") readlink -f "$mddev" > MD_DEV_PV ;;
+	*)	mkdir -p "$mddevdir"
+		cp -LR "$mddev" "$mddevdir"
+		echo "${mddevdir}${mdname}" > MD_DEV_PV ;;
+	esac
 	echo "$mddev" > MD_DEV
 	notify_lvmetad "$(< MD_DEV_PV)"
 	printf "%s\n" "${@:4}" > MD_DEVICES
@@ -809,12 +815,14 @@ cleanup_md_dev() {
 	local IFS=$IFS_NL
 	local dev
 	local mddev
+	local mddev_pv
 	mddev=$(< MD_DEV)
+	mddev_pv=$(< MD_DEV_PV)
 	udev_wait
 	mdadm --stop "$mddev" || true
-	test "$DM_DEV_DIR" != "/dev" && rm -f "$DM_DEV_DIR/$(basename "$mddev")"
-	notify_lvmetad "$(< MD_DEV_PV)"
+	notify_lvmetad "$mddev_pv"
 	udev_wait  # wait till events are process, not zeroing to early
+	test "$DM_DEV_DIR" != "/dev" && rm -rf "${mddev_pv%/*}"
 	for dev in $(< MD_DEVICES); do
 		mdadm --zero-superblock "$dev" || true
 		notify_lvmetad "$dev"
@@ -843,7 +851,7 @@ prepare_backing_dev() {
 		return 0
 	elif test "${LVM_TEST_PREFER_BRD-1}" = "1" && \
 	     test ! -d /sys/block/ram0 && \
-	     kernel_at_least 4 16 && \
+	     kernel_at_least 4 16 0 && \
 	     test "$size" -lt 16384; then
 		# try to use ramdisk if possible, but for
 		# big allocs (>16G) do not try to use ramdisk
@@ -1153,7 +1161,7 @@ prepare_vg() {
 	teardown_devs
 
 	prepare_devs "$@"
-	vgcreate -s 512K "$vg" "${DEVICES[@]}"
+	vgcreate $SHARED -s 512K "$vg" "${DEVICES[@]}"
 }
 
 extend_filter() {
@@ -1167,7 +1175,7 @@ extend_filter() {
 }
 
 extend_filter_LVMTEST() {
-	extend_filter "a|$DM_DEV_DIR/$PREFIX|"
+	extend_filter "a|$DM_DEV_DIR/$PREFIX|" "$@"
 }
 
 hide_dev() {

@@ -12,13 +12,11 @@
 
 # Check pvmove behavior when it's progress and machine is rebooted
 
-SKIP_WITH_LVMLOCKD=1
-
 . lib/inittest
 
 aux prepare_pvs 3 60
 
-vgcreate -s 128k $vg "$dev1" "$dev2"
+vgcreate $SHARED -s 128k $vg "$dev1" "$dev2"
 pvcreate --metadatacopies 0 "$dev3"
 vgextend $vg "$dev3"
 
@@ -94,7 +92,7 @@ LVM_TEST_TAG="kill_me_$PREFIX" vgchange --config 'activation{polling_interval=10
 aux wait_pvmove_lv_ready "$vg-pvmove0"
 dmsetup table
 
-pvmove --abort
+pvmove --abort "$dev1"
 
 lvs -a -o+devices $vg
 

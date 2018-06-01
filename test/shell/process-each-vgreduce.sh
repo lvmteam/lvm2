@@ -12,7 +12,7 @@
 
 test_description='Exercise toollib process_each_pv with vgreduce'
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -31,9 +31,9 @@ aux prepare_devs 14
 # dev1 matchines dev10,dev11,etc
 #
 
-vgcreate $vg1 "$dev10"
-vgcreate $vg2 "$dev2" "$dev3" "$dev4" "$dev5"
-vgcreate $vg3 "$dev6" "$dev7" "$dev8" "$dev9"
+vgcreate $SHARED $vg1 "$dev10"
+vgcreate $SHARED $vg2 "$dev2" "$dev3" "$dev4" "$dev5"
+vgcreate $SHARED $vg3 "$dev6" "$dev7" "$dev8" "$dev9"
 
 pvchange --addtag V2D3 "$dev3"
 pvchange --addtag V2D4 "$dev4"
@@ -190,7 +190,7 @@ pvchange --addtag V2D45 "$dev5"
 not vgreduce -a $vg2
 # reset
 vgremove $vg2
-vgcreate $vg2 "$dev2" "$dev3" "$dev4" "$dev5"
+vgcreate $SHARED $vg2 "$dev2" "$dev3" "$dev4" "$dev5"
 pvchange --addtag V2D3 "$dev3"
 pvchange --addtag V2D4 "$dev4"
 pvchange --addtag V2D45 "$dev4"
@@ -258,9 +258,9 @@ pvcreate "$dev14" --metadatacopies 0
 # dev12
 # dev13
 
-vgcreate $vg1 "$dev10"
-vgcreate $vg2 "$dev2" "$dev3" "$dev4" "$dev5"
-vgcreate $vg3 "$dev6" "$dev7" "$dev8" "$dev9"
+vgcreate $SHARED $vg1 "$dev10"
+vgcreate $SHARED $vg2 "$dev2" "$dev3" "$dev4" "$dev5"
+vgcreate $SHARED $vg3 "$dev6" "$dev7" "$dev8" "$dev9"
 
 pvchange --addtag V2D3 "$dev3"
 pvchange --addtag V2D4 "$dev4"

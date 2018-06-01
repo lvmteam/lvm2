@@ -70,4 +70,6 @@ struct device *dev_iter_get(struct dev_iter *iter);
 
 void dev_reset_error_count(struct cmd_context *cmd);
 
+void dev_cache_failed_path(struct device *dev, const char *path);
+
 #endif

@@ -12,6 +12,7 @@
 
 SKIP_WITH_LVMPOLLD=1
 
+
 . lib/inittest
 
 aux have_thin 1 0 0 || skip
@@ -20,7 +21,7 @@ get_devs
 
 aux lvmconf "metadata/record_lvs_history=1"
 
-vgcreate -s 64K "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 64K "$vg" "${DEVICES[@]}"
 
 lvcreate -l100%FREE -T ${vg}/pool
 

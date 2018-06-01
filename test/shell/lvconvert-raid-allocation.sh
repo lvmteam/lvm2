@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -20,7 +20,7 @@ aux have_raid 1 3 0 || skip
 aux prepare_pvs 5
 get_devs
 
-vgcreate -s 256k "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 256k "$vg" "${DEVICES[@]}"
 
 # Start with linear on 2 PV and ensure that converting to
 # RAID is not allowed to reuse PVs for different images.  (Bug 1113180)

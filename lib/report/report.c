@@ -3385,6 +3385,14 @@ static int _vgclustered_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _binary_disp(rh, mem, field, clustered, GET_FIRST_RESERVED_NAME(vg_clustered_y), private);
 }
 
+static int _vgshared_disp(struct dm_report *rh, struct dm_pool *mem,
+			  struct dm_report_field *field,
+			  const void *data, void *private)
+{
+	int shared = (vg_is_shared((const struct volume_group *) data)) != 0;
+	return _binary_disp(rh, mem, field, shared, GET_FIRST_RESERVED_NAME(vg_shared_y), private);
+}
+
 static int _lvlayout_disp(struct dm_report *rh, struct dm_pool *mem,
 				struct dm_report_field *field,
 				const void *data, void *private)

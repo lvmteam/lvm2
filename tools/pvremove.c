@@ -39,9 +39,18 @@ int pvremove(struct cmd_context *cmd, int argc, char **argv)
 	 * (disable afterward to prevent process_each_pv from doing
 	 * a shared global lock since it's already acquired it ex.)
 	 */
-	if (!lockd_gl(cmd, "ex", 0))
-		return_ECMD_FAILED;
+	if (!lockd_gl(cmd, "ex", 0)) {
+		/* Let pvremove -ff skip locks */
+		if (pp.force == DONT_PROMPT_OVERRIDE)
+			log_warn("WARNING: skipping global lock in lvmlockd for force.");
+		else
+			return_ECMD_FAILED;
+	}
 	cmd->lockd_gl_disable = 1;
+
+	/* When forcibly clearing a PV we don't care about a VG lock. */
+	if (pp.force == DONT_PROMPT_OVERRIDE)
+		cmd->lockd_vg_disable = 1;
 
 	if (!(handle = init_processing_handle(cmd, NULL))) {
 		log_error("Failed to initialize processing handle.");

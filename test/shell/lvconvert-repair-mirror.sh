@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -54,7 +54,7 @@ dd if=/dev/zero of=mnt/zero bs=4K count=100 conv=fdatasync 2>err &
 
 PERCENT=$(get lv_field $vg/$lv1 copy_percent)
 PERCENT=${PERCENT%%\.*}  # cut decimal
-# and check less then 50% mirror is in sync (could be unusable delay_dev ?)
+# and check less than 50% mirror is in sync (could be unusable delay_dev ?)
 test "$PERCENT" -lt 50 || skip
 #lvs -a -o+devices $vg
 

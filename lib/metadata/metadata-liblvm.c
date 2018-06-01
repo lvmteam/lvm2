@@ -227,13 +227,12 @@ static int _pvcreate_check(struct cmd_context *cmd, const char *name,
 	/*
 	 * This test will fail if the device belongs to an MD array.
 	 */
-	if (!dev_test_excl(dev)) {
+	if (!label_scan_open_excl(dev)) {
 		/* FIXME Detect whether device-mapper itself is still using it */
 		log_error("Can't open %s exclusively.  Mounted filesystem?",
 			  name);
 		goto out;
 	}
-	dev_close(dev);
 
 	if (!wipe_known_signatures(cmd, dev, name,
 				   TYPE_LVM1_MEMBER | TYPE_LVM2_MEMBER,
@@ -575,16 +574,6 @@ static int _pvremove_single(struct cmd_context *cmd, const char *pv_name,
 	if (!(dev = dev_cache_get(pv_name, cmd->filter))) {
 		log_error("%s: Couldn't find device.  Check your filters?",
 			  pv_name);
-		goto out;
-	}
-
-	// FIXME: why is this called if info is not used?
-	//info = lvmcache_info_from_pvid(dev->pvid, dev, 0);
-
-	if (!dev_test_excl(dev)) {
-		/* FIXME Detect whether device-mapper is still using the device */
-		log_error("Can't open %s exclusively - not removing. "
-			  "Mounted filesystem?", dev_name(dev));
 		goto out;
 	}
 

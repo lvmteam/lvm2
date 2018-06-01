@@ -12,7 +12,6 @@
 
 # disable lvmetad logging as it bogs down test systems
 
-SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
@@ -36,7 +35,7 @@ aux prepare_pvs 9
 get_devs
 
 # vgcreate -s 256k "$vg" "${DEVICES[@]}"
-vgcreate -s 2m "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 2m "$vg" "${DEVICES[@]}"
 
 ###########################################
 # RAID1 convert tests

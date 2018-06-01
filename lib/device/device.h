@@ -75,6 +75,7 @@ struct device {
 	uint64_t size;
 	uint64_t end;
 	struct dev_ext ext;
+	const char *duplicate_prefer_reason;
 
 	const char *vgid; /* if device is an LV */
 	const char *lvid; /* if device is an LV */

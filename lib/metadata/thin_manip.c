@@ -228,7 +228,7 @@ int pool_metadata_min_threshold(const struct lv_segment *pool_seg)
 	 *
 	 * In the metadata LV there should be minimum from either 4MiB of free space
 	 * or at least 25% of free space, which applies when the size of thin pool's
-	 * metadata is less then 16MiB.
+	 * metadata is less than 16MiB.
 	 */
 	const dm_percent_t meta_min = DM_PERCENT_1 * 25;
 	dm_percent_t meta_free = dm_make_percent(((4096 * 1024) >> SECTOR_SHIFT),

@@ -211,6 +211,7 @@ FIELD(VGS, vg, BIN, "Exported", cmd, 10, vgexported, vg_exported, "Set if VG is 
 FIELD(VGS, vg, BIN, "Partial", cmd, 10, vgpartial, vg_partial, "Set if VG is partial.", 0)
 FIELD(VGS, vg, STR, "AllocPol", cmd, 10, vgallocationpolicy, vg_allocation_policy, "VG allocation policy.", 0)
 FIELD(VGS, vg, BIN, "Clustered", cmd, 10, vgclustered, vg_clustered, "Set if VG is clustered.", 0)
+FIELD(VGS, vg, BIN, "Shared", cmd, 7, vgshared, vg_shared, "Set if VG is shared.", 0)
 FIELD(VGS, vg, SIZ, "VSize", cmd, 0, vgsize, vg_size, "Total size of VG in current units.", 0)
 FIELD(VGS, vg, SIZ, "VFree", cmd, 0, vgfree, vg_free, "Total amount of free space in current units.", 0)
 FIELD(VGS, vg, STR, "SYS ID", cmd, 0, vgsystemid, vg_sysid, "System ID of the VG indicating which host owns it.", 0)

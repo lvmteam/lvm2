@@ -13,7 +13,7 @@
 # Excersize resize of filesystem when size of LV already matches
 # https://bugzilla.redhat.com/1354396
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

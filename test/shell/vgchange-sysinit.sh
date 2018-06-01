@@ -10,7 +10,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_CLVMD=1
 SKIP_WITH_LVMPOLLD=1
 
@@ -30,8 +29,8 @@ cleanup_mounted_and_teardown()
 	aux teardown
 }
 
-vgcreate $vg1 "$dev1"
-vgcreate $vg2 "$dev2"
+vgcreate $SHARED $vg1 "$dev1"
+vgcreate $SHARED $vg2 "$dev2"
 
 lvcreate -l 1 -n $lv2 $vg2
 vgchange -an $vg2
@@ -54,7 +53,12 @@ test ! -b "$DM_DEV_DIR/$vg2/$lv2"
 
 vgchange --ignorelockingfailure -ay $vg2
 
+if test -n "$LVM_TEST_LVMLOCKD"; then
+vgremove --config 'global{locking_type=0}' -ff $vg2
+else
 # TODO maybe also support --ignorelockingfailure ??
 vgremove --config 'global{locking_type=0}' -ff $vg2
+fi
+
 umount "$mount_dir" || true
 vgremove -ff $vg1

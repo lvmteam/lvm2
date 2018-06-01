@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -83,12 +83,18 @@ EOF
     if aux kernel_at_least 2 6 33 ; then
 	# in case the system is running without devtmpfs /dev
 	# wait here for created device node on tmpfs
-	test "$DM_DEV_DIR" != "/dev" && cp -LR "${mddev}p1" "$DM_DEV_DIR"
+	test "$DM_DEV_DIR" = "/dev" || cp -LR "${mddev}p1" "${pvdev%/*}"
 
 	pvcreate --metadatasize 128k "${pvdev}p1"
 
 	maj=$(($(stat -L --printf=0x%t "${mddev}p1")))
 	min=$(($(stat -L --printf=0x%T "${mddev}p1")))
+
+	ls /sys/dev/block/$maj:$min/
+	ls /sys/dev/block/$maj:$min/holders/
+	cat /sys/dev/block/$maj:$min/dev
+	cat /sys/dev/block/$maj:$min/stat
+	cat /sys/dev/block/$maj:$min/size
 
 	sysfs_alignment_offset="/sys/dev/block/$maj:$min/alignment_offset"
 	[ -f "$sysfs_alignment_offset" ] && \
@@ -100,20 +106,25 @@ EOF
 	check pv_field "${pvdev}p1" pe_start $pv_align --units b --nosuffix
 
 	pvremove "${pvdev}p1"
-	test "$DM_DEV_DIR" != "/dev" && rm -f "$DM_DEV_DIR/${mddev}p1"
+	test "$DM_DEV_DIR" = "/dev" || rm -f "${pvdev}p1"
     fi
 fi
 
 # Test newer topology-aware alignment detection w/ --dataalignment override
 if aux kernel_at_least 2 6 33 ; then
     # make sure we're clean for another test
-    dd if=/dev/zero of="$mddev" bs=512 count=1
+    dd if=/dev/zero of="$mddev" bs=512 count=4 conv=fdatasync
+    partprobe -s "$mddev"
     aux prepare_md_dev 0 1024 2 "$dev1" "$dev2"
     pvdev=$(< MD_DEV_PV)
 
     # optimal_io_size=2097152, minimum_io_size=1048576
     pvcreate --metadatasize 128k \
 	--config 'devices { md_chunk_alignment=0 }' "$pvdev"
+
+    # to see the processing of scanning
+    pvs -vvvv
+
     check pv_field "$pvdev" pe_start "2.00m"
 
     # now verify pe_start alignment override using --dataalignment

@@ -13,7 +13,7 @@
 # test thin profile functionality
 #
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
@@ -38,7 +38,7 @@ aux prepare_pvs 1 "$DEV_SIZE"
 SHOULD=""
 check sysfs "$dev1" queue/optimal_io_size "$EXPECT" || SHOULD=should
 
-vgcreate $vg "$dev1"
+vgcreate $SHARED $vg "$dev1"
 
 # By default, "generic" policy is used to
 # calculate chunk size which is 64KiB by default
@@ -68,7 +68,7 @@ fi
 
 # The profile must be also applied if using the profile
 # for the whole VG - any LVs inherit this profile then.
-vgcreate --profile thin-performance $vg "$dev1"
+vgcreate $SHARED --profile thin-performance $vg "$dev1"
 lvcreate -L8m -T $vg/pool_performance_inherited
 # ...the LV does not have the profile attached, but VG does!
 check vg_field $vg profile "thin-performance"

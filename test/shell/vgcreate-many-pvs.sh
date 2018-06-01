@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -40,7 +40,7 @@ SKIP_WITH_LVMPOLLD=1
 LVM_TEST_PVS=${LVM_TEST_PVS:-100}
 
 #aux prepare_devs $LVM_TEST_PVS 8
-#vgcreate $vg $(< DEVICES)
+#vgcreate $SHARED $vg $(< DEVICES)
 
 # prepare_vg is now directly using steps above
 aux prepare_vg $LVM_TEST_PVS
@@ -62,5 +62,5 @@ vgremove -ff $vg
 # TODO Turn this into another test case:
 #
 #for i in $(seq 1 $LVM_TEST_PVS); do
-#	vgcreate ${vg}$i "$DM_DEV_DIR/mapper/${PREFIX}pv$i"
+#	vgcreate $SHARED ${vg}$i "$DM_DEV_DIR/mapper/${PREFIX}pv$i"
 #done

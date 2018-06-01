@@ -16,7 +16,7 @@
 #
 # 'Test pvcreate without metadata on all pvs'
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -28,7 +28,7 @@ pvcreate "$dev1"
 pvcreate --metadatacopies 0 "$dev2"
 
 # "check lv snapshot"
-vgcreate $vg "$dev1" "$dev2"
+vgcreate $SHARED $vg "$dev1" "$dev2"
 lvcreate -aey -n $lv -l 60%FREE $vg
 lvcreate -s -n $lv2 -l 10%FREE $vg/$lv
 vgremove -f $vg

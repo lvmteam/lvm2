@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -18,12 +18,12 @@ SKIP_WITH_LVMPOLLD=1
 aux extend_filter_LVMTEST
 aux prepare_pvs 3
 
-vgcreate $vg1 "$dev1" "$dev2"
+vgcreate $SHARED $vg1 "$dev1" "$dev2"
 lvcreate -n $lv1 -l 100%FREE $vg1
 
 #top VG
 pvcreate "$DM_DEV_DIR/$vg1/$lv1"
-vgcreate $vg "$DM_DEV_DIR/$vg1/$lv1" "$dev3"
+vgcreate $SHARED $vg "$DM_DEV_DIR/$vg1/$lv1" "$dev3"
 
 vgchange -a n $vg $vg1
 

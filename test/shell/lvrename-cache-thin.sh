@@ -12,7 +12,7 @@
 
 # Check rename of stacked  thin over cached LV
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

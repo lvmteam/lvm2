@@ -12,15 +12,13 @@
 
 # 'Exercise some lvcreate diagnostics'
 
-SKIP_WITH_LVMLOCKD=1
-
 . lib/inittest
 
 aux prepare_pvs 4
 get_devs
 
 aux pvcreate --metadatacopies 0 "$dev1"
-aux vgcreate "$vg" "${DEVICES[@]}"
+aux vgcreate $SHARED "$vg" "${DEVICES[@]}"
 
 invalid lvcreate --type free -l1 -n $lv1 $vg 2>err
 grep "Invalid argument for --type" err
@@ -146,6 +144,10 @@ grep "Redundant" err
 check lv_field $vg/$lv1 segtype "linear"
 lvremove -ff $vg
 
+if test -n "$LVM_TEST_LVMLOCKD"; then
+echo "skip snapshot without origin"
+else
+
 # Old --type snapshot works with -s
 lvcreate --type snapshot -s -V64 -L32 -n $lv1 $vg
 check lv_field $vg/$lv1 segtype "linear"
@@ -161,6 +163,8 @@ lvcreate -s --virtualoriginsize 64m -L 32m -n $lv1 $vg
 lvchange -a n $vg/$lv1
 lvremove -ff $vg/$lv1
 lvremove -ff $vg
+
+fi
 
 # readahead default (auto), none, #, auto
 lvcreate -L 8 -n $lv1 $vg

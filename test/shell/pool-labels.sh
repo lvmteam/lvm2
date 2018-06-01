@@ -11,7 +11,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 # lvmetad does not handle pool labels so skip test.
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMETAD=1
 SKIP_WITH_LVMPOLLD=1
 

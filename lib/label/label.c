@@ -114,7 +114,7 @@ int label_remove(struct device *dev)
 
 	log_very_verbose("Scanning for labels to wipe from %s", dev_name(dev));
 
-	if (!label_scan_open(dev)) {
+	if (!label_scan_open_excl(dev)) {
 		log_error("Failed to open device %s", dev_name(dev));
 		return 0;
 	}
@@ -427,7 +427,11 @@ static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
 
 static int _scan_dev_open(struct device *dev)
 {
+	struct dm_list *name_list;
+	struct dm_str_list *name_sl;
 	const char *name;
+	struct stat sbuf;
+	int retried = 0;
 	int flags = 0;
 	int fd;
 
@@ -435,20 +439,30 @@ static int _scan_dev_open(struct device *dev)
 		return 0;
 
 	if (dev->flags & DEV_IN_BCACHE) {
-		log_error("scan_dev_open %s DEV_IN_BCACHE already set", dev_name(dev));
+		/* Shouldn't happen */
+		log_error("Device open %s has DEV_IN_BCACHE already set", dev_name(dev));
 		dev->flags &= ~DEV_IN_BCACHE;
 	}
 
 	if (dev->bcache_fd > 0) {
-		log_error("scan_dev_open %s already open with fd %d",
+		/* Shouldn't happen */
+		log_error("Device open %s already open with fd %d",
 			  dev_name(dev), dev->bcache_fd);
 		return 0;
 	}
 
-	if (!(name = dev_name_confirmed(dev, 1))) {
-		log_error("scan_dev_open %s no name", dev_name(dev));
+	/*
+	 * All the names for this device (major:minor) are kept on
+	 * dev->aliases, the first one is the primary/preferred name.
+	 */
+	if (!(name_list = dm_list_first(&dev->aliases))) {
+		/* Shouldn't happen */
+		log_error("Device open %s %d:%d has no path names.",
+			  dev_name(dev), (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
 		return 0;
 	}
+	name_sl = dm_list_item(name_list, struct dm_str_list);
+	name = name_sl->str;
 
 	flags |= O_RDWR;
 	flags |= O_DIRECT;
@@ -457,6 +471,8 @@ static int _scan_dev_open(struct device *dev)
 	if (dev->flags & DEV_BCACHE_EXCL)
 		flags |= O_EXCL;
 
+retry_open:
+
 	fd = open(name, flags, 0777);
 
 	if (fd < 0) {
@@ -464,7 +480,39 @@ static int _scan_dev_open(struct device *dev)
 			log_error("Can't open %s exclusively.  Mounted filesystem?",
 				  dev_name(dev));
 		} else {
-			log_error("scan_dev_open %s failed errno %d", dev_name(dev), errno);
+			int major, minor;
+
+			/*
+			 * Shouldn't happen, if it does, print stat info to help figure
+			 * out what's wrong.
+			 */
+
+			major = (int)MAJOR(dev->dev);
+			minor = (int)MINOR(dev->dev);
+
+			log_error("Device open %s %d:%d failed errno %d", name, major, minor, errno);
+
+			if (stat(name, &sbuf)) {
+				log_debug_devs("Device open %s %d:%d stat failed errno %d",
+					       name, major, minor, errno);
+			} else if (sbuf.st_rdev != dev->dev) {
+				log_debug_devs("Device open %s %d:%d stat %d:%d does not match.",
+					       name, major, minor,
+					       (int)MAJOR(sbuf.st_rdev), (int)MINOR(sbuf.st_rdev));
+			}
+
+			if (!retried) {
+				/*
+				 * FIXME: remove this, the theory for this retry is that
+				 * there may be a udev race that we can sometimes mask by
+				 * retrying.  This is here until we can figure out if it's
+				 * needed and if so fix the real problem.
+				 */
+				usleep(5000);
+				log_debug_devs("Device open %s retry", dev_name(dev));
+				retried = 1;
+				goto retry_open;
+			}
 		}
 		return 0;
 	}
@@ -493,6 +541,37 @@ static int _scan_dev_close(struct device *dev)
 	return 1;
 }
 
+static void _drop_bad_aliases(struct device *dev)
+{
+	struct dm_str_list *strl, *strl2;
+	const char *name;
+	struct stat sbuf;
+	int major = (int)MAJOR(dev->dev);
+	int minor = (int)MINOR(dev->dev);
+	int bad;
+
+	dm_list_iterate_items_safe(strl, strl2, &dev->aliases) {
+		name = strl->str;
+		bad = 0;
+
+		if (stat(name, &sbuf)) {
+			bad = 1;
+			log_debug_devs("Device path check %d:%d %s stat failed errno %d",
+					major, minor, name, errno);
+		} else if (sbuf.st_rdev != dev->dev) {
+			bad = 1;
+			log_debug_devs("Device path check %d:%d %s stat %d:%d does not match.",
+				       major, minor, name,
+				       (int)MAJOR(sbuf.st_rdev), (int)MINOR(sbuf.st_rdev));
+		}
+
+		if (bad) {
+			log_debug_devs("Device path check %d:%d dropping path %s.", major, minor, name);
+			dev_cache_failed_path(dev, name);
+		}
+	}
+}
+
 /*
  * Read or reread label/metadata from selected devs.
  *
@@ -509,9 +588,10 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 {
 	struct dm_list wait_devs;
 	struct dm_list done_devs;
+	struct dm_list reopen_devs;
 	struct device_list *devl, *devl2;
 	struct block *bb;
-	int scan_open_errors = 0;
+	int retried_open = 0;
 	int scan_read_errors = 0;
 	int scan_process_errors = 0;
 	int scan_failed_count = 0;
@@ -524,6 +604,7 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 
 	dm_list_init(&wait_devs);
 	dm_list_init(&done_devs);
+	dm_list_init(&reopen_devs);
 
 	log_debug_devs("Scanning %d devices for VG info", dm_list_size(devs));
 
@@ -547,9 +628,7 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 			if (!_scan_dev_open(devl->dev)) {
 				log_debug_devs("Scan failed to open %s.", dev_name(devl->dev));
 				dm_list_del(&devl->list);
-				dm_list_add(&done_devs, &devl->list);
-				scan_open_errors++;
-				scan_failed_count++;
+				dm_list_add(&reopen_devs, &devl->list);
 				continue;
 			}
 		}
@@ -578,7 +657,11 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 			scan_failed_count++;
 			lvmcache_del_dev(devl->dev);
 		} else {
-			log_debug_devs("Processing data from device %s fd %d block %p", dev_name(devl->dev), devl->dev->bcache_fd, bb);
+			log_debug_devs("Processing data from device %s %d:%d fd %d block %p",
+				       dev_name(devl->dev),
+				       (int)MAJOR(devl->dev->dev),
+				       (int)MINOR(devl->dev->dev),
+				       devl->dev->bcache_fd, bb);
 
 			ret = _process_block(cmd, f, devl->dev, bb, 0, 0, &is_lvm_device);
 
@@ -612,8 +695,53 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 	if (!dm_list_empty(devs))
 		goto scan_more;
 
-	log_debug_devs("Scanned devices: open errors %d read errors %d process errors %d",
-			scan_open_errors, scan_read_errors, scan_process_errors);
+	/*
+	 * We're done scanning all the devs.  If we failed to open any of them
+	 * the first time through, refresh device paths and retry.  We failed
+	 * to open the devs on the reopen_devs list.
+	 *
+	 * FIXME: it's not clear if or why this helps.
+	 */
+	if (!dm_list_empty(&reopen_devs)) {
+		if (retried_open) {
+			/* Don't try again. */
+			scan_failed_count += dm_list_size(&reopen_devs);
+			dm_list_splice(&done_devs, &reopen_devs);
+			goto out;
+		}
+		retried_open = 1;
+
+		dm_list_iterate_items_safe(devl, devl2, &reopen_devs) {
+			_drop_bad_aliases(devl->dev);
+
+			if (dm_list_empty(&devl->dev->aliases)) {
+				log_warn("WARNING: Scan ignoring device %d:%d with no paths.",
+					 (int)MAJOR(devl->dev->dev),
+					 (int)MINOR(devl->dev->dev));
+					 
+				dm_list_del(&devl->list);
+				lvmcache_del_dev(devl->dev);
+				scan_failed_count++;
+			}
+		}
+
+		/*
+		 * This will search the system's /dev for new path names and
+		 * could help us reopen the device if it finds a new preferred
+		 * path name for this dev's major:minor.  It does that by
+		 * inserting a new preferred path name on dev->aliases.  open
+		 * uses the first name from that list.
+		 */
+		log_debug_devs("Scanning refreshing device paths.");
+		dev_cache_scan();
+
+		/* Put devs that failed to open back on the original list to retry. */
+		dm_list_splice(devs, &reopen_devs);
+		goto scan_more;
+	}
+out:
+	log_debug_devs("Scanned devices: read errors %d process errors %d failed %d",
+			scan_read_errors, scan_process_errors, scan_failed_count);
 
 	if (failed)
 		*failed = scan_failed_count;
@@ -975,6 +1103,12 @@ int label_scan_open(struct device *dev)
 	if (!_in_bcache(dev))
 		return _scan_dev_open(dev);
 	return 1;
+}
+
+int label_scan_open_excl(struct device *dev)
+{
+	dev->flags |= DEV_BCACHE_EXCL;
+	return label_scan_open(dev);
 }
 
 bool dev_read_bytes(struct device *dev, uint64_t start, size_t len, void *data)

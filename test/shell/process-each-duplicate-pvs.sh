@@ -8,7 +8,6 @@
 
 test_description='Test duplicate PVs'
 
-SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 SKIP_WITH_CLVMD=1
 
@@ -25,8 +24,8 @@ aux lvmconf 'devices/allow_changes_with_duplicate_pvs = 0'
 
 pvcreate "$dev1"
 pvcreate "$dev2"
-vgcreate $vg1 "$dev1"
-vgcreate $vg2 "$dev2"
+vgcreate $SHARED $vg1 "$dev1"
+vgcreate $SHARED $vg2 "$dev2"
 pvresize --setphysicalvolumesize 8m -y "$dev2"
 lvcreate -an -l1 -n $lv1 $vg1
 
@@ -72,7 +71,7 @@ not grep duplicate main
 not grep $vg2 main
 not grep $UUID2 main
 
-grep "was already found on" warn
+grep "Not using device" warn
 grep "prefers device" warn
 
 # Find which is the preferred dev and which is the duplicate.
@@ -119,7 +118,7 @@ grep "$dev2" main | grep $vg1
 grep "$dev1" main | grep $UUID1
 grep "$dev2" main | grep $UUID1
 
-grep "was already found on" warn
+grep "Not using device" warn
 grep "prefers device" warn
 
 #
@@ -136,7 +135,7 @@ grep "$dev1" main
 not grep "$dev2" main
 grep "$UUID1" main
 grep "$vg1" main
-grep "was already found on" warn
+grep "Not using device" warn
 grep "prefers device" warn
 
 pvs -o+uuid "$dev2" 2>&1 | tee out
@@ -149,7 +148,7 @@ grep "$dev2" main
 not grep "$dev1" main
 grep "$UUID1" main
 grep "$vg1" main
-grep "was already found on" warn
+grep "Not using device" warn
 grep "prefers device" warn
 
 pvs -o+uuid,duplicate "$dev1" "$dev2" 2>&1 | tee out
@@ -225,7 +224,7 @@ grep -v WARNING out > main || true
 not grep "$dev1" main
 grep "$dev2" main
 
-not grep "was already found on" warn
+not grep "Not using device" warn
 not grep "prefers device" warn
 
 
@@ -238,7 +237,7 @@ grep -v WARNING out > main || true
 grep "$dev1" main
 not grep "$dev2" main
 
-not grep "was already found on" warn
+not grep "Not using device" warn
 not grep "prefers device" warn
 
 # PV size and minor is still reported correctly for each.
@@ -306,7 +305,7 @@ grep -v WARNING out > main || true
 test "$(grep -c "$UUID3" main)" -eq 1
 not grep "$UUID4" main
 
-grep "was already found on" warn
+grep "Not using device" warn
 grep "prefers device" warn
 
 # Both appear with 'pvs -a'
@@ -325,7 +324,7 @@ grep "$dev4" main
 grep $UUID3 main
 not grep $UUID4 main
 
-grep "was already found on" warn
+grep "Not using device" warn
 grep "prefers device" warn
 
 # Show each dev individually and both together
@@ -339,7 +338,7 @@ grep -v WARNING out > main || true
 grep "$dev3" main
 not grep "$dev4" main
 
-grep "was already found on" warn
+grep "Not using device" warn
 grep "prefers device" warn
 
 pvs -o+uuid "$dev4" 2>&1 | tee out
@@ -351,7 +350,7 @@ grep -v WARNING out > main || true
 not grep "$dev3" main
 grep "$dev4" main
 
-grep "was already found on" warn
+grep "Not using device" warn
 grep "prefers device" warn
 
 pvs -o+uuid "$dev3" "$dev4" 2>&1 | tee out
@@ -363,7 +362,7 @@ grep -v WARNING out > main || true
 grep "$dev3" main
 grep "$dev4" main
 
-grep "was already found on" warn
+grep "Not using device" warn
 grep "prefers device" warn
 
 # Same sizes shown.
@@ -378,7 +377,16 @@ dd if=/dev/zero of="$dev3" bs=1M oflag=direct,sync || true
 dd if=/dev/zero of="$dev4" bs=1M oflag=direct,sync || true
 pvscan --cache
 
-vgcreate "$vg2" "$dev3" "$dev4"
+# The previous steps prevent us from nicely cleaning up
+# the vg lockspace in lvmlockd, so just restart it;
+# what follows could also just be split into a separate test.
+if test -n "$LVM_TEST_LVMLOCKD_TEST" ; then
+	killall -9 lvmlockd
+	sleep 2
+	aux prepare_lvmlockd
+fi
+
+vgcreate $SHARED "$vg2" "$dev3" "$dev4"
 lvcreate -l1 -n $lv1 $vg2 "$dev3"
 lvcreate -l1 -n $lv2 $vg2 "$dev4"
 
@@ -457,7 +465,7 @@ pvscan --cache
 # Reverse devs in the previous in case dev3/dev4 would be
 # preferred even without an active LV using them.
 
-vgcreate $vg2 "$dev5" "$dev6"
+vgcreate $SHARED $vg2 "$dev5" "$dev6"
 lvcreate -l1 -n $lv1 $vg2 "$dev5"
 lvcreate -l1 -n $lv2 $vg2 "$dev6"
 

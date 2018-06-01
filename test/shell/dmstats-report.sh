@@ -12,6 +12,7 @@
 
 SKIP_WITH_LVMPOLLD=1
 
+
 . lib/inittest
 
 # Don't attempt to test stats with driver < 4.33.00

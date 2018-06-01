@@ -7801,10 +7801,20 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		lv->status |= LV_TEMPORARY;
 
 	if (seg_is_cache(lp)) {
+		if (is_lockd_type(lv->vg->lock_type)) {
+			if (is_change_activating(lp->activate)) {
+				if (!lv_active_change(cmd, lv, CHANGE_AEY, 0)) {
+					log_error("Aborting. Failed to activate LV %s.",
+						  display_lvname(lv));
+					goto revert_new_lv;
+				}
+			}
+		}
+
 		/* FIXME Support remote exclusive activation? */
 		/* Not yet 'cache' LV, it is stripe volume for wiping */
-		if (is_change_activating(lp->activate) &&
-		    !activate_lv_excl_local(cmd, lv)) {
+
+		else if (is_change_activating(lp->activate) && !activate_lv_excl_local(cmd, lv)) {
 			log_error("Aborting. Failed to activate LV %s locally exclusively.",
 				  display_lvname(lv));
 			goto revert_new_lv;
@@ -8000,7 +8010,7 @@ deactivate_and_revert_new_lv:
 
 revert_new_lv:
 	lockd_lv(cmd, lv, "un", LDLV_PERSISTENT);
-	lockd_free_lv(vg->cmd, vg, lp->lv_name, &lv->lvid.id[1], lv->lock_args);
+	lockd_free_lv(vg->cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
 
 	/* FIXME Better to revert to backup of metadata? */
 	if (!lv_remove(lv) || !vg_write(vg) || !vg_commit(vg))
@@ -8025,8 +8035,14 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 			if (!(lp->segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_THIN_POOL)))
 				return_NULL;
 
+			/* We want a lockd lock for the new thin pool, but not the thin lv. */
+			lp->needs_lockd_init = 1;
+
 			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name)))
 				return_NULL;
+
+			lp->needs_lockd_init = 0;
+
 		} else if (seg_is_cache(lp)) {
 			if (!lp->origin_name) {
 				/* Until we have --pooldatasize we are lost */

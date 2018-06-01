@@ -11,7 +11,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 test_description='Test pvcreate bootloader area support'
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -45,7 +45,7 @@ grep "Bootloader area with data-aligned start must not exceed device size" err
 # restoring the PV should also restore the bootloader area correctly
 pvremove -ff "$dev1"
 pvcreate --dataalignment 256k --bootloaderareasize 600k "$dev1"
-vgcreate $vg "$dev1"
+vgcreate $SHARED $vg "$dev1"
 vgcfgbackup -f "$TESTDIR/vg_with_ba_backup" "$vg"
 pv_uuid=$(get pv_field "$dev1" pv_uuid)
 vgremove -ff $vg

@@ -5730,7 +5730,7 @@ do_command:
 	if (pp->preserve_existing && pp->orphan_vg_name) {
 		log_debug("Using existing orphan PVs in %s.", pp->orphan_vg_name);
 
-		if (!(orphan_vg = vg_read_internal(cmd, pp->orphan_vg_name, NULL, 0, &consistent))) {
+		if (!(orphan_vg = vg_read_internal(cmd, pp->orphan_vg_name, NULL, 0, 0, &consistent))) {
 			log_error("Cannot read orphans VG %s.", pp->orphan_vg_name);
 			goto bad;
 		}
@@ -5785,7 +5785,7 @@ do_command:
 
 		pv_name = pd->name;
 
-		label_scan_open(pd->dev);
+		label_scan_open_excl(pd->dev);
 
 		log_debug("Creating a new PV on %s.", pv_name);
 

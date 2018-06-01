@@ -14,7 +14,7 @@
 # tests lvm initialization, and especially negative tests of error paths
 #
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

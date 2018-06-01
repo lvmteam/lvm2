@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
 # Copyright (C) 2015-2016 Red Hat, Inc. All rights reserved.
 #
@@ -1027,7 +1027,7 @@ class TestDbusService(unittest.TestCase):
 			vg.Move(
 				dbus.ObjectPath(location),
 				dbus.Struct((0, 0), signature='tt'),
-				dbus.Array([(dst, pv.PeCount / 2, 0), ], '(ott)'),
+				dbus.Array([(dst, pv.PeCount // 2, 0), ], '(ott)'),
 				dbus.Int32(g_tmo),
 				EOD))
 		self.assertEqual(job, '/')
@@ -1320,7 +1320,7 @@ class TestDbusService(unittest.TestCase):
 
 			original_size = pv.SizeBytes
 
-			new_size = original_size / 2
+			new_size = original_size // 2
 
 			self.handle_return(
 				pv.ReSize(
@@ -1454,7 +1454,7 @@ class TestDbusService(unittest.TestCase):
 
 	@staticmethod
 	def _write_some_data(device_path, size):
-		blocks = int(size / 512)
+		blocks = int(size // 512)
 		block = bytearray(512)
 		for i in range(0, 512):
 			block[i] = i % 255
@@ -1481,7 +1481,7 @@ class TestDbusService(unittest.TestCase):
 							interfaces=(LV_COMMON_INT, LV_INT, SNAPSHOT_INT, ))
 
 		# Write some data to snapshot so merge takes some time
-		TestDbusService._write_some_data(ss.LvCommon.Path, ss_size / 2)
+		TestDbusService._write_some_data(ss.LvCommon.Path, ss_size // 2)
 
 		job_path = self.handle_return(
 			ss.Snapshot.Merge(
@@ -1873,10 +1873,14 @@ class TestDbusService(unittest.TestCase):
 		# when run from lvm2 testsuite. See dbustest.sh.
 		pv_object_path = self.objs[PV_INT][0].object_path
 
+		if not pv_object_path.startswith("/dev"):
+			std_err_print('Skipping test not running in /dev')
+			return
+
 		for i in range(0, 5):
 			pv_object_path = self._create_nested(pv_object_path)
 
-	def test_pv_symlinks(self):
+	def DISABLED_test_pv_symlinks(self):
 		# Lets take one of our test PVs, pvremove it, find a symlink to it
 		# and re-create using the symlink to ensure we return an object
 		# path to it.  Additionally, we will take the symlink and do a lookup

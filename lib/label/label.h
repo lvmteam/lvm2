@@ -114,6 +114,7 @@ int label_read_sector(struct device *dev, uint64_t scan_sector);
 void label_scan_confirm(struct device *dev);
 int label_scan_setup_bcache(void);
 int label_scan_open(struct device *dev);
+int label_scan_open_excl(struct device *dev);
 
 /*
  * Wrappers around bcache equivalents.

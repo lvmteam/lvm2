@@ -20,13 +20,77 @@
 
 #define MSG_SKIPPING "%s: Skipping md component device"
 
-static int _ignore_md(struct device *dev, int full)
+/*
+ * The purpose of these functions is to ignore md component devices,
+ * e.g. if /dev/md0 is a raid1 composed of /dev/loop0 and /dev/loop1,
+ * lvm wants to deal with md0 and ignore loop0 and loop1.  md0 should
+ * pass the filter, and loop0,loop1 should not pass the filter so lvm
+ * will ignore them.
+ *
+ * (This is assuming lvm.conf md_component_detection=1.)
+ *
+ * If lvm does *not* ignore the components, then lvm will read lvm
+ * labels from the md dev and from the component devs, and will see
+ * them all as duplicates of each other.  LVM duplicate resolution
+ * will then kick in and keep the md dev around to use and ignore
+ * the components.
+ *
+ * It is better to exclude the components as early as possible during
+ * lvm processing, ideally before lvm even looks for labels on the
+ * components, so that duplicate resolution can be avoided.  There are
+ * a number of ways that md components can be excluded earlier than
+ * the duplicate resolution phase:
+ *
+ * - When external_device_info_source="udev", lvm discovers a device is
+ *   an md component by asking udev during the initial filtering phase.
+ *   However, lvm's default is to not use udev for this.  The
+ *   alternative is "native" detection in which lvm tries to detect
+ *   md components itself.
+ *
+ * - When using native detection, lvm's md filter looks for the md
+ *   superblock at the start of devices.  It will see the md superblock
+ *   on the components, exclude them in the md filter, and avoid
+ *   handling them later in duplicate resolution.
+ *
+ * - When using native detection, lvm's md filter will not detect
+ *   components when the md device has an older superblock version that
+ *   places the superblock at the end of the device.  This case will
+ *   fall back to duplicate resolution to exclude components.
+ *
+ * A variation of the description above occurs for lvm commands that
+ * intend to create new PVs on devices (pvcreate, vgcreate, vgextend).
+ * For these commands, the native md filter also reads the end of all
+ * devices to check for the odd md superblocks.
+ *
+ * (The reason that external_device_info_source is not set to udev by
+ * default is that there have be issues with udev not being promptly
+ * or reliably updated about md state changes, causing the udev info
+ * that lvm uses to be occasionally wrong.)
+ */
+
+/*
+ * Returns 0 if:
+ * the device is an md component and it should be ignored.
+ *
+ * Returns 1 if:
+ * the device is not md component and should not be ignored.
+ *
+ * The actual md device will pass this filter and should be used,
+ * it is the md component devices that we are trying to exclude
+ * that will not pass.
+ */
+
+static int _passes_md_filter(struct device *dev, int full)
 {
 	int ret;
-	
+
+	/*
+	 * When md_component_dectection=0, don't even try to skip md
+	 * components.
+	 */
 	if (!md_filtering())
 		return 1;
-	
+
 	ret = dev_is_md(dev, NULL, full);
 
 	if (ret == -EAGAIN) {
@@ -35,6 +99,9 @@ static int _ignore_md(struct device *dev, int full)
 		log_debug_devs("filter md deferred %s", dev_name(dev));
 		return 1;
 	}
+
+	if (ret == 0)
+		return 1;
 
 	if (ret == 1) {
 		if (dev->ext.src == DEV_EXT_NONE)
@@ -54,16 +121,16 @@ static int _ignore_md(struct device *dev, int full)
 	return 1;
 }
 
-static int _ignore_md_lite(struct dev_filter *f __attribute__((unused)),
-		           struct device *dev)
+static int _passes_md_filter_lite(struct dev_filter *f __attribute__((unused)),
+				  struct device *dev)
 {
-	return _ignore_md(dev, 0);
+	return _passes_md_filter(dev, 0);
 }
 
-static int _ignore_md_full(struct dev_filter *f __attribute__((unused)),
-		           struct device *dev)
+static int _passes_md_filter_full(struct dev_filter *f __attribute__((unused)),
+				  struct device *dev)
 {
-	return _ignore_md(dev, 1);
+	return _passes_md_filter(dev, 1);
 }
 
 static void _destroy(struct dev_filter *f)
@@ -91,9 +158,9 @@ struct dev_filter *md_filter_create(struct cmd_context *cmd, struct dev_types *d
 	 */
 
 	if (cmd->use_full_md_check)
-		f->passes_filter = _ignore_md_full;
+		f->passes_filter = _passes_md_filter_full;
 	else
-		f->passes_filter = _ignore_md_lite;
+		f->passes_filter = _passes_md_filter_lite;
 
 	f->destroy = _destroy;
 	f->use_count = 0;

@@ -15,7 +15,7 @@
 # to improve code coverage
 #
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -29,7 +29,7 @@ pvcreate --metadatacopies 0 "$dev3"
 # FIXME takes very long time
 #pvck "$dev1"
 
-vgcreate "$vg" "${DEVICES[@]}"
+vgcreate $SHARED "$vg" "${DEVICES[@]}"
 
 lvcreate -l 5 -i5 -I256 -n $lv $vg
 lvcreate -aey -l 5 -n $lv1 $vg

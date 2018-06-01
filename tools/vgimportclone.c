@@ -153,6 +153,11 @@ static int _vgimportclone_vg_single(struct cmd_context *cmd, const char *vg_name
 	if (!(vg->name = dm_pool_strdup(vg->vgmem, vp->new_vgname)))
 		goto_bad;
 
+	/* A duplicate of a shared VG is imported as a new local VG. */
+	vg->lock_type = NULL;
+	vg->lock_args = NULL;
+	vg->system_id = cmd->system_id ? dm_pool_strdup(vg->vgmem, cmd->system_id) : NULL;
+
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (!(new_pvl = dm_pool_zalloc(vg->vgmem, sizeof(*new_pvl))))
 			goto_bad;
@@ -174,8 +179,10 @@ static int _vgimportclone_vg_single(struct cmd_context *cmd, const char *vg_name
 		dm_list_add(&vg->pv_write_list, &new_pvl->list);
 	}
 
-	dm_list_iterate_items(lvl, &vg->lvs)
+	dm_list_iterate_items(lvl, &vg->lvs) {
 		memcpy(&lvl->lv->lvid, &vg->id, sizeof(vg->id));
+		lvl->lv->lock_args = NULL;
+	}
 
 	if (!vg_write(vg) || !vg_commit(vg))
 		goto_bad;
@@ -342,6 +349,12 @@ retry_name:
 		log_error("Can't get lock for new VG name %s", vp.new_vgname);
 		goto out;
 	}
+
+	/*
+	 * Trying to lock the duplicated VG would conflict with the original,
+	 * and it's not needed because the new VG will be imported as a local VG.
+	 */
+	cmd->lockd_vg_disable = 1;
 
 	ret = process_each_vg(cmd, 0, NULL, vp.old_vgname, NULL, READ_FOR_UPDATE | READ_ALLOW_EXPORTED, 0, handle, _vgimportclone_vg_single);
 

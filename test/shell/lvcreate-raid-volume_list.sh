@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 # bz1161347 - When raid creation is aborted, left-over devices appear
@@ -24,7 +24,7 @@ aux have_raid 1 3 0 || skip
 
 aux prepare_pvs 2 # 2 devices for RAID1
 get_devs
-vgcreate -s 512k "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 512k "$vg" "${DEVICES[@]}"
 
 aux lvmconf "activation/volume_list = [ \"vg_not_exist\" ]"
 

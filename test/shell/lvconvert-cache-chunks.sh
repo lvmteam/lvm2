@@ -13,7 +13,7 @@
 # Exercise number of cache chunks in cache pool
 # Skips creation of real cached device for older cache targets...
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

@@ -12,14 +12,14 @@
 
 # Demonstrate problem when upconverting and cutting leg in clvmd
 
-SKIP_WITH_LVMLOCKD=1
+
 
 . lib/inittest
 
 aux prepare_pvs 3 100
 get_devs
 
-vgcreate -s 64k "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 64k "$vg" "${DEVICES[@]}"
 
 # Use zero devices for big mirror legs
 aux zero_dev "$dev2" $(get first_extent_sector "$dev2"):

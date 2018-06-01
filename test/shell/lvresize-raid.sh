@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -24,7 +24,7 @@ aux have_raid 1 7 0 && levels="0 0_meta $levels"
 aux prepare_pvs 6
 get_devs
 
-vgcreate -s 256K "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 256K "$vg" "${DEVICES[@]}"
 
 for deactivate in true false; do
 

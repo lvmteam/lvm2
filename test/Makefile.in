@@ -32,6 +32,18 @@ SOURCES = lib/not.c lib/harness.c
 CXXSOURCES = lib/runner.cpp
 CXXFLAGS += $(EXTRA_EXEC_CFLAGS)
 
+CLEAN_DIRS += dbus/__pycache__ $(LVM_TEST_RESULTS)
+ifneq (.,$(firstword $(srcdir)))
+CLEAN_TARGETS += $(RUN_BASE) $(addprefix lib/,$(LIB_LVMLOCKD_CONF))
+endif
+
+CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,\
+	$(CMDS) clvmd dmeventd dmsetup dmstats lvmetad lvmpolld \
+	harness lvmdbusd.profile thin-performance.profile fsadm \
+	dm-version-expected version-expected \
+	paths-installed paths-installed-t paths-common paths-common-t)
+
+
 include $(top_builddir)/make.tmpl
 
 T ?= .
@@ -83,6 +95,7 @@ help:
 	@echo "  check_lvmlockd_sanlock Run tests with lvmlockd and sanlock."
 	@echo "  check_lvmlockd_dlm     Run tests with lvmlockd and dlm."
 	@echo "  check_lvmlockd_test    Run tests with lvmlockd --test."
+	@echo "  check_lvmlockd_test_lvmetad Run tests with lvmlockd --test and lvmetad."
 	@echo "  run-unit-test          Run only unit tests (root not needed)."
 	@echo "  clean			Clean dir."
 	@echo "  help			Display callable targets."
@@ -191,6 +204,13 @@ check_lvmlockd_test: .tests-stamp
 		--flavours udev-lvmlockd-test --only $(T) --skip $(S)
 endif
 
+ifeq ("@BUILD_LVMLOCKD@", "yes")
+check_lvmlockd_test_lvmetad: .tests-stamp
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir results \
+		--flavours udev-lvmlockd-test-lvmetad --only $(T) --skip $(S)
+endif
+
 run-unit-test unit-test:
 	$(MAKE) -C unit $(@)
 
@@ -212,6 +232,7 @@ LIB_FLAVOURS = \
  flavour-udev-lvmlockd-sanlock\
  flavour-udev-lvmlockd-dlm\
  flavour-udev-lvmlockd-test\
+ flavour-udev-lvmlockd-test-lvmetad\
  flavour-udev-vanilla
 
 LIB_LVMLOCKD_CONF = \
@@ -351,17 +372,6 @@ LIB = $(addprefix lib/, $(LIB_SHARED) $(LIB_LOCAL) $(LIB_NOT) $(LIB_LINK_NOT) $(
 	test "$(srcdir)" = . || for i in $(LIB_LVMLOCKD_CONF); do \
 		$(LN_S) -f $(abs_top_srcdir)/test/lib/$$i lib/; done
 	touch $@
-
-CLEAN_DIRS += $(LVM_TEST_RESULTS)
-ifneq (.,$(firstword $(srcdir)))
-CLEAN_TARGETS += $(RUN_BASE) $(addprefix lib/,$(LIB_LVMLOCKD_CONF))
-endif
-
-CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,\
-	$(CMDS) clvmd dmeventd dmsetup dmstats lvmetad lvmpolld \
-	harness lvmdbusd.profile thin-performance.profile fsadm \
-	dm-version-expected version-expected \
-	paths-installed paths-installed-t paths-common paths-common-t)
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@

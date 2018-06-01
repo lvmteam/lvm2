@@ -184,7 +184,7 @@ int update_cache_pool_params(struct cmd_context *cmd,
 			 * keep user informed he might be using things in untintended direction
 			 */
 			log_print_unless_silent("Using %s chunk size instead of default %s, "
-						"so cache pool has less then " FMTu64 " chunks.",
+						"so cache pool has less than " FMTu64 " chunks.",
 						display_size(cmd, min_chunk_size),
 						display_size(cmd, *chunk_size),
 						max_chunks);
@@ -193,7 +193,7 @@ int update_cache_pool_params(struct cmd_context *cmd,
 			log_verbose("Setting chunk size to %s.",
 				    display_size(cmd, *chunk_size));
 	} else if (*chunk_size < min_chunk_size) {
-		log_error("Chunk size %s is less then required minimal chunk size %s "
+		log_error("Chunk size %s is less than required minimal chunk size %s "
 			  "for a cache pool of %s size and limit " FMTu64 " chunks.",
 			  display_size(cmd, *chunk_size),
 			  display_size(cmd, min_chunk_size),

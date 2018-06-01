@@ -13,7 +13,7 @@
 # Exercise obtaining cache parameter from various sources
 # Either commmand line or metadata profile or implicit default...
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

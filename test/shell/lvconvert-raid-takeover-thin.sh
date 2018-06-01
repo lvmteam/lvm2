@@ -13,7 +13,7 @@
 # check we may convert thin-pool to raid1/raid10 and back
 # RHBZ#1365286
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

@@ -12,7 +12,7 @@
 
 # 'Check extents percentage arguments'
 
-SKIP_WITH_LVMLOCKD=1
+
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -20,7 +20,7 @@ SKIP_WITH_LVMPOLLD=1
 aux prepare_pvs 2 128
 get_devs
 
-aux vgcreate "$vg" "${DEVICES[@]}"
+aux vgcreate $SHARED "$vg" "${DEVICES[@]}"
 
 lvcreate -L64 -n $lv $vg
 

@@ -13,6 +13,7 @@
 # lvmetad does not handle pool labels so skip test.
 SKIP_WITH_LVMPOLLD=1
 
+
 . lib/inittest
 
 env printf "" || skip # skip if printf is not available

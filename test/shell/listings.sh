@@ -14,7 +14,6 @@
 # tests functionality of lvs, pvs, vgs, *display tools
 #
 
-SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -40,7 +39,7 @@ pvdisplay
 #COMM pvs with segment attributes works even for orphans
 test "$(pvs --noheadings -o seg_all,pv_all,lv_all,vg_all "${DEVICES[@]}" | wc -l)" -eq 5
 
-vgcreate $vg "${DEVICES[@]}"
+vgcreate $SHARED $vg "${DEVICES[@]}"
 
 check pv_field "$dev1" pv_uuid BADBEE-BAAD-BAAD-BAAD-BAAD-BAAD-BADBEE
 
@@ -202,17 +201,17 @@ vgremove -ff $vg
 # all LVs active - VG considered active
 pvcreate "$dev1" "$dev2" "$dev3"
 
-vgcreate $vg1 "$dev1"
+vgcreate $SHARED $vg1 "$dev1"
 lvcreate -l1 $vg1
 lvcreate -l1 $vg1
 
 # at least one LV active - VG considered active
-vgcreate $vg2 "$dev2"
+vgcreate $SHARED $vg2 "$dev2"
 lvcreate -l1 $vg2
 lvcreate -l1 -an -Zn $vg2
 
 # no LVs active - VG considered inactive
-vgcreate $vg3 "$dev3"
+vgcreate $SHARED $vg3 "$dev3"
 lvcreate -l1 -an -Zn $vg3
 lvcreate -l1 -an -Zn $vg3
 

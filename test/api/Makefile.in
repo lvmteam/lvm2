@@ -38,6 +38,8 @@ SOURCES2 = \
 
 endif
 
+PYTEST = python_lvm_unit.py
+
 include $(top_builddir)/make.tmpl
 
 DEFS += -D_REENTRANT
@@ -50,6 +52,9 @@ LIBS += @LVM2APP_LIB@ $(DMEVENT_LIBS)
 
 %.t: %.o $(DEPLIBS)
 	$(CC) -o $@ $(<) $(CFLAGS) $(LDFLAGS) $(ELDFLAGS) $(LIBS)
+
+all:
+	test -x $(PYTEST) || chmod 755 $(PYTEST)
 
 test: $(OBJECTS) $(DEPLIBS)
 	$(CC) -o $@ $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(ELDFLAGS) $(LIBS) $(READLINE_LIBS)

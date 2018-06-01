@@ -548,6 +548,9 @@ static int _init_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
 	case -EPROTONOSUPPORT:
 		log_error("VG %s init failed: lock manager dlm is not supported by lvmlockd", vg->name);
 		break;
+	case -EEXIST:
+		log_error("VG %s init failed: a lockspace with the same name exists", vg->name);
+		break;
 	default:
 		log_error("VG %s init failed: %d", vg->name, result);
 	}
@@ -670,6 +673,9 @@ static int _init_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg, in
 		break;
 	case -EMSGSIZE:
 		log_error("VG %s init failed: no disk space for leases", vg->name);
+		break;
+	case -EEXIST:
+		log_error("VG %s init failed: a lockspace with the same name exists", vg->name);
 		break;
 	default:
 		log_error("VG %s init failed: %d", vg->name, result);
@@ -1547,6 +1553,16 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 		}
 	}
 
+	if (result == -EALREADY) {
+		/*
+		 * This should generally not happen because commands should be coded
+		 * to avoid reacquiring the global lock.  If there is a case that's
+		 * missed which causes the command to request the gl when it's already
+		 * held, it's not a problem, so let it go.
+		 */
+		log_debug("lockd global mode %s already held.", mode);
+		return 1;
+	}
 
 	if (!strcmp(mode, "un"))
 		return 1;
@@ -2095,8 +2111,9 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (result == -EEXIST) {
 		/*
-		 * This happens if lvchange tries to modify the LV with an ex
-		 * LV lock when the LV is already active with a sh LV lock.
+		 * This happens if a command like lvchange tries to modify the
+		 * LV with an ex LV lock when the LV is already active with a
+		 * sh LV lock.
 		 */
 		log_error("LV is already locked with incompatible mode: %s/%s", vg->name, lv_name);
 		return 0;
@@ -2405,10 +2422,6 @@ int lockd_init_lv_args(struct cmd_context *cmd, struct volume_group *vg,
  * an LV with no lock_args will do nothing (unless the LV type causes the lock
  * request to be directed to another LV with a lock, e.g. to the thin pool LV
  * for thin LVs.)
- *
- * Current limitations:
- * - cache-type LV's in a lockd VG must be created with lvconvert.
- * - creating a thin pool and thin lv in one command is not allowed.
  */
 
 int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logical_volume *lv,
@@ -2437,13 +2450,15 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 		/* needs_lock_init is set for LVs that need a lockd lock. */
 		return 1;
 
-	} else if (seg_is_cache(lp) || seg_is_cache_pool(lp)) {
+	} else if (seg_is_cache_pool(lp)) {
 		/*
-		 * This should not happen because the command defs are
-		 * checked and excluded for shared VGs early in lvcreate.
+		 * A cache pool does not use a lockd lock because it cannot be
+		 * used by itself.  When a cache pool is attached to an actual
+		 * LV, the lockd lock for that LV covers the LV and the cache
+		 * pool attached to it.
 		 */
-		log_error("Use lvconvert for cache with lock type %s", vg->lock_type);
-		return 0;
+		lv->lock_args = NULL;
+		return 1;
 
 	} else if (!seg_is_thin_volume(lp) && lp->snapshot) {
 		struct logical_volume *origin_lv;

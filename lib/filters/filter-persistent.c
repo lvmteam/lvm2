@@ -286,9 +286,17 @@ out:
 static int _lookup_p(struct dev_filter *f, struct device *dev)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
-	void *l = dm_hash_lookup(pf->devices, dev_name(dev));
+	void *l;
 	struct dm_str_list *sl;
 	int pass = 1;
+
+	if (dm_list_empty(&dev->aliases)) {
+		log_debug_devs("%d:%d: filter cache skipping (no name)",
+				(int)MAJOR(dev->dev), (int)MINOR(dev->dev));
+		return 0;
+	}
+
+	l = dm_hash_lookup(pf->devices, dev_name(dev));
 
 	/* Cached bad, skip dev */
 	if (l == PF_BAD_DEVICE) {
