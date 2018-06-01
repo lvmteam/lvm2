@@ -3426,7 +3426,7 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 
 	/* FIXME: run all cases through lv_active_change when clvm variants are gone. */
 
-	if (is_lockd_type(lvl->lv->vg->lock_type)) {
+	if (vg_is_shared(lvl->lv->vg)) {
 		if (!lv_active_change(lv->vg->cmd, lvl->lv, CHANGE_AEY, 0))
 			return_0;
 	} else if (!activate_lv_excl_local(cmd, lvl->lv))

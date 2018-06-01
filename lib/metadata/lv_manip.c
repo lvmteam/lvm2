@@ -7801,7 +7801,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		lv->status |= LV_TEMPORARY;
 
 	if (seg_is_cache(lp)) {
-		if (is_lockd_type(lv->vg->lock_type)) {
+		if (vg_is_shared(vg)) {
 			if (is_change_activating(lp->activate)) {
 				if (!lv_active_change(cmd, lv, CHANGE_AEY, 0)) {
 					log_error("Aborting. Failed to activate LV %s.",

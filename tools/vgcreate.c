@@ -207,7 +207,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	 * used after this command completes (otherwise, the VG can only be
 	 * read without locks until the lockspace is done starting.)
 	 */
-	if (is_lockd_type(vg->lock_type)) {
+	if (vg_is_shared(vg)) {
 		const char *start_opt = arg_str_value(cmd, lockopt_ARG, NULL);
 
 		if (!lockd_start_vg(cmd, vg, 1)) {

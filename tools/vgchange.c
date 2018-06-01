@@ -631,7 +631,7 @@ static int _vgchange_lock_start(struct cmd_context *cmd, struct volume_group *vg
 	int auto_opt = 0;
 	int r;
 
-	if (!is_lockd_type(vg->lock_type))
+	if (!vg_is_shared(vg))
 		return 1;
 
 	if (arg_is_set(cmd, force_ARG))

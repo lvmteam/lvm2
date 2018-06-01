@@ -709,7 +709,7 @@ char *vg_attr_dup(struct dm_pool *mem, const struct volume_group *vg)
 
 	if (vg_is_clustered(vg))
 		repstr[5] = 'c';
-	else if (is_lockd_type(vg->lock_type))
+	else if (vg_is_shared(vg))
 		repstr[5] = 's';
 	else
 		repstr[5] = '-';

@@ -1010,7 +1010,8 @@ static void _filter_duplicate_devs(struct cmd_context *cmd)
 
 	dm_list_iterate_items_safe(devl, devl2, &_unused_duplicate_devs) {
 
-		info = lvmcache_info_from_pvid(devl->dev->pvid, NULL, 0);
+		if (!(info = lvmcache_info_from_pvid(devl->dev->pvid, NULL, 0)))
+			continue;
 
 		if (MAJOR(info->dev->dev) == dt->md_major) {
 			log_debug_devs("Ignoring md component duplicate %s", dev_name(devl->dev));
@@ -1038,7 +1039,8 @@ static void _warn_duplicate_devs(struct cmd_context *cmd)
 
 	dm_list_iterate_items_safe(devl, devl2, &_unused_duplicate_devs) {
 		/* info for the preferred device that we're actually using */
-		info = lvmcache_info_from_pvid(devl->dev->pvid, NULL, 0);
+		if (!(info = lvmcache_info_from_pvid(devl->dev->pvid, NULL, 0)))
+			continue;
 
 		if (!id_write_format((const struct id *)info->dev->pvid, uuid, sizeof(uuid)))
 			stack;

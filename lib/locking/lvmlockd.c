@@ -1020,7 +1020,7 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int start_i
 
 	memset(uuid, 0, sizeof(uuid));
 
-	if (!is_lockd_type(vg->lock_type))
+	if (!vg_is_shared(vg))
 		return 1;
 
 	if (!_use_lvmlockd) {
@@ -1111,7 +1111,7 @@ int lockd_stop_vg(struct cmd_context *cmd, struct volume_group *vg)
 	int result;
 	int ret;
 
-	if (!is_lockd_type(vg->lock_type))
+	if (!vg_is_shared(vg)))
 		return 1;
 	if (!_use_lvmlockd)
 		return 0;
@@ -1996,7 +1996,7 @@ int lockd_vg_update(struct volume_group *vg)
 	int result;
 	int ret;
 
-	if (!is_lockd_type(vg->lock_type))
+	if (!vg_is_shared(vg))
 		return 1;
 	if (!_use_lvmlockd)
 		return 0;
@@ -2253,7 +2253,7 @@ static int _lockd_lv_mirror(struct cmd_context *cmd, struct logical_volume *lv,
 int lockd_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	     const char *def_mode, uint32_t flags)
 {
-	if (!is_lockd_type(lv->vg->lock_type))
+	if (!vg_is_shared(lv->vg))
 		return 1;
 
 	if (!_use_lvmlockd) {
@@ -2586,7 +2586,7 @@ int lockd_rename_vg_before(struct cmd_context *cmd, struct volume_group *vg)
 	int result;
 	int ret;
 
-	if (!is_lockd_type(vg->lock_type))
+	if (!vg_is_shared(vg))
 		return 1;
 	if (!_use_lvmlockd)
 		return 0;
@@ -2650,7 +2650,7 @@ int lockd_rename_vg_final(struct cmd_context *cmd, struct volume_group *vg, int 
 	int result;
 	int ret;
 
-	if (!is_lockd_type(vg->lock_type))
+	if (!vg_is_shared(vg))
 		return 1;
 	if (!_use_lvmlockd)
 		return 0;

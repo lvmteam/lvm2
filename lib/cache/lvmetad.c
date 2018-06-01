@@ -1069,14 +1069,14 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 		 * host.
 		 */
 
-		if (is_lockd_type(vg->lock_type) && cmd->include_shared_vgs) {
+		if (vg_is_shared(vg) && cmd->include_shared_vgs) {
 			log_debug_lvmetad("Rescan VG %s because including shared", vgname);
 			rescan = 1;
-		} else if (is_lockd_type(vg->lock_type) && cmd->lockd_vg_rescan) {
+		} else if (vg_is_shared(vg) && cmd->lockd_vg_rescan) {
 			log_debug_lvmetad("Rescan VG %s because no lvmlockd lock is held", vgname);
 			rescan = 1;
 		} else if (dm_config_find_node(reply.cft->root, "vg_invalid")) {
-			if (!is_lockd_type(vg->lock_type)) {
+			if (!vg_is_shared(vg)) {
 				/* Can happen if a previous command failed/crashed without updating lvmetad. */
 				log_warn("WARNING: Reading VG %s from disk because lvmetad metadata is invalid.", vgname);
 			} else {

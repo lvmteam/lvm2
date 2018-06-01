@@ -2576,7 +2576,7 @@ int vg_validate(struct volume_group *vg)
 		goto out;
 	}
 
-	if (is_lockd_type(vg->lock_type)) {
+	if (vg_is_shared(vg)) {
 		if (!vg->lock_args) {
 			log_error(INTERNAL_ERROR "VG %s with lock_type %s without lock_args",
 				  vg->name, vg->lock_type);
@@ -2612,7 +2612,7 @@ int vg_validate(struct volume_group *vg)
 	}
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
-		if (is_lockd_type(vg->lock_type)) {
+		if (vg_is_shared(vg)) {
 			if (lockd_lv_uses_lock(lvl->lv)) {
 				if (vg->skip_validate_lock_args)
 					continue;
@@ -2929,13 +2929,15 @@ int vg_write(struct volume_group *vg)
 	struct lv_list *lvl;
 	int revert = 0, wrote = 0;
 
-	dm_list_iterate_items(lvl, &vg->lvs) {
-		if (lvl->lv->lock_args && !strcmp(lvl->lv->lock_args, "pending")) {
-			if (!lockd_init_lv_args(vg->cmd, vg, lvl->lv, vg->lock_type, &lvl->lv->lock_args)) {
-				log_error("Cannot allocate lock for new LV.");
-				return 0;
+	if (vg_is_shared(vg)) {
+		dm_list_iterate_items(lvl, &vg->lvs) {
+			if (lvl->lv->lock_args && !strcmp(lvl->lv->lock_args, "pending")) {
+				if (!lockd_init_lv_args(vg->cmd, vg, lvl->lv, vg->lock_type, &lvl->lv->lock_args)) {
+					log_error("Cannot allocate lock for new LV.");
+					return 0;
+				}
+				lvl->lv->new_lock_args = 1;
 			}
-			lvl->lv->new_lock_args = 1;
 		}
 	}
 
@@ -3556,7 +3558,7 @@ static int _repair_inconsistent_vg(struct volume_group *vg, uint32_t lockd_state
 		return 0;
 	}
 
-	if (is_lockd_type(vg->lock_type) && !(lockd_state & LDST_EX)) {
+	if (vg_is_shared(vg) && !(lockd_state & LDST_EX)) {
 		log_verbose("Skip metadata repair for shared VG without exclusive lock.");
 		return 0;
 	}
@@ -3602,7 +3604,7 @@ static int _wipe_outdated_pvs(struct cmd_context *cmd, struct volume_group *vg, 
 		return 0;
 	}
 
-	if (is_lockd_type(vg->lock_type) && !(lockd_state & LDST_EX)) {
+	if (vg_is_shared(vg) && !(lockd_state & LDST_EX)) {
 		log_verbose("Skip wiping outdated PVs for shared VG without exclusive lock.");
 		return 0;
 	}
@@ -3684,7 +3686,7 @@ static int _check_or_repair_pv_ext(struct cmd_context *cmd,
 					    "VG %s but not marked as used.",
 					    pv_dev_name(pvl->pv), vg->name);
 				*inconsistent_pvs = 1;
-			} else if (is_lockd_type(vg->lock_type) && !(lockd_state & LDST_EX)) {
+			} else if (vg_is_shared(vg) && !(lockd_state & LDST_EX)) {
 				log_warn("Skip repair of PV %s that is in shared "
 					    "VG %s but not marked as used.",
 					    pv_dev_name(pvl->pv), vg->name);
@@ -5260,7 +5262,7 @@ static int _access_vg_lock_type(struct cmd_context *cmd, struct volume_group *vg
 	/*
 	 * Local VG requires no lock from lvmlockd.
 	 */
-	if (!is_lockd_type(vg->lock_type))
+	if (!vg_is_shared(vg))
 		return 1;
 
 	/*

@@ -197,7 +197,7 @@ static int _pvscan_autoactivate_single(struct cmd_context *cmd, const char *vg_n
 	if (vg_is_exported(vg))
 		return ECMD_PROCESSED;
 
-	if (is_lockd_type(vg->lock_type))
+	if (vg_is_shared(vg)))
 		return ECMD_PROCESSED;
 
 	log_debug("pvscan autoactivating VG %s.", vg_name);
