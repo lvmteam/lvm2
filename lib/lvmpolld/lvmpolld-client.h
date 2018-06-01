@@ -16,7 +16,7 @@
 #define _LVM_LVMPOLLD_CLIENT_H
 #  ifdef LVMPOLLD_SUPPORT
 
-#	include "daemon-client.h"
+#	include "libdaemon/client/daemon-client.h"
 
 #	define LVMPOLLD_SOCKET DEFAULT_RUN_DIR "/lvmpolld.socket"
 

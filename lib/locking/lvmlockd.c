@@ -1111,7 +1111,7 @@ int lockd_stop_vg(struct cmd_context *cmd, struct volume_group *vg)
 	int result;
 	int ret;
 
-	if (!vg_is_shared(vg)))
+	if (!vg_is_shared(vg))
 		return 1;
 	if (!_use_lvmlockd)
 		return 0;

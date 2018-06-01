@@ -642,7 +642,7 @@ static int _pvmove_setup_single(struct cmd_context *cmd,
 	 * other hosts.  For LVs that are active on multiple hosts (sh), we
 	 * would need to used cluster mirrors.
 	 */
-	if (vg_is_shared(vg))) {
+	if (vg_is_shared(vg)) {
 		if (!lv) {
 			log_error("pvmove in a shared VG requires a named LV.");
 			return ECMD_FAILED;
