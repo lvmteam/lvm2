@@ -178,7 +178,8 @@ static int _get_segment_status_from_target_params(const char *target_name,
 	}
 
 	/* Validate target_name segtype from DM table with lvm2 metadata segtype */
-	if (strcmp(segtype->name, target_name) &&
+	if (!lv_is_locked(seg->lv) &&
+	    strcmp(segtype->name, target_name) &&
 	    /* If kernel's type isn't an exact match is it compatible? */
 	    (!segtype->ops->target_status_compatible ||
 	     !segtype->ops->target_status_compatible(target_name))) {
