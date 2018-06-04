@@ -122,12 +122,12 @@ device-mapper: $(TARGETS_DM)
 
 CFLAGS_dmsetup.o += $(UDEV_CFLAGS) $(EXTRA_EXEC_CFLAGS)
 
-dmsetup: dmsetup.o $(top_builddir)/device_mapper/libdevice-mapper.a
+dmsetup: dmsetup.o $(INTERNAL_LIBS)
 	@echo "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) \
 	      -o $@ $+ $(LIBS) -lm
 
-dmsetup.static: dmsetup.o $(top_builddir)/device_mapper/libdevice-mapper.a
+dmsetup.static: dmsetup.o $(INTERNAL_LIBS)
 	@echo "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -static -L$(interfacebuilddir) \
 	      -o $@ $+ $(M_LIBS) $(PTHREAD_LIBS) $(STATIC_LIBS) $(LIBS)
@@ -138,7 +138,7 @@ CFLAGS_lvm.o += $(EXTRA_EXEC_CFLAGS)
 
 INCLUDES += -I$(top_builddir)/tools
 
-lvm: $(OBJECTS) lvm.o $(top_builddir)/lib/liblvm-internal.a $(top_builddir)/device_mapper/libdevice-mapper.a
+lvm: $(OBJECTS) lvm.o $(top_builddir)/lib/liblvm-internal.a $(INTERNAL_LIBS)
 	@echo "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $+ \
 		$(LVMLIBS) $(READLINE_LIBS) $(LIBS) -lm
@@ -157,7 +157,7 @@ ifeq ("@BUILD_LVMETAD@", "yes")
 lvm: $(top_builddir)/libdaemon/client/libdaemonclient.a
 endif
 
-lvm.static: $(OBJECTS) lvm-static.o $(top_builddir)/lib/liblvm-internal.a  $(top_builddir)/device_mapper/libdevice-mapper.a
+lvm.static: $(OBJECTS) lvm-static.o $(top_builddir)/lib/liblvm-internal.a $(INTERNAL_LIBS)
 	@echo "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -static -L$(interfacebuilddir) -o $@ \
 	      $(OBJECTS) lvm-static.o $(LVMLIBS) $(STATIC_LIBS) $(LIBS)

@@ -46,8 +46,7 @@ DEFS += -D_REENTRANT
 DEPLIBS += $(top_builddir)/liblvm/liblvm2app.so
 LDFLAGS+=\
 	-L$(top_builddir)/liblvm \
-	-L$(top_builddir)/daemons/dmeventd \
-	-L$(top_builddir)/device_mapper/libdevice-mapper.a
+	-L$(top_builddir)/daemons/dmeventd
 LIBS += @LVM2APP_LIB@ $(DMEVENT_LIBS)
 
 %.t: %.o $(DEPLIBS)

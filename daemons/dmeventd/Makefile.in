@@ -61,7 +61,7 @@ LIBS += $(PTHREAD_LIBS)
 
 dmeventd: $(LIB_SHARED) dmeventd.o
 	$(CC) $(CFLAGS) -L. $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) dmeventd.o \
-		-o $@ $(DL_LIBS) $(DMEVENT_LIBS) $(top_builddir)/device_mapper/libdevice-mapper.a $(LIBS) -lm
+		-o $@ $(DL_LIBS) $(DMEVENT_LIBS) $(INTERNAL_LIBS) $(LIBS) -lm
 
 dmeventd.static: $(LIB_STATIC) dmeventd.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -static -L. -L$(interfacebuilddir) dmeventd.o \

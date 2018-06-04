@@ -342,7 +342,7 @@ SUBDIRS.distclean := $(SUBDIRS:=.distclean)
 
 TARGETS += $(LIB_SHARED) $(LIB_STATIC)
 
-all: $(top_builddir)/device_mapper/libdevice-mapper.a $(SUBDIRS) $(TARGETS)
+all: $(SUBDIRS) $(TARGETS)
 
 install: all $(SUBDIRS.install)
 install_cluster: all $(SUBDIRS.install_cluster)
@@ -351,7 +351,7 @@ install_lvm2: $(SUBDIRS.install_lvm2)
 install_ocf: $(SUBDIRS.install_ocf)
 cflow: $(SUBDIRS.cflow)
 
-$(SUBDIRS): $(SUBDIRS.device-mapper) $(top_builddir)/device_mapper/libdevice-mapper.a
+$(SUBDIRS): $(SUBDIRS.device-mapper)
 	$(MAKE) -C $@
 
 $(SUBDIRS.device-mapper):

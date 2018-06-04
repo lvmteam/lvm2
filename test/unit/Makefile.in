@@ -34,7 +34,7 @@ UNIT_OBJECTS=$(UNIT_SOURCE:%.c=%.o)
 CLEAN_TARGETS+=$(UNIT_DEPENDS) $(UNIT_OBJECTS)
 UNIT_LDLIBS += $(LVMINTERNAL_LIBS) -laio
 
-test/unit/unit-test: $(UNIT_OBJECTS) lib/liblvm-internal.a device_mapper/libdevice-mapper.a
+test/unit/unit-test: $(UNIT_OBJECTS) lib/liblvm-internal.a $(INTERNAL_LIBS)
 	@echo "    [LD] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) \
 	      -o $@ $+ $(UNIT_LDLIBS) -lm

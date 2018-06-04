@@ -80,7 +80,7 @@ CFLAGS += -fno-strict-aliasing $(EXTRA_EXEC_CFLAGS)
 INSTALL_TARGETS = \
 	install_clvmd
 
-clvmd: $(OBJECTS) $(top_builddir)/lib/liblvm-internal.a $(top_builddir)/device_mapper/libdevice-mapper.a
+clvmd: $(OBJECTS) $(top_builddir)/lib/liblvm-internal.a $(INTERNAL_LIBS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) \
 	      -o clvmd $+ $(LMLIBS) $(LIBS)
 
