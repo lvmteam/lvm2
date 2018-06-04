@@ -42,10 +42,12 @@ LIBS += $(RT_LIBS) $(DAEMON_LIBS) $(PTHREAD_LIBS)
 
 lvmlockd: $(OBJECTS) $(top_builddir)/libdaemon/client/libdaemonclient.a \
 		    $(top_builddir)/libdaemon/server/libdaemonserver.a
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) $(LOCK_LIBS) -ldaemonserver $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) $(LOCK_LIBS) -ldaemonserver \
+		$(top_builddir)/device_mapper/libdevice-mapper.a $(LIBS)
 
 lvmlockctl: lvmlockctl.o $(top_builddir)/libdaemon/client/libdaemonclient.a
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ lvmlockctl.o $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ lvmlockctl.o \
+		$(top_builddir)/device_mapper/libdevice-mapper.a $(LIBS)
 
 install_lvmlockd: lvmlockd
 	$(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)

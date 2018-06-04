@@ -290,7 +290,7 @@ char *lvseg_cachemode_dup(struct dm_pool *mem, const struct lv_segment *seg)
 }
 
 #ifdef DMEVENTD
-#  include "libdevmapper-event.h"
+#  include "daemons/dmeventd/libdevmapper-event.h"
 #endif
 char *lvseg_monitor_dup(struct dm_pool *mem, const struct lv_segment *seg)
 {
