@@ -210,7 +210,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 			   const struct lv_activate_opts *laopts, int monitor);
 
 #ifdef DMEVENTD
-#  include "libdevmapper-event.h"
+#  include "daemons/dmeventd/libdevmapper-event.h"
 char *get_monitor_dso_path(struct cmd_context *cmd, int id);
 int target_registered_with_dmeventd(struct cmd_context *cmd, const char *dso,
 				    const struct logical_volume *lv, int *pending, int *monitored);
