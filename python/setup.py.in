@@ -22,7 +22,7 @@ liblvm = Extension('lvm',
                     sources = ['liblvm_python.c'],
                     libraries= ['lvm2app', 'devmapper'],
                     library_dirs= ['@top_builddir@/liblvm', '@top_builddir@/libdm'],
-                    include_dirs= ['@top_builddir@/include'])
+                    include_dirs= ['@top_builddir@'])
 
 setup (name='lvm',
        version=@LVM_VERSION@,
