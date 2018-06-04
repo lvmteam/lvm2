@@ -1,5 +1,6 @@
 Version 3.0.0
 =============
+  Avoid showing internal error in lvs output or pvmoved LVs.
   Remove clvmd
   Remove lvmlib (api)
   lvconvert: provide possible layouts between linear and striped/raid
