@@ -17,7 +17,7 @@
 #include "memcheck.h"
 #endif
 
-#include "misc/dmlib.h"
+#include "device_mapper/misc/dmlib.h"
 #include <stddef.h>	/* For musl libc */
 #include <malloc.h>
 

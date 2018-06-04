@@ -13,7 +13,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "misc/dmlib.h"
+#include "device_mapper/misc/dmlib.h"
 
 #ifdef VALGRIND_POOL
 #include "memcheck.h"

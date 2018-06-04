@@ -13,9 +13,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "misc/dmlib.h"
-#include "libdm-targets.h"
-#include "libdm-common.h"
+#include "device_mapper/misc/dmlib.h"
+#include "device_mapper/ioctl/libdm-targets.h"
+#include "device_mapper/libdm-common.h"
 
 #include <stddef.h>
 #include <fcntl.h>
@@ -26,7 +26,7 @@
 #include <unistd.h>
 
 #ifdef __linux__
-#  include "misc/kdev_t.h"
+#  include "device_mapper/misc/kdev_t.h"
 #  include <linux/limits.h>
 #else
 #  define MAJOR(x) major((x))
@@ -34,7 +34,7 @@
 #  define MKDEV(x,y) makedev((x),(y))
 #endif
 
-#include "misc/dm-ioctl.h"
+#include "device_mapper/misc/dm-ioctl.h"
 
 /*
  * Ensure build compatibility.  

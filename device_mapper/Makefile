@@ -30,17 +30,17 @@ DEVICE_MAPPER_SOURCE=\
 	device_mapper/regex/ttree.c \
 	device_mapper/ioctl/libdm-iface.c
 
-DEVICE_MAPPER_DEPENDS=$(subst .c,.d,$(DEVICE_MAPPER_SOURCE))
-DEVICE_MAPPER_OBJECTS=$(subst .c,.o,$(DEVICE_MAPPER_SOURCE))
+DEVICE_MAPPER_DEPENDS=$(addprefix $(top_builddir)/,$(subst .c,.d,$(DEVICE_MAPPER_SOURCE)))
+DEVICE_MAPPER_OBJECTS=$(addprefix $(top_builddir)/,$(subst .c,.o,$(DEVICE_MAPPER_SOURCE)))
 CLEAN_TARGETS+=$(DEVICE_MAPPER_DEPENDS) $(DEVICE_MAPPER_OBJECTS)
 
 -include $(DEVICE_MAPPER_DEPENDS)
 
-$(DEVICE_MAPPER_OBJECTS): INCLUDES+=-Idevice_mapper/
+$(DEVICE_MAPPER_OBJECTS): INCLUDES+=-I$(top_srcdir)/device_mapper/
 
-device_mapper/libdevice-mapper.a: $(DEVICE_MAPPER_OBJECTS)
+$(top_builddir)/device_mapper/libdevice-mapper.a: $(DEVICE_MAPPER_OBJECTS)
 	@echo "    [AR] $@"
 	$(Q) $(RM) $@
 	$(Q) $(AR) rsv $@ $(DEVICE_MAPPER_OBJECTS) > /dev/null
 
-CLEAN_TARGETS+=device_mapper/libdevice-mapper.a
+CLEAN_TARGETS+=$(top_builddir)/device_mapper/libdevice-mapper.a

@@ -213,7 +213,7 @@ endif
 endif
 
 include test/unit/Makefile
-include device_mapper/Makefile
+include $(top_srcdir)/device_mapper/Makefile
 
 ifneq ($(shell which ctags),)
 .PHONY: tags
