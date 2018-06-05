@@ -466,8 +466,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			 * in the case it's NOT active anywhere else, since LOCKED LVs cannot be
 			 * later activated by user.
 			 */
-			if (lv_is_active_remotely(holder) ||
-			    (!lv_is_active_locally(holder) && !activate_lv_excl_local(cmd, holder))) {
+			if ((!lv_is_active(holder) && !activate_lv(cmd, holder))) {
 				lv_skipped = 1;
 				log_print_unless_silent("Skipping LV %s which is not locally exclusive%s.",
 							display_lvname(lv),
@@ -532,10 +531,7 @@ static int _activate_lv(struct cmd_context *cmd, struct logical_volume *lv_mirr,
 {
 	int r = 0;
 
-	if (exclusive || lv_is_active_exclusive(lv_mirr))
-		r = activate_lv_excl(cmd, lv_mirr);
-	else
-		r = activate_lv(cmd, lv_mirr);
+	r = activate_lv(cmd, lv_mirr);
 
 	if (!r)
 		stack;

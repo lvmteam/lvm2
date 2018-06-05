@@ -231,20 +231,14 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 })
 #define suspend_lv(cmd, lv)	\
 	(lock_activation((cmd), (lv)) ? lock_lv_vol((cmd), (lv), LCK_LV_SUSPEND | LCK_HOLD) : 0)
+
 #define suspend_lv_origin(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_SUSPEND | LCK_HOLD | LCK_ORIGIN_ONLY)
+
 #define deactivate_lv(cmd, lv)	lock_lv_vol_serially(cmd, lv, LCK_LV_DEACTIVATE)
 
 #define activate_lv(cmd, lv)	lock_lv_vol_serially(cmd, lv, LCK_LV_ACTIVATE | LCK_HOLD)
-#define activate_lv_excl_local(cmd, lv)	\
-				lock_lv_vol_serially(cmd, lv, LCK_LV_EXCLUSIVE | LCK_HOLD | LCK_LOCAL)
-#define activate_lv_excl_remote(cmd, lv)	\
-				lock_lv_vol(cmd, lv, LCK_LV_EXCLUSIVE | LCK_HOLD | LCK_REMOTE)
 
 struct logical_volume;
-int activate_lv_excl(struct cmd_context *cmd, const struct logical_volume *lv);
-
-#define activate_lv_local(cmd, lv)	\
-	lock_lv_vol_serially(cmd, lv, LCK_LV_ACTIVATE | LCK_HOLD | LCK_LOCAL)
 
 #define deactivate_lv_local(cmd, lv)	\
 	lock_lv_vol_serially(cmd, lv, LCK_LV_DEACTIVATE | LCK_LOCAL)

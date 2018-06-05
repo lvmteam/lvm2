@@ -294,9 +294,6 @@ static int _reactivate_lv(struct logical_volume *lv,
 	if (!active)
 		return 1;
 
-	if (exclusive)
-		return activate_lv_excl_local(cmd, lv);
-
 	return activate_lv(cmd, lv);
 }
 
@@ -318,7 +315,7 @@ static int _lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 
 	dm_list_init(&device_list);
 
-	if (lv_is_active_locally(lv)) {
+	if (lv_is_active(lv)) {
 		if (!lv_check_not_in_use(lv, 1)) {
 			log_error("Can't resync open logical volume %s.",
 				  display_lvname(lv));
@@ -335,7 +332,7 @@ static int _lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 		}
 
 		active = 1;
-		if (lv_is_active_exclusive_locally(lv))
+		if (lv_is_active(lv))
 			exclusive = 1;
 	}
 
@@ -411,7 +408,7 @@ static int _lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 	memlock_unlock(lv->vg->cmd);
 
 	dm_list_iterate_items(lvl, &device_list) {
-		if (!activate_lv_excl_local(cmd, lvl->lv)) {
+		if (!activate_lv(cmd, lvl->lv)) {
 			log_error("Unable to activate %s for %s clearing.",
 				  display_lvname(lvl->lv), (seg_is_raid(seg)) ?
 				  "metadata area" : "mirror log");
@@ -621,7 +618,7 @@ static int _lvchange_persistent(struct cmd_context *cmd,
 
 	if (activate != CHANGE_AN) {
 		log_verbose("Re-activating logical volume %s.", display_lvname(lv));
-		if (!lv_active_change(cmd, lv, activate, 0)) {
+		if (!lv_active_change(cmd, lv, activate)) {
 			log_error("%s: reactivation failed.", display_lvname(lv));
 			backup(lv->vg);
 			return 0;

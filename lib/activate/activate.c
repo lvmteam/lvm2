@@ -374,31 +374,6 @@ int lv_is_active(const struct logical_volume *lv)
 {
 	return 0;
 }
-int lv_is_active_locally(const struct logical_volume *lv)
-{
-	return 0;
-}
-int lv_is_active_remotely(const struct logical_volume *lv)
-{
-	return 0;
-}
-int lv_is_active_but_not_locally(const struct logical_volume *lv)
-{
-	return 0;
-}
-int lv_is_active_exclusive(const struct logical_volume *lv)
-{
-	return 0;
-}
-int lv_is_active_exclusive_locally(const struct logical_volume *lv)
-{
-	return 0;
-}
-int lv_is_active_exclusive_remotely(const struct logical_volume *lv)
-{
-	return 0;
-}
-
 int lv_check_transient(struct logical_volume *lv)
 {
 	return 1;
@@ -1471,61 +1446,6 @@ int lvs_in_vg_opened(const struct volume_group *vg)
 }
 
 /*
- * _lv_is_active
- * @lv:        logical volume being queried
- * @locally:   set if active locally (when provided)
- * @remotely:  set if active remotely (when provided)
- * @exclusive: set if active exclusively (when provided)
- *
- * Determine whether an LV is active locally or in a cluster.
- * In addition to the return code which indicates whether or
- * not the LV is active somewhere, two other values are set
- * to yield more information about the status of the activation:
- *
- *	return	locally	exclusively	status
- *	======	=======	===========	======
- *	   0	   0	    0		not active
- *	   1	   0	    0		active remotely
- *	   1	   0	    1		exclusive remotely
- *	   1	   1	    0		active locally and possibly remotely
- *	   1	   1	    1		exclusive locally (or local && !cluster)
- * The VG lock must be held to call this function.
- *
- * Returns: 0 or 1
- */
-static int _lv_is_active(const struct logical_volume *lv,
-			 int *locally, int *remotely, int *exclusive)
-{
-	int r, l, e; /* remote, local, and exclusive */
-	int skip_cluster_query = 0;
-
-	r = l = e = 0;
-
-	if (_lv_active(lv->vg->cmd, lv))
-		l = 1;
-
-	if (l)
-		e = 1;  /* exclusive by definition */
-
-	if (locally)
-		*locally = l;
-	if (exclusive)
-		*exclusive = e;
-	if (remotely)
-		*remotely = r;
-
-	log_very_verbose("%s is %sactive%s%s%s%s",
-			 display_lvname(lv),
-			 (r || l) ? "" : "not ",
-			 (exclusive && e) ? " exclusive" : "",
-			 l ? " locally" : "",
-			 (!skip_cluster_query && l && r) ? " and" : "",
-			 (!skip_cluster_query && r) ? " remotely" : "");
-
-	return r || l;
-}
-
-/*
  * Check if "raid4" @segtype is supported by kernel.
  *
  * if segment type is not raid4, return 1.
@@ -1545,51 +1465,14 @@ int raid4_is_supported(struct cmd_context *cmd, const struct segment_type *segty
 	return 1;
 }
 
+/*
+ * The VG lock must be held to call this function.
+ *
+ * Returns: 0 or 1
+ */
 int lv_is_active(const struct logical_volume *lv)
 {
-	return _lv_is_active(lv, NULL, NULL, NULL);
-}
-
-int lv_is_active_locally(const struct logical_volume *lv)
-{
-	int l;
-
-	return _lv_is_active(lv, &l, NULL, NULL) && l;
-}
-
-int lv_is_active_remotely(const struct logical_volume *lv)
-{
-	int r;
-
-	return _lv_is_active(lv, NULL, &r, NULL) && r;
-}
-
-int lv_is_active_but_not_locally(const struct logical_volume *lv)
-{
-	int l;
-
-	return _lv_is_active(lv, &l, NULL, NULL) && !l;
-}
-
-int lv_is_active_exclusive(const struct logical_volume *lv)
-{
-	int e;
-
-	return _lv_is_active(lv, NULL, NULL, &e) && e;
-}
-
-int lv_is_active_exclusive_locally(const struct logical_volume *lv)
-{
-	int l, e;
-
-	return _lv_is_active(lv, &l, NULL, &e) && l && e;
-}
-
-int lv_is_active_exclusive_remotely(const struct logical_volume *lv)
-{
-	int l, e;
-
-	return _lv_is_active(lv, &l, NULL, &e) && !l && e;
+	return _lv_active(lv->vg->cmd, lv);
 }
 
 #ifdef DMEVENTD
@@ -1991,7 +1874,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 			continue;
 
 		if (!vg_write_lock_held() && lv_is_mirror(lv)) {
-			mirr_laopts.exclusive = lv_is_active_exclusive_locally(lv) ? 1 : 0;
+			mirr_laopts.exclusive = lv_is_active(lv) ? 1 : 0;
 			/*
 			 * Commands vgchange and lvchange do use read-only lock when changing
 			 * monitoring (--monitor y|n). All other use cases hold 'write-lock'

@@ -504,7 +504,7 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 			 *   as this version has major problem when it does not know
 			 *   which Node has pool active.
 			 */
-			if (!activate_lv_excl(lv->vg->cmd, lv)) {
+			if (!activate_lv(lv->vg->cmd, lv)) {
 				init_dmeventd_monitor(monitored);
 				return_0;
 			}
@@ -857,7 +857,7 @@ int check_new_thin_pool(const struct logical_volume *pool_lv)
 	uint64_t transaction_id;
 
 	/* For transaction_id check LOCAL activation is required */
-	if (!activate_lv_excl_local(cmd, pool_lv)) {
+	if (!activate_lv(cmd, pool_lv)) {
 		log_error("Aborting. Failed to locally activate thin pool %s.",
 			  display_lvname(pool_lv));
 		return 0;

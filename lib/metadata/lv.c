@@ -1023,7 +1023,7 @@ int lv_raid_image_in_sync(const struct logical_volume *lv)
 	 * If the LV is not active locally,
 	 * it doesn't make sense to check status
 	 */
-	if (!lv_is_active_locally(lv))
+	if (!lv_is_active(lv))
 		return 0;  /* Assume not in-sync */
 
 	if (!lv_is_raid_image(lv)) {
@@ -1081,7 +1081,7 @@ int lv_raid_healthy(const struct logical_volume *lv)
 	 * If the LV is not active locally,
 	 * it doesn't make sense to check status
 	 */
-	if (!lv_is_active_locally(lv))
+	if (!lv_is_active(lv))
 		return 1;  /* assume healthy */
 
 	if (!lv_is_raid_type(lv)) {
@@ -1446,22 +1446,8 @@ char *lv_host_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	return dm_pool_strdup(mem, lv->hostname ? : "");
 }
 
-static int _lv_is_exclusive(struct logical_volume *lv)
-{
-	struct lv_segment *seg;
-
-	/* Some seg types require exclusive activation */
-	/* FIXME Scan recursively */
-	dm_list_iterate_items(seg, &lv->segments)
-		if (seg_only_exclusive(seg))
-			return 1;
-
-	/* Origin has no seg type require exlusiveness */
-	return lv_is_origin(lv);
-}
-
 int lv_active_change(struct cmd_context *cmd, struct logical_volume *lv,
-		     enum activation_change activate, int needs_exclusive)
+		     enum activation_change activate)
 {
 	const char *ay_with_mode = NULL;
 
@@ -1478,45 +1464,22 @@ int lv_active_change(struct cmd_context *cmd, struct logical_volume *lv,
 
 	switch (activate) {
 	case CHANGE_AN:
+	case CHANGE_ALN:
 		log_verbose("Deactivating logical volume %s.", display_lvname(lv));
 		if (!deactivate_lv(cmd, lv))
 			return_0;
 		break;
-	case CHANGE_ALN:
-		log_verbose("Deactivating logical volume %s locally.",
-			    display_lvname(lv));
-		if (!deactivate_lv_local(cmd, lv))
-			return_0;
-		break;
+
 	case CHANGE_ALY:
 	case CHANGE_AAY:
-		if (needs_exclusive || _lv_is_exclusive(lv)) {
-			log_verbose("Activating logical volume %s exclusively locally.",
-				    display_lvname(lv));
-			if (!activate_lv_excl_local(cmd, lv))
-				return_0;
-		} else {
-			log_verbose("Activating logical volume %s locally.",
-				    display_lvname(lv));
-			if (!activate_lv_local(cmd, lv))
-				return_0;
-		}
-		break;
 	case CHANGE_AEY:
-exclusive:
-		log_verbose("Activating logical volume %s exclusively.",
-			    display_lvname(lv));
-		if (!activate_lv_excl(cmd, lv))
-			return_0;
-		break;
 	case CHANGE_ASY:
 	case CHANGE_AY:
 	default:
-		if (needs_exclusive || _lv_is_exclusive(lv))
-			goto exclusive;
 		log_verbose("Activating logical volume %s.", display_lvname(lv));
 		if (!activate_lv(cmd, lv))
 			return_0;
+		break;
 	}
 
 	if (!is_change_activating(activate) &&
@@ -1535,23 +1498,10 @@ char *lv_active_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		goto out;
 	}
 
-	if (vg_is_clustered(lv->vg)) {
-		//const struct logical_volume *lvo = lv;
-		lv = lv_lock_holder(lv);
-		//log_debug("Holder for %s => %s.", lvo->name, lv->name);
-	}
-
 	if (!lv_is_active(lv))
 		s = ""; /* not active */
-	else if (!vg_is_clustered(lv->vg))
+	else
 		s = "active";
-	else if (lv_is_active_exclusive(lv))
-		/* exclusive cluster activation */
-		s = lv_is_active_exclusive_locally(lv) ?
-			"local exclusive" : "remote exclusive";
-	else /* locally active */
-		s = lv_is_active_but_not_locally(lv) ?
-			"remotely" : "locally";
 out:
 	return dm_pool_strdup(mem, s);
 }

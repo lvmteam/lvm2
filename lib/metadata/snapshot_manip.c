@@ -411,11 +411,5 @@ int validate_snapshot_origin(const struct logical_volume *origin_lv)
 		return 0;
 	}
 
-	if (vg_is_clustered(origin_lv->vg) && lv_is_active(origin_lv) &&
-	    !lv_is_active_exclusive_locally(origin_lv)) {
-		log_error("Snapshot origin must be active exclusively.");
-		return 0;
-	}
-
 	return 1;
 }

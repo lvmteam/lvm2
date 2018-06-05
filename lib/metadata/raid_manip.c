@@ -319,7 +319,7 @@ static int _deactivate_and_remove_lvs(struct volume_group *vg, struct dm_list *r
 			return 0;
 		}
 		/* Must get a cluster lock on SubLVs that will be removed. */
-		if (!activate_lv_excl_local(vg->cmd, lvl->lv))
+		if (!activate_lv(vg->cmd, lvl->lv))
 			return_0;
 	}
 
@@ -669,7 +669,7 @@ static int _lv_update_and_reload_list(struct logical_volume *lv, int origin_only
 		dm_list_iterate_items(lvl, lv_list) {
 			log_very_verbose("Activating logical volume %s before %s in kernel.",
 					 display_lvname(lvl->lv), display_lvname(lock_lv));
-			if (!activate_lv_excl_local(vg->cmd, lvl->lv)) {
+			if (!activate_lv(vg->cmd, lvl->lv)) {
 				log_error("Failed to activate %s before resuming %s.",
 					  display_lvname(lvl->lv), display_lvname(lock_lv));
 				r = 0; /* But lets try with the rest */
@@ -732,9 +732,9 @@ static int _clear_lvs(struct dm_list *lv_list)
 	was_active = alloca(sz);
 
 	dm_list_iterate_items(lvl, lv_list)
-		if (!(was_active[i++] = lv_is_active_locally(lvl->lv))) {
+		if (!(was_active[i++] = lv_is_active(lvl->lv))) {
 			lvl->lv->status |= LV_TEMPORARY;
-			if (!activate_lv_excl_local(vg->cmd, lvl->lv)) {
+			if (!activate_lv(vg->cmd, lvl->lv)) {
 				log_error("Failed to activate localy %s for clearing.",
 					  display_lvname(lvl->lv));
 				r = 0;
@@ -2276,7 +2276,7 @@ static int _vg_write_lv_suspend_vg_commit(struct logical_volume *lv, int origin_
 /* Helper: function to activate @lv exclusively local */
 static int _activate_sub_lv_excl_local(struct logical_volume *lv)
 {
-	if (lv && !activate_lv_excl_local(lv->vg->cmd, lv)) {
+	if (lv && !activate_lv(lv->vg->cmd, lv)) {
 		log_error("Failed to activate %s.", display_lvname(lv));
 		return 0;
 	}
@@ -3258,16 +3258,6 @@ static int _lv_raid_change_image_count(struct logical_volume *lv, int yes, uint3
 		return r;
 	}
 
-	/*
-	 * LV must be either in-active or exclusively active
-	 */
-	if (lv_is_active(lv_lock_holder(lv)) && vg_is_clustered(lv->vg) &&
-	    !lv_is_active_exclusive_locally(lv_lock_holder(lv))) {
-		log_error("%s must be active exclusive locally to "
-			  "perform this operation.", display_lvname(lv));
-		return 0;
-	}
-
 	if (old_count > new_count)
 		return _raid_remove_images(lv, yes, new_count, allocate_pvs, removal_lvs, commit);
 
@@ -3427,13 +3417,13 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 	/* FIXME: run all cases through lv_active_change when clvm variants are gone. */
 
 	if (vg_is_shared(lvl->lv->vg)) {
-		if (!lv_active_change(lv->vg->cmd, lvl->lv, CHANGE_AEY, 0))
+		if (!lv_active_change(lv->vg->cmd, lvl->lv, CHANGE_AEY))
 			return_0;
-	} else if (!activate_lv_excl_local(cmd, lvl->lv))
+	} else if (!activate_lv(cmd, lvl->lv))
 		return_0;
 
 	dm_list_iterate_items(lvl, &removal_lvs)
-		if (!activate_lv_excl_local(cmd, lvl->lv))
+		if (!activate_lv(cmd, lvl->lv))
 			return_0;
 
 	if (!resume_lv(cmd, lv_lock_holder(lv))) {
@@ -3539,7 +3529,7 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 
 	/* Activate the split (and tracking) LV */
 	/* Preserving exclusive local activation also for tracked LV */
-	if (!activate_lv_excl_local(lv->vg->cmd, seg_lv(seg, s)))
+	if (!activate_lv(lv->vg->cmd, seg_lv(seg, s)))
 		return_0;
 
 	if (seg->area_count == 2)
@@ -5001,7 +4991,7 @@ static int _clear_meta_lvs(struct logical_volume *lv)
 	/* Grab locks first in case of clustered VG */
 	if (vg_is_clustered(lv->vg))
 		dm_list_iterate_items(lvl, &meta_lvs)
-			if (!activate_lv_excl_local(lv->vg->cmd, lvl->lv))
+			if (!activate_lv(lv->vg->cmd, lvl->lv))
 				return_0;
 	/*
 	 * Now deactivate the MetaLVs before clearing, so
@@ -6520,14 +6510,6 @@ int lv_raid_convert(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (vg_is_clustered(lv->vg) &&
-		   !lv_is_active_exclusive_locally(lv_lock_holder(lv))) {
-		/* In clustered VGs, the LV must be active on this node exclusively. */
-		log_error("%s must be active exclusive locally to "
-			  "perform this operation.", display_lvname(lv));
-		return 0;
-	}
-
 	new_segtype = new_segtype ? : seg->segtype;
 	if (!new_segtype) {
 		log_error(INTERNAL_ERROR "New segtype not specified.");
@@ -6810,10 +6792,8 @@ static int _lv_raid_rebuild_or_replace(struct logical_volume *lv,
 	if (lv_is_partial(lv))
 		lv->vg->cmd->partial_activation = 1;
 
-	if (!lv_is_active_exclusive_locally(lv_lock_holder(lv))) {
-		log_error("%s must be active %sto perform this operation.",
-			  display_lvname(lv),
-			  vg_is_clustered(lv->vg) ? "exclusive locally " : "");
+	if (!lv_is_active(lv_lock_holder(lv))) {
+		log_error("%s must be active to perform this operation.", display_lvname(lv));
 		return 0;
 	}
 
@@ -7013,7 +6993,7 @@ try_again:
 	 * of their new names.
 	 */
 	dm_list_iterate_items(lvl, &old_lvs)
-		if (!activate_lv_excl_local(lv->vg->cmd, lvl->lv))
+		if (!activate_lv(lv->vg->cmd, lvl->lv))
 			return_0;
 
 	/*

@@ -1767,7 +1767,7 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 		return 0;
 	}
 
-	if (lv_is_active_locally(cow)) {
+	if (lv_is_active(cow)) {
 		if (!lv_check_not_in_use(cow, 1))
 			return_0;
 
@@ -1950,7 +1950,7 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 		log_warn("WARNING: %s not zeroed.", snap_name);
 	else {
 		lv->status |= LV_TEMPORARY;
-		if (!activate_lv_excl_local(cmd, lv) ||
+		if (!activate_lv(cmd, lv) ||
 		    !wipe_lv(lv, (struct wipe_params) { .do_zero = 1 })) {
 			log_error("Aborting. Failed to wipe snapshot exception store.");
 			return 0;
@@ -2037,7 +2037,7 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 	 * constructor and DM should prevent appropriate devices from
 	 * being open.
 	 */
-	if (lv_is_active_locally(origin)) {
+	if (lv_is_active(origin)) {
 		if (!lv_check_not_in_use(origin, 0)) {
 			log_print_unless_silent("Delaying merge since origin is open.");
 			merge_on_activate = 1;
@@ -2146,7 +2146,7 @@ static int _lvconvert_merge_thin_snapshot(struct cmd_context *cmd,
 		log_print_unless_silent("Volume %s replaced origin %s.",
 					display_lvname(origin), display_lvname(lv));
 
-		if (origin_is_active && !activate_lv_excl_local(cmd, lv)) {
+		if (origin_is_active && !activate_lv(cmd, lv)) {
 			log_error("Failed to reactivate origin %s.",
 				  display_lvname(lv));
 			return 0;
@@ -2254,13 +2254,13 @@ static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!activate_lv_excl_local(cmd, pmslv)) {
+	if (!activate_lv(cmd, pmslv)) {
 		log_error("Cannot activate pool metadata spare volume %s.",
 			  pmslv->name);
 		return 0;
 	}
 
-	if (!activate_lv_excl_local(cmd, mlv)) {
+	if (!activate_lv(cmd, mlv)) {
 		log_error("Cannot activate thin pool metadata volume %s.",
 			  mlv->name);
 		goto deactivate_pmslv;
@@ -2452,13 +2452,13 @@ static int _lvconvert_cache_repair(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!activate_lv_excl_local(cmd, pmslv)) {
+	if (!activate_lv(cmd, pmslv)) {
 		log_error("Cannot activate pool metadata spare volume %s.",
 			  pmslv->name);
 		return 0;
 	}
 
-	if (!activate_lv_excl_local(cmd, mlv)) {
+	if (!activate_lv(cmd, mlv)) {
 		log_error("Cannot activate cache pool metadata volume %s.",
 			  mlv->name);
 		goto deactivate_pmslv;
@@ -3106,7 +3106,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 
 		if (zero_metadata) {
 			metadata_lv->status |= LV_TEMPORARY;
-			if (!activate_lv_excl_local(cmd, metadata_lv)) {
+			if (!activate_lv(cmd, metadata_lv)) {
 				log_error("Aborting. Failed to activate metadata lv.");
 				goto bad;
 			}
@@ -3248,7 +3248,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	}
 
 	if (activate_pool &&
-	    !activate_lv_excl(cmd, pool_lv)) {
+	    !activate_lv(cmd, pool_lv)) {
 		log_error("Failed to activate pool logical volume %s.",
 			  display_lvname(pool_lv));
 		/* Deactivate subvolumes */
@@ -3461,11 +3461,8 @@ static int _lvconvert_repair_pvs_raid(struct cmd_context *cmd, struct logical_vo
 	struct dm_list *failed_pvs;
 	int do_it;
 
-	if (!lv_is_active_exclusive_locally(lv_lock_holder(lv))) {
-		log_error("%s must be active %sto perform this operation.",
-			  display_lvname(lv),
-			  vg_is_clustered(lv->vg) ?
-			  "exclusive locally " : "");
+	if (!lv_is_active(lv_lock_holder(lv))) {
+		log_error("%s must be active to perform this operation.", display_lvname(lv));
 		return 0;
 	}
 

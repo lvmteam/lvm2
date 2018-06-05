@@ -354,7 +354,7 @@ static int _init_mirror_log(struct cmd_context *cmd,
 	} else if (!lv_update_and_reload((struct logical_volume*) lock_holder))
 		return_0;
 
-	if (!activate_lv_excl_local(cmd, log_lv)) {
+	if (!activate_lv(cmd, log_lv)) {
 		log_error("Aborting. Failed to activate mirror log.");
 		goto revert_new_lv;
 	}
@@ -427,15 +427,10 @@ static int _activate_lv_like_model(struct logical_volume *model,
 	/* FIXME: run all cases through lv_active_change when clvm variants are gone. */
 
 	if (vg_is_shared(lv->vg))
-		return lv_active_change(lv->vg->cmd, lv, CHANGE_AEY, 0);
+		return lv_active_change(lv->vg->cmd, lv, CHANGE_AEY);
 
-	if (lv_is_active_exclusive(model)) {
-		if (!activate_lv_excl(lv->vg->cmd, lv))
-			return_0;
-	} else {
-		if (!activate_lv(lv->vg->cmd, lv))
-			return_0;
-	}
+	if (!activate_lv(lv->vg->cmd, lv))
+		return_0;
 	return 1;
 }
 
@@ -610,14 +605,7 @@ static int _mirrored_lv_in_sync(struct logical_volume *lv)
 
 	if (!lv_mirror_percent(lv->vg->cmd, lv, 0, &sync_percent,
 			       NULL)) {
-		if (lv_is_active_but_not_locally(lv))
-			log_error("Unable to determine mirror sync status of"
-				  " remotely active LV, %s",
-				  display_lvname(lv));
-		else
-			log_error("Unable to determine mirror "
-				  "sync status of %s.",
-				  display_lvname(lv));
+		log_error("Unable to determine mirror sync status of %s.", display_lvname(lv));
 		return 0;
 	}
 
@@ -1668,7 +1656,6 @@ int remove_mirror_log(struct cmd_context *cmd,
 		      int force)
 {
 	dm_percent_t sync_percent;
-	struct volume_group *vg = lv->vg;
 
 	/* Unimplemented features */
 	if (dm_list_size(&lv->segments) != 1) {
@@ -1677,20 +1664,12 @@ int remove_mirror_log(struct cmd_context *cmd,
 	}
 
 	/* Had disk log, switch to core. */
-	if (lv_is_active_locally(lv)) {
+	if (lv_is_active(lv)) {
 		if (!lv_mirror_percent(cmd, lv, 0, &sync_percent,
 				       NULL)) {
 			log_error("Unable to determine mirror sync status.");
 			return 0;
 		}
-	} else if (lv_is_active(lv)) {
-		log_error("Unable to determine sync status of "
-			  "remotely active mirror volume %s.", display_lvname(lv));
-		return 0;
-	} else if (vg_is_clustered(vg)) {
-		log_error("Unable to convert the log of an inactive "
-			  "cluster mirror volume %s.", display_lvname(lv));
-		return 0;
 	} else if (force || yes_no_prompt("Full resync required to convert inactive "
 					  "mirror volume %s to core log. "
 					  "Proceed? [y/n]: ", display_lvname(lv)) == 'y')
@@ -1910,19 +1889,8 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 	unsigned old_log_count;
 	int r = 0;
 
-	if (vg_is_clustered(lv->vg) && (log_count > 1)) {
-		log_error("Log type, \"mirrored\", is unavailable to cluster mirrors.");
-		return 0;
-	}
-
 	if (dm_list_size(&lv->segments) != 1) {
 		log_error("Multiple-segment mirror is not supported.");
-		return 0;
-	}
-
-	if (lv_is_active_but_not_locally(lv)) {
-		log_error("Unable to convert the log of a mirror, %s, that is "
-			  "active remotely but not locally.", display_lvname(lv));
 		return 0;
 	}
 
@@ -2077,27 +2045,6 @@ int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!mirrors && !log_count) {
 		log_error("No conversion is requested.");
 		return 0;
-	}
-
-	if (vg_is_clustered(lv->vg)) {
-		/* FIXME: move this test out of this function */
-		/* Skip test for pvmove mirrors, it can use local mirror */
-		if (!lv_is_pvmove(lv) && !lv_is_locked(lv) &&
-		    lv_is_active(lv) &&
-		    !lv_is_active_exclusive_locally(lv) && /* lv_is_active_remotely */
-		    !cluster_mirror_is_available(lv->vg->cmd)) {
-			log_error("Shared cluster mirrors are not available.");
-			return 0;
-		}
-
-		/*
-		 * No mirrored logs for cluster mirrors until
-		 * log daemon is multi-threaded.
-		 */
-		if (log_count > 1) {
-			log_error("Log type, \"mirrored\", is unavailable to cluster mirrors.");
-			return 0;
-		}
 	}
 
 	if (lv->vg->lock_type && !strcmp(lv->vg->lock_type, "dlm") && cmd->lockd_lv_sh) {
