@@ -25,7 +25,7 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 	if (argc == 1) {
 		vg_name = skip_dev_dir(cmd, argv[0], NULL);
 		if (!validate_name(vg_name)) {
-			log_error("Volume group name \"%s\" is invalid", vg_name);
+			log_error("Volume group name \"%s\" is invalid.", vg_name);
 			return EINVALID_CMD_LINE;
 		}
 	} else if (!(arg_is_set(cmd, list_ARG) && arg_is_set(cmd, file_ARG))) {
@@ -64,12 +64,12 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE, NULL)) {
-		log_error("Unable to lock volume group %s", vg_name);
+		log_error("Unable to lock volume group %s.", vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
-		log_error("Unable to lock orphans");
+		log_error("Unable to lock orphans.");
 		unlock_vg(cmd, NULL, vg_name);
 		return ECMD_FAILED;
 	}
@@ -91,7 +91,7 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	ret = ECMD_PROCESSED;
-	log_print_unless_silent("Restored volume group %s", vg_name);
+	log_print_unless_silent("Restored volume group %s.", vg_name);
 
 	unlock_vg(cmd, NULL, VG_ORPHANS);
 	unlock_vg(cmd, NULL, vg_name);
