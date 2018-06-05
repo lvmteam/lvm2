@@ -2698,11 +2698,6 @@ static int _init_lvmlockd(struct cmd_context *cmd)
 		}
 	}
 
-	if (use_lvmlockd && locking_is_clustered()) {
-		log_error("ERROR: configuration setting use_lvmlockd cannot be used with clustered locking_type 3.");
-		return 0;
-	}
-
 	lvmlockd_disconnect(); /* start over when tool context is refreshed */
 	lvmlockd_socket = getenv("LVM_LVMLOCKD_SOCKET");
 	if (!lvmlockd_socket)

@@ -780,15 +780,6 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 
 	*new_log_count = arg_int_value(cmd, mirrorlog_ARG, lp->corelog ? MIRROR_LOG_CORE : DEFAULT_MIRRORLOG);
 
-	/*
-	 * No mirrored logs for cluster mirrors until
-	 * log daemon is multi-threaded.
-	 */
-	if ((*new_log_count == MIRROR_LOG_MIRRORED) && vg_is_clustered(lv->vg)) {
-		log_error("Log type, \"mirrored\", is unavailable to cluster mirrors.");
-		return 0;
-	}
-
 	log_verbose("Setting logging type to %s.", get_mirror_log_name(*new_log_count));
 
 	/*
@@ -2054,10 +2045,6 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 			log_print_unless_silent("Delaying merge since snapshot is open.");
 			merge_on_activate = 1;
 		}
-	} else if (vg_is_clustered(origin->vg) && lv_is_active(origin)) {
-		/* When it's active somewhere else */
-		log_print_unless_silent("Delaying merge since origin is remotely active.");
-		merge_on_activate = 1;
 	}
 
 	init_snapshot_merge(snap_seg, origin);

@@ -116,101 +116,16 @@ int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 
 	_blocking_supported = find_config_tree_bool(cmd, global_wait_for_locks_CFG, NULL);
 
-	switch (type) {
-	case 0:
-		init_no_locking(&_locking, cmd, suppress_messages);
-		log_warn_suppress(suppress_messages,
-			"WARNING: Locking disabled. Be careful! "
-			"This could corrupt your metadata.");
-		return 1;
+	if (type != 1)
+		log_warn("WARNING: locking_type deprecated, using file locking.");
 
-	case 1:
-		log_very_verbose("%sFile-based locking selected.",
-				 _blocking_supported ? "" : "Non-blocking ");
-
-		if (!init_file_locking(&_locking, cmd, suppress_messages)) {
-			log_error_suppress(suppress_messages,
-					   "File-based locking initialisation failed.");
-			break;
-		}
-		return 1;
-
-#ifdef HAVE_LIBDL
-	case 2:
-		if (!is_static()) {
-			log_very_verbose("External locking selected.");
-			if (init_external_locking(&_locking, cmd, suppress_messages))
-				return 1;
-		}
-		if (!find_config_tree_bool(cmd, global_fallback_to_clustered_locking_CFG, NULL)) {
-			log_error_suppress(suppress_messages, "External locking initialisation failed.");
-			break;
-		}
-#endif
-
-		log_very_verbose("Falling back to internal clustered locking.");
-		/* Fall through */
-
-	case 3:
-#ifdef CLUSTER_LOCKING_INTERNAL
-		log_very_verbose("Cluster locking selected.");
-		if (!init_cluster_locking(&_locking, cmd, suppress_messages)) {
-			log_error_suppress(suppress_messages,
-					   "Internal cluster locking initialisation failed.");
-			break;
-		}
-		return 1;
-#else
-		log_warn("WARNING: Using locking_type=1, ignoring locking_type=3.");
+	if (type == 3)
 		log_warn("WARNING: See lvmlockd(8) for information on using cluster/clvm VGs.");
-		type = 1;
 
-		log_very_verbose("%sFile-based locking selected.",
-				 _blocking_supported ? "" : "Non-blocking ");
+	log_very_verbose("%sFile-based locking selected.", _blocking_supported ? "" : "Non-blocking ");
 
-		if (!init_file_locking(&_locking, cmd, suppress_messages)) {
-			log_error_suppress(suppress_messages,
-					   "File-based locking initialisation failed.");
-			break;
-		}
-		return 1;
-#endif
-
-	case 4:
-		log_verbose("Read-only locking selected. "
-			    "Only read operations permitted.");
-		if (!init_readonly_locking(&_locking, cmd, suppress_messages))
-			break;
-		return 1;
-
-	case 5:
-		init_dummy_locking(&_locking, cmd, suppress_messages);
-		log_verbose("Locking disabled for read-only access.");
-		return 1;
-
-	default:
-		log_error("Unknown locking type requested.");
-		return 0;
-	}
-
-	if ((type == 2 || type == 3) &&
-	    find_config_tree_bool(cmd, global_fallback_to_local_locking_CFG, NULL)) {
-		log_warn_suppress(suppress_messages, "WARNING: Falling back to local file-based locking.");
-		log_warn_suppress(suppress_messages,
-				  "Volume Groups with the clustered attribute will "
-				  "be inaccessible.");
-		if (init_file_locking(&_locking, cmd, suppress_messages))
-			return 1;
-
-		log_error_suppress(suppress_messages,
-				   "File-based locking initialisation failed.");
-	}
-
-	if (!ignorelockingfailure())
-		return 0;
-
-	log_verbose("Locking disabled - only read operations permitted.");
-	init_readonly_locking(&_locking, cmd, suppress_messages);
+	if (!init_file_locking(&_locking, cmd, suppress_messages))
+		log_error_suppress(suppress_messages, "File-based locking initialisation failed.");
 
 	return 1;
 }
@@ -325,13 +240,6 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 		    !lvmcache_verify_lock_order(vol))
 			return_0;
 
-		if ((flags == LCK_VG_DROP_CACHE) ||
-		    (strcmp(vol, VG_GLOBAL) && strcmp(vol, VG_SYNC_NAMES))) {
-			/* Skip dropping cache for internal VG names #global, #sync_names */
-			log_debug_locking("Dropping cache for %s.", vol);
-			lvmcache_drop_metadata(vol, 0);
-		}
-
 		break;
 	case LCK_LV:
 		/* All LV locks are non-blocking. */
@@ -372,24 +280,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
  */
 int activate_lv_excl(struct cmd_context *cmd, const struct logical_volume *lv)
 {
-	/* Non-clustered VGs are only activated locally. */
-	if (!vg_is_clustered(lv->vg))
-		return activate_lv_excl_local(cmd, lv);
-
-	if (lv_is_active_exclusive_locally(lv))
-		return 1;
-
-	if (!activate_lv_excl_local(cmd, lv))
-		return_0;
-
-	if (lv_is_active_exclusive(lv))
-		return 1;
-
-	/* FIXME Deal with error return codes. */
-	if (!activate_lv_excl_remote(cmd, lv))
-		return_0;
-
-	return 1;
+	return activate_lv_excl_local(cmd, lv);
 }
 
 /* Lock a list of LVs */
@@ -426,35 +317,6 @@ int vg_write_lock_held(void)
 int locking_is_clustered(void)
 {
 	return (_locking.flags & LCK_CLUSTERED) ? 1 : 0;
-}
-
-int locking_supports_remote_queries(void)
-{
-	return (_locking.flags & LCK_SUPPORTS_REMOTE_QUERIES) ? 1 : 0;
-}
-
-int cluster_lock_held(const char *vol, const char *node, int *exclusive)
-{
-	int mode = LCK_NULL;
-
-	if (!locking_is_clustered())
-		return 0;
-
-	if (!_locking.query_resource)
-		return -1;
-
-	/*
-	 * If an error occured, expect that volume is active
-	 */
-	if (!_locking.query_resource(vol, node, &mode)) {
-		stack;
-		return 1;
-	}
-
-	if (exclusive)
-		*exclusive = (mode == LCK_EXCL);
-
-	return mode == LCK_NULL ? 0 : 1;
 }
 
 int sync_local_dev_names(struct cmd_context* cmd)

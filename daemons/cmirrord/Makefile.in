@@ -17,8 +17,6 @@ top_builddir = @top_builddir@
 
 CPG_LIBS = @CPG_LIBS@
 CPG_CFLAGS = @CPG_CFLAGS@
-SACKPT_LIBS = @SACKPT_LIBS@
-SACKPT_CFLAGS = @SACKPT_CFLAGS@
 
 SOURCES = clogd.c cluster.c compat.c functions.c link_mon.c local.c logging.c
 
@@ -26,8 +24,8 @@ TARGETS = cmirrord
 
 include $(top_builddir)/make.tmpl
 
-LMLIBS += $(CPG_LIBS) $(SACKPT_LIBS)
-CFLAGS += $(CPG_CFLAGS) $(SACKPT_CFLAGS) $(EXTRA_EXEC_CFLAGS)
+LMLIBS += $(CPG_LIBS)
+CFLAGS += $(CPG_CFLAGS) $(EXTRA_EXEC_CFLAGS)
 LDFLAGS += $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS)
 
 cmirrord: $(OBJECTS) $(top_builddir)/lib/liblvm-internal.a

@@ -16,10 +16,6 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
-ifeq ("@CLUSTER@", "shared")
-  SUBDIRS += locking
-endif
-
 SOURCES =\
 	activate/activate.c \
 	cache/lvmcache.c \
@@ -66,7 +62,6 @@ SOURCES =\
 	label/label.c \
 	locking/file_locking.c \
 	locking/locking.c \
-	locking/no_locking.c \
 	log/log.c \
 	metadata/cache_manip.c \
 	metadata/lv.c \
@@ -107,10 +102,6 @@ SOURCES =\
 	uuid/uuid.c \
 	zero/zero.c
 
-ifeq ("@CLUSTER@", "internal")
-  SOURCES += locking/cluster_locking.c
-endif
-
 ifeq ("@DEVMAPPER@", "yes")
   SOURCES +=\
 	activate/dev_manager.c \
@@ -118,9 +109,7 @@ ifeq ("@DEVMAPPER@", "yes")
 endif
 
 ifeq ("@HAVE_LIBDL@", "yes")
-  SOURCES +=\
-	locking/external_locking.c \
-	misc/sharedlib.c
+  SOURCES += misc/sharedlib.c
 endif
 
 ifeq ("@BUILD_LVMETAD@", "yes")

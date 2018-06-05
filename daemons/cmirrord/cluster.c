@@ -18,6 +18,9 @@
 #include "local.h"
 #include "lib/mm/xlate.h"
 
+/* FIXME: remove this and the code */
+#define CMIRROR_HAS_CHECKPOINT 0
+
 #include <corosync/cpg.h>
 #include <errno.h>
 #include <signal.h>

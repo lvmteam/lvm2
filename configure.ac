@@ -46,7 +46,6 @@ case "$host_os" in
 		ODIRECT=yes
 		DM_IOCTLS=yes
 		SELINUX=yes
-		CLUSTER=internal
 		FSADM=yes
 		BLKDEACTIVATE=yes
 		;;
@@ -61,7 +60,6 @@ case "$host_os" in
 		ODIRECT=no
 		DM_IOCTLS=no
 		SELINUX=no
-		CLUSTER=none
 		FSADM=no
 		BLKDEACTIVATE=no
 		;;
@@ -281,22 +279,6 @@ case "$MANGLING" in
 esac
 AC_MSG_RESULT($MANGLING)
 AC_DEFINE_UNQUOTED([DEFAULT_DM_NAME_MANGLING], $mangling, [Define default name mangling behaviour])
-
-################################################################################
-dnl -- cluster_locking inclusion type
-AC_MSG_CHECKING(whether to include support for cluster locking)
-AC_ARG_WITH(cluster,
-	    AC_HELP_STRING([--with-cluster=TYPE],
-			   [cluster LVM locking support: internal/shared/none [internal]]),
-	    CLUSTER=$withval)
-AC_MSG_RESULT($CLUSTER)
-
-case "$CLUSTER" in
-  none|shared) ;;
-  internal) AC_DEFINE([CLUSTER_LOCKING_INTERNAL], 1,
-		      [Define to 1 to include built-in support for clustered LVM locking.]) ;;
-  *) AC_MSG_ERROR([--with-cluster parameter invalid]) ;;
-esac
 
 ################################################################################
 dnl -- snapshots inclusion type
@@ -672,241 +654,6 @@ AC_DEFINE_UNQUOTED(DEFAULT_RUN_DIR, ["$DEFAULT_RUN_DIR"],
 		   [Default LVM run directory.])
 
 ################################################################################
-dnl -- Build cluster LVM daemon
-AC_MSG_CHECKING(whether to build cluster LVM daemon)
-AC_ARG_WITH(clvmd,
-  [  --with-clvmd=TYPE       build cluster LVM Daemon
-                          The following cluster manager combinations are valid:
-                           * cman                  (RHEL5 or equivalent)
-                           * cman,corosync,openais (or selection of them)
-                           * singlenode            (localhost only)
-                           * all                   (autodetect)
-                           * none                  (disable build)
-                          [[none]]],
-	    CLVMD=$withval, CLVMD=none)
-test "$CLVMD" = yes && CLVMD=all
-AC_MSG_RESULT($CLVMD)
-
-dnl -- If clvmd enabled without cluster locking, automagically include it
-test "$CLVMD" != none -a "$CLUSTER" = none && CLUSTER=internal
-
-dnl -- init pkgconfig if required
-test "$CLVMD" != none && pkg_config_init
-
-dnl -- Express clvmd init script Required-Start / Required-Stop
-CLVMD_CMANAGERS=""
-dnl -- On RHEL4/RHEL5, qdiskd is started from a separate init script.
-dnl -- Enable if we are build for cman.
-CLVMD_NEEDS_QDISKD=no
-
-dnl -- define build types
-if [[ `expr x"$CLVMD" : '.*gulm.*'` != 0 ]]; then
-	AC_MSG_ERROR([Since version 2.02.87 GULM locking is no longer supported.]);
-fi
-if [[ `expr x"$CLVMD" : '.*cman.*'` != 0 ]]; then
-	BUILDCMAN=yes
-	CLVMD_CMANAGERS="$CLVMD_CMANAGERS cman"
-	CLVMD_NEEDS_QDISKD=yes
-fi
-if [[ `expr x"$CLVMD" : '.*corosync.*'` != 0 ]]; then
-	BUILDCOROSYNC=yes
-	CLVMD_CMANAGERS="$CLVMD_CMANAGERS corosync"
-fi
-if [[ `expr x"$CLVMD" : '.*openais.*'` != 0 ]]; then
-	BUILDOPENAIS=yes
-	CLVMD_CMANAGERS="$CLVMD_CMANAGERS openais"
-fi
-test "$CLVMD_NEEDS_QDISKD" != no && CLVMD_CMANAGERS="$CLVMD_CMANAGERS qdiskd"
-
-dnl -- define a soft bailout if we are autodetecting
-soft_bailout() {
-	NOTFOUND=1
-}
-
-hard_bailout() {
-	AC_MSG_ERROR([bailing out])
-}
-
-dnl -- if clvmd=all then set soft_bailout (we do not want to error)
-dnl -- and set all builds to yes. We need to do this here
-dnl -- to skip the openais|corosync sanity check above.
-if test "$CLVMD" = all; then
-	bailout=soft_bailout
-	BUILDCMAN=yes
-	BUILDCOROSYNC=yes
-	BUILDOPENAIS=yes
-else
-	bailout=hard_bailout
-fi
-
-dnl -- helper macro to check libs without adding them to LIBS
-check_lib_no_libs() {
-	lib_no_libs_arg1=$1
-	shift
-	lib_no_libs_arg2=$1
-	shift
-	lib_no_libs_args=$@
-	AC_CHECK_LIB([$lib_no_libs_arg1],
-		     [$lib_no_libs_arg2],,
-		     [$bailout],
-		     [$lib_no_libs_args])
-	LIBS=$ac_check_lib_save_LIBS
-}
-
-dnl -- Look for cman libraries if required.
-if test "$BUILDCMAN" = yes; then
-	PKG_CHECK_MODULES(CMAN, libcman, [HAVE_CMAN=yes],
-		[NOTFOUND=0
-		AC_CHECK_HEADERS(libcman.h,,$bailout)
-		check_lib_no_libs cman cman_init
-		if test $NOTFOUND = 0; then
-			AC_MSG_RESULT([no pkg for libcman, using -lcman])
-			CMAN_LIBS="-lcman"
-			HAVE_CMAN=yes
-		fi])
-	CHECKCONFDB=yes
-	CHECKDLM=yes
-fi
-
-dnl -- Look for corosync that is required also for openais build
-dnl -- only enough recent version of corosync ship pkg-config files.
-dnl -- We can safely rely on that to detect the correct bits.
-if test "$BUILDCOROSYNC" = yes -o "$BUILDOPENAIS" = yes; then
-	PKG_CHECK_MODULES(COROSYNC, corosync, [HAVE_COROSYNC=yes], $bailout)
-	CHECKCONFDB=yes
-	CHECKCMAP=yes
-fi
-
-dnl -- Look for corosync libraries if required.
-if test "$BUILDCOROSYNC" = yes; then
-	PKG_CHECK_MODULES(QUORUM, libquorum, [HAVE_QUORUM=yes], $bailout)
-	CHECKCPG=yes
-	CHECKDLM=yes
-fi
-
-dnl -- Look for openais libraries if required.
-if test "$BUILDOPENAIS" = yes; then
-	PKG_CHECK_MODULES(SALCK, libSaLck, [HAVE_SALCK=yes], $bailout)
-	CHECKCPG=yes
-fi
-
-dnl -- Below are checks for libraries common to more than one build.
-
-dnl -- Check confdb library.
-dnl -- mandatory for corosync < 2.0 build.
-dnl -- optional for openais/cman build.
-
-if test "$CHECKCONFDB" = yes; then
-	PKG_CHECK_MODULES(CONFDB, libconfdb,
-			  [HAVE_CONFDB=yes], [HAVE_CONFDB=no])
-
-	AC_CHECK_HEADERS([corosync/confdb.h],
-			 [HAVE_CONFDB_H=yes], [HAVE_CONFDB_H=no])
-
-	if test "$HAVE_CONFDB" != yes -a "$HAVE_CONFDB_H" = yes; then
-		check_lib_no_libs confdb confdb_initialize
-		AC_MSG_RESULT([no pkg for confdb, using -lconfdb])
-		CONFDB_LIBS="-lconfdb"
-		HAVE_CONFDB=yes
-	fi
-fi
-
-dnl -- Check cmap library
-dnl -- mandatory for corosync >= 2.0 build.
-
-if test "$CHECKCMAP" = yes; then
-	PKG_CHECK_MODULES(CMAP, libcmap,
-			  [HAVE_CMAP=yes], [HAVE_CMAP=no])
-
-	AC_CHECK_HEADERS([corosync/cmap.h],
-			 [HAVE_CMAP_H=yes], [HAVE_CMAP_H=no])
-
-	if test "$HAVE_CMAP" != yes -a "$HAVE_CMAP_H" = yes; then
-		check_lib_no_libs cmap cmap_initialize
-		AC_MSG_RESULT([no pkg for cmap, using -lcmap])
-		CMAP_LIBS="-lcmap"
-		HAVE_CMAP=yes
-	fi
-fi
-
-if test "$BUILDCOROSYNC" = yes -a \
-	"$HAVE_CMAP" != yes -a "$HAVE_CONFDB" != yes -a "$CLVMD" != all; then
-	AC_MSG_ERROR([bailing out... cmap (corosync >= 2.0) or confdb (corosync < 2.0) library is required])
-fi
-
-dnl -- Check cpg library.
-if test "$CHECKCPG" = yes; then
-	PKG_CHECK_MODULES(CPG, libcpg, [HAVE_CPG=yes], [$bailout])
-fi
-
-dnl -- Check dlm library.
-if test "$CHECKDLM" = yes; then
-	PKG_CHECK_MODULES(DLM, libdlm, [HAVE_DLM=yes],
-		[NOTFOUND=0
-		AC_CHECK_HEADERS(libdlm.h,,[$bailout])
-		check_lib_no_libs dlm dlm_lock -lpthread
-		if test $NOTFOUND = 0; then
-			AC_MSG_RESULT([no pkg for libdlm, using -ldlm])
-			DLM_LIBS="-ldlm -lpthread"
-			HAVE_DLM=yes
-		fi])
-fi
-
-dnl -- If we are autodetecting, we need to re-create
-dnl -- the depedencies checks and set a proper CLVMD,
-dnl -- together with init script Required-Start/Stop entries.
-if test "$CLVMD" = all; then
-	CLVMD=none
-	CLVMD_CMANAGERS=""
-	CLVMD_NEEDS_QDISKD=no
-	if test "$HAVE_CMAN" = yes -a \
-		"$HAVE_DLM" = yes; then
-		AC_MSG_RESULT([Enabling clvmd cman cluster manager])
-		CLVMD="$CLVMD,cman"
-		CLVMD_CMANAGERS="$CLVMD_CMANAGERS cman"
-		CLVMD_NEEDS_QDISKD=yes
-	fi
-	if test "$HAVE_COROSYNC" = yes -a \
-		"$HAVE_QUORUM" = yes -a \
-		"$HAVE_CPG" = yes -a \
-		"$HAVE_DLM" = yes; then
-	   if test "$HAVE_CONFDB" = yes -o "$HAVE_CMAP" = yes; then
-		AC_MSG_RESULT([Enabling clvmd corosync cluster manager])
-		CLVMD="$CLVMD,corosync"
-		CLVMD_CMANAGERS="$CLVMD_CMANAGERS corosync"
-	   fi
-	fi
-	if test "$HAVE_COROSYNC" = yes -a \
-		"$HAVE_CPG" = yes -a \
-		"$HAVE_SALCK" = yes; then
-		AC_MSG_RESULT([Enabling clvmd openais cluster manager])
-		CLVMD="$CLVMD,openais"
-		CLVMD_CMANAGERS="$CLVMD_CMANAGERS openais"
-	fi
-	test "$CLVMD_NEEDS_QDISKD" != no && CLVMD_CMANAGERS="$CLVMD_CMANAGERS qdiskd"
-	test "$CLVMD" = none && AC_MSG_RESULT([Disabling clvmd build. No cluster manager detected.])
-fi
-
-dnl -- Fixup CLVMD_CMANAGERS with new corosync
-dnl -- clvmd built with corosync >= 2.0 needs dlm (either init or systemd service)
-dnl -- to be started.
-if [[ `expr x"$CLVMD" : '.*corosync.*'` != 0 ]]; then
-   test "$HAVE_CMAP" = yes && CLVMD_CMANAGERS="$CLVMD_CMANAGERS dlm"
-fi
-
-################################################################################
-dnl -- clvmd pidfile
-if test "$CLVMD" != none; then
-	AC_ARG_WITH(clvmd-pidfile,
-		    AC_HELP_STRING([--with-clvmd-pidfile=PATH],
-				   [clvmd pidfile [PID_DIR/clvmd.pid]]),
-		    CLVMD_PIDFILE=$withval,
-		    CLVMD_PIDFILE="$DEFAULT_PID_DIR/clvmd.pid")
-	AC_DEFINE_UNQUOTED(CLVMD_PIDFILE, ["$CLVMD_PIDFILE"],
-			   [Path to clvmd pidfile.])
-fi
-
-################################################################################
 dnl -- Build cluster mirror log daemon
 AC_MSG_CHECKING(whether to build cluster mirror log daemon)
 AC_ARG_ENABLE(cmirrord,
@@ -933,11 +680,6 @@ fi
 dnl -- Look for corosync libraries if required.
 if [[ "$BUILD_CMIRRORD" = yes ]]; then
 	pkg_config_init
-
-	AC_DEFINE([CMIRROR_HAS_CHECKPOINT], 1, [Define to 1 to include libSaCkpt.])
-	PKG_CHECK_MODULES(SACKPT, libSaCkpt, [HAVE_SACKPT=yes],
-		[AC_MSG_RESULT([no libSaCkpt, compiling without it])
-		AC_DEFINE([CMIRROR_HAS_CHECKPOINT], 0, [Define to 0 to exclude libSaCkpt.])])
 
 	if test "$HAVE_CPG" != yes; then
 		PKG_CHECK_MODULES(CPG, libcpg)
@@ -1538,7 +1280,7 @@ AC_CHECK_LIB(dl, dlopen,
 
 ################################################################################
 dnl -- Check for shared/static conflicts
-if [[ \( "$LVM1" = shared -o "$POOL" = shared -o "$CLUSTER" = shared \
+if [[ \( "$LVM1" = shared -o "$POOL" = shared \
       \) -a "$STATIC_LINK" = yes ]]; then
 	AC_MSG_ERROR([Features cannot be 'shared' when building statically])
 fi
@@ -1758,18 +1500,6 @@ if test "$BUILD_LVMPOLLD" = yes; then
 	AC_FUNC_STRERROR_R
 fi
 
-if test "$CLVMD" != none; then
-	AC_CHECK_HEADERS(mntent.h netdb.h netinet/in.h pthread.h search.h sys/mount.h sys/socket.h sys/uio.h sys/un.h utmpx.h,,AC_MSG_ERROR(bailing out))
-	AC_CHECK_FUNCS(dup2 getmntent memmove select socket,,hard_bailout)
-	AC_FUNC_GETMNTENT
-	AC_FUNC_SELECT_ARGTYPES
-fi
-
-if test "$CLUSTER" != none; then
-	AC_CHECK_HEADERS(sys/socket.h sys/un.h,,hard_bailout)
-	AC_CHECK_FUNCS(socket,,hard_bailout)
-fi
-
 if test "$BUILD_DMEVENTD" = yes; then
 	AC_CHECK_HEADERS(arpa/inet.h,,hard_bailout)
 fi
@@ -1804,8 +1534,6 @@ LVM_PATH="$SBINDIR/lvm"
 AC_DEFINE_UNQUOTED(LVM_PATH, ["$LVM_PATH"], [Path to lvm binary.])
 
 USRSBINDIR="$(eval echo $(eval echo $usrsbindir))"
-CLVMD_PATH="$USRSBINDIR/clvmd"
-AC_DEFINE_UNQUOTED(CLVMD_PATH, ["$CLVMD_PATH"], [Path to clvmd binary.])
 
 FSADM_PATH="$SBINDIR/fsadm"
 AC_DEFINE_UNQUOTED(FSADM_PATH, ["$FSADM_PATH"], [Path to fsadm binary.])
@@ -1944,14 +1672,6 @@ AC_SUBST(CHMOD)
 AC_SUBST(CLDFLAGS)
 AC_SUBST(CLDNOWHOLEARCHIVE)
 AC_SUBST(CLDWHOLEARCHIVE)
-AC_SUBST(CLUSTER)
-AC_SUBST(CLVMD)
-AC_SUBST(CLVMD_CMANAGERS)
-AC_SUBST(CLVMD_PATH)
-AC_SUBST(CMAN_CFLAGS)
-AC_SUBST(CMAN_LIBS)
-AC_SUBST(CMAP_CFLAGS)
-AC_SUBST(CMAP_LIBS)
 AC_SUBST(CMDLIB)
 AC_SUBST(CONFDB_CFLAGS)
 AC_SUBST(CONFDB_LIBS)
@@ -2067,7 +1787,6 @@ AC_SUBST(DMEVENTD_PIDFILE)
 AC_SUBST(LVMETAD_PIDFILE)
 AC_SUBST(LVMPOLLD_PIDFILE)
 AC_SUBST(LVMLOCKD_PIDFILE)
-AC_SUBST(CLVMD_PIDFILE)
 AC_SUBST(CMIRRORD_PIDFILE)
 AC_SUBST(interface)
 AC_SUBST(kerneldir)
@@ -2090,7 +1809,6 @@ Makefile
 make.tmpl
 libdm/make.tmpl
 daemons/Makefile
-daemons/clvmd/Makefile
 daemons/cmirrord/Makefile
 daemons/dmeventd/Makefile
 daemons/dmeventd/libdevmapper-event.pc
@@ -2116,7 +1834,6 @@ conf/command_profile_template.profile
 conf/metadata_profile_template.profile
 include/Makefile
 lib/Makefile
-lib/locking/Makefile
 include/lvm-version.h
 libdaemon/Makefile
 libdaemon/client/Makefile
@@ -2132,14 +1849,10 @@ python/setup.py
 scripts/blkdeactivate.sh
 scripts/blk_availability_init_red_hat
 scripts/blk_availability_systemd_red_hat.service
-scripts/clvmd_init_red_hat
 scripts/cmirrord_init_red_hat
 scripts/com.redhat.lvmdbus1.service
 scripts/dm_event_systemd_red_hat.service
 scripts/dm_event_systemd_red_hat.socket
-scripts/lvm2_cluster_activation_red_hat.sh
-scripts/lvm2_cluster_activation_systemd_red_hat.service
-scripts/lvm2_clvmd_systemd_red_hat.service
 scripts/lvm2_cmirrord_systemd_red_hat.service
 scripts/lvm2_lvmdbusd_systemd_red_hat.service
 scripts/lvm2_lvmetad_init_red_hat

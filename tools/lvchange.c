@@ -74,13 +74,6 @@ static int _lvchange_permission(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (lv_is_mirrored(lv) && vg_is_clustered(lv->vg) &&
-	    lv_info(cmd, lv, 0, &info, 0, 0) && info.exists) {
-		log_error("Cannot change permissions of mirror %s while active.",
-			  display_lvname(lv));
-		return 0;
-	}
-
 	if (lv_access & LVM_WRITE) {
 		lv->status |= LVM_WRITE;
 		log_verbose("Setting logical volume %s read/write.",
@@ -362,12 +355,6 @@ static int _lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 		return 0;
 	}
 
-	if (vg_is_clustered(lv->vg) && lv_is_active(lv)) {
-		log_error("Can't get exclusive access to clustered volume %s.",
-			  display_lvname(lv));
-		return 0;
-	}
-
 	if (monitored != DMEVENTD_MONITOR_IGNORE)
 		init_dmeventd_monitor(monitored);
 	init_mirror_in_sync(0);
@@ -617,16 +604,6 @@ static int _lvchange_persistent(struct cmd_context *cmd,
 			}
 
 			activate = CHANGE_AEY;
-			if (vg_is_clustered(lv->vg) &&
-			    locking_is_clustered() &&
-			    locking_supports_remote_queries() &&
-			    !lv_is_active_exclusive_locally(lv)) {
-				/* Reliable reactivate only locally */
-				log_print_unless_silent("Remotely active LV %s needs "
-							"individual reactivation.",
-							display_lvname(lv));
-				activate = CHANGE_ALY;
-			}
 		}
 
 		/* Ensuring LV is not active */
@@ -1252,12 +1229,6 @@ static int _lvchange_properties_check(struct cmd_context *cmd,
 
 		if (lv_is_named_arg)
 			log_error("Operation not permitted on hidden LV %s.", display_lvname(lv));
-		return 0;
-	}
-
-	if (vg_is_clustered(lv->vg) && lv_is_cache_origin(lv) && lv_is_raid(lv)) {
-		log_error("Unable to change internal LV %s directly in a cluster.",
-			  display_lvname(lv));
 		return 0;
 	}
 

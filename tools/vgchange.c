@@ -308,84 +308,6 @@ static int _vgchange_resizeable(struct cmd_context *cmd,
 	return 1;
 }
 
-static int _vgchange_clustered(struct cmd_context *cmd,
-			       struct volume_group *vg)
-{
-	int clustered = arg_int_value(cmd, clustered_ARG, 0);
-	const char *lock_type = arg_str_value(cmd, locktype_ARG, NULL);
-	struct lv_list *lvl;
-	struct lv_segment *mirror_seg;
-
-	if (find_config_tree_bool(cmd, global_use_lvmlockd_CFG, NULL)) {
-		log_error("lvmlockd requires using the vgchange --lock-type option.");
-		return 0;
-	}
-
-	if (lock_type && !strcmp(lock_type, "clvm"))
-		clustered = 1;
-
-	if (clustered && vg_is_clustered(vg)) {
-		if (vg->system_id && *vg->system_id)
-			log_warn("WARNING: Clearing invalid system ID %s from volume group %s.",
-				 vg->system_id, vg->name);
-		else {
-			log_error("Volume group \"%s\" is already clustered", vg->name);
-			return 0;
-		}
-	}
-
-	if (!clustered && !vg_is_clustered(vg)) {
-		if ((!vg->system_id || !*vg->system_id) && cmd->system_id && *cmd->system_id)
-			log_warn("Setting missing system ID on Volume Group %s to %s.",
-				 vg->name, cmd->system_id);
-		else {
-			log_error("Volume group \"%s\" is already not clustered",
-				  vg->name);
-			return 0;
-		}
-	}
-
-	if (clustered && !arg_is_set(cmd, yes_ARG)) {
-		if (!clvmd_is_running()) {
-			if (yes_no_prompt("LVM cluster daemon (clvmd) is not running. "
-					  "Make volume group \"%s\" clustered "
-					  "anyway? [y/n]: ", vg->name) == 'n') {
-				log_error("No volume groups changed.");
-				return 0;
-			}
-
-		} else if (!locking_is_clustered() &&
-			   (yes_no_prompt("LVM locking type is not clustered. "
-					  "Make volume group \"%s\" clustered "
-					  "anyway? [y/n]: ", vg->name) == 'n')) {
-			log_error("No volume groups changed.");
-			return 0;
-		}
-#ifdef CMIRROR_REGION_COUNT_LIMIT
-		dm_list_iterate_items(lvl, &vg->lvs) {
-			if (!lv_is_mirror(lvl->lv))
-				continue;
-			mirror_seg = first_seg(lvl->lv);
-			if ((lvl->lv->size / mirror_seg->region_size) >
-			    CMIRROR_REGION_COUNT_LIMIT) {
-				log_error("Unable to convert %s to clustered mode:"
-					  " Mirror region size of %s is too small.",
-					  vg->name, lvl->lv->name);
-				return 0;
-			}
-		}
-#endif
-	}
-
-	if (!vg_set_system_id(vg, clustered ? NULL : cmd->system_id))
-		return_0;
-
-	if (!vg_set_clustered(vg, clustered))
-		return_0;
-
-	return 1;
-}
-
 static int _vgchange_logicalvolume(struct cmd_context *cmd,
 				   struct volume_group *vg)
 {
@@ -676,7 +598,6 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 {
 	int ret = ECMD_PROCESSED;
 	unsigned i;
-	struct lv_list *lvl;
 
 	static const struct {
 		int arg;
@@ -690,7 +611,6 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		{ physicalextentsize_ARG, &_vgchange_pesize },
 		{ uuid_ARG, &_vgchange_uuid },
 		{ alloc_ARG, &_vgchange_alloc },
-		{ clustered_ARG, &_vgchange_clustered },
 		{ vgmetadatacopies_ARG, &_vgchange_metadata_copies },
 		{ metadataprofile_ARG, &_vgchange_profile },
 		{ profile_ARG, &_vgchange_profile },
@@ -731,31 +651,6 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		backup(vg);
 
 		log_print_unless_silent("Volume group \"%s\" successfully changed", vg->name);
-
-		/* FIXME: fix clvmd bug and take DLM lock for non clustered VGs. */
-		if (arg_is_set(cmd, clustered_ARG) &&
-		    vg_is_clustered(vg) && /* just switched to clustered */
-		    locking_is_clustered() &&
-		    locking_supports_remote_queries())
-			dm_list_iterate_items(lvl, &vg->lvs) {
-				if ((lv_lock_holder(lvl->lv) != lvl->lv) ||
-				    !lv_is_active(lvl->lv))
-					continue;
-
-				if (!activate_lv_excl_local(cmd, lvl->lv) ||
-				    !lv_is_active_exclusive_locally(lvl->lv)) {
-					log_error("Can't reactive logical volume %s, "
-						  "please fix manually.",
-						  display_lvname(lvl->lv));
-					ret = ECMD_FAILED;
-				}
-
-				if (lv_is_mirror(lvl->lv))
-					/* Give hint for clustered mirroring */
-					log_print_unless_silent("For clustered mirroring of %s "
-								"deactivation and activation is needed.",
-								display_lvname(lvl->lv));
-			}
 	}
 
 	if (arg_is_set(cmd, activate_ARG)) {
@@ -810,7 +705,6 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		arg_is_set(cmd, resizeable_ARG) ||
 		arg_is_set(cmd, uuid_ARG) ||
 		arg_is_set(cmd, physicalextentsize_ARG) ||
-		arg_is_set(cmd, clustered_ARG) ||
 		arg_is_set(cmd, alloc_ARG) ||
 		arg_is_set(cmd, vgmetadatacopies_ARG);
 
@@ -965,22 +859,6 @@ static int _vgchange_locktype(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	/*
-	 * When lvm is currently using clvm, this function is just an alternative
-	 * to vgchange -c{y,n}, and can:
-	 * - change none to clvm
-	 * - change clvm to none
-	 * - it CANNOT change to or from a lockd type
-	 */
-	if (locking_is_clustered()) {
-		if (is_lockd_type(lock_type)) {
-			log_error("Changing to lock type %s requires lvmlockd.", lock_type);
-			return 0;
-		}
-
-		return _vgchange_clustered(cmd, vg);
-	}
-
-	/*
 	 * When lvm is currently using lvmlockd, this function can:
 	 * - change none to lockd type
 	 * - change none to clvm (with warning about not being able to use it)
@@ -994,14 +872,6 @@ static int _vgchange_locktype(struct cmd_context *cmd, struct volume_group *vg)
 		log_error("Changing VG %s lock type not allowed with active LVs",
 			  vg->name);
 		return 0;
-	}
-
-	/* none to clvm */
-	if (!strcmp(vg->lock_type, "none") && !strcmp(lock_type, "clvm")) {
-		log_warn("New clvm lock type will not be usable with lvmlockd.");
-		vg->status |= CLUSTERED;
-		vg->lock_type = "clvm"; /* this is optional */
-		return 1;
 	}
 
 	/* clvm to none */
@@ -1031,15 +901,6 @@ static int _vgchange_locktype(struct cmd_context *cmd, struct volume_group *vg)
 
 		dm_list_iterate_items(lvl, &vg->lvs)
 			lvl->lv->lock_args = NULL;
-	}
-
-	/* ... to clvm */
-	if (!strcmp(lock_type, "clvm")) {
-		log_warn("New clvm lock type will not be usable with lvmlockd.");
-		vg->status |= CLUSTERED;
-		vg->lock_type = "clvm"; /* this is optional */
-		vg->system_id = NULL;
-		return 1;
 	}
 
 	/* ... to lockd type */

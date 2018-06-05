@@ -1482,7 +1482,7 @@ OO_VGCHANGE: --autobackup Bool, --ignoremonitoring, --ignoreskippedcluster,
 
 OO_VGCHANGE_META: --addtag Tag, --deltag Tag,
 --logicalvolume Uint32, --maxphysicalvolumes Uint32, --alloc Alloc, --uuid,
---clustered Bool, --pvmetadatacopies MetadataCopiesPV, --vgmetadatacopies MetadataCopiesVG,
+--pvmetadatacopies MetadataCopiesPV, --vgmetadatacopies MetadataCopiesVG,
 --physicalextentsize SizeMB, --resizeable Bool,
 --profile String, --detachprofile, --metadataprofile String
 
@@ -1692,7 +1692,7 @@ ID: vgscan_general
 OO_VGSPLIT: --autobackup Bool
 
 # used only when the destination VG is new
-OO_VGSPLIT_NEW: --alloc Alloc, --clustered Bool,
+OO_VGSPLIT_NEW: --alloc Alloc,
 --maxlogicalvolumes Uint32, --maxphysicalvolumes Uint32,
 --metadatatype MetadataType, --vgmetadatacopies MetadataCopiesVG
 

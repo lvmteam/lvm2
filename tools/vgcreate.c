@@ -23,7 +23,6 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	struct vgcreate_params vp_def;
 	struct volume_group *vg;
 	const char *tag;
-	const char *clustered_message = "";
 	char *vg_name;
 	struct arg_value_group_list *current_group;
 
@@ -135,7 +134,6 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	    !vg_set_max_lv(vg, vp_new.max_lv) ||
 	    !vg_set_max_pv(vg, vp_new.max_pv) ||
 	    !vg_set_alloc_policy(vg, vp_new.alloc) ||
-	    !vg_set_clustered(vg, vp_new.clustered) ||
 	    !vg_set_system_id(vg, vp_new.system_id) ||
 	    !vg_set_mda_copies(vg, vp_new.vgmetadatacopies))
 		goto_bad;
@@ -167,11 +165,6 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	if (vg_is_clustered(vg))
-		clustered_message = "Clustered ";
-	else if (locking_is_clustered())
-		clustered_message = "Non-clustered ";
-
 	if (!archive(vg))
 		goto_bad;
 
@@ -197,8 +190,8 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	backup(vg);
 
-	log_print_unless_silent("%s%colume group \"%s\" successfully created%s%s",
-				clustered_message, *clustered_message ? 'v' : 'V', vg->name,
+	log_print_unless_silent("Volume group \"%s\" successfully created%s%s",
+				vg->name,
 				vg->system_id ? " with system ID " : "", vg->system_id ? : "");
 
 	/*

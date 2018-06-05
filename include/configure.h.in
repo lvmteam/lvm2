@@ -25,15 +25,6 @@
 /* Define to 1 if the `closedir' function returns void instead of `int'. */
 #undef CLOSEDIR_VOID
 
-/* Define to 1 to include built-in support for clustered LVM locking. */
-#undef CLUSTER_LOCKING_INTERNAL
-
-/* Path to clvmd binary. */
-#undef CLVMD_PATH
-
-/* Path to clvmd pidfile. */
-#undef CLVMD_PIDFILE
-
 /* Path to cmirrord pidfile. */
 #undef CMIRRORD_PIDFILE
 
@@ -178,12 +169,6 @@
 /* Define to 1 if you have the `clock_gettime' function. */
 #undef HAVE_CLOCK_GETTIME
 
-/* Define to 1 if you have the <corosync/cmap.h> header file. */
-#undef HAVE_COROSYNC_CMAP_H
-
-/* Define to 1 if you have the <corosync/confdb.h> header file. */
-#undef HAVE_COROSYNC_CONFDB_H
-
 /* Define to 1 if you have the <ctype.h> header file. */
 #undef HAVE_CTYPE_H
 
@@ -247,9 +232,6 @@
 
 /* Define to 1 if you have the <libaio.h> header file. */
 #undef HAVE_LIBAIO_H
-
-/* Define to 1 if you have the <libcman.h> header file. */
-#undef HAVE_LIBCMAN_H
 
 /* Define to 1 if dynamic libraries are available. */
 #undef HAVE_LIBDL

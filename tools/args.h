@@ -949,17 +949,8 @@ arg(chunksize_ARG, 'c', "chunksize", sizekb_VAL, 0, 0,
     "See \\fBlvmthin\\fP(7) and \\fBlvmcache\\fP(7) for more information.\n")
 
 arg(clustered_ARG, 'c', "clustered", bool_VAL, 0, 0,
-    "#vgcreate\n"
-    "Create a clustered VG using clvmd if LVM is compiled with cluster support.\n"
-    "This allows multiple hosts to share a VG on shared devices.\n"
-    "clvmd and a lock manager must be configured and running.\n"
-    "(A clustered VG using clvmd is different from a shared VG using lvmlockd.)\n"
-    "See \\fBclvmd\\fP(8) for more information about clustered VGs.\n"
-    "#vgchange\n"
-    "Change the clustered property of a VG using clvmd.\n"
-    "See \\fBclvmd\\fP(8) for more information about clustered VGs.\n"
-    "#vgsplit\n"
-    "Specifies the clustered property of the new VG.\n")
+    "This option was specific to clvm and is now replaced by\n"
+    "the --shared option with \\fBlvmlockd\\fP(8).\n")
 
 arg(colon_ARG, 'c', "colon", 0, 0, 0,
     "Generate colon separated output for easier parsing in scripts or programs.\n"

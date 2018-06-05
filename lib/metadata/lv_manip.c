@@ -7366,7 +7366,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	struct logical_volume *lv, *origin_lv = NULL;
 	struct logical_volume *pool_lv = NULL;
 	struct logical_volume *tmp_lv;
-	const struct logical_volume *lock_lv;
 	struct lv_segment *seg, *pool_seg;
 	int thin_pool_was_active = -1; /* not scanned, inactive, active */
 	int historical;
@@ -7528,18 +7527,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			log_error("Caching of origin cache volume smaller then chunk size is unsupported.");
 			return NULL;
 		}
-
-		/* Validate cache origin is exclusively active */
-		lock_lv = lv_lock_holder(origin_lv);
-		if (vg_is_clustered(origin_lv->vg) &&
-		    locking_is_clustered() &&
-		    locking_supports_remote_queries() &&
-		    lv_is_active(lock_lv) &&
-		    !lv_is_active_exclusive(lock_lv)) {
-			log_error("Cannot cache not exclusively active origin volume %s.",
-				  display_lvname(origin_lv));
-			return NULL;
-		}
 	} else if (seg_is_cache(lp)) {
 		if (!pool_lv) {
 			log_error(INTERNAL_ERROR "Pool LV for cache is missing.");
@@ -7555,13 +7542,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		if (!(create_segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_STRIPED)))
 			return_0;
 	} else if (seg_is_mirrored(lp) || (seg_is_raid(lp) && !seg_is_any_raid0(lp))) {
-		if (is_change_activating(lp->activate) && (lp->activate != CHANGE_AEY) &&
-		    vg_is_clustered(vg) && seg_is_mirrored(lp) && !seg_is_raid(lp) &&
-		    !cluster_mirror_is_available(vg->cmd)) {
-			log_error("Shared cluster mirrors are not available.");
-			return NULL;
-		}
-
 		if (!(lp->region_size = adjusted_mirror_region_size(vg->cmd,
 								    vg->extent_size,
 								    lp->extents,

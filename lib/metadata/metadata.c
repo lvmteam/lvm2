@@ -1843,13 +1843,6 @@ int vgs_are_compatible(struct cmd_context *cmd __attribute__((unused)),
 		return 0;
 	}
 
-	/* Clustering attribute must be the same */
-	if (vg_is_clustered(vg_to) != vg_is_clustered(vg_from)) {
-		log_error("Clustered attribute differs for \"%s\" and \"%s\"",
-			  vg_to->name, vg_from->name);
-		return 0;
-	}
-
 	/* Check no conflicts with LV names */
 	dm_list_iterate_items(lvl1, &vg_to->lvs) {
 		name1 = lvl1->lv->name;
@@ -4564,123 +4557,6 @@ void free_pv_fid(struct physical_volume *pv)
 	pv_set_fid(pv, NULL);
 }
 
-/* This is only called by lv_from_lvid, which is only called from
- * activate.c so we know the appropriate VG lock is already held and
- * the vg_read_internal is therefore safe.
- */
-struct volume_group *vg_read_by_vgid(struct cmd_context *cmd,
-				     const char *vgid,
-				     unsigned precommitted)
-{
-	const char *vgname;
-	struct volume_group *vg;
-	uint32_t warn_flags = WARN_PV_READ | WARN_INCONSISTENT;
-	int consistent = 0;
-
-	/*
-	 * When using lvmlockd we should never reach this point.
-	 * The VG is locked, then vg_read() is done, which gets
-	 * the latest VG from lvmetad, or disk if lvmetad has
-	 * been invalidated.  When we get here the VG should
-	 * always be cached and returned above.
-	 */
-	if (lvmlockd_use())
-		log_error(INTERNAL_ERROR "vg_read_by_vgid failed with lvmlockd");
-
-	if ((vg = lvmcache_get_saved_vg(vgid, precommitted))) {
-		log_debug_metadata("lvmcache: using saved_vg %s seqno %d pre %d %p",
-				   vg->name, vg->seqno, precommitted, vg);
-		return vg;
-	}
-
-	/* Mustn't scan if memory locked: ensure cache gets pre-populated! */
-	if (critical_section())
-		log_debug_metadata("Reading VG by vgid in critical section pre %d vgid %.8s", precommitted, vgid);
-
-	if (!(vgname = lvmcache_vgname_from_vgid(cmd->mem, vgid))) {
-		log_debug_metadata("Reading VG by vgid %.8s no VG name found, retrying.", vgid);
-		lvmcache_destroy(cmd, 1, 0);
-		label_scan_destroy(cmd);
-		lvmcache_label_scan(cmd);
-		warn_flags |= SKIP_RESCAN;
-	}
-
-	if (!(vgname = lvmcache_vgname_from_vgid(cmd->mem, vgid))) {
-		log_debug_metadata("Reading VG by vgid %.8s no VG name found.", vgid);
-		return NULL;
-	}
-
-	consistent = 0;
-
-	label_scan_setup_bcache();
-
-	if (!(vg = _vg_read(cmd, vgname, vgid, 0, warn_flags, &consistent, precommitted))) {
-		log_error("Rescan devices to look for missing VG.");
-		goto scan;
-	}
-
-	if (vg_missing_pv_count(vg)) {
-		log_error("Rescan devices to look for missing PVs.");
-		release_vg(vg);
-		goto scan;
-	}
-
-	label_scan_destroy(cmd); /* drop bcache to close devs, keep lvmcache */
-	lvmcache_save_vg(vg, precommitted);
-	return vg;
-
- scan:
-	lvmcache_destroy(cmd, 1, 0);
-	label_scan_destroy(cmd);
-	lvmcache_label_scan(cmd);
-	warn_flags |= SKIP_RESCAN;
-
-	if (!(vg = _vg_read(cmd, vgname, vgid, 0, warn_flags, &consistent, precommitted)))
-		goto fail;
-
-	label_scan_destroy(cmd); /* drop bcache to close devs, keep lvmcache */
-
-	lvmcache_save_vg(vg, precommitted);
-	return vg;
-
- fail:
-	label_scan_destroy(cmd); /* drop bache to close devs, keep lvmcache */
-	log_debug_metadata("Reading VG by vgid %.8s not found.", vgid);
-	return NULL;
-}
-
-/* Only called by activate.c */
-struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s,
-				    unsigned precommitted)
-{
-	struct logical_volume *lv;
-	struct volume_group *vg;
-	const union lvid *lvid;
-
-	lvid = (const union lvid *) lvid_s;
-
-	log_very_verbose("Finding %svolume group for uuid %s", precommitted ? "precommitted " : "", lvid_s);
-	if (!(vg = vg_read_by_vgid(cmd, (const char *)lvid->id[0].uuid, precommitted))) {
-		log_error("Reading VG not found for LVID %s", lvid_s);
-		return NULL;
-	}
-
-	log_verbose("Found volume group \"%s\" %p", vg->name, vg);
-	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group \"%s\" is exported", vg->name);
-		goto out;
-	}
-	if (!(lv = find_lv_in_vg_by_lvid(vg, lvid))) {
-		log_very_verbose("Can't find logical volume id %s", lvid_s);
-		goto out;
-	}
-
-	return lv;
-out:
-	release_vg(vg);
-	return NULL;
-}
-
 const char *find_vgname_from_pvid(struct cmd_context *cmd,
 				  const char *pvid)
 {
@@ -5127,7 +5003,7 @@ int vg_flag_write_locked(struct volume_group *vg)
 
 static int _access_vg_clustered(struct cmd_context *cmd, const struct volume_group *vg)
 {
-	if (vg_is_clustered(vg) && !locking_is_clustered()) {
+	if (vg_is_clustered(vg)) {
 		if (!cmd->ignore_clustered_vgs)
 			log_error("Skipping clustered volume group %s", vg->name);
 		else

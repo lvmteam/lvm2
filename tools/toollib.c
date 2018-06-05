@@ -726,7 +726,6 @@ int vgcreate_params_set_defaults(struct cmd_context *cmd,
 		vp_def->max_pv = vg->max_pv;
 		vp_def->max_lv = vg->max_lv;
 		vp_def->alloc = vg->alloc;
-		vp_def->clustered = vg_is_clustered(vg);
 		vp_def->vgmetadatacopies = vg->mda_copies;
 		vp_def->system_id = vg->system_id;	/* No need to clone this */
 	} else {
@@ -741,7 +740,6 @@ int vgcreate_params_set_defaults(struct cmd_context *cmd,
 		vp_def->max_pv = DEFAULT_MAX_PV;
 		vp_def->max_lv = DEFAULT_MAX_LV;
 		vp_def->alloc = DEFAULT_ALLOC_POLICY;
-		vp_def->clustered = DEFAULT_CLUSTERED;
 		vp_def->vgmetadatacopies = DEFAULT_VGMETADATACOPIES;
 		vp_def->system_id = cmd->system_id;
 	}
@@ -761,10 +759,13 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 {
 	const char *system_id_arg_str;
 	const char *lock_type = NULL;
-	int locking_type;
 	int use_lvmlockd;
-	int use_clvmd;
 	lock_type_t lock_type_num;
+
+	if (arg_is_set(cmd, clustered_ARG)) {
+		log_error("The clustered option is deprecated, see --shared.");
+		return 0;
+	}
 
 	vp_new->vg_name = skip_dev_dir(cmd, vp_def->vg_name, NULL);
 	vp_new->max_lv = arg_uint_value(cmd, maxlogicalvolumes_ARG,
@@ -904,41 +905,14 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 	 * - 'vgcreate' (neither option) creates a local VG
 	 */
 
-	locking_type = find_config_tree_int(cmd, global_locking_type_CFG, NULL);
 	use_lvmlockd = find_config_tree_bool(cmd, global_use_lvmlockd_CFG, NULL);
-	use_clvmd = (locking_type == 3);
 
 	if (arg_is_set(cmd, locktype_ARG)) {
-		if (arg_is_set(cmd, clustered_ARG)) {
-			log_error("A lock type cannot be specified with --clustered.");
-			return 0;
-		}
-
 		lock_type = arg_str_value(cmd, locktype_ARG, "");
 
 		if (arg_is_set(cmd, shared_ARG) && !is_lockd_type(lock_type)) {
 			log_error("The --shared option requires lock type sanlock or dlm.");
 			return 0;
-		}
-
-	} else if (arg_is_set(cmd, clustered_ARG)) {
-		const char *arg_str = arg_str_value(cmd, clustered_ARG, "");
-		int clustery = strcmp(arg_str, "y") ? 0 : 1;
-
-		if (use_clvmd) {
-			lock_type = clustery ? "clvm" : "none";
-
-		} else if (use_lvmlockd) {
-			log_error("lvmlockd is configured, use --shared with lvmlockd, and --clustered with clvmd.");
-			return 0;
-
-		} else {
-			if (clustery) {
-				log_error("The --clustered option requires clvmd (locking_type=3).");
-				return 0;
-			}
-
-			lock_type = "none";
 		}
 
 	} else if (arg_is_set(cmd, shared_ARG)) {
@@ -953,20 +927,13 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 				return 0;
 			}
 
-		} else if (use_clvmd) {
-			log_error("Use --shared with lvmlockd, and --clustered with clvmd.");
-			return 0;
-
 		} else {
 			log_error("Using a shared lock type requires lvmlockd.");
 			return 0;
 		}
 
 	} else {
-		if (use_clvmd)
-			lock_type = locking_is_clustered() ? "clvm" : "none";
-		else
-			lock_type = "none";
+		lock_type = "none";
 	}
 
 	/*
@@ -977,6 +944,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 
 	switch (lock_type_num) {
 	case LOCK_TYPE_INVALID:
+	case LOCK_TYPE_CLVM:
 		log_error("lock_type %s is invalid", lock_type);
 		return 0;
 
@@ -984,12 +952,6 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 	case LOCK_TYPE_DLM:
 		if (!use_lvmlockd) {
 			log_error("Using a shared lock type requires lvmlockd.");
-			return 0;
-		}
-		break;
-	case LOCK_TYPE_CLVM:
-		if (!use_clvmd) {
-			log_error("Using clvm requires locking_type 3.");
 			return 0;
 		}
 		break;
@@ -1001,15 +963,10 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 	 * The vg is not owned by one host/system_id.
 	 * Locking coordinates access from multiple hosts.
 	 */
-	if (lock_type_num == LOCK_TYPE_DLM || lock_type_num == LOCK_TYPE_SANLOCK || lock_type_num == LOCK_TYPE_CLVM)
+	if (lock_type_num == LOCK_TYPE_DLM || lock_type_num == LOCK_TYPE_SANLOCK)
 		vp_new->system_id = NULL;
 
 	vp_new->lock_type = lock_type;
-
-	if (lock_type_num == LOCK_TYPE_CLVM)
-		vp_new->clustered = 1;
-	else
-		vp_new->clustered = 0;
 
 	log_debug("Setting lock_type to %s", vp_new->lock_type);
 	return 1;

@@ -278,14 +278,7 @@ static int _add_log(struct dm_pool *mem, struct lv_segment *seg,
 	char *log_dlid = NULL;
 	uint32_t log_flags = 0;
 
-	/*
-	 * Use clustered mirror log for non-exclusive activation
-	 * in clustered VG.
-	 */
-	if (!laopts->exclusive && vg_is_clustered(seg->lv->vg))
-		clustered = 1;
-
-	else if (seg->lv->vg->lock_type && !strcmp(seg->lv->vg->lock_type, "dlm")) {
+	if (seg->lv->vg->lock_type && !strcmp(seg->lv->vg->lock_type, "dlm")) {
 		/*
 		 * If shared lock was used due to -asy, then we set clustered
 		 * to use a clustered mirror log with cmirrod.
@@ -520,12 +513,6 @@ static int _mirrored_modules_needed(struct dm_pool *mem,
 	if (seg->log_lv &&
 	    !list_segment_modules(mem, first_seg(seg->log_lv), modules))
 		return_0;
-
-	if (vg_is_clustered(seg->lv->vg) &&
-	    !str_list_add(mem, modules, MODULE_NAME_CLUSTERED_MIRROR)) {
-		log_error("cluster log string list allocation failed");
-		return 0;
-	}
 
 	if (!str_list_add(mem, modules, MODULE_NAME_MIRROR)) {
 		log_error("mirror string list allocation failed");

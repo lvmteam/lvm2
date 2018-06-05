@@ -669,9 +669,7 @@ static int _lv_info(struct cmd_context *cmd, const struct logical_volume *lv,
 	 * in progress - as only those could lead to opened files
 	 */
 	if (with_open_count) {
-		if (locking_is_clustered() && !sync_local_dev_names(cmd)) /* Wait to have udev in sync */
-			return_0;
-		else if (fs_has_non_delete_ops())
+		if (fs_has_non_delete_ops())
 			fs_unlock(); /* For non clustered - wait if there are non-delete ops */
 	}
 
@@ -722,21 +720,6 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_la
 		return 0;
 
 	return _lv_info(cmd, lv, use_layer, info, NULL, NULL, with_open_count, with_read_ahead);
-}
-
-int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
-		    struct lvinfo *info, int with_open_count, int with_read_ahead)
-{
-	int r;
-	struct logical_volume *lv;
-
-	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
-		return 0;
-
-	r = lv_info(cmd, lv, use_layer, info, with_open_count, with_read_ahead);
-	release_vg(lv->vg);
-
-	return r;
 }
 
 /*
@@ -1521,47 +1504,9 @@ static int _lv_is_active(const struct logical_volume *lv,
 	if (_lv_active(lv->vg->cmd, lv))
 		l = 1;
 
-	if (!vg_is_clustered(lv->vg)) {
-		if (l)
-			e = 1;  /* exclusive by definition */
-		goto out;
-	}
+	if (l)
+		e = 1;  /* exclusive by definition */
 
-	/* Active locally, and the caller doesn't care about exclusive or remotely */
-	if (l && !exclusive && !remotely)
-		skip_cluster_query = 1;
-
-	if (skip_cluster_query)
-		goto out;
-
-	if ((r = cluster_lock_held(lv->lvid.s, "", &e)) >= 0) {
-		if (l && e)
-			r = 0; /* exclusive locally */
-		goto out;
-	}
-
-	/*
-	 * If lock query is not supported (due to interfacing with old
-	 * code), then we cannot evaluate exclusivity properly.
-	 *
-	 * Old users of this function will never be affected by this,
-	 * since they are only concerned about active vs. not active.
-	 * New users of this function who specifically ask for 'exclusive'
-	 * will be given a warning message.
-	 */
-	log_warn("WARNING: Unable to determine exclusivity of %s.", display_lvname(lv));
-
-	e = 0;
-
-	/* Also set remotely as a precaution, as we don't know */
-	r = 1;
-
-	/*
-	 * We used to attempt activate_lv_excl_local(lv->vg->cmd, lv) here,
-	 * but it's unreliable.
-	 */
-
-out:
 	if (locally)
 		*locally = l;
 	if (exclusive)
@@ -2146,74 +2091,10 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	struct dm_pool *mem = NULL;
 	struct dm_list suspend_lvs;
 	struct lv_list *lvl;
-	const union lvid *lvid = (const union lvid *) lvid_s;
-	const char *vgid = (const char *)lvid->id[0].uuid;
-	struct volume_group *vg;
-	struct volume_group *vg_pre;
 	int found;
 
 	if (!activation())
 		return 1;
-
-	if (!cmd->is_clvmd)
-		goto skip_read;
-
-	if (lv && lv_pre)
-		goto skip_read;
-
-	if (!(vg = lvmcache_get_saved_vg(vgid, 0))) {
-		log_debug("lv_suspend did not find saved_vg %.8s so reading", vgid);
-		if (!(vg = vg_read_by_vgid(cmd, vgid, 0))) {
-			log_error("lv_suspend could not read vgid %.8s", vgid);
-			goto out;
-		}
-		log_debug("lv_suspend using read vg %s %d %p", vg->name, vg->seqno, vg);
-	} else {
-		log_debug("lv_suspend using saved_vg %s %d %p", vg->name, vg->seqno, vg);
-	}
-
-	if (!(vg_pre = lvmcache_get_saved_vg(vgid, 1))) {
-		log_debug("lv_suspend did not find pre saved_vg %.8s so reading", vgid);
-		if (!(vg_pre = vg_read_by_vgid(cmd, vgid, 1))) {
-			log_error("lv_suspend could not read pre vgid %.8s", vgid);
-			goto out;
-		}
-		log_debug("lv_suspend using pre read vg %s %d %p", vg_pre->name, vg_pre->seqno, vg_pre);
-	} else {
-		log_debug("lv_suspend using pre saved_vg %s %d %p", vg_pre->name, vg_pre->seqno, vg_pre);
-	}
-
-	/*
-	 * Note that vg and vg_pre returned by vg_read_by_vgid will
-	 * not be the same as saved_vg_old/saved_vg_new that would
-	 * be returned by lvmcache_get_saved_vg() because the saved_vg's
-	 * are copies of the vg struct that is created by _vg_read.
-	 * (Should we grab and use the saved_vg to use here instead of
-	 * the vg returned by vg_read_by_vgid?)
-	 */
-
-	if ((vg->status & EXPORTED_VG) || (vg_pre->status & EXPORTED_VG)) {
-		log_error("Volume group \"%s\" is exported", vg->name);
-		goto out;
-	}
-
-	lv = lv_to_free = find_lv_in_vg_by_lvid(vg, lvid);
-	lv_pre = lv_pre_to_free = find_lv_in_vg_by_lvid(vg_pre, lvid);
-
-	if (!lv || !lv_pre) {
-		log_error("lv_suspend could not find lv %p lv_pre %p vg %p vg_pre %p vgid %s",
-			  lv, lv_pre, vg, vg_pre, vgid);
-		goto out;
-	}
-
-skip_read:
-	/* lv comes from committed metadata */
-	if (!lv && !(lv_to_free = lv = lv_from_lvid(cmd, lvid_s, 0)))
-		goto_out;
-
-	/* Use precommitted metadata if present */
-	if (!lv_pre && !(lv_pre_to_free = lv_pre = lv_from_lvid(cmd, lvid_s, 1)))
-		goto_out;
 
 	/* Ignore origin_only unless LV is origin in both old and new metadata */
 	/* or LV is thin or thin pool volume */
@@ -2230,19 +2111,6 @@ skip_read:
 
 	if (!lv_info(cmd, lv, laopts->origin_only, &info, 0, 0))
 		goto_out;
-
-	/*
-	 * Save old and new (current and precommitted) versions of the
-	 * VG metadata for lv_resume() to use, since lv_resume can't
-	 * read metadata given that devices are suspended.  lv_resume()
-	 * will resume LVs using the old/current metadata if the vg_commit
-	 * did happen (or failed), and it will resume LVs using the
-	 * new/precommitted metadata if the vg_commit succeeded.
-	 */
-	if (cmd->is_clvmd) {
-		lvmcache_save_vg(lv->vg, 0);
-		lvmcache_save_vg(lv_pre->vg, 1);
-	}
 
 	if (!info.exists || info.suspended) {
 		if (!error_if_not_suspended) {
@@ -2451,54 +2319,11 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	              const struct logical_volume *lv)
 {
 	struct dm_list *snh;
-	struct volume_group *vg = NULL;
-	struct logical_volume *lv_found = NULL;
-	const union lvid *lvid;
-	const char *vgid;
 	struct lvinfo info;
 	int r = 0;
 
 	if (!activation())
 		return 1;
-
-	/*
-	 * When called in clvmd, lvid_s is set and lv is not.  We need to
-	 * get the VG metadata without reading disks because devs are
-	 * suspended.  lv_suspend() saved old and new VG metadata for us
-	 * to use here.  If vg_commit() happened, lvmcache_get_saved_vg_latest
-	 * will return the new metadata for us to use in resuming LVs.
-	 * If vg_commit() did not happen, lvmcache_get_saved_vg_latest
-	 * returns the old metadata which we use to resume LVs.
-	 */
-	if (!lv && lvid_s) {
-		lvid = (const union lvid *) lvid_s;
-		vgid = (const char *)lvid->id[0].uuid;
-
-		if ((vg = lvmcache_get_saved_vg_latest(vgid))) {
-			log_debug_activation("Resuming LVID %s found saved vg seqno %d %s", lvid_s, vg->seqno, vg->name);
-			if ((lv_found = find_lv_in_vg_by_lvid(vg, lvid))) {
-				log_debug_activation("Resuming LVID %s found saved LV %s", lvid_s, display_lvname(lv_found));
-				lv = lv_found;
-			} else
-				log_debug_activation("Resuming LVID %s did not find saved LV", lvid_s);
-		} else
-			log_debug_activation("Resuming LVID %s did not find saved VG", lvid_s);
-
-		/*
-		 * resume must have been called without a preceding suspend,
-		 * so we need to read the vg.
-		 */
-
-		if (!lv) {
-			log_debug_activation("Resuming LVID %s reading VG", lvid_s);
-			if (!(lv_found = lv_from_lvid(cmd, lvid_s, 0))) {
-				log_debug_activation("Resuming LVID %s failed to read VG", lvid_s);
-				goto out;
-			}
-
-			lv = lv_found;
-		}
-	}
 
 	if (!lv_is_origin(lv) && !lv_is_thin_volume(lv) && !lv_is_thin_pool(lv))
 		laopts->origin_only = 0;
@@ -2620,9 +2445,6 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 	if (!activation())
 		return 1;
 
-	if (!lv && !(lv_to_free = lv = lv_from_lvid(cmd, lvid_s, 0)))
-		goto out;
-
 	if (test_mode()) {
 		_skip("Deactivating %s.", display_lvname(lv));
 		r = 1;
@@ -2694,16 +2516,10 @@ out:
 int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 			 int *activate_lv, const struct logical_volume *lv)
 {
-	const struct logical_volume *lv_to_free = NULL;
-	int r = 0;
-
 	if (!activation()) {
 		*activate_lv = 1;
 		return 1;
 	}
-
-	if (!lv && !(lv_to_free = lv = lv_from_lvid(cmd, lvid_s, 0)))
-		goto_out;
 
 	if (!_passes_activation_filter(cmd, lv)) {
 		log_verbose("Not activating %s since it does not pass "
@@ -2711,27 +2527,19 @@ int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 		*activate_lv = 0;
 	} else
 		*activate_lv = 1;
-	r = 1;
-out:
-	if (lv_to_free)
-		release_vg(lv_to_free->vg);
 
-	return r;
+	return 1;
 }
 
 static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 			struct lv_activate_opts *laopts, int filter,
 	                const struct logical_volume *lv)
 {
-	const struct logical_volume *lv_to_free = NULL;
 	struct lvinfo info;
 	int r = 0;
 
 	if (!activation())
 		return 1;
-
-	if (!lv && !(lv_to_free = lv = lv_from_lvid(cmd, lvid_s, 0)))
-		goto out;
 
 	if (!laopts->exclusive &&
 	    (lv_is_origin(lv) ||
@@ -2768,16 +2576,6 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	if (lv_has_unknown_segments(lv)) {
 		log_error("Refusing activation of LV %s containing "
 			  "an unrecognised segment.", display_lvname(lv));
-		goto out;
-	}
-
-	/*
-	 * Check if cmirrord is running for clustered mirrors.
-	 */
-	if (!laopts->exclusive && vg_is_clustered(lv->vg) &&
-	    lv_is_mirror(lv) && !lv_is_raid(lv) &&
-	    !cluster_mirror_is_available(lv->vg->cmd)) {
-		log_error("Shared cluster mirrors are not available.");
 		goto out;
 	}
 
@@ -2823,11 +2621,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 
 	if (r && !monitor_dev_for_events(cmd, lv, laopts, 1))
 		stack;
-
 out:
-	if (lv_to_free)
-		release_vg(lv_to_free->vg);
-
 	return r;
 }
 

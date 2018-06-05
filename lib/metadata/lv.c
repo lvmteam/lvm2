@@ -1478,21 +1478,11 @@ int lv_active_change(struct cmd_context *cmd, struct logical_volume *lv,
 
 	switch (activate) {
 	case CHANGE_AN:
-deactivate:
 		log_verbose("Deactivating logical volume %s.", display_lvname(lv));
 		if (!deactivate_lv(cmd, lv))
 			return_0;
 		break;
 	case CHANGE_ALN:
-		if (vg_is_clustered(lv->vg) && (needs_exclusive || _lv_is_exclusive(lv))) {
-			if (!lv_is_active_locally(lv)) {
-				log_error("Cannot deactivate remotely exclusive device %s locally.",
-					  display_lvname(lv));
-				return 0;
-			}
-			/* Unlock whole exclusive activation */
-			goto deactivate;
-		}
 		log_verbose("Deactivating logical volume %s locally.",
 			    display_lvname(lv));
 		if (!deactivate_lv_local(cmd, lv))
