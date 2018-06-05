@@ -126,6 +126,14 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv);
 
 int lv_deactivate_any_missing_subdevs(const struct logical_volume *lv);
 
+int activate_lv(struct cmd_context *cmd, const struct logical_volume *lv);
+int deactivate_lv(struct cmd_context *cmd, const struct logical_volume *lv);
+int suspend_lv(struct cmd_context *cmd, const struct logical_volume *lv);
+int suspend_lv_origin(struct cmd_context *cmd, const struct logical_volume *lv);
+int resume_lv(struct cmd_context *cmd, const struct logical_volume *lv);
+int resume_lv_origin(struct cmd_context *cmd, const struct logical_volume *lv);
+int revert_lv(struct cmd_context *cmd, const struct logical_volume *lv);
+
 /*
  * Returns 1 if info structure has been populated, else 0 on failure.
  * When lvinfo* is NULL, it returns 1 if the device is locally active, 0 otherwise.
