@@ -234,12 +234,6 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 		/* Global VG_ORPHANS lock covers all orphan formats. */
 		if (is_orphan_vg(vol))
 			vol = VG_ORPHANS;
-		/* VG locks alphabetical, ORPHAN lock last */
-		if ((lck_type != LCK_UNLOCK) &&
-		    !(flags & LCK_CACHE) &&
-		    !lvmcache_verify_lock_order(vol))
-			return_0;
-
 		break;
 	case LCK_LV:
 		/* All LV locks are non-blocking. */

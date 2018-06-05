@@ -99,13 +99,8 @@ static int _vgrename_single(struct cmd_context *cmd, const char *vg_name,
 	 *   this uuid-for-name case.
 	 */
 	if (vp->lock_vg_old_first || vp->old_name_is_uuid) {
-		if (vp->old_name_is_uuid)
-			lvmcache_lock_ordering(0);
-
 		if (!_lock_new_vg_for_rename(cmd, vp->vg_name_new))
 			return ECMD_FAILED;
-
-		lvmcache_lock_ordering(1);
 	}
 
 	dev_dir = cmd->dev_dir;

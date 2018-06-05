@@ -5414,14 +5414,6 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	}
 
 	/*
-	 * This function holds the orphans lock while reading VGs to look for
-	 * devices.  This means the orphans lock is held while VG locks are
-	 * acquired, which is against lvmcache lock ordering rules, so disable
-	 * the lvmcache lock ordering checks.
-	 */
-	lvmcache_lock_ordering(0);
-
-	/*
 	 * Clear the cache before acquiring the orphan lock.  (Clearing the
 	 * cache with locks held is an error.)  We want the orphan lock
 	 * acquired before process_each_pv.  If the orphan lock is not held
