@@ -35,30 +35,6 @@ static int _vg_lock_count = 0;		/* Number of locks held */
 static int _vg_write_lock_held = 0;	/* VG write lock held? */
 static int _blocking_supported = 0;
 
-typedef enum {
-        LV_NOOP,
-        LV_SUSPEND,
-        LV_RESUME
-} lv_operation_t;
-
-static void _lock_memory(struct cmd_context *cmd, lv_operation_t lv_op)
-{
-	if (!(_locking.flags & LCK_PRE_MEMLOCK))
-		return;
-
-	if (lv_op == LV_SUSPEND)
-		critical_section_inc(cmd, "locking for suspend");
-}
-
-static void _unlock_memory(struct cmd_context *cmd, lv_operation_t lv_op)
-{
-	if (!(_locking.flags & LCK_PRE_MEMLOCK))
-		return;
-
-	if (lv_op == LV_RESUME)
-		critical_section_dec(cmd, "unlocking on resume");
-}
-
 static void _unblock_signals(void)
 {
 	/* Don't unblock signals while any locks are held */
@@ -139,16 +115,13 @@ void fin_locking(void)
  * VG locking is by VG name.
  * FIXME This should become VG uuid.
  */
-static int _lock_vol(struct cmd_context *cmd, const char *resource,
-		     uint32_t flags, lv_operation_t lv_op, const struct logical_volume *lv)
+static int _lock_vol(struct cmd_context *cmd, const char *resource, uint32_t flags)
 {
 	uint32_t lck_type = flags & LCK_TYPE_MASK;
 	uint32_t lck_scope = flags & LCK_SCOPE_MASK;
 	int ret = 0;
-	const struct logical_volume *active_lv;
 
 	block_signals(flags);
-	_lock_memory(cmd, lv_op);
 
 	assert(resource);
 
@@ -162,23 +135,13 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 		goto out;
 	}
 
-	/* When trying activating component LV, make sure none of
-	 * sub component LV or  LVs that are using it are active */
-	if (lv && ((lck_type == LCK_READ) || (lck_type == LCK_EXCL)) &&
-	    ((!lv_is_visible(lv) && (active_lv = lv_holder_is_active(lv))) ||
-	     (active_lv = lv_component_is_active(lv)))) {
-		log_error("Activation of logical volume %s is prohibited while logical volume %s is active.",
-			  display_lvname(lv), display_lvname(active_lv));
-		goto out;
-	}
-
 	if (cmd->metadata_read_only && lck_type == LCK_WRITE &&
 	    strcmp(resource, VG_GLOBAL)) {
 		log_error("Operation prohibited while global/metadata_read_only is set.");
 		goto out;
 	}
 
-	if ((ret = _locking.lock_resource(cmd, resource, flags, lv))) {
+	if ((ret = _locking.lock_resource(cmd, resource, flags, NULL))) {
 		if (lck_scope == LCK_VG && !(flags & LCK_CACHE)) {
 			if (lck_type != LCK_UNLOCK)
 				lvmcache_lock_vgname(resource, lck_type == LCK_READ);
@@ -196,7 +159,6 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 			_update_vg_lock_count(resource, flags);
 	}
 out:
-	_unlock_memory(cmd, lv_op);
 	_unblock_signals();
 
 	return ret;
@@ -205,19 +167,7 @@ out:
 int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const struct logical_volume *lv)
 {
 	char resource[258] __attribute__((aligned(8)));
-	lv_operation_t lv_op;
 	int lck_type = flags & LCK_TYPE_MASK;
-
-	switch (flags & (LCK_SCOPE_MASK | LCK_TYPE_MASK)) {
-		case LCK_LV_SUSPEND:
-				lv_op = LV_SUSPEND;
-				break;
-		case LCK_LV_RESUME:
-				lv_op = LV_RESUME;
-				break;
-		default:	lv_op = LV_NOOP;
-	}
-
 
 	if (flags == LCK_NONE) {
 		log_debug_locking(INTERNAL_ERROR "%s: LCK_NONE lock requested", vol);
@@ -225,8 +175,6 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 	}
 
 	switch (flags & LCK_SCOPE_MASK) {
-	case LCK_ACTIVATION:
-		break;
 	case LCK_VG:
 		if (!_blocking_supported)
 			flags |= LCK_NONBLOCK;
@@ -234,10 +182,6 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 		/* Global VG_ORPHANS lock covers all orphan formats. */
 		if (is_orphan_vg(vol))
 			vol = VG_ORPHANS;
-		break;
-	case LCK_LV:
-		/* All LV locks are non-blocking. */
-		flags |= LCK_NONBLOCK;
 		break;
 	default:
 		log_error("Unrecognised lock scope: %d",
@@ -250,7 +194,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 		return 0;
 	}
 
-	if (!_lock_vol(cmd, resource, flags, lv_op, lv))
+	if (!_lock_vol(cmd, resource, flags))
 		return_0;
 
 	/*
@@ -261,7 +205,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 	    (flags & (LCK_CACHE | LCK_HOLD)))
 		return 1;
 
-	if (!_lock_vol(cmd, resource, (flags & ~LCK_TYPE_MASK) | LCK_UNLOCK, lv_op, lv))
+	if (!_lock_vol(cmd, resource, (flags & ~LCK_TYPE_MASK) | LCK_UNLOCK))
 		return_0;
 
 	return 1;
@@ -312,3 +256,4 @@ int sync_dev_names(struct cmd_context* cmd)
 
 	return lock_vol(cmd, VG_SYNC_NAMES, LCK_VG_SYNC, NULL);
 }
+

@@ -2424,15 +2424,6 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	if (!activation())
 		return 1;
 
-	if (!laopts->exclusive &&
-	    (lv_is_origin(lv) ||
-	     seg_only_exclusive(first_seg(lv))))  {
-		log_error(INTERNAL_ERROR "Trying non-exlusive activation of %s with "
-			  "a volume type %s requiring exclusive activation.",
-			  display_lvname(lv), lvseg_name(first_seg(lv)));
-		return 0;
-	}
-
 	if (filter && !_passes_activation_filter(cmd, lv)) {
 		log_verbose("Not activating %s since it does not pass "
 			    "activation filter.", display_lvname(lv));
@@ -2765,3 +2756,97 @@ int deactivate_lv_with_sub_lv(const struct logical_volume *lv)
 
 	return 1;
 }
+
+int activate_lv(struct cmd_context *cmd, const struct logical_volume *lv)
+{
+	const struct logical_volume *active_lv;
+	int ret;
+
+	/*
+	 * When trying activating component LV, make sure none of sub component
+	 * LV or LVs that are using it are active.
+	 */
+	if (!lv_is_visible(lv))
+		active_lv = lv_holder_is_active(lv);
+	else
+		active_lv = lv_component_is_active(lv);
+
+	if (active_lv) {
+		log_error("Activation of logical volume %s is prohibited while logical volume %s is active.",
+			  display_lvname(lv), display_lvname(active_lv));
+		ret = 0;
+		goto out;
+	}
+
+	ret = lv_activate_with_filter(cmd, NULL, 0,
+				      (lv->status & LV_NOSCAN) ? 1 : 0,
+				      (lv->status & LV_TEMPORARY) ? 1 : 0,
+				      lv_committed(lv));
+out:
+	return ret;
+}
+
+int deactivate_lv(struct cmd_context *cmd, const struct logical_volume *lv)
+{
+	int ret;
+
+	ret = lv_deactivate(cmd, NULL, lv_committed(lv));
+
+	return ret;
+}
+
+int suspend_lv(struct cmd_context *cmd, const struct logical_volume *lv)
+{
+	int ret;
+
+	critical_section_inc(cmd, "locking for suspend");
+
+	ret = lv_suspend_if_active(cmd, NULL, 0, 0, lv_committed(lv), lv);
+
+	return ret;
+}
+
+int suspend_lv_origin(struct cmd_context *cmd, const struct logical_volume *lv)
+{
+	int ret;
+
+	critical_section_inc(cmd, "locking for suspend");
+
+	ret = lv_suspend_if_active(cmd, NULL, 1, 0, lv_committed(lv), lv);
+
+	return ret;
+}
+
+int resume_lv(struct cmd_context *cmd, const struct logical_volume *lv)
+{
+	int ret;
+
+	ret = lv_resume_if_active(cmd, NULL, 0, 0, 0, lv_committed(lv));
+
+	critical_section_dec(cmd, "unlocking on resume");
+
+	return ret;
+}
+
+int resume_lv_origin(struct cmd_context *cmd, const struct logical_volume *lv)
+{
+	int ret;
+
+	ret = lv_resume_if_active(cmd, NULL, 1, 0, 0, lv_committed(lv));
+
+	critical_section_dec(cmd, "unlocking on resume");
+
+	return ret;
+}
+
+int revert_lv(struct cmd_context *cmd, const struct logical_volume *lv)
+{
+	int ret;
+
+	ret = lv_resume_if_active(cmd, NULL, 0, 0, 1, lv_committed(lv));
+
+	critical_section_dec(cmd, "unlocking on resume");
+
+	return ret;
+}
+
