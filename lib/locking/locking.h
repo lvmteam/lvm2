@@ -163,10 +163,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 
 #define LCK_MASK (LCK_TYPE_MASK | LCK_SCOPE_MASK)
 
-#define LCK_LV_CLUSTERED(lv)	\
-	(vg_is_clustered((lv)->vg) ? LCK_CLUSTER_VG : 0)
-
-#define lock_lv_vol(cmd, lv, flags) lock_vol(cmd, (lv)->lvid.s, flags | LCK_LV_CLUSTERED(lv), lv) 
+#define lock_lv_vol(cmd, lv, flags) lock_vol(cmd, (lv)->lvid.s, flags, lv) 
 
 /*
  * Activation locks are wrapped around activation commands that have to
@@ -180,7 +177,9 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
  */
 
 #define lv_type_requires_activation_lock(lv) ((lv_is_thin_type(lv) || lv_is_cache_type(lv) || lv_is_mirror_type(lv) || lv_is_raid_type(lv) || lv_is_origin(lv) || lv_is_snapshot(lv)) ? 1 : 0)
+
 #define lv_activation_lock_name(lv) (lv_type_requires_activation_lock(lv) ? (lv)->vg->name : (lv)->lvid.s)
+
 #define lv_requires_activation_lock_now(lv) ((!vg_write_lock_held() && (!vg_is_clustered((lv)->vg) || !lv_type_requires_activation_lock(lv))) ? 1 : 0)
 
 #define lock_activation(cmd, lv)	(lv_requires_activation_lock_now(lv) ? lock_vol(cmd, lv_activation_lock_name(lv), LCK_ACTIVATE_LOCK, lv) : 1)
@@ -246,16 +245,12 @@ int activate_lv_excl(struct cmd_context *cmd, const struct logical_volume *lv);
 
 #define activate_lv_local(cmd, lv)	\
 	lock_lv_vol_serially(cmd, lv, LCK_LV_ACTIVATE | LCK_HOLD | LCK_LOCAL)
+
 #define deactivate_lv_local(cmd, lv)	\
 	lock_lv_vol_serially(cmd, lv, LCK_LV_DEACTIVATE | LCK_LOCAL)
+
 #define drop_cached_metadata(vg)	\
 	lock_vol((vg)->cmd, (vg)->name, LCK_VG_DROP_CACHE, NULL)
-#define remote_commit_cached_metadata(vg)	\
-	lock_vol((vg)->cmd, (vg)->name, LCK_VG_COMMIT, NULL)
-#define remote_revert_cached_metadata(vg)	\
-	lock_vol((vg)->cmd, (vg)->name, LCK_VG_REVERT, NULL)
-#define remote_backup_metadata(vg)	\
-	lock_vol((vg)->cmd, (vg)->name, LCK_VG_BACKUP, NULL)
 
 int sync_local_dev_names(struct cmd_context* cmd);
 int sync_dev_names(struct cmd_context* cmd);

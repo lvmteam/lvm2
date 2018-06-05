@@ -3130,10 +3130,6 @@ int vg_commit(struct volume_group *vg)
 	set_vg_notify(vg->cmd);
 
 	if (cache_updated) {
-		/* Instruct remote nodes to upgrade cached metadata. */
-		if (!remote_commit_cached_metadata(vg))
-			stack; // FIXME: What should we do?
-
 		/*
 		 * We need to clear old_name after a successful commit.
 		 * The volume_group structure could be reused later.
@@ -3188,9 +3184,6 @@ void vg_revert(struct volume_group *vg)
 	if (!drop_cached_metadata(vg))
 		log_error("Attempt to drop cached metadata failed "
 			  "after reverted update for VG %s.", vg->name);
-
-	if (!remote_revert_cached_metadata(vg))
-		stack; // FIXME: What should we do?
 }
 
 static int _check_mda_in_use(struct metadata_area *mda, void *_in_use)

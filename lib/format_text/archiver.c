@@ -275,10 +275,6 @@ int backup(struct volume_group *vg)
 	if (is_orphan_vg(vg->name))
 		return 1;
 
-	if (vg_is_clustered(vg))
-		if (!remote_backup_metadata(vg))
-			stack;
-
 	return backup_locally(vg);
 }
 
