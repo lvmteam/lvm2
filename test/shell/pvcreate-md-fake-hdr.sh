@@ -25,6 +25,12 @@ aux extend_filter_LVMTEST "a|/dev/md|"
 
 aux prepare_devs 4
 
+pvcreate "$dev2"
+aux prepare_md_dev 0 64 2 "$dev1" "$dev2"
+# Incorrectly shows  $dev2 as PV for 'raid0'
+pvs -vvvv
+
+
 vgcreate $SHARED $vg "$dev3" "$dev4"
 
 # create 2 disk MD raid1 array
