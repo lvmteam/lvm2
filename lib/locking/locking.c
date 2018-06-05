@@ -273,16 +273,6 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 	return 1;
 }
 
-/*
- * First try to activate exclusively locally.
- * Then if the VG is clustered and the LV is not yet active (e.g. due to 
- * an activation filter) try activating on remote nodes.
- */
-int activate_lv_excl(struct cmd_context *cmd, const struct logical_volume *lv)
-{
-	return activate_lv_excl_local(cmd, lv);
-}
-
 /* Lock a list of LVs */
 int activate_lvs(struct cmd_context *cmd, struct dm_list *lvs, unsigned exclusive)
 {
@@ -290,13 +280,9 @@ int activate_lvs(struct cmd_context *cmd, struct dm_list *lvs, unsigned exclusiv
 	struct lv_list *lvl;
 
 	dm_list_iterate_items(lvl, lvs) {
-		if (!exclusive && !lv_is_active_exclusive(lvl->lv)) {
-			if (!activate_lv(cmd, lvl->lv)) {
-				log_error("Failed to activate %s", display_lvname(lvl->lv));
-				return 0;
-			}
-		} else if (!activate_lv_excl(cmd, lvl->lv)) {
+		if (!activate_lv(cmd, lvl->lv)) {
 			log_error("Failed to activate %s", display_lvname(lvl->lv));
+
 			dm_list_uniterate(lvh, lvs, &lvl->list) {
 				lvl = dm_list_item(lvh, struct lv_list);
 				if (!deactivate_lv(cmd, lvl->lv))

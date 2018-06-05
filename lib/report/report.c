@@ -3559,11 +3559,7 @@ static int _lvactivelocally_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (!activation())
 		return _binary_undef_disp(rh, mem, field, private);
 
-	if (vg_is_clustered(lv->vg)) {
-		lv = lv_lock_holder(lv);
-		active_locally = lv_is_active_locally(lv);
-	} else
-		active_locally = lv_is_active(lv);
+	active_locally = lv_is_active(lv);
 
 	return _binary_disp(rh, mem, field, active_locally, GET_FIRST_RESERVED_NAME(lv_active_locally_y), private);
 }
@@ -3572,38 +3568,12 @@ static int _lvactiveremotely_disp(struct dm_report *rh, struct dm_pool *mem,
 				  struct dm_report_field *field,
 				  const void *data, void *private)
 {
-	const struct logical_volume *lv = (const struct logical_volume *) data;
 	int active_remotely;
 
 	if (!activation())
 		return _binary_undef_disp(rh, mem, field, private);
 
-	if (vg_is_clustered(lv->vg)) {
-		lv = lv_lock_holder(lv);
-		/* FIXME: It seems we have no way to get this info correctly
-		 * 	  with current interface - we'd need to check number
-		 * 	  of responses from the cluster:
-		 * 	    - if number of nodes that responded == 1
-		 * 	    - and LV is active on local node
-		 * 	  ..then we may say that LV is *not* active remotely.
-		 *
-		 * 	  Otherwise ((responses > 1 && LV active locally) ||
-		 * 	  (responses == 1 && LV not active locally)), it's
-		 * 	  active remotely.
-		 *
-		 * 	  We have this info, but hidden underneath the
-		 * 	  locking interface (locking_type.query_resource fn).
-		 *
-		 * 	  For now, let's use 'unknown' for remote status if
-		 * 	  the LV is found active locally until we find a way to
-		 * 	  smuggle the proper information out of the interface.
-		 */
-		if (lv_is_active_locally(lv))
-			return _binary_undef_disp(rh, mem, field, private);
-
-		active_remotely = lv_is_active_but_not_locally(lv);
-	} else
-		active_remotely = 0;
+	active_remotely = 0;
 
 	return _binary_disp(rh, mem, field, active_remotely, GET_FIRST_RESERVED_NAME(lv_active_remotely_y), private);
 }
@@ -3618,11 +3588,7 @@ static int _lvactiveexclusively_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (!activation())
 		return _binary_undef_disp(rh, mem, field, private);
 
-	if (vg_is_clustered(lv->vg)) {
-		lv = lv_lock_holder(lv);
-		active_exclusively = lv_is_active_exclusive(lv);
-	} else
-		active_exclusively = lv_is_active(lv);
+	active_exclusively = lv_is_active(lv);
 
 	return _binary_disp(rh, mem, field, active_exclusively, GET_FIRST_RESERVED_NAME(lv_active_exclusively_y), private);
 }

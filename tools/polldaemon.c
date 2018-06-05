@@ -200,7 +200,7 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 		 * If the LV is not active locally, the kernel cannot be
 		 * queried for its status.  We must exit in this case.
 		 */
-		if (!lv_is_active_locally(lv)) {
+		if (!lv_is_active(lv)) {
 			log_print_unless_silent("%s: Interrupted: No longer active.", id->display_name);
 			ret = 1;
 			goto out;
@@ -440,7 +440,7 @@ static int _report_progress(struct cmd_context *cmd, struct poll_operation_id *i
 		goto out;
 	}
 
-	if (!lv_is_active_locally(lv)) {
+	if (!lv_is_active(lv)) {
 		log_verbose("%s: Interrupted: No longer active.", id->display_name);
 		ret = 1;
 		goto out;

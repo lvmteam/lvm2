@@ -566,8 +566,8 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 		default:
 			/* Otherwise localy activate volume to sync dirty blocks */
 			cache_lv->status |= LV_TEMPORARY;
-			if (!activate_lv_excl_local(cache_lv->vg->cmd, cache_lv) ||
-			    !lv_is_active_locally(cache_lv)) {
+			if (!activate_lv(cache_lv->vg->cmd, cache_lv) ||
+			    !lv_is_active(cache_lv)) {
 				log_error("Failed to active cache locally %s.",
 					  display_lvname(cache_lv));
 				return 0;
@@ -969,7 +969,7 @@ int wipe_cache_pool(struct logical_volume *cache_pool_lv)
 	}
 
 	cache_pool_lv->status |= LV_TEMPORARY;
-	if (!activate_lv_excl_local(cache_pool_lv->vg->cmd, cache_pool_lv)) {
+	if (!activate_lv(cache_pool_lv->vg->cmd, cache_pool_lv)) {
 		log_error("Aborting. Failed to activate cache pool %s.",
 			  display_lvname(cache_pool_lv));
 		return 0;

@@ -1232,13 +1232,13 @@ static int _determine_cache_argument(struct volume_group *vg,
 				return 1;
 
 			} else if (vg_is_shared(vg)) {
-				if (!lv_active_change(cmd, lv, CHANGE_AEY, 0)) {
+				if (!lv_active_change(cmd, lv, CHANGE_AEY)) {
 					log_error("Cannot activate cache origin %s.",
 						   display_lvname(lv));
 					return 0;
 				}
 
-			} else if (!activate_lv_excl_local(cmd, lv)) {
+			} else if (!activate_lv(cmd, lv)) {
 				log_error("Cannot activate cache origin %s.",
 					  display_lvname(lv));
 				return 0;

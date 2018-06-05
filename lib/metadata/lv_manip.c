@@ -4058,7 +4058,7 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 			for (s = 0; !fail && s < seg->area_count; s++) {
 				meta_lv = seg_metalv(seg, s);
 
-				if (!activate_lv_local(meta_lv->vg->cmd, meta_lv)) {
+				if (!activate_lv(meta_lv->vg->cmd, meta_lv)) {
 					log_error("Failed to activate %s for clearing.",
 						  display_lvname(meta_lv));
 					fail = 1;
@@ -4228,7 +4228,7 @@ int lv_extend(struct logical_volume *lv,
 		    (lv_is_not_synced(lv))) {
 			dm_percent_t sync_percent = DM_PERCENT_INVALID;
 
-			if (!lv_is_active_locally(lv)) {
+			if (!lv_is_active(lv)) {
 				log_error("Unable to read sync percent while LV %s "
 					  "is not locally active.", display_lvname(lv));
 				/* FIXME Support --force */
@@ -4711,7 +4711,7 @@ static int _lvresize_adjust_policy(const struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!lv_is_active_locally(lv)) {
+	if (!lv_is_active(lv)) {
 		log_error("Can't read state of locally inactive LV %s.",
 			  display_lvname(lv));
 		return 0;
@@ -5571,7 +5571,7 @@ int lv_resize(struct logical_volume *lv,
 		 * then use suspend and resume and deactivate pool LV,
 		 * instead of searching for an active thin volume.
 		 */
-		if (!activate_lv_excl(cmd, lock_lv)) {
+		if (!activate_lv(cmd, lock_lv)) {
 			log_error("Failed to activate %s.", display_lvname(lock_lv));
 			return 0;
 		}
@@ -6788,7 +6788,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	struct segment_type *segtype;
 	struct lv_segment *mapseg;
 	struct lv_names lv_names;
-	unsigned exclusive = 0, i;
+	unsigned i;
 
 	/* create an empty layer LV */
 	if (dm_snprintf(name, sizeof(name), "%s%s", lv_where->name, layer_suffix) < 0) {
@@ -6803,9 +6803,6 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 		log_error("Creation of layer LV failed");
 		return NULL;
 	}
-
-	if (lv_is_active_exclusive_locally(lv_where))
-		exclusive = 1;
 
 	if (lv_is_active(lv_where) && strstr(name, MIRROR_SYNC_LAYER)) {
 		log_very_verbose("Creating transient LV %s for mirror conversion in VG %s.", name, lv_where->vg->name);
@@ -6835,10 +6832,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 			return NULL;
 		}
 
-		if (exclusive)
-			r = activate_lv_excl(cmd, layer_lv);
-		else
-			r = activate_lv(cmd, layer_lv);
+		r = activate_lv(cmd, layer_lv);
 
 		if (!r) {
 			log_error("Failed to resume transient LV"
@@ -7125,7 +7119,7 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 		/* nothing to do */
 		return 1;
 
-	if (!lv_is_active_locally(lv)) {
+	if (!lv_is_active(lv)) {
 		log_error("Volume \"%s/%s\" is not active locally (volume_list activation filter?).",
 			  lv->vg->name, lv->name);
 		return 0;
@@ -7491,7 +7485,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 					return_NULL;
 				/* New pool is now inactive */
 			} else {
-				if (!activate_lv_excl_local(cmd, pool_lv)) {
+				if (!activate_lv(cmd, pool_lv)) {
 					log_error("Aborting. Failed to locally activate thin pool %s.",
 						  display_lvname(pool_lv));
 					return NULL;
@@ -7783,7 +7777,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	if (seg_is_cache(lp)) {
 		if (vg_is_shared(vg)) {
 			if (is_change_activating(lp->activate)) {
-				if (!lv_active_change(cmd, lv, CHANGE_AEY, 0)) {
+				if (!lv_active_change(cmd, lv, CHANGE_AEY)) {
 					log_error("Aborting. Failed to activate LV %s.",
 						  display_lvname(lv));
 					goto revert_new_lv;
@@ -7794,7 +7788,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		/* FIXME Support remote exclusive activation? */
 		/* Not yet 'cache' LV, it is stripe volume for wiping */
 
-		else if (is_change_activating(lp->activate) && !activate_lv_excl_local(cmd, lv)) {
+		else if (is_change_activating(lp->activate) && !activate_lv(cmd, lv)) {
 			log_error("Aborting. Failed to activate LV %s locally exclusively.",
 				  display_lvname(lv));
 			goto revert_new_lv;
@@ -7827,7 +7821,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				/* Avoid multiple thin-pool activations in this case */
 				if (thin_pool_was_active < 0)
 					thin_pool_was_active = 0;
-				if (!activate_lv_excl(cmd, pool_lv)) {
+				if (!activate_lv(cmd, pool_lv)) {
 					log_error("Failed to activate thin pool %s.",
 						  display_lvname(pool_lv));
 					goto revert_new_lv;
@@ -7846,7 +7840,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 		backup(vg);
 
-		if (!lv_active_change(cmd, lv, lp->activate, 0)) {
+		if (!lv_active_change(cmd, lv, lp->activate)) {
 			log_error("Failed to activate thin %s.", lv->name);
 			goto deactivate_and_revert_new_lv;
 		}
@@ -7860,13 +7854,13 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 	} else if (lp->snapshot) {
 		lv->status |= LV_TEMPORARY;
-		if (!activate_lv_local(cmd, lv)) {
+		if (!activate_lv(cmd, lv)) {
 			log_error("Aborting. Failed to activate snapshot "
 				  "exception store.");
 			goto revert_new_lv;
 		}
 		lv->status &= ~LV_TEMPORARY;
-	} else if (!lv_active_change(cmd, lv, lp->activate, 0)) {
+	} else if (!lv_active_change(cmd, lv, lp->activate)) {
 		log_error("Failed to activate new LV.");
 		goto deactivate_and_revert_new_lv;
 	}
@@ -7968,7 +7962,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			 */
 
 			/* Activate spare snapshot once it is a complete LV */
-			if (!lv_active_change(cmd, origin_lv, lp->activate, 1)) {
+			if (!lv_active_change(cmd, origin_lv, lp->activate)) {
 				log_error("Failed to activate sparce volume %s.",
 					  display_lvname(origin_lv));
 				return NULL;

@@ -1034,7 +1034,7 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!lv_active_change(cmd, lv, activate, 0))
+	if (!lv_active_change(cmd, lv, activate))
 		return_0;
 
 	set_lv_notify(lv->vg->cmd);
@@ -1066,7 +1066,7 @@ int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 	 * - fortunately: polldaemon will immediately shutdown if the
 	 *   origin doesn't have a status with a snapshot percentage
 	 */
-	if (background_polling() && lv_is_merging_origin(lv) && lv_is_active_locally(lv))
+	if (background_polling() && lv_is_merging_origin(lv) && lv_is_active(lv))
 		lv_spawn_background_polling(cmd, lv);
 
 	return 1;

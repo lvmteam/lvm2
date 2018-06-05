@@ -63,7 +63,7 @@ static int _poll_lvs_in_vg(struct cmd_context *cmd,
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
 
-		if (lv_is_active_locally(lv) &&
+		if (lv_is_active(lv) &&
 		    (lv_is_pvmove(lv) || lv_is_converting(lv) || lv_is_merging(lv))) {
 			lv_spawn_background_polling(cmd, lv);
 			count++;
@@ -116,20 +116,8 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 		expected_count++;
 
-		if (!lv_change_activate(cmd, lv, activate)) {
-			if (!lv_is_active_exclusive_remotely(lv))
-				stack;
-			else {
-				/*
-				 * If the LV is active exclusive remotely,
-				 * then ignore it here
-				 */
-				log_verbose("%s is exclusively active on a remote node.",
-					    display_lvname(lv));
-				expected_count--; /* not accounted */
-			}
+		if (!lv_change_activate(cmd, lv, activate))
 			continue;
-		}
 
 		count++;
 	}

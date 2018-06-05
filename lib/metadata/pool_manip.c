@@ -526,7 +526,7 @@ int create_pool(struct logical_volume *pool_lv,
 		 * or directly converted to invisible device via suspend/resume
 		 */
 		pool_lv->status |= LV_TEMPORARY;
-		if (!activate_lv_excl_local(pool_lv->vg->cmd, pool_lv)) {
+		if (!activate_lv(pool_lv->vg->cmd, pool_lv)) {
 			log_error("Aborting. Failed to activate pool metadata %s.",
 				  display_lvname(pool_lv));
 			goto bad;
