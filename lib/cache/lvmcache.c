@@ -77,7 +77,6 @@ static int _has_scanned = 0;
 static int _vgs_locked = 0;
 static int _vg_global_lock_held = 0;	/* Global lock held when cache wiped? */
 static int _found_duplicate_pvs = 0;	/* If we never see a duplicate PV we can skip checking for them later. */
-static int _suppress_lock_ordering = 0;
 
 int lvmcache_init(struct cmd_context *cmd)
 {
@@ -156,71 +155,6 @@ static void _update_cache_lock_state(const char *vgname, int locked)
 		return;
 
 	_update_cache_vginfo_lock_state(vginfo, locked);
-}
-
-/*
- * Ensure vgname2 comes after vgname1 alphabetically.
- * Orphan locks come last.
- * VG_GLOBAL comes first.
- */
-static int _vgname_order_correct(const char *vgname1, const char *vgname2)
-{
-	if (is_global_vg(vgname1))
-		return 1;
-
-	if (is_global_vg(vgname2))
-		return 0;
-
-	if (is_orphan_vg(vgname1))
-		return 0;
-
-	if (is_orphan_vg(vgname2))
-		return 1;
-
-	if (strcmp(vgname1, vgname2) < 0)
-		return 1;
-
-	return 0;
-}
-
-void lvmcache_lock_ordering(int enable)
-{
-	_suppress_lock_ordering = !enable;
-}
-
-/*
- * Ensure VG locks are acquired in alphabetical order.
- */
-int lvmcache_verify_lock_order(const char *vgname)
-{
-	struct dm_hash_node *n;
-	const char *vgname2;
-
-	if (_suppress_lock_ordering)
-		return 1;
-
-	if (!_lock_hash)
-		return 1;
-
-	dm_hash_iterate(n, _lock_hash) {
-		if (!dm_hash_get_data(_lock_hash, n))
-			return_0;
-
-		if (!(vgname2 = dm_hash_get_key(_lock_hash, n))) {
-			log_error(INTERNAL_ERROR "VG lock %s hits NULL.",
-				 vgname);
-			return 0;
-		}
-
-		if (!_vgname_order_correct(vgname2, vgname)) {
-			log_errno(EDEADLK, INTERNAL_ERROR "VG lock %s must "
-				  "be requested before %s, not after.",
-				  vgname, vgname2);
-			return 0;
-		}
-	}
-
-	return 1;
 }
 
 void lvmcache_lock_vgname(const char *vgname, int read_only __attribute__((unused)))

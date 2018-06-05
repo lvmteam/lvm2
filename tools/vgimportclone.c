@@ -342,9 +342,6 @@ retry_name:
 
 	log_debug("Changing VG %s to %s.", vp.old_vgname, vp.new_vgname);
 
-	/* We don't care if the new name comes before the old in lock order. */
-	lvmcache_lock_ordering(0);
-
 	if (!lock_vol(cmd, vp.new_vgname, LCK_VG_WRITE, NULL)) {
 		log_error("Can't get lock for new VG name %s", vp.new_vgname);
 		goto out;
@@ -363,7 +360,6 @@ out:
 	unlock_vg(cmd, NULL, VG_GLOBAL);
 	internal_filter_clear();
 	init_internal_filtering(0);
-	lvmcache_lock_ordering(1);
 	destroy_processing_handle(cmd, handle);
 
 	/* Enable lvmetad again if no duplicates are left. */
