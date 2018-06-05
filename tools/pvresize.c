@@ -96,7 +96,7 @@ int pvresize(struct cmd_context *cmd, int argc, char **argv)
 
 	ret = process_each_pv(cmd, argc, argv, NULL, 0, READ_FOR_UPDATE | READ_ALLOW_EXPORTED, handle, _pvresize_single);
 
-	log_print_unless_silent("%d physical volume(s) resized / %d physical volume(s) "
+	log_print_unless_silent("%d physical volume(s) resized or updated / %d physical volume(s) "
 				"not resized", params.done, params.total - params.done);
 out:
 	destroy_processing_handle(cmd, handle);
