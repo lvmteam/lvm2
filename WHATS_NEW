@@ -1,5 +1,6 @@
 Version 3.0.0
 =============
+  Fix check if resized PV can also fit metadata area.
   Avoid showing internal error in lvs output or pvmoved LVs.
   Remove clvmd
   Remove lvmlib (api)
