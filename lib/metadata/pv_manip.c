@@ -566,6 +566,7 @@ static int _pv_resize(struct physical_volume *pv, struct volume_group *vg, uint6
 		log_error("Size must exceed physical extent start "
 			  "of %" PRIu64 " sectors on PV %s.",
 			  pv_pe_start(pv), pv_dev_name(pv));
+		return 0;
 	}
 
 	old_pe_count = pv->pe_count;
@@ -645,7 +646,7 @@ int pv_resize_single(struct cmd_context *cmd,
 						  pv_name, display_size(cmd, new_size),
 						  display_size(cmd, size)) == 'n') {
 				log_error("Physical Volume %s not resized.", pv_name);
-				goto_out;
+				goto out;
 			}
 
 		}  else if (new_size < size)
@@ -653,7 +654,7 @@ int pv_resize_single(struct cmd_context *cmd,
 						  pv_name, display_size(cmd, new_size),
 						  display_size(cmd, size)) == 'n') {
 				log_error("Physical Volume %s not resized.", pv_name);
-				goto_out;
+				goto out;
 			}
 
 		if (new_size == size)
