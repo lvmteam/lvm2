@@ -101,7 +101,7 @@ vgremove -ff $vg
 test -n "$LVM_TEST_LVMLOCKD" && exit 0
 
 # set cluster bit
-vgcreate -cn $vg "$dev1" "$dev2" "$dev3"
+vgcreate $vg "$dev1" "$dev2" "$dev3"
 # check prompt to change cluster bit without giving explicit vg name
 fail vgchange -cy 2>&1 | tee out
 grep "y/n" out
@@ -121,10 +121,10 @@ if test -e LOCAL_CLVMD ; then
 	# check we do not support conversion of just locally active LVs
 	lvchange -an $vg
 	lvchange -ay $vg
-	not vgchange -cn $vg
+	not vgchange $vg
 	lvchange -an $vg
 	lvchange -aey $vg
-	vgchange -cn $vg
+	vgchange $vg
 else
 	# no clvmd is running
 	fail vgchange -cy $vg
@@ -136,7 +136,7 @@ else
 	vgs --ignoreskippedcluster $vg 2>&1 | tee out
 	not grep "Skipping clustered volume group" out
 	# reset back to non-clustered VG with disabled locking
-	vgchange -cn $vg --config 'global{locking_type=0}' $vg
+	vgchange $vg --config 'global{locking_type=0}' $vg
 fi
 check vg_attr_bit cluster $vg "-"
 

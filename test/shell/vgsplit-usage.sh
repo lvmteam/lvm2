@@ -96,9 +96,9 @@ grep "Volume group \"$vg2\" exists, but new VG option specified" err
 vgremove $vg1 $vg2
 
 # vgsplit rejects split because clustered given with existing vg
-vgcreate -M$mdatype --clustered n $vg1 "$dev1" "$dev2"
-vgcreate -M$mdatype --clustered n $vg2 "$dev3" "$dev4"
-not vgsplit --clustered n $vg1 $vg2 "$dev1" 2>err
+vgcreate -M$mdatype $vg1 "$dev1" "$dev2"
+vgcreate -M$mdatype $vg2 "$dev3" "$dev4"
+not vgsplit $vg1 $vg2 "$dev1" 2>err
 grep "Volume group \"$vg2\" exists, but new VG option specified" err
 vgremove $vg1 $vg2
 
