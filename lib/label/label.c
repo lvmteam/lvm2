@@ -1122,14 +1122,15 @@ bool dev_read_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 	if (dev->bcache_fd <= 0) {
 		/* This is not often needed, perhaps only with lvmetad. */
 		if (!label_scan_open(dev)) {
-			log_error("dev_read_bytes %s cannot open dev", dev_name(dev));
+			log_error("Error opening device %s for reading at %llu length %u.",
+				  dev_name(dev), (unsigned long long)start, (uint32_t)len);
 			return false;
 		}
 	}
 
 	if (!bcache_read_bytes(scan_bcache, dev->bcache_fd, start, len, data)) {
-		log_error("dev_read_bytes %s at %u failed invalidate fd %d",
-			  dev_name(dev), (uint32_t)start, dev->bcache_fd);
+		log_error("Error reading device %s at %llu length %u.",
+			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
 		label_scan_invalidate(dev);
 		return false;
 	}
@@ -1151,21 +1152,22 @@ bool dev_write_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 	if (dev->bcache_fd <= 0) {
 		/* This is not often needed, perhaps only with lvmetad. */
 		if (!label_scan_open(dev)) {
-			log_error("dev_write_bytes %s cannot open dev", dev_name(dev));
+			log_error("Error opening device %s for writing at %llu length %u.",
+				  dev_name(dev), (unsigned long long)start, (uint32_t)len);
 			return false;
 		}
 	}
 
 	if (!bcache_write_bytes(scan_bcache, dev->bcache_fd, start, len, data)) {
-		log_error("dev_write_bytes %s at %u bcache write failed invalidate fd %d",
-			  dev_name(dev), (uint32_t)start, dev->bcache_fd);
+		log_error("Error writing device %s at %llu length %u.",
+			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
 		label_scan_invalidate(dev);
 		return false;
 	}
 
 	if (!bcache_flush(scan_bcache)) {
-		log_error("dev_write_bytes %s at %u bcache flush failed invalidate fd %d",
-			  dev_name(dev), (uint32_t)start, dev->bcache_fd);
+		log_error("Error writing device %s at %llu length %u.",
+			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
 		label_scan_invalidate(dev);
 		return false;
 	}
@@ -1185,21 +1187,22 @@ bool dev_write_zeros(struct device *dev, uint64_t start, size_t len)
 	if (dev->bcache_fd <= 0) {
 		/* This is not often needed, perhaps only with lvmetad. */
 		if (!label_scan_open(dev)) {
-			log_error("dev_write_zeros %s cannot open dev", dev_name(dev));
+			log_error("Error opening device %s for writing at %llu length %u.",
+				  dev_name(dev), (unsigned long long)start, (uint32_t)len);
 			return false;
 		}
 	}
 
 	if (!bcache_zero_bytes(scan_bcache, dev->bcache_fd, start, len)) {
-		log_error("dev_write_zeros %s at %u bcache write failed invalidate fd %d",
-			  dev_name(dev), (uint32_t)start, dev->bcache_fd);
+		log_error("Error writing device %s at %llu length %u.",
+			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
 		label_scan_invalidate(dev);
 		return false;
 	}
 
 	if (!bcache_flush(scan_bcache)) {
-		log_error("dev_write_zeros %s at %u bcache flush failed invalidate fd %d",
-			  dev_name(dev), (uint32_t)start, dev->bcache_fd);
+		log_error("Error writing device %s at %llu length %u.",
+			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
 		label_scan_invalidate(dev);
 		return false;
 	}
@@ -1219,21 +1222,22 @@ bool dev_set_bytes(struct device *dev, uint64_t start, size_t len, uint8_t val)
 	if (dev->bcache_fd <= 0) {
 		/* This is not often needed, perhaps only with lvmetad. */
 		if (!label_scan_open(dev)) {
-			log_error("dev_set_bytes %s cannot open dev", dev_name(dev));
+			log_error("Error opening device %s for writing at %llu length %u.",
+				  dev_name(dev), (unsigned long long)start, (uint32_t)len);
 			return false;
 		}
 	}
 
 	if (!bcache_set_bytes(scan_bcache, dev->bcache_fd, start, len, val)) {
-		log_error("dev_set_bytes %s at %u bcache write failed invalidate fd %d",
-			  dev_name(dev), (uint32_t)start, dev->bcache_fd);
+		log_error("Error writing device %s at %llu length %u.",
+			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
 		label_scan_invalidate(dev);
 		return false;
 	}
 
 	if (!bcache_flush(scan_bcache)) {
-		log_error("dev_set_bytes %s at %u bcache flush failed invalidate fd %d",
-			  dev_name(dev), (uint32_t)start, dev->bcache_fd);
+		log_error("Error writing device %s at %llu length %u.",
+			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
 		label_scan_invalidate(dev);
 		return false;
 	}
