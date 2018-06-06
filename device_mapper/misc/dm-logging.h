@@ -16,7 +16,7 @@
 #ifndef _DM_LOGGING_H
 #define _DM_LOGGING_H
 
-#include "libdevmapper.h"
+#include "device_mapper/libdevmapper.h"
 
 extern dm_log_with_errno_fn dm_log_with_errno;
 

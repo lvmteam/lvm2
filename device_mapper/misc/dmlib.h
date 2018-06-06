@@ -26,7 +26,7 @@
 #define _REENTRANT
 #define _GNU_SOURCE
 
-#include "libdevmapper.h"
+#include "device_mapper/libdevmapper.h"
 #include "lib/misc/util.h"
 #include "dm-logging.h"
 
