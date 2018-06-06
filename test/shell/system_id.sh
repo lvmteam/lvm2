@@ -275,30 +275,6 @@ grep $vg1 err
 grep "$SID1" err
 vgremove $vg1
 
-# vgchange -cy clears system_id, vgchange -cn sets system_id
-
-SID1=sidfoofile1
-echo "$SID1" > "$SIDFILE"
-aux lvmconf "global/system_id_source = file" \
-	    "global/system_id_file = \"$SIDFILE\""
-# create a vg
-vgcreate $vg1 "$dev1"
-# normal vgs sees the vg
-vgs -o+systemid >err
-grep $vg1 err
-grep "$SID1" err
-# after vgchange -cy there is no systemid
-vgchange --yes -cy $vg1
-vgs --config 'global { locking_type=0 }' -o+systemid $vg1 >err
-grep $vg1 err
-not grep "$SID1" err
-# after vgchange -cn there is a systemid
-vgchange --config 'global { locking_type=0 }' -cn $vg1
-vgs -o+systemid >err
-grep $vg1 err
-grep "$SID1" err
-vgremove $vg1
-
 # Test max system_id length (128) and invalid system_id characters.
 # The 128 length limit is imposed before invalid characters are omitted.
 
