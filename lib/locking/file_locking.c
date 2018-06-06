@@ -92,7 +92,7 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd,
 	locking->lock_resource = _file_lock_resource;
 	locking->reset_locking = _reset_file_locking;
 	locking->fin_locking = _fin_file_locking;
-	locking->flags = 0;
+	locking->flags = LCK_FLOCK;
 
 	/* Get lockfile directory from config file */
 	locking_dir = find_config_tree_str(cmd, global_locking_dir_CFG, NULL);
