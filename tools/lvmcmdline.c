@@ -2734,6 +2734,9 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	const char *reason = NULL;
 	int ret = 0;
 	int locking_type;
+	int file_locking_disable = 0;
+	int file_locking_sysinit = 0;
+	int file_locking_readonly = 0;
 	int monitoring;
 	char *arg_new, *arg;
 	int i;
@@ -2908,34 +2911,31 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
-	if (_cmd_no_meta_proc(cmd))
-		locking_type = 0;
-	else if (arg_is_set(cmd, readonly_ARG)) {
-		if (find_config_tree_bool(cmd, global_use_lvmlockd_CFG, NULL)) {
-			/*
-			 * FIXME: we could use locking_type 5 here if that didn't
-			 * cause CLUSTERED to be set, which conflicts with using lvmlockd.
-			 */
-			locking_type = 1;
-			cmd->lockd_gl_disable = 1;
-			cmd->lockd_vg_disable = 1;
-			cmd->lockd_lv_disable = 1;
-		} else {
-			locking_type = 5;
-		}
+	if (arg_is_set(cmd, nolocking_ARG) || _cmd_no_meta_proc(cmd))
+		file_locking_disable = 1;
 
-		if (lvmetad_used()) {
-			lvmetad_make_unused(cmd);
-			log_verbose("Not using lvmetad because read-only is set.");
-		}
-	} else if (arg_is_set(cmd, nolocking_ARG))
-		locking_type = 0;
-	else
-		locking_type = -1;
+	else if (arg_is_set(cmd, sysinit_ARG))
+		file_locking_sysinit = 1;
 
-	if (!init_locking(locking_type, cmd, _cmd_no_meta_proc(cmd) || arg_is_set(cmd, sysinit_ARG))) {
-		ret = ECMD_FAILED;
-		goto_out;
+	else if (arg_is_set(cmd, readonly_ARG))
+		file_locking_readonly = 1;
+
+	locking_type = find_config_tree_int(cmd, global_locking_type_CFG, NULL);
+
+	if (locking_type == 3)
+		log_warn("WARNING: See lvmlockd(8) for information on using cluster/clvm VGs.");
+
+	if (locking_type != 1) {
+		log_warn("WARNING: locking_type deprecated, using file locking.");
+		locking_type = 1;
+	}
+
+	if (!file_locking_disable) {
+		/* Set up file locking */
+		if (!init_locking(cmd, file_locking_sysinit, file_locking_readonly)) {
+			ret = ECMD_FAILED;
+			goto_out;
+		}
 	}
 
 	if (!_cmd_no_meta_proc(cmd) && !_init_lvmlockd(cmd)) {

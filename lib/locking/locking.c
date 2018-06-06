@@ -34,6 +34,8 @@ static struct locking_type _locking;
 static int _vg_lock_count = 0;		/* Number of locks held */
 static int _vg_write_lock_held = 0;	/* VG write lock held? */
 static int _blocking_supported = 0;
+static int _file_locking_readonly = 0;
+static int _file_locking_sysinit = 0;
 
 static void _unblock_signals(void)
 {
@@ -45,6 +47,10 @@ static void _unblock_signals(void)
 void reset_locking(void)
 {
 	int was_locked = _vg_lock_count;
+
+	/* file locking disabled */
+	if (!_locking.flags)
+		return;
 
 	_vg_lock_count = 0;
 	_vg_write_lock_held = 0;
@@ -82,21 +88,19 @@ static void _update_vg_lock_count(const char *resource, uint32_t flags)
  * Select a locking type
  * type: locking type; if < 0, then read config tree value
  */
-int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
+int init_locking(struct cmd_context *cmd, int file_locking_sysinit, int file_locking_readonly)
 {
+	int suppress_messages = 0;
+
 	if (getenv("LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES"))
 		suppress_messages = 1;
 
-	if (type < 0)
-		type = find_config_tree_int(cmd, global_locking_type_CFG, NULL);
+	if (file_locking_sysinit)
+		suppress_messages = 1;
 
 	_blocking_supported = find_config_tree_bool(cmd, global_wait_for_locks_CFG, NULL);
-
-	if (type != 1)
-		log_warn("WARNING: locking_type deprecated, using file locking.");
-
-	if (type == 3)
-		log_warn("WARNING: See lvmlockd(8) for information on using cluster/clvm VGs.");
+	_file_locking_readonly = file_locking_readonly;
+	_file_locking_sysinit = file_locking_sysinit;
 
 	log_very_verbose("%sFile-based locking selected.", _blocking_supported ? "" : "Non-blocking ");
 
@@ -108,6 +112,10 @@ int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 
 void fin_locking(void)
 {
+	/* file locking disabled */
+	if (!_locking.flags)
+		return;
+
 	_locking.fin_locking();
 }
 
@@ -135,10 +143,30 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource, uint32_t fla
 		goto out;
 	}
 
-	if (cmd->metadata_read_only && lck_type == LCK_WRITE &&
+	if ((lck_type == LCK_WRITE) && (lck_scope == LCK_VG) && !(flags & LCK_CACHE) &&
 	    strcmp(resource, VG_GLOBAL)) {
-		log_error("Operation prohibited while global/metadata_read_only is set.");
-		goto out;
+
+		/* read only locking set in lvm.conf metadata_read_only */
+
+		if (cmd->metadata_read_only) {
+			log_error("Operation prohibited while global/metadata_read_only is set.");
+			goto out;
+		}
+
+		/* read only locking set with option --readonly */
+
+		if (_file_locking_readonly) {
+			log_error("Read-only locking specified. Write locks are prohibited.");
+			goto out;
+		}
+
+		/* read only locking (except activation) set with option --sysinit */
+		/* FIXME: sysinit is intended to allow activation, add that exception here */
+
+		if (_file_locking_sysinit) {
+			log_error("Read-only sysinit locking specified. Write locks are prohibited.");
+			goto out;
+		}
 	}
 
 	if ((ret = _locking.lock_resource(cmd, resource, flags, NULL))) {
@@ -168,6 +196,10 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 {
 	char resource[258] __attribute__((aligned(8)));
 	int lck_type = flags & LCK_TYPE_MASK;
+
+	/* file locking disabled */
+	if (!_locking.flags)
+		return 1;
 
 	if (flags == LCK_NONE) {
 		log_debug_locking(INTERNAL_ERROR "%s: LCK_NONE lock requested", vol);
@@ -240,7 +272,7 @@ int vg_write_lock_held(void)
 
 int locking_is_clustered(void)
 {
-	return (_locking.flags & LCK_CLUSTERED) ? 1 : 0;
+	return 0;
 }
 
 int sync_local_dev_names(struct cmd_context* cmd)
