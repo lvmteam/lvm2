@@ -3395,7 +3395,7 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 
 	lvl->lv->name = split_name;
 
-	if (!strcmp(lv->vg->lock_type, "dlm"))
+	if (lv->vg->lock_type && !strcmp(lv->vg->lock_type, "dlm"))
 		lvl->lv->lock_args = lv->lock_args;
 
 	if (!vg_write(lv->vg)) {
