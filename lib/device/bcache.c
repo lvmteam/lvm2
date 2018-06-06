@@ -646,7 +646,6 @@ static void _complete_io(void *context, int err)
 	dm_list_del(&b->list);
 
 	if (b->error) {
-		log_warn("bcache io error %d fd %d", b->error, b->fd);
 		dm_list_add(&cache->errored, &b->list);
 
 	} else {
