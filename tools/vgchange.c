@@ -791,7 +791,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 			cmd->lockd_vg_enforce_sh = 1;
 	}
 
-	if (update)
+	if (update || arg_is_set(cmd, activate_ARG))
 		flags |= READ_FOR_UPDATE;
 
 	if (!(handle = init_processing_handle(cmd, NULL))) {
