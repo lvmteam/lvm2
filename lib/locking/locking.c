@@ -36,6 +36,8 @@ static int _vg_write_lock_held = 0;	/* VG write lock held? */
 static int _blocking_supported = 0;
 static int _file_locking_readonly = 0;
 static int _file_locking_sysinit = 0;
+static int _file_locking_ignorefail = 0;
+static int _file_locking_failed = 0;
 
 static void _unblock_signals(void)
 {
@@ -85,27 +87,65 @@ static void _update_vg_lock_count(const char *resource, uint32_t flags)
 }
 
 /*
- * Select a locking type
- * type: locking type; if < 0, then read config tree value
+ * A mess of options have been introduced over time to override
+ * or tweak the behavior of file locking.  These options are
+ * allowed in different but overlapping sets of commands
+ * (see command-lines.in)
+ *
+ * --nolocking
+ *
+ * Command won't try to set up or use file locks at all.
+ *
+ * --readonly
+ *
+ * Command will grant any read lock request, without trying
+ * to acquire an actual file lock.  Command will refuse any
+ * write lock request.
+ *
+ * --ignorelockingfailure
+ *
+ * Command tries to set up file locks and will use them
+ * (both read and write) if successful.  If command fails
+ * to set up file locks it falls back to readonly behavior
+ * above, while allowing activation.
+ *
+ * --sysinit
+ *
+ * The same as ignorelockingfailure.
+ *
+ * global/metadata_read_only
+ *
+ * The command acquires actual read locks and refuses
+ * write lock requests.
  */
-int init_locking(struct cmd_context *cmd, int file_locking_sysinit, int file_locking_readonly)
+
+int init_locking(struct cmd_context *cmd,
+		 int file_locking_sysinit, int file_locking_readonly, int file_locking_ignorefail)
 {
 	int suppress_messages = 0;
 
-	if (getenv("LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES"))
-		suppress_messages = 1;
-
-	if (file_locking_sysinit)
+	if (file_locking_sysinit || getenv("LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES"))
 		suppress_messages = 1;
 
 	_blocking_supported = find_config_tree_bool(cmd, global_wait_for_locks_CFG, NULL);
 	_file_locking_readonly = file_locking_readonly;
 	_file_locking_sysinit = file_locking_sysinit;
+	_file_locking_ignorefail = file_locking_ignorefail;
 
-	log_very_verbose("%sFile-based locking selected.", _blocking_supported ? "" : "Non-blocking ");
+	log_debug("File locking settings: readonly:%d sysinit:%d ignorelockingfailure:%d global/metadata_read_only:%d global/wait_for_locks:%d.",
+		  _file_locking_readonly, _file_locking_sysinit, _file_locking_ignorefail,
+		  cmd->metadata_read_only, _blocking_supported);
 
-	if (!init_file_locking(&_locking, cmd, suppress_messages))
-		log_error_suppress(suppress_messages, "File-based locking initialisation failed.");
+	if (!init_file_locking(&_locking, cmd, suppress_messages)) {
+		log_error_suppress(suppress_messages, "File locking initialisation failed.");
+
+		_file_locking_failed = 1;
+
+		if (file_locking_sysinit || file_locking_ignorefail)
+			return 1;
+
+		return 0;
+	}
 
 	return 1;
 }
@@ -125,68 +165,12 @@ void fin_locking(void)
  */
 static int _lock_vol(struct cmd_context *cmd, const char *resource, uint32_t flags)
 {
-	uint32_t lck_type = flags & LCK_TYPE_MASK;
-	uint32_t lck_scope = flags & LCK_SCOPE_MASK;
 	int ret = 0;
 
 	block_signals(flags);
 
-	assert(resource);
+	ret = _locking.lock_resource(cmd, resource, flags, NULL);
 
-	if (!*resource) {
-		log_error(INTERNAL_ERROR "Use of P_orphans is deprecated.");
-		goto out;
-	}
-
-	if ((is_orphan_vg(resource) || is_global_vg(resource)) && (flags & LCK_CACHE)) {
-		log_error(INTERNAL_ERROR "P_%s referenced.", resource);
-		goto out;
-	}
-
-	if ((lck_type == LCK_WRITE) && (lck_scope == LCK_VG) && !(flags & LCK_CACHE) &&
-	    strcmp(resource, VG_GLOBAL)) {
-
-		/* read only locking set in lvm.conf metadata_read_only */
-
-		if (cmd->metadata_read_only) {
-			log_error("Operation prohibited while global/metadata_read_only is set.");
-			goto out;
-		}
-
-		/* read only locking set with option --readonly */
-
-		if (_file_locking_readonly) {
-			log_error("Read-only locking specified. Write locks are prohibited.");
-			goto out;
-		}
-
-		/* read only locking (except activation) set with option --sysinit */
-		/* FIXME: sysinit is intended to allow activation, add that exception here */
-
-		if (_file_locking_sysinit) {
-			log_error("Read-only sysinit locking specified. Write locks are prohibited.");
-			goto out;
-		}
-	}
-
-	if ((ret = _locking.lock_resource(cmd, resource, flags, NULL))) {
-		if (lck_scope == LCK_VG && !(flags & LCK_CACHE)) {
-			if (lck_type != LCK_UNLOCK)
-				lvmcache_lock_vgname(resource, lck_type == LCK_READ);
-			dev_reset_error_count(cmd);
-		}
-
-		_update_vg_lock_count(resource, flags);
-	} else
-		stack;
-
-	/* If unlocking, always remove lock from lvmcache even if operation failed. */
-	if (lck_scope == LCK_VG && !(flags & LCK_CACHE) && lck_type == LCK_UNLOCK) {
-		lvmcache_unlock_vgname(resource);
-		if (!ret)
-			_update_vg_lock_count(resource, flags);
-	}
-out:
 	_unblock_signals();
 
 	return ret;
@@ -195,52 +179,102 @@ out:
 int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const struct logical_volume *lv)
 {
 	char resource[258] __attribute__((aligned(8)));
-	int lck_type = flags & LCK_TYPE_MASK;
+	uint32_t lck_type = flags & LCK_TYPE_MASK;
+	uint32_t lck_scope = flags & LCK_SCOPE_MASK;
 
-	/* file locking disabled */
-	if (!_locking.flags)
-		return 1;
+	if (!_blocking_supported)
+		flags |= LCK_NONBLOCK;
 
-	if (flags == LCK_NONE) {
-		log_debug_locking(INTERNAL_ERROR "%s: LCK_NONE lock requested", vol);
-		return 1;
-	}
-
-	switch (flags & LCK_SCOPE_MASK) {
-	case LCK_VG:
-		if (!_blocking_supported)
-			flags |= LCK_NONBLOCK;
-
-		/* Global VG_ORPHANS lock covers all orphan formats. */
-		if (is_orphan_vg(vol))
-			vol = VG_ORPHANS;
-		break;
-	default:
-		log_error("Unrecognised lock scope: %d",
-			  flags & LCK_SCOPE_MASK);
-		return 0;
-	}
+	if (is_orphan_vg(vol))
+		vol = VG_ORPHANS;
 
 	if (!dm_strncpy(resource, vol, sizeof(resource))) {
 		log_error(INTERNAL_ERROR "Resource name %s is too long.", vol);
 		return 0;
 	}
 
-	if (!_lock_vol(cmd, resource, flags))
-		return_0;
+	/*
+	 * File locking is disabled by --nolocking.
+	 */
+	if (!_locking.flags)
+		goto out_hold;
 
 	/*
+	 * When file locking could not be initialized, --ignorelockingfailure
+	 * and --sysinit behave like --readonly, but allow activation.
+	 */
+	if (_file_locking_failed && (_file_locking_sysinit || _file_locking_ignorefail)) {
+		if (lck_type != LCK_WRITE)
+			goto out_hold;
+
+		if (cmd->is_activating && (lck_scope == LCK_VG) && !(flags & LCK_CACHE) && strcmp(vol, VG_GLOBAL))
+			goto out_hold;
+
+		goto out_fail;
+	}
+
+	/*
+	 * When --readonly is set, grant read lock requests without trying to
+	 * acquire an actual lock, and refuse write lock requests.
+	 */
+	if (_file_locking_readonly) {
+		if (lck_type != LCK_WRITE)
+			goto out_hold;
+
+		log_error("Operation prohibited while --readonly is set.");
+		goto out_fail;
+	}
+
+	/*
+	 * When global/metadata_read_only is set, acquire actual read locks and
+	 * refuse write lock requests.
+	 */
+	if (cmd->metadata_read_only) {
+		if ((lck_type == LCK_WRITE) && (lck_scope == LCK_VG) && !(flags & LCK_CACHE) && strcmp(vol, VG_GLOBAL)) {
+			log_error("Operation prohibited while global/metadata_read_only is set.");
+			goto out_fail;
+		}
+
+		/* continue and acquire a read file lock */
+	}
+
+	if (!_lock_vol(cmd, resource, flags))
+		goto out_fail;
+
+	/*
+	 * FIXME: I don't think we need this any more.
 	 * If a real lock was acquired (i.e. not LCK_CACHE),
 	 * perform an immediate unlock unless LCK_HOLD was requested.
 	 */
+
 	if ((lck_type == LCK_NULL) || (lck_type == LCK_UNLOCK) ||
 	    (flags & (LCK_CACHE | LCK_HOLD)))
-		return 1;
+		goto out_hold;
 
 	if (!_lock_vol(cmd, resource, (flags & ~LCK_TYPE_MASK) | LCK_UNLOCK))
 		return_0;
-
 	return 1;
+
+
+out_hold:
+	/*
+	 * FIXME: other parts of the code want to check if a VG is
+	 * locked by looking in lvmcache.  They shouldn't need to
+	 * do that, and we should be able to remove this.
+	 */
+	if ((lck_scope == LCK_VG) && !(flags & LCK_CACHE) && (lck_type != LCK_UNLOCK))
+		lvmcache_lock_vgname(resource, lck_type == LCK_READ);
+	else if ((lck_scope == LCK_VG) && !(flags & LCK_CACHE) && (lck_type == LCK_UNLOCK))
+		lvmcache_unlock_vgname(resource);
+
+	/* FIXME: we shouldn't need to keep track of this either. */
+	_update_vg_lock_count(resource, flags);
+	return 1;
+
+out_fail:
+	if (lck_type == LCK_UNLOCK)
+		_update_vg_lock_count(resource, flags);
+	return 0;
 }
 
 /* Lock a list of LVs */

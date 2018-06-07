@@ -172,6 +172,7 @@ struct cmd_context {
 	unsigned can_use_one_scan:1;
 	unsigned is_clvmd:1;
 	unsigned use_full_md_check:1;
+	unsigned is_activating:1;
 
 	/*
 	 * Filtering.

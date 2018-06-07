@@ -785,51 +785,16 @@ cfg(global_etc_CFG, "etc", global_CFG_SECTION, 0, CFG_TYPE_STRING, DEFAULT_ETC_D
 	"Location of /etc system configuration directory.\n")
 
 cfg(global_locking_type_CFG, "locking_type", global_CFG_SECTION, 0, CFG_TYPE_INT, 1, vsn(1, 0, 0), NULL, 0, NULL,
-	"Type of locking to use.\n"
-	"#\n"
-	"Accepted values:\n"
-	"  0\n"
-	"    Turns off locking. Warning: this risks metadata corruption if\n"
-	"    commands run concurrently.\n"
-	"  1\n"
-	"    LVM uses local file-based locking, the standard mode.\n"
-	"  2\n"
-	"    LVM uses the external shared library locking_library.\n"
-	"  3\n"
-	"    LVM uses built-in clustered locking with clvmd.\n"
-	"    This is incompatible with lvmetad. If use_lvmetad is enabled,\n"
-	"    LVM prints a warning and disables lvmetad use.\n"
-	"  4\n"
-	"    LVM uses read-only locking which forbids any operations that\n"
-	"    might change metadata.\n"
-	"  5\n"
-	"    Offers dummy locking for tools that do not need any locks.\n"
-	"    You should not need to set this directly; the tools will select\n"
-	"    when to use it instead of the configured locking_type.\n"
-	"    Do not use lvmetad or the kernel device-mapper driver with this\n"
-	"    locking type. It is used by the --readonly option that offers\n"
-	"    read-only access to Volume Group metadata that cannot be locked\n"
-	"    safely because it belongs to an inaccessible domain and might be\n"
-	"    in use, for example a virtual machine image or a disk that is\n"
-	"    shared by a clustered machine.\n"
-	"#\n")
+	"This setting is no longer used.")
 
 cfg(global_wait_for_locks_CFG, "wait_for_locks", global_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_WAIT_FOR_LOCKS, vsn(2, 2, 50), NULL, 0, NULL,
 	"When disabled, fail if a lock request would block.\n")
 
 cfg(global_fallback_to_clustered_locking_CFG, "fallback_to_clustered_locking", global_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_FALLBACK_TO_CLUSTERED_LOCKING, vsn(2, 2, 42), NULL, 0, NULL,
-	"Attempt to use built-in cluster locking if locking_type 2 fails.\n"
-	"If using external locking (type 2) and initialisation fails, with\n"
-	"this enabled, an attempt will be made to use the built-in clustered\n"
-	"locking. Disable this if using a customised locking_library.\n")
+	"This setting is no longer used.\n")
 
 cfg(global_fallback_to_local_locking_CFG, "fallback_to_local_locking", global_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_FALLBACK_TO_LOCAL_LOCKING, vsn(2, 2, 42), NULL, 0, NULL,
-	"Use locking_type 1 (local) if locking_type 2 or 3 fail.\n"
-	"If an attempt to initialise type 2 or type 3 locking failed, perhaps\n"
-	"because cluster components such as clvmd are not running, with this\n"
-	"enabled, an attempt will be made to use local file-based locking\n"
-	"(type 1). If this succeeds, only commands against local VGs will\n"
-	"proceed. VGs marked as clustered will be ignored.\n")
+	"This setting is no longer used.\n")
 
 cfg(global_locking_dir_CFG, "locking_dir", global_CFG_SECTION, 0, CFG_TYPE_STRING, DEFAULT_LOCK_DIR, vsn(1, 0, 0), "@DEFAULT_LOCK_DIR@", 0, NULL,
 	"Directory to use for LVM command file locks.\n"
@@ -849,7 +814,7 @@ cfg(global_library_dir_CFG, "library_dir", global_CFG_SECTION, CFG_DEFAULT_UNDEF
 	"Search this directory first for shared libraries.\n")
 
 cfg(global_locking_library_CFG, "locking_library", global_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_LOCKING_LIB, vsn(1, 0, 0), NULL, 0, NULL,
-	"The external locking library to use for locking_type 2.\n")
+	"This setting is no longer used.\n")
 
 cfg(global_abort_on_internal_errors_CFG, "abort_on_internal_errors", global_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_ABORT_ON_INTERNAL_ERRORS, vsn(2, 2, 57), NULL, 0, NULL,
 	"Abort a command that encounters an internal error.\n"

@@ -187,7 +187,7 @@
 # OO_ALL is included in every command automatically.
 #
 OO_ALL: --commandprofile String, --config String, --debug,
---driverloaded Bool, --help, --lockopt String, --longhelp, --profile String, --quiet,
+--driverloaded Bool, --help, --nolocking, --lockopt String, --longhelp, --profile String, --quiet,
 --verbose, --version, --yes, --test
 
 #
@@ -195,7 +195,7 @@ OO_ALL: --commandprofile String, --config String, --debug,
 #
 OO_REPORT: --aligned, --all, --binary, --configreport ConfigReport, --foreign,
 --ignorelockingfailure, --ignoreskippedcluster, --logonly,
---nameprefixes, --noheadings, --nolocking, --nosuffix,
+--nameprefixes, --noheadings, --nosuffix,
 --options String, --readonly, --reportformat ReportFmt, --rows,
 --select String, --separator String, --shared, --sort String,
 --trustcache, --unbuffered, --units Units, --unquoted

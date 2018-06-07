@@ -34,7 +34,6 @@ static int _trust_cache = 0; /* Don't scan when incomplete VGs encountered */
 static int _debug_level = 0;
 static int _debug_classes_logged = 0;
 static int _log_cmd_name = 0;
-static int _ignorelockingfailure = 0;
 static int _security_level = SECURITY_LEVEL;
 static char _cmd_name[30] = "";
 static int _mirror_in_sync = 0;
@@ -104,11 +103,6 @@ void init_external_device_info_source(enum dev_ext_e src)
 void init_trust_cache(int trustcache)
 {
 	_trust_cache = trustcache;
-}
-
-void init_ignorelockingfailure(int level)
-{
-	_ignorelockingfailure = level;
 }
 
 void init_security_level(int level)
@@ -265,11 +259,6 @@ int trust_cache(void)
 int background_polling(void)
 {
 	return _background_polling;
-}
-
-int ignorelockingfailure(void)
-{
-	return _ignorelockingfailure;
 }
 
 int security_level(void)

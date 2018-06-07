@@ -2323,11 +2323,6 @@ static int _get_current_settings(struct cmd_context *cmd)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_is_set(cmd, ignorelockingfailure_ARG) || arg_is_set(cmd, sysinit_ARG))
-		init_ignorelockingfailure(1);
-	else
-		init_ignorelockingfailure(0);
-
 	cmd->ignore_clustered_vgs = arg_is_set(cmd, ignoreskippedcluster_ARG);
 	cmd->include_foreign_vgs = arg_is_set(cmd, foreign_ARG) ? 1 : 0;
 	cmd->include_shared_vgs = arg_is_set(cmd, shared_ARG) ? 1 : 0;
@@ -2734,9 +2729,8 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	const char *reason = NULL;
 	int ret = 0;
 	int locking_type;
-	int file_locking_disable = 0;
-	int file_locking_sysinit = 0;
-	int file_locking_readonly = 0;
+	int nolocking = 0;
+	int readonly = 0;
 	int monitoring;
 	char *arg_new, *arg;
 	int i;
@@ -2865,6 +2859,10 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_is_set(cmd, readonly_ARG))
 		cmd->metadata_read_only = 1;
 
+	if ((cmd->command->command_enum == vgchange_activate_CMD) ||
+	    (cmd->command->command_enum == lvchange_activate_CMD))
+		cmd->is_activating = 1;
+
 	/*
 	 * Now that all configs, profiles and command lines args are available,
 	 * freshly calculate and apply all settings.  Specific command line
@@ -2911,28 +2909,35 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
-	if (arg_is_set(cmd, nolocking_ARG) || _cmd_no_meta_proc(cmd))
-		file_locking_disable = 1;
-
-	else if (arg_is_set(cmd, sysinit_ARG))
-		file_locking_sysinit = 1;
-
-	else if (arg_is_set(cmd, readonly_ARG))
-		file_locking_readonly = 1;
-
+	/* Defaults to 1 if not set. */
 	locking_type = find_config_tree_int(cmd, global_locking_type_CFG, NULL);
 
 	if (locking_type == 3)
-		log_warn("WARNING: See lvmlockd(8) for information on using cluster/clvm VGs.");
+		log_warn("WARNING: see lvmlockd(8) for information on using cluster/clvm VGs.");
 
-	if (locking_type != 1) {
-		log_warn("WARNING: locking_type deprecated, using file locking.");
-		locking_type = 1;
+	if ((locking_type == 0) || (locking_type == 5)) {
+		log_warn("WARNING: locking_type is deprecated, using --nolocking.");
+		nolocking = 1;
+
+	} else if (locking_type == 4) {
+		log_warn("WARNING: locking_type is deprecated, using --readonly.");
+		readonly = 1;
+
+	} else if (locking_type != 1) {
+		log_warn("WARNING: locking_type is deprecated, using file locking.");
 	}
 
-	if (!file_locking_disable) {
-		/* Set up file locking */
-		if (!init_locking(cmd, file_locking_sysinit, file_locking_readonly)) {
+	if (arg_is_set(cmd, nolocking_ARG) || _cmd_no_meta_proc(cmd))
+		nolocking = 1;
+
+	if (arg_is_set(cmd, readonly_ARG))
+		readonly = 1;
+
+	if (nolocking) {
+		if (!_cmd_no_meta_proc(cmd))
+			log_warn("WARNING: File locking is disabled.");
+	} else {
+		if (!init_locking(cmd, arg_is_set(cmd, sysinit_ARG), readonly, arg_is_set(cmd, ignorelockingfailure_ARG))) {
 			ret = ECMD_FAILED;
 			goto_out;
 		}
