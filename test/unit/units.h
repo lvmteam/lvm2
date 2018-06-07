@@ -20,6 +20,7 @@
 //-----------------------------------------------------------------
 
 // Declare the function that adds tests suites here ...
+void activation_generator_tests(struct dm_list *suites);
 void bcache_tests(struct dm_list *suites);
 void bcache_utils_tests(struct dm_list *suites);
 void bitset_tests(struct dm_list *suites);
@@ -36,6 +37,7 @@ void vdo_tests(struct dm_list *suites);
 // ... and call it in here.
 static inline void register_all_tests(struct dm_list *suites)
 {
+        activation_generator_tests(suites);
 	bcache_tests(suites);
 	bcache_utils_tests(suites);
 	bitset_tests(suites);

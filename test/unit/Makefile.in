@@ -14,6 +14,7 @@ UNIT_SOURCE=\
 	base/data-struct/radix-tree.c \
 	device_mapper/vdo/status.c \
 	\
+	test/unit/activation-generator_t.c \
 	test/unit/bcache_t.c \
 	test/unit/bcache_utils_t.c \
 	test/unit/bitset_t.c \
@@ -32,12 +33,11 @@ UNIT_SOURCE=\
 UNIT_DEPENDS=$(subst .c,.d,$(UNIT_SOURCE))
 UNIT_OBJECTS=$(UNIT_SOURCE:%.c=%.o)
 CLEAN_TARGETS+=$(UNIT_DEPENDS) $(UNIT_OBJECTS)
-UNIT_LDLIBS += $(LVMINTERNAL_LIBS) -laio
 
-test/unit/unit-test: $(UNIT_OBJECTS) lib/liblvm-internal.a $(INTERNAL_LIBS)
+test/unit/unit-test: $(UNIT_OBJECTS) lib/liblvm-internal.a libdaemon/client/libdaemonclient.a $(INTERNAL_LIBS)
 	@echo "    [LD] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) \
-	      -o $@ $+ $(UNIT_LDLIBS) -lm
+	      -o $@ $+ $(LIBS) -lm -ldl -laio
 
 .PHONEY: run-unit-test
 run-unit-test: test/unit/unit-test

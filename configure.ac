@@ -1533,6 +1533,9 @@ SBINDIR="$(eval echo $(eval echo $sbindir))"
 LVM_PATH="$SBINDIR/lvm"
 AC_DEFINE_UNQUOTED(LVM_PATH, ["$LVM_PATH"], [Path to lvm binary.])
 
+LVMCONFIG_PATH="$$BINDIR/lvmconfig"
+AC_DEFINE_UNQUOTED(LVMCONFIG_PATH, ["$LVMCONFIG_PATH"], [Path to lvmconfig binary.])
+
 USRSBINDIR="$(eval echo $(eval echo $usrsbindir))"
 
 FSADM_PATH="$SBINDIR/fsadm"
