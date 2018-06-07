@@ -173,9 +173,6 @@ steps.  They can be performed manually or using the system service
 manager.
 
 \[bu]
-start lvmetad
-.br
-\[bu]
 start lvmlockd
 .br
 \[bu]
@@ -201,9 +198,6 @@ stop lock manager
 .br
 \[bu]
 stop lvmlockd
-.br
-\[bu]
-stop lvmetad
 .br
 
 .P
