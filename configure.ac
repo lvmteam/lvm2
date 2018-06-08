@@ -1788,8 +1788,6 @@ libdm/Makefile
 libdm/libdevmapper.pc
 man/Makefile
 po/Makefile
-python/Makefile
-python/setup.py
 scripts/blkdeactivate.sh
 scripts/blk_availability_init_red_hat
 scripts/blk_availability_systemd_red_hat.service
@@ -1814,8 +1812,6 @@ scripts/lvm2_tmpfiles_red_hat.conf
 scripts/lvmdump.sh
 scripts/Makefile
 test/Makefile
-test/api/Makefile
-test/api/python_lvm_unit.py
 tools/Makefile
 udev/Makefile
 ])

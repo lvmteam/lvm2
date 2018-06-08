@@ -1364,11 +1364,6 @@ prepare_profiles() {
 	done
 }
 
-apitest() {
-	test -x "$TESTOLDPWD/api/$1.t" || skip
-	"$TESTOLDPWD/api/$1.t" "${@:2}" && rm -f debug.log strace.log
-}
-
 unittest() {
 	test -x "$TESTOLDPWD/unit/unit-test" || skip
 	"$TESTOLDPWD/unit/unit-test" "${@}"

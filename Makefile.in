@@ -28,10 +28,6 @@ ifeq ("@INTL@", "yes")
   SUBDIRS += po
 endif
 
-ifeq ("@PYTHON_BINDINGS@", "yes")
-  SUBDIRS += python
-endif
-
 ifeq ($(MAKECMDGOALS),clean)
   SUBDIRS += test
 endif
@@ -39,7 +35,7 @@ endif
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS = conf include man test scripts \
     libdaemon lib tools daemons libdm \
-    udev po python
+    udev po
 tools.distclean: test.distclean
 endif
 DISTCLEAN_DIRS += lcov_reports*
