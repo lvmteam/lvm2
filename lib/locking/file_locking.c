@@ -45,31 +45,20 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 {
 	char lockfile[PATH_MAX];
 
-	switch (flags & LCK_SCOPE_MASK) {
-	case LCK_VG:
-		if (is_orphan_vg(resource) || is_global_vg(resource)) {
-			if (dm_snprintf(lockfile, sizeof(lockfile),
-					"%s/P_%s", _lock_dir, resource + 1) < 0) {
-				log_error("Too long locking filename %s/P_%s.",
-					  _lock_dir, resource + 1);
-				return 0;
-			}
-		} else
-			if (dm_snprintf(lockfile, sizeof(lockfile),
-					"%s/V_%s", _lock_dir, resource) < 0) {
-				log_error("Too long locking filename %s/V_%s.",
-					  _lock_dir, resource);
-				return 0;
-			}
+	if (is_orphan_vg(resource) || is_global_vg(resource)) {
+		if (dm_snprintf(lockfile, sizeof(lockfile),
+				"%s/P_%s", _lock_dir, resource + 1) < 0) {
+			log_error("Too long locking filename %s/P_%s.", _lock_dir, resource + 1);
+			return 0;
+		}
+	} else
+		if (dm_snprintf(lockfile, sizeof(lockfile), "%s/V_%s", _lock_dir, resource) < 0) {
+			log_error("Too long locking filename %s/V_%s.", _lock_dir, resource);
+			return 0;
+		}
 
-		if (!lock_file(lockfile, flags))
-			return_0;
-		break;
-	default:
-		log_error("Unrecognised lock scope: %d",
-			  flags & LCK_SCOPE_MASK);
-		return 0;
-	}
+	if (!lock_file(lockfile, flags))
+		return_0;
 
 	return 1;
 }

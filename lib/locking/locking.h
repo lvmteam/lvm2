@@ -27,7 +27,6 @@ void reset_locking(void);
 int vg_write_lock_held(void);
 
 /*
- * LCK_VG:
  *   Lock/unlock on-disk volume group data.
  *   Use VG_ORPHANS to lock all orphan PVs.
  *   Use VG_GLOBAL as a global lock and to wipe the internal cache.
@@ -35,42 +34,19 @@ int vg_write_lock_held(void);
  *   If more than one lock needs to be held simultaneously, they must be
  *   acquired in alphabetical order of 'vol' (to avoid deadlocks), with
  *   VG_ORPHANS last.
- *
- *   Use VG_SYNC_NAMES to ensure /dev is up-to-date for example, with udev,
- *   by waiting for any asynchronous events issued to have completed.
- *
- * LCK_LV:
- *   Lock/unlock an individual logical volume
- *   char *vol holds lvid
  */
 int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const struct logical_volume *lv);
 
-/*
- * Internal locking representation.
- *   LCK_VG: Uses prefix V_ unless the vol begins with # (i.e. #global or #orphans)
- */
-
-/*
- * Lock type - these numbers are the same as VMS and the IBM DLM
- */
 #define LCK_TYPE_MASK	0x00000007U
-
-#define LCK_READ	0x00000001U	/* LCK$_CRMODE (Activate) */
-#define LCK_WRITE	0x00000004U	/* LCK$_PWMODE (Suspend) */
-#define LCK_UNLOCK      0x00000006U	/* This is ours (Resume) */
-
-/*
- * Lock scope
- */
-#define LCK_SCOPE_MASK	0x00001008U
-#define LCK_VG		0x00000000U	/* Volume Group */
+#define LCK_READ	0x00000001U
+#define LCK_WRITE	0x00000004U
+#define LCK_UNLOCK      0x00000006U
 
 /*
  * Lock bits.
  * Bottom 8 bits except LCK_LOCAL form args[0] in cluster comms.
  */
 #define LCK_NONBLOCK	0x00000010U	/* Don't block waiting for lock? */
-#define LCK_HOLD	0x00000020U	/* Hold lock when lock_vol returns? */
 
 /*
  * Special cases of VG locks.
@@ -78,14 +54,9 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 #define VG_ORPHANS	"#orphans"
 #define VG_GLOBAL	"#global"
 
-/*
- * Common combinations
- */
-#define LCK_VG_READ		(LCK_VG | LCK_READ | LCK_HOLD)
-#define LCK_VG_WRITE		(LCK_VG | LCK_WRITE | LCK_HOLD)
-#define LCK_VG_UNLOCK		(LCK_VG | LCK_UNLOCK)
-
-#define LCK_MASK (LCK_TYPE_MASK | LCK_SCOPE_MASK)
+#define LCK_VG_READ		LCK_READ
+#define LCK_VG_WRITE		LCK_WRITE
+#define LCK_VG_UNLOCK		LCK_UNLOCK
 
 #define unlock_vg(cmd, vg, vol)	\
 	do { \
