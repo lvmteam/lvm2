@@ -27,7 +27,8 @@ datarootdir = @datarootdir@
 
 LVM_TEST_RESULTS ?= results
 
-SUBDIRS = api unit
+SUBDIRS = api
+# FIXME: resolve testing of: unit
 SOURCES = lib/not.c lib/harness.c
 CXXSOURCES = lib/runner.cpp
 CXXFLAGS += $(EXTRA_EXEC_CFLAGS)
