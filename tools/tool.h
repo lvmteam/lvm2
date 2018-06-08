@@ -24,6 +24,7 @@
 
 #include <unistd.h>
 
+#include "base/memory/zalloc.h"
 #include "device_mapper/all.h"
 #include "lib/misc/util.h"
 

@@ -16,6 +16,7 @@
  * dmeventd - dm event daemon to monitor active mapped devices
  */
 
+#include "base/memory/zalloc.h"
 #include "device_mapper/misc/dm-logging.h"
 
 #include "daemons/dmeventd/libdevmapper-event.h"
