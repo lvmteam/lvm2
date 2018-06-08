@@ -312,14 +312,7 @@ int locking_is_clustered(void)
 int sync_local_dev_names(struct cmd_context* cmd)
 {
 	memlock_unlock(cmd);
-
-	return lock_vol(cmd, VG_SYNC_NAMES, LCK_VG_SYNC_LOCAL, NULL);
-}
-
-int sync_dev_names(struct cmd_context* cmd)
-{
-	memlock_unlock(cmd);
-
-	return lock_vol(cmd, VG_SYNC_NAMES, LCK_VG_SYNC, NULL);
+	fs_unlock();
+	return 1;
 }
 

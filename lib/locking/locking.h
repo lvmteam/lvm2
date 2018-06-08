@@ -129,7 +129,6 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
  */
 #define VG_ORPHANS	"#orphans"
 #define VG_GLOBAL	"#global"
-#define VG_SYNC_NAMES	"#sync_names"
 
 /*
  * Common combinations
@@ -147,16 +146,13 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 
 #define LCK_VG_BACKUP		(LCK_VG | LCK_CACHE)
 
-#define LCK_VG_SYNC		(LCK_NONE | LCK_CACHE)
-#define LCK_VG_SYNC_LOCAL	(LCK_NONE | LCK_CACHE | LCK_LOCAL)
-
 #define LCK_MASK (LCK_TYPE_MASK | LCK_SCOPE_MASK)
 
 #define unlock_vg(cmd, vg, vol)	\
 	do { \
 		if (vg && !lvmetad_vg_update_finish(vg)) \
 			stack; \
-		if (is_real_vg(vol) && !sync_dev_names(cmd)) \
+		if (is_real_vg(vol) && !sync_local_dev_names(cmd)) \
 			stack; \
 		if (!lock_vol(cmd, vol, LCK_VG_UNLOCK, NULL)) \
 			stack;	\
@@ -171,7 +167,6 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 	lock_vol((vg)->cmd, (vg)->name, LCK_VG_DROP_CACHE, NULL)
 
 int sync_local_dev_names(struct cmd_context* cmd);
-int sync_dev_names(struct cmd_context* cmd);
 
 /* Process list of LVs */
 struct volume_group;
