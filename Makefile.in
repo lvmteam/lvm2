@@ -28,10 +28,6 @@ ifeq ("@INTL@", "yes")
   SUBDIRS += po
 endif
 
-ifeq ("@APPLIB@", "yes")
-  SUBDIRS += liblvm
-endif
-
 ifeq ("@PYTHON_BINDINGS@", "yes")
   SUBDIRS += python
 endif
@@ -43,7 +39,7 @@ endif
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS = conf include man test scripts \
     libdaemon lib tools daemons libdm \
-    udev po liblvm python
+    udev po python
 tools.distclean: test.distclean
 endif
 DISTCLEAN_DIRS += lcov_reports*
@@ -54,18 +50,16 @@ include make.tmpl
 libdm: include
 libdaemon: include
 lib: libdm libdaemon
-liblvm: lib
 daemons: lib libdaemon tools
 tools: lib libdaemon device-mapper
 po: tools daemons
 man: tools
 all_man: tools
-scripts: liblvm libdm
+scripts: libdm
 test: tools daemons
 
 lib.device-mapper: include.device-mapper
 libdm.device-mapper: include.device-mapper
-liblvm.device-mapper: include.device-mapper
 daemons.device-mapper: libdm.device-mapper
 tools.device-mapper: libdm.device-mapper
 scripts.device-mapper: include.device-mapper
@@ -77,10 +71,6 @@ tools.pofile: lib.pofile
 daemons.pofile: lib.pofile
 po.pofile: tools.pofile daemons.pofile
 pofile: po.pofile
-endif
-
-ifeq ("@PYTHON_BINDINGS@", "yes")
-python: liblvm
 endif
 
 ifneq ("$(CFLOW_CMD)", "")
@@ -159,15 +149,10 @@ install_systemd_units:
 install_all_man:
 	$(MAKE) -C man install_all_man
 
-ifeq ("@PYTHON_BINDINGS@", "yes")
-install_python_bindings:
-	$(MAKE) -C liblvm/python install_python_bindings
-endif
-
 install_tmpfiles_configuration:
 	$(MAKE) -C scripts install_tmpfiles_configuration
 
-LCOV_TRACES = libdm.info lib.info liblvm.info tools.info \
+LCOV_TRACES = libdm.info lib.info tools.info \
 	libdaemon/client.info libdaemon/server.info \
 	test/unit.info \
 	daemons/clvmd.info \

@@ -16,47 +16,14 @@ top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
 TARGETS =
-ifeq ("@APPLIB@", "yes")
-TARGETS += test
-SOURCES = test.c
-
-TARGETS += \
-	lvtest.t \
-	vglist.t \
-	percent.t \
-	pe_start.t \
-	thin_percent.t \
-	vgtest.t
-
-SOURCES2 = \
-	lvtest.c \
-	vglist.c \
-	percent.c \
-	pe_start.c \
-	thin_percent.c \
-	vgtest.c
-
-endif
-
 PYTEST = python_lvm_unit.py
 
 include $(top_builddir)/make.tmpl
 
 DEFS += -D_REENTRANT
-DEPLIBS += $(top_builddir)/liblvm/liblvm2app.so
-LDFLAGS+=\
-	-L$(top_builddir)/liblvm \
-	-L$(top_builddir)/daemons/dmeventd
-LIBS += @LVM2APP_LIB@ $(DMEVENT_LIBS)
-
-%.t: %.o $(DEPLIBS)
-	$(CC) -o $@ $(<) $(CFLAGS) $(LDFLAGS) $(ELDFLAGS) $(LIBS)
 
 all:
 	test -x $(PYTEST) || chmod 755 $(PYTEST)
-
-test: $(OBJECTS) $(DEPLIBS)
-	$(CC) -o $@ $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(ELDFLAGS) $(LIBS) $(READLINE_LIBS)
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status test/api/Makefile

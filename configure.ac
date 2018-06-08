@@ -1109,20 +1109,6 @@ if test "$ODIRECT" = yes; then
 fi
 
 ################################################################################
-dnl -- Enable liblvm2app.so
-AC_MSG_CHECKING(whether to build liblvm2app.so application library)
-AC_ARG_ENABLE(applib,
-	      AC_HELP_STRING([--enable-applib], [build application library]),
-	      APPLIB=$enableval, APPLIB=no)
-AC_MSG_RESULT($APPLIB)
-AC_SUBST([LVM2APP_LIB])
-test "$APPLIB" = yes \
-  && LVM2APP_LIB=-llvm2app \
-  || LVM2APP_LIB=
-AS_IF([test "$APPLIB"],
-      [AC_MSG_WARN([liblvm2app is deprecated. Use D-Bus API])])
-
-################################################################################
 dnl -- Enable cmdlib
 AC_MSG_CHECKING(whether to compile liblvm2cmd.so)
 AC_ARG_ENABLE(cmdlib,
@@ -1145,44 +1131,9 @@ AS_IF([test "$NOTIFYDBUS_SUPPORT" = yes && test "BUILD_LVMDBUSD" = yes],
       [AC_MSG_WARN([Building D-Bus support without D-Bus notifications.])])
 
 ################################################################################
-dnl -- Enable Python liblvm2app bindings
-AC_MSG_CHECKING(whether to build Python wrapper for liblvm2app.so)
-AC_ARG_ENABLE(python_bindings,
-	      AC_HELP_STRING([--enable-python_bindings], [build default Python applib bindings]),
-	      PYTHON_BINDINGS=$enableval, PYTHON_BINDINGS=no)
-AC_MSG_RESULT($PYTHON_BINDINGS)
+dnl -- Enable Python dbus library
 
-AC_MSG_CHECKING(whether to build Python2 wrapper for liblvm2app.so)
-AC_ARG_ENABLE(python2_bindings,
-	      AC_HELP_STRING([--enable-python2_bindings], [build Python2 applib bindings]),
-	      PYTHON2_BINDINGS=$enableval, PYTHON2_BINDINGS=no)
-AC_MSG_RESULT($PYTHON2_BINDINGS)
-
-
-AC_MSG_CHECKING(whether to build Python3 wrapper for liblvm2app.so)
-AC_ARG_ENABLE(python3_bindings,
-	      AC_HELP_STRING([--enable-python3_bindings], [build Python3 applib bindings]),
-	      PYTHON3_BINDINGS=$enableval, PYTHON3_BINDINGS=no)
-AC_MSG_RESULT($PYTHON3_BINDINGS)
-
-if test "$PYTHON_BINDINGS" = yes; then
-	AC_MSG_ERROR([--enable-python-bindings is replaced by --enable-python2-bindings and --enable-python3-bindings])
-fi
-
-if test "$PYTHON2_BINDINGS" = yes; then
-	AM_PATH_PYTHON([2])
-	AC_PATH_TOOL(PYTHON2, python2)
-	test -z "$PYTHON2" && AC_MSG_ERROR([python2 is required for --enable-python2_bindings but cannot be found])
-	AC_PATH_TOOL(PYTHON2_CONFIG, python2-config)
-	test -z "$PYTHON2_CONFIG" && AC_PATH_TOOL(PYTHON2_CONFIG, python-config)
-	test -z "$PYTHON2_CONFIG" && AC_MSG_ERROR([python headers are required for --enable-python2_bindings but cannot be found])
-	PYTHON2_INCDIRS=`"$PYTHON2_CONFIG" --includes`
-	PYTHON2_LIBDIRS=`"$PYTHON2_CONFIG" --libs`
-	PYTHON2DIR=$pythondir
-	PYTHON_BINDINGS=yes
-fi
-	
-if test "$PYTHON3_BINDINGS" = yes -o "$BUILD_LVMDBUSD" = yes; then
+if test "$BUILD_LVMDBUSD" = yes; then
 	unset PYTHON PYTHON_CONFIG
 	unset am_cv_pathless_PYTHON ac_cv_path_PYTHON am_cv_python_platform
 	unset am_cv_python_pythondir am_cv_python_version am_cv_python_pyexecdir
@@ -1196,17 +1147,10 @@ if test "$PYTHON3_BINDINGS" = yes -o "$BUILD_LVMDBUSD" = yes; then
 	PYTHON3_LIBDIRS=`"$PYTHON3_CONFIG" --libs`
 	PYTHON3DIR=$pythondir
 	test "$PYTHON3_BINDINGS" = yes && PYTHON_BINDINGS=yes
-fi
 
-if test "$BUILD_LVMDBUSD" = yes; then
 	# To get this macro, install autoconf-archive package then run autoreconf
 	AC_PYTHON_MODULE([pyudev], [Required], python3)
 	AC_PYTHON_MODULE([dbus], [Required], python3)
-fi
-
-if test "$PYTHON_BINDINGS" = yes -o "$PYTHON2_BINDINGS" = yes -o "$PYTHON3_BINDINGS" = yes; then
-	AC_MSG_WARN([Python bindings are deprecated. Use D-Bus API])
-	test "$APPLIB" != yes && AC_MSG_ERROR([Python_bindings require --enable-applib])
 fi
 
 ################################################################################
@@ -1656,7 +1600,6 @@ LVM_LIBAPI=`echo "$VER" | $AWK -F '[[()]]' '{print $2}'`
 AC_DEFINE_UNQUOTED(LVM_CONFIGURE_LINE, "$CONFIGURE_LINE", [configure command line used])
 
 ################################################################################
-AC_SUBST(APPLIB)
 AC_SUBST(AWK)
 AC_SUBST(BLKID_PC)
 AC_SUBST(BUILD_CMIRRORD)
@@ -1843,8 +1786,6 @@ libdaemon/client/Makefile
 libdaemon/server/Makefile
 libdm/Makefile
 libdm/libdevmapper.pc
-liblvm/Makefile
-liblvm/liblvm2app.pc
 man/Makefile
 po/Makefile
 python/Makefile

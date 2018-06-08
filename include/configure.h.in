@@ -28,9 +28,6 @@
 /* Path to cmirrord pidfile. */
 #undef CMIRRORD_PIDFILE
 
-/* Define to 0 to exclude libSaCkpt. */
-#undef CMIRROR_HAS_CHECKPOINT
-
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
    systems. This function is required for `alloca.c' support on those systems.
    */
@@ -185,9 +182,6 @@
 /* Define to 1 if you don't have `vprintf' but do have `_doprnt.' */
 #undef HAVE_DOPRNT
 
-/* Define to 1 if you have the `dup2' function. */
-#undef HAVE_DUP2
-
 /* Define to 1 if you have the <errno.h> header file. */
 #undef HAVE_ERRNO_H
 
@@ -208,9 +202,6 @@
 
 /* Define to 1 if getline is available. */
 #undef HAVE_GETLINE
-
-/* Define to 1 if you have the `getmntent' function. */
-#undef HAVE_GETMNTENT
 
 /* Define to 1 if getopt_long is available. */
 #undef HAVE_GETOPTLONG
@@ -235,9 +226,6 @@
 
 /* Define to 1 if dynamic libraries are available. */
 #undef HAVE_LIBDL
-
-/* Define to 1 if you have the <libdlm.h> header file. */
-#undef HAVE_LIBDLM_H
 
 /* Define to 1 if you have the <libgen.h> header file. */
 #undef HAVE_LIBGEN_H
@@ -283,9 +271,6 @@
 /* Define to 1 if you have the `memchr' function. */
 #undef HAVE_MEMCHR
 
-/* Define to 1 if you have the `memmove' function. */
-#undef HAVE_MEMMOVE
-
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
@@ -301,29 +286,17 @@
 /* Define to 1 if you have a working `mmap' system call. */
 #undef HAVE_MMAP
 
-/* Define to 1 if you have the <mntent.h> header file. */
-#undef HAVE_MNTENT_H
-
 /* Define to 1 if you have the `munmap' function. */
 #undef HAVE_MUNMAP
 
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #undef HAVE_NDIR_H
 
-/* Define to 1 if you have the <netdb.h> header file. */
-#undef HAVE_NETDB_H
-
-/* Define to 1 if you have the <netinet/in.h> header file. */
-#undef HAVE_NETINET_IN_H
-
 /* Define to 1 if you have the `nl_langinfo' function. */
 #undef HAVE_NL_LANGINFO
 
 /* Define to 1 if you have the <paths.h> header file. */
 #undef HAVE_PATHS_H
-
-/* Define to 1 if you have the <pthread.h> header file. */
-#undef HAVE_PTHREAD_H
 
 /* Define to 1 if the system has the type `ptrdiff_t'. */
 #undef HAVE_PTRDIFF_T
@@ -350,12 +323,6 @@
 /* Define to 1 if you have the `rmdir' function. */
 #undef HAVE_RMDIR
 
-/* Define to 1 if you have the <search.h> header file. */
-#undef HAVE_SEARCH_H
-
-/* Define to 1 if you have the `select' function. */
-#undef HAVE_SELECT
-
 /* Define to 1 to include support for selinux. */
 #undef HAVE_SELINUX
 
@@ -376,9 +343,6 @@
 
 /* Define to 1 if you have the <signal.h> header file. */
 #undef HAVE_SIGNAL_H
-
-/* Define to 1 if you have the `socket' function. */
-#undef HAVE_SOCKET
 
 /* Define to 1 if `stat' has the bug that it succeeds when given the
    zero-length file name argument. */
@@ -491,9 +455,6 @@
 /* Define to 1 if you have the <sys/mman.h> header file. */
 #undef HAVE_SYS_MMAN_H
 
-/* Define to 1 if you have the <sys/mount.h> header file. */
-#undef HAVE_SYS_MOUNT_H
-
 /* Define to 1 if you have the <sys/ndir.h> header file, and it defines `DIR'.
    */
 #undef HAVE_SYS_NDIR_H
@@ -504,14 +465,8 @@
 /* Define to 1 if you have the <sys/resource.h> header file. */
 #undef HAVE_SYS_RESOURCE_H
 
-/* Define to 1 if you have the <sys/select.h> header file. */
-#undef HAVE_SYS_SELECT_H
-
 /* Define to 1 if you have the <sys/sem.h> header file. */
 #undef HAVE_SYS_SEM_H
-
-/* Define to 1 if you have the <sys/socket.h> header file. */
-#undef HAVE_SYS_SOCKET_H
 
 /* Define to 1 if you have the <sys/statvfs.h> header file. */
 #undef HAVE_SYS_STATVFS_H
@@ -527,12 +482,6 @@
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
-
-/* Define to 1 if you have the <sys/uio.h> header file. */
-#undef HAVE_SYS_UIO_H
-
-/* Define to 1 if you have the <sys/un.h> header file. */
-#undef HAVE_SYS_UN_H
 
 /* Define to 1 if you have the <sys/utsname.h> header file. */
 #undef HAVE_SYS_UTSNAME_H
@@ -554,9 +503,6 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
-
-/* Define to 1 if you have the <utmpx.h> header file. */
-#undef HAVE_UTMPX_H
 
 /* valgrind.h found */
 #undef HAVE_VALGRIND
@@ -597,6 +543,9 @@
 /* Define to 1 if `lstat' dereferences a symlink specified with a trailing
    slash. */
 #undef LSTAT_FOLLOWS_SLASHED_SYMLINK
+
+/* Path to lvmconfig binary. */
+#undef LVMCONFIG_PATH
 
 /* Path to lvmetad pidfile. */
 #undef LVMETAD_PIDFILE
@@ -668,15 +617,6 @@
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #undef RETSIGTYPE
-
-/* Define to the type of arg 1 for `select'. */
-#undef SELECT_TYPE_ARG1
-
-/* Define to the type of args 2, 3 and 4 for `select'. */
-#undef SELECT_TYPE_ARG234
-
-/* Define to the type of arg 5 for `select'. */
-#undef SELECT_TYPE_ARG5
 
 /* Define to 1 to include built-in support for snapshots. */
 #undef SNAPSHOT_INTERNAL
