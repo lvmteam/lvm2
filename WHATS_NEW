@@ -1,5 +1,7 @@
-Version 2.02.178 -
-====================================
+Version 3.0.0
+=============
+  Remove clvmd
+  Remove lvmlib (api)
   lvconvert: provide possible layouts between linear and striped/raid
   Use versionsort to fix archive file expiry beyond 100000 files.
 
