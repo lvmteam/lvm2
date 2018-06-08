@@ -15,6 +15,7 @@
 
 #include "device_mapper/misc/dmlib.h"
 #include "base/memory/zalloc.h"
+#include "hash.h"
 
 struct dm_hash_node {
 	struct dm_hash_node *next;

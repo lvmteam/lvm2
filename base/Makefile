@@ -12,6 +12,7 @@
 
 BASE_SOURCE=\
 	base/data-struct/radix-tree.c \
+	base/data-struct/hash.c \
 	base/data-struct/list.c
 
 BASE_DEPENDS=$(addprefix $(top_builddir)/,$(subst .c,.d,$(BASE_SOURCE)))
