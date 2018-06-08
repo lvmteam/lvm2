@@ -95,13 +95,6 @@ not vgsplit --alloc cling $vg1 $vg2 "$dev1" 2>err;
 grep "Volume group \"$vg2\" exists, but new VG option specified" err
 vgremove $vg1 $vg2
 
-# vgsplit rejects split because clustered given with existing vg
-vgcreate -M$mdatype $vg1 "$dev1" "$dev2"
-vgcreate -M$mdatype $vg2 "$dev3" "$dev4"
-not vgsplit $vg1 $vg2 "$dev1" 2>err
-grep "Volume group \"$vg2\" exists, but new VG option specified" err
-vgremove $vg1 $vg2
-
 # vgsplit rejects vg with active lv
 pvcreate -M$mdatype -ff "$dev3" "$dev4"
 vgcreate -M$mdatype $vg1 "$dev1" "$dev2"
