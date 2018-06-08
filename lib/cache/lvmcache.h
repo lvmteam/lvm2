@@ -102,24 +102,12 @@ struct lvmcache_info *lvmcache_info_from_pvid(const char *pvid, struct device *d
 const char *lvmcache_vgname_from_vgid(struct dm_pool *mem, const char *vgid);
 const char *lvmcache_vgid_from_vgname(struct cmd_context *cmd, const char *vgname);
 struct device *lvmcache_device_from_pvid(struct cmd_context *cmd, const struct id *pvid, uint64_t *label_sector);
-const char *lvmcache_pvid_from_devname(struct cmd_context *cmd, const char *devname);
-char *lvmcache_vgname_from_pvid(struct cmd_context *cmd, const char *pvid);
 const char *lvmcache_vgname_from_info(struct lvmcache_info *info);
 const struct format_type *lvmcache_fmt_from_info(struct lvmcache_info *info);
 int lvmcache_vgs_locked(void);
 int lvmcache_vgname_is_locked(const char *vgname);
 
 void lvmcache_seed_infos_from_lvmetad(struct cmd_context *cmd);
-
-/* Returns list of struct dm_str_list containing pool-allocated copy of vgnames */
-/* If include_internal is not set, return only proper vg names. */
-struct dm_list *lvmcache_get_vgnames(struct cmd_context *cmd,
-				     int include_internal);
-
-/* Returns list of struct dm_str_list containing pool-allocated copy of vgids */
-/* If include_internal is not set, return only proper vg ids. */
-struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd,
-				   int include_internal);
 
 int lvmcache_get_vgnameids(struct cmd_context *cmd, int include_internal,
                           struct dm_list *vgnameids);
@@ -180,7 +168,6 @@ uint64_t lvmcache_device_size(struct lvmcache_info *info);
 void lvmcache_set_device_size(struct lvmcache_info *info, uint64_t size);
 struct device *lvmcache_device(struct lvmcache_info *info);
 int lvmcache_is_orphan(struct lvmcache_info *info);
-int lvmcache_uncertain_ownership(struct lvmcache_info *info);
 unsigned lvmcache_mda_count(struct lvmcache_info *info);
 int lvmcache_vgid_is_cached(const char *vgid);
 uint64_t lvmcache_smallest_mda_size(struct lvmcache_info *info);
