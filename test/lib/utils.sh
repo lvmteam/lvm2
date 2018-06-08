@@ -276,7 +276,7 @@ if test -z "${installed_testsuite+varset}"; then
     *)
 	PATH="$abs_top_builddir/test/lib:$abs_top_builddir/test/api:$PATH"
 	LD_LIBRARY_PATH=$(find -L "$abs_top_builddir/libdm/" "$abs_top_builddir/tools/"\
-		"$abs_top_builddir/daemons/" "$abs_top_builddir/liblvm/"\
+		"$abs_top_builddir/daemons/" \
 		-name "*.so" -printf "%h:")"$LD_LIBRARY_PATH"
 	export PATH LD_LIBRARY_PATH ;;
     esac
