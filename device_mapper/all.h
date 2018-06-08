@@ -43,10 +43,6 @@
 
 #define DM_ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*****************************************************************
  * The first section of this file provides direct access to the
  * individual device-mapper ioctls.  Since it is quite laborious to
@@ -3518,7 +3514,4 @@ int dm_udev_wait_immediate(uint32_t cookie, int *ready);
 #define DM_DEV_DIR_UMASK 0022
 #define DM_CONTROL_NODE_UMASK 0177
 
-#ifdef __cplusplus
-}
-#endif
 #endif				/* LIB_DEVICE_MAPPER_H */
