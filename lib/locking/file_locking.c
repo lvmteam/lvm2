@@ -47,10 +47,6 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
-		/* LCK_CACHE does not require a real lock */
-		if (flags & LCK_CACHE)
-			break;
-
 		if (is_orphan_vg(resource) || is_global_vg(resource)) {
 			if (dm_snprintf(lockfile, sizeof(lockfile),
 					"%s/P_%s", _lock_dir, resource + 1) < 0) {

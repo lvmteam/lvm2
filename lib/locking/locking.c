@@ -70,7 +70,6 @@ static void _update_vg_lock_count(const char *resource, uint32_t flags)
 {
 	/* Ignore locks not associated with updating VG metadata */
 	if ((flags & LCK_SCOPE_MASK) != LCK_VG ||
-	    (flags & LCK_CACHE) ||
 	    !strcmp(resource, VG_GLOBAL))
 		return;
 
@@ -207,7 +206,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 		if (lck_type != LCK_WRITE)
 			goto out_hold;
 
-		if (cmd->is_activating && (lck_scope == LCK_VG) && !(flags & LCK_CACHE) && strcmp(vol, VG_GLOBAL))
+		if (cmd->is_activating && (lck_scope == LCK_VG) && strcmp(vol, VG_GLOBAL))
 			goto out_hold;
 
 		goto out_fail;
@@ -230,7 +229,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 	 * refuse write lock requests.
 	 */
 	if (cmd->metadata_read_only) {
-		if ((lck_type == LCK_WRITE) && (lck_scope == LCK_VG) && !(flags & LCK_CACHE) && strcmp(vol, VG_GLOBAL)) {
+		if ((lck_type == LCK_WRITE) && (lck_scope == LCK_VG) && strcmp(vol, VG_GLOBAL)) {
 			log_error("Operation prohibited while global/metadata_read_only is set.");
 			goto out_fail;
 		}
@@ -243,12 +242,11 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 
 	/*
 	 * FIXME: I don't think we need this any more.
-	 * If a real lock was acquired (i.e. not LCK_CACHE),
+	 * If a real lock was acquired
 	 * perform an immediate unlock unless LCK_HOLD was requested.
 	 */
 
-	if ((lck_type == LCK_NULL) || (lck_type == LCK_UNLOCK) ||
-	    (flags & (LCK_CACHE | LCK_HOLD)))
+	if ((lck_type == LCK_UNLOCK) || (flags & LCK_HOLD))
 		goto out_hold;
 
 	if (!_lock_vol(cmd, resource, (flags & ~LCK_TYPE_MASK) | LCK_UNLOCK))
@@ -262,9 +260,9 @@ out_hold:
 	 * locked by looking in lvmcache.  They shouldn't need to
 	 * do that, and we should be able to remove this.
 	 */
-	if ((lck_scope == LCK_VG) && !(flags & LCK_CACHE) && (lck_type != LCK_UNLOCK))
+	if ((lck_scope == LCK_VG) && (lck_type != LCK_UNLOCK))
 		lvmcache_lock_vgname(resource, lck_type == LCK_READ);
-	else if ((lck_scope == LCK_VG) && !(flags & LCK_CACHE) && (lck_type == LCK_UNLOCK))
+	else if ((lck_scope == LCK_VG) && (lck_type == LCK_UNLOCK))
 		lvmcache_unlock_vgname(resource);
 
 	/* FIXME: we shouldn't need to keep track of this either. */
@@ -302,11 +300,6 @@ int activate_lvs(struct cmd_context *cmd, struct dm_list *lvs, unsigned exclusiv
 int vg_write_lock_held(void)
 {
 	return _vg_write_lock_held;
-}
-
-int locking_is_clustered(void)
-{
-	return 0;
 }
 
 int sync_local_dev_names(struct cmd_context* cmd)
