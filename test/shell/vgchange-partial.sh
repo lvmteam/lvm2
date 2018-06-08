@@ -41,9 +41,6 @@ not vgchange -u $vg
 # physicalextentsize_ARG
 not vgchange -s 2M $vg
 
-# clustered_ARG
-not vgchange -c y $vg
-
 # alloc_ARG
 not vgchange --alloc anywhere $vg
 
