@@ -28,8 +28,6 @@
 #include "lib/cache/lvmetad.h"
 #include "daemons/lvmetad/lvmetad-client.h"
 
-#define CACHE_LOCKED	0x00000002
-
 /* One per device */
 struct lvmcache_info {
 	struct dm_list list;	/* Join VG members together */
@@ -131,33 +129,6 @@ void lvmcache_seed_infos_from_lvmetad(struct cmd_context *cmd)
 	_has_scanned = 1;
 }
 
-static void _update_cache_info_lock_state(struct lvmcache_info *info, int locked)
-{
-	if (locked)
-		info->status |= CACHE_LOCKED;
-	else
-		info->status &= ~CACHE_LOCKED;
-}
-
-static void _update_cache_vginfo_lock_state(struct lvmcache_vginfo *vginfo,
-					    int locked)
-{
-	struct lvmcache_info *info;
-
-	dm_list_iterate_items(info, &vginfo->infos)
-		_update_cache_info_lock_state(info, locked);
-}
-
-static void _update_cache_lock_state(const char *vgname, int locked)
-{
-	struct lvmcache_vginfo *vginfo;
-
-	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, NULL)))
-		return;
-
-	_update_cache_vginfo_lock_state(vginfo, locked);
-}
-
 void lvmcache_lock_vgname(const char *vgname, int read_only __attribute__((unused)))
 {
 	if (dm_hash_lookup(_lock_hash, vgname))
@@ -167,10 +138,8 @@ void lvmcache_lock_vgname(const char *vgname, int read_only __attribute__((unuse
 	if (!dm_hash_insert(_lock_hash, vgname, (void *) 1))
 		log_error("Cache locking failure for %s", vgname);
 
-	if (strcmp(vgname, VG_GLOBAL)) {
-		_update_cache_lock_state(vgname, 1);
+	if (strcmp(vgname, VG_GLOBAL))
 		_vgs_locked++;
-	}
 }
 
 int lvmcache_vgname_is_locked(const char *vgname)
@@ -186,9 +155,6 @@ void lvmcache_unlock_vgname(const char *vgname)
 	if (!dm_hash_lookup(_lock_hash, vgname))
 		log_error(INTERNAL_ERROR "Attempt to unlock unlocked VG %s.",
 			  vgname);
-
-	if (strcmp(vgname, VG_GLOBAL))
-		_update_cache_lock_state(vgname, 0);
 
 	dm_hash_remove(_lock_hash, vgname);
 
@@ -1512,8 +1478,6 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 		_vginfo_attach_info(vginfo, info);
 	else if (!_lvmcache_update_vgid(NULL, vginfo, vgid)) /* Orphans */
 		return_0;
-
-	_update_cache_vginfo_lock_state(vginfo, lvmcache_vgname_is_locked(vgname));
 
 	/* FIXME Check consistency of list! */
 	vginfo->fmt = fmt;
