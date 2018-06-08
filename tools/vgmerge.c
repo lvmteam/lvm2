@@ -103,9 +103,6 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 	if (!archive(vg_from) || !archive(vg_to))
 		goto_bad;
 
-	if (!drop_cached_metadata(vg_from))
-		stack;
-
 	if (!_vgmerge_select_pool_metadata_spare(cmd, vg_to, vg_from))
 		goto_bad;
 

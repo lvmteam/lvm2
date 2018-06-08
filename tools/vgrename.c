@@ -108,10 +108,6 @@ static int _vgrename_single(struct cmd_context *cmd, const char *vg_name,
 	if (!archive(vg))
 		goto error;
 
-	/* Remove references based on old name */
-	if (!drop_cached_metadata(vg))
-		stack;
-
 	if (!lockd_rename_vg_before(cmd, vg)) {
 		stack;
 		goto error;

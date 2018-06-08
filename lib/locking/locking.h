@@ -138,7 +138,6 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_VG_READ		(LCK_VG | LCK_READ | LCK_HOLD)
 #define LCK_VG_WRITE		(LCK_VG | LCK_WRITE | LCK_HOLD)
 #define LCK_VG_UNLOCK		(LCK_VG | LCK_UNLOCK)
-#define LCK_VG_DROP_CACHE	(LCK_VG | LCK_WRITE | LCK_CACHE)
 
 /* FIXME: LCK_HOLD abused here */
 #define LCK_VG_COMMIT		(LCK_VG | LCK_WRITE | LCK_CACHE | LCK_HOLD)
@@ -162,9 +161,6 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 		unlock_vg(cmd, vg, vol); \
 		release_vg(vg); \
 	} while (0)
-
-#define drop_cached_metadata(vg)	\
-	lock_vol((vg)->cmd, (vg)->name, LCK_VG_DROP_CACHE, NULL)
 
 int sync_local_dev_names(struct cmd_context* cmd);
 

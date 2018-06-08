@@ -2915,11 +2915,6 @@ int vg_write(struct volume_group *vg)
 		return 0;
 	}
 
-	if (!drop_cached_metadata(vg)) {
-		log_error("Unable to drop cached metadata for VG %s.", vg->name);
-		return 0;
-	}
-
 	if (critical_section())
 		log_error(INTERNAL_ERROR
 			  "Writing metadata in critical section.");
@@ -3077,11 +3072,6 @@ int vg_commit(struct volume_group *vg)
 		_vg_move_cached_precommitted_to_committed(vg);
 	}
 
-	/* If update failed, remove any cached precommitted metadata. */
-	if (!cache_updated && !drop_cached_metadata(vg))
-		log_error("Attempt to drop cached metadata failed "
-			  "after commit for VG %s.", vg->name);
-
 	/* If at least one mda commit succeeded, it was committed */
 	return cache_updated;
 }
@@ -3115,10 +3105,6 @@ void vg_revert(struct volume_group *vg)
 			stack;
 		}
 	}
-
-	if (!drop_cached_metadata(vg))
-		log_error("Attempt to drop cached metadata failed "
-			  "after reverted update for VG %s.", vg->name);
 }
 
 static int _check_mda_in_use(struct metadata_area *mda, void *_in_use)
@@ -3543,12 +3529,6 @@ static int _wipe_outdated_pvs(struct cmd_context *cmd, struct volume_group *vg, 
 			 pv_dev_name(pvl->pv), uuid, vg->name);
 		if (!pv_write_orphan(cmd, pvl->pv))
 			return_0;
-
-		/* Refresh metadata after orphan write */
-		if (!drop_cached_metadata(vg)) {
-			log_error("Unable to drop cached metadata for VG %s while wiping outdated PVs.", vg->name);
-			return 0;
-		}
 next_pv:
 		;
 	}
