@@ -16,7 +16,7 @@
 #ifndef LIB_DMCOMMON_H
 #define LIB_DMCOMMON_H
 
-#include "libdevmapper.h"
+#include "device_mapper/all.h"
 
 #define DM_DEFAULT_NAME_MANGLING_MODE_ENV_VAR_NAME "DM_DEFAULT_NAME_MANGLING_MODE"
 

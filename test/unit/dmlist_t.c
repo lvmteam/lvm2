@@ -13,7 +13,7 @@
  */
 
 #include "units.h"
-#include "device_mapper/libdevmapper.h"
+#include "device_mapper/all.h"
 
 static void test_dmlist_splice(void *fixture)
 {

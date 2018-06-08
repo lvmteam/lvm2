@@ -79,7 +79,7 @@
 
 
 #include "lib/misc/intl.h"
-#include "device_mapper/libdevmapper.h"
+#include "device_mapper/all.h"
 #include "lib/misc/util.h"
 
 #ifdef DM
