@@ -27,7 +27,7 @@
 #include <unistd.h>
 
 #include "configure.h"
-#include "device_mapper/libdevmapper.h"
+#include "device_mapper/all.h"
 
 //----------------------------------------------------------------
 

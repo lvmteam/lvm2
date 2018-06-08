@@ -13,6 +13,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "base/memory/zalloc.h"
 #include "device_mapper/misc/dmlib.h"
 #include "ioctl/libdm-targets.h"
 #include "libdm-common.h"
@@ -308,7 +309,7 @@ dm_string_mangling_t dm_get_name_mangling_mode(void)
 
 struct dm_task *dm_task_create(int type)
 {
-	struct dm_task *dmt = dm_zalloc(sizeof(*dmt));
+	struct dm_task *dmt = zalloc(sizeof(*dmt));
 
 	if (!dmt) {
 		log_error("dm_task_create: malloc(%" PRIsize_t ") failed",
@@ -317,7 +318,7 @@ struct dm_task *dm_task_create(int type)
 	}
 
 	if (!dm_check_version()) {
-		dm_free(dmt);
+		free(dmt);
 		return_NULL;
 	}
 
@@ -562,9 +563,9 @@ static int _dm_task_set_name(struct dm_task *dmt, const char *name,
 	char mangled_name[DM_NAME_LEN];
 	int r = 0;
 
-	dm_free(dmt->dev_name);
+	free(dmt->dev_name);
 	dmt->dev_name = NULL;
-	dm_free(dmt->mangled_dev_name);
+	free(dmt->mangled_dev_name);
 	dmt->mangled_dev_name = NULL;
 
 	if (strlen(name) >= DM_NAME_LEN) {
@@ -587,13 +588,13 @@ static int _dm_task_set_name(struct dm_task *dmt, const char *name,
 		log_debug_activation("Device name mangled [%s]: %s --> %s",
 				     mangling_mode == DM_STRING_MANGLING_AUTO ? "auto" : "hex",
 				     name, mangled_name);
-		if (!(dmt->mangled_dev_name = dm_strdup(mangled_name))) {
-			log_error("_dm_task_set_name: dm_strdup(%s) failed", mangled_name);
+		if (!(dmt->mangled_dev_name = strdup(mangled_name))) {
+			log_error("_dm_task_set_name: strdup(%s) failed", mangled_name);
 			return 0;
 		}
 	}
 
-	if (!(dmt->dev_name = dm_strdup(name))) {
+	if (!(dmt->dev_name = strdup(name))) {
 		log_error("_dm_task_set_name: strdup(%s) failed", name);
 		return 0;
 	}
@@ -689,8 +690,8 @@ static char *_task_get_string_mangled(const char *str, const char *str_name,
 	if ((r = mangle_string(str, str_name, strlen(str), buf, buf_size, mode)) < 0)
 		return NULL;
 
-	if (!(rs = r ? dm_strdup(buf) : dm_strdup(str)))
-		log_error("_task_get_string_mangled: dm_strdup failed");
+	if (!(rs = r ? strdup(buf) : strdup(str)))
+		log_error("_task_get_string_mangled: strdup failed");
 
 	return rs;
 }
@@ -710,8 +711,8 @@ static char *_task_get_string_unmangled(const char *str, const char *str_name,
 	    (r = unmangle_string(str, str_name, strlen(str), buf, buf_size, mode)) < 0)
 		return NULL;
 
-	if (!(rs = r ? dm_strdup(buf) : dm_strdup(str)))
-		log_error("_task_get_string_unmangled: dm_strdup failed");
+	if (!(rs = r ? strdup(buf) : strdup(str)))
+		log_error("_task_get_string_unmangled: strdup failed");
 
 	return rs;
 }
@@ -807,8 +808,8 @@ int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 		newname = mangled_name;
 	}
 
-	dm_free(dmt->newname);
-	if (!(dmt->newname = dm_strdup(newname))) {
+	free(dmt->newname);
+	if (!(dmt->newname = strdup(newname))) {
 		log_error("dm_task_set_newname: strdup(%s) failed", newname);
 		return 0;
 	}
@@ -824,9 +825,9 @@ int dm_task_set_uuid(struct dm_task *dmt, const char *uuid)
 	dm_string_mangling_t mangling_mode = dm_get_name_mangling_mode();
 	int r = 0;
 
-	dm_free(dmt->uuid);
+	free(dmt->uuid);
 	dmt->uuid = NULL;
-	dm_free(dmt->mangled_uuid);
+	free(dmt->mangled_uuid);
 	dmt->mangled_uuid = NULL;
 
 	if (!check_multiple_mangled_string_allowed(uuid, "UUID", mangling_mode))
@@ -844,13 +845,13 @@ int dm_task_set_uuid(struct dm_task *dmt, const char *uuid)
 				     mangling_mode == DM_STRING_MANGLING_AUTO ? "auto" : "hex",
 				     uuid, mangled_uuid);
 
-		if (!(dmt->mangled_uuid = dm_strdup(mangled_uuid))) {
-			log_error("dm_task_set_uuid: dm_strdup(%s) failed", mangled_uuid);
+		if (!(dmt->mangled_uuid = strdup(mangled_uuid))) {
+			log_error("dm_task_set_uuid: strdup(%s) failed", mangled_uuid);
 			return 0;
 		}
 	}
 
-	if (!(dmt->uuid = dm_strdup(uuid))) {
+	if (!(dmt->uuid = strdup(uuid))) {
 		log_error("dm_task_set_uuid: strdup(%s) failed", uuid);
 		return 0;
 	}
@@ -1458,7 +1459,7 @@ static void _del_node_op(struct node_op_parms *nop)
 {
 	_count_node_ops[nop->type]--;
 	dm_list_del(&nop->list);
-	dm_free(nop);
+	free(nop);
 
 }
 
@@ -1562,7 +1563,7 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 		warn_if_udev_failed = 0;
 	}
 
-	if (!(nop = dm_malloc(sizeof(*nop) + len))) {
+	if (!(nop = malloc(sizeof(*nop) + len))) {
 		log_error("Insufficient memory to stack mknod operation");
 		return 0;
 	}
@@ -1828,8 +1829,8 @@ static int _sysfs_get_dm_name(uint32_t major, uint32_t minor, char *buf, size_t 
 	int r = 0;
 	size_t len;
 
-	if (!(sysfs_path = dm_malloc(PATH_MAX)) ||
-	    !(temp_buf = dm_malloc(PATH_MAX))) {
+	if (!(sysfs_path = malloc(PATH_MAX)) ||
+	    !(temp_buf = malloc(PATH_MAX))) {
 		log_error("_sysfs_get_dm_name: failed to allocate temporary buffers");
 		goto bad;
 	}
@@ -1867,8 +1868,8 @@ bad:
 	if (fp && fclose(fp))
 		log_sys_error("fclose", sysfs_path);
 
-	dm_free(temp_buf);
-	dm_free(sysfs_path);
+	free(temp_buf);
+	free(sysfs_path);
 
 	return r;
 }
@@ -1880,8 +1881,8 @@ static int _sysfs_get_kernel_name(uint32_t major, uint32_t minor, char *buf, siz
 	size_t len;
 	int r = 0;
 
-	if (!(sysfs_path = dm_malloc(PATH_MAX)) ||
-	    !(temp_buf = dm_malloc(PATH_MAX))) {
+	if (!(sysfs_path = malloc(PATH_MAX)) ||
+	    !(temp_buf = malloc(PATH_MAX))) {
 		log_error("_sysfs_get_kernel_name: failed to allocate temporary buffers");
 		goto bad;
 	}
@@ -1916,8 +1917,8 @@ static int _sysfs_get_kernel_name(uint32_t major, uint32_t minor, char *buf, siz
 	strcpy(buf, name);
 	r = 1;
 bad:
-	dm_free(temp_buf);
-	dm_free(sysfs_path);
+	free(temp_buf);
+	free(sysfs_path);
 
 	return r;
 }

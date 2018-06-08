@@ -12,6 +12,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/device/dev-type.h"
 #include "lib/mm/xlate.h"
@@ -49,7 +50,7 @@ struct dev_types *create_dev_types(const char *proc_dir,
 	const char *name;
 	char *nl;
 
-	if (!(dt = dm_zalloc(sizeof(struct dev_types)))) {
+	if (!(dt = zalloc(sizeof(struct dev_types)))) {
 		log_error("Failed to allocate device type register.");
 		return NULL;
 	}
@@ -204,7 +205,7 @@ struct dev_types *create_dev_types(const char *proc_dir,
 
 	return dt;
 bad:
-	dm_free(dt);
+	free(dt);
 	return NULL;
 }
 

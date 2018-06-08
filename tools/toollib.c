@@ -1482,7 +1482,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 					log_error("No physical volume label read from %s.", argv[opt]);
 					ret_max = ECMD_FAILED;
 				} else {
-					if (!(devl = dm_malloc(sizeof(*devl))))
+					if (!(devl = malloc(sizeof(*devl))))
 						return_0;
 					devl->dev = dev;
 					dm_list_add(&process_duplicates, &devl->list);

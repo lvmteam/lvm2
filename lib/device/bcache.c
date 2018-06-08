@@ -70,14 +70,14 @@ struct cb_set {
 static struct cb_set *_cb_set_create(unsigned nr)
 {
 	int i;
-	struct cb_set *cbs = dm_malloc(sizeof(*cbs));
+	struct cb_set *cbs = malloc(sizeof(*cbs));
 
 	if (!cbs)
 		return NULL;
 
-	cbs->vec = dm_malloc(nr * sizeof(*cbs->vec));
+	cbs->vec = malloc(nr * sizeof(*cbs->vec));
 	if (!cbs->vec) {
-		dm_free(cbs);
+		free(cbs);
 		return NULL;
 	}
 
@@ -100,8 +100,8 @@ static void _cb_set_destroy(struct cb_set *cbs)
 		return;
 	}
 
-	dm_free(cbs->vec);
-	dm_free(cbs);
+	free(cbs->vec);
+	free(cbs);
 }
 
 static struct control_block *_cb_alloc(struct cb_set *cbs, void *context)
@@ -155,7 +155,7 @@ static void _async_destroy(struct io_engine *ioe)
 	if (r)
 		log_sys_warn("io_destroy");
 
-	dm_free(e);
+	free(e);
 }
 
 static bool _async_issue(struct io_engine *ioe, enum dir d, int fd,
@@ -253,7 +253,7 @@ static unsigned _async_max_io(struct io_engine *e)
 struct io_engine *create_async_io_engine(void)
 {
 	int r;
-	struct async_engine *e = dm_malloc(sizeof(*e));
+	struct async_engine *e = malloc(sizeof(*e));
 
 	if (!e)
 		return NULL;
@@ -267,14 +267,14 @@ struct io_engine *create_async_io_engine(void)
 	r = io_setup(MAX_IO, &e->aio_context);
 	if (r < 0) {
 		log_warn("io_setup failed");
-		dm_free(e);
+		free(e);
 		return NULL;
 	}
 
 	e->cbs = _cb_set_create(MAX_IO);
 	if (!e->cbs) {
 		log_warn("couldn't create control block set");
-		dm_free(e);
+		free(e);
 		return NULL;
 	}
 
@@ -303,7 +303,7 @@ static struct sync_engine *_to_sync(struct io_engine *e)
 static void _sync_destroy(struct io_engine *ioe)
 {
         struct sync_engine *e = _to_sync(ioe);
-        dm_free(e);
+        free(e);
 }
 
 static bool _sync_issue(struct io_engine *ioe, enum dir d, int fd,
@@ -362,7 +362,7 @@ static bool _sync_wait(struct io_engine *ioe, io_complete_fn fn)
 	dm_list_iterate_items_safe(io, tmp, &e->complete) {
 		fn(io->context, 0);
 		dm_list_del(&io->list);
-		dm_free(io);
+		free(io);
 	}
 
 	return true;
@@ -375,7 +375,7 @@ static unsigned _sync_max_io(struct io_engine *e)
 
 struct io_engine *create_sync_io_engine(void)
 {
-	struct sync_engine *e = dm_malloc(sizeof(*e));
+	struct sync_engine *e = malloc(sizeof(*e));
 
 	if (!e)
         	return NULL;
@@ -530,10 +530,10 @@ static bool _init_free_list(struct bcache *cache, unsigned count, unsigned pgsiz
 		return false;
 
 	cache->raw_data = data;
-	cache->raw_blocks = dm_malloc(count * sizeof(*cache->raw_blocks));
+	cache->raw_blocks = malloc(count * sizeof(*cache->raw_blocks));
 
 	if (!cache->raw_blocks)
-		dm_free(cache->raw_data);
+		free(cache->raw_data);
 
 	for (i = 0; i < count; i++) {
 		struct block *b = cache->raw_blocks + i;
@@ -547,8 +547,8 @@ static bool _init_free_list(struct bcache *cache, unsigned count, unsigned pgsiz
 
 static void _exit_free_list(struct bcache *cache)
 {
-	dm_free(cache->raw_data);
-	dm_free(cache->raw_blocks);
+	free(cache->raw_data);
+	free(cache->raw_blocks);
 }
 
 static struct block *_alloc_block(struct bcache *cache)
@@ -885,7 +885,7 @@ struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks,
 		return NULL;
 	}
 
-	cache = dm_malloc(sizeof(*cache));
+	cache = malloc(sizeof(*cache));
 	if (!cache)
 		return NULL;
 
@@ -906,7 +906,7 @@ struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks,
         cache->rtree = radix_tree_create(NULL, NULL);
 	if (!cache->rtree) {
 		cache->engine->destroy(cache->engine);
-		dm_free(cache);
+		free(cache);
 		return NULL;
 	}
 
@@ -920,7 +920,7 @@ struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks,
 	if (!_init_free_list(cache, nr_cache_blocks, pgsize)) {
 		cache->engine->destroy(cache->engine);
 		radix_tree_destroy(cache->rtree);
-		dm_free(cache);
+		free(cache);
 		return NULL;
 	}
 
@@ -937,7 +937,7 @@ void bcache_destroy(struct bcache *cache)
 	_exit_free_list(cache);
 	radix_tree_destroy(cache->rtree);
 	cache->engine->destroy(cache->engine);
-	dm_free(cache);
+	free(cache);
 }
 
 sector_t bcache_block_sectors(struct bcache *cache)

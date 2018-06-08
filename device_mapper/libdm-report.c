@@ -13,6 +13,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "base/memory/zalloc.h"
 #include "misc/dmlib.h"
 
 #include <ctype.h>
@@ -477,8 +478,8 @@ static int _report_field_string_list(struct dm_report *rh,
 	}
 
 	/* more than one item - sort the list */
-	if (!(arr = dm_malloc(sizeof(struct str_list_sort_item) * list_size))) {
-		log_error("dm_report_field_string_list: dm_malloc failed");
+	if (!(arr = malloc(sizeof(struct str_list_sort_item) * list_size))) {
+		log_error("dm_report_field_string_list: malloc failed");
 		goto out;
 	}
 
@@ -547,7 +548,7 @@ static int _report_field_string_list(struct dm_report *rh,
 out:
 	if (!r && sort_value)
 		dm_pool_free(rh->mem, sort_value);
-	dm_free(arr);
+	free(arr);
 
 	return r;
 }
@@ -1257,8 +1258,8 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 	if (_contains_reserved_report_type(types))
 		return_NULL;
 
-	if (!(rh = dm_zalloc(sizeof(*rh)))) {
-		log_error("dm_report_init: dm_malloc failed");
+	if (!(rh = zalloc(sizeof(*rh)))) {
+		log_error("dm_report_init: malloc failed");
 		return NULL;
 	}
 
@@ -1300,7 +1301,7 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 
 	if (!(rh->mem = dm_pool_create("report", 10 * 1024))) {
 		log_error("dm_report_init: allocation of memory pool failed");
-		dm_free(rh);
+		free(rh);
 		return NULL;
 	}
 
@@ -1348,7 +1349,7 @@ void dm_report_free(struct dm_report *rh)
 	if (rh->value_cache)
 		dm_hash_destroy(rh->value_cache);
 	dm_pool_destroy(rh->mem);
-	dm_free(rh);
+	free(rh);
 }
 
 static char *_toupperstr(char *str)
@@ -2732,7 +2733,7 @@ static const char *_tok_value_string_list(const struct dm_report_field_type *ft,
 		goto bad;
 	} else if (list_size == 1)
 		goto out;
-	if (!(arr = dm_malloc(sizeof(item) * list_size))) {
+	if (!(arr = malloc(sizeof(item) * list_size))) {
 		log_error("_tok_value_string_list: memory allocation failed for sort array");
 		goto bad;
 	}
@@ -2745,7 +2746,7 @@ static const char *_tok_value_string_list(const struct dm_report_field_type *ft,
 	for (i = 0; i < list_size; i++)
 		dm_list_add(&ssl->str_list.list, &arr[i]->list);
 
-	dm_free(arr);
+	free(arr);
 out:
 	*end = s;
         if (sel_str_list)
@@ -3514,8 +3515,8 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 	/* store comparison operand */
 	if (flags & FLD_CMP_REGEX) {
 		/* REGEX */
-		if (!(s = dm_malloc(len + 1))) {
-			log_error("dm_report: dm_malloc failed to store "
+		if (!(s = malloc(len + 1))) {
+			log_error("dm_report: malloc failed to store "
 				  "regex value for selection field %s", field_id);
 			goto error;
 		}
@@ -3523,7 +3524,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 		s[len] = '\0';
 
 		fs->value->v.r = dm_regex_create(rh->selection->mem, (const char * const *) &s, 1);
-		dm_free(s);
+		free(s);
 		if (!fs->value->v.r) {
 			log_error("dm_report: failed to create regex "
 				  "matcher for selection field %s", field_id);
@@ -4175,7 +4176,7 @@ static int _report_headings(struct dm_report *rh)
 	/* Including trailing '\0'! */
 	buf_size++;
 
-	if (!(buf = dm_malloc(buf_size))) {
+	if (!(buf = malloc(buf_size))) {
 		log_error("dm_report: Could not allocate memory for heading buffer.");
 		goto bad;
 	}
@@ -4219,12 +4220,12 @@ static int _report_headings(struct dm_report *rh)
 	log_print("%s", heading);
 
 	dm_pool_free(rh->mem, (void *)heading);
-	dm_free(buf);
+	free(buf);
 
 	return 1;
 
       bad:
-	dm_free(buf);
+	free(buf);
 	dm_pool_abandon_object(rh->mem);
 	return 0;
 }
@@ -4398,24 +4399,24 @@ static int _output_field(struct dm_report *rh, struct dm_report_field *field)
 			return 0;
 		}
 	} else if (rh->flags & DM_REPORT_OUTPUT_FIELD_NAME_PREFIX) {
-		if (!(field_id = dm_strdup(fields[field->props->field_num].id))) {
+		if (!(field_id = strdup(fields[field->props->field_num].id))) {
 			log_error("dm_report: Failed to copy field name");
 			return 0;
 		}
 
 		if (!dm_pool_grow_object(rh->mem, rh->output_field_name_prefix, 0)) {
 			log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
-			dm_free(field_id);
+			free(field_id);
 			return 0;
 		}
 
 		if (!dm_pool_grow_object(rh->mem, _toupperstr(field_id), 0)) {
 			log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
-			dm_free(field_id);
+			free(field_id);
 			return 0;
 		}
 
-		dm_free(field_id);
+		free(field_id);
 
 		if (!dm_pool_grow_object(rh->mem, STANDARD_PAIR, 1)) {
 			log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
@@ -4468,7 +4469,7 @@ static int _output_field(struct dm_report *rh, struct dm_report_field *field)
 
 		/* Including trailing '\0'! */
 		buf_size = width + 1;
-		if (!(buf = dm_malloc(buf_size))) {
+		if (!(buf = malloc(buf_size))) {
 			log_error("dm_report: Could not allocate memory for output line buffer.");
 			return 0;
 		}
@@ -4510,11 +4511,11 @@ static int _output_field(struct dm_report *rh, struct dm_report_field *field)
 		}
 	}
 
-	dm_free(buf);
+	free(buf);
 	return 1;
 
 bad:
-	dm_free(buf);
+	free(buf);
 	return 0;
 }
 

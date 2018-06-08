@@ -1816,7 +1816,6 @@ scripts/Makefile
 test/Makefile
 test/api/Makefile
 test/api/python_lvm_unit.py
-test/unit/Makefile
 tools/Makefile
 udev/Makefile
 ])

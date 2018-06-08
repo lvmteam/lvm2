@@ -21,14 +21,14 @@ static char *_expand_filename(const char *template, const char *vg_name,
 	char *filename;
 
 	if (security_level()) {
-		if (!(filename = dm_strdup(template))) {
+		if (!(filename = strdup(template))) {
 			log_error("Failed to allocate filename.");
 			return NULL;
 		}
 		goto out;
 	}
 
-	if (!(filename = dm_malloc(PATH_MAX))) {
+	if (!(filename = malloc(PATH_MAX))) {
 		log_error("Failed to allocate filename.");
 		return NULL;
 	}
@@ -36,17 +36,17 @@ static char *_expand_filename(const char *template, const char *vg_name,
 	if (dm_snprintf(filename, PATH_MAX, template, vg_name) < 0) {
 		log_error("Error processing filename template %s",
 			   template);
-		dm_free(filename);
+		free(filename);
 		return NULL;
 	}
 	if (*last_filename && !strncmp(*last_filename, filename, PATH_MAX)) {
 		log_error("VGs must be backed up into different files. "
 			  "Use %%s in filename for VG name.");
-		dm_free(filename);
+		free(filename);
 		return NULL;
 	}
 out:
-	dm_free(*last_filename);
+	free(*last_filename);
 	*last_filename = filename;
 
 	return filename;
@@ -102,7 +102,7 @@ int vgcfgbackup(struct cmd_context *cmd, int argc, char **argv)
 	ret = process_each_vg(cmd, argc, argv, NULL, NULL, READ_ALLOW_INCONSISTENT, 0,
 			      handle, &_vg_backup_single);
 
-	dm_free(last_filename);
+	free(last_filename);
 
 	init_pvmove(0);
 

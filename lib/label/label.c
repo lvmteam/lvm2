@@ -13,6 +13,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#define _GNU_SOURCE
+
+#include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/label/label.h"
 #include "lib/misc/crc.h"
@@ -26,7 +29,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/time.h>
-
+#include <sys/types.h>
 
 /* FIXME Allow for larger labels?  Restricted to single sector currently */
 
@@ -49,7 +52,7 @@ static struct labeller_i *_alloc_li(const char *name, struct labeller *l)
 
 	len = sizeof(*li) + strlen(name) + 1;
 
-	if (!(li = dm_malloc(len))) {
+	if (!(li = malloc(len))) {
 		log_error("Couldn't allocate memory for labeller list object.");
 		return NULL;
 	}
@@ -73,7 +76,7 @@ void label_exit(void)
 	dm_list_iterate_items_safe(li, tli, &_labellers) {
 		dm_list_del(&li->list);
 		li->l->ops->destroy(li->l);
-		dm_free(li);
+		free(li);
 	}
 
 	dm_list_init(&_labellers);
@@ -217,14 +220,14 @@ int label_write(struct device *dev, struct label *label)
 void label_destroy(struct label *label)
 {
 	label->labeller->ops->destroy_label(label->labeller, label);
-	dm_free(label);
+	free(label);
 }
 
 struct label *label_create(struct labeller *labeller)
 {
 	struct label *label;
 
-	if (!(label = dm_zalloc(sizeof(*label)))) {
+	if (!(label = zalloc(sizeof(*label)))) {
 		log_error("label allocaction failed");
 		return NULL;
 	}
@@ -831,7 +834,7 @@ int label_scan(struct cmd_context *cmd)
 	}
 
 	while ((dev = dev_iter_get(iter))) {
-		if (!(devl = dm_zalloc(sizeof(*devl))))
+		if (!(devl = zalloc(sizeof(*devl))))
 			continue;
 		devl->dev = dev;
 		dm_list_add(&all_devs, &devl->list);
@@ -858,7 +861,7 @@ int label_scan(struct cmd_context *cmd)
 
 	dm_list_iterate_items_safe(devl, devl2, &all_devs) {
 		dm_list_del(&devl->list);
-		dm_free(devl);
+		free(devl);
 	}
 
 	return 1;
@@ -997,7 +1000,7 @@ int label_read(struct device *dev)
 	int failed = 0;
 
 	/* scanning is done by list, so make a single item list for this dev */
-	if (!(devl = dm_zalloc(sizeof(*devl))))
+	if (!(devl = zalloc(sizeof(*devl))))
 		return 0;
 	devl->dev = dev;
 	dm_list_init(&one_dev);
@@ -1010,7 +1013,7 @@ int label_read(struct device *dev)
 
 	_scan_list(NULL, NULL, &one_dev, &failed);
 
-	dm_free(devl);
+	free(devl);
 
 	if (failed)
 		return 0;

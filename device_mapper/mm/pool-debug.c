@@ -50,7 +50,7 @@ struct dm_pool {
 
 struct dm_pool *dm_pool_create(const char *name, size_t chunk_hint)
 {
-	struct dm_pool *mem = dm_zalloc(sizeof(*mem));
+	struct dm_pool *mem = zalloc(sizeof(*mem));
 
 	if (!mem) {
 		log_error("Couldn't create memory pool %s (size %"
@@ -82,8 +82,8 @@ static void _free_blocks(struct dm_pool *p, struct block *b)
 		p->stats.blocks_allocated--;
 
 		n = b->next;
-		dm_free(b->data);
-		dm_free(b);
+		free(b->data);
+		free(b);
 		b = n;
 	}
 }
@@ -105,7 +105,7 @@ void dm_pool_destroy(struct dm_pool *p)
 	_pool_stats(p, "Destroying");
 	_free_blocks(p, p->blocks);
 	dm_list_del(&p->list);
-	dm_free(p);
+	free(p);
 }
 
 void *dm_pool_alloc(struct dm_pool *p, size_t s)
@@ -139,7 +139,7 @@ static struct block *_new_block(size_t s, unsigned alignment)
 {
 	/* FIXME: I'm currently ignoring the alignment arg. */
 	size_t len = sizeof(struct block) + s;
-	struct block *b = dm_malloc(len);
+	struct block *b = malloc(len);
 
 	/*
 	 * Too lazy to implement alignment for debug version, and
@@ -153,9 +153,9 @@ static struct block *_new_block(size_t s, unsigned alignment)
 		return NULL;
 	}
 
-	if (!(b->data = dm_malloc(s))) {
+	if (!(b->data = malloc(s))) {
 		log_error("Out of memory");
-		dm_free(b);
+		free(b);
 		return NULL;
 	}
 
@@ -247,8 +247,8 @@ int dm_pool_grow_object(struct dm_pool *p, const void *extra, size_t delta)
 
 	if (p->object) {
 		memcpy(new->data, p->object->data, p->object->size);
-		dm_free(p->object->data);
-		dm_free(p->object);
+		free(p->object->data);
+		free(p->object);
 	}
 	p->object = new;
 
@@ -270,7 +270,7 @@ void *dm_pool_end_object(struct dm_pool *p)
 void dm_pool_abandon_object(struct dm_pool *p)
 {
 	assert(p->begun);
-	dm_free(p->object);
+	free(p->object);
 	p->begun = 0;
 	p->object = NULL;
 }

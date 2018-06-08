@@ -515,7 +515,7 @@ static int _handle_connect(daemon_state s)
 	 if (fcntl(client.socket_fd, F_SETFD, FD_CLOEXEC))
 		WARN(&s, "setting CLOEXEC on client socket fd %d failed", client.socket_fd);
 
-	if (!(ts = dm_malloc(sizeof(thread_state)))) {
+	if (!(ts = malloc(sizeof(thread_state)))) {
 		if (close(client.socket_fd))
 			perror("close");
 		ERROR(&s, "Failed to allocate thread state");
@@ -547,7 +547,7 @@ static void _reap(daemon_state s, int waiting)
 			if ((errno = pthread_join(ts->client.thread_id, &rv)))
 				ERROR(&s, "pthread_join failed: %s", strerror(errno));
 			last->next = ts->next;
-			dm_free(ts);
+			free(ts);
 		} else
 			last = ts;
 		ts = last->next;

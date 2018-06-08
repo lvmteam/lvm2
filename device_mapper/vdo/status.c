@@ -1,7 +1,7 @@
 #include "target.h"
 
 // For DM_ARRAY_SIZE!
-#include "device_mapper/libdevmapper.h"
+#include "device_mapper/all.h"
 
 #include <ctype.h>
 #include <stdlib.h>

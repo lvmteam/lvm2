@@ -18,6 +18,7 @@
  * the results of these routines should stay in-core.  
  */
 
+#include "base/memory/zalloc.h"
 #include "misc/dmlib.h"
 
 #include <stdlib.h>
@@ -53,7 +54,7 @@ struct dm_timestamp *dm_timestamp_alloc(void)
 {
 	struct dm_timestamp *ts = NULL;
 
-	if (!(ts = dm_zalloc(sizeof(*ts))))
+	if (!(ts = zalloc(sizeof(*ts))))
 		stack;
 
 	return ts;
@@ -101,7 +102,7 @@ struct dm_timestamp *dm_timestamp_alloc(void)
 {
 	struct dm_timestamp *ts;
 
-	if (!(ts = dm_malloc(sizeof(*ts))))
+	if (!(ts = malloc(sizeof(*ts))))
 		stack;
 
 	return ts;
@@ -174,5 +175,5 @@ void dm_timestamp_copy(struct dm_timestamp *ts_new, struct dm_timestamp *ts_old)
 
 void dm_timestamp_destroy(struct dm_timestamp *ts)
 {
-	dm_free(ts);
+	free(ts);
 }

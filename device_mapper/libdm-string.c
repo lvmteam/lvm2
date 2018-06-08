@@ -146,7 +146,7 @@ int dm_vasprintf(char **result, const char *format, va_list aq)
 {
 	int i, n, size = 16;
 	va_list ap;
-	char *buf = dm_malloc(size);
+	char *buf = malloc(size);
 
 	*result = 0;
 
@@ -161,20 +161,20 @@ int dm_vasprintf(char **result, const char *format, va_list aq)
 		if (0 <= n && n < size)
 			break;
 
-		dm_free(buf);
+		free(buf);
 		/* Up to glibc 2.0.6 returns -1 */
 		size = (n < 0) ? size * 2 : n + 1;
-		if (!(buf = dm_malloc(size)))
+		if (!(buf = malloc(size)))
 			return -1;
 	}
 
 	if (i > 1) {
 		/* Reallocating more then once? */
-		if (!(*result = dm_strdup(buf))) {
-			dm_free(buf);
+		if (!(*result = strdup(buf))) {
+			free(buf);
 			return -1;
 		}
-		dm_free(buf);
+		free(buf);
 	} else
 		*result = buf;
 

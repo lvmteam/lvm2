@@ -529,7 +529,7 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 		}
 		fb = fb + mmap_offset;
 	} else {
-		if (!(buf = dm_malloc(size + size2))) {
+		if (!(buf = malloc(size + size2))) {
 			log_error("Failed to allocate circular buffer.");
 			return 0;
 		}
@@ -573,7 +573,7 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 
       out:
 	if (!use_mmap)
-		dm_free(buf);
+		free(buf);
 	else {
 		/* unmap the file */
 		if (munmap(fb - mmap_offset, size + mmap_offset)) {
@@ -715,8 +715,8 @@ static struct dm_config_value *_get_def_array_values(struct cmd_context *cmd,
 		return array;
 	}
 
-	if (!(p = token = enc_value = dm_strdup(def_enc_value))) {
-		log_error("_get_def_array_values: dm_strdup failed");
+	if (!(p = token = enc_value = strdup(def_enc_value))) {
+		log_error("_get_def_array_values: strdup failed");
 		return NULL;
 	}
 	/* Proper value always starts with '#'. */
@@ -741,7 +741,7 @@ static struct dm_config_value *_get_def_array_values(struct cmd_context *cmd,
 
 		if (!(v = dm_config_create_value(cft))) {
 			log_error("Failed to create default config array value for %s.", def->name);
-			dm_free(enc_value);
+			free(enc_value);
 			return NULL;
 		}
 
@@ -770,7 +770,7 @@ static struct dm_config_value *_get_def_array_values(struct cmd_context *cmd,
 				break;
 			case 'S':
 				if (!(r = dm_pool_strdup(cft->mem, token + 1))) {
-					dm_free(enc_value);
+					free(enc_value);
 					log_error("Failed to duplicate token for default "
 						  "array value of %s.", def->name);
 					return NULL;
@@ -786,13 +786,13 @@ static struct dm_config_value *_get_def_array_values(struct cmd_context *cmd,
 		token = p;
 	}
 
-	dm_free(enc_value);
+	free(enc_value);
 	return array;
 bad:
 	log_error(INTERNAL_ERROR "Default array value malformed for \"%s\", "
 		  "value: \"%s\", token: \"%s\".", def->name,
 		  def->default_value.v_CFG_TYPE_STRING, token);
-	dm_free(enc_value);
+	free(enc_value);
 	return NULL;
 }
 

@@ -13,8 +13,10 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "device_mapper/misc/dmlib.h"
+#include "list.h"
+
 #include <assert.h>
+#include <stdlib.h>
 
 /*
  * Initialise a list before use.

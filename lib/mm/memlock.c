@@ -339,7 +339,7 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 		if (!_maps_buffer || len >= _maps_len) {
 			if (_maps_buffer)
 				_maps_len *= 2;
-			if (!(line = dm_realloc(_maps_buffer, _maps_len))) {
+			if (!(line = realloc(_maps_buffer, _maps_len))) {
 				log_error("Allocation of maps buffer failed.");
 				return 0;
 			}
@@ -551,7 +551,7 @@ static void _unlock_mem(struct cmd_context *cmd)
 		_restore_mmap();
 		if (close(_maps_fd))
 			log_sys_error("close", _procselfmaps);
-		dm_free(_maps_buffer);
+		free(_maps_buffer);
 		_maps_buffer = NULL;
 		if (_mstats < unlock_mstats) {
 			if ((_mstats + lvm_getpagesize()) < unlock_mstats)

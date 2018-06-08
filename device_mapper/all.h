@@ -31,6 +31,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "base/data-struct/list.h"
+#include "base/data-struct/hash.h"
+
 #ifndef __GNUC__
 # define __typeof__ typeof
 #endif
@@ -40,10 +43,6 @@
 #define DM_TO_STRING(A) DM_TO_STRING_EXP(A)
 
 #define DM_ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /*****************************************************************
  * The first section of this file provides direct access to the
@@ -822,7 +821,7 @@ int dm_stats_get_region_nr_histogram_bins(const struct dm_stats *dms,
  *
  * On sucess a pointer to the struct dm_histogram representing the
  * bounds values is returned, or NULL in the case of error. The returned
- * pointer should be freed using dm_free() when no longer required.
+ * pointer should be freed using free() when no longer required.
  */
 struct dm_histogram *dm_histogram_bounds_from_string(const char *bounds_str);
 
@@ -1321,7 +1320,7 @@ int dm_stats_get_group_descriptor(const struct dm_stats *dms,
  * On success the function returns a pointer to an array of uint64_t
  * containing the IDs of the newly created regions. The region_id
  * array is terminated by the value DM_STATS_REGION_NOT_PRESENT and
- * should be freed using dm_free() when no longer required.
+ * should be freed using free() when no longer required.
  *
  * On error NULL is returned.
  *
@@ -1353,7 +1352,7 @@ uint64_t *dm_stats_create_regions_from_fd(struct dm_stats *dms, int fd,
  * regions that were not modified by the call).
  *
  * The region_id array is terminated by the special value
- * DM_STATS_REGION_NOT_PRESENT and should be freed using dm_free()
+ * DM_STATS_REGION_NOT_PRESENT and should be freed using free()
  * when no longer required.
  *
  * On error NULL is returned.
@@ -1474,7 +1473,7 @@ dm_string_mangling_t dm_get_name_mangling_mode(void);
 /*
  * Get mangled/unmangled form of the device-mapper name or uuid
  * irrespective of the global setting (set by dm_set_name_mangling_mode).
- * The name or uuid returned needs to be freed after use by calling dm_free!
+ * The name or uuid returned needs to be freed after use by calling free!
  */
 char *dm_task_get_name_mangled(const struct dm_task *dmt);
 char *dm_task_get_name_unmangled(const struct dm_task *dmt);
@@ -2066,35 +2065,7 @@ uint32_t dm_tree_get_cookie(struct dm_tree_node *node);
  * Library functions
  *****************************************************************************/
 
-/*******************
- * Memory management
- *******************/
-
-/*
- * Never use these functions directly - use the macros following instead.
- */
-void *dm_malloc_wrapper(size_t s, const char *file, int line)
-	__attribute__((__malloc__)) __attribute__((__warn_unused_result__));
-void *dm_malloc_aligned_wrapper(size_t s, size_t a, const char *file, int line)
-	__attribute__((__malloc__)) __attribute__((__warn_unused_result__));
-void *dm_zalloc_wrapper(size_t s, const char *file, int line)
-	__attribute__((__malloc__)) __attribute__((__warn_unused_result__));
-void *dm_realloc_wrapper(void *p, unsigned int s, const char *file, int line)
-	__attribute__((__warn_unused_result__));
-void dm_free_wrapper(void *ptr);
-char *dm_strdup_wrapper(const char *s, const char *file, int line)
-	__attribute__((__warn_unused_result__));
-int dm_dump_memory_wrapper(void);
-void dm_bounds_check_wrapper(void);
-
-#define dm_malloc(s) dm_malloc_wrapper((s), __FILE__, __LINE__)
-#define dm_malloc_aligned(s, a) dm_malloc_aligned_wrapper((s), (a),  __FILE__, __LINE__)
-#define dm_zalloc(s) dm_zalloc_wrapper((s), __FILE__, __LINE__)
-#define dm_strdup(s) dm_strdup_wrapper((s), __FILE__, __LINE__)
-#define dm_free(p) dm_free_wrapper(p)
-#define dm_realloc(p, s) dm_realloc_wrapper((p), (s), __FILE__, __LINE__)
-#define dm_dump_memory() dm_dump_memory_wrapper()
-#define dm_bounds_check() dm_bounds_check_wrapper()
+#define malloc_aligned(s, a) malloc_aligned_wrapper((s), (a),  __FILE__, __LINE__)
 
 /*
  * The pool allocator is useful when you are going to allocate
@@ -2261,7 +2232,7 @@ int dm_bit_get_prev(dm_bitset_t bs, int last_bit);
  * notation used is identical to the kernel bitmap parser (cpuset etc.)
  * and supports both lists ("1,2,3") and ranges ("1-2,5-8"). If the mem
  * parameter is NULL memory for the bitset will be allocated using
- * dm_malloc(). Otherwise the bitset will be allocated using the supplied
+ * malloc(). Otherwise the bitset will be allocated using the supplied
  * dm_pool.
  */
 dm_bitset_t dm_bitset_parse_list(const char *str, struct dm_pool *mem,
@@ -2277,299 +2248,6 @@ static inline unsigned hweight32(uint32_t i)
 	r =    (r & 0x00FF00FF) + ((r >>  8) & 0x00FF00FF);
 	return (r & 0x0000FFFF) + ((r >> 16) & 0x0000FFFF);
 }
-
-/****************
- * hash functions
- ****************/
-
-struct dm_hash_table;
-struct dm_hash_node;
-
-typedef void (*dm_hash_iterate_fn) (void *data);
-
-struct dm_hash_table *dm_hash_create(unsigned size_hint)
-	__attribute__((__warn_unused_result__));
-void dm_hash_destroy(struct dm_hash_table *t);
-void dm_hash_wipe(struct dm_hash_table *t);
-
-void *dm_hash_lookup(struct dm_hash_table *t, const char *key);
-int dm_hash_insert(struct dm_hash_table *t, const char *key, void *data);
-void dm_hash_remove(struct dm_hash_table *t, const char *key);
-
-void *dm_hash_lookup_binary(struct dm_hash_table *t, const void *key, uint32_t len);
-int dm_hash_insert_binary(struct dm_hash_table *t, const void *key, uint32_t len,
-			  void *data);
-void dm_hash_remove_binary(struct dm_hash_table *t, const void *key, uint32_t len);
-
-unsigned dm_hash_get_num_entries(struct dm_hash_table *t);
-void dm_hash_iter(struct dm_hash_table *t, dm_hash_iterate_fn f);
-
-char *dm_hash_get_key(struct dm_hash_table *t, struct dm_hash_node *n);
-void *dm_hash_get_data(struct dm_hash_table *t, struct dm_hash_node *n);
-struct dm_hash_node *dm_hash_get_first(struct dm_hash_table *t);
-struct dm_hash_node *dm_hash_get_next(struct dm_hash_table *t, struct dm_hash_node *n);
-
-/*
- * dm_hash_insert() replaces the value of an existing
- * entry with a matching key if one exists.  Otherwise
- * it adds a new entry.
- *
- * dm_hash_insert_with_val() inserts a new entry if
- * another entry with the same key already exists.
- * val_len is the size of the data being inserted.
- *
- * If two entries with the same key exist,
- * (added using dm_hash_insert_allow_multiple), then:
- * . dm_hash_lookup() returns the first one it finds, and
- *   dm_hash_lookup_with_val() returns the one with a matching
- *   val_len/val.
- * . dm_hash_remove() removes the first one it finds, and
- *   dm_hash_remove_with_val() removes the one with a matching
- *   val_len/val.
- *
- * If a single entry with a given key exists, and it has
- * zero val_len, then:
- * . dm_hash_lookup() returns it
- * . dm_hash_lookup_with_val(val_len=0) returns it
- * . dm_hash_remove() removes it
- * . dm_hash_remove_with_val(val_len=0) removes it
- *
- * dm_hash_lookup_with_count() is a single call that will
- * both lookup a key's value and check if there is more
- * than one entry with the given key.
- *
- * (It is not meant to retrieve all the entries with the
- * given key.  In the common case where a single entry exists
- * for the key, it is useful to have a single call that will
- * both look up the value and indicate if multiple values
- * exist for the key.)
- *
- * dm_hash_lookup_with_count:
- * . If no entries exist, the function returns NULL, and
- *   the count is set to 0.
- * . If only one entry exists, the value of that entry is
- *   returned and count is set to 1.
- * . If N entries exists, the value of the first entry is
- *   returned and count is set to N.
- */
-
-void *dm_hash_lookup_with_val(struct dm_hash_table *t, const char *key,
-                              const void *val, uint32_t val_len);
-void dm_hash_remove_with_val(struct dm_hash_table *t, const char *key,
-                             const void *val, uint32_t val_len);
-int dm_hash_insert_allow_multiple(struct dm_hash_table *t, const char *key,
-                                  const void *val, uint32_t val_len);
-void *dm_hash_lookup_with_count(struct dm_hash_table *t, const char *key, int *count);
-
-
-#define dm_hash_iterate(v, h) \
-	for (v = dm_hash_get_first((h)); v; \
-	     v = dm_hash_get_next((h), v))
-
-/****************
- * list functions
- ****************/
-
-/*
- * A list consists of a list head plus elements.
- * Each element has 'next' and 'previous' pointers.
- * The list head's pointers point to the first and the last element.
- */
-
-struct dm_list {
-	struct dm_list *n, *p;
-};
-
-/*
- * String list.
- */
-struct dm_str_list {
-	struct dm_list list;
-	const char *str;
-};
-
-/*
- * Initialise a list before use.
- * The list head's next and previous pointers point back to itself.
- */
-#define DM_LIST_HEAD_INIT(name)	 { &(name), &(name) }
-#define DM_LIST_INIT(name)	struct dm_list name = DM_LIST_HEAD_INIT(name)
-void dm_list_init(struct dm_list *head);
-
-/*
- * Insert an element before 'head'.
- * If 'head' is the list head, this adds an element to the end of the list.
- */
-void dm_list_add(struct dm_list *head, struct dm_list *elem);
-
-/*
- * Insert an element after 'head'.
- * If 'head' is the list head, this adds an element to the front of the list.
- */
-void dm_list_add_h(struct dm_list *head, struct dm_list *elem);
-
-/*
- * Delete an element from its list.
- * Note that this doesn't change the element itself - it may still be safe
- * to follow its pointers.
- */
-void dm_list_del(struct dm_list *elem);
-
-/*
- * Remove an element from existing list and insert before 'head'.
- */
-void dm_list_move(struct dm_list *head, struct dm_list *elem);
-
-/*
- * Join 'head1' to the end of 'head'.
- */
-void dm_list_splice(struct dm_list *head, struct dm_list *head1);
-
-/*
- * Is the list empty?
- */
-int dm_list_empty(const struct dm_list *head);
-
-/*
- * Is this the first element of the list?
- */
-int dm_list_start(const struct dm_list *head, const struct dm_list *elem);
-
-/*
- * Is this the last element of the list?
- */
-int dm_list_end(const struct dm_list *head, const struct dm_list *elem);
-
-/*
- * Return first element of the list or NULL if empty
- */
-struct dm_list *dm_list_first(const struct dm_list *head);
-
-/*
- * Return last element of the list or NULL if empty
- */
-struct dm_list *dm_list_last(const struct dm_list *head);
-
-/*
- * Return the previous element of the list, or NULL if we've reached the start.
- */
-struct dm_list *dm_list_prev(const struct dm_list *head, const struct dm_list *elem);
-
-/*
- * Return the next element of the list, or NULL if we've reached the end.
- */
-struct dm_list *dm_list_next(const struct dm_list *head, const struct dm_list *elem);
-
-/*
- * Given the address v of an instance of 'struct dm_list' called 'head'
- * contained in a structure of type t, return the containing structure.
- */
-#define dm_list_struct_base(v, t, head) \
-    ((t *)((const char *)(v) - (const char *)&((t *) 0)->head))
-
-/*
- * Given the address v of an instance of 'struct dm_list list' contained in
- * a structure of type t, return the containing structure.
- */
-#define dm_list_item(v, t) dm_list_struct_base((v), t, list)
-
-/*
- * Given the address v of one known element e in a known structure of type t,
- * return another element f.
- */
-#define dm_struct_field(v, t, e, f) \
-    (((t *)((uintptr_t)(v) - (uintptr_t)&((t *) 0)->e))->f)
-
-/*
- * Given the address v of a known element e in a known structure of type t,
- * return the list head 'list'
- */
-#define dm_list_head(v, t, e) dm_struct_field(v, t, e, list)
-
-/*
- * Set v to each element of a list in turn.
- */
-#define dm_list_iterate(v, head) \
-	for (v = (head)->n; v != head; v = v->n)
-
-/*
- * Set v to each element in a list in turn, starting from the element
- * in front of 'start'.
- * You can use this to 'unwind' a list_iterate and back out actions on
- * already-processed elements.
- * If 'start' is 'head' it walks the list backwards.
- */
-#define dm_list_uniterate(v, head, start) \
-	for (v = (start)->p; v != head; v = v->p)
-
-/*
- * A safe way to walk a list and delete and free some elements along
- * the way.
- * t must be defined as a temporary variable of the same type as v.
- */
-#define dm_list_iterate_safe(v, t, head) \
-	for (v = (head)->n, t = v->n; v != head; v = t, t = v->n)
-
-/*
- * Walk a list, setting 'v' in turn to the containing structure of each item.
- * The containing structure should be the same type as 'v'.
- * The 'struct dm_list' variable within the containing structure is 'field'.
- */
-#define dm_list_iterate_items_gen(v, head, field) \
-	for (v = dm_list_struct_base((head)->n, __typeof__(*v), field); \
-	     &v->field != (head); \
-	     v = dm_list_struct_base(v->field.n, __typeof__(*v), field))
-
-/*
- * Walk a list, setting 'v' in turn to the containing structure of each item.
- * The containing structure should be the same type as 'v'.
- * The list should be 'struct dm_list list' within the containing structure.
- */
-#define dm_list_iterate_items(v, head) dm_list_iterate_items_gen(v, (head), list)
-
-/*
- * Walk a list, setting 'v' in turn to the containing structure of each item.
- * The containing structure should be the same type as 'v'.
- * The 'struct dm_list' variable within the containing structure is 'field'.
- * t must be defined as a temporary variable of the same type as v.
- */
-#define dm_list_iterate_items_gen_safe(v, t, head, field) \
-	for (v = dm_list_struct_base((head)->n, __typeof__(*v), field), \
-	     t = dm_list_struct_base(v->field.n, __typeof__(*v), field); \
-	     &v->field != (head); \
-	     v = t, t = dm_list_struct_base(v->field.n, __typeof__(*v), field))
-/*
- * Walk a list, setting 'v' in turn to the containing structure of each item.
- * The containing structure should be the same type as 'v'.
- * The list should be 'struct dm_list list' within the containing structure.
- * t must be defined as a temporary variable of the same type as v.
- */
-#define dm_list_iterate_items_safe(v, t, head) \
-	dm_list_iterate_items_gen_safe(v, t, (head), list)
-
-/*
- * Walk a list backwards, setting 'v' in turn to the containing structure
- * of each item.
- * The containing structure should be the same type as 'v'.
- * The 'struct dm_list' variable within the containing structure is 'field'.
- */
-#define dm_list_iterate_back_items_gen(v, head, field) \
-	for (v = dm_list_struct_base((head)->p, __typeof__(*v), field); \
-	     &v->field != (head); \
-	     v = dm_list_struct_base(v->field.p, __typeof__(*v), field))
-
-/*
- * Walk a list backwards, setting 'v' in turn to the containing structure
- * of each item.
- * The containing structure should be the same type as 'v'.
- * The list should be 'struct dm_list list' within the containing structure.
- */
-#define dm_list_iterate_back_items(v, head) dm_list_iterate_back_items_gen(v, (head), list)
-
-/*
- * Return the number of elements in a list by walking it.
- */
-unsigned int dm_list_size(const struct dm_list *head);
 
 /*********
  * selinux
@@ -2758,7 +2436,7 @@ int dm_is_empty_dir(const char *dir);
 int dm_fclose(FILE *stream);
 
 /*
- * Returns size of a buffer which is allocated with dm_malloc.
+ * Returns size of a buffer which is allocated with malloc.
  * Pointer to the buffer is stored in *buf.
  * Returns -1 on failure leaving buf undefined.
  */
@@ -3749,7 +3427,4 @@ int dm_udev_wait_immediate(uint32_t cookie, int *ready);
 #define DM_DEV_DIR_UMASK 0022
 #define DM_CONTROL_NODE_UMASK 0177
 
-#ifdef __cplusplus
-}
-#endif
 #endif				/* LIB_DEVICE_MAPPER_H */
