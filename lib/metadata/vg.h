@@ -89,8 +89,6 @@ struct volume_group {
 	 * a PV label yet. They need to be pvcreate'd at vg_write time.
 	 */
 
-	struct dm_list pvs_to_write; /* struct pv_to_write */
-
 	struct dm_list pv_write_list; /* struct pv_list */
 
 	/*

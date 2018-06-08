@@ -471,27 +471,6 @@ const char *lvmcache_vgname_from_info(struct lvmcache_info *info)
 	return NULL;
 }
 
-char *lvmcache_vgname_from_pvid(struct cmd_context *cmd, const char *pvid)
-{
-	struct lvmcache_info *info;
-	char *vgname;
-
-	if (!lvmcache_device_from_pvid(cmd, (const struct id *)pvid, NULL)) {
-		log_error("Couldn't find device with uuid %s.", pvid);
-		return NULL;
-	}
-
-	info = lvmcache_info_from_pvid(pvid, NULL, 0);
-	if (!info)
-		return_NULL;
-
-	if (!(vgname = dm_pool_strdup(cmd->mem, info->vginfo->vgname))) {
-		log_errno(ENOMEM, "vgname allocation failed");
-		return NULL;
-	}
-	return vgname;
-}
-
 /*
  * Check if any PVs in vg->pvs have the same PVID as any
  * entries in _unused_duplicate_devices.
@@ -1187,61 +1166,6 @@ int lvmcache_get_vgnameids(struct cmd_context *cmd, int include_internal,
 	return 1;
 }
 
-struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd,
-				   int include_internal)
-{
-	struct dm_list *vgids;
-	struct lvmcache_vginfo *vginfo;
-
-	// TODO plug into lvmetad here automagically?
-	lvmcache_label_scan(cmd);
-
-	if (!(vgids = str_list_create(cmd->mem))) {
-		log_error("vgids list allocation failed");
-		return NULL;
-	}
-
-	dm_list_iterate_items(vginfo, &_vginfos) {
-		if (!include_internal && is_orphan_vg(vginfo->vgname))
-			continue;
-
-		if (!str_list_add(cmd->mem, vgids,
-				  dm_pool_strdup(cmd->mem, vginfo->vgid))) {
-			log_error("strlist allocation failed");
-			return NULL;
-		}
-	}
-
-	return vgids;
-}
-
-struct dm_list *lvmcache_get_vgnames(struct cmd_context *cmd,
-				     int include_internal)
-{
-	struct dm_list *vgnames;
-	struct lvmcache_vginfo *vginfo;
-
-	lvmcache_label_scan(cmd);
-
-	if (!(vgnames = str_list_create(cmd->mem))) {
-		log_errno(ENOMEM, "vgnames list allocation failed");
-		return NULL;
-	}
-
-	dm_list_iterate_items(vginfo, &_vginfos) {
-		if (!include_internal && is_orphan_vg(vginfo->vgname))
-			continue;
-
-		if (!str_list_add(cmd->mem, vgnames,
-				  dm_pool_strdup(cmd->mem, vginfo->vgname))) {
-			log_errno(ENOMEM, "strlist allocation failed");
-			return NULL;
-		}
-	}
-
-	return vgnames;
-}
-
 struct dm_list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
 				const char *vgid)
 {
@@ -1308,23 +1232,6 @@ struct device *lvmcache_device_from_pvid(struct cmd_context *cmd, const struct i
 
 	log_debug_devs("No device with uuid %s.", (const char *)pvid);
 	return NULL;
-}
-
-const char *lvmcache_pvid_from_devname(struct cmd_context *cmd,
-				       const char *devname)
-{
-	struct device *dev;
-
-	if (!(dev = dev_cache_get(devname, cmd->filter))) {
-		log_error("%s: Couldn't find device.  Check your filters?",
-			  devname);
-		return NULL;
-	}
-
-	if (!label_read(dev))
-		return NULL;
-
-	return dev->pvid;
 }
 
 int lvmcache_pvid_in_unchosen_duplicates(const char *pvid)
@@ -2433,14 +2340,6 @@ void lvmcache_set_independent_location(const char *vgname)
 
 	if ((vginfo = lvmcache_vginfo_from_vgname(vgname, NULL)))
 		vginfo->independent_metadata_location = 1;
-}
-
-/*
- * Return true iff it is impossible to find out from this info alone whether the
- * PV in question is or is not an orphan.
- */
-int lvmcache_uncertain_ownership(struct lvmcache_info *info) {
-	return mdas_empty_or_ignored(&info->mdas);
 }
 
 uint64_t lvmcache_smallest_mda_size(struct lvmcache_info *info)

@@ -55,7 +55,6 @@ struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
 	}
 
 	dm_list_init(&vg->pvs);
-	dm_list_init(&vg->pvs_to_write);
 	dm_list_init(&vg->pv_write_list);
 	dm_list_init(&vg->pvs_outdated);
 	dm_list_init(&vg->lvs);

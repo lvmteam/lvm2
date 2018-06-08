@@ -680,21 +680,6 @@ int check_pv_dev_sizes(struct volume_group *vg)
 	return r;
 }
 
-/*
- * FIXME: commands shifting to common code in toollib have left a large
- * amount of code only used by liblvm.  Either remove this by shifting
- * liblvm to use toollib, or isolate all this code into a liblvm-specific
- * source file.  All the following and more are only used by liblvm:
- *
- * . get_pvs()
- * . get_vgids()
- * . get_vgnames()
- * . lvmcache_get_vgids()
- * . lvmcache_get_vgnames()
- * . the vg->pvs_to_write list and pv_to_write struct
- * . _pvcreate_write()
- */
-
 int vg_extend_each_pv(struct volume_group *vg, struct pvcreate_params *pp)
 {
 	struct pv_list *pvl;
@@ -1405,49 +1390,6 @@ void pvcreate_params_set_defaults(struct pvcreate_params *pp)
 	dm_list_init(&pp->arg_remove);
 	dm_list_init(&pp->arg_fail);
 	dm_list_init(&pp->pvs);
-}
-
-static int _pvcreate_write(struct cmd_context *cmd, struct pv_to_write *pvw)
-{
-	struct physical_volume *pv = pvw->pv;
-	struct device *dev = pv->dev;
-	const char *pv_name = dev_name(dev);
-
-	if (!label_scan_open_excl(dev)) {
-		log_error("%s not opened: device not written", pv_name);
-		return 0;
-	}
-
-	if (pvw->new_pv) {
-		/* Wipe existing label first */
-		if (!label_remove(dev)) {
-			log_error("Failed to wipe existing label on %s", pv_name);
-			return 0;
-		}
-
-		if (pvw->pp->zero) {
-			log_verbose("Zeroing start of device %s", pv_name);
-			if (!dev_write_zeros(dev, 0, 2048)) {
-				log_error("%s not wiped: aborting", pv_name);
-				return 0;
-			}
-		}
-	}
-
-	log_verbose("Writing physical volume data to disk \"%s\"",
-		    pv_name);
-
-	if (!(pv_write(cmd, pv, 1))) {
-		log_error("Failed to write physical volume \"%s\"", pv_name);
-		return 0;
-	}
-
-	if (pvw->new_pv)
-		log_print_unless_silent("Physical volume \"%s\" successfully created", pv_name);
-	else
-		log_verbose("Physical volume \"%s\" successfully written", pv_name);
-
-	return 1;
 }
 
 static struct physical_volume *_alloc_pv(struct dm_pool *mem, struct device *dev)
@@ -2916,7 +2858,6 @@ static int _handle_historical_lvs(struct volume_group *vg)
 int vg_write(struct volume_group *vg)
 {
 	struct dm_list *mdah;
-	struct pv_to_write *pv_to_write, *pv_to_write_safe;
 	struct pv_list *pvl, *pvl_safe;
 	struct metadata_area *mda;
 	struct lv_list *lvl;
@@ -2991,12 +2932,6 @@ int vg_write(struct volume_group *vg)
 		if (!pv_write(vg->cmd, pvl->pv, 1))
 			return_0;
 		dm_list_del(&pvl->list);
-	}
-
-        dm_list_iterate_items_safe(pv_to_write, pv_to_write_safe, &vg->pvs_to_write) {
-		if (!_pvcreate_write(vg->cmd, pv_to_write))
-			return_0;
-		dm_list_del(&pv_to_write->list);
 	}
 
 	/* Write to each copy of the metadata area */
@@ -4550,55 +4485,6 @@ void free_pv_fid(struct physical_volume *pv)
 	pv_set_fid(pv, NULL);
 }
 
-const char *find_vgname_from_pvid(struct cmd_context *cmd,
-				  const char *pvid)
-{
-	char *vgname;
-	struct lvmcache_info *info;
-
-	vgname = lvmcache_vgname_from_pvid(cmd, pvid);
-
-	if (is_orphan_vg(vgname)) {
-		if (!(info = lvmcache_info_from_pvid(pvid, NULL, 0))) {
-			return_NULL;
-		}
-		/*
-		 * If an orphan PV has no MDAs, or it has MDAs but the
-		 * MDA is ignored, it may appear to be an orphan until
-		 * the metadata is read off another PV in the same VG.
-		 * Detecting this means checking every VG by scanning
-		 * every PV on the system.
-		 */
-		if (lvmcache_uncertain_ownership(info)) {
-			if (!scan_vgs_for_pvs(cmd, WARN_PV_READ)) {
-				log_error("Rescan for PVs without "
-					  "metadata areas failed.");
-				return NULL;
-			}
-			/*
-			 * Ask lvmcache again - we may have a non-orphan
-			 * name now
-			 */
-			vgname = lvmcache_vgname_from_pvid(cmd, pvid);
-		}
-	}
-	return vgname;
-}
-
-
-const char *find_vgname_from_pvname(struct cmd_context *cmd,
-				    const char *pvname)
-{
-	const char *pvid;
-
-	pvid = lvmcache_pvid_from_devname(cmd, pvname);
-	if (!pvid)
-		/* Not a PV */
-		return NULL;
-
-	return find_vgname_from_pvid(cmd, pvid);
-}
-
 static struct physical_volume *_pv_read(struct cmd_context *cmd,
 					const struct format_type *fmt,
 					struct volume_group *vg,
@@ -4634,17 +4520,6 @@ bad:
 	free_pv_fid(pv);
 	dm_pool_free(vg->vgmem, pv);
 	return NULL;
-}
-
-/* May return empty list */
-struct dm_list *get_vgnames(struct cmd_context *cmd, int include_internal)
-{
-	return lvmcache_get_vgnames(cmd, include_internal);
-}
-
-struct dm_list *get_vgids(struct cmd_context *cmd, int include_internal)
-{
-	return lvmcache_get_vgids(cmd, include_internal);
 }
 
 int get_vgnameids(struct cmd_context *cmd, struct dm_list *vgnameids,
@@ -4693,152 +4568,6 @@ int get_vgnameids(struct cmd_context *cmd, struct dm_list *vgnameids,
 	}
 
 	return 1;
-}
-
-static int _get_pvs(struct cmd_context *cmd, uint32_t warn_flags,
-		struct dm_list *pvslist, struct dm_list *vgslist)
-{
-	struct dm_str_list *strl;
-	const char *vgname, *name, *vgid;
-	struct pv_list *pvl, *pvl_copy;
-	struct dm_list *vgids;
-	struct volume_group *vg;
-	int consistent = 0;
-	int old_pvmove;
-	struct vg_list *vgl_item = NULL;
-	int have_pv = 0;
-
-	lvmcache_label_scan(cmd);
-
-	/* Get list of VGs */
-	if (!(vgids = get_vgids(cmd, 1))) {
-		log_error("get_pvs: get_vgids failed");
-		return 0;
-	}
-
-	/* Read every VG to ensure cache consistency */
-	/* Orphan VG is last on list */
-	old_pvmove = pvmove_mode();
-	init_pvmove(1);
-	dm_list_iterate_items(strl, vgids) {
-		vgid = strl->str;
-		if (!vgid)
-			continue;	/* FIXME Unnecessary? */
-		consistent = 0;
-		if (!(name = lvmcache_vgname_from_vgid(NULL, vgid))) {
-			stack;
-			continue;
-		}
-
-		vgname = dm_pool_strdup(cmd->mem, name);
-
-		/*
-		 * When we are retrieving a list to return toliblvm we need
-		 * that list to contain VGs that are modifiable as we are using
-		 * the vgmem pool in the vg to provide allocation for liblvm.
-		 * This is a hack to prevent the vg from getting cached as the
-		 * vgid will be NULL.
-		 * FIXME Remove this hack.
-		 */
-
-		warn_flags |= WARN_INCONSISTENT;
-
-		if (!(vg = vg_read_internal(cmd, vgname, (!vgslist) ? vgid : NULL, 0, warn_flags, &consistent))) {
-			stack;
-			continue;
-		}
-
-		/* Move PVs onto results list */
-		if (pvslist)
-			dm_list_iterate_items(pvl, &vg->pvs) {
-				if (!(pvl_copy = _copy_pvl(cmd->mem, pvl))) {
-					log_error("PV list allocation failed");
-					release_vg(vg);
-					return 0;
-				}
-				/* If we are going to release the VG, don't
-				 * store a pointer to it in the PV structure.
-				 */
-				if (!vgslist)
-					pvl_copy->pv->vg = NULL;
-				else
-					/*
-					 * Make sure the vg mode indicates
-					 * writeable.
-					 * FIXME Rework function to take a
-					 * parameter to control this
-					 */
-					pvl_copy->pv->vg->open_mode = 'w';
-				have_pv = 1;
-				dm_list_add(pvslist, &pvl_copy->list);
-			}
-
-		/*
-		 * In the case of the library we want to preserve the embedded
-		 * volume group as subsequent calls to retrieve data about the
-		 * PV require it.
-		 */
-		if (!vgslist || !have_pv)
-			release_vg(vg);
-		else {
-			/*
-			 * Add VG to list of VG objects that will be returned
-			 */
-			vgl_item = dm_pool_alloc(cmd->mem, sizeof(*vgl_item));
-			if (!vgl_item) {
-				log_error("VG list element allocation failed");
-				return 0;
-			}
-			vgl_item->vg = vg;
-			vg = NULL;
-			dm_list_add(vgslist, &vgl_item->list);
-		}
-		have_pv = 0;
-	}
-	init_pvmove(old_pvmove);
-
-	if (!pvslist)
-		dm_pool_free(cmd->mem, vgids);
-
-	return 1;
-}
-
-/*
- * Retrieve a list of all physical volumes.
- * @param 	cmd	Command context
- * @param	pvslist	Set to NULL if you want memory for list created,
- * 			else valid memory
- * @param	vgslist	Set to NULL if you need the pv structures to contain
- * 			valid vg pointer.  This is the list of VGs
- * @returns NULL on errors, else pvslist which will equal passed-in value if
- * supplied.
- */
-struct dm_list *get_pvs_internal(struct cmd_context *cmd,
-				 struct dm_list *pvslist,
-				 struct dm_list *vgslist)
-{
-	struct dm_list *results = pvslist;
-
-	if (NULL == results) {
-		if (!(results = dm_pool_alloc(cmd->mem, sizeof(*results)))) {
-			log_error("PV list allocation failed");
-			return 0;
-		}
-
-		dm_list_init(results);
-	}
-
-	if (!_get_pvs(cmd, WARN_PV_READ, results, vgslist)) {
-		if (!pvslist)
-			dm_pool_free(cmd->mem, results);
-		return NULL;
-	}
-	return results;
-}
-
-int scan_vgs_for_pvs(struct cmd_context *cmd, uint32_t warn_flags)
-{
-	return _get_pvs(cmd, warn_flags, NULL, NULL);
 }
 
 int pv_write(struct cmd_context *cmd,
