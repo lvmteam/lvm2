@@ -728,34 +728,7 @@ global {
 	etc = "@CONFDIR@"
 
 	# Configuration option global/locking_type.
-	# Type of locking to use.
-	# 
-	# Accepted values:
-	#   0
-	#     Turns off locking. Warning: this risks metadata corruption if
-	#     commands run concurrently.
-	#   1
-	#     LVM uses local file-based locking, the standard mode.
-	#   2
-	#     LVM uses the external shared library locking_library.
-	#   3
-	#     LVM uses built-in clustered locking with clvmd.
-	#     This is incompatible with lvmetad. If use_lvmetad is enabled,
-	#     LVM prints a warning and disables lvmetad use.
-	#   4
-	#     LVM uses read-only locking which forbids any operations that
-	#     might change metadata.
-	#   5
-	#     Offers dummy locking for tools that do not need any locks.
-	#     You should not need to set this directly; the tools will select
-	#     when to use it instead of the configured locking_type.
-	#     Do not use lvmetad or the kernel device-mapper driver with this
-	#     locking type. It is used by the --readonly option that offers
-	#     read-only access to Volume Group metadata that cannot be locked
-	#     safely because it belongs to an inaccessible domain and might be
-	#     in use, for example a virtual machine image or a disk that is
-	#     shared by a clustered machine.
-	# 
+	# This setting is no longer used.
 	locking_type = 1
 
 	# Configuration option global/wait_for_locks.
@@ -763,19 +736,11 @@ global {
 	wait_for_locks = 1
 
 	# Configuration option global/fallback_to_clustered_locking.
-	# Attempt to use built-in cluster locking if locking_type 2 fails.
-	# If using external locking (type 2) and initialisation fails, with
-	# this enabled, an attempt will be made to use the built-in clustered
-	# locking. Disable this if using a customised locking_library.
+	# This setting is no longer used.
 	fallback_to_clustered_locking = 1
 
 	# Configuration option global/fallback_to_local_locking.
-	# Use locking_type 1 (local) if locking_type 2 or 3 fail.
-	# If an attempt to initialise type 2 or type 3 locking failed, perhaps
-	# because cluster components such as clvmd are not running, with this
-	# enabled, an attempt will be made to use local file-based locking
-	# (type 1). If this succeeds, only commands against local VGs will
-	# proceed. VGs marked as clustered will be ignored.
+	# This setting is no longer used.
 	fallback_to_local_locking = 1
 
 	# Configuration option global/locking_dir.
@@ -799,7 +764,7 @@ global {
 	# This configuration option does not have a default value defined.
 
 	# Configuration option global/locking_library.
-	# The external locking library to use for locking_type 2.
+	# This setting is no longer used.
 	# This configuration option has an automatic default value.
 	# locking_library = "liblvm2clusterlock.so"
 

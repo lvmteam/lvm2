@@ -133,6 +133,10 @@ lvchange - Change the attributes of logical volume(s)
 .ad b
 .br
 .ad l
+    \fB--nolocking\fP
+.ad b
+.br
+.ad l
     \fB--noudevsync\fP
 .ad b
 .br
@@ -576,6 +580,10 @@ Common options for lvm:
 .ad b
 .br
 .ad l
+[    \fB--nolocking\fP ]
+.ad b
+.br
+.ad l
 [    \fB--profile\fP \fIString\fP ]
 .ad b
 .br
@@ -873,6 +881,12 @@ Start (yes) or stop (no) monitoring an LV with dmeventd.
 dmeventd monitors kernel events for an LV, and performs
 automated maintenance for the LV in reponse to specific events.
 See \fBdmeventd\fP(8) for more information.
+.ad b
+.HP
+.ad l
+\fB--nolocking\fP
+.br
+Disable locking.
 .ad b
 .HP
 .ad l

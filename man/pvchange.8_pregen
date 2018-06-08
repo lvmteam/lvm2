@@ -154,6 +154,10 @@ Common options for lvm:
 .ad b
 .br
 .ad l
+[    \fB--nolocking\fP ]
+.ad b
+.br
+.ad l
 [    \fB--profile\fP \fIString\fP ]
 .ad b
 .br
@@ -266,6 +270,12 @@ Specifies the metadataignore property of a PV.
 If yes, metadata areas on the PV are ignored, and lvm will
 not store metadata in the metadata areas of the PV.
 If no, lvm will store metadata on the PV.
+.ad b
+.HP
+.ad l
+\fB--nolocking\fP
+.br
+Disable locking.
 .ad b
 .HP
 .ad l

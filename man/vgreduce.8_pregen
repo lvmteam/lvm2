@@ -53,6 +53,10 @@ vgreduce - Remove physical volume(s) from a volume group
 .ad b
 .br
 .ad l
+    \fB--nolocking\fP
+.ad b
+.br
+.ad l
     \fB--profile\fP \fIString\fP
 .ad b
 .br
@@ -187,6 +191,10 @@ Common options for lvm:
 .ad b
 .br
 .ad l
+[    \fB--nolocking\fP ]
+.ad b
+.br
+.ad l
 [    \fB--profile\fP \fIString\fP ]
 .ad b
 .br
@@ -269,6 +277,12 @@ Display long help text.
 \fB--mirrorsonly\fP
 .br
 Only remove missing PVs from mirror LVs.
+.ad b
+.HP
+.ad l
+\fB--nolocking\fP
+.br
+Disable locking.
 .ad b
 .HP
 .ad l

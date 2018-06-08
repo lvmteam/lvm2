@@ -79,6 +79,10 @@ Common options for lvm:
 .ad b
 .br
 .ad l
+[    \fB--nolocking\fP ]
+.ad b
+.br
+.ad l
 [    \fB--profile\fP \fIString\fP ]
 .ad b
 .br
@@ -141,6 +145,12 @@ Display long help text.
 \fB-l\fP|\fB--lvmpartition\fP
 .br
 Only report PVs.
+.ad b
+.HP
+.ad l
+\fB--nolocking\fP
+.br
+Disable locking.
 .ad b
 .HP
 .ad l

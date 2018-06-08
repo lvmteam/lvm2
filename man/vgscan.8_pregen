@@ -85,6 +85,10 @@ Common options for lvm:
 .ad b
 .br
 .ad l
+[    \fB--nolocking\fP ]
+.ad b
+.br
+.ad l
 [    \fB--profile\fP \fIString\fP ]
 .ad b
 .br
@@ -161,6 +165,12 @@ Display long help text.
 .br
 Also checks the LVM special files in /dev that are needed for active
 LVs and creates any missing ones and removes unused ones.
+.ad b
+.HP
+.ad l
+\fB--nolocking\fP
+.br
+Disable locking.
 .ad b
 .HP
 .ad l

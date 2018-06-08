@@ -110,6 +110,10 @@ Common options for lvm:
 .ad b
 .br
 .ad l
+[    \fB--nolocking\fP ]
+.ad b
+.br
+.ad l
 [    \fB--profile\fP \fIString\fP ]
 .ad b
 .br
@@ -211,6 +215,12 @@ Display long help text.
 Do not perform fsck before resizing filesystem when filesystem
 requires it. You may need to use --force to proceed with
 this option.
+.ad b
+.HP
+.ad l
+\fB--nolocking\fP
+.br
+Disable locking.
 .ad b
 .HP
 .ad l

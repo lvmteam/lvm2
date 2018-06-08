@@ -137,6 +137,10 @@ Common options for lvm:
 .ad b
 .br
 .ad l
+[    \fB--nolocking\fP ]
+.ad b
+.br
+.ad l
 [    \fB--profile\fP \fIString\fP ]
 .ad b
 .br
@@ -257,6 +261,12 @@ Display long help text.
 \fB-n\fP|\fB--name\fP \fIString\fP
 .br
 Move only the extents belonging to the named LV.
+.ad b
+.HP
+.ad l
+\fB--nolocking\fP
+.br
+Disable locking.
 .ad b
 .HP
 .ad l

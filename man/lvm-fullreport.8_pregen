@@ -72,10 +72,6 @@ if information changes between commands.
 .ad b
 .br
 .ad l
-[    \fB--nolocking\fP ]
-.ad b
-.br
-.ad l
 [    \fB--nosuffix\fP ]
 .ad b
 .br
@@ -167,6 +163,10 @@ Common options for lvm:
 .br
 .ad l
 [    \fB--longhelp\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nolocking\fP ]
 .ad b
 .br
 .ad l

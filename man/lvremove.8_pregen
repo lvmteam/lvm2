@@ -114,6 +114,10 @@ Common options for lvm:
 .ad b
 .br
 .ad l
+[    \fB--nolocking\fP ]
+.ad b
+.br
+.ad l
 [    \fB--profile\fP \fIString\fP ]
 .ad b
 .br
@@ -192,6 +196,12 @@ Display long help text.
 Do not record history of LVs being removed.
 This has no effect unless the configuration setting
 metadata/record_lvs_history is enabled.
+.ad b
+.HP
+.ad l
+\fB--nolocking\fP
+.br
+Disable locking.
 .ad b
 .HP
 .ad l
