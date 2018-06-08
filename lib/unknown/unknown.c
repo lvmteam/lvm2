@@ -12,6 +12,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/commands/toolcontext.h"
 #include "lib/metadata/segtype.h"
@@ -49,8 +50,8 @@ static int _unknown_text_export(const struct lv_segment *seg, struct formatter *
 
 static void _unknown_destroy(struct segment_type *segtype)
 {
-	dm_free((void *) segtype->name);
-	dm_free(segtype);
+	free((void *) segtype->name);
+	free(segtype);
 }
 
 static struct segtype_handler _unknown_ops = {
@@ -61,7 +62,7 @@ static struct segtype_handler _unknown_ops = {
 
 struct segment_type *init_unknown_segtype(struct cmd_context *cmd, const char *name)
 {
-	struct segment_type *segtype = dm_zalloc(sizeof(*segtype));
+	struct segment_type *segtype = zalloc(sizeof(*segtype));
 
 	if (!segtype) {
 		log_error("Failed to allocate memory for unknown segtype");
@@ -69,9 +70,9 @@ struct segment_type *init_unknown_segtype(struct cmd_context *cmd, const char *n
 	}
 
 	segtype->ops = &_unknown_ops;
-	if (!(segtype->name = dm_strdup(name))) {
+	if (!(segtype->name = strdup(name))) {
 		log_error("Failed to allocate name.");
-		dm_free(segtype);
+		free(segtype);
 		return NULL;
 	}
 

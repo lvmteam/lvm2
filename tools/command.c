@@ -51,9 +51,9 @@ do { \
 	printf(fmt "\n", ##args); \
 } while (0)
 
-#define dm_malloc malloc
-#define dm_strdup strdup
-#define dm_free free
+#define malloc malloc
+#define strdup strdup
+#define free free
 #define dm_snprintf snprintf
 
 static int dm_strncpy(char *dest, const char *src, size_t n)
@@ -746,7 +746,7 @@ static void _add_oo_definition_line(const char *name, const char *line)
 
 	oo = &_oo_lines[_oo_line_count++];
 
-	if (!(oo->name = dm_strdup(name))) {
+	if (!(oo->name = strdup(name))) {
 		log_error("Failer to duplicate name %s.", name);
 		return; /* FIXME: return code */
 	}
@@ -759,7 +759,7 @@ static void _add_oo_definition_line(const char *name, const char *line)
 	}
 
 	start = strchr(line, ':') + 2;
-	if (!(oo->line = dm_strdup(start))) {
+	if (!(oo->line = strdup(start))) {
 		log_error("Failer to duplicate line %s.", start);
 		return;
 	}
@@ -780,14 +780,14 @@ static void _append_oo_definition_line(const char *new_line)
 
 	/* +2 = 1 space between old and new + 1 terminating \0 */
 	len = strlen(old_line) + strlen(new_line) + 2;
-	line = dm_malloc(len);
+	line = malloc(len);
 	if (!line) {
 		log_error("Parsing command defs: no memory.");
 		return;
 	}
 
 	(void) dm_snprintf(line, len, "%s %s", old_line, new_line);
-	dm_free(oo->line);
+	free(oo->line);
 	oo->line = line;
 }
 
@@ -834,14 +834,14 @@ static void _include_optional_opt_args(struct cmd_context *cmdtool, struct comma
 		return;
 	}
 
-	if (!(line = dm_strdup(oo_line))) {
+	if (!(line = strdup(oo_line))) {
 		cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
 		return;
 	}
 
 	_split_line(line, &line_argc, line_argv, ' ');
 	__add_optional_opt_line(cmdtool, cmd, line_argc, line_argv);
-	dm_free(line);
+	free(line);
 }
 
 /*
@@ -1090,14 +1090,14 @@ static void _include_required_opt_args(struct cmd_context *cmdtool, struct comma
 		return;
 	}
 
-	if (!(line = dm_strdup(oo_line))) {
+	if (!(line = strdup(oo_line))) {
 		cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
 		return;
 	}
 
 	_split_line(line, &line_argc, line_argv, ' ');
 	_add_required_opt_line(cmdtool, cmd, line_argc, line_argv);
-	dm_free(line);
+	free(line);
 }
 
 /* Process what follows command_name, which are required opt/pos args. */
@@ -1568,8 +1568,8 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 
 	for (i = 0; i < _oo_line_count; i++) {
 		struct oo_line *oo = &_oo_lines[i];
-		dm_free(oo->name);
-		dm_free(oo->line);
+		free(oo->name);
+		free(oo->line);
 	}
 	memset(&_oo_lines, 0, sizeof(_oo_lines));
 	_oo_line_count = 0;
@@ -2298,7 +2298,7 @@ static void _print_val_man(struct command_name *cname, int opt_enum, int val_enu
 	}
 
 	if (strchr(str, '|')) {
-		line = dm_strdup(str);
+		line = strdup(str);
 		_split_line(line, &line_argc, line_argv, '|');
 		for (i = 0; i < line_argc; i++) {
 			if (i)
@@ -2308,7 +2308,7 @@ static void _print_val_man(struct command_name *cname, int opt_enum, int val_enu
 			else
 				printf("\\fB%s\\fP", line_argv[i]);
 		}
-		dm_free(line);
+		free(line);
 		return;
 	}
 
@@ -3318,7 +3318,7 @@ static int _include_description_file(char *name, char *des_file)
 		goto out_close;
 	}
 
-	if (!(buf = dm_malloc(statbuf.st_size + 1))) {
+	if (!(buf = malloc(statbuf.st_size + 1))) {
 		log_error("Failed to allocate buffer for description file %s.", des_file);
 		goto out_close;
 	}
@@ -3333,7 +3333,7 @@ static int _include_description_file(char *name, char *des_file)
 	r = 1;
 
 out_free:
-	dm_free(buf);
+	free(buf);
 out_close:
 	(void) close(fd);
 
@@ -3520,7 +3520,7 @@ int main(int argc, char *argv[])
 
 	memset(&commands, 0, sizeof(commands));
 
-	if (!(stdout_buf = dm_malloc(sz)))
+	if (!(stdout_buf = malloc(sz)))
 		log_error("Failed to allocate stdout buffer; carrying on with default buffering.");
 	else
 		setbuffer(stdout, stdout_buf, sz);

@@ -13,6 +13,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/commands/toolcontext.h"
 #include "lib/metadata/segtype.h"
@@ -212,7 +213,7 @@ static int _striped_target_present(struct cmd_context *cmd,
 
 static void _striped_destroy(struct segment_type *segtype)
 {
-	dm_free(segtype);
+	free(segtype);
 }
 
 static struct segtype_handler _striped_ops = {
@@ -232,7 +233,7 @@ static struct segtype_handler _striped_ops = {
 
 static struct segment_type *_init_segtype(struct cmd_context *cmd, const char *name, uint64_t target)
 {
-	struct segment_type *segtype = dm_zalloc(sizeof(*segtype));
+	struct segment_type *segtype = zalloc(sizeof(*segtype));
 
 	if (!segtype)
 		return_NULL;

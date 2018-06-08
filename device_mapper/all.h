@@ -33,8 +33,6 @@
 
 #include "base/data-struct/list.h"
 
-#include "base/data-struct/list.h"
-
 #ifndef __GNUC__
 # define __typeof__ typeof
 #endif
@@ -826,7 +824,7 @@ int dm_stats_get_region_nr_histogram_bins(const struct dm_stats *dms,
  *
  * On sucess a pointer to the struct dm_histogram representing the
  * bounds values is returned, or NULL in the case of error. The returned
- * pointer should be freed using dm_free() when no longer required.
+ * pointer should be freed using free() when no longer required.
  */
 struct dm_histogram *dm_histogram_bounds_from_string(const char *bounds_str);
 
@@ -1325,7 +1323,7 @@ int dm_stats_get_group_descriptor(const struct dm_stats *dms,
  * On success the function returns a pointer to an array of uint64_t
  * containing the IDs of the newly created regions. The region_id
  * array is terminated by the value DM_STATS_REGION_NOT_PRESENT and
- * should be freed using dm_free() when no longer required.
+ * should be freed using free() when no longer required.
  *
  * On error NULL is returned.
  *
@@ -1357,7 +1355,7 @@ uint64_t *dm_stats_create_regions_from_fd(struct dm_stats *dms, int fd,
  * regions that were not modified by the call).
  *
  * The region_id array is terminated by the special value
- * DM_STATS_REGION_NOT_PRESENT and should be freed using dm_free()
+ * DM_STATS_REGION_NOT_PRESENT and should be freed using free()
  * when no longer required.
  *
  * On error NULL is returned.
@@ -1478,7 +1476,7 @@ dm_string_mangling_t dm_get_name_mangling_mode(void);
 /*
  * Get mangled/unmangled form of the device-mapper name or uuid
  * irrespective of the global setting (set by dm_set_name_mangling_mode).
- * The name or uuid returned needs to be freed after use by calling dm_free!
+ * The name or uuid returned needs to be freed after use by calling free!
  */
 char *dm_task_get_name_mangled(const struct dm_task *dmt);
 char *dm_task_get_name_unmangled(const struct dm_task *dmt);
@@ -2070,35 +2068,7 @@ uint32_t dm_tree_get_cookie(struct dm_tree_node *node);
  * Library functions
  *****************************************************************************/
 
-/*******************
- * Memory management
- *******************/
-
-/*
- * Never use these functions directly - use the macros following instead.
- */
-void *dm_malloc_wrapper(size_t s, const char *file, int line)
-	__attribute__((__malloc__)) __attribute__((__warn_unused_result__));
-void *dm_malloc_aligned_wrapper(size_t s, size_t a, const char *file, int line)
-	__attribute__((__malloc__)) __attribute__((__warn_unused_result__));
-void *dm_zalloc_wrapper(size_t s, const char *file, int line)
-	__attribute__((__malloc__)) __attribute__((__warn_unused_result__));
-void *dm_realloc_wrapper(void *p, unsigned int s, const char *file, int line)
-	__attribute__((__warn_unused_result__));
-void dm_free_wrapper(void *ptr);
-char *dm_strdup_wrapper(const char *s, const char *file, int line)
-	__attribute__((__warn_unused_result__));
-int dm_dump_memory_wrapper(void);
-void dm_bounds_check_wrapper(void);
-
-#define dm_malloc(s) dm_malloc_wrapper((s), __FILE__, __LINE__)
-#define dm_malloc_aligned(s, a) dm_malloc_aligned_wrapper((s), (a),  __FILE__, __LINE__)
-#define dm_zalloc(s) dm_zalloc_wrapper((s), __FILE__, __LINE__)
-#define dm_strdup(s) dm_strdup_wrapper((s), __FILE__, __LINE__)
-#define dm_free(p) dm_free_wrapper(p)
-#define dm_realloc(p, s) dm_realloc_wrapper((p), (s), __FILE__, __LINE__)
-#define dm_dump_memory() dm_dump_memory_wrapper()
-#define dm_bounds_check() dm_bounds_check_wrapper()
+#define malloc_aligned(s, a) malloc_aligned_wrapper((s), (a),  __FILE__, __LINE__)
 
 /*
  * The pool allocator is useful when you are going to allocate
@@ -2265,7 +2235,7 @@ int dm_bit_get_prev(dm_bitset_t bs, int last_bit);
  * notation used is identical to the kernel bitmap parser (cpuset etc.)
  * and supports both lists ("1,2,3") and ranges ("1-2,5-8"). If the mem
  * parameter is NULL memory for the bitset will be allocated using
- * dm_malloc(). Otherwise the bitset will be allocated using the supplied
+ * malloc(). Otherwise the bitset will be allocated using the supplied
  * dm_pool.
  */
 dm_bitset_t dm_bitset_parse_list(const char *str, struct dm_pool *mem,
@@ -2557,7 +2527,7 @@ int dm_is_empty_dir(const char *dir);
 int dm_fclose(FILE *stream);
 
 /*
- * Returns size of a buffer which is allocated with dm_malloc.
+ * Returns size of a buffer which is allocated with malloc.
  * Pointer to the buffer is stored in *buf.
  * Returns -1 on failure leaving buf undefined.
  */

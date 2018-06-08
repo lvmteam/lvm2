@@ -435,7 +435,7 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 			block_on_error = 1;
 	}
 
-	lc = dm_zalloc(sizeof(*lc));
+	lc = zalloc(sizeof(*lc));
 	if (!lc) {
 		LOG_ERROR("Unable to allocate cluster log context");
 		r = -ENOMEM;
@@ -532,9 +532,9 @@ fail:
 			LOG_ERROR("Close device error, %s: %s",
 				  disk_path, strerror(errno));
 		free(lc->disk_buffer);
-		dm_free(lc->sync_bits);
-		dm_free(lc->clean_bits);
-		dm_free(lc);
+		free(lc->sync_bits);
+		free(lc->clean_bits);
+		free(lc);
 	}
 	return r;
 }
@@ -659,9 +659,9 @@ static int clog_dtr(struct dm_ulog_request *rq)
 			  strerror(errno));
 	if (lc->disk_buffer)
 		free(lc->disk_buffer);
-	dm_free(lc->clean_bits);
-	dm_free(lc->sync_bits);
-	dm_free(lc);
+	free(lc->clean_bits);
+	free(lc->sync_bits);
+	free(lc);
 
 	return 0;
 }

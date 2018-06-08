@@ -269,11 +269,11 @@ static int _line_append(struct config_output *out, const char *fmt, ...)
 
 	if (!dm_pool_grow_object(out->mem, dyn_buf ? : buf, 0)) {
 		log_error("dm_pool_grow_object failed for config line");
-		dm_free(dyn_buf);
+		free(dyn_buf);
 		return 0;
 	}
 
-	dm_free(dyn_buf);
+	free(dyn_buf);
 
 	return 1;
 }
@@ -1441,12 +1441,12 @@ static int _enumerate(const char *path, struct dm_config_node *cn, int (*cb)(con
 		} else
 			if (!cb(sub, cn, baton))
 				goto_bad;
-		dm_free(sub);
+		free(sub);
 		cn = cn->sib;
 	}
 	return 1;
 bad:
-	dm_free(sub);
+	free(sub);
 	return 0;
 }
 

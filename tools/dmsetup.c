@@ -17,6 +17,7 @@
  */
 #include "tools/tool.h"
 
+#include "base/memory/zalloc.h"
 #include "device_mapper/misc/dm-logging.h"
 
 #include <ctype.h>
@@ -398,7 +399,7 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 
 #ifndef HAVE_GETLINE
 	buffer_size = LINE_SIZE;
-	if (!(buffer = dm_malloc(buffer_size))) {
+	if (!(buffer = malloc(buffer_size))) {
 		log_error("Failed to malloc line buffer.");
 		return 0;
 	}
@@ -415,7 +416,7 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 out:
 	memset(buffer, 0, buffer_size);
 #ifndef HAVE_GETLINE
-	dm_free(buffer);
+	free(buffer);
 #else
 	free(buffer);
 #endif
@@ -509,7 +510,7 @@ static char *_extract_uuid_prefix(const char *uuid, const int separator)
 		ptr = strchr(uuid, separator);
 
 	len = ptr ? ptr - uuid : 0;
-	if (!(uuid_prefix = dm_malloc(len + 1))) {
+	if (!(uuid_prefix = malloc(len + 1))) {
 		log_error("Failed to allocate memory to extract uuid prefix.");
 		return NULL;
 	}
@@ -527,14 +528,14 @@ static struct dm_split_name *_get_split_name(const char *uuid, const char *name,
 {
 	struct dm_split_name *split_name;
 
-	if (!(split_name = dm_malloc(sizeof(*split_name)))) {
+	if (!(split_name = malloc(sizeof(*split_name)))) {
 		log_error("Failed to allocate memory to split device name "
 			  "into components.");
 		return NULL;
 	}
 
 	if (!(split_name->subsystem = _extract_uuid_prefix(uuid, separator))) {
-		dm_free(split_name);
+		free(split_name);
 		return_NULL;
 	}
 
@@ -542,7 +543,7 @@ static struct dm_split_name *_get_split_name(const char *uuid, const char *name,
 	    split_name->lv_layer = (char *) "";
 
 	if (!strcmp(split_name->subsystem, "LVM") &&
-	    (!(split_name->vg_name = dm_strdup(name)) ||
+	    (!(split_name->vg_name = strdup(name)) ||
 	     !dm_split_lvm_name(NULL, NULL, &split_name->vg_name,
 				&split_name->lv_name, &split_name->lv_layer)))
 		log_error("Failed to allocate memory to split LVM name "
@@ -558,10 +559,10 @@ static void _destroy_split_name(struct dm_split_name *split_name)
 	 * of memory as vg_name so don't need to be freed separately.
 	 */
 	if (!strcmp(split_name->subsystem, "LVM"))
-		dm_free(split_name->vg_name);
+		free(split_name->vg_name);
 
-	dm_free(split_name->subsystem);
-	dm_free(split_name);
+	free(split_name->subsystem);
+	free(split_name);
 }
 
 /*
@@ -1220,7 +1221,7 @@ static char *_slurp_stdin(void)
 	size_t total = 0;
 	ssize_t n = 0;
 
-	if (!(buf = dm_malloc(bufsize))) {
+	if (!(buf = malloc(bufsize))) {
 		log_error("Buffer memory allocation failed.");
 		return NULL;
 	}
@@ -1233,7 +1234,7 @@ static char *_slurp_stdin(void)
 
 		if (n < 0) {
 			log_error("Read from stdin aborted: %s", strerror(errno));
-			dm_free(buf);
+			free(buf);
 			return NULL;
 		}
 
@@ -1244,7 +1245,7 @@ static char *_slurp_stdin(void)
 		pos += n;
 		if (total == bufsize - 1) {
 			bufsize *= 2;
-			if (!(buf = dm_realloc(buf, bufsize))) {
+			if (!(buf = realloc(buf, bufsize))) {
 				log_error("Buffer memory extension to %" PRIsize_t " bytes failed.", bufsize);
 				return NULL;
 			}
@@ -1396,7 +1397,7 @@ static int _create_concise(const struct command *cmd, int argc, char **argv)
 
 out:
 	if (!argc)
-		dm_free(concise_format);
+		free(concise_format);
 
 	return 0;
 }
@@ -1529,7 +1530,7 @@ static int _message(CMD_ARGS)
 	for (i = 0; i < argc; i++)
 		sz += strlen(argv[i]) + 1;
 
-	if (!(str = dm_zalloc(sz))) {
+	if (!(str = zalloc(sz))) {
 		log_error("Message string allocation failed.");
 		goto out;
 	}
@@ -1542,7 +1543,7 @@ static int _message(CMD_ARGS)
 
 	i = dm_task_set_message(dmt, str);
 
-	dm_free(str);
+	free(str);
 
 	if (!i)
 		goto_out;
@@ -3141,7 +3142,7 @@ static int _dm_mangled_name_disp(struct dm_report *rh,
 
 	if ((name = dm_task_get_name_mangled((const struct dm_task *) data))) {
 		r = dm_report_field_string(rh, field, (const char * const *) &name);
-		dm_free(name);
+		free(name);
 	}
 
 	return r;
@@ -3157,7 +3158,7 @@ static int _dm_unmangled_name_disp(struct dm_report *rh,
 
 	if ((name = dm_task_get_name_unmangled((const struct dm_task *) data))) {
 		r = dm_report_field_string(rh, field, (const char * const *) &name);
-		dm_free(name);
+		free(name);
 	}
 
 	return r;
@@ -3186,7 +3187,7 @@ static int _dm_mangled_uuid_disp(struct dm_report *rh,
 
 	if ((uuid = dm_task_get_uuid_mangled((const struct dm_task *) data))) {
 		r = dm_report_field_string(rh, field, (const char * const *) &uuid);
-		dm_free(uuid);
+		free(uuid);
 	}
 
 	return r;
@@ -3202,7 +3203,7 @@ static int _dm_unmangled_uuid_disp(struct dm_report *rh,
 
 	if ((uuid = dm_task_get_uuid_unmangled((const struct dm_task *) data))) {
 		r = dm_report_field_string(rh, field, (const char * const *) &uuid);
-		dm_free(uuid);
+		free(uuid);
 	}
 
 	return r;
@@ -4772,13 +4773,13 @@ static int _report_init(const struct command *cmd, const char *subcommand)
 			char *tmpopts;
 			opt_fields = _string_args[OPTIONS_ARG] + 1;
 			len = strlen(options) + strlen(opt_fields) + 2;
-			if (!(tmpopts = dm_malloc(len))) {
+			if (!(tmpopts = malloc(len))) {
 				log_error("Failed to allocate option string.");
 				return 0;
 			}
 			if (dm_snprintf(tmpopts, len, "%s,%s",
 					options, opt_fields) < 0) {
-				dm_free(tmpopts);
+				free(tmpopts);
 				return 0;
 			}
 			options = tmpopts;
@@ -4845,7 +4846,7 @@ static int _report_init(const struct command *cmd, const char *subcommand)
 
 out:
 	if (len)
-		dm_free(options);
+		free(options);
 
 	return r;
 }
@@ -4950,8 +4951,8 @@ static int _mangle(CMD_ARGS)
 	r = _do_rename(name, new_name, NULL);
 
 out:
-	dm_free(new_name);
-	dm_free(new_uuid);
+	free(new_name);
+	free(new_uuid);
 	dm_task_destroy(dmt);
 	return r;
 }
@@ -5120,7 +5121,7 @@ static int _stats_group_segments(struct dm_stats *dms, uint64_t *region_ids,
 	uint64_t group_id;
 	int r, i;
 
-	this_region = regions = dm_malloc(bufsize);
+	this_region = regions = malloc(bufsize);
 
 	if (!regions) {
 		log_error("Could not allocate memory for region_id table.");
@@ -5154,7 +5155,7 @@ static int _stats_group_segments(struct dm_stats *dms, uint64_t *region_ids,
 		log_error("Failed to create group for regions %s.", regions);
 
 bad:
-	dm_free(regions);
+	free(regions);
 	return r;
 }
 
@@ -5218,7 +5219,7 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 	if (!segments || (info.target_count == 1))
 		region_ids = &region_id;
 	else
-		region_ids = dm_malloc(info.target_count * sizeof(*region_ids));
+		region_ids = malloc(info.target_count * sizeof(*region_ids));
 
 	do {
 		uint64_t segment_start, segment_len;
@@ -5262,7 +5263,7 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 
 out:
 	if (region_ids != &region_id)
-		dm_free(region_ids);
+		free(region_ids);
 
 	dm_task_destroy(dmt);
 	dm_stats_destroy(dms);
@@ -5384,7 +5385,7 @@ static int _stats_create_file(CMD_ARGS)
 
 	if (bounds_str
 	    && !(bounds = dm_histogram_bounds_from_string(bounds_str))) {
-		dm_free(abspath);
+		free(abspath);
 		return_0;
 	}
 
@@ -5461,15 +5462,15 @@ static int _stats_create_file(CMD_ARGS)
 		while (*(++region) != DM_STATS_REGIONS_ALL);
 	}
 
-	dm_free(regions);
-	dm_free(abspath);
-	dm_free(bounds);
+	free(regions);
+	free(abspath);
+	free(bounds);
 	dm_stats_destroy(dms);
 	return 1;
 
 bad:
-	dm_free(abspath);
-	dm_free(bounds);
+	free(abspath);
+	free(bounds);
 
 	if ((fd > -1) && close(fd))
 		log_sys_debug("close", path);
@@ -6073,13 +6074,13 @@ out:
 	if (close(fd))
 		log_sys_debug("close", abspath);
 
-	dm_free(regions);
-	dm_free(abspath);
+	free(regions);
+	free(abspath);
 	dm_stats_destroy(dms);
 	return 1;
 
 bad:
-	dm_free(abspath);
+	free(abspath);
 
 	if ((fd > -1) && close(fd))
 		log_sys_debug("close", path);
@@ -6524,7 +6525,7 @@ static char *_parse_loop_device_name(const char *dev, const char *dev_dir)
 	char *buf;
 	char *device = NULL;
 
-	if (!(buf = dm_malloc(PATH_MAX)))
+	if (!(buf = malloc(PATH_MAX)))
 		return_NULL;
 
 	if (dev[0] == '/') {
@@ -6542,7 +6543,7 @@ static char *_parse_loop_device_name(const char *dev, const char *dev_dir)
 
 		if (!dm_strncpy(buf, strrchr(device, '/') + 1, PATH_MAX))
 			goto_bad;
-		dm_free(device);
+		free(device);
 	} else {
 		/* check for device number */
 		if (strncmp(dev, "loop", sizeof("loop") - 1))
@@ -6554,8 +6555,8 @@ static char *_parse_loop_device_name(const char *dev, const char *dev_dir)
 
 	return buf;
 bad:
-	dm_free(device);
-	dm_free(buf);
+	free(device);
+	free(buf);
 
 	return NULL;
 }
@@ -6704,7 +6705,7 @@ static int _process_losetup_switches(const char *base, int *argcp, char ***argvp
 	if (*argcp != 2) {
 		log_error("%s: Too few arguments.", base);
 		_usage(stderr);
-		dm_free(device_name);
+		free(device_name);
 		return 0;
 	}
 
@@ -6713,15 +6714,15 @@ static int _process_losetup_switches(const char *base, int *argcp, char ***argvp
 		log_error("%s: Could not parse loop file name %s.",
 			  base, (*argvp)[1]);
 		_usage(stderr);
-		dm_free(device_name);
+		free(device_name);
 		return 0;
 	}
 
-	_table = dm_malloc(LOOP_TABLE_SIZE);
+	_table = malloc(LOOP_TABLE_SIZE);
 	if (!_table ||
 	    !_loop_table(_table, (size_t) LOOP_TABLE_SIZE, loop_file, device_name, offset)) {
 		log_error("Could not build device-mapper table for %s.", (*argvp)[0]);
-		dm_free(device_name);
+		free(device_name);
 		return 0;
 	}
 	_switches[TABLE_ARG]++;
@@ -7186,7 +7187,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 			_switches[SHOWKEYS_ARG]++;
 		if (ind == TABLE_ARG) {
 			_switches[TABLE_ARG]++;
-			if (!(_table = dm_strdup(optarg))) {
+			if (!(_table = strdup(optarg))) {
 				log_error("Could not allocate memory for table string.");
 				return 0;
 			}
@@ -7450,7 +7451,7 @@ out:
 	if (_dtree)
 		dm_tree_free(_dtree);
 
-	dm_free(_table);
+	free(_table);
 
 	if (_initial_timestamp)
 		dm_timestamp_destroy(_initial_timestamp);

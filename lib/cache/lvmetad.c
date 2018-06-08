@@ -196,7 +196,7 @@ void lvmetad_set_token(const struct dm_config_value *filter)
 {
 	int ft = 0;
 
-	dm_free(_lvmetad_token);
+	free(_lvmetad_token);
 
 	while (filter && filter->type == DM_CFG_STRING) {
 		ft = calc_crc(ft, (const uint8_t *) filter->v.str, strlen(filter->v.str));
@@ -209,7 +209,7 @@ void lvmetad_set_token(const struct dm_config_value *filter)
 
 void lvmetad_release_token(void)
 {
-	dm_free(_lvmetad_token);
+	free(_lvmetad_token);
 	_lvmetad_token = NULL;
 }
 

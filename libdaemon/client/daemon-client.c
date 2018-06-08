@@ -60,7 +60,7 @@ daemon_handle daemon_open(daemon_info i)
 	/* Check protocol and version matches */
 	h.protocol = daemon_reply_str(r, "protocol", NULL);
 	if (h.protocol)
-		h.protocol = dm_strdup(h.protocol); /* keep around */
+		h.protocol = strdup(h.protocol); /* keep around */
 	h.protocol_version = daemon_reply_int(r, "version", 0);
 
 	if (i.protocol && (!h.protocol || strcmp(h.protocol, i.protocol))) {
@@ -85,7 +85,7 @@ error:
 	if (r.cft)
 		daemon_reply_destroy(r);
 
-	dm_free((char *)h.protocol);
+	free((char *)h.protocol);
 	h.protocol = NULL;
 
 	return h;
@@ -181,7 +181,7 @@ void daemon_close(daemon_handle h)
 			log_sys_error("close", "daemon_close");
 	}
 
-	dm_free((char *)h.protocol);
+	free((char *)h.protocol);
 }
 
 daemon_request daemon_request_make(const char *id)

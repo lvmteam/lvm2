@@ -235,7 +235,7 @@ int read_segtype_lvflags(uint64_t *status, char *segtype_str)
 	if (!(str = strchr(segtype_str, '+')))
 		return 1; /* No flags */
 
-	if (!(buffer = dm_strdup(str + 1))) {
+	if (!(buffer = strdup(str + 1))) {
 		log_error("Cannot duplicate segment string.");
 		return 0;
 	}
@@ -263,7 +263,7 @@ int read_segtype_lvflags(uint64_t *status, char *segtype_str)
 	else
 		*str = '\0'; /* Cut away 1st. '+' */
 
-	dm_free(buffer);
+	free(buffer);
 
 	return 1;
 }

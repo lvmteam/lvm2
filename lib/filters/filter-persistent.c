@@ -13,6 +13,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/filters/filter.h"
 #include "lib/config/config.h"
@@ -360,10 +361,10 @@ static void _persistent_destroy(struct dev_filter *f)
 		log_error(INTERNAL_ERROR "Destroying persistent filter while in use %u times.", f->use_count);
 
 	dm_hash_destroy(pf->devices);
-	dm_free(pf->file);
+	free(pf->file);
 	pf->real->destroy(pf->real);
-	dm_free(pf);
-	dm_free(f);
+	free(pf);
+	free(f);
 }
 
 struct dev_filter *persistent_filter_create(struct dev_types *dt,
@@ -374,14 +375,14 @@ struct dev_filter *persistent_filter_create(struct dev_types *dt,
 	struct dev_filter *f = NULL;
 	struct stat info;
 
-	if (!(pf = dm_zalloc(sizeof(*pf)))) {
+	if (!(pf = zalloc(sizeof(*pf)))) {
 		log_error("Allocation of persistent filter failed.");
 		return NULL;
 	}
 
 	pf->dt = dt;
 
-	if (!(pf->file = dm_strdup(file))) {
+	if (!(pf->file = strdup(file))) {
 		log_error("Filename duplication for persistent filter failed.");
 		goto bad;
 	}
@@ -393,7 +394,7 @@ struct dev_filter *persistent_filter_create(struct dev_types *dt,
 		goto bad;
 	}
 
-	if (!(f = dm_zalloc(sizeof(*f)))) {
+	if (!(f = zalloc(sizeof(*f)))) {
 		log_error("Allocation of device filter for persistent filter failed.");
 		goto bad;
 	}
@@ -414,10 +415,10 @@ struct dev_filter *persistent_filter_create(struct dev_types *dt,
 	return f;
 
       bad:
-	dm_free(pf->file);
+	free(pf->file);
 	if (pf->devices)
 		dm_hash_destroy(pf->devices);
-	dm_free(pf);
-	dm_free(f);
+	free(pf);
+	free(f);
 	return NULL;
 }

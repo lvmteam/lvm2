@@ -55,7 +55,7 @@ int archive_init(struct cmd_context *cmd, const char *dir,
 	if (!*dir)
 		return 1;
 
-	if (!(cmd->archive_params->dir = dm_strdup(dir))) {
+	if (!(cmd->archive_params->dir = strdup(dir))) {
 		log_error("Couldn't copy archive directory name.");
 		return 0;
 	}
@@ -71,7 +71,7 @@ void archive_exit(struct cmd_context *cmd)
 {
 	if (!cmd->archive_params)
 		return;
-	dm_free(cmd->archive_params->dir);
+	free(cmd->archive_params->dir);
 	memset(cmd->archive_params, 0, sizeof(*cmd->archive_params));
 }
 
@@ -193,7 +193,7 @@ int backup_init(struct cmd_context *cmd, const char *dir,
 	if (!*dir)
 		return 1;
 
-	if (!(cmd->backup_params->dir = dm_strdup(dir))) {
+	if (!(cmd->backup_params->dir = strdup(dir))) {
 		log_error("Couldn't copy backup directory name.");
 		return 0;
 	}
@@ -206,7 +206,7 @@ void backup_exit(struct cmd_context *cmd)
 {
 	if (!cmd->backup_params)
 		return;
-	dm_free(cmd->backup_params->dir);
+	free(cmd->backup_params->dir);
 	memset(cmd->backup_params, 0, sizeof(*cmd->backup_params));
 }
 

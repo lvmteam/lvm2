@@ -81,6 +81,7 @@
 #include "lib/misc/intl.h"
 #include "device_mapper/all.h"
 #include "lib/misc/util.h"
+#include "base/memory/zalloc.h"
 
 #ifdef DM
 #  include "libdm/misc/dm-logging.h"

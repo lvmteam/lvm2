@@ -14,6 +14,7 @@
  */
 
 #include "device_mapper/misc/dmlib.h"
+#include "base/memory/zalloc.h"
 
 #include <ctype.h>
 
@@ -29,7 +30,7 @@ dm_bitset_t dm_bitset_create(struct dm_pool *mem, unsigned num_bits)
 	if (mem)
 		bs = dm_pool_zalloc(mem, size);
 	else
-		bs = dm_zalloc(size);
+		bs = zalloc(size);
 
 	if (!bs)
 		return NULL;
@@ -41,7 +42,7 @@ dm_bitset_t dm_bitset_create(struct dm_pool *mem, unsigned num_bits)
 
 void dm_bitset_destroy(dm_bitset_t bs)
 {
-	dm_free(bs);
+	free(bs);
 }
 
 int dm_bitset_equal(dm_bitset_t in1, dm_bitset_t in2)

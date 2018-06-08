@@ -13,6 +13,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/format_text/format-text.h"
 #include "layout.h"
@@ -198,7 +199,7 @@ int add_da(struct dm_pool *mem, struct dm_list *das,
 	struct data_area_list *dal;
 
 	if (!mem) {
-		if (!(dal = dm_malloc(sizeof(*dal)))) {
+		if (!(dal = malloc(sizeof(*dal)))) {
 			log_error("struct data_area_list allocation failed");
 			return 0;
 		}
@@ -225,7 +226,7 @@ void del_das(struct dm_list *das)
 	dm_list_iterate_safe(dah, tmp, das) {
 		da = dm_list_item(dah, struct data_area_list);
 		dm_list_del(&da->list);
-		dm_free(da);
+		free(da);
 	}
 }
 
@@ -250,14 +251,14 @@ int add_mda(const struct format_type *fmt, struct dm_pool *mem, struct dm_list *
 	struct mda_context *mdac, *mdac2;
 
 	if (!mem) {
-		if (!(mdal = dm_malloc(sizeof(struct metadata_area)))) {
+		if (!(mdal = malloc(sizeof(struct metadata_area)))) {
 			log_error("struct mda_list allocation failed");
 			return 0;
 		}
 
-		if (!(mdac = dm_malloc(sizeof(struct mda_context)))) {
+		if (!(mdac = malloc(sizeof(struct mda_context)))) {
 			log_error("struct mda_context allocation failed");
-			dm_free(mdal);
+			free(mdal);
 			return 0;
 		}
 	} else {
@@ -304,9 +305,9 @@ void del_mdas(struct dm_list *mdas)
 
 	dm_list_iterate_safe(mdah, tmp, mdas) {
 		mda = dm_list_item(mdah, struct metadata_area);
-		dm_free(mda->metadata_locn);
+		free(mda->metadata_locn);
 		dm_list_del(&mda->list);
-		dm_free(mda);
+		free(mda);
 	}
 }
 
@@ -465,7 +466,7 @@ static void _text_destroy_label(struct labeller *l __attribute__((unused)),
 
 static void _fmt_text_destroy(struct labeller *l)
 {
-	dm_free(l);
+	free(l);
 }
 
 struct label_ops _text_ops = {
@@ -481,7 +482,7 @@ struct labeller *text_labeller_create(const struct format_type *fmt)
 {
 	struct labeller *l;
 
-	if (!(l = dm_zalloc(sizeof(*l)))) {
+	if (!(l = zalloc(sizeof(*l)))) {
 		log_error("Couldn't allocate labeller object.");
 		return NULL;
 	}

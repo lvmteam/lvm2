@@ -13,6 +13,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/cache/lvmcache.h"
 #include "lib/commands/toolcontext.h"
@@ -253,7 +254,7 @@ static void _destroy_duplicate_device_list(struct dm_list *head)
 
 	dm_list_iterate_items_safe(devl, devl2, head) {
 		dm_list_del(&devl->list);
-		dm_free(devl);
+		free(devl);
 	}
 	dm_list_init(head);
 }
@@ -348,7 +349,7 @@ const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd,
  	 */
 	dm_list_init(&devs);
 	dm_list_iterate_items(info, &vginfo->infos) {
-		if (!(devl = dm_malloc(sizeof(*devl)))) {
+		if (!(devl = malloc(sizeof(*devl)))) {
 			log_error("device_list element allocation failed");
 			return NULL;
 		}
@@ -362,7 +363,7 @@ const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd,
 		devl = dm_list_item(devh, struct device_list);
 		label_read(devl->dev);
 		dm_list_del(&devl->list);
-		dm_free(devl);
+		free(devl);
 	}
 
 	/* If vginfo changed, caller needs to rescan */
@@ -566,7 +567,7 @@ static void _filter_duplicate_devs(struct cmd_context *cmd)
 		if (MAJOR(info->dev->dev) == dt->md_major) {
 			log_debug_devs("Ignoring md component duplicate %s", dev_name(devl->dev));
 			dm_list_del(&devl->list);
-			dm_free(devl);
+			free(devl);
 		}
 	}
 
@@ -836,7 +837,7 @@ next:
 
 		dm_list_move(add_cache_devs, &alt->list);
 
-		if ((del = dm_zalloc(sizeof(*del)))) {
+		if ((del = zalloc(sizeof(*del)))) {
 			del->dev = info->dev;
 			dm_list_add(del_cache_devs, &del->list);
 		}
@@ -922,7 +923,7 @@ int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const 
 		return 1;
 
 	dm_list_iterate_items(info, &vginfo->infos) {
-		if (!(devl = dm_malloc(sizeof(*devl)))) {
+		if (!(devl = malloc(sizeof(*devl)))) {
 			log_error("device_list element allocation failed");
 			return 0;
 		}
@@ -945,7 +946,7 @@ int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const 
 
 	dm_list_iterate_items_safe(devl, devl2, &devs) {
 		dm_list_del(&devl->list);
-		dm_free(devl);
+		free(devl);
 	}
 
 	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
@@ -1361,9 +1362,9 @@ static int _free_vginfo(struct lvmcache_vginfo *vginfo)
 			vginfo2 = vginfo2->next;
 		}
 
-	dm_free(vginfo->system_id);
-	dm_free(vginfo->vgname);
-	dm_free(vginfo->creation_host);
+	free(vginfo->system_id);
+	free(vginfo->vgname);
+	free(vginfo->creation_host);
 
 	if (*vginfo->vgid && _vgid_hash &&
 	    lvmcache_vginfo_from_vgid(vginfo->vgid) == vginfo)
@@ -1371,7 +1372,7 @@ static int _free_vginfo(struct lvmcache_vginfo *vginfo)
 
 	dm_list_del(&vginfo->list);
 
-	dm_free(vginfo);
+	free(vginfo);
 
 	return r;
 }
@@ -1405,7 +1406,7 @@ void lvmcache_del(struct lvmcache_info *info)
 	info->label->labeller->ops->destroy_label(info->label->labeller,
 						  info->label);
 	label_destroy(info->label);
-	dm_free(info);
+	free(info);
 }
 
 void lvmcache_del_dev(struct device *dev)
@@ -1568,12 +1569,12 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 	 	 * into the hash table.
 	 	 */
 
-		if (!(vginfo = dm_zalloc(sizeof(*vginfo)))) {
+		if (!(vginfo = zalloc(sizeof(*vginfo)))) {
 			log_error("lvmcache_update_vgname: list alloc failed");
 			return 0;
 		}
-		if (!(vginfo->vgname = dm_strdup(vgname))) {
-			dm_free(vginfo);
+		if (!(vginfo->vgname = strdup(vgname))) {
+			free(vginfo);
 			log_error("cache vgname alloc failed for %s", vgname);
 			return 0;
 		}
@@ -1588,8 +1589,8 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 		primary_vginfo = lvmcache_vginfo_from_vgname(vgname, NULL);
 
 		if (!_insert_vginfo(vginfo, vgid, vgstatus, creation_host, primary_vginfo)) {
-			dm_free(vginfo->vgname);
-			dm_free(vginfo);
+			free(vginfo->vgname);
+			free(vginfo);
 			return 0;
 		}
 
@@ -1647,9 +1648,9 @@ static int _lvmcache_update_vgstatus(struct lvmcache_info *info, uint32_t vgstat
 						   info->vginfo->creation_host))
 		goto set_lock_type;
 
-	dm_free(info->vginfo->creation_host);
+	free(info->vginfo->creation_host);
 
-	if (!(info->vginfo->creation_host = dm_strdup(creation_host))) {
+	if (!(info->vginfo->creation_host = strdup(creation_host))) {
 		log_error("cache creation host alloc failed for %s.",
 			  creation_host);
 		return 0;
@@ -1666,9 +1667,9 @@ set_lock_type:
 	if (info->vginfo->lock_type && !strcmp(lock_type, info->vginfo->lock_type))
 		goto set_system_id;
 
-	dm_free(info->vginfo->lock_type);
+	free(info->vginfo->lock_type);
 
-	if (!(info->vginfo->lock_type = dm_strdup(lock_type))) {
+	if (!(info->vginfo->lock_type = strdup(lock_type))) {
 		log_error("cache lock_type alloc failed for %s", lock_type);
 		return 0;
 	}
@@ -1684,9 +1685,9 @@ set_system_id:
 	if (info->vginfo->system_id && !strcmp(system_id, info->vginfo->system_id))
 		goto out;
 
-	dm_free(info->vginfo->system_id);
+	free(info->vginfo->system_id);
 
-	if (!(info->vginfo->system_id = dm_strdup(system_id))) {
+	if (!(info->vginfo->system_id = strdup(system_id))) {
 		log_error("cache system_id alloc failed for %s", system_id);
 		return 0;
 	}
@@ -1889,7 +1890,7 @@ static struct lvmcache_info * _create_info(struct labeller *labeller, struct dev
 
 	if (!(label = label_create(labeller)))
 		return_NULL;
-	if (!(info = dm_zalloc(sizeof(*info)))) {
+	if (!(info = zalloc(sizeof(*info)))) {
 		log_error("lvmcache_info allocation failed");
 		label_destroy(label);
 		return NULL;
@@ -1965,7 +1966,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller,
 			 * use it.
 			 */
 
-			if (!(devl = dm_zalloc(sizeof(*devl))))
+			if (!(devl = zalloc(sizeof(*devl))))
 				return_NULL;
 			devl->dev = dev;
 
@@ -2020,8 +2021,8 @@ update_vginfo:
 		if (created) {
 			dm_hash_remove(_pvid_hash, pvid_s);
 			strcpy(info->dev->pvid, "");
-			dm_free(info->label);
-			dm_free(info);
+			free(info->label);
+			free(info);
 		}
 		return NULL;
 	}
@@ -2034,7 +2035,7 @@ static void _lvmcache_destroy_entry(struct lvmcache_info *info)
 	_vginfo_detach_info(info);
 	info->dev->pvid[0] = 0;
 	label_destroy(info->label);
-	dm_free(info);
+	free(info);
 }
 
 static void _lvmcache_destroy_vgnamelist(struct lvmcache_vginfo *vginfo)

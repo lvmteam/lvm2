@@ -27,12 +27,12 @@ static char *_construct_full_lvname(const char *vgname, const char *lvname)
 	size_t l;
 
 	l = strlen(vgname) + strlen(lvname) + 2; /* vg/lv and \0 */
-	name = (char *) dm_malloc(l * sizeof(char));
+	name = (char *) malloc(l * sizeof(char));
 	if (!name)
 		return NULL;
 
 	if (dm_snprintf(name, l, "%s/%s", vgname, lvname) < 0) {
-		dm_free(name);
+		free(name);
 		name = NULL;
 	}
 
@@ -47,7 +47,7 @@ static char *_construct_lvm_system_dir_env(const char *sysdir)
 	 *  just single char to store NULL byte
 	 */
 	size_t l = sysdir ? strlen(sysdir) + 16 : 1;
-	char *env = (char *) dm_malloc(l * sizeof(char));
+	char *env = (char *) malloc(l * sizeof(char));
 
 	if (!env)
 		return NULL;
@@ -55,7 +55,7 @@ static char *_construct_lvm_system_dir_env(const char *sysdir)
 	*env = '\0';
 
 	if (sysdir && dm_snprintf(env, l, "%s%s", LVM_SYSTEM_DIR, sysdir) < 0) {
-		dm_free(env);
+		free(env);
 		env = NULL;
 	}
 
@@ -74,7 +74,7 @@ char *construct_id(const char *sysdir, const char *uuid)
 	size_t l;
 
 	l = strlen(uuid) + (sysdir ? strlen(sysdir) : 0) + 1;
-	id = (char *) dm_malloc(l * sizeof(char));
+	id = (char *) malloc(l * sizeof(char));
 	if (!id)
 		return NULL;
 
@@ -82,7 +82,7 @@ char *construct_id(const char *sysdir, const char *uuid)
 		     dm_snprintf(id, l, "%s", uuid);
 
 	if (r < 0) {
-		dm_free(id);
+		free(id);
 		id = NULL;
 	}
 
@@ -95,7 +95,7 @@ struct lvmpolld_lv *pdlv_create(struct lvmpolld_state *ls, const char *id,
 			   const char *sinterval, unsigned pdtimeout,
 			   struct lvmpolld_store *pdst)
 {
-	char *lvmpolld_id = dm_strdup(id), /* copy */
+	char *lvmpolld_id = strdup(id), /* copy */
 	     *full_lvname = _construct_full_lvname(vgname, lvname), /* copy */
 	     *lvm_system_dir_env = _construct_lvm_system_dir_env(sysdir); /* copy */
 
@@ -106,12 +106,12 @@ struct lvmpolld_lv *pdlv_create(struct lvmpolld_state *ls, const char *id,
 		.lvid = _get_lvid(lvmpolld_id, sysdir),
 		.lvname = full_lvname,
 		.lvm_system_dir_env = lvm_system_dir_env,
-		.sinterval = dm_strdup(sinterval), /* copy */
+		.sinterval = strdup(sinterval), /* copy */
 		.pdtimeout = pdtimeout < MIN_POLLING_TIMEOUT ? MIN_POLLING_TIMEOUT : pdtimeout,
 		.cmd_state = { .retcode = -1, .signal = 0 },
 		.pdst = pdst,
 		.init_rq_count = 1
-	}, *pdlv = (struct lvmpolld_lv *) dm_malloc(sizeof(struct lvmpolld_lv));
+	}, *pdlv = (struct lvmpolld_lv *) malloc(sizeof(struct lvmpolld_lv));
 
 	if (!pdlv || !tmp.lvid || !tmp.lvname || !tmp.lvm_system_dir_env || !tmp.sinterval)
 		goto err;
@@ -124,27 +124,27 @@ struct lvmpolld_lv *pdlv_create(struct lvmpolld_state *ls, const char *id,
 	return pdlv;
 
 err:
-	dm_free((void *)full_lvname);
-	dm_free((void *)lvmpolld_id);
-	dm_free((void *)lvm_system_dir_env);
-	dm_free((void *)tmp.sinterval);
-	dm_free((void *)pdlv);
+	free((void *)full_lvname);
+	free((void *)lvmpolld_id);
+	free((void *)lvm_system_dir_env);
+	free((void *)tmp.sinterval);
+	free((void *)pdlv);
 
 	return NULL;
 }
 
 void pdlv_destroy(struct lvmpolld_lv *pdlv)
 {
-	dm_free((void *)pdlv->lvmpolld_id);
-	dm_free((void *)pdlv->lvname);
-	dm_free((void *)pdlv->sinterval);
-	dm_free((void *)pdlv->lvm_system_dir_env);
-	dm_free((void *)pdlv->cmdargv);
-	dm_free((void *)pdlv->cmdenvp);
+	free((void *)pdlv->lvmpolld_id);
+	free((void *)pdlv->lvname);
+	free((void *)pdlv->sinterval);
+	free((void *)pdlv->lvm_system_dir_env);
+	free((void *)pdlv->cmdargv);
+	free((void *)pdlv->cmdenvp);
 
 	pthread_mutex_destroy(&pdlv->lock);
 
-	dm_free((void *)pdlv);
+	free((void *)pdlv);
 }
 
 unsigned pdlv_get_polling_finished(struct lvmpolld_lv *pdlv)
@@ -194,7 +194,7 @@ void pdlv_set_polling_finished(struct lvmpolld_lv *pdlv, unsigned finished)
 
 struct lvmpolld_store *pdst_init(const char *name)
 {
-	struct lvmpolld_store *pdst = (struct lvmpolld_store *) dm_malloc(sizeof(struct lvmpolld_store));
+	struct lvmpolld_store *pdst = (struct lvmpolld_store *) malloc(sizeof(struct lvmpolld_store));
 	if (!pdst)
 		return NULL;
 
@@ -212,7 +212,7 @@ struct lvmpolld_store *pdst_init(const char *name)
 err_mutex:
 	dm_hash_destroy(pdst->store);
 err_hash:
-	dm_free(pdst);
+	free(pdst);
 	return NULL;
 }
 
@@ -223,7 +223,7 @@ void pdst_destroy(struct lvmpolld_store *pdst)
 
 	dm_hash_destroy(pdst->store);
 	pthread_mutex_destroy(&pdst->lock);
-	dm_free(pdst);
+	free(pdst);
 }
 
 void pdst_locked_lock_all_pdlvs(const struct lvmpolld_store *pdst)
@@ -321,7 +321,7 @@ void pdst_locked_destroy_all_pdlvs(const struct lvmpolld_store *pdst)
 
 struct lvmpolld_thread_data *lvmpolld_thread_data_constructor(struct lvmpolld_lv *pdlv)
 {
-	struct lvmpolld_thread_data *data = (struct lvmpolld_thread_data *) dm_malloc(sizeof(struct lvmpolld_thread_data));
+	struct lvmpolld_thread_data *data = (struct lvmpolld_thread_data *) malloc(sizeof(struct lvmpolld_thread_data));
 	if (!data)
 		return NULL;
 
@@ -368,7 +368,7 @@ void lvmpolld_thread_data_destroy(void *thread_private)
 		pdst_unlock(data->pdlv->pdst);
 	}
 
-	/* may get reallocated in getline(). dm_free must not be used */
+	/* may get reallocated in getline(). free must not be used */
 	free(data->line);
 
 	if (data->fout && !fclose(data->fout))
@@ -389,5 +389,5 @@ void lvmpolld_thread_data_destroy(void *thread_private)
 	if (data->errpipe[1] >= 0)
 		(void) close(data->errpipe[1]);
 
-	dm_free(data);
+	free(data);
 }

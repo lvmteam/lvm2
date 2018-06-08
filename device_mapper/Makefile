@@ -22,7 +22,6 @@ DEVICE_MAPPER_SOURCE=\
 	device_mapper/libdm-string.c \
 	device_mapper/libdm-targets.c \
 	device_mapper/libdm-timestamp.c \
-	device_mapper/mm/dbg_malloc.c \
 	device_mapper/mm/pool.c \
 	device_mapper/regex/matcher.c \
 	device_mapper/regex/parse_rx.c \

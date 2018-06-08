@@ -166,7 +166,7 @@ void sync_dir(const char *file)
 	int fd;
 	char *dir, *c;
 
-	if (!(dir = dm_strdup(file))) {
+	if (!(dir = strdup(file))) {
 		log_error("sync_dir failed in strdup");
 		return;
 	}
@@ -194,7 +194,7 @@ void sync_dir(const char *file)
 		log_sys_error("close", dir);
 
       out:
-	dm_free(dir);
+	free(dir);
 }
 
 /*
@@ -210,7 +210,7 @@ int fcntl_lock_file(const char *file, short lock_type, int warn_if_read_only)
 	char *dir;
 	char *c;
 
-	if (!(dir = dm_strdup(file))) {
+	if (!(dir = strdup(file))) {
 		log_error("fcntl_lock_file failed in strdup.");
 		return -1;
 	}
@@ -219,11 +219,11 @@ int fcntl_lock_file(const char *file, short lock_type, int warn_if_read_only)
 		*c = '\0';
 
 	if (!dm_create_dir(dir)) {
-		dm_free(dir);
+		free(dir);
 		return -1;
 	}
 
-	dm_free(dir);
+	free(dir);
 
 	log_very_verbose("Locking %s (%s, %hd)", file,
 			 (lock_type == F_WRLCK) ? "F_WRLCK" : "F_RDLCK",

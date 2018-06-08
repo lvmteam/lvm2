@@ -123,13 +123,13 @@ static int _set_custom_log_stream(struct log_stream_item *stream_item, int custo
 		goto out;
 	}
 
-	if (!(stream_item->buffer = dm_malloc(LOG_STREAM_BUFFER_SIZE))) {
+	if (!(stream_item->buffer = malloc(LOG_STREAM_BUFFER_SIZE))) {
 		log_error("Failed to allocate buffer for stream on file "
 			  "descriptor %d.", (int) custom_fd);
 	} else {
 		if (setvbuf(final_stream, stream_item->buffer, _IOLBF, LOG_STREAM_BUFFER_SIZE)) {
 			log_sys_error("setvbuf", "");
-			dm_free(stream_item->buffer);
+			free(stream_item->buffer);
 			stream_item->buffer = NULL;
 		}
 	}
@@ -342,7 +342,7 @@ void release_log_memory(void)
 	if (!_log_direct)
 		return;
 
-	dm_free((char *) _log_dev_alias.str);
+	free((char *) _log_dev_alias.str);
 	_log_dev_alias.str = "activate_log file";
 }
 
@@ -396,7 +396,7 @@ void reset_lvm_errno(int store_errmsg)
 	_lvm_errno = 0;
 
 	if (_lvm_errmsg) {
-		dm_free(_lvm_errmsg);
+		free(_lvm_errmsg);
 		_lvm_errmsg = NULL;
 		_lvm_errmsg_size = _lvm_errmsg_len = 0;
 	}
@@ -542,7 +542,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 		msglen = strlen(message);
 		if ((_lvm_errmsg_len + msglen + 1) >= _lvm_errmsg_size) {
 			_lvm_errmsg_size = 2 * (_lvm_errmsg_len + msglen + 1);
-			if ((newbuf = dm_realloc(_lvm_errmsg,
+			if ((newbuf = realloc(_lvm_errmsg,
 						 _lvm_errmsg_size)))
 				_lvm_errmsg = newbuf;
 			else

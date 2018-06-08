@@ -627,7 +627,7 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 			goto out;
 		}
 
-		if (!(vgname = dm_strdup(name)) ||
+		if (!(vgname = strdup(name)) ||
 		    !dm_split_lvm_name(NULL, NULL, &vgname, &lvname, &layer))
 			goto_out;
 
@@ -735,7 +735,7 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 	r = 1;
 
       out:
-	dm_free(vgname);
+	free(vgname);
 	dm_task_destroy(dmt);
 	return r;
 }

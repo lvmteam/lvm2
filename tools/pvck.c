@@ -13,6 +13,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "base/memory/zalloc.h"
 #include "tools.h"
 
 int pvck(struct cmd_context *cmd, int argc, char **argv)
@@ -41,7 +42,7 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 			continue;
 		}
 
-		if (!(devl = dm_zalloc(sizeof(*devl))))
+		if (!(devl = zalloc(sizeof(*devl))))
 			continue;
 
 		devl->dev = dev;

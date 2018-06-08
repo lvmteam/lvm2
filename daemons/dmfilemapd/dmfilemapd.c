@@ -311,7 +311,7 @@ static int _parse_args(int argc, char **argv, struct filemap_monitor *fm)
 		return 0;
 	}
 
-	fm->path = dm_strdup(argv[0]);
+	fm->path = strdup(argv[0]);
 	if (!fm->path) {
 		_early_log("Could not allocate memory for path argument.");
 		return 0;
@@ -538,8 +538,8 @@ static void _filemap_monitor_destroy(struct filemap_monitor *fm)
 		_filemap_monitor_end_notify(fm);
 		_filemap_monitor_close_fd(fm);
 	}
-	dm_free((void *) fm->program_id);
-	dm_free(fm->path);
+	free((void *) fm->program_id);
+	free(fm->path);
 }
 
 static int _filemap_monitor_check_same_file(int fd1, int fd2)
@@ -699,7 +699,7 @@ static int _update_regions(struct dm_stats *dms, struct filemap_monitor *fm)
 			 fm->group_id, regions[0]);
 		fm->group_id = regions[0];
 	}
-	dm_free(regions);
+	free(regions);
 	fm->nr_regions = nr_regions;
 	return 1;
 }
@@ -741,7 +741,7 @@ static int _dmfilemapd(struct filemap_monitor *fm)
 	 */
 	program_id = dm_stats_get_region_program_id(dms, fm->group_id);
 	if (program_id)
-		fm->program_id = dm_strdup(program_id);
+		fm->program_id = strdup(program_id);
 	else
 		fm->program_id = NULL;
 	dm_stats_set_program_id(dms, 1, program_id);
@@ -817,7 +817,7 @@ int main(int argc, char **argv)
 	memset(&fm, 0, sizeof(fm));
 
 	if (!_parse_args(argc, argv, &fm)) {
-		dm_free(fm.path);
+		free(fm.path);
 		return 1;
 	}
 
@@ -828,7 +828,7 @@ int main(int argc, char **argv)
 		 _mode_names[fm.mode], fm.path);
 
 	if (!_foreground && !_daemonise(&fm)) {
-		dm_free(fm.path);
+		free(fm.path);
 		return 1;
 	}
 

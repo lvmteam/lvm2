@@ -12,6 +12,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/metadata/segtype.h"
 #include "lib/display/display.h"
@@ -363,8 +364,8 @@ static int _raid_target_status_compatible(const char *type)
 
 static void _raid_destroy(struct segment_type *segtype)
 {
-	dm_free((void *) segtype->dso);
-	dm_free(segtype);
+	free((void *) segtype->dso);
+	free(segtype);
 }
 
 #ifdef DEVMAPPER_SUPPORT
@@ -617,7 +618,7 @@ static struct segment_type *_init_raid_segtype(struct cmd_context *cmd,
 					       const char *dso,
 					       uint64_t monitored)
 {
-	struct segment_type *segtype = dm_zalloc(sizeof(*segtype));
+	struct segment_type *segtype = zalloc(sizeof(*segtype));
 
 	if (!segtype) {
 		log_error("Failed to allocate memory for %s segtype",
@@ -631,7 +632,7 @@ static struct segment_type *_init_raid_segtype(struct cmd_context *cmd,
 
 	/* Never monitor raid0 or raid0_meta LVs */
 	if (!segtype_is_any_raid0(segtype) &&
-	    dso && (dso = dm_strdup(dso))) {
+	    dso && (dso = strdup(dso))) {
 		segtype->dso = dso;
 		segtype->flags |= monitored;
 	}
@@ -675,7 +676,7 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 			break;
 		}
 
-	dm_free(dso);
+	free(dso);
 
 	return r;
 }

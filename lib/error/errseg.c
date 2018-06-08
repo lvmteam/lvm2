@@ -12,6 +12,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/commands/toolcontext.h"
 #include "lib/metadata/segtype.h"
@@ -77,7 +78,7 @@ static int _errseg_modules_needed(struct dm_pool *mem,
 
 static void _errseg_destroy(struct segment_type *segtype)
 {
-	dm_free(segtype);
+	free(segtype);
 }
 
 static struct segtype_handler _error_ops = {
@@ -92,7 +93,7 @@ static struct segtype_handler _error_ops = {
 
 struct segment_type *init_error_segtype(struct cmd_context *cmd)
 {
-	struct segment_type *segtype = dm_zalloc(sizeof(*segtype));
+	struct segment_type *segtype = zalloc(sizeof(*segtype));
 
 	if (!segtype)
 		return_NULL;

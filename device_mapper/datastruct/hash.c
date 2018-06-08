@@ -14,6 +14,7 @@
  */
 
 #include "device_mapper/misc/dmlib.h"
+#include "base/memory/zalloc.h"
 
 struct dm_hash_node {
 	struct dm_hash_node *next;
@@ -59,7 +60,7 @@ static unsigned char _nums[] = {
 
 static struct dm_hash_node *_create_node(const char *str, unsigned len)
 {
-	struct dm_hash_node *n = dm_malloc(sizeof(*n) + len);
+	struct dm_hash_node *n = malloc(sizeof(*n) + len);
 
 	if (n) {
 		memcpy(n->key, str, len);
@@ -91,7 +92,7 @@ struct dm_hash_table *dm_hash_create(unsigned size_hint)
 {
 	size_t len;
 	unsigned new_size = 16u;
-	struct dm_hash_table *hc = dm_zalloc(sizeof(*hc));
+	struct dm_hash_table *hc = zalloc(sizeof(*hc));
 
 	if (!hc)
 		return_0;
@@ -102,14 +103,14 @@ struct dm_hash_table *dm_hash_create(unsigned size_hint)
 
 	hc->num_slots = new_size;
 	len = sizeof(*(hc->slots)) * new_size;
-	if (!(hc->slots = dm_zalloc(len)))
+	if (!(hc->slots = zalloc(len)))
 		goto_bad;
 
 	return hc;
 
       bad:
-	dm_free(hc->slots);
-	dm_free(hc);
+	free(hc->slots);
+	free(hc);
 	return 0;
 }
 
@@ -121,15 +122,15 @@ static void _free_nodes(struct dm_hash_table *t)
 	for (i = 0; i < t->num_slots; i++)
 		for (c = t->slots[i]; c; c = n) {
 			n = c->next;
-			dm_free(c);
+			free(c);
 		}
 }
 
 void dm_hash_destroy(struct dm_hash_table *t)
 {
 	_free_nodes(t);
-	dm_free(t->slots);
-	dm_free(t);
+	free(t->slots);
+	free(t);
 }
 
 static struct dm_hash_node **_find(struct dm_hash_table *t, const void *key,
@@ -187,7 +188,7 @@ void dm_hash_remove_binary(struct dm_hash_table *t, const void *key,
 	if (*c) {
 		struct dm_hash_node *old = *c;
 		*c = (*c)->next;
-		dm_free(old);
+		free(old);
 		t->num_nodes--;
 	}
 }
@@ -287,7 +288,7 @@ void dm_hash_remove_with_val(struct dm_hash_table *t, const char *key,
 	if (c && *c) {
 		struct dm_hash_node *old = *c;
 		*c = (*c)->next;
-		dm_free(old);
+		free(old);
 		t->num_nodes--;
 	}
 }

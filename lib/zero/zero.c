@@ -12,6 +12,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/metadata/segtype.h"
 #include "lib/datastruct/str_list.h"
@@ -71,7 +72,7 @@ static int _zero_modules_needed(struct dm_pool *mem,
 
 static void _zero_destroy(struct segment_type *segtype)
 {
-	dm_free(segtype);
+	free(segtype);
 }
 
 static struct segtype_handler _zero_ops = {
@@ -86,7 +87,7 @@ static struct segtype_handler _zero_ops = {
 
 struct segment_type *init_zero_segtype(struct cmd_context *cmd)
 {
-	struct segment_type *segtype = dm_zalloc(sizeof(*segtype));
+	struct segment_type *segtype = zalloc(sizeof(*segtype));
 
 	if (!segtype)
 		return_NULL;

@@ -13,6 +13,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/commands/toolcontext.h"
 #include "lib/metadata/metadata.h"
@@ -1758,7 +1759,7 @@ void destroy_config_context(struct cmd_context *cmd)
 	if (cmd->libmem)
 		dm_pool_destroy(cmd->libmem);
 
-	dm_free(cmd);
+	free(cmd);
 }
 
 /*
@@ -1771,7 +1772,7 @@ struct cmd_context *create_config_context(void)
 {
 	struct cmd_context *cmd;
 
-	if (!(cmd = dm_zalloc(sizeof(*cmd))))
+	if (!(cmd = zalloc(sizeof(*cmd))))
 		goto_out;
 
 	strcpy(cmd->system_dir, DEFAULT_SYS_DIR);
@@ -1838,7 +1839,7 @@ struct cmd_context *create_toolcontext(unsigned is_clvmd,
 
 	init_syslog(DEFAULT_LOG_FACILITY);
 
-	if (!(cmd = dm_zalloc(sizeof(*cmd)))) {
+	if (!(cmd = zalloc(sizeof(*cmd)))) {
 		log_error("Failed to allocate command context");
 		return NULL;
 	}
@@ -1870,7 +1871,7 @@ struct cmd_context *create_toolcontext(unsigned is_clvmd,
 #endif
 	   ) {
 		/* Allocate 2 buffers */
-		if (!(cmd->linebuffer = dm_malloc(2 * _linebuffer_size))) {
+		if (!(cmd->linebuffer = malloc(2 * _linebuffer_size))) {
 			log_error("Failed to allocate line buffer.");
 			goto out;
 		}
@@ -2062,7 +2063,7 @@ static void _destroy_dev_types(struct cmd_context *cmd)
 	if (!cmd->dev_types)
 		return;
 
-	dm_free(cmd->dev_types);
+	free(cmd->dev_types);
 	cmd->dev_types = NULL;
 }
 
@@ -2275,10 +2276,10 @@ void destroy_toolcontext(struct cmd_context *cmd)
 				cmd->linebuffer = NULL;	/* Leave buffer in place (deliberate leak) */
 		}
 
-		dm_free(cmd->linebuffer);
+		free(cmd->linebuffer);
 	}
 #endif
-	dm_free(cmd);
+	free(cmd);
 
 	lvmetad_release_token();
 	lvmetad_disconnect();

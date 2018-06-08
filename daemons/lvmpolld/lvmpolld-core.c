@@ -530,7 +530,7 @@ static response progress_info(client_handle h, struct lvmpolld_state *ls, reques
 
 	pdst_unlock(pdst);
 
-	dm_free(id);
+	free(id);
 
 	if (pdlv) {
 		if (st.error)
@@ -673,7 +673,7 @@ static response poll_init(client_handle h, struct lvmpolld_state *ls, request re
 			      PD_LOG_PREFIX, "poll operation type mismatch on LV identified by",
 			      id,
 			      polling_op(pdlv_get_type(pdlv)), polling_op(type));
-			dm_free(id);
+			free(id);
 			return reply(LVMPD_RESP_EINVAL,
 				     REASON_DIFFERENT_OPERATION_IN_PROGRESS);
 		}
@@ -683,14 +683,14 @@ static response poll_init(client_handle h, struct lvmpolld_state *ls, request re
 				      lvname, sysdir, type, abort_polling, 2 * uinterval);
 		if (!pdlv) {
 			pdst_unlock(pdst);
-			dm_free(id);
+			free(id);
 			return reply(LVMPD_RESP_FAILED, REASON_ENOMEM);
 		}
 		if (!pdst_locked_insert(pdst, id, pdlv)) {
 			pdlv_destroy(pdlv);
 			pdst_unlock(pdst);
 			ERROR(ls, "%s: %s", PD_LOG_PREFIX, "couldn't store internal LV data structure");
-			dm_free(id);
+			free(id);
 			return reply(LVMPD_RESP_FAILED, REASON_ENOMEM);
 		}
 		if (!spawn_detached_thread(pdlv)) {
@@ -698,7 +698,7 @@ static response poll_init(client_handle h, struct lvmpolld_state *ls, request re
 			pdst_locked_remove(pdst, id);
 			pdlv_destroy(pdlv);
 			pdst_unlock(pdst);
-			dm_free(id);
+			free(id);
 			return reply(LVMPD_RESP_FAILED, REASON_ENOMEM);
 		}
 
@@ -709,7 +709,7 @@ static response poll_init(client_handle h, struct lvmpolld_state *ls, request re
 
 	pdst_unlock(pdst);
 
-	dm_free(id);
+	free(id);
 
 	return daemon_reply_simple(LVMPD_RESP_OK, NULL);
 }
@@ -806,7 +806,7 @@ static int printout_raw_response(const char *prefix, const char *msg)
 	char *buf;
 	char *pos;
 
-	buf = dm_strdup(msg);
+	buf = strdup(msg);
 	pos = buf;
 
 	if (!buf)
@@ -819,7 +819,7 @@ static int printout_raw_response(const char *prefix, const char *msg)
 		_log_line(pos, &b);
 		pos = next ? next + 1 : 0;
 	}
-	dm_free(buf);
+	free(buf);
 
 	return 1;
 }

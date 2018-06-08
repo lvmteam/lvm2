@@ -13,6 +13,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/datastruct/btree.h"
 #include "lib/config/config.h"
@@ -80,9 +81,9 @@ void dev_destroy_file(struct device *dev)
 	if (!(dev->flags & DEV_ALLOCED))
 		return;
 
-	dm_free((void *) dm_list_item(dev->aliases.n, struct dm_str_list)->str);
-	dm_free(dev->aliases.n);
-	dm_free(dev);
+	free((void *) dm_list_item(dev->aliases.n, struct dm_str_list)->str);
+	free(dev->aliases.n);
+	free(dev);
 }
 
 struct device *dev_create_file(const char *filename, struct device *dev,
@@ -92,19 +93,19 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 
 	if (allocate) {
 		if (use_malloc) {
-			if (!(dev = dm_zalloc(sizeof(*dev)))) {
+			if (!(dev = zalloc(sizeof(*dev)))) {
 				log_error("struct device allocation failed");
 				return NULL;
 			}
-			if (!(alias = dm_zalloc(sizeof(*alias)))) {
+			if (!(alias = zalloc(sizeof(*alias)))) {
 				log_error("struct dm_str_list allocation failed");
-				dm_free(dev);
+				free(dev);
 				return NULL;
 			}
-			if (!(alias->str = dm_strdup(filename))) {
+			if (!(alias->str = strdup(filename))) {
 				log_error("filename strdup failed");
-				dm_free(dev);
-				dm_free(alias);
+				free(dev);
+				free(alias);
 				return NULL;
 			}
 		} else {
@@ -123,7 +124,7 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 				return NULL;
 			}
 		}
-	} else if (!(alias->str = dm_strdup(filename))) {
+	} else if (!(alias->str = strdup(filename))) {
 		log_error("filename strdup failed");
 		return NULL;
 	}
@@ -861,7 +862,7 @@ static int _insert_dev(const char *path, dev_t d)
 static char *_join(const char *dir, const char *name)
 {
 	size_t len = strlen(dir) + strlen(name) + 2;
-	char *r = dm_malloc(len);
+	char *r = malloc(len);
 	if (r)
 		snprintf(r, len, "%s/%s", dir, name);
 
@@ -909,7 +910,7 @@ static int _insert_dir(const char *dir)
 
 			_collapse_slashes(path);
 			r &= _insert(path, NULL, 1, 0);
-			dm_free(path);
+			free(path);
 
 			free(dirent[n]);
 		}
@@ -1632,7 +1633,7 @@ struct device *dev_cache_get_by_devt(dev_t dev, struct dev_filter *f)
 
 struct dev_iter *dev_iter_create(struct dev_filter *f, int unused)
 {
-	struct dev_iter *di = dm_malloc(sizeof(*di));
+	struct dev_iter *di = malloc(sizeof(*di));
 
 	if (!di) {
 		log_error("dev_iter allocation failed");
@@ -1651,7 +1652,7 @@ void dev_iter_destroy(struct dev_iter *iter)
 {
 	if (iter->filter)
 		iter->filter->use_count--;
-	dm_free(iter);
+	free(iter);
 }
 
 static struct device *_iter_next(struct dev_iter *iter)
