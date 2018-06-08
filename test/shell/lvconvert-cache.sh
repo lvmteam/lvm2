@@ -106,6 +106,11 @@ fail lvconvert --type cache --cachepool $vg/pool $vg/corigin
 lvconvert --yes --cache --cachepool $vg/pool $vg/corigin
 lvremove -ff $vg
 
+# Check we also support conversion that uses 'cleaner' cache policy
+lvcreate -n corigin -l 10 $vg
+lvcreate -n pool -l 10 $vg
+lvconvert --yes --cache --cachepool $vg/pool $vg/corigin --cachepolicy cleaner
+lvremove -ff $vg
 
 #######################
 # Invalid conversions #

@@ -51,6 +51,11 @@ lvs -a -o+cachemetadataformat $vg
 
 lvremove -f $vg
 
+lvcreate --type cache-pool --cachepolicy cleaner --cachemetadataformat 1 -L1 $vg/cpool
+lvcreate -H -L10 -n $lv1 --cachepool $vg/cpool
+check lv_field $vg/$lv1 cachemetadataformat "1"
+lvremove -f $vg
+
 if [ -z "$META2" ]; then
 # for these test we need kernel with metadata2 support
 
@@ -76,6 +81,11 @@ lvcreate -L10 -n $lv1 $vg
 lvcreate --type cache-pool -L1 $vg/cpool
 lvconvert --config 'allocation/cache_metadata_format=1' -y -H --cachepool $vg/cpool $vg/$lv1
 check lv_field $vg/$lv1 cachemetadataformat "1"
+lvremove -f $vg
+
+lvcreate --type cache-pool --cachepolicy cleaner -L1 $vg/cpool
+lvcreate -H -L10 -n $lv1 --cachepool $vg/cpool
+check lv_field $vg/$lv1 cachemetadataformat "2"
 lvremove -f $vg
 
 fi
