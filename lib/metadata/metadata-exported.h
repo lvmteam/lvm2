@@ -178,6 +178,8 @@
 #define READ_OK_NOTFOUND	0x00040000U
 #define READ_WARN_INCONSISTENT	0x00080000U
 #define READ_FOR_UPDATE		0x00100000U /* A meta-flag, useful with toollib for_each_* functions. */
+#define PROCESS_SKIP_SCAN	 0x00200000U /* skip lvmcache_label_scan in process_each_pv */
+#define PROCESS_SKIP_ORPHAN_LOCK 0x00400000U /* skip lock_vol(VG_ORPHAN) in vg_read */
 
 /* vg's "read_status" field */
 #define FAILED_INCONSISTENT	0x00000001U

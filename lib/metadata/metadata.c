@@ -3049,12 +3049,6 @@ int vg_commit(struct volume_group *vg)
 	int cache_updated = 0;
 	struct pv_list *pvl;
 
-	if (!lvmcache_vgname_is_locked(vg->name)) {
-		log_error(INTERNAL_ERROR "Attempt to write new VG metadata "
-			  "without locking %s", vg->name);
-		return cache_updated;
-	}
-
 	cache_updated = _vg_commit_mdas(vg);
 
 	set_vg_notify(vg->cmd);
@@ -5032,7 +5026,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 	uint32_t failure = 0;
 	uint32_t warn_flags = 0;
 	int is_shared = 0;
-	int already_locked;
+	int skip_lock = is_orphan_vg(vg_name) && (read_flags & PROCESS_SKIP_ORPHAN_LOCK);
 
 	if ((read_flags & READ_ALLOW_INCONSISTENT) || (lock_flags != LCK_VG_WRITE))
 		consistent = 0;
@@ -5043,15 +5037,13 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 		return NULL;
 	}
 
-	already_locked = lvmcache_vgname_is_locked(vg_name);
-
-	if (!already_locked &&
+	if (!skip_lock &&
 	    !lock_vol(cmd, vg_name, lock_flags, NULL)) {
 		log_error("Can't get lock for %s", vg_name);
 		return _vg_make_handle(cmd, vg, FAILED_LOCKING);
 	}
 
-	if (already_locked)
+	if (skip_lock)
 		log_very_verbose("Locking %s already done", vg_name);
 
 	if (is_orphan_vg(vg_name))
@@ -5119,13 +5111,13 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 		goto_bad;
 
 	if (!(vg = _vg_make_handle(cmd, vg, failure)) || vg_read_error(vg))
-		if (!already_locked)
+		if (!skip_lock)
 			unlock_vg(cmd, vg, vg_name);
 
 	return vg;
 
 bad:
-	if (!already_locked)
+	if (!skip_lock)
 		unlock_vg(cmd, vg, vg_name);
 
 bad_no_unlock:
