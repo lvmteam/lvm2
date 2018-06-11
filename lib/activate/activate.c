@@ -1907,7 +1907,8 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 	 * In case of a snapshot device, we monitor lv->snapshot->lv,
 	 * not the actual LV itself.
 	 */
-	if (lv_is_cow(lv) && (laopts->no_merging || !lv_is_merging_cow(lv))) {
+	if (lv_is_cow(lv) && (laopts->no_merging || !lv_is_merging_cow(lv) ||
+			      lv_has_target_type(lv->vg->cmd->mem, lv, NULL, TARGET_NAME_SNAPSHOT))) {
 		if (!(r = monitor_dev_for_events(cmd, lv->snapshot->lv, NULL, monitor)))
 			stack;
 		return r;
