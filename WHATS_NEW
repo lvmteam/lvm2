@@ -1,5 +1,6 @@
 Version 3.0.0
 =============
+  Fix unmonitoring of merging snapshots.
   Cache can uses metadata format 2 with cleaner policy.
   Fix check if resized PV can also fit metadata area.
   Avoid showing internal error in lvs output or pvmoved LVs.
