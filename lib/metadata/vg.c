@@ -671,6 +671,7 @@ int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 {
 	struct pv_list *pvl;
 	struct volume_group *orphan_vg = NULL;
+	int consistent;
 	int r = 0;
 	const char *name = pv_dev_name(pv);
 
@@ -678,6 +679,8 @@ int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 		log_error(INTERNAL_ERROR "VG is NULL.");
 		return r;
 	}
+
+	log_debug("vgreduce_single VG %s PV %s", vg->name, pv_dev_name(pv));
 
 	if (pv_pe_alloc_count(pv)) {
 		log_error("Physical volume \"%s\" still in use", name);
@@ -687,11 +690,6 @@ int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	if (vg->pv_count == 1) {
 		log_error("Can't remove final physical volume \"%s\" from "
 			  "volume group \"%s\"", name, vg->name);
-		return r;
-	}
-
-	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
-		log_error("Can't get lock for orphan PVs");
 		return r;
 	}
 
@@ -716,8 +714,8 @@ int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	vg->free_count -= pv_pe_count(pv) - pv_pe_alloc_count(pv);
 	vg->extent_count -= pv_pe_count(pv);
 
-	orphan_vg = vg_read_for_update(cmd, vg->fid->fmt->orphan_vg_name,
-				       NULL, 0, 0);
+	/* FIXME: we don't need to vg_read the orphan vg here */
+	orphan_vg = vg_read_orphans(cmd, 0, vg->fid->fmt->orphan_vg_name, &consistent);
 
 	if (vg_read_error(orphan_vg))
 		goto bad;
@@ -755,6 +753,6 @@ bad:
 	/* If we are committing here or we had an error then we will free fid */
 	if (pvl && (commit || r != 1))
 		free_pv_fid(pvl->pv);
-	unlock_and_release_vg(cmd, orphan_vg, VG_ORPHANS);
+	release_vg(orphan_vg);
 	return r;
 }

@@ -748,8 +748,10 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	/*
 	 * Finally, remove the EXPORTED flag from the new VG and write it out.
+	 * We need to unlock vg_to because vg_read_for_update wants to lock it.
 	 */
 	if (!test_mode()) {
+		unlock_vg(cmd, NULL, vg_name_to);
 		release_vg(vg_to);
 		vg_to = vg_read_for_update(cmd, vg_name_to, NULL,
 					   READ_ALLOW_EXPORTED, 0);

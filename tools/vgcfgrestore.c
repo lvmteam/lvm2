@@ -63,14 +63,14 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 		lvmetad_rescan = 1;
 	}
 
-	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE, NULL)) {
-		log_error("Unable to lock volume group %s.", vg_name);
+	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
+		log_error("Unable to lock orphans.");
 		return ECMD_FAILED;
 	}
 
-	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
-		log_error("Unable to lock orphans.");
-		unlock_vg(cmd, NULL, vg_name);
+	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE, NULL)) {
+		log_error("Unable to lock volume group %s.", vg_name);
+		unlock_vg(cmd, NULL, VG_ORPHANS);
 		return ECMD_FAILED;
 	}
 
@@ -83,8 +83,8 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 				       arg_str_value(cmd, file_ARG, ""),
 				       arg_count(cmd, force_long_ARG)) :
 	      backup_restore(cmd, vg_name, arg_count(cmd, force_long_ARG)))) {
-		unlock_vg(cmd, NULL, VG_ORPHANS);
 		unlock_vg(cmd, NULL, vg_name);
+		unlock_vg(cmd, NULL, VG_ORPHANS);
 		log_error("Restore failed.");
 		ret = ECMD_FAILED;
 		goto rescan;

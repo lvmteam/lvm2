@@ -693,6 +693,10 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name,
 			     const char *vgid, uint32_t read_flags, uint32_t lockd_state);
 struct volume_group *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
 			 const char *vgid, uint32_t read_flags, uint32_t lockd_state);
+struct volume_group *vg_read_orphans(struct cmd_context *cmd,
+                                             uint32_t warn_flags,
+                                             const char *orphan_vgname,
+                                             int *consistent);
 
 /* 
  * Test validity of a VG handle.

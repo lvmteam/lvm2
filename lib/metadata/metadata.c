@@ -600,14 +600,8 @@ int vg_remove(struct volume_group *vg)
 {
 	int ret;
 
-	if (!lock_vol(vg->cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
-		log_error("Can't get lock for orphan PVs");
-		return 0;
-	}
-
 	ret = vg_remove_direct(vg);
 
-	unlock_vg(vg->cmd, vg, VG_ORPHANS);
 	return ret;
 }
 
@@ -3280,7 +3274,7 @@ static int _vg_read_orphan_pv(struct lvmcache_info *info, void *baton)
 }
 
 /* Make orphan PVs look like a VG. */
-static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
+struct volume_group *vg_read_orphans(struct cmd_context *cmd,
 					     uint32_t warn_flags,
 					     const char *orphan_vgname,
 					     int *consistent)
@@ -3664,7 +3658,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				  "with pre-commit.");
 			return NULL;
 		}
-		return _vg_read_orphans(cmd, warn_flags, vgname, consistent);
+		return vg_read_orphans(cmd, warn_flags, vgname, consistent);
 	}
 
 	uuid[0] = '\0';

@@ -231,9 +231,20 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	handle->custom_handle = &vp;
 
 	if (!repairing) {
+		if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
+			log_error("Can't get lock for orphan PVs");
+			ret = ECMD_FAILED;
+			goto out;
+		}
+
 		/* FIXME: Pass private struct through to all these functions */
 		/* and update in batch afterwards? */
-		ret = process_each_pv(cmd, argc, argv, vg_name, 0, READ_FOR_UPDATE, handle, _vgreduce_single);
+
+		ret = process_each_pv(cmd, argc, argv, vg_name, 0,
+				      READ_FOR_UPDATE | PROCESS_SKIP_ORPHAN_LOCK,
+				      handle, _vgreduce_single);
+
+		unlock_vg(cmd, NULL, VG_ORPHANS);
 		goto out;
 	}
 

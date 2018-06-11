@@ -108,10 +108,17 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 	 */
 	cmd->lockd_gl_disable = 1;
 
+	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
+		log_error("Can't get lock for orphan PVs");
+		return ECMD_FAILED;
+	}
+
 	cmd->handles_missing_pvs = 1;
 	ret = process_each_vg(cmd, argc, argv, NULL, NULL,
 			      READ_FOR_UPDATE, 0,
 			      NULL, &_vgremove_single);
+
+	unlock_vg(cmd, NULL, VG_ORPHANS);
 
 	return ret;
 }
