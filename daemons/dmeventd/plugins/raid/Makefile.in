@@ -29,7 +29,7 @@ CFLOW_LIST_TARGET = $(LIB_NAME).cflow
 
 include $(top_builddir)/make.tmpl
 
-LIBS += -ldevmapper-event-lvm2
+LIBS += -ldevmapper-event-lvm2 $(INTERNAL_LIBS)
 
 install_lvm2: install_dm_plugin
 
