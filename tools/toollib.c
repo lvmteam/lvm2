@@ -5348,7 +5348,6 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	struct pv_list *vgpvl;
 	struct device_list *devl;
 	const char *pv_name;
-	int consistent = 0;
 	int must_use_all = (cmd->cname->flags & MUST_USE_ALL_ARGS);
 	int found;
 	unsigned i;
@@ -5639,7 +5638,7 @@ do_command:
 	if (pp->preserve_existing && pp->orphan_vg_name) {
 		log_debug("Using existing orphan PVs in %s.", pp->orphan_vg_name);
 
-		if (!(orphan_vg = vg_read_internal(cmd, pp->orphan_vg_name, NULL, 0, 0, &consistent))) {
+		if (!(orphan_vg = vg_read_orphans(cmd, 0, pp->orphan_vg_name))) {
 			log_error("Cannot read orphans VG %s.", pp->orphan_vg_name);
 			goto bad;
 		}

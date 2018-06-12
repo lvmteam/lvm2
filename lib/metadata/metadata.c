@@ -3276,8 +3276,7 @@ static int _vg_read_orphan_pv(struct lvmcache_info *info, void *baton)
 /* Make orphan PVs look like a VG. */
 struct volume_group *vg_read_orphans(struct cmd_context *cmd,
 					     uint32_t warn_flags,
-					     const char *orphan_vgname,
-					     int *consistent)
+					     const char *orphan_vgname)
 {
 	const struct format_type *fmt;
 	struct lvmcache_vginfo *vginfo;
@@ -3624,7 +3623,9 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				     const char *vgid,
 				     uint32_t lockd_state, 
 				     uint32_t warn_flags, 
-				     int *consistent, unsigned precommitted)
+				     int enable_repair,
+				     int *mdas_consistent,
+				     unsigned precommitted)
 {
 	struct format_instance *fid = NULL;
 	struct format_instance_ctx fic;
@@ -3637,18 +3638,19 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	int inconsistent_pvs = 0;
 	int inconsistent_mdas = 0;
 	int inconsistent_mda_count = 0;
-	int strip_historical_lvs = *consistent;
-	int update_old_pv_ext = *consistent;
+	int strip_historical_lvs = enable_repair;
+	int update_old_pv_ext = enable_repair;
 	unsigned use_precommitted = precommitted;
 	struct dm_list *pvids;
 	struct pv_list *pvl;
 	struct dm_list all_pvs;
 	char uuid[64] __attribute__((aligned(8)));
 	int skipped_rescan = 0;
-
 	int reappeared = 0;
 	struct cached_vg_fmtdata *vg_fmtdata = NULL;	/* Additional format-specific data about the vg */
 	unsigned use_previous_vg;
+
+	*mdas_consistent = 1;
 
 	if (is_orphan_vg(vgname)) {
 		log_very_verbose("Reading VG %s", vgname);
@@ -3658,7 +3660,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				  "with pre-commit.");
 			return NULL;
 		}
-		return vg_read_orphans(cmd, warn_flags, vgname, consistent);
+		return vg_read_orphans(cmd, warn_flags, vgname);
 	}
 
 	uuid[0] = '\0';
@@ -3670,11 +3672,11 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	if (lvmetad_used() && !use_precommitted) {
 		if ((correct_vg = lvmetad_vg_lookup(cmd, vgname, vgid))) {
 			dm_list_iterate_items(pvl, &correct_vg->pvs)
-				reappeared += _check_reappeared_pv(correct_vg, pvl->pv, *consistent);
-			if (reappeared && *consistent)
-				*consistent = _repair_inconsistent_vg(correct_vg, lockd_state);
+				reappeared += _check_reappeared_pv(correct_vg, pvl->pv, enable_repair);
+			if (reappeared && enable_repair)
+				*mdas_consistent = _repair_inconsistent_vg(correct_vg, lockd_state);
 			else
-				*consistent = !reappeared;
+				*mdas_consistent = !reappeared;
 			if (_wipe_outdated_pvs(cmd, correct_vg, &correct_vg->pvs_outdated, lockd_state)) {
 				/* clear the list */
 				dm_list_init(&correct_vg->pvs_outdated);
@@ -4153,7 +4155,6 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				log_error(INTERNAL_ERROR "Too many inconsistent MDAs.");
 
 			if (!inconsistent_mda_count) {
-				*consistent = 0;
 				_free_pv_list(&all_pvs);
 				return correct_vg;
 			}
@@ -4162,13 +4163,9 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			return NULL;
 		}
 
-		if (!*consistent) {
+		if (!enable_repair) {
 			_free_pv_list(&all_pvs);
-			return correct_vg;
-		}
-
-		if (cmd->is_clvmd) {
-			_free_pv_list(&all_pvs);
+			*mdas_consistent = 0;
 			return correct_vg;
 		}
 
@@ -4181,10 +4178,9 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 		/* Don't touch if vgids didn't match */
 		if (inconsistent_vgid) {
-			log_warn("WARNING: Inconsistent metadata UUIDs found for "
-				 "volume group %s.", vgname);
-			*consistent = 0;
+			log_warn("WARNING: Inconsistent metadata UUIDs found for volume group %s.", vgname);
 			_free_pv_list(&all_pvs);
+			*mdas_consistent = 0;
 			return correct_vg;
 		}
 
@@ -4225,16 +4221,13 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	}
 
 	/* We have the VG now finally, check if PV ext info is in sync with VG metadata. */
-	if (!cmd->is_clvmd && !_check_or_repair_pv_ext(cmd, correct_vg, lockd_state,
-				     skipped_rescan ? 0 : *consistent,
+	if (!_check_or_repair_pv_ext(cmd, correct_vg, lockd_state, skipped_rescan ? 0 : enable_repair,
 				     &inconsistent_pvs)) {
 		release_vg(correct_vg);
 		return_NULL;
 	}
 
-	*consistent = !inconsistent_pvs;
-
-	if (!cmd->is_clvmd && correct_vg && *consistent && !skipped_rescan) {
+	if (correct_vg && enable_repair && !skipped_rescan) {
 		if (update_old_pv_ext && !_vg_update_old_pv_ext_if_needed(correct_vg)) {
 			release_vg(correct_vg);
 			return_NULL;
@@ -4245,6 +4238,9 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			return_NULL;
 		}
 	}
+
+	if (inconsistent_pvs)
+		*mdas_consistent = 0;
 
 	return correct_vg;
 }
@@ -4390,12 +4386,14 @@ static int _check_devs_used_correspond_with_vg(struct volume_group *vg)
 struct volume_group *vg_read_internal(struct cmd_context *cmd,
 				      const char *vgname, const char *vgid,
 				      uint32_t lockd_state, uint32_t warn_flags,
-				      int *consistent)
+				      int enable_repair,
+				      int *mdas_consistent)
 {
 	struct volume_group *vg;
 	struct lv_list *lvl;
 
-	if (!(vg = _vg_read(cmd, vgname, vgid, lockd_state, warn_flags, consistent, 0)))
+	if (!(vg = _vg_read(cmd, vgname, vgid, lockd_state,
+			    warn_flags, enable_repair, mdas_consistent, 0)))
 		goto_out;
 
 	if (!check_pv_dev_sizes(vg))
@@ -4435,7 +4433,7 @@ struct volume_group *vg_read_internal(struct cmd_context *cmd,
 
 	(void) _check_devs_used_correspond_with_vg(vg);
 out:
-	if (!*consistent && (warn_flags & WARN_INCONSISTENT)) {
+	if (!*mdas_consistent && (warn_flags & WARN_INCONSISTENT)) {
 		if (is_orphan_vg(vgname))
 			log_warn("WARNING: Found inconsistent standalone Physical Volumes.");
 		else
@@ -4756,7 +4754,7 @@ static struct volume_group *_recover_vg(struct cmd_context *cmd,
 			 const char *vg_name, const char *vgid,
 			 int is_shared, uint32_t lockd_state)
 {
-	int consistent = 1;
+	int mdas_consistent = 0;
 	struct volume_group *vg;
 	uint32_t state = 0;
 
@@ -4777,12 +4775,12 @@ static struct volume_group *_recover_vg(struct cmd_context *cmd,
 		lockd_state |= LDST_EX;
 	}
 
-	if (!(vg = vg_read_internal(cmd, vg_name, vgid, lockd_state, WARN_PV_READ, &consistent))) {
+	if (!(vg = vg_read_internal(cmd, vg_name, vgid, lockd_state, 0, 1, &mdas_consistent))) {
 		unlock_vg(cmd, NULL, vg_name);
 		return_NULL;
 	}
 
-	if (!consistent) {
+	if (!mdas_consistent) {
 		release_vg(vg);
 		unlock_vg(cmd, NULL, vg_name);
 		return_NULL;
@@ -5015,15 +5013,17 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 			       uint32_t lockd_state)
 {
 	struct volume_group *vg = NULL;
-	int consistent = 1;
-	int consistent_in;
 	uint32_t failure = 0;
 	uint32_t warn_flags = 0;
+	int mdas_consistent = 1;
+	int enable_repair = 1;
 	int is_shared = 0;
 	int skip_lock = is_orphan_vg(vg_name) && (read_flags & PROCESS_SKIP_ORPHAN_LOCK);
 
-	if ((read_flags & READ_ALLOW_INCONSISTENT) || (lock_flags != LCK_VG_WRITE))
-		consistent = 0;
+	if ((read_flags & READ_ALLOW_INCONSISTENT) || (lock_flags != LCK_VG_WRITE)) {
+		enable_repair = 0;
+		warn_flags |= WARN_INCONSISTENT;
+	}
 
 	if (!validate_name(vg_name) && !is_orphan_vg(vg_name)) {
 		log_error("Volume group name \"%s\" has invalid characters.",
@@ -5043,18 +5043,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 	if (is_orphan_vg(vg_name))
 		status_flags &= ~LVM_WRITE;
 
-	consistent_in = consistent;
-
-	warn_flags = WARN_PV_READ;
-	if (consistent || (read_flags & READ_WARN_INCONSISTENT))
-		warn_flags |= WARN_INCONSISTENT;
-
-	/* If consistent == 1, we get NULL here if correction fails. */
-	if (!(vg = vg_read_internal(cmd, vg_name, vgid, lockd_state, warn_flags, &consistent))) {
-		if (consistent_in && !consistent) {
-			failure |= FAILED_INCONSISTENT;
-			goto bad;
-		}
+	if (!(vg = vg_read_internal(cmd, vg_name, vgid, lockd_state, warn_flags, enable_repair, &mdas_consistent))) {
 		if (!(read_flags & READ_OK_NOTFOUND))
 			log_error("Volume group \"%s\" not found", vg_name);
 		failure |= FAILED_NOTFOUND;
@@ -5064,16 +5053,27 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 	if (!_vg_access_permitted(cmd, vg, lockd_state, &failure))
 		goto bad;
 
-	/* consistent == 0 when VG is not found, but failed == FAILED_NOTFOUND */
-	if (!consistent && !failure) {
+	/*
+	 * If we called vg_read_internal above without repair enabled,
+	 * and the read found inconsistent mdas, then then get a write/ex
+	 * lock and call it again with repair enabled so it will fix
+	 * the inconsistent mdas.
+	 *
+	 * FIXME: factor vg repair out of vg_read.  The vg_read caller
+	 * should get an error about the vg have problems and then call
+	 * a repair-specific function if it wants to.  (NB there are
+	 * other kinds of repairs hidden in _vg_read that should be
+	 * pulled out in addition to _recover_vg).
+	 */
+	if (!mdas_consistent && !enable_repair) {
 		is_shared = vg_is_shared(vg);
 		release_vg(vg);
+
 		if (!(vg = _recover_vg(cmd, vg_name, vgid, is_shared, lockd_state))) {
 			if (is_orphan_vg(vg_name))
 				log_error("Recovery of standalone physical volumes failed.");
 			else
-				log_error("Recovery of volume group \"%s\" failed.",
-					  vg_name);
+				log_error("Recovery of volume group \"%s\" failed.", vg_name);
 			failure |= FAILED_RECOVERY;
 			goto bad_no_unlock;
 		}

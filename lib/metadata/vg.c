@@ -671,7 +671,6 @@ int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 {
 	struct pv_list *pvl;
 	struct volume_group *orphan_vg = NULL;
-	int consistent;
 	int r = 0;
 	const char *name = pv_dev_name(pv);
 
@@ -715,7 +714,7 @@ int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	vg->extent_count -= pv_pe_count(pv);
 
 	/* FIXME: we don't need to vg_read the orphan vg here */
-	orphan_vg = vg_read_orphans(cmd, 0, vg->fid->fmt->orphan_vg_name, &consistent);
+	orphan_vg = vg_read_orphans(cmd, 0, vg->fid->fmt->orphan_vg_name);
 
 	if (vg_read_error(orphan_vg))
 		goto bad;

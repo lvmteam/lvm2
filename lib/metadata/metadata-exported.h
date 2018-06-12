@@ -653,8 +653,6 @@ void pvcreate_params_set_defaults(struct pvcreate_params *pp);
 int vg_write(struct volume_group *vg);
 int vg_commit(struct volume_group *vg);
 void vg_revert(struct volume_group *vg);
-struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vg_name,
-				      const char *vgid, uint32_t lockd_state, uint32_t warn_flags, int *consistent);
 
 /*
  * Add/remove LV to/from volume group
@@ -689,15 +687,18 @@ int lv_resize(struct logical_volume *lv,
 /*
  * Return a handle to VG metadata.
  */
+struct volume_group *vg_read_internal(struct cmd_context *cmd,
+                                      const char *vgname, const char *vgid,
+                                      uint32_t lockd_state, uint32_t warn_flags,
+                                      int enable_repair,
+                                      int *mdas_consistent);
 struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name,
 			     const char *vgid, uint32_t read_flags, uint32_t lockd_state);
 struct volume_group *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
 			 const char *vgid, uint32_t read_flags, uint32_t lockd_state);
 struct volume_group *vg_read_orphans(struct cmd_context *cmd,
                                              uint32_t warn_flags,
-                                             const char *orphan_vgname,
-                                             int *consistent);
-
+                                             const char *orphan_vgname);
 /* 
  * Test validity of a VG handle.
  */
