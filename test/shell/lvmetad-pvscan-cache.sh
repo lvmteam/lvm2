@@ -37,8 +37,8 @@ check lv_field $vg1/$lv1 lv_active ""
 
 # Check that an LV cannot be activated by pvscan while VG is exported
 vgexport $vg1
-pvscan --cache -aay "$dev1"
-pvscan --cache -aay "$dev2"
+not pvscan --cache -aay "$dev1"
+not pvscan --cache -aay "$dev2"
 vgimport $vg1
 check lv_exists $vg1
 check lv_field $vg1/$lv1 lv_active ""
