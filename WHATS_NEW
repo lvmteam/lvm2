@@ -1,5 +1,13 @@
 Version 2.02.179 -
 ====================================
+  Add the report field "shared".
+  Enable automatic metadata consistency repair on a shared VG.
+  Fix pvremove force on a PV with a shared VG.
+  Fixed vgimportclone of a PV with a shared VG.
+  Enable previously disallowed thin/cache commands in shared VGs.
+  Enable metadata-related changes on LVs active with shared lock.
+  Do not continue trying to use a device that cannot be opened.
+  Fix problems opening a device that fails and returns.
   Use versionsort to fix archive file expiry beyond 100000 files.
 
 Version 2.02.178 - 13th June 2018
