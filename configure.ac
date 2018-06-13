@@ -1804,7 +1804,6 @@ scripts/lvm2_lvmpolld_init_red_hat
 scripts/lvm2_lvmpolld_systemd_red_hat.service
 scripts/lvm2_lvmpolld_systemd_red_hat.socket
 scripts/lvm2_lvmlockd_systemd_red_hat.service
-scripts/lvm2_lvmlocking_systemd_red_hat.service
 scripts/lvm2_monitoring_init_red_hat
 scripts/lvm2_monitoring_systemd_red_hat.service
 scripts/lvm2_pvscan_systemd_red_hat@.service

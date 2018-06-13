@@ -16,7 +16,6 @@ lvm2_lvmetad_init_red_hat
 lvm2_lvmetad_systemd_red_hat.service
 lvm2_lvmetad_systemd_red_hat.socket
 lvm2_lvmlockd_systemd_red_hat.service
-lvm2_lvmlocking_systemd_red_hat.service
 lvm2_lvmpolld_init_red_hat
 lvm2_lvmpolld_systemd_red_hat.service
 lvm2_lvmpolld_systemd_red_hat.socket
