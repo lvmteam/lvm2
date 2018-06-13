@@ -312,24 +312,17 @@ cfg_array(devices_global_filter_CFG, "global_filter", devices_CFG_SECTION, CFG_D
 	"The syntax is the same as devices/filter. Devices rejected by\n"
 	"global_filter are not opened by LVM.\n")
 
-cfg_runtime(devices_cache_CFG, "cache", devices_CFG_SECTION, 0, CFG_TYPE_STRING, vsn(1, 0, 0), vsn(1, 2, 19),
-	"This has been replaced by the devices/cache_dir setting.\n",
-	"Cache file path.\n")
+cfg_runtime(devices_cache_CFG, "cache", devices_CFG_SECTION, 0, CFG_TYPE_STRING, vsn(1, 0, 0), vsn(1, 2, 19), NULL,
+	"This setting is no longer used.\n")
 
 cfg_runtime(devices_cache_dir_CFG, "cache_dir", devices_CFG_SECTION, 0, CFG_TYPE_STRING, vsn(1, 2, 19), 0, NULL,
-	"Directory in which to store the device cache file.\n"
-	"The results of filtering are cached on disk to avoid rescanning dud\n"
-	"devices (which can take a very long time). By default this cache is\n"
-	"stored in a file named .cache. It is safe to delete this file; the\n"
-	"tools regenerate it. If obtain_device_list_from_udev is enabled, the\n"
-	"list of devices is obtained from udev and any existing .cache file\n"
-	"is removed.\n")
+	"This setting is no longer used.\n")
 
 cfg(devices_cache_file_prefix_CFG, "cache_file_prefix", devices_CFG_SECTION, CFG_ALLOW_EMPTY, CFG_TYPE_STRING, DEFAULT_CACHE_FILE_PREFIX, vsn(1, 2, 19), NULL, 0, NULL,
-	"A prefix used before the .cache file name. See devices/cache_dir.\n")
+	"This setting is no longer used.\n")
 
 cfg(devices_write_cache_state_CFG, "write_cache_state", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, 1, vsn(1, 0, 0), NULL, 0, NULL,
-	"Enable/disable writing the cache file. See devices/cache_dir.\n")
+	"This setting is no longer used.\n")
 
 cfg_array(devices_types_CFG, "types", devices_CFG_SECTION, CFG_DEFAULT_UNDEFINED | CFG_ADVANCED, CFG_TYPE_INT | CFG_TYPE_STRING, NULL, vsn(1, 0, 0), NULL, 0, NULL,
 	"List of additional acceptable block device types.\n"

@@ -27,9 +27,7 @@ struct dev_filter *md_filter_create(struct cmd_context *cmd, struct dev_types *d
 struct dev_filter *fwraid_filter_create(struct dev_types *dt);
 struct dev_filter *mpath_filter_create(struct dev_types *dt);
 struct dev_filter *partitioned_filter_create(struct dev_types *dt);
-struct dev_filter *persistent_filter_create(struct dev_types *dt,
-					    struct dev_filter *f,
-					    const char *file);
+struct dev_filter *persistent_filter_create(struct dev_types *dt, struct dev_filter *f);
 struct dev_filter *sysfs_filter_create(void);
 struct dev_filter *signature_filter_create(struct dev_types *dt);
 
@@ -53,7 +51,5 @@ typedef enum {
 	FILTER_MODE_POST_LVMETAD
 } filter_mode_t;
 struct dev_filter *usable_filter_create(struct dev_types *dt, filter_mode_t mode);
-
-int persistent_filter_load(struct dev_filter *f, struct dm_config_tree **cft_out);
 
 #endif 	/* _LVM_FILTER_H */

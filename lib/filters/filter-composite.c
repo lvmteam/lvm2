@@ -58,18 +58,6 @@ static void _composite_destroy(struct dev_filter *f)
 	free(f);
 }
 
-static int _dump(struct dev_filter *f, int merge_existing)
-{
-	struct dev_filter **filters;
-
-	for (filters = (struct dev_filter **) f->private; *filters; ++filters)
-		if ((*filters)->dump &&
-		    !(*filters)->dump(*filters, merge_existing))
-			return_0;
-
-	return 1;
-}
-
 static void _wipe(struct dev_filter *f)
 {
 	struct dev_filter **filters;
@@ -102,7 +90,6 @@ struct dev_filter *composite_filter_create(int n, int use_dev_ext_info, struct d
 
 	cft->passes_filter = use_dev_ext_info ? _and_p_with_dev_ext_info : _and_p;
 	cft->destroy = _composite_destroy;
-	cft->dump = _dump;
 	cft->wipe = _wipe;
 	cft->use_count = 0;
 	cft->private = filters_copy;

@@ -1195,19 +1195,14 @@ bad:
  */
 int init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 {
-	const char *dev_cache;
 	struct dev_filter *filter = NULL, *filter_components[2] = {0};
 	int nr_filt;
-	struct stat st;
 	const struct dm_config_node *cn;
-	struct timespec ts, cts;
 
 	if (!cmd->initialized.connections) {
 		log_error(INTERNAL_ERROR "connections must be initialized before filters");
 		return 0;
 	}
-
-	cmd->dump_filter = 0;
 
 	cmd->lvmetad_filter = _init_lvmetad_filter_chain(cmd);
 	if (!cmd->lvmetad_filter)
@@ -1246,10 +1241,7 @@ int init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 		cmd->lvmetad_filter = NULL;
 	}
 
-	if (!(dev_cache = find_config_tree_str(cmd, devices_cache_CFG, NULL)))
-		goto_bad;
-
-	if (!(filter = persistent_filter_create(cmd->dev_types, filter, dev_cache))) {
+	if (!(filter = persistent_filter_create(cmd->dev_types, filter))) {
 		log_verbose("Failed to create persistent device filter.");
 		goto bad;
 	}
@@ -1266,29 +1258,6 @@ int init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 			goto_bad;
 	} else
 		cmd->full_filter = filter;
-
-	/* Should we ever dump persistent filter state? */
-	if (find_config_tree_bool(cmd, devices_write_cache_state_CFG, NULL))
-		cmd->dump_filter = 1;
-
-	if (!*cmd->system_dir)
-		cmd->dump_filter = 0;
-
-	/*
-	 * Only load persistent filter device cache on startup if it is newer
-	 * than the config file and this is not a long-lived process. Also avoid
-	 * it when lvmetad is enabled.
-	 */
-	if (!find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL) &&
-	    load_persistent_cache && !cmd->is_long_lived &&
-	    !stat(dev_cache, &st)) {
-		lvm_stat_ctim(&ts, &st);
-		cts = config_file_timestamp(cmd->cft);
-		if (timespeccmp(&ts, &cts, >) &&
-		    !persistent_filter_load(cmd->filter, NULL))
-			log_verbose("Failed to load existing device cache from %s",
-				    dev_cache);
-	}
 
 	cmd->initialized.filters = 1;
 	return 1;
@@ -2165,10 +2134,6 @@ void destroy_toolcontext(struct cmd_context *cmd)
 {
 	struct dm_config_tree *cft_cmdline;
 	int flags;
-
-	if (cmd->dump_filter && cmd->filter && cmd->filter->dump &&
-	    !cmd->filter->dump(cmd->filter, 1))
-		stack;
 
 	archive_exit(cmd);
 	backup_exit(cmd);
