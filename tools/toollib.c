@@ -1963,6 +1963,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 		log_very_verbose("Processing VG %s %s", vg_name, uuid);
 
 		if (!lockd_vg(cmd, vg_name, NULL, 0, &lockd_state)) {
+			stack;
 			ret_max = ECMD_FAILED;
 			report_log_ret_code(ret_max);
 			continue;
