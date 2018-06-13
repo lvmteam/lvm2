@@ -1189,6 +1189,7 @@ int vgchange_locktype_cmd(struct cmd_context *cmd, int argc, char **argv)
 		cmd->lockd_vg_disable = 1;
 		cmd->lockd_lv_disable = 1;
 		cmd->handles_missing_pvs = 1;
+		cmd->force_access_clustered = 1;
 		goto process;
 	}
 

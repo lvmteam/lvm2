@@ -814,8 +814,8 @@ dlm), first change it to a local VG, then to the new type.
 
 All LVs must be inactive to change the lock type.
 
-First change the clvm VG to a local VG.  Within a running clvm cluster,
-change a clvm VG to a local VG with the command:
+First change the clvm/clustered VG to a local VG.  Within a running clvm
+cluster, change a clustered VG to a local VG with the command:
 
 vgchange -cn <vgname>
 
@@ -823,10 +823,7 @@ If the clvm cluster is no longer running on any nodes, then extra options
 can be used to forcibly make the VG local.  Caution: this is only safe if
 all nodes have stopped using the VG:
 
-vgchange --config 'global/locking_type=0 global/use_lvmlockd=0'
-.RS
--cn <vgname>
-.RE
+vgchange  --lock-type none --lock-opt force <vgname>
 
 After the VG is local, follow the steps described in "changing a local VG
 to a lockd VG".
