@@ -4689,6 +4689,15 @@ int vg_flag_write_locked(struct volume_group *vg)
 static int _access_vg_clustered(struct cmd_context *cmd, const struct volume_group *vg)
 {
 	if (vg_is_clustered(vg)) {
+		/*
+		 * force_access_clustered is only set when forcibly
+		 * converting a clustered vg to lock type none.
+		 */
+		if (cmd->force_access_clustered) {
+			log_debug("Allowing forced access to clustered vg %s", vg->name);
+			return 1;
+		}
+
 		if (!cmd->ignore_clustered_vgs)
 			log_error("Skipping clustered volume group %s", vg->name);
 		else
