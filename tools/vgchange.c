@@ -187,7 +187,7 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 	    strcmp(vg->system_id, cmd->system_id) &&
 	    do_activate) {
 		log_error("Cannot activate LVs in a foreign VG.");
-		return ECMD_FAILED;
+		return 0;
 	}
 
 	/*
