@@ -52,7 +52,6 @@ SOURCES =\
 	vgchange.c \
 	vgck.c \
 	vgcreate.c \
-	vgconvert.c \
 	vgdisplay.c \
 	vgexport.c \
 	vgextend.c \

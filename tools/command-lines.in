@@ -1548,14 +1548,6 @@ ID: vgck_general
 
 ---
 
-vgconvert VG ...
-OO: --force, --labelsector Number, --bootloaderareasize SizeMB,
---metadatatype MetadataType, --pvmetadatacopies MetadataCopiesPV,
---metadatasize SizeMB, --reportformat ReportFmt
-ID: vgconvert_general
-
----
-
 vgcreate VG_new PV ...
 OO: --addtag Tag, --alloc Alloc, --autobackup Bool, --clustered Bool, --maxlogicalvolumes Uint32,
 --maxphysicalvolumes Uint32, --metadataprofile String, --metadatatype MetadataType,
@@ -1782,4 +1774,11 @@ ID: lvmsadc_general
 lvmsar
 OO: --full, --stdin
 ID: lvmsar_general
+
+# deprecated
+vgconvert VG ...
+OO: --force, --labelsector Number, --bootloaderareasize SizeMB,
+--metadatatype MetadataType, --pvmetadatacopies MetadataCopiesPV,
+--metadatasize SizeMB, --reportformat ReportFmt
+ID: vgconvert_general
 
