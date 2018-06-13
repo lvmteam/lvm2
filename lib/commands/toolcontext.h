@@ -146,7 +146,6 @@ struct cmd_context {
 	unsigned metadata_read_only:1;
 	unsigned ignore_clustered_vgs:1;
 	unsigned threaded:1;			/* set if running within a thread e.g. clvmd */
-	unsigned independent_metadata_areas:1;	/* active formats have MDAs outside PVs */
 	unsigned unknown_system_id:1;
 	unsigned include_historical_lvs:1;	/* also process/report/display historical LVs */
 	unsigned record_historical_lvs:1;	/* record historical LVs */

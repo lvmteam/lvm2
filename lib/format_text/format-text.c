@@ -45,16 +45,6 @@ struct text_fid_context {
 	uint32_t raw_metadata_buf_size;
 };
 
-struct dir_list {
-	struct dm_list list;
-	char dir[0];
-};
-
-struct raw_list {
-	struct dm_list list;
-	struct device_area dev_area;
-};
-
 int rlocn_is_ignored(const struct raw_locn *rlocn)
 {
 	return (rlocn->flags & RAW_LOCN_IGNORED ? 1 : 0);
@@ -503,22 +493,6 @@ static uint64_t _next_rlocn_offset(struct raw_locn *rlocn, struct mda_header *md
 		new_start_offset -= (mdah->size - MDA_HEADER_SIZE);
 
 	return new_start_offset;
-}
-
-static int _raw_holds_vgname(struct format_instance *fid,
-			     struct device_area *dev_area, const char *vgname)
-{
-	int r = 0;
-	int noprecommit = 0;
-	struct mda_header *mdah;
-
-	if (!(mdah = raw_read_mda_header(fid->fmt, dev_area, 0)))
-		return_0;
-
-	if (_read_metadata_location_vg(dev_area, mdah, 0, vgname, &noprecommit))
-		r = 1;
-
-	return r;
 }
 
 static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
@@ -1118,75 +1092,6 @@ static int _vg_remove_file(struct format_instance *fid __attribute__((unused)),
 	return 1;
 }
 
-static int _scan_file(const struct format_type *fmt, const char *vgname)
-{
-	struct dirent *dirent;
-	struct dir_list *dl;
-	struct dm_list *dir_list;
-	char *tmp;
-	DIR *d;
-	struct volume_group *vg;
-	struct format_instance *fid;
-	struct format_instance_ctx fic;
-	char path[PATH_MAX];
-	char *scanned_vgname;
-
-	dir_list = &((struct mda_lists *) fmt->private)->dirs;
-
-	if (!dm_list_empty(dir_list))
-		log_debug_metadata("Scanning independent files for %s", vgname ? vgname : "VGs");
-
-	dm_list_iterate_items(dl, dir_list) {
-		if (!(d = opendir(dl->dir))) {
-			log_sys_error("opendir", dl->dir);
-			continue;
-		}
-		while ((dirent = readdir(d)))
-			if (strcmp(dirent->d_name, ".") &&
-			    strcmp(dirent->d_name, "..") &&
-			    (!(tmp = strstr(dirent->d_name, ".tmp")) ||
-			     tmp != dirent->d_name + strlen(dirent->d_name)
-			     - 4)) {
-				scanned_vgname = dirent->d_name;
-
-				/* If vgname supplied, only scan that one VG */
-				if (vgname && strcmp(vgname, scanned_vgname))
-					continue;
-
-				if (dm_snprintf(path, PATH_MAX, "%s/%s",
-						 dl->dir, scanned_vgname) < 0) {
-					log_error("Name too long %s/%s",
-						  dl->dir, scanned_vgname);
-					break;
-				}
-
-				/* FIXME stat file to see if it's changed */
-				/* FIXME: Check this fid is OK! */
-				fic.type = FMT_INSTANCE_PRIVATE_MDAS;
-				fic.context.private = NULL;
-				if (!(fid = _text_create_text_instance(fmt, &fic))) {
-					stack;
-					break;
-				}
-
-				log_debug_metadata("Scanning independent file %s for VG %s", path, scanned_vgname);
-
-				if ((vg = _vg_read_file_name(fid, scanned_vgname,
-							     path))) {
-					/* FIXME Store creation host in vg */
-					lvmcache_update_vg(vg, 0);
-					lvmcache_set_independent_location(vg->name);
-					release_vg(vg);
-				}
-			}
-
-		if (closedir(d))
-			log_sys_error("closedir", dl->dir);
-	}
-
-	return 1;
-}
-
 int read_metadata_location_summary(const struct format_type *fmt,
 		    struct mda_header *mdah, int primary_mda, struct device_area *dev_area,
 		    struct lvmcache_vgsummary *vgsummary, uint64_t *mda_free_sectors)
@@ -1323,55 +1228,6 @@ int read_metadata_location_summary(const struct format_type *fmt,
 			*mda_free_sectors = ((buffer_size - 2 * current_usage) / 2) >> SECTOR_SHIFT;
 	}
 
-	return 1;
-}
-
-/* used for independent_metadata_areas */
-
-static int _scan_raw(const struct format_type *fmt, const char *vgname __attribute__((unused)))
-{
-	struct raw_list *rl;
-	struct dm_list *raw_list;
-	struct volume_group *vg;
-	struct format_instance fid;
-	struct lvmcache_vgsummary vgsummary = { 0 };
-	struct mda_header *mdah;
-
-	raw_list = &((struct mda_lists *) fmt->private)->raws;
-
-	if (!dm_list_empty(raw_list))
-		log_debug_metadata("Scanning independent raw locations for %s", vgname ? vgname : "VGs");
-
-	fid.fmt = fmt;
-	dm_list_init(&fid.metadata_areas_in_use);
-	dm_list_init(&fid.metadata_areas_ignored);
-
-	dm_list_iterate_items(rl, raw_list) {
-		log_debug_metadata("Scanning independent dev %s", dev_name(rl->dev_area.dev));
-
-		if (!(mdah = raw_read_mda_header(fmt, &rl->dev_area, 0))) {
-			stack;
-			continue;
-		}
-
-		if (read_metadata_location_summary(fmt, mdah, 0, &rl->dev_area, &vgsummary, NULL)) {
-			vg = _vg_read_raw_area(&fid, vgsummary.vgname, &rl->dev_area, NULL, NULL, 0, 0);
-			if (vg) {
-				lvmcache_update_vg(vg, 0);
-				lvmcache_set_independent_location(vg->name);
-			}
-		}
-	}
-
-	return 1;
-}
-
-/* used for independent_metadata_areas */
-
-static int _text_scan(const struct format_type *fmt, const char *vgname)
-{
-	_scan_file(fmt, vgname);
-	_scan_raw(fmt, vgname);
 	return 1;
 }
 
@@ -1535,28 +1391,6 @@ static int _text_pv_needs_rewrite(const struct format_type *fmt, struct physical
 	return 1;
 }
 
-static int _add_raw(struct dm_list *raw_list, struct device_area *dev_area)
-{
-	struct raw_list *rl;
-
-	/* Already present? */
-	dm_list_iterate_items(rl, raw_list) {
-		/* FIXME Check size/overlap consistency too */
-		if (rl->dev_area.dev == dev_area->dev &&
-		    rl->dev_area.start == dev_area->start)
-			return 1;
-	}
-
-	if (!(rl = malloc(sizeof(struct raw_list)))) {
-		log_error("_add_raw allocation failed");
-		return 0;
-	}
-	memcpy(&rl->dev_area, dev_area, sizeof(*dev_area));
-	dm_list_add(raw_list, &rl->list);
-
-	return 1;
-}
-
 /*
  * Copy constructor for a metadata_locn.
  */
@@ -1709,36 +1543,13 @@ static void _text_destroy_instance(struct format_instance *fid)
 	}
 }
 
-static void _free_dirs(struct dm_list *dir_list)
-{
-	struct dm_list *dl, *tmp;
-
-	dm_list_iterate_safe(dl, tmp, dir_list) {
-		dm_list_del(dl);
-		free(dl);
-	}
-}
-
-static void _free_raws(struct dm_list *raw_list)
-{
-	struct dm_list *rl, *tmp;
-
-	dm_list_iterate_safe(rl, tmp, raw_list) {
-		dm_list_del(rl);
-		free(rl);
-	}
-}
-
 static void _text_destroy(struct format_type *fmt)
 {
 	if (fmt->orphan_vg)
 		free_orphan_vg(fmt->orphan_vg);
 
-	if (fmt->private) {
-		_free_dirs(&((struct mda_lists *) fmt->private)->dirs);
-		_free_raws(&((struct mda_lists *) fmt->private)->raws);
+	if (fmt->private)
 		free(fmt->private);
-	}
 
 	free(fmt);
 }
@@ -1963,15 +1774,9 @@ static void *_create_text_context(struct dm_pool *mem, struct text_context *tc)
 static int _create_vg_text_instance(struct format_instance *fid,
                                     const struct format_instance_ctx *fic)
 {
-	static char path[PATH_MAX];
 	uint32_t type = fic->type;
 	struct text_fid_context *fidtc;
 	struct metadata_area *mda;
-	struct mda_context *mdac;
-	struct dir_list *dl;
-	struct raw_list *rl;
-	struct dm_list *dir_list, *raw_list;
-	struct text_context tc;
 	struct lvmcache_vginfo *vginfo;
 	const char *vg_name, *vg_id;
 
@@ -2001,53 +1806,12 @@ static int _create_vg_text_instance(struct format_instance *fid,
 			return 0;
 		}
 
-		if (type & FMT_INSTANCE_AUX_MDAS) {
-			dir_list = &((struct mda_lists *) fid->fmt->private)->dirs;
-			dm_list_iterate_items(dl, dir_list) {
-				if (dm_snprintf(path, PATH_MAX, "%s/%s", dl->dir, vg_name) < 0) {
-					log_error("Name too long %s/%s", dl->dir, vg_name);
-					return 0;
-				}
-
-				if (!(mda = dm_pool_zalloc(fid->mem, sizeof(*mda))))
-					return_0;
-				mda->ops = &_metadata_text_file_ops;
-				tc.path_live = path;
-				tc.path_edit = tc.desc = NULL;
-				mda->metadata_locn = _create_text_context(fid->mem, &tc);
-				mda->status = 0;
-				fid_add_mda(fid, mda, NULL, 0, 0);
-			}
-
-			raw_list = &((struct mda_lists *) fid->fmt->private)->raws;
-			dm_list_iterate_items(rl, raw_list) {
-				/* FIXME Cache this; rescan below if some missing */
-				if (!_raw_holds_vgname(fid, &rl->dev_area, vg_name))
-					continue;
-
-				if (!(mda = dm_pool_zalloc(fid->mem, sizeof(*mda))))
-					return_0;
-
-				if (!(mdac = dm_pool_zalloc(fid->mem, sizeof(*mdac))))
-					return_0;
-				mda->metadata_locn = mdac;
-				/* FIXME Allow multiple dev_areas inside area */
-				memcpy(&mdac->area, &rl->dev_area, sizeof(mdac->area));
-				mda->ops = &_metadata_text_raw_ops;
-				mda->status = 0;
-				/* FIXME MISTAKE? mda->metadata_locn = context; */
-				fid_add_mda(fid, mda, NULL, 0, 0);
-			}
-		}
-
 		if (type & FMT_INSTANCE_MDAS) {
 			if (!(vginfo = lvmcache_vginfo_from_vgname(vg_name, vg_id)))
 				goto_out;
 			if (!lvmcache_fid_add_mdas_vg(vginfo, fid))
 				goto_out;
 		}
-
-		/* FIXME If PV list or raw metadata area count are not as expected rescan */
 	}
 
 out:
@@ -2440,7 +2204,6 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 }
 
 static struct format_handler _text_handler = {
-	.scan = _text_scan,
 	.pv_initialise = _text_pv_initialise,
 	.pv_setup = _text_pv_setup,
 	.pv_add_metadata_area = _text_pv_add_metadata_area,
@@ -2455,84 +2218,11 @@ static struct format_handler _text_handler = {
 	.destroy = _text_destroy
 };
 
-static int _add_dir(const char *dir, struct dm_list *dir_list)
-{
-	struct dir_list *dl;
-
-	if (dm_create_dir(dir)) {
-		if (!(dl = malloc(sizeof(struct dm_list) + strlen(dir) + 1))) {
-			log_error("_add_dir allocation failed");
-			return 0;
-		}
-		log_very_verbose("Adding text format metadata dir: %s", dir);
-		strcpy(dl->dir, dir);
-		dm_list_add(dir_list, &dl->list);
-		return 1;
-	}
-
-	return 0;
-}
-
-static int _get_config_disk_area(struct cmd_context *cmd,
-				 const struct dm_config_node *cn, struct dm_list *raw_list)
-{
-	struct device_area dev_area;
-	const char *id_str;
-	struct id id;
-
-	if (!(cn = cn->child)) {
-		log_error("Empty metadata disk_area section of config file");
-		return 0;
-	}
-
-	if (!dm_config_get_uint64(cn, "start_sector", &dev_area.start)) {
-		log_error("Missing start_sector in metadata disk_area section "
-			  "of config file");
-		return 0;
-	}
-	dev_area.start <<= SECTOR_SHIFT;
-
-	if (!dm_config_get_uint64(cn, "size", &dev_area.size)) {
-		log_error("Missing size in metadata disk_area section "
-			  "of config file");
-		return 0;
-	}
-	dev_area.size <<= SECTOR_SHIFT;
-
-	if (!dm_config_get_str(cn, "id", &id_str)) {
-		log_error("Missing uuid in metadata disk_area section "
-			  "of config file");
-		return 0;
-	}
-
-	if (!id_read_format(&id, id_str)) {
-		log_error("Invalid uuid in metadata disk_area section "
-			  "of config file: %s", id_str);
-		return 0;
-	}
-
-	if (!(dev_area.dev = lvmcache_device_from_pvid(cmd, &id, NULL))) {
-		char buffer[64] __attribute__((aligned(8)));
-
-		if (!id_write_format(&id, buffer, sizeof(buffer)))
-			log_error("Couldn't find device.");
-		else
-			log_error("Couldn't find device with uuid '%s'.",
-				  buffer);
-
-		return 0;
-	}
-
-	return _add_raw(raw_list, &dev_area);
-}
-
 struct format_type *create_text_format(struct cmd_context *cmd)
 {
 	struct format_instance_ctx fic;
 	struct format_instance *fid;
 	struct format_type *fmt;
-	const struct dm_config_node *cn;
-	const struct dm_config_value *cv;
 	struct mda_lists *mda_lists;
 
 	if (!(fmt = malloc(sizeof(*fmt)))) {
@@ -2556,8 +2246,6 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 		return NULL;
 	}
 
-	dm_list_init(&mda_lists->dirs);
-	dm_list_init(&mda_lists->raws);
 	mda_lists->file_ops = &_metadata_text_file_ops;
 	mda_lists->raw_ops = &_metadata_text_raw_ops;
 	fmt->private = (void *) mda_lists;
@@ -2574,32 +2262,6 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 		log_error("Couldn't register text label handler.");
 		fmt->labeller->ops->destroy(fmt->labeller);
 		goto bad;
-	}
-
-	if ((cn = find_config_tree_array(cmd, metadata_dirs_CFG, NULL))) {
-		for (cv = cn->v; cv; cv = cv->next) {
-			if (cv->type != DM_CFG_STRING) {
-				log_error("Invalid string in config file: "
-					  "metadata/dirs");
-				goto bad;
-			}
-
-			if (!_add_dir(cv->v.str, &mda_lists->dirs)) {
-				log_error("Failed to add %s to text format "
-					  "metadata directory list ", cv->v.str);
-				goto bad;
-			}
-			cmd->independent_metadata_areas = 1;
-		}
-	}
-
-	if ((cn = find_config_tree_node(cmd, metadata_disk_areas_CFG_SUBSECTION, NULL))) {
-		/* FIXME: disk_areas do not work with lvmetad - the "id" can't be found. */
-		for (cn = cn->child; cn; cn = cn->sib) {
-			if (!_get_config_disk_area(cmd, cn, &mda_lists->raws))
-				goto_bad;
-			cmd->independent_metadata_areas = 1;
-		}
 	}
 
 	if (!(fmt->orphan_vg = alloc_vg("text_orphan", cmd, fmt->orphan_vg_name)))

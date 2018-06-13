@@ -60,7 +60,6 @@ struct lvmcache_vginfo {
 	uint32_t mda_checksum;
 	size_t mda_size;
 	int seqno;
-	int independent_metadata_location; /* metadata read from independent areas */
 	int scan_summary_mismatch; /* vgsummary from devs had mismatching seqno or checksum */
 };
 
@@ -794,16 +793,6 @@ next:
  * VG metadata to figure out that a dev with no metadata belongs
  * to a particular VG, so a device with no mdas will not be linked
  * to that VG after a scan.
- *
- * (In the special case where VG metadata is stored in files on the
- * file system (configured in lvm.conf), the
- * vginfo->independent_metadata_location flag is set during label scan.
- * When we get here to rescan, we are revalidating the device to VG
- * mapping from label scan by repeating the label scan on a subset of
- * devices.  If we see independent_metadata_location is set from the
- * initial label scan, we know that there is nothing to do because
- * there is no device to VG mapping to revalidate, since the VG metadata
- * comes directly from files.)
  */
 
 int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const char *vgid)
@@ -820,16 +809,6 @@ int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const 
 
 	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid)))
 		return_0;
-
-	/*
-	 * When the VG metadata is from an independent location,
-	 * then rescanning the devices in the VG won't find the
-	 * metadata, and will destroy the vginfo/info associations
-	 * that were created during label scan when the
-	 * independent locations were read.
-	 */
-	if (vginfo->independent_metadata_location)
-		return 1;
 
 	dm_list_iterate_items(info, &vginfo->infos) {
 		if (!(devl = malloc(sizeof(*devl)))) {
@@ -897,7 +876,6 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	struct lvmcache_info *info;
 	struct lvmcache_vginfo *vginfo;
 	struct device_list *devl;
-	struct format_type *fmt;
 	int vginfo_count = 0;
 
 	int r = 0;
@@ -997,12 +975,6 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 			lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_DUPLICATES);
 		}
 	}
-
-	/* Perform any format-specific scanning e.g. text files */
-	if (cmd->independent_metadata_areas)
-		dm_list_iterate_items(fmt, &cmd->formats)
-			if (fmt->ops->scan && !fmt->ops->scan(fmt, NULL))
-				goto out;
 
 	r = 1;
 
@@ -2232,14 +2204,6 @@ int lvmcache_vgid_is_cached(const char *vgid) {
 		return 0;
 
 	return 1;
-}
-
-void lvmcache_set_independent_location(const char *vgname)
-{
-	struct lvmcache_vginfo *vginfo;
-
-	if ((vginfo = lvmcache_vginfo_from_vgname(vgname, NULL)))
-		vginfo->independent_metadata_location = 1;
 }
 
 uint64_t lvmcache_smallest_mda_size(struct lvmcache_info *info)

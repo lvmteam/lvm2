@@ -4026,9 +4026,6 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 		inconsistent = 0;
 
-		/* Independent MDAs aren't supported under low memory */
-		if (!cmd->independent_metadata_areas && prioritized_section())
-			return_NULL;
 		if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 0)))
 			return_NULL;
 
@@ -5211,15 +5208,6 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 	if (!lvmcache_fmt_from_vgname(cmd, vgname, NULL, 1)) {
 		lvmcache_label_scan(cmd);
 		if (!lvmcache_fmt_from_vgname(cmd, vgname, NULL, 1)) {
-			/* Independent MDAs aren't supported under low memory */
-			if (!cmd->independent_metadata_areas && critical_section()) {
-				/*
-				 * FIXME: Disallow calling this function if
-				 * critical_section() is true.
-				 */
-				unlock_vg(cmd, NULL, vgname);
-				return FAILED_LOCKING;
-			}
 			lvmcache_label_scan(cmd);
 			if (!lvmcache_fmt_from_vgname(cmd, vgname, NULL, 0))
 				return SUCCESS; /* vgname not found after scanning */

@@ -1509,20 +1509,7 @@ cfg(metadata_pvmetadataignore_CFG, "pvmetadataignore", metadata_CFG_SECTION, CFG
 cfg(metadata_stripesize_CFG, "stripesize", metadata_CFG_SECTION, CFG_ADVANCED | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_STRIPESIZE, vsn(1, 0, 0), NULL, 0, NULL, NULL)
 
 cfg_array(metadata_dirs_CFG, "dirs", metadata_CFG_SECTION, CFG_ADVANCED | CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, NULL, vsn(1, 0, 0), NULL, 0, NULL,
-	"Directories holding live copies of text format metadata.\n"
-	"These directories must not be on logical volumes!\n"
-	"It's possible to use LVM with a couple of directories here,\n"
-	"preferably on different (non-LV) filesystems, and with no other\n"
-	"on-disk metadata (pvmetadatacopies = 0). Or this can be in addition\n"
-	"to on-disk metadata areas. The feature was originally added to\n"
-	"simplify testing and is not supported under low memory situations -\n"
-	"the machine could lock up. Never edit any files in these directories\n"
-	"by hand unless you are absolutely sure you know what you are doing!\n"
-	"Use the supplied toolset to make changes (e.g. vgcfgrestore).\n"
-	"#\n"
-	"Example\n"
-	"dirs = [ \"/etc/lvm/metadata\", \"/mnt/disk2/lvm/metadata2\" ]\n"
-	"#\n")
+	  "This setting is no longer used.\n")
 
 cfg_section(metadata_disk_areas_CFG_SUBSECTION, "disk_areas", metadata_CFG_SECTION, CFG_UNSUPPORTED | CFG_DEFAULT_COMMENTED, vsn(1, 0, 0), 0, NULL, NULL)
 cfg_section(disk_area_CFG_SUBSECTION, "disk_area", metadata_disk_areas_CFG_SUBSECTION, CFG_NAME_VARIABLE | CFG_UNSUPPORTED | CFG_DEFAULT_COMMENTED, vsn(1, 0, 0), 0, NULL, NULL)

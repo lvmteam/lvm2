@@ -1796,7 +1796,6 @@ struct cmd_context *create_toolcontext(unsigned is_clvmd,
 	cmd->threaded = threaded ? 1 : 0;
 	cmd->handles_missing_pvs = 0;
 	cmd->handles_unknown_segments = 0;
-	cmd->independent_metadata_areas = 0;
 	cmd->ignore_clustered_vgs = 0;
 	cmd->hosttags = 0;
 	dm_list_init(&cmd->arg_value_groups);
@@ -1968,8 +1967,6 @@ static void _destroy_formats(struct cmd_context *cmd, struct dm_list *formats)
 		dm_list_del(&fmt->list);
 		fmt->ops->destroy(fmt);
 	}
-
-	cmd->independent_metadata_areas = 0;
 }
 
 static void _destroy_segtypes(struct dm_list *segtypes)

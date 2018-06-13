@@ -84,8 +84,6 @@ struct mda_header *raw_read_mda_header(const struct format_type *fmt,
 				       struct device_area *dev_area, int primary_mda);
 
 struct mda_lists {
-	struct dm_list dirs;
-	struct dm_list raws;
 	struct metadata_area_ops *file_ops;
 	struct metadata_area_ops *raw_ops;
 };
