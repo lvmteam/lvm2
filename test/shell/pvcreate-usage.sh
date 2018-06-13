@@ -143,25 +143,6 @@ pvcreate --metadatasize 128k --metadatacopies 2 --dataalignmentoffset 7s "$dev1"
 check pv_field "$dev1" pv_mda_count 2
 # FIXME: compare start of 2nd mda with and without --dataalignmentoffset
 
-#COMM 'pv with LVM1 compatible data alignment can be convereted'
-#compatible == LVM1_PE_ALIGN == 64k
-if test -n "$LVM_TEST_LVM1" ; then
-pvcreate --dataalignment 256k "$dev1"
-vgcreate $SHARED -s 1m $vg "$dev1"
-vgconvert -M1 $vg
-vgconvert -M2 $vg
-check pv_field "$dev1" pe_start 256.00k
-vgremove $vg
-fi
-
-#COMM 'pv with LVM1 incompatible data alignment cannot be convereted'
-if test -n "$LVM_TEST_LVM1" ; then
-pvcreate --dataalignment 10k "$dev1"
-vgcreate $SHARED -s 1m $vg "$dev1"
-not vgconvert -M1 $vg
-vgremove $vg
-fi
-
 #COMM 'vgcfgrestore allows pe_start=0'
 #basically it produces nonsense, but it tests vgcfgrestore,
 #not that final cfg is usable...
