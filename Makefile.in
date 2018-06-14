@@ -193,7 +193,8 @@ endif
 
 endif
 
-include test/unit/Makefile
+# FIXME: Drop once top-level make is resolved
+-include test/unit/Makefile
 include $(top_srcdir)/device_mapper/Makefile
 include $(top_srcdir)/base/Makefile
 

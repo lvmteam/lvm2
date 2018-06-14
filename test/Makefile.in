@@ -357,7 +357,7 @@ LIB = $(addprefix lib/, $(LIB_SHARED) $(LIB_LOCAL) $(LIB_NOT) $(LIB_LINK_NOT) $(
 	touch $@
 
 .lib-dir-stamp:
-	$(MKDIR_P) lib
+	$(MKDIR_P) lib unit
 	for i in $(CMDS); do $(LN_S) -f lvm-wrapper lib/$$i; done
 	for i in daemons/clvmd/clvmd daemons/dmeventd/dmeventd \
 		tools/dmsetup daemons/lvmetad/lvmetad \
