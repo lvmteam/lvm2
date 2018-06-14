@@ -346,9 +346,9 @@ of the foreign VG to its own.  See Overriding system ID above.
 
 .SS shared VGs
 
-A shared/lockd VG has no system ID set, allowing multiple hosts to use it
-via lvmlockd.  Changing a VG to a lockd type will clear the existing
-system ID.  Applicable only if LVM is compiled with lockd support.
+A shared VG has no system ID set, allowing multiple hosts to use it
+via lvmlockd.  Changing a VG to shared will clear the existing
+system ID.  Applicable only if LVM is compiled with lvmlockd support.
 
 
 .SS clustered VGs
