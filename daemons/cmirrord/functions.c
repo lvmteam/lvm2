@@ -11,6 +11,7 @@
  */
 #include "logging.h"
 #include "functions.h"
+#include "base/memory/zalloc.h"
 
 #include <sys/sysmacros.h>
 #include <dirent.h>

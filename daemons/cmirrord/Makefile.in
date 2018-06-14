@@ -30,7 +30,7 @@ LDFLAGS += $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS)
 
 cmirrord: $(OBJECTS) $(top_builddir)/lib/liblvm-internal.a
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) \
-		$(LVMLIBS) $(LMLIBS) $(LIBS)
+		$(LVMLIBS) $(LMLIBS) $(INTERNAL_LIBS) $(LIBS)
 
 install: $(TARGETS)
 	$(INSTALL_PROGRAM) -D cmirrord $(usrsbindir)/cmirrord
