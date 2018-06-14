@@ -14,11 +14,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "tools/tool.h"
-
-#include "device_mapper/misc/dm-logging.h"
-
-#include "lib/config/defaults.h"
+#include "util.h"
+#include "libdm/misc/dm-logging.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -29,12 +26,14 @@
 #include <ctype.h>
 
 #ifdef __linux__
-#  include "kdev_t.h"
+#  include "libdm/misc/kdev_t.h"
 #else
 #  define MAJOR(x) major((x))
 #  define MINOR(x) minor((x))
 #  define MKDEV(x,y) makedev((x),(y))
 #endif
+
+#define DEFAULT_PROC_DIR "/proc"
 
 /* limit to two updates/sec */
 #define FILEMAPD_WAIT_USECS 500000
