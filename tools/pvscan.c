@@ -318,21 +318,22 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	dm_list_init(&found_vgnames);
 	dm_list_init(&pp.changed_vgnames);
 
-	do_activate = arg_is_set(cmd, activate_ARG);
+	if ((do_activate = arg_is_set(cmd, activate_ARG))) {
+		if (arg_uint_value(cmd, activate_ARG, 0) != CHANGE_AAY) {
+			log_error("Only --activate ay allowed with pvscan.");
+			return EINVALID_CMD_LINE;
+		}
 
-	if (!lvmetad_used() && !do_activate) {
-		log_verbose("Ignoring pvscan --cache because lvmetad is not in use.");
-		return ret;
-	}
-
-	if (do_activate && (arg_uint_value(cmd, activate_ARG, CHANGE_AAY) != CHANGE_AAY)) {
-		log_error("Only --activate ay allowed with pvscan.");
-		return 0;
-	}
-
-	if (!lvmetad_used() && do_activate && !find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL)) {
-		log_verbose("Ignoring pvscan --cache -aay because lvmetad is not in use.");
-		return ret;
+		if (!lvmetad_used() &&
+		    !find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL)) {
+			log_verbose("Ignoring pvscan --cache -aay because lvmetad is not in use.");
+			return ret;
+		}
+	} else {
+		if (!lvmetad_used()) {
+			log_verbose("Ignoring pvscan --cache because lvmetad is not in use.");
+			return ret;
+		}
 	}
 
 	if (arg_is_set(cmd, major_ARG) + arg_is_set(cmd, minor_ARG))
