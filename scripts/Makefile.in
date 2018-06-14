@@ -69,9 +69,6 @@ endif
 ifeq ("@BUILD_LVMPOLLD@", "yes")
 	$(INSTALL_SCRIPT) lvm2_lvmpolld_init_red_hat $(initdir)/lvm2-lvmpolld
 endif
-ifneq ("@CLVMD@", "none")
-	$(INSTALL_SCRIPT) clvmd_init_red_hat $(initdir)/clvmd
-endif
 ifeq ("@BUILD_CMIRRORD@", "yes")
 	$(INSTALL_SCRIPT) cmirrord_init_red_hat $(initdir)/cmirrord
 endif
@@ -109,11 +106,6 @@ ifeq ("@BUILD_LVMPOLLD@", "yes")
 endif
 ifeq ("@BUILD_LVMLOCKD@", "yes")
 	$(INSTALL_DATA) lvm2_lvmlockd_systemd_red_hat.service $(systemd_unit_dir)/lvm2-lvmlockd.service
-endif
-ifneq ("@CLVMD@", "none")
-	$(INSTALL_DATA) lvm2_clvmd_systemd_red_hat.service $(systemd_unit_dir)/lvm2-clvmd.service
-	$(INSTALL_DATA) lvm2_cluster_activation_systemd_red_hat.service $(systemd_unit_dir)/lvm2-cluster-activation.service
-	$(INSTALL_SCRIPT) lvm2_cluster_activation_red_hat.sh $(systemd_dir)/lvm2-cluster-activation
 endif
 ifeq ("@BUILD_CMIRRORD@", "yes")
 	$(INSTALL_DATA) lvm2_cmirrord_systemd_red_hat.service $(systemd_unit_dir)/lvm2-cmirrord.service
