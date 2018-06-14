@@ -51,9 +51,6 @@ do { \
 	printf(fmt "\n", ##args); \
 } while (0)
 
-#define malloc malloc
-#define strdup strdup
-#define free free
 #define dm_snprintf snprintf
 
 static int dm_strncpy(char *dest, const char *src, size_t n)
