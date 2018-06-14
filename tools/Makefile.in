@@ -67,7 +67,6 @@ SOURCES =\
 	vgsplit.c
 
 SOURCES2 =\
-	dmsetup.c \
 	lvm.c \
 	lvm2cmd-static.c \
 	lvm2cmd.c \
@@ -80,17 +79,13 @@ TARGETS =\
 	lvm \
 	man-generator
 
-TARGETS_DM = dmsetup
-
 INSTALL_LVM_TARGETS = install_tools_dynamic
-INSTALL_DMSETUP_TARGETS = install_dmsetup_dynamic
+INSTALL_DMSETUP_TARGETS =
 INSTALL_CMDLIB_TARGETS = install_cmdlib_dynamic install_cmdlib_include 
 
 ifeq ("@STATIC_LINK@", "yes")
   TARGETS += lvm.static
-  TARGETS_DM += dmsetup.static
   INSTALL_LVM_TARGETS += install_tools_static
-  INSTALL_DMSETUP_TARGETS += install_dmsetup_static
   INSTALL_CMDLIB_TARGETS += install_cmdlib_static
 endif
 
@@ -99,7 +94,7 @@ LIB_VERSION = $(LIB_VERSION_LVM)
 
 CLEAN_TARGETS = liblvm2cmd.$(LIB_SUFFIX) $(TARGETS_DM) \
 	liblvm2cmd.$(LIB_SUFFIX).$(LIB_VERSION) lvm-static.o \
-	liblvm2cmd-static.a dmsetup.static lvm.static \
+	liblvm2cmd-static.a lvm.static \
 	$(LDDEPS) .exported_symbols_generated \
 	cmds.h command-lines-input.h command-count.h man-generator.c
 
@@ -117,19 +112,7 @@ CFLOW_TARGET = lvm
 
 include $(top_builddir)/make.tmpl
 
-device-mapper: $(TARGETS_DM)
-
-CFLAGS_dmsetup.o += $(UDEV_CFLAGS) $(EXTRA_EXEC_CFLAGS)
-
-dmsetup: dmsetup.o $(INTERNAL_LIBS)
-	@echo "    [CC] $@"
-	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) \
-	      -o $@ $+ $(LIBS) -lm
-
-dmsetup.static: dmsetup.o $(INTERNAL_LIBS)
-	@echo "    [CC] $@"
-	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -static -L$(interfacebuilddir) \
-	      -o $@ $+ $(M_LIBS) $(PTHREAD_LIBS) $(STATIC_LIBS) $(LIBS)
+device-mapper:
 
 all: device-mapper
 
@@ -225,8 +208,7 @@ CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))
 endif
 
 .PHONY: install_cmdlib_dynamic install_cmdlib_static install_cmdlib_include \
-	install_tools_dynamic install_tools_static \
-	install_dmsetup_dynamic install_dmsetup_static
+	install_tools_dynamic install_tools_static
 
 install_cmdlib_include: $(srcdir)/lvm2cmd.h
 	@echo "    [INSTALL] $<"
@@ -255,18 +237,6 @@ install_tools_static: lvm.static
 	@echo "    [INSTALL] $<"
 	$(Q) $(INSTALL_PROGRAM) -D $< $(staticdir)/$(<F)
 
-install_dmsetup_dynamic: dmsetup
-	@echo "    [INSTALL] $<"
-	$(Q) $(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
-	$(Q) $(LN_S) -f $(<F) $(sbindir)/dmstats
-
-install_dmsetup_static: dmsetup.static
-	@echo "    [INSTALL] $<"
-	$(Q) $(INSTALL_PROGRAM) -D $< $(staticdir)/$(<F)
-	$(Q) $(LN_S) -f $(<F) $(staticdir)/dmstats
-
-install_device-mapper: $(INSTALL_DMSETUP_TARGETS)
-
 install_lvm2: $(INSTALL_LVM_TARGETS)
 
-install: install_lvm2 install_device-mapper
+install: install_lvm2

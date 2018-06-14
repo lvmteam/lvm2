@@ -1,0 +1,69 @@
+#
+# Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
+# Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
+#
+# This file is part of LVM2.
+#
+# This copyrighted material is made available to anyone wishing to use,
+# modify, copy, or redistribute it subject to the terms and conditions
+# of the GNU General Public License v.2.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+top_builddir = @top_builddir@
+
+SOURCES=\
+
+SOURCES2=\
+	dmsetup.c
+
+TARGETS_DM = dmsetup
+
+INSTALL_DMSETUP_TARGETS = install_dmsetup_dynamic
+
+ifeq ("@STATIC_LINK@", "yes")
+  TARGETS_DM += dmsetup.static
+  INSTALL_DMSETUP_TARGETS += install_dmsetup_static
+endif
+
+CLEAN_TARGETS = $(TARGETS_DM) \
+	dmsetup.static \
+	$(LDDEPS) .exported_symbols_generated
+
+include $(top_builddir)/libdm/make.tmpl
+
+device-mapper: $(TARGETS_DM)
+
+CFLAGS_dmsetup.o += $(UDEV_CFLAGS) $(EXTRA_EXEC_CFLAGS)
+
+dmsetup: dmsetup.o
+	@echo "    [CC] $@"
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) \
+	      -o $@ $+ $(LIBS) -L$(top_builddir)/libdm -ldevmapper -lm
+
+dmsetup.static: dmsetup.o $(INTERNAL_LIBS)
+	@echo "    [CC] $@"
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -static -L$(interfacebuilddir) \
+	      -o $@ $+ $(M_LIBS) $(PTHREAD_LIBS) $(STATIC_LIBS) $(LIBS)
+
+all: device-mapper
+
+.PHONY: install_dmsetup_dynamic install_dmsetup_static
+
+install_dmsetup_dynamic: dmsetup
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
+	$(Q) $(LN_S) -f $(<F) $(sbindir)/dmstats
+
+install_dmsetup_static: dmsetup.static
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_PROGRAM) -D $< $(staticdir)/$(<F)
+	$(Q) $(LN_S) -f $(<F) $(staticdir)/dmstats
+
+install_device-mapper: $(INSTALL_DMSETUP_TARGETS)
+
+install: install_device-mapper

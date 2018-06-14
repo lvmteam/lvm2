@@ -1785,6 +1785,7 @@ libdaemon/Makefile
 libdaemon/client/Makefile
 libdaemon/server/Makefile
 libdm/Makefile
+libdm/dm-tools/Makefile
 libdm/libdevmapper.pc
 man/Makefile
 po/Makefile

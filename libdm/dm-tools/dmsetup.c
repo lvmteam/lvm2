@@ -15,21 +15,26 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-#include "tools/tool.h"
 
-#include "base/memory/zalloc.h"
-#include "device_mapper/misc/dm-logging.h"
+// For canonicalize_file_name()
+#define _GNU_SOURCE
+#include <stdlib.h>
+
+#include "libdm/misc/dm-logging.h"
+#include "libdm/dm-tools/util.h"
+#include "configure.h"
 
 #include <ctype.h>
 #include <dirent.h>
-#include <sys/wait.h>
-#include <sys/param.h>
-#include <locale.h>
-#include <langinfo.h>
-#include <time.h>
-
 #include <fcntl.h>
+#include <langinfo.h>
+#include <locale.h>
+#include <stdlib.h>
+#include <sys/param.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
+#include <time.h>
+#include <unistd.h>
 
 #ifdef UDEV_SYNC_SUPPORT
 #  include <sys/types.h>
@@ -64,8 +69,6 @@
 #else
 struct option {
 };
-extern int optind;
-extern char *optarg;
 #  define GETOPTLONG_FN(a, b, c, d, e) getopt((a), (b), (c))
 #  define OPTIND_INIT 1
 #endif
@@ -1530,7 +1533,7 @@ static int _message(CMD_ARGS)
 	for (i = 0; i < argc; i++)
 		sz += strlen(argv[i]) + 1;
 
-	if (!(str = zalloc(sz))) {
+	if (!(str = dm_zalloc(sz))) {
 		log_error("Message string allocation failed.");
 		goto out;
 	}
