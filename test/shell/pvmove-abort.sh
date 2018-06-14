@@ -34,8 +34,8 @@ for backgroundarg in "-b" "" ;
 do
 
 # Create multisegment LV
-lvcreate -an -Zn -l30 -n $lv1 $vg "$dev1"
-lvcreate -an -Zn -l40 -n $lv2 $vg "$dev2"
+lvcreate -an -Zn -l40 -n $lv1 $vg "$dev1"
+lvcreate -an -Zn -l50 -n $lv2 $vg "$dev2"
 
 cmd1=(pvmove -i1 $backgroundarg $mode "$dev1" "$dev3")
 cmd2=(pvmove -i1 $backgroundarg $mode "$dev2" "$dev3")
