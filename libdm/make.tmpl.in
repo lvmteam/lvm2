@@ -53,9 +53,6 @@ WC = @WC@
 AR = @AR@
 RM = rm -f
 
-PYTHON2 = @PYTHON2@
-PYTHON3 = @PYTHON3@
-PYCOMPILE = $(top_srcdir)/autoconf/py-compile
 
 LIBS = @LIBS@
 LIBS += $(SELINUX_LIBS) $(UDEV_LIBS) $(BLKID_LIBS) $(RT_LIBS) -lm
@@ -69,9 +66,6 @@ CLDFLAGS += @CLDFLAGS@
 ELDFLAGS += @ELDFLAGS@
 LDDEPS += @LDDEPS@
 LIB_SUFFIX = @LIB_SUFFIX@
-LVMINTERNAL_LIBS=\
-	-llvm-internal \
-	$(DMEVENT_LIBS) $(DAEMON_LIBS) $(SYSTEMD_LIBS) $(UDEV_LIBS) $(DL_LIBS) $(BLKID_LIBS)
 DL_LIBS = @DL_LIBS@
 RT_LIBS = @RT_LIBS@
 M_LIBS = @M_LIBS@
@@ -250,20 +244,6 @@ ifeq (,$(findstring -g,$(CFLAGS)))
 endif
   CFLAGS += -fno-omit-frame-pointer
   DEFS += -DDEBUG
-  # memory debugging is not thread-safe yet
-  ifneq ("@BUILD_DMEVENTD@", "yes")
-  ifneq ("@BUILD_DMFILEMAPD@", "yes")
-  ifneq ("@BUILD_LVMLOCKD@", "yes")
-  ifneq ("@BUILD_LVMPOLLD@", "yes")
-  ifneq ("@BUILD_LVMETAD@", "yes")
-  ifeq ("@CLVMD@", "none")
-    DEFS += -DDEBUG_MEM
-  endif
-  endif
-  endif
-  endif
-  endif
-  endif
 endif
 
 # end of fPIC protection
@@ -271,18 +251,8 @@ endif
 
 DEFS += -D_BUILDING_LVM
 
-LDFLAGS += -L$(top_builddir)/libdm -L$(top_builddir)/lib
-CLDFLAGS += -L$(top_builddir)/libdm -L$(top_builddir)/lib
-
-DAEMON_LIBS = -ldaemonclient
-LDFLAGS += -L$(top_builddir)/libdaemon/client
-CLDFLAGS += -L$(top_builddir)/libdaemon/client
-
-ifeq ("@BUILD_DMEVENTD@", "yes")
-  DMEVENT_LIBS = -ldevmapper-event
-  LDFLAGS += -L$(top_builddir)/daemons/dmeventd
-  CLDFLAGS += -L$(top_builddir)/daemons/dmeventd
-endif
+LDFLAGS += -L$(top_builddir)/libdm
+CLDFLAGS += -L$(top_builddir)/libdm
 
 # Combination of DEBUG_POOL and DEBUG_ENFORCE_POOL_LOCKING is not suppored.
 #DEFS += -DDEBUG_POOL
@@ -307,8 +277,6 @@ LIB_VERSION_LVM := $(shell $(AWK) -F '.' '{printf "%s.%s",$$1,$$2}' $(top_srcdir
 
 LIB_VERSION_DM := $(shell $(AWK) -F '.' '{printf "%s.%s",$$1,$$2}' $(top_srcdir)/VERSION_DM)
 
-LIB_VERSION_APP := $(shell $(AWK) -F '[(). ]' '{printf "%s.%s",$$1,$$4}' $(top_srcdir)/VERSION)
-
 INCLUDES += -I$(top_srcdir) -I$(srcdir) -I$(top_builddir)/include
 
 
@@ -319,22 +287,19 @@ OBJECTS = $(SOURCES:%.c=%.o) $(CXXSOURCES:%.cpp=%.o)
 POTFILES = $(SOURCES:%.c=%.pot)
 
 .PHONY: all pofile distclean clean cleandir cflow device-mapper
-.PHONY: install install_cluster install_device-mapper install_lvm2
+.PHONY: install install_device-mapper install_lvm2
 .PHONY: install_dbus_service
 .PHONY: install_lib_shared install_dm_plugin install_lvm2_plugin
 .PHONY: install_ocf install_systemd_generators install_all_man all_man man help
 .PHONY: python_bindings install_python_bindings
 .PHONY: $(SUBDIRS) $(SUBDIRS.install) $(SUBDIRS.clean) $(SUBDIRS.distclean)
-.PHONY: $(SUBDIRS.pofile) $(SUBDIRS.install_cluster) $(SUBDIRS.cflow)
+.PHONY: $(SUBDIRS.pofile) $(SUBDIRS.cflow)
 .PHONY: $(SUBDIRS.device-mapper) $(SUBDIRS.install-device-mapper)
 .PHONY: $(SUBDIRS.generate) generate
 
 SUBDIRS.device-mapper := $(SUBDIRS:=.device-mapper)
 SUBDIRS.install := $(SUBDIRS:=.install)
-SUBDIRS.install_cluster := $(SUBDIRS:=.install_cluster)
 SUBDIRS.install_device-mapper := $(SUBDIRS:=.install_device-mapper)
-SUBDIRS.install_lvm2 := $(SUBDIRS:=.install_lvm2)
-SUBDIRS.install_ocf := $(SUBDIRS:=.install_ocf)
 SUBDIRS.pofile := $(SUBDIRS:=.pofile)
 SUBDIRS.cflow := $(SUBDIRS:=.cflow)
 SUBDIRS.clean := $(SUBDIRS:=.clean)
@@ -345,10 +310,7 @@ TARGETS += $(LIB_SHARED) $(LIB_STATIC)
 all: $(SUBDIRS) $(TARGETS)
 
 install: all $(SUBDIRS.install)
-install_cluster: all $(SUBDIRS.install_cluster)
 install_device-mapper: $(SUBDIRS.install_device-mapper)
-install_lvm2: $(SUBDIRS.install_lvm2)
-install_ocf: $(SUBDIRS.install_ocf)
 cflow: $(SUBDIRS.cflow)
 
 $(SUBDIRS): $(SUBDIRS.device-mapper)
@@ -360,17 +322,8 @@ $(SUBDIRS.device-mapper):
 $(SUBDIRS.install): $(SUBDIRS)
 	$(MAKE) -C $(@:.install=) install
 
-$(SUBDIRS.install_cluster): $(SUBDIRS)
-	$(MAKE) -C $(@:.install_cluster=) install_cluster
-
 $(SUBDIRS.install_device-mapper): device-mapper
 	$(MAKE) -C $(@:.install_device-mapper=) install_device-mapper
-
-$(SUBDIRS.install_lvm2): $(SUBDIRS)
-	$(MAKE) -C $(@:.install_lvm2=) install_lvm2
-
-$(SUBDIRS.install_ocf):
-	$(MAKE) -C $(@:.install_ocf=) install_ocf
 
 $(SUBDIRS.clean):
 	-$(MAKE) -C $(@:.clean=) clean
