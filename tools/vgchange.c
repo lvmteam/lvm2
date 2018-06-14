@@ -127,16 +127,28 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 	sigint_restore();
 
+	if (expected_count)
+		log_verbose("%sctivated %d logical volumes in volume group %s.",
+			    is_change_activating(activate) ? "A" : "Dea",
+			    count, vg->name);
+
+	/*
+	 * After sucessfull activation we need to initialise polling
+	 * for all activated LVs in a VG. Possible enhancement would
+	 * be adding --poll y|n cmdline option for pvscan and call
+	 * init_background_polling routine in autoactivation handler.
+	 */
+	if (count && is_change_activating(activate) &&
+	    !vgchange_background_polling(cmd, vg)) {
+		stack;
+		r = 0;
+	}
+
 	/* Wait until devices are available */
 	if (!sync_local_dev_names(vg->cmd)) {
 		log_error("Failed to sync local devices for VG %s.", vg->name);
 		r = 0;
 	}
-
-	if (expected_count)
-		log_verbose("%s %d logical volumes in volume group %s",
-			    is_change_activating(activate) ?
-			    "Activated" : "Deactivated", count, vg->name);
 
 	return r;
 }
@@ -163,7 +175,8 @@ int vgchange_background_polling(struct cmd_context *cmd, struct volume_group *vg
 	int polled;
 
 	if (background_polling()) {
-	        polled = _poll_lvs_in_vg(cmd, vg);
+		log_debug_activation("Starting background polling for volume group \"%s\".", vg->name);
+		polled = _poll_lvs_in_vg(cmd, vg);
 		if (polled)
 			log_print_unless_silent("Background polling started for %d logical volume(s) "
 						"in volume group \"%s\"",
