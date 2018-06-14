@@ -17,7 +17,6 @@ DEVICE_MAPPER_SOURCE=\
 	device_mapper/libdm-deptree.c \
 	device_mapper/libdm-file.c \
 	device_mapper/libdm-report.c \
-	device_mapper/libdm-stats.c \
 	device_mapper/libdm-string.c \
 	device_mapper/libdm-targets.c \
 	device_mapper/libdm-timestamp.c \
