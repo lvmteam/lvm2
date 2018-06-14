@@ -30,7 +30,6 @@
 # enable service only if you know what you are doing
 #
 %if %{enable_cmirror}
-#service clvmd 1
 #service cmirrord 1
 %endif
 
