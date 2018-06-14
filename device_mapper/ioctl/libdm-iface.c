@@ -624,20 +624,6 @@ static int _dm_inactive_supported(void)
 	return inactive_supported;
 }
 
-int dm_message_supports_precise_timestamps(void)
-{
-	/*
-	 * 4.32.0 supports "precise_timestamps" and "histogram:" options
-	 * to @stats_create messages but lacks the ability to report
-	 * these properties via a subsequent @stats_list: require at
-	 * least 4.33.0 in order to use these features.
-	 */
-	if (dm_check_version() && _dm_version >= 4)
-		if (_dm_version_minor >= 33)
-			return 1;
-	return 0;
-}
-
 void *dm_get_next_target(struct dm_task *dmt, void *next,
 			 uint64_t *start, uint64_t *length,
 			 char **target_type, char **params)
