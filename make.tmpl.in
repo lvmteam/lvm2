@@ -144,7 +144,6 @@ vpath %.po $(srcdir)
 vpath %.exported_symbols $(srcdir)
 
 interface = @interface@
-interfacebuilddir = $(top_builddir)/libdm/$(interface)
 rpmbuilddir = $(abs_top_builddir)/build
 
 # The number of jobs to run, if blank, defaults to the make standard
@@ -252,14 +251,10 @@ endif
   DEFS += -DDEBUG
   # memory debugging is not thread-safe yet
   ifneq ("@BUILD_DMEVENTD@", "yes")
-  ifneq ("@BUILD_DMFILEMAPD@", "yes")
   ifneq ("@BUILD_LVMLOCKD@", "yes")
   ifneq ("@BUILD_LVMPOLLD@", "yes")
   ifneq ("@BUILD_LVMETAD@", "yes")
-  ifeq ("@CLVMD@", "none")
     DEFS += -DDEBUG_MEM
-  endif
-  endif
   endif
   endif
   endif
@@ -271,8 +266,8 @@ endif
 
 DEFS += -D_BUILDING_LVM
 
-LDFLAGS += -L$(top_builddir)/libdm -L$(top_builddir)/lib
-CLDFLAGS += -L$(top_builddir)/libdm -L$(top_builddir)/lib
+LDFLAGS += -L$(top_builddir)/lib
+CLDFLAGS += -L$(top_builddir)/lib
 
 DAEMON_LIBS = -ldaemonclient
 LDFLAGS += -L$(top_builddir)/libdaemon/client
@@ -426,8 +421,6 @@ CFLOW_FLAGS +=\
  --symbol __REDIRECT:wrapper \
  --symbol __REDIRECT_NTH:wrapper \
  --symbol __wur:wrapper \
- -I$(top_srcdir)/libdm \
- -I$(top_srcdir)/libdm/ioctl \
  -I$(top_srcdir)/daemons/dmeventd/plugins/lvm2/ \
  $(INCLUDES) $(DEFS)
 
