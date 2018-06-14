@@ -586,6 +586,7 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 {
 	int ret = ECMD_PROCESSED;
 	unsigned i;
+	activation_change_t activate = CHANGE_AN;
 
 	static const struct {
 		int arg;
@@ -642,8 +643,8 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (arg_is_set(cmd, activate_ARG)) {
-		if (!vgchange_activate(cmd, vg, (activation_change_t)
-				       arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
+		activate = (activation_change_t) arg_uint_value(cmd, activate_ARG, 0);
+		if (!vgchange_activate(cmd, vg, activate))
 			return_ECMD_FAILED;
 	}
 
