@@ -116,8 +116,11 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 		expected_count++;
 
-		if (!lv_change_activate(cmd, lv, activate))
+		if (!lv_change_activate(cmd, lv, activate)) {
+			stack;
+			r = 0;
 			continue;
+		}
 
 		count++;
 	}
@@ -135,7 +138,7 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			    is_change_activating(activate) ?
 			    "Activated" : "Deactivated", count, vg->name);
 
-	return (expected_count != count) ? 0 : r;
+	return r;
 }
 
 static int _vgchange_monitoring(struct cmd_context *cmd, struct volume_group *vg)
