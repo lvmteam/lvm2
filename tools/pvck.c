@@ -35,7 +35,7 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 
 		pv_name = argv[i];
 
-		dev = dev_cache_get(pv_name, cmd->filter);
+		dev = dev_cache_get(cmd, pv_name, cmd->filter);
 
 		if (!dev) {
 			log_error("Device %s %s.", pv_name, dev_cache_filtered_reason(pv_name));

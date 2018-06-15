@@ -1510,7 +1510,7 @@ struct pv_list *find_pv_in_vg(const struct volume_group *vg,
 			       const char *pv_name)
 {
 	struct pv_list *pvl;
-	struct device *dev = dev_cache_get(pv_name, vg->cmd->filter);
+	struct device *dev = dev_cache_get(vg->cmd, pv_name, vg->cmd->filter);
 
 	/*
 	 * If the device does not exist or is filtered out, don't bother trying

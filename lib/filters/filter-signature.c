@@ -21,7 +21,7 @@
 
 #define BUFSIZE 4096
 
-static int _ignore_signature(struct dev_filter *f __attribute__((unused)),
+static int _ignore_signature(struct cmd_context *cmd, struct dev_filter *f __attribute__((unused)),
 		      struct device *dev)
 {
 	char buf[BUFSIZE];

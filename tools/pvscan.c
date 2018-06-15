@@ -438,10 +438,10 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	while (argc--) {
 		pv_name = *argv++;
 		if (pv_name[0] == '/') {
-			if (!(dev = dev_cache_get(pv_name, cmd->lvmetad_filter))) {
+			if (!(dev = dev_cache_get(cmd, pv_name, cmd->lvmetad_filter))) {
 				/* Remove device path from lvmetad. */
 				log_debug("Removing dev %s from lvmetad cache.", pv_name);
-				if ((dev = dev_cache_get(pv_name, NULL))) {
+				if ((dev = dev_cache_get(cmd, pv_name, NULL))) {
 					if (!_lvmetad_clear_dev(dev->dev, MAJOR(dev->dev), MINOR(dev->dev)))
 						remove_errors++;
 				} else {
@@ -468,7 +468,7 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 			}
 			devno = MKDEV((dev_t)major, (dev_t)minor);
 
-			if (!(dev = dev_cache_get_by_devt(devno, cmd->lvmetad_filter))) {
+			if (!(dev = dev_cache_get_by_devt(cmd, devno, cmd->lvmetad_filter))) {
 				/* Remove major:minor from lvmetad. */
 				log_debug("Removing dev %d:%d from lvmetad cache.", major, minor);
 				if (!_lvmetad_clear_dev(devno, major, minor))
@@ -531,7 +531,7 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 
 		devno = MKDEV((dev_t)major, (dev_t)minor);
 
-		if (!(dev = dev_cache_get_by_devt(devno, cmd->lvmetad_filter))) {
+		if (!(dev = dev_cache_get_by_devt(cmd, devno, cmd->lvmetad_filter))) {
 			/* Remove major:minor from lvmetad. */
 			log_debug("Removing dev %d:%d from lvmetad cache.", major, minor);
 			if (!_lvmetad_clear_dev(devno, major, minor))

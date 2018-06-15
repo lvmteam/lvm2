@@ -1470,7 +1470,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 
 	if (argc) {
 		for (; opt < argc; opt++) {
-			if (!(dev = dev_cache_get(argv[opt], cmd->full_filter))) {
+			if (!(dev = dev_cache_get(cmd, argv[opt], cmd->full_filter))) {
 				log_error("Failed to find device "
 					  "\"%s\".", argv[opt]);
 				ret_max = ECMD_FAILED;
@@ -1547,7 +1547,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 		goto out;
 	}
 
-	while ((dev = dev_iter_get(iter)))
+	while ((dev = dev_iter_get(cmd, iter)))
 	{
 		if (!(label = lvmcache_get_dev_label(dev)))
 			continue;
@@ -3870,7 +3870,7 @@ static int _get_arg_devices(struct cmd_context *cmd,
 			return ECMD_FAILED;
 		}
 
-		if (!(dil->dev = dev_cache_get(sl->str, cmd->filter))) {
+		if (!(dil->dev = dev_cache_get(cmd, sl->str, cmd->filter))) {
 			log_error("Failed to find device for physical volume \"%s\".", sl->str);
 			ret_max = ECMD_FAILED;
 		} else {
@@ -3898,7 +3898,7 @@ static int _get_all_devices(struct cmd_context *cmd, struct dm_list *all_devices
 		return ECMD_FAILED;
 	}
 
-	while ((dev = dev_iter_get(iter))) {
+	while ((dev = dev_iter_get(cmd, iter))) {
 		if (!(dil = dm_pool_alloc(cmd->mem, sizeof(*dil)))) {
 			log_error("device_id_list alloc failed.");
 			goto out;
@@ -5398,7 +5398,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	 * Translate arg names into struct device's.
 	 */
 	dm_list_iterate_items(pd, &pp->arg_devices)
-		pd->dev = dev_cache_get(pd->name, cmd->full_filter);
+		pd->dev = dev_cache_get(cmd, pd->name, cmd->full_filter);
 
 	/*
 	 * Use process_each_pv to search all existing PVs and devices.

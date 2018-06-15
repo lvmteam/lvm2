@@ -366,7 +366,7 @@ static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
 
 		log_debug_devs("Scan filtering %s", dev_name(dev));
 		
-		pass = f->passes_filter(f, dev);
+		pass = f->passes_filter(cmd, f, dev);
 
 		if ((pass == -EAGAIN) || (dev->flags & DEV_FILTER_AFTER_SCAN)) {
 			/* Shouldn't happen */
@@ -833,7 +833,7 @@ int label_scan(struct cmd_context *cmd)
 		return 0;
 	}
 
-	while ((dev = dev_iter_get(iter))) {
+	while ((dev = dev_iter_get(cmd, iter))) {
 		if (!(devl = zalloc(sizeof(*devl))))
 			continue;
 		devl->dev = dev;
@@ -946,7 +946,7 @@ void label_scan_invalidate_lv(struct cmd_context *cmd, struct logical_volume *lv
 
 	lv_info(cmd, lv, 0, &lvinfo, 0, 0);
 	devt = MKDEV(lvinfo.major, lvinfo.minor);
-	if ((dev = dev_cache_get_by_devt(devt, NULL)))
+	if ((dev = dev_cache_get_by_devt(cmd, devt, NULL)))
 		label_scan_invalidate(dev);
 }
 
@@ -963,7 +963,7 @@ void label_scan_drop(struct cmd_context *cmd)
 	if (!(iter = dev_iter_create(NULL, 0)))
 		return;
 
-	while ((dev = dev_iter_get(iter))) {
+	while ((dev = dev_iter_get(cmd, iter))) {
 		if (_in_bcache(dev))
 			_scan_dev_close(dev);
 	}

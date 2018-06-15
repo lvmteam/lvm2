@@ -18,13 +18,13 @@
 #include "lib/filters/filter.h"
 #include "lib/device/device.h"
 
-static int _and_p(struct dev_filter *f, struct device *dev)
+static int _and_p(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
 {
 	struct dev_filter **filters;
 	int ret;
 
 	for (filters = (struct dev_filter **) f->private; *filters; ++filters) {
-		ret = (*filters)->passes_filter(*filters, dev);
+		ret = (*filters)->passes_filter(cmd, *filters, dev);
 
 		if (!ret)
 			return 0;	/* No 'stack': a filter, not an error. */
@@ -33,12 +33,12 @@ static int _and_p(struct dev_filter *f, struct device *dev)
 	return 1;
 }
 
-static int _and_p_with_dev_ext_info(struct dev_filter *f, struct device *dev)
+static int _and_p_with_dev_ext_info(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
 {
 	int r;
 
 	dev_ext_enable(dev, external_device_info_source());
-	r = _and_p(f, dev);
+	r = _and_p(cmd, f, dev);
 	dev_ext_disable(dev);
 
 	return r;

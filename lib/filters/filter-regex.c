@@ -145,7 +145,7 @@ static int _build_matcher(struct rfilter *rf, const struct dm_config_value *val)
 	return r;
 }
 
-static int _accept_p(struct dev_filter *f, struct device *dev)
+static int _accept_p(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
 {
 	int m, first = 1, rejected = 0;
 	struct rfilter *rf = (struct rfilter *) f->private;

@@ -17,7 +17,7 @@
 #include "lib/misc/lib.h"
 #include "lib/filters/filter.h"
 
-static int _passes_lvm_type_device_filter(struct dev_filter *f, struct device *dev)
+static int _passes_lvm_type_device_filter(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
 {
 	struct dev_types *dt = (struct dev_types *) f->private;
 	const char *name = dev_name(dev);

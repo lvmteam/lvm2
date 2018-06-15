@@ -27,7 +27,7 @@ int pv_disks_found;
 int pv_parts_found;
 int max_len;
 
-static int _get_max_dev_name_len(struct dev_filter *filter)
+static int _get_max_dev_name_len(struct cmd_context *cmd, struct dev_filter *filter)
 {
 	int len = 0;
 	int maxlen = 0;
@@ -40,7 +40,7 @@ static int _get_max_dev_name_len(struct dev_filter *filter)
 	}
 
 	/* Do scan */
-	for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
+	for (dev = dev_iter_get(cmd, iter); dev; dev = dev_iter_get(cmd, iter)) {
 		len = strlen(dev_name(dev));
 		if (len > maxlen)
 			maxlen = len;
@@ -100,14 +100,14 @@ int lvmdiskscan(struct cmd_context *cmd, int argc __attribute__((unused)),
 	/* Call before using dev_iter which uses filters which want bcache data. */
 	label_scan(cmd);
 
-	max_len = _get_max_dev_name_len(cmd->full_filter);
+	max_len = _get_max_dev_name_len(cmd, cmd->full_filter);
 
 	if (!(iter = dev_iter_create(cmd->full_filter, 0))) {
 		log_error("dev_iter_create failed");
 		return ECMD_FAILED;
 	}
 
-	for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
+	for (dev = dev_iter_get(cmd, iter); dev; dev = dev_iter_get(cmd, iter)) {
 		if (lvmcache_has_dev_info(dev)) {
 			if (!dev_get_size(dev, &size)) {
 				log_error("Couldn't get size of \"%s\"",

@@ -247,7 +247,7 @@ static int _dev_is_mpath(struct dev_filter *f, struct device *dev)
 
 #define MSG_SKIPPING "%s: Skipping mpath component device"
 
-static int _ignore_mpath(struct dev_filter *f, struct device *dev)
+static int _ignore_mpath(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
 {
 	if (_dev_is_mpath(f, dev) == 1) {
 		if (dev->ext.src == DEV_EXT_NONE)

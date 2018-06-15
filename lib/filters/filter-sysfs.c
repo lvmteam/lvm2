@@ -260,7 +260,7 @@ static int _init_devs(struct dev_set *ds)
 }
 
 
-static int _accept_p(struct dev_filter *f, struct device *dev)
+static int _accept_p(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
 {
 	struct dev_set *ds = (struct dev_set *) f->private;
 

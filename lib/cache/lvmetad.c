@@ -863,9 +863,9 @@ static int _pv_populate_lvmcache(struct cmd_context *cmd,
 		return 0;
 	}
 
-	dev = dev_cache_get_by_devt(devt, cmd->filter);
+	dev = dev_cache_get_by_devt(cmd, devt, cmd->filter);
 	if (!dev && fallback)
-		dev = dev_cache_get_by_devt(fallback, cmd->filter);
+		dev = dev_cache_get_by_devt(cmd, fallback, cmd->filter);
 
 	if (!dev) {
 		log_warn("WARNING: Device for PV %s not found or rejected by a filter.", pvid_txt);
@@ -2404,7 +2404,7 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
 	was_silent = silent_mode();
 	init_silent(1);
 
-	while ((dev = dev_iter_get(iter))) {
+	while ((dev = dev_iter_get(cmd, iter))) {
 		if (sigint_caught()) {
 			ret = 0;
 			stack;
@@ -2549,7 +2549,7 @@ static void _update_pv_in_udev(struct cmd_context *cmd, dev_t devt)
 #if 0
 	struct device *dev;
 
-	if (!(dev = dev_cache_get_by_devt(devt, cmd->lvmetad_filter))) {
+	if (!(dev = dev_cache_get_by_devt(cmd, devt, cmd->lvmetad_filter))) {
 		log_error("_update_pv_in_udev no dev found");
 		return;
 	}

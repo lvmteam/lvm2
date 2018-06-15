@@ -292,7 +292,7 @@ static int _write_log_header(struct cmd_context *cmd, struct logical_volume *lv)
 
 	log_verbose("Writing log header for LV %s to device %s.", display_lvname(lv), name);
 
-	if (!(dev = dev_cache_get(name, NULL))) {
+	if (!(dev = dev_cache_get(cmd, name, NULL))) {
 		log_error("%s: not found: log header not written.", name);
 		return 0;
 	}

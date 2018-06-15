@@ -70,6 +70,13 @@
  */
 
 /*
+ * FIXME: for commands that want a full md check (pvcreate, vgcreate,
+ * vgextend), we do an extra read at the end of every device that the
+ * filter looks at.  This isn't necessary; we only need to do the full
+ * md check on the PVs that these commands are trying to use.
+ */
+
+/*
  * Returns 0 if:
  * the device is an md component and it should be ignored.
  *
@@ -81,7 +88,7 @@
  * that will not pass.
  */
 
-static int _passes_md_filter(struct device *dev, int full)
+static int _passes_md_filter(struct cmd_context *cmd, struct dev_filter *f __attribute__((unused)), struct device *dev)
 {
 	int ret;
 
@@ -92,7 +99,7 @@ static int _passes_md_filter(struct device *dev, int full)
 	if (!md_filtering())
 		return 1;
 
-	ret = dev_is_md(dev, NULL, full);
+	ret = dev_is_md(dev, NULL, cmd->use_full_md_check);
 
 	if (ret == -EAGAIN) {
 		/* let pass, call again after scan */
@@ -122,18 +129,6 @@ static int _passes_md_filter(struct device *dev, int full)
 	return 1;
 }
 
-static int _passes_md_filter_lite(struct dev_filter *f __attribute__((unused)),
-				  struct device *dev)
-{
-	return _passes_md_filter(dev, 0);
-}
-
-static int _passes_md_filter_full(struct dev_filter *f __attribute__((unused)),
-				  struct device *dev)
-{
-	return _passes_md_filter(dev, 1);
-}
-
 static void _destroy(struct dev_filter *f)
 {
 	if (f->use_count)
@@ -151,18 +146,7 @@ struct dev_filter *md_filter_create(struct cmd_context *cmd, struct dev_types *d
 		return NULL;
 	}
 
-	/*
-	 * FIXME: for commands that want a full md check (pvcreate, vgcreate,
-	 * vgextend), we do an extra read at the end of every device that the
-	 * filter looks at.  This isn't necessary; we only need to do the full
-	 * md check on the PVs that these commands are trying to use.
-	 */
-
-	if (cmd->use_full_md_check)
-		f->passes_filter = _passes_md_filter_full;
-	else
-		f->passes_filter = _passes_md_filter_lite;
-
+	f->passes_filter = _passes_md_filter;
 	f->destroy = _destroy;
 	f->use_count = 0;
 	f->private = dt;

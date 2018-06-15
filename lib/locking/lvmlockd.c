@@ -398,7 +398,7 @@ static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, 
 
 	log_print("Zeroing %u MiB on extended internal lvmlock LV...", extend_mb);
 
-	if (!(dev = dev_cache_get(path, NULL))) {
+	if (!(dev = dev_cache_get(cmd, path, NULL))) {
 		log_error("Extend sanlock LV %s cannot find device.", display_lvname(lv));
 		return 0;
 	}

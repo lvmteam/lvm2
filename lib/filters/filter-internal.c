@@ -37,7 +37,7 @@ void internal_filter_clear(void)
 	dm_list_init(&_allow_devs);
 }
 
-static int _passes_internal(struct dev_filter *f __attribute__((unused)),
+static int _passes_internal(struct cmd_context *cmd, struct dev_filter *f __attribute__((unused)),
 			    struct device *dev)
 {
 	struct device_list *devl;

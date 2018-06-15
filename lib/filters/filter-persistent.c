@@ -68,7 +68,7 @@ static void _persistent_filter_wipe(struct dev_filter *f)
 	dm_hash_wipe(pf->devices);
 }
 
-static int _lookup_p(struct dev_filter *f, struct device *dev)
+static int _lookup_p(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 	void *l;
@@ -99,7 +99,7 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 	if (!l) {
 		dev->flags &= ~DEV_FILTER_AFTER_SCAN;
 
-		pass = pf->real->passes_filter(pf->real, dev);
+		pass = pf->real->passes_filter(cmd, pf->real, dev);
 
 		if (!pass) {
 			/*

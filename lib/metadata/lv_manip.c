@@ -7145,7 +7145,7 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 		return 0;
 	}
 
-	if (!(dev = dev_cache_get(name, NULL))) {
+	if (!(dev = dev_cache_get(lv->vg->cmd, name, NULL))) {
 		log_error("%s: not found: device not cleared", name);
 		return 0;
 	}

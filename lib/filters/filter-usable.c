@@ -100,7 +100,7 @@ static int _check_pv_min_size(struct device *dev)
 	return 0;
 }
 
-static int _passes_usable_filter(struct dev_filter *f, struct device *dev)
+static int _passes_usable_filter(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
 {
 	filter_mode_t mode = *((filter_mode_t *) f->private);
 	struct dev_usable_check_params ucp = {0};

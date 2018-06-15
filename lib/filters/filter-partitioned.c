@@ -19,7 +19,7 @@
 
 #define MSG_SKIPPING "%s: Skipping: Partition table signature found"
 
-static int _passes_partitioned_filter(struct dev_filter *f, struct device *dev)
+static int _passes_partitioned_filter(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
 {
 	struct dev_types *dt = (struct dev_types *) f->private;
 	int ret;

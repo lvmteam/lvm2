@@ -1504,7 +1504,7 @@ const char *dev_cache_filtered_reason(const char *name)
 	return reason;
 }
 
-struct device *dev_cache_get(const char *name, struct dev_filter *f)
+struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct dev_filter *f)
 {
 	struct stat buf;
 	struct device *d = (struct device *) dm_hash_lookup(_cache.names, name);
@@ -1544,7 +1544,7 @@ struct device *dev_cache_get(const char *name, struct dev_filter *f)
 		return d;
 
 	if (f && !(d->flags & DEV_REGULAR)) {
-		ret = f->passes_filter(f, d);
+		ret = f->passes_filter(cmd, f, d);
 
 		if (ret == -EAGAIN) {
 			log_debug_devs("get device by name defer filter %s", dev_name(d));
@@ -1576,7 +1576,7 @@ static struct device *_dev_cache_seek_devt(dev_t dev)
  * TODO This is very inefficient. We probably want a hash table indexed by
  * major:minor for keys to speed up these lookups.
  */
-struct device *dev_cache_get_by_devt(dev_t dev, struct dev_filter *f)
+struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t dev, struct dev_filter *f)
 {
 	char path[PATH_MAX];
 	const char *sysfs_dir;
@@ -1617,7 +1617,7 @@ struct device *dev_cache_get_by_devt(dev_t dev, struct dev_filter *f)
 	if (!f)
 		return d;
 
-	ret = f->passes_filter(f, d);
+	ret = f->passes_filter(cmd, f, d);
 
 	if (ret == -EAGAIN) {
 		log_debug_devs("get device by number defer filter %s", dev_name(d));
@@ -1662,7 +1662,7 @@ static struct device *_iter_next(struct dev_iter *iter)
 	return d;
 }
 
-struct device *dev_iter_get(struct dev_iter *iter)
+struct device *dev_iter_get(struct cmd_context *cmd, struct dev_iter *iter)
 {
 	struct dev_filter *f;
 	int ret;
@@ -1674,7 +1674,7 @@ struct device *dev_iter_get(struct dev_iter *iter)
 		f = iter->filter;
 
 		if (f && !(d->flags & DEV_REGULAR)) {
-			ret = f->passes_filter(f, d);
+			ret = f->passes_filter(cmd, f, d);
 
 			if (ret == -EAGAIN) {
 				log_debug_devs("get device by iter defer filter %s", dev_name(d));
