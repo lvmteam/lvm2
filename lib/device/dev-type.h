@@ -76,6 +76,7 @@ int wipe_known_signatures(struct cmd_context *cmd, struct device *dev, const cha
 
 /* Type-specific device properties */
 unsigned long dev_md_stripe_width(struct dev_types *dt, struct device *dev);
+int dev_is_md_with_end_superblock(struct dev_types *dt, struct device *dev);
 
 /* Partitioning */
 int major_max_partitions(struct dev_types *dt, int major);

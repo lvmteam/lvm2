@@ -452,7 +452,7 @@ int lvmcache_dev_is_unchosen_duplicate(struct device *dev)
  * unused_duplicate_devs list, and restrict what we allow done with it.
  *
  * In the case of md components, we usually filter these out in filter-md,
- * but in the special case of md superblocks <= 1.0 where the superblock
+ * but in the special case of md superblock version 1.0 where the superblock
  * is at the end of the device, filter-md doesn't always eliminate them
  * first, so we eliminate them here.
  *
