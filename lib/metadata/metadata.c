@@ -4698,10 +4698,7 @@ static int _access_vg_clustered(struct cmd_context *cmd, const struct volume_gro
 			return 1;
 		}
 
-		if (!cmd->ignore_clustered_vgs)
-			log_error("Skipping clustered volume group %s", vg->name);
-		else
-			log_verbose("Skipping clustered volume group %s", vg->name);
+		log_verbose("Skipping clustered VG %s.", vg->name);
 		return 0;
 	}
 

@@ -175,7 +175,7 @@ static int generate_unit(struct generator *gen, int unit)
 		      "Wants=systemd-udev-settle.service\n\n" "[Service]\n", f);
 	}
 
-	fputs("ExecStart=" LVM_PATH " vgchange -aay --ignoreskippedcluster", f);
+	fputs("ExecStart=" LVM_PATH " vgchange -aay", f);
 	if (gen->cfg.sysinit_needed)
 		fputs(" --sysinit", f);
 	fputs("\nType=oneshot\n", f);

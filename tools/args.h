@@ -243,8 +243,7 @@ arg(ignoremonitoring_ARG, '\0', "ignoremonitoring", 0, 0, 0,
     "Do not use this if dmeventd is already monitoring a device.\n")
 
 arg(ignoreskippedcluster_ARG, '\0', "ignoreskippedcluster", 0, 0, 0,
-    "Use to avoid exiting with an non-zero status code if the command is run\n"
-    "without clustered locking and clustered VGs are skipped.\n")
+    "No longer used.\n")
 
 arg(ignoreunsupported_ARG, '\0', "ignoreunsupported", 0, 0, 0,
     "Exclude unsupported configuration settings from the output. These settings are\n"

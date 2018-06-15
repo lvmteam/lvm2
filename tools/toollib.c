@@ -204,10 +204,15 @@ static int _ignore_vg(struct volume_group *vg, const char *vg_name,
 	if ((read_error & FAILED_INCONSISTENT) && (read_flags & READ_ALLOW_INCONSISTENT))
 		read_error &= ~FAILED_INCONSISTENT; /* Check for other errors */
 
-	if ((read_error & FAILED_CLUSTERED) && vg->cmd->ignore_clustered_vgs) {
-		read_error &= ~FAILED_CLUSTERED; /* Check for other errors */
-		log_verbose("Skipping volume group %s", vg_name);
-		*skip = 1;
+	if (read_error & FAILED_CLUSTERED) {
+		if (arg_vgnames && str_list_match_item(arg_vgnames, vg->name)) {
+			log_error("Cannot access clustered VG %s, see lvmlockd(8).", vg->name);
+			return 1;
+		} else {
+			log_warn("Skipping clustered VG %s.", vg_name);
+			*skip = 1;
+			return 0;
+		}
 	}
 
 	/*
@@ -252,12 +257,6 @@ static int _ignore_vg(struct volume_group *vg, const char *vg_name,
 			log_verbose("Skipping volume group %s", vg_name);
 			*skip = 1;
 		}
-	}
-
-	if (read_error == FAILED_CLUSTERED) {
-		*skip = 1;
-		stack;	/* Error already logged */
-		return 1;
 	}
 
 	if (read_error != SUCCESS) {

@@ -194,7 +194,7 @@ OO_ALL: --commandprofile String, --config String, --debug,
 # options for pvs, lvs, vgs, fullreport
 #
 OO_REPORT: --aligned, --all, --binary, --configreport ConfigReport, --foreign,
---ignorelockingfailure, --ignoreskippedcluster, --logonly,
+--ignorelockingfailure, --logonly,
 --nameprefixes, --noheadings, --nosuffix,
 --options String, --readonly, --reportformat ReportFmt, --rows,
 --select String, --separator String, --shared, --sort String,
@@ -213,8 +213,7 @@ OO_CONFIG: --atversion String, --typeconfig ConfigType, --file String, --ignorea
 # None of these can function as a required option for lvchange.
 
 OO_LVCHANGE: --autobackup Bool, --force, --ignoremonitoring,
---ignoreskippedcluster, --noudevsync, --reportformat ReportFmt,
---select String
+--noudevsync, --reportformat ReportFmt, --select String
 
 # Any of these can function as a required option for lvchange.
 # profile is also part of OO_ALL, but is repeated in OO_LVCHANGE_META
@@ -235,6 +234,7 @@ OO_LVCHANGE_META: --addtag Tag, --deltag Tag,
 
 lvchange OO_LVCHANGE_META VG|LV|Tag|Select ...
 OO: --activate Active, --poll Bool, --monitor Bool, OO_LVCHANGE
+IO: --ignoreskippedcluster
 ID: lvchange_properties
 DESC: Change a general LV attribute.
 DESC: For options listed in parentheses, any one is
@@ -257,6 +257,7 @@ RULE: --alloc --discards --zero --cachemode --cachepolicy --cachesettings not lv
 
 lvchange --resync VG|LV_raid_mirror|Tag|Select ...
 OO: --activate Active, OO_LVCHANGE
+IO: --ignoreskippedcluster
 ID: lvchange_resync
 DESC: Resyncronize a mirror or raid LV.
 RULE: all not lv_is_pvmove lv_is_locked
@@ -264,12 +265,14 @@ RULE: all not LV_raid0
 
 lvchange --syncaction SyncAction VG|LV_raid|Tag|Select ...
 OO: OO_LVCHANGE
+IO: --ignoreskippedcluster
 ID: lvchange_syncaction
 DESC: Resynchronize or check a raid LV.
 RULE: all not LV_raid0
 
 lvchange --rebuild PV VG|LV_raid|Tag|Select ...
 OO: OO_LVCHANGE
+IO: --ignoreskippedcluster
 ID: lvchange_rebuild
 DESC: Reconstruct data on specific PVs of a raid LV.
 RULE: all not LV_raid0
@@ -277,27 +280,32 @@ RULE: all not LV_raid0
 lvchange --activate Active VG|LV|Tag|Select ...
 OO: --activationmode ActivationMode, --partial, --poll Bool, --monitor Bool,
 --ignoreactivationskip, --ignorelockingfailure, --sysinit, OO_LVCHANGE
+IO: --ignoreskippedcluster
 ID: lvchange_activate
 DESC: Activate or deactivate an LV.
 
 lvchange --refresh VG|LV|Tag|Select ...
 OO: --activationmode ActivationMode, --partial, --poll Bool, --monitor Bool, OO_LVCHANGE
+IO: --ignoreskippedcluster
 ID: lvchange_refresh
 DESC: Reactivate an LV using the latest metadata.
 
 lvchange --monitor Bool VG|LV|Tag|Select ...
 OO: OO_LVCHANGE
+IO: --ignoreskippedcluster
 ID: lvchange_monitor
 DESC: Start or stop monitoring an LV from dmeventd.
 RULE: all not lv_is_pvmove
 
 lvchange --poll Bool VG|LV|Tag|Select ...
 OO: --monitor Bool, OO_LVCHANGE
+IO: --ignoreskippedcluster
 ID: lvchange_poll
 DESC: Start or stop processing an LV conversion.
 
 lvchange --persistent y --minor Number LV
 OO: --major Number, --activate Active, --poll Bool, --monitor Bool, OO_LVCHANGE
+IO: --ignoreskippedcluster
 ID: lvchange_persistent
 DESC: Make the minor device number persistent for an LV.
 RULE: all not LV_thinpool LV_cachepool
@@ -1193,12 +1201,12 @@ FLAGS: SECONDARY_SYNTAX
 lvdisplay
 OO: --aligned, --all, --binary, --colon, --columns,
 --configreport ConfigReport, --foreign, --history, --ignorelockingfailure,
---ignoreskippedcluster, --logonly, --maps, --noheadings,
+--logonly, --maps, --noheadings,
 --nosuffix, --options String, --sort String, --readonly,
 --reportformat ReportFmt, --segments, --select String, --separator String,
 --shared, --unbuffered, --units Units
 OP: VG|LV|Tag ...
-IO: --partial
+IO: --partial, --ignoreskippedcluster
 ID: lvdisplay_general
 
 ---
@@ -1312,7 +1320,7 @@ DESC: Resize a pool metadata SubLV by a specified size.
 lvs
 OO: --history, --segments, OO_REPORT
 OP: VG|LV|Tag ...
-IO: --partial
+IO: --partial, --ignoreskippedcluster
 ID: lvs_general
 
 ---
@@ -1333,8 +1341,7 @@ ID: lvscan_cache
 ---
 
 # None of these can function as a required option for pvchange.
-OO_PVCHANGE: --autobackup Bool, --force, --ignoreskippedcluster,
---reportformat ReportFmt, --uuid
+OO_PVCHANGE: --autobackup Bool, --force, --reportformat ReportFmt, --uuid
 
 # Any of these can function as a required option for pvchange.
 OO_PVCHANGE_META: --allocatable Bool, --addtag Tag, --deltag Tag,
@@ -1342,11 +1349,13 @@ OO_PVCHANGE_META: --allocatable Bool, --addtag Tag, --deltag Tag,
 
 pvchange OO_PVCHANGE_META --all
 OO: OO_PVCHANGE
+IO: --ignoreskippedcluster
 ID: pvchange_properties_all
 DESC: Change properties of all PVs.
 
 pvchange OO_PVCHANGE_META PV|Select ...
 OO: --select String, OO_PVCHANGE
+IO: --ignoreskippedcluster
 ID: pvchange_properties_some
 DESC: Change properties of specified PVs.
 
@@ -1381,11 +1390,12 @@ RULE: --bootloaderareasize not --restorefile
 
 pvdisplay
 OO: --aligned, --all, --binary, --colon, --columns, --configreport ConfigReport,
---foreign, --ignorelockingfailure, --ignoreskippedcluster,
+--foreign, --ignorelockingfailure,
 --logonly, --maps, --noheadings, --nosuffix, --options String,
 --readonly, --reportformat ReportFmt, --select String, --separator String, --shared,
 --short, --sort String, --unbuffered, --units Units
 OP: PV|Tag ...
+IO: --ignoreskippedcluster
 ID: pvdisplay_general
 
 ---
@@ -1413,7 +1423,7 @@ ID: pvremove_general
 pvs
 OO: --segments, OO_REPORT
 OP: PV|Tag ...
-IO: --partial
+IO: --partial, --ignoreskippedcluster
 ID: pvs_general
 
 ---
@@ -1473,7 +1483,7 @@ DESC: List one VG metadata backup file.
 
 # None of these can function as a required option for vgchange.
 
-OO_VGCHANGE: --autobackup Bool, --ignoremonitoring, --ignoreskippedcluster,
+OO_VGCHANGE: --autobackup Bool, --ignoremonitoring,
 --noudevsync, --reportformat ReportFmt, --select String, --force
 
 # Any of these can function as a required option for vgchange.
@@ -1489,6 +1499,7 @@ OO_VGCHANGE_META: --addtag Tag, --deltag Tag,
 vgchange OO_VGCHANGE_META
 OO: --poll Bool, OO_VGCHANGE
 OP: VG|Tag|Select ...
+IO: --ignoreskippedcluster
 ID: vgchange_properties
 DESC: Change a general VG attribute.
 DESC: For options listed in parentheses, any one is
@@ -1497,12 +1508,14 @@ DESC: required, after which the others are optional.
 vgchange --monitor Bool
 OO: --sysinit, --ignorelockingfailure, --poll Bool, OO_VGCHANGE
 OP: VG|Tag|Select ...
+IO: --ignoreskippedcluster
 ID: vgchange_monitor
 DESC: Start or stop monitoring LVs from dmeventd.
 
 vgchange --poll Bool
 OO: --ignorelockingfailure, OO_VGCHANGE
 OP: VG|Tag|Select ...
+IO: --ignoreskippedcluster
 ID: vgchange_poll
 DESC: Start or stop processing LV conversions.
 
@@ -1510,12 +1523,14 @@ vgchange --activate Active
 OO: --activationmode ActivationMode, --ignoreactivationskip, --partial, --sysinit,
 --ignorelockingfailure, --monitor Bool, --poll Bool, OO_VGCHANGE
 OP: VG|Tag|Select ...
+IO: --ignoreskippedcluster
 ID: vgchange_activate
 DESC: Activate or deactivate LVs.
 
 vgchange --refresh
 OO: --sysinit, --ignorelockingfailure, --poll Bool, OO_VGCHANGE
 OP: VG|Tag|Select ...
+IO: --ignoreskippedcluster
 ID: vgchange_refresh
 DESC: Reactivate LVs using the latest metadata.
 
@@ -1562,11 +1577,11 @@ ID: vgcreate_general
 vgdisplay
 OO: --activevolumegroups, --aligned, --binary, --colon, --columns,
 --configreport ConfigReport, --foreign, --ignorelockingfailure,
---ignoreskippedcluster, --logonly, --noheadings, --nosuffix,
+--logonly, --noheadings, --nosuffix,
 --options String, --readonly, --reportformat ReportFmt, --select String,
 --shared, --short, --separator String, --sort String, --unbuffered, --units Units
 OP: VG|Tag ...
-IO: --partial
+IO: --partial, --ignoreskippedcluster
 ID: vgdisplay_general
 
 ---
@@ -1668,7 +1683,7 @@ DESC: Rename a VG by specifying the VG UUID.
 vgs
 OO: OO_REPORT
 OP: VG|Tag ...
-IO: --partial
+IO: --partial, --ignoreskippedcluster
 ID: vgs_general
 
 ---
@@ -1723,7 +1738,7 @@ ID: devtypes_general
 fullreport
 OO: OO_REPORT
 OP: VG ...
-IO: --partial
+IO: --partial, --ignoreskippedcluster
 ID: fullreport_general
 
 lastlog
