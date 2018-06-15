@@ -64,8 +64,6 @@ struct device {
 	/* private */
 	int fd;
 	int open_count;
-	int error_count;
-	int max_error_count;
 	int phys_block_size;
 	int block_size;
 	int read_ahead;

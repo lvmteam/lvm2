@@ -62,13 +62,12 @@ static int _insert(const char *path, const struct stat *info,
 		   int rec, int check_with_udev_db);
 
 /* Setup non-zero members of passed zeroed 'struct device' */
-static void _dev_init(struct device *dev, int max_error_count)
+static void _dev_init(struct device *dev)
 {
 	dev->phys_block_size = -1;
 	dev->block_size = -1;
 	dev->fd = -1;
 	dev->read_ahead = -1;
-	dev->max_error_count = max_error_count;
 
 	dev->ext.enabled = 0;
 	dev->ext.src = DEV_EXT_NONE;
@@ -129,7 +128,7 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 		return NULL;
 	}
 
-	_dev_init(dev, NO_DEV_ERROR_COUNT_LIMIT);
+	_dev_init(dev);
 	dev->flags = DEV_REGULAR | ((use_malloc) ? DEV_ALLOCED : 0);
 	dm_list_add(&dev->aliases, &alias->list);
 
@@ -145,7 +144,7 @@ static struct device *_dev_create(dev_t d)
 		return NULL;
 	}
 
-	_dev_init(dev, dev_disable_after_error_count());
+	_dev_init(dev);
 	dev->dev = d;
 
 	return dev;
@@ -1688,18 +1687,6 @@ struct device *dev_iter_get(struct cmd_context *cmd, struct dev_iter *iter)
 	}
 
 	return NULL;
-}
-
-void dev_reset_error_count(struct cmd_context *cmd)
-{
-	struct dev_iter iter;
-
-	if (!_cache.devices)
-		return;
-
-	iter.current = btree_first(_cache.devices);
-	while (iter.current)
-		_iter_next(&iter)->error_count = 0;
 }
 
 int dev_fd(struct device *dev)

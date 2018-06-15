@@ -974,9 +974,6 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	int len_diff;
 	int device_list_from_udev;
 
-	init_dev_disable_after_error_count(
-		find_config_tree_int(cmd, devices_disable_after_error_count_CFG, NULL));
-
 	if (!dev_cache_init(cmd))
 		return_0;
 

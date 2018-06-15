@@ -410,12 +410,8 @@ cfg(devices_ignore_lvm_mirrors_CFG, "ignore_lvm_mirrors", devices_CFG_SECTION, 0
 	"apply to LVM RAID types like 'raid1' which handle failures in a\n"
 	"different way, making them a better choice for VG stacking.\n")
 
-cfg(devices_disable_after_error_count_CFG, "disable_after_error_count", devices_CFG_SECTION, 0, CFG_TYPE_INT, DEFAULT_DISABLE_AFTER_ERROR_COUNT, vsn(2, 2, 75), NULL, 0, NULL,
-	"Number of I/O errors after which a device is skipped.\n"
-	"During each LVM operation, errors received from each device are\n"
-	"counted. If the counter of a device exceeds the limit set here,\n"
-	"no further I/O is sent to that device for the remainder of the\n"
-	"operation. Setting this to 0 disables the counters altogether.\n")
+cfg(devices_disable_after_error_count_CFG, "disable_after_error_count", devices_CFG_SECTION, 0, CFG_TYPE_INT, 0, vsn(2, 2, 75), NULL, vsn(3, 0, 0), NULL,
+	"This setting is no longer used.\n")
 
 cfg(devices_require_restorefile_with_uuid_CFG, "require_restorefile_with_uuid", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_REQUIRE_RESTOREFILE_WITH_UUID, vsn(2, 2, 73), NULL, 0, NULL,
 	"Allow use of pvcreate --uuid without requiring --restorefile.\n")

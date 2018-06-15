@@ -689,20 +689,6 @@ int dev_close_immediate(struct device *dev)
 	return _dev_close(dev, 1);
 }
 
-static inline int _dev_is_valid(struct device *dev)
-{
-	return (dev->max_error_count == NO_DEV_ERROR_COUNT_LIMIT ||
-		dev->error_count < dev->max_error_count);
-}
-
-static void _dev_inc_error_count(struct device *dev)
-{
-	if (++dev->error_count == dev->max_error_count)
-		log_warn("WARNING: Error counts reached a limit of %d. "
-			 "Device %s was disabled",
-			 dev->max_error_count, dev_name(dev));
-}
-
 int dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *buffer)
 {
 	struct device_area where;
@@ -711,16 +697,11 @@ int dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t re
 	if (!dev->open_count)
 		return_0;
 
-	if (!_dev_is_valid(dev))
-		return 0;
-
 	where.dev = dev;
 	where.start = offset;
 	where.size = len;
 
 	ret = _aligned_io(&where, buffer, 0, reason);
-	if (!ret)
-		_dev_inc_error_count(dev);
 
 	return ret;
 }
@@ -783,9 +764,6 @@ int dev_write(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t r
 	if (!dev->open_count)
 		return_0;
 
-	if (!_dev_is_valid(dev))
-		return 0;
-
 	if (!len) {
 		log_error(INTERNAL_ERROR "Attempted to write 0 bytes to %s at " FMTu64, dev_name(dev), offset);
 		return 0;
@@ -798,8 +776,6 @@ int dev_write(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t r
 	dev->flags |= DEV_ACCESSED_W;
 
 	ret = _aligned_io(&where, buffer, 1, reason);
-	if (!ret)
-		_dev_inc_error_count(dev);
 
 	return ret;
 }
