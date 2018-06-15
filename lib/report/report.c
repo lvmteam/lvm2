@@ -2855,8 +2855,14 @@ static int _vglocktype_disp(struct dm_report *rh, struct dm_pool *mem,
 			    const void *data, void *private)
 {
 	const struct volume_group *vg = (const struct volume_group *) data;
+	const char *locktype;
 
-	return _field_string(rh, field, vg->lock_type ? : "");
+	if (!vg->lock_type || !strcmp(vg->lock_type, "none"))
+		locktype = "";
+	else
+		locktype = vg->lock_type;
+
+	return _field_string(rh, field, locktype);
 }
 
 static int _vglockargs_disp(struct dm_report *rh, struct dm_pool *mem,
