@@ -142,13 +142,6 @@ static int _native_dev_is_md(struct device *dev, uint64_t *offset_found, int ful
 	 * command if it should do a full check (cmd->use_full_md_check),
 	 * and set it for commands that could possibly write to an md dev
 	 * (pvcreate/vgcreate/vgextend).
-	 *
-	 * For old md versions with magic numbers at the end of devices,
-	 * the md dev components won't be filtered out here when full is 0,
-	 * so they will be scanned, and appear as duplicate PVs in lvmcache.
-	 * The md device itself will be chosen as the primary duplicate,
-	 * and the components are dropped from the list of duplicates in,
-	 * i.e. a kind of post-scan filtering.
 	 */
 	if (!full) {
 		sb_offset = 0;
@@ -412,6 +405,26 @@ unsigned long dev_md_stripe_width(struct dev_types *dt, struct device *dev)
 			 stripe_width_sectors << SECTOR_SHIFT);
 
 	return stripe_width_sectors;
+}
+
+int dev_is_md_with_end_superblock(struct dev_types *dt, struct device *dev)
+{
+	char version_string[MD_MAX_SYSFS_SIZE];
+	const char *attribute = "metadata_version";
+
+	if (MAJOR(dev->dev) != dt->md_major)
+		return 0;
+
+	if (_md_sysfs_attribute_scanf(dt, dev, attribute,
+				      "%s", &version_string) != 1)
+		return -1;
+
+	log_very_verbose("Device %s %s is %s.",
+			 dev_name(dev), attribute, version_string);
+
+	if (!strcmp(version_string, "1.0"))
+		return 1;
+	return 0;
 }
 
 #else

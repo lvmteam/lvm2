@@ -89,6 +89,7 @@ sleep 1
 # (when mdadm supports repair)
 if mdadm --action=repair "$mddev" ; then
 	sleep 1
+	pvscan -vvvv
 	# should be showing correctly PV3 & PV4
-	pvs
+	pvs -vvvv "$dev3" "$dev4"
 fi

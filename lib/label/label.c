@@ -856,6 +856,20 @@ int label_scan(struct cmd_context *cmd)
 			bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
 			_scan_dev_close(dev);
 		}
+
+		/*
+		 * When md devices exist that use the old superblock at the
+		 * end of the device, then in order to detect and filter out
+		 * the component devices of those md devs, we need to enable
+		 * the full md filter which scans both the start and the end
+		 * of every device.  This doubles the amount of scanning i/o,
+		 * which we want to avoid.  FIXME: it may not be worth the
+		 * cost of double i/o just to avoid displaying md component
+		 * devs in 'pvs', which is a pretty harmless effect from a
+		 * pretty uncommon situation.
+		 */
+		if (dev_is_md_with_end_superblock(cmd->dev_types, dev))
+			cmd->use_full_md_check = 1;
 	};
 	dev_iter_destroy(iter);
 
