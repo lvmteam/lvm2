@@ -295,6 +295,11 @@ static void _drop_metadata(const char *vgname, int drop_precommitted)
 		_saved_vg_free(svg, 0, 1);
 	else
 		_saved_vg_free(svg, 1, 1);
+
+	if (!svg->saved_vg_old && !svg->saved_vg_new) {
+		dm_hash_remove(_saved_vg_hash, svg->vgid);
+		dm_free(svg);
+	}
 }
 
 void lvmcache_save_vg(struct volume_group *vg, int precommitted)
@@ -2515,6 +2520,7 @@ static void _lvmcache_destroy_lockname(struct dm_hash_node *n)
 static void _destroy_saved_vg(struct saved_vg *svg)
 {
 	_saved_vg_free(svg, 1, 1);
+	dm_free(svg);
 }
 
 void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
