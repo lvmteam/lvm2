@@ -173,6 +173,8 @@ const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
 	return vg_name;
 }
 
+static int _printed_clustered_vg_advice = 0;
+
 /*
  * Three possible results:
  * a) return 0, skip 0: take the VG, and cmd will end in success
@@ -206,10 +208,18 @@ static int _ignore_vg(struct volume_group *vg, const char *vg_name,
 
 	if (read_error & FAILED_CLUSTERED) {
 		if (arg_vgnames && str_list_match_item(arg_vgnames, vg->name)) {
-			log_error("Cannot access clustered VG %s, see lvmlockd(8).", vg->name);
+			log_error("Cannot access clustered VG %s.", vg->name);
+			if (!_printed_clustered_vg_advice) {
+				_printed_clustered_vg_advice = 1;
+				log_error("See lvmlockd(8) for changing a clvm/clustered VG to a shared VG.");
+			}
 			return 1;
 		} else {
 			log_warn("Skipping clustered VG %s.", vg_name);
+			if (!_printed_clustered_vg_advice) {
+				_printed_clustered_vg_advice = 1;
+				log_error("See lvmlockd(8) for changing a clvm/clustered VG to a shared VG.");
+			}
 			*skip = 1;
 			return 0;
 		}
