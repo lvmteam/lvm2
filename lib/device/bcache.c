@@ -189,7 +189,6 @@ static bool _async_issue(struct io_engine *ioe, enum dir d, int fd,
 	} while (r == -EAGAIN);
 
 	if (r < 0) {
-		log_sys_warn("io_submit");
 		_cb_free(e->cbs, cb);
 		return false;
 	}
