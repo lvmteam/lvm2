@@ -387,11 +387,10 @@ static bool _insert_node48(struct radix_tree *rt, struct value *v, uint8_t *kb, 
 		if (!n256)
 			return false;
 
+		n256->nr_entries = 49;
 		for (i = 0; i < 256; i++) {
-			if (n48->keys[i] >= 48)
-				continue;
-
-			n256->values[i] = n48->values[n48->keys[i]];
+			if (n48->keys[i] < 48)
+				n256->values[i] = n48->values[n48->keys[i]];
 		}
 
 		if (!_insert(rt, n256->values + *kb, kb + 1, ke, rv)) {
@@ -417,15 +416,13 @@ static bool _insert_node48(struct radix_tree *rt, struct value *v, uint8_t *kb, 
 static bool _insert_node256(struct radix_tree *rt, struct value *v, uint8_t *kb, uint8_t *ke, union radix_value rv)
 {
 	struct node256 *n256 = v->value.ptr;
-	bool was_unset = n256->values[*kb].type == UNSET;
+	bool r, was_unset = n256->values[*kb].type == UNSET;
 
-	if (!_insert(rt, n256->values + *kb, kb + 1, ke, rv))
-		return false;
-
-	if (was_unset)
+	r = _insert(rt, n256->values + *kb, kb + 1, ke, rv);
+	if (r && was_unset)
         	n256->nr_entries++;
 
-	return true;
+	return r;
 }
 
 // FIXME: the tree should not be touched if insert fails (eg, OOM)
@@ -546,7 +543,9 @@ static struct lookup_result _lookup_prefix(struct value *v, uint8_t *kb, uint8_t
 
 	case NODE256:
 		n256 = v->value.ptr;
-		return _lookup_prefix(n256->values + *kb, kb + 1, ke);
+		if (n256->values[*kb].type != UNSET)
+			return _lookup_prefix(n256->values + *kb, kb + 1, ke);
+		break;
 	}
 
 	return (struct lookup_result) {.v = v, .kb = kb};
@@ -574,11 +573,19 @@ static void _degrade_to_n4(struct node16 *n16, struct value *result)
 
 static void _degrade_to_n16(struct node48 *n48, struct value *result)
 {
-        struct node4 *n16 = zalloc(sizeof(*n16));
+	unsigned i, count = 0;
+        struct node16 *n16 = zalloc(sizeof(*n16));
 
         n16->nr_entries = n48->nr_entries;
-        memcpy(n16->keys, n48->keys, n48->nr_entries * sizeof(*n16->keys));
+        for (i = 0; i < 256; i++) {
+	        if (n48->keys[i] < 48) {
+		        n16->keys[count] = i;
+		        count++;
+	        }
+        }
+
         memcpy(n16->values, n48->values, n48->nr_entries * sizeof(*n16->values));
+
         free(n48);
 
 	result->type = NODE16;
@@ -588,27 +595,42 @@ static void _degrade_to_n16(struct node48 *n48, struct value *result)
 static void _degrade_to_n48(struct node256 *n256, struct value *result)
 {
         unsigned i, count = 0;
-        struct node4 *n48 = zalloc(sizeof(*n48));
+        struct node48 *n48 = zalloc(sizeof(*n48));
+
+	memset(n48->keys, 48, sizeof(n48->keys));
 
         n48->nr_entries = n256->nr_entries;
         for (i = 0; i < 256; i++) {
 		if (n256->values[i].type == UNSET)
         		continue;
 
-		n48->keys[count] = i;
+		n48->keys[i] = count;
 		n48->values[count] = n256->values[i];
 		count++;
         }
+
         free(n256);
 
 	result->type = NODE48;
 	result->value.ptr = n48;
 }
 
+// Removes an entry in an array by sliding the values above it down.
+static void _erase_elt(void *array, unsigned obj_size, unsigned count, unsigned index)
+{
+	if (index == (count - 1))
+		// The simple case
+		return;
+
+	memmove(((uint8_t *) array) + (obj_size * index),
+                ((uint8_t *) array) + (obj_size * (index + 1)),
+                obj_size * (count - index - 1));
+}
+
 static bool _remove(struct radix_tree *rt, struct value *root, uint8_t *kb, uint8_t *ke)
 {
 	bool r;
-	unsigned i;
+	unsigned i, j;
 	struct value_chain *vc;
 	struct prefix_chain *pc;
 	struct node4 *n4;
@@ -643,7 +665,8 @@ static bool _remove(struct radix_tree *rt, struct value *root, uint8_t *kb, uint
 		vc = root->value.ptr;
 		r = _remove(rt, &vc->child, kb, ke);
 		if (r && (vc->child.type == UNSET)) {
-			memcpy(root, &vc->child, sizeof(*root));
+			root->type = VALUE;
+			root->value = vc->value;
 			free(vc);
 		}
 		return r;
@@ -657,7 +680,12 @@ static bool _remove(struct radix_tree *rt, struct value *root, uint8_t *kb, uint
 			if (kb[i] != pc->prefix[i])
         			return false;
 
-		return _remove(rt, &pc->child, kb + pc->len, ke);
+		r = _remove(rt, &pc->child, kb + pc->len, ke);
+		if (r && pc->child.type == UNSET) {
+			root->type = UNSET;
+			free(pc);
+		}
+		return r;
 
 	case NODE4:
 		n4 = root->value.ptr;
@@ -665,13 +693,16 @@ static bool _remove(struct radix_tree *rt, struct value *root, uint8_t *kb, uint
 			if (n4->keys[i] == *kb) {
 				r = _remove(rt, n4->values + i, kb + 1, ke);
 				if (r && n4->values[i].type == UNSET) {
+        				if (i < n4->nr_entries) {
+	        				_erase_elt(n4->keys, sizeof(*n4->keys), n4->nr_entries, i);
+	        				_erase_elt(n4->values, sizeof(*n4->values), n4->nr_entries, i);
+        				}
+
         				n4->nr_entries--;
-        				if (i < n4->nr_entries)
-                				// slide the entries down
-        					memmove(n4->keys + i, n4->keys + i + 1,
-                                                       sizeof(*n4->keys) * (n4->nr_entries - i));
-					if (!n4->nr_entries)
+					if (!n4->nr_entries) {
+						free(n4);
 						root->type = UNSET;
+					}
 				}
 				return r;
 			}
@@ -684,13 +715,15 @@ static bool _remove(struct radix_tree *rt, struct value *root, uint8_t *kb, uint
 			if (n16->keys[i] == *kb) {
 				r = _remove(rt, n16->values + i, kb + 1, ke);
 				if (r && n16->values[i].type == UNSET) {
+        				if (i < n16->nr_entries) {
+	        				_erase_elt(n16->keys, sizeof(*n16->keys), n16->nr_entries, i);
+	        				_erase_elt(n16->values, sizeof(*n16->values), n16->nr_entries, i);
+        				}
+
         				n16->nr_entries--;
-        				if (i < n16->nr_entries)
-                				// slide the entries down
-        					memmove(n16->keys + i, n16->keys + i + 1,
-                                                        sizeof(*n16->keys) * (n16->nr_entries - i));
-					if (n16->nr_entries <= 4)
+					if (n16->nr_entries <= 4) {
         					_degrade_to_n4(n16, root);
+					}
 				}
 				return r;
 			}
@@ -704,6 +737,10 @@ static bool _remove(struct radix_tree *rt, struct value *root, uint8_t *kb, uint
         		r = _remove(rt, n48->values + i, kb + 1, ke);
         		if (r && n48->values[i].type == UNSET) {
                 		n48->keys[*kb] = 48;
+                		for (j = 0; j < 256; j++)
+	                		if (n48->keys[j] < 48 && n48->keys[j] > i)
+		                		n48->keys[j]--;
+				_erase_elt(n48->values, sizeof(*n48->values), n48->nr_entries, i);
 				n48->nr_entries--;
 				if (n48->nr_entries <= 16)
         				_degrade_to_n16(n48, root);
@@ -736,6 +773,8 @@ bool radix_tree_remove(struct radix_tree *rt, uint8_t *key_begin, uint8_t *key_e
 	return false;
 }
 
+//----------------------------------------------------------------
+
 static bool _prefix_chain_matches(struct lookup_result *lr, uint8_t *ke)
 {
         // It's possible the top node is a prefix chain, and
@@ -754,18 +793,140 @@ static bool _prefix_chain_matches(struct lookup_result *lr, uint8_t *ke)
         return false;
 }
 
+static bool _remove_subtree(struct radix_tree *rt, struct value *root, uint8_t *kb, uint8_t *ke, unsigned *count)
+{
+	bool r;
+	unsigned i, j, len;
+	struct value_chain *vc;
+	struct prefix_chain *pc;
+	struct node4 *n4;
+	struct node16 *n16;
+	struct node48 *n48;
+	struct node256 *n256;
+
+	if (kb == ke) {
+		*count += _free_node(rt, *root);
+		root->type = UNSET;
+		return true;
+	}
+
+	switch (root->type) {
+	case UNSET:
+	case VALUE:
+		// No entries with the given prefix
+        	return true;
+
+	case VALUE_CHAIN:
+		vc = root->value.ptr;
+		r = _remove_subtree(rt, &vc->child, kb, ke, count);
+		if (r && (vc->child.type == UNSET)) {
+			root->type = VALUE;
+			root->value = vc->value;
+			free(vc);
+		}
+		return r;
+
+	case PREFIX_CHAIN:
+		pc = root->value.ptr;
+		len = min(pc->len, ke - kb);
+		for (i = 0; i < len; i++)
+			if (kb[i] != pc->prefix[i])
+        			return true;
+
+		r = _remove_subtree(rt, &pc->child, len < pc->len ? ke : (kb + pc->len), ke, count);
+		if (r && pc->child.type == UNSET) {
+			root->type = UNSET;
+			free(pc);
+		}
+		return r;
+
+	case NODE4:
+		n4 = root->value.ptr;
+		for (i = 0; i < n4->nr_entries; i++) {
+			if (n4->keys[i] == *kb) {
+				r = _remove_subtree(rt, n4->values + i, kb + 1, ke, count);
+				if (r && n4->values[i].type == UNSET) {
+        				if (i < n4->nr_entries) {
+	        				_erase_elt(n4->keys, sizeof(*n4->keys), n4->nr_entries, i);
+	        				_erase_elt(n4->values, sizeof(*n4->values), n4->nr_entries, i);
+        				}
+
+        				n4->nr_entries--;
+					if (!n4->nr_entries) {
+						free(n4);
+						root->type = UNSET;
+					}
+				}
+				return r;
+			}
+		}
+		return true;
+
+	case NODE16:
+        	n16 = root->value.ptr;
+		for (i = 0; i < n16->nr_entries; i++) {
+			if (n16->keys[i] == *kb) {
+				r = _remove_subtree(rt, n16->values + i, kb + 1, ke, count);
+				if (r && n16->values[i].type == UNSET) {
+        				if (i < n16->nr_entries) {
+	        				_erase_elt(n16->keys, sizeof(*n16->keys), n16->nr_entries, i);
+	        				_erase_elt(n16->values, sizeof(*n16->values), n16->nr_entries, i);
+        				}
+
+        				n16->nr_entries--;
+					if (n16->nr_entries <= 4)
+        					_degrade_to_n4(n16, root);
+				}
+				return r;
+			}
+		}
+		return true;
+
+	case NODE48:
+		n48 = root->value.ptr;
+		i = n48->keys[*kb];
+		if (i < 48) {
+        		r = _remove_subtree(rt, n48->values + i, kb + 1, ke, count);
+        		if (r && n48->values[i].type == UNSET) {
+                		n48->keys[*kb] = 48;
+                		for (j = 0; j < 256; j++)
+	                		if (n48->keys[j] < 48 && n48->keys[j] > i)
+		                		n48->keys[j]--;
+				_erase_elt(n48->values, sizeof(*n48->values), n48->nr_entries, i);
+				n48->nr_entries--;
+				if (n48->nr_entries <= 16)
+        				_degrade_to_n16(n48, root);
+        		}
+        		return r;
+		}
+		return true;
+
+	case NODE256:
+		n256 = root->value.ptr;
+		r = _remove_subtree(rt, n256->values + (*kb), kb + 1, ke, count);
+		if (r && n256->values[*kb].type == UNSET) {
+			n256->nr_entries--;
+			if (n256->nr_entries <= 48)
+        			_degrade_to_n48(n256, root);
+		}
+		return r;
+	}
+
+	// Shouldn't get here
+	return false;
+}
+
 unsigned radix_tree_remove_prefix(struct radix_tree *rt, uint8_t *kb, uint8_t *ke)
 {
         unsigned count = 0;
-	struct lookup_result lr = _lookup_prefix(&rt->root, kb, ke);
-	if (lr.kb == ke || _prefix_chain_matches(&lr, ke)) {
-        	count = _free_node(rt, *lr.v);
-        	lr.v->type = UNSET;
-	}
 
-	rt->nr_entries -= count;
+        if (_remove_subtree(rt, &rt->root, kb, ke, &count))
+		rt->nr_entries -= count;
+
 	return count;
 }
+
+//----------------------------------------------------------------
 
 bool radix_tree_lookup(struct radix_tree *rt,
 		       uint8_t *kb, uint8_t *ke, union radix_value *result)
@@ -857,6 +1018,119 @@ void radix_tree_iterate(struct radix_tree *rt, uint8_t *kb, uint8_t *ke,
 	struct lookup_result lr = _lookup_prefix(&rt->root, kb, ke);
 	if (lr.kb == ke || _prefix_chain_matches(&lr, ke))
         	_iterate(lr.v, it);
+}
+
+//----------------------------------------------------------------
+// Checks:
+// 1) The number of entries matches rt->nr_entries
+// 2) The number of entries is correct in each node
+
+static bool _check_nodes(struct value *v, unsigned *count)
+{
+	unsigned i, ncount;
+	struct value_chain *vc;
+	struct prefix_chain *pc;
+	struct node4 *n4;
+	struct node16 *n16;
+	struct node48 *n48;
+	struct node256 *n256;
+
+	switch (v->type) {
+	case UNSET:
+		return true;
+
+	case VALUE:
+		(*count)++;
+		return true;
+
+	case VALUE_CHAIN:
+		(*count)++;
+		vc = v->value.ptr;
+		return _check_nodes(&vc->child, count);
+
+	case PREFIX_CHAIN:
+		pc = v->value.ptr;
+		return _check_nodes(&pc->child, count);
+
+	case NODE4:
+		n4 = v->value.ptr;
+		for (i = 0; i < n4->nr_entries; i++)
+			if (!_check_nodes(n4->values + i, count))
+				return false;
+		return true;
+
+	case NODE16:
+		n16 = v->value.ptr;
+		for (i = 0; i < n16->nr_entries; i++)
+			if (!_check_nodes(n16->values + i, count))
+				return false;
+		return true;
+
+	case NODE48:
+		n48 = v->value.ptr;
+		ncount = 0;
+		for (i = 0; i < 256; i++) {
+			if (n48->keys[i] < 48) {
+				ncount++;
+				if (!_check_nodes(n48->values + n48->keys[i], count))
+					return false;
+			}
+		}
+
+		if (ncount != n48->nr_entries) {
+			fprintf(stderr, "incorrect number of entries in n48, n48->nr_entries = %u, actual = %u\n",
+                                n48->nr_entries, ncount);
+			return false;
+		}
+
+		return true;
+
+	case NODE256:
+		n256 = v->value.ptr;
+
+		ncount = 0;
+		for (i = 0; i < 256; i++) {
+			struct value *v2 = n256->values + i;
+
+			if (v2->type == UNSET)
+				continue;
+
+			if (!_check_nodes(v2, count))
+				return false;
+
+			ncount++;
+		}
+
+		if (ncount != n256->nr_entries) {
+			fprintf(stderr, "incorrect number of entries in n256, n256->nr_entries = %u, actual = %u\n",
+                                n256->nr_entries, ncount);
+			return false;
+		}
+
+		return true;
+
+	default:
+		fprintf(stderr, "unknown value type: %u\n", v->type);
+	}
+
+	fprintf(stderr, "shouldn't get here\n");
+	return false;
+}
+
+bool radix_tree_is_well_formed(struct radix_tree *rt)
+{
+	unsigned count = 0;
+
+	if (!_check_nodes(&rt->root, &count))
+		return false;
+
+	if (rt->nr_entries != count) {
+		fprintf(stderr, "incorrect entry count: rt->nr_entries = %u, actual = %u\n",
+                        rt->nr_entries, count);
+		return false;
+	}
+
+	return true;
 }
 
 //----------------------------------------------------------------
