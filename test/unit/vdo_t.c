@@ -12,9 +12,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "device_mapper/vdo/target.h"
-#include "framework.h"
 #include "units.h"
+#include "device_mapper/vdo/target.h"
 
 //----------------------------------------------------------------
 

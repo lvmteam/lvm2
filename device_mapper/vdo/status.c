@@ -1,3 +1,4 @@
+#include "configure.h"
 #include "target.h"
 
 // For DM_ARRAY_SIZE!

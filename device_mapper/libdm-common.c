@@ -13,12 +13,12 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "base/memory/zalloc.h"
-#include "device_mapper/misc/dmlib.h"
-#include "ioctl/libdm-targets.h"
+#include "misc/dmlib.h"
 #include "libdm-common.h"
+#include "ioctl/libdm-targets.h"
 #include "misc/kdev_t.h"
 #include "misc/dm-ioctl.h"
+#include "base/memory/zalloc.h"
 
 #include <stdarg.h>
 #include <sys/param.h>

@@ -14,6 +14,9 @@
 
 #define _GNU_SOURCE
 
+#include "units.h"
+#include "lib/device/bcache.h"
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,10 +24,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-
-#include "lib/device/bcache.h"
-#include "framework.h"
-#include "units.h"
 
 //----------------------------------------------------------------
 

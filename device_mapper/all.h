@@ -17,6 +17,9 @@
 #ifndef LIB_DEVICE_MAPPER_H
 #define LIB_DEVICE_MAPPER_H
 
+#include "base/data-struct/list.h"
+#include "base/data-struct/hash.h"
+
 #include <inttypes.h>
 #include <stdarg.h>
 #include <sys/types.h>
@@ -30,9 +33,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-#include "base/data-struct/list.h"
-#include "base/data-struct/hash.h"
 
 #ifndef __GNUC__
 # define __typeof__ typeof

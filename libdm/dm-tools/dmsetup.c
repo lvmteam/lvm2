@@ -18,11 +18,10 @@
 
 // For canonicalize_file_name()
 #define _GNU_SOURCE
-#include <stdlib.h>
 
+#include "configure.h"
 #include "libdm/misc/dm-logging.h"
 #include "libdm/dm-tools/util.h"
-#include "configure.h"
 
 #include <ctype.h>
 #include <dirent.h>
@@ -35,6 +34,7 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #ifdef UDEV_SYNC_SUPPORT
 #  include <sys/types.h>

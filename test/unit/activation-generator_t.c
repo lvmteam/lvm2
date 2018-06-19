@@ -12,9 +12,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "scripts/generator-internals.c"
-#include "framework.h"
 #include "units.h"
+#include "scripts/generator-internals.c"
 
 #include "device_mapper/all.h"
 
