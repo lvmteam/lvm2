@@ -562,6 +562,47 @@ static void test_remove_calls_dtr(void *fixture)
 	radix_tree_destroy(rt);
 }
 
+static void test_destroy_calls_dtr(void *fixture)
+{
+	unsigned i;
+	struct counter c;
+	struct radix_tree *rt = radix_tree_create(_counting_dtr, &c);
+	T_ASSERT(rt);
+
+	// Bug hunting, so I need the keys to be deterministic
+	srand(0);
+
+	c.c = 0;
+	memset(c.present, 1, sizeof(c.present));
+
+	{
+		uint8_t keys[DTR_COUNT * 3];
+		union radix_value v;
+
+		// generate and insert a lot of keys
+		for (i = 0; i < DTR_COUNT; i++) {
+			bool found = false;
+			do {
+				v.n = i;
+				uint8_t *k = keys + (i * 3);
+				_gen_key(k, k + 3);
+				if (!radix_tree_lookup(rt, k, k + 3, &v)) {
+					T_ASSERT(radix_tree_insert(rt, k, k + 3, v));
+					found = true;
+				}
+
+			} while (!found);
+		}
+
+		T_ASSERT(radix_tree_is_well_formed(rt));
+	}
+		
+	radix_tree_destroy(rt);
+	T_ASSERT(c.c == DTR_COUNT);
+	for (i = 0; i < DTR_COUNT; i++)
+		T_ASSERT(!c.present[i]);
+}
+
 //----------------------------------------------------------------
 
 #define T(path, desc, fn) register_test(ts, "/base/data-struct/radix-tree/" path, desc, fn)
@@ -595,6 +636,7 @@ void radix_tree_tests(struct dm_list *all_tests)
 	T("iterate-single", "iterate a subset that contains a single entry", test_iterate_single);
 	T("iterate-vary-middle", "iterate keys that vary in the middle", test_iterate_vary_middle);
 	T("remove-calls-dtr", "remove should call the dtr for the value", test_remove_calls_dtr);
+	T("destroy-calls-dtr", "destroy should call the dtr for all values", test_destroy_calls_dtr);
 
 	dm_list_add(all_tests, &ts->list);
 }
