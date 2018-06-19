@@ -56,10 +56,6 @@ pvs produces formatted output about PVs.
 .ad b
 .br
 .ad l
-[    \fB--ignoreskippedcluster\fP ]
-.ad b
-.br
-.ad l
 [    \fB--logonly\fP ]
 .ad b
 .br
@@ -254,13 +250,6 @@ Display help text.
 .br
 Allows a command to continue with read-only metadata
 operations after locking failures.
-.ad b
-.HP
-.ad l
-\fB--ignoreskippedcluster\fP
-.br
-Use to avoid exiting with an non-zero status code if the command is run
-without clustered locking and clustered VGs are skipped.
 .ad b
 .HP
 .ad l

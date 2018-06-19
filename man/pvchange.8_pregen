@@ -98,10 +98,6 @@ Common options for command:
 .ad b
 .br
 .ad l
-[    \fB--ignoreskippedcluster\fP ]
-.ad b
-.br
-.ad l
 [    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .RE
@@ -241,13 +237,6 @@ Use with extreme caution.
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
-.ad b
-.HP
-.ad l
-\fB--ignoreskippedcluster\fP
-.br
-Use to avoid exiting with an non-zero status code if the command is run
-without clustered locking and clustered VGs are skipped.
 .ad b
 .HP
 .ad l

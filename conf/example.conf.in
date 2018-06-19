@@ -151,21 +151,15 @@ devices {
 	# global_filter = [ "a|.*/|" ]
 
 	# Configuration option devices/cache_dir.
-	# Directory in which to store the device cache file.
-	# The results of filtering are cached on disk to avoid rescanning dud
-	# devices (which can take a very long time). By default this cache is
-	# stored in a file named .cache. It is safe to delete this file; the
-	# tools regenerate it. If obtain_device_list_from_udev is enabled, the
-	# list of devices is obtained from udev and any existing .cache file
-	# is removed.
+	# This setting is no longer used.
 	cache_dir = "@DEFAULT_SYS_DIR@/@DEFAULT_CACHE_SUBDIR@"
 
 	# Configuration option devices/cache_file_prefix.
-	# A prefix used before the .cache file name. See devices/cache_dir.
+	# This setting is no longer used.
 	cache_file_prefix = ""
 
 	# Configuration option devices/write_cache_state.
-	# Enable/disable writing the cache file. See devices/cache_dir.
+	# This setting is no longer used.
 	write_cache_state = 1
 
 	# Configuration option devices/types.
@@ -269,11 +263,7 @@ devices {
 	ignore_lvm_mirrors = 1
 
 	# Configuration option devices/disable_after_error_count.
-	# Number of I/O errors after which a device is skipped.
-	# During each LVM operation, errors received from each device are
-	# counted. If the counter of a device exceeds the limit set here,
-	# no further I/O is sent to that device for the remainder of the
-	# operation. Setting this to 0 disables the counters altogether.
+	# This setting is no longer used.
 	disable_after_error_count = 0
 
 	# Configuration option devices/require_restorefile_with_uuid.
@@ -1557,20 +1547,7 @@ activation {
 	# stripesize = 64
 
 	# Configuration option metadata/dirs.
-	# Directories holding live copies of text format metadata.
-	# These directories must not be on logical volumes!
-	# It's possible to use LVM with a couple of directories here,
-	# preferably on different (non-LV) filesystems, and with no other
-	# on-disk metadata (pvmetadatacopies = 0). Or this can be in addition
-	# to on-disk metadata areas. The feature was originally added to
-	# simplify testing and is not supported under low memory situations -
-	# the machine could lock up. Never edit any files in these directories
-	# by hand unless you are absolutely sure you know what you are doing!
-	# Use the supplied toolset to make changes (e.g. vgcfgrestore).
-	# 
-	# Example
-	# dirs = [ "/etc/lvm/metadata", "/mnt/disk2/lvm/metadata2" ]
-	# 
+	# This setting is no longer used.
 	# This configuration option is advanced.
 	# This configuration option does not have a default value defined.
 # }

@@ -75,10 +75,6 @@ vgchange - Change volume group attributes
 .ad b
 .br
 .ad l
-    \fB--ignoreskippedcluster\fP
-.ad b
-.br
-.ad l
     \fB--lockopt\fP \fIString\fP
 .ad b
 .br
@@ -279,10 +275,6 @@ required, after which the others are optional.
 .ad b
 .br
 .ad l
-[    \fB--ignoreskippedcluster\fP ]
-.ad b
-.br
-.ad l
 [    \fB--noudevsync\fP ]
 .ad b
 .br
@@ -333,10 +325,6 @@ Start or stop monitoring LVs from dmeventd.
 .ad b
 .br
 .ad l
-[    \fB--ignoreskippedcluster\fP ]
-.ad b
-.br
-.ad l
 [    \fB--noudevsync\fP ]
 .ad b
 .br
@@ -376,10 +364,6 @@ Start or stop processing LV conversions.
 .br
 .ad l
 [    \fB--ignoremonitoring\fP ]
-.ad b
-.br
-.ad l
-[    \fB--ignoreskippedcluster\fP ]
 .ad b
 .br
 .ad l
@@ -449,10 +433,6 @@ Activate or deactivate LVs.
 .ad b
 .br
 .ad l
-[    \fB--ignoreskippedcluster\fP ]
-.ad b
-.br
-.ad l
 [    \fB--noudevsync\fP ]
 .ad b
 .br
@@ -500,10 +480,6 @@ Reactivate LVs using the latest metadata.
 .br
 .ad l
 [    \fB--ignoremonitoring\fP ]
-.ad b
-.br
-.ad l
-[    \fB--ignoreskippedcluster\fP ]
 .ad b
 .br
 .ad l
@@ -797,13 +773,6 @@ operations after locking failures.
 .br
 Do not interact with dmeventd unless --monitor is specified.
 Do not use this if dmeventd is already monitoring a device.
-.ad b
-.HP
-.ad l
-\fB--ignoreskippedcluster\fP
-.br
-Use to avoid exiting with an non-zero status code if the command is run
-without clustered locking and clustered VGs are skipped.
 .ad b
 .HP
 .ad l
