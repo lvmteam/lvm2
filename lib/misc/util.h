@@ -43,7 +43,7 @@
 #ifdef HAVE___BUILTIN_CLZ
 #define clz(x) __builtin_clz((x))
 #else /* ifdef HAVE___BUILTIN_CLZ */
-unsigned _dm_clz(unsigned x)
+static unsigned _dm_clz(unsigned x)
 {
 	int n;
 
@@ -75,6 +75,19 @@ unsigned _dm_clz(unsigned x)
 }
 #define clz(x) _dm_clz((x))
 #endif /* ifdef HAVE___BUILTIN_CLZ */
+
+#ifdef HAVE___BUILTIN_CLZLL
+#define clzll(x) __builtin_clzll((x))
+#else /* ifdef HAVE___BUILTIN_CLZ */
+static unsigned _dm_clzll(unsigned long long x)
+{
+	if (x <= 0xffffffff)
+		return 32 + clz((unsigned) (x & 0xffffffff));
+
+	return clz(x >> 32);
+}
+#define clzll(x) _dm_clzll((x))
+#endif /* ifdef HAVE___BUILTIN_CLZLL */
 
 #define KERNEL_VERSION(major, minor, release) (((major) << 16) + ((minor) << 8) + (release))
 

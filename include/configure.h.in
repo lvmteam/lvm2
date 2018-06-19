@@ -528,6 +528,9 @@
 /* Define to 1 if the system has the `__builtin_clz' built-in function */
 #undef HAVE___BUILTIN_CLZ
 
+/* Define to 1 if the system has the `__builtin_clzll' built-in function */
+#undef HAVE___BUILTIN_CLZLL
+
 /* Internalization package */
 #undef INTL_PACKAGE
 

@@ -140,6 +140,7 @@ AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 AX_GCC_BUILTIN([__builtin_clz])
+AX_GCC_BUILTIN([__builtin_clzll])
 
 ################################################################################
 dnl -- Check for functions
