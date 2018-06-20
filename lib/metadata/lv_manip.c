@@ -1190,6 +1190,11 @@ int set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
 			 display_lvname(seg->lv), seg->le, area_num,
 			 display_lvname(lv), le);
 
+	if (area_num >= seg->area_count) {
+		log_error(INTERNAL_ERROR "Try to set to high area number (%u >= %u) for LV %s.",
+			  area_num, seg->area_count, display_lvname(seg->lv));
+		return 0;
+	}
 	lv->status |= status;
 	if (lv_is_raid_metadata(lv)) {
 		seg->meta_areas[area_num].type = AREA_LV;
