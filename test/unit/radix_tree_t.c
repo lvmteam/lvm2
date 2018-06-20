@@ -605,6 +605,37 @@ static void test_destroy_calls_dtr(void *fixture)
 
 //----------------------------------------------------------------
 
+static void test_bcache_scenario(void *fixture)
+{
+	struct radix_tree *rt = fixture;
+
+    	unsigned i;
+    	uint8_t k[6];
+	union radix_value v;
+
+    	memset(k, 0, sizeof(k));
+
+    	for (i = 0; i < 3; i++) {
+	    	// it has to be the 4th byte that varies to
+	    	// trigger the bug.
+	    	k[4] = i;
+	    	v.n = i;
+	    	T_ASSERT(radix_tree_insert(rt, k, k + sizeof(k), v));
+    	}
+	T_ASSERT(radix_tree_is_well_formed(rt));
+
+	k[4] = 0;
+    	T_ASSERT(radix_tree_remove(rt, k, k + sizeof(k)));
+	T_ASSERT(radix_tree_is_well_formed(rt));
+
+    	k[4] = i;
+    	v.n = i;
+    	T_ASSERT(radix_tree_insert(rt, k, k + sizeof(k), v));
+	T_ASSERT(radix_tree_is_well_formed(rt));
+}
+
+//----------------------------------------------------------------
+
 #define T(path, desc, fn) register_test(ts, "/base/data-struct/radix-tree/" path, desc, fn)
 
 void radix_tree_tests(struct dm_list *all_tests)
@@ -637,6 +668,7 @@ void radix_tree_tests(struct dm_list *all_tests)
 	T("iterate-vary-middle", "iterate keys that vary in the middle", test_iterate_vary_middle);
 	T("remove-calls-dtr", "remove should call the dtr for the value", test_remove_calls_dtr);
 	T("destroy-calls-dtr", "destroy should call the dtr for all values", test_destroy_calls_dtr);
+	T("bcache-scenario", "A specific series of keys from a bcache scenario", test_bcache_scenario);
 
 	dm_list_add(all_tests, &ts->list);
 }

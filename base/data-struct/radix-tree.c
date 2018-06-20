@@ -251,7 +251,11 @@ static bool _insert_prefix_chain(struct radix_tree *rt, struct value *v, uint8_t
 {
 	struct prefix_chain *pc = v->value.ptr;
 
-	if (*kb == pc->prefix[0]) {
+	if (!pc->len) {
+		v->type = VALUE;
+		v->value = rv;
+
+	} else if (*kb == pc->prefix[0]) {
 		// There's a common prefix let's split the chain into two and
 		// recurse.
 		struct prefix_chain *pc2;
@@ -282,25 +286,23 @@ static bool _insert_prefix_chain(struct radix_tree *rt, struct value *v, uint8_t
 		if (!n4)
 			return false;
 
-		n4->keys[0] = *kb;
-		if (!_insert(rt, n4->values, kb + 1, ke, rv)) {
+		n4->keys[0] = pc->prefix[0];
+		if (pc->len == 1) {
+			n4->values[0] = pc->child;
+			free(pc);
+		} else {
+			memmove(pc->prefix, pc->prefix + 1, pc->len - 1);
+			pc->len--;
+			n4->values[0] = *v;
+		}
+
+		n4->keys[1] = *kb;
+		if (!_insert(rt, n4->values + 1, kb + 1, ke, rv)) {
 			free(n4);
 			return false;
 		}
 
-		if (pc->len) {
-			n4->keys[1] = pc->prefix[0];
-			if (pc->len == 1) {
-				n4->values[1] = pc->child;
-				free(pc);
-			} else {
-				memmove(pc->prefix, pc->prefix + 1, pc->len - 1);
-				pc->len--;
-				n4->values[1] = *v;
-			}
-			n4->nr_entries = 2;
-		} else
-			n4->nr_entries = 1;
+		n4->nr_entries = 2;
 
 		v->type = NODE4;
 		v->value.ptr = n4;
@@ -330,7 +332,6 @@ static bool _insert_node4(struct radix_tree *rt, struct value *v, uint8_t *kb, u
 		v->type = NODE16;
 		v->value.ptr = n16;
 	} else {
-		n4 = v->value.ptr;
 		if (!_insert(rt, n4->values + n4->nr_entries, kb + 1, ke, rv))
 			return false;
 
@@ -699,6 +700,7 @@ static bool _remove(struct radix_tree *rt, struct value *root, uint8_t *kb, uint
         				}
 
         				n4->nr_entries--;
+        				n4->values[n4->nr_entries].type = UNSET;
 					if (!n4->nr_entries) {
 						free(n4);
 						root->type = UNSET;
@@ -721,6 +723,7 @@ static bool _remove(struct radix_tree *rt, struct value *root, uint8_t *kb, uint
         				}
 
         				n16->nr_entries--;
+        				n16->values[n16->nr_entries].type = UNSET;
 					if (n16->nr_entries <= 4) {
         					_degrade_to_n4(n16, root);
 					}
@@ -742,6 +745,7 @@ static bool _remove(struct radix_tree *rt, struct value *root, uint8_t *kb, uint
 		                		n48->keys[j]--;
 				_erase_elt(n48->values, sizeof(*n48->values), n48->nr_entries, i);
 				n48->nr_entries--;
+				n48->values[n48->nr_entries].type = UNSET;
 				if (n48->nr_entries <= 16)
         				_degrade_to_n16(n48, root);
         		}
@@ -1024,6 +1028,8 @@ void radix_tree_iterate(struct radix_tree *rt, uint8_t *kb, uint8_t *ke,
 // Checks:
 // 1) The number of entries matches rt->nr_entries
 // 2) The number of entries is correct in each node
+// 3) prefix chain len > 0
+// 4) all unused values are UNSET
 
 static bool _check_nodes(struct value *v, unsigned *count)
 {
@@ -1057,6 +1063,13 @@ static bool _check_nodes(struct value *v, unsigned *count)
 		for (i = 0; i < n4->nr_entries; i++)
 			if (!_check_nodes(n4->values + i, count))
 				return false;
+
+		for (i = n4->nr_entries; i < 4; i++)
+			if (n4->values[i].type != UNSET) {
+				fprintf(stderr, "unused value is not UNSET\n");
+				return false;
+			}
+
 		return true;
 
 	case NODE16:
@@ -1064,6 +1077,13 @@ static bool _check_nodes(struct value *v, unsigned *count)
 		for (i = 0; i < n16->nr_entries; i++)
 			if (!_check_nodes(n16->values + i, count))
 				return false;
+
+		for (i = n16->nr_entries; i < 16; i++)
+			if (n16->values[i].type != UNSET) {
+				fprintf(stderr, "unused value is not UNSET\n");
+				return false;
+			}
+
 		return true;
 
 	case NODE48:
@@ -1082,6 +1102,12 @@ static bool _check_nodes(struct value *v, unsigned *count)
                                 n48->nr_entries, ncount);
 			return false;
 		}
+
+		for (i = n48->nr_entries; i < 48; i++)
+			if (n48->values[i].type != UNSET) {
+				fprintf(stderr, "unused value is not UNSET\n");
+				return false;
+			}
 
 		return true;
 
@@ -1131,6 +1157,103 @@ bool radix_tree_is_well_formed(struct radix_tree *rt)
 	}
 
 	return true;
+}
+
+//----------------------------------------------------------------
+
+static void _dump(FILE *out, struct value v, unsigned indent)
+{
+	unsigned i;
+	struct value_chain *vc;
+	struct prefix_chain *pc;
+	struct node4 *n4;
+	struct node16 *n16;
+	struct node48 *n48;
+	struct node256 *n256;
+
+	if (v.type == UNSET)
+		return;
+
+	for (i = 0; i < 2 * indent; i++)
+		fprintf(out, " ");
+
+	switch (v.type) {
+	case UNSET:
+		// can't happen
+		break;
+
+	case VALUE:
+		fprintf(out, "<val: %llu>\n", (unsigned long long) v.value.n);
+		break;
+
+	case VALUE_CHAIN:
+		vc = v.value.ptr;
+		fprintf(out, "<val_chain: %llu>\n", (unsigned long long) vc->value.n);
+		_dump(out, vc->child, indent + 1);
+		break;
+
+	case PREFIX_CHAIN:
+		pc = v.value.ptr;
+		fprintf(out, "<prefix: ");
+		for (i = 0; i < pc->len; i++)
+			fprintf(out, "%x.", (unsigned) *(pc->prefix + i));
+		fprintf(out, ">\n");
+		_dump(out, pc->child, indent + 1);
+		break;
+
+	case NODE4:
+		n4 = v.value.ptr;
+		fprintf(out, "<n4: ");
+		for (i = 0; i < n4->nr_entries; i++)
+			fprintf(out, "%x ", (unsigned) n4->keys[i]);
+		fprintf(out, ">\n");
+
+		for (i = 0; i < n4->nr_entries; i++)
+			_dump(out, n4->values[i], indent + 1);
+		break;
+
+	case NODE16:
+		n16 = v.value.ptr;
+		fprintf(out, "<n16: ");
+		for (i = 0; i < n16->nr_entries; i++)
+			fprintf(out, "%x ", (unsigned) n16->keys[i]);
+		fprintf(out, ">\n");
+
+		for (i = 0; i < n16->nr_entries; i++)
+			_dump(out, n16->values[i], indent + 1);
+		break;
+
+	case NODE48:
+		n48 = v.value.ptr;
+		fprintf(out, "<n48: ");
+		for (i = 0; i < 256; i++)
+			if (n48->keys[i] < 48)
+				fprintf(out, "%x ", i);
+		fprintf(out, ">\n");
+
+		for (i = 0; i < 256; i++)
+			if (n48->keys[i] < 48)
+				_dump(out, n48->values[i], indent + 1);
+		break;
+
+	case NODE256:
+		n256 = v.value.ptr;
+		fprintf(out, "<n256: ");
+		for (i = 0; i < 256; i++)
+			if (n256->values[i].type != UNSET)
+				fprintf(out, "%x ", i);
+		fprintf(out, ">\n");
+
+		for (i = 0; i < 256; i++)
+			if (n256->values[i].type != UNSET)
+				_dump(out, n256->values[i], indent + 1);
+		break;
+	}
+}
+
+void radix_tree_dump(struct radix_tree *rt, FILE *out)
+{
+	_dump(out, rt->root, 0);
 }
 
 //----------------------------------------------------------------

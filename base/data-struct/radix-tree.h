@@ -15,6 +15,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
 //----------------------------------------------------------------
 
@@ -56,6 +57,7 @@ void radix_tree_iterate(struct radix_tree *rt, uint8_t *kb, uint8_t *ke,
 // Checks that some constraints on the shape of the tree are
 // being held.  For debug only.
 bool radix_tree_is_well_formed(struct radix_tree *rt);
+void radix_tree_dump(struct radix_tree *rt, FILE *out);
 
 //----------------------------------------------------------------
 
