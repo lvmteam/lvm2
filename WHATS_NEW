@@ -1,5 +1,7 @@
 Version 2.02.180 - 
 =================================
+  Reopen devices RDWR before writing to avoid udev issues.
+  Fix mem leak in clvmd.
 
 Version 2.02.179 - 18th June 2018
 =================================
