@@ -35,6 +35,7 @@
 #define DEV_BCACHE_EXCL		0x00001000      /* bcache_fd should be open EXCL */
 #define DEV_FILTER_AFTER_SCAN	0x00002000	/* apply filter after bcache has data */
 #define DEV_FILTER_OUT_SCAN	0x00004000	/* filtered out during label scan */
+#define DEV_BCACHE_WRITE	0x00008000      /* bcache_fd is open with RDWR */
 
 /*
  * Support for external device info.
