@@ -464,12 +464,24 @@ static int _scan_dev_open(struct device *dev)
 	name_sl = dm_list_item(name_list, struct dm_str_list);
 	name = name_sl->str;
 
-	flags |= O_RDWR;
 	flags |= O_DIRECT;
 	flags |= O_NOATIME;
 
-	if (dev->flags & DEV_BCACHE_EXCL)
+	/*
+	 * FIXME: udev is a train wreck when we open RDWR and close, so we
+	 * need to only use RDWR when we actually need to write, and use
+	 * RDONLY otherwise.  Fix, disable or scrap udev nonsense so we can
+	 * just open with RDWR by default.
+	 */
+
+	if (dev->flags & DEV_BCACHE_EXCL) {
 		flags |= O_EXCL;
+		flags |= O_RDWR;
+	} else if (dev->flags & DEV_BCACHE_WRITE) {
+		flags |= O_RDWR;
+	} else {
+		flags |= O_RDONLY;
+	}
 
 retry_open:
 
@@ -1107,7 +1119,14 @@ int label_scan_open(struct device *dev)
 
 int label_scan_open_excl(struct device *dev)
 {
+	if (_in_bcache(dev) && !(dev->flags & DEV_BCACHE_EXCL)) {
+		/* FIXME: avoid tossing out bcache blocks just to replace fd. */
+		log_debug("Close and reopen excl %s", dev_name(dev));
+		bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
+		_scan_dev_close(dev);
+	}
 	dev->flags |= DEV_BCACHE_EXCL;
+	dev->flags |= DEV_BCACHE_WRITE;
 	return label_scan_open(dev);
 }
 
@@ -1149,8 +1168,19 @@ bool dev_write_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 		return false;
 	}
 
+	if (!(dev->flags & DEV_BCACHE_WRITE)) {
+		/* FIXME: avoid tossing out bcache blocks just to replace fd. */
+		log_debug("Close and reopen to write %s", dev_name(dev));
+		bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
+		_scan_dev_close(dev);
+
+		dev->flags |= DEV_BCACHE_WRITE;
+		label_scan_open(dev);
+	}
+
 	if (dev->bcache_fd <= 0) {
 		/* This is not often needed, perhaps only with lvmetad. */
+		dev->flags |= DEV_BCACHE_WRITE;
 		if (!label_scan_open(dev)) {
 			log_error("Error opening device %s for writing at %llu length %u.",
 				  dev_name(dev), (unsigned long long)start, (uint32_t)len);
@@ -1184,8 +1214,19 @@ bool dev_write_zeros(struct device *dev, uint64_t start, size_t len)
 		return false;
 	}
 
+	if (!(dev->flags & DEV_BCACHE_WRITE)) {
+		/* FIXME: avoid tossing out bcache blocks just to replace fd. */
+		log_debug("Close and reopen to write %s", dev_name(dev));
+		bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
+		_scan_dev_close(dev);
+
+		dev->flags |= DEV_BCACHE_WRITE;
+		label_scan_open(dev);
+	}
+
 	if (dev->bcache_fd <= 0) {
 		/* This is not often needed, perhaps only with lvmetad. */
+		dev->flags |= DEV_BCACHE_WRITE;
 		if (!label_scan_open(dev)) {
 			log_error("Error opening device %s for writing at %llu length %u.",
 				  dev_name(dev), (unsigned long long)start, (uint32_t)len);
@@ -1219,8 +1260,19 @@ bool dev_set_bytes(struct device *dev, uint64_t start, size_t len, uint8_t val)
 		return false;
 	}
 
+	if (!(dev->flags & DEV_BCACHE_WRITE)) {
+		/* FIXME: avoid tossing out bcache blocks just to replace fd. */
+		log_debug("Close and reopen to write %s", dev_name(dev));
+		bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
+		_scan_dev_close(dev);
+
+		dev->flags |= DEV_BCACHE_WRITE;
+		label_scan_open(dev);
+	}
+
 	if (dev->bcache_fd <= 0) {
 		/* This is not often needed, perhaps only with lvmetad. */
+		dev->flags |= DEV_BCACHE_WRITE;
 		if (!label_scan_open(dev)) {
 			log_error("Error opening device %s for writing at %llu length %u.",
 				  dev_name(dev), (unsigned long long)start, (uint32_t)len);
