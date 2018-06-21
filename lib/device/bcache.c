@@ -319,6 +319,7 @@ static bool _sync_issue(struct io_engine *ioe, enum dir d, int fd,
 	r = lseek(fd, where, SEEK_SET);
 	if (r < 0) {
         	log_warn("unable to seek to position %llu", (unsigned long long) where);
+        	free(io);
         	return false;
 	}
 
@@ -333,6 +334,7 @@ static bool _sync_issue(struct io_engine *ioe, enum dir d, int fd,
 
         	if (r < 0) {
                 	log_warn("io failed %d", r);
+                	free(io);
                 	return false;
         	}
 
@@ -341,6 +343,7 @@ static bool _sync_issue(struct io_engine *ioe, enum dir d, int fd,
 
 	if (len) {
         	log_warn("short io %u bytes remaining", (unsigned) len);
+        	free(io);
         	return false;
 	}
 
