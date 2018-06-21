@@ -628,7 +628,7 @@ static void _erase_elt(void *array, unsigned obj_size, unsigned count, unsigned 
                 obj_size * (count - index - 1));
 
 	// Zero the now unused last elt (set's v.type to UNSET)
-	memset(array + (count - 1) * obj_size, 0, obj_size);
+	memset(((uint8_t *) array) + (count - 1) * obj_size, 0, obj_size);
 }
 
 static bool _remove(struct radix_tree *rt, struct value *root, uint8_t *kb, uint8_t *ke)
