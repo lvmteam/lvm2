@@ -698,7 +698,7 @@ static int _split_mirror_images(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!strcmp(lv->vg->lock_type, "dlm"))
+	if (lv->vg->lock_type && !strcmp(lv->vg->lock_type, "dlm"))
 		new_lv->lock_args = lv->lock_args;
 
 	if (!dm_list_empty(&split_images)) {
