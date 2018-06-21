@@ -690,17 +690,7 @@ static int _insert_dev(const char *path, dev_t d)
 	struct device *dev;
 	struct device *dev_by_devt;
 	struct device *dev_by_path;
-	static dev_t loopfile_count = 0;
-	int loopfile = 0;
 	char *path_copy;
-
-	/* Generate pretend device numbers for loopfiles */
-	if (!d) {
-		if (dm_hash_lookup(_cache.names, path))
-			return 1;
-		d = ++loopfile_count;
-		loopfile = 1;
-	}
 
 	dev_by_devt = (struct device *) btree_lookup(_cache.devices, (uint32_t) d);
 	dev_by_path = (struct device *) dm_hash_lookup(_cache.names, path);
@@ -724,10 +714,7 @@ static int _insert_dev(const char *path, dev_t d)
 
 		if (!(dev = (struct device *) btree_lookup(_cache.sysfs_only_devices, (uint32_t) d))) {
 			/* create new device */
-			if (loopfile) {
-				if (!(dev = dev_create_file(path, NULL, NULL, 0)))
-					return_0;
-			} else if (!(dev = _dev_create(d)))
+			if (!(dev = _dev_create(d)))
 				return_0;
 		}
 
@@ -742,7 +729,7 @@ static int _insert_dev(const char *path, dev_t d)
 			return 0;
 		}
 
-		if (!loopfile && !_add_alias(dev, path_copy)) {
+		if (!_add_alias(dev, path_copy)) {
 			log_error("Couldn't add alias to dev cache.");
 			return 0;
 		}
@@ -767,7 +754,7 @@ static int _insert_dev(const char *path, dev_t d)
 			return 0;
 		}
 
-		if (!loopfile && !_add_alias(dev, path_copy)) {
+		if (!_add_alias(dev, path_copy)) {
 			log_error("Couldn't add alias to dev cache.");
 			return 0;
 		}
@@ -791,10 +778,7 @@ static int _insert_dev(const char *path, dev_t d)
 
 		if (!(dev = (struct device *) btree_lookup(_cache.sysfs_only_devices, (uint32_t) d))) {
 			/* create new device */
-			if (loopfile) {
-				if (!(dev = dev_create_file(path, NULL, NULL, 0)))
-					return_0;
-			} else if (!(dev = _dev_create(d)))
+			if (!(dev = _dev_create(d)))
 				return_0;
 		}
 
@@ -809,7 +793,7 @@ static int _insert_dev(const char *path, dev_t d)
 			return 0;
 		}
 
-		if (!loopfile && !_add_alias(dev, path_copy)) {
+		if (!_add_alias(dev, path_copy)) {
 			log_error("Couldn't add alias to dev cache.");
 			return 0;
 		}
@@ -839,7 +823,7 @@ static int _insert_dev(const char *path, dev_t d)
 			return 0;
 		}
 
-		if (!loopfile && !_add_alias(dev, path_copy)) {
+		if (!_add_alias(dev, path_copy)) {
 			log_error("Couldn't add alias to dev cache.");
 			return 0;
 		}
@@ -917,26 +901,6 @@ static int _insert_dir(const char *dir)
 	}
 
 	return r;
-}
-
-static int _insert_file(const char *path)
-{
-	struct stat info;
-
-	if (stat(path, &info) < 0) {
-		log_sys_very_verbose("stat", path);
-		return 0;
-	}
-
-	if (!S_ISREG(info.st_mode)) {
-		log_debug_devs("%s: Not a regular file", path);
-		return 0;
-	}
-
-	if (!_insert_dev(path, 0))
-		return_0;
-
-	return 1;
 }
 
 static int _dev_cache_iterate_devs_for_index(void)
@@ -1207,8 +1171,6 @@ static int _insert(const char *path, const struct stat *info,
 
 void dev_cache_scan(void)
 {
-	struct dir_list *dl;
-	
 	log_debug_devs("Creating list of system devices.");
 
 	_cache.has_scanned = 1;
@@ -1216,9 +1178,6 @@ void dev_cache_scan(void)
 	_insert_dirs(&_cache.dirs);
 
 	(void) dev_cache_index_devs();
-
-	dm_list_iterate_items(dl, &_cache.files)
-		_insert_file(dl->dir);
 }
 
 int dev_cache_has_scanned(void)
@@ -1317,7 +1276,6 @@ int dev_cache_init(struct cmd_context *cmd)
 	}
 
 	dm_list_init(&_cache.dirs);
-	dm_list_init(&_cache.files);
 
 	if (!_init_preferred_names(cmd))
 		goto_bad;
@@ -1408,32 +1366,6 @@ int dev_cache_add_dir(const char *path)
 
 	strcpy(dl->dir, path);
 	dm_list_add(&_cache.dirs, &dl->list);
-	return 1;
-}
-
-int dev_cache_add_loopfile(const char *path)
-{
-	struct dir_list *dl;
-	struct stat st;
-
-	if (stat(path, &st)) {
-		log_warn("Ignoring %s: %s.", path, strerror(errno));
-		/* But don't fail */
-		return 1;
-	}
-
-	if (!S_ISREG(st.st_mode)) {
-		log_warn("Ignoring %s: Not a regular file.", path);
-		return 1;
-	}
-
-	if (!(dl = _zalloc(sizeof(*dl) + strlen(path) + 1))) {
-		log_error("dir_list allocation failed for file");
-		return 0;
-	}
-
-	strcpy(dl->dir, path);
-	dm_list_add(&_cache.files, &dl->list);
 	return 1;
 }
 
