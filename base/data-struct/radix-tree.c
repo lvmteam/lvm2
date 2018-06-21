@@ -626,6 +626,9 @@ static void _erase_elt(void *array, unsigned obj_size, unsigned count, unsigned 
 	memmove(((uint8_t *) array) + (obj_size * index),
                 ((uint8_t *) array) + (obj_size * (index + 1)),
                 obj_size * (count - index - 1));
+
+	// Zero the now unused last elt (set's v.type to UNSET)
+	memset(array + (count - 1) * obj_size, 0, obj_size);
 }
 
 static bool _remove(struct radix_tree *rt, struct value *root, uint8_t *kb, uint8_t *ke)
@@ -700,7 +703,6 @@ static bool _remove(struct radix_tree *rt, struct value *root, uint8_t *kb, uint
         				}
 
         				n4->nr_entries--;
-        				n4->values[n4->nr_entries].type = UNSET;
 					if (!n4->nr_entries) {
 						free(n4);
 						root->type = UNSET;
@@ -723,7 +725,6 @@ static bool _remove(struct radix_tree *rt, struct value *root, uint8_t *kb, uint
         				}
 
         				n16->nr_entries--;
-        				n16->values[n16->nr_entries].type = UNSET;
 					if (n16->nr_entries <= 4) {
         					_degrade_to_n4(n16, root);
 					}
@@ -745,7 +746,6 @@ static bool _remove(struct radix_tree *rt, struct value *root, uint8_t *kb, uint
 		                		n48->keys[j]--;
 				_erase_elt(n48->values, sizeof(*n48->values), n48->nr_entries, i);
 				n48->nr_entries--;
-				n48->values[n48->nr_entries].type = UNSET;
 				if (n48->nr_entries <= 16)
         				_degrade_to_n16(n48, root);
         		}
@@ -1066,7 +1066,7 @@ static bool _check_nodes(struct value *v, unsigned *count)
 
 		for (i = n4->nr_entries; i < 4; i++)
 			if (n4->values[i].type != UNSET) {
-				fprintf(stderr, "unused value is not UNSET\n");
+				fprintf(stderr, "unused value is not UNSET (n4)\n");
 				return false;
 			}
 
@@ -1080,7 +1080,7 @@ static bool _check_nodes(struct value *v, unsigned *count)
 
 		for (i = n16->nr_entries; i < 16; i++)
 			if (n16->values[i].type != UNSET) {
-				fprintf(stderr, "unused value is not UNSET\n");
+				fprintf(stderr, "unused value is not UNSET (n16)\n");
 				return false;
 			}
 
@@ -1105,7 +1105,7 @@ static bool _check_nodes(struct value *v, unsigned *count)
 
 		for (i = n48->nr_entries; i < 48; i++)
 			if (n48->values[i].type != UNSET) {
-				fprintf(stderr, "unused value is not UNSET\n");
+				fprintf(stderr, "unused value is not UNSET (n48)\n");
 				return false;
 			}
 
