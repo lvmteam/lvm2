@@ -43,12 +43,15 @@ struct pfilter {
  * do this.
  */
 
+static int _good_device;
+static int _bad_device;
+
 /*
  * The hash table holds one of these two states
  * against each entry.
  */
-#define PF_BAD_DEVICE ((void *) 1)
-#define PF_GOOD_DEVICE ((void *) 2)
+#define PF_BAD_DEVICE ((void *) &_good_device)
+#define PF_GOOD_DEVICE ((void *) &_bad_device)
 
 static int _init_hash(struct pfilter *pf)
 {
