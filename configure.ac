@@ -171,6 +171,15 @@ AC_ARG_ENABLE(dependency-tracking,
 AC_MSG_RESULT($USE_TRACKING)
 
 ################################################################################
+dnl -- Disable silence rules
+AC_MSG_CHECKING(whether to build silently)
+AC_ARG_ENABLE(silent-rules,
+	      AC_HELP_STRING([--disable-silent-rules], [disable silent building]),
+	      SILENT_RULES=$enableval, SILENT_RULES=yes)
+AC_MSG_RESULT($SILENT_RULES)
+
+
+################################################################################
 dnl -- Enables statically-linked tools
 AC_MSG_CHECKING(whether to use static linking)
 AC_ARG_ENABLE(static_link,
@@ -1726,6 +1735,7 @@ AC_SUBST(UDEV_SYSTEMD_BACKGROUND_JOBS)
 AC_SUBST(UDEV_RULE_EXEC_DETECTION)
 AC_SUBST(UDEV_HAS_BUILTIN_BLKID)
 AC_SUBST(USE_TRACKING)
+AC_SUBST(SILENT_RULES)
 AC_SUBST(USRSBINDIR)
 AC_SUBST(VALGRIND_POOL)
 AC_SUBST(WRITE_INSTALL)

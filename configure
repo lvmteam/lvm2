@@ -643,6 +643,7 @@ DMEVENTD_PIDFILE
 WRITE_INSTALL
 VALGRIND_POOL
 USRSBINDIR
+SILENT_RULES
 USE_TRACKING
 UDEV_HAS_BUILTIN_BLKID
 UDEV_RULE_EXEC_DETECTION
@@ -885,6 +886,7 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 enable_dependency_tracking
+enable_silent_rules
 enable_static_link
 with_user
 with_group
@@ -1622,6 +1624,7 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-dependency-tracking
                           speeds up one-time build.
+  --disable-silent-rules  disable silent building
   --enable-static_link    use this to link the tools to their libraries
                           statically (default is dynamic linking
   --disable-thin_check_needs_check
@@ -8042,6 +8045,20 @@ fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $USE_TRACKING" >&5
 $as_echo "$USE_TRACKING" >&6; }
+
+################################################################################
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build silently" >&5
+$as_echo_n "checking whether to build silently... " >&6; }
+# Check whether --enable-silent-rules was given.
+if test "${enable_silent_rules+set}" = set; then :
+  enableval=$enable_silent_rules; SILENT_RULES=$enableval
+else
+  SILENT_RULES=yes
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $SILENT_RULES" >&5
+$as_echo "$SILENT_RULES" >&6; }
+
 
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use static linking" >&5
