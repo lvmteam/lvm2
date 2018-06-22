@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2018 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -15,11 +15,69 @@
 
 #include "tools.h"
 #include "lvmetad-client.h"
+#include "dm-ioctl.h"
+
+/*
+ * Check if there are any active volumes from restored vg_name.
+ * We can prompt user, as such operation may make some serious
+ * troubles later, when user will try to continue such devices.
+ */
+static int _check_all_dm_devices(const char *vg_name, unsigned *found)
+{
+	struct dm_task *dmt;
+	struct dm_names *names;
+	char vgname_buf[DM_NAME_LEN * 2];
+	char *vgname, *lvname, *lvlayer;
+	unsigned next = 0;
+	int r = 1;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_LIST)))
+		return_0;
+
+	if (!dm_task_run(dmt)) {
+		r = 0;
+		goto_out;
+	}
+
+	if (!(names = dm_task_get_names(dmt))) {
+		r = 0;
+		goto_out;
+	}
+
+	if (!names->dev) {
+		log_verbose("No devices found.");
+		goto out;
+	}
+
+	do {
+		/* TODO: Do we want to validate UUID LVM- prefix as well ? */
+		names = (struct dm_names *)((char *) names + next);
+		if (!dm_strncpy(vgname_buf, names->name, sizeof(vgname_buf))) {
+			r = 0;
+			goto_out;
+		}
+		vgname = vgname_buf;
+		if (!dm_split_lvm_name(NULL, NULL, &vgname, &lvname, &lvlayer)) {
+			r = 0;
+			goto_out;
+		}
+		if (strcmp(vgname, vg_name) == 0) {
+			log_print("Volume group %s has active volume: %s.", vgname, lvname);
+			(*found)++;
+		}
+		next = names->next;
+	} while (next);
+
+out:
+	dm_task_destroy(dmt);
+	return r;
+}
 
 int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 {
 	const char *vg_name = NULL;
 	int lvmetad_rescan = 0;
+	unsigned found = 0;
 	int ret;
 
 	if (argc == 1) {
@@ -45,6 +103,21 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 			return_ECMD_FAILED;
 
 		return ECMD_PROCESSED;
+	}
+
+	if (!_check_all_dm_devices(vg_name, &found)) {
+		log_warn("WARNING: Failed to check for active volumes in volume group \"%s\".", vg_name);
+	} else if (found) {
+		log_warn("WARNING: Found %u active volume(s) in volume group \"%s\".",
+			 found, vg_name);
+		log_print("Restoring VG with active LVs, may cause mismatch with its metadata.");
+		if (!arg_is_set(cmd, yes_ARG) &&
+		    yes_no_prompt("Do you really want to proceed with restore of volume group \"%s\", "
+				  "while %u volume(s) are active? [y/n]: ",
+				  vg_name, found) == 'n') {
+			log_error("Restore aborted.");
+			return ECMD_FAILED;
+		}
 	}
 
 	/*

@@ -1,5 +1,6 @@
 Version 2.02.180 - 
 =================================
+  Enhance vgcfgrestore to check for active LVs in restored VG.
   lvconvert: provide possible layouts between linear and striped/raid
   Fix unmonitoring of merging snapshots.
   Add missing -l description in fsadm man page.
