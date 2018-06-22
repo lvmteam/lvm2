@@ -34,7 +34,7 @@ CXXFLAGS += $(EXTRA_EXEC_CFLAGS)
 
 CLEAN_DIRS += dbus/__pycache__ $(LVM_TEST_RESULTS)
 ifneq (.,$(firstword $(srcdir)))
-CLEAN_TARGETS += $(RUN_BASE) $(addprefix lib/,$(LIB_LVMLOCKD_CONF))
+CLEAN_TARGETS += $(RUN_BASE) $(addprefix lib/,$(LIB_LVMLOCKD_CONF) $(LIB_MKE2FS_CONF))
 endif
 
 CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,\
@@ -239,7 +239,10 @@ LIB_LVMLOCKD_CONF = \
  test-dlm-conf \
  test-sanlock-conf
 
-LIB_LOCAL = paths runner mke2fs.conf
+LIB_MKE2FS_CONF = \
+  mke2fs.conf
+
+LIB_LOCAL = paths runner
 LIB_NOT = not
 LIB_LINK_NOT = invalid fail should
 LIB_SHARED = check aux inittest utils get lvm-wrapper
@@ -249,13 +252,13 @@ install: .tests-stamp lib/paths-installed
 	$(INSTALL_DIR) $(DATADIR)/{shell,unit,lib,dbus} $(EXECDIR)
 	$(INSTALL_DATA) shell/*.sh $(DATADIR)/shell
 	$(INSTALL_DATA) unit/*.sh $(DATADIR)/unit
-	$(INSTALL_DATA) lib/mke2fs.conf $(DATADIR)/lib
 	-$(INSTALL_PROGRAM) unit/unit-test $(DATADIR)/unit
 	-$(INSTALL_PROGRAM) dbus/*.py $(DATADIR)/dbus/
 	$(INSTALL_DATA) lib/paths-installed $(DATADIR)/lib/paths
 	cd lib && $(INSTALL_DATA) \
 		$(LIB_FLAVOURS) \
 		$(LIB_LVMLOCKD_CONF) \
+		$(LIB_MKE2FS_CONF) \
 		dm-version-expected \
 		version-expected \
 		$(DATADIR)/lib
@@ -340,9 +343,6 @@ lib/version-expected: $(top_srcdir)/VERSION .lib-dir-stamp
 lib/dm-version-expected: $(top_srcdir)/VERSION_DM .lib-dir-stamp
 	cut -f 1 -d ' ' <$< >$@
 
-lib/mke2fs.conf: $(srcdir)/lib/mke2fs.conf
-	$(LN_S) -f $< $@
-
 CMDS = lvm $(shell cat $(top_builddir)/tools/.commands 2>/dev/null)
 LIB = $(addprefix lib/, $(LIB_SHARED) $(LIB_LOCAL) $(LIB_NOT) $(LIB_LINK_NOT) $(LIB_FLAVOURS))
 
@@ -369,8 +369,9 @@ LIB = $(addprefix lib/, $(LIB_SHARED) $(LIB_LOCAL) $(LIB_NOT) $(LIB_LINK_NOT) $(
 	$(LN_S) -f $(abs_top_srcdir)/conf/lvmdbusd.profile lib/
 	$(LN_S) -f $(abs_top_srcdir)/conf/thin-performance.profile lib/
 	$(LN_S) -f $(abs_top_srcdir)/scripts/fsadm.sh lib/fsadm
-	test "$(srcdir)" = . || for i in $(LIB_LVMLOCKD_CONF); do \
-		$(LN_S) -f $(abs_top_srcdir)/test/lib/$$i lib/; done
+	test "$(srcdir)" = . || \
+		for i in $(LIB_LVMLOCKD_CONF) $(LIB_MKE2FS_CONF); do \
+			$(LN_S) -f $(abs_top_srcdir)/test/lib/$$i lib/; done
 	touch $@
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
