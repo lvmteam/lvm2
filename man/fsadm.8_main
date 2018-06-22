@@ -40,6 +40,11 @@ filesystem.
 Unmount ext2/ext3/ext4 filesystem before doing resize.
 .
 .HP
+.BR -l | --lvresize
+.br
+Resize given device if it is LVM device.
+.
+.HP
 .BR -f | --force
 .br
 Bypass some sanity checks.

@@ -1,5 +1,6 @@
 Version 2.02.180 - 
 =================================
+  Add missing -l description in fsadm man page.
   Cache can uses metadata format 2 with cleaner policy.
   Avoid showing internal error in lvs output or pvmoved LVs.
   Fix check if resized PV can also fit metadata area.
