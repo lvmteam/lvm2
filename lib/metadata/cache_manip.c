@@ -623,10 +623,10 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	if (!(cache_seg->areas = dm_pool_zalloc(cache_lv->vg->vgmem, sizeof(*cache_seg->areas))))
 		return_0;
 
+	cache_seg->area_count = 1;
 	if (!set_lv_segment_area_lv(cache_seg, 0, cache_lv, 0, 0))
 		return_0;
 
-	cache_seg->area_count = 1;
 	corigin_lv->le_count = cache_lv->le_count;
 	corigin_lv->size = cache_lv->size;
 	corigin_lv->status |= LV_PENDING_DELETE;
