@@ -1510,33 +1510,13 @@ static struct load_segment *_get_last_load_segment(struct dm_tree_node *node)
 }
 
 /* For preload pass only validate pool's transaction_id */
-static int _node_send_messages(struct dm_tree_node *dnode,
-			       const char *uuid_prefix,
-			       size_t uuid_prefix_len,
-			       int send)
+static int _thin_pool_node_send_messages(struct dm_tree_node *dnode,
+					 struct load_segment *seg,
+					 int send)
 {
-	struct load_segment *seg;
 	struct thin_message *tmsg;
 	struct dm_status_thin_pool stp;
-	const char *uuid;
 	int have_messages;
-
-	if (!dnode->info.exists)
-		return 1;
-
-	if (!(seg = _get_last_load_segment(dnode)))
-		return_0;
-
-	if (seg->type != SEG_THIN_POOL)
-		return 1;
-
-	if (!(uuid = dm_tree_node_get_uuid(dnode)))
-		return_0;
-
-	if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len)) {
-		log_debug_activation("UUID \"%s\" does not match.", uuid);
-		return 1;
-	}
 
 	if (!_thin_pool_get_status(dnode, &stp))
 		return_0;
@@ -1581,6 +1561,36 @@ static int _node_send_messages(struct dm_tree_node *dnode,
 
 	return 1;
 }
+
+static int _node_send_messages(struct dm_tree_node *dnode,
+			       const char *uuid_prefix,
+			       size_t uuid_prefix_len,
+			       int send)
+{
+	struct load_segment *seg;
+	const char *uuid;
+
+	if (!dnode->info.exists || !dnode->info.live_table)
+		return 1;
+
+	if (!(uuid = dm_tree_node_get_uuid(dnode)))
+		return_0;
+
+	if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len)) {
+		log_debug_activation("UUID \"%s\" does not match.", uuid);
+		return 1;
+	}
+
+	if (!(seg = _get_last_load_segment(dnode)))
+		return_0;
+
+	switch (seg->type) {
+	case SEG_THIN_POOL: return _thin_pool_node_send_messages(dnode, seg, send);
+	}
+
+	return 1;
+}
+
 
 /*
  * FIXME Don't attempt to deactivate known internal dependencies.
