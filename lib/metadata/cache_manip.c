@@ -620,10 +620,9 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	if (!(cache_seg->segtype = get_segtype_from_string(corigin_lv->vg->cmd, SEG_TYPE_NAME_CACHE)))
 		return_0;
 
-	if (!(cache_seg->areas = dm_pool_zalloc(cache_lv->vg->vgmem, sizeof(*cache_seg->areas))))
+	if (!add_lv_segment_areas(cache_seg, 1))
 		return_0;
 
-	cache_seg->area_count = 1;
 	if (!set_lv_segment_area_lv(cache_seg, 0, cache_lv, 0, 0))
 		return_0;
 
