@@ -5901,7 +5901,7 @@ struct dm_list *build_parallel_areas_from_lv(struct logical_volume *lv,
 	uint32_t raid_multiple;
 	struct lv_segment *seg = first_seg(lv);
 
-	if (!(parallel_areas = dm_pool_alloc(cmd->mem, sizeof(*parallel_areas)))) {
+	if (!(parallel_areas = dm_pool_alloc(lv->vg->vgmem, sizeof(*parallel_areas)))) {
 		log_error("parallel_areas allocation failed");
 		return NULL;
 	}
@@ -5910,7 +5910,7 @@ struct dm_list *build_parallel_areas_from_lv(struct logical_volume *lv,
 
 	do {
 		if (!spvs || !create_single_list) {
-			if (!(spvs = dm_pool_zalloc(cmd->mem, sizeof(*spvs)))) {
+			if (!(spvs = dm_pool_zalloc(lv->vg->vgmem, sizeof(*spvs)))) {
 				log_error("allocation failed");
 				return NULL;
 			}
