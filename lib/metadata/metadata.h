@@ -445,6 +445,8 @@ int for_each_sub_lv(struct logical_volume *lv,
 int move_lv_segments(struct logical_volume *lv_to,
 		     struct logical_volume *lv_from,
 		     uint64_t set_status, uint64_t reset_status);
+/* Widen existing segment areas */
+int add_lv_segment_areas(struct lv_segment *seg, uint32_t new_area_count);
 
 /*
  * Calculate readahead from underlying PV devices

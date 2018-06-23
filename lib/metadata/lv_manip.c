@@ -1219,17 +1219,19 @@ int set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
 /*
  * Prepare for adding parallel areas to an existing segment.
  */
-static int _lv_segment_add_areas(struct logical_volume *lv,
-				 struct lv_segment *seg,
-				 uint32_t new_area_count)
+int add_lv_segment_areas(struct lv_segment *seg, uint32_t new_area_count)
 {
 	struct lv_segment_area *newareas;
 	uint32_t areas_sz = new_area_count * sizeof(*newareas);
 
-	if (!(newareas = dm_pool_zalloc(lv->vg->cmd->mem, areas_sz)))
+	if (!(newareas = dm_pool_zalloc(seg->lv->vg->vgmem, areas_sz))) {
+		log_error("Failed to allocate widened LV segment for %s.",
+			  display_lvname(seg->lv));
 		return_0;
+	}
 
-	memcpy(newareas, seg->areas, seg->area_count * sizeof(*seg->areas));
+	if (seg->area_count)
+		memcpy(newareas, seg->areas, seg->area_count * sizeof(*seg->areas));
 
 	seg->areas = newareas;
 	seg->area_count = new_area_count;
@@ -3766,7 +3768,7 @@ int lv_add_mirror_areas(struct alloc_handle *ah,
 		old_area_count = seg->area_count;
 		new_area_count = old_area_count + ah->area_count;
 
-		if (!_lv_segment_add_areas(lv, seg, new_area_count))
+		if (!add_lv_segment_areas(seg, new_area_count))
 			return_0;
 
 		for (s = 0; s < ah->area_count; s++) {
@@ -3818,11 +3820,8 @@ int lv_add_mirror_lvs(struct logical_volume *lv,
 	old_area_count = seg->area_count;
 	new_area_count = old_area_count + num_extra_areas;
 
-	if (!_lv_segment_add_areas(lv, seg, new_area_count)) {
-		log_error("Failed to allocate widened LV segment for %s.",
-			  display_lvname(lv));
-		return 0;
-	}
+	if (!add_lv_segment_areas(seg, new_area_count))
+		return_0;
 
 	for (m = 0; m < old_area_count; m++)
 		seg_lv(seg, m)->status |= status;
