@@ -1382,20 +1382,14 @@ out:
 	return r;
 }
 
-static int _thin_pool_get_status(struct dm_tree_node *dnode,
-				 struct dm_status_thin_pool *s)
+static struct dm_task *_dm_task_create_device_status(uint32_t major, uint32_t minor)
 {
 	struct dm_task *dmt;
-	int r = 0;
-	uint64_t start, length;
-	char *type = NULL;
-	char *params = NULL;
 
 	if (!(dmt = dm_task_create(DM_DEVICE_STATUS)))
-		return_0;
+		return_NULL;
 
-	if (!dm_task_set_major(dmt, dnode->info.major) ||
-	    !dm_task_set_minor(dmt, dnode->info.minor)) {
+	if (!dm_task_set_major(dmt, major) || !dm_task_set_minor(dmt, minor)) {
 		log_error("Failed to set major minor.");
 		goto out;
 	}
@@ -1405,6 +1399,26 @@ static int _thin_pool_get_status(struct dm_tree_node *dnode,
 
 	if (!dm_task_run(dmt))
 		goto_out;
+
+	return dmt;
+out:
+	dm_task_destroy(dmt);
+
+	return NULL;
+}
+
+static int _thin_pool_get_status(struct dm_tree_node *dnode,
+				 struct dm_status_thin_pool *s)
+{
+	struct dm_task *dmt;
+	int r = 0;
+	uint64_t start, length;
+	char *type = NULL;
+	char *params = NULL;
+
+	if (!(dmt = _dm_task_create_device_status(dnode->info.major,
+						  dnode->info.minor)))
+		return_0;
 
 	dm_get_next_target(dmt, NULL, &start, &length, &type, &params);
 
