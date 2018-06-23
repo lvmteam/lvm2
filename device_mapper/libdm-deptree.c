@@ -1428,9 +1428,42 @@ out:
 	return r;
 }
 
-static int _thin_pool_node_message(struct dm_tree_node *dnode, struct thin_message *tm)
+static int _node_message(uint32_t major, uint32_t minor,
+			 int expected_errno, const char *message)
 {
 	struct dm_task *dmt;
+	int r;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_TARGET_MSG)))
+		return_0;
+
+	if (!dm_task_set_major(dmt, major) ||
+	    !dm_task_set_minor(dmt, minor)) {
+		log_error("Failed to set message major minor.");
+		goto out;
+	}
+
+	if (!dm_task_set_message(dmt, message))
+		goto_out;
+
+	/* Internal functionality of dm_task */
+	dmt->expected_errno = expected_errno;
+
+	if (!dm_task_run(dmt)) {
+		log_error("Failed to process message \"%s\".", message);
+		goto out;
+	}
+
+	r = 1;
+out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
+
+static int _thin_pool_node_message(struct dm_tree_node *dnode, struct thin_message *tm)
+{
 	struct dm_thin_message *m = &tm->message;
 	char buf[64];
 	int r;
@@ -1470,33 +1503,11 @@ static int _thin_pool_node_message(struct dm_tree_node *dnode, struct thin_messa
 		return 0;
 	}
 
-	r = 0;
-
-	if (!(dmt = dm_task_create(DM_DEVICE_TARGET_MSG)))
+	if (!_node_message(dnode->info.major, dnode->info.minor,
+			   tm->expected_errno, buf))
 		return_0;
 
-	if (!dm_task_set_major(dmt, dnode->info.major) ||
-	    !dm_task_set_minor(dmt, dnode->info.minor)) {
-		log_error("Failed to set message major minor.");
-		goto out;
-	}
-
-	if (!dm_task_set_message(dmt, buf))
-		goto_out;
-
-	/* Internal functionality of dm_task */
-	dmt->expected_errno = tm->expected_errno;
-
-	if (!dm_task_run(dmt)) {
-		log_error("Failed to process thin pool message \"%s\".", buf);
-		goto out;
-	}
-
-	r = 1;
-out:
-	dm_task_destroy(dmt);
-
-	return r;
+	return 1;
 }
 
 static struct load_segment *_get_last_load_segment(struct dm_tree_node *node)
