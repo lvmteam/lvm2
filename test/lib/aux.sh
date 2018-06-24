@@ -1552,6 +1552,14 @@ have_thin() {
 	fi
 }
 
+have_vdo() {
+	lvm segtypes 2>/dev/null | grep -q vdo$ || {
+		echo "VDO is not built-in." >&2
+		return 1
+	}
+	target_at_least dm-vdo "$@"
+}
+
 have_raid() {
 	target_at_least dm-raid "$@"
 
