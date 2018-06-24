@@ -33,7 +33,7 @@ vgcfgbackup -f backup $vg
 # use of --force is mandatory
 not vgcfgrestore -f backup $vg
 
-vgcfgrestore -f backup --force $vg
+vgcfgrestore -y -f backup --force $vg
 
 check lv_field $vg/pool transaction_id 1
 
