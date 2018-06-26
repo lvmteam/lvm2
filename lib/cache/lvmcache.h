@@ -69,7 +69,7 @@ void lvmcache_allow_reads_with_lvmetad(void);
 void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset);
 
 int lvmcache_label_scan(struct cmd_context *cmd);
-int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const char *vgid);
+int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const char *vgid, int open_rw);
 
 /* Add/delete a device */
 struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,

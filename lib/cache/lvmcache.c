@@ -1351,7 +1351,7 @@ next:
  * comes directly from files.)
  */
 
-int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const char *vgid)
+int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const char *vgid, int open_rw)
 {
 	struct dm_list devs;
 	struct device_list *devl, *devl2;
@@ -1396,7 +1396,10 @@ int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const 
 	/* FIXME: should we also rescan unused_duplicate_devs for devs
 	   being rescanned here and then repeat resolving the duplicates? */
 
-	label_scan_devs(cmd, cmd->filter, &devs);
+	if (open_rw)
+		label_scan_devs_rw(cmd, cmd->filter, &devs);
+	else
+		label_scan_devs(cmd, cmd->filter, &devs);
 
 	dm_list_iterate_items_safe(devl, devl2, &devs) {
 		dm_list_del(&devl->list);

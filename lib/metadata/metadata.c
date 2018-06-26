@@ -3731,6 +3731,7 @@ out:
 static struct volume_group *_vg_read(struct cmd_context *cmd,
 				     const char *vgname,
 				     const char *vgid,
+				     int write_lock_held,
 				     uint32_t lockd_state, 
 				     uint32_t warn_flags, 
 				     int *consistent, unsigned precommitted)
@@ -3863,8 +3864,15 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		if (warn_flags & SKIP_RESCAN)
 			goto find_vg;
 		skipped_rescan = 0;
+
+		/*
+		 * When a write lock is held, it implies we are going to be
+		 * writing to the devs in the VG, so when we rescan the VG
+		 * we should reopen the devices in RDWR (since they were
+		 * open RDONLY from the initial scan.
+		 */
 		log_debug_metadata("Rescanning devices for %s", vgname);
-		lvmcache_label_rescan_vg(cmd, vgname, vgid);
+		lvmcache_label_rescan_vg(cmd, vgname, vgid, write_lock_held);
 	} else {
 		log_debug_metadata("Skipped rescanning devices for %s", vgname);
 		skipped_rescan = 1;
@@ -4498,13 +4506,15 @@ static int _check_devs_used_correspond_with_vg(struct volume_group *vg)
 
 struct volume_group *vg_read_internal(struct cmd_context *cmd,
 				      const char *vgname, const char *vgid,
-				      uint32_t lockd_state, uint32_t warn_flags,
+				      int write_lock_held,
+				      uint32_t lockd_state,
+				      uint32_t warn_flags,
 				      int *consistent)
 {
 	struct volume_group *vg;
 	struct lv_list *lvl;
 
-	if (!(vg = _vg_read(cmd, vgname, vgid, lockd_state, warn_flags, consistent, 0)))
+	if (!(vg = _vg_read(cmd, vgname, vgid, write_lock_held, lockd_state, warn_flags, consistent, 0)))
 		goto_out;
 
 	if (!check_pv_dev_sizes(vg))
@@ -4612,7 +4622,7 @@ struct volume_group *vg_read_by_vgid(struct cmd_context *cmd,
 
 	label_scan_setup_bcache();
 
-	if (!(vg = _vg_read(cmd, vgname, vgid, 0, warn_flags, &consistent, precommitted))) {
+	if (!(vg = _vg_read(cmd, vgname, vgid, 0, 0, warn_flags, &consistent, precommitted))) {
 		log_error("Rescan devices to look for missing VG.");
 		goto scan;
 	}
@@ -4633,7 +4643,7 @@ struct volume_group *vg_read_by_vgid(struct cmd_context *cmd,
 	lvmcache_label_scan(cmd);
 	warn_flags |= SKIP_RESCAN;
 
-	if (!(vg = _vg_read(cmd, vgname, vgid, 0, warn_flags, &consistent, precommitted)))
+	if (!(vg = _vg_read(cmd, vgname, vgid, 0, 0, warn_flags, &consistent, precommitted)))
 		goto fail;
 
 	label_scan_destroy(cmd); /* drop bcache to close devs, keep lvmcache */
@@ -4872,7 +4882,7 @@ static int _get_pvs(struct cmd_context *cmd, uint32_t warn_flags,
 
 		warn_flags |= WARN_INCONSISTENT;
 
-		if (!(vg = vg_read_internal(cmd, vgname, (!vgslist) ? vgid : NULL, 0, warn_flags, &consistent))) {
+		if (!(vg = vg_read_internal(cmd, vgname, (!vgslist) ? vgid : NULL, 0, 0, warn_flags, &consistent))) {
 			stack;
 			continue;
 		}
@@ -5218,7 +5228,7 @@ static struct volume_group *_recover_vg(struct cmd_context *cmd,
 		lockd_state |= LDST_EX;
 	}
 
-	if (!(vg = vg_read_internal(cmd, vg_name, vgid, lockd_state, WARN_PV_READ, &consistent))) {
+	if (!(vg = vg_read_internal(cmd, vg_name, vgid, 1, lockd_state, WARN_PV_READ, &consistent))) {
 		unlock_vg(cmd, NULL, vg_name);
 		return_NULL;
 	}
@@ -5462,6 +5472,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 	uint32_t warn_flags = 0;
 	int is_shared = 0;
 	int already_locked;
+	int write_lock_held = (lock_flags == LCK_VG_WRITE);
 
 	if ((read_flags & READ_ALLOW_INCONSISTENT) || (lock_flags != LCK_VG_WRITE))
 		consistent = 0;
@@ -5493,7 +5504,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 		warn_flags |= WARN_INCONSISTENT;
 
 	/* If consistent == 1, we get NULL here if correction fails. */
-	if (!(vg = vg_read_internal(cmd, vg_name, vgid, lockd_state, warn_flags, &consistent))) {
+	if (!(vg = vg_read_internal(cmd, vg_name, vgid, write_lock_held, lockd_state, warn_flags, &consistent))) {
 		if (consistent_in && !consistent) {
 			failure |= FAILED_INCONSISTENT;
 			goto bad;

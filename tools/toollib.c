@@ -5730,7 +5730,7 @@ do_command:
 	if (pp->preserve_existing && pp->orphan_vg_name) {
 		log_debug("Using existing orphan PVs in %s.", pp->orphan_vg_name);
 
-		if (!(orphan_vg = vg_read_internal(cmd, pp->orphan_vg_name, NULL, 0, 0, &consistent))) {
+		if (!(orphan_vg = vg_read_internal(cmd, pp->orphan_vg_name, NULL, 0, 0, 0, &consistent))) {
 			log_error("Cannot read orphans VG %s.", pp->orphan_vg_name);
 			goto bad;
 		}

@@ -909,6 +909,28 @@ int label_scan_devs(struct cmd_context *cmd, struct dev_filter *f, struct dm_lis
 	return 1;
 }
 
+int label_scan_devs_rw(struct cmd_context *cmd, struct dev_filter *f, struct dm_list *devs)
+{
+	struct device_list *devl;
+	int failed = 0;
+
+	dm_list_iterate_items(devl, devs) {
+		if (_in_bcache(devl->dev)) {
+			bcache_invalidate_fd(scan_bcache, devl->dev->bcache_fd);
+			_scan_dev_close(devl->dev);
+		}
+
+		/* _scan_dev_open will open(RDWR) when this flag is set */
+		devl->dev->flags |= DEV_BCACHE_WRITE;
+	}
+
+	_scan_list(cmd, f, devs, &failed);
+
+	/* FIXME: this function should probably fail if any devs couldn't be scanned */
+
+	return 1;
+}
+
 int label_scan_devs_excl(struct dm_list *devs)
 {
 	struct device_list *devl;
