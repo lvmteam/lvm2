@@ -559,11 +559,13 @@ static bool _init_free_list(struct bcache *cache, unsigned count, unsigned pgsiz
 	if (!data)
 		return false;
 
-	cache->raw_data = data;
 	cache->raw_blocks = dm_malloc(count * sizeof(*cache->raw_blocks));
-
 	if (!cache->raw_blocks)
-		dm_free(cache->raw_data);
+		free(data);
+		return false;
+	}
+
+	cache->raw_data = data;
 
 	for (i = 0; i < count; i++) {
 		struct block *b = cache->raw_blocks + i;
