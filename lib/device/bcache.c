@@ -560,7 +560,7 @@ static bool _init_free_list(struct bcache *cache, unsigned count, unsigned pgsiz
 		return false;
 
 	cache->raw_blocks = dm_malloc(count * sizeof(*cache->raw_blocks));
-	if (!cache->raw_blocks)
+	if (!cache->raw_blocks) {
 		free(data);
 		return false;
 	}
