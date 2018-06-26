@@ -367,18 +367,24 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 static int _dev_read_ahead_dev(struct device *dev, uint32_t *read_ahead)
 {
 	long read_ahead_long;
+	int fd = dev->bcache_fd;
+	int do_close = 0;
 
 	if (dev->read_ahead != -1) {
 		*read_ahead = (uint32_t) dev->read_ahead;
 		return 1;
 	}
 
-	if (!dev_open_readonly(dev))
-		return_0;
+	if (fd <= 0) {
+		if (!dev_open_readonly(dev))
+			return_0;
+		fd = dev_fd(dev);
+		do_close = 1;
+	}
 
-	if (ioctl(dev->fd, BLKRAGET, &read_ahead_long) < 0) {
+	if (ioctl(fd, BLKRAGET, &read_ahead_long) < 0) {
 		log_sys_error("ioctl BLKRAGET", dev_name(dev));
-		if (!dev_close_immediate(dev))
+		if (do_close && !dev_close_immediate(dev))
 			stack;
 		return 0;
 	}
@@ -389,8 +395,8 @@ static int _dev_read_ahead_dev(struct device *dev, uint32_t *read_ahead)
 	log_very_verbose("%s: read_ahead is %u sectors",
 			 dev_name(dev), *read_ahead);
 
-	if (!dev_close_immediate(dev))
-		stack;
+	if (do_close && !dev_close_immediate(dev))
+		log_sys_error("close", dev_name(dev));
 
 	return 1;
 }
