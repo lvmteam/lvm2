@@ -60,8 +60,11 @@ struct vdo_status_parse_result {
 	struct vdo_status *status;
 };
 
+struct dm_pool;
+
 // Parses the status line from the kernel target.
-bool vdo_status_parse(const char *input, struct vdo_status_parse_result *result);
+bool vdo_status_parse(struct dm_pool *mem, const char *input,
+		      struct vdo_status_parse_result *result);
 
 //----------------------------------------------------------------
 

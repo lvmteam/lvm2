@@ -91,7 +91,7 @@ static void _check_good(struct example_good *es, unsigned count)
                 struct example_good *e = es + i;
                 struct vdo_status_parse_result pr;
 
-                T_ASSERT(vdo_status_parse(e->input, &pr));
+                T_ASSERT(vdo_status_parse(NULL, e->input, &pr));
 #if 0
                 _print_status(stderr, pr.status);
                 fprintf(stderr, "\n");
@@ -116,7 +116,7 @@ static void _check_bad(struct example_bad *es, unsigned count)
                 struct example_bad *e = es + i;
                 struct vdo_status_parse_result pr;
 
-                T_ASSERT(!vdo_status_parse(e->input, &pr));
+                T_ASSERT(!vdo_status_parse(NULL, e->input, &pr));
                 T_ASSERT(!strcmp(e->reason, pr.error));
         }
 }
