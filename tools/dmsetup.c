@@ -939,8 +939,10 @@ static int _display_info_cols(struct dm_task *dmt, struct dm_info *info)
 			goto_out;
 
 		/* No regions to report is not an error */
-		if (!dm_stats_get_nr_regions(obj.stats))
+		if (!dm_stats_get_nr_regions(obj.stats)) {
+			r = 1;
 			goto out;
+		}
 	}
 
 	/* group report with no groups? */
