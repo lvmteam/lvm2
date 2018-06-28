@@ -419,7 +419,7 @@ int vg_has_duplicate_pvs(struct volume_group *vg)
 	return 0;
 }
 
-static int _dev_in_device_list(struct device *dev, struct dm_list *head)
+int dev_in_device_list(struct device *dev, struct dm_list *head)
 {
 	struct device_list *devl;
 
@@ -432,7 +432,7 @@ static int _dev_in_device_list(struct device *dev, struct dm_list *head)
 
 int lvmcache_dev_is_unchosen_duplicate(struct device *dev)
 {
-	return _dev_in_device_list(dev, &_unused_duplicate_devs);
+	return dev_in_device_list(dev, &_unused_duplicate_devs);
 }
 
 /*
@@ -601,8 +601,8 @@ next:
 			continue;
 		}
 
-		prev_unchosen1 = _dev_in_device_list(dev1, &_unused_duplicate_devs);
-		prev_unchosen2 = _dev_in_device_list(dev2, &_unused_duplicate_devs);
+		prev_unchosen1 = dev_in_device_list(dev1, &_unused_duplicate_devs);
+		prev_unchosen2 = dev_in_device_list(dev2, &_unused_duplicate_devs);
 
 		if (!prev_unchosen1 && !prev_unchosen2) {
 			/*
@@ -612,8 +612,8 @@ next:
 			 * want the same duplicate preference to be preserved
 			 * in each instance of lvmcache for a single command.
 			 */
-			prev_unchosen1 = _dev_in_device_list(dev1, &cmd->unused_duplicate_devs);
-			prev_unchosen2 = _dev_in_device_list(dev2, &cmd->unused_duplicate_devs);
+			prev_unchosen1 = dev_in_device_list(dev1, &cmd->unused_duplicate_devs);
+			prev_unchosen2 = dev_in_device_list(dev2, &cmd->unused_duplicate_devs);
 		}
 
 		dev1_major = MAJOR(dev1->dev);
