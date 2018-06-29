@@ -7427,7 +7427,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	lp->extents = _round_to_stripe_boundary(vg, lp->extents, lp->stripes, 1);
 
-	if (!lp->extents && !seg_is_thin_volume(lp)) {
+	if (!lp->extents && !seg_is_virtual(lp)) {
 		log_error(INTERNAL_ERROR "Unable to create new logical volume with no extents.");
 		return NULL;
 	}
