@@ -45,7 +45,7 @@ typedef enum {
 } action_t;
 
 /* This list must match lib/misc/lvm-string.c:build_dm_uuid(). */
-const char *uuid_suffix_list[] = { "pool", "cdata", "cmeta", "tdata", "tmeta", NULL};
+const char *uuid_suffix_list[] = { "pool", "cdata", "cmeta", "tdata", "tmeta", "vdata", "vpool", NULL};
 
 struct dlid_list {
 	struct dm_list list;
@@ -274,6 +274,10 @@ static int _info_run(const char *dlid, struct dm_info *dminfo,
 		if (lv_is_thin_pool_metadata(seg_status->seg->lv) &&
 		    (length > DM_THIN_MAX_METADATA_SIZE))
 			length = DM_THIN_MAX_METADATA_SIZE;
+
+		/* Uses virtual size with headers for VDO pool device */
+		if (lv_is_vdo_pool(seg_status->seg->lv))
+			length = get_vdo_pool_virtual_size(seg_status->seg);
 
 		do {
 			target = dm_get_next_target(dmt, target, &target_start,

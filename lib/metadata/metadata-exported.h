@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2018 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -145,7 +145,12 @@
 #define LV_RESHAPE		UINT64_C(0x1000000000000000)    /* Ongoing reshape (number of stripes, stripesize or raid algorithm change):
 								   used as SEGTYPE_FLAG to prevent activation on old runtime */
 #define LV_RESHAPE_DATA_OFFSET	UINT64_C(0x2000000000000000)    /* LV reshape flag data offset (out of place reshaping) */
-/* Next unused flag:		UINT64_C(0x8000000000000000)    */
+
+
+#define LV_VDO			UINT64_C(0x0000000020000000)    /* LV - Internal user only */
+#define LV_VDO_POOL		UINT64_C(0x0000000040000000)    /* LV - Internal user only */
+#define LV_VDO_POOL_DATA	UINT64_C(0x8000000000000000)    /* LV - Internal user only */
+
 
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
@@ -250,6 +255,11 @@
 #define lv_is_pool_metadata(lv)		(((lv)->status & (CACHE_POOL_METADATA | THIN_POOL_METADATA)) ? 1 : 0)
 #define lv_is_pool_metadata_spare(lv)	(((lv)->status & POOL_METADATA_SPARE) ? 1 : 0)
 #define lv_is_lockd_sanlock_lv(lv)	(((lv)->status & LOCKD_SANLOCK_LV) ? 1 : 0)
+
+#define lv_is_vdo(lv)		(((lv)->status & LV_VDO) ? 1 : 0)
+#define lv_is_vdo_pool(lv)	(((lv)->status & LV_VDO_POOL) ? 1 : 0)
+#define lv_is_vdo_pool_data(lv)	(((lv)->status & LV_VDO_POOL_DATA) ? 1 : 0)
+#define lv_is_vdo_type(lv)	(((lv)->status & (LV_VDO | LV_VDO_POOL | LV_VDO_POOL_DATA)) ? 1 : 0)
 
 #define lv_is_removed(lv)	(((lv)->status & LV_REMOVED) ? 1 : 0)
 
@@ -487,6 +497,10 @@ struct lv_segment {
 	const char *policy_name;		/* For cache_pool */
 	struct dm_config_node *policy_settings;	/* For cache_pool */
 	unsigned cleaner_policy;		/* For cache */
+
+	struct dm_vdo_target_params vdo_params;	/* For VDO-pool */
+	uint32_t vdo_pool_header_size;		/* For VDO-pool */
+	uint32_t vdo_pool_virtual_extents;	/* For VDO-pool */
 };
 
 #define seg_type(seg, s)	(seg)->areas[(s)].type
@@ -950,6 +964,7 @@ struct lvcreate_params {
 	uint32_t read_ahead; /* all */
 	int approx_alloc;     /* all */
 	alloc_policy_t alloc; /* all */
+	struct dm_vdo_target_params vdo_params; /* vdo */
 
 	struct dm_list tags;	/* all */
 
@@ -1231,6 +1246,16 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean);
 int lv_cache_remove(struct logical_volume *cache_lv);
 int wipe_cache_pool(struct logical_volume *cache_pool_lv);
 /* --  metadata/cache_manip.c */
+
+
+/* ++  metadata/vdo_manip.c */
+
+uint64_t get_vdo_pool_virtual_size(const struct lv_segment *vdo_pool_seg);
+struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
+					   const struct dm_vdo_target_params *vtp,
+					   uint32_t *virtual_extents);
+int get_vdo_write_policy(enum dm_vdo_write_policy *vwp, const char *policy);
+/* --  metadata/vdo_manip.c */
 
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 				      struct device *dev, uint64_t lv_type);

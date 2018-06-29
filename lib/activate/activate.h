@@ -261,6 +261,7 @@ void fs_unlock(void);
 #define TARGET_NAME_STRIPED "striped"
 #define TARGET_NAME_THIN "thin"
 #define TARGET_NAME_THIN_POOL "thin-pool"
+#define TARGET_NAME_VDO "vdo"
 #define TARGET_NAME_ZERO "zero"
 
 #define MODULE_NAME_CLUSTERED_MIRROR "clog"

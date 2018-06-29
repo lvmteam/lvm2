@@ -77,6 +77,7 @@ SOURCES =\
 	metadata/segtype.c \
 	metadata/snapshot_manip.c \
 	metadata/thin_manip.c \
+	metadata/vdo_manip.c \
 	metadata/vg.c \
 	mirror/mirrored.c \
 	misc/crc.c \
@@ -124,6 +125,10 @@ endif
 ifeq ("@BUILD_LVMLOCKD@", "yes")
   SOURCES +=\
 	locking/lvmlockd.c
+endif
+
+ifeq ("@VDO@", "internal")
+  SOURCES += vdo/vdo.c
 endif
 
 LIB_NAME = liblvm-internal

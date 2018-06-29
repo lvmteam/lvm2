@@ -1399,6 +1399,11 @@ static int _init_segtypes(struct cmd_context *cmd)
 		return 0;
 #endif
 
+#ifdef VDO_INTERNAL
+	if (!init_vdo_segtypes(cmd, &seglib))
+		return_0;
+#endif
+
 #ifdef HAVE_LIBDL
 	/* Load any formats in shared libs unless static */
 	if (!is_static() &&

@@ -258,6 +258,8 @@ char *build_dm_uuid(struct dm_pool *mem, const struct logical_volume *lv,
 			lv_is_thin_pool(lv) ? "pool" :
 			lv_is_thin_pool_data(lv) ? "tdata" :
 			lv_is_thin_pool_metadata(lv) ? "tmeta" :
+			lv_is_vdo_pool(lv) ? "vpool" :
+			lv_is_vdo_pool_data(lv) ? "vdata" :
 			NULL;
 	}
 

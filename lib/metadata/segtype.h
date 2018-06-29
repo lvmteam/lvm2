@@ -69,6 +69,8 @@ struct dev_manager;
 
 #define SEG_STRIPED_TARGET	(1ULL << 39)
 #define SEG_LINEAR_TARGET	(1ULL << 40)
+#define SEG_VDO			(1ULL << 41)
+#define SEG_VDO_POOL		(1ULL << 42)
 
 #define SEG_UNKNOWN		(1ULL << 63)
 
@@ -83,6 +85,8 @@ struct dev_manager;
 #define SEG_TYPE_NAME_ERROR		"error"
 #define SEG_TYPE_NAME_FREE		"free"
 #define SEG_TYPE_NAME_ZERO		"zero"
+#define SEG_TYPE_NAME_VDO		"vdo"
+#define SEG_TYPE_NAME_VDO_POOL		"vdo-pool"
 #define SEG_TYPE_NAME_RAID		"raid"
 #define SEG_TYPE_NAME_RAID0		"raid0"
 #define SEG_TYPE_NAME_RAID0_META	"raid0_meta"
@@ -151,6 +155,8 @@ struct dev_manager;
 #define segtype_is_thin(segtype)	((segtype)->flags & (SEG_THIN_POOL|SEG_THIN_VOLUME) ? 1 : 0)
 #define segtype_is_thin_pool(segtype)	((segtype)->flags & SEG_THIN_POOL ? 1 : 0)
 #define segtype_is_thin_volume(segtype)	((segtype)->flags & SEG_THIN_VOLUME ? 1 : 0)
+#define segtype_is_vdo(segtype)		((segtype)->flags & SEG_VDO ? 1 : 0)
+#define segtype_is_vdo_pool(segtype)	((segtype)->flags & SEG_VDO_POOL ? 1 : 0)
 #define segtype_is_virtual(segtype)	((segtype)->flags & SEG_VIRTUAL ? 1 : 0)
 #define segtype_is_unknown(segtype)	((segtype)->flags & SEG_UNKNOWN ? 1 : 0)
 
@@ -202,6 +208,8 @@ struct dev_manager;
 #define seg_is_thin(seg)	segtype_is_thin((seg)->segtype)
 #define seg_is_thin_pool(seg)	segtype_is_thin_pool((seg)->segtype)
 #define seg_is_thin_volume(seg)	segtype_is_thin_volume((seg)->segtype)
+#define seg_is_vdo(seg)		segtype_is_vdo((seg)->segtype)
+#define seg_is_vdo_pool(seg)	segtype_is_vdo_pool((seg)->segtype)
 #define seg_is_virtual(seg)	segtype_is_virtual((seg)->segtype)
 #define seg_unknown(seg)	segtype_is_unknown((seg)->segtype)
 #define seg_can_split(seg)	segtype_can_split((seg)->segtype)
@@ -327,6 +335,10 @@ int init_thin_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
 
 #ifdef CACHE_INTERNAL
 int init_cache_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
+#endif
+
+#ifdef VDO_INTERNAL
+int init_vdo_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
 #endif
 
 #define CACHE_FEATURE_POLICY_MQ			(1U << 0)

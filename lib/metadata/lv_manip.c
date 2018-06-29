@@ -1034,6 +1034,7 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 
 	if (lv_is_mirror_image(lv) ||
 	    lv_is_thin_pool_data(lv) ||
+	    lv_is_vdo_pool_data(lv) ||
 	    lv_is_cache_pool_data(lv)) {
 		if (!lv_reduce(lv, area_reduction))
 			return_0; /* FIXME: any upper level reporting */
@@ -1101,6 +1102,10 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 		seg_le(seg, s) = 0;
 		seg_type(seg, s) = AREA_UNASSIGNED;
 	}
+
+	/* When removed last VDO user automatically removes VDO pool */
+	if (lv_is_vdo_pool(lv) && dm_list_empty(&(lv->segs_using_this_lv)))
+		return lv_remove(lv); /* FIXME: any upper level reporting */
 
 	return 1;
 }
@@ -3265,10 +3270,45 @@ static int _allocate(struct alloc_handle *ah,
 	return r;
 }
 
+/*
+ * FIXME: Add proper allocation function for VDO segment on top
+ *        of VDO pool with virtual size.
+ *
+ * Note: ATM lvm2 can't resize VDO device so it can add only a single segment.
+ */
+static int _lv_add_vdo_segment(struct logical_volume *lv, uint64_t status,
+			       uint32_t extents, const struct segment_type *segtype)
+{
+	struct lv_segment *seg;
+
+	if (!dm_list_empty(&lv->segments) &&
+	    (seg = last_seg(lv)) && (seg->segtype == segtype)) {
+		seg->area_len += extents;
+		seg->len += extents;
+	} else {
+		if (!(seg = alloc_lv_segment(segtype, lv, lv->le_count, extents, 0,
+					     status, 0, NULL, 1,
+					     extents, 0, 0, 0, 0, NULL))) {
+			log_error("Couldn't allocate new %s segment.", segtype->name);
+			return 0;
+		}
+		lv->status |= LV_VDO;
+		dm_list_add(&lv->segments, &seg->list);
+	}
+
+	lv->le_count += extents;
+	lv->size += (uint64_t) extents * lv->vg->extent_size;
+
+	return 1;
+}
+
 int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
 			   uint32_t extents, const struct segment_type *segtype)
 {
 	struct lv_segment *seg;
+
+	if (segtype_is_vdo(segtype))
+		return _lv_add_vdo_segment(lv, 0u, extents, segtype);
 
 	if (!dm_list_empty(&lv->segments) &&
 	    (seg = last_seg(lv)) && (seg->segtype == segtype)) {
@@ -4362,7 +4402,9 @@ static int _rename_cb(struct logical_volume *lv, void *data)
 
 static int _rename_skip_pools_externals_cb(struct logical_volume *lv, void *data)
 {
-	if (lv_is_pool(lv) || lv_is_external_origin(lv))
+	if (lv_is_pool(lv) ||
+	    lv_is_vdo_pool(lv) ||
+	    lv_is_external_origin(lv))
 		return -1; /* and skip subLVs */
 
 	return _rename_cb(lv, data);
@@ -4458,6 +4500,7 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 	 * (thin pool is 'visible', but cache may not)
 	 */
 	if (!lv_is_pool(lv) &&
+	    !lv_is_vdo_pool(lv) &&
 	    !lv_is_visible(lv)) {
 		log_error("Cannot rename internal LV \"%s\".", lv->name);
 		return 0;
@@ -6351,6 +6394,13 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	    !_lv_remove_segs_using_this_lv(cmd, lv, force, level, "pool"))
 		return_0;
 
+	if (lv_is_vdo_pool(lv)) {
+		if (!_lv_remove_segs_using_this_lv(cmd, lv, force, level, "VDO pool"))
+			return_0;
+		/* Last user removes VDO pool itself, lv no longer exists */
+		return 1;
+	}
+
 	if (lv_is_cache_pool(lv) && !lv_is_used_cache_pool(lv)) {
 		if (!deactivate_lv(cmd, first_seg(lv)->metadata_lv) ||
 		    !deactivate_lv(cmd, seg_lv(first_seg(lv),0))) {
@@ -6787,7 +6837,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 					   uint64_t status,
 					   const char *layer_suffix)
 {
-	static const char _suffixes[][8] = { "_tdata", "_cdata", "_corig" };
+	static const char _suffixes[][8] = { "_tdata", "_cdata", "_corig", "_vdata" };
 	int r;
 	char name[NAME_LEN];
 	struct dm_str_list *sl;
@@ -7386,6 +7436,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		    seg_is_mirror(lp) ||
 		    (seg_is_raid(lp) && !seg_is_raid0(lp)) ||
 		    seg_is_thin(lp) ||
+		    seg_is_vdo(lp) ||
 		    lp->snapshot) {
 			/*
 			 * FIXME: For thin pool add some code to allow delayed
@@ -7451,7 +7502,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	if (seg_is_pool(lp))
 		status |= LVM_WRITE; /* Pool is always writable */
-	else if (seg_is_cache(lp) || seg_is_thin_volume(lp)) {
+	else if (seg_is_cache(lp) || seg_is_thin_volume(lp) || seg_is_vdo(lp)) {
 		/* Resolve pool volume */
 		if (!lp->pool_name) {
 			/* Should be already checked */
@@ -7619,6 +7670,16 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		status |= LVM_WRITE;
 		lp->zero = 1;
 		lp->wipe_signatures = 0;
+	} else if (seg_is_vdo_pool(lp)) {
+		if (!lp->virtual_extents)
+			log_verbose("Virtual size matching available free logical size in VDO pool.");
+
+		if (!(create_segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_STRIPED)))
+			return_NULL;
+
+		/* Must zero and format data area */
+		status |= LVM_WRITE;
+		lp->zero = 1;
 	}
 
 	if (!segtype_is_virtual(create_segtype) && !lp->approx_alloc &&
@@ -7648,7 +7709,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		log_debug_metadata("Setting read ahead sectors %u.", lv->read_ahead);
 	}
 
-	if (!segtype_is_pool(create_segtype) && lp->minor >= 0) {
+	if (!segtype_is_pool(create_segtype) &&
+	    !segtype_is_vdo_pool(create_segtype) &&
+	    lp->minor >= 0) {
 		lv->major = lp->major;
 		lv->minor = lp->minor;
 		lv->status |= FIXED_MINOR;
@@ -7670,7 +7733,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		       lp->stripes, lp->stripe_size,
 		       lp->mirrors,
 		       segtype_is_pool(create_segtype) ? lp->pool_metadata_extents : lp->region_size,
-		       segtype_is_thin_volume(create_segtype) ? lp->virtual_extents : lp->extents,
+		       (segtype_is_thin_volume(create_segtype) ||
+			segtype_is_vdo(create_segtype)) ? lp->virtual_extents : lp->extents,
 		       lp->pvh, lp->alloc, lp->approx_alloc)) {
 		unlink_lv_from_vg(lv); /* Keep VG consistent and remove LV without any segment */
 		return_NULL;
@@ -7685,6 +7749,11 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	/* Unlock memory if possible */
 	memlock_unlock(vg->cmd);
+
+	if (segtype_is_vdo(create_segtype) && pool_lv) {
+		if (!set_lv_segment_area_lv(first_seg(lv), 0, pool_lv, 0, LV_VDO_POOL))
+			return_NULL;
+	}
 
 	if (lv_is_cache_pool(lv)) {
 		if (!cache_set_params(first_seg(lv),
@@ -7886,7 +7955,12 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 	}
 
-	if (seg_is_cache(lp) || (origin_lv && lv_is_cache_pool(lv))) {
+	if (seg_is_vdo_pool(lp)) {
+		if (!convert_vdo_pool_lv(lv, &lp->vdo_params, &lp->virtual_extents)) {
+			stack;
+			goto deactivate_and_revert_new_lv;
+		}
+	} else if (seg_is_cache(lp) || (origin_lv && lv_is_cache_pool(lv))) {
 		/* Finish cache conversion magic */
 		if (origin_lv) {
 			/* Convert origin to cached LV */
@@ -8047,6 +8121,13 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 			log_print_unless_silent("Logical volume %s is now cached.",
 						display_lvname(lv));
 			return lv;
+		} else if (seg_is_vdo(lp)) {
+			/* The VDO segment needs VDO pool which is layer above created striped data LV */
+			if (!(lp->segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_VDO_POOL)))
+				return_NULL;
+
+			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name)))
+				return_NULL;
 		} else {
 			log_error(INTERNAL_ERROR "Creation of pool for unsupported segment type %s.",
 				  lp->segtype->name);
