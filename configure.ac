@@ -592,6 +592,53 @@ AC_DEFINE_UNQUOTED([CACHE_REPAIR_CMD], ["$CACHE_REPAIR_CMD"],
 AC_DEFINE_UNQUOTED([CACHE_RESTORE_CMD], ["$CACHE_RESTORE_CMD"],
 		   [The path to 'cache_restore', if available.])
 
+################################################################################
+dnl -- cache inclusion type
+AC_MSG_CHECKING(whether to include vdo)
+AC_ARG_WITH(vdo,
+	    AC_HELP_STRING([--with-vdo=TYPE],
+			   [vdo support: internal/none [internal]]),
+			   VDO=$withval, VDO="none")
+
+AC_MSG_RESULT($VDO)
+
+AC_ARG_WITH(vdo-format,
+	    AC_HELP_STRING([--with-vdo-format=PATH],
+			   [vdoformat tool: [autodetect]]),
+			   VDO_FORMAT_CMD=$withval, VDO_FORMAT_CMD="autodetect")
+case "$VDO" in
+ none) ;;
+ internal) 
+	AC_DEFINE([VDO_INTERNAL], 1, [Define to 1 to include built-in support for vdo.])
+	if test "$VDO_FORMAT_CMD" = "autodetect"; then
+		AC_PATH_TOOL(VDO_FORMAT_CMD, vdoformat, [], [$PATH])
+		if test -z "$VDO_FORMAT_CMD"; then
+			AC_MSG_WARN([vdoformat not found in path $PATH])
+			VDO_FORMAT_CMD=/usr/bin/vdoformat
+			VDO_CONFIGURE_WARN=y
+		fi
+	fi
+	;;
+ *) AC_MSG_ERROR([--with-vdo parameter invalid]) ;;
+esac
+
+AC_DEFINE_UNQUOTED([VDO_FORMAT_CMD], ["$VDO_FORMAT_CMD"],
+		   [The path to 'vdoformat', if available.])
+#
+# Do we need to use the API??
+# Do we want to link lvm2 with a big library for vdoformating ?
+#
+#AC_ARG_WITH(vdo-include,
+#	    AC_HELP_STRING([--with-vdo-include=PATH],
+#			   [vdo support: Path to utils headers: [/usr/include/vdo/utils]]),
+#			   VDO_INCLUDE=$withval, VDO_INCLUDE="/usr/include/vdo/utils")
+#AC_MSG_RESULT($VDO_INCLUDE)
+#
+#AC_ARG_WITH(vdo-lib,
+#            AC_HELP_STRING([--with-vdo-lib=PATH],
+#                           [vdo support: Path to utils lib: [/usr/lib]]),
+#                           VDO_LIB=$withval, VDO_LIB="/usr/lib") 
+#AC_MSG_RESULT($VDO_LIB)
 
 ################################################################################
 dnl -- Disable readline
@@ -1739,6 +1786,10 @@ AC_SUBST(USE_TRACKING)
 AC_SUBST(SILENT_RULES)
 AC_SUBST(USRSBINDIR)
 AC_SUBST(VALGRIND_POOL)
+AC_SUBST(VDO)
+AC_SUBST(VDO_FORMAT_CMD)
+AC_SUBST(VDO_INCLUDE)
+AC_SUBST(VDO_LIB)
 AC_SUBST(WRITE_INSTALL)
 AC_SUBST(DMEVENTD_PIDFILE)
 AC_SUBST(LVMETAD_PIDFILE)
@@ -1839,6 +1890,9 @@ AS_IF([test -n "$CACHE_CONFIGURE_WARN"],
 
 AS_IF([test -n "$CACHE_CHECK_VERSION_WARN"],
       [AC_MSG_WARN([You should install latest cache_check vsn 0.7.0 to use lvm2 cache metadata format 2])])
+
+AS_IF([test -n "$VDO_CONFIGURE_WARN"],
+      [AC_MSG_WARN([unrecognized 'vdoformat' tool is REQUIRED for VDO logical volume creation!])])
 
 
 AS_IF([test "$ODIRECT" != yes],

@@ -641,6 +641,9 @@ LVMPOLLD_PIDFILE
 LVMETAD_PIDFILE
 DMEVENTD_PIDFILE
 WRITE_INSTALL
+VDO_LIB
+VDO_INCLUDE
+VDO
 VALGRIND_POOL
 USRSBINDIR
 SILENT_RULES
@@ -791,6 +794,7 @@ PKGCONFIGINIT_CFLAGS
 PKG_CONFIG_LIBDIR
 PKG_CONFIG_PATH
 PKG_CONFIG
+VDO_FORMAT_CMD
 CACHE_RESTORE_CMD
 CACHE_REPAIR_CMD
 CACHE_DUMP_CMD
@@ -912,6 +916,8 @@ with_cache_dump
 with_cache_repair
 with_cache_restore
 enable_cache_check_needs_check
+with_vdo
+with_vdo_format
 enable_readline
 enable_realtime
 enable_ocf
@@ -1708,6 +1714,8 @@ Optional Packages:
                           cache_repair tool: [autodetect]
   --with-cache-restore=PATH
                           cache_restore tool: [autodetect]
+  --with-vdo=TYPE         vdo support: internal/none [internal]
+  --with-vdo-format=PATH  vdoformat tool: [autodetect]
   --with-ocfdir=DIR       install OCF files in
                           [PREFIX/lib/ocf/resource.d/lvm2]
   --with-default-pid-dir=PID_DIR
@@ -9545,6 +9553,165 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
+################################################################################
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to include vdo" >&5
+$as_echo_n "checking whether to include vdo... " >&6; }
+
+# Check whether --with-vdo was given.
+if test "${with_vdo+set}" = set; then :
+  withval=$with_vdo; VDO=$withval
+else
+  VDO="none"
+fi
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $VDO" >&5
+$as_echo "$VDO" >&6; }
+
+
+# Check whether --with-vdo-format was given.
+if test "${with_vdo_format+set}" = set; then :
+  withval=$with_vdo_format; VDO_FORMAT_CMD=$withval
+else
+  VDO_FORMAT_CMD="autodetect"
+fi
+
+case "$VDO" in
+ none) ;;
+ internal)
+
+$as_echo "#define VDO_INTERNAL 1" >>confdefs.h
+
+	if test "$VDO_FORMAT_CMD" = "autodetect"; then
+		if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}vdoformat", so it can be a program name with args.
+set dummy ${ac_tool_prefix}vdoformat; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_path_VDO_FORMAT_CMD+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  case $VDO_FORMAT_CMD in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_VDO_FORMAT_CMD="$VDO_FORMAT_CMD" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_VDO_FORMAT_CMD="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+VDO_FORMAT_CMD=$ac_cv_path_VDO_FORMAT_CMD
+if test -n "$VDO_FORMAT_CMD"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $VDO_FORMAT_CMD" >&5
+$as_echo "$VDO_FORMAT_CMD" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_path_VDO_FORMAT_CMD"; then
+  ac_pt_VDO_FORMAT_CMD=$VDO_FORMAT_CMD
+  # Extract the first word of "vdoformat", so it can be a program name with args.
+set dummy vdoformat; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_path_ac_pt_VDO_FORMAT_CMD+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  case $ac_pt_VDO_FORMAT_CMD in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_ac_pt_VDO_FORMAT_CMD="$ac_pt_VDO_FORMAT_CMD" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_ac_pt_VDO_FORMAT_CMD="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+ac_pt_VDO_FORMAT_CMD=$ac_cv_path_ac_pt_VDO_FORMAT_CMD
+if test -n "$ac_pt_VDO_FORMAT_CMD"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_pt_VDO_FORMAT_CMD" >&5
+$as_echo "$ac_pt_VDO_FORMAT_CMD" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+  if test "x$ac_pt_VDO_FORMAT_CMD" = x; then
+    VDO_FORMAT_CMD=""
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    VDO_FORMAT_CMD=$ac_pt_VDO_FORMAT_CMD
+  fi
+else
+  VDO_FORMAT_CMD="$ac_cv_path_VDO_FORMAT_CMD"
+fi
+
+		if test -z "$VDO_FORMAT_CMD"; then
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: vdoformat not found in path $PATH" >&5
+$as_echo "$as_me: WARNING: vdoformat not found in path $PATH" >&2;}
+			VDO_FORMAT_CMD=/usr/bin/vdoformat
+			VDO_CONFIGURE_WARN=y
+		fi
+	fi
+	;;
+ *) as_fn_error $? "--with-vdo parameter invalid" "$LINENO" 5 ;;
+esac
+
+
+cat >>confdefs.h <<_ACEOF
+#define VDO_FORMAT_CMD "$VDO_FORMAT_CMD"
+_ACEOF
+
+#
+# Do we need to use the API??
+# Do we want to link lvm2 with a big library for vdoformating ?
+#
+#AC_ARG_WITH(vdo-include,
+#	    AC_HELP_STRING([--with-vdo-include=PATH],
+#			   [vdo support: Path to utils headers: [/usr/include/vdo/utils]]),
+#			   VDO_INCLUDE=$withval, VDO_INCLUDE="/usr/include/vdo/utils")
+#AC_MSG_RESULT($VDO_INCLUDE)
+#
+#AC_ARG_WITH(vdo-lib,
+#            AC_HELP_STRING([--with-vdo-lib=PATH],
+#                           [vdo support: Path to utils lib: [/usr/lib]]),
+#                           VDO_LIB=$withval, VDO_LIB="/usr/lib")
+#AC_MSG_RESULT($VDO_LIB)
 
 ################################################################################
 # Check whether --enable-readline was given.
@@ -15041,6 +15208,11 @@ fi
 if test -n "$CACHE_CHECK_VERSION_WARN"; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: You should install latest cache_check vsn 0.7.0 to use lvm2 cache metadata format 2" >&5
 $as_echo "$as_me: WARNING: You should install latest cache_check vsn 0.7.0 to use lvm2 cache metadata format 2" >&2;}
+fi
+
+if test -n "$VDO_CONFIGURE_WARN"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: unrecognized 'vdoformat' tool is REQUIRED for VDO logical volume creation!" >&5
+$as_echo "$as_me: WARNING: unrecognized 'vdoformat' tool is REQUIRED for VDO logical volume creation!" >&2;}
 fi
 
 

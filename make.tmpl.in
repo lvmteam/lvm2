@@ -311,6 +311,7 @@ LIB_VERSION_APP := $(shell $(AWK) -F '[(). ]' '{printf "%s.%s",$$1,$$4}' $(top_s
 
 INCLUDES += -I$(top_srcdir) -I$(srcdir) -I$(top_builddir)/include
 
+#VDO_INCLUDES=-I@VDO_INCLUDE@
 
 DEPS = $(top_builddir)/make.tmpl $(top_srcdir)/VERSION \
        $(top_builddir)/Makefile
