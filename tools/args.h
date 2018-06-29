@@ -125,6 +125,10 @@ arg(commandprofile_ARG, '\0', "commandprofile", string_VAL, 0, 0,
     "The command profile to use for command configuration.\n"
     "See \\fBlvm.conf\\fP(5) for more information about profiles.\n")
 
+arg(compression_ARG, '\0', "compression", bool_VAL, 0, 0,
+    "Controls whether compression is enabled or disable for VDO volume.\n"
+    "See \\fBlvmvdo\\fP(7) for more information about VDO usage.\n")
+
 arg(config_ARG, '\0', "config", string_VAL, 0, 0,
     "Config settings for the command. These override lvm.conf settings.\n"
     "The String arg uses the same format as lvm.conf,\n"
@@ -177,6 +181,10 @@ arg(dataalignment_ARG, '\0', "dataalignment", sizekb_VAL, 0, 0,
 
 arg(dataalignmentoffset_ARG, '\0', "dataalignmentoffset", sizekb_VAL, 0, 0,
     "Shift the start of the data area by this additional offset.\n")
+
+arg(deduplication_ARG, '\0', "deduplication", bool_VAL, 0, 0,
+    "Controls whether deduplication is enabled or disable for VDO volume.\n"
+    "See \\fBlvmvdo\\fP(7) for more information about VDO usage.\n")
 
 arg(deltag_ARG, '\0', "deltag", tag_VAL, ARG_GROUPABLE, 0,
     "Deletes a tag from a PV, VG or LV. This option can be repeated to delete\n"
@@ -756,6 +764,15 @@ arg(validate_ARG, '\0', "validate", 0, 0, 0,
     "at the front of the \"config cascade\". To validate the whole\n"
     "merged configuration tree, also use --mergedconfig.\n"
     "The validation is done even if lvm.conf config/checks is disabled.\n")
+
+arg(vdo_ARG, '\0', "vdo", 0, 0, 0,
+    "Specifies the command is handling VDO LV.\n"
+    "See --type vdo.\n"
+    "See \\fBlvmvdo\\fP(7) for more information about VDO usage.\n")
+
+arg(vdopool_ARG, '\0', "vdopool", lv_VAL, 0, 0,
+    "The name of a VDO pool LV.\n"
+    "See \\fBlvmvdo\\fP(7) for more information about VDO usage.\n")
 
 arg(version_ARG, '\0', "version", 0, 0, 0,
     "Display version information.\n")
