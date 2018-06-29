@@ -486,6 +486,29 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 			seg_error("sets indirect_origin LV");
 	}
 
+	if (seg_is_vdo_pool(seg)) {
+		if (!lv_is_vdo_pool(lv))
+			seg_error("is not flagged as VDO pool LV");
+		if ((seg->area_count != 1) || (seg_type(seg, 0) != AREA_LV)) {
+			seg_error("is missing a VDO pool data LV");
+		} else if (!lv_is_vdo_pool_data(seg_lv(seg, 0)))
+			seg_error("is not VDO pool data LV");
+	} else { /* !VDO pool */
+		if (seg->vdo_pool_header_size)
+			seg_error("sets vdo_pool_header_size");
+		if (seg->vdo_pool_virtual_extents)
+			seg_error("sets vdo_pool_virtual_extents");
+	}
+
+	if (seg_is_vdo(seg)) {
+		if (!lv_is_vdo(lv))
+			seg_error("is not flagged as VDO LV");
+		if (!seg_lv(seg, 0))
+			seg_error("is missing VDO pool LV");
+		else if (!lv_is_vdo_pool(seg_lv(seg, 0)))
+			seg_error("is not referencing VDO pool LV");
+	}
+
 	/* Some multi-seg vars excluded here */
 	if (!seg_is_cache(seg) &&
 	    !seg_is_thin_volume(seg)) {
