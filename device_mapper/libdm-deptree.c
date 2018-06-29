@@ -2877,8 +2877,14 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 			 * insufficient to remove those - only the node
 			 * encountering the table load failure is removed.
 			 */
-			if (node_created && !_remove_node(child))
-				return_0;
+			if (node_created) {
+				if (!_remove_node(child))
+					return_0;
+				if (!dm_udev_wait(dm_tree_get_cookie(dnode)))
+					stack;
+				dm_tree_set_cookie(dnode, 0);
+				(void) _dm_tree_revert_activated(child);
+			}
 			return_0;
 		}
 
