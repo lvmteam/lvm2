@@ -24,7 +24,9 @@ DEVICE_MAPPER_SOURCE=\
 	device_mapper/regex/matcher.c \
 	device_mapper/regex/parse_rx.c \
 	device_mapper/regex/ttree.c \
-	device_mapper/ioctl/libdm-iface.c
+	device_mapper/ioctl/libdm-iface.c \
+	device_mapper/vdo/vdo_target.c \
+	device_mapper/vdo/status.c
 
 DEVICE_MAPPER_DEPENDS=$(addprefix $(top_builddir)/,$(subst .c,.d,$(DEVICE_MAPPER_SOURCE)))
 DEVICE_MAPPER_OBJECTS=$(addprefix $(top_builddir)/,$(subst .c,.o,$(DEVICE_MAPPER_SOURCE)))

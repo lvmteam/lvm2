@@ -19,6 +19,7 @@
 
 #include "base/data-struct/list.h"
 #include "base/data-struct/hash.h"
+#include "vdo/target.h"
 
 #include <inttypes.h>
 #include <stdarg.h>
@@ -912,6 +913,14 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 				  const char *policy_name,
 				  const struct dm_config_node *policy_settings,
 				  uint32_t data_block_size);
+
+/*
+ * VDO target
+ */
+int dm_tree_node_add_vdo_target(struct dm_tree_node *node,
+				uint64_t size,
+				const char *data_uuid,
+				const struct dm_vdo_target_params *param);
 
 /*
  * FIXME Add individual cache policy pairs  <key> = value, like:
