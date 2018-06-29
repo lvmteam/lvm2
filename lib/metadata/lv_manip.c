@@ -113,6 +113,7 @@ enum {
 	LV_TYPE_POOL,
 	LV_TYPE_DATA,
 	LV_TYPE_SPARE,
+	LV_TYPE_VDO,
 	LV_TYPE_VIRTUAL,
 	LV_TYPE_RAID0,
 	LV_TYPE_RAID0_META,
@@ -164,6 +165,7 @@ static const char *_lv_type_names[] = {
 	[LV_TYPE_POOL] =				"pool",
 	[LV_TYPE_DATA] =				"data",
 	[LV_TYPE_SPARE] =				"spare",
+	[LV_TYPE_VDO] =					"vdo",
 	[LV_TYPE_VIRTUAL] =				"virtual",
 	[LV_TYPE_RAID0] =				SEG_TYPE_NAME_RAID0,
 	[LV_TYPE_RAID0_META] =				SEG_TYPE_NAME_RAID0_META,
@@ -466,6 +468,44 @@ bad:
 	return 0;
 }
 
+static int _lv_layout_and_role_vdo(struct dm_pool *mem,
+				    const struct logical_volume *lv,
+				    struct dm_list *layout,
+				    struct dm_list *role,
+				    int *public_lv)
+{
+	int top_level = 0;
+
+	/* non-top-level LVs */
+	if (lv_is_vdo_pool(lv)) {
+		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_VDO]) ||
+		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_POOL]))
+			goto_bad;
+	} else if (lv_is_vdo_pool_data(lv)) {
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_VDO]) ||
+		    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_POOL]) ||
+		    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_DATA]))
+			goto_bad;
+	} else
+		top_level = 1;
+
+	if (!top_level) {
+		*public_lv = 0;
+		return 1;
+	}
+
+	/* top-level LVs */
+	if (lv_is_vdo(lv)) {
+		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_VDO]) ||
+		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_SPARSE]))
+			goto_bad;
+	}
+
+	return 1;
+bad:
+	return 0;
+}
+
 int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 		       struct dm_list **layout, struct dm_list **role) {
 	int linear, striped;
@@ -508,6 +548,11 @@ int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 	/* Caches and related */
 	if ((lv_is_cache_type(lv) || lv_is_cache_origin(lv)) &&
 	    !_lv_layout_and_role_cache(mem, lv, *layout, *role, &public_lv))
+		goto_bad;
+
+	/* VDO and related */
+	if (lv_is_vdo_type(lv) &&
+	    !_lv_layout_and_role_vdo(mem, lv, *layout, *role, &public_lv))
 		goto_bad;
 
 	/* Pool-specific */
