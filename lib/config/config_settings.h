@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2013-2018 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -607,6 +607,112 @@ cfg_runtime(allocation_thin_pool_chunk_size_CFG, "thin_pool_chunk_size", allocat
 cfg(allocation_physical_extent_size_CFG, "physical_extent_size", allocation_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_EXTENT_SIZE, vsn(2, 2, 112), NULL, 0, NULL,
 	"Default physical extent size in KiB to use for new VGs.\n")
 
+#define VDO_1ST_VSN vsn(3, 0, 0)
+cfg(allocation_vdo_use_compression_CFG, "vdo_use_compression", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_USE_COMPRESSION, VDO_1ST_VSN, NULL, 0, NULL,
+	"Enables or disables compression when creating a VDO volume.\n"
+	"Compression may be disabled if necessary to maximize performance\n"
+	"or to speed processing of data that is unlikely to compress.\n")
+
+cfg(allocation_vdo_use_deduplication_CFG, "vdo_use_deduplication", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_USE_DEDUPLICATION, VDO_1ST_VSN, NULL, 0, NULL,
+	"Enables or disables deduplication when creating a VDO volume.\n"
+	"Deduplication may be disabled in instances where data is not expected\n"
+	"to have good deduplication rates but compression is still desired.")
+
+cfg(allocation_vdo_emulate_512_sectors_CFG, "vdo_emulate_512_sectors", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_EMULATE_512_SECTORS, VDO_1ST_VSN, NULL, 0, NULL,
+	"Specifies that the VDO volume is to emulate a 512 byte block device.\n")
+
+cfg(allocation_vdo_block_map_cache_size_mb_CFG, "vdo_block_map_cache_size_mb", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_BLOCK_MAP_CACHE_SIZE_MB, VDO_1ST_VSN, NULL, 0, NULL,
+	"Specifies the amount of memory in MiB allocated for caching block map\n"
+	"pages for VDO volume. The value must be a multiple of 4096 and must be\n"
+	"at least 128MiB and less than 16TiB. The cache must be at least 16MiB\n"
+	"per logical thread. Note that there is a memory overhead of 15%.\n")
+
+cfg(allocation_vdo_block_map_period_CFG, "vdo_block_map_period", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_BLOCK_MAP_PERIOD, VDO_1ST_VSN, NULL, 0, NULL,
+	"Tunes the quantity of block map updates that can accumulate\n"
+	"before cache pages are flushed to disk. The value must be\n"
+	"at least 1 and less then 16380.\n"
+	"A lower value means shorter recovery time but lower performance.\n")
+
+cfg(allocation_vdo_check_point_frequency_CFG, "vdo_check_point_frequency", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_CHECK_POINT_FREQUENCY, VDO_1ST_VSN, NULL, 0, NULL,
+	"The default check point frequency for VDO volume.\n")
+
+cfg(allocation_vdo_use_sparse_index_CFG, "vdo_use_sparse_index", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_USE_SPARSE_INDEX, VDO_1ST_VSN, NULL, 0, NULL,
+	"Enables sparse indexing for VDO volume.\n")
+
+cfg(allocation_vdo_index_memory_size_mb_CFG, "vdo_index_memory_size_mb", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_INDEX_MEMORY_SIZE_MB, VDO_1ST_VSN, NULL, 0, NULL,
+	"Specifies the amount of index memory in MiB for VDO volume.\n"
+	"The value must be at least 256MiB and at most 1TiB.\n")
+
+cfg(allocation_vdo_use_read_cache_CFG, "vdo_use_read_cache", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_USE_READ_CACHE, VDO_1ST_VSN, NULL, 0, NULL,
+	"Enables or disables the read cache within the VDO volume.\n"
+	"The cache should be enabled if write workloads are expected\n"
+	"to have high levels of deduplication, or for read intensive\n"
+	"workloads of highly compressible data.\n")
+
+cfg(allocation_vdo_read_cache_size_mb_CFG, "vdo_read_cache_size_mb", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_READ_CACHE_SIZE_MB, VDO_1ST_VSN, NULL, 0, NULL,
+	"Specifies the extra VDO volume read cache size in MiB.\n"
+	"This space is in addition to a system-defined minimum.\n"
+	"The value must be less then 16TiB and 1.12 MiB of memory\n"
+	"will be used per MiB of read cache specified, per bio thread.\n")
+
+cfg(allocation_vdo_slab_size_mb_CFG, "vdo_slab_size_mb", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_SLAB_SIZE_MB, VDO_1ST_VSN, NULL, 0, NULL,
+	"Specifies the size in MiB of the increment by which a VDO is grown.\n"
+	"Using a smaller size constrains the total maximum physical size\n"
+	"that can be accommodated. Must be a power of two between 128MiB and 32GiB.\n")
+
+cfg(allocation_vdo_ack_threads_CFG, "vdo_ack_threads", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_ACK_THREADS, VDO_1ST_VSN, NULL, 0, NULL,
+	"Specifies the number of threads to use for acknowledging\n"
+	"completion of requested VDO I/O operations.\n"
+	"The value must be at in range [0..100].\n")
+
+cfg(allocation_vdo_bio_threads_CFG, "vdo_bio_threads", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_BIO_THREADS, VDO_1ST_VSN, NULL, 0, NULL,
+	"Specifies the number of threads to use for submitting I/O\n"
+	"operations to the storage device of VDO volume.\n"
+	"The value must be in range [1..100]\n"
+	"Each additional thread after the first will use an additional 18MiB of RAM,\n"
+	"plus 1.12 MiB of RAM per megabyte of configured read cache size.\n")
+
+cfg(allocation_vdo_bio_rotation_CFG, "vdo_bio_rotation", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_BIO_ROTATION, VDO_1ST_VSN, NULL, 0, NULL,
+	"Specifies the number of I/O operations to enqueue for each bio-submission\n"
+	"thread before directing work to the next. The value must be in range [1..1024].\n")
+
+cfg(allocation_vdo_cpu_threads_CFG, "vdo_cpu_threads", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_CPU_THREADS, VDO_1ST_VSN, NULL, 0, NULL,
+	"Specifies the number of threads to use for CPU-intensive work such as\n"
+	"hashing or compression for VDO volume. The value must be in range [1..100]\n")
+
+cfg(allocation_vdo_hash_zone_threads_CFG, "vdo_hash_zone_threads", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_HASH_ZONE_THREADS, VDO_1ST_VSN, NULL, 0, NULL,
+	"Specifies the number of threads across which to subdivide parts of the VDO\n"
+	"processing based on the hash value computed from the block data.\n"
+	"The value must be at in range [0..100].\n"
+	"vdo_hash_zone_threads, vdo_logical_threads and vdo_physical_threads must be\n"
+	"either all zero or all non-zero.")
+
+cfg(allocation_vdo_logical_threads_CFG, "vdo_logical_threads", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_LOGICAL_THREADS, VDO_1ST_VSN, NULL, 0, NULL,
+	"Specifies the number of threads across which to subdivide parts of the VDO\n"
+	"processing based on the hash value computed from the block data.\n"
+	"A logical thread count of 9 or more will require explicitly specifying\n"
+	"a sufficiently large block map cache size, as well.\n"
+	"The value must be in range [0..100].\n"
+	"vdo_hash_zone_threads, vdo_logical_threads and vdo_physical_threads must be\n"
+	"either all zero or all non-zero.\n")
+
+cfg(allocation_vdo_physical_threads_CFG, "vdo_physical_threads", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_PHYSICAL_THREADS, VDO_1ST_VSN, NULL, 0, NULL,
+	"Specifies the number of threads across which to subdivide parts of the VDO\n"
+	"processing based on physical block addresses.\n"
+	"Each additional thread after the first will use an additional 10MiB of RAM.\n"
+	"The value must be in range [0..16].\n"
+	"vdo_hash_zone_threads, vdo_logical_threads and vdo_physical_threads must be\n"
+	"either all zero or all non-zero.\n")
+
+cfg(allocation_vdo_write_policy_CFG, "vdo_write_policy", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_VDO_WRITE_POLICY, VDO_1ST_VSN, NULL, 0, NULL,
+	"Specifies the write policy:\n"
+	"auto  - VDO will check the storage device and determine whether it supports flushes.\n"
+	"        If it does, VDO will run in async mode, otherwise it will run in sync mode.\n"
+	"sync  - Writes are acknowledged only after data is stably written.\n"
+	"        This policy is not supported if the underlying storage is not also synchronous.\n"
+	"async - Writes are acknowledged after data has been cached for writing to stable storage.\n"
+	"        Data which has not been flushed is not guaranteed to persist in this mode.\n")
+
 cfg(log_report_command_log_CFG, "report_command_log", log_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED | CFG_DISALLOW_INTERACTIVE, CFG_TYPE_BOOL, DEFAULT_COMMAND_LOG_REPORT, vsn(2, 2, 158), NULL, 0, NULL,
 	"Enable or disable LVM log reporting.\n"
 	"If enabled, LVM will collect a log of operations, messages,\n"
@@ -1018,6 +1124,13 @@ cfg_array(global_cache_check_options_CFG, "cache_check_options", global_CFG_SECT
 
 cfg_array(global_cache_repair_options_CFG, "cache_repair_options", global_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_CACHE_REPAIR_OPTIONS_CONFIG, vsn(2, 2, 108), NULL, 0, NULL,
 	"List of options passed to the cache_repair command.\n")
+
+cfg(global_vdo_format_executable_CFG, "vdo_format_executable", global_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, VDO_FORMAT_CMD, VDO_1ST_VSN, "@VDO_FORMAT_CMD@", 0, NULL,
+	"The full path to the vdoformat command.\n"
+	"LVM uses this command to initial data volume for VDO type logical volume\n")
+
+cfg_array(global_vdo_format_options_CFG, "vdo_format_options", global_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_VDO_FORMAT_OPTIONS_CONFIG, VDO_1ST_VSN, NULL, 0, NULL,
+	"List of options passed added to standard vdoformat command.\n")
 
 cfg(global_fsadm_executable_CFG, "fsadm_executable", global_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_FSADM_PATH, vsn(2, 2, 170), "@FSADM_PATH@", 0, NULL,
 	"The full path to the fsadm command.\n"

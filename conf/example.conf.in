@@ -488,6 +488,149 @@ allocation {
 	# Default physical extent size in KiB to use for new VGs.
 	# This configuration option has an automatic default value.
 	# physical_extent_size = 4096
+
+	# Configuration option allocation/vdo_use_compression.
+	# Enables or disables compression when creating a VDO volume.
+	# Compression may be disabled if necessary to maximize performance
+	# or to speed processing of data that is unlikely to compress.
+	# This configuration option has an automatic default value.
+	# vdo_use_compression = 1
+
+	# Configuration option allocation/vdo_use_deduplication.
+	# Enables or disables deduplication when creating a VDO volume.
+	# Deduplication may be disabled in instances where data is not expected
+	# to have good deduplication rates but compression is still desired.
+	# This configuration option has an automatic default value.
+	# vdo_use_deduplication = 1
+
+	# Configuration option allocation/vdo_emulate_512_sectors.
+	# Specifies that the VDO volume is to emulate a 512 byte block device.
+	# This configuration option has an automatic default value.
+	# vdo_emulate_512_sectors = 0
+
+	# Configuration option allocation/vdo_block_map_cache_size_mb.
+	# Specifies the amount of memory in MiB allocated for caching block map
+	# pages for VDO volume. The value must be a multiple of 4096 and must be
+	# at least 128MiB and less than 16TiB. The cache must be at least 16MiB
+	# per logical thread. Note that there is a memory overhead of 15%.
+	# This configuration option has an automatic default value.
+	# vdo_block_map_cache_size_mb = 128
+
+	# Configuration option allocation/vdo_block_map_period.
+	# Tunes the quantity of block map updates that can accumulate
+	# before cache pages are flushed to disk. The value must be
+	# at least 1 and less then 16380.
+	# A lower value means shorter recovery time but lower performance.
+	# This configuration option has an automatic default value.
+	# vdo_block_map_period = 16380
+
+	# Configuration option allocation/vdo_check_point_frequency.
+	# The default check point frequency for VDO volume.
+	# This configuration option has an automatic default value.
+	# vdo_check_point_frequency = 0
+
+	# Configuration option allocation/vdo_use_sparse_index.
+	# Enables sparse indexing for VDO volume.
+	# This configuration option has an automatic default value.
+	# vdo_use_sparse_index = 0
+
+	# Configuration option allocation/vdo_index_memory_size_mb.
+	# Specifies the amount of index memory in MiB for VDO volume.
+	# The value must be at least 256MiB and at most 1TiB.
+	# This configuration option has an automatic default value.
+	# vdo_index_memory_size_mb = 256
+
+	# Configuration option allocation/vdo_use_read_cache.
+	# Enables or disables the read cache within the VDO volume.
+	# The cache should be enabled if write workloads are expected
+	# to have high levels of deduplication, or for read intensive
+	# workloads of highly compressible data.
+	# This configuration option has an automatic default value.
+	# vdo_use_read_cache = 0
+
+	# Configuration option allocation/vdo_read_cache_size_mb.
+	# Specifies the extra VDO volume read cache size in MiB.
+	# This space is in addition to a system-defined minimum.
+	# The value must be less then 16TiB and 1.12 MiB of memory
+	# will be used per MiB of read cache specified, per bio thread.
+	# This configuration option has an automatic default value.
+	# vdo_read_cache_size_mb = 0
+
+	# Configuration option allocation/vdo_slab_size_mb.
+	# Specifies the size in MiB of the increment by which a VDO is grown.
+	# Using a smaller size constrains the total maximum physical size
+	# that can be accommodated. Must be a power of two between 128MiB and 32GiB.
+	# This configuration option has an automatic default value.
+	# vdo_slab_size_mb = 2048
+
+	# Configuration option allocation/vdo_ack_threads.
+	# Specifies the number of threads to use for acknowledging
+	# completion of requested VDO I/O operations.
+	# The value must be at in range [0..100].
+	# This configuration option has an automatic default value.
+	# vdo_ack_threads = 1
+
+	# Configuration option allocation/vdo_bio_threads.
+	# Specifies the number of threads to use for submitting I/O
+	# operations to the storage device of VDO volume.
+	# The value must be in range [1..100]
+	# Each additional thread after the first will use an additional 18MiB of RAM,
+	# plus 1.12 MiB of RAM per megabyte of configured read cache size.
+	# This configuration option has an automatic default value.
+	# vdo_bio_threads = 1
+
+	# Configuration option allocation/vdo_bio_rotation.
+	# Specifies the number of I/O operations to enqueue for each bio-submission
+	# thread before directing work to the next. The value must be in range [1..1024].
+	# This configuration option has an automatic default value.
+	# vdo_bio_rotation = 64
+
+	# Configuration option allocation/vdo_cpu_threads.
+	# Specifies the number of threads to use for CPU-intensive work such as
+	# hashing or compression for VDO volume. The value must be in range [1..100]
+	# This configuration option has an automatic default value.
+	# vdo_cpu_threads = 2
+
+	# Configuration option allocation/vdo_hash_zone_threads.
+	# Specifies the number of threads across which to subdivide parts of the VDO
+	# processing based on the hash value computed from the block data.
+	# The value must be at in range [0..100].
+	# vdo_hash_zone_threads, vdo_logical_threads and vdo_physical_threads must be
+	# either all zero or all non-zero.
+	# This configuration option has an automatic default value.
+	# vdo_hash_zone_threads = 1
+
+	# Configuration option allocation/vdo_logical_threads.
+	# Specifies the number of threads across which to subdivide parts of the VDO
+	# processing based on the hash value computed from the block data.
+	# A logical thread count of 9 or more will require explicitly specifying
+	# a sufficiently large block map cache size, as well.
+	# The value must be in range [0..100].
+	# vdo_hash_zone_threads, vdo_logical_threads and vdo_physical_threads must be
+	# either all zero or all non-zero.
+	# This configuration option has an automatic default value.
+	# vdo_logical_threads = 1
+
+	# Configuration option allocation/vdo_physical_threads.
+	# Specifies the number of threads across which to subdivide parts of the VDO
+	# processing based on physical block addresses.
+	# Each additional thread after the first will use an additional 10MiB of RAM.
+	# The value must be in range [0..16].
+	# vdo_hash_zone_threads, vdo_logical_threads and vdo_physical_threads must be
+	# either all zero or all non-zero.
+	# This configuration option has an automatic default value.
+	# vdo_physical_threads = 1
+
+	# Configuration option allocation/vdo_write_policy.
+	# Specifies the write policy:
+	# auto  - VDO will check the storage device and determine whether it supports flushes.
+	#         If it does, VDO will run in async mode, otherwise it will run in sync mode.
+	# sync  - Writes are acknowledged only after data is stably written.
+	#         This policy is not supported if the underlying storage is not also synchronous.
+	# async - Writes are acknowledged after data has been cached for writing to stable storage.
+	#         Data which has not been flushed is not guaranteed to persist in this mode.
+	# This configuration option has an automatic default value.
+	# vdo_write_policy = "auto"
 }
 
 # Configuration section log.
@@ -1005,6 +1148,17 @@ global {
 	# List of options passed to the cache_repair command.
 	# This configuration option has an automatic default value.
 	# cache_repair_options = [ "" ]
+
+	# Configuration option global/vdo_format_executable.
+	# The full path to the vdoformat command.
+	# LVM uses this command to initial data volume for VDO type logical volume
+	# This configuration option has an automatic default value.
+	# vdo_format_executable = "@VDO_FORMAT_CMD@"
+
+	# Configuration option global/vdo_format_options.
+	# List of options passed added to standard vdoformat command.
+	# This configuration option has an automatic default value.
+	# vdo_format_options = [ "" ]
 
 	# Configuration option global/fsadm_executable.
 	# The full path to the fsadm command.

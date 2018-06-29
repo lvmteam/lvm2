@@ -16,6 +16,8 @@
 #ifndef _LVM_DEFAULTS_H
 #define _LVM_DEFAULTS_H
 
+#include "device_mapper/vdo/vdo_limits.h"
+
 #define DEFAULT_PE_ALIGN 2048
 #define DEFAULT_PE_ALIGN_OLD 128
 
@@ -133,6 +135,37 @@
 #define DEFAULT_CACHE_POLICY "mq"
 #define DEFAULT_CACHE_METADATA_FORMAT CACHE_METADATA_FORMAT_UNSELECTED /* Autodetect */
 #define DEFAULT_CACHE_MODE "writethrough"
+
+
+/* VDO defaults */
+#define DEFAULT_VDO_USE_COMPRESSION	(true)
+#define DEFAULT_VDO_USE_DEDUPLICATION	(true)
+#define DEFAULT_VDO_EMULATE_512_SECTORS	(false)
+#define DEFAULT_VDO_BLOCK_MAP_CACHE_SIZE_MB	(DM_VDO_BLOCK_MAP_CACHE_SIZE_MINIMUM_MB)
+#define DEFAULT_VDO_BLOCK_MAP_PERIOD	(DM_VDO_BLOCK_MAP_PERIOD_MAXIMUM)
+#define DEFAULT_VDO_USE_SPARSE_INDEX	(false)
+#define DEFAULT_VDO_CHECK_POINT_FREQUENCY	(0)
+#define DEFAULT_VDO_INDEX_MEMORY_SIZE_MB	(DM_VDO_INDEX_MEMORY_SIZE_MINIMUM_MB)
+#define DEFAULT_VDO_USE_READ_CACHE	(false)
+#define DEFAULT_VDO_READ_CACHE_SIZE_MB	(0)
+#define DEFAULT_VDO_SLAB_SIZE_MB	(2 * 1024)  // 2GiB ... 19 slabbits
+#define DEFAULT_VDO_ACK_THREADS		(1)
+#define DEFAULT_VDO_BIO_THREADS		(1)
+#define DEFAULT_VDO_BIO_ROTATION	(64)
+#define DEFAULT_VDO_CPU_THREADS		(2)
+#define DEFAULT_VDO_HASH_ZONE_THREADS	(1)
+#define DEFAULT_VDO_LOGICAL_THREADS	(1)
+#define DEFAULT_VDO_PHYSICAL_THREADS	(1)
+#define DEFAULT_VDO_WRITE_POLICY	"auto"
+
+#define DEFAULT_VDO_FORMAT_OPTIONS_CONFIG "#S" ""
+/*
+ * VDO pool will reverve some sectors in the front and the back of pool device to avoid
+ * seeing same device twice in the system.
+ */
+#define DEFAULT_VDO_POOL_HEADER_SIZE  (1024)   // 512KiB
+
+
 
 #define DEFAULT_FSADM_PATH FSADM_PATH
 
