@@ -1313,6 +1313,46 @@ int lv_thin_device_id(const struct logical_volume *lv, uint32_t *device_id)
 	return r;
 }
 
+/*
+ * lv_vdo_pool_status  obtains  status information about VDO pool
+ *
+ * If the 'params' string has been already retrieved, use it.
+ * If the mempool already exists, use it.
+ *
+ */
+int lv_vdo_pool_status(const struct logical_volume *lv, int flush,
+		       struct lv_status_vdo **vdo_status)
+{
+	int r = 0;
+	struct dev_manager *dm;
+	struct lv_status_vdo *status;
+	char *params;
+
+	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
+		return 0;
+
+	log_debug_activation("Checking VDO pool status for LV %s.",
+			     display_lvname(lv));
+
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, !lv_is_pvmove(lv))))
+		return_0;
+
+	if (!dev_manager_vdo_pool_status(dm, lv, flush, &params, &status))
+		goto_out;
+
+	if (!parse_vdo_pool_status(status->mem, lv, params, status))
+		goto_out;
+
+	/* User is responsible to dm_pool_destroy memory pool! */
+	*vdo_status = status;
+	r = 1;
+out:
+	if (!r)
+		dev_manager_destroy(dm);
+
+	return r;
+}
+
 static int _lv_active(struct cmd_context *cmd, const struct logical_volume *lv)
 {
 	struct lvinfo info;

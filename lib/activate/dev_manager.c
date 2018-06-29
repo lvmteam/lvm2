@@ -1640,6 +1640,65 @@ out:
 	return r;
 }
 
+int dev_manager_vdo_pool_status(struct dev_manager *dm,
+				const struct logical_volume *lv,
+				int flush,
+				char **vdo_params,
+				struct lv_status_vdo **vdo_status)
+{
+	struct lv_status_vdo *status;
+	const char *dlid;
+	struct dm_info info;
+	uint64_t start, length;
+	struct dm_task *dmt = NULL;
+	char *type = NULL;
+	char *params = NULL;
+	int r = 0;
+
+	*vdo_params = NULL;
+	*vdo_status = NULL;
+
+	if (!(status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_vdo)))) {
+		log_error("Cannot allocate VDO status structure.");
+		return 0;
+	}
+
+	if (!(dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
+		return_0;
+
+	if (!(dmt = _setup_task_run(DM_DEVICE_STATUS, &info, NULL, dlid, 0, 0, 0, 0, flush, 0)))
+		return_0;
+
+	if (!info.exists)
+		goto_out;
+
+	if (dm_get_next_target(dmt, NULL, &start, &length, &type, &params)) {
+		log_error("More then one table line found for %s.",
+			  display_lvname(lv));
+		goto out;
+	}
+
+	if (!type || strcmp(type, TARGET_NAME_VDO)) {
+		log_error("Expected %s segment type but got %s instead.",
+			  TARGET_NAME_VDO, type ? type : "NULL");
+		goto out;
+	}
+
+	if (!(*vdo_params = dm_pool_strdup(dm->mem, params))) {
+		log_error("Cannot duplicate VDO status params.");
+		goto out;
+	}
+
+	status->mem = dm->mem;
+	*vdo_status =  status;
+
+	r = 1;
+out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
 
 /*************************/
 /*  NEW CODE STARTS HERE */
