@@ -7865,7 +7865,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 		lv->status &= ~LV_TEMPORARY;
 	} else if (!lv_active_change(cmd, lv, lp->activate)) {
-		log_error("Failed to activate new LV.");
+		log_error("Failed to activate new LV %s.", display_lvname(lv));
 		goto deactivate_and_revert_new_lv;
 	}
 
