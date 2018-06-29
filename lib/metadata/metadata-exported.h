@@ -1270,6 +1270,9 @@ struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 					   const struct dm_vdo_target_params *vtp,
 					   uint32_t *virtual_extents);
 int get_vdo_write_policy(enum dm_vdo_write_policy *vwp, const char *policy);
+int fill_vdo_target_params(struct cmd_context *cmd,
+			   struct dm_vdo_target_params *vtp,
+			   struct profile *profile);
 /* --  metadata/vdo_manip.c */
 
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,

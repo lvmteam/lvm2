@@ -404,3 +404,56 @@ int get_vdo_write_policy(enum dm_vdo_write_policy *vwp, const char *policy)
 
 	return 1;
 }
+
+int fill_vdo_target_params(struct cmd_context *cmd,
+			   struct dm_vdo_target_params *vtp,
+			   struct profile *profile)
+{
+	const char *policy;
+
+	// TODO: Postpone filling data to the moment when VG is known with profile.
+	// TODO: Maybe add more lvm cmdline switches to set profile settings.
+
+	vtp->use_compression =
+		find_config_tree_int(cmd, allocation_vdo_use_compression_CFG, profile);
+	vtp->use_deduplication =
+		find_config_tree_int(cmd, allocation_vdo_use_deduplication_CFG, profile);
+	vtp->emulate_512_sectors =
+		find_config_tree_int(cmd, allocation_vdo_emulate_512_sectors_CFG, profile);
+	vtp->block_map_cache_size_mb =
+		find_config_tree_int64(cmd, allocation_vdo_block_map_cache_size_mb_CFG, profile);
+	vtp->block_map_period =
+		find_config_tree_int(cmd, allocation_vdo_block_map_period_CFG, profile);
+	vtp->check_point_frequency =
+		find_config_tree_int(cmd, allocation_vdo_check_point_frequency_CFG, profile);
+	vtp->use_sparse_index =
+		find_config_tree_int(cmd, allocation_vdo_use_sparse_index_CFG, profile);
+	vtp->index_memory_size_mb =
+		find_config_tree_int64(cmd, allocation_vdo_index_memory_size_mb_CFG, profile);
+	vtp->use_read_cache =
+		find_config_tree_int(cmd, allocation_vdo_use_read_cache_CFG, profile);
+	vtp->read_cache_size_mb =
+		find_config_tree_int64(cmd, allocation_vdo_read_cache_size_mb_CFG, profile);
+	vtp->slab_size_mb =
+		find_config_tree_int(cmd, allocation_vdo_slab_size_mb_CFG, profile);
+	vtp->ack_threads =
+		find_config_tree_int(cmd, allocation_vdo_ack_threads_CFG, profile);
+	vtp->bio_threads =
+		find_config_tree_int(cmd, allocation_vdo_bio_threads_CFG, profile);
+	vtp->bio_rotation =
+		find_config_tree_int(cmd, allocation_vdo_bio_rotation_CFG, profile);
+	vtp->cpu_threads =
+		find_config_tree_int(cmd, allocation_vdo_cpu_threads_CFG, profile);
+	vtp->hash_zone_threads =
+		find_config_tree_int(cmd, allocation_vdo_hash_zone_threads_CFG, profile);
+	vtp->logical_threads =
+		find_config_tree_int(cmd, allocation_vdo_logical_threads_CFG, profile);
+	vtp->physical_threads =
+		find_config_tree_int(cmd, allocation_vdo_physical_threads_CFG, profile);
+
+	policy = find_config_tree_str(cmd, allocation_vdo_write_policy_CFG, profile);
+	if (!get_vdo_write_policy(&vtp->write_policy, policy))
+		return_0;
+
+	return 1;
+}

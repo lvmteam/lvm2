@@ -731,12 +731,38 @@ OO_LVCREATE_POOL: --poolmetadatasize SizeMB, --poolmetadataspare Bool, --chunksi
 
 OO_LVCREATE_THIN: --discards Discards, --errorwhenfull Bool
 
+OO_LVCREATE_VDO: --compression Bool, --deduplication Bool
 ---
 
 lvcreate --type error --size SizeMB VG
 OO: OO_LVCREATE
 ID: lvcreate_error_vol
 DESC: Create an LV that returns errors when used.
+FLAGS: SECONDARY_SYNTAX
+
+---
+
+lvcreate --type vdo --size SizeMB VG
+OO: --vdo, OO_LVCREATE, OO_LVCREATE_VDO, --virtualsize SizeMB, --stripes Number, --stripesize SizeKB,
+OP: PV ...
+IO: --mirrors 0
+ID: lvcreate_vdo_vol
+DESC: Create an LV that returns VDO when used.
+
+lvcreate --vdo --size SizeMB VG
+OO: OO_LVCREATE, OO_LVCREATE_VDO, --virtualsize SizeMB, --stripes Number, --stripesize SizeKB
+OP: PV ...
+IO: --mirrors 0
+ID: lvcreate_vdo_vol
+DESC: Create an VDO LV with VDO pool.
+FLAGS: SECONDARY_SYNTAX
+
+lvcreate --vdopool LV --virtualsize SizeMB VG
+OO: --vdo, --type vdo
+OP: PV ...
+IO: --mirrors 0
+ID: lvcreate_vdo_vol
+DESC: Create an VDO LV using existing VDO pool.
 FLAGS: SECONDARY_SYNTAX
 
 ---
