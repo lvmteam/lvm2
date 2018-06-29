@@ -271,6 +271,7 @@ void fs_unlock(void);
 #define MODULE_NAME_MIRROR TARGET_NAME_MIRROR
 #define MODULE_NAME_SNAPSHOT TARGET_NAME_SNAPSHOT
 #define MODULE_NAME_RAID TARGET_NAME_RAID
+#define MODULE_NAME_VDO "kvdo"          /* does NOT use dm- prefix */
 #define MODULE_NAME_ZERO TARGET_NAME_ZERO
 
 #endif

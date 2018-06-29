@@ -585,6 +585,12 @@ int module_present(struct cmd_context *cmd, const char *target_name)
 	}
 
 #ifdef MODPROBE_CMD
+	if (strcmp(target_name, MODULE_NAME_VDO) == 0) {
+		argv[1] = target_name;		/* ATM kvdo is without dm- prefix */
+		if ((ret = exec_cmd(cmd, argv, NULL, 0)))
+			return ret;
+	}
+
 	if (dm_snprintf(module, sizeof(module), "dm-%s", target_name) < 0) {
 		log_error("module_present module name too long: %s",
 			  target_name);
