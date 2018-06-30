@@ -1,5 +1,6 @@
 Version 3.0.0
 =============
+  Extend list of non-memlocked areas with newly linked libs.
   Enhance vgcfgrestore to check for active LVs in restored VG.
   Configure supports --disable-silent-rules for verbose builds.
   Fix unmonitoring of merging snapshots.
