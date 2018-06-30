@@ -1,5 +1,6 @@
 Version 2.02.180 - 
 =================================
+  Extend list of non-memlocked areas with newly linked libs.
   Enhance vgcfgrestore to check for active LVs in restored VG.
   lvconvert: provide possible layouts between linear and striped/raid
   Fix unmonitoring of merging snapshots.

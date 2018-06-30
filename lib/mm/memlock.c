@@ -105,23 +105,30 @@ static const char * const _blacklist_maps[] = {
 	"/LC_MESSAGES/",
 	"gconv/gconv-modules.cache",
 	"/ld-2.",		/* not using dlopen,dlsym during mlock */
+	"/libaio.so.",		/* not using aio during mlock */
 	"/libattr.so.",		/* not using during mlock (udev) */
-	"/libblkid.so.",	/* not using lzma during mlock (selinux) */
+	"/libblkid.so.",	/* not using blkid during mlock (udev) */
 	"/libbz2.so.",		/* not using during mlock (udev) */
-	"/libcap.so.",		/* not using during mlock (udev) */
+	"/libcap.so.",		/* not using during mlock (systemd) */
+	"/libdl-",		/* not using dlopen,dlsym during mlock */
 	"/libdw-",		/* not using during mlock (udev) */
 	"/libelf-",		/* not using during mlock (udev) */
-	"/liblzma.so.",	/* not using lzma during mlock (selinux) */
+	"/libgcrypt.so.",	/* not using during mlock (systemd) */
+	"/libgpg-error.so.",	/* not using gpg-error during mlock (systemd) */
+	"/liblz4.so.",		/* not using lz4 during mlock (systemd) */
+	"/liblzma.so.",		/* not using lzma during mlock (systemd) */
+	"/libmount.so.",	/* not using mount during mlock (udev) */
 	"/libncurses.so.",	/* not using ncurses during mlock */
-	"/libpcre.so.",	/* not using pcre during mlock (selinux) */
+	"/libpcre.so.",		/* not using pcre during mlock (selinux) */
+	"/libpcre2-",		/* not using pcre during mlock (selinux) */
 	"/libreadline.so.",	/* not using readline during mlock */
-	"/libresolv-",	/* not using during mlock (udev) */
+	"/libresolv-",		/* not using during mlock (udev) */
 	"/libselinux.so.",	/* not using selinux during mlock */
 	"/libsepol.so.",	/* not using sepol during mlock */
+	"/libsystemd.so.",	/* not using systemd during mlock */
 	"/libtinfo.so.",	/* not using tinfo during mlock */
 	"/libudev.so.",		/* not using udev during mlock */
 	"/libuuid.so.",		/* not using uuid during mlock (blkid) */
-	"/libdl-",		/* not using dlopen,dlsym during mlock */
 	"/libz.so.",		/* not using during mlock (udev) */
 	"/etc/selinux",		/* not using selinux during mlock */
 	/* "/libdevmapper-event.so" */
