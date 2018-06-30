@@ -267,4 +267,7 @@ int lvconvert_change_region_size_cmd(struct cmd_context * cmd, int argc, char **
 
 int lvconvert_merge_cmd(struct cmd_context *cmd, int argc, char **argv);
 
+int lvconvert_to_vdopool_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvconvert_to_vdopool_param_cmd(struct cmd_context *cmd, int argc, char **argv);
+
 #endif

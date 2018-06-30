@@ -4740,6 +4740,118 @@ int lvconvert_merge_cmd(struct cmd_context *cmd, int argc, char **argv)
 	return ret;
 }
 
+static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
+					struct logical_volume *lv,
+					struct processing_handle *handle)
+{
+	const char *vg_name = NULL;
+	struct volume_group *vg = lv->vg;
+	struct logical_volume *vdo_lv;
+	struct dm_vdo_target_params vdo_params; /* vdo */
+	struct lvcreate_params lvc = {
+		.activate = CHANGE_AEY,
+		.alloc = ALLOC_INHERIT,
+		.major = -1,
+		.minor = -1,
+		.suppress_zero_warn = 1, /* Suppress warning for this VDO */
+		.permission = LVM_READ | LVM_WRITE,
+		.pool_name = lv->name,
+		.pvh = &vg->pvs,
+		.read_ahead = DM_READ_AHEAD_AUTO,
+		.stripes = 1,
+		.lv_name = arg_str_value(cmd, name_ARG, NULL),
+	};
+
+	if (lvc.lv_name &&
+	    !validate_restricted_lvname_param(cmd, &vg_name, &lvc.lv_name))
+		return_0;
+
+	lvc.virtual_extents = extents_from_size(cmd,
+						arg_uint_value(cmd, virtualsize_ARG, 0),
+						vg->extent_size);
+
+	if (!(lvc.segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_VDO)))
+		return_0;
+
+	if (vg_is_shared(vg)) {
+		/* FIXME: need to swap locks betwen LVs? */
+		log_error("Unable to convert VDO pool in VG with lock_type %s", vg->lock_type);
+		goto out;
+	}
+
+	if (!fill_vdo_target_params(cmd, &vdo_params, NULL))
+		goto_out;
+
+	if (arg_is_set(cmd, compression_ARG))
+		vdo_params.use_compression =
+			arg_int_value(cmd, compression_ARG, 0);
+
+	if (arg_is_set(cmd, deduplication_ARG))
+		vdo_params.use_deduplication =
+			arg_int_value(cmd, deduplication_ARG, 0);
+
+	if (!activate_lv(cmd, lv)) {
+		log_error("Cannot activate %s.", display_lvname(lv));
+		goto out;
+	}
+
+	log_warn("WARNING: Converting logical volume %s to VDO pool volume.",
+		 lv->name);
+	log_warn("THIS WILL DESTROY CONTENT OF LOGICAL VOLUME (filesystem etc.)");
+
+	if (!arg_count(cmd, yes_ARG) &&
+	    yes_no_prompt("Do you really want to convert %s? [y/n]: ",
+			  lv->name) == 'n') {
+		log_error("Conversion aborted.");
+		goto out;
+	}
+
+	if (!wipe_lv(lv, (struct wipe_params) { .do_zero = 1, .do_wipe_signatures = 1 })) {
+		log_error("Aborting. Failed to wipe VDO data store.");
+		goto out;
+	}
+
+	if (!archive(vg))
+		goto_out;
+
+	if (!convert_vdo_pool_lv(lv, &vdo_params, &lvc.virtual_extents))
+		goto_out;
+
+	dm_list_init(&lvc.tags);
+
+	if (!(vdo_lv = lv_create_single(vg, &lvc)))
+		goto_out; /* FIXME: hmmm what to do now */
+
+	log_print_unless_silent("Converted %s to VDO pool volume and created virtual %s VDO volume.",
+				display_lvname(lv), display_lvname(vdo_lv));
+
+	return ECMD_PROCESSED;
+
+ out:
+	return ECMD_FAILED;
+}
+
+int lvconvert_to_vdopool_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	return process_each_lv(cmd, 1, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
+			       NULL, NULL, &_lvconvert_to_vdopool_single);
+}
+
+int lvconvert_to_vdopool_param_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	/* Make the LV the first position arg. */
+	int i, p = cmd->position_argc;
+
+	for (i = 0; i < cmd->position_argc; i++)
+		cmd->position_argv[p] = cmd->position_argv[p-1];
+
+	cmd->position_argv[0] = (char *)arg_str_value(cmd, vdopool_ARG, NULL);
+	cmd->position_argc++;
+
+	return process_each_lv(cmd, 1, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
+			       NULL, NULL, &_lvconvert_to_vdopool_single);
+}
+
 /*
  * All lvconvert command defs have their own function,
  * so the generic function name is unused.

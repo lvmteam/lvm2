@@ -555,6 +555,24 @@ RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 ---
 
+lvconvert --type vdo-pool LV_linear_striped_raid_cache
+OO: --name LV_new, --virtualsize SizeMB, --compression Bool, --deduplication Bool, OO_LVCONVERT
+ID: lvconvert_to_vdopool
+DESC: Convert LV to type vdopool.
+RULE: all and lv_is_visible
+RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_virtual
+
+lvconvert --vdopool LV_linear_striped_raid_cache
+OO: --type vdo-pool, OO_LVCONVERT,
+--name LV_new, --virtualsize SizeMB, --compression Bool, --deduplication Bool
+ID: lvconvert_to_vdopool_param
+DESC: Convert LV to type vdopool.
+RULE: all and lv_is_visible
+RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_virtual
+FLAGS: SECONDARY_SYNTAX
+
+---
+
 lvconvert --splitcache LV_cachepool_cache_thinpool
 OO: OO_LVCONVERT
 ID: lvconvert_split_and_keep_cachepool

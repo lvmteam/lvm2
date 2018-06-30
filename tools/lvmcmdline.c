@@ -143,6 +143,10 @@ static const struct command_function _command_functions[CMD_COUNT] = {
 	/* redirected to merge_snapshot/merge_thin/merge_mirrors */
 	{ lvconvert_merge_CMD, lvconvert_merge_cmd },
 
+	/* lvconvert VDO pool */
+	{ lvconvert_to_vdopool_CMD, lvconvert_to_vdopool_cmd },
+	{ lvconvert_to_vdopool_param_CMD, lvconvert_to_vdopool_param_cmd },
+
 };
 
 
