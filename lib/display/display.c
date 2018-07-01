@@ -411,6 +411,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 	int thin_active = 0;
 	dm_percent_t thin_percent;
 	struct lv_status_cache *cache_status = NULL;
+	struct lv_status_vdo *vdo_status = NULL;
 
 	if (lv_is_historical(lv))
 		return _lvdisplay_historical_full(cmd, lv);
@@ -529,6 +530,27 @@ int lvdisplay_full(struct cmd_context *cmd,
 		seg = first_seg(lv);
 		log_print("LV Pool metadata       %s", seg->metadata_lv->name);
 		log_print("LV Pool data           %s", seg_lv(seg, 0)->name);
+	} else if (lv_is_vdo_pool(lv)) {
+		seg = first_seg(lv);
+		log_print("LV VDO Pool data       %s", seg_lv(seg, 0)->name);
+		if (inkernel && lv_vdo_pool_status(lv, 0, &vdo_status)) { /* FIXME: flush option? */
+			log_print("LV VDO Pool usage      %s%%",
+				  display_percent(cmd, vdo_status->usage));
+			log_print("LV VDO Pool saving     %s%%",
+				  display_percent(cmd, vdo_status->saving));
+			log_print("LV VDO Operating mode  %s",
+				  get_vdo_operating_mode_name(vdo_status->vdo->operating_mode));
+			log_print("LV VDO Index state     %s",
+				  get_vdo_index_state_name(vdo_status->vdo->index_state));
+			log_print("LV VDO Compression st  %s",
+				  get_vdo_compression_state_name(vdo_status->vdo->compression_state));
+			log_print("LV VDO Used size       %s",
+				  display_size(cmd, vdo_status->vdo->used_blocks * DM_VDO_BLOCK_SIZE));
+			dm_pool_destroy(vdo_status->mem);
+		}
+	} else if (lv_is_vdo(lv)) {
+		seg = first_seg(lv);
+		log_print("LV VDO Pool name       %s", seg_lv(seg, 0)->name);
 	}
 
 	if (inkernel && info.suspended)

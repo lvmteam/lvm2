@@ -450,6 +450,9 @@ dm_percent_t lvseg_percent_with_info_and_seg_status(const struct lv_with_info_an
 			}
 		}
 		break;
+	case SEG_STATUS_VDO_POOL:
+		p = s->vdo_pool.usage;
+		break;
 	default:
 		p = DM_PERCENT_INVALID;
 	}
@@ -695,11 +698,13 @@ char *lv_mirror_log_uuid_dup(struct dm_pool *mem, const struct logical_volume *l
 
 struct logical_volume *lv_pool_lv(const struct logical_volume *lv)
 {
-	struct lv_segment *seg = (lv_is_thin_volume(lv) || lv_is_cache(lv)) ?
-				  first_seg(lv) : NULL;
-	struct logical_volume *pool_lv = seg ? seg->pool_lv : NULL;
+	if (lv_is_thin_volume(lv) || lv_is_cache(lv))
+		return first_seg(lv)->pool_lv;
 
-	return pool_lv;
+	if (lv_is_vdo(lv))
+		return seg_lv(first_seg(lv), 0);
+
+	return NULL;
 }
 
 static char *_do_lv_pool_lv_dup(struct dm_pool *mem, const struct logical_volume *lv,
@@ -728,7 +733,9 @@ char *lv_pool_lv_uuid_dup(struct dm_pool *mem, const struct logical_volume *lv)
 
 struct logical_volume *lv_data_lv(const struct logical_volume *lv)
 {
-	struct lv_segment *seg = (lv_is_thin_pool(lv) || lv_is_cache_pool(lv)) ?
+	struct lv_segment *seg = (lv_is_cache_pool(lv) ||
+				  lv_is_thin_pool(lv) ||
+				  lv_is_vdo_pool(lv)) ?
 				  first_seg(lv) : NULL;
 	struct logical_volume *data_lv = seg ? seg_lv(seg, 0) : NULL;
 
@@ -1181,6 +1188,13 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 	else if (lv_is_thin_volume(lv))
 		repstr[0] = lv_is_merging_origin(lv) ?
 			'O' : (lv_is_merging_thin_snapshot(lv) ? 'S' : 'V');
+	//else if (lv_is_vdo(lv))
+	//	repstr[0] = 'V'; // TODO: Show 'V' like Virtual Thin ?
+	// ATM shows 'v' as virtual target just like: error, zero
+	else if (lv_is_vdo_pool(lv))
+		repstr[0] = 'd';
+	else if (lv_is_vdo_pool_data(lv))
+		repstr[0] = 'D';
 	else if (lv_is_virtual(lv))
 		repstr[0] = 'v';
 	else if (lv_is_thin_pool(lv))

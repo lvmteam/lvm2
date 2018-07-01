@@ -66,6 +66,11 @@ static const char *_vdo_name(const struct lv_segment *seg)
 	return SEG_TYPE_NAME_VDO;
 }
 
+static void _vdo_display(const struct lv_segment *seg)
+{
+	display_stripe(seg, 0, "    ");
+}
+
 static int _vdo_text_import(struct lv_segment *seg,
 			    const struct dm_config_node *n,
 			    struct dm_hash_table *pv_hash __attribute__((unused)))
@@ -148,6 +153,43 @@ static int _vdo_add_target_line(struct dev_manager *dm,
 static const char *_vdo_pool_name(const struct lv_segment *seg)
 {
 	return SEG_TYPE_NAME_VDO_POOL;
+}
+
+static void _vdo_pool_display(const struct lv_segment *seg)
+{
+	struct cmd_context *cmd = seg->lv->vg->cmd;
+	const struct dm_vdo_target_params *vtp = &seg->vdo_params;
+
+	log_print("  Virtual size\t%s", display_size(cmd, get_vdo_pool_virtual_size(seg)));
+	log_print("  Header size\t\t%s", display_size(cmd, seg->vdo_pool_header_size));
+
+	_print_yes_no("Compression\t", vtp->use_compression);
+	_print_yes_no("Deduplication", vtp->use_deduplication);
+	_print_yes_no("Emulate 512 sectors", vtp->emulate_512_sectors);
+
+	log_print("  Block map cache sz\t%s",
+		  display_size(cmd, vtp->block_map_cache_size_mb * UINT64_C(2 * 1024)));
+	log_print("  Block map period\t%u", vtp->block_map_period);
+
+	_print_yes_no("Sparse index", vtp->use_sparse_index);
+
+	log_print("  Index memory size\t%s",
+		  display_size(cmd, vtp->index_memory_size_mb * UINT64_C(2 * 1024)));
+
+	_print_yes_no("Using read cache", vtp->use_read_cache);
+
+	log_print("  Read cache size\t%s",
+		  display_size(cmd, vtp->read_cache_size_mb * UINT64_C(2 * 1024)));
+	log_print("  Slab size\t\t%s",
+		  display_size(cmd, vtp->slab_size_mb * UINT64_C(2 * 1024)));
+
+	log_print("  # Ack threads\t%u", (unsigned) vtp->ack_threads);
+	log_print("  # Bio threads\t%u", (unsigned) vtp->bio_threads);
+	log_print("  Bio rotation\t%u", (unsigned) vtp->bio_rotation);
+	log_print("  # CPU threads\t%u", (unsigned) vtp->cpu_threads);
+	log_print("  # Hash zone threads\t%u", (unsigned) vtp->hash_zone_threads);
+	log_print("  # Logical threads\t%u", (unsigned) vtp->logical_threads);
+	log_print("  # Physical threads\t%u", (unsigned) vtp->physical_threads);
 }
 
 /* reused as _vdo_text_import_area_count */
@@ -419,6 +461,7 @@ static void _vdo_pool_destroy(struct segment_type *segtype)
 
 static struct segtype_handler _vdo_ops = {
 	.name = _vdo_name,
+	.display = _vdo_display,
 	.text_import = _vdo_text_import,
 	.text_import_area_count = _vdo_pool_text_import_area_count,
 	.text_export = _vdo_text_export,
@@ -434,6 +477,7 @@ static struct segtype_handler _vdo_ops = {
 
 static struct segtype_handler _vdo_pool_ops = {
 	.name = _vdo_pool_name,
+	.display = _vdo_pool_display,
 	.text_import = _vdo_pool_text_import,
 	.text_import_area_count = _vdo_pool_text_import_area_count,
 	.text_export = _vdo_pool_text_export,
