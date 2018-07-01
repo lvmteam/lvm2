@@ -504,6 +504,11 @@ int vg_set_extent_size(struct volume_group *vg, uint32_t new_extent_size)
 					     new_extent_size))
 				return_0;
 
+			if (!_recalc_extents(&seg->vdo_pool_virtual_extents, lv->name,
+					     " virtual extents", old_extent_size,
+					     new_extent_size))
+				return_0;
+
 			/* foreach area */
 			for (s = 0; s < seg->area_count; s++) {
 				switch (seg_type(seg, s)) {

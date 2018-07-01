@@ -107,6 +107,9 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		if (lv_is_mirror_image(lv) || lv_is_mirror_log(lv))
 			continue;
 
+		if (lv_is_vdo_pool(lv))
+			continue;
+
 		if (lv_activation_skip(lv, activate, arg_is_set(cmd, ignoreactivationskip_ARG)))
 			continue;
 
@@ -219,7 +222,9 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 
 	       	if ((lv_open = lvs_in_vg_opened(vg))) {
 			dm_list_iterate_items(lvl, &vg->lvs) {
-				if (lv_is_visible(lvl->lv) && !lv_check_not_in_use(lvl->lv, 1)) {
+				if (lv_is_visible(lvl->lv) &&
+				    !lv_is_vdo_pool(lvl->lv) && // FIXME: API skip flag missing
+				    !lv_check_not_in_use(lvl->lv, 1)) {
 					log_error("Can't deactivate volume group \"%s\" with %d open logical volume(s)",
 						  vg->name, lv_open);
 					return 0;
