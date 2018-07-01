@@ -20,6 +20,8 @@ include $(top_builddir)/make.tmpl
 
 DISTCLEAN_TARGETS += .configure.h lvm-version.h
 CLEAN_TARGETS += \
+ .symlinks \
+ .symlinks_created \
  activate.h \
  archiver.h \
  bcache.h \
