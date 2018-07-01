@@ -30,7 +30,12 @@ DEVICE_MAPPER_DEPENDS=$(addprefix $(top_builddir)/,$(subst .c,.d,$(DEVICE_MAPPER
 DEVICE_MAPPER_OBJECTS=$(addprefix $(top_builddir)/,$(subst .c,.o,$(DEVICE_MAPPER_SOURCE)))
 CLEAN_TARGETS+=$(DEVICE_MAPPER_DEPENDS) $(DEVICE_MAPPER_OBJECTS)
 
--include $(DEVICE_MAPPER_DEPENDS)
+ifeq ("$(USE_TRACKING)","yes")
+ifeq (,$(findstring $(MAKECMDGOALS),cscope.out cflow clean distclean lcov \
+ help check check_local check_cluster check_lvmetad check_lvmpolld))
+	-include $(DEVICE_MAPPER_DEPENDS)
+endif
+endif
 
 $(DEVICE_MAPPER_OBJECTS): INCLUDES+=-I$(top_srcdir)/device_mapper/
 

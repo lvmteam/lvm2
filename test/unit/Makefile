@@ -43,4 +43,9 @@ run-unit-test: test/unit/unit-test
 	@echo Running unit tests
 	LD_LIBRARY_PATH=libdm test/unit/unit-test run
 
--include $(UNIT_DEPENDS)
+ifeq ("$(USE_TRACKING)","yes")
+ifeq (,$(findstring $(MAKECMDGOALS),cscope.out cflow clean distclean lcov \
+ help check check_local check_cluster check_lvmetad check_lvmpolld))
+	-include $(UNIT_DEPENDS)
+endif
+endif
