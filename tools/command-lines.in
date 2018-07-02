@@ -221,6 +221,7 @@ OO_LVCHANGE: --autobackup Bool, --force, --ignoremonitoring,
 
 OO_LVCHANGE_META: --addtag Tag, --deltag Tag,
 --alloc Alloc, --contiguous Bool,
+--compression Bool, --deduplication Bool,
 --detachprofile, --metadataprofile String, --profile String,
 --permission Permission, --readahead Readahead, --setactivationskip Bool,
 --errorwhenfull Bool, --discards Discards, --zero Bool,
@@ -308,7 +309,7 @@ OO: --major Number, --activate Active, --poll Bool, --monitor Bool, OO_LVCHANGE
 IO: --ignoreskippedcluster
 ID: lvchange_persistent
 DESC: Make the minor device number persistent for an LV.
-RULE: all not LV_thinpool LV_cachepool
+RULE: all not LV_thinpool LV_cachepool LV_vdopool
 
 ---
 

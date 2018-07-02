@@ -934,6 +934,62 @@ static int _lvchange_activation_skip(struct logical_volume *lv, uint32_t *mr)
 	return 1;
 }
 
+static int _lvchange_compression(struct logical_volume *lv, uint32_t *mr)
+{
+	struct cmd_context *cmd = lv->vg->cmd;
+	unsigned compression = arg_uint_value(cmd, compression_ARG, 0);
+	struct lv_segment *seg = first_seg(lv);
+
+	if (lv_is_vdo(lv))
+		seg = first_seg(seg_lv(seg, 0));
+	else if (!lv_is_vdo_pool(lv)) {
+		log_error("Unable to change compression for non VDO volume %s.",
+			  display_lvname(lv));
+		return 0;
+	}
+
+	if (compression == seg->vdo_params.use_compression) {
+		log_error("Logical volume %s already uses --compression %c.",
+			  display_lvname(lv), compression ? 'y' : 'n');
+		return 0;
+	}
+
+	seg->vdo_params.use_compression = compression;
+
+	/* Request caller to commit and reload metadata */
+	*mr |= MR_RELOAD;
+
+	return 1;
+}
+
+static int _lvchange_deduplication(struct logical_volume *lv, uint32_t *mr)
+{
+	struct cmd_context *cmd = lv->vg->cmd;
+	unsigned deduplication = arg_uint_value(cmd, deduplication_ARG, 0);
+	struct lv_segment *seg = first_seg(lv);
+
+	if (lv_is_vdo(lv))
+		seg = first_seg(seg_lv(seg, 0));
+	else if (!lv_is_vdo_pool(lv)) {
+		log_error("Unable to change deduplication for non VDO volume %s.",
+			  display_lvname(lv));
+		return 0;
+	}
+
+	if (deduplication == seg->vdo_params.use_deduplication) {
+		log_error("Logical volume %s already uses --deduplication %c.",
+			  display_lvname(lv), deduplication ? 'y' : 'n');
+		return 0;
+	}
+
+	seg->vdo_params.use_deduplication = deduplication;
+
+	/* Request caller to commit and reload metadata */
+	*mr |= MR_RELOAD;
+
+	return 1;
+}
+
 /* Update and reload or commit and/or backup metadata for @lv as requested by @mr */
 static int _commit_reload(struct logical_volume *lv, uint32_t mr)
 {
@@ -966,6 +1022,8 @@ static int _option_allows_group_commit(int opt_enum)
 		permission_ARG,
 		alloc_ARG,
 		contiguous_ARG,
+		compression_ARG,
+		deduplication_ARG,
 		errorwhenfull_ARG,
 		readahead_ARG,
 		persistent_ARG,
@@ -1115,6 +1173,16 @@ static int _lvchange_properties_single(struct cmd_context *cmd,
 		case setactivationskip_ARG:
 			docmds++;
 			doit += _lvchange_activation_skip(lv, &mr);
+			break;
+
+		case compression_ARG:
+			docmds++;
+			doit += _lvchange_compression(lv, &mr);
+			break;
+
+		case deduplication_ARG:
+			docmds++;
+			doit += _lvchange_deduplication(lv, &mr);
 			break;
 
 		default:
@@ -1345,6 +1413,9 @@ static int _lvchange_activate_check(struct cmd_context *cmd,
 			log_error("Operation not permitted on hidden LV %s.", display_lvname(lv));
 		return 0;
 	}
+
+	if (lv_is_vdo_pool(lv) && !lv_is_named_arg)
+		return 0;	/* Skip VDO pool processing unless explicitely named */
 
 	return 1;
 }
