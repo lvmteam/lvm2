@@ -1251,6 +1251,9 @@ int wipe_cache_pool(struct logical_volume *cache_pool_lv);
 
 /* ++  metadata/vdo_manip.c */
 
+const char *get_vdo_compression_state_name(enum dm_vdo_compression_state state);
+const char *get_vdo_index_state_name(enum dm_vdo_index_state state);
+const char *get_vdo_operating_mode_name(enum dm_vdo_operating_mode mode);
 uint64_t get_vdo_pool_virtual_size(const struct lv_segment *vdo_pool_seg);
 struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 					   const struct dm_vdo_target_params *vtp,

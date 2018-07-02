@@ -25,6 +25,56 @@
 #include "lib/misc/lvm-signal.h"
 #include "lib/misc/lvm-exec.h"
 
+const char *get_vdo_compression_state_name(enum dm_vdo_compression_state state)
+{
+	switch (state) {
+	case DM_VDO_COMPRESSION_ONLINE:
+		return "online";
+	default:
+		log_debug(INTERNAL_ERROR "Unrecognized compression state: %u.", state);
+		/* Fall through */
+	case DM_VDO_COMPRESSION_OFFLINE:
+		return "offline";
+	}
+}
+
+const char *get_vdo_index_state_name(enum dm_vdo_index_state state)
+{
+	switch (state) {
+	case DM_VDO_INDEX_ERROR:
+		return "error";
+	case DM_VDO_INDEX_CLOSED:
+		return "closed";
+	case DM_VDO_INDEX_OPENING:
+		return "opening";
+	case DM_VDO_INDEX_CLOSING:
+		return "closing";
+	case DM_VDO_INDEX_OFFLINE:
+		return "offline";
+	case DM_VDO_INDEX_ONLINE:
+		return "online";
+	default:
+		log_debug(INTERNAL_ERROR "Unrecognized index state: %u.", state);
+		/* Fall through */
+	case DM_VDO_INDEX_UNKNOWN:
+		return "unknown";
+	}
+}
+
+const char *get_vdo_operating_mode_name(enum dm_vdo_operating_mode mode)
+{
+	switch (mode) {
+	case DM_VDO_MODE_RECOVERING:
+		return "recovering";
+	case DM_VDO_MODE_READ_ONLY:
+		return "read-only";
+	default:
+		log_debug(INTERNAL_ERROR "Unrecognized operating mode: %u.", mode);
+		/* Fall through */
+	case DM_VDO_MODE_NORMAL:
+		return "normal";
+	}
+}
 
 /*
  * Size of VDO virtual LV is adding header_size in front and back of device
