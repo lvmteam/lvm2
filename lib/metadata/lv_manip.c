@@ -4893,6 +4893,12 @@ static int _lvresize_check(struct logical_volume *lv,
 		return 0;
 	}
 
+	if (lv_is_vdo_type(lv)) {
+		log_error("Resize of VDO type volume %s is not yet supported.",
+			  display_lvname(lv));
+		return 0;
+	}
+
 	if (lv_is_raid(lv) &&
 	    lp->resize == LV_REDUCE) {
 		unsigned attrs;
