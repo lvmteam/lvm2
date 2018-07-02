@@ -2544,6 +2544,12 @@ static int _lv_is_type(struct cmd_context *cmd, struct logical_volume *lv, int l
 		return lv_is_cache(lv);
 	case cachepool_LVT:
 		return lv_is_cache_pool(lv);
+	case vdo_LVT:
+		return lv_is_vdo(lv);
+	case vdopool_LVT:
+		return lv_is_vdo_pool(lv);
+	case vdopooldata_LVT:
+		return lv_is_vdo_pool_data(lv);
 	case mirror_LVT:
 		return lv_is_mirror(lv);
 	case raid_LVT:
@@ -2594,6 +2600,12 @@ int get_lvt_enum(struct logical_volume *lv)
 		return cache_LVT;
 	if (lv_is_cache_pool(lv))
 		return cachepool_LVT;
+	if (lv_is_vdo(lv))
+		return vdo_LVT;
+	if (lv_is_vdo_pool(lv))
+		return vdopool_LVT;
+	if (lv_is_vdo_pool_data(lv))
+		return vdopooldata_LVT;
 	if (lv_is_mirror(lv))
 		return mirror_LVT;
 	if (lv_is_raid(lv))
