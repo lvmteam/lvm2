@@ -37,6 +37,7 @@ typedef enum {
 	SEG_STATUS_SNAPSHOT,
 	SEG_STATUS_THIN,
 	SEG_STATUS_THIN_POOL,
+	SEG_STATUS_VDO_POOL,
 	SEG_STATUS_UNKNOWN
 } lv_seg_status_type_t;
 
@@ -50,6 +51,7 @@ struct lv_seg_status {
 		struct dm_status_snapshot *snapshot;
 		struct dm_status_thin *thin;
 		struct dm_status_thin_pool *thin_pool;
+		struct lv_status_vdo vdo_pool;
 	};
 };
 

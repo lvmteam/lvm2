@@ -93,6 +93,89 @@ uint64_t get_vdo_pool_virtual_size(const struct lv_segment *vdo_pool_seg)
 				 vdo_pool_seg->vdo_pool_header_size);
 }
 
+static int _sysfs_get_kvdo_value(const char *dm_name, const char *vdo_param, uint64_t *value)
+{
+	char path[PATH_MAX];
+	char temp[64];
+	int fd, size, r = 0;
+
+	if (dm_snprintf(path, sizeof(path), "%skvdo/%s/%s",
+			dm_sysfs_dir(), dm_name, vdo_param) < 0) {
+		log_error("Failed to build kmod path.");
+		goto bad;
+	}
+
+	if ((fd = open(path, O_RDONLY)) < 0) {
+		if (errno != ENOENT)
+			log_sys_error("open", path);
+		else
+			log_sys_debug("open", path);
+		goto bad;
+	}
+
+	if ((size = read(fd, temp, sizeof(temp) - 1)) < 0) {
+		log_sys_error("read", path);
+		goto bad;
+	}
+	temp[size] = 0;
+	errno = 0;
+	*value = strtoll(temp, NULL, 0);
+	if (errno) {
+		log_sys_error("strtool", path);
+		goto bad;
+	}
+
+	r = 1;
+bad:
+	if (fd >= 0 && close(fd))
+		log_sys_error("close", path);
+
+	return r;
+}
+
+int parse_vdo_pool_status(struct dm_pool *mem, const struct logical_volume *vdo_pool_lv,
+			  const char *params, struct lv_status_vdo *status)
+{
+	struct dm_vdo_status_parse_result result;
+	char *dm_name;
+
+	status->usage = DM_PERCENT_INVALID;
+	status->saving = DM_PERCENT_INVALID;
+
+	if (!(dm_name = dm_build_dm_name(mem, vdo_pool_lv->vg->name,
+					 vdo_pool_lv->name, NULL))) {
+		log_error("Failed to build VDO DM name %s.",
+			  display_lvname(vdo_pool_lv));
+		return 0;
+	}
+
+	if (!dm_vdo_status_parse(mem, params, &result)) {
+		log_error("Cannot parse %s VDO pool status %s.",
+			  display_lvname(vdo_pool_lv), result.error);
+		return 0;
+	}
+
+	status->vdo = result.status;
+
+	if (result.status->operating_mode == DM_VDO_MODE_NORMAL) {
+		if (!_sysfs_get_kvdo_value(dm_name, "statistics/data_blocks_used",
+					   &status->data_blocks_used))
+			return_0;
+
+		if (!_sysfs_get_kvdo_value(dm_name, "statistics/logical_blocks_used",
+					   &status->logical_blocks_used))
+			return_0;
+
+		status->usage = dm_make_percent(result.status->used_blocks,
+						result.status->total_blocks);
+		status->saving = dm_make_percent(status->logical_blocks_used - status->data_blocks_used,
+						 status->logical_blocks_used);
+	}
+
+	return 1;
+}
+
+
 /*
  * Formats data LV for a use as a VDO pool LV.
  *

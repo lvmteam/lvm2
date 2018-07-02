@@ -209,6 +209,10 @@ static int _get_segment_status_from_target_params(const char *target_name,
 		if (!dm_get_status_snapshot(seg_status->mem, params, &seg_status->snapshot))
 			return_0;
 		seg_status->type = SEG_STATUS_SNAPSHOT;
+	} else if (segtype_is_vdo_pool(segtype)) {
+		if (!parse_vdo_pool_status(seg_status->mem, seg->lv, params, &seg_status->vdo_pool))
+			return_0;
+		seg_status->type = SEG_STATUS_VDO_POOL;
 	} else
 		/*
 		 * TODO: Add support for other segment types too!
