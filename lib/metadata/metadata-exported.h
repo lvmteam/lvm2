@@ -267,6 +267,7 @@
 #define lv_is_component(lv) (lv_is_cache_origin(lv) || ((lv)->status & (\
 	CACHE_POOL_DATA |\
 	CACHE_POOL_METADATA |\
+	LV_VDO_POOL_DATA |\
 	MIRROR_IMAGE |\
 	MIRROR_LOG |\
 	RAID_IMAGE |\
