@@ -32,8 +32,8 @@ include $(top_builddir)/make.tmpl
 .PHONY: install_conf install_localconf install_profiles
 
 generate:
-	LD_LIBRARY_PATH=$(top_builddir)/libdm:$(LD_LIBRARY_PATH) $(top_builddir)/tools/lvm dumpconfig --type default --unconfigured --withgeneralpreamble --withcomments --ignorelocal --withspaces > example.conf.in
-	LD_LIBRARY_PATH=$(top_builddir)/libdm:$(LD_LIBRARY_PATH) $(top_builddir)/tools/lvm dumpconfig --type default --unconfigured --withlocalpreamble --withcomments --withspaces local > lvmlocal.conf.in
+	$(top_builddir)/tools/lvm dumpconfig --type default --unconfigured --withgeneralpreamble --withcomments --ignorelocal --withspaces > example.conf.in
+	$(top_builddir)/tools/lvm dumpconfig --type default --unconfigured --withlocalpreamble --withcomments --withspaces local > lvmlocal.conf.in
 
 install_conf: $(CONFSRC)
 	@if [ ! -e $(confdir)/$(CONFDEST) ]; then \
