@@ -8125,8 +8125,8 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 			/* The VDO segment needs VDO pool which is layer above created striped data LV */
 			if (!(lp->segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_VDO_POOL)))
 				return_NULL;
-
-			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name)))
+			/* Use vpool names for vdo-pool */
+			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name ? : "vpool%d")))
 				return_NULL;
 		} else {
 			log_error(INTERNAL_ERROR "Creation of pool for unsupported segment type %s.",
