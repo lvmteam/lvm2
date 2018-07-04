@@ -451,7 +451,10 @@ dm_percent_t lvseg_percent_with_info_and_seg_status(const struct lv_with_info_an
 		}
 		break;
 	case SEG_STATUS_VDO_POOL:
-		p = s->vdo_pool.usage;
+		if (seg_is_vdo_pool(lvdm->seg_status.seg))
+			p = s->vdo_pool.usage;
+		else
+			p = s->vdo_pool.data_usage;
 		break;
 	default:
 		p = DM_PERCENT_INVALID;

@@ -1257,6 +1257,7 @@ struct lv_status_vdo {
 	uint64_t logical_blocks_used;	/* grabbed from /sys/kvdo */
 	dm_percent_t usage;
 	dm_percent_t saving;
+	dm_percent_t data_usage;
 };
 
 const char *get_vdo_compression_state_name(enum dm_vdo_compression_state state);

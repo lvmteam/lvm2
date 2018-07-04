@@ -798,6 +798,21 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 		lv_seg = find_snapshot(lv);
 	}
 
+	if (lv_is_vdo(lv)) {
+		if (!_lv_info(cmd, lv, 0, &status->info, NULL, NULL,
+			      with_open_count, with_read_ahead))
+			return_0;
+		if (status->info.exists) {
+			/* Status for VDO pool */
+			(void) _lv_info(cmd, seg_lv(lv_seg, 0), 1, NULL,
+					first_seg(seg_lv(lv_seg, 0)),
+					&status->seg_status, 0, 0);
+			/* Use VDO pool segtype result for VDO segtype */
+			status->seg_status.seg = lv_seg;
+		}
+		return 1;
+	}
+
 	return _lv_info(cmd, lv, 0, &status->info, lv_seg, &status->seg_status,
 			with_open_count, with_read_ahead);
 }

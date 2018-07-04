@@ -141,6 +141,7 @@ int parse_vdo_pool_status(struct dm_pool *mem, const struct logical_volume *vdo_
 
 	status->usage = DM_PERCENT_INVALID;
 	status->saving = DM_PERCENT_INVALID;
+	status->data_usage = DM_PERCENT_INVALID;
 
 	if (!(dm_name = dm_build_dm_name(mem, vdo_pool_lv->vg->name,
 					 vdo_pool_lv->name, NULL))) {
@@ -170,6 +171,9 @@ int parse_vdo_pool_status(struct dm_pool *mem, const struct logical_volume *vdo_
 						result.status->total_blocks);
 		status->saving = dm_make_percent(status->logical_blocks_used - status->data_blocks_used,
 						 status->logical_blocks_used);
+		status->data_usage = dm_make_percent(status->data_blocks_used * DM_VDO_BLOCK_SIZE,
+						     first_seg(vdo_pool_lv)->vdo_pool_virtual_extents *
+						     (uint64_t) vdo_pool_lv->vg->extent_size);
 	}
 
 	return 1;
