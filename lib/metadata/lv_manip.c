@@ -3149,9 +3149,8 @@ static int _allocate(struct alloc_handle *ah,
 	if (ah->alloc == ALLOC_CONTIGUOUS)
 		can_split = 0;
 
-	if (lv && !dm_list_empty(&lv->segments))
-		prev_lvseg = dm_list_item(dm_list_last(&lv->segments),
-				       struct lv_segment);
+	if (lv)
+		prev_lvseg = last_seg(lv);
 	/*
 	 * Build the sets of available areas on the pv's.
 	 */
