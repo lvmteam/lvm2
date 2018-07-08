@@ -188,7 +188,7 @@ bool vdo_status_parse(struct dm_pool *mem, const char *input,
 	const char *te;
 	struct vdo_status *s;
 
-	s = (!mem) ? malloc(sizeof(*s)) : dm_pool_zalloc(mem, sizeof(*s));
+	s = (!mem) ? zalloc(sizeof(*s)) : dm_pool_zalloc(mem, sizeof(*s));
 
 	if (!s) {
 		_set_error(result, "out of memory");
@@ -206,7 +206,7 @@ bool vdo_status_parse(struct dm_pool *mem, const char *input,
 		_set_error(result, "out of memory");
 		goto bad;
 	}
-	dm_strncpy(s->device, b, te - b);
+	dm_strncpy(s->device, b, te - b + 1);
 
 	b = _eat_space(te, e);
 
