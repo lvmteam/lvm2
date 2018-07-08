@@ -411,9 +411,11 @@ static int _dev_discard_blocks(struct device *dev, uint64_t offset_bytes, uint64
 	discard_range[0] = offset_bytes;
 	discard_range[1] = size_bytes;
 
-	log_debug_devs("Discarding %" PRIu64 " bytes offset %" PRIu64 " bytes on %s.",
-		       size_bytes, offset_bytes, dev_name(dev));
-	if (ioctl(dev->fd, BLKDISCARD, &discard_range) < 0) {
+	log_debug_devs("Discarding %" PRIu64 " bytes offset %" PRIu64 " bytes on %s. %s",
+		       size_bytes, offset_bytes, dev_name(dev),
+		       test_mode() ? " (test mode - suppressed)" : "");
+
+	if (!test_mode() && ioctl(dev->fd, BLKDISCARD, &discard_range) < 0) {
 		log_error("%s: BLKDISCARD ioctl at offset %" PRIu64 " size %" PRIu64 " failed: %s.",
 			  dev_name(dev), offset_bytes, size_bytes, strerror(errno));
 		if (!dev_close_immediate(dev))
