@@ -199,6 +199,17 @@ check vg_field $vg lv_count 6
 lvremove -ff $vg
 check vg_field $vg lv_count 0
 
+
+# Check how allocator works with 2PVs where one is nearly full
+lvcreate -l99%PV $vg "$dev1"
+lvs -a $vg
+# Check when separate metadata is required, allocation needs to fail
+fail lvcreate -L10 -T --poolmetadataspare n --config 'allocation/thin_pool_metadata_require_separate_pvs=1' $vg
+# Check when data and metadata may share the same PV, it shall pass
+lvcreate -L10 -T --poolmetadataspare n --config 'allocation/thin_pool_metadata_require_separate_pvs=0' $vg
+lvremove -f $vg
+
+
 # Fail cases
 # Too small pool size (1 extent 64KB) for given chunk size
 not lvcreate --chunksize 256 -l1 -T $vg/pool1
