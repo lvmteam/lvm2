@@ -2959,12 +2959,14 @@ static int _find_some_parallel_space(struct alloc_handle *ah,
 		       (*(alloc_state->areas + alloc_state->num_positional_areas + ix - 1 -
 			  too_small_for_log_count)).used < ah->log_len)
 			too_small_for_log_count++;
-		ix_log_offset = alloc_state->num_positional_areas + ix - too_small_for_log_count - ah->log_area_count;
+		if (ah->mirror_logs_separate && (too_small_for_log_count >= devices_needed))
+			return 1;
+		if ((alloc_state->num_positional_areas + ix) < (too_small_for_log_count + ah->log_area_count))
+			return 1;
+		ix_log_offset = alloc_state->num_positional_areas + ix - (too_small_for_log_count + ah->log_area_count);
 	}
 
-	if (ix + alloc_state->num_positional_areas < devices_needed +
-	    (alloc_state->log_area_count_still_needed ? alloc_state->log_area_count_still_needed +
-				    too_small_for_log_count : 0))
+	if (ix + alloc_state->num_positional_areas < devices_needed)
 		return 1;
 
 	/*
