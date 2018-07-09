@@ -1,6 +1,5 @@
 #
-# Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
-# Copyright (C) 2004-2018 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2018 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -16,12 +15,22 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
-SUBDIRS += lvm2 snapshot raid thin mirror vdo
+INCLUDES += -I$(top_srcdir)/daemons/dmeventd/plugins/lvm2
+CLDFLAGS += -L$(top_builddir)/daemons/dmeventd/plugins/lvm2
+
+SOURCES = dmeventd_vdo.c
+
+LIB_NAME = libdevmapper-event-lvm2vdo
+LIB_SHARED = $(LIB_NAME).$(LIB_SUFFIX)
+LIB_VERSION = $(LIB_VERSION_LVM)
+
+CFLOW_LIST = $(SOURCES)
+CFLOW_LIST_TARGET = $(LIB_NAME).cflow
 
 include $(top_builddir)/make.tmpl
 
-snapshot: lvm2
-mirror: lvm2
-raid: lvm2
-thin: lvm2
-vdo: lvm2
+LIBS += -ldevmapper-event-lvm2 $(INTERNAL_LIBS)
+
+install_lvm2: install_dm_plugin
+
+install: install_lvm2

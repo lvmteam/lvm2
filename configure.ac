@@ -1775,6 +1775,7 @@ daemons/dmeventd/plugins/raid/Makefile
 daemons/dmeventd/plugins/mirror/Makefile
 daemons/dmeventd/plugins/snapshot/Makefile
 daemons/dmeventd/plugins/thin/Makefile
+daemons/dmeventd/plugins/vdo/Makefile
 daemons/lvmdbusd/Makefile
 daemons/lvmdbusd/lvmdbusd
 daemons/lvmdbusd/lvmdb.py

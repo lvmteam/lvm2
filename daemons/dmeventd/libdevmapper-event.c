@@ -648,6 +648,7 @@ int dm_event_register_handler(const struct dm_event_handler *dmevh)
 	uuid = dm_task_get_uuid(dmt);
 
 	if (!strstr(dmevh->dso, "libdevmapper-event-lvm2thin.so") &&
+	    !strstr(dmevh->dso, "libdevmapper-event-lvm2vdo.so") &&
 	    !strstr(dmevh->dso, "libdevmapper-event-lvm2snapshot.so") &&
 	    !strstr(dmevh->dso, "libdevmapper-event-lvm2mirror.so") &&
 	    !strstr(dmevh->dso, "libdevmapper-event-lvm2raid.so"))
