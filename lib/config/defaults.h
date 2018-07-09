@@ -83,6 +83,8 @@
 #define DEFAULT_DMEVENTD_SNAPSHOT_LIB "libdevmapper-event-lvm2snapshot.so"
 #define DEFAULT_DMEVENTD_THIN_LIB "libdevmapper-event-lvm2thin.so"
 #define DEFAULT_DMEVENTD_THIN_COMMAND "lvm lvextend --use-policies"
+#define DEFAULT_DMEVENTD_VDO_LIB "libdevmapper-event-lvm2vdo.so"
+#define DEFAULT_DMEVENTD_VDO_COMMAND "lvm lvextend --use-policies"
 #define DEFAULT_DMEVENTD_MONITOR 1
 #define DEFAULT_BACKGROUND_POLLING 1
 
@@ -295,5 +297,7 @@
 #define DEFAULT_SNAPSHOT_AUTOEXTEND_PERCENT 20
 #define DEFAULT_THIN_POOL_AUTOEXTEND_THRESHOLD 100
 #define DEFAULT_THIN_POOL_AUTOEXTEND_PERCENT 20
+#define DEFAULT_VDO_POOL_AUTOEXTEND_THRESHOLD 100
+#define DEFAULT_VDO_POOL_AUTOEXTEND_PERCENT 20
 
 #endif				/* _LVM_DEFAULTS_H */

@@ -450,6 +450,38 @@ static int _vdo_modules_needed(struct dm_pool *mem,
 
 	return 1;
 }
+
+#  ifdef DMEVENTD
+/* FIXME Cache this */
+static int _vdo_pool_target_registered(struct lv_segment *seg, int *pending, int *monitored)
+{
+	return target_registered_with_dmeventd(seg->lv->vg->cmd,
+					       seg->segtype->dso,
+					       seg->lv, pending, monitored);
+}
+
+/* FIXME This gets run while suspended and performs banned operations. */
+static int _vdo_pool_target_set_events(struct lv_segment *seg, int evmask, int set)
+{
+	/* FIXME Make timeout (10) configurable */
+	return target_register_events(seg->lv->vg->cmd,
+				      seg->segtype->dso,
+				      seg->lv, evmask, set, 10);
+}
+
+static int _vdo_pool_target_register_events(struct lv_segment *seg,
+					    int events)
+{
+	return _vdo_pool_target_set_events(seg, events, 1);
+}
+
+static int _vdo_pool_target_unregister_events(struct lv_segment *seg,
+					      int events)
+{
+	return _vdo_pool_target_set_events(seg, events, 0);
+}
+
+#  endif /* DMEVENTD */
 #endif
 
 /* reused as _vdo_destroy */
@@ -487,6 +519,12 @@ static struct segtype_handler _vdo_pool_ops = {
 	.add_target_line = _vdo_pool_add_target_line,
 	.target_present = _vdo_target_present,
 	.modules_needed = _vdo_modules_needed,
+
+#  ifdef DMEVENTD
+	.target_monitored = _vdo_pool_target_registered,
+	.target_monitor_events = _vdo_pool_target_register_events,
+	.target_unmonitor_events = _vdo_pool_target_unregister_events,
+#  endif /* DMEVENTD */
 #endif
 	.destroy = _vdo_pool_destroy,
 };
@@ -515,6 +553,13 @@ int init_vdo_segtypes(struct cmd_context *cmd,
 	pool_segtype->name = SEG_TYPE_NAME_VDO_POOL;
 	pool_segtype->flags = SEG_VDO_POOL | SEG_ONLY_EXCLUSIVE;
 	pool_segtype->ops = &_vdo_pool_ops;
+#ifdef DEVMAPPER_SUPPORT
+#  ifdef DMEVENTD
+	pool_segtype->dso = get_monitor_dso_path(cmd, dmeventd_vdo_library_CFG);
+	if (pool_segtype->dso)
+		pool_segtype->flags |= SEG_MONITORED;
+#  endif /* DMEVENTD */
+#endif
 
 	if (!lvm_register_segtype(seglib, pool_segtype))
 		return_0;

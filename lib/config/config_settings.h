@@ -1478,6 +1478,30 @@ cfg(activation_thin_pool_autoextend_percent_CFG, "thin_pool_autoextend_percent",
 	"thin_pool_autoextend_percent = 20\n"
 	"#\n")
 
+cfg(activation_vdo_pool_autoextend_threshold_CFG, "vdo_pool_autoextend_threshold", activation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA, CFG_TYPE_INT, DEFAULT_VDO_POOL_AUTOEXTEND_THRESHOLD, VDO_1ST_VSN, NULL, 0, NULL,
+	"Auto-extend a VDO pool when its usage exceeds this percent.\n"
+	"Setting this to 100 disables automatic extension.\n"
+	"The minimum value is 50 (a smaller value is treated as 50.)\n"
+	"Also see vdo_pool_autoextend_percent.\n"
+	"Automatic extension requires dmeventd to be monitoring the LV.\n"
+	"#\n"
+	"Example\n"
+	"Using 70% autoextend threshold and 20% autoextend size, when a 10G\n"
+	"VDO pool exceeds 7G, it is extended to 12G, and when it exceeds\n"
+	"8.4G, it is extended to 14.4G:\n"
+	"vdo_pool_autoextend_threshold = 70\n"
+	"#\n")
+
+cfg(activation_vdo_pool_autoextend_percent_CFG, "vdo_pool_autoextend_percent", activation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_POOL_AUTOEXTEND_PERCENT, VDO_1ST_VSN, NULL, 0, NULL,
+	"Auto-extending a VDO pool adds this percent extra space.\n"
+	"The amount of additional space added to a VDO pool is this\n"
+	"percent of its current size.\n"
+	"#\n"
+	"Example\n"
+	"Using 70% autoextend threshold and 20% autoextend size, when a 10G\n"
+	"VDO pool exceeds 7G, it is extended to 12G, and when it exceeds\n"
+	"8.4G, it is extended to 14.4G:\n")
+
 cfg_array(activation_mlock_filter_CFG, "mlock_filter", activation_CFG_SECTION, CFG_DEFAULT_UNDEFINED | CFG_ADVANCED, CFG_TYPE_STRING, NULL, vsn(2, 2, 62), NULL, 0, NULL,
 	"Do not mlock these memory areas.\n"
 	"While activating devices, I/O to devices being (re)configured is\n"
@@ -1960,6 +1984,20 @@ cfg(dmeventd_thin_library_CFG, "thin_library", dmeventd_CFG_SECTION, 0, CFG_TYPE
 cfg(dmeventd_thin_command_CFG, "thin_command", dmeventd_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_DMEVENTD_THIN_COMMAND, vsn(2, 2, 169), NULL, 0, NULL,
 	"The plugin runs command with each 5% increment when thin-pool data volume\n"
 	"or metadata volume gets above 50%.\n"
+	"Command which starts with 'lvm ' prefix is internal lvm command.\n"
+	"You can write your own handler to customise behaviour in more details.\n"
+	"User handler is specified with the full path starting with '/'.\n")
+	/* TODO: systemd service handler */
+
+cfg(dmeventd_vdo_library_CFG, "vdo_library", dmeventd_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_DMEVENTD_VDO_LIB, VDO_1ST_VSN, NULL, 0, NULL,
+	"The library dmeventd uses when monitoring a VDO pool device.\n"
+	"libdevmapper-event-lvm2vdo.so monitors the filling of a pool\n"
+	"and emits a warning through syslog when the usage exceeds 80%. The\n"
+	"warning is repeated when 85%, 90% and 95% of the pool is filled.\n")
+
+cfg(dmeventd_vdo_command_CFG, "vdo_command", dmeventd_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_DMEVENTD_VDO_COMMAND, VDO_1ST_VSN, NULL, 0, NULL,
+	"The plugin runs command with each 5% increment when VDO pool volume\n"
+	"gets above 50%.\n"
 	"Command which starts with 'lvm ' prefix is internal lvm command.\n"
 	"You can write your own handler to customise behaviour in more details.\n"
 	"User handler is specified with the full path starting with '/'.\n")
