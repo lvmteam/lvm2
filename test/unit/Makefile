@@ -11,8 +11,6 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 UNIT_SOURCE=\
-	device_mapper/vdo/status.c \
-	\
 	test/unit/activation-generator_t.c \
 	test/unit/bcache_t.c \
 	test/unit/bcache_utils_t.c \
@@ -36,7 +34,7 @@ CLEAN_TARGETS+=$(UNIT_DEPENDS) $(UNIT_OBJECTS)
 test/unit/unit-test: $(UNIT_OBJECTS) lib/liblvm-internal.a libdaemon/client/libdaemonclient.a $(INTERNAL_LIBS)
 	@echo "    [LD] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) \
-	      -o $@ $+ $(LIBS) -lm -ldl -laio
+	      -o $@ $+ $(LIBS) $(DMEVENT_LIBS) $(SYSTEMD_LIBS) -lm -ldl -laio
 
 .PHONEY: run-unit-test
 run-unit-test: test/unit/unit-test
@@ -45,7 +43,7 @@ run-unit-test: test/unit/unit-test
 
 ifeq ("$(USE_TRACKING)","yes")
 ifeq (,$(findstring $(MAKECMDGOALS),cscope.out cflow clean distclean lcov \
- help check check_local check_cluster check_lvmetad check_lvmpolld))
+ help check check_local check_cluster check_lvmetad check_lvmpolld run-unit-test))
 	-include $(UNIT_DEPENDS)
 endif
 endif
