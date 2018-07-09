@@ -3,6 +3,7 @@
 
 // For DM_ARRAY_SIZE!
 #include "device_mapper/all.h"
+#include "base/memory/zalloc.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -27,14 +28,14 @@ static bool _parse_operating_mode(const char *b, const char *e, void *context)
 {
 	static const struct {
 		const char str[12];
-		enum vdo_operating_mode mode;
+		enum dm_vdo_operating_mode mode;
 	} _table[] = {
-		{"recovering", VDO_MODE_RECOVERING},
-		{"read-only", VDO_MODE_READ_ONLY},
-		{"normal", VDO_MODE_NORMAL}
+		{"recovering", DM_VDO_MODE_RECOVERING},
+		{"read-only", DM_VDO_MODE_READ_ONLY},
+		{"normal", DM_VDO_MODE_NORMAL}
 	};
 
-	enum vdo_operating_mode *r = context;
+	enum dm_vdo_operating_mode *r = context;
 	unsigned i;
 	for (i = 0; i < DM_ARRAY_SIZE(_table); i++) {
 		if (_tok_eq(b, e, _table[i].str)) {
@@ -50,13 +51,13 @@ static bool _parse_compression_state(const char *b, const char *e, void *context
 {
 	static const struct {
 		const char str[8];
-		enum vdo_compression_state state;
+		enum dm_vdo_compression_state state;
 	} _table[] = {
-		{"online", VDO_COMPRESSION_ONLINE},
-		{"offline", VDO_COMPRESSION_OFFLINE}
+		{"online", DM_VDO_COMPRESSION_ONLINE},
+		{"offline", DM_VDO_COMPRESSION_OFFLINE}
 	};
 
-	enum vdo_compression_state *r = context;
+	enum dm_vdo_compression_state *r = context;
 	unsigned i;
 	for (i = 0; i < DM_ARRAY_SIZE(_table); i++) {
 		if (_tok_eq(b, e, _table[i].str)) {
@@ -88,18 +89,18 @@ static bool _parse_index_state(const char *b, const char *e, void *context)
 {
 	static const struct {
 		const char str[8];
-		enum vdo_index_state state;
+		enum dm_vdo_index_state state;
 	} _table[] = {
-		{"error", VDO_INDEX_ERROR},
-		{"closed", VDO_INDEX_CLOSED},
-		{"opening", VDO_INDEX_OPENING},
-		{"closing", VDO_INDEX_CLOSING},
-		{"offline", VDO_INDEX_OFFLINE},
-		{"online", VDO_INDEX_ONLINE},
-		{"unknown", VDO_INDEX_UNKNOWN}
+		{"error", DM_VDO_INDEX_ERROR},
+		{"closed", DM_VDO_INDEX_CLOSED},
+		{"opening", DM_VDO_INDEX_OPENING},
+		{"closing", DM_VDO_INDEX_CLOSING},
+		{"offline", DM_VDO_INDEX_OFFLINE},
+		{"online", DM_VDO_INDEX_ONLINE},
+		{"unknown", DM_VDO_INDEX_UNKNOWN}
 	};
 
-	enum vdo_index_state *r = context;
+	enum dm_vdo_index_state *r = context;
 	unsigned i;
 	for (i = 0; i < DM_ARRAY_SIZE(_table); i++) {
 		if (_tok_eq(b, e, _table[i].str)) {
@@ -145,10 +146,10 @@ static const char *_next_tok(const char *b, const char *e)
 	return te == b ? NULL : te;
 }
 
-static void _set_error(struct vdo_status_parse_result *result, const char *fmt, ...)
+static void _set_error(struct dm_vdo_status_parse_result *result, const char *fmt, ...)
 __attribute__ ((format(printf, 2, 3)));
 
-static void _set_error(struct vdo_status_parse_result *result, const char *fmt, ...)
+static void _set_error(struct dm_vdo_status_parse_result *result, const char *fmt, ...)
 {
 	va_list ap;
 
@@ -160,7 +161,7 @@ static void _set_error(struct vdo_status_parse_result *result, const char *fmt, 
 static bool _parse_field(const char **b, const char *e,
 			 bool (*p_fn)(const char *, const char *, void *),
 			 void *field, const char *field_name,
-			 struct vdo_status_parse_result *result)
+			 struct dm_vdo_status_parse_result *result)
 {
 	const char *te;
 
@@ -180,13 +181,13 @@ static bool _parse_field(const char **b, const char *e,
 
 }
 
-bool vdo_status_parse(struct dm_pool *mem, const char *input,
-		      struct vdo_status_parse_result *result)
+bool dm_vdo_status_parse(struct dm_pool *mem, const char *input,
+			 struct dm_vdo_status_parse_result *result)
 {
 	const char *b = b = input;
 	const char *e = input + strlen(input);
 	const char *te;
-	struct vdo_status *s;
+	struct dm_vdo_status *s;
 
 	s = (!mem) ? zalloc(sizeof(*s)) : dm_pool_zalloc(mem, sizeof(*s));
 

@@ -20,51 +20,51 @@
 
 //----------------------------------------------------------------
 
-enum vdo_operating_mode {
-	VDO_MODE_RECOVERING,
-	VDO_MODE_READ_ONLY,
-	VDO_MODE_NORMAL
+enum dm_vdo_operating_mode {
+	DM_VDO_MODE_RECOVERING,
+	DM_VDO_MODE_READ_ONLY,
+	DM_VDO_MODE_NORMAL
 };
 
-enum vdo_compression_state {
-	VDO_COMPRESSION_ONLINE,
-	VDO_COMPRESSION_OFFLINE
+enum dm_vdo_compression_state {
+	DM_VDO_COMPRESSION_ONLINE,
+	DM_VDO_COMPRESSION_OFFLINE
 };
 
-enum vdo_index_state {
-	VDO_INDEX_ERROR,
-	VDO_INDEX_CLOSED,
-	VDO_INDEX_OPENING,
-	VDO_INDEX_CLOSING,
-	VDO_INDEX_OFFLINE,
-	VDO_INDEX_ONLINE,
-	VDO_INDEX_UNKNOWN
+enum dm_vdo_index_state {
+	DM_VDO_INDEX_ERROR,
+	DM_VDO_INDEX_CLOSED,
+	DM_VDO_INDEX_OPENING,
+	DM_VDO_INDEX_CLOSING,
+	DM_VDO_INDEX_OFFLINE,
+	DM_VDO_INDEX_ONLINE,
+	DM_VDO_INDEX_UNKNOWN
 };
 
-struct vdo_status {
+struct dm_vdo_status {
 	char *device;
-	enum vdo_operating_mode operating_mode;
+	enum dm_vdo_operating_mode operating_mode;
 	bool recovering;
-	enum vdo_index_state index_state;
-	enum vdo_compression_state compression_state;
+	enum dm_vdo_index_state index_state;
+	enum dm_vdo_compression_state compression_state;
 	uint64_t used_blocks;
 	uint64_t total_blocks;
 };
 
-void vdo_status_destroy(struct vdo_status *s);
+void dm_vdo_status_destroy(struct dm_vdo_status *s);
 
 #define VDO_MAX_ERROR 256
 
-struct vdo_status_parse_result {
+struct dm_vdo_status_parse_result {
 	char error[VDO_MAX_ERROR];
-	struct vdo_status *status;
+	struct dm_vdo_status *status;
 };
 
 struct dm_pool;
 
 // Parses the status line from the kernel target.
-bool vdo_status_parse(struct dm_pool *mem, const char *input,
-		      struct vdo_status_parse_result *result);
+bool dm_vdo_status_parse(struct dm_pool *mem, const char *input,
+			 struct dm_vdo_status_parse_result *result);
 
 //----------------------------------------------------------------
 
