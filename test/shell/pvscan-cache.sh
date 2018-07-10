@@ -11,7 +11,6 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 SKIP_WITH_LVMLOCKD=1
-SKIP_WITHOUT_LVMETAD=1
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
