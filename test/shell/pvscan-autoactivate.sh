@@ -19,6 +19,8 @@ aux prepare_pvs 2
 vgcreate $vg1 "$dev1" "$dev2"
 lvcreate -n $lv1 -l 4 -a n $vg1
 
+mkdir /run/lvm/pvs_online || true
+
 # the first pvscan scans all devs 
 
 rm /run/lvm/pvs_online/*

@@ -26,7 +26,7 @@ check inactive $vg1 foo
 
 # create a file in pvs_online to disable the pvscan init
 # case which scans everything when the first dev appears.
-mkdir /run/lvm/pvs_online/
+mkdir /run/lvm/pvs_online || true
 touch /run/lvm/pvs_online/foo
 
 pvscan --cache --background "$dev2" -aay
