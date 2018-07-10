@@ -38,7 +38,7 @@ CLEAN_TARGETS += $(RUN_BASE) $(addprefix lib/,$(LIB_LVMLOCKD_CONF) $(LIB_MKE2FS_
 endif
 
 CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,\
-	$(CMDS) clvmd dmeventd dmsetup dmstats lvmetad lvmpolld \
+	$(CMDS) clvmd dmeventd dmsetup dmstats lvmpolld \
 	harness lvmdbusd.profile thin-performance.profile fsadm \
 	dm-version-expected version-expected \
 	paths-installed paths-installed-t paths-common paths-common-t)
@@ -54,16 +54,10 @@ comma = ,
 RUN := $(shell find -L $(srcdir) -regextype posix-egrep \( -path \*/shell/\*.sh -or -path \*/unit/\*.sh \) -and -regex "$(srcdir)/.*($(subst $(comma),|,$(T))).*" -and -not -regex "$(srcdir)/.*($(subst $(comma),|,$(S))).*" | $(SORT))
 RUN_BASE = $(subst $(srcdir)/,,$(RUN))
 
-ifeq ("@BUILD_LVMETAD@", "yes")
-LVMETAD_RUN_BASE = $(RUN_BASE)
-LVMETAD_NDEV_FLAVOUR = ,ndev-lvmetad
-LVMETAD_UDEV_FLAVOUR = ,udev-lvmetad
-endif
-
 ifeq ("@BUILD_LVMPOLLD@", "yes")
 LVMPOLLD_RUN_BASE = $(RUN_BASE)
-LVMPOLLD_NDEV_FLAVOUR = ,ndev-lvmpolld,ndev-cluster-lvmpolld,ndev-lvmetad-lvmpolld
-LVMPOLLD_UDEV_FLAVOUR = ,udev-lvmpolld,udev-cluster-lvmpolld,udev-lvmetad-lvmpolld
+LVMPOLLD_NDEV_FLAVOUR = ,ndev-lvmpolld
+LVMPOLLD_UDEV_FLAVOUR = ,udev-lvmpolld
 endif
 
 ifeq ("@BUILD_LVMLOCKD@", "yes")
@@ -85,17 +79,12 @@ help:
 	@echo "  all			Default target, run check."
 	@echo "  check			Run all tests."
 	@echo "  check_system		Run all tests using udev."
-	@echo "  check_local		Run tests without clvmd and lvmetad."
-	@echo "  check_cluster		Run tests with cluster daemon."
-	@echo "  check_lvmetad		Run tests with lvmetad daemon."
+	@echo "  check_local		Run tests."
 	@echo "  check_lvmpolld         Run tests with lvmpolld daemon."
-	@echo "  check_cluster_lvmpolld Run tests with clvmd and lvmpolld daemon."
-	@echo "  check_lvmetad_lvmpolld Run tests with lvmetad and lvmpolld daemon."
 	@echo "  check_all_lvmpolld     Run all tests with lvmpolld daemon."
 	@echo "  check_lvmlockd_sanlock Run tests with lvmlockd and sanlock."
 	@echo "  check_lvmlockd_dlm     Run tests with lvmlockd and dlm."
 	@echo "  check_lvmlockd_test    Run tests with lvmlockd --test."
-	@echo "  check_lvmlockd_test_lvmetad Run tests with lvmlockd --test and lvmetad."
 	@echo "  run-unit-test          Run only unit tests (root not needed)."
 	@echo "  clean			Clean dir."
 	@echo "  help			Display callable targets."
@@ -107,7 +96,6 @@ help:
 	@echo "  LVM_TEST_PREFER_BRD	Prefer using brd (ramdisk) over loop for testing [1]."
 	@echo "  LVM_TEST_DIR		Where to create test files  [$(LVM_TEST_DIR)]."
 	@echo "  LVM_TEST_LOCKING	Normal (1), Cluster (3)."
-	@echo "  LVM_TEST_LVMETAD	Start lvmetad (1)."
 	@echo "  LVM_TEST_LVMETAD_DEBUG_OPTS  Allows to override debug opts [-l all]."
 	@echo "  LVM_TEST_LVMPOLLD	Start lvmpolld"
 	@echo "  LVM_TEST_NODEBUG	Do not debug lvm commands."
@@ -124,7 +112,6 @@ help:
 	@echo "  LVM_TEST_UNLIMITED	Set to get unlimited test log (>32MB)"
 	@echo "  LVM_VALGRIND		Enable valgrind testing, execs $$"VALGRIND.
 	@echo "  LVM_VALGRIND_DMEVENTD	Enable valgrind testing of dmeventd (1)."
-	@echo "  LVM_VALGRIND_LVMETAD	Enable valgrind testing of lvmetad (1)."
 	@echo "  LVM_STRACE		Enable strace logging."
 	@echo "  LVM_DEBUG_LEVEL	Sets debuging level for valgrind/strace (use > 0)."
 	@echo "  LVM_VERIFY_UDEV	Default verify state for lvm.conf."
@@ -136,29 +123,17 @@ help:
 check: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir $(LVM_TEST_RESULTS) \
-		--flavours ndev-vanilla,ndev-cluster$(LVMETAD_NDEV_FLAVOUR)$(LVMPOLLD_NDEV_FLAVOUR) --only $(T) --skip $(S)
+		--flavours ndev-vanilla,$(LVMETAD_NDEV_FLAVOUR)$(LVMPOLLD_NDEV_FLAVOUR) --only $(T) --skip $(S)
 
 check_system: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir $(LVM_TEST_RESULTS) \
-		--flavours udev-vanilla,udev-cluster$(LVMETAD_UDEV_FLAVOUR)$(LVMPOLLD_UDEV_FLAVOUR)$(LVMLOCKD_UDEV_FLAVOUR) --only $(T) --skip $(S)
-
-check_cluster: .tests-stamp
-	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir $(LVM_TEST_RESULTS) \
-		--flavours ndev-cluster --only $(T) --skip $(S)
+		--flavours udev-vanilla,$(LVMETAD_UDEV_FLAVOUR)$(LVMPOLLD_UDEV_FLAVOUR)$(LVMLOCKD_UDEV_FLAVOUR) --only $(T) --skip $(S)
 
 check_local: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir $(LVM_TEST_RESULTS) \
 		--flavours ndev-vanilla --only $(T) --skip $(S)
-
-ifeq ("@BUILD_LVMETAD@", "yes")
-check_lvmetad: .tests-stamp
-	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir $(LVM_TEST_RESULTS) \
-		--flavours ndev-lvmetad --only $(T) --skip $(S)
-endif
 
 ifeq ("@BUILD_LVMPOLLD@", "yes")
 check_lvmpolld: .tests-stamp
@@ -166,20 +141,10 @@ check_lvmpolld: .tests-stamp
 		--testdir . --outdir results \
 		--flavours ndev-lvmpolld --only $(T) --skip $(S)
 
-check_cluster_lvmpolld: .tests-stamp
-	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir results \
-		--flavours ndev-cluster-lvmpolld --only $(T) --skip $(S)
-
-check_lvmetad_lvmpolld: .tests-stamp
-	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir results \
-		--flavours ndev-lvmetad-lvmpolld --only $(T) --skip $(S)
-
 check_all_lvmpolld: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir results \
-		--flavours ndev-lvmpolld,ndev-cluster-lvmpolld,ndev-lvmetad-lvmpolld --only $(T) --skip $(S)
+		--flavours ndev-lvmpolld --only $(T) --skip $(S)
 endif
 
 ifeq ("@BUILD_LVMLOCKD@", "yes")
@@ -203,13 +168,6 @@ check_lvmlockd_test: .tests-stamp
 		--flavours udev-lvmlockd-test --only $(T) --skip $(S)
 endif
 
-ifeq ("@BUILD_LVMLOCKD@", "yes")
-check_lvmlockd_test_lvmetad: .tests-stamp
-	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir results \
-		--flavours udev-lvmlockd-test-lvmetad --only $(T) --skip $(S)
-endif
-
 run-unit-test unit-test:
 	$(MAKE) -C unit $(@)
 
@@ -217,21 +175,12 @@ DATADIR = $(datadir)/lvm2-testsuite
 EXECDIR = $(libexecdir)/lvm2-testsuite
 
 LIB_FLAVOURS = \
- flavour-ndev-cluster-lvmpolld\
- flavour-ndev-cluster\
- flavour-ndev-lvmetad-lvmpolld\
- flavour-ndev-lvmetad\
  flavour-ndev-lvmpolld\
  flavour-ndev-vanilla\
- flavour-udev-cluster-lvmpolld\
- flavour-udev-cluster\
- flavour-udev-lvmetad-lvmpolld\
- flavour-udev-lvmetad\
  flavour-udev-lvmpolld\
  flavour-udev-lvmlockd-sanlock\
  flavour-udev-lvmlockd-dlm\
  flavour-udev-lvmlockd-test\
- flavour-udev-lvmlockd-test-lvmetad\
  flavour-udev-vanilla
 
 LIB_LVMLOCKD_CONF = \
@@ -362,7 +311,7 @@ LIB = $(addprefix lib/, $(LIB_SHARED) $(LIB_LOCAL) $(LIB_NOT) $(LIB_LINK_NOT) $(
 	$(RM) lib/clvmd
 	for i in $(CMDS); do $(LN_S) -f lvm-wrapper lib/$$i; done
 	for i in daemons/dmeventd/dmeventd \
-		libdm/dm-tools/dmsetup daemons/lvmetad/lvmetad \
+		libdm/dm-tools/dmsetup \
 		daemons/lvmpolld/lvmpolld ; do \
 		$(LN_S) -f $(abs_top_builddir)/$$i lib/; done
 	$(LN_S) -f $(abs_top_builddir)/libdm/dm-tools/dmsetup lib/dmstats
