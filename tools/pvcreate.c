@@ -103,17 +103,6 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 	struct pvcreate_params pp;
 	int ret;
 
-	if (!argc) {
-		log_error("Please enter a physical volume path.");
-		return 0;
-	}
-
-	/*
-	 * Device info needs to be available for reading the VG backup file in
-	 * _pvcreate_restore_params_from_backup.
-	 */
-	lvmcache_seed_infos_from_lvmetad(cmd);
-
 	/*
 	 * Five kinds of pvcreate param values:
 	 * 1. defaults

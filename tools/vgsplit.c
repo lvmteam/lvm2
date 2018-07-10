@@ -582,7 +582,6 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	lvmcache_label_scan(cmd);
-	lvmcache_seed_infos_from_lvmetad(cmd);
 
 	if (strcmp(vg_name_to, vg_name_from) < 0)
 		lock_vg_from_first = 0;
@@ -728,8 +727,6 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	if (!vg_write(vg_to) || !vg_commit(vg_to))
 		goto_bad;
 
-	lvmetad_vg_update_finish(vg_to);
-
 	backup(vg_to);
 
 	/*
@@ -740,8 +737,6 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	if (vg_from->pv_count) {
 		if (!vg_write(vg_from) || !vg_commit(vg_from))
 			goto_bad;
-
-		lvmetad_vg_update_finish(vg_from);
 
 		backup(vg_from);
 	}
@@ -766,8 +761,6 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!vg_write(vg_to) || !vg_commit(vg_to))
 		goto_bad;
-
-	lvmetad_vg_update_finish(vg_to);
 
 	backup(vg_to);
 

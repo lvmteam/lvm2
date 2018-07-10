@@ -106,8 +106,6 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 
 	strncpy(*cmd->argv, "(lvm2)", strlen(*cmd->argv));
 
-	lvmetad_disconnect();
-
 	if (!skip_lvm) {
 		reset_locking();
 		lvmcache_destroy(cmd, 1, 1);
@@ -1475,7 +1473,6 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_LABEL);
 
 	lvmcache_label_scan(cmd);
-	lvmcache_seed_infos_from_lvmetad(cmd);
 
 	if (argc) {
 		for (; opt < argc; opt++) {
@@ -2064,10 +2061,8 @@ static int _resolve_duplicate_vgnames(struct cmd_context *cmd,
 				continue;
 
 			/*
-			 * Without lvmetad, a label scan has already populated
-			 * lvmcache vginfo with this information.
-			 * With lvmetad, this function does vg_lookup on this
-			 * name/vgid and checks system_id in the metadata.
+			 * label scan has already populated lvmcache vginfo with
+			 * this information.
 			 */
 			if (lvmcache_vg_is_foreign(cmd, vgnl->vg_name, vgnl->vgid)) {
 				if (!id_write_format((const struct id*)vgnl->vgid, uuid, sizeof(uuid)))
@@ -3912,8 +3907,6 @@ static int _get_all_devices(struct cmd_context *cmd, struct dm_list *all_devices
 
 	log_debug("Getting list of all devices");
 
-	lvmcache_seed_infos_from_lvmetad(cmd);
-
 	if (!(iter = dev_iter_create(cmd->full_filter, 1))) {
 		log_error("dev_iter creation failed.");
 		return ECMD_FAILED;
@@ -4574,7 +4567,6 @@ int process_each_pv(struct cmd_context *cmd,
 		log_verbose("Some PVs were not found in first search, retrying.");
 
 		lvmcache_label_scan(cmd);
-		lvmcache_seed_infos_from_lvmetad(cmd);
 
 		ret = _process_pvs_in_vgs(cmd, read_flags, &all_vgnameids, &all_devices,
 					  &arg_missed, &arg_tags, 0, 0,
@@ -5770,12 +5762,6 @@ do_command:
 			continue;
 		}
 
-		if (!lvmetad_pv_gone_by_dev(pd->dev)) {
-			log_error("Failed to remove PV %s from lvmetad.", pd->name);
-			dm_list_move(&pp->arg_fail, &pd->list);
-			continue;
-		}
-
 		log_print_unless_silent("Labels on physical volume \"%s\" successfully wiped.",
 					pd->name);
 	}
@@ -5786,12 +5772,6 @@ do_command:
 	dm_list_iterate_items_safe(pd, pd2, &remove_duplicates) {
 		if (!label_remove(pd->dev)) {
 			log_error("Failed to wipe existing label(s) on %s.", pd->name);
-			dm_list_move(&pp->arg_fail, &pd->list);
-			continue;
-		}
-
-		if (!lvmetad_pv_gone_by_dev(pd->dev)) {
-			log_error("Failed to remove PV %s from lvmetad.", pd->name);
 			dm_list_move(&pp->arg_fail, &pd->list);
 			continue;
 		}

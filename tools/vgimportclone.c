@@ -14,7 +14,6 @@
 
 #include "tools.h"
 #include "lib/cache/lvmcache.h"
-#include "daemons/lvmetad/lvmetad-client.h"
 #include "lib/filters/filter.h"
 
 struct vgimportclone_params {
@@ -204,7 +203,6 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 	char base_vgname[NAME_LEN] = { 0 };
 	char tmp_vgname[NAME_LEN] = { 0 };
 	unsigned int vgname_count;
-	int lvmetad_rescan = 0;
 	int ret = ECMD_FAILED;
 
 	if (!argc) {
@@ -218,12 +216,6 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 	set_pv_notify(cmd);
 
 	vp.import_vg = arg_is_set(cmd, import_ARG);
-
-	if (lvmetad_used()) {
-		lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_DUPLICATES);
-		lvmetad_disconnect();
-		lvmetad_rescan = 1;
-	}
 
 	if (!(handle = init_processing_handle(cmd, NULL))) {
 		log_error("Failed to initialize processing handle.");
@@ -361,23 +353,6 @@ out:
 	internal_filter_clear();
 	init_internal_filtering(0);
 	destroy_processing_handle(cmd, handle);
-
-	/* Enable lvmetad again if no duplicates are left. */
-	if (lvmetad_rescan) {
-		if (!lvmetad_connect(cmd)) {
-			log_warn("WARNING: Failed to connect to lvmetad.");
-			log_warn("WARNING: Update lvmetad with pvscan --cache.");
-			return ret;
-		}
-
-		if (!refresh_filters(cmd))
-			stack;
-
-		if (!lvmetad_pvscan_all_devs(cmd, 1)) {
-			log_warn("WARNING: Failed to scan devices.");
-			log_warn("WARNING: Update lvmetad with pvscan --cache.");
-		}
-	}
 
 	return ret;
 }

@@ -20,7 +20,6 @@
 #include "lib/misc/lvm-string.h"
 #include "lib/misc/lvm-file.h"
 #include "lib/cache/lvmcache.h"
-#include "lib/cache/lvmetad.h"
 #include "lib/mm/memlock.h"
 #include "lib/datastruct/str_list.h"
 #include "lib/metadata/pv_alloc.h"
@@ -542,11 +541,6 @@ int vg_remove_direct(struct volume_group *vg)
 	struct pv_list *pvl;
 	int ret = 1;
 
-	if (!lvmetad_vg_remove_pending(vg)) {
-		log_error("Failed to update lvmetad for pending remove.");
-		return 0;
-	}
-
 	if (!vg_remove_mdas(vg)) {
 		log_error("vg_remove_mdas %s failed", vg->name);
 		return 0;
@@ -577,9 +571,6 @@ int vg_remove_direct(struct volume_group *vg)
 			ret = 0;
 		}
 	}
-
-	if (!lvmetad_vg_remove_finish(vg))
-		stack;
 
 	lockd_vg_update(vg);
 
@@ -2987,17 +2978,6 @@ int vg_write(struct volume_group *vg)
 
 	lockd_vg_update(vg);
 
-	/*
-	 * This tells lvmetad the new seqno it should expect to receive
-	 * the metadata for after the commit.  The cached VG will be
-	 * invalid in lvmetad until this command sends the new metadata
-	 * after it's committed.
-	 */
-	if (!lvmetad_vg_update_pending(vg)) {
-		log_error("Failed to prepare new VG metadata in lvmetad cache.");
-		return 0;
-	}
-
 	return 1;
 }
 
@@ -3030,7 +3010,6 @@ static int _vg_commit_mdas(struct volume_group *vg)
 		/* Update cache first time we succeed */
 		if (!failed && !cache_updated) {
 			lvmcache_update_vg(vg, 0);
-			// lvmetad_vg_commit(vg);
 			cache_updated = 1;
 		}
 	}
@@ -3069,14 +3048,6 @@ void vg_revert(struct volume_group *vg)
 {
 	struct metadata_area *mda;
 	struct lv_list *lvl;
-
-	/*
-	 * This will leave the cached copy in lvmetad INVALID (from
-	 * lvmetad_vg_update_pending) and means the VG will be reread from disk
-	 * to update the lvmetad copy, which is what we want to ensure that the
-	 * cached copy is correct.
-	 */
-	vg->lvmetad_update_pending = 0;
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		if (lvl->lv->new_lock_args) {
@@ -3646,7 +3617,6 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct dm_list all_pvs;
 	char uuid[64] __attribute__((aligned(8)));
 	int skipped_rescan = 0;
-	int reappeared = 0;
 	struct cached_vg_fmtdata *vg_fmtdata = NULL;	/* Additional format-specific data about the vg */
 	unsigned use_previous_vg;
 
@@ -3668,49 +3638,6 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		stack;
 
 	log_very_verbose("Reading VG %s %s", vgname ?: "<no name>", vgid ? uuid : "<no vgid>");
-
-	if (lvmetad_used() && !use_precommitted) {
-		if ((correct_vg = lvmetad_vg_lookup(cmd, vgname, vgid))) {
-			dm_list_iterate_items(pvl, &correct_vg->pvs)
-				reappeared += _check_reappeared_pv(correct_vg, pvl->pv, enable_repair);
-			if (reappeared && enable_repair)
-				*mdas_consistent = _repair_inconsistent_vg(correct_vg, lockd_state);
-			else
-				*mdas_consistent = !reappeared;
-			if (_wipe_outdated_pvs(cmd, correct_vg, &correct_vg->pvs_outdated, lockd_state)) {
-				/* clear the list */
-				dm_list_init(&correct_vg->pvs_outdated);
-				lvmetad_vg_clear_outdated_pvs(correct_vg);
-                        }
-		}
-
-
-		if (correct_vg) {
-			if (update_old_pv_ext && !_vg_update_old_pv_ext_if_needed(correct_vg)) {
-				release_vg(correct_vg);
-				return_NULL;
-			}
-
-			if (strip_historical_lvs && !vg_strip_outdated_historical_lvs(correct_vg)) {
-				release_vg(correct_vg);
-				return_NULL;
-			}
-
-			/*
-		 	 * When a command reads the vg from lvmetad, and then
-			 * writes the vg, the write path does some disk reads
-		 	 * of the devs.
-		 	 * FIXME: when a command is going to write the vg,
-		 	 * we should just read the vg from disk entirely
-		 	 * and skip reading it from lvmetad.
-		 	 */
-			dm_list_iterate_items(pvl, &correct_vg->pvs)
-				label_scan_open(pvl->pv->dev);
-
-		}
-
-		return correct_vg;
-	}
 
 	/*
 	 * Rescan the devices that are associated with this vg in lvmcache.
@@ -4489,7 +4416,6 @@ int get_vgnameids(struct cmd_context *cmd, struct dm_list *vgnameids,
 		  const char *only_this_vgname, int include_internal)
 {
 	struct vgnameid_list *vgnl;
-	struct format_type *fmt;
 
 	if (only_this_vgname) {
 		if (!(vgnl = dm_pool_alloc(cmd->mem, sizeof(*vgnl)))) {
@@ -4503,32 +4429,7 @@ int get_vgnameids(struct cmd_context *cmd, struct dm_list *vgnameids,
 		return 1;
 	}
 
-	if (lvmetad_used()) {
-		/*
-		 * This just gets the list of names/ids from lvmetad
-		 * and does not populate lvmcache.
-		 */
-		lvmetad_get_vgnameids(cmd, vgnameids);
-
-		if (include_internal) {
-			dm_list_iterate_items(fmt, &cmd->formats) {
-				if (!(vgnl = dm_pool_alloc(cmd->mem, sizeof(*vgnl)))) {
-					log_error("vgnameid_list allocation failed.");
-					return 0;
-				}
-
-				vgnl->vg_name = dm_pool_strdup(cmd->mem, fmt->orphan_vg_name);
-				vgnl->vgid = NULL;
-				dm_list_add(vgnameids, &vgnl->list);
-			}
-		}
-	} else {
-		/*
-		 * The non-lvmetad case. This function begins by calling
-		 * lvmcache_label_scan() to populate lvmcache.
-		 */
-		lvmcache_get_vgnameids(cmd, include_internal, vgnameids);
-	}
+	lvmcache_get_vgnameids(cmd, include_internal, vgnameids);
 
 	return 1;
 }
@@ -4558,9 +4459,6 @@ int pv_write(struct cmd_context *cmd,
 		return_0;
 
 	pv->status &= ~UNLABELLED_PV;
-
-	if (!lvmetad_pv_found(cmd, &pv->id, pv->dev, pv->fmt, pv->label_sector, NULL, NULL, NULL))
-		return_0;
 
 	return 1;
 }

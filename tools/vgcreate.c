@@ -84,8 +84,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	lvmcache_label_scan(cmd);              /* Does nothing when using lvmetad. */
-	lvmcache_seed_infos_from_lvmetad(cmd); /* Does nothing unless using lvmetad. */
+	lvmcache_label_scan(cmd);
 
 	if (lvmcache_fmt_from_vgname(cmd, vp_new.vg_name, NULL, 0)) {
 		unlock_vg(cmd, NULL, vp_new.vg_name);

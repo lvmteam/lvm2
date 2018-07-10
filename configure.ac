@@ -39,7 +39,6 @@ case "$host_os" in
 		LDDEPS="$LDDEPS .export.sym"
 		LIB_SUFFIX=so
 		DEVMAPPER=yes
-		BUILD_LVMETAD=no
 		BUILD_LVMPOLLD=no
 		LOCKDSANLOCK=no
 		LOCKDDLM=no
@@ -844,16 +843,6 @@ if test "$DEVMAPPER" = yes; then
 fi
 
 ################################################################################
-dnl -- Build lvmetad
-AC_MSG_CHECKING(whether to build LVMetaD)
-AC_ARG_ENABLE(lvmetad,
-	      AC_HELP_STRING([--enable-lvmetad],
-			     [enable the LVM Metadata Daemon]),
-	      LVMETAD=$enableval)
-test -n "$LVMETAD" && BUILD_LVMETAD=$LVMETAD
-AC_MSG_RESULT($BUILD_LVMETAD)
-
-################################################################################
 dnl -- Build lvmpolld
 AC_MSG_CHECKING(whether to build lvmpolld)
 AC_ARG_ENABLE(lvmpolld,
@@ -908,9 +897,7 @@ AC_MSG_RESULT($BUILD_LVMLOCKD)
 
 if test "$BUILD_LVMLOCKD" = yes; then
 	AS_IF([test "$LVMPOLLD" = no], [AC_MSG_ERROR([cannot build lvmlockd with --disable-lvmpolld.])])
-	AS_IF([test "$LVMETAD" = no], [AC_MSG_ERROR([cannot build lvmlockd with --disable-lvmetad.])])
 	AS_IF([test "$BUILD_LVMPOLLD" = no], [BUILD_LVMPOLLD=yes; AC_MSG_WARN([Enabling lvmpolld - required by lvmlockd.])])
-	AS_IF([test "$BUILD_LVMETAD" = no], [BUILD_LVMETAD=yes; AC_MSG_WARN([Enabling lvmetad - required by lvmlockd.])])
 	AC_MSG_CHECKING([defaults for use_lvmlockd])
 	AC_ARG_ENABLE(use_lvmlockd,
 		      AC_HELP_STRING([--disable-use-lvmlockd],
@@ -934,33 +921,6 @@ else
 fi
 AC_DEFINE_UNQUOTED(DEFAULT_USE_LVMLOCKD, [$DEFAULT_USE_LVMLOCKD],
 		   [Use lvmlockd by default.])
-
-################################################################################
-dnl -- Check lvmetad
-if test "$BUILD_LVMETAD" = yes; then
-	AC_MSG_CHECKING([defaults for use_lvmetad])
-	AC_ARG_ENABLE(use_lvmetad,
-		      AC_HELP_STRING([--disable-use-lvmetad],
-				     [disable usage of LVM Metadata Daemon]),
-		      [case ${enableval} in
-		       yes) DEFAULT_USE_LVMETAD=1 ;;
-		       *) DEFAULT_USE_LVMETAD=0 ;;
-		       esac], DEFAULT_USE_LVMETAD=1)
-	AC_MSG_RESULT($DEFAULT_USE_LVMETAD)
-	AC_DEFINE([LVMETAD_SUPPORT], 1, [Define to 1 to include code that uses lvmetad.])
-
-	AC_ARG_WITH(lvmetad-pidfile,
-		    AC_HELP_STRING([--with-lvmetad-pidfile=PATH],
-				   [lvmetad pidfile [PID_DIR/lvmetad.pid]]),
-		    LVMETAD_PIDFILE=$withval,
-		    LVMETAD_PIDFILE="$DEFAULT_PID_DIR/lvmetad.pid")
-	AC_DEFINE_UNQUOTED(LVMETAD_PIDFILE, ["$LVMETAD_PIDFILE"],
-			   [Path to lvmetad pidfile.])
-else
-	DEFAULT_USE_LVMETAD=0
-fi
-AC_DEFINE_UNQUOTED(DEFAULT_USE_LVMETAD, [$DEFAULT_USE_LVMETAD],
-		   [Use lvmetad by default.])
 
 ################################################################################
 dnl -- Check lvmpolld
@@ -1662,7 +1622,6 @@ AC_SUBST(BLKID_PC)
 AC_SUBST(BUILD_CMIRRORD)
 AC_SUBST(BUILD_DMEVENTD)
 AC_SUBST(BUILD_LVMDBUSD)
-AC_SUBST(BUILD_LVMETAD)
 AC_SUBST(BUILD_LVMPOLLD)
 AC_SUBST(BUILD_LVMLOCKD)
 AC_SUBST(BUILD_LOCKDSANLOCK)
@@ -1699,7 +1658,6 @@ AC_SUBST(DEFAULT_SPARSE_SEGTYPE)
 AC_SUBST(DEFAULT_SYS_DIR)
 AC_SUBST(DEFAULT_SYS_LOCK_DIR)
 AC_SUBST(DEFAULT_USE_BLKID_WIPING)
-AC_SUBST(DEFAULT_USE_LVMETAD)
 AC_SUBST(DEFAULT_USE_LVMPOLLD)
 AC_SUBST(DEFAULT_USE_LVMLOCKD)
 AC_SUBST(DEVMAPPER)
@@ -1792,7 +1750,6 @@ AC_SUBST(VDO_INCLUDE)
 AC_SUBST(VDO_LIB)
 AC_SUBST(WRITE_INSTALL)
 AC_SUBST(DMEVENTD_PIDFILE)
-AC_SUBST(LVMETAD_PIDFILE)
 AC_SUBST(LVMPOLLD_PIDFILE)
 AC_SUBST(LVMLOCKD_PIDFILE)
 AC_SUBST(CMIRRORD_PIDFILE)
@@ -1832,7 +1789,6 @@ daemons/lvmdbusd/lvmdbusd
 daemons/lvmdbusd/lvmdb.py
 daemons/lvmdbusd/lvm_shell_proxy.py
 daemons/lvmdbusd/path.py
-daemons/lvmetad/Makefile
 daemons/lvmpolld/Makefile
 daemons/lvmlockd/Makefile
 conf/Makefile
@@ -1860,9 +1816,6 @@ scripts/dm_event_systemd_red_hat.service
 scripts/dm_event_systemd_red_hat.socket
 scripts/lvm2_cmirrord_systemd_red_hat.service
 scripts/lvm2_lvmdbusd_systemd_red_hat.service
-scripts/lvm2_lvmetad_init_red_hat
-scripts/lvm2_lvmetad_systemd_red_hat.service
-scripts/lvm2_lvmetad_systemd_red_hat.socket
 scripts/lvm2_lvmpolld_init_red_hat
 scripts/lvm2_lvmpolld_systemd_red_hat.service
 scripts/lvm2_lvmpolld_systemd_red_hat.socket

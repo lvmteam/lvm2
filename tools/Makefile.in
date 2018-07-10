@@ -135,10 +135,6 @@ man-generator: man-generator.o
 	@echo "    [CC] $@"
 	$(CC) $(CFLAGS) -o $@ $<
 
-ifeq ("@BUILD_LVMETAD@", "yes")
-lvm: $(top_builddir)/libdaemon/client/libdaemonclient.a
-endif
-
 lvm.static: $(OBJECTS) lvm-static.o $(top_builddir)/lib/liblvm-internal.a $(INTERNAL_LIBS)
 	@echo "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -static -L$(interfacebuilddir) -o $@ \

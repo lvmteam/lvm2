@@ -1373,15 +1373,8 @@ ID: lvs_general
 lvscan
 OO: --all, --blockdevice, --ignorelockingfailure,
 --readonly, --reportformat ReportFmt
-IO: --partial
+IO: --partial, --cache_long
 ID: lvscan_general
-
-lvscan --cache_long
-OO: --blockdevice, --ignorelockingfailure,
---readonly, --reportformat ReportFmt
-OP: LV ...
-IO: --partial
-ID: lvscan_cache
 
 ---
 
@@ -1476,7 +1469,7 @@ ID: pvs_general
 pvscan
 OO: --ignorelockingfailure, --reportformat ReportFmt, --exported, --novolumegroup,
 --short, --uuid
-ID: pvscan_show
+ID: pvscan_display
 DESC: Display PV information.
 
 pvscan --cache_long
@@ -1484,7 +1477,7 @@ OO: --ignorelockingfailure, --reportformat ReportFmt, --background,
 --activate ay, --major Number, --minor Number
 OP: PV|String ...
 ID: pvscan_cache
-DESC: Populate the lvmetad cache by scanning PVs.
+DESC: Autoactivate a VG when all PVs are online.
 
 ---
 
@@ -1734,9 +1727,9 @@ ID: vgs_general
 ---
 
 vgscan
-OO: --cache_long, --ignorelockingfailure, --mknodes, --notifydbus,
+OO: --ignorelockingfailure, --mknodes, --notifydbus,
 --reportformat ReportFmt
-IO: --partial
+IO: --partial, --cache_long
 ID: vgscan_general
 
 ---

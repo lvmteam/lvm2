@@ -73,7 +73,6 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 	}
 
 	lvmcache_label_scan(cmd);
-	lvmcache_seed_infos_from_lvmetad(cmd);
 
 	if (strcmp(vg_name_to, vg_name_from) > 0)
 		lock_vg_from_first = 1;

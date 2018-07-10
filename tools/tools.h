@@ -23,7 +23,6 @@
 #include "lib/activate/activate.h"
 #include "lib/format_text/archiver.h"
 #include "lib/cache/lvmcache.h"
-#include "lib/cache/lvmetad.h"
 #include "lib/locking/lvmlockd.h"
 #include "lvm-version.h"
 #include "lib/config/config.h"
@@ -128,8 +127,6 @@ struct arg_value_group_list {
 #define IGNORE_PERSISTENT_FILTER 0x00000080
 /* Command must use all specified arg names and fail if all cannot be used. */
 #define MUST_USE_ALL_ARGS        0x00000100
-/* Command wants to control the device scan for lvmetad itself. */
-#define NO_LVMETAD_AUTOSCAN      0x00000200
 /* Command should process unused duplicate devices. */
 #define ENABLE_DUPLICATE_DEVS    0x00000400
 /* Command does not accept tags as args. */
@@ -269,5 +266,8 @@ int lvconvert_merge_cmd(struct cmd_context *cmd, int argc, char **argv);
 
 int lvconvert_to_vdopool_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvconvert_to_vdopool_param_cmd(struct cmd_context *cmd, int argc, char **argv);
+
+int pvscan_display_cmd(struct cmd_context *cmd, int argc, char **argv);
+int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv);
 
 #endif

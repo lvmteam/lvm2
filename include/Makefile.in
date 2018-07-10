@@ -71,8 +71,6 @@ CLEAN_TARGETS += \
  lvm2app.h \
  lvm2cmd.h \
  lvmcache.h \
- lvmetad-client.h \
- lvmetad.h \
  lvmlockd-client.h \
  lvmlockd.h \
  lvmnotify.h \

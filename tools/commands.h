@@ -103,7 +103,7 @@ xx(lvs,
 
 xx(lvscan,
    "List all logical volumes in all volume groups",
-   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH | NO_LVMETAD_AUTOSCAN)
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH)
 
 xx(pvchange,
    "Change attributes of physical volume(s)",
@@ -149,7 +149,7 @@ xx(pvs,
 
 xx(pvscan,
    "List all physical volumes",
-   PERMITTED_READ_ONLY | LOCKD_VG_SH | NO_LVMETAD_AUTOSCAN | IGNORE_PERSISTENT_FILTER)
+   PERMITTED_READ_ONLY | LOCKD_VG_SH | IGNORE_PERSISTENT_FILTER)
 
 xx(segtypes,
    "List available segment types",
@@ -201,11 +201,10 @@ xx(vgextend,
 
 xx(vgimport,
    "Register exported volume group with system",
-   ALL_VGS_IS_DEFAULT | NO_LVMETAD_AUTOSCAN)
+   ALL_VGS_IS_DEFAULT)
 
 xx(vgimportclone,
-   "Import a VG from cloned PVs",
-   NO_LVMETAD_AUTOSCAN)
+   "Import a VG from cloned PVs", 0)
 
 xx(vgmerge,
    "Merge volume groups",
@@ -233,7 +232,7 @@ xx(vgs,
 
 xx(vgscan,
    "Search for all volume groups",
-   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH | NO_LVMETAD_AUTOSCAN | IGNORE_PERSISTENT_FILTER)
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH | IGNORE_PERSISTENT_FILTER)
 
 xx(vgsplit,
    "Move physical volumes into a new or existing volume group",

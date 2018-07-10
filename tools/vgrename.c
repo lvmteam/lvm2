@@ -61,10 +61,8 @@ static int _vgrename_single(struct cmd_context *cmd, const char *vg_name,
 	 *
 	 * (FIXME: We could look for the new name in the list of all
 	 * VGs that process_each_vg created, but we don't have access
-	 * to that list here, so we have to look in lvmcache.
-	 * This requires populating lvmcache when using lvmetad.)
+	 * to that list here, so we have to look in lvmcache.)
 	 */
-	lvmcache_seed_infos_from_lvmetad(cmd);
 
 	if (lvmcache_vginfo_from_vgname(vp->vg_name_new, NULL)) {
 		log_error("New VG name \"%s\" already exists", vp->vg_name_new);

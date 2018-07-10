@@ -13,7 +13,6 @@
 #include "lib/metadata/metadata.h"
 #include "lib/metadata/segtype.h"
 #include "lib/activate/activate.h"
-#include "lib/cache/lvmetad.h"
 #include "lib/locking/lvmlockd.h"
 #include "lib/cache/lvmcache.h"
 #include "daemons/lvmlockd/lvmlockd-client.h"
@@ -1324,7 +1323,7 @@ int lockd_gl_create(struct cmd_context *cmd, const char *def_mode, const char *v
 		 *    lvmlockd to return NO_GL_LS/NO_LOCKSPACES.
 		 *
 		 * 2. No sanlock VGs are seen in lvmcache after the disk
-		 *    scan performed in lvmetad_validate_global_cache().
+		 *    scan performed.
 		 *
 		 * If both of those are true, we go ahead and create this new
 		 * VG which will have the global lock enabled.  However, this
@@ -1347,11 +1346,6 @@ int lockd_gl_create(struct cmd_context *cmd, const char *def_mode, const char *v
 		if ((lockd_flags & LD_RF_NO_GL_LS) &&
 		    (lockd_flags & LD_RF_NO_LOCKSPACES) &&
 		    !strcmp(vg_lock_type, "sanlock")) {
-			lvmetad_validate_global_cache(cmd, 1);
-			/*
-			 * lvmcache holds provisional VG lock_type info because
-			 * lvmetad_validate_global_cache did a disk scan.
-			 */
 			if (lvmcache_contains_lock_type_sanlock(cmd)) {
 				/* FIXME: we could check that all are started, and then check that none have gl enabled. */
 				log_error("Global lock failed: start existing sanlock VGs to access global lock.");
@@ -1390,8 +1384,6 @@ int lockd_gl_create(struct cmd_context *cmd, const char *def_mode, const char *v
 
 	/* --shared with vgcreate does not mean include_shared_vgs */
 	cmd->include_shared_vgs = 0;
-
-	lvmetad_validate_global_cache(cmd, 1);
 
 	return 1;
 }
@@ -1438,17 +1430,6 @@ int lockd_gl_create(struct cmd_context *cmd, const char *def_mode, const char *v
  * will continue running for a long time while not needing the global lock,
  * e.g. commands that poll to report progress.
  *
- * Acquiring the global lock also updates the local lvmetad cache if
- * necessary.  lockd_gl() first acquires the lock via lvmlockd, then
- * before returning to the caller, it checks that the global information
- * (e.g. VG namespace, set of orphans) is up to date in lvmetad.  If
- * not, it scans disks and updates the lvmetad cache before returning
- * to the caller.  It does this checking using a version number associated
- * with the global lock.  The version number is incremented each time
- * a change is made to the state associated with the global lock, and
- * if the local version number is lower than the version number in the
- * lock, then the local lvmetad state must be updated.
- *
  * There are two cases where the global lock can be taken in shared mode,
  * and then later converted to ex.  pvchange and pvresize use process_each_pv
  * which does lockd_gl("sh") to get the list of VGs.  Later, in the "_single"
@@ -1491,7 +1472,6 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 	const char *mode = NULL;
 	const char *opts = NULL;
 	uint32_t lockd_flags;
-	int force_cache_update = 0;
 	int retries = 0;
 	int result;
 
@@ -1536,7 +1516,6 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 		/* We can continue reading if a shared lock fails. */
 		if (!strcmp(mode, "sh")) {
 			log_warn("Reading without shared global lock.");
-			force_cache_update = 1;
 			goto allow;
 		}
 
@@ -1615,26 +1594,22 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 
 		if (result == -ESTARTING) {
 			log_warn("Skipping global lock: lockspace is starting");
-			force_cache_update = 1;
 			goto allow;
 		}
 
 		if (result == -ELOCKIO || result == -EVGKILLED) {
 			log_warn("Skipping global lock: storage %s for sanlock leases",
 				  result == -ELOCKIO ? "errors" : "failed");
-			force_cache_update = 1;
 			goto allow;
 		}
 
 		if ((lockd_flags & LD_RF_NO_GL_LS) && (lockd_flags & LD_RF_WARN_GL_REMOVED)) {
 			log_warn("Skipping global lock: VG with global lock was removed");
-			force_cache_update = 1;
 			goto allow;
 		}
 
 		if ((lockd_flags & LD_RF_NO_GL_LS) || (lockd_flags & LD_RF_NO_LOCKSPACES)) {
 			log_warn("Skipping global lock: lockspace not found or started");
-			force_cache_update = 1;
 			goto allow;
 		}
 
@@ -1669,7 +1644,6 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 	}
 
  allow:
-	lvmetad_validate_global_cache(cmd, force_cache_update);
 	return 1;
 }
 
@@ -1688,9 +1662,7 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
  * assessed in combination with vg->lock_type.
  *
  * The VG lock protects the VG metadata on disk from concurrent access
- * among hosts.  The VG lock also ensures that the local lvmetad cache
- * contains the latest version of the VG metadata from disk.  (Since
- * another host may have changed the VG since it was last read.)
+ * among hosts.
  *
  * The VG lock must be acquired before the VG is read, i.e. before vg_read().
  * The result from lockd_vg() is saved in the "lockd_state" variable, and
@@ -1700,13 +1672,6 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
  * looking at lockd_state.  If vg_read() sees that the VG is a local VG,
  * i.e. lock_type is not sanlock or dlm, then no lock is required, and it
  * ignores lockd_state (which would indicate no lock was found.)
- *
- * When acquiring the VG lock, lvmlockd checks if the local cached copy
- * of the VG metadata in lvmetad is up to date.  If not, it invalidates
- * the VG cached in lvmetad.  This would happen if another host changed
- * the VG since it was last read.  When lvm commands read the VG from
- * lvmetad, they will check if the metadata is invalid, and if so they
- * will reread it from disk, and update the copy in lvmetad.
  */
 
 int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
@@ -1725,24 +1690,6 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	 * know if this is a local VG or lockd VG.
 	 */
 	*lockd_state = 0;
-
-	/*
-	 * Use of lockd_vg_rescan.
-	 *
-	 * This is the VG equivalent of using lvmetad_validate_global_cache()
-	 * for the global lock (after failing to acquire the global lock).  If
-	 * we fail to acquire the VG lock from lvmlockd, then the lvmlockd
-	 * mechanism has been missed that would have updated the cached lvmetad
-	 * copy of the VG.  So, set lockd_vg_rescan to tell the VG reading code
-	 * to treat the lvmetad copy as if the invalid flag had been returned.
-	 * i.e. If a lockd VG is read without a lock, ignore the lvmetad copy
-	 * and read it from disk since we don't know if the cache is stale.
-	 *
-	 * Because lvmlockd requests return an error for local VGs, this will
-	 * be set for local VGs, but it ends up being ignored once the VG is
-	 * read and found to be a local VG.
-	 */
-	cmd->lockd_vg_rescan = 0;
 
 	if (!is_real_vg(vg_name))
 		return 1;
@@ -1812,7 +1759,6 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	 */
 	if (!_use_lvmlockd) {
 		*lockd_state |= LDST_FAIL_REQUEST;
-		cmd->lockd_vg_rescan = 1;
 		return 1;
 	}
 
@@ -1829,7 +1775,6 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 		 * this error for local VGs, but we do care for lockd VGs.
 		 */
 		*lockd_state |= LDST_FAIL_REQUEST;
-		cmd->lockd_vg_rescan = 1;
 		return 1;
 	}
 
@@ -1848,15 +1793,12 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 		break;
 	case -ENOLS:
 		*lockd_state |= LDST_FAIL_NOLS;
-		cmd->lockd_vg_rescan = 1;
 		break;
 	case -ESTARTING:
 		*lockd_state |= LDST_FAIL_STARTING;
-		cmd->lockd_vg_rescan = 1;
 		break;
 	default:
 		*lockd_state |= LDST_FAIL_OTHER;
-		cmd->lockd_vg_rescan = 1;
 	}
 
 	/*

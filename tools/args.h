@@ -96,11 +96,11 @@ arg(bootloaderareasize_ARG, '\0', "bootloaderareasize", sizemb_VAL, 0, 0,
 
 arg(cache_long_ARG, '\0', "cache", 0, 0, 0,
     "#pvscan\n"
-    "Scan one or more devices and send the metadata to lvmetad.\n"
+    "Scan one or more devices and record that they are online.\n"
     "#vgscan\n"
-    "Scan all devices and send the metadata to lvmetad.\n"
+    "This option is no longer used.\n"
     "#lvscan\n"
-    "Scan the devices used by an LV and send the metadata to lvmetad.\n")
+    "This option is no longer used.\n")
 
 arg(cachemetadataformat_ARG, '\0', "cachemetadataformat", cachemetadataformat_VAL, 0, 0,
     "Specifies the cache metadata format used by cache target.\n")
@@ -674,7 +674,6 @@ arg(sysinit_ARG, '\0', "sysinit", 0, 0, 0,
     "acts as a shortcut which selects an appropriate set of options. Currently,\n"
     "this is equivalent to using --ignorelockingfailure, --ignoremonitoring,\n"
     "--poll n, and setting env var LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES.\n"
-    "When used in conjunction with lvmetad enabled and running,\n"
     "vgchange/lvchange skip autoactivation, and defer to pvscan autoactivation.\n")
 
 arg(systemid_ARG, '\0', "systemid", string_VAL, 0, 0,

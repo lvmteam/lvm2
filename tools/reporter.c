@@ -1104,8 +1104,7 @@ static int _do_report(struct cmd_context *cmd, struct processing_handle *handle,
 	 * We lock VG_GLOBAL to enable use of metadata cache.
 	 * This can pause alongide pvscan or vgscan process for a while.
 	 */
-	if (single_args->args_are_pvs && (report_type == PVS || report_type == PVSEGS) &&
-	    !lvmetad_used()) {
+	if (single_args->args_are_pvs && (report_type == PVS || report_type == PVSEGS)) {
 		lock_global = 1;
 		if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_READ, NULL)) {
 			log_error("Unable to obtain global lock.");
@@ -1420,8 +1419,6 @@ static int _report(struct cmd_context *cmd, int argc, char **argv, report_type_t
 		destroy_processing_handle(cmd, handle);
 		return ECMD_FAILED;
 	}
-
-	lvmcache_seed_infos_from_lvmetad(cmd);
 
 	if (single_args->report_type == FULL) {
 		handle->custom_handle = &args;

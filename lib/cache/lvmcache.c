@@ -25,9 +25,6 @@
 #include "lib/format_text/format-text.h"
 #include "lib/config/config.h"
 
-#include "lib/cache/lvmetad.h"
-#include "daemons/lvmetad/lvmetad-client.h"
-
 /* One per device */
 struct lvmcache_info {
 	struct dm_list list;	/* Join VG members together */
@@ -96,21 +93,6 @@ int lvmcache_init(struct cmd_context *cmd)
 		return 0;
 
 	return 1;
-}
-
-void lvmcache_seed_infos_from_lvmetad(struct cmd_context *cmd)
-{
-	if (!lvmetad_used() || _has_scanned)
-		return;
-
-	dev_cache_scan();
-
-	if (!lvmetad_pv_list_to_lvmcache(cmd)) {
-		stack;
-		return;
-	}
-
-	_has_scanned = 1;
 }
 
 void lvmcache_lock_vgname(const char *vgname, int read_only __attribute__((unused)))
@@ -249,20 +231,10 @@ const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd,
 	struct dm_list *devh, *tmp;
 	struct dm_list devs;
 	struct device_list *devl;
-	struct volume_group *vg;
-	const struct format_type *fmt;
 	char vgid_found[ID_LEN + 1] __attribute__((aligned(8)));
 
 	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
-		if (!lvmetad_used())
-			return NULL; /* too bad */
-		/* If we don't have the info but we have lvmetad, we can ask
-		 * there before failing. */
-		if ((vg = lvmetad_vg_lookup(cmd, vgname, vgid))) {
-			fmt = vg->fid->fmt;
-			release_vg(vg);
-			return fmt;
-		}
+		stack;
 		return NULL;
 	}
 
@@ -802,9 +774,6 @@ int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const 
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_info *info;
 
-	if (lvmetad_used())
-		return 1;
-
 	dm_list_init(&devs);
 
 	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid)))
@@ -879,12 +848,6 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	int vginfo_count = 0;
 
 	int r = 0;
-
-	if (lvmetad_used()) {
-		if (!label_scan_setup_bcache())
-			return 0;
-		return 1;
-	}
 
 	log_debug_cache("Finding VG info");
 
@@ -969,11 +932,6 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 		 * the same device.
 		 */
 		_warn_duplicate_devs(cmd);
-
-		if (!_found_duplicate_pvs && lvmetad_used()) {
-			log_warn("WARNING: Disabling lvmetad cache which does not support duplicate PVs.");
-			lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_DUPLICATES);
-		}
 	}
 
 	r = 1;
@@ -993,14 +951,8 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 }
 
 /*
- * When not using lvmetad, lvmcache_label_scan() detects duplicates in
- * the basic label_scan(), then filters out some dups, and chooses
- * preferred duplicates to use.
- *
- * When using lvmetad, pvscan --cache does not use lvmcache_label_scan(),
- * only label_scan() which detects the duplicates.  This function is used
- * after pvscan's label_scan() to filter out some dups, print any warnings,
- * and disable lvmetad if any dups are left.
+ * lvmcache_label_scan() detects duplicates in the basic label_scan(), then
+ * filters out some dups, and chooses preferred duplicates to use.
  */
 
 void lvmcache_pvscan_duplicate_check(struct cmd_context *cmd)
@@ -1024,19 +976,15 @@ void lvmcache_pvscan_duplicate_check(struct cmd_context *cmd)
 	_filter_duplicate_devs(cmd);
 
 	/*
-	 * If no more dups after ignoring some, then we can use lvmetad.
+	 * no more dups after ignoring some
 	 */
 	if (!_found_duplicate_pvs)
 		return;
 
-	/* Duplicates are found where we would have to pick one, so disable lvmetad. */
+	/* Duplicates are found where we would have to pick one. */
 
 	dm_list_iterate_items(devl, &_unused_duplicate_devs)
 		log_warn("WARNING: found device with duplicate %s", dev_name(devl->dev));
-
-	log_warn("WARNING: Disabling lvmetad cache which does not support duplicate PVs.");
-	lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_DUPLICATES);
-	lvmetad_make_unused(cmd);
 }
 
 int lvmcache_get_vgnameids(struct cmd_context *cmd, int include_internal,
@@ -2192,9 +2140,6 @@ int lvmcache_is_orphan(struct lvmcache_info *info) {
 int lvmcache_vgid_is_cached(const char *vgid) {
 	struct lvmcache_vginfo *vginfo;
 
-	if (lvmetad_used())
-		return 1;
-
 	vginfo = lvmcache_vginfo_from_vgid(vgid);
 
 	if (!vginfo || !vginfo->vgname)
@@ -2284,9 +2229,6 @@ int lvmcache_vg_is_foreign(struct cmd_context *cmd, const char *vgname, const ch
 {
 	struct lvmcache_vginfo *vginfo;
 	int ret = 0;
-
-	if (lvmetad_used())
-		return lvmetad_vg_is_foreign(cmd, vgname, vgid);
 
 	if ((vginfo = lvmcache_vginfo_from_vgid(vgid)))
 		ret = !is_system_id_allowed(cmd, vginfo->system_id);

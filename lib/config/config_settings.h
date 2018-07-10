@@ -289,7 +289,6 @@ cfg_array(devices_filter_CFG, "filter", devices_CFG_SECTION, CFG_DEFAULT_COMMENT
 	"then the device is accepted. Be careful mixing 'a' and 'r' patterns,\n"
 	"as the combination might produce unexpected results (test changes.)\n"
 	"Run vgscan after changing the filter to regenerate the cache.\n"
-	"See the use_lvmetad comment for a special case regarding filters.\n"
 	"#\n"
 	"Example\n"
 	"Accept every block device:\n"
@@ -307,7 +306,7 @@ cfg_array(devices_filter_CFG, "filter", devices_CFG_SECTION, CFG_DEFAULT_COMMENT
 cfg_array(devices_global_filter_CFG, "global_filter", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, "#Sa|.*/|", vsn(2, 2, 98), NULL, 0, NULL,
 	"Limit the block devices that are used by LVM system components.\n"
 	"Because devices/filter may be overridden from the command line, it is\n"
-	"not suitable for system-wide device filtering, e.g. udev and lvmetad.\n"
+	"not suitable for system-wide device filtering, e.g. udev.\n"
 	"Use global_filter to hide devices from these LVM system components.\n"
 	"The syntax is the same as devices/filter. Devices rejected by\n"
 	"global_filter are not opened by LVM.\n")
@@ -800,11 +799,11 @@ cfg(log_activation_CFG, "activation", log_CFG_SECTION, 0, CFG_TYPE_BOOL, 0, vsn(
 
 cfg(log_activate_file_CFG, "activate_file", log_CFG_SECTION, CFG_DEFAULT_UNDEFINED | CFG_UNSUPPORTED, CFG_TYPE_STRING, NULL, vsn(1, 0, 0), NULL, 0, NULL, NULL)
 
-cfg_array(log_debug_classes_CFG, "debug_classes", log_CFG_SECTION, CFG_ALLOW_EMPTY, CFG_TYPE_STRING, "#Smemory#Sdevices#Sio#Sactivation#Sallocation#Slvmetad#Smetadata#Scache#Slocking#Slvmpolld#Sdbus", vsn(2, 2, 99), NULL, 0, NULL,
+cfg_array(log_debug_classes_CFG, "debug_classes", log_CFG_SECTION, CFG_ALLOW_EMPTY, CFG_TYPE_STRING, "#Smemory#Sdevices#Sio#Sactivation#Sallocation#Smetadata#Scache#Slocking#Slvmpolld#Sdbus", vsn(2, 2, 99), NULL, 0, NULL,
 	"Select log messages by class.\n"
 	"Some debugging messages are assigned to a class and only appear in\n"
 	"debug output if the class is listed here. Classes currently\n"
-	"available: memory, devices, io, activation, allocation, lvmetad,\n"
+	"available: memory, devices, io, activation, allocation,\n"
 	"metadata, cache, locking, lvmpolld. Use \"all\" to see everything.\n")
 
 cfg(backup_backup_CFG, "backup", backup_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_BACKUP_ENABLED, vsn(1, 0, 0), NULL, 0, NULL,
@@ -995,38 +994,11 @@ cfg(global_lvdisplay_shows_full_device_path_CFG, "lvdisplay_shows_full_device_pa
 	"Previously this was always shown as /dev/vgname/lvname even when that\n"
 	"was never a valid path in the /dev filesystem.\n")
 
-cfg(global_use_lvmetad_CFG, "use_lvmetad", global_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_USE_LVMETAD, vsn(2, 2, 93), "@DEFAULT_USE_LVMETAD@", 0, NULL,
-	"Use lvmetad to cache metadata and reduce disk scanning.\n"
-	"When enabled (and running), lvmetad provides LVM commands with VG\n"
-	"metadata and PV state. LVM commands then avoid reading this\n"
-	"information from disks which can be slow. When disabled (or not\n"
-	"running), LVM commands fall back to scanning disks to obtain VG\n"
-	"metadata. lvmetad is kept updated via udev rules which must be set\n"
-	"up for LVM to work correctly. (The udev rules should be installed\n"
-	"by default.) Without a proper udev setup, changes in the system's\n"
-	"block device configuration will be unknown to LVM, and ignored\n"
-	"until a manual 'pvscan --cache' is run. If lvmetad was running\n"
-	"while use_lvmetad was disabled, it must be stopped, use_lvmetad\n"
-	"enabled, and then started. When using lvmetad, LV activation is\n"
-	"switched to an automatic, event-based mode. In this mode, LVs are\n"
-	"activated based on incoming udev events that inform lvmetad when\n"
-	"PVs appear on the system. When a VG is complete (all PVs present),\n"
-	"it is auto-activated. The auto_activation_volume_list setting\n"
-	"controls which LVs are auto-activated (all by default.)\n"
-	"When lvmetad is updated (automatically by udev events, or directly\n"
-	"by pvscan --cache), devices/filter is ignored and all devices are\n"
-	"scanned by default. lvmetad always keeps unfiltered information\n"
-	"which is provided to LVM commands. Each LVM command then filters\n"
-	"based on devices/filter. This does not apply to other, non-regexp,\n"
-	"filtering settings: component filters such as multipath and MD\n"
-	"are checked during pvscan --cache. To filter a device and prevent\n"
-	"scanning from the LVM system entirely, including lvmetad, use\n"
-	"devices/global_filter.\n")
+cfg(global_use_lvmetad_CFG, "use_lvmetad", global_CFG_SECTION, 0, CFG_TYPE_BOOL, 0, vsn(2, 2, 93), 0, vsn(3, 0, 0), NULL,
+	"This setting is no longer used.\n")
 
-cfg(global_lvmetad_update_wait_time_CFG, "lvmetad_update_wait_time", global_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_LVMETAD_UPDATE_WAIT_TIME, vsn(2, 2, 151), NULL, 0, NULL,
-	"Number of seconds a command will wait for lvmetad update to finish.\n"
-	"After waiting for this period, a command will not use lvmetad, and\n"
-	"will revert to disk scanning.\n")
+cfg(global_lvmetad_update_wait_time_CFG, "lvmetad_update_wait_time", global_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, 0, vsn(2, 2, 151), NULL, vsn(3, 0, 0), NULL,
+	"This setting is no longer used.\n")
 
 cfg(global_use_lvmlockd_CFG, "use_lvmlockd", global_CFG_SECTION, 0, CFG_TYPE_BOOL, 0, vsn(2, 2, 124), NULL, 0, NULL,
 	"Use lvmlockd for locking among hosts using LVM on shared storage.\n"

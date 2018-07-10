@@ -19,7 +19,6 @@
 #include "lib/display/display.h"
 #include "lib/commands/toolcontext.h"
 #include "lib/cache/lvmcache.h"
-#include "lib/cache/lvmetad.h"
 #include "lib/locking/lvmlockd.h"
 #include "lib/metadata/lv_alloc.h"
 #include "lib/metadata/pv_alloc.h"
@@ -59,10 +58,6 @@ static int _vsn1_check_version(const struct dm_config_tree *cft)
 {
 	const struct dm_config_node *cn;
 	const struct dm_config_value *cv;
-
-	// TODO if this is pvscan --cache, we want this check back.
-	if (lvmetad_used())
-		return 1;
 
 	/*
 	 * Check the contents field.
@@ -186,8 +181,6 @@ static int _read_pv(struct format_instance *fid,
 	const struct dm_config_value *cv;
 	uint64_t size, ba_start;
 
-	int outdated = !strcmp(pvn->parent->key, "outdated_pvs");
-
 	if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl))) ||
 	    !(pvl->pv = dm_pool_zalloc(mem, sizeof(*pvl->pv))))
 		return_0;
@@ -233,13 +226,12 @@ static int _read_pv(struct format_instance *fid,
 
 	memcpy(&pv->vgid, &vg->id, sizeof(vg->id));
 
-	if (!outdated && !_read_flag_config(pvn, &pv->status, PV_FLAGS)) {
+	if (!_read_flag_config(pvn, &pv->status, PV_FLAGS)) {
 		log_error("Couldn't read status flags for physical volume.");
 		return 0;
 	}
 
-	/* TODO is the !lvmetad_used() too coarse here? */
-	if (!pv->dev && !lvmetad_used())
+	if (!pv->dev)
 		pv->status |= MISSING_PV;
 
 	if ((pv->status & MISSING_PV) && pv->dev && pv_mda_used_count(pv) == 0) {
@@ -255,13 +247,13 @@ static int _read_pv(struct format_instance *fid,
 		return 0;
 	}
 
-	if (!outdated && !_read_uint64(pvn, "pe_start", &pv->pe_start)) {
+	if (!_read_uint64(pvn, "pe_start", &pv->pe_start)) {
 		log_error("Couldn't read extent start value (pe_start) "
 			  "for physical volume.");
 		return 0;
 	}
 
-	if (!outdated && !_read_int32(pvn, "pe_count", &pv->pe_count)) {
+	if (!_read_int32(pvn, "pe_count", &pv->pe_count)) {
 		log_error("Couldn't find extent count (pe_count) for "
 			  "physical volume.");
 		return 0;
@@ -320,10 +312,7 @@ static int _read_pv(struct format_instance *fid,
 
 	vg->extent_count += pv->pe_count;
 	vg->free_count += pv->pe_count;
-	if (outdated)
-		dm_list_add(&vg->pvs_outdated, &pvl->list);
-	else
-		add_pvl_to_vgs(vg, pvl);
+	add_pvl_to_vgs(vg, pvl);
 
 	return 1;
 }
@@ -1147,12 +1136,6 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 			  "group %s.", vg->name);
 		goto bad;
 	}
-
-	if (allow_lvmetad_extensions)
-		_read_sections(fid, "outdated_pvs", _read_pv, vg,
-			       vgn, pv_hash, lv_hash, 1);
-	else if (dm_config_has_node(vgn, "outdated_pvs"))
-		log_error(INTERNAL_ERROR "Unexpected outdated_pvs section in metadata of VG %s.", vg->name);
 
 	/* Optional tags */
 	if (dm_config_get_list(vgn, "tags", &cv) &&

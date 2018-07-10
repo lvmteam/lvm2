@@ -20,7 +20,6 @@
 #include "lib/commands/toolcontext.h"
 #include "lib/cache/lvmcache.h"
 #include "lib/format_text/archiver.h"
-#include "lib/cache/lvmetad.h"
 
 struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
 			      const char *vg_name)
@@ -56,7 +55,6 @@ struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
 
 	dm_list_init(&vg->pvs);
 	dm_list_init(&vg->pv_write_list);
-	dm_list_init(&vg->pvs_outdated);
 	dm_list_init(&vg->lvs);
 	dm_list_init(&vg->historical_lvs);
 	dm_list_init(&vg->tags);
@@ -89,11 +87,6 @@ void release_vg(struct volume_group *vg)
 {
 	if (!vg || (vg->fid && vg == vg->fid->fmt->orphan_vg))
 		return;
-
-	if (vg->saved_in_clvmd) {
-		log_debug("release_vg skip saved %s %p", vg->name, vg);
-		return;
-	}
 
 	release_vg(vg->vg_committed);
 	release_vg(vg->vg_precommitted);

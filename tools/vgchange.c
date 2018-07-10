@@ -769,20 +769,6 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	/*
-	 * If --sysinit -aay is used and at the same time lvmetad is used,
-	 * we want to rely on autoactivation to take place. Also, we
-	 * need to take special care here as lvmetad service does
-	 * not neet to be running at this moment yet - it could be
-	 * just too early during system initialization time.
-	 */
-	if (arg_is_set(cmd, sysinit_ARG) && (arg_uint_value(cmd, activate_ARG, 0) == CHANGE_AAY)) {
-		if (lvmetad_used()) {
-			log_warn("WARNING: lvmetad is active, skipping direct activation during sysinit");
-			return ECMD_PROCESSED;
-		}
-	}
-
 	if (arg_is_set(cmd, clustered_ARG) && !argc && !arg_is_set(cmd, yes_ARG) &&
 	    (yes_no_prompt("Change clustered property of all volumes groups? [y/n]: ") == 'n')) {
 		log_error("No volume groups changed.");

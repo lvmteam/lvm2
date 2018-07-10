@@ -112,11 +112,6 @@ ifeq ("@HAVE_LIBDL@", "yes")
   SOURCES += misc/sharedlib.c
 endif
 
-ifeq ("@BUILD_LVMETAD@", "yes")
-  SOURCES +=\
-	cache/lvmetad.c
-endif
-
 ifeq ("@BUILD_LVMPOLLD@", "yes")
   SOURCES +=\
 	lvmpolld/lvmpolld-client.c

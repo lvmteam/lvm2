@@ -60,7 +60,6 @@ out:
 
 int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 {
-	int lock_global = 0;
 	int ret;
 
 	if (arg_is_set(cmd, columns_ARG)) {
@@ -94,25 +93,9 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	/*
-	 * If the lock_type is LCK_VG_READ (used only in reporting commands),
-	 * we lock VG_GLOBAL to enable use of metadata cache.
-	 * This can pause alongide pvscan or vgscan process for a while.
-	 */
-	if (!lvmetad_used()) {
-		lock_global = 1;
-		if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_READ, NULL)) {
-			log_error("Unable to obtain global lock.");
-			return ECMD_FAILED;
-		}
-	}
-
 	ret = process_each_pv(cmd, argc, argv, NULL,
 			      arg_is_set(cmd, all_ARG), 0,
 			      NULL, _pvdisplay_single);
-
-	if (lock_global)
-		unlock_vg(cmd, NULL, VG_GLOBAL);
 
 	return ret;
 }

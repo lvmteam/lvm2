@@ -60,8 +60,6 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 
 #define unlock_vg(cmd, vg, vol)	\
 	do { \
-		if (vg && !lvmetad_vg_update_finish(vg)) \
-			stack; \
 		if (is_real_vg(vol) && !sync_local_dev_names(cmd)) \
 			stack; \
 		if (!lock_vol(cmd, vol, LCK_VG_UNLOCK, NULL)) \

@@ -17,7 +17,6 @@
 #include "libdaemon/client/daemon-io.h"
 #include "daemon-server.h"
 #include "lvm-version.h"
-#include "daemons/lvmetad/lvmetad-client.h"
 #include "daemons/lvmlockd/lvmlockd-client.h"
 #include "device_mapper/misc/dm-ioctl.h"
 
@@ -143,10 +142,6 @@ static const char *lvmlockd_protocol = "lvmlockd";
 static const int lvmlockd_protocol_version = 1;
 static int daemon_quit;
 static int adopt_opt;
-
-static daemon_handle lvmetad_handle;
-static pthread_mutex_t lvmetad_mutex;
-static int lvmetad_connected;
 
 /*
  * We use a separate socket for dumping daemon info.
@@ -1009,54 +1004,6 @@ static void add_work_action(struct action *act)
 	pthread_mutex_unlock(&worker_mutex);
 }
 
-#define ERR_LVMETAD_NOT_RUNNING -200
-
-static daemon_reply send_lvmetad(const char *id, ...)
-{
-	daemon_reply reply;
-	va_list ap;
-	int retries = 0;
-	int err;
-
-	va_start(ap, id);
-
-	/*
-	 * mutex is used because all threads share a single
-	 * lvmetad connection/handle.
-	 */
-	pthread_mutex_lock(&lvmetad_mutex);
-retry:
-	if (!lvmetad_connected) {
-		lvmetad_handle = lvmetad_open(NULL);
-		if (lvmetad_handle.error || lvmetad_handle.socket_fd < 0) {
-			err = lvmetad_handle.error ?: lvmetad_handle.socket_fd;
-			pthread_mutex_unlock(&lvmetad_mutex);
-			log_debug("lvmetad_open reconnect error %d", err);
-			memset(&reply, 0, sizeof(reply));
-			reply.error = ERR_LVMETAD_NOT_RUNNING;
-			va_end(ap);
-			return reply;
-		} else {
-			log_debug("lvmetad reconnected");
-			lvmetad_connected = 1;
-		}
-	}
-
-	reply = daemon_send_simple_v(lvmetad_handle, id, ap);
-
-	/* lvmetad may have been restarted */
-	if ((reply.error == ECONNRESET) && (retries < 2)) {
-		daemon_close(lvmetad_handle);
-		lvmetad_connected = 0;
-		retries++;
-		goto retry;
-	}
-	pthread_mutex_unlock(&lvmetad_mutex);
-
-	va_end(ap);
-	return reply;
-}
-
 static int res_lock(struct lockspace *ls, struct resource *r, struct action *act, int *retry)
 {
 	struct lock *lk;
@@ -1253,6 +1200,18 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 	}
 
 	/*
+	 * lvmetad is no longer used, but the infrastructure for
+	 * distributed cache validation remains.  The points
+	 * where vg or global cache state would be invalidated
+	 * remain below and log_debug messages point out where
+	 * they would occur.
+	 *
+	 * The comments related to "lvmetad" remain because they
+	 * describe how some other local cache like lvmetad would
+	 * be invalidated here.
+	 */
+
+	/*
 	 * r is vglk: tell lvmetad to set the vg invalid
 	 * flag, and provide the new r_version.  If lvmetad finds
 	 * that its cached vg has seqno less than the value
@@ -1277,47 +1236,12 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 	 */
 
 	if (inval_meta && (r->type == LD_RT_VG)) {
-		daemon_reply reply;
-		char *uuid;
-
-		log_debug("S %s R %s res_lock set lvmetad vg version %u",
+		log_debug("S %s R %s res_lock invalidate vg state version %u",
 			  ls->name, r->name, new_version);
-	
-		if (!ls->vg_uuid[0] || !strcmp(ls->vg_uuid, "none"))
-			uuid = (char *)"none";
-		else
-			uuid = ls->vg_uuid;
-
-		reply = send_lvmetad("set_vg_info",
-				     "token = %s", "skip",
-				     "uuid = %s", uuid,
-				     "name = %s", ls->vg_name,
-				     "version = " FMTd64, (int64_t)new_version,
-				     NULL);
-
-		if (reply.error || strcmp(daemon_reply_str(reply, "response", ""), "OK")) {
-			if (reply.error != ERR_LVMETAD_NOT_RUNNING)
-				log_error("set_vg_info in lvmetad failed %d", reply.error);
-		}
-		daemon_reply_destroy(reply);
 	}
 
 	if (inval_meta && (r->type == LD_RT_GL)) {
-		daemon_reply reply;
-
-		log_debug("S %s R %s res_lock set lvmetad global invalid",
-			  ls->name, r->name);
-
-		reply = send_lvmetad("set_global_info",
-				     "token = %s", "skip",
-				     "global_invalid = " FMTd64, INT64_C(1),
-				     NULL);
-
-		if (reply.error || strcmp(daemon_reply_str(reply, "response", ""), "OK")) {
-			if (reply.error != ERR_LVMETAD_NOT_RUNNING)
-				log_error("set_global_info in lvmetad failed %d", reply.error);
-		}
-		daemon_reply_destroy(reply);
+		log_debug("S %s R %s res_lock invalidate global state", ls->name, r->name);
 	}
 
 	/*
@@ -4827,7 +4751,7 @@ static void close_client_thread(void)
 }
 
 /*
- * Get a list of all VGs with a lockd type (sanlock|dlm) from lvmetad.
+ * Get a list of all VGs with a lockd type (sanlock|dlm).
  * We'll match this list against a list of existing lockspaces that are
  * found in the lock manager.
  *
@@ -4838,6 +4762,9 @@ static void close_client_thread(void)
 
 static int get_lockd_vgs(struct list_head *vg_lockd)
 {
+	/* FIXME: get VGs some other way */
+	return -1;
+#if 0
 	struct list_head update_vgs;
 	daemon_reply reply;
 	struct dm_config_node *cn;
@@ -4994,6 +4921,7 @@ out:
 	}
 
 	return rv;
+#endif
 }
 
 static char _dm_uuid[DM_UUID_LEN];
@@ -5268,7 +5196,7 @@ static void adopt_locks(void)
 		gl_use_sanlock = 1;
 
 	list_for_each_entry(ls, &vg_lockd, list) {
-		log_debug("adopt lvmetad vg %s lock_type %s lock_args %s",
+		log_debug("adopt vg %s lock_type %s lock_args %s",
 			  ls->vg_name, lm_str(ls->lm_type), ls->vg_args);
 
 		list_for_each_entry(r, &ls->resources, list)
@@ -5333,7 +5261,7 @@ static void adopt_locks(void)
 		/*
 		 * LS in ls_found, not in vg_lockd.
 		 * An lvm lockspace found in the lock manager has no
-		 * corresponding VG in lvmetad.  This shouldn't usually
+		 * corresponding VG.  This shouldn't usually
 		 * happen, but it's possible the VG could have been removed
 		 * while the orphaned lockspace from it was still around.
 		 * Report an error and leave the ls in the lm alone.
@@ -5348,7 +5276,7 @@ static void adopt_locks(void)
 
 	/*
 	 * LS in vg_lockd, not in ls_found.
-	 * lockd vgs from lvmetad that do not have an existing lockspace.
+	 * lockd vgs that do not have an existing lockspace.
 	 * This wouldn't be unusual; we just skip the vg.
 	 * But, if the vg has active lvs, then it should have had locks
 	 * and a lockspace.  Should we attempt to join the lockspace and
@@ -5399,8 +5327,6 @@ static void adopt_locks(void)
 		memcpy(act->vg_uuid, ls->vg_uuid, 64);
 		memcpy(act->vg_args, ls->vg_args, MAX_ARGS);
 		act->host_id = ls->host_id;
-
-		/* set act->version from lvmetad data? */
 
 		log_debug("adopt add %s vg lockspace %s", lm_str(act->lm_type), act->vg_name);
 
@@ -5860,24 +5786,12 @@ static int main_loop(daemon_state *ds_arg)
 	setup_worker_thread();
 	setup_restart();
 
-	pthread_mutex_init(&lvmetad_mutex, NULL);
-	lvmetad_handle = lvmetad_open(NULL);
-	if (lvmetad_handle.error || lvmetad_handle.socket_fd < 0)
-		log_debug("lvmetad_open error %d", lvmetad_handle.error);
-	else
-		lvmetad_connected = 1;
-
 	/*
 	 * Attempt to rejoin lockspaces and adopt locks from a previous
 	 * instance of lvmlockd that left behind lockspaces/locks.
 	 */
-	if (adopt_opt) {
-		/* FIXME: implement this without lvmetad */
-		if (!lvmetad_connected)
-			log_error("Cannot adopt locks without lvmetad running.");
-		else
-			adopt_locks();
-	}
+	if (adopt_opt)
+		adopt_locks();
 
 	while (1) {
 		rv = poll(pollfd, pollfd_maxi + 1, -1);
@@ -5993,7 +5907,6 @@ static int main_loop(daemon_state *ds_arg)
 	close_worker_thread();
 	close_client_thread();
 	closelog();
-	daemon_close(lvmetad_handle);
 	return 1; /* libdaemon uses 1 for success */
 }
 

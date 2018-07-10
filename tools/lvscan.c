@@ -15,36 +15,6 @@
 
 #include "tools.h"
 
-static int _lvscan_single_lvmetad(struct cmd_context *cmd, struct logical_volume *lv)
-{
-	struct pv_list *pvl;
-	struct dm_list all_pvs;
-	char pvid_s[64] __attribute__((aligned(8)));
-
-	if (!lvmetad_used())
-		return ECMD_PROCESSED;
-
-	dm_list_init(&all_pvs);
-
-	if (!get_pv_list_for_lv(lv->vg->vgmem, lv, &all_pvs))
-		return ECMD_FAILED;
-
-	dm_list_iterate_items(pvl, &all_pvs) {
-		if (!pvl->pv->dev) {
-			if (!id_write_format(&pvl->pv->id, pvid_s, sizeof(pvid_s)))
-				stack;
-			else
-				log_warn("WARNING: Device for PV %s already missing, skipping.",
-					 pvid_s);
-			continue;
-		}
-		if (!lvmetad_pvscan_single(cmd, pvl->pv->dev, NULL, NULL))
-			return ECMD_FAILED;
-	}
-
-	return ECMD_PROCESSED;
-}
-
 static int _lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 			  struct processing_handle *handle __attribute__((unused)))
 {
@@ -53,9 +23,6 @@ static int _lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 	dm_percent_t snap_percent;     /* fused, fsize; */
 
 	const char *active_str, *snapshot_str;
-
-	if (arg_is_set(cmd, cache_long_ARG))
-		return _lvscan_single_lvmetad(cmd, lv);
 
 	if (!arg_is_set(cmd, all_ARG) && !lv_is_visible(lv))
 		return ECMD_PROCESSED;
@@ -91,32 +58,9 @@ static int _lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 int lvscan(struct cmd_context *cmd, int argc, char **argv)
 {
-	const char *reason = NULL;
-
-	if (argc && !arg_is_set(cmd, cache_long_ARG)) {
-		log_error("No additional command line arguments allowed");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (!lvmetad_used() && arg_is_set(cmd, cache_long_ARG))
-		log_verbose("Ignoring lvscan --cache because lvmetad is not in use.");
-
-	/* Needed because this command has NO_LVMETAD_AUTOSCAN. */
-	if (lvmetad_used() && (!lvmetad_token_matches(cmd) || lvmetad_is_disabled(cmd, &reason))) {
-		if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, 0)) {
-			log_warn("WARNING: Not using lvmetad because cache update failed.");
-			lvmetad_make_unused(cmd);
-		}
-
-		if (lvmetad_used() && lvmetad_is_disabled(cmd, &reason)) {
-			log_warn("WARNING: Not using lvmetad because %s.", reason);
-			lvmetad_make_unused(cmd);
-		}
-
-		/*
-		 * FIXME: doing lvscan --cache after a full scan is pointless.
-		 * Should the cache case just exit here?
-		 */
+	if (arg_is_set(cmd, cache_long_ARG)) {
+		log_warn("Ignoring lvscan --cache because lvmetad is no longer used.");
+		return ECMD_PROCESSED;
 	}
 
 	return process_each_lv(cmd, argc, argv, NULL, NULL, 0, NULL, NULL, &_lvscan_single);

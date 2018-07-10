@@ -397,16 +397,13 @@ static int _report_progress(struct cmd_context *cmd, struct poll_operation_id *i
 	int ret;
 
 	/*
-	 * It's reasonable to expect a lockd_vg("sh") here, but it should
-	 * not actually be needed, because we only report the progress on
-	 * the same host where the pvmove/lvconvert is happening.  This means
-	 * that the local pvmove/lvconvert/lvpoll commands are updating the
-	 * local lvmetad with the latest info they have, and we just need to
-	 * read the latest info that they have put into lvmetad about their
-	 * progress.  No VG lock is needed to protect anything here (we're
-	 * just reading the VG), and no VG lock is needed to force a VG read
-	 * from disk to get changes from other hosts, because the only change
-	 * to the VG we're interested in is the change done locally.
+	 * It's reasonable to expect a lockd_vg("sh") here, but it should not
+	 * actually be needed, because we only report the progress on the same
+	 * host where the pvmove/lvconvert is happening.  No VG lock is needed
+	 * to protect anything here (we're just reading the VG), and no VG lock
+	 * is needed to force a VG read from disk to get changes from other
+	 * hosts, because the only change to the VG we're interested in is the
+	 * change done locally.
 	 */
 
 	vg = vg_read(cmd, id->vg_name, NULL, 0, lockd_state);
@@ -602,11 +599,6 @@ static int _poll_daemon(struct cmd_context *cmd, struct poll_operation_id *id,
 			parms->progress_display = 0; /* Child */
 		/* FIXME Use wait_event (i.e. interval = 0) and */
 		/*       fork one daemon per copy? */
-
-		if ((daemon_mode == 1) && find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL)) {
-			if (!lvmetad_connect(cmd))
-				log_warn("WARNING: lvm polling process %d cannot connect to lvmetad.", getpid());
-		}
 	}
 
 	/*

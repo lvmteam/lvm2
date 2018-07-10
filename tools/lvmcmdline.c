@@ -19,7 +19,6 @@
 #include "lib/label/label.h"
 #include "lvm-version.h"
 #include "lib/locking/lvmlockd.h"
-#include "daemons/lvmetad/lvmetad-client.h"
 
 #include "stub.h"
 #include "lib/misc/last-path-component.h"
@@ -147,6 +146,8 @@ static const struct command_function _command_functions[CMD_COUNT] = {
 	{ lvconvert_to_vdopool_CMD, lvconvert_to_vdopool_cmd },
 	{ lvconvert_to_vdopool_param_CMD, lvconvert_to_vdopool_param_cmd },
 
+	{ pvscan_display_CMD, pvscan_display_cmd },
+	{ pvscan_cache_CMD, pvscan_cache_cmd },
 };
 
 
@@ -2716,11 +2717,6 @@ static int _cmd_no_meta_proc(struct cmd_context *cmd)
 	return cmd->cname->flags & NO_METADATA_PROCESSING;
 }
 
-static int _cmd_no_lvmetad_autoscan(struct cmd_context *cmd)
-{
-	return cmd->cname->flags & NO_LVMETAD_AUTOSCAN;
-}
-
 static int _cmd_ignores_persistent_filter(struct cmd_context *cmd)
 {
 	return cmd->cname->flags & IGNORE_PERSISTENT_FILTER;
@@ -2729,7 +2725,6 @@ static int _cmd_ignores_persistent_filter(struct cmd_context *cmd)
 int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct dm_config_tree *config_string_cft, *config_profile_command_cft, *config_profile_metadata_cft;
-	const char *reason = NULL;
 	int ret = 0;
 	int locking_type;
 	int nolocking = 0;
@@ -2898,13 +2893,6 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
-	if (cmd->command->command_enum == lvconvert_repair_CMD) {
-		log_warn("WARNING: Disabling lvmetad cache for repair command.");
-		lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_REPAIR);
-		log_warn("WARNING: Not using lvmetad because of repair.");
-		lvmetad_make_unused(cmd);
-	}
-
 	if (cmd->metadata_read_only &&
 	    !(cmd->cname->flags & PERMITTED_READ_ONLY)) {
 		log_error("%s: Command not permitted while global/metadata_read_only "
@@ -2949,46 +2937,6 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (!_cmd_no_meta_proc(cmd) && !_init_lvmlockd(cmd)) {
 		ret = ECMD_FAILED;
 		goto_out;
-	}
-
-	/*
-	 * pvscan/vgscan/lvscan/vgimport want their own control over rescanning
-	 * to populate lvmetad and have similar code of their own.
-	 * Other commands use this general policy for using lvmetad.
-	 *
-	 * The lvmetad cache may need to be repopulated before we use it because:
-	 * - We are reading foreign VGs which others hosts may have changed
-	 *   which our lvmetad would not have seen.
-	 * - lvmetad may have just been started and no command has been run
-	 *   to populate it yet (e.g. no pvscan --cache was run).
-	 * - Another local command may have run with a different global filter
-	 *   which changed the content of lvmetad from what we want (recognized
-	 *   by different token values.)
-	 *
-	 * lvmetad may have been previously disabled (or disabled during the
-	 * rescan done here) because duplicate devices were seen.
-	 * In this case, disable the *use* of lvmetad by this command, reverting to
-	 * disk scanning.
-	 */
-	if (lvmetad_used() && !_cmd_no_lvmetad_autoscan(cmd)) {
-		if (cmd->include_foreign_vgs || !lvmetad_token_matches(cmd)) {
-			if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, cmd->include_foreign_vgs ? 1 : 0)) {
-				log_warn("WARNING: Not using lvmetad because cache update failed.");
-				lvmetad_make_unused(cmd);
-			}
-		}
-
-		if (lvmetad_used() && lvmetad_is_disabled(cmd, &reason)) {
-			log_warn("WARNING: Not using lvmetad because %s.", reason);
-			lvmetad_make_unused(cmd);
-
-			if (strstr(reason, "duplicate")) {
-				log_warn("WARNING: Use multipath or vgimportclone to resolve duplicate PVs?");
-				if (!find_config_tree_bool(cmd, devices_multipath_component_detection_CFG, NULL))
-					log_warn("WARNING: Set multipath_component_detection=1 to hide multipath duplicates.");
-				log_warn("WARNING: After duplicates are resolved, run \"pvscan --cache\" to enable lvmetad.");
-			}
-		}
 	}
 
 	if (cmd->command->functions)

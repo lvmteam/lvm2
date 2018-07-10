@@ -28,7 +28,6 @@
 #include "lib/mm/xlate.h"
 #include "lib/label/label.h"
 #include "lib/cache/lvmcache.h"
-#include "lib/cache/lvmetad.h"
 #include "lib/mm/memlock.h"
 
 #include <unistd.h>
@@ -1569,11 +1568,6 @@ static struct metadata_area_ops _metadata_text_file_backup_ops = {
 	.vg_commit = _vg_commit_file_backup
 };
 
-static int _mda_export_text_raw(struct metadata_area *mda,
-				struct dm_config_tree *cft,
-				struct dm_config_node *parent);
-static int _mda_import_text_raw(struct lvmcache_info *info, const struct dm_config_node *cn);
-
 static struct metadata_area_ops _metadata_text_raw_ops = {
 	.vg_read = _vg_read_raw,
 	.vg_read_precommit = _vg_read_precommit_raw,
@@ -1591,62 +1585,7 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
 	.pv_analyze_mda = _pv_analyze_mda_raw,
 	.mda_locns_match = _mda_locns_match_raw,
 	.mda_get_device = _mda_get_device_raw,
-	.mda_export_text = _mda_export_text_raw,
-	.mda_import_text = _mda_import_text_raw
 };
-
-/* used only for sending info to lvmetad */
-
-static int _mda_export_text_raw(struct metadata_area *mda,
-				struct dm_config_tree *cft,
-				struct dm_config_node *parent)
-{
-	struct mda_context *mdc = (struct mda_context *) mda->metadata_locn;
-	char mdah[MDA_HEADER_SIZE]; /* temporary */
-
-	if (!mdc) {
-		log_error(INTERNAL_ERROR "mda_export_text_raw no mdc");
-		return 1; /* pretend the MDA does not exist */
-	}
-
-	/* FIXME: why aren't ignore,start,size,free_sectors available? */
-	if (!_raw_read_mda_header((struct mda_header *)mdah, &mdc->area, mda_is_primary(mda)))
-		return 1; /* pretend the MDA does not exist */
-
-	return config_make_nodes(cft, parent, NULL,
-				 "ignore = " FMTd64, (int64_t) mda_is_ignored(mda),
-				 "start = " FMTd64, (int64_t) mdc->area.start,
-				 "size = " FMTd64, (int64_t) mdc->area.size,
-				 "free_sectors = " FMTd64, (int64_t) mdc->free_sectors,
-				 NULL) ? 1 : 0;
-}
-
-/* used only for receiving info from lvmetad */
-
-static int _mda_import_text_raw(struct lvmcache_info *info, const struct dm_config_node *cn)
-{
-	struct device *device;
-	uint64_t offset;
-	uint64_t size;
-	int ignore;
-
-	if (!cn->child)
-		return 0;
-
-	cn = cn->child;
-	device = lvmcache_device(info);
-	size = dm_config_find_int64(cn, "size", 0);
-
-	if (!device || !size)
-		return 0;
-
-	offset = dm_config_find_int64(cn, "start", 0);
-	ignore = dm_config_find_int(cn, "ignore", 0);
-
-	lvmcache_add_mda(info, device, offset, size, ignore);
-
-	return 1;
-}
 
 static int _text_pv_setup(const struct format_type *fmt,
 			  struct physical_volume *pv,

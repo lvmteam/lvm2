@@ -64,7 +64,6 @@ struct lvmcache_vgsummary {
 };
 
 int lvmcache_init(struct cmd_context *cmd);
-void lvmcache_allow_reads_with_lvmetad(void);
 
 void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset);
 
@@ -105,8 +104,6 @@ struct device *lvmcache_device_from_pvid(struct cmd_context *cmd, const struct i
 const char *lvmcache_vgname_from_info(struct lvmcache_info *info);
 const struct format_type *lvmcache_fmt_from_info(struct lvmcache_info *info);
 int lvmcache_vgs_locked(void);
-
-void lvmcache_seed_infos_from_lvmetad(struct cmd_context *cmd);
 
 int lvmcache_get_vgnameids(struct cmd_context *cmd, int include_internal,
                           struct dm_list *vgnameids);

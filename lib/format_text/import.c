@@ -246,9 +246,3 @@ struct volume_group *import_vg_from_config_tree(const struct dm_config_tree *cft
 {
 	return _import_vg_from_config_tree(cft, fid, 0);
 }
-
-struct volume_group *import_vg_from_lvmetad_config_tree(const struct dm_config_tree *cft,
-							struct format_instance *fid)
-{
-	return _import_vg_from_config_tree(cft, fid, 1);
-}
