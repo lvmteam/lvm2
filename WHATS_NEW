@@ -10,8 +10,10 @@ Version 2.02.180 -
   Cache can uses metadata format 2 with cleaner policy.
   Avoid showing internal error in lvs output or pvmoved LVs.
   Fix check if resized PV can also fit metadata area.
-  Reopen devices RDWR before writing to avoid udev issues.
-  Fix mem leak in clvmd.
+  Reopen devices RDWR only before writing to avoid udev issues.
+  Change pvresize output confusing when no resize took place.
+  Fix lvmetad hanging on shutdown.
+  Fix mem leak in clvmd and more coverity issues.
 
 Version 2.02.179 - 18th June 2018
 =================================
