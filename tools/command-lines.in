@@ -408,7 +408,7 @@ lvconvert --splitmirrors Number --trackchanges LV_raid1_cache
 OO: OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_split_mirror_images
-DESC: Split images from a raid1 LV and track changes to origin.
+DESC: Split images from a raid1 LV and track changes to origin for later merge.
 RULE: all not lv_is_locked lv_is_pvmove
 
 lvconvert --mergemirrors LV_linear_raid|VG|Tag ...
