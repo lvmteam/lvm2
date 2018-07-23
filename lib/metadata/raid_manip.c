@@ -3563,7 +3563,7 @@ int lv_raid_merge(struct logical_volume *image_lv)
 	struct volume_group *vg = image_lv->vg;
 
 	if (image_lv->status & LVM_WRITE) {
-		log_error("%s is not read-only - refusing to merge.",
+		log_error("%s cannot be merged because --trackchanges was not used.",
 			  display_lvname(image_lv));
 		return 0;
 	}
@@ -3572,7 +3572,7 @@ int lv_raid_merge(struct logical_volume *image_lv)
 		return_0;
 
 	if (!(p = strstr(lv_name, "_rimage_"))) {
-		log_error("Unable to merge non-mirror image %s.",
+		log_error("Unable to merge non-raid image %s.",
 			  display_lvname(image_lv));
 		return 0;
 	}

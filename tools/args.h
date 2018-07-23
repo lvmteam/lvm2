@@ -611,7 +611,9 @@ arg(splitcache_ARG, '\0', "splitcache", 0, 0, 0,
 arg(splitmirrors_ARG, '\0', "splitmirrors", number_VAL, 0, 0,
     "Splits the specified number of images from a raid1 or mirror LV\n"
     "and uses them to create a new LV. If --trackchanges is also specified,\n"
-    "changes to the raid1 LV are tracked while the split LV remains detached.\n")
+    "changes to the raid1 LV are tracked while the split LV remains detached.\n"
+    "If --name is specified, then the images are permanently split from the\n"
+    "original LV and changes are not tracked.\n")
 
 arg(splitsnapshot_ARG, '\0', "splitsnapshot", 0, 0, 0,
     "Separates a COW snapshot from its origin LV. The LV that is split off\n"
@@ -691,10 +693,12 @@ arg(thinpool_ARG, '\0', "thinpool", lv_VAL, 0, 0,
 arg(trackchanges_ARG, '\0', "trackchanges", 0, 0, 0,
     "Can be used with --splitmirrors on a raid1 LV. This causes\n"
     "changes to the original raid1 LV to be tracked while the split images\n"
-    "remain detached. This allows the read-only detached image(s) to be\n"
-    "merged efficiently back into the raid1 LV later. Only the regions with\n"
-    "changed data are resynchronized during merge. (This option only applies\n"
-    "when using the raid1 LV type.)\n")
+    "remain detached. This is a temporary state that allows the read-only\n"
+    "detached image to be merged efficiently back into the raid1 LV later.\n"
+    "Only the regions with changed data are resynchronized during merge.\n"
+    "While a raid1 LV is tracking changes, operations on it are limited to\n"
+    "merging the split image (see --mergemirrors) or permanently splitting\n"
+    "the image (see --splitmirrors with --name.\n")
 
 /* TODO: hide this? */
 arg(trustcache_ARG, '\0', "trustcache", 0, 0, 0,
