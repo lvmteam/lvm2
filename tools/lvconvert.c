@@ -4235,6 +4235,12 @@ static int _lvconvert_to_pool_or_swap_metadata_single(struct cmd_context *cmd,
 		return 0;
 	};
 
+	if (lv_is_origin(lv)) {
+		log_error("Cannot convert logical volume %s under snapshot.",
+			  display_lvname(lv));
+		return 0;
+	};
+
 	if (cmd->position_argc > 1) {
 		/* First pos arg is required LV, remaining are optional PVs. */
 		if (!(use_pvh = create_pv_list(cmd->mem, lv->vg, cmd->position_argc - 1, cmd->position_argv + 1, 0)))
