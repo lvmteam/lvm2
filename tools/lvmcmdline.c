@@ -118,6 +118,7 @@ static const struct command_function _command_functions[CMD_COUNT] = {
 
 	/* lvconvert utility to trigger polling on an LV. */
 	{ lvconvert_start_poll_CMD, lvconvert_start_poll_cmd },
+	{ lvconvert_plain_CMD, lvconvert_start_poll_cmd },
 
 	/* lvconvert utilities for creating/maintaining thin and cache objects. */
 	{ lvconvert_to_thinpool_CMD,			lvconvert_to_pool_cmd },
@@ -1578,6 +1579,17 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 		if (arg_is_set(cmd, help_ARG) || arg_is_set(cmd, help2_ARG) || arg_is_set(cmd, longhelp_ARG) || arg_is_set(cmd, version_ARG))
 			return &commands[i];
 
+		/*
+		 * The 'lvconvert LV' cmd def matches any lvconvert cmd which throws off
+		 * nearest-command partial-match suggestions.  Make it a special case so
+		 * that it won't be used as a close match.  If the command has any option
+		 * set (other than -v), don't attempt to match it to 'lvconvert LV'.
+		 */
+		if (commands[i].command_enum == lvconvert_plain_CMD) {
+			if (cmd->opt_count - cmd->opt_arg_values[verbose_ARG].count)
+				continue;
+		}
+
 		match_required = 0;	/* required parameters that match */
 		match_ro = 0;		/* required opt_args that match */
 		match_rp = 0;		/* required pos_args that match */
@@ -2095,6 +2107,8 @@ static int _process_command_line(struct cmd_context *cmd, int *argc, char ***arg
 
 		if (goval == '?')
 			return 0;
+
+		cmd->opt_count++;
 
 		/*
 		 * translate the option value used by getopt into the enum

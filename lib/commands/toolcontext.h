@@ -95,6 +95,7 @@ struct cmd_context {
 	char **argv;
 	struct arg_values *opt_arg_values;
 	struct dm_list arg_value_groups;
+	int opt_count; /* total number of options (beginning with - or --) */
 
 	/*
 	 * Position args remaining after command name
