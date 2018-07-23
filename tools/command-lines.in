@@ -727,7 +727,7 @@ RULE: all and lv_is_converting
 # for compat since this was how it used to be done.
 lvconvert LV_mirror_raid
 OO: OO_LVCONVERT
-ID: lvconvert_start_poll
+ID: lvconvert_plain
 DESC: Poll LV to continue conversion (also see --startpoll)
 DESC: or waits till conversion/mirror syncing is finished
 FLAGS: SECONDARY_SYNTAX
