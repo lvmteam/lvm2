@@ -165,7 +165,7 @@ fi
 %{_sysconfdir}/lvm/profile/cache-mq.profile
 %{_sysconfdir}/lvm/profile/cache-smq.profile
 %{_sysconfdir}/lvm/profile/lvmdbusd.profile
-%if %{enable_vdo}
+%if %{have_with vdo}
  %{_sysconfdir}/lvm/profile/vdo-small.profile
 %endif
 %dir %{_sysconfdir}/lvm/backup
@@ -240,7 +240,7 @@ This package contains shared lvm2 libraries for applications.
 %{_libdir}/libdevmapper-event-lvm2mirror.so
 %{_libdir}/libdevmapper-event-lvm2snapshot.so
 %{_libdir}/libdevmapper-event-lvm2raid.so
-%if %{enable_vdo}
+%if %{have_with vdo}
 %{_libdir}/device-mapper/libdevmapper-event-lvm2vdo.so
 %{_libdir}/libdevmapper-event-lvm2vdo.so
 %endif
