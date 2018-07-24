@@ -5,9 +5,6 @@
 
 %global enable_profiling 0
 %global enable_testsuite 1
-%global enable_python 1
-# Off by default - <= does not work well with or:
-%global enable_python3 0
 %global enable_dbusd 0
 %global enable_udev 1
 %global enable_systemd 1
@@ -72,25 +69,6 @@
 
 ##############################################################
 
-%if %{rhel} == 5
-%global enable_python 0
-%endif
-
-%if %{rhel} >= 8 || %{fedora} >= 20
-%global enable_python3 1
-%endif
-
-%if %{enable_python}
-  %global buildreq_python2_devel python2-devel
-  %global buildreq_python_setuptools python-setuptools
-%endif
-%if %{enable_python3}
-  %global buildreq_python3_devel python3-devel
-  %global buildreq_python_setuptools python-setuptools
-%endif
-
-##############################################################
-
 %if %{rhel} >= 7 || %{fedora} >= 25
   %global enable_dmfilemapd 1
 %endif
@@ -98,15 +76,12 @@
 ##############################################################
 
 %if %{rhel} >= 8 || %{fedora} >= 23
-  %if %{enable_python3}
-    %global enable_dbusd 1
-  %else
-    # dbusd requires python3
-    false
-  %endif
+  %global enable_dbusd 1
 %endif
 
 %if %{enable_dbusd}
+  %global buildreq_python3_devel python3-devel
+  %global buildreq_python_setuptools python-setuptools
   %global buildreq_python3_dbus python3-dbus
   %global buildreq_python3_pyudev python3-pyudev
 %endif
@@ -191,7 +166,6 @@ BuildRequires: pkgconfig
 %maybe BuildRequires: %{?buildreq_cluster}
 %maybe BuildRequires: %{?buildreq_lvmlockd_dlm}
 %maybe BuildRequires: %{?buildreq_lvmlockd_sanlock}
-%maybe BuildRequires: %{?buildreq_python2_devel}
 %maybe BuildRequires: %{?buildreq_python3_devel}
 %maybe BuildRequires: %{?buildreq_python_setuptools}
 
