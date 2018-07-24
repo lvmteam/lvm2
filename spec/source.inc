@@ -30,7 +30,6 @@
 
 %global buildreq_cluster corosync-devel >= 1.99.9-1, dlm-devel >= 3.99.1-1
 %global req_cluster corosync >= 1.99.9-1, dlm >= 3.99.2-1
-%with clvmd corosync
 
 # TODO %global req_dm_persistent device-mapper-persistent-data >= 0.1.4
 %with cache internal

@@ -3,16 +3,13 @@
 %with default-pid-dir %{_default_pid_dir}
 %with default-locking-dir %{_default_locking_dir}
 %with usrlibdir %{_libdir}
-%enableif 1 lvm1_fallback
 %enableif 1 fsadm
-%with pool internal
 %with user
 %with group
 %with device-uid 0
 %with device-gid 6
 %with device-mode 0660
 %enableif 1 pkgconfig
-%enableif 1 applib
 %enableif 1 cmdlib
 %enableif 1 dmeventd
 %enableif 1 write_install
