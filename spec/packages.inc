@@ -3,9 +3,6 @@
 %post
 %daemon_reload
 %enable -s monitor -t service
-%if %{have_service lvmetad}
-%enable -s lvmetad -t socket
-%endif
 %if %{have_service lvmpolld}
 %enable -s lvmpolld -t socket
 %endif
@@ -14,16 +11,10 @@
 %if %{have_service lvmpolld}
 %disable -s lvmpolld -t socket
 %endif
-%if %{have_service lvmetad}
-%disable -s lvmetad -t socket
-%endif
 %disable -s monitor -t service
 
 %postun
 %try_restart -s monitor -t service
-%if %{have_service lvmetad}
-%try_restart -s lvmetad -t service
-%endif
 %if %{have_service lvmpolld}
 %try_restart -s lvmpolld -t service
 %endif
@@ -90,9 +81,6 @@ fi
 %{_sbindir}/vgs
 %{_sbindir}/vgscan
 %{_sbindir}/vgsplit
-%if %{have_service lvmetad}
- %{_sbindir}/lvmetad
-%endif
 %if %{have_service lvmpolld}
  %{_sbindir}/lvmpolld
 %endif
@@ -164,10 +152,6 @@ fi
 %endif
 %if %{enable_udev}
  %{_udevdir}/11-dm-lvm.rules
- %if %{have_service lvmetad}
-  %{_mandir}/man8/lvmetad.8.gz
-  %{_udevdir}/69-dm-lvm-metad.rules
- %endif
 %endif
 %dir %{_sysconfdir}/lvm
 %ghost %{_sysconfdir}/lvm/cache/.cache
@@ -191,11 +175,6 @@ fi
  %{_unitdir}/blk-availability.service
  %{_unitdir}/lvm2-monitor.service
  %attr(555, -, -) %{_prefix}/lib/systemd/system-generators/lvm2-activation-generator
- %if %{have_service lvmetad}
-  %{_unitdir}/lvm2-lvmetad.socket
-  %{_unitdir}/lvm2-lvmetad.service
-  %{_unitdir}/lvm2-pvscan@.service
- %endif
  %if %{have_service lvmpolld}
   %{_unitdir}/lvm2-lvmpolld.service
   %{_unitdir}/lvm2-lvmpolld.socket
@@ -203,9 +182,6 @@ fi
 %else
  %{_sysconfdir}/rc.d/init.d/blk-availability
  %{_sysconfdir}/rc.d/init.d/lvm2-monitor
- %if %{have_service lvmetad}
-  %{_sysconfdir}/rc.d/init.d/lvm2-lvmetad
- %endif
  %if %{have_service lvmpolld}
   %{_sysconfdir}/rc.d/init.d/lvm2-lvmpolld
  %endif
