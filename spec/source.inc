@@ -37,6 +37,8 @@
 %with thin_check %{_sbindir}/thin_check
 %with thin_repair %{_sbindir}/thin_repair
 %with thin_dump %{_sbindir}/thin_dump
+%with vdo internal
+%with vdo-format %{_bindir}/vdoformat
 
 %global buildreq_udev systemd-devel
 %global req_udev udev >= 181-1
