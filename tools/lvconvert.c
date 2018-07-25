@@ -1161,6 +1161,12 @@ static int _raid_split_image_conversion(struct logical_volume *lv)
 {
 	const char *s;
 
+	if (lv_is_raid_with_tracking(lv)) {
+		log_error("Conversion of tracking raid1 LV %s is not supported.",
+			  display_lvname(lv));
+		return 1;
+	}
+
 	if (lv_is_raid_image(lv) &&
 	    (s = strstr(lv->name, "_rimage_"))) {
 		size_t len = s - lv->name;

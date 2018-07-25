@@ -27,6 +27,13 @@ vgcreate $SHARED -s 512k "$vg" "${DEVICES[@]}"
 lvcreate -y --ty raid1 -m 2 -n $lv1 -l 1 $vg
 lvconvert -y --splitmirrors 1 --trackchanges $vg/$lv1
 
+not lvconvert -y --ty linear $vg/$lv1
+not lvconvert -y --ty striped -i 3 $vg/$lv1
+not lvconvert -y --ty mirror $vg/$lv1
+not lvconvert -y --ty raid4 $vg/$lv1
+not lvconvert -y --ty raid5 $vg/$lv1
+not lvconvert -y --ty raid6 $vg/$lv1
+not lvconvert -y --ty raid10 $vg/$lv1
 not lvconvert -y --ty striped -m 1 $vg/${lv1}_rimage_2
 not lvconvert -y --ty raid1 -m 1 $vg/${lv1}_rimage_2
 not lvconvert -y --ty mirror -m 1 $vg/${lv1}_rimage_2
