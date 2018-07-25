@@ -1165,6 +1165,36 @@ static int _lvconvert_validate_thin(struct logical_volume *lv,
 	return 0;
 }
 
+/* Check for raid1 split trackchanges image to reject conversions on it. */
+static int _raid_split_image_conversion(struct logical_volume *lv)
+{
+	const char *s;
+
+	if (lv_is_raid_image(lv) &&
+	    (s = strstr(lv->name, "_rimage_"))) {
+		size_t len = s - lv->name;
+		char raidlv_name[len + 1];
+		const struct logical_volume *tmp_lv;
+
+		strncpy(raidlv_name, lv->name, len);
+		raidlv_name[len] = '\0';
+
+		if (!(tmp_lv = find_lv(lv->vg, raidlv_name))) {
+			log_error(INTERNAL_ERROR "Failed to find RaidLV of RAID subvolume %s.",
+				  display_lvname(lv));
+			return 1;
+		}
+
+		if (lv_is_raid_with_tracking(tmp_lv)) {
+			log_error("Conversion of tracked raid1 subvolume %s is not supported.",
+				  display_lvname(lv));
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 /*
  * _lvconvert_mirrors
  *
@@ -1179,6 +1209,9 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 	uint32_t old_log_count = 0;
 	uint32_t new_mimage_count = 0;
 	uint32_t new_log_count = 0;
+
+	if (_raid_split_image_conversion(lv))
+		return 0;
 
 	if ((lp->corelog || lp->mirrorlog) && *lp->type_str && strcmp(lp->type_str, SEG_TYPE_NAME_MIRROR)) {
 		log_error("--corelog and --mirrorlog are only compatible with mirror devices.");
@@ -1295,6 +1328,9 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	int image_count = 0;
 	struct cmd_context *cmd = lv->vg->cmd;
 	struct lv_segment *seg = first_seg(lv);
+
+	if (_raid_split_image_conversion(lv))
+		return 0;
 
 	if (_linear_type_requested(lp->type_str)) {
 		if (arg_is_set(cmd, mirrors_ARG) && (arg_uint_value(cmd, mirrors_ARG, 0) != 0)) {
@@ -2574,6 +2610,9 @@ static int _lvconvert_to_thin_with_external(struct cmd_context *cmd,
 		.virtual_extents = lv->le_count,
 	};
 
+	if (_raid_split_image_conversion(lv))
+		return 0;
+
 	if (lv == thinpool_lv) {
 		log_error("Can't use same LV %s for thin pool and thin volume.",
 			  display_lvname(thinpool_lv));
@@ -2882,6 +2921,9 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	struct id lockd_data_id;
 	struct id lockd_meta_id;
 	const char *str_seg_type = to_cachepool ? SEG_TYPE_NAME_CACHE_POOL : SEG_TYPE_NAME_THIN_POOL;
+
+	if (_raid_split_image_conversion(lv))
+		return 0;
 
 	if (lv_is_thin_pool(lv) || lv_is_cache_pool(lv)) {
 		log_error(INTERNAL_ERROR "LV %s is already a pool.", display_lvname(lv));
@@ -3333,6 +3375,9 @@ static int _lvconvert_to_cache_vol(struct cmd_context *cmd,
 	const char *policy_name;
 	struct dm_config_tree *policy_settings = NULL;
 	int r = 0;
+
+	if (_raid_split_image_conversion(lv))
+		return 0;
 
 	/* If LV is inactive here, ensure it's not active elsewhere. */
 	if (!lockd_lv(cmd, lv, "ex", 0))

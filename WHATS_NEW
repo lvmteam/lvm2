@@ -1,5 +1,6 @@
 Version 2.02.181 - 
 =================================
+  lvconvert: reject conversions on raid1 split tracked SubLVs
 
 Version 2.02.180 - 19th July 2018
 =================================
