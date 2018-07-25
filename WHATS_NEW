@@ -1,5 +1,6 @@
 Version 3.0.0
 =============
+  lvconvert: reject conversions on raid1 split tracked SubLVs
   Add basic creation support for VDO target.
   Never send any discard ioctl with test mode.
   Fix thin-pool alloc which needs same PV for data and metadata.
