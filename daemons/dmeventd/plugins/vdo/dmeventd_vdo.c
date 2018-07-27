@@ -12,10 +12,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "lib/misc/lib.h"
+#include "lib.h"
 #include "dmeventd_lvm.h"
-#include "daemons/dmeventd/libdevmapper-event.h"
-#include "device_mapper/vdo/target.h"
+#include "libdevmapper-event.h"
 
 #include <sys/wait.h>
 #include <stdarg.h>
@@ -45,6 +44,23 @@ struct dso_state {
 	const char *cmd_str;
 	const char *name;
 };
+
+struct vdo_status {
+	uint64_t used_blocks;
+	uint64_t total_blocks;
+};
+
+static int _vdo_status_parse(const char *params, struct vdo_status *status)
+{
+	if (sscanf(params, "%*s %*s %*s %*s %*s %" PRIu64 " %" PRIu64,
+		   &status->used_blocks,
+		   &status->total_blocks) < 2) {
+		log_error("Failed to parse vdo params: %s.", params);
+		return 0;
+	}
+
+	return 1;
+}
 
 DM_EVENT_LOG_FN("vdo")
 
@@ -149,7 +165,7 @@ void process_event(struct dm_task *dmt,
 	char *params;
 	int needs_policy = 0;
 	struct dm_task *new_dmt = NULL;
-	struct dm_vdo_status_parse_result vdop = { .status = NULL };
+	struct vdo_status status;
 
 #if VDO_DEBUG
 	log_debug("Watch for VDO %s:%.2f%%.", state->name,
@@ -195,24 +211,24 @@ void process_event(struct dm_task *dmt,
 		goto out;
 	}
 
-	if (!dm_vdo_status_parse(state->mem, params, &vdop)) {
+	if (!_vdo_status_parse(params, &status)) {
 		log_error("Failed to parse status.");
 		goto out;
 	}
 
-	state->percent = dm_make_percent(vdop.status->used_blocks,
-					 vdop.status->total_blocks);
+	state->percent = dm_make_percent(status.used_blocks,
+					 status.total_blocks);
 
 #if VDO_DEBUG
 	log_debug("VDO %s status  %.2f%% " FMTu64 "/" FMTu64 ".",
 		  state->name, dm_percent_to_round_float(state->percent, 2),
-		  vdop.status->used_blocks, vdop.status->total_blocks);
+		  status.used_blocks, status.total_blocks);
 #endif
 
 	/* VDO pool size had changed. Clear the threshold. */
-	if (state->known_data_size != vdop.status->total_blocks) {
+	if (state->known_data_size != status.total_blocks) {
 		state->percent_check = CHECK_MINIMUM;
-		state->known_data_size = vdop.status->total_blocks;
+		state->known_data_size = status.total_blocks;
 		state->fails = 0;
 	}
 
@@ -257,9 +273,6 @@ void process_event(struct dm_task *dmt,
 	if (0 && needs_policy)
 		_use_policy(dmt, state);
 out:
-	if (vdop.status)
-		dm_pool_free(state->mem, vdop.status);
-
 	if (new_dmt)
 		dm_task_destroy(new_dmt);
 }
