@@ -475,7 +475,7 @@ Split images from a raid1 or mirror LV and use them to create a new LV.
 .RE
 -
 
-Split images from a raid1 LV and track changes to origin.
+Split images from a raid1 LV and track changes to origin for later merge.
 .br
 .P
 \fBlvconvert\fP \fB--splitmirrors\fP \fINumber\fP \fB--trackchanges\fP \fILV\fP\fI_cache_raid1\fP
@@ -1281,6 +1281,8 @@ Before the separation, the cache is flushed. Also see --uncache.
 Splits the specified number of images from a raid1 or mirror LV
 and uses them to create a new LV. If --trackchanges is also specified,
 changes to the raid1 LV are tracked while the split LV remains detached.
+If --name is specified, then the images are permanently split from the
+original LV and changes are not tracked.
 .ad b
 .HP
 .ad l
@@ -1354,10 +1356,12 @@ The name of a thin pool LV.
 .br
 Can be used with --splitmirrors on a raid1 LV. This causes
 changes to the original raid1 LV to be tracked while the split images
-remain detached. This allows the read-only detached image(s) to be
-merged efficiently back into the raid1 LV later. Only the regions with
-changed data are resynchronized during merge. (This option only applies
-when using the raid1 LV type.)
+remain detached. This is a temporary state that allows the read-only
+detached image to be merged efficiently back into the raid1 LV later.
+Only the regions with changed data are resynchronized during merge.
+While a raid1 LV is tracking changes, operations on it are limited to
+merging the split image (see --mergemirrors) or permanently splitting
+the image (see --splitmirrors with --name.
 .ad b
 .HP
 .ad l
