@@ -1190,7 +1190,7 @@ bool dev_write_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 		return false;
 	}
 
-	if (!(dev->flags & DEV_BCACHE_WRITE)) {
+	if (_in_bcache(dev) && !(dev->flags & DEV_BCACHE_WRITE)) {
 		/* FIXME: avoid tossing out bcache blocks just to replace fd. */
 		log_debug("Close and reopen to write %s", dev_name(dev));
 		bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
@@ -1236,7 +1236,7 @@ bool dev_write_zeros(struct device *dev, uint64_t start, size_t len)
 		return false;
 	}
 
-	if (!(dev->flags & DEV_BCACHE_WRITE)) {
+	if (_in_bcache(dev) && !(dev->flags & DEV_BCACHE_WRITE)) {
 		/* FIXME: avoid tossing out bcache blocks just to replace fd. */
 		log_debug("Close and reopen to write %s", dev_name(dev));
 		bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
@@ -1282,7 +1282,7 @@ bool dev_set_bytes(struct device *dev, uint64_t start, size_t len, uint8_t val)
 		return false;
 	}
 
-	if (!(dev->flags & DEV_BCACHE_WRITE)) {
+	if (_in_bcache(dev) && !(dev->flags & DEV_BCACHE_WRITE)) {
 		/* FIXME: avoid tossing out bcache blocks just to replace fd. */
 		log_debug("Close and reopen to write %s", dev_name(dev));
 		bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
