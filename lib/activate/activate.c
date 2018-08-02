@@ -1851,6 +1851,8 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 
 	if (!laopts)
 		laopts = &zlaopts;
+	else
+		mirr_laopts.read_only = laopts->read_only;
 
 	/* skip dmeventd code altogether */
 	if (dmeventd_monitor_mode() == DMEVENTD_MONITOR_IGNORE)
