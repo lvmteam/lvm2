@@ -5872,6 +5872,13 @@ do_command:
 					pd->name);
 	}
 
+	/*
+	 * Don't keep devs open excl in bcache because the excl will prevent
+	 * using that dev elsewhere.
+	 */
+	dm_list_iterate_items(devl, &rescan_devs)
+		label_scan_invalidate(devl->dev);
+
 	dm_list_iterate_items(pd, &pp->arg_fail)
 		log_debug("%s: command failed for %s.",
 			  cmd->command->name, pd->name);
