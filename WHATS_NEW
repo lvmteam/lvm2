@@ -1,5 +1,6 @@
 Version 2.02.182 - 
 ==============================
+  Do not pair cache policy and cache metadata format.
 
 Version 2.02.181 - 01 August 2018
 =================================
