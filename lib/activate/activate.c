@@ -2001,6 +2001,11 @@ static int _preload_detached_lv(struct logical_volume *lv, void *data)
 		    !lv_is_raid_metadata(lv_pre) && lv_is_active(lv) &&
 		    !_lv_preload(lv_pre, detached->laopts, detached->flush_required))
 			return_0;
+	} else if (lv_is_mirror_image(lv)) {
+		if ((lv_pre = find_lv_in_vg_by_lvid(detached->lv_pre->vg, &lv->lvid)) &&
+		    !lv_is_mirror_image(lv_pre) && lv_is_active(lv) &&
+		    !_lv_preload(lv_pre, detached->laopts, detached->flush_required))
+			return_0;
 	}
 
 	if (!lv_is_visible(lv) && (lv_pre = find_lv(detached->lv_pre->vg, lv->name)) &&
