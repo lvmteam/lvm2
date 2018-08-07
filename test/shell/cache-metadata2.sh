@@ -78,6 +78,12 @@ lvconvert --config 'allocation/cache_metadata_format=1' -y -H --cachepool $vg/cp
 check lv_field $vg/$lv1 cachemetadataformat "1"
 lvremove -f $vg
 
+lvcreate --type cache-pool --cachepolicy mq --cachemetadataformat 1 -L1 $vg/cpool
+check lv_field $vg/cpool cachemetadataformat "1"
+lvcreate -H -L10 -n $lv1 --cachemetadataformat 2 --cachepool $vg/cpool
+check lv_field $vg/$lv1 cachemetadataformat "2"
+lvremove -f $vg
+
 fi
 #lvs -a -o name,cachemetadataformat,kernelmetadataformat,chunksize,cachepolicy,cachemode $vg
 
