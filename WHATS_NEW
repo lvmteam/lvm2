@@ -1,5 +1,6 @@
 Version 3.0.0
 =============
+  Do not pair cache policy and cache metadata format.
   lvconvert: reject conversions on raid1 LVs with split tracked SubLVs
   lvconvert: reject conversions on raid1 split tracked SubLVs
   Add basic creation support for VDO target.

@@ -842,15 +842,10 @@ int cache_set_metadata_format(struct lv_segment *seg, cache_metadata_format_t fo
 
 	/*
 	 * If policy is unselected, but format 2 is selected, policy smq is enforced.
-	 * ATM no other then smq & cleaner policy is allowed to select format 2.
 	 */
 	if (!seg->policy_name) {
 		if (format == CACHE_METADATA_FORMAT_2)
 			seg->policy_name = "smq";
-	} else if (strcmp(seg->policy_name, "smq") &&
-		   strcmp(seg->policy_name, "cleaner")) {
-		seg->cache_metadata_format = CACHE_METADATA_FORMAT_1;
-		return 1;
 	}
 
 	/* Check if we need to search for configured cache metadata format */
