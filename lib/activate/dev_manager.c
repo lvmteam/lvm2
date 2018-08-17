@@ -827,6 +827,113 @@ static int _info(struct cmd_context *cmd,
 	return 1;
 }
 
+/* FIXME: could we just use dev_manager_info instead of this? */
+
+int get_cache_single_meta_data(struct cmd_context *cmd,
+				    struct logical_volume *lv,
+				    struct logical_volume *pool_lv,
+				    struct dm_info *info_meta, struct dm_info *info_data)
+{
+	struct lv_segment *lvseg = first_seg(lv);
+	union lvid lvid_meta;
+	union lvid lvid_data;
+	char *name_meta;
+	char *name_data;
+	char *dlid_meta;
+	char *dlid_data;
+
+	memset(&lvid_meta, 0, sizeof(lvid_meta));
+	memset(&lvid_data, 0, sizeof(lvid_meta));
+	memcpy(&lvid_meta.id[0], &lv->vg->id, sizeof(struct id));
+	memcpy(&lvid_meta.id[1], &lvseg->metadata_id, sizeof(struct id));
+	memcpy(&lvid_data.id[0], &lv->vg->id, sizeof(struct id));
+	memcpy(&lvid_data.id[1], &lvseg->data_id, sizeof(struct id));
+
+	if (!(dlid_meta = dm_build_dm_uuid(cmd->mem, UUID_PREFIX, (const char *)&lvid_meta.s, NULL)))
+		return_0;
+	if (!(dlid_data = dm_build_dm_uuid(cmd->mem, UUID_PREFIX, (const char *)&lvid_data.s, NULL)))
+		return_0;
+	if (!(name_meta = dm_build_dm_name(cmd->mem, lv->vg->name, pool_lv->name, "_cmeta")))
+		return_0;
+	if (!(name_data = dm_build_dm_name(cmd->mem, lv->vg->name, pool_lv->name, "_cdata")))
+		return_0;
+
+	if (!_info(cmd, name_meta, dlid_meta, 1, 0, info_meta, NULL, NULL))
+		return_0;
+
+	if (!_info(cmd, name_data, dlid_data, 1, 0, info_data, NULL, NULL))
+		return_0;
+
+	return 1;
+}
+
+/*
+ * FIXME: isn't there a simpler, more direct way to just remove these two dm
+ * devs?
+ */
+
+int remove_cache_single_meta_data(struct cmd_context *cmd,
+				       struct dm_info *info_meta, struct dm_info *info_data)
+{
+	struct dm_tree *dtree;
+	struct dm_tree_node *root;
+	struct dm_tree_node *child;
+	const char *uuid;
+	void *handle = NULL;
+
+	if (!(dtree = dm_tree_create()))
+		goto_out;
+
+	if (!dm_tree_add_dev(dtree, info_meta->major, info_meta->minor))
+		goto_out;
+
+	if (!dm_tree_add_dev(dtree, info_data->major, info_data->minor))
+		goto_out;
+
+	if (!(root = dm_tree_find_node(dtree, 0, 0)))
+		goto_out;
+
+	while ((child = dm_tree_next_child(&handle, root, 0))) {
+		if (!(uuid = dm_tree_node_get_uuid(child))) {
+			stack;
+			continue;
+		}
+
+		if (!dm_tree_deactivate_children(root, uuid, strlen(uuid))) {
+			stack;
+			continue;
+		}
+	}
+
+	dm_tree_free(dtree);
+	return 1;
+ out:
+	dm_tree_free(dtree);
+	return 0;
+}
+
+int dev_manager_remove_dm_major_minor(uint32_t major, uint32_t minor)
+{
+	struct dm_task *dmt;
+	int r = 0;
+
+	log_verbose("Removing dm dev %u:%u", major, minor);
+
+	if (!(dmt = dm_task_create(DM_DEVICE_REMOVE)))
+		return_0;
+
+	if (!dm_task_set_major(dmt, major) || !dm_task_set_minor(dmt, minor)) {
+		log_error("Failed to set device number for remove %u:%u", major, minor);
+		goto out;
+	}
+
+	r = dm_task_run(dmt);
+out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
 static int _info_by_dev(uint32_t major, uint32_t minor, struct dm_info *info)
 {
 	return _info_run(NULL, info, NULL, 0, 0, 0, major, minor);
@@ -2236,6 +2343,10 @@ static int _pool_register_callback(struct dev_manager *dm,
 		return 1;
 #endif
 
+	/* Skip for single-device cache pool */
+	if (lv_is_cache(lv) && lv_is_cache_single(first_seg(lv)->pool_lv))
+		return 1;
+
 	if (!(data = dm_pool_zalloc(dm->mem, sizeof(*data)))) {
 		log_error("Failed to allocated path for callback.");
 		return 0;
@@ -2301,6 +2412,53 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			return 1;
 		}
 		/* Unused cache pool is activated as metadata */
+	}
+
+	if (lv_is_cache(lv) && lv_is_cache_single(first_seg(lv)->pool_lv) && dm->activation) {
+		struct logical_volume *pool_lv = first_seg(lv)->pool_lv;
+		struct lv_segment *lvseg = first_seg(lv);
+		struct dm_info info_meta;
+		struct dm_info info_data;
+		union lvid lvid_meta;
+		union lvid lvid_data;
+		char *name_meta;
+		char *name_data;
+		char *dlid_meta;
+		char *dlid_data;
+
+		memset(&lvid_meta, 0, sizeof(lvid_meta));
+		memset(&lvid_data, 0, sizeof(lvid_meta));
+		memcpy(&lvid_meta.id[0], &lv->vg->id, sizeof(struct id));
+		memcpy(&lvid_meta.id[1], &lvseg->metadata_id, sizeof(struct id));
+		memcpy(&lvid_data.id[0], &lv->vg->id, sizeof(struct id));
+		memcpy(&lvid_data.id[1], &lvseg->data_id, sizeof(struct id));
+
+		if (!(dlid_meta = dm_build_dm_uuid(dm->mem, UUID_PREFIX, (const char *)&lvid_meta.s, NULL)))
+			return_0;
+		if (!(dlid_data = dm_build_dm_uuid(dm->mem, UUID_PREFIX, (const char *)&lvid_data.s, NULL)))
+			return_0;
+		if (!(name_meta = dm_build_dm_name(dm->mem, lv->vg->name, pool_lv->name, "_cmeta")))
+			return_0;
+		if (!(name_data = dm_build_dm_name(dm->mem, lv->vg->name, pool_lv->name, "_cdata")))
+			return_0;
+
+		if (!_info(dm->cmd, name_meta, dlid_meta, 1, 0, &info_meta, NULL, NULL))
+			return_0;
+
+		if (!_info(dm->cmd, name_data, dlid_data, 1, 0, &info_data, NULL, NULL))
+			return_0;
+
+		if (info_meta.exists &&
+		    !dm_tree_add_dev_with_udev_flags(dtree, info_meta.major, info_meta.minor,
+						     _get_udev_flags(dm, lv, NULL, 0, 0, 0))) {
+			log_error("Failed to add device (%" PRIu32 ":%" PRIu32") to dtree.", info_meta.major, info_meta.minor);
+		}
+
+		if (info_data.exists &&
+		    !dm_tree_add_dev_with_udev_flags(dtree, info_data.major, info_data.minor,
+						     _get_udev_flags(dm, lv, NULL, 0, 0, 0))) {
+			log_error("Failed to add device (%" PRIu32 ":%" PRIu32") to dtree.", info_data.major, info_data.minor);
+		}
 	}
 
 	if (!origin_only && !_add_dev_to_dtree(dm, dtree, lv, NULL))
@@ -2444,7 +2602,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		    !_add_lv_to_dtree(dm, dtree, seg->metadata_lv, 0))
 			return_0;
 		if (seg->pool_lv &&
-		    (lv_is_cache_pool(seg->pool_lv) || dm->track_external_lv_deps) &&
+		    (lv_is_cache_pool(seg->pool_lv) || lv_is_cache_single(seg->pool_lv) || dm->track_external_lv_deps) &&
 		    /* When activating and not origin_only detect linear 'overlay' over pool */
 		    !_add_lv_to_dtree(dm, dtree, seg->pool_lv, dm->activation ? origin_only : 1))
 			return_0;
@@ -2941,6 +3099,14 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	int save_pending_delete = dm->track_pending_delete;
 	int merge_in_progress = 0;
 
+	if (!(lvlayer = dm_pool_alloc(dm->mem, sizeof(*lvlayer)))) {
+		log_error("_add_new_lv_to_dtree: pool alloc failed for %s %s.",
+			  display_lvname(lv), layer);
+		return 0;
+	}
+	lvlayer->lv = lv;
+	lvlayer->visible_component = (laopts->component_lv == lv) ? 1 : 0;
+
 	log_debug_activation("Adding new LV %s%s%s to dtree", display_lvname(lv),
 			     layer ? "-" : "", layer ? : "");
 	/* LV with pending delete is never put new into a table */
@@ -2955,6 +3121,99 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		if (!_add_new_lv_to_dtree(dm, dtree, first_seg(lv)->metadata_lv, laopts, NULL))
 			return_0;
 		return 1;
+	}
+
+	if (lv_is_cache(lv) && lv_is_cache_single(first_seg(lv)->pool_lv)) {
+		struct logical_volume *pool_lv = first_seg(lv)->pool_lv;
+		struct lv_segment *lvseg = first_seg(lv);
+		struct volume_group *vg = lv->vg;
+		struct dm_tree_node *dnode_meta;
+		struct dm_tree_node *dnode_data;
+		union lvid lvid_meta;
+		union lvid lvid_data;
+		char *name_meta;
+		char *name_data;
+		char *dlid_meta;
+		char *dlid_data;
+		char *dlid_pool;
+		uint64_t meta_len = first_seg(lv)->metadata_len;
+		uint64_t data_len = first_seg(lv)->data_len;
+		uint16_t udev_flags = _get_udev_flags(dm, lv, layer,
+					     laopts->noscan, laopts->temporary,
+					     0);
+
+		log_debug("Add cache pool %s to dtree before cache %s", pool_lv->name, lv->name);
+
+		if (!_add_new_lv_to_dtree(dm, dtree, pool_lv, laopts, NULL)) {
+			log_error("Failed to add cachepool to dtree before cache");
+			return_0;
+		}
+
+		memset(&lvid_meta, 0, sizeof(lvid_meta));
+		memset(&lvid_data, 0, sizeof(lvid_meta));
+		memcpy(&lvid_meta.id[0], &vg->id, sizeof(struct id));
+		memcpy(&lvid_meta.id[1], &lvseg->metadata_id, sizeof(struct id));
+		memcpy(&lvid_data.id[0], &vg->id, sizeof(struct id));
+		memcpy(&lvid_data.id[1], &lvseg->data_id, sizeof(struct id));
+
+		if (!(dlid_meta = dm_build_dm_uuid(dm->mem, UUID_PREFIX, (const char *)&lvid_meta.s, NULL)))
+			return_0;
+		if (!(dlid_data = dm_build_dm_uuid(dm->mem, UUID_PREFIX, (const char *)&lvid_data.s, NULL)))
+			return_0;
+
+		if (!(name_meta = dm_build_dm_name(dm->mem, vg->name, pool_lv->name, "_cmeta")))
+			return_0;
+		if (!(name_data = dm_build_dm_name(dm->mem, vg->name, pool_lv->name, "_cdata")))
+			return_0;
+
+		if (!(dlid_pool = build_dm_uuid(dm->mem, pool_lv, NULL)))
+			return_0;
+
+		/* add meta dnode */
+		if (!(dnode_meta = dm_tree_add_new_dev_with_udev_flags(dtree,
+								  name_meta,
+								  dlid_meta,
+								  -1, -1,
+								  read_only_lv(lv, laopts, layer),
+								  ((lv->vg->status & PRECOMMITTED) | laopts->revert) ? 1 : 0,
+								  lvlayer,
+								  udev_flags)))
+			return_0;
+
+		/* add load_segment to meta dnode: linear, size of meta area */
+		if (!add_linear_area_to_dtree(dnode_meta,
+					      meta_len,
+					      lv->vg->extent_size,
+					      lv->vg->cmd->use_linear_target,
+					      lv->vg->name, lv->name))
+			return_0;
+
+		/* add seg_area to prev load_seg: offset 0 maps to cachepool lv offset 0 */
+		if (!dm_tree_node_add_target_area(dnode_meta, NULL, dlid_pool, 0))
+			return_0;
+
+		/* add data dnode */
+		if (!(dnode_data = dm_tree_add_new_dev_with_udev_flags(dtree,
+								  name_data,
+								  dlid_data,
+								  -1, -1,
+								  read_only_lv(lv, laopts, layer),
+								  ((lv->vg->status & PRECOMMITTED) | laopts->revert) ? 1 : 0,
+								  lvlayer,
+								  udev_flags)))
+			return_0;
+
+		/* add load_segment to data dnode: linear, size of data area */
+		if (!add_linear_area_to_dtree(dnode_data,
+					      data_len,
+					      lv->vg->extent_size,
+					      lv->vg->cmd->use_linear_target,
+					      lv->vg->name, lv->name))
+			return_0;
+
+		/* add seg_area to prev load_seg: offset 0 maps to cachepool lv after meta */
+		if (!dm_tree_node_add_target_area(dnode_data, NULL, dlid_pool, meta_len))
+			return_0;
 	}
 
 	/* FIXME Seek a simpler way to lay out the snapshot-merge tree. */
@@ -3024,12 +3283,6 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if ((dnode = dm_tree_find_node_by_uuid(dtree, dlid)) &&
 	    dm_tree_node_get_context(dnode))
 		return 1;
-
-	if (!(lvlayer = dm_pool_alloc(dm->mem, sizeof(*lvlayer)))) {
-		log_error("_add_new_lv_to_dtree: pool alloc failed for %s %s.",
-			  display_lvname(lv), layer);
-		return 0;
-	}
 
 	lvlayer->lv = lv;
 	lvlayer->visible_component = (laopts->component_lv == lv) ? 1 : 0;
@@ -3121,7 +3374,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	    !_pool_register_callback(dm, dnode, lv))
 		return_0;
 
-	if (lv_is_cache(lv) &&
+	if (lv_is_cache(lv) && !lv_is_cache_single(first_seg(lv)->pool_lv) &&
 	    /* Register callback only for layer activation or non-layered cache LV */
 	    (layer || !lv_layer(lv)) &&
 	    /* Register callback when metadata LV is NOT already active */

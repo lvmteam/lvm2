@@ -104,6 +104,7 @@ lvcreate -n pool -l 10 $vg
 lvs -a -o +devices
 fail lvconvert --type cache --cachepool $vg/pool $vg/corigin
 lvconvert --yes --cache --cachepool $vg/pool $vg/corigin
+lvconvert --splitcache $vg/corigin
 lvremove -ff $vg
 
 # Check we also support conversion that uses 'cleaner' cache policy

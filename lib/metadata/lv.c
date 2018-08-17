@@ -333,6 +333,8 @@ uint64_t lvseg_chunksize(const struct lv_segment *seg)
 
 	if (lv_is_cow(seg->lv))
 		size = (uint64_t) find_snapshot(seg->lv)->chunk_size;
+	else if (seg_is_cache(seg) && lv_is_cache_single(seg->pool_lv))
+		size = (uint64_t) seg->chunk_size;
 	else if (seg_is_pool(seg))
 		size = (uint64_t) seg->chunk_size;
 	else if (seg_is_cache(seg))
@@ -932,10 +934,18 @@ uint64_t lv_origin_size(const struct logical_volume *lv)
 
 uint64_t lv_metadata_size(const struct logical_volume *lv)
 {
-	struct lv_segment *seg = (lv_is_thin_pool(lv) || lv_is_cache_pool(lv)) ?
-		first_seg(lv) : NULL;
+	struct lv_segment *seg;
 
-	return seg ? seg->metadata_lv->size : 0;
+	if (!(seg = first_seg(lv)))
+		return 0;
+
+	if (seg_is_cache(seg) && lv_is_cache_single(seg->pool_lv))
+		return seg->metadata_len;
+
+	if (lv_is_thin_pool(lv) || lv_is_cache_pool(lv))
+		return seg->metadata_lv->size;
+
+	return 0;
 }
 
 char *lv_path_dup(struct dm_pool *mem, const struct logical_volume *lv)
@@ -1297,7 +1307,7 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 
 	if (lv_is_thin_pool(lv) || lv_is_thin_volume(lv))
 		repstr[6] = 't';
-	else if (lv_is_cache_pool(lv) || lv_is_cache(lv) || lv_is_cache_origin(lv))
+	else if (lv_is_cache_pool(lv) || lv_is_cache_single(lv) || lv_is_cache(lv) || lv_is_cache_origin(lv))
 		repstr[6] = 'C';
 	else if (lv_is_raid_type(lv))
 		repstr[6] = 'r';

@@ -912,6 +912,10 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 				  const char *origin_uuid,
 				  const char *policy_name,
 				  const struct dm_config_node *policy_settings,
+				  uint64_t metadata_start,
+				  uint64_t metadata_len,
+				  uint64_t data_start,
+				  uint64_t data_len,
 				  uint32_t data_block_size);
 
 /*

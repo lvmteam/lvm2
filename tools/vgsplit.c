@@ -402,7 +402,10 @@ static int _move_cache(struct volume_group *vg_from,
 
 		/* NOTREACHED */
 
-		if (lv_is_cache(lv)) {
+		if (lv_is_cache(lv) && lv_is_cache_single(seg->pool_lv)) {
+			log_error("Cannot split while LV %s has cache attached.", display_lvname(lv));
+			return 0;
+		} else if (lv_is_cache(lv)) {
 			orig = seg_lv(seg, 0);
 			data = seg_lv(first_seg(seg->pool_lv), 0);
 			meta = first_seg(seg->pool_lv)->metadata_lv;

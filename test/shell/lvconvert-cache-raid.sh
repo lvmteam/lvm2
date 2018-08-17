@@ -84,22 +84,31 @@ lvremove -f $vg
 
 
 # Test up/down raid conversion of cache pool data and metadata
-lvcreate --type cache-pool $vg/cpool -l 10
-lvcreate -H -n corigin --cachepool $vg/cpool -l 20 $vg
 
-lvconvert -y -m +1 --type raid1 $vg/cpool_cmeta
-check lv_field $vg/cpool_cmeta layout "raid,raid1"
-check lv_field $vg/cpool_cmeta role "private,cache,pool,metadata"
+lvcreate -l 10 -n cp1 $vg
+lvconvert -y --type cache-pool $vg/cp1
 
-lvconvert -y -m +1 --type raid1 $vg/cpool_cdata
-check lv_field $vg/cpool_cdata layout "raid,raid1"
-check lv_field $vg/cpool_cdata role "private,cache,pool,data"
+lvcreate -l 20 -n co1 $vg
+lvconvert -y --type cache --cachepool cp1 $vg/co1
 
-not lvconvert -m -1  $vg/cpool_cmeta
-lvconvert -y -m -1  $vg/cpool_cmeta
-check lv_field $vg/cpool_cmeta layout "linear"
-lvconvert -y -m -1  $vg/cpool_cdata
-check lv_field $vg/cpool_cdata layout "linear"
+lvconvert -y -m +1 --type raid1 $vg/cp1_cmeta
+check lv_field $vg/cp1_cmeta layout "raid,raid1"
+check lv_field $vg/cp1_cmeta role "private,cache,pool,metadata"
+
+lvconvert -y -m +1 --type raid1 $vg/cp1_cdata
+check lv_field $vg/cp1_cdata layout "raid,raid1"
+check lv_field $vg/cp1_cdata role "private,cache,pool,data"
+
+sleep 5
+
+lvs -a -o+devices $vg
+
+not lvconvert -m -1  $vg/cp1_cmeta
+
+lvconvert -y -m -1  $vg/cp1_cmeta
+check lv_field $vg/cp1_cmeta layout "linear"
+lvconvert -y -m -1  $vg/cp1_cdata
+check lv_field $vg/cp1_cdata layout "linear"
 
 lvremove -f $vg
 

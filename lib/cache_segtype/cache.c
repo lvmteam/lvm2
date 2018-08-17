@@ -49,7 +49,10 @@ static void _cache_display(const struct lv_segment *seg)
 	const struct dm_config_node *n;
 	const struct lv_segment *setting_seg = NULL;
 
-	if (seg_is_cache_pool(seg))
+	if (seg_is_cache(seg) && lv_is_cache_single(seg->pool_lv))
+		setting_seg = seg;
+
+	else if (seg_is_cache_pool(seg))
 		setting_seg = seg;
 
 	else if (seg_is_cache(seg))
@@ -474,6 +477,7 @@ static int _cache_text_import(struct lv_segment *seg,
 {
 	struct logical_volume *pool_lv, *origin_lv;
 	const char *name;
+	const char *uuid;
 
 	if (!dm_config_has_node(sn, "cache_pool"))
 		return SEG_LOG_ERROR("cache_pool not specified in");
@@ -503,9 +507,44 @@ static int _cache_text_import(struct lv_segment *seg,
 	if (!attach_pool_lv(seg, pool_lv, NULL, NULL, NULL))
 		return_0;
 
-	/* load order is unknown, could be cache origin or pool LV, so check for both */
-	if (!dm_list_empty(&pool_lv->segments))
-		_fix_missing_defaults(first_seg(pool_lv));
+	if (!_settings_text_import(seg, sn))
+		return_0;
+
+	if (dm_config_has_node(sn, "metadata_format")) {
+		if (!dm_config_get_uint32(sn, "metadata_format", &seg->cache_metadata_format))
+			return SEG_LOG_ERROR("Couldn't read cache metadata_format in");
+		if (seg->cache_metadata_format != CACHE_METADATA_FORMAT_2)
+			return SEG_LOG_ERROR("Unknown cache metadata format %u number in",
+					     seg->cache_metadata_format);
+	}
+
+	if (dm_config_has_node(sn, "metadata_start")) {
+		if (!dm_config_get_uint64(sn, "metadata_start", &seg->metadata_start))
+			return SEG_LOG_ERROR("Couldn't read metadata_start in");
+		if (!dm_config_get_uint64(sn, "metadata_len", &seg->metadata_len))
+			return SEG_LOG_ERROR("Couldn't read metadata_len in");
+		if (!dm_config_get_uint64(sn, "data_start", &seg->data_start))
+			return SEG_LOG_ERROR("Couldn't read data_start in");
+		if (!dm_config_get_uint64(sn, "data_len", &seg->data_len))
+			return SEG_LOG_ERROR("Couldn't read data_len in");
+
+		if (!dm_config_get_str(sn, "metadata_id", &uuid))
+			return SEG_LOG_ERROR("Couldn't read metadata_id in");
+
+		if (!id_read_format(&seg->metadata_id, uuid))
+			return SEG_LOG_ERROR("Couldn't format metadata_id in");
+
+		if (!dm_config_get_str(sn, "data_id", &uuid))
+			return SEG_LOG_ERROR("Couldn't read data_id in");
+
+		if (!id_read_format(&seg->data_id, uuid))
+			return SEG_LOG_ERROR("Couldn't format data_id in");
+	} else {
+		/* Do not call this when LV is cache_single. */
+		/* load order is unknown, could be cache origin or pool LV, so check for both */
+		if (!dm_list_empty(&pool_lv->segments))
+			_fix_missing_defaults(first_seg(pool_lv));
+	}
 
 	return 1;
 }
@@ -520,6 +559,8 @@ static int _cache_text_import_area_count(const struct dm_config_node *sn,
 
 static int _cache_text_export(const struct lv_segment *seg, struct formatter *f)
 {
+	char buffer[40];
+
 	if (!seg_lv(seg, 0))
 		return_0;
 
@@ -528,6 +569,26 @@ static int _cache_text_export(const struct lv_segment *seg, struct formatter *f)
 
 	if (seg->cleaner_policy)
 		outf(f, "cleaner = 1");
+
+	if (lv_is_cache_single(seg->pool_lv)) {
+		outf(f, "metadata_format = " FMTu32, seg->cache_metadata_format);
+
+		if (!_settings_text_export(seg, f))
+			return_0;
+
+		outf(f, "metadata_start = " FMTu64, seg->metadata_start);
+		outf(f, "metadata_len = " FMTu64, seg->metadata_len);
+		outf(f, "data_start = " FMTu64, seg->data_start);
+		outf(f, "data_len = " FMTu64, seg->data_len);
+
+		if (!id_write_format(&seg->metadata_id, buffer, sizeof(buffer)))
+			return_0;
+		outf(f, "metadata_id = \"%s\"", buffer);
+
+		if (!id_write_format(&seg->data_id, buffer, sizeof(buffer)))
+			return_0;
+		outf(f, "data_id = \"%s\"", buffer);
+	}
 
 	return 1;
 }
@@ -544,6 +605,8 @@ static int _cache_add_target_line(struct dev_manager *dm,
 {
 	struct lv_segment *cache_pool_seg;
 	struct lv_segment *setting_seg;
+	union lvid metadata_lvid;
+	union lvid data_lvid;
 	char *metadata_uuid, *data_uuid, *origin_uuid;
 	uint64_t feature_flags = 0;
 	unsigned attr;
@@ -557,7 +620,10 @@ static int _cache_add_target_line(struct dev_manager *dm,
 
 	cache_pool_seg = first_seg(seg->pool_lv);
 
-	setting_seg = cache_pool_seg;
+	if (lv_is_cache_single(seg->pool_lv))
+		setting_seg = seg;
+	else
+		setting_seg = cache_pool_seg;
 
 	if (seg->cleaner_policy)
 		/* With cleaner policy always pass writethrough */
@@ -599,14 +665,45 @@ static int _cache_add_target_line(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (!(metadata_uuid = build_dm_uuid(mem, cache_pool_seg->metadata_lv, NULL)))
-		return_0;
-
-	if (!(data_uuid = build_dm_uuid(mem, seg_lv(cache_pool_seg, 0), NULL)))
-		return_0;
-
 	if (!(origin_uuid = build_dm_uuid(mem, seg_lv(seg, 0), NULL)))
 		return_0;
+
+	if (!lv_is_cache_single(seg->pool_lv)) {
+		/* We don't use start/len when using separate data/meta devices. */
+		if (seg->metadata_len || seg->data_len) {
+			log_error(INTERNAL_ERROR "LV %s using unsupported ranges with cache pool.",
+				 display_lvname(seg->lv));
+			return 0;
+		}
+
+		if (!(metadata_uuid = build_dm_uuid(mem, cache_pool_seg->metadata_lv, NULL)))
+			return_0;
+
+		if (!(data_uuid = build_dm_uuid(mem, seg_lv(cache_pool_seg, 0), NULL)))
+			return_0;
+	} else {
+		if (!seg->metadata_len || !seg->data_len || (seg->metadata_start == seg->data_start)) {
+			log_error(INTERNAL_ERROR "LV %s has invalid ranges metadata %llu %llu data %llu %llu.",
+				 display_lvname(seg->lv),
+				 (unsigned long long)seg->metadata_start,
+				 (unsigned long long)seg->metadata_len,
+				 (unsigned long long)seg->data_start,
+				 (unsigned long long)seg->data_len);
+			return 0;
+		}
+
+		memset(&metadata_lvid, 0, sizeof(metadata_lvid));
+		memset(&data_lvid, 0, sizeof(data_lvid));
+		memcpy(&metadata_lvid.id[0], &seg->lv->vg->id, sizeof(struct id));
+		memcpy(&metadata_lvid.id[1], &seg->metadata_id, sizeof(struct id));
+		memcpy(&data_lvid.id[0], &seg->lv->vg->id, sizeof(struct id));
+		memcpy(&data_lvid.id[1], &seg->data_id, sizeof(struct id));
+
+		if (!(metadata_uuid = dm_build_dm_uuid(mem, UUID_PREFIX, (const char *)&metadata_lvid.s, NULL)))
+			return_0;
+		if (!(data_uuid = dm_build_dm_uuid(mem, UUID_PREFIX, (const char *)&data_lvid.s, NULL)))
+			return_0;
+	}
 
 	if (!dm_tree_node_add_cache_target(node, len,
 					   feature_flags,
@@ -616,8 +713,12 @@ static int _cache_add_target_line(struct dev_manager *dm,
 					   seg->cleaner_policy ? "cleaner" :
 						   /* undefined policy name -> likely an old "mq" */
 						   cache_pool_seg->policy_name ? : "mq",
-					   seg->cleaner_policy ? NULL : cache_pool_seg->policy_settings,
-					   cache_pool_seg->chunk_size))
+					   seg->cleaner_policy ? NULL : setting_seg->policy_settings,
+					   seg->metadata_start,
+					   seg->metadata_len,
+					   seg->data_start,
+					   seg->data_len,
+					   setting_seg->chunk_size))
 		return_0;
 
 	return 1;

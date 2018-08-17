@@ -422,7 +422,7 @@ static int _lv_layout_and_role_cache(struct dm_pool *mem,
 	if (lv_is_cache(lv) &&
 	    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_CACHE]))
 		goto_bad;
-	else if (lv_is_cache_pool(lv)) {
+	else if (lv_is_cache_pool(lv) || lv_is_cache_single(lv)) {
 		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_CACHE]) ||
 		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_POOL]))
 			goto_bad;
@@ -4449,6 +4449,7 @@ static int _rename_skip_pools_externals_cb(struct logical_volume *lv, void *data
 {
 	if (lv_is_pool(lv) ||
 	    lv_is_vdo_pool(lv) ||
+	    lv_is_cache_single(lv) ||
 	    lv_is_external_origin(lv))
 		return -1; /* and skip subLVs */
 
@@ -6146,6 +6147,13 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (!lockd_lv(cmd, lock_lv, "ex", LDLV_PERSISTENT))
 		return_0;
+
+	if (lv_is_cache(lv) && lv_is_cache_single(first_seg(lv)->pool_lv)) {
+		if (!lv_detach_cache_single(lv)) {
+			log_error("Failed to detach cache from %s", display_lvname(lv));
+			return 0;
+		}
+	}
 
 	/* FIXME Ensure not referred to by another existing LVs */
 	ask_discard = find_config_tree_bool(cmd, devices_issue_discards_CFG, NULL);

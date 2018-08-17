@@ -151,6 +151,8 @@
 #define LV_VDO_POOL		UINT64_C(0x0000000040000000)    /* LV - Internal user only */
 #define LV_VDO_POOL_DATA	UINT64_C(0x8000000000000000)    /* LV - Internal user only */
 
+#define LV_CACHE_SINGLE		UINT64_C(0x0010000000000000)	/* LV - also a PV flag */
+
 
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
@@ -245,10 +247,11 @@
 
 #define lv_is_cache(lv)		(((lv)->status & CACHE) ? 1 : 0)
 #define lv_is_cache_pool(lv)	(((lv)->status & CACHE_POOL) ? 1 : 0)
+#define lv_is_cache_single(lv)	(((lv)->status & LV_CACHE_SINGLE) ? 1 : 0)
 #define lv_is_used_cache_pool(lv)	(lv_is_cache_pool(lv) && !dm_list_empty(&(lv)->segs_using_this_lv))
 #define lv_is_cache_pool_data(lv)	(((lv)->status & CACHE_POOL_DATA) ? 1 : 0)
 #define lv_is_cache_pool_metadata(lv)	(((lv)->status & CACHE_POOL_METADATA) ? 1 : 0)
-#define lv_is_cache_type(lv)	(((lv)->status & (CACHE | CACHE_POOL | CACHE_POOL_DATA | CACHE_POOL_METADATA)) ? 1 : 0)
+#define lv_is_cache_type(lv)	(((lv)->status & (CACHE | CACHE_POOL | LV_CACHE_SINGLE | CACHE_POOL_DATA | CACHE_POOL_METADATA)) ? 1 : 0)
 
 #define lv_is_pool(lv)		(((lv)->status & (CACHE_POOL | THIN_POOL)) ? 1 : 0)
 #define lv_is_pool_data(lv)		(((lv)->status & (CACHE_POOL_DATA | THIN_POOL_DATA)) ? 1 : 0)
@@ -492,6 +495,13 @@ struct lv_segment {
 	struct logical_volume *external_lv;	/* For thin */
 	struct logical_volume *pool_lv;		/* For thin, cache */
 	uint32_t device_id;			/* For thin, 24bit */
+
+	uint64_t metadata_start;		/* For cache */
+	uint64_t metadata_len;			/* For cache */
+	uint64_t data_start;			/* For cache */
+	uint64_t data_len;			/* For cache */
+	struct id metadata_id;			/* For cache */
+	struct id data_id;			/* For cache */
 
 	cache_metadata_format_t cache_metadata_format;/* For cache_pool */
 	cache_mode_t cache_mode;		/* For cache_pool */
@@ -1218,7 +1228,7 @@ struct lv_status_cache {
 
 const char *cache_mode_num_to_str(cache_mode_t mode);
 const char *display_cache_mode(const struct lv_segment *seg);
-const char *get_cache_mode_name(const struct lv_segment *pool_seg);
+const char *get_cache_mode_name(const struct lv_segment *seg);
 int set_cache_mode(cache_mode_t *mode, const char *cache_mode);
 int cache_set_cache_mode(struct lv_segment *seg, cache_mode_t mode);
 int cache_set_metadata_format(struct lv_segment *seg, cache_metadata_format_t format);
@@ -1230,6 +1240,15 @@ int cache_set_params(struct lv_segment *seg,
 		     cache_mode_t mode,
 		     const char *policy_name,
 		     const struct dm_config_tree *policy_settings);
+int cache_single_set_params(struct cmd_context *cmd,
+		     struct logical_volume *cache_lv,
+		     struct logical_volume *pool_lv,
+		     uint64_t poolmetadatasize,
+                     uint32_t chunk_size,
+                     cache_metadata_format_t format,
+                     cache_mode_t mode,
+                     const char *policy,
+                     const struct dm_config_tree *settings);
 void cache_check_for_warns(const struct lv_segment *seg);
 int update_cache_pool_params(struct cmd_context *cmd,
 			     struct profile *profile,
@@ -1246,6 +1265,7 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool_lv,
 				       struct logical_volume *origin_lv);
 int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean);
 int lv_cache_remove(struct logical_volume *cache_lv);
+int lv_detach_cache_single(struct logical_volume *cache_lv);
 int wipe_cache_pool(struct logical_volume *cache_pool_lv);
 /* --  metadata/cache_manip.c */
 

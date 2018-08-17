@@ -26,6 +26,8 @@ lvcreate -L10 -n cpool $vg
 lvcreate -L10 -n tpool $vg
 lvcreate -L10 -n $lv1 $vg
 
+lvconvert --yes --type cache-pool $vg/cpool
+
 lvconvert --yes --cache --cachepool cpool $vg/tpool
 
 # currently the only allowed stacking is cache thin data volume

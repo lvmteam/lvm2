@@ -189,6 +189,11 @@ struct load_segment {
 	uint32_t min_recovery_rate;	/* raid kB/sec/disk */
 	uint32_t data_copies;		/* raid10 data_copies */
 
+	uint64_t metadata_start;	/* Cache */
+	uint64_t metadata_len;		/* Cache */
+	uint64_t data_start;		/* Cache */
+	uint64_t data_len;		/* Cache */
+
 	struct dm_tree_node *metadata;	/* Thin_pool + Cache */
 	struct dm_tree_node *pool;	/* Thin_pool, Thin */
 	struct dm_tree_node *external;	/* Thin */
@@ -3473,6 +3478,10 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 				  const char *origin_uuid,
 				  const char *policy_name,
 				  const struct dm_config_node *policy_settings,
+				  uint64_t metadata_start,
+				  uint64_t metadata_len,
+				  uint64_t data_start,
+				  uint64_t data_len,
 				  uint32_t data_block_size)
 {
 	struct dm_config_node *cn;
@@ -3548,6 +3557,10 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 	if (!_link_tree_nodes(node, seg->origin))
 		return_0;
 
+	seg->metadata_start = metadata_start;
+	seg->metadata_len = metadata_len;
+	seg->data_start = data_start;
+	seg->data_len = data_len;
 	seg->data_block_size = data_block_size;
 	seg->flags = feature_flags;
 	seg->policy_name = policy_name;
@@ -4026,7 +4039,7 @@ int dm_tree_node_add_cache_target_base(struct dm_tree_node *node,
 
 	return dm_tree_node_add_cache_target(node, size, feature_flags & _mask,
 					     metadata_uuid, data_uuid, origin_uuid,
-					     policy_name, policy_settings, data_block_size);
+					     policy_name, policy_settings, 0, 0, 0, 0, data_block_size);
 }
 #endif
 

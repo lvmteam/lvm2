@@ -1430,7 +1430,10 @@ static int _cache_settings_disp(struct dm_report *rh, struct dm_pool *mem,
 	struct _str_list_append_baton baton;
 	struct dm_list dummy_list; /* dummy list to display "nothing" */
 
-	if (seg_is_cache_pool(seg))
+	if (seg_is_cache(seg) && lv_is_cache_single(seg->pool_lv))
+		setting_seg = seg;
+
+	else if (seg_is_cache_pool(seg))
 		setting_seg = seg;
 
 	else if (seg_is_cache(seg))
@@ -1565,7 +1568,10 @@ static int _cache_policy_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct lv_segment *seg = (const struct lv_segment *) data;
 	const struct lv_segment *setting_seg = NULL;
 
-	if (seg_is_cache_pool(seg))
+	if (seg_is_cache(seg) && lv_is_cache_single(seg->pool_lv))
+		setting_seg = seg;
+
+	else if (seg_is_cache_pool(seg))
 		setting_seg = seg;
 
 	else if (seg_is_cache(seg))
@@ -2747,7 +2753,10 @@ static int _cachemetadataformat_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct lv_segment *setting_seg = NULL;
 	const uint64_t *fmt;
 
-	if (seg_is_cache_pool(seg))
+	if (seg_is_cache(seg) && lv_is_cache_single(seg->pool_lv))
+		setting_seg = seg;
+
+	else if (seg_is_cache_pool(seg))
 		setting_seg = seg;
 
 	else if (seg_is_cache(seg))
@@ -3221,6 +3230,11 @@ static int _lvmetadatasize_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	uint64_t size;
+
+	if (lv_is_cache(lv) && lv_is_cache_single(first_seg(lv)->pool_lv)) {
+		size = lv_metadata_size(lv);
+		return _size64_disp(rh, mem, field, &size, private);
+	}
 
 	if (lv_is_thin_pool(lv) || lv_is_cache_pool(lv)) {
 		size = lv_metadata_size(lv);
