@@ -907,6 +907,9 @@ static bool _remove_subtree(struct radix_tree *rt, struct value *root, uint8_t *
 
 	case NODE256:
 		n256 = root->value.ptr;
+		if (n256->values[*kb].type == UNSET)
+			return true;  // No entries
+
 		r = _remove_subtree(rt, n256->values + (*kb), kb + 1, ke, count);
 		if (r && n256->values[*kb].type == UNSET) {
 			n256->nr_entries--;

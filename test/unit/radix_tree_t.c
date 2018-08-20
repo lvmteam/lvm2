@@ -635,6 +635,121 @@ static void test_bcache_scenario(void *fixture)
 
 //----------------------------------------------------------------
 
+static void _bcs2_step1(struct radix_tree *rt)
+{
+	unsigned i;
+	uint8_t k[12];
+	union radix_value v;
+
+	memset(k, 0, sizeof(k));
+	for (i = 0x6; i < 0x69; i++) {
+		k[0] = i;
+		v.n = i;
+		T_ASSERT(radix_tree_insert(rt, k, k + sizeof(k), v));
+	}
+	T_ASSERT(radix_tree_is_well_formed(rt));
+}
+
+static void _bcs2_step2(struct radix_tree *rt)
+{
+	unsigned i;
+	uint8_t k[12];
+
+	memset(k, 0, sizeof(k));
+	for (i = 0x6; i < 0x69; i++) {
+		k[0] = i;
+		radix_tree_remove_prefix(rt, k, k + 4);
+	}
+	T_ASSERT(radix_tree_is_well_formed(rt));
+}
+
+static void test_bcache_scenario2(void *fixture)
+{
+	unsigned i;
+	struct radix_tree *rt = fixture;
+	uint8_t k[12];
+	union radix_value v;
+
+	_bcs2_step1(rt);
+	_bcs2_step2(rt);
+
+	memset(k, 0, sizeof(k));
+        for (i = 0; i < 50; i++) {
+	        k[0] = 0x6;
+	        v.n = 0x6;
+	        T_ASSERT(radix_tree_insert(rt, k, k + sizeof(k), v));
+	        radix_tree_remove_prefix(rt, k, k + 4);
+        }
+        T_ASSERT(radix_tree_is_well_formed(rt));
+
+	_bcs2_step1(rt);
+	_bcs2_step2(rt);
+	_bcs2_step1(rt);
+	_bcs2_step2(rt);
+
+	memset(k, 0, sizeof(k));
+	for(i = 0x6; i < 0x37; i++) {
+		k[0] = i;
+		k[4] = 0xf;
+		k[5] = 0x1;
+		T_ASSERT(radix_tree_insert(rt, k, k + sizeof(k), v));
+		k[4] = 0;
+		k[5] = 0;
+		T_ASSERT(radix_tree_insert(rt, k, k + sizeof(k), v));
+	}
+	T_ASSERT(radix_tree_is_well_formed(rt));
+
+	memset(k, 0, sizeof(k));
+	for (i = 0x38; i < 0x69; i++) {
+		k[0] = i - 0x32;
+		k[4] = 0xf;
+		k[5] = 1;
+		T_ASSERT(radix_tree_remove(rt, k, k + sizeof(k)));
+
+		k[0] = i;
+		T_ASSERT(radix_tree_insert(rt, k, k + sizeof(k), v));
+
+		k[0] = i - 0x32;
+		k[4] = 0;
+		k[5] = 0;
+		T_ASSERT(radix_tree_remove(rt, k, k + sizeof(k)));
+
+		k[0] = i;
+		T_ASSERT(radix_tree_insert(rt, k, k + sizeof(k), v));
+	}
+	T_ASSERT(radix_tree_is_well_formed(rt));
+
+	memset(k, 0, sizeof(k));
+	k[0] = 0x6;
+	radix_tree_remove_prefix(rt, k, k + 4);
+	T_ASSERT(radix_tree_is_well_formed(rt));
+
+	k[0] = 0x38;
+	k[4] = 0xf;
+	k[5] = 0x1;
+	T_ASSERT(radix_tree_remove(rt, k, k + sizeof(k)));
+	T_ASSERT(radix_tree_is_well_formed(rt));
+
+	memset(k, 0, sizeof(k));
+	k[0] = 0x6;
+	T_ASSERT(radix_tree_insert(rt, k, k + sizeof(k), v));
+	T_ASSERT(radix_tree_is_well_formed(rt));
+
+	k[0] = 0x7;
+	radix_tree_remove_prefix(rt, k, k + 4);
+	T_ASSERT(radix_tree_is_well_formed(rt));
+
+	k[0] = 0x38;
+	T_ASSERT(radix_tree_remove(rt, k, k + sizeof(k)));
+	T_ASSERT(radix_tree_is_well_formed(rt));
+
+	k[0] = 7;
+	T_ASSERT(radix_tree_insert(rt, k, k + sizeof(k), v));
+	T_ASSERT(radix_tree_is_well_formed(rt));
+}
+
+//----------------------------------------------------------------
+
 #define T(path, desc, fn) register_test(ts, "/base/data-struct/radix-tree/" path, desc, fn)
 
 void radix_tree_tests(struct dm_list *all_tests)
@@ -668,6 +783,7 @@ void radix_tree_tests(struct dm_list *all_tests)
 	T("remove-calls-dtr", "remove should call the dtr for the value", test_remove_calls_dtr);
 	T("destroy-calls-dtr", "destroy should call the dtr for all values", test_destroy_calls_dtr);
 	T("bcache-scenario", "A specific series of keys from a bcache scenario", test_bcache_scenario);
+	T("bcache-scenario-2", "A second series of keys from a bcache scenario", test_bcache_scenario2);
 
 	dm_list_add(all_tests, &ts->list);
 }
