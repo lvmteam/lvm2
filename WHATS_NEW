@@ -1,5 +1,5 @@
-Version 3.0.0
-=============
+Version 2.03.00 - 10th October 2018
+===================================
   Add hot fix to avoiding locking collision when monitoring thin-pools.
   Allow raid4 -> linear conversion request.
   Fix lvconvert striped/raid0/raid0_meta -> raid6 regression.
@@ -24,6 +24,7 @@ Version 3.0.0
   Avoid showing internal error in lvs output or pvmoved LVs.
   Remove clvmd
   Remove lvmlib (api)
+  Remove lvmetad
   lvconvert: provide possible layouts between linear and striped/raid
   Use versionsort to fix archive file expiry beyond 100000 files.
 

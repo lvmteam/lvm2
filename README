@@ -1,5 +1,8 @@
 This tree contains the LVM2 and device-mapper tools and libraries.
 
+This is development branch, for stable 2.02 release see 2018-06-01-stable
+branch.
+
 For more information about LVM2 read the changelog in the WHATS_NEW file.
 Installation instructions are in INSTALL.
 

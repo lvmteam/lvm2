@@ -1,6 +1,19 @@
-Version 1.02.147 -
+Version 1.02.151 - 10th October 2018
 ====================================
+  Add hot fix to avoiding locking collision when monitoring thin-pools.
+
+Version 1.02.150 - 01 August 2018
+=================================
   Add vdo plugin for monitoring VDO devices.
+
+Version 1.02.149 - 19th July 2018
+=================================
+
+Version 1.02.148 - 18th June 2018
+=================================
+
+Version 1.02.147 - 13th June 2018
+=================================
 
 Version 1.02.147-rc1 - 24th May 2018
 ====================================
