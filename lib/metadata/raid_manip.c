@@ -6126,6 +6126,9 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 		if (seg_from->area_count == 1)
 			seg_flag = SEG_RAID1;
 
+		else if (seg_is_any_raid0(seg_from) && segtype_is_striped(*segtype))
+			;
+
 		/* If this is any raid5 conversion request -> enforce raid5_n, because we convert from striped */
 		else if (((segtype_is_striped(*segtype) && !segtype_is_any_raid0(*segtype)) || segtype_is_any_raid5(*segtype)) &&
 			 !segtype_is_raid5_n(*segtype))
