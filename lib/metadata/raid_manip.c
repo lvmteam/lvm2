@@ -6110,8 +6110,7 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 	const struct segment_type *segtype_sav = *segtype;
 
 	/* Linear -> striped request */
-	if (seg_is_striped(seg_from) &&
-	    seg_from->area_count == 1 &&
+	if (seg_is_linear(seg_from) &&
 	    segtype_is_striped(*segtype))
 		;
 	/* Bail out if same RAID level is requested. */
@@ -6120,23 +6119,19 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 
 	log_debug("Checking LV %s requested %s segment type for convenience",
 		  display_lvname(seg_from->lv), (*segtype)->name);
-	/* striped/raid0 -> raid5/6 */
-	if (seg_is_striped(seg_from) || seg_is_any_raid0(seg_from)) {
-		/* linear -> raid*, interim/first conversion is to raid1 */
-		if (seg_from->area_count == 1)
-			seg_flag = SEG_RAID1;
 
-		else if (seg_is_any_raid0(seg_from) && segtype_is_striped(*segtype))
-			;
+	/* linear -> */
+	if (seg_is_linear(seg_from)) {
+		seg_flag = SEG_RAID1;
 
-		/* If this is any raid5 conversion request -> enforce raid5_n, because we convert from striped */
-		else if (((segtype_is_striped(*segtype) && !segtype_is_any_raid0(*segtype)) || segtype_is_any_raid5(*segtype)) &&
-			 !segtype_is_raid5_n(*segtype))
-			seg_flag = SEG_RAID5_N;
-
-		/* If this is any raid6 conversion request -> enforce raid6_n_6, because we convert from striped */
-		else if (segtype_is_any_raid6(*segtype) && !segtype_is_raid6_n_6(*segtype))
+	/* striped/raid0 -> */
+	} else if (seg_is_striped(seg_from) || seg_is_any_raid0(seg_from)) {
+		if (segtype_is_any_raid6(*segtype))
 			seg_flag = SEG_RAID6_N_6;
+
+		if (segtype_is_linear(*segtype) ||
+		    (!segtype_is_raid10(*segtype) && !segtype_is_striped(*segtype)))
+			seg_flag = SEG_RAID5_N;
 
 	/* raid1 -> */
 	} else if (seg_is_raid1(seg_from) && !segtype_is_mirror(*segtype)) {
@@ -6147,84 +6142,67 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 		}
 
 		if (segtype_is_striped(*segtype) ||
-			   segtype_is_any_raid0(*segtype) ||
-			   segtype_is_raid10(*segtype))
+		    segtype_is_any_raid0(*segtype) ||
+		    segtype_is_raid10(*segtype))
 			seg_flag = SEG_RAID5_N;
 
 		else if (!segtype_is_raid4(*segtype) && !segtype_is_any_raid5(*segtype))
 			seg_flag = SEG_RAID5_LS;
 
-	/* raid4/raid5 -> striped/raid0/raid1/raid6/raid10 */
-	} else if (seg_is_raid4(seg_from) || seg_is_any_raid5(seg_from)) {
-		if ((segtype_is_raid1(*segtype) || segtype_is_linear(*segtype)) && seg_is_raid5_n(seg_from)) {
+	/* raid5* -> */
+	} else if (seg_is_any_raid5(seg_from)) {
+		if (segtype_is_raid1(*segtype) || segtype_is_linear(*segtype)) {
 			if (seg_from->area_count != 2) {
 				log_error("Converting %s LV %s to 2 stripes first.",
 					  lvseg_name(seg_from), display_lvname(seg_from->lv));
 				*new_image_count = 2;
-				seg_flag = SEG_RAID5_N;
+				*segtype = seg_from->segtype;
+				seg_flag = 0;
 			} else
 				seg_flag = SEG_RAID1;
 
-		} else if (segtype_is_raid1(*segtype) && seg_from->area_count != 2) {
-			log_error("Convert %s LV %s to 2 stripes first (i.e. --stripes 1).",
-				  lvseg_name(seg_from), display_lvname(seg_from->lv));
-			return 0;
+		} else if (segtype_is_any_raid6(*segtype)) {
+			if (seg_from->area_count < 4) {
+				if (*stripes > 3)
+					*new_image_count = *stripes + seg_from->segtype->parity_devs;
+				else
+					*new_image_count = 4;
 
-		} else if (seg_is_raid4(seg_from) &&
-		         (segtype_is_linear(*segtype) || segtype_is_any_raid5(*segtype)) &&
-			 !segtype_is_raid5_n(*segtype))
-			seg_flag = SEG_RAID5_N;
-
-		else if (seg_is_raid5_n(seg_from) && seg_from->area_count == 2) {
-			if (*stripes >= 2) {
+				*segtype = seg_from->segtype;
 				log_error("Converting %s LV %s to %u stripes first.",
-					  lvseg_name(seg_from), display_lvname(seg_from->lv), *stripes);
+					  lvseg_name(seg_from), display_lvname(seg_from->lv), *new_image_count);
+
+			} else
+				seg_flag = _raid_seg_flag_5_to_6(seg_from);
+
+		} else if (segtype_is_striped(*segtype) || segtype_is_raid10(*segtype)) {
+			int change = 0;
+
+			if (!seg_is_raid5_n(seg_from)) {
+				seg_flag = SEG_RAID5_N;
+
+			} else if (*stripes > 2 && *stripes != seg_from->area_count - seg_from->segtype->parity_devs) {
+				change = 1;
 				*new_image_count = *stripes + seg_from->segtype->parity_devs;
 				seg_flag = SEG_RAID5_N;
-			} else {
-				log_error("Convert %s LV %s to minimum 3 stripes first (i.e. --stripes 2).",
-					  lvseg_name(seg_from), display_lvname(seg_from->lv));
-				return 0;
-			}
-		} else if (seg_is_any_raid5(seg_from) &&
-		         (segtype_is_linear(*segtype) || segtype_is_raid4(*segtype)) &&
-			 !segtype_is_raid5_n(*segtype))
-			seg_flag = SEG_RAID5_N;
 
-		else if (segtype_is_raid10(*segtype)) {
-			if (seg_from->area_count < 3) {
-				if (*stripes >= 2) {
-					log_error("Converting %s LV %s to %u stripes first.",
-						  lvseg_name(seg_from), display_lvname(seg_from->lv), *stripes);
-					*new_image_count = *stripes + seg_from->segtype->parity_devs;
-					seg_flag = SEG_RAID5_N;
-				} else {
-					log_error("Convert %s LV %s to minimum 3 stripes first (i.e. --stripes 2).",
-						  lvseg_name(seg_from), display_lvname(seg_from->lv));
-					return 0;
-				}
-			} else
-				seg_flag = seg_is_raid5_n(seg_from) ? SEG_RAID0_META : SEG_RAID5_N;
+			} else if (seg_from->area_count < 3) {
+				change = 1;
+				*new_image_count = 3;
+				seg_flag = SEG_RAID5_N;
 
-		} else if (segtype_is_any_raid6(*segtype)) {
-			if (seg_from->area_count < 4 &&
-			    seg_is_any_raid5(seg_from)) {
-				if (*stripes >= 3) {
-					log_error("Converting %s LV %s to %u stripes first.",
-						  lvseg_name(seg_from), display_lvname(seg_from->lv), *stripes);
-					*new_image_count = *stripes + seg_from->segtype->parity_devs;
-					seg_flag = SEG_RAID5_LS;
-				} else {
-					log_error("Convert %s LV %s to minimum 4 stripes first (i.e. --stripes 3).",
-						  lvseg_name(seg_from), display_lvname(seg_from->lv));
-					return 0;
-				}
+			} else if (!segtype_is_striped(*segtype))
+				seg_flag = SEG_RAID0_META;
 
-			} else if (seg_is_raid4(seg_from) && !segtype_is_raid6_n_6(*segtype))
-				seg_flag = SEG_RAID6_N_6;
-			else
-				seg_flag = _raid_seg_flag_5_to_6(seg_from);
+			if (change)
+				log_error("Converting %s LV %s to %u stripes first.",
+					  lvseg_name(seg_from), display_lvname(seg_from->lv), *new_image_count);
 		}
+
+	/* raid4 -> !raid4/raid5* */
+	} else if (seg_is_raid4(seg_from) &&
+		   !segtype_is_raid4(*segtype) && !segtype_is_any_raid5(*segtype)) {
+		seg_flag = SEG_RAID5_N;
 
 	/* raid6 -> striped/raid0/raid5/raid10 */
 	} else if (seg_is_any_raid6(seg_from)) {
@@ -6236,6 +6214,9 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 
 		} else if (segtype_is_any_raid10(*segtype)) {
 			seg_flag = seg_is_raid6_n_6(seg_from) ? SEG_RAID0_META : SEG_RAID6_N_6;
+
+		} else if (segtype_is_linear(*segtype)) {
+			seg_flag = seg_is_raid6_n_6(seg_from) ? SEG_RAID5_N : SEG_RAID6_N_6;
 
 		} else if (segtype_is_striped(*segtype) || segtype_is_any_raid0(*segtype)) {
 			if (!seg_is_raid6_n_6(seg_from))
@@ -6267,12 +6248,16 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 			return 0;
 		}
 
-	/* raid10 -> ... */
-	} else if (seg_is_raid10(seg_from) &&
-		   !segtype_is_striped(*segtype) &&
-		   !segtype_is_any_raid0(*segtype))
-		seg_flag = SEG_RAID0_META;
+	} else if (seg_is_raid10(seg_from)) {
+		if (segtype_is_linear(*segtype) ||
+		    (!segtype_is_striped(*segtype) &&
+		    !segtype_is_any_raid0(*segtype))) {
+			seg_flag = SEG_RAID0_META;
+		}
+	}
 
+
+	/* raid10 -> ... */
 	if (seg_flag) {
 		if (!(*segtype = get_segtype_from_flag(cmd, seg_flag)))
 			return_0;

@@ -1,5 +1,6 @@
 Version 3.0.0
 =============
+  Fix lvconvert conversion attempts to linear.
   Fix lvconvert raid0/raid0_meta -> striped regression.
   Fix lvconvert --splitmirror for mirror type (2.02.178).
   Do not pair cache policy and cache metadata format.
