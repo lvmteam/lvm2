@@ -78,6 +78,7 @@ check lv_first_seg_field $vg/$lv data_stripes 3
 check lv_first_seg_field $vg/$lv stripesize "64.00k"
 check lv_first_seg_field $vg/$lv regionsize "128.00k"
 check lv_first_seg_field $vg/$lv reshape_len_le 0
+aux wait_for_sync $vg $lv
 
 # Convert raid6_ls_6 -> raid6(_zr) (reshape)
 lvconvert -y --type raid6 --stripes 3 --stripesize 64K --regionsize 128K $vg/$lv
@@ -88,6 +89,7 @@ check lv_first_seg_field $vg/$lv data_stripes 3
 check lv_first_seg_field $vg/$lv stripesize "64.00k"
 check lv_first_seg_field $vg/$lv regionsize "128.00k"
 check lv_first_seg_field $vg/$lv reshape_len_le 10
+aux wait_for_sync $vg $lv
 
 # Remove reshape space
 lvconvert -y --type raid6 --stripes 3 --stripesize 64K --regionsize 128K $vg/$lv
