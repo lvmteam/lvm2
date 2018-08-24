@@ -196,7 +196,15 @@ static bool _async_issue(struct io_engine *ioe, enum dir d, int fd,
 	return true;
 }
 
-#define MAX_IO 1024
+/*
+ * MAX_IO is returned to the layer above via bcache_max_prefetches() which
+ * tells the caller how many devices to submit io for concurrently.  There will
+ * be an open file descriptor for each of these, so keep it low enough to avoid
+ * reaching the default max open file limit (1024) when there are over 1024
+ * devices being scanned.
+ */
+
+#define MAX_IO 256
 #define MAX_EVENT 64
 
 static bool _async_wait(struct io_engine *ioe, io_complete_fn fn)
