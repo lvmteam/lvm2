@@ -1,5 +1,6 @@
 Version 3.0.0
 =============
+  Reduce max concurrent aios to avoid EMFILE with many devices.
   Fix lvconvert conversion attempts to linear.
   Fix lvconvert raid0/raid0_meta -> striped regression.
   Fix lvconvert --splitmirror for mirror type (2.02.178).
