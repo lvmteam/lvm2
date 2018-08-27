@@ -3931,7 +3931,7 @@ static int _get_arg_devices(struct cmd_context *cmd,
 	return ret_max;
 }
 
-static int _get_all_devices(struct cmd_context *cmd, struct dm_list *all_devices)
+static int _get_all_devices_lvmetad(struct cmd_context *cmd, struct dm_list *all_devices)
 {
 	struct dev_iter *iter;
 	struct device *dev;
@@ -3941,6 +3941,56 @@ static int _get_all_devices(struct cmd_context *cmd, struct dm_list *all_devices
 	log_debug("Getting list of all devices");
 
 	lvmcache_seed_infos_from_lvmetad(cmd);
+
+	if (!(iter = dev_iter_create(cmd->full_filter, 1))) {
+		log_error("dev_iter creation failed.");
+		return ECMD_FAILED;
+	}
+
+	/*
+	 * The dev_iter_get applies the filter, which means it reads the device
+	 * (since some filters read devices).  The read is called from the
+	 * filter, and done without label_scan_open, so the dev_read_bytes does
+	 * the open.  Since the open and read are not done from the label scan
+	 * layer, there's nothing to do label_scan_invalidate and close devs
+	 * that are not lvms.  Hack around this by doing label_scan_invalidate
+	 * here.  It's dumb that we are reading all disks here when we're meant
+	 * to be using lvmetad.  process_each_pv with lvmetad should either
+	 * just do a proper label_scan or find a way to not need to read devs
+	 * at all.  If we didn't close each dev here, all devs would remain
+	 * open and lvm will have too many open fds.  It's all because we're
+	 * not using the label scan layer to do the scanning, but pretending a
+	 * label scan isn't needed (because of lvmetad) and then secretly doing
+	 * a scan anyway hidden down in the filters.
+	 */
+
+	while ((dev = dev_iter_get(iter))) {
+		if (!(dil = dm_pool_alloc(cmd->mem, sizeof(*dil)))) {
+			log_error("device_id_list alloc failed.");
+			goto out;
+		}
+
+		strncpy(dil->pvid, dev->pvid, ID_LEN);
+		dil->dev = dev;
+		dm_list_add(all_devices, &dil->list);
+
+		label_scan_invalidate(dev);
+	}
+
+	r = ECMD_PROCESSED;
+out:
+	dev_iter_destroy(iter);
+	return r;
+}
+
+static int _get_all_devices_normal(struct cmd_context *cmd, struct dm_list *all_devices)
+{
+	struct dev_iter *iter;
+	struct device *dev;
+	struct device_id_list *dil;
+	int r = ECMD_FAILED;
+
+	log_debug("Getting list of all devices");
 
 	if (!(iter = dev_iter_create(cmd->full_filter, 1))) {
 		log_error("dev_iter creation failed.");
@@ -3962,6 +4012,14 @@ static int _get_all_devices(struct cmd_context *cmd, struct dm_list *all_devices
 out:
 	dev_iter_destroy(iter);
 	return r;
+}
+
+static int _get_all_devices(struct cmd_context *cmd, struct dm_list *all_devices)
+{
+	if (lvmetad_used())
+		return _get_all_devices_lvmetad(cmd, all_devices);
+	else
+		return _get_all_devices_normal(cmd, all_devices);
 }
 
 static int _device_list_remove(struct dm_list *devices, struct device *dev)
