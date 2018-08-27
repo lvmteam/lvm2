@@ -31,6 +31,13 @@ static pthread_mutex_t _register_mutex = PTHREAD_MUTEX_INITIALIZER;
 static int _register_count = 0;
 static struct dm_pool *_mem_pool = NULL;
 static void *_lvm_handle = NULL;
+static DM_LIST_INIT(_env_registry);
+
+struct env_data {
+	struct dm_list list;
+	const char *cmd;
+	const char *data;
+};
 
 DM_EVENT_LOG_FN("#lvm")
 
@@ -100,6 +107,7 @@ void dmeventd_lvm2_exit(void)
 		lvm2_run(_lvm_handle, "_memlock_dec");
 		dm_pool_destroy(_mem_pool);
 		_mem_pool = NULL;
+		dm_list_init(&_env_registry);
 		lvm2_exit(_lvm_handle);
 		_lvm_handle = NULL;
 		log_debug("lvm plugin exited.");
@@ -124,6 +132,8 @@ int dmeventd_lvm2_command(struct dm_pool *mem, char *buffer, size_t size,
 	static char _internal_prefix[] =  "_dmeventd_";
 	char *vg = NULL, *lv = NULL, *layer;
 	int r;
+	struct env_data *env_data;
+	const char *env = NULL;
 
 	if (!dm_split_lvm_name(mem, device, &vg, &lv, &layer)) {
 		log_error("Unable to determine VG name from %s.",
@@ -137,18 +147,35 @@ int dmeventd_lvm2_command(struct dm_pool *mem, char *buffer, size_t size,
 		*layer = '\0';
 
 	if (!strncmp(cmd, _internal_prefix, sizeof(_internal_prefix) - 1)) {
-		dmeventd_lvm2_lock();
-		/* output of internal command passed via env var */
-		if (!dmeventd_lvm2_run(cmd))
-			cmd = NULL;
-		else if ((cmd = getenv(cmd)))
-			cmd = dm_pool_strdup(mem, cmd); /* copy with lock */
-		dmeventd_lvm2_unlock();
+		/* check if ENVVAR wasn't already resolved */
+		dm_list_iterate_items(env_data, &_env_registry)
+			if (!strcmp(cmd, env_data->cmd)) {
+				env = env_data->data;
+				break;
+			}
 
-		if (!cmd) {
-			log_error("Unable to find configured command.");
-			return 0;
+		if (!env) {
+			/* run lvm2 command to find out setting value */
+			dmeventd_lvm2_lock();
+			if (!dmeventd_lvm2_run(cmd) ||
+			    !(env = getenv(cmd))) {
+				log_error("Unable to find configured command.");
+				return 0;
+			}
+			/* output of internal command passed via env var */
+			env = dm_pool_strdup(_mem_pool, env); /* copy with lock */
+			dmeventd_lvm2_unlock();
+			if (!env ||
+			    !(env_data = dm_pool_zalloc(_mem_pool, sizeof(*env_data))) ||
+			    !(env_data->cmd = dm_pool_strdup(_mem_pool, cmd))) {
+				log_error("Unable to allocate env memory.");
+				return 0;
+			}
+			env_data->data = env;
+			/* add to ENVVAR registry */
+			dm_list_add(&_env_registry, &env_data->list);
 		}
+		cmd = env;
 	}
 
 	r = dm_snprintf(buffer, size, "%s %s/%s", cmd, vg, lv);
