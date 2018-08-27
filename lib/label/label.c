@@ -876,6 +876,79 @@ int label_scan(struct cmd_context *cmd)
 	return 1;
 }
 
+int label_scan_pvscan_all(struct cmd_context *cmd, struct dm_list *scan_devs)
+{
+	struct dm_list all_devs;
+	struct dev_iter *iter;
+	struct device_list *devl, *devl2;
+	struct device *dev;
+
+	log_debug_devs("Finding devices to scan");
+
+	dm_list_init(&all_devs);
+
+	/*
+	 * Iterate through all the devices in dev-cache (block devs that appear
+	 * under /dev that could possibly hold a PV and are not excluded by
+	 * filters).  Read each to see if it's an lvm device, and if so
+	 * populate lvmcache with some basic info about the device and the VG
+	 * on it.  This info will be used by the vg_read() phase of the
+	 * command.
+	 */
+	dev_cache_scan();
+
+	if (!(iter = dev_iter_create(cmd->lvmetad_filter, 0))) {
+		log_error("Scanning failed to get devices.");
+		return 0;
+	}
+
+	while ((dev = dev_iter_get(iter))) {
+		if (!(devl = dm_zalloc(sizeof(*devl))))
+			return 0;
+		devl->dev = dev;
+		dm_list_add(&all_devs, &devl->list);
+
+		/*
+		 * label_scan should not generally be called a second time,
+		 * so this will usually not be true.
+		 */
+		if (_in_bcache(dev)) {
+			bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
+			_scan_dev_close(dev);
+		}
+	};
+	dev_iter_destroy(iter);
+
+	log_debug_devs("Found %d devices to scan", dm_list_size(&all_devs));
+
+	if (!scan_bcache) {
+		if (!_setup_bcache(dm_list_size(&all_devs)))
+			return 0;
+	}
+
+	_scan_list(cmd, cmd->lvmetad_filter, &all_devs, NULL);
+
+	dm_list_iterate_items_safe(devl, devl2, &all_devs) {
+		dm_list_del(&devl->list);
+
+		/*
+		 * If this device is lvm's then, return it to pvscan
+		 * to do the further pvscan.  (We could have _scan_list
+		 * just set a result in devl indicating the result, but
+		 * instead we're just checking indirectly if _scan_list
+		 * saved lvmcache info for the dev which also means it's
+		 * an lvm device.)
+		 */
+
+		if (lvmcache_has_dev_info(devl->dev))
+			dm_list_add(scan_devs, &devl->list);
+		else
+			dm_free(devl);
+	}
+
+	return 1;
+}
+
 /*
  * Scan and cache lvm data from the listed devices.  If a device is already
  * scanned and cached, this replaces the previously cached lvm data for the

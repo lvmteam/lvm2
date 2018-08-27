@@ -2322,8 +2322,8 @@ bad:
 
 int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
 {
-	struct dev_iter *iter;
-	struct device *dev;
+	struct device_list *devl, *devl2;
+	struct dm_list scan_devs;
 	daemon_reply reply;
 	char *future_token;
 	const char *reason;
@@ -2339,6 +2339,8 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
 	}
 
  retry:
+	dm_list_init(&scan_devs);
+
 	/*
 	 * If another update is in progress, delay to allow it to finish,
 	 * rather than interrupting it with our own update.
@@ -2348,7 +2350,7 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
 		replacing_other_update = 1;
 	}
 
-	label_scan(cmd);
+	label_scan_pvscan_all(cmd, &scan_devs);
 
 	lvmcache_pvscan_duplicate_check(cmd);
 
@@ -2357,19 +2359,14 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
 		return 0;
 	}
 
-	log_verbose("Scanning all devices to update lvmetad.");
-
-	if (!(iter = dev_iter_create(cmd->lvmetad_filter, 1))) {
-		log_error("dev_iter creation failed");
-		return 0;
-	}
+	log_verbose("Scanning metadata from %d devices to update lvmetad.",
+		    dm_list_size(&scan_devs));
 
 	future_token = _lvmetad_token;
 	_lvmetad_token = (char *) LVMETAD_TOKEN_UPDATE_IN_PROGRESS;
 
 	if (!_token_update(&replaced_update)) {
 		log_error("Failed to update lvmetad which had an update in progress.");
-		dev_iter_destroy(iter);
 		_lvmetad_token = future_token;
 		return 0;
 	}
@@ -2385,12 +2382,10 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
 		if (do_wait && !retries) {
 			retries = 1;
 			log_warn("WARNING: lvmetad update in progress, retrying update.");
-			dev_iter_destroy(iter);
 			_lvmetad_token = future_token;
 			goto retry;
 		}
 		log_warn("WARNING: lvmetad update in progress, skipping update.");
-		dev_iter_destroy(iter);
 		_lvmetad_token = future_token;
 		return 0;
 	}
@@ -2404,23 +2399,28 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
 	was_silent = silent_mode();
 	init_silent(1);
 
-	while ((dev = dev_iter_get(iter))) {
+	dm_list_iterate_items_safe(devl, devl2, &scan_devs) {
 		if (sigint_caught()) {
 			ret = 0;
 			stack;
 			break;
 		}
 
-		if (!lvmetad_pvscan_single(cmd, dev, NULL, NULL)) {
-			ret = 0;
+		dm_list_del(&devl->list);
+
+		ret = lvmetad_pvscan_single(cmd, devl->dev, NULL, NULL);
+
+		label_scan_invalidate(devl->dev);
+
+		dm_free(devl);
+
+		if (!ret) {
 			stack;
 			break;
 		}
 	}
 
 	init_silent(was_silent);
-
-	dev_iter_destroy(iter);
 
 	_lvmetad_token = future_token;
 
