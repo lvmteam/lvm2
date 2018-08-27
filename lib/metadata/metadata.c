@@ -5545,3 +5545,38 @@ int vg_strip_outdated_historical_lvs(struct volume_group *vg) {
 
 	return 1;
 }
+
+int lv_on_pmem(struct logical_volume *lv)
+{
+	struct lv_segment *seg;
+	struct physical_volume *pv;
+	uint32_t s;
+	int pmem_devs = 0, other_devs = 0;
+
+	dm_list_iterate_items(seg, &lv->segments) {
+		for (s = 0; s < seg->area_count; s++) {
+			pv = seg_pv(seg, s);
+
+			if (dev_is_pmem(pv->dev)) {
+				log_debug("LV %s dev %s is pmem.", lv->name, dev_name(pv->dev));
+				pmem_devs++;
+			} else {
+				log_debug("LV %s dev %s not pmem.", lv->name, dev_name(pv->dev));
+				other_devs++;
+			}
+		}
+	}
+
+	if (pmem_devs && other_devs) {
+		log_error("Invalid mix of cache device types in %s.", display_lvname(lv));
+		return -1;
+	}
+
+	if (pmem_devs) {
+		log_debug("LV %s on pmem", lv->name);
+		return 1;
+	}
+
+	return 0;
+}
+

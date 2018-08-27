@@ -35,6 +35,48 @@
 
 #include "lib/device/device-types.h"
 
+/*
+ * dev is pmem if /sys/dev/block/<major>:<minor>/queue/dax is 1
+ */
+
+int dev_is_pmem(struct device *dev)
+{
+	FILE *fp;
+	char path[PATH_MAX];
+	char buffer[64];
+	int is_pmem = 0;
+
+	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/queue/dax",
+			dm_sysfs_dir(),
+			(int) MAJOR(dev->dev),
+			(int) MINOR(dev->dev)) < 0) {
+		log_warn("Sysfs path for %s dax is too long.", dev_name(dev));
+		return 0;
+	}
+
+	if (!(fp = fopen(path, "r")))
+		return 0;
+
+	if (!fgets(buffer, sizeof(buffer), fp)) {
+		log_warn("Failed to read %s.", path);
+		fclose(fp);
+		return 0;
+	} else if (sscanf(buffer, "%d", &is_pmem) != 1) {
+		log_warn("Failed to parse %s '%s'.", path, buffer);
+		fclose(fp);
+		return 0;
+	}
+
+	fclose(fp);
+
+	if (is_pmem) {
+		log_debug("%s is pmem", dev_name(dev));
+		return 1;
+	}
+
+	return 0;
+}
+
 struct dev_types *create_dev_types(const char *proc_dir,
 				   const struct dm_config_node *cn)
 {

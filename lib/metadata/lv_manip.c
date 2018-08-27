@@ -1572,6 +1572,11 @@ int lv_reduce(struct logical_volume *lv, uint32_t extents)
 {
 	struct lv_segment *seg = first_seg(lv);
 
+	if (lv_is_writecache(lv)) {
+		log_error("Remove not yet allowed on LVs with writecache attached.");
+		return 0;
+	}
+
 	/* Ensure stripe boundary extents on RAID LVs */
 	if (lv_is_raid(lv) && extents != lv->le_count)
 		extents =_round_to_stripe_boundary(lv->vg, extents,
@@ -5561,6 +5566,11 @@ int lv_resize(struct logical_volume *lv,
 	int activated = 0;
 	int ret = 0;
 	int status;
+
+	if (lv_is_writecache(lv)) {
+		log_error("Resize not yet allowed on LVs with writecache attached.");
+		return 0;
+	}
 
 	if (!_lvresize_check(lv, lp))
 		return_0;

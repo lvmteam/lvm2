@@ -643,6 +643,24 @@ AC_DEFINE_UNQUOTED([VDO_FORMAT_CMD], ["$VDO_FORMAT_CMD"],
 #AC_MSG_RESULT($VDO_LIB)
 
 ################################################################################
+dnl -- writecache inclusion type
+AC_MSG_CHECKING(whether to include writecache)
+AC_ARG_WITH(writecache,
+	    AC_HELP_STRING([--with-writecache=TYPE],
+			   [writecache support: internal/none [internal]]),
+			   WRITECACHE=$withval, WRITECACHE="none")
+
+AC_MSG_RESULT($WRITECACHE)
+
+case "$WRITECACHE" in
+ none) ;;
+ internal) 
+	AC_DEFINE([WRITECACHE_INTERNAL], 1, [Define to 1 to include built-in support for writecache.])
+	;;
+ *) AC_MSG_ERROR([--with-writecache parameter invalid]) ;;
+esac
+
+################################################################################
 dnl -- Disable readline
 AC_ARG_ENABLE([readline],
 	      AC_HELP_STRING([--disable-readline], [disable readline support]),

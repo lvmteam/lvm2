@@ -346,6 +346,38 @@ bad:
 	return 0;
 }
 
+/*
+ * From linux/Documentation/device-mapper/writecache.txt
+ *
+ * Status:
+ * 1. error indicator - 0 if there was no error, otherwise error number
+ * 2. the number of blocks
+ * 3. the number of free blocks
+ * 4. the number of blocks under writeback
+ */
+
+int dm_get_status_writecache(struct dm_pool *mem, const char *params,
+			     struct dm_status_writecache **status)
+{
+	struct dm_status_writecache *s;
+
+	if (!(s = dm_pool_zalloc(mem, sizeof(struct dm_status_writecache))))
+		return_0;
+
+	if (sscanf(params, "%u %llu %llu %llu",
+		   &s->error,
+		   (unsigned long long *)&s->total_blocks,
+		   (unsigned long long *)&s->free_blocks,
+		   (unsigned long long *)&s->writeback_blocks) != 4) {
+		log_error("Failed to parse writecache params: %s.", params);
+		dm_pool_free(mem, s);
+		return 0;
+	}
+
+	*status = s;
+	return 1;
+}
+
 int parse_thin_pool_status(const char *params, struct dm_status_thin_pool *s)
 {
 	int pos;

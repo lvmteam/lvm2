@@ -2562,6 +2562,8 @@ static int _lv_is_type(struct cmd_context *cmd, struct logical_volume *lv, int l
 		return seg_is_any_raid6(seg);
 	case raid10_LVT:
 		return seg_is_raid10(seg);
+	case writecache_LVT:
+		return seg_is_writecache(seg);
 	case error_LVT:
 		return !strcmp(seg->segtype->name, SEG_TYPE_NAME_ERROR);
 	case zero_LVT:
@@ -2618,6 +2620,8 @@ int get_lvt_enum(struct logical_volume *lv)
 		return raid6_LVT;
 	if (seg_is_raid10(seg))
 		return raid10_LVT;
+	if (seg_is_writecache(seg))
+		return writecache_LVT;
 
 	if (!strcmp(seg->segtype->name, SEG_TYPE_NAME_ERROR))
 		return error_LVT;
@@ -2740,8 +2744,13 @@ static int _check_lv_types(struct cmd_context *cmd, struct logical_volume *lv, i
 	if (!ret) {
 		int lvt_enum = get_lvt_enum(lv);
 		struct lv_type *type = get_lv_type(lvt_enum);
-		log_warn("Command on LV %s does not accept LV type %s.",
-			 display_lvname(lv), type ? type->name : "unknown");
+		if (!type) {
+			log_warn("Command on LV %s does not accept LV type unknown (%d).",
+				 display_lvname(lv), lvt_enum);
+		} else {
+			log_warn("Command on LV %s does not accept LV type %s.",
+				 display_lvname(lv), type->name);
+		}
 	}
 
 	return ret;

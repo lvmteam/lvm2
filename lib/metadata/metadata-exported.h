@@ -95,6 +95,7 @@
 #define MERGING			UINT64_C(0x0000000010000000)	/* LV SEG */
 
 #define UNLABELLED_PV		UINT64_C(0x0000000080000000)	/* PV -this PV had no label written yet */
+#define WRITECACHE		UINT64_C(0x0000000080000000)	/* LV - shared with UNLABELLED_PV */
 
 #define RAID			UINT64_C(0x0000000100000000)	/* LV - Internal use only */
 #define RAID_META		UINT64_C(0x0000000200000000)	/* LV - Internal use only */
@@ -258,6 +259,7 @@
 #define lv_is_pool_metadata(lv)		(((lv)->status & (CACHE_POOL_METADATA | THIN_POOL_METADATA)) ? 1 : 0)
 #define lv_is_pool_metadata_spare(lv)	(((lv)->status & POOL_METADATA_SPARE) ? 1 : 0)
 #define lv_is_lockd_sanlock_lv(lv)	(((lv)->status & LOCKD_SANLOCK_LV) ? 1 : 0)
+#define lv_is_writecache(lv)   (((lv)->status & WRITECACHE) ? 1 : 0)
 
 #define lv_is_vdo(lv)		(((lv)->status & LV_VDO) ? 1 : 0)
 #define lv_is_vdo_pool(lv)	(((lv)->status & LV_VDO_POOL) ? 1 : 0)
@@ -508,6 +510,10 @@ struct lv_segment {
 	const char *policy_name;		/* For cache_pool */
 	struct dm_config_node *policy_settings;	/* For cache_pool */
 	unsigned cleaner_policy;		/* For cache */
+
+	struct logical_volume *writecache;	/* For writecache */
+	uint32_t writecache_block_size;		/* For writecache */
+	struct writecache_settings writecache_settings; /* For writecache */
 
 	struct dm_vdo_target_params vdo_params;	/* For VDO-pool */
 	uint32_t vdo_pool_header_size;		/* For VDO-pool */
@@ -1359,5 +1365,7 @@ int vg_is_shared(const struct volume_group *vg);
 int is_system_id_allowed(struct cmd_context *cmd, const char *system_id);
 
 int vg_strip_outdated_historical_lvs(struct volume_group *vg);
+
+int lv_on_pmem(struct logical_volume *lv);
 
 #endif

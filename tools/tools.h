@@ -248,11 +248,12 @@ int lvconvert_start_poll_cmd(struct cmd_context *cmd, int argc, char **argv);
 
 int lvconvert_to_pool_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvconvert_to_cache_vol_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvconvert_to_writecache_vol_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvconvert_to_thin_with_external_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvconvert_swap_pool_metadata_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvconvert_to_pool_or_swap_metadata_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvconvert_merge_thin_cmd(struct cmd_context *cmd, int argc, char **argv);
-int lvconvert_split_cachepool_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvconvert_split_cache_cmd(struct cmd_context *cmd, int argc, char **argv);
 
 int lvconvert_raid_types_cmd(struct cmd_context * cmd, int argc, char **argv);
 int lvconvert_split_mirror_images_cmd(struct cmd_context * cmd, int argc, char **argv);

@@ -1173,6 +1173,26 @@ out:
 	return r;
 }
 
+int lv_writecache_message(const struct logical_volume *lv, const char *msg)
+{
+	int r = 0;
+	struct dev_manager *dm;
+
+	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0)) {
+		log_error("Unable to send message to an inactive logical volume.");
+		return 0;
+	}
+
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
+		return_0;
+
+	r = dev_manager_writecache_message(dm, lv, msg);
+
+	dev_manager_destroy(dm);
+
+	return r;
+}
+
 /*
  * Return dm_status_cache for cache volume, accept also cache pool
  *

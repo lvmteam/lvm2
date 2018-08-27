@@ -102,6 +102,7 @@ static const struct flag _lv_flags[] = {
 	{LV_VDO, NULL, 0},
 	{LV_VDO_POOL, NULL, 0},
 	{LV_VDO_POOL_DATA, NULL, 0},
+	{WRITECACHE, NULL, 0},
 	{LV_PENDING_DELETE, NULL, 0}, /* FIXME Display like COMPATIBLE_FLAG */
 	{LV_REMOVED, NULL, 0},
 	{0, NULL, 0}

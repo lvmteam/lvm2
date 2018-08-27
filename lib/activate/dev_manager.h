@@ -63,6 +63,9 @@ int dev_manager_raid_status(struct dev_manager *dm,
 int dev_manager_raid_message(struct dev_manager *dm,
 			     const struct logical_volume *lv,
 			     const char *msg);
+int dev_manager_writecache_message(struct dev_manager *dm,
+                                   const struct logical_volume *lv,
+                                   const char *msg);
 int dev_manager_cache_status(struct dev_manager *dm,
 			     const struct logical_volume *lv,
 			     struct lv_status_cache **status);

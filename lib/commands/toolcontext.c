@@ -1367,6 +1367,11 @@ static int _init_segtypes(struct cmd_context *cmd)
 		return_0;
 #endif
 
+#ifdef WRITECACHE_INTERNAL
+	if (!init_writecache_segtypes(cmd, &seglib))
+		return 0;
+#endif
+
 #ifdef HAVE_LIBDL
 	/* Load any formats in shared libs unless static */
 	if (!is_static() &&

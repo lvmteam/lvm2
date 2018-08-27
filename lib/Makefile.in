@@ -19,6 +19,7 @@ top_builddir = @top_builddir@
 SOURCES =\
 	activate/activate.c \
 	cache/lvmcache.c \
+	writecache/writecache.c \
 	cache_segtype/cache.c \
 	commands/toolcontext.c \
 	config/config.c \

@@ -92,4 +92,6 @@ unsigned long dev_discard_granularity(struct dev_types *dt, struct device *dev);
 
 int dev_is_rotational(struct dev_types *dt, struct device *dev);
 
+int dev_is_pmem(struct device *dev);
+
 #endif

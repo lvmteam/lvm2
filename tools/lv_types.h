@@ -33,5 +33,6 @@ lvt(raid6_LVT, "raid6", NULL)
 lvt(raid10_LVT, "raid10", NULL)
 lvt(error_LVT, "error", NULL)
 lvt(zero_LVT, "zero", NULL)
+lvt(writecache_LVT, "writecache", NULL)
 lvt(LVT_COUNT, "", NULL)
 

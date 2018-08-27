@@ -38,6 +38,7 @@ typedef enum {
 	SEG_STATUS_THIN,
 	SEG_STATUS_THIN_POOL,
 	SEG_STATUS_VDO_POOL,
+	SEG_STATUS_WRITECACHE,
 	SEG_STATUS_UNKNOWN
 } lv_seg_status_type_t;
 
@@ -51,6 +52,7 @@ struct lv_seg_status {
 		struct dm_status_snapshot *snapshot;
 		struct dm_status_thin *thin;
 		struct dm_status_thin_pool *thin_pool;
+		struct dm_status_writecache *writecache;
 		struct lv_status_vdo vdo_pool;
 	};
 };
@@ -184,6 +186,7 @@ int lv_raid_dev_health(const struct logical_volume *lv, char **dev_health);
 int lv_raid_mismatch_count(const struct logical_volume *lv, uint64_t *cnt);
 int lv_raid_sync_action(const struct logical_volume *lv, char **sync_action);
 int lv_raid_message(const struct logical_volume *lv, const char *msg);
+int lv_writecache_message(const struct logical_volume *lv, const char *msg);
 int lv_cache_status(const struct logical_volume *cache_lv,
 		    struct lv_status_cache **status);
 int lv_thin_pool_percent(const struct logical_volume *lv, int metadata,
@@ -255,6 +258,7 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check);
 void fs_unlock(void);
 
 #define TARGET_NAME_CACHE "cache"
+#define TARGET_NAME_WRITECACHE "writecache"
 #define TARGET_NAME_ERROR "error"
 #define TARGET_NAME_ERROR_OLD "erro"	/* Truncated in older kernels */
 #define TARGET_NAME_LINEAR "linear"
@@ -271,6 +275,7 @@ void fs_unlock(void);
 
 #define MODULE_NAME_CLUSTERED_MIRROR "clog"
 #define MODULE_NAME_CACHE TARGET_NAME_CACHE
+#define MODULE_NAME_WRITECACHE TARGET_NAME_WRITECACHE
 #define MODULE_NAME_ERROR TARGET_NAME_ERROR
 #define MODULE_NAME_LOG_CLUSTERED "log-clustered"
 #define MODULE_NAME_LOG_USERSPACE "log-userspace"

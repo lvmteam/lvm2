@@ -37,6 +37,7 @@ enum {
 	SEG_SNAPSHOT_MERGE,
 	SEG_STRIPED,
 	SEG_ZERO,
+	SEG_WRITECACHE,
 	SEG_THIN_POOL,
 	SEG_THIN,
 	SEG_VDO,
@@ -76,6 +77,7 @@ static const struct {
 	{ SEG_SNAPSHOT_MERGE, "snapshot-merge" },
 	{ SEG_STRIPED, "striped" },
 	{ SEG_ZERO, "zero"},
+	{ SEG_WRITECACHE, "writecache"},
 	{ SEG_THIN_POOL, "thin-pool"},
 	{ SEG_THIN, "thin"},
 	{ SEG_VDO, "vdo" },
@@ -212,6 +214,11 @@ struct load_segment {
 	struct dm_tree_node *vdo_data;  /* VDO */
 	struct dm_vdo_target_params vdo_params; /* VDO */
 	const char *vdo_name;           /* VDO - device name is ALSO passed as table arg */
+
+	struct dm_tree_node *writecache_node;		/* writecache */
+	int writecache_pmem;				/* writecache, 1 if pmem, 0 if ssd */
+	uint32_t writecache_block_size;			/* writecache, in bytes */
+	struct writecache_settings writecache_settings;	/* writecache */
 };
 
 /* Per-device properties */
@@ -2605,6 +2612,88 @@ static int _cache_emit_segment_line(struct dm_task *dmt,
 	return 1;
 }
 
+static int _writecache_emit_segment_line(struct dm_task *dmt,
+				    struct load_segment *seg,
+				    char *params, size_t paramsize)
+{
+	int pos = 0;
+	int count = 0;
+	uint32_t block_size;
+	char origin_dev[DM_FORMAT_DEV_BUFSIZE];
+	char cache_dev[DM_FORMAT_DEV_BUFSIZE];
+
+	if (!_build_dev_string(origin_dev, sizeof(origin_dev), seg->origin))
+		return_0;
+
+	if (!_build_dev_string(cache_dev, sizeof(cache_dev), seg->writecache_node))
+		return_0;
+
+	if (seg->writecache_settings.high_watermark_set)
+		count += 2;
+	if (seg->writecache_settings.low_watermark_set)
+		count += 2;
+	if (seg->writecache_settings.writeback_jobs_set)
+		count += 2;
+	if (seg->writecache_settings.autocommit_blocks_set)
+		count += 2;
+	if (seg->writecache_settings.autocommit_time_set)
+		count += 2;
+	if (seg->writecache_settings.fua_set)
+		count += 1;
+	if (seg->writecache_settings.nofua_set)
+		count += 1;
+	if (seg->writecache_settings.new_key)
+		count += 2;
+
+	if (!(block_size = seg->writecache_block_size))
+		block_size = 4096;
+
+	EMIT_PARAMS(pos, "%s %s %s %u %d",
+		    seg->writecache_pmem ? "p" : "s",
+		    origin_dev, cache_dev, block_size, count);
+
+	if (seg->writecache_settings.high_watermark_set) {
+		EMIT_PARAMS(pos, " high_watermark %llu",
+			(unsigned long long)seg->writecache_settings.high_watermark);
+	}
+
+	if (seg->writecache_settings.low_watermark_set) {
+		EMIT_PARAMS(pos, " low_watermark %llu",
+			(unsigned long long)seg->writecache_settings.low_watermark);
+	}
+
+	if (seg->writecache_settings.writeback_jobs_set) {
+		EMIT_PARAMS(pos, " writeback_jobs %llu",
+			(unsigned long long)seg->writecache_settings.writeback_jobs);
+	}
+
+	if (seg->writecache_settings.autocommit_blocks_set) {
+		EMIT_PARAMS(pos, " autocommit_blocks %llu",
+			(unsigned long long)seg->writecache_settings.autocommit_blocks);
+	}
+
+	if (seg->writecache_settings.autocommit_time_set) {
+		EMIT_PARAMS(pos, " autocommit_time %llu",
+			(unsigned long long)seg->writecache_settings.autocommit_time);
+	}
+
+	if (seg->writecache_settings.fua_set) {
+		EMIT_PARAMS(pos, " fua");
+	}
+
+	if (seg->writecache_settings.nofua_set) {
+		EMIT_PARAMS(pos, " nofua");
+	}
+
+	if (seg->writecache_settings.new_key) {
+		EMIT_PARAMS(pos, " %s %s",
+			seg->writecache_settings.new_key,
+			seg->writecache_settings.new_val);
+	}
+
+	return 1;
+}
+
 static int _thin_pool_emit_segment_line(struct dm_task *dmt,
 					struct load_segment *seg,
 					char *params, size_t paramsize)
@@ -2784,6 +2873,10 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 		if (!_cache_emit_segment_line(dmt, seg, params, paramsize))
 			return_0;
 		break;
+	case SEG_WRITECACHE:
+		if (!_writecache_emit_segment_line(dmt, seg, params, paramsize))
+			return_0;
+		break;
 	}
 
 	switch(seg->type) {
@@ -2795,6 +2888,7 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 	case SEG_THIN_POOL:
 	case SEG_THIN:
 	case SEG_CACHE:
+	case SEG_WRITECACHE:
 		break;
 	case SEG_CRYPT:
 	case SEG_LINEAR:
@@ -3578,6 +3672,46 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 			}
 			seg->policy_argc++;
 		}
+	}
+
+	return 1;
+}
+
+int dm_tree_node_add_writecache_target(struct dm_tree_node *node,
+				  uint64_t size,
+				  const char *origin_uuid,
+				  const char *cache_uuid,
+				  int pmem,
+				  uint32_t writecache_block_size,
+				  struct writecache_settings *settings)
+{
+	struct load_segment *seg;
+
+	if (!(seg = _add_segment(node, SEG_WRITECACHE, size)))
+		return_0;
+
+	seg->writecache_pmem = pmem;
+	seg->writecache_block_size = writecache_block_size;
+
+	if (!(seg->writecache_node = dm_tree_find_node_by_uuid(node->dtree, cache_uuid))) {
+		log_error("Missing writecache's cache uuid %s.", cache_uuid);
+		return 0;
+	}
+	if (!_link_tree_nodes(node, seg->writecache_node))
+		return_0;
+
+	if (!(seg->origin = dm_tree_find_node_by_uuid(node->dtree, origin_uuid))) {
+		log_error("Missing writecache's origin uuid %s.", origin_uuid);
+		return 0;
+	}
+	if (!_link_tree_nodes(node, seg->origin))
+		return_0;
+
+	memcpy(&seg->writecache_settings, settings, sizeof(struct writecache_settings));
+
+	if (settings->new_key && settings->new_val) {
+		seg->writecache_settings.new_key = dm_pool_strdup(node->dtree->mem, settings->new_key);
+		seg->writecache_settings.new_val = dm_pool_strdup(node->dtree->mem, settings->new_val);
 	}
 
 	return 1;

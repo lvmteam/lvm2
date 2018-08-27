@@ -66,6 +66,7 @@ struct dev_manager;
 #define SEG_RAID6_RS_6		(1ULL << 34)
 #define SEG_RAID6_N_6		(1ULL << 35)
 #define SEG_RAID6		SEG_RAID6_ZR
+#define SEG_WRITECACHE		(1ULL << 36)
 
 #define SEG_STRIPED_TARGET	(1ULL << 39)
 #define SEG_LINEAR_TARGET	(1ULL << 40)
@@ -82,6 +83,7 @@ struct dev_manager;
 #define SEG_TYPE_NAME_THIN_POOL		"thin-pool"
 #define SEG_TYPE_NAME_CACHE		"cache"
 #define SEG_TYPE_NAME_CACHE_POOL	"cache-pool"
+#define SEG_TYPE_NAME_WRITECACHE	"writecache"
 #define SEG_TYPE_NAME_ERROR		"error"
 #define SEG_TYPE_NAME_FREE		"free"
 #define SEG_TYPE_NAME_ZERO		"zero"
@@ -114,6 +116,7 @@ struct dev_manager;
 #define segtype_is_striped_target(segtype)	((segtype)->flags & SEG_STRIPED_TARGET ? 1 : 0)
 #define segtype_is_cache(segtype)	((segtype)->flags & SEG_CACHE ? 1 : 0)
 #define segtype_is_cache_pool(segtype)	((segtype)->flags & SEG_CACHE_POOL ? 1 : 0)
+#define segtype_is_writecache(segtype)	((segtype)->flags & SEG_WRITECACHE ? 1 : 0)
 #define segtype_is_mirrored(segtype)	((segtype)->flags & SEG_AREAS_MIRRORED ? 1 : 0)
 #define segtype_is_mirror(segtype)	((segtype)->flags & SEG_MIRROR ? 1 : 0)
 #define segtype_is_pool(segtype)	((segtype)->flags & (SEG_CACHE_POOL | SEG_THIN_POOL)  ? 1 : 0)
@@ -175,6 +178,7 @@ struct dev_manager;
 #define seg_is_striped_target(seg)	segtype_is_striped_target((seg)->segtype)
 #define seg_is_cache(seg)	segtype_is_cache((seg)->segtype)
 #define seg_is_cache_pool(seg)	segtype_is_cache_pool((seg)->segtype)
+#define seg_is_writecache(seg)	segtype_is_writecache((seg)->segtype)
 #define seg_is_used_cache_pool(seg) (seg_is_cache_pool(seg) && (!dm_list_empty(&(seg->lv)->segs_using_this_lv)))
 #define seg_is_linear(seg)	(seg_is_striped(seg) && ((seg)->area_count == 1))
 #define seg_is_mirror(seg)	segtype_is_mirror((seg)->segtype)
@@ -340,6 +344,8 @@ int init_cache_segtypes(struct cmd_context *cmd, struct segtype_library *seglib)
 #ifdef VDO_INTERNAL
 int init_vdo_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
 #endif
+
+int init_writecache_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
 
 #define CACHE_FEATURE_POLICY_MQ			(1U << 0)
 #define CACHE_FEATURE_POLICY_SMQ		(1U << 1)

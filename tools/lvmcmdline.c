@@ -124,12 +124,13 @@ static const struct command_function _command_functions[CMD_COUNT] = {
 	{ lvconvert_to_cachepool_CMD,			lvconvert_to_pool_cmd },
 	{ lvconvert_to_thin_with_external_CMD,		lvconvert_to_thin_with_external_cmd },
 	{ lvconvert_to_cache_vol_CMD,			lvconvert_to_cache_vol_cmd },
+	{ lvconvert_to_writecache_vol_CMD,		lvconvert_to_writecache_vol_cmd },
 	{ lvconvert_swap_pool_metadata_CMD,		lvconvert_swap_pool_metadata_cmd },
 	{ lvconvert_to_thinpool_or_swap_metadata_CMD,   lvconvert_to_pool_or_swap_metadata_cmd },
 	{ lvconvert_to_cachepool_or_swap_metadata_CMD,  lvconvert_to_pool_or_swap_metadata_cmd },
 	{ lvconvert_merge_thin_CMD,			lvconvert_merge_thin_cmd },
-	{ lvconvert_split_and_keep_cachepool_CMD,	lvconvert_split_cachepool_cmd },
-	{ lvconvert_split_and_remove_cachepool_CMD,	lvconvert_split_cachepool_cmd },
+	{ lvconvert_split_and_keep_cache_CMD,		lvconvert_split_cache_cmd },
+	{ lvconvert_split_and_remove_cache_CMD,		lvconvert_split_cache_cmd },
 
 	/* lvconvert raid-related type conversions */
 	{ lvconvert_raid_types_CMD,			lvconvert_raid_types_cmd },
@@ -2120,7 +2121,7 @@ static int _process_command_line(struct cmd_context *cmd, int *argc, char ***arg
 		 * value (e.g. foo_ARG) from the args array.
 		 */
 		if ((arg_enum = _find_arg(cmd->name, goval)) < 0) {
-			log_fatal("Unrecognised option.");
+			log_fatal("Unrecognised option %d (%c).", goval, goval);
 			return 0;
 		}
 
