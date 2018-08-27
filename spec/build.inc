@@ -33,6 +33,7 @@
 %enableif %{enable_python} python2-bindings
 %enableif %{enable_python3} python3-bindings
 %enableif %{enable_python} applib
+%enableif %{enable_python3} applib
 %enableif %{enable_dbusd} dbus-service
 %enableif %{enable_dbusd} notify-dbus
 %enableif %{enable_dmfilemapd} dmfilemapd

@@ -79,15 +79,24 @@
 %global enable_python 0
 %endif
 
-%if %{rhel} >= 8 || %{fedora} >= 20
+%if %{rhel} > 7 || %{fedora} >= 20
 %global enable_python3 1
+%endif
+
+%if %{rhel} > 7 || %{fedora} >= 29
+%global enable_python 0
+%endif
+
+%if %{rhel} > 7 || %{fedora} >= 23
+%global enable_dbusd 1
 %endif
 
 %if %{enable_python}
   %global buildreq_python2_devel python2-devel
   %global buildreq_python_setuptools python-setuptools
 %endif
-%if %{enable_python3}
+
+%if %{enable_python3} || %{enable_dbusd}
   %global buildreq_python3_devel python3-devel
   %global buildreq_python_setuptools python-setuptools
 %endif
@@ -99,15 +108,6 @@
 %endif
 
 ##############################################################
-
-%if %{rhel} >= 8 || %{fedora} >= 23
-  %if %{enable_python3}
-    %global enable_dbusd 1
-  %else
-    # dbusd requires python3
-    false
-  %endif
-%endif
 
 %if %{enable_dbusd}
   %global buildreq_python3_dbus python3-dbus
