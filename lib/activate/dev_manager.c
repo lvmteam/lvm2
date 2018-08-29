@@ -648,6 +648,11 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 		}
 	}
 
+	if (check.check_lv && uuid && !strncmp(uuid, "LVM-", 4)) {
+		/* Skip LVs */
+		goto out;
+	}
+
 	if (check.check_reserved && uuid &&
 	    (!strncmp(uuid, CRYPT_TEMP, sizeof(CRYPT_TEMP) - 1) ||
 	     !strncmp(uuid, STRATIS, sizeof(STRATIS) - 1))) {

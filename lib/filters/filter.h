@@ -50,6 +50,6 @@ typedef enum {
 	FILTER_MODE_PRE_LVMETAD,
 	FILTER_MODE_POST_LVMETAD
 } filter_mode_t;
-struct dev_filter *usable_filter_create(struct dev_types *dt, filter_mode_t mode);
+struct dev_filter *usable_filter_create(struct cmd_context *cmd, struct dev_types *dt, filter_mode_t mode);
 
 #endif 	/* _LVM_FILTER_H */
