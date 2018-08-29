@@ -234,6 +234,7 @@ struct dev_usable_check_params {
 	unsigned int check_suspended:1;
 	unsigned int check_error_target:1;
 	unsigned int check_reserved:1;
+	unsigned int check_lv:1;
 };
 
 /*

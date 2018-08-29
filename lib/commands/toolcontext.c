@@ -1115,7 +1115,7 @@ static struct dev_filter *_init_lvmetad_filter_chain(struct cmd_context *cmd)
 	nr_filt++;
 
 	/* usable device filter. Required. */
-	if (!(filters[nr_filt] = usable_filter_create(cmd->dev_types,
+	if (!(filters[nr_filt] = usable_filter_create(cmd, cmd->dev_types,
 						      lvmetad_used() ? FILTER_MODE_PRE_LVMETAD
 								     : FILTER_MODE_NO_LVMETAD))) {
 		log_error("Failed to create usabled device filter");
@@ -1235,7 +1235,7 @@ int init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 			}
 			nr_filt++;
 		}
-		if (!(filter_components[nr_filt] = usable_filter_create(cmd->dev_types, FILTER_MODE_POST_LVMETAD))) {
+		if (!(filter_components[nr_filt] = usable_filter_create(cmd, cmd->dev_types, FILTER_MODE_POST_LVMETAD))) {
 			log_verbose("Failed to create usable device filter.");
 			goto bad;
 		}

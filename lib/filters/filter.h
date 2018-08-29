@@ -52,7 +52,7 @@ typedef enum {
 	FILTER_MODE_PRE_LVMETAD,
 	FILTER_MODE_POST_LVMETAD
 } filter_mode_t;
-struct dev_filter *usable_filter_create(struct dev_types *dt, filter_mode_t mode);
+struct dev_filter *usable_filter_create(struct cmd_context *cmd, struct dev_types *dt, filter_mode_t mode);
 
 int persistent_filter_load(struct dev_filter *f, struct dm_config_tree **cft_out);
 

@@ -20,6 +20,11 @@
 #include "dev-ext-udev-constants.h"
 #endif
 
+struct filter_data {
+	filter_mode_t mode;
+	int skip_lvs;
+};
+
 static const char *_too_small_to_hold_pv_msg = "Too small to hold a PV";
 
 static int _native_check_pv_min_size(struct device *dev)
@@ -101,7 +106,9 @@ static int _check_pv_min_size(struct device *dev)
 
 static int _passes_usable_filter(struct dev_filter *f, struct device *dev)
 {
-	filter_mode_t mode = *((filter_mode_t *) f->private);
+	struct filter_data *data = f->private;
+	filter_mode_t mode = data->mode;
+	int skip_lvs = data->skip_lvs;
 	struct dev_usable_check_params ucp = {0};
 	int r = 1;
 
@@ -114,6 +121,7 @@ static int _passes_usable_filter(struct dev_filter *f, struct device *dev)
 			ucp.check_suspended = ignore_suspended_devices();
 			ucp.check_error_target = 1;
 			ucp.check_reserved = 1;
+			ucp.check_lv = skip_lvs;
 			break;
 		case FILTER_MODE_PRE_LVMETAD:
 			ucp.check_empty = 1;
@@ -121,6 +129,7 @@ static int _passes_usable_filter(struct dev_filter *f, struct device *dev)
 			ucp.check_suspended = 0;
 			ucp.check_error_target = 1;
 			ucp.check_reserved = 1;
+			ucp.check_lv = skip_lvs;
 			break;
 		case FILTER_MODE_POST_LVMETAD:
 			ucp.check_empty = 0;
@@ -128,6 +137,7 @@ static int _passes_usable_filter(struct dev_filter *f, struct device *dev)
 			ucp.check_suspended = ignore_suspended_devices();
 			ucp.check_error_target = 0;
 			ucp.check_reserved = 0;
+			ucp.check_lv = skip_lvs;
 			break;
 		}
 
@@ -161,8 +171,9 @@ static void _usable_filter_destroy(struct dev_filter *f)
 	dm_free(f);
 }
 
-struct dev_filter *usable_filter_create(struct dev_types *dt __attribute__((unused)), filter_mode_t mode)
+struct dev_filter *usable_filter_create(struct cmd_context *cmd, struct dev_types *dt __attribute__((unused)), filter_mode_t mode)
 {
+	struct filter_data *data;
 	struct dev_filter *f;
 
 	if (!(f = dm_zalloc(sizeof(struct dev_filter)))) {
@@ -173,14 +184,20 @@ struct dev_filter *usable_filter_create(struct dev_types *dt __attribute__((unus
 	f->passes_filter = _passes_usable_filter;
 	f->destroy = _usable_filter_destroy;
 	f->use_count = 0;
-	if (!(f->private = dm_zalloc(sizeof(filter_mode_t)))) {
+
+	if (!(data = dm_zalloc(sizeof(struct filter_data)))) {
 		log_error("Usable device filter mode allocation failed");
 		dm_free(f);
 		return NULL;
 	}
-	*((filter_mode_t *) f->private) = mode;
 
-	log_debug_devs("Usable device filter initialised.");
+	data->mode = mode;
+
+	data->skip_lvs = !find_config_tree_bool(cmd, devices_scan_lvs_CFG, NULL);
+
+	f->private = data;
+
+	log_debug_devs("Usable device filter initialised (scan_lvs %d).", !data->skip_lvs);
 
 	return f;
 }
