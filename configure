@@ -13417,7 +13417,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-LVMCONFIG_PATH="$$BINDIR/lvmconfig"
+LVMCONFIG_PATH="$SBINDIR/lvmconfig"
 
 cat >>confdefs.h <<_ACEOF
 #define LVMCONFIG_PATH "$LVMCONFIG_PATH"
