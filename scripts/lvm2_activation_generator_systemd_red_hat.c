@@ -128,7 +128,7 @@ static int generate_unit(const char *dir, int unit, int sysinit_needed)
 	      "DefaultDependencies=no\n", f);
 
 	if (unit == UNIT_NET) {
-		fprintf(f, "After=%s iscsi.service fcoe.service\n"
+		fprintf(f, "After=%s iscsi.service fcoe.service rbdmap.service\n"
 			"Before=remote-fs-pre.target shutdown.target\n\n"
 			"[Service]\n"
 			"ExecStartPre=/usr/bin/udevadm settle\n", unit_names[UNIT_MAIN]);
