@@ -56,7 +56,8 @@ static bool _open_child(struct child_process *child, const char *cmd, const char
 			close(pipe_fd[1]);
 		}
 
-		execv(cmd, (char *const *) argv);
+		if (execv(cmd, (char *const *) argv) < 0)
+			_error("execv failed: %s\n", strerror(errno));
 		// Shouldn't get here unless exec failed.
 		exit(1);
 	} else {
