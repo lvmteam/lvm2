@@ -6130,7 +6130,7 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 			seg_flag = SEG_RAID6_N_6;
 
 		if (segtype_is_linear(*segtype) ||
-		    (!segtype_is_raid10(*segtype) && !segtype_is_striped(*segtype)))
+		    (!segtype_is_raid4(*segtype) && !segtype_is_raid10(*segtype) && !segtype_is_striped(*segtype)))
 			seg_flag = SEG_RAID5_N;
 
 	/* raid1 -> */
@@ -6199,10 +6199,9 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 					  lvseg_name(seg_from), display_lvname(seg_from->lv), *new_image_count);
 		}
 
-	/* raid4 -> !raid4/raid5* */
-	} else if (seg_is_raid4(seg_from) &&
-		   !segtype_is_raid4(*segtype) && !segtype_is_any_raid5(*segtype)) {
-		seg_flag = SEG_RAID5_N;
+	/* raid4 -> * */
+	} else if (seg_is_raid4(seg_from) && !segtype_is_raid4(*segtype) && !segtype_is_striped(*segtype)) {
+		seg_flag = segtype_is_any_raid6(*segtype) ? SEG_RAID6_N_6 : SEG_RAID5_N;
 
 	/* raid6 -> striped/raid0/raid5/raid10 */
 	} else if (seg_is_any_raid6(seg_from)) {
