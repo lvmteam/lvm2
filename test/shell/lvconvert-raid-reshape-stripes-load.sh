@@ -39,7 +39,7 @@ vgcreate $SHARED -s 1M "$vg" "${DEVICES[@]}"
 
 trap 'cleanup_mounted_and_teardown' EXIT
 
-# Create 13-way striped raid5 (14 legs total)
+# Create 10-way striped raid5 (11 legs total)
 lvcreate --yes --type raid5_ls --stripesize 64K --stripes 10 -L200M -n$lv1 $vg
 check lv_first_seg_field $vg/$lv1 segtype "raid5_ls"
 check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
