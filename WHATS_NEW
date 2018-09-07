@@ -1,5 +1,6 @@
 Version 2.02.182 - 
 ==============================
+  Fix lvconvert striped/raid0/raid0_meta -> raid6 regression.
   Add After=rbdmap.service to {lvm2-activation-net,blk-availability}.service.
   Fix pvs with lvmetad to avoid too many open files from filter reads.
   Fix pvscan --cache to avoid too many open files from filter reads.
