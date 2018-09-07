@@ -6127,10 +6127,10 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 	/* striped/raid0 -> */
 	} else if (seg_is_striped(seg_from) || seg_is_any_raid0(seg_from)) {
 		if (segtype_is_any_raid6(*segtype))
-			seg_flag = SEG_RAID6_N_6;
+			seg_flag = seg_from->area_count < 3 ? SEG_RAID5_N : SEG_RAID6_N_6;
 
-		if (segtype_is_linear(*segtype) ||
-		    (!segtype_is_raid4(*segtype) && !segtype_is_raid10(*segtype) && !segtype_is_striped(*segtype)))
+		else if (segtype_is_linear(*segtype) ||
+			 (!segtype_is_raid4(*segtype) && !segtype_is_raid10(*segtype) && !segtype_is_striped(*segtype)))
 			seg_flag = SEG_RAID5_N;
 
 	/* raid1 -> */
