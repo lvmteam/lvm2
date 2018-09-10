@@ -1,5 +1,6 @@
 Version 3.0.0
 =============
+  Allow raid4 -> linear conversion request.
   Fix lvconvert striped/raid0/raid0_meta -> raid6 regression.
   Add 'lvm2-activation-generator:' prefix for kmsg messages logged by generator.
   Add After=rbdmap.service to {lvm2-activation-net,blk-availability}.service.

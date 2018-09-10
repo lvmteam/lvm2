@@ -6149,9 +6149,17 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 		else if (!segtype_is_raid4(*segtype) && !segtype_is_any_raid5(*segtype))
 			seg_flag = SEG_RAID5_LS;
 
-	/* raid5* -> */
-	} else if (seg_is_any_raid5(seg_from)) {
-		if (segtype_is_raid1(*segtype) || segtype_is_linear(*segtype)) {
+	/* raid4/raid5* -> */
+	} else if (seg_is_raid4(seg_from) || seg_is_any_raid5(seg_from)) {
+		if (seg_is_raid4(seg_from) && segtype_is_any_raid5(*segtype)) {
+			if (!segtype_is_raid5_n(*segtype))
+				seg_flag = SEG_RAID5_N;
+
+		} else if (seg_is_any_raid5(seg_from) && segtype_is_raid4(*segtype)) {
+				if (!seg_is_raid5_n(seg_from))
+					seg_flag = SEG_RAID5_N;
+
+		} else if (segtype_is_raid1(*segtype) || segtype_is_linear(*segtype)) {
 			if (seg_from->area_count != 2) {
 				log_error("Converting %s LV %s to 2 stripes first.",
 					  lvseg_name(seg_from), display_lvname(seg_from->lv));
@@ -6173,12 +6181,12 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 					  lvseg_name(seg_from), display_lvname(seg_from->lv), *new_image_count);
 
 			} else
-				seg_flag = _raid_seg_flag_5_to_6(seg_from);
+				seg_flag = seg_is_raid4(seg_from) ? SEG_RAID6_N_6 :_raid_seg_flag_5_to_6(seg_from);
 
 		} else if (segtype_is_striped(*segtype) || segtype_is_raid10(*segtype)) {
 			int change = 0;
 
-			if (!seg_is_raid5_n(seg_from)) {
+			if (!seg_is_raid4(seg_from) && !seg_is_raid5_n(seg_from)) {
 				seg_flag = SEG_RAID5_N;
 
 			} else if (*stripes > 2 && *stripes != seg_from->area_count - seg_from->segtype->parity_devs) {
@@ -6198,10 +6206,6 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 				log_error("Converting %s LV %s to %u stripes first.",
 					  lvseg_name(seg_from), display_lvname(seg_from->lv), *new_image_count);
 		}
-
-	/* raid4 -> * */
-	} else if (seg_is_raid4(seg_from) && !segtype_is_raid4(*segtype) && !segtype_is_striped(*segtype)) {
-		seg_flag = segtype_is_any_raid6(*segtype) ? SEG_RAID6_N_6 : SEG_RAID5_N;
 
 	/* raid6 -> striped/raid0/raid5/raid10 */
 	} else if (seg_is_any_raid6(seg_from)) {
