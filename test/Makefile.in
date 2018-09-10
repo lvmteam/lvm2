@@ -96,7 +96,6 @@ help:
 	@echo "  LVM_TEST_PREFER_BRD	Prefer using brd (ramdisk) over loop for testing [1]."
 	@echo "  LVM_TEST_DIR		Where to create test files  [$(LVM_TEST_DIR)]."
 	@echo "  LVM_TEST_LOCKING	Normal (1), Cluster (3)."
-	@echo "  LVM_TEST_LVMETAD_DEBUG_OPTS  Allows to override debug opts [-l all]."
 	@echo "  LVM_TEST_LVMPOLLD	Start lvmpolld"
 	@echo "  LVM_TEST_NODEBUG	Do not debug lvm commands."
 	@echo "  LVM_TEST_PARALLEL	May skip agresive wipe of LVMTEST resources."
@@ -252,7 +251,6 @@ lib/flavour-%: $(srcdir)/lib/flavour-%.sh .lib-dir-stamp
 
 lib/paths-common: $(srcdir)/Makefile.in .lib-dir-stamp Makefile
 	echo 'DM_UDEV_SYNCHRONISATION=$(dm_udev_synchronisation)' >> $@-t
-	echo 'LVMETAD_PIDFILE="@LVMETAD_PIDFILE@"' >> $@-t
 	echo 'LVMPOLLD_PIDFILE="@LVMPOLLD_PIDFILE@"' >> $@-t
 	echo 'DMEVENTD_PIDFILE="@DMEVENTD_PIDFILE@"' >> $@-t
 	echo 'LVM_TEST_THIN_CHECK_CMD=$${LVM_TEST_THIN_CHECK_CMD-@THIN_CHECK_CMD@}' >> $@-t
@@ -264,7 +262,6 @@ lib/paths-common: $(srcdir)/Makefile.in .lib-dir-stamp Makefile
 	echo 'LVM_TEST_CACHE_REPAIR_CMD=$${LVM_TEST_CACHE_REPAIR_CMD-@CACHE_REPAIR_CMD@}' >> $@-t
 	echo 'LVM_TEST_CACHE_RESTORE_CMD=$${LVM_TEST_CACHE_RESTORE_CMD-@CACHE_RESTORE_CMD@}' >> $@-t
 	echo 'export DM_UDEV_SYNCHRONISATION THIN RAID CACHE\' >> $@-t
-	echo ' LVMETAD_PIDFILE LVMPOLLD_PIDFILE DMEVENTD_PIDFILE \' >> $@-t
 	echo ' LVM_TEST_THIN_CHECK_CMD LVM_TEST_THIN_DUMP_CMD LVM_TEST_THIN_REPAIR_CMD LVM_TEST_THIN_RESTORE_CMD\' >> $@-t
 	echo ' LVM_TEST_CACHE_CHECK_CMD LVM_TEST_CACHE_DUMP_CMD LVM_TEST_CACHE_REPAIR_CMD LVM_TEST_CACHE_RESTORE_CMD' >> $@-t
 	mv $@-t $@

@@ -12,9 +12,6 @@
 
 
 
-# disable lvmetad logging as it bogs down test systems
-export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
-
 . lib/inittest
 
 aux prepare_pvs 5

@@ -597,11 +597,6 @@ grep "No system ID found from system_id_source" err
 vgremove $vg1
 
 
-# Test cases where lvmetad cache of a foreign VG are out of date
-# because the foreign owner has changed the VG.
-
-test ! -e LOCAL_LVMETAD && exit 0
-
 # When a foreign vg is newer on disk than in lvmetad, using --foreign
 # should find the newer version.  This simulates a foreign host changing
 # foreign vg by turning off lvmetad when we create an lv in the vg.

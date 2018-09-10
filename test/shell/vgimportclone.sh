@@ -45,7 +45,6 @@ vgchange -ay $vg1
 
 # Clone the LUN
 dd if="$dev1" of="$dev2" bs=256K count=1
-aux notify_lvmetad "$dev2"
 
 # Verify pvs works on each device to give us vgname
 aux hide_dev "$dev2"
@@ -59,14 +58,6 @@ aux unhide_dev "$dev1"
 # Import the cloned PV to a new VG
 vgimportclone --basevgname $vg2 "$dev2"
 
-# We need to re-scan *both* $dev1 and $dev2 since a PV, as far as lvmetad is
-# concerned, can only live on a single device. With the last pvscan, we told it
-# that PV from $dev1 now lives on $dev2, but in fact this is not true anymore,
-# since we wrote a different PV over $dev2.
-rm -f "$TESTDIR/etc/.cache"
-aux notify_lvmetad "$dev2"
-aux notify_lvmetad "$dev1"
-
 # Verify we can activate / deactivate the LV from both VGs
 lvchange -ay $vg1/$lv1 $vg2/$lv1
 vgchange -an $vg1 $vg2
@@ -79,19 +70,16 @@ vgcreate $SHARED --metadatasize 128k A${vg1}B "$dev1"
 
 # vg1B is not the same as Avg1B - we don't need number suffix
 dd if="$dev1" of="$dev2" bs=256K count=1
-aux notify_lvmetad "$dev2"
 vgimportclone -n ${vg1}B "$dev2"
 check pv_field "$dev2" vg_name ${vg1}B
 
 # Avg1 is not the same as Avg1B - we don't need number suffix
 dd if="$dev1" of="$dev2" bs=256K count=1
-aux notify_lvmetad "$dev2"
 vgimportclone -n A${vg1} "$dev2"
 check pv_field "$dev2" vg_name A${vg1}
 
 # Avg1B is the same as Avg1B - we need to add the number suffix
 dd if="$dev1" of="$dev2" bs=256K count=1
-aux notify_lvmetad "$dev2"
 vgimportclone -n A${vg1}B "$dev2"
 aux vgs
 check pv_field "$dev2" vg_name A${vg1}B1

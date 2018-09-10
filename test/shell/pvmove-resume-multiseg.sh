@@ -16,7 +16,6 @@
 # Multisegment variant w/ 2 pvmoves LVs per VG
 
 SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_CLVMD=1
 
 . lib/inittest
 
@@ -78,8 +77,6 @@ test_pvmove_resume() {
 		done # wait for the pid removal
 		aux prepare_clvmd
 	fi
-
-	aux notify_lvmetad "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 
 	# call resume function (see below)
 	# with expected number of spawned

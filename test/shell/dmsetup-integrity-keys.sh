@@ -13,8 +13,6 @@
 # unrelated to lvm2 daemons
 SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
-SKIP_WITH_CLVMD=1
-SKIP_WITH_LVMETAD=1
 
 . lib/inittest
 

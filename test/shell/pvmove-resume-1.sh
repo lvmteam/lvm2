@@ -86,8 +86,6 @@ test_pvmove_resume() {
 		aux prepare_clvmd
 	fi
 
-	aux notify_lvmetad "$dev1" "$dev2" "$dev3" "$dev4"
-
 	# call resume function (see below)
 	# with expected number of spawned
 	# bg polling as parameter

@@ -20,14 +20,10 @@ aux prepare_devs 3
 
 pvcreate "$dev1"
 UUID1=$(get pv_field "$dev1" uuid)
-pvcreate --config "devices{filter=[\"a|$dev2|\",\"r|.*|\"]} global/use_lvmetad=0" -u "$UUID1" --norestorefile "$dev2"
-pvcreate --config "devices{filter=[\"a|$dev3|\",\"r|.*|\"]} global/use_lvmetad=0" -u "$UUID1" --norestorefile "$dev3"
+pvcreate --config "devices{filter=[\"a|$dev2|\",\"r|.*|\"]}" -u "$UUID1" --norestorefile "$dev2"
+pvcreate --config "devices{filter=[\"a|$dev3|\",\"r|.*|\"]}" -u "$UUID1" --norestorefile "$dev3"
 
 pvscan --cache 2>&1 | tee out
-
-if test -e LOCAL_LVMETAD; then
-	grep "WARNING: Disabling lvmetad cache which does not support duplicate PVs." out
-fi
 
 pvs -o+uuid 2>&1 | tee out
 

@@ -34,7 +34,6 @@ LVM_TEST_LVM1=${LVM_TEST_LVM1-}
 # TODO: LVM_TEST_SHARED
 SHARED=${SHARED-}
 
-LVM_TEST_LVMETAD=${LVM_TEST_LVMETAD-}
 LVM_TEST_LVMLOCKD=${LVM_TEST_LVMLOCKD-}
 LVM_TEST_LVMLOCKD_TEST=${LVM_TEST_LVMLOCKD_TEST-}
 LVM_TEST_LVMPOLLD=${LVM_TEST_LVMPOLLD-}
@@ -43,9 +42,6 @@ LVM_TEST_LOCK_TYPE_SANLOCK=${LVM_TEST_LOCK_TYPE_SANLOCK-}
 
 SKIP_WITHOUT_CLVMD=${SKIP_WITHOUT_CLVMD-}
 SKIP_WITH_CLVMD=${SKIP_WITH_CLVMD-}
-
-SKIP_WITHOUT_LVMETAD=${SKIP_WITHOUT_LVMETAD-}
-SKIP_WITH_LVMETAD=${SKIP_WITH_LVMETAD-}
 
 SKIP_WITH_LVMPOLLD=${SKIP_WITH_LVMPOLLD-}
 SKIP_WITH_LVMLOCKD=${SKIP_WITH_LVMLOCKD-}
@@ -58,9 +54,6 @@ test -f "lib/flavour-$LVM_TEST_FLAVOUR" || { echo "NOTE: Flavour '$LVM_TEST_FLAV
 test -n "$SKIP_WITHOUT_CLVMD" && test "$LVM_TEST_LOCKING" -ne 3 && initskip
 test -n "$SKIP_WITH_CLVMD" && test "$LVM_TEST_LOCKING" = 3 && initskip
 
-test -n "$SKIP_WITHOUT_LVMETAD" && test -z "$LVM_TEST_LVMETAD" && initskip
-test -n "$SKIP_WITH_LVMETAD" && test -n "$LVM_TEST_LVMETAD" && initskip
-
 test -n "$SKIP_WITH_LVMPOLLD" && test -n "$LVM_TEST_LVMPOLLD" && test -z "$LVM_TEST_LVMLOCKD" && initskip
 
 test -n "$SKIP_WITH_LVMLOCKD" && test -n "$LVM_TEST_LVMLOCKD" && initskip
@@ -68,7 +61,7 @@ test -n "$SKIP_WITH_LVMLOCKD" && test -n "$LVM_TEST_LVMLOCKD" && initskip
 unset CDPATH
 
 export LVM_TEST_BACKING_DEVICE LVM_TEST_DEVDIR LVM_TEST_NODEBUG
-export LVM_TEST_LVMETAD LVM_TEST_LVMLOCKD LVM_TEST_LVMLOCKD_TEST
+export LVM_TEST_LVMLOCKD LVM_TEST_LVMLOCKD_TEST
 export LVM_TEST_LVMPOLLD LVM_TEST_LOCK_TYPE_DLM LVM_TEST_LOCK_TYPE_SANLOCK
 # grab some common utilities
 . lib/utils
@@ -157,15 +150,8 @@ test -n "$BASH" && set -euE -o pipefail
 echo "@TESTDIR=$TESTDIR"
 echo "@PREFIX=$PREFIX"
 
-if test -n "$LVM_TEST_LVMETAD" ; then
-	export LVM_LVMETAD_SOCKET="$TESTDIR/lvmetad.socket"
-	export LVM_LVMETAD_PIDFILE="$TESTDIR/lvmetad.pid"
-	aux prepare_lvmetad
-elif test -z "$SKIP_ROOT_DM_CHECK" ; then
-	# lvmetad prepares its own lvmconf
-	export LVM_LVMETAD_PIDFILE="$TESTDIR/non-existing-file"
+if test -z "$SKIP_ROOT_DM_CHECK" ; then
 	aux lvmconf
-	aux prepare_clvmd
 fi
 
 test -n "$LVM_TEST_LVMPOLLD" && {

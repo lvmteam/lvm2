@@ -10,9 +10,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-# lvmetad does not handle pool labels so skip test.
-
-SKIP_WITH_LVMETAD=1
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -27,7 +24,6 @@ create_pool_label_()
   # printf comes from coreutils, and is probably not posix either
   env printf "\x01\x16\x70\x06\x5f\xcf\xff\xb9\xf8\x24\x8apool1" | dd of="$2" bs=5 seek=1 conv=notrunc
   env printf "\x04\x01\x03\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x0$1\x68\x01\x16\x70\x00\x00\x00\x00\x00\x06\x5f\xd0" | dd of=$2 bs=273 seek=1 conv=notrunc
-  aux notify_lvmetad "$2"
 }
 
 
