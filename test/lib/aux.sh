@@ -214,62 +214,7 @@ prepare_dmeventd() {
 	echo ok
 }
 
-prepare_lvmetad() {
-	check_daemon_in_builddir lvmetad
-
-	local run_valgrind=""
-	test "${LVM_VALGRIND_LVMETAD:-0}" -eq 0 || run_valgrind="run_valgrind"
-
-	kill_sleep_kill_ LOCAL_LVMETAD "${LVM_VALGRIND_LVMETAD:-0}"
-
-	lvmconf "global/use_lvmetad = 1" "devices/md_component_detection = 0"
-	# Default debug is "-l all" and could be override
-	# by setting LVM_TEST_LVMETAD_DEBUG_OPTS before calling inittest.
-	echo -n "## preparing lvmetad..."
-	# shellcheck disable=SC2086
-	$run_valgrind lvmetad -f "$@" -s "$TESTDIR/lvmetad.socket" \
-		${LVM_TEST_LVMETAD_DEBUG_OPTS--l all} &
-	echo $! > LOCAL_LVMETAD
-	for i in {200..0} ; do
-		test "$i" -eq 0 && die "Startup of lvmetad is too slow."
-		test -e "$TESTDIR/lvmetad.socket" && break
-		echo -n .
-		sleep .1;
-	done
-	echo ok
-}
-
-lvmetad_talk() {
-	local use=nc
-	if type -p socat >& /dev/null; then
-		use=socat
-	elif echo | not nc -U "$TESTDIR/lvmetad.socket" ; then
-		echo "WARNING: Neither socat nor nc -U seems to be available." 1>&2
-		echo "## failed to contact lvmetad."
-		return 1
-	fi
-
-	if test "$use" = nc ; then
-		nc -U "$TESTDIR/lvmetad.socket"
-	else
-		socat "unix-connect:$TESTDIR/lvmetad.socket" -
-	fi | tee -a lvmetad-talk.txt
-}
-
-lvmetad_dump() {
-	(echo 'request="dump"'; echo '##') | lvmetad_talk "$@"
-}
-
-notify_lvmetad() {
-	if test -e LOCAL_LVMETAD; then
-		# Ignore results here...
-		LVM_LOG_FILE_EPOCH="" pvscan --cache "$@" || true
-		rm -f debug.log
-	fi
-}
-
 prepare_lvmpolld() {
-	check_daemon_in_builddir lvmetad
 	lvmconf "global/use_lvmpolld = 1"
 
 	local run_valgrind=""
@@ -583,8 +528,6 @@ teardown() {
 		killall -9 lvmlockd || true
 	fi
 
-	kill_sleep_kill_ LOCAL_LVMETAD "${LVM_VALGRIND_LVMETAD:-0}"
-
 	dm_table | not grep -E -q "$vg|$vg1|$vg2|$vg3|$vg4" || {
 		# Avoid activation of dmeventd if there is no pid
 		cfg=$(test -s LOCAL_DMEVENTD || echo "--config activation{monitoring=0}")
@@ -802,11 +745,7 @@ prepare_md_dev() {
 		echo "${mddevdir}${mdname}" > MD_DEV_PV ;;
 	esac
 	echo "$mddev" > MD_DEV
-	notify_lvmetad "$(< MD_DEV_PV)"
 	printf "%s\n" "${@:4}" > MD_DEVICES
-	for mddev in "${@:4}"; do
-		notify_lvmetad "$mddev"
-	done
 }
 
 cleanup_md_dev() {
@@ -820,12 +759,10 @@ cleanup_md_dev() {
 	mddev_pv=$(< MD_DEV_PV)
 	udev_wait
 	mdadm --stop "$mddev" || true
-	notify_lvmetad "$mddev_pv"
 	udev_wait  # wait till events are process, not zeroing to early
 	test "$DM_DEV_DIR" != "/dev" && rm -rf "${mddev_pv%/*}"
 	for dev in $(< MD_DEVICES); do
 		mdadm --zero-superblock "$dev" || true
-		notify_lvmetad "$dev"
 	done
 	udev_wait
 	if [ -b "$mddev" ]; then
@@ -929,12 +866,6 @@ prepare_devs() {
 	printf "%s\\n" "${DEVICES[@]}" > DEVICES
 #	( IFS=$'\n'; echo "${DEVICES[*]}" ) >DEVICES
 	echo "ok"
-
-	if test -e LOCAL_LVMETAD; then
-		for dev in "${DEVICES[@]}"; do
-			notify_lvmetad "$dev"
-		done
-	fi
 }
 
 
@@ -1041,10 +972,6 @@ disable_dev() {
 		    dmsetup remove -f "$dev" 2>/dev/null || true
 		fi
 	done
-
-	test -n "$silent" || for num in $notify; do
-		notify_lvmetad --major "${num%%:*}" --minor "${num##*:}"
-	done
 }
 
 enable_dev() {
@@ -1066,10 +993,6 @@ enable_dev() {
 		dmsetup resume "$name"
 	done
 	finish_udev_transaction
-
-	test -n "$silent" || for dev in "$@"; do
-		notify_lvmetad "$dev"
-	done
 }
 
 # Throttle down performance of kcopyd when mirroring i.e. disk image
@@ -1108,10 +1031,6 @@ restore_from_devtable() {
 		dmsetup resume "$name"
 	done
 	finish_udev_transaction
-
-	test -n "$silent" || for dev in "$@"; do
-		notify_lvmetad "$dev"
-	done
 }
 
 #
@@ -1215,7 +1134,6 @@ generate_config() {
 	fi
 
 	LVM_TEST_LOCKING=${LVM_TEST_LOCKING:-1}
-	LVM_TEST_LVMETAD=${LVM_TEST_LVMETAD:-0}
 	LVM_TEST_LVMPOLLD=${LVM_TEST_LVMPOLLD:-0}
 	LVM_TEST_LVMLOCKD=${LVM_TEST_LVMLOCKD:-0}
         # FIXME:dct: This is harmful! Variables are unused here and are tested not being empty elsewhere:
@@ -1264,7 +1182,6 @@ global/si_unit_consistency = 1
 global/thin_check_executable = "$LVM_TEST_THIN_CHECK_CMD"
 global/thin_dump_executable = "$LVM_TEST_THIN_DUMP_CMD"
 global/thin_repair_executable = "$LVM_TEST_THIN_REPAIR_CMD"
-global/use_lvmetad = $LVM_TEST_LVMETAD
 global/use_lvmpolld = $LVM_TEST_LVMPOLLD
 global/use_lvmlockd = $LVM_TEST_LVMLOCKD
 log/activation = 1

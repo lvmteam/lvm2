@@ -18,8 +18,6 @@
 
 SKIP_WITH_LVMPOLLD=1
 
-export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
-
 . lib/inittest
 
 # check for version 1.9.0

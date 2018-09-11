@@ -10,7 +10,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-# lvmetad does not handle pool labels so skip test.
 SKIP_WITH_LVMPOLLD=1
 
 
@@ -166,8 +165,6 @@ create_pv_with_ext_vsn1_and_vg()
 "\x75\x6c\x20\x32\x37\x20\x31\x31\x3a\x32\x35\x3a\x31\x30\x20\x32"\
 "\x30\x31\x36\x0a\x0a\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" | dd of="$1" bs=5632 seek=1 conv=notrunc
-
-  aux notify_lvmetad "$1"
 }
 
 aux prepare_devs 1 8

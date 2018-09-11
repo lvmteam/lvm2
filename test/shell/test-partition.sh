@@ -32,5 +32,4 @@ pvs "$dev1"
 # create small partition table
 echo "1 2" | sfdisk --force "$dev1"
 
-aux notify_lvmetad "$dev1"
 not pvs "$dev1"

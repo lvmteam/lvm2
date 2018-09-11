@@ -26,12 +26,10 @@ SKIP_WITH_LVMPOLLD=1
 # export LVM_TEST_PVS=300
 #
 # make check_local   ~52sec  (U:29s, S:13s)
-# make check_lvmetad ~20sec  (U: 4s, S: 5s)
 #
 # With patch from 2015-03-06:
 #
 # make check_local   ~30sec  (U:10s, S:12s)
-# make check_lvmetad ~20sec  (U: 4s, S: 5s)
 #
 
 # TODO: extend test suite to monitor performance and report regressions...

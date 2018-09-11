@@ -45,7 +45,7 @@ run-unit-test: test/unit/unit-test
 
 ifeq ("$(USE_TRACKING)","yes")
 ifeq (,$(findstring $(MAKECMDGOALS),cscope.out cflow clean distclean lcov \
- help check check_local check_cluster check_lvmetad check_lvmpolld run-unit-test))
+ help check check_local check_lvmpolld run-unit-test))
 	-include $(UNIT_DEPENDS)
 endif
 endif

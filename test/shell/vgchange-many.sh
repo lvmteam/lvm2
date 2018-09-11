@@ -16,8 +16,6 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-# FIXME: lvmetad fails with i.e. 1500 device on memory failure...
-
 # Number of LVs to create
 TEST_DEVS=1000
 # On low-memory boxes let's not stress too much

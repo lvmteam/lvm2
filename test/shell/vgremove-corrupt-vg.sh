@@ -19,6 +19,5 @@ aux prepare_vg 3
 lvcreate -n blabla -L 1 $vg -an --zero n
 
 dd if=/dev/urandom bs=512 seek=2 count=32 of="$dev2"
-aux notify_lvmetad "$dev2"
 
 vgremove -f $vg
