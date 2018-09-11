@@ -10,6 +10,9 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+# Uncomment this to build the simple radix tree.  You'll need to make clean too.
+# base/data-struct/radix-tree.o: CFLAGS += -DSIMPLE_RADIX_TREE
+
 BASE_SOURCE=\
 	base/data-struct/radix-tree.c \
 	base/data-struct/hash.c \
