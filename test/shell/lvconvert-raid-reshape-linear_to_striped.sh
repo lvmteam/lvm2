@@ -17,11 +17,8 @@ SKIP_WITH_LVMPOLLD=1
 aux lvmconf 'activation/raid_region_size = 512'
 
 which mkfs.ext4 || skip
-aux have_raid 1 12 0 || skip
+aux have_raid 1 14 0 || skip
 
-# Temporarily skip reshape tests on single-core CPUs until there's a fix for
-# https://bugzilla.redhat.com/1443999 - AGK 2017/04/20
-aux have_multi_core || skip
 aux prepare_vg 5
 
 #

@@ -18,12 +18,7 @@ LVM_SKIP_LARGE_TESTS=0
 . lib/inittest
 
 which mkfs.ext4 || skip
-aux have_raid 1 13 99 || skip # needed to address RHBZ#1501145
-
-# Temporarily skip reshape tests on single-core CPUs until there's a fix for
-# https://bugzilla.redhat.com/1443999 - AGK 2017/04/20
-#aux have_multi_core || skip
-# dropping single-core limitation with  1.12 target
+aux have_raid 1 14 0 || skip
 
 if [ $LVM_SKIP_LARGE_TESTS -eq 0 ]
 then
