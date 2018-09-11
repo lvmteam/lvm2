@@ -757,7 +757,6 @@ static struct block *_new_block(struct bcache *cache, int fd, block_address i, b
 
 	if (b) {
 		dm_list_init(&b->list);
-		dm_list_init(&b->hash);
 		b->flags = 0;
 		b->fd = fd;
 		b->index = i;
