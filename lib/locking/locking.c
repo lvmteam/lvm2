@@ -86,9 +86,9 @@ static void _update_vg_lock_count(const char *resource, uint32_t flags)
 
 /*
  * A mess of options have been introduced over time to override
- * or tweak the behavior of file locking.  These options are
- * allowed in different but overlapping sets of commands
- * (see command-lines.in)
+ * or tweak the behavior of file locking, and indirectly other
+ * behaviors.  These options are allowed in different but
+ * overlapping sets of commands (see command-lines.in)
  *
  * --nolocking
  *
@@ -98,7 +98,8 @@ static void _update_vg_lock_count(const char *resource, uint32_t flags)
  *
  * Command will grant any read lock request, without trying
  * to acquire an actual file lock.  Command will refuse any
- * write lock request.
+ * write lock request.  (Activation, which uses a write lock,
+ * is not allowed.)
  *
  * --ignorelockingfailure
  *
@@ -110,6 +111,12 @@ static void _update_vg_lock_count(const char *resource, uint32_t flags)
  * --sysinit
  *
  * The same as ignorelockingfailure.
+ *
+ * --sysinit --readonly
+ *
+ * The combination of these two flags acts like --readonly,
+ * refusing write lock requests, but makes an exception to
+ * allow activation.
  *
  * global/metadata_read_only
  *
@@ -214,9 +221,27 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 	 * When --readonly is set, grant read lock requests without trying to
 	 * acquire an actual lock, and refuse write lock requests.
 	 */
-	if (_file_locking_readonly) {
+	if (_file_locking_readonly && !_file_locking_sysinit) {
 		if (lck_type != LCK_WRITE)
 			goto out_hold;
+
+		log_error("Operation prohibited while --readonly is set.");
+		goto out_fail;
+	}
+
+	/*
+	 * When --readonly and --sysinit are set, grant read lock requests without
+	 * trying to acquire an actual lock, and refuse write lock requests except
+	 * in the case of activation which is permitted.
+	 */
+	if (_file_locking_readonly && _file_locking_sysinit) {
+		if (lck_type != LCK_WRITE)
+			goto out_hold;
+
+		if (cmd->is_activating) {
+			log_warn("Allowing activation with --readonly --sysinit.");
+			goto out_hold;
+		}
 
 		log_error("Operation prohibited while --readonly is set.");
 		goto out_fail;

@@ -2743,6 +2743,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	int locking_type;
 	int nolocking = 0;
 	int readonly = 0;
+	int sysinit = 0;
 	int monitoring;
 	char *arg_new, *arg;
 	int i;
@@ -2921,19 +2922,23 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		log_warn("WARNING: see lvmlockd(8) for information on using cluster/clvm VGs.");
 
 	if ((locking_type == 0) || (locking_type == 5)) {
-		log_warn("WARNING: locking_type is deprecated, using --nolocking.");
+		log_warn("WARNING: locking_type (%d) is deprecated, using --nolocking.", locking_type);
 		nolocking = 1;
 
 	} else if (locking_type == 4) {
-		log_warn("WARNING: locking_type is deprecated, using --readonly.");
+		log_warn("WARNING: locking_type (%d) is deprecated, using --sysinit --readonly.", locking_type);
+		sysinit = 1;
 		readonly = 1;
 
 	} else if (locking_type != 1) {
-		log_warn("WARNING: locking_type is deprecated, using file locking.");
+		log_warn("WARNING: locking_type (%d) is deprecated, using file locking.", locking_type);
 	}
 
 	if (arg_is_set(cmd, nolocking_ARG) || _cmd_no_meta_proc(cmd))
 		nolocking = 1;
+
+	if (arg_is_set(cmd, sysinit_ARG))
+		sysinit = 1;
 
 	if (arg_is_set(cmd, readonly_ARG))
 		readonly = 1;
@@ -2942,7 +2947,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		if (!_cmd_no_meta_proc(cmd))
 			log_warn("WARNING: File locking is disabled.");
 	} else {
-		if (!init_locking(cmd, arg_is_set(cmd, sysinit_ARG), readonly, arg_is_set(cmd, ignorelockingfailure_ARG))) {
+		if (!init_locking(cmd, sysinit, readonly, arg_is_set(cmd, ignorelockingfailure_ARG))) {
 			ret = ECMD_FAILED;
 			goto_out;
 		}
