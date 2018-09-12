@@ -149,7 +149,7 @@ xx(pvs,
 
 xx(pvscan,
    "List all physical volumes",
-   PERMITTED_READ_ONLY | LOCKD_VG_SH | IGNORE_PERSISTENT_FILTER)
+   PERMITTED_READ_ONLY | LOCKD_VG_SH)
 
 xx(segtypes,
    "List available segment types",
@@ -232,7 +232,7 @@ xx(vgs,
 
 xx(vgscan,
    "Search for all volume groups",
-   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH | IGNORE_PERSISTENT_FILTER)
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH)
 
 xx(vgsplit,
    "Move physical volumes into a new or existing volume group",

@@ -2731,11 +2731,6 @@ static int _cmd_no_meta_proc(struct cmd_context *cmd)
 	return cmd->cname->flags & NO_METADATA_PROCESSING;
 }
 
-static int _cmd_ignores_persistent_filter(struct cmd_context *cmd)
-{
-	return cmd->cname->flags & IGNORE_PERSISTENT_FILTER;
-}
-
 int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct dm_config_tree *config_string_cft, *config_profile_command_cft, *config_profile_metadata_cft;
@@ -2860,13 +2855,8 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (!cmd->initialized.connections && !_cmd_no_meta_proc(cmd) && !init_connections(cmd))
 		return_ECMD_FAILED;
 
-	/* Note: Load persistent cache only if we haven't refreshed toolcontext!
-	 *       If toolcontext has been refreshed, it means config has changed
-	 *       and we can't rely on persistent cache anymore.
-	 * Similarly ignore the persistent cache if the command is going to discard it regardless.
-	 */
 	if (!cmd->initialized.filters && !_cmd_no_meta_proc(cmd) &&
-	    !init_filters(cmd, !(refresh_done || _cmd_ignores_persistent_filter(cmd))))
+	    !init_filters(cmd, !refresh_done))
 		return_ECMD_FAILED;
 
 	if (arg_is_set(cmd, readonly_ARG))
