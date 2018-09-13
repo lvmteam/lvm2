@@ -121,7 +121,7 @@ Start the lvmlockd daemon.
 .br
 Use systemctl, a cluster resource agent, or run directly, e.g.
 .br
-systemctl start lvm2-lvmlockd
+systemctl start lvmlockd
 
 .SS 4. start lock manager
 

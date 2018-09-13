@@ -37,7 +37,7 @@ LVMRAIDMAN = lvmraid.7
 
 MAN5=lvm.conf.5
 MAN7=lvmsystemid.7 lvmreport.7 
-MAN8=lvm.8 lvmconf.8 lvmdump.8 lvm-fullreport.8 lvm-lvpoll.8 \
+MAN8=lvm.8 lvmdump.8 lvm-fullreport.8 lvm-lvpoll.8 \
      lvcreate.8 lvchange.8 lvmconfig.8 lvconvert.8 lvdisplay.8 \
      lvextend.8 lvreduce.8 lvremove.8 lvrename.8 lvresize.8 lvs.8 \
      lvscan.8 pvchange.8 pvck.8 pvcreate.8 pvdisplay.8 pvmove.8 pvremove.8 \

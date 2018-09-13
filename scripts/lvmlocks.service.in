@@ -1,7 +1,7 @@
 [Unit]
 Description=LVM locking start and stop
 Documentation=man:lvmlockd(8)
-After=lvm2-lvmlockd.service sanlock.service dlm.service
+After=lvmlockd.service sanlock.service dlm.service
 
 [Service]
 Type=oneshot

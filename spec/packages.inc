@@ -285,7 +285,8 @@ fi
 %{_mandir}/man8/lvmlockd.8.gz
 %{_mandir}/man8/lvmlockctl.8.gz
 %dir %{_default_locking_dir}
-%{_unitdir}/lvm2-lvmlockd.service
+%{_unitdir}/lvmlockd.service
+%{_unitdir}/lvmlocks.service
 %endif
 
 ##############################################################################
