@@ -1,13 +1,10 @@
 [Unit]
-Description=LVM2 lock daemon
+Description=LVM lock daemon
 Documentation=man:lvmlockd(8)
-After=lvm2-lvmetad.service
 
 [Service]
-Type=simple
-NonBlocking=true
-ExecStart=@SBINDIR@/lvmlockd -f
-Environment=SD_ACTIVATION=1
+Type=notify
+ExecStart=@SBINDIR@/lvmlockd --foreground
 PIDFile=@LVMLOCKD_PIDFILE@
 SendSIGKILL=no
 

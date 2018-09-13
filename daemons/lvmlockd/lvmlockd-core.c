@@ -35,6 +35,10 @@
 #include <sys/utsname.h>
 #include <sys/un.h>
 
+#ifdef USE_SD_NOTIFY
+#include <systemd/sd-daemon.h>
+#endif
+
 #define EXTERN
 #include "lvmlockd-internal.h"
 
@@ -5785,6 +5789,10 @@ static int main_loop(daemon_state *ds_arg)
 	setup_client_thread();
 	setup_worker_thread();
 	setup_restart();
+
+#ifdef USE_SD_NOTIFY
+	sd_notify(0, "READY=1");
+#endif
 
 	/*
 	 * Attempt to rejoin lockspaces and adopt locks from a previous
