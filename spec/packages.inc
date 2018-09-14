@@ -41,7 +41,6 @@ fi
 %{_sbindir}/lvdisplay
 %{_sbindir}/lvextend
 %{_sbindir}/lvm
-%{_sbindir}/lvmconf
 %{_sbindir}/lvmconfig
 %{_sbindir}/lvmdiskscan
 %{_sbindir}/lvmdump
@@ -99,7 +98,6 @@ fi
 %{_mandir}/man8/lvm-dumpconfig.8.gz
 %{_mandir}/man8/lvm.8.gz
 %{_mandir}/man8/lvm2-activation-generator.8.gz
-%{_mandir}/man8/lvmconf.8.gz
 %{_mandir}/man8/lvmconfig.8.gz
 %{_mandir}/man8/lvmdiskscan.8.gz
 %{_mandir}/man8/lvmdump.8.gz
