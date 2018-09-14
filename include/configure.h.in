@@ -90,9 +90,6 @@
 /* Use blkid wiping by default. */
 #undef DEFAULT_USE_BLKID_WIPING
 
-/* Use lvmetad by default. */
-#undef DEFAULT_USE_LVMETAD
-
 /* Use lvmlockd by default. */
 #undef DEFAULT_USE_LVMLOCKD
 
@@ -549,12 +546,6 @@
 
 /* Path to lvmconfig binary. */
 #undef LVMCONFIG_PATH
-
-/* Path to lvmetad pidfile. */
-#undef LVMETAD_PIDFILE
-
-/* Define to 1 to include code that uses lvmetad. */
-#undef LVMETAD_SUPPORT
 
 /* Path to lvmlockd pidfile. */
 #undef LVMLOCKD_PIDFILE
