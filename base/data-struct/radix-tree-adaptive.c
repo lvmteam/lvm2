@@ -1260,9 +1260,10 @@ static void _dump(FILE *out, struct value v, unsigned indent)
 				fprintf(out, "%x ", i);
 		fprintf(out, ">\n");
 
-		for (i = 0; i < 256; i++)
-			if (n48->keys[i] < 48)
-				_dump(out, n48->values[i], indent + 1);
+		for (i = 0; i < n48->nr_entries; i++) {
+			assert(n48->values[i].type != UNSET);
+			_dump(out, n48->values[i], indent + 1);
+		}
 		break;
 
 	case NODE256:
