@@ -567,14 +567,6 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 	if (rlocn->offset + rlocn->size > mdah->size)
 		wrap = (uint32_t) ((rlocn->offset + rlocn->size) - mdah->size);
 
-	if (wrap > rlocn->offset) {
-		log_error("Metadata for VG %s on %s at %llu size %llu is too large for circular buffer.",
-			  vgname, dev_name(area->dev),
-			  (unsigned long long)(area->start + rlocn->offset),
-			  (unsigned long long)rlocn->size);
-		goto out;
-	}
-
 	vg = text_read_metadata(fid, NULL, vg_fmtdata, use_previous_vg, area->dev, primary_mda,
 				(off_t) (area->start + rlocn->offset),
 				(uint32_t) (rlocn->size - wrap),
