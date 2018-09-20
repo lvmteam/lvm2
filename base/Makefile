@@ -12,7 +12,7 @@
 
 # Uncomment this to build the simple radix tree.  You'll need to make clean too.
 # Comment to build the advanced radix tree.
-base/data-struct/radix-tree.o: CFLAGS += -DSIMPLE_RADIX_TREE
+#base/data-struct/radix-tree.o: CFLAGS += -DSIMPLE_RADIX_TREE
 
 BASE_SOURCE=\
 	base/data-struct/radix-tree.c \

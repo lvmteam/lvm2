@@ -29,6 +29,8 @@ UNIT_SOURCE=\
 	test/unit/string_t.c \
 	test/unit/vdo_t.c
 
+test/unit/radix_tree_t.o: test/unit/rt_case1.c
+
 UNIT_DEPENDS=$(subst .c,.d,$(UNIT_SOURCE))
 UNIT_OBJECTS=$(UNIT_SOURCE:%.c=%.o)
 CLEAN_TARGETS+=$(UNIT_DEPENDS) $(UNIT_OBJECTS)
