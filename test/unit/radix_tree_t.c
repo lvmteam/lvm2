@@ -750,6 +750,65 @@ static void test_bcache_scenario2(void *fixture)
 
 //----------------------------------------------------------------
 
+struct key_parts {
+	uint32_t fd;
+	uint64_t b;
+} __attribute__ ((packed));
+
+union key {
+	struct key_parts parts;
+        uint8_t bytes[12];
+};
+
+static void __lookup_matches(struct radix_tree *rt, int fd, uint64_t b, uint64_t expected)
+{
+	union key k;
+	union radix_value v;
+
+	k.parts.fd = fd;
+	k.parts.b = b;
+	T_ASSERT(radix_tree_lookup(rt, k.bytes, k.bytes + sizeof(k.bytes), &v));
+	T_ASSERT(v.n == expected);
+}
+
+static void __lookup_fails(struct radix_tree *rt, int fd, uint64_t b)
+{
+	union key k;
+	union radix_value v;
+
+	k.parts.fd = fd;
+	k.parts.b = b;
+	T_ASSERT(!radix_tree_lookup(rt, k.bytes, k.bytes + sizeof(k.bytes), &v));
+}
+
+static void __insert(struct radix_tree *rt, int fd, uint64_t b, uint64_t n)
+{
+	union key k;
+	union radix_value v;
+
+	k.parts.fd = fd;
+	k.parts.b = b;
+	v.n = n;
+	T_ASSERT(radix_tree_insert(rt, k.bytes, k.bytes + sizeof(k.bytes), v));
+}
+
+static void __invalidate(struct radix_tree *rt, int fd)
+{
+	union key k;
+
+	k.parts.fd = fd;
+	radix_tree_remove_prefix(rt, k.bytes, k.bytes + sizeof(k.parts.fd));
+	radix_tree_is_well_formed(rt);
+}
+
+static void test_bcache_scenario3(void *fixture)
+{
+	struct radix_tree *rt = fixture;
+
+	#include "test/unit/rt_case1.c"
+}
+
+//----------------------------------------------------------------
 #define T(path, desc, fn) register_test(ts, "/base/data-struct/radix-tree/" path, desc, fn)
 
 void radix_tree_tests(struct dm_list *all_tests)
@@ -784,6 +843,7 @@ void radix_tree_tests(struct dm_list *all_tests)
 	T("destroy-calls-dtr", "destroy should call the dtr for all values", test_destroy_calls_dtr);
 	T("bcache-scenario", "A specific series of keys from a bcache scenario", test_bcache_scenario);
 	T("bcache-scenario-2", "A second series of keys from a bcache scenario", test_bcache_scenario2);
+	T("bcache-scenario-3", "A third series of keys from a bcache scenario", test_bcache_scenario3);
 
 	dm_list_add(all_tests, &ts->list);
 }
