@@ -597,16 +597,16 @@ static void _degrade_to_n48(struct node256 *n256, struct value *result)
         unsigned i, count = 0;
         struct node48 *n48 = zalloc(sizeof(*n48));
 
-	memset(n48->keys, 48, sizeof(n48->keys));
-
         n48->nr_entries = n256->nr_entries;
         for (i = 0; i < 256; i++) {
 		if (n256->values[i].type == UNSET)
-        		continue;
+			n48->keys[i] = 48;
 
-		n48->keys[i] = count;
-		n48->values[count] = n256->values[i];
-		count++;
+		else {
+			n48->keys[i] = count;
+			n48->values[count] = n256->values[i];
+			count++;
+		}
         }
 
         free(n256);
