@@ -487,11 +487,6 @@ static struct raw_locn *_read_metadata_location_vg(struct device_area *dev_area,
 /*
  * Determine offset for new metadata
  *
- * Adjusting new offsets to begin on 512 boundaries is fairly new, and metadata
- * previously begain immediately after the old, without rounding up.  The
- * rounding should have no practical benefit since it does not affect the
- * actual disk io.
- *
  * FIXME: The rounding can have a negative effect: when the current metadata
  * text size is just below the max, a command to remove something, that
  * *reduces* the text metadata size, can still be rejected for being too large,
