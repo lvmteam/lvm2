@@ -1036,6 +1036,7 @@ void radix_tree_iterate(struct radix_tree *rt, uint8_t *kb, uint8_t *ke,
 
 static bool _check_nodes(struct value *v, unsigned *count)
 {
+	uint64_t bits;
 	unsigned i, ncount;
 	struct value_chain *vc;
 	struct prefix_chain *pc;
@@ -1090,13 +1091,32 @@ static bool _check_nodes(struct value *v, unsigned *count)
 		return true;
 
 	case NODE48:
+		bits = 0;
 		n48 = v->value.ptr;
 		ncount = 0;
 		for (i = 0; i < 256; i++) {
 			if (n48->keys[i] < 48) {
+				if (n48->keys[i] >= n48->nr_entries) {
+					fprintf(stderr, "referencing value past nr_entries (n48)\n");
+					return false;
+				}
+
+				if (bits & (1ull << n48->keys[i])) {
+					fprintf(stderr, "duplicate entry (n48) %u\n", (unsigned) n48->keys[i]);
+					return false;
+				}
+				bits = bits | (1ull << n48->keys[i]);
 				ncount++;
+
 				if (!_check_nodes(n48->values + n48->keys[i], count))
 					return false;
+			}
+		}
+
+		for (i = 0; i < n48->nr_entries; i++) {
+			if (!(bits & (1ull << i))) {
+				fprintf(stderr, "not all values are referenced (n48)\n");
+				return false;
 			}
 		}
 
@@ -1105,6 +1125,12 @@ static bool _check_nodes(struct value *v, unsigned *count)
                                 n48->nr_entries, ncount);
 			return false;
 		}
+
+		for (i = 0; i < n48->nr_entries; i++)
+			if (n48->values[i].type == UNSET) {
+				fprintf(stderr, "value in UNSET (n48)\n");
+				return false;
+			}
 
 		for (i = n48->nr_entries; i < 48; i++)
 			if (n48->values[i].type != UNSET) {
