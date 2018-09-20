@@ -581,11 +581,10 @@ static void _degrade_to_n16(struct node48 *n48, struct value *result)
         for (i = 0; i < 256; i++) {
 	        if (n48->keys[i] < 48) {
 		        n16->keys[count] = i;
+		        n16->values[count] = n48->values[n48->keys[i]];
 		        count++;
 	        }
         }
-
-        memcpy(n16->values, n48->values, n48->nr_entries * sizeof(*n16->values));
 
         free(n48);
 
