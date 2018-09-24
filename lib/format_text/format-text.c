@@ -1441,20 +1441,19 @@ int read_metadata_location_summary(const struct format_type *fmt,
 	uint32_t wrap = 0;
 	unsigned int len = 0;
 	char buf[NAME_LEN + 1] __attribute__((aligned(8)));
-
-	/*
-	 * For the case where the metadata area is unused, we say that half of
-	 * it is available, based on the fact that we keep two consecutive
-	 * copies of the metadata in the area, so each copy can be as large as
-	 * half the area.  (Technically, one of those could be less than half
-	 * and another could be more than half.)
-	 */
-	if (mda_free_sectors)
-		*mda_free_sectors = ((dev_area->size - MDA_HEADER_SIZE) / 2) >> SECTOR_SHIFT;
+	uint64_t max_size;
 
 	if (!mdah) {
 		log_error(INTERNAL_ERROR "read_metadata_location_summary called with NULL pointer for mda_header");
 		return 0;
+	}
+
+	/*
+	 * For the case where the metadata area is unused, half is available.
+	 */
+	if (mda_free_sectors) {
+		max_size = ((mdah->size - MDA_HEADER_SIZE) / 2) - 512;
+		*mda_free_sectors = max_size >> SECTOR_SHIFT;
 	}
 
 	rlocn = mdah->raw_locns; /* slot0, committed metadata */
@@ -1567,12 +1566,11 @@ int read_metadata_location_summary(const struct format_type *fmt,
 
 	if (mda_free_sectors) {
 		/*
-		 * Report remaining space on the assumption that a single copy
-		 * of metadata can be as large as half the total metadata
-		 * space, minus 512 because each copy is rounded to begin
-		 * on a sector boundary.
+		 * Report remaining space given that a single copy of metadata
+		 * can be as large as half the total metadata space, minus 512
+		 * because each copy is rounded to begin on a sector boundary.
 		 */
-		uint64_t max_size = ((mdah->size - MDA_HEADER_SIZE) / 2) - 512;
+		max_size = ((mdah->size - MDA_HEADER_SIZE) / 2) - 512;
 
 		if (rlocn->size >= max_size)
 			*mda_free_sectors = UINT64_C(0);
