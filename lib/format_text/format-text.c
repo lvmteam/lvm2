@@ -682,6 +682,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	struct pv_list *pvl;
 	uint64_t old_start = 0, old_last = 0, old_size = 0, old_wrap = 0;
 	uint64_t new_start = 0, new_last = 0, new_size = 0, new_wrap = 0;
+	uint64_t max_size;
 	char *new_buf = NULL;
 	int overlap;
 	int found = 0;
@@ -718,6 +719,27 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 
 	if (!new_size || !new_buf) {
 		log_error("VG %s metadata writing failed", vg->name);
+		goto out;
+	}
+
+	/*
+	 * The max size of a single copy of text metadata.
+	 *
+	 * The space available for all text metadata is the size of the
+	 * metadata area (mdah->size) minus the sector used for the header.
+	 * Two copies of the text metadata must fit in this space, so it is
+	 * divided in two.  This result is then reduced by 512 because any
+	 * single copy of metadata is rounded to begin on a sector boundary.
+	 */
+
+	max_size = ((mdah->size - MDA_HEADER_SIZE) / 2) - 512;
+
+	if (new_size > max_size) {
+		log_error("VG %s metadata on %s (%llu bytes) exceeds maximum metadata size (%llu bytes)",
+			  vg->name,
+			  dev_name(mdac->area.dev),
+			  (unsigned long long)new_size,
+			  (unsigned long long)max_size);
 		goto out;
 	}
 
@@ -816,6 +838,13 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	/*
 	 * If the new copy of the metadata would overlap the old copy of the
 	 * metadata, it means that the circular metadata buffer is full.
+	 *
+	 * Given the max_size restriction above, two copies of metadata should
+	 * never overlap, so these overlap checks should not be technically
+	 * necessary, and a failure should not occur here.  It's left as a
+	 * sanity check.  For some unknown time, lvm did not enforce a
+	 * max_size, but rather detected the too-large failure by checking for
+	 * overlap between old and new.
 	 */
 
 	if (new_wrap && old_wrap) {
@@ -1540,16 +1569,15 @@ int read_metadata_location_summary(const struct format_type *fmt,
 		/*
 		 * Report remaining space on the assumption that a single copy
 		 * of metadata can be as large as half the total metadata
-		 * space.  Technically, it can be larger if the other copy is
-		 * less.  511 is subtracted from max because the next copy can
-		 * be rounded up by 511 bytes to start on a sector boundary.
+		 * space, minus 512 because each copy is rounded to begin
+		 * on a sector boundary.
 		 */
-		uint64_t max = (mdah->size - MDA_HEADER_SIZE - 511) / 2;
+		uint64_t max_size = ((mdah->size - MDA_HEADER_SIZE) / 2) - 512;
 
-		if (rlocn->size >= max)
+		if (rlocn->size >= max_size)
 			*mda_free_sectors = UINT64_C(0);
 		else
-			*mda_free_sectors = (max - rlocn->size) >> SECTOR_SHIFT;
+			*mda_free_sectors = (max_size - rlocn->size) >> SECTOR_SHIFT;
 	}
 
 	return 1;
