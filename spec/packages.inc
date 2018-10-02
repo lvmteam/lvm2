@@ -169,8 +169,8 @@ fi
 %dir %{_sysconfdir}/lvm/backup
 %dir %{_sysconfdir}/lvm/cache
 %dir %{_sysconfdir}/lvm/archive
-%ghost %dir %{_default_locking_dir}
-%ghost %dir %{_default_run_dir}
+%dir %{_default_locking_dir}
+%dir %{_default_run_dir}
 %if %{enable_systemd}
  %{_tmpfilesdir}/%{name}.conf
  %{_unitdir}/blk-availability.service
