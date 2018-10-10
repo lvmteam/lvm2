@@ -1151,7 +1151,7 @@ AS_IF([test "$NOTIFYDBUS_SUPPORT" = yes && test "BUILD_LVMDBUSD" = yes],
 dnl -- Enable Python dbus library
 
 if test "$BUILD_LVMDBUSD" = yes; then
-	unset PYTHON PYTHON_CONFIG
+	unset PYTHON_CONFIG
 	unset am_cv_pathless_PYTHON ac_cv_path_PYTHON am_cv_python_platform
 	unset am_cv_python_pythondir am_cv_python_version am_cv_python_pyexecdir
 	unset ac_cv_path_PYTHON_CONFIG ac_cv_path_ac_pt_PYTHON_CONFIG
