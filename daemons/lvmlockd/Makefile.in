@@ -45,7 +45,7 @@ LIBS += $(RT_LIBS) $(DAEMON_LIBS) $(PTHREAD_LIBS)
 
 ifeq ($(USE_SD_NOTIFY),yes)
 	CFLAGS += $(shell pkg-config --cflags libsystemd) -DUSE_SD_NOTIFY
-	LDFLAGS += $(shell pkg-config --libs libsystemd)
+	LIBS += $(shell pkg-config --libs libsystemd)
 endif
 
 lvmlockd: $(OBJECTS) $(top_builddir)/libdaemon/client/libdaemonclient.a \
