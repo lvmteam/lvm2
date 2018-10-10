@@ -1,3 +1,6 @@
+Version 1.02.153 - 
+====================================
+
 Version 1.02.151 - 10th October 2018
 ====================================
   Add hot fix to avoiding locking collision when monitoring thin-pools.
