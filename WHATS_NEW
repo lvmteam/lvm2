@@ -1,5 +1,6 @@
 Version 2.02.185 - 
 ==================================
+  Fix change of monitoring in clustered volumes.
   Improve -lXXX%VG modifier which improves cache segment estimation.
   Add synchronization with udev before removing cached devices.
   Fix missing growth of _pmsmare volume when extending _tmeta volume.

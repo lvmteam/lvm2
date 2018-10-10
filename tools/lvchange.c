@@ -148,7 +148,8 @@ static int _lvchange_pool_update(struct cmd_context *cmd,
  */
 
 static int _lvchange_monitoring(struct cmd_context *cmd,
-				struct logical_volume *lv)
+				struct logical_volume *lv,
+				int was_refreshed)
 {
 	struct lvinfo info;
 
@@ -163,8 +164,15 @@ static int _lvchange_monitoring(struct cmd_context *cmd,
 			log_verbose("Monitoring LV %s", display_lvname(lv));
 		else
 			log_verbose("Unmonitoring LV %s", display_lvname(lv));
-		if (!monitor_dev_for_events(cmd, lv, 0, dmeventd_monitor_mode()))
-			return_0;
+
+		if (!was_refreshed) {
+			if (locking_is_clustered()) {
+				/* FIXME: doesn't work when the LV is not lockholder */
+				if ((lv == lv_lock_holder(lv)) && !lv_refresh(cmd, lv))
+					return_0;
+			} else if (!monitor_dev_for_events(cmd, lv, 0, dmeventd_monitor_mode()))
+				return_0;
+		}
 	}
 
 	return 1;
@@ -176,7 +184,8 @@ static int _lvchange_monitoring(struct cmd_context *cmd,
  */
 
 static int _lvchange_background_polling(struct cmd_context *cmd,
-					struct logical_volume *lv)
+					struct logical_volume *lv,
+					int was_refreshed)
 {
 	struct lvinfo info;
 
@@ -187,7 +196,8 @@ static int _lvchange_background_polling(struct cmd_context *cmd,
 
 	if (background_polling()) {
 		log_verbose("Polling LV %s", display_lvname(lv));
-		lv_spawn_background_polling(cmd, lv);
+		if (!was_refreshed)
+			lv_spawn_background_polling(cmd, lv);
 	}
 
 	return 1;
@@ -1422,11 +1432,11 @@ static int _lvchange_refresh_single(struct cmd_context *cmd,
 	 * checking poll arg.  Pull that out of lv_refresh.
 	 */
 	if (arg_is_set(cmd, poll_ARG) &&
-	    !_lvchange_background_polling(cmd, lv))
+	    !_lvchange_background_polling(cmd, lv, 1))
 		return_ECMD_FAILED;
 
 	if (arg_is_set(cmd, monitor_ARG) &&
-	    !_lvchange_monitoring(cmd, lv))
+	    !_lvchange_monitoring(cmd, lv, 1))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
@@ -1584,11 +1594,11 @@ static int _lvchange_monitor_poll_single(struct cmd_context *cmd,
 				         struct processing_handle *handle)
 {
 	if (arg_is_set(cmd, monitor_ARG) &&
-	    !_lvchange_monitoring(cmd, lv))
+	    !_lvchange_monitoring(cmd, lv, 0))
 		return_ECMD_FAILED;
 
 	if (arg_is_set(cmd, poll_ARG) &&
-	    !_lvchange_background_polling(cmd, lv))
+	    !_lvchange_background_polling(cmd, lv, 0))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;

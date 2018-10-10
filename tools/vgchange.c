@@ -42,7 +42,16 @@ static int _monitor_lvs_in_vg(struct cmd_context *cmd,
 		if (lv_is_pvmove(lv))
 			continue;
 
-		if (!monitor_dev_for_events(cmd, lv, 0, reg)) {
+		if (locking_is_clustered()) {
+			if (lv != lv_lock_holder(lv))
+				continue;
+			if (!lv_refresh(cmd, lv)) {
+				stack;
+				r = 0;
+				continue;
+			}
+		} else if (!monitor_dev_for_events(cmd, lv, 0, reg)) {
+			stack;
 			r = 0;
 			continue;
 		}
@@ -157,8 +166,10 @@ static int _vgchange_monitoring(struct cmd_context *cmd, struct volume_group *vg
 
 	if (lvs_in_vg_activated(vg) &&
 	    dmeventd_monitor_mode() != DMEVENTD_MONITOR_IGNORE) {
-		if (!_monitor_lvs_in_vg(cmd, vg, dmeventd_monitor_mode(), &monitored))
+		if (!_monitor_lvs_in_vg(cmd, vg, dmeventd_monitor_mode(), &monitored)) {
+			stack;
 			r = 0;
+		}
 		log_print_unless_silent("%d logical volume(s) in volume group "
 					"\"%s\" %smonitored",
 					monitored, vg->name, (dmeventd_monitor_mode()) ? "" : "un");
