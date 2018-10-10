@@ -51,11 +51,19 @@ lvconvert - Change logical volume layout
 .ad b
 .br
 .ad l
+    \fB--compression\fP \fBy\fP|\fBn\fP
+.ad b
+.br
+.ad l
     \fB--config\fP \fIString\fP
 .ad b
 .br
 .ad l
  \fB-d\fP|\fB--debug\fP
+.ad b
+.br
+.ad l
+    \fB--deduplication\fP \fBy\fP|\fBn\fP
 .ad b
 .br
 .ad l
@@ -227,11 +235,19 @@ lvconvert - Change logical volume layout
 .ad b
 .br
 .ad l
+    \fB--vdopool\fP \fILV\fP
+.ad b
+.br
+.ad l
  \fB-v\fP|\fB--verbose\fP
 .ad b
 .br
 .ad l
     \fB--version\fP
+.ad b
+.br
+.ad l
+ \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
 .ad b
 .br
 .ad l
@@ -479,7 +495,7 @@ Split images from a raid1 or mirror LV and use them to create a new LV.
 .RE
 -
 
-Split images from a raid1 LV and track changes to origin.
+Split images from a raid1 LV and track changes to origin for later merge.
 .br
 .P
 \fBlvconvert\fP \fB--splitmirrors\fP \fINumber\fP \fB--trackchanges\fP \fILV\fP\fI_cache_raid1\fP
@@ -722,6 +738,33 @@ Convert LV to type cache-pool.
 .RE
 -
 
+Convert LV to type vdopool.
+.br
+.P
+\fBlvconvert\fP \fB--type\fP \fBvdo-pool\fP \fILV\fP\fI_linear_striped_cache_raid\fP
+.br
+.RS 4
+.ad l
+[ \fB-n\fP|\fB--name\fP \fILV\fP\fI_new\fP ]
+.ad b
+.br
+.ad l
+[ \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--compression\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+-
+
 Separate and keep the cache pool from a cache LV.
 .br
 .P
@@ -942,12 +985,7 @@ See \fBlvm\fP(8) for more information about allocation.
 .ad b
 .HP
 .ad l
-\fB-b\fP|\fB--background\fP
-.br
-If the operation requires polling, this option causes the command to
-return before the operation is complete, and polling is done in the
-background.
-.ad b
+\fB-b\fP|\fB--background\fP.ad b
 .HP
 .ad l
 \fB-H\fP|\fB--cache\fP
@@ -1027,6 +1065,13 @@ See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
 .HP
 .ad l
+\fB--compression\fP \fBy\fP|\fBn\fP
+.br
+Controls whether compression is enabled or disable for VDO volume.
+See \fBlvmvdo\fP(7) for more information about VDO usage.
+.ad b
+.HP
+.ad l
 \fB--config\fP \fIString\fP
 .br
 Config settings for the command. These override lvm.conf settings.
@@ -1040,6 +1085,13 @@ See \fBlvm.conf\fP(5) for more information about config.
 .br
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
+.ad b
+.HP
+.ad l
+\fB--deduplication\fP \fBy\fP|\fBn\fP
+.br
+Controls whether deduplication is enabled or disable for VDO volume.
+See \fBlvmvdo\fP(7) for more information about VDO usage.
 .ad b
 .HP
 .ad l
@@ -1295,6 +1347,8 @@ Before the separation, the cache is flushed. Also see --uncache.
 Splits the specified number of images from a raid1 or mirror LV
 and uses them to create a new LV. If --trackchanges is also specified,
 changes to the raid1 LV are tracked while the split LV remains detached.
+If --name is specified, then the images are permanently split from the
+original LV and changes are not tracked.
 .ad b
 .HP
 .ad l
@@ -1368,10 +1422,12 @@ The name of a thin pool LV.
 .br
 Can be used with --splitmirrors on a raid1 LV. This causes
 changes to the original raid1 LV to be tracked while the split images
-remain detached. This allows the read-only detached image(s) to be
-merged efficiently back into the raid1 LV later. Only the regions with
-changed data are resynchronized during merge. (This option only applies
-when using the raid1 LV type.)
+remain detached. This is a temporary state that allows the read-only
+detached image to be merged efficiently back into the raid1 LV later.
+Only the regions with changed data are resynchronized during merge.
+While a raid1 LV is tracking changes, operations on it are limited to
+merging the split image (see --mergemirrors) or permanently splitting
+the image (see --splitmirrors with --name.
 .ad b
 .HP
 .ad l
@@ -1404,6 +1460,13 @@ or a profile.
 .ad b
 .HP
 .ad l
+\fB--vdopool\fP \fILV\fP
+.br
+The name of a VDO pool LV.
+See \fBlvmvdo\fP(7) for more information about VDO usage.
+.ad b
+.HP
+.ad l
 \fB-v\fP|\fB--verbose\fP ...
 .br
 Set verbose level. Repeat from 1 to 4 times to increase the detail
@@ -1414,6 +1477,23 @@ of messages sent to stdout and stderr.
 \fB--version\fP
 .br
 Display version information.
+.ad b
+.HP
+.ad l
+\fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
+.br
+The virtual size of a new thin LV.
+See \fBlvmthin\fP(7) for more information about LVM thin provisioning.
+Using virtual size (-V) and actual size (-L) together creates
+a sparse LV.
+lvm.conf global/sparse_segtype_default determines the
+default segment type used to create a sparse LV.
+Anything written to a sparse LV will be returned when reading from it.
+Reading from other areas of the LV will return blocks of zeros.
+When using a snapshot to create a sparse LV, a hidden virtual device
+is created using the zero target, and the LV has the suffix _vorigin.
+Snapshots are less efficient than thin provisioning when creating
+large sparse LVs (GiB).
 .ad b
 .HP
 .ad l
@@ -1640,6 +1720,37 @@ Convert LV to type cache (infers --type cache).
 .br
 .ad l
 [    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+-
+
+Convert LV to type vdopool.
+.br
+.P
+\fBlvconvert\fP \fB--vdopool\fP \fILV\fP\fI_linear_striped_cache_raid\fP
+.br
+.RS 4
+.ad l
+[ \fB-n\fP|\fB--name\fP \fILV\fP\fI_new\fP ]
+.ad b
+.br
+.ad l
+[ \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--type\fP \fBvdo-pool\fP ]
+.ad b
+.br
+.ad l
+[    \fB--compression\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]

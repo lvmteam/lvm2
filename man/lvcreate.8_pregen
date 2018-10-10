@@ -59,6 +59,10 @@ lvcreate - Create a logical volume
 .ad b
 .br
 .ad l
+    \fB--compression\fP \fBy\fP|\fBn\fP
+.ad b
+.br
+.ad l
     \fB--config\fP \fIString\fP
 .ad b
 .br
@@ -68,6 +72,10 @@ lvcreate - Create a logical volume
 .br
 .ad l
  \fB-d\fP|\fB--debug\fP
+.ad b
+.br
+.ad l
+    \fB--deduplication\fP \fBy\fP|\fBn\fP
 .ad b
 .br
 .ad l
@@ -227,6 +235,14 @@ lvcreate - Create a logical volume
 .ad b
 .br
 .ad l
+    \fB--vdo\fP
+.ad b
+.br
+.ad l
+    \fB--vdopool\fP \fILV\fP
+.ad b
+.br
+.ad l
  \fB-v\fP|\fB--verbose\fP
 .ad b
 .br
@@ -286,6 +302,132 @@ options, even though it is typically used. When the name is not
 specified, a new LV name is generated with the "lvol" prefix and a unique
 numeric suffix.
 .SH USAGE
+Create an LV that returns VDO when used.
+.br
+.P
+\fBlvcreate\fP \fB--type\fP \fBvdo\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+.br
+.RS 4
+.ad l
+[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+.ad b
+.br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--vdo\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
+.ad l
+[    \fB--compression\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
+-
+
 Create a linear LV.
 .br
 .P
@@ -297,7 +439,91 @@ Create a linear LV.
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [    \fB--type\fP \fBlinear\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -322,477 +548,12 @@ Create a striped LV (infers --type striped).
 [ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
-[ COMMON_OPTIONS ]
-.RE
-.br
-.RS 4
-[ \fIPV\fP ... ]
-.RE
--
-
-Create a raid1 or mirror LV (infers --type raid1|mirror).
-.br
-.P
-\fBlvcreate\fP \fB-m\fP|\fB--mirrors\fP \fINumber\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
-.br
-.RS 4
-.ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
-.ad b
-.br
-.ad l
-[ \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--mirrorlog\fP \fBcore\fP|\fBdisk\fP ]
-.ad b
-.br
-.ad l
-[    \fB--[raid]minrecoveryrate\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-[ COMMON_OPTIONS ]
-.RE
-.br
-.RS 4
-[ \fIPV\fP ... ]
-.RE
--
-
-Create a raid LV (a specific raid level must be used, e.g. raid1).
-.br
-.P
-\fBlvcreate\fP \fB--type\fP \fBraid\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
-.br
-.RS 4
-.ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
-.ad b
-.br
-.ad l
-[ \fB-m\fP|\fB--mirrors\fP \fINumber\fP ]
-.ad b
-.br
-.ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
-.ad b
-.br
-.ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-.ad l
-[ \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--[raid]minrecoveryrate\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-[ COMMON_OPTIONS ]
-.RE
-.br
-.RS 4
-[ \fIPV\fP ... ]
-.RE
--
-
-Create a raid10 LV.
-.br
-.P
-\fBlvcreate\fP \fB-m\fP|\fB--mirrors\fP \fINumber\fP \fB-i\fP|\fB--stripes\fP \fINumber\fP
-.RS 5
- \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
-.RE
-.br
-.RS 4
-.ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
-.ad b
-.br
-.ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-.ad l
-[ \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--[raid]minrecoveryrate\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-[ COMMON_OPTIONS ]
-.RE
-.br
-.RS 4
-[ \fIPV\fP ... ]
-.RE
--
-
-Create a COW snapshot LV of an origin LV.
-.br
-.P
-\fBlvcreate\fP \fB-s\fP|\fB--snapshot\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fILV\fP
-.br
-.RS 4
-.ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
-.ad b
-.br
-.ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
-.ad b
-.br
-.ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-.ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--type\fP \fBsnapshot\fP ]
-.ad b
-.br
-[ COMMON_OPTIONS ]
-.RE
-.br
-.RS 4
-[ \fIPV\fP ... ]
-.RE
--
-
-Create a thin pool.
-.br
-.P
-\fBlvcreate\fP \fB--type\fP \fBthin-pool\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
-.br
-.RS 4
-.ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
-.ad b
-.br
-.ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-.ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
-.ad b
-.br
-.ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--thinpool\fP \fILV\fP\fI_new\fP ]
-.ad b
-.br
-.ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
-.ad b
-.br
-.ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
-.ad b
-.br
-.ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
-.ad b
-.br
-[ COMMON_OPTIONS ]
-.RE
-.br
-.RS 4
-[ \fIPV\fP ... ]
-.RE
--
-
-Create a cache pool.
-.br
-.P
-\fBlvcreate\fP \fB--type\fP \fBcache-pool\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
-.br
-.RS 4
-.ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
-.ad b
-.br
-.ad l
-[ \fB-H\fP|\fB--cache\fP ]
-.ad b
-.br
-.ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
-.ad b
-.br
-.ad l
-[    \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
-.ad b
-.br
-.ad l
-[    \fB--cachepolicy\fP \fIString\fP ]
-.ad b
-.br
-.ad l
-[    \fB--cachesettings\fP \fIString\fP ]
-.ad b
-.br
-.ad l
-[    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
-.ad b
-.br
-[ COMMON_OPTIONS ]
-.RE
-.br
-.RS 4
-[ \fIPV\fP ... ]
-.RE
--
-
-Create a thin LV in a thin pool (infers --type thin).
-.br
-.P
-\fBlvcreate\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fB--thinpool\fP \fILV\fP\fI_thinpool\fP \fIVG\fP
-.br
-.RS 4
-.ad l
-[ \fB-T\fP|\fB--thin\fP ]
-.ad b
-.br
-.ad l
-[    \fB--type\fP \fBthin\fP ]
-.ad b
-.br
-.ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
-.ad b
-.br
-.ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
-.ad b
-.br
-[ COMMON_OPTIONS ]
-.RE
-.br
--
-
-Create a thin LV that is a snapshot of an existing thin LV 
-.br
-(infers --type thin).
-.br
-.P
-\fBlvcreate\fP \fB-s\fP|\fB--snapshot\fP \fILV\fP\fI_thin\fP
-.br
-.RS 4
-.ad l
-[    \fB--type\fP \fBthin\fP ]
-.ad b
-.br
-.ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
-.ad b
-.br
-.ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
-.ad b
-.br
-[ COMMON_OPTIONS ]
-.RE
-.br
--
-
-Create a thin LV that is a snapshot of an external origin LV.
-.br
-.P
-\fBlvcreate\fP \fB--type\fP \fBthin\fP \fB--thinpool\fP \fILV\fP\fI_thinpool\fP \fILV\fP
-.br
-.RS 4
-.ad l
-[ \fB-T\fP|\fB--thin\fP ]
-.ad b
-.br
-.ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
-.ad b
-.br
-.ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
-.ad b
-.br
-.ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
-.ad b
-.br
-[ COMMON_OPTIONS ]
-.RE
-.br
--
-
-Create a thin LV, first creating a thin pool for it, 
-.br
-where the new thin pool is named by the --thinpool arg.
-.br
-.P
-\fBlvcreate\fP \fB--type\fP \fBthin\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
-.RS 5
- \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fB--thinpool\fP \fILV\fP\fI_new\fP
-.RE
-.br
-.RS 4
-.ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
-.ad b
-.br
-.ad l
-[ \fB-T\fP|\fB--thin\fP ]
-.ad b
-.br
-.ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-.ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
-.ad b
-.br
-.ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
-.ad b
-.br
-.ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
-.ad b
-.br
-.ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
-.ad b
-.br
-[ COMMON_OPTIONS ]
-.RE
-.br
-.RS 4
-[ \fIPV\fP ... ]
-.RE
--
-
-Create a cache LV, first creating a new origin LV, 
-.br
-then combining it with the existing cache pool named 
-.br
-by the --cachepool arg.
-.br
-.P
-\fBlvcreate\fP \fB--type\fP \fBcache\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
-.RS 5
- \fB--cachepool\fP \fILV\fP\fI_cachepool\fP \fIVG\fP
-.RE
-.br
-.RS 4
-.ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
-.ad b
-.br
-.ad l
-[ \fB-H\fP|\fB--cache\fP ]
-.ad b
-.br
-.ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-.ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
-.ad b
-.br
-.ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
-.ad b
-.br
-.ad l
-[    \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
-.ad b
-.br
-.ad l
-[    \fB--cachepolicy\fP \fIString\fP ]
-.ad b
-.br
-.ad l
-[    \fB--cachesettings\fP \fIString\fP ]
-.ad b
-.br
-.ad l
-[    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
-.ad b
-.br
-[ COMMON_OPTIONS ]
-.RE
-.br
-.RS 4
-[ \fIPV\fP ... ]
-.RE
--
-
-Common options for command:
-.
-.RS 4
-.ad l
-[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
-.ad b
-.br
 .ad l
 [ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
 .ad b
 .br
 .ad l
@@ -870,6 +631,1396 @@ Common options for command:
 .ad l
 [    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
+-
+
+Create a raid1 or mirror LV (infers --type raid1|mirror).
+.br
+.P
+\fBlvcreate\fP \fB-m\fP|\fB--mirrors\fP \fINumber\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+.br
+.RS 4
+.ad l
+[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+.ad b
+.br
+.ad l
+[ \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--mirrorlog\fP \fBcore\fP|\fBdisk\fP ]
+.ad b
+.br
+.ad l
+[    \fB--[raid]minrecoveryrate\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
+-
+
+Create a raid LV (a specific raid level must be used, e.g. raid1).
+.br
+.P
+\fBlvcreate\fP \fB--type\fP \fBraid\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+.br
+.RS 4
+.ad l
+[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+.ad b
+.br
+.ad l
+[ \fB-m\fP|\fB--mirrors\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--[raid]minrecoveryrate\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
+-
+
+Create a raid10 LV.
+.br
+.P
+\fBlvcreate\fP \fB-m\fP|\fB--mirrors\fP \fINumber\fP \fB-i\fP|\fB--stripes\fP \fINumber\fP
+.RS 5
+ \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+.RE
+.br
+.RS 4
+.ad l
+[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+.ad b
+.br
+.ad l
+[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--[raid]minrecoveryrate\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
+-
+
+Create a COW snapshot LV of an origin LV.
+.br
+.P
+\fBlvcreate\fP \fB-s\fP|\fB--snapshot\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fILV\fP
+.br
+.RS 4
+.ad l
+[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+.ad b
+.br
+.ad l
+[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--type\fP \fBsnapshot\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
+-
+
+Create a thin pool.
+.br
+.P
+\fBlvcreate\fP \fB--type\fP \fBthin-pool\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+.br
+.RS 4
+.ad l
+[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+.ad b
+.br
+.ad l
+[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--thinpool\fP \fILV\fP\fI_new\fP ]
+.ad b
+.br
+.ad l
+[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+.ad b
+.br
+.ad l
+[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
+-
+
+Create a cache pool.
+.br
+.P
+\fBlvcreate\fP \fB--type\fP \fBcache-pool\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+.br
+.RS 4
+.ad l
+[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+.ad b
+.br
+.ad l
+[ \fB-H\fP|\fB--cache\fP ]
+.ad b
+.br
+.ad l
+[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachepolicy\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachesettings\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
+-
+
+Create a thin LV in a thin pool (infers --type thin).
+.br
+.P
+\fBlvcreate\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fB--thinpool\fP \fILV\fP\fI_thinpool\fP \fIVG\fP
+.br
+.RS 4
+.ad l
+[ \fB-T\fP|\fB--thin\fP ]
+.ad b
+.br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--type\fP \fBthin\fP ]
+.ad b
+.br
+.ad l
+[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+.ad b
+.br
+.ad l
+[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+-
+
+Create a thin LV that is a snapshot of an existing thin LV 
+.br
+(infers --type thin).
+.br
+.P
+\fBlvcreate\fP \fB-s\fP|\fB--snapshot\fP \fILV\fP\fI_thin\fP
+.br
+.RS 4
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--type\fP \fBthin\fP ]
+.ad b
+.br
+.ad l
+[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+.ad b
+.br
+.ad l
+[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+-
+
+Create a thin LV that is a snapshot of an external origin LV.
+.br
+.P
+\fBlvcreate\fP \fB--type\fP \fBthin\fP \fB--thinpool\fP \fILV\fP\fI_thinpool\fP \fILV\fP
+.br
+.RS 4
+.ad l
+[ \fB-T\fP|\fB--thin\fP ]
+.ad b
+.br
+.ad l
+[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+.ad b
+.br
+.ad l
+[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+-
+
+Create a thin LV, first creating a thin pool for it, 
+.br
+where the new thin pool is named by the --thinpool arg.
+.br
+.P
+\fBlvcreate\fP \fB--type\fP \fBthin\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
+.RS 5
+ \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fB--thinpool\fP \fILV\fP\fI_new\fP
+.RE
+.br
+.RS 4
+.ad l
+[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+.ad b
+.br
+.ad l
+[ \fB-T\fP|\fB--thin\fP ]
+.ad b
+.br
+.ad l
+[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+.ad b
+.br
+.ad l
+[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
+-
+
+Create a cache LV, first creating a new origin LV, 
+.br
+then combining it with the existing cache pool named 
+.br
+by the --cachepool arg.
+.br
+.P
+\fBlvcreate\fP \fB--type\fP \fBcache\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
+.RS 5
+ \fB--cachepool\fP \fILV\fP\fI_cachepool\fP \fIVG\fP
+.RE
+.br
+.RS 4
+.ad l
+[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+.ad b
+.br
+.ad l
+[ \fB-H\fP|\fB--cache\fP ]
+.ad b
+.br
+.ad l
+[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachepolicy\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachesettings\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
+-
+
+Common options for command:
+.
+.RS 4
 .RE
 
 Common options for lvm:
@@ -1064,6 +2215,13 @@ See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
 .HP
 .ad l
+\fB--compression\fP \fBy\fP|\fBn\fP
+.br
+Controls whether compression is enabled or disable for VDO volume.
+See \fBlvmvdo\fP(7) for more information about VDO usage.
+.ad b
+.HP
+.ad l
 \fB--config\fP \fIString\fP
 .br
 Config settings for the command. These override lvm.conf settings.
@@ -1087,6 +2245,13 @@ are already contiguous.
 .br
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
+.ad b
+.HP
+.ad l
+\fB--deduplication\fP \fBy\fP|\fBn\fP
+.br
+Controls whether deduplication is enabled or disable for VDO volume.
+See \fBlvmvdo\fP(7) for more information about VDO usage.
 .ad b
 .HP
 .ad l
@@ -1475,6 +2640,21 @@ Use inferred types with care because it can lead to unexpected results.
 .ad b
 .HP
 .ad l
+\fB--vdo\fP
+.br
+Specifies the command is handling VDO LV.
+See --type vdo.
+See \fBlvmvdo\fP(7) for more information about VDO usage.
+.ad b
+.HP
+.ad l
+\fB--vdopool\fP \fILV\fP
+.br
+The name of a VDO pool LV.
+See \fBlvmvdo\fP(7) for more information about VDO usage.
+.ad b
+.HP
+.ad l
 \fB-v\fP|\fB--verbose\fP ...
 .br
 Set verbose level. Repeat from 1 to 4 times to increase the detail
@@ -1597,9 +2777,237 @@ Create an LV that returns errors when used.
 [ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
 [ COMMON_OPTIONS ]
 .RE
 .br
+-
+
+Create an VDO LV with VDO pool.
+.br
+.P
+\fBlvcreate\fP \fB--vdo\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+.br
+.RS 4
+.ad l
+[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+.ad b
+.br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
+.ad l
+[    \fB--compression\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
+-
+
+Create an VDO LV using existing VDO pool.
+.br
+.P
+\fBlvcreate\fP \fB--vdopool\fP \fILV\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fIVG\fP
+.br
+.RS 4
+.ad l
+[    \fB--vdo\fP ]
+.ad b
+.br
+.ad l
+[    \fB--type\fP \fBvdo\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
 -
 
 Create an LV that returns zeros when read.
@@ -1610,6 +3018,90 @@ Create an LV that returns zeros when read.
 .RS 4
 .ad l
 [ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+.ad b
+.br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1625,6 +3117,90 @@ Create a linear LV.
 .RS 4
 .ad l
 [ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+.ad b
+.br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1651,6 +3227,90 @@ Create a striped LV (also see lvcreate --stripes).
 .br
 .ad l
 [ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1688,7 +3348,91 @@ Create a mirror LV (also see --type raid1).
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [    \fB--mirrorlog\fP \fBcore\fP|\fBdisk\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1727,6 +3471,90 @@ Create a COW snapshot LV of an origin LV
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
 [ COMMON_OPTIONS ]
 .RE
 .br
@@ -1758,6 +3586,90 @@ Create a sparse COW snapshot LV of a virtual origin LV
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
 [ COMMON_OPTIONS ]
 .RE
 .br
@@ -1784,7 +3696,91 @@ Create a sparse COW snapshot LV of a virtual origin LV.
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [    \fB--type\fP \fBsnapshot\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1807,6 +3803,54 @@ Create a thin pool (infers --type thin-pool).
 .br
 .ad l
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
@@ -1835,6 +3879,42 @@ Create a thin pool (infers --type thin-pool).
 .br
 .ad l
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1866,6 +3946,54 @@ Create a thin pool named by the --thinpool arg
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
 .ad b
 .br
@@ -1891,6 +4019,42 @@ Create a thin pool named by the --thinpool arg
 .br
 .ad l
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1925,6 +4089,54 @@ Create a cache pool named by the --cachepool arg
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
@@ -1946,6 +4158,42 @@ Create a cache pool named by the --cachepool arg
 .br
 .ad l
 [    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1974,6 +4222,54 @@ Create a thin LV in a thin pool.
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
@@ -1987,6 +4283,42 @@ Create a thin LV in a thin pool.
 .br
 .ad l
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2007,11 +4339,95 @@ Create a thin LV in a thin pool named in the first arg
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2034,6 +4450,54 @@ naming pool.)
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [    \fB--type\fP \fBthin\fP ]
 .ad b
 .br
@@ -2043,6 +4507,42 @@ naming pool.)
 .br
 .ad l
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2061,11 +4561,95 @@ Create a thin LV that is a snapshot of an existing thin LV.
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2082,6 +4666,54 @@ Create a thin LV that is a snapshot of an existing thin LV
 .br
 .RS 4
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [    \fB--type\fP \fBthin\fP ]
 .ad b
 .br
@@ -2091,6 +4723,42 @@ Create a thin LV that is a snapshot of an existing thin LV
 .br
 .ad l
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2107,6 +4775,54 @@ Create a thin LV that is a snapshot of an external origin LV
 .br
 .RS 4
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [    \fB--type\fP \fBthin\fP ]
 .ad b
 .br
@@ -2116,6 +4832,42 @@ Create a thin LV that is a snapshot of an external origin LV
 .br
 .ad l
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2149,6 +4901,54 @@ where the new thin pool is named by the --thinpool arg
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
 .ad b
 .br
@@ -2170,6 +4970,42 @@ where the new thin pool is named by the --thinpool arg
 .br
 .ad l
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2206,6 +5042,54 @@ where the new thin pool is named by the --thinpool arg
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
 .ad b
 .br
@@ -2227,6 +5111,42 @@ where the new thin pool is named by the --thinpool arg
 .br
 .ad l
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2265,6 +5185,54 @@ arg is a VG name.
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
 .ad b
 .br
@@ -2286,6 +5254,42 @@ arg is a VG name.
 .br
 .ad l
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2320,6 +5324,54 @@ arg is a VG name (variant, infers --type thin).
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
 .ad b
 .br
@@ -2341,6 +5393,42 @@ arg is a VG name (variant, infers --type thin).
 .br
 .ad l
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2380,6 +5468,54 @@ config setting sparse_segtype_default.
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
 .ad b
 .br
@@ -2405,6 +5541,42 @@ config setting sparse_segtype_default.
 .br
 .ad l
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2438,6 +5610,54 @@ by the --cachepool arg (variant, infers --type cache).
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
 .ad b
 .br
@@ -2463,6 +5683,42 @@ by the --cachepool arg (variant, infers --type cache).
 .br
 .ad l
 [    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2496,6 +5752,54 @@ in the first arg (variant, also use --cachepool).
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
 .ad b
 .br
@@ -2525,6 +5829,42 @@ in the first arg (variant, also use --cachepool).
 .br
 .ad l
 [    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2562,6 +5902,54 @@ to type cache after creating a new cache pool LV to use
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+.ad b
+.br
+.ad l
+[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+.ad b
+.br
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+.ad b
+.br
+.ad l
+[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
 .ad b
 .br
@@ -2591,6 +5979,42 @@ to type cache after creating a new cache pool LV to use
 .br
 .ad l
 [    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--addtag\fP \fITag\fP ]
+.ad b
+.br
+.ad l
+[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--minor\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--nosync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]

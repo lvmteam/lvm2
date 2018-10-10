@@ -195,12 +195,7 @@ Enabling this is strongly advised! See \fBvgcfgbackup\fP(8) for more information
 .ad b
 .HP
 .ad l
-\fB-b\fP|\fB--background\fP
-.br
-If the operation requires polling, this option causes the command to
-return before the operation is complete, and polling is done in the
-background.
-.ad b
+\fB-b\fP|\fB--background\fP.ad b
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP

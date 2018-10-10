@@ -129,7 +129,7 @@ Display PV information.
 .RE
 .br
 
-Populate the lvmetad cache by scanning PVs.
+Autoactivate a VG when all PVs are online.
 .br
 .P
 \fBpvscan\fP \fB--cache\fP
@@ -239,17 +239,12 @@ Auto-activate LVs in a VG when the PVs scanned have completed the VG.
 .ad b
 .HP
 .ad l
-\fB-b\fP|\fB--background\fP
-.br
-If the operation requires polling, this option causes the command to
-return before the operation is complete, and polling is done in the
-background.
-.ad b
+\fB-b\fP|\fB--background\fP.ad b
 .HP
 .ad l
 \fB--cache\fP
 .br
-Scan one or more devices and send the metadata to lvmetad.
+Scan one or more devices and record that they are online.
 .ad b
 .HP
 .ad l

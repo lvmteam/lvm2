@@ -3,11 +3,9 @@
 lvscan - List all logical volumes in all volume groups
 .
 .SH SYNOPSIS
-\fBlvscan\fP \fIoption_args\fP
+\fBlvscan\fP
 .br
     [ \fIoption_args\fP ]
-.br
-    [ \fIposition_args\fP ]
 .br
 .SH DESCRIPTION
 lvscan scans all VGs or all supported LVM block devices in the system for
@@ -23,23 +21,6 @@ comprehensive information about LVs.
 [ \fB-a\fP|\fB--all\fP ]
 .ad b
 .br
-[ COMMON_OPTIONS ]
-.RE
-.br
-
-\fBlvscan\fP \fB--cache\fP
-.br
-.RS 4
-[ COMMON_OPTIONS ]
-.RE
-.br
-.RS 4
-[ \fILV\fP ... ]
-.RE
-
-Common options for command:
-.
-.RS 4
 .ad l
 [ \fB-b\fP|\fB--blockdevice\fP ]
 .ad b
@@ -55,7 +36,10 @@ Common options for command:
 .ad l
 [    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
+.br
+[ COMMON_OPTIONS ]
 .RE
+.br
 
 Common options for lvm:
 .
@@ -130,12 +114,6 @@ which are not independently accessible, e.g. not mountable.
 \fB-b\fP|\fB--blockdevice\fP
 .br
 No longer used.
-.ad b
-.HP
-.ad l
-\fB--cache\fP
-.br
-Scan the devices used by an LV and send the metadata to lvmetad.
 .ad b
 .HP
 .ad l
@@ -270,11 +248,6 @@ answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .ad b
 .SH VARIABLES
-.HP
-\fILV\fP
-.br
-Logical Volume name.  See \fBlvm\fP(8) for valid names.
-An LV positional arg generally includes the VG name and LV name, e.g. VG/LV.
 .HP
 \fIString\fP
 .br

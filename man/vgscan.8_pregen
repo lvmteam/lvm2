@@ -14,10 +14,6 @@ vgscan scans all supported LVM block devices in the system for VGs.
 .br
 .RS 4
 .ad l
-[    \fB--cache\fP ]
-.ad b
-.br
-.ad l
 [    \fB--ignorelockingfailure\fP ]
 .ad b
 .br
@@ -97,12 +93,6 @@ Common options for lvm:
 .ad b
 .RE
 .SH OPTIONS
-.HP
-.ad l
-\fB--cache\fP
-.br
-Scan all devices and send the metadata to lvmetad.
-.ad b
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
