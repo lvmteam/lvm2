@@ -609,7 +609,7 @@ cfg_runtime(allocation_thin_pool_chunk_size_CFG, "thin_pool_chunk_size", allocat
 cfg(allocation_physical_extent_size_CFG, "physical_extent_size", allocation_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_EXTENT_SIZE, vsn(2, 2, 112), NULL, 0, NULL,
 	"Default physical extent size in KiB to use for new VGs.\n")
 
-#define VDO_1ST_VSN vsn(3, 0, 0)
+#define VDO_1ST_VSN vsn(2, 3, 0)
 cfg(allocation_vdo_use_compression_CFG, "vdo_use_compression", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_USE_COMPRESSION, VDO_1ST_VSN, NULL, 0, NULL,
 	"Enables or disables compression when creating a VDO volume.\n"
 	"Compression may be disabled if necessary to maximize performance\n"
