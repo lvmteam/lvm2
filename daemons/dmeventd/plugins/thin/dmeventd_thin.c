@@ -286,7 +286,7 @@ void process_event(struct dm_task *dmt,
 		if (state->fails++ <= state->max_fails) {
 			log_debug("Postponing frequently failing policy (%u <= %u).",
 				  state->fails - 1, state->max_fails);
-			return;
+			goto out;
 		}
 		if (state->max_fails < MAX_FAILS)
 			state->max_fails <<= 1;
