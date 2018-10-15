@@ -465,12 +465,12 @@ static struct raw_locn *_read_metadata_location_vg(struct device_area *dev_area,
 	memset(vgnamebuf, 0, sizeof(vgnamebuf));
 
 	if (!dev_read_bytes(dev_area->dev, dev_area->start + rlocn->offset, NAME_LEN, vgnamebuf))
-		return_NULL;
+		goto fail;
 
 	if (!strncmp(vgnamebuf, vgname, len = strlen(vgname)) &&
 	    (isspace(vgnamebuf[len]) || vgnamebuf[len] == '{'))
 		return rlocn;
-
+ fail:
 	log_error("Metadata on %s at %llu has wrong VG name \"%s\" expected %s.",
 		  dev_name(dev_area->dev),
 		  (unsigned long long)(dev_area->start + rlocn->offset),
@@ -1439,7 +1439,7 @@ int read_metadata_location_summary(const struct format_type *fmt,
 	struct raw_locn *rlocn;
 	uint32_t wrap = 0;
 	unsigned int len = 0;
-	char buf[NAME_LEN + 1] __attribute__((aligned(8)));
+	char namebuf[NAME_LEN + 1] __attribute__((aligned(8)));
 	uint64_t max_size;
 
 	if (!mdah) {
@@ -1468,20 +1468,22 @@ int read_metadata_location_summary(const struct format_type *fmt,
 		return 0;
 	}
 
-	if (!dev_read_bytes(dev_area->dev, dev_area->start + rlocn->offset, NAME_LEN, buf))
-		return_0;
+	memset(namebuf, 0, sizeof(namebuf));
 
-	while (buf[len] && !isspace(buf[len]) && buf[len] != '{' &&
+	if (!dev_read_bytes(dev_area->dev, dev_area->start + rlocn->offset, NAME_LEN, namebuf))
+		stack;
+
+	while (namebuf[len] && !isspace(namebuf[len]) && namebuf[len] != '{' &&
 	       len < (NAME_LEN - 1))
 		len++;
 
-	buf[len] = '\0';
+	namebuf[len] = '\0';
 
 	/*
 	 * Check that the text metadata in the circular buffer begins with a
 	 * valid vg name.
 	 */
-	if (!validate_name(buf)) {
+	if (!validate_name(namebuf)) {
 		log_error("Metadata location on %s at %llu begins with invalid VG name.",
 			  dev_name(dev_area->dev),
 			  (unsigned long long)(dev_area->start + rlocn->offset));
