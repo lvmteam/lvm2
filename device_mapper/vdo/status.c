@@ -184,7 +184,7 @@ static bool _parse_field(const char **b, const char *e,
 bool dm_vdo_status_parse(struct dm_pool *mem, const char *input,
 			 struct dm_vdo_status_parse_result *result)
 {
-	const char *b = b = input;
+	const char *b = input;
 	const char *e = input + strlen(input);
 	const char *te;
 	struct dm_vdo_status *s;
