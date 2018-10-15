@@ -216,6 +216,8 @@ static void _online_pvid_file_remove_devno(int major, int minor)
 		}
 
 		rv = read(fd, buf_in, sizeof(buf_in));
+		if (close(fd))
+			log_sys_debug("close", path);
 		if (!rv || rv < 0) {
 			log_debug("Failed to read %s", path);
 			continue;
