@@ -102,7 +102,7 @@ static int _sysfs_get_kvdo_value(const char *dm_name, const char *vdo_param, uin
 	if (dm_snprintf(path, sizeof(path), "%skvdo/%s/%s",
 			dm_sysfs_dir(), dm_name, vdo_param) < 0) {
 		log_error("Failed to build kmod path.");
-		goto bad;
+		return 0;
 	}
 
 	if ((fd = open(path, O_RDONLY)) < 0) {
