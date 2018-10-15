@@ -284,7 +284,8 @@ static void _online_pvid_file_create(struct device *dev)
 
 	/* We don't care about syncing, these files are not even persistent. */
 
-	close(fd);
+	if (close(fd))
+		log_sys_debug("close", path);
 }
 
 static int _online_pvid_file_exists(const char *pvid)
