@@ -1167,7 +1167,7 @@ bad:
  */
 int init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 {
-	struct dev_filter *filter = NULL, *filter_components[2] = {0};
+	struct dev_filter *pfilter, *filter = NULL, *filter_components[2] = {0};
 
 	if (!cmd->initialized.connections) {
 		log_error(INTERNAL_ERROR "connections must be initialized before filters");
@@ -1192,12 +1192,12 @@ int init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 	filter = cmd->lvmetad_filter;
 	cmd->lvmetad_filter = NULL;
 
-	if (!(filter = persistent_filter_create(cmd->dev_types, filter))) {
+	if (!(pfilter = persistent_filter_create(cmd->dev_types, filter))) {
 		log_verbose("Failed to create persistent device filter.");
 		goto bad;
 	}
 
-	cmd->filter = filter;
+	cmd->filter = filter = pfilter;
 
 	cmd->full_filter = filter;
 
