@@ -620,6 +620,7 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	int add_errors = 0;
 	int ret = ECMD_PROCESSED;
 
+	dm_list_init(&single_devs);
 	dm_list_init(&found_vgnames);
 
 	if (arg_is_set(cmd, major_ARG) + arg_is_set(cmd, minor_ARG))
@@ -663,8 +664,6 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 
 	/* Creates a list of dev names from /dev, sysfs, etc; does not read any. */
 	dev_cache_scan();
-
-	dm_list_init(&single_devs);
 
 	while (argc--) {
 		pv_name = *argv++;
