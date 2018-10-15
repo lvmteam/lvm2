@@ -970,7 +970,9 @@ void label_scan_invalidate_lv(struct cmd_context *cmd, struct logical_volume *lv
 	struct device *dev;
 	dev_t devt;
 
-	lv_info(cmd, lv, 0, &lvinfo, 0, 0);
+	if (!lv_info(cmd, lv, 0, &lvinfo, 0, 0))
+		return;
+
 	devt = MKDEV(lvinfo.major, lvinfo.minor);
 	if ((dev = dev_cache_get_by_devt(cmd, devt, NULL)))
 		label_scan_invalidate(dev);
