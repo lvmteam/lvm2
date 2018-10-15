@@ -564,6 +564,8 @@ static void _degrade_to_n4(struct node16 *n16, struct value *result)
 {
         struct node4 *n4 = zalloc(sizeof(*n4));
 
+	assert(n4 != NULL);
+
         n4->nr_entries = n16->nr_entries;
         memcpy(n4->keys, n16->keys, n16->nr_entries * sizeof(*n4->keys));
         memcpy(n4->values, n16->values, n16->nr_entries * sizeof(*n4->values));
@@ -577,6 +579,8 @@ static void _degrade_to_n16(struct node48 *n48, struct value *result)
 {
 	unsigned i, count = 0;
         struct node16 *n16 = zalloc(sizeof(*n16));
+
+	assert(n16 != NULL);
 
         n16->nr_entries = n48->nr_entries;
         for (i = 0; i < 256; i++) {
@@ -597,6 +601,8 @@ static void _degrade_to_n48(struct node256 *n256, struct value *result)
 {
         unsigned i, count = 0;
         struct node48 *n48 = zalloc(sizeof(*n48));
+
+	assert(n48 != NULL);
 
         n48->nr_entries = n256->nr_entries;
         for (i = 0; i < 256; i++) {
