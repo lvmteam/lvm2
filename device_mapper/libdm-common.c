@@ -1765,7 +1765,7 @@ static int _mountinfo_parse_line(const char *line, unsigned *maj, unsigned *min,
 			return 0;
 		}
 		devmapper += 12; /* skip fixed prefix */
-		for (i = 0; devmapper[i] && devmapper[i] != ' ' && i < sizeof(root); ++i)
+		for (i = 0; devmapper[i] && devmapper[i] != ' ' && i < sizeof(root)-1; ++i)
 			root[i] = devmapper[i];
 		root[i] = 0;
 		_unmangle_mountinfo_string(root, buf);
