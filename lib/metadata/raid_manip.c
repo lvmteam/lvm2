@@ -2243,7 +2243,7 @@ static int _vg_write_lv_suspend_commit_backup(struct volume_group *vg,
 		return_0;
 	}
 
-	if (lv && !(r = (origin_only ? suspend_lv_origin(vg->cmd, lock_lv) :
+	if (!(r = (origin_only ? suspend_lv_origin(vg->cmd, lock_lv) :
 				       suspend_lv(vg->cmd, lock_lv)))) {
 		log_error("Failed to suspend %s before committing changes.",
 			  display_lvname(lv));
