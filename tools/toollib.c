@@ -59,7 +59,8 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 
 	log_verbose("Forking background process from command: %s", cmd->cmd_line);
 
-	sigaction(SIGCHLD, &act, NULL);
+	if (sigaction(SIGCHLD, &act, NULL))
+		log_warn("WARNING: Failed to set SIGCHLD action.");
 
 	if (!skip_lvm)
 		if (!sync_local_dev_names(cmd)) { /* Flush ops and reset dm cookie */
