@@ -207,7 +207,11 @@ bool dm_vdo_status_parse(struct dm_pool *mem, const char *input,
 		_set_error(result, "out of memory");
 		goto bad;
 	}
-	dm_strncpy(s->device, b, te - b + 1);
+
+	if (!dm_strncpy(s->device, b, te - b + 1)) {
+		_set_error(result, "copy device");
+		goto bad;
+	}
 
 	b = _eat_space(te, e);
 
