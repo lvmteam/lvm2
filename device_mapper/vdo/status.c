@@ -154,7 +154,7 @@ static void _set_error(struct dm_vdo_status_parse_result *result, const char *fm
 	va_list ap;
 
 	va_start(ap, fmt);
-	vsnprintf(result->error, sizeof(result->error), fmt, ap);
+	(void) vsnprintf(result->error, sizeof(result->error), fmt, ap);
 	va_end(ap);
 }
 
