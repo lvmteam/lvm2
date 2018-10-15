@@ -1067,7 +1067,11 @@ int label_read_sector(struct device *dev, uint64_t read_sector)
 	block_sector = block_num * BCACHE_BLOCK_SIZE_IN_SECTORS;
 	start_sector = read_sector % BCACHE_BLOCK_SIZE_IN_SECTORS;
 
-	label_scan_open(dev);
+	if (!label_scan_open(dev)) {
+		log_error("Error opening device %s for prefetch %llu sector.",
+			  dev_name(dev), (unsigned long long)block_num);
+		return false;
+	}
 
 	bcache_prefetch(scan_bcache, dev->bcache_fd, block_num);
 
