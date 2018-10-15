@@ -1487,7 +1487,7 @@ static int _node_message(uint32_t major, uint32_t minor,
 			 int expected_errno, const char *message)
 {
 	struct dm_task *dmt;
-	int r;
+	int r = 0;
 
 	if (!(dmt = dm_task_create(DM_DEVICE_TARGET_MSG)))
 		return_0;
