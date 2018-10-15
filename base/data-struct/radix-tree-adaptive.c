@@ -265,7 +265,8 @@ static bool _insert_prefix_chain(struct radix_tree *rt, struct value *v, uint8_t
 			if (kb[i] != pc->prefix[i])
 				break;
 
-		pc2 = zalloc(sizeof(*pc2) + pc->len - i);
+		if (!(pc2 = zalloc(sizeof(*pc2) + pc->len - i)))
+			return false;
 		pc2->len = pc->len - i;
 		memmove(pc2->prefix, pc->prefix + i, pc2->len);
 		pc2->child = pc->child;
