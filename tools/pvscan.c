@@ -225,7 +225,8 @@ static void _online_pvid_file_remove_devno(int major, int minor)
 
 		if (!strncmp(buf, buf_in, strlen(buf))) {
 			log_debug("Unlink pv online %s %s", buf, path);
-			unlink(path);
+			if (unlink(path))
+				log_sys_debug("unlink", path);
 			break;
 		}
 	}
@@ -248,7 +249,8 @@ static void _online_pvid_files_remove(void)
 
 		memset(path, 0, sizeof(path));
 		snprintf(path, sizeof(path), "%s/%s", _pvs_online_dir, de->d_name);
-		unlink(path);
+		if (unlink(path))
+			log_sys_debug("unlink", path);
 	}
 	if (closedir(dir))
 		log_sys_debug("closedir", _pvs_online_dir);
