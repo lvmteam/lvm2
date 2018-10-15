@@ -229,7 +229,8 @@ static void _online_pvid_file_remove_devno(int major, int minor)
 			break;
 		}
 	}
-	closedir(dir);
+	if (closedir(dir))
+		log_sys_debug("closedir", _pvs_online_dir);
 }
 
 static void _online_pvid_files_remove(void)
@@ -249,7 +250,8 @@ static void _online_pvid_files_remove(void)
 		snprintf(path, sizeof(path), "%s/%s", _pvs_online_dir, de->d_name);
 		unlink(path);
 	}
-	closedir(dir);
+	if (closedir(dir))
+		log_sys_debug("closedir", _pvs_online_dir);
 }
 
 static void _online_pvid_file_create(struct device *dev)
@@ -338,10 +340,12 @@ static int _online_pvid_files_missing(void)
 	while ((de = readdir(dir))) {
 		if (de->d_name[0] == '.')
 			continue;
-		closedir(dir);
+		if (closedir(dir))
+			log_sys_debug("closedir", _pvs_online_dir);
 		return 0;
 	}
-	closedir(dir);
+	if (closedir(dir))
+		log_sys_debug("closedir", _pvs_online_dir);
 	return 1;
 }
 
