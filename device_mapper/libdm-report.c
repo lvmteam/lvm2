@@ -2381,7 +2381,7 @@ static const char *_get_reserved(struct dm_report *rh, unsigned type,
 {
 	const struct dm_report_reserved_value *iter = implicit ? NULL : rh->reserved_values;
 	const struct dm_report_field_reserved_value *frv;
-	const char *tmp_begin, *tmp_end, *tmp_s = s;
+	const char *tmp_begin = NULL, *tmp_end = NULL, *tmp_s = s;
 	const char *name = NULL;
 	char c;
 
