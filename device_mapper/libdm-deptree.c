@@ -21,7 +21,6 @@
 
 #include <stdarg.h>
 #include <string.h>
-#include <sys/param.h>
 #include <sys/utsname.h>
 
 #define MAX_TARGET_PARAMSIZE 500000

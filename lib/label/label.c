@@ -28,7 +28,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/time.h>
 #include <sys/types.h>
 
 /* FIXME Allow for larger labels?  Restricted to single sector currently */

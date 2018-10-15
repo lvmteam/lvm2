@@ -25,7 +25,6 @@
 #include <libudev.h>
 #endif
 #include <unistd.h>
-#include <sys/param.h>
 #include <dirent.h>
 
 struct dev_iter {

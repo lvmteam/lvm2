@@ -28,10 +28,8 @@
 #include "lib/mm/xlate.h"
 #include "lib/label/label.h"
 #include "lib/cache/lvmcache.h"
-#include "lib/mm/memlock.h"
 
 #include <unistd.h>
-#include <sys/param.h>
 #include <limits.h>
 #include <dirent.h>
 #include <ctype.h>

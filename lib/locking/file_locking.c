@@ -16,7 +16,6 @@
 #include "lib/misc/lib.h"
 #include "lib/locking/locking.h"
 #include "locking_types.h"
-#include "lib/activate/activate.h"
 #include "lib/config/config.h"
 #include "lib/config/defaults.h"
 #include "lib/misc/lvm-string.h"

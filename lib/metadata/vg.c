@@ -18,7 +18,6 @@
 #include "lib/display/display.h"
 #include "lib/activate/activate.h"
 #include "lib/commands/toolcontext.h"
-#include "lib/cache/lvmcache.h"
 #include "lib/format_text/archiver.h"
 
 struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,

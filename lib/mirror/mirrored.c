@@ -16,7 +16,6 @@
 #include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/commands/toolcontext.h"
-#include "lib/metadata/metadata.h"
 #include "lib/metadata/segtype.h"
 #include "lib/display/display.h"
 #include "lib/format_text/text_export.h"
