@@ -1009,6 +1009,7 @@ static int _stats_parse_list(struct dm_stats *dms, const char *resp)
 	 * dm_task_get_message_response() returns a 'const char *' but
 	 * since fmemopen also permits "w" it expects a 'char *'.
 	 */
+	/* coverity[alloc_strlen] intentional */
 	if (!(list_rows = fmemopen((char *)resp, strlen(resp), "r")))
 		return_0;
 
@@ -1240,6 +1241,7 @@ static int _stats_parse_region(struct dm_stats *dms, const char *resp,
 	 * dm_task_get_message_response() returns a 'const char *' but
 	 * since fmemopen also permits "w" it expects a 'char *'.
 	 */
+	/* coverity[alloc_strlen] intentional */
 	stats_rows = fmemopen((char *)resp, strlen(resp), "r");
 	if (!stats_rows)
 		goto_bad;
