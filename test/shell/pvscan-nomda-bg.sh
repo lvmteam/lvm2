@@ -24,10 +24,12 @@ lvcreate -n foo -l 1 -an --zero n $vg1
 
 check inactive $vg1 foo
 
+RUNDIR="/run"
+test -d "$RUNDIR" || RUNDIR="/var/run"
 # create a file in pvs_online to disable the pvscan init
 # case which scans everything when the first dev appears.
-mkdir /run/lvm/pvs_online || true
-touch /run/lvm/pvs_online/foo
+mkdir "$RUNDIR/lvm/pvs_online" || true
+touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache --background "$dev2" -aay
 
@@ -37,5 +39,5 @@ pvscan --cache --background "$dev1" -aay
 
 check active $vg1 foo
 
-rm /run/lvm/pvs_online/foo
+rm "$RUNDIR/lvm/pvs_online/foo"
 vgremove -ff $vg1

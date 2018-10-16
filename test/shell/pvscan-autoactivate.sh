@@ -19,11 +19,13 @@ aux prepare_pvs 2
 vgcreate $vg1 "$dev1" "$dev2"
 lvcreate -n $lv1 -l 4 -a n $vg1
 
-mkdir /run/lvm/pvs_online || true
+RUNDIR="/run"
+test -d "$RUNDIR" || RUNDIR="/var/run"
 
-# the first pvscan scans all devs 
-
-rm /run/lvm/pvs_online/*
+# the first pvscan scans all devs
+# FIXME: kills logic for running system
+rm -rf "$RUNDIR/lvm/pvs_online"
+mkdir "$RUNDIR/lvm/pvs_online" || true
 
 pvscan --cache -aay
 check lv_field $vg1/$lv1 lv_active "active"
@@ -32,7 +34,8 @@ lvchange -an $vg1
 # the first pvscan scans all devs even when
 # only one device is specified
 
-rm /run/lvm/pvs_online/*
+# FIXME: kills logic for running system
+rm "$RUNDIR/lvm/pvs_online/*"
 
 pvscan --cache -aay "$dev1"
 check lv_field $vg1/$lv1 lv_active "active"
@@ -41,8 +44,9 @@ lvchange -an $vg1
 # touch foo to disable first-pvscan case,
 # then check pvscan with no args scans all
 
-rm /run/lvm/pvs_online/*
-touch /run/lvm/pvs_online/foo
+# FIXME: kills logic for running system
+rm "$RUNDIR/lvm/pvs_online/*"
+touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache -aay
 check lv_field $vg1/$lv1 lv_active "active"
@@ -52,8 +56,9 @@ lvchange -an $vg1
 # then check that vg is activated only after
 # both devs appear separately
 
-rm /run/lvm/pvs_online/*
-touch /run/lvm/pvs_online/foo
+# FIXME: kills logic for running system
+rm "$RUNDIR/lvm/pvs_online/*"
+touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache -aay "$dev1"
 check lv_field $vg1/$lv1 lv_active ""
@@ -65,8 +70,9 @@ lvchange -an $vg1
 # then check that vg is activated when both
 # devs appear together
 
-rm /run/lvm/pvs_online/*
-touch /run/lvm/pvs_online/foo
+# FIXME: kills logic for running system
+rm "$RUNDIR/lvm/pvs_online/*"
+touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache -aay "$dev1" "$dev2"
 check lv_field $vg1/$lv1 lv_active "active"
@@ -86,8 +92,9 @@ lvcreate -n $lv1 -l 4 -a n $vg1
 # touch foo to disable first-pvscan case,
 # test case where dev with metadata appears first
 
-rm /run/lvm/pvs_online/*
-touch /run/lvm/pvs_online/foo
+# FIXME: kills logic for running system
+rm "$RUNDIR/lvm/pvs_online/*"
+touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache -aay "$dev2"
 check lv_field $vg1/$lv1 lv_active ""
@@ -99,8 +106,9 @@ lvchange -an $vg1
 # test case where dev without metadata
 # appears first which triggers scanning all
 
-rm /run/lvm/pvs_online/*
-touch /run/lvm/pvs_online/foo
+# FIXME: kills logic for running system
+rm "$RUNDIR/lvm/pvs_online/*"
+touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache -aay "$dev1"
 check lv_field $vg1/$lv1 lv_active "active"
@@ -111,7 +119,8 @@ lvchange -an $vg1
 # dev without metadata is scanned, but
 # first-pvscan case scans all devs
 
-rm /run/lvm/pvs_online/*
+# FIXME: kills logic for running system
+rm "$RUNDIR/lvm/pvs_online/*"
 
 pvscan --cache -aay "$dev1"
 check lv_field $vg1/$lv1 lv_active "active"
@@ -121,8 +130,9 @@ lvchange -an $vg1
 # is online without the -aay option to
 # activate until after they are online
 
-rm /run/lvm/pvs_online/*
-touch /run/lvm/pvs_online/foo
+# FIXME: kills logic for running system
+rm "$RUNDIR/lvm/pvs_online/*"
+touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache "$dev1"
 check lv_field $vg1/$lv1 lv_active ""
@@ -134,12 +144,12 @@ lvchange -an $vg1
 
 # like previous
 
-rm /run/lvm/pvs_online/*
-touch /run/lvm/pvs_online/foo
+# FIXME: kills logic for running system
+rm "$RUNDIR/lvm/pvs_online/*"
+touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache "$dev1"
 check lv_field $vg1/$lv1 lv_active ""
 pvscan --cache -aay "$dev2"
 check lv_field $vg1/$lv1 lv_active "active"
 lvchange -an $vg1
-
