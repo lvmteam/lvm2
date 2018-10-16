@@ -14,6 +14,8 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+aux have_raid 1 3 0 || skip
+
 # Test for MD raid1 kernel bug causing read
 # errors on failing first leg sectors.
 
