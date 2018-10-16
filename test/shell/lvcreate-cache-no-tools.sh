@@ -93,9 +93,9 @@ lvremove -f $vg
 
 fi
 
+# Enforce older cache target format V1
+aux lvmconf 'allocation/cache_metadata_format = 1'
 
-# On older cache target that supports only V1 format
-aux lvmconf 'global/cache_disabled_features = [ "policy_smq" ]'
 rm -f fake-tool.sh
 
 lvcreate -aey -l1 -n $lv1 $vg
