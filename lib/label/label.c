@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 
+int use_full_md_check;
 
 /* FIXME Allow for larger labels?  Restricted to single sector currently */
 
@@ -868,8 +869,18 @@ int label_scan(struct cmd_context *cmd)
 		 * devs in 'pvs', which is a pretty harmless effect from a
 		 * pretty uncommon situation.
 		 */
-		if (dev_is_md_with_end_superblock(cmd->dev_types, dev))
+		if (dev_is_md_with_end_superblock(cmd->dev_types, dev)) {
 			cmd->use_full_md_check = 1;
+
+			/* This is a hack because 'cmd' is not passed
+			   into the filters so we can't check the flag
+			   in the cmd struct.  The master branch has
+			   changed the filters in commit 8eab37593eccb
+			   to accept cmd, but it's a complex change
+			   that I'm trying to avoid in the stable branch. */
+
+			use_full_md_check = 1;
+		}
 	};
 	dev_iter_destroy(iter);
 
