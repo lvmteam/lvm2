@@ -82,7 +82,7 @@
 
 %if %{enable_dbusd}
   %global buildreq_python3_devel python3-devel
-  %global buildreq_python_setuptools python-setuptools
+  %global buildreq_python3_setuptools python3-setuptools
   %global buildreq_python3_dbus python3-dbus
   %global buildreq_python3_pyudev python3-pyudev
 %endif
@@ -168,7 +168,7 @@ BuildRequires: pkgconfig
 %maybe BuildRequires: %{?buildreq_lvmlockd_dlm}
 %maybe BuildRequires: %{?buildreq_lvmlockd_sanlock}
 %maybe BuildRequires: %{?buildreq_python3_devel}
-%maybe BuildRequires: %{?buildreq_python_setuptools}
+%maybe BuildRequires: %{?buildreq_python3_setuptools}
 
 %description
 LVM2 includes all of the support for handling read/write operations on
