@@ -30,7 +30,7 @@ AC_CANONICAL_TARGET([])
 AS_IF([test -z "$CFLAGS"], [COPTIMISE_FLAG="-O2"])
 case "$host_os" in
 	linux*)
-		CLDFLAGS="$CLDFLAGS -Wl,--version-script,.export.sym"
+		CLDFLAGS="${CLDFLAGS:"$LDFLAGS"} -Wl,--version-script,.export.sym"
 		# equivalent to -rdynamic
 		ELDFLAGS="-Wl,--export-dynamic"
 		# FIXME Generate list and use --dynamic-list=.dlopen.sym
@@ -50,7 +50,7 @@ case "$host_os" in
 		;;
 	darwin*)
 		CFLAGS="$CFLAGS -no-cpp-precomp -fno-common"
-		CLDFLAGS="$CLDFLAGS"
+		CLDFLAGS="${CLDFLAGS:"$LDFLAGS"}"
 		ELDFLAGS=
 		CLDWHOLEARCHIVE="-all_load"
 		CLDNOWHOLEARCHIVE=
@@ -61,6 +61,9 @@ case "$host_os" in
 		SELINUX=no
 		FSADM=no
 		BLKDEACTIVATE=no
+		;;
+	*)
+		CLDFLAGS="${CLDFLAGS:"$LDFLAGS"}"
 		;;
 esac
 
