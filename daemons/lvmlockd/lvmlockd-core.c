@@ -929,12 +929,12 @@ static void lm_rem_resource(struct lockspace *ls, struct resource *r)
 		lm_rem_resource_sanlock(ls, r);
 }
 
-static int lm_find_free_lock(struct lockspace *ls, uint64_t *free_offset)
+static int lm_find_free_lock(struct lockspace *ls, uint64_t *free_offset, int *sector_size, int *align_size)
 {
 	if (ls->lm_type == LD_LM_DLM)
 		return 0;
 	else if (ls->lm_type == LD_LM_SANLOCK)
-		return lm_find_free_lock_sanlock(ls, free_offset);
+		return lm_find_free_lock_sanlock(ls, free_offset, sector_size, align_size);
 	return -1;
 }
 
@@ -2427,11 +2427,16 @@ static void *lockspace_thread_main(void *arg_in)
 
 			if (act->op == LD_OP_FIND_FREE_LOCK && act->rt == LD_RT_VG) {
 				uint64_t free_offset = 0;
+				int sector_size = 0;
+				int align_size = 0;
+
 				log_debug("S %s find free lock", ls->name);
-				rv = lm_find_free_lock(ls, &free_offset);
-				log_debug("S %s find free lock %d offset %llu",
-					  ls->name, rv, (unsigned long long)free_offset);
+				rv = lm_find_free_lock(ls, &free_offset, &sector_size, &align_size);
+				log_debug("S %s find free lock %d offset %llu sector_size %d align_size %d",
+					  ls->name, rv, (unsigned long long)free_offset, sector_size, align_size);
 				ls->free_lock_offset = free_offset;
+				ls->free_lock_sector_size = sector_size;
+				ls->free_lock_align_size = align_size;
 				list_del(&act->list);
 				act->result = rv;
 				add_client_result(act);
@@ -3237,6 +3242,8 @@ static int work_init_lv(struct action *act)
 	char vg_args[MAX_ARGS+1];
 	char lv_args[MAX_ARGS+1];
 	uint64_t free_offset = 0;
+	int sector_size = 0;
+	int align_size = 0;
 	int lm_type = 0;
 	int rv = 0;
 
@@ -3252,6 +3259,8 @@ static int work_init_lv(struct action *act)
 		lm_type = ls->lm_type;
 		memcpy(vg_args, ls->vg_args, MAX_ARGS);
 		free_offset = ls->free_lock_offset;
+		sector_size = ls->free_lock_sector_size;
+		align_size = ls->free_lock_align_size;
 	}
 	pthread_mutex_unlock(&lockspaces_mutex);
 
@@ -3268,7 +3277,7 @@ static int work_init_lv(struct action *act)
 
 	if (lm_type == LD_LM_SANLOCK) {
 		rv = lm_init_lv_sanlock(ls_name, act->vg_name, act->lv_uuid,
-					vg_args, lv_args, free_offset);
+					vg_args, lv_args, sector_size, align_size, free_offset);
 
 		memcpy(act->lv_args, lv_args, MAX_ARGS);
 		return rv;

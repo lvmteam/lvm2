@@ -174,7 +174,9 @@ struct lockspace {
 	int8_t lm_type;			/* lock manager: LM_DLM, LM_SANLOCK */
 	void *lm_data;
 	uint64_t host_id;
-	uint64_t free_lock_offset;	/* start search for free lock here */
+	uint64_t free_lock_offset;	/* for sanlock, start search for free lock here */
+	int free_lock_sector_size;	/* for sanlock */
+	int free_lock_align_size;	/* for sanlock */
 
 	uint32_t start_client_id;	/* client_id that started the lockspace */
 	pthread_t thread;		/* makes synchronous lock requests */
@@ -468,7 +470,7 @@ static inline int lm_hosts_dlm(struct lockspace *ls, int notify)
 #ifdef LOCKDSANLOCK_SUPPORT
 
 int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
-int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name, char *vg_args, char *lv_args, uint64_t free_offset);
+int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name, char *vg_args, char *lv_args, int sector_size, int align_size, uint64_t free_offset);
 int lm_free_lv_sanlock(struct lockspace *ls, struct resource *r);
 int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
 int lm_prepare_lockspace_sanlock(struct lockspace *ls);
@@ -488,7 +490,7 @@ int lm_gl_is_enabled(struct lockspace *ls);
 int lm_get_lockspaces_sanlock(struct list_head *ls_rejoin);
 int lm_data_size_sanlock(void);
 int lm_is_running_sanlock(void);
-int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t *free_offset);
+int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t *free_offset, int *sector_size, int *align_size);
 
 static inline int lm_support_sanlock(void)
 {
