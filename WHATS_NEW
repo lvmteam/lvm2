@@ -1,5 +1,5 @@
-Version 2.02.182 - 
-==============================
+Version 2.02.182 - 30th October 2018
+====================================
   Fix possible write race between last metadata block and the first extent.
   Fix filtering of md 1.0 devices so they are not seen as duplicate PVs.
   Fix lvconvert striped/raid0/raid0_meta -> raid6 regression.
