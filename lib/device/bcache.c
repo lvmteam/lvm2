@@ -156,6 +156,10 @@ static void _async_destroy(struct io_engine *ioe)
 	dm_free(e);
 }
 
+static int _last_byte_fd;
+static uint64_t _last_byte_offset;
+static int _last_byte_sector_size;
+
 static bool _async_issue(struct io_engine *ioe, enum dir d, int fd,
 			 sector_t sb, sector_t se, void *data, void *context)
 {
@@ -163,10 +167,51 @@ static bool _async_issue(struct io_engine *ioe, enum dir d, int fd,
 	struct iocb *cb_array[1];
 	struct control_block *cb;
 	struct async_engine *e = _to_async(ioe);
+	sector_t offset;
+	sector_t nbytes;
+	sector_t limit_nbytes;
+	sector_t extra_nbytes = 0;
 
 	if (((uintptr_t) data) & e->page_mask) {
 		log_warn("misaligned data buffer");
 		return false;
+	}
+
+	offset = sb << SECTOR_SHIFT;
+	nbytes = (se - sb) << SECTOR_SHIFT;
+
+	/*
+	 * If bcache block goes past where lvm wants to write, then clamp it.
+	 */
+	if ((d == DIR_WRITE) && _last_byte_offset && (fd == _last_byte_fd)) {
+		if (offset > _last_byte_offset) {
+			log_error("Limit write at %llu len %llu beyond last byte %llu",
+				  (unsigned long long)offset,
+				  (unsigned long long)nbytes,
+				  (unsigned long long)_last_byte_offset);
+			return false;
+		}
+
+		if (offset + nbytes > _last_byte_offset) {
+			limit_nbytes = _last_byte_offset - offset;
+			if (limit_nbytes % _last_byte_sector_size)
+				extra_nbytes = _last_byte_sector_size - (limit_nbytes % _last_byte_sector_size);
+
+			if (extra_nbytes) {
+				log_debug("Limit write at %llu len %llu to len %llu rounded to %llu",
+					  (unsigned long long)offset,
+					  (unsigned long long)nbytes,
+					  (unsigned long long)limit_nbytes,
+					  (unsigned long long)(limit_nbytes + extra_nbytes));
+				nbytes = limit_nbytes + extra_nbytes;
+			} else {
+				log_debug("Limit write at %llu len %llu to len %llu",
+					  (unsigned long long)offset,
+					  (unsigned long long)nbytes,
+					  (unsigned long long)limit_nbytes);
+				nbytes = limit_nbytes;
+			}
+		}
 	}
 
 	cb = _cb_alloc(e->cbs, context);
@@ -179,9 +224,21 @@ static bool _async_issue(struct io_engine *ioe, enum dir d, int fd,
 
 	cb->cb.aio_fildes = (int) fd;
 	cb->cb.u.c.buf = data;
-	cb->cb.u.c.offset = sb << SECTOR_SHIFT;
-	cb->cb.u.c.nbytes = (se - sb) << SECTOR_SHIFT;
+	cb->cb.u.c.offset = offset;
+	cb->cb.u.c.nbytes = nbytes;
 	cb->cb.aio_lio_opcode = (d == DIR_READ) ? IO_CMD_PREAD : IO_CMD_PWRITE;
+
+#if 0
+	if (d == DIR_READ) {
+		log_debug("io R off %llu bytes %llu",
+			  (unsigned long long)cb->cb.u.c.offset,
+			  (unsigned long long)cb->cb.u.c.nbytes);
+	} else {
+		log_debug("io W off %llu bytes %llu",
+			  (unsigned long long)cb->cb.u.c.offset,
+			  (unsigned long long)cb->cb.u.c.nbytes);
+	}
+#endif
 
 	cb_array[0] = &cb->cb;
 	do {
@@ -1152,4 +1209,22 @@ bool bcache_invalidate_fd(struct bcache *cache, int fd)
 }
 
 //----------------------------------------------------------------
+
+void bcache_set_last_byte(struct bcache *cache, int fd, uint64_t offset, int sector_size)
+{
+	_last_byte_fd = fd;
+	_last_byte_offset = offset;
+	_last_byte_sector_size = sector_size;
+	if (!sector_size)
+		_last_byte_sector_size = 512;
+}
+
+void bcache_unset_last_byte(struct bcache *cache, int fd)
+{
+	if (_last_byte_fd == fd) {
+		_last_byte_fd = 0;
+		_last_byte_offset = 0;
+		_last_byte_sector_size = 0;
+	}
+}
 
