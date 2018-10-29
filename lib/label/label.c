@@ -174,6 +174,7 @@ int label_write(struct device *dev, struct label *label)
 {
 	char buf[LABEL_SIZE] __attribute__((aligned(8)));
 	struct label_header *lh = (struct label_header *) buf;
+	uint64_t offset;
 	int r = 1;
 
 	if (!label->labeller->ops->write) {
@@ -208,10 +209,16 @@ int label_write(struct device *dev, struct label *label)
 		return 0;
 	}
 
-	if (!dev_write_bytes(dev, label->sector << SECTOR_SHIFT, LABEL_SIZE, buf)) {
+	offset = label->sector << SECTOR_SHIFT;
+
+	dev_set_last_byte(dev, offset + LABEL_SIZE);
+
+	if (!dev_write_bytes(dev, offset, LABEL_SIZE, buf)) {
 		log_debug_devs("Failed to write label to %s", dev_name(dev));
 		r = 0;
 	}
+
+	dev_unset_last_byte(dev);
 
 	return r;
 }
@@ -1256,9 +1263,12 @@ bool dev_write_zeros(struct device *dev, uint64_t start, size_t len)
 		}
 	}
 
+	dev_set_last_byte(dev, start + len);
+
 	if (!bcache_zero_bytes(scan_bcache, dev->bcache_fd, start, len)) {
 		log_error("Error writing device %s at %llu length %u.",
 			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
+		dev_unset_last_byte(dev);
 		label_scan_invalidate(dev);
 		return false;
 	}
@@ -1266,9 +1276,11 @@ bool dev_write_zeros(struct device *dev, uint64_t start, size_t len)
 	if (!bcache_flush(scan_bcache)) {
 		log_error("Error writing device %s at %llu length %u.",
 			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
+		dev_unset_last_byte(dev);
 		label_scan_invalidate(dev);
 		return false;
 	}
+	dev_unset_last_byte(dev);
 	return true;
 }
 
@@ -1302,9 +1314,12 @@ bool dev_set_bytes(struct device *dev, uint64_t start, size_t len, uint8_t val)
 		}
 	}
 
+	dev_set_last_byte(dev, start + len);
+
 	if (!bcache_set_bytes(scan_bcache, dev->bcache_fd, start, len, val)) {
 		log_error("Error writing device %s at %llu length %u.",
 			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
+		dev_unset_last_byte(dev);
 		label_scan_invalidate(dev);
 		return false;
 	}
@@ -1312,9 +1327,27 @@ bool dev_set_bytes(struct device *dev, uint64_t start, size_t len, uint8_t val)
 	if (!bcache_flush(scan_bcache)) {
 		log_error("Error writing device %s at %llu length %u.",
 			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
+		dev_unset_last_byte(dev);
 		label_scan_invalidate(dev);
 		return false;
 	}
+
+	dev_unset_last_byte(dev);
 	return true;
+}
+
+void dev_set_last_byte(struct device *dev, uint64_t offset)
+{
+	unsigned int phys_block_size = 0;
+	unsigned int block_size = 0;
+
+	dev_get_block_size(dev, &phys_block_size, &block_size);
+
+	bcache_set_last_byte(scan_bcache, dev->bcache_fd, offset, phys_block_size);
+}
+
+void dev_unset_last_byte(struct device *dev)
+{
+	bcache_unset_last_byte(scan_bcache, dev->bcache_fd);
 }
 

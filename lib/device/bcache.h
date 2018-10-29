@@ -158,6 +158,9 @@ bool bcache_write_bytes(struct bcache *cache, int fd, uint64_t start, size_t len
 bool bcache_zero_bytes(struct bcache *cache, int fd, uint64_t start, size_t len);
 bool bcache_set_bytes(struct bcache *cache, int fd, uint64_t start, size_t len, uint8_t val);
 
+void bcache_set_last_byte(struct bcache *cache, int fd, uint64_t offset, int sector_size);
+void bcache_unset_last_byte(struct bcache *cache, int fd);
+
 //----------------------------------------------------------------
 
 #endif
