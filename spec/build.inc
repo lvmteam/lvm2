@@ -32,8 +32,10 @@
 %endif
 %enableif %{enable_python} python2-bindings
 %enableif %{enable_python3} python3-bindings
-%enableif %{enable_python} applib
-%enableif %{enable_python3} applib
+# Must use this, or applib will be enabled and disabled depending in python[23] availability
+%if %{enable_python3} || %{enable_python}
+%enableif 1 applib
+%endif
 %enableif %{enable_dbusd} dbus-service
 %enableif %{enable_dbusd} notify-dbus
 %enableif %{enable_dmfilemapd} dmfilemapd
