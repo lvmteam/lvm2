@@ -1,5 +1,6 @@
 Version 2.03.02 - 
 ===================================
+  Fix (de)activation of RaidLVs with visible SubLVs
   Prohibit mirrored 'mirror' log via lvcreate and lvconvert
   Use sync io if async io_setup fails, or use_aio=0 is set in config.
 
