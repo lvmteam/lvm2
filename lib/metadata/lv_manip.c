@@ -3958,6 +3958,25 @@ bad:
 	return 0;
 }
 
+/* Add all rmeta SubLVs for @seg to @lvs and return allocated @lvl to free by caller. */
+static struct lv_list *_raid_list_metalvs(struct lv_segment *seg, struct dm_list *lvs)
+{
+	uint32_t s;
+	struct lv_list *lvl;
+
+	dm_list_init(lvs);
+
+	if (!(lvl = dm_pool_alloc(seg->lv->vg->vgmem, sizeof(*lvl) * seg->area_count)))
+		return_NULL;
+
+	for (s = 0; s < seg->area_count; s++) {
+		lvl[s].lv = seg_metalv(seg, s);
+		dm_list_add(lvs, &lvl[s].list);
+	}
+
+	return lvl;
+}
+
 static int _lv_extend_layered_lv(struct alloc_handle *ah,
 				 struct logical_volume *lv,
 				 uint32_t extents, uint32_t first_area,
@@ -3969,7 +3988,6 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 	uint32_t fa, s;
 	int clear_metadata = 0;
 	uint32_t area_multiple = 1;
-	int fail;
 
 	if (!(segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_STRIPED)))
 		return_0;
@@ -4047,74 +4065,50 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 		return_0;
 
 	if (clear_metadata) {
+		struct volume_group *vg = lv->vg;
+
 		/*
 		 * We must clear the metadata areas upon creation.
 		 */
-		/* FIXME VG is not in a fully-consistent state here and should not be committed! */
-		if (!vg_write(lv->vg) || !vg_commit(lv->vg))
-			return_0;
 
-		if (test_mode())
+		/*
+		 * Declare the new RaidLV as temporary to avoid visible SubLV
+		 * failures on activation until after we wiped them so that
+		 * we can avoid activating crashed, potentially partially
+		 * wiped RaidLVs.
+		 */
+		lv->status |= LV_ACTIVATION_SKIP;
+
+		if (test_mode()) {
+			/* FIXME VG is not in a fully-consistent state here and should not be committed! */
+			if (!vg_write(vg) || !vg_commit(vg))
+				return_0;
+
 			log_verbose("Test mode: Skipping wiping of metadata areas.");
-		else {
-			fail = 0;
-			/* Activate all rmeta devices locally first (more efficient) */
-			for (s = 0; !fail && s < seg->area_count; s++) {
-				meta_lv = seg_metalv(seg, s);
+		} else {
+			struct dm_list meta_lvs;
+			struct lv_list *lvl;
 
-				if (!activate_lv_local(meta_lv->vg->cmd, meta_lv)) {
-					log_error("Failed to activate %s for clearing.",
-						  display_lvname(meta_lv));
-					fail = 1;
-				}
-			}
+			if (!(lvl = _raid_list_metalvs(seg, &meta_lvs)))
+				return 0;
 
-			/* Clear all rmeta devices */
-			for (s = 0; !fail && s < seg->area_count; s++) {
-				meta_lv = seg_metalv(seg, s);
-
-				log_verbose("Clearing metadata area of %s.",
-					    display_lvname(meta_lv));
-				/*
-				 * Rather than wiping meta_lv->size, we can simply
-				 * wipe '1' to remove the superblock of any previous
-				 * RAID devices.  It is much quicker.
-				 */
-				if (!wipe_lv(meta_lv, (struct wipe_params)
-					     { .do_zero = 1, .zero_sectors = 1 })) {
-					stack;
-					fail = 1;
-				}
-			}
-
-			/* Deactivate all rmeta devices */
-			for (s = 0; s < seg->area_count; s++) {
-				meta_lv = seg_metalv(seg, s);
-
-				if (!deactivate_lv(meta_lv->vg->cmd, meta_lv)) {
-					log_error("Failed to deactivate %s after clearing.",
-						  display_lvname(meta_lv));
-					fail = 1;
-				}
-
-				/* Wipe any temporary tags required for activation. */
-				str_list_wipe(&meta_lv->tags);
-			}
-
-			if (fail) {
-				/* Fail, after trying to deactivate all we could */
-				struct volume_group *vg = lv->vg;
-
+			/* Wipe lv list committing metadata */
+			if (!activate_and_wipe_lvlist(&meta_lvs, 1)) {
+				/* If we failed clearing rmeta SubLVs, try removing the new RaidLV */
 				if (!lv_remove(lv))
 					log_error("Failed to remove LV");
 				else if (!vg_write(vg) || !vg_commit(vg))
 					log_error("Failed to commit VG %s", vg->name);
 				return_0;
 			}
+
+			dm_pool_free(vg->vgmem, lvl);
 		}
 
 		for (s = 0; s < seg->area_count; s++)
 			lv_set_hidden(seg_metalv(seg, s));
+
+		lv->status &= ~LV_ACTIVATION_SKIP;
 	}
 
 	return 1;
@@ -7198,6 +7192,100 @@ out:
 	lv->status &= ~LV_NOSCAN;
 
 	return 1;
+}
+
+/*
+ * Optionally makes on-disk metadata changes if @commit
+ *
+ * If LV is active:
+ *	wipe any signatures and clear first sector of LVs listed on @lv_list
+ * otherwise:
+ *	activate, wipe (as above), deactivate
+ *
+ * Returns: 1 on success, 0 on failure
+ */
+int activate_and_wipe_lvlist(struct dm_list *lv_list, int commit)
+{
+	struct lv_list *lvl;
+	struct volume_group *vg = NULL;
+	unsigned i = 0, sz = dm_list_size(lv_list);
+	char *was_active;
+	int r = 1;
+
+	if (!sz) {
+		log_debug_metadata(INTERNAL_ERROR "Empty list of LVs given for wiping.");
+		return 1;
+	}
+
+	dm_list_iterate_items(lvl, lv_list) {
+		if (!lv_is_visible(lvl->lv)) {
+			log_error(INTERNAL_ERROR
+				  "LVs must be set visible before wiping.");
+			return 0;
+		}
+		vg = lvl->lv->vg;
+	}
+
+	if (test_mode())
+		return 1;
+
+	/*
+	 * FIXME: only vg_[write|commit] if LVs are not already written
+	 * as visible in the LVM metadata (which is never the case yet).
+	 */
+	if (commit &&
+	    (!vg || !vg_write(vg) || !vg_commit(vg)))
+		return_0;
+
+	was_active = alloca(sz);
+
+	dm_list_iterate_items(lvl, lv_list)
+		if (!(was_active[i++] = lv_is_active(lvl->lv))) {
+			lvl->lv->status |= LV_TEMPORARY;
+			if (!activate_lv(vg->cmd, lvl->lv)) {
+				log_error("Failed to activate localy %s for wiping.",
+					  display_lvname(lvl->lv));
+				r = 0;
+				goto out;
+			}
+			lvl->lv->status &= ~LV_TEMPORARY;
+		}
+
+	dm_list_iterate_items(lvl, lv_list) {
+		log_verbose("Wiping metadata area %s.", display_lvname(lvl->lv));
+		/* Wipe any know signatures */
+		if (!wipe_lv(lvl->lv, (struct wipe_params) { .do_wipe_signatures = 1, .do_zero = 1, .zero_sectors = 1 })) {
+			log_error("Failed to wipe %s.", display_lvname(lvl->lv));
+			r = 0;
+			goto out;
+		}
+	}
+out:
+	/* TODO:   deactivation is only needed with clustered locking
+	 *         in normal case we should keep device active
+	 */
+	sz = 0;
+	dm_list_iterate_items(lvl, lv_list)
+		if ((i > sz) && !was_active[sz++] &&
+		    !deactivate_lv(vg->cmd, lvl->lv)) {
+			log_error("Failed to deactivate %s.", display_lvname(lvl->lv));
+			r = 0; /* Continue deactivating as many as possible. */
+		}
+
+	return r;
+}
+
+/* Wipe logical volume @lv, optionally with @commit of metadata */
+int activate_and_wipe_lv(struct logical_volume *lv, int commit)
+{
+	struct dm_list lv_list;
+	struct lv_list lvl;
+
+	lvl.lv = lv;
+	dm_list_init(&lv_list);
+	dm_list_add(&lv_list, &lvl.list);
+
+	return activate_and_wipe_lvlist(&lv_list, commit);
 }
 
 static struct logical_volume *_create_virtual_origin(struct cmd_context *cmd,

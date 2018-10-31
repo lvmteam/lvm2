@@ -321,7 +321,6 @@ static int _lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 	int monitored;
 	struct lv_segment *seg = first_seg(lv);
 	struct dm_list device_list;
-	struct lv_list *lvl;
 
 	dm_list_init(&device_list);
 
@@ -405,6 +404,7 @@ static int _lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 	 * Now we handle mirrors with log devices
 	 */
 	lv->status &= ~LV_NOTSYNCED;
+	lv->status |= LV_ACTIVATION_SKIP;
 
 	/* Separate mirror log or metadata devices so we can clear them */
 	if (!_detach_metadata_devices(seg, &device_list)) {
@@ -423,32 +423,8 @@ static int _lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 	/* No backup for intermediate metadata, so just unlock memory */
 	memlock_unlock(lv->vg->cmd);
 
-	dm_list_iterate_items(lvl, &device_list) {
-		if (!activate_lv_excl_local(cmd, lvl->lv)) {
-			log_error("Unable to activate %s for %s clearing.",
-				  display_lvname(lvl->lv), (seg_is_raid(seg)) ?
-				  "metadata area" : "mirror log");
-			return 0;
-		}
-
-		if (!wipe_lv(lvl->lv, (struct wipe_params)
-			     { .do_zero = 1, .zero_sectors = lvl->lv->size })) {
-			log_error("Unable to reset sync status for %s.",
-				  display_lvname(lv));
-			if (!deactivate_lv(cmd, lvl->lv))
-				log_error("Failed to deactivate log LV after "
-					  "wiping failed");
-			return 0;
-		}
-
-		if (!deactivate_lv(cmd, lvl->lv)) {
-			log_error("Unable to deactivate %s LV %s "
-				  "after wiping for resync.",
-				  (seg_is_raid(seg)) ? "metadata" : "log",
-				  display_lvname(lvl->lv));
-			return 0;
-		}
-	}
+	if (!activate_and_wipe_lvlist(&device_list, 0))
+		return 0;
 
 	/* Wait until devices are away */
 	if (!sync_local_dev_names(lv->vg->cmd)) {
@@ -463,6 +439,8 @@ static int _lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 			  (seg_is_raid(seg)) ? "metadata" : "log");
 		return 0;
 	}
+
+	lv->status &= ~LV_ACTIVATION_SKIP;
 
 	if (!_vg_write_commit(lv, NULL))
 		return 0;

@@ -784,6 +784,12 @@ struct wipe_params {
 /* Zero out LV and/or wipe signatures */
 int wipe_lv(struct logical_volume *lv, struct wipe_params params);
 
+/* Wipe any signatures and zero first sector on @lv */
+int activate_and_wipe_lv(struct logical_volume *lv, int commit);
+
+/* Wipe any signatures and zero first sector of LVs listed on @lv_list */
+int activate_and_wipe_lvlist(struct dm_list *lv_list, int commit);
+
 int lv_change_tag(struct logical_volume *lv, const char *tag, int add_tag);
 
 /* Reduce the size of an LV by extents */
@@ -1213,6 +1219,8 @@ int lv_raid_change_region_size(struct logical_volume *lv,
 int lv_raid_in_sync(const struct logical_volume *lv);
 uint32_t lv_raid_data_copies(const struct segment_type *segtype, uint32_t area_count);
 int lv_raid_free_reshape_space(const struct logical_volume *lv);
+int lv_raid_clear_lv(struct logical_volume *lv, int commit);
+int lv_raid_has_visible_sublvs(const struct logical_volume *lv);
 /* --  metadata/raid_manip.c */
 
 /* ++  metadata/cache_manip.c */

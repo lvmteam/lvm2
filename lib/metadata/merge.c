@@ -234,6 +234,30 @@ static void _check_non_raid_seg_members(struct lv_segment *seg, int *error_count
 	/* .... more members? */
 }
 
+static void _check_raid_sublvs(struct lv_segment *seg, int *error_count)
+{
+	unsigned s;
+
+	for (s = 0; s < seg->area_count; s++) {
+		if (seg_type(seg, s) != AREA_LV)
+			raid_seg_error("no raid image SubLV");
+
+		if ((seg_lv(seg, s)->status & LVM_WRITE) &&
+		    !(seg->lv->status & LV_ACTIVATION_SKIP) &&
+		    lv_is_visible(seg_lv(seg, s)))
+			raid_seg_error("visible raid image LV");
+
+		if (!seg_is_raid_with_meta(seg) || !seg->meta_areas)
+			continue;
+
+		if (seg_metatype(seg, s) != AREA_LV)
+			raid_seg_error("no raid meta SubLV");
+		else if (!(seg->lv->status & LV_ACTIVATION_SKIP) &&
+			 lv_is_visible(seg_metalv(seg, s)))
+			raid_seg_error("visible raid meta LV");
+	}
+}
+
 /*
  * Check RAID segment struct members of @seg for acceptable
  * properties and increment @error_count for any bogus ones.
@@ -287,10 +311,14 @@ static void _check_raid_seg(struct lv_segment *seg, int *error_count)
 	/* Check for any MetaLV flaws like non-existing ones or size variations */
 	if (seg->meta_areas)
 		for (area_len = s = 0; s < seg->area_count; s++) {
+			if (seg_metatype(seg, s) == AREA_UNASSIGNED)
+				continue;
+
 			if (seg_metatype(seg, s) != AREA_LV) {
 				raid_seg_error("no MetaLV");
 				continue;
 			}
+
 			if (!lv_is_raid_metadata(seg_metalv(seg, s)))
 				raid_seg_error("MetaLV without RAID metadata flag");
 			if (area_len &&
@@ -314,6 +342,8 @@ static void _check_raid_seg(struct lv_segment *seg, int *error_count)
 		_check_raid45610_seg(seg, error_count);
 	else
 		raid_seg_error("bogus RAID segment type");
+
+	_check_raid_sublvs(seg, error_count);
 }
 /* END: RAID segment property checks. */
 
