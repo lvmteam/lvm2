@@ -748,10 +748,11 @@ static void _display_fields_more(struct dm_report *rh,
 			id_len = strlen(type->prefix) + 3;
 
 	for (f = 0; fields[f].report_fn; f++) {
-		if ((type = _find_type(rh, fields[f].type)) && type->desc)
-			desc = type->desc;
-		else
-			desc = " ";
+		if (!(type = _find_type(rh, fields[f].type))) {
+			log_debug(INTERNAL_ERROR "Field type undefined.");
+			continue;
+		}
+		desc = (type->desc) ? : " ";
 		if (desc != last_desc) {
 			if (*last_desc)
 				log_warn(" ");
