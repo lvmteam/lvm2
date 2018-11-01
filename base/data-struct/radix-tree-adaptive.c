@@ -354,6 +354,7 @@ static bool _insert_node16(struct radix_tree *rt, struct value *v, uint8_t *kb, 
 			return false;
 
 		n48->nr_entries = 17;
+		/* coverity[bad_memset] intentional use of '0' */
 		memset(n48->keys, 48, sizeof(n48->keys));
 
 		for (i = 0; i < 16; i++) {

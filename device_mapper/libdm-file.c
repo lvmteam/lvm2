@@ -222,6 +222,8 @@ retry_fcntl:
 		goto fail_close_unlink;
 	}
 
+	/* coverity[leaked_handle] intentional leak of fd handle here  */
+
 	return 1;
 
 fail_close_unlink:
