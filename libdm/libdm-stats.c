@@ -2336,11 +2336,6 @@ int dm_stats_populate(struct dm_stats *dms, const char *program_id,
 		return 0;
 	}
 
-	if (!dms->nr_regions) {
-		log_error("No regions registered.");
-		return 0;
-	}
-
 	/* allow zero-length program_id for populate */
 	if (!program_id)
 		program_id = dms->program_id;
@@ -2350,6 +2345,11 @@ int dm_stats_populate(struct dm_stats *dms, const char *program_id,
 		goto bad;
 	} else if (!_stats_set_name_cache(dms)) {
 		goto_bad;
+	}
+
+	if (!dms->nr_regions) {
+		log_verbose("No stats regions registered: %s", dms->name);
+		return 0;
 	}
 
 	dms->walk_flags = DM_STATS_WALK_REGION;
