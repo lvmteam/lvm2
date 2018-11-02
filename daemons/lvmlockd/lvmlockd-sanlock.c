@@ -1860,12 +1860,20 @@ int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
 	if (rv < 0)
 		log_error("S %s R %s unlock_san release error %d", ls->name, r->name, rv);
 
-	if (rv == -EIO)
-		rv = -ELOCKIO;
-	else if (rv < 0)
-		rv = -ELMERR;
+	/*
+	 * sanlock may return an error here if it fails to release the lease on
+	 * disk because of an io timeout.  But, sanlock will continue trying to
+	 * release the lease after this call returns.  We shouldn't return an
+	 * error here which would result in lvmlockd-core keeping the lock
+	 * around.  By releasing the lock in lvmlockd-core at this point,
+	 * lvmlockd may send another acquire request to lvmlockd.  If sanlock
+	 * has not been able to release the previous instance of the lock yet,
+	 * then it will return an error for the new request.  But, acquiring a
+	 * new lock is able o fail gracefully, until sanlock is finally able to
+	 * release the old lock.
+	 */
 
-	return rv;
+	return 0;
 }
 
 int lm_hosts_sanlock(struct lockspace *ls, int notify)
