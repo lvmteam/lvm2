@@ -623,7 +623,7 @@ static void _degrade_to_n48(struct node256 *n256, struct value *result)
 }
 
 // Removes an entry in an array by sliding the values above it down.
-static void _erase_elt(void *array, unsigned obj_size, unsigned count, unsigned index)
+static void _erase_elt(void *array, size_t obj_size, unsigned count, unsigned index)
 {
 	if (index == (count - 1))
 		// The simple case
