@@ -44,7 +44,7 @@
 #include <errno.h>
 #include <syslog.h>
 #include <blkid/blkid.h>
-#include <linux/kdev_t.h>
+#include <sys/sysmacros.h>
 
 #define ONE_MB 1048576
 
@@ -351,7 +351,7 @@ static void _read_sysfs_size(dev_t devno, const char *name, unsigned int *val)
 	size_t len;
 
 	snprintf(path, sizeof(path), "/sys/dev/block/%d:%d/queue/%s",
-		 (int)MAJOR(devno), (int)MINOR(devno), name);
+		 (int)major(devno), (int)minor(devno), name);
 
 	if (!(fp = fopen(path, "r")))
 		return;
