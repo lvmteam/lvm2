@@ -175,6 +175,7 @@ void process_event(struct dm_task *dmt,
 	const char *device = dm_task_get_name(dmt);
 	int percent;
 	struct dm_info info;
+	int ret;
 
 	/* No longer monitoring, waiting for remove */
 	if (!state->percent_check)
@@ -205,7 +206,8 @@ void process_event(struct dm_task *dmt,
 		/* Maybe configurable ? */
 		_remove(dm_task_get_uuid(dmt));
 #endif
-		pthread_kill(pthread_self(), SIGALRM);
+		if ((ret = pthread_kill(pthread_self(), SIGALRM)) && (ret != ESRCH))
+			log_sys_error("pthread_kill", "self");
 		goto out;
 	}
 
@@ -213,7 +215,8 @@ void process_event(struct dm_task *dmt,
 		/* TODO eventually recognize earlier when room is enough */
 		log_info("Dropping monitoring of fully provisioned snapshot %s.",
 			 device);
-		pthread_kill(pthread_self(), SIGALRM);
+		if ((ret = pthread_kill(pthread_self(), SIGALRM)) && (ret != ESRCH))
+			log_sys_error("pthread_kill", "self");
 		goto out;
 	}
 
