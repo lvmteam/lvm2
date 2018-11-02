@@ -307,7 +307,8 @@ static int read_host_id_file(void)
 		}
 	}
 	if (fclose(file))
-		log_error("failed to close host id file %s", daemon_host_id_file);
+		log_debug("Failed to fclose host id file %s (%s).",
+			  daemon_host_id_file, strerror(errno));
 out:
 	log_debug("host_id %d from %s", host_id, daemon_host_id_file);
 	return host_id;
@@ -365,7 +366,9 @@ static void _read_sysfs_size(dev_t devno, const char *name, unsigned int *val)
 	if (strlen(buf))
 		*val = atoi(buf);
 out:
-	fclose(fp);
+	if (fclose(fp))
+		log_debug("Failed to fclose host id file %s (%s).", path, strerror(errno));
+
 }
 
 /* Select sector/align size for a new VG based on what the device reports for
