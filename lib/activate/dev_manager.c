@@ -1916,7 +1916,11 @@ static int _check_holder(struct dev_manager *dm, struct dm_tree *dtree,
 
 		if (!strncmp(uuid, (char*)&lv->vg->id, sizeof(lv->vg->id)) &&
 		    !dm_tree_find_node_by_uuid(dtree, uuid)) {
-			dm_strncpy((char*)&id, uuid, 2 * sizeof(struct id) + 1);
+			if (!dm_strncpy((char*)&id, uuid, 2 * sizeof(struct id) + 1)) {
+				log_error(INTERNAL_ERROR "Too long UUID %s in VG %s.",
+					  uuid, lv->vg->name);
+				goto out;
+			}
 
 			/* If UUID is not yet in dtree, look for matching LV */
 			if (!(lv_det = find_lv_in_vg_by_lvid(lv->vg, &id))) {
