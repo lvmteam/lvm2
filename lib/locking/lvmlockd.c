@@ -389,7 +389,7 @@ static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, 
 		.resize = LV_EXTEND,
 		.force = 1,
 	};
-	int i;
+	uint64_t i;
 
 	extend_bytes = extend_mb * ONE_MB_IN_BYTES;
 	extend_sectors = extend_bytes / SECTOR_SIZE;
@@ -443,8 +443,8 @@ static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, 
 
 	for (i = 0; i < extend_mb; i++) {
 		if (!dev_write_zeros(dev, old_size_bytes + (i * ONE_MB_IN_BYTES), ONE_MB_IN_BYTES)) {
-			log_error("Extend sanlock LV %s cannot zero device at %llu.", display_lvname(lv),
-				  (unsigned long long)(old_size_bytes + i * ONE_MB_IN_BYTES));
+			log_error("Extend sanlock LV %s cannot zero device at " FMTu64 ".",
+				  display_lvname(lv), (old_size_bytes + i * ONE_MB_IN_BYTES));
 			label_scan_invalidate(dev);
 			return 0;
 		}
