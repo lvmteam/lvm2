@@ -5245,6 +5245,7 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 			 */
 			this_start = (segments) ? segment_start : start;
 			this_len = (segments) ? segment_len : this_len;
+			/* coverity[ptr_arith] intentional */
 			if (!(r = dm_stats_create_region(dms, &region_ids[count],
 							 this_start, this_len, step,
 							 precise, bounds,
