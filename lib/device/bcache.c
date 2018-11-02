@@ -1004,7 +1004,8 @@ void bcache_destroy(struct bcache *cache)
 	if (cache->nr_locked)
 		log_warn("some blocks are still locked");
 
-	bcache_flush(cache);
+	if (!bcache_flush(cache))
+		stack;
 	_wait_all(cache);
 	_exit_free_list(cache);
 	radix_tree_destroy(cache->rtree);
