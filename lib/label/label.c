@@ -1299,9 +1299,7 @@ bool dev_set_bytes(struct device *dev, uint64_t start, size_t len, uint8_t val)
 		log_debug("Close and reopen to write %s", dev_name(dev));
 		bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
 		_scan_dev_close(dev);
-
-		dev->flags |= DEV_BCACHE_WRITE;
-		label_scan_open(dev);
+		/* goes to label_scan_open() since bcache_fd < 0 */
 	}
 
 	if (dev->bcache_fd <= 0) {
