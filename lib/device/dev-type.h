@@ -26,7 +26,7 @@
 #else
 #  define MAJOR(x) major((x))
 #  define MINOR(x) minor((x))
-#  define MKDEV(x,y) makedev((x),(y))
+#  define MKDEV(x,y) makedev((dev_t)(x),(dev_t)(y))
 #endif
 
 #define PARTITION_SCSI_DEVICE (1 << 0)

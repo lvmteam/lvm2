@@ -505,7 +505,7 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 	 */
 	if ((parts = dt->dev_type_array[major].max_partitions) > 1) {
 		if ((residue = minor % parts)) {
-			*result = MKDEV((dev_t)major, (dev_t)(minor - residue));
+			*result = MKDEV(major, (minor - residue));
 			ret = 2;
 		} else {
 			*result = dev->dev;
@@ -575,7 +575,7 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 			  path, buffer);
 		goto out;
 	}
-	*result = MKDEV((dev_t)major, (dev_t)minor);
+	*result = MKDEV(major, minor);
 	ret = 2;
 out:
 	if (fp && fclose(fp))

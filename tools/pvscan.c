@@ -496,7 +496,7 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 				log_warn("WARNING: Failed to parse major:minor from %s, skipping.", pv_name);
 				continue;
 			}
-			devno = MKDEV((dev_t)major, (dev_t)minor);
+			devno = MKDEV(major, minor);
 
 			if (!(dev = dev_cache_get_by_devt(devno, cmd->lvmetad_filter))) {
 				/* Remove major:minor from lvmetad. */
@@ -559,7 +559,7 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 		if (major < 0 || minor < 0)
 			continue;
 
-		devno = MKDEV((dev_t)major, (dev_t)minor);
+		devno = MKDEV(major, minor);
 
 		if (!(dev = dev_cache_get_by_devt(devno, cmd->lvmetad_filter))) {
 			/* Remove major:minor from lvmetad. */
