@@ -1042,7 +1042,7 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 {
 	char path[PATH_MAX];
 	struct stat info;
-	dev_t dev = MKDEV((dev_t)major, (dev_t)minor);
+	dev_t dev = MKDEV(major, minor);
 	mode_t old_mask;
 
 	if (!_build_dev_path(path, sizeof(path), dev_name))

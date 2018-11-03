@@ -30,7 +30,7 @@
 #else
 #  define MAJOR(x) major((x))
 #  define MINOR(x) minor((x))
-#  define MKDEV(x,y) makedev((x),(y))
+#  define MKDEV(x,y) makedev(((dev_t)x),((dev_t)y))
 #endif
 
 #include "libdm/misc/dm-ioctl.h"
@@ -259,7 +259,7 @@ static int _control_exists(const char *control, uint32_t major, uint32_t minor)
 		return -1;
 	}
 
-	if (major && buf.st_rdev != MKDEV((dev_t)major, (dev_t)minor)) {
+	if (major && buf.st_rdev != MKDEV(major, minor)) {
 		log_verbose("%s: Wrong device number: (%u, %u) instead of "
 			    "(%u, %u)", control,
 			    MAJOR(buf.st_mode), MINOR(buf.st_mode),
@@ -302,7 +302,7 @@ static int _create_control(const char *control, uint32_t major, uint32_t minor)
 	(void) dm_prepare_selinux_context(control, S_IFCHR);
 	old_umask = umask(DM_CONTROL_NODE_UMASK);
 	if (mknod(control, S_IFCHR | S_IRUSR | S_IWUSR,
-		  MKDEV((dev_t)major, (dev_t)minor)) < 0)  {
+		  MKDEV(major, minor)) < 0)  {
 		log_sys_error("mknod", control);
 		ret = 0;
 	}
@@ -1194,7 +1194,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 		}
 
 		dmi->flags |= DM_PERSISTENT_DEV_FLAG;
-		dmi->dev = MKDEV((dev_t)dmt->major, (dev_t)dmt->minor);
+		dmi->dev = MKDEV(dmt->major, dmt->minor);
 	}
 
 	/* Does driver support device number referencing? */

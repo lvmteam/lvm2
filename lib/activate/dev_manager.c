@@ -374,7 +374,7 @@ static int _ignore_blocked_mirror_devices(struct device *dev,
 			if (!(tmp_dev = dev_create_file(buf, NULL, NULL, 0)))
 				goto_out;
 
-			tmp_dev->dev = MKDEV((dev_t)sm->logs[0].major, (dev_t)sm->logs[0].minor);
+			tmp_dev->dev = MKDEV(sm->logs[0].major, sm->logs[0].minor);
 			if (device_is_usable(tmp_dev, (struct dev_usable_check_params)
 					     { .check_empty = 1,
 					       .check_blocked = 1,
