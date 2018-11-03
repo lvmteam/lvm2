@@ -607,7 +607,7 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 {
 	int ret = ECMD_PROCESSED;
 	unsigned i;
-	activation_change_t activate = CHANGE_AN;
+	activation_change_t activate;
 
 	static const struct {
 		int arg;
