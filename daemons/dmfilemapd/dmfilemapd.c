@@ -629,10 +629,10 @@ check_unlinked:
 
 static int _daemonise(struct filemap_monitor *fm)
 {
-	pid_t pid = 0, sid;
+	pid_t pid = 0;
 	int fd;
 
-	if (!(sid = setsid())) {
+	if (!setsid()) {
 		_early_log("setsid failed.");
 		return 0;
 	}

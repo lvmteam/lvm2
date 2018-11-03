@@ -667,10 +667,9 @@ struct dm_list *dev_cache_get_dev_list_for_lvid(const char *lvid)
 
 void dev_cache_failed_path(struct device *dev, const char *path)
 {
-	struct device *dev_by_path;
 	struct dm_str_list *strl;
 
-	if ((dev_by_path = (struct device *) dm_hash_lookup(_cache.names, path)))
+	if (dm_hash_lookup(_cache.names, path))
 		dm_hash_remove(_cache.names, path);
 
 	dm_list_iterate_items(strl, &dev->aliases) {
