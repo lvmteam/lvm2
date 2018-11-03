@@ -67,7 +67,6 @@ static DM_LIST_INIT(_vginfos);
 static DM_LIST_INIT(_found_duplicate_devs);
 static DM_LIST_INIT(_unused_duplicate_devs);
 static int _scanning_in_progress = 0;
-static int _has_scanned = 0;
 static int _vgs_locked = 0;
 static int _found_duplicate_pvs = 0;	/* If we never see a duplicate PV we can skip checking for them later. */
 
@@ -1807,8 +1806,6 @@ static void _lvmcache_destroy_vgnamelist(struct lvmcache_vginfo *vginfo)
 void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 {
 	log_debug_cache("Dropping VG info");
-
-	_has_scanned = 0;
 
 	if (_vgid_hash) {
 		dm_hash_destroy(_vgid_hash);

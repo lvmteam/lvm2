@@ -452,7 +452,6 @@ static int _online_pvscan_one(struct cmd_context *cmd, struct device *dev,
 			      int disable_remove,
 			      const char **pvid_without_metadata)
 {
-	struct label *label;
 	struct lvmcache_info *info;
 	struct _pvscan_baton baton;
 	const struct format_type *fmt;
@@ -474,7 +473,7 @@ static int _online_pvscan_one(struct cmd_context *cmd, struct device *dev,
 		return 1;
 	}
 
-	if (!(label = lvmcache_get_label(info))) {
+	if (!lvmcache_get_label(info)) {
 		log_debug("No PV label found for %s.", dev_name(dev));
 		if (!disable_remove)
 			_online_pvid_file_remove_devno((int)MAJOR(dev->dev), (int)MINOR(dev->dev));
