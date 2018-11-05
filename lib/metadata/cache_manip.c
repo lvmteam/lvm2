@@ -748,23 +748,30 @@ static cache_metadata_format_t _get_default_cache_metadata_format(struct cmd_con
 	return f;
 }
 
-int cache_set_policy(struct lv_segment *seg, const char *name,
+int cache_set_policy(struct lv_segment *lvseg, const char *name,
 		     const struct dm_config_tree *settings)
 {
+	struct lv_segment *seg;
 	struct dm_config_node *cn;
 	const struct dm_config_node *cns;
 	struct dm_config_tree *old = NULL, *new = NULL, *tmp = NULL;
 	int r = 0;
-	struct profile *profile = seg->lv->profile;
+	struct profile *profile = lvseg->lv->profile;
 
-	if (seg_is_cache(seg))
-		seg = first_seg(seg->pool_lv);
-	else if (seg_is_cache_pool(seg)) {
+	if (seg_is_cache_pool(lvseg)) {
 		if (!name && !settings)
 			return 1; /* Policy and settings can be selected later when caching LV */
-	} else {
+	}
+
+	if (seg_is_cache_pool(lvseg))
+		seg = lvseg;
+
+	else if (seg_is_cache(lvseg))
+		seg = first_seg(lvseg->pool_lv);
+
+	else {
 		log_error(INTERNAL_ERROR "Cannot set cache metadata format for non cache volume %s.",
-			  display_lvname(seg->lv));
+			  display_lvname(lvseg->lv));
 		return 0;
 	}
 
