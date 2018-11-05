@@ -1424,14 +1424,19 @@ static int _cache_settings_disp(struct dm_report *rh, struct dm_pool *mem,
 				const void *data, void *private)
 {
 	const struct lv_segment *seg = (const struct lv_segment *) data;
+	const struct lv_segment *setting_seg = NULL;
 	const struct dm_config_node *settings;
 	struct dm_list *result;
 	struct _str_list_append_baton baton;
 	struct dm_list dummy_list; /* dummy list to display "nothing" */
 
-	if (seg_is_cache(seg))
-		seg = first_seg(seg->pool_lv);
-	else if (!seg_is_cache_pool(seg)) {
+	if (seg_is_cache_pool(seg))
+		setting_seg = seg;
+
+	else if (seg_is_cache(seg))
+		setting_seg = first_seg(seg->pool_lv);
+
+	if (!setting_seg || !setting_seg->policy_settings) {
 		dm_list_init(&dummy_list);
 		return _field_set_string_list(rh, field, &dummy_list, private, 0, NULL);
 		/* TODO: once we have support for STR_LIST reserved values, replace with:
@@ -1439,15 +1444,7 @@ static int _cache_settings_disp(struct dm_report *rh, struct dm_pool *mem,
 		 */
 	}
 
-	if (seg->policy_settings)
-		settings = seg->policy_settings->child;
-	else {
-		dm_list_init(&dummy_list);
-		return _field_set_string_list(rh, field, &dummy_list, private, 0, NULL);
-		/* TODO: once we have support for STR_LIST reserved values, replace with:
-		 * return _field_set_value(field,  GET_FIRST_RESERVED_NAME(cache_settings_undef), GET_FIELD_RESERVED_VALUE(cache_settings_undef));
-		 */
-	}
+	settings = setting_seg->policy_settings->child;
 
 	if (!(result = str_list_create(mem)))
 		return_0;
@@ -1566,19 +1563,19 @@ static int _cache_policy_disp(struct dm_report *rh, struct dm_pool *mem,
 			      const void *data, void *private)
 {
 	const struct lv_segment *seg = (const struct lv_segment *) data;
+	const struct lv_segment *setting_seg = NULL;
 
-	if (seg_is_cache(seg))
-		seg = first_seg(seg->pool_lv);
-	else if (!seg_is_cache_pool(seg) || !seg->policy_name)
+	if (seg_is_cache_pool(seg))
+		setting_seg = seg;
+
+	else if (seg_is_cache(seg))
+		setting_seg = first_seg(seg->pool_lv);
+
+	if (!setting_seg || !setting_seg->policy_name)
 		return _field_set_value(field, GET_FIRST_RESERVED_NAME(cache_policy_undef),
 					GET_FIELD_RESERVED_VALUE(cache_policy_undef));
 
-	if (!seg->policy_name) {
-		log_error(INTERNAL_ERROR "Unexpected NULL policy name.");
-		return 0;
-	}
-
-	return _field_string(rh, field, seg->policy_name);
+	return _field_string(rh, field, setting_seg->policy_name);
 }
 
 static int _modules_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -2747,21 +2744,27 @@ static int _cachemetadataformat_disp(struct dm_report *rh, struct dm_pool *mem,
 				     const void *data, void *private)
 {
 	const struct lv_segment *seg = (const struct lv_segment *) data;
+	const struct lv_segment *setting_seg = NULL;
 	const uint64_t *fmt;
 
-	if (seg_is_cache(seg))
-		seg = first_seg(seg->pool_lv);
+	if (seg_is_cache_pool(seg))
+		setting_seg = seg;
 
-	if (seg_is_cache_pool(seg)) {
-		switch (seg->cache_metadata_format) {
-		case CACHE_METADATA_FORMAT_1:
-		case CACHE_METADATA_FORMAT_2:
-			fmt = (seg->cache_metadata_format == CACHE_METADATA_FORMAT_2) ? &_two64 : &_one64;
-			return dm_report_field_uint64(rh, field, fmt);
-		default: /* unselected/undefined for all other cases */;
-		}
+	else if (seg_is_cache(seg))
+		setting_seg = first_seg(seg->pool_lv);
+
+	else
+		goto undef;
+
+	switch (setting_seg->cache_metadata_format) {
+	case CACHE_METADATA_FORMAT_1:
+	case CACHE_METADATA_FORMAT_2:
+		fmt = (setting_seg->cache_metadata_format == CACHE_METADATA_FORMAT_2) ? &_two64 : &_one64;
+		return dm_report_field_uint64(rh, field, fmt);
+	default: /* unselected/undefined for all other cases */;
 	}
 
+ undef:
 	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
 }
 
