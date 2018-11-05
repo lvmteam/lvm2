@@ -1216,6 +1216,7 @@ struct lv_status_cache {
 	dm_percent_t dirty_usage;
 };
 
+const char *cache_mode_num_to_str(cache_mode_t mode);
 const char *display_cache_mode(const struct lv_segment *seg);
 const char *get_cache_mode_name(const struct lv_segment *pool_seg);
 int set_cache_mode(cache_mode_t *mode, const char *cache_mode);

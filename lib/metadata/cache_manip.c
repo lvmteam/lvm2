@@ -30,33 +30,53 @@
 #define DM_HINT_OVERHEAD_PER_BLOCK	8  /* bytes */
 #define DM_MAX_HINT_WIDTH		(4+16)  /* bytes.  FIXME Configurable? */
 
-const char *display_cache_mode(const struct lv_segment *seg)
+const char *cache_mode_num_to_str(cache_mode_t mode)
 {
-	if (seg_is_cache(seg))
-		seg = first_seg(seg->pool_lv);
-
-	if (!seg_is_cache_pool(seg) ||
-	    (seg->cache_mode == CACHE_MODE_UNSELECTED))
-		return "";
-
-	return get_cache_mode_name(seg);
-}
-
-
-const char *get_cache_mode_name(const struct lv_segment *pool_seg)
-{
-	switch (pool_seg->cache_mode) {
-	default:
-		log_error(INTERNAL_ERROR "Cache pool %s has undefined cache mode, using writethrough instead.",
-			  display_lvname(pool_seg->lv));
-		/* Fall through */
+	switch (mode) {
 	case CACHE_MODE_WRITETHROUGH:
 		return "writethrough";
 	case CACHE_MODE_WRITEBACK:
 		return "writeback";
 	case CACHE_MODE_PASSTHROUGH:
 		return "passthrough";
+	default:
+		return NULL;
 	}
+}
+
+const char *display_cache_mode(const struct lv_segment *seg)
+{
+	const struct lv_segment *setting_seg = NULL;
+	const char *str;
+
+	if (seg_is_cache_pool(seg))
+		setting_seg = seg;
+
+	else if (seg_is_cache(seg))
+		setting_seg = first_seg(seg->pool_lv);
+
+	if (!setting_seg || (setting_seg->cache_mode == CACHE_MODE_UNSELECTED))
+		return "";
+
+	if (!(str = cache_mode_num_to_str(setting_seg->cache_mode))) {
+		log_error(INTERNAL_ERROR "Cache pool %s has undefined cache mode, using writethrough instead.",
+			  display_lvname(seg->lv));
+		str = "writethrough";
+	}
+
+	return str;
+}
+
+const char *get_cache_mode_name(const struct lv_segment *pool_seg)
+{
+	const char *str;
+		
+	if (!(str = cache_mode_num_to_str(pool_seg->cache_mode))) {
+		log_error(INTERNAL_ERROR "Cache pool %s has undefined cache mode, using writethrough instead.",
+			  display_lvname(pool_seg->lv));
+		str = "writethrough";
+	}
+	return str;
 }
 
 int set_cache_mode(cache_mode_t *mode, const char *cache_mode)
