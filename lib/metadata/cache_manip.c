@@ -171,9 +171,10 @@ void cache_check_for_warns(const struct lv_segment *seg)
 		log_warn("WARNING: Data redundancy could be lost with writeback "
 			 "caching of raid logical volume!");
 
-	if (lv_is_thin_pool_data(seg->lv))
-		log_warn("WARNING: Cached thin pool's data cannot be currently "
-			 "resized and require manual uncache before resize!");
+	if (lv_is_thin_pool_data(seg->lv)) {
+		log_warn("WARNING: thin pool data will not be automatically extended when cached.");
+		log_warn("WARNING: manual splitcache is required before extending thin pool data.");
+	}
 }
 
 /*
