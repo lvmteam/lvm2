@@ -543,6 +543,7 @@ static int _cache_add_target_line(struct dev_manager *dm,
 				 uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
 	struct lv_segment *cache_pool_seg;
+	struct lv_segment *setting_seg;
 	char *metadata_uuid, *data_uuid, *origin_uuid;
 	uint64_t feature_flags = 0;
 	unsigned attr;
@@ -552,15 +553,20 @@ static int _cache_add_target_line(struct dev_manager *dm,
 		return 0;
 	}
 
+	log_debug("cache_add_target_line lv %s pool %s", seg->lv->name, seg->pool_lv->name);
+
 	cache_pool_seg = first_seg(seg->pool_lv);
+
+	setting_seg = cache_pool_seg;
+
 	if (seg->cleaner_policy)
 		/* With cleaner policy always pass writethrough */
 		feature_flags |= DM_CACHE_FEATURE_WRITETHROUGH;
 	else
-		switch (cache_pool_seg->cache_mode) {
+		switch (setting_seg->cache_mode) {
 		default:
 			log_error(INTERNAL_ERROR "LV %s has unknown cache mode %d.",
-				  display_lvname(seg->lv), cache_pool_seg->cache_mode);
+				  display_lvname(seg->lv), setting_seg->cache_mode);
 			/* Fall through */
 		case CACHE_MODE_WRITETHROUGH:
 			feature_flags |= DM_CACHE_FEATURE_WRITETHROUGH;
@@ -573,7 +579,7 @@ static int _cache_add_target_line(struct dev_manager *dm,
 			break;
 		}
 
-	switch (cache_pool_seg->cache_metadata_format) {
+	switch (setting_seg->cache_metadata_format) {
 	case CACHE_METADATA_FORMAT_1: break;
 	case CACHE_METADATA_FORMAT_2:
 		if (!_target_present(cmd, NULL, &attr))
@@ -581,7 +587,7 @@ static int _cache_add_target_line(struct dev_manager *dm,
 
 		if (!(attr & CACHE_FEATURE_METADATA2)) {
 			log_error("LV %s has metadata format %u unsuported by kernel.",
-				  display_lvname(seg->lv), cache_pool_seg->cache_metadata_format);
+				  display_lvname(seg->lv), setting_seg->cache_metadata_format);
 			return 0;
 		}
 		feature_flags |= DM_CACHE_FEATURE_METADATA2;
@@ -589,7 +595,7 @@ static int _cache_add_target_line(struct dev_manager *dm,
 		break;
 	default:
 		log_error(INTERNAL_ERROR "LV %s has unknown metadata format %u.",
-			  display_lvname(seg->lv), cache_pool_seg->cache_metadata_format);
+			  display_lvname(seg->lv), setting_seg->cache_metadata_format);
 		return 0;
 	}
 
