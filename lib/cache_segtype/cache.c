@@ -47,23 +47,30 @@ static int _cache_out_line(const char *line, void *_f)
 static void _cache_display(const struct lv_segment *seg)
 {
 	const struct dm_config_node *n;
-	const struct lv_segment *pool_seg =
-		seg_is_cache_pool(seg) ? seg : first_seg(seg->pool_lv);
+	const struct lv_segment *setting_seg = NULL;
+
+	if (seg_is_cache_pool(seg))
+		setting_seg = seg;
+
+	else if (seg_is_cache(seg))
+		setting_seg = first_seg(seg->pool_lv);
+	else
+		return;
 
 	log_print("  Chunk size\t\t%s",
-		  display_size(seg->lv->vg->cmd, pool_seg->chunk_size));
+		  display_size(seg->lv->vg->cmd, setting_seg->chunk_size));
 
-	if (pool_seg->cache_metadata_format != CACHE_METADATA_FORMAT_UNSELECTED)
-		log_print("  Metadata format\t%u", pool_seg->cache_metadata_format);
+	if (setting_seg->cache_metadata_format != CACHE_METADATA_FORMAT_UNSELECTED)
+		log_print("  Metadata format\t%u", setting_seg->cache_metadata_format);
 
-	if (pool_seg->cache_mode != CACHE_MODE_UNSELECTED)
-		log_print("  Mode\t\t%s", get_cache_mode_name(pool_seg));
+	if (setting_seg->cache_mode != CACHE_MODE_UNSELECTED)
+		log_print("  Mode\t\t%s", get_cache_mode_name(setting_seg));
 
-	if (pool_seg->policy_name)
-		log_print("  Policy\t\t%s", pool_seg->policy_name);
+	if (setting_seg->policy_name)
+		log_print("  Policy\t\t%s", setting_seg->policy_name);
 
-	if (pool_seg->policy_settings &&
-	    (n = pool_seg->policy_settings->child))
+	if (setting_seg->policy_settings &&
+	    (n = setting_seg->policy_settings->child))
 		dm_config_write_node(n, _cache_out_line, NULL);
 
 	log_print(" ");
