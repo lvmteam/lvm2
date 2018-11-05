@@ -2544,7 +2544,7 @@ static int _cache_emit_segment_line(struct dm_task *dmt,
 				    char *params, size_t paramsize)
 {
 	int pos = 0;
-	/* unsigned feature_count; */
+	unsigned feature_count;
 	char data[DM_FORMAT_DEV_BUFSIZE];
 	char metadata[DM_FORMAT_DEV_BUFSIZE];
 	char origin[DM_FORMAT_DEV_BUFSIZE];
@@ -2569,19 +2569,23 @@ static int _cache_emit_segment_line(struct dm_task *dmt,
 	EMIT_PARAMS(pos, " %u", seg->data_block_size);
 
 	/* Features */
-	/* feature_count = hweight32(seg->flags); */
-	/* EMIT_PARAMS(pos, " %u", feature_count); */
+
+	feature_count = 1; /* One of passthrough|writeback|writethrough is always set. */
+
 	if (seg->flags & DM_CACHE_FEATURE_METADATA2)
-		EMIT_PARAMS(pos, " 2 metadata2 ");
-	else
-		EMIT_PARAMS(pos, " 1 ");
+		feature_count++;
+
+	EMIT_PARAMS(pos, " %u", feature_count);
+
+	if (seg->flags & DM_CACHE_FEATURE_METADATA2)
+		EMIT_PARAMS(pos, " metadata2");
 
 	if (seg->flags & DM_CACHE_FEATURE_PASSTHROUGH)
-		EMIT_PARAMS(pos, "passthrough");
+		EMIT_PARAMS(pos, " passthrough");
         else if (seg->flags & DM_CACHE_FEATURE_WRITEBACK)
-		EMIT_PARAMS(pos, "writeback");
+		EMIT_PARAMS(pos, " writeback");
 	else
-		EMIT_PARAMS(pos, "writethrough");
+		EMIT_PARAMS(pos, " writethrough");
 
 	/* Cache Policy */
 	name = seg->policy_name ? : "default";
