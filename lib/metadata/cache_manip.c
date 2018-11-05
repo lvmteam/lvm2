@@ -95,31 +95,13 @@ int set_cache_mode(cache_mode_t *mode, const char *cache_mode)
 	return 1;
 }
 
-int cache_set_cache_mode(struct lv_segment *seg, cache_mode_t mode)
+static cache_mode_t _get_cache_mode_from_config(struct cmd_context *cmd,
+						struct profile *profile,
+						struct logical_volume *lv)
 {
-	struct cmd_context *cmd = seg->lv->vg->cmd;
-	struct profile *profile = seg->lv->profile;
+	cache_mode_t mode;
 	const char *str;
 	int id;
-
-	if (seg_is_cache(seg))
-		seg = first_seg(seg->pool_lv);
-	else if (seg_is_cache_pool(seg)) {
-		if (mode == CACHE_MODE_UNSELECTED)
-			return 1;	/* Defaults only for cache */
-	} else {
-		log_error(INTERNAL_ERROR "Cannot set cache mode for non cache volume %s.",
-			  display_lvname(seg->lv));
-		return 0;
-	}
-
-	if (mode != CACHE_MODE_UNSELECTED) {
-		seg->cache_mode = mode;
-		return 1;
-	}
-
-	if (seg->cache_mode != CACHE_MODE_UNSELECTED)
-		return 1;               /* Default already set in cache pool */
 
 	/* Figure default settings from config/profiles */
 	id = allocation_cache_mode_CFG;
@@ -131,11 +113,48 @@ int cache_set_cache_mode(struct lv_segment *seg, cache_mode_t mode)
 
 	if (!(str = find_config_tree_str(cmd, id, profile))) {
 		log_error(INTERNAL_ERROR "Cache mode is not determined.");
+		return CACHE_MODE_WRITETHROUGH;
+	}
+
+	if (!(set_cache_mode(&mode, str)))
+		return CACHE_MODE_WRITETHROUGH;
+
+	return mode;
+}
+
+int cache_set_cache_mode(struct lv_segment *seg, cache_mode_t mode)
+{
+	struct cmd_context *cmd = seg->lv->vg->cmd;
+	struct lv_segment *setting_seg;
+
+	/*
+	 * Don't set a cache mode on an unused cache pool, the
+	 * cache mode will be set when it's attached.
+	 */
+	if (seg_is_cache_pool(seg) && (mode == CACHE_MODE_UNSELECTED))
+		return 1;
+
+	if (seg_is_cache_pool(seg))
+		setting_seg = seg;
+
+	else if (seg_is_cache(seg))
+		setting_seg = first_seg(seg->pool_lv);
+
+	else {
+		log_error(INTERNAL_ERROR "Cannot set cache mode for non cache volume %s.",
+			  display_lvname(seg->lv));
 		return 0;
 	}
 
-	if (!(set_cache_mode(&seg->cache_mode, str)))
-		return_0;
+	if (mode != CACHE_MODE_UNSELECTED) {
+		setting_seg->cache_mode = mode;
+		return 1;
+	}
+
+	if (setting_seg->cache_mode != CACHE_MODE_UNSELECTED)
+		return 1;
+
+	setting_seg->cache_mode = _get_cache_mode_from_config(cmd, seg->lv->profile, seg->lv);
 
 	return 1;
 }
