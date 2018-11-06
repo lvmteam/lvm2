@@ -20,7 +20,7 @@ ONLINEDIR="$RUNDIR/lvm/pvs_online"
 _clear_online() {
 	# wait till udev is finished
 	aux udev_wait
-	rm -f "$ONLINEDIR/*"
+	rm -f "$ONLINEDIR"/*
 	test -n "${1+varset}" || touch "$ONLINEDIR/foo"
 }
 
@@ -62,9 +62,9 @@ lvchange -an $vg1
 
 _clear_online
 
-pvscan -vvvv --cache -aay "$dev1"
+pvscan --cache -aay "$dev1"
 check lv_field $vg1/$lv1 lv_active ""
-pvscan -vvvv --cache -aay "$dev2"
+pvscan --cache -aay "$dev2"
 check lv_field $vg1/$lv1 lv_active "active"
 lvchange -an $vg1
 
