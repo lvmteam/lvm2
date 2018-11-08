@@ -915,6 +915,7 @@ with_cache_restore
 enable_cache_check_needs_check
 with_vdo
 with_vdo_format
+with_writecache
 enable_readline
 enable_realtime
 enable_ocf
@@ -1708,6 +1709,7 @@ Optional Packages:
                           cache_restore tool: [autodetect]
   --with-vdo=TYPE         vdo support: internal/none [internal]
   --with-vdo-format=PATH  vdoformat tool: [autodetect]
+  --with-writecache=TYPE  writecache support: internal/none [internal]
   --with-ocfdir=DIR       install OCF files in
                           [PREFIX/lib/ocf/resource.d/lvm2]
   --with-default-pid-dir=PID_DIR
@@ -9704,6 +9706,31 @@ _ACEOF
 #                           [vdo support: Path to utils lib: [/usr/lib]]),
 #                           VDO_LIB=$withval, VDO_LIB="/usr/lib")
 #AC_MSG_RESULT($VDO_LIB)
+
+################################################################################
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to include writecache" >&5
+$as_echo_n "checking whether to include writecache... " >&6; }
+
+# Check whether --with-writecache was given.
+if test "${with_writecache+set}" = set; then :
+  withval=$with_writecache; WRITECACHE=$withval
+else
+  WRITECACHE="none"
+fi
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $WRITECACHE" >&5
+$as_echo "$WRITECACHE" >&6; }
+
+case "$WRITECACHE" in
+ none) ;;
+ internal)
+
+$as_echo "#define WRITECACHE_INTERNAL 1" >>confdefs.h
+
+	;;
+ *) as_fn_error $? "--with-writecache parameter invalid" "$LINENO" 5 ;;
+esac
 
 ################################################################################
 # Check whether --enable-readline was given.
