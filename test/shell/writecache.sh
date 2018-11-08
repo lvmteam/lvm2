@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2017 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2018 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -16,12 +16,14 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+aux have_writecache 1 0 0 || skip
+which mkfs.xfs || skip
+
 mount_dir="mnt"
 mkdir -p $mount_dir
 
 # generate random data
-dmesg > pattern1
-ps aux >> pattern1
+dd if=/dev/urandom of=pattern1 bs=512K count=1
 
 aux prepare_devs 2 64
 

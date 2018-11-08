@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2017 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2018 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -16,12 +16,14 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+aux have_cache 1 3 0 || skip
+which mkfs.xfs || skip
+
 mount_dir="mnt"
-mkdir -p $mount_dir
+mkdir -p "$mount_dir"
 
 # generate random data
-dmesg > pattern1
-ps aux >> pattern1
+dd if=/dev/urandom of=pattern1 bs=512K count=1
 
 aux prepare_devs 5 64
 
@@ -40,10 +42,10 @@ mkfs_mount_umount()
 	lvchange -ay $vg/$lvt
 
 	mkfs.xfs -f -s size=4096 "$DM_DEV_DIR/$vg/$lvt"
-	mount "$DM_DEV_DIR/$vg/$lvt" $mount_dir
-	cp pattern1 $mount_dir/pattern1
-	dd if=/dev/zero of=$mount_dir/zeros2M bs=1M count=2 oflag=sync
-	umount $mount_dir
+	mount "$DM_DEV_DIR/$vg/$lvt" "$mount_dir"
+	cp pattern1 "$mount_dir/pattern1"
+	dd if=/dev/zero of="$mount_dir/zeros2M" bs=1M count=2 conv=fdatasync
+	umount "$mount_dir"
 
 	lvchange -an $vg/$lvt
 }
@@ -54,10 +56,10 @@ mount_umount()
 
 	lvchange -ay $vg/$lvt
 
-	mount "$DM_DEV_DIR/$vg/$lvt" $mount_dir
-	diff pattern1 $mount_dir/pattern1
-	dd if=$mount_dir/zeros2M of=/dev/null bs=1M count=2
-	umount $mount_dir
+	mount "$DM_DEV_DIR/$vg/$lvt" "$mount_dir"
+	diff pattern1 "$mount_dir/pattern1"
+	dd if="$mount_dir/zeros2M" of=/dev/null bs=1M count=2 conv=fdatasync
+	umount "$mount_dir"
 
 	lvchange -an $vg/$lvt
 }
@@ -266,4 +268,3 @@ check lv_field $vg/$lv3 segtype cache-pool
 
 
 vgremove -ff $vg
-

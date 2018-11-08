@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2017 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2018 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -16,12 +16,14 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+aux have_cache 1 3 0 || skip
+which mkfs.xfs || skip
+
 mount_dir="mnt"
-mkdir -p $mount_dir
+mkdir -p "$mount_dir"
 
 # generate random data
-dmesg > pattern1
-ps aux >> pattern1
+dd if=/dev/urandom of=pattern1 bs=512K count=1
 
 aux prepare_devs 2 64
 
@@ -39,11 +41,11 @@ lvchange -ay $vg/$lv1
 
 mkfs.xfs -f -s size=4096 "$DM_DEV_DIR/$vg/$lv1"
 
-mount "$DM_DEV_DIR/$vg/$lv1" $mount_dir
+mount "$DM_DEV_DIR/$vg/$lv1" "$mount_dir"
 
-cp pattern1 $mount_dir/pattern1
+cp pattern1 "$mount_dir/pattern1"
 
-umount $mount_dir
+umount "$mount_dir"
 lvchange -an $vg/$lv1
 
 lvconvert -y --type cache --cachepool $lv2 $vg/$lv1
@@ -55,15 +57,15 @@ grep linear out
 
 lvchange -ay $vg/$lv1
 
-mount "$DM_DEV_DIR/$vg/$lv1" $mount_dir
+mount "$DM_DEV_DIR/$vg/$lv1" "$mount_dir"
 
-diff pattern1 $mount_dir/pattern1
+diff pattern1 "$mount_dir/pattern1"
 
-cp pattern1 $mount_dir/pattern1b
+cp pattern1 "$mount_dir/pattern1b"
 
-ls -l $mount_dir
+ls -l "$mount_dir"
 
-umount $mount_dir
+umount "$mount_dir"
 
 lvchange -an $vg/$lv1
 
@@ -75,14 +77,14 @@ check lv_field $vg/$lv2 segtype linear
 lvchange -ay $vg/$lv1
 lvchange -ay $vg/$lv2
 
-mount "$DM_DEV_DIR/$vg/$lv1" $mount_dir
+mount "$DM_DEV_DIR/$vg/$lv1" "$mount_dir"
 
-ls -l $mount_dir
+ls -l "$mount_dir"
 
-diff pattern1 $mount_dir/pattern1
-diff pattern1 $mount_dir/pattern1b
+diff pattern1 "$mount_dir/pattern1"
+diff pattern1 "$mount_dir/pattern1b"
 
-umount $mount_dir
+umount "$mount_dir"
 lvchange -an $vg/$lv1
 lvchange -an $vg/$lv2
 
@@ -99,12 +101,12 @@ lvchange -ay $vg/$lv1
 
 mkfs.xfs -f -s size=4096 "$DM_DEV_DIR/$vg/$lv1"
 
-mount "$DM_DEV_DIR/$vg/$lv1" $mount_dir
+mount "$DM_DEV_DIR/$vg/$lv1" "$mount_dir"
 
-cp pattern1 $mount_dir/pattern1
-ls -l $mount_dir
+cp pattern1 "$mount_dir/pattern1"
+ls -l "$mount_dir"
 
-umount $mount_dir
+umount "$mount_dir"
 lvchange -an $vg/$lv1
 
 lvconvert --splitcache $vg/$lv1
@@ -115,15 +117,14 @@ check lv_field $vg/$lv2 segtype linear
 lvchange -ay $vg/$lv1
 lvchange -ay $vg/$lv2
 
-mount "$DM_DEV_DIR/$vg/$lv1" $mount_dir
+mount "$DM_DEV_DIR/$vg/$lv1" "$mount_dir"
 
-ls -l $mount_dir
+ls -l "$mount_dir"
 
-diff pattern1 $mount_dir/pattern1
+diff pattern1 "$mount_dir/pattern1"
 
-umount $mount_dir
+umount "$mount_dir"
 lvchange -an $vg/$lv1
 lvchange -an $vg/$lv2
 
 vgremove -ff $vg
-

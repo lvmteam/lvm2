@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2017 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2018 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -15,6 +15,8 @@
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
+
+aux have_cache 1 3 0 || skip
 
 aux prepare_devs 5 80
 
