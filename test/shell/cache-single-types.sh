@@ -30,13 +30,11 @@ aux prepare_devs 4 64
 
 vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4"
 
-lvcreate --type raid1 -n $lv1 -l 8 -an $vg "$dev1" "$dev2"
+lvcreate --type raid1 -m 1 -n $lv1 -l 8 $vg "$dev1" "$dev2"
 
-lvcreate --type raid1 -n $lv2 -l 4 -an $vg "$dev3" "$dev4"
+lvcreate --type raid1 -m 1 -n $lv2 -l 4 $vg "$dev3" "$dev4"
 
 # test1: create fs on LV before cache is attached
-
-lvchange -ay $vg/$lv1
 
 mkfs.xfs -f -s size=4096 "$DM_DEV_DIR/$vg/$lv1"
 
