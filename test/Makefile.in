@@ -137,33 +137,33 @@ check_local: .tests-stamp
 ifeq ("@BUILD_LVMPOLLD@", "yes")
 check_lvmpolld: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir results \
+		--testdir . --outdir $(LVM_TEST_RESULTS) \
 		--flavours ndev-lvmpolld --only $(T) --skip $(S)
 
 check_all_lvmpolld: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir results \
+		--testdir . --outdir $(LVM_TEST_RESULTS) \
 		--flavours ndev-lvmpolld --only $(T) --skip $(S)
 endif
 
 ifeq ("@BUILD_LVMLOCKD@", "yes")
 check_lvmlockd_sanlock: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir results \
+		--testdir . --outdir $(LVM_TEST_RESULTS) \
 		--flavours udev-lvmlockd-sanlock --only shell/aa-lvmlockd-sanlock-prepare.sh,$(T),shell/zz-lvmlockd-sanlock-remove.sh --skip $(S)
 endif
 
 ifeq ("@BUILD_LVMLOCKD@", "yes")
 check_lvmlockd_dlm: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir results \
+		--testdir . --outdir $(LVM_TEST_RESULTS) \
 		--flavours udev-lvmlockd-dlm --only shell/aa-lvmlockd-dlm-prepare.sh,$(T),shell/zz-lvmlockd-dlm-remove.sh --skip $(S)
 endif
 
 ifeq ("@BUILD_LVMLOCKD@", "yes")
 check_lvmlockd_test: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir results \
+		--testdir . --outdir $(LVM_TEST_RESULTS) \
 		--flavours udev-lvmlockd-test --only $(T) --skip $(S)
 endif
 
