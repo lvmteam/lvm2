@@ -236,6 +236,10 @@ lvchange --cachemode writethrough $vg/$lv1
 
 check lv_field $vg/$lv1 cachemode "writethrough"
 
+lvchange --cachemode passthrough $vg/$lv1
+
+check lv_field $vg/$lv1 cachemode "passthrough"
+
 lvchange -an $vg/$lv1
 
 lvchange --cachepolicy mq --cachesettings 'migration_threshold=100' $vg/$lv1
