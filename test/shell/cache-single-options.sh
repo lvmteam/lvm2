@@ -164,16 +164,16 @@ mount_umount $lv1
 #mount_umount $lv1
 
 
-#lvconvert -y --type cache --cachepool $lv2 --cachemode writeback $vg/$lv1
+lvconvert -y --type cache --cachepool $lv2 --cachemode writeback $vg/$lv1
 
-#check lv_field $vg/$lv1 cachemode "writeback"
+check lv_field $vg/$lv1 cachemode "writeback"
 
-#mkfs_mount_umount $lv1
+mkfs_mount_umount $lv1
 
-#lvconvert --splitcache $vg/$lv1
-#check lv_field $vg/$lv1 segtype linear
-#check lv_field $vg/$lv2 segtype linear
-#mount_umount $lv1
+lvconvert --splitcache $vg/$lv1
+check lv_field $vg/$lv1 segtype linear
+check lv_field $vg/$lv2 segtype linear
+mount_umount $lv1
 
 
 #
