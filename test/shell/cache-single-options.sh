@@ -58,7 +58,7 @@ mount_umount()
 
 	mount "$DM_DEV_DIR/$vg/$lvt" "$mount_dir"
 	diff pattern1 "$mount_dir/pattern1"
-	dd if="$mount_dir/zeros2M" of=/dev/null bs=1M count=2 conv=fdatasync
+	dd if="$mount_dir/zeros2M" of=/dev/null bs=1M count=2
 	umount "$mount_dir"
 
 	lvchange -an $vg/$lvt
