@@ -1804,7 +1804,7 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 
 		if (!_deactivate_node(name, info.major, info.minor,
 				      &child->dtree->cookie, child->udev_flags,
-				      (level == 0) ? child->dtree->retry_remove : 0)) {
+				      child->dtree->retry_remove)) {
 			log_error("Unable to deactivate %s (" FMTu32 ":"
 				  FMTu32 ").", name, info.major, info.minor);
 			r = 0;
