@@ -186,11 +186,10 @@ check lv_field $vg/$lv1 cachepolicy "smq"
 
 mkfs_mount_umount $lv1
 
-# FIXME: lvchange_cachepolicy sets wrong lv
-#lvchange --cachepolicy cleaner $vg/$lv1
-#lvchange -ay $vg/$lv1
-#check lv_field $vg/$lv1 cachepolicy "cleaner"
-#lvchange -an $vg/$lv1
+lvchange --cachepolicy cleaner $vg/$lv1
+lvchange -ay $vg/$lv1
+check lv_field $vg/$lv1 cachepolicy "cleaner"
+lvchange -an $vg/$lv1
 
 lvconvert --splitcache $vg/$lv1
 check lv_field $vg/$lv1 segtype linear
