@@ -112,6 +112,12 @@ check_and_cleanup_lvs_
 lvcreate -aey -l2 --type mirror -m1 -n $lv1 $vg
 # Use large enough polling interval so mirror is keeping mimagetmp
 LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -i+40 -b $vg/$lv1
+for i in $(seq 1 10) ; do
+	# check if background process already started
+	# this is recognized by presence of LV1_mimage_2
+	check lvl $vg/${lv1}_mimage_2 && break
+	sleep .1
+done
 convlv=$(lv_convert_lv_ $vg/$lv1)
 test "$convlv" = "${lv1}_mimagetmp_2"
 lv_devices_ $vg/$lv1 $convlv ${lv1}_mimage_2
