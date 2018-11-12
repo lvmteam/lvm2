@@ -1764,7 +1764,12 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 
 		if (info.open_count) {
 			/* Skip internal non-toplevel opened nodes */
-			if (level)
+			/* On some old udev systems without corrrect udev rules
+			 * this hack avoids 'leaking' active _mimageX legs after
+			 * deactivation of mirror LV. Other suffixes are not added
+			 * since it's expected newer systems with wider range of
+			 * supported targets also use better udev */
+			if (level && !strstr(name, "_mimage"))
 				continue;
 
 			/* When retry is not allowed, error */
