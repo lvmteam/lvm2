@@ -76,7 +76,6 @@ lvcreate -aey -l1 -n $lv1 $vg
 lvcreate -H -l2 $vg/$lv1
 
 check_change_ "Check is skipped"
-vgcfgbackup -f /dev/shm/back
 
 # prepare fake version of cache_check tool that reports old version
 make_fake_ "0.1.0"
