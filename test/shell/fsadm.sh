@@ -143,7 +143,7 @@ if check_missing ext3; then
 fi
 
 if check_missing xfs; then
-	mkfs.xfs -l internal,size=1000b -f "$dev_vg_lv"
+	mkfs.xfs -l internal,size=2000b -f "$dev_vg_lv"
 
 	fsadm --lvresize resize $vg_lv 30M
 	# Fails - not enough space for 4M fs
