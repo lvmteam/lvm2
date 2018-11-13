@@ -1481,9 +1481,10 @@ ID: pvscan_display
 DESC: Display PV information.
 
 pvscan --cache_long
-OO: --ignorelockingfailure, --reportformat ReportFmt, --background,
+OO: --ignorelockingfailure, --reportformat ReportFmt,
 --activate ay, --major Number, --minor Number
 OP: PV|String ...
+IO: --background
 ID: pvscan_cache
 DESC: Autoactivate a VG when all PVs are online.
 
