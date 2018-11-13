@@ -38,8 +38,6 @@ The content of the tarball is as follows:
 .br
 - if enabled with -a, debug output of vgscan, pvscan and list of all available volume groups, physical volumes and logical volumes will be included
 .br
-- if enabled with -c, cluster status info
-.br
 - if enabled with -l, lvmetad state if running
 .br
 - if enabled with -p, lvmpolld state if running
@@ -53,9 +51,6 @@ The content of the tarball is as follows:
 Advanced collection.
 \fBWARNING\fR: if lvm is already hung, then this script may hang as well
 if \fB-a\fR is used.
-.TP
-.B -c
-If clvmd is running, gather cluster data as well.
 .TP
 .B -d  \fIdirectory
 Dump into a directory instead of tarball
