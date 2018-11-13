@@ -84,14 +84,16 @@ arg(binary_ARG, '\0', "binary", 0, 0, 0,
     "the \"unknown\" value which denotes that the value could not be determined).\n")
 
 arg(bootloaderareasize_ARG, '\0', "bootloaderareasize", sizemb_VAL, 0, 0,
-    "Create a separate bootloader area of specified size besides PV's data\n"
-    "area. The bootloader area is an area of reserved space on the PV from\n"
-    "which LVM will not allocate any extents and it's kept untouched. This is\n"
-    "primarily aimed for use with bootloaders to embed their own data or metadata.\n"
+    "Reserve space for the bootloader between the LVM metadata area and the first PE.\n"
+    "The bootloader area is reserved for bootloaders to embed their own data or\n"
+    "metadata; LVM will not use it.\n"
+    "The bootloader area begins where the first PE would otherwise be located.\n"
+    "The first PE is moved out by the size of the bootloader area, and then moved\n"
+    "out further if necessary to match the data alignment.\n"
     "The start of the bootloader area is always aligned, see also --dataalignment\n"
-    "and --dataalignmentoffset. The bootloader area size may eventually\n"
-    "end up increased due to the alignment, but it's never less than the\n"
-    "size that is requested. To see the bootloader area start and size of\n"
+    "and --dataalignmentoffset. The bootloader area may be larger than requested\n"
+    "due to the alignment, but it's never less than the requested size.\n"
+    "To see the bootloader area start and size of\n"
     "an existing PV use pvs -o +pv_ba_start,pv_ba_size.\n")
 
 arg(cache_long_ARG, '\0', "cache", 0, 0, 0,
@@ -173,14 +175,14 @@ arg(configtype_ARG, '\0', "typeconfig", configtype_VAL, 0, 0,
     "Also see \\fBlvm.conf\\fP(5).\n")
 
 arg(dataalignment_ARG, '\0', "dataalignment", sizekb_VAL, 0, 0,
-    "Align the start of the data to a multiple of this number.\n"
-    "Also specify an appropriate Physical Extent size when creating a VG.\n"
-    "To see the location of the first Physical Extent of an existing PV,\n"
-    "use pvs -o +pe_start. In addition, it may be shifted by an alignment offset.\n"
-    "See lvm.conf/data_alignment_offset_detection and --dataalignmentoffset.\n")
+    "Align the start of a PV data area with a multiple of this number.\n"
+    "To see the location of the first Physical Extent (PE) of an existing PV,\n"
+    "use pvs -o +pe_start. In addition, it may be shifted by an alignment offset,\n"
+    "see --dataalignmentoffset.\n"
+    "Also specify an appropriate PE size when creating a VG.\n")
 
 arg(dataalignmentoffset_ARG, '\0', "dataalignmentoffset", sizekb_VAL, 0, 0,
-    "Shift the start of the data area by this additional offset.\n")
+    "Shift the start of the PV data area by this additional offset.\n")
 
 arg(deduplication_ARG, '\0', "deduplication", bool_VAL, 0, 0,
     "Controls whether deduplication is enabled or disable for VDO volume.\n"
@@ -488,8 +490,7 @@ arg(pvmetadatacopies_ARG, '\0', "pvmetadatacopies", pvmetadatacopies_VAL, 0, 0,
     "The number of metadata areas to set aside on a PV for storing VG metadata.\n"
     "When 2, one copy of the VG metadata is stored at the front of the PV\n"
     "and a second copy is stored at the end.\n"
-    "When 1, one copy of the VG metadata is stored at the front of the PV\n"
-    "(starting in the 5th sector).\n"
+    "When 1, one copy of the VG metadata is stored at the front of the PV.\n"
     "When 0, no copies of the VG metadata are stored on the given PV.\n"
     "This may be useful in VGs containing many PVs (this places limitations\n"
     "on the ability to use vgsplit later.)\n")

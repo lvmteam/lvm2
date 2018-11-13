@@ -34,14 +34,6 @@ grep "Metadata area size too small" err
 #COMM 'pvcreate accepts metadatasize that is at least the minimum size'
 pvcreate --dataalignment ${MDA_SIZE_MIN}b --metadatasize ${MDA_SIZE_MIN}b "$dev1"
 
-# x. metadatasize 0, defaults to 255
-# FIXME: unable to check default value, not in reporting cmds
-# should default to 255 according to code
-#   check pv_field pv_mda_size 255 
-#COMM 'pvcreate accepts metadatasize 0'
-pvcreate --metadatasize 0 "$dev1"
-pvremove "$dev1"
-
 #Verify vg_mda_size is smaller pv_mda_size
 pvcreate --metadatasize 512k "$dev1"
 pvcreate --metadatasize 96k "$dev2"
@@ -95,20 +87,17 @@ not pvcreate --labelsector 1000000000000 "$dev1"
 #COMM 'pvcreate basic dataalignment sanity checks'
 not pvcreate --dataalignment -1 "$dev1"
 not pvcreate --dataalignment 1e "$dev1"
-if test -n "$LVM_TEST_LVM1" ; then
-not pvcreate -M1 --dataalignment 1 "$dev1"
-fi
 
 #COMM 'pvcreate always rounded up to page size for start of device'
 #pvcreate --metadatacopies 0 --dataalignment 1 "$dev1"
 # amuse shell experts
 #check pv_field "$dev1" pe_start $(($(getconf PAGESIZE)/1024))".00k"
 
-#COMM 'pvcreate sets data offset directly'
-pvcreate --dataalignment 512k "$dev1"
+#COMM 'pvcreate sets data alignment directly'
+pvcreate --dataalignment 512K --config 'metadata {pvmetadatasize=255}' "$dev1"
 check pv_field "$dev1" pe_start "512.00k"
 
-#COMM 'vgcreate $SHARED/vgremove do not modify data offset of existing PV'
+#COMM 'vgcreate/vgremove do not modify data offset of existing PV'
 vgcreate $SHARED $vg "$dev1"  --config 'devices { data_alignment = 1024 }'
 check pv_field "$dev1" pe_start "512.00k"
 vgremove $vg --config 'devices { data_alignment = 1024 }'
@@ -124,6 +113,31 @@ case "$PAGESIZE" in
  8192)	pv_align="136.50k" ;;
  *)	pv_align="133.00k" ;;
 esac
+
+# pe_start is a multiple of dataalignment, leaving enough
+# space between mda_start and pe_end for the specified
+# metadata size.
+#
+# With page size 4k, mda_start is rounded up start at 4k.
+# The chosen multiple of data alignment (3.5k) is 38:
+# 3.5k * 38 = 133k for pe_start
+# Space available for metadata between mda_start and pe_end is:
+# 133k - 4k = 129k mda size, which is large enough for the
+# specified mda size of 128k.
+#
+# With page size 8k, mda_start is rouned up to start at 8k.
+# The chosen multiple of data alignment (3.5k) is 39:
+# 3.5k * 39 = 136.5k for pe_start
+# Space available for metadata between mda_start and pe_end is:
+# 136.5k - 8k = 128.5k mda size, which is large enough for the
+# specified mda size of 128k.
+# 
+# With page size 64k, mda_start is rouned up to start at 64k.
+# The chosen multiple of data alignment (3.5k) is 55:
+# 3.5k * 55 = 192.5k for pe_start
+# Space available for metadata between mda_start and pe_end is:
+# 192.5k - 64k = 128.5k mda size, which is large enough for the
+# specified mda size of 128k.
 
 pvcreate --metadatasize 128k --dataalignment 3.5k "$dev1"
 check pv_field "$dev1" pe_start $pv_align

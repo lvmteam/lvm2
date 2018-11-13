@@ -18,8 +18,18 @@
 
 #include "device_mapper/vdo/vdo_limits.h"
 
-#define DEFAULT_PE_ALIGN 2048
-#define DEFAULT_PE_ALIGN_OLD 128
+
+/*
+ * By default the first PE is placed at 1 MiB.
+ *
+ * If default_data_alignment is 2, then the first PE
+ * is placed at 2 * 1 MiB.
+ *
+ * If default_data_alignment is 3, then the first PE
+ * is placed at 3 * 1 MiB.
+ */
+#define FIRST_PE_AT_ONE_MB_IN_SECTORS 2048  /* 1 MiB in 512 byte sectors */
+#define FIRST_PE_AT_ONE_MB_IN_MB         1
 
 #define DEFAULT_ARCHIVE_ENABLED 1
 #define DEFAULT_BACKUP_ENABLED 1
@@ -180,7 +190,6 @@
 #define DEFAULT_RECORD_LVS_HISTORY 0
 #define DEFAULT_LVS_HISTORY_RETENTION_TIME 0
 #define DEFAULT_PVMETADATAIGNORE 0
-#define DEFAULT_PVMETADATASIZE 255
 #define DEFAULT_PVMETADATACOPIES 1
 #define DEFAULT_VGMETADATACOPIES 0
 #define DEFAULT_LABELSECTOR UINT64_C(1)

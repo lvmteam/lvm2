@@ -112,7 +112,8 @@ aux prepare_scsi_debug_dev $DEV_SIZE \
 check sysfs "$(< SCSI_DEBUG_DEV)" queue/logical_block_size $LOGICAL_BLOCK_SIZE
 check sysfs "$(< SCSI_DEBUG_DEV)" queue/optimal_io_size 786432
 
-aux prepare_pvs 1 $PER_DEV_SIZE
+aux prepare_devs 1 $PER_DEV_SIZE
+pvcreate --metadatasize 255s "${DEVICES[@]}"
 
 # Kernel (3.19) could provide wrong results - in this case skip
 # test with incorrect result - lvm2 can't figure out good values.

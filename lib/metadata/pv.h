@@ -54,8 +54,8 @@ struct physical_volume {
 	uint64_t pe_start;
 	uint32_t pe_count;
 	uint32_t pe_alloc_count;
-	unsigned long pe_align;
-	unsigned long pe_align_offset;
+	uint64_t pe_align;
+	uint64_t pe_align_offset;
 
         /* This is true whenever the represented PV has a label associated. */
         uint64_t is_labelled:1;

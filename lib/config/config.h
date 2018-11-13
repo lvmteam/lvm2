@@ -311,5 +311,7 @@ int get_default_allocation_cache_pool_chunk_size_CFG(struct cmd_context *cmd, st
 const char *get_default_allocation_cache_policy_CFG(struct cmd_context *cmd, struct profile *profile);
 #define get_default_unconfigured_allocation_cache_policy_CFG NULL
 uint64_t get_default_allocation_cache_pool_max_chunks_CFG(struct cmd_context *cmd, struct profile *profile);
+int get_default_metadata_pvmetadatasize_CFG(struct cmd_context *cmd, struct profile *profile);
+#define get_default_unconfigured_metadata_pvmetadatasize_CFG NULL
 
 #endif

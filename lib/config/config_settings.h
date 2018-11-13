@@ -352,16 +352,21 @@ cfg(devices_fw_raid_component_detection_CFG, "fw_raid_component_detection", devi
 	"detection to execute.\n")
 
 cfg(devices_md_chunk_alignment_CFG, "md_chunk_alignment", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_MD_CHUNK_ALIGNMENT, vsn(2, 2, 48), NULL, 0, NULL,
-	"Align PV data blocks with md device's stripe-width.\n"
-	"This applies if a PV is placed directly on an md device.\n")
+	"Align the start of a PV data area with md device's stripe-width.\n"
+	"This applies if a PV is placed directly on an md device.\n"
+	"default_data_alignment will be overriden if it is not aligned\n"
+	"with the value detected for this setting.\n"
+	"This setting is overriden by data_alignment_detection,\n"
+	"data_alignment, and the --dataalignment option.\n")
 
-cfg(devices_default_data_alignment_CFG, "default_data_alignment", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_DATA_ALIGNMENT, vsn(2, 2, 75), NULL, 0, NULL,
-	"Default alignment of the start of a PV data area in MB.\n"
-	"If set to 0, a value of 64KiB will be used.\n"
-	"Set to 1 for 1MiB, 2 for 2MiB, etc.\n")
+cfg(devices_default_data_alignment_CFG, "default_data_alignment", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, FIRST_PE_AT_ONE_MB_IN_MB, vsn(2, 2, 75), NULL, 0, NULL,
+	"Align the start of a PV data area with this number of MiB.\n"
+	"Set to 1 for 1MiB, 2 for 2MiB, etc. Set to 0 to disable.\n"
+	"This setting is overriden by data_alignment and the --dataalignment\n"
+	"option.\n")
 
 cfg(devices_data_alignment_detection_CFG, "data_alignment_detection", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_DATA_ALIGNMENT_DETECTION, vsn(2, 2, 51), NULL, 0, NULL,
-	"Detect PV data alignment based on sysfs device information.\n"
+	"Align the start of a PV data area with sysfs io properties.\n"
 	"The start of a PV data area will be a multiple of minimum_io_size or\n"
 	"optimal_io_size exposed in sysfs. minimum_io_size is the smallest\n"
 	"request the device can perform without incurring a read-modify-write\n"
@@ -369,25 +374,27 @@ cfg(devices_data_alignment_detection_CFG, "data_alignment_detection", devices_CF
 	"preferred unit of receiving I/O, e.g. MD stripe width.\n"
 	"minimum_io_size is used if optimal_io_size is undefined (0).\n"
 	"If md_chunk_alignment is enabled, that detects the optimal_io_size.\n"
-	"This setting takes precedence over md_chunk_alignment.\n")
+	"default_data_alignment and md_chunk_alignment will be overriden\n"
+	"if they are not aligned with the value detected for this setting.\n"
+	"This setting is overriden by data_alignment and the --dataalignment\n"
+	"option.\n")
 
 cfg(devices_data_alignment_CFG, "data_alignment", devices_CFG_SECTION, 0, CFG_TYPE_INT, 0, vsn(2, 2, 45), NULL, 0, NULL,
-	"Alignment of the start of a PV data area in KiB.\n"
-	"If a PV is placed directly on an md device and md_chunk_alignment or\n"
-	"data_alignment_detection are enabled, then this setting is ignored.\n"
-	"Otherwise, md_chunk_alignment and data_alignment_detection are\n"
-	"disabled if this is set. Set to 0 to use the default alignment or the\n"
-	"page size, if larger.\n")
+	"Align the start of a PV data area with this number of KiB.\n"
+	"When non-zero, this setting overrides default_data_alignment.\n"
+	"Set to 0 to disable, in which case default_data_alignment\n"
+	"is used to align the first PE in units of MiB.\n"
+	"This setting is overriden by the --dataalignment option.\n")
 
 cfg(devices_data_alignment_offset_detection_CFG, "data_alignment_offset_detection", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_DATA_ALIGNMENT_OFFSET_DETECTION, vsn(2, 2, 50), NULL, 0, NULL,
-	"Detect PV data alignment offset based on sysfs device information.\n"
-	"The start of a PV aligned data area will be shifted by the\n"
+	"Shift the start of an aligned PV data area based on sysfs information.\n"
+	"After a PV data area is aligned, it will be shifted by the\n"
 	"alignment_offset exposed in sysfs. This offset is often 0, but may\n"
 	"be non-zero. Certain 4KiB sector drives that compensate for windows\n"
 	"partitioning will have an alignment_offset of 3584 bytes (sector 7\n"
 	"is the lowest aligned logical block, the 4KiB sectors start at\n"
 	"LBA -1, and consequently sector 63 is aligned on a 4KiB boundary).\n"
-	"pvcreate --dataalignmentoffset will skip this detection.\n")
+	"This setting is overriden by the --dataalignmentoffset option.\n")
 
 cfg(devices_ignore_suspended_devices_CFG, "ignore_suspended_devices", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_IGNORE_SUSPENDED_DEVICES, vsn(1, 2, 19), NULL, 0, NULL,
 	"Ignore DM devices that have I/O suspended while scanning devices.\n"
@@ -1606,12 +1613,19 @@ cfg(metadata_vgmetadatacopies_CFG, "vgmetadatacopies", metadata_CFG_SECTION, CFG
 	"and allows you to control which metadata areas are used at the\n"
 	"individual PV level using pvchange --metadataignore y|n.\n")
 
-cfg(metadata_pvmetadatasize_CFG, "pvmetadatasize", metadata_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_PVMETADATASIZE, vsn(1, 0, 0), NULL, 0, NULL,
-	"Approximate number of sectors to use for each metadata copy.\n"
-	"VGs with large numbers of PVs or LVs, or VGs containing complex LV\n"
-	"structures, may need additional space for VG metadata. The metadata\n"
-	"areas are treated as circular buffers, so unused space becomes filled\n"
-	"with an archive of the most recent previous versions of the metadata.\n")
+cfg_runtime(metadata_pvmetadatasize_CFG, "pvmetadatasize", metadata_CFG_SECTION, CFG_DEFAULT_COMMENTED | CFG_DEFAULT_UNDEFINED, CFG_TYPE_INT, vsn(1, 0, 0), 0, NULL,
+	"The default size of the metadata area in units of 512 byte sectors.\n"
+	"The metadata area begins at an offset of the page size from the start\n"
+	"of the device. The first PE is by default at 1 MiB from the start of\n"
+	"the device. The space between these is the default metadata area size.\n"
+	"The actual size of the metadata area may be larger than what is set\n"
+	"here due to default_data_alignment making the first PE a MiB multiple.\n"
+	"The metadata area begins with a 512 byte header and is followed by a\n"
+	"circular buffer used for VG metadata text. The maximum size of the VG\n"
+	"metadata is about half the size of the metadata buffer. VGs with large\n"
+	"numbers of PVs or LVs, or VGs containing complex LV structures, may need\n"
+	"additional space for VG metadata. The --metadatasize option overrides\n"
+	"this setting.\n")
 
 cfg(metadata_pvmetadataignore_CFG, "pvmetadataignore", metadata_CFG_SECTION, CFG_ADVANCED | CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_PVMETADATAIGNORE, vsn(2, 2, 69), NULL, 0, NULL,
 	"Ignore metadata areas on a new PV.\n"

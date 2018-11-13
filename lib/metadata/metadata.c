@@ -41,36 +41,105 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 					struct volume_group *vg,
 					struct lvmcache_info *info);
 
-static int _alignment_overrides_default(unsigned long data_alignment,
-					unsigned long default_pe_align)
+/*
+ * Historically, DEFAULT_PVMETADATASIZE was 255 for many years,
+ * but that value was only used if default_data_alignment was
+ * disabled.  Using DEFAULT_PVMETADATASIZE 255, pe_start was
+ * rounded up to 192KB from aligning it with 64K
+ * (DEFAULT_PE_ALIGN_OLD 128 sectors).  Given a 4KB mda_start,
+ * and 192KB pe_start, the mda_size between the two was 188KB.
+ * This metadata area size was too small to be a good default,
+ * and disabling default_data_alignment, with no other change,
+ * does not imply that the default mda_size or pe_start should
+ * change.
+ */
+
+int get_default_pvmetadatasize_sectors(void)
 {
-	return data_alignment && (default_pe_align % data_alignment);
+	int pagesize = lvm_getpagesize();
+
+	/*
+	 * This returns the default size of the metadata area in units of
+	 * 512 byte sectors.
+	 *
+	 * We want the default pe_start to consistently be 1 MiB (1024 KiB),
+	 * (even if default_data_alignment is disabled.)
+	 *
+	 * The mda start is at pagesize offset from the start of the device.
+	 *
+	 * The metadata size is the space between mda start and pe_start.
+	 *
+	 * So, if set set default metadata size to 1024 KiB - <pagesize> KiB,
+	 * it will consistently produce pe_start of 1 MiB.
+	 *
+	 * pe_start 1024 KiB = 2048 sectors.
+	 *
+	 * pagesizes:
+	 * 4096 = 8 sectors.
+	 * 8192 = 16 sectors.
+	 * 65536 = 128 sectors.
+	 */
+
+	switch (pagesize) {
+	case 4096:
+		return 2040;
+	case 8192:
+		return 2032;
+	case 65536:
+		return 1920;
+	}
+
+	log_warn("Using metadata size 960 KiB for non-standard page size %d.", pagesize);
+	return 1920;
 }
 
-unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignment)
+#define ONE_MB_IN_SECTORS 2048  /* 2048 * 512 = 1048576 */
+
+void set_pe_align(struct physical_volume *pv, uint64_t data_alignment_sectors)
 {
-	unsigned long default_pe_align, temp_pe_align;
+	uint64_t default_data_alignment_mb;
+	uint64_t pe_align_sectors;
+	uint64_t temp_pe_align_sectors;
+	uint32_t page_size_sectors;
 
 	if (pv->pe_align)
 		goto out;
 
-	if (data_alignment) {
-		/* Always use specified data_alignment */
-		pv->pe_align = data_alignment;
+	if (data_alignment_sectors) {
+		/* Always use specified alignment */
+		log_debug("Requested PE alignment is %llu sectors", (unsigned long long)data_alignment_sectors);
+		pe_align_sectors = data_alignment_sectors;
+		pv->pe_align = data_alignment_sectors;
 		goto out;
 	}
 
-	default_pe_align = find_config_tree_int(pv->fmt->cmd, devices_default_data_alignment_CFG, NULL);
+	/*
+	 * By default the first PE is placed at 1 MiB.
+	 *
+	 * If default_data_alignment is 2, then the first PE
+	 * is placed at 2 * 1 MiB.
+	 *
+	 * If default_data_alignment is 3, then the first PE
+	 * is placed at 3 * 1 MiB.
+	 */
 
-	if (default_pe_align)
-		/* align on 1 MiB multiple */
-		default_pe_align *= DEFAULT_PE_ALIGN;
+	default_data_alignment_mb = find_config_tree_int(pv->fmt->cmd, devices_default_data_alignment_CFG, NULL);
+
+	if (default_data_alignment_mb)
+		pe_align_sectors = default_data_alignment_mb * FIRST_PE_AT_ONE_MB_IN_SECTORS;
 	else
-		/* align on 64 KiB multiple (old default) */
-		default_pe_align = DEFAULT_PE_ALIGN_OLD;
+		pe_align_sectors = FIRST_PE_AT_ONE_MB_IN_SECTORS;
 
-	pv->pe_align = MAX((default_pe_align << SECTOR_SHIFT),
-			   lvm_getpagesize()) >> SECTOR_SHIFT;
+	pv->pe_align = pe_align_sectors;
+	log_debug("Standard PE alignment is %llu sectors", (unsigned long long)pe_align_sectors);
+
+	page_size_sectors = lvm_getpagesize() >> SECTOR_SHIFT;
+	if (page_size_sectors > pe_align_sectors) {
+		/* This shouldn't happen */
+		log_debug("Increasing PE alignment to page size %u sectors", page_size_sectors);
+		pe_align_sectors = page_size_sectors;
+		pv->pe_align = page_size_sectors;
+	}
 
 	if (!pv->dev)
 		goto out;
@@ -79,9 +148,16 @@ unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignm
 	 * Align to stripe-width of underlying md device if present
 	 */
 	if (find_config_tree_bool(pv->fmt->cmd, devices_md_chunk_alignment_CFG, NULL)) {
-		temp_pe_align = dev_md_stripe_width(pv->fmt->cmd->dev_types, pv->dev);
-		if (_alignment_overrides_default(temp_pe_align, default_pe_align))
-			pv->pe_align = temp_pe_align;
+		temp_pe_align_sectors = dev_md_stripe_width(pv->fmt->cmd->dev_types, pv->dev);
+
+		if (temp_pe_align_sectors && (pe_align_sectors % temp_pe_align_sectors)) {
+			log_debug("Adjusting PE alignment from %llu sectors to md stripe width %llu sectors for %s",
+				  (unsigned long long)pe_align_sectors,
+				  (unsigned long long)temp_pe_align_sectors,
+				  dev_name(pv->dev));
+			pe_align_sectors = temp_pe_align_sectors;
+			pv->pe_align = temp_pe_align_sectors;
+		}
 	}
 
 	/*
@@ -92,31 +168,42 @@ unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignm
 	 *   (e.g. MD's stripe width)
 	 */
 	if (find_config_tree_bool(pv->fmt->cmd, devices_data_alignment_detection_CFG, NULL)) {
-		temp_pe_align = dev_minimum_io_size(pv->fmt->cmd->dev_types, pv->dev);
-		if (_alignment_overrides_default(temp_pe_align, default_pe_align))
-			pv->pe_align = temp_pe_align;
+		temp_pe_align_sectors = dev_minimum_io_size(pv->fmt->cmd->dev_types, pv->dev);
 
-		temp_pe_align = dev_optimal_io_size(pv->fmt->cmd->dev_types, pv->dev);
-		if (_alignment_overrides_default(temp_pe_align, default_pe_align))
-			pv->pe_align = temp_pe_align;
+		if (temp_pe_align_sectors && (pe_align_sectors % temp_pe_align_sectors)) {
+			log_debug("Adjusting PE alignment from %llu sectors to mininum io size %llu sectors for %s",
+				  (unsigned long long)pe_align_sectors,
+				  (unsigned long long)temp_pe_align_sectors,
+				  dev_name(pv->dev));
+			pe_align_sectors = temp_pe_align_sectors;
+			pv->pe_align = temp_pe_align_sectors;
+		}
+
+		temp_pe_align_sectors = dev_optimal_io_size(pv->fmt->cmd->dev_types, pv->dev);
+
+		if (temp_pe_align_sectors && (pe_align_sectors % temp_pe_align_sectors)) {
+			log_debug("Adjusting PE alignment from %llu sectors to optimal io size %llu sectors for %s",
+				  (unsigned long long)pe_align_sectors,
+				  (unsigned long long)temp_pe_align_sectors,
+				  dev_name(pv->dev));
+			pe_align_sectors = temp_pe_align_sectors;
+			pv->pe_align = temp_pe_align_sectors;
+		}
 	}
 
 out:
-	log_very_verbose("%s: Setting PE alignment to %lu sectors.",
-			 dev_name(pv->dev), pv->pe_align);
-
-	return pv->pe_align;
+	log_debug("Setting PE alignment to %llu sectors for %s.",
+		  (unsigned long long)pv->pe_align, dev_name(pv->dev));
 }
 
-unsigned long set_pe_align_offset(struct physical_volume *pv,
-				  unsigned long data_alignment_offset)
+void set_pe_align_offset(struct physical_volume *pv, uint64_t data_alignment_offset_sectors)
 {
 	if (pv->pe_align_offset)
 		goto out;
 
-	if (data_alignment_offset) {
+	if (data_alignment_offset_sectors) {
 		/* Always use specified data_alignment_offset */
-		pv->pe_align_offset = data_alignment_offset;
+		pv->pe_align_offset = data_alignment_offset_sectors;
 		goto out;
 	}
 
@@ -128,14 +215,12 @@ unsigned long set_pe_align_offset(struct physical_volume *pv,
 		/* must handle a -1 alignment_offset; means dev is misaligned */
 		if (align_offset < 0)
 			align_offset = 0;
-		pv->pe_align_offset = MAX(pv->pe_align_offset, align_offset);
+		pv->pe_align_offset = align_offset;
 	}
 
 out:
-	log_very_verbose("%s: Setting PE alignment offset to %lu sectors.",
-			 dev_name(pv->dev), pv->pe_align_offset);
-
-	return pv->pe_align_offset;
+	log_debug("Setting PE alignment offset to %llu sectors for %s.",
+		  (unsigned long long)pv->pe_align_offset, dev_name(pv->dev));
 }
 
 void add_pvl_to_vgs(struct volume_group *vg, struct pv_list *pvl)
@@ -1355,10 +1440,10 @@ void pvcreate_params_set_defaults(struct pvcreate_params *pp)
 	pp->uuid_str = NULL;
 
 	pp->pva.size = 0;
-	pp->pva.data_alignment = UINT64_C(0);
-	pp->pva.data_alignment_offset = UINT64_C(0);
+	pp->pva.data_alignment = 0;
+	pp->pva.data_alignment_offset = 0;
 	pp->pva.pvmetadatacopies = DEFAULT_PVMETADATACOPIES;
-	pp->pva.pvmetadatasize = DEFAULT_PVMETADATASIZE;
+	pp->pva.pvmetadatasize = get_default_pvmetadatasize_sectors();
 	pp->pva.label_sector = DEFAULT_LABELSECTOR;
 	pp->pva.metadataignore = DEFAULT_PVMETADATAIGNORE;
 	pp->pva.ba_start = 0;
@@ -1413,8 +1498,8 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 	unsigned mda_index;
 	struct pv_list *pvl;
 	uint64_t size = pva->size;
-	unsigned long data_alignment = pva->data_alignment;
-	unsigned long data_alignment_offset = pva->data_alignment_offset;
+	uint64_t data_alignment = pva->data_alignment;
+	uint64_t data_alignment_offset = pva->data_alignment_offset;
 	unsigned pvmetadatacopies = pva->pvmetadatacopies;
 	uint64_t pvmetadatasize = pva->pvmetadatasize;
 	unsigned metadataignore = pva->metadataignore;
@@ -1469,6 +1554,10 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 	pv->fmt = fmt;
 	pv->vg_name = fmt->orphan_vg_name;
 
+	/*
+	 * Sets pv: pe_align, pe_align_offset, pe_start, pe_size
+	 * Does not write to device.
+	 */
 	if (!fmt->ops->pv_initialise(fmt, pva, pv)) {
 		log_error("Format-specific initialisation of physical "
 			  "volume %s failed.", pv_dev_name(pv));

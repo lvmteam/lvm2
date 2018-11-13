@@ -2,3 +2,9 @@ vgcreate creates a new VG on block devices. If the devices were not
 previously intialized as PVs with \fBpvcreate\fP(8), vgcreate will
 inititialize them, making them PVs. The pvcreate options for initializing
 devices are also available with vgcreate.
+
+When vgcreate uses an existing PV, that PV's existing values for metadata
+size, PE start, etc, are used, even if different values are specified in
+the vgcreate command.  To change these values, first use pvremove on the
+device.
+

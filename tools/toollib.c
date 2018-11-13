@@ -4757,8 +4757,11 @@ int pvcreate_params_from_args(struct cmd_context *cmd, struct pvcreate_params *p
 	}
 
 	pp->pva.pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG, UINT64_C(0));
-	if (!pp->pva.pvmetadatasize)
+	if (!pp->pva.pvmetadatasize) {
 		pp->pva.pvmetadatasize = find_config_tree_int(cmd, metadata_pvmetadatasize_CFG, NULL);
+		if (!pp->pva.pvmetadatasize)
+			pp->pva.pvmetadatasize = get_default_pvmetadatasize_sectors();
+	}
 
 	pp->pva.pvmetadatacopies = arg_int_value(cmd, pvmetadatacopies_ARG, -1);
 	if (pp->pva.pvmetadatacopies < 0)

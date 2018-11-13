@@ -1791,45 +1791,47 @@ static int _text_pv_initialise(const struct format_type *fmt,
 			       struct pv_create_args *pva,
 			       struct physical_volume *pv)
 {
-	unsigned long data_alignment = pva->data_alignment;
-	unsigned long data_alignment_offset = pva->data_alignment_offset;
-	unsigned long adjustment, final_alignment = 0;
+	uint64_t data_alignment_sectors = pva->data_alignment;
+	uint64_t data_alignment_offset_sectors = pva->data_alignment_offset;
+	uint64_t adjustment;
+	uint64_t final_alignment_sectors = 0;
 
-	if (!data_alignment)
-		data_alignment = find_config_tree_int(pv->fmt->cmd, devices_data_alignment_CFG, NULL) * 2;
+	log_debug("PV init requested data_alignment_sectors %llu data_alignment_offset_sectors %llu",
+		  (unsigned long long)data_alignment_sectors, (unsigned long long)data_alignment_offset_sectors);
 
-	if (set_pe_align(pv, data_alignment) != data_alignment &&
-	    data_alignment) {
-		log_error("%s: invalid data alignment of "
-			  "%lu sectors (requested %lu sectors)",
-			  pv_dev_name(pv), pv->pe_align, data_alignment);
-		return 0;
+	if (!data_alignment_sectors) {
+		data_alignment_sectors = find_config_tree_int(pv->fmt->cmd, devices_data_alignment_CFG, NULL) * 2;
+		if (data_alignment_sectors)
+			log_debug("PV init config data_alignment_sectors %llu",
+				  (unsigned long long)data_alignment_sectors);
 	}
 
-	if (set_pe_align_offset(pv, data_alignment_offset) != data_alignment_offset &&
-	    data_alignment_offset) {
-		log_error("%s: invalid data alignment offset of "
-			  "%lu sectors (requested %lu sectors)",
-			  pv_dev_name(pv), pv->pe_align_offset, data_alignment_offset);
-		return 0;
-	}
+	/* sets pv->pe_align */
+	set_pe_align(pv, data_alignment_sectors);
+
+	/* sets pv->pe_align_offset */
+	set_pe_align_offset(pv, data_alignment_offset_sectors);
 
 	if (pv->pe_align < pv->pe_align_offset) {
-		log_error("%s: pe_align (%lu sectors) must not be less "
-			  "than pe_align_offset (%lu sectors)",
-			  pv_dev_name(pv), pv->pe_align, pv->pe_align_offset);
+		log_error("%s: pe_align (%llu sectors) must not be less than pe_align_offset (%llu sectors)",
+			  pv_dev_name(pv), (unsigned long long)pv->pe_align, (unsigned long long)pv->pe_align_offset);
 		return 0;
 	}
 
-	final_alignment = pv->pe_align + pv->pe_align_offset;
+	final_alignment_sectors = pv->pe_align + pv->pe_align_offset;
 
-	if (pv->size < final_alignment) {
+	log_debug("PV init final alignment %llu sectors from align %llu align_offset %llu",
+		  (unsigned long long)final_alignment_sectors,
+		  (unsigned long long)pv->pe_align,
+		  (unsigned long long)pv->pe_align_offset);
+
+	if (pv->size < final_alignment_sectors) {
 		log_error("%s: Data alignment must not exceed device size.",
 			  pv_dev_name(pv));
 		return 0;
 	}
 
-	if (pv->size < final_alignment + pva->ba_size) {
+	if (pv->size < final_alignment_sectors + pva->ba_size) {
 		log_error("%s: Bootloader area with data-aligned start must "
 			  "not exceed device size.", pv_dev_name(pv));
 		return 0;
@@ -1846,15 +1848,23 @@ static int _text_pv_initialise(const struct format_type *fmt,
 		 * But we still want to support a PV with BA only!
 		 */
 		if (pva->ba_size) {
-			pv->ba_start = final_alignment;
+			pv->ba_start = final_alignment_sectors;
 			pv->ba_size = pva->ba_size;
 			if ((adjustment = pva->ba_size % pv->pe_align))
 				pv->ba_size += pv->pe_align - adjustment;
 			if (pv->size < pv->ba_start + pv->ba_size)
 				pv->ba_size = pv->size - pv->ba_start;
 			pv->pe_start = pv->ba_start + pv->ba_size;
-		} else
-			pv->pe_start = final_alignment;
+			log_debug("Setting pe start to %llu sectors after ba start %llu size %llu for %s",
+				  (unsigned long long)pv->pe_start,
+				  (unsigned long long)pv->ba_start,
+				  (unsigned long long)pv->ba_size,
+				  pv_dev_name(pv));
+		} else {
+			pv->pe_start = final_alignment_sectors;
+			log_debug("Setting PE start to %llu sectors for %s",
+				  (unsigned long long)pv->pe_start, pv_dev_name(pv));
+		}
 	} else {
 		/*
 		 * Try to keep the value of PE start set to a firm value if
@@ -1864,16 +1874,19 @@ static int _text_pv_initialise(const struct format_type *fmt,
 		 * if possible.
 		 */
 		pv->pe_start = pva->pe_start;
+
+		log_debug("Setting pe start to requested %llu sectors for %s",
+			  (unsigned long long)pv->pe_start, pv_dev_name(pv));
+
 		if (pva->ba_size) {
 			if ((pva->ba_start && pva->ba_start + pva->ba_size > pva->pe_start) ||
-			    (pva->pe_start <= final_alignment) ||
-			    (pva->pe_start - final_alignment < pva->ba_size)) {
-				log_error("%s: Bootloader area would overlap "
-					  "data area.", pv_dev_name(pv));
+			    (pva->pe_start <= final_alignment_sectors) ||
+			    (pva->pe_start - final_alignment_sectors < pva->ba_size)) {
+				log_error("%s: Bootloader area would overlap data area.", pv_dev_name(pv));
 				return 0;
 			}
 
-			pv->ba_start = pva->ba_start ? : final_alignment;
+			pv->ba_start = pva->ba_start ? : final_alignment_sectors;
 			pv->ba_size = pva->ba_size;
 		}
 	}

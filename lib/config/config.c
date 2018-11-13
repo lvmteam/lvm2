@@ -24,6 +24,7 @@
 #include "lib/misc/lvm-file.h"
 #include "lib/mm/memlock.h"
 #include "lib/label/label.h"
+#include "lib/metadata/metadata.h"
 
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -2331,6 +2332,11 @@ int load_pending_profiles(struct cmd_context *cmd)
 	}
 
 	return r;
+}
+
+int get_default_metadata_pvmetadatasize_CFG(struct cmd_context *cmd, struct profile *profile)
+{
+	return get_default_pvmetadatasize_sectors();
 }
 
 const char *get_default_devices_cache_dir_CFG(struct cmd_context *cmd, struct profile *profile)

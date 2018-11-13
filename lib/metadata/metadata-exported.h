@@ -566,20 +566,20 @@ struct vgnameid_list {
  * Values used by pv_create().
  */
 struct pv_create_args {
-	uint64_t size;
-	uint64_t data_alignment;
-	uint64_t data_alignment_offset;
+	uint64_t size; /* in sectors */
+	uint64_t data_alignment; /* in sectors */
+	uint64_t data_alignment_offset; /* in sectors */
 	uint64_t label_sector;
 	int pvmetadatacopies;
-	uint64_t pvmetadatasize;
+	uint64_t pvmetadatasize; /* in sectors */
 	unsigned metadataignore;
 
 	/* used when restoring */
 	struct id id;
 	struct id *idp;
-	uint64_t ba_start;
-	uint64_t ba_size;
-	uint64_t pe_start;
+	uint64_t ba_start; /* in sectors */
+	uint64_t ba_size; /* in sectors */
+	uint64_t pe_start; /* in sectors */
 	uint32_t extent_count;
 	uint32_t extent_size;
 };

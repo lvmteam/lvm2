@@ -45,9 +45,6 @@
 /* Name of default metadata cache subdirectory. */
 #undef DEFAULT_CACHE_SUBDIR
 
-/* Default data alignment. */
-#undef DEFAULT_DATA_ALIGNMENT
-
 /* Define default node creation behavior with dmsetup create */
 #undef DEFAULT_DM_ADD_NODE
 
