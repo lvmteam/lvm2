@@ -46,8 +46,7 @@ circumstances (see vgexport and vgimport).  Improper changes can result in
 a host losing access to its VG, or a VG being accidentally damaged by
 access from an unintended host.  Even limited changes to the VG system ID
 may not be perfectly reflected across hosts.  A more coherent view of
-shared storage requires an inter-host locking system to coordinate access
-and update caches.
+shared storage requires an inter-host locking system to coordinate access.
 
 Valid system ID characters are the same as valid VG name characters.  If a
 system ID contains invalid characters, those characters are omitted and
@@ -294,8 +293,7 @@ The system ID of a VG is displayed with the "systemid" reporting option.
 
 Report/display commands ignore foreign VGs by default.  To report foreign
 VGs, the --foreign option can be used.  This causes the VGs to be read
-from disk.  Because lvmetad caching is not used, this option can cause
-poor performance.
+from disk.
 
 .B vgs --foreign -o +systemid
 
@@ -306,20 +304,10 @@ standard reporting commands will silently ignore foreign VGs.
 
 .SS vgexport/vgimport
 
-vgexport clears the system ID.
-
-Other hosts will continue to see a newly exported VG as foreign because of
-local caching (when lvmetad is used).  Manually updating the local lvmetad
-cache with pvscan --cache will allow a host to recognize the newly
-exported VG.
+vgexport clears the VG system ID when exporting the VG.
 
 vgimport sets the VG system ID to the system ID of the host doing the
-import.  vgimport automatically scans storage for newly exported VGs.
-
-After vgimport, the exporting host may continue to see the VG as exported,
-and not owned by the new host.  Manually updating the local cache with
-pvscan --cache will allow a host to recognize the newly imported VG as
-foreign.
+import.
 
 
 .SS vgchange
@@ -372,15 +360,6 @@ Orphan PVs are unused devices; they are not currently used in any VG.
 Because of this, they are not protected by a system ID, and any host can
 use them.  Coordination of changes to orphan PVs is beyond the scope of
 system ID.  The same is true of any block device that is not a PV.
-
-The effects of this are especially evident when LVM uses lvmetad caching.
-For example, if multiple hosts see an orphan PV, and one host creates a VG
-using the orphan, the other hosts will continue to report the PV as an
-orphan.  Nothing would automatically prevent the other hosts from using
-the newly allocated PV and corrupting it.  If the other hosts run a
-command to rescan devices, and update lvmetad, they would then recognize
-that the PV has been used by another host.  A command that rescans devices
-could be pvscan --cache, or vgs --foreign.
 
 .SH SEE ALSO
 .BR vgcreate (8),

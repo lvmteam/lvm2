@@ -192,7 +192,7 @@ Rename a Volume Group.
 Report information about Volume Groups.
 .TP
 .B vgscan
-Scan all disks for Volume Groups and rebuild caches.
+Scan all disks for Volume Groups.
 .TP
 .B vgsplit
 Split a Volume Group into two, moving any logical
@@ -440,12 +440,6 @@ The Volume Group name that is assumed for
 any reference to a Logical Volume that doesn't specify a path.
 Not set by default.
 .TP
-.B LVM_LVMETAD_PIDFILE
-Path to the file that stores the lvmetad process ID.
-.TP
-.B LVM_LVMETAD_SOCKET
-Path to the socket used to communicate with lvmetad.
-.TP
 .B LVM_LVMPOLLD_PIDFILE
 Path to the file that stores the lvmpolld process ID.
 .TP
@@ -547,7 +541,6 @@ Prepends source file name and code line number with libdm debugging.
 .BR lvmdump (8)
 
 .BR dmeventd (8)
-.BR lvmetad (8)
 .BR lvmpolld (8)
 .BR lvmlockd (8)
 .BR lvmlockctl (8)

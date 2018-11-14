@@ -829,9 +829,6 @@ on a remote host.  (The activation option 'l' is not used.)
 lvmlockd works with thin and cache pools and LVs.
 
 .IP \[bu] 2
-lvmlockd works with lvmetad.
-
-.IP \[bu] 2
 lvmlockd saves the cluster name for a shared VG using dlm.  Only hosts in
 the matching cluster can use the VG.
 
