@@ -929,15 +929,10 @@ arg(activevolumegroups_ARG, 'A', "activevolumegroups", 0, 0, 0,
     "Only select active VGs. The VG is considered active\n"
     "if at least one of its LVs is active.\n")
 
-/* FIXME: remove background option from pvscan, it's not used */
-
 arg(background_ARG, 'b', "background", 0, 0, 0,
     "If the operation requires polling, this option causes the command to\n"
     "return before the operation is complete, and polling is done in the\n"
     "background.\n")
-
-/* Not used */
-arg(backgroundfork_ARG, 'b', "background", 0, 0, 0, NULL)
 
 arg(basevgname_ARG, 'n', "basevgname", string_VAL, 0, 0,
     "By default the snapshot VG will be renamed to the original name plus a\n"
