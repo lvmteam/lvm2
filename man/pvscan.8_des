@@ -1,13 +1,11 @@
-pvscan reads all supported LVM block devices in the system for PVs.
-
 When called without the --cache option, pvscan lists PVs on the system,
 like
 .BR pvs (8)
 or
 .BR pvdisplay (8).
 
-When the --cache and -aay options are used, pvscan keeps track of PVs that
-have appeared on the system, and activates LVs in completed VGs.  A VG is
+When the --cache and -aay options are used, pvscan records which PVs are
+available on the system, and activates LVs in completed VGs.  A VG is
 complete when pvscan sees that the final PV in the VG has appeared.  This
 is used by event-based system startup (systemd, udev) to activate LVs.
 
@@ -23,14 +21,14 @@ In most cases, the pvscan will only read the named devices.
 .B pvscan --cache -aay
 .IR device ...
 
-This begins by performing the same steps as above.  If the device is the
-final PV in the VG to appear on the system, then pvscan will activate LVs
-in the VG (the same as vgchange -aay vgname would do.)
+This begins by performing the same steps as above.  Afterward, if the VG
+for the specified PV is complete, then pvscan will activate LVs in the VG
+(the same as vgchange -aay vgname would do.)
 
 .B pvscan --cache
 
-This clears all existing PV online records, then scans all the devices on
-the system, adding PV online records for any PVs that it finds.
+This first clears all existing PV online records, then scans all devices
+on the system, adding PV online records for any PVs that are found.
 
 .B pvscan --cache -aay
 
