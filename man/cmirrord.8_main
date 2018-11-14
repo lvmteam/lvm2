@@ -11,10 +11,8 @@ It is specific to device-mapper based mirrors (and by extension, LVM
 cluster mirrors).  Cluster mirrors are not possible without this daemon
 running.
 
-This daemon relies on the cluster infrastructure provided by the
-Cluster MANager (CMAN), which must be set up and running in order for
-cmirrord to function.  (The cluster infrastructure is also required for
-\fBclvmd\fP(8).)
+This daemon relies on the cluster infrastructure provided by the corosync,
+which must be set up and running in order for cmirrord to function.
 
 Output is logged via \fBsyslog\fP(3). The \fBSIGUSR1 signal\fP(7) can be
 issued to \fBcmirrord\fP to gather current status information for debugging
@@ -32,8 +30,7 @@ Do not fork and log to the terminal.
 Print usage.
 
 .SH SEE ALSO
+.BR lvmlockd (8),
+.BR lvm (8),
 .BR syslog (3),
-.BR cluster.conf (5),
-.BR signal (7),
-.BR clvmd (8),
-.BR lvm (8)
+.BR signal (7)
