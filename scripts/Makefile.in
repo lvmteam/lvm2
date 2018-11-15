@@ -63,9 +63,6 @@ install_initscripts:
 ifeq ("@BUILD_DMEVENTD@", "yes")
 	$(INSTALL_SCRIPT) lvm2_monitoring_init_red_hat $(initdir)/lvm2-monitor
 endif
-ifeq ("@BUILD_LVMETAD@", "yes")
-	$(INSTALL_SCRIPT) lvm2_lvmetad_init_red_hat $(initdir)/lvm2-lvmetad
-endif
 ifeq ("@BUILD_LVMPOLLD@", "yes")
 	$(INSTALL_SCRIPT) lvm2_lvmpolld_init_red_hat $(initdir)/lvm2-lvmpolld
 endif
@@ -94,11 +91,6 @@ ifeq ("@BUILD_DMEVENTD@", "yes")
 endif
 ifeq ("@BLKDEACTIVATE@", "yes")
 	$(INSTALL_DATA) blk_availability_systemd_red_hat.service $(systemd_unit_dir)/blk-availability.service
-endif
-ifeq ("@BUILD_LVMETAD@", "yes")
-	$(INSTALL_DATA) lvm2_lvmetad_systemd_red_hat.socket $(systemd_unit_dir)/lvm2-lvmetad.socket
-	$(INSTALL_DATA) lvm2_lvmetad_systemd_red_hat.service $(systemd_unit_dir)/lvm2-lvmetad.service
-	$(INSTALL_DATA) lvm2_pvscan_systemd_red_hat@.service $(systemd_unit_dir)/lvm2-pvscan@.service
 endif
 ifeq ("@BUILD_LVMPOLLD@", "yes")
 	$(INSTALL_DATA) lvm2_lvmpolld_systemd_red_hat.socket $(systemd_unit_dir)/lvm2-lvmpolld.socket
@@ -144,10 +136,7 @@ DISTCLEAN_TARGETS += \
 	lvm2_clvmd_systemd_red_hat.service \
 	lvm2_cmirrord_systemd_red_hat.service \
 	lvm2_lvmdbusd_systemd_red_hat.service \
-	lvm2_lvmetad_init_red_hat \
 	lvm2_lvmpolld_init_red_hat \
-	lvm2_lvmetad_systemd_red_hat.service \
-	lvm2_lvmetad_systemd_red_hat.socket \
 	lvm2_lvmpolld_systemd_red_hat.service \
 	lvm2_lvmpolld_systemd_red_hat.socket \
 	lvmlockd.service \
