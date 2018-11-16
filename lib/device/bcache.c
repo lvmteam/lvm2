@@ -388,6 +388,48 @@ static bool _sync_issue(struct io_engine *ioe, enum dir d, int fd,
         	return false;
 	}
 
+	/*
+	 * If bcache block goes past where lvm wants to write, then clamp it.
+	 */
+	if ((d == DIR_WRITE) && _last_byte_offset && (fd == _last_byte_fd)) {
+		uint64_t offset = where;
+		uint64_t nbytes = len;
+		sector_t limit_nbytes = 0;
+		sector_t extra_nbytes = 0;
+
+		if (offset > _last_byte_offset) {
+			log_error("Limit write at %llu len %llu beyond last byte %llu",
+				  (unsigned long long)offset,
+				  (unsigned long long)nbytes,
+				  (unsigned long long)_last_byte_offset);
+			return false;
+		}
+
+		if (offset + nbytes > _last_byte_offset) {
+			limit_nbytes = _last_byte_offset - offset;
+			if (limit_nbytes % _last_byte_sector_size)
+				extra_nbytes = _last_byte_sector_size - (limit_nbytes % _last_byte_sector_size);
+
+			if (extra_nbytes) {
+				log_debug("Limit write at %llu len %llu to len %llu rounded to %llu",
+					  (unsigned long long)offset,
+					  (unsigned long long)nbytes,
+					  (unsigned long long)limit_nbytes,
+					  (unsigned long long)(limit_nbytes + extra_nbytes));
+				nbytes = limit_nbytes + extra_nbytes;
+			} else {
+				log_debug("Limit write at %llu len %llu to len %llu",
+					  (unsigned long long)offset,
+					  (unsigned long long)nbytes,
+					  (unsigned long long)limit_nbytes);
+				nbytes = limit_nbytes;
+			}
+		}
+
+		where = offset;
+		len = nbytes;
+	}
+
 	while (len) {
         	do {
                 	if (d == DIR_READ)
