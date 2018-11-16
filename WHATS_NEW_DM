@@ -1,5 +1,6 @@
 Version 1.02.155 - 
 ====================================
+  Do not add parameters for RESUME with DM_DEVICE_CREATE dm task.
 
 Version 1.02.153 - 31st October 2018
 ====================================
