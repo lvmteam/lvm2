@@ -117,6 +117,9 @@ static struct cmd_data _cmd_data_v4[] = {
 #ifdef DM_DEV_SET_GEOMETRY
 	{"setgeometry",	DM_DEV_SET_GEOMETRY,	{4, 6, 0}},
 #endif
+#ifdef DM_DEV_ARM_POLL
+	{"armpoll",	DM_DEV_ARM_POLL,	{4, 36, 0}},
+#endif
 };
 /* *INDENT-ON* */
 
