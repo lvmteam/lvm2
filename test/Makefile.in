@@ -28,7 +28,7 @@ datarootdir = @datarootdir@
 LVM_TEST_RESULTS ?= results
 
 # FIXME: resolve testing of: unit
-SOURCES = lib/not.c lib/harness.c
+SOURCES = lib/not.c lib/harness.c lib/dmsecuretest.c
 CXXSOURCES = lib/runner.cpp
 CXXFLAGS += $(EXTRA_EXEC_CFLAGS)
 
@@ -190,6 +190,8 @@ LIB_LVMLOCKD_CONF = \
 LIB_MKE2FS_CONF = \
   mke2fs.conf
 
+LIB_SECURETEST = securetest
+LIB_DMSECURETEST = dmsecuretest
 LIB_LOCAL = paths runner
 LIB_NOT = not
 LIB_LINK_NOT = invalid fail should
@@ -217,7 +219,7 @@ install: .tests-stamp lib/paths-installed
 	@cd $(DATADIR)/lib && for i in $(CMDS); do \
 		echo "$(LN_S) -f lvm-wrapper $$i"; \
 		$(LN_S) -f lvm-wrapper $$i; done
-	$(INSTALL_PROGRAM) lib/$(LIB_NOT) $(EXECDIR)
+	$(INSTALL_PROGRAM) lib/$(LIB_NOT) lib/$(LIB_SECURETEST) lib/$(LIB_DMSECURETEST) $(EXECDIR)
 	@cd $(EXECDIR) && for i in $(LIB_LINK_NOT); do \
 		echo "$(LN_S) -f not $$i"; \
 		$(LN_S) -f not $$i; done
@@ -235,9 +237,16 @@ lib/fail: lib/not
 lib/runner: lib/runner.o .lib-dir-stamp
 	$(CXX) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $<
 
+lib/dmsecuretest: lib/dmsecuretest.o .lib-dir-stamp $(INTERNAL_LIBS)
+	$(CC) -g $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $< $(INTERNAL_LIBS) $(UDEV_LIBS) -lm
+
+lib/securetest: lib/dmsecuretest.o .lib-dir-stamp
+	$(CC) -g $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $< -L$(top_builddir)/libdm/ioctl -ldevmapper
+
 lib/runner.o: $(wildcard $(srcdir)/lib/*.h)
 
 CFLAGS_runner.o += $(EXTRA_EXEC_CFLAGS)
+CFLAGS_dmsecuretest.o += $(EXTRA_EXEC_CFLAGS)
 
 lib/%: lib/%.o .lib-dir-stamp
 	$(CC) $(CFLAGS) $(LDFLAGS) $(ELDFLAGS) -o $@ $<
@@ -290,7 +299,7 @@ lib/dm-version-expected: $(top_srcdir)/VERSION_DM .lib-dir-stamp
 	cut -f 1 -d ' ' <$< >$@
 
 CMDS = lvm $(shell cat $(top_builddir)/tools/.commands 2>/dev/null)
-LIB = $(addprefix lib/, $(LIB_SHARED) $(LIB_LOCAL) $(LIB_NOT) $(LIB_LINK_NOT) $(LIB_FLAVOURS))
+LIB = $(addprefix lib/, $(LIB_SECURETEST) $(LIB_DMSECURETEST) $(LIB_SHARED) $(LIB_LOCAL) $(LIB_NOT) $(LIB_LINK_NOT) $(LIB_FLAVOURS))
 
 .tests-stamp: $(ALL) $(LIB) $(SUBDIRS) lib/version-expected lib/dm-version-expected
 	@if test "$(srcdir)" != . ; then \
