@@ -1,5 +1,6 @@
 Version 1.02.156 - 
 =====================================
+  Add DM_DEVICE_ARM_POLL for API completness matching kernel.
 
 Version 1.02.154 - 07th December 2018
 =====================================
