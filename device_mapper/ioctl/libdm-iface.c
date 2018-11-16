@@ -1087,6 +1087,22 @@ static int _lookup_dev_name(uint64_t dev, char *buf, size_t len)
 	return r;
 }
 
+static int _add_params(int type)
+{
+	switch (type) {
+	case DM_DEVICE_REMOVE_ALL:
+	case DM_DEVICE_CREATE:
+	case DM_DEVICE_REMOVE:
+	case DM_DEVICE_SUSPEND:
+	case DM_DEVICE_STATUS:
+	case DM_DEVICE_CLEAR:
+	case DM_DEVICE_ARM_POLL:
+		return 0; /* IOCTL_FLAGS_NO_PARAMS in drivers/md/dm-ioctl.c */
+	default:
+		return 1;
+	}
+}
+
 static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 {
 	const size_t min_size = 16 * 1024;
@@ -1099,11 +1115,15 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	char *b, *e;
 	int count = 0;
 
-	for (t = dmt->head; t; t = t->next) {
-		len += sizeof(struct dm_target_spec);
-		len += strlen(t->params) + 1 + ALIGNMENT;
-		count++;
-	}
+	if (_add_params(dmt->type))
+		for (t = dmt->head; t; t = t->next) {
+			len += sizeof(struct dm_target_spec);
+			len += strlen(t->params) + 1 + ALIGNMENT;
+			count++;
+		}
+	else if (dmt->head)
+		log_debug_activation(INTERNAL_ERROR "dm '%s' ioctl should not define parameters.",
+				     _cmd_data_v4[dmt->type].name);
 
 	if (count && (dmt->sector || dmt->message)) {
 		log_error("targets and message are incompatible");
@@ -1253,9 +1273,10 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	b = (char *) (dmi + 1);
 	e = (char *) dmi + len;
 
-	for (t = dmt->head; t; t = t->next)
-		if (!(b = _add_target(t, b, e)))
-			goto_bad;
+	if (_add_params(dmt->type))
+		for (t = dmt->head; t; t = t->next)
+			if (!(b = _add_target(t, b, e)))
+				goto_bad;
 
 	if (dmt->newname)
 		strcpy(b, dmt->newname);
