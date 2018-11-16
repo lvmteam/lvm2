@@ -331,6 +331,8 @@ static void _init_logging(struct cmd_context *cmd)
 	    find_config_tree_bool(cmd, global_test_CFG, NULL);
 	init_test(cmd->default_settings.test);
 
+	init_use_aio(find_config_tree_bool(cmd, global_use_aio_CFG, NULL));
+
 	/* Settings for logging to file */
 	if (find_config_tree_bool(cmd, log_overwrite_CFG, NULL))
 		append = 0;

@@ -799,7 +799,7 @@ out:
 
 static int _setup_bcache(int cache_blocks)
 {
-	struct io_engine *ioe;
+	struct io_engine *ioe = NULL;
 
 	if (cache_blocks < MIN_BCACHE_BLOCKS)
 		cache_blocks = MIN_BCACHE_BLOCKS;
@@ -807,9 +807,18 @@ static int _setup_bcache(int cache_blocks)
 	if (cache_blocks > MAX_BCACHE_BLOCKS)
 		cache_blocks = MAX_BCACHE_BLOCKS;
 
-	if (!(ioe = create_async_io_engine())) {
-		log_error("Failed to create bcache io engine.");
-		return 0;
+	if (use_aio()) {
+		if (!(ioe = create_async_io_engine())) {
+			log_warn("Failed to set up async io, using sync io.");
+			init_use_aio(0);
+		}
+	}
+
+	if (!ioe) {
+		if (!(ioe = create_sync_io_engine())) {
+			log_error("Failed to set up sync io.");
+			return 0;
+		}
 	}
 
 	if (!(scan_bcache = bcache_create(BCACHE_BLOCK_SIZE_IN_SECTORS, cache_blocks, ioe))) {
