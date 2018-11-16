@@ -171,7 +171,9 @@ wait_for_change_ $pre
 lvchange -an $vg
 
 #
-fake_metadata_ 350 2 >data
+DATA=300  # Newer version of thin-pool have hidden reserve, so use lower value
+aux target_at_least dm-thin-pool 1 20 0 || DATA=350
+fake_metadata_ $DATA 2 >data
 lvchange -ay $vg/$lv1
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 
