@@ -1456,6 +1456,7 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	dmt->uuid = NULL;
 	free(dmt->mangled_uuid);
 	dmt->mangled_uuid = NULL;
+	_dm_task_free_targets(dmt);
 
 	if (dm_task_run(dmt))
 		return 1;
@@ -1466,6 +1467,7 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	dmt->uuid = NULL;
 	free(dmt->mangled_uuid);
 	dmt->mangled_uuid = NULL;
+	_dm_task_free_targets(dmt);
 
 	/*
 	 * Also udev-synchronize "remove" dm task that is a part of this revert!
