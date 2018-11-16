@@ -1,5 +1,6 @@
 Version 2.02.183 - 
 ====================================
+  Use sync io if async io_setup fails, or use_aio=0 is set in config.
   Avoid opening devices to get block size by using existing open fd.
 
 Version 2.02.182 - 30th October 2018
