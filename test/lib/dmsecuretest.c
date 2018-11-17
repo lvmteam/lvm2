@@ -10,9 +10,10 @@
  *
  */
 
+#include "libdevmapper.h"
+
 #include <unistd.h>
 #include <signal.h>
-#include <libdevmapper.h>
 
 /* Comment out this define to get coredump instead of sleeping */
 #define SLEEP 1
