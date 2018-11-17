@@ -10,7 +10,7 @@
  *
  */
 
-#include "libdevmapper.h"
+#include "device_mapper/all.h"
 
 #include <unistd.h>
 #include <signal.h>
