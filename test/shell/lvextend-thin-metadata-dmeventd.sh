@@ -90,7 +90,9 @@ lvchange -an $vg/pool
 
 # Consume more then (100% - 4MiB) out of 32MiB metadata volume  (>87.5%)
 # (Test for less than 4MiB free space in metadata, which is less than 25%)
-fake_metadata_ 7400 2 >data
+DATA=7200  # Newer version of thin-pool have hidden reserve, so use lower value
+aux target_at_least dm-thin-pool 1 20 0 || DATA=7400
+fake_metadata_ "$DATA" 2 >data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv2"
 # Swap volume with restored fake metadata
 lvconvert -y --chunksize 64k --thinpool $vg/pool --poolmetadata $vg/$lv2
