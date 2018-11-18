@@ -112,6 +112,17 @@ check_and_cleanup_lvs_
 lvcreate -aey -l2 --type mirror -m1 -n $lv1 $vg
 # Use large enough polling interval so mirror is keeping mimagetmp
 LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -i+40 -b $vg/$lv1
+
+#
+# TODO: lvmpolld is not 'preserving' -i  interval setting from
+# lvconvert initiating command - so there is not much to test
+# if the lvconvert is already finished at this point
+# and lvmpolld cleaned metadata and refreshed DM table
+#
+# It' unclear if this is undocumented feature of bug.
+#
+if test ! -f LOCAL_LVMPOLLD ; then
+
 for i in $(seq 1 10) ; do
 	# check if background process already started
 	# this is recognized by presence of LV1_mimage_2
@@ -139,6 +150,7 @@ convlv=$(lv_convert_lv_ $vg/$lv2)
 lv_devices_ $vg/$lv2 $convlv ${lv2}_mimage_2
 lv_devices_ $vg/$convlv ${lv2}_mimage_0 ${lv2}_mimage_1
 lv_mirror_log_ $vg/$convlv ${lv2}_mlog
+fi  # ! -f LOCAL_LVMPOLLD
 
 #COMM "cleanup"
 check_and_cleanup_lvs_
