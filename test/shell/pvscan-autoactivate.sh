@@ -32,7 +32,7 @@ vgcreate $vg1 "$dev1" "$dev2"
 lvcreate -n $lv1 -l 4 -a n $vg1
 
 # the first pvscan scans all devs
-test -d "$ONLINEDIR" || mkdir "$ONLINEDIR"
+test -d "$ONLINEDIR" || mkdir -p "$ONLINEDIR"
 _clear_online nofoo
 
 pvscan --cache -aay
