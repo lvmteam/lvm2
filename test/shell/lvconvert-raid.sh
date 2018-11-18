@@ -244,9 +244,16 @@ lvremove -ff $vg
 ###########################################
 aux delay_dev "$dev2" 0 100
 lvcreate --type raid1 -m 2 -aey -l 2 -n $lv1 $vg "$dev1" "$dev2" "$dev3"
+case "$(uname -r)" in
+4.8.14*)
+echo "Skippen test that kills this kernel"
+;;
+*)
 lvconvert --yes -m 1 $vg/$lv1 "$dev3"
 lvconvert --yes -m 0 $vg/$lv1 "$dev1"
 aux enable_dev "$dev2"
+;;
+esac
 lvremove -ff $vg
 
 ###########################################
