@@ -21,6 +21,9 @@ SECURE="434e0cbab02ca68ffba9268222c3789d703fe62427b78b308518b3228f6a2122"
 
 DMTEST="${PREFIX}-test-secure"
 
+# Test needs installed gdb package with gcore app
+which gcore || skip
+
 aux driver_at_least 4 6 || skip
 
 # ensure we can create devices (uses dmsetup, etc)
