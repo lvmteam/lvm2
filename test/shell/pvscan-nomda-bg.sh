@@ -28,7 +28,7 @@ RUNDIR="/run"
 test -d "$RUNDIR" || RUNDIR="/var/run"
 # create a file in pvs_online to disable the pvscan init
 # case which scans everything when the first dev appears.
-mkdir "$RUNDIR/lvm/pvs_online" || true
+mkdir -p "$RUNDIR/lvm/pvs_online" || true
 touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache --background "$dev2" -aay
