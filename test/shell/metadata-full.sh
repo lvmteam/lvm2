@@ -42,7 +42,7 @@ vgcreate $SHARED -s 512K --metadatacopies 8 $vg "${DEVICES[@]}"
 # is written.
 
 vgcfgbackup -f data $vg
-TEST_DEVS=930
+TEST_DEVS=925
 # Generate a lot of LV devices (size of 1 extent)
 awk -v TEST_DEVS=$TEST_DEVS '/^\t\}/ {
     printf("\t}\n\tlogical_volumes {\n");
