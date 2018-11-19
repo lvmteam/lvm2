@@ -65,7 +65,8 @@ _test_regionsizes raid1
 # Clean up
 lvremove --yes $vg
 
-if aux have_raid 1 10 1; then
+# Needs reshaping kernel for raid6 conversion
+if aux have_raid 1 14 0; then
 # Create 5-way raid6
 lvcreate --yes -aey --type raid6 -i 3 --stripesize 128K -R 256K -L8M -n $lv1 $vg
 check lv_field $vg/$lv1 segtype "raid6"
