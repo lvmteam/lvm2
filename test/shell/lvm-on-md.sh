@@ -52,6 +52,7 @@ pvs
 vgchange -an $vg
 
 mdadm --stop "$mddev"
+aux udev_wait
 
 # with md superblock 1.0 this pvs will report duplicates
 # for the two md legs since the md device itself is not
@@ -70,6 +71,7 @@ lvs $vg
 
 # start the md dev
 mdadm --assemble "$mddev" "$dev1" "$dev2"
+aux udev_wait
 
 # Now that the md dev is online, pvs can see it and
 # ignore the two legs, so there's no duplicate warning
