@@ -1,5 +1,6 @@
 Version 2.03.02 - 
 ===================================
+  Use sync io if async io_setup fails, or use_aio=0 is set in config.
 
 Version 2.03.01 - 31st October 2018
 ===================================
