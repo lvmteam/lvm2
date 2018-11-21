@@ -117,7 +117,7 @@ attached.
 The dm-writecache block size can be 4096 bytes (the default), or 512
 bytes.  The default 4096 has better performance and should be used except
 when 512 is necessary for compatibility.  The dm-writecache block size is
-specified with --writecacheblocksize 4096b|512b when caching is started.
+specified with --cachesettings block_size=4096|512 when caching is started.
 
 When a file system like xfs already exists on the main LV prior to
 caching, and the file system is using a block size of 512, then the

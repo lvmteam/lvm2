@@ -470,7 +470,7 @@ FLAGS: SECONDARY_SYNTAX
 ---
 
 lvconvert --type writecache --cachepool LV LV_linear_striped_raid
-OO: OO_LVCONVERT, --cachesettings String, --writecacheblocksize SizeKB
+OO: OO_LVCONVERT, --cachesettings String
 ID: lvconvert_to_writecache_vol
 DESC: Attach a writecache to an LV, converts the LV to type writecache.
 RULE: all and lv_is_visible

@@ -812,9 +812,6 @@ arg(withversions_ARG, '\0', "withversions", 0, 0, 0,
     "each configuration node. If the setting is deprecated, also display\n"
     "the version since which it is deprecated.\n")
 
-arg(writecacheblocksize_ARG, '\0', "writecacheblocksize", sizekb_VAL, 0, 0,
-    "The block size to use for cache blocks in writecache.\n")
-
 arg(writebehind_ARG, '\0', "writebehind", number_VAL, 0, 0,
     "The maximum number of outstanding writes that are allowed to\n"
     "devices in a RAID1 LV that is marked write-mostly.\n"

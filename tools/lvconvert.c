@@ -5271,8 +5271,22 @@ out:
 }
 
 static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecache_settings *settings,
-				       char *key, char *val)
+				       char *key, char *val, uint32_t *block_size_sectors)
 {
+	/* special case: block_size is not a setting but is set with the --cachesettings option */
+	if (!strncmp(key, "block_size", strlen("block_size"))) {
+		uint32_t block_size = 0;
+		if (sscanf(val, "%u", &block_size) != 1)
+			goto_bad;
+		if (block_size == 512)
+			*block_size_sectors = 1;
+		else if (block_size == 4096)
+			*block_size_sectors = 8;
+		else
+			goto_bad;
+		return 1;
+	}
+
 	if (!strncmp(key, "high_watermark", strlen("high_watermark"))) {
 		if (sscanf(val, "%llu", (unsigned long long *)&settings->high_watermark) != 1)
 			goto_bad;
@@ -5352,7 +5366,8 @@ static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecach
 	return 0;
 }
 
-static int _get_writecache_settings(struct cmd_context *cmd, struct writecache_settings *settings)
+static int _get_writecache_settings(struct cmd_context *cmd, struct writecache_settings *settings,
+				    uint32_t *block_size_sectors)
 {
 	struct arg_value_group_list *group;
 	const char *str;
@@ -5388,7 +5403,7 @@ static int _get_writecache_settings(struct cmd_context *cmd, struct writecache_s
 
 			pos += num;
 
-			if (!_get_one_writecache_setting(cmd, settings, key, val))
+			if (!_get_one_writecache_setting(cmd, settings, key, val, block_size_sectors))
 				return_0;
 		}
 	}
@@ -5437,6 +5452,8 @@ static struct logical_volume *_lv_writecache_create(struct cmd_context *cmd,
 	return lv_wcorig;
 }
 
+#define DEFAULT_WRITECACHE_BLOCK_SIZE_SECTORS 8 /* 4K */
+
 static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 					struct logical_volume *lv,
 					struct processing_handle *handle)
@@ -5469,16 +5486,10 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 		return 0;
 	}
 
-	/* default block size is 4096 bytes (8 sectors) */
-	block_size_sectors = arg_int_value(cmd, writecacheblocksize_ARG, 8);
-	if (block_size_sectors > 8) {
-		log_error("Max writecache block size is 4096 bytes.");
-		return 0;
-	}
-
 	memset(&settings, 0, sizeof(settings));
+	block_size_sectors = DEFAULT_WRITECACHE_BLOCK_SIZE_SECTORS;
 
-	if (!_get_writecache_settings(cmd, &settings)) {
+	if (!_get_writecache_settings(cmd, &settings, &block_size_sectors)) {
 		log_error("Invalid writecache settings.");
 		return 0;
 	}
@@ -5498,7 +5509,7 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 	 * an existing file system on lv may become unmountable with the
 	 * writecache attached because of the changing sector size.  If this
 	 * happens, then use --splitcache, and reattach the writecache using a
-	 * --writecacheblocksize value matching the sector size of lv.
+	 * writecache block_size value matching the sector size of lv.
 	 */
 
 	if (!_writecache_zero(cmd, lv_fast)) {
