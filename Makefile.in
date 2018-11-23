@@ -148,18 +148,8 @@ install_all_man:
 install_tmpfiles_configuration:
 	$(MAKE) -C scripts install_tmpfiles_configuration
 
-LCOV_TRACES = libdm.info lib.info tools.info \
-	libdaemon/client.info libdaemon/server.info \
-	test/unit.info \
-	daemons/clvmd.info \
-	daemons/dmeventd.info \
-	daemons/lvmlockd.info \
-	daemons/lvmpolld.info
-
-CLEAN_TARGETS += $(LCOV_TRACES)
-
 ifneq ("$(LCOV)", "")
-.PHONY: lcov-reset lcov lcov-dated $(LCOV_TRACES)
+.PHONY: lcov-reset lcov lcov-dated
 
 ifeq ($(MAKECMDGOALS),lcov-dated)
 LCOV_REPORTS_DIR := lcov_reports-$(shell date +%Y%m%d%k%M%S)
@@ -169,25 +159,15 @@ LCOV_REPORTS_DIR := lcov_reports
 endif
 
 lcov-reset:
-	$(LCOV) --zerocounters $(addprefix -d , $(basename $(LCOV_TRACES)))
-
-# maybe use subdirs processing to create tracefiles...
-$(LCOV_TRACES):
-	$(LCOV) -b $(basename $@) -d $(basename $@) \
-		--ignore-errors source -c -o - | $(SED) \
-		-e "s/\(dmeventd_lvm.[ch]\)/plugins\/lvm2\/\1/" \
-		-e "s/dmeventd_\(mirror\|snapshot\|thin\|raid\)\.c/plugins\/\1\/dmeventd_\1\.c/" \
-		>$@
+	$(LCOV) --zerocounters --directory $(top_builddir)
 
 ifneq ("$(GENHTML)", "")
-lcov: $(LCOV_TRACES)
-	$(RM) -r $(LCOV_REPORTS_DIR)
+lcov:
+	$(RM) -rf $(LCOV_REPORTS_DIR)
 	$(MKDIR_P) $(LCOV_REPORTS_DIR)
-	for i in $(LCOV_TRACES); do \
-		test -s $$i -a $$(wc -w <$$i) -ge 100 && lc="$$lc $$i"; \
-	done; \
-	test -z "$$lc" || $(GENHTML) -p @abs_top_builddir@ \
-		-o $(LCOV_REPORTS_DIR) $$lc
+	$(LCOV) --capture --directory $(top_builddir) --output-file $(LCOV_REPORTS_DIR)/out.info
+	-test !-s $(LCOV_REPORTS_DIR)/out.info || \
+		$(GENHTML) -o $(LCOV_REPORTS_DIR) --ignore-errors source $(LCOV_REPORTS_DIR)/out.info
 endif
 
 endif
