@@ -79,7 +79,7 @@ for i in $(seq 1 "$TEST_DEVS"); do
 done
 
 # test we hit 'out-of-metadata-space'
-test "$i" -gt 5
+test "$i" -gt 2
 test "$i" -lt "$TEST_DEVS"
 
 # should show 0
