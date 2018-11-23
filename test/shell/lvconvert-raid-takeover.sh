@@ -26,19 +26,8 @@ aux prepare_vg 8
 # FIXME: lvconvert leaks  'error' devices
 detect_error_leak_()
 {
-	local err=""
-
-	for i in $(dmsetup info -c -o name --noheadings) ; do
-		case "$i" in
-		"$vg*") (dmsetup table "$i" | grep "error ") && err="$err $i" ;;
-		esac
-	done
-
-	test -z "$err" || {
-		dmsetup table | grep $vg
-		dmsetup ls --tree
-		die "Device(s) $err should not be here."
-	}
+	dmsetup table -S "name=~^$vg-" | not grep "error" || \
+		die "Device(s) with error target should not be here."
 }
 
 function _lvcreate
