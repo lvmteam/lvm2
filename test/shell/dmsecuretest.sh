@@ -42,12 +42,11 @@ PID=$!
 sleep .5
 
 # crypt device should be loaded
-dmsetup table | tee tbl
-grep "$DMTEST" tbl
+dmsetup status "$DMTEST"
 
 # generate core file for running&sleeping binary
 gcore "$PID"
-kill "$PID"
+kill "$PID" || true
 wait
 
 cat cmdout
