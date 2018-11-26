@@ -997,6 +997,15 @@ cfg(global_lvdisplay_shows_full_device_path_CFG, "lvdisplay_shows_full_device_pa
 	"Previously this was always shown as /dev/vgname/lvname even when that\n"
 	"was never a valid path in the /dev filesystem.\n")
 
+cfg(global_event_activation_CFG, "event_activation", global_CFG_SECTION, 0, CFG_TYPE_BOOL, 1, vsn(2, 3, 1), 0, 0, NULL,
+	"Activate LVs based on system-generated device events.\n"
+	"When a device appears on the system, a system-generated event runs\n"
+	"the pvscan command to activate LVs if the new PV completes the VG.\n"
+	"Use auto_activation_volume_list to select which LVs should be\n"
+	"activated from these events (the default is all.)\n"
+	"When event_activation is disabled, the system will generally run\n"
+	"a direct activation command to activate LVs in complete VGs.\n")
+
 cfg(global_use_lvmetad_CFG, "use_lvmetad", global_CFG_SECTION, 0, CFG_TYPE_BOOL, 0, vsn(2, 2, 93), 0, vsn(3, 0, 0), NULL,
 	"This setting is no longer used.\n")
 

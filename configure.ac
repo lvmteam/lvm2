@@ -1828,6 +1828,7 @@ libdm/dm-tools/Makefile
 libdm/libdevmapper.pc
 man/Makefile
 po/Makefile
+scripts/lvm2-pvscan.service
 scripts/blkdeactivate.sh
 scripts/blk_availability_init_red_hat
 scripts/blk_availability_systemd_red_hat.service
