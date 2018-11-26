@@ -93,11 +93,11 @@ static bool _close_child(struct child_process *child)
 //----------------------------------------------------------------
 // Aquiring config from the lvmconfig process
 
-#define LVM_CONF_USE_LVMETAD	"global/use_lvmetad"
-#define LVM_CONF_USE_LVMPOLLD	"global/use_lvmpolld"
+#define LVM_CONF_EVENT_ACTIVATION "global/event_activation"
+#define LVM_CONF_USE_LVMPOLLD	  "global/use_lvmpolld"
 
 struct config {
-	bool use_lvmetad;
+	bool event_activation;
 	bool sysinit_needed;
 };
 
@@ -153,8 +153,8 @@ static bool _parse_line(const char *line, struct config *cfg)
 {
 	const char *val;
 
-	if (_begins_with(line, "use_lvmetad=", &val)) {
-		return _parse_bool(val, &cfg->use_lvmetad);
+	if (_begins_with(line, "event_activation=", &val)) {
+		return _parse_bool(val, &cfg->event_activation);
 
 	} else if (_begins_with(line, "use_lvmpolld=", &val)) {
 		bool r;
@@ -170,14 +170,14 @@ static bool _parse_line(const char *line, struct config *cfg)
 static bool _get_config(struct config *cfg, const char *lvmconfig_path)
 {
 	static const char *_argv[] = {
-		"lvmconfig", LVM_CONF_USE_LVMETAD, LVM_CONF_USE_LVMPOLLD, NULL
+		"lvmconfig", LVM_CONF_EVENT_ACTIVATION, LVM_CONF_USE_LVMPOLLD, NULL
 	};
 
 	bool r = true;
 	char buffer[256];
 	struct child_process child;
 
-	cfg->use_lvmetad = false;
+	cfg->event_activation = false;
 	cfg->sysinit_needed = true;
 
 	if (!_open_child(&child, lvmconfig_path, _argv)) {
