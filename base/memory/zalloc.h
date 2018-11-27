@@ -20,10 +20,7 @@
 
 static inline void *zalloc(size_t len)
 {
-	void *ptr = malloc(len);
-	if (ptr)
-		memset(ptr, 0, len);
-	return ptr;
+	return calloc(1, len);
 }
 
 //----------------------------------------------------------------
