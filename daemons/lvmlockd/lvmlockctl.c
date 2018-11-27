@@ -24,7 +24,7 @@
 static int quit = 0;
 static int info = 0;
 static int dump = 0;
-static int wait_opt = 0;
+static int wait_opt = 1;
 static int force_opt = 0;
 static int kill_vg = 0;
 static int drop_vg = 0;
