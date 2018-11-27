@@ -1045,7 +1045,8 @@ int vgchange_locktype_cmd(struct cmd_context *cmd, int argc, char **argv)
 			return 0;
 		}
 
-		if (yes_no_prompt("Forcibly change VG lock type to none? [y/n]: ") == 'n') {
+		if (!arg_is_set(cmd, yes_ARG) &&
+		     yes_no_prompt("Forcibly change VG lock type to none? [y/n]: ") == 'n') {
 			log_error("VG lock type not changed.");
 			return 0;
 		}
