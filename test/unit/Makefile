@@ -46,7 +46,7 @@ run-unit-test: test/unit/unit-test
 	LD_LIBRARY_PATH=libdm test/unit/unit-test run
 
 ifeq ("$(USE_TRACKING)","yes")
-ifeq (,$(findstring $(MAKECMDGOALS),cscope.out cflow clean distclean lcov \
+ifeq (,$(findstring $(MAKECMDGOALS),cscope.out cflow clean distclean lcov lcov-reset \
  help check check_local check_lvmpolld run-unit-test))
 	-include $(UNIT_DEPENDS)
 endif
