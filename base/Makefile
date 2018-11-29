@@ -22,9 +22,11 @@ BASE_SOURCE=\
 	base/data-struct/hash.c \
 	base/data-struct/list.c
 
-BASE_DEPENDS=$(addprefix $(top_builddir)/,$(subst .c,.d,$(BASE_SOURCE)))
-BASE_OBJECTS=$(addprefix $(top_builddir)/,$(subst .c,.o,$(BASE_SOURCE)))
-CLEAN_TARGETS+=$(BASE_DEPENDS) $(BASE_OBJECTS)
+BASE_DEPENDS = $(BASE_SOURCE:%.c=%.d)
+BASE_OBJECTS = $(BASE_SOURCE:%.c=%.o)
+CLEAN_TARGETS += $(BASE_DEPENDS) $(BASE_OBJECTS) \
+	$(BASE_SOURCE:%.c=%.gcda) \
+	$(BASE_SOURCE:%.c=%.gcno)
 
 ifeq ("$(USE_TRACKING)","yes")
 ifeq (,$(findstring $(MAKECMDGOALS),cscope.out cflow clean distclean lcov lcov-reset \
@@ -35,9 +37,9 @@ endif
 
 $(BASE_OBJECTS): INCLUDES+=-I$(top_srcdir)/base/
 
-$(top_builddir)/base/libbase.a: $(BASE_OBJECTS)
+base/libbase.a: $(BASE_OBJECTS)
 	@echo "    [AR] $@"
 	$(Q) $(RM) $@
 	$(Q) $(AR) rsv $@ $(BASE_OBJECTS) > /dev/null
 
-CLEAN_TARGETS+=$(top_builddir)/base/libbase.a
+CLEAN_TARGETS += base/libbase.a

@@ -18,7 +18,7 @@ top_builddir = @top_builddir@
 
 include $(top_builddir)/make.tmpl
 
-DISTCLEAN_TARGETS += .configure.h lvm-version.h
+DISTCLEAN_TARGETS += configure.h lvm-version.h
 CLEAN_TARGETS += \
  .symlinks \
  .symlinks_created \

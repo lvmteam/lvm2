@@ -105,4 +105,4 @@ install_ioctl_static: $(LIB_STATIC)
 	$(Q) $(INSTALL_DATA) -D $< $(usrlibdir)/$(<F)
 
 CLEAN_TARGETS += ioctl/libdevmapper.a
-DISTCLEAN_TARGETS += libdevmapper.pc
+DISTCLEAN_TARGETS += libdevmapper.pc make.tmpl
