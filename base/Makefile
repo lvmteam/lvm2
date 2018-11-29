@@ -14,6 +14,9 @@
 # Comment to build the advanced radix tree.
 #base/data-struct/radix-tree.o: CFLAGS += -DSIMPLE_RADIX_TREE
 
+# NOTE: this include only works as 'include' for toplevel Makefile
+#       which defined all top_* variables
+
 BASE_SOURCE=\
 	base/data-struct/radix-tree.c \
 	base/data-struct/hash.c \
@@ -23,7 +26,12 @@ BASE_DEPENDS=$(addprefix $(top_builddir)/,$(subst .c,.d,$(BASE_SOURCE)))
 BASE_OBJECTS=$(addprefix $(top_builddir)/,$(subst .c,.o,$(BASE_SOURCE)))
 CLEAN_TARGETS+=$(BASE_DEPENDS) $(BASE_OBJECTS)
 
--include $(BASE_DEPENDS)
+ifeq ("$(USE_TRACKING)","yes")
+ifeq (,$(findstring $(MAKECMDGOALS),cscope.out cflow clean distclean lcov lcov-reset \
+ help check check_local check_cluster check_lvmetad check_lvmpolld))
+	-include $(BASE_DEPENDS)
+endif
+endif
 
 $(BASE_OBJECTS): INCLUDES+=-I$(top_srcdir)/base/
 
