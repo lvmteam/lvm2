@@ -422,7 +422,7 @@ int dev_is_md_with_end_superblock(struct dev_types *dt, struct device *dev)
 	log_very_verbose("Device %s %s is %s.",
 			 dev_name(dev), attribute, version_string);
 
-	if (!strcmp(version_string, "1.0"))
+	if (!strcmp(version_string, "1.0") || !strcmp(version_string, "0.90"))
 		return 1;
 	return 0;
 }
