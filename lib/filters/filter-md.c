@@ -47,7 +47,7 @@ extern int use_full_md_check;
  * 3. use udev to detect components
  *
  * mode 1 will not detect and exclude components of md devices
- * that use superblock version 1.0 which is at the end of the device.
+ * that use superblock version 0.9 or 1.0 which is at the end of the device.
  *
  * mode 2 will detect these, but mode 2 doubles the i/o done by label
  * scan, since there's a read at both the start and end of every device.
@@ -60,11 +60,11 @@ extern int use_full_md_check;
  *
  * - the command is pvcreate/vgcreate/vgextend, which format new
  *   devices, and if the user ran these commands on a component
- *   device of an md device 1.0, then it would cause problems.
+ *   device of an md device 0.9 or 1.0, then it would cause problems.
  *   FIXME: this would only really need to scan the end of the
  *   devices being formatted, not all devices.
  *
- * - it sees an md device on the system using version 1.0.
+ * - it sees an md device on the system using version 0.9 or 1.0.
  *   The point of this is just to avoid displaying md components
  *   from the 'pvs' command.
  *   FIXME: the cost (double i/o) may not be worth the benefit
