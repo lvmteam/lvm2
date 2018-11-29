@@ -50,16 +50,20 @@ endif
 
 lvmlockd: $(OBJECTS) $(top_builddir)/libdaemon/client/libdaemonclient.a \
 		    $(top_builddir)/libdaemon/server/libdaemonserver.a
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) $(LOCK_LIBS) -ldaemonserver $(INTERNAL_LIBS) $(LIBS)
+	@echo "    [CC] $@"
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) $(LOCK_LIBS) -ldaemonserver $(INTERNAL_LIBS) $(LIBS)
 
 lvmlockctl: lvmlockctl.o $(top_builddir)/libdaemon/client/libdaemonclient.a
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ lvmlockctl.o $(INTERNAL_LIBS) $(LIBS)
+	@echo "    [CC] $@"
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -o $@ lvmlockctl.o $(INTERNAL_LIBS) $(LIBS)
 
 install_lvmlockd: lvmlockd
-	$(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
 
 install_lvmlockctl: lvmlockctl
-	$(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
 
 install_lvm2: install_lvmlockd install_lvmlockctl
 

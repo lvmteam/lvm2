@@ -133,7 +133,7 @@ man-generator.c: command.c
 
 man-generator: man-generator.o
 	@echo "    [CC] $@"
-	$(CC) $(CFLAGS) -o $@ $<
+	$(Q) $(CC) $(CFLAGS) -o $@ $<
 
 lvm.static: $(OBJECTS) lvm-static.o $(top_builddir)/lib/liblvm-internal.a $(INTERNAL_LIBS)
 	@echo "    [CC] $@"
@@ -225,7 +225,7 @@ install_tools_dynamic: lvm .commands
 	$(Q) $(INSTALL_PROGRAM) -D lvm $(sbindir)/lvm
 	@echo Creating symbolic links for individual commands in $(sbindir)
 	@for v in `cat .commands`; do \
-		echo "$(LN_S) -f lvm $(sbindir)/$$v"; \
+		test -n "$(Q)" || echo "$(LN_S) -f lvm $(sbindir)/$$v"; \
 		$(LN_S) -f lvm $(sbindir)/$$v; \
 	done;
 

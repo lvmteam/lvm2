@@ -80,18 +80,22 @@ ifeq ("@BUILD_DMFILEMAPD@", "yes")
   CFLAGS_dmfilemapd.o += $(EXTRA_EXEC_CFLAGS)
 
   dmfilemapd: $(LIB_SHARED) dmfilemapd.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) \
+	@echo "    [CC] $<"
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) \
 		-o $@ dmfilemapd.o -L$(top_builddir)/libdm -ldevmapper $(DL_LIBS) $(LIBS)
 
   dmfilemapd.static: $(LIB_STATIC) dmfilemapd.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(ELDFLAGS) -static -L$(interfacebuilddir) \
+	@echo "    [CC] $<"
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(ELDFLAGS) -static -L$(interfacebuilddir) \
 		-o $@ dmfilemapd.o $(DL_LIBS) $(LIBS) $(STATIC_LIBS)
 
   install_dmfilemapd_dynamic: dmfilemapd
-	$(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
 
   install_dmfilemapd_static: dmfilemapd.static
-	$(INSTALL_PROGRAM) -D $< $(staticdir)/$(<F)
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_PROGRAM) -D $< $(staticdir)/$(<F)
 
   install_dmfilemapd: $(INSTALL_DMFILEMAPD_TARGETS)
 
