@@ -2099,7 +2099,6 @@ If autoactivation \fBay\fP is used, the LV is only activated
 if it matches an item in lvm.conf activation/auto_activation_volume_list.
 \fBay\fP implies --zero n and --wipesignatures n.
 See \fBlvmlockd\fP(8) for more information about activation options for shared VGs.
-See \fBclvmd\fP(8) for more information about activation options for clustered VGs.
 .ad b
 .HP
 .ad l
@@ -6177,11 +6176,9 @@ then combining the new origin LV with an existing cache pool.
 .BR lvmdump (8)
 
 .BR dmeventd (8)
-.BR lvmetad (8)
 .BR lvmpolld (8)
 .BR lvmlockd (8)
 .BR lvmlockctl (8)
-.BR clvmd (8)
 .BR cmirrord (8)
 .BR lvmdbusd (8)
 

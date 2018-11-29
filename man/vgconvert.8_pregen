@@ -111,14 +111,16 @@ Common options for lvm:
 .ad l
 \fB--bootloaderareasize\fP \fISize\fP[m|UNIT]
 .br
-Create a separate bootloader area of specified size besides PV's data
-area. The bootloader area is an area of reserved space on the PV from
-which LVM will not allocate any extents and it's kept untouched. This is
-primarily aimed for use with bootloaders to embed their own data or metadata.
+Reserve space for the bootloader between the LVM metadata area and the first PE.
+The bootloader area is reserved for bootloaders to embed their own data or
+metadata; LVM will not use it.
+The bootloader area begins where the first PE would otherwise be located.
+The first PE is moved out by the size of the bootloader area, and then moved
+out further if necessary to match the data alignment.
 The start of the bootloader area is always aligned, see also --dataalignment
-and --dataalignmentoffset. The bootloader area size may eventually
-end up increased due to the alignment, but it's never less than the
-size that is requested. To see the bootloader area start and size of
+and --dataalignmentoffset. The bootloader area may be larger than requested
+due to the alignment, but it's never less than the requested size.
+To see the bootloader area start and size of
 an existing PV use pvs -o +pv_ba_start,pv_ba_size.
 .ad b
 .HP
@@ -221,8 +223,7 @@ on the command.
 The number of metadata areas to set aside on a PV for storing VG metadata.
 When 2, one copy of the VG metadata is stored at the front of the PV
 and a second copy is stored at the end.
-When 1, one copy of the VG metadata is stored at the front of the PV
-(starting in the 5th sector).
+When 1, one copy of the VG metadata is stored at the front of the PV.
 When 0, no copies of the VG metadata are stored on the given PV.
 This may be useful in VGs containing many PVs (this places limitations
 on the ability to use vgsplit later.)
@@ -357,11 +358,9 @@ For example, LVM_VG_NAME can generally be substituted for a required VG paramete
 .BR lvmdump (8)
 
 .BR dmeventd (8)
-.BR lvmetad (8)
 .BR lvmpolld (8)
 .BR lvmlockd (8)
 .BR lvmlockctl (8)
-.BR clvmd (8)
 .BR cmirrord (8)
 .BR lvmdbusd (8)
 
