@@ -44,11 +44,11 @@ vpath %.sh $(srcdir)
 vpath %.ocf $(srcdir)
 
 %_install: %.sh
-	$(INSTALL_PROGRAM) -D $< $(sbindir)/$(basename $(<F))
+	$(Q) $(INSTALL_PROGRAM) -D $< $(sbindir)/$(basename $(<F))
 
 %_install: %.ocf
-	$(INSTALL_DIR) $(ocf_scriptdir)
-	$(INSTALL_SCRIPT) $< $(ocf_scriptdir)/$(basename $(<F))
+	$(Q) $(INSTALL_DIR) $(ocf_scriptdir)
+	$(Q) $(INSTALL_SCRIPT) $< $(ocf_scriptdir)/$(basename $(<F))
 
 install_lvm2: $(LVM_SCRIPTS:.sh=_install)
 install_device-mapper: $(DM_SCRIPTS:.sh=_install)
@@ -59,61 +59,66 @@ install: install_lvm2 install_ocf install_device-mapper
 
 # FIXME Customise for other distributions
 install_initscripts:
-	$(INSTALL_DIR) $(initdir)
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_DIR) $(initdir)
 ifeq ("@BUILD_DMEVENTD@", "yes")
-	$(INSTALL_SCRIPT) lvm2_monitoring_init_red_hat $(initdir)/lvm2-monitor
+	$(Q) $(INSTALL_SCRIPT) lvm2_monitoring_init_red_hat $(initdir)/lvm2-monitor
 endif
 ifeq ("@BUILD_LVMPOLLD@", "yes")
-	$(INSTALL_SCRIPT) lvm2_lvmpolld_init_red_hat $(initdir)/lvm2-lvmpolld
+	$(Q) $(INSTALL_SCRIPT) lvm2_lvmpolld_init_red_hat $(initdir)/lvm2-lvmpolld
 endif
 ifeq ("@BUILD_CMIRRORD@", "yes")
-	$(INSTALL_SCRIPT) cmirrord_init_red_hat $(initdir)/cmirrord
+	$(Q) $(INSTALL_SCRIPT) cmirrord_init_red_hat $(initdir)/cmirrord
 endif
 ifeq ("@BLKDEACTIVATE@", "yes")
-	$(INSTALL_SCRIPT) blk_availability_init_red_hat $(initdir)/blk-availability
+	$(Q) $(INSTALL_SCRIPT) blk_availability_init_red_hat $(initdir)/blk-availability
 endif
 
 CFLAGS_lvm2_activation_generator_systemd_red_hat.o += $(EXTRA_EXEC_CFLAGS)
 
 lvm2_activation_generator_systemd_red_hat: $(OBJECTS) $(DEPLIBS) $(INTERNAL_LIBS)
-	$(CC) -o $@ $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) $(LVMLIBS) $(INTERNAL_LIBS) $(LIBS)
+	@echo "    [CC] $@"
+	$(Q) $(CC) -o $@ $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) $(LVMLIBS) $(INTERNAL_LIBS) $(LIBS)
 
 install_systemd_generators:
-	$(INSTALL_DIR) $(systemd_generator_dir)
-	$(INSTALL_PROGRAM) lvm2_activation_generator_systemd_red_hat $(systemd_generator_dir)/lvm2-activation-generator
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_DIR) $(systemd_generator_dir)
+	$(Q) $(INSTALL_PROGRAM) lvm2_activation_generator_systemd_red_hat $(systemd_generator_dir)/lvm2-activation-generator
 
 install_systemd_units:	install_dbus_service
-	$(INSTALL_DIR) $(systemd_unit_dir)
-	$(INSTALL_DATA) lvm2-pvscan.service $(systemd_unit_dir)/lvm2-pvscan@.service
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_DIR) $(systemd_unit_dir)
+	$(Q) $(INSTALL_DATA) lvm2-pvscan.service $(systemd_unit_dir)/lvm2-pvscan@.service
 ifeq ("@BUILD_DMEVENTD@", "yes")
-	$(INSTALL_DATA) dm_event_systemd_red_hat.socket $(systemd_unit_dir)/dm-event.socket
-	$(INSTALL_DATA) dm_event_systemd_red_hat.service $(systemd_unit_dir)/dm-event.service
-	$(INSTALL_DATA) lvm2_monitoring_systemd_red_hat.service $(systemd_unit_dir)/lvm2-monitor.service
+	$(Q) $(INSTALL_DATA) dm_event_systemd_red_hat.socket $(systemd_unit_dir)/dm-event.socket
+	$(Q) $(INSTALL_DATA) dm_event_systemd_red_hat.service $(systemd_unit_dir)/dm-event.service
+	$(Q) $(INSTALL_DATA) lvm2_monitoring_systemd_red_hat.service $(systemd_unit_dir)/lvm2-monitor.service
 endif
 ifeq ("@BLKDEACTIVATE@", "yes")
-	$(INSTALL_DATA) blk_availability_systemd_red_hat.service $(systemd_unit_dir)/blk-availability.service
+	$(Q) $(INSTALL_DATA) blk_availability_systemd_red_hat.service $(systemd_unit_dir)/blk-availability.service
 endif
 ifeq ("@BUILD_LVMPOLLD@", "yes")
-	$(INSTALL_DATA) lvm2_lvmpolld_systemd_red_hat.socket $(systemd_unit_dir)/lvm2-lvmpolld.socket
-	$(INSTALL_DATA) lvm2_lvmpolld_systemd_red_hat.service $(systemd_unit_dir)/lvm2-lvmpolld.service
+	$(Q) $(INSTALL_DATA) lvm2_lvmpolld_systemd_red_hat.socket $(systemd_unit_dir)/lvm2-lvmpolld.socket
+	$(Q) $(INSTALL_DATA) lvm2_lvmpolld_systemd_red_hat.service $(systemd_unit_dir)/lvm2-lvmpolld.service
 endif
 ifeq ("@BUILD_LVMLOCKD@", "yes")
-	$(INSTALL_DATA) lvmlockd.service $(systemd_unit_dir)/lvmlockd.service
-	$(INSTALL_DATA) lvmlocks.service $(systemd_unit_dir)/lvmlocks.service
+	$(Q) $(INSTALL_DATA) lvmlockd.service $(systemd_unit_dir)/lvmlockd.service
+	$(Q) $(INSTALL_DATA) lvmlocks.service $(systemd_unit_dir)/lvmlocks.service
 endif
 ifeq ("@BUILD_CMIRRORD@", "yes")
-	$(INSTALL_DATA) lvm2_cmirrord_systemd_red_hat.service $(systemd_unit_dir)/lvm2-cmirrord.service
+	$(Q) $(INSTALL_DATA) lvm2_cmirrord_systemd_red_hat.service $(systemd_unit_dir)/lvm2-cmirrord.service
 endif
 ifeq ("@BUILD_LVMDBUSD@", "yes")
-	$(INSTALL_DATA) lvm2_lvmdbusd_systemd_red_hat.service $(systemd_unit_dir)/lvm2-lvmdbusd.service
+	$(Q) $(INSTALL_DATA) lvm2_lvmdbusd_systemd_red_hat.service $(systemd_unit_dir)/lvm2-lvmdbusd.service
 endif
 
 ifeq ("@BUILD_LVMDBUSD@", "yes")
 install_dbus_service:
-	$(INSTALL_DIR) $(dbusconfdir)
-	$(INSTALL_DIR) $(dbusservicedir)
-	$(INSTALL_DATA) $(top_srcdir)/scripts/com.redhat.lvmdbus1.conf $(dbusconfdir)
-	$(INSTALL_DATA) com.redhat.lvmdbus1.service $(dbusservicedir)
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_DIR) $(dbusconfdir)
+	$(Q) $(INSTALL_DIR) $(dbusservicedir)
+	$(Q) $(INSTALL_DATA) $(top_srcdir)/scripts/com.redhat.lvmdbus1.conf $(dbusconfdir)
+	$(Q) $(INSTALL_DATA) com.redhat.lvmdbus1.service $(dbusservicedir)
 
 install_systemd_units:	install_dbus_service
 endif

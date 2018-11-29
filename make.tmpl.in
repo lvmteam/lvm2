@@ -481,7 +481,7 @@ ifeq ("@LIB_SUFFIX@","dylib")
 endif
 
 $(LIB_SHARED): $(LIB_SHARED).$(LIB_VERSION)
-	@echo "    [LN] $<"
+	@echo "    [LN] $@"
 	$(Q) $(LN_S) -f $(<F) $@
 
 CLEAN_TARGETS += $(LDDEPS) .exported_symbols_generated
@@ -534,18 +534,20 @@ CLEAN_TARGETS += \
 	$(POTFILES) $(CLEAN_CFLOW)
 
 cleandir:
+	@echo "    [CLEANDIR]"
 ifneq (,$(firstword $(CLEAN_DIRS)))
-	$(RM) -r $(CLEAN_DIRS)
+	$(Q) $(RM) -r $(CLEAN_DIRS)
 endif
-	$(RM) $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) core
+	$(Q) $(RM) $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) core
 
 clean: $(SUBDIRS.clean) cleandir
 
 distclean: cleandir $(SUBDIRS.distclean)
+	@echo "    [DISTCLEAN]"
 ifneq (,$(firstword $(DISTCLEAN_DIRS)))
-	$(RM) -r $(DISTCLEAN_DIRS)
+	$(Q) $(RM) -r $(DISTCLEAN_DIRS)
 endif
-	$(RM) $(DISTCLEAN_TARGETS) Makefile
+	$(Q) $(RM) $(DISTCLEAN_TARGETS) Makefile
 
 .exported_symbols_generated: $(EXPORTED_HEADER) .exported_symbols $(DEPS)
 	$(Q) set -e; \

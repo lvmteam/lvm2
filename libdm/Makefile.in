@@ -65,7 +65,8 @@ device-mapper: all
 dm-tools.device-mapper: $(TARGETS)
 
 libdevmapper.$(LIB_SUFFIX) libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION): $(LIB_SHARED)
-	$(LN_S) -f $< $@
+	@echo "    [LN] $<"
+	$(Q) $(LN_S) -f $< $@
 
 .PHONY: install_dynamic install_static install_include \
 	install_ioctl install_ioctl_static \
@@ -86,7 +87,8 @@ install: $(INSTALL_TYPE) install_include
 install_device-mapper: install
 
 install_include: $(srcdir)/libdevmapper.h
-	$(INSTALL_DATA) -D $< $(includedir)/$(<F)
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_DATA) -D $< $(includedir)/$(<F)
 
 install_dynamic: install_@interface@
 
@@ -95,10 +97,12 @@ install_static: install_@interface@_static
 install_ioctl: install_lib_shared
 
 install_pkgconfig: libdevmapper.pc
-	$(INSTALL_DATA) -D $< $(pkgconfigdir)/devmapper.pc
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_DATA) -D $< $(pkgconfigdir)/devmapper.pc
 
 install_ioctl_static: $(LIB_STATIC)
-	$(INSTALL_DATA) -D $< $(usrlibdir)/$(<F)
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_DATA) -D $< $(usrlibdir)/$(<F)
 
 CLEAN_TARGETS += ioctl/libdevmapper.a
 DISTCLEAN_TARGETS += libdevmapper.pc

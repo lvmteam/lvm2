@@ -60,11 +60,13 @@ CFLAGS_dmeventd.o += $(EXTRA_EXEC_CFLAGS)
 LIBS += $(PTHREAD_LIBS)
 
 dmeventd: $(LIB_SHARED) dmeventd.o
-	$(CC) $(CFLAGS) -L. $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) dmeventd.o \
+	@echo "    [CC] $@"
+	$(Q) $(CC) $(CFLAGS) -L. $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) dmeventd.o \
 		-o $@ $(DL_LIBS) $(DMEVENT_LIBS) $(INTERNAL_LIBS) $(LIBS) -lm
 
 dmeventd.static: $(LIB_STATIC) dmeventd.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -static -L. -L$(interfacebuilddir) dmeventd.o \
+	@echo "    [CC] $@"
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -static -L. -L$(interfacebuilddir) dmeventd.o \
 		-o $@ $(DL_LIBS) $(DMEVENT_LIBS) $(LIBS) $(STATIC_LIBS)
 
 ifeq ("@PKGCONFIG@", "yes")
@@ -80,23 +82,28 @@ CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))
 endif
 
 install_include: $(srcdir)/libdevmapper-event.h
-	$(INSTALL_DATA) -D $< $(includedir)/$(<F)
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_DATA) -D $< $(includedir)/$(<F)
 
 install_pkgconfig: libdevmapper-event.pc
-	$(INSTALL_DATA) -D $< $(pkgconfigdir)/devmapper-event.pc
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_DATA) -D $< $(pkgconfigdir)/devmapper-event.pc
 
 install_lib_dynamic: install_lib_shared
 
 install_lib_static: $(LIB_STATIC)
-	$(INSTALL_DATA) -D $< $(usrlibdir)/$(<F)
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_DATA) -D $< $(usrlibdir)/$(<F)
 
 install_lib: $(INSTALL_LIB_TARGETS)
 
 install_dmeventd_dynamic: dmeventd
-	$(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
 
 install_dmeventd_static: dmeventd.static
-	$(INSTALL_PROGRAM) -D $< $(staticdir)/$(<F)
+	@echo "    [INSTALL] $<"
+	$(Q) $(INSTALL_PROGRAM) -D $< $(staticdir)/$(<F)
 
 install_dmeventd: $(INSTALL_DMEVENTD_TARGETS)
 
