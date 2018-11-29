@@ -129,20 +129,19 @@ static void _test_parse_line(void *fixture)
 
 	for (i = 0; i< DM_ARRAY_SIZE(_tests); i++) {
         	bool r;
-		struct config cfg;
+		struct config cfg = {
+			.sysinit_needed = true
+		};
 		struct pl_test *t = _tests + i;
-
-		cfg.use_lvmetad = false;
-		cfg.sysinit_needed = true;
 
 		r = _parse_line(t->input, &cfg);
 		if (t->success) {
 			if (!r)
         			test_fail("_parse_line('%s') failed", t->input);
 
-        		if (cfg.use_lvmetad != t->use_lvmetad)
-                		test_fail("_parse_line('%s') -> use_lvmetad='%s'",
-                                          t->input, _bool(cfg.use_lvmetad));
+			//if (cfg.use_lvmetad != t->use_lvmetad)
+			//	test_fail("_parse_line('%s') -> use_lvmetad='%s'",
+			//		t->input, _bool(cfg.use_lvmetad));
 
                 	if (cfg.sysinit_needed != t->sysinit_needed)
                         	test_fail("_parse_line('%s') -> sysinit_needed='%s'",
@@ -207,14 +206,13 @@ static void _test_get_config(void *fixture)
 
 	bool r;
 	unsigned i;
-	struct config cfg;
 	const char *path;
 
 	for (i = 0; i < DM_ARRAY_SIZE(_tests); i++) {
         	struct gc_test *t = _tests + i;
-
-        	cfg.use_lvmetad = false;
-        	cfg.sysinit_needed = true;
+		struct config cfg = {
+			.sysinit_needed = true
+		};
 
 		path = _fake_lvmconfig(t->output);
 		if (!path)
@@ -225,9 +223,9 @@ static void _test_get_config(void *fixture)
 			if (!r)
         			test_fail("_get_config() <- '%s' failed", t->output);
 
-        		if (t->use_lvmetad != cfg.use_lvmetad)
-                		test_fail("_get_config() <- '%s', use_lvmetad = %s",
-                                          t->output, _bool(cfg.use_lvmetad));
+			//if (t->use_lvmetad != cfg.use_lvmetad)
+			//	test_fail("_get_config() <- '%s', use_lvmetad = %s",
+			//		  t->output, _bool(cfg.use_lvmetad));
 
                 	if (t->sysinit_needed != cfg.sysinit_needed)
                         	test_fail("_get_config() <- '%s', sysinit = %s",
