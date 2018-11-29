@@ -652,7 +652,6 @@ if the list is set but empty, no LVs match.
 Autoactivation should be used during system boot to make it possible
 to select which LVs should be automatically activated by the system.
 See \fBlvmlockd\fP(8) for more information about activation options \fBey\fP and \fBsy\fP for shared VGs.
-See \fBclvmd\fP(8) for more information about activation options \fBey\fP, \fBsy\fP, \fBly\fP and \fBln\fP for clustered VGs.
 .ad b
 .HP
 .ad l
@@ -913,8 +912,7 @@ on the command.
 The number of metadata areas to set aside on a PV for storing VG metadata.
 When 2, one copy of the VG metadata is stored at the front of the PV
 and a second copy is stored at the end.
-When 1, one copy of the VG metadata is stored at the front of the PV
-(starting in the 5th sector).
+When 1, one copy of the VG metadata is stored at the front of the PV.
 When 0, no copies of the VG metadata are stored on the given PV.
 This may be useful in VGs containing many PVs (this places limitations
 on the ability to use vgsplit later.)
@@ -933,12 +931,9 @@ Repeat once to also suppress any prompts with answer 'no'.
 Run the command in a special read-only mode which will read on-disk
 metadata without needing to take any locks. This can be used to peek
 inside metadata used by a virtual machine image while the virtual
-machine is running.
-It can also be used to peek inside the metadata of clustered VGs
-when clustered locking is not configured or running. No attempt
-will be made to communicate with the device-mapper kernel driver, so
-this option is unable to report whether or not LVs are
-actually in use.
+machine is running. No attempt will be made to communicate with the
+device-mapper kernel driver, so this option is unable to report whether
+or not LVs are actually in use.
 .ad b
 .HP
 .ad l
@@ -1159,11 +1154,9 @@ Change the maximum number of LVs for an inactive VG.
 .BR lvmdump (8)
 
 .BR dmeventd (8)
-.BR lvmetad (8)
 .BR lvmpolld (8)
 .BR lvmlockd (8)
 .BR lvmlockctl (8)
-.BR clvmd (8)
 .BR cmirrord (8)
 .BR lvmdbusd (8)
 

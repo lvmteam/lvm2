@@ -195,7 +195,12 @@ Enabling this is strongly advised! See \fBvgcfgbackup\fP(8) for more information
 .ad b
 .HP
 .ad l
-\fB-b\fP|\fB--background\fP.ad b
+\fB-b\fP|\fB--background\fP
+.br
+If the operation requires polling, this option causes the command to
+return before the operation is complete, and polling is done in the
+background.
+.ad b
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
@@ -505,11 +510,9 @@ extents can also be picked out and moved.
 .BR lvmdump (8)
 
 .BR dmeventd (8)
-.BR lvmetad (8)
 .BR lvmpolld (8)
 .BR lvmlockd (8)
 .BR lvmlockctl (8)
-.BR clvmd (8)
 .BR cmirrord (8)
 .BR lvmdbusd (8)
 

@@ -354,12 +354,9 @@ Repeat once to also suppress any prompts with answer 'no'.
 Run the command in a special read-only mode which will read on-disk
 metadata without needing to take any locks. This can be used to peek
 inside metadata used by a virtual machine image while the virtual
-machine is running.
-It can also be used to peek inside the metadata of clustered VGs
-when clustered locking is not configured or running. No attempt
-will be made to communicate with the device-mapper kernel driver, so
-this option is unable to report whether or not LVs are
-actually in use.
+machine is running. No attempt will be made to communicate with the
+device-mapper kernel driver, so this option is unable to report whether
+or not LVs are actually in use.
 .ad b
 .HP
 .ad l
@@ -644,11 +641,9 @@ s(k)ip activation: this volume is flagged to be skipped during activation.
 .BR lvmdump (8)
 
 .BR dmeventd (8)
-.BR lvmetad (8)
 .BR lvmpolld (8)
 .BR lvmlockd (8)
 .BR lvmlockctl (8)
-.BR clvmd (8)
 .BR cmirrord (8)
 .BR lvmdbusd (8)
 
