@@ -957,6 +957,12 @@ int label_scan_pvscan_all(struct cmd_context *cmd, struct dm_list *scan_devs)
 			bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
 			_scan_dev_close(dev);
 		}
+
+		if (dev_is_md_with_end_superblock(cmd->dev_types, dev)) {
+			cmd->use_full_md_check = 1;
+			use_full_md_check = 1;
+			log_debug("Found md component in sysfs with end superblock %s", dev_name(dev));
+		}
 	};
 	dev_iter_destroy(iter);
 

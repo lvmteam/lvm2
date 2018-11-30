@@ -455,7 +455,8 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 		if (dev_is_md_with_end_superblock(cmd->dev_types, dev)) {
 			cmd->use_full_md_check = 1;
 			use_full_md_check = 1;
-			log_debug("Found md with end superblock %s", dev_name(dev));
+			log_debug("Found md component in sysfs with end superblock %s", dev_name(dev));
+			break;
 		}
 	}
 	dev_iter_destroy(iter);
