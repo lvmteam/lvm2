@@ -59,11 +59,13 @@ char *dm_pool_strdup(struct dm_pool *p, const char *str)
 
 char *dm_pool_strndup(struct dm_pool *p, const char *str, size_t n)
 {
+	size_t slen = strlen(str);
+	size_t len = (slen < n) ? slen : n;
 	char *ret = dm_pool_alloc(p, n + 1);
 
 	if (ret) {
-		strncpy(ret, str, n);
-		ret[n] = '\0';
+		ret[len] = '\0';
+		memcpy(ret, str, len);
 	}
 
 	return ret;
