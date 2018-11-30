@@ -203,13 +203,8 @@ bool dm_vdo_status_parse(struct dm_pool *mem, const char *input,
 		goto bad;
 	}
 
-	if (!(s->device = (!mem) ? malloc((e - b) + 1) : dm_pool_alloc(mem, (e - b) + 1))) {
+	if (!(s->device = (!mem) ? strndup(b, (te - b)) : dm_pool_alloc(mem, (te - b)))) {
 		_set_error(result, "out of memory");
-		goto bad;
-	}
-
-	if (!dm_strncpy(s->device, b, te - b + 1)) {
-		_set_error(result, "copy device");
 		goto bad;
 	}
 
