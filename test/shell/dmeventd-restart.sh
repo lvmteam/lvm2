@@ -44,7 +44,7 @@ dmeventd -R -f &
 echo $! >LOCAL_DMEVENTD
 
 # wait longer as tries to communicate with killed daemon
-sleep 7
+sleep 9
 # now dmeventd should not be running
 not pgrep dmeventd
 rm LOCAL_DMEVENTD
