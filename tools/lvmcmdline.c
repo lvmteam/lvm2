@@ -2914,8 +2914,6 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (cmd->command->command_enum == lvconvert_repair_CMD) {
-		log_warn("WARNING: Disabling lvmetad cache for repair command.");
-		lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_REPAIR);
 		log_warn("WARNING: Not using lvmetad because of repair.");
 		lvmetad_make_unused(cmd);
 	}

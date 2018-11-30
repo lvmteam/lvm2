@@ -31,6 +31,7 @@ static daemon_handle _lvmetad = { .error = 0 };
 static int _lvmetad_use = 0;
 static int _lvmetad_connected = 0;
 static int _lvmetad_daemon_pid = 0;
+static int _was_connected = 0;
 
 static char *_lvmetad_token = NULL;
 static const char *_lvmetad_socket = NULL;
@@ -114,8 +115,10 @@ static int _log_debug_inequality(const char *name, struct dm_config_node *a, str
 
 void lvmetad_disconnect(void)
 {
-	if (_lvmetad_connected)
+	if (_lvmetad_connected) {
 		daemon_close(_lvmetad);
+		_was_connected = 1;
+	}
 
 	_lvmetad_connected = 0;
 	_lvmetad_use = 0;
@@ -2973,14 +2976,33 @@ int lvmetad_vg_is_foreign(struct cmd_context *cmd, const char *vgname, const cha
  */
 void lvmetad_set_disabled(struct cmd_context *cmd, const char *reason)
 {
+	daemon_handle tmph = { .error = 0 };
 	daemon_reply reply;
+	int dis = 0;
 
-	if (!_lvmetad_use)
-		return;
+	/*
+	 * If we were using lvmetad at the start of the command, but are not
+	 * now, then _was_connected should still be set.  In this case we
+	 * want to make a temp connection just to disable it.
+	 */
+	if (!_lvmetad_use) {
+		if (_was_connected) {
+			/* Create a special temp connection just to send disable */
+			tmph = lvmetad_open(_lvmetad_socket);
+			if (tmph.socket_fd < 0 || tmph.error) {
+				log_warn("Failed to connect to lvmetad to disable.");
+				return;
+			}
+			dis = 1;
+		} else {
+			/* We were never using lvmetad, don't start now. */
+			return;
+		}
+	}
 
 	log_debug_lvmetad("Sending lvmetad disabled %s", reason);
 
-	reply = daemon_send_simple(_lvmetad, "set_global_info",
+	reply = daemon_send_simple(tmph, "set_global_info",
 				   "token = %s", "skip",
 				   "global_disable = " FMTd64, (int64_t)1,
 				   "disable_reason = %s", reason,
@@ -2994,6 +3016,9 @@ void lvmetad_set_disabled(struct cmd_context *cmd, const char *reason)
 		log_error("Failed response from lvmetad.");
 
 	daemon_reply_destroy(reply);
+
+	if (dis)
+		daemon_close(tmph);
 }
 
 void lvmetad_clear_disabled(struct cmd_context *cmd)

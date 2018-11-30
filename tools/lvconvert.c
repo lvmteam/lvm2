@@ -17,6 +17,7 @@
 #include "polldaemon.h"
 #include "lv_alloc.h"
 #include "lvconvert_poll.h"
+#include "lvmetad-client.h"
 
 #define MAX_PDATA_ARGS	10	/* Max number of accepted args for d-m-p-d tools */
 
@@ -1072,6 +1073,9 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 					display_lvname(lv));
 		return 1;
 	}
+
+	log_warn("WARNING: Disabling lvmetad cache for repair command.");
+	lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_REPAIR);
 
 	failed_mimages = _failed_mirrors_count(lv);
 	failed_logs = _failed_logs_count(lv);
@@ -2321,6 +2325,9 @@ static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
 		goto deactivate_pmslv;
 	}
 
+	log_warn("WARNING: Disabling lvmetad cache for repair command.");
+	lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_REPAIR);
+
 	if (!(ret = exec_cmd(cmd, (const char * const *)argv, &status, 1))) {
 		log_error("Repair of thin metadata volume of thin pool %s failed (status:%d). "
 			  "Manual repair required!",
@@ -2518,6 +2525,9 @@ static int _lvconvert_cache_repair(struct cmd_context *cmd,
 			  mlv->name);
 		goto deactivate_pmslv;
 	}
+
+	log_warn("WARNING: Disabling lvmetad cache for repair command.");
+	lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_REPAIR);
 
 	if (!(ret = exec_cmd(cmd, (const char * const *)argv, &status, 1))) {
 		log_error("Repair of cache metadata volume of cache %s failed (status:%d). "
@@ -3538,6 +3548,9 @@ static int _lvconvert_repair_pvs_raid(struct cmd_context *cmd, struct logical_vo
 	_lvconvert_repair_pvs_raid_ask(cmd, &do_it);
 
 	if (do_it) {
+		log_warn("WARNING: Disabling lvmetad cache for repair command.");
+		lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_REPAIR);
+
 		if (!(failed_pvs = _failed_pv_list(lv->vg)))
 			return_0;
 
