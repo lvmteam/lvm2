@@ -356,7 +356,7 @@ static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
 	char label_buf[LABEL_SIZE] __attribute__((aligned(8)));
 	struct label *label = NULL;
 	struct labeller *labeller;
-	uint64_t sector;
+	uint64_t sector = 0;
 	int ret = 0;
 	int pass;
 
