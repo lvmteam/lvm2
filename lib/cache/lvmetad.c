@@ -2978,7 +2978,7 @@ void lvmetad_set_disabled(struct cmd_context *cmd, const char *reason)
 {
 	daemon_handle tmph = { .error = 0 };
 	daemon_reply reply;
-	int dis = 0;
+	int tmp_con = 0;
 
 	/*
 	 * If we were using lvmetad at the start of the command, but are not
@@ -2993,7 +2993,7 @@ void lvmetad_set_disabled(struct cmd_context *cmd, const char *reason)
 				log_warn("Failed to connect to lvmetad to disable.");
 				return;
 			}
-			dis = 1;
+			tmp_con = 1;
 		} else {
 			/* We were never using lvmetad, don't start now. */
 			return;
@@ -3002,13 +3002,23 @@ void lvmetad_set_disabled(struct cmd_context *cmd, const char *reason)
 
 	log_debug_lvmetad("Sending lvmetad disabled %s", reason);
 
-	reply = daemon_send_simple(tmph, "set_global_info",
+	if (tmp_con)
+		reply = daemon_send_simple(tmph, "set_global_info",
 				   "token = %s", "skip",
 				   "global_disable = " FMTd64, (int64_t)1,
 				   "disable_reason = %s", reason,
 				   "pid = " FMTd64, (int64_t)getpid(),
 				   "cmd = %s", get_cmd_name(),
 				   NULL);
+	else
+		reply = daemon_send_simple(_lvmetad, "set_global_info",
+				   "token = %s", "skip",
+				   "global_disable = " FMTd64, (int64_t)1,
+				   "disable_reason = %s", reason,
+				   "pid = " FMTd64, (int64_t)getpid(),
+				   "cmd = %s", get_cmd_name(),
+				   NULL);
+
 	if (reply.error)
 		log_error("Failed to send message to lvmetad %d", reply.error);
 
@@ -3017,7 +3027,7 @@ void lvmetad_set_disabled(struct cmd_context *cmd, const char *reason)
 
 	daemon_reply_destroy(reply);
 
-	if (dis)
+	if (tmp_con)
 		daemon_close(tmph);
 }
 
