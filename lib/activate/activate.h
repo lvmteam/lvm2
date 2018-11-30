@@ -162,10 +162,10 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 int lv_check_not_in_use(const struct logical_volume *lv, int error_if_used);
 
 /*
- * Returns 1 if activate_lv has been set: 1 = activate; 0 = don't.
+ * Returns 1 if activate has been set: 1 = activate; 0 = don't.
  */
 int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
-			 int *activate_lv, const struct logical_volume *lv);
+			 int *activate, const struct logical_volume *lv);
 /*
  * Checks against the auto_activation_volume_list and
  * returns 1 if the LV should be activated, 0 otherwise.

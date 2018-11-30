@@ -2476,19 +2476,19 @@ out:
 
 /* Test if LV passes filter */
 int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
-			 int *activate_lv, const struct logical_volume *lv)
+			 int *activate, const struct logical_volume *lv)
 {
 	if (!activation()) {
-		*activate_lv = 1;
+		*activate = 1;
 		return 1;
 	}
 
 	if (!_passes_activation_filter(cmd, lv)) {
 		log_verbose("Not activating %s since it does not pass "
 			    "activation filter.", display_lvname(lv));
-		*activate_lv = 0;
+		*activate = 0;
 	} else
-		*activate_lv = 1;
+		*activate = 1;
 
 	return 1;
 }
