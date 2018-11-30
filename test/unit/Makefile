@@ -35,7 +35,8 @@ UNIT_DEPENDS = $(UNIT_SOURCE:%.c=%.d)
 UNIT_OBJECTS = $(UNIT_SOURCE:%.c=%.o)
 CLEAN_TARGETS += $(UNIT_DEPENDS) $(UNIT_OBJECTS) \
 	$(UNIT_SOURCE:%.c=%.gcda) \
-	$(UNIT_SOURCE:%.c=%.gcno)
+	$(UNIT_SOURCE:%.c=%.gcno) \
+	test/unit/unit-test
 
 test/unit/unit-test: $(UNIT_OBJECTS) lib/liblvm-internal.a libdaemon/client/libdaemonclient.a $(INTERNAL_LIBS)
 	@echo "    [LD] $@"
