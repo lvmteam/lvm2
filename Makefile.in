@@ -205,13 +205,13 @@ $(LCOV_TRACES):
 
 ifneq ("$(GENHTML)", "")
 lcov: $(LCOV_TRACES)
-	$(RM) -r $(LCOV_REPORTS_DIR)
+	$(RM) -rf $(LCOV_REPORTS_DIR)
 	$(MKDIR_P) $(LCOV_REPORTS_DIR)
-	for i in $(LCOV_TRACES); do \
-		test -s $$i -a $$(wc -w <$$i) -ge 100 && lc="$$lc $$i"; \
-	done; \
-	test -z "$$lc" || $(GENHTML) -p @abs_top_builddir@ \
-		-o $(LCOV_REPORTS_DIR) $$lc
+	$(LCOV) --capture --directory $(top_builddir) --ignore-errors source \
+		--output-file $(LCOV_REPORTS_DIR)/out.info
+	-test ! -s $(LCOV_REPORTS_DIR)/out.info || \
+		$(GENHTML) -o $(LCOV_REPORTS_DIR) --ignore-errors source \
+		$(LCOV_REPORTS_DIR)/out.info
 endif
 
 endif
