@@ -25,7 +25,7 @@ enum dev_ext_e;
 void init_verbose(int level);
 void init_silent(int silent);
 void init_test(int level);
-void init_use_aio(int use_aio);
+void init_use_aio(int useaio);
 void init_md_filtering(int level);
 void init_internal_filtering(int level);
 void init_fwraid_filtering(int level);
