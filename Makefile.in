@@ -179,7 +179,7 @@ endif
 include $(top_srcdir)/device_mapper/Makefile
 include $(top_srcdir)/base/Makefile
 
-ifneq ($(shell which ctags),)
+ifneq ($(shell which ctags 2>/dev/null),)
 .PHONY: tags
 tags:
 	test -z "$(shell find $(top_srcdir) -type f -name '*.[ch]' -newer tags 2>/dev/null | head -1)" || $(RM) tags
