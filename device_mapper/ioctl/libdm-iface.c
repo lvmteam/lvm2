@@ -15,9 +15,11 @@
 
 #include "base/memory/zalloc.h"
 #include "device_mapper/misc/dmlib.h"
+#include "device_mapper/misc/dm-ioctl.h"
 #include "device_mapper/ioctl/libdm-targets.h"
 #include "device_mapper/libdm-common.h"
 
+#include <stdio.h>  /* getline() */
 #include <stddef.h>
 #include <fcntl.h>
 #include <dirent.h>
@@ -34,8 +36,6 @@
 #  define MINOR(x) minor((x))
 #  define MKDEV(x,y) makedev(((dev_t)x),((dev_t)y))
 #endif
-
-#include "device_mapper/misc/dm-ioctl.h"
 
 /*
  * Ensure build compatibility.  
