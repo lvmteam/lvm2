@@ -41,9 +41,10 @@ CLEAN_TARGETS += $(UNIT_DEPENDS) $(UNIT_OBJECTS) \
 test/unit/unit-test: $(UNIT_OBJECTS) lib/liblvm-internal.a libdaemon/client/libdaemonclient.a $(INTERNAL_LIBS)
 	@echo "    [LD] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) \
-	      -o $@ $+ $(LIBS) $(DMEVENT_LIBS) $(SYSTEMD_LIBS) -lm -ldl -laio
+	      -o $@ $+ $(DMEVENT_LIBS) $(SYSTEMD_LIBS) $(LIBS) -ldl -laio
 
-.PHONEY: run-unit-test
+.PHONEY: run-unit-test unit-test
+unit-test: test/unit/unit-test
 run-unit-test: test/unit/unit-test
 	@echo Running unit tests
 	LD_LIBRARY_PATH=libdm test/unit/unit-test run
