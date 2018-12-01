@@ -2644,7 +2644,7 @@ static int _vdo_emit_segment_line(struct dm_task *dmt,
 	/* Unlike normal targets, current VDO requires device path */
 	if (dm_snprintf(data_dev, sizeof(data_dev), "/dev/dm-%u", seg->vdo_data->info.minor) < 0) {
 		log_error("Can create VDO data volume path for %s.", data);
-		return_0;
+		return 0;
 	}
 
 	EMIT_PARAMS(pos, "%s %u %s " FMTu64 " " FMTu64 " %u on %s %s "
