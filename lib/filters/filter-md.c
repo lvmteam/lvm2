@@ -106,6 +106,7 @@ static int _passes_md_filter(struct cmd_context *cmd, struct dev_filter *f __att
 		return 1;
 
 	if (ret == 1) {
+		log_debug_devs("md filter full %d excluding md component %s", cmd->use_full_md_check, dev_name(dev));
 		if (dev->ext.src == DEV_EXT_NONE)
 			log_debug_devs(MSG_SKIPPING, dev_name(dev));
 		else
