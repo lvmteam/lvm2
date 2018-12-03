@@ -13,9 +13,9 @@
  */
 
 #include "lib/misc/lib.h"
-#include "lib/config/defaults.h"
-#include "dmeventd_lvm.h"
+#include "daemons/dmeventd/plugins/lvm2/dmeventd_lvm.h"
 #include "daemons/dmeventd/libdevmapper-event.h"
+#include "lib/config/defaults.h"
 
 /* Hold enough elements for the mximum number of RAID images */
 #define	RAID_DEVS_ELEMS	((DEFAULT_RAID_MAX_IMAGES + 63) / 64)
