@@ -190,14 +190,24 @@ out:
 
 int dev_is_md(struct device *dev, uint64_t *offset_found, int full)
 {
+	int ret;
 
 	/*
 	 * If non-native device status source is selected, use it
 	 * only if offset_found is not requested as this
 	 * information is not in udev db.
 	 */
-	if ((dev->ext.src == DEV_EXT_NONE) || offset_found)
-		return _native_dev_is_md(dev, offset_found, full);
+	if ((dev->ext.src == DEV_EXT_NONE) || offset_found) {
+		ret = _native_dev_is_md(dev, offset_found, full);
+
+		if (!full) {
+			if (!ret || (ret == -EAGAIN)) {
+				if (udev_dev_is_md_component(dev))
+					return 1;
+			}
+		}
+		return ret;
+	}
 
 	if (dev->ext.src == DEV_EXT_UDEV)
 		return _udev_dev_is_md(dev);

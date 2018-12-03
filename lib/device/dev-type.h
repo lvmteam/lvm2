@@ -62,6 +62,7 @@ int dev_is_swap(struct device *dev, uint64_t *signature, int full);
 int dev_is_luks(struct device *dev, uint64_t *signature, int full);
 int dasd_is_cdl_formatted(struct device *dev);
 int udev_dev_is_mpath_component(struct device *dev);
+int udev_dev_is_md_component(struct device *dev);
 
 int dev_is_lvm1(struct device *dev, char *buf, int buflen);
 int dev_is_pool(struct device *dev, char *buf, int buflen);
