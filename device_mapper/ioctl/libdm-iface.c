@@ -19,7 +19,6 @@
 #include "device_mapper/ioctl/libdm-targets.h"
 #include "device_mapper/libdm-common.h"
 
-#include <stdio.h>  /* getline() */
 #include <stddef.h>
 #include <fcntl.h>
 #include <dirent.h>

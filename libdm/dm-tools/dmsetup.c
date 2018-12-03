@@ -17,8 +17,6 @@
  */
 
 // For canonicalize_file_name()
-#define _GNU_SOURCE
-
 #include "configure.h"
 #include "libdm/misc/dm-logging.h"
 #include "libdm/dm-tools/util.h"

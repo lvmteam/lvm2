@@ -21,9 +21,6 @@
 
 #include "configure.h"
 
-#define _REENTRANT
-#define _GNU_SOURCE
-
 /*
  * Symbol export control macros
  *

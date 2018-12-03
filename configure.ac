@@ -144,6 +144,11 @@ AC_TYPE_UINT64_T
 AX_GCC_BUILTIN([__builtin_clz])
 AX_GCC_BUILTIN([__builtin_clzll])
 
+
+AC_DEFINE([_GNU_SOURCE], 1, [Define to get access to GNU/Linux extension])
+AC_DEFINE([_REENTRANT], 1, [Define to use re-entrant thread safe versions])
+
+
 ################################################################################
 dnl -- Check for functions
 AC_CHECK_FUNCS([ftruncate gethostname getpagesize gettimeofday localtime_r \

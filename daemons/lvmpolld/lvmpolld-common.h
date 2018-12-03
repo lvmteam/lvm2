@@ -18,8 +18,6 @@
 #ifndef _LVM_LVMPOLLD_COMMON_H
 #define _LVM_LVMPOLLD_COMMON_H
 
-#define _REENTRANT
-
 #include "tools/tool.h"
 
 #include "lvmpolld-cmd-utils.h"
