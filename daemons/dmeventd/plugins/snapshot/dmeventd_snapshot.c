@@ -13,7 +13,7 @@
  */
 
 #include "lib/misc/lib.h"
-#include "dmeventd_lvm.h"
+#include "daemons/dmeventd/plugins/lvm2/dmeventd_lvm.h"
 #include "daemons/dmeventd/libdevmapper-event.h"
 
 #include <sys/sysmacros.h>
