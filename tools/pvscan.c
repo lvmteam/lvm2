@@ -539,7 +539,7 @@ static void _online_pvscan_all_devs(struct cmd_context *cmd,
 
 	label_scan(cmd);
 
-	if (!(iter = dev_iter_create(cmd->lvmetad_filter, 1))) {
+	if (!(iter = dev_iter_create(cmd->full_filter, 1))) {
 		log_error("dev_iter creation failed");
 		return;
 	}
@@ -680,7 +680,7 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	while (argc--) {
 		pv_name = *argv++;
 		if (pv_name[0] == '/') {
-			if (!(dev = dev_cache_get(cmd, pv_name, cmd->lvmetad_filter))) {
+			if (!(dev = dev_cache_get(cmd, pv_name, cmd->full_filter))) {
 				log_debug("pvscan arg %s not found.", pv_name);
 				if ((dev = dev_cache_get(cmd, pv_name, NULL))) {
 					/* nothing to do for this dev name */
@@ -707,7 +707,7 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 			}
 			devno = MKDEV(major, minor);
 
-			if (!(dev = dev_cache_get_by_devt(cmd, devno, cmd->lvmetad_filter))) {
+			if (!(dev = dev_cache_get_by_devt(cmd, devno, cmd->full_filter))) {
 				log_debug("pvscan arg %d:%d not found.", major, minor);
 				_online_pvid_file_remove_devno(major, minor);
 			} else {
@@ -731,7 +731,7 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (!dm_list_empty(&single_devs)) {
-		label_scan_devs(cmd, cmd->lvmetad_filter, &single_devs);
+		label_scan_devs(cmd, cmd->full_filter, &single_devs);
 
 		dm_list_iterate_items(devl, &single_devs) {
 			dev = devl->dev;
@@ -763,7 +763,7 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 
 		devno = MKDEV(major, minor);
 
-		if (!(dev = dev_cache_get_by_devt(cmd, devno, cmd->lvmetad_filter))) {
+		if (!(dev = dev_cache_get_by_devt(cmd, devno, cmd->full_filter))) {
 			log_debug("pvscan arg %d:%d not found.", major, minor);
 			_online_pvid_file_remove_devno(major, minor);
 		} else {
@@ -782,7 +782,7 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (!dm_list_empty(&single_devs)) {
-		label_scan_devs(cmd, cmd->lvmetad_filter, &single_devs);
+		label_scan_devs(cmd, cmd->full_filter, &single_devs);
 
 		dm_list_iterate_items(devl, &single_devs) {
 			dev = devl->dev;
