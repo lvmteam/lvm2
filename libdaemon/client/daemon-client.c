@@ -12,12 +12,10 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#define _REENTRANT
-
 #include "tools/tool.h"
 
-#include "libdaemon/client/daemon-io.h"
-#include "libdaemon/client/daemon-client.h"
+#include "daemon-io.h"
+#include "daemon-client.h"
 #include "device_mapper/misc/dm-logging.h"
 
 #include <sys/un.h>

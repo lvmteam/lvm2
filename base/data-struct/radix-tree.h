@@ -13,6 +13,8 @@
 #ifndef BASE_DATA_STRUCT_RADIX_TREE_H
 #define BASE_DATA_STRUCT_RADIX_TREE_H
 
+#include "configure.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>

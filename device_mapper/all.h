@@ -17,6 +17,8 @@
 #ifndef LIB_DEVICE_MAPPER_H
 #define LIB_DEVICE_MAPPER_H
 
+#include "configure.h"
+
 #include "base/data-struct/list.h"
 #include "base/data-struct/hash.h"
 #include "vdo/target.h"

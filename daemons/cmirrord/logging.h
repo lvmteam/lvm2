@@ -13,8 +13,6 @@
 #ifndef _LVM_CLOG_LOGGING_H
 #define _LVM_CLOG_LOGGING_H
 
-#define _GNU_SOURCE
-
 #include "configure.h"
 #include <stdio.h>
 #include <stdint.h>

@@ -21,11 +21,6 @@
 
 // FIXME: get rid of this whole file
  
-#include "configure.h"
-
-#define _REENTRANT
-#define _GNU_SOURCE
-
 #include "device_mapper/all.h"
 #include "lib/misc/util.h"
 #include "dm-logging.h"

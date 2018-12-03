@@ -18,14 +18,12 @@
 #ifndef _LVM_TOOL_H
 #define _LVM_TOOL_H
 
-#define _GNU_SOURCE
-
 #include "configure.h"
-
-#include <unistd.h>
 
 #include "base/memory/zalloc.h"
 #include "device_mapper/all.h"
 #include "lib/misc/util.h"
+
+#include <unistd.h>
 
 #endif	/* _LVM_TOOL_H */

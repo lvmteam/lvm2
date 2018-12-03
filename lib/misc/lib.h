@@ -19,11 +19,6 @@
 #ifndef _LVM_LIB_H
 #define _LVM_LIB_H
 
-#include "configure.h"
-
-#define _REENTRANT
-#define _GNU_SOURCE
-
 /*
  * Symbol export control macros
  *
@@ -78,10 +73,10 @@
 #endif
 
 
-#include "lib/misc/intl.h"
 #include "device_mapper/all.h"
-#include "lib/misc/util.h"
 #include "base/memory/zalloc.h"
+#include "lib/misc/intl.h"
+#include "lib/misc/util.h"
 
 #ifdef DM
 #  include "libdm/misc/dm-logging.h"
