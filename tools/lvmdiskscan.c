@@ -100,9 +100,9 @@ int lvmdiskscan(struct cmd_context *cmd, int argc __attribute__((unused)),
 	/* Call before using dev_iter which uses filters which want bcache data. */
 	label_scan(cmd);
 
-	max_len = _get_max_dev_name_len(cmd, cmd->full_filter);
+	max_len = _get_max_dev_name_len(cmd, cmd->filter);
 
-	if (!(iter = dev_iter_create(cmd->full_filter, 0))) {
+	if (!(iter = dev_iter_create(cmd->filter, 0))) {
 		log_error("dev_iter_create failed");
 		return ECMD_FAILED;
 	}
