@@ -1034,7 +1034,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 
 #define MAX_FILTERS 10
 
-static struct dev_filter *_init_lvmetad_filter_chain(struct cmd_context *cmd)
+static struct dev_filter *_init_filter_chain(struct cmd_context *cmd)
 {
 	int nr_filt = 0;
 	const struct dm_config_node *cn;
@@ -1143,27 +1143,9 @@ bad:
 }
 
 /*
- * The way the filtering is initialized depends on whether lvmetad is uesd or not.
- *
- * If lvmetad is used, there are three filter chains:
- *
- *   - cmd->lvmetad_filter - the lvmetad filter chain used when scanning devs for lvmetad update:
- *     sysfs filter -> internal filter -> global regex filter -> type filter ->
- *     usable device filter(FILTER_MODE_PRE_LVMETAD) ->
- *     mpath component filter -> partitioned filter ->
- *     md component filter -> fw raid filter
- *
- *   - cmd->filter - the filter chain used for lvmetad responses:
- *     persistent filter -> regex_filter -> usable device filter(FILTER_MODE_POST_LVMETAD)
- *
- *   - cmd->full_filter - the filter chain used for all the remaining situations:
- *     cmd->lvmetad_filter -> cmd->filter
- *
- * If lvmetad is not used, there's just one filter chain:
- *
- *   - cmd->filter == cmd->full_filter:
- *     persistent filter -> sysfs filter -> internal filter -> global regex filter ->
- *     regex_filter -> type filter -> usable device filter(FILTER_MODE_NO_LVMETAD) ->
+ *   cmd->filter == 
+ *     persistent(cache) filter -> sysfs filter -> internal filter -> global regex filter ->
+ *     regex_filter -> type filter -> usable device filter ->
  *     mpath component filter -> partitioned filter -> md component filter -> fw raid filter
  *
  */
@@ -1176,24 +1158,24 @@ int init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 		return 0;
 	}
 
-	cmd->lvmetad_filter = _init_lvmetad_filter_chain(cmd);
-	if (!cmd->lvmetad_filter)
+	filter = _init_filter_chain(cmd);
+	if (!filter)
 		goto_bad;
 
 	init_ignore_suspended_devices(find_config_tree_bool(cmd, devices_ignore_suspended_devices_CFG, NULL));
 	init_ignore_lvm_mirrors(find_config_tree_bool(cmd, devices_ignore_lvm_mirrors_CFG, NULL));
 
 	/*
-	 * If lvmetad is used, there's a separation between pre-lvmetad filter chain
-	 * ("cmd->lvmetad_filter") applied only if scanning for lvmetad update and
-	 * post-lvmetad filter chain ("filter") applied on each lvmetad response.
-	 * However, if lvmetad is not used, these two chains are not separated
-	 * and we use exactly one filter chain during device scanning ("filter"
-	 * that includes also "cmd->lvmetad_filter" chain).
+	 * persisent filter is a cache of the previous result real filter result.
+	 * If a dev is found in persistent filter, the pass/fail result saved by
+	 * the pfilter is used.  If a dev does not existing in the persistent
+	 * filter, the dev is passed on to the real filter, and when the result
+	 * of the real filter is saved in the persistent filter.
+	 *
+	 * FIXME: we should apply the filter once at the start of the command,
+	 * and not call the filters repeatedly.  In that case we would not need
+	 * the persistent/caching filter layer.
 	 */
-	filter = cmd->lvmetad_filter;
-	cmd->lvmetad_filter = NULL;
-
 	if (!(pfilter = persistent_filter_create(cmd->dev_types, filter))) {
 		log_verbose("Failed to create persistent device filter.");
 		goto bad;
@@ -1222,10 +1204,6 @@ bad:
 		 */
 		filter->destroy(filter);
 	}
-
-	/* if lvmetad is used, the cmd->lvmetad_filter is separate */
-	if (cmd->lvmetad_filter)
-		cmd->lvmetad_filter->destroy(cmd->lvmetad_filter);
 
 	cmd->initialized.filters = 0;
 	return 0;
@@ -1853,7 +1831,7 @@ static void _destroy_filters(struct cmd_context *cmd)
 {
 	if (cmd->full_filter) {
 		cmd->full_filter->destroy(cmd->full_filter);
-		cmd->lvmetad_filter = cmd->filter = cmd->full_filter = NULL;
+		cmd->filter = cmd->full_filter = NULL;
 	}
 	cmd->initialized.filters = 0;
 }

@@ -176,7 +176,6 @@ struct cmd_context {
 	/*
 	 * Filtering.
 	 */
-	struct dev_filter *lvmetad_filter;	/* pre-lvmetad filter chain */
 	struct dev_filter *filter;		/* post-lvmetad filter chain */
 	struct dev_filter *full_filter;		/* lvmetad_filter + filter */
 
