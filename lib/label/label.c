@@ -855,7 +855,7 @@ int label_scan(struct cmd_context *cmd)
 	 */
 	dev_cache_scan();
 
-	if (!(iter = dev_iter_create(cmd->full_filter, 0))) {
+	if (!(iter = dev_iter_create(cmd->filter, 0))) {
 		log_error("Scanning failed to get devices.");
 		return 0;
 	}
@@ -898,7 +898,7 @@ int label_scan(struct cmd_context *cmd)
 			return 0;
 	}
 
-	_scan_list(cmd, cmd->full_filter, &all_devs, NULL);
+	_scan_list(cmd, cmd->filter, &all_devs, NULL);
 
 	dm_list_iterate_items_safe(devl, devl2, &all_devs) {
 		dm_list_del(&devl->list);

@@ -857,8 +857,8 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	_scanning_in_progress = 1;
 
 	/* FIXME: can this happen? */
-	if (!cmd->full_filter) {
-		log_error("label scan is missing full filter");
+	if (!cmd->filter) {
+		log_error("label scan is missing filter");
 		goto out;
 	}
 

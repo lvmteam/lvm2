@@ -1181,9 +1181,7 @@ int init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 		goto bad;
 	}
 
-	cmd->filter = filter = pfilter;
-
-	cmd->full_filter = filter;
+	cmd->filter = pfilter;
 
 	cmd->initialized.filters = 1;
 	return 1;
@@ -1834,9 +1832,9 @@ static void _destroy_dev_types(struct cmd_context *cmd)
 
 static void _destroy_filters(struct cmd_context *cmd)
 {
-	if (cmd->full_filter) {
-		cmd->full_filter->destroy(cmd->full_filter);
-		cmd->filter = cmd->full_filter = NULL;
+	if (cmd->filter) {
+		cmd->filter->destroy(cmd->filter);
+		cmd->filter = NULL;
 	}
 	cmd->initialized.filters = 0;
 }

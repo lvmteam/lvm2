@@ -1477,7 +1477,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 
 	if (argc) {
 		for (; opt < argc; opt++) {
-			if (!(dev = dev_cache_get(cmd, argv[opt], cmd->full_filter))) {
+			if (!(dev = dev_cache_get(cmd, argv[opt], cmd->filter))) {
 				log_error("Failed to find device "
 					  "\"%s\".", argv[opt]);
 				ret_max = ECMD_FAILED;
@@ -1548,7 +1548,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 		goto out;
 	}
 
-	if (!(iter = dev_iter_create(cmd->full_filter, 1))) {
+	if (!(iter = dev_iter_create(cmd->filter, 1))) {
 		log_error("dev_iter creation failed.");
 		ret_max = ECMD_FAILED;
 		goto out;
@@ -3917,7 +3917,7 @@ static int _get_all_devices(struct cmd_context *cmd, struct dm_list *all_devices
 
 	log_debug("Getting list of all devices");
 
-	if (!(iter = dev_iter_create(cmd->full_filter, 1))) {
+	if (!(iter = dev_iter_create(cmd->filter, 1))) {
 		log_error("dev_iter creation failed.");
 		return ECMD_FAILED;
 	}
@@ -5424,7 +5424,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	 * Translate arg names into struct device's.
 	 */
 	dm_list_iterate_items(pd, &pp->arg_devices)
-		pd->dev = dev_cache_get(cmd, pd->name, cmd->full_filter);
+		pd->dev = dev_cache_get(cmd, pd->name, cmd->filter);
 
 	/*
 	 * Use process_each_pv to search all existing PVs and devices.
