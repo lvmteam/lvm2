@@ -85,5 +85,8 @@ cat out
 not grep "prefers device" out
 
 vgchange -an $vg
+aux udev_wait
 
-vgremove -f $vg
+aux cleanup_md_dev
+
+# vgremove -f $vg
