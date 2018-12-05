@@ -773,6 +773,28 @@ vgchange --lock-type none --lock-opt force <vgname>
 After the VG is local, follow the steps described in "changing a local VG
 to a shared VG".
 
+.SS extending an LV active on multiple hosts
+
+With lvmlockd, a new procedure is required to extend an LV while it is
+active on multiple hosts (e.g. when used under gfs2):
+
+1. On one node run the lvextend command:
+.br
+.nf
+   lvextend --lockopt skiplv -L Size VG/LV
+.fi
+
+2. On each node using the LV, refresh the LV:
+.br
+.nf
+   lvchange --refresh VG/LV
+.fi
+
+3. On one node extend gfs2 (or comparable for other applications):
+.br
+.nf
+   gfs2_grow VG/LV
+.fi
 
 .SS limitations of shared VGs
 
@@ -806,12 +828,12 @@ Visible usage differences between shared VGs (using lvmlockd) and
 clvm/clustered VGs (using clvmd):
 
 .IP \[bu] 2
-lvm.conf must be configured to use either lvmlockd (use_lvmlockd=1) or
-clvmd (locking_type=3), but not both.
+lvm.conf is configured to use lvmlockd by setting use_lvmlockd=1.
+clvmd used locking_type=3.
 
 .IP \[bu] 2
-vgcreate --shared creates a shared VG, and vgcreate --clustered y
-creates a clvm/clustered VG.
+vgcreate --shared creates a shared VG.  vgcreate --clustered y
+created a clvm/clustered VG.
 
 .IP \[bu] 2
 lvmlockd adds the option of using sanlock for locking, avoiding the
@@ -824,9 +846,6 @@ mode is unspecified, i.e. -ay means -aey, not -asy.
 .IP \[bu] 2
 lvmlockd commands always apply to the local host, and never have an effect
 on a remote host.  (The activation option 'l' is not used.)
-
-.IP \[bu] 2
-lvmlockd works with thin and cache pools and LVs.
 
 .IP \[bu] 2
 lvmlockd saves the cluster name for a shared VG using dlm.  Only hosts in
