@@ -1,6 +1,7 @@
-Version 1.02.154 - 
-====================================
+Version 1.02.154 - 07th December 2018
+=====================================
   Do not add parameters for RESUME with DM_DEVICE_CREATE dm task.
+  Fix dmstats report printing no output.
 
 Version 1.02.152 - 30th October 2018
 ====================================
