@@ -891,6 +891,11 @@ global {
 	# This configuration option has an automatic default value.
 	# lvdisplay_shows_full_device_path = 0
 
+	# Configuration option global/use_aio.
+	# Use async I/O when reading and writing devices.
+	# This configuration option has an automatic default value.
+	# use_aio = 1
+
 	# Configuration option global/use_lvmetad.
 	# Use lvmetad to cache metadata and reduce disk scanning.
 	# When enabled (and running), lvmetad provides LVM commands with VG
