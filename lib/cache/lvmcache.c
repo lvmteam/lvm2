@@ -69,6 +69,7 @@ static DM_LIST_INIT(_unused_duplicate_devs);
 static int _scanning_in_progress = 0;
 static int _vgs_locked = 0;
 static int _found_duplicate_pvs = 0;	/* If we never see a duplicate PV we can skip checking for them later. */
+static int _found_duplicate_vgnames = 0;
 
 int lvmcache_init(struct cmd_context *cmd)
 {
@@ -129,6 +130,11 @@ int lvmcache_vgs_locked(void)
 int lvmcache_found_duplicate_pvs(void)
 {
 	return _found_duplicate_pvs;
+}
+
+int lvmcache_found_duplicate_vgnames(void)
+{
+	return _found_duplicate_vgnames;
 }
 
 int lvmcache_get_unused_duplicate_devs(struct cmd_context *cmd, struct dm_list *head)
@@ -1225,6 +1231,8 @@ static int _insert_vginfo(struct lvmcache_vginfo *new_vginfo, const char *vgid,
 				     sizeof(uuid_primary)))
 			return_0;
 
+		_found_duplicate_vgnames = 1;
+
 		/*
 		 * vginfo is kept for each VG with the same name.
 		 * They are saved with the vginfo->next list.
@@ -2278,3 +2286,13 @@ int lvmcache_scan_mismatch(struct cmd_context *cmd, const char *vgname, const ch
 	return 1;
 }
 
+int lvmcache_vginfo_has_pvid(struct lvmcache_vginfo *vginfo, char *pvid)
+{
+	struct lvmcache_info *info;
+
+	dm_list_iterate_items(info, &vginfo->infos) {
+		if (!strcmp(info->dev->pvid, pvid))
+			return 1;
+	}
+	return 0;
+}

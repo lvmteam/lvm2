@@ -2286,6 +2286,7 @@ static void _apply_current_output_settings(struct cmd_context *cmd)
 static int _get_current_settings(struct cmd_context *cmd)
 {
 	const char *activation_mode;
+	const char *hint_mode;
 
 	_get_current_output_settings_from_args(cmd);
 
@@ -2312,6 +2313,29 @@ static int _get_current_settings(struct cmd_context *cmd)
 
 	if (cmd->cname->flags & CAN_USE_ONE_SCAN)
 		cmd->can_use_one_scan = 1;
+
+	cmd->scan_lvs = find_config_tree_bool(cmd, devices_scan_lvs_CFG, NULL);
+
+	/*
+	 * enable_hints is set to 1 if any commands are using hints.
+	 * use_hints is set to 1 if this command doesn't use the hints.
+	 * enable_hints=1 and use_hints=0 means that this command won't
+	 * use the hints, but it may invalidate the hints that are used
+	 * by other commands.
+	 *
+	 * enable_hints=0 means no commands are using hints, so this
+	 * command would not need to invalidate hints for other cmds.
+	 */
+	cmd->enable_hints = 1;
+
+	/* Only certain commands need to be optimized by using hints. */
+	if (cmd->cname->flags & ALLOW_HINTS)
+		cmd->use_hints = 1;
+
+	if ((hint_mode = find_config_tree_str(cmd, devices_hints_CFG, NULL))) {
+		if (!strcmp(hint_mode, "none"))
+			cmd->enable_hints = 0;
+	}
 
 	cmd->partial_activation = 0;
 	cmd->degraded_activation = 0;
@@ -2687,6 +2711,12 @@ static int _init_lvmlockd(struct cmd_context *cmd)
 {
 	const char *lvmlockd_socket;
 	int use_lvmlockd = find_config_tree_bool(cmd, global_use_lvmlockd_CFG, NULL);
+
+	/*
+	 * Think about when/how to enable hints with lvmlockd.
+	 */
+	if (use_lvmlockd)
+		cmd->enable_hints = 0;
 
 	if (use_lvmlockd && arg_is_set(cmd, nolocking_ARG)) {
 		/* --nolocking is only allowed with vgs/lvs/pvs commands */

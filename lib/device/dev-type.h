@@ -95,4 +95,6 @@ int dev_is_rotational(struct dev_types *dt, struct device *dev);
 
 int dev_is_pmem(struct device *dev);
 
+int dev_is_lv(struct device *dev);
+
 #endif

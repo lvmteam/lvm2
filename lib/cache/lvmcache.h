@@ -169,6 +169,7 @@ int lvmcache_vgid_is_cached(const char *vgid);
 uint64_t lvmcache_smallest_mda_size(struct lvmcache_info *info);
 
 int lvmcache_found_duplicate_pvs(void);
+int lvmcache_found_duplicate_vgnames(void);
 
 void lvmcache_pvscan_duplicate_check(struct cmd_context *cmd);
 
@@ -197,6 +198,8 @@ int lvmcache_get_vg_devs(struct cmd_context *cmd,
 void lvmcache_set_independent_location(const char *vgname);
 
 int lvmcache_scan_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid);
+
+int lvmcache_vginfo_has_pvid(struct lvmcache_vginfo *vginfo, char *pvid);
 
 /*
  * These are clvmd-specific functions and are not related to lvmcache.

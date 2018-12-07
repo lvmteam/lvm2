@@ -145,7 +145,7 @@ static int _build_matcher(struct rfilter *rf, const struct dm_config_value *val)
 	return r;
 }
 
-static int _accept_p(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
+static int _accept_p(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
 {
 	int m, first = 1, rejected = 0;
 	struct rfilter *rf = (struct rfilter *) f->private;
@@ -212,6 +212,7 @@ struct dev_filter *regex_filter_create(const struct dm_config_value *patterns)
 	f->destroy = _regex_destroy;
 	f->use_count = 0;
 	f->private = rf;
+	f->name = "regex";
 
 	log_debug_devs("Regex filter initialised.");
 

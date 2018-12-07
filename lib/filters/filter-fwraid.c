@@ -65,7 +65,7 @@ static int _dev_is_fwraid(struct device *dev)
 #define MSG_SKIPPING "%s: Skipping firmware RAID component device"
 
 static int _ignore_fwraid(struct cmd_context *cmd, struct dev_filter *f __attribute__((unused)),
-			   struct device *dev)
+			   struct device *dev, const char *use_filter_name)
 {
 	int ret;
 
@@ -113,6 +113,7 @@ struct dev_filter *fwraid_filter_create(struct dev_types *dt __attribute__((unus
 	f->destroy = _destroy;
 	f->use_count = 0;
 	f->private = NULL;
+	f->name = "fwraid";
 
 	log_debug_devs("Firmware RAID filter initialised.");
 

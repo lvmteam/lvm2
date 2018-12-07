@@ -22,7 +22,7 @@
 #define BUFSIZE 4096
 
 static int _ignore_signature(struct cmd_context *cmd, struct dev_filter *f __attribute__((unused)),
-		      struct device *dev)
+		      struct device *dev, const char *use_filter_name)
 {
 	char buf[BUFSIZE];
 	int ret = 0;
@@ -81,6 +81,7 @@ struct dev_filter *signature_filter_create(struct dev_types *dt)
 	f->destroy = _destroy;
 	f->use_count = 0;
 	f->private = dt;
+	f->name = "signature";
 
 	log_debug_devs("signature filter initialised.");
 

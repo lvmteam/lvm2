@@ -55,7 +55,7 @@ check pv_field "$dev2" dev_size "$SIZE2"
 
 # Copy dev1 over dev2.
 dd if="$dev1" of="$dev2" bs=1M iflag=direct oflag=direct,sync
-pvscan --cache
+#pvscan --cache
 
 # The single preferred dev is shown from 'pvs'.
 pvs -o+uuid,duplicate 2>&1 | tee out
@@ -292,7 +292,7 @@ grep "$dev3" out
 grep "$dev4" out
 
 dd if="$dev3" of="$dev4" bs=1M iflag=direct oflag=direct,sync
-pvscan --cache
+#pvscan --cache
 
 # One appears with 'pvs'
 
@@ -375,7 +375,7 @@ check pv_field "$dev4" dev_size "$SIZE4"
 
 dd if=/dev/zero of="$dev3" bs=1M oflag=direct,sync || true
 dd if=/dev/zero of="$dev4" bs=1M oflag=direct,sync || true
-pvscan --cache
+#pvscan --cache
 
 # The previous steps prevent us from nicely cleaning up
 # the vg lockspace in lvmlockd, so just restart it;
@@ -392,6 +392,9 @@ lvcreate -l1 -n $lv2 $vg2 "$dev4"
 
 dd if="$dev3" of="$dev5" bs=1M iflag=direct oflag=direct,sync
 dd if="$dev4" of="$dev6" bs=1M iflag=direct oflag=direct,sync
+# dev5/dev6 not pvs so dd'ing pv onto them causes invalid hints
+# that won't be detected, so 5/6 won't be scanned unless we
+# force hint recreation
 pvscan --cache
 
 pvs -o+uuid,duplicate 2>&1 | tee out
@@ -450,7 +453,7 @@ not grep "prefers device $dev6" warn
 
 dd if=/dev/zero of="$dev5" bs=1M oflag=direct,sync || true
 dd if=/dev/zero of="$dev6" bs=1M oflag=direct,sync || true
-pvscan --cache
+#pvscan --cache
 
 lvremove -y $vg2/$lv1
 lvremove -y $vg2/$lv2
@@ -460,7 +463,7 @@ pvremove -ff -y "$dev4"
 
 dd if=/dev/zero of="$dev3" bs=1M oflag=direct,sync || true
 dd if=/dev/zero of="$dev4" bs=1M oflag=direct,sync || true
-pvscan --cache
+#pvscan --cache
 
 # Reverse devs in the previous in case dev3/dev4 would be
 # preferred even without an active LV using them.
@@ -471,6 +474,9 @@ lvcreate -l1 -n $lv2 $vg2 "$dev6"
 
 dd if="$dev5" of="$dev3" bs=1M iflag=direct oflag=direct,sync
 dd if="$dev6" of="$dev4" bs=1M iflag=direct oflag=direct,sync
+# dev3/dev4 are not pvs (zeroed above) so dd'ing pv onto them causes
+# invalid hints that won't be detected, so 3/4 won't be scanned
+# unless we force hint recreation
 pvscan --cache
 
 pvs -o+uuid,duplicate 2>&1 | tee out
@@ -506,7 +512,7 @@ not grep "prefers device $dev4" warn
 
 dd if=/dev/zero of="$dev3" bs=1M oflag=direct,sync || true
 dd if=/dev/zero of="$dev4" bs=1M oflag=direct,sync || true
-pvscan --cache
+#pvscan --cache
 
 lvremove -y $vg2/$lv1
 lvremove -y $vg2/$lv2

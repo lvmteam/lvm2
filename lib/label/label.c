@@ -22,6 +22,7 @@
 #include "lib/device/bcache.h"
 #include "lib/commands/toolcontext.h"
 #include "lib/activate/activate.h"
+#include "lib/label/hints.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -358,6 +359,8 @@ static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
 	int ret = 0;
 	int pass;
 
+	dev->flags &= ~DEV_SCAN_FOUND_LABEL;
+
 	/*
 	 * The device may have signatures that exclude it from being processed.
 	 * If filters were applied before bcache data was available, some
@@ -370,7 +373,7 @@ static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
 
 		log_debug_devs("Scan filtering %s", dev_name(dev));
 		
-		pass = f->passes_filter(cmd, f, dev);
+		pass = f->passes_filter(cmd, f, dev, NULL);
 
 		if ((pass == -EAGAIN) || (dev->flags & DEV_FILTER_AFTER_SCAN)) {
 			/* Shouldn't happen */
@@ -412,6 +415,7 @@ static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
 		goto_out;
 	}
 
+	dev->flags |= DEV_SCAN_FOUND_LABEL;
 	*is_lvm_device = 1;
 
 	/*
@@ -827,6 +831,16 @@ static int _setup_bcache(int cache_blocks)
 	return 1;
 }
 
+static void _free_hints(struct dm_list *hints)
+{
+	struct hint *hint, *hint2;
+
+	dm_list_iterate_items_safe(hint, hint2, hints) {
+		dm_list_del(&hint->list);
+		free(hint);
+	}
+}
+
 /*
  * Scan and cache lvm data from all devices on the system.
  * The cache should be empty/reset before calling this.
@@ -835,13 +849,18 @@ static int _setup_bcache(int cache_blocks)
 int label_scan(struct cmd_context *cmd)
 {
 	struct dm_list all_devs;
+	struct dm_list scan_devs;
+	struct dm_list hints;
 	struct dev_iter *iter;
 	struct device_list *devl, *devl2;
 	struct device *dev;
+	int newhints = 0;
 
 	log_debug_devs("Finding devices to scan");
 
 	dm_list_init(&all_devs);
+	dm_list_init(&scan_devs);
+	dm_list_init(&hints);
 
 	/*
 	 * Iterate through all the devices in dev-cache (block devs that appear
@@ -889,19 +908,63 @@ int label_scan(struct cmd_context *cmd)
 	};
 	dev_iter_destroy(iter);
 
-	log_debug_devs("Found %d devices to scan", dm_list_size(&all_devs));
-
 	if (!scan_bcache) {
 		if (!_setup_bcache(dm_list_size(&all_devs)))
 			return 0;
 	}
 
-	_scan_list(cmd, cmd->filter, &all_devs, NULL);
+	/*
+	 * In some common cases we can avoid scanning all devices.
+	 *
+	 * TODO: if the command is using hints and a single vgname
+	 * arg, we can also take the vg lock here, prior to scanning.
+	 * This means we would not need to rescan the PVs in the VG
+	 * in vg_read (skip lvmcache_label_rescan_vg) after the
+	 * vg lock is usually taken.  (Some commands are already
+	 * able to avoid rescan in vg_read, but locking early would
+	 * apply to more cases.)
+	 */
+	if (!get_hints(cmd, &hints, &newhints, &all_devs, &scan_devs))
+		dm_list_splice(&scan_devs, &all_devs);
+
+	log_debug("Will scan %d devices skip %d", dm_list_size(&scan_devs), dm_list_size(&all_devs));
+
+	/*
+	 * Do the main scan.
+	 */
+	_scan_list(cmd, cmd->filter, &scan_devs, NULL);
+
+	dm_list_init(&cmd->hints);
+
+	if (!dm_list_empty(&hints)) {
+		if (!validate_hints(cmd, &hints)) {
+			/*
+			 * We scanned a subset of all devices based on hints.
+			 * With the results from the scan we may decide that
+			 * the hints are not valid, so scan all others.
+			 */
+			log_debug("Will scan %d remaining devices", dm_list_size(&all_devs));
+			_scan_list(cmd, cmd->filter, &all_devs, NULL);
+			_free_hints(&hints);
+			newhints = 0;
+		} else {
+			/* The hints may be used by another device iteration. */
+			dm_list_splice(&cmd->hints, &hints);
+		}
+	}
 
 	dm_list_iterate_items_safe(devl, devl2, &all_devs) {
 		dm_list_del(&devl->list);
 		free(devl);
 	}
+
+	dm_list_iterate_items_safe(devl, devl2, &scan_devs) {
+		dm_list_del(&devl->list);
+		free(devl);
+	}
+
+	if (newhints)
+		write_hint_file(cmd, newhints);
 
 	return 1;
 }

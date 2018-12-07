@@ -255,6 +255,20 @@ cfg(devices_external_device_info_source_CFG, "external_device_info_source", devi
 	"    compiled with udev support.\n"
 	"#\n")
 
+cfg(devices_hints_CFG, "hints", devices_CFG_SECTION, 0, CFG_TYPE_STRING, DEFAULT_HINTS, vsn(2, 3, 2), NULL, 0, NULL,
+	"Use a local file to remember which devices have PVs on them.\n"
+	"Some commands will use this as an optimization to reduce device\n"
+	"scanning, and will only scan the listed PVs. Removing the hint file\n"
+	"will cause lvm to generate a new one. Disable hints if PVs will\n"
+	"be copied onto devices using non-lvm commands, like dd.\n"
+	"#\n"
+	"Accepted values:\n"
+	"  all\n"
+	"    Use all hints.\n"
+	"  none\n"
+	"    Use no hints.\n"
+	"#\n")
+
 cfg_array(devices_preferred_names_CFG, "preferred_names", devices_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_UNDEFINED , CFG_TYPE_STRING, NULL, vsn(1, 2, 19), NULL, 0, NULL,
 	"Select which path name to display for a block device.\n"
 	"If multiple path names exist for a block device, and LVM needs to\n"

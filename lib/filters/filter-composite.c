@@ -18,13 +18,15 @@
 #include "lib/filters/filter.h"
 #include "lib/device/device.h"
 
-static int _and_p(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
+static int _and_p(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
 {
 	struct dev_filter **filters;
 	int ret;
 
 	for (filters = (struct dev_filter **) f->private; *filters; ++filters) {
-		ret = (*filters)->passes_filter(cmd, *filters, dev);
+		if (use_filter_name && strcmp((*filters)->name, use_filter_name))
+			continue;
+		ret = (*filters)->passes_filter(cmd, *filters, dev, use_filter_name);
 
 		if (!ret)
 			return 0;	/* No 'stack': a filter, not an error. */
@@ -33,12 +35,12 @@ static int _and_p(struct cmd_context *cmd, struct dev_filter *f, struct device *
 	return 1;
 }
 
-static int _and_p_with_dev_ext_info(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
+static int _and_p_with_dev_ext_info(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
 {
 	int r;
 
 	dev_ext_enable(dev, external_device_info_source());
-	r = _and_p(cmd, f, dev);
+	r = _and_p(cmd, f, dev, use_filter_name);
 	dev_ext_disable(dev);
 
 	return r;
@@ -93,6 +95,7 @@ struct dev_filter *composite_filter_create(int n, int use_dev_ext_info, struct d
 	cft->wipe = _wipe;
 	cft->use_count = 0;
 	cft->private = filters_copy;
+	cft->name = "composite";
 
 	log_debug_devs("Composite filter initialised.");
 

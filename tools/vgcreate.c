@@ -64,6 +64,8 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return_ECMD_FAILED;
 	cmd->lockd_gl_disable = 1;
 
+	clear_hint_file(cmd);
+
 	/* Check for old md signatures at the end of devices. */
 	cmd->use_full_md_check = 1;
 

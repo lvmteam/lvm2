@@ -35,7 +35,7 @@ xx(help,
 
 xx(fullreport,
    "Display full report",
-   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH)
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH | ALLOW_HINTS)
 
 xx(lastlog,
    "Display last command's log report",
@@ -43,7 +43,7 @@ xx(lastlog,
 
 xx(lvchange,
    "Change the attributes of logical volume(s)",
-   PERMITTED_READ_ONLY)
+   PERMITTED_READ_ONLY | ALLOW_HINTS)
 
 xx(lvconvert,
    "Change logical volume layout",
@@ -51,15 +51,15 @@ xx(lvconvert,
 
 xx(lvcreate,
    "Create a logical volume",
-   0)
+   ALLOW_HINTS)
 
 xx(lvdisplay,
    "Display information about a logical volume",
-   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH | CAN_USE_ONE_SCAN)
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH | CAN_USE_ONE_SCAN | ALLOW_HINTS)
 
 xx(lvextend,
    "Add space to a logical volume",
-   0)
+   ALLOW_HINTS)
 
 xx(lvmchange,
    "With the device mapper, this is obsolete and does nothing.",
@@ -83,23 +83,23 @@ xx(lvmsar,
 
 xx(lvreduce,
    "Reduce the size of a logical volume",
-   0)
+   ALLOW_HINTS)
 
 xx(lvremove,
    "Remove logical volume(s) from the system",
-   ALL_VGS_IS_DEFAULT) /* all VGs only with --select */
+   ALL_VGS_IS_DEFAULT | ALLOW_HINTS) /* all VGs only with --select */
 
 xx(lvrename,
    "Rename a logical volume",
-   0)
+   ALLOW_HINTS)
 
 xx(lvresize,
    "Resize a logical volume",
-   0)
+   ALLOW_HINTS)
 
 xx(lvs,
    "Display information about logical volumes",
-   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH | CAN_USE_ONE_SCAN)
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH | CAN_USE_ONE_SCAN | ALLOW_HINTS)
 
 xx(lvscan,
    "List all logical volumes in all volume groups",
@@ -127,7 +127,7 @@ xx(pvdata,
 
 xx(pvdisplay,
    "Display various attributes of physical volume(s)",
-   PERMITTED_READ_ONLY | ENABLE_ALL_DEVS | ENABLE_DUPLICATE_DEVS | LOCKD_VG_SH | CAN_USE_ONE_SCAN)
+   PERMITTED_READ_ONLY | ENABLE_ALL_DEVS | ENABLE_DUPLICATE_DEVS | LOCKD_VG_SH | CAN_USE_ONE_SCAN | ALLOW_HINTS)
 
 /* ALL_VGS_IS_DEFAULT is for polldaemon to find pvmoves in-progress using process_each_vg. */
 
@@ -137,7 +137,7 @@ xx(pvmove,
 
 xx(lvpoll,
    "Continue already initiated poll operation on a logical volume",
-   0)
+   ALLOW_HINTS)
 
 xx(pvremove,
    "Remove LVM label(s) from physical volume(s)",
@@ -145,7 +145,7 @@ xx(pvremove,
 
 xx(pvs,
    "Display information about physical volumes",
-   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | ENABLE_ALL_DEVS | ENABLE_DUPLICATE_DEVS | LOCKD_VG_SH | CAN_USE_ONE_SCAN)
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | ENABLE_ALL_DEVS | ENABLE_DUPLICATE_DEVS | LOCKD_VG_SH | CAN_USE_ONE_SCAN | ALLOW_HINTS)
 
 xx(pvscan,
    "List all physical volumes",
@@ -173,11 +173,11 @@ xx(vgcfgrestore,
 
 xx(vgchange,
    "Change volume group attributes",
-   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT)
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | ALLOW_HINTS)
 
 xx(vgck,
    "Check the consistency of volume group(s)",
-   ALL_VGS_IS_DEFAULT | LOCKD_VG_SH)
+   ALL_VGS_IS_DEFAULT | LOCKD_VG_SH | ALLOW_HINTS)
 
 xx(vgconvert,
    "Change volume group metadata format",
@@ -189,7 +189,7 @@ xx(vgcreate,
 
 xx(vgdisplay,
    "Display volume group information",
-   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH | CAN_USE_ONE_SCAN)
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH | CAN_USE_ONE_SCAN | ALLOW_HINTS)
 
 xx(vgexport,
    "Unregister volume group(s) from the system",
@@ -228,7 +228,7 @@ xx(vgrename,
 
 xx(vgs,
    "Display information about volume groups",
-   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH | CAN_USE_ONE_SCAN)
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH | CAN_USE_ONE_SCAN | ALLOW_HINTS)
 
 xx(vgscan,
    "Search for all volume groups",

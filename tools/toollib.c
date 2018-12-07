@@ -15,6 +15,7 @@
 
 #include "tools.h"
 #include "lib/format_text/format-text.h"
+#include "lib/label/hints.h"
 
 #include <sys/stat.h>
 #include <signal.h>
@@ -3908,14 +3909,40 @@ static int _get_arg_devices(struct cmd_context *cmd,
 	return ret_max;
 }
 
-static int _get_all_devices(struct cmd_context *cmd, struct dm_list *all_devices)
+static int _get_all_devices(struct cmd_context *cmd,
+			    int process_all_devices,
+			    struct dm_list *all_devices)
 {
 	struct dev_iter *iter;
 	struct device *dev;
 	struct device_id_list *dil;
+	struct hint *hint;
 	int r = ECMD_FAILED;
 
-	log_debug("Getting list of all devices");
+	/*
+	 * If command is using hints and is only looking for PVs
+	 * (not all devices), then we can use only devs from hints.
+	 */
+	if (!process_all_devices && !dm_list_empty(&cmd->hints)) {
+		log_debug("Getting list of all devices from hints");
+
+		dm_list_iterate_items(hint, &cmd->hints) {
+			if (!(dev = dev_cache_get(cmd, hint->name, NULL)))
+				continue;
+
+			if (!(dil = dm_pool_alloc(cmd->mem, sizeof(*dil)))) {
+				log_error("device_id_list alloc failed.");
+				goto out;
+			}
+
+			strncpy(dil->pvid, hint->pvid, ID_LEN);
+			dil->dev = dev;
+			dm_list_add(all_devices, &dil->list);
+		}
+		return 1;
+	}
+
+	log_debug("Getting list of all devices from system");
 
 	if (!(iter = dev_iter_create(cmd->filter, 1))) {
 		log_error("dev_iter creation failed.");
@@ -4488,7 +4515,7 @@ int process_each_pv(struct cmd_context *cmd,
 	 * from all VGs are processed first, removing them from all_devices.  Then
 	 * any devs remaining in all_devices are processed.
 	 */
-	if ((ret = _get_all_devices(cmd, &all_devices)) != ECMD_PROCESSED) {
+	if ((ret = _get_all_devices(cmd, process_all_devices, &all_devices)) != ECMD_PROCESSED) {
 		ret_max = ret;
 		goto_out;
 	}

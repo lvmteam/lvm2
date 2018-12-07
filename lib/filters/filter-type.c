@@ -17,7 +17,7 @@
 #include "lib/misc/lib.h"
 #include "lib/filters/filter.h"
 
-static int _passes_lvm_type_device_filter(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
+static int _passes_lvm_type_device_filter(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
 {
 	struct dev_types *dt = (struct dev_types *) f->private;
 	const char *name = dev_name(dev);
@@ -53,6 +53,7 @@ struct dev_filter *lvm_type_filter_create(struct dev_types *dt)
 	f->destroy = _lvm_type_filter_destroy;
 	f->use_count = 0;
 	f->private = dt;
+	f->name = "type";
 
 	log_debug_devs("LVM type filter initialised.");
 

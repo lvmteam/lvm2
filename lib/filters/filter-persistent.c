@@ -71,12 +71,15 @@ static void _persistent_filter_wipe(struct dev_filter *f)
 	dm_hash_wipe(pf->devices);
 }
 
-static int _lookup_p(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
+static int _lookup_p(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 	void *l;
 	struct dm_str_list *sl;
 	int pass = 1;
+
+	if (use_filter_name && strcmp(f->name, use_filter_name))
+		return pf->real->passes_filter(cmd, pf->real, dev, use_filter_name);
 
 	if (dm_list_empty(&dev->aliases)) {
 		log_debug_devs("%d:%d: filter cache skipping (no name)",
@@ -102,7 +105,7 @@ static int _lookup_p(struct cmd_context *cmd, struct dev_filter *f, struct devic
 	if (!l) {
 		dev->flags &= ~DEV_FILTER_AFTER_SCAN;
 
-		pass = pf->real->passes_filter(cmd, pf->real, dev);
+		pass = pf->real->passes_filter(cmd, pf->real, dev, use_filter_name);
 
 		if (!pass) {
 			/*
@@ -182,6 +185,7 @@ struct dev_filter *persistent_filter_create(struct dev_types *dt, struct dev_fil
 	f->use_count = 0;
 	f->private = pf;
 	f->wipe = _persistent_filter_wipe;
+	f->name = "persistent";
 
 	log_debug_devs("Persistent filter initialised.");
 

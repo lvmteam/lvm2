@@ -38,7 +38,7 @@ void internal_filter_clear(void)
 }
 
 static int _passes_internal(struct cmd_context *cmd, struct dev_filter *f __attribute__((unused)),
-			    struct device *dev)
+			    struct device *dev, const char *use_filter_name)
 {
 	struct device_list *devl;
 
@@ -74,6 +74,7 @@ struct dev_filter *internal_filter_create(void)
 	f->passes_filter = _passes_internal;
 	f->destroy = _destroy;
 	f->use_count = 0;
+	f->name = "internal";
 
 	log_debug_devs("Internal filter initialised.");
 

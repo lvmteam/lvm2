@@ -312,4 +312,6 @@
 
 #define DEFAULT_SCAN_LVS 1
 
+#define DEFAULT_HINTS "all"
+
 #endif				/* _LVM_DEFAULTS_H */

@@ -101,6 +101,8 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 	if (!lockd_gl(cmd, "ex", LDGL_UPDATE_NAMES))
 		return ECMD_FAILED;
 
+	clear_hint_file(cmd);
+
 	/*
 	 * This is a special case: if vgremove is given a tag, it causes
 	 * process_each_vg to do lockd_gl(sh) when getting a list of all

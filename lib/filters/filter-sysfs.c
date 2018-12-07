@@ -260,7 +260,7 @@ static int _init_devs(struct dev_set *ds)
 }
 
 
-static int _accept_p(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
+static int _accept_p(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
 {
 	struct dev_set *ds = (struct dev_set *) f->private;
 
@@ -323,6 +323,7 @@ struct dev_filter *sysfs_filter_create(void)
 	f->destroy = _destroy;
 	f->use_count = 0;
 	f->private = ds;
+	f->name = "sysfs";
 
 	log_debug_devs("Sysfs filter initialised.");
 

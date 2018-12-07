@@ -1473,7 +1473,7 @@ struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct d
 		return d;
 
 	if (f && !(d->flags & DEV_REGULAR)) {
-		ret = f->passes_filter(cmd, f, d);
+		ret = f->passes_filter(cmd, f, d, NULL);
 
 		if (ret == -EAGAIN) {
 			log_debug_devs("get device by name defer filter %s", dev_name(d));
@@ -1546,7 +1546,7 @@ struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t dev, struct 
 	if (!f)
 		return d;
 
-	ret = f->passes_filter(cmd, f, d);
+	ret = f->passes_filter(cmd, f, d, NULL);
 
 	if (ret == -EAGAIN) {
 		log_debug_devs("get device by number defer filter %s", dev_name(d));
@@ -1603,7 +1603,7 @@ struct device *dev_iter_get(struct cmd_context *cmd, struct dev_iter *iter)
 		f = iter->filter;
 
 		if (f && !(d->flags & DEV_REGULAR)) {
-			ret = f->passes_filter(cmd, f, d);
+			ret = f->passes_filter(cmd, f, d, NULL);
 
 			if (ret == -EAGAIN) {
 				log_debug_devs("get device by iter defer filter %s", dev_name(d));

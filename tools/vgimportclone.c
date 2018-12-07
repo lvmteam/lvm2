@@ -345,6 +345,8 @@ retry_name:
 	 */
 	cmd->lockd_vg_disable = 1;
 
+	clear_hint_file(cmd);
+
 	ret = process_each_vg(cmd, 0, NULL, vp.old_vgname, NULL, READ_FOR_UPDATE | READ_ALLOW_EXPORTED, 0, handle, _vgimportclone_vg_single);
 
 	unlock_vg(cmd, NULL, vp.new_vgname);

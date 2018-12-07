@@ -61,6 +61,7 @@ SOURCES =\
 	format_text/text_label.c \
 	freeseg/freeseg.c \
 	label/label.c \
+	label/hints.c \
 	locking/file_locking.c \
 	locking/locking.c \
 	log/log.c \

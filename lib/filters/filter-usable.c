@@ -105,7 +105,7 @@ static int _check_pv_min_size(struct device *dev)
 	return 0;
 }
 
-static int _passes_usable_filter(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
+static int _passes_usable_filter(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
 {
 	struct filter_data *data = f->private;
 	filter_mode_t mode = data->mode;
@@ -185,6 +185,7 @@ struct dev_filter *usable_filter_create(struct cmd_context *cmd, struct dev_type
 	f->passes_filter = _passes_usable_filter;
 	f->destroy = _usable_filter_destroy;
 	f->use_count = 0;
+	f->name = "usable";
 
 	if (!(data = zalloc(sizeof(struct filter_data)))) {
 		log_error("Usable device filter mode allocation failed");

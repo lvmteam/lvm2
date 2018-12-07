@@ -93,6 +93,13 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	/*
+	 * Without -a, command only looks at PVs and can use hints,
+	 * with -a, the command looks at all (non-hinted) devices.
+	 */
+	if (arg_is_set(cmd, all_ARG))
+		cmd->use_hints = 0;
+
 	ret = process_each_pv(cmd, argc, argv, NULL,
 			      arg_is_set(cmd, all_ARG), 0,
 			      NULL, _pvdisplay_single);

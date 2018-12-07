@@ -210,6 +210,8 @@ int vgmerge(struct cmd_context *cmd, int argc, char **argv)
 	if (!lockd_gl(cmd, "ex", LDGL_UPDATE_NAMES))
 		return ECMD_FAILED;
 
+	clear_hint_file(cmd);
+
 	vg_name_to = skip_dev_dir(cmd, argv[0], NULL);
 	argc--;
 	argv++;

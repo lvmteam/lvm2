@@ -1456,6 +1456,13 @@ int pvs(struct cmd_context *cmd, int argc, char **argv)
 {
 	report_type_t type;
 
+	/*
+	 * Without -a, command only looks at PVs and can use hints,
+	 * with -a, the command looks at all (non-hinted) devices.
+	 */
+	if (arg_is_set(cmd, all_ARG))
+		cmd->use_hints = 0;
+
 	if (arg_is_set(cmd, segments_ARG))
 		type = PVSEGS;
 	else

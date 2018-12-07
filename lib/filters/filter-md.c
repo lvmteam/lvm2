@@ -82,7 +82,7 @@
  * that will not pass.
  */
 
-static int _passes_md_filter(struct cmd_context *cmd, struct dev_filter *f __attribute__((unused)), struct device *dev)
+static int _passes_md_filter(struct cmd_context *cmd, struct dev_filter *f __attribute__((unused)), struct device *dev, const char *use_filter_name)
 {
 	int ret;
 
@@ -145,6 +145,7 @@ struct dev_filter *md_filter_create(struct cmd_context *cmd, struct dev_types *d
 	f->destroy = _destroy;
 	f->use_count = 0;
 	f->private = dt;
+	f->name = "md";
 
 	log_debug_devs("MD filter initialised.");
 

@@ -130,6 +130,8 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	clear_hint_file(cmd);
+
 	lvmcache_label_scan(cmd);
 
 	cmd->handles_unknown_segments = 1;

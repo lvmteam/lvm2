@@ -1484,6 +1484,7 @@ struct cmd_context *create_config_context(void)
 
 	dm_list_init(&cmd->config_files);
 	dm_list_init(&cmd->tags);
+	dm_list_init(&cmd->hints);
 
 	if (!_init_lvm_conf(cmd))
 		goto_out;

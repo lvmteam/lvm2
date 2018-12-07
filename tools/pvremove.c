@@ -48,6 +48,8 @@ int pvremove(struct cmd_context *cmd, int argc, char **argv)
 	}
 	cmd->lockd_gl_disable = 1;
 
+	clear_hint_file(cmd);
+
 	/* When forcibly clearing a PV we don't care about a VG lock. */
 	if (pp.force == DONT_PROMPT_OVERRIDE)
 		cmd->lockd_vg_disable = 1;
