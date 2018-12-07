@@ -1908,7 +1908,8 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (log_count > 1) {
-		log_warn("WARNING: Log type \"mirrored\" is DEPRECATED and will be removed in the future. Use RAID1 LV or disk log instead.");
+		log_err("Log type \"mirrored\" is DEPRECATED. Use RAID1 LV or disk log instead.");
+		return 0;
 	}
 
 	if (!(parallel_areas = build_parallel_areas_from_lv(lv, 0, 0)))
