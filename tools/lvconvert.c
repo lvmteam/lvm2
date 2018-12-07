@@ -3534,6 +3534,18 @@ static int _lvconvert_repair_pvs_mirror(struct cmd_context *cmd, struct logical_
 	int ret;
 
 	/*
+	 * We want to allow cmirror active on multiple nodes to be repaired,
+	 * but normal mirror to only be repaired if active exclusively here.
+	 * If the LV is active it already has the necessary lock, but if not
+	 * active, then require ex since we cannot know the active state on
+	 * other hosts.
+	 */
+	if (!lv_is_active(lv)) {
+		if (!lockd_lv(cmd, lv, "ex", 0))
+			return_0;
+	}
+
+	/*
 	 * FIXME: temporary use of lp because _lvconvert_mirrors_repair()
 	 * and _aux() still use lp fields everywhere.
 	 * Migrate them away from using lp (for the most part just use
@@ -3662,6 +3674,10 @@ static int _lvconvert_repair_cachepool_thinpool(struct cmd_context *cmd, struct 
 {
 	int poolmetadataspare = arg_int_value(cmd, poolmetadataspare_ARG, DEFAULT_POOL_METADATA_SPARE);
 	struct dm_list *use_pvh;
+
+	/* ensure it's not active elsewhere. */
+	if (!lockd_lv(cmd, lv, "ex", 0))
+		return_0;
 
 	if (cmd->position_argc > 1) {
 		/* First pos arg is required LV, remaining are optional PVs. */
