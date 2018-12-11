@@ -369,9 +369,17 @@ class LvCommon(AutomatedProperties):
 
 	@property
 	def Health(self):
-		type_map = {'p': 'partial', 'r': 'refresh',
-					'm': 'mismatches', 'w': 'writemostly',
-					'X': 'X unknown', '-': 'Unspecified'}
+		type_map = {'p': 'partial',
+					'r': 'refresh needed',
+					'm': 'mismatches',
+					'w': 'writemostly',
+					'X': 'unknown',
+					'-': 'unspecified',
+					's': 'reshaping',
+					'F': 'failed',
+					'D': 'Data space',
+					'R': 'Remove',
+					'M': 'Metadata'}
 		return self.attr_struct(8, type_map)
 
 	@property
