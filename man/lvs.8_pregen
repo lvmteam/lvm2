@@ -569,6 +569,8 @@ Inconsistencies are detected by initiating a "check" on a RAID logical volume.
 (The scrubbing operations, "check" and "repair", can be performed on a RAID
 logical volume via the 'lvchange' command.)  (w)ritemostly signifies the
 devices in a RAID 1 logical volume that have been marked write-mostly.
+Re(s)haping shows a Raid Logical Volume is undergoing a reshape (ie. striped
+ addition/removal, stripe size or RAID algorithm change).
 (R)emove after reshape signifies freed striped raid images to be removed.
 .IP
 Related to Thin pool Logical Volumes: (F)ailed, out of (D)ata space,
