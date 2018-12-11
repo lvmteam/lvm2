@@ -67,7 +67,7 @@ class LvmFlightRecorder(object):
 		with cmd_lock:
 			if len(self.queue):
 				log_error("LVM dbus flight recorder START")
-				for c in self.queue:
+				for c in reversed(self.queue):
 					log_error(str(c))
 				log_error("LVM dbus flight recorder END")
 
