@@ -346,13 +346,19 @@ class LvCommon(AutomatedProperties):
 
 	@property
 	def State(self):
-		type_map = {'a': 'active', 's': 'suspended', 'I': 'Invalid snapshot',
+		type_map = {'a': 'active',
+					's': 'suspended',
+					'I': 'Invalid snapshot',
 					'S': 'invalid Suspended snapshot',
 					'm': 'snapshot merge failed',
 					'M': 'suspended snapshot (M)erge failed',
 					'd': 'mapped device present without  tables',
 					'i': 'mapped device present with inactive table',
-					'X': 'unknown', '-': 'Unspecified'}
+					'h': 'historical',
+					'c': 'check needed suspended thin-pool',
+					'C': 'check needed',
+					'X': 'unknown',
+					'-': 'Unspecified'}
 		return self.attr_struct(4, type_map)
 
 	@property
