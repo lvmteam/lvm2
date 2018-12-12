@@ -58,11 +58,12 @@ device-mapper: $(TARGETS)
 
 CFLAGS_dmeventd.o += $(EXTRA_EXEC_CFLAGS)
 LIBS += $(PTHREAD_LIBS)
+LIBS += $(INTERNAL_LIBS)
 
 dmeventd: $(LIB_SHARED) dmeventd.o
 	@echo "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) -L. $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) dmeventd.o \
-		-o $@ $(DL_LIBS) $(DMEVENT_LIBS) $(INTERNAL_LIBS) $(LIBS) -lm
+		-o $@ $(DL_LIBS) $(DMEVENT_LIBS) $(LIBS) -lm
 
 dmeventd.static: $(LIB_STATIC) dmeventd.o
 	@echo "    [CC] $@"
