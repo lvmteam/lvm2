@@ -18,5 +18,3 @@ LIB_STATIC = libdaemonserver.a
 SOURCES = daemon-server.c daemon-log.c
 
 include $(top_builddir)/make.tmpl
-
-LIBS += $(DAEMON_LIBS)
