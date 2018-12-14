@@ -91,6 +91,7 @@ SOURCES =\
 	misc/lvm-string.c \
 	misc/lvm-wrappers.c \
 	misc/lvm-percent.c \
+	misc/sharedlib.c \
 	mm/memlock.c \
 	notify/lvmnotify.c \
 	properties/prop_common.c \
@@ -109,10 +110,6 @@ ifeq ("@DEVMAPPER@", "yes")
 	activate/fs.c
 endif
 
-ifeq ("@HAVE_LIBDL@", "yes")
-  SOURCES += misc/sharedlib.c
-endif
-
 ifeq ("@BUILD_LVMPOLLD@", "yes")
   SOURCES +=\
 	lvmpolld/lvmpolld-client.c
@@ -129,12 +126,6 @@ endif
 
 LIB_NAME = liblvm-internal
 LIB_STATIC = $(LIB_NAME).a
-
-ifeq ($(MAKECMDGOALS),distclean)
-  SUBDIRS =\
-	notify \
-	locking
-endif
 
 CFLOW_LIST = $(SOURCES)
 CFLOW_LIST_TARGET = $(LIB_NAME).cflow
