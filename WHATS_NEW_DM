@@ -1,5 +1,6 @@
 Version 1.02.155 - 
 ====================================
+  Include correct internal header inside libdm list.c.
   Enhance ioctl flattening and add parameters only when needed.
   Add DM_DEVICE_ARM_POLL for API completness matching kernel.
   Do not add parameters for RESUME with DM_DEVICE_CREATE dm task.
