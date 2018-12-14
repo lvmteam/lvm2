@@ -23,11 +23,10 @@ LVMDBUS_SRCDIR_FILES = \
 	cfg.py \
 	cmdhandler.py \
 	fetch.py \
-	__init__.py \
 	job.py \
 	loader.py \
-	main.py \
 	lv.py \
+	main.py \
 	manager.py \
 	objectmanager.py \
 	pv.py \
@@ -35,7 +34,8 @@ LVMDBUS_SRCDIR_FILES = \
 	state.py \
 	udevwatch.py \
 	utils.py \
-	vg.py
+	vg.py \
+	__init__.py
 
 LVMDBUS_BUILDDIR_FILES = \
 	lvmdb.py \

@@ -15,6 +15,7 @@
 
 DEVICE_MAPPER_SOURCE=\
 	device_mapper/datastruct/bitset.c \
+	device_mapper/ioctl/libdm-iface.c \
 	device_mapper/libdm-common.c \
 	device_mapper/libdm-config.c \
 	device_mapper/libdm-deptree.c \
@@ -27,9 +28,8 @@ DEVICE_MAPPER_SOURCE=\
 	device_mapper/regex/matcher.c \
 	device_mapper/regex/parse_rx.c \
 	device_mapper/regex/ttree.c \
-	device_mapper/ioctl/libdm-iface.c \
-	device_mapper/vdo/vdo_target.c \
-	device_mapper/vdo/status.c
+	device_mapper/vdo/status.c \
+	device_mapper/vdo/vdo_target.c
 
 DEVICE_MAPPER_DEPENDS = $(DEVICE_MAPPER_SOURCE:%.c=%.d)
 DEVICE_MAPPER_OBJECTS = $(DEVICE_MAPPER_SOURCE:%.c=%.o)

@@ -18,9 +18,9 @@
 #       which defined all top_* variables
 
 BASE_SOURCE=\
-	base/data-struct/radix-tree.c \
 	base/data-struct/hash.c \
-	base/data-struct/list.c
+	base/data-struct/list.c \
+	base/data-struct/radix-tree.c
 
 BASE_DEPENDS = $(BASE_SOURCE:%.c=%.d)
 BASE_OBJECTS = $(BASE_SOURCE:%.c=%.o)

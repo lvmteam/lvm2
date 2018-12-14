@@ -28,6 +28,7 @@ SOURCES =\
 	lvextend.c \
 	lvmcmdline.c \
 	lvmdiskscan.c \
+	lvpoll.c \
 	lvreduce.c \
 	lvremove.c \
 	lvrename.c \
@@ -56,10 +57,9 @@ SOURCES =\
 	vgexport.c \
 	vgextend.c \
 	vgimport.c \
+	vgimportclone.c \
 	vgmerge.c \
 	vgmknodes.c \
-	lvpoll.c \
-	vgimportclone.c \
 	vgreduce.c \
 	vgremove.c \
 	vgrename.c \
