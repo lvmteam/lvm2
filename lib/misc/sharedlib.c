@@ -14,8 +14,8 @@
  */
 
 #include "lib/misc/lib.h"
+#include "sharedlib.h"
 #include "lib/config/config.h"
-#include "lib/misc/sharedlib.h"
 #include "lib/commands/toolcontext.h"
 
 #include <limits.h>
@@ -39,32 +39,4 @@ void get_shared_library_path(struct cmd_context *cmd, const char *libname,
 			 libname) == -1) || stat(path, &info) == -1) {
 		(void) dm_strncpy(path, libname, path_len);
 	}
-}
-
-void *load_shared_library(struct cmd_context *cmd, const char *libname,
-			  const char *desc, int silent)
-{
-	char path[PATH_MAX];
-	void *library;
-
-	if (is_static()) {
-		log_error("Not loading shared %s library %s in static mode.",
-			  desc, libname);
-		return NULL;
-	}
-
-	get_shared_library_path(cmd, libname, path, sizeof(path));
-
-	log_very_verbose("Opening shared %s library %s", desc, path);
-
-	if (!(library = dlopen(path, RTLD_LAZY | RTLD_GLOBAL))) {
-		if (silent)
-			log_verbose("Unable to open external %s library %s: %s",
-				    desc, path, dlerror());
-		else
-			log_error("Unable to open external %s library %s: %s",
-				  desc, path, dlerror());
-	}
-
-	return library;
 }
