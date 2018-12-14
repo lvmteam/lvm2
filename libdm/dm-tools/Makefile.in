@@ -82,12 +82,12 @@ ifeq ("@BUILD_DMFILEMAPD@", "yes")
   dmfilemapd: $(LIB_SHARED) dmfilemapd.o
 	@echo "    [CC] $<"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) \
-		-o $@ dmfilemapd.o -L$(top_builddir)/libdm -ldevmapper $(DL_LIBS) $(LIBS)
+		-o $@ dmfilemapd.o -L$(top_builddir)/libdm -ldevmapper $(LIBS)
 
   dmfilemapd.static: $(LIB_STATIC) dmfilemapd.o
 	@echo "    [CC] $<"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(ELDFLAGS) -static -L$(interfacebuilddir) \
-		-o $@ dmfilemapd.o $(DL_LIBS) $(LIBS) $(STATIC_LIBS)
+		-o $@ dmfilemapd.o $(LIBS) $(STATIC_LIBS)
 
   install_dmfilemapd_dynamic: dmfilemapd
 	@echo "    [INSTALL] $<"
