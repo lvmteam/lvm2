@@ -16,6 +16,7 @@ top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
 CLDFLAGS += -L$(top_builddir)/tools
+LIBS += $(DMEVENT_LIBS) $(PTHREAD_LIBS) @LVM2CMD_LIB@
 
 SOURCES = dmeventd_lvm.c
 
@@ -23,8 +24,6 @@ LIB_SHARED = libdevmapper-event-lvm2.$(LIB_SUFFIX)
 LIB_VERSION = $(LIB_VERSION_LVM)
 
 include $(top_builddir)/make.tmpl
-
-LIBS += @LVM2CMD_LIB@ $(INTERNAL_LIBS) $(PTHREAD_LIBS)
 
 install_lvm2: install_lib_shared
 
