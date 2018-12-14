@@ -20,11 +20,11 @@ UNIT_SOURCE=\
 	test/unit/config_t.c \
 	test/unit/dmlist_t.c \
 	test/unit/dmstatus_t.c \
-	test/unit/io_engine_t.c \
-	test/unit/radix_tree_t.c \
-	test/unit/matcher_t.c \
 	test/unit/framework.c \
+	test/unit/io_engine_t.c \
+	test/unit/matcher_t.c \
 	test/unit/percent_t.c \
+	test/unit/radix_tree_t.c \
 	test/unit/run.c \
 	test/unit/string_t.c \
 	test/unit/vdo_t.c
