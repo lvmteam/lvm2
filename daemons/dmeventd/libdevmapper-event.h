@@ -21,6 +21,7 @@
 #ifndef LIB_DMEVENT_H
 #define LIB_DMEVENT_H
 
+#include <stdarg.h>
 #include <stdint.h>
 
 /*

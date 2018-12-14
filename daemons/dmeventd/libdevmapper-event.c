@@ -12,11 +12,12 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "device_mapper/misc/dmlib.h"
-#include "base/memory/zalloc.h"
-#include "device_mapper/misc/dm-logging.h"
-#include "daemons/dmeventd/libdevmapper-event.h"
+#include "configure.h"
+#include "libdevmapper-event.h"
 #include "dmeventd.h"
+#include "libdm/misc/dm-logging.h"
+#include "base/memory/zalloc.h"
+
 #include "lib/misc/intl.h"
 
 #include <fcntl.h>

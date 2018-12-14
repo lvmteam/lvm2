@@ -57,8 +57,7 @@ all: device-mapper
 device-mapper: $(TARGETS)
 
 CFLAGS_dmeventd.o += $(EXTRA_EXEC_CFLAGS)
-LIBS += $(PTHREAD_LIBS)
-LIBS += $(INTERNAL_LIBS)
+LIBS += $(PTHREAD_LIBS) -L$(top_builddir)/libdm -ldevmapper
 
 dmeventd: $(LIB_SHARED) dmeventd.o
 	@echo "    [CC] $@"
