@@ -15,14 +15,12 @@
 #include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/device/dev-type.h"
+#include "lib/device/device-types.h"
 #include "lib/mm/xlate.h"
 #include "lib/config/config.h"
 #include "lib/metadata/metadata.h"
 #include "lib/device/bcache.h"
 #include "lib/label/label.h"
-
-#include <libgen.h>
-#include <ctype.h>
 
 #ifdef BLKID_WIPING_SUPPORT
 #include <blkid.h>
@@ -33,7 +31,8 @@
 #include "lib/device/dev-ext-udev-constants.h"
 #endif
 
-#include "lib/device/device-types.h"
+#include <libgen.h>
+#include <ctype.h>
 
 struct dev_types *create_dev_types(const char *proc_dir,
 				   const struct dm_config_node *cn)

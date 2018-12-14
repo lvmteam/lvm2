@@ -14,8 +14,9 @@
  */
 
 #include "lib/misc/lib.h"
-#include "lib/format_text/format-text.h"
 #include "import-export.h"
+#include "format-text.h"
+#include "layout.h"
 #include "lib/device/device.h"
 #include "lib/misc/lvm-file.h"
 #include "lib/config/config.h"
@@ -23,7 +24,6 @@
 #include "lib/commands/toolcontext.h"
 #include "lib/misc/lvm-string.h"
 #include "lib/uuid/uuid.h"
-#include "layout.h"
 #include "lib/misc/crc.h"
 #include "lib/mm/xlate.h"
 #include "lib/label/label.h"
