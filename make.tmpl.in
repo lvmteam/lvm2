@@ -309,7 +309,7 @@ LIB_VERSION_DM := $(shell $(AWK) -F '.' '{printf "%s.%s",$$1,$$2}' $(top_srcdir)
 
 LIB_VERSION_APP := $(shell $(AWK) -F '[(). ]' '{printf "%s.%s",$$1,$$4}' $(top_srcdir)/VERSION)
 
-INCLUDES += -I$(top_srcdir) -I$(srcdir) -I$(top_builddir)/include
+INCLUDES += -I$(srcdir) -I$(top_srcdir) -I$(top_builddir)/include
 
 #VDO_INCLUDES=-I@VDO_INCLUDE@
 
