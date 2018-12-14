@@ -16,14 +16,13 @@
  * dmeventd - dm event daemon to monitor active mapped devices
  */
 
-#include "device_mapper/misc/dmlib.h"
-#include "base/memory/zalloc.h"
-#include "device_mapper/misc/dm-logging.h"
 
-#include "daemons/dmeventd/libdevmapper-event.h"
+#include "configure.h"
+#include "libdevmapper-event.h"
 #include "dmeventd.h"
 
-#include "tools/tool.h"
+#include "libdm/misc/dm-logging.h"
+#include "base/memory/zalloc.h"
 
 #include <dlfcn.h>
 #include <pthread.h>
@@ -35,6 +34,8 @@
 #include <signal.h>
 #include <arpa/inet.h>		/* for htonl, ntohl */
 #include <fcntl.h>		/* for musl libc */
+#include <unistd.h>
+#include <syslog.h>
 
 #ifdef __linux__
 /*
@@ -61,8 +62,6 @@
 #  define SD_FD_FIFO_CLIENT (SD_LISTEN_FDS_START + 1)
 
 #endif
-
-#include <syslog.h>
 
 #define DM_SIGNALED_EXIT  1
 #define DM_SCHEDULED_EXIT 2
