@@ -5962,7 +5962,7 @@ static int _add_pvs(struct cmd_context *cmd, struct pv_segment *peg,
 	if (find_pv_in_pv_list(&spvs->pvs, peg->pv))
 		return 1;
 
-	if (!(pvl = dm_pool_alloc(cmd->mem, sizeof(*pvl)))) {
+	if (!(pvl = dm_pool_zalloc(cmd->mem, sizeof(*pvl)))) {
 		log_error("pv_list allocation failed");
 		return 0;
 	}
