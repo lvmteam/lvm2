@@ -483,7 +483,7 @@ static struct dm_list *_failed_pv_list(struct volume_group *vg)
 		if (pvl->pv->pe_alloc_count == 0)
 			continue;
 
-		if (!(new_pvl = dm_pool_alloc(vg->vgmem, sizeof(*new_pvl)))) {
+		if (!(new_pvl = dm_pool_zalloc(vg->vgmem, sizeof(*new_pvl)))) {
 			log_error("Allocation of failed_pvs list entry failed.");
 			return NULL;
 		}
