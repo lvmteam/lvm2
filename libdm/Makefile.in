@@ -58,7 +58,7 @@ include $(top_builddir)/libdm/make.tmpl
 
 PROGS_CFLAGS = $(UDEV_CFLAGS)
 
-LIBS += $(RT_LIBS) $(SELINUX_LIBS) $(UDEV_LIBS) $(PTHREAD_LIBS) $(M_LIBS)
+LIBS += $(SELINUX_LIBS) $(UDEV_LIBS) $(PTHREAD_LIBS) $(RT_LIBS) $(M_LIBS)
 
 device-mapper: all
 
