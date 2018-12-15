@@ -10,6 +10,9 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+# NOTE: this Makefile only works as 'include' for toplevel Makefile
+#       which defined all top_* variables
+
 UNIT_SOURCE=\
 	device_mapper/vdo/status.c \
 	\
@@ -31,27 +34,25 @@ UNIT_SOURCE=\
 
 test/unit/radix_tree_t.o: test/unit/rt_case1.c
 
+UNIT_TARGET = test/unit/unit-test
 UNIT_DEPENDS = $(UNIT_SOURCE:%.c=%.d)
 UNIT_OBJECTS = $(UNIT_SOURCE:%.c=%.o)
 CLEAN_TARGETS += $(UNIT_DEPENDS) $(UNIT_OBJECTS) \
 	$(UNIT_SOURCE:%.c=%.gcda) \
 	$(UNIT_SOURCE:%.c=%.gcno) \
-	test/unit/unit-test
+	$(UNIT_TARGET)
 
-test/unit/unit-test: $(UNIT_OBJECTS) lib/liblvm-internal.a libdaemon/client/libdaemonclient.a $(INTERNAL_LIBS)
+$(UNIT_TARGET): $(UNIT_OBJECTS) $(LVMINTERNAL_LIBS)
 	@echo "    [LD] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) \
-	      -o $@ $+ $(DMEVENT_LIBS) $(SYSTEMD_LIBS) $(LIBS) -laio
+	      -o $@ $+ $(DMEVENT_LIBS) $(LIBS) -laio
 
 .PHONEY: run-unit-test unit-test
-unit-test: test/unit/unit-test
-run-unit-test: test/unit/unit-test
-	@echo Running unit tests
-	LD_LIBRARY_PATH=libdm test/unit/unit-test run
+unit-test: $(UNIT_TARGET)
+run-unit-test: $(UNIT_TARGET)
+	@echo "Running unit tests"
+	LD_LIBRARY_PATH=libdm $(UNIT_TARGET) run
 
-ifeq ("$(USE_TRACKING)","yes")
-ifeq (,$(findstring $(MAKECMDGOALS),cscope.out cflow clean distclean lcov lcov-reset \
- help check check_local check_lvmpolld run-unit-test))
-	-include $(UNIT_DEPENDS)
-endif
+ifeq ("$(DEPENDS)","yes")
+-include $(UNIT_SOURCE:%.c=%.d)
 endif

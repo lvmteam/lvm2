@@ -14,7 +14,7 @@
 # Comment to build the advanced radix tree.
 #base/data-struct/radix-tree.o: CFLAGS += -DSIMPLE_RADIX_TREE
 
-# NOTE: this include only works as 'include' for toplevel Makefile
+# NOTE: this Makefile only works as 'include' for toplevel Makefile
 #       which defined all top_* variables
 
 BASE_SOURCE=\
@@ -22,24 +22,19 @@ BASE_SOURCE=\
 	base/data-struct/list.c \
 	base/data-struct/radix-tree.c
 
+BASE_TARGET = base/libbase.a
 BASE_DEPENDS = $(BASE_SOURCE:%.c=%.d)
 BASE_OBJECTS = $(BASE_SOURCE:%.c=%.o)
 CLEAN_TARGETS += $(BASE_DEPENDS) $(BASE_OBJECTS) \
 	$(BASE_SOURCE:%.c=%.gcda) \
-	$(BASE_SOURCE:%.c=%.gcno)
+	$(BASE_SOURCE:%.c=%.gcno) \
+	$(BASE_TARGET)
 
-ifeq ("$(USE_TRACKING)","yes")
-ifeq (,$(findstring $(MAKECMDGOALS),cscope.out cflow clean distclean lcov lcov-reset \
- help check check_local check_cluster check_lvmetad check_lvmpolld))
-	-include $(BASE_DEPENDS)
-endif
-endif
-
-$(BASE_OBJECTS): INCLUDES+=-I$(top_srcdir)/base/
-
-base/libbase.a: $(BASE_OBJECTS)
+$(BASE_TARGET): $(BASE_OBJECTS)
 	@echo "    [AR] $@"
 	$(Q) $(RM) $@
 	$(Q) $(AR) rsv $@ $(BASE_OBJECTS) > /dev/null
 
-CLEAN_TARGETS += base/libbase.a
+ifeq ("$(DEPENDS)","yes")
+-include $(BASE_DEPENDS)
+endif

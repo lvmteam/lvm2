@@ -76,9 +76,9 @@ endif
 
 CFLAGS_lvm2_activation_generator_systemd_red_hat.o += $(EXTRA_EXEC_CFLAGS)
 
-lvm2_activation_generator_systemd_red_hat: $(OBJECTS) $(DEPLIBS) $(INTERNAL_LIBS)
+lvm2_activation_generator_systemd_red_hat: $(OBJECTS) $(LVMINTERNAL_LIBS)
 	@echo "    [CC] $@"
-	$(Q) $(CC) -o $@ $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) $(LVMLIBS) $(INTERNAL_LIBS) $(LIBS)
+	$(Q) $(CC) -o $@ $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) $(LVMINTERNAL_LIBS) $(LIBS)
 
 install_systemd_generators:
 	@echo "    [INSTALL] $<"

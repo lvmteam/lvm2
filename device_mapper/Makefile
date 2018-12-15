@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-# NOTE: this include only works as 'include' for toplevel Makefile
+# NOTE: this Makefile only works as 'include' for toplevel Makefile
 #       which defined all top_* variables
 
 DEVICE_MAPPER_SOURCE=\
@@ -31,27 +31,22 @@ DEVICE_MAPPER_SOURCE=\
 	device_mapper/vdo/status.c \
 	device_mapper/vdo/vdo_target.c
 
+DEVICE_MAPPER_TARGET = device_mapper/libdevice-mapper.a
 DEVICE_MAPPER_DEPENDS = $(DEVICE_MAPPER_SOURCE:%.c=%.d)
 DEVICE_MAPPER_OBJECTS = $(DEVICE_MAPPER_SOURCE:%.c=%.o)
 CLEAN_TARGETS += $(DEVICE_MAPPER_DEPENDS) $(DEVICE_MAPPER_OBJECTS) \
 	$(DEVICE_MAPPER_SOURCE:%.c=%.gcda) \
-	$(DEVICE_MAPPER_SOURCE:%.c=%.gcno)
+	$(DEVICE_MAPPER_SOURCE:%.c=%.gcno) \
+	$(DEVICE_MAPPER_TARGET)
 
 #$(DEVICE_MAPPER_DEPENDS): INCLUDES+=$(VDO_INCLUDES)
 #$(DEVICE_MAPPER_OBJECTS): INCLUDES+=$(VDO_INCLUDES)
 
-ifeq ("$(USE_TRACKING)","yes")
-ifeq (,$(findstring $(MAKECMDGOALS),cscope.out cflow clean distclean lcov lcov-reset \
- help check check_local check_cluster check_lvmetad check_lvmpolld))
-	-include $(DEVICE_MAPPER_DEPENDS)
-endif
-endif
-
-$(DEVICE_MAPPER_OBJECTS): INCLUDES+=-I$(top_srcdir)/device_mapper/
-
-device_mapper/libdevice-mapper.a: $(DEVICE_MAPPER_OBJECTS)
+$(DEVICE_MAPPER_TARGET): $(DEVICE_MAPPER_OBJECTS)
 	@echo "    [AR] $@"
 	$(Q) $(RM) $@
 	$(Q) $(AR) rsv $@ $(DEVICE_MAPPER_OBJECTS) > /dev/null
 
-CLEAN_TARGETS += device_mapper/libdevice-mapper.a
+ifeq ("$(DEPENDS)","yes")
+-include $(DEVICE_MAPPER_DEPENDS)
+endif
