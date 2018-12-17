@@ -138,6 +138,7 @@ DISTCLEAN_TARGETS += \
 	dm_event_systemd_red_hat.service \
 	dm_event_systemd_red_hat.socket \
 	lvmdump.sh \
+	lvm2-pvscan.service \
 	lvm2_cluster_activation_red_hat.sh \
 	lvm2_cluster_activation_systemd_red_hat.service \
 	lvm2_clvmd_systemd_red_hat.service \
