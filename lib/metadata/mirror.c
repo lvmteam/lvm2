@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2008 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2008,2018 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -1908,8 +1908,12 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (log_count > 1) {
-		log_err("Log type \"mirrored\" is DEPRECATED. Use RAID1 LV or disk log instead.");
-		return 0;
+		if (find_config_tree_bool(cmd, global_support_mirrored_mirror_log_CFG, NULL))
+			log_warn("Log type \"mirrored\" creation/conversion is not supported for regular operation!");
+		else {
+			log_err("Log type \"mirrored\" is DEPRECATED. Use RAID1 LV or disk log instead.");
+			return 0;
+		}
 	}
 
 	if (!(parallel_areas = build_parallel_areas_from_lv(lv, 0, 0)))

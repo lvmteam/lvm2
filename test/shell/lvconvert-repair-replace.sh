@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2008 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2008,2018 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -13,6 +13,8 @@
 
 
 . lib/inittest
+
+aux lvmconf "global/support_mirrored_mirror_log=1"
 
 aux prepare_vg 6
 aux lvmconf 'allocation/maximise_cling = 0' \

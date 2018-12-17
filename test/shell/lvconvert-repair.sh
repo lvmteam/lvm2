@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2008-2013 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2008-2013,2018 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -11,6 +11,8 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 . lib/inittest
+
+aux lvmconf "global/support_mirrored_mirror_log=1"
 
 recreate_vg_()
 {

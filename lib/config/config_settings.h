@@ -960,6 +960,17 @@ cfg(global_mirror_segtype_default_CFG, "mirror_segtype_default", global_CFG_SECT
 	"    fashion in a cluster.\n"
 	"#\n")
 
+cfg(global_support_mirrored_mirror_log_CFG, "support_mirrored_mirror_log", global_CFG_SECTION, 0, CFG_TYPE_BOOL, 0, vsn(2, 3, 2), NULL, 0, NULL,
+	"Configuration option global/support_mirrored_mirror_log.\n"
+	"Enable mirrored 'mirror' log type for testing.\n"
+	"#\n"
+	"This type is deprecated to create or convert to but can\n"
+	"be enabled to test that activation of existing mirrored\n"
+	"logs and conversion to disk/core works.\n"
+	"#\n"
+	"Not supported for regular operation!\n"
+	"\n")
+
 cfg(global_raid10_segtype_default_CFG, "raid10_segtype_default", global_CFG_SECTION, 0, CFG_TYPE_STRING, DEFAULT_RAID10_SEGTYPE, vsn(2, 2, 99), "@DEFAULT_RAID10_SEGTYPE@", 0, NULL,
 	"The segment type used by the -i -m combination.\n"
 	"The --type raid10|mirror option overrides this setting.\n"
