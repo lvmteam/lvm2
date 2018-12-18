@@ -87,3 +87,13 @@ blackbox = None
 
 # RequestEntry ctor
 create_request_entry = None
+
+
+def exit_daemon():
+    """
+    Exit the daemon cleanly
+    :return:
+    """
+    if run and loop:
+        run.value = 0
+        loop.quit()
