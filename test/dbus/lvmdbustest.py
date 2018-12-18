@@ -1873,14 +1873,13 @@ class TestDbusService(unittest.TestCase):
 		# when run from lvm2 testsuite. See dbustest.sh.
 		pv_object_path = self.objs[PV_INT][0].object_path
 
-		if not pv_object_path.startswith("/dev"):
-			std_err_print('Skipping test not running in /dev')
-			return
+		if not self.objs[PV_INT][0].Pv.Name.startswith("/dev"):
+			raise unittest.SkipTest('test not running in /dev')
 
 		for i in range(0, 5):
 			pv_object_path = self._create_nested(pv_object_path)
 
-	def DISABLED_test_pv_symlinks(self):
+	def test_pv_symlinks(self):
 		# Lets take one of our test PVs, pvremove it, find a symlink to it
 		# and re-create using the symlink to ensure we return an object
 		# path to it.  Additionally, we will take the symlink and do a lookup
@@ -1890,6 +1889,9 @@ class TestDbusService(unittest.TestCase):
 
 		pv = self.objs[PV_INT][0]
 		pv_device_path = pv.Pv.Name
+
+		if not pv_device_path.startswith("/dev"):
+			raise unittest.SkipTest('test not running in /dev')
 
 		self._pv_remove(pv)
 
