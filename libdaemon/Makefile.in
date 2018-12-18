@@ -19,10 +19,7 @@ top_builddir = @top_builddir@
 
 SUBDIRS += client
 
-ifeq (@BUILD_LVMETAD@,yes)
-  SUBDIRS += server
-server: client
-else ifeq (@BUILD_LVMPOLLD@,yes)
+ifeq (@BUILD_LVMPOLLD@,yes)
   SUBDIRS += server
 server: client
 endif
