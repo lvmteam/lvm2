@@ -8,84 +8,27 @@ pvcreate - Initialize physical volume(s) for use by LVM
     [ \fIoption_args\fP ]
 .br
 .SH DESCRIPTION
-pvcreate initializes a Physical Volume (PV) on a device so the device is
-recognized as belonging to LVM.  This allows the PV to be used in a Volume
-Group (VG).  An LVM disk label is written to the device, and LVM metadata
-areas are initialized.  A PV can be placed on a whole device or partition.
+pvcreate initializes a PV so that it is recognized as belonging to LVM,
+and allows the PV to be used in a VG. A PV can be a disk partition, whole
+disk, meta device, or loopback file.
+
+For DOS disk partitions, the partition id should be set to 0x8e using
+.BR fdisk (8),
+.BR cfdisk (8),
+or a equivalent. For GUID Partition Table (GPT), the id is
+E6D6D379-F507-44C2-A23C-238F2A3DF928. For
+whole disk devices only
+the partition table must be erased, which will effectively destroy all
+data on that disk. This can be done by zeroing the first sector with:
+
+.BI "dd if=/dev/zero of=" PhysicalVolume " bs=512 count=1"
 
 Use \fBvgcreate\fP(8) to create a new VG on the PV, or \fBvgextend\fP(8)
-to add the PV to an existing VG.  Use \fBpvremove\fP(8) to remove the LVM
-disk label from the device.
+to add the PV to existing VG.
 
 The force option will create a PV without confirmation.  Repeating the
 force option (\fB-ff\fP) will forcibly create a PV, overriding checks that
 normally prevent it, e.g. if the PV is already in a VG.
-
-.B Metadata location, size, and alignment
-
-The LVM disk label begins 512 bytes from the start of the device, and is
-512 bytes in size.
-
-The LVM metadata area begins at an offset (from the start of the device)
-equal to the page size of the machine creating the PV (often 4 KiB.) The
-metadata area contains a 512 byte header and a multi-KiB circular buffer
-that holds text copies of the VG metadata.
-
-With default settings, the first physical extent (PE), which contains LV
-data, is 1 MiB from the start of the device.  This location is controlled
-by \fBdefault_data_alignment\fP in lvm.conf, which is set to 1 (MiB) by
-default.  The pe_start will be a multiple of this many MiB.  This location
-can be checked with:
-.br
-.B pvs -o pe_start
-.I PV
-
-The size of the LVM metadata area is the space between the the start of
-the metadata area and the first PE.  When metadata begins at 4 KiB and the
-first PE is at 1024 KiB, the metadata area size is 1020 KiB.  This can be
-checked with:
-.br
-.B pvs -o mda_size
-.I PV
-
-The mda_size cannot be increased after pvcreate, so if larger metadata is
-needed, it must be set during pvcreate.  Two copies of the VG metadata
-must always fit within the metadata area, so the maximum VG metadata size
-is around half the mda_size.  This can be checked with:
-.br
-.B vgs -o mda_free
-.I VG
-
-A larger metadata area can be set with --metadatasize.  The resulting
-mda_size may be larger than specified due to default_data_alignment
-placing pe_start on a MiB boundary, and the fact that the metadata area
-extends to the first PE.  With metadata starting at 4 KiB and
-default_data_alignment 1 (MiB), setting --metadatasize 2048k results in
-pe_start of 3 MiB and mda_size of 3068 KiB.  Alternatively, --metadatasize
-2044k results in pe_start at 2 MiB and mda_size of 2044 KiB.
-
-The alignment of pe_start described above may be automatically overriden
-based on md device properties or device i/o properties reported in sysfs.
-These automatic adjustments can be enabled/disabled using lvm.conf
-settings md_chunk_alignment and data_alignment_offset_detection.
-
-To use a different pe_start alignment, use the --dataalignment option.
-The --metadatasize option would also typically be used in this case
-because the metadata area size also determines the location of pe_start.
-When using these two options together, pe_start is calculated as:
-metadata area start (page size), plus the specified --metadatasize,
-rounded up to the next multiple of --dataalignment.
-With metadata starting at 4 KiB, --metadatasize 2048k, and --dataalignment 128k,
-pe_start is 2176 KiB and mda_size is 2172 KiB.
-The pe_start of 2176 KiB is the nearest even multiple of 128 KiB that
-provides at least 2048 KiB of metadata space.
-Always check the resulting alignment and metadata size when using
-these options.
-
-To shift an aligned pe_start value, use the --dataaligmentoffset option.
-The pe_start alignment is calculated as described above, and then the
-value specified with --dataaligmentoffset is added to produce the final
-pe_start value.
 .SH USAGE
 \fBpvcreate\fP \fIPV\fP ...
 .br
@@ -218,16 +161,14 @@ Common options for lvm:
 .ad l
 \fB--bootloaderareasize\fP \fISize\fP[m|UNIT]
 .br
-Reserve space for the bootloader between the LVM metadata area and the first PE.
-The bootloader area is reserved for bootloaders to embed their own data or
-metadata; LVM will not use it.
-The bootloader area begins where the first PE would otherwise be located.
-The first PE is moved out by the size of the bootloader area, and then moved
-out further if necessary to match the data alignment.
+Create a separate bootloader area of specified size besides PV's data
+area. The bootloader area is an area of reserved space on the PV from
+which LVM will not allocate any extents and it's kept untouched. This is
+primarily aimed for use with bootloaders to embed their own data or metadata.
 The start of the bootloader area is always aligned, see also --dataalignment
-and --dataalignmentoffset. The bootloader area may be larger than requested
-due to the alignment, but it's never less than the requested size.
-To see the bootloader area start and size of
+and --dataalignmentoffset. The bootloader area size may eventually
+end up increased due to the alignment, but it's never less than the
+size that is requested. To see the bootloader area start and size of
 an existing PV use pvs -o +pv_ba_start,pv_ba_size.
 .ad b
 .HP
@@ -250,17 +191,17 @@ See \fBlvm.conf\fP(5) for more information about config.
 .ad l
 \fB--dataalignment\fP \fISize\fP[k|UNIT]
 .br
-Align the start of a PV data area with a multiple of this number.
-To see the location of the first Physical Extent (PE) of an existing PV,
-use pvs -o +pe_start. In addition, it may be shifted by an alignment offset,
-see --dataalignmentoffset.
-Also specify an appropriate PE size when creating a VG.
+Align the start of the data to a multiple of this number.
+Also specify an appropriate Physical Extent size when creating a VG.
+To see the location of the first Physical Extent of an existing PV,
+use pvs -o +pe_start. In addition, it may be shifted by an alignment offset.
+See lvm.conf/data_alignment_offset_detection and --dataalignmentoffset.
 .ad b
 .HP
 .ad l
 \fB--dataalignmentoffset\fP \fISize\fP[k|UNIT]
 .br
-Shift the start of the PV data area by this additional offset.
+Shift the start of the data area by this additional offset.
 .ad b
 .HP
 .ad l
@@ -362,7 +303,8 @@ on the command.
 The number of metadata areas to set aside on a PV for storing VG metadata.
 When 2, one copy of the VG metadata is stored at the front of the PV
 and a second copy is stored at the end.
-When 1, one copy of the VG metadata is stored at the front of the PV.
+When 1, one copy of the VG metadata is stored at the front of the PV
+(starting in the 5th sector).
 When 0, no copies of the VG metadata are stored on the given PV.
 This may be useful in VGs containing many PVs (this places limitations
 on the ability to use vgsplit later.)

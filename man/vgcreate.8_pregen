@@ -12,12 +12,6 @@ vgcreate creates a new VG on block devices. If the devices were not
 previously intialized as PVs with \fBpvcreate\fP(8), vgcreate will
 inititialize them, making them PVs. The pvcreate options for initializing
 devices are also available with vgcreate.
-
-When vgcreate uses an existing PV, that PV's existing values for metadata
-size, PE start, etc, are used, even if different values are specified in
-the vgcreate command.  To change these values, first use pvremove on the
-device.
-
 .SH USAGE
 \fBvgcreate\fP \fIVG\fP\fI_new\fP \fIPV\fP ...
 .br
@@ -232,17 +226,17 @@ See \fBlvm.conf\fP(5) for more information about config.
 .ad l
 \fB--dataalignment\fP \fISize\fP[k|UNIT]
 .br
-Align the start of a PV data area with a multiple of this number.
-To see the location of the first Physical Extent (PE) of an existing PV,
-use pvs -o +pe_start. In addition, it may be shifted by an alignment offset,
-see --dataalignmentoffset.
-Also specify an appropriate PE size when creating a VG.
+Align the start of the data to a multiple of this number.
+Also specify an appropriate Physical Extent size when creating a VG.
+To see the location of the first Physical Extent of an existing PV,
+use pvs -o +pe_start. In addition, it may be shifted by an alignment offset.
+See lvm.conf/data_alignment_offset_detection and --dataalignmentoffset.
 .ad b
 .HP
 .ad l
 \fB--dataalignmentoffset\fP \fISize\fP[k|UNIT]
 .br
-Shift the start of the PV data area by this additional offset.
+Shift the start of the data area by this additional offset.
 .ad b
 .HP
 .ad l
@@ -368,7 +362,8 @@ on the command.
 The number of metadata areas to set aside on a PV for storing VG metadata.
 When 2, one copy of the VG metadata is stored at the front of the PV
 and a second copy is stored at the end.
-When 1, one copy of the VG metadata is stored at the front of the PV.
+When 1, one copy of the VG metadata is stored at the front of the PV
+(starting in the 5th sector).
 When 0, no copies of the VG metadata are stored on the given PV.
 This may be useful in VGs containing many PVs (this places limitations
 on the ability to use vgsplit later.)

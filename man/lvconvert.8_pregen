@@ -567,7 +567,7 @@ Convert LV to a thin LV, using the original LV as an external origin.
 .br
 -
 
-Attach a cache to an LV, converts the LV to type cache.
+Convert LV to type cache.
 .br
 .P
 \fBlvconvert\fP \fB--type\fP \fBcache\fP \fB--cachepool\fP \fILV\fP \fILV\fP\fI_linear_striped_thinpool_raid\fP
@@ -619,21 +619,6 @@ Attach a cache to an LV, converts the LV to type cache.
 .br
 .ad l
 [    \fB--metadataprofile\fP \fIString\fP ]
-.ad b
-.br
-[ COMMON_OPTIONS ]
-.RE
-.br
--
-
-Attach a writecache to an LV, converts the LV to type writecache.
-.br
-.P
-\fBlvconvert\fP \fB--type\fP \fBwritecache\fP \fB--cachepool\fP \fILV\fP \fILV\fP\fI_linear_striped_raid\fP
-.br
-.RS 4
-.ad l
-[    \fB--cachesettings\fP \fIString\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -780,10 +765,10 @@ Convert LV to type vdopool.
 .br
 -
 
-Detach a cache from an LV.
+Separate and keep the cache pool from a cache LV.
 .br
 .P
-\fBlvconvert\fP \fB--splitcache\fP \fILV\fP\fI_thinpool_cache_cachepool_writecache\fP
+\fBlvconvert\fP \fB--splitcache\fP \fILV\fP\fI_thinpool_cache_cachepool\fP
 .br
 .RS 4
 [ COMMON_OPTIONS ]
@@ -1688,7 +1673,7 @@ Convert LV to a thin LV, using the original LV as an external origin
 .br
 -
 
-Attach a cache to an LV (infers --type cache).
+Convert LV to type cache (infers --type cache).
 .br
 .P
 \fBlvconvert\fP \fB-H\fP|\fB--cache\fP \fB--cachepool\fP \fILV\fP \fILV\fP\fI_linear_striped_thinpool_raid\fP
@@ -1778,10 +1763,10 @@ Convert LV to type vdopool.
 .br
 -
 
-Detach and delete a cache from an LV.
+Separate and delete the cache pool from a cache LV.
 .br
 .P
-\fBlvconvert\fP \fB--uncache\fP \fILV\fP\fI_thinpool_cache_writecache\fP
+\fBlvconvert\fP \fB--uncache\fP \fILV\fP\fI_thinpool_cache\fP
 .br
 .RS 4
 [ COMMON_OPTIONS ]
