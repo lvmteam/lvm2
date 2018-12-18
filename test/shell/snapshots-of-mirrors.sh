@@ -38,6 +38,15 @@ not lvconvert -m2 $vg/lv
 # Log conversion (disk -> core)
 lvconvert --mirrorlog core $vg/lv
 
+# Log conversion (core -> mirrored)
+# FIXME on cluster
+SHOULD=""
+test -e LOCAL_CLVMD && SHOULD=should
+$SHOULD lvconvert --mirrorlog mirrored $vg/lv
+
+# Log conversion (mirrored -> core)
+lvconvert --mirrorlog core $vg/lv
+
 # Log conversion (core -> disk)
 lvconvert --mirrorlog disk $vg/lv
 

@@ -71,3 +71,33 @@ lvconvert -y --repair $vg/mirror2
 check mirror $vg mirror2
 vgs $vg
 vgremove -ff $vg
+
+if aux kernel_at_least 3 0 0; then
+	# 2-way, mirrored log
+	# Double log failure, full replace
+	vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6"
+	lvcreate -aey --mirrorlog mirrored --type mirror -m 1 --ignoremonitoring --nosync -L 1 -n 2way $vg \
+	    "$dev1" "$dev2" "$dev3":0 "$dev4":0
+	aux disable_dev "$dev3" "$dev4"
+	lvconvert -y --repair $vg/2way 2>&1 | tee 2way.out
+	lvs -a -o +devices $vg | not grep unknown
+	not grep "WARNING: Failed" 2way.out
+	vgreduce --removemissing $vg
+	check mirror $vg 2way
+	aux enable_dev "$dev3" "$dev4"
+	vgremove -ff $vg
+fi
+
+# 3-way, mirrored log
+# Single log failure, replace
+vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6"
+lvcreate -aey --mirrorlog mirrored --type mirror -m 2 --ignoremonitoring --nosync -L 1 -n 3way $vg \
+    "$dev1" "$dev2" "$dev3" "$dev4":0 "$dev5":0
+aux disable_dev "$dev4"
+lvconvert -y --repair $vg/3way 2>&1 | tee 3way.out
+lvs -a -o +devices $vg | not grep unknown
+not grep "WARNING: Failed" 3way.out
+vgreduce --removemissing $vg
+check mirror $vg 3way
+aux enable_dev "$dev4"
+vgremove -ff $vg
