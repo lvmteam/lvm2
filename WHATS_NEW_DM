@@ -1,5 +1,5 @@
-Version 1.02.155 - 
-====================================
+Version 1.02.155 - 18th December 2018
+=====================================
   Include correct internal header inside libdm list.c.
   Enhance ioctl flattening and add parameters only when needed.
   Add DM_DEVICE_ARM_POLL for API completness matching kernel.

@@ -1,9 +1,10 @@
-Version 2.03.02 - 
-===================================
+Version 2.03.02 - 18th December 2018
+====================================
   Fix missing proper initialization of pv_list struct when adding pv.
-  Fix (de)activation of RaidLVs with visible SubLVs
-  Prohibit mirrored 'mirror' log via lvcreate and lvconvert
+  Fix (de)activation of RaidLVs with visible SubLVs.
+  Prohibit mirrored 'mirror' log via lvcreate and lvconvert.
   Use sync io if async io_setup fails, or use_aio=0 is set in config.
+  Fix more issues reported by coverity scan.
 
 Version 2.03.01 - 31st October 2018
 ===================================
