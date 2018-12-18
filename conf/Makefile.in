@@ -39,13 +39,13 @@ generate:
 install_conf: $(CONFSRC)
 	@if [ ! -e $(confdir)/$(CONFDEST) ]; then \
 		echo "$(INSTALL_WDATA) -D $< $(confdir)/$(CONFDEST)"; \
-		$(Q) $(INSTALL_WDATA) -D $< $(confdir)/$(CONFDEST); \
+		$(INSTALL_WDATA) -D $< $(confdir)/$(CONFDEST); \
 	fi
 
 install_localconf: $(CONFLOCAL)
 	@if [ ! -e $(confdir)/$(CONFLOCAL) ]; then \
 		echo "$(INSTALL_WDATA) -D $< $(confdir)/$(CONFLOCAL)"; \
-		$(Q) $(INSTALL_WDATA) -D $< $(confdir)/$(CONFLOCAL); \
+		$(INSTALL_WDATA) -D $< $(confdir)/$(CONFLOCAL); \
 	fi
 
 install_profiles: $(PROFILES)
