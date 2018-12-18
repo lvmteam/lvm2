@@ -497,7 +497,8 @@ def lvm_full_report_json():
 	])
 
 	rc, out, err = call(cmd)
-	if rc == 0:
+	# When we have an exported vg the exit code of lvs or fullreport will be 5
+	if rc == 0 or rc == 5:
 		# With the current implementation, if we are using the shell then we
 		# are using JSON and JSON is returned back to us as it was parsed to
 		# figure out if we completed OK or not

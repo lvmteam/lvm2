@@ -220,7 +220,10 @@ class LVMShellProxy(object):
 
 		# Parse the report to see what happened
 		if 'log' in report_json:
-			if report_json['log'][-1:][0]['log_ret_code'] == '1':
+			ret_code = int(report_json['log'][-1:][0]['log_ret_code'])
+			# If we have an exported vg we get a log_ret_code == 5 when
+			# we do a 'fullreport'
+			if (ret_code == 1) or (ret_code == 5 and argv[0] == 'fullreport'):
 				rc = 0
 			else:
 				error_msg = self.get_error_msg()
