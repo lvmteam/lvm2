@@ -243,18 +243,6 @@ not lvconvert --type mirror -m1 --corelog --stripes 2 $vg/$lv1
 lvremove -ff $vg
 
 
-# Linear to mirror with mirrored log using --alloc anywhere
-lvcreate -aey -l2 -n $lv1 $vg "$dev1"
-if test -e LOCAL_CLVMD; then
-# This is not supposed to work in cluster
-not lvconvert --type mirror -m +1 --mirrorlog mirrored --alloc anywhere $vg/$lv1 "$dev1" "$dev2"
-else
-lvconvert --type mirror -m +1 --mirrorlog mirrored --alloc anywhere $vg/$lv1 "$dev1" "$dev2"
-check mirror $vg $lv1
-fi
-lvremove -ff $vg
-
-
 if test -e LOCAL_CLVMD; then
 : # FIXME - cases which needs to be fixed to work in cluster
 else

@@ -69,17 +69,6 @@ _check_mlog
 vgreduce --removemissing $vg
 aux enable_dev "$dev4"
 
-# 3-way, mirrored log => 3-way, core log
-recreate_vg_
-lvcreate -aey --type mirror -m 2 --mirrorlog mirrored --ignoremonitoring -L 1 -n 3way $vg \
-    "$dev1" "$dev2" "$dev3" "$dev4":0 "$dev5":0
-aux disable_dev "$dev4" "$dev5"
-echo n | lvconvert --repair $vg/3way
-check mirror $vg 3way core
-_check_mlog
-vgreduce --removemissing $vg
-aux enable_dev "$dev4" "$dev5"
-
 # 2-way, disk log => 2-way, core log
 recreate_vg_
 lvcreate -aey --type mirror -m 1 --ignoremonitoring -L 1 -n 2way $vg "$dev1" "$dev2" "$dev3":0
