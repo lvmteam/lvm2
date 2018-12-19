@@ -15,7 +15,9 @@
 #include "lib/misc/lib.h"
 #include "daemons/dmeventd/plugins/lvm2/dmeventd_lvm.h"
 #include "daemons/dmeventd/libdevmapper-event.h"
-#include "device_mapper/vdo/target.h"
+
+/* Use parser from new device_mapper library */
+#include "device_mapper/vdo/status.c"
 
 #include <sys/wait.h>
 #include <stdarg.h>
