@@ -290,7 +290,8 @@ static int _online_pvid_file_create(struct device *dev)
 		rv = write(fd, buf, len);
 		if (rv < 0) {
 			log_error("Failed to write fd %d buf %s dev %s to %s: %d",
-				  fd, buf, dev_name(dev), path, errno);
+			          fd, buf, dev_name(dev), path, errno);
+			close(fd);
 			return 0;
 		}
 		len -= rv;
