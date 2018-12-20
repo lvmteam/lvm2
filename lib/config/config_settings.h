@@ -625,10 +625,17 @@ cfg(allocation_vdo_use_compression_CFG, "vdo_use_compression", allocation_CFG_SE
 cfg(allocation_vdo_use_deduplication_CFG, "vdo_use_deduplication", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_USE_DEDUPLICATION, VDO_1ST_VSN, NULL, 0, NULL,
 	"Enables or disables deduplication when creating a VDO volume.\n"
 	"Deduplication may be disabled in instances where data is not expected\n"
-	"to have good deduplication rates but compression is still desired.")
+	"to have good deduplication rates but compression is still desired.\n")
 
-cfg(allocation_vdo_emulate_512_sectors_CFG, "vdo_emulate_512_sectors", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_EMULATE_512_SECTORS, VDO_1ST_VSN, NULL, 0, NULL,
-	"Specifies that the VDO volume is to emulate a 512 byte block device.\n")
+cfg(allocation_vdo_use_metadata_hints_CFG, "vdo_use_metadata_hints", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_USE_METADATA_HINTS, VDO_1ST_VSN, NULL, 0, NULL,
+	"Enables or disables whether VDO volume should tag its latency-critical\n"
+	"writes with the REQ_SYNC flag. Some device mapper targets such as dm-raid5\n"
+	"process writes with this flag at a higher priority.\n"
+	"Default is enabled.\n")
+
+cfg(allocation_vdo_minimum_io_size_CFG, "vdo_minimum_io_size", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_MINIMUM_IO_SIZE, VDO_1ST_VSN, NULL, 0, NULL,
+	"The minimum IO size for VDO volume to accept, in bytes.\n"
+	"Valid values are 512 or 4096. The recommended and default value is 4096.\n")
 
 cfg(allocation_vdo_block_map_cache_size_mb_CFG, "vdo_block_map_cache_size_mb", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_BLOCK_MAP_CACHE_SIZE_MB, VDO_1ST_VSN, NULL, 0, NULL,
 	"Specifies the amount of memory in MiB allocated for caching block map\n"
@@ -636,41 +643,32 @@ cfg(allocation_vdo_block_map_cache_size_mb_CFG, "vdo_block_map_cache_size_mb", a
 	"at least 128MiB and less than 16TiB. The cache must be at least 16MiB\n"
 	"per logical thread. Note that there is a memory overhead of 15%.\n")
 
-cfg(allocation_vdo_block_map_period_CFG, "vdo_block_map_period", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_BLOCK_MAP_PERIOD, VDO_1ST_VSN, NULL, 0, NULL,
-	"Tunes the quantity of block map updates that can accumulate\n"
-	"before cache pages are flushed to disk. The value must be\n"
-	"at least 1 and less then 16380.\n"
-	"A lower value means shorter recovery time but lower performance.\n")
+// vdo format --blockMapPeriod
+cfg(allocation_vdo_block_map_era_length_CFG, "vdo_block_map_period", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_BLOCK_MAP_ERA_LENGTH, VDO_1ST_VSN, NULL, 0, NULL,
+	"The speed with which the block map cache writes out modified block map pages.\n"
+	"A smaller era length is likely to reduce the amount time spent rebuilding,\n"
+	"at the cost of increased block map writes during normal operation.\n"
+	"The maximum and recommended value is 16380; the minimum value is 1.\n")
 
 cfg(allocation_vdo_check_point_frequency_CFG, "vdo_check_point_frequency", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_CHECK_POINT_FREQUENCY, VDO_1ST_VSN, NULL, 0, NULL,
 	"The default check point frequency for VDO volume.\n")
 
+// vdo format
 cfg(allocation_vdo_use_sparse_index_CFG, "vdo_use_sparse_index", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_USE_SPARSE_INDEX, VDO_1ST_VSN, NULL, 0, NULL,
 	"Enables sparse indexing for VDO volume.\n")
 
+// vdo format
 cfg(allocation_vdo_index_memory_size_mb_CFG, "vdo_index_memory_size_mb", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_INDEX_MEMORY_SIZE_MB, VDO_1ST_VSN, NULL, 0, NULL,
 	"Specifies the amount of index memory in MiB for VDO volume.\n"
-	"The value must be at least 256MiB and at most 1TiB.\n")
-
-cfg(allocation_vdo_use_read_cache_CFG, "vdo_use_read_cache", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_USE_READ_CACHE, VDO_1ST_VSN, NULL, 0, NULL,
-	"Enables or disables the read cache within the VDO volume.\n"
-	"The cache should be enabled if write workloads are expected\n"
-	"to have high levels of deduplication, or for read intensive\n"
-	"workloads of highly compressible data.\n")
-
-cfg(allocation_vdo_read_cache_size_mb_CFG, "vdo_read_cache_size_mb", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_READ_CACHE_SIZE_MB, VDO_1ST_VSN, NULL, 0, NULL,
-	"Specifies the extra VDO volume read cache size in MiB.\n"
-	"This space is in addition to a system-defined minimum.\n"
-	"The value must be less then 16TiB and 1.12 MiB of memory\n"
-	"will be used per MiB of read cache specified, per bio thread.\n")
+	"The value must be at least 256MiB and at most 1TiB.")
 
 cfg(allocation_vdo_slab_size_mb_CFG, "vdo_slab_size_mb", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_SLAB_SIZE_MB, VDO_1ST_VSN, NULL, 0, NULL,
 	"Specifies the size in MiB of the increment by which a VDO is grown.\n"
 	"Using a smaller size constrains the total maximum physical size\n"
-	"that can be accommodated. Must be a power of two between 128MiB and 32GiB.\n")
+	"that can be accommodated. Must be a power of two between 128MiB and 32GiB.")
 
 cfg(allocation_vdo_ack_threads_CFG, "vdo_ack_threads", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_ACK_THREADS, VDO_1ST_VSN, NULL, 0, NULL,
-	"Specifies the number of threads to use for acknowledging\n"
+	"Specifies the number of threads   to use for acknowledging\n"
 	"completion of requested VDO I/O operations.\n"
 	"The value must be at in range [0..100].\n")
 
@@ -721,6 +719,16 @@ cfg(allocation_vdo_write_policy_CFG, "vdo_write_policy", allocation_CFG_SECTION,
 	"        This policy is not supported if the underlying storage is not also synchronous.\n"
 	"async - Writes are acknowledged after data has been cached for writing to stable storage.\n"
 	"        Data which has not been flushed is not guaranteed to persist in this mode.\n")
+
+cfg(allocation_vdo_max_discard_CFG, "vdo_max_discard", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_MAX_DISCARD, VDO_1ST_VSN, NULL, 0, NULL,
+	"Specified te maximum size of discard bio accepted, in 4096 byte blocks.\n"
+	"I/O requests to a VDO volume are normally split into 4096-byte blocks,\n"
+	"and processed up to 2048 at a time. However, discard requests to a VDO volume\n"
+	"can be automatically split to a larger size, up to <max discard> 4096-byte blocks\n"
+	"in a single bio, and are limited to 1500 at a time.\n"
+	"Increasing this value may provide better overall performance, at the cost of\n"
+	"increased latency for the individual discard requests.\n"
+	"The default and minimum is 1. The maximum is UINT_MAX / 4096.\n")
 
 cfg(log_report_command_log_CFG, "report_command_log", log_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED | CFG_DISALLOW_INTERACTIVE, CFG_TYPE_BOOL, DEFAULT_COMMAND_LOG_REPORT, vsn(2, 2, 158), NULL, 0, NULL,
 	"Enable or disable LVM log reporting.\n"

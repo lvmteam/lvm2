@@ -23,6 +23,13 @@ bool dm_vdo_validate_target_params(const struct dm_vdo_target_params *vtp,
 {
 	bool valid = true;
 
+	if ((vtp->minimum_io_size != 512) &&
+	    (vtp->minimum_io_size != 4096)) {
+		log_error("VDO minimum io size %u is unsupported.",
+			  vtp->minimum_io_size);
+		valid = false;
+	}
+
 	if ((vtp->block_map_cache_size_mb < DM_VDO_BLOCK_MAP_CACHE_SIZE_MINIMUM_MB) ||
 	    (vtp->block_map_cache_size_mb > DM_VDO_BLOCK_MAP_CACHE_SIZE_MAXIMUM_MB)) {
 		log_error("VDO block map cache size %u out of range.",
@@ -37,16 +44,17 @@ bool dm_vdo_validate_target_params(const struct dm_vdo_target_params *vtp,
 		valid = false;
 	}
 
-	if (vtp->read_cache_size_mb > DM_VDO_READ_CACHE_SIZE_MAXIMUM_MB) {
-		log_error("VDO read cache size %u out of range.",
-			  vtp->read_cache_size_mb);
-		valid = false;
-	}
-
 	if ((vtp->slab_size_mb < DM_VDO_SLAB_SIZE_MINIMUM_MB) ||
 	    (vtp->slab_size_mb > DM_VDO_SLAB_SIZE_MAXIMUM_MB)) {
 		log_error("VDO slab size %u out of range.",
 			  vtp->slab_size_mb);
+		valid = false;
+	}
+
+	if ((vtp->max_discard < DM_VDO_MAX_DISCARD_MINIMUM) ||
+	    (vtp->max_discard > DM_VDO_MAX_DISCARD_MAXIMUM)) {
+		log_error("VDO max discard %u out of range.",
+			  vtp->max_discard);
 		valid = false;
 	}
 

@@ -214,6 +214,7 @@ struct load_segment {
 	struct dm_tree_node *vdo_data;  /* VDO */
 	struct dm_vdo_target_params vdo_params; /* VDO */
 	const char *vdo_name;           /* VDO - device name is ALSO passed as table arg */
+	uint64_t vdo_data_size;		/* VDO - size of data storage device */
 
 	struct dm_tree_node *writecache_node;		/* writecache */
 	int writecache_pmem;				/* writecache, 1 if pmem, 0 if ssd */
@@ -2745,17 +2746,18 @@ static int _vdo_emit_segment_line(struct dm_task *dmt,
 		return 0;
 	}
 
-	EMIT_PARAMS(pos, "%s %u %s " FMTu64 " " FMTu64 " %u on %s %s "
-		    "ack=%u,bio=%u,bioRotationInterval=%u,cpu=%u,hash=%u,logical=%u,physical=%u",
+	EMIT_PARAMS(pos, "V2 %s " FMTu64 " %u " FMTu64 " %u %s %s %s "
+		    "maxDiscard %u ack %u bio %u bioRotationInterval %u cpu %u hash %u logical %u physical %u",
 		    data_dev,
-		    (seg->vdo_params.emulate_512_sectors == 0) ? 4096 : 512,
-		    seg->vdo_params.use_read_cache ? "enabled" : "disabled",
-		    seg->vdo_params.read_cache_size_mb * UINT64_C(256),		// 1MiB -> 4KiB units
+		    seg->vdo_data_size / 8, // this parameter is in 4K units
+		    seg->vdo_params.minimum_io_size,
 		    seg->vdo_params.block_map_cache_size_mb * UINT64_C(256),	// 1MiB -> 4KiB units
-		    seg->vdo_params.block_map_period,
+		    seg->vdo_params.block_map_era_length,
+		    seg->vdo_params.use_metadata_hints ? "on" : "off" ,
 		    (seg->vdo_params.write_policy == DM_VDO_WRITE_POLICY_SYNC) ? "sync" :
 			(seg->vdo_params.write_policy == DM_VDO_WRITE_POLICY_ASYNC) ? "async" : "auto", // policy
 		    seg->vdo_name,
+		    seg->vdo_params.max_discard,
 		    seg->vdo_params.ack_threads,
 		    seg->vdo_params.bio_threads,
 		    seg->vdo_params.bio_rotation,
@@ -4185,6 +4187,7 @@ int dm_tree_node_add_cache_target_base(struct dm_tree_node *node,
 int dm_tree_node_add_vdo_target(struct dm_tree_node *node,
 				uint64_t size,
 				const char *data_uuid,
+				uint64_t data_size,
 				const struct dm_vdo_target_params *vtp)
 {
 	struct load_segment *seg;
@@ -4205,6 +4208,7 @@ int dm_tree_node_add_vdo_target(struct dm_tree_node *node,
 
 	seg->vdo_params = *vtp;
 	seg->vdo_name = node->name;
+	seg->vdo_data_size = data_size;
 
 	node->props.send_messages = 2;
 

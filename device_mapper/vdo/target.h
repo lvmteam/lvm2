@@ -74,16 +74,16 @@ enum dm_vdo_write_policy {
 
 // FIXME: review whether we should use the createParams from the userlib
 struct dm_vdo_target_params {
+	uint32_t minimum_io_size;
 	uint32_t block_map_cache_size_mb;
-	uint32_t block_map_period;
+	uint32_t block_map_era_length;	// format period
 
 	uint32_t check_point_frequency;
-	uint32_t index_memory_size_mb;
+	uint32_t index_memory_size_mb;  // format
 
-	uint32_t read_cache_size_mb;
+	uint32_t slab_size_mb;          // format
 
-	uint32_t slab_size_mb;
-
+	uint32_t max_discard;
 	// threads
 	uint32_t ack_threads;
 	uint32_t bio_threads;
@@ -95,9 +95,8 @@ struct dm_vdo_target_params {
 
 	bool use_compression;
 	bool use_deduplication;
-	bool emulate_512_sectors;
-	bool use_sparse_index;
-	bool use_read_cache;
+	bool use_metadata_hints;
+	bool use_sparse_index;          // format
 
 	// write policy
 	enum dm_vdo_write_policy write_policy;
