@@ -29,13 +29,12 @@ include $(top_builddir)/make.tmpl
 
 CFLAGS += $(EXTRA_EXEC_CFLAGS)
 INCLUDES += -I$(top_srcdir)/libdaemon/server
-LDFLAGS += -L$(top_builddir)/libdaemon/server $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS)
-LIBS += $(DAEMON_LIBS) -ldaemonserver $(PTHREAD_LIBS)
+LDFLAGS += $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS)
+LIBS += $(DAEMON_LIBS) $(PTHREAD_LIBS)
 
-lvmpolld: $(OBJECTS) $(top_builddir)/libdaemon/client/libdaemonclient.a \
-		    $(top_builddir)/libdaemon/server/libdaemonserver.a
+lvmpolld: $(OBJECTS) $(top_builddir)/libdaemon/server/libdaemonserver.a $(INTERNAL_LIBS)
 	@echo "    [CC] $@"
-	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) $(INTERNAL_LIBS) $(LIBS)
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $+ $(LIBS)
 
 install_lvmpolld: lvmpolld
 	@echo "    [INSTALL] $<"

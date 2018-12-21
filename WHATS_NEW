@@ -1,5 +1,6 @@
 Version 2.03.02 - 
 ===================================
+  Improve Makefile dependency tracking.
   Move VDO support towards V2 target (6.2) support.
   Fix missing proper initialization of pv_list struct when adding pv.
   Fix (de)activation of RaidLVs with visible SubLVs
