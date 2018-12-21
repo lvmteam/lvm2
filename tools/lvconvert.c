@@ -5292,7 +5292,7 @@ static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecach
 	}
 
 	if (!strncmp(key, "nofua", strlen("nofua"))) {
-		if (settings->nofua_set) {
+		if (settings->fua_set) {
 			log_error("Setting fua and nofua cannot both be set.");
 			return 0;
 		}
