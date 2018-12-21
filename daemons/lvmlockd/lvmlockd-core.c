@@ -8,9 +8,6 @@
  * of the GNU Lesser General Public License v.2.1.
  */
 
-#define _XOPEN_SOURCE 500  /* pthread */
-#define _ISOC99_SOURCE
-
 #include "tools/tool.h"
 
 #include "libdaemon/client/daemon-io.h"
