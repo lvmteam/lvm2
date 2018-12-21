@@ -5225,52 +5225,6 @@ bad:
 
 }
 
-static int _writecache_zero(struct cmd_context *cmd, struct logical_volume *lv)
-{
-	struct device *dev;
-	char name[PATH_MAX];
-	int ret = 0;
-
-	if (!activate_lv(cmd, lv)) {
-		log_error("Failed to activate LV %s for zeroing.", lv->name);
-		return 0;
-	}
-
-	sync_local_dev_names(cmd);
-
-	if (dm_snprintf(name, sizeof(name), "%s%s/%s",
-			cmd->dev_dir, lv->vg->name, lv->name) < 0) {
-		log_error("Name too long - device not cleared (%s)", lv->name);
-		goto out;
-	}
-
-	if (!(dev = dev_cache_get(cmd, name, NULL))) {
-		log_error("%s: not found: device not zeroed", name);
-		goto out;
-	}
-
-	if (!label_scan_open(dev)) {
-		log_error("Failed to open %s/%s for zeroing.", lv->vg->name, lv->name);
-		goto out;
-	}
-
-	if (!dev_write_zeros(dev, UINT64_C(0), (size_t) 1 << SECTOR_SHIFT))
-		goto_out;
-
-	log_debug("Zeroed the first sector of %s", lv->name);
-
-	label_scan_invalidate(dev);
-
-	ret = 1;
-out:
-	if (!deactivate_lv(cmd, lv)) {
-		log_error("Failed to deactivate LV %s for zeroing.", lv->name);
-		ret = 0;
-	}
-
-	return ret;
-}
-
 static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecache_settings *settings,
 				       char *key, char *val, uint32_t *block_size_sectors)
 {
@@ -5513,7 +5467,7 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 	 * writecache block_size value matching the sector size of lv.
 	 */
 
-	if (!_writecache_zero(cmd, lv_fast)) {
+	if (!activate_and_wipe_lv(lv_fast, 0)) {
 		log_error("LV %s could not be zeroed.", display_lvname(lv_fast));
 		return 0;
 	}
