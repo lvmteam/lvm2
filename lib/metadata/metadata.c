@@ -34,7 +34,6 @@
 #include "lib/notify/lvmnotify.h"
 
 #include <math.h>
-#include <sys/param.h>
 
 static struct physical_volume *_pv_read(struct cmd_context *cmd,
 					const struct format_type *fmt,
