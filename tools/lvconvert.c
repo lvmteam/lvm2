@@ -2423,7 +2423,7 @@ static int _lvconvert_cache_repair(struct cmd_context *cmd,
 
 	if (lv_is_cache(cache_lv) && lv_is_cache_single(first_seg(cache_lv)->pool_lv)) {
 		log_error("Manual repair required.");
-		return_0;
+		return 0;
 	}
 
 	pool_lv = lv_is_cache_pool(cache_lv) ? cache_lv : first_seg(cache_lv)->pool_lv;
@@ -5283,7 +5283,7 @@ static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecach
 	if (!strncmp(key, "fua", strlen("fua"))) {
 		if (settings->nofua_set) {
 			log_error("Setting fua and nofua cannot both be set.");
-			return_0;
+			return 0;
 		}
 		if (sscanf(val, "%u", &settings->fua) != 1)
 			goto_bad;
@@ -5294,7 +5294,7 @@ static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecach
 	if (!strncmp(key, "nofua", strlen("nofua"))) {
 		if (settings->nofua_set) {
 			log_error("Setting fua and nofua cannot both be set.");
-			return_0;
+			return 0;
 		}
 		if (sscanf(val, "%u", &settings->nofua) != 1)
 			goto_bad;
@@ -5310,7 +5310,7 @@ static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecach
 	log_warn("Unrecognized writecache setting \"%s\" may cause activation failure.", key);
 	if (yes_no_prompt("Use unrecognized writecache setting? [y/n]: ") == 'n') {
 		log_error("Aborting writecache conversion.");
-		return_0;
+		return 0;
 	}
 
 	log_warn("Using unrecognized writecache setting: %s = %s.", key, val);
@@ -5356,7 +5356,7 @@ static int _get_writecache_settings(struct cmd_context *cmd, struct writecache_s
 
 			if (sscanf(str + pos, " %63[^=]=%63s %n", key, val, &num) != 2) {
 				log_error("Invalid setting at: %s", str+pos);
-				return_0;
+				return 0;
 			}
 
 			pos += num;
