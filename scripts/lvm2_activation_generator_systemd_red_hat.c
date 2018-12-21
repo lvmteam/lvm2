@@ -69,7 +69,8 @@ static void _error(const char *format, ...)
 		return;
 
 	/* The n+31: +30 for "<n>lvm2-activation-generator: " prefix and +1 for '\0' suffix */
-	(void) write(_kmsg_fd, message, n + 31);
+	if (write(_kmsg_fd, message, n + 31) < 0)
+		_error("Failed to write activation message %s: %m.\n", message);
 }
 
 //----------------------------------------------------------------
