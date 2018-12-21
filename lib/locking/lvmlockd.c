@@ -632,7 +632,7 @@ static int _init_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg, in
 	struct device *sector_dev;
 	uint32_t sector_size = 0;
 	unsigned int phys_block_size, block_size;
-	int num_mb;
+	int num_mb = 0;
 	int result;
 	int ret;
 
@@ -655,25 +655,20 @@ static int _init_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg, in
 			sector_size = phys_block_size;
 			sector_dev = pvl->pv->dev;
 		} else if (sector_size != phys_block_size) {
-			log_warn("Inconsistent sector sizes for %s and %s.",
-				 dev_name(pvl->pv->dev), dev_name(sector_dev));
-			return 1;
+			log_error("Inconsistent sector sizes for %s and %s.",
+				  dev_name(pvl->pv->dev), dev_name(sector_dev));
+			return 0;
 		}
-	}
-
-	if ((sector_size != 512) && (sector_size != 4096)) {
-		log_error("Unknown sector size.");
-		return 1;
 	}
 
 	log_debug("Using sector size %u for sanlock LV", sector_size);
 
 	/* Base starting size of sanlock LV is 256MB/1GB for 512/4K sectors */
-	if (sector_size == 512)
-		num_mb = 256;
-	else if (sector_size == 4096)
-		num_mb = 1024;
-
+	switch (sector_size) {
+	case 512: num_mb = 256; break;
+	case 4096: num_mb = 1024; break;
+	default: log_error("Unknown sector size %u.", sector_size); return 0;
+	}
 
 	/*
 	 * Creating the sanlock LV writes the VG containing the new lvmlock
