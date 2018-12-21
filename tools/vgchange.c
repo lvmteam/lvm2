@@ -818,7 +818,7 @@ static int _vgchange_locktype(struct cmd_context *cmd, struct volume_group *vg)
 	int lv_lock_count = 0;
 
 	/* Special recovery case. */
-	if (lockopt && !strcmp(lock_type, "none") && !strcmp(lockopt, "force")) {
+	if (lock_type && lockopt && !strcmp(lock_type, "none") && !strcmp(lockopt, "force")) {
 		vg->status &= ~CLUSTERED;
 		vg->lock_type = "none";
 		vg->lock_args = NULL;
@@ -867,7 +867,7 @@ static int _vgchange_locktype(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	/* clvm to none */
-	if (!strcmp(vg->lock_type, "clvm") && !strcmp(lock_type, "none")) {
+	if (lock_type && !strcmp(vg->lock_type, "clvm") && !strcmp(lock_type, "none")) {
 		vg->status &= ~CLUSTERED;
 		vg->lock_type = "none";
 		return 1;
@@ -963,7 +963,7 @@ static int _vgchange_locktype(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	/* ... to none */
-	if (!strcmp(lock_type, "none")) {
+	if (lock_type && !strcmp(lock_type, "none")) {
 		vg->lock_type = NULL;
 		vg->system_id = cmd->system_id ? dm_pool_strdup(vg->vgmem, cmd->system_id) : NULL;
 		return 1;
