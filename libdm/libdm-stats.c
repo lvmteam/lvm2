@@ -4869,24 +4869,24 @@ uint64_t *dm_stats_update_regions_from_fd(struct dm_stats *dms, int fd,
 					  group_id, &count, &regroup);
 
 	if (!regions)
-		goto bad;
+		goto_out;
 
 	if (!dm_stats_list(dms, NULL))
-		goto bad;
+		goto_bad;
 
 	/* regroup if there are regions to group */
 	if (regroup && (*regions != DM_STATS_REGION_NOT_PRESENT))
 		if (!_stats_group_file_regions(dms, regions, count, alias))
-			goto bad;
+			goto_bad;
 
 	dm_free(bounds);
 	dm_free((char *) alias);
 	return regions;
 bad:
 	_stats_cleanup_region_ids(dms, regions, count);
-	dm_free(bounds);
-	dm_free(regions);
 out:
+	dm_free(regions);
+	dm_free(bounds);
 	dm_free((char *) alias);
 	return NULL;
 }
