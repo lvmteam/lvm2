@@ -5165,7 +5165,7 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 	}
 
 	if (!archive(lv->vg))
-		goto_bad;
+		return_0;
 
 	/*
 	 * Activate LV internally since the LV needs to be active to flush.
@@ -5180,17 +5180,23 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 		return 0;
 	}
 
-	sync_local_dev_names(cmd);
+	if (!sync_local_dev_names(cmd)) {
+		log_error("Failed to sync local devices before detaching LV %s.",
+			  display_lvname(lv));
+		return 0;
+	}
 
 	if (!lv_writecache_message(lv, "flush")) {
 		log_error("Failed to flush writecache for %s.", display_lvname(lv));
-		deactivate_lv(cmd, lv);
+		if (!deactivate_lv(cmd, lv))
+			log_error("Failed to deactivate %s.", display_lvname(lv));
 		return 0;
 	}
 
 	if (!_get_writecache_kernel_error(cmd, lv, &kernel_error)) {
 		log_error("Failed to get writecache error status for %s.", display_lvname(lv));
-		deactivate_lv(cmd, lv);
+		if (!deactivate_lv(cmd, lv))
+			log_error("Failed to deactivate %s.", display_lvname(lv));
 		return 0;
 	}
 
@@ -5219,10 +5225,7 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 
 	log_print_unless_silent("Logical volume %s write cache has been detached.",
 				display_lvname(lv));
-	return ECMD_PROCESSED;
-bad:
-	return ECMD_FAILED;
-
+	return 1;
 }
 
 static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecache_settings *settings,
