@@ -275,11 +275,11 @@ LIB_VERSION_LVM := $(shell $(AWK) -F '.' '{printf "%s.%s",$$1,$$2}' $(top_srcdir
 
 LIB_VERSION_DM := $(shell $(AWK) -F '.' '{printf "%s.%s",$$1,$$2}' $(top_srcdir)/VERSION_DM)
 
-INCLUDES += -I$(srcdir) -I$(top_srcdir) -I$(top_builddir)/include
+INCLUDES += -I$(srcdir) -I$(top_srcdir) -I$(top_builddir)/include -include configure.h
 
 
 DEPS = $(top_builddir)/libdm/make.tmpl $(top_srcdir)/VERSION \
-       $(top_builddir)/libdm/Makefile
+       $(top_builddir)/libdm/Makefile $(top_builddir)/include/configure.h
 
 OBJECTS = $(SOURCES:%.c=%.o) $(CXXSOURCES:%.cpp=%.o)
 POTFILES = $(SOURCES:%.c=%.pot)

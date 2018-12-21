@@ -13,7 +13,6 @@
 #ifndef BASE_MEMORY_ZALLOC_H
 #define BASE_MEMORY_ZALLOC_H
 
-#include "configure.h"
 #include <stdlib.h>
 
 //----------------------------------------------------------------

@@ -15,8 +15,6 @@
 /* Note: this object is also used by VDO dmeventd plugin for parsing status */
 /* File could be included by VDO plugin and can use original libdm library */
 #ifndef LIB_DMEVENT_H
-#include "configure.h"
-// For DM_ARRAY_SIZE!
 #include "device_mapper/all.h"
 #endif
 

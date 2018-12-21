@@ -13,7 +13,6 @@
 #ifndef _LVM_CLOG_LOGGING_H
 #define _LVM_CLOG_LOGGING_H
 
-#include "configure.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <syslog.h>

@@ -17,7 +17,6 @@
  */
 
 
-#include "configure.h"
 #include "libdevmapper-event.h"
 #include "dmeventd.h"
 

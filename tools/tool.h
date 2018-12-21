@@ -18,8 +18,6 @@
 #ifndef _LVM_TOOL_H
 #define _LVM_TOOL_H
 
-#include "configure.h"
-
 #include "base/memory/zalloc.h"
 #include "device_mapper/all.h"
 #include "lib/misc/util.h"

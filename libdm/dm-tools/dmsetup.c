@@ -17,7 +17,6 @@
  */
 
 // For canonicalize_file_name()
-#include "configure.h"
 #include "libdm/misc/dm-logging.h"
 #include "libdm/dm-tools/util.h"
 

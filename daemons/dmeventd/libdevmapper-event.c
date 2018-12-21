@@ -12,7 +12,6 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "configure.h"
 #include "libdevmapper-event.h"
 #include "dmeventd.h"
 #include "libdm/misc/dm-logging.h"

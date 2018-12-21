@@ -19,8 +19,6 @@
 #ifndef _DM_LIB_H
 #define _DM_LIB_H
 
-#include "configure.h"
-
 /*
  * Symbol export control macros
  *

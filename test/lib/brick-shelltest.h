@@ -80,8 +80,6 @@
 #include <unistd.h>
 #endif
 
-#include "configure.h"
-
 /*  Timeout for the whole test suite in hours */
 static const time_t TEST_SUITE_TIMEOUT = 4;
 
