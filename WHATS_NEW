@@ -1,5 +1,6 @@
 Version 2.03.02 - 
 ===================================
+  Fix missing unlock on lvm2 dmeventd plugin error path initialization.
   Improve Makefile dependency tracking.
   Move VDO support towards V2 target (6.2) support.
   Fix missing proper initialization of pv_list struct when adding pv.
