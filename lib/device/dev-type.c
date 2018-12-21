@@ -58,15 +58,18 @@ int dev_is_pmem(struct device *dev)
 
 	if (!fgets(buffer, sizeof(buffer), fp)) {
 		log_warn("Failed to read %s.", path);
-		fclose(fp);
+		if (fclose(fp))
+			log_sys_debug("fclose", path);
 		return 0;
 	} else if (sscanf(buffer, "%d", &is_pmem) != 1) {
 		log_warn("Failed to parse %s '%s'.", path, buffer);
-		fclose(fp);
+		if (fclose(fp))
+			log_sys_debug("fclose", path);
 		return 0;
 	}
 
-	fclose(fp);
+	if (fclose(fp))
+		log_sys_debug("fclose", path);
 
 	if (is_pmem) {
 		log_debug("%s is pmem", dev_name(dev));
