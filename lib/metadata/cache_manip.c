@@ -1201,7 +1201,10 @@ int cache_single_set_params(struct cmd_context *cmd,
 	 * data size: the LV size minus the metadata size.
 	 */
 
-	extent_size = pool_lv->vg->extent_size;
+	if (!(extent_size = pool_lv->vg->extent_size)) {
+		log_error(INTERNAL_ERROR "Extend size can't be 0.");
+		return 0;
+	}
 	min_meta_size = extent_size;
 	max_meta_size = 2 * DEFAULT_CACHE_POOL_MAX_METADATA_SIZE; /* 2x for KiB to sectors */
 
