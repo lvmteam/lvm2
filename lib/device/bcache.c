@@ -409,6 +409,7 @@ static bool _sync_issue(struct io_engine *ioe, enum dir d, int fd,
 				  (unsigned long long)offset,
 				  (unsigned long long)nbytes,
 				  (unsigned long long)_last_byte_offset);
+			free(io);
 			return false;
 		}
 
