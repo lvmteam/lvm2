@@ -1460,11 +1460,10 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 
 		if (_is_desc_line(line_argv[0]) && !skip && cmd) {
 			char *desc = dm_pool_strdup(cmdtool->libmem, line_orig);
-			if (cmd->desc) {
+			if (cmd->desc && desc) {
 				int newlen = strlen(cmd->desc) + strlen(desc) + 2;
 				char *newdesc = dm_pool_alloc(cmdtool->libmem, newlen);
 				if (newdesc) {
-					memset(newdesc, 0, newlen);
 					snprintf(newdesc, newlen, "%s %s", cmd->desc, desc);
 					cmd->desc = newdesc;
 				} else {
