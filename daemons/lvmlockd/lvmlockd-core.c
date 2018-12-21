@@ -34,7 +34,7 @@
 #include <sys/utsname.h>
 #include <sys/un.h>
 
-#ifdef USE_SD_NOTIFY
+#ifdef NOTIFYDBUS_SUPPORT
 #include <systemd/sd-daemon.h>
 #endif
 
