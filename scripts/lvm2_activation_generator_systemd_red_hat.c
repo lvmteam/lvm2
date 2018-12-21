@@ -12,29 +12,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
-#include <ctype.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <limits.h>		/* For PATH_MAX for musl libc */
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include <syslog.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-
-#include "configure.h"
-#include "device_mapper/all.h"
-
-//----------------------------------------------------------------
-
 // Code in this file gets included in the unit tests.
 #include "generator-internals.c"
 
-//----------------------------------------------------------------
 // Logging
 
 #define KMSG_DEV_PATH		"/dev/kmsg"

@@ -1,6 +1,8 @@
 // This file contains the unit testable parts of
 // lvm2_activation_generator_systemd_red_hat
 
+#include "device_mapper/all.h"
+
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>

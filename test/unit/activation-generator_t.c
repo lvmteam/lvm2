@@ -15,8 +15,6 @@
 #include "units.h"
 #include "scripts/generator-internals.c"
 
-#include "device_mapper/all.h"
-
 //----------------------------------------------------------------
 
 static void _error(const char *format, ...)
