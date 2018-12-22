@@ -1453,7 +1453,8 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 		align_size = sanlock_align(&lms->ss.host_id_disk);
 		if (align_size <= 0) {
 			log_error("S %s prepare_lockspace_san align error %d", lsname, align_size);
-			return -EINVAL;
+			ret = -EINVAL;
+			goto fail;
 		}
 		sector_size = (align_size == ONE_MB) ? 512 : 4096;
 		log_debug("S %s prepare_lockspace_san found old sector_size %d align_size %d", lsname, sector_size, align_size);
