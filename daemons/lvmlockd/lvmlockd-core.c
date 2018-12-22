@@ -405,12 +405,11 @@ struct lockspace *alloc_lockspace(void)
 {
 	struct lockspace *ls;
 
-	if (!(ls = malloc(sizeof(struct lockspace)))) {
+	if (!(ls = zalloc(sizeof(struct lockspace)))) {
 		log_error("out of memory for lockspace");
 		return NULL;
 	}
 
-	memset(ls, 0, sizeof(struct lockspace));
 	INIT_LIST_HEAD(&ls->actions);
 	INIT_LIST_HEAD(&ls->resources);
 	pthread_mutex_init(&ls->mutex, NULL);

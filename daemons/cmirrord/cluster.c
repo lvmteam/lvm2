@@ -17,6 +17,7 @@
 #include "link_mon.h"
 #include "local.h"
 #include "lib/mm/xlate.h"
+#include "base/memory/zalloc.h"
 
 /* FIXME: remove this and the code */
 #define CMIRROR_HAS_CHECKPOINT 0
@@ -402,13 +403,12 @@ static struct checkpoint_data *prepare_checkpoint(struct clog_cpg *entry,
 		return NULL;
 	}
 
-	new = malloc(sizeof(*new));
+	new = zalloc(sizeof(*new));
 	if (!new) {
 		LOG_ERROR("Unable to create checkpoint data for %u",
 			  cp_requester);
 		return NULL;
 	}
-	memset(new, 0, sizeof(*new));
 	new->requester = cp_requester;
 	strncpy(new->uuid, entry->name.value, entry->name.length);
 
@@ -643,13 +643,12 @@ static int export_checkpoint(struct checkpoint_data *cp)
 	rq_size += RECOVERING_REGION_SECTION_SIZE;
 	rq_size += cp->bitmap_size * 2; /* clean|sync_bits */
 
-	rq = malloc(rq_size);
+	rq = zalloc(rq_size);
 	if (!rq) {
 		LOG_ERROR("export_checkpoint: "
 			  "Unable to allocate transfer structs");
 		return -ENOMEM;
 	}
-	memset(rq, 0, rq_size);
 
 	dm_list_init(&rq->u.list);
 	rq->u_rq.request_type = DM_ULOG_CHECKPOINT_READY;
@@ -1621,12 +1620,11 @@ int create_cluster_cpg(char *uuid, uint64_t luid)
 			return -EEXIST;
 		}
 
-	new = malloc(sizeof(*new));
+	new = zalloc(sizeof(*new));
 	if (!new) {
 		LOG_ERROR("Unable to allocate memory for clog_cpg");
 		return -ENOMEM;
 	}
-	memset(new, 0, sizeof(*new));
 	dm_list_init(&new->list);
 	new->lowest_id = 0xDEAD;
 	dm_list_init(&new->startup_list);

@@ -272,10 +272,9 @@ static int lm_add_resource_dlm(struct lockspace *ls, struct resource *r, int wit
 	int rv;
 
 	if (r->type == LD_RT_GL || r->type == LD_RT_VG) {
-		buf = malloc(sizeof(struct val_blk) + DLM_LVB_LEN);
+		buf = zalloc(sizeof(struct val_blk) + DLM_LVB_LEN);
 		if (!buf)
 			return -ENOMEM;
-		memset(buf, 0, sizeof(struct val_blk) + DLM_LVB_LEN);
 
 		rdd->vb = (struct val_blk *)buf;
 		rdd->lksb.sb_lvbptr = buf + sizeof(struct val_blk);

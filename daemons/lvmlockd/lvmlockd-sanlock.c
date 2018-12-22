@@ -1393,7 +1393,7 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 		goto fail;
 	}
 
-	lms = malloc(sizeof(struct lm_sanlock));
+	lms = zalloc(sizeof(struct lm_sanlock));
 	if (!lms) {
 		ret = -ENOMEM;
 		goto fail;
@@ -1402,7 +1402,6 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 	memset(lsname, 0, sizeof(lsname));
 	strncpy(lsname, ls->name, SANLK_NAME_LEN);
 
-	memset(lms, 0, sizeof(struct lm_sanlock));
 	memcpy(lms->ss.name, lsname, SANLK_NAME_LEN);
 	lms->ss.host_id_disk.offset = 0;
 	lms->ss.host_id = ls->host_id;
@@ -1615,10 +1614,9 @@ static int lm_add_resource_sanlock(struct lockspace *ls, struct resource *r)
 	/* LD_RT_LV offset is set in each lm_lock call from lv_args. */
 
 	if (r->type == LD_RT_GL || r->type == LD_RT_VG) {
-		rds->vb = malloc(sizeof(struct val_blk));
+		rds->vb = zalloc(sizeof(struct val_blk));
 		if (!rds->vb)
 			return -ENOMEM;
-		memset(rds->vb, 0, sizeof(struct val_blk));
 	}
 
 	return 0;
