@@ -4680,7 +4680,7 @@ static uint64_t *_stats_map_file_regions(struct dm_stats *dms, int fd,
 	/* make space for end-of-table marker */
 	if (!(regions = dm_malloc((1 + *count) * sizeof(*regions)))) {
 		log_error("Could not allocate memory for region IDs.");
-		goto_out;
+		goto out;
 	}
 
 	/*

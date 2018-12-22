@@ -4142,7 +4142,7 @@ static int _lvconvert_to_cache_vol_single(struct cmd_context *cmd,
 	/* Convert lv to cache vol using cachepool_lv. */
 
 	if (!_lvconvert_to_cache_vol(cmd, lv, cachepool_lv))
-		goto_out;
+		goto out;
 
 	return ECMD_PROCESSED;
 

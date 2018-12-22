@@ -546,7 +546,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 
 	if (!(mdah = raw_read_mda_header(fid->fmt, area, primary_mda))) {
 		log_error("Failed to read vg %s from %s", vgname, dev_name(area->dev));
-		goto_out;
+		goto out;
 	}
 
 	if (!(rlocn = _read_metadata_location_vg(area, mdah, primary_mda, vgname, &precommitted))) {
