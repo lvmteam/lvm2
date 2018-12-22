@@ -137,9 +137,9 @@ static void _test_parse_line(void *fixture)
 			if (!r)
         			test_fail("_parse_line('%s') failed", t->input);
 
-			//if (cfg.event_activation != t->event_activation)
-			//	test_fail("_parse_line('%s') -> event_activation='%s'",
-			//		t->input, _bool(cfg.event_activation));
+			if (cfg.event_activation != t->event_activation)
+				test_fail("_parse_line('%s') -> event_activation='%s'",
+					t->input, _bool(cfg.event_activation));
 
                 	if (cfg.sysinit_needed != t->sysinit_needed)
                         	test_fail("_parse_line('%s') -> sysinit_needed='%s'",
@@ -180,7 +180,7 @@ static const char *_fake_lvmconfig(const char *output)
 	if (!fp)
         	return NULL;
 
-	fprintf(fp, "#!/usr/bin/sh\n");
+	fprintf(fp, "#!/usr/bin/env bash\n");
 	fprintf(fp, "cat <<EOF\n");
 	fprintf(fp, "%s", output);
 	fprintf(fp, "EOF\n");
@@ -221,9 +221,9 @@ static void _test_get_config(void *fixture)
 			if (!r)
         			test_fail("_get_config() <- '%s' failed", t->output);
 
-			//if (t->event_activation != cfg.event_activation)
-			//	test_fail("_get_config() <- '%s', event_activation = %s",
-			//		  t->output, _bool(cfg.event_activation));
+			if (t->event_activation != cfg.event_activation)
+				test_fail("_get_config() <- '%s', event_activation = %s",
+					  t->output, _bool(cfg.event_activation));
 
                 	if (t->sysinit_needed != cfg.sysinit_needed)
                         	test_fail("_get_config() <- '%s', sysinit = %s",
