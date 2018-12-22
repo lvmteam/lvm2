@@ -4235,7 +4235,7 @@ static int _lvconvert_cache_attach_single(struct cmd_context *cmd,
 
 	} else {
 		log_error(INTERNAL_ERROR "Invalid cache pool state for %s", cachepool_lv->name);
-		goto_out;
+		goto out;
 	}
 
 	log_print_unless_silent("Logical volume %s is now cached.", display_lvname(lv));
