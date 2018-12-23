@@ -14,6 +14,8 @@
 
 . lib/inittest
 
+aux lvmconf "global/support_mirrored_mirror_log=1"
+
 log_name_to_count() {
 	case "$1"  in
 	mirrored) echo 2 ;;
