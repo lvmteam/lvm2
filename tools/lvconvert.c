@@ -5498,6 +5498,12 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (!arg_is_set(cmd, yes_ARG) &&
+	    yes_no_prompt("Erase all existing data on %s? [y/n]: ", display_lvname(lv_fast)) == 'n') {
+		log_error("Conversion aborted.");
+		return 0;
+	}
+
 	/* Ensure the two LVs are not active elsewhere. */
 	if (!lockd_lv(cmd, lv, "ex", 0))
 		goto_bad;
