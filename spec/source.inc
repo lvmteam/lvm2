@@ -98,7 +98,7 @@
 
 %if %{enable_python3} || %{enable_dbusd}
   %global buildreq_python3_devel python3-devel
-  %global buildreq_python_setuptools python-setuptools
+  %global buildreq_python_setuptools python3-setuptools
 %endif
 
 ##############################################################
