@@ -5230,44 +5230,23 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 
 static int _writecache_zero(struct cmd_context *cmd, struct logical_volume *lv)
 {
-	struct device *dev;
-	char name[PATH_MAX];
-	int ret = 0;
+	struct wipe_params wp;
+	int ret;
 
 	if (!activate_lv(cmd, lv)) {
-		log_error("Failed to activate LV %s for zeroing.", lv->name);
+		log_error("Failed to activate LV %s for zeroing.", display_lvname(lv));
 		return 0;
 	}
 
-	sync_local_dev_names(cmd);
+	wp.do_wipe_signatures = 1; /* optional, to print warning if clobbering something */
+	wp.do_zero = 1;            /* required for dm-writecache to work */
+	wp.zero_sectors = 1;
+	wp.zero_value = 0;
 
-	if (dm_snprintf(name, sizeof(name), "%s%s/%s",
-			cmd->dev_dir, lv->vg->name, lv->name) < 0) {
-		log_error("Name too long - device not cleared (%s)", lv->name);
-		goto out;
-	}
+	ret = wipe_lv(lv, wp);
 
-	if (!(dev = dev_cache_get(cmd, name, NULL))) {
-		log_error("%s: not found: device not zeroed", name);
-		goto out;
-	}
-
-	if (!label_scan_open(dev)) {
-		log_error("Failed to open %s/%s for zeroing.", lv->vg->name, lv->name);
-		goto out;
-	}
-
-	if (!dev_write_zeros(dev, UINT64_C(0), (size_t) 1 << SECTOR_SHIFT))
-		goto_out;
-
-	log_debug("Zeroed the first sector of %s", lv->name);
-
-	label_scan_invalidate(dev);
-
-	ret = 1;
-out:
 	if (!deactivate_lv(cmd, lv)) {
-		log_error("Failed to deactivate LV %s for zeroing.", lv->name);
+		log_error("Failed to deactivate LV %s for zeroing.", display_lvname(lv));
 		ret = 0;
 	}
 
