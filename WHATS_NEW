@@ -1,5 +1,6 @@
 Version 2.03.02 - 
 ===================================
+  Fix generator quering lvmconfig unpresent config option.
   Fix memleak on bcache error path code.
   Fix missing unlock on lvm2 dmeventd plugin error path initialization.
   Improve Makefile dependency tracking.

@@ -186,7 +186,8 @@ static bool _parse_line(const char *line, struct config *cfg)
 static bool _get_config(struct config *cfg, const char *lvmconfig_path)
 {
 	static const char *_argv[] = {
-		"lvmconfig", LVM_CONF_EVENT_ACTIVATION, LVM_CONF_USE_LVMPOLLD, NULL
+		"lvmconfig", "--type", "full",
+		LVM_CONF_EVENT_ACTIVATION, LVM_CONF_USE_LVMPOLLD, NULL
 	};
 
 	bool r = true;

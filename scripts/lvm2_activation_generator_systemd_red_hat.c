@@ -194,12 +194,17 @@ static bool _run(int argc, const char **argv)
 	if (!_parse_command_line(&gen, argc, argv))
 		return false;
 
-	if (!_get_config(&gen.cfg, LVMCONFIG_PATH))
-		return false;
+	if (_get_config(&gen.cfg, LVMCONFIG_PATH)) {
+		if (gen.cfg.event_activation)
+			// If event_activation=1, pvscan --cache -aay does activation.
+			return true;
+	}
 
-	if (gen.cfg.event_activation)
-		// If event_activation=1, pvscan --cache -aay does activation.
-		return true;
+	/*
+	 *  Create the activation units if:
+	 *    - _get_config succeeded and event_activation=0
+	 *    - _get_config failed, then this is a failsafe fallback
+	 */
 
 	/* mark lvm2-activation.*.service as world-accessible */
 	old_mask = umask(0022);
