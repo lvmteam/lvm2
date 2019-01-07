@@ -324,6 +324,9 @@ void init_log_while_suspended(int log_while_suspended)
 
 void init_syslog(int facility)
 {
+	if (getenv("LVM_SUPPRESS_SYSLOG"))
+		return;
+
 	openlog("lvm", LOG_PID, facility);
 	_syslog = 1;
 }

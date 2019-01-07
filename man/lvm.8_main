@@ -435,6 +435,9 @@ Defaults to "\fI#DEFAULT_SYS_DIR#\fP".
 .B LVM_SUPPRESS_FD_WARNINGS
 Suppress warnings about unexpected file descriptors passed into LVM.
 .TP
+.B LVM_SUPPRESS_SYSLOG
+Suppress contacting syslog.
+.TP
 .B LVM_VG_NAME
 The Volume Group name that is assumed for
 any reference to a Logical Volume that doesn't specify a path.

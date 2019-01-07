@@ -72,6 +72,9 @@ static bool _open_child(struct child_process *child, const char *cmd, const char
 			(void) close(pipe_fd[1]);
 		}
 
+		/* Suppressing any use of syslog */
+		(void) setenv("LVM_SUPPRESS_SYSLOG", "1", 1);
+
 		if (execv(cmd, (char *const *) argv) < 0)
 			_error("execv failed: %s\n", strerror(errno));
 		// Shouldn't get here unless exec failed.
