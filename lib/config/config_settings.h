@@ -668,7 +668,7 @@ cfg(allocation_vdo_slab_size_mb_CFG, "vdo_slab_size_mb", allocation_CFG_SECTION,
 	"that can be accommodated. Must be a power of two between 128MiB and 32GiB.")
 
 cfg(allocation_vdo_ack_threads_CFG, "vdo_ack_threads", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_ACK_THREADS, VDO_1ST_VSN, NULL, 0, NULL,
-	"Specifies the number of threads   to use for acknowledging\n"
+	"Specifies the number of threads to use for acknowledging\n"
 	"completion of requested VDO I/O operations.\n"
 	"The value must be at in range [0..100].\n")
 
