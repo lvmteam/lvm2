@@ -497,10 +497,19 @@ allocation {
 	# This configuration option has an automatic default value.
 	# vdo_use_deduplication = 1
 
-	# Configuration option allocation/vdo_emulate_512_sectors.
-	# Specifies that the VDO volume is to emulate a 512 byte block device.
+	# Configuration option allocation/vdo_use_metadata_hints.
+	# Enables or disables whether VDO volume should tag its latency-critical
+	# writes with the REQ_SYNC flag. Some device mapper targets such as dm-raid5
+	# process writes with this flag at a higher priority.
+	# Default is enabled.
 	# This configuration option has an automatic default value.
-	# vdo_emulate_512_sectors = 0
+	# vdo_use_metadata_hints = 1
+
+	# Configuration option allocation/vdo_minimum_io_size.
+	# The minimum IO size for VDO volume to accept, in bytes.
+	# Valid values are 512 or 4096. The recommended and default value is 4096.
+	# This configuration option has an automatic default value.
+	# vdo_minimum_io_size = 4096
 
 	# Configuration option allocation/vdo_block_map_cache_size_mb.
 	# Specifies the amount of memory in MiB allocated for caching block map
@@ -511,10 +520,10 @@ allocation {
 	# vdo_block_map_cache_size_mb = 128
 
 	# Configuration option allocation/vdo_block_map_period.
-	# Tunes the quantity of block map updates that can accumulate
-	# before cache pages are flushed to disk. The value must be
-	# at least 1 and less then 16380.
-	# A lower value means shorter recovery time but lower performance.
+	# The speed with which the block map cache writes out modified block map pages.
+	# A smaller era length is likely to reduce the amount time spent rebuilding,
+	# at the cost of increased block map writes during normal operation.
+	# The maximum and recommended value is 16380; the minimum value is 1.
 	# This configuration option has an automatic default value.
 	# vdo_block_map_period = 16380
 
@@ -533,22 +542,6 @@ allocation {
 	# The value must be at least 256MiB and at most 1TiB.
 	# This configuration option has an automatic default value.
 	# vdo_index_memory_size_mb = 256
-
-	# Configuration option allocation/vdo_use_read_cache.
-	# Enables or disables the read cache within the VDO volume.
-	# The cache should be enabled if write workloads are expected
-	# to have high levels of deduplication, or for read intensive
-	# workloads of highly compressible data.
-	# This configuration option has an automatic default value.
-	# vdo_use_read_cache = 0
-
-	# Configuration option allocation/vdo_read_cache_size_mb.
-	# Specifies the extra VDO volume read cache size in MiB.
-	# This space is in addition to a system-defined minimum.
-	# The value must be less then 16TiB and 1.12 MiB of memory
-	# will be used per MiB of read cache specified, per bio thread.
-	# This configuration option has an automatic default value.
-	# vdo_read_cache_size_mb = 0
 
 	# Configuration option allocation/vdo_slab_size_mb.
 	# Specifies the size in MiB of the increment by which a VDO is grown.
@@ -625,6 +618,18 @@ allocation {
 	#         Data which has not been flushed is not guaranteed to persist in this mode.
 	# This configuration option has an automatic default value.
 	# vdo_write_policy = "auto"
+
+	# Configuration option allocation/vdo_max_discard.
+	# Specified te maximum size of discard bio accepted, in 4096 byte blocks.
+	# I/O requests to a VDO volume are normally split into 4096-byte blocks,
+	# and processed up to 2048 at a time. However, discard requests to a VDO volume
+	# can be automatically split to a larger size, up to <max discard> 4096-byte blocks
+	# in a single bio, and are limited to 1500 at a time.
+	# Increasing this value may provide better overall performance, at the cost of
+	# increased latency for the individual discard requests.
+	# The default and minimum is 1. The maximum is UINT_MAX / 4096.
+	# This configuration option has an automatic default value.
+	# vdo_max_discard = 1
 }
 
 # Configuration section log.

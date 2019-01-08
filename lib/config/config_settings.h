@@ -660,12 +660,12 @@ cfg(allocation_vdo_use_sparse_index_CFG, "vdo_use_sparse_index", allocation_CFG_
 // vdo format
 cfg(allocation_vdo_index_memory_size_mb_CFG, "vdo_index_memory_size_mb", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_INDEX_MEMORY_SIZE_MB, VDO_1ST_VSN, NULL, 0, NULL,
 	"Specifies the amount of index memory in MiB for VDO volume.\n"
-	"The value must be at least 256MiB and at most 1TiB.")
+	"The value must be at least 256MiB and at most 1TiB.\n")
 
 cfg(allocation_vdo_slab_size_mb_CFG, "vdo_slab_size_mb", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_SLAB_SIZE_MB, VDO_1ST_VSN, NULL, 0, NULL,
 	"Specifies the size in MiB of the increment by which a VDO is grown.\n"
 	"Using a smaller size constrains the total maximum physical size\n"
-	"that can be accommodated. Must be a power of two between 128MiB and 32GiB.")
+	"that can be accommodated. Must be a power of two between 128MiB and 32GiB.\n")
 
 cfg(allocation_vdo_ack_threads_CFG, "vdo_ack_threads", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_ACK_THREADS, VDO_1ST_VSN, NULL, 0, NULL,
 	"Specifies the number of threads to use for acknowledging\n"
@@ -692,7 +692,7 @@ cfg(allocation_vdo_hash_zone_threads_CFG, "vdo_hash_zone_threads", allocation_CF
 	"processing based on the hash value computed from the block data.\n"
 	"The value must be at in range [0..100].\n"
 	"vdo_hash_zone_threads, vdo_logical_threads and vdo_physical_threads must be\n"
-	"either all zero or all non-zero.")
+	"either all zero or all non-zero.\n")
 
 cfg(allocation_vdo_logical_threads_CFG, "vdo_logical_threads", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_LOGICAL_THREADS, VDO_1ST_VSN, NULL, 0, NULL,
 	"Specifies the number of threads across which to subdivide parts of the VDO\n"
