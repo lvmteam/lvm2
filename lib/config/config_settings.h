@@ -969,7 +969,6 @@ cfg(global_mirror_segtype_default_CFG, "mirror_segtype_default", global_CFG_SECT
 	"#\n")
 
 cfg(global_support_mirrored_mirror_log_CFG, "support_mirrored_mirror_log", global_CFG_SECTION, 0, CFG_TYPE_BOOL, 0, vsn(2, 3, 2), NULL, 0, NULL,
-	"Configuration option global/support_mirrored_mirror_log.\n"
 	"Enable mirrored 'mirror' log type for testing.\n"
 	"#\n"
 	"This type is deprecated to create or convert to but can\n"

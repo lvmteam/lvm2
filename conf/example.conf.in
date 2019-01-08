@@ -911,13 +911,12 @@ global {
 
 	# Configuration option global/support_mirrored_mirror_log.
 	# Enable mirrored 'mirror' log type for testing.
-	#
+	# 
 	# This type is deprecated to create or convert to but can
 	# be enabled to test that activation of existing mirrored
 	# logs and conversion to disk/core works.
-	#
+	# 
 	# Not supported for regular operation!
-	#
 	support_mirrored_mirror_log = 0
 
 	# Configuration option global/raid10_segtype_default.
