@@ -1852,21 +1852,21 @@ static void _init_alloc_parms(struct alloc_handle *ah,
 /* Handles also stacking */
 static int _setup_lv_size(struct logical_volume *lv, uint32_t extents)
 {
-	struct lv_segment *thin_pool_seg;
+	struct lv_segment *pool_seg;
 
 	lv->le_count = extents;
 	lv->size = (uint64_t) extents * lv->vg->extent_size;
 
 	if (lv_is_thin_pool_data(lv) ||
 	    lv_is_vdo_pool_data(lv)) {
-		if (!(thin_pool_seg = get_only_segment_using_this_lv(lv)))
+		if (!(pool_seg = get_only_segment_using_this_lv(lv)))
 			return_0;
 
-		/* Update thin pool segment from the layered LV */
-		thin_pool_seg->lv->le_count =
-			thin_pool_seg->len =
-			thin_pool_seg->area_len = lv->le_count;
-		thin_pool_seg->lv->size = lv->size;
+		/* Update pool segment from the layered LV */
+		pool_seg->lv->le_count =
+			pool_seg->len =
+			pool_seg->area_len = lv->le_count;
+		pool_seg->lv->size = lv->size;
 	}
 
 	return 1;
