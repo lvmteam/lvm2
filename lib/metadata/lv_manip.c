@@ -1857,7 +1857,8 @@ static int _setup_lv_size(struct logical_volume *lv, uint32_t extents)
 	lv->le_count = extents;
 	lv->size = (uint64_t) extents * lv->vg->extent_size;
 
-	if (lv_is_thin_pool_data(lv)) {
+	if (lv_is_thin_pool_data(lv) ||
+	    lv_is_vdo_pool_data(lv)) {
 		if (!(thin_pool_seg = get_only_segment_using_this_lv(lv)))
 			return_0;
 
@@ -4902,12 +4903,6 @@ static int _lvresize_check(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (lv_is_vdo_type(lv)) {
-		log_error("Resize of VDO type volume %s is not yet supported.",
-			  display_lvname(lv));
-		return 0;
-	}
-
 	if (lv_is_raid(lv) &&
 	    lp->resize == LV_REDUCE) {
 		unsigned attrs;
@@ -4934,6 +4929,7 @@ static int _lvresize_check(struct logical_volume *lv,
 
 	if (!lv_is_visible(lv) &&
 	    !lv_is_thin_pool_metadata(lv) &&
+	    !lv_is_vdo_pool_data(lv) &&
 	    !lv_is_lockd_sanlock_lv(lv)) {
 		log_error("Can't resize internal logical volume %s.", display_lvname(lv));
 		return 0;
@@ -4967,6 +4963,8 @@ static int _lvresize_check(struct logical_volume *lv,
 	    (lv_is_thin_pool(lv) ||
 	     lv_is_thin_pool_data(lv) ||
 	     lv_is_thin_pool_metadata(lv) ||
+	     lv_is_vdo_pool(lv) ||
+	     lv_is_vdo_pool_data(lv) ||
 	     lv_is_pool_metadata_spare(lv) ||
 	     lv_is_lockd_sanlock_lv(lv))) {
 		log_print_unless_silent("Ignoring --resizefs as volume %s does not have a filesystem.",
@@ -5457,6 +5455,11 @@ static int _lvresize_check_type(const struct logical_volume *lv,
 			log_error("Thin pool metadata volumes cannot be reduced.");
 			return 0;
 		}
+		if (lv_is_vdo_pool_data(lv)) {
+			log_error("Cannot reduce VDO pool data volume %s.",
+				  display_lvname(lv));
+			return 0;
+		}
 	} else if (lp->resize == LV_EXTEND)  {
 		if (lv_is_thin_pool_metadata(lv) &&
 		    (!(seg = find_pool_seg(first_seg(lv))) ||
@@ -5529,7 +5532,7 @@ static int _lvresize_prepare(struct logical_volume **lv,
 {
 	struct volume_group *vg = (*lv)->vg;
 
-	if (lv_is_thin_pool(*lv))
+	if (lv_is_thin_pool(*lv) || lv_is_vdo_pool(*lv))
 		*lv = seg_lv(first_seg(*lv), 0); /* switch to data LV */
 
 	/* Resolve extents from size */
