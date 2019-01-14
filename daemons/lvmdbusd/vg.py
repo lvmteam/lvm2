@@ -216,7 +216,7 @@ class Vg(AutomatedProperties):
 	# TODO: This should be broken into a number of different methods
 	# instead of having one method that takes a hash for parameters.  Some of
 	# the changes that vgchange does works on entire system, not just a
-	# specfic vg, thus that should be in the Manager interface.
+	# specific vg, thus that should be in the Manager interface.
 	@dbus.service.method(
 		dbus_interface=VG_INTERFACE,
 		in_signature='ia{sv}',
