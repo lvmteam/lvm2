@@ -308,7 +308,7 @@ static int _vdo_pool_text_export(const struct lv_segment *seg, struct formatter 
 	if (vtp->use_metadata_hints)
 		outf(f, "use_metadata_hints = 1");
 
-	outsize(f, vtp->minimum_io_size, "minimum_io_size = %u", vtp->minimum_io_size);
+	outf(f, "minimum_io_size = %u", vtp->minimum_io_size);
 
 	outsize(f, vtp->block_map_cache_size_mb * UINT64_C(2 * 1024),
 		"block_map_cache_size_mb = %u", vtp->block_map_cache_size_mb);
