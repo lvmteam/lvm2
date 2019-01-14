@@ -164,6 +164,8 @@ class Manager(AutomatedProperties):
 		return the object path in O(1) time.
 
 		:param key: The lookup value
+		:param cb:	dbus python call back parameter, not client visible
+		:param cbe:	dbus python error call back parameter, not client visible
 		:return: Return the object path.  If object not found you will get '/'
 		"""
 		r = RequestEntry(-1, Manager._lookup_by_lvm_id, (key,), cb, cbe, False)
