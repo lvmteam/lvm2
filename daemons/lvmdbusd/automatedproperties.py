@@ -155,7 +155,7 @@ class AutomatedProperties(dbus.service.Object):
 		# through all dbus objects as some don't have a search method, like
 		# 'Manager' object.
 		if not self._ap_search_method:
-			return
+			return 0
 
 		search = self.lvm_id
 		if search_key:
