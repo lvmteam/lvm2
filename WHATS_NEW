@@ -1,5 +1,6 @@
 Version 2.03.02 - 
 ===================================
+  Add device hints to reduce scanning.
   Introduce LVM_SUPPRESS_SYSLOG to suppress syslog usage by generator.
   Fix generator quering lvmconfig unpresent config option.
   Fix memleak on bcache error path code.
