@@ -344,6 +344,13 @@ static void _unlock_hints(void)
 	_hints_fd = -1;
 }
 
+void hints_exit(void)
+{
+	if (_hints_fd == -1)
+		return;
+	return _unlock_hints();
+}
+
 static struct hint *_find_hint_name(struct dm_list *hints, const char *name)
 {
 	struct hint *hint;
@@ -989,6 +996,8 @@ void clear_hint_file(struct cmd_context *cmd)
 	if (!cmd->enable_hints)
 		return;
 
+	log_debug("clear_hint_file");
+
 	/*
 	 * This function runs even when cmd->use_hints is 0,
 	 * which means this command does not use hints, but
@@ -998,11 +1007,6 @@ void clear_hint_file(struct cmd_context *cmd)
 	/* limit potential delay blocking on hints lock next */
 	if (!_touch_nohints())
 		stack;
-
-	/*
-	 * We are relying on the command exit to release this flock,
-	 * we should probably add an explicit unlock_hints call.
-	 */
 
 	if (!_lock_hints(LOCK_EX, 0))
 		stack;

@@ -33,5 +33,7 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints, int *newhints,
 
 int validate_hints(struct cmd_context *cmd, struct dm_list *hints);
 
+void hints_exit(void);
+
 #endif
 

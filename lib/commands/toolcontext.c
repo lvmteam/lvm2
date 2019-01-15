@@ -22,6 +22,7 @@
 #include "lib/activate/activate.h"
 #include "lib/filters/filter.h"
 #include "lib/label/label.h"
+#include "lib/label/hints.h"
 #include "lib/misc/lvm-file.h"
 #include "lib/format_text/format-text.h"
 #include "lib/display/display.h"
@@ -1781,6 +1782,7 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	 */
 
 	activation_release();
+	hints_exit();
 	lvmcache_destroy(cmd, 0, 0);
 	label_scan_destroy(cmd);
 	label_exit();
@@ -1900,6 +1902,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 
 	archive_exit(cmd);
 	backup_exit(cmd);
+	hints_exit();
 	lvmcache_destroy(cmd, 0, 0);
 	label_scan_destroy(cmd);
 	label_exit();

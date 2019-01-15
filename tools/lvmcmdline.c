@@ -2331,6 +2331,8 @@ static int _get_current_settings(struct cmd_context *cmd)
 	/* Only certain commands need to be optimized by using hints. */
 	if (cmd->cname->flags & ALLOW_HINTS)
 		cmd->use_hints = 1;
+	else
+		cmd->use_hints = 0;
 
 	if ((hint_mode = find_config_tree_str(cmd, devices_hints_CFG, NULL))) {
 		if (!strcmp(hint_mode, "none"))
@@ -2986,6 +2988,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 
       out:
 
+	hints_exit();
 	lvmcache_destroy(cmd, 1, 1);
 	label_scan_destroy(cmd);
 
