@@ -328,8 +328,6 @@ static void _init_logging(struct cmd_context *cmd)
 	    find_config_tree_bool(cmd, global_test_CFG, NULL);
 	init_test(cmd->default_settings.test);
 
-	init_use_aio(find_config_tree_bool(cmd, global_use_aio_CFG, NULL));
-
 	/* Settings for logging to file */
 	if (find_config_tree_bool(cmd, log_overwrite_CFG, NULL))
 		append = 0;
@@ -1660,6 +1658,8 @@ struct cmd_context *create_toolcontext(unsigned is_clvmd,
 	if (!(cmd->dev_types = create_dev_types(cmd->proc_dir,
 						find_config_tree_array(cmd, devices_types_CFG, NULL))))
 		goto_out;
+
+	init_use_aio(find_config_tree_bool(cmd, global_use_aio_CFG, NULL));
 
 	if (!_init_dev_cache(cmd))
 		goto_out;
