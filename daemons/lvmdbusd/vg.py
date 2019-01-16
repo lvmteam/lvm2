@@ -177,7 +177,7 @@ class Vg(AutomatedProperties):
 		# Make sure we have a dbus object representing it
 		Vg.validate_dbus_object(uuid, vg_name)
 		rc, out, err = cmdhandler.vg_rename(
-			vg_name, new_name, rename_options)
+			uuid, new_name, rename_options)
 		Vg.handle_execute(rc, out, err)
 		return '/'
 

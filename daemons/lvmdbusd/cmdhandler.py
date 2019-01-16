@@ -263,10 +263,10 @@ def lv_tag(lv_name, add, rm, tag_options):
 	return _tag('lvchange', lv_name, add, rm, tag_options)
 
 
-def vg_rename(vg, new_name, rename_options):
+def vg_rename(vg_uuid, new_name, rename_options):
 	cmd = ['vgrename']
 	cmd.extend(options_to_cli_args(rename_options))
-	cmd.extend([vg, new_name])
+	cmd.extend([vg_uuid, new_name])
 	return call(cmd)
 
 
