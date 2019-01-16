@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2018-2019 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -89,6 +89,23 @@ uint64_t get_vdo_pool_virtual_size(const struct lv_segment *vdo_pool_seg)
 	return _get_virtual_size(vdo_pool_seg->vdo_pool_virtual_extents,
 				 vdo_pool_seg->lv->vg->extent_size,
 				 vdo_pool_seg->vdo_pool_header_size);
+}
+
+int update_vdo_pool_virtual_size(struct lv_segment *vdo_pool_seg)
+{
+	struct seg_list *sl;
+	uint32_t extents = 0;
+
+	/* FIXME: as long as we have only SINGLE VDO with vdo-pool this works */
+	/* after adding support for multiple VDO LVs - this needs heavy rework */
+	dm_list_iterate_items(sl, &vdo_pool_seg->lv->segs_using_this_lv)
+		extents += sl->seg->len;
+
+	/* Only growing virtual/logical VDO size */
+	if (extents > vdo_pool_seg->vdo_pool_virtual_extents)
+		vdo_pool_seg->vdo_pool_virtual_extents = extents;
+
+	return 1;
 }
 
 static int _sysfs_get_kvdo_value(const char *dm_name, const char *vdo_param, uint64_t *value)
