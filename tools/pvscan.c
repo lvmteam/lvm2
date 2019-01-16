@@ -17,6 +17,7 @@
 
 #include "lib/cache/lvmcache.h"
 #include "lib/metadata/metadata.h"
+#include "lib/label/hints.h"
 
 #include <dirent.h>
 
@@ -632,6 +633,7 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	int do_activate = arg_is_set(cmd, activate_ARG);
 	int all_vgs = 0;
 	int add_errors = 0;
+	int add_single_count = 0;
 	int ret = ECMD_PROCESSED;
 
 	dm_list_init(&single_devs);
@@ -750,6 +752,8 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 			if (dev->flags & DEV_FILTER_OUT_SCAN)
 				continue;
 
+			add_single_count++;
+
 			/*
 			 * Devices that exist and pass the lvmetad filter
 			 * are online.
@@ -801,6 +805,8 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 			if (dev->flags & DEV_FILTER_OUT_SCAN)
 				continue;
 
+			add_single_count++;
+
 			/*
 			 * Devices that exist and pass the lvmetad filter
 			 * are online.
@@ -811,6 +817,16 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 activate:
+	/*
+	 * When a new PV appears, the system runs pvscan --cache dev.
+	 * This also means that existing hints are invalid, and
+	 * we can force hints to be refreshed here.  There may be
+	 * cases where this detects a change that the other methods
+	 * of detecting invalid hints doesn't catch.
+	 */
+	if (add_single_count)
+		invalidate_hints(cmd);
+
 	/*
 	 * Special case: pvscan --cache -aay dev 
 	 * where dev has no VG metadata, and it's the final device to

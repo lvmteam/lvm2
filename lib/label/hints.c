@@ -1026,6 +1026,21 @@ void clear_hint_file(struct cmd_context *cmd)
 }
 
 /*
+ * This is used when pvscan --cache sees a new PV, which
+ * means we should refresh hints.  It could catch some case
+ * which the other methods of detecting stale hints may miss.
+ */
+void invalidate_hints(struct cmd_context *cmd)
+{
+	/* No commands are using hints. */
+	if (!cmd->enable_hints)
+		return;
+
+	if (!_touch_newhints())
+		stack;
+}
+
+/*
  * Currently, all the commands using hints (ALLOW_HINTS) take an optional or
  * required first position arg of a VG name or LV name.  If some other command
  * began using hints which took some other kind of position arg, we would

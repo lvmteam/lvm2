@@ -273,11 +273,12 @@ diff $HINTS $PREV
 #
 
 # pvs (no change), pvscan (hints are new), pvs (no change)
+rm $HINTS $PREV
 pvs
 cp $HINTS $PREV
-diff $HINTS $PREV
-cp $HINTS $PREV
+# this next pvscan recreates the hints file
 pvscan --cache
+# the only diff will be "Created by pvscan ..." vs "Created by pvs ..."
 not diff $HINTS $PREV
 cp $HINTS $PREV
 pvs
@@ -285,6 +286,8 @@ diff $HINTS $PREV
 grep 'Created by pvscan' $HINTS
 # dev4 is a PV not used by a VG, dev5 is not a PV
 # using dd to copy skirts hint tracking so dev5 won't be seen
+# (unless the dd triggers udev which triggers pvscan --cache $dev5,
+# but I've not seen that happen in tests so far.)
 dd if="$dev4" of="$dev5" bs=1M
 # this pvs won't see dev5
 pvs > foo
@@ -313,6 +316,22 @@ grep "$dev4" foo
 not grep "$dev5" foo
 grep "$dev4" $HINTS
 not grep "$dev5" $HINTS
+
+#
+# Test pvscan --cache <dev> forces refresh
+#
+
+rm $HINTS $PREV
+pvs
+cp $HINTS $PREV
+# this next pvscan creates newhints to trigger a refresh
+pvscan --cache "$dev5"
+cat $NEWHINTS
+# this next pvs creates new hints
+pvs
+# the only diff will be "Created by..."
+not diff $HINTS $PREV
+
 
 
 #

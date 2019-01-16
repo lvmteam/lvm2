@@ -28,6 +28,8 @@ int write_hint_file(struct cmd_context *cmd, int newhints);
 
 void clear_hint_file(struct cmd_context *cmd);
 
+void invalidate_hints(struct cmd_context *cmd);
+
 int get_hints(struct cmd_context *cmd, struct dm_list *hints, int *newhints,
               struct dm_list *devs_in, struct dm_list *devs_out);
 
