@@ -141,13 +141,22 @@ class DataStore(object):
 
 	@staticmethod
 	def _parse_vgs(_vgs):
-		vgs = sorted(_vgs, key=lambda vk: vk['vg_name'])
+		vgs = sorted(_vgs, key=lambda vk: vk['vg_uuid'])
 
 		c_vgs = OrderedDict()
 		c_lookup = {}
 
 		for i in vgs:
-			c_lookup[i['vg_name']] = i['vg_uuid']
+			vg_name = i['vg_name']
+
+			# Lvm allows duplicate vg names.  When this occurs, each subsequent
+			# matching VG name will be called vg_name:vg_uuid.  Note: ':' is an
+			# invalid character for lvm VG names
+			if vg_name in c_lookup:
+				vg_name = "%s:%s" % (vg_name, i['vg_uuid'])
+				i['vg_name'] = vg_name
+
+			c_lookup[vg_name] = i['vg_uuid']
 			DataStore._insert_record(c_vgs, i['vg_uuid'], i, [])
 
 		return c_vgs, c_lookup
@@ -162,13 +171,22 @@ class DataStore(object):
 				tmp_vg.extend(r['vg'])
 
 		# Sort for consistent output, however this is optional
-		vgs = sorted(tmp_vg, key=lambda vk: vk['vg_name'])
+		vgs = sorted(tmp_vg, key=lambda vk: vk['vg_uuid'])
 
 		c_vgs = OrderedDict()
 		c_lookup = {}
 
 		for i in vgs:
-			c_lookup[i['vg_name']] = i['vg_uuid']
+			vg_name = i['vg_name']
+
+			# Lvm allows duplicate vg names.  When this occurs, each subsequent
+			# matching VG name will be called vg_name:vg_uuid.  Note: ':' is an
+			# invalid character for lvm VG names
+			if vg_name in c_lookup:
+				vg_name = "%s:%s" % (vg_name, i['vg_uuid'])
+				i['vg_name'] = vg_name
+
+			c_lookup[vg_name] = i['vg_uuid']
 			c_vgs[i['vg_uuid']] = i
 
 		return c_vgs, c_lookup
@@ -520,6 +538,10 @@ if __name__ == "__main__":
 	print("VGS")
 	for v in ds.vgs.values():
 		pp.pprint(v)
+
+	print("VG name to UUID")
+	for k, v in ds.vg_name_to_uuid.items():
+		print("%s: %s" % (k, v))
 
 	print("LVS")
 	for v in ds.lvs.values():

@@ -52,18 +52,23 @@ def load_vgs(vg_specific=None, object_path=None, refresh=False,
 
 # noinspection PyPep8Naming,PyUnresolvedReferences,PyUnusedLocal
 class VgState(State):
+
 	@property
-	def lvm_id(self):
+	def internal_name(self):
 		return self.Name
 
+	@property
+	def lvm_id(self):
+		return self.internal_name
+
 	def identifiers(self):
-		return (self.Uuid, self.Name)
+		return (self.Uuid, self.internal_name)
 
 	def _lv_paths_build(self):
 		rc = []
 		for lv in cfg.db.lvs_in_vg(self.Uuid):
 			(lv_name, meta, lv_uuid) = lv
-			full_name = "%s/%s" % (self.Name, lv_name)
+			full_name = "%s/%s" % (self.internal_name, lv_name)
 
 			gen = utils.lv_object_path_method(lv_name, meta)
 
@@ -92,7 +97,7 @@ class VgState(State):
 	def create_dbus_object(self, path):
 		if not path:
 			path = cfg.om.get_object_path_by_uuid_lvm_id(
-				self.Uuid, self.Name, vg_obj_path_generate)
+				self.Uuid, self.internal_name, vg_obj_path_generate)
 		return Vg(path, self)
 
 	# noinspection PyMethodMayBeStatic
@@ -102,7 +107,6 @@ class VgState(State):
 
 # noinspection PyPep8Naming
 @utils.dbus_property(VG_INTERFACE, 'Uuid', 's')
-@utils.dbus_property(VG_INTERFACE, 'Name', 's')
 @utils.dbus_property(VG_INTERFACE, 'Fmt', 's')
 @utils.dbus_property(VG_INTERFACE, 'SizeBytes', 't', 0)
 @utils.dbus_property(VG_INTERFACE, 'FreeBytes', 't', 0)
@@ -135,6 +139,7 @@ class Vg(AutomatedProperties):
 	_AllocNormal_meta = ('b', VG_INTERFACE)
 	_AllocAnywhere_meta = ('b', VG_INTERFACE)
 	_Clustered_meta = ('b', VG_INTERFACE)
+	_Name_meta = ('s', VG_INTERFACE)
 
 	# noinspection PyUnusedLocal,PyPep8Naming
 	def __init__(self, object_path, object_state):
@@ -728,6 +733,12 @@ class Vg(AutomatedProperties):
 				control_flags, activate_options),
 				cb, cbe, return_tuple=False)
 		cfg.worker_q.put(r)
+
+	@property
+	def Name(self):
+		if ':' in self.state.Name:
+			return self.state.Name.split(':')[0]
+		return self.state.Name
 
 	@property
 	def Tags(self):
