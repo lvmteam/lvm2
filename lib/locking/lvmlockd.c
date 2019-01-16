@@ -1009,7 +1009,7 @@ void lockd_free_vg_final(struct cmd_context *cmd, struct volume_group *vg)
  * that the VG lockspace being started is new.
  */
 
-int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int start_init)
+int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int start_init, int *exists)
 {
 	char uuid[64] __attribute__((aligned(8)));
 	daemon_reply reply;
@@ -1082,6 +1082,12 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int start_i
 		break;
 	case -EEXIST:
 		log_debug("VG %s start error: already started", vg->name);
+		ret = 1;
+		break;
+	case -ESTARTING:
+		log_debug("VG %s start error: already starting", vg->name);
+		if (exists)
+			*exists = 1;
 		ret = 1;
 		break;
 	case -EARGS:
@@ -2662,7 +2668,7 @@ int lockd_rename_vg_final(struct cmd_context *cmd, struct volume_group *vg, int 
 		 * Depending on the problem that caused the rename to
 		 * fail, it may make sense to not restart the VG here.
 		 */
-		if (!lockd_start_vg(cmd, vg, 0))
+		if (!lockd_start_vg(cmd, vg, 0, NULL))
 			log_error("Failed to restart VG %s lockspace.", vg->name);
 		return 1;
 	}
@@ -2702,7 +2708,7 @@ int lockd_rename_vg_final(struct cmd_context *cmd, struct volume_group *vg, int 
 		}
 	}
 
-	if (!lockd_start_vg(cmd, vg, 1))
+	if (!lockd_start_vg(cmd, vg, 1, NULL))
 		log_error("Failed to start VG %s lockspace.", vg->name);
 
 	return 1;

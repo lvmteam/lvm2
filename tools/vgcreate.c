@@ -210,7 +210,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	if (is_lockd_type(vg->lock_type)) {
 		const char *start_opt = arg_str_value(cmd, lockopt_ARG, NULL);
 
-		if (!lockd_start_vg(cmd, vg, 1)) {
+		if (!lockd_start_vg(cmd, vg, 1, NULL)) {
 			log_error("Failed to start locking");
 			goto out;
 		}

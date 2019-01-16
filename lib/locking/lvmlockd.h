@@ -63,7 +63,7 @@ int lockd_rename_vg_final(struct cmd_context *cmd, struct volume_group *vg, int 
 
 /* start and stop the lockspace for a vg */
 
-int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int start_init);
+int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int start_init, int *exists);
 int lockd_stop_vg(struct cmd_context *cmd, struct volume_group *vg);
 int lockd_start_wait(struct cmd_context *cmd);
 
