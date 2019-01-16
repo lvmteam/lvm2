@@ -148,7 +148,7 @@ static inline int lockd_rename_vg_final(struct cmd_context *cmd, struct volume_g
 	return 1;
 }
 
-static inline int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int start_init)
+static inline int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int start_init, int *exists)
 {
 	return 0;
 }
