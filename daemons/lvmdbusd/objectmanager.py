@@ -189,8 +189,8 @@ class ObjectManager(AutomatedProperties):
 			path = dbus_object.dbus_object_path()
 			interfaces = dbus_object.interface()
 
-			# print 'UN-Registering object path %s for %s' % \
-			#      (path, dbus_object.lvm_id)
+			# print('UN-Registering object path %s for %s' %
+			#		(path, dbus_object.lvm_id))
 
 			self._lookup_remove(path)
 
@@ -240,39 +240,19 @@ class ObjectManager(AutomatedProperties):
 				return lookup_rc
 			return '/'
 
-	def _uuid_verify(self, path, uuid, lvm_id):
+	def _id_verify(self, path, uuid, lvm_id):
 		"""
-		Ensure uuid is present for a successful lvm_id lookup
+		Ensure our lookups are correct
 		NOTE: Internal call, assumes under object manager lock
 		:param path: 		Path to object we looked up
-		:param uuid: 		lvm uuid to verify
-		:param lvm_id:		lvm_id used to find object
+		:param uuid: 		uuid lookup
+		:param lvm_id:		lvm_id lookup
 		:return: None
 		"""
-		# This gets called when we found an object based on lvm_id, ensure
-		# uuid is correct too, as they can change. There is no durable
-		# non-changeable name in lvm
+		# There is no durable non-changeable name in lvm
 		if lvm_id != uuid:
-			if uuid and uuid not in self._id_to_object_path:
-				obj = self.get_object_by_path(path)
-				self._lookup_add(obj, path, lvm_id, uuid)
-
-	def _lvm_id_verify(self, path, uuid, lvm_id):
-		"""
-		Ensure lvm_id is present for a successful uuid lookup
-		NOTE: Internal call, assumes under object manager lock
-		:param path: 		Path to object we looked up
-		:param uuid: 		uuid used to find object
-		:param lvm_id:		lvm_id to verify
-		:return: None
-		"""
-		# This gets called when we found an object based on uuid, ensure
-		# lvm_id is correct too, as they can change.  There is no durable
-		# non-changeable name in lvm
-		if lvm_id != uuid:
-			if lvm_id and lvm_id not in self._id_to_object_path:
-				obj = self.get_object_by_path(path)
-				self._lookup_add(obj, path, lvm_id, uuid)
+			obj = self.get_object_by_path(path)
+			self._lookup_add(obj, path, lvm_id, uuid)
 
 	def _id_lookup(self, the_id):
 		path = None
@@ -339,22 +319,22 @@ class ObjectManager(AutomatedProperties):
 				# Lets check for the uuid first
 				path = self._id_lookup(uuid)
 				if path:
-					# Verify the lvm_id is sane
-					self._lvm_id_verify(path, uuid, lvm_id)
+					# Ensure table lookups are correct
+					self._id_verify(path, uuid, lvm_id)
 				else:
 					# Unable to find by UUID, lets lookup by lvm_id
 					path = self._id_lookup(lvm_id)
 					if path:
-						# Verify the uuid is sane
-						self._uuid_verify(path, uuid, lvm_id)
+						# Ensure table lookups are correct
+						self._id_verify(path, uuid, lvm_id)
 					else:
 						# We have exhausted all lookups, let's create if we can
 						if path_create:
 							path = path_create()
 							self._lookup_add(None, path, lvm_id, uuid)
 
-			# print('get_object_path_by_lvm_id(%s, %s, %s, %s: return %s' %
-			# 	   (uuid, lvm_id, str(path_create), str(gen_new), path))
+			# print('get_object_path_by_lvm_id(%s, %s, %s): return %s' %
+			#	(uuid, lvm_id, str(path_create), path))
 
 			return path
 
