@@ -560,6 +560,7 @@ static int _vgchange_lock_start(struct cmd_context *cmd, struct volume_group *vg
 {
 	const char *start_opt = arg_str_value(cmd, lockopt_ARG, NULL);
 	int auto_opt = 0;
+	int exists = 0;
 	int r;
 
 	if (!vg_is_shared(vg))
@@ -586,9 +587,11 @@ static int _vgchange_lock_start(struct cmd_context *cmd, struct volume_group *vg
 	}
 
 do_start:
-	r = lockd_start_vg(cmd, vg, 0);
+	r = lockd_start_vg(cmd, vg, 0, &exists);
 
 	if (r)
+		vp->lock_start_count++;
+	else if (exists)
 		vp->lock_start_count++;
 	if (!strcmp(vg->lock_type, "sanlock"))
 		vp->lock_start_sanlock = 1;

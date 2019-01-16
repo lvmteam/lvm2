@@ -2743,6 +2743,9 @@ static int add_lockspace_thread(const char *ls_name,
 		if (ls2->thread_stop) {
 			log_debug("add_lockspace_thread %s exists and stopping", ls->name);
 			rv = -EAGAIN;
+		} else if (!ls2->create_fail && !ls2->create_done) {
+			log_debug("add_lockspace_thread %s exists and starting", ls->name);
+			rv = -ESTARTING;
 		} else {
 			log_debug("add_lockspace_thread %s exists", ls->name);
 			rv = -EEXIST;
@@ -2984,7 +2987,7 @@ static int count_lockspace_starting(uint32_t client_id)
 
 	pthread_mutex_lock(&lockspaces_mutex);
 	list_for_each_entry(ls, &lockspaces, list) {
-		if (ls->start_client_id != client_id)
+		if (client_id && (ls->start_client_id != client_id))
 			continue;
 
 		if (!ls->create_done && !ls->create_fail) {
@@ -3389,7 +3392,7 @@ static void *worker_thread_main(void *arg_in)
 			add_client_result(act);
 
 		} else if (act->op == LD_OP_START_WAIT) {
-			act->result = count_lockspace_starting(act->client_id);
+			act->result = count_lockspace_starting(0);
 			if (!act->result)
 				add_client_result(act);
 			else
@@ -3423,7 +3426,7 @@ static void *worker_thread_main(void *arg_in)
 		list_for_each_entry_safe(act, safe, &delayed_list, list) {
 			if (act->op == LD_OP_START_WAIT) {
 				log_debug("work delayed start_wait for client %u", act->client_id);
-				act->result = count_lockspace_starting(act->client_id);
+				act->result = count_lockspace_starting(0);
 				if (!act->result) {
 					list_del(&act->list);
 					add_client_result(act);
