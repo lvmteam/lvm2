@@ -33,6 +33,7 @@ LVMCACHEMAN = lvmcache.7
 LVMTHINMAN = lvmthin.7
 LVMDBUSDMAN = lvmdbusd.8
 LVMRAIDMAN = lvmraid.7
+LVMVDOMAN = lvmvdo.7
 
 MAN5=lvm.conf.5
 MAN7=lvmsystemid.7 lvmreport.7 
@@ -96,7 +97,7 @@ else
   endif
 endif
 
-MAN7+=$(LVMCACHEMAN) $(LVMTHINMAN) $(LVMRAIDMAN)
+MAN7+=$(LVMCACHEMAN) $(LVMTHINMAN) $(LVMRAIDMAN) $(LVMVDOMAN)
 MAN5DIR=$(mandir)/man5
 MAN7DIR=$(mandir)/man7
 MAN8DIR=$(mandir)/man8
