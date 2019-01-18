@@ -219,6 +219,42 @@ Note: vdostats currently understands only /dev/mapper device names.
 
 .fi
 
+.SS 4. Extending VDOPoolLV size
+
+Adding more space to hold VDO data and metadata can be made via
+extension of VDODataLV.
+
+Note: Size of VDOPoolLV cannot be reduced.
+
+.B lvextend -L+AddingSize VG/VDOPoolLV
+
+.I Example
+.br
+.nf
+# lvextend -L+50G vg/vdopool0
+# lvresize -L300G vg/vdopool1
+.fi
+
+.SS 4. Extending or reducing VDOLV size
+
+VDO LV can be extended or reduced as standard LV.
+
+Note: Reduction needs to process TRIM for reduced disk area
+to unmap used data blocks from VDOPoolLV and it may take
+a long time.
+
+.B lvextend -L+AddingSize VG/VDOLV
+.B lvreduce -L-ReducingSize VG/VDOLV
+
+.I Example
+.br
+.nf
+# lvextend -L+50G vg/vdo0
+# lvreduce -L-50G vg/vdo1
+# lvresize -L200G vg/vdo2
+.fi
+
+
 .SH VDO Topics
 
 .br
