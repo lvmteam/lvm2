@@ -278,6 +278,12 @@ static int _update_extents_params(struct volume_group *vg,
 	switch (lcp->percent) {
 		case PERCENT_VG:
 			extents = percent_of_extents(lp->extents, base_calc_extents = vg->extent_count, 0);
+			if (extents > vg->free_count) {
+				extents = vg->free_count;
+				log_print_unless_silent("Reducing %u%%VG to remaining free space %s in VG.",
+							lp->extents,
+							display_size(vg->cmd, (uint64_t)vg->extent_size * extents));
+			}
 			break;
 		case PERCENT_FREE:
 			extents = percent_of_extents(lp->extents, base_calc_extents = vg->free_count, 0);

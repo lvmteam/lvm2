@@ -1,5 +1,6 @@
 Version 2.03.02 - 
 ===================================
+  Improve -lXXX%VG modifier which improves cache segment estimation.
   Ensure migration_threshold for cache is at least 8 chunks.
   Restore missing man info lvcreate --zero for thin-pools.
   Drop misleadning comment for metadata minimum_io_size for VDO segment.
