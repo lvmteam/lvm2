@@ -4925,6 +4925,12 @@ static int _lvresize_extents_from_percent(const struct logical_volume *lv,
 		case PERCENT_VG:
 			lp->extents = percent_of_extents(lp->extents, vg->extent_count,
 							 (lp->sign != SIGN_MINUS));
+			if ((lp->sign == SIGN_NONE) && (lp->extents > (lv->le_count + vg->free_count))) {
+				lp->extents = lv->le_count + vg->free_count;
+				log_print_unless_silent("Reducing %u%%VG to remaining free space %s in VG.",
+							old_extents,
+							display_size(vg->cmd, (uint64_t)vg->extent_size * lp->extents));
+			}
 			break;
 		case PERCENT_FREE:
 			lp->extents = percent_of_extents(lp->extents, vg->free_count,
