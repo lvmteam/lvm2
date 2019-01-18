@@ -2715,6 +2715,7 @@ answer yes. Use with extreme caution.
 Controls zeroing of the first 4KiB of data in the new LV.
 Default is \fBy\fP.
 Snapshot COW volumes are always zeroed.
+For thin pools, this controls zeroing of provisioned blocks.
 LV is not zeroed if the read only flag is set.
 Warning: trying to mount an unzeroed LV can cause the system to hang.
 .ad b

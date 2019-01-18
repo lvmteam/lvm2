@@ -1464,6 +1464,7 @@ arg(zero_ARG, 'Z', "zero", bool_VAL, 0, 0,
     "Controls zeroing of the first 4KiB of data in the new LV.\n"
     "Default is \\fBy\\fP.\n"
     "Snapshot COW volumes are always zeroed.\n"
+    "For thin pools, this controls zeroing of provisioned blocks.\n"
     "LV is not zeroed if the read only flag is set.\n"
     "Warning: trying to mount an unzeroed LV can cause the system to hang.\n"
     "#pvcreate\n"
