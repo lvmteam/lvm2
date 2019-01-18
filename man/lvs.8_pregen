@@ -519,8 +519,9 @@ Volume type: (C)ache, (m)irrored, (M)irrored without initial sync, (o)rigin,
 (O)rigin with merging snapshot, (r)aid, (R)aid without initial sync,
 (s)napshot, merging (S)napshot, (p)vmove, (v)irtual,
 mirror or raid (i)mage, mirror or raid (I)mage out-of-sync, mirror (l)og device,
-under (c)onversion, thin (V)olume, (t)hin pool, (T)hin pool data, raid or
-pool m(e)tadata or pool metadata spare.
+under (c)onversion, thin (V)olume, (t)hin pool, (T)hin pool data,
+v(d)o pool, v(D)o pool data,
+raid or pool m(e)tadata or pool metadata spare.
 .IP 2 3
 Permissions: (w)riteable, (r)ead-only, (R)ead-only activation of non-read-only
 volume
