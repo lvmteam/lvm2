@@ -4663,6 +4663,11 @@ static int _request_confirmation(const struct logical_volume *lv,
 			return 0;
 		}
 		return 1;
+	} else if (lv_is_vdo(lv) && !info.exists) {
+		log_error("Logical volume %s must be activated "
+			  "before reducing device size.",
+			  display_lvname(lv));
+		return 0;
 	}
 
 	if (!info.exists)
