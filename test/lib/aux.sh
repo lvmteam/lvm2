@@ -1410,6 +1410,7 @@ version_at_least() {
 target_at_least() {
 	rm -f debug.log strace.log
 	case "$1" in
+	  dm-vdo) modprobe "kvdo" || true ;;
 	  dm-*) modprobe "$1" || true ;;
 	esac
 
