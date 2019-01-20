@@ -255,8 +255,7 @@ void process_event(struct dm_task *dmt,
 	} else
 		state->max_fails = 1; /* Reset on success */
 
-	/* FIXME: ATM nothing can be done, drop 0, once it becomes useful */
-	if (0 && needs_policy)
+	if (needs_policy)
 		_use_policy(dmt, state);
 out:
 	if (vdop.status)

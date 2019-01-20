@@ -4795,6 +4795,18 @@ static int _lvresize_adjust_policy(const struct logical_volume *lv,
 				 "minimum supported 50%%.", policy_threshold);
 			policy_threshold = 50;
 		}
+	} else if (lv_is_vdo_pool(lv)) {
+		policy_threshold =
+			find_config_tree_int(cmd, activation_vdo_pool_autoextend_threshold_CFG,
+					     lv_config_profile(lv));
+		policy_amount =
+			find_config_tree_int(cmd, activation_vdo_pool_autoextend_percent_CFG,
+					     lv_config_profile(lv));
+		if (policy_threshold < 50) {
+			log_warn("WARNING: VDO pool autoextend threshold %d%% is set below "
+				 "minimum supported 50%%.", policy_threshold);
+			policy_threshold = 50;
+		}
 	} else {
 		policy_threshold =
 			find_config_tree_int(cmd, activation_snapshot_autoextend_threshold_CFG, NULL);
@@ -4832,6 +4844,9 @@ static int _lvresize_adjust_policy(const struct logical_volume *lv,
 					      min_threshold : policy_threshold, policy_amount);
 
 		if (!lv_thin_pool_percent(lv, 0, &percent))
+			return_0;
+	} else if (lv_is_vdo_pool(lv)) {
+		if (!lv_vdo_pool_percent(lv, &percent))
 			return_0;
 	} else {
 		if (!lv_snapshot_percent(lv, &percent))
@@ -4916,7 +4931,10 @@ static int _lvresize_check(struct logical_volume *lv,
 		}
 	}
 
-	if (lp->use_policies && !lv_is_cow(lv) && !lv_is_thin_pool(lv)) {
+	if (lp->use_policies &&
+	    !lv_is_cow(lv) &&
+	    !lv_is_thin_pool(lv) &&
+	    !lv_is_vdo_pool(lv)) {
 		log_error("Policy-based resize is supported only for snapshot and thin pool volumes.");
 		return 0;
 	}
