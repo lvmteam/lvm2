@@ -198,6 +198,7 @@ int lv_thin_pool_transaction_id(const struct logical_volume *lv,
 int lv_thin_device_id(const struct logical_volume *lv, uint32_t *device_id);
 int lv_vdo_pool_status(const struct logical_volume *lv, int flush,
 		       struct lv_status_vdo **status);
+int lv_vdo_pool_percent(const struct logical_volume *lv, dm_percent_t *percent);
 
 /*
  * Return number of LVs in the VG that are active.

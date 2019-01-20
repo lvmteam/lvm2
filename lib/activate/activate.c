@@ -1387,6 +1387,19 @@ out:
 	return r;
 }
 
+int lv_vdo_pool_percent(const struct logical_volume *lv, dm_percent_t *percent)
+{
+	struct lv_status_vdo *vdo_status;
+
+	if (!lv_vdo_pool_status(lv, 0, &vdo_status))
+		return_0;
+
+	*percent = vdo_status->usage;
+	dm_pool_destroy(vdo_status->mem);
+
+	return 1;
+}
+
 static int _lv_active(struct cmd_context *cmd, const struct logical_volume *lv)
 {
 	struct lvinfo info;
