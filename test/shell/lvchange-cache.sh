@@ -38,27 +38,27 @@ check lv_field  $vg/corigin kernel_cache_policy "cleaner"
 # device-mapper: space map common: index_check failed: blocknr 17179869216 != wanted 11
 if aux have_cache 1 5 0 ; then
 
-lvchange --cachepolicy mq --cachesettings migration_threshold=333 $vg/corigin
+lvchange --cachepolicy mq --cachesettings migration_threshold=1333 $vg/corigin
 
 # TODO once mq->smq happens we will get here some 0 for mq settings
 check lv_field $vg/corigin kernel_cache_policy "mq"
-get lv_field $vg/corigin kernel_cache_settings | grep 'migration_threshold=333'
+get lv_field $vg/corigin kernel_cache_settings | grep 'migration_threshold=1333'
 
 lvchange --refresh $vg/corigin
-get lv_field $vg/corigin kernel_cache_settings | grep 'migration_threshold=333'
+get lv_field $vg/corigin kernel_cache_settings | grep 'migration_threshold=1333'
 lvchange -an $vg
 lvchange -ay $vg
-get lv_field $vg/corigin kernel_cache_settings | grep 'migration_threshold=333'
+get lv_field $vg/corigin kernel_cache_settings | grep 'migration_threshold=1333'
 
-lvchange --cachesettings 'migration_threshold = 233 sequential_threshold = 13' $vg/corigin
+lvchange --cachesettings 'migration_threshold = 1233 sequential_threshold = 13' $vg/corigin
 get lv_field $vg/corigin kernel_cache_settings | tee out
-grep 'migration_threshold=233' out
+grep 'migration_threshold=1233' out
 
 if grep 'sequential_threshold=13' out ; then
 
-lvchange --cachesettings 'migration_threshold = 17' $vg/corigin
+lvchange --cachesettings 'migration_threshold = 1117' $vg/corigin
 get lv_field $vg/corigin kernel_cache_settings | tee out
-grep 'migration_threshold=17' out
+grep 'migration_threshold=1117' out
 grep 'sequential_threshold=13' out
 
 lvchange --cachesettings 'migration_threshold = default' $vg/corigin
@@ -66,16 +66,16 @@ get lv_field $vg/corigin kernel_cache_settings | tee out
 grep 'migration_threshold=2048' out
 grep 'sequential_threshold=13' out
 
-lvchange --cachesettings 'migration_threshold = 233 sequential_threshold = 13 random_threshold = 1' $vg/corigin
+lvchange --cachesettings 'migration_threshold = 1233 sequential_threshold = 13 random_threshold = 1' $vg/corigin
 lvchange --cachesettings 'random_threshold = default migration_threshold = default' $vg/corigin
 get lv_field $vg/corigin kernel_cache_settings | tee out
 grep 'migration_threshold=2048' out
 grep 'sequential_threshold=13' out
 grep 'random_threshold=4' out
 
-lvchange --cachesettings migration_threshold=233 --cachesettings sequential_threshold=13 --cachesettings random_threshold=1 $vg/corigin
+lvchange --cachesettings migration_threshold=1233 --cachesettings sequential_threshold=13 --cachesettings random_threshold=1 $vg/corigin
 get lv_field $vg/corigin kernel_cache_settings | tee out
-grep 'migration_threshold=233' out
+grep 'migration_threshold=1233' out
 grep 'sequential_threshold=13' out
 grep 'random_threshold=1' out
 
