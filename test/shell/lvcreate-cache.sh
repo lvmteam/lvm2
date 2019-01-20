@@ -256,20 +256,23 @@ lvdisplay --maps $vg
 
 lvremove -f $vg
 
+# migration_threshold is protected to not be smaller then  8*chunk_size
+# so even when user sets migration threshold to lower value,
+# activation will ensure the minimal size is preserved
 lvcreate --type cache-pool -L10 $vg/cpool
-lvcreate --type cache -l 1 --cachepool $vg/cpool -n corigin $vg --cachesettings migration_threshold=233
+lvcreate --type cache -l 1 --cachepool $vg/cpool -c 64k -n corigin $vg --cachesettings migration_threshold=233
 dmsetup status | grep $vg
-dmsetup status | grep $vg-corigin | grep 'migration_threshold 233'
+dmsetup status | grep $vg-corigin | grep 'migration_threshold 1024'
 lvchange -an $vg
 lvchange -ay $vg
-dmsetup status | grep $vg-corigin | grep 'migration_threshold 233'
+dmsetup status | grep $vg-corigin | grep 'migration_threshold 1024'
 
 lvremove -f $vg
 
-lvcreate --type cache-pool -L10 --cachepolicy mq --cachesettings migration_threshold=233 $vg/cpool
+lvcreate --type cache-pool -L10 --cachepolicy mq --cachesettings migration_threshold=1233 $vg/cpool
 lvcreate --type cache -l 1 --cachepool $vg/cpool -n corigin $vg
 dmsetup status | grep $vg
-dmsetup status | grep $vg-corigin | grep 'migration_threshold 233'
+dmsetup status | grep $vg-corigin | grep 'migration_threshold 1233'
 
 lvremove -f $vg
 
@@ -281,7 +284,7 @@ lvremove -f $vg
 # Creation of read-only cache pool is not supported
 invalid lvcreate -pr --type cache-pool -l1 -n $vg/cpool
 
-# Atempt to use bigger chunk size then cache pool data size
+# Attempt to use bigger chunk size then cache pool data size
 fail lvcreate -l 1 --type cache-pool --chunksize 16M $vg 2>out
 grep "chunk size" out
 
