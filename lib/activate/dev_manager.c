@@ -1792,9 +1792,8 @@ out:
 
 int dev_manager_vdo_pool_status(struct dev_manager *dm,
 				const struct logical_volume *lv,
-				int flush,
-				char **vdo_params,
-				struct lv_status_vdo **vdo_status)
+				struct lv_status_vdo **vdo_status,
+				int flush)
 {
 	struct lv_status_vdo *status;
 	const char *dlid;
@@ -1805,7 +1804,6 @@ int dev_manager_vdo_pool_status(struct dev_manager *dm,
 	char *params = NULL;
 	int r = 0;
 
-	*vdo_params = NULL;
 	*vdo_status = NULL;
 
 	if (!(status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_vdo)))) {
@@ -1834,13 +1832,11 @@ int dev_manager_vdo_pool_status(struct dev_manager *dm,
 		goto out;
 	}
 
-	if (!(*vdo_params = dm_pool_strdup(dm->mem, params))) {
-		log_error("Cannot duplicate VDO status params.");
-		goto out;
-	}
+	if (!parse_vdo_pool_status(dm->mem, lv, params, status))
+		goto_out;
 
 	status->mem = dm->mem;
-	*vdo_status =  status;
+	*vdo_status = status;
 
 	r = 1;
 out:

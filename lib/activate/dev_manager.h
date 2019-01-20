@@ -84,9 +84,8 @@ int dev_manager_thin_device_id(struct dev_manager *dm,
 			       uint32_t *device_id);
 int dev_manager_vdo_pool_status(struct dev_manager *dm,
 				const struct logical_volume *lv,
-				int flush,
-				char **vdo_params,
-				struct lv_status_vdo **vdo_status);
+				struct lv_status_vdo **vdo_status,
+				int flush);
 int dev_manager_suspend(struct dev_manager *dm, const struct logical_volume *lv,
 			struct lv_activate_opts *laopts, int lockfs, int flush_required);
 int dev_manager_activate(struct dev_manager *dm, const struct logical_volume *lv,

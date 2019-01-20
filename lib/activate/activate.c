@@ -1359,8 +1359,6 @@ int lv_vdo_pool_status(const struct logical_volume *lv, int flush,
 {
 	int r = 0;
 	struct dev_manager *dm;
-	struct lv_status_vdo *status;
-	char *params;
 
 	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
 		return 0;
@@ -1371,14 +1369,10 @@ int lv_vdo_pool_status(const struct logical_volume *lv, int flush,
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, !lv_is_pvmove(lv))))
 		return_0;
 
-	if (!dev_manager_vdo_pool_status(dm, lv, flush, &params, &status))
+	if (!dev_manager_vdo_pool_status(dm, lv, vdo_status, flush))
 		goto_out;
 
-	if (!parse_vdo_pool_status(status->mem, lv, params, status))
-		goto_out;
-
-	/* User is responsible to dm_pool_destroy memory pool! */
-	*vdo_status = status;
+	/* User has to call dm_pool_destroy(vdo_status->mem) */
 	r = 1;
 out:
 	if (!r)
