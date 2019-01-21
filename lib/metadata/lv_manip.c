@@ -5570,6 +5570,8 @@ int lv_resize(struct logical_volume *lv,
 	int activated = 0;
 	int ret = 0;
 	int status;
+	struct device *dev;
+	char name[PATH_MAX];
 
 	if (lv_is_writecache(lv)) {
 		log_error("Resize not yet allowed on LVs with writecache attached.");
@@ -5695,6 +5697,41 @@ int lv_resize(struct logical_volume *lv,
 		activated = 1;
 	}
 
+	/* Send DISCARD/TRIM to reduced area of VDO volumes
+	 * TODO: enable thin and provide
+	 * TODO2: we need polling method */
+	if ((lp->resize == LV_REDUCE) && lv_is_vdo(lv)) {
+		if (dm_snprintf(name, sizeof(name), "%s%s/%s", lv->vg->cmd->dev_dir,
+				lv->vg->name, lv->name) < 0) {
+			log_error("Name too long - device not discarded (%s)", lv->name);
+			return 0;
+		}
+
+		if (!(dev = dev_cache_get(lv->vg->cmd, name, NULL))) {
+			log_error("%s: not found: device not discarded.", name);
+			return 0;
+		}
+
+		if (!dev_discard_max_bytes(cmd->dev_types, dev) ||
+		    !dev_discard_granularity(cmd->dev_types, dev)) {
+			log_error("%s: max bytes and granularity query fails.", name);
+			dev_destroy_file(dev);
+			return 0;
+		}
+
+		log_warn("WARNING: %s: Discarding %s at offset " FMTu64 ", please wait...",
+			 name, display_size(cmd, (uint64_t)(lv->le_count - lp->extents) * vg->extent_size),
+			 ((uint64_t)lp->extents * vg->extent_size) << SECTOR_SHIFT);
+
+		if (!dev_discard_blocks(dev, ((uint64_t)lp->extents * vg->extent_size) << SECTOR_SHIFT,
+					((uint64_t)(lv->le_count - lp->extents) * vg->extent_size) << SECTOR_SHIFT)) {
+			log_error("%s: discarding failed.", name);
+			dev_destroy_file(dev);
+			return 0;
+		}
+
+		dev_destroy_file(dev);
+	}
 	/*
 	 * If the LV is locked from activation, this lock call is a no-op.
 	 * Otherwise, this acquires a transient lock on the lv (not PERSISTENT).
