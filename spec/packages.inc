@@ -148,6 +148,9 @@ fi
   %{_mandir}/man8/lvmpolld.8.gz
   %{_mandir}/man8/lvm-lvpoll.8.gz
 %endif
+%if %{have_with vdo}
+  %{_mandir}/man7/lvmvdo.7.gz
+%endif
 %if %{enable_udev}
  %{_udevdir}/11-dm-lvm.rules
  %{_udevdir}/69-dm-lvm-metad.rules
