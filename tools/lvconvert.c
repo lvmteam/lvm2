@@ -5017,7 +5017,9 @@ static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 		goto out;
 	}
 
-	if (!wipe_lv(lv, (struct wipe_params) { .do_zero = 1, .do_wipe_signatures = 1 })) {
+	if (!wipe_lv(lv, (struct wipe_params) { .do_zero = 1, .do_wipe_signatures = 1,
+		     .yes = arg_count(cmd, yes_ARG),
+		     .force = arg_count(cmd, force_ARG)})) {
 		log_error("Aborting. Failed to wipe VDO data store.");
 		goto out;
 	}
