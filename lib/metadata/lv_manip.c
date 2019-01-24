@@ -7350,7 +7350,7 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 
 	if (wp.do_wipe_signatures) {
 		log_verbose("Wiping known signatures on logical volume \"%s/%s\"",
-			     lv->vg->name, lv->name);
+			    lv->vg->name, lv->name);
 		if (!wipe_known_signatures(lv->vg->cmd, dev, name, 0,
 					   TYPE_DM_SNAPSHOT_COW,
 					   wp.yes, wp.force, NULL))

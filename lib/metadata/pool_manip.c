@@ -790,7 +790,7 @@ int vg_remove_pool_metadata_spare(struct volume_group *vg)
 
 	log_print_unless_silent("Renaming existing pool metadata spare "
 				"logical volume \"%s\" to \"%s/%s\".",
-                                display_lvname(lv), vg->name, new_name);
+				display_lvname(lv), vg->name, new_name);
 
 	if (!lv_rename_update(vg->cmd, lv, new_name, 0))
 		return_0;

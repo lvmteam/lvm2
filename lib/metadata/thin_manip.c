@@ -266,7 +266,6 @@ int pool_below_threshold(const struct lv_segment *pool_seg)
 	if (!lv_thin_pool_percent(pool_seg->lv, 1, &percent))
 		return_0;
 
-
 	if (percent >= min_threshold) {
 		log_warn("WARNING: Remaining free space in metadata of thin pool %s "
 			 "is too low (%s%% >= %s%%). "
@@ -276,7 +275,6 @@ int pool_below_threshold(const struct lv_segment *pool_seg)
 			 display_percent(cmd, min_threshold));
 		return 0;
 	}
-
 
 	if (percent > threshold) {
 		log_debug("Threshold configured for free metadata space in "
