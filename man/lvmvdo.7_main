@@ -260,6 +260,21 @@ a long time.
 # lvresize -L200G vg/vdo2
 .fi
 
+.SS 5. Component activation of VDODataLV
+
+VDODataLV can be activated separately as component LV for examination
+purposes. It activates data LV in read-only mode and cannot be modified.
+If the VDODataLV is active as component, any upper LV using this volume CANNOT
+be activated. User has to deactivate VDODataLV first to continue to use VDOPoolLV.
+
+.I Example
+.br
+.nf
+# lvchange -ay vg/vpool0_vdata
+# lvchange -an vg/vpool0_vdata
+.fi
+
+
 .SH VDO Topics
 .br
 
