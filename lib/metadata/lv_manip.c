@@ -6954,7 +6954,7 @@ int remove_layer_from_lv(struct logical_volume *lv,
 			if (strstr(layer_lv->name, _suffixes[r]) == 0) {
 				lv_names.old = layer_lv->name;
 				lv_names.new = parent_lv->name;
-				if (!for_each_sub_lv(parent_lv, _rename_cb, (void *) &lv_names))
+				if (!for_each_sub_lv(parent_lv, _rename_skip_pools_externals_cb, (void *) &lv_names))
 					return_0;
 				break;
 			}
@@ -7072,7 +7072,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 		if (strcmp(layer_suffix, _suffixes[i]) == 0) {
 			lv_names.old = lv_where->name;
 			lv_names.new = layer_lv->name;
-			if (!for_each_sub_lv(layer_lv, _rename_cb, (void *) &lv_names))
+			if (!for_each_sub_lv(layer_lv, _rename_skip_pools_externals_cb, (void *) &lv_names))
 				return_NULL;
 			break;
 		}
