@@ -276,6 +276,48 @@ be activated. User has to deactivate VDODataLV first to continue to use VDOPoolL
 
 
 .SH VDO Topics
+
+.SS 1. Stacking VDO
+
+User can convert/stack VDO with existing volumes.
+
+.SS 2. VDO on top of raid
+
+Using Raid type LV for VDO Data LV.
+
+.I Example
+.br
+.nf
+# lvcreate --type raid1 -L 5G -n vpool vg
+# lvconvert --type vdo-pool -V 10G vg/vpool
+.fi
+
+.SS 3. Caching VDODataLV, VDOPoolLV
+
+Cache VDO Data LV (accepts also VDOPoolLV.
+
+.I Example
+.br
+.nf
+# lvcreate -L 5G -V 10G -n vdo1 vg/vpool
+# lvcreate --type cache-pool -L 1G -n cpool vg
+# lvconvert --cache --cachepool vg/cpool vg/vpool
+# lvconvert --uncache vg/vpool
+.fi
+
+.SS 3. Caching VDOLV
+
+Cache VDO LV.
+
+.I Example
+.br
+.nf
+# lvcreate -L 5G -V 10G -n vdo1 vg/vpool
+# lvcreate --type cache-pool -L 1G -n cpool vg
+# lvconvert --cache --cachepool vg/cpool vg/vdo1
+# lvconvert --uncache vg/vdo1
+.fi
+
 .br
 
 \&
