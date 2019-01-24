@@ -6828,7 +6828,7 @@ int move_lv_segments(struct logical_volume *lv_to,
 		     struct logical_volume *lv_from,
 		     uint64_t set_status, uint64_t reset_status)
 {
-	const uint64_t MOVE_BITS = (RAID | MIRROR | THIN_VOLUME);
+	const uint64_t MOVE_BITS = (RAID | MIRROR | THIN_VOLUME | CACHE | LV_VDO);
 	struct lv_segment *seg;
 
 	dm_list_iterate_items(seg, &lv_to->segments)
@@ -6869,7 +6869,7 @@ int move_lv_segments(struct logical_volume *lv_to,
 int remove_layer_from_lv(struct logical_volume *lv,
 			 struct logical_volume *layer_lv)
 {
-	static const char _suffixes[][8] = { "_tdata", "_cdata", "_corig" };
+	static const char _suffixes[][8] = { "_tdata", "_cdata", "_corig", "_vdata" };
 	struct logical_volume *parent_lv;
 	struct lv_segment *parent_seg;
 	struct segment_type *segtype;

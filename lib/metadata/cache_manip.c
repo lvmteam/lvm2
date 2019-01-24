@@ -369,7 +369,9 @@ int validate_lv_cache_create_origin(const struct logical_volume *origin_lv)
 	}
 
 	/* For now we only support conversion of thin pool data volume */
-	if (!lv_is_visible(origin_lv) && !lv_is_thin_pool_data(origin_lv)) {
+	if (!lv_is_visible(origin_lv) &&
+	    !lv_is_thin_pool_data(origin_lv) &&
+	    !lv_is_vdo_pool_data(origin_lv)) {
 		log_error("Can't convert internal LV %s.", display_lvname(origin_lv));
 		return 0;
 	}
@@ -383,7 +385,8 @@ int validate_lv_cache_create_origin(const struct logical_volume *origin_lv)
 	    lv_is_thin_volume(origin_lv) || lv_is_thin_pool_metadata(origin_lv) ||
 	    lv_is_merging_origin(origin_lv) ||
 	    lv_is_cow(origin_lv) || lv_is_merging_cow(origin_lv) ||
-	    lv_is_virtual(origin_lv)) {
+	    /* TODO: think about enabling caching of a single thin volume */
+	    (lv_is_virtual(origin_lv) && !lv_is_vdo(origin_lv))) {
 		log_error("Cache is not supported with %s segment type of the original logical volume %s.",
 			  lvseg_name(first_seg(origin_lv)), display_lvname(origin_lv));
 		return 0;
@@ -438,7 +441,7 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool_lv,
 	    !validate_lv_cache_create_origin(cache_lv))
 		return_NULL;
 
-	if (lv_is_thin_pool(cache_lv))
+	if (lv_is_thin_pool(cache_lv) || lv_is_vdo_pool(cache_lv))
 		cache_lv = seg_lv(first_seg(cache_lv), 0); /* cache _tdata */
 
 	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_CACHE)))

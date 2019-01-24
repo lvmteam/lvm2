@@ -451,7 +451,7 @@ RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 ---
 
-lvconvert --type cache --cachepool LV LV_linear_striped_raid_thinpool
+lvconvert --type cache --cachepool LV LV_linear_striped_raid_thinpool_vdo_vdopool_vdopooldata
 OO: --cache, OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_cache_with_cachepool
 DESC: Attach a cache pool to an LV, converts the LV to type cache.
@@ -459,7 +459,7 @@ RULE: all and lv_is_visible
 RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 # alternate form of lvconvert --type cache
-lvconvert --cache --cachepool LV LV_linear_striped_raid_thinpool
+lvconvert --cache --cachepool LV LV_linear_striped_raid_thinpool_vdo_vdopool_vdopooldata
 OO: --type cache, OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_cache_with_cachepool
 DESC: Attach a cache pool to an LV (infers --type cache).
@@ -589,14 +589,14 @@ FLAGS: SECONDARY_SYNTAX
 
 ---
 
-lvconvert --splitcache LV_cachepool_cache_thinpool_writecache
+lvconvert --splitcache LV_cachepool_cache_thinpool_vdopool_writecache
 OO: OO_LVCONVERT
 ID: lvconvert_split_and_keep_cache
 DESC: Detach a cache from an LV.
 
 ---
 
-lvconvert --uncache LV_cache_thinpool_writecache
+lvconvert --uncache LV_cache_thinpool_vdopool_writecache
 OO: OO_LVCONVERT
 ID: lvconvert_split_and_remove_cache
 DESC: Detach and delete a cache from an LV.

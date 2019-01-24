@@ -4261,6 +4261,9 @@ static int _lvconvert_cachepool_attach_single(struct cmd_context *cmd,
 	if (lv_is_thin_pool(lv)) {
 		lv = seg_lv(first_seg(lv), 0);
 		log_verbose("Redirecting operation to data sub LV %s.", display_lvname(lv));
+	} else if (lv_is_vdo_pool(lv)) {
+		lv = seg_lv(first_seg(lv), 0);
+		log_verbose("Redirecting operation to data sub LV %s.", display_lvname(lv));
 	}
 
 	if (_raid_split_image_conversion(lv))
@@ -4569,6 +4572,9 @@ static int _lvconvert_split_cache_vol(struct cmd_context *cmd,
 
 	} else if (lv_is_thin_pool(lv)) {
 		lv_main = seg_lv(first_seg(lv), 0); /* cached _tdata */
+		lv_fast = first_seg(lv_main)->pool_lv;
+	} else if (lv_is_vdo_pool(lv)) {
+		lv_main = seg_lv(first_seg(lv), 0); /* cached _vdata */
 		lv_fast = first_seg(lv_main)->pool_lv;
 	}
 

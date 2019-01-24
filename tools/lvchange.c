@@ -1281,6 +1281,9 @@ static int _lvchange_properties_check(struct cmd_context *cmd,
 		if (lv_is_thin_pool_data(lv))
 			return 1;
 
+		if (lv_is_vdo_pool_data(lv))
+			return 1;
+
 		if (lv_is_named_arg)
 			log_error("Operation not permitted on hidden LV %s.", display_lvname(lv));
 		return 0;
