@@ -769,31 +769,6 @@ FLAGS: SECONDARY_SYNTAX
 
 ---
 
-lvcreate --type vdo --size SizeMB VG
-OO: --vdo, OO_LVCREATE, OO_LVCREATE_VDO, --virtualsize SizeMB, --stripes Number, --stripesize SizeKB,
-OP: PV ...
-IO: --mirrors 0
-ID: lvcreate_vdo_vol
-DESC: Create an LV that returns VDO when used.
-
-lvcreate --vdo --size SizeMB VG
-OO: OO_LVCREATE, OO_LVCREATE_VDO, --virtualsize SizeMB, --stripes Number, --stripesize SizeKB
-OP: PV ...
-IO: --mirrors 0
-ID: lvcreate_vdo_vol
-DESC: Create an VDO LV with VDO pool.
-FLAGS: SECONDARY_SYNTAX
-
-lvcreate --vdopool LV --virtualsize SizeMB VG
-OO: --vdo, --type vdo
-OP: PV ...
-IO: --mirrors 0
-ID: lvcreate_vdo_vol
-DESC: Create an VDO LV using existing VDO pool.
-FLAGS: SECONDARY_SYNTAX
-
----
-
 lvcreate --type zero --size SizeMB VG
 OO: OO_LVCREATE
 ID: lvcreate_zero_vol
@@ -1064,6 +1039,34 @@ IO: --mirrors 0
 ID: lvcreate_thin_snapshot_of_external
 DESC: Create a thin LV that is a snapshot of an external origin LV
 DESC: (infers --type thin).
+FLAGS: SECONDARY_SYNTAX
+
+---
+
+lvcreate --type vdo --size SizeMB VG
+OO: --vdo, --vdopool LV_new, OO_LVCREATE, OO_LVCREATE_VDO,
+--virtualsize SizeMB, --stripes Number, --stripesize SizeKB,
+OP: PV ...
+IO: --mirrors 0
+ID: lvcreate_vdo_vol
+DESC: Create a LV that returns VDO when used.
+
+lvcreate --vdo --size SizeMB VG
+OO: --vdopool LV_new, OO_LVCREATE, OO_LVCREATE_VDO,
+--virtualsize SizeMB, --stripes Number, --stripesize SizeKB
+OP: PV ...
+IO: --mirrors 0
+ID: lvcreate_vdo_vol
+DESC: Create a VDO LV with VDO pool.
+FLAGS: SECONDARY_SYNTAX
+
+lvcreate --vdopool LV_new --size SizeMB VG
+OO: --vdo, --type vdo, OO_LVCREATE, OO_LVCREATE_VDO,
+--virtualsize SizeMB, --stripes Number, --stripesize SizeKB
+OP: PV ...
+IO: --mirrors 0
+ID: lvcreate_vdo_vol
+DESC: Create a VDO LV with VDO pool.
 FLAGS: SECONDARY_SYNTAX
 
 ---

@@ -773,7 +773,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 		segtype_str = SEG_TYPE_NAME_CACHE;
 	else if (arg_is_set(cmd, thin_ARG) || arg_is_set(cmd, thinpool_ARG))
 		segtype_str = SEG_TYPE_NAME_THIN;
-	else if (arg_is_set(cmd, vdo_ARG))
+	else if (arg_is_set(cmd, vdo_ARG) || arg_is_set(cmd, vdopool_ARG))
 		segtype_str = SEG_TYPE_NAME_VDO;
 	else if (arg_is_set(cmd, virtualsize_ARG)) {
 		if (arg_is_set(cmd, virtualoriginsize_ARG))
@@ -862,6 +862,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	thinpool_ARG
 
 #define VDO_POOL_ARGS \
+	vdopool_ARG,\
 	compression_ARG,\
 	deduplication_ARG
 
