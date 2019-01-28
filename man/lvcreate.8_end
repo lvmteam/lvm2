@@ -64,6 +64,10 @@ to the first image).
 .br
 .B lvcreate --type raid10 -L 5G -i 2 -m 1 -n mylv vg00
 
+Create a 1TiB thin LV mythin, with 256GiB thinpool tpool0 in vg00.
+.br
+.B lvcreate --T --size 256G --name mythin vg00/tpool0
+
 Create a 1TiB thin LV, first creating a new thin pool for it, where
 the thin pool has 100MiB of space, uses 2 stripes, has a 64KiB stripe
 size, and 256KiB chunk size.
@@ -95,3 +99,7 @@ then combining the new origin LV with an existing cache pool.
 .RS
 .B -L 100G -n mylv vg00 /dev/slow1
 .RE
+
+Create a VDO LV vdo0 with VDOPoolLV size of 10GiB and name vpool1.
+.br
+.B lvcreate --vdo --size 10G --name vdo0 vg00/vpool1
