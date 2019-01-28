@@ -215,9 +215,12 @@ int update_cache_pool_params(struct cmd_context *cmd,
 
 	if (!*chunk_size) {
 		if (!(*chunk_size = find_config_tree_int(cmd, allocation_cache_pool_chunk_size_CFG,
-							 profile) * 2))
+							 profile) * 2)) {
 			*chunk_size = get_default_allocation_cache_pool_chunk_size_CFG(cmd,
 										       profile);
+			/* Use power-of-2 for min chunk size when unspecified */
+			min_chunk_size = 1 << (32 - clz(min_chunk_size - 1));
+		}
 		if (*chunk_size < min_chunk_size) {
 			/*
 			 * When using more then 'standard' default,
