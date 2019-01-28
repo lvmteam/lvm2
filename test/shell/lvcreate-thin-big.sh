@@ -75,12 +75,10 @@ check lv_field $vg/pool1_tmeta size "2.50m"
 check lv_field $vg/pool2_tmeta size "3.75m"
 lvremove -ff $vg
 
-# Block size of multiple 64KB needs >= 1.4
-if aux have_thin 1 4 0 ; then
-# Test chunk size is rounded to 64KB boundary
+# Test chunk size is rounded to power-of-2
 lvcreate -L10G --poolmetadatasize 4M -T $vg/pool
-check lv_field $vg/pool chunk_size "192.00k"
-fi
+check lv_field $vg/pool chunk_size "256.00k"
+
 # Old thinpool target required rounding to power of 2
 aux lvmconf "global/thin_disabled_features = [ \"block_size\" ]"
 lvcreate -L10G --poolmetadatasize 4M -T $vg/pool_old
