@@ -714,9 +714,10 @@ arg(type_ARG, '\0', "type", segtype_VAL, 0, 0,
     "For thin provisioning (\\fBthin\\fP, \\fBthin-pool\\fP) see \\fBlvmthin\\fP(7).\n"
     "For performance caching (\\fBcache\\fP, \\fBcache-pool\\fP) see \\fBlvmcache\\fP(7).\n"
     "For copy-on-write snapshots (\\fBsnapshot\\fP) see usage definitions.\n"
+    "For VDO (\\fBvdo\\fP) see \\fBlvmvdo\\fP(7).\n"
     "Several commands omit an explicit type option because the type\n"
     "is inferred from other options or shortcuts\n"
-    "(e.g. --stripes, --mirrors, --snapshot, --virtualsize, --thin, --cache).\n"
+    "(e.g. --stripes, --mirrors, --snapshot, --virtualsize, --thin, --cache, --vdo).\n"
     "Use inferred types with care because it can lead to unexpected results.\n")
 
 arg(unbuffered_ARG, '\0', "unbuffered", 0, 0, 0,
