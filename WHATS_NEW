@@ -1,5 +1,6 @@
 Version 2.03.02 - 
 ===================================
+  Thin-pool selects power-of-2 chunk size by default.
   Cache selects power-of-2 chunk size by default.
   Support reszing for VDOPoolLV and VDOLV.
   Improve -lXXX%VG modifier which improves cache segment estimation.
