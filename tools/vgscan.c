@@ -57,8 +57,6 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_PROCESSED;
 	}
 
-	log_print_unless_silent("Reading all physical volumes.  This may take a while...");
-
 	maxret = process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0, NULL, &_vgscan_single);
 
 	if (arg_is_set(cmd, mknodes_ARG)) {
