@@ -579,21 +579,15 @@ static uint32_t _estimate_chunk_size(uint32_t data_extents, uint32_t extent_size
 				     uint64_t metadata_size, int attr)
 {
 	uint32_t chunk_size = _estimate_size(data_extents, extent_size, metadata_size);
+	const uint32_t BIG_CHUNK =  2 * DEFAULT_THIN_POOL_CHUNK_SIZE_ALIGNED - 1;
 
-	if (attr & THIN_FEATURE_BLOCK_SIZE) {
-		/* Round up to 64KB */
-		chunk_size += DM_THIN_MIN_DATA_BLOCK_SIZE - 1;
-		chunk_size &= ~(uint32_t)(DM_THIN_MIN_DATA_BLOCK_SIZE - 1);
-	} else {
-		/* Round up to nearest power of 2 */
-		chunk_size--;
-		chunk_size |= chunk_size >> 1;
-		chunk_size |= chunk_size >> 2;
-		chunk_size |= chunk_size >> 4;
-		chunk_size |= chunk_size >> 8;
-		chunk_size |= chunk_size >> 16;
-		chunk_size++;
-	}
+	if ((attr & THIN_FEATURE_BLOCK_SIZE) &&
+	    (chunk_size > BIG_CHUNK) &&
+	    (chunk_size < (UINT32_MAX - BIG_CHUNK)))
+		chunk_size = (chunk_size + BIG_CHUNK) & ~BIG_CHUNK;
+	else
+		/* Round up to nearest power of 2 of 32-bit */
+		chunk_size = 1 << (32 - clz(chunk_size - 1));
 
 	if (chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE)
 		chunk_size = DM_THIN_MIN_DATA_BLOCK_SIZE;
