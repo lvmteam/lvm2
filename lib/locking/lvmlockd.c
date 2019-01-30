@@ -2780,7 +2780,7 @@ int lockd_lv_uses_lock(struct logical_volume *lv)
 	if (lv_is_pool_metadata_spare(lv))
 		return 0;
 
-	if (lv_is_cache_single(lv))
+	if (lv_is_cache_vol(lv))
 		return 0;
 
 	if (lv_is_cache_pool(lv))

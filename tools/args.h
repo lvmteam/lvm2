@@ -121,7 +121,10 @@ arg(cachemode_ARG, '\0', "cachemode", cachemode_VAL, 0, 0,
     "block invalidates. See \\fBlvmcache\\fP(7) for more information.\n")
 
 arg(cachepool_ARG, '\0', "cachepool", lv_VAL, 0, 0,
-    "The name of a cache pool LV.\n")
+    "The name of a cache pool.\n")
+
+arg(cachevol_ARG, '\0', "cachevol", lv_VAL, 0, 0,
+    "The name of a cache volume.\n")
 
 arg(commandprofile_ARG, '\0', "commandprofile", string_VAL, 0, 0,
     "The command profile to use for command configuration.\n"

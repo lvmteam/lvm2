@@ -61,7 +61,7 @@ const char *display_cache_mode(const struct lv_segment *seg)
 {
 	const struct lv_segment *setting_seg = NULL;
 
-	if (seg_is_cache(seg) && lv_is_cache_single(seg->pool_lv))
+	if (seg_is_cache(seg) && lv_is_cache_vol(seg->pool_lv))
 		setting_seg = seg;
 
 	else if (seg_is_cache_pool(seg))
@@ -131,7 +131,7 @@ int cache_set_cache_mode(struct lv_segment *seg, cache_mode_t mode)
 	if (seg_is_cache_pool(seg) && (mode == CACHE_MODE_UNSELECTED))
 		return 1;
 
-	if (seg_is_cache(seg) && lv_is_cache_single(seg->pool_lv))
+	if (seg_is_cache(seg) && lv_is_cache_vol(seg->pool_lv))
 		setting_seg = seg;
 
 	else if (seg_is_cache_pool(seg))
@@ -337,7 +337,7 @@ int validate_lv_cache_create_pool(const struct logical_volume *pool_lv)
 {
 	struct lv_segment *seg;
 
-	if (!lv_is_cache_pool(pool_lv) && !lv_is_cache_single(pool_lv)) {
+	if (!lv_is_cache_pool(pool_lv) && !lv_is_cache_vol(pool_lv)) {
 		log_error("Logical volume %s is not a cache pool.",
 			  display_lvname(pool_lv));
 		return 0;
@@ -559,7 +559,7 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 	return 1;
 }
 
-static int _lv_detach_cache_single_while_active(struct cmd_context *cmd, struct logical_volume *cache_lv)
+static int _lv_detach_cache_vol_while_active(struct cmd_context *cmd, struct logical_volume *cache_lv)
 {
 	struct lv_segment *cache_seg = first_seg(cache_lv);
 	struct logical_volume *corigin_lv;
@@ -582,7 +582,7 @@ static int _lv_detach_cache_single_while_active(struct cmd_context *cmd, struct 
 	/*
 	 * This info is needed to remove the cmeta/cdata devs at the end.
 	 */
-	if (!get_cache_single_meta_data(cmd, cache_lv, cache_pool_lv, &info_meta, &info_data)) {
+	if (!get_cache_vol_meta_data(cmd, cache_lv, cache_pool_lv, &info_meta, &info_data)) {
 		log_error("Failed to get info about cdata/cmeta for %s", display_lvname(cache_pool_lv));
 		return 0;
 	}
@@ -604,7 +604,7 @@ static int _lv_detach_cache_single_while_active(struct cmd_context *cmd, struct 
 		return_0;
 	}
 
-	cache_pool_lv->status &= ~LV_CACHE_SINGLE;
+	cache_pool_lv->status &= ~LV_CACHE_VOL;
 
 	if (!remove_layer_from_lv(cache_lv, corigin_lv)) {
 		log_error("Failed to remove cache layer from %s", display_lvname(cache_lv));
@@ -623,7 +623,7 @@ static int _lv_detach_cache_single_while_active(struct cmd_context *cmd, struct 
 	 */
 
 	/* These cmeta/cdata dm devs need to be removed since they are using cache_pool_lv. */
-	if (!remove_cache_single_meta_data(cmd, &info_meta, &info_data))
+	if (!remove_cache_vol_meta_data(cmd, &info_meta, &info_data))
 		log_error("Failed to remove cdata/cmeta devs for %s", display_lvname(cache_pool_lv));
 
 	if (!deactivate_lv(cmd, cache_pool_lv))
@@ -652,7 +652,7 @@ static int _lv_detach_cache_single_while_active(struct cmd_context *cmd, struct 
 	return 1;
 }
 
-static int _lv_detach_cache_single_while_inactive(struct cmd_context *cmd, struct logical_volume *cache_lv)
+static int _lv_detach_cache_vol_while_inactive(struct cmd_context *cmd, struct logical_volume *cache_lv)
 {
 	struct lv_segment *cache_seg = first_seg(cache_lv);
 	struct logical_volume *corigin_lv;
@@ -707,7 +707,7 @@ static int _lv_detach_cache_single_while_inactive(struct cmd_context *cmd, struc
 		return_0;
 	}
 
-	cache_pool_lv->status &= ~LV_CACHE_SINGLE;
+	cache_pool_lv->status &= ~LV_CACHE_VOL;
 
 	if (!remove_layer_from_lv(cache_lv, corigin_lv)) {
 		log_error("Failed to remove cache layer from %s", display_lvname(cache_lv));
@@ -724,7 +724,7 @@ static int _lv_detach_cache_single_while_inactive(struct cmd_context *cmd, struc
 	return 1;
 }
 
-int lv_detach_cache_single(struct logical_volume *cache_lv)
+int lv_detach_cache_vol(struct logical_volume *cache_lv)
 {
 	struct cmd_context *cmd = cache_lv->vg->cmd;
 
@@ -734,9 +734,9 @@ int lv_detach_cache_single(struct logical_volume *cache_lv)
 	}
 
 	if (lv_is_active(cache_lv))
-		return _lv_detach_cache_single_while_active(cmd, cache_lv);
+		return _lv_detach_cache_vol_while_active(cmd, cache_lv);
 	else
-		return _lv_detach_cache_single_while_inactive(cmd, cache_lv);
+		return _lv_detach_cache_vol_while_inactive(cmd, cache_lv);
 }
 
 /*
@@ -763,7 +763,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 		return 0;
 	}
 
-	if (lv_is_cache_single(cache_seg->pool_lv)) {
+	if (lv_is_cache_vol(cache_seg->pool_lv)) {
 		log_error(INTERNAL_ERROR "Incorrect remove for cache single");
 		return 0;
 	}
@@ -952,7 +952,7 @@ int cache_set_policy(struct lv_segment *lvseg, const char *name,
 			return 1; /* Policy and settings can be selected later when caching LV */
 	}
 
-	if (seg_is_cache(lvseg) && lv_is_cache_single(lvseg->pool_lv))
+	if (seg_is_cache(lvseg) && lv_is_cache_vol(lvseg->pool_lv))
 		seg = lvseg;
 
 	else if (seg_is_cache_pool(lvseg))
@@ -1128,7 +1128,7 @@ int cache_set_metadata_format(struct lv_segment *seg, cache_metadata_format_t fo
 #define ONE_MB_S 2048 /* 1MB in sectors */
 #define ONE_GB_S 2097152 /* 1GB in sectors */
 
-int cache_single_set_params(struct cmd_context *cmd,
+int cache_vol_set_params(struct cmd_context *cmd,
 		     struct logical_volume *cache_lv,
 		     struct logical_volume *pool_lv,
 		     uint64_t poolmetadatasize,
@@ -1428,7 +1428,7 @@ int wipe_cache_pool(struct logical_volume *cache_pool_lv)
 	int r;
 
 	/* Only unused cache-pool could be activated and wiped */
-	if ((!lv_is_cache_pool(cache_pool_lv) && !lv_is_cache_single(cache_pool_lv)) ||
+	if ((!lv_is_cache_pool(cache_pool_lv) && !lv_is_cache_vol(cache_pool_lv)) ||
 	    !dm_list_empty(&cache_pool_lv->segs_using_this_lv)) {
 		log_error(INTERNAL_ERROR "Failed to wipe cache pool for volume %s.",
 			  display_lvname(cache_pool_lv));

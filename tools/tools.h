@@ -250,8 +250,9 @@ int lvconvert_combine_split_snapshot_cmd(struct cmd_context *cmd, int argc, char
 int lvconvert_start_poll_cmd(struct cmd_context *cmd, int argc, char **argv);
 
 int lvconvert_to_pool_cmd(struct cmd_context *cmd, int argc, char **argv);
-int lvconvert_to_cache_vol_cmd(struct cmd_context *cmd, int argc, char **argv);
-int lvconvert_to_writecache_vol_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvconvert_to_cache_with_cachevol_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvconvert_to_cache_with_cachepool_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvconvert_to_writecache_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvconvert_to_thin_with_external_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvconvert_swap_pool_metadata_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvconvert_to_pool_or_swap_metadata_cmd(struct cmd_context *cmd, int argc, char **argv);

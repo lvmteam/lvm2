@@ -30,7 +30,7 @@ vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 lvcreate -L10 -an -n $lv1 $vg "$dev1"
 lvcreate -L10 -an -n $lv2 $vg "$dev2"
 
-lvconvert -y --type cache --cachepool $lv2 $vg/$lv1
+lvconvert -y --type cache --cachevol $lv2 $vg/$lv1
 lvconvert -y --type thin-pool $vg/$lv1
 
 lvcreate --type thin -V10 -n lvthin --thinpool $vg/$lv1

@@ -48,7 +48,7 @@ cp pattern1 $mount_dir/pattern1
 umount $mount_dir
 lvchange -an $vg/$lv1
 
-lvconvert --yes --type writecache --cachepool $lv2 $vg/$lv1
+lvconvert --yes --type writecache --cachevol $lv2 $vg/$lv1
 
 check lv_field $vg/$lv1 segtype writecache
 
@@ -90,7 +90,7 @@ lvchange -an $vg/$lv2
 
 # test2: create fs on LV after writecache is attached
 
-lvconvert --yes --type writecache --cachepool $lv2 $vg/$lv1
+lvconvert --yes --type writecache --cachevol $lv2 $vg/$lv1
 
 check lv_field $vg/$lv1 segtype writecache
 

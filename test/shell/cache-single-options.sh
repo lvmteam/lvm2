@@ -69,13 +69,13 @@ mount_umount()
 #
 
 # 1 shouldn't be used any longer
-not lvconvert --cachemetadataformat 1 -y --type cache --cachepool $lv2 $vg/$lv1
+not lvconvert --cachemetadataformat 1 -y --type cache --cachevol $lv2 $vg/$lv1
 
 # 3 doesn't exist
-not lvconvert --cachemetadataformat 3 -y --type cache --cachepool $lv2 $vg/$lv1
+not lvconvert --cachemetadataformat 3 -y --type cache --cachevol $lv2 $vg/$lv1
 
 # 2 is used by default
-lvconvert -y --type cache --cachepool $lv2 $vg/$lv1
+lvconvert -y --type cache --cachevol $lv2 $vg/$lv1
 
 check lv_field $vg/$lv1 cachemetadataformat "2"
 
@@ -84,14 +84,14 @@ check lv_field $vg/$lv1 segtype linear
 check lv_field $vg/$lv2 segtype linear
 
 # 2 can be set explicitly
-lvconvert --cachemetadataformat 2 -y --type cache --cachepool $lv2 $vg/$lv1
+lvconvert --cachemetadataformat 2 -y --type cache --cachevol $lv2 $vg/$lv1
 
 check lv_field $vg/$lv1 cachemetadataformat "2"
 
 lvconvert --splitcache $vg/$lv1
 
 # "auto" means 2
-lvconvert --cachemetadataformat auto -y --type cache --cachepool $lv2 $vg/$lv1
+lvconvert --cachemetadataformat auto -y --type cache --cachevol $lv2 $vg/$lv1
 
 check lv_field $vg/$lv1 cachemetadataformat "2"
 
@@ -107,7 +107,7 @@ mount_umount $lv1
 # Test --poolmetadatasize
 #
 
-lvconvert -y --type cache --cachepool $lv2 --poolmetadatasize 4m $vg/$lv1
+lvconvert -y --type cache --cachevol $lv2 --poolmetadatasize 4m $vg/$lv1
 
 check lv_field $vg/$lv1 lv_metadata_size "4.00m"
 
@@ -123,7 +123,7 @@ mount_umount $lv1
 # Test --chunksize
 #
 
-lvconvert -y --type cache --cachepool $lv2 --chunksize 32k $vg/$lv1
+lvconvert -y --type cache --cachevol $lv2 --chunksize 32k $vg/$lv1
 
 check lv_field $vg/$lv1 chunksize "32.00k"
 
@@ -139,7 +139,7 @@ mount_umount $lv1
 # Test --cachemode
 #
 
-lvconvert -y --type cache --cachepool $lv2 --cachemode writethrough $vg/$lv1
+lvconvert -y --type cache --cachevol $lv2 --cachemode writethrough $vg/$lv1
 
 check lv_field $vg/$lv1 cachemode "writethrough"
 
@@ -152,7 +152,7 @@ mount_umount $lv1
 
 # FIXME: kernel errors for other cache modes
 
-#lvconvert -y --type cache --cachepool $lv2 --cachemode passthrough $vg/$lv1
+#lvconvert -y --type cache --cachevol $lv2 --cachemode passthrough $vg/$lv1
 
 #check lv_field $vg/$lv1 cachemode "passthrough"
 
@@ -164,7 +164,7 @@ mount_umount $lv1
 #mount_umount $lv1
 
 
-lvconvert -y --type cache --cachepool $lv2 --cachemode writeback $vg/$lv1
+lvconvert -y --type cache --cachevol $lv2 --cachemode writeback $vg/$lv1
 
 check lv_field $vg/$lv1 cachemode "writeback"
 
@@ -180,7 +180,7 @@ mount_umount $lv1
 # Test --cachepolicy
 #
 
-lvconvert -y --type cache --cachepool $lv2 --cachepolicy smq $vg/$lv1
+lvconvert -y --type cache --cachevol $lv2 --cachepolicy smq $vg/$lv1
 
 check lv_field $vg/$lv1 cachepolicy "smq"
 
@@ -202,7 +202,7 @@ mount_umount $lv1
 # (only for mq policy, no settings for smq)
 #
 
-lvconvert -y --type cache --cachepool $lv2 --cachemode writethrough --cachepolicy mq --cachesettings 'migration_threshold = 233 sequential_threshold=13 random_threshold =1' $vg/$lv1
+lvconvert -y --type cache --cachevol $lv2 --cachemode writethrough --cachepolicy mq --cachesettings 'migration_threshold = 233 sequential_threshold=13 random_threshold =1' $vg/$lv1
 
 check lv_field $vg/$lv1 cachemode "writethrough"
 check lv_field $vg/$lv1 cachepolicy "mq"
@@ -224,7 +224,7 @@ mount_umount $lv1
 # Test lvchange of --cachemode, --cachepolicy, --cachesettings
 #
 
-lvconvert -y --type cache --cachepool $lv2 $vg/$lv1
+lvconvert -y --type cache --cachevol $lv2 $vg/$lv1
 
 lvchange -ay $vg/$lv1
 

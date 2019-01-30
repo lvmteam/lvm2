@@ -364,14 +364,14 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 
 		if (!seg->pool_lv) {
 			seg_error("is missing cache pool LV");
-		} else if (!lv_is_cache_pool(seg->pool_lv) && !lv_is_cache_single(seg->pool_lv))
+		} else if (!lv_is_cache_pool(seg->pool_lv) && !lv_is_cache_vol(seg->pool_lv))
 			seg_error("is not referencing cache pool LV");
 	} else { /* !cache */
 		if (seg->cleaner_policy)
 			seg_error("sets cleaner_policy");
 	}
 
-	if (lv_is_cache(lv) && seg->pool_lv && lv_is_cache_single(seg->pool_lv)) {
+	if (lv_is_cache(lv) && seg->pool_lv && lv_is_cache_vol(seg->pool_lv)) {
 		cache_setting_seg = seg;
 		no_metadata_format = 1;
 	}
@@ -805,7 +805,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 		if ((seg_count != 1) &&
 		    (lv_is_cache(lv) ||
 		     lv_is_cache_pool(lv) ||
-		     lv_is_cache_single(lv) ||
+		     lv_is_cache_vol(lv) ||
 		     lv_is_raid(lv) ||
 		     lv_is_snapshot(lv) ||
 		     lv_is_thin_pool(lv) ||

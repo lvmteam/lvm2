@@ -1847,8 +1847,8 @@ static int _lvconvert_split_and_keep_cache(struct cmd_context *cmd,
 	if (!archive(lv->vg))
 		return_0;
 
-	if (lv_is_cache_single(cache_seg->pool_lv)) {
-		if (!lv_detach_cache_single(lv))
+	if (lv_is_cache_vol(cache_seg->pool_lv)) {
+		if (!lv_detach_cache_vol(lv))
 			return_0;
 	} else {
 		if (!lv_cache_remove(lv))
@@ -2421,7 +2421,7 @@ static int _lvconvert_cache_repair(struct cmd_context *cmd,
 	struct logical_volume *pmslv;
 	struct logical_volume *mlv;
 
-	if (lv_is_cache(cache_lv) && lv_is_cache_single(first_seg(cache_lv)->pool_lv)) {
+	if (lv_is_cache(cache_lv) && lv_is_cache_vol(first_seg(cache_lv)->pool_lv)) {
 		log_error("Manual repair required.");
 		return 0;
 	}
@@ -3354,7 +3354,7 @@ revert_new_lv:
 #endif
 }
 
-static int _cache_single_attach(struct cmd_context *cmd,
+static int _cache_vol_attach(struct cmd_context *cmd,
 			        struct logical_volume *lv,
 			        struct logical_volume *lv_fast)
 {
@@ -3398,7 +3398,7 @@ static int _cache_single_attach(struct cmd_context *cmd,
 	if (arg_is_set(cmd, poolmetadatasize_ARG))
 		poolmetadatasize = arg_uint64_value(cmd, poolmetadatasize_ARG, 0);
 
-	if (!cache_single_set_params(cmd, cache_lv, lv_fast, poolmetadatasize, chunk_size, cache_metadata_format, cache_mode, policy_name, policy_settings))
+	if (!cache_vol_set_params(cmd, cache_lv, lv_fast, poolmetadatasize, chunk_size, cache_metadata_format, cache_mode, policy_name, policy_settings))
 		goto_out;
 
 	/*
@@ -4104,7 +4104,72 @@ int lvconvert_to_pool_cmd(struct cmd_context *cmd, int argc, char **argv)
 			       NULL, NULL, &_lvconvert_to_pool_single);
 }
 
-static int _lvconvert_cache_attach_single(struct cmd_context *cmd,
+static int _lvconvert_cachevol_attach_single(struct cmd_context *cmd,
+					  struct logical_volume *lv,
+					  struct processing_handle *handle)
+{
+	struct volume_group *vg = lv->vg;
+	struct logical_volume *cachevol_lv;
+	const char *cachevol_name;
+
+	if (!(cachevol_name = arg_str_value(cmd, cachevol_ARG, NULL)))
+		goto_out;
+
+	if (!validate_lvname_param(cmd, &vg->name, &cachevol_name))
+		goto_out;
+
+	if (!(cachevol_lv = find_lv(vg, cachevol_name))) {
+		log_error("Cache single %s not found.", cachevol_name);
+		goto out;
+	}
+
+	/* Ensure the LV is not active elsewhere. */
+	if (!lockd_lv(cmd, lv, "ex", 0))
+		goto_out;
+
+	if (!dm_list_empty(&cachevol_lv->segs_using_this_lv)) {
+		log_error("LV %s is already in use.", display_lvname(cachevol_lv));
+		goto out;
+	}
+
+	if (!arg_is_set(cmd, yes_ARG) &&
+	    yes_no_prompt("Erase all existing data on %s? [y/n]: ", display_lvname(cachevol_lv)) == 'n') {
+		log_error("Conversion aborted.");
+		goto out;
+	}
+
+	/* Ensure the LV is not active elsewhere. */
+	if (!lockd_lv(cmd, cachevol_lv, "ex", LDLV_PERSISTENT))
+		goto_out;
+
+	cachevol_lv->status |= LV_CACHE_VOL;
+
+	if (!wipe_cache_pool(cachevol_lv))
+		goto_out;
+
+	/* When the lv arg is a thinpool, redirect command to data sub lv. */
+
+	if (lv_is_thin_pool(lv)) {
+		lv = seg_lv(first_seg(lv), 0);
+		log_verbose("Redirecting operation to data sub LV %s.", display_lvname(lv));
+	}
+
+	if (_raid_split_image_conversion(lv))
+		goto_out;
+
+	/* Attach the cache to the main LV. */
+
+	if (!_cache_vol_attach(cmd, lv, cachevol_lv))
+		goto_out;
+
+	log_print_unless_silent("Logical volume %s is now cached.", display_lvname(lv));
+
+	return ECMD_PROCESSED;
+ out:
+	return ECMD_FAILED;
+}
+
+static int _lvconvert_cachepool_attach_single(struct cmd_context *cmd,
 					  struct logical_volume *lv,
 					  struct processing_handle *handle)
 {
@@ -4132,7 +4197,7 @@ static int _lvconvert_cache_attach_single(struct cmd_context *cmd,
 	 * If using an existing cache pool, wipe it.
 	 */
 
-	if (!lv_is_cache_pool(cachepool_lv) && arg_is_set(cmd, poolmetadata_ARG)) {
+	if (!lv_is_cache_pool(cachepool_lv)) {
 		int lvt_enum = get_lvt_enum(cachepool_lv);
 		struct lv_type *lvtype = get_lv_type(lvt_enum);
 
@@ -4163,28 +4228,6 @@ static int _lvconvert_cache_attach_single(struct cmd_context *cmd,
 			log_error("LV %s is not a cache pool.", display_lvname(cachepool_lv));
 			goto out;
 		}
-
-	} else if (!lv_is_cache_pool(cachepool_lv)) {
-
-		if (!dm_list_empty(&cachepool_lv->segs_using_this_lv)) {
-			log_error("LV %s is already in use.", display_lvname(cachepool_lv));
-			goto out;
-		}
-
-		if (!arg_is_set(cmd, yes_ARG) &&
-		    yes_no_prompt("Erase all existing data on %s? [y/n]: ", display_lvname(cachepool_lv)) == 'n') {
-			log_error("Conversion aborted.");
-			goto out;
-		}
-
-		/* Ensure the LV is not active elsewhere. */
-		if (!lockd_lv(cmd, cachepool_lv, "ex", LDLV_PERSISTENT))
-			goto_out;
-
-		cachepool_lv->status |= LV_CACHE_SINGLE;
-
-		if (!wipe_cache_pool(cachepool_lv))
-			goto_out;
 	} else {
 		if (!dm_list_empty(&cachepool_lv->segs_using_this_lv)) {
 			log_error("Cache pool %s is already in use.", cachepool_name);
@@ -4225,31 +4268,20 @@ static int _lvconvert_cache_attach_single(struct cmd_context *cmd,
 
 	/* Attach the cache to the main LV. */
 
-	if (lv_is_cache_single(cachepool_lv)) {
-		if (!_cache_single_attach(cmd, lv, cachepool_lv))
-			goto_out;
-
-	} else if (lv_is_cache_pool(cachepool_lv)) {
-		if (!_cache_pool_attach(cmd, lv, cachepool_lv))
-			goto_out;
-
-	} else {
-		log_error(INTERNAL_ERROR "Invalid cache pool state for %s", cachepool_lv->name);
-		goto out;
-	}
+	if (!_cache_pool_attach(cmd, lv, cachepool_lv))
+		goto_out;
 
 	log_print_unless_silent("Logical volume %s is now cached.", display_lvname(lv));
 
 	return ECMD_PROCESSED;
-
  out:
 	return ECMD_FAILED;
 }
 
-int lvconvert_to_cache_vol_cmd(struct cmd_context *cmd, int argc, char **argv)
+int lvconvert_to_cache_with_cachepool_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
 	return process_each_lv(cmd, 1, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
-			       NULL, NULL, &_lvconvert_cache_attach_single);
+			       NULL, NULL, &_lvconvert_cachepool_attach_single);
 }
 
 static int _lvconvert_to_thin_with_external_single(struct cmd_context *cmd,
@@ -4510,7 +4542,7 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 					struct logical_volume *lv,
 					struct logical_volume *lv_fast);
 
-static int _lvconvert_split_cache_single(struct cmd_context *cmd,
+static int _lvconvert_split_cache_vol(struct cmd_context *cmd,
 					 struct logical_volume *lv,
 					 struct processing_handle *handle)
 {
@@ -4565,7 +4597,7 @@ static int _lvconvert_split_cache_single(struct cmd_context *cmd,
 
 	} else if (lv_is_cache(lv_main)) {
 		if ((cmd->command->command_enum == lvconvert_split_and_remove_cache_CMD) &&
-		    lv_is_cache_single(lv_fast)) {
+		    lv_is_cache_vol(lv_fast)) {
 			log_error("Detach cache from %s with --splitcache.", display_lvname(lv));
 			log_error("The cache %s may then be removed with lvremove.", display_lvname(lv_fast));
 			return 0;
@@ -4600,7 +4632,7 @@ int lvconvert_split_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	return process_each_lv(cmd, 1, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
-			       NULL, NULL, &_lvconvert_split_cache_single);
+			       NULL, NULL, &_lvconvert_split_cache_vol);
 }
 
 static int _lvconvert_raid_types_single(struct cmd_context *cmd, struct logical_volume *lv,
@@ -5453,7 +5485,7 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 	char *lockd_fast_name = NULL;
 	struct id lockd_fast_id;
 
-	fast_name = arg_str_value(cmd, cachepool_ARG, "");
+	fast_name = arg_str_value(cmd, cachevol_ARG, "");
 
 	if (!(lv_fast = find_lv(vg, fast_name))) {
 		log_error("LV %s not found.", fast_name);
@@ -5559,7 +5591,7 @@ bad:
 
 }
 
-int lvconvert_to_writecache_vol_cmd(struct cmd_context *cmd, int argc, char **argv)
+int lvconvert_to_writecache_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct processing_handle *handle;
 	struct lvconvert_result lr = { 0 };
@@ -5576,6 +5608,29 @@ int lvconvert_to_writecache_vol_cmd(struct cmd_context *cmd, int argc, char **ar
 
 	ret = process_each_lv(cmd, cmd->position_argc, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE, handle, NULL,
 			      &_lvconvert_writecache_attach_single);
+
+	destroy_processing_handle(cmd, handle);
+
+	return ret;
+}
+
+int lvconvert_to_cache_with_cachevol_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	struct processing_handle *handle;
+	struct lvconvert_result lr = { 0 };
+	int ret;
+
+	if (!(handle = init_processing_handle(cmd, NULL))) {
+		log_error("Failed to initialize processing handle.");
+		return ECMD_FAILED;
+	}
+
+	handle->custom_handle = &lr;
+
+	cmd->cname->flags &= ~GET_VGNAME_FROM_OPTIONS;
+
+	ret = process_each_lv(cmd, cmd->position_argc, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE, handle, NULL,
+			      &_lvconvert_cachevol_attach_single);
 
 	destroy_processing_handle(cmd, handle);
 

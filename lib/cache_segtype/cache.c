@@ -49,7 +49,7 @@ static void _cache_display(const struct lv_segment *seg)
 	const struct dm_config_node *n;
 	const struct lv_segment *setting_seg = NULL;
 
-	if (seg_is_cache(seg) && lv_is_cache_single(seg->pool_lv))
+	if (seg_is_cache(seg) && lv_is_cache_vol(seg->pool_lv))
 		setting_seg = seg;
 
 	else if (seg_is_cache_pool(seg))
@@ -540,7 +540,7 @@ static int _cache_text_import(struct lv_segment *seg,
 		if (!id_read_format(&seg->data_id, uuid))
 			return SEG_LOG_ERROR("Couldn't format data_id in");
 	} else {
-		/* Do not call this when LV is cache_single. */
+		/* Do not call this when LV is cache_vol. */
 		/* load order is unknown, could be cache origin or pool LV, so check for both */
 		if (!dm_list_empty(&pool_lv->segments))
 			_fix_missing_defaults(first_seg(pool_lv));
@@ -570,7 +570,7 @@ static int _cache_text_export(const struct lv_segment *seg, struct formatter *f)
 	if (seg->cleaner_policy)
 		outf(f, "cleaner = 1");
 
-	if (lv_is_cache_single(seg->pool_lv)) {
+	if (lv_is_cache_vol(seg->pool_lv)) {
 		outf(f, "metadata_format = " FMTu32, seg->cache_metadata_format);
 
 		if (!_settings_text_export(seg, f))
@@ -620,7 +620,7 @@ static int _cache_add_target_line(struct dev_manager *dm,
 
 	cache_pool_seg = first_seg(seg->pool_lv);
 
-	if (lv_is_cache_single(seg->pool_lv))
+	if (lv_is_cache_vol(seg->pool_lv))
 		setting_seg = seg;
 	else
 		setting_seg = cache_pool_seg;
@@ -668,7 +668,7 @@ static int _cache_add_target_line(struct dev_manager *dm,
 	if (!(origin_uuid = build_dm_uuid(mem, seg_lv(seg, 0), NULL)))
 		return_0;
 
-	if (!lv_is_cache_single(seg->pool_lv)) {
+	if (!lv_is_cache_vol(seg->pool_lv)) {
 		/* We don't use start/len when using separate data/meta devices. */
 		if (seg->metadata_len || seg->data_len) {
 			log_error(INTERNAL_ERROR "LV %s using unsupported ranges with cache pool.",

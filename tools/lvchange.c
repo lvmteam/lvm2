@@ -621,7 +621,7 @@ static int _lvchange_cache(struct cmd_context *cmd,
 
 	seg = first_seg(lv);
 
-	if (seg_is_cache(seg) && lv_is_cache_single(seg->pool_lv))
+	if (seg_is_cache(seg) && lv_is_cache_vol(seg->pool_lv))
 		setting_seg = seg;
 
 	else if (seg_is_cache_pool(seg))

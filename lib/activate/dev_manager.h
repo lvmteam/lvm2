@@ -107,12 +107,12 @@ int dev_manager_device_uses_vg(struct device *dev,
 
 int dev_manager_remove_dm_major_minor(uint32_t major, uint32_t minor);
 
-int get_cache_single_meta_data(struct cmd_context *cmd,
+int get_cache_vol_meta_data(struct cmd_context *cmd,
                                     struct logical_volume *lv,
                                     struct logical_volume *pool_lv,
                                     struct dm_info *info_meta, struct dm_info *info_data);
 
-int remove_cache_single_meta_data(struct cmd_context *cmd,
+int remove_cache_vol_meta_data(struct cmd_context *cmd,
                                        struct dm_info *info_meta, struct dm_info *info_data);
 
 #endif

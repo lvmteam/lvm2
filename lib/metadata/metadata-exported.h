@@ -152,7 +152,7 @@
 #define LV_VDO_POOL		UINT64_C(0x0000000040000000)    /* LV - Internal user only */
 #define LV_VDO_POOL_DATA	UINT64_C(0x8000000000000000)    /* LV - Internal user only */
 
-#define LV_CACHE_SINGLE		UINT64_C(0x0010000000000000)	/* LV - also a PV flag */
+#define LV_CACHE_VOL		UINT64_C(0x0010000000000000)	/* LV - also a PV flag */
 
 
 /* Format features flags */
@@ -248,11 +248,11 @@
 
 #define lv_is_cache(lv)		(((lv)->status & CACHE) ? 1 : 0)
 #define lv_is_cache_pool(lv)	(((lv)->status & CACHE_POOL) ? 1 : 0)
-#define lv_is_cache_single(lv)	(((lv)->status & LV_CACHE_SINGLE) ? 1 : 0)
+#define lv_is_cache_vol(lv)	(((lv)->status & LV_CACHE_VOL) ? 1 : 0)
 #define lv_is_used_cache_pool(lv)	(lv_is_cache_pool(lv) && !dm_list_empty(&(lv)->segs_using_this_lv))
 #define lv_is_cache_pool_data(lv)	(((lv)->status & CACHE_POOL_DATA) ? 1 : 0)
 #define lv_is_cache_pool_metadata(lv)	(((lv)->status & CACHE_POOL_METADATA) ? 1 : 0)
-#define lv_is_cache_type(lv)	(((lv)->status & (CACHE | CACHE_POOL | LV_CACHE_SINGLE | CACHE_POOL_DATA | CACHE_POOL_METADATA)) ? 1 : 0)
+#define lv_is_cache_type(lv)	(((lv)->status & (CACHE | CACHE_POOL | LV_CACHE_VOL | CACHE_POOL_DATA | CACHE_POOL_METADATA)) ? 1 : 0)
 
 #define lv_is_pool(lv)		(((lv)->status & (CACHE_POOL | THIN_POOL)) ? 1 : 0)
 #define lv_is_pool_data(lv)		(((lv)->status & (CACHE_POOL_DATA | THIN_POOL_DATA)) ? 1 : 0)
@@ -1254,7 +1254,7 @@ int cache_set_params(struct lv_segment *seg,
 		     cache_mode_t mode,
 		     const char *policy_name,
 		     const struct dm_config_tree *policy_settings);
-int cache_single_set_params(struct cmd_context *cmd,
+int cache_vol_set_params(struct cmd_context *cmd,
 		     struct logical_volume *cache_lv,
 		     struct logical_volume *pool_lv,
 		     uint64_t poolmetadatasize,
@@ -1279,7 +1279,7 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool_lv,
 				       struct logical_volume *origin_lv);
 int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean);
 int lv_cache_remove(struct logical_volume *cache_lv);
-int lv_detach_cache_single(struct logical_volume *cache_lv);
+int lv_detach_cache_vol(struct logical_volume *cache_lv);
 int wipe_cache_pool(struct logical_volume *cache_pool_lv);
 /* --  metadata/cache_manip.c */
 

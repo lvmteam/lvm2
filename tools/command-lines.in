@@ -453,26 +453,34 @@ RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 lvconvert --type cache --cachepool LV LV_linear_striped_raid_thinpool
 OO: --cache, OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
-ID: lvconvert_to_cache_vol
-DESC: Attach a cache to an LV, converts the LV to type cache.
+ID: lvconvert_to_cache_with_cachepool
+DESC: Attach a cache pool to an LV, converts the LV to type cache.
 RULE: all and lv_is_visible
 RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 # alternate form of lvconvert --type cache
 lvconvert --cache --cachepool LV LV_linear_striped_raid_thinpool
 OO: --type cache, OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
-ID: lvconvert_to_cache_vol
-DESC: Attach a cache to an LV (infers --type cache).
+ID: lvconvert_to_cache_with_cachepool
+DESC: Attach a cache pool to an LV (infers --type cache).
 RULE: all and lv_is_visible
 RULE: --poolmetadata not --readahead --stripesize --stripes_long
 FLAGS: SECONDARY_SYNTAX
 
 ---
 
-lvconvert --type writecache --cachepool LV LV_linear_striped_raid
+lvconvert --type writecache --cachevol LV LV_linear_striped_raid
 OO: OO_LVCONVERT, --cachesettings String
-ID: lvconvert_to_writecache_vol
+ID: lvconvert_to_writecache
 DESC: Attach a writecache to an LV, converts the LV to type writecache.
+RULE: all and lv_is_visible
+
+---
+
+lvconvert --type cache --cachevol LV LV_linear_striped_raid_thinpool
+OO: --cache, OO_LVCONVERT_CACHE, OO_LVCONVERT, --poolmetadatasize SizeMB, --chunksize SizeKB
+ID: lvconvert_to_cache_with_cachevol
+DESC: Attach a cache to an LV, converts the LV to type cache.
 RULE: all and lv_is_visible
 
 ---

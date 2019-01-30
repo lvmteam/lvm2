@@ -833,7 +833,7 @@ static int _info(struct cmd_context *cmd,
 
 /* FIXME: could we just use dev_manager_info instead of this? */
 
-int get_cache_single_meta_data(struct cmd_context *cmd,
+int get_cache_vol_meta_data(struct cmd_context *cmd,
 				    struct logical_volume *lv,
 				    struct logical_volume *pool_lv,
 				    struct dm_info *info_meta, struct dm_info *info_data)
@@ -876,7 +876,7 @@ int get_cache_single_meta_data(struct cmd_context *cmd,
  * devs?
  */
 
-int remove_cache_single_meta_data(struct cmd_context *cmd,
+int remove_cache_vol_meta_data(struct cmd_context *cmd,
 				       struct dm_info *info_meta, struct dm_info *info_data)
 {
 	struct dm_tree *dtree;
@@ -2375,7 +2375,7 @@ static int _pool_register_callback(struct dev_manager *dm,
 #endif
 
 	/* Skip for single-device cache pool */
-	if (lv_is_cache(lv) && lv_is_cache_single(first_seg(lv)->pool_lv))
+	if (lv_is_cache(lv) && lv_is_cache_vol(first_seg(lv)->pool_lv))
 		return 1;
 
 	if (!(data = dm_pool_zalloc(dm->mem, sizeof(*data)))) {
@@ -2445,7 +2445,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		/* Unused cache pool is activated as metadata */
 	}
 
-	if (lv_is_cache(lv) && lv_is_cache_single(first_seg(lv)->pool_lv) && dm->activation) {
+	if (lv_is_cache(lv) && lv_is_cache_vol(first_seg(lv)->pool_lv) && dm->activation) {
 		struct logical_volume *pool_lv = first_seg(lv)->pool_lv;
 		struct lv_segment *lvseg = first_seg(lv);
 		struct dm_info info_meta;
@@ -2637,7 +2637,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 				return_0;
 		}
 		if (seg->pool_lv &&
-		    (lv_is_cache_pool(seg->pool_lv) || lv_is_cache_single(seg->pool_lv) || dm->track_external_lv_deps) &&
+		    (lv_is_cache_pool(seg->pool_lv) || lv_is_cache_vol(seg->pool_lv) || dm->track_external_lv_deps) &&
 		    /* When activating and not origin_only detect linear 'overlay' over pool */
 		    !_add_lv_to_dtree(dm, dtree, seg->pool_lv, dm->activation ? origin_only : 1))
 			return_0;
@@ -3163,7 +3163,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		return 1;
 	}
 
-	if (lv_is_cache(lv) && lv_is_cache_single(first_seg(lv)->pool_lv)) {
+	if (lv_is_cache(lv) && lv_is_cache_vol(first_seg(lv)->pool_lv)) {
 		struct logical_volume *pool_lv = first_seg(lv)->pool_lv;
 		struct lv_segment *lvseg = first_seg(lv);
 		struct volume_group *vg = lv->vg;
@@ -3414,7 +3414,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	    !_pool_register_callback(dm, dnode, lv))
 		return_0;
 
-	if (lv_is_cache(lv) && !lv_is_cache_single(first_seg(lv)->pool_lv) &&
+	if (lv_is_cache(lv) && !lv_is_cache_vol(first_seg(lv)->pool_lv) &&
 	    /* Register callback only for layer activation or non-layered cache LV */
 	    (layer || !lv_layer(lv)) &&
 	    /* Register callback when metadata LV is NOT already active */

@@ -45,7 +45,7 @@ cp pattern1 "$mount_dir/pattern1"
 umount "$mount_dir"
 lvchange -an $vg/$lv1
 
-lvconvert -y --type cache --cachepool $lv2 $vg/$lv1
+lvconvert -y --type cache --cachevol $lv2 $vg/$lv1
 
 check lv_field $vg/$lv1 segtype cache
 
