@@ -1,5 +1,6 @@
 Version 2.02.185 - 
 ==================================
+  Add support for vgsplit with cached devices.
   Fix signal delivery checking race in libdaemon (lvmetad).
   Add missing Before=shutdown.target to LVM2 services to fix shutdown ordering.
 
