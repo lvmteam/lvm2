@@ -1138,6 +1138,9 @@ int udev_dev_is_mpath_component(struct device *dev)
 	const char *value;
 	int ret = 0;
 
+	if (!obtain_device_list_from_udev())
+		return 0;
+
 	if (!(udev_device = _udev_get_dev(dev)))
 		return 0;
 
@@ -1166,6 +1169,9 @@ int udev_dev_is_md_component(struct device *dev)
 	struct udev_device *udev_device;
 	const char *value;
 	int ret = 0;
+
+	if (!obtain_device_list_from_udev())
+		return 0;
 
 	if (!(udev_device = _udev_get_dev(dev)))
 		return 0;
