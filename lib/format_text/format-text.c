@@ -161,7 +161,8 @@ static void _xlate_mdah(struct mda_header *mdah)
 	}
 }
 
-static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev_area, int primary_mda)
+static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev_area,
+				int primary_mda, uint32_t ignore_bad_fields, uint32_t *bad_fields)
 {
 	log_debug_metadata("Reading mda header sector from %s at %llu",
 			   dev_name(dev_area->dev), (unsigned long long)dev_area->start);
@@ -169,53 +170,62 @@ static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev
 	if (!dev_read_bytes(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, mdah)) {
 		log_error("Failed to read metadata area header on %s at %llu",
 			  dev_name(dev_area->dev), (unsigned long long)dev_area->start);
+		*bad_fields |= BAD_MDA_READ;
 		return 0;
 	}
 
 	if (mdah->checksum_xl != xlate32(calc_crc(INITIAL_CRC, (uint8_t *)mdah->magic,
 						  MDA_HEADER_SIZE -
 						  sizeof(mdah->checksum_xl)))) {
-		log_error("Incorrect checksum in metadata area header on %s at %llu",
+		log_warn("WARNING: wrong checksum %x in mda header on %s at %llu",
+			  mdah->checksum_xl,
 			  dev_name(dev_area->dev), (unsigned long long)dev_area->start);
-		return 0;
+		*bad_fields |= BAD_MDA_CHECKSUM;
 	}
 
 	_xlate_mdah(mdah);
 
 	if (memcmp(mdah->magic, FMTT_MAGIC, sizeof(mdah->magic))) {
-		log_error("Wrong magic number in metadata area header on %s at %llu",
+		log_warn("WARNING: wrong magic number in mda header on %s at %llu",
 			  dev_name(dev_area->dev), (unsigned long long)dev_area->start);
-		return 0;
+		*bad_fields |= BAD_MDA_MAGIC;
 	}
 
 	if (mdah->version != FMTT_VERSION) {
-		log_error("Incompatible version %u metadata area header on %s at %llu",
+		log_warn("WARNING: wrong version %u in mda header on %s at %llu",
 			  mdah->version,
 			  dev_name(dev_area->dev), (unsigned long long)dev_area->start);
-		return 0;
+		*bad_fields |= BAD_MDA_VERSION;
 	}
 
 	if (mdah->start != dev_area->start) {
-		log_error("Incorrect start sector %llu in metadata area header on %s at %llu",
+		log_warn("WARNING: wrong start sector %llu in mda header on %s at %llu",
 			  (unsigned long long)mdah->start,
 			  dev_name(dev_area->dev), (unsigned long long)dev_area->start);
-		return 0;
+		*bad_fields |= BAD_MDA_START;
 	}
+
+	*bad_fields &= ~ignore_bad_fields;
+
+	if (*bad_fields)
+		return 0;
 
 	return 1;
 }
 
 struct mda_header *raw_read_mda_header(const struct format_type *fmt,
-				       struct device_area *dev_area, int primary_mda)
+				       struct device_area *dev_area,
+				       int primary_mda, uint32_t ignore_bad_fields, uint32_t *bad_fields)
 {
 	struct mda_header *mdah;
 
 	if (!(mdah = dm_pool_alloc(fmt->cmd->mem, MDA_HEADER_SIZE))) {
 		log_error("struct mda_header allocation failed");
+		*bad_fields |= BAD_MDA_INTERNAL;
 		return NULL;
 	}
 
-	if (!_raw_read_mda_header(mdah, dev_area, primary_mda)) {
+	if (!_raw_read_mda_header(mdah, dev_area, primary_mda, ignore_bad_fields, bad_fields)) {
 		dm_pool_free(fmt->cmd->mem, mdah);
 		return NULL;
 	}
@@ -413,8 +423,9 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 	time_t when;
 	char *desc;
 	uint32_t wrap = 0;
+	uint32_t bad_fields = 0;
 
-	if (!(mdah = raw_read_mda_header(fid->fmt, area, primary_mda))) {
+	if (!(mdah = raw_read_mda_header(fid->fmt, area, primary_mda, 0, &bad_fields))) {
 		log_error("Failed to read vg %s from %s", vgname, dev_name(area->dev));
 		goto out;
 	}
@@ -535,6 +546,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	uint64_t old_start = 0, old_last = 0, old_size = 0, old_wrap = 0;
 	uint64_t new_start = 0, new_last = 0, new_size = 0, new_wrap = 0;
 	uint64_t max_size;
+	uint32_t bad_fields = 0;
 	char *new_buf = NULL;
 	int overlap;
 	int found = 0;
@@ -550,7 +562,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	if (!found)
 		return 1;
 
-	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area, mda_is_primary(mda))))
+	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area, mda_is_primary(mda), mda->ignore_bad_fields, &bad_fields)))
 		goto_out;
 
 	/*
@@ -821,6 +833,7 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 	struct raw_locn *rlocn_slot1;
 	struct raw_locn *rlocn_new;
 	struct pv_list *pvl;
+	uint32_t bad_fields = 0;
 	int r = 0;
 	int found = 0;
 
@@ -841,7 +854,7 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 	 * mdah buffer, but the mdah buffer is not modified and mdac->rlocn is
 	 * modified.
 	 */
-	if (!(mdab = raw_read_mda_header(fid->fmt, &mdac->area, mda_is_primary(mda))))
+	if (!(mdab = raw_read_mda_header(fid->fmt, &mdac->area, mda_is_primary(mda), mda->ignore_bad_fields, &bad_fields)))
 		goto_out;
 
 	/*
@@ -1033,6 +1046,7 @@ static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 	struct mda_header *mdah;
 	struct raw_locn *rlocn_slot0;
 	struct raw_locn *rlocn_slot1;
+	uint32_t bad_fields = 0;
 	int r = 0;
 
 	if (!(mdah = dm_pool_alloc(fid->fmt->cmd->mem, MDA_HEADER_SIZE))) {
@@ -1046,7 +1060,7 @@ static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 	 * Just to print the warning?
 	 */
 
-	if (!_raw_read_mda_header(mdah, &mdac->area, mda_is_primary(mda)))
+	if (!_raw_read_mda_header(mdah, &mdac->area, mda_is_primary(mda), 0, &bad_fields))
 		log_warn("WARNING: Removing metadata location on %s with bad mda header.",
 			  dev_name(mdac->area.dev));
 

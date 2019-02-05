@@ -331,8 +331,9 @@ static int _read_mda_header_and_metadata(struct metadata_area *mda, void *baton)
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct mda_header *mdah;
 	struct lvmcache_vgsummary vgsummary = { 0 };
+	uint32_t bad_fields = 0;
 
-	if (!(mdah = raw_read_mda_header(fmt, &mdac->area, mda_is_primary(mda)))) {
+	if (!(mdah = raw_read_mda_header(fmt, &mdac->area, mda_is_primary(mda), 0, &bad_fields))) {
 		log_error("Failed to read mda header from %s", dev_name(mdac->area.dev));
 		goto fail;
 	}

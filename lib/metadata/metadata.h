@@ -168,11 +168,25 @@ struct metadata_area_ops {
 #define MDA_CONTENT_REASON(primary_mda) ((primary_mda) ? DEV_IO_MDA_CONTENT : DEV_IO_MDA_EXTRA_CONTENT)
 #define MDA_HEADER_REASON(primary_mda)  ((primary_mda) ? DEV_IO_MDA_HEADER : DEV_IO_MDA_EXTRA_HEADER)
 
+/*
+ * Flags describing errors found while reading.
+ */
+#define BAD_MDA_INTERNAL	0x00000001 /* internal lvm error */
+#define BAD_MDA_READ		0x00000002 /* read io failed */
+#define BAD_MDA_HEADER		0x00000004 /* general problem with header */
+#define BAD_MDA_TEXT		0x00000008 /* general problem with text */
+#define BAD_MDA_CHECKSUM	0x00000010
+#define BAD_MDA_MAGIC		0x00000020
+#define BAD_MDA_VERSION		0x00000040
+#define BAD_MDA_START		0x00000080
+
 struct metadata_area {
 	struct dm_list list;
 	struct metadata_area_ops *ops;
 	void *metadata_locn;
 	uint32_t status;
+	uint32_t bad_fields; /* BAD_MDA_ flags are set to indicate errors found when reading */
+	uint32_t ignore_bad_fields; /* BAD_MDA_ flags are set to indicate errors to ignore */
 };
 struct metadata_area *mda_copy(struct dm_pool *mem,
 			       struct metadata_area *mda);
