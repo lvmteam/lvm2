@@ -229,9 +229,11 @@ static struct volume_group *_import_vg_from_config_tree(const struct dm_config_t
 		 */
 		if (!(vg = (*vsn)->read_vg(fid, cft, allow_lvmetad_extensions)))
 			stack;
-		else if ((vg_missing = vg_missing_pv_count(vg))) {
-			log_verbose("There are %d physical volumes missing.",
-				    vg_missing);
+		else {
+			set_pv_devices(fid, vg);
+
+			if ((vg_missing = vg_missing_pv_count(vg)))
+				log_verbose("There are %d physical volumes missing.", vg_missing);
 			vg_mark_partial_lvs(vg, 1);
 			/* FIXME: move this code inside read_vg() */
 		}

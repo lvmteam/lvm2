@@ -320,6 +320,9 @@ struct volume_group *backup_read_vg(struct cmd_context *cmd,
 		break;
 	}
 
+	if (vg)
+		set_pv_devices(tf, vg);
+
 	if (!vg)
 		tf->fmt->ops->destroy_instance(tf);
 

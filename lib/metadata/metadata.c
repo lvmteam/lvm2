@@ -3866,6 +3866,9 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			continue;
 		}
 
+		if (vg)
+			set_pv_devices(fid, vg);
+
 		/* Use previous VG because checksum matches */
 		if (!vg) {
 			vg = correct_vg;
@@ -4072,6 +4075,9 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				vg_fmtdata = NULL;
 				continue;
 			}
+
+			if (vg)
+				set_pv_devices(fid, vg);
 
 			/* Use previous VG because checksum matches */
 			if (!vg) {
@@ -4496,6 +4502,75 @@ bad:
 	free_pv_fid(pv);
 	dm_pool_free(vg->vgmem, pv);
 	return NULL;
+}
+
+/*
+ * FIXME: we only want to print the warnings when this is called from
+ * vg_read, not from import_vg_from_metadata, so do the warnings elsewhere
+ * or avoid calling this from import_vg_from.
+ */
+static void _set_pv_device(struct format_instance *fid,
+			   struct volume_group *vg,
+			   struct physical_volume *pv)
+{
+	char buffer[64] __attribute__((aligned(8)));
+	uint64_t size;
+
+	if (!(pv->dev = lvmcache_device_from_pvid(fid->fmt->cmd, &pv->id, &pv->label_sector))) {
+		if (!id_write_format(&pv->id, buffer, sizeof(buffer)))
+			buffer[0] = '\0';
+
+		if (fid->fmt->cmd && !fid->fmt->cmd->pvscan_cache_single)
+			log_error_once("Couldn't find device with uuid %s.", buffer);
+		else
+			log_debug_metadata("Couldn't find device with uuid %s.", buffer);
+	}
+
+	/*
+	 * A previous command wrote the VG while this dev was missing, so
+	 * the MISSING flag was included in the PV.
+	 */
+	if ((pv->status & MISSING_PV) && pv->dev)
+		log_warn("WARNING: VG %s was previously updated while PV %s was missing.", vg->name, dev_name(pv->dev));
+
+	/*
+	 * If this command writes the VG, we want the MISSING flag to be
+	 * written for this PV with no device.
+	 */
+	if (!pv->dev)
+		pv->status |= MISSING_PV;
+
+	/* is this correct? */
+	if ((pv->status & MISSING_PV) && pv->dev && (pv_mda_used_count(pv) == 0)) {
+		pv->status &= ~MISSING_PV;
+		log_info("Found a previously MISSING PV %s with no MDAs.", pv_dev_name(pv));
+	}
+
+	/* Fix up pv size if missing or impossibly large */
+	if ((!pv->size || pv->size > (1ULL << 62)) && pv->dev) {
+		if (!dev_get_size(pv->dev, &pv->size)) {
+			log_error("%s: Couldn't get size.", pv_dev_name(pv));
+			return;
+		}
+		log_verbose("Fixing up missing size (%s) for PV %s", display_size(fid->fmt->cmd, pv->size),
+			    pv_dev_name(pv));
+		size = pv->pe_count * (uint64_t) vg->extent_size + pv->pe_start;
+		if (size > pv->size)
+			log_warn("WARNING: Physical Volume %s is too large "
+				 "for underlying device", pv_dev_name(pv));
+	}
+}
+
+/*
+ * Finds the 'struct device' that correponds to each PV in the metadata,
+ * and may make some adjustments to vg fields based on the dev properties.
+ */
+void set_pv_devices(struct format_instance *fid, struct volume_group *vg)
+{
+	struct pv_list *pvl;
+
+	dm_list_iterate_items(pvl, &vg->pvs)
+		_set_pv_device(fid, vg, pvl->pv);
 }
 
 int get_vgnameids(struct cmd_context *cmd, struct dm_list *vgnameids,
