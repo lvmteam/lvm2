@@ -129,7 +129,8 @@ void lvmcache_del_mdas(struct lvmcache_info *info);
 void lvmcache_del_das(struct lvmcache_info *info);
 void lvmcache_del_bas(struct lvmcache_info *info);
 int lvmcache_add_mda(struct lvmcache_info *info, struct device *dev,
-		     uint64_t start, uint64_t size, unsigned ignored);
+		     uint64_t start, uint64_t size, unsigned ignored,
+		     struct metadata_area **mda_new);
 int lvmcache_add_da(struct lvmcache_info *info, uint64_t start, uint64_t size);
 int lvmcache_add_ba(struct lvmcache_info *info, uint64_t start, uint64_t size);
 

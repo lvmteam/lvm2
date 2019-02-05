@@ -1547,7 +1547,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 		// if fmt is not the same as info->fmt we are in trouble
 		if (!lvmcache_add_mda(info, mdac->area.dev,
 				      mdac->area.start, mdac->area.size,
-				      mda_is_ignored(mda)))
+				      mda_is_ignored(mda), NULL))
 			return_0;
 	}
 

@@ -2086,9 +2086,10 @@ void lvmcache_del_bas(struct lvmcache_info *info)
 }
 
 int lvmcache_add_mda(struct lvmcache_info *info, struct device *dev,
-		     uint64_t start, uint64_t size, unsigned ignored)
+		     uint64_t start, uint64_t size, unsigned ignored,
+		     struct metadata_area **mda_new)
 {
-	return add_mda(info->fmt, NULL, &info->mdas, dev, start, size, ignored);
+	return add_mda(info->fmt, NULL, &info->mdas, dev, start, size, ignored, mda_new);
 }
 
 int lvmcache_add_da(struct lvmcache_info *info, uint64_t start, uint64_t size)
