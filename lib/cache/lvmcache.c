@@ -48,6 +48,7 @@ struct lvmcache_info {
 struct lvmcache_vginfo {
 	struct dm_list list;	/* Join these vginfos together */
 	struct dm_list infos;	/* List head for lvmcache_infos */
+	struct dm_list outdated_infos; /* vg_read moves info from infos to outdated_infos */
 	const struct format_type *fmt;
 	char *vgname;		/* "" == orphan */
 	uint32_t status;
@@ -1389,6 +1390,7 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 			return 0;
 		}
 		dm_list_init(&vginfo->infos);
+		dm_list_init(&vginfo->outdated_infos);
 
 		/*
 		 * A different VG (different uuid) can exist with the same name.
@@ -2392,3 +2394,81 @@ struct metadata_area *lvmcache_get_mda(struct cmd_context *cmd,
 	return NULL;
 }
 
+void lvmcache_get_outdated_devs(struct cmd_context *cmd,
+				const char *vgname, const char *vgid,
+				struct dm_list *devs)
+{
+	struct lvmcache_vginfo *vginfo;
+	struct lvmcache_info *info;
+	struct device_list *devl;
+
+	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
+		log_error(INTERNAL_ERROR "lvmcache_get_outdated_devs no vginfo %s", vgname);
+		return;
+	}
+
+	dm_list_iterate_items(info, &vginfo->outdated_infos) {
+		if (!(devl = zalloc(sizeof(*devl))))
+			return;
+		devl->dev = info->dev;
+		dm_list_add(devs, &devl->list);
+	}
+}
+
+void lvmcache_del_outdated_devs(struct cmd_context *cmd,
+				const char *vgname, const char *vgid)
+{
+	struct lvmcache_vginfo *vginfo;
+	struct lvmcache_info *info, *info2;
+
+	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
+		log_error(INTERNAL_ERROR "lvmcache_get_outdated_devs no vginfo");
+		return;
+	}
+
+	dm_list_iterate_items_safe(info, info2, &vginfo->outdated_infos)
+		lvmcache_del(info);
+}
+
+void lvmcache_get_outdated_mdas(struct cmd_context *cmd,
+				const char *vgname, const char *vgid,
+				struct device *dev,
+				struct dm_list **mdas)
+{
+	struct lvmcache_vginfo *vginfo;
+	struct lvmcache_info *info;
+
+	*mdas = NULL;
+
+	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
+		log_error(INTERNAL_ERROR "lvmcache_get_outdated_mdas no vginfo");
+		return;
+	}
+
+	dm_list_iterate_items(info, &vginfo->outdated_infos) {
+		if (info->dev != dev)
+			continue;
+		*mdas = &info->mdas;
+		return;
+	}
+}
+
+bool lvmcache_is_outdated_dev(struct cmd_context *cmd,
+			     const char *vgname, const char *vgid,
+			     struct device *dev)
+{
+	struct lvmcache_vginfo *vginfo;
+	struct lvmcache_info *info;
+
+	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
+		log_error(INTERNAL_ERROR "lvmcache_get_outdated_mdas no vginfo");
+		return false;
+	}
+
+	dm_list_iterate_items(info, &vginfo->outdated_infos) {
+		if (info->dev == dev)
+			return true;
+	}
+
+	return false;
+}

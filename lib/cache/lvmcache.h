@@ -222,6 +222,21 @@ int dev_in_device_list(struct device *dev, struct dm_list *head);
 
 bool lvmcache_has_bad_metadata(struct device *dev);
 
+void lvmcache_get_outdated_devs(struct cmd_context *cmd,
+                                const char *vgname, const char *vgid,
+                                struct dm_list *devs);
+void lvmcache_get_outdated_mdas(struct cmd_context *cmd,
+                                const char *vgname, const char *vgid,
+                                struct device *dev,
+                                struct dm_list **mdas);
+
+bool lvmcache_is_outdated_dev(struct cmd_context *cmd,
+                              const char *vgname, const char *vgid,
+                              struct device *dev);
+
+void lvmcache_del_outdated_devs(struct cmd_context *cmd,
+                                const char *vgname, const char *vgid);
+
 void lvmcache_save_bad_mda(struct lvmcache_info *info, struct metadata_area *mda);
 
 void lvmcache_get_bad_mdas(struct cmd_context *cmd,
