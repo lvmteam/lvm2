@@ -3072,6 +3072,7 @@ static int _vg_commit_mdas(struct volume_group *vg)
 	struct metadata_area *mda, *tmda;
 	struct dm_list ignored;
 	int failed = 0;
+	int good = 0;
 	int cache_updated = 0;
 
 	/* Rearrange the metadata_areas_in_use so ignored mdas come first. */
@@ -3092,27 +3093,31 @@ static int _vg_commit_mdas(struct volume_group *vg)
 		    !mda->ops->vg_commit(vg->fid, vg, mda)) {
 			stack;
 			failed = 1;
-		}
+		} else
+			good++;
+
 		/* Update cache first time we succeed */
 		if (!failed && !cache_updated) {
 			lvmcache_update_vg(vg, 0);
 			cache_updated = 1;
 		}
 	}
-	return cache_updated;
+	if (good)
+		return 1;
+	return 0;
 }
 
 /* Commit pending changes */
 int vg_commit(struct volume_group *vg)
 {
-	int cache_updated = 0;
 	struct pv_list *pvl;
+	int ret;
 
-	cache_updated = _vg_commit_mdas(vg);
+	ret = _vg_commit_mdas(vg);
 
 	set_vg_notify(vg->cmd);
 
-	if (cache_updated) {
+	if (ret) {
 		/*
 		 * We need to clear old_name after a successful commit.
 		 * The volume_group structure could be reused later.
@@ -3126,7 +3131,7 @@ int vg_commit(struct volume_group *vg)
 	}
 
 	/* If at least one mda commit succeeded, it was committed */
-	return cache_updated;
+	return ret;
 }
 
 /* Don't commit any pending changes */
