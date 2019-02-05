@@ -356,9 +356,9 @@ static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
 			  int *is_lvm_device)
 {
 	char label_buf[LABEL_SIZE] __attribute__((aligned(8)));
-	struct label *label = NULL;
 	struct labeller *labeller;
 	uint64_t sector = 0;
+	int is_duplicate = 0;
 	int ret = 0;
 	int pass;
 
@@ -423,17 +423,41 @@ static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
 
 	/*
 	 * This is the point where the scanning code dives into the rest of
-	 * lvm.  ops->read() is usually _text_read() which reads the pv_header,
-	 * mda locations, mda contents.  As these bits of data are read, they
-	 * are saved into lvmcache as info/vginfo structs.
+	 * lvm.  ops->read() is _text_read() which reads the pv_header, mda
+	 * locations, and metadata text.  All of the info it finds about the PV
+	 * and VG is stashed in lvmcache which saves it in the form of
+	 * info/vginfo structs.  That lvmcache info is used later when the
+	 * command wants to read the VG to do something to it.
 	 */
+	ret = labeller->ops->read(labeller, dev, label_buf, sector, &is_duplicate);
 
-	if ((ret = (labeller->ops->read)(labeller, dev, label_buf, &label)) && label) {
-		label->dev = dev;
-		label->sector = sector;
-	} else {
+	if (!ret) {
 		/* FIXME: handle errors */
 		lvmcache_del_dev(dev);
+
+		if (is_duplicate) {
+			/*
+			 * _text_read() called lvmcache_add() which found an
+			 * existing info struct for this PVID but for a
+			 * different dev.  lvmcache_add() did not add an info
+			 * struct for this dev, but added this dev to the list
+			 * of duplicate devs.
+			 */
+			log_warn("WARNING: scan found duplicate PVID %s on %s", dev->pvid, dev_name(dev));
+		} else {
+			/*
+			 * Leave the info in lvmcache because the device is
+			 * present and can still be used even if it has
+			 * metadata that we can't process (we can get metadata
+			 * from another PV/mda.) _text_read only saves mdas
+			 * with good metadata in lvmcache (this includes old
+			 * metadata), and if a PV has no mdas with good
+			 * metadata, then the info for the PV will be in
+			 * lvmcache with empty info->mdas, and it will behave
+			 * like a PV with no mdas (a common configuration.)
+			 */
+			log_warn("WARNING: scan failed to get metadata summary from %s PVID %s", dev_name(dev), dev->pvid);
+		}
 	}
  out:
 	return ret;

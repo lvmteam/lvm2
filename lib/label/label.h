@@ -65,7 +65,7 @@ struct label_ops {
 	 * Read a label from a volume.
 	 */
 	int (*read) (struct labeller * l, struct device * dev,
-		     void *label_buf, struct label ** label);
+		     void *label_buf, uint64_t label_sector, int *is_duplicate);
 
 	/*
 	 * Populate label_type etc.

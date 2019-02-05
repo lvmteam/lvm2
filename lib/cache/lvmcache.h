@@ -74,9 +74,9 @@ int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const 
 
 /* Add/delete a device */
 struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
-				   struct device *dev,
-				   const char *vgname, const char *vgid,
-				   uint32_t vgstatus);
+                                   struct device *dev, uint64_t label_sector,
+                                   const char *vgname, const char *vgid,
+                                   uint32_t vgstatus, int *is_duplicate);
 int lvmcache_add_orphan_vginfo(const char *vgname, struct format_type *fmt);
 void lvmcache_del(struct lvmcache_info *info);
 void lvmcache_del_dev(struct device *dev);

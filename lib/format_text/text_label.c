@@ -371,8 +371,8 @@ fail:
 	return 0;
 }
 
-static int _text_read(struct labeller *l, struct device *dev, void *label_buf,
-		      struct label **label)
+static int _text_read(struct labeller *labeller, struct device *dev, void *label_buf,
+		      uint64_t label_sector, int *is_duplicate)
 {
 	struct label_header *lh = (struct label_header *) label_buf;
 	struct pv_header *pvhdr;
@@ -382,18 +382,33 @@ static int _text_read(struct labeller *l, struct device *dev, void *label_buf,
 	uint64_t offset;
 	uint32_t ext_version;
 	struct _update_mda_baton baton;
+	struct label *label;
 
 	/*
 	 * PV header base
 	 */
 	pvhdr = (struct pv_header *) ((char *) label_buf + xlate32(lh->offset_xl));
 
-	if (!(info = lvmcache_add(l, (char *)pvhdr->pv_uuid, dev,
+	/*
+	 * FIXME: stop adding the device to lvmcache initially as an orphan
+	 * (and then moving it later) and instead just add it when we know the
+	 * VG.
+	 *
+	 * If another device with this same PVID has already been seen,
+	 * lvmcache_add will put this device in the duplicates list in lvmcache
+	 * and return NULL.  At the end of label_scan, the duplicate devs are
+	 * compared, and if another dev is preferred for this PV, then the
+	 * existing dev is removed from lvmcache and _text_read is called again
+	 * for this dev, and lvmcache_add will add it.
+	 *
+	 * Other reasons for lvmcache_add to return NULL are internal errors.
+	 */
+	if (!(info = lvmcache_add(labeller, (char *)pvhdr->pv_uuid, dev, label_sector,
 				  FMT_TEXT_ORPHAN_VG_NAME,
-				  FMT_TEXT_ORPHAN_VG_NAME, 0)))
+				  FMT_TEXT_ORPHAN_VG_NAME, 0, is_duplicate)))
 		return_0;
 
-	*label = lvmcache_get_label(info);
+	label = lvmcache_get_label(info);
 
 	lvmcache_set_device_size(info, xlate64(pvhdr->device_size_xl));
 
@@ -441,7 +456,7 @@ static int _text_read(struct labeller *l, struct device *dev, void *label_buf,
 	}
 out:
 	baton.info = info;
-	baton.label = *label;
+	baton.label = label;
 
 	/*
 	 * In the vg_read phase, we compare all mdas and decide which to use

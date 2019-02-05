@@ -1760,7 +1760,7 @@ int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted)
  *   transient duplicate?
  */
 
-static struct lvmcache_info * _create_info(struct labeller *labeller, struct device *dev)
+static struct lvmcache_info * _create_info(struct labeller *labeller, struct device *dev, uint64_t label_sector)
 {
 	struct lvmcache_info *info;
 	struct label *label;
@@ -1772,6 +1772,9 @@ static struct lvmcache_info * _create_info(struct labeller *labeller, struct dev
 		label_destroy(label);
 		return NULL;
 	}
+
+	label->dev = dev;
+	label->sector = label_sector;
 
 	info->dev = dev;
 	info->fmt = labeller->fmt;
@@ -1788,8 +1791,9 @@ static struct lvmcache_info * _create_info(struct labeller *labeller, struct dev
 }
 
 struct lvmcache_info *lvmcache_add(struct labeller *labeller,
-				   const char *pvid, struct device *dev,
-				   const char *vgname, const char *vgid, uint32_t vgstatus)
+				   const char *pvid, struct device *dev, uint64_t label_sector,
+				   const char *vgname, const char *vgid, uint32_t vgstatus,
+				   int *is_duplicate)
 {
 	char pvid_s[ID_LEN + 1] __attribute__((aligned(8)));
 	char uuid[64] __attribute__((aligned(8)));
@@ -1817,7 +1821,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller,
 		info = lvmcache_info_from_pvid(dev->pvid, NULL, 0);
 
 	if (!info) {
-		info = _create_info(labeller, dev);
+		info = _create_info(labeller, dev, label_sector);
 		created = 1;
 	}
 
@@ -1849,6 +1853,8 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller,
 
 			dm_list_add(&_found_duplicate_devs, &devl->list);
 			_found_duplicate_pvs = 1;
+			if (is_duplicate)
+				*is_duplicate = 1;
 			return NULL;
 		}
 

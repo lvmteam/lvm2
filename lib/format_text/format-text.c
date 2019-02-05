@@ -1513,13 +1513,12 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 
 	/* Add a new cache entry with PV info or update existing one. */
 	if (!(info = lvmcache_add(fmt->labeller, (const char *) &pv->id,
-				  pv->dev, pv->vg_name,
-				  is_orphan_vg(pv->vg_name) ? pv->vg_name : pv->vg ? (const char *) &pv->vg->id : NULL, 0)))
+				  pv->dev,  pv->label_sector, pv->vg_name,
+				  is_orphan_vg(pv->vg_name) ? pv->vg_name : pv->vg ? (const char *) &pv->vg->id : NULL, 0, NULL)))
 		return_0;
 
+	/* lvmcache_add() creates info and info->label structs for the dev, get info->label. */
 	label = lvmcache_get_label(info);
-	label->sector = pv->label_sector;
-	label->dev = pv->dev;
 
 	lvmcache_update_pv(info, pv, fmt);
 
