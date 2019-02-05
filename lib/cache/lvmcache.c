@@ -31,6 +31,7 @@ struct lvmcache_info {
 	struct dm_list mdas;	/* list head for metadata areas */
 	struct dm_list das;	/* list head for data areas */
 	struct dm_list bas;	/* list head for bootloader areas */
+	struct dm_list bad_mdas;/* list head for bad metadata areas */
 	struct lvmcache_vginfo *vginfo;	/* NULL == unknown */
 	struct label *label;
 	const struct format_type *fmt;
@@ -39,6 +40,8 @@ struct lvmcache_info {
 	uint32_t ext_version;   /* Extension version */
 	uint32_t ext_flags;	/* Extension flags */
 	uint32_t status;
+	bool mda1_bad;		/* label scan found bad metadata in mda1 */
+	bool mda2_bad;		/* label scan found bad metadata in mda2 */
 };
 
 /* One per VG */
@@ -173,6 +176,54 @@ static void _destroy_duplicate_device_list(struct dm_list *head)
 		free(devl);
 	}
 	dm_list_init(head);
+}
+
+bool lvmcache_has_bad_metadata(struct device *dev)
+{
+	struct lvmcache_info *info;
+
+	if (!(info = lvmcache_info_from_pvid(dev->pvid, dev, 0))) {
+		/* shouldn't happen */
+		log_error("No lvmcache info for checking bad metadata on %s", dev_name(dev));
+		return false;
+	}
+
+	if (info->mda1_bad || info->mda2_bad)
+		return true;
+	return false;
+}
+
+void lvmcache_save_bad_mda(struct lvmcache_info *info, struct metadata_area *mda)
+{
+	if (mda->mda_num == 1)
+		info->mda1_bad = true;
+	else if (mda->mda_num == 2)
+		info->mda2_bad = true;
+	dm_list_add(&info->bad_mdas, &mda->list);
+}
+
+void lvmcache_get_bad_mdas(struct cmd_context *cmd,
+			   const char *vgname, const char *vgid,
+                           struct dm_list *bad_mda_list)
+{
+	struct lvmcache_vginfo *vginfo;
+	struct lvmcache_info *info;
+	struct mda_list *mdal;
+	struct metadata_area *mda, *mda2;
+
+	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
+		log_error(INTERNAL_ERROR "lvmcache_get_bad_mdas no vginfo %s", vgname);
+		return;
+	}
+
+	dm_list_iterate_items(info, &vginfo->infos) {
+		dm_list_iterate_items_safe(mda, mda2, &info->bad_mdas) {
+			if (!(mdal = zalloc(sizeof(*mdal))))
+				continue;
+			mdal->mda = mda;
+			dm_list_add(bad_mda_list, &mdal->list);
+		}
+	}
 }
 
 static void _vginfo_attach_info(struct lvmcache_vginfo *vginfo,
@@ -1945,6 +1996,10 @@ void lvmcache_del_mdas(struct lvmcache_info *info)
 	if (info->mdas.n)
 		del_mdas(&info->mdas);
 	dm_list_init(&info->mdas);
+
+	if (info->bad_mdas.n)
+		del_mdas(&info->bad_mdas);
+	dm_list_init(&info->bad_mdas);
 }
 
 void lvmcache_del_das(struct lvmcache_info *info)

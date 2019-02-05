@@ -220,4 +220,12 @@ void lvmcache_save_metadata_size(uint64_t val);
 
 int dev_in_device_list(struct device *dev, struct dm_list *head);
 
+bool lvmcache_has_bad_metadata(struct device *dev);
+
+void lvmcache_save_bad_mda(struct lvmcache_info *info, struct metadata_area *mda);
+
+void lvmcache_get_bad_mdas(struct cmd_context *cmd,
+                           const char *vgname, const char *vgid,
+                           struct dm_list *bad_mda_list);
+
 #endif

@@ -185,6 +185,7 @@ struct metadata_area {
 	struct metadata_area_ops *ops;
 	void *metadata_locn;
 	uint32_t status;
+	int mda_num;
 	uint32_t bad_fields; /* BAD_MDA_ flags are set to indicate errors found when reading */
 	uint32_t ignore_bad_fields; /* BAD_MDA_ flags are set to indicate errors to ignore */
 };
@@ -248,7 +249,7 @@ struct name_list {
 
 struct mda_list {
 	struct dm_list list;
-	struct device_area mda;
+	struct metadata_area *mda;
 };
 
 struct peg_list {
