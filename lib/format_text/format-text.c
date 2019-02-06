@@ -1600,10 +1600,14 @@ static int _text_pv_needs_rewrite(const struct format_type *fmt, struct physical
 {
 	struct lvmcache_info *info;
 	uint32_t ext_vsn;
+	uint32_t ext_flags;
 
 	*needs_rewrite = 0;
 
 	if (!pv->is_labelled)
+		return 1;
+
+	if (!pv->dev)
 		return 1;
 
 	if (!(info = lvmcache_info_from_pvid((const char *)&pv->id, pv->dev, 0))) {
@@ -1613,8 +1617,16 @@ static int _text_pv_needs_rewrite(const struct format_type *fmt, struct physical
 
 	ext_vsn = lvmcache_ext_version(info);
 
-	if (ext_vsn < PV_HEADER_EXTENSION_VSN)
+	if (ext_vsn < PV_HEADER_EXTENSION_VSN) {
+		log_debug("PV %s header needs rewrite for new ext version", dev_name(pv->dev));
 		*needs_rewrite = 1;
+	}
+
+	ext_flags = lvmcache_ext_flags(info);
+	if (!(ext_flags & PV_EXT_USED)) {
+		log_debug("PV %s header needs rewrite to set ext used", dev_name(pv->dev));
+		*needs_rewrite = 1;
+	}
 
 	return 1;
 }
