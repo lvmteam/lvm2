@@ -1,5 +1,6 @@
 Version 2.02.185 - 
 ==================================
+  Add synchronization with udev before removing cached devices.
   Fix missing growth of _pmsmare volume when extending _tmeta volume.
   Automatically grow thin metadata, when thin data gets too big.
   Add support for vgsplit with cached devices.
