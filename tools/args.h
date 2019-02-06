@@ -1393,6 +1393,9 @@ arg(thin_ARG, 'T', "thin", 0, 0, 0,
     "See --type thin, --type thin-pool, and --virtualsize.\n"
     "See \\fBlvmthin\\fP(7) for more information about LVM thin provisioning.\n")
 
+arg(updatemetadata_ARG, '\0', "updatemetadata", 0, 0, 0,
+    "Update VG metadata to correct problems.\n")
+
 arg(uuid_ARG, 'u', "uuid", 0, 0, 0,
     "#pvchange\n"
     "Generate new random UUID for specified PVs.\n"

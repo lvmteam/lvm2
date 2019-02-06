@@ -5597,3 +5597,86 @@ int vg_is_foreign(struct volume_group *vg)
 	return _is_foreign_vg(vg);
 }
 
+void vg_write_commit_bad_mdas(struct cmd_context *cmd, struct volume_group *vg)
+{
+	struct dm_list bad_mda_list;
+	struct mda_list *mdal;
+	struct metadata_area *mda;
+	struct device *dev;
+
+	dm_list_init(&bad_mda_list);
+
+	lvmcache_get_bad_mdas(cmd, vg->name, (const char *)&vg->id, &bad_mda_list);
+
+	dm_list_iterate_items(mdal, &bad_mda_list) {
+		mda = mdal->mda;
+		dev = mda_get_device(mda);
+
+		/*
+		 * bad_fields:
+		 *
+		 * 0: shouldn't happen
+		 *
+		 * READ|INTERNAL: there's probably nothing wrong on disk
+		 *
+		 * MAGIC|START: there's a good chance that we were
+		 * reading the mda_header from the wrong location; maybe
+		 * the pv_header location was wrong.  We don't want to
+		 * write new metadata to the wrong location.  To handle
+		 * this we would want to do some further verification that
+		 * we have the mda location correct.
+		 *
+		 * VERSION|CHECKSUM: when the others are correct these
+		 * look safe to repair.
+		 *
+		 * HEADER: general error related to header, covered by fields
+		 * above.
+		 *
+		 * TEXT: general error related to text metadata, we can repair.
+		 */
+		if (!mda->bad_fields ||
+		    (mda->bad_fields & BAD_MDA_READ) ||
+		    (mda->bad_fields & BAD_MDA_INTERNAL) ||
+		    (mda->bad_fields & BAD_MDA_MAGIC) ||
+		    (mda->bad_fields & BAD_MDA_START)) {
+			log_warn("WARNING: not repairing bad metadata (0x%x) for mda%d on %s",
+				 mda->bad_fields, mda->mda_num, dev_name(dev));
+			continue;
+		}
+
+		/*
+		 * vg_write/vg_commit reread the mda_header which checks the
+		 * mda header fields and fails if any are bad, which stops
+		 * vg_write/vg_commit from continuing.  Suppress these header
+		 * field checks when we know the field is bad and we are going
+		 * to replace it.  FIXME: do vg_write/vg_commit really need to
+		 * reread and recheck the mda_header again (probably not)?
+		 */
+
+		if (mda->bad_fields & BAD_MDA_CHECKSUM)
+			mda->ignore_bad_fields |= BAD_MDA_CHECKSUM;
+		if (mda->bad_fields & BAD_MDA_VERSION)
+			mda->ignore_bad_fields |= BAD_MDA_VERSION;
+
+		log_warn("WARNING: repairing bad metadata (0x%x) in mda%d at %llu on %s.",
+			 mda->bad_fields, mda->mda_num, (unsigned long long)mda->header_start, dev_name(dev));
+
+		if (!mda->ops->vg_write(vg->fid, vg, mda)) {
+			log_warn("WARNING: failed to write VG %s metadata to bad mda%d at %llu on %s.",
+				 vg->name, mda->mda_num, (unsigned long long)mda->header_start, dev_name(dev));
+			continue;
+		}
+
+		if (!mda->ops->vg_precommit(vg->fid, vg, mda)) {
+			log_warn("WARNING: failed to precommit VG %s metadata to bad mda%d at %llu on %s.",
+				 vg->name, mda->mda_num, (unsigned long long)mda->header_start, dev_name(dev));
+			continue;
+		}
+
+		if (!mda->ops->vg_commit(vg->fid, vg, mda)) {
+			log_warn("WARNING: failed to commit VG %s metadata to bad mda%d at %llu on %s.",
+				 vg->name, mda->mda_num, (unsigned long long)mda->header_start, dev_name(dev));
+			continue;
+		}
+	}
+}

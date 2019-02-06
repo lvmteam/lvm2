@@ -185,6 +185,7 @@ struct metadata_area {
 	struct metadata_area_ops *ops;
 	void *metadata_locn;
 	uint32_t status;
+	uint64_t header_start; /* mda_header.start */
 	int mda_num;
 	uint32_t bad_fields; /* BAD_MDA_ flags are set to indicate errors found when reading */
 	uint32_t ignore_bad_fields; /* BAD_MDA_ flags are set to indicate errors to ignore */

@@ -341,6 +341,9 @@ static int _read_mda_header_and_metadata(struct metadata_area *mda, void *baton)
 		goto fail;
 	}
 
+	if (mda)
+		mda->header_start = mdah->start;
+
 	mda_set_ignored(mda, rlocn_is_ignored(mdah->raw_locns));
 
 	if (mda_is_ignored(mda)) {

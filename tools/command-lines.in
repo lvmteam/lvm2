@@ -1624,6 +1624,11 @@ vgck
 OO: --reportformat ReportFmt
 OP: VG|Tag ...
 ID: vgck_general
+DESC: Read and display information about a VG.
+
+vgck --updatemetadata VG
+ID: vgck_update_metadata
+DESC: Rewrite VG metadata to correct problems.
 
 ---
 

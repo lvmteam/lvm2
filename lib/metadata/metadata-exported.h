@@ -1381,4 +1381,6 @@ int lv_on_pmem(struct logical_volume *lv);
 
 int vg_is_foreign(struct volume_group *vg);
 
+void vg_write_commit_bad_mdas(struct cmd_context *cmd, struct volume_group *vg);
+
 #endif
