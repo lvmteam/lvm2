@@ -4156,11 +4156,15 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 	struct physical_volume *pv;
 	struct pv_list *pvl;
 	struct device_id_list *dil;
+	struct device_list *devl;
+	struct dm_list outdated_devs;
 	const char *pv_name;
 	int process_pv;
 	int do_report_ret_code = 1;
 	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
+
+	dm_list_init(&outdated_devs);
 
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_PV);
 
@@ -4247,6 +4251,12 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 			break;
 		log_set_report_object_name_and_id(NULL, NULL);
 	}
+
+	if (!is_orphan_vg(vg->name))
+		lvmcache_get_outdated_devs(cmd, vg->name, (const char *)&vg->id, &outdated_devs);
+	dm_list_iterate_items(devl, &outdated_devs)
+		_device_list_remove(all_devices, devl->dev);
+
 	do_report_ret_code = 0;
 out:
 	if (do_report_ret_code)
