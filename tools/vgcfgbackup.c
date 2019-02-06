@@ -73,6 +73,15 @@ static int _vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 			return ECMD_FAILED;
 		}
 
+		if (vg_missing_pv_count(vg)) {
+			log_error("No backup taken: specify filename with -f to backup with missing PVs.");
+			return ECMD_FAILED;
+		}
+		if (vg_has_unknown_segments(vg)) {
+			log_error("No backup taken: specify filename with -f to backup with unknown segments.");
+			return ECMD_FAILED;
+		}
+
 		/* just use the normal backup code */
 		backup_enable(cmd, 1);	/* force a backup */
 		if (!backup(vg))
@@ -96,6 +105,14 @@ int vgcfgbackup(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	handle->custom_handle = &last_filename;
+
+	/*
+	 * Just set so that we can do the check ourselves above and
+	 * report a helpful error message in place of the error message
+	 * that would be generated from vg_read.
+	 */
+	cmd->handles_missing_pvs = 1;
+	cmd->handles_unknown_segments = 1;
 
 	init_pvmove(1);
 
