@@ -3098,7 +3098,7 @@ static int _vg_commit_mdas(struct volume_group *vg)
 
 		/* Update cache first time we succeed */
 		if (!failed && !cache_updated) {
-			lvmcache_update_vg(vg, 0);
+			lvmcache_update_vg_from_write(vg);
 			cache_updated = 1;
 		}
 	}
@@ -3993,7 +3993,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				 * If there is no precommitted metadata, committed metadata
 				 * is read and stored in the cache even if use_precommitted is set
 				 */
-				lvmcache_update_vg(correct_vg, correct_vg->status & PRECOMMITTED);
+				lvmcache_update_vg_from_read(correct_vg, correct_vg->status & PRECOMMITTED);
 
 				if (!(pvids = lvmcache_get_pvids(cmd, vgname, vgid))) {
 					release_vg(correct_vg);
@@ -4149,7 +4149,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	 * If there is no precommitted metadata, committed metadata
 	 * is read and stored in the cache even if use_precommitted is set
 	 */
-	lvmcache_update_vg(correct_vg, (correct_vg->status & PRECOMMITTED));
+	lvmcache_update_vg_from_read(correct_vg, (correct_vg->status & PRECOMMITTED));
 
 	if (inconsistent) {
 		/* FIXME Test should be if we're *using* precommitted metadata not if we were searching for it */
