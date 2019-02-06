@@ -77,4 +77,7 @@ struct data_area_list {
 	struct disk_locn disk_locn;
 };
 
+int text_wipe_outdated_pv_mda(struct cmd_context *cmd, struct device *dev,
+                              struct metadata_area *mda);
+
 #endif

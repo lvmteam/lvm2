@@ -2463,3 +2463,36 @@ bad:
 
 	return NULL;
 }
+
+int text_wipe_outdated_pv_mda(struct cmd_context *cmd, struct device *dev,
+			      struct metadata_area *mda)
+{
+	struct mda_context *mdac = mda->metadata_locn;
+	uint64_t start_byte = mdac->area.start;
+	struct mda_header *mdab;
+	struct raw_locn *rlocn_slot0;
+	struct raw_locn *rlocn_slot1;
+	uint32_t bad_fields = 0;
+
+	if (!(mdab = raw_read_mda_header(cmd->fmt, &mdac->area, mda_is_primary(mda), 0, &bad_fields))) {
+		log_error("Failed to read outdated pv mda header on %s", dev_name(dev));
+		return 0;
+	}
+
+	rlocn_slot0 = &mdab->raw_locns[0];
+	rlocn_slot1 = &mdab->raw_locns[1];
+
+	rlocn_slot0->offset = 0;
+	rlocn_slot0->size = 0;
+	rlocn_slot0->checksum = 0;
+	rlocn_slot1->offset = 0;
+	rlocn_slot1->size = 0;
+	rlocn_slot1->checksum = 0;
+         
+	if (!_raw_write_mda_header(cmd->fmt, dev, mda_is_primary(mda), start_byte, mdab)) {
+		log_error("Failed to write outdated pv mda header on %s", dev_name(dev));
+		return 0;
+	}
+
+	return 1;
+}

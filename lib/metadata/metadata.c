@@ -28,11 +28,14 @@
 #include "lib/display/display.h"
 #include "lib/locking/locking.h"
 #include "lib/format_text/archiver.h"
+#include "lib/format_text/format-text.h"
+#include "lib/format_text/layout.h"
+#include "lib/format_text/import-export.h"
 #include "lib/config/defaults.h"
 #include "lib/locking/lvmlockd.h"
-#include "time.h"
 #include "lib/notify/lvmnotify.h"
 
+#include <time.h>
 #include <math.h>
 
 static struct physical_volume *_pv_read(struct cmd_context *cmd,
@@ -2922,6 +2925,69 @@ static int _handle_historical_lvs(struct volume_group *vg)
 	return 1;
 }
 
+static void _wipe_outdated_pvs(struct cmd_context *cmd, struct volume_group *vg)
+{
+	struct dm_list devs;
+	struct dm_list *mdas = NULL;
+	struct device_list *devl;
+	struct device *dev;
+	struct metadata_area *mda;
+	struct label *label;
+	struct lvmcache_info *info;
+	uint32_t ext_flags;
+
+	dm_list_init(&devs);
+
+	/*
+	 * When vg_read selected a good copy of the metadata, it used it to
+	 * update the lvmcache representation of the VG (lvmcache_update_vg).
+	 * At that point outdated PVs were recognized and moved into the
+	 * vginfo->outdated_infos list.  Here we clear the PVs on that list.
+	 */
+
+	lvmcache_get_outdated_devs(cmd, vg->name, (const char *)&vg->id, &devs);
+
+	dm_list_iterate_items(devl, &devs) {
+		dev = devl->dev;
+
+		lvmcache_get_outdated_mdas(cmd, vg->name, (const char *)&vg->id, dev, &mdas);
+
+		if (mdas) {
+			dm_list_iterate_items(mda, mdas) {
+				log_warn("WARNING: wiping mda on outdated PV %s", dev_name(dev));
+
+				if (!text_wipe_outdated_pv_mda(cmd, dev, mda))
+					log_warn("WARNING: failed to wipe mda on outdated PV %s", dev_name(dev));
+			}
+		}
+
+		if (!(label = lvmcache_get_dev_label(dev))) {
+			log_error("_wipe_outdated_pvs no label for %s", dev_name(dev));
+			continue;
+		}
+
+		info = label->info;
+		ext_flags = lvmcache_ext_flags(info);
+		ext_flags &= ~PV_EXT_USED;
+		lvmcache_set_ext_version(info, PV_HEADER_EXTENSION_VSN);
+		lvmcache_set_ext_flags(info, ext_flags);
+
+		log_warn("WARNING: wiping header on outdated PV %s", dev_name(dev));
+
+		if (!label_write(dev, label))
+			log_warn("WARNING: failed to wipe header on outdated PV %s", dev_name(dev));
+
+		lvmcache_del(info);
+	}
+
+	/*
+	 * A vgremove will involve many vg_write() calls (one for each lv
+	 * removed) but we only need to wipe pvs once, so clear the outdated
+	 * list so it won't be wiped again.
+	 */
+	lvmcache_del_outdated_devs(cmd, vg->name, (const char *)&vg->id);
+}
+
 /*
  * After vg_write() returns success,
  * caller MUST call either vg_commit() or vg_revert()
@@ -2985,6 +3051,9 @@ int vg_write(struct volume_group *vg)
 		log_error("Aborting vg_write: No metadata areas to write to!");
 		return 0;
 	}
+
+	if (vg->cmd->wipe_outdated_pvs)
+		_wipe_outdated_pvs(vg->cmd, vg);
 
 	if (critical_section())
 		log_error(INTERNAL_ERROR
@@ -3535,52 +3604,6 @@ static int _repair_inconsistent_vg(struct volume_group *vg, uint32_t lockd_state
 		return 0;
 	}
 
-	return 1;
-}
-
-static int _wipe_outdated_pvs(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *to_check, uint32_t lockd_state)
-{
-	struct pv_list *pvl, *pvl2;
-	char uuid[64] __attribute__((aligned(8)));
-
-	if (lvmcache_found_duplicate_pvs()) {
-		log_debug_metadata("Skip wiping outdated PVs with duplicates.");
-		return 0;
-	}
-
-	/*
-	 * Cannot write foreign VGs, the owner will repair it.
-	 * Also, if another host is updating its VG, we may read
-	 * the PVs while some are written but not others, making
-	 * some PVs look outdated to us just because we're reading
-	 * the VG while it's only partially written out.
-	 */
-	if (_is_foreign_vg(vg)) {
-		log_debug_metadata("Skip wiping outdated PVs for foreign VG.");
-		return 0;
-	}
-
-	if (vg_is_shared(vg) && !(lockd_state & LDST_EX)) {
-		log_verbose("Skip wiping outdated PVs for shared VG without exclusive lock.");
-		return 0;
-	}
-
-	dm_list_iterate_items(pvl, to_check) {
-		dm_list_iterate_items(pvl2, &vg->pvs) {
-			if (pvl->pv->dev == pvl2->pv->dev)
-				goto next_pv;
-		}
-
-
-		if (!id_write_format(&pvl->pv->id, uuid, sizeof(uuid)))
-			return_0;
-		log_warn("WARNING: Removing PV %s (%s) that no longer belongs to VG %s",
-			 pv_dev_name(pvl->pv), uuid, vg->name);
-		if (!pv_write_orphan(cmd, pvl->pv))
-			return_0;
-next_pv:
-		;
-	}
 	return 1;
 }
 
@@ -4216,12 +4239,6 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			_free_pv_list(&all_pvs);
 			release_vg(correct_vg);
 			return NULL;
-		}
-
-		if (!_wipe_outdated_pvs(cmd, correct_vg, &all_pvs, lockd_state)) {
-			_free_pv_list(&all_pvs);
-			release_vg(correct_vg);
-			return_NULL;
 		}
 	}
 

@@ -179,6 +179,7 @@ struct cmd_context {
 	unsigned use_hints:1;			/* if hints are enabled this cmd can use them */
 	unsigned pvscan_recreate_hints:1;	/* enable special case hint handling for pvscan --cache */
 	unsigned scan_lvs:1;
+	unsigned wipe_outdated_pvs:1;
 
 	/*
 	 * Devices and filtering.
