@@ -14,14 +14,15 @@ SKIP_WITH_LVMPOLLD=1
 
 RUNDIR="/run"
 test -d "$RUNDIR" || RUNDIR="/var/run"
-ONLINEDIR="$RUNDIR/lvm/pvs_online"
+PVS_ONLINE_DIR="$RUNDIR/lvm/pvs_online"
+VGS_ONLINE_DIR="$RUNDIR/lvm/vgs_online"
 
 # FIXME: kills logic for running system
-_clear_online() {
+_clear_online_files() {
 	# wait till udev is finished
 	aux udev_wait
-	rm -f "$ONLINEDIR"/*
-	test -n "${1+varset}" || touch "$ONLINEDIR/foo"
+	rm -f "$PVS_ONLINE_DIR"/*
+	rm -f "$VGS_ONLINE_DIR"/*
 }
 
 . lib/inittest
@@ -32,8 +33,9 @@ vgcreate $vg1 "$dev1" "$dev2"
 lvcreate -n $lv1 -l 4 -a n $vg1
 
 # the first pvscan scans all devs
-test -d "$ONLINEDIR" || mkdir -p "$ONLINEDIR"
-_clear_online nofoo
+test -d "$PVS_ONLINE_DIR" || mkdir -p "$PVS_ONLINE_DIR"
+test -d "$VGS_ONLINE_DIR" || mkdir -p "$VGS_ONLINE_DIR"
+_clear_online_files
 
 pvscan --cache -aay
 check lv_field $vg1/$lv1 lv_active "active"
@@ -42,7 +44,7 @@ lvchange -an $vg1
 # the first pvscan scans all devs even when
 # only one device is specified
 
-_clear_online nofoo
+_clear_online_files
 
 pvscan --cache -aay "$dev1"
 check lv_field $vg1/$lv1 lv_active "active"
@@ -50,7 +52,8 @@ lvchange -an $vg1
 
 # touch foo to disable first-pvscan case,
 # then check pvscan with no args scans all
-_clear_online
+_clear_online_files
+touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache -aay
 check lv_field $vg1/$lv1 lv_active "active"
@@ -60,7 +63,8 @@ lvchange -an $vg1
 # then check that vg is activated only after
 # both devs appear separately
 
-_clear_online
+_clear_online_files
+touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache -aay "$dev1"
 check lv_field $vg1/$lv1 lv_active ""
@@ -72,7 +76,8 @@ lvchange -an $vg1
 # then check that vg is activated when both
 # devs appear together
 
-_clear_online
+_clear_online_files
+touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache -aay "$dev1" "$dev2"
 check lv_field $vg1/$lv1 lv_active "active"
@@ -92,7 +97,8 @@ lvcreate -n $lv1 -l 4 -a n $vg1
 # touch foo to disable first-pvscan case,
 # test case where dev with metadata appears first
 
-_clear_online
+_clear_online_files
+touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache -aay "$dev2"
 check lv_field $vg1/$lv1 lv_active ""
@@ -104,7 +110,8 @@ lvchange -an $vg1
 # test case where dev without metadata
 # appears first which triggers scanning all
 
-_clear_online
+_clear_online_files
+touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache -aay "$dev1"
 check lv_field $vg1/$lv1 lv_active "active"
@@ -115,7 +122,7 @@ lvchange -an $vg1
 # dev without metadata is scanned, but
 # first-pvscan case scans all devs
 
-_clear_online nofoo
+_clear_online_files
 
 pvscan --cache -aay "$dev1"
 check lv_field $vg1/$lv1 lv_active "active"
@@ -125,7 +132,8 @@ lvchange -an $vg1
 # is online without the -aay option to
 # activate until after they are online
 
-_clear_online
+_clear_online_files
+touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache "$dev1"
 check lv_field $vg1/$lv1 lv_active ""
@@ -137,7 +145,8 @@ lvchange -an $vg1
 
 # like previous
 
-_clear_online
+_clear_online_files
+touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache "$dev1"
 check lv_field $vg1/$lv1 lv_active ""

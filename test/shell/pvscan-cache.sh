@@ -13,6 +13,18 @@
 SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
+RUNDIR="/run"
+test -d "$RUNDIR" || RUNDIR="/var/run"
+PVS_ONLINE_DIR="$RUNDIR/lvm/pvs_online"
+VGS_ONLINE_DIR="$RUNDIR/lvm/vgs_online"
+
+_clear_online_files() {
+	# wait till udev is finished
+	aux udev_wait
+	rm -f "$PVS_ONLINE_DIR"/*
+	rm -f "$VGS_ONLINE_DIR"/*
+}
+
 . lib/inittest
 
 aux prepare_pvs 2
@@ -35,9 +47,12 @@ check lv_exists $vg1
 check lv_field $vg1/$lv1 lv_active ""
 
 # Check that an LV cannot be activated by pvscan while VG is exported
+vgchange -an $vg1
+_clear_online_files
 vgexport $vg1
-not pvscan --cache -aay "$dev1"
-not pvscan --cache -aay "$dev2"
+pvscan --cache -aay "$dev1" || true
+pvscan --cache -aay "$dev2" || true
+_clear_online_files
 vgimport $vg1
 check lv_exists $vg1
 check lv_field $vg1/$lv1 lv_active ""
@@ -51,6 +66,7 @@ lvchange -an $vg1/$lv1
 # metadata which hasn't been updated for some
 # time and also since the MDA is marked as ignored,
 # it should really be *ignored*!
+_clear_online_files
 pvchange --metadataignore y "$dev1"
 aux disable_dev "$dev2"
 pvscan --cache
