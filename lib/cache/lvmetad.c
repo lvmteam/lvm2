@@ -313,6 +313,7 @@ retry:
 	 * The caller should do a disk scan to populate lvmetad.
 	 */
 	if (!strcmp(daemon_token, "none")) {
+		log_debug_lvmetad("lvmetad initialization needed.");
 		ret = 0;
 		goto out;
 	}
@@ -324,9 +325,15 @@ retry:
 	 * our global filter.
 	 */
 	if (strcmp(daemon_token, _lvmetad_token)) {
+		log_debug_lvmetad("lvmetad initialization needed for different filter.");
 		ret = 0;
 		goto out;
 	}
+
+	if (wait_start)
+		log_debug_lvmetad("lvmetad initialized during wait.");
+	else
+		log_debug_lvmetad("lvmetad initialized previously.");
 
 out:
 	daemon_reply_destroy(reply);
@@ -2353,23 +2360,11 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
 		replacing_other_update = 1;
 	}
 
-	label_scan_pvscan_all(cmd, &scan_devs);
-
-	lvmcache_pvscan_duplicate_check(cmd);
-
-	if (lvmcache_found_duplicate_pvs()) {
-		log_warn("WARNING: Scan found duplicate PVs.");
-		return 0;
-	}
-
-	log_verbose("Scanning metadata from %d devices to update lvmetad.",
-		    dm_list_size(&scan_devs));
-
 	future_token = _lvmetad_token;
 	_lvmetad_token = (char *) LVMETAD_TOKEN_UPDATE_IN_PROGRESS;
 
 	if (!_token_update(&replaced_update)) {
-		log_error("Failed to update lvmetad which had an update in progress.");
+		log_error("Failed to start lvmetad update.");
 		_lvmetad_token = future_token;
 		return 0;
 	}
@@ -2393,6 +2388,10 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
 		return 0;
 	}
 
+	log_verbose("Scanning all devices to initialize lvmetad.");
+
+	label_scan_pvscan_all(cmd, &scan_devs);
+
 	log_debug_lvmetad("Telling lvmetad to clear its cache");
 	reply = _lvmetad_send(cmd, "pv_clear_all", NULL);
 	if (!_lvmetad_handle_reply(reply, "pv_clear_all", "", NULL))
@@ -2401,6 +2400,8 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
 
 	was_silent = silent_mode();
 	init_silent(1);
+
+	log_debug_lvmetad("Sending %d devices to lvmetad.", dm_list_size(&scan_devs));
 
 	dm_list_iterate_items_safe(devl, devl2, &scan_devs) {
 		if (sigint_caught()) {
@@ -2439,6 +2440,13 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
 
 	if (!_token_update(NULL)) {
 		log_error("Failed to update lvmetad token after device scan.");
+		return 0;
+	}
+
+	/* This will disable lvmetad if label scan found duplicates. */
+	lvmcache_pvscan_duplicate_check(cmd);
+	if (lvmcache_found_duplicate_pvs()) {
+		log_warn("WARNING: Scan found duplicate PVs.");
 		return 0;
 	}
 

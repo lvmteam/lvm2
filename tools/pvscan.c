@@ -381,7 +381,7 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 		all_vgs = 1;
 		goto activate;
 	}
-       
+
 	/*
 	 * FIXME: when specific devs are named, we generally don't want to scan
 	 * any other devs, but if lvmetad is not yet populated, the first
@@ -390,11 +390,10 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	 * never scan any devices other than those specified.
 	 */
 	if (!lvmetad_token_matches(cmd)) {
-		log_verbose("Scanning all devices to initialize lvmetad.");
-
 		if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, 0)) {
-			log_warn("WARNING: Not using lvmetad because cache update failed.");
-			lvmetad_make_unused(cmd);
+			log_warn("WARNING: Not updating lvmetad because cache update failed.");
+			ret = ECMD_FAILED;
+			goto out;
 		}
 		if (lvmetad_used() && lvmetad_is_disabled(cmd, &reason)) {
 			log_warn("WARNING: Not using lvmetad because %s.", reason);
