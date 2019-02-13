@@ -660,17 +660,20 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	if (!argc && !devno_args) {
 		/*
 		 * pvscan --cache removes existing hints and recreates new ones.
-		 * We begin by clearing hints at the start of the command like
-		 * vgcreate would do.  The pvscan_recreate_hints flag is used
-		 * to enable the special case hint recreation in label_scan.
+		 * We begin by clearing hints at the start of the command.
+		 * The pvscan_recreate_hints flag is used to enable the
+		 * special case hint recreation in label_scan.
 		 */
 		cmd->pvscan_recreate_hints = 1;
-		clear_hint_file(cmd);
+		pvscan_recreate_hints_begin(cmd);
 
 		log_verbose("pvscan all devices.");
 		_online_pvid_files_remove();
 		_online_pvscan_all_devs(cmd, NULL, NULL);
 		all_vgs = 1;
+
+		cmd->pvscan_recreate_hints = 0;
+		cmd->use_hints = 0;
 		goto activate;
 	}
 

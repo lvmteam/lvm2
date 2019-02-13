@@ -1026,6 +1026,34 @@ void clear_hint_file(struct cmd_context *cmd)
 }
 
 /*
+ * This is only used at the start of pvscan --cache [-aay] to
+ * set up for recreating the hint file.
+ */
+void pvscan_recreate_hints_begin(struct cmd_context *cmd)
+{
+	/* No commands are using hints. */
+	if (!cmd->enable_hints)
+		return;
+
+	log_debug("pvscan_recreate_hints_begin");
+
+	if (!_touch_hints())
+		return;
+
+	/* limit potential delay blocking on hints lock next */
+	if (!_touch_nohints())
+		stack;
+
+	if (!_lock_hints(LOCK_EX, 0))
+		stack;
+
+	_unlink_nohints();
+
+	if (!_clear_hints(cmd))
+		stack;
+}
+
+/*
  * This is used when pvscan --cache sees a new PV, which
  * means we should refresh hints.  It could catch some case
  * which the other methods of detecting stale hints may miss.
@@ -1136,7 +1164,7 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints, int *newhints,
 	 * so this has to be checked before the cmd->use_hints check.
 	 */
 	if (cmd->pvscan_recreate_hints) {
-		/* clear_hint_file already locked hints ex */
+		/* pvscan_recreate_hints_begin already locked hints ex */
 		/* create new hints after scan */
 		log_debug("get_hints: pvscan recreate");
 		*newhints = NEWHINTS_FILE;
