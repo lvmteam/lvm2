@@ -18,6 +18,8 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+aux lvmconf 'devices/scan_lvs = 1'
+
 aux can_use_16T || skip
 
 aux prepare_pvs 1

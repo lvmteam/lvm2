@@ -17,6 +17,8 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+aux lvmconf 'devices/scan_lvs = 1'
+
 MKFS=mkfs.ext2
 which $MKFS || skip
 
