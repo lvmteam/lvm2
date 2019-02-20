@@ -1,5 +1,6 @@
 Version 2.03.02 - 
 ===================================
+  Change scan_lvs default to 0 so LVs are not scanned for PVs.
   Thin-pool selects power-of-2 chunk size by default.
   Cache selects power-of-2 chunk size by default.
   Support reszing for VDOPoolLV and VDOLV.
