@@ -18,6 +18,8 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+aux lvmconf 'devices/scan_lvs = 1'
+
 aux prepare_vg
 
 aux have_thin 1 8 0 || skip

@@ -17,6 +17,8 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+aux lvmconf 'devices/scan_lvs = 1'
+
 # FIXME  update test to make something useful on <16T
 aux can_use_16T || skip
 
