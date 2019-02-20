@@ -1,5 +1,7 @@
 Version 2.02.184 - 
 =====================================
+  Change scan_lvs default to 0 so LVs are not scanned for PVs.
+  Add scan_lvs config setting to control if lvm scans LVs for PVs.
   Fix missing proper initialization of pv_list struct when adding pv.
 
 Version 2.02.183 - 07th December 2018
