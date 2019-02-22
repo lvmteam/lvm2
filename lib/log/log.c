@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <syslog.h>
 #include <ctype.h>
+#include <time.h>
 
 static FILE *_log_file;
 static char _log_file_path[PATH_MAX];
@@ -36,7 +37,7 @@ static uint64_t _log_file_max_lines = 0;
 static uint64_t _log_file_lines = 0;
 static int _log_direct = 0;
 static int _log_while_suspended = 0;
-static int _indent = 1;
+static int _indent = 0;
 static int _log_suppress = 0;
 static char _msg_prefix[30] = "  ";
 static int _already_logging = 0;
@@ -471,12 +472,40 @@ const char *log_get_report_object_type_name(log_report_object_type_t object_type
 	return log_object_type_names[object_type];
 }
 
+static void _set_time_prefix(char *prefix, int buflen)
+{
+
+	struct timespec ts;
+	struct tm time_info;
+	int len;
+
+	if (clock_gettime(CLOCK_REALTIME, &ts) < 0)
+		goto fail;
+
+	if (!localtime_r(&ts.tv_sec, &time_info))
+		goto fail;
+
+	len = strftime(prefix, buflen, "%H:%M:%S", &time_info);
+	if (!len)
+		goto fail;
+
+	len = dm_snprintf(prefix + len, buflen - len, ".%ld ", ts.tv_nsec/1000);
+	if (len < 0)
+		goto fail;
+
+	return;
+
+fail:
+	*prefix = '\0';
+}
+
 __attribute__ ((format(printf, 5, 0)))
 static void _vprint_log(int level, const char *file, int line, int dm_errno_or_class,
 			const char *format, va_list orig_ap)
 {
 	va_list ap;
 	char buf[1024], message[4096];
+	char time_prefix[32] = "";
 	int bufused, n;
 	const char *trformat;		/* Translated format string */
 	char *newbuf;
@@ -598,10 +627,21 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
       log_it:
 	if (!logged_via_report && ((verbose_level() >= level) && !_log_suppress)) {
 		if (verbose_level() > _LOG_DEBUG) {
-			(void) dm_snprintf(buf, sizeof(buf), "#%s:%-5d ",
-					   file, line);
-		} else
-			buf[0] = '\0';
+			memset(buf, 0, sizeof(buf));
+
+			if (!time_prefix[0])
+				_set_time_prefix(time_prefix, sizeof(time_prefix));
+
+			(void) dm_snprintf(buf, sizeof(buf), "%s%s %s:%d",
+					   time_prefix, log_command_file(), file, line);
+
+		} else {
+			memset(buf, 0, sizeof(buf));
+
+			/* without -vvvv, command[pid] is controlled by config settings */
+
+			(void) dm_snprintf(buf, sizeof(buf), "%s", log_command_info());
+		}
 
 		if (_indent)
 			switch (level) {
@@ -627,8 +667,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 			stream = (use_stderr || (level != _LOG_WARN)) ? err_stream : out_stream;
 			if (stream == err_stream)
 				fflush(out_stream);
-			fprintf(stream, "%s%s%s%s", buf, log_command_name(),
-				_msg_prefix, indent_spaces);
+			fprintf(stream, "%s%s%s", buf, _msg_prefix, indent_spaces);
 			vfprintf(stream, trformat, ap);
 			fputc('\n', stream);
 		}
@@ -643,15 +682,17 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 	}
 
 	if (_log_to_file && (_log_while_suspended || !critical_section())) {
-		fprintf(_log_file, "%s:%-5d %s%s", file, line, log_command_name(),
-			_msg_prefix);
+		if (!time_prefix[0])
+			_set_time_prefix(time_prefix, sizeof(time_prefix));
+
+		fprintf(_log_file, "%s%s %s:%d%s", time_prefix, log_command_file(), file, line, _msg_prefix);
 
 		va_copy(ap, orig_ap);
 		vfprintf(_log_file, trformat, ap);
 		va_end(ap);
 
 		if (_log_file_max_lines && ++_log_file_lines >= _log_file_max_lines) {
-			fprintf(_log_file, "\n%s:%-5d %sAborting. Command has reached limit "
+			fprintf(_log_file, "\n%s:%d %sAborting. Command has reached limit "
 				"for logged lines (LVM_LOG_FILE_MAX_LINES=" FMTu64 ").",
 				file, line, _msg_prefix,
 				_log_file_max_lines);
@@ -676,9 +717,8 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 		_already_logging = 1;
 		memset(&buf, ' ', sizeof(buf));
 		bufused = 0;
-		if ((n = dm_snprintf(buf, sizeof(buf),
-				      "%s:%-5d %s%s", file, line, log_command_name(),
-				      _msg_prefix)) == -1)
+		if ((n = dm_snprintf(buf, sizeof(buf), "%s:%s %s:%d %s",
+				     time_prefix, log_command_file(), file, line, _msg_prefix)) == -1)
 			goto done;
 
 		bufused += n;		/* n does not include '\0' */

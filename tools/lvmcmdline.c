@@ -2492,7 +2492,6 @@ static void _apply_current_settings(struct cmd_context *cmd)
 	init_dmeventd_monitor(DEFAULT_DMEVENTD_MONITOR);
 
 	init_msg_prefix(cmd->default_settings.msg_prefix);
-	init_cmd_name(cmd->default_settings.cmd_name);
 
 	archive_enable(cmd, cmd->current_settings.archive);
 	backup_enable(cmd, cmd->current_settings.backup);
@@ -2788,6 +2787,10 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	set_cmd_name(cmd->name);
+
+	init_log_command(find_config_tree_bool(cmd, log_command_names_CFG, NULL), 0);
+
 	configure_command_option_values(cmd->name);
 
 	/* eliminate '-' from all options starting with -- */
@@ -2854,8 +2857,6 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	 */
 	cmd->position_argc = argc;
 	cmd->position_argv = argv;
-
-	set_cmd_name(cmd->name);
 
 	if (arg_is_set(cmd, config_ARG))
 		if (!override_config_tree_from_string(cmd, arg_str_value(cmd, config_ARG, ""))) {

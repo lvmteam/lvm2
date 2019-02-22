@@ -320,8 +320,8 @@ static void _init_logging(struct cmd_context *cmd)
 	cmd->default_settings.msg_prefix = find_config_tree_str_allow_empty(cmd, log_prefix_CFG, NULL);
 	init_msg_prefix(cmd->default_settings.msg_prefix);
 
-	cmd->default_settings.cmd_name = find_config_tree_bool(cmd, log_command_names_CFG, NULL);
-	init_cmd_name(cmd->default_settings.cmd_name);
+	/* so that file and verbose output have a command prefix */
+	init_log_command(0, 0);
 
 	/* Test mode */
 	cmd->default_settings.test =
