@@ -891,6 +891,9 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 		_online_files_remove(_vgs_online_dir);
 		_online_pvscan_all_devs(cmd, complete_vgnames, NULL);
 		_unlock_online();
+
+		cmd->pvscan_recreate_hints = 0;
+		cmd->use_hints = 0;
 		goto activate;
 	}
 
