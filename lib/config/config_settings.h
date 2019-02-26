@@ -255,7 +255,7 @@ cfg(devices_external_device_info_source_CFG, "external_device_info_source", devi
 	"    compiled with udev support.\n"
 	"#\n")
 
-cfg(devices_hints_CFG, "hints", devices_CFG_SECTION, 0, CFG_TYPE_STRING, DEFAULT_HINTS, vsn(2, 3, 2), NULL, 0, NULL,
+cfg(devices_hints_CFG, "hints", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_HINTS, vsn(2, 3, 2), NULL, 0, NULL,
 	"Use a local file to remember which devices have PVs on them.\n"
 	"Some commands will use this as an optimization to reduce device\n"
 	"scanning, and will only scan the listed PVs. Removing the hint file\n"
