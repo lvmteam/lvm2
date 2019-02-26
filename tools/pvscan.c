@@ -1066,9 +1066,7 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 
 	if (_online_pvid_files_missing()) {
 		log_verbose("pvscan all devices to initialize available PVs.");
-		_online_files_remove(_pvs_online_dir);
-		_online_files_remove(_vgs_online_dir);
-		_online_pvscan_all_devs(cmd, complete_vgnames, NULL);
+		_online_pvscan_all_devs(cmd, complete_vgnames, &add_devs);
 		_unlock_online();
 		goto activate;
 	}
