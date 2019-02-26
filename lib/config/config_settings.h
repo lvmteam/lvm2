@@ -838,6 +838,14 @@ cfg_array(log_debug_classes_CFG, "debug_classes", log_CFG_SECTION, CFG_ALLOW_EMP
 	"available: memory, devices, io, activation, allocation,\n"
 	"metadata, cache, locking, lvmpolld. Use \"all\" to see everything.\n")
 
+cfg_array(log_debug_file_fields_CFG, "debug_file_fields", log_CFG_SECTION, CFG_DEFAULT_COMMENTED | CFG_ADVANCED, CFG_TYPE_STRING, "#Stime#Scommand#Sfileline#Smessage", vsn(2, 3, 2), NULL, 0, NULL,
+	  "The fields included in debug output written to log file.\n"
+	  "Use \"all\" to include everything (the default).\n")
+
+cfg_array(log_debug_output_fields_CFG, "debug_output_fields", log_CFG_SECTION, CFG_DEFAULT_COMMENTED | CFG_ADVANCED, CFG_TYPE_STRING, "#Stime#Scommand#Sfileline#Smessage", vsn(2, 3, 2), NULL, 0, NULL,
+	  "The fields included in debug output written to stderr.\n"
+	  "Use \"all\" to include everything (the default).\n")
+
 cfg(backup_backup_CFG, "backup", backup_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_BACKUP_ENABLED, vsn(1, 0, 0), NULL, 0, NULL,
 	"Maintain a backup of the current metadata configuration.\n"
 	"Think very hard before turning this off!\n")

@@ -42,6 +42,8 @@ static int _log_suppress = 0;
 static char _msg_prefix[30] = "  ";
 static int _already_logging = 0;
 static int _abort_on_internal_errors_config = 0;
+static uint32_t _debug_file_fields;
+static uint32_t _debug_output_fields;
 
 static lvm2_log_fn_t _lvm2_log_fn = NULL;
 
@@ -472,6 +474,16 @@ const char *log_get_report_object_type_name(log_report_object_type_t object_type
 	return log_object_type_names[object_type];
 }
 
+void init_debug_file_fields(uint32_t debug_fields)
+{
+	_debug_file_fields = debug_fields;
+}
+
+void init_debug_output_fields(uint32_t debug_fields)
+{
+	_debug_output_fields = debug_fields;
+}
+
 static void _set_time_prefix(char *prefix, int buflen)
 {
 
@@ -506,6 +518,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 	va_list ap;
 	char buf[1024], message[4096];
 	char time_prefix[32] = "";
+	const char *command_prefix = NULL;
 	int bufused, n;
 	const char *trformat;		/* Translated format string */
 	char *newbuf;
@@ -629,12 +642,24 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 		if (verbose_level() > _LOG_DEBUG) {
 			memset(buf, 0, sizeof(buf));
 
-			if (!time_prefix[0])
-				_set_time_prefix(time_prefix, sizeof(time_prefix));
+			if (!_debug_output_fields || (_debug_output_fields & LOG_DEBUG_FIELD_TIME)) {
+				if (!time_prefix[0])
+					_set_time_prefix(time_prefix, sizeof(time_prefix));
+				else
+					time_prefix[0] = '\0';
+			}
 
-			(void) dm_snprintf(buf, sizeof(buf), "%s%s %s:%d",
-					   time_prefix, log_command_file(), file, line);
+			if (!_debug_output_fields || (_debug_output_fields & LOG_DEBUG_FIELD_COMMAND))
+				command_prefix = log_command_file();
+			else
+				command_prefix = NULL;
 
+			if (!_debug_output_fields || (_debug_output_fields & LOG_DEBUG_FIELD_FILELINE))
+				(void) dm_snprintf(buf, sizeof(buf), "%s%s %s:%d",
+					   	   time_prefix, command_prefix ?: "", file, line);
+			else
+				(void) dm_snprintf(buf, sizeof(buf), "%s%s",
+					   	   time_prefix, command_prefix ?: "");
 		} else {
 			memset(buf, 0, sizeof(buf));
 
@@ -682,10 +707,23 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 	}
 
 	if (_log_to_file && (_log_while_suspended || !critical_section())) {
-		if (!time_prefix[0])
-			_set_time_prefix(time_prefix, sizeof(time_prefix));
 
-		fprintf(_log_file, "%s%s %s:%d%s", time_prefix, log_command_file(), file, line, _msg_prefix);
+		if (!_debug_file_fields || (_debug_file_fields & LOG_DEBUG_FIELD_TIME)) {
+			if (!time_prefix[0])
+				_set_time_prefix(time_prefix, sizeof(time_prefix));
+			else
+				time_prefix[0] = '\0';
+		}
+
+		if (!_debug_file_fields || (_debug_file_fields & LOG_DEBUG_FIELD_COMMAND))
+			command_prefix = log_command_file();
+		else
+			command_prefix = NULL;
+
+		if (!_debug_file_fields || (_debug_file_fields & LOG_DEBUG_FIELD_FILELINE))
+			fprintf(_log_file, "%s%s %s:%d%s", time_prefix, command_prefix ?: "", file, line, _msg_prefix);
+		else
+			fprintf(_log_file, "%s%s %s", time_prefix, command_prefix ?: "", _msg_prefix);
 
 		va_copy(ap, orig_ap);
 		vfprintf(_log_file, trformat, ap);

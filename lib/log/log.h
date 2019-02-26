@@ -57,6 +57,13 @@
 
 #define INTERNAL_ERROR "Internal error: "
 
+#define LOG_DEBUG_FIELD_ALL		0x0000
+#define LOG_DEBUG_FIELD_TIME		0x0001
+#define LOG_DEBUG_FIELD_COMMAND		0x0002
+#define LOG_DEBUG_FIELD_FILELINE	0x0004
+#define LOG_DEBUG_FIELD_MESSAGE		0x0008
+
+
 /*
  * Classes available for debug log messages.
  * These are also listed in doc/example.conf

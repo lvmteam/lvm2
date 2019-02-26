@@ -232,6 +232,45 @@ static void _get_sysfs_dir(struct cmd_context *cmd, char *buf, size_t buf_size)
 	strncpy(buf, sys_mnt, buf_size);
 }
 
+static uint32_t _parse_debug_fields(struct cmd_context *cmd, int cfg, const char *cfgname)
+{
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
+	uint32_t debug_fields = 0;
+
+	if (!(cn = find_config_tree_array(cmd, cfg, NULL))) {
+		log_error(INTERNAL_ERROR "Unable to find configuration for log/%s.", cfgname);
+		return 0;
+	}
+
+	for (cv = cn->v; cv; cv = cv->next) {
+		if (cv->type != DM_CFG_STRING) {
+			log_verbose("log/%s contains a value which is not a string.  Ignoring.", cfgname);
+			continue;
+		}
+
+		if (!strcasecmp(cv->v.str, "all"))
+			return 0;
+
+		if (!strcasecmp(cv->v.str, "time"))
+			debug_fields |= LOG_DEBUG_FIELD_TIME;
+
+		else if (!strcasecmp(cv->v.str, "command"))
+			debug_fields |= LOG_DEBUG_FIELD_COMMAND;
+
+		else if (!strcasecmp(cv->v.str, "fileline"))
+			debug_fields |= LOG_DEBUG_FIELD_FILELINE;
+
+		else if (!strcasecmp(cv->v.str, "message"))
+			debug_fields |= LOG_DEBUG_FIELD_MESSAGE;
+
+		else
+			log_verbose("Unrecognised value for log/%s: %s", cfgname, cv->v.str);
+	}
+
+	return debug_fields;
+}
+
 static int _parse_debug_classes(struct cmd_context *cmd)
 {
 	const struct dm_config_node *cn;
@@ -349,6 +388,9 @@ static void _init_logging(struct cmd_context *cmd)
 	cmd->default_settings.debug_classes = _parse_debug_classes(cmd);
 	log_debug("Setting log debug classes to %d", cmd->default_settings.debug_classes);
 	init_debug_classes_logged(cmd->default_settings.debug_classes);
+
+	init_debug_file_fields(_parse_debug_fields(cmd, log_debug_file_fields_CFG, "debug_file_fields"));
+	init_debug_output_fields(_parse_debug_fields(cmd, log_debug_output_fields_CFG, "debug_output_fields"));
 
 	t = time(NULL);
 	ctime_r(&t, &timebuf[0]);
