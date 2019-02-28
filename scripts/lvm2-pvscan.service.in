@@ -2,7 +2,7 @@
 Description=LVM event activation on device %i
 Documentation=man:pvscan(8)
 DefaultDependencies=no
-StartLimitInterval=0
+StartLimitIntervalSec=0
 BindsTo=dev-block-%i.device
 Before=shutdown.target
 Conflicts=shutdown.target
