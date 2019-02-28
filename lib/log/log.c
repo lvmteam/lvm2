@@ -28,19 +28,15 @@
 
 static FILE *_log_file;
 static char _log_file_path[PATH_MAX];
-static struct device _log_dev;
-static struct dm_str_list _log_dev_alias;
 
 static int _syslog = 0;
 static int _log_to_file = 0;
 static uint64_t _log_file_max_lines = 0;
 static uint64_t _log_file_lines = 0;
-static int _log_direct = 0;
 static int _log_while_suspended = 0;
 static int _indent = 0;
 static int _log_suppress = 0;
 static char _msg_prefix[30] = "  ";
-static int _already_logging = 0;
 static int _abort_on_internal_errors_config = 0;
 static uint32_t _debug_file_fields;
 static uint32_t _debug_output_fields;
@@ -309,17 +305,6 @@ void unlink_log_file(int ret)
 	}
 }
 
-void init_log_direct(const char *log_file, int append)
-{
-	int open_flags = append ? 0 : O_TRUNC;
-
-	dev_create_file(log_file, &_log_dev, &_log_dev_alias, 1);
-	if (!dev_open_flags(&_log_dev, O_RDWR | O_CREAT | open_flags, 1, 0))
-		return;
-
-	_log_direct = 1;
-}
-
 void init_log_while_suspended(int log_while_suspended)
 {
 	_log_while_suspended = log_while_suspended;
@@ -343,22 +328,8 @@ int log_suppress(int suppress)
 	return old_suppress;
 }
 
-void release_log_memory(void)
-{
-	if (!_log_direct)
-		return;
-
-	free((char *) _log_dev_alias.str);
-	_log_dev_alias.str = "activate_log file";
-}
-
 void fin_log(void)
 {
-	if (_log_direct) {
-		(void) dev_close(&_log_dev);
-		_log_direct = 0;
-	}
-
 	if (_log_to_file) {
 		if (dm_fclose(_log_file)) {
 			if (errno)
@@ -519,7 +490,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 	char buf[1024], message[4096];
 	char time_prefix[32] = "";
 	const char *command_prefix = NULL;
-	int bufused, n;
+	int n;
 	const char *trformat;		/* Translated format string */
 	char *newbuf;
 	int use_stderr = log_stderr(level);
@@ -749,36 +720,6 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 
 	if (fatal_internal_error)
 		abort();
-
-	/* FIXME This code is unfinished - pre-extend & condense. */
-	if (!_already_logging && _log_direct && critical_section()) {
-		_already_logging = 1;
-		memset(&buf, ' ', sizeof(buf));
-		bufused = 0;
-		if ((n = dm_snprintf(buf, sizeof(buf), "%s:%s %s:%d %s",
-				     time_prefix, log_command_file(), file, line, _msg_prefix)) == -1)
-			goto done;
-
-		bufused += n;		/* n does not include '\0' */
-
-		va_copy(ap, orig_ap);
-		n = vsnprintf(buf + bufused, sizeof(buf) - bufused,
-			      trformat, ap);
-		va_end(ap);
-
-		if (n < 0)
-			goto done;
-
-		bufused += n;
-		if (n >= (int) sizeof(buf))
-			bufused = sizeof(buf) - 1;
-	      done:
-		buf[bufused] = '\n';
-		buf[sizeof(buf) - 1] = '\n';
-		/* FIXME real size bufused */
-		dev_append(&_log_dev, sizeof(buf), DEV_IO_LOG, buf);
-		_already_logging = 0;
-	}
 }
 
 void print_log(int level, const char *file, int line, int dm_errno_or_class,

@@ -374,14 +374,9 @@ static void _init_logging(struct cmd_context *cmd)
 	log_file = find_config_tree_str(cmd, log_file_CFG, NULL);
 
 	if (log_file) {
-		release_log_memory();
 		fin_log();
 		init_log_file(log_file, append);
 	}
-
-	log_file = find_config_tree_str(cmd, log_activate_file_CFG, NULL);
-	if (log_file)
-		init_log_direct(log_file, append);
 
 	init_log_while_suspended(find_config_tree_bool(cmd, log_activation_CFG, NULL));
 
@@ -1995,7 +1990,6 @@ void destroy_toolcontext(struct cmd_context *cmd)
 
 	lvmpolld_disconnect();
 
-	release_log_memory();
 	activation_exit();
 	reset_log_duplicated();
 	fin_log();
