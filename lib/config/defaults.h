@@ -269,4 +269,6 @@
 
 #define DEFAULT_SCAN_LVS 0
 
+#define DEFAULT_IO_MEMORY_SIZE_KB 4096
+
 #endif				/* _LVM_DEFAULTS_H */

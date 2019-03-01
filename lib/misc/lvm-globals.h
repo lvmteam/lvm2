@@ -53,6 +53,7 @@ void init_pv_min_size(uint64_t sectors);
 void init_activation_checks(int checks);
 void init_retry_deactivation(int retry);
 void init_unknown_device_name(const char *name);
+void init_io_memory_size(int val);
 
 void set_cmd_name(const char *cmd_name);
 const char *get_cmd_name(void);
@@ -86,11 +87,13 @@ uint64_t pv_min_size(void);
 int activation_checks(void);
 int retry_deactivation(void);
 const char *unknown_device_name(void);
+int io_memory_size(void);
 
 #define DMEVENTD_MONITOR_IGNORE -1
 int dmeventd_monitor_mode(void);
 
 #define NO_DEV_ERROR_COUNT_LIMIT 0
 int dev_disable_after_error_count(void);
+
 
 #endif
