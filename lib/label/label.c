@@ -775,33 +775,33 @@ out:
 }
 
 /*
- * How many blocks to set up in bcache?  Is 1024 a good max?
+ * num_devs is the number of devices the caller is going to scan.
+ * When 0 the caller doesn't know, and we use the default cache size.
+ * When non-zero, allocate at least num_devs bcache blocks.
+ * num_devs doesn't really tell us how many bcache blocks we'll use
+ * because it includes lvm devs and non-lvm devs, and each lvm dev
+ * will often use a number of bcache blocks.
  *
- * Currently, we tell bcache to set up N blocks where N
- * is the number of devices that are going to be scanned.
- * Reasons why this number may not be be a good choice:
- *
- * - there may be a lot of non-lvm devices, which
- *   would make this number larger than necessary
- *
- * - each lvm device may use more than one cache
- *   block if the metadata is large enough or it
- *   uses more than one metadata area, which
- *   would make this number smaller than it
- *   should be for the best performance.
- *
- * This is even more tricky to estimate when lvmetad
- * is used, because it's hard to predict how many
- * devs might need to be scanned when using lvmetad.
- * This currently just sets up bcache with MIN blocks.
+ * We don't know ahead of time if we will find some VG metadata 
+ * that is larger than the total size of the bcache, which would
+ * prevent us from reading/writing the VG since we do not dynamically
+ * increase the bcache size when we find it's too small.  In these
+ * cases the user would need to set io_memory_size to be larger
+ * than the max VG metadata size (lvm does not impose any limit on
+ * the metadata size.)
  */
 
-#define MIN_BCACHE_BLOCKS 32
+#define MIN_BCACHE_BLOCKS 32    /* 4MB, currently matches DEFAULT_IO_MEMORY_SIZE_KB */
 #define MAX_BCACHE_BLOCKS 1024
 
-static int _setup_bcache(int cache_blocks)
+static int _setup_bcache(int num_devs)
 {
 	struct io_engine *ioe = NULL;
+	int iomem_kb = io_memory_size();
+	int block_size_kb = (BCACHE_BLOCK_SIZE_IN_SECTORS * 512) / 1024;
+	int cache_blocks;
+
+	cache_blocks = iomem_kb / block_size_kb;
 
 	if (cache_blocks < MIN_BCACHE_BLOCKS)
 		cache_blocks = MIN_BCACHE_BLOCKS;

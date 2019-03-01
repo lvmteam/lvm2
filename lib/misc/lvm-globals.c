@@ -53,6 +53,7 @@ static int _activation_checks = 0;
 static char _sysfs_dir_path[PATH_MAX] = "";
 static uint64_t _pv_min_size = (DEFAULT_PV_MIN_SIZE_KB * 1024L >> SECTOR_SHIFT);
 static const char *_unknown_device_name = DEFAULT_UNKNOWN_DEVICE_NAME;
+static int _io_memory_size_kb = DEFAULT_IO_MEMORY_SIZE_KB;
 
 void init_verbose(int level)
 {
@@ -393,3 +394,12 @@ void init_unknown_device_name(const char *name)
 	_unknown_device_name = name;
 }
 
+int io_memory_size(void)
+{
+	return _io_memory_size_kb;
+}
+
+void init_io_memory_size(int val)
+{
+	_io_memory_size_kb = val;
+}

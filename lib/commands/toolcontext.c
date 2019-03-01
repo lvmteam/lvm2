@@ -715,6 +715,8 @@ static int _process_config(struct cmd_context *cmd)
 	if (!_init_system_id(cmd))
 		return_0;
 
+	init_io_memory_size(find_config_tree_int(cmd, global_io_memory_size_CFG, NULL));
+
 	return 1;
 }
 

@@ -314,4 +314,6 @@
 
 #define DEFAULT_HINTS "all"
 
+#define DEFAULT_IO_MEMORY_SIZE_KB 4096
+
 #endif				/* _LVM_DEFAULTS_H */

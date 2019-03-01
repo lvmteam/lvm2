@@ -1224,6 +1224,14 @@ cfg(global_notify_dbus_CFG, "notify_dbus", global_CFG_SECTION, 0, CFG_TYPE_BOOL,
 	"When enabled, an LVM command that changes PVs, changes VG metadata,\n"
 	"or changes the activation state of an LV will send a notification.\n")
 
+cfg(global_io_memory_size_CFG, "io_memory_size", global_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_IO_MEMORY_SIZE_KB, vsn(2, 3, 2), NULL, 0, NULL,
+	"The amount of memory in KiB that LVM allocates to perform disk io.\n"
+	"LVM performance may benefit from more io memory when there are many\n"
+	"disks or VG metadata is large. Increasing this size may be necessary\n"
+	"when a single copy of VG metadata is larger than the current setting.\n"
+	"This value should usually not be decreased from the default; setting\n"
+	"it too low can result in lvm failing to read VGs.\n")
+
 cfg(activation_udev_sync_CFG, "udev_sync", activation_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_UDEV_SYNC, vsn(2, 2, 51), NULL, 0, NULL,
 	"Use udev notifications to synchronize udev and LVM.\n"
 	"The --nodevsync option overrides this setting.\n"
