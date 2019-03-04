@@ -644,6 +644,8 @@ static int _online_pvscan_one(struct cmd_context *cmd, struct device *dev,
 	const struct format_type *fmt;
 	/* Create a dummy instance. */
 	struct format_instance_ctx fic = { .type = 0 };
+	uint32_t ext_version;
+	uint32_t ext_flags;
 	int ret = 0;
 
 	log_debug("pvscan metadata from dev %s", dev_name(dev));
@@ -664,6 +666,14 @@ static int _online_pvscan_one(struct cmd_context *cmd, struct device *dev,
 		log_debug("No PV label found for %s.", dev_name(dev));
 		if (!disable_remove)
 			_online_pvid_file_remove_devno((int)MAJOR(dev->dev), (int)MINOR(dev->dev));
+		return 1;
+	}
+
+	ext_version = lvmcache_ext_version(info);
+	ext_flags = lvmcache_ext_flags(info);
+
+	if ((ext_version >= 2) && !(ext_flags & PV_EXT_USED)) {
+		log_print("pvscan[%d] PV %s not used.", getpid(), dev_name(dev));
 		return 1;
 	}
 
