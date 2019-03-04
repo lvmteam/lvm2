@@ -23,6 +23,7 @@
 #include "lib/commands/toolcontext.h"
 #include "lib/activate/activate.h"
 #include "lib/label/hints.h"
+#include "lib/metadata/metadata.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -30,6 +31,8 @@
 #include <sys/types.h>
 
 /* FIXME Allow for larger labels?  Restricted to single sector currently */
+
+static uint64_t _current_bcache_size_bytes;
 
 /*
  * Internal labeller struct.
@@ -809,6 +812,8 @@ static int _setup_bcache(int num_devs)
 	if (cache_blocks > MAX_BCACHE_BLOCKS)
 		cache_blocks = MAX_BCACHE_BLOCKS;
 
+	_current_bcache_size_bytes = cache_blocks * BCACHE_BLOCK_SIZE_IN_SECTORS * 512;
+
 	if (use_aio()) {
 		if (!(ioe = create_async_io_engine())) {
 			log_warn("Failed to set up async io, using sync io.");
@@ -854,6 +859,7 @@ int label_scan(struct cmd_context *cmd)
 	struct dev_iter *iter;
 	struct device_list *devl, *devl2;
 	struct device *dev;
+	uint64_t max_metadata_size_bytes;
 	int newhints = 0;
 
 	log_debug_devs("Finding devices to scan");
@@ -933,6 +939,41 @@ int label_scan(struct cmd_context *cmd)
 	 * Do the main scan.
 	 */
 	_scan_list(cmd, cmd->filter, &scan_devs, NULL);
+
+	/*
+	 * Metadata could be larger than total size of bcache, and bcache
+	 * cannot currently be resized during the command.  If this is the
+	 * case (or within reach), warn that io_memory_size needs to be
+	 * set larger.
+	 *
+	 * Even if bcache out of space did not cause a failure during scan, it
+	 * may cause a failure during the next vg_read phase or during vg_write.
+	 *
+	 * If there was an error during scan, we could recreate bcache here
+	 * with a larger size and then restart label_scan.  But, this does not
+	 * address the problem of writing new metadata that excedes the bcache
+	 * size and failing, which would often be hit first, i.e. we'll fail
+	 * to write new metadata exceding the max size before we have a chance
+	 * to read any metadata with that size, unless we find an existing vg
+	 * that has been previously created with the larger size.
+	 *
+	 * If the largest metadata is within 1MB of the bcache size, then start
+	 * warning.
+	 */
+	max_metadata_size_bytes = lvmcache_max_metadata_size();
+
+	if (max_metadata_size_bytes + (1024 * 1024) > _current_bcache_size_bytes) {
+		/* we want bcache to be 1MB larger than the max metadata seen */
+		uint64_t want_size_kb = (max_metadata_size_bytes / 1024) + 1024;
+		uint64_t remainder;
+		if ((remainder = (want_size_kb % 1024)))
+			want_size_kb = want_size_kb + 1024 - remainder;
+
+		log_warn("WARNING: metadata may not be usable with current io_memory_size %d KiB",
+			 io_memory_size());
+		log_warn("WARNING: increase lvm.conf io_memory_size to at least %llu KiB",
+			 (unsigned long long)want_size_kb);
+	}
 
 	dm_list_init(&cmd->hints);
 

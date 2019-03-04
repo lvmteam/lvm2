@@ -210,6 +210,9 @@ struct volume_group *lvmcache_get_saved_vg(const char *vgid, int precommitted);
 struct volume_group *lvmcache_get_saved_vg_latest(const char *vgid);
 void lvmcache_drop_saved_vgid(const char *vgid);
 
+uint64_t lvmcache_max_metadata_size(void);
+void lvmcache_save_metadata_size(uint64_t val);
+
 int dev_in_device_list(struct device *dev, struct dm_list *head);
 
 #endif
