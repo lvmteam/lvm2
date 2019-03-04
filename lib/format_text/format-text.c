@@ -1294,6 +1294,10 @@ int read_metadata_location_summary(const struct format_type *fmt,
 	 */
 	vgsummary->mda_checksum = rlocn->checksum;
 	vgsummary->mda_size = rlocn->size;
+
+	/* Keep track of largest metadata size we find. */
+	lvmcache_save_metadata_size(rlocn->size);
+
 	lvmcache_lookup_mda(vgsummary);
 
 	if (!text_read_metadata_summary(fmt, dev_area->dev, MDA_CONTENT_REASON(primary_mda),

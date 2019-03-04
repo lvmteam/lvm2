@@ -3044,3 +3044,18 @@ int lvmcache_scan_mismatch(struct cmd_context *cmd, const char *vgname, const ch
 	return 1;
 }
 
+static uint64_t _max_metadata_size;
+
+void lvmcache_save_metadata_size(uint64_t val)
+{
+	if (!_max_metadata_size)
+		_max_metadata_size = val;
+	else if (_max_metadata_size < val)
+		_max_metadata_size = val;
+}
+
+uint64_t lvmcache_max_metadata_size(void)
+{
+	return _max_metadata_size;
+}
+
