@@ -794,7 +794,7 @@ out:
  * the metadata size.)
  */
 
-#define MIN_BCACHE_BLOCKS 32    /* 4MB, currently matches DEFAULT_IO_MEMORY_SIZE_KB */
+#define MIN_BCACHE_BLOCKS 32    /* 4MB */
 #define MAX_BCACHE_BLOCKS 1024
 
 static int _setup_bcache(int num_devs)
