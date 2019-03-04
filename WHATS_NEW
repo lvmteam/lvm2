@@ -1,5 +1,7 @@
 Version 2.03.02 - 
 ===================================
+  Change default io_memory_size from 4 to 8 MiB.
+  Add config setting io_memory_size to set bcache size.
   Fix pvscan autoactivation for concurrent pvscans.
   Change scan_lvs default to 0 so LVs are not scanned for PVs.
   Thin-pool selects power-of-2 chunk size by default.
