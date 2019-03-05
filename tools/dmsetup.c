@@ -5216,7 +5216,10 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 	if (!segments || (info.target_count == 1))
 		region_ids = &region_id;
 	else
-		region_ids = dm_malloc(info.target_count * sizeof(*region_ids));
+		if (!(region_ids = dm_malloc(info.target_count * sizeof(*region_ids)))) {
+			log_error("Failed to allocated region IDs.");
+			goto out;
+		}
 
 	do {
 		uint64_t segment_start, segment_len;
