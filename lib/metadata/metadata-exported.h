@@ -1377,4 +1377,6 @@ int vg_strip_outdated_historical_lvs(struct volume_group *vg);
 
 int lv_on_pmem(struct logical_volume *lv);
 
+int vg_is_foreign(struct volume_group *vg);
+
 #endif

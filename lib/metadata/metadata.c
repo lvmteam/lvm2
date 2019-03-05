@@ -5668,3 +5668,8 @@ int lv_on_pmem(struct logical_volume *lv)
 	return 0;
 }
 
+int vg_is_foreign(struct volume_group *vg)
+{
+	return _is_foreign_vg(vg);
+}
+

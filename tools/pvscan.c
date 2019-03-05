@@ -696,6 +696,18 @@ static int _online_pvscan_one(struct cmd_context *cmd, struct device *dev,
 		fmt->ops->destroy_instance(baton.fid);
 	}
 
+	if (baton.vg && vg_is_shared(baton.vg)) {
+		log_print("pvscan[%d] PV %s ignore shared VG.", getpid(), dev_name(dev));
+		release_vg(baton.vg);
+		return 1;
+	}
+
+	if (baton.vg && vg_is_foreign(baton.vg)) {
+		log_print("pvscan[%d] PV %s ignore foreign VG.", getpid(), dev_name(dev));
+		release_vg(baton.vg);
+		return 1;
+	}
+
 	ret = _online_pv_found(cmd, dev, dev_args, baton.vg, found_vgnames);
 
 	release_vg(baton.vg);
