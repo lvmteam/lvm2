@@ -27,7 +27,7 @@ _clear_online_files() {
 
 . lib/inittest
 
-aux prepare_pvs 2
+aux prepare_pvs 3
 
 vgcreate $vg1 "$dev1" "$dev2"
 lvcreate -n $lv1 -l 4 -a n $vg1
@@ -153,3 +153,38 @@ check lv_field $vg1/$lv1 lv_active ""
 pvscan --cache -aay "$dev2"
 check lv_field $vg1/$lv1 lv_active "active"
 lvchange -an $vg1
+
+
+# pvscan cache ignores pv that's not used
+
+pvcreate "$dev3"
+
+PVID3=`pvs $dev3 --noheading -o uuid | tr -d - | awk '{print $1}'`
+echo $PVID3
+
+not ls "$RUNDIR/lvm/pvs_online/$PVID3"
+
+pvscan --cache -aay "$dev3"
+
+ls "$RUNDIR/lvm/pvs_online"
+not ls "$RUNDIR/lvm/pvs_online/$PVID3"
+
+
+# pvscan cache ignores pv in a foreign vg
+
+aux lvmconf "global/system_id_source = uname"
+
+vgcreate $vg2 "$dev3"
+lvcreate -an -n $lv1 -l1 $vg2
+pvscan --cache -aay "$dev3"
+ls "$RUNDIR/lvm/pvs_online/$PVID3"
+check lv_field $vg2/$lv1 lv_active "active"
+lvchange -an $vg2
+rm "$RUNDIR/lvm/pvs_online/$PVID3"
+
+vgchange -y --systemid "asdf" "$vg2"
+
+pvscan --cache -aay "$dev3"
+not ls "$RUNDIR/lvm/pvs_online/$PVID3"
+check lv_field $vg2/$lv1 lv_active "" --foreign
+

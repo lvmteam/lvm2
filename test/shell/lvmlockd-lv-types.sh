@@ -39,6 +39,20 @@ aux prepare_devs 5
 vgcreate --shared $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 
 #
+# pvscan autoactivation ignore shared PVs
+#
+RUNDIR="/run"
+test -d "$RUNDIR" || RUNDIR="/var/run"
+
+PVID1=`pvs $dev1 --noheading -o uuid | tr -d - | awk '{print $1}'`
+pvscan --cache -aay "$dev1"
+not ls "$RUNDIR/lvm/pvs_online/$PVID1"
+pvscan --cache -aay
+not ls "$RUNDIR/lvm/pvs_online/$PVID1"
+not ls "$RUNDIR/lvm/vgs_online/$vg"
+
+
+#
 # thin pool, thin lv, thin snap
 #
 
