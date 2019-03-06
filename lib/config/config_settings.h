@@ -346,7 +346,17 @@ cfg(devices_sysfs_scan_CFG, "sysfs_scan", devices_CFG_SECTION, 0, CFG_TYPE_BOOL,
 	"present on the system. sysfs must be part of the kernel and mounted.)\n")
 
 cfg(devices_scan_lvs_CFG, "scan_lvs", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_SCAN_LVS, vsn(2, 2, 182), NULL, 0, NULL,
-	"Scan LVM LVs for layered PVs.\n")
+	"Scan LVM LVs for layered PVs, allowing LVs to be used as PVs.\n"
+	"When 1, LVM will detect PVs layered on LVs, and caution must be\n"
+	"taken to avoid a host accessing a layered VG that may not belong\n"
+	"to it, e.g. from a guest image. This generally requires excluding\n"
+	"the LVs with device filters. Also, when this setting is enabled,\n"
+	"every LVM command will scan every active LV on the system (unless\n"
+	"filtered), which can cause performance problems on systems with\n"
+	"many active LVs. When this setting is 0, LVM will not detect or\n"
+	"use PVs that exist on LVs, and will not allow a PV to be created on\n"
+	"an LV. The LVs are ignored using a built in device filter that\n"
+	"identifies and excludes LVs.\n")
 
 cfg(devices_multipath_component_detection_CFG, "multipath_component_detection", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_MULTIPATH_COMPONENT_DETECTION, vsn(2, 2, 89), NULL, 0, NULL,
 	"Ignore devices that are components of DM multipath devices.\n")
