@@ -25,17 +25,25 @@ make.tmpl
 
 /autom4te.cache/
 /autoscan.log
+/build/
+/config.cache
 /config.log
 /config.status
 /configure.scan
 /cscope.out
+/html/
+/reports/
 /tags
 /tmp/
 
+coverity/coverity_model.xml
 
 tools/man-generator
 tools/man-generator.c
 
+test/.lib-dir-stamp
+test/.tests-stamp
+test/lib/dmsecuretest
 test/lib/lvchange
 test/lib/lvconvert
 test/lib/lvcreate
@@ -60,6 +68,7 @@ test/lib/pvremove
 test/lib/pvresize
 test/lib/pvs
 test/lib/pvscan
+test/lib/securetest
 test/lib/vgcfgbackup
 test/lib/vgcfgrestore
 test/lib/vgchange

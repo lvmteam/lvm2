@@ -24,3 +24,6 @@ lvm2_monitoring_systemd_red_hat.service
 lvm2_pvscan_systemd_red_hat@.service
 lvm2_tmpfiles_red_hat.conf
 lvmdump.sh
+lvm2-pvscan.service
+lvmlockd.service
+lvmlocks.service
