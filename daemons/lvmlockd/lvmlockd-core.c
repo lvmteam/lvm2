@@ -725,6 +725,8 @@ static const char *op_str(int x)
 		return "rename_final";
 	case LD_OP_RUNNING_LM:
 		return "running_lm";
+	case LD_OP_QUERY_LOCK:
+		return "query_lock";
 	case LD_OP_FIND_FREE_LOCK:
 		return "find_free_lock";
 	case LD_OP_KILL_VG:
@@ -2196,6 +2198,7 @@ static int process_op_during_kill(struct action *act)
 	case LD_OP_UPDATE:
 	case LD_OP_RENAME_BEFORE:
 	case LD_OP_RENAME_FINAL:
+	case LD_OP_QUERY_LOCK:
 	case LD_OP_FIND_FREE_LOCK:
 		return 0;
 	};
@@ -2418,6 +2421,19 @@ static void *lockspace_thread_main(void *arg_in)
 				ls->thread_stop = 1;
 				/* Do we want to check hosts again below like vgremove? */
 				break;
+			}
+
+			if (act->op == LD_OP_QUERY_LOCK) {
+				r = find_resource_act(ls, act, 0);
+				if (!r)
+					act->result = -ENOENT;
+				else {
+					act->result = 0;
+					act->mode = r->mode;
+				}
+				list_del(&act->list);
+				add_client_result(act);
+				continue;
 			}
 
 			if (act->op == LD_OP_FIND_FREE_LOCK && act->rt == LD_RT_VG) {
@@ -3673,6 +3689,20 @@ static int client_send_result(struct client *cl, struct action *act)
 					  "result_flags = %s", result_flags[0] ? result_flags : "none",
 					  NULL);
 
+	} else if (act->op == LD_OP_QUERY_LOCK) {
+
+		log_debug("send %s[%d] cl %u %s %s rv %d mode %d",
+			  cl->name[0] ? cl->name : "client", cl->pid, cl->id,
+			  op_str(act->op), rt_str(act->rt),
+			  act->result, act->mode);
+
+		res = daemon_reply_simple("OK",
+					  "op = " FMTd64, (int64_t)act->op,
+					  "op_result = " FMTd64, (int64_t) act->result,
+					  "lock_type = %s", lm_str(act->lm_type),
+					  "mode = %s", mode_str(act->mode),
+					  NULL);
+
 	} else if (act->op == LD_OP_DUMP_LOG || act->op == LD_OP_DUMP_INFO) {
 		/*
 		 * lvmlockctl creates the unix socket then asks us to write to it.
@@ -4001,6 +4031,16 @@ static int str_to_op_rt(const char *req_name, int *op, int *rt)
 	if (!strcmp(req_name, "running_lm")) {
 		*op = LD_OP_RUNNING_LM;
 		*rt = 0;
+		return 0;
+	}
+	if (!strcmp(req_name, "query_lock_vg")) {
+		*op = LD_OP_QUERY_LOCK;
+		*rt = LD_RT_VG;
+		return 0;
+	}
+	if (!strcmp(req_name, "query_lock_lv")) {
+		*op = LD_OP_QUERY_LOCK;
+		*rt = LD_RT_LV;
 		return 0;
 	}
 	if (!strcmp(req_name, "find_free_lock")) {
@@ -4582,6 +4622,7 @@ static void client_recv_action(struct client *cl)
 	case LD_OP_DISABLE:
 	case LD_OP_FREE:
 	case LD_OP_RENAME_BEFORE:
+	case LD_OP_QUERY_LOCK:
 	case LD_OP_FIND_FREE_LOCK:
 	case LD_OP_KILL_VG:
 	case LD_OP_DROP_VG:

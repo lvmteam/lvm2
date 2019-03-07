@@ -2031,6 +2031,59 @@ int lockd_vg_update(struct volume_group *vg)
 	return ret;
 }
 
+static int _query_lock_lv(struct cmd_context *cmd, struct volume_group *vg,
+			  const char *lv_name, char *lv_uuid,
+			  const char *lock_args, int *ex, int *sh)
+{
+	daemon_reply reply;
+	const char *opts = NULL;
+	const char *reply_str;
+	int result;
+	int ret;
+
+	log_debug("lockd query LV %s/%s", vg->name, lv_name);
+
+	reply = _lockd_send("query_lock_lv",
+				"pid = " FMTd64, (int64_t) getpid(),
+				"opts = %s", opts ?: "none",
+				"vg_name = %s", vg->name,
+				"lv_name = %s", lv_name,
+				"lv_uuid = %s", lv_uuid,
+				"vg_lock_type = %s", vg->lock_type,
+				"vg_lock_args = %s", vg->lock_args,
+				"lv_lock_args = %s", lock_args ?: "none",
+				NULL);
+
+	if (!_lockd_result(reply, &result, NULL)) {
+		/* No result from lvmlockd, it is probably not running. */
+		log_error("Lock query failed for LV %s/%s", vg->name, lv_name);
+		return 0;
+	} else {
+		ret = (result < 0) ? 0 : 1;
+	}
+
+	if (!ret)
+		log_error("query_lock_lv lvmlockd result %d", result);
+
+	if (!(reply_str = daemon_reply_str(reply, "mode", NULL))) {
+		log_error("query_lock_lv mode not returned");
+		ret = 0;
+	}
+
+	if (reply_str && !strcmp(reply_str, "ex"))
+		*ex = 1;
+	else if (reply_str && !strcmp(reply_str, "sh"))
+		*sh = 1;
+
+	daemon_reply_destroy(reply);
+
+	/* The lv was not active/locked. */
+	if (result == -ENOENT)
+		return 1;
+
+	return 1;
+}
+
 /*
  * When this is called directly (as opposed to being called from
  * lockd_lv), the caller knows that the LV has a lock.
@@ -2055,6 +2108,34 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
+	if (!id_write_format(lv_id, lv_uuid, sizeof(lv_uuid)))
+		return_0;
+
+	if (cmd->lockd_lv_disable && !strcmp(vg->lock_type, "dlm")) {
+		/*
+		 * If the command is updating an LV with a shared lock,
+		 * and using --lockopt skiplv to skip the incompat ex
+		 * lock, then check if an existing sh lock exists.
+		 */
+
+		if (!strcmp(cmd->name, "lvextend") ||
+		    !strcmp(cmd->name, "lvresize") ||
+		    !strcmp(cmd->name, "lvchange") ||
+		    !strcmp(cmd->name, "lvconvert")) {
+			int ex = 0, sh = 0;
+
+			if (!_query_lock_lv(cmd, vg, lv_name, lv_uuid, lock_args, &ex, &sh))
+				return 1;
+
+			if (sh) {
+				log_warn("WARNING: shared LV may require refresh on other hosts where it is active.");
+				return 1;
+			}
+		}
+
+		return 1;
+	}
+
 	if (cmd->lockd_lv_disable)
 		return 1;
 
@@ -2062,9 +2143,6 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	if (!_lvmlockd_connected)
 		return 0;
-
-	if (!id_write_format(lv_id, lv_uuid, sizeof(lv_uuid)))
-		return_0;
 
 	/*
 	 * For lvchange/vgchange activation, def_mode is "sh" or "ex"

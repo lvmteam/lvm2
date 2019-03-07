@@ -53,6 +53,7 @@ enum {
 	LD_OP_KILL_VG,
 	LD_OP_DROP_VG,
 	LD_OP_BUSY,
+	LD_OP_QUERY_LOCK,
 };
 
 /* resource types */
