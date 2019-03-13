@@ -211,12 +211,12 @@ static int _native_dev_is_mpath(struct dev_filter *f, struct device *dev)
 			return_0;
 		break;
 	default: /* 0, error. */
-		log_error("Failed to get primary device for %d:%d.", major, minor);
+		log_warn("Failed to get primary device for %d:%d.", major, minor);
 		return 0;
 	}
 
 	if (dm_snprintf(path, sizeof(path), "%s/block/%s/holders", sysfs_dir, name) < 0) {
-		log_error("Sysfs path to check mpath is too long.");
+		log_warn("Sysfs path to check mpath is too long.");
 		return 0;
 	}
 
@@ -225,7 +225,7 @@ static int _native_dev_is_mpath(struct dev_filter *f, struct device *dev)
 		return 0;
 
 	if (!S_ISDIR(info.st_mode)) {
-		log_error("Path %s is not a directory.", path);
+		log_warn("Path %s is not a directory.", path);
 		return 0;
 	}
 
