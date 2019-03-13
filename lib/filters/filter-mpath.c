@@ -27,6 +27,14 @@
 
 #define MPATH_PREFIX "mpath-"
 
+
+struct mpath_priv {
+	struct dm_pool *mem;
+	struct dev_filter f;
+	struct dev_types *dt;
+	struct dm_hash_table *hash;
+};
+
 static const char *_get_sysfs_name(struct device *dev)
 {
 	const char *name;
@@ -174,7 +182,8 @@ static int _udev_dev_is_mpath(struct device *dev)
 
 static int _native_dev_is_mpath(struct dev_filter *f, struct device *dev)
 {
-	struct dev_types *dt = (struct dev_types *) f->private;
+	struct mpath_priv *mp = (struct mpath_priv *) f->private;
+	struct dev_types *dt = mp->dt;
 	const char *part_name, *name;
 	struct stat info;
 	char path[PATH_MAX], parent_name[PATH_MAX];
@@ -182,6 +191,7 @@ static int _native_dev_is_mpath(struct dev_filter *f, struct device *dev)
 	int major = MAJOR(dev->dev);
 	int minor = MINOR(dev->dev);
 	dev_t primary_dev;
+	long look;
 
 	/* Limit this filter only to SCSI devices */
 	if (!major_is_scsi_device(dt, MAJOR(dev->dev)))
@@ -228,7 +238,22 @@ static int _native_dev_is_mpath(struct dev_filter *f, struct device *dev)
 	if (major != dt->device_mapper_major)
 		return 0;
 
-	return lvm_dm_prefix_check(major, minor, MPATH_PREFIX);
+	/* Avoid repeated detection of multipath device and use first checked result */
+	look = (long) dm_hash_lookup_binary(mp->hash, &minor, sizeof(minor));
+	if (look > 0) {
+		log_debug_devs("%s(%u:%u): already checked as %sbeing mpath.",
+			       parent_name, major, minor, (look > 1) ? "" : "not ");
+		return (look > 1) ? 0 : 1;
+	}
+
+	if (lvm_dm_prefix_check(major, minor, MPATH_PREFIX)) {
+		(void) dm_hash_insert_binary(mp->hash, &minor, sizeof(minor), (void*)2);
+		return 1;
+	}
+
+	(void) dm_hash_insert_binary(mp->hash, &minor, sizeof(minor), (void*)1);
+
+	return 0;
 }
 
 static int _dev_is_mpath(struct dev_filter *f, struct device *dev)
@@ -263,36 +288,65 @@ static int _ignore_mpath(struct cmd_context *cmd, struct dev_filter *f, struct d
 
 static void _destroy(struct dev_filter *f)
 {
+	struct mpath_priv *mp = (struct mpath_priv*) f->private;
+
 	if (f->use_count)
 		log_error(INTERNAL_ERROR "Destroying mpath filter while in use %u times.", f->use_count);
 
-	free(f);
+	dm_hash_destroy(mp->hash);
+	dm_pool_destroy(mp->mem);
 }
 
 struct dev_filter *mpath_filter_create(struct dev_types *dt)
 {
 	const char *sysfs_dir = dm_sysfs_dir();
-	struct dev_filter *f;
+	struct dm_pool *mem;
+	struct mpath_priv *mp;
+	struct dm_hash_table *hash;
 
 	if (!*sysfs_dir) {
 		log_verbose("No proc filesystem found: skipping multipath filter");
 		return NULL;
 	}
 
-	if (!(f = zalloc(sizeof(*f)))) {
-		log_error("mpath filter allocation failed");
+	if (!(hash = dm_hash_create(128))) {
+		log_error("mpath hash table creation failed.");
 		return NULL;
 	}
 
-	f->passes_filter = _ignore_mpath;
-	f->destroy = _destroy;
-	f->use_count = 0;
-	f->private = dt;
-	f->name = "mpath";
+	if (!(mem = dm_pool_create("mpath", 256))) {
+		log_error("mpath pool creation failed.");
+		dm_hash_destroy(hash);
+		return NULL;
+	}
+
+	if (!(mp = dm_pool_zalloc(mem, sizeof(*mp)))) {
+		log_error("mpath filter allocation failed.");
+		goto bad;
+	}
+
+	if (!(mp = dm_pool_zalloc(mem, sizeof(*mp)))) {
+		log_error("mpath filter allocation failed.");
+		goto bad;
+	}
+
+	mp->f.passes_filter = _ignore_mpath;
+	mp->f.destroy = _destroy;
+	mp->f.use_count = 0;
+	mp->f.private = mp;
+	mp->f.name = "mpath";
+
+	mp->mem = mem;
+	mp->dt = dt;
+	mp->hash = hash;
 
 	log_debug_devs("mpath filter initialised.");
 
-	return f;
+	return &mp->f;
+bad:
+	dm_pool_destroy(mem);
+	dm_hash_destroy(hash);
+	return NULL;
 }
 
 #else
