@@ -154,6 +154,7 @@ pvscan --cache -aay "$dev2"
 check lv_field $vg1/$lv1 lv_active "active"
 lvchange -an $vg1
 
+vgremove -f $vg1
 
 # pvscan cache ignores pv that's not used
 
@@ -174,17 +175,37 @@ not ls "$RUNDIR/lvm/pvs_online/$PVID3"
 
 aux lvmconf "global/system_id_source = uname"
 
+_clear_online_files
+
 vgcreate $vg2 "$dev3"
-lvcreate -an -n $lv1 -l1 $vg2
+lvcreate -an -n $lv2 -l1 $vg2
 pvscan --cache -aay "$dev3"
 ls "$RUNDIR/lvm/pvs_online/$PVID3"
-check lv_field $vg2/$lv1 lv_active "active"
+check lv_field $vg2/$lv2 lv_active "active"
 lvchange -an $vg2
 rm "$RUNDIR/lvm/pvs_online/$PVID3"
 
+# a vg without a system id is not foreign, not ignored
+vgchange -y --systemid "" "$vg2"
+
+_clear_online_files
+pvscan --cache -aay "$dev3"
+ls "$RUNDIR/lvm/pvs_online/$PVID3"
+check lv_field $vg2/$lv2 lv_active "active"
+lvchange -an $vg2
+rm "$RUNDIR/lvm/pvs_online/$PVID3"
+
+# make the vg foreign by assigning a system id different from ours
 vgchange -y --systemid "asdf" "$vg2"
+
+_clear_online_files
 
 pvscan --cache -aay "$dev3"
 not ls "$RUNDIR/lvm/pvs_online/$PVID3"
-check lv_field $vg2/$lv1 lv_active "" --foreign
+lvs --foreign $vg2 > tmp
+cat tmp
+grep $lv2 tmp
+check lv_field $vg2/$lv2 lv_active "" --foreign
+
+
 

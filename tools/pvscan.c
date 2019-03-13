@@ -702,7 +702,12 @@ static int _online_pvscan_one(struct cmd_context *cmd, struct device *dev,
 		return 1;
 	}
 
-	if (baton.vg && vg_is_foreign(baton.vg)) {
+	if (baton.vg &&
+	    baton.vg->system_id && baton.vg->system_id[0] &&
+	    cmd->system_id && cmd->system_id[0] &&
+	    vg_is_foreign(baton.vg)) {
+		log_verbose("Ignore PV %s with VG system id %s with our system id %s",
+			    dev_name(dev), baton.vg->system_id, cmd->system_id);
 		log_print("pvscan[%d] PV %s ignore foreign VG.", getpid(), dev_name(dev));
 		release_vg(baton.vg);
 		return 1;
