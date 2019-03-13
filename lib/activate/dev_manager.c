@@ -943,6 +943,23 @@ static int _info_by_dev(uint32_t major, uint32_t minor, struct dm_info *info)
 	return _info_run(NULL, info, NULL, 0, 0, 0, major, minor);
 }
 
+int dev_manager_check_prefix_dm_major_minor(uint32_t major, uint32_t minor, const char *prefix)
+{
+	struct dm_task *dmt;
+	const char *uuid;
+	int r = 1;
+
+	if (!(dmt = _setup_task_run(DM_DEVICE_INFO, NULL, NULL, NULL, 0, major, minor, 0, 0, 0)))
+		return_0;
+
+	if (!(uuid = dm_task_get_uuid(dmt)) || strncasecmp(uuid, prefix, strlen(prefix)))
+		r = 0;
+
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
 int dev_manager_info(struct cmd_context *cmd,
 		     const struct logical_volume *lv, const char *layer,
 		     int with_open_count, int with_read_ahead,

@@ -107,6 +107,8 @@ int dev_manager_device_uses_vg(struct device *dev,
 
 int dev_manager_remove_dm_major_minor(uint32_t major, uint32_t minor);
 
+int dev_manager_check_prefix_dm_major_minor(uint32_t major, uint32_t minor, const char *prefix);
+
 int get_cache_vol_meta_data(struct cmd_context *cmd,
                                     struct logical_volume *lv,
                                     struct logical_volume *pool_lv,

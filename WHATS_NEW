@@ -1,5 +1,6 @@
 Version 2.03.02 - 
 ===================================
+  Use device INFO instead of STATUS when checking for mpath device uuid.
   Change default io_memory_size from 4 to 8 MiB.
   Add config setting io_memory_size to set bcache size.
   Fix pvscan autoactivation for concurrent pvscans.

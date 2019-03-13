@@ -539,25 +539,7 @@ int target_version(const char *target_name, uint32_t *maj,
 
 int lvm_dm_prefix_check(int major, int minor, const char *prefix)
 {
-	struct dm_task *dmt;
-	const char *uuid;
-	int r;
-
-	if (!(dmt = dm_task_create(DM_DEVICE_STATUS)))
-		return_0;
-
-	if (!dm_task_set_minor(dmt, minor) ||
-	    !dm_task_set_major(dmt, major) ||
-	    !dm_task_run(dmt) ||
-	    !(uuid = dm_task_get_uuid(dmt))) {
-		dm_task_destroy(dmt);
-		return 0;
-	}
-
-	r = strncasecmp(uuid, prefix, strlen(prefix));
-	dm_task_destroy(dmt);
-
-	return r ? 0 : 1;
+	return dev_manager_check_prefix_dm_major_minor(major, minor, prefix);
 }
 
 int module_present(struct cmd_context *cmd, const char *target_name)
