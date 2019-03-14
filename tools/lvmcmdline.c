@@ -2714,6 +2714,13 @@ static int _init_lvmlockd(struct cmd_context *cmd)
 	const char *lvmlockd_socket;
 	int use_lvmlockd = find_config_tree_bool(cmd, global_use_lvmlockd_CFG, NULL);
 
+	if (cmd->command->command_enum == pvscan_cache_CMD) {
+		/* pvscan cache ignores shared vgs, it only activates local vgs. */
+		if (use_lvmlockd)
+			log_debug("Ignore lvmlockd for pvscan cache.");
+		return 1;
+	}
+
 	/*
 	 * Think about when/how to enable hints with lvmlockd.
 	 */
