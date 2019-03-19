@@ -106,6 +106,7 @@ struct client {
 #define LD_AF_WARN_GL_REMOVED	   0x00020000
 #define LD_AF_LV_LOCK              0x00040000
 #define LD_AF_LV_UNLOCK            0x00080000
+#define LD_AF_SH_EXISTS            0x00100000
 
 /*
  * Number of times to repeat a lock request after

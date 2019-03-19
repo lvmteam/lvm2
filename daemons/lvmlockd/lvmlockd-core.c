@@ -1816,9 +1816,9 @@ static void res_process(struct lockspace *ls, struct resource *r,
 			add_client_result(act);
 		} else {
 			/* persistent lock is sh, transient request is ex */
-			/* FIXME: can we remove this case? do a convert here? */
 			log_debug("res_process %s existing persistent lock new transient", r->name);
 			r->last_client_id = act->client_id;
+			act->flags |= LD_AF_SH_EXISTS;
 			act->result = -EEXIST;
 			list_del(&act->list);
 			add_client_result(act);
@@ -3661,6 +3661,9 @@ static int client_send_result(struct client *cl, struct action *act)
 	if ((act->flags & LD_AF_WARN_GL_REMOVED) || gl_vg_removed)
 		strcat(result_flags, "WARN_GL_REMOVED,");
 	
+	if (act->flags & LD_AF_SH_EXISTS)
+		strcat(result_flags, "SH_EXISTS,");
+
 	if (act->op == LD_OP_INIT) {
 		/*
 		 * init is a special case where lock args need
