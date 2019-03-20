@@ -42,6 +42,7 @@ case "$host_os" in
 		BUILD_LVMPOLLD=no
 		LOCKDSANLOCK=no
 		LOCKDDLM=no
+		LOCKDDLM_CONTROL=no
 		ODIRECT=yes
 		DM_IOCTLS=yes
 		SELINUX=yes
@@ -917,6 +918,24 @@ if test "$BUILD_LOCKDDLM" = yes; then
 fi
 
 ################################################################################
+dnl -- Build lvmlockddlmcontrol
+AC_MSG_CHECKING(whether to build lvmlockddlmcontrol)
+AC_ARG_ENABLE(lvmlockd-dlmcontrol,
+	      AC_HELP_STRING([--enable-lvmlockd-dlmcontrol],
+			     [enable lvmlockd remote refresh using libdlmcontrol]),
+	      LOCKDDLM_CONTROL=$enableval)
+AC_MSG_RESULT($LOCKDDLM_CONTROL)
+
+BUILD_LOCKDDLM_CONTROL=$LOCKDDLM_CONTROL
+
+dnl -- Look for libdlmcontrol libraries
+if test "$BUILD_LOCKDDLM_CONTROL" = yes; then
+	PKG_CHECK_MODULES(LOCKD_DLM_CONTROL, libdlmcontrol >= 3.2, [HAVE_LOCKD_DLM_CONTROL=yes], $bailout)
+	AC_DEFINE([LOCKDDLM_CONTROL_SUPPORT], 1, [Define to 1 to include code that uses lvmlockd dlm control option.])
+	BUILD_LVMLOCKD=yes
+fi
+
+################################################################################
 dnl -- Build lvmlockd
 AC_MSG_CHECKING(whether to build lvmlockd)
 AC_MSG_RESULT($BUILD_LVMLOCKD)
@@ -1642,6 +1661,7 @@ AC_SUBST(BUILD_LVMPOLLD)
 AC_SUBST(BUILD_LVMLOCKD)
 AC_SUBST(BUILD_LOCKDSANLOCK)
 AC_SUBST(BUILD_LOCKDDLM)
+AC_SUBST(BUILD_LOCKDDLM_CONTROL)
 AC_SUBST(BUILD_DMFILEMAPD)
 AC_SUBST(CACHE)
 AC_SUBST(CFLAGS)

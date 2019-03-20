@@ -152,6 +152,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	lp->nofsck = arg_is_set(cmd, nofsck_ARG);
 	lp->nosync = arg_is_set(cmd, nosync_ARG);
 	lp->resizefs = arg_is_set(cmd, resizefs_ARG);
+	lp->lockopt = arg_str_value(cmd, lockopt_ARG, NULL);
 
 	return 1;
 }
@@ -204,6 +205,9 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			      &_lvresize_single);
 
 	destroy_processing_handle(cmd, handle);
+
+	if (lp.lockd_lv_refresh_path && !lockd_lv_refresh(cmd, &lp))
+		ret = ECMD_FAILED;
 
 	return ret;
 }

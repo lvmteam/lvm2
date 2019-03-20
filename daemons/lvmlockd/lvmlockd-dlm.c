@@ -24,6 +24,7 @@
  * link with non-threaded version of library, libdlm_lt.
  */
 #include "libdlm.h"
+#include "libdlmcontrol.h"
 
 #include <stddef.h>
 #include <poll.h>
@@ -776,3 +777,75 @@ int lm_is_running_dlm(void)
 	return 1;
 }
 
+#ifdef LOCKDDLM_CONTROL_SUPPORT
+
+int lm_refresh_lv_start_dlm(struct action *act)
+{
+	char command[DLMC_RUN_COMMAND_LEN];
+	char run_uuid[DLMC_RUN_UUID_LEN];
+	int rv;
+
+	memset(command, 0, sizeof(command));
+	memset(run_uuid, 0, sizeof(run_uuid));
+
+	snprintf(command, DLMC_RUN_COMMAND_LEN,
+		 "lvm lvchange --refresh --nolocking %s", act->path);
+
+	rv = dlmc_run_start(command, strlen(command), 0,
+			    DLMC_FLAG_RUN_START_NODE_NONE,
+			    run_uuid);
+	if (rv < 0) {
+		log_debug("refresh_lv run_start error %d", rv);
+		return rv;
+	}
+
+	log_debug("refresh_lv run_start %s", run_uuid);
+
+	/* Bit of a hack here, we don't need path once started,
+	   but we do need to save the run_uuid somewhere, so just
+	   replace the path with the uuid. */
+
+	free(act->path);
+	act->path = strdup(run_uuid);
+	return 0;
+}
+
+int lm_refresh_lv_check_dlm(struct action *act)
+{
+	uint32_t check_status = 0;
+	int rv;
+
+	/* NB act->path was replaced with run_uuid */
+
+	rv = dlmc_run_check(act->path, strlen(act->path), 0,
+			    DLMC_FLAG_RUN_CHECK_CLEAR,
+			    &check_status);
+	if (rv < 0) {
+		log_debug("refresh_lv check error %d", rv);
+		return rv;
+	}
+
+	log_debug("refresh_lv check %s status %x", act->path, check_status);
+
+	if (!(check_status & DLMC_RUN_STATUS_DONE))
+		return -EAGAIN;
+
+	if (check_status & DLMC_RUN_STATUS_FAILED)
+		return -1;
+
+	return 0;
+}
+
+#else /* LOCKDDLM_CONTROL_SUPPORT */
+
+int lm_refresh_lv_start_dlm(struct action *act)
+{
+	return 0;
+}
+
+int lm_refresh_lv_check_dlm(struct action *act)
+{
+	return 0;
+}
+
+#endif /* LOCKDDLM_CONTROL_SUPPORT */

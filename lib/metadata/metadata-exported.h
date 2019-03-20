@@ -667,6 +667,10 @@ struct lvresize_params {
 	int approx_alloc;
 	int extents_are_pes;	/* Is 'extents' counting PEs or LEs? */
 	int size_changed;	/* Was there actually a size change */
+
+	const char *lockopt;
+	char *lockd_lv_refresh_path; /* set during resize to use for refresh at the end */
+	char *lockd_lv_refresh_uuid; /* set during resize to use for refresh at the end */
 };
 
 void pvcreate_params_set_defaults(struct pvcreate_params *pp);

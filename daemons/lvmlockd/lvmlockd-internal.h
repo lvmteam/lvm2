@@ -54,6 +54,7 @@ enum {
 	LD_OP_DROP_VG,
 	LD_OP_BUSY,
 	LD_OP_QUERY_LOCK,
+	LD_OP_REFRESH_LV,
 };
 
 /* resource types */
@@ -129,6 +130,7 @@ struct action {
 	int max_retries;
 	int result;
 	int lm_rv;			/* return value from lm_ function */
+	char *path;
 	char vg_uuid[64];
 	char vg_name[MAX_NAME+1];
 	char lv_name[MAX_NAME+1];
@@ -391,6 +393,8 @@ int lm_get_lockspaces_dlm(struct list_head *ls_rejoin);
 int lm_data_size_dlm(void);
 int lm_is_running_dlm(void);
 int lm_hosts_dlm(struct lockspace *ls, int notify);
+int lm_refresh_lv_start_dlm(struct action *act);
+int lm_refresh_lv_check_dlm(struct action *act);
 
 static inline int lm_support_dlm(void)
 {
@@ -463,6 +467,16 @@ static inline int lm_support_dlm(void)
 }
 
 static inline int lm_hosts_dlm(struct lockspace *ls, int notify)
+{
+	return 0;
+}
+
+static inline int lm_refresh_lv_start_dlm(struct action *act)
+{
+	return 0;
+}
+
+static inline int lm_refresh_lv_check_dlm(struct action *act)
 {
 	return 0;
 }

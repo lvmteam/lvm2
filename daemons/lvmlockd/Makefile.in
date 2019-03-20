@@ -27,6 +27,7 @@ endif
 ifeq ("@BUILD_LOCKDDLM@", "yes")
   SOURCES += lvmlockd-dlm.c
   LOCK_LIBS += -ldlm_lt
+  LOCK_LIBS += -ldlmcontrol
 endif
 
 SOURCES2 = lvmlockctl.c

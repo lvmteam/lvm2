@@ -22,7 +22,7 @@
 /* lockd_lv flags */
 #define LDLV_MODE_NO_SH           0x00000001
 #define LDLV_PERSISTENT           0x00000002
-#define LDLV_EXTEND               0x00000004
+#define LDLV_SH_EXISTS_OK         0x00000004
 
 /* lvmlockd result flags */
 #define LD_RF_NO_LOCKSPACES     0x00000001
@@ -82,6 +82,8 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 		  const char *lock_args, const char *def_mode, uint32_t flags);
 int lockd_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	     const char *def_mode, uint32_t flags);
+int lockd_lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
+	     const char *def_mode, uint32_t flags, struct lvresize_params *lp);
 
 /* lvcreate/lvremove use init/free */
 
@@ -97,6 +99,8 @@ const char *lockd_running_lock_type(struct cmd_context *cmd, int *found_multiple
 int handle_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg);
 
 int lockd_lv_uses_lock(struct logical_volume *lv);
+
+int lockd_lv_refresh(struct cmd_context *cmd, struct lvresize_params *lp);
 
 #else /* LVMLOCKD_SUPPORT */
 
@@ -208,6 +212,12 @@ static inline int lockd_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	return 1;
 }
 
+static inline int lockd_lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
+	     const char *def_mode, uint32_t flags, struct lvresize_params *lp)
+{
+	return 0;
+}
+
 static inline int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg,
 		  	struct logical_volume *lv, struct lvcreate_params *lp)
 {
@@ -238,6 +248,11 @@ static inline int handle_sanlock_lv(struct cmd_context *cmd, struct volume_group
 }
 
 static inline int lockd_lv_uses_lock(struct logical_volume *lv)
+{
+	return 0;
+}
+
+static inline int lockd_lv_refresh(struct cmd_context *cmd, struct lvresize_params *lp)
 {
 	return 0;
 }

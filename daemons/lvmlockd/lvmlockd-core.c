@@ -502,6 +502,10 @@ static struct lock *alloc_lock(void)
 
 static void free_action(struct action *act)
 {
+	if (act->path) {
+		free(act->path);
+		act->path = NULL;
+	}
 	pthread_mutex_lock(&unused_struct_mutex);
 	if (unused_action_count >= MAX_UNUSED_ACTION) {
 		free(act);
@@ -739,6 +743,8 @@ static const char *op_str(int x)
 		return "dump_info";
 	case LD_OP_BUSY:
 		return "busy";
+	case LD_OP_REFRESH_LV:
+		return "refresh_lv";
 	default:
 		return "op_unknown";
 	};
@@ -3421,6 +3427,15 @@ static void *worker_thread_main(void *arg_in)
 			else
 				list_add(&act->list, &delayed_list);
 
+		} else if (act->op == LD_OP_REFRESH_LV) {
+			log_debug("work refresh_lv %s %s", act->lv_uuid, act->path);
+			rv = lm_refresh_lv_start_dlm(act);
+			if (rv < 0) {
+				act->result = rv;
+				add_client_result(act);
+			} else
+				list_add(&act->list, &delayed_list);
+
 		} else {
 			log_error("work unknown op %d", act->op);
 			act->result = -EINVAL;
@@ -3454,6 +3469,19 @@ static void *worker_thread_main(void *arg_in)
 				if (!act->result) {
 					list_del(&act->list);
 					act->result = 0;
+					add_client_result(act);
+				}
+
+			} else if (act->op == LD_OP_REFRESH_LV) {
+				log_debug("work delayed refresh_lv");
+				rv = lm_refresh_lv_check_dlm(act);
+				if (!rv) {
+					list_del(&act->list);
+					act->result = 0;
+					add_client_result(act);
+				} else if ((rv < 0) && (rv != -EAGAIN)) {
+					list_del(&act->list);
+					act->result = rv;
 					add_client_result(act);
 				}
 			}
@@ -4061,6 +4089,11 @@ static int str_to_op_rt(const char *req_name, int *op, int *rt)
 		*rt = LD_RT_VG;
 		return 0;
 	}
+	if (!strcmp(req_name, "refresh_lv")) {
+		*op = LD_OP_REFRESH_LV;
+		*rt = 0;
+		return 0;
+	}
 out:
 	return -1;
 }
@@ -4422,6 +4455,7 @@ static void client_recv_action(struct client *cl)
 	const char *vg_name;
 	const char *vg_uuid;
 	const char *vg_sysid;
+	const char *path;
 	const char *str;
 	int64_t val;
 	uint32_t opts = 0;
@@ -4508,6 +4542,7 @@ static void client_recv_action(struct client *cl)
 	opts = str_to_opts(str);
 	str = daemon_request_str(req, "vg_lock_type", NULL);
 	lm = str_to_lm(str);
+	path = daemon_request_str(req, "path", NULL);
 
 	if (cl_pid && cl_pid != cl->pid)
 		log_error("client recv bad message pid %d client %d", cl_pid, cl->pid);
@@ -4539,6 +4574,9 @@ static void client_recv_action(struct client *cl)
 	act->mode = mode;
 	act->flags = opts;
 	act->lm_type = lm;
+
+	if (path)
+		act->path = strdup(path);
 
 	if (vg_name && strcmp(vg_name, "none"))
 		strncpy(act->vg_name, vg_name, MAX_NAME);
@@ -4616,6 +4654,7 @@ static void client_recv_action(struct client *cl)
 	case LD_OP_STOP_ALL:
 	case LD_OP_RENAME_FINAL:
 	case LD_OP_RUNNING_LM:
+	case LD_OP_REFRESH_LV:
 		add_work_action(act);
 		rv = 0;
 		break;

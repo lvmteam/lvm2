@@ -17,6 +17,8 @@
 #include "lib/cache/lvmcache.h"
 #include "daemons/lvmlockd/lvmlockd-client.h"
 
+#include <mntent.h>
+
 static daemon_handle _lvmlockd;
 static const char *_lvmlockd_socket = NULL;
 static int _use_lvmlockd = 0;         /* is 1 if command is configured to use lvmlockd */
@@ -2120,22 +2122,17 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 		 * and using --lockopt skiplv to skip the incompat ex
 		 * lock, then check if an existing sh lock exists.
 		 */
-
-		if (!strcmp(cmd->name, "lvextend") ||
-		    !strcmp(cmd->name, "lvresize") ||
-		    !strcmp(cmd->name, "lvchange") ||
-		    !strcmp(cmd->name, "lvconvert")) {
+		if (!strcmp(cmd->name, "lvextend") || !strcmp(cmd->name, "lvresize") ||
+		    !strcmp(cmd->name, "lvchange") || !strcmp(cmd->name, "lvconvert")) {
 			int ex = 0, sh = 0;
 
 			if (!_query_lock_lv(cmd, vg, lv_name, lv_uuid, lock_args, &ex, &sh))
 				return 1;
-
 			if (sh) {
 				log_warn("WARNING: shared LV may require refresh on other hosts where it is active.");
 				return 1;
 			}
 		}
-
 		return 1;
 	}
 
@@ -2209,15 +2206,10 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 		 * sh LV lock.
 		 */
 
-		/*
-		 * Special case to allow lvextend under gfs2.
-		 *
-		 * FIXME: verify the LV actually holds gfs2/ocfs2 which we know
-		 * allow this (other users of the LV may not.)
-		 */
 		if (lockd_flags & LD_RF_SH_EXISTS) {
-			if (flags & LDLV_EXTEND) {
+			if (flags & LDLV_SH_EXISTS_OK) {
 				log_warn("WARNING: extending LV with a shared lock, other hosts may require LV refresh.");
+				cmd->lockd_lv_sh_for_ex = 1;
 				return 1;
 			}
 		}
@@ -2397,6 +2389,110 @@ int lockd_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	       
 	return lockd_lv_name(cmd, lv->vg, lv->name, &lv->lvid.id[1],
 			     lv->lock_args, def_mode, flags);
+}
+
+/*
+ * Check if the LV being resized is used by gfs2/ocfs2 which we
+ * know allow resizing under a shared lock.
+ */
+static int _shared_fs_can_resize(struct logical_volume *lv)
+{
+	FILE *f = NULL;
+	struct mntent *m;
+	int ret = 0;
+
+	if (!(f = setmntent("/etc/mtab", "r")))
+		return 0;
+
+	while ((m = getmntent(f))) {
+		if (!strcmp(m->mnt_type, "gfs2") || !strcmp(m->mnt_type, "ocfs2")) {
+			/* FIXME: check if this mntent is for lv */
+			ret = 1;
+			break;
+		}
+	}
+	endmntent(f);
+	return ret;
+}
+
+/*
+ * A special lockd_lv function is used for lvresize so that details can
+ * be saved for doing cluster "refresh" at the end of the command.
+ */
+
+int lockd_lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
+	     const char *def_mode, uint32_t flags,
+	     struct lvresize_params *lp)
+{
+	char lv_uuid[64] __attribute__((aligned(8)));
+	char path[PATH_MAX];
+	int shupdate = (lp->lockopt && strstr(lp->lockopt, "shupdate"));
+	int norefresh = (lp->lockopt && strstr(lp->lockopt, "norefresh"));
+	int rv;
+
+	if (!vg_is_shared(lv->vg))
+		return 1;
+
+	if (!_use_lvmlockd) {
+		log_error("LV in VG %s with lock_type %s requires lvmlockd.",
+			  lv->vg->name, lv->vg->lock_type);
+		return 0;
+	}
+
+	if (!_lvmlockd_connected)
+		return 0;
+
+	/*
+	 * A special case for gfs2 where we want to allow lvextend
+	 * of an LV that has an existing shared lock, which is normally
+	 * incompatible with the ex lock required by lvextend.
+	 *
+	 * Check if gfs2 or ocfs2 is mounted on the LV, and enable this
+	 * SH_EXISTS_OK flag if so.  Other users of the LV may not want
+	 * to allow this.  --lockopt shupdate allows the shared lock in
+	 * place of ex even we don't detect gfs2/ocfs2.
+	 */
+	if (lp->resize == LV_EXTEND) {
+		if (shupdate || _shared_fs_can_resize(lv))
+			flags |= LDLV_SH_EXISTS_OK;
+	}
+
+	rv = lockd_lv(cmd, lv, def_mode, flags);
+
+	if (norefresh)
+		return rv;
+
+	/*
+	 * If lockd_lv found an existing sh lock in lvmlockd and
+	 * used that in place of the usual ex lock (we allowed this
+	 * with SH_EXISTS_OK), then it sets this flag.
+	 *
+	 * We use this as a signal that we should try to refresh
+	 * the LV on remote nodes through dlm/corosync at the end
+	 * of the command.
+	 *
+	 * If lockd_lv sucessfully acquired the LV lock ex (did not
+	 * need to make use of SH_EXISTS_OK), then we know the LV
+	 * is active here only (or not active anywhere) and we
+	 * don't need to do any remote refresh.
+	 *
+	 * lvresize --lockopt norefresh disables the remote refresh.
+	 */
+	if (cmd->lockd_lv_sh_for_ex) {
+		if (!id_write_format(&lv->lvid.id[1], lv_uuid, sizeof(lv_uuid)))
+			return 0;
+		if (dm_snprintf(path, sizeof(path), "%s/%s/%s",
+				cmd->dev_dir, lv->vg->name, lv->name) < 0) {
+			log_error("LV path too long for lvmlockd refresh.");
+			return 0;
+		}
+
+		/* These will be used at the end of lvresize to do lockd_lv_refresh */
+		lp->lockd_lv_refresh_path = dm_pool_strdup(cmd->mem, path);
+		lp->lockd_lv_refresh_uuid = dm_pool_strdup(cmd->mem, lv_uuid);
+	}
+
+	return rv;
 }
 
 static int _init_lv_sanlock(struct cmd_context *cmd, struct volume_group *vg,
@@ -2915,3 +3011,44 @@ int lockd_lv_uses_lock(struct logical_volume *lv)
 
 	return 1;
 }
+
+/*
+ * send lvmlockd a request to use libdlmcontrol dlmc_run_start/dlmc_run_check
+ * to run a command on all nodes running dlm_controld:
+ * lvm lvchange --refresh --nolocking <path>
+ */
+
+int lockd_lv_refresh(struct cmd_context *cmd, struct lvresize_params *lp)
+{
+	daemon_reply reply;
+	char *lv_uuid = lp->lockd_lv_refresh_uuid;
+	char *path = lp->lockd_lv_refresh_path;
+	int result;
+
+	if (!lv_uuid || !path)
+		return 1;
+
+	log_warn("Refreshing LV %s on other hosts...", path);
+
+	reply = _lockd_send("refresh_lv",
+				"pid = " FMTd64, (int64_t) getpid(),
+				"opts = %s", "none",
+				"lv_uuid = %s", lv_uuid,
+				"path = %s", path,
+				NULL);
+
+	if (!_lockd_result(reply, &result, NULL)) {
+		/* No result from lvmlockd, it is probably not running. */
+		log_error("LV refresh failed for LV %s", path);
+		return 0;
+	}
+	daemon_reply_destroy(reply);
+
+	if (result < 0) {
+		log_error("Failed to refresh LV on all hosts.");
+		log_error("Manual lvchange --refresh required on all hosts for %s.", path);
+		return 0;
+	}
+	return 1;
+}
+

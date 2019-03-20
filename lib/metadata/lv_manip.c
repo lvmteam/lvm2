@@ -5762,7 +5762,7 @@ int lv_resize(struct logical_volume *lv,
 	 * If the LV is locked from activation, this lock call is a no-op.
 	 * Otherwise, this acquires a transient lock on the lv (not PERSISTENT).
 	 */
-	if (!lockd_lv(cmd, lock_lv, "ex", (lp->resize == LV_EXTEND) ? LDLV_EXTEND : 0))
+	if (!lockd_lv_resize(cmd, lock_lv, "ex", 0, lp))
 		return_0;
 
 	if (!archive(vg))
