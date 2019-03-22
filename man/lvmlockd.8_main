@@ -545,7 +545,7 @@ report an error and fail.
 The shared mode is intended for a multi-host/cluster application or
 file system.
 LV types that cannot be used concurrently
-from multiple hosts include thin, cache, raid, and snapshot.
+from multiple hosts include thin, cache, raid, mirror, and snapshot.
 
 .IP \fBn\fP
 The command deactivates the LV.  After deactivating the LV, the command

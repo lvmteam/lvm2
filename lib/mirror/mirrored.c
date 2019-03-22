@@ -278,15 +278,6 @@ static int _add_log(struct dm_pool *mem, struct lv_segment *seg,
 	char *log_dlid = NULL;
 	uint32_t log_flags = 0;
 
-	if (seg->lv->vg->lock_type && !strcmp(seg->lv->vg->lock_type, "dlm")) {
-		/*
-		 * If shared lock was used due to -asy, then we set clustered
-		 * to use a clustered mirror log with cmirrod.
-		 */
-		if (seg->lv->vg->cmd->lockd_lv_sh)
-			clustered = 1;
-	}
-
 	if (seg->log_lv) {
 		/* If disk log, use its UUID */
 		if (!(log_dlid = build_dm_uuid(mem, seg->log_lv, NULL))) {
