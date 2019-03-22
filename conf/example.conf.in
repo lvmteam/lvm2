@@ -185,6 +185,20 @@ devices {
 	# present on the system. sysfs must be part of the kernel and mounted.)
 	sysfs_scan = 1
 
+	# Configuration option devices/scan_lvs.
+	# Scan LVM LVs for layered PVs, allowing LVs to be used as PVs.
+	# When 1, LVM will detect PVs layered on LVs, and caution must be
+	# taken to avoid a host accessing a layered VG that may not belong
+	# to it, e.g. from a guest image. This generally requires excluding
+	# the LVs with device filters. Also, when this setting is enabled,
+	# every LVM command will scan every active LV on the system (unless
+	# filtered), which can cause performance problems on systems with
+	# many active LVs. When this setting is 0, LVM will not detect or
+	# use PVs that exist on LVs, and will not allow a PV to be created on
+	# an LV. The LVs are ignored using a built in device filter that
+	# identifies and excludes LVs.
+	scan_lvs = 0
+
 	# Configuration option devices/multipath_component_detection.
 	# Ignore devices that are components of DM multipath devices.
 	multipath_component_detection = 1
@@ -1113,6 +1127,16 @@ global {
 	# When enabled, an LVM command that changes PVs, changes VG metadata,
 	# or changes the activation state of an LV will send a notification.
 	notify_dbus = 1
+
+	# Configuration option global/io_memory_size.
+	# The amount of memory in KiB that LVM allocates to perform disk io.
+	# LVM performance may benefit from more io memory when there are many
+	# disks or VG metadata is large. Increasing this size may be necessary
+	# when a single copy of VG metadata is larger than the current setting.
+	# This value should usually not be decreased from the default; setting
+	# it too low can result in lvm failing to read VGs.
+	# This configuration option has an automatic default value.
+	# io_memory_size = 8192
 }
 
 # Configuration section activation.
