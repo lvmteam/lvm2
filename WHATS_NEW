@@ -1,5 +1,5 @@
-Version 2.02.184 - 
-=====================================
+Version 2.02.184 - 22nd March 2019
+==================================
   Fix (de)activation of RaidLVs with visible SubLVs
   Change scan_lvs default to 0 so LVs are not scanned for PVs.
   Add scan_lvs config setting to control if lvm scans LVs for PVs.
