@@ -781,15 +781,47 @@ int lm_is_running_dlm(void)
 
 int lm_refresh_lv_start_dlm(struct action *act)
 {
+	char path[PATH_MAX];
 	char command[DLMC_RUN_COMMAND_LEN];
 	char run_uuid[DLMC_RUN_UUID_LEN];
+	char *p, *vgname, *lvname;
 	int rv;
+
+	/* split /dev/vgname/lvname into vgname and lvname strings */
+	strncpy(path, act->path, strlen(act->path));
+
+	/* skip past dev */
+	p = strchr(path + 1, '/');
+
+	/* skip past slashes */
+	while (*p == '/')
+		p++;
+
+	/* start of vgname */
+	vgname = p;
+
+	/* skip past vgname */
+	while (*p != '/')
+		p++;
+
+	/* terminate vgname */
+	*p = '\0';
+	p++;
+
+	/* skip past slashes */
+	while (*p == '/')
+		p++;
+
+	lvname = p;
 
 	memset(command, 0, sizeof(command));
 	memset(run_uuid, 0, sizeof(run_uuid));
 
+	/* todo: add --readonly */
+
 	snprintf(command, DLMC_RUN_COMMAND_LEN,
-		 "lvm lvchange --refresh --nolocking %s", act->path);
+		 "lvm lvchange --refresh --partial --nolocking --select 'lvname=%s && vgname=%s'",
+		 lvname, vgname);
 
 	rv = dlmc_run_start(command, strlen(command), 0,
 			    DLMC_FLAG_RUN_START_NODE_NONE,
