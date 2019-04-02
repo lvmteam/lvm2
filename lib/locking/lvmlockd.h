@@ -215,7 +215,7 @@ static inline int lockd_lv(struct cmd_context *cmd, struct logical_volume *lv,
 static inline int lockd_lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	     const char *def_mode, uint32_t flags, struct lvresize_params *lp)
 {
-	return 0;
+	return 1;
 }
 
 static inline int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg,
