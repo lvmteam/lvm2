@@ -1,5 +1,6 @@
 Version 2.02.185 - 
 ==================================
+  Automatically grow thin metadata, when thin data gets too big.
   Add support for vgsplit with cached devices.
   Fix signal delivery checking race in libdaemon (lvmetad).
   Add missing Before=shutdown.target to LVM2 services to fix shutdown ordering.
