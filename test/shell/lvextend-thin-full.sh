@@ -28,7 +28,7 @@ test -n "$LVM_TEST_THIN_RESTORE_CMD" || LVM_TEST_THIN_RESTORE_CMD=$(which thin_r
 
 aux have_thin 1 10 0 || skip
 
-aux prepare_vg 3 256
+aux prepare_vg 3 4096
 
 aux lvmconf 'activation/thin_pool_autoextend_percent = 30' \
 	    'activation/thin_pool_autoextend_threshold = 70'
@@ -57,6 +57,12 @@ not lvcreate -V10 $vg/pool
 
 lvextend --use-policies $vg/pool "$dev2" "$dev3"
 #should lvextend -l+100%FREE $vg/pool2
+
+check lv_field $vg/pool_tmeta size "3.00m"
+
+lvextend -L+3G $vg/pool
+
+check lv_field $vg/pool_tmeta size "3.50m"
 
 lvs -a $vg
 
