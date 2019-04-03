@@ -908,3 +908,15 @@ int validate_thin_pool_chunk_size(struct cmd_context *cmd, uint32_t chunk_size)
 
 	return r;
 }
+
+uint64_t estimate_thin_pool_metadata_size(uint32_t data_extents, uint32_t extent_size, uint32_t chunk_size)
+{
+	uint64_t sz = _estimate_metadata_size(data_extents, extent_size, chunk_size);
+
+	if (sz > (2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE))
+		sz = 2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE;
+	else if (sz < (2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE))
+		sz = 2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE;
+
+	return sz;
+}
