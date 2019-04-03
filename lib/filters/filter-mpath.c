@@ -243,7 +243,7 @@ static int _native_dev_is_mpath(struct dev_filter *f, struct device *dev)
 	if (look > 0) {
 		log_debug_devs("%s(%u:%u): already checked as %sbeing mpath.",
 			       parent_name, major, minor, (look > 1) ? "" : "not ");
-		return (look > 1) ? 0 : 1;
+		return (look > 1) ? 1 : 0;
 	}
 
 	if (lvm_dm_prefix_check(major, minor, MPATH_PREFIX)) {
