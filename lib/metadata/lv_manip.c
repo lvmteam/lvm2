@@ -5664,6 +5664,24 @@ int lv_resize(struct logical_volume *lv,
 	if (!_lvresize_prepare(&lv, lp, pvh))
 		return_0;
 
+	if (lp->resize != LV_REDUCE && !aux_lv && !lp->poolmetadata_size &&
+	    &lv->vg->pvs == pvh && lv_is_thin_pool_data(lv)) {
+		/* When thin-pool data part is extended, automatically extend also metadata part
+		 * to have the metadata chunks for adressing all data blocks
+		 * Do this only when PV list is not defined and --poolmetadatasize is unspecified */
+		aux_lp = *lp;
+		seg = get_only_segment_using_this_lv(lv);
+		aux_lp.size = estimate_thin_pool_metadata_size(lp->extents, lv->vg->extent_size, seg->chunk_size);
+		if (aux_lp.size > seg->metadata_lv->size) {
+			log_verbose("Also going to resize thin-pool metadata to match bigger data.");
+			aux_lv = _lvresize_setup_aux(seg->metadata_lv, &aux_lp);
+			aux_lp.sign = SIGN_NONE;
+			if (!_lvresize_prepare(&aux_lv, &aux_lp, pvh))
+				return_0;
+		} else
+			aux_lp.size = 0;
+	}
+
 	if (((lp->resize == LV_REDUCE) ||
 	     (aux_lv && aux_lp.resize == LV_REDUCE)) &&
 	    (pvh != &vg->pvs))

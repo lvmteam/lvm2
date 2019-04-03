@@ -1,5 +1,6 @@
 Version 2.03.02 - 
 ===================================
+  Automatically grow thin metadata, when thin data gets too big.
   Add synchronization with udev before removing cached devices.
   Add support for caching VDO LVs and VDOPOOL LVs.
   Add support for vgsplit with cached devices.
