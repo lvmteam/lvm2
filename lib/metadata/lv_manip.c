@@ -5400,6 +5400,10 @@ static int _lvresize_volume(struct logical_volume *lv,
 					display_lvname(lv),
 					display_size(cmd, (uint64_t) old_extents * vg->extent_size), old_extents,
 					display_size(cmd, (uint64_t) lv->le_count * vg->extent_size), lv->le_count);
+
+		/* Resizing metadata and PV list is not specified -> maintain size of _pmspare volume */
+		if ((&vg->pvs == pvh) && lv_is_pool_metadata(lv))
+			(void) handle_pool_metadata_spare(vg, 0, pvh, 1);
 	}
 
 	return 1;
