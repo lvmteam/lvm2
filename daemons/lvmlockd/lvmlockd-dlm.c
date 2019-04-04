@@ -818,11 +818,10 @@ int lm_refresh_lv_start_dlm(struct action *act)
 	memset(run_uuid, 0, sizeof(run_uuid));
 
 	/* todo: add --readonly */
-	/* FIXME: move vgname into the select option once the dlm can handle compound select args */
 
 	snprintf(command, DLMC_RUN_COMMAND_LEN,
-		 "lvm lvchange --refresh --partial --nolocking --select lvname=%s %s",
-		 lvname, vgname);
+		 "lvm lvchange --refresh --partial --nolocking %s/%s",
+		 vgname, lvname);
 
 	rv = dlmc_run_start(command, strlen(command), 0,
 			    DLMC_FLAG_RUN_START_NODE_NONE,
