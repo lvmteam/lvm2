@@ -785,6 +785,7 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	int all_devs;
 	struct arg_value_group_list *current_group;
 	dev_t devno;
+	int filtered;
 	int do_activate = arg_is_set(cmd, activate_ARG);
 	int add_errors = 0;
 	int add_single_count = 0;
@@ -840,6 +841,7 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 				log_debug("pvscan arg %s not found.", pv_name);
 				if ((dev = dev_cache_get(cmd, pv_name, NULL))) {
 					/* nothing to do for this dev name */
+					log_print("pvscan[%d] device %s excluded by filter.", getpid(), dev_name(dev));
 				} else {
 					log_error("Physical Volume %s not found.", pv_name);
 					ret = ECMD_FAILED;
@@ -863,8 +865,15 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 			}
 			devno = MKDEV(major, minor);
 
-			if (!(dev = dev_cache_get_by_devt(cmd, devno, cmd->filter))) {
-				log_debug("pvscan arg %d:%d not found.", major, minor);
+			if (!(dev = dev_cache_get_by_devt(cmd, devno, cmd->filter, &filtered))) {
+				if (filtered) {
+					if ((dev = dev_cache_get_by_devt(cmd, devno, NULL, NULL)))
+						log_print("pvscan[%d] device %d:%d %s excluded by filter.", getpid(), major, minor, dev_name(dev));
+					else
+						log_print("pvscan[%d] device %d:%d excluded by filter.", getpid(), major, minor);
+				} else
+					log_print("pvscan[%d] device %d:%d not found.", getpid(), major, minor);
+
 				if (!(dev = dm_pool_zalloc(cmd->mem, sizeof(struct device))))
 					return_0;
 				if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
@@ -897,8 +906,15 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 
 		devno = MKDEV(major, minor);
 
-		if (!(dev = dev_cache_get_by_devt(cmd, devno, cmd->filter))) {
-			log_debug("pvscan arg %d:%d not found.", major, minor);
+		if (!(dev = dev_cache_get_by_devt(cmd, devno, cmd->filter, &filtered))) {
+			if (filtered) {
+				if ((dev = dev_cache_get_by_devt(cmd, devno, NULL, NULL)))
+					log_print("pvscan[%d] device %d:%d %s excluded by filter.", getpid(), major, minor, dev_name(dev));
+				else
+					log_print("pvscan[%d] device %d:%d excluded by filter.", getpid(), major, minor);
+			} else
+				log_print("pvscan[%d] device %d:%d not found.", getpid(), major, minor);
+
 			if (!(dev = dm_pool_zalloc(cmd->mem, sizeof(struct device))))
 				return_0;
 			if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
@@ -969,8 +985,10 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 		dm_list_iterate_items(devl, &add_devs) {
 			dev = devl->dev;
 
-			if (dev->flags & DEV_FILTER_OUT_SCAN)
+			if (dev->flags & DEV_FILTER_OUT_SCAN) {
+				log_print("pvscan[%d] device %s excluded by filter.", getpid(), dev_name(dev));
 				continue;
+			}
 
 			add_single_count++;
 

@@ -1505,13 +1505,16 @@ static struct device *_dev_cache_seek_devt(dev_t dev)
  * TODO This is very inefficient. We probably want a hash table indexed by
  * major:minor for keys to speed up these lookups.
  */
-struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t dev, struct dev_filter *f)
+struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t dev, struct dev_filter *f, int *filtered)
 {
 	char path[PATH_MAX];
 	const char *sysfs_dir;
 	struct stat info;
 	struct device *d = _dev_cache_seek_devt(dev);
 	int ret;
+
+	if (filtered)
+		*filtered = 0;
 
 	if (d && (d->flags & DEV_REGULAR))
 		return d;
@@ -1557,6 +1560,8 @@ struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t dev, struct 
 	if (ret)
 		return d;
 
+	if (filtered)
+		*filtered = 1;
 	return NULL;
 }
 
