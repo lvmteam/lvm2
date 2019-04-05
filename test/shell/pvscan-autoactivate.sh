@@ -32,53 +32,29 @@ aux prepare_pvs 3
 vgcreate $vg1 "$dev1" "$dev2"
 lvcreate -n $lv1 -l 4 -a n $vg1
 
-# the first pvscan scans all devs
 test -d "$PVS_ONLINE_DIR" || mkdir -p "$PVS_ONLINE_DIR"
 test -d "$VGS_ONLINE_DIR" || mkdir -p "$VGS_ONLINE_DIR"
 _clear_online_files
 
+# check pvscan with no args scans and activates all
 pvscan --cache -aay
 check lv_field $vg1/$lv1 lv_active "active"
 lvchange -an $vg1
 
-# the first pvscan scans all devs even when
-# only one device is specified
-
 _clear_online_files
 
-pvscan --cache -aay "$dev1"
-check lv_field $vg1/$lv1 lv_active "active"
-lvchange -an $vg1
-
-# touch foo to disable first-pvscan case,
-# then check pvscan with no args scans all
-_clear_online_files
-touch "$RUNDIR/lvm/pvs_online/foo"
-
-pvscan --cache -aay
-check lv_field $vg1/$lv1 lv_active "active"
-lvchange -an $vg1
-
-# touch foo to disable first-pvscan case,
-# then check that vg is activated only after
-# both devs appear separately
-
-_clear_online_files
-touch "$RUNDIR/lvm/pvs_online/foo"
-
+# first dev leaves vg incomplete and inactive,
+# and second dev completes vg and activates
 pvscan --cache -aay "$dev1"
 check lv_field $vg1/$lv1 lv_active ""
 pvscan --cache -aay "$dev2"
 check lv_field $vg1/$lv1 lv_active "active"
 lvchange -an $vg1
 
-# touch foo to disable first-pvscan case,
-# then check that vg is activated when both
-# devs appear together
-
 _clear_online_files
-touch "$RUNDIR/lvm/pvs_online/foo"
 
+# check that vg is activated when both devs
+# are scanned together
 pvscan --cache -aay "$dev1" "$dev2"
 check lv_field $vg1/$lv1 lv_active "active"
 lvchange -an $vg1
@@ -94,37 +70,23 @@ pvcreate --metadatacopies 1 "$dev2"
 vgcreate $vg1 "$dev1" "$dev2"
 lvcreate -n $lv1 -l 4 -a n $vg1
 
-# touch foo to disable first-pvscan case,
-# test case where dev with metadata appears first
 
 _clear_online_files
-touch "$RUNDIR/lvm/pvs_online/foo"
 
+# test case where dev with metadata is scanned first
 pvscan --cache -aay "$dev2"
 check lv_field $vg1/$lv1 lv_active ""
 pvscan --cache -aay "$dev1"
 check lv_field $vg1/$lv1 lv_active "active"
 lvchange -an $vg1
 
-# touch foo to disable first-pvscan case,
-# test case where dev without metadata
-# appears first which triggers scanning all
+# test case where dev without metadata is scanned first
+# which triggers scanning all, which finds both
 
 _clear_online_files
-touch "$RUNDIR/lvm/pvs_online/foo"
-
 pvscan --cache -aay "$dev1"
 check lv_field $vg1/$lv1 lv_active "active"
 pvscan --cache -aay "$dev2"
-check lv_field $vg1/$lv1 lv_active "active"
-lvchange -an $vg1
-
-# dev without metadata is scanned, but
-# first-pvscan case scans all devs
-
-_clear_online_files
-
-pvscan --cache -aay "$dev1"
 check lv_field $vg1/$lv1 lv_active "active"
 lvchange -an $vg1
 
@@ -133,7 +95,6 @@ lvchange -an $vg1
 # activate until after they are online
 
 _clear_online_files
-touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache "$dev1"
 check lv_field $vg1/$lv1 lv_active ""
@@ -146,7 +107,6 @@ lvchange -an $vg1
 # like previous
 
 _clear_online_files
-touch "$RUNDIR/lvm/pvs_online/foo"
 
 pvscan --cache "$dev1"
 check lv_field $vg1/$lv1 lv_active ""
