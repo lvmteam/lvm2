@@ -127,6 +127,8 @@ static int generate_unit(const char *dir, int unit, int sysinit_needed)
 	      "SourcePath=/etc/lvm/lvm.conf\n"
 	      "DefaultDependencies=no\n", f);
 
+	fputs("Conflicts=shutdown.target\n", f);
+
 	if (unit == UNIT_NET) {
 		fprintf(f, "After=%s iscsi.service fcoe.service rbdmap.service\n"
 			"Before=remote-fs-pre.target shutdown.target\n\n"

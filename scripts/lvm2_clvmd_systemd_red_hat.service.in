@@ -2,7 +2,7 @@
 Description=Clustered LVM daemon
 Documentation=man:clvmd(8)
 After=dlm.service corosync.service
-Before=remote-fs-pre.target
+Before=remote-fs-pre.target shutdown.target
 Requires=network.target dlm.service corosync.service
 RefuseManualStart=true
 RefuseManualStop=true

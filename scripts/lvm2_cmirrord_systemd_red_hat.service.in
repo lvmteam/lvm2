@@ -3,7 +3,7 @@ Description=Clustered LVM mirror log daemon
 Documentation=man:cmirrord(8)
 Requires=corosync.service
 After=corosync.service
-Before=remote-fs-pre.target
+Before=remote-fs-pre.target shutdown.target
 DefaultDependencies=no
 Conflicts=shutdown.target
 

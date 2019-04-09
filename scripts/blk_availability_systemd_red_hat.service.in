@@ -1,5 +1,6 @@
 [Unit]
 Description=Availability of block devices
+Before=shutdown.target
 After=lvm2-activation.service lvm2-lvmetad.service iscsi-shutdown.service iscsi.service iscsid.service fcoe.service rbdmap.service
 DefaultDependencies=no
 Conflicts=shutdown.target

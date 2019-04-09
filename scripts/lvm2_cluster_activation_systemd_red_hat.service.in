@@ -1,6 +1,7 @@
 [Unit]
 Description=Clustered LVM volumes activation service
 Requires=lvm2-clvmd.service
+Before=shutdown.target
 After=lvm2-clvmd.service lvm2-cmirrord.service
 OnFailure=lvm2-clvmd.service
 DefaultDependencies=no
