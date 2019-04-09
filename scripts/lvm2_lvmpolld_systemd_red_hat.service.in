@@ -2,6 +2,7 @@
 Description=LVM2 poll daemon
 Documentation=man:lvmpolld(8)
 Requires=lvm2-lvmpolld.socket
+Before=shutdown.target
 After=lvm2-lvmpolld.socket
 DefaultDependencies=no
 Conflicts=shutdown.target

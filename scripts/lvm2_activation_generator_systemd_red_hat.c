@@ -139,6 +139,8 @@ static int generate_unit(struct generator *gen, int unit)
 	      "Documentation=man:lvm2-activation-generator(8)\n"
 	      "SourcePath=/etc/lvm/lvm.conf\n" "DefaultDependencies=no\n", f);
 
+	fputs("Conflicts=shutdown.target\n", f);
+
 	if (unit == UNIT_NET) {
 		fprintf(f, "After=%s iscsi.service fcoe.service rbdmap.service\n"
 			"Before=remote-fs-pre.target shutdown.target\n\n"
