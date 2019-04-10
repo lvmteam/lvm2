@@ -1,5 +1,6 @@
 Version 2.03.02 - 
 ===================================
+  Fix signal delivery checking race in libdaemon (lvmetad).
   Add missing Before=shutdown.target to LVM2 services to fix shutdown ordering.
   Skip autoactivation for a PV when PV size does not match device size.
   Remove first-pvscan-initialization which should no longer be needed.
