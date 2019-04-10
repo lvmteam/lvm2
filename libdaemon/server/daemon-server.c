@@ -87,7 +87,7 @@ static int _is_idle(daemon_state s)
 	return s.idle && s.idle->is_idle && !s.threads->next;
 }
 
-static struct timeval *_get_timeout(daemon_state s)
+static struct timespec *_get_timeout(daemon_state s)
 {
 	return s.idle ? s.idle->ptimeout : NULL;
 }
@@ -96,7 +96,7 @@ static void _reset_timeout(daemon_state s)
 {
 	if (s.idle) {
 		s.idle->ptimeout->tv_sec = 1;
-		s.idle->ptimeout->tv_usec = 0;
+		s.idle->ptimeout->tv_nsec = 0;
 	}
 }
 
@@ -561,6 +561,8 @@ void daemon_start(daemon_state s)
 	thread_state _threads = { .next = NULL };
 	unsigned timeout_count = 0;
 	fd_set in;
+	sigset_t new_set, old_set;
+	int ret;
 
 	/*
 	 * Switch to C locale to avoid reading large locale-archive file used by
@@ -628,8 +630,7 @@ void daemon_start(daemon_state s)
 	if (!s.foreground)
 		kill(getppid(), SIGTERM);
 
-	/*
-	 * Use daemon_main for daemon-specific init and polling, or
+	/*                                                                               	 * Use daemon_main for daemon-specific init and polling, or
 	 * use daemon_init for daemon-specific init and generic lib polling.
 	 */
 
@@ -643,21 +644,38 @@ void daemon_start(daemon_state s)
 		if (!s.daemon_init(&s))
 			failed = 1;
 
+	if (s.socket_fd >= FD_SETSIZE)
+		failed = 1; /* FD out of available selectable set */
+
+	sigfillset(&new_set);
+	sigprocmask(SIG_SETMASK, NULL, &old_set);
+
 	while (!failed) {
 		_reset_timeout(s);
 		FD_ZERO(&in);
 		FD_SET(s.socket_fd, &in);
-		if (select(FD_SETSIZE, &in, NULL, NULL, _get_timeout(s)) < 0 && errno != EINTR)
-			perror("select error");
+
+		sigprocmask(SIG_SETMASK, &new_set, NULL);
+		if (_shutdown_requested && !s.threads->next) {
+			sigprocmask(SIG_SETMASK, &old_set, NULL);
+			INFO(&s, "shutdown requested", s.name);
+			break;
+		}
+		ret = pselect(s.socket_fd + 1, &in, NULL, NULL, _get_timeout(s), &old_set);
+		sigprocmask(SIG_SETMASK, &old_set, NULL);
+
+		if (ret < 0) {
+			if (errno != EINTR && errno != EAGAIN &&
+			    (EWOULDBLOCK == EAGAIN || errno != EWOULDBLOCK))
+				perror("select error");
+			continue;
+		}
+
 		if (FD_ISSET(s.socket_fd, &in)) {
 			timeout_count = 0;
 			_handle_connect(s);
 		}
-
 		_reap(s, 0);
-
-		if (_shutdown_requested && !s.threads->next)
-			break;
 
 		/* s.idle == NULL equals no shutdown on timeout */
 		if (_is_idle(s)) {

@@ -47,7 +47,7 @@ struct timeval;
 typedef struct {
 	volatile unsigned is_idle;
 	unsigned max_timeouts;
-	struct timeval *ptimeout;
+	struct timespec *ptimeout;
 } daemon_idle;
 
 struct daemon_state;

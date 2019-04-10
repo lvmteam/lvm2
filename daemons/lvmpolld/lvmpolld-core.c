@@ -915,7 +915,7 @@ int main(int argc, char *argv[])
 	int option_index = 0;
 	int client = 0, server = 0;
 	unsigned action = ACTION_MAX;
-	struct timeval timeout;
+	struct timespec timeout;
 	daemon_idle di = { .ptimeout = &timeout };
 	struct lvmpolld_state ls = { .log_config = "" };
 	daemon_state s = {

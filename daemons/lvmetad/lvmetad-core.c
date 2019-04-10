@@ -2953,7 +2953,7 @@ static void usage(const char *prog, FILE *file)
 int main(int argc, char *argv[])
 {
 	signed char opt;
-	struct timeval timeout;
+	struct timespec timeout;
 	daemon_idle di = { .ptimeout = &timeout };
 	lvmetad_state ls = { .log_config = "" };
 	daemon_state s = {

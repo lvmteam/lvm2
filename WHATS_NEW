@@ -1,5 +1,6 @@
 Version 2.02.185 - 
 ==================================
+  Fix signal delivery checking race in libdaemon (lvmetad).
   Add missing Before=shutdown.target to LVM2 services to fix shutdown ordering.
 
 Version 2.02.184 - 22nd March 2019
