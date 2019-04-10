@@ -50,8 +50,8 @@ struct pfilter {
  * by default.  The old code for it should be removed.
  */
 
-static char* _good_device = "good";
-static char* _bad_device = "bad";
+static const char* _good_device = "good";
+static const char* _bad_device = "bad";
 
 /*
  * The hash table holds one of these two states
