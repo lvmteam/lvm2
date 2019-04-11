@@ -1,6 +1,8 @@
 [Unit]
 Description=LVM2 metadata daemon socket
 Documentation=man:lvmetad(8)
+DefaultDependencies=no
+Conflicts=shutdown.target
 
 [Socket]
 ListenStream=@DEFAULT_RUN_DIR@/lvmetad.socket
