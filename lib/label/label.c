@@ -855,7 +855,7 @@ int label_scan(struct cmd_context *cmd)
 {
 	struct dm_list all_devs;
 	struct dm_list scan_devs;
-	struct dm_list hints;
+	struct dm_list hints_list;
 	struct dev_iter *iter;
 	struct device_list *devl, *devl2;
 	struct device *dev;
@@ -866,7 +866,7 @@ int label_scan(struct cmd_context *cmd)
 
 	dm_list_init(&all_devs);
 	dm_list_init(&scan_devs);
-	dm_list_init(&hints);
+	dm_list_init(&hints_list);
 
 	/*
 	 * Iterate through all the devices in dev-cache (block devs that appear
@@ -930,8 +930,10 @@ int label_scan(struct cmd_context *cmd)
 	 * able to avoid rescan in vg_read, but locking early would
 	 * apply to more cases.)
 	 */
-	if (!get_hints(cmd, &hints, &newhints, &all_devs, &scan_devs))
+	if (!get_hints(cmd, &hints_list, &newhints, &all_devs, &scan_devs)) {
 		dm_list_splice(&scan_devs, &all_devs);
+		dm_list_init(&hints_list);
+	}
 
 	log_debug("Will scan %d devices skip %d", dm_list_size(&scan_devs), dm_list_size(&all_devs));
 
@@ -977,8 +979,8 @@ int label_scan(struct cmd_context *cmd)
 
 	dm_list_init(&cmd->hints);
 
-	if (!dm_list_empty(&hints)) {
-		if (!validate_hints(cmd, &hints)) {
+	if (!dm_list_empty(&hints_list)) {
+		if (!validate_hints(cmd, &hints_list)) {
 			/*
 			 * We scanned a subset of all devices based on hints.
 			 * With the results from the scan we may decide that
@@ -986,11 +988,11 @@ int label_scan(struct cmd_context *cmd)
 			 */
 			log_debug("Will scan %d remaining devices", dm_list_size(&all_devs));
 			_scan_list(cmd, cmd->filter, &all_devs, NULL);
-			_free_hints(&hints);
+			_free_hints(&hints_list);
 			newhints = 0;
 		} else {
 			/* The hints may be used by another device iteration. */
-			dm_list_splice(&cmd->hints, &hints);
+			dm_list_splice(&cmd->hints, &hints_list);
 		}
 	}
 

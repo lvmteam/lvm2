@@ -1147,11 +1147,14 @@ check:
  * Returns 1: use hints that are returned in hints list.
  */
 
-int get_hints(struct cmd_context *cmd, struct dm_list *hints, int *newhints,
+int get_hints(struct cmd_context *cmd, struct dm_list *hints_out, int *newhints,
 	      struct dm_list *devs_in, struct dm_list *devs_out)
 {
+	struct dm_list hints_list;
 	int needs_refresh = 0;
 	char *vgname = NULL;
+
+	dm_list_init(&hints_list);
 
 	/* Decide below if the caller should create new hints. */
 	*newhints = NEWHINTS_NONE;
@@ -1230,7 +1233,7 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints, int *newhints,
 	/*
 	 * couln't read file for some reason, not normal, just skip using hints
 	 */
-	if (!_read_hint_file(cmd, hints, &needs_refresh)) {
+	if (!_read_hint_file(cmd, &hints_list, &needs_refresh)) {
 		log_debug("get_hints: read fail");
 		_unlock_hints();
 		return 0;
@@ -1259,7 +1262,7 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints, int *newhints,
 	 * of the hints file so it will be recreated, and we must
 	 * be following that since we found no hints.
 	 */
-	if (dm_list_empty(hints)) {
+	if (dm_list_empty(&hints_list)) {
 		log_debug("get_hints: no entries");
 
 		if (!_lock_hints(LOCK_EX, NONBLOCK))
@@ -1279,12 +1282,14 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints, int *newhints,
 	 * us which devs are PVs. We might want to enable this optimization
 	 * separately.)
 	 */
-	_get_single_vgname_cmd_arg(cmd, hints, &vgname);
+	_get_single_vgname_cmd_arg(cmd, &hints_list, &vgname);
 
-	_apply_hints(cmd, hints, vgname, devs_in, devs_out);
+	_apply_hints(cmd, &hints_list, vgname, devs_in, devs_out);
 
 	log_debug("get_hints: applied using %d other %d",
 		  dm_list_size(devs_out), dm_list_size(devs_in));
+
+	dm_list_splice(hints_out, &hints_list);
 	return 1;
 }
 
