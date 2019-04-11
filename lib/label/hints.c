@@ -414,7 +414,7 @@ static int _dev_in_hint_hash(struct cmd_context *cmd, struct device *dev)
 	if (!cmd->scan_lvs && dm_is_dm_major(MAJOR(dev->dev)) && dev_is_lv(dev))
 		return 0;
 
-	if (dev_get_size(dev, &devsize) && !devsize)
+	if (!dev_get_size(dev, &devsize) || !devsize)
 		return 0;
 
 	return 1;
@@ -603,6 +603,8 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 
 	if (!(fp = fopen(_hints_file, "r")))
 		return 0;
+
+	log_debug("Reading hint file");
 
 	for (i = 0; i < HINT_LINE_WORDS; i++)
 		split[i] = NULL;
