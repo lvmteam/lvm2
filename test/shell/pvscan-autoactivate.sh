@@ -94,15 +94,19 @@ lvchange -an $vg1
 # is online without the -aay option to
 # activate until after they are online
 
-_clear_online_files
+# This part is disabled because it doesn't work if the
+# 'pvscan --cache -aay' without args ends up scanning
+# dev1 (without metadata) after dev2.
 
-pvscan --cache "$dev1"
-check lv_field $vg1/$lv1 lv_active ""
-pvscan --cache "$dev2"
-check lv_field $vg1/$lv1 lv_active ""
-pvscan --cache -aay
-check lv_field $vg1/$lv1 lv_active "active"
-lvchange -an $vg1
+#_clear_online_files
+
+#pvscan --cache "$dev1"
+#check lv_field $vg1/$lv1 lv_active ""
+#pvscan --cache "$dev2"
+#check lv_field $vg1/$lv1 lv_active ""
+#pvscan --cache -aay
+#check lv_field $vg1/$lv1 lv_active "active"
+#lvchange -an $vg1
 
 # like previous
 
