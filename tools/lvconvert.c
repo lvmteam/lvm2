@@ -3167,8 +3167,8 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 
 		if (zero_metadata) {
 			metadata_lv->status |= LV_ACTIVATION_SKIP;
-			if (!activate_lv(cmd, metadata_lv)) {
-				log_error("Aborting. Failed to activate metadata lv.");
+			if (!activate_lv_excl_local(cmd, metadata_lv)) {
+				log_error("Aborting. Failed to locally activate metadata lv.");
 				goto bad;
 			}
 			metadata_lv->status &= ~LV_ACTIVATION_SKIP;
