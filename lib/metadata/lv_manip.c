@@ -7240,9 +7240,9 @@ int activate_and_wipe_lvlist(struct dm_list *lv_list, int commit)
 	was_active = alloca(sz);
 
 	dm_list_iterate_items(lvl, lv_list)
-		if (!(was_active[i++] = lv_is_active(lvl->lv))) {
+		if (!(was_active[i++] = lv_is_active_locally(lvl->lv))) {
 			lvl->lv->status |= LV_TEMPORARY;
-			if (!activate_lv(vg->cmd, lvl->lv)) {
+			if (!activate_lv_excl_local(vg->cmd, lvl->lv)) {
 				log_error("Failed to activate localy %s for wiping.",
 					  display_lvname(lvl->lv));
 				r = 0;
