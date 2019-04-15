@@ -27,7 +27,7 @@ _clear_online_files() {
 
 . lib/inittest
 
-aux prepare_pvs 3
+aux prepare_pvs 8
 
 vgcreate $vg1 "$dev1" "$dev2"
 lvcreate -n $lv1 -l 4 -a n $vg1
@@ -56,6 +56,19 @@ _clear_online_files
 # check that vg is activated when both devs
 # are scanned together
 pvscan --cache -aay "$dev1" "$dev2"
+check lv_field $vg1/$lv1 lv_active "active"
+lvchange -an $vg1
+
+# check that a cache command without aay will
+# just record online state, and that a following
+# pvscan cache aay that does not record any new
+# online files will activate the vg
+_clear_online_files
+pvscan --cache "$dev1"
+check lv_field $vg1/$lv1 lv_active ""
+pvscan --cache "$dev2"
+check lv_field $vg1/$lv1 lv_active ""
+pvscan --cache -aay
 check lv_field $vg1/$lv1 lv_active "active"
 lvchange -an $vg1
 
@@ -93,22 +106,6 @@ lvchange -an $vg1
 # use the --cache option to record a dev
 # is online without the -aay option to
 # activate until after they are online
-
-# This part is disabled because it doesn't work if the
-# 'pvscan --cache -aay' without args ends up scanning
-# dev1 (without metadata) after dev2.
-
-#_clear_online_files
-
-#pvscan --cache "$dev1"
-#check lv_field $vg1/$lv1 lv_active ""
-#pvscan --cache "$dev2"
-#check lv_field $vg1/$lv1 lv_active ""
-#pvscan --cache -aay
-#check lv_field $vg1/$lv1 lv_active "active"
-#lvchange -an $vg1
-
-# like previous
 
 _clear_online_files
 
@@ -172,4 +169,39 @@ grep $lv2 tmp
 check lv_field $vg2/$lv2 lv_active "" --foreign
 
 
+# Test the case where pvscan --cache -aay (with no devs)
+# gets the final PV to complete the VG, where that final PV
+# does not hold VG metadata.  In this case it needs to rely
+# on VG metadata that has been saved from a previously
+# scanned PV from the same VG.
+#
+# We can't control which order of devices pvscan will see,
+# so create several PVs without metadata surrounding one
+# PV with metadata, to make it likely that pvscan will
+# get a final PV without metadata.
+
+pvcreate --metadatacopies 0 "$dev4"
+pvcreate --metadatacopies 0 "$dev5"
+pvcreate --metadatacopies 1 "$dev6"
+pvcreate --metadatacopies 0 "$dev7"
+pvcreate --metadatacopies 0 "$dev8"
+vgcreate $vg3 "$dev4" "$dev5" "$dev6" "$dev7" "$dev8"
+lvcreate -n $lv1 -l 4 -a n $vg3
+
+_clear_online_files
+
+check lv_field $vg3/$lv1 lv_active ""
+pvscan --cache "$dev4"
+check lv_field $vg3/$lv1 lv_active ""
+pvscan --cache "$dev5"
+check lv_field $vg3/$lv1 lv_active ""
+pvscan --cache "$dev6"
+check lv_field $vg3/$lv1 lv_active ""
+pvscan --cache "$dev7"
+check lv_field $vg3/$lv1 lv_active ""
+pvscan --cache "$dev8"
+check lv_field $vg3/$lv1 lv_active ""
+pvscan --cache -aay
+check lv_field $vg3/$lv1 lv_active "active"
+lvchange -an $vg3
 

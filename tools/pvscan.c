@@ -547,10 +547,12 @@ static int _online_pvscan_single(struct metadata_area *mda, void *baton)
 static int _online_pvscan_one(struct cmd_context *cmd, struct device *dev,
 			      struct dm_list *dev_args,
 			      struct dm_list *found_vgnames,
+			      struct dm_list *all_vgs,
 			      int disable_remove,
 			      const char **pvid_without_metadata)
 {
 	struct lvmcache_info *info;
+	struct vg_list *vgl;
 	struct _pvscan_baton baton;
 	const struct format_type *fmt;
 	/* Create a dummy instance. */
@@ -656,9 +658,86 @@ static int _online_pvscan_one(struct cmd_context *cmd, struct device *dev,
 
 	ret = _online_pv_found(cmd, dev, dev_args, baton.vg, found_vgnames);
 
-	release_vg(baton.vg);
+	/*
+	 * Save vg's in case they need to be used at the end for checking PVs
+	 * without metadata (in _check_vg_with_pvid_complete).
+	 */
+	if (all_vgs && baton.vg) {
+		int found = 0;
+		dm_list_iterate_items(vgl, all_vgs) {
+			if (!strcmp(baton.vg->name, vgl->vg->name)) {
+				found = 1;
+				break;
+			}
+		}
+		if (!found) {
+	       		if ((vgl = malloc(sizeof(struct vg_list)))) {
+				vgl->vg = baton.vg;
+				baton.vg = NULL;
+				dm_list_add(all_vgs, &vgl->list);
+			}
+		}
+	}
+
+	if (baton.vg)
+		release_vg(baton.vg);
 out:
 	return ret;
+}
+
+/*
+ * This is to handle the case where pvscan --cache -aay (with no dev args)
+ * gets to the final PV, completing the VG, but that final PV does not
+ * have VG metadata.  In this case, we need to use VG metadata from a
+ * previously scanned PV in the same VG, which we saved in the all_vgs
+ * list.  Using this saved metadata, we can find which VG this PVID
+ * belongs to, and then check if that VG is now complete, and if so
+ * add the VG name to the list of complete VGs to be autoactivated.
+ *
+ * The "pvid" arg here is the PVID of the PV that has just been scanned
+ * and didn't have metadata.  We look through previously scanned VG
+ * metadata to find the VG this PVID belongs to, and then check that VG
+ * metadata to see if all the PVs are now online.
+ */
+static void _check_vg_with_pvid_complete(struct cmd_context *cmd,
+				         struct dm_list *found_vgnames,
+					 struct dm_list *all_vgs,
+					 const char *pvid)
+{
+	struct vg_list *vgl;
+	struct pv_list *pvl;
+	struct volume_group *vg;
+	int pvids_not_online = 0;
+	int found;
+
+	dm_list_iterate_items(vgl, all_vgs) {
+		vg = vgl->vg;
+		found = 0;
+
+		dm_list_iterate_items(pvl, &vg->pvs) {
+			if (strcmp((const char *)&pvl->pv->id.uuid, pvid))
+				continue;
+			found = 1;
+			break;
+		}
+		if (!found)
+			continue;
+
+		dm_list_iterate_items(pvl, &vg->pvs) {
+			if (!_online_pvid_file_exists((const char *)&pvl->pv->id.uuid)) {
+				pvids_not_online++;
+				break;
+			}
+		}
+
+		if (!pvids_not_online) {
+			log_debug("pvid %s makes complete VG %s", pvid, vg->name);
+			if (!str_list_add(cmd->mem, found_vgnames, dm_pool_strdup(cmd->mem, vg->name)))
+				stack;
+		} else
+			log_debug("pvid %s incomplete VG %s", pvid, vg->name);
+		break;
+	}
 }
 
 /*
@@ -676,8 +755,13 @@ static void _online_pvscan_all_devs(struct cmd_context *cmd,
 				    struct dm_list *found_vgnames,
 				    struct dm_list *dev_args)
 {
+	struct dm_list all_vgs;
 	struct dev_iter *iter;
+	struct vg_list *vgl;
 	struct device *dev;
+	const char *pvid_without_metadata;
+
+	dm_list_init(&all_vgs);
 
 	label_scan(cmd);
 
@@ -692,11 +776,20 @@ static void _online_pvscan_all_devs(struct cmd_context *cmd,
 			break;
 		}
 
-		if (!_online_pvscan_one(cmd, dev, dev_args, found_vgnames, 1, NULL)) {
+		pvid_without_metadata = NULL;
+
+		if (!_online_pvscan_one(cmd, dev, dev_args, found_vgnames, &all_vgs, 1, &pvid_without_metadata)) {
 			stack;
 			break;
 		}
+
+		/* This PV without metadata may complete a VG. */
+		if (pvid_without_metadata)
+			_check_vg_with_pvid_complete(cmd, found_vgnames, &all_vgs, pvid_without_metadata);
 	}
+
+	dm_list_iterate_items(vgl, &all_vgs)
+		release_vg(vgl->vg);
 
 	dev_iter_destroy(iter);
 }
@@ -1034,7 +1127,7 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 
 			add_single_count++;
 
-			if (!_online_pvscan_one(cmd, dev, NULL, complete_vgnames, 0, &pvid_without_metadata))
+			if (!_online_pvscan_one(cmd, dev, NULL, complete_vgnames, NULL, 0, &pvid_without_metadata))
 				add_errors++;
 		}
 	}
