@@ -658,7 +658,7 @@ void daemon_start(daemon_state s)
 		sigprocmask(SIG_SETMASK, &new_set, NULL);
 		if (_shutdown_requested && !s.threads->next) {
 			sigprocmask(SIG_SETMASK, &old_set, NULL);
-			INFO(&s, "shutdown requested", s.name);
+			INFO(&s, "%s shutdown requested", s.name);
 			break;
 		}
 		ret = pselect(s.socket_fd + 1, &in, NULL, NULL, _get_timeout(s), &old_set);
