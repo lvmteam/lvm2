@@ -73,7 +73,7 @@ lvresize --poolmetadatasize 64 $vg/$lv7
 lvresize --poolmetadatasize +8 $vg/$lv7
 not lvresize -y --poolmetadatasize -8 $vg/$lv7
 
-lvextend --poolmetadatasize +8 $vg/$lv7
+lvextend --poolmetadatasize +4 $vg/$lv7
 not lvextend -y --poolmetadatasize -8 $vg/$lv7
 fi
 
