@@ -97,14 +97,13 @@ int lvmcache_init(struct cmd_context *cmd)
 
 void lvmcache_lock_vgname(const char *vgname, int read_only __attribute__((unused)))
 {
-	if (strcmp(vgname, VG_GLOBAL))
-		_vgs_locked++;
+	_vgs_locked++;
 }
 
 void lvmcache_unlock_vgname(const char *vgname)
 {
 	/* FIXME Do this per-VG */
-	if (strcmp(vgname, VG_GLOBAL) && !--_vgs_locked) {
+	if (!--_vgs_locked) {
 		dev_size_seqno_inc(); /* invalidate all cached dev sizes */
 	}
 }

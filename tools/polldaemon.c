@@ -376,6 +376,7 @@ static void _poll_for_all_vgs(struct cmd_context *cmd,
 	while (1) {
 		parms->outstanding_count = 0;
 		process_each_vg(cmd, 0, NULL, NULL, NULL, READ_FOR_UPDATE, 0, handle, _poll_vg);
+		lock_global(cmd, "un");
 		if (!parms->outstanding_count)
 			break;
 		_nanosleep(parms->interval, 1);

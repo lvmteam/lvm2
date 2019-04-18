@@ -913,10 +913,10 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 
 		/*
 		 * The command may sit and report progress for some time,
-		 * and we do not want or need the lockd locks held during
+		 * and we do not want or need the global lock held during
 		 * that time.
 		 */
-		lockd_gl(cmd, "un", 0);
+		lock_global(cmd, "un");
 	}
 
 	return pvmove_poll(cmd, pv_name, lvid ? lvid->s : NULL,

@@ -1315,7 +1315,7 @@ int lockd_start_wait(struct cmd_context *cmd)
  *    Future lockd_gl/lockd_gl_create calls will acquire the existing gl.
  */
 
-int lockd_gl_create(struct cmd_context *cmd, const char *def_mode, const char *vg_lock_type)
+int lockd_global_create(struct cmd_context *cmd, const char *def_mode, const char *vg_lock_type)
 {
 	const char *mode = NULL;
 	uint32_t lockd_flags;
@@ -1460,6 +1460,12 @@ int lockd_gl_create(struct cmd_context *cmd, const char *def_mode, const char *v
 	/* --shared with vgcreate does not mean include_shared_vgs */
 	cmd->include_shared_vgs = 0;
 
+	/*
+	 * This is done to prevent converting an explicitly acquired
+	 * ex lock to sh in process_each.
+	 */
+	cmd->lockd_global_ex = 1;
+
 	return 1;
 }
 
@@ -1542,7 +1548,7 @@ int lockd_gl_create(struct cmd_context *cmd, const char *def_mode, const char *v
  * are unprotected.
  */
 
-int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
+int lockd_global(struct cmd_context *cmd, const char *def_mode)
 {
 	const char *mode = NULL;
 	const char *opts = NULL;
@@ -1572,9 +1578,15 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 	if (!mode)
 		mode = def_mode;
 	if (!mode) {
-		log_error("Unknown lock-gl mode");
+		log_error("Unknown lvmlockd global lock mode");
 		return 0;
 	}
+
+	if (!strcmp(mode, "sh") && cmd->lockd_global_ex)
+		return 1;
+
+	if (!strcmp(mode, "un") && cmd->lockd_global_ex)
+		cmd->lockd_global_ex = 0;
 
  req:
 	log_debug("lockd global mode %s", mode);
@@ -1719,6 +1731,14 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 	}
 
  allow:
+
+	/*
+	 * This is done to prevent converting an explicitly acquired
+	 * ex lock to sh in process_each.
+	 */
+	if (!strcmp(mode, "ex"))
+		cmd->lockd_global_ex = 1;
+
 	return 1;
 }
 

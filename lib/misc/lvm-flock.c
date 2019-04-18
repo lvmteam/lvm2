@@ -56,6 +56,20 @@ static void _undo_flock(const char *file, int fd)
 		log_sys_debug("close", file);
 }
 
+static struct lock_list *_get_lock_list_entry(const char *file)
+{
+	struct lock_list *ll;
+	struct dm_list *llh;
+
+	dm_list_iterate(llh, &_lock_list) {
+		ll = dm_list_item(llh, struct lock_list);
+
+		if (!strcmp(ll->res, file))
+			return ll;
+	}
+	return NULL;
+}
+
 static int _release_lock(const char *file, int unlock)
 {
 	struct lock_list *ll;
@@ -167,8 +181,8 @@ int lock_file(const char *file, uint32_t flags)
 {
 	int operation;
 	uint32_t nonblock = flags & LCK_NONBLOCK;
+	uint32_t convert = flags & LCK_CONVERT;
 	int r;
-
 	struct lock_list *ll;
 	char state;
 
@@ -185,6 +199,20 @@ int lock_file(const char *file, uint32_t flags)
 		return _release_lock(file, 1);
 	default:
 		log_error("Unrecognised lock type: %d", flags & LCK_TYPE_MASK);
+		return 0;
+	}
+
+	if (convert) {
+		if (nonblock)
+			operation |= LOCK_NB;
+		if (!(ll = _get_lock_list_entry(file)))
+			return 0;
+		log_very_verbose("Locking %s %c%c convert", ll->res, state,
+			 	 nonblock ? ' ' : 'B');
+		r = flock(ll->lf, operation);
+		if (!r)
+			return 1;
+		log_error("Failed to convert flock on %s %d", file, errno);
 		return 0;
 	}
 

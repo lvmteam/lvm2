@@ -148,11 +148,6 @@ int pvscan_display_cmd(struct cmd_context *cmd, int argc, char **argv)
 			  arg_is_set(cmd, exported_ARG) ?
 			  "of exported volume group(s)" : "in no volume group");
 
-	if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_WRITE, NULL)) {
-		log_error("Unable to obtain global lock.");
-		return ECMD_FAILED;
-	}
-
 	if (!(handle = init_processing_handle(cmd, NULL))) {
 		log_error("Failed to initialize processing handle.");
 		ret = ECMD_FAILED;
@@ -174,7 +169,6 @@ int pvscan_display_cmd(struct cmd_context *cmd, int argc, char **argv)
 					params.new_pvs_found, display_size(cmd, params.size_new));
 
 out:
-	unlock_vg(cmd, NULL, VG_GLOBAL);
 	destroy_processing_handle(cmd, handle);
 
 	return ret;
@@ -937,11 +931,6 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 		all_devs = 1;
 	}
 
-	if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_READ, NULL)) {
-		log_error("Unable to obtain global lock.");
-		return ECMD_FAILED;
-	}
-
 	_online_dir_setup();
 
 	/* Creates a list of dev names from /dev, sysfs, etc; does not read any. */
@@ -1173,7 +1162,6 @@ activate:
 
 	if (!sync_local_dev_names(cmd))
 		stack;
-	unlock_vg(cmd, NULL, VG_GLOBAL);
 	return ret;
 }
 

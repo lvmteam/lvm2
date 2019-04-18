@@ -1075,7 +1075,7 @@ int vgchange_locktype_cmd(struct cmd_context *cmd, int argc, char **argv)
 	 * on other hosts, to cause them to see the new system_id or
 	 * lock_type.
 	 */
-	if (!lockd_gl(cmd, "ex", LDGL_UPDATE_NAMES))
+	if (!lockd_global(cmd, "ex"))
 		return 0;
 
 process:
@@ -1138,7 +1138,7 @@ int vgchange_lock_start_stop_cmd(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_is_set(cmd, lockstart_ARG)) {
 		cmd->lockd_vg_disable = 1;
 
-		if (!lockd_gl(cmd, "sh", 0))
+		if (!lockd_global(cmd, "sh"))
 			log_debug("No global lock for lock start");
 
 		/* Disable the lockd_gl in process_each_vg. */
@@ -1154,7 +1154,7 @@ int vgchange_lock_start_stop_cmd(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_is_set(cmd, lockstart_ARG) && vp.lock_start_count) {
 		const char *start_opt = arg_str_value(cmd, lockopt_ARG, NULL);
 
-		if (!lockd_gl(cmd, "un", 0))
+		if (!lockd_global(cmd, "un"))
 			stack;
 
 		if (!start_opt || !strcmp(start_opt, "auto")) {
@@ -1210,7 +1210,7 @@ int vgchange_systemid_cmd(struct cmd_context *cmd, int argc, char **argv)
 	 * on other hosts, to cause them to see the new system_id or
 	 * lock_type.
 	 */
-	if (!lockd_gl(cmd, "ex", LDGL_UPDATE_NAMES))
+	if (!lockd_global(cmd, "ex"))
 		return 0;
 
 	if (!(handle = init_processing_handle(cmd, NULL))) {

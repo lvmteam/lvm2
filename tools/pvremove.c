@@ -34,19 +34,14 @@ int pvremove(struct cmd_context *cmd, int argc, char **argv)
 	pp.pv_count = argc;
 	pp.pv_names = argv;
 
-	/*
-	 * Needed to change the set of orphan PVs.
-	 * (disable afterward to prevent process_each_pv from doing
-	 * a shared global lock since it's already acquired it ex.)
-	 */
-	if (!lockd_gl(cmd, "ex", 0)) {
+	/* Needed to change the set of orphan PVs. */
+	if (!lock_global(cmd, "ex")) {
 		/* Let pvremove -ff skip locks */
 		if (pp.force == DONT_PROMPT_OVERRIDE)
-			log_warn("WARNING: skipping global lock in lvmlockd for force.");
+			log_warn("WARNING: skipping global lock for force.");
 		else
 			return_ECMD_FAILED;
 	}
-	cmd->lockd_gl_disable = 1;
 
 	clear_hint_file(cmd);
 
@@ -67,11 +62,8 @@ int pvremove(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!pvcreate_each_device(cmd, handle, &pp))
 		ret = ECMD_FAILED;
-	else {
-		/* pvcreate_each_device returns with orphans locked */
-		unlock_vg(cmd, NULL, VG_ORPHANS);
+	else
 		ret = ECMD_PROCESSED;
-	}
 
 	destroy_processing_handle(cmd, handle);
 	return ret;

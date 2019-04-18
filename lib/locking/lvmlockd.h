@@ -16,9 +16,6 @@
 
 #define LOCKD_SANLOCK_LV_NAME "lvmlock"
 
-/* lockd_gl flags */
-#define LDGL_UPDATE_NAMES         0x00000001
-
 /* lockd_lv flags */
 #define LDLV_MODE_NO_SH           0x00000001
 #define LDLV_PERSISTENT           0x00000002
@@ -42,6 +39,9 @@
 #define LDST_FAIL		(LDST_FAIL_REQUEST | LDST_FAIL_NOLS | LDST_FAIL_STARTING | LDST_FAIL_OTHER)
 
 #ifdef LVMLOCKD_SUPPORT
+
+struct lvresize_params;
+struct lvcreate_params;
 
 /* lvmlockd connection and communication */
 
@@ -71,8 +71,8 @@ int lockd_start_wait(struct cmd_context *cmd);
 
 /* locking */
 
-int lockd_gl_create(struct cmd_context *cmd, const char *def_mode, const char *vg_lock_type);
-int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags);
+int lockd_global_create(struct cmd_context *cmd, const char *def_mode, const char *vg_lock_type);
+int lockd_global(struct cmd_context *cmd, const char *def_mode);
 int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	     uint32_t flags, uint32_t *lockd_state);
 int lockd_vg_update(struct volume_group *vg);
@@ -169,7 +169,7 @@ static inline int lockd_start_wait(struct cmd_context *cmd)
 	return 0;
 }
 
-static inline int lockd_gl_create(struct cmd_context *cmd, const char *def_mode, const char *vg_lock_type)
+static inline int lockd_global_create(struct cmd_context *cmd, const char *def_mode, const char *vg_lock_type)
 {
 	/*
 	 * When lvm is built without lvmlockd support, creating a VG with
@@ -182,7 +182,7 @@ static inline int lockd_gl_create(struct cmd_context *cmd, const char *def_mode,
 	return 1;
 }
 
-static inline int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
+static inline int lockd_global(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 {
 	return 1;
 }

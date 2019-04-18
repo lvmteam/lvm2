@@ -28,12 +28,10 @@ int vg_write_lock_held(void);
 
 /*
  *   Lock/unlock on-disk volume group data.
- *   Use VG_ORPHANS to lock all orphan PVs.
- *   Use VG_GLOBAL as a global lock and to wipe the internal cache.
+ *   Use VG_GLOBAL as a global lock.
  *   char *vol holds volume group name.
  *   If more than one lock needs to be held simultaneously, they must be
- *   acquired in alphabetical order of 'vol' (to avoid deadlocks), with
- *   VG_ORPHANS last.
+ *   acquired in alphabetical order of 'vol' (to avoid deadlocks).
  */
 int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const struct logical_volume *lv);
 
@@ -47,10 +45,8 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
  * Bottom 8 bits except LCK_LOCAL form args[0] in cluster comms.
  */
 #define LCK_NONBLOCK	0x00000010U	/* Don't block waiting for lock? */
+#define LCK_CONVERT	0x00000020U
 
-/*
- * Special cases of VG locks.
- */
 #define VG_ORPHANS	"#orphans"
 #define VG_GLOBAL	"#global"
 
@@ -76,5 +72,10 @@ int sync_local_dev_names(struct cmd_context* cmd);
 /* Process list of LVs */
 struct volume_group;
 int activate_lvs(struct cmd_context *cmd, struct dm_list *lvs, unsigned exclusive);
+
+int lockf_global(struct cmd_context *cmd, const char *mode);
+int lockf_global_convert(struct cmd_context *cmd, const char *mode);
+int lock_global(struct cmd_context *cmd, const char *mode);
+int lock_global_convert(struct cmd_context *cmd, const char *mode);
 
 #endif

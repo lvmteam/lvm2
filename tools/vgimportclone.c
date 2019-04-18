@@ -223,15 +223,10 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 	}
 	handle->custom_handle = &vp;
 
-	if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_WRITE, NULL)) {
-		log_error("Unable to obtain global lock.");
+	if (!lock_global(cmd, "ex")) {
 		destroy_processing_handle(cmd, handle);
 		return ECMD_FAILED;
 	}
-
-	if (!lockd_gl(cmd, "ex", 0))
-		goto_out;
-	cmd->lockd_gl_disable = 1;
 
 	/*
 	 * Find the devices being imported which are named on the command line.
@@ -351,7 +346,6 @@ retry_name:
 
 	unlock_vg(cmd, NULL, vp.new_vgname);
 out:
-	unlock_vg(cmd, NULL, VG_GLOBAL);
 	internal_filter_clear();
 	init_internal_filtering(0);
 	destroy_processing_handle(cmd, handle);

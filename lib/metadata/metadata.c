@@ -4572,11 +4572,6 @@ int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv)
 	return 1;
 }
 
-int is_global_vg(const char *vg_name)
-{
-	return (vg_name && !strcmp(vg_name, VG_GLOBAL)) ? 1 : 0;
-}
-
 /**
  * is_orphan_vg - Determine whether a vg_name is an orphan
  * @vg_name: pointer to the vg_name
@@ -5005,7 +5000,6 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 	int mdas_consistent = 1;
 	int enable_repair = 1;
 	int is_shared = 0;
-	int skip_lock = is_orphan_vg(vg_name) && (read_flags & PROCESS_SKIP_ORPHAN_LOCK);
 
 	if ((read_flags & READ_ALLOW_INCONSISTENT) || (lock_flags != LCK_VG_WRITE)) {
 		enable_repair = 0;
@@ -5018,14 +5012,10 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 		return NULL;
 	}
 
-	if (!skip_lock &&
-	    !lock_vol(cmd, vg_name, lock_flags, NULL)) {
+	if (!lock_vol(cmd, vg_name, lock_flags, NULL)) {
 		log_error("Can't get lock for %s", vg_name);
 		return _vg_make_handle(cmd, vg, FAILED_LOCKING);
 	}
-
-	if (skip_lock)
-		log_very_verbose("Locking %s already done", vg_name);
 
 	if (is_orphan_vg(vg_name))
 		status_flags &= ~LVM_WRITE;
@@ -5092,14 +5082,12 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 		goto_bad;
 
 	if (!(vg = _vg_make_handle(cmd, vg, failure)) || vg_read_error(vg))
-		if (!skip_lock)
-			unlock_vg(cmd, vg, vg_name);
+		unlock_vg(cmd, vg, vg_name);
 
 	return vg;
 
 bad:
-	if (!skip_lock)
-		unlock_vg(cmd, vg, vg_name);
+	unlock_vg(cmd, vg, vg_name);
 
 bad_no_unlock:
 	return _vg_make_handle(cmd, vg, failure);

@@ -44,7 +44,7 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 {
 	char lockfile[PATH_MAX];
 
-	if (is_orphan_vg(resource) || is_global_vg(resource)) {
+	if (!strcmp(resource, VG_GLOBAL)) {
 		if (dm_snprintf(lockfile, sizeof(lockfile),
 				"%s/P_%s", _lock_dir, resource + 1) < 0) {
 			log_error("Too long locking filename %s/P_%s.", _lock_dir, resource + 1);

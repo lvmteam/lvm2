@@ -15,6 +15,7 @@
 
 #include "lib/misc/lib.h"
 #include "lib/locking/locking.h"
+#include "lib/locking/lvmlockd.h"
 #include "locking_types.h"
 #include "lib/misc/lvm-string.h"
 #include "lib/activate/activate.h"
@@ -185,12 +186,13 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 {
 	char resource[258] __attribute__((aligned(8)));
 	uint32_t lck_type = flags & LCK_TYPE_MASK;
+	int is_global = !strcmp(vol, VG_GLOBAL);
+
+	if (is_orphan_vg(vol))
+		return 1;
 
 	if (!_blocking_supported)
 		flags |= LCK_NONBLOCK;
-
-	if (is_orphan_vg(vol))
-		vol = VG_ORPHANS;
 
 	if (!dm_strncpy(resource, vol, sizeof(resource))) {
 		log_error(INTERNAL_ERROR "Resource name %s is too long.", vol);
@@ -211,7 +213,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 		if (lck_type != LCK_WRITE)
 			goto out_hold;
 
-		if (cmd->is_activating && strcmp(vol, VG_GLOBAL))
+		if (cmd->is_activating && !is_global)
 			goto out_hold;
 
 		goto out_fail;
@@ -252,7 +254,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 	 * refuse write lock requests.
 	 */
 	if (cmd->metadata_read_only) {
-		if ((lck_type == LCK_WRITE) && strcmp(vol, VG_GLOBAL)) {
+		if (lck_type == LCK_WRITE) {
 			log_error("Operation prohibited while global/metadata_read_only is set.");
 			goto out_fail;
 		}
@@ -264,6 +266,9 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 		goto out_fail;
 
 out_hold:
+	if (is_global)
+		return 1;
+
 	/*
 	 * FIXME: other parts of the code want to check if a VG is
 	 * locked by looking in lvmcache.  They shouldn't need to
@@ -279,6 +284,8 @@ out_hold:
 	return 1;
 
 out_fail:
+	if (is_global)
+		return 0;
 	if (lck_type == LCK_UNLOCK)
 		_update_vg_lock_count(resource, flags);
 	return 0;
@@ -318,3 +325,86 @@ int sync_local_dev_names(struct cmd_context* cmd)
 	return 1;
 }
 
+/*
+ * The lockf_global_ex flag is used to prevent changing
+ * an explicitly acquired ex global lock to sh in process_each.
+ */
+
+static int _lockf_global(struct cmd_context *cmd, const char *mode, int convert)
+{
+	uint32_t flags = 0;
+	int ret;
+
+	if (convert)
+		flags |= LCK_CONVERT;
+
+	if (!strcmp(mode, "ex")) {
+		flags |= LCK_WRITE;
+
+		if (cmd->lockf_global_ex) {
+			log_warn("global flock already held ex");
+			return 1;
+		}
+
+		ret = lock_vol(cmd, VG_GLOBAL, flags, NULL);
+		if (ret)
+			cmd->lockf_global_ex = 1;
+
+	} else if (!strcmp(mode, "sh")) {
+		if (cmd->lockf_global_ex)
+			return 1;
+
+		flags |= LCK_READ;
+
+		ret = lock_vol(cmd, VG_GLOBAL, flags, NULL);
+
+	} else if (!strcmp(mode, "un")) {
+		ret = lock_vol(cmd, VG_GLOBAL, LCK_UNLOCK, NULL);
+		cmd->lockf_global_ex = 0;
+	}
+
+	return ret;
+}
+
+int lockf_global(struct cmd_context *cmd, const char *mode)
+{
+	return _lockf_global(cmd, mode, 0);
+}
+
+int lockf_global_convert(struct cmd_context *cmd, const char *mode)
+{
+	return _lockf_global(cmd, mode, 1);
+}
+
+int lock_global(struct cmd_context *cmd, const char *mode)
+{
+	if (!lockf_global(cmd, mode))
+		return 0;
+
+	if (!lockd_global(cmd, mode)) {
+		lockf_global(cmd, "un");
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * The global lock is already held, convert it to another mode.
+ *
+ * Currently only used for sh->ex.
+ *
+ * (The lockf_global_ex flag would need overriding
+ * to handle ex->sh.)
+ */
+
+int lock_global_convert(struct cmd_context *cmd, const char *mode)
+{
+	if (!lockf_global_convert(cmd, mode))
+		return 0;
+
+	if (!lockd_global(cmd, mode))
+		return 0;
+
+	return 1;
+}

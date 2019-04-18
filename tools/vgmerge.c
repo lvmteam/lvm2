@@ -206,8 +206,7 @@ int vgmerge(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	/* Needed change the global VG namespace. */
-	if (!lockd_gl(cmd, "ex", LDGL_UPDATE_NAMES))
+	if (!lock_global(cmd, "ex"))
 		return ECMD_FAILED;
 
 	clear_hint_file(cmd);

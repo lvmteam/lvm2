@@ -2234,7 +2234,7 @@ int process_each_vg(struct cmd_context *cmd,
 	/*
 	 * Needed for a current listing of the global VG namespace.
 	 */
-	if (process_all_vgs_on_system && !lockd_gl(cmd, "sh", 0)) {
+	if (process_all_vgs_on_system && !lock_global(cmd, "sh")) {
 		ret_max = ECMD_FAILED;
 		goto_out;
 	}
@@ -3772,7 +3772,7 @@ int process_each_lv(struct cmd_context *cmd,
 	/*
 	 * Needed for a current listing of the global VG namespace.
 	 */
-	if (process_all_vgs_on_system && !lockd_gl(cmd, "sh", 0)) {
+	if (process_all_vgs_on_system && !lock_global(cmd, "sh")) {
 		ret_max = ECMD_FAILED;
 		goto_out;
 	}
@@ -4344,7 +4344,6 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 	int ret;
 	int skip;
 	int notfound;
-	int skip_lock;
 	int do_report_ret_code = 1;
 
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_VG);
@@ -4378,8 +4377,6 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 
 		log_debug("Processing PVs in VG %s", vg_name);
 
-		skip_lock = is_orphan_vg(vg_name) && (read_flags & PROCESS_SKIP_ORPHAN_LOCK);
-
 		vg = vg_read(cmd, vg_name, vg_uuid, read_flags, lockd_state);
 		if (_ignore_vg(vg, vg_name, NULL, read_flags, &skip, &notfound)) {
 			stack;
@@ -4406,7 +4403,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 		if (ret > ret_max)
 			ret_max = ret;
 
-		if (!skip && !skip_lock)
+		if (!skip)
 			unlock_vg(cmd, vg, vg->name);
 endvg:
 		release_vg(vg);
@@ -4497,7 +4494,7 @@ int process_each_pv(struct cmd_context *cmd,
 	process_all_devices = process_all_pvs && (cmd->cname->flags & ENABLE_ALL_DEVS) && all_is_set;
 
 	/* Needed for a current listing of the global VG namespace. */
-	if (!only_this_vgname && !lockd_gl(cmd, "sh", 0)) {
+	if (!only_this_vgname && !lock_global(cmd, "sh")) {
 		ret_max = ECMD_FAILED;
 		goto_out;
 	}
@@ -4575,9 +4572,11 @@ int process_each_pv(struct cmd_context *cmd,
 
 	/*
 	 * If the orphans lock was held, there shouldn't be missed devices.
+	 *
+	 * FIXME: this case can now be removed with the global lock
+	 * replacing the orphans lock.
 	 */
-	if (read_flags & PROCESS_SKIP_ORPHAN_LOCK)
-		goto skip_missed;
+	goto skip_missed;
 
 	/*
 	 * Some PVs may have been missed by the first search if another command
@@ -5382,9 +5381,6 @@ static int _pvremove_check_single(struct cmd_context *cmd,
  * This function returns 1 (success) if the caller requires all specified
  * devices to be created, and all are created, or if the caller does not
  * require all specified devices to be created and one or more were created.
- *
- * When this function returns 1 (success), it returns to the caller with the
- * VG_ORPHANS write lock held.
  */
 
 int pvcreate_each_device(struct cmd_context *cmd,
@@ -5435,11 +5431,6 @@ int pvcreate_each_device(struct cmd_context *cmd,
 		dm_list_add(&pp->arg_devices, &pd->list);
 	}
 
-	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
-		log_error("Can't get lock for orphan PVs.");
-		return 0;
-	}
-
 	/*
 	 * Scan before calling process_each_pv so we can set up the PV args
 	 * first.  We can then skip the scan that would normally occur at the
@@ -5468,7 +5459,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	 * If it's added to arg_process but needs a prompt or force option, then
 	 * a corresponding prompt entry is added to pp->prompts.
 	 */
-	process_each_pv(cmd, 0, NULL, NULL, 1, PROCESS_SKIP_SCAN | PROCESS_SKIP_ORPHAN_LOCK,
+	process_each_pv(cmd, 0, NULL, NULL, 1, PROCESS_SKIP_SCAN,
 			handle, pp->is_remove ? _pvremove_check_single : _pvcreate_check_single);
 
 	/*
@@ -5557,7 +5548,8 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	 * from the user, reacquire the lock, verify that the PVs were not used
 	 * during the wait, then do the create steps.
 	 */
-	unlock_vg(cmd, NULL, VG_ORPHANS);
+
+	lockf_global(cmd, "un");
 
 	/*
 	 * Process prompts that require asking the user.  The orphans lock is
@@ -5595,9 +5587,10 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	 * finds them changed, or can't find them any more, then they aren't
 	 * used.
 	 */
-	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
-		log_error("Can't get lock for orphan PVs.");
-		goto out;
+
+	if (!lockf_global(cmd, "ex")) {
+		log_error("Failed to reacquire global lock after prompt.");
+		goto_out;
 	}
 
 	lvmcache_label_scan(cmd);
@@ -5616,7 +5609,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	 */
 	dm_list_splice(&pp->arg_confirm, &pp->arg_process);
 
-	process_each_pv(cmd, 0, NULL, NULL, 1, PROCESS_SKIP_SCAN | PROCESS_SKIP_ORPHAN_LOCK,
+	process_each_pv(cmd, 0, NULL, NULL, 1, PROCESS_SKIP_SCAN,
 			handle, _pv_confirm_single);
 
 	dm_list_iterate_items(pd, &pp->arg_confirm)
@@ -5834,16 +5827,10 @@ do_command:
 			  cmd->command->name, pd->name);
 
 	if (!dm_list_empty(&pp->arg_fail))
-		goto_bad;
+		goto_out;
 
-	/*
-	 * Returns with VG_ORPHANS write lock held because vgcreate and
-	 * vgextend want to use the newly created PVs.
-	 */
 	return 1;
-
 bad:
-	unlock_vg(cmd, NULL, VG_ORPHANS);
 out:
 	return 0;
 }

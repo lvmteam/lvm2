@@ -979,17 +979,13 @@ int write_hint_file(struct cmd_context *cmd, int newhints)
  * an issue we could easily write the pid in the nohints file, and
  * others could check if the pid is still around before obeying it.)
  *
- * The intention is to call this function after the global ex lock has been
+ * The function is meant to be called after the global ex lock has been
  * taken, which is the official lock serializing commands changing which
  * devs are PVs or not.  This means that a command should never block in
  * this function due to another command that has used this function --
  * they would be serialized by the official global lock first.
  * e.g. two pvcreates should never block each other from the hint lock,
- * but rather from the global lock...
- *
- * Unfortunately, the global(orphan) lock is not used consistently so it's not
- * quite doing its job right and needs some cleanup.  Until that's done,
- * concurrent commands like pvcreate may block each other on the hint lock.
+ * but rather from the global lock.
  */
 
 void clear_hint_file(struct cmd_context *cmd)

@@ -191,8 +191,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 	if (!(vp.vg_name_new = dm_pool_strdup(cmd->mem, vg_name_new)))
 		return_ECMD_FAILED;
 
-	/* Needed change the global VG namespace. */
-	if (!lockd_gl(cmd, "ex", LDGL_UPDATE_NAMES))
+	if (!lock_global(cmd, "ex"))
 		return_ECMD_FAILED;
 
 	clear_hint_file(cmd);

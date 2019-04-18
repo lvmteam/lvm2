@@ -1076,7 +1076,6 @@ static int _do_report(struct cmd_context *cmd, struct processing_handle *handle,
 	void *orig_custom_handle = handle->custom_handle;
 	report_type_t report_type = single_args->report_type;
 	void *report_handle = NULL;
-	int lock_global = 0;
 	int lv_info_needed;
 	int lv_segment_status_needed;
 	int report_in_group = 0;
@@ -1098,18 +1097,6 @@ static int _do_report(struct cmd_context *cmd, struct processing_handle *handle,
 		if (!dm_report_group_push(cmd->cmd_report.report_group, report_handle, (void *) single_args->report_name))
 			goto_out;
 		report_in_group = 1;
-	}
-
-	/*
-	 * We lock VG_GLOBAL to enable use of metadata cache.
-	 * This can pause alongide pvscan or vgscan process for a while.
-	 */
-	if (single_args->args_are_pvs && (report_type == PVS || report_type == PVSEGS)) {
-		lock_global = 1;
-		if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_READ, NULL)) {
-			log_error("Unable to obtain global lock.");
-			goto out;
-		}
 	}
 
 	switch (report_type) {
@@ -1209,8 +1196,6 @@ static int _do_report(struct cmd_context *cmd, struct processing_handle *handle,
 	if (!(args->log_only && (single_args->report_type != CMDLOG)))
 		dm_report_output(report_handle);
 
-	if (lock_global)
-		unlock_vg(cmd, NULL, VG_GLOBAL);
 out:
 	if (report_handle) {
 		if (report_in_group && !dm_report_group_pop(cmd->cmd_report.report_group))

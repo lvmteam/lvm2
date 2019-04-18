@@ -56,13 +56,10 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	if (!vgcreate_params_validate(cmd, &vp_new))
 		return EINVALID_CMD_LINE;
 
-	/*
-	 * Needed to change the global VG namespace,
-	 * and to change the set of orphan PVs.
-	 */
-	if (!lockd_gl_create(cmd, "ex", vp_new.lock_type))
+	if (!lockf_global(cmd, "ex"))
 		return_ECMD_FAILED;
-	cmd->lockd_gl_disable = 1;
+	if (!lockd_global_create(cmd, "ex", vp_new.lock_type))
+		return_ECMD_FAILED;
 
 	clear_hint_file(cmd);
 
@@ -118,12 +115,6 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		destroy_processing_handle(cmd, handle);
 		return_ECMD_FAILED;
 	}
-
-	/*
-	 * pvcreate_each_device returns with the VG_ORPHANS write lock held,
-	 * which was used to do pvcreate.  Now to create the VG using those
-	 * PVs, the VG lock will be taken (with the orphan lock already held.)
-	 */
 
 	if (!(vg = vg_create(cmd, vp_new.vg_name)))
 		goto_bad;
@@ -186,7 +177,6 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		goto_bad;
 	}
 
-	unlock_vg(cmd, NULL, VG_ORPHANS);
 	unlock_vg(cmd, vg, vp_new.vg_name);
 
 	backup(vg);
@@ -209,7 +199,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 			goto out;
 		}
 
-		lockd_gl(cmd, "un", 0);
+		lock_global(cmd, "un");
 
 		if (!start_opt || !strcmp(start_opt, "wait")) {
 			/* It is OK if the user does Ctrl-C to cancel the wait. */
@@ -228,7 +218,6 @@ out:
 
 bad:
 	unlock_vg(cmd, vg, vp_new.vg_name);
-	unlock_vg(cmd, NULL, VG_ORPHANS);
 	release_vg(vg);
 	destroy_processing_handle(cmd, handle);
 	return ECMD_FAILED;

@@ -157,14 +157,8 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	/* Check for old md signatures at the end of devices. */
 	cmd->use_full_md_check = 1;
 
-	/*
-	 * Needed to change the set of orphan PVs.
-	 * (disable afterward to prevent process_each_pv from doing
-	 * a shared global lock since it's already acquired it ex.)
-	 */
-	if (!lockd_gl(cmd, "ex", 0))
+	if (!lock_global(cmd, "ex"))
 		return_ECMD_FAILED;
-	cmd->lockd_gl_disable = 1;
 
 	clear_hint_file(cmd);
 
@@ -179,12 +173,6 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 			return_ECMD_FAILED;
 		}
 	}
-
-	/*
-	 * pvcreate_each_device returns with the VG_ORPHANS write lock held,
-	 * which was used to do pvcreate.  Now to create the VG using those
-	 * PVs, the VG lock will be taken (with the orphan lock already held.)
-	 */
 
 	/*
 	 * It is always ok to add new PVs to a VG - even if there are
@@ -202,7 +190,5 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 
 	destroy_processing_handle(cmd, handle);
 
-	if (!restoremissing)
-		unlock_vg(cmd, NULL, VG_ORPHANS);
 	return ret;
 }

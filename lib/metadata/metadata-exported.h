@@ -187,7 +187,6 @@
 #define READ_WARN_INCONSISTENT	0x00080000U
 #define READ_FOR_UPDATE		0x00100000U /* A meta-flag, useful with toollib for_each_* functions. */
 #define PROCESS_SKIP_SCAN	 0x00200000U /* skip lvmcache_label_scan in process_each_pv */
-#define PROCESS_SKIP_ORPHAN_LOCK 0x00400000U /* skip lock_vol(VG_ORPHAN) in vg_read */
 
 /* vg's "read_status" field */
 #define FAILED_INCONSISTENT	0x00000001U
@@ -706,7 +705,6 @@ int move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 int move_pvs_used_by_lv(struct volume_group *vg_from,
 			struct volume_group *vg_to,
 			const char *lv_name);
-int is_global_vg(const char *vg_name);
 int is_orphan_vg(const char *vg_name);
 int is_real_vg(const char *vg_name);
 int vg_missing_pv_count(const struct volume_group *vg);

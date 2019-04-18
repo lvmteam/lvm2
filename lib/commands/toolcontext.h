@@ -160,6 +160,8 @@ struct cmd_context {
 	unsigned lockd_vg_default_sh:1;
 	unsigned lockd_vg_enforce_sh:1;
 	unsigned lockd_lv_sh_for_ex:1;
+	unsigned lockd_global_ex:1;		/* set while global lock held ex (lockd) */
+	unsigned lockf_global_ex:1;		/* set while global lock held ex (flock) */
 	unsigned vg_notify:1;
 	unsigned lv_notify:1;
 	unsigned pv_notify:1;
