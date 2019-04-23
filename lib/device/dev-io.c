@@ -572,10 +572,7 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 			}
 		}
 #endif
-		if (quiet)
-			log_sys_debug("open", name);
-		else
-			log_sys_error("open", name);
+		log_sys_debug("open", name);
 
 		dev->flags |= DEV_OPEN_FAILURE;
 		return 0;
