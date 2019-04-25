@@ -35,7 +35,7 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints, int *newhints,
 
 int validate_hints(struct cmd_context *cmd, struct dm_list *hints);
 
-void hints_exit(void);
+void hints_exit(struct cmd_context *cmd);
 
 void pvscan_recreate_hints_begin(struct cmd_context *cmd);
 

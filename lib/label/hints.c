@@ -294,11 +294,14 @@ static int _clear_hints(struct cmd_context *cmd)
 	return 1;
 }
 
-static int _lock_hints(int mode, int nonblock)
+static int _lock_hints(struct cmd_context *cmd, int mode, int nonblock)
 {
 	int fd;
 	int op = mode;
 	int ret;
+
+	if (cmd->nolocking)
+		return 1;
 
 	if (nonblock)
 		op |= LOCK_NB;
@@ -326,9 +329,12 @@ static int _lock_hints(int mode, int nonblock)
 	return 0;
 }
 
-static void _unlock_hints(void)
+static void _unlock_hints(struct cmd_context *cmd)
 {
 	int ret;
+
+	if (cmd->nolocking)
+		return;
 
 	if (_hints_fd == -1) {
 		log_warn("unlock_hints no existing fd");
@@ -344,11 +350,11 @@ static void _unlock_hints(void)
 	_hints_fd = -1;
 }
 
-void hints_exit(void)
+void hints_exit(struct cmd_context *cmd)
 {
 	if (_hints_fd == -1)
 		return;
-	return _unlock_hints();
+	return _unlock_hints(cmd);
 }
 
 static struct hint *_find_hint_name(struct dm_list *hints, const char *name)
@@ -941,7 +947,7 @@ int write_hint_file(struct cmd_context *cmd, int newhints)
 
  out_unlock:
 	/* get_hints() took ex lock before returning with newhints set */
-	_unlock_hints();
+	_unlock_hints(cmd);
 
 	return ret;
 }
@@ -1006,7 +1012,7 @@ void clear_hint_file(struct cmd_context *cmd)
 	if (!_touch_nohints())
 		stack;
 
-	if (!_lock_hints(LOCK_EX, 0))
+	if (!_lock_hints(cmd, LOCK_EX, 0))
 		stack;
 
 	_unlink_nohints();
@@ -1042,7 +1048,7 @@ void pvscan_recreate_hints_begin(struct cmd_context *cmd)
 	if (!_touch_nohints())
 		stack;
 
-	if (!_lock_hints(LOCK_EX, 0))
+	if (!_lock_hints(cmd, LOCK_EX, 0))
 		stack;
 
 	_unlink_nohints();
@@ -1194,7 +1200,7 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints_out, int *newhints,
 		log_debug("get_hints: newhints file");
 		if (!_hints_exists())
 			_touch_hints();
-		if (!_lock_hints(LOCK_EX, NONBLOCK))
+		if (!_lock_hints(cmd, LOCK_EX, NONBLOCK))
 			return 0;
 		/* create new hints after scan */
 		*newhints = NEWHINTS_FILE;
@@ -1208,7 +1214,7 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints_out, int *newhints,
 		log_debug("get_hints: no file");
 		if (!_touch_hints())
 			return 0;
-		if (!_lock_hints(LOCK_EX, NONBLOCK))
+		if (!_lock_hints(cmd, LOCK_EX, NONBLOCK))
 			return 0;
 		/* create new hints after scan */
 		*newhints = NEWHINTS_INIT;
@@ -1221,7 +1227,7 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints_out, int *newhints,
 	 * We hold a sh lock on the hints file while reading it to prevent
 	 * another command from clearing it while we're reading
 	 */
-	if (!_lock_hints(LOCK_SH, NONBLOCK)) {
+	if (!_lock_hints(cmd, LOCK_SH, NONBLOCK)) {
 		log_debug("get_hints: lock fail");
 		return 0;
 	}
@@ -1231,11 +1237,11 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints_out, int *newhints,
 	 */
 	if (!_read_hint_file(cmd, &hints_list, &needs_refresh)) {
 		log_debug("get_hints: read fail");
-		_unlock_hints();
+		_unlock_hints(cmd);
 		return 0;
 	}
 
-	_unlock_hints();
+	_unlock_hints(cmd);
 
 	/*
 	 * The content of the hint file is invalid and should be refreshed,
@@ -1244,7 +1250,7 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints_out, int *newhints,
 	if (needs_refresh) {
 		log_debug("get_hints: needs refresh");
 
-		if (!_lock_hints(LOCK_EX, NONBLOCK))
+		if (!_lock_hints(cmd, LOCK_EX, NONBLOCK))
 			return 0;
 
 		/* create new hints after scan */
@@ -1261,7 +1267,7 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints_out, int *newhints,
 	if (dm_list_empty(&hints_list)) {
 		log_debug("get_hints: no entries");
 
-		if (!_lock_hints(LOCK_EX, NONBLOCK))
+		if (!_lock_hints(cmd, LOCK_EX, NONBLOCK))
 			return 0;
 
 		/* create new hints after scan */

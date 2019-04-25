@@ -2958,7 +2958,9 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		log_warn("WARNING: locking_type (%d) is deprecated, using file locking.", locking_type);
 	}
 
-	if (arg_is_set(cmd, nolocking_ARG) || _cmd_no_meta_proc(cmd))
+	cmd->nolocking = arg_is_set(cmd, nolocking_ARG);
+
+	if (cmd->nolocking || _cmd_no_meta_proc(cmd))
 		nolocking = 1;
 
 	if (arg_is_set(cmd, sysinit_ARG))
@@ -2997,7 +2999,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 
       out:
 
-	hints_exit();
+	hints_exit(cmd);
 	lvmcache_destroy(cmd, 1, 1);
 	label_scan_destroy(cmd);
 

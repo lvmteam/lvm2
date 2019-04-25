@@ -1821,7 +1821,7 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	 */
 
 	activation_release();
-	hints_exit();
+	hints_exit(cmd);
 	lvmcache_destroy(cmd, 0, 0);
 	label_scan_destroy(cmd);
 	label_exit();
@@ -1941,7 +1941,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 
 	archive_exit(cmd);
 	backup_exit(cmd);
-	hints_exit();
+	hints_exit(cmd);
 	lvmcache_destroy(cmd, 0, 0);
 	label_scan_destroy(cmd);
 	label_exit();
