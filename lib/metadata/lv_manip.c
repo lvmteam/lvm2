@@ -7365,7 +7365,7 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 		return 0;
 	}
 
-	if (!label_scan_open(dev)) {
+	if (!label_scan_open_rw(dev)) {
 		log_error("Failed to open %s/%s for wiping and zeroing.", lv->vg->name, lv->name);
 		goto out;
 	}

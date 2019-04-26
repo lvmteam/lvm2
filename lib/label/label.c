@@ -1272,6 +1272,18 @@ int label_scan_open_excl(struct device *dev)
 	return label_scan_open(dev);
 }
 
+int label_scan_open_rw(struct device *dev)
+{
+	if (_in_bcache(dev) && !(dev->flags & DEV_BCACHE_WRITE)) {
+		/* FIXME: avoid tossing out bcache blocks just to replace fd. */
+		log_debug("Close and reopen rw %s", dev_name(dev));
+		bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
+		_scan_dev_close(dev);
+	}
+	dev->flags |= DEV_BCACHE_WRITE;
+	return label_scan_open(dev);
+}
+
 bool dev_read_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 {
 	if (!scan_bcache) {
