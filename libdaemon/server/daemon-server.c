@@ -655,6 +655,7 @@ void daemon_start(daemon_state s)
 		FD_ZERO(&in);
 		FD_SET(s.socket_fd, &in);
 
+		_reap(s, 0);
 		sigprocmask(SIG_SETMASK, &new_set, NULL);
 		if (_shutdown_requested && !s.threads->next) {
 			sigprocmask(SIG_SETMASK, &old_set, NULL);
