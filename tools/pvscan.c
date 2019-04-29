@@ -1062,18 +1062,6 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 		cmd->pvscan_recreate_hints = 1;
 		pvscan_recreate_hints_begin(cmd);
 
-		/*
-		 * FIXME: if _online_pvscan_all_devs scans a PV without
-		 * metadata as the final PV to complete the VG, then
-		 * that VG is not added to the complete_vgnames list.
-		 * To fix this, we could also keep an incomplete_vg list,
-		 * and each incomplete_vg entry would list the PVIDs it
-		 * still needed.  If a PV without metadata is scanned,
-		 * its PVID would be removed from the incomplete_vg entry,
-		 * and if the entry had no remaining PVs needed, the vgname
-		 * would be added to complete_vgnames.
-		 */
-
 		log_verbose("pvscan all devices for requested refresh.");
 		_online_files_remove(_pvs_online_dir);
 		_online_files_remove(_vgs_online_dir);
