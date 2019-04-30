@@ -2243,7 +2243,8 @@ int process_each_vg(struct cmd_context *cmd,
 	 * Scan all devices to populate lvmcache with initial
 	 * list of PVs and VGs.
 	 */
-	lvmcache_label_scan(cmd);
+	if (!(read_flags & PROCESS_SKIP_SCAN))
+		lvmcache_label_scan(cmd);
 
 	/*
 	 * A list of all VGs on the system is needed when:
@@ -5325,13 +5326,6 @@ int pvcreate_each_device(struct cmd_context *cmd,
 
 		dm_list_add(&pp->arg_devices, &pd->list);
 	}
-
-	/*
-	 * Scan before calling process_each_pv so we can set up the PV args
-	 * first.  We can then skip the scan that would normally occur at the
-	 * beginning of process_each_pv.
-	 */
-	lvmcache_label_scan(cmd);
 
 	/*
 	 * Translate arg names into struct device's.

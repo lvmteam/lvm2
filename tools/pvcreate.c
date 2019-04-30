@@ -145,6 +145,8 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	clear_hint_file(cmd);
 
+	lvmcache_label_scan(cmd);
+
 	if (!(handle = init_processing_handle(cmd, NULL))) {
 		log_error("Failed to initialize processing handle.");
 		return ECMD_FAILED;
@@ -152,9 +154,8 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!pvcreate_each_device(cmd, handle, &pp))
 		ret = ECMD_FAILED;
-	else {
+	else
 		ret = ECMD_PROCESSED;
-	}
 
 	destroy_processing_handle(cmd, handle);
 	return ret;

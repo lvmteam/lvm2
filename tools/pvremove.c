@@ -45,6 +45,8 @@ int pvremove(struct cmd_context *cmd, int argc, char **argv)
 
 	clear_hint_file(cmd);
 
+	lvmcache_label_scan(cmd);
+
 	/* When forcibly clearing a PV we don't care about a VG lock. */
 	if (pp.force == DONT_PROMPT_OVERRIDE)
 		cmd->lockd_vg_disable = 1;
