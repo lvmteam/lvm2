@@ -91,27 +91,12 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	/*
-	 * FIXME: we have to unlock/relock the new VG name around the pvcreate
-	 * step because pvcreate needs to destroy lvmcache, which doesn't allow
-	 * any locks to be held.  There shouldn't be any reason to require this
-	 * VG lock to be released, so the lvmcache destroy rule about locks
-	 * seems to be unwarranted here.
-	 */
-	unlock_vg(cmd, NULL, vp_new.vg_name);
-
 	if (!(handle = init_processing_handle(cmd, NULL))) {
 		log_error("Failed to initialize processing handle.");
 		return ECMD_FAILED;
 	}
 
 	if (!pvcreate_each_device(cmd, handle, &pp)) {
-		destroy_processing_handle(cmd, handle);
-		return_ECMD_FAILED;
-	}
-
-	/* Relock the new VG name, see comment above. */
-	if (!lock_vol(cmd, vp_new.vg_name, LCK_VG_WRITE, NULL)) {
 		destroy_processing_handle(cmd, handle);
 		return_ECMD_FAILED;
 	}
