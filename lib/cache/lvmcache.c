@@ -66,7 +66,6 @@ static struct dm_hash_table *_vgname_hash = NULL;
 static DM_LIST_INIT(_vginfos);
 static DM_LIST_INIT(_found_duplicate_devs);
 static DM_LIST_INIT(_unused_duplicate_devs);
-static int _scanning_in_progress = 0;
 static int _vgs_locked = 0;
 static int _found_duplicate_pvs = 0;	/* If we never see a duplicate PV we can skip checking for them later. */
 static int _found_duplicate_vgnames = 0;
@@ -855,12 +854,6 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 
 	log_debug_cache("Finding VG info");
 
-	/* Avoid recursion when a PVID can't be found! */
-	if (_scanning_in_progress)
-		return 0;
-
-	_scanning_in_progress = 1;
-
 	/* FIXME: can this happen? */
 	if (!cmd->filter) {
 		log_error("label scan is missing filter");
@@ -941,8 +934,6 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	r = 1;
 
       out:
-	_scanning_in_progress = 0;
-
 	dm_list_iterate_items(vginfo, &_vginfos) {
 		if (is_orphan_vg(vginfo->vgname))
 			continue;
