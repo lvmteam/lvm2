@@ -26,8 +26,6 @@
 #include "lib/metadata/lv_alloc.h"
 #include "lib/config/defaults.h"
 
-static const char _writecache_module[] = "writecache";
-
 #define SEG_LOG_ERROR(t, p...) \
         log_error(t " segment %s of logical volume %s.", ## p,	\
                   dm_config_parent_name(sn), seg->lv->name), 0;
