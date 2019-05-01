@@ -30,7 +30,7 @@ static int _text_can_handle(struct labeller *l __attribute__((unused)),
 {
 	struct label_header *lh = (struct label_header *) buf;
 
-	if (!strncmp((char *)lh->type, LVM2_LABEL, sizeof(lh->type)))
+	if (!memcmp(lh->type, LVM2_LABEL, sizeof(lh->type)))
 		return 1;
 
 	return 0;
@@ -95,9 +95,9 @@ static int _text_write(struct label *label, void *buf)
 	 * PV header base
 	 */
 	/* FIXME Move to where label is created */
-	strncpy(label->type, LVM2_LABEL, sizeof(label->type));
+	memcpy(label->type, LVM2_LABEL, sizeof(label->type));
 
-	strncpy((char *)lh->type, label->type, sizeof(label->type));
+	memcpy(lh->type, LVM2_LABEL, sizeof(lh->type));
 
 	pvhdr = (struct pv_header *) ((char *) buf + xlate32(lh->offset_xl));
 	info = (struct lvmcache_info *) label->info;
@@ -314,7 +314,7 @@ void del_mdas(struct dm_list *mdas)
 static int _text_initialise_label(struct labeller *l __attribute__((unused)),
 				  struct label *label)
 {
-	strncpy(label->type, LVM2_LABEL, sizeof(label->type));
+	memcpy(label->type, LVM2_LABEL, sizeof(label->type));
 
 	return 1;
 }

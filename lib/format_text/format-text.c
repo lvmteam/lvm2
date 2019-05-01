@@ -333,7 +333,7 @@ static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev
 
 	_xlate_mdah(mdah);
 
-	if (strncmp((char *)mdah->magic, FMTT_MAGIC, sizeof(mdah->magic))) {
+	if (memcmp(mdah->magic, FMTT_MAGIC, sizeof(mdah->magic))) {
 		log_error("Wrong magic number in metadata area header on %s at %llu",
 			  dev_name(dev_area->dev), (unsigned long long)dev_area->start);
 		return 0;
@@ -378,7 +378,7 @@ static int _raw_write_mda_header(const struct format_type *fmt,
 				 struct device *dev, int primary_mda,
 				 uint64_t start_byte, struct mda_header *mdah)
 {
-	strncpy((char *)mdah->magic, FMTT_MAGIC, sizeof(mdah->magic));
+	memcpy(mdah->magic, FMTT_MAGIC, sizeof(mdah->magic));
 	mdah->version = FMTT_VERSION;
 	mdah->start = start_byte;
 

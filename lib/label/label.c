@@ -139,7 +139,7 @@ int label_remove(struct device *dev)
 
 		wipe = 0;
 
-		if (!strncmp((char *)lh->id, LABEL_ID, sizeof(lh->id))) {
+		if (!memcmp(lh->id, LABEL_ID, sizeof(lh->id))) {
 			if (xlate64(lh->sector_xl) == sector)
 				wipe = 1;
 		} else {
@@ -192,7 +192,7 @@ int label_write(struct device *dev, struct label *label)
 
 	memset(buf, 0, LABEL_SIZE);
 
-	strncpy((char *)lh->id, LABEL_ID, sizeof(lh->id));
+	memcpy(lh->id, LABEL_ID, sizeof(lh->id));
 	lh->sector_xl = xlate64(label->sector);
 	lh->offset_xl = xlate32(sizeof(*lh));
 
@@ -293,7 +293,7 @@ static struct labeller *_find_lvm_header(struct device *dev,
 
 		lh = (struct label_header *) (scan_buf + (sector << SECTOR_SHIFT));
 
-		if (!strncmp((char *)lh->id, LABEL_ID, sizeof(lh->id))) {
+		if (!memcmp(lh->id, LABEL_ID, sizeof(lh->id))) {
 			if (found) {
 				log_error("Ignoring additional label on %s at sector %llu",
 					  dev_name(dev), (unsigned long long)(block_sector + sector));
