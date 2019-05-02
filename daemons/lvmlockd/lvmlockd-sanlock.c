@@ -500,13 +500,15 @@ static int get_sizes_lockspace(char *path, int *sector_size, int *align_size)
  * version and lv name, and returns the real lock_args in vg_args.
  */
 
+#define MAX_VERSION 16
+
 int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args)
 {
 	struct sanlk_lockspace ss;
 	struct sanlk_resourced rd;
 	struct sanlk_disk disk;
 	char lock_lv_name[MAX_ARGS+1];
-	char lock_args_version[MAX_ARGS+1];
+	char lock_args_version[MAX_VERSION+1];
 	const char *gl_name = NULL;
 	uint32_t daemon_version;
 	uint32_t daemon_proto;
@@ -526,7 +528,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 		return -EARGS;
 	}
 
-	snprintf(lock_args_version, MAX_ARGS, "%u.%u.%u",
+	snprintf(lock_args_version, MAX_VERSION, "%u.%u.%u",
 		 VG_LOCK_ARGS_MAJOR, VG_LOCK_ARGS_MINOR, VG_LOCK_ARGS_PATCH);
 
 	/* see comment above about input vg_args being only lock_lv_name */
@@ -543,7 +545,9 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	if (daemon_test) {
 		if (!gl_lsname_sanlock[0])
 			strncpy(gl_lsname_sanlock, ls_name, MAX_NAME);
-		snprintf(vg_args, MAX_ARGS, "%s:%s", lock_args_version, lock_lv_name);
+		rv = snprintf(vg_args, MAX_ARGS, "%s:%s", lock_args_version, lock_lv_name);
+		if (rv >= MAX_ARGS)
+			log_debug("init_vg_san vg_args may be too long %d %s", rv, vg_args);
 		return 0;
 	}
 
@@ -635,7 +639,9 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	if (!strcmp(gl_name, R_NAME_GL))
 		strncpy(gl_lsname_sanlock, ls_name, MAX_NAME);
  
-	snprintf(vg_args, MAX_ARGS, "%s:%s", lock_args_version, lock_lv_name);
+	rv = snprintf(vg_args, MAX_ARGS, "%s:%s", lock_args_version, lock_lv_name);
+	if (rv >= MAX_ARGS)
+		log_debug("init_vg_san vg_args may be too long %d %s", rv, vg_args);
 
 	log_debug("S %s init_vg_san done vg_args %s", ls_name, vg_args);
 
@@ -692,7 +698,7 @@ int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name,
 {
 	struct sanlk_resourced rd;
 	char lock_lv_name[MAX_ARGS+1];
-	char lock_args_version[MAX_ARGS+1];
+	char lock_args_version[MAX_VERSION+1];
 	uint64_t offset;
 	int rv;
 
@@ -707,7 +713,7 @@ int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name,
 		return rv;
 	}
 
-	snprintf(lock_args_version, MAX_ARGS, "%u.%u.%u",
+	snprintf(lock_args_version, MAX_VERSION, "%u.%u.%u",
 		 LV_LOCK_ARGS_MAJOR, LV_LOCK_ARGS_MINOR, LV_LOCK_ARGS_PATCH);
 
 	if (daemon_test) {

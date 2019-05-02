@@ -128,16 +128,18 @@ static int read_cluster_name(char *clustername)
 	return 0;
 }
 
+#define MAX_VERSION 16
+
 int lm_init_vg_dlm(char *ls_name, char *vg_name, uint32_t flags, char *vg_args)
 {
 	char clustername[MAX_ARGS+1];
-	char lock_args_version[MAX_ARGS+1];
+	char lock_args_version[MAX_VERSION+1];
 	int rv;
 
 	memset(clustername, 0, sizeof(clustername));
 	memset(lock_args_version, 0, sizeof(lock_args_version));
 
-	snprintf(lock_args_version, MAX_ARGS, "%u.%u.%u",
+	snprintf(lock_args_version, MAX_VERSION, "%u.%u.%u",
 		 VG_LOCK_ARGS_MAJOR, VG_LOCK_ARGS_MINOR, VG_LOCK_ARGS_PATCH);
 
 	rv = read_cluster_name(clustername);
@@ -149,7 +151,9 @@ int lm_init_vg_dlm(char *ls_name, char *vg_name, uint32_t flags, char *vg_args)
 		return -EARGS;
 	}
 
-	snprintf(vg_args, MAX_ARGS, "%s:%s", lock_args_version, clustername);
+	rv = snprintf(vg_args, MAX_ARGS, "%s:%s", lock_args_version, clustername);
+	if (rv >= MAX_ARGS)
+		log_debug("init_vg_dlm vg_args may be too long %d %s", rv, vg_args);
 	rv = 0;
 
 	log_debug("init_vg_dlm done %s vg_args %s", ls_name, vg_args);

@@ -2230,7 +2230,7 @@ static void *lockspace_thread_main(void *arg_in)
 	struct action *act_op_free = NULL;
 	struct list_head tmp_act;
 	struct list_head act_close;
-	char tmp_name[MAX_NAME+1];
+	char tmp_name[MAX_NAME+5];
 	int free_vg = 0;
 	int drop_vg = 0;
 	int error = 0;
@@ -2624,8 +2624,10 @@ out_act:
 	 * blank or fill it with garbage, but instead set it to REM:<name>
 	 * to make it easier to follow progress of freeing is via log_debug.
 	 */
-	dm_strncpy(tmp_name, ls->name, sizeof(tmp_name));
-	snprintf(ls->name, sizeof(ls->name), "REM:%s", tmp_name);
+	memset(tmp_name, 0, sizeof(tmp_name));
+	memcpy(tmp_name, "REM:", 4);
+	strncpy(tmp_name+4, ls->name, sizeof(tmp_name)-4);
+	memcpy(ls->name, tmp_name, sizeof(ls->name));
 	pthread_mutex_unlock(&lockspaces_mutex);
 
 	/* worker_thread will join this thread, and free the ls */
