@@ -292,6 +292,18 @@ static int _read_pv(struct format_instance *fid,
 	pv->pe_align = 0;
 	pv->fmt = fid->fmt;
 
+	/*
+	 * It would be nice to check this earlier, e.g. in or after label scan,
+	 * but this is first time we get far enough through the vg metadata to
+	 * see the PV size, and can finally compare it with the device size.
+	 */
+	if (pv->dev && (pv->size != pv->dev->size)) {
+		if (dev_is_md(pv->dev, NULL, 1)) {
+			log_warn("WARNING: device %s is an md component, ignoring PV.", dev_name(pv->dev));
+			return_0;
+		}
+	}
+
 	/* Fix up pv size if missing or impossibly large */
 	if ((!pv->size || pv->size > (1ULL << 62)) && pv->dev) {
 		if (!dev_get_size(pv->dev, &pv->size)) {
