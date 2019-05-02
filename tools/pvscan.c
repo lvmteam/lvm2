@@ -511,6 +511,7 @@ struct _pvscan_baton {
 	struct cmd_context *cmd;
 	struct volume_group *vg;
 	struct format_instance *fid;
+	int mda_read_errors;
 };
 
 static int _online_pvscan_single(struct metadata_area *mda, void *baton)
@@ -518,9 +519,13 @@ static int _online_pvscan_single(struct metadata_area *mda, void *baton)
 	struct _pvscan_baton *b = baton;
 	struct volume_group *vg;
 
-	if (mda_is_ignored(mda) ||
-	    !(vg = mda->ops->vg_read(b->fid, "", mda, NULL, NULL)))
+	if (mda_is_ignored(mda))
 		return 1;
+	vg = mda->ops->vg_read(b->fid, "", mda, NULL, NULL);
+	if (!vg) {
+		b->mda_read_errors++;
+		return 1;
+	}
 
 	/* FIXME Also ensure contents match etc. */
 	if (!b->vg || vg->seqno > b->vg->seqno)
@@ -586,6 +591,7 @@ static int _online_pvscan_one(struct cmd_context *cmd, struct device *dev,
 
 	fmt = lvmcache_fmt(info);
 
+	memset(&baton, 0, sizeof(baton));
 	baton.cmd = cmd;
 	baton.vg = NULL;
 	baton.fid = fmt->ops->create_instance(fmt, &fic);
@@ -596,6 +602,16 @@ static int _online_pvscan_one(struct cmd_context *cmd, struct device *dev,
 	}
 
 	lvmcache_foreach_mda(info, _online_pvscan_single, &baton);
+
+	if (baton.mda_read_errors) {
+		/* Don't record the PV as online if there are errors reading the vg. */
+		log_print("pvscan[%d] PV %s ignore for metadata processing error.", getpid(), dev_name(dev));
+		if (baton.vg)
+			release_vg(baton.vg);
+		else
+			fmt->ops->destroy_instance(baton.fid);
+		return 1;
+	}
 
 	if (!baton.vg) {
 		if (pvid_without_metadata)
