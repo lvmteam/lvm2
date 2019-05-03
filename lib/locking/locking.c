@@ -361,6 +361,9 @@ static int _lockf_global(struct cmd_context *cmd, const char *mode, int convert)
 	} else if (!strcmp(mode, "un")) {
 		ret = lock_vol(cmd, VG_GLOBAL, LCK_UNLOCK, NULL);
 		cmd->lockf_global_ex = 0;
+	} else {
+		log_error(INTERNAL_ERROR "Unknown locking mode %s.", mode);
+		return 0;
 	}
 
 	return ret;
