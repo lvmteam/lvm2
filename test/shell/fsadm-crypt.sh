@@ -46,7 +46,14 @@ PWD2="mymJeD8ivEhE"
 PWD3="ocMakf3fAcQO"
 SKIP_DETACHED=
 
-which cryptsetup || check_cryptsetup=${check_cryptsetup:-cryptsetup}
+if which cryptsetup ; then
+	# use older format luks1 - otherwise the test would need to pass password everywhere...
+	case $(cryptsetup --version) in
+	"cryptsetup 2"*)  FORMAT_PARAMS="$FORMAT_PARAMS --type luks1" ;;
+	esac
+else
+	check_cryptsetup=${check_cryptsetup:-cryptsetup}
+fi
 
 which mkfs.ext2 || check_ext2=${check_ext2:-mkfs.ext2}
 which mkfs.ext3 || check_ext3=${check_ext3:-mkfs.ext3}
