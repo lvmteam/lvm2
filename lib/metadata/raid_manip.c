@@ -6471,7 +6471,7 @@ int lv_raid_convert(struct logical_volume *lv,
 		return_0;
 
 	region_size = new_region_size ? : seg->region_size;
-	region_size = region_size ? : get_default_region_size(lv->vg->cmd);
+	region_size = region_size ? : (uint32_t)get_default_region_size(lv->vg->cmd);
 
 	/*
 	 * Check acceptible options mirrors, region_size,
