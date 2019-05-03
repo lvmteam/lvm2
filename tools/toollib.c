@@ -3933,14 +3933,14 @@ static int _get_all_devices(struct cmd_context *cmd,
 
 			if (!(dil = dm_pool_alloc(cmd->mem, sizeof(*dil)))) {
 				log_error("device_id_list alloc failed.");
-				goto out;
+				return ECMD_FAILED;
 			}
 
 			strncpy(dil->pvid, hint->pvid, ID_LEN);
 			dil->dev = dev;
 			dm_list_add(all_devices, &dil->list);
 		}
-		return 1;
+		return ECMD_PROCESSED;
 	}
 
 	log_debug("Getting list of all devices from system");
