@@ -708,7 +708,6 @@ int report_for_selection(struct cmd_context *cmd,
 static void _check_pv_list(struct cmd_context *cmd, struct report_args *args, struct single_report_args *single_args)
 {
 	int i;
-	int rescan_done = 0;
 
 	if (!args->argv)
 		return;
@@ -719,12 +718,6 @@ static void _check_pv_list(struct cmd_context *cmd, struct report_args *args, st
 
 	if (single_args->args_are_pvs && args->argc) {
 		for (i = 0; i < args->argc; i++) {
-			if (!rescan_done && !dev_cache_get(cmd, args->argv[i], cmd->filter)) {
-				cmd->filter->wipe(cmd->filter);
-				/* FIXME scan only one device */
-				lvmcache_label_scan(cmd);
-				rescan_done = 1;
-			}
 			if (*args->argv[i] == '@') {
 				/*
 				 * Tags are metadata related, not label
@@ -732,13 +725,7 @@ static void _check_pv_list(struct cmd_context *cmd, struct report_args *args, st
 				 */
 				if (single_args->report_type == LABEL)
 					single_args->report_type = PVS;
-				/*
-				 * If we changed the report_type and we did rescan,
-				 * no need to iterate over dev list further - nothing
-				 * else would change.
-				 */
-				if (rescan_done)
-					break;
+				break;
 			}
 		}
 	}
