@@ -13,6 +13,7 @@
 
 #include "libdaemon/client/config-util.h"
 #include "libdaemon/client/daemon-client.h"
+#include "lib/metadata/metadata-exported.h" /* is_lockd_type() */
 
 #define LOCKD_SANLOCK_LV_NAME "lvmlock"
 
@@ -182,7 +183,7 @@ static inline int lockd_global_create(struct cmd_context *cmd, const char *def_m
 	return 1;
 }
 
-static inline int lockd_global(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
+static inline int lockd_global(struct cmd_context *cmd, const char *def_mode)
 {
 	return 1;
 }
