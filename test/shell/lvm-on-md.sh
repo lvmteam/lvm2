@@ -124,10 +124,6 @@ vgremove -f $vg
 
 aux cleanup_md_dev
 
-wipefs -a "$dev1"
-wipefs -a "$dev2"
-
-
 # create 2 disk MD raid0 array
 # by default using metadata format 1.0 with data at the end of device
 # When a raid0 md array is stopped, the components will not look like
