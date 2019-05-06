@@ -137,7 +137,7 @@ get_crypt_kname() {
 # $1 device
 # $2 pass
 crypt_format() {
-	echo "$2" | cryptsetup luksFormat "$FORMAT_PARAMS" "$1"
+	echo "$2" | cryptsetup luksFormat $FORMAT_PARAMS "$1"
 }
 
 
