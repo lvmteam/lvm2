@@ -51,6 +51,8 @@ struct parser {
 
 	struct dm_pool *mem;
 	int no_dup_node_check;	/* whether to disable dup node checking */
+	const char *key;        /* last obtained key */
+	unsigned ignored_creation_time;
 };
 
 struct config_output {
@@ -176,7 +178,7 @@ static int _do_dm_config_parse(struct dm_config_tree *cft, const char *start, co
 	/* TODO? if (start == end) return 1; */
 
 	struct parser *p;
-	if (!(p = dm_pool_alloc(cft->mem, sizeof(*p))))
+	if (!(p = dm_pool_zalloc(cft->mem, sizeof(*p))))
 		return_0;
 
 	p->mem = cft->mem;
@@ -615,6 +617,7 @@ static struct dm_config_node *_section(struct parser *p, struct dm_config_node *
 		match(TOK_SECTION_E);
 	} else {
 		match(TOK_EQ);
+		p->key = root->key;
 		if (!(value = _value(p)))
 			return_NULL;
 		if (root->v)
@@ -682,8 +685,17 @@ static struct dm_config_value *_type(struct parser *p)
 		errno = 0;
 		v->v.i = strtoll(p->tb, NULL, 0);	/* FIXME: check error */
 		if (errno) {
-			log_error("Failed to read int token.");
-			return NULL;
+			if (errno == ERANGE && p->key &&
+			    strcmp("creation_time", p->key) == 0) {
+				/* Due to a bug in some older 32bit builds (<2.02.169),
+				 * lvm was able to produce invalid creation_time string */
+				v->v.i = 1527120000; /* Pick 2018-05-24 day instead */
+				if (!p->ignored_creation_time++)
+					log_warn("WARNING: Invalid creation_time found in metadata (repaired with next metadata update).");
+			} else {
+				log_error("Failed to read int token.");
+				return NULL;
+			}
 		}
 		match(TOK_INT);
 		break;
