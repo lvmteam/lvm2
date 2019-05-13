@@ -1,9 +1,9 @@
-Version 2.02.185 - 
-==================================
+Version 2.02.185 - 13th May 2019
+================================
   Fix change of monitoring in clustered volumes.
   Improve -lXXX%VG modifier which improves cache segment estimation.
   Add synchronization with udev before removing cached devices.
-  Fix missing growth of _pmsmare volume when extending _tmeta volume.
+  Fix missing growth of _pmspare volume when extending _tmeta volume.
   Automatically grow thin metadata, when thin data gets too big.
   Add support for vgsplit with cached devices.
   Fix signal delivery checking race in libdaemon (lvmetad).
