@@ -268,7 +268,7 @@ test_ext3_small_shrink() {
 }
 
 test_xfs_resize() {
-	mkfs.xfs -l internal,size=1000b -f "$3"
+	mkfs.xfs -l internal,size=1536b -f "$3"
 
 	fsadm --lvresize resize $1 30M
 	# Fails - not enough space for 4M fs
@@ -283,7 +283,7 @@ test_xfs_resize() {
 }
 
 test_xfs_small_shrink() {
-	mkfs.xfs -l internal,size=1000b -f "$3"
+	mkfs.xfs -l internal,size=1536b -f "$3"
 
 	not lvresize -L-1 -r $1
 	fscheck_xfs "$3"
@@ -347,7 +347,7 @@ test_ext3_inactive() {
 
 test_xfs_inactive() {
 	crypt_open "$2" $PWD2 "$4"
-	mkfs.xfs -l internal,size=1000b -f "$3"
+	mkfs.xfs -l internal,size=1536b -f "$3"
 	crypt_close "$4"
 
 	not fsadm --lvresize resize $1 30M
@@ -428,7 +428,7 @@ test_ext3_plain() {
 }
 
 test_xfs_plain() {
-	mkfs.xfs -l internal,size=1000b -f "$3"
+	mkfs.xfs -l internal,size=1536b -f "$3"
 
 	not fsadm --lvresize resize $1 30M
 	not lvresize -L+10M -r $1
@@ -494,7 +494,7 @@ test_ext3_detached() {
 }
 
 test_xfs_detached() {
-	mkfs.xfs -l internal,size=1000b -f "$3"
+	mkfs.xfs -l internal,size=1536b -f "$3"
 
 	not fsadm --lvresize resize $1 30M
 	not lvresize -L+10M -r $1
