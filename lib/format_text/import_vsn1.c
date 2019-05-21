@@ -298,7 +298,7 @@ static int _read_pv(struct format_instance *fid,
 	 * see the PV size, and can finally compare it with the device size.
 	 */
 	if (pv->dev && (pv->size != pv->dev->size)) {
-		if (dev_is_md(pv->dev, NULL, 1)) {
+		if (dev_is_md_component(pv->dev, NULL, 1)) {
 			log_warn("WARNING: device %s is an md component, ignoring PV.", dev_name(pv->dev));
 			return_0;
 		}

@@ -88,8 +88,21 @@ static uint64_t _v1_sb_offset(uint64_t size, md_minor_version_t minor_version)
 	return sb_offset;
 }
 
+/*
+ * _udev_dev_is_md_component() only works if
+ *   external_device_info_source="udev"
+ *
+ * but
+ *
+ * udev_dev_is_md_component() in dev-type.c only works if
+ *   obtain_device_list_from_udev=1
+ *
+ * and neither of those config setting matches very well
+ * with what we're doing here.
+ */
+
 #ifdef UDEV_SYNC_SUPPORT
-static int _udev_dev_is_md(struct device *dev)
+static int _udev_dev_is_md_component(struct device *dev)
 {
 	const char *value;
 	struct dev_ext *ext;
@@ -103,7 +116,7 @@ static int _udev_dev_is_md(struct device *dev)
 	return !strcmp(value, DEV_EXT_UDEV_BLKID_TYPE_SW_RAID);
 }
 #else
-static int _udev_dev_is_md(struct device *dev)
+static int _udev_dev_is_md_component(struct device *dev)
 {
 	return 0;
 }
@@ -112,7 +125,7 @@ static int _udev_dev_is_md(struct device *dev)
 /*
  * Returns -1 on error
  */
-static int _native_dev_is_md(struct device *dev, uint64_t *offset_found, int full)
+static int _native_dev_is_md_component(struct device *dev, uint64_t *offset_found, int full)
 {
 	md_minor_version_t minor;
 	uint64_t size, sb_offset;
@@ -188,7 +201,7 @@ out:
 	return ret;
 }
 
-int dev_is_md(struct device *dev, uint64_t *offset_found, int full)
+int dev_is_md_component(struct device *dev, uint64_t *offset_found, int full)
 {
 	int ret;
 
@@ -198,7 +211,7 @@ int dev_is_md(struct device *dev, uint64_t *offset_found, int full)
 	 * information is not in udev db.
 	 */
 	if ((dev->ext.src == DEV_EXT_NONE) || offset_found) {
-		ret = _native_dev_is_md(dev, offset_found, full);
+		ret = _native_dev_is_md_component(dev, offset_found, full);
 
 		if (!full) {
 			if (!ret || (ret == -EAGAIN)) {
@@ -210,7 +223,7 @@ int dev_is_md(struct device *dev, uint64_t *offset_found, int full)
 	}
 
 	if (dev->ext.src == DEV_EXT_UDEV)
-		return _udev_dev_is_md(dev);
+		return _udev_dev_is_md_component(dev);
 
 	log_error(INTERNAL_ERROR "Missing hook for MD device recognition "
 		  "using external device info source %s", dev_ext_name(dev));
@@ -439,7 +452,7 @@ int dev_is_md_with_end_superblock(struct dev_types *dt, struct device *dev)
 
 #else
 
-int dev_is_md(struct device *dev __attribute__((unused)),
+int dev_is_md_component(struct device *dev __attribute__((unused)),
 	      uint64_t *sb __attribute__((unused)))
 {
 	return 0;

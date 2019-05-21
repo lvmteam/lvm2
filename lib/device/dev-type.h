@@ -57,7 +57,7 @@ const char *dev_subsystem_name(struct dev_types *dt, struct device *dev);
 int major_is_scsi_device(struct dev_types *dt, int major);
 
 /* Signature/superblock recognition with position returned where found. */
-int dev_is_md(struct device *dev, uint64_t *sb, int full);
+int dev_is_md_component(struct device *dev, uint64_t *sb, int full);
 int dev_is_swap(struct device *dev, uint64_t *signature, int full);
 int dev_is_luks(struct device *dev, uint64_t *signature, int full);
 int dasd_is_cdl_formatted(struct device *dev);

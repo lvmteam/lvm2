@@ -866,7 +866,7 @@ static int _wipe_known_signatures_with_lvm(struct device *dev, const char *name,
 		wiped = &wiped_tmp;
 	*wiped = 0;
 
-	if (!_wipe_signature(dev, "software RAID md superblock", name, 4, yes, force, wiped, dev_is_md) ||
+	if (!_wipe_signature(dev, "software RAID md superblock", name, 4, yes, force, wiped, dev_is_md_component) ||
 	    !_wipe_signature(dev, "swap signature", name, 10, yes, force, wiped, dev_is_swap) ||
 	    !_wipe_signature(dev, "LUKS signature", name, 8, yes, force, wiped, dev_is_luks))
 		return 0;
