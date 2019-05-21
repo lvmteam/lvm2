@@ -2076,15 +2076,6 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
-	/*
-	 * This is a hack for mirror LVs which need to know at a very low level
-	 * which lock mode the LV is being activated with so that it can pick
-	 * a mirror log type during activation.  Do not use this for anything
-	 * else.
-	 */
-	if (mode && !strcmp(mode, "sh"))
-		cmd->lockd_lv_sh = 1;
-
 	if (!mode)
 		mode = "ex";
 
@@ -2209,31 +2200,6 @@ static int _lockd_lv_thin(struct cmd_context *cmd, struct logical_volume *lv,
 }
 
 /*
- * Only the combination of dlm + corosync + cmirrord allows
- * mirror LVs to be activated in shared mode on multiple nodes.
- */
-static int _lockd_lv_mirror(struct cmd_context *cmd, struct logical_volume *lv,
-			    const char *def_mode, uint32_t flags)
-{
-	if (!strcmp(lv->vg->lock_type, "sanlock"))
-		flags |= LDLV_MODE_NO_SH;
-
-	else if (!strcmp(lv->vg->lock_type, "dlm") && def_mode && !strcmp(def_mode, "sh")) {
-#ifdef CMIRRORD_PIDFILE
-		if (!cmirrord_is_running()) {
-			log_error("cmirrord must be running to activate an LV in shared mode.");
-			return 0;
-		}
-#else
-		flags |= LDLV_MODE_NO_SH;
-#endif
-	}
-
-	return lockd_lv_name(cmd, lv->vg, lv->name, &lv->lvid.id[1],
-			     lv->lock_args, def_mode, flags);
-}
-
-/*
  * If the VG has no lock_type, then this function can return immediately.
  * The LV itself may have no lock (NULL lv->lock_args), but the lock request
  * may be directed to another lock, e.g. the pool LV lock in _lockd_lv_thin.
@@ -2286,14 +2252,12 @@ int lockd_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	 */
 	if (lv_is_external_origin(lv) ||
 	    lv_is_thin_type(lv) ||
+	    lv_is_mirror_type(lv) ||
 	    lv_is_raid_type(lv) ||
 	    lv_is_cache_type(lv)) {
 		flags |= LDLV_MODE_NO_SH;
 	}
 
-	if (lv_is_mirror_type(lv))
-		return _lockd_lv_mirror(cmd, lv, def_mode, flags);
-	       
 	return lockd_lv_name(cmd, lv->vg, lv->name, &lv->lvid.id[1],
 			     lv->lock_args, def_mode, flags);
 }
