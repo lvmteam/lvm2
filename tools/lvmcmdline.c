@@ -2766,20 +2766,53 @@ static int _init_lvmlockd(struct cmd_context *cmd)
 	return 1;
 }
 
+/*
+ * md_component_check full: always set use_full_md_check
+ * which causes filter-md to read the start+end of every
+ * device on the system (this could be optimized to only
+ * read the end of PVs.)
+ *
+ * md_component_check start: the end of devices will
+ * not generally be read to check for an md superblock
+ * (lvm may still scan for end-of-device md superblocks
+ * if it knows that some exists.)
+ *
+ * md_component_check auto: lvm will use some built-in
+ * heuristics to decide when it should scan the end of
+ * devices to look for md superblocks, e.g. commands
+ * like pvcreate that could clobber a component, or if
+ * udev info is not available and hints are not available.
+ */
 static void _init_md_checks(struct cmd_context *cmd)
 {
-	/*
-	 * use_full_md_check can also be set later.
-	 * These commands are chosen to always perform
-	 * a full md component check because they initialize
-	 * a new device that could be an md component,
-	 * and they are not run frequently during normal
-	 * operation.
-	 */
-	if (!strcmp(cmd->name, "pvcreate") ||
-	    !strcmp(cmd->name, "vgcreate") ||
-	    !strcmp(cmd->name, "vgextend"))
+	const char *md_check;
+
+	cmd->md_component_detection = find_config_tree_bool(cmd, devices_md_component_detection_CFG, NULL);
+
+	md_check = find_config_tree_str(cmd, devices_md_component_checks_CFG, NULL);
+	if (!md_check)
+		cmd->md_component_checks = "auto";
+	else if (!strcmp(md_check, "auto") ||
+	         !strcmp(md_check, "start") ||
+	         !strcmp(md_check, "full"))
+		cmd->md_component_checks = md_check;
+	else {
+		log_warn("Ignoring unknown md_component_checks setting, using auto.");
+		cmd->md_component_checks = "auto";
+	}
+
+	if (!strcmp(cmd->md_component_checks, "full"))
 		cmd->use_full_md_check = 1;
+	else if (!strcmp(cmd->md_component_checks, "auto")) {
+		/* use_full_md_check can also be set later */
+		if (!strcmp(cmd->name, "pvcreate") ||
+		    !strcmp(cmd->name, "vgcreate") ||
+		    !strcmp(cmd->name, "vgextend"))
+			cmd->use_full_md_check = 1;
+	}
+
+	log_debug("Using md_component_checks %s use_full_md_check %d",
+		  cmd->md_component_checks, cmd->use_full_md_check);
 }
 
 static int _cmd_no_meta_proc(struct cmd_context *cmd)

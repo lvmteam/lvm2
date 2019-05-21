@@ -172,6 +172,7 @@ struct cmd_context {
 	unsigned pvscan_cache_single:1;
 	unsigned can_use_one_scan:1;
 	unsigned is_clvmd:1;
+	unsigned md_component_detection:1;
 	unsigned use_full_md_check:1;
 	unsigned is_activating:1;
 	unsigned enable_hints:1;		/* hints are enabled for cmds in general */
@@ -184,6 +185,7 @@ struct cmd_context {
 	 */
 	struct dev_filter *filter;
 	struct dm_list hints;
+	const char *md_component_checks;
 
 	/*
 	 * Configuration.

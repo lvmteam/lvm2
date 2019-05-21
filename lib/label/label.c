@@ -1022,6 +1022,33 @@ int label_scan(struct cmd_context *cmd)
 		}
 	}
 
+	/*
+	 * Stronger exclusion of md components that might have been
+	 * misidentified as PVs due to having an end-of-device md superblock.
+	 * If we're not using hints, and are not already doing a full md check
+	 * on devs being scanned, then if udev info is missing for a PV, scan
+	 * the end of the PV to verify it's not an md component.  The full
+	 * dev_is_md_component call will do new reads at the end of the dev.
+	 */
+	if (cmd->md_component_detection && !cmd->use_full_md_check && !using_hints &&
+	    !strcmp(cmd->md_component_checks, "auto")) {
+		int once = 0;
+		dm_list_iterate_items(devl, &scan_devs) {
+			if (!(devl->dev->flags & DEV_SCAN_FOUND_LABEL))
+				continue;
+			if (!(devl->dev->flags & DEV_UDEV_INFO_MISSING))
+				continue;
+			if (!once++)
+				log_debug_devs("Scanning end of PVs with no udev info for MD components");
+
+			if (dev_is_md_component(devl->dev, NULL, 1)) {
+				log_debug_devs("Drop PV from MD component %s", dev_name(devl->dev));
+				devl->dev->flags &= ~DEV_SCAN_FOUND_LABEL;
+				lvmcache_del_dev(devl->dev);
+			}
+		}
+	}
+
 	dm_list_iterate_items_safe(devl, devl2, &all_devs) {
 		dm_list_del(&devl->list);
 		free(devl);

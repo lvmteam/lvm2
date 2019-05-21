@@ -555,8 +555,11 @@ next:
 	 */
 
 	if (!(info = lvmcache_info_from_pvid(alt->dev->pvid, NULL, 0))) {
-		/* This shouldn't happen */
-		log_warn("WARNING: PV %s on duplicate device %s not found in cache.",
+		/*
+		 * This will happen if a duplicate dev has been dropped already,
+		 * e.g. it was found to be an md component.
+		 */
+		log_debug("PVID %s on duplicate device %s not found in cache.",
 			 alt->dev->pvid, dev_name(alt->dev));
 		goto next;
 	}
