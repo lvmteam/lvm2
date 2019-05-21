@@ -2766,6 +2766,22 @@ static int _init_lvmlockd(struct cmd_context *cmd)
 	return 1;
 }
 
+static void _init_md_checks(struct cmd_context *cmd)
+{
+	/*
+	 * use_full_md_check can also be set later.
+	 * These commands are chosen to always perform
+	 * a full md component check because they initialize
+	 * a new device that could be an md component,
+	 * and they are not run frequently during normal
+	 * operation.
+	 */
+	if (!strcmp(cmd->name, "pvcreate") ||
+	    !strcmp(cmd->name, "vgcreate") ||
+	    !strcmp(cmd->name, "vgextend"))
+		cmd->use_full_md_check = 1;
+}
+
 static int _cmd_no_meta_proc(struct cmd_context *cmd)
 {
 	return cmd->cname->flags & NO_METADATA_PROCESSING;
@@ -2978,6 +2994,8 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 			goto_out;
 		}
 	}
+
+	_init_md_checks(cmd);
 
 	if (!_cmd_no_meta_proc(cmd) && !_init_lvmlockd(cmd)) {
 		ret = ECMD_FAILED;

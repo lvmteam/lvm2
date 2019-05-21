@@ -154,9 +154,6 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	/* pvcreate within vgextend cannot be forced. */
 	pp->force = 0;
 
-	/* Check for old md signatures at the end of devices. */
-	cmd->use_full_md_check = 1;
-
 	if (!lock_global(cmd, "ex"))
 		return_ECMD_FAILED;
 
