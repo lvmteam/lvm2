@@ -134,7 +134,7 @@ not ls "$RUNDIR/lvm/pvs_online/$PVID3"
 
 # pvscan cache ignores pv in a foreign vg
 
-aux lvmconf "global/system_id_source = uname"
+aux lvmconf "global/system_id_source = machineid"
 
 _clear_online_files
 
