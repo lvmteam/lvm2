@@ -1180,6 +1180,7 @@ int udev_dev_is_md_component(struct device *dev)
 	if (value && !strcmp(value, DEV_EXT_UDEV_BLKID_TYPE_SW_RAID)) {
 		log_debug("Device %s is md raid component based on blkid variable in udev db (%s=\"%s\").",
 			   dev_name(dev), DEV_EXT_UDEV_BLKID_TYPE, value);
+		dev->flags |= DEV_IS_MD_COMPONENT;
 		ret = 1;
 		goto out;
 	}

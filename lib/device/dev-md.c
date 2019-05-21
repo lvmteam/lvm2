@@ -216,14 +216,20 @@ int dev_is_md_component(struct device *dev, uint64_t *offset_found, int full)
 		if (!full) {
 			if (!ret || (ret == -EAGAIN)) {
 				if (udev_dev_is_md_component(dev))
-					return 1;
+					ret = 1;
 			}
 		}
+		if (ret && (ret != -EAGAIN))
+			dev->flags |= DEV_IS_MD_COMPONENT;
 		return ret;
 	}
 
-	if (dev->ext.src == DEV_EXT_UDEV)
-		return _udev_dev_is_md_component(dev);
+	if (dev->ext.src == DEV_EXT_UDEV) {
+		ret = _udev_dev_is_md_component(dev);
+		if (ret && (ret != -EAGAIN))
+			dev->flags |= DEV_IS_MD_COMPONENT;
+		return ret;
+	}
 
 	log_error(INTERNAL_ERROR "Missing hook for MD device recognition "
 		  "using external device info source %s", dev_ext_name(dev));

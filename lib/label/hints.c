@@ -901,6 +901,11 @@ int write_hint_file(struct cmd_context *cmd, int newhints)
 		if (!(dev->flags & DEV_SCAN_FOUND_LABEL))
 			continue;
 
+		if (dev->flags & DEV_IS_MD_COMPONENT) {
+			log_debug("exclude md component from hints %s", dev_name(dev));
+			continue;
+		}
+
 		/*
 		 * No vgname will be found here for a PV with no mdas,
 		 * in which case the vgname hint will be incomplete.
