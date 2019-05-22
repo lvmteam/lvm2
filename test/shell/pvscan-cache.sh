@@ -75,4 +75,7 @@ aux enable_dev "$dev2"
 pvscan --cache
 check pv_field "$dev1" vg_name "$vg1"
 
+vgchange -an $vg1
+lvremove $vg1/$lv1
+
 vgremove -ff $vg1
