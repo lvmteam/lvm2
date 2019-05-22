@@ -1,1 +1,8 @@
-pvck checks the LVM metadata for consistency on PVs.
+pvck checks LVM metadata on PVs.
+
+Use the --dump option to extract metadata from PVs for debugging.
+With dump, set --pvmetadatacopies 2 to extract metadata from a
+second metadata area at the end of the device. Use the --file
+option to save the raw metadata to a specified file. (The raw
+metadata is not usable with vgcfgbackup and vgcfgrestore.)
+

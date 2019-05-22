@@ -114,7 +114,7 @@ xx(pvresize,
    0)
 
 xx(pvck,
-   "Check the consistency of physical volume(s)",
+   "Check metadata on physical volumes",
    LOCKD_VG_SH)
 
 xx(pvcreate,

@@ -213,6 +213,11 @@ arg(driverloaded_ARG, '\0', "driverloaded", bool_VAL, 0, 0,
     "If set to no, the command will not attempt to use device-mapper.\n"
     "For testing and debugging.\n")
 
+arg(dump_ARG, '\0', "dump", string_VAL, 0, 0,
+    "Dump metadata from a PV. Option values include \\fBmetadata\\fP\n"
+    "to extract the current text metadata, and \\fBmetadata_area\\fP\n"
+    "to extract the entire text metadata area.\n")
+
 arg(errorwhenfull_ARG, '\0', "errorwhenfull", bool_VAL, 0, 0,
     "Specifies thin pool behavior when data space is exhausted.\n"
     "When yes, device-mapper will immediately return an error\n"

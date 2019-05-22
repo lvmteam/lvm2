@@ -168,6 +168,11 @@ unsigned lvmcache_mda_count(struct lvmcache_info *info);
 int lvmcache_vgid_is_cached(const char *vgid);
 uint64_t lvmcache_smallest_mda_size(struct lvmcache_info *info);
 
+struct metadata_area *lvmcache_get_mda(struct cmd_context *cmd,
+                                      const char *vgname,
+                                      struct device *dev,
+                                      int use_mda_num);
+
 int lvmcache_found_duplicate_pvs(void);
 int lvmcache_found_duplicate_vgnames(void);
 

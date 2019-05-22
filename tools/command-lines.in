@@ -1427,6 +1427,12 @@ ID: pvresize_general
 pvck PV ...
 OO: --labelsector Number
 ID: pvck_general
+DESC: Check for metadata on a device
+
+pvck --dump String PV
+OO: --file String, --pvmetadatacopies MetadataCopiesPV
+ID: pvck_dumpmetadata
+DESC: Dump raw metadata from a device
 
 ---
 

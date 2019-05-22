@@ -76,4 +76,18 @@ struct data_area_list {
 	struct disk_locn disk_locn;
 };
 
+int dump_metadata_text(struct cmd_context *cmd,
+                       const char *vgname,
+                       const char *vgid,
+                       struct device *dev,
+                       struct metadata_area *mda,
+                       const char *tofile);
+
+int dump_metadata_area(struct cmd_context *cmd,
+                       const char *vgname,
+                       const char *vgid,
+                       struct device *dev,
+                       struct metadata_area *mda,
+                       const char *tofile);
+
 #endif
