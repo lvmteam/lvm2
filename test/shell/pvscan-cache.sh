@@ -60,6 +60,7 @@ pvscan --cache -aay "$dev1"
 pvscan --cache -aay "$dev2"
 check lv_field $vg1/$lv1 lv_active "active"
 lvchange -an $vg1/$lv1
+lvremove $vg1/$lv1
 
 # When MDA is ignored on PV, do not read any VG
 # metadata from such PV as it may contain old
@@ -74,8 +75,5 @@ check pv_field "$dev1" vg_name "[unknown]"
 aux enable_dev "$dev2"
 pvscan --cache
 check pv_field "$dev1" vg_name "$vg1"
-
-vgchange -an $vg1
-lvremove $vg1/$lv1
 
 vgremove -ff $vg1
