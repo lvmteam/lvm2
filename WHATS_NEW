@@ -1,5 +1,6 @@
 Version 2.03.02 - 
 ===================================
+  Add pvck --dump option to extract metadata.
   Fix signal delivery checking race in libdaemon (lvmetad).
   Add missing Before=shutdown.target to LVM2 services to fix shutdown ordering.
   Skip autoactivation for a PV when PV size does not match device size.
