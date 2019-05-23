@@ -33,7 +33,8 @@ check lv_field $vg/$lv1 data_stripes 4
 check lv_field $vg/$lv1 stripes 4
 check lv_field $vg/$lv1 stripesize "32.00k"
 check lv_field $vg/$lv1 reshape_len_le ""
-echo y|mkfs -t ext4 $DM_DEV_DIR/$vg/$lv1
+wipefs -a $DM_DEV_DIR/$vg/$lv1
+mkfs -t ext4 $DM_DEV_DIR/$vg/$lv1
 fsck -fn $DM_DEV_DIR/$vg/$lv1
 
 # Convert striped -> raid5(_n)

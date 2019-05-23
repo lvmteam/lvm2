@@ -44,7 +44,8 @@ lvcreate --yes --type raid5_ls --stripes 13 -L190M -n$lv1 $vg
 check lv_first_seg_field $vg/$lv1 segtype "raid5_ls"
 check lv_first_seg_field $vg/$lv1 data_stripes 13
 check lv_first_seg_field $vg/$lv1 stripes 14
-echo y|mkfs -t ext4 /dev/$vg/$lv1
+wipefs -a /dev/$vg/$lv1
+mkfs -t ext4 /dev/$vg/$lv1
 aux wait_for_sync $vg $lv1
 
 mkdir -p $mount_dir

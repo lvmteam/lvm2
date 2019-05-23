@@ -30,7 +30,8 @@ check lv_field $vg/$lv1 segtype "raid5"
 check lv_field $vg/$lv1 stripes 4
 check lv_field $vg/$lv1 data_stripes 3
 check lv_field $vg/$lv1 region_size "256.00k"
-echo y|mkfs -t ext4 $DM_DEV_DIR/$vg/$lv1
+wipefs -a $DM_DEV_DIR/$vg/$lv1
+mkfs -t ext4 $DM_DEV_DIR/$vg/$lv1
 fsck -fn $DM_DEV_DIR/$vg/$lv1
 aux wait_for_sync $vg $lv1
 fsck -fn $DM_DEV_DIR/$vg/$lv1
