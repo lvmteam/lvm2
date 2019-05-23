@@ -59,7 +59,8 @@ check lv_field $vg1/$lv1 lv_active ""
 pvscan --cache -aay "$dev1"
 pvscan --cache -aay "$dev2"
 check lv_field $vg1/$lv1 lv_active "active"
-lvchange -an $vg1/$lv1
+lvchange -an -vvvv $vg1/$lv1
+dmsetup ls
 lvremove $vg1/$lv1
 
 # When MDA is ignored on PV, do not read any VG
