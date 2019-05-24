@@ -24,53 +24,48 @@ lvchange -a n $vg/mirror
 
 aux backup_dev "${DEVICES[@]}"
 
-init() {
+makeold() {
+	# reset metadata on all devs to starting condition
 	aux restore_dev "${DEVICES[@]}"
 	not check lv_field $vg/resized lv_size "8.00m"
+	# change the metadata on all devs
 	lvresize -L 8192K $vg/resized
+	# reset metadata on just dev1 to the previous version
 	aux restore_dev "$dev1"
 }
 
-init
-vgscan 2>&1 | tee cmd.out
-grep "Inconsistent metadata found for VG $vg" cmd.out
-vgscan 2>&1 | tee cmd.out
-not grep "Inconsistent metadata found for VG $vg" cmd.out
-check lv_field $vg/resized lv_size "8.00m"
+# create old metadata
+makeold
 
-# vgdisplay fixes
-init
-vgdisplay $vg 2>&1 | tee cmd.out
-grep "Inconsistent metadata found for VG $vg" cmd.out
-vgdisplay $vg 2>&1 | tee cmd.out
-not grep "Inconsistent metadata found for VG $vg" cmd.out
-check lv_field $vg/resized lv_size "8.00m"
-
-# lvs fixes up
-init
-lvs $vg 2>&1 | tee cmd.out
-grep "Inconsistent metadata found for VG $vg" cmd.out
-vgdisplay $vg 2>&1 | tee cmd.out
-not grep "Inconsistent metadata found for VG $vg" cmd.out
-check lv_field $vg/resized lv_size "8.00m"
-
-# vgs fixes up as well
-init
+# reports old metadata
 vgs $vg 2>&1 | tee cmd.out
-grep "Inconsistent metadata found for VG $vg" cmd.out
-vgs $vg 2>&1 | tee cmd.out
-not grep "Inconsistent metadata found for VG $vg" cmd.out
+grep "ignoring metadata" cmd.out
 check lv_field $vg/resized lv_size "8.00m"
 
-echo Check auto-repair of failed vgextend - metadata written to original pv but not new pv
+# corrects old metadata
+lvcreate -l1 -an $vg
+
+# no old report
+vgs $vg 2>&1 | tee cmd.out
+not grep "ignoring metadata" cmd.out
+check lv_field $vg/resized lv_size "8.00m"
+
+
+echo Check auto-repair of failed vgextend
+echo - metadata written to original pv but not new pv
+
 vgremove -f $vg
 pvremove -ff "${DEVICES[@]}"
 pvcreate "${DEVICES[@]}"
+
 aux backup_dev "$dev2"
 vgcreate $SHARED $vg "$dev1"
 vgextend $vg "$dev2"
 aux restore_dev "$dev2"
-vgscan
+
+vgs -o+vg_mda_count $vg
+pvs -o+vg_mda_count
+
 should check compare_fields vgs $vg vg_mda_count pvs "$dev2" vg_mda_count
 
 vgremove -ff $vg

@@ -148,6 +148,7 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 	struct logical_volume *lv;
 	int finished = 0;
 	uint32_t lockd_state = 0;
+	uint32_t error_flags = 0;
 	int ret;
 
 	if (!parms->wait_before_testing)
@@ -168,12 +169,10 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 		}
 
 		/* Locks the (possibly renamed) VG again */
-		vg = vg_read(cmd, id->vg_name, NULL, READ_FOR_UPDATE, lockd_state);
-		if (vg_read_error(vg)) {
+		vg = vg_read(cmd, id->vg_name, NULL, READ_FOR_UPDATE, lockd_state, &error_flags, NULL);
+		if (!vg) {
 			/* What more could we do here? */
-			log_error("ABORTING: Can't reread VG for %s.", id->display_name);
-			release_vg(vg);
-			vg = NULL;
+			log_error("ABORTING: Can't reread VG for %s error flags %x.", id->display_name, error_flags);
 			ret = 0;
 			goto out;
 		}
@@ -395,6 +394,7 @@ static int _report_progress(struct cmd_context *cmd, struct poll_operation_id *i
 	struct volume_group *vg;
 	struct logical_volume *lv;
 	uint32_t lockd_state = 0;
+	uint32_t error_flags = 0;
 	int ret;
 
 	/*
@@ -407,10 +407,9 @@ static int _report_progress(struct cmd_context *cmd, struct poll_operation_id *i
 	 * change done locally.
 	 */
 
-	vg = vg_read(cmd, id->vg_name, NULL, 0, lockd_state);
-	if (vg_read_error(vg)) {
-		release_vg(vg);
-		log_error("Can't reread VG for %s", id->display_name);
+	vg = vg_read(cmd, id->vg_name, NULL, 0, lockd_state, &error_flags, NULL);
+	if (!vg) {
+		log_error("Can't reread VG for %s error flags %x", id->display_name, error_flags);
 		ret = 0;
 		goto out_ret;
 	}

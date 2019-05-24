@@ -241,12 +241,10 @@ void del_bas(struct dm_list *bas)
 	del_das(bas);
 }
 
-/* FIXME: refactor this function with other mda constructor code */
 int add_mda(const struct format_type *fmt, struct dm_pool *mem, struct dm_list *mdas,
 	    struct device *dev, uint64_t start, uint64_t size, unsigned ignored,
 	    struct metadata_area **mda_new)
 {
-/* FIXME List size restricted by pv_header SECTOR_SIZE */
 	struct metadata_area *mdal, *mda;
 	struct mda_lists *mda_lists = (struct mda_lists *) fmt->private;
 	struct mda_context *mdac, *mdac2;
@@ -322,23 +320,22 @@ static int _text_initialise_label(struct labeller *l __attribute__((unused)),
 	return 1;
 }
 
-struct _update_mda_baton {
-	struct lvmcache_info *info;
-	struct label *label;
-};
-
-static int _read_mda_header_and_metadata(struct metadata_area *mda, void *baton)
+static int _read_mda_header_and_metadata(const struct format_type *fmt,
+					 struct metadata_area *mda,
+					 struct lvmcache_vgsummary *vgsummary,
+					 uint32_t *bad_fields)
 {
-	struct _update_mda_baton *p = baton;
-	const struct format_type *fmt = p->label->labeller->fmt;
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct mda_header *mdah;
-	struct lvmcache_vgsummary vgsummary = { 0 };
-	uint32_t bad_fields = 0;
 
-	if (!(mdah = raw_read_mda_header(fmt, &mdac->area, mda_is_primary(mda), 0, &bad_fields))) {
-		log_error("Failed to read mda header from %s", dev_name(mdac->area.dev));
-		goto fail;
+	if (!(mdah = raw_read_mda_header(fmt, &mdac->area, (mda->mda_num == 1), 0, bad_fields))) {
+		log_warn("WARNING: bad metadata header on %s at %llu.",
+			 dev_name(mdac->area.dev),
+			 (unsigned long long)mdac->area.start);
+		if (mda)
+			mda->header_start = mdac->area.start;
+		*bad_fields |= BAD_MDA_HEADER;
+		return 0;
 	}
 
 	if (mda)
@@ -350,42 +347,51 @@ static int _read_mda_header_and_metadata(struct metadata_area *mda, void *baton)
 		log_debug_metadata("Ignoring mda on device %s at offset " FMTu64,
 				   dev_name(mdac->area.dev),
 				   mdac->area.start);
+		vgsummary->mda_ignored = 1;
 		return 1;
 	}
 
 	if (!read_metadata_location_summary(fmt, mdah, mda_is_primary(mda), &mdac->area,
-					    &vgsummary, &mdac->free_sectors)) {
-		if (vgsummary.zero_offset)
+					    vgsummary, &mdac->free_sectors)) {
+		if (vgsummary->zero_offset)
 			return 1;
 
-		log_error("Failed to read metadata summary from %s", dev_name(mdac->area.dev));
-		goto fail;
-	}
-
-	if (!lvmcache_update_vgname_and_id(p->info, &vgsummary)) {
-		log_error("Failed to save lvm summary for %s", dev_name(mdac->area.dev));
-		goto fail;
+		log_warn("WARNING: bad metadata text on %s in mda%d",
+			 dev_name(mdac->area.dev), mda->mda_num);
+		*bad_fields |= BAD_MDA_TEXT;
+		return 0;
 	}
 
 	return 1;
-
-fail:
-	lvmcache_del(p->info);
-	return 0;
 }
+
+/*
+ * Used by label_scan to get a summary of the VG that exists on this PV.  This
+ * summary is stored in lvmcache vginfo/info/info->mdas and is used later by
+ * vg_read which needs to know which PVs to read for a given VG name, and where
+ * the metadata is at for those PVs.
+ */
 
 static int _text_read(struct labeller *labeller, struct device *dev, void *label_buf,
 		      uint64_t label_sector, int *is_duplicate)
 {
+	struct lvmcache_vgsummary vgsummary;
+	struct lvmcache_info *info;
+	const struct format_type *fmt = labeller->fmt;
 	struct label_header *lh = (struct label_header *) label_buf;
 	struct pv_header *pvhdr;
 	struct pv_header_extension *pvhdr_ext;
-	struct lvmcache_info *info;
+	struct metadata_area *mda;
+	struct metadata_area *mda1 = NULL;
+	struct metadata_area *mda2 = NULL;
 	struct disk_locn *dlocn_xl;
 	uint64_t offset;
 	uint32_t ext_version;
-	struct _update_mda_baton baton;
-	struct label *label;
+	uint32_t bad_fields;
+	int mda_count = 0;
+	int good_mda_count = 0;
+	int bad_mda_count = 0;
+	int rv1, rv2;
 
 	/*
 	 * PV header base
@@ -411,8 +417,6 @@ static int _text_read(struct labeller *labeller, struct device *dev, void *label
 				  FMT_TEXT_ORPHAN_VG_NAME, 0, is_duplicate)))
 		return_0;
 
-	label = lvmcache_get_label(info);
-
 	lvmcache_set_device_size(info, xlate64(pvhdr->device_size_xl));
 
 	lvmcache_del_das(info);
@@ -426,11 +430,27 @@ static int _text_read(struct labeller *labeller, struct device *dev, void *label
 		dlocn_xl++;
 	}
 
-	/* Metadata area headers */
 	dlocn_xl++;
+
+	/* Metadata areas */
 	while ((offset = xlate64(dlocn_xl->offset))) {
-		lvmcache_add_mda(info, dev, offset, xlate64(dlocn_xl->size), 0, NULL);
+
+		/*
+		 * This just calls add_mda() above, replacing info with info->mdas.
+		 */
+		lvmcache_add_mda(info, dev, offset, xlate64(dlocn_xl->size), 0, &mda);
+
 		dlocn_xl++;
+		mda_count++;
+
+		if (mda_count == 1) {
+			mda1 = mda;
+			mda1->mda_num = 1;
+		}
+		else if (mda_count == 2) {
+			mda2 = mda;
+			mda2->mda_num = 2;
+		}
 	}
 
 	dlocn_xl++;
@@ -440,7 +460,7 @@ static int _text_read(struct labeller *labeller, struct device *dev, void *label
 	 */
 	pvhdr_ext = (struct pv_header_extension *) ((char *) dlocn_xl);
 	if (!(ext_version = xlate32(pvhdr_ext->version)))
-		goto out;
+		goto scan_mdas;
 
 	log_debug_metadata("%s: PV header extension version " FMTu32 " found",
 			   dev_name(dev), ext_version);
@@ -457,22 +477,117 @@ static int _text_read(struct labeller *labeller, struct device *dev, void *label
 		lvmcache_add_ba(info, offset, xlate64(dlocn_xl->size));
 		dlocn_xl++;
 	}
-out:
-	baton.info = info;
-	baton.label = label;
 
-	/*
-	 * In the vg_read phase, we compare all mdas and decide which to use
-	 * which are bad and need repair.
-	 *
-	 * FIXME: this quits if the first mda is bad, but we need something
-	 * smarter to be able to use the second mda if it's good.
-	 */
-	if (!lvmcache_foreach_mda(info, _read_mda_header_and_metadata, &baton)) {
-		log_error("Failed to scan VG from %s", dev_name(dev));
-		return 0;
+ scan_mdas:
+	if (!mda_count) {
+		log_debug_metadata("Scanning %s found no mdas.", dev_name(dev));
+		return 1;
 	}
 
+	/*
+	 * Track which devs have bad metadata so repair can find them (even if
+	 * this dev also has good metadata that we are able to use).
+	 *
+	 * When bad metadata is seen, the unusable mda struct is removed from
+	 * lvmcache info->mdas.  This means that vg_read and vg_write will skip
+	 * the bad mda not try to read or write the bad metadata.  The bad mdas
+	 * are saved in a separate bad_mdas list in lvmcache so that repair can
+	 * find them to repair.
+	 */
+
+	if (mda1) {
+		log_debug_metadata("Scanning %s mda1 summary.", dev_name(dev));
+		memset(&vgsummary, 0, sizeof(vgsummary));
+		bad_fields = 0;
+		vgsummary.mda_num = 1;
+
+		rv1 = _read_mda_header_and_metadata(fmt, mda1, &vgsummary, &bad_fields);
+
+		if (rv1 && !vgsummary.zero_offset && !vgsummary.mda_ignored) {
+			if (!lvmcache_update_vgname_and_id(info, &vgsummary)) {
+				/* I believe this is only an internal error. */
+				log_warn("WARNING: Scanning %s mda1 failed to save internal summary.", dev_name(dev));
+
+				dm_list_del(&mda1->list);
+				bad_fields |= BAD_MDA_INTERNAL;
+				mda1->bad_fields = bad_fields;
+				lvmcache_save_bad_mda(info, mda1);
+				mda1 = NULL;
+				bad_mda_count++;
+			} else {
+				/* The normal success path */
+				log_debug("Scanned %s mda1 seqno %u", dev_name(dev), vgsummary.seqno);
+				good_mda_count++;
+			}
+		}
+
+		if (!rv1) {
+			/*
+			 * Remove the bad mda from normal mda list so it's not
+			 * used by vg_read/vg_write, but keep track of it in
+			 * lvmcache for repair.
+			 */
+			log_warn("WARNING: scanning %s mda1 failed to read metadata summary.", dev_name(dev));
+			log_warn("WARNING: repair VG metadata on %s with vgck --updatemetadata.", dev_name(dev));
+
+			dm_list_del(&mda1->list);
+			mda1->bad_fields = bad_fields;
+			lvmcache_save_bad_mda(info, mda1);
+			mda1 = NULL;
+			bad_mda_count++;
+		}
+	}
+
+	if (mda2) {
+		log_debug_metadata("Scanning %s mda2 summary.", dev_name(dev));
+		memset(&vgsummary, 0, sizeof(vgsummary));
+		bad_fields = 0;
+		vgsummary.mda_num = 2;
+
+		rv2 = _read_mda_header_and_metadata(fmt, mda2, &vgsummary, &bad_fields);
+
+		if (rv2 && !vgsummary.zero_offset && !vgsummary.mda_ignored) {
+			if (!lvmcache_update_vgname_and_id(info, &vgsummary)) {
+				/* I believe this is only an internal error. */
+				log_warn("WARNING: Scanning %s mda2 failed to save internal summary.", dev_name(dev));
+
+				dm_list_del(&mda2->list);
+				bad_fields |= BAD_MDA_INTERNAL;
+				mda2->bad_fields = bad_fields;
+				lvmcache_save_bad_mda(info, mda2);
+				mda2 = NULL;
+				bad_mda_count++;
+			} else {
+				/* The normal success path */
+				log_debug("Scanned %s mda2 seqno %u", dev_name(dev), vgsummary.seqno);
+				good_mda_count++;
+			}
+		}
+
+		if (!rv2) {
+			/*
+			 * Remove the bad mda from normal mda list so it's not
+			 * used by vg_read/vg_write, but keep track of it in
+			 * lvmcache for repair.
+			 */
+			log_warn("WARNING: scanning %s mda2 failed to read metadata summary.", dev_name(dev));
+			log_warn("WARNING: repair VG metadata on %s with vgck --updatemetadata.", dev_name(dev));
+
+			dm_list_del(&mda2->list);
+			mda2->bad_fields = bad_fields;
+			lvmcache_save_bad_mda(info, mda2);
+			mda2 = NULL;
+			bad_mda_count++;
+		}
+	}
+
+	if (good_mda_count)
+		return 1;
+
+	if (bad_mda_count)
+		return 0;
+
+	/* no metadata in the mdas */
 	return 1;
 }
 

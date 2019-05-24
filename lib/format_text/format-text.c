@@ -1357,7 +1357,7 @@ int read_metadata_location_summary(const struct format_type *fmt,
 	 * valid vg name.
 	 */
 	if (!validate_name(namebuf)) {
-		log_error("Metadata location on %s at %llu begins with invalid VG name.",
+		log_warn("WARNING: Metadata location on %s at %llu begins with invalid VG name.",
 			  dev_name(dev_area->dev),
 			  (unsigned long long)(dev_area->start + rlocn->offset));
 		return 0;
@@ -1423,7 +1423,7 @@ int read_metadata_location_summary(const struct format_type *fmt,
 				(off_t) (dev_area->start + MDA_HEADER_SIZE),
 				wrap, calc_crc, vgsummary->vgname ? 1 : 0,
 				vgsummary)) {
-		log_error("Metadata location on %s at %llu has invalid summary for VG.",
+		log_warn("WARNING: metadata on %s at %llu has invalid summary for VG.",
 			  dev_name(dev_area->dev),
 			  (unsigned long long)(dev_area->start + rlocn->offset));
 		return 0;
@@ -1431,7 +1431,7 @@ int read_metadata_location_summary(const struct format_type *fmt,
 
 	/* Ignore this entry if the characters aren't permissible */
 	if (!validate_name(vgsummary->vgname)) {
-		log_error("Metadata location on %s at %llu has invalid VG name.",
+		log_warn("WARNING: metadata on %s at %llu has invalid VG name.",
 			  dev_name(dev_area->dev),
 			  (unsigned long long)(dev_area->start + rlocn->offset));
 		return 0;
@@ -2508,3 +2508,4 @@ int text_wipe_outdated_pv_mda(struct cmd_context *cmd, struct device *dev,
 
 	return 1;
 }
+

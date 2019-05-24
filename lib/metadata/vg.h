@@ -122,11 +122,6 @@ struct volume_group {
 	struct dm_list removed_pvs;
 	uint32_t open_mode; /* FIXME: read or write - check lock type? */
 
-	/*
-	 * Store result of the last vg_read().
-	 * 0 for success else appropriate FAILURE_* bits set.
-	 */
-	uint32_t read_status;
 	uint32_t mda_copies; /* target number of mdas for this VG */
 
 	struct dm_hash_table *hostnames; /* map of creation hostnames */

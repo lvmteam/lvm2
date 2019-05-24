@@ -84,7 +84,7 @@ static void _free_vg(struct volume_group *vg)
 
 void release_vg(struct volume_group *vg)
 {
-	if (!vg || (vg->fid && vg == vg->fid->fmt->orphan_vg))
+	if (!vg || is_orphan_vg(vg->name))
 		return;
 
 	release_vg(vg->vg_committed);
@@ -711,9 +711,9 @@ int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	vg->extent_count -= pv_pe_count(pv);
 
 	/* FIXME: we don't need to vg_read the orphan vg here */
-	orphan_vg = vg_read_orphans(cmd, 0, vg->fid->fmt->orphan_vg_name);
+	orphan_vg = vg_read_orphans(cmd, vg->fid->fmt->orphan_vg_name);
 
-	if (vg_read_error(orphan_vg))
+	if (!orphan_vg)
 		goto bad;
 
 	if (!vg_split_mdas(cmd, vg, orphan_vg) || !vg->pv_count) {

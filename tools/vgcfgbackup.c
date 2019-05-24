@@ -67,12 +67,6 @@ static int _vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 		if (!backup_to_file(filename, vg->cmd->cmd_line, vg))
 			return_ECMD_FAILED;
 	} else {
-		if (vg_read_error(vg) == FAILED_INCONSISTENT) {
-			log_error("No backup taken: specify filename with -f "
-				  "to backup an inconsistent VG");
-			return ECMD_FAILED;
-		}
-
 		if (vg_missing_pv_count(vg)) {
 			log_error("No backup taken: specify filename with -f to backup with missing PVs.");
 			return ECMD_FAILED;
@@ -116,7 +110,7 @@ int vgcfgbackup(struct cmd_context *cmd, int argc, char **argv)
 
 	init_pvmove(1);
 
-	ret = process_each_vg(cmd, argc, argv, NULL, NULL, READ_ALLOW_INCONSISTENT, 0,
+	ret = process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0,
 			      handle, &_vg_backup_single);
 
 	free(last_filename);

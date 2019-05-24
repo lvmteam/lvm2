@@ -39,7 +39,6 @@ check pv_field "$dev2" pv_in_use "used"
 # disable $dev2 and dev1 with 0 MDAs remains, but still
 # marked as used, so pvcreate/vgcreate/pvremove should fail
 aux disable_dev "$dev2"
-pvscan --cache
 
 check pv_field "$dev1" pv_in_use "used"
 not pvcreate "$dev1" 2>err
@@ -71,20 +70,14 @@ vgcreate $vg1 "$dev1" "$dev2"
 # disable $dev1, then repair the VG - $dev1 is removed from VG
 aux disable_dev "$dev1"
 vgreduce --removemissing $vg1
-# now, enable $dev1, automatic repair will happen on pvs call
-# (or any other lvm command that does vg_read with repair inside)
-aux enable_dev "$dev1"
 
-# FIXME: once persistent cache does not cause races with timestamps
-#        causing LVM tools to not see the VG inconsistency and once
-#        VG repair is always done, delete this line which removes
-#        persistent .cache as a workaround
-rm -f "$TESTDIR/etc/.cache"
+# now, enable $dev1 and clear the old metadata from it
+aux enable_dev "$dev1"
+vgck --updatemetadata $vg1
 
 vgck $vg1
-# check $dev1 does not contain the PV_EXT_FLAG anymore - it
-# should be removed as part of the repaid during vg_read since
-# $dev1 is not part of $vg1 anymore
+
+# check $dev1 does not contain the PV_EXT_FLAG anymore
 check pv_field "$dev1" pv_in_use ""
 
 #############################################
@@ -105,7 +98,6 @@ check pv_field "$dev2" pv_in_use "used"
 
 pvchange --metadataignore y "$dev1"
 aux disable_dev "$dev2"
-pvscan --cache
 
 check pv_field "$dev1" pv_in_use "used"
 not pvcreate "$dev1" 2>err
@@ -136,20 +128,14 @@ vgcreate $vg1 "$dev1" "$dev2"
 # disable $dev1, then repair the VG - $dev1 is removed from VG
 aux disable_dev "$dev1"
 vgreduce --removemissing $vg1
-# now, enable $dev1, automatic repair will happen on pvs call
-# (or any other lvm command that does vg_read with repair inside)
-aux enable_dev "$dev1"
 
-# FIXME: once persistent cache does not cause races with timestamps
-#        causing LVM tools to not see the VG inconsistency and once
-#        VG repair is always done, delete this line which removes
-#        persistent .cache as a workaround
-rm -f "$TESTDIR/etc/.cache"
+# now, enable $dev1 and clear the old metadata from it
+aux enable_dev "$dev1"
+vgck --updatemetadata $vg1
 
 vgck $vg1
-# check $dev1 does not contain the PV_EXT_FLAG anymore - it
-# should be removed as part of the repaid during vg_read since
-# $dev1 is not part of $vg1 anymore
+
+# check $dev1 does not contain the PV_EXT_FLAG anymore
 check pv_field "$dev1" pv_in_use ""
 
 ###########################

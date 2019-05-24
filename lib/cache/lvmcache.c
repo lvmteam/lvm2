@@ -2122,6 +2122,14 @@ int lvmcache_fid_add_mdas_pv(struct lvmcache_info *info, struct format_instance 
 	return lvmcache_fid_add_mdas(info, fid, info->dev->pvid, ID_LEN);
 }
 
+/*
+ * This is the linkage where information is passed from
+ * the label_scan to vg_read.
+ *
+ * Called by create_text_instance in vg_read to copy the
+ * mda's found during label_scan and saved in info->mdas,
+ * to fid->metadata_areas_in_use which is used by vg_read.
+ */
 int lvmcache_fid_add_mdas_vg(struct lvmcache_vginfo *vginfo, struct format_instance *fid)
 {
 	struct lvmcache_info *info;

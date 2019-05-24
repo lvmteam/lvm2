@@ -181,15 +181,14 @@
 #define MIRROR_SKIP_INIT_SYNC	0x00000010U	/* skip initial sync */
 
 /* vg_read and vg_read_for_update flags */
-#define READ_ALLOW_INCONSISTENT	0x00010000U
 #define READ_ALLOW_EXPORTED	0x00020000U
 #define READ_OK_NOTFOUND	0x00040000U
 #define READ_WARN_INCONSISTENT	0x00080000U
 #define READ_FOR_UPDATE		0x00100000U /* A meta-flag, useful with toollib for_each_* functions. */
 #define PROCESS_SKIP_SCAN	 0x00200000U /* skip lvmcache_label_scan in process_each_pv */
 
-/* vg's "read_status" field */
-#define FAILED_INCONSISTENT	0x00000001U
+/* vg_read returns these in error_flags */
+#define FAILED_NOT_ENABLED	0x00000001U
 #define FAILED_LOCKING		0x00000002U
 #define FAILED_NOTFOUND		0x00000004U
 #define FAILED_READ_ONLY	0x00000008U
@@ -202,6 +201,7 @@
 #define FAILED_SYSTEMID		0x00000400U
 #define FAILED_LOCK_TYPE	0x00000800U
 #define FAILED_LOCK_MODE	0x00001000U
+#define FAILED_INTERNAL_ERROR	0x00002000U
 #define SUCCESS			0x00000000U
 
 #define VGMETADATACOPIES_ALL UINT32_MAX
@@ -717,24 +717,14 @@ int lv_resize(struct logical_volume *lv,
 	      struct lvresize_params *lp,
 	      struct dm_list *pvh);
 
-/*
- * Return a handle to VG metadata.
- */
-struct volume_group *vg_read_internal(struct cmd_context *cmd,
-                                      const char *vgname, const char *vgid,
-                                      uint32_t lockd_state, uint32_t warn_flags,
-                                      int enable_repair,
-                                      int *mdas_consistent);
-struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name,
-			     const char *vgid, uint32_t read_flags, uint32_t lockd_state);
+struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const char *vgid,
+			     uint32_t read_flags, uint32_t lockd_state,
+			     uint32_t *error_flags, struct volume_group **error_vg);
 struct volume_group *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
 			 const char *vgid, uint32_t read_flags, uint32_t lockd_state);
-struct volume_group *vg_read_orphans(struct cmd_context *cmd,
-                                             uint32_t warn_flags,
-                                             const char *orphan_vgname);
-/* 
- * Test validity of a VG handle.
- */
+struct volume_group *vg_read_orphans(struct cmd_context *cmd, const char *orphan_vgname);
+
+/* this is historical and being removed, don't use */
 uint32_t vg_read_error(struct volume_group *vg_handle);
 
 /* pe_start and pe_end relate to any existing data so that new metadata
@@ -757,7 +747,7 @@ uint32_t pv_list_extents_free(const struct dm_list *pvh);
 int validate_new_vg_name(struct cmd_context *cmd, const char *vg_name);
 int vg_validate(struct volume_group *vg);
 struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name);
-struct volume_group *vg_lock_and_create(struct cmd_context *cmd, const char *vg_name);
+struct volume_group *vg_lock_and_create(struct cmd_context *cmd, const char *vg_name, int *exists);
 int vg_remove_mdas(struct volume_group *vg);
 int vg_remove_check(struct volume_group *vg);
 void vg_remove_pvs(struct volume_group *vg);

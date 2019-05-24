@@ -43,14 +43,16 @@ pvs "$dev1"
 lvcreate -aey -m2 --type mirror -l4 --alloc anywhere --corelog -n $lv1 $vg2
 
 aux disable_dev "$dev3"
+
+pvs 2>&1| tee out
+grep "is missing PV" out
+
 lvconvert --yes --repair $vg2/$lv1
+
 aux enable_dev "$dev3"
 
-# here it should fix any reappeared devices
-lvs
-
 lvs -a $vg2 -o+devices 2>&1 | tee out
-not grep reappeared out
+not grep "is missing PV" out
 
 # This removes the first "vg1" using its uuid
 vgremove -ff -S vg_uuid=$UUID1

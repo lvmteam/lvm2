@@ -189,11 +189,12 @@ static int _printed_clustered_vg_advice = 0;
  * Case c covers the other errors returned when reading the VG.
  *   If *skip is 1, it's OK for the caller to read the list of PVs in the VG.
  */
-static int _ignore_vg(struct volume_group *vg, const char *vg_name,
-		      struct dm_list *arg_vgnames, uint32_t read_flags,
-		      int *skip, int *notfound)
+static int _ignore_vg(struct cmd_context *cmd,
+		      uint32_t error_flags, struct volume_group *error_vg,
+		      const char *vg_name, struct dm_list *arg_vgnames,
+		      uint32_t read_flags, int *skip, int *notfound)
 {
-	uint32_t read_error = vg_read_error(vg);
+	uint32_t read_error = error_flags;
 
 	*skip = 0;
 	*notfound = 0;
@@ -203,12 +204,9 @@ static int _ignore_vg(struct volume_group *vg, const char *vg_name,
 		return 0;
 	}
 
-	if ((read_error & FAILED_INCONSISTENT) && (read_flags & READ_ALLOW_INCONSISTENT))
-		read_error &= ~FAILED_INCONSISTENT; /* Check for other errors */
-
 	if (read_error & FAILED_CLUSTERED) {
-		if (arg_vgnames && str_list_match_item(arg_vgnames, vg->name)) {
-			log_error("Cannot access clustered VG %s.", vg->name);
+		if (arg_vgnames && str_list_match_item(arg_vgnames, vg_name)) {
+			log_error("Cannot access clustered VG %s.", vg_name);
 			if (!_printed_clustered_vg_advice) {
 				_printed_clustered_vg_advice = 1;
 				log_error("See lvmlockd(8) for changing a clvm/clustered VG to a shared VG.");
@@ -233,10 +231,13 @@ static int _ignore_vg(struct volume_group *vg, const char *vg_name,
 	 * would expect to fail.
 	 */
 	if (read_error & FAILED_SYSTEMID) {
-		if (arg_vgnames && str_list_match_item(arg_vgnames, vg->name)) {
+		if (arg_vgnames && str_list_match_item(arg_vgnames, vg_name)) {
 			log_error("Cannot access VG %s with system ID %s with %slocal system ID%s%s.",
-				  vg->name, vg->system_id, vg->cmd->system_id ? "" : "unknown ",
-				  vg->cmd->system_id ? " " : "", vg->cmd->system_id ? vg->cmd->system_id : "");
+				  vg_name,
+				  error_vg ? error_vg->system_id : "unknown ",
+				  cmd->system_id ? "" : "unknown ",
+				  cmd->system_id ? " " : "",
+				  cmd->system_id ? cmd->system_id : "");
 			return 1;
 		} else {
 			read_error &= ~FAILED_SYSTEMID; /* Check for other errors */
@@ -255,10 +256,11 @@ static int _ignore_vg(struct volume_group *vg, const char *vg_name,
 	 * command failed to acquire the necessary lock.)
 	 */
 	if (read_error & (FAILED_LOCK_TYPE | FAILED_LOCK_MODE)) {
-		if (arg_vgnames && str_list_match_item(arg_vgnames, vg->name)) {
+		if (arg_vgnames && str_list_match_item(arg_vgnames, vg_name)) {
 			if (read_error & FAILED_LOCK_TYPE)
 				log_error("Cannot access VG %s with lock type %s that requires lvmlockd.",
-					  vg->name, vg->lock_type);
+					  vg_name,
+					  error_vg ? error_vg->lock_type : "unknown");
 			/* For FAILED_LOCK_MODE, the error is printed in vg_read. */
 			return 1;
 		} else {
@@ -1924,10 +1926,12 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 	log_report_t saved_log_report_state = log_get_report_state();
 	char uuid[64] __attribute__((aligned(8)));
 	struct volume_group *vg;
+	struct volume_group *error_vg = NULL;
 	struct vgnameid_list *vgnl;
 	const char *vg_name;
 	const char *vg_uuid;
 	uint32_t lockd_state = 0;
+	uint32_t error_flags = 0;
 	int whole_selected = 0;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
@@ -1977,13 +1981,18 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 			continue;
 		}
 
-		vg = vg_read(cmd, vg_name, vg_uuid, read_flags, lockd_state);
-		if (_ignore_vg(vg, vg_name, arg_vgnames, read_flags, &skip, &notfound)) {
+		vg = vg_read(cmd, vg_name, vg_uuid, read_flags, lockd_state, &error_flags, &error_vg);
+		if (_ignore_vg(cmd, error_flags, error_vg, vg_name, arg_vgnames, read_flags, &skip, &notfound)) {
 			stack;
 			ret_max = ECMD_FAILED;
 			report_log_ret_code(ret_max);
+			if (error_vg)
+				unlock_and_release_vg(cmd, error_vg, vg_name);
 			goto endvg;
 		}
+		if (error_vg)
+			unlock_and_release_vg(cmd, error_vg, vg_name);
+
 		if (skip || notfound)
 			goto endvg;
 
@@ -2004,8 +2013,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 				ret_max = ret;
 		}
 
-		if (!vg_read_error(vg))
-			unlock_vg(cmd, vg, vg_name);
+		unlock_vg(cmd, vg, vg_name);
 endvg:
 		release_vg(vg);
 		if (!lockd_vg(cmd, vg_name, "un", 0, &lockd_state))
@@ -3590,11 +3598,13 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 	log_report_t saved_log_report_state = log_get_report_state();
 	char uuid[64] __attribute__((aligned(8)));
 	struct volume_group *vg;
+	struct volume_group *error_vg = NULL;
 	struct vgnameid_list *vgnl;
 	struct dm_str_list *sl;
 	struct dm_list *tags_arg;
 	struct dm_list lvnames;
 	uint32_t lockd_state = 0;
+	uint32_t error_flags = 0;
 	const char *vg_name;
 	const char *vg_uuid;
 	const char *vgn;
@@ -3663,13 +3673,18 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 			continue;
 		}
 
-		vg = vg_read(cmd, vg_name, vg_uuid, read_flags, lockd_state);
-		if (_ignore_vg(vg, vg_name, arg_vgnames, read_flags, &skip, &notfound)) {
+		vg = vg_read(cmd, vg_name, vg_uuid, read_flags, lockd_state, &error_flags, &error_vg);
+		if (_ignore_vg(cmd, error_flags, error_vg, vg_name, arg_vgnames, read_flags, &skip, &notfound)) {
 			stack;
 			ret_max = ECMD_FAILED;
 			report_log_ret_code(ret_max);
+			if (error_vg)
+				unlock_and_release_vg(cmd, error_vg, vg_name);
 			goto endvg;
 		}
+		if (error_vg)
+			unlock_and_release_vg(cmd, error_vg, vg_name);
+
 		if (skip || notfound)
 			goto endvg;
 
@@ -4294,10 +4309,12 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 	log_report_t saved_log_report_state = log_get_report_state();
 	char uuid[64] __attribute__((aligned(8)));
 	struct volume_group *vg;
+	struct volume_group *error_vg;
 	struct vgnameid_list *vgnl;
 	const char *vg_name;
 	const char *vg_uuid;
 	uint32_t lockd_state = 0;
+	uint32_t error_flags = 0;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
 	int skip;
@@ -4335,8 +4352,8 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 
 		log_debug("Processing PVs in VG %s", vg_name);
 
-		vg = vg_read(cmd, vg_name, vg_uuid, read_flags, lockd_state);
-		if (_ignore_vg(vg, vg_name, NULL, read_flags, &skip, &notfound)) {
+		vg = vg_read(cmd, vg_name, vg_uuid, read_flags, lockd_state, &error_flags, &error_vg);
+		if (_ignore_vg(cmd, error_flags, error_vg, vg_name, NULL, read_flags, &skip, &notfound)) {
 			stack;
 			ret_max = ECMD_FAILED;
 			report_log_ret_code(ret_max);
@@ -4348,22 +4365,26 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 			goto endvg;
 		
 		/*
-		 * Don't continue when skip is set, because we need to remove
-		 * vg->pvs entries from devices list.
+		 * Don't call "continue" when skip is set, because we need to remove
+		 * error_vg->pvs entries from devices list.
 		 */
 		
-		ret = _process_pvs_in_vg(cmd, vg, all_devices, arg_devices, arg_tags,
+		ret = _process_pvs_in_vg(cmd, vg ? vg : error_vg, all_devices, arg_devices, arg_tags,
 					 process_all_pvs, process_all_devices, skip,
 					 handle, process_single_pv);
 		if (ret != ECMD_PROCESSED)
 			stack;
+
 		report_log_ret_code(ret);
+
 		if (ret > ret_max)
 			ret_max = ret;
 
 		if (!skip)
 			unlock_vg(cmd, vg, vg->name);
 endvg:
+		if (error_vg)
+			unlock_and_release_vg(cmd, error_vg, vg_name);
 		release_vg(vg);
 		if (!lockd_vg(cmd, vg_name, "un", 0, &lockd_state))
 			stack;
@@ -5584,7 +5605,7 @@ do_command:
 	if (pp->preserve_existing && pp->orphan_vg_name) {
 		log_debug("Using existing orphan PVs in %s.", pp->orphan_vg_name);
 
-		if (!(orphan_vg = vg_read_orphans(cmd, 0, pp->orphan_vg_name))) {
+		if (!(orphan_vg = vg_read_orphans(cmd, pp->orphan_vg_name))) {
 			log_error("Cannot read orphans VG %s.", pp->orphan_vg_name);
 			goto bad;
 		}
