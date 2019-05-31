@@ -215,8 +215,9 @@ arg(driverloaded_ARG, '\0', "driverloaded", bool_VAL, 0, 0,
 
 arg(dump_ARG, '\0', "dump", string_VAL, 0, 0,
     "Dump metadata from a PV. Option values include \\fBmetadata\\fP\n"
-    "to extract the current text metadata, and \\fBmetadata_area\\fP\n"
-    "to extract the entire text metadata area.\n")
+    "to extract the current text metadata, \\fBmetadata_area\\fP\n"
+    "to extract the entire text metadata area, and \\fBheaders\\fP\n"
+    "to print and check LVM headers.\n")
 
 arg(errorwhenfull_ARG, '\0', "errorwhenfull", bool_VAL, 0, 0,
     "Specifies thin pool behavior when data space is exhausted.\n"
