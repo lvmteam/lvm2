@@ -83,13 +83,16 @@ static char *_chars_to_hexstr(void *in, void *out, int num, int max, const char 
 	return out;
 }
 
-static int _check_label_header(struct label_header *lh, uint64_t labelsector)
+static int _check_label_header(struct label_header *lh, uint64_t labelsector,
+			       int *found_label)
 {
 	uint32_t crc;
+	int good_id = 1, good_type = 1;
 	int bad = 0;
 
 	if (memcmp(lh->id, LABEL_ID, sizeof(lh->id))) {
 		log_print("CHECK: label_header.id expected %s", LABEL_ID);
+		good_id = 0;
 		bad++;
 	}
 
@@ -113,8 +116,13 @@ static int _check_label_header(struct label_header *lh, uint64_t labelsector)
 
 	if (memcmp(lh->type, LVM2_LABEL, sizeof(lh->type))) {
 		log_print("CHECK: label_header.type expected %s", LVM2_LABEL);
+		good_type = 0;
 		bad++;
 	}
+
+	/* Report a label is found if at least id and type are correct. */
+	if (found_label && good_id && good_type)
+		*found_label = 1;
 
 	if (bad)
 		return 0;
@@ -140,10 +148,11 @@ static int _check_pv_header(struct pv_header *ph)
  * mda_offset/mda_size are from the pv_header/disk_locn and could
  * be incorrect.
  */
-static int _check_mda_header(struct mda_header *mh, int mda_num, uint64_t mda_offset, uint64_t mda_size)
+static int _check_mda_header(struct mda_header *mh, int mda_num, uint64_t mda_offset, uint64_t mda_size, int *found_header)
 {
 	char str[256];
 	uint32_t crc;
+	int good_magic = 1;
 	int bad = 0;
 
 	crc = calc_crc(INITIAL_CRC, (uint8_t *)mh->magic,
@@ -156,6 +165,7 @@ static int _check_mda_header(struct mda_header *mh, int mda_num, uint64_t mda_of
 
 	if (memcmp(mh->magic, FMTT_MAGIC, sizeof(mh->magic))) {
 		log_print("CHECK: mda_header_%d.magic expected 0x%s", mda_num, _chars_to_hexstr((void *)&FMTT_MAGIC, str, 16, 256, "mda_header.magic"));
+		good_magic = 0;
 		bad++;
 	}
 
@@ -173,6 +183,10 @@ static int _check_mda_header(struct mda_header *mh, int mda_num, uint64_t mda_of
 		log_print("CHECK: mda_header_%d.size does not match pv_header.disk_locn.size %llu", mda_num, (unsigned long long)mda_size);
 		bad++;
 	}
+
+	/* Report a header is found if at least magic is correct. */
+	if (found_header && good_magic)
+		*found_header = 1;
 
 	if (bad)
 		return 0;
@@ -684,9 +698,10 @@ static int _dump_meta_text(struct device *dev,
 		config_destroy(cft);
 	}
 
-	log_print("metadata text at %llu crc 0x%x # vgname %s seqno %u",
-		  (unsigned long long)(mda_offset + meta_offset), crc,
-		  vgname ? vgname : "?", seqno);
+	if (print_fields || print_metadata)
+		log_print("metadata text at %llu crc 0x%x # vgname %s seqno %u",
+			  (unsigned long long)(mda_offset + meta_offset), crc,
+			  vgname ? vgname : "?", seqno);
 
 	if (!print_metadata)
 		goto out;
@@ -720,6 +735,7 @@ static int _dump_meta_text(struct device *dev,
 
 static int _dump_label_and_pv_header(struct cmd_context *cmd, int print_fields,
 				     struct device *dev,
+				     int *found_label,
 				     uint64_t *mda1_offset, uint64_t *mda1_size,
 				     uint64_t *mda2_offset, uint64_t *mda2_size)
 {
@@ -771,7 +787,7 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, int print_fields,
 		log_print("label_header.type %s", _chars_to_str(lh->type, str, 8, 256, "label_header.type"));
 	}
 
-	if (!_check_label_header(lh, labelsector))
+	if (!_check_label_header(lh, labelsector, found_label))
 		bad++;
 
 	/*
@@ -972,7 +988,8 @@ static int _dump_mda_header(struct cmd_context *cmd,
 			    const char *tofile,
 			    struct device *dev,
 			    uint64_t mda_offset, uint64_t mda_size,
-			    uint32_t *checksum0_ret)
+			    uint32_t *checksum0_ret,
+			    int *found_header)
 {
 	char str[256];
 	char *buf;
@@ -1018,7 +1035,7 @@ static int _dump_mda_header(struct cmd_context *cmd,
 		log_print("mda_header_%d.size %llu", mda_num, (unsigned long long)xlate64(mh->size));
 	}
 
-	if (!_check_mda_header(mh, mda_num, mda_offset, mda_size))
+	if (!_check_mda_header(mh, mda_num, mda_offset, mda_size, found_header))
 		bad++;
 
 	if (print_area) {
@@ -1108,7 +1125,7 @@ static int _dump_headers(struct cmd_context *cmd,
 
 	label_scan_setup_bcache();
 
-	if (!_dump_label_and_pv_header(cmd, 1, dev,
+	if (!_dump_label_and_pv_header(cmd, 1, dev, NULL,
 			&mda1_offset, &mda1_size, &mda2_offset, &mda2_size))
 		bad++;
 
@@ -1125,7 +1142,7 @@ static int _dump_headers(struct cmd_context *cmd,
 	 * which may have been corrupted.
 	 */
 
-	if (!_dump_mda_header(cmd, 1, 0, 0, NULL, dev, 4096, mda1_size, &mda1_checksum))
+	if (!_dump_mda_header(cmd, 1, 0, 0, NULL, dev, 4096, mda1_size, &mda1_checksum, NULL))
 		bad++;
 
 	/*
@@ -1136,7 +1153,7 @@ static int _dump_headers(struct cmd_context *cmd,
 	 * but there is a valid header elsewhere.
 	 */
 	if (mda2_offset) {
-		if (!_dump_mda_header(cmd, 1, 0, 0, NULL, dev, mda2_offset, mda2_size, &mda2_checksum))
+		if (!_dump_mda_header(cmd, 1, 0, 0, NULL, dev, mda2_offset, mda2_size, &mda2_checksum, NULL))
 			bad++;
 
 		/* This probably indicates that one was committed and the other not. */
@@ -1181,7 +1198,7 @@ static int _dump_metadata(struct cmd_context *cmd,
 
 	label_scan_setup_bcache();
 
-	if (!_dump_label_and_pv_header(cmd, 0, dev,
+	if (!_dump_label_and_pv_header(cmd, 0, dev, NULL,
 			&mda1_offset, &mda1_size, &mda2_offset, &mda2_size))
 		bad++;
 
@@ -1204,14 +1221,14 @@ static int _dump_metadata(struct cmd_context *cmd,
 	 */
 
 	if (mda_num == 1) {
-		if (!_dump_mda_header(cmd, 0, print_metadata, print_area, tofile, dev, 4096, mda1_size, &mda1_checksum))
+		if (!_dump_mda_header(cmd, 0, print_metadata, print_area, tofile, dev, 4096, mda1_size, &mda1_checksum, NULL))
 			bad++;
 	} else if (mda_num == 2) {
 		if (!mda2_offset) {
 			log_print("CHECK: second mda not found");
 			bad++;
 		} else {
-			if (!_dump_mda_header(cmd, 0, print_metadata, print_area, tofile, dev, mda2_offset, mda2_size, &mda2_checksum))
+			if (!_dump_mda_header(cmd, 0, print_metadata, print_area, tofile, dev, mda2_offset, mda2_size, &mda2_checksum, NULL))
 				bad++;
 		}
 	}
@@ -1223,16 +1240,59 @@ static int _dump_metadata(struct cmd_context *cmd,
 	return ECMD_PROCESSED;
 }
 
+static int _dump_found(struct cmd_context *cmd, struct device *dev,
+		       uint64_t labelsector)
+{
+	uint64_t mda1_offset = 0, mda1_size = 0, mda2_offset = 0, mda2_size = 0;
+	uint32_t mda1_checksum = 0, mda2_checksum = 0;
+	int found_label = 0, found_header1 = 0, found_header2 = 0;
+	int bad = 0;
+
+	if (!_dump_label_and_pv_header(cmd, 0, dev, &found_label,
+			&mda1_offset, &mda1_size, &mda2_offset, &mda2_size))
+		bad++;
+
+	if (found_label && mda1_offset) {
+		if (!_dump_mda_header(cmd, 0, 0, 0, NULL, dev, 4096, mda1_size, &mda1_checksum, &found_header1))
+			bad++;
+	}
+
+	if (found_label && mda2_offset) {
+		if (!_dump_mda_header(cmd, 0, 0, 0, NULL, dev, mda2_offset, mda2_size, &mda2_checksum, &found_header2))
+			bad++;
+	}
+
+	if (found_label)
+		log_print("Found label on %s, sector %llu, type=LVM2 001",
+			  dev_name(dev), (unsigned long long)labelsector);
+	else {
+		log_error("Could not find LVM label on %s", dev_name(dev));
+		return 0;
+	}
+
+	if (found_header1)
+		log_print("Found text metadata area: offset=%llu, size=%llu",
+			  (unsigned long long)mda1_offset,
+			  (unsigned long long)mda1_size);
+
+	if (found_header2)
+		log_print("Found text metadata area: offset=%llu, size=%llu",
+			  (unsigned long long)mda2_offset,
+			  (unsigned long long)mda2_size);
+
+	if (bad)
+		return 0;
+	return 1;
+}
+
 int pvck(struct cmd_context *cmd, int argc, char **argv)
 {
-	struct dm_list devs;
-	struct device_list *devl;
 	struct device *dev;
 	const char *dump;
 	const char *pv_name;
-	uint64_t labelsector;
+	uint64_t labelsector = 1;
+	int bad = 0;
 	int i;
-	int ret_max = ECMD_PROCESSED;
 
 	if (arg_is_set(cmd, dump_ARG)) {
 		dump = arg_str_value(cmd, dump_ARG, NULL);
@@ -1253,56 +1313,29 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	labelsector = arg_uint64_value(cmd, labelsector_ARG, UINT64_C(0));
+	/*
+	 * The old/original form of pvck, which did not do much,
+	 * but this is here to preserve the historical output.
+	 */
 
-	dm_list_init(&devs);
+	if (arg_is_set(cmd, labelsector_ARG))
+		labelsector = arg_uint64_value(cmd, labelsector_ARG, UINT64_C(0));
+
+	label_scan_setup_bcache();
 
 	for (i = 0; i < argc; i++) {
-		dm_unescape_colons_and_at_signs(argv[i], NULL, NULL);
-
 		pv_name = argv[i];
 
-		dev = dev_cache_get(cmd, pv_name, cmd->filter);
-
-		if (!dev) {
+		if (!(dev = dev_cache_get(cmd, argv[i], cmd->filter))) {
 			log_error("Device %s %s.", pv_name, dev_cache_filtered_reason(pv_name));
 			continue;
 		}
 
-		if (!(devl = zalloc(sizeof(*devl))))
-			continue;
-
-		devl->dev = dev;
-		dm_list_add(&devs, &devl->list);
+		if (!_dump_found(cmd, dev, labelsector))
+			bad++;
 	}
 
-	label_scan_setup_bcache();
-	label_scan_devs(cmd, cmd->filter, &devs);
-
-	dm_list_iterate_items(devl, &devs) {
-		/*
-		 * The scan above will populate lvmcache with any info from the
-		 * standard locations at the start of the device.  Now populate
-		 * lvmcache with any info from non-standard offsets.
-		 *
-		 * FIXME: is it possible for a real lvm label sector to be
-		 * anywhere other than the first four sectors of the disk?
-		 * If not, drop the code in label_read_sector/find_lvm_header
-		 * that supports searching at any sector.
-		 */
-		if (labelsector) {
-			if (!label_read_sector(devl->dev, labelsector)) {
-				stack;
-				ret_max = ECMD_FAILED;
-				continue;
-			}
-		}
-
-		if (!pv_analyze(cmd, devl->dev, labelsector)) {
-			stack;
-			ret_max = ECMD_FAILED;
-		}
-	}
-
-	return ret_max;
+	if (bad)
+		return ECMD_FAILED;
+	return ECMD_PROCESSED;
 }

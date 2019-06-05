@@ -1198,66 +1198,6 @@ int label_read(struct device *dev)
 	return 1;
 }
 
-/*
- * Read a label from a specfic, non-zero sector.  This is used in only
- * one place: pvck/pv_analyze.
- */
-
-int label_read_sector(struct device *dev, uint64_t read_sector)
-{
-	struct block *bb = NULL;
-	uint64_t block_num;
-	uint64_t block_sector;
-	uint64_t start_sector;
-	int is_lvm_device = 0;
-	int result;
-	int ret;
-
-	block_num = read_sector / BCACHE_BLOCK_SIZE_IN_SECTORS;
-	block_sector = block_num * BCACHE_BLOCK_SIZE_IN_SECTORS;
-	start_sector = read_sector % BCACHE_BLOCK_SIZE_IN_SECTORS;
-
-	if (!label_scan_open(dev)) {
-		log_error("Error opening device %s for prefetch %llu sector.",
-			  dev_name(dev), (unsigned long long)block_num);
-		return false;
-	}
-
-	bcache_prefetch(scan_bcache, dev->bcache_fd, block_num);
-
-	if (!bcache_get(scan_bcache, dev->bcache_fd, block_num, 0, &bb)) {
-		log_error("Scan failed to read %s at %llu",
-			  dev_name(dev), (unsigned long long)block_num);
-		ret = 0;
-		goto out;
-	}
-
-	/*
-	 * TODO: check if scan_sector is larger than the bcache block size.
-	 * If it is, we need to fetch a later block from bcache.
-	 */
-
-	result = _process_block(NULL, NULL, dev, bb, block_sector, start_sector, &is_lvm_device);
-
-	if (!result && is_lvm_device) {
-		log_error("Scan failed to process %s", dev_name(dev));
-		ret = 0;
-		goto out;
-	}
-
-	if (!result || !is_lvm_device) {
-		log_error("Could not find LVM label on %s", dev_name(dev));
-		ret = 0;
-		goto out;
-	}
-
-	ret = 1;
-out:
-	if (bb)
-		bcache_put(bb);
-	return ret;
-}
-
 int label_scan_setup_bcache(void)
 {
 	if (!scan_bcache) {

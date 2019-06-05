@@ -4664,41 +4664,6 @@ int is_real_vg(const char *vg_name)
 	return (vg_name && *vg_name != '#');
 }
 
-static int _analyze_mda(struct metadata_area *mda, void *baton)
-{
-	const struct format_type *fmt = baton;
-	mda->ops->pv_analyze_mda(fmt, mda);
-	return 1;
-}
-
-/*
- * Returns:
- *  0 - fail
- *  1 - success
- */
-int pv_analyze(struct cmd_context *cmd, struct device *dev,
-	       uint64_t label_sector)
-{
-	struct label *label;
-	struct lvmcache_info *info;
-
-	if (!(label = lvmcache_get_dev_label(dev))) {
-		log_error("Could not find LVM label on %s", dev_name(dev));
-		return 0;
-	}
-
-	log_print("Found label on %s, sector %"PRIu64", type=%.8s",
-		  dev_name(dev), label->sector, label->type);
-
-	/*
-	 * Next, loop through metadata areas
-	 */
-	info = label->info;
-	lvmcache_foreach_mda(info, _analyze_mda, (void *)lvmcache_fmt(info));
-
-	return 1;
-}
-
 /* FIXME: remove / combine this with locking? */
 int vg_check_write_mode(struct volume_group *vg)
 {
