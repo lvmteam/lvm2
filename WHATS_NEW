@@ -1,5 +1,6 @@
 Version 2.03.02 - 
 ===================================
+  Report no_discard_passdown for cache LVs with lvs -o+kernel_discards.
   Add pvck --dump option to extract metadata.
   Fix signal delivery checking race in libdaemon (lvmetad).
   Add missing Before=shutdown.target to LVM2 services to fix shutdown ordering.

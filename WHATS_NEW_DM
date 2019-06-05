@@ -1,5 +1,6 @@
 Version 1.02.155 - 
 ====================================
+  Parsing of cache status understand no_discard_passdown.
   Ensure migration_threshold for cache is at least 8 chunks.
   Include correct internal header inside libdm list.c.
   Enhance ioctl flattening and add parameters only when needed.

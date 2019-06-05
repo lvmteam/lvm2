@@ -903,6 +903,7 @@ int dm_tree_node_add_raid_target_with_params_v2(struct dm_tree_node *node,
 #define DM_CACHE_FEATURE_WRITETHROUGH 0x00000002
 #define DM_CACHE_FEATURE_PASSTHROUGH  0x00000004
 #define DM_CACHE_FEATURE_METADATA2    0x00000008 /* cache v1.10 */
+#define DM_CACHE_FEATURE_NO_DISCARD_PASSDOWN 0x00000010
 
 struct dm_config_node;
 /*

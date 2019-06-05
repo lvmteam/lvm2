@@ -245,6 +245,11 @@ char *lvseg_kernel_discards_dup_with_info_and_seg_status(struct dm_pool *mem, co
 			return 0;
 		}
 		s = get_pool_discards_name(d);
+	} else if (lvdm->seg_status.type == SEG_STATUS_CACHE) {
+		if (lvdm->seg_status.cache->feature_flags &
+		    DM_CACHE_FEATURE_NO_DISCARD_PASSDOWN) {
+			s = "nopassdown";
+		}
 	}
 
 	if (!(ret = dm_pool_strdup(mem, s))) {
