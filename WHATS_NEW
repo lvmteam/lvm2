@@ -1,5 +1,6 @@
 Version 2.02.186 - 
 ================================
+  Report no_discard_passdown for cache LVs with lvs -o+kernel_discards.
   Prevent shared active mirror LVs with lvmlockd.
 
 Version 2.02.185 - 13th May 2019

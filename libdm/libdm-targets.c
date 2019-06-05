@@ -296,6 +296,8 @@ int dm_get_status_cache(struct dm_pool *mem, const char *params,
 			s->feature_flags |= DM_CACHE_FEATURE_PASSTHROUGH;
 		else if (!strncmp(p, "metadata2 ", 10))
 			s->feature_flags |= DM_CACHE_FEATURE_METADATA2;
+		else if (!strncmp(p, "no_discard_passdown ", 20))
+			s->feature_flags |= DM_CACHE_FEATURE_NO_DISCARD_PASSDOWN;
 		else
 			log_error("Unknown feature in status: %s", params);
 
