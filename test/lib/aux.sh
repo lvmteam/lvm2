@@ -1171,7 +1171,7 @@ extend_filter() {
 	for rx in "$@"; do
 		filter=$(echo "$filter" | sed -e "s:\\[:[ \"$rx\", :")
 	done
-	lvmconf "$filter"
+	lvmconf "$filter" "devices/scan_lvs = 1"
 }
 
 extend_filter_LVMTEST() {
