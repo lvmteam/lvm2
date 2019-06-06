@@ -100,6 +100,7 @@ static struct dm_hash_table *_saved_vg_hash = NULL;
 static DM_LIST_INIT(_vginfos);
 static DM_LIST_INIT(_found_duplicate_devs);
 static DM_LIST_INIT(_unused_duplicate_devs);
+static DM_LIST_INIT(_prev_unused_duplicate_devs);
 static int _scanning_in_progress = 0;
 static int _has_scanned = 0;
 static int _vgs_locked = 0;
@@ -118,6 +119,7 @@ int lvmcache_init(struct cmd_context *cmd)
 	dm_list_init(&_vginfos);
 	dm_list_init(&_found_duplicate_devs);
 	dm_list_init(&_unused_duplicate_devs);
+	dm_list_init(&_prev_unused_duplicate_devs);
 
 	if (!(_vgname_hash = dm_hash_create(128)))
 		return 0;
@@ -1152,14 +1154,14 @@ next:
 
 		if (!prev_unchosen1 && !prev_unchosen2) {
 			/*
-			 * The cmd list saves the unchosen preference across
+			 * The prev list saves the unchosen preference across
 			 * lvmcache_destroy.  Sometimes a single command will
 			 * fill lvmcache, destroy it, and refill it, and we
 			 * want the same duplicate preference to be preserved
 			 * in each instance of lvmcache for a single command.
 			 */
-			prev_unchosen1 = _dev_in_device_list(dev1, &cmd->unused_duplicate_devs);
-			prev_unchosen2 = _dev_in_device_list(dev2, &cmd->unused_duplicate_devs);
+			prev_unchosen1 = _dev_in_device_list(dev1, &_prev_unused_duplicate_devs);
+			prev_unchosen2 = _dev_in_device_list(dev2, &_prev_unused_duplicate_devs);
 		}
 
 		dev1_major = MAJOR(dev1->dev);
@@ -2575,8 +2577,8 @@ void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 	dm_list_init(&_vginfos);
 
 	/*
-	 * Copy the current _unused_duplicate_devs into a cmd list before
-	 * destroying _unused_duplicate_devs.
+	 * Move the current _unused_duplicate_devs to _prev_unused_duplicate_devs
+	 * before destroying _unused_duplicate_devs.
 	 *
 	 * One command can init/populate/destroy lvmcache multiple times.  Each
 	 * time it will encounter duplicates and choose the preferrred devs.
@@ -2584,8 +2586,8 @@ void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 	 * the unpreferred devs here so that _choose_preferred_devs can use
 	 * this to make the same choice each time.
 	 */
-	dm_list_init(&cmd->unused_duplicate_devs);
-	lvmcache_get_unused_duplicate_devs(cmd, &cmd->unused_duplicate_devs);
+	_destroy_duplicate_device_list(&_prev_unused_duplicate_devs);
+	dm_list_splice(&_prev_unused_duplicate_devs, &_unused_duplicate_devs);
 	_destroy_duplicate_device_list(&_unused_duplicate_devs);
 	_destroy_duplicate_device_list(&_found_duplicate_devs); /* should be empty anyway */
 	_found_duplicate_pvs = 0;

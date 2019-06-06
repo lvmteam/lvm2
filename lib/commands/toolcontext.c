@@ -1983,8 +1983,6 @@ struct cmd_context *create_toolcontext(unsigned is_clvmd,
 	if (!init_lvmcache_orphans(cmd))
 		goto_out;
 
-	dm_list_init(&cmd->unused_duplicate_devs);
-
 	if (!_init_segtypes(cmd))
 		goto_out;
 
