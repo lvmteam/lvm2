@@ -134,6 +134,8 @@ not ls "$RUNDIR/lvm/pvs_online/$PVID3"
 
 # pvscan cache ignores pv in a foreign vg
 
+if [ -e "/etc/machine-id" ]; then
+
 aux lvmconf "global/system_id_source = machineid"
 
 _clear_online_files
@@ -167,6 +169,8 @@ lvs --foreign $vg2 > tmp
 cat tmp
 grep $lv2 tmp
 check lv_field $vg2/$lv2 lv_active "" --foreign
+
+fi
 
 
 # Test the case where pvscan --cache -aay (with no devs)
