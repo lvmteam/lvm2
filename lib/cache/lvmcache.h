@@ -91,7 +91,6 @@ void lvmcache_lock_vgname(const char *vgname, int read_only);
 void lvmcache_unlock_vgname(const char *vgname);
 
 /* Queries */
-const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd, const char *vgname, const char *vgid, unsigned revalidate_labels);
 int lvmcache_lookup_mda(struct lvmcache_vgsummary *vgsummary);
 
 struct lvmcache_vginfo *lvmcache_vginfo_from_vgname(const char *vgname,

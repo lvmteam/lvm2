@@ -71,7 +71,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	 * then do the initial label scan which reads all devices and
 	 * populates lvmcache with any VG name it finds.  If the VG name
 	 * we want to use exists, then the label scan will find it,
-	 * and the fmt_from_vgname call (used to check if the name exists)
+	 * and the vginfo_from_vgname call (used to check if the name exists)
 	 * will return non-NULL.
 	 */
 
@@ -82,7 +82,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	lvmcache_label_scan(cmd);
 
-	if (lvmcache_fmt_from_vgname(cmd, vp_new.vg_name, NULL, 0)) {
+	if (lvmcache_vginfo_from_vgname(vp_new.vg_name, NULL)) {
 		unlock_vg(cmd, NULL, vp_new.vg_name);
 		log_error("A volume group called %s already exists.", vp_new.vg_name);
 		return ECMD_FAILED;

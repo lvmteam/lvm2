@@ -278,60 +278,6 @@ struct lvmcache_vginfo *lvmcache_vginfo_from_vgname(const char *vgname, const ch
 	return vginfo;
 }
 
-const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd,
-						   const char *vgname, const char *vgid,
-						   unsigned revalidate_labels)
-{
-	struct lvmcache_vginfo *vginfo;
-	struct lvmcache_info *info;
-	struct dm_list *devh, *tmp;
-	struct dm_list devs;
-	struct device_list *devl;
-	char vgid_found[ID_LEN + 1] __attribute__((aligned(8)));
-
-	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
-		stack;
-		return NULL;
-	}
-
-	/*
-	 * If this function is called repeatedly, only the first one needs to revalidate.
-	 */
-	if (!revalidate_labels)
-		goto out;
-
-	/*
-	 * This function is normally called before reading metadata so
- 	 * we check cached labels here. Unfortunately vginfo is volatile.
- 	 */
-	dm_list_init(&devs);
-	dm_list_iterate_items(info, &vginfo->infos) {
-		if (!(devl = malloc(sizeof(*devl)))) {
-			log_error("device_list element allocation failed");
-			return NULL;
-		}
-		devl->dev = info->dev;
-		dm_list_add(&devs, &devl->list);
-	}
-
-	memcpy(vgid_found, vginfo->vgid, sizeof(vgid_found));
-
-	dm_list_iterate_safe(devh, tmp, &devs) {
-		devl = dm_list_item(devh, struct device_list);
-		label_read(devl->dev);
-		dm_list_del(&devl->list);
-		free(devl);
-	}
-
-	/* If vginfo changed, caller needs to rescan */
-	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid_found)) ||
-	    strncmp(vginfo->vgid, vgid_found, ID_LEN))
-		return NULL;
-
-out:
-	return vginfo->fmt;
-}
-
 struct lvmcache_vginfo *lvmcache_vginfo_from_vgid(const char *vgid)
 {
 	struct lvmcache_vginfo *vginfo;
