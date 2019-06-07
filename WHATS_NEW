@@ -1,3 +1,6 @@
+Version 2.03.04 - 
+================================
+
 Version 2.03.03 - 07th June 2019
 ================================
   Report no_discard_passdown for cache LVs with lvs -o+kernel_discards.
