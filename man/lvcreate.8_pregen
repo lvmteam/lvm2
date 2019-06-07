@@ -309,7 +309,8 @@ numeric suffix.
 In the usage section below, when creating a pool and the name is omitted
 the new LV pool name is generated with the
 "vpool" for vdo-pools  for prefix and a unique numeric suffix.
-Also pool name can be specified together with \fIVG\fP name i.e.:
+
+Pool name can be specified together with \fIVG\fP name i.e.:
 vg00/mythinpool.
 .SH USAGE
 Create a linear LV.
@@ -1097,7 +1098,7 @@ See \fBlvmcache\fP(7) for more information.
 .ad l
 \fB--cachepool\fP \fILV\fP
 .br
-The name of a cache pool LV.
+The name of a cache pool.
 .ad b
 .HP
 .ad l

@@ -88,6 +88,22 @@ devices {
 	# 
 	external_device_info_source = "none"
 
+	# Configuration option devices/hints.
+	# Use a local file to remember which devices have PVs on them.
+	# Some commands will use this as an optimization to reduce device
+	# scanning, and will only scan the listed PVs. Removing the hint file
+	# will cause lvm to generate a new one. Disable hints if PVs will
+	# be copied onto devices using non-lvm commands, like dd.
+	# 
+	# Accepted values:
+	#   all
+	#     Use all hints.
+	#   none
+	#     Use no hints.
+	# 
+	# This configuration option has an automatic default value.
+	# hints = "all"
+
 	# Configuration option devices/preferred_names.
 	# Select which path name to display for a block device.
 	# If multiple path names exist for a block device, and LVM needs to
@@ -167,8 +183,18 @@ devices {
 	sysfs_scan = 1
 
 	# Configuration option devices/scan_lvs.
-	# Scan LVM LVs for layered PVs.
-	scan_lvs = 1
+	# Scan LVM LVs for layered PVs, allowing LVs to be used as PVs.
+	# When 1, LVM will detect PVs layered on LVs, and caution must be
+	# taken to avoid a host accessing a layered VG that may not belong
+	# to it, e.g. from a guest image. This generally requires excluding
+	# the LVs with device filters. Also, when this setting is enabled,
+	# every LVM command will scan every active LV on the system (unless
+	# filtered), which can cause performance problems on systems with
+	# many active LVs. When this setting is 0, LVM will not detect or
+	# use PVs that exist on LVs, and will not allow a PV to be created on
+	# an LV. The LVs are ignored using a built in device filter that
+	# identifies and excludes LVs.
+	scan_lvs = 0
 
 	# Configuration option devices/multipath_component_detection.
 	# Ignore devices that are components of DM multipath devices.
@@ -720,7 +746,8 @@ log {
 
 	# Configuration option log/indent.
 	# Indent messages according to their severity.
-	indent = 1
+	# This configuration option has an automatic default value.
+	# indent = 0
 
 	# Configuration option log/command_names.
 	# Display the command name on each line of output.
@@ -746,6 +773,20 @@ log {
 	# available: memory, devices, io, activation, allocation,
 	# metadata, cache, locking, lvmpolld. Use "all" to see everything.
 	debug_classes = [ "memory", "devices", "io", "activation", "allocation", "metadata", "cache", "locking", "lvmpolld", "dbus" ]
+
+	# Configuration option log/debug_file_fields.
+	# The fields included in debug output written to log file.
+	# Use "all" to include everything (the default).
+	# This configuration option is advanced.
+	# This configuration option has an automatic default value.
+	# debug_file_fields = [ "time", "command", "fileline", "message" ]
+
+	# Configuration option log/debug_output_fields.
+	# The fields included in debug output written to stderr.
+	# Use "all" to include everything (the default).
+	# This configuration option is advanced.
+	# This configuration option has an automatic default value.
+	# debug_output_fields = [ "time", "command", "fileline", "message" ]
 }
 
 # Configuration section backup.
@@ -1174,6 +1215,16 @@ global {
 	# When enabled, an LVM command that changes PVs, changes VG metadata,
 	# or changes the activation state of an LV will send a notification.
 	notify_dbus = 1
+
+	# Configuration option global/io_memory_size.
+	# The amount of memory in KiB that LVM allocates to perform disk io.
+	# LVM performance may benefit from more io memory when there are many
+	# disks or VG metadata is large. Increasing this size may be necessary
+	# when a single copy of VG metadata is larger than the current setting.
+	# This value should usually not be decreased from the default; setting
+	# it too low can result in lvm failing to read VGs.
+	# This configuration option has an automatic default value.
+	# io_memory_size = 8192
 }
 
 # Configuration section activation.
