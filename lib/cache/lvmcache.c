@@ -117,11 +117,6 @@ void lvmcache_unlock_vgname(const char *vgname)
 	}
 }
 
-int lvmcache_vgs_locked(void)
-{
-	return _vgs_locked;
-}
-
 /*
  * When lvmcache sees a duplicate PV, this is set.
  * process_each_pv() can avoid searching for duplicates
@@ -1006,43 +1001,6 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	return r;
 }
 
-/*
- * lvmcache_label_scan() detects duplicates in the basic label_scan(), then
- * filters out some dups, and chooses preferred duplicates to use.
- */
-
-void lvmcache_pvscan_duplicate_check(struct cmd_context *cmd)
-{
-	struct device_list *devl;
-
-	/* Check if label_scan() detected any dups. */
-	if (!_found_duplicate_pvs)
-		return;
-
-	/*
-	 * Once all the dups are identified, they are moved from the
-	 * "found" list to the "unused" list to sort out.
-	 */
-	dm_list_splice(&_unused_duplicate_devs, &_found_duplicate_devs);
-
-	/*
-	 * Remove items from the dups list that we know are the same
-	 * underlying dev, e.g. md components, that we want to just ignore.
-	 */
-	_filter_duplicate_devs(cmd);
-
-	/*
-	 * no more dups after ignoring some
-	 */
-	if (!_found_duplicate_pvs)
-		return;
-
-	/* Duplicates are found where we would have to pick one. */
-
-	dm_list_iterate_items(devl, &_unused_duplicate_devs)
-		log_warn("WARNING: found device with duplicate %s", dev_name(devl->dev));
-}
-
 int lvmcache_get_vgnameids(struct cmd_context *cmd, int include_internal,
 			   struct dm_list *vgnameids)
 {
@@ -1069,49 +1027,6 @@ int lvmcache_get_vgnameids(struct cmd_context *cmd, int include_internal,
 		dm_list_add(vgnameids, &vgnl->list);
 	}
 
-	return 1;
-}
-
-struct dm_list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
-				const char *vgid)
-{
-	struct dm_list *pvids;
-	struct lvmcache_vginfo *vginfo;
-	struct lvmcache_info *info;
-
-	if (!(pvids = str_list_create(cmd->mem))) {
-		log_error("pvids list allocation failed");
-		return NULL;
-	}
-
-	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid)))
-		return pvids;
-
-	dm_list_iterate_items(info, &vginfo->infos) {
-		if (!str_list_add(cmd->mem, pvids,
-				  dm_pool_strdup(cmd->mem, info->dev->pvid))) {
-			log_error("strlist allocation failed");
-			return NULL;
-		}
-	}
-
-	return pvids;
-}
-
-int lvmcache_get_vg_devs(struct cmd_context *cmd,
-			 struct lvmcache_vginfo *vginfo,
-			 struct dm_list *devs)
-{
-	struct lvmcache_info *info;
-	struct device_list *devl;
-
-	dm_list_iterate_items(info, &vginfo->infos) {
-		if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
-			return_0;
-
-		devl->dev = info->dev;
-		dm_list_add(devs, &devl->list);
-	}
 	return 1;
 }
 
@@ -2393,26 +2308,6 @@ void lvmcache_set_ext_flags(struct lvmcache_info *info, uint32_t flags) {
 
 uint32_t lvmcache_ext_flags(struct lvmcache_info *info) {
 	return info->ext_flags;
-}
-
-int lvmcache_is_orphan(struct lvmcache_info *info) {
-	if (!info->vginfo)
-		return 1; /* FIXME? */
-	return is_orphan_vg(info->vginfo->vgname);
-}
-
-int lvmcache_vgid_is_cached(const char *vgid) {
-	struct lvmcache_vginfo *vginfo;
-
-	vginfo = lvmcache_vginfo_from_vgid(vgid);
-
-	if (!vginfo || !vginfo->vgname)
-		return 0;
-
-	if (is_orphan_vg(vginfo->vgname))
-		return 0;
-
-	return 1;
 }
 
 uint64_t lvmcache_smallest_mda_size(struct lvmcache_info *info)

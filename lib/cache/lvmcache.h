@@ -94,9 +94,6 @@ void lvmcache_unlock_vgname(const char *vgname);
 const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd, const char *vgname, const char *vgid, unsigned revalidate_labels);
 int lvmcache_lookup_mda(struct lvmcache_vgsummary *vgsummary);
 
-/* Decrement and test if there are still vg holders in vginfo. */
-int lvmcache_vginfo_holders_dec_and_test_for_zero(struct lvmcache_vginfo *vginfo);
-
 struct lvmcache_vginfo *lvmcache_vginfo_from_vgname(const char *vgname,
 					   const char *vgid);
 struct lvmcache_vginfo *lvmcache_vginfo_from_vgid(const char *vgid);
@@ -106,14 +103,9 @@ const char *lvmcache_vgid_from_vgname(struct cmd_context *cmd, const char *vgnam
 struct device *lvmcache_device_from_pvid(struct cmd_context *cmd, const struct id *pvid, uint64_t *label_sector);
 const char *lvmcache_vgname_from_info(struct lvmcache_info *info);
 const struct format_type *lvmcache_fmt_from_info(struct lvmcache_info *info);
-int lvmcache_vgs_locked(void);
 
 int lvmcache_get_vgnameids(struct cmd_context *cmd, int include_internal,
                           struct dm_list *vgnameids);
-
-/* Returns list of struct dm_str_list containing pool-allocated copy of pvids */
-struct dm_list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
-				const char *vgid);
 
 void lvmcache_drop_metadata(const char *vgname, int drop_precommitted);
 void lvmcache_commit_metadata(const char *vgname);
@@ -167,9 +159,7 @@ int lvmcache_foreach_pv(struct lvmcache_vginfo *vginfo,
 uint64_t lvmcache_device_size(struct lvmcache_info *info);
 void lvmcache_set_device_size(struct lvmcache_info *info, uint64_t size);
 struct device *lvmcache_device(struct lvmcache_info *info);
-int lvmcache_is_orphan(struct lvmcache_info *info);
 unsigned lvmcache_mda_count(struct lvmcache_info *info);
-int lvmcache_vgid_is_cached(const char *vgid);
 uint64_t lvmcache_smallest_mda_size(struct lvmcache_info *info);
 
 struct metadata_area *lvmcache_get_mda(struct cmd_context *cmd,
@@ -179,8 +169,6 @@ struct metadata_area *lvmcache_get_mda(struct cmd_context *cmd,
 
 int lvmcache_found_duplicate_pvs(void);
 int lvmcache_found_duplicate_vgnames(void);
-
-void lvmcache_pvscan_duplicate_check(struct cmd_context *cmd);
 
 int lvmcache_get_unused_duplicate_devs(struct cmd_context *cmd, struct dm_list *head);
 
@@ -193,31 +181,15 @@ void lvmcache_get_max_name_lengths(struct cmd_context *cmd,
 
 int lvmcache_vg_is_foreign(struct cmd_context *cmd, const char *vgname, const char *vgid);
 
-void lvmcache_lock_ordering(int enable);
-
 int lvmcache_dev_is_unchosen_duplicate(struct device *dev);
 
 void lvmcache_remove_unchosen_duplicate(struct device *dev);
 
 int lvmcache_pvid_in_unchosen_duplicates(const char *pvid);
 
-int lvmcache_get_vg_devs(struct cmd_context *cmd,
-			 struct lvmcache_vginfo *vginfo,
-			 struct dm_list *devs);
-void lvmcache_set_independent_location(const char *vgname);
-
 bool lvmcache_scan_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid);
 
 int lvmcache_vginfo_has_pvid(struct lvmcache_vginfo *vginfo, char *pvid);
-
-/*
- * These are clvmd-specific functions and are not related to lvmcache.
- * FIXME: rename these with a clvm_ prefix in place of lvmcache_
- */
-void lvmcache_save_vg(struct volume_group *vg, int precommitted);
-struct volume_group *lvmcache_get_saved_vg(const char *vgid, int precommitted);
-struct volume_group *lvmcache_get_saved_vg_latest(const char *vgid);
-void lvmcache_drop_saved_vgid(const char *vgid);
 
 uint64_t lvmcache_max_metadata_size(void);
 void lvmcache_save_metadata_size(uint64_t val);
