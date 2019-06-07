@@ -234,7 +234,6 @@ struct cmd_context {
 	const char *report_list_item_separator;
 	const char *time_format;
 	unsigned rand_seed;
-	struct dm_list unused_duplicate_devs; /* save preferences between lvmcache instances */
 };
 
 /*
