@@ -1,11 +1,15 @@
-Version 1.02.155 - 
+Version 1.02.159 - 07th June 2019
 ====================================
   Parsing of cache status understand no_discard_passdown.
   Ensure migration_threshold for cache is at least 8 chunks.
+
+Version 1.02.155 - 18th December 2018
+=====================================
   Include correct internal header inside libdm list.c.
   Enhance ioctl flattening and add parameters only when needed.
   Add DM_DEVICE_ARM_POLL for API completness matching kernel.
   Do not add parameters for RESUME with DM_DEVICE_CREATE dm task.
+  Fix dmstats report printing no output.
 
 Version 1.02.153 - 31st October 2018
 ====================================
