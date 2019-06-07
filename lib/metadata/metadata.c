@@ -985,29 +985,6 @@ int vg_has_unknown_segments(const struct volume_group *vg)
 	return 0;
 }
 
-struct volume_group *vg_lock_and_create(struct cmd_context *cmd, const char *vg_name, int *exists)
-{
-	uint32_t rc;
-	struct volume_group *vg;
-
-	if (!validate_name(vg_name)) {
-		log_error("Invalid vg name %s", vg_name);
-		return NULL;
-	}
-
-	rc = vg_lock_newname(cmd, vg_name);
-	if (rc == FAILED_EXIST)
-		*exists = 1;
-	if (rc != SUCCESS)
-		return NULL;
-
-	vg = vg_create(cmd, vg_name);
-	if (!vg)
-		unlock_vg(cmd, NULL, vg_name);
-
-	return vg;
-}
-
 /*
  * Create a VG with default parameters.
  */
@@ -3265,7 +3242,7 @@ static int _vg_read_orphan_pv(struct lvmcache_info *info, void *baton)
 /* Make orphan PVs look like a VG. */
 struct volume_group *vg_read_orphans(struct cmd_context *cmd, const char *orphan_vgname)
 {
-	const struct format_type *fmt;
+	const struct format_type *fmt = cmd->fmt;
 	struct lvmcache_vginfo *vginfo;
 	struct volume_group *vg = NULL;
 	struct _vg_read_orphan_baton baton;
@@ -3275,9 +3252,6 @@ struct volume_group *vg_read_orphans(struct cmd_context *cmd, const char *orphan
 	dm_list_init(&head.list);
 
 	if (!(vginfo = lvmcache_vginfo_from_vgname(orphan_vgname, NULL)))
-		return_NULL;
-
-	if (!(fmt = lvmcache_fmt_from_vgname(cmd, orphan_vgname, NULL, 0)))
 		return_NULL;
 
 	vg = fmt->orphan_vg;
@@ -3971,40 +3945,6 @@ uint32_t vg_read_error(struct volume_group *vg_handle)
 		return FAILED_ALLOCATION;
 
 	return SUCCESS;
-}
-
-/*
- * Lock a vgname and/or check for existence.
- * Takes a WRITE lock on the vgname before scanning.
- * If scanning fails or vgname found, release the lock.
- * NOTE: If you find the return codes confusing, you might think of this
- * function as similar to an open() call with O_CREAT and O_EXCL flags
- * (open returns fail with -EEXIST if file already exists).
- *
- * Returns:
- * FAILED_LOCKING - Cannot lock name
- * FAILED_EXIST - VG name already exists - cannot reserve
- * SUCCESS - VG name does not exist in system and WRITE lock held
- */
-uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
-{
-	if (!lock_vol(cmd, vgname, LCK_VG_WRITE, NULL))
-		return FAILED_LOCKING;
-
-	/* Find the vgname in the cache */
-	/* If it's not there we must do full scan to be completely sure */
-	if (!lvmcache_fmt_from_vgname(cmd, vgname, NULL, 1)) {
-		lvmcache_label_scan(cmd);
-		if (!lvmcache_fmt_from_vgname(cmd, vgname, NULL, 1)) {
-			lvmcache_label_scan(cmd);
-			if (!lvmcache_fmt_from_vgname(cmd, vgname, NULL, 0))
-				return SUCCESS; /* vgname not found after scanning */
-		}
-	}
-
-	/* Found vgname so cannot reserve. */
-	unlock_vg(cmd, NULL, vgname);
-	return FAILED_EXIST;
 }
 
 struct format_instance *alloc_fid(const struct format_type *fmt,
