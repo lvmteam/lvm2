@@ -31,6 +31,10 @@ test -f /proc/mdstat && grep -q raid1 /proc/mdstat || \
 
 aux lvmconf 'devices/md_component_detection = 1'
 
+# This stops lvm from taking advantage of hints which
+# will have already excluded md components.
+aux lvmconf 'devices/hints = "none"'
+
 # This stops lvm from asking udev if a dev is an md component.
 # LVM will ask udev if a dev is an md component, but we don't
 # want to rely on that ability in this test.
@@ -61,6 +65,10 @@ check lv_field $vg/$lv1 lv_active "active"
 pvs "$mddev"
 not pvs "$dev1"
 not pvs "$dev2"
+pvs > out
+not grep "$dev1" out
+not grep "$dev2" out
+
 sleep 1
 
 vgchange -an $vg
@@ -72,12 +80,14 @@ sleep 1
 mdadm --stop "$mddev"
 aux udev_wait
 
-# with md superblock 1.0 this pvs will report duplicates
-# for the two md legs since the md device itself is not
-# started
-pvs 2>&1 |tee out
-cat out
-grep "prefers device" out
+# The md components should still be detected and excluded.
+not pvs "$dev1"
+not pvs "$dev2"
+pvs > out
+not grep "$dev1" out
+not grep "$dev2" out
+
+pvs -vvvv
 
 # should not activate from the md legs
 not vgchange -ay $vg
@@ -104,16 +114,20 @@ not grep "active" out
 mdadm --assemble "$mddev" "$dev1" "$dev2"
 aux udev_wait
 
-# Now that the md dev is online, pvs can see it and
-# ignore the two legs, so there's no duplicate warning
+# Now that the md dev is online, pvs can see it
+# and check for components even if
+# md_component_checks is "start" (which disables
+# most default end-of-device scans)
+aux lvmconf 'devices/md_component_checks = "start"'
 
-pvs 2>&1 |tee out
-cat out
-not grep "prefers device" out
+not pvs "$dev1"
+not pvs "$dev2"
+pvs > out
+not grep "$dev1" out
+not grep "$dev2" out
 
-vgchange -ay $vg 2>&1 |tee out
-cat out
-not grep "prefers device" out
+
+vgchange -ay $vg
 
 check lv_field $vg/$lv1 lv_active "active"
 
@@ -123,6 +137,9 @@ aux udev_wait
 vgremove -f $vg
 
 aux cleanup_md_dev
+
+# Put this setting back to the default
+aux lvmconf 'devices/md_component_checks = "auto"'
 
 # create 2 disk MD raid0 array
 # by default using metadata format 1.0 with data at the end of device
@@ -149,6 +166,10 @@ check lv_field $vg/$lv1 lv_active "active"
 pvs "$mddev"
 not pvs "$dev1"
 not pvs "$dev2"
+pvs > out
+not grep "$dev1" out
+not grep "$dev2" out
+
 sleep 1
 
 vgchange -an $vg
@@ -160,7 +181,14 @@ sleep 1
 mdadm --stop "$mddev"
 aux udev_wait
 
-pvs 2>&1 |tee pvs.out
+# The md components should still be detected and excluded.
+not pvs "$dev1"
+not pvs "$dev2"
+pvs > out
+not grep "$dev1" out
+not grep "$dev2" out
+
+pvs -vvvv
 
 # should not activate from the md legs
 not vgchange -ay $vg
@@ -187,16 +215,19 @@ not grep "active" out
 mdadm --assemble "$mddev" "$dev1" "$dev2"
 aux udev_wait
 
-# Now that the md dev is online, pvs can see it and
-# ignore the two legs, so there's no duplicate warning
+# Now that the md dev is online, pvs can see it
+# and check for components even if
+# md_component_checks is "start" (which disables
+# most default end-of-device scans)
+aux lvmconf 'devices/md_component_checks = "start"'
 
-pvs 2>&1 |tee out
-cat out
-not grep "prefers device" out
+not pvs "$dev1"
+not pvs "$dev2"
+pvs > out
+not grep "$dev1" out
+not grep "$dev2" out
 
 vgchange -ay $vg 2>&1 |tee out
-cat out
-not grep "prefers device" out
 
 check lv_field $vg/$lv1 lv_active "active"
 

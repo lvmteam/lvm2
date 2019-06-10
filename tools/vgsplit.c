@@ -456,6 +456,7 @@ static struct volume_group *_vgsplit_to(struct cmd_context *cmd,
 					int *existing_vg)
 {
 	struct volume_group *vg_to = NULL;
+	int exists = 0;
 
 	log_verbose("Checking for new volume group \"%s\"", vg_name_to);
 	/*
@@ -468,13 +469,13 @@ static struct volume_group *_vgsplit_to(struct cmd_context *cmd,
 	 * we obtained a WRITE lock and could not find the vgname in the
 	 * system.  Thus, the split will be into a new VG.
 	 */
-	vg_to = vg_lock_and_create(cmd, vg_name_to);
-	if (vg_read_error(vg_to) == FAILED_LOCKING) {
+	vg_to = vg_lock_and_create(cmd, vg_name_to, &exists);
+	if (!vg_to && !exists) {
 		log_error("Can't get lock for %s", vg_name_to);
 		release_vg(vg_to);
 		return NULL;
 	}
-	if (vg_read_error(vg_to) == FAILED_EXIST) {
+	if (!vg_to && exists) {
 		*existing_vg = 1;
 		release_vg(vg_to);
 		vg_to = vg_read_for_update(cmd, vg_name_to, NULL, 0, 0);

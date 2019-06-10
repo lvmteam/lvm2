@@ -93,6 +93,9 @@ lvconvert --yes --uncache $vg/$lv1
 
 aux enable_dev "$dev2"
 
+# vg was changed while dev was missing
+vgextend --restoremissing $vg "$dev2"
+
 # FIXME: temporary workaround
 lvcreate -L1 -n $lv5 $vg
 lvremove -ff $vg

@@ -28,16 +28,25 @@ static int _restore_pv(struct volume_group *vg, const char *pv_name)
 		return 0;
 	}
 
-	if (!(pvl->pv->status & MISSING_PV)) {
-		log_warn("WARNING: PV %s was not missing in VG %s", pv_name, vg->name);
-		return 0;
-	}
-
 	if (!pvl->pv->dev) {
 		log_warn("WARNING: The PV %s is still missing.", pv_name);
 		return 0;
 	}
 
+	if (pvl->pv->status & MISSING_PV)
+		goto clear_flag;
+
+	/*
+	 * when the PV has no used PE's vg_read clears the MISSING_PV flag
+	 * and sets this so we know.
+	 */
+	if (pvl->pv->unused_missing_cleared)
+		goto clear_flag;
+
+	log_warn("WARNING: PV %s was not missing in VG %s", pv_name, vg->name);
+	return 0;
+
+clear_flag:
 	pvl->pv->status &= ~MISSING_PV;
 	return 1;
 }

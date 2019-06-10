@@ -15,6 +15,57 @@
 
 #include "tools.h"
 
+/*
+ * TODO: we cannot yet repair corruption in label_header, pv_header/locations,
+ * or corruption of some mda_header fields.
+ */
+
+static int _update_metadata_single(struct cmd_context *cmd __attribute__((unused)),
+		       const char *vg_name,
+		       struct volume_group *vg,
+		       struct processing_handle *handle __attribute__((unused)))
+{
+
+	/*
+	 * Simply calling vg_write can correct or clean up various things:
+	 * . some mda's have old versions of metdadata 
+	 * . wipe outdated PVs
+	 * . fix pv_header used flag and version
+	 * . strip historical lvs
+	 * . clear missing pv flag on unused PV
+	 */
+	if (!vg_write(vg)) {
+		log_error("Failed to write VG.");
+		return 0;
+	}
+
+	if (!vg_commit(vg)) {
+		log_error("Failed to commit VG.");
+		return 0;
+	}
+
+	/*
+	 * vg_write does not write to "bad" mdas (where "bad" is corrupt, can't
+	 * be processed when reading).  bad mdas are not kept in
+	 * fid->metadata_areas_in_use so vg_read and vg_write ignore them, but
+	 * they are saved in lvmcache.  this gets them from lvmcache and tries
+	 * to write this metadata to them.
+	 */
+	vg_write_commit_bad_mdas(cmd, vg);
+
+	return 1;
+}
+
+static int _update_metadata(struct cmd_context *cmd, int argc, char **argv)
+{
+	cmd->handles_missing_pvs = 1;
+	cmd->wipe_outdated_pvs = 1;
+	cmd->handles_unknown_segments = 1;
+
+	return process_each_vg(cmd, argc, argv, NULL, NULL, READ_FOR_UPDATE, 0, NULL,
+			       &_update_metadata_single);
+}
+
 static int vgck_single(struct cmd_context *cmd __attribute__((unused)),
 		       const char *vg_name,
 		       struct volume_group *vg,
@@ -37,6 +88,9 @@ static int vgck_single(struct cmd_context *cmd __attribute__((unused)),
 
 int vgck(struct cmd_context *cmd, int argc, char **argv)
 {
+	if (arg_is_set(cmd, updatemetadata_ARG))
+		return _update_metadata(cmd, argc, argv);
+
 	return process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0, NULL,
 			       &vgck_single);
 }

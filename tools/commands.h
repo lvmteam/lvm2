@@ -177,7 +177,7 @@ xx(vgchange,
 
 xx(vgck,
    "Check the consistency of volume group(s)",
-   ALL_VGS_IS_DEFAULT | LOCKD_VG_SH | ALLOW_HINTS)
+   ALL_VGS_IS_DEFAULT | LOCKD_VG_SH)
 
 xx(vgconvert,
    "Change volume group metadata format",

@@ -356,9 +356,9 @@ static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
 			  int *is_lvm_device)
 {
 	char label_buf[LABEL_SIZE] __attribute__((aligned(8)));
-	struct label *label = NULL;
 	struct labeller *labeller;
 	uint64_t sector = 0;
+	int is_duplicate = 0;
 	int ret = 0;
 	int pass;
 
@@ -423,17 +423,38 @@ static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
 
 	/*
 	 * This is the point where the scanning code dives into the rest of
-	 * lvm.  ops->read() is usually _text_read() which reads the pv_header,
-	 * mda locations, mda contents.  As these bits of data are read, they
-	 * are saved into lvmcache as info/vginfo structs.
+	 * lvm.  ops->read() is _text_read() which reads the pv_header, mda
+	 * locations, and metadata text.  All of the info it finds about the PV
+	 * and VG is stashed in lvmcache which saves it in the form of
+	 * info/vginfo structs.  That lvmcache info is used later when the
+	 * command wants to read the VG to do something to it.
 	 */
+	ret = labeller->ops->read(labeller, dev, label_buf, sector, &is_duplicate);
 
-	if ((ret = (labeller->ops->read)(labeller, dev, label_buf, &label)) && label) {
-		label->dev = dev;
-		label->sector = sector;
-	} else {
-		/* FIXME: handle errors */
-		lvmcache_del_dev(dev);
+	if (!ret) {
+		if (is_duplicate) {
+			/*
+			 * _text_read() called lvmcache_add() which found an
+			 * existing info struct for this PVID but for a
+			 * different dev.  lvmcache_add() did not add an info
+			 * struct for this dev, but added this dev to the list
+			 * of duplicate devs.
+			 */
+			log_warn("WARNING: scan found duplicate PVID %s on %s", dev->pvid, dev_name(dev));
+		} else {
+			/*
+			 * Leave the info in lvmcache because the device is
+			 * present and can still be used even if it has
+			 * metadata that we can't process (we can get metadata
+			 * from another PV/mda.) _text_read only saves mdas
+			 * with good metadata in lvmcache (this includes old
+			 * metadata), and if a PV has no mdas with good
+			 * metadata, then the info for the PV will be in
+			 * lvmcache with empty info->mdas, and it will behave
+			 * like a PV with no mdas (a common configuration.)
+			 */
+			log_warn("WARNING: scan failed to get metadata summary from %s PVID %s", dev_name(dev), dev->pvid);
+		}
 	}
  out:
 	return ret;
@@ -696,7 +717,6 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 				scan_failed = 1;
 				scan_process_errors++;
 				scan_failed_count++;
-				lvmcache_del_dev(devl->dev);
 			}
 		}
 
@@ -1019,6 +1039,33 @@ int label_scan(struct cmd_context *cmd)
 		} else {
 			/* The hints may be used by another device iteration. */
 			dm_list_splice(&cmd->hints, &hints_list);
+		}
+	}
+
+	/*
+	 * Stronger exclusion of md components that might have been
+	 * misidentified as PVs due to having an end-of-device md superblock.
+	 * If we're not using hints, and are not already doing a full md check
+	 * on devs being scanned, then if udev info is missing for a PV, scan
+	 * the end of the PV to verify it's not an md component.  The full
+	 * dev_is_md_component call will do new reads at the end of the dev.
+	 */
+	if (cmd->md_component_detection && !cmd->use_full_md_check && !using_hints &&
+	    !strcmp(cmd->md_component_checks, "auto")) {
+		int once = 0;
+		dm_list_iterate_items(devl, &scan_devs) {
+			if (!(devl->dev->flags & DEV_SCAN_FOUND_LABEL))
+				continue;
+			if (!(devl->dev->flags & DEV_UDEV_INFO_MISSING))
+				continue;
+			if (!once++)
+				log_debug_devs("Scanning end of PVs with no udev info for MD components");
+
+			if (dev_is_md_component(devl->dev, NULL, 1)) {
+				log_debug_devs("Drop PV from MD component %s", dev_name(devl->dev));
+				devl->dev->flags &= ~DEV_SCAN_FOUND_LABEL;
+				lvmcache_del_dev(devl->dev);
+			}
 		}
 	}
 

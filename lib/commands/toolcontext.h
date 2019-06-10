@@ -172,18 +172,21 @@ struct cmd_context {
 	unsigned pvscan_cache_single:1;
 	unsigned can_use_one_scan:1;
 	unsigned is_clvmd:1;
+	unsigned md_component_detection:1;
 	unsigned use_full_md_check:1;
 	unsigned is_activating:1;
 	unsigned enable_hints:1;		/* hints are enabled for cmds in general */
 	unsigned use_hints:1;			/* if hints are enabled this cmd can use them */
 	unsigned pvscan_recreate_hints:1;	/* enable special case hint handling for pvscan --cache */
 	unsigned scan_lvs:1;
+	unsigned wipe_outdated_pvs:1;
 
 	/*
 	 * Devices and filtering.
 	 */
 	struct dev_filter *filter;
 	struct dm_list hints;
+	const char *md_component_checks;
 
 	/*
 	 * Configuration.

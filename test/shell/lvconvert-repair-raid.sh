@@ -65,6 +65,7 @@ aux disable_dev "$dev2"
 lvconvert -y --repair $vg/$lv1
 vgreduce --removemissing $vg
 aux enable_dev "$dev2"
+vgck --updatemetadata $vg
 vgextend $vg "$dev2"
 lvremove -ff $vg/$lv1
 
@@ -80,6 +81,7 @@ aux wait_for_sync $vg $lv1
 lvconvert -y --repair $vg/$lv1
 vgreduce --removemissing $vg
 aux enable_dev "$dev2" "$dev3"
+vgck --updatemetadata $vg
 vgextend $vg "$dev2" "$dev3"
 lvremove -ff $vg/$lv1
 
@@ -96,6 +98,7 @@ aux disable_dev "$dev3"
 vgreduce --removemissing -f $vg
 lvconvert -y --repair $vg/$lv1
 aux enable_dev "$dev3"
+vgck --updatemetadata $vg
 pvcreate -yff "$dev3"
 vgextend $vg "$dev3"
 lvremove -ff $vg/$lv1
@@ -114,6 +117,7 @@ aux wait_for_sync $vg $lv1
 lvconvert -y --repair $vg/$lv1
 vgreduce --removemissing $vg
 aux enable_dev "$dev3"
+vgck --updatemetadata $vg
 vgextend $vg "$dev3"
 lvremove -ff $vg/$lv1
 
@@ -128,6 +132,7 @@ aux disable_dev "$dev4" "$dev5"
 lvconvert -y --repair $vg/$lv1
 vgreduce --removemissing $vg
 aux enable_dev "$dev4" "$dev5"
+vgck --updatemetadata $vg
 vgextend $vg "$dev4" "$dev5"
 lvremove -ff $vg/$lv1
 
@@ -145,6 +150,7 @@ aux wait_for_sync $vg $lv1
 lvconvert -y --repair $vg/$lv1
 vgreduce --removemissing $vg
 aux enable_dev "$dev4"
+vgck --updatemetadata $vg
 vgextend $vg "$dev4"
 lvremove -ff $vg/$lv1
 
@@ -163,6 +169,7 @@ aux wait_for_sync $vg $lv1
 lvconvert -y --repair $vg/$lv1
 vgreduce --removemissing $vg
 aux enable_dev "$dev4"
+vgck --updatemetadata $vg
 vgextend $vg "$dev4"
 lvremove -ff $vg/$lv1
 

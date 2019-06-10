@@ -37,6 +37,7 @@
 #define DEV_BCACHE_WRITE	0x00008000      /* bcache_fd is open with RDWR */
 #define DEV_SCAN_FOUND_LABEL	0x00010000      /* label scan read dev and found label */
 #define DEV_IS_MD_COMPONENT	0x00020000	/* device is an md component */
+#define DEV_UDEV_INFO_MISSING   0x00040000	/* we have no udev info for this device */
 
 /*
  * Support for external device info.

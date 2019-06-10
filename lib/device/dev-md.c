@@ -110,14 +110,17 @@ static int _udev_dev_is_md_component(struct device *dev)
 	if (!(ext = dev_ext_get(dev)))
 		return_0;
 
-	if (!(value = udev_device_get_property_value((struct udev_device *)ext->handle, DEV_EXT_UDEV_BLKID_TYPE)))
+	if (!(value = udev_device_get_property_value((struct udev_device *)ext->handle, DEV_EXT_UDEV_BLKID_TYPE))) {
+		dev->flags |= DEV_UDEV_INFO_MISSING;
 		return 0;
+	}
 
 	return !strcmp(value, DEV_EXT_UDEV_BLKID_TYPE_SW_RAID);
 }
 #else
 static int _udev_dev_is_md_component(struct device *dev)
 {
+	dev->flags |= DEV_UDEV_INFO_MISSING;
 	return 0;
 }
 #endif

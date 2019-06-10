@@ -368,7 +368,30 @@ cfg(devices_multipath_component_detection_CFG, "multipath_component_detection", 
 	"Ignore devices that are components of DM multipath devices.\n")
 
 cfg(devices_md_component_detection_CFG, "md_component_detection", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_MD_COMPONENT_DETECTION, vsn(1, 0, 18), NULL, 0, NULL,
-	"Ignore devices that are components of software RAID (md) devices.\n")
+	"Enable detection and exclusion of MD component devices.\n"
+	"An MD component device is a block device that MD uses as part\n"
+	"of a software RAID virtual device. When an LVM PV is created\n"
+	"on an MD device, LVM must only use the top level MD device as\n"
+	"the PV, and should ignore the underlying component devices.\n"
+	"In cases where the MD superblock is located at the end of the\n"
+	"component devices, it is more difficult for LVM to consistently\n"
+	"identify an MD component, see the md_component_checks setting.\n")
+
+cfg(devices_md_component_checks_CFG, "md_component_checks", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_MD_COMPONENT_CHECKS, vsn(2, 3, 2), NULL, 0, NULL,
+	"The checks LVM should use to detect MD component devices.\n"
+	"MD component devices are block devices used by MD software RAID.\n"
+	"#\n"
+	"Accepted values:\n"
+	"  auto\n"
+	"    LVM will skip scanning the end of devices when it has other\n"
+	"    indications that the device is not an MD component.\n"
+	"  start\n"
+	"    LVM will only scan the start of devices for MD superblocks.\n"
+	"    This does not incur extra I/O by LVM.\n"
+	"  full\n"
+	"    LVM will scan the start and end of devices for MD superblocks.\n"
+	"    This requires an extra read at the end of devices.\n"
+	"#\n")
 
 cfg(devices_fw_raid_component_detection_CFG, "fw_raid_component_detection", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_FW_RAID_COMPONENT_DETECTION, vsn(2, 2, 112), NULL, 0, NULL,
 	"Ignore devices that are components of firmware RAID devices.\n"

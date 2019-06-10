@@ -61,7 +61,8 @@ int add_ba(struct dm_pool *mem, struct dm_list *eas,
 	   uint64_t start, uint64_t size);
 void del_bas(struct dm_list *bas);
 int add_mda(const struct format_type *fmt, struct dm_pool *mem, struct dm_list *mdas,
-	    struct device *dev, uint64_t start, uint64_t size, unsigned ignored);
+	    struct device *dev, uint64_t start, uint64_t size, unsigned ignored,
+	    struct metadata_area **mda_new);
 void del_mdas(struct dm_list *mdas);
 
 /* On disk */
@@ -75,5 +76,8 @@ struct data_area_list {
 	struct dm_list list;
 	struct disk_locn disk_locn;
 };
+
+int text_wipe_outdated_pv_mda(struct cmd_context *cmd, struct device *dev,
+                              struct metadata_area *mda);
 
 #endif

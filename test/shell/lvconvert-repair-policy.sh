@@ -24,6 +24,8 @@ aux lvmconf 'allocation/maximise_cling = 0' \
 cleanup_() {
 	vgreduce --removemissing $vg
 	for d in "$@"; do aux enable_dev "$d"; done
+	# clear the outdated metadata on enabled devs before we can reuse them
+	vgck --updatemetadata $vg
 	for d in "$@"; do vgextend $vg "$d"; done
 	lvremove -ff $vg/mirror
 	lvcreate -aey --type mirror -m 1 --ignoremonitoring -l 2 -n mirror $vg "$dev1" "$dev2" "$dev3:0"

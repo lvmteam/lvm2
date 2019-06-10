@@ -123,8 +123,16 @@ check_and_cleanup_lvs_()
 recover_vg_()
 {
 	aux enable_dev "$@"
+
+	# clear outdated metadata on PVs so they can be used again
+	vgck --updatemetadata $vg
+
+	pvscan --cache
+
 	pvcreate -ff "$@"
+	# wipefs -a "$@"
 	vgextend $vg "$@"
+
 	check_and_cleanup_lvs_
 }
 

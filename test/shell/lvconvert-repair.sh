@@ -106,17 +106,23 @@ lvconvert -y --repair $vg/mirror
 vgreduce --removemissing $vg
 
 aux enable_dev "$dev1"
+# clear the outdated dev before we can reuse it
+vgck --updatemetadata $vg
 vgextend $vg "$dev1"
 aux disable_dev "$dev2"
 lvconvert -y --repair $vg/mirror
 vgreduce --removemissing $vg
 
 aux enable_dev "$dev2"
+# clear the outdated dev before we can reuse it
+vgck --updatemetadata $vg
 vgextend $vg "$dev2"
 aux disable_dev "$dev3"
 lvconvert -y --repair $vg/mirror
 vgreduce --removemissing $vg
 aux enable_dev "$dev3"
+# clear the outdated dev before we can reuse it
+vgck --updatemetadata $vg
 vgextend $vg "$dev3"
 
 vgremove -ff $vg
