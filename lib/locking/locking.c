@@ -384,6 +384,10 @@ int lockf_global(struct cmd_context *cmd, const char *mode)
 
 int lockf_global_convert(struct cmd_context *cmd, const char *mode)
 {
+	/* some uncommon cases like pvchange -a can call this multiple times */
+	if (cmd->lockf_global_ex && !strcmp(mode, "ex"))
+		return 1;
+
 	return _lockf_global(cmd, mode, 1);
 }
 
