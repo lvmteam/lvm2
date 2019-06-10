@@ -164,8 +164,16 @@ struct cmd_rule {
 /*
  * one or more from required_opt_args is required,
  * then the rest are optional.
+ *
+ * CMD_FLAG_ANY_REQUIRED_OPT: for lvchange/vgchange special case.
+ * The first ro_count entries of required_opt_args must be met
+ * (ro_count may be 0.)  After this, one or more options must be
+ * set from the remaining required_opt_args.  So, the first
+ * ro_count options in required_opt_args must match, and after
+ * that one or more of the remaining options in required_opt_args
+ * must match.
  */
-#define CMD_FLAG_ONE_REQUIRED_OPT   1  /* lvchange/vgchage require one item from required_opt_args */
+#define CMD_FLAG_ANY_REQUIRED_OPT   1
 #define CMD_FLAG_SECONDARY_SYNTAX   2  /* allows syntax variants to be suppressed in certain output */
 #define CMD_FLAG_PREVIOUS_SYNTAX    4  /* allows syntax variants to not be advertised in output */
 #define CMD_FLAG_PARSE_ERROR        8  /* error parsing command-lines.in def */
@@ -201,6 +209,8 @@ struct command {
 	struct opt_arg ignore_opt_args[CMD_IO_ARGS];
 
 	struct cmd_rule rules[CMD_MAX_RULES];
+
+	int any_ro_count;
 
 	int ro_count;
 	int oo_count;

@@ -1084,7 +1084,7 @@ static int _lvchange_properties_single(struct cmd_context *cmd,
 	 */
 
 	/* First group of options which allow for one metadata commit/update for the whole group */
-	for (i = 0; i < cmd->command->ro_count; i++) {
+	for (i = 0; i < cmd->command->ro_count + cmd->command->any_ro_count; i++) {
 		opt_enum = cmd->command->required_opt_args[i].opt;
 
 		if (!arg_is_set(cmd, opt_enum))
@@ -1206,7 +1206,7 @@ static int _lvchange_properties_single(struct cmd_context *cmd,
 		return_ECMD_FAILED;
 
 	/* Second group of options which need per option metadata commit+reload(s) */
-	for (i = 0; i < cmd->command->ro_count; i++) {
+	for (i = 0; i < cmd->command->ro_count + cmd->command->any_ro_count; i++) {
 		opt_enum = cmd->command->required_opt_args[i].opt;
 
 		if (!arg_is_set(cmd, opt_enum))

@@ -1192,7 +1192,7 @@ static void _set_valid_args_for_command_name(int ci)
 		if (strcmp(commands[i].name, command_names[ci].name))
 			continue;
 
-		for (ro = 0; ro < commands[i].ro_count; ro++) {
+		for (ro = 0; ro < (commands[i].ro_count + commands[i].any_ro_count); ro++) {
 			opt_enum = commands[i].required_opt_args[ro].opt;
 			all_args[opt_enum] = 1;
 
@@ -1533,7 +1533,7 @@ static int _command_required_pos_matches(struct cmd_context *cmd, int ci, int rp
  * For each command[i], check how many required opt/pos args cmd matches.
  * Save the command[i] that matches the most.
  *
- * commands[i].cmd_flags & CMD_FLAG_ONE_REQUIRED_OPT means
+ * commands[i].cmd_flags & CMD_FLAG_ANY_REQUIRED_OPT means
  * any one item from commands[i].required_opt_args needs to be
  * set to match.
  *
@@ -1551,7 +1551,7 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 	const char *name;
 	char opts_msg[MAX_OPTS_MSG];
 	char check_opts_msg[MAX_OPTS_MSG];
-	int match_required, match_ro, match_rp, match_type, match_unused, mismatch_required;
+	int match_required, match_ro, match_rp, match_any_ro, match_type, match_unused, mismatch_required;
 	int best_i = 0, best_required = 0, best_type = 0, best_unused = 0;
 	int close_i = 0, close_ro = 0, close_type = 0;
 	int only_i = 0;
@@ -1600,6 +1600,7 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 		match_required = 0;	/* required parameters that match */
 		match_ro = 0;		/* required opt_args that match */
 		match_rp = 0;		/* required pos_args that match */
+		match_any_ro = 0;
 		match_type = 0;		/* type arg matches */
 		match_unused = 0;	/* options set that are not accepted by command */
 		mismatch_required = 0;	/* required parameters that do not match */
@@ -1628,18 +1629,17 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 			}
 		}
 
-		/*
-		 * Special case where missing required_opt_arg's does not matter
-		 * if one required_opt_arg did match.
-		 */
-		if (commands[i].cmd_flags & CMD_FLAG_ONE_REQUIRED_OPT) {
-			if (match_ro) {
-				/* one or more of the required_opt_args is used */
-				mismatch_required = 0;
-			} else {
-				/* not even one of the required_opt_args is used */
-				mismatch_required = 1;
+		for (ro = commands[i].ro_count; ro < commands[i].ro_count + commands[i].any_ro_count; ro++) {
+			if (_command_required_opt_matches(cmd, i, ro)) {
+				/* log_warn("match %d any ro opt %d", i, commands[i].required_opt_args[ro].opt); */
+				match_any_ro++;
 			}
+		}
+
+		if ((commands[i].cmd_flags & CMD_FLAG_ANY_REQUIRED_OPT) && !match_any_ro) {
+			/* not even one of the any ro is used */
+			/* log_warn("match %d not one from any", i); */
+			mismatch_required = 1;
 		}
 
 		/* match required_pos_args */
@@ -1697,7 +1697,7 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 			accepted = 0;
 
 			/* NB in some cases required_opt_args are optional */
-			for (j = 0; j < commands[i].ro_count; j++) {
+			for (j = 0; j < commands[i].ro_count + commands[i].any_ro_count; j++) {
 				if (commands[i].required_opt_args[j].opt == opt_enum) {
 					accepted = 1;
 					break;

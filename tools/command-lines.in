@@ -1404,7 +1404,7 @@ OO_PVCHANGE: --autobackup Bool, --force, --reportformat ReportFmt, --uuid
 OO_PVCHANGE_META: --allocatable Bool, --addtag Tag, --deltag Tag,
 --uuid, --metadataignore Bool
 
-pvchange OO_PVCHANGE_META --all
+pvchange --all OO_PVCHANGE_META
 OO: OO_PVCHANGE
 IO: --ignoreskippedcluster
 ID: pvchange_properties_all
