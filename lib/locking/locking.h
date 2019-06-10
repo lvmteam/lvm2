@@ -22,7 +22,7 @@
 struct logical_volume;
 
 int init_locking(struct cmd_context *cmd, int file_locking_sysinit, int file_locking_readonly, int file_locking_ignorefail);
-void fin_locking(void);
+void fin_locking(struct cmd_context *cmd);
 void reset_locking(void);
 int vg_write_lock_held(void);
 

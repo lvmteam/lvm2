@@ -3043,7 +3043,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		ret = cmd->command->fn(cmd, argc, argv);
 
 	lvmlockd_disconnect();
-	fin_locking();
+	fin_locking(cmd);
 
 	if (!_cmd_no_meta_proc(cmd) && find_config_tree_bool(cmd, global_notify_dbus_CFG, NULL))
 		lvmnotify_send(cmd);

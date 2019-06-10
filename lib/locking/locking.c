@@ -156,11 +156,19 @@ int init_locking(struct cmd_context *cmd,
 	return 1;
 }
 
-void fin_locking(void)
+void fin_locking(struct cmd_context *cmd)
 {
 	/* file locking disabled */
 	if (!_locking.flags)
 		return;
+
+	/*
+	 * These may be automatically released when the
+	 * command ends, without an explicit unlock call,
+	 * in which case these flags would not be cleared.
+	 */
+	cmd->lockf_global_ex = 0;
+	cmd->lockd_global_ex = 0;
 
 	_locking.fin_locking();
 }
