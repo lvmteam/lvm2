@@ -1,5 +1,6 @@
-Version 2.03.04 - 
+Version 2.03.04 - 10th June 2019
 ================================
+  Remove unused_duplicate_devs from cmd causing segfault in dmeventd.
 
 Version 2.03.03 - 07th June 2019
 ================================
