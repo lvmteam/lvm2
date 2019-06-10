@@ -2942,12 +2942,12 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	    !init_filters(cmd, !refresh_done))
 		return_ECMD_FAILED;
 
-	if (arg_is_set(cmd, readonly_ARG))
-		cmd->metadata_read_only = 1;
+	cmd->metadata_read_only = arg_is_set(cmd, readonly_ARG);
 
-	if ((cmd->command->command_enum == vgchange_activate_CMD) ||
-	    (cmd->command->command_enum == lvchange_activate_CMD))
-		cmd->is_activating = 1;
+	cmd->is_activating = (cmd->command->command_enum == vgchange_activate_CMD) ||
+			     (cmd->command->command_enum == lvchange_activate_CMD);
+
+	cmd->wipe_outdated_pvs = 0;
 
 	/*
 	 * Now that all configs, profiles and command lines args are available,

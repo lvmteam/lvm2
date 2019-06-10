@@ -2664,7 +2664,7 @@ void lvmcache_del_outdated_devs(struct cmd_context *cmd,
 	struct lvmcache_info *info, *info2;
 
 	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
-		log_error(INTERNAL_ERROR "lvmcache_get_outdated_devs no vginfo");
+		log_error(INTERNAL_ERROR "lvmcache_del_outdated_devs no vginfo");
 		return;
 	}
 
