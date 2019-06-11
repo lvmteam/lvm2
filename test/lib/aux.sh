@@ -1421,7 +1421,7 @@ target_at_least() {
 	fi
 
 	local version
-	version=$(dmsetup targets 2>/dev/null | grep "${1##dm-} " 2>/dev/null)
+	version=$(dmsetup targets 2>/dev/null | grep "^${1##dm-} " 2>/dev/null)
 	version=${version##* v}
 
 	version_at_least "$version" "${@:2}" || {
