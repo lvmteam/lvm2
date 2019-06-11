@@ -947,11 +947,25 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	return r;
 }
 
-int lvmcache_get_vgnameids(struct cmd_context *cmd, int include_internal,
-			   struct dm_list *vgnameids)
+int lvmcache_get_vgnameids(struct cmd_context *cmd,
+			   struct dm_list *vgnameids,
+			   const char *only_this_vgname,
+			   int include_internal)
 {
 	struct vgnameid_list *vgnl;
 	struct lvmcache_vginfo *vginfo;
+
+	if (only_this_vgname) {
+		if (!(vgnl = dm_pool_alloc(cmd->mem, sizeof(*vgnl)))) {
+			log_error("vgnameid_list allocation failed.");
+			return 0;
+		}
+
+		vgnl->vg_name = dm_pool_strdup(cmd->mem, only_this_vgname);
+		vgnl->vgid = NULL;
+		dm_list_add(vgnameids, &vgnl->list);
+		return 1;
+	}
 
 	dm_list_iterate_items(vginfo, &_vginfos) {
 		if (!include_internal && is_orphan_vg(vginfo->vgname))

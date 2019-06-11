@@ -296,7 +296,7 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 		vgname_count = 1;
 	}
 
-	if (!get_vgnameids(cmd, &vgnameids_on_system, NULL, 0))
+	if (!lvmcache_get_vgnameids(cmd, &vgnameids_on_system, NULL, 0))
 		goto_out;
 
 retry_name:

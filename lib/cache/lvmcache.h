@@ -103,8 +103,10 @@ struct device *lvmcache_device_from_pvid(struct cmd_context *cmd, const struct i
 const char *lvmcache_vgname_from_info(struct lvmcache_info *info);
 const struct format_type *lvmcache_fmt_from_info(struct lvmcache_info *info);
 
-int lvmcache_get_vgnameids(struct cmd_context *cmd, int include_internal,
-                          struct dm_list *vgnameids);
+int lvmcache_get_vgnameids(struct cmd_context *cmd,
+                           struct dm_list *vgnameids,
+                           const char *only_this_vgname,
+                           int include_internal);
 
 void lvmcache_drop_metadata(const char *vgname, int drop_precommitted);
 void lvmcache_commit_metadata(const char *vgname);

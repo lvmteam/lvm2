@@ -696,9 +696,6 @@ int unlink_lv_from_vg(struct logical_volume *lv);
 void lv_set_visible(struct logical_volume *lv);
 void lv_set_hidden(struct logical_volume *lv);
 
-int get_vgnameids(struct cmd_context *cmd, struct dm_list *vgnameids,
-		  const char *only_this_vgname, int include_internal);
-
 int pv_write(struct cmd_context *cmd, struct physical_volume *pv, int allow_non_orphan);
 int move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 	    const char *pv_name);

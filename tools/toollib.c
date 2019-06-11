@@ -2262,7 +2262,7 @@ int process_each_vg(struct cmd_context *cmd,
 	 */
 	log_very_verbose("Obtaining the complete list of VGs to process");
 
-	if (!get_vgnameids(cmd, &vgnameids_on_system, NULL, include_internal)) {
+	if (!lvmcache_get_vgnameids(cmd, &vgnameids_on_system, NULL, include_internal)) {
 		ret_max = ECMD_FAILED;
 		goto_out;
 	}
@@ -3807,7 +3807,7 @@ int process_each_lv(struct cmd_context *cmd,
 	 */
 	log_very_verbose("Obtaining the complete list of VGs before processing their LVs");
 
-	if (!get_vgnameids(cmd, &vgnameids_on_system, NULL, 0)) {
+	if (!lvmcache_get_vgnameids(cmd, &vgnameids_on_system, NULL, 0)) {
 		ret_max = ECMD_FAILED;
 		goto_out;
 	}
@@ -4479,7 +4479,7 @@ int process_each_pv(struct cmd_context *cmd,
 	if (!(read_flags & PROCESS_SKIP_SCAN))
 		lvmcache_label_scan(cmd);
 
-	if (!get_vgnameids(cmd, &all_vgnameids, only_this_vgname, 1)) {
+	if (!lvmcache_get_vgnameids(cmd, &all_vgnameids, only_this_vgname, 1)) {
 		ret_max = ret;
 		goto_out;
 	}

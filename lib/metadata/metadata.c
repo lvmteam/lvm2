@@ -3566,28 +3566,6 @@ void set_pv_devices(struct format_instance *fid, struct volume_group *vg)
 		_set_pv_device(fid, vg, pvl->pv);
 }
 
-int get_vgnameids(struct cmd_context *cmd, struct dm_list *vgnameids,
-		  const char *only_this_vgname, int include_internal)
-{
-	struct vgnameid_list *vgnl;
-
-	if (only_this_vgname) {
-		if (!(vgnl = dm_pool_alloc(cmd->mem, sizeof(*vgnl)))) {
-			log_error("vgnameid_list allocation failed.");
-			return 0;
-		}
-
-		vgnl->vg_name = dm_pool_strdup(cmd->mem, only_this_vgname);
-		vgnl->vgid = NULL;
-		dm_list_add(vgnameids, &vgnl->list);
-		return 1;
-	}
-
-	lvmcache_get_vgnameids(cmd, include_internal, vgnameids);
-
-	return 1;
-}
-
 int pv_write(struct cmd_context *cmd,
 	     struct physical_volume *pv, int allow_non_orphan)
 {
