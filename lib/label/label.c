@@ -1118,7 +1118,37 @@ int label_scan_devs(struct cmd_context *cmd, struct dev_filter *f, struct dm_lis
 
 	_scan_list(cmd, f, devs, NULL);
 
-	/* FIXME: this function should probably fail if any devs couldn't be scanned */
+	return 1;
+}
+
+/*
+ * This function is used when the caller plans to write to the devs, so opening
+ * them RW during rescan avoids needing to close and reopen with WRITE in
+ * dev_write_bytes.
+ */
+
+int label_scan_devs_rw(struct cmd_context *cmd, struct dev_filter *f, struct dm_list *devs)
+{
+	struct device_list *devl;
+
+	if (!scan_bcache) {
+		if (!_setup_bcache(0))
+			return 0;
+	}
+
+	dm_list_iterate_items(devl, devs) {
+		if (_in_bcache(devl->dev)) {
+			bcache_invalidate_fd(scan_bcache, devl->dev->bcache_fd);
+			_scan_dev_close(devl->dev);
+		}
+		/*
+		 * With this flag set, _scan_dev_open() done by
+		 * _scan_list() will do open RW
+		 */
+		devl->dev->flags |= DEV_BCACHE_WRITE;
+	}
+
+	_scan_list(cmd, f, devs, NULL);
 
 	return 1;
 }

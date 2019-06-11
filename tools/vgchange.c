@@ -800,8 +800,10 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 			cmd->lockd_vg_enforce_sh = 1;
 	}
 
-	if (update || arg_is_set(cmd, activate_ARG))
+	if (update)
 		flags |= READ_FOR_UPDATE;
+	else if (arg_is_set(cmd, activate_ARG))
+		flags |= READ_FOR_ACTIVATE;
 
 	if (!(handle = init_processing_handle(cmd, NULL))) {
 		log_error("Failed to initialize processing handle.");

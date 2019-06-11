@@ -1435,7 +1435,7 @@ int lvchange_activate_cmd(struct cmd_context *cmd, int argc, char **argv)
 	} else /* Component LVs might be active, support easy deactivation */
 		cmd->process_component_lvs = 1;
 
-	ret = process_each_lv(cmd, argc, argv, NULL, NULL, READ_FOR_UPDATE,
+	ret = process_each_lv(cmd, argc, argv, NULL, NULL, READ_FOR_ACTIVATE,
 			      NULL, &_lvchange_activate_check, &_lvchange_activate_single);
 
 	if (ret != ECMD_PROCESSED)

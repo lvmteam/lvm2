@@ -4476,7 +4476,8 @@ void vg_write_commit_bad_mdas(struct cmd_context *cmd, struct volume_group *vg)
 static struct volume_group *_vg_read(struct cmd_context *cmd,
 				     const char *vgname,
 				     const char *vgid,
-				     unsigned precommitted)
+				     unsigned precommitted,
+				     int writing)
 {
 	const struct format_type *fmt = cmd->fmt;
 	struct format_instance *fid = NULL;
@@ -4530,8 +4531,11 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	 * we can also skip the rescan in that case.
 	 */
 	if (!cmd->can_use_one_scan || lvmcache_scan_mismatch(cmd, vgname, vgid)) {
-		log_debug_metadata("Rescanning devices for %s", vgname);
-		lvmcache_label_rescan_vg(cmd, vgname, vgid);
+		log_debug_metadata("Rescanning devices for %s %s", vgname, writing ? "rw" : "");
+		if (writing)
+			lvmcache_label_rescan_vg_rw(cmd, vgname, vgid);
+		else
+			lvmcache_label_rescan_vg(cmd, vgname, vgid);
 	} else {
 		log_debug_metadata("Skipped rescanning devices for %s", vgname);
 	}
@@ -4752,6 +4756,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	int missing_pv_flag = 0;
 	uint32_t failure = 0;
 	int writing = (read_flags & READ_FOR_UPDATE);
+	int activating = (read_flags & READ_FOR_ACTIVATE);
 
 	if (is_orphan_vg(vg_name)) {
 		log_very_verbose("Reading orphan VG %s", vg_name);
@@ -4766,13 +4771,23 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		return NULL;
 	}
 
-	if (!lock_vol(cmd, vg_name, writing ? LCK_VG_WRITE : LCK_VG_READ, NULL)) {
+	/*
+	 * When a command is reading the VG with the intention of eventually
+	 * writing it, it passes the READ_FOR_UPDATE flag.  This causes vg_read
+	 * to acquire an exclusive VG lock, and causes vg_read to do some more
+	 * checks, e.g. that the VG is writable and not exported.  It also
+	 * means that when the label scan is repeated on the VG's devices, the
+	 * VG's PVs can be reopened read-write when rescanning in anticipation
+	 * of needing to write to them.
+	 */
+
+	if (!lock_vol(cmd, vg_name, (writing || activating) ? LCK_VG_WRITE : LCK_VG_READ, NULL)) {
 		log_error("Can't get lock for %s", vg_name);
 		failure |= FAILED_LOCKING;
 		goto_bad;
 	}
 
-	if (!(vg = _vg_read(cmd, vg_name, vgid, 0))) {
+	if (!(vg = _vg_read(cmd, vg_name, vgid, 0, writing))) {
 		/* Some callers don't care if the VG doesn't exist and don't want an error message. */
 		if (!(read_flags & READ_OK_NOTFOUND))
 			log_error("Volume group \"%s\" not found", vg_name);
@@ -4883,29 +4898,36 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		goto_bad;
 	}
 
-	if (writing && !(read_flags & READ_ALLOW_EXPORTED) && vg_is_exported(vg)) {
-		log_error("Volume group %s is exported", vg->name);
-		failure |= FAILED_EXPORTED;
-		goto_bad;
-	}
+	/*
+	 * If the command intends to write or activate the VG, there are
+	 * additional restrictions.  FIXME: These restrictions should
+	 * probably be checked/applied after vg_read returns.
+	 */
+	if (writing || activating) {
+		if (!(read_flags & READ_ALLOW_EXPORTED) && vg_is_exported(vg)) {
+			log_error("Volume group %s is exported", vg->name);
+			failure |= FAILED_EXPORTED;
+			goto_bad;
+		}
 
-	if (writing && !(vg->status & LVM_WRITE)) {
-		log_error("Volume group %s is read-only", vg->name);
-		failure |= FAILED_READ_ONLY;
-		goto_bad;
-	}
+		if (!(vg->status & LVM_WRITE)) {
+			log_error("Volume group %s is read-only", vg->name);
+			failure |= FAILED_READ_ONLY;
+			goto_bad;
+		}
 
-	if (!cmd->handles_missing_pvs && (missing_pv_dev || missing_pv_flag) && writing) {
-		log_error("Cannot change VG %s while PVs are missing.", vg->name);
-		log_error("See vgreduce --removemissing and vgextend --restoremissing.");
-		failure |= FAILED_NOT_ENABLED;
-		goto_bad;
-	}
+		if (!cmd->handles_missing_pvs && (missing_pv_dev || missing_pv_flag)) {
+			log_error("Cannot change VG %s while PVs are missing.", vg->name);
+			log_error("See vgreduce --removemissing and vgextend --restoremissing.");
+			failure |= FAILED_NOT_ENABLED;
+			goto_bad;
+		}
 
-	if (!cmd->handles_unknown_segments && vg_has_unknown_segments(vg) && writing) {
-		log_error("Cannot change VG %s with unknown segments in it!", vg->name);
-		failure |= FAILED_NOT_ENABLED; /* FIXME new failure code here? */
-		goto_bad;
+		if (!cmd->handles_unknown_segments && vg_has_unknown_segments(vg)) {
+			log_error("Cannot change VG %s with unknown segments in it!", vg->name);
+			failure |= FAILED_NOT_ENABLED; /* FIXME new failure code here? */
+			goto_bad;
+		}
 	}
 
 	/*
