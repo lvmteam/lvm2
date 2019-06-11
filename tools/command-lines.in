@@ -198,7 +198,7 @@ OO_REPORT: --aligned, --all, --binary, --configreport ConfigReport, --foreign,
 --nameprefixes, --noheadings, --nosuffix,
 --options String, --readonly, --reportformat ReportFmt, --rows,
 --select String, --separator String, --shared, --sort String,
---trustcache, --unbuffered, --units Units, --unquoted
+--unbuffered, --units Units, --unquoted
 
 #
 # options for config, dumpconfig, lvmconfig
@@ -1384,7 +1384,7 @@ DESC: Resize a pool metadata SubLV by a specified size.
 lvs
 OO: --history, --segments, OO_REPORT
 OP: VG|LV|Tag ...
-IO: --partial, --ignoreskippedcluster
+IO: --partial, --ignoreskippedcluster, --trustcache
 ID: lvs_general
 
 ---
@@ -1486,7 +1486,7 @@ ID: pvremove_general
 pvs
 OO: --segments, OO_REPORT
 OP: PV|Tag ...
-IO: --partial, --ignoreskippedcluster
+IO: --partial, --ignoreskippedcluster, --trustcache
 ID: pvs_general
 
 ---
@@ -1752,7 +1752,7 @@ DESC: Rename a VG by specifying the VG UUID.
 vgs
 OO: OO_REPORT
 OP: VG|Tag ...
-IO: --partial, --ignoreskippedcluster
+IO: --partial, --ignoreskippedcluster, --trustcache
 ID: vgs_general
 
 ---
@@ -1807,7 +1807,7 @@ ID: devtypes_general
 fullreport
 OO: OO_REPORT
 OP: VG ...
-IO: --partial, --ignoreskippedcluster
+IO: --partial, --ignoreskippedcluster, --trustcache
 ID: fullreport_general
 
 lastlog

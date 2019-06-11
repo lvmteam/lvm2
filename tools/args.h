@@ -713,9 +713,8 @@ arg(trackchanges_ARG, '\0', "trackchanges", 0, 0, 0,
     "merging the split image (see --mergemirrors) or permanently splitting\n"
     "the image (see --splitmirrors with --name.\n")
 
-/* TODO: hide this? */
 arg(trustcache_ARG, '\0', "trustcache", 0, 0, 0,
-    "Avoids certain device scanning during command processing. Do not use.\n")
+    "No longer used.\n")
 
 arg(type_ARG, '\0', "type", segtype_VAL, 0, 0,
     "The LV type, also known as \"segment type\" or \"segtype\".\n"

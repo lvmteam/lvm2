@@ -2396,17 +2396,6 @@ static int _get_current_settings(struct cmd_context *cmd)
 	if (arg_is_set(cmd, binary_ARG))
 		cmd->report_binary_values_as_numeric = 1;
 
-	if (arg_is_set(cmd, trustcache_ARG)) {
-		if (arg_is_set(cmd, all_ARG)) {
-			log_error("--trustcache is incompatible with --all");
-			return EINVALID_CMD_LINE;
-		}
-		init_trust_cache(1);
-		log_warn("WARNING: Cache file of PVs will be trusted.  "
-			  "New devices holding PVs may get ignored.");
-	} else
-		init_trust_cache(0);
-
 	if (arg_is_set(cmd, noudevsync_ARG))
 		cmd->current_settings.udev_sync = 0;
 
