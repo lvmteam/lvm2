@@ -1,5 +1,12 @@
 Version 2.03.05 - 
 ================================
+  Fix command definition for pvchange -a.
+  Add vgck --updatemetadata command that will repair metadata problems.
+  Improve VG reading to work if one good copy of metadata is found.
+  Report/display/scan commands that read VGs will no longer write/repair.
+  Move metadata repairs from VG reading to VG writing.
+  Add config setting md_component_checks to control MD component checks.
+  Add end of device MD component checks when dev has no udev info.
 
 Version 2.03.04 - 10th June 2019
 ================================
