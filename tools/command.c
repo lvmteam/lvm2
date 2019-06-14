@@ -1292,7 +1292,7 @@ void factor_common_options(void)
 				if (strcmp(cmd->name, command_names[cn].name))
 					continue;
 
-				if (cmd->ro_count)
+				if (cmd->ro_count || cmd->any_ro_count)
 					command_names[cn].variant_has_ro = 1;
 				if (cmd->rp_count)
 					command_names[cn].variant_has_rp = 1;
@@ -1301,7 +1301,7 @@ void factor_common_options(void)
 				if (cmd->op_count)
 					command_names[cn].variant_has_op = 1;
 
-				for (ro = 0; ro < cmd->ro_count; ro++) {
+				for (ro = 0; ro < cmd->ro_count + cmd->any_ro_count; ro++) {
 					command_names[cn].all_options[cmd->required_opt_args[ro].opt] = 1;
 
 					if ((cmd->required_opt_args[ro].opt == size_ARG) && !strncmp(cmd->name, "lv", 2))
