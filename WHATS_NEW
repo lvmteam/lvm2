@@ -1,4 +1,4 @@
-Version 2.03.05 - 
+Version 2.03.05 - 15th June 2019
 ================================
   Fix command definition for pvchange -a.
   Add vgck --updatemetadata command that will repair metadata problems.
