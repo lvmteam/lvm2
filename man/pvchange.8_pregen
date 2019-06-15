@@ -16,17 +16,13 @@ others are optional.
 Change properties of all PVs.
 .br
 .P
-\fBpvchange\fP
+\fBpvchange\fP \fB-a\fP|\fB--all\fP
 .RS 4
 ( \fB-x\fP|\fB--allocatable\fP \fBy\fP|\fBn\fP,
 .ad b
 .br
 .ad l
   \fB-u\fP|\fB--uuid\fP,
-.ad b
-.br
-.ad l
-  \fB-a\fP|\fB--all\fP,
 .ad b
 .br
 .ad l

@@ -3,7 +3,7 @@
 vgck - Check the consistency of volume group(s)
 .
 .SH SYNOPSIS
-\fBvgck\fP
+\fBvgck\fP \fIoption_args\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
 .br
@@ -12,6 +12,9 @@ vgck - Check the consistency of volume group(s)
 .SH DESCRIPTION
 vgck checks LVM metadata for consistency.
 .SH USAGE
+Read and display information about a VG.
+.br
+.P
 \fBvgck\fP
 .br
 .RS 4
@@ -24,6 +27,21 @@ vgck checks LVM metadata for consistency.
 .br
 .RS 4
 [ \fIVG\fP|\fITag\fP ... ]
+.RE
+
+Rewrite VG metadata to correct problems.
+.br
+.P
+\fBvgck\fP \fB--updatemetadata\fP \fIVG\fP
+.br
+.RS 4
+[ COMMON_OPTIONS ]
+.RE
+.br
+
+Common options for command:
+.
+.RS 4
 .RE
 
 Common options for lvm:
@@ -175,6 +193,12 @@ This is implemented by disabling all metadata writing but nevertheless
 returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
+.ad b
+.HP
+.ad l
+\fB--updatemetadata\fP
+.br
+Update VG metadata to correct problems.
 .ad b
 .HP
 .ad l

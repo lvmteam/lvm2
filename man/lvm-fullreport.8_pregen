@@ -92,10 +92,6 @@ if information changes between commands.
 .ad b
 .br
 .ad l
-[    \fB--trustcache\fP ]
-.ad b
-.br
-.ad l
 [    \fB--unbuffered\fP ]
 .ad b
 .br
@@ -403,12 +399,6 @@ This is implemented by disabling all metadata writing but nevertheless
 returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
-.ad b
-.HP
-.ad l
-\fB--trustcache\fP
-.br
-Avoids certain device scanning during command processing. Do not use.
 .ad b
 .HP
 .ad l

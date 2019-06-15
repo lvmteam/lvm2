@@ -201,8 +201,33 @@ devices {
 	multipath_component_detection = 1
 
 	# Configuration option devices/md_component_detection.
-	# Ignore devices that are components of software RAID (md) devices.
+	# Enable detection and exclusion of MD component devices.
+	# An MD component device is a block device that MD uses as part
+	# of a software RAID virtual device. When an LVM PV is created
+	# on an MD device, LVM must only use the top level MD device as
+	# the PV, and should ignore the underlying component devices.
+	# In cases where the MD superblock is located at the end of the
+	# component devices, it is more difficult for LVM to consistently
+	# identify an MD component, see the md_component_checks setting.
 	md_component_detection = 1
+
+	# Configuration option devices/md_component_checks.
+	# The checks LVM should use to detect MD component devices.
+	# MD component devices are block devices used by MD software RAID.
+	# 
+	# Accepted values:
+	#   auto
+	#     LVM will skip scanning the end of devices when it has other
+	#     indications that the device is not an MD component.
+	#   start
+	#     LVM will only scan the start of devices for MD superblocks.
+	#     This does not incur extra I/O by LVM.
+	#   full
+	#     LVM will scan the start and end of devices for MD superblocks.
+	#     This requires an extra read at the end of devices.
+	# 
+	# This configuration option has an automatic default value.
+	# md_component_checks = "auto"
 
 	# Configuration option devices/fw_raid_component_detection.
 	# Ignore devices that are components of firmware RAID devices.
