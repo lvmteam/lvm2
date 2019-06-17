@@ -1694,7 +1694,7 @@ cfg(metadata_vgmetadatacopies_CFG, "vgmetadatacopies", metadata_CFG_SECTION, CFG
 	"and allows you to control which metadata areas are used at the\n"
 	"individual PV level using pvchange --metadataignore y|n.\n")
 
-cfg_runtime(metadata_pvmetadatasize_CFG, "pvmetadatasize", metadata_CFG_SECTION, CFG_DEFAULT_COMMENTED | CFG_DEFAULT_UNDEFINED, CFG_TYPE_INT, vsn(1, 0, 0), 0, NULL,
+cfg_runtime(metadata_pvmetadatasize_CFG, "pvmetadatasize", metadata_CFG_SECTION, CFG_DEFAULT_UNDEFINED, CFG_TYPE_INT, vsn(1, 0, 0), 0, NULL,
 	"The default size of the metadata area in units of 512 byte sectors.\n"
 	"The metadata area begins at an offset of the page size from the start\n"
 	"of the device. The first PE is by default at 1 MiB from the start of\n"
