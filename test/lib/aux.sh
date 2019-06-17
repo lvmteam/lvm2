@@ -26,7 +26,7 @@ expect_failure() {
 check_daemon_in_builddir() {
 	# skip if we don't have our own deamon...
 	if test -z "${installed_testsuite+varset}"; then
-		(which "$1" 2>/dev/null | grep -q "$abs_builddir") || skip "$1 is not in executed path."
+		(which "$1" 2>/dev/null | grep "$abs_builddir" >/dev/null ) || skip "$1 is not in executed path."
 	fi
 	rm -f debug.log strace.log
 }
@@ -167,7 +167,7 @@ prepare_clvmd() {
 
 	test -e "$DM_DEV_DIR/control" || dmsetup table >/dev/null # create control node
 	# skip if singlenode is not compiled in
-	(clvmd --help 2>&1 | grep "Available cluster managers" | grep -q "singlenode") || \
+	(clvmd --help 2>&1 | grep "Available cluster managers" | grep "singlenode" >/dev/null) || \
 		skip "Compiled clvmd does not support singlenode for testing."
 
 #	lvmconf "activation/monitoring = 1"
@@ -531,7 +531,7 @@ teardown() {
 	dm_table | not grep -E -q "$vg|$vg1|$vg2|$vg3|$vg4" || {
 		# Avoid activation of dmeventd if there is no pid
 		cfg=$(test -s LOCAL_DMEVENTD || echo "--config activation{monitoring=0}")
-		if dm_info suspended,name | grep -q "^Suspended:.*$PREFIX" ; then
+		if dm_info suspended,name | grep "^Suspended:.*$PREFIX" >/dev/null ; then
 			echo "## skipping vgremove, suspended devices detected."
 		else
 			vgremove -ff "$cfg"  \
@@ -662,7 +662,7 @@ prepare_scsi_debug_dev() {
 
 	# Skip test if scsi_debug module is unavailable or is already in use
 	modprobe --dry-run scsi_debug || skip
-	lsmod | not grep -q scsi_debug || skip
+	lsmod | not grep scsi_debug >/dev/null || skip
 
 	# Create the scsi_debug device and determine the new scsi device's name
 	# NOTE: it will _never_ make sense to pass num_tgts param;
@@ -1447,7 +1447,7 @@ driver_at_least() {
 }
 
 have_thin() {
-	lvm segtypes 2>/dev/null | grep -q thin$ || {
+	lvm segtypes 2>/dev/null | grep thin$ >/dev/null || {
 		echo "Thin is not built-in." >&2
 		return 1
 	}
@@ -1471,7 +1471,7 @@ have_thin() {
 }
 
 have_vdo() {
-	lvm segtypes 2>/dev/null | grep -q vdo$ || {
+	lvm segtypes 2>/dev/null | grep vdo$ >/dev/null || {
 		echo "VDO is not built-in." >&2
 		return 1
 	}
@@ -1507,7 +1507,7 @@ have_raid4 () {
 }
 
 have_cache() {
-	lvm segtypes 2>/dev/null | grep -q cache$ || {
+	lvm segtypes 2>/dev/null | grep cache$ >/dev/null || {
 		echo "Cache is not built-in." >&2
 		return 1
 	}
