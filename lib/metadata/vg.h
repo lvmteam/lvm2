@@ -42,6 +42,7 @@ struct volume_group {
 	struct lvmcache_vginfo *vginfo;
 	uint32_t seqno;		/* Metadata sequence number */
 	unsigned skip_validate_lock_args : 1;
+	uint32_t write_count; /* count the number of vg_write calls */
 
 	/*
 	 * The parsed committed (on-disk) copy of this VG; is NULL if this VG is committed

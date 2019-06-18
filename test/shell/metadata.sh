@@ -26,6 +26,10 @@ pvcreate --metadatacopies 0 "$dev5"
 vgcreate $SHARED "$vg" "${DEVICES[@]}"
 lvcreate -n $lv -l 1 -i5 -I256 $vg
 
+pvck --dump metadata "$dev1" > meta1
+grep "description = " meta1 > desc1
+grep "Write from lvcreate" desc1
+
 pvchange -x n "$dev1"
 pvchange -x y "$dev1"
 vgchange -a n $vg

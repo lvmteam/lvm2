@@ -493,6 +493,29 @@ static struct volume_group *_vg_read_precommit_raw(struct format_instance *fid,
 	return vg;
 }
 
+#define MAX_DESC_LEN 2048
+
+static char *_build_desc_write(struct cmd_context *cmd, struct volume_group *vg)
+{
+	size_t len = strlen(cmd->cmd_line) + 32;
+	char *desc;
+
+	if (len > MAX_DESC_LEN)
+		len = MAX_DESC_LEN;
+
+	if (!(desc = zalloc(len)))
+		return_NULL;
+
+	vg->write_count++;
+
+	if (vg->write_count == 1)
+		dm_snprintf(desc, len, "Write from %s.", cmd->cmd_line);
+	else
+		dm_snprintf(desc, len, "Write[%u] from %s.", vg->write_count, cmd->cmd_line);
+
+	return desc;
+}
+
 /*
  * VG metadata updates:
  *
@@ -576,9 +599,11 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		new_buf = fidtc->raw_metadata_buf;
 		new_size = fidtc->raw_metadata_buf_size;
 	} else {
-		new_size = text_vg_export_raw(vg, "", &new_buf);
+		char *desc = _build_desc_write(fid->fmt->cmd, vg);
+		new_size = text_vg_export_raw(vg, desc, &new_buf);
 		fidtc->raw_metadata_buf = new_buf;
 		fidtc->raw_metadata_buf_size = new_size;
+		free(desc);
 	}
 
 	if (!new_size || !new_buf) {

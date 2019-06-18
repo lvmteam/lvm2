@@ -1086,7 +1086,7 @@ size_t text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
 	return r;
 }
 
-size_t export_vg_to_buffer(struct volume_group *vg, char **buf)
+static size_t _export_vg_to_buffer(struct volume_group *vg, char **buf)
 {
 	return text_vg_export_raw(vg, "", buf);
 }
@@ -1096,7 +1096,7 @@ struct dm_config_tree *export_vg_to_config_tree(struct volume_group *vg)
 	char *buf = NULL;
 	struct dm_config_tree *vg_cft;
 
-	if (!export_vg_to_buffer(vg, &buf)) {
+	if (!_export_vg_to_buffer(vg, &buf)) {
 		log_error("Could not format metadata for VG %s.", vg->name);
 		return NULL;
 	}
