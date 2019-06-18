@@ -175,15 +175,21 @@ check lv_field $vg/$lv2 lv_kernel_read_ahead "0"
 lvcreate -L 8 -n $lv3 --readahead 8k $vg
 check lv_field $vg/$lv3 lv_read_ahead "8.00k"
 check lv_field $vg/$lv3 lv_kernel_read_ahead "8.00k"
-lvcreate -L 8 -n $lv4 --readahead auto $vg
+lvcreate -L 8 -n $lv4 --readahead auto $vg "$dev1"
 check lv_field $vg/$lv4 lv_read_ahead "auto"
-check lv_field $vg/$lv4 lv_kernel_read_ahead "128.00k"
+# figure RA value of a PV origin device
+DEVICE=$(dmsetup deps -o blkdevname "$dev1" | sed -e "s,.*:\ (\(.*\)),/dev/\1,")
+RASZ=$(( $(blockdev --getra "$DEVICE" ) / 2 ))
+SZ="$RASZ.00k"
+test "$RASZ" -ge 128 || SZ="128.00k"
+check lv_field $vg/$lv4 lv_kernel_read_ahead "$SZ" --units k
 lvcreate -L 8 -n $lv5 -i2 --stripesize 16k --readahead auto $vg
 check lv_field $vg/$lv5 lv_read_ahead "auto"
-check lv_field $vg/$lv5 lv_kernel_read_ahead "128.00k"
+check lv_field $vg/$lv5 lv_kernel_read_ahead "$SZ" --units k
 lvcreate -L 8 -n $lv6 -i2 --stripesize 128k --readahead auto $vg
 check lv_field $vg/$lv6 lv_read_ahead "auto"
-check lv_field $vg/$lv6 lv_kernel_read_ahead "512.00k"
+test "$RASZ" -ge 512 || SZ="512.00k"
+check lv_field $vg/$lv6 lv_kernel_read_ahead "$SZ" --units k
 lvremove -ff $vg
 
 #
