@@ -864,17 +864,6 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 		/* FIXME Share code with lvcreate */
 
 		/*
-		 * Avoid bug 1711427 in which an exclusively active linear LV in a
-		 * clustered VG, when upconverted to a mirror, will mistakenly use
-		 * a userspace/cmirror log in _add_log() beause laopts.exclusive is
-		 * not set.
-		 */
-		if (vg_is_clustered(lv->vg) && lv_is_active(lv)) {
-			log_error("Cannot convert active LV to mirror in clustered VG.");
-			return 0;
-		}
-
-		/*
 		 * FIXME should we give not only pvh, but also all PVs
 		 * currently taken by the mirror? Would make more sense from
 		 * user perspective.
