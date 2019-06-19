@@ -2048,12 +2048,12 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 		} else
 			continue;
 
-		if (!locking_is_clustered() && !vg_write_lock_held() && lv_is_mirror(lv)) {
+		if (!cmd->is_clvmd && !vg_write_lock_held() && lv_is_mirror(lv)) {
 			/*
 			 * Commands vgchange and lvchange do use read-only lock when changing
 			 * monitoring (--monitor y|n). All other use cases hold 'write-lock'
 			 * so they skip this dm mirror table refreshing step.
-			 * Shortcut can't be applied with clustered locking.
+			 * Shortcut is also not applied with clvmd.
 			 */
 			if (!_lv_activate_lv(lv, &mirr_laopts)) {
 				stack;
