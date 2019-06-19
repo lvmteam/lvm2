@@ -15,8 +15,6 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-aux lvmconf 'devices/scan_lvs = 1'
-
 aux prepare_vg 4
 
 lvcreate --type snapshot -s -L10 -n $lv1 $vg --virtualsize 2T

@@ -25,8 +25,6 @@ export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 #
 aux have_thin 1 1 0 || skip
 
-aux lvmconf 'devices/scan_lvs = 1'
-
 aux prepare_vg 2 64
 get_devs
 

@@ -20,7 +20,6 @@ SKIP_WITH_LVMPOLLD=1
 # FIXME  update test to make something useful on <16T
 aux can_use_16T || skip
 aux have_raid 1 3 0 || skip
-aux lvmconf 'devices/scan_lvs = 1'
 
 aux prepare_vg 5
 
