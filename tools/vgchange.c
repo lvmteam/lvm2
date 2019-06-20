@@ -631,6 +631,8 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	};
 
 	if (vg_is_exported(vg)) {
+		if (cmd->command->command_enum == vgchange_monitor_CMD)
+			return ECMD_PROCESSED;
 		log_error("Volume group \"%s\" is exported", vg_name);
 		return ECMD_FAILED;
 	}
