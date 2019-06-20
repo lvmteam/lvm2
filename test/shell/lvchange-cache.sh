@@ -88,7 +88,8 @@ grep 'random_threshold=4' out
 else
 # When MQ is emulated by SMQ policy it does not hold settings.
 # So just skip testing of param changes when sequential_threshold=0
-grep 'sequential_threshold=0' out
+# or some older kernel instancies show also value 512
+grep 'sequential_threshold=0' out || grep 'sequential_threshold=512' out
 fi
 
 fi  # have_cache 1 5 0
