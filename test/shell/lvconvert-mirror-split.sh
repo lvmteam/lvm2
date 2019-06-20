@@ -20,7 +20,7 @@ aux prepare_vg 3
 # Mirror split tests
 ###########################################
 # 3-way to 2-way/linear
-lvcreate --type mirror -m 2 -l 2 -n $lv1 $vg
+lvcreate -aey --type mirror -m 2 -l 2 -n $lv1 $vg
 aux wait_for_sync $vg $lv1
 lvconvert --splitmirrors 1 -n $lv2 -vvvv $vg/$lv1
 
