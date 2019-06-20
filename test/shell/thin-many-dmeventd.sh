@@ -22,6 +22,7 @@ export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 #
 # Main
 #
+TIME=$(which time) || skip "Missing 'time' command"
 aux have_thin 1 0 0 || skip
 
 aux prepare_dmeventd
@@ -54,7 +55,7 @@ sleep 9
 # new thin-pool registration.
 for i in $(seq 11 15)
 do
-	/usr/bin/time -o TM -f %e lvcreate --errorwhenfull y -Zn -T -L4M -V4M $vg/pool_${i} -n $lv${i}
+	"$TIME" -o TM -f %e lvcreate --errorwhenfull y -Zn -T -L4M -V4M $vg/pool_${i} -n $lv${i}
         read -r t < TM
         test ${t%%.*} -lt 8 || die "Creation of thin pool took more then 8 second! ($t seconds)"
         # Fill thin-pool to some capacity >50%
