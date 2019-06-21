@@ -91,12 +91,12 @@ lvremove -ff $vg/$lv3
 lvchange -an $vg/$lv1
 lvcreate -l1 -s -n $lv3 $vg/$lv1
 fail lvcreate -l1 -n $lv4 $vg
-fail lvcreate -l1 --type mirror -m1 -n $lv4 $vg
+fail lvcreate -aey -l1 --type mirror -m1 -n $lv4 $vg
 
 lvremove -ff $vg/$lv3
 lvcreate -aey -l1 --type mirror -m1 -n $lv3 $vg
 not lvcreate -l1 -n $lv4 $vg
-not lvcreate -l1 --type mirror -m1 -n $lv4 $vg
+not lvcreate -aey -l1 --type mirror -m1 -n $lv4 $vg
 
 lvconvert -m0 $vg/$lv3
 lvconvert -m2 --type mirror -i 1 $vg/$lv3
@@ -128,10 +128,10 @@ lvremove -f $vg
 # - nonzero (bz186013)
 # - a power of 2 and a multiple of page size
 # - <= size of LV
-invalid lvcreate --type mirror -m 1 -L 32m -n $lv -R 0 $vg 2>err
+invalid lvcreate -aey --type mirror -m 1 -L 32m -n $lv -R 0 $vg 2>err
 grep "may not be zero" err
-invalid lvcreate --type mirror -m 1 -L 32m -n $lv -R 11k $vg
-invalid lvcreate --type mirror -m 1 -L 32m -n $lv -R 1k $vg
+invalid lvcreate -aey --type mirror -m 1 -L 32m -n $lv -R 11k $vg
+invalid lvcreate -aey --type mirror -m 1 -L 32m -n $lv -R 1k $vg
 lvcreate -aey -L 32m -n $lv --regionsize 128m  --type mirror -m 1 $vg
 check lv_field $vg/$lv regionsize "32.00m"
 lvremove -f $vg
