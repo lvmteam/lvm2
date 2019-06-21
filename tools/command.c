@@ -137,6 +137,7 @@ static inline int configtype_arg(struct cmd_context *cmd __attribute__((unused))
 #define GET_VGNAME_FROM_OPTIONS  0x00001000
 #define CAN_USE_ONE_SCAN	 0x00002000
 #define ALLOW_HINTS              0x00004000
+#define ALLOW_EXPORTED           0x00008000
 
 
 /* create foo_CMD enums for command def ID's in command-lines.in */

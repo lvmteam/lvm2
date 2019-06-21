@@ -87,8 +87,6 @@ int vgimport(struct cmd_context *cmd, int argc, char **argv)
 		cmd->handles_missing_pvs = 1;
 	}
 
-	return process_each_vg(cmd, argc, argv, NULL, NULL,
-			       READ_FOR_UPDATE | READ_ALLOW_EXPORTED,
-			       0, NULL,
-			       &_vgimport_single);
+	return process_each_vg(cmd, argc, argv, NULL, NULL, READ_FOR_UPDATE,
+			       0, NULL, &_vgimport_single);
 }

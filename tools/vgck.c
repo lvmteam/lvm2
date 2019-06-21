@@ -71,9 +71,6 @@ static int vgck_single(struct cmd_context *cmd __attribute__((unused)),
 		       struct volume_group *vg,
 		       struct processing_handle *handle __attribute__((unused)))
 {
-	if (!vg_check_status(vg, EXPORTED_VG))
-		return_ECMD_FAILED;
-
 	if (!vg_validate(vg))
 		return_ECMD_FAILED;
 

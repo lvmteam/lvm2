@@ -235,7 +235,7 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 
 	log_debug("Finding devices to import.");
 	cmd->cname->flags |= ENABLE_DUPLICATE_DEVS;
-	process_each_pv(cmd, argc, argv, NULL, 0, READ_ALLOW_EXPORTED, handle, _vgimportclone_pv_single);
+	process_each_pv(cmd, argc, argv, NULL, 0, 0, handle, _vgimportclone_pv_single);
 
 	if (vp.found_args != argc) {
 		log_error("Failed to find all devices.");
@@ -342,7 +342,7 @@ retry_name:
 
 	clear_hint_file(cmd);
 
-	ret = process_each_vg(cmd, 0, NULL, vp.old_vgname, NULL, READ_FOR_UPDATE | READ_ALLOW_EXPORTED, 0, handle, _vgimportclone_vg_single);
+	ret = process_each_vg(cmd, 0, NULL, vp.old_vgname, NULL, READ_FOR_UPDATE, 0, handle, _vgimportclone_vg_single);
 
 	unlock_vg(cmd, NULL, vp.new_vgname);
 out:

@@ -630,13 +630,6 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		{ detachprofile_ARG, &_vgchange_profile },
 	};
 
-	if (vg_is_exported(vg)) {
-		if (cmd->command->command_enum == vgchange_monitor_CMD)
-			return ECMD_PROCESSED;
-		log_error("Volume group \"%s\" is exported", vg_name);
-		return ECMD_FAILED;
-	}
-
 	/*
 	 * FIXME: DEFAULT_BACKGROUND_POLLING should be "unspecified".
 	 * If --poll is explicitly provided use it; otherwise polling
@@ -984,11 +977,6 @@ static int _vgchange_locktype_single(struct cmd_context *cmd, const char *vg_nam
 			             struct volume_group *vg,
 			             struct processing_handle *handle)
 {
-	if (vg_is_exported(vg)) {
-		log_error("Volume group \"%s\" is exported", vg_name);
-		return ECMD_FAILED;
-	}
-
 	if (!archive(vg))
 		return_ECMD_FAILED;
 
@@ -1147,11 +1135,14 @@ int vgchange_lock_start_stop_cmd(struct cmd_context *cmd, int argc, char **argv)
 
 		/* Disable the lockd_gl in process_each_vg. */
 		cmd->lockd_gl_disable = 1;
+	} else {
+		/* If the VG was started when it was exported, allow it to be stopped. */
+		cmd->include_exported_vgs = 1;
 	}
 
 	handle->custom_handle = &vp;
 
-	ret = process_each_vg(cmd, argc, argv, NULL, NULL, READ_ALLOW_EXPORTED, 0, handle, &_vgchange_lock_start_stop_single);
+	ret = process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0, handle, &_vgchange_lock_start_stop_single);
 
 	/* Wait for lock-start ops that were initiated in vgchange_lockstart. */
 
@@ -1180,11 +1171,6 @@ static int _vgchange_systemid_single(struct cmd_context *cmd, const char *vg_nam
 			             struct volume_group *vg,
 			             struct processing_handle *handle)
 {
-	if (vg_is_exported(vg)) {
-		log_error("Volume group \"%s\" is exported", vg_name);
-		return ECMD_FAILED;
-	}
-
 	if (!archive(vg))
 		return_ECMD_FAILED;
 

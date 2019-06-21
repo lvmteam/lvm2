@@ -181,7 +181,6 @@
 #define MIRROR_SKIP_INIT_SYNC	0x00000010U	/* skip initial sync */
 
 /* vg_read and vg_read_for_update flags */
-#define READ_ALLOW_EXPORTED	0x00020000U
 #define READ_OK_NOTFOUND	0x00040000U
 #define READ_WARN_INCONSISTENT	0x00080000U
 #define READ_FOR_UPDATE		0x00100000U /* command tells vg_read it plans to write the vg */

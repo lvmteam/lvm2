@@ -42,9 +42,6 @@ static int _vgremove_single(struct cmd_context *cmd, const char *vg_name,
 	unsigned lv_count, missing;
 	int ret;
 
-	if (!vg_check_status(vg, EXPORTED_VG))
-		return_ECMD_FAILED;
-
 	lv_count = vg_visible_lvs(vg);
 
 	if (lv_count) {

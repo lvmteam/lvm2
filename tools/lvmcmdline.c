@@ -2315,6 +2315,8 @@ static int _get_current_settings(struct cmd_context *cmd)
 	if (cmd->cname->flags & CAN_USE_ONE_SCAN)
 		cmd->can_use_one_scan = 1;
 
+	cmd->include_exported_vgs = (cmd->cname->flags & ALLOW_EXPORTED) ? 1 : 0;
+
 	cmd->scan_lvs = find_config_tree_bool(cmd, devices_scan_lvs_CFG, NULL);
 
 	/*

@@ -223,6 +223,17 @@ static int _ignore_vg(struct cmd_context *cmd,
 		}
 	}
 
+	if (read_error & FAILED_EXPORTED) {
+		if (arg_vgnames && str_list_match_item(arg_vgnames, vg_name)) {
+			log_error("Volume group %s is exported", vg_name);
+			return 1;
+		} else {
+			read_error &= ~FAILED_EXPORTED; /* Check for other errors */
+			log_verbose("Skipping exported volume group %s", vg_name);
+			*skip = 1;
+		}
+	}
+
 	/*
 	 * Commands that operate on "all vgs" shouldn't be bothered by
 	 * skipping a foreign VG, and the command shouldn't fail when
@@ -3032,11 +3043,6 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	dm_list_init(&final_lvs);
 	dm_list_init(&found_arg_lvnames);
 
-	if (!vg_check_status(vg, EXPORTED_VG)) {
-		ret_max = ECMD_FAILED;
-		goto_out;
-	}
-
 	if (tags_in && !dm_list_empty(tags_in))
 		tags_supplied = 1;
 
@@ -4161,6 +4167,7 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 			      int process_all_pvs,
 			      int process_all_devices,
 			      int skip,
+			      uint32_t error_flags,
 			      struct processing_handle *handle,
 			      process_single_pv_fn_t process_single_pv)
 {
@@ -4216,20 +4223,41 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 		}
 
 		process_pv = process_all_pvs;
+		dil = NULL;
 
 		/* Remove each arg_devices entry as it is processed. */
 
-		if (!process_pv && !dm_list_empty(arg_devices) &&
-		    (dil = _device_list_find_dev(arg_devices, pv->dev))) {
-			process_pv = 1;
-			_device_list_remove(arg_devices, dil->dev);
+		if (arg_devices && !dm_list_empty(arg_devices)) {
+			if ((dil = _device_list_find_dev(arg_devices, pv->dev)))
+				_device_list_remove(arg_devices, dil->dev);
 		}
+
+		if (!process_pv && dil)
+			process_pv = 1;
 
 		if (!process_pv && !dm_list_empty(arg_tags) &&
 		    str_list_match_list(arg_tags, &pv->tags, NULL))
 			process_pv = 1;
 
 		process_pv = process_pv && select_match_pv(cmd, handle, vg, pv) && _select_matches(handle);
+
+		/*
+		 * The command has asked to process a specific PV
+		 * named on the command line, but the VG containing
+		 * that PV cannot be accessed.  In this case report
+		 * and return an error.  If the inaccessible PV is
+		 * not explicitly named on the command line, it is
+		 * silently skipped.
+		 */
+		if (process_pv && skip && dil && error_flags) {
+			if (error_flags & FAILED_EXPORTED)
+				log_error("Cannot use PV %s in exported VG %s.", pv_name, vg->name);
+			if (error_flags & FAILED_SYSTEMID)
+				log_error("Cannot use PV %s in foreign VG %s.", pv_name, vg->name);
+			if (error_flags & (FAILED_LOCK_TYPE | FAILED_LOCK_MODE))
+				log_error("Cannot use PV %s in shared VG %s.", pv_name, vg->name);
+			ret_max = ECMD_FAILED;
+		}
 
 		if (process_pv) {
 			if (skip)
@@ -4352,6 +4380,8 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 
 		log_debug("Processing PVs in VG %s", vg_name);
 
+		error_flags = 0;
+
 		vg = vg_read(cmd, vg_name, vg_uuid, read_flags, lockd_state, &error_flags, &error_vg);
 		if (_ignore_vg(cmd, error_flags, error_vg, vg_name, NULL, read_flags, &skip, &notfound)) {
 			stack;
@@ -4359,7 +4389,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 			report_log_ret_code(ret_max);
 			if (!skip)
 				goto endvg;
-			/* Drop through to eliminate a clustered VG's PVs from the devices list */
+			/* Drop through to eliminate unmpermitted PVs from the devices list */
 		}
 		if (notfound)
 			goto endvg;
@@ -4370,7 +4400,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 		 */
 		
 		ret = _process_pvs_in_vg(cmd, vg ? vg : error_vg, all_devices, arg_devices, arg_tags,
-					 process_all_pvs, process_all_devices, skip,
+					 process_all_pvs, process_all_devices, skip, error_flags,
 					 handle, process_single_pv);
 		if (ret != ECMD_PROCESSED)
 			stack;

@@ -135,7 +135,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 {
 	int r;
 
-	if (!vg_check_status(vg, EXPORTED_VG | LVM_WRITE | RESIZEABLE_VG))
+	if (!vg_check_status(vg, LVM_WRITE | RESIZEABLE_VG))
 		return ECMD_FAILED;
 
 	r = vgreduce_single(cmd, vg, pv, 1);
@@ -250,8 +250,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 
 	init_ignore_suspended_devices(1);
 
-	process_each_vg(cmd, 0, NULL, vg_name, NULL,
-			READ_FOR_UPDATE | READ_ALLOW_EXPORTED,
+	process_each_vg(cmd, 0, NULL, vg_name, NULL, READ_FOR_UPDATE,
 			0, handle, &_vgreduce_repair_single);
 
 	if (vp.already_consistent) {

@@ -593,9 +593,6 @@ int vg_remove_check(struct volume_group *vg)
 		return 0;
 	}
 
-	if (!vg_check_status(vg, EXPORTED_VG))
-		return 0;
-
 	lv_count = vg_visible_lvs(vg);
 
 	if (lv_count) {
@@ -3709,12 +3706,6 @@ uint32_t vg_bad_status_bits(const struct volume_group *vg, uint64_t status)
 		/* Return because other flags are considered undefined. */
 		return FAILED_CLUSTERED;
 
-	if ((status & EXPORTED_VG) &&
-	    vg_is_exported(vg)) {
-		log_error("Volume group %s is exported", vg->name);
-		failure |= FAILED_EXPORTED;
-	}
-
 	if ((status & LVM_WRITE) &&
 	    !(vg->status & LVM_WRITE)) {
 		log_error("Volume group %s is read-only", vg->name);
@@ -3733,7 +3724,7 @@ uint32_t vg_bad_status_bits(const struct volume_group *vg, uint64_t status)
 /**
  * vg_check_status - check volume group status flags and log error
  * @vg - volume group to check status flags
- * @status - specific status flags to check (e.g. EXPORTED_VG)
+ * @status - specific status flags to check
  */
 int vg_check_status(const struct volume_group *vg, uint64_t status)
 {
@@ -3910,6 +3901,28 @@ static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	/* Silently ignore foreign vgs. */
+
+	return 0;
+}
+
+static int _access_vg_exported(struct cmd_context *cmd, struct volume_group *vg)
+{
+	if (!vg_is_exported(vg))
+		return 1;
+
+	if (cmd->include_exported_vgs)
+		return 1;
+
+	/*
+	 * Some commands want the error printed by vg_read, others by ignore_vg.
+	 * Those using ignore_vg may choose to skip the error.
+	 */
+	if (cmd->vg_read_print_access_error) {
+		log_error("Volume group %s is exported", vg->name);
+		return 0;
+	}
+
+	/* Silently ignore exported vgs. */
 
 	return 0;
 }
@@ -4898,18 +4911,17 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		goto_bad;
 	}
 
+	if (!_access_vg_exported(cmd, vg)) {
+		failure |= FAILED_EXPORTED;
+		goto_bad;
+	}
+
 	/*
 	 * If the command intends to write or activate the VG, there are
 	 * additional restrictions.  FIXME: These restrictions should
 	 * probably be checked/applied after vg_read returns.
 	 */
 	if (writing || activating) {
-		if (!(read_flags & READ_ALLOW_EXPORTED) && vg_is_exported(vg)) {
-			log_error("Volume group %s is exported", vg->name);
-			failure |= FAILED_EXPORTED;
-			goto_bad;
-		}
-
 		if (!(vg->status & LVM_WRITE)) {
 			log_error("Volume group %s is read-only", vg->name);
 			failure |= FAILED_READ_ONLY;

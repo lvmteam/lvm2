@@ -35,11 +35,6 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	params->total++;
 
-	if (vg && vg_is_exported(vg)) {
-		log_error("Volume group %s is exported", vg->name);
-		goto bad;
-	}
-
 	/*
 	 * The primary location of this check is in vg_write(), but it needs
 	 * to be copied here to prevent the pv_write() which is called before
@@ -239,7 +234,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 
 	clear_hint_file(cmd);
 
-	ret = process_each_pv(cmd, argc, argv, NULL, 0, READ_FOR_UPDATE | READ_ALLOW_EXPORTED, handle, _pvchange_single);
+	ret = process_each_pv(cmd, argc, argv, NULL, 0, READ_FOR_UPDATE, handle, _pvchange_single);
 
 	log_print_unless_silent("%d physical volume%s changed / %d physical volume%s not changed",
 				params.done, params.done == 1 ? "" : "s",

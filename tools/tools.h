@@ -136,6 +136,8 @@ struct arg_value_group_list {
 #define CAN_USE_ONE_SCAN	 0x00002000
 /* Command can use hints file */
 #define ALLOW_HINTS		 0x00004000
+/* Command can access exported vg. */
+#define ALLOW_EXPORTED           0x00008000
 
 
 void usage(const char *name);
