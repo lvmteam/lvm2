@@ -866,8 +866,11 @@ int label_scan(struct cmd_context *cmd)
 	}
 
 	while ((dev = dev_iter_get(iter))) {
-		if (!(devl = dm_zalloc(sizeof(*devl))))
+		if (!(devl = dm_zalloc(sizeof(*devl)))) {
+			log_error("Failed to allocated device list.");
+			dev_iter_destroy(iter);
 			return 0;
+		}
 		devl->dev = dev;
 		dm_list_add(&all_devs, &devl->list);
 
