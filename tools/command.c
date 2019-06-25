@@ -1916,7 +1916,7 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 			 * see print_common_options_cmd()
 			 */
 
-			if ((cname->variants > 1) && cname->common_options[opt_enum])
+			if (cname && (cname->variants > 1) && cname->common_options[opt_enum])
 				continue;
 
 			printf("\n\t[");
@@ -1956,7 +1956,7 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 			 * see print_common_options_cmd()
 			 */
 
-			if ((cname->variants > 1) && cname->common_options[opt_enum])
+			if (cname && (cname->variants > 1) && cname->common_options[opt_enum])
 				continue;
 
 			printf("\n\t[");
@@ -3384,7 +3384,7 @@ static int _print_man(char *name, char *des_file, int secondary)
 
 		if (!prev_cmd || strcmp(prev_cmd->name, cmd->name)) {
 			printf(".SH NAME\n");
-			if (cname->desc)
+			if (cname && cname->desc)
 				printf("%s - %s\n", lvmname, cname->desc);
 			else
 				printf("%s\n", lvmname);
