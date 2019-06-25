@@ -468,7 +468,12 @@ static struct raw_locn *_read_metadata_location_vg(struct device_area *dev_area,
 	 */
 	memset(vgnamebuf, 0, sizeof(vgnamebuf));
 
-	dev_read_bytes(dev_area->dev, dev_area->start + rlocn->offset, NAME_LEN, vgnamebuf);
+	if (!dev_read_bytes(dev_area->dev, dev_area->start + rlocn->offset, NAME_LEN, vgnamebuf)) {
+		log_error("Failed to read metadata location vg %s at %llu",
+			  dev_name(dev_area->dev),
+			  (unsigned long long)dev_area->start + rlocn->offset);
+		return 0;
+	}
 
 	if (!strncmp(vgnamebuf, vgname, len = strlen(vgname)) &&
 	    (isspace(vgnamebuf[len]) || vgnamebuf[len] == '{'))
@@ -1229,7 +1234,12 @@ int read_metadata_location_summary(const struct format_type *fmt,
 		return 0;
 	}
 
-	dev_read_bytes(dev_area->dev, dev_area->start + rlocn->offset, NAME_LEN, buf);
+	if (!dev_read_bytes(dev_area->dev, dev_area->start + rlocn->offset, NAME_LEN, buf)) {
+		log_error("Can't read metadata location on %s at %llu.",
+			  dev_name(dev_area->dev),
+			  (unsigned long long)(dev_area->start + rlocn->offset));
+		return 0;
+	}
 
 	while (buf[len] && !isspace(buf[len]) && buf[len] != '{' &&
 	       len < (NAME_LEN - 1))
