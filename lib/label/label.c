@@ -1498,7 +1498,10 @@ void dev_set_last_byte(struct device *dev, uint64_t offset)
 	unsigned int phys_block_size = 0;
 	unsigned int block_size = 0;
 
-	dev_get_block_size(dev, &phys_block_size, &block_size);
+	if (!dev_get_block_size(dev, &phys_block_size, &block_size)) {
+		stack;
+		return; /* FIXME: error path ? */
+	}
 
 	bcache_set_last_byte(scan_bcache, dev->bcache_fd, offset, phys_block_size);
 }
