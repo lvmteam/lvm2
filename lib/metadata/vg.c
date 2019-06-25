@@ -18,7 +18,6 @@
 #include "display.h"
 #include "activate.h"
 #include "toolcontext.h"
-#include "lvmcache.h"
 #include "archiver.h"
 #include "lvmetad.h"
 

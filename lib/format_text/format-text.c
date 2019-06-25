@@ -29,7 +29,6 @@
 #include "label.h"
 #include "lvmcache.h"
 #include "lvmetad.h"
-#include "memlock.h"
 
 #include <unistd.h>
 #include <sys/param.h>

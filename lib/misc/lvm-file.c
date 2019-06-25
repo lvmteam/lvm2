@@ -14,7 +14,6 @@
  */
 
 #include "lib.h"
-#include "lvm-file.h"
 
 #include <unistd.h>
 #include <sys/stat.h>

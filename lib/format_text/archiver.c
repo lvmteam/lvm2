@@ -18,7 +18,6 @@
 #include "format-text.h"
 #include "lvm-string.h"
 #include "lvmcache.h"
-#include "lvmetad.h"
 #include "memlock.h"
 #include "toolcontext.h"
 #include "locking.h"

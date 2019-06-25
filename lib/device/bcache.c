@@ -29,7 +29,6 @@
 #include <libaio.h>
 #include <unistd.h>
 #include <linux/fs.h>
-#include <sys/ioctl.h>
 #include <sys/user.h>
 
 #define SECTOR_SHIFT 9L

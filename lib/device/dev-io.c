@@ -17,7 +17,6 @@
 #include "device.h"
 #include "metadata.h"
 #include "memlock.h"
-#include "locking.h"
 
 #include <limits.h>
 #include <sys/stat.h>

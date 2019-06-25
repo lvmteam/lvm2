@@ -19,7 +19,6 @@
 #include "label.h"
 #include "lvm-version.h"
 #include "lvmlockd.h"
-#include "lvmetad-client.h"
 
 #include "stub.h"
 #include "last-path-component.h"

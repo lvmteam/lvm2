@@ -17,7 +17,6 @@
 #include "xlate.h"
 #include "config.h"
 #include "metadata.h"
-#include "bcache.h"
 #include "label.h"
 
 #include <libgen.h>
