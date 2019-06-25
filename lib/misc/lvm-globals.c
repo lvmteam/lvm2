@@ -73,9 +73,9 @@ void init_test(int level)
 	_test = level;
 }
 
-void init_use_aio(int use_aio)
+void init_use_aio(int use)
 {
-	_use_aio = use_aio;
+	_use_aio = use;
 }
 
 void init_md_filtering(int level)
