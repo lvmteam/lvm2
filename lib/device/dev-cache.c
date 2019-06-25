@@ -1344,7 +1344,8 @@ static int _check_for_open_devices(int close_immediate)
 				  dev_name(dev), dev->open_count);
 			num_open++;
 			if (close_immediate)
-				dev_close_immediate(dev);
+				if (!dev_close_immediate(dev))
+					stack;
 		}
 	}
 

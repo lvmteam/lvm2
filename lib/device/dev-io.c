@@ -521,7 +521,8 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 		/* dev_close_immediate will decrement this */
 		dev->open_count++;
 
-		dev_close_immediate(dev);
+		if (!dev_close_immediate(dev))
+			stack;
 		// FIXME: dev with DEV_ALLOCED is released
 		// but code is referencing it
 	}
@@ -599,7 +600,8 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 	if (!(dev->flags & DEV_REGULAR) &&
 	    ((fstat(dev->fd, &buf) < 0) || (buf.st_rdev != dev->dev))) {
 		log_error("%s: fstat failed: Has device name changed?", name);
-		dev_close_immediate(dev);
+		if (!dev_close_immediate(dev))
+			stack;
 		return 0;
 	}
 

@@ -2595,7 +2595,8 @@ void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 	if (retain_orphans) {
 		struct format_type *fmt;
 
-		lvmcache_init(cmd);
+		if (!lvmcache_init(cmd))
+			stack;
 
 		dm_list_iterate_items(fmt, &cmd->formats) {
 			if (!lvmcache_add_orphan_vginfo(fmt->orphan_vg_name, fmt))
