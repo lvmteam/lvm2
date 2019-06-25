@@ -690,7 +690,7 @@ void daemon_start(daemon_state s)
 out:
 	/* If activated by systemd, do not unlink the socket - systemd takes care of that! */
 	if (!_systemd_activation && s.socket_fd >= 0)
-		if (unlink(s.socket_path))
+		if (s.socket_path && unlink(s.socket_path))
 			perror("unlink error");
 
 	if (s.socket_fd >= 0)
