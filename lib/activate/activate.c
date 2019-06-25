@@ -2478,7 +2478,12 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	 * If vg_commit() did not happen, lvmcache_get_saved_vg_latest
 	 * returns the old metadata which we use to resume LVs.
 	 */
-	if (!lv && lvid_s) {
+	if (!lv) {
+		if (!lvid_s) {
+			log_error(INTERNAL_ERROR "Requested resume of unindentified resource!");
+			return 0;
+		}
+
 		lvid = (const union lvid *) lvid_s;
 		vgid = (const char *)lvid->id[0].uuid;
 
