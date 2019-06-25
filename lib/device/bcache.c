@@ -1040,6 +1040,11 @@ struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks,
 	unsigned max_io = engine->max_io(engine);
 	long pgsize = sysconf(_SC_PAGESIZE);
 
+	if ((pgsize = sysconf(_SC_PAGESIZE)) < 0) {
+		log_warn("bcache cannot read pagesize.");
+		return NULL;
+	}
+
 	if (!nr_cache_blocks) {
 		log_warn("bcache must have at least one cache block");
 		return NULL;
