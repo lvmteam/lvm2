@@ -5544,6 +5544,15 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	lvmcache_label_scan(cmd);
 
 	/*
+	 * When using lvmetad, we want to do a dev cache scan here (if not done
+	 * already) so that the dev_cache_get just below will be able to find
+	 * device aliases.  When not using lvmetad, the label_scan just above
+	 * has done dev_cache_scan, and this will not be run.
+	 */
+	if (!dev_cache_has_scanned())
+		dev_cache_scan();
+
+	/*
 	 * Translate arg names into struct device's.
 	 */
 	dm_list_iterate_items(pd, &pp->arg_devices)
