@@ -912,7 +912,7 @@ int label_scan(struct cmd_context *cmd)
 
 	if (!scan_bcache) {
 		if (!_setup_bcache(dm_list_size(&all_devs)))
-			return 0;
+			return_0;
 	}
 
 	_scan_list(cmd, cmd->full_filter, &all_devs, NULL);
@@ -987,8 +987,11 @@ int label_scan_pvscan_all(struct cmd_context *cmd, struct dm_list *scan_devs)
 	}
 
 	while ((dev = dev_iter_get(iter))) {
-		if (!(devl = dm_zalloc(sizeof(*devl))))
+		if (!(devl = dm_zalloc(sizeof(*devl)))) {
+			log_error("Failed to allocated device list.");
+			dev_iter_destroy(iter);
 			return 0;
+		}
 		devl->dev = dev;
 		dm_list_add(&all_devs, &devl->list);
 
@@ -1013,7 +1016,7 @@ int label_scan_pvscan_all(struct cmd_context *cmd, struct dm_list *scan_devs)
 
 	if (!scan_bcache) {
 		if (!_setup_bcache(dm_list_size(&all_devs)))
-			return 0;
+			return_0;
 	}
 
 	_scan_list(cmd, cmd->lvmetad_filter, &all_devs, NULL);
