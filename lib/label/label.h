@@ -19,7 +19,6 @@
 #include "uuid.h"
 #include "device.h"
 #include "bcache.h"
-#include "toolcontext.h"
 
 #define LABEL_ID "LABELONE"
 #define LABEL_SIZE SECTOR_SIZE	/* Think very carefully before changing this */
@@ -27,6 +26,9 @@
 #define LABEL_SCAN_SIZE (LABEL_SCAN_SECTORS << SECTOR_SHIFT)
 
 struct labeller;
+struct dev_filter;
+struct cmd_context;
+struct logical_volume;
 
 void allow_reads_with_lvmetad(void);
 
