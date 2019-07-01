@@ -129,6 +129,7 @@ static int _extend_buffer(struct formatter *f)
 		log_error("Buffer reallocation failed.");
 		return 0;
 	}
+	memset(newbuf + f->data.buf.size, 0, f->data.buf.size);
 	f->data.buf.start = newbuf;
 	f->data.buf.size *= 2;
 
@@ -1052,7 +1053,7 @@ int text_vg_export_file(struct volume_group *vg, const char *desc, FILE *fp)
 }
 
 /* Returns amount of buffer used incl. terminating NUL */
-size_t text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
+size_t text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf, uint32_t *buf_size)
 {
 	struct formatter *f;
 	size_t r = 0;
@@ -1063,7 +1064,7 @@ size_t text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
 		return_0;
 
 	f->data.buf.size = 65536;	/* Initial metadata limit */
-	if (!(f->data.buf.start = malloc(f->data.buf.size))) {
+	if (!(f->data.buf.start = zalloc(f->data.buf.size))) {
 		log_error("text_export buffer allocation failed");
 		goto out;
 	}
@@ -1081,6 +1082,9 @@ size_t text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
 	r = f->data.buf.used + 1;
 	*buf = f->data.buf.start;
 
+	if (buf_size)
+		*buf_size = f->data.buf.size;
+
       out:
 	free(f);
 	return r;
@@ -1088,7 +1092,7 @@ size_t text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
 
 static size_t _export_vg_to_buffer(struct volume_group *vg, char **buf)
 {
-	return text_vg_export_raw(vg, "", buf);
+	return text_vg_export_raw(vg, "", buf, NULL);
 }
 
 struct dm_config_tree *export_vg_to_config_tree(struct volume_group *vg)
