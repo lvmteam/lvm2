@@ -228,7 +228,7 @@ lvconvert -y --type cache --cachevol $lv2 $vg/$lv1
 
 lvchange -ay $vg/$lv1
 
-lvchange --cachemode writeback $vg/$lv1
+lvchange -y --cachemode writeback $vg/$lv1
 
 check lv_field $vg/$lv1 cachemode "writeback"
 

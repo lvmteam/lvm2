@@ -3401,6 +3401,14 @@ static int _cache_vol_attach(struct cmd_context *cmd,
 	if (!cache_vol_set_params(cmd, cache_lv, lv_fast, poolmetadatasize, chunk_size, cache_metadata_format, cache_mode, policy_name, policy_settings))
 		goto_out;
 
+	if (cache_mode == CACHE_MODE_WRITEBACK) {
+		log_warn("WARNING: repairing a damaged cachevol is not yet possible.");
+		log_warn("WARNING: cache mode writethrough is suggested for safe operation.");
+		if (!arg_count(cmd, yes_ARG) &&
+		    yes_no_prompt("Continue using writeback without repair?") == 'n')
+			goto_out;
+	}
+
 	/*
 	 * lv/cache_lv keeps the same lockd lock it had before, the lock for
 	 * lv_fast is freed, and lv_corig has no lock.
