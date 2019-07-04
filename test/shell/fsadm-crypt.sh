@@ -83,6 +83,7 @@ export LVM_BINARY
 test ! -d "$mount_dir" && mkdir "$mount_dir"
 
 crypt_close() {
+	aux udev_wait
 	cryptsetup remove "$1"
 	if [ "$?" -eq 0 -a -n "$DROP_SYMLINK" ]; then
 		rm -f "$DM_DEV_DIR/mapper/$1"
