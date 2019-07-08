@@ -334,13 +334,11 @@ DESC: Convert LV to striped.
 RULE: all not lv_is_locked lv_is_pvmove
 
 lvconvert --type mirror LV
-OO: --mirrors SNumber, --regionsize RegionSize, --interval Number, --mirrorlog MirrorLog, OO_LVCONVERT
+OO: --mirrors SNumber, --stripes_long Number, --stripesize SizeKB, --regionsize RegionSize, --interval Number, --mirrorlog MirrorLog, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert LV to type mirror (also see type raid1),
-DESC: (also see lvconvert --mirrors).
 RULE: all not lv_is_locked lv_is_pvmove
-FLAGS: SECONDARY_SYNTAX
 
 # When LV is already raid, this changes the raid layout
 # (changing layout of raid0 and raid1 not allowed.)
