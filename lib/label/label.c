@@ -798,13 +798,6 @@ out:
 }
 
 /*
- * num_devs is the number of devices the caller is going to scan.
- * When 0 the caller doesn't know, and we use the default cache size.
- * When non-zero, allocate at least num_devs bcache blocks.
- * num_devs doesn't really tell us how many bcache blocks we'll use
- * because it includes lvm devs and non-lvm devs, and each lvm dev
- * will often use a number of bcache blocks.
- *
  * We don't know ahead of time if we will find some VG metadata 
  * that is larger than the total size of the bcache, which would
  * prevent us from reading/writing the VG since we do not dynamically
@@ -817,7 +810,7 @@ out:
 #define MIN_BCACHE_BLOCKS 32    /* 4MB */
 #define MAX_BCACHE_BLOCKS 1024
 
-static int _setup_bcache(int num_devs)
+static int _setup_bcache(void)
 {
 	struct io_engine *ioe = NULL;
 	int iomem_kb = io_memory_size();
@@ -955,7 +948,7 @@ int label_scan(struct cmd_context *cmd)
 	dev_iter_destroy(iter);
 
 	if (!scan_bcache) {
-		if (!_setup_bcache(dm_list_size(&all_devs)))
+		if (!_setup_bcache())
 			return 0;
 	}
 
@@ -1105,7 +1098,7 @@ int label_scan_devs(struct cmd_context *cmd, struct dev_filter *f, struct dm_lis
 	struct device_list *devl;
 
 	if (!scan_bcache) {
-		if (!_setup_bcache(0))
+		if (!_setup_bcache())
 			return 0;
 	}
 
@@ -1132,7 +1125,7 @@ int label_scan_devs_rw(struct cmd_context *cmd, struct dev_filter *f, struct dm_
 	struct device_list *devl;
 
 	if (!scan_bcache) {
-		if (!_setup_bcache(0))
+		if (!_setup_bcache())
 			return 0;
 	}
 
@@ -1278,7 +1271,7 @@ int label_read(struct device *dev)
 int label_scan_setup_bcache(void)
 {
 	if (!scan_bcache) {
-		if (!_setup_bcache(0))
+		if (!_setup_bcache())
 			return 0;
 	}
 
