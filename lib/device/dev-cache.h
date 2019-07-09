@@ -17,6 +17,7 @@
 #define _LVM_DEV_CACHE_H
 
 #include "lib/device/device.h"
+#include "lib/device/dev-type.h"
 #include "lib/misc/lvm-wrappers.h"
 
 struct cmd_context;
@@ -70,5 +71,7 @@ struct device *dev_iter_get(struct cmd_context *cmd, struct dev_iter *iter);
 void dev_reset_error_count(struct cmd_context *cmd);
 
 void dev_cache_failed_path(struct device *dev, const char *path);
+
+bool dev_cache_has_md_with_end_superblock(struct dev_types *dt);
 
 #endif

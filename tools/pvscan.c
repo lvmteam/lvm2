@@ -938,6 +938,13 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	/* Creates a list of dev names from /dev, sysfs, etc; does not read any. */
 	dev_cache_scan();
 
+	if (cmd->md_component_detection && !cmd->use_full_md_check &&
+	    !strcmp(cmd->md_component_checks, "auto") &&
+	    dev_cache_has_md_with_end_superblock(cmd->dev_types)) {
+		log_debug("Enable full md component check.");
+		cmd->use_full_md_check = 1;
+	}
+
 	/*
 	 * For each device command arg (from either position or --major/--minor),
 	 * decide if that device is being added to the system (a dev node exists

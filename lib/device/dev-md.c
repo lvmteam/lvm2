@@ -302,12 +302,12 @@ static int _md_sysfs_attribute_scanf(struct dev_types *dt,
 		return ret;
 
 	if (!(fp = fopen(path, "r"))) {
-		log_sys_error("fopen", path);
+		log_debug("_md_sysfs_attribute_scanf fopen failed %s", path);
 		return ret;
 	}
 
 	if (!fgets(buffer, sizeof(buffer), fp)) {
-		log_sys_error("fgets", path);
+		log_debug("_md_sysfs_attribute_scanf fgets failed %s", path);
 		goto out;
 	}
 
@@ -449,7 +449,7 @@ int dev_is_md_with_end_superblock(struct dev_types *dt, struct device *dev)
 
 	if (_md_sysfs_attribute_scanf(dt, dev, attribute,
 				      "%s", &version_string) != 1)
-		return -1;
+		return 0;
 
 	log_very_verbose("Device %s %s is %s.",
 			 dev_name(dev), attribute, version_string);

@@ -15,6 +15,7 @@
 
 #include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
+#include "lib/device/dev-type.h"
 #include "lib/datastruct/btree.h"
 #include "lib/config/config.h"
 #include "lib/commands/toolcontext.h"
@@ -1634,3 +1635,21 @@ const char *dev_name(const struct device *dev)
 	return (dev && dev->aliases.n) ? dm_list_item(dev->aliases.n, struct dm_str_list)->str :
 	    unknown_device_name();
 }
+
+bool dev_cache_has_md_with_end_superblock(struct dev_types *dt)
+{
+	struct btree_iter *iter = btree_first(_cache.devices);
+	struct device *dev;
+
+	while (iter) {
+		dev = btree_get_data(iter);
+
+		if (dev_is_md_with_end_superblock(dt, dev))
+			return true;
+
+		iter = btree_next(iter);
+	}
+
+	return false;
+}
+

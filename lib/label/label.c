@@ -894,6 +894,20 @@ int label_scan(struct cmd_context *cmd)
 	dev_cache_scan();
 
 	/*
+	 * If we know that there will be md components with an end
+	 * superblock, then enable the full md filter before label
+	 * scan begins.  FIXME: we could skip the full md check on
+	 * devs that are not identified as PVs, but then we'd need
+	 * to do something other than using the standard md filter.
+	 */
+	if (cmd->md_component_detection && !cmd->use_full_md_check &&
+	    !strcmp(cmd->md_component_checks, "auto") &&
+	    dev_cache_has_md_with_end_superblock(cmd->dev_types)) {
+		log_debug("Enable full md component check.");
+		cmd->use_full_md_check = 1;
+	}
+
+	/*
 	 * Set up the iterator that is needed to step through each device in
 	 * dev cache.
 	 */
@@ -931,19 +945,6 @@ int label_scan(struct cmd_context *cmd)
 			bcache_invalidate_fd(scan_bcache, dev->bcache_fd);
 			_scan_dev_close(dev);
 		}
-
-		/*
-		 * When md devices exist that use the old superblock at the
-		 * end of the device, then in order to detect and filter out
-		 * the component devices of those md devs, we enable the full
-		 * md filter which scans both the start and the end of every
-		 * device.  This doubles the amount of scanning i/o, which we
-		 * want to avoid.  FIXME: this forces start+end scanning of
-		 * every device, but it would be more efficient to limit the
-		 * end scan only to PVs.
-		 */
-		if (dev_is_md_with_end_superblock(cmd->dev_types, dev))
-			cmd->use_full_md_check = 1;
 	};
 	dev_iter_destroy(iter);
 
