@@ -3504,17 +3504,39 @@ static void _set_pv_device(struct format_instance *fid,
 			   struct physical_volume *pv)
 {
 	char buffer[64] __attribute__((aligned(8)));
+	struct cmd_context *cmd = fid->fmt->cmd;
+	struct device *dev;
 	uint64_t size;
 
-	if (!(pv->dev = lvmcache_device_from_pvid(fid->fmt->cmd, &pv->id, &pv->label_sector))) {
+	if (!(dev = lvmcache_device_from_pvid(cmd, &pv->id, &pv->label_sector))) {
 		if (!id_write_format(&pv->id, buffer, sizeof(buffer)))
 			buffer[0] = '\0';
 
-		if (fid->fmt->cmd && !fid->fmt->cmd->pvscan_cache_single)
+		if (cmd && !cmd->pvscan_cache_single)
 			log_warn("WARNING: Couldn't find device with uuid %s.", buffer);
 		else
 			log_debug_metadata("Couldn't find device with uuid %s.", buffer);
 	}
+
+	/*
+	 * If the device and PV are not the size, it's a clue that we might
+	 * be reading an MD component (but not necessarily). Skip this check:
+	 * . if md component detection is disabled
+	 * . if we are already doing full a md check in label scan
+	 * . if md_component_checks is auto, not none (full means use_full_md_check is set)
+	 */
+	if (dev && (pv->size != dev->size) && cmd &&
+	    cmd->md_component_detection &&
+	    !cmd->use_full_md_check &&
+	    !strcmp(cmd->md_component_checks, "auto")) {
+		if (dev_is_md_component(dev, NULL, 1)) {
+			log_warn("WARNING: device %s is an md component, not setting device for PV.",
+				 dev_name(dev));
+			dev = NULL;
+		}
+	}
+
+	pv->dev = dev;
 
 	/*
 	 * A previous command wrote the VG while this dev was missing, so
