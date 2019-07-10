@@ -42,7 +42,7 @@ aux lvmconf 'devices/obtain_device_list_from_udev = 0'
 
 aux extend_filter_LVMTEST "a|/dev/md|"
 
-aux prepare_devs 2
+aux prepare_devs 3
 
 # create 2 disk MD raid1 array
 # by default using metadata format 1.0 with data at the end of device
@@ -54,6 +54,9 @@ mddev=$(< MD_DEV)
 pvdev=$(< MD_DEV_PV)
 
 vgcreate $vg "$mddev"
+
+PVIDMD=`pvs $mddev --noheading -o uuid | tr -d - | awk '{print $1}'`
+echo $PVIDMD
 
 lvcreate -n $lv1 -l 2 $vg
 lvcreate -n $lv2 -l 2 -an $vg
@@ -87,7 +90,8 @@ pvs > out
 not grep "$dev1" out
 not grep "$dev2" out
 
-pvs -vvvv
+pvs 2>&1|tee out
+not grep "Not using device" out
 
 # should not activate from the md legs
 not vgchange -ay $vg
@@ -105,20 +109,16 @@ _clear_online_files
 pvscan --cache -aay "$dev1"
 pvscan --cache -aay "$dev2"
 
+not ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
+not ls "$RUNDIR/lvm/vgs_online/$vg"
+
 # should not show an active lv
 rm out
 lvs -o active $vg |tee out || true
 not grep "active" out
 
-# start the md dev
 mdadm --assemble "$mddev" "$dev1" "$dev2"
 aux udev_wait
-
-# Now that the md dev is online, pvs can see it
-# and check for components even if
-# md_component_checks is "start" (which disables
-# most default end-of-device scans)
-aux lvmconf 'devices/md_component_checks = "start"'
 
 not pvs "$dev1"
 not pvs "$dev2"
@@ -126,20 +126,44 @@ pvs > out
 not grep "$dev1" out
 not grep "$dev2" out
 
+lvs $vg
+vgchange -an $vg
+
+# should not activate from the md legs
+_clear_online_files
+pvscan --cache -aay "$dev1"
+pvscan --cache -aay "$dev2"
+
+not ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
+not ls "$RUNDIR/lvm/vgs_online/$vg"
+
+# should not show an active lv
+rm out
+lvs -o active $vg |tee out || true
+not grep "active" out
 
 vgchange -ay $vg
 
 check lv_field $vg/$lv1 lv_active "active"
 
 vgchange -an $vg
+
+_clear_online_files
+pvscan --cache -aay "$mddev"
+
+ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
+ls "$RUNDIR/lvm/vgs_online/$vg"
+
+lvs -o active $vg |tee out || true
+grep "active" out
+
+vgchange -an $vg
+
 aux udev_wait
 
 vgremove -f $vg
 
 aux cleanup_md_dev
-
-# Put this setting back to the default
-aux lvmconf 'devices/md_component_checks = "auto"'
 
 # create 2 disk MD raid0 array
 # by default using metadata format 1.0 with data at the end of device
@@ -154,7 +178,8 @@ pvdev=$(< MD_DEV_PV)
 
 vgcreate $vg "$mddev"
 
-lvs $vg
+PVIDMD=`pvs $mddev --noheading -o uuid | tr -d - | awk '{print $1}'`
+echo $PVIDMD
 
 lvcreate -n $lv1 -l 2 $vg
 lvcreate -n $lv2 -l 2 -an $vg
@@ -188,7 +213,8 @@ pvs > out
 not grep "$dev1" out
 not grep "$dev2" out
 
-pvs -vvvv
+pvs 2>&1|tee out
+not grep "Not using device" out
 
 # should not activate from the md legs
 not vgchange -ay $vg
@@ -206,6 +232,9 @@ _clear_online_files
 pvscan --cache -aay "$dev1"
 pvscan --cache -aay "$dev2"
 
+not ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
+not ls "$RUNDIR/lvm/vgs_online/$vg"
+
 # should not show an active lv
 rm out
 lvs -o active $vg |tee out || true
@@ -215,11 +244,171 @@ not grep "active" out
 mdadm --assemble "$mddev" "$dev1" "$dev2"
 aux udev_wait
 
-# Now that the md dev is online, pvs can see it
-# and check for components even if
-# md_component_checks is "start" (which disables
-# most default end-of-device scans)
-aux lvmconf 'devices/md_component_checks = "start"'
+not pvs "$dev1"
+not pvs "$dev2"
+pvs > out
+not grep "$dev1" out
+not grep "$dev2" out
+
+lvs $vg
+vgchange -an $vg
+
+# should not activate from the md legs
+_clear_online_files
+pvscan --cache -aay "$dev1"
+pvscan --cache -aay "$dev2"
+
+not ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
+not ls "$RUNDIR/lvm/vgs_online/$vg"
+
+# should not show an active lv
+rm out
+lvs -o active $vg |tee out || true
+not grep "active" out
+
+vgchange -ay $vg
+
+check lv_field $vg/$lv1 lv_active "active"
+
+vgchange -an $vg
+
+_clear_online_files
+pvscan --cache -aay "$mddev"
+
+ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
+ls "$RUNDIR/lvm/vgs_online/$vg"
+
+lvs -o active $vg |tee out || true
+grep "active" out
+
+vgchange -an $vg
+
+aux udev_wait
+
+vgremove -f $vg
+
+aux cleanup_md_dev
+
+# Repeat tests using the default config settings
+
+aux lvmconf 'devices/hints = "all"'
+aux lvmconf 'devices/obtain_device_list_from_udev = 1'
+
+# create 2 disk MD raid0 array
+# by default using metadata format 1.0 with data at the end of device
+# When a raid0 md array is stopped, the components will not look like
+# duplicate PVs as they do with raid1.
+aux prepare_md_dev 0 64 2 "$dev1" "$dev2"
+
+cat /proc/mdstat
+
+mddev=$(< MD_DEV)
+pvdev=$(< MD_DEV_PV)
+
+# Create an unused PV so that there is at least one PV in the hints
+# when the MD dev is stopped.  If there are no PVs, the hints are
+# empty, and the code falls back to scanning all, and we do not end
+# up testing the code with hints actively used.
+pvcreate "$dev3"
+
+vgcreate $vg "$mddev"
+
+PVIDMD=`pvs $mddev --noheading -o uuid | tr -d - | awk '{print $1}'`
+echo $PVIDMD
+
+lvcreate -n $lv1 -l 2 $vg
+lvcreate -n $lv2 -l 2 -an $vg
+
+lvchange -ay $vg/$lv2
+check lv_field $vg/$lv1 lv_active "active"
+
+# lvm does not show md components as PVs
+pvs "$mddev"
+not pvs "$dev1"
+not pvs "$dev2"
+pvs > out
+not grep "$dev1" out
+not grep "$dev2" out
+
+grep "$mddev" /run/lvm/hints
+grep "$dev3" /run/lvm/hints
+not grep "$dev1" /run/lvm/hints
+not grep "$dev2" /run/lvm/hints
+
+sleep 1
+
+vgchange -an $vg
+sleep 1
+
+# When the md device is started, lvm will see that and know to
+# scan for md components, so stop the md device to remove this
+# advantage so we will test the fallback detection.
+mdadm --stop "$mddev"
+aux udev_wait
+
+# A WARNING indicating duplicate PVs is printed by 'pvs' in this
+# case.  It's printed during the scan, but after the scan, the
+# md component detection is run on the devs and they are dropped
+# when we see they are md components. So, we ignore the warning
+# containing the word duplicate, and look for the "Not using device"
+# message, which shouldn't appear, as it would indicate that
+# we didn't drop the md components.
+# FIXME: we should avoid printing the premature warning indicating
+# duplicate PVs which are eventually recognized as md components
+# and dropped.
+pvs 2>&1|tee out1
+grep -v WARNING out1 > out2
+not grep "Not using device" out2
+not grep "$mddev" out2
+not grep "$dev1" out2
+not grep "$dev2" out2
+grep "$dev3" out2
+cat /run/lvm/hints
+
+pvs 2>&1|tee out1
+grep -v WARNING out1 > out2
+not grep "Not using device" out2
+not grep "$mddev" out2
+not grep "$dev1" out2
+not grep "$dev2" out2
+grep "$dev3" out2
+cat /run/lvm/hints
+
+# The md components should still be detected and excluded.
+not pvs "$dev1"
+not pvs "$dev2"
+pvs > out
+not grep "$dev1" out
+not grep "$dev2" out
+grep "$dev3" out
+
+# should not activate from the md legs
+not vgchange -ay $vg
+
+# should not show an active lv
+rm out
+lvs -o active $vg |tee out || true
+not grep "active" out
+
+# should not allow updating vg
+not lvcreate -l1 $vg
+
+# should not activate from the md legs
+_clear_online_files
+pvscan --cache -aay "$dev1"
+pvscan --cache -aay "$dev2"
+
+not ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
+not ls "$RUNDIR/lvm/vgs_online/$vg"
+
+# should not show an active lv
+rm out
+lvs -o active $vg |tee out || true
+not grep "active" out
+
+# start the md dev
+mdadm --assemble "$mddev" "$dev1" "$dev2"
+aux udev_wait
 
 not pvs "$dev1"
 not pvs "$dev2"
@@ -227,11 +416,39 @@ pvs > out
 not grep "$dev1" out
 not grep "$dev2" out
 
-vgchange -ay $vg 2>&1 |tee out
+lvs $vg
+vgchange -an $vg
+
+# should not activate from the md legs
+_clear_online_files
+pvscan --cache -aay "$dev1"
+pvscan --cache -aay "$dev2"
+
+not ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
+not ls "$RUNDIR/lvm/vgs_online/$vg"
+
+# should not show an active lv
+rm out
+lvs -o active $vg |tee out || true
+not grep "active" out
+
+vgchange -ay $vg
 
 check lv_field $vg/$lv1 lv_active "active"
 
 vgchange -an $vg
+
+_clear_online_files
+pvscan --cache -aay "$mddev"
+
+ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
+ls "$RUNDIR/lvm/vgs_online/$vg"
+
+lvs -o active $vg |tee out || true
+grep "active" out
+
+vgchange -an $vg
+
 aux udev_wait
 
 vgremove -f $vg
