@@ -27,7 +27,7 @@ _clear_online_files() {
 
 . lib/inittest
 
-aux prepare_pvs 8
+aux prepare_devs 8 16
 
 vgcreate $vg1 "$dev1" "$dev2"
 lvcreate -n $lv1 -l 4 -a n $vg1
@@ -208,4 +208,30 @@ check lv_field $vg3/$lv1 lv_active ""
 pvscan --cache -aay
 check lv_field $vg3/$lv1 lv_active "active"
 lvchange -an $vg3
+
+# Test event activation when PV and dev size don't match
+
+vgremove -ff $vg3
+
+pvremove "$dev8"
+pvcreate -y --setphysicalvolumesize 8M "$dev8"
+
+PVID8=`pvs $dev8 --noheading -o uuid | tr -d - | awk '{print $1}'`
+echo $PVID8
+
+vgcreate $vg3 "$dev8"
+lvcreate -l1 -n $lv1 $vg3
+check lv_field $vg3/$lv1 lv_active "active"
+vgchange -an $vg3
+check lv_field $vg3/$lv1 lv_active ""
+
+_clear_online_files
+
+pvscan --cache -aay "$dev8"
+check lv_field $vg3/$lv1 lv_active "active"
+ls "$RUNDIR/lvm/pvs_online/$PVID8"
+ls "$RUNDIR/lvm/vgs_online/$vg3"
+vgchange -an $vg3
+
+vgremove -ff $vg3
 
