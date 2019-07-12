@@ -16,6 +16,7 @@ RUNDIR="/run"
 test -d "$RUNDIR" || RUNDIR="/var/run"
 PVS_ONLINE_DIR="$RUNDIR/lvm/pvs_online"
 VGS_ONLINE_DIR="$RUNDIR/lvm/vgs_online"
+HINTS="$RUNDIR/lvm/hints"
 
 _clear_online_files() {
         # wait till udev is finished
@@ -330,10 +331,10 @@ pvs > out
 not grep "$dev1" out
 not grep "$dev2" out
 
-grep "$mddev" /run/lvm/hints
-grep "$dev3" /run/lvm/hints
-not grep "$dev1" /run/lvm/hints
-not grep "$dev2" /run/lvm/hints
+grep "$mddev" $HINTS
+grep "$dev3" $HINTS
+not grep "$dev1" $HINTS
+not grep "$dev2" $HINTS
 
 sleep 1
 
@@ -363,7 +364,7 @@ not grep "$mddev" out2
 not grep "$dev1" out2
 not grep "$dev2" out2
 grep "$dev3" out2
-cat /run/lvm/hints
+cat $HINTS
 
 pvs 2>&1|tee out1
 grep -v WARNING out1 > out2
@@ -372,7 +373,7 @@ not grep "$mddev" out2
 not grep "$dev1" out2
 not grep "$dev2" out2
 grep "$dev3" out2
-cat /run/lvm/hints
+cat $HINTS
 
 # The md components should still be detected and excluded.
 not pvs "$dev1"
