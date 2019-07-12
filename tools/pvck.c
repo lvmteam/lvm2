@@ -395,6 +395,9 @@ static int _dump_meta_all(struct device *dev, const char *tofile,
 	search_offset = meta_offset + meta_size;
 
  search_next:
+	if (search_wrapped && (search_offset >= meta_offset + meta_size))
+		goto done;
+
 	if (search_offset > mda_size) {
 		if (search_wrapped)
 			goto done;
