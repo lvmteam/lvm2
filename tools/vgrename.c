@@ -202,6 +202,11 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 	if (!(vp.vg_name_new = dm_pool_strdup(cmd->mem, vg_name_new)))
 		return_ECMD_FAILED;
 
+	if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_WRITE, NULL)) {
+		log_error("Unable to obtain global lock.");
+		return_ECMD_FAILED;
+	}
+
 	/* Needed change the global VG namespace. */
 	if (!lockd_gl(cmd, "ex", LDGL_UPDATE_NAMES))
 		return_ECMD_FAILED;
