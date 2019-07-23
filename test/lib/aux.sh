@@ -1548,17 +1548,17 @@ version_at_least() {
 	IFS=".-" read -r major minor revision <<< "$1"
 	shift
 
-	test -z "$1" && return 0
+	test -n "${1:-}" || return 0
 	test -n "$major" || return 1
 	test "$major" -gt "$1" && return 0
 	test "$major" -eq "$1" || return 1
 
-	test -z "$2" && return 0
+	test -n "${2:-}" || return 0
 	test -n "$minor" || return 1
 	test "$minor" -gt "$2" && return 0
 	test "$minor" -eq "$2" || return 1
 
-	test -z "$3" && return 0
+	test -n "${3:-}" || return 0
 	test "$revision" -ge "$3" 2>/dev/null || return 1
 }
 #
