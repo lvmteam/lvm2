@@ -135,6 +135,58 @@ static int _io(struct device_area *where, char *buffer, int should_write, dev_io
 	return (total == (size_t) where->size);
 }
 
+int dev_get_direct_block_sizes(struct device *dev, unsigned int *physical_block_size,
+				unsigned int *logical_block_size)
+{
+	int fd = dev->bcache_fd;
+	int do_close = 0;
+	unsigned int pbs = 0;
+	unsigned int lbs = 0;
+
+	if (dev->physical_block_size || dev->logical_block_size) {
+		*physical_block_size = dev->physical_block_size;
+		*logical_block_size = dev->logical_block_size;
+		return 1;
+	}
+
+	if (fd <= 0) {
+		if (!dev_open_readonly(dev))
+			return 0;
+		fd = dev_fd(dev);
+		do_close = 1;
+	}
+
+	/*
+	 * BLKPBSZGET from kernel comment for blk_queue_physical_block_size:
+	 * "the lowest possible sector size that the hardware can operate on
+	 * without reverting to read-modify-write operations"
+	 */
+	if (ioctl(fd, BLKPBSZGET, &pbs)) {
+		stack;
+		pbs = 0;
+	}
+
+	/*
+	 * BLKSSZGET from kernel comment for blk_queue_logical_block_size:
+	 * "the lowest possible block size that the storage device can address."
+	 */
+	if (ioctl(fd, BLKSSZGET, &lbs)) {
+		stack;
+		lbs = 0;
+	}
+
+	dev->physical_block_size = pbs;
+	dev->logical_block_size = lbs;
+
+	*physical_block_size = pbs;
+	*logical_block_size = lbs;
+
+	if (do_close && !dev_close_immediate(dev))
+		stack;
+
+	return 1;
+}
+
 /*-----------------------------------------------------------------
  * LVM2 uses O_DIRECT when performing metadata io, which requires
  * block size aligned accesses.  If any io is not aligned we have

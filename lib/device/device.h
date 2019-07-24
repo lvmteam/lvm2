@@ -67,8 +67,10 @@ struct device {
 	int open_count;
 	int error_count;
 	int max_error_count;
-	int phys_block_size;
-	int block_size;
+	int phys_block_size;     /* From either BLKPBSZGET or BLKSSZGET, don't use */
+	int block_size;          /* From BLKBSZGET, returns bdev->bd_block_size, likely set by fs, probably don't use */
+	int physical_block_size; /* From BLKPBSZGET: lowest possible sector size that the hardware can operate on without reverting to read-modify-write operations */
+	int logical_block_size;  /* From BLKSSZGET: lowest possible block size that the storage device can address */
 	int read_ahead;
 	int bcache_fd;
 	uint32_t flags;
@@ -132,6 +134,8 @@ void dev_size_seqno_inc(void);
  * All io should use these routines.
  */
 int dev_get_block_size(struct device *dev, unsigned int *phys_block_size, unsigned int *block_size);
+int dev_get_direct_block_sizes(struct device *dev, unsigned int *physical_block_size,
+                               unsigned int *logical_block_size);
 int dev_get_size(struct device *dev, uint64_t *size);
 int dev_get_read_ahead(struct device *dev, uint32_t *read_ahead);
 int dev_discard_blocks(struct device *dev, uint64_t offset_bytes, uint64_t size_bytes);
