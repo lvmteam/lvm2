@@ -1495,16 +1495,34 @@ bool dev_set_bytes(struct device *dev, uint64_t start, size_t len, uint8_t val)
 
 void dev_set_last_byte(struct device *dev, uint64_t offset)
 {
-	unsigned int phys_block_size = 0;
-	unsigned int block_size = 0;
+	unsigned int physical_block_size = 0;
+	unsigned int logical_block_size = 0;
+	unsigned int bs;
 
-	if (!dev_get_block_size(dev, &phys_block_size, &block_size)) {
+	if (!dev_get_direct_block_sizes(dev, &physical_block_size, &logical_block_size)) {
 		stack;
-		/* FIXME  ASSERT or regular error testing is missing */
-		return;
+		return; /* FIXME: error path ? */
 	}
 
-	bcache_set_last_byte(scan_bcache, dev->bcache_fd, offset, phys_block_size);
+	if ((physical_block_size == 512) && (logical_block_size == 512))
+		bs = 512;
+	else if ((physical_block_size == 4096) && (logical_block_size == 4096))
+		bs = 4096;
+	else if ((physical_block_size == 512) || (logical_block_size == 512)) {
+		log_debug("Set last byte mixed block sizes physical %u logical %u using 512",
+			  physical_block_size, logical_block_size);
+		bs = 512;
+	} else if ((physical_block_size == 4096) || (logical_block_size == 4096)) {
+		log_debug("Set last byte mixed block sizes physical %u logical %u using 4096",
+			  physical_block_size, logical_block_size);
+		bs = 4096;
+	} else {
+		log_debug("Set last byte mixed block sizes physical %u logical %u using 512",
+			  physical_block_size, logical_block_size);
+		bs = 512;
+	}
+
+	bcache_set_last_byte(scan_bcache, dev->bcache_fd, offset, bs);
 }
 
 void dev_unset_last_byte(struct device *dev)
