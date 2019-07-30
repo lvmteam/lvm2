@@ -1,5 +1,6 @@
 Version 1.02.160 - 
 ================================
+  Fix versioning of dm_stats_create_region and dm_stats_create_region.
   Parsing of cache status understand no_discard_passdown.
 
 Version 1.02.158 - 13th May 2019
