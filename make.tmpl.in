@@ -557,17 +557,17 @@ EXPORTED_SYMBOLS := $(wildcard $(srcdir)/.exported_symbols.Base $(srcdir)/.expor
 .export.sym: .exported_symbols_generated $(EXPORTED_SYMBOLS)
 ifeq (,$(firstword $(EXPORTED_SYMBOLS)))
 	$(Q) set -e; (echo "Base {"; echo "	global:";\
-		 $(SED) "s/^/		/;s/$$/;/" $<;\
+		 $(SED) "/^#/d;s/^/		/;s/$$/;/" $<;\
 		 echo "};";\
 		 echo "Local {"; echo "	local:"; echo "		*;"; echo "};";\
 		 ) > $@
 else
 	$(Q) set -e;\
-	R=$$($(SORT) $^ | uniq -u);\
+	R=$$($(SORT) $^ | $(GREP) -v "^#" | uniq -u);\
 	test -z "$$R" || { echo "Mismatch between symbols in shared library and lists in .exported_symbols.* files: $$R"; false; } ;\
 	( for i in $$(echo $(EXPORTED_SYMBOLS) | tr ' ' '\n' | $(SORT) -rnt_ -k5 ); do\
 		echo "$${i##*.} {"; echo "	global:";\
-		$(SED) "s/^/		/;s/$$/;/" $$i;\
+		$(SED) "/^#/d;s/^/		/;s/$$/;/" $$i;\
 		echo "};";\
 	  done;\
 	  echo "Local {"; echo "	local:"; echo "		*;"; echo "};";\
