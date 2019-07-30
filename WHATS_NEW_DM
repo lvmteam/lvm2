@@ -1,5 +1,6 @@
 Version 1.02.165 - 
 =================================
+  Fix versioning of dm_stats_create_region and dm_stats_create_region.
 
 Version 1.02.163 - 15th June 2019
 =================================
