@@ -1,5 +1,6 @@
 Version 2.03.06 - 
 ================================
+  Fix metadata writes from corrupting with large physical block size.
 
 Version 2.03.05 - 15th June 2019
 ================================
