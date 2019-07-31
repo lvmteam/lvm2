@@ -653,7 +653,7 @@ dnl -- writecache inclusion type
 AC_MSG_CHECKING(whether to include writecache)
 AC_ARG_WITH(writecache,
 	    AC_HELP_STRING([--with-writecache=TYPE],
-			   [writecache support: internal/none [internal]]),
+			   [writecache support: internal/none [none]]),
 			   WRITECACHE=$withval, WRITECACHE="none")
 
 AC_MSG_RESULT($WRITECACHE)
