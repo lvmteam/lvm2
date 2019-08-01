@@ -116,6 +116,28 @@ void lvmcache_unlock_vgname(const char *vgname)
 	}
 }
 
+static struct device_list *_get_devl_in_device_list(struct device *dev, struct dm_list *head)
+{
+	struct device_list *devl;
+
+	dm_list_iterate_items(devl, head) {
+		if (devl->dev == dev)
+			return devl;
+	}
+	return NULL;
+}
+
+int dev_in_device_list(struct device *dev, struct dm_list *head)
+{
+	struct device_list *devl;
+
+	dm_list_iterate_items(devl, head) {
+		if (devl->dev == dev)
+			return 1;
+	}
+	return 0;
+}
+
 bool lvmcache_has_duplicate_devs(void)
 {
 	if (dm_list_empty(&_unused_duplicates) && dm_list_empty(&_initial_duplicates))
@@ -147,11 +169,9 @@ void lvmcache_del_dev_from_duplicates(struct device *dev)
 {
 	struct device_list *devl;
 
-	dm_list_iterate_items(devl, &_unused_duplicates) {
-		if (devl->dev == dev) {
-			dm_list_del(&devl->list);
-			return;
-		}
+	if ((devl = _get_devl_in_device_list(dev, &_unused_duplicates))) {
+		log_debug_cache("delete dev from unused duplicates %s", dev_name(dev));
+		dm_list_del(&devl->list);
 	}
 }
 
@@ -377,17 +397,6 @@ int vg_has_duplicate_pvs(struct volume_group *vg)
 			if (id_equal(&pvl->pv->id, (const struct id *)devl->dev->pvid))
 				return 1;
 		}
-	}
-	return 0;
-}
-
-int dev_in_device_list(struct device *dev, struct dm_list *head)
-{
-	struct device_list *devl;
-
-	dm_list_iterate_items(devl, head) {
-		if (devl->dev == dev)
-			return 1;
 	}
 	return 0;
 }
