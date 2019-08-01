@@ -76,7 +76,6 @@ static DM_LIST_INIT(_initial_duplicates);
 static DM_LIST_INIT(_unused_duplicates);
 static DM_LIST_INIT(_prev_unused_duplicate_devs);
 static int _vgs_locked = 0;
-static int _found_duplicate_pvs = 0;	/* If we never see a duplicate PV we can skip checking for them later. */
 static int _found_duplicate_vgnames = 0;
 
 int lvmcache_init(struct cmd_context *cmd)
@@ -119,7 +118,9 @@ void lvmcache_unlock_vgname(const char *vgname)
 
 bool lvmcache_has_duplicate_devs(void)
 {
-	return _found_duplicate_pvs ? true : false;
+	if (dm_list_empty(&_unused_duplicates) && dm_list_empty(&_initial_duplicates))
+		return false;
+	return true;
 }
 
 int lvmcache_found_duplicate_vgnames(void)
@@ -439,9 +440,6 @@ static void _filter_duplicate_devs(struct cmd_context *cmd)
 			free(devl);
 		}
 	}
-
-	if (dm_list_empty(&_unused_duplicates))
-		_found_duplicate_pvs = 0;
 }
 
 static void _warn_unused_duplicates(struct cmd_context *cmd)
@@ -1851,7 +1849,6 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller,
 			devl->dev = dev;
 
 			dm_list_add(&_initial_duplicates, &devl->list);
-			_found_duplicate_pvs = 1;
 			if (is_duplicate)
 				*is_duplicate = 1;
 			return NULL;
@@ -1971,7 +1968,6 @@ void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 	dm_list_splice(&_prev_unused_duplicate_devs, &_unused_duplicates);
 	_destroy_device_list(&_unused_duplicates);
 	_destroy_device_list(&_initial_duplicates); /* should be empty anyway */
-	_found_duplicate_pvs = 0;
 
 	if (retain_orphans) {
 		struct format_type *fmt;
