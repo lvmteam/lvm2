@@ -169,10 +169,10 @@ struct metadata_area *lvmcache_get_mda(struct cmd_context *cmd,
                                       struct device *dev,
                                       int use_mda_num);
 
-int lvmcache_found_duplicate_pvs(void);
+bool lvmcache_has_duplicate_devs(void);
 int lvmcache_found_duplicate_vgnames(void);
 
-int lvmcache_get_unused_duplicate_devs(struct cmd_context *cmd, struct dm_list *head);
+int lvmcache_get_unused_duplicates(struct cmd_context *cmd, struct dm_list *head);
 
 int vg_has_duplicate_pvs(struct volume_group *vg);
 
@@ -183,11 +183,11 @@ void lvmcache_get_max_name_lengths(struct cmd_context *cmd,
 
 int lvmcache_vg_is_foreign(struct cmd_context *cmd, const char *vgname, const char *vgid);
 
-int lvmcache_dev_is_unchosen_duplicate(struct device *dev);
+bool lvmcache_dev_is_unused_duplicate(struct device *dev);
 
-void lvmcache_remove_unchosen_duplicate(struct device *dev);
+void lvmcache_del_dev_from_duplicates(struct device *dev);
 
-int lvmcache_pvid_in_unchosen_duplicates(const char *pvid);
+int lvmcache_pvid_in_unused_duplicates(const char *pvid);
 
 bool lvmcache_scan_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid);
 

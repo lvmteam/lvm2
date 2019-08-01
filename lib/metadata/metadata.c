@@ -2962,7 +2962,7 @@ int vg_write(struct volume_group *vg)
 		return 0;
 	}
 
-	if (lvmcache_found_duplicate_pvs() && vg_has_duplicate_pvs(vg) &&
+	if (lvmcache_has_duplicate_devs() && vg_has_duplicate_pvs(vg) &&
 	    !find_config_tree_bool(vg->cmd, devices_allow_changes_with_duplicate_pvs_CFG, NULL)) {
 		log_error("Cannot update volume group %s with duplicate PV devices.",
 			  vg->name);

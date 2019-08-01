@@ -40,7 +40,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 	 * to be copied here to prevent the pv_write() which is called before
 	 * the vg_write().
 	 */
-	if (vg && lvmcache_found_duplicate_pvs() && vg_has_duplicate_pvs(vg)) {
+	if (vg && lvmcache_has_duplicate_devs() && vg_has_duplicate_pvs(vg)) {
 	    	if (!find_config_tree_bool(vg->cmd, devices_allow_changes_with_duplicate_pvs_CFG, NULL)) {
 			log_error("Cannot update volume group %s with duplicate PV devices.",
 				  vg->name);

@@ -72,8 +72,8 @@ static struct dm_hash_table *_pvid_hash = NULL;
 static struct dm_hash_table *_vgid_hash = NULL;
 static struct dm_hash_table *_vgname_hash = NULL;
 static DM_LIST_INIT(_vginfos);
-static DM_LIST_INIT(_found_duplicate_devs);
-static DM_LIST_INIT(_unused_duplicate_devs);
+static DM_LIST_INIT(_initial_duplicates);
+static DM_LIST_INIT(_unused_duplicates);
 static DM_LIST_INIT(_prev_unused_duplicate_devs);
 static int _vgs_locked = 0;
 static int _found_duplicate_pvs = 0;	/* If we never see a duplicate PV we can skip checking for them later. */
@@ -88,8 +88,8 @@ int lvmcache_init(struct cmd_context *cmd)
 	_vgs_locked = 0;
 
 	dm_list_init(&_vginfos);
-	dm_list_init(&_found_duplicate_devs);
-	dm_list_init(&_unused_duplicate_devs);
+	dm_list_init(&_initial_duplicates);
+	dm_list_init(&_unused_duplicates);
 	dm_list_init(&_prev_unused_duplicate_devs);
 
 	if (!(_vgname_hash = dm_hash_create(128)))
@@ -117,22 +117,9 @@ void lvmcache_unlock_vgname(const char *vgname)
 	}
 }
 
-/*
- * When lvmcache sees a duplicate PV, this is set.
- * process_each_pv() can avoid searching for duplicates
- * by checking this and seeing that no duplicate PVs exist.
- *
- *
- * found_duplicate_pvs tells the process_each_pv code
- * to search the devices list for duplicates, so that
- * devices can be processed together with their
- * duplicates (while processing the VG, rather than
- * reporting pv->dev under the VG, and its duplicate
- * outside the VG context.)
- */
-int lvmcache_found_duplicate_pvs(void)
+bool lvmcache_has_duplicate_devs(void)
 {
-	return _found_duplicate_pvs;
+	return _found_duplicate_pvs ? true : false;
 }
 
 int lvmcache_found_duplicate_vgnames(void)
@@ -140,11 +127,11 @@ int lvmcache_found_duplicate_vgnames(void)
 	return _found_duplicate_vgnames;
 }
 
-int lvmcache_get_unused_duplicate_devs(struct cmd_context *cmd, struct dm_list *head)
+int lvmcache_get_unused_duplicates(struct cmd_context *cmd, struct dm_list *head)
 {
 	struct device_list *devl, *devl2;
 
-	dm_list_iterate_items(devl, &_unused_duplicate_devs) {
+	dm_list_iterate_items(devl, &_unused_duplicates) {
 		if (!(devl2 = dm_pool_alloc(cmd->mem, sizeof(*devl2)))) {
 			log_error("device_list element allocation failed");
 			return 0;
@@ -155,11 +142,11 @@ int lvmcache_get_unused_duplicate_devs(struct cmd_context *cmd, struct dm_list *
 	return 1;
 }
 
-void lvmcache_remove_unchosen_duplicate(struct device *dev)
+void lvmcache_del_dev_from_duplicates(struct device *dev)
 {
 	struct device_list *devl;
 
-	dm_list_iterate_items(devl, &_unused_duplicate_devs) {
+	dm_list_iterate_items(devl, &_unused_duplicates) {
 		if (devl->dev == dev) {
 			dm_list_del(&devl->list);
 			return;
@@ -167,7 +154,7 @@ void lvmcache_remove_unchosen_duplicate(struct device *dev)
 	}
 }
 
-static void _destroy_duplicate_device_list(struct dm_list *head)
+static void _destroy_device_list(struct dm_list *head)
 {
 	struct device_list *devl, *devl2;
 
@@ -385,7 +372,7 @@ int vg_has_duplicate_pvs(struct volume_group *vg)
 	struct device_list *devl;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
-		dm_list_iterate_items(devl, &_unused_duplicate_devs) {
+		dm_list_iterate_items(devl, &_unused_duplicates) {
 			if (id_equal(&pvl->pv->id, (const struct id *)devl->dev->pvid))
 				return 1;
 		}
@@ -404,9 +391,9 @@ int dev_in_device_list(struct device *dev, struct dm_list *head)
 	return 0;
 }
 
-int lvmcache_dev_is_unchosen_duplicate(struct device *dev)
+bool lvmcache_dev_is_unused_duplicate(struct device *dev)
 {
-	return dev_in_device_list(dev, &_unused_duplicate_devs);
+	return dev_in_device_list(dev, &_unused_duplicates) ? true : false;
 }
 
 /*
@@ -441,7 +428,7 @@ static void _filter_duplicate_devs(struct cmd_context *cmd)
 	struct lvmcache_info *info;
 	struct device_list *devl, *devl2;
 
-	dm_list_iterate_items_safe(devl, devl2, &_unused_duplicate_devs) {
+	dm_list_iterate_items_safe(devl, devl2, &_unused_duplicates) {
 
 		if (!(info = lvmcache_info_from_pvid(devl->dev->pvid, NULL, 0)))
 			continue;
@@ -453,24 +440,24 @@ static void _filter_duplicate_devs(struct cmd_context *cmd)
 		}
 	}
 
-	if (dm_list_empty(&_unused_duplicate_devs))
+	if (dm_list_empty(&_unused_duplicates))
 		_found_duplicate_pvs = 0;
 }
 
-static void _warn_duplicate_devs(struct cmd_context *cmd)
+static void _warn_unused_duplicates(struct cmd_context *cmd)
 {
 	char uuid[64] __attribute__((aligned(8)));
 	struct lvmcache_info *info;
 	struct device_list *devl, *devl2;
 
-	dm_list_iterate_items_safe(devl, devl2, &_unused_duplicate_devs) {
+	dm_list_iterate_items_safe(devl, devl2, &_unused_duplicates) {
 		if (!id_write_format((const struct id *)devl->dev->pvid, uuid, sizeof(uuid)))
 			stack;
 
 		log_warn("WARNING: Not using device %s for PV %s.", dev_name(devl->dev), uuid);
 	}
 
-	dm_list_iterate_items_safe(devl, devl2, &_unused_duplicate_devs) {
+	dm_list_iterate_items_safe(devl, devl2, &_unused_duplicates) {
 		/* info for the preferred device that we're actually using */
 		if (!(info = lvmcache_info_from_pvid(devl->dev->pvid, NULL, 0)))
 			continue;
@@ -484,26 +471,26 @@ static void _warn_duplicate_devs(struct cmd_context *cmd)
 }
 
 /*
- * Compare _found_duplicate_devs entries with the corresponding duplicate dev
- * in lvmcache.  There may be multiple duplicates in _found_duplicate_devs for
- * a given pvid.  If a dev from _found_duplicate_devs is preferred over the dev
+ * Compare _initial_duplicates entries with the corresponding duplicate dev
+ * in lvmcache.  There may be multiple duplicates in _initial_duplicates for
+ * a given pvid.  If a dev from _initial_duplicates is preferred over the dev
  * in lvmcache, then drop the dev in lvmcache and rescan the preferred dev to
  * add it to lvmcache.
  *
- * _found_duplicate_devs: duplicate devs found during initial scan.
+ * _initial_duplicates: duplicate devs found during initial scan.
  * These are compared to lvmcache devs to see if any are preferred.
  *
- * _unused_duplicate_devs: duplicate devs not chosen to be used.
- * These are _found_duplicate_devs entries that were not chosen,
+ * _unused_duplicates: duplicate devs not chosen to be used.
+ * These are _initial_duplicates entries that were not chosen,
  * or unpreferred lvmcache devs that were dropped.
  *
  * del_cache_devs: devices to drop from lvmcache
  * add_cache_devs: devices to scan to add to lvmcache
  */
 
-static void _choose_preferred_devs(struct cmd_context *cmd,
-				   struct dm_list *del_cache_devs,
-				   struct dm_list *add_cache_devs)
+static void _choose_duplicates(struct cmd_context *cmd,
+			       struct dm_list *del_cache_devs,
+			       struct dm_list *add_cache_devs)
 {
 	const char *reason;
 	struct dm_list altdevs;
@@ -531,7 +518,7 @@ next:
 	dm_list_init(&altdevs);
 	alt = NULL;
 
-	dm_list_iterate_items_safe(devl, devl_safe, &_found_duplicate_devs) {
+	dm_list_iterate_items_safe(devl, devl_safe, &_initial_duplicates) {
 		if (!alt) {
 			dm_list_move(&altdevs, &devl->list);
 			alt = devl;
@@ -542,8 +529,8 @@ next:
 	}
 
 	if (!alt) {
-		_destroy_duplicate_device_list(&_unused_duplicate_devs);
-		dm_list_splice(&_unused_duplicate_devs, &new_unused);
+		_destroy_device_list(&_unused_duplicates);
+		dm_list_splice(&_unused_duplicates, &new_unused);
 		return;
 	}
 
@@ -578,8 +565,8 @@ next:
 			continue;
 		}
 
-		prev_unchosen1 = dev_in_device_list(dev1, &_unused_duplicate_devs);
-		prev_unchosen2 = dev_in_device_list(dev2, &_unused_duplicate_devs);
+		prev_unchosen1 = dev_in_device_list(dev1, &_unused_duplicates);
+		prev_unchosen2 = dev_in_device_list(dev2, &_unused_duplicates);
 
 		if (!prev_unchosen1 && !prev_unchosen2) {
 			/*
@@ -732,9 +719,9 @@ next:
 	}
 
 	/*
-	 * alt devs not chosen are moved to _unused_duplicate_devs.
-	 * del_cache_devs being dropped are moved to _unused_duplicate_devs
-	 * after being dropped.  So, _unused_duplicate_devs represents all
+	 * alt devs not chosen are moved to _unused_duplicates.
+	 * del_cache_devs being dropped are moved to _unused_duplicates
+	 * after being dropped.  So, _unused_duplicates represents all
 	 * duplicates not being used in lvmcache.
 	 */
 
@@ -879,9 +866,9 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 		log_error("Scan failed to refresh device filter.");
 
 	/*
-	 * Duplicates found during this label scan are added to _found_duplicate_devs().
+	 * Duplicates found during this label scan are added to _initial_duplicates().
 	 */
-	_destroy_duplicate_device_list(&_found_duplicate_devs);
+	_destroy_device_list(&_initial_duplicates);
 
 	/*
 	 * Do the actual scanning.  This populates lvmcache
@@ -895,7 +882,7 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	label_scan(cmd);
 
 	/*
-	 * _choose_preferred_devs() returns:
+	 * _choose_duplicates() returns:
 	 *
 	 * . del_cache_devs: a list of devs currently in lvmcache that should
 	 * be removed from lvmcache because they will be replaced with
@@ -909,16 +896,16 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	 * the devs that are preferred to add them to lvmcache.
 	 *
 	 * Keep a complete list of all devs that are unused by moving the
-	 * del_cache_devs onto _unused_duplicate_devs.
+	 * del_cache_devs onto _unused_duplicates.
 	 */
 
-	if (!dm_list_empty(&_found_duplicate_devs)) {
+	if (!dm_list_empty(&_initial_duplicates)) {
 		dm_list_init(&del_cache_devs);
 		dm_list_init(&add_cache_devs);
 
 		log_debug_cache("Resolving duplicate devices");
 
-		_choose_preferred_devs(cmd, &del_cache_devs, &add_cache_devs);
+		_choose_duplicates(cmd, &del_cache_devs, &add_cache_devs);
 
 		dm_list_iterate_items(devl, &del_cache_devs) {
 			log_debug_cache("Drop duplicate device %s in lvmcache", dev_name(devl->dev));
@@ -931,7 +918,7 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 			label_read(devl->dev);
 		}
 
-		dm_list_splice(&_unused_duplicate_devs, &del_cache_devs);
+		dm_list_splice(&_unused_duplicates, &del_cache_devs);
 
 		/*
 		 * This may remove some entries from the unused_duplicates list for
@@ -943,7 +930,7 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 		 * Warn about remaining duplicates that may actually be separate copies of
 		 * the same device.
 		 */
-		_warn_duplicate_devs(cmd);
+		_warn_unused_duplicates(cmd);
 	}
 
 	r = 1;
@@ -1028,11 +1015,11 @@ struct device *lvmcache_device_from_pvid(struct cmd_context *cmd, const struct i
 	return NULL;
 }
 
-int lvmcache_pvid_in_unchosen_duplicates(const char *pvid)
+int lvmcache_pvid_in_unused_duplicates(const char *pvid)
 {
 	struct device_list *devl;
 
-	dm_list_iterate_items(devl, &_unused_duplicate_devs) {
+	dm_list_iterate_items(devl, &_unused_duplicates) {
 		if (!strncmp(devl->dev->pvid, pvid, ID_LEN))
 			return 1;
 	}
@@ -1863,7 +1850,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller,
 				return_NULL;
 			devl->dev = dev;
 
-			dm_list_add(&_found_duplicate_devs, &devl->list);
+			dm_list_add(&_initial_duplicates, &devl->list);
 			_found_duplicate_pvs = 1;
 			if (is_duplicate)
 				*is_duplicate = 1;
@@ -1971,8 +1958,8 @@ void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 	dm_list_init(&_vginfos);
 
 	/*
-	 * Move the current _unused_duplicate_devs to _prev_unused_duplicate_devs
-	 * before destroying _unused_duplicate_devs.
+	 * Move the current _unused_duplicates to _prev_unused_duplicate_devs
+	 * before destroying _unused_duplicates.
 	 *
 	 * One command can init/populate/destroy lvmcache multiple times.  Each
 	 * time it will encounter duplicates and choose the preferrred devs.
@@ -1980,10 +1967,10 @@ void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 	 * the unpreferred devs here so that _choose_preferred_devs can use
 	 * this to make the same choice each time.
 	 */
-	_destroy_duplicate_device_list(&_prev_unused_duplicate_devs);
-	dm_list_splice(&_prev_unused_duplicate_devs, &_unused_duplicate_devs);
-	_destroy_duplicate_device_list(&_unused_duplicate_devs);
-	_destroy_duplicate_device_list(&_found_duplicate_devs); /* should be empty anyway */
+	_destroy_device_list(&_prev_unused_duplicate_devs);
+	dm_list_splice(&_prev_unused_duplicate_devs, &_unused_duplicates);
+	_destroy_device_list(&_unused_duplicates);
+	_destroy_device_list(&_initial_duplicates); /* should be empty anyway */
 	_found_duplicate_pvs = 0;
 
 	if (retain_orphans) {

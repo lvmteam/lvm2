@@ -1048,7 +1048,7 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (is_change_activating(activate) &&
-	    lvmcache_found_duplicate_pvs() &&
+	    lvmcache_has_duplicate_devs() &&
 	    vg_has_duplicate_pvs(lv->vg) &&
 	    !find_config_tree_bool(cmd, devices_allow_changes_with_duplicate_pvs_CFG, NULL)) {
 		log_error("Cannot activate LVs in VG %s while PVs appear on duplicate devices.",
@@ -1499,7 +1499,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 			}
 
 			if (!(label = lvmcache_get_dev_label(dev))) {
-				if (!lvmcache_dev_is_unchosen_duplicate(dev)) {
+				if (!lvmcache_dev_is_unused_duplicate(dev)) {
 					log_error("No physical volume label read from %s.", argv[opt]);
 					ret_max = ECMD_FAILED;
 				} else {
@@ -4089,7 +4089,7 @@ static int _process_duplicate_pvs(struct cmd_context *cmd,
 
 	dm_list_init(&unused_duplicate_devs);
 
-	if (!lvmcache_get_unused_duplicate_devs(cmd, &unused_duplicate_devs))
+	if (!lvmcache_get_unused_duplicates(cmd, &unused_duplicate_devs))
 		return_ECMD_FAILED;
 
 	dm_list_iterate_items(devl, &unused_duplicate_devs) {
@@ -5016,7 +5016,7 @@ static int _pvcreate_check_single(struct cmd_context *cmd,
 	/*
 	 * Don't allow using a device with duplicates.
 	 */
-	if (lvmcache_pvid_in_unchosen_duplicates(pd->dev->pvid)) {
+	if (lvmcache_pvid_in_unused_duplicates(pd->dev->pvid)) {
 		log_error("Cannot use device %s with duplicates.", pd->name);
 		dm_list_move(&pp->arg_fail, &pd->list);
 		return 1;
@@ -5473,9 +5473,9 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	 * erase them below without going through the normal processing code.
 	 */
 	if (pp->is_remove && (pp->force == DONT_PROMPT_OVERRIDE) &&
-	   !dm_list_empty(&pp->arg_devices) && lvmcache_found_duplicate_pvs()) {
+	   !dm_list_empty(&pp->arg_devices) && lvmcache_has_duplicate_devs()) {
 		dm_list_iterate_items_safe(pd, pd2, &pp->arg_devices) {
-			if (lvmcache_dev_is_unchosen_duplicate(pd->dev)) {
+			if (lvmcache_dev_is_unused_duplicate(pd->dev)) {
 				log_debug("Found pvremove arg %s: device is a duplicate.", pd->name);
 				dm_list_move(&remove_duplicates, &pd->list);
 			}
@@ -5806,7 +5806,7 @@ do_command:
 			continue;
 		}
 
-		lvmcache_remove_unchosen_duplicate(pd->dev);
+		lvmcache_del_dev_from_duplicates(pd->dev);
 
 		log_print_unless_silent("Labels on physical volume \"%s\" successfully wiped.",
 					pd->name);

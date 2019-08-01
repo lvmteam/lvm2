@@ -450,7 +450,7 @@ int validate_hints(struct cmd_context *cmd, struct dm_list *hints)
 	if (!cmd->use_hints && !cmd->pvscan_recreate_hints)
 		return 0;
 
-	if (lvmcache_found_duplicate_pvs()) {
+	if (lvmcache_has_duplicate_devs()) {
 		log_debug("Hints not used with duplicate pvs");
 		ret = 0;
 		goto out;
@@ -820,7 +820,7 @@ int write_hint_file(struct cmd_context *cmd, int newhints)
 	if (!cmd->use_hints && !cmd->pvscan_recreate_hints)
 		return 0;
 
-	if (lvmcache_found_duplicate_pvs() || lvmcache_found_duplicate_vgnames()) {
+	if (lvmcache_has_duplicate_devs() || lvmcache_found_duplicate_vgnames()) {
 		/*
 		 * When newhints is EMPTY, it means get_hints() found an empty
 		 * hint file.  So we scanned all devs and found duplicate pvids
@@ -841,11 +841,11 @@ int write_hint_file(struct cmd_context *cmd, int newhints)
 
 	t = time(NULL);
 
-	if (lvmcache_found_duplicate_pvs() || lvmcache_found_duplicate_vgnames()) {
+	if (lvmcache_has_duplicate_devs() || lvmcache_found_duplicate_vgnames()) {
 		fprintf(fp, "# Created empty by %s pid %d %s", cmd->name, getpid(), ctime(&t));
 
 		/* leave a comment about why it's empty in case someone is curious */
-		if (lvmcache_found_duplicate_pvs())
+		if (lvmcache_has_duplicate_devs())
 			fprintf(fp, "# info: duplicate_pvs\n");
 		if (lvmcache_found_duplicate_vgnames())
 			fprintf(fp, "# info: duplicate_vgnames\n");

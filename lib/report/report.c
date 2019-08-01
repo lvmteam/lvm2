@@ -3354,7 +3354,7 @@ static int _pvduplicate_disp(struct dm_report *rh, struct dm_pool *mem,
 			    const void *data, void *private)
 {
 	const struct physical_volume *pv = (const struct physical_volume *) data;
-	int duplicate = lvmcache_dev_is_unchosen_duplicate(pv->dev);
+	int duplicate = lvmcache_dev_is_unused_duplicate(pv->dev);
 
 	return _binary_disp(rh, mem, field, duplicate, GET_FIRST_RESERVED_NAME(pv_duplicate_y), private);
 }
