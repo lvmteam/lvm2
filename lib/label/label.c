@@ -441,7 +441,7 @@ static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
 			 * struct for this dev, but added this dev to the list
 			 * of duplicate devs.
 			 */
-			log_warn("WARNING: scan found duplicate PVID %s on %s", dev->pvid, dev_name(dev));
+			log_debug("label scan found duplicate PVID %s on %s", dev->pvid, dev_name(dev));
 		} else {
 			/*
 			 * Leave the info in lvmcache because the device is
@@ -1117,9 +1117,10 @@ int label_scan(struct cmd_context *cmd)
 				log_debug_devs("Scanning end of PVs with no udev info for MD components");
 
 			if (dev_is_md_component(devl->dev, NULL, 1)) {
-				log_debug_devs("Drop PV from MD component %s", dev_name(devl->dev));
+				log_debug_devs("Scan dropping PV from MD component %s", dev_name(devl->dev));
 				devl->dev->flags &= ~DEV_SCAN_FOUND_LABEL;
 				lvmcache_del_dev(devl->dev);
+				lvmcache_del_dev_from_duplicates(devl->dev);
 			}
 		}
 	}
