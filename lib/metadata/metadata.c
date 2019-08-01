@@ -699,11 +699,39 @@ int vg_extend_each_pv(struct volume_group *vg, struct pvcreate_params *pp)
 {
 	struct pv_list *pvl;
 	unsigned int max_phys_block_size = 0;
+	unsigned int physical_block_size, logical_block_size;
+	unsigned int prev_lbs = 0;
+	int inconsistent_existing_lbs = 0;
 
 	log_debug_metadata("Adding PVs to VG %s.", vg->name);
 
 	if (vg_bad_status_bits(vg, RESIZEABLE_VG))
 		return_0;
+
+	/*
+	 * Check if existing PVs have inconsistent block sizes.
+	 * If so, do not enforce new devices to be consistent.
+	 */
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		logical_block_size = 0;
+		physical_block_size = 0;
+
+		if (!dev_get_direct_block_sizes(pvl->pv->dev, &physical_block_size, &logical_block_size))
+			continue;
+
+		if (!logical_block_size)
+			continue;
+
+		if (!prev_lbs) {
+			prev_lbs = logical_block_size;
+			continue;
+		}
+		
+		if (prev_lbs != logical_block_size) {
+			inconsistent_existing_lbs = 1;
+			break;
+		}
+	}
 
 	dm_list_iterate_items(pvl, &pp->pvs) {
 		log_debug_metadata("Adding PV %s to VG %s.", pv_dev_name(pvl->pv), vg->name);
@@ -713,6 +741,22 @@ int vg_extend_each_pv(struct volume_group *vg, struct pvcreate_params *pp)
 						  &max_phys_block_size))) {
 			log_error("PV %s has wrong block size.", pv_dev_name(pvl->pv));
 			return 0;
+		}
+
+		logical_block_size = 0;
+		physical_block_size = 0;
+
+		if (!dev_get_direct_block_sizes(pvl->pv->dev, &physical_block_size, &logical_block_size))
+			log_warn("WARNING: PV %s has unknown block size.", pv_dev_name(pvl->pv));
+
+		else if (prev_lbs && logical_block_size && (logical_block_size != prev_lbs)) {
+			if (vg->cmd->allow_mixed_block_sizes || inconsistent_existing_lbs)
+				log_debug("Devices have inconsistent block sizes (%u and %u)", prev_lbs, logical_block_size);
+			else {
+				log_error("Devices have inconsistent logical block sizes (%u and %u).",
+					  prev_lbs, logical_block_size);
+				return 0;
+			}
 		}
 
 		if (!add_pv_to_vg(vg, pv_dev_name(pvl->pv), pvl->pv, 0)) {
