@@ -623,6 +623,7 @@ struct pvcreate_params {
 	unsigned is_remove : 1;         /* is removing PVs, not creating */
 	unsigned preserve_existing : 1;
 	unsigned check_failed : 1;
+	unsigned check_consistent_block_size : 1;
 };
 
 struct lvresize_params {

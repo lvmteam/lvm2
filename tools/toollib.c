@@ -5355,6 +5355,8 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	struct pv_list *vgpvl;
 	struct device_list *devl;
 	const char *pv_name;
+	unsigned int physical_block_size, logical_block_size;
+	unsigned int prev_pbs = 0, prev_lbs = 0;
 	int must_use_all = (cmd->cname->flags & MUST_USE_ALL_ARGS);
 	int found;
 	unsigned i;
@@ -5393,6 +5395,51 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	 */
 	dm_list_iterate_items(pd, &pp->arg_devices)
 		pd->dev = dev_cache_get(cmd, pd->name, cmd->filter);
+
+	/*
+	 * Check for consistent block sizes.
+	 */
+	if (pp->check_consistent_block_size) {
+		dm_list_iterate_items(pd, &pp->arg_devices) {
+			if (!pd->dev)
+				continue;
+
+			logical_block_size = 0;
+			physical_block_size = 0;
+
+			if (!dev_get_direct_block_sizes(pd->dev, &physical_block_size, &logical_block_size)) {
+				log_warn("WARNING: Unknown block size for device %s.", dev_name(pd->dev));
+				continue;
+			}
+
+			if (!logical_block_size) {
+				log_warn("WARNING: Unknown logical_block_size for device %s.", dev_name(pd->dev));
+				continue;
+			}
+
+			if (!prev_lbs) {
+				prev_lbs = logical_block_size;
+				prev_pbs = physical_block_size;
+				continue;
+			}
+
+			if (prev_lbs == logical_block_size) {
+				/* Require lbs to match, just warn about unmatching pbs. */
+				if (!cmd->allow_mixed_block_sizes && prev_pbs && physical_block_size &&
+				    (prev_pbs != physical_block_size))
+					log_warn("WARNING: Devices have inconsistent physical block sizes (%u and %u).",
+						  prev_pbs, physical_block_size);
+				continue;
+			}
+
+			if (!cmd->allow_mixed_block_sizes) {
+				log_error("Devices have inconsistent logical block sizes (%u and %u).",
+					  prev_lbs, logical_block_size);
+				log_print("See lvm.conf allow_mixed_block_sizes.");
+				return 0;
+			}
+		}
+	}
 
 	/*
 	 * Use process_each_pv to search all existing PVs and devices.

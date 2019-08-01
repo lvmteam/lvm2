@@ -2319,6 +2319,8 @@ static int _get_current_settings(struct cmd_context *cmd)
 
 	cmd->scan_lvs = find_config_tree_bool(cmd, devices_scan_lvs_CFG, NULL);
 
+	cmd->allow_mixed_block_sizes = find_config_tree_bool(cmd, devices_allow_mixed_block_sizes_CFG, NULL);
+
 	/*
 	 * enable_hints is set to 1 if any commands are using hints.
 	 * use_hints is set to 1 if this command doesn't use the hints.
