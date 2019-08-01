@@ -759,7 +759,7 @@ static void _online_pvscan_all_devs(struct cmd_context *cmd,
 
 	dm_list_init(&all_vgs);
 
-	label_scan(cmd);
+	lvmcache_label_scan(cmd);
 
 	if (!(iter = dev_iter_create(cmd->filter, 1))) {
 		log_error("dev_iter creation failed");
