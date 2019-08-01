@@ -3546,12 +3546,14 @@ bad:
  */
 static void _set_pv_device(struct format_instance *fid,
 			   struct volume_group *vg,
-			   struct physical_volume *pv)
+			   struct physical_volume *pv,
+			   int *found_md_component)
 {
 	char buffer[64] __attribute__((aligned(8)));
 	struct cmd_context *cmd = fid->fmt->cmd;
 	struct device *dev;
 	uint64_t size;
+	int do_check = 0;
 
 	if (!(dev = lvmcache_device_from_pvid(cmd, &pv->id, &pv->label_sector))) {
 		if (!id_write_format(&pv->id, buffer, sizeof(buffer)))
@@ -3565,19 +3567,26 @@ static void _set_pv_device(struct format_instance *fid,
 
 	/*
 	 * If the device and PV are not the size, it's a clue that we might
-	 * be reading an MD component (but not necessarily). Skip this check:
-	 * . if md component detection is disabled
-	 * . if we are already doing full a md check in label scan
-	 * . if md_component_checks is auto, not none (full means use_full_md_check is set)
+	 * be reading an MD component (but not necessarily). Skip this check
+	 * if md component detection is disabled or if we are already doing
+	 * full a md check in label scan
 	 */
-	if (dev && (pv->size != dev->size) && cmd &&
-	    cmd->md_component_detection &&
-	    !cmd->use_full_md_check &&
-	    !strcmp(cmd->md_component_checks, "auto")) {
-		if (dev_is_md_component(dev, NULL, 1)) {
+	if (dev && cmd && cmd->md_component_detection && !cmd->use_full_md_check) {
+
+		/* PV larger than dev not common, check for md component */
+		if (pv->size > dev->size)
+			do_check = 1;
+
+		/* dev larger than PV can be common, limit check to auto mode */
+		else if ((pv->size < dev->size) && !strcmp(cmd->md_component_checks, "auto"))
+			do_check = 1;
+
+		if (do_check && dev_is_md_component(dev, NULL, 1)) {
 			log_warn("WARNING: device %s is an md component, not setting device for PV.",
 				 dev_name(dev));
 			dev = NULL;
+			if (found_md_component)
+				*found_md_component = 1;
 		}
 	}
 
@@ -3622,12 +3631,12 @@ static void _set_pv_device(struct format_instance *fid,
  * Finds the 'struct device' that correponds to each PV in the metadata,
  * and may make some adjustments to vg fields based on the dev properties.
  */
-void set_pv_devices(struct format_instance *fid, struct volume_group *vg)
+void set_pv_devices(struct format_instance *fid, struct volume_group *vg, int *found_md_component)
 {
 	struct pv_list *pvl;
 
 	dm_list_iterate_items(pvl, &vg->pvs)
-		_set_pv_device(fid, vg, pvl->pv);
+		_set_pv_device(fid, vg, pvl->pv, found_md_component);
 }
 
 int pv_write(struct cmd_context *cmd,
@@ -4565,9 +4574,11 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct volume_group *vg, *vg_ret = NULL;
 	struct metadata_area *mda, *mda2;
 	unsigned use_precommitted = precommitted;
-	struct device *mda_dev, *dev_ret;
+	struct device *mda_dev, *dev_ret, *dev;
 	struct cached_vg_fmtdata *vg_fmtdata = NULL;	/* Additional format-specific data about the vg */
+	struct pv_list *pvl;
 	int found_old_metadata = 0;
+	int found_md_component = 0;
 	unsigned use_previous_vg;
 
 	log_debug_metadata("Reading VG %s %s", vgname ?: "<no name>", vgid ?: "<no vgid>");
@@ -4780,13 +4791,54 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	vg = NULL;
 
 	if (vg_ret)
-		set_pv_devices(fid, vg_ret);
+		set_pv_devices(fid, vg_ret, &found_md_component);
 
 	fid->ref_count--;
 
 	if (!vg_ret) {
 		_destroy_fid(&fid);
 		goto_out;
+	}
+
+	/*
+	 * Usually md components are eliminated during label scan, or duplicate
+	 * resolution, but sometimes an md component can get through and be
+	 * detected in set_pv_device() (which will do an md component check if
+	 * the device/PV sizes don't match.)  In this case we need to fix up
+	 * lvmcache to drop the component dev and fix up metadata_areas_in_use
+	 * to drop it also.
+	 */
+	if (found_md_component) {
+		dm_list_iterate_items(pvl, &vg_ret->pvs) {
+			if (!(dev = lvmcache_device_from_pvid(cmd, &pvl->pv->id, NULL)))
+				continue;
+
+			/* dev_is_md_component set this flag if it was found */
+			if (!(dev->flags & DEV_IS_MD_COMPONENT))
+				continue;
+
+			log_debug_metadata("Drop dev for MD component from cache %s", dev_name(dev));
+			lvmcache_del_dev(dev);
+
+			dm_list_iterate_items(mda, &fid->metadata_areas_in_use) {
+				if (mda_get_device(mda) != dev)
+					continue;
+				log_debug_metadata("Drop mda from MD component from mda list %s", dev_name(dev));
+				dm_list_del(&mda->list);
+				break;
+			}
+		}
+	}
+
+	/*
+	 * After dropping MD components there may be no remaining legitimate
+	 * devices for this VG.
+	 */
+	if (!lvmcache_vginfo_from_vgid(vgid)) {
+		log_debug_metadata("VG %s not found on any remaining devices.", vgname);
+		release_vg(vg_ret);
+		vg_ret = NULL;
+		goto out;
 	}
 
 	/*
