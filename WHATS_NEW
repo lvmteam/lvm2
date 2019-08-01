@@ -1,5 +1,6 @@
 Version 2.02.187 - 
 ===================================
+  Prevent creating VGs with PVs with different logical block sizes.
   Pvmove runs in exlusively activating mode for exclusively active LVs.
   Activate thin-pool layered volume as 'read-only' device.
   Ignore crypto devices with UUID signature CRYPT-SUBDEV.
