@@ -679,20 +679,21 @@ int vg_remove(struct volume_group *vg)
 }
 
 int check_dev_block_size_for_vg(struct device *dev, const struct volume_group *vg,
-				unsigned int *max_phys_block_size_found)
+				unsigned int *max_logical_block_size_found)
 {
-	unsigned int phys_block_size, block_size;
+	unsigned int physical_block_size, logical_block_size;
 
-	if (!(dev_get_block_size(dev, &phys_block_size, &block_size)))
+	if (!(dev_get_direct_block_sizes(dev, &physical_block_size, &logical_block_size)))
 		return_0;
 
-	if (phys_block_size > *max_phys_block_size_found)
-		*max_phys_block_size_found = phys_block_size;
+	/* FIXME: max_logical_block_size_found does not seem to be used anywhere */
+	if (logical_block_size > *max_logical_block_size_found)
+		*max_logical_block_size_found = logical_block_size;
 
-	if (phys_block_size >> SECTOR_SHIFT > vg->extent_size) {
+	if (logical_block_size >> SECTOR_SHIFT > vg->extent_size) {
 		log_error("Physical extent size used for volume group %s "
-			  "is less than physical block size that %s uses.",
-			   vg->name, dev_name(dev));
+			  "is less than logical block size (%u bytes) that %s uses.",
+			   vg->name, logical_block_size, dev_name(dev));
 		return 0;
 	}
 
@@ -702,10 +703,10 @@ int check_dev_block_size_for_vg(struct device *dev, const struct volume_group *v
 int vg_check_pv_dev_block_sizes(const struct volume_group *vg)
 {
 	struct pv_list *pvl;
-	unsigned int max_phys_block_size_found = 0;
+	unsigned int max_logical_block_size_found = 0;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
-		if (!check_dev_block_size_for_vg(pvl->pv->dev, vg, &max_phys_block_size_found))
+		if (!check_dev_block_size_for_vg(pvl->pv->dev, vg, &max_logical_block_size_found))
 			return 0;
 	}
 
@@ -750,7 +751,7 @@ int check_pv_dev_sizes(struct volume_group *vg)
 int vg_extend_each_pv(struct volume_group *vg, struct pvcreate_params *pp)
 {
 	struct pv_list *pvl;
-	unsigned int max_phys_block_size = 0;
+	unsigned int max_logical_block_size = 0;
 	unsigned int physical_block_size, logical_block_size;
 	unsigned int prev_lbs = 0;
 	int inconsistent_existing_lbs = 0;
@@ -790,7 +791,7 @@ int vg_extend_each_pv(struct volume_group *vg, struct pvcreate_params *pp)
 
 		if (!(check_dev_block_size_for_vg(pvl->pv->dev,
 						  (const struct volume_group *) vg,
-						  &max_phys_block_size))) {
+						  &max_logical_block_size))) {
 			log_error("PV %s has wrong block size.", pv_dev_name(pvl->pv));
 			return 0;
 		}

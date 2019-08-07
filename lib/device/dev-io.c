@@ -53,77 +53,6 @@
 
 static unsigned _dev_size_seqno = 1;
 
-/*
- * Get the physical and logical block size for a device.
- */
-int dev_get_block_size(struct device *dev, unsigned int *physical_block_size, unsigned int *block_size)
-{
-	const char *name = dev_name(dev);
-	int fd = dev->bcache_fd;
-	int do_close = 0;
-	int r = 1;
-
-	if ((dev->phys_block_size > 0) && (dev->block_size > 0)) {
-		*physical_block_size = (unsigned int)dev->phys_block_size;
-		*block_size = (unsigned int)dev->block_size;
-		return 1;
-	}
-
-	if (fd <= 0) {
-		if (!dev->open_count) {
-			if (!dev_open_readonly(dev))
-				return_0;
-			do_close = 1;
-		}
-		fd = dev_fd(dev);
-	}
-
-	if (dev->block_size == -1) {
-		if (ioctl(fd, BLKBSZGET, &dev->block_size) < 0) {
-			log_sys_error("ioctl BLKBSZGET", name);
-			r = 0;
-			goto out;
-		}
-		log_debug_devs("%s: Block size is %u bytes", name, dev->block_size);
-	}
-
-#ifdef BLKPBSZGET
-	/* BLKPBSZGET is available in kernel >= 2.6.32 only */
-	if (dev->phys_block_size == -1) {
-		if (ioctl(fd, BLKPBSZGET, &dev->phys_block_size) < 0) {
-			log_sys_error("ioctl BLKPBSZGET", name);
-			r = 0;
-			goto out;
-		}
-		log_debug_devs("%s: Physical block size is %u bytes", name, dev->phys_block_size);
-	}
-#elif defined (BLKSSZGET)
-	/* if we can't get physical block size, just use logical block size instead */
-	if (dev->phys_block_size == -1) {
-		if (ioctl(fd, BLKSSZGET, &dev->phys_block_size) < 0) {
-			log_sys_error("ioctl BLKSSZGET", name);
-			r = 0;
-			goto out;
-		}
-		log_debug_devs("%s: Physical block size can't be determined: Using logical block size of %u bytes", name, dev->phys_block_size);
-	}
-#else
-	/* if even BLKSSZGET is not available, use default 512b */
-	if (dev->phys_block_size == -1) {
-		dev->phys_block_size = 512;
-		log_debug_devs("%s: Physical block size can't be determined: Using block size of %u bytes instead", name, dev->phys_block_size);
-	}
-#endif
-
-	*physical_block_size = (unsigned int) dev->phys_block_size;
-	*block_size = (unsigned int) dev->block_size;
-out:
-	if (do_close && !dev_close_immediate(dev))
-		stack;
-
-	return r;
-}
-
 static int _dev_get_size_file(struct device *dev, uint64_t *size)
 {
 	const char *name = dev_name(dev);
@@ -515,8 +444,6 @@ static void _close(struct device *dev)
 	if (close(dev->fd))
 		log_sys_error("close", dev_name(dev));
 	dev->fd = -1;
-	dev->phys_block_size = -1;
-	dev->block_size = -1;
 
 	log_debug_devs("Closed %s", dev_name(dev));
 
