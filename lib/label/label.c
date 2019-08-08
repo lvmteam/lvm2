@@ -29,6 +29,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/resource.h>
 
 /* FIXME Allow for larger labels?  Restricted to single sector currently */
 
@@ -860,6 +861,57 @@ static void _free_hints(struct dm_list *hints)
 }
 
 /*
+ * We don't know how many of num_devs will be PVs that we need to
+ * keep open, but if it's greater than the soft limit, then we'll
+ * need the soft limit raised, so do that before starting.
+ *
+ * If opens approach the raised soft/hard limit while scanning, then
+ * we could also attempt to raise the soft/hard limits during the scan.
+ */
+
+#define BASE_FD_COUNT 32 /* Number of open files we want apart from devs */
+
+static void _prepare_open_file_limit(struct cmd_context *cmd, unsigned int num_devs)
+{
+	struct rlimit old, new;
+	unsigned int want = num_devs + BASE_FD_COUNT;
+	int rv;
+
+	rv = prlimit(0, RLIMIT_NOFILE, NULL, &old);
+	if (rv < 0) {
+		log_debug("Checking fd limit for num_devs %u failed %d", num_devs, errno);
+		return;
+	}
+
+	log_debug("Checking fd limit for num_devs %u want %u soft %lld hard %lld",
+		  num_devs, want, (long long)old.rlim_cur, (long long)old.rlim_max);
+
+	/* Current soft limit is enough */
+	if (old.rlim_cur > want)
+		return;
+
+	/* Soft limit already raised to max */
+	if (old.rlim_cur == old.rlim_max)
+		return;
+
+	/* Raise soft limit up to hard/max limit */
+	new.rlim_cur = old.rlim_max;
+	new.rlim_max = old.rlim_max;
+
+	log_debug("Setting fd limit for num_devs %u soft %lld hard %lld",
+		  num_devs, (long long)new.rlim_cur, (long long)new.rlim_max);
+
+	rv = prlimit(0, RLIMIT_NOFILE, &new, &old);
+	if (rv < 0) {
+		if (errno == EPERM)
+			log_warn("WARNING: permission error setting open file limit for scanning %u devices.", num_devs);
+		else
+			log_warn("WARNING: cannot set open file limit for scanning %u devices.", num_devs);
+		return;
+	}
+}
+
+/*
  * Scan devices on the system to discover which are LVM devices.
  * Info about the LVM devices (PVs) is saved in lvmcache in a
  * basic/summary form (info/vginfo structs).  The vg_read phase
@@ -975,6 +1027,15 @@ int label_scan(struct cmd_context *cmd)
 		using_hints = 1;
 
 	log_debug("Will scan %d devices skip %d", dm_list_size(&scan_devs), dm_list_size(&all_devs));
+
+	/*
+	 * If the total number of devices exceeds the soft open file
+	 * limit, then increase the soft limit to the hard/max limit
+	 * in case the number of PVs in scan_devs (it's only the PVs
+	 * which we want to keep open) is higher than the current
+	 * soft limit.
+	 */
+	_prepare_open_file_limit(cmd, dm_list_size(&scan_devs));
 
 	/*
 	 * Do the main scan.
