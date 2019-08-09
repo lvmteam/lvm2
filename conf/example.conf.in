@@ -142,7 +142,7 @@ devices {
 	# 
 	# Example
 	# Accept every block device:
-	# filter = [ "a|.*/|" ]
+	# filter = [ "a|.*|" ]
 	# Reject the cdrom drive:
 	# filter = [ "r|/dev/cdrom|" ]
 	# Work with just loopback devices, e.g. for testing:
@@ -150,10 +150,10 @@ devices {
 	# Accept all loop devices and ide drives except hdc:
 	# filter = [ "a|loop|", "r|/dev/hdc|", "a|/dev/ide|", "r|.*|" ]
 	# Use anchors to be very specific:
-	# filter = [ "a|^/dev/hda8$|", "r|.*/|" ]
+	# filter = [ "a|^/dev/hda8$|", "r|.*|" ]
 	# 
 	# This configuration option has an automatic default value.
-	# filter = [ "a|.*/|" ]
+	# filter = [ "a|.*|" ]
 
 	# Configuration option devices/global_filter.
 	# Limit the block devices that are used by LVM system components.
@@ -163,7 +163,7 @@ devices {
 	# The syntax is the same as devices/filter. Devices rejected by
 	# global_filter are not opened by LVM.
 	# This configuration option has an automatic default value.
-	# global_filter = [ "a|.*/|" ]
+	# global_filter = [ "a|.*|" ]
 
 	# Configuration option devices/types.
 	# List of additional acceptable block device types.
@@ -347,6 +347,12 @@ devices {
 	# Enabling this setting allows the VG to be used as usual even with
 	# uncertain devices.
 	allow_changes_with_duplicate_pvs = 0
+
+	# Configuration option devices/allow_mixed_block_sizes.
+	# Allow PVs in the same VG with different logical block sizes.
+	# When allowed, the user is responsible to ensure that an LV is
+	# using PVs with matching block sizes when necessary.
+	allow_mixed_block_sizes = 0
 }
 
 # Configuration section allocation.
@@ -898,9 +904,6 @@ global {
 	# is not present in the kernel, disabling this should suppress
 	# the error messages.
 	activation = 1
-
-	# Configuration option global/segment_libraries.
-	# This configuration option does not have a default value defined.
 
 	# Configuration option global/proc.
 	# Location of proc filesystem.
@@ -1751,7 +1754,6 @@ activation {
 	# additional space for VG metadata. The --metadatasize option overrides
 	# this setting.
 	# This configuration option does not have a default value defined.
-	# This configuration option has an automatic default value.
 
 	# Configuration option metadata/pvmetadataignore.
 	# Ignore metadata areas on a new PV.
