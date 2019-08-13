@@ -1,5 +1,6 @@
 Version 2.03.06 - 
 ================================
+  Remove unsupported OPTIONS+="event_timeout" udev rule from 11-dm-lvm.rules.
   Prevent creating VGs with PVs with different logical block sizes.
   Fix metadata writes from corrupting with large physical block size.
 
