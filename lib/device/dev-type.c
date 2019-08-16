@@ -1118,6 +1118,9 @@ static struct udev_device *_udev_get_dev(struct device *dev)
 			   i + 1, UDEV_DEV_IS_COMPONENT_ITERATION_COUNT,
 			   i * UDEV_DEV_IS_COMPONENT_USLEEP);
 
+		if (!udev_sleeping())
+			break;
+
 		usleep(UDEV_DEV_IS_COMPONENT_USLEEP);
 		i++;
 	}

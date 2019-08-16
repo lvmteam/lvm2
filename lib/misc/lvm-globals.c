@@ -47,6 +47,7 @@ static int _ignore_lvm_mirrors = DEFAULT_IGNORE_LVM_MIRRORS;
 static int _error_message_produced = 0;
 static unsigned _is_static = 0;
 static int _udev_checking = 1;
+static int _udev_sleeping = 1;
 static int _retry_deactivation = DEFAULT_RETRY_DEACTIVATION;
 static int _activation_checks = 0;
 static char _sysfs_dir_path[PATH_MAX] = "";
@@ -184,6 +185,11 @@ void init_udev_checking(int checking)
 		log_debug_activation("LVM udev checking enabled");
 	else
 		log_debug_activation("LVM udev checking disabled");
+}
+
+void init_udev_sleeping(int sleeping)
+{
+	_udev_sleeping = sleeping;
 }
 
 void init_retry_deactivation(int retry)
@@ -351,6 +357,11 @@ unsigned is_static(void)
 int udev_checking(void)
 {
 	return _udev_checking;
+}
+
+int udev_sleeping(void)
+{
+	return _udev_sleeping;
 }
 
 int retry_deactivation(void)

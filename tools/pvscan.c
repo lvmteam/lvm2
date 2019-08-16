@@ -914,6 +914,13 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	dm_list_init(&rem_devs);
 	dm_list_init(&vgnames);
 
+	/*
+	 * When systemd/udev run pvscan --cache commands, those commands
+	 * should not wait on udev info since the udev info may not be
+	 * complete until the pvscan --cache command is done.
+	 */
+	init_udev_sleeping(0);
+
 	if (do_activate)
 		complete_vgnames = &vgnames;
 
