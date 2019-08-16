@@ -808,8 +808,8 @@ out:
  * the metadata size.)
  */
 
-#define MIN_BCACHE_BLOCKS 32    /* 4MB */
-#define MAX_BCACHE_BLOCKS 1024
+#define MIN_BCACHE_BLOCKS 32    /* 4MB (32 * 128KB) */
+#define MAX_BCACHE_BLOCKS 4096  /* 512MB (4096 * 128KB) */
 
 static int _setup_bcache(void)
 {
