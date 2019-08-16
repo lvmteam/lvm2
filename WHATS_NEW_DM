@@ -1,5 +1,6 @@
 Version 1.02.165 - 
 =================================
+  Add debug of dmsetup udevcomplete with hexa print DM_COOKIE_COMPLETED.
   Fix versioning of dm_stats_create_region and dm_stats_create_region.
 
 Version 1.02.163 - 15th June 2019
