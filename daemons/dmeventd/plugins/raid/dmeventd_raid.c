@@ -76,16 +76,12 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 	}
 
 	if (dead) {
-		if (status->insync_regions < status->total_regions) {
-			if (!state->warned) {
-				state->warned = 1;
-				log_warn("WARNING: waiting for resynchronization to finish "
-					 "before initiating repair on RAID device %s.", device);
-			}
-
-			goto out; /* Not yet done syncing with accessible devices */
-		}
-
+		/*
+		 * Use the first event to run a repair ignoring any additonal ones.
+		 *
+		 * We presume lvconvert to do pre-repair
+		 * checks to avoid bloat in this plugin.
+		 */
 		if (state->failed)
 			goto out; /* already reported */
 
