@@ -3579,13 +3579,6 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root, const 
 	const char *name, *uuid;
 	struct dm_str_list *dl;
 
-	/* Deactivate any tracked pending delete nodes */
-	dm_list_iterate_items(dl, &dm->pending_delete) {
-		log_debug_activation("Deleting tracked UUID %s.", dl->str);
-		if (!dm_tree_deactivate_children(root, dl->str, strlen(dl->str)))
-			return_0;
-	}
-
 	while ((child = dm_tree_next_child(&handle, root, 0))) {
 		if (!(name = dm_tree_node_get_name(child)))
 			continue;
@@ -3606,8 +3599,19 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root, const 
 		if (non_toplevel_tree_dlid && !strcmp(non_toplevel_tree_dlid, uuid))
 			continue;
 
-		if (!dm_tree_deactivate_children(root, uuid, strlen(uuid)))
+		if (!str_list_add(dm->mem, &dm->pending_delete, uuid))
 			return_0;
+	}
+
+	/* Deactivate any tracked pending delete nodes */
+	if (!dm_list_empty(&dm->pending_delete) && !dm_get_suspended_counter()) {
+		fs_unlock();
+		dm_tree_set_cookie(root, fs_get_cookie());
+		dm_list_iterate_items(dl, &dm->pending_delete) {
+			log_debug_activation("Deleting tracked UUID %s.", dl->str);
+			if (!dm_tree_deactivate_children(root, dl->str, strlen(dl->str)))
+				return_0;
+		}
 	}
 
 	return 1;
