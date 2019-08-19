@@ -226,8 +226,6 @@ or vgchange to activate thin snapshots with the "k" attribute.
 
 .SH Thin Topics
 
-.B Alternate syntax for specifying type thin-pool
-.br
 .B Automatic pool metadata LV
 .br
 .B Specify devices for data and metadata LVs
