@@ -78,28 +78,21 @@ int pvmove_update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 			   struct dm_list *lvs_changed __attribute__((unused)),
 			   unsigned flags __attribute__((unused)))
 {
-printf("%s[%u] lv_mirr->read_ahead=%d\n", __func__, __LINE__, lv_mirr->read_ahead);
 	if (!lv_update_and_reload(lv_mirr))
 		return_0;
 
-printf("%s[%u] lv_mirr->read_ahead=%d\n", __func__, __LINE__, lv_mirr->read_ahead);
 	return 1;
 }
 
 int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 		  struct logical_volume *lv_mirr, struct dm_list *lvs_changed)
 {
-	int read_ahead = lv_mirr->read_ahead;
-
-printf("%s[%u] lv_mirr->read_ahead=%d\n", __func__, __LINE__, lv_mirr->read_ahead);
 	if (!dm_list_empty(lvs_changed) &&
 	    (!_detach_pvmove_mirror(cmd, lv_mirr) ||
 	    !replace_lv_with_error_segment(lv_mirr))) {
 		log_error("ABORTING: Removal of temporary mirror failed");
 		return 0;
 	}
-	lv_mirr->read_ahead = read_ahead;
-printf("%s[%u] lv_mirr->read_ahead=%d\n", __func__, __LINE__, lv_mirr->read_ahead);
 
 	if (!lv_update_and_reload(lv_mirr))
 		return_0;
