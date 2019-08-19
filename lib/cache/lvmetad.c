@@ -248,7 +248,7 @@ int lvmetad_token_matches(struct cmd_context *cmd)
 	const char *daemon_token;
 	unsigned int delay_usec = 0;
 	unsigned int wait_sec = 0;
-	uint64_t now = 0, wait_start = 0;
+	uint64_t now = 0, wait_start = 0, last_warn = 0;
 	int ret = 1;
 
 	wait_sec = (unsigned int)_lvmetad_update_timeout;
@@ -294,12 +294,15 @@ retry:
 			wait_start = now;
 
 		if (now - wait_start > wait_sec) {
-			log_warn("WARNING: Not using lvmetad after %u sec lvmetad_update_wait_time.", wait_sec);
+			log_warn("pvscan[%d] WARNING: Not using lvmetad after %u sec lvmetad_update_wait_time.", getpid(), wait_sec);
 			goto fail;
 		}
 
-		log_warn("WARNING: lvmetad is being updated, retrying (setup) for %u more seconds.",
-			 wait_sec - (unsigned int)(now - wait_start));
+		if (now - last_warn >= 10) {
+			last_warn = now;
+			log_warn("pvscan[%d] WARNING: lvmetad is being updated, retrying (setup) for %u more seconds.",
+				 getpid(), wait_sec - (unsigned int)(now - wait_start));
+		}
 
 		/* Delay a random period between 1 and 2 seconds. */
 		delay_usec = 1000000 + lvm_even_rand(&_lvmetad_cmd->rand_seed, 1000000);

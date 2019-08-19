@@ -20,6 +20,8 @@ struct vgchange_params {
 	unsigned int lock_start_sanlock : 1;
 };
 
+extern void online_vg_file_remove(const char *vgname);
+
 /*
  * Increments *count by the number of _new_ monitored devices.
  */
@@ -257,6 +259,17 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 	if (!_activate_lvs_in_vg(cmd, vg, activate)) {
 		stack;
 		r = 0;
+	}
+
+	if (!do_activate && r) {
+		/*
+		 * While the VG is inactive, the PVs may go offline.
+		 * If the PVs then come back online, pvscan --cache -aay
+		 * which should autoactivate the VG again.  We need
+		 * to remove the vg online file in order for the pvscan
+		 * to autoactivate the VG again.
+		 */
+		online_vg_file_remove(vg->name);
 	}
 
 	/* Print message only if there was not found a missing VG */

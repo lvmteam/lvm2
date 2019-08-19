@@ -18,7 +18,12 @@
 #include "lvmetad.h"
 #include "lvmcache.h"
 
+#include <dirent.h>
+#include <sys/file.h>
+
 extern int use_full_md_check;
+
+void online_vg_file_remove(const char *vgname);
 
 struct pvscan_params {
 	int new_pvs_found;
@@ -142,6 +147,82 @@ static int _lvmetad_clear_dev(dev_t devno, int32_t major, int32_t minor)
 	return 1;
 }
 
+static const char *_vgs_online_dir = DEFAULT_RUN_DIR "/vgs_online";
+
+static void _online_dir_setup(void)
+{
+	struct stat st;
+	int rv;
+
+	if (!stat(DEFAULT_RUN_DIR, &st))
+		goto do_vgs;
+
+	log_debug("Creating run_dir.");
+	dm_prepare_selinux_context(DEFAULT_RUN_DIR, S_IFDIR);
+	rv = mkdir(DEFAULT_RUN_DIR, 0755);
+	dm_prepare_selinux_context(NULL, 0);
+
+	if ((rv < 0) && stat(DEFAULT_RUN_DIR, &st))
+		log_error("Failed to create %s %d", DEFAULT_RUN_DIR, errno);
+
+do_vgs:
+	if (!stat(_vgs_online_dir, &st))
+		return;
+
+	log_debug("Creating vgs_online_dir.");
+	dm_prepare_selinux_context(_vgs_online_dir, S_IFDIR);
+	rv = mkdir(_vgs_online_dir, 0755);
+	dm_prepare_selinux_context(NULL, 0);
+
+	if ((rv < 0) && stat(_vgs_online_dir, &st))
+		log_error("Failed to create %s %d", _vgs_online_dir, errno);
+}
+
+static int _online_vg_file_create(struct cmd_context *cmd, const char *vgname)
+{
+	char path[PATH_MAX];
+	int fd;
+
+	if (dm_snprintf(path, sizeof(path), "%s/%s", _vgs_online_dir, vgname) < 0) {
+		log_error("Path %s/%s is too long.", _vgs_online_dir, vgname);
+		return 0;
+	}
+
+	log_debug("Create vg online: %s", path);
+
+	fd = open(path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
+	if (fd < 0) {
+		log_debug("Failed to create %s: %d", path, errno);
+		return 0;
+	}
+
+	/* We don't care about syncing, these files are not even persistent. */
+
+	if (close(fd))
+		log_sys_debug("close", path);
+
+	return 1;
+}
+
+void online_vg_file_remove(const char *vgname)
+{
+	char path[PATH_MAX];
+
+	if (dm_snprintf(path, sizeof(path), "%s/%s", _vgs_online_dir, vgname) < 0) {
+		log_error("Path %s/%s is too long.", _vgs_online_dir, vgname);
+		return;
+	}
+
+	log_debug("Unlink vg online: %s", path);
+
+	/*
+	 * There will only be an online file for the vg if it was
+	 * autoactivated, so in many cases there will not be one.
+	 */
+
+	unlink(path);
+}
+
 /*
  * pvscan --cache does not perform any lvmlockd locking, and
  * pvscan --cache -aay skips autoactivation in lockd VGs.
@@ -190,8 +271,6 @@ static int _pvscan_autoactivate_single(struct cmd_context *cmd, const char *vg_n
 				       struct volume_group *vg, struct processing_handle *handle)
 {
 	struct pvscan_aa_params *pp = (struct pvscan_aa_params *)handle->custom_handle;
-	unsigned int refresh_retries = REFRESH_BEFORE_AUTOACTIVATION_RETRIES;
-	int refresh_done = 0;
 
 	if (vg_is_clustered(vg))
 		return ECMD_PROCESSED;
@@ -203,6 +282,10 @@ static int _pvscan_autoactivate_single(struct cmd_context *cmd, const char *vg_n
 		return ECMD_PROCESSED;
 
 	log_debug("pvscan autoactivating VG %s.", vg_name);
+
+#if 0
+	unsigned int refresh_retries = REFRESH_BEFORE_AUTOACTIVATION_RETRIES;
+	int refresh_done = 0;
 
 	/*
 	 * Refresh LVs in a VG that has "changed" from finding a PV.
@@ -241,8 +324,14 @@ static int _pvscan_autoactivate_single(struct cmd_context *cmd, const char *vg_n
 		if (!refresh_done)
 			log_warn("%s: refresh before autoactivation failed.", vg->name);
 	}
+#endif
 
-	log_debug_activation("Autoactivating VG %s.", vg_name);
+	if (!_online_vg_file_create(cmd, vg->name)) {
+		log_print("pvscan[%d] VG %s skip autoactivation.", getpid(), vg->name);
+		return ECMD_PROCESSED;
+	}
+
+	log_print("pvscan[%d] VG %s run autoactivation.", getpid(), vg->name);
 
 	if (!vgchange_activate(cmd, vg, CHANGE_AAY)) {
 		log_error("%s: autoactivation failed.", vg->name);
@@ -307,6 +396,7 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	struct dev_iter *iter;
 	const char *pv_name;
 	const char *reason = NULL;
+	const char *dev_arg = NULL;
 	int32_t major = -1;
 	int32_t minor = -1;
 	int devno_args = 0;
@@ -346,7 +436,12 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Both --major and --minor required to identify devices.");
 		return EINVALID_CMD_LINE;
 	}
-	
+
+	if (!devno_args && argc)
+		dev_arg = *argv;
+
+	_online_dir_setup();
+
 	if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_READ, NULL)) {
 		log_error("Unable to obtain global lock.");
 		return ECMD_FAILED;
@@ -358,7 +453,7 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	 * still activate LVs even though it's not updating the cache.
 	 */
 	if (do_activate && !lvmetad_used()) {
-		log_verbose("Activating all VGs without lvmetad.");
+		log_print("pvscan[%d] activating all directly (lvmetad unused) %s", getpid(), dev_arg ?: "");
 		all_vgs = 1;
 		devno_args = 0;
 		goto activate;
@@ -399,6 +494,7 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 			log_warn("WARNING: Not using lvmetad because %s.", reason);
 			lvmetad_make_unused(cmd);
 		}
+		log_print("pvscan[%d] activating all directly (lvmetad token) %s", getpid(), dev_arg ?: "");
 		all_vgs = 1;
 		goto activate;
 	}
@@ -415,6 +511,7 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	if (lvmetad_is_disabled(cmd, &reason)) {
 		log_warn("WARNING: Not using lvmetad because %s.", reason);
 		lvmetad_make_unused(cmd);
+		log_print("pvscan[%d] activating all directly (lvmetad disabled) %s", getpid(), dev_arg ?: "");
 		all_vgs = 1;
 		goto activate;
 	}
@@ -610,6 +707,7 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	 */
 	if (lvmetad_used() && lvmetad_is_disabled(cmd, &reason)) {
 		log_warn("WARNING: Not using lvmetad because %s.", reason);
+		log_print("pvscan[%d] activating directly (lvmetad disabled in scan) %s", getpid(), dev_arg ?: "");
 		lvmetad_make_unused(cmd);
 	}
 
