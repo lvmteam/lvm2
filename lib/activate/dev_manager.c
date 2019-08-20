@@ -2034,10 +2034,20 @@ static uint16_t _get_udev_flags(struct dev_manager *dm, const struct logical_vol
 
 static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			    const struct logical_volume *lv, int origin_only);
-
+static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
+				const struct logical_volume *lv,
+				struct lv_activate_opts *laopts,
+				const char *layer);
+/*
+ * Check for device holders (ATM used only for removed pvmove targets)
+ * and add them into dtree structures.
+ * When 'laopts != NULL' add them as new nodes - which also corrects READ_AHEAD.
+ * Note: correct table are already explicitelly PRELOADED.
+ */
 static int _check_holder(struct dev_manager *dm, struct dm_tree *dtree,
-			 const struct logical_volume *lv, uint32_t major,
-			 const char *d_name)
+			 const struct logical_volume *lv,
+			 struct lv_activate_opts *laopts,
+			 uint32_t major, const char *d_name)
 {
 	const char *default_uuid_prefix = dm_uuid_prefix();
 	const size_t default_uuid_prefix_len = strlen(default_uuid_prefix);
@@ -2089,8 +2099,11 @@ static int _check_holder(struct dev_manager *dm, struct dm_tree *dtree,
 			log_debug_activation("Found holder %s of %s.",
 					     display_lvname(lv_det),
 					     display_lvname(lv));
-			if (!_add_lv_to_dtree(dm, dtree, lv_det, 0))
-				goto_out;
+			if (!laopts) {
+				if (!_add_lv_to_dtree(dm, dtree, lv_det, 0))
+					goto_out;
+			} else if (!_add_new_lv_to_dtree(dm, dtree, lv_det, laopts, 0))
+					goto_out;
 		}
 	}
 
@@ -2107,7 +2120,9 @@ out:
  * i.e. PVMOVE is being finished and final table is going to be resumed.
  */
 static int _add_holders_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
-				 const struct logical_volume *lv, struct dm_info *info)
+				 const struct logical_volume *lv,
+				 struct lv_activate_opts *laopts,
+				 const struct dm_info *info)
 {
 	const char *sysfs_dir = dm_sysfs_dir();
 	char sysfs_path[PATH_MAX];
@@ -2130,7 +2145,7 @@ static int _add_holders_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	while ((dirent = readdir(d)))
 		/* Expects minor is added to 'dm-' prefix */
 		if (!strncmp(dirent->d_name, "dm-", 3) &&
-		    !_check_holder(dm, dtree, lv, info->major, dirent->d_name))
+		    !_check_holder(dm, dtree, lv, laopts, info->major, dirent->d_name))
 			goto_out;
 
 	r = 1;
@@ -2202,7 +2217,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	 */
 	if (info.exists && !lv_is_pvmove(lv) &&
 	    !strchr(lv->name, '_') && !strncmp(lv->name, "pvmove", 6))
-		if (!_add_holders_to_dtree(dm, dtree, lv, &info))
+		if (!_add_holders_to_dtree(dm, dtree, lv, NULL, &info))
 			return_0;
 
 	return 1;
@@ -3000,11 +3015,6 @@ static int _add_target_to_dtree(struct dev_manager *dm,
 						  &dm->pvmove_mirror_count);
 }
 
-static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
-				const struct logical_volume *lv,
-				struct lv_activate_opts *laopts,
-				const char *layer);
-
 static int _add_new_external_lv_to_dtree(struct dev_manager *dm,
 					 struct dm_tree *dtree,
 					 struct logical_volume *external_lv,
@@ -3438,6 +3448,17 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	    !_cached_dm_info(dm->mem, dtree, first_seg(first_seg(lv)->pool_lv)->metadata_lv, NULL) &&
 	    !_pool_register_callback(dm, dnode, lv))
 		return_0;
+
+	/*
+	 * Update tables for ANY PVMOVE holders for active LV where the name starts with 'pvmove',
+	 * but it's not anymore PVMOVE LV and also it's not a PVMOVE _mimage LV.
+	 * When resume happens, tables MUST be already preloaded with correct entries!
+	 * (since we can't preload different table while devices are suspended)
+	 */
+	if (!lv_is_pvmove(lv) && !strncmp(lv->name, "pvmove", 6) && !strchr(lv->name, '_') &&
+	    (dinfo = _cached_dm_info(dm->mem, dtree, lv, NULL)))
+		if (!_add_holders_to_dtree(dm, dtree, lv, laopts, dinfo))
+			return_0;
 
 	if (read_ahead == DM_READ_AHEAD_AUTO) {
 		/* we need RA at least twice a whole stripe - see the comment in md/raid0.c */
