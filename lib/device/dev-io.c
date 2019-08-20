@@ -156,6 +156,7 @@ int dev_get_direct_block_sizes(struct device *dev, unsigned int *physical_block_
 		do_close = 1;
 	}
 
+#ifdef BLKPBSZGET /* not defined before kernel version 2.6.32 (e.g. rhel5) */
 	/*
 	 * BLKPBSZGET from kernel comment for blk_queue_physical_block_size:
 	 * "the lowest possible sector size that the hardware can operate on
@@ -165,6 +166,7 @@ int dev_get_direct_block_sizes(struct device *dev, unsigned int *physical_block_
 		stack;
 		pbs = 0;
 	}
+#endif
 
 	/*
 	 * BLKSSZGET from kernel comment for blk_queue_logical_block_size:
