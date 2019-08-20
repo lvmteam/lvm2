@@ -1,5 +1,6 @@
 Version 2.03.06 - 
 ================================
+  Add missing device synchronization point before removing pvmove node.
   Correctly set read_ahead for LVs when pvmove is finished.
   Remove unsupported OPTIONS+="event_timeout" udev rule from 11-dm-lvm.rules.
   Prevent creating VGs with PVs with different logical block sizes.
