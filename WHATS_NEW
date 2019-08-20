@@ -1,5 +1,6 @@
 Version 2.02.186 - 
 ================================
+  Correctly set read_ahead for LVs when pvmove is finished.
   Fix metadata writes from corrupting with large physical block size.
   Report no_discard_passdown for cache LVs with lvs -o+kernel_discards.
   Prevent shared active mirror LVs with lvmlockd.
