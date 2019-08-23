@@ -1734,6 +1734,8 @@ struct cmd_context *create_toolcontext(unsigned is_clvmd,
 	cmd->current_settings = cmd->default_settings;
 
 	cmd->initialized.config = 1;
+
+	dm_list_init(&cmd->pending_delete);
 out:
 	if (!cmd->initialized.config) {
 		destroy_toolcontext(cmd);
@@ -1921,6 +1923,12 @@ int refresh_toolcontext(struct cmd_context *cmd)
 		return_0;
 
 	cmd->initialized.config = 1;
+
+	if (!dm_list_empty(&cmd->pending_delete)) {
+		log_debug(INTERNAL_ERROR "Unprocessed pending delete for %d devices.",
+			  dm_list_size(&cmd->pending_delete));
+		dm_list_init(&cmd->pending_delete);
+	}
 
 	if (cmd->initialized.connections && !init_connections(cmd))
 		return_0;
