@@ -3231,6 +3231,7 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root, const 
 			if (!dm_tree_deactivate_children(root, dl->str, strlen(dl->str)))
 				return_0;
 		}
+		dm_list_init(&dm->pending_delete);
 	}
 
 	return 1;
@@ -3357,24 +3358,21 @@ out_no_root:
 int dev_manager_activate(struct dev_manager *dm, const struct logical_volume *lv,
 			 struct lv_activate_opts *laopts)
 {
+	dm_list_splice(&dm->pending_delete, &lv->vg->cmd->pending_delete);
+
 	if (!_tree_action(dm, lv, laopts, ACTIVATE))
 		return_0;
 
-	/*
-	 * When lvm2 resumes a device and shortly after that it removes it,
-	 * udevd rule will try to blindly call 'dmsetup info' on already removed
-	 * device leaving the trace inside syslog about failing operation.
-	 *
-	 * TODO: It's not completely clear this call here is the best fix.
-	 *       Maybe there can be a better sequence, but ATM we do usually resume
-	 *       error device i.e. on cache deletion and remove it.
-	 * TODO2: there could be more similar cases!
-	 */
-	if (!dm_list_empty(&dm->pending_delete))
-		fs_unlock();
-
 	if (!_tree_action(dm, lv, laopts, CLEAN))
 		return_0;
+
+	if (!dm_list_empty(&dm->pending_delete)) {
+		log_debug("Preserving %d device(s) for removal while being suspended.",
+			  dm_list_size(&dm->pending_delete));
+		if (!(str_list_dup(lv->vg->cmd->mem, &lv->vg->cmd->pending_delete,
+				   &dm->pending_delete)))
+			return_0;
+	}
 
 	return 1;
 }
