@@ -1,5 +1,6 @@
 Version 2.03.06 - 
 ================================
+  Improve internal removal of cached devices.
   Synchronize with udev when dropping snapshot.
   Add missing device synchronization point before removing pvmove node.
   Correctly set read_ahead for LVs when pvmove is finished.
