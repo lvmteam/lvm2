@@ -6647,7 +6647,7 @@ $as_echo "#define _REENTRANT 1" >>confdefs.h
 
 ################################################################################
 for ac_func in ftruncate gethostname getpagesize gettimeofday localtime_r \
-  memchr memset mkdir mkfifo munmap nl_langinfo prlimit pselect realpath rmdir setenv \
+  memchr memset mkdir mkfifo munmap nl_langinfo pselect realpath rmdir setenv \
   setlocale strcasecmp strchr strcspn strdup strerror strncasecmp strndup \
   strrchr strspn strstr strtol strtoul uname
 do :
@@ -6660,6 +6660,17 @@ _ACEOF
 
 else
   as_fn_error $? "bailing out" "$LINENO" 5
+fi
+done
+
+for ac_func in prlimit
+do :
+  ac_fn_c_check_func "$LINENO" "prlimit" "ac_cv_func_prlimit"
+if test "x$ac_cv_func_prlimit" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_PRLIMIT 1
+_ACEOF
+
 fi
 done
 
