@@ -292,6 +292,9 @@
 /* Define to 1 if you have the <paths.h> header file. */
 #undef HAVE_PATHS_H
 
+/* Define to 1 if you have the `prlimit' function. */
+#undef HAVE_PRLIMIT
+
 /* Define to 1 if you have the `pselect' function. */
 #undef HAVE_PSELECT
 

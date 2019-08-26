@@ -873,6 +873,7 @@ static void _free_hints(struct dm_list *hints)
 
 static void _prepare_open_file_limit(struct cmd_context *cmd, unsigned int num_devs)
 {
+#ifdef HAVE_PRLIMIT
 	struct rlimit old, new;
 	unsigned int want = num_devs + BASE_FD_COUNT;
 	int rv;
@@ -909,6 +910,7 @@ static void _prepare_open_file_limit(struct cmd_context *cmd, unsigned int num_d
 			log_warn("WARNING: cannot set open file limit for scanning %u devices.", num_devs);
 		return;
 	}
+#endif
 }
 
 /*

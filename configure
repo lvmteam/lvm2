@@ -1715,7 +1715,7 @@ Optional Packages:
                           cache_restore tool: [autodetect]
   --with-vdo=TYPE         vdo support: internal/none [internal]
   --with-vdo-format=PATH  vdoformat tool: [autodetect]
-  --with-writecache=TYPE  writecache support: internal/none [internal]
+  --with-writecache=TYPE  writecache support: internal/none [none]
   --with-ocfdir=DIR       install OCF files in
                           [PREFIX/lib/ocf/resource.d/lvm2]
   --with-default-pid-dir=PID_DIR
@@ -6647,7 +6647,7 @@ $as_echo "#define _REENTRANT 1" >>confdefs.h
 
 ################################################################################
 for ac_func in ftruncate gethostname getpagesize gettimeofday localtime_r \
-  memchr memset mkdir mkfifo munmap nl_langinfo pselect realpath rmdir setenv \
+  memchr memset mkdir mkfifo munmap nl_langinfo prlimit pselect realpath rmdir setenv \
   setlocale strcasecmp strchr strcspn strdup strerror strncasecmp strndup \
   strrchr strspn strstr strtol strtoul uname
 do :
