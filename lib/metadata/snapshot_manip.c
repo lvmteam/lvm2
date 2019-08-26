@@ -361,13 +361,7 @@ int vg_remove_snapshot(struct logical_volume *cow)
 			return 0;
 		}
 
-		/*
-		 * For merged snapshot and clustered VG activate cow LV so
-		 * the following call to deactivate_lv() can clean-up table
-		 * entries. For this clustered lock need to be held.
-		 */
-		if (vg_is_clustered(cow->vg) &&
-		    merging_snapshot && !activate_lv(cow->vg->cmd, cow)) {
+		if (merging_snapshot && !activate_lv(cow->vg->cmd, cow)) {
 			log_error("Failed to activate %s.", cow->name);
 			return 0;
 		}
