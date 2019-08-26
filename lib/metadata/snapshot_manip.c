@@ -292,6 +292,11 @@ int vg_remove_snapshot(struct logical_volume *cow)
 
 	if (is_origin_active &&
 	    lv_is_virtual_origin(origin)) {
+		if (!sync_local_dev_names(origin->vg->cmd)) {
+			log_error("Failed to sync local devices before deactivating origin LV %s.",
+				  display_lvname(origin));
+			return 0;
+		}
 		if (!deactivate_lv(origin->vg->cmd, origin)) {
 			log_error("Failed to deactivate logical volume \"%s\"",
 				  origin->name);
