@@ -5830,9 +5830,17 @@ out:
 
 	ret = 1;
 bad:
-	if (activated && !deactivate_lv(cmd, lock_lv)) {
-		log_error("Problem deactivating %s.", display_lvname(lock_lv));
-		ret = 0;
+	if (activated) {
+		if (!sync_local_dev_names(lock_lv->vg->cmd)) {
+			log_error("Failed to sync local devices before deactivating LV %s.",
+				  display_lvname(lock_lv));
+			return 0;
+		}
+
+		if (!deactivate_lv(cmd, lock_lv)) {
+			log_error("Problem deactivating %s.", display_lvname(lock_lv));
+			ret = 0;
+		}
 	}
 
 	return ret;

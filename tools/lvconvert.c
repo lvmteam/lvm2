@@ -2513,6 +2513,12 @@ static int _lvconvert_cache_repair(struct cmd_context *cmd,
 	/* TODO: any active validation of cache-pool metadata? */
 
 deactivate_mlv:
+	if (!sync_local_dev_names(cmd)) {
+		log_error("Failed to sync local devices before deactivating LV %s.",
+			  display_lvname(mlv));
+		return 0;
+	}
+
 	if (!deactivate_lv(cmd, mlv)) {
 		log_error("Cannot deactivate pool metadata volume %s.",
 			  display_lvname(mlv));
@@ -2520,6 +2526,12 @@ deactivate_mlv:
 	}
 
 deactivate_pmslv:
+	if (!sync_local_dev_names(cmd)) {
+		log_error("Failed to sync local devices before deactivating LV %s.",
+			  display_lvname(pmslv));
+		return 0;
+	}
+
 	if (!deactivate_lv(cmd, pmslv)) {
 		log_error("Cannot deactivate pool metadata spare volume %s.",
 			  display_lvname(pmslv));
