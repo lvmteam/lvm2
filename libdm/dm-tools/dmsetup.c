@@ -1695,7 +1695,7 @@ static int _udevcomplete(CMD_ARGS)
 	if (!(cookie = _get_cookie_value(argv[0])))
 		return_0;
 
-	printf("DM_COOKIE_COMPLETED=0x%-10x", cookie);
+	printf("DM_COOKIE_COMPLETED=0x%-10x\n", cookie);
 	/*
 	 * Strip flags from the cookie and use cookie magic instead.
 	 * If the cookie has non-zero prefix and the base is zero then
