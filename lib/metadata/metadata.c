@@ -4917,7 +4917,8 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	 * of needing to write to them.
 	 */
 
-	if (!lock_vol(cmd, vg_name, (writing || activating) ? LCK_VG_WRITE : LCK_VG_READ, NULL)) {
+	if (!(read_flags & READ_WITHOUT_LOCK) &&
+	    !lock_vol(cmd, vg_name, (writing || activating) ? LCK_VG_WRITE : LCK_VG_READ, NULL)) {
 		log_error("Can't get lock for %s", vg_name);
 		failure |= FAILED_LOCKING;
 		goto_bad;

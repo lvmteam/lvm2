@@ -26,12 +26,6 @@
 					((ret_code) == ECMD_PROCESSED) ? REPORT_OBJECT_CMDLOG_SUCCESS \
 								   : REPORT_OBJECT_CMDLOG_FAILURE, (ret_code))
 
-struct device_id_list {
-	struct dm_list list;
-	struct device *dev;
-	char pvid[ID_LEN + 1];
-};
-
 const char *command_name(struct cmd_context *cmd)
 {
 	return cmd->command->name;

@@ -185,20 +185,28 @@ lvs -o active $vg |tee out || true
 grep "active" out
 vgchange -an $vg
 
-# N.B. pvscan --cache on the md component does not detect it's
-# a md component, and marks the PVID online, then does activation,
-# but the activation phase scans all devs, finds duplicates between
-# components and the actual md dev, chooses the md dev, and activates
-# the VG using the md dev.
-# The behavior with auto mode is preferable in which this does nothing,
-# but this is ok.
+# N.B. when the md dev (which is started) has not been scanned by
+# pvscan, then pvscan --cache on the md component does not detect it's
+# an md component, and marks the PVID online, then does activation,
+# but the activation using the component fails because the component
+# device is busy from being used in the md dev, and activation fails.
+# The default behavior in auto mode is preferrable.
 _clear_online_files
-pvscan --cache -aay "$dev1"
+not pvscan --cache -aay "$dev1"
+ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
+ls "$RUNDIR/lvm/vgs_online/$vg"
+lvs -o active $vg |tee out || true
+not grep "active" out
+
+# pvscan activation from mddev first, then try from component which fails
+_clear_online_files
+pvscan --cache -aay "$mddev"
 ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
 ls "$RUNDIR/lvm/vgs_online/$vg"
 lvs -o active $vg |tee out || true
 grep "active" out
-# FIXME: verify the LV is using the md dev and not the component
+not pvscan --cache -aay "$dev1"
+
 
 vgchange -an $vg
 vgremove -f $vg
@@ -266,6 +274,14 @@ aux cleanup_md_dev
 # md_component_checks: start (not auto)
 # mddev: stopped             (not started)
 #
+# N.B. This test case is just characterizing the current behavior, even
+# though the behavior it's testing for is not what we'd want to happen.
+# In this scenario, we have disabled/avoided everything that would
+# lead lvm to discover that dev1 is an md component, so dev1 is used
+# as the PV.  Multiple default settings need to be changed to get to
+# this unwanted behavior (md_component_checks,
+# obtain_device_list_from_udev), and other conditions also
+# need to be true (md device stopped).
 
 aux lvmconf 'devices/md_component_checks = "start"'
 
@@ -301,26 +317,37 @@ not grep "$dev2" $HINTS
 not lvchange -ay $vg/$lv1
 not lvs $vg
 
-# pvscan activation all does nothing
+# pvscan activation all does nothing because both legs are
+# seen as duplicates which triggers md component check which
+# eliminates the devs
 _clear_online_files
 pvscan --cache -aay
 not ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
 not ls "$RUNDIR/lvm/vgs_online/$vg"
 
-# pvscan activation from md components does nothing
 _clear_online_files
-pvscan --cache -aay "$dev1" || true
-# N.B it would be preferrable if this did not recognize the PV on the
-# component and attempt to activate, like auto mode, but this is ok,
-# the activation scans all devs, sees duplicates, which triggers md
-# component detection which eliminates both devs, leaving no vg to activate.
+pvscan --cache -aay "$dev1"
 ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
 ls "$RUNDIR/lvm/vgs_online/$vg"
-pvscan --cache -aay "$dev2" || true
-lvs -o active $vg |tee out || true
-not grep "active" out
 
-aux cleanup_md_dev
+# N.B. not good to activate from component, but result of "start" setting
+# Other commands will not see the vg at this point because they'll
+# recognize the md components and ignore them (where pvscan is special due
+# to it not scanning all devs and not seeing the duplicates and not
+# detecting the components.)
+# disable dev2 so other cmds don't see dups and we can deactivate the vg
+aux disable_dev "$dev2"
+vgchange -an $vg
+
+aux enable_dev "$dev2"
+aux udev_wait
+cat /proc/mdstat
+# for some reason enabling dev2 starts an odd md dev
+mdadm --stop "$mddev" || true
+mdadm --stop --scan
+cat /proc/mdstat
+wipefs -a "$dev1" || true
+wipefs -a "$dev2" || true
 
 
 ##########################################
@@ -382,12 +409,18 @@ _clear_online_files
 pvscan --cache -aay
 ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
 ls "$RUNDIR/lvm/vgs_online/$vg"
+# N.B. not good to activate from component, but result of "start" setting
+lvs -o active $vg |tee out || true
+grep "active" out
 vgchange -an $vg
 
 _clear_online_files
 pvscan --cache -aay "$dev1"
 ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
 ls "$RUNDIR/lvm/vgs_online/$vg"
+# N.B. not good to activate from component, but result of "start" setting
+lvs -o active $vg |tee out || true
+grep "active" out
 vgchange -an $vg
 
 aux enable_dev "$dev2"
@@ -582,21 +615,32 @@ pvscan --cache -aay
 not ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
 not ls "$RUNDIR/lvm/vgs_online/$vg"
 
-# pvscan activation from md components does nothing
 _clear_online_files
 pvscan --cache -aay "$dev1" || true
-# N.B it would be preferrable if this did not recognize the PV on the
-# component and attempt to activate, like auto mode, but this is ok,
-# the activation scans all devs, sees duplicates, which triggers md
-# component detection which eliminates both devs, leaving no vg to activate.
 ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
 ls "$RUNDIR/lvm/vgs_online/$vg"
-pvscan --cache -aay "$dev2" || true
-lvs -o active $vg |tee out || true
-not grep "active" out
-pvscan --cache -aay "$dev4" || true
-lvs -o active $vg |tee out || true
-not grep "active" out
+# N.B. not good to activate from component, but result of "start" setting
+# Scanning the other two legs sees existing pv online file and warns about
+# duplicate PVID, exiting with error:
+not pvscan --cache -aay "$dev2"
+not pvscan --cache -aay "$dev4"
 
-aux cleanup_md_dev
+# Have to disable other legs so we can deactivate since
+# vgchange will detect and eliminate the components due
+# to duplicates and not see the vg.
+aux disable_dev "$dev2"
+aux disable_dev "$dev4"
+vgchange -an $vg
+
+aux enable_dev "$dev2"
+aux enable_dev "$dev4"
+aux udev_wait
+cat /proc/mdstat
+# for some reason enabling dev2 starts an odd md dev
+mdadm --stop "$mddev" || true
+mdadm --stop --scan
+cat /proc/mdstat
+wipefs -a "$dev1" || true
+wipefs -a "$dev2" || true
+wipefs -a "$dev4" || true
 

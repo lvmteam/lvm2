@@ -186,6 +186,7 @@
 #define READ_FOR_UPDATE		0x00100000U /* command tells vg_read it plans to write the vg */
 #define PROCESS_SKIP_SCAN	0x00200000U /* skip lvmcache_label_scan in process_each_pv */
 #define READ_FOR_ACTIVATE	0x00400000U /* command tells vg_read it plans to activate the vg */
+#define READ_WITHOUT_LOCK	0x00800000U /* caller responsible for vg lock */
 
 /* vg_read returns these in error_flags */
 #define FAILED_NOT_ENABLED	0x00000001U
@@ -557,6 +558,12 @@ struct vgnameid_list {
 	struct dm_list list;
 	const char *vg_name;
 	const char *vgid;
+};
+
+struct device_id_list {
+	struct dm_list list;
+	struct device *dev;
+	char pvid[ID_LEN + 1];
 };
 
 #define PV_PE_START_CALC ((uint64_t) -1) /* Calculate pe_start value */

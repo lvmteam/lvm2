@@ -199,6 +199,43 @@ static char *_vgname_in_pvid_file_buf(char *buf)
 
 #define MAX_PVID_FILE_SIZE 512
 
+static int _online_pvid_file_read(char *path, int *major, int *minor, char *vgname)
+{
+	char buf[MAX_PVID_FILE_SIZE];
+	char *name;
+	int fd, rv;
+
+	fd = open(path, O_RDONLY);
+	if (fd < 0) {
+		log_warn("Failed to open %s", path);
+		return 0;
+	}
+
+	memset(buf, 0, sizeof(buf));
+
+	rv = read(fd, buf, sizeof(buf));
+	if (close(fd))
+		log_sys_debug("close", path);
+	if (!rv || rv < 0) {
+		log_warn("No info in %s", path);
+		return 0;
+	}
+
+	if (sscanf(buf, "%d:%d", major, minor) != 2) {
+		log_warn("No device numbers in %s", path);
+		return 0;
+	}
+
+	/* vgname points to an offset in buf */
+	if ((name = _vgname_in_pvid_file_buf(buf)))
+		strncpy(vgname, name, NAME_LEN);
+	else
+		log_debug("No vgname in %s", path);
+
+	return 1;
+}
+
+
 /*
  * When a PV goes offline, remove the vg online file for that VG
  * (even if other PVs for the VG are still online).  This means
@@ -231,15 +268,10 @@ static void _online_vg_file_remove(const char *vgname)
 static void _online_pvid_file_remove_devno(int major, int minor)
 {
 	char path[PATH_MAX];
-	char buf[MAX_PVID_FILE_SIZE];
-	char buf_in[MAX_PVID_FILE_SIZE];
-	char *vgname = NULL;
+	char file_vgname[NAME_LEN];
 	DIR *dir;
 	struct dirent *de;
-	int fd, rv;
-
-	memset(buf, 0, sizeof(buf));
-	snprintf(buf, sizeof(buf), "%d:%d\n", major, minor);
+	int file_major = 0, file_minor = 0;
 
 	log_debug("Remove pv online devno %d:%d", major, minor);
 
@@ -253,34 +285,19 @@ static void _online_pvid_file_remove_devno(int major, int minor)
 		memset(path, 0, sizeof(path));
 		snprintf(path, sizeof(path), "%s/%s", _pvs_online_dir, de->d_name);
 
-		fd = open(path, O_RDONLY);
-		if (fd < 0) {
-			log_debug("Failed to open %s", path);
-			continue;
-		}
+		file_major = 0;
+		file_minor = 0;
+		memset(file_vgname, 0, sizeof(file_vgname));
 
-		memset(buf_in, 0, sizeof(buf_in));
+		_online_pvid_file_read(path, &file_major, &file_minor, file_vgname);
 
-		rv = read(fd, buf_in, sizeof(buf_in));
-		if (close(fd))
-			log_sys_debug("close", path);
-		if (!rv || rv < 0) {
-			log_debug("Failed to read %s", path);
-			continue;
-		}
-
-		if (!strncmp(buf, buf_in, strlen(buf))) {
+		if ((file_major == major) && (file_minor == minor)) {
 			log_debug("Unlink pv online %s", path);
 			if (unlink(path))
 				log_sys_debug("unlink", path);
 
-			/* vgname points to an offset in buf_in */
-			if ((vgname = _vgname_in_pvid_file_buf(buf_in)))
-				_online_vg_file_remove(vgname);
-			else
-				log_debug("No vgname in pvid file");
-
-			break;
+			if (file_vgname[0])
+				_online_vg_file_remove(file_vgname);
 		}
 	}
 	if (closedir(dir))
@@ -313,6 +330,8 @@ static int _online_pvid_file_create(struct device *dev, const char *vgname)
 {
 	char path[PATH_MAX];
 	char buf[MAX_PVID_FILE_SIZE];
+	char file_vgname[NAME_LEN];
+	int file_major = 0, file_minor = 0;
 	int major, minor;
 	int fd;
 	int rv;
@@ -347,8 +366,10 @@ static int _online_pvid_file_create(struct device *dev, const char *vgname)
 
 	log_debug("Create pv online: %s %d:%d %s", path, major, minor, dev_name(dev));
 
-	fd = open(path, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
+	fd = open(path, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
 	if (fd < 0) {
+		if (errno == EEXIST)
+			goto check_duplicate;
 		log_error("Failed to open create %s: %d", path, errno);
 		return 0;
 	}
@@ -371,6 +392,39 @@ static int _online_pvid_file_create(struct device *dev, const char *vgname)
 		log_sys_debug("close", path);
 
 	return 1;
+
+check_duplicate:
+
+	/*
+	 * If a PVID online file already exists for this PVID, check if the
+	 * file contains a different device number, and if so we may have a
+	 * duplicate PV.
+	 *
+	 * FIXME: disable autoactivation of the VG somehow?
+	 * The VG may or may not already be activated when a dupicate appears.
+	 * Perhaps write a new field in the pv online or vg online file?
+	 */
+
+	memset(file_vgname, 0, sizeof(file_vgname));
+
+	_online_pvid_file_read(path, &file_major, &file_minor, file_vgname);
+
+	if ((file_major == major) && (file_minor == minor)) {
+		log_debug("Existing online file for %d:%d", major, minor);
+		return 1;
+	}
+
+	/* Don't know how vgname might not match, but it's not good so fail. */
+
+	if ((file_major != major) || (file_minor != minor))
+		log_error("pvscan[%d] PV %s is duplicate for PVID %s on %d:%d and %d:%d.",
+			  getpid(), dev_name(dev), dev->pvid, major, minor, file_major, file_minor);
+
+	if (file_vgname[0] && strcmp(file_vgname, vgname))
+		log_error("pvscan[%d] PV %s has unexpected VG %s vs %s.",
+			  getpid(), dev_name(dev), vgname, file_vgname);
+
+	return 0;
 }
 
 static int _online_pvid_file_exists(const char *pvid)
@@ -511,29 +565,56 @@ struct _pvscan_baton {
 	struct cmd_context *cmd;
 	struct volume_group *vg;
 	struct format_instance *fid;
-	int mda_read_errors;
 };
+
+/*
+ * If no mdas on this PV have a usable copy of the metadata,
+ * then the PV behaves like a PV without metadata, which
+ * causes the pvscan to scan all devs to find a copy of the
+ * metadata on another dev to check if the VG is now complete
+ * and can be activated.
+ */
 
 static int _online_pvscan_single(struct metadata_area *mda, void *baton)
 {
 	struct _pvscan_baton *b = baton;
 	struct volume_group *vg;
+	struct device *mda_dev = mda_get_device(mda);
 
 	if (mda_is_ignored(mda))
 		return 1;
 	vg = mda->ops->vg_read(b->fid, "", mda, NULL, NULL);
 	if (!vg) {
-		b->mda_read_errors++;
+		/*
+		 * Many or most cases of bad metadata would be found in
+		 * the scan, and the mda removed from the list, so we
+		 * would not get here to attempt this.
+		 */
+		log_print("pvscan[%d] metadata error in mda %d on %s.",
+			  getpid(), mda->mda_num, dev_name(mda_dev));
 		return 1;
 	}
 
-	/* FIXME Also ensure contents match etc. */
+	log_debug("pvscan vg_read %s seqno %u in mda %d on %s",
+		  vg->name, vg->seqno, mda->mda_num, dev_name(mda_dev));
+
 	if (!b->vg || vg->seqno > b->vg->seqno)
 		b->vg = vg;
 	else if (b->vg)
 		release_vg(vg);
 
 	return 1;
+}
+
+static struct volume_group *_find_saved_vg(struct dm_list *saved_vgs, const char *vgname)
+{
+	struct vg_list *vgl;
+
+	dm_list_iterate_items(vgl, saved_vgs) {
+		if (!strcmp(vgname, vgl->vg->name))
+			return vgl->vg;
+	}
+	return NULL;
 }
 
 /*
@@ -546,7 +627,7 @@ static int _online_pvscan_single(struct metadata_area *mda, void *baton)
 static int _online_pvscan_one(struct cmd_context *cmd, struct device *dev,
 			      struct dm_list *dev_args,
 			      struct dm_list *found_vgnames,
-			      struct dm_list *all_vgs,
+			      struct dm_list *saved_vgs,
 			      int disable_remove,
 			      const char **pvid_without_metadata)
 {
@@ -603,17 +684,8 @@ static int _online_pvscan_one(struct cmd_context *cmd, struct device *dev,
 
 	lvmcache_foreach_mda(info, _online_pvscan_single, &baton);
 
-	if (baton.mda_read_errors) {
-		/* Don't record the PV as online if there are errors reading the vg. */
-		log_print("pvscan[%d] PV %s ignore for metadata processing error.", getpid(), dev_name(dev));
-		if (baton.vg)
-			release_vg(baton.vg);
-		else
-			fmt->ops->destroy_instance(baton.fid);
-		return 1;
-	}
-
 	if (!baton.vg) {
+		log_print("pvscan[%d] PV %s has no VG metadata.", getpid(), dev_name(dev));
 		if (pvid_without_metadata)
 			*pvid_without_metadata = dm_pool_strdup(cmd->mem, dev->pvid);
 		fmt->ops->destroy_instance(baton.fid);
@@ -652,21 +724,14 @@ static int _online_pvscan_one(struct cmd_context *cmd, struct device *dev,
 
 	/*
 	 * Save vg's in case they need to be used at the end for checking PVs
-	 * without metadata (in _check_vg_with_pvid_complete).
+	 * without metadata (in _check_vg_with_pvid_complete), or activating.
 	 */
-	if (all_vgs && baton.vg) {
-		int found = 0;
-		dm_list_iterate_items(vgl, all_vgs) {
-			if (!strcmp(baton.vg->name, vgl->vg->name)) {
-				found = 1;
-				break;
-			}
-		}
-		if (!found) {
+	if (saved_vgs && baton.vg) {
+		if (!_find_saved_vg(saved_vgs, baton.vg->name)) {
 	       		if ((vgl = malloc(sizeof(struct vg_list)))) {
 				vgl->vg = baton.vg;
 				baton.vg = NULL;
-				dm_list_add(all_vgs, &vgl->list);
+				dm_list_add(saved_vgs, &vgl->list);
 			}
 		}
 	}
@@ -681,7 +746,7 @@ out:
  * This is to handle the case where pvscan --cache -aay (with no dev args)
  * gets to the final PV, completing the VG, but that final PV does not
  * have VG metadata.  In this case, we need to use VG metadata from a
- * previously scanned PV in the same VG, which we saved in the all_vgs
+ * previously scanned PV in the same VG, which we saved in the saved_vgs
  * list.  Using this saved metadata, we can find which VG this PVID
  * belongs to, and then check if that VG is now complete, and if so
  * add the VG name to the list of complete VGs to be autoactivated.
@@ -693,7 +758,7 @@ out:
  */
 static void _check_vg_with_pvid_complete(struct cmd_context *cmd,
 				         struct dm_list *found_vgnames,
-					 struct dm_list *all_vgs,
+					 struct dm_list *saved_vgs,
 					 const char *pvid)
 {
 	struct vg_list *vgl;
@@ -702,7 +767,7 @@ static void _check_vg_with_pvid_complete(struct cmd_context *cmd,
 	int pvids_not_online = 0;
 	int found;
 
-	dm_list_iterate_items(vgl, all_vgs) {
+	dm_list_iterate_items(vgl, saved_vgs) {
 		vg = vgl->vg;
 		found = 0;
 
@@ -749,15 +814,12 @@ static void _check_vg_with_pvid_complete(struct cmd_context *cmd,
 
 static void _online_pvscan_all_devs(struct cmd_context *cmd,
 				    struct dm_list *found_vgnames,
+				    struct dm_list *saved_vgs,
 				    struct dm_list *dev_args)
 {
-	struct dm_list all_vgs;
 	struct dev_iter *iter;
-	struct vg_list *vgl;
 	struct device *dev;
 	const char *pvid_without_metadata;
-
-	dm_list_init(&all_vgs);
 
 	lvmcache_label_scan(cmd);
 
@@ -774,18 +836,15 @@ static void _online_pvscan_all_devs(struct cmd_context *cmd,
 
 		pvid_without_metadata = NULL;
 
-		if (!_online_pvscan_one(cmd, dev, dev_args, found_vgnames, &all_vgs, 1, &pvid_without_metadata)) {
+		if (!_online_pvscan_one(cmd, dev, dev_args, found_vgnames, saved_vgs, 1, &pvid_without_metadata)) {
 			stack;
 			break;
 		}
 
 		/* This PV without metadata may complete a VG. */
 		if (pvid_without_metadata && found_vgnames)
-			_check_vg_with_pvid_complete(cmd, found_vgnames, &all_vgs, pvid_without_metadata);
+			_check_vg_with_pvid_complete(cmd, found_vgnames, saved_vgs, pvid_without_metadata);
 	}
-
-	dm_list_iterate_items(vgl, &all_vgs)
-		release_vg(vgl->vg);
 
 	dev_iter_destroy(iter);
 }
@@ -840,8 +899,236 @@ static int _online_vg_file_create(struct cmd_context *cmd, const char *vgname)
 	return 1;
 }
 
+/*
+ * This is a very unconventional way of doing things because
+ * we want to figure out which devices to read the VG from
+ * without first scanning devices.  It's usually the reverse;
+ * we have to scan all devs, which tells us which devs we
+ * need to read to get the VG.
+ *
+ * We can do it this way only by cheating and using the pvid
+ * online files for devs that have been scanned by prior pvscan
+ * instances.
+ *
+ * This is similar to the hints file, but the hints file is
+ * always a full picture of PV state, and is only ever created
+ * by scanning all devs, whereas the online files are only
+ * created incrementally by scanning one device at a time.
+ * The online files are only used for determining complete VGs
+ * for the purpose of autoactivation, and no attempt is made
+ * to keep them in sync with lvm state once autoactivation
+ * is complete, but much effort is made to always ensure hints
+ * will accurately reflect PV state.
+ *
+ * The saved VG metadata tells us which PVIDs are needed to
+ * complete the VG.  The pv online files tell us which of those
+ * PVIDs are online, and the content of those pv online files
+ * tells us which major:minor number holds that PVID.  The
+ * dev_cache tell us which struct device has the major:minor.
+ * We end up with a list of struct devices that we need to
+ * scan/read in order to process/activate the VG.
+ */
+
+static int _get_devs_from_saved_vg(struct cmd_context *cmd, char *vgname,
+				   struct dm_list *saved_vgs,
+				   struct dm_list *devs)
+{
+	char path[PATH_MAX];
+	char file_vgname[NAME_LEN];
+	struct pv_list *pvl;
+	struct device_list *devl;
+	struct device *dev;
+	struct volume_group *vg;
+	const char *pvid;
+	dev_t devno;
+	int file_major = 0, file_minor = 0;
+
+	/*
+	 * We previously saved the metadata (as a struct vg) from the device
+	 * arg that was scanned.  Now use that metadata to put together a list
+	 * of devices for this VG.  (This could alternatively be worked out by
+	 * reading all the pvid online files, see which have a matching vg
+	 * name, and getting the device numbers from those files.)
+	 */
+	if (!(vg = _find_saved_vg(saved_vgs, vgname)))
+		return_0;
+
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		pvid = (const char *)&pvl->pv->id.uuid;
+
+		memset(path, 0, sizeof(path));
+		snprintf(path, sizeof(path), "%s/%s", _pvs_online_dir, pvid);
+
+		file_major = 0;
+		file_minor = 0;
+		memset(file_vgname, 0, sizeof(file_vgname));
+
+		_online_pvid_file_read(path, &file_major, &file_minor, file_vgname);
+
+		if (file_vgname[0] && strcmp(vgname, file_vgname)) {
+			log_error("Wrong VG found for %d:%d PVID %s: %s vs %s",
+				  file_major, file_minor, pvid, vgname, file_vgname);
+			return 0;
+		}
+
+		devno = MKDEV(file_major, file_minor);
+
+		if (!(dev = dev_cache_get_by_devt(cmd, devno, NULL, NULL))) {
+			log_error("No device found for %d:%d PVID %s", file_major, file_minor, pvid);
+			return 0;
+		}
+
+		if (!(devl = zalloc(sizeof(*devl))))
+			return_0;
+
+		devl->dev = dev;
+		dm_list_add(devs, &devl->list);
+		log_debug("pvscan using %s for PVID %s in VG %s", dev_name(dev), pvid, vgname);
+	}
+
+	return 1;
+}
+
+/*
+ * When there's a single VG to activate (the common case),
+ * optimize things by cutting out the process_each_vg().
+ *
+ * The main point of this optimization is to avoid extra
+ * device scanning in the common case where we're
+ * activating a completed VG after scanning a single PV.
+ * The scanning overhead of hundreds of concurrent
+ * activations from hundreds of PVs appearing together
+ * can be overwhelming, and scanning needs to be reduced
+ * as much as possible.
+ *
+ * The common process_each_vg will generally do:
+ * label scan all devs
+ * vg_read
+ *   lock vg
+ *   label rescan of only vg devs (often skipped)
+ *   read metadata
+ *   set pv devices (find devs for each PVID)
+ * do command (vgchange_activate)
+ * unlock vg
+ *
+ * In this optimized version with process_each we do:
+ * lock vg
+ * label scan of only vg devs
+ * vg_read
+ *   read metadata
+ *   set pv devices (find devs for each PVID)
+ * do command (vgchange_activate)
+ * unlock vg
+ *
+ * The optimized version avoids scanning all devs, which
+ * is important when there are many devs.
+ */
+
+static int _pvscan_aa_direct(struct cmd_context *cmd, struct pvscan_aa_params *pp, char *vgname,
+			     struct dm_list *saved_vgs)
+{
+	struct dm_list devs; /* device_list */
+	struct volume_group *vg;
+	struct pv_list *pvl;
+	const char *vgid;
+	uint32_t lockd_state = 0;
+	uint32_t error_flags = 0;
+	int ret = ECMD_PROCESSED;
+
+	dm_list_init(&devs);
+
+	/*
+	 * Get list of devices for this VG so we can label scan them.
+	 * The saved VG struct gives the list of PVIDs in the VG.
+	 * The pvs_online/PVID files gives us the devnums for PVIDs.
+	 * The dev_cache gives us struct devices from the devnums.
+	 */
+	if (!_get_devs_from_saved_vg(cmd, vgname, saved_vgs, &devs)) {
+		log_error("pvscan activation for VG %s failed to find devices.", vgname);
+		return ECMD_FAILED;
+	}
+
+	/*
+	 * Lock the VG before scanning so we don't need to
+	 * rescan in _vg_read.  (The lock_vol and the
+	 * label rescan are then disabled in vg_read.)
+	 */
+	if (!lock_vol(cmd, vgname, LCK_VG_WRITE, NULL)) {
+		log_error("pvscan activation for VG %s failed to lock VG.", vgname);
+		return ECMD_FAILED;
+	}
+
+	/*
+	 * Drop lvmcache info about the PV/VG that was saved
+	 * when originally identifying the PV.
+	 */
+	lvmcache_destroy(cmd, 1, 1);
+
+	label_scan_devs(cmd, NULL, &devs);
+
+	if (!(vgid = lvmcache_vgid_from_vgname(cmd, vgname))) {
+		log_error("pvscan activation for VG %s failed to find vgid.", vgname);
+		return ECMD_FAILED;
+	}
+
+	/*
+	 * can_use_one_scan and READ_WITHOUT_LOCK are both important key
+	 * changes made to vg_read that are possible because the VG is locked
+	 * above (lock_vol).
+	 */
+
+	cmd->can_use_one_scan = 1;
+
+	vg = vg_read(cmd, vgname, vgid, READ_WITHOUT_LOCK | READ_FOR_ACTIVATE, lockd_state, &error_flags, NULL);
+
+	if (!vg) {
+		/*
+		 * The common cases would already have been caught during the
+		 * original device arg scan.  There will be very few and unusual
+		 * cases that would be caught here.
+		 */
+		log_error("pvscan activation for VG %s cannot read (%x).", vgname, error_flags);
+		return ECMD_FAILED;
+	}
+
+	/*
+	 * These cases would already have been caught during the original
+	 * device arg scan.
+	 */
+	if (vg_is_clustered(vg))
+		goto_out;
+	if (vg_is_exported(vg))
+		goto_out;
+	if (vg_is_shared(vg))
+		goto_out;
+
+	/*
+	 * Verify that the devices we scanned above for the VG are in fact the
+	 * devices used by the VG we read.
+	 */
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (dev_in_device_list(pvl->pv->dev, &devs))
+			continue;
+		log_error("pvscan activation for VG %s found different devices.", vgname);
+		ret = ECMD_FAILED;
+		goto out;
+	}
+
+	log_debug("pvscan autoactivating VG %s.", vgname);
+
+	if (!vgchange_activate(cmd, vg, CHANGE_AAY)) {
+		log_error("%s: autoactivation failed.", vg->name);
+		pp->activate_errors++;
+	}
+
+out:
+	unlock_vg(cmd, vg, vgname);
+	release_vg(vg);
+	return ret;
+}
+
 static int _pvscan_aa(struct cmd_context *cmd, struct pvscan_aa_params *pp,
-		      struct dm_list *vgnames)
+		      struct dm_list *vgnames, struct dm_list *saved_vgs)
 {
 	struct processing_handle *handle = NULL;
 	struct dm_str_list *sl, *sl2;
@@ -880,7 +1167,13 @@ static int _pvscan_aa(struct cmd_context *cmd, struct pvscan_aa_params *pp,
 		return ECMD_PROCESSED;
 	}
 
-	ret = process_each_vg(cmd, 0, NULL, NULL, vgnames, READ_FOR_ACTIVATE, 0, handle, _pvscan_aa_single);
+	if (dm_list_size(vgnames) == 1) {
+		dm_list_iterate_items(sl, vgnames)
+			ret = _pvscan_aa_direct(cmd, pp, (char *)sl->str, saved_vgs);
+	} else {
+		/* FIXME: suppress label scan in process_each if label scan already done? */
+		ret = process_each_vg(cmd, 0, NULL, NULL, vgnames, READ_FOR_ACTIVATE, 0, handle, _pvscan_aa_single);
+	}
 
 	destroy_processing_handle(cmd, handle);
 
@@ -893,9 +1186,12 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	struct dm_list add_devs;
 	struct dm_list rem_devs;
 	struct dm_list vgnames;
+	struct dm_list vglist;
 	struct dm_list *complete_vgnames = NULL;
+	struct dm_list *saved_vgs = NULL;
 	struct device *dev;
 	struct device_list *devl;
+	struct vg_list *vgl;
 	const char *pv_name;
 	const char *pvid_without_metadata = NULL;
 	int32_t major = -1;
@@ -913,6 +1209,7 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	dm_list_init(&add_devs);
 	dm_list_init(&rem_devs);
 	dm_list_init(&vgnames);
+	dm_list_init(&vglist);
 
 	/*
 	 * When systemd/udev run pvscan --cache commands, those commands
@@ -921,8 +1218,10 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	 */
 	init_udev_sleeping(0);
 
-	if (do_activate)
+	if (do_activate) {
 		complete_vgnames = &vgnames;
+		saved_vgs = &vglist;
+	}
 
 	if (arg_is_set(cmd, major_ARG) + arg_is_set(cmd, minor_ARG))
 		devno_args = 1;
@@ -1081,7 +1380,7 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 		log_verbose("pvscan all devices for requested refresh.");
 		_online_files_remove(_pvs_online_dir);
 		_online_files_remove(_vgs_online_dir);
-		_online_pvscan_all_devs(cmd, complete_vgnames, NULL);
+		_online_pvscan_all_devs(cmd, complete_vgnames, saved_vgs, NULL);
 
 		cmd->pvscan_recreate_hints = 0;
 		cmd->use_hints = 0;
@@ -1120,7 +1419,7 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 
 			add_single_count++;
 
-			if (!_online_pvscan_one(cmd, dev, NULL, complete_vgnames, NULL, 0, &pvid_without_metadata))
+			if (!_online_pvscan_one(cmd, dev, NULL, complete_vgnames, saved_vgs, 0, &pvid_without_metadata))
 				add_errors++;
 		}
 	}
@@ -1137,8 +1436,8 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	 */
 	if (!dm_list_empty(&add_devs) && complete_vgnames && dm_list_empty(complete_vgnames) &&
 	    pvid_without_metadata && do_activate) {
-		log_verbose("pvscan all devices for PV without metadata: %s.", pvid_without_metadata);
-		_online_pvscan_all_devs(cmd, complete_vgnames, &add_devs);
+		log_print("pvscan[%d] scan all devices for PV without metadata: %s.", getpid(), pvid_without_metadata);
+		_online_pvscan_all_devs(cmd, complete_vgnames, saved_vgs, &add_devs);
 	}
 
 	/*
@@ -1159,10 +1458,13 @@ activate:
 	 * list, and we can attempt to autoactivate LVs in the VG.
 	 */
 	if (do_activate)
-		ret = _pvscan_aa(cmd, &pp, complete_vgnames);
+		ret = _pvscan_aa(cmd, &pp, complete_vgnames, saved_vgs);
 
 	if (add_errors || pp.activate_errors)
 		ret = ECMD_FAILED;
+
+	dm_list_iterate_items(vgl, &vglist)
+		release_vg(vgl->vg);
 
 	if (!sync_local_dev_names(cmd))
 		stack;
