@@ -516,6 +516,7 @@ static bool _sync_issue(struct io_engine *ioe, enum dir d, int fd,
 					  (unsigned long long)limit_nbytes,
 					  (unsigned long long)extra_nbytes,
 					  (unsigned long long)_last_byte_sector_size);
+                                free(io);
 				return false;
 			}
 		}
@@ -547,8 +548,8 @@ static bool _sync_issue(struct io_engine *ioe, enum dir d, int fd,
 				log_debug("Device write error %d offset %llu len %llu", errno,
 					  (unsigned long long)(where + pos),
 					  (unsigned long long)(len - pos));
-                	free(io);
-                	return false;
+			free(io);
+			return false;
 		}
 		pos += rv;
 	}
