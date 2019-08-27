@@ -1492,6 +1492,8 @@ void destroy_config_context(struct cmd_context *cmd)
 		dm_pool_destroy(cmd->mem);
 	if (cmd->libmem)
 		dm_pool_destroy(cmd->libmem);
+	if (cmd->pending_delete_mem)
+		dm_pool_destroy(cmd->pending_delete_mem);
 
 	free(cmd);
 }
@@ -1519,6 +1521,9 @@ struct cmd_context *create_config_context(void)
 
 	if (!(cmd->mem = dm_pool_create("command", 4 * 1024)))
 		goto out;
+
+	if (!(cmd->pending_delete_mem = dm_pool_create("pending_delete", 1024)))
+		goto_out;
 
 	dm_list_init(&cmd->config_files);
 	dm_list_init(&cmd->tags);
@@ -1666,6 +1671,9 @@ struct cmd_context *create_toolcontext(unsigned is_clvmd,
 		log_error("Command memory pool creation failed");
 		goto out;
 	}
+
+	if (!(cmd->pending_delete_mem = dm_pool_create("pending_delete", 1024)))
+		goto_out;
 
 	if (!_init_lvm_conf(cmd))
 		goto_out;
@@ -1970,6 +1978,8 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	if (cmd->libmem)
 		dm_pool_destroy(cmd->libmem);
 
+	if (cmd->pending_delete_mem)
+		dm_pool_destroy(cmd->pending_delete_mem);
 #ifndef VALGRIND_POOL
 	if (cmd->linebuffer) {
 		/* Reset stream buffering to defaults */

@@ -240,6 +240,7 @@ struct cmd_context {
 	const char *time_format;
 	unsigned rand_seed;
 	struct dm_list pending_delete;		/* list of LVs for removal */
+	struct dm_pool *pending_delete_mem;	/* memory pool for pending deletes */
 };
 
 /*
