@@ -354,6 +354,44 @@ Convert LV to striped.
 .RE
 -
 
+Convert LV to type mirror (also see type raid1),
+.br
+.P
+\fBlvconvert\fP \fB--type\fP \fBmirror\fP \fILV\fP
+.br
+.RS 4
+.ad l
+[ \fB-m\fP|\fB--mirrors\fP [\fB+\fP|\fB-\fP]\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-i\fP|\fB--interval\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--stripes\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[    \fB--mirrorlog\fP \fBcore\fP|\fBdisk\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
+-
+
 Convert LV to raid or change raid layout 
 .br
 (a specific raid level must be used, e.g. raid1).
@@ -1472,38 +1510,6 @@ For example, LVM_VG_NAME can generally be substituted for a required VG paramete
 .SH ADVANCED USAGE
 Alternate command forms, advanced command usage, and listing of all valid syntax for completeness.
 .P
-Convert LV to type mirror (also see type raid1), 
-.br
-(also see lvconvert --mirrors).
-.br
-.P
-\fBlvconvert\fP \fB--type\fP \fBmirror\fP \fILV\fP
-.br
-.RS 4
-.ad l
-[ \fB-m\fP|\fB--mirrors\fP [\fB+\fP|\fB-\fP]\fINumber\fP ]
-.ad b
-.br
-.ad l
-[ \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT] ]
-.ad b
-.br
-.ad l
-[ \fB-i\fP|\fB--interval\fP \fINumber\fP ]
-.ad b
-.br
-.ad l
-[    \fB--mirrorlog\fP \fBcore\fP|\fBdisk\fP ]
-.ad b
-.br
-[ COMMON_OPTIONS ]
-.RE
-.br
-.RS 4
-[ \fIPV\fP ... ]
-.RE
--
-
 Change the region size of an LV.
 .br
 .P
