@@ -64,7 +64,6 @@ struct dev_manager {
 	int activation;                 /* building activation tree */
 	int suspend;			/* building suspend tree */
 	unsigned track_external_lv_deps;
-	struct dm_list pending_delete;	/* str_list of dlid(s) with pending delete */
 	unsigned track_pending_delete;
 	unsigned track_pvmove_deps;
 
@@ -1251,8 +1250,6 @@ struct dev_manager *dev_manager_create(struct cmd_context *cmd,
 
 	dm_udev_set_sync_support(cmd->current_settings.udev_sync);
 
-	dm_list_init(&dm->pending_delete);
-
 	return dm;
 
       bad:
@@ -1939,7 +1936,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
 
-	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
+	if (!(dlid = build_dm_uuid(dm->track_pending_delete ? dm->cmd->pending_delete_mem : dm->mem, lv, layer)))
 		return_0;
 
 	if (!_info(dm->cmd, name, dlid, 1, 0, &info, NULL, NULL))
@@ -1981,7 +1978,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (info.exists && dm->track_pending_delete) {
 		log_debug_activation("Tracking pending delete for %s (%s).",
 				     display_lvname(lv), dlid);
-		if (!str_list_add(dm->mem, &dm->pending_delete, dlid))
+		if (!str_list_add(dm->cmd->pending_delete_mem, &dm->cmd->pending_delete, dlid))
 			return_0;
 	}
 
@@ -3218,20 +3215,26 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root, const 
 		if (non_toplevel_tree_dlid && !strcmp(non_toplevel_tree_dlid, uuid))
 			continue;
 
-		if (!str_list_add(dm->mem, &dm->pending_delete, uuid))
+		if (!(uuid = dm_pool_strdup(dm->cmd->pending_delete_mem, uuid))) {
+			log_error("_clean_tree: Failed to duplicate uuid.");
+			return 0;
+		}
+
+		if (!str_list_add(dm->cmd->pending_delete_mem, &dm->cmd->pending_delete, uuid))
 			return_0;
 	}
 
 	/* Deactivate any tracked pending delete nodes */
-	if (!dm_list_empty(&dm->pending_delete) && !dm_get_suspended_counter()) {
+	if (!dm_list_empty(&dm->cmd->pending_delete) && !dm_get_suspended_counter()) {
 		fs_unlock();
 		dm_tree_set_cookie(root, fs_get_cookie());
-		dm_list_iterate_items(dl, &dm->pending_delete) {
+		dm_list_iterate_items(dl, &dm->cmd->pending_delete) {
 			log_debug_activation("Deleting tracked UUID %s.", dl->str);
 			if (!dm_tree_deactivate_children(root, dl->str, strlen(dl->str)))
 				return_0;
 		}
-		dm_list_init(&dm->pending_delete);
+		dm_list_init(&dm->cmd->pending_delete);
+		dm_pool_empty(dm->cmd->pending_delete_mem);
 	}
 
 	return 1;
@@ -3358,21 +3361,11 @@ out_no_root:
 int dev_manager_activate(struct dev_manager *dm, const struct logical_volume *lv,
 			 struct lv_activate_opts *laopts)
 {
-	dm_list_splice(&dm->pending_delete, &lv->vg->cmd->pending_delete);
-
 	if (!_tree_action(dm, lv, laopts, ACTIVATE))
 		return_0;
 
 	if (!_tree_action(dm, lv, laopts, CLEAN))
 		return_0;
-
-	if (!dm_list_empty(&dm->pending_delete)) {
-		log_debug("Preserving %d device(s) for removal while being suspended.",
-			  dm_list_size(&dm->pending_delete));
-		if (!(str_list_dup(lv->vg->cmd->mem, &lv->vg->cmd->pending_delete,
-				   &dm->pending_delete)))
-			return_0;
-	}
 
 	return 1;
 }
