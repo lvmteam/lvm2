@@ -491,12 +491,10 @@ static void _choose_duplicates(struct cmd_context *cmd,
 	struct lvmcache_info *info;
 	struct device *dev1, *dev2;
 	uint32_t dev1_major, dev1_minor, dev2_major, dev2_minor;
-	uint64_t info_size, dev1_size, dev2_size;
 	int in_subsys1, in_subsys2;
 	int is_dm1, is_dm2;
 	int has_fs1, has_fs2;
 	int has_lv1, has_lv2;
-	int same_size1, same_size2;
 	int prev_unchosen1, prev_unchosen2;
 	int change;
 
@@ -613,11 +611,6 @@ next:
 		dev2_major = MAJOR(dev2->dev);
 		dev2_minor = MINOR(dev2->dev);
 
-		if (!dev_get_size(dev1, &dev1_size))
-			dev1_size = 0;
-		if (!dev_get_size(dev2, &dev2_size))
-			dev2_size = 0;
-
 		has_lv1 = (dev1->flags & DEV_USED_FOR_LV) ? 1 : 0;
 		has_lv2 = (dev2->flags & DEV_USED_FOR_LV) ? 1 : 0;
 
@@ -630,20 +623,10 @@ next:
 		has_fs1 = dm_device_has_mounted_fs(dev1_major, dev1_minor);
 		has_fs2 = dm_device_has_mounted_fs(dev2_major, dev2_minor);
 
-		info_size = info->device_size >> SECTOR_SHIFT;
-		same_size1 = (dev1_size == info_size);
-		same_size2 = (dev2_size == info_size);
-
 		log_debug_cache("PV %s compare duplicates: %s %u:%u. %s %u:%u.",
 				devl->dev->pvid,
 				dev_name(dev1), dev1_major, dev1_minor,
 				dev_name(dev2), dev2_major, dev2_minor);
-
-		log_debug_cache("PV %s: wants size %llu. %s is %llu. %s is %llu.",
-				devl->dev->pvid,
-				(unsigned long long)info_size,
-				dev_name(dev1), (unsigned long long)dev1_size,
-				dev_name(dev2), (unsigned long long)dev2_size);
 
 		log_debug_cache("PV %s: %s was prev %s. %s was prev %s.",
 				devl->dev->pvid,
@@ -686,13 +669,6 @@ next:
 			/* change to 2 */
 			change = 1;
 			reason = "device is used by LV";
-		} else if (same_size1 && !same_size2) {
-			/* keep 1 */
-			reason = "device size is correct";
-		} else if (same_size2 && !same_size1) {
-			/* change to 2 */
-			change = 1;
-			reason = "device size is correct";
 		} else if (has_fs1 && !has_fs2) {
 			/* keep 1 */
 			reason = "device has fs mounted";
