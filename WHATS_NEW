@@ -1,5 +1,5 @@
-Version 2.02.186 - 
-================================
+Version 2.02.186 - 27th August 2019
+===================================
   Improve internal removal of cached devices.
   Synchronize with udev when dropping snapshot.
   Add missing device synchronization point before removing pvmove node.
