@@ -608,7 +608,8 @@ static void _filter_to_str(struct cmd_context *cmd, int filter_cfg, char **strp)
 		return;
 	}
 
-	str = malloc(len);
+	if (!(str = malloc(len)))
+		return;
 	memset(str, 0, len);
 
 	for (cv = cn->v; cv; cv = cv->next) {
