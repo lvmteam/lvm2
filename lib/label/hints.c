@@ -579,6 +579,52 @@ static void _apply_hints(struct cmd_context *cmd, struct dm_list *hints,
 	}
 }
 
+static void _filter_to_str(struct cmd_context *cmd, int filter_cfg, char **strp)
+{
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
+	char *str;
+	int pos = 0;
+	int len = 0;
+	int ret;
+
+	*strp = NULL;
+
+	if (!(cn = find_config_tree_array(cmd, filter_cfg, NULL))) {
+		/* shouldn't happen because default is a|*| */
+		return;
+	}
+
+	for (cv = cn->v; cv; cv = cv->next) {
+		if (cv->type != DM_CFG_STRING)
+			continue;
+
+		len += (strlen(cv->v.str) + 1);
+	}
+	len++;
+
+	if (len == 1) {
+		/* shouldn't happen because default is a|*| */
+		return;
+	}
+
+	str = malloc(len);
+	memset(str, 0, len);
+
+	for (cv = cn->v; cv; cv = cv->next) {
+		if (cv->type != DM_CFG_STRING)
+			continue;
+
+		ret = snprintf(str + pos, len - pos, "%s", cv->v.str);
+
+		if (ret >= len - pos)
+			break;
+		pos += ret;
+	}
+
+	*strp = str;
+}
+
 /*
  * Return 1 and needs_refresh 0: the hints can be used
  * Return 1 and needs_refresh 1: the hints can't be used and should be updated
@@ -590,12 +636,11 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 {
 	char devpath[PATH_MAX];
 	FILE *fp;
-	const struct dm_config_node *cn;
 	struct dev_iter *iter;
 	struct hint *hint;
 	struct device *dev;
 	char *split[HINT_LINE_WORDS];
-	char *name, *pvid, *devn, *vgname, *p;
+	char *name, *pvid, *devn, *vgname, *p, *filter_str = NULL;
 	uint32_t read_hash = 0;
 	uint32_t calc_hash = INITIAL_CRC;
 	uint32_t read_count = 0;
@@ -655,23 +700,31 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 
 		keylen = strlen("global_filter:");
 		if (!strncmp(_hint_line, "global_filter:", keylen)) {
-			cn = find_config_tree_array(cmd, devices_global_filter_CFG, NULL);
-			if (strcmp(cn->v->v.str, _hint_line + keylen)) {
+			_filter_to_str(cmd, devices_global_filter_CFG, &filter_str);
+			if (!filter_str || strcmp(filter_str, _hint_line + keylen)) {
 				log_debug("ignore hints with different global_filter");
+				if (filter_str)
+					free(filter_str);
 				*needs_refresh = 1;
 				break;
 			}
+			if (filter_str)
+				free(filter_str);
 			continue;
 		}
 
 		keylen = strlen("filter:");
 		if (!strncmp(_hint_line, "filter:", keylen)) {
-			cn = find_config_tree_array(cmd, devices_filter_CFG, NULL);
-			if (strcmp(cn->v->v.str, _hint_line + keylen)) {
+			_filter_to_str(cmd, devices_filter_CFG, &filter_str);
+			if (!filter_str || strcmp(filter_str, _hint_line + keylen)) {
 				log_debug("ignore hints with different filter");
+				if (filter_str)
+					free(filter_str);
 				*needs_refresh = 1;
 				break;
 			}
+			if (filter_str)
+				free(filter_str);
 			continue;
 		}
 
@@ -800,11 +853,11 @@ int write_hint_file(struct cmd_context *cmd, int newhints)
 {
 	char devpath[PATH_MAX];
 	FILE *fp;
-	const struct dm_config_node *cn;
 	struct lvmcache_info *info;
 	struct dev_iter *iter;
 	struct device *dev;
 	const char *vgname;
+	char *filter_str = NULL;
 	uint32_t hash = INITIAL_CRC;
 	uint32_t count = 0;
 	time_t t;
@@ -855,11 +908,15 @@ int write_hint_file(struct cmd_context *cmd, int newhints)
 	fprintf(fp, "# Created by %s pid %d %s", cmd->name, getpid(), ctime(&t));
 	fprintf(fp, "hints_version: %d.%d\n", HINTS_VERSION_MAJOR, HINTS_VERSION_MINOR);
 
-	cn = find_config_tree_array(cmd, devices_global_filter_CFG, NULL);
-	fprintf(fp, "global_filter:%s\n", cn->v->v.str);
+	_filter_to_str(cmd, devices_global_filter_CFG, &filter_str);
+	fprintf(fp, "global_filter:%s\n", filter_str ?: "-");
+	if (filter_str)
+		free(filter_str);
 
-	cn = find_config_tree_array(cmd, devices_filter_CFG, NULL);
-	fprintf(fp, "filter:%s\n", cn->v->v.str);
+	_filter_to_str(cmd, devices_filter_CFG, &filter_str);
+	fprintf(fp, "filter:%s\n", filter_str ?: "-");
+	if (filter_str)
+		free(filter_str);
 
 	fprintf(fp, "scan_lvs:%d\n", cmd->scan_lvs);
 
