@@ -4900,7 +4900,8 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 
 	if (!validate_name(vg_name)) {
 		log_error("Volume group name \"%s\" has invalid characters.", vg_name);
-		return NULL;
+		failure |= FAILED_NOTFOUND;
+		goto_bad;
 	}
 
 	/*
