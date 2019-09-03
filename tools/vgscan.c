@@ -101,7 +101,7 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 		log_verbose("Ignoring vgscan --cache command because lvmetad is not in use.");
 
 	if (lvmetad_used() && (arg_is_set(cmd, cache_long_ARG) || !lvmetad_token_matches(cmd) || lvmetad_is_disabled(cmd, &reason))) {
-		if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, arg_is_set(cmd, cache_long_ARG))) {
+		if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, arg_is_set(cmd, cache_long_ARG), NULL)) {
 			log_warn("WARNING: Not using lvmetad because cache update failed.");
 			lvmetad_make_unused(cmd);
 		}

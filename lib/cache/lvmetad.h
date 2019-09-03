@@ -151,7 +151,7 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 			  struct dm_list *found_vgnames,
 			  struct dm_list *changed_vgnames);
 
-int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait);
+int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait, struct dm_list *found_vgnames);
 
 int lvmetad_vg_clear_outdated_pvs(struct volume_group *vg);
 void lvmetad_validate_global_cache(struct cmd_context *cmd, int force);

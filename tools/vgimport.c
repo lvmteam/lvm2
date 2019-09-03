@@ -96,7 +96,7 @@ int vgimport(struct cmd_context *cmd, int argc, char **argv)
 	 * import it.
 	 */
 	if (lvmetad_used()) {
-		if (!lvmetad_pvscan_all_devs(cmd, 1)) {
+		if (!lvmetad_pvscan_all_devs(cmd, 1, NULL)) {
 			log_warn("WARNING: Not using lvmetad because cache update failed.");
 			lvmetad_make_unused(cmd);
 		}

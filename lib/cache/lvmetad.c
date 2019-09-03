@@ -1702,6 +1702,13 @@ int lvmetad_pv_found(struct cmd_context *cmd, const struct id *pvid, struct devi
 		changed = daemon_reply_int(reply, "changed", 0);
 	}
 
+	if (vg && vg->system_id && vg->system_id[0] &&
+	    cmd->system_id && cmd->system_id[0] &&
+	    strcmp(vg->system_id, cmd->system_id)) {
+		log_debug_lvmetad("Ignore foreign VG %s on %s", vg->name , dev_name(dev));
+		goto out;
+	}
+
 	/*
 	 * If lvmetad now sees all PVs in the VG, it returned the
 	 * "complete" status string.  Add this VG name to the list
@@ -1732,7 +1739,7 @@ int lvmetad_pv_found(struct cmd_context *cmd, const struct id *pvid, struct devi
 				log_error("str_list_add failed");
 		}
 	}
-
+out:
 	daemon_reply_destroy(reply);
 
 	return result;
@@ -2333,7 +2340,7 @@ bad:
  * generally revert disk scanning and not use lvmetad.
  */
 
-int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
+int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait, struct dm_list *found_vgnames)
 {
 	struct device_list *devl, *devl2;
 	struct dm_list scan_devs;
@@ -2415,7 +2422,7 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
 
 		dm_list_del(&devl->list);
 
-		ret = lvmetad_pvscan_single(cmd, devl->dev, NULL, NULL);
+		ret = lvmetad_pvscan_single(cmd, devl->dev, found_vgnames, NULL);
 
 		label_scan_invalidate(devl->dev);
 
@@ -2758,7 +2765,7 @@ void lvmetad_validate_global_cache(struct cmd_context *cmd, int force)
 	 * we rescanned for the token, and the time we acquired the global
 	 * lock.)
 	 */
-	if (!lvmetad_pvscan_all_devs(cmd, 1)) {
+	if (!lvmetad_pvscan_all_devs(cmd, 1, NULL)) {
 		log_warn("WARNING: Not using lvmetad because cache update failed.");
 		lvmetad_make_unused(cmd);
 		return;

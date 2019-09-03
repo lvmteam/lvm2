@@ -2980,7 +2980,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	 */
 	if (lvmetad_used() && !_cmd_no_lvmetad_autoscan(cmd)) {
 		if (cmd->include_foreign_vgs || !lvmetad_token_matches(cmd)) {
-			if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, cmd->include_foreign_vgs ? 1 : 0)) {
+			if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, cmd->include_foreign_vgs ? 1 : 0, NULL)) {
 				log_warn("WARNING: Not using lvmetad because cache update failed.");
 				lvmetad_make_unused(cmd);
 			}

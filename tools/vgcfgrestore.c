@@ -177,7 +177,7 @@ rescan:
 		}
 		if (!refresh_filters(cmd))
 			stack;
-		if (!lvmetad_pvscan_all_devs(cmd, 1)) {
+		if (!lvmetad_pvscan_all_devs(cmd, 1, NULL)) {
 			log_warn("WARNING: Failed to scan devices.");
 			log_warn("WARNING: Update lvmetad with pvscan --cache.");
 			goto out;
