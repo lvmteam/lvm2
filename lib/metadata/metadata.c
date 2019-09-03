@@ -718,6 +718,9 @@ int vg_extend_each_pv(struct volume_group *vg, struct pvcreate_params *pp)
 		logical_block_size = 0;
 		physical_block_size = 0;
 
+		if (!pvl->pv->dev)
+			continue;
+
 		if (!dev_get_direct_block_sizes(pvl->pv->dev, &physical_block_size, &logical_block_size))
 			continue;
 
