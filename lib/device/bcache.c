@@ -957,7 +957,7 @@ static struct block *_new_block(struct bcache *cache, int fd, block_address i, b
 					_writeback(cache, 16);  // FIXME: magic number
 				_wait_io(cache);
 			} else {
-				log_error("bcache no new blocks for fd %d index %u",
+				log_debug("bcache no new blocks for fd %d index %u",
 					  fd, (uint32_t) i);
 				return NULL;
 			}
