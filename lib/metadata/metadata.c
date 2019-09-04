@@ -4971,7 +4971,10 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		if (!pvl->pv->dev) {
 			/* The obvious and common case of a missing device. */
 
-			log_warn("WARNING: VG %s is missing PV %s.", vg_name, uuidstr);
+			if (pvl->pv->device_hint)
+				log_warn("WARNING: VG %s is missing PV %s (last written to %s).", vg_name, uuidstr, pvl->pv->device_hint);
+			else
+				log_warn("WARNING: VG %s is missing PV %s.", vg_name, uuidstr);
 			missing_pv_dev++;
 
 		} else if (pvl->pv->status & MISSING_PV) {

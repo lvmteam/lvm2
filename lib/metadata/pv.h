@@ -26,6 +26,7 @@ struct physical_volume {
 	struct id id;
 	struct id old_id;		/* Set during pvchange -u. */
 	struct device *dev;
+	const char *device_hint;	/* primary name last time metadata was written */
 	const struct format_type *fmt;
 	struct format_instance *fid;
 

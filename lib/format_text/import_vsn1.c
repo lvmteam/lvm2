@@ -184,6 +184,7 @@ static int _read_pv(struct cmd_context *cmd,
 	struct physical_volume *pv;
 	struct pv_list *pvl;
 	const struct dm_config_value *cv;
+	const char *device_hint;
 	uint64_t size, ba_start;
 
 	if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl))) ||
@@ -226,6 +227,11 @@ static int _read_pv(struct cmd_context *cmd,
 	    !_read_uint64(pvn, "dev_size", &pv->size)) {
 		log_error("Couldn't read dev size for physical volume.");
 		return 0;
+	}
+
+	if (dm_config_get_str(pvn, "device", &device_hint)) {
+		if (!(pv->device_hint = dm_pool_strdup(mem, device_hint)))
+			log_error("Failed to allocate memory for device hint in read_pv.");
 	}
 
 	if (!_read_uint64(pvn, "pe_start", &pv->pe_start)) {
