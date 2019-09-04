@@ -929,17 +929,19 @@ static int _online_vg_file_create(struct cmd_context *cmd, const char *vgname)
  * scan/read in order to process/activate the VG.
  */
 
-static int _get_devs_from_saved_vg(struct cmd_context *cmd, char *vgname,
+static int _get_devs_from_saved_vg(struct cmd_context *cmd, const char *vgname,
 				   struct dm_list *saved_vgs,
 				   struct dm_list *devs)
 {
 	char path[PATH_MAX];
 	char file_vgname[NAME_LEN];
+	char uuidstr[64] __attribute__((aligned(8)));
 	struct pv_list *pvl;
 	struct device_list *devl;
 	struct device *dev;
 	struct volume_group *vg;
 	const char *pvid;
+	const char *name1, *name2;
 	dev_t devno;
 	int file_major = 0, file_minor = 0;
 
@@ -975,6 +977,16 @@ static int _get_devs_from_saved_vg(struct cmd_context *cmd, char *vgname,
 
 		if (!(dev = dev_cache_get_by_devt(cmd, devno, NULL, NULL))) {
 			log_error("No device found for %d:%d PVID %s", file_major, file_minor, pvid);
+			return 0;
+		}
+
+		name1 = dev_name(dev);
+		name2 = pvl->pv->device_hint;
+
+		if (strcmp(name1, name2)) {
+			if (!id_write_format((const struct id *)pvid, uuidstr, sizeof(uuidstr)))
+				uuidstr[0] = '\0';
+			log_print("PVID %s read from %s last written to %s.", uuidstr, name1, name2);
 			return 0;
 		}
 
@@ -1024,8 +1036,8 @@ static int _get_devs_from_saved_vg(struct cmd_context *cmd, char *vgname,
  * is important when there are many devs.
  */
 
-static int _pvscan_aa_direct(struct cmd_context *cmd, struct pvscan_aa_params *pp, char *vgname,
-			     struct dm_list *saved_vgs)
+static int _pvscan_aa_quick(struct cmd_context *cmd, struct pvscan_aa_params *pp, const char *vgname,
+			    struct dm_list *saved_vgs, int *no_quick)
 {
 	struct dm_list devs; /* device_list */
 	struct volume_group *vg;
@@ -1044,7 +1056,8 @@ static int _pvscan_aa_direct(struct cmd_context *cmd, struct pvscan_aa_params *p
 	 * The dev_cache gives us struct devices from the devnums.
 	 */
 	if (!_get_devs_from_saved_vg(cmd, vgname, saved_vgs, &devs)) {
-		log_error("pvscan activation for VG %s failed to find devices.", vgname);
+		log_print("pvscan[%d] VG %s not using quick activation.", getpid(), vgname);
+		*no_quick = 1;
 		return ECMD_FAILED;
 	}
 
@@ -1132,6 +1145,7 @@ static int _pvscan_aa(struct cmd_context *cmd, struct pvscan_aa_params *pp,
 {
 	struct processing_handle *handle = NULL;
 	struct dm_str_list *sl, *sl2;
+	int no_quick = 0;
 	int ret;
 
 	if (dm_list_empty(vgnames)) {
@@ -1169,11 +1183,11 @@ static int _pvscan_aa(struct cmd_context *cmd, struct pvscan_aa_params *pp,
 
 	if (dm_list_size(vgnames) == 1) {
 		dm_list_iterate_items(sl, vgnames)
-			ret = _pvscan_aa_direct(cmd, pp, (char *)sl->str, saved_vgs);
-	} else {
-		/* FIXME: suppress label scan in process_each if label scan already done? */
-		ret = process_each_vg(cmd, 0, NULL, NULL, vgnames, READ_FOR_ACTIVATE, 0, handle, _pvscan_aa_single);
+			ret = _pvscan_aa_quick(cmd, pp, sl->str, saved_vgs, &no_quick);
 	}
+
+	if ((dm_list_size(vgnames) > 1) || no_quick)
+		ret = process_each_vg(cmd, 0, NULL, NULL, vgnames, READ_FOR_ACTIVATE, 0, handle, _pvscan_aa_single);
 
 	destroy_processing_handle(cmd, handle);
 
