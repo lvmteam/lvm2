@@ -250,6 +250,11 @@ vgremove -ff $vg
 # Test pvscan activation with bad PVs
 #
 
+# autoactivation not done on shared VGs
+if test -n "$LVM_TEST_LVMLOCKD"; then
+exit 0
+fi
+
 dd if=/dev/zero of="$dev1" || true
 dd if=/dev/zero of="$dev2" || true
 dd if=/dev/zero of="$dev3" || true
