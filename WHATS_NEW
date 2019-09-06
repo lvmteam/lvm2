@@ -1,5 +1,6 @@
 Version 2.03.06 - 
 ================================
+  Enhance validation for thin and cache pool conversion and swapping.
   Improve internal removal of cached devices.
   Synchronize with udev when dropping snapshot.
   Add missing device synchronization point before removing pvmove node.

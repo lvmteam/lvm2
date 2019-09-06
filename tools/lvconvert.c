@@ -4455,24 +4455,66 @@ static int _lvconvert_to_pool_or_swap_metadata_single(struct cmd_context *cmd,
 	struct dm_list *use_pvh = NULL;
 	int to_thinpool = 0;
 	int to_cachepool = 0;
+	int lvt_enum = get_lvt_enum(lv);
+	struct lv_type *lvtype;
 
 	switch (cmd->command->command_enum) {
 	case lvconvert_to_thinpool_or_swap_metadata_CMD:
+		if (lv_is_cache(lv))
+			/* For cached LV check the cache origin LV type */
+			lvt_enum = get_lvt_enum(seg_lv(first_seg(lv), 0));
 		to_thinpool = 1;
 		break;
 	case lvconvert_to_cachepool_or_swap_metadata_CMD:
+		if (lv_is_cache(lv))
+			goto_bad; /* Cache over cache is not supported */
 		to_cachepool = 1;
 		break;
 	default:
-		log_error(INTERNAL_ERROR "Invalid lvconvert pool command");
-		return 0;
-	};
+		log_error(INTERNAL_ERROR "Invalid lvconvert pool command.");
+		return ECMD_FAILED;
+	}
+
+	switch (lvt_enum) {
+	case thinpool_LVT:
+		if (!to_thinpool)
+			goto_bad; /* can't accept cache-pool */
+		break; /* swap thin-pool */
+	case cachepool_LVT:
+		if (!to_cachepool)
+			goto_bad; /* can't accept thin-pool */
+		break; /* swap cache-pool */
+	case linear_LVT:
+	case raid_LVT:
+	case striped_LVT:
+	case zero_LVT:
+		break;
+	default:
+bad:
+		lvtype = get_lv_type(lvt_enum);
+		log_error("LV %s with type %s cannot be used as a %s pool LV.",
+			  display_lvname(lv), lvtype ? lvtype->name : "unknown",
+			  to_thinpool ? "thin" : "cache");
+		return ECMD_FAILED;
+	}
 
 	if (lv_is_origin(lv)) {
 		log_error("Cannot convert logical volume %s under snapshot.",
 			  display_lvname(lv));
-		return 0;
-	};
+		return ECMD_FAILED;
+	}
+
+	if (!lv_is_visible(lv)) {
+		log_error("Can't convert internal LV %s.",
+			  display_lvname(lv));
+		return ECMD_FAILED;
+	}
+
+	if (lv_is_locked(lv)) {
+		log_error("Can't convert locked LV %s.",
+			  display_lvname(lv));
+		return ECMD_FAILED;
+	}
 
 	if (cmd->position_argc > 1) {
 		/* First pos arg is required LV, remaining are optional PVs. */
