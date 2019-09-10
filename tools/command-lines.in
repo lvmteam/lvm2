@@ -1498,7 +1498,7 @@ DESC: Display PV information.
 
 pvscan --cache_long
 OO: --ignorelockingfailure, --reportformat ReportFmt,
---activate ay, --major Number, --minor Number
+--activate ay, --major Number, --minor Number, --noudevsync
 OP: PV|String ...
 IO: --background
 ID: pvscan_cache
