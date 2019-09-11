@@ -16,7 +16,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-aux have_cache 1 3 0 || skip
+aux have_cache 1 10 0 || skip
 aux have_raid 1 3 5 || skip
 which mkfs.xfs || skip
 
