@@ -16,6 +16,8 @@ SKIP_WITH_LVMLOCKD=1
 
 . lib/inittest
 
+prlimit -h || skip
+
 aux lvmconf 'devices/pv_min_size = 1024'
 
 aux prepare_devs 200 1
