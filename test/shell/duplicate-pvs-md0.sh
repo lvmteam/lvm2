@@ -11,6 +11,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 SKIP_WITH_LVMPOLLD=1
+SKIP_WITH_LVMLOCKD=1
 
 RUNDIR="/run"
 test -d "$RUNDIR" || RUNDIR="/var/run"
@@ -29,6 +30,7 @@ _clear_online_files() {
 
 test -f /proc/mdstat && grep -q raid0 /proc/mdstat || \
         modprobe raid0 || skip
+not grep md0 /proc/mdstat
 
 aux lvmconf 'devices/md_component_detection = 1'
 
@@ -37,7 +39,7 @@ aux lvmconf 'devices/md_component_detection = 1'
 # want to rely on that ability in this test.
 aux lvmconf 'devices/obtain_device_list_from_udev = 0'
 
-aux extend_filter_LVMTEST "a|/dev/md|"
+aux extend_filter_md "a|/dev/md|"
 
 aux prepare_devs 4
 
@@ -60,10 +62,9 @@ pvcreate "$dev3"
 
 aux lvmconf 'devices/md_component_checks = "auto"'
 
-aux prepare_md_dev 0 64 2 "$dev1" "$dev2"
-cat /proc/mdstat
-mddev=$(< MD_DEV)
-pvdev=$(< MD_DEV_PV)
+mddev="/dev/md0"
+mdadm --create --metadata=1.0 "$mddev" --level 0 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
+aux wait_md_create "$mddev"
 pvcreate "$mddev"
 PVIDMD=`pvs $mddev --noheading -o uuid | tr -d - | awk '{print $1}'`
 echo $PVIDMD
@@ -119,7 +120,11 @@ not grep "active" out
 
 vgchange -an $vg
 vgremove -f $vg
-aux cleanup_md_dev
+mdadm --stop "$mddev"
+aux udev_wait
+wipefs -a "$dev1"
+wipefs -a "$dev2"
+aux udev_wait
 
 
 ##########################################
@@ -130,10 +135,9 @@ aux cleanup_md_dev
 
 aux lvmconf 'devices/md_component_checks = "start"'
 
-aux prepare_md_dev 0 64 2 "$dev1" "$dev2"
-cat /proc/mdstat
-mddev=$(< MD_DEV)
-pvdev=$(< MD_DEV_PV)
+mddev="/dev/md0"
+mdadm --create --metadata=1.0 "$mddev" --level 0 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
+aux wait_md_create "$mddev"
 pvcreate "$mddev"
 PVIDMD=`pvs $mddev --noheading -o uuid | tr -d - | awk '{print $1}'`
 echo $PVIDMD
@@ -189,7 +193,11 @@ not grep "active" out
 
 vgchange -an $vg
 vgremove -f $vg
-aux cleanup_md_dev
+mdadm --stop "$mddev"
+aux udev_wait
+wipefs -a "$dev1"
+wipefs -a "$dev2"
+aux udev_wait
 
 
 ##########################################
@@ -200,10 +208,9 @@ aux cleanup_md_dev
 
 aux lvmconf 'devices/md_component_checks = "auto"'
 
-aux prepare_md_dev 0 64 2 "$dev1" "$dev2"
-cat /proc/mdstat
-mddev=$(< MD_DEV)
-pvdev=$(< MD_DEV_PV)
+mddev="/dev/md0"
+mdadm --create --metadata=1.0 "$mddev" --level 0 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
+aux wait_md_create "$mddev"
 pvcreate "$mddev"
 PVIDMD=`pvs $mddev --noheading -o uuid | tr -d - | awk '{print $1}'`
 echo $PVIDMD
@@ -245,7 +252,9 @@ pvscan --cache -aay "$dev2"
 not ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
 not ls "$RUNDIR/lvm/vgs_online/$vg"
 
-aux cleanup_md_dev
+wipefs -a "$dev1"
+wipefs -a "$dev2"
+aux udev_wait
 
 ##########################################
 # PV on an md raid0 device, start+stopped
@@ -255,11 +264,9 @@ aux cleanup_md_dev
 
 aux lvmconf 'devices/md_component_checks = "start"'
 
-wipefs -a "$dev1" "$dev2"
-aux prepare_md_dev 0 64 2 "$dev1" "$dev2"
-cat /proc/mdstat
-mddev=$(< MD_DEV)
-pvdev=$(< MD_DEV_PV)
+mddev="/dev/md0"
+mdadm --create --metadata=1.0 "$mddev" --level 0 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
+aux wait_md_create "$mddev"
 pvcreate "$mddev"
 PVIDMD=`pvs $mddev --noheading -o uuid | tr -d - | awk '{print $1}'`
 echo $PVIDMD
@@ -304,7 +311,9 @@ not ls "$RUNDIR/lvm/vgs_online/$vg"
 lvs -o active $vg |tee out || true
 not grep "active" out
 
-aux cleanup_md_dev
+wipefs -a "$dev1"
+wipefs -a "$dev2"
+aux udev_wait
 
 
 ##########################################
@@ -316,11 +325,9 @@ aux cleanup_md_dev
 
 aux lvmconf 'devices/md_component_checks = "start"'
 
-wipefs -a "$dev1" "$dev2"
-aux prepare_md_dev 0 64 2 "$dev1" "$dev2"
-cat /proc/mdstat
-mddev=$(< MD_DEV)
-pvdev=$(< MD_DEV_PV)
+mddev="/dev/md0"
+mdadm --create --metadata=1.0 "$mddev" --level 0 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
+aux wait_md_create "$mddev"
 pvcreate "$mddev"
 PVIDMD=`pvs $mddev --noheading -o uuid | tr -d - | awk '{print $1}'`
 echo $PVIDMD
@@ -361,7 +368,7 @@ not ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
 not ls "$RUNDIR/lvm/vgs_online/$vg"
 
 aux enable_dev "$dev2"
-aux udev_wait
+aux aux udev_wait
 cat /proc/mdstat
 # for some reason enabling dev2 starts an odd md dev
 mdadm --stop "$mddev" || true
@@ -369,6 +376,7 @@ mdadm --stop --scan
 cat /proc/mdstat
 wipefs -a "$dev1" || true
 wipefs -a "$dev2" || true
+aux udev_wait
 
 ##########################################
 # PV on an md raid0 device, auto+stopped
@@ -379,10 +387,9 @@ wipefs -a "$dev2" || true
 
 aux lvmconf 'devices/md_component_checks = "auto"'
 
-aux prepare_md_dev 0 64 2 "$dev1" "$dev2"
-cat /proc/mdstat
-mddev=$(< MD_DEV)
-pvdev=$(< MD_DEV_PV)
+mddev="/dev/md0"
+mdadm --create --metadata=1.0 "$mddev" --level 0 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
+aux wait_md_create "$mddev"
 pvcreate "$mddev"
 PVIDMD=`pvs $mddev --noheading -o uuid | tr -d - | awk '{print $1}'`
 echo $PVIDMD
@@ -428,7 +435,7 @@ not ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
 not ls "$RUNDIR/lvm/vgs_online/$vg"
 
 aux enable_dev "$dev2"
-aux udev_wait
+aux aux udev_wait
 cat /proc/mdstat
 # for some reason enabling dev2 starts an odd md dev
 mdadm --stop "$mddev" || true
@@ -436,3 +443,4 @@ mdadm --stop --scan
 cat /proc/mdstat
 wipefs -a "$dev1" || true
 wipefs -a "$dev2" || true
+aux udev_wait

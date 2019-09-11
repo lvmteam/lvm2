@@ -20,17 +20,19 @@ which sfdisk || skip
 
 test -f /proc/mdstat && grep -q raid0 /proc/mdstat || \
 	modprobe raid0 || skip
+not grep md0 /proc/mdstat
 
 aux lvmconf 'devices/md_component_detection = 1'
-aux extend_filter_LVMTEST "a|/dev/md|"
+aux extend_filter_md "a|/dev/md|"
 
 aux prepare_devs 2
 
 # create 2 disk MD raid0 array (stripe_width=128K)
-aux prepare_md_dev 0 64 2 "$dev1" "$dev2"
+mddev="/dev/md0"
+mdadm --create --metadata=1.0 "$mddev" --level 0 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
+aux wait_md_create "$mddev"
 
-mddev=$(< MD_DEV)
-pvdev=$(< MD_DEV_PV)
+pvdev="$mddev"
 
 # Test alignment of PV on MD without any MD-aware or topology-aware detection
 # - should treat $mddev just like any other block device
@@ -82,7 +84,7 @@ EOF
     if aux kernel_at_least 2 6 33 ; then
 	# in case the system is running without devtmpfs /dev
 	# wait here for created device node on tmpfs
-	test "$DM_DEV_DIR" = "/dev" || cp -LR "${mddev}p1" "${pvdev%/*}"
+	# test "$DM_DEV_DIR" = "/dev" || cp -LR "${mddev}p1" "${pvdev%/*}"
 
 	pvcreate --metadatasize 128k "${pvdev}p1"
 
@@ -105,17 +107,23 @@ EOF
 	check pv_field "${pvdev}p1" pe_start $pv_align --units b --nosuffix
 
 	pvremove "${pvdev}p1"
-	test "$DM_DEV_DIR" = "/dev" || rm -f "${pvdev}p1"
+	# test "$DM_DEV_DIR" = "/dev" || rm -f "${pvdev}p1"
     fi
 fi
 
+mdadm --stop "$mddev"
+aux udev_wait
+wipefs -a "$dev1"
+wipefs -a "$dev2"
+aux udev_wait
+
 # Test newer topology-aware alignment detection w/ --dataalignment override
 if aux kernel_at_least 2 6 33 ; then
-    # make sure we're clean for another test
-    dd if=/dev/zero of="$mddev" bs=512 count=4 conv=fdatasync
-    partprobe -s "$mddev"
-    aux prepare_md_dev 0 1024 2 "$dev1" "$dev2"
-    pvdev=$(< MD_DEV_PV)
+
+    mddev="/dev/md0"
+    mdadm --create --metadata=1.0 "$mddev" --level 0 --chunk=1024 --raid-devices=2 "$dev1" "$dev2"
+    aux wait_md_create "$mddev"
+    pvdev="$mddev"
 
     # optimal_io_size=2097152, minimum_io_size=1048576
     pvcreate --metadatasize 128k \
@@ -130,4 +138,11 @@ if aux kernel_at_least 2 6 33 ; then
     pvcreate --dataalignment 64k --metadatasize 128k \
 	--config 'devices { md_chunk_alignment=0 }' "$pvdev"
     check pv_field "$pvdev" pe_start "192.00k"
+
+    mdadm --stop "$mddev"
+    aux udev_wait
+    wipefs -a "$dev1"
+    wipefs -a "$dev2"
+    aux udev_wait
+
 fi

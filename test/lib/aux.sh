@@ -775,6 +775,20 @@ cleanup_md_dev() {
 	rm -f MD_DEV MD_DEVICES MD_DEV_PV
 }
 
+wait_md_create() {
+	local md=$1
+
+	while :; do
+		if ! grep `basename $md` /proc/mdstat; then
+			echo "$md not ready"
+			cat /proc/mdstat
+			sleep 2
+		else
+			break
+		fi
+	done
+}
+
 prepare_backing_dev() {
 	local size=${1=32}
 	shift
@@ -1093,6 +1107,17 @@ extend_filter() {
 	lvmconf "$filter" "devices/scan_lvs = 1"
 }
 
+extend_filter_md() {
+	local filter
+
+	filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
+	for rx in "$@"; do
+		filter=$(echo "$filter" | sed -e "s:\\[:[ \"$rx\", :")
+	done
+	lvmconf "$filter"
+	lvmconf "devices/scan = [ \"$DM_DEV_DIR\", \"/dev\" ]"
+}
+
 extend_filter_LVMTEST() {
 	extend_filter "a|$DM_DEV_DIR/$PREFIX|" "$@"
 }
@@ -1165,7 +1190,7 @@ devices/dir = "$DM_DEV_DIR"
 devices/filter = "a|.*|"
 devices/global_filter = [ "a|$DM_DEV_DIR/mapper/${PREFIX}.*pv[0-9_]*$|", "r|.*|" ]
 devices/md_component_detection = 0
-devices/scan = "$DM_DEV_DIR"
+devices/scan = [ "$DM_DEV_DIR" ]
 devices/sysfs_scan = 1
 devices/write_cache_state = 0
 global/abort_on_internal_errors = 1

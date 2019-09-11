@@ -11,6 +11,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 SKIP_WITH_LVMPOLLD=1
+SKIP_WITH_LVMLOCKD=1
 
 RUNDIR="/run"
 test -d "$RUNDIR" || RUNDIR="/var/run"
@@ -29,6 +30,7 @@ _clear_online_files() {
 
 test -f /proc/mdstat && grep -q raid1 /proc/mdstat || \
 	modprobe raid1 || skip
+not grep md0 /proc/mdstat
 
 aux lvmconf 'devices/md_component_detection = 1'
 
@@ -41,19 +43,16 @@ aux lvmconf 'devices/hints = "none"'
 # want to rely on that ability in this test.
 aux lvmconf 'devices/obtain_device_list_from_udev = 0'
 
-aux extend_filter_LVMTEST "a|/dev/md|"
+aux extend_filter_md "a|/dev/md|"
 
 aux prepare_devs 3
 
 # create 2 disk MD raid1 array
 # by default using metadata format 1.0 with data at the end of device
-aux prepare_md_dev 1 64 2 "$dev1" "$dev2"
 
-cat /proc/mdstat
-
-mddev=$(< MD_DEV)
-pvdev=$(< MD_DEV_PV)
-
+mddev="/dev/md0"
+mdadm --create --metadata=1.0 "$mddev" --level 1 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
+aux wait_md_create "$mddev"
 vgcreate $vg "$mddev"
 
 PVIDMD=`pvs $mddev --noheading -o uuid | tr -d - | awk '{print $1}'`
@@ -164,19 +163,21 @@ aux udev_wait
 
 vgremove -f $vg
 
-aux cleanup_md_dev
+mdadm --stop "$mddev"
+aux udev_wait
+wipefs -a "$dev1"
+wipefs -a "$dev2"
+aux udev_wait
+
 
 # create 2 disk MD raid0 array
 # by default using metadata format 1.0 with data at the end of device
 # When a raid0 md array is stopped, the components will not look like
 # duplicate PVs as they do with raid1.
-aux prepare_md_dev 0 64 2 "$dev1" "$dev2"
 
-cat /proc/mdstat
-
-mddev=$(< MD_DEV)
-pvdev=$(< MD_DEV_PV)
-
+mddev="/dev/md0"
+mdadm --create --metadata=1.0 "$mddev" --level 0 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
+aux wait_md_create "$mddev"
 vgcreate $vg "$mddev"
 
 PVIDMD=`pvs $mddev --noheading -o uuid | tr -d - | awk '{print $1}'`
@@ -288,7 +289,12 @@ aux udev_wait
 
 vgremove -f $vg
 
-aux cleanup_md_dev
+mdadm --stop "$mddev"
+aux udev_wait
+wipefs -a "$dev1"
+wipefs -a "$dev2"
+aux udev_wait
+
 
 # Repeat tests using the default config settings
 
@@ -299,12 +305,10 @@ aux lvmconf 'devices/obtain_device_list_from_udev = 1'
 # by default using metadata format 1.0 with data at the end of device
 # When a raid0 md array is stopped, the components will not look like
 # duplicate PVs as they do with raid1.
-aux prepare_md_dev 0 64 2 "$dev1" "$dev2"
 
-cat /proc/mdstat
-
-mddev=$(< MD_DEV)
-pvdev=$(< MD_DEV_PV)
+mddev="/dev/md0"
+mdadm --create --metadata=1.0 "$mddev" --level 0 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
+aux wait_md_create "$mddev"
 
 # Create an unused PV so that there is at least one PV in the hints
 # when the MD dev is stopped.  If there are no PVs, the hints are
@@ -454,5 +458,9 @@ aux udev_wait
 
 vgremove -f $vg
 
-aux cleanup_md_dev
+mdadm --stop "$mddev"
+aux udev_wait
+wipefs -a "$dev1"
+wipefs -a "$dev2"
+aux udev_wait
 
