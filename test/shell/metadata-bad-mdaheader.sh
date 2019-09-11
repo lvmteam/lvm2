@@ -12,6 +12,8 @@
 
 . lib/inittest
 
+xxd -v || skip
+
 aux prepare_devs 3
 get_devs
 
@@ -33,8 +35,6 @@ vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3"
 
 pvs
 
-if [ -e "/usr/bin/xxd" ]; then
-
 # read mda_header which is 4k from start of disk
 dd if="$dev1" of=meta1 bs=4k count=1 skip=1
 
@@ -53,8 +53,6 @@ dd if=meta1-bad of="$dev1" bs=4k seek=1
 # pvs reports bad metadata header
 pvs 2>&1 | tee out
 grep "bad metadata header" out
-
-fi
 
 pvs "$dev1"
 pvs "$dev2"

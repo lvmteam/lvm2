@@ -14,6 +14,8 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+xxd -v || skip
+
 aux prepare_devs 1 256
 get_devs
 
@@ -26,8 +28,6 @@ pvcreate --pvmetadatacopies 2 "$dev1"
 vgcreate $SHARED "$vg" "$dev1"
 
 for i in `seq 1 50`; do lvcreate -l1 -an $vg; done
-
-if [ -e "/usr/bin/xxd" ]; then
 
 # Check metadata copies are separated by zeroes in the first mda
 
@@ -80,7 +80,5 @@ grep '0000 0000 0000 0000 0000 0000 0000 0000' meta.zeros > meta.count
 cat meta.count | wc -l
 
 test "$(cat meta.count | wc -l)" -gt 20
-
-fi
 
 vgremove -ff $vg
