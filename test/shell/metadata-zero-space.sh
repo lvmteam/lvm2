@@ -35,6 +35,9 @@ dd if="$dev1" of=meta.raw bs=1M count=1
 
 xxd meta.raw > meta.txt
 
+# to help debug if the next grep fails
+grep -A4 -B4 00001200 meta.txt
+
 grep -B1 "$vg {" meta.txt > meta.vg
 
 cat meta.vg
