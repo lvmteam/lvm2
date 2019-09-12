@@ -15,6 +15,7 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 losetup -h | grep sector-size || skip
+wipefs -V || skip
 
 dd if=/dev/zero of=loopa bs=$((1024*1024)) count=2 2> /dev/null
 dd if=/dev/zero of=loopb bs=$((1024*1024)) count=2 2> /dev/null

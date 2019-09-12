@@ -28,6 +28,8 @@ _clear_online_files() {
 
 . lib/inittest
 
+wipefs -V || skip
+
 test -f /proc/mdstat && grep -q raid1 /proc/mdstat || \
 	modprobe raid1 || skip
 not grep md0 /proc/mdstat
