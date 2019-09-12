@@ -38,7 +38,7 @@ xxd meta.raw > meta.txt
 # to help debug if the next grep fails
 ls -l meta.txt
 head -n 100 meta.txt
-grep -A4 -B4 00001200 meta.txt
+grep -A4 -B4 1200 meta.txt
 
 grep -B1 "$vg {" meta.txt > meta.vg
 
