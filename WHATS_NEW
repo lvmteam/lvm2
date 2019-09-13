@@ -1,5 +1,6 @@
 Version 2.03.06 - 
 ================================
+  Allow standalone activation of VDO pool just like for thin-pools.
   Activate thin-pool layered volume as 'read-only' device.
   Ignore crypto devices with UUID signature CRYPT-SUBDEV.
   Enhance validation for thin and cache pool conversion and swapping.

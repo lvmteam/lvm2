@@ -794,6 +794,18 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 		return 1;
 	}
 
+	if (lv_is_vdo_pool(lv)) {
+		/* Always collect status for '-vpool' */
+		if (_lv_info(cmd, lv, 1, &status->info, lv_seg, &status->seg_status, 0, 0) &&
+		    (status->seg_status.type == SEG_STATUS_VDO_POOL)) {
+			/* There is -tpool device, but query 'active' state of 'fake' vdo-pool */
+			if (!_lv_info(cmd, lv, 0, NULL, NULL, NULL, 0, 0))
+				status->info.exists = 0; /* So VDO pool LV is not active */
+		}
+
+		return 1;
+	}
+
 	return _lv_info(cmd, lv, 0, &status->info, lv_seg, &status->seg_status,
 			with_open_count, with_read_ahead);
 }
@@ -1342,7 +1354,7 @@ int lv_vdo_pool_status(const struct logical_volume *lv, int flush,
 	int r = 0;
 	struct dev_manager *dm;
 
-	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
+	if (!lv_info(lv->vg->cmd, lv, 1, NULL, 0, 0))
 		return 0;
 
 	log_debug_activation("Checking VDO pool status for LV %s.",

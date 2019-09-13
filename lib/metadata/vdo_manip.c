@@ -159,7 +159,7 @@ int parse_vdo_pool_status(struct dm_pool *mem, const struct logical_volume *vdo_
 	status->data_usage = DM_PERCENT_INVALID;
 
 	if (!(dm_name = dm_build_dm_name(mem, vdo_pool_lv->vg->name,
-					 vdo_pool_lv->name, NULL))) {
+					 vdo_pool_lv->name, lv_layer(vdo_pool_lv)))) {
 		log_error("Failed to build VDO DM name %s.",
 			  display_lvname(vdo_pool_lv));
 		return 0;

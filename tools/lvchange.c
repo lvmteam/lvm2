@@ -1400,9 +1400,6 @@ static int _lvchange_activate_check(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (lv_is_vdo_pool(lv) && !lv_is_named_arg)
-		return 0;	/* Skip VDO pool processing unless explicitely named */
-
 	return 1;
 }
 

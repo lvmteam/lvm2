@@ -1991,7 +1991,7 @@ static uint16_t _get_udev_flags(struct dev_manager *dm, const struct logical_vol
 		/* New thin-pool is regular LV with -tpool UUID suffix. */
 		udev_flags |= DM_UDEV_DISABLE_DISK_RULES_FLAG |
 		              DM_UDEV_DISABLE_OTHER_RULES_FLAG;
-	else if (layer || !lv_is_visible(lv) || lv_is_thin_pool(lv))
+	else if (layer || !lv_is_visible(lv) || lv_is_thin_pool(lv) || lv_is_vdo_pool(lv))
 		udev_flags |= DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG |
 			      DM_UDEV_DISABLE_DISK_RULES_FLAG |
 			      DM_UDEV_DISABLE_OTHER_RULES_FLAG;
@@ -2611,6 +2611,15 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		}
 	}
 
+	if (lv_is_vdo_pool(lv)) {
+		/*
+		 * For both origin_only and !origin_only
+		 * skips test for -vpool-real and vpool-cow
+		 */
+		if (!_add_dev_to_dtree(dm, dtree, lv, lv_layer(lv)))
+			return_0;
+	}
+
 	if (lv_is_cache(lv)) {
 		if (!origin_only && !dm->activation && !dm->track_pending_delete) {
 			/* Setup callback for non-activation partial tree */
@@ -2682,7 +2691,8 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			if (seg_type(seg, s) == AREA_LV && seg_lv(seg, s) &&
 			    /* origin only for cache without pending delete */
 			    (!dm->track_pending_delete || !lv_is_cache(lv)) &&
-			    !_add_lv_to_dtree(dm, dtree, seg_lv(seg, s), 0))
+			    !_add_lv_to_dtree(dm, dtree, seg_lv(seg, s),
+					      lv_is_vdo_pool(seg_lv(seg, s)) ? 1 : 0))
 				return_0;
 			if (seg_is_raid_with_meta(seg) && seg->meta_areas && seg_metalv(seg, s) &&
 			    !_add_lv_to_dtree(dm, dtree, seg_metalv(seg, s), 0))
@@ -2908,8 +2918,11 @@ static int _add_layer_target_to_dtree(struct dev_manager *dm,
 	if (!(layer_dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
 		return_0;
 
+
 	/* Add linear mapping over layered LV */
-	if (!add_linear_area_to_dtree(dnode, lv->size, lv->vg->extent_size,
+	/* From VDO layer expose ONLY vdo pool header, we would need to use virtual size otherwise */
+	if (!add_linear_area_to_dtree(dnode, lv_is_vdo_pool(lv) ? first_seg(lv)->vdo_pool_header_size : lv->size,
+				      lv->vg->extent_size,
 				      lv->vg->cmd->use_linear_target,
 				      lv->vg->name, lv->name) ||
 	    !dm_tree_node_add_target_area(dnode, NULL, layer_dlid, 0))
@@ -3132,7 +3145,9 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 		    /* origin only for cache without pending delete */
 		    (!dm->track_pending_delete || !seg_is_cache(seg)) &&
 		    !_add_new_lv_to_dtree(dm, dtree, seg_lv(seg, s),
-					  laopts, NULL))
+					  laopts,
+					  lv_is_vdo_pool(seg_lv(seg, s)) ?
+					  lv_layer(seg_lv(seg, s)) : NULL))
 			return_0;
 		if (seg_is_raid_with_meta(seg) && seg->meta_areas && seg_metalv(seg, s) &&
 		    !lv_is_raid_image_with_tracking(seg_lv(seg, s)) &&
@@ -3424,8 +3439,9 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		if (!_add_snapshot_target_to_dtree(dm, dnode, lv, laopts))
 			return_0;
 	} else if (!layer && ((lv_is_thin_pool(lv) && !lv_is_new_thin_pool(lv)) ||
+                              lv_is_vdo_pool(lv) ||
 			      lv_is_external_origin(lv))) {
-		/* External origin or 'used' Thin pool is using layer */
+		/* External origin or 'used' Thin pool or VDO pool is using layer */
 		if (!_add_new_lv_to_dtree(dm, dtree, lv, laopts, lv_layer(lv)))
 			return_0;
 		if (!_add_layer_target_to_dtree(dm, dnode, lv))
@@ -3438,6 +3454,10 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			if (max_stripe_size < seg->stripe_size * seg->area_count)
 				max_stripe_size = seg->stripe_size * seg->area_count;
 		}
+
+		if (!layer && lv_is_vdo_pool(lv) &&
+		    !_add_layer_target_to_dtree(dm, dnode, lv))
+			return_0;
 	}
 
 	/* Setup thin pool callback */
@@ -3705,7 +3725,10 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 		/* Add all required new devices to tree */
 		if (!_add_new_lv_to_dtree(dm, dtree, lv, laopts,
 					  (lv_is_origin(lv) && laopts->origin_only) ? "real" :
-					  (lv_is_thin_pool(lv) && laopts->origin_only) ? "tpool" : NULL))
+					  (laopts->origin_only &&
+					   (lv_is_thin_pool(lv) ||
+					    lv_is_vdo_pool(lv))) ?
+					  lv_layer(lv) : NULL))
 			goto_out;
 
 		/* Preload any devices required before any suspensions */
