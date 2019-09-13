@@ -33,6 +33,7 @@
 #define MAX_TARGET_PARAMSIZE 50000
 #define LVM_UDEV_NOSCAN_FLAG DM_SUBSYSTEM_UDEV_FLAG0
 #define CRYPT_TEMP	"CRYPT-TEMP"
+#define CRYPT_SUBDEV	"CRYPT-SUBDEV"
 #define STRATIS		"stratis-"
 
 typedef enum {
@@ -646,6 +647,7 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 
 	if (check.check_reserved && uuid &&
 	    (!strncmp(uuid, CRYPT_TEMP, sizeof(CRYPT_TEMP) - 1) ||
+	     !strncmp(uuid, CRYPT_SUBDEV, sizeof(CRYPT_SUBDEV) - 1) ||
 	     !strncmp(uuid, STRATIS, sizeof(STRATIS) - 1))) {
 		/* Skip private crypto devices */
 		log_debug_activation("%s: Reserved uuid %s on %s device %s not usable.",
