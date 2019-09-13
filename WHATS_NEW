@@ -1,5 +1,6 @@
 Version 2.02.187 - 
 ===================================
+  Activate thin-pool layered volume as 'read-only' device.
   Ignore crypto devices with UUID signature CRYPT-SUBDEV.
   Enhance validation for thin and cache pool conversion and swapping.
 

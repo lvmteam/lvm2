@@ -85,6 +85,11 @@ int read_only_lv(const struct logical_volume *lv, const struct lv_activate_opts 
 	if (lv_is_raid_image(lv) || lv_is_raid_metadata(lv))
 		return 0; /* Keep RAID SubLvs writable */
 
+	if (!layer) {
+		if (lv_is_thin_pool(lv))
+			return 1;
+	}
+
 	return (laopts->read_only || !(lv->status & LVM_WRITE));
 }
 
