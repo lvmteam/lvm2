@@ -27,26 +27,26 @@ lvcreate --vdo -L5G -n $lv1 $vg/vdopool
 # Wait till index gets openned
 for i in {1..10} ; do
 	sleep .1
-	check grep_dmsetup status $vg-vdopool " online online " || continue
+	check grep_dmsetup status $vg-vdopool-vpool " online online " || continue
 	break
 done
 
 
 # compression_ARG
 lvchange --compression n $vg/vdopool
-check grep_dmsetup status $vg-vdopool " online offline "
+check grep_dmsetup status $vg-vdopool-vpool " online offline "
 lvchange --compression y $vg/vdopool
-check grep_dmsetup status $vg-vdopool " online online "
+check grep_dmsetup status $vg-vdopool-vpool " online online "
 
 # dedulication_ARG
 lvchange --deduplication n $vg/vdopool
-check grep_dmsetup status $vg-vdopool " offline online "
+check grep_dmsetup status $vg-vdopool-vpool " offline online "
 lvchange --deduplication y $vg/vdopool
-check grep_dmsetup status $vg-vdopool " online online "
+check grep_dmsetup status $vg-vdopool-vpool " online online "
 
 
 lvchange --compression n --deduplication n $vg/vdopool
-check grep_dmsetup status $vg-vdopool " offline offline "
+check grep_dmsetup status $vg-vdopool-vpool " offline offline "
 
 
 lvchange -an $vg/$lv1
@@ -116,6 +116,25 @@ not lvchange --zero y $vg/$lv1
 #
 not lvchange --resync -ay $vg/$lv1
 not lvchange --resync --addtag foo $vg/$lv1
+
+# Check activation of VDO alone works (like for thin-pools)
+lvchange -an $vg
+
+lvchange -ay $vg/vdopool
+check active $vg vdopool
+check inactive $vg $lv1
+
+lvchange -ay $vg/$lv1
+check active $vg $lv1
+
+lvchange -an $vg/$lv1
+check active $vg vdopool
+check inactive $vg $lv1
+
+lvchange -ay $vg/$lv1
+lvchange -an $vg/vdopool
+lvchange -an $vg/$lv1
+check inactive $vg vdopool
 
 #
 # Play with tags and activation
