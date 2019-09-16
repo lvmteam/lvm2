@@ -68,7 +68,7 @@ export LVM_TEST_LVMPOLLD LVM_TEST_LOCK_TYPE_DLM LVM_TEST_LOCK_TYPE_SANLOCK
 
 TESTOLDPWD=$(pwd)
 COMMON_PREFIX="LVMTEST"
-PREFIX="${COMMON_PREFIX}"
+PREFIX="${COMMON_PREFIX}$$"
 
 # Check we are not conflickting with some exiting setup
 if test -z "$SKIP_ROOT_DM_CHECK" ; then
