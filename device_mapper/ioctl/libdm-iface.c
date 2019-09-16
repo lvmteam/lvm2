@@ -119,6 +119,9 @@ static struct cmd_data _cmd_data_v4[] = {
 #ifdef DM_DEV_ARM_POLL
 	{"armpoll",	DM_DEV_ARM_POLL,	{4, 36, 0}},
 #endif
+#ifdef DM_GET_TARGET_VERSION
+	{"target-version", DM_GET_TARGET_VERSION, {4, 41, 0}},
+#endif
 };
 /* *INDENT-ON* */
 
