@@ -51,4 +51,20 @@ check lv_field $vg/$lv1 segtype "thin"
 lvconvert --uncache $vg/tpool
 lvs -a $vg
 
+lvremove -f $vg
+
+# Check conversion of cached LV works as thin-pool
+lvcreate -L10 -n $lv $vg
+lvcreate -L10 -n $lv1 $vg
+lvcreate -H -L10 $vg/$lv
+
+# Stack of cache over cache is unsupported ATM
+fail lvconvert --yes --cachepool $vg/$lv
+
+# Thin-pool cannot use cached metaddata LV  (meta should be on FAST device)
+fail lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $vg/$lv
+
+# Thin-pool CAN use cached data LV
+lvconvert --yes --thinpool $vg/$lv
+
 vgremove -f $vg
