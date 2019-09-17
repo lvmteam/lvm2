@@ -655,7 +655,7 @@ static int _lv_detach_cache_vol_while_active(struct cmd_context *cmd, struct log
 	return 1;
 }
 
-static int _lv_detach_cache_vol_while_inactive(struct cmd_context *cmd, struct logical_volume *cache_lv)
+static int _lv_detach_cache_vol_while_inactive(struct cmd_context *cmd, struct logical_volume *cache_lv, int noflush)
 {
 	struct lv_segment *cache_seg = first_seg(cache_lv);
 	struct logical_volume *corigin_lv;
@@ -673,7 +673,7 @@ static int _lv_detach_cache_vol_while_inactive(struct cmd_context *cmd, struct l
 	 * With these modes there is no flush needed so we can immediately
 	 * detach without temporarily activating the LV to flush it.
 	 */
-	if ((cache_mode == CACHE_MODE_WRITETHROUGH) || (cache_mode == CACHE_MODE_PASSTHROUGH))
+	if ((cache_mode == CACHE_MODE_WRITETHROUGH) || (cache_mode == CACHE_MODE_PASSTHROUGH) || noflush)
 		goto detach;
 
 	/*
@@ -727,7 +727,7 @@ static int _lv_detach_cache_vol_while_inactive(struct cmd_context *cmd, struct l
 	return 1;
 }
 
-int lv_detach_cache_vol(struct logical_volume *cache_lv)
+int lv_detach_cache_vol(struct logical_volume *cache_lv, int noflush)
 {
 	struct cmd_context *cmd = cache_lv->vg->cmd;
 
@@ -739,7 +739,7 @@ int lv_detach_cache_vol(struct logical_volume *cache_lv)
 	if (lv_is_active(cache_lv))
 		return _lv_detach_cache_vol_while_active(cmd, cache_lv);
 	else
-		return _lv_detach_cache_vol_while_inactive(cmd, cache_lv);
+		return _lv_detach_cache_vol_while_inactive(cmd, cache_lv, noflush);
 }
 
 /*

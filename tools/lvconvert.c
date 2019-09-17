@@ -1841,16 +1841,53 @@ static int _lvconvert_split_and_keep_cache(struct cmd_context *cmd,
 				   struct logical_volume *lv_fast)
 {
 	struct lv_segment *cache_seg = first_seg(lv);
-
-	log_debug("Detaching cache %s from LV %s.", display_lvname(lv_fast), display_lvname(lv));
+	int cache_mode = cache_seg->cache_mode;
+	int noflush = 0;
 
 	if (!archive(lv->vg))
 		return_0;
 
 	if (lv_is_cache_vol(cache_seg->pool_lv)) {
-		if (!lv_detach_cache_vol(lv))
+		log_debug("Detaching cachevol %s from LV %s.", display_lvname(lv_fast), display_lvname(lv));
+
+		/*
+		 * Detaching a writeback cache generally requires flushing;
+		 * doing otherwise can mean data loss/corruption.
+		 * If the cache devices are missing, the cache can't be
+		 * flushed, so require the user to use a force option to
+		 * detach the cache in this case.
+		 */
+		if ((cache_mode != CACHE_MODE_WRITETHROUGH) && lv_is_partial(lv_fast)) {
+			if (!arg_count(cmd, force_ARG)) {
+				log_warn("WARNING: writeback cache on %s is not complete and cannot be flushed.", display_lvname(lv_fast));
+				log_warn("WARNING: cannot detach writeback cache from %s without --force.", display_lvname(lv));
+				log_error("Conversion aborted.");
+				return 0;
+			}
+
+			log_warn("WARNING: Data may be lost by detaching writeback cache without flushing.");
+
+			if (!arg_count(cmd, yes_ARG) &&
+			    yes_no_prompt("Detach writeback cache %s from %s without flushing data?",
+				          display_lvname(lv_fast),
+				          display_lvname(lv)) == 'n') {
+				log_error("Conversion aborted.");
+				return 0;
+			}
+
+			noflush = 1;
+		}
+				
+		if (!lv_detach_cache_vol(lv, noflush))
 			return_0;
 	} else {
+		log_debug("Detaching cachepool %s from LV %s.", display_lvname(lv_fast), display_lvname(lv));
+
+		if (vg_missing_pv_count(lv->vg)) {
+			log_error("Cannot split cache pool while PVs are missing, see --uncache to delete cache pool.");
+			return 0;
+		}
+
 		if (!lv_cache_remove(lv))
 			return_0;
 	}
@@ -1860,7 +1897,7 @@ static int _lvconvert_split_and_keep_cache(struct cmd_context *cmd,
 
 	backup(lv->vg);
 
-	log_print_unless_silent("Logical volume %s is not cached and cache pool %s is unused.",
+	log_print_unless_silent("Logical volume %s is not cached and %s is unused.",
 				display_lvname(lv), display_lvname(lv_fast));
 
 	return 1;
@@ -1895,7 +1932,7 @@ static int _lvconvert_split_and_remove_cache(struct cmd_context *cmd,
 		if (first_seg(seg->pool_lv)->cache_mode != CACHE_MODE_WRITETHROUGH) {
 			if (!arg_count(cmd, force_ARG)) {
 				log_error("Conversion aborted.");
-				log_error("Cannot uncache writethrough cache volume %s without --force.",
+				log_error("Cannot uncache writeback cache volume %s without --force.",
 					  display_lvname(lv));
 				return 0;
 			}
@@ -4607,7 +4644,7 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 					struct logical_volume *lv,
 					struct logical_volume *lv_fast);
 
-static int _lvconvert_split_cache_vol(struct cmd_context *cmd,
+static int _lvconvert_split_cache_single(struct cmd_context *cmd,
 					 struct logical_volume *lv,
 					 struct processing_handle *handle)
 {
@@ -4635,6 +4672,7 @@ static int _lvconvert_split_cache_vol(struct cmd_context *cmd,
 	} else if (lv_is_thin_pool(lv)) {
 		lv_main = seg_lv(first_seg(lv), 0); /* cached _tdata */
 		lv_fast = first_seg(lv_main)->pool_lv;
+
 	} else if (lv_is_vdo_pool(lv)) {
 		lv_main = seg_lv(first_seg(lv), 0); /* cached _vdata */
 		lv_fast = first_seg(lv_main)->pool_lv;
@@ -4694,13 +4732,11 @@ static int _lvconvert_split_cache_vol(struct cmd_context *cmd,
 
 int lvconvert_split_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
-	if (cmd->command->command_enum == lvconvert_split_and_remove_cache_CMD) {
-		cmd->handles_missing_pvs = 1;
-		cmd->partial_activation = 1;
-	}
+	cmd->handles_missing_pvs = 1;
+	cmd->partial_activation = 1;
 
 	return process_each_lv(cmd, 1, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
-			       NULL, NULL, &_lvconvert_split_cache_vol);
+			       NULL, NULL, &_lvconvert_split_cache_single);
 }
 
 static int _lvconvert_raid_types_single(struct cmd_context *cmd, struct logical_volume *lv,
@@ -5246,11 +5282,6 @@ fail:
 	return 0;
 }
 
-/*
- * TODO: add a new option that will skip activating and flushing the
- * writecache and move directly to detaching.
- */
-
 static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 					struct logical_volume *lv,
 					struct logical_volume *lv_fast)
@@ -5268,6 +5299,26 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 
 	if (!archive(lv->vg))
 		return_0;
+
+	if (lv_is_partial(lv_fast)) {
+		if (!arg_count(cmd, force_ARG)) {
+			log_warn("WARNING: writecache on %s is not complete and cannot be flushed.", display_lvname(lv_fast));
+			log_warn("WARNING: cannot detach writecache from %s without --force.", display_lvname(lv));
+			log_error("Conversion aborted.");
+			return 0;
+		}
+
+		log_warn("WARNING: Data may be lost by detaching writecache without flushing.");
+
+		if (!arg_count(cmd, yes_ARG) &&
+		     yes_no_prompt("Detach writecache %s from %s without flushing data?",
+				   display_lvname(lv_fast), display_lvname(lv)) == 'n') {
+			log_error("Conversion aborted.");
+			return 0;
+		}
+
+		goto detach;
+	}
 
 	/*
 	 * Activate LV internally since the LV needs to be active to flush.
@@ -5315,6 +5366,7 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 
 	lv->status &= ~LV_TEMPORARY;
 
+ detach:
 	if (!_lv_writecache_detach(cmd, lv, lv_fast)) {
 		log_error("Failed to detach writecache from %s", display_lvname(lv));
 		return 0;
