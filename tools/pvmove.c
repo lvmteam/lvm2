@@ -674,7 +674,8 @@ static int _pvmove_setup_single(struct cmd_context *cmd,
 		dm_list_iterate_items(lvl, lvs_changed) {
 			lvh = lv_lock_holder(lvl->lv);
 			/* Exclusive LV decides whether pvmove must be also exclusive */
-			if (lv_is_origin(lvh) || seg_only_exclusive(first_seg(lvh)))
+			if (lv_is_origin(lvh) || seg_only_exclusive(first_seg(lvh)) ||
+			    lv_is_active_exclusive(lvh))
 				exclusive = 1;
 		}
 
