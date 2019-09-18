@@ -805,7 +805,6 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 		if ((seg_count != 1) &&
 		    (lv_is_cache(lv) ||
 		     lv_is_cache_pool(lv) ||
-		     lv_is_cache_vol(lv) ||
 		     lv_is_raid(lv) ||
 		     lv_is_snapshot(lv) ||
 		     lv_is_thin_pool(lv) ||
