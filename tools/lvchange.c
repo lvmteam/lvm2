@@ -1391,6 +1391,20 @@ static int _lvchange_activate_check(struct cmd_context *cmd,
 				     struct processing_handle *handle,
 				     int lv_is_named_arg)
 {
+	int do_activate = is_change_activating((activation_change_t)arg_uint_value(cmd, activate_ARG, CHANGE_AY));
+
+	if (lv_is_cache_vol(lv) && lv_is_named_arg) {
+		if (!do_activate)
+			return 1;
+
+		if (arg_is_set(cmd, yes_ARG) ||
+		    (yes_no_prompt("Do you want to activate component LV in read-only mode? [y/n]: ") == 'y')) {
+			log_print_unless_silent("Allowing activation of component LV.");
+			cmd->activate_component = 1;
+		}
+		return 1;
+	}
+
 	if (!lv_is_visible(lv) &&
 	    !cmd->activate_component && /* activation of named component LV */
 	    ((first_seg(lv)->status & MERGING) || /* merging already started */
