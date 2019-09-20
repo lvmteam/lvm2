@@ -113,7 +113,7 @@ check lv_field $vg/$lv1 cachemode "writethrough"
 
 mkfs_mount_umount $lv1
 
-lvchange -ay $vg/$lv1
+# lvchange -ay $vg/$lv1
 
 lvconvert --splitcache $vg/$lv1
 lvs -o segtype $vg/$lv1 | grep linear
@@ -135,7 +135,7 @@ lvchange -an $vg/$lv2
 
 mkfs_mount_umount $lv1
 
-lvchange -ay $vg/$lv1
+# lvchange -ay $vg/$lv1
 
 lvconvert --splitcache $vg/$lv1
 lvs -o segtype $vg/$lv1 | grep linear
@@ -160,7 +160,7 @@ lvchange -an $vg/$lv2
 
 mkfs_mount_umount $lv1
 
-lvchange -ay $vg/$lv1
+# lvchange -ay $vg/$lv1
 
 aux disable_dev "$dev2"
 
