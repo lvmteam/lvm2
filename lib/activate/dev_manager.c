@@ -46,7 +46,7 @@ typedef enum {
 } action_t;
 
 /* This list must match lib/misc/lvm-string.c:build_dm_uuid(). */
-const char *uuid_suffix_list[] = { "pool", "cdata", "cmeta", "tdata", "tmeta", "vdata", "vpool", NULL};
+const char *uuid_suffix_list[] = { "pool", "cdata", "cmeta", "tdata", "tmeta", "vdata", "vpool", "cvol", NULL};
 
 struct dlid_list {
 	struct dm_list list;
@@ -859,9 +859,9 @@ int get_cache_vol_meta_data(struct cmd_context *cmd,
 	memcpy(&lvid_data.id[0], &lv->vg->id, sizeof(struct id));
 	memcpy(&lvid_data.id[1], &lvseg->data_id, sizeof(struct id));
 
-	if (!(dlid_meta = dm_build_dm_uuid(cmd->mem, UUID_PREFIX, (const char *)&lvid_meta.s, NULL)))
+	if (!(dlid_meta = dm_build_dm_uuid(cmd->mem, UUID_PREFIX, (const char *)&lvid_meta.s, "cmeta")))
 		return_0;
-	if (!(dlid_data = dm_build_dm_uuid(cmd->mem, UUID_PREFIX, (const char *)&lvid_data.s, NULL)))
+	if (!(dlid_data = dm_build_dm_uuid(cmd->mem, UUID_PREFIX, (const char *)&lvid_data.s, "cdata")))
 		return_0;
 	if (!(name_meta = dm_build_dm_name(cmd->mem, lv->vg->name, pool_lv->name, "_cmeta")))
 		return_0;
@@ -2500,9 +2500,9 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		memcpy(&lvid_data.id[0], &lv->vg->id, sizeof(struct id));
 		memcpy(&lvid_data.id[1], &lvseg->data_id, sizeof(struct id));
 
-		if (!(dlid_meta = dm_build_dm_uuid(dm->mem, UUID_PREFIX, (const char *)&lvid_meta.s, NULL)))
+		if (!(dlid_meta = dm_build_dm_uuid(dm->mem, UUID_PREFIX, (const char *)&lvid_meta.s, "cmeta")))
 			return_0;
-		if (!(dlid_data = dm_build_dm_uuid(dm->mem, UUID_PREFIX, (const char *)&lvid_data.s, NULL)))
+		if (!(dlid_data = dm_build_dm_uuid(dm->mem, UUID_PREFIX, (const char *)&lvid_data.s, "cdata")))
 			return_0;
 		if (!(name_meta = dm_build_dm_name(dm->mem, lv->vg->name, pool_lv->name, "_cmeta")))
 			return_0;
@@ -3242,9 +3242,9 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		memcpy(&lvid_data.id[0], &vg->id, sizeof(struct id));
 		memcpy(&lvid_data.id[1], &lvseg->data_id, sizeof(struct id));
 
-		if (!(dlid_meta = dm_build_dm_uuid(dm->mem, UUID_PREFIX, (const char *)&lvid_meta.s, NULL)))
+		if (!(dlid_meta = dm_build_dm_uuid(dm->mem, UUID_PREFIX, (const char *)&lvid_meta.s, "cmeta")))
 			return_0;
-		if (!(dlid_data = dm_build_dm_uuid(dm->mem, UUID_PREFIX, (const char *)&lvid_data.s, NULL)))
+		if (!(dlid_data = dm_build_dm_uuid(dm->mem, UUID_PREFIX, (const char *)&lvid_data.s, "cdata")))
 			return_0;
 
 		if (!(name_meta = dm_build_dm_name(dm->mem, vg->name, pool_lv->name, "_cmeta")))

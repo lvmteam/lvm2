@@ -699,9 +699,9 @@ static int _cache_add_target_line(struct dev_manager *dm,
 		memcpy(&data_lvid.id[0], &seg->lv->vg->id, sizeof(struct id));
 		memcpy(&data_lvid.id[1], &seg->data_id, sizeof(struct id));
 
-		if (!(metadata_uuid = dm_build_dm_uuid(mem, UUID_PREFIX, (const char *)&metadata_lvid.s, NULL)))
+		if (!(metadata_uuid = dm_build_dm_uuid(mem, UUID_PREFIX, (const char *)&metadata_lvid.s, "cmeta")))
 			return_0;
-		if (!(data_uuid = dm_build_dm_uuid(mem, UUID_PREFIX, (const char *)&data_lvid.s, NULL)))
+		if (!(data_uuid = dm_build_dm_uuid(mem, UUID_PREFIX, (const char *)&data_lvid.s, "cdata")))
 			return_0;
 	}
 
