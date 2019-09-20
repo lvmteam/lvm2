@@ -33,7 +33,6 @@ fi
 %defattr(-,root,root,-)
 %doc COPYING COPYING.LIB INSTALL README VERSION WHATS_NEW
 %doc doc/lvm_fault_handling.txt
-%{_sbindir}/blkdeactivate
 %{_sbindir}/fsadm
 %{_sbindir}/lvchange
 %{_sbindir}/lvconvert
@@ -87,7 +86,6 @@ fi
 %{_mandir}/man7/lvmsystemid.7.gz
 %{_mandir}/man7/lvmreport.7.gz
 %{_mandir}/man7/lvmraid.7.gz
-%{_mandir}/man8/blkdeactivate.8.gz
 %{_mandir}/man8/fsadm.8.gz
 %{_mandir}/man8/lvchange.8.gz
 %{_mandir}/man8/lvconvert.8.gz
@@ -420,8 +418,10 @@ for the kernel device-mapper.
 %files -n device-mapper
 %defattr(-,root,root,-)
 %doc COPYING COPYING.LIB WHATS_NEW_DM VERSION_DM README INSTALL
+%{_sbindir}/blkdeactivate
 %attr(755,root,root) %{_sbindir}/dmsetup
 %{_sbindir}/dmstats
+%{_mandir}/man8/blkdeactivate.8.gz
 %{_mandir}/man8/dmsetup.8.gz
 %{_mandir}/man8/dmstats.8.gz
 %if %{enable_dmfilemapd}
