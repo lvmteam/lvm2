@@ -5230,6 +5230,8 @@ static int _lv_writecache_detach(struct cmd_context *cmd, struct logical_volume 
 	lv->status &= ~WRITECACHE;
 	seg->writecache = NULL;
 
+	lv_fast->status &= ~LV_CACHE_VOL;
+
 	if (!remove_layer_from_lv(lv, origin))
 		return_0;
 
@@ -5645,6 +5647,8 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 
 	if (!archive(vg))
 		goto_bad;
+
+	lv_fast->status |= LV_CACHE_VOL;
 
 	/*
 	 * TODO: use libblkid to get the sector size of lv.  If it doesn't

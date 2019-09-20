@@ -158,6 +158,7 @@ static const char *_lvname_has_reserved_component_string(const char *lvname)
 		"_cmeta",
 		"_corig",
 		"_cvol",
+		"_wcorig",
 		"_mimage",
 		"_mlog",
 		"_rimage",
@@ -249,6 +250,7 @@ char *build_dm_uuid(struct dm_pool *mem, const struct logical_volume *lv,
 		 */
 		/* Suffixes used here MUST match lib/activate/dev_manager.c */
 		layer = lv_is_cache_origin(lv) ? "real" :
+			lv_is_writecache_origin(lv) ? "real" :
 			(lv_is_cache(lv) && lv_is_pending_delete(lv)) ? "real" :
 			lv_is_cache_pool_data(lv) ? "cdata" :
 			lv_is_cache_pool_metadata(lv) ? "cmeta" :

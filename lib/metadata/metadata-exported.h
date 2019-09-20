@@ -269,16 +269,19 @@
 #define lv_is_removed(lv)	(((lv)->status & LV_REMOVED) ? 1 : 0)
 
 /* Recognize component LV (matching lib/misc/lvm-string.c _lvname_has_reserved_component_string()) */
-#define lv_is_component(lv) (lv_is_cache_origin(lv) || ((lv)->status & (\
-	CACHE_POOL_DATA |\
-	CACHE_POOL_METADATA |\
-	LV_VDO_POOL_DATA |\
-	MIRROR_IMAGE |\
-	MIRROR_LOG |\
-	RAID_IMAGE |\
-	RAID_META |\
-	THIN_POOL_DATA |\
-	THIN_POOL_METADATA)) ? 1 : 0)
+#define lv_is_component(lv) (lv_is_cache_origin(lv) || \
+			     lv_is_writecache_origin(lv) || \
+			     ((lv)->status & (\
+					      CACHE_POOL_DATA |\
+					      CACHE_POOL_METADATA |\
+					      LV_CACHE_VOL |\
+					      LV_VDO_POOL_DATA |\
+					      MIRROR_IMAGE |\
+					      MIRROR_LOG |\
+					      RAID_IMAGE |\
+					      RAID_META |\
+					      THIN_POOL_DATA |\
+					      THIN_POOL_METADATA)) ? 1 : 0)
 
 int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 		       struct dm_list **layout, struct dm_list **role);
@@ -1077,6 +1080,7 @@ int lv_is_cow(const struct logical_volume *lv);
 #define lv_is_thick_snapshot lv_is_cow
 
 int lv_is_cache_origin(const struct logical_volume *lv);
+int lv_is_writecache_origin(const struct logical_volume *lv);
 
 int lv_is_merging_cow(const struct logical_volume *cow);
 uint32_t cow_max_extents(const struct logical_volume *origin, uint32_t chunk_size);
