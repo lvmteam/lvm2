@@ -131,7 +131,10 @@ enum {
 	LV_TYPE_RAID6_NR,
 	LV_TYPE_RAID6_NC,
 	LV_TYPE_LOCKD,
-	LV_TYPE_SANLOCK
+	LV_TYPE_SANLOCK,
+	LV_TYPE_CACHEVOL,
+	LV_TYPE_WRITECACHE,
+	LV_TYPE_WRITECACHEORIGIN
 };
 
 static const char *_lv_type_names[] = {
@@ -184,6 +187,9 @@ static const char *_lv_type_names[] = {
 	[LV_TYPE_RAID6_NC] =				SEG_TYPE_NAME_RAID6_NC,
 	[LV_TYPE_LOCKD] =				"lockd",
 	[LV_TYPE_SANLOCK] =				"sanlock",
+	[LV_TYPE_CACHEVOL] =				"cachevol",
+	[LV_TYPE_WRITECACHE] =				"writecache",
+	[LV_TYPE_WRITECACHEORIGIN] =			"writecacheorigin",
 };
 
 static int _lv_layout_and_role_mirror(struct dm_pool *mem,
@@ -410,6 +416,14 @@ static int _lv_layout_and_role_cache(struct dm_pool *mem,
 		if (lv_is_cache(lv) &&
 		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_CACHE]))
 			goto_bad;
+	} else if (lv_is_writecache_origin(lv)) {
+		if (!str_list_add(mem, role, _lv_type_names[LV_TYPE_WRITECACHE]) ||
+		    !str_list_add(mem, role, _lv_type_names[LV_TYPE_ORIGIN]) ||
+		    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_WRITECACHEORIGIN]))
+			goto_bad;
+		if (lv_is_writecache(lv) &&
+		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_WRITECACHE]))
+			goto_bad;
 	} else
 		top_level = 1;
 
@@ -422,7 +436,20 @@ static int _lv_layout_and_role_cache(struct dm_pool *mem,
 	if (lv_is_cache(lv) &&
 	    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_CACHE]))
 		goto_bad;
-	else if (lv_is_cache_pool(lv) || lv_is_cache_vol(lv)) {
+	else if (lv_is_writecache(lv) &&
+	         !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_WRITECACHE]))
+		goto_bad;
+	else if (lv_is_writecache_cachevol(lv)) {
+		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_WRITECACHE]) ||
+		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_CACHEVOL]))
+			goto_bad;
+		*public_lv = 0;
+	} else if (lv_is_cache_vol(lv)) {
+		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_CACHE]) ||
+		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_CACHEVOL]))
+			goto_bad;
+		*public_lv = 0;
+	} else if (lv_is_cache_pool(lv)) {
 		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_CACHE]) ||
 		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_POOL]))
 			goto_bad;
@@ -546,7 +573,7 @@ int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 		goto_bad;
 
 	/* Caches and related */
-	if ((lv_is_cache_type(lv) || lv_is_cache_origin(lv)) &&
+	if ((lv_is_cache_type(lv) || lv_is_cache_origin(lv) || lv_is_writecache(lv) || lv_is_writecache_origin(lv)) &&
 	    !_lv_layout_and_role_cache(mem, lv, *layout, *role, &public_lv))
 		goto_bad;
 

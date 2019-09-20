@@ -1081,6 +1081,7 @@ int lv_is_cow(const struct logical_volume *lv);
 
 int lv_is_cache_origin(const struct logical_volume *lv);
 int lv_is_writecache_origin(const struct logical_volume *lv);
+int lv_is_writecache_cachevol(const struct logical_volume *lv);
 
 int lv_is_merging_cow(const struct logical_volume *cow);
 uint32_t cow_max_extents(const struct logical_volume *origin, uint32_t chunk_size);
