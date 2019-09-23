@@ -482,6 +482,14 @@ ID: lvconvert_to_cache_with_cachevol
 DESC: Attach a cache to an LV, converts the LV to type cache.
 RULE: all and lv_is_visible
 
+# alternate form of lvconvert --type cache
+lvconvert --cache --cachevol LV LV_linear_striped_raid_thinpool
+OO: OO_LVCONVERT_CACHE, OO_LVCONVERT, --poolmetadatasize SizeMB, --chunksize SizeKB
+ID: lvconvert_to_cache_with_cachevol
+DESC: Attach a cache to an LV, converts the LV to type cache.
+RULE: all and lv_is_visible
+FLAGS: SECONDARY_SYNTAX
+
 ---
 
 lvconvert --type thin-pool LV_linear_striped_raid_cache
