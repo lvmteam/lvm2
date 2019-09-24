@@ -196,7 +196,7 @@ static inline int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *
 			  struct dm_list *found_vgnames,
 			  struct dm_list *changed_vgnames) {return 0;}
 
-static inline int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait) {return 0;}
+static inline int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait, struct dm_list *found_vgnames) {return 0;}
 
 static inline int lvmetad_vg_clear_outdated_pvs(struct volume_group *vg) {return 0;}
 static inline void lvmetad_validate_global_cache(struct cmd_context *cmd, int force) {}
