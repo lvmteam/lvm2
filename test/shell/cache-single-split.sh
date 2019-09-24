@@ -289,5 +289,128 @@ lvs $vg
 vgchange -an $vg
 vgextend --restoremissing $vg "$dev3"
 
-vgremove -ff $vg
+#
+# uncache when no devs are missing
+# while inactive
+# both cachemodes work the same
+#
 
+lvremove $vg/$lv1
+lvremove $vg/$lv2
+
+lvcreate -n $lv1 -l 16 -an $vg "$dev1" "$dev4"
+lvcreate -n $lv2 -l 4 -an $vg "$dev2"
+
+lvconvert -y --type cache --cachevol $lv2 --cachemode writethrough $vg/$lv1
+
+mkfs_mount_umount $lv1
+
+lvconvert --uncache $vg/$lv1
+lvs -o segtype $vg/$lv1 | grep linear
+
+lvcreate -n $lv2 -l 4 -an $vg "$dev2"
+
+lvconvert -y --type cache --cachevol $lv2 --cachemode writeback $vg/$lv1
+
+mkfs_mount_umount $lv1
+
+lvconvert --uncache $vg/$lv1
+lvs -o segtype $vg/$lv1 | grep linear
+
+mount_umount $lv1
+
+#
+# uncache when no devs are missing
+# while active
+# both cachemodes work the same
+#
+
+lvremove $vg/$lv1
+
+lvcreate -n $lv1 -l 16 -an $vg "$dev1" "$dev4"
+lvcreate -n $lv2 -l 4 -an $vg "$dev2"
+
+lvconvert -y --type cache --cachevol $lv2 --cachemode writethrough $vg/$lv1
+
+mkfs_mount_umount $lv1
+
+lvchange -ay $vg/$lv1
+
+lvconvert --uncache $vg/$lv1
+lvs -o segtype $vg/$lv1 | grep linear
+
+lvcreate -n $lv2 -l 4 -an $vg "$dev2"
+
+lvconvert -y --type cache --cachevol $lv2 --cachemode writeback $vg/$lv1
+
+lvchange -an $vg/$lv1
+
+mkfs_mount_umount $lv1
+
+lvchange -ay $vg/$lv1
+
+lvconvert --uncache $vg/$lv1
+lvs -o segtype $vg/$lv1 | grep linear
+
+mount_umount $lv1
+
+#
+# uncache while cachevol is missing
+# writethrough
+#
+
+lvremove $vg/$lv1
+
+lvcreate -n $lv1 -l 16 -an $vg "$dev1" "$dev4"
+lvcreate -n $lv2 -l 4 -an $vg "$dev2"
+
+lvconvert -y --type cache --cachevol $lv2 --cachemode writethrough $vg/$lv1
+
+mkfs_mount_umount $lv1
+
+aux disable_dev "$dev2"
+
+lvconvert --uncache $vg/$lv1
+
+lvs -o segtype $vg/$lv1 | grep linear
+
+aux enable_dev "$dev2"
+
+not lvs -o segtype $vg/$lv2
+
+vgck --updatemetadata $vg
+lvs $vg
+
+vgchange -an $vg
+
+mount_umount $lv1
+
+#
+# uncache while cachevol is missing
+# writeback
+#
+
+lvremove $vg/$lv1
+
+lvcreate -n $lv1 -l 16 -an $vg "$dev1" "$dev4"
+lvcreate -n $lv2 -l 4 -an $vg "$dev2"
+
+lvconvert -y --type cache --cachevol $lv2 --cachemode writeback $vg/$lv1
+
+mkfs_mount_umount $lv1
+
+aux disable_dev "$dev2"
+
+not lvconvert --uncache $vg/$lv1
+lvconvert --uncache --force --yes $vg/$lv1
+
+lvs -o segtype $vg/$lv1 | grep linear
+
+aux enable_dev "$dev2"
+
+not lvs -o segtype $vg/$lv2
+
+vgck --updatemetadata $vg
+lvs $vg
+
+vgremove -ff $vg
