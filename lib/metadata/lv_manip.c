@@ -1599,11 +1599,6 @@ int lv_reduce(struct logical_volume *lv, uint32_t extents)
 {
 	struct lv_segment *seg = first_seg(lv);
 
-	if (lv_is_writecache(lv)) {
-		log_error("Remove not yet allowed on LVs with writecache attached.");
-		return 0;
-	}
-
 	/* Ensure stripe boundary extents on RAID LVs */
 	if (lv_is_raid(lv) && extents != lv->le_count)
 		extents =_round_to_stripe_boundary(lv->vg, extents,
@@ -6315,6 +6310,25 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			}
 
 			ask_discard = 0;
+		}
+	}
+
+	if (lv_is_writecache(lv)) {
+		struct logical_volume *cachevol_lv = first_seg(lv)->writecache;
+
+		if (!deactivate_lv(cmd, lv)) {
+			log_error("Failed to deactivate LV %s", display_lvname(lv));
+			return 0;
+		}
+
+		if (!lv_detach_writecache_cachevol(lv, 1)) {
+			log_error("Failed to detach writecache from %s", display_lvname(lv));
+			return 0;
+		}
+
+		if (!lv_remove_single(cmd, cachevol_lv, force, suppress_remove_message)) {
+			log_error("Failed to remove cachevol %s.", display_lvname(cachevol_lv));
+			return 0;
 		}
 	}
 
