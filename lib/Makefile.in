@@ -66,6 +66,7 @@ SOURCES =\
 	locking/locking.c \
 	log/log.c \
 	metadata/cache_manip.c \
+	metadata/writecache_manip.c \
 	metadata/lv.c \
 	metadata/lv_manip.c \
 	metadata/merge.c \

@@ -5237,94 +5237,11 @@ int lvconvert_to_vdopool_param_cmd(struct cmd_context *cmd, int argc, char **arg
 			       NULL, NULL, &_lvconvert_to_vdopool_single);
 }
 
-static int _lv_writecache_detach(struct cmd_context *cmd, struct logical_volume *lv,
-				 struct logical_volume *lv_fast)
-{
-	struct lv_segment *seg = first_seg(lv);
-	struct logical_volume *origin;
-
-	if (!seg_is_writecache(seg)) {
-		log_error("LV %s segment is not writecache.", display_lvname(lv));
-		return 0;
-	}
-
-	if (!seg->writecache) {
-		log_error("LV %s writecache segment has no writecache.", display_lvname(lv));
-		return 0;
-	}
-
-	if (!(origin = seg_lv(seg, 0))) {
-		log_error("LV %s writecache segment has no origin", display_lvname(lv));
-		return 0;
-	}
-
-	if (!remove_seg_from_segs_using_this_lv(seg->writecache, seg))
-		return_0;
-
-	lv_set_visible(seg->writecache);
-
-	lv->status &= ~WRITECACHE;
-	seg->writecache = NULL;
-
-	lv_fast->status &= ~LV_CACHE_VOL;
-
-	if (!remove_layer_from_lv(lv, origin))
-		return_0;
-
-	if (!lv_remove(origin))
-		return_0;
-
-	return 1;
-}
-
-static int _get_writecache_kernel_error(struct cmd_context *cmd,
-					struct logical_volume *lv,
-					uint32_t *kernel_error)
-{
-	struct lv_with_info_and_seg_status status;
-
-	memset(&status, 0, sizeof(status));
-	status.seg_status.type = SEG_STATUS_NONE;
-
-	status.seg_status.seg = first_seg(lv);
-
-	/* FIXME: why reporter_pool? */
-	if (!(status.seg_status.mem = dm_pool_create("reporter_pool", 1024))) {
-		log_error("Failed to get mem for LV status.");
-		return 0;
-	}
-
-	if (!lv_info_with_seg_status(cmd, first_seg(lv), &status, 1, 1)) {
-		log_error("Failed to get device mapper status for %s", display_lvname(lv));
-		goto fail;
-	}
-
-	if (!status.info.exists) {
-		log_error("No device mapper info exists for %s", display_lvname(lv));
-		goto fail;
-	}
-
-	if (status.seg_status.type != SEG_STATUS_WRITECACHE) {
-		log_error("Invalid device mapper status type (%d) for %s",
-			  (uint32_t)status.seg_status.type, display_lvname(lv));
-		goto fail;
-	}
-
-	*kernel_error = status.seg_status.writecache->error;
-
-	dm_pool_destroy(status.seg_status.mem);
-	return 1;
-
-fail:
-	dm_pool_destroy(status.seg_status.mem);
-	return 0;
-}
-
 static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 					struct logical_volume *lv,
 					struct logical_volume *lv_fast)
 {
-	uint32_t kernel_error = 0;
+	int noflush = 0;
 
 	/*
 	 * LV must be inactive externally before detaching cache.
@@ -5354,61 +5271,12 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 			log_error("Conversion aborted.");
 			return 0;
 		}
-
-		goto detach;
+		
+		noflush = 1;
 	}
 
-	/*
-	 * Activate LV internally since the LV needs to be active to flush.
-	 * LV_TEMPORARY should keep the LV from being exposed to the user
-	 * and being accessed.
-	 */
-
-	lv->status |= LV_TEMPORARY;
-
-	if (!activate_lv(cmd, lv)) {
-		log_error("Failed to activate LV %s for flushing.", display_lvname(lv));
-		return 0;
-	}
-
-	if (!sync_local_dev_names(cmd)) {
-		log_error("Failed to sync local devices before detaching LV %s.",
-			  display_lvname(lv));
-		return 0;
-	}
-
-	if (!lv_writecache_message(lv, "flush")) {
-		log_error("Failed to flush writecache for %s.", display_lvname(lv));
-		if (!deactivate_lv(cmd, lv))
-			log_error("Failed to deactivate %s.", display_lvname(lv));
-		return 0;
-	}
-
-	if (!_get_writecache_kernel_error(cmd, lv, &kernel_error)) {
-		log_error("Failed to get writecache error status for %s.", display_lvname(lv));
-		if (!deactivate_lv(cmd, lv))
-			log_error("Failed to deactivate %s.", display_lvname(lv));
-		return 0;
-	}
-
-	if (kernel_error) {
-		log_error("Failed to flush writecache (error %u) for %s.", kernel_error, display_lvname(lv));
-		deactivate_lv(cmd, lv);
-		return 0;
-	}
-
-	if (!deactivate_lv(cmd, lv)) {
-		log_error("Failed to deactivate LV %s for detaching writecache.", display_lvname(lv));
-		return 0;
-	}
-
-	lv->status &= ~LV_TEMPORARY;
-
- detach:
-	if (!_lv_writecache_detach(cmd, lv, lv_fast)) {
-		log_error("Failed to detach writecache from %s", display_lvname(lv));
-		return 0;
-	}
+	if (!lv_detach_writecache_cachevol(lv, noflush))
+		return_0;
 
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;
