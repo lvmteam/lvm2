@@ -4715,16 +4715,16 @@ static int _lvconvert_split_cache_single(struct cmd_context *cmd,
 
 	/* If LV is inactive here, ensure it's not active elsewhere. */
 	if (!lockd_lv(cmd, lv_main, "ex", 0))
-		return_0;
+		return ECMD_FAILED;
 
 	if (lv_is_writecache(lv_main)) {
-		if (cmd->command->command_enum == lvconvert_split_and_remove_cache_CMD) {
-			log_error("Detach cache from %s with --splitcache.", display_lvname(lv));
-			log_error("The writecache %s may then be removed with lvremove.", display_lvname(lv_fast));
-			return 0;
-		}
+		if (!_lvconvert_detach_writecache(cmd, lv_main, lv_fast))
+			return ECMD_FAILED;
 
-		ret = _lvconvert_detach_writecache(cmd, lv_main, lv_fast);
+		if (cmd->command->command_enum == lvconvert_split_and_remove_cache_CMD) {
+			if (lvremove_single(cmd, lv_fast, NULL) != ECMD_PROCESSED)
+				return ECMD_FAILED;
+		}
 
 	} else if (lv_is_cache(lv_main) && lv_is_cache_vol(lv_fast)) {
 		if (cmd->command->command_enum == lvconvert_split_and_remove_cache_CMD) {
