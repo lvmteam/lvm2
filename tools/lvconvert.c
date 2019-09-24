@@ -1884,8 +1884,18 @@ static int _lvconvert_split_and_keep_cachevol(struct cmd_context *cmd,
 
 	backup(lv->vg);
 
-	log_print_unless_silent("Logical volume %s is not cached and %s is unused.",
-				display_lvname(lv), display_lvname(lv_fast));
+	return 1;
+}
+
+static int _lvconvert_split_and_remove_cachevol(struct cmd_context *cmd,
+				   struct logical_volume *lv,
+				   struct logical_volume *lv_fast)
+{
+	if (!_lvconvert_split_and_keep_cachevol(cmd, lv, lv_fast))
+		return_0;
+
+	if (lvremove_single(cmd, lv_fast, NULL) != ECMD_PROCESSED)
+		return_0;
 
 	return 1;
 }
@@ -1916,15 +1926,6 @@ static int _lvconvert_split_and_keep_cachepool(struct cmd_context *cmd,
 				display_lvname(lv), display_lvname(lv_fast));
 
 	return 1;
-}
-
-static int _lvconvert_split_and_remove_cachevol(struct cmd_context *cmd,
-				   struct logical_volume *lv,
-				   struct logical_volume *lv_fast)
-{
-	log_error("Detach cache from %s with --splitcache.", display_lvname(lv));
-	log_error("The cache %s may then be removed with lvremove.", display_lvname(lv_fast));
-	return 0;
 }
 
 static int _lvconvert_split_and_remove_cachepool(struct cmd_context *cmd,
@@ -4726,13 +4727,19 @@ static int _lvconvert_split_cache_single(struct cmd_context *cmd,
 		ret = _lvconvert_detach_writecache(cmd, lv_main, lv_fast);
 
 	} else if (lv_is_cache(lv_main) && lv_is_cache_vol(lv_fast)) {
-		if (cmd->command->command_enum == lvconvert_split_and_remove_cache_CMD)
+		if (cmd->command->command_enum == lvconvert_split_and_remove_cache_CMD) {
 			ret = _lvconvert_split_and_remove_cachevol(cmd, lv_main, lv_fast);
 
-		else if (cmd->command->command_enum == lvconvert_split_and_keep_cache_CMD)
+			log_print_unless_silent("Logical volume %s is not cached and %s is removed.",
+						display_lvname(lv), display_lvname(lv_fast));
+
+		} else if (cmd->command->command_enum == lvconvert_split_and_keep_cache_CMD) {
 			ret = _lvconvert_split_and_keep_cachevol(cmd, lv_main, lv_fast);
 
-		else  {
+			log_print_unless_silent("Logical volume %s is not cached and %s is unused.",
+						display_lvname(lv), display_lvname(lv_fast));
+
+		} else  {
 			log_error(INTERNAL_ERROR "Unknown cache split command.");
 			ret = 0;
 		}
