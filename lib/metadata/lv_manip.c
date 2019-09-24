@@ -6283,8 +6283,14 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return_0;
 
 	if (lv_is_cache(lv) && lv_is_cache_vol(first_seg(lv)->pool_lv)) {
+		struct logical_volume *cachevol_lv = first_seg(lv)->pool_lv;
+
 		if (!lv_detach_cache_vol(lv, 0)) {
 			log_error("Failed to detach cache from %s", display_lvname(lv));
+			return 0;
+		}
+		if (!lv_remove_single(cmd, cachevol_lv, force, suppress_remove_message)) {
+			log_error("Failed to remove cachevol %s.", display_lvname(cachevol_lv));
 			return 0;
 		}
 	}
