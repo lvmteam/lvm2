@@ -360,7 +360,9 @@ required, after which the others are optional.
 .br
 -
 
-Resyncronize a mirror or raid LV.
+Resyncronize a mirror or raid LV. 
+.br
+Use to reset 'R' attribute on a not initially synchronized LV.
 .br
 .P
 \fBlvchange\fP \fB--resync\fP \fIVG\fP|\fILV\fP\fI_mirror_raid\fP|\fITag\fP|\fISelect\fP ...

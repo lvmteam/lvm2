@@ -1807,6 +1807,45 @@ Attach a cache pool to an LV (infers --type cache).
 .br
 -
 
+Attach a cache to an LV, converts the LV to type cache.
+.br
+.P
+\fBlvconvert\fP \fB-H\fP|\fB--cache\fP \fB--cachevol\fP \fILV\fP \fILV\fP\fI_linear_striped_thinpool_raid\fP
+.br
+.RS 4
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachepolicy\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachesettings\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+-
+
 Convert LV to type vdopool.
 .br
 .P

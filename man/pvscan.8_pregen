@@ -115,6 +115,10 @@ Autoactivate a VG when all PVs are online.
 [    \fB--minor\fP \fINumber\fP ]
 .ad b
 .br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
 [ COMMON_OPTIONS ]
 .RE
 .br
@@ -286,6 +290,15 @@ The minor number of a device.
 \fB--nolocking\fP
 .br
 Disable locking.
+.ad b
+.HP
+.ad l
+\fB--noudevsync\fP
+.br
+Disables udev synchronisation. The process will not wait for notification
+from udev. It will continue irrespective of any possible udev processing
+in the background. Only use this if udev is not running or has rules that
+ignore the devices LVM creates.
 .ad b
 .HP
 .ad l
