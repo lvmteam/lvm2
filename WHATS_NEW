@@ -1,5 +1,6 @@
 Version 2.02.187 - 
 ===================================
+  Fix lvmetad shutdown and avoid lenghty timeouts when rebooting system.
   Prevent creating VGs with PVs with different logical block sizes.
   Pvmove runs in exlusively activating mode for exclusively active LVs.
   Activate thin-pool layered volume as 'read-only' device.

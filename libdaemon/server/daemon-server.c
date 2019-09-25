@@ -89,6 +89,13 @@ static int _is_idle(daemon_state s)
 
 static struct timespec *_get_timeout(daemon_state s)
 {
+	static struct timespec _tm = { 0 };
+
+	if (_shutdown_requested) {
+		_tm.tv_sec = 1;
+		return &_tm;
+	}
+
 	return s.idle ? s.idle->ptimeout : NULL;
 }
 
@@ -506,7 +513,7 @@ static int _handle_connect(daemon_state s)
 	socklen_t sl = sizeof(sockaddr);
 
 	client.socket_fd = accept(s.socket_fd, (struct sockaddr *) &sockaddr, &sl);
-	if (client.socket_fd < 0) {
+	if (client.socket_fd < 0 || _shutdown_requested) {
 		if (errno != EAGAIN || !_shutdown_requested)
 			ERROR(&s, "Failed to accept connection: %s.", strerror(errno));
 		return 0;
@@ -672,7 +679,7 @@ void daemon_start(daemon_state s)
 			continue;
 		}
 
-		if (FD_ISSET(s.socket_fd, &in)) {
+		if (!_shutdown_requested && FD_ISSET(s.socket_fd, &in)) {
 			timeout_count = 0;
 			_handle_connect(s);
 		}
