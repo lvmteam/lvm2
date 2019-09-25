@@ -565,7 +565,12 @@ static int _token_update(int *replaced_update)
 	const char *reply_str;
 	int update_pid;
 	int ending_our_update;
+	unsigned int wait_sec = 0;
+	uint64_t now = 0, wait_start = 0;
+	wait_sec = (unsigned int)_lvmetad_update_timeout;
+	unsigned int delay_usec = 0;
 
+retry:
 	log_debug_lvmetad("Sending lvmetad token_update %s", _lvmetad_token);
 	reply = _lvmetad_send(NULL, "token_update", NULL);
 
@@ -581,6 +586,28 @@ static int _token_update(int *replaced_update)
 	update_pid = (int)daemon_reply_int(reply, "update_pid", 0);
 	reply_str = daemon_reply_str(reply, "response", "");
 
+	if (!strcmp(reply_str, "token_updating")) {
+		daemon_reply_destroy(reply);
+		if (!(now = _monotonic_seconds())) {
+			log_print_unless_silent("_monotonic_seconds error");
+			return 0;
+		}
+
+		if (!wait_start)
+			wait_start = now;
+
+		if (now - wait_start <= wait_sec) {
+			log_warn("lvmetad is being updated, retry for %u more seconds.",
+				 wait_sec - (unsigned int)(now - wait_start));
+			delay_usec = 1000000 + lvm_even_rand(&_lvmetad_cmd->rand_seed, 1000000);
+			usleep(delay_usec);
+			goto retry;
+		}
+
+		log_print_unless_silent("Not using lvmetad after %u sec lvmetad_update_wait_time, no more try.", wait_sec);
+		return 0;
+	}
+
 	/*
 	 * A mismatch can only happen when this command attempts to set the
 	 * token to filter:<hash> at the end of its update, but the update has
@@ -591,11 +618,11 @@ static int _token_update(int *replaced_update)
 
 		ending_our_update = strcmp(_lvmetad_token, LVMETAD_TOKEN_UPDATE_IN_PROGRESS);
 
-		log_debug_lvmetad("Received token update mismatch expected \"%s\" our token \"%s\" update_pid %d our pid %d",
+		log_print_unless_silent("Received token update mismatch expected \"%s\" our token \"%s\" update_pid %d our pid %d",
 				  token_expected, _lvmetad_token, update_pid, getpid());
 
 		if (ending_our_update && (update_pid != getpid())) {
-			log_warn("WARNING: lvmetad was updated by another command (pid %d).", update_pid);
+			log_print_unless_silent("WARNING: lvmetad was updated by another command (pid %d).", update_pid);
 		} else {
 			/*
 			 * Shouldn't happen.

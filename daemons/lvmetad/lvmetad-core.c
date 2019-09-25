@@ -2669,6 +2669,7 @@ static response handler(daemon_state s, client_handle h, request r)
 	int pid;
 	int cache_lock = 0;
 	int info_lock = 0;
+	uint64_t timegap = 0;
 
 	rq = daemon_request_str(r, "request", "NONE");
 	token = daemon_request_str(r, "token", "NONE");
@@ -2711,12 +2712,22 @@ static response handler(daemon_state s, client_handle h, request r)
 				 state->update_cmd);
 
 		} else if (prev_in_progress && this_in_progress) {
+			timegap = _monotonic_seconds() - state->update_begin;
+			if (timegap < state->update_timeout) {
+				pthread_mutex_unlock(&state->token_lock);
+				return daemon_reply_simple("token_updating",
+							   "expected = %s", state->token,
+							   "update_pid = " FMTd64, (int64_t)state->update_pid,
+							   "reason = %s", "another command has populated the cache",
+							   NULL);
+			}
+
 			/* Current update is cancelled and replaced by a new update */
 
-			DEBUGLOG(state, "token_update replacing pid %d begin %llu len %d cmd %s",
+			WARN(state, "token_update replacing pid %d begin %llu len %d cmd %s",
 				 state->update_pid,
 				 (unsigned long long)state->update_begin,
-				 (int)(_monotonic_seconds() - state->update_begin),
+				 (int)(timegap),
 				 state->update_cmd);
 
 			(void) dm_strncpy(prev_token, state->token, sizeof(prev_token));
@@ -2726,7 +2737,7 @@ static response handler(daemon_state s, client_handle h, request r)
 			state->update_pid = pid;
 			strncpy(state->update_cmd, cmd, CMD_NAME_SIZE - 1);
 
-			DEBUGLOG(state, "token_update begin %llu timeout %d pid %d cmd %s",
+			WARN(state, "token_update begin %llu timeout %d pid %d cmd %s",
 				 (unsigned long long)state->update_begin,
 				 state->update_timeout,
 				 state->update_pid,
@@ -2737,7 +2748,7 @@ static response handler(daemon_state s, client_handle h, request r)
 
 			if (state->update_pid != pid) {
 				/* If a pid doing update was cancelled, ignore its token update at the end. */
-				DEBUGLOG(state, "token_update ignored from cancelled update pid %d", pid);
+				WARN(state, "token_update ignored from cancelled update pid %d", pid);
 				pthread_mutex_unlock(&state->token_lock);
 
 				return daemon_reply_simple("token_mismatch",
@@ -2748,7 +2759,7 @@ static response handler(daemon_state s, client_handle h, request r)
 							   NULL);
 			}
 
-			DEBUGLOG(state, "token_update end len %d pid %d new token %s",
+			WARN(state, "token_update end len %d pid %d new token %s",
 				 (int)(_monotonic_seconds() - state->update_begin),
 				 state->update_pid, token);
 
