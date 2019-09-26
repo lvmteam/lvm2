@@ -41,14 +41,9 @@ struct lvmcache_vginfo;
 
 /*
  * vgsummary represents a summary of the VG that is read
- * without a lock.  The info does not come through vg_read(),
- * but through reading mdas.  It provides information about
- * the VG that is needed to lock the VG and then read it fully
- * with vg_read(), after which the VG summary should be checked
- * against the full VG metadata to verify it was correct (since
- * it was read without a lock.)
- *
- * Once read, vgsummary information is saved in lvmcache_vginfo.
+ * without a lock during label scan.  It's used to populate
+ * basic lvmcache vginfo/info during label scan prior to
+ * vg_read().
  */
 struct lvmcache_vgsummary {
 	const char *vgname;
@@ -63,6 +58,7 @@ struct lvmcache_vgsummary {
 	int mda_num; /* 1 = summary from mda1, 2 = summary from mda2 */
 	unsigned mda_ignored:1;
 	unsigned zero_offset:1;
+	struct dm_list pvsummaries;
 };
 
 int lvmcache_init(struct cmd_context *cmd);

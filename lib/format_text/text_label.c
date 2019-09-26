@@ -498,6 +498,7 @@ static int _text_read(struct labeller *labeller, struct device *dev, void *label
 	if (mda1) {
 		log_debug_metadata("Scanning %s mda1 summary.", dev_name(dev));
 		memset(&vgsummary, 0, sizeof(vgsummary));
+		dm_list_init(&vgsummary.pvsummaries);
 		bad_fields = 0;
 		vgsummary.mda_num = 1;
 
@@ -541,6 +542,7 @@ static int _text_read(struct labeller *labeller, struct device *dev, void *label
 	if (mda2) {
 		log_debug_metadata("Scanning %s mda2 summary.", dev_name(dev));
 		memset(&vgsummary, 0, sizeof(vgsummary));
+		dm_list_init(&vgsummary.pvsummaries);
 		bad_fields = 0;
 		vgsummary.mda_num = 2;
 

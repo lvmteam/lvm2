@@ -278,6 +278,8 @@ static struct raw_locn *_read_metadata_location_vg(struct device_area *dev_area,
 	};
 	int rlocn_was_ignored;
 
+	dm_list_init(&vgsummary_orphan.pvsummaries);
+
 	memcpy(&vgsummary_orphan.vgid, FMT_TEXT_ORPHAN_VG_NAME, sizeof(FMT_TEXT_ORPHAN_VG_NAME));
 
 	rlocn = mdah->raw_locns;	/* Slot 0 */

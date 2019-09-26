@@ -31,10 +31,12 @@ typedef int (*section_fn) (struct cmd_context *cmd,
 			   struct format_type *fmt,
 			   struct format_instance *fid,
 			   struct dm_pool *mem,
-			   struct volume_group * vg, const struct dm_config_node * pvn,
-			   const struct dm_config_node * vgn,
-			   struct dm_hash_table * pv_hash,
-			   struct dm_hash_table * lv_hash);
+			   struct volume_group *vg,
+			   struct lvmcache_vgsummary *vgsummary,
+			   const struct dm_config_node *pvn,
+			   const struct dm_config_node *vgn,
+			   struct dm_hash_table *pv_hash,
+			   struct dm_hash_table *lv_hash);
 
 #define _read_int32(root, path, result) \
 	dm_config_get_uint32(root, path, (uint32_t *) (result))
@@ -176,7 +178,9 @@ static int _read_pv(struct cmd_context *cmd,
 		    struct format_type *fmt,
 		    struct format_instance *fid,
 		    struct dm_pool *mem,
-		    struct volume_group *vg, const struct dm_config_node *pvn,
+		    struct volume_group *vg,
+		    struct lvmcache_vgsummary *vgsummary,
+		    const struct dm_config_node *pvn,
 		    const struct dm_config_node *vgn __attribute__((unused)),
 		    struct dm_hash_table *pv_hash,
 		    struct dm_hash_table *lv_hash __attribute__((unused)))
@@ -285,6 +289,49 @@ static int _read_pv(struct cmd_context *cmd,
 	vg->extent_count += pv->pe_count;
 	vg->free_count += pv->pe_count;
 	add_pvl_to_vgs(vg, pvl);
+
+	return 1;
+}
+
+static int _read_pvsummary(struct cmd_context *cmd,
+			   struct format_type *fmt,
+			   struct format_instance *fid,
+			   struct dm_pool *mem,
+			   struct volume_group *vg,
+			   struct lvmcache_vgsummary *vgsummary,
+			   const struct dm_config_node *pvn,
+			   const struct dm_config_node *vgn __attribute__((unused)),
+			   struct dm_hash_table *pv_hash __attribute__((unused)),
+			   struct dm_hash_table *lv_hash __attribute__((unused)))
+{
+	struct physical_volume *pv;
+	struct pv_list *pvl;
+	const char *device_hint;
+
+	if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl))) ||
+	    !(pvl->pv = dm_pool_zalloc(mem, sizeof(*pvl->pv))))
+		return_0;
+
+	pv = pvl->pv;
+
+	if (!(pvn = pvn->child)) {
+		log_error("Empty pv section.");
+		return 0;
+	}
+
+	if (!_read_id(&pv->id, pvn, "id"))
+		log_warn("Couldn't read uuid for physical volume.");
+
+	if (dm_config_has_node(pvn, "dev_size") &&
+	    !_read_uint64(pvn, "dev_size", &pv->size))
+		log_warn("Couldn't read dev size for physical volume.");
+
+	if (dm_config_get_str(pvn, "device", &device_hint)) {
+		if (!(pv->device_hint = dm_pool_strdup(mem, device_hint)))
+			log_error("Failed to allocate memory for device hint in read_pv.");
+	}
+
+	dm_list_add(&vgsummary->pvsummaries, &pvl->list);
 
 	return 1;
 }
@@ -538,7 +585,9 @@ static int _read_lvnames(struct cmd_context *cmd,
 			 struct format_type *fmt,
 			 struct format_instance *fid __attribute__((unused)),
 			 struct dm_pool *mem,
-			 struct volume_group *vg, const struct dm_config_node *lvn,
+			 struct volume_group *vg,
+			 struct lvmcache_vgsummary *vgsummary,
+			 const struct dm_config_node *lvn,
 			 const struct dm_config_node *vgn __attribute__((unused)),
 			 struct dm_hash_table *pv_hash __attribute__((unused)),
 			 struct dm_hash_table *lv_hash)
@@ -695,7 +744,9 @@ static int _read_historical_lvnames(struct cmd_context *cmd,
 				    struct format_type *fmt,
 				    struct format_instance *fid __attribute__((unused)),
 				     struct dm_pool *mem,
-				     struct volume_group *vg, const struct dm_config_node *hlvn,
+				     struct volume_group *vg,
+				     struct lvmcache_vgsummary *vgsummary,
+				     const struct dm_config_node *hlvn,
 				     const struct dm_config_node *vgn __attribute__((unused)),
 				     struct dm_hash_table *pv_hash __attribute__((unused)),
 				     struct dm_hash_table *lv_hash __attribute__((unused)))
@@ -766,7 +817,9 @@ static int _read_historical_lvnames_interconnections(struct cmd_context *cmd,
 						 struct format_type *fmt,
 						 struct format_instance *fid __attribute__((unused)),
 						 struct dm_pool *mem,
-						 struct volume_group *vg, const struct dm_config_node *hlvn,
+						 struct volume_group *vg,
+			  			 struct lvmcache_vgsummary *vgsummary,
+						 const struct dm_config_node *hlvn,
 						 const struct dm_config_node *vgn __attribute__((unused)),
 						 struct dm_hash_table *pv_hash __attribute__((unused)),
 						 struct dm_hash_table *lv_hash __attribute__((unused)))
@@ -878,7 +931,9 @@ static int _read_lvsegs(struct cmd_context *cmd,
 			struct format_type *fmt,
 			struct format_instance *fid,
 			struct dm_pool *mem,
-			struct volume_group *vg, const struct dm_config_node *lvn,
+			struct volume_group *vg,
+			struct lvmcache_vgsummary *vgsummary,
+			const struct dm_config_node *lvn,
 			const struct dm_config_node *vgn __attribute__((unused)),
 			struct dm_hash_table *pv_hash,
 			struct dm_hash_table *lv_hash)
@@ -942,7 +997,9 @@ static int _read_sections(struct cmd_context *cmd,
 			  struct format_instance *fid,
 			  struct dm_pool *mem,
 			  const char *section, section_fn fn,
-			  struct volume_group *vg, const struct dm_config_node *vgn,
+			  struct volume_group *vg,
+			  struct lvmcache_vgsummary *vgsummary,
+			  const struct dm_config_node *vgn,
 			  struct dm_hash_table *pv_hash,
 			  struct dm_hash_table *lv_hash,
 			  int optional)
@@ -959,7 +1016,7 @@ static int _read_sections(struct cmd_context *cmd,
 	}
 
 	for (n = n->child; n; n = n->sib) {
-		if (!fn(cmd, fmt, fid, mem, vg, n, vgn, pv_hash, lv_hash))
+		if (!fn(cmd, fmt, fid, mem, vg, vgsummary, n, vgn, pv_hash, lv_hash))
 			return_0;
 	}
 
@@ -971,7 +1028,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 				     unsigned allow_lvmetad_extensions)
 {
 	struct cmd_context *cmd = fid->fmt->cmd;
-	struct format_type *fmt = fid->fmt;
+	struct format_type *fmt = (struct format_type *)fid->fmt;
 	struct dm_pool *mem;
 	const struct dm_config_node *vgn;
 	const struct dm_config_value *cv;
@@ -1126,7 +1183,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		vg->mda_copies = DEFAULT_VGMETADATACOPIES;
 	}
 
-	if (!_read_sections(cmd, fmt, fid, mem, "physical_volumes", _read_pv, vg,
+	if (!_read_sections(cmd, fmt, fid, mem, "physical_volumes", _read_pv, vg, NULL,
 			    vgn, pv_hash, lv_hash, 0)) {
 		log_error("Couldn't find all physical volumes for volume "
 			  "group %s.", vg->name);
@@ -1140,21 +1197,21 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		goto bad;
 	}
 
-	if (!_read_sections(cmd, fmt, fid, mem, "logical_volumes", _read_lvnames, vg,
+	if (!_read_sections(cmd, fmt, fid, mem, "logical_volumes", _read_lvnames, vg, NULL,
 			    vgn, pv_hash, lv_hash, 1)) {
 		log_error("Couldn't read all logical volume names for volume "
 			  "group %s.", vg->name);
 		goto bad;
 	}
 
-	if (!_read_sections(cmd, fmt, fid, mem, "historical_logical_volumes", _read_historical_lvnames, vg,
+	if (!_read_sections(cmd, fmt, fid, mem, "historical_logical_volumes", _read_historical_lvnames, vg, NULL,
 			    vgn, pv_hash, lv_hash, 1)) {
 		log_error("Couldn't read all historical logical volumes for volume "
 			  "group %s.", vg->name);
 		goto bad;
 	}
 
-	if (!_read_sections(cmd, fmt, fid, mem, "logical_volumes", _read_lvsegs, vg,
+	if (!_read_sections(cmd, fmt, fid, mem, "logical_volumes", _read_lvsegs, vg, NULL,
 			    vgn, pv_hash, lv_hash, 1)) {
 		log_error("Couldn't read all logical volumes for "
 			  "volume group %s.", vg->name);
@@ -1162,7 +1219,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	}
 
 	if (!_read_sections(cmd, fmt, fid, mem, "historical_logical_volumes", _read_historical_lvnames_interconnections,
-			    vg, vgn, pv_hash, lv_hash, 1)) {
+			    vg, NULL, vgn, pv_hash, lv_hash, 1)) {
 		log_error("Couldn't read all removed logical volume interconnections "
 			  "for volume group %s.", vg->name);
 		goto bad;
@@ -1268,6 +1325,11 @@ static int _read_vgsummary(const struct format_type *fmt, const struct dm_config
 		log_error("Couldn't read seqno for volume group %s.",
 			  vgsummary->vgname);
 		return 0;
+	}
+
+	if (!_read_sections(fmt->cmd, NULL, NULL, mem, "physical_volumes", _read_pvsummary, NULL, vgsummary,
+			    vgn, NULL, NULL, 0)) {
+		log_debug("Couldn't read pv summaries");
 	}
 
 	return 1;

@@ -53,6 +53,7 @@ struct lvmcache_vginfo {
 	struct dm_list list;	/* Join these vginfos together */
 	struct dm_list infos;	/* List head for lvmcache_infos */
 	struct dm_list outdated_infos; /* vg_read moves info from infos to outdated_infos */
+	struct dm_list pvsummaries; /* pv_list taken directly from vgsummary */
 	const struct format_type *fmt;
 	char *vgname;		/* "" == orphan */
 	uint32_t status;
@@ -1295,6 +1296,7 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 		}
 		dm_list_init(&vginfo->infos);
 		dm_list_init(&vginfo->outdated_infos);
+		dm_list_init(&vginfo->pvsummaries);
 
 		/*
 		 * A different VG (different uuid) can exist with the same name.
@@ -1416,6 +1418,18 @@ out:
 int lvmcache_add_orphan_vginfo(const char *vgname, struct format_type *fmt)
 {
 	return _lvmcache_update_vgname(NULL, vgname, vgname, 0, "", fmt);
+}
+
+static void _lvmcache_update_pvsummaries(struct lvmcache_vginfo *vginfo, struct lvmcache_vgsummary *vgsummary)
+{
+	struct pv_list *pvl, *safe;
+
+	dm_list_init(&vginfo->pvsummaries);
+
+	dm_list_iterate_items_safe(pvl, safe, &vgsummary->pvsummaries) {
+		dm_list_del(&pvl->list);
+		dm_list_add(&vginfo->pvsummaries, &pvl->list);
+	}
 }
 
 /*
@@ -1581,6 +1595,8 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info, struct lvmcache_vg
 		 */
 		log_error("Failed to update VG %s info in lvmcache.", vgname);
 	}
+
+	_lvmcache_update_pvsummaries(vginfo, vgsummary);
 
 	return 1;
 }
