@@ -387,6 +387,23 @@ const char *lvmcache_vgname_from_info(struct lvmcache_info *info)
 	return NULL;
 }
 
+static uint64_t _get_pvsummary_size(char *pvid)
+{
+	char pvid_s[ID_LEN + 1] __attribute__((aligned(8)));
+	struct lvmcache_vginfo *vginfo;
+	struct pv_list *pvl;
+
+	dm_list_iterate_items(vginfo, &_vginfos) {
+		dm_list_iterate_items(pvl, &vginfo->pvsummaries) {
+			(void) dm_strncpy(pvid_s, (char *) &pvl->pv->id, sizeof(pvid_s));
+			if (!strcmp(pvid_s, pvid))
+				return pvl->pv->size;
+		}
+	}
+
+	return 0;
+}
+
 /*
  * Check if any PVs in vg->pvs have the same PVID as any
  * entries in _unused_duplicates.
@@ -492,10 +509,12 @@ static void _choose_duplicates(struct cmd_context *cmd,
 	struct lvmcache_info *info;
 	struct device *dev1, *dev2;
 	uint32_t dev1_major, dev1_minor, dev2_major, dev2_minor;
+	uint64_t dev1_size, dev2_size, pv_size;
 	int in_subsys1, in_subsys2;
 	int is_dm1, is_dm2;
 	int has_fs1, has_fs2;
 	int has_lv1, has_lv2;
+	int same_size1, same_size2;
 	int prev_unchosen1, prev_unchosen2;
 	int change;
 
@@ -612,6 +631,15 @@ next:
 		dev2_major = MAJOR(dev2->dev);
 		dev2_minor = MINOR(dev2->dev);
 
+		if (!dev_get_size(dev1, &dev1_size))
+			dev1_size = 0;
+		if (!dev_get_size(dev2, &dev2_size))
+			dev2_size = 0;
+
+		pv_size = _get_pvsummary_size(devl->dev->pvid);
+		same_size1 = (dev1_size == pv_size);
+		same_size2 = (dev2_size == pv_size);
+
 		has_lv1 = (dev1->flags & DEV_USED_FOR_LV) ? 1 : 0;
 		has_lv2 = (dev2->flags & DEV_USED_FOR_LV) ? 1 : 0;
 
@@ -628,6 +656,12 @@ next:
 				devl->dev->pvid,
 				dev_name(dev1), dev1_major, dev1_minor,
 				dev_name(dev2), dev2_major, dev2_minor);
+
+		log_debug_cache("PV %s: size %llu. %s is %llu. %s is %llu.",
+				devl->dev->pvid,
+				(unsigned long long)pv_size,
+				dev_name(dev1), (unsigned long long)dev1_size,
+				dev_name(dev2), (unsigned long long)dev2_size);
 
 		log_debug_cache("PV %s: %s was prev %s. %s was prev %s.",
 				devl->dev->pvid,
@@ -670,6 +704,13 @@ next:
 			/* change to 2 */
 			change = 1;
 			reason = "device is used by LV";
+		} else if (same_size1 && !same_size2) {
+			/* keep 1 */
+			reason = "device size is correct";
+		} else if (same_size2 && !same_size1) {
+			/* change to 2 */
+			change = 1;
+			reason = "device size is correct";
 		} else if (has_fs1 && !has_fs2) {
 			/* keep 1 */
 			reason = "device has fs mounted";
