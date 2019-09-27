@@ -37,7 +37,7 @@ wipefs -V || skip
 
 test -f /proc/mdstat && grep -q raid1 /proc/mdstat || \
         modprobe raid1 || skip
-not grep md0 /proc/mdstat
+not grep md0 /proc/mdstat || skip
 
 aux lvmconf 'devices/md_component_detection = 1'
 
