@@ -190,18 +190,17 @@ lvs -o active $vg |tee out || true
 grep "active" out
 vgchange -an $vg
 
-# N.B. when the md dev (which is started) has not been scanned by
-# pvscan, then pvscan --cache on the md component does not detect it's
-# an md component, and marks the PVID online, then does activation,
-# but the activation using the component fails because the component
-# device is busy from being used in the md dev, and activation fails.
-# The default behavior in auto mode is preferrable.
+# The dev name and device_hint don't match so pvscan
+# skips quick activation and scans all devs during
+# activation.  This means it sees the component and
+# the mddev as duplicates and chooses to use the mddev
+# for activation.
 _clear_online_files
-not pvscan --cache -aay "$dev1"
+pvscan --cache -aay "$dev1"
 ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
 ls "$RUNDIR/lvm/vgs_online/$vg"
 lvs -o active $vg |tee out || true
-not grep "active" out
+grep "active" out
 
 # pvscan activation from mddev first, then try from component which fails
 _clear_online_files
@@ -332,27 +331,17 @@ pvscan --cache -aay
 not ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
 not ls "$RUNDIR/lvm/vgs_online/$vg"
 
+# component dev name does not match device_hint in metadata so
+# quick activation is skipped and activation scans all devs.
+# this leads it to see both components as duplicates which
+# triggers full md check which means we see both devs are
+# md components and drop them, leaving no remaining devs
+# on which this vg is seen.
 _clear_online_files
-pvscan --cache -aay "$dev1"
+not pvscan --cache -aay "$dev1"
 ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
 ls "$RUNDIR/lvm/vgs_online/$vg"
 
-# N.B. not good to activate from component, but result of "start" setting
-# Other commands will not see the vg at this point because they'll
-# recognize the md components and ignore them (where pvscan is special due
-# to it not scanning all devs and not seeing the duplicates and not
-# detecting the components.)
-# disable dev2 so other cmds don't see dups and we can deactivate the vg
-aux disable_dev "$dev2"
-vgchange -an $vg
-
-aux enable_dev "$dev2"
-aux udev_wait
-cat /proc/mdstat
-# for some reason enabling dev2 starts an odd md dev
-mdadm --stop "$mddev" || true
-mdadm --stop --scan
-cat /proc/mdstat
 wipefs -a "$dev1" || true
 wipefs -a "$dev2" || true
 
