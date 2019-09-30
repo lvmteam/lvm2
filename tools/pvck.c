@@ -740,7 +740,8 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, int print_fields,
 				     struct device *dev,
 				     int *found_label,
 				     uint64_t *mda1_offset, uint64_t *mda1_size,
-				     uint64_t *mda2_offset, uint64_t *mda2_size)
+				     uint64_t *mda2_offset, uint64_t *mda2_size,
+				     int *mda_count_out)
 {
 	char str[256];
 	struct label_header *lh;
@@ -899,6 +900,8 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, int print_fields,
 		dlocn_offset += 16;
 		mda_count++;
 	}
+
+	*mda_count_out = mda_count;
 
 	/* all-zero dlocn struct is area list end */
 	if (print_fields) {
@@ -1117,6 +1120,7 @@ static int _dump_headers(struct cmd_context *cmd,
 	const char *pv_name;
 	uint64_t mda1_offset = 0, mda1_size = 0, mda2_offset = 0, mda2_size = 0;
 	uint32_t mda1_checksum, mda2_checksum;
+	int mda_count = 0;
 	int bad = 0;
 
 	pv_name = argv[0];
@@ -1129,8 +1133,13 @@ static int _dump_headers(struct cmd_context *cmd,
 	label_scan_setup_bcache();
 
 	if (!_dump_label_and_pv_header(cmd, 1, dev, NULL,
-			&mda1_offset, &mda1_size, &mda2_offset, &mda2_size))
+			&mda1_offset, &mda1_size, &mda2_offset, &mda2_size, &mda_count))
 		bad++;
+
+	if (!mda_count) {
+		log_print("zero metadata copies");
+		return ECMD_PROCESSED;
+	}
 
 	/* N.B. mda1_size and mda2_size may be different */
 
@@ -1180,6 +1189,7 @@ static int _dump_metadata(struct cmd_context *cmd,
 	const char *tofile = NULL;
 	uint64_t mda1_offset = 0, mda1_size = 0, mda2_offset = 0, mda2_size = 0;
 	uint32_t mda1_checksum, mda2_checksum;
+	int mda_count = 0;
 	int mda_num = 1;
 	int bad = 0;
 
@@ -1202,9 +1212,13 @@ static int _dump_metadata(struct cmd_context *cmd,
 	label_scan_setup_bcache();
 
 	if (!_dump_label_and_pv_header(cmd, 0, dev, NULL,
-			&mda1_offset, &mda1_size, &mda2_offset, &mda2_size))
+			&mda1_offset, &mda1_size, &mda2_offset, &mda2_size, &mda_count))
 		bad++;
 
+	if (!mda_count) {
+		log_print("zero metadata copies");
+		return ECMD_PROCESSED;
+	}
 
 	/*
 	 * The first mda is always 4096 bytes from the start of the device.
@@ -1249,10 +1263,11 @@ static int _dump_found(struct cmd_context *cmd, struct device *dev,
 	uint64_t mda1_offset = 0, mda1_size = 0, mda2_offset = 0, mda2_size = 0;
 	uint32_t mda1_checksum = 0, mda2_checksum = 0;
 	int found_label = 0, found_header1 = 0, found_header2 = 0;
+	int mda_count = 0;
 	int bad = 0;
 
 	if (!_dump_label_and_pv_header(cmd, 0, dev, &found_label,
-			&mda1_offset, &mda1_size, &mda2_offset, &mda2_size))
+			&mda1_offset, &mda1_size, &mda2_offset, &mda2_size, &mda_count))
 		bad++;
 
 	if (found_label && mda1_offset) {

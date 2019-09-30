@@ -12,30 +12,35 @@
 
 . lib/inittest
 
-aux prepare_devs 3
+aux prepare_devs 4
 get_devs
 
 dd if=/dev/zero of="$dev1" || true
 dd if=/dev/zero of="$dev2" || true
 dd if=/dev/zero of="$dev3" || true
+dd if=/dev/zero of="$dev4" || true
 
 pvcreate "$dev1"
 pvcreate "$dev2"
 pvcreate --pvmetadatacopies 2 "$dev3"
+pvcreate --pvmetadatacopies 0 "$dev4"
 
 vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3"
 
 pvck --dump headers "$dev1" > h1
 pvck --dump headers "$dev2" > h2
 pvck --dump headers "$dev3" > h3
+pvck --dump headers "$dev4" > h4
 
 grep "label_header at 512" h1
 grep "label_header at 512" h2
 grep "label_header at 512" h3
+grep "label_header at 512" h4
 
 grep "pv_header at 544" h1
 grep "pv_header at 544" h2
 grep "pv_header at 544" h3
+grep "pv_header at 544" h4
 
 grep "pv_header.disk_locn\[0\].offset 1048576" h1
 grep "pv_header.disk_locn\[0\].offset 1048576" h2
@@ -48,6 +53,10 @@ grep "pv_header.disk_locn\[2\].offset 4096" h3
 grep "pv_header.disk_locn\[2\].size 1044480" h1
 grep "pv_header.disk_locn\[2\].size 1044480" h2
 grep "pv_header.disk_locn\[2\].size 1044480" h3
+
+not grep "pv_header.disk_locn\[3\].size" h4
+not grep "pv_header.disk_locn\[4\].size" h4
+not grep "mda_header" h4
 
 grep "mda_header_1 at 4096" h1
 grep "mda_header_1 at 4096" h2
@@ -75,7 +84,10 @@ not grep CHECK h3
 pvck --dump metadata "$dev1" > m1
 pvck --dump metadata "$dev2" > m2
 pvck --dump metadata "$dev3" > m3
+pvck --dump metadata "$dev4" > m4
 pvck --dump metadata --pvmetadatacopies 2 "$dev3" > m3b
+
+grep "zero metadata copies" m4
 
 diff m1 m2
 diff m1 m3
