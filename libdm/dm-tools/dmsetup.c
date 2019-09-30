@@ -942,10 +942,12 @@ static int _display_info_cols(struct dm_task *dmt, struct dm_info *info)
 		}
 	}
 
-	/* group report with no groups? */
+	/* Group report with no groups is not an error */
 	if ((walk_flags == DM_STATS_WALK_GROUP)
-	    && !dm_stats_get_nr_groups(obj.stats))
+	    && !dm_stats_get_nr_groups(obj.stats)) {
+		r = 1;
 		goto out;
+	}
 
 	dm_stats_walk_init(obj.stats, walk_flags);
 	dm_stats_walk_do(obj.stats) {
