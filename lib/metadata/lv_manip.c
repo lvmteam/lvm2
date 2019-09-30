@@ -4850,12 +4850,6 @@ static int _lvresize_adjust_policy(const struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!lv_is_active(lv)) {
-		log_error("Can't read state of locally inactive LV %s.",
-			  display_lvname(lv));
-		return 0;
-	}
-
 	if (lv_is_thin_pool(lv)) {
 		if (!lv_thin_pool_percent(lv, 1, &percent))
 			return_0;
@@ -4870,9 +4864,12 @@ static int _lvresize_adjust_policy(const struct logical_volume *lv,
 	} else if (lv_is_vdo_pool(lv)) {
 		if (!lv_vdo_pool_percent(lv, &percent))
 			return_0;
-	} else {
-		if (!lv_snapshot_percent(lv, &percent))
+	} else if (!lv_snapshot_percent(lv, &percent))
 			return_0;
+	else if (!lv_is_active(lv)) {
+		log_error("Can't read state of locally inactive LV %s.",
+			  display_lvname(lv));
+		return 0;
 	}
 
 	*amount = _adjust_amount(percent, policy_threshold, policy_amount);
