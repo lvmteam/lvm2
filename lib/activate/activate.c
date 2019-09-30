@@ -2434,6 +2434,17 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 			}
 		}
 
+		if (lv_is_vdo_pool(lv)) {
+			/* If someone has remove 'linear' mapping over VDO device
+			 * we may still be able to deactivate the rest of the tree
+			 * i.e. in test-suite we simulate this via 'dmsetup remove' */
+			if (!lv_info(cmd, lv, 1, &info, 1, 0))
+				goto_out;
+
+			if (info.exists && !info.open_count)
+				r = 0; /* Unused VDO device left in table? */
+		}
+
 		if (r)
 			goto out;
 	}
