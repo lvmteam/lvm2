@@ -145,7 +145,7 @@ static int _lvchange_monitoring(struct cmd_context *cmd,
 {
 	struct lvinfo info;
 
-	if (!lv_info(cmd, lv, lv_is_thin_pool(lv) ? 1 : 0,
+	if (!lv_info(cmd, lv, (lv_is_thin_pool(lv) || lv_is_vdo_pool(lv)) ? 1 : 0,
 		     &info, 0, 0) || !info.exists) {
 		log_error("Logical volume %s is not active.", display_lvname(lv));
 		return 0;
