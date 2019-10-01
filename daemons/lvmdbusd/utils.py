@@ -26,6 +26,15 @@ import signal
 STDOUT_TTY = os.isatty(sys.stdout.fileno())
 
 
+def _handle_execute(rc, out, err, interface):
+	if rc == 0:
+		cfg.load()
+	else:
+		# Need to work on error handling, need consistent
+		raise dbus.exceptions.DBusException(
+			interface, 'Exit code %s, stderr = %s' % (str(rc), err))
+
+
 def rtype(dbus_type):
 	"""
 	Decorator making sure that the decorated function returns a value of

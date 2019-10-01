@@ -10,7 +10,7 @@
 from .automatedproperties import AutomatedProperties
 
 from . import utils
-from .utils import vg_obj_path_generate, log_error
+from .utils import vg_obj_path_generate, log_error, _handle_execute
 import dbus
 from . import cmdhandler
 from . import cfg
@@ -275,13 +275,7 @@ class LvCommon(AutomatedProperties):
 
 	@staticmethod
 	def handle_execute(rc, out, err):
-		if rc == 0:
-			cfg.load()
-		else:
-			# Need to work on error handling, need consistent
-			raise dbus.exceptions.DBusException(
-				LV_INTERFACE,
-				'Exit code %s, stderr = %s' % (str(rc), err))
+		_handle_execute(rc, out, err, LV_INTERFACE)
 
 	@staticmethod
 	def validate_dbus_object(lv_uuid, lv_name):

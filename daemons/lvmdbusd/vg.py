@@ -10,7 +10,8 @@
 from .automatedproperties import AutomatedProperties
 
 from . import utils
-from .utils import pv_obj_path_generate, vg_obj_path_generate, n
+from .utils import pv_obj_path_generate, vg_obj_path_generate, n, \
+	_handle_execute
 import dbus
 from . import cfg
 from .cfg import VG_INTERFACE
@@ -154,13 +155,7 @@ class Vg(AutomatedProperties):
 
 	@staticmethod
 	def handle_execute(rc, out, err):
-		if rc == 0:
-			cfg.load()
-		else:
-			# Need to work on error handling, need consistent
-			raise dbus.exceptions.DBusException(
-				VG_INTERFACE,
-				'Exit code %s, stderr = %s' % (str(rc), err))
+		return _handle_execute(rc, out, err, VG_INTERFACE)
 
 	@staticmethod
 	def validate_dbus_object(vg_uuid, vg_name):

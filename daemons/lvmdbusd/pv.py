@@ -14,7 +14,7 @@ import dbus
 from .cfg import PV_INTERFACE
 from . import cmdhandler
 from .utils import vg_obj_path_generate, n, pv_obj_path_generate, \
-	lv_object_path_method
+	lv_object_path_method, _handle_execute
 from .loader import common
 from .request import RequestEntry
 from .state import State
@@ -144,13 +144,7 @@ class Pv(AutomatedProperties):
 
 	@staticmethod
 	def handle_execute(rc, out, err):
-		if rc == 0:
-			cfg.load()
-		else:
-			# Need to work on error handling, need consistent
-			raise dbus.exceptions.DBusException(
-				PV_INTERFACE,
-				'Exit code %s, stderr = %s' % (str(rc), err))
+		return _handle_execute(rc, out, err, PV_INTERFACE)
 
 	@staticmethod
 	def validate_dbus_object(pv_uuid, pv_name):
