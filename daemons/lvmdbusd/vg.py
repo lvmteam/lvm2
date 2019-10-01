@@ -171,9 +171,8 @@ class Vg(AutomatedProperties):
 	def _rename(uuid, vg_name, new_name, rename_options):
 		# Make sure we have a dbus object representing it
 		Vg.validate_dbus_object(uuid, vg_name)
-		rc, out, err = cmdhandler.vg_rename(
-			uuid, new_name, rename_options)
-		Vg.handle_execute(rc, out, err)
+		Vg.handle_execute(*cmdhandler.vg_rename(
+			uuid, new_name, rename_options))
 		return '/'
 
 	@dbus.service.method(
@@ -192,8 +191,7 @@ class Vg(AutomatedProperties):
 		# Make sure we have a dbus object representing it
 		Vg.validate_dbus_object(uuid, vg_name)
 		# Remove the VG, if successful then remove from the model
-		rc, out, err = cmdhandler.vg_remove(vg_name, remove_options)
-		Vg.handle_execute(rc, out, err)
+		Vg.handle_execute(*cmdhandler.vg_remove(vg_name, remove_options))
 		return '/'
 
 	@dbus.service.method(
@@ -209,8 +207,7 @@ class Vg(AutomatedProperties):
 	@staticmethod
 	def _change(uuid, vg_name, change_options):
 		Vg.validate_dbus_object(uuid, vg_name)
-		rc, out, err = cmdhandler.vg_change(change_options, vg_name)
-		Vg.handle_execute(rc, out, err)
+		Vg.handle_execute(*cmdhandler.vg_change(change_options, vg_name))
 		return '/'
 
 	# TODO: This should be broken into a number of different methods
@@ -246,9 +243,8 @@ class Vg(AutomatedProperties):
 						VG_INTERFACE,
 						'PV Object path not found = %s!' % pv_op)
 
-		rc, out, err = cmdhandler.vg_reduce(vg_name, missing, pv_devices,
-											reduce_options)
-		Vg.handle_execute(rc, out, err)
+		Vg.handle_execute(*cmdhandler.vg_reduce(
+			vg_name, missing, pv_devices, reduce_options))
 		return '/'
 
 	@dbus.service.method(
@@ -278,9 +274,8 @@ class Vg(AutomatedProperties):
 					VG_INTERFACE, 'PV Object path not found = %s!' % i)
 
 		if len(extend_devices):
-			rc, out, err = cmdhandler.vg_extend(vg_name, extend_devices,
-												extend_options)
-			Vg.handle_execute(rc, out, err)
+			Vg.handle_execute(*cmdhandler.vg_extend(
+				vg_name, extend_devices, extend_options))
 		else:
 			raise dbus.exceptions.DBusException(
 				VG_INTERFACE, 'No pv_object_paths provided!')
@@ -334,10 +329,8 @@ class Vg(AutomatedProperties):
 
 				pv_dests.append((pv_dbus_obj.lvm_id, pr[1], pr[2]))
 
-		rc, out, err = cmdhandler.vg_lv_create(
-			vg_name, create_options, name, size_bytes, pv_dests)
-
-		Vg.handle_execute(rc, out, err)
+		Vg.handle_execute(*cmdhandler.vg_lv_create(
+			vg_name, create_options, name, size_bytes, pv_dests))
 		return Vg.fetch_new_lv(vg_name, name)
 
 	@dbus.service.method(
@@ -375,11 +368,8 @@ class Vg(AutomatedProperties):
 			thin_pool, create_options):
 		# Make sure we have a dbus object representing it
 		Vg.validate_dbus_object(uuid, vg_name)
-
-		rc, out, err = cmdhandler.vg_lv_create_linear(
-			vg_name, create_options, name, size_bytes, thin_pool)
-
-		Vg.handle_execute(rc, out, err)
+		Vg.handle_execute(*cmdhandler.vg_lv_create_linear(
+			vg_name, create_options, name, size_bytes, thin_pool))
 		return Vg.fetch_new_lv(vg_name, name)
 
 	@dbus.service.method(
@@ -401,10 +391,9 @@ class Vg(AutomatedProperties):
 			stripe_size_kb, thin_pool, create_options):
 		# Make sure we have a dbus object representing it
 		Vg.validate_dbus_object(uuid, vg_name)
-		rc, out, err = cmdhandler.vg_lv_create_striped(
+		Vg.handle_execute(*cmdhandler.vg_lv_create_striped(
 			vg_name, create_options, name, size_bytes,
-			num_stripes, stripe_size_kb, thin_pool)
-		Vg.handle_execute(rc, out, err)
+			num_stripes, stripe_size_kb, thin_pool))
 		return Vg.fetch_new_lv(vg_name, name)
 
 	@dbus.service.method(
@@ -429,9 +418,8 @@ class Vg(AutomatedProperties):
 			num_copies, create_options):
 		# Make sure we have a dbus object representing it
 		Vg.validate_dbus_object(uuid, vg_name)
-		rc, out, err = cmdhandler.vg_lv_create_mirror(
-			vg_name, create_options, name, size_bytes, num_copies)
-		Vg.handle_execute(rc, out, err)
+		Vg.handle_execute(*cmdhandler.vg_lv_create_mirror(
+			vg_name, create_options, name, size_bytes, num_copies))
 		return Vg.fetch_new_lv(vg_name, name)
 
 	@dbus.service.method(
@@ -454,10 +442,9 @@ class Vg(AutomatedProperties):
 						num_stripes, stripe_size_kb, create_options):
 		# Make sure we have a dbus object representing it
 		Vg.validate_dbus_object(uuid, vg_name)
-		rc, out, err = cmdhandler.vg_lv_create_raid(
+		Vg.handle_execute(*cmdhandler.vg_lv_create_raid(
 			vg_name, create_options, name, raid_type, size_bytes,
-			num_stripes, stripe_size_kb)
-		Vg.handle_execute(rc, out, err)
+			num_stripes, stripe_size_kb))
 		return Vg.fetch_new_lv(vg_name, name)
 
 	@dbus.service.method(
@@ -555,9 +542,8 @@ class Vg(AutomatedProperties):
 				raise dbus.exceptions.DBusException(
 					VG_INTERFACE, 'PV object path = %s not found' % p)
 
-		rc, out, err = cmdhandler.pv_tag(
-			pv_devices, tags_add, tags_del, tag_options)
-		Vg.handle_execute(rc, out, err)
+		Vg.handle_execute(*cmdhandler.pv_tag(
+			pv_devices, tags_add, tags_del, tag_options))
 		return '/'
 
 	@dbus.service.method(
@@ -598,9 +584,8 @@ class Vg(AutomatedProperties):
 		# Make sure we have a dbus object representing it
 		Vg.validate_dbus_object(uuid, vg_name)
 
-		rc, out, err = cmdhandler.vg_tag(
-			vg_name, tags_add, tags_del, tag_options)
-		Vg.handle_execute(rc, out, err)
+		Vg.handle_execute(*cmdhandler.vg_tag(
+			vg_name, tags_add, tags_del, tag_options))
 		return '/'
 
 	@dbus.service.method(
@@ -639,8 +624,7 @@ class Vg(AutomatedProperties):
 	def _vg_change_set(uuid, vg_name, method, value, options):
 		# Make sure we have a dbus object representing it
 		Vg.validate_dbus_object(uuid, vg_name)
-		rc, out, err = method(vg_name, value, options)
-		Vg.handle_execute(rc, out, err)
+		Vg.handle_execute(*method(vg_name, value, options))
 		return '/'
 
 	@dbus.service.method(
@@ -700,9 +684,8 @@ class Vg(AutomatedProperties):
 								options):
 		# Make sure we have a dbus object representing it
 		Vg.validate_dbus_object(uuid, vg_name)
-		rc, out, err = cmdhandler.activate_deactivate(
-			'vgchange', vg_name, activate, control_flags, options)
-		Vg.handle_execute(rc, out, err)
+		Vg.handle_execute(*cmdhandler.activate_deactivate(
+			'vgchange', vg_name, activate, control_flags, options))
 		return '/'
 
 	@dbus.service.method(

@@ -138,8 +138,7 @@ class Pv(AutomatedProperties):
 		# Remove the PV, if successful then remove from the model
 		# Make sure we have a dbus object representing it
 		Pv.validate_dbus_object(pv_uuid, pv_name)
-		rc, out, err = cmdhandler.pv_remove(pv_name, remove_options)
-		Pv.handle_execute(rc, out, err)
+		Pv.handle_execute(*cmdhandler.pv_remove(pv_name, remove_options))
 		return '/'
 
 	@staticmethod
@@ -172,10 +171,8 @@ class Pv(AutomatedProperties):
 	def _resize(pv_uuid, pv_name, new_size_bytes, resize_options):
 		# Make sure we have a dbus object representing it
 		Pv.validate_dbus_object(pv_uuid, pv_name)
-
-		rc, out, err = cmdhandler.pv_resize(pv_name, new_size_bytes,
-												resize_options)
-		Pv.handle_execute(rc, out, err)
+		Pv.handle_execute(*cmdhandler.pv_resize(pv_name, new_size_bytes,
+												resize_options))
 		return '/'
 
 	@dbus.service.method(
@@ -194,9 +191,8 @@ class Pv(AutomatedProperties):
 	def _allocation_enabled(pv_uuid, pv_name, yes_no, allocation_options):
 		# Make sure we have a dbus object representing it
 		Pv.validate_dbus_object(pv_uuid, pv_name)
-		rc, out, err = cmdhandler.pv_allocatable(
-			pv_name, yes_no, allocation_options)
-		Pv.handle_execute(rc, out, err)
+		Pv.handle_execute(*cmdhandler.pv_allocatable(pv_name, yes_no,
+														allocation_options))
 		return '/'
 
 	@dbus.service.method(

@@ -450,8 +450,7 @@ class Lv(LvCommon):
 		# Make sure we have a dbus object representing it
 		LvCommon.validate_dbus_object(lv_uuid, lv_name)
 		# Remove the LV, if successful then remove from the model
-		rc, out, err = cmdhandler.lv_remove(lv_name, remove_options)
-		LvCommon.handle_execute(rc, out, err)
+		LvCommon.handle_execute(*cmdhandler.lv_remove(lv_name, remove_options))
 		return '/'
 
 	@dbus.service.method(
@@ -471,9 +470,8 @@ class Lv(LvCommon):
 		# Make sure we have a dbus object representing it
 		LvCommon.validate_dbus_object(lv_uuid, lv_name)
 		# Rename the logical volume
-		rc, out, err = cmdhandler.lv_rename(lv_name, new_name,
-											rename_options)
-		LvCommon.handle_execute(rc, out, err)
+		LvCommon.handle_execute(*cmdhandler.lv_rename(lv_name, new_name,
+												rename_options))
 		return '/'
 
 	@dbus.service.method(
@@ -522,12 +520,10 @@ class Lv(LvCommon):
 				remainder = space % 512
 				optional_size = space + 512 - remainder
 
-		rc, out, err = cmdhandler.vg_lv_snapshot(
-			lv_name, snapshot_options, name, optional_size)
-		LvCommon.handle_execute(rc, out, err)
+		LvCommon.handle_execute(*cmdhandler.vg_lv_snapshot(
+			lv_name, snapshot_options,name, optional_size))
 		full_name = "%s/%s" % (dbo.vg_name_lookup(), name)
 		return cfg.om.get_object_path_by_lvm_id(full_name)
-
 
 	@dbus.service.method(
 		dbus_interface=LV_INTERFACE,
@@ -564,9 +560,8 @@ class Lv(LvCommon):
 				pv_dests.append((pv_dbus_obj.lvm_id, pr[1], pr[2]))
 
 		size_change = new_size_bytes - dbo.SizeBytes
-		rc, out, err = cmdhandler.lv_resize(dbo.lvm_id, size_change,
-											pv_dests, resize_options)
-		LvCommon.handle_execute(rc, out, err)
+		LvCommon.handle_execute(*cmdhandler.lv_resize(
+			dbo.lvm_id, size_change,pv_dests, resize_options))
 		return "/"
 
 	@dbus.service.method(
@@ -601,9 +596,8 @@ class Lv(LvCommon):
 								options):
 		# Make sure we have a dbus object representing it
 		LvCommon.validate_dbus_object(uuid, lv_name)
-		rc, out, err = cmdhandler.activate_deactivate(
-			'lvchange', lv_name, activate, control_flags, options)
-		LvCommon.handle_execute(rc, out, err)
+		LvCommon.handle_execute(*cmdhandler.activate_deactivate(
+			'lvchange', lv_name, activate, control_flags, options))
 		return '/'
 
 	@dbus.service.method(
@@ -637,9 +631,8 @@ class Lv(LvCommon):
 	def _add_rm_tags(uuid, lv_name, tags_add, tags_del, tag_options):
 		# Make sure we have a dbus object representing it
 		LvCommon.validate_dbus_object(uuid, lv_name)
-		rc, out, err = cmdhandler.lv_tag(
-			lv_name, tags_add, tags_del, tag_options)
-		LvCommon.handle_execute(rc, out, err)
+		LvCommon.handle_execute(*cmdhandler.lv_tag(
+			lv_name, tags_add, tags_del, tag_options))
 		return '/'
 
 	@dbus.service.method(
@@ -699,10 +692,8 @@ class LvThinPool(Lv):
 	def _lv_create(lv_uuid, lv_name, name, size_bytes, create_options):
 		# Make sure we have a dbus object representing it
 		dbo = LvCommon.validate_dbus_object(lv_uuid, lv_name)
-
-		rc, out, err = cmdhandler.lv_lv_create(
-			lv_name, create_options, name, size_bytes)
-		LvCommon.handle_execute(rc, out, err)
+		LvCommon.handle_execute(*cmdhandler.lv_lv_create(
+			lv_name, create_options, name, size_bytes))
 		full_name = "%s/%s" % (dbo.vg_name_lookup(), name)
 		return cfg.om.get_object_path_by_lvm_id(full_name)
 
