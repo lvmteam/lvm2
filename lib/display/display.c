@@ -522,10 +522,10 @@ int lvdisplay_full(struct cmd_context *cmd,
 			log_print("LV origin of Cache LV  %s", seg->lv->name);
 	} else if (lv_is_cache(lv)) {
 		seg = first_seg(lv);
-		if (inkernel && !lv_cache_status(lv, &cache_status))
-                        return_0;
-		log_print("LV Cache pool name     %s", seg->pool_lv->name);
-		log_print("LV Cache origin name   %s", seg_lv(seg, 0)->name);
+		if (inkernel && lv_cache_status(lv, &cache_status)) {
+			log_print("LV Cache pool name     %s", seg->pool_lv->name);
+			log_print("LV Cache origin name   %s", seg_lv(seg, 0)->name);
+		}
 	} else if (lv_is_cache_pool(lv)) {
 		seg = first_seg(lv);
 		log_print("LV Pool metadata       %s", seg->metadata_lv->name);
