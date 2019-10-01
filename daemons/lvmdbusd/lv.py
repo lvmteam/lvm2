@@ -315,6 +315,7 @@ class LvCommon(AutomatedProperties):
 					'l': 'mirror log device', 'c': 'under conversion',
 					'V': 'thin Volume', 't': 'thin pool', 'T': 'Thin pool data',
 					'e': 'raid or pool metadata or pool metadata spare',
+					'd': 'vdo pool', 'D': 'vdo pool data',
 					'-': 'Unspecified'}
 		return self.attr_struct(0, type_map)
 
