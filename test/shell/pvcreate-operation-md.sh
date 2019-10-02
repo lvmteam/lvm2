@@ -22,7 +22,8 @@ wipefs -V || skip
 
 test -f /proc/mdstat && grep -q raid0 /proc/mdstat || \
 	modprobe raid0 || skip
-not grep md0 /proc/mdstat || skip
+mddev="/dev/md33"
+not grep $mddev /proc/mdstat || skip
 
 aux lvmconf 'devices/md_component_detection = 1'
 aux extend_filter_md "a|/dev/md|"
@@ -30,7 +31,6 @@ aux extend_filter_md "a|/dev/md|"
 aux prepare_devs 2
 
 # create 2 disk MD raid0 array (stripe_width=128K)
-mddev="/dev/md0"
 mdadm --create --metadata=1.0 "$mddev" --level 0 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
 aux wait_md_create "$mddev"
 
@@ -122,7 +122,6 @@ aux udev_wait
 # Test newer topology-aware alignment detection w/ --dataalignment override
 if aux kernel_at_least 2 6 33 ; then
 
-    mddev="/dev/md0"
     mdadm --create --metadata=1.0 "$mddev" --level 0 --chunk=1024 --raid-devices=2 "$dev1" "$dev2"
     aux wait_md_create "$mddev"
     pvdev="$mddev"

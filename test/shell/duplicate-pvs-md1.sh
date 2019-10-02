@@ -37,7 +37,9 @@ wipefs -V || skip
 
 test -f /proc/mdstat && grep -q raid1 /proc/mdstat || \
         modprobe raid1 || skip
-not grep md0 /proc/mdstat || skip
+
+mddev="/dev/md33"
+not grep $mddev /proc/mdstat || skip
 
 aux lvmconf 'devices/md_component_detection = 1'
 
@@ -69,7 +71,6 @@ pvcreate "$dev3"
 
 aux lvmconf 'devices/md_component_checks = "auto"'
 
-mddev="/dev/md0"
 mdadm --create --metadata=1.0 "$mddev" --level 1 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
 aux wait_md_create "$mddev"
 pvcreate "$mddev"
@@ -143,7 +144,6 @@ aux udev_wait
 
 aux lvmconf 'devices/md_component_checks = "start"'
 
-mddev="/dev/md0"
 mdadm --create --metadata=1.0 "$mddev" --level 1 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
 aux wait_md_create "$mddev"
 pvcreate "$mddev"
@@ -229,7 +229,6 @@ aux udev_wait
 
 aux lvmconf 'devices/md_component_checks = "auto"'
 
-mddev="/dev/md0"
 mdadm --create --metadata=1.0 "$mddev" --level 1 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
 aux wait_md_create "$mddev"
 pvcreate "$mddev"
@@ -294,7 +293,6 @@ aux udev_wait
 
 aux lvmconf 'devices/md_component_checks = "start"'
 
-mddev="/dev/md0"
 mdadm --create --metadata=1.0 "$mddev" --level 1 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
 aux wait_md_create "$mddev"
 pvcreate "$mddev"
@@ -363,7 +361,6 @@ wipefs -a "$dev2" || true
 
 aux lvmconf 'devices/md_component_checks = "start"'
 
-mddev="/dev/md0"
 mdadm --create --metadata=1.0 "$mddev" --level 1 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
 aux wait_md_create "$mddev"
 pvcreate "$mddev"
@@ -421,7 +418,6 @@ aux udev_wait
 cat /proc/mdstat
 # for some reason enabling dev2 starts an odd md dev
 mdadm --stop "$mddev" || true
-mdadm --stop --scan
 cat /proc/mdstat
 wipefs -a "$dev1" || true
 wipefs -a "$dev2" || true
@@ -435,7 +431,6 @@ wipefs -a "$dev2" || true
 
 aux lvmconf 'devices/md_component_checks = "auto"'
 
-mddev="/dev/md0"
 mdadm --create --metadata=1.0 "$mddev" --level 1 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
 aux wait_md_create "$mddev"
 pvcreate "$mddev"
@@ -487,7 +482,6 @@ aux udev_wait
 cat /proc/mdstat
 # for some reason enabling dev2 starts an odd md dev
 mdadm --stop "$mddev" || true
-mdadm --stop --scan
 cat /proc/mdstat
 wipefs -a "$dev1" || true
 wipefs -a "$dev2" || true
@@ -502,7 +496,6 @@ wipefs -a "$dev2" || true
 
 aux lvmconf 'devices/md_component_checks = "auto"'
 
-mddev="/dev/md0"
 mdadm --create --metadata=1.0 "$mddev" --level 1 --chunk=64 --raid-devices=3 "$dev1" "$dev2" "$dev4"
 aux wait_md_create "$mddev"
 pvcreate "$mddev"
@@ -567,7 +560,6 @@ aux udev_wait
 
 aux lvmconf 'devices/md_component_checks = "start"'
 
-mddev="/dev/md0"
 mdadm --create --metadata=1.0 "$mddev" --level 1 --chunk=64 --raid-devices=3 "$dev1" "$dev2" "$dev4"
 aux wait_md_create "$mddev"
 pvcreate "$mddev"
@@ -628,7 +620,6 @@ aux udev_wait
 cat /proc/mdstat
 # for some reason enabling dev2 starts an odd md dev
 mdadm --stop "$mddev" || true
-mdadm --stop --scan
 cat /proc/mdstat
 wipefs -a "$dev1" || true
 wipefs -a "$dev2" || true

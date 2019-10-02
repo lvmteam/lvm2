@@ -32,7 +32,9 @@ wipefs -V || skip
 
 test -f /proc/mdstat && grep -q raid1 /proc/mdstat || \
 	modprobe raid1 || skip
-not grep md0 /proc/mdstat || skip
+
+mddev="/dev/md33"
+not grep $mddev /proc/mdstat || skip
 
 aux lvmconf 'devices/md_component_detection = 1'
 
@@ -52,7 +54,6 @@ aux prepare_devs 3
 # create 2 disk MD raid1 array
 # by default using metadata format 1.0 with data at the end of device
 
-mddev="/dev/md0"
 mdadm --create --metadata=1.0 "$mddev" --level 1 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
 aux wait_md_create "$mddev"
 vgcreate $vg "$mddev"
@@ -177,7 +178,6 @@ aux udev_wait
 # When a raid0 md array is stopped, the components will not look like
 # duplicate PVs as they do with raid1.
 
-mddev="/dev/md0"
 mdadm --create --metadata=1.0 "$mddev" --level 0 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
 aux wait_md_create "$mddev"
 vgcreate $vg "$mddev"
@@ -308,7 +308,6 @@ aux lvmconf 'devices/obtain_device_list_from_udev = 1'
 # When a raid0 md array is stopped, the components will not look like
 # duplicate PVs as they do with raid1.
 
-mddev="/dev/md0"
 mdadm --create --metadata=1.0 "$mddev" --level 0 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
 aux wait_md_create "$mddev"
 

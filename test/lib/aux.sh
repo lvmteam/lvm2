@@ -421,13 +421,15 @@ teardown_devs() {
 	teardown_udev_cookies
 
 	test ! -f MD_DEV || cleanup_md_dev
+
+	test ! -f WAIT_MD_DEV || mddev=$(< WAIT_MD_DEV)
 	udev_wait
-	mdadm --stop --scan || true
+	test ! -f WAIT_MD_DEV || mdadm --stop $mddev || true
 	udev_wait
 	test ! -f DEVICES || teardown_devs_prefixed "$PREFIX"
 	test ! -f RAMDISK || { modprobe -r brd || true ; }
 
-	mdadm --stop --scan || true
+	test ! -f WAIT_MD_DEV || mdadm --stop $mddev || true
 
 	# NOTE: SCSI_DEBUG_DEV test must come before the LOOP test because
 	# prepare_scsi_debug_dev() also sets LOOP to short-circuit prepare_loop()
@@ -792,6 +794,7 @@ wait_md_create() {
 			break
 		fi
 	done
+	echo "$md" > WAIT_MD_DEV
 }
 
 prepare_backing_dev() {
