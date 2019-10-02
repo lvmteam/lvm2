@@ -28,8 +28,6 @@ _clear_online_files() {
 
 . lib/inittest
 
-wipefs -V || skip
-
 test -f /proc/mdstat && grep -q raid0 /proc/mdstat || \
         modprobe raid0 || skip
 
@@ -125,8 +123,8 @@ vgchange -an $vg
 vgremove -f $vg
 mdadm --stop "$mddev"
 aux udev_wait
-wipefs -a "$dev1"
-wipefs -a "$dev2"
+aux wipefs_a "$dev1"
+aux wipefs_a "$dev2"
 aux udev_wait
 
 
@@ -197,8 +195,8 @@ vgchange -an $vg
 vgremove -f $vg
 mdadm --stop "$mddev"
 aux udev_wait
-wipefs -a "$dev1"
-wipefs -a "$dev2"
+aux wipefs_a "$dev1"
+aux wipefs_a "$dev2"
 aux udev_wait
 
 
@@ -253,8 +251,8 @@ pvscan --cache -aay "$dev2"
 not ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
 not ls "$RUNDIR/lvm/vgs_online/$vg"
 
-wipefs -a "$dev1"
-wipefs -a "$dev2"
+aux wipefs_a "$dev1"
+aux wipefs_a "$dev2"
 aux udev_wait
 
 ##########################################
@@ -311,8 +309,8 @@ not ls "$RUNDIR/lvm/vgs_online/$vg"
 lvs -o active $vg |tee out || true
 not grep "active" out
 
-wipefs -a "$dev1"
-wipefs -a "$dev2"
+aux wipefs_a "$dev1"
+aux wipefs_a "$dev2"
 aux udev_wait
 
 
@@ -372,8 +370,8 @@ cat /proc/mdstat
 # for some reason enabling dev2 starts an odd md dev
 mdadm --stop "$mddev" || true
 cat /proc/mdstat
-wipefs -a "$dev1" || true
-wipefs -a "$dev2" || true
+aux wipefs_a "$dev1" || true
+aux wipefs_a "$dev2" || true
 aux udev_wait
 
 ##########################################
@@ -437,6 +435,6 @@ cat /proc/mdstat
 # for some reason enabling dev2 starts an odd md dev
 mdadm --stop "$mddev" || true
 cat /proc/mdstat
-wipefs -a "$dev1" || true
-wipefs -a "$dev2" || true
+aux wipefs_a "$dev1" || true
+aux wipefs_a "$dev2" || true
 aux udev_wait

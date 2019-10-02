@@ -18,8 +18,6 @@ SKIP_WITH_LVMPOLLD=1
 # skip this test if mdadm or sfdisk (or others) aren't available
 which sfdisk || skip
 
-wipefs -V || skip
-
 test -f /proc/mdstat && grep -q raid0 /proc/mdstat || \
 	modprobe raid0 || skip
 mddev="/dev/md33"
@@ -115,8 +113,8 @@ fi
 
 mdadm --stop "$mddev"
 aux udev_wait
-wipefs -a "$dev1"
-wipefs -a "$dev2"
+aux wipefs_a "$dev1"
+aux wipefs_a "$dev2"
 aux udev_wait
 
 # Test newer topology-aware alignment detection w/ --dataalignment override
@@ -142,8 +140,8 @@ if aux kernel_at_least 2 6 33 ; then
 
     mdadm --stop "$mddev"
     aux udev_wait
-    wipefs -a "$dev1"
-    wipefs -a "$dev2"
+    aux wipefs_a "$dev1"
+    aux wipefs_a "$dev2"
     aux udev_wait
 
 fi

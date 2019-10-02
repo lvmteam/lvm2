@@ -15,7 +15,6 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 losetup -h | grep sector-size || skip
-wipefs -V || skip
 
 dd if=/dev/zero of=loopa bs=$((1024*1024)) count=2 2> /dev/null
 dd if=/dev/zero of=loopb bs=$((1024*1024)) count=2 2> /dev/null
@@ -32,8 +31,8 @@ not vgcreate --config 'devices {allow_mixed_block_sizes=0 scan="/dev"}' $vg $LOO
 vgcreate --config 'devices {allow_mixed_block_sizes=1 scan="/dev"}' $vg $LOOP1 $LOOP2
 vgs --config 'devices {allow_mixed_block_sizes=1 scan="/dev"}' $vg
 
-wipefs -a $LOOP1
-wipefs -a $LOOP2
+aux wipefs_a $LOOP1
+aux wipefs_a $LOOP2
 
 vgcreate --config 'devices {allow_mixed_block_sizes=1 scan="/dev"}' $vg $LOOP1
 vgs --config 'devices {allow_mixed_block_sizes=1 scan="/dev"}' $vg

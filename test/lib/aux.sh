@@ -797,6 +797,17 @@ wait_md_create() {
 	echo "$md" > WAIT_MD_DEV
 }
 
+wipefs_a() {
+	local dev=$1
+	shift
+
+	if wipefs -V >/dev/null; then
+		wipefs -a "$dev"
+	else
+		dd if=/dev/zero of="$dev" bs=1024 || true
+	fi
+}
+
 prepare_backing_dev() {
 	local size=${1=32}
 	shift

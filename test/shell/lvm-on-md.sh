@@ -28,8 +28,6 @@ _clear_online_files() {
 
 . lib/inittest
 
-wipefs -V || skip
-
 test -f /proc/mdstat && grep -q raid1 /proc/mdstat || \
 	modprobe raid1 || skip
 
@@ -168,8 +166,8 @@ vgremove -f $vg
 
 mdadm --stop "$mddev"
 aux udev_wait
-wipefs -a "$dev1"
-wipefs -a "$dev2"
+aux wipefs_a "$dev1"
+aux wipefs_a "$dev2"
 aux udev_wait
 
 
@@ -293,8 +291,8 @@ vgremove -f $vg
 
 mdadm --stop "$mddev"
 aux udev_wait
-wipefs -a "$dev1"
-wipefs -a "$dev2"
+aux wipefs_a "$dev1"
+aux wipefs_a "$dev2"
 aux udev_wait
 
 
@@ -461,7 +459,7 @@ vgremove -f $vg
 
 mdadm --stop "$mddev"
 aux udev_wait
-wipefs -a "$dev1"
-wipefs -a "$dev2"
+aux wipefs_a "$dev1"
+aux wipefs_a "$dev2"
 aux udev_wait
 

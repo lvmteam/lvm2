@@ -33,8 +33,6 @@ _clear_online_files() {
 
 . lib/inittest
 
-wipefs -V || skip
-
 test -f /proc/mdstat && grep -q raid1 /proc/mdstat || \
         modprobe raid1 || skip
 
@@ -130,8 +128,8 @@ vgchange -an $vg
 vgremove -f $vg
 mdadm --stop "$mddev"
 aux udev_wait
-wipefs -a "$dev1"
-wipefs -a "$dev2"
+aux wipefs_a "$dev1"
+aux wipefs_a "$dev2"
 aux udev_wait
 
 
@@ -216,8 +214,8 @@ vgchange -an $vg
 vgremove -f $vg
 mdadm --stop "$mddev"
 aux udev_wait
-wipefs -a "$dev1"
-wipefs -a "$dev2"
+aux wipefs_a "$dev1"
+aux wipefs_a "$dev2"
 aux udev_wait
 
 
@@ -272,8 +270,8 @@ pvscan --cache -aay "$dev2"
 not ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
 not ls "$RUNDIR/lvm/vgs_online/$vg"
 
-wipefs -a "$dev1"
-wipefs -a "$dev2"
+aux wipefs_a "$dev1"
+aux wipefs_a "$dev2"
 aux udev_wait
 
 
@@ -340,8 +338,8 @@ not pvscan --cache -aay "$dev1"
 ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
 ls "$RUNDIR/lvm/vgs_online/$vg"
 
-wipefs -a "$dev1" || true
-wipefs -a "$dev2" || true
+aux wipefs_a "$dev1" || true
+aux wipefs_a "$dev2" || true
 
 
 ##########################################
@@ -419,8 +417,8 @@ cat /proc/mdstat
 # for some reason enabling dev2 starts an odd md dev
 mdadm --stop "$mddev" || true
 cat /proc/mdstat
-wipefs -a "$dev1" || true
-wipefs -a "$dev2" || true
+aux wipefs_a "$dev1" || true
+aux wipefs_a "$dev2" || true
 
 ##########################################
 # PV on an md raid1 device, auto+stopped
@@ -483,8 +481,8 @@ cat /proc/mdstat
 # for some reason enabling dev2 starts an odd md dev
 mdadm --stop "$mddev" || true
 cat /proc/mdstat
-wipefs -a "$dev1" || true
-wipefs -a "$dev2" || true
+aux wipefs_a "$dev1" || true
+aux wipefs_a "$dev2" || true
 
 
 ##########################################
@@ -545,9 +543,9 @@ pvscan --cache -aay "$dev4"
 not ls "$RUNDIR/lvm/pvs_online/$PVIDMD"
 not ls "$RUNDIR/lvm/vgs_online/$vg"
 
-wipefs -a "$dev1"
-wipefs -a "$dev2"
-wipefs -a "$dev4"
+aux wipefs_a "$dev1"
+aux wipefs_a "$dev2"
+aux wipefs_a "$dev4"
 aux udev_wait
 
 
@@ -621,7 +619,7 @@ cat /proc/mdstat
 # for some reason enabling dev2 starts an odd md dev
 mdadm --stop "$mddev" || true
 cat /proc/mdstat
-wipefs -a "$dev1" || true
-wipefs -a "$dev2" || true
-wipefs -a "$dev4" || true
+aux wipefs_a "$dev1" || true
+aux wipefs_a "$dev2" || true
+aux wipefs_a "$dev4" || true
 
