@@ -43,8 +43,8 @@ done
 ##############################################
 # Create an 8-way striped raid10 with 4 mirror
 # groups and rebuild selected PVs.
-lvcreate --type raid10 -m 1 -i 4 -l 2 -n $lv1 $vg
-_sync
+lvcreate --type raid10 -m 1 -i 4 -l 64 -n $lv1 $vg
+_sync "AAAAAAAA"
 
 # Rebuild 1st and 2nd device would rebuild a
 # whole mirror group and needs to be rejected.
