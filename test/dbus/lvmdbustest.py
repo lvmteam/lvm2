@@ -759,12 +759,7 @@ class TestDbusService(unittest.TestCase):
 		self._check_consistency()
 		self.assertEqual(new_name, tp.LvCommon.Name)
 
-	# noinspection PyUnresolvedReferences
-	def test_lv_on_thin_pool_rename(self):
-		# Rename a LV on a thin Pool
-
-		# This returns a LV with the LV interface, need to get a proxy for
-		# thinpool interface too
+	def _create_thin_lv(self):
 		vg = self._vg_create().Vg
 		tp = self._create_lv(thinpool=True, vg=vg)
 
@@ -773,15 +768,20 @@ class TestDbusService(unittest.TestCase):
 		thin_path = self.handle_return(
 			tp.ThinPool.LvCreate(
 				dbus.String(lv_name),
-				dbus.UInt64(mib(8)),
+				dbus.UInt64(mib(10)),
 				dbus.Int32(g_tmo),
 				EOD)
 		)
 		self._validate_lookup("%s/%s" % (vg.Name, lv_name), thin_path)
 
 		lv = ClientProxy(self.bus, thin_path,
-							interfaces=(LV_COMMON_INT, LV_INT))
+						 interfaces=(LV_COMMON_INT, LV_INT))
+		return vg, thin_path, lv
 
+	# noinspection PyUnresolvedReferences
+	def test_lv_on_thin_pool_rename(self):
+		# Rename a LV on a thin Pool
+		vg, thin_path, lv = self._create_thin_lv()
 		re_named = 'rename_test' + lv.LvCommon.Name
 		rc = self.handle_return(
 			lv.Lv.Rename(
@@ -1445,21 +1445,7 @@ class TestDbusService(unittest.TestCase):
 
 	def test_snapshot_merge_thin(self):
 		# Create a thin LV, snapshot it and merge it
-		vg = self._vg_create().Vg
-		tp = self._create_lv(thinpool=True, vg=vg)
-		lv_name = lv_n('_thin_lv')
-
-		thin_path = self.handle_return(
-			tp.ThinPool.LvCreate(
-				dbus.String(lv_name),
-				dbus.UInt64(mib(10)),
-				dbus.Int32(g_tmo),
-				EOD))
-
-		self._validate_lookup("%s/%s" % (vg.Name, lv_name), thin_path)
-
-		lv_p = ClientProxy(self.bus, thin_path,
-							interfaces=(LV_INT, LV_COMMON_INT))
+		_vg, _thin_path, lv_p = self._create_thin_lv()
 
 		ss_name = lv_p.LvCommon.Name + '_snap'
 		snapshot_path = self.handle_return(
