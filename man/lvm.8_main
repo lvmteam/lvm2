@@ -274,7 +274,7 @@ not be used as LV or VG names. A VG cannot be called anything that exists in
 An LV cannot be called '.', '..', 'snapshot' or 'pvmove'.
 The LV name may also not contain any of the following strings:
 \fR'_cdata', '_cmeta', '_corig', '_mlog', '_mimage', '_pmspare',
-\fR'_rimage', '_rmeta', '_tdata', '_tmeta' or '_vorigin'.
+\fR'_rimage', '_rmeta', '_tdata', '_tmeta', '_vorigin' or '_vdata'.
 A directory bearing the name of each Volume Group is created under
 \fI/dev\fP when any of its Logical Volumes are activated.
 Each active Logical Volume is accessible from this directory as a symbolic
