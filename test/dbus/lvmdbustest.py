@@ -1715,33 +1715,7 @@ class TestDbusService(unittest.TestCase):
 						dbus.Int32(g_tmo),
 						EOD))
 
-	def test_tag_names(self):
-		vg_proxy = self._vg_create()
-
-		for i in range(1, 64):
-			tag = rs(i, "", self._ALLOWABLE_TAG_CH)
-
-			tmp = self.handle_return(
-				vg_proxy.Vg.TagsAdd(
-					dbus.Array([tag], 's'),
-					dbus.Int32(g_tmo),
-					EOD))
-			self.assertTrue(tmp == '/')
-			vg_proxy.update()
-
-			self.assertTrue(
-				tag in vg_proxy.Vg.Tags,
-				"%s not in %s" % (tag, str(vg_proxy.Vg.Tags)))
-
-			self.assertEqual(
-				i, len(vg_proxy.Vg.Tags),
-				"%d != %d" % (i, len(vg_proxy.Vg.Tags)))
-
-	def test_tag_regression(self):
-		vg_proxy = self._vg_create()
-
-		tag = '--h/K.6g0A4FOEatf3+k_nI/Yp&L_u2oy-=j649x:+dUcYWPEo6.IWT0c'
-
+	def _tag_add_common(self, vg_proxy, tag):
 		tmp = self.handle_return(
 			vg_proxy.Vg.TagsAdd(
 				dbus.Array([tag], 's'),
@@ -1753,6 +1727,22 @@ class TestDbusService(unittest.TestCase):
 		self.assertTrue(
 			tag in vg_proxy.Vg.Tags,
 			"%s not in %s" % (tag, str(vg_proxy.Vg.Tags)))
+
+	def test_tag_names(self):
+		vg_proxy = self._vg_create()
+
+		for i in range(1, 64):
+			tag = rs(i, "", self._ALLOWABLE_TAG_CH)
+			self._tag_add_common(vg_proxy, tag)
+
+			self.assertEqual(
+				i, len(vg_proxy.Vg.Tags),
+				"%d != %d" % (i, len(vg_proxy.Vg.Tags)))
+
+	def test_tag_regression(self):
+		vg_proxy = self._vg_create()
+		tag = '--h/K.6g0A4FOEatf3+k_nI/Yp&L_u2oy-=j649x:+dUcYWPEo6.IWT0c'
+		self._tag_add_common(vg_proxy, tag)
 
 	def _verify_existence(self, cmd, operation, resource_name):
 		ec, stdout, stderr = call_lvm(cmd)
