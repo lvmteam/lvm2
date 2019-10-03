@@ -1670,7 +1670,7 @@ class TestDbusService(unittest.TestCase):
 		for reserved in (
 				"_cdata", "_cmeta", "_corig", "_mimage", "_mlog",
 				"_pmspare", "_rimage", "_rmeta", "_tdata", "_tmeta",
-				"_vorigin"):
+				"_vorigin", "_vdata"):
 			with self.assertRaises(dbus.exceptions.DBusException):
 				self.handle_return(
 					vg_proxy.Vg.LvCreateLinear(

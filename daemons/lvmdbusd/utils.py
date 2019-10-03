@@ -455,7 +455,7 @@ _ALLOWABLE_CH_SET = set(_ALLOWABLE_CH)
 _ALLOWABLE_VG_LV_CH = string.ascii_letters + string.digits + '.-_+'
 _ALLOWABLE_VG_LV_CH_SET = set(_ALLOWABLE_VG_LV_CH)
 _LV_NAME_RESERVED = ("_cdata", "_cmeta", "_corig", "_mimage", "_mlog",
-	"_pmspare", "_rimage", "_rmeta", "_tdata", "_tmeta", "_vorigin")
+	"_pmspare", "_rimage", "_rmeta", "_tdata", "_tmeta", "_vorigin", "_vdata")
 
 # Tags can have the characters, based on the code
 # a-zA-Z0-9._-+/=!:&#
