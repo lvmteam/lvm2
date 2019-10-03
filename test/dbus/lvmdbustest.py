@@ -489,6 +489,26 @@ class TestDbusService(unittest.TestCase):
 			self.assertTrue(path == '/')
 			self._check_consistency()
 
+	def _verify_lv_paths(self, vg, new_name):
+		"""
+		# Go through each LV and make sure it has the correct path back to the
+		# VG
+		:return:
+		"""
+		lv_paths = vg.Lvs
+
+		for l in lv_paths:
+			lv_proxy = ClientProxy(self.bus, l,
+								   interfaces=(LV_COMMON_INT,)).LvCommon
+			self.assertTrue(
+				lv_proxy.Vg == vg.object_path, "%s != %s" %
+				(lv_proxy.Vg, vg.object_path))
+			full_name = "%s/%s" % (new_name, lv_proxy.Name)
+			lv_path = self._lookup(full_name)
+			self.assertTrue(
+				lv_path == lv_proxy.object_path, "%s != %s" %
+				(lv_path, lv_proxy.object_path))
+
 	# noinspection PyUnresolvedReferences
 	def test_vg_rename(self):
 		vg = self._vg_create().Vg
@@ -524,20 +544,8 @@ class TestDbusService(unittest.TestCase):
 		# VG
 		vg.update()
 
-		lv_paths = vg.Lvs
-		self.assertTrue(len(lv_paths) == 5)
-
-		for l in lv_paths:
-			lv_proxy = ClientProxy(self.bus, l,
-									interfaces=(LV_COMMON_INT,)).LvCommon
-			self.assertTrue(
-				lv_proxy.Vg == vg.object_path, "%s != %s" %
-				(lv_proxy.Vg, vg.object_path))
-			full_name = "%s/%s" % (new_name, lv_proxy.Name)
-			lv_path = self._lookup(full_name)
-			self.assertTrue(
-				lv_path == lv_proxy.object_path, "%s != %s" %
-				(lv_path, lv_proxy.object_path))
+		self.assertTrue(len(vg.Lvs) == 5)
+		self._verify_lv_paths(vg, new_name)
 
 	def _verify_hidden_lookups(self, lv_common_object, vgname):
 		hidden_lv_paths = lv_common_object.HiddenLvs
@@ -602,26 +610,9 @@ class TestDbusService(unittest.TestCase):
 		self.assertTrue(path == '/')
 		self._check_consistency()
 
-		# Go through each LV and make sure it has the correct path back to the
-		# VG
 		vg.update()
 		thin_pool.update()
-
-		lv_paths = vg.Lvs
-
-		for l in lv_paths:
-			lv_proxy = ClientProxy(self.bus, l,
-									interfaces=(LV_COMMON_INT,)).LvCommon
-			self.assertTrue(
-				lv_proxy.Vg == vg.object_path, "%s != %s" %
-				(lv_proxy.Vg, vg.object_path))
-			full_name = "%s/%s" % (new_name, lv_proxy.Name)
-			# print('Full Name %s' % (full_name))
-			lv_path = self._lookup(full_name)
-			self.assertTrue(
-				lv_path == lv_proxy.object_path, "%s != %s" %
-				(lv_path, lv_proxy.object_path))
-
+		self._verify_lv_paths(vg, new_name)
 		# noinspection PyTypeChecker
 		self._verify_hidden_lookups(thin_pool.LvCommon, new_name)
 
