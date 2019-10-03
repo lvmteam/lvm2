@@ -1697,19 +1697,7 @@ class TestDbusService(unittest.TestCase):
 		return ''.join(bad_tag_ch_set)
 
 	def test_invalid_tags(self):
-		mgr = self.objs[MANAGER_INT][0].Manager
-		pv_paths = [self.objs[PV_INT][0].object_path]
-		vg_name = vg_n()
-
-		vg_path = self.handle_return(
-			mgr.VgCreate(
-				dbus.String(vg_name),
-				dbus.Array(pv_paths, 'o'),
-				dbus.Int32(g_tmo),
-				EOD))
-		self._validate_lookup(vg_name, vg_path)
-
-		vg_proxy = ClientProxy(self.bus, vg_path, interfaces=(VG_INT, ))
+		vg_proxy = self._vg_create()
 
 		for c in self._invalid_tag_characters():
 			with self.assertRaises(dbus.exceptions.DBusException):
@@ -1728,18 +1716,7 @@ class TestDbusService(unittest.TestCase):
 						EOD))
 
 	def test_tag_names(self):
-		mgr = self.objs[MANAGER_INT][0].Manager
-		pv_paths = [self.objs[PV_INT][0].object_path]
-		vg_name = vg_n()
-
-		vg_path = self.handle_return(
-			mgr.VgCreate(
-				dbus.String(vg_name),
-				dbus.Array(pv_paths, 'o'),
-				dbus.Int32(g_tmo),
-				EOD))
-		self._validate_lookup(vg_name, vg_path)
-		vg_proxy = ClientProxy(self.bus, vg_path, interfaces=(VG_INT, ))
+		vg_proxy = self._vg_create()
 
 		for i in range(1, 64):
 			tag = rs(i, "", self._ALLOWABLE_TAG_CH)
@@ -1761,18 +1738,7 @@ class TestDbusService(unittest.TestCase):
 				"%d != %d" % (i, len(vg_proxy.Vg.Tags)))
 
 	def test_tag_regression(self):
-		mgr = self.objs[MANAGER_INT][0].Manager
-		pv_paths = [self.objs[PV_INT][0].object_path]
-		vg_name = vg_n()
-
-		vg_path = self.handle_return(
-			mgr.VgCreate(
-				dbus.String(vg_name),
-				dbus.Array(pv_paths, 'o'),
-				dbus.Int32(g_tmo),
-				EOD))
-		self._validate_lookup(vg_name, vg_path)
-		vg_proxy = ClientProxy(self.bus, vg_path, interfaces=(VG_INT, ))
+		vg_proxy = self._vg_create()
 
 		tag = '--h/K.6g0A4FOEatf3+k_nI/Yp&L_u2oy-=j649x:+dUcYWPEo6.IWT0c'
 
