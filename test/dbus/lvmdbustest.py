@@ -1147,17 +1147,7 @@ class TestDbusService(unittest.TestCase):
 
 	def test_lv_tags(self):
 		vg = self._vg_create().Vg
-		lv_name = lv_n()
-		lv = self._test_lv_create(
-			vg.LvCreateLinear,
-			(dbus.String(lv_name),
-			dbus.UInt64(mib(4)),
-			dbus.Boolean(False),
-			dbus.Int32(g_tmo),
-			EOD),
-			vg, LV_BASE_INT)
-
-		self._validate_lookup("%s/%s" % (vg.Name, lv_name), lv.object_path)
+		lv = self._create_lv(vg=vg)
 
 		t = ['Testing', 'tags']
 
@@ -1234,18 +1224,7 @@ class TestDbusService(unittest.TestCase):
 
 	def test_vg_activate_deactivate(self):
 		vg = self._vg_create().Vg
-		lv_name = lv_n()
-		lv = self._test_lv_create(
-			vg.LvCreateLinear, (
-				dbus.String(lv_name),
-				dbus.UInt64(mib(4)),
-				dbus.Boolean(False),
-				dbus.Int32(g_tmo),
-				EOD),
-			vg, LV_BASE_INT)
-
-		self._validate_lookup("%s/%s" % (vg.Name, lv_name), lv.object_path)
-
+		self._create_lv(vg=vg)
 		vg.update()
 
 		rc = self.handle_return(
