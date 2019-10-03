@@ -1871,6 +1871,10 @@ class TestDbusService(unittest.TestCase):
 		#
 		# NOTE: This needs an equivalent of aux extend_filter_LVMTEST
 		# when run from lvm2 testsuite. See dbustest.sh.
+		# Also if developing locally with actual devices one can achieve this
+		# by editing lvm.conf with "devices/scan_lvs = 1"  As testing
+		# typically utilizes loopback, this test is skipped in
+		# those environments.
 		pv_object_path = self.objs[PV_INT][0].object_path
 
 		if not self.objs[PV_INT][0].Pv.Name.startswith("/dev"):
