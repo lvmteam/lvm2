@@ -108,7 +108,9 @@ fi
 %{_mandir}/man8/lvm-config.8.gz
 %{_mandir}/man8/lvm-dumpconfig.8.gz
 %{_mandir}/man8/lvm.8.gz
-%{_mandir}/man8/lvm2-activation-generator.8.gz
+%if %{enable_systemd}
+ %{_mandir}/man8/lvm2-activation-generator.8.gz
+%endif
 %{_mandir}/man8/lvmconf.8.gz
 %{_mandir}/man8/lvmconfig.8.gz
 %{_mandir}/man8/lvmdiskscan.8.gz
