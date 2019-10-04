@@ -374,6 +374,7 @@ static int _remove_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg)
 		return 0;
 	}
 
+	log_debug("sanlock lvmlock LV removed");
 	return 1;
 }
 
@@ -1028,6 +1029,13 @@ int lockd_free_vg_before(struct cmd_context *cmd, struct volume_group *vg,
 
 	switch (lock_type_num) {
 	case LOCK_TYPE_NONE:
+		/*
+		 * If a sanlock VG was forcibly changed to none,
+		 * the sanlock_lv may have been left behind.
+		 */
+		if (vg->sanlock_lv)
+			_remove_sanlock_lv(cmd, vg);
+		return 1;
 	case LOCK_TYPE_CLVM:
 		return 1;
 	case LOCK_TYPE_DLM:
