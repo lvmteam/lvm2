@@ -3902,6 +3902,7 @@ static int _access_vg_lock_type(struct cmd_context *cmd, struct volume_group *vg
 
 	if (test_mode()) {
 		log_error("Test mode is not yet supported with lock type %s.", vg->lock_type);
+		*failure |= FAILED_LOCK_TYPE;
 		return 0;
 	}
 
