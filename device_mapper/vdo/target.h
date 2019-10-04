@@ -74,7 +74,7 @@ enum dm_vdo_write_policy {
 
 // FIXME: review whether we should use the createParams from the userlib
 struct dm_vdo_target_params {
-	uint32_t minimum_io_size;
+	uint32_t minimum_io_size;       // in sectors
 	uint32_t block_map_cache_size_mb;
 	uint32_t block_map_era_length;	// format period
 

@@ -436,7 +436,7 @@ int fill_vdo_target_params(struct cmd_context *cmd,
 	vtp->use_metadata_hints =
 		find_config_tree_int(cmd, allocation_vdo_use_metadata_hints_CFG, profile);
 	vtp->minimum_io_size =
-		find_config_tree_int(cmd, allocation_vdo_minimum_io_size_CFG, profile);
+		find_config_tree_int(cmd, allocation_vdo_minimum_io_size_CFG, profile) >> SECTOR_SHIFT;
 	vtp->block_map_cache_size_mb =
 		find_config_tree_int64(cmd, allocation_vdo_block_map_cache_size_mb_CFG, profile);
 	vtp->block_map_era_length =

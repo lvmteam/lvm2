@@ -23,8 +23,9 @@ bool dm_vdo_validate_target_params(const struct dm_vdo_target_params *vtp,
 {
 	bool valid = true;
 
-	if ((vtp->minimum_io_size != 512) &&
-	    (vtp->minimum_io_size != 4096)) {
+	/* 512 or 4096 bytes only ATM */
+	if ((vtp->minimum_io_size != 1) &&
+	    (vtp->minimum_io_size != 8)) {
 		log_error("VDO minimum io size %u is unsupported.",
 			  vtp->minimum_io_size);
 		valid = false;

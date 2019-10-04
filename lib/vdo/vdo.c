@@ -239,6 +239,7 @@ static int _vdo_pool_text_import(struct lv_segment *seg,
 
 	if (!dm_config_get_uint32(n, "minimum_io_size", &vtp->minimum_io_size))
 		return _bad_field("minimum_io_size");
+	vtp->minimum_io_size >>= SECTOR_SHIFT; // keep in sectors, while metadata uses bytes
 
 	if (!dm_config_get_uint32(n, "block_map_cache_size_mb", &vtp->block_map_cache_size_mb))
 		return _bad_field("block_map_cache_size_mb");
@@ -308,7 +309,7 @@ static int _vdo_pool_text_export(const struct lv_segment *seg, struct formatter 
 	if (vtp->use_metadata_hints)
 		outf(f, "use_metadata_hints = 1");
 
-	outf(f, "minimum_io_size = %u", vtp->minimum_io_size);
+	outf(f, "minimum_io_size = %u", (vtp->minimum_io_size << SECTOR_SHIFT));
 
 	outsize(f, vtp->block_map_cache_size_mb * UINT64_C(2 * 1024),
 		"block_map_cache_size_mb = %u", vtp->block_map_cache_size_mb);
