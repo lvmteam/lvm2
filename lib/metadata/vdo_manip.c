@@ -74,6 +74,21 @@ const char *get_vdo_operating_mode_name(enum dm_vdo_operating_mode mode)
 	}
 }
 
+const char *get_vdo_write_policy_name(enum dm_vdo_write_policy policy)
+{
+	switch (policy) {
+	case DM_VDO_WRITE_POLICY_SYNC:
+		return "sync";
+	case DM_VDO_WRITE_POLICY_ASYNC:
+		return "async";
+	default:
+		log_debug(INTERNAL_ERROR "Unrecognized VDO write policy: %u.", policy);
+		/* Fall through */
+	case DM_VDO_WRITE_POLICY_AUTO:
+		return "auto";
+	}
+}
+
 /*
  * Size of VDO virtual LV is adding header_size in front and back of device
  * to avoid colission with blkid checks.

@@ -1301,6 +1301,7 @@ struct lv_status_vdo {
 const char *get_vdo_compression_state_name(enum dm_vdo_compression_state state);
 const char *get_vdo_index_state_name(enum dm_vdo_index_state state);
 const char *get_vdo_operating_mode_name(enum dm_vdo_operating_mode mode);
+const char *get_vdo_write_policy_name(enum dm_vdo_write_policy policy);
 uint64_t get_vdo_pool_virtual_size(const struct lv_segment *vdo_pool_seg);
 int update_vdo_pool_virtual_size(struct lv_segment *vdo_pool_seg);
 int parse_vdo_pool_status(struct dm_pool *mem, const struct logical_volume *vdo_pool_lv,
