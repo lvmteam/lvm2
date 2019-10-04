@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2018-2019 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -189,6 +189,7 @@ static void _vdo_pool_display(const struct lv_segment *seg)
 	log_print("  # Logical threads\t%u", (unsigned) vtp->logical_threads);
 	log_print("  # Physical threads\t%u", (unsigned) vtp->physical_threads);
 	log_print("  Max discard\t%u", (unsigned) vtp->max_discard);
+	log_print("  Write policy\t%s", get_vdo_write_policy_name(vtp->write_policy));
 }
 
 /* reused as _vdo_text_import_area_count */
@@ -280,6 +281,12 @@ static int _vdo_pool_text_import(struct lv_segment *seg,
 	if (!dm_config_get_uint32(n, "physical_threads", &vtp->physical_threads))
 		return _bad_field("physical_threads");
 
+	if (dm_config_has_node(n, "write_policy")) {
+		if (!(str = dm_config_find_str(n, "write_policy", NULL)) ||
+		    !set_vdo_write_policy(&vtp->write_policy, str))
+			return _bad_field("write_policy");
+	} else
+		vtp->write_policy = DM_VDO_WRITE_POLICY_AUTO;
 
 	if (!set_lv_segment_area_lv(seg, 0, data_lv, 0, LV_VDO_POOL_DATA))
 		return_0;
@@ -333,6 +340,9 @@ static int _vdo_pool_text_export(const struct lv_segment *seg, struct formatter 
 	outf(f, "hash_zone_threads = %u", (unsigned) vtp->hash_zone_threads);
 	outf(f, "logical_threads = %u", (unsigned) vtp->logical_threads);
 	outf(f, "physical_threads = %u", (unsigned) vtp->physical_threads);
+
+	if (vtp->write_policy != DM_VDO_WRITE_POLICY_AUTO)
+		outf(f, "write_policy = %s", get_vdo_write_policy_name(vtp->write_policy));
 
 	return 1;
 }
