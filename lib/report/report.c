@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2019 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -2407,6 +2407,74 @@ static int _lvkreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _size32_disp(rh, mem, field, &lvdm->info.read_ahead, private);
 }
 
+static int _vdo_operating_mode_disp(struct dm_report *rh, struct dm_pool *mem,
+				    struct dm_report_field *field,
+				    const void *data, void *private)
+{
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
+
+	if ((lv_is_vdo_pool(lvdm->lv) || lv_is_vdo(lvdm->lv)) &&
+	    (lvdm->seg_status.type == SEG_STATUS_VDO_POOL))
+		return _field_string(rh, field, get_vdo_operating_mode_name(lvdm->seg_status.vdo_pool.vdo->operating_mode));
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
+}
+
+static int _vdo_compression_state_disp(struct dm_report *rh, struct dm_pool *mem,
+				       struct dm_report_field *field,
+				       const void *data, void *private)
+{
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
+
+	if ((lv_is_vdo_pool(lvdm->lv) || lv_is_vdo(lvdm->lv)) &&
+	    (lvdm->seg_status.type == SEG_STATUS_VDO_POOL))
+		return _field_string(rh, field, get_vdo_compression_state_name(lvdm->seg_status.vdo_pool.vdo->compression_state));
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
+}
+
+static int _vdo_index_state_disp(struct dm_report *rh, struct dm_pool *mem,
+				 struct dm_report_field *field,
+				 const void *data, void *private)
+{
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
+
+	if ((lv_is_vdo_pool(lvdm->lv) || lv_is_vdo(lvdm->lv)) &&
+	    (lvdm->seg_status.type == SEG_STATUS_VDO_POOL))
+		return _field_string(rh, field, get_vdo_index_state_name(lvdm->seg_status.vdo_pool.vdo->index_state));
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
+}
+
+static int _vdo_used_size_disp(struct dm_report *rh, struct dm_pool *mem,
+			       struct dm_report_field *field,
+			       const void *data, void *private)
+{
+	uint64_t size;
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
+
+	if ((lv_is_vdo_pool(lvdm->lv) || lv_is_vdo(lvdm->lv)) &&
+	    (lvdm->seg_status.type == SEG_STATUS_VDO_POOL)) {
+		size = lvdm->seg_status.vdo_pool.vdo->used_blocks * DM_VDO_BLOCK_SIZE;
+		return _size64_disp(rh, mem, field, &size, private);
+	}
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
+}
+
+static int _vdo_saving_percent_disp(struct dm_report *rh, struct dm_pool *mem,
+				    struct dm_report_field *field,
+				    const void *data, void *private)
+{
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
+
+	if ((lv_is_vdo_pool(lvdm->lv) || lv_is_vdo(lvdm->lv)) &&
+	    (lvdm->seg_status.type == SEG_STATUS_VDO_POOL))
+		return dm_report_field_percent(rh, field, &lvdm->seg_status.vdo_pool.saving);
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
+}
+
 static int _vgsize_disp(struct dm_report *rh, struct dm_pool *mem,
 			struct dm_report_field *field,
 			const void *data, void *private)
@@ -3806,6 +3874,180 @@ GENERATE_CACHE_STATUS_DISP_FN(read_hits)
 GENERATE_CACHE_STATUS_DISP_FN(read_misses)
 GENERATE_CACHE_STATUS_DISP_FN(write_hits)
 GENERATE_CACHE_STATUS_DISP_FN(write_misses)
+
+
+/*
+ * Macro to generate '_vdo_<vdo_field_name>_disp' reporting function.
+ * The 'vdo_field_name' is field name from struct lv_vdo_status.
+ */
+#define GENERATE_VDO_FIELD_DISP_FN(vdo_field_name) \
+static int _vdo_ ## vdo_field_name ## _disp (struct dm_report *rh, struct dm_pool *mem, \
+					     struct dm_report_field *field, \
+					     const void *data, void *private) \
+{ \
+	const struct lv_segment *seg = (const struct lv_segment *) data; \
+\
+	if (seg_is_vdo(seg)) \
+		seg = first_seg(seg_lv(seg, 0)); \
+\
+	if (!seg_is_vdo_pool(seg)) \
+		return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64)); \
+\
+	return dm_report_field_uint32(rh, field, &seg->vdo_params.vdo_field_name); \
+}
+
+GENERATE_VDO_FIELD_DISP_FN(block_map_era_length)
+GENERATE_VDO_FIELD_DISP_FN(ack_threads)
+GENERATE_VDO_FIELD_DISP_FN(bio_threads)
+GENERATE_VDO_FIELD_DISP_FN(bio_rotation)
+GENERATE_VDO_FIELD_DISP_FN(cpu_threads)
+GENERATE_VDO_FIELD_DISP_FN(hash_zone_threads)
+GENERATE_VDO_FIELD_DISP_FN(logical_threads)
+GENERATE_VDO_FIELD_DISP_FN(physical_threads)
+GENERATE_VDO_FIELD_DISP_FN(max_discard)
+
+/*
+ * Macro to generate '_vdo_<vdo_field_name>_disp' reporting function.
+ * The 'vdo_field_name' is field name from struct lv_vdo_status.
+ */
+#define GENERATE_VDO_FIELDSZMB_DISP_FN(vdo_field_name) \
+static int _vdo_ ## vdo_field_name ## _disp (struct dm_report *rh, struct dm_pool *mem, \
+					     struct dm_report_field *field, \
+					     const void *data, void *private) \
+{ \
+	uint64_t size; \
+	const struct lv_segment *seg = (const struct lv_segment *) data; \
+\
+	if (seg_is_vdo(seg)) \
+		seg = first_seg(seg_lv(seg, 0)); \
+\
+	if (!seg_is_vdo_pool(seg)) \
+		return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64)); \
+\
+	size = seg->vdo_params.vdo_field_name ## _mb * (1024 * 1024 >> SECTOR_SHIFT); \
+\
+	return _size64_disp(rh, mem, field, &size, private);\
+}
+
+GENERATE_VDO_FIELDSZMB_DISP_FN(block_map_cache_size)
+GENERATE_VDO_FIELDSZMB_DISP_FN(index_memory_size)
+GENERATE_VDO_FIELDSZMB_DISP_FN(slab_size)
+
+static int _vdo_compression_disp(struct dm_report *rh, struct dm_pool *mem,
+				 struct dm_report_field *field,
+				 const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data; \
+
+	if (seg_is_vdo(seg))
+		seg = first_seg(seg_lv(seg, 0));
+
+	if (seg_is_vdo_pool(seg))
+		return _binary_disp(rh, mem, field, seg->vdo_params.use_compression,
+				    GET_FIRST_RESERVED_NAME(vdo_compression_y), private);
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64)); \
+}
+
+static int _vdo_deduplication_disp(struct dm_report *rh, struct dm_pool *mem,
+				   struct dm_report_field *field,
+				   const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data; \
+
+	if (seg_is_vdo(seg))
+		seg = first_seg(seg_lv(seg, 0));
+
+	if (seg_is_vdo_pool(seg))
+		return _binary_disp(rh, mem, field, seg->vdo_params.use_deduplication,
+				    GET_FIRST_RESERVED_NAME(vdo_deduplication_y), private);
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64)); \
+}
+
+static int _vdo_use_metadata_hints_disp(struct dm_report *rh, struct dm_pool *mem,
+					struct dm_report_field *field,
+					const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+
+	if (seg_is_vdo(seg))
+		seg = first_seg(seg_lv(seg, 0));
+
+	if (seg_is_vdo_pool(seg))
+		return _binary_disp(rh, mem, field, seg->vdo_params.use_metadata_hints,
+				    GET_FIRST_RESERVED_NAME(vdo_use_metadata_hints_y),
+				    private);
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
+}
+
+static int _vdo_use_sparse_index_disp(struct dm_report *rh, struct dm_pool *mem,
+				      struct dm_report_field *field,
+				      const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+
+	if (seg_is_vdo(seg))
+		seg = first_seg(seg_lv(seg, 0));
+
+	if (seg_is_vdo_pool(seg))
+		return _binary_disp(rh, mem, field, seg->vdo_params.use_sparse_index,
+				    GET_FIRST_RESERVED_NAME(vdo_use_sparse_index_y),
+				    private);
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
+}
+
+static int _vdo_minimum_io_size_disp(struct dm_report *rh, struct dm_pool *mem,
+				     struct dm_report_field *field,
+				     const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+
+	if (seg_is_vdo(seg))
+		seg = first_seg(seg_lv(seg, 0));
+
+	if (seg_is_vdo_pool(seg))
+		return _size32_disp(rh, mem, field, &seg->vdo_params.minimum_io_size, private);
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
+}
+
+static int _vdo_header_size_disp(struct dm_report *rh,
+				 struct dm_pool *mem,
+				 struct dm_report_field *field,
+				 const void *data,
+				 void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+
+	if (seg_is_vdo(seg))
+		seg = first_seg(seg_lv(seg, 0));
+
+	if (seg_is_vdo_pool(seg))
+		return _size32_disp(rh, mem, field, &seg->vdo_pool_header_size, private);
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
+}
+
+static int _vdo_write_policy_disp(struct dm_report *rh,
+				     struct dm_pool *mem,
+				     struct dm_report_field *field,
+				     const void *data,
+				     void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+
+	if (seg_is_vdo(seg))
+		seg = first_seg(seg_lv(seg, 0));
+
+	if (seg_is_vdo_pool(seg))
+		return _field_string(rh, field, get_vdo_write_policy_name(seg->vdo_params.write_policy));
+
+	return  _field_set_value(field, GET_FIRST_RESERVED_NAME(vdo_write_policy_undef),
+				 GET_FIELD_RESERVED_VALUE(vdo_write_policy_undef));
+}
 
 /* Report object types */
 

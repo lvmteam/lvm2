@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2019 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -146,6 +146,11 @@ FIELD(LVSSTATUS, lv, STR, "KDiscards", lvid, 0, kdiscards, kernel_discards, "For
 FIELD(LVSSTATUS, lv, BIN, "CheckNeeded", lvid, 15, lvcheckneeded, lv_check_needed, "For thin pools and cache volumes, whether metadata check is needed.", 0)
 FIELD(LVSSTATUS, lv, BIN, "MergeFailed", lvid, 15, lvmergefailed, lv_merge_failed, "Set if snapshot merge failed.", 0)
 FIELD(LVSSTATUS, lv, BIN, "SnapInvalid", lvid, 15, lvsnapshotinvalid, lv_snapshot_invalid, "Set if snapshot LV is invalid.", 0)
+FIELD(LVSSTATUS, lv, STR, "VDOOperatingMode", lvid, 0, vdo_operating_mode, vdo_operating_mode, "For vdo pools, its current operating mode.", 0)
+FIELD(LVSSTATUS, lv, STR, "VDOCompressionState", lvid, 0, vdo_compression_state, vdo_compression_state, "For vdo pools, whether compression is running.", 0)
+FIELD(LVSSTATUS, lv, STR, "VDOIndexState", lvid, 0, vdo_index_state, vdo_index_state, "For vdo pools, state of index for deduplication.", 0)
+FIELD(LVSSTATUS, lv, NUM, "VDOUsedSize", lvid, 0, vdo_used_size, vdo_used_size, "For vdo pools, currently used space.", 0)
+FIELD(LVSSTATUS, lv, NUM, "VDOSaving%", lvid, 0, vdo_saving_percent, vdo_saving_percent, "For vdo pools, percentage of saved space.", 0)
 /*
  * End of LVSSTATUS type fields
  */
@@ -274,6 +279,27 @@ FIELD(SEGS, seg, STR_LIST, "Metadata Devs", list, 0, metadatadevices, metadata_d
 FIELD(SEGS, seg, STR, "Monitor", list, 0, segmonitor, seg_monitor, "Dmeventd monitoring status of the segment.", 0)
 FIELD(SEGS, seg, STR, "CachePolicy", list, 0, cache_policy, cache_policy, "The cache policy (cached segments only).", 0)
 FIELD(SEGS, seg, STR_LIST, "CacheSettings", list, 0, cache_settings, cache_settings, "Cache settings/parameters (cached segments only).", 0)
+
+FIELD(SEGS, seg, BIN, "VDOCompression", list, 0, vdo_compression, vdo_compression, "Set for compressed LV (vdopool).", 0)
+FIELD(SEGS, seg, BIN, "VDODeduplication", list, 0, vdo_deduplication, vdo_deduplication, "Set for deduplicated LV (vdopool).", 0)
+FIELD(SEGS, seg, BIN, "VDOMetadataHints", list, 0, vdo_use_metadata_hints, vdo_use_metadata_hints, "Use REQ_SYNC for writes (vdopool).", 0)
+FIELD(SEGS, seg, NUM, "VDOMinimumIOSize", list, 0, vdo_minimum_io_size, vdo_minimum_io_size, "Minimum acceptable IO size (vdopool).", 0)
+FIELD(SEGS, seg, SIZ, "VDOBlockMapCacheSize", list, 0, vdo_block_map_cache_size, vdo_block_map_cache_size, "Allocated caching size (vdopool).", 0)
+FIELD(SEGS, seg, NUM, "VDOBlockMapEraLength", list, 0, vdo_block_map_era_length, vdo_block_map_era_length, "Speed of cache writes (vdopool).", 0)
+FIELD(SEGS, seg, BIN, "VDOSparseIndex", list, 0, vdo_use_sparse_index, vdo_use_sparse_index, "Sparse indexing (vdopool).", 0)
+FIELD(SEGS, seg, SIZ, "VDOIndexMemorySize", list, 0, vdo_index_memory_size, vdo_index_memory_size, "Allocated indexing memory (vdopool).", 0)
+FIELD(SEGS, seg, SIZ, "VDOSlabSize", list, 0, vdo_slab_size, vdo_slab_size, "Increment size for growing (vdopool).", 0)
+FIELD(SEGS, seg, NUM, "VDOAckThreads", list, 0, vdo_ack_threads, vdo_ack_threads, "Acknowledging threads (vdopool).", 0)
+FIELD(SEGS, seg, NUM, "VDOBioThreads", list, 0, vdo_bio_threads, vdo_bio_threads, "IO submitting threads (vdopool).", 0)
+FIELD(SEGS, seg, NUM, "VDOBioRotation", list, 0, vdo_bio_rotation, vdo_bio_rotation, "IO enqueue (vdopool).", 0)
+FIELD(SEGS, seg, NUM, "VDOCPUThreads", list, 0, vdo_cpu_threads, vdo_cpu_threads, "CPU threads for compression and hashing (vdopool).", 0)
+FIELD(SEGS, seg, NUM, "VDOHashZoneThreads", list, 0, vdo_hash_zone_threads, vdo_hash_zone_threads, "Threads for subdivide parts (vdopool).", 0)
+FIELD(SEGS, seg, NUM, "VDOLogicalThreads", list, 0, vdo_logical_threads, vdo_logical_threads, "Logical threads for subdivide parts (vdopool).", 0)
+FIELD(SEGS, seg, NUM, "VDOPhysicalThreads", list, 0, vdo_physical_threads, vdo_physical_threads, "Physical threads for subdivide parts (vdopool).", 0)
+FIELD(SEGS, seg, NUM, "VDOMaxDiscard", list, 0, vdo_max_discard, vdo_max_discard, "Maximum discard size volume can recieve (vdopool).", 0)
+FIELD(SEGS, seg, STR, "VDOWritePolicy", list, 0, vdo_write_policy, vdo_write_policy, "Specified write policy (vdopool).", 0)
+FIELD(SEGS, seg, SIZ, "VDOHeaderSize", list, 0, vdo_header_size, vdo_header_size, "Header size at front of vdopool.", 0)
+
 /*
  * End of SEGS type fields
  */
