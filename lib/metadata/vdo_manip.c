@@ -404,7 +404,7 @@ struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 	return data_lv;
 }
 
-int get_vdo_write_policy(enum dm_vdo_write_policy *vwp, const char *policy)
+int set_vdo_write_policy(enum dm_vdo_write_policy *vwp, const char *policy)
 {
 	if (strcasecmp(policy, "sync") == 0)
 		*vwp = DM_VDO_WRITE_POLICY_SYNC;
@@ -467,7 +467,7 @@ int fill_vdo_target_params(struct cmd_context *cmd,
 		find_config_tree_int(cmd, allocation_vdo_max_discard_CFG, profile);
 
 	policy = find_config_tree_str(cmd, allocation_vdo_write_policy_CFG, profile);
-	if (!get_vdo_write_policy(&vtp->write_policy, policy))
+	if (!set_vdo_write_policy(&vtp->write_policy, policy))
 		return_0;
 
 	return 1;
