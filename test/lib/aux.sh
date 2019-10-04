@@ -804,7 +804,8 @@ wipefs_a() {
 	if wipefs -V >/dev/null; then
 		wipefs -a "$dev"
 	else
-		dd if=/dev/zero of="$dev" bs=1024 || true
+		dd if=/dev/zero of="$dev" bs=4096 count=8 || true
+		mdadm --zero-superblock "$dev" || true
 	fi
 }
 
