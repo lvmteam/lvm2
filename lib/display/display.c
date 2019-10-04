@@ -533,7 +533,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 	} else if (lv_is_vdo_pool(lv)) {
 		seg = first_seg(lv);
 		log_print("LV VDO Pool data       %s", seg_lv(seg, 0)->name);
-		if (inkernel && lv_vdo_pool_status(lv, 0, &vdo_status)) { /* FIXME: flush option? */
+		if (lv_vdo_pool_status(lv, 0, &vdo_status)) { /* FIXME: flush option? */
 			log_print("LV VDO Pool usage      %s%%",
 				  display_percent(cmd, vdo_status->usage));
 			log_print("LV VDO Pool saving     %s%%",
