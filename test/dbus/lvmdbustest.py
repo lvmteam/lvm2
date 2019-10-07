@@ -114,7 +114,7 @@ def get_objects():
 	rc = {
 		MANAGER_INT: [], PV_INT: [], VG_INT: [], LV_INT: [],
 		THINPOOL_INT: [], JOB_INT: [], SNAPSHOT_INT: [], LV_COMMON_INT: [],
-		CACHE_POOL_INT: [], CACHE_LV_INT: []}
+		CACHE_POOL_INT: [], CACHE_LV_INT: [], VG_VDO_INT: []}
 
 	object_manager_object = bus.get_object(
 		BUS_NAME, "/com/redhat/lvmdbus1", introspect=False)

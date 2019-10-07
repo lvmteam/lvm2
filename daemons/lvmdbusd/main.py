@@ -29,7 +29,7 @@ from .utils import log_debug, log_error
 import argparse
 import os
 import sys
-from .cmdhandler import LvmFlightRecorder
+from .cmdhandler import LvmFlightRecorder, supports_vdo
 from .request import RequestEntry
 
 
@@ -126,6 +126,10 @@ def main():
 	if cfg.args.use_lvm_shell and not cfg.args.use_json:
 		log_error("You cannot specify --lvmshell and --nojson")
 		sys.exit(1)
+
+	# We will dynamically add interfaces which support vdo if it
+	# exists.
+	cfg.vdo_support = supports_vdo()
 
 	# List of threads that we start up
 	thread_list = []

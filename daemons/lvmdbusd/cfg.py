@@ -79,6 +79,9 @@ hidden_lv = itertools.count()
 load = None
 event = None
 
+# Boolean to denote if lvm supports VDO integration
+vdo_support = False
+
 # Global cached state
 db = None
 
