@@ -1,5 +1,6 @@
 Version 2.03.06 - 
 ================================
+  Add _cvol in list of protected suffixes and start use it with DM UUID.
   Rename LV converted to cachevol to use _cvol suffix.
   Use normal LVs for wiping of cachevols.
   Reload cleanered cache DM only with cleaner policy.
