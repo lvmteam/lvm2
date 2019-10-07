@@ -14,7 +14,7 @@ from .utils import pv_obj_path_generate, vg_obj_path_generate, n, \
 	_handle_execute
 import dbus
 from . import cfg
-from .cfg import VG_INTERFACE
+from .cfg import VG_INTERFACE, VG_VDO_INTERFACE
 from . import cmdhandler
 from .request import RequestEntry
 from .loader import common
@@ -47,7 +47,7 @@ def vgs_state_retrieve(selection, cache_refresh=True):
 
 def load_vgs(vg_specific=None, object_path=None, refresh=False,
 		emit_signal=False, cache_refresh=True):
-	return common(vgs_state_retrieve, (Vg,), vg_specific, object_path, refresh,
+	return common(vgs_state_retrieve, (Vg, VgVdo, ), vg_specific, object_path, refresh,
 					emit_signal, cache_refresh)
 
 
@@ -99,7 +99,11 @@ class VgState(State):
 		if not path:
 			path = cfg.om.get_object_path_by_uuid_lvm_id(
 				self.Uuid, self.internal_name, vg_obj_path_generate)
-		return Vg(path, self)
+
+		if cfg.vdo_support:
+			return VgVdo(path, self)
+		else:
+			return Vg(path, self)
 
 	# noinspection PyMethodMayBeStatic
 	def creation_signature(self):
@@ -773,3 +777,39 @@ class Vg(AutomatedProperties):
 	@property
 	def Clustered(self):
 		return self._attribute(5, 'c')
+
+
+class VgVdo(Vg):
+
+	# noinspection PyUnusedLocal,PyPep8Naming
+	def __init__(self, object_path, object_state):
+		super(VgVdo, self).__init__(object_path, vgs_state_retrieve)
+		self.set_interface(VG_VDO_INTERFACE)
+		self._object_path = object_path
+		self.state = object_state
+
+	@staticmethod
+	def _lv_vdo_pool_create_with_lv(uuid, vg_name, pool_name, lv_name,
+									data_size, virtual_size, create_options):
+		Vg.validate_dbus_object(uuid, vg_name)
+		Vg.handle_execute(*cmdhandler.vg_create_vdo_pool_lv_and_lv(
+			vg_name, pool_name, lv_name, data_size, virtual_size,
+			create_options))
+		return Vg.fetch_new_lv(vg_name, pool_name)
+
+	@dbus.service.method(
+		dbus_interface=VG_VDO_INTERFACE,
+		in_signature='ssttia{sv}',
+		out_signature='(oo)',
+		async_callbacks=('cb', 'cbe'))
+	def CreateVdoPoolandLv(self, pool_name, lv_name, data_size, virtual_size,
+							tmo, create_options, cb, cbe):
+		utils.validate_lv_name(VG_VDO_INTERFACE, self.Name, pool_name)
+		utils.validate_lv_name(VG_VDO_INTERFACE, self.Name, lv_name)
+
+		r = RequestEntry(tmo, VgVdo._lv_vdo_pool_create_with_lv,
+							(self.state.Uuid, self.state.lvm_id,
+							pool_name, lv_name, round_size(data_size),
+							round_size(virtual_size),
+							create_options), cb, cbe)
+		cfg.worker_q.put(r)
