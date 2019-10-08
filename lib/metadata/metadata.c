@@ -4518,6 +4518,9 @@ void vg_write_commit_bad_mdas(struct cmd_context *cmd, struct volume_group *vg)
 		 * above.
 		 *
 		 * TEXT: general error related to text metadata, we can repair.
+		 *
+		 * MISMATCH: different values between instances of metadata,
+		 * can repair.
 		 */
 		if (!mda->bad_fields ||
 		    (mda->bad_fields & BAD_MDA_READ) ||

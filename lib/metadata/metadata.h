@@ -179,6 +179,7 @@ struct metadata_area_ops {
 #define BAD_MDA_MAGIC		0x00000020
 #define BAD_MDA_VERSION		0x00000040
 #define BAD_MDA_START		0x00000080
+#define BAD_MDA_MISMATCH	0x00000100 /* lvmcache found difference from prev metadata */
 
 struct metadata_area {
 	struct dm_list list;

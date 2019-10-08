@@ -58,6 +58,7 @@ struct lvmcache_vgsummary {
 	int mda_num; /* 1 = summary from mda1, 2 = summary from mda2 */
 	unsigned mda_ignored:1;
 	unsigned zero_offset:1;
+	unsigned mismatch:1; /* lvmcache sets if this summary differs from previous values */
 	struct dm_list pvsummaries;
 };
 

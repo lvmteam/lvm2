@@ -507,10 +507,17 @@ static int _text_read(struct labeller *labeller, struct device *dev, void *label
 		if (rv1 && !vgsummary.zero_offset && !vgsummary.mda_ignored) {
 			if (!lvmcache_update_vgname_and_id(info, &vgsummary)) {
 				/* I believe this is only an internal error. */
-				log_warn("WARNING: Scanning %s mda1 failed to save internal summary.", dev_name(dev));
 
 				dm_list_del(&mda1->list);
-				bad_fields |= BAD_MDA_INTERNAL;
+
+				/* Are there other cases besides mismatch and internal error? */
+				if (vgsummary.mismatch) {
+					log_warn("WARNING: Scanning %s mda1 found mismatch with other metadata.", dev_name(dev));
+					bad_fields |= BAD_MDA_MISMATCH;
+				} else {
+					log_warn("WARNING: Scanning %s mda1 failed to save internal summary.", dev_name(dev));
+					bad_fields |= BAD_MDA_INTERNAL;
+				}
 				mda1->bad_fields = bad_fields;
 				lvmcache_save_bad_mda(info, mda1);
 				mda1 = NULL;
@@ -550,11 +557,17 @@ static int _text_read(struct labeller *labeller, struct device *dev, void *label
 
 		if (rv2 && !vgsummary.zero_offset && !vgsummary.mda_ignored) {
 			if (!lvmcache_update_vgname_and_id(info, &vgsummary)) {
-				/* I believe this is only an internal error. */
-				log_warn("WARNING: Scanning %s mda2 failed to save internal summary.", dev_name(dev));
-
 				dm_list_del(&mda2->list);
-				bad_fields |= BAD_MDA_INTERNAL;
+
+				/* Are there other cases besides mismatch and internal error? */
+				if (vgsummary.mismatch) {
+					log_warn("WARNING: Scanning %s mda2 found mismatch with other metadata.", dev_name(dev));
+					bad_fields |= BAD_MDA_MISMATCH;
+				} else {
+					log_warn("WARNING: Scanning %s mda2 failed to save internal summary.", dev_name(dev));
+					bad_fields |= BAD_MDA_INTERNAL;
+				}
+
 				mda2->bad_fields = bad_fields;
 				lvmcache_save_bad_mda(info, mda2);
 				mda2 = NULL;

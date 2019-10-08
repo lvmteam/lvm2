@@ -1649,6 +1649,7 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info, struct lvmcache_vg
 				 vgsummary->mda_checksum, vgsummary->mda_size,
 				 vginfo->mda_checksum, vginfo->mda_size);
 			vginfo->scan_summary_mismatch = true;
+			vgsummary->mismatch = 1;
 			return 0;
 		}
 
