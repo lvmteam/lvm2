@@ -41,7 +41,34 @@ struct text_fid_context {
 	char *write_buf;         /* buffer containing metadata text to write to disk */
 	uint32_t write_buf_size; /* mem size of write_buf, increases in 64K multiples */
 	uint32_t new_metadata_size; /* size of text metadata in buf */
+	unsigned preserve:1;
 };
+
+void preserve_text_fidtc(struct volume_group *vg)
+{
+	struct format_instance *fid = vg->fid;
+	struct text_fid_context *fidtc = (struct text_fid_context *)fid->private;
+
+	if (fidtc)
+		fidtc->preserve = 1;
+}
+
+void free_text_fidtc(struct volume_group *vg)
+{
+	struct format_instance *fid = vg->fid;
+	struct text_fid_context *fidtc = (struct text_fid_context *)fid->private;
+
+	if (!fidtc)
+		return;
+
+	fidtc->preserve = 0;
+
+	if (fidtc->write_buf)
+		free(fidtc->write_buf);
+	fidtc->write_buf = NULL;
+	fidtc->write_buf_size = 0;
+	fidtc->new_metadata_size = 0;
+}
 
 int rlocn_is_ignored(const struct raw_locn *rlocn)
 {
@@ -1183,7 +1210,7 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 	r = 1;
 
       out:
-	if (!precommit) {
+	if (!precommit && !fidtc->preserve) {
 		free(fidtc->write_buf);
 		fidtc->write_buf = NULL;
 		fidtc->write_buf_size = 0;

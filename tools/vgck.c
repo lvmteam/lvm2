@@ -14,6 +14,7 @@
  */
 
 #include "tools.h"
+#include "lib/format_text/format-text.h"
 
 /*
  * TODO: we cannot yet repair corruption in label_header, pv_header/locations,
@@ -39,6 +40,14 @@ static int _update_metadata_single(struct cmd_context *cmd __attribute__((unused
 		return 0;
 	}
 
+	/*
+	 * Prevent vg_commit from freeing the metadata
+	 * buffer that vg_write wrote to disk so that
+	 * vg_write_commit_bad_mdas() can use the same
+	 * metadata buffer to write to the bad mdas.
+	 */
+	preserve_text_fidtc(vg);
+
 	if (!vg_commit(vg)) {
 		log_error("Failed to commit VG.");
 		return 0;
@@ -52,6 +61,12 @@ static int _update_metadata_single(struct cmd_context *cmd __attribute__((unused
 	 * to write this metadata to them.
 	 */
 	vg_write_commit_bad_mdas(cmd, vg);
+
+	/*
+	 * Now free the metadata buffer that was
+	 * preserved above.
+	 */
+	free_text_fidtc(vg);
 
 	return 1;
 }

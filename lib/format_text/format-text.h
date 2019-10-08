@@ -80,4 +80,7 @@ struct data_area_list {
 int text_wipe_outdated_pv_mda(struct cmd_context *cmd, struct device *dev,
                               struct metadata_area *mda);
 
+void preserve_text_fidtc(struct volume_group *vg);
+void free_text_fidtc(struct volume_group *vg);
+
 #endif
