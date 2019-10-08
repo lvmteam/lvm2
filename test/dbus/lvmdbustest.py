@@ -1455,6 +1455,39 @@ class TestDbusService(unittest.TestCase):
 				vg.Remove(dbus.Int32(g_tmo), EOD))
 			self.assertTrue(rc == '/')
 
+	def test_cache_lv_rename(self):
+		"""
+		Make sure that if we rename a cache lv that we correctly handle the
+		internal state update.
+		:return:
+		"""
+		vg, cache_pool = self._create_cache_pool()
+
+		lv_to_cache = self._create_lv(size=mib(8), vg=vg)
+
+		c_lv_path = self.handle_return(
+			cache_pool.CachePool.CacheLv(
+				dbus.ObjectPath(lv_to_cache.object_path),
+				dbus.Int32(g_tmo),
+				EOD))
+
+		# Make sure we only have expected # of cached LV
+		cur_objs, _ = get_objects()
+		self.assertEqual(len(cur_objs[CACHE_LV_INT]), 2)
+
+		cached_lv = ClientProxy(self.bus, c_lv_path,
+								interfaces=(LV_COMMON_INT, LV_INT,
+											CACHE_LV_INT))
+		new_name = 'renamed_' + cached_lv.LvCommon.Name
+
+		self.handle_return(cached_lv.Lv.Rename(dbus.String(new_name),
+												dbus.Int32(g_tmo), EOD))
+
+		# Make sure we only have expected # of cached LV
+		cur_objs, _ = get_objects()
+		self.assertEqual(len(cur_objs[CACHE_LV_INT]), 2)
+		self._check_consistency()
+
 	def test_vg_change(self):
 		vg_proxy = self._vg_create()
 
