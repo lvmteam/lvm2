@@ -140,6 +140,21 @@ metadata.)  This can be used with dm-cache.
 
 \&
 
+.SS dm-cache block size
+
+\&
+
+A cache pool will have a logical block size of 4096 bytes if it is created
+on a device with a logical block size of 4096 bytes.
+
+If a main LV has logical block size 512 (with an existing xfs file system
+using that size), then it cannot use a cache pool with a 4096 logical
+block size.  If the cache pool is attached, the main LV will likely fail
+to mount.
+
+To avoid this problem, use a mkfs option to specify a 4096 block size for
+the file system, or attach the cache pool before running mkfs.
+
 .SS dm-writecache block size
 
 \&
