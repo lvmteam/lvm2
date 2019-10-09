@@ -131,6 +131,10 @@ def main():
 	# exists.
 	cfg.vdo_support = supports_vdo()
 
+	if cfg.vdo_support and not cfg.args.use_json:
+		log_error("You cannot specify --nojson when lvm has VDO support")
+		sys.exit(1)
+
 	# List of threads that we start up
 	thread_list = []
 
