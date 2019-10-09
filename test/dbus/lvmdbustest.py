@@ -1316,6 +1316,10 @@ class TestDbusService(unittest.TestCase):
 				EOD))
 
 	def test_pv_scan(self):
+
+		def major_minor(d):
+			return (int(d.properties['MAJOR']), int(d.properties['MINOR']))
+
 		devices = TestDbusService._get_devices()
 
 		self.assertEqual(self._pv_scan(False, True, [], []), '/')
@@ -1327,8 +1331,7 @@ class TestDbusService(unittest.TestCase):
 		self.assertEqual(self._pv_scan(False, True, block_path, []), '/')
 		self._check_consistency()
 
-		mm = [(int(d.properties['MAJOR']), int(d.properties['MINOR']))
-				for d in devices]
+		mm = [major_minor(d) for d in devices]
 
 		self.assertEqual(self._pv_scan(False, True, block_path, mm), '/')
 		self._check_consistency()
