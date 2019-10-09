@@ -243,6 +243,7 @@ class ClientProxy(object):
 	Pv = None
 	Lv = None
 	Vg = None
+	VgVdo = None
 
 	@staticmethod
 	def _intf_short_name(nm):

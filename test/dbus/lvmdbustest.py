@@ -176,6 +176,15 @@ def call_lvm(command):
 	return process.returncode, stdout_text, stderr_text
 
 
+def supports_vdo():
+	cmd = ['segtypes']
+	rc, out, err = call_lvm(cmd)
+	if rc == 0:
+		if "vdo" in out:
+			return True
+	return False
+
+
 # noinspection PyUnresolvedReferences
 class TestDbusService(unittest.TestCase):
 	def setUp(self):
@@ -197,6 +206,8 @@ class TestDbusService(unittest.TestCase):
 		self.pvs = []
 		for p in self.objs[PV_INT]:
 			self.pvs.append(p.Pv.Name)
+
+		self.vdo = supports_vdo()
 
 	def _recurse_vg_delete(self, vg_proxy, pv_proxy, nested_pv_hash):
 
@@ -320,7 +331,12 @@ class TestDbusService(unittest.TestCase):
 
 		self._validate_lookup(vg_name, vg_path)
 		self.assertTrue(vg_path is not None and len(vg_path) > 0)
-		return ClientProxy(self.bus, vg_path, interfaces=(VG_INT, ))
+
+		intf = [VG_INT, ]
+		if self.vdo:
+			intf.append(VG_VDO_INT)
+
+		return ClientProxy(self.bus, vg_path, interfaces=intf)
 
 	def test_vg_create(self):
 		self._vg_create()
@@ -1775,6 +1791,42 @@ class TestDbusService(unittest.TestCase):
 		# Lets check symlink lookup
 		self.assertEqual(pv_object_path, self._lookup(symlink))
 		self.assertEqual(pv_object_path, self._lookup(pv_device_path))
+
+	def _create_vdo_pool_and_lv(self):
+		pool_name = lv_n("_vdo_pool")
+		lv_name = lv_n()
+
+		vg_proxy = self._vg_create()
+		vdo_pool_object_path = self.handle_return(
+			vg_proxy.VgVdo.CreateVdoPoolandLv(
+				pool_name, lv_name,
+				dbus.UInt64(mib(4096)),
+				dbus.UInt64(mib(8192)),
+				dbus.Int32(g_tmo),
+				EOD))
+
+		self.assertNotEqual(vdo_pool_object_path, "/")
+		self.assertEqual(
+			vdo_pool_object_path,
+			self._lookup("%s/%s" % (vg_proxy.Vg.Name, pool_name)))
+
+		vdo_lv = self._lookup("%s/%s" % (vg_proxy.Vg.Name, lv_name))
+		self.assertNotEqual(vdo_lv, "/")
+		intf = (LV_COMMON_INT, LV_INT, VDOPOOL_INT)
+		pool_lv = ClientProxy(self.bus, vdo_lv, interfaces=intf)
+		return vg_proxy, pool_lv
+
+	def test_vdo_pool_create(self):
+		# Basic vdo sanity testing
+		if not self.vdo:
+			raise unittest.SkipTest('vdo not supported')
+
+		# Do this twice to ensure we are providing the correct flags to force
+		# the operation when if finds an existing vdo signature, which likely
+		# shouldn't exist.
+		for _ in range(0, 2):
+			vg, _ = self._create_vdo_pool_and_lv()
+			self.handle_return(vg.Vg.Remove(dbus.Int32(g_tmo), EOD))
 
 
 class AggregateResults(object):
