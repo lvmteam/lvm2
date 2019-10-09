@@ -21,7 +21,8 @@ get_devs
 
 # Fill with random data so if the space between metadata
 # copies are not zeroed the grep for zeros will fail.
-dd if=/dev/urandom of="$dev1" bs=1M || true
+dd if=/dev/urandom of="$dev1" bs=1M count=1 || true
+dd if=/dev/urandom of="$dev1" bs=1M skip=15 count=1 || true
 
 pvcreate --pvmetadatacopies 2 "$dev1"
 
