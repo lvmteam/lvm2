@@ -27,6 +27,7 @@ VG_INT = BASE_INTERFACE + ".Vg"
 VG_VDO_INT = BASE_INTERFACE + ".VgVdo"
 LV_INT = BASE_INTERFACE + ".Lv"
 THINPOOL_INT = BASE_INTERFACE + ".ThinPool"
+VDOPOOL_INT = BASE_INTERFACE + ".VdoPool"
 SNAPSHOT_INT = BASE_INTERFACE + ".Snapshot"
 LV_COMMON_INT = BASE_INTERFACE + ".LvCommon"
 JOB_INT = BASE_INTERFACE + ".Job"
@@ -240,6 +241,10 @@ class RemoteInterface(object):
 
 
 class ClientProxy(object):
+	Pv = None
+	Lv = None
+	Vg = None
+
 	@staticmethod
 	def _intf_short_name(nm):
 		return nm.split('.')[-1:][0]

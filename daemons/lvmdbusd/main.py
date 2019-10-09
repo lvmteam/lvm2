@@ -155,7 +155,7 @@ def main():
 	cfg.om = Lvm(BASE_OBJ_PATH)
 	cfg.om.register_object(Manager(MANAGER_OBJ_PATH))
 
-	cfg.db = lvmdb.DataStore(cfg.args.use_json)
+	cfg.db = lvmdb.DataStore(cfg.args.use_json, cfg.vdo_support)
 
 	# Using a thread to process requests, we cannot hang the dbus library
 	# thread that is handling the dbus interface

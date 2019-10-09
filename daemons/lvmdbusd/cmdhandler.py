@@ -509,6 +509,22 @@ def lvm_full_report_json():
 
 	lv_seg_columns = ['seg_pe_ranges', 'segtype', 'lv_uuid']
 
+	if cfg.vdo_support:
+		lv_columns.extend(
+			['vdo_operating_mode', 'vdo_compression_state', 'vdo_index_state',
+				'vdo_used_size', 'vdo_saving_percent']
+		)
+
+		lv_seg_columns.extend(
+			['vdo_compression', 'vdo_deduplication',
+				'vdo_use_metadata_hints', 'vdo_minimum_io_size',
+				'vdo_block_map_cache_size', 'vdo_block_map_era_length',
+				'vdo_use_sparse_index', 'vdo_index_memory_size',
+				'vdo_slab_size', 'vdo_ack_threads', 'vdo_bio_threads',
+				'vdo_bio_rotation', 'vdo_cpu_threads', 'vdo_hash_zone_threads',
+				'vdo_logical_threads', 'vdo_physical_threads',
+				'vdo_max_discard', 'vdo_write_policy', 'vdo_header_size'])
+
 	cmd = _dc('fullreport', [
 		'-a',		# Need hidden too
 		'--configreport', 'pv', '-o', ','.join(pv_columns),

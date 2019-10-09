@@ -15,9 +15,9 @@ import dbus
 from . import cmdhandler
 from . import cfg
 from .cfg import LV_INTERFACE, THIN_POOL_INTERFACE, SNAPSHOT_INTERFACE, \
-	LV_COMMON_INTERFACE, CACHE_POOL_INTERFACE, LV_CACHED
+	LV_COMMON_INTERFACE, CACHE_POOL_INTERFACE, LV_CACHED, VDO_POOL_INTERFACE
 from .request import RequestEntry
-from .utils import n, n32
+from .utils import n, n32, d
 from .loader import common
 from .state import State
 from . import background
@@ -74,23 +74,66 @@ def lvs_state_retrieve(selection, cache_refresh=True):
 	lvs = sorted(cfg.db.fetch_lvs(selection), key=get_key)
 
 	for l in lvs:
-		rc.append(LvState(
-			l['lv_uuid'], l['lv_name'],
-			l['lv_path'], n(l['lv_size']),
-			l['vg_name'],
-			l['vg_uuid'], l['pool_lv_uuid'],
-			l['pool_lv'], l['origin_uuid'], l['origin'],
-			n32(l['data_percent']), l['lv_attr'],
-			l['lv_tags'], l['lv_active'], l['data_lv'],
-			l['metadata_lv'], l['segtype'], l['lv_role'],
-			l['lv_layout'],
-			n32(l['snap_percent']),
-			n32(l['metadata_percent']),
-			n32(l['copy_percent']),
-			n32(l['sync_percent']),
-			n(l['lv_metadata_size']),
-			l['move_pv'],
-			l['move_pv_uuid']))
+		if cfg.vdo_support:
+			rc.append(LvStateVdo(
+				l['lv_uuid'], l['lv_name'],
+				l['lv_path'], n(l['lv_size']),
+				l['vg_name'],
+				l['vg_uuid'], l['pool_lv_uuid'],
+				l['pool_lv'], l['origin_uuid'], l['origin'],
+				n32(l['data_percent']), l['lv_attr'],
+				l['lv_tags'], l['lv_active'], l['data_lv'],
+				l['metadata_lv'], l['segtype'], l['lv_role'],
+				l['lv_layout'],
+				n32(l['snap_percent']),
+				n32(l['metadata_percent']),
+				n32(l['copy_percent']),
+				n32(l['sync_percent']),
+				n(l['lv_metadata_size']),
+				l['move_pv'],
+				l['move_pv_uuid'],
+				l['vdo_operating_mode'],
+				l['vdo_compression_state'],
+				l['vdo_index_state'],
+				n(l['vdo_used_size']),
+				d(l['vdo_saving_percent']),
+				l['vdo_compression'],
+				l['vdo_deduplication'],
+				l['vdo_use_metadata_hints'],
+				n32(l['vdo_minimum_io_size']),
+				n(l['vdo_block_map_cache_size']),
+				n32(l['vdo_block_map_era_length']),
+				l['vdo_use_sparse_index'],
+				n(l['vdo_index_memory_size']),
+				n(l['vdo_slab_size']),
+				n32(l['vdo_ack_threads']),
+				n32(l['vdo_bio_threads']),
+				n32(l['vdo_bio_rotation']),
+				n32(l['vdo_cpu_threads']),
+				n32(l['vdo_hash_zone_threads']),
+				n32(l['vdo_logical_threads']),
+				n32(l['vdo_physical_threads']),
+				n32(l['vdo_max_discard']),
+				l['vdo_write_policy'],
+				n32(l['vdo_header_size'])))
+		else:
+			rc.append(LvState(
+				l['lv_uuid'], l['lv_name'],
+				l['lv_path'], n(l['lv_size']),
+				l['vg_name'],
+				l['vg_uuid'], l['pool_lv_uuid'],
+				l['pool_lv'], l['origin_uuid'], l['origin'],
+				n32(l['data_percent']), l['lv_attr'],
+				l['lv_tags'], l['lv_active'], l['data_lv'],
+				l['metadata_lv'], l['segtype'], l['lv_role'],
+				l['lv_layout'],
+				n32(l['snap_percent']),
+				n32(l['metadata_percent']),
+				n32(l['copy_percent']),
+				n32(l['sync_percent']),
+				n(l['lv_metadata_size']),
+				l['move_pv'],
+				l['move_pv_uuid']))
 	return rc
 
 
@@ -194,6 +237,8 @@ class LvState(State):
 	def _object_type_create(self):
 		if self.Attr[0] == 't':
 			return LvThinPool
+		elif self.Attr[0] == 'd':
+			return LvVdoPool
 		elif self.Attr[0] == 'C':
 			if 'pool' in self.layout:
 				return LvCachePool
@@ -218,6 +263,34 @@ class LvState(State):
 		klass = self._object_type_create()
 		path_method = self._object_path_create()
 		return (klass, path_method)
+
+
+class LvStateVdo(LvState):
+
+	def __init__(self, Uuid, Name, Path, SizeBytes,
+					vg_name, vg_uuid, pool_lv_uuid, PoolLv,
+					origin_uuid, OriginLv, DataPercent, Attr, Tags, active,
+					data_lv, metadata_lv, segtypes, role, layout, SnapPercent,
+					MetaDataPercent, CopyPercent, SyncPercent,
+					MetaDataSizeBytes, move_pv, move_pv_uuid,
+					vdo_operating_mode, vdo_compression_state, vdo_index_state,
+					vdo_used_size,vdo_saving_percent,vdo_compression,
+					vdo_deduplication,vdo_use_metadata_hints,
+					vdo_minimum_io_size,vdo_block_map_cache_size,
+					vdo_block_map_era_length,vdo_use_sparse_index,
+					vdo_index_memory_size,vdo_slab_size,vdo_ack_threads,
+					vdo_bio_threads,vdo_bio_rotation,vdo_cpu_threads,
+					vdo_hash_zone_threads,vdo_logical_threads,
+					vdo_physical_threads,vdo_max_discard,
+					vdo_write_policy,vdo_header_size):
+		super(LvStateVdo, self).__init__(Uuid, Name, Path, SizeBytes,
+					vg_name, vg_uuid, pool_lv_uuid, PoolLv,
+					origin_uuid, OriginLv, DataPercent, Attr, Tags, active,
+					data_lv, metadata_lv, segtypes, role, layout, SnapPercent,
+					MetaDataPercent, CopyPercent, SyncPercent,
+					MetaDataSizeBytes, move_pv, move_pv_uuid)
+
+		utils.init_class_from_arguments(self, "vdo_", snake_to_pascal=True)
 
 
 # noinspection PyPep8Naming
@@ -669,6 +742,43 @@ class Lv(LvCommon):
 			None, tags, tag_options),
 			cb, cbe, return_tuple=False)
 		cfg.worker_q.put(r)
+
+# noinspection PyPep8Naming
+@utils.dbus_property(VDO_POOL_INTERFACE, 'OperatingMode', 's')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'CompressionState', 's')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'IndexState', 's')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'UsedSize', 't')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'SavingPercent', 'd')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'Compression', 's')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'Deduplication', 's')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'UseMetadataHints', 's')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'MinimumIoSize', 'u')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'BlockMapCacheSize', "t")
+@utils.dbus_property(VDO_POOL_INTERFACE, 'BlockMapEraLength', 'u')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'UseSparseIndex', 's')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'IndexMemorySize', 't')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'SlabSize', 't')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'AckThreads', 'u')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'BioThreads', 'u')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'BioRotation', 'u')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'CpuThreads', 'u')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'HashZoneThreads', 'u')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'LogicalThreads', 'u')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'PhysicalThreads', 'u')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'MaxDiscard', 'u')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'WritePolicy', 's')
+@utils.dbus_property(VDO_POOL_INTERFACE, 'HeaderSize', 'u')
+class LvVdoPool(Lv):
+	_DataLv_meta = ("o", VDO_POOL_INTERFACE)
+
+	def __init__(self, object_path, object_state):
+		super(LvVdoPool, self).__init__(object_path, object_state)
+		self.set_interface(VDO_POOL_INTERFACE)
+		self._data_lv, _ = self._get_data_meta()
+
+	@property
+	def DataLv(self):
+		return dbus.ObjectPath(self._data_lv)
 
 
 # noinspection PyPep8Naming

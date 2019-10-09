@@ -71,7 +71,8 @@ def lv_n(suffix=None):
 
 
 def _is_testsuite_pv(pv_name):
-	return g_prefix != "" and pv_name[-1].isdigit() and pv_name[:-1].endswith(g_prefix + "pv")
+	return g_prefix != "" and pv_name[-1].isdigit() and \
+			pv_name[:-1].endswith(g_prefix + "pv")
 
 
 def is_nested_pv(pv_name):
@@ -114,7 +115,7 @@ def get_objects():
 	rc = {
 		MANAGER_INT: [], PV_INT: [], VG_INT: [], LV_INT: [],
 		THINPOOL_INT: [], JOB_INT: [], SNAPSHOT_INT: [], LV_COMMON_INT: [],
-		CACHE_POOL_INT: [], CACHE_LV_INT: [], VG_VDO_INT: []}
+		CACHE_POOL_INT: [], CACHE_LV_INT: [], VG_VDO_INT: [], VDOPOOL_INT: []}
 
 	object_manager_object = bus.get_object(
 		BUS_NAME, "/com/redhat/lvmdbus1", introspect=False)

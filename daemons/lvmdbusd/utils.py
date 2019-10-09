@@ -66,8 +66,20 @@ def n32(v):
 	return int(float(v))
 
 
+@rtype(dbus.Double)
+def d(v):
+	if not v:
+		return 0.0
+	return float(v)
+
+
+def _snake_to_pascal(s):
+	return ''.join(x.title() for x in s.split('_'))
+
+
 # noinspection PyProtectedMember
-def init_class_from_arguments(obj_instance):
+def init_class_from_arguments(
+		obj_instance, begin_suffix=None, snake_to_pascal=False):
 	for k, v in list(sys._getframe(1).f_locals.items()):
 		if k != 'self':
 			nt = k
@@ -78,8 +90,17 @@ def init_class_from_arguments(obj_instance):
 			cur = getattr(obj_instance, nt, v)
 
 			# print 'Init class %s = %s' % (nt, str(v))
-			if not (cur and len(str(cur)) and (v is None or len(str(v))) == 0):
-				setattr(obj_instance, nt, v)
+			if not (cur and len(str(cur)) and (v is None or len(str(v))) == 0)\
+					and (begin_suffix is None or nt.startswith(begin_suffix)):
+
+				if begin_suffix and nt.startswith(begin_suffix):
+					name = nt[len(begin_suffix):]
+					if snake_to_pascal:
+						name = _snake_to_pascal(name)
+
+					setattr(obj_instance, name, v)
+				else:
+					setattr(obj_instance, nt, v)
 
 
 def get_properties(f):
@@ -347,6 +368,8 @@ def lv_object_path_method(name, meta):
 		return _hidden_lv_obj_path_generate
 	elif meta[0][0] == 't':
 		return _thin_pool_obj_path_generate
+	elif meta[0][0] == 'd':
+		return _vdo_pool_object_path_generate
 	elif meta[0][0] == 'C' and 'pool' in meta[1]:
 		return _cache_pool_obj_path_generate
 
@@ -362,6 +385,10 @@ def _lv_obj_path_generate():
 
 def _thin_pool_obj_path_generate():
 	return cfg.THIN_POOL_PATH + "/%d" % next(cfg.thin_id)
+
+
+def _vdo_pool_object_path_generate():
+	return cfg.VDO_POOL_PATH + "/%d" % next(cfg.vdo_id)
 
 
 def _cache_pool_obj_path_generate():

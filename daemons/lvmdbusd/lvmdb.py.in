@@ -20,7 +20,7 @@ from lvmdbusd.utils import log_debug, log_error
 
 
 class DataStore(object):
-	def __init__(self, usejson=True):
+	def __init__(self, usejson=True, vdo_support=False):
 		self.pvs = {}
 		self.vgs = {}
 		self.lvs = {}
@@ -42,6 +42,8 @@ class DataStore(object):
 			self.json = cmdhandler.supports_json()
 		else:
 			self.json = usejson
+
+		self.vdo_support = vdo_support
 
 	@staticmethod
 	def _insert_record(table, key, record, allowed_multiple):
@@ -241,8 +243,7 @@ class DataStore(object):
 
 		return DataStore._parse_lvs_common(c_lvs, c_lv_full_lookup)
 
-	@staticmethod
-	def _parse_lvs_json(_all):
+	def _parse_lvs_json(self, _all):
 
 		c_lvs = OrderedDict()
 		c_lv_full_lookup = {}
@@ -262,8 +263,13 @@ class DataStore(object):
 				if 'seg' in r:
 					for s in r['seg']:
 						r = c_lvs[s['lv_uuid']]
-						r.setdefault('seg_pe_ranges', []).append(s['seg_pe_ranges'])
+						r.setdefault('seg_pe_ranges', []).\
+							append(s['seg_pe_ranges'])
 						r.setdefault('segtype', []).append(s['segtype'])
+						if self.vdo_support:
+							for seg_key, seg_val in s.items():
+								if seg_key.startswith("vdo_"):
+									r[seg_key] = seg_val
 
 		return DataStore._parse_lvs_common(c_lvs, c_lv_full_lookup)
 
