@@ -145,6 +145,8 @@ def btsr(value):
 		return rc
 	elif t == dbus.Array:
 		rc = "a"
+		if hasattr(value, "signature"):
+			return rc + value.signature
 		for i in value:
 			rc += btsr(i)
 			break
@@ -157,12 +159,9 @@ def verify_type(value, dbus_str_rep):
 	actual_str_rep = btsr(value)
 
 	if dbus_str_rep != actual_str_rep:
-		# print("%s ~= %s" % (dbus_str_rep, actual_str_rep))
-		# Unless we have a full filled out type we won't match exactly
-		if not dbus_str_rep.startswith(actual_str_rep):
-			raise RuntimeError(
-				"Incorrect type, expected= %s actual = %s object= %s" %
-				(dbus_str_rep, actual_str_rep, str(type(value))))
+		raise RuntimeError(
+			"Incorrect type, expected= %s actual = %s object= %s" %
+			(dbus_str_rep, actual_str_rep, str(type(value))))
 
 
 class RemoteInterface(object):
