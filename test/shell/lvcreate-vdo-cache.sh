@@ -20,7 +20,11 @@ SKIP_WITH_LVMPOLLD=1
 #
 # Main
 #
-aux have_vdo 6 2 0 || skip
+
+#
+# FIXME: tempororarily disable this test until fixed VDO driver is relase
+#
+aux have_vdo 96 2 0 || skip
 aux have_cache 1 3 0 || skip
 
 which mkfs.ext4 || skip
