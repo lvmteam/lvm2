@@ -86,7 +86,7 @@ The primary methods for using VDO with lvm2:
 
 .SS 1. Create VDOPoolLV with VDOLV
 
-Create an VDOPoolLV that will holds VDO data togehther with
+Create an VDOPoolLV that will holds VDO data together with
 virtual size VDOLV, that user can use. When the virtual size
 is not specified, then such LV is created with maximum size that
 always fits into data volume even if there cannot happen any
@@ -117,8 +117,8 @@ operation.
 Convert an already created/existing LV into a volume that can hold
 VDO data and metadata (a volume reference by VDOPoolLV).
 User will be prompted to confirm such conversion as it is \fBIRREVERSIBLY
-DESTROYING\fP content of such volume, as it's being immediatelly
-formated by \fBvdoformat\fP(8) as VDO pool data volume. User can
+DESTROYING\fP content of such volume, as it's being immediately
+formatted by \fBvdoformat\fP(8) as VDO pool data volume. User can
 specify virtual size of associated VDOLV with this VDOPoolLV.
 When the virtual size is not specified, it will set to the maximum size
 that can keep 100% uncompressible data there.
