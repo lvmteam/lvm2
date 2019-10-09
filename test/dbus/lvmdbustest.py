@@ -1424,22 +1424,25 @@ class TestDbusService(unittest.TestCase):
 		self.assertTrue(
 			'/com/redhat/lvmdbus1/CachePool' in cache_pool.object_path)
 
+	def _create_cache_lv(self):
+		vg, cache_pool = self._create_cache_pool()
+
+		lv_to_cache = self._create_lv(size=mib(8), vg=vg)
+
+		c_lv_path = self.handle_return(
+			cache_pool.CachePool.CacheLv(
+				dbus.ObjectPath(lv_to_cache.object_path),
+				dbus.Int32(g_tmo),
+				EOD))
+
+		intf = (LV_COMMON_INT, LV_INT, CACHE_LV_INT)
+		cached_lv = ClientProxy(self.bus, c_lv_path, interfaces=intf)
+		return vg, cache_pool, cached_lv
+
 	def test_cache_lv_create(self):
 
 		for destroy_cache in [True, False]:
-			vg, cache_pool = self._create_cache_pool()
-
-			lv_to_cache = self._create_lv(size=mib(8), vg=vg)
-
-			c_lv_path = self.handle_return(
-				cache_pool.CachePool.CacheLv(
-					dbus.ObjectPath(lv_to_cache.object_path),
-					dbus.Int32(g_tmo),
-					EOD))
-
-			intf = (LV_COMMON_INT, LV_INT, CACHE_LV_INT)
-			cached_lv = ClientProxy(self.bus, c_lv_path, interfaces=intf)
-
+			vg, _, cached_lv = self._create_cache_lv()
 			uncached_lv_path = self.handle_return(
 				cached_lv.CachedLv.DetachCachePool(
 					dbus.Boolean(destroy_cache),
@@ -1459,31 +1462,18 @@ class TestDbusService(unittest.TestCase):
 		internal state update.
 		:return:
 		"""
-		vg, cache_pool = self._create_cache_pool()
+		def verify_cache_lv_count():
+			cur_objs, _ = get_objects()
+			self.assertEqual(len(cur_objs[CACHE_LV_INT]), 2)
+			self._check_consistency()
 
-		lv_to_cache = self._create_lv(size=mib(8), vg=vg)
+		_, _, cached_lv = self._create_cache_lv()
 
-		c_lv_path = self.handle_return(
-			cache_pool.CachePool.CacheLv(
-				dbus.ObjectPath(lv_to_cache.object_path),
-				dbus.Int32(g_tmo),
-				EOD))
-
-		# Make sure we only have expected # of cached LV
-		cur_objs, _ = get_objects()
-		self.assertEqual(len(cur_objs[CACHE_LV_INT]), 2)
-
-		intf = (LV_COMMON_INT, LV_INT, CACHE_LV_INT)
-		cached_lv = ClientProxy(self.bus, c_lv_path, interfaces=intf)
+		verify_cache_lv_count()
 		new_name = 'renamed_' + cached_lv.LvCommon.Name
-
 		self.handle_return(
 			cached_lv.Lv.Rename(dbus.String(new_name), dbus.Int32(g_tmo), EOD))
-
-		# Make sure we only have expected # of cached LV
-		cur_objs, _ = get_objects()
-		self.assertEqual(len(cur_objs[CACHE_LV_INT]), 2)
-		self._check_consistency()
+		verify_cache_lv_count()
 
 	def test_vg_change(self):
 		vg_proxy = self._vg_create()
