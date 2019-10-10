@@ -169,8 +169,8 @@ class RemoteInterface(object):
 		if not props:
 			for _ in range(0, 3):
 				try:
-					prop_interface = dbus.Interface(self.dbus_object,
-						'org.freedesktop.DBus.Properties')
+					prop_interface = dbus.Interface(
+						self.dbus_object, 'org.freedesktop.DBus.Properties')
 					props = prop_interface.GetAll(self.interface)
 					break
 				except dbus.exceptions.DBusException as dbe:
@@ -180,8 +180,9 @@ class RemoteInterface(object):
 			for kl, vl in list(props.items()):
 				# Verify type is correct!
 				if self.introspect:
-					verify_type(vl, self.introspect[self.interface]
-					['properties'][kl]['p_type'])
+					verify_type(
+						vl, self.introspect[self.interface]
+						['properties'][kl]['p_type'])
 				setattr(self, kl, vl)
 
 	@property
@@ -189,8 +190,8 @@ class RemoteInterface(object):
 		return self.dbus_object.object_path
 
 	def __init__(
-			self, dbus_object, interface, introspect,
-			properties=None, timelimit=-1):
+			self, dbus_object, interface,
+			introspect, properties=None, timelimit=-1):
 		self.dbus_object = dbus_object
 		self.interface = interface
 		self.introspect = introspect
@@ -203,6 +204,7 @@ class RemoteInterface(object):
 		self.dbus_interface = dbus.Interface(self.dbus_object, self.interface)
 		self._set_props(properties)
 
+	# noinspection PyTypeChecker
 	def __getattr__(self, item):
 		if hasattr(self.dbus_interface, item):
 			return functools.partial(self._wrapper, item)
@@ -221,8 +223,9 @@ class RemoteInterface(object):
 
 		if self.tmo > 0.0:
 			if diff > self.tmo:
-				std_err_print("\n Time exceeded: %f > %f %s" %
-								(diff, self.tmo, _method_name))
+				std_err_print(
+					"\n Time exceeded: %f > %f %s" %
+					(diff, self.tmo, _method_name))
 
 		if self.introspect:
 			if 'RETURN_VALUE' in self.introspect[
@@ -259,12 +262,14 @@ class ClientProxy(object):
 	def _common(self, interface, introspect, properties):
 		short_name = ClientProxy._intf_short_name(interface)
 		self.short_interface_names.append(short_name)
-		ro = RemoteInterface(self.dbus_object, interface, introspect,
-								properties, timelimit=self.tmo)
+		ro = RemoteInterface(
+			self.dbus_object, interface, introspect, properties,
+			timelimit=self.tmo)
 		setattr(self, short_name, ro)
 
-	def __init__(self, bus, object_path, interface_prop_hash=None,
-					interfaces=None, timelimit=-1):
+	def __init__(
+			self, bus, object_path, interface_prop_hash=None,
+			interfaces=None, timelimit=-1):
 		self.object_path = object_path
 		self.short_interface_names = []
 		self.tmo = timelimit
