@@ -243,10 +243,6 @@ class RemoteInterface(object):
 
 
 class ClientProxy(object):
-	Pv = None
-	Lv = None
-	Vg = None
-	VgVdo = None
 
 	@staticmethod
 	def _intf_short_name(nm):
@@ -270,6 +266,22 @@ class ClientProxy(object):
 	def __init__(
 			self, bus, object_path, interface_prop_hash=None,
 			interfaces=None, timelimit=-1):
+		# Instance variables which may or may not get assigned during class
+		# construction dynamically.  Assigned here so code inspection tools
+		# have knowledge of their existence.
+		self.Manager = None
+		self.Pv = None
+		self.Vg = None
+		self.Lv = None
+		self.VgVdo = None
+		self.ThinPool = None
+		self.VdoPool = None
+		self.SnapShot = None
+		self.LvCommon = None
+		self.Job = None
+		self.CachePool = None
+		self.CachedLv = None
+
 		self.object_path = object_path
 		self.short_interface_names = []
 		self.tmo = timelimit
