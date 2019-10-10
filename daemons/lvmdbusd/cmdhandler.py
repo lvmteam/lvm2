@@ -738,6 +738,7 @@ def activate_deactivate(op, name, activate, control_flags, options):
 		op += 'n'
 
 	cmd.append(op)
+	cmd.append("-y")
 	cmd.append(name)
 	return call(cmd)
 
