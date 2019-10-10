@@ -29,10 +29,25 @@ def _main_thread_load(refresh=True, emit_signal=True):
 		refresh=refresh,
 		emit_signal=emit_signal,
 		cache_refresh=False)[1]
-	num_total_changes += load_lvs(
+
+	lv_changes = load_lvs(
 		refresh=refresh,
 		emit_signal=emit_signal,
 		cache_refresh=False)[1]
+
+	num_total_changes += lv_changes
+
+	# When the LVs change it can cause another change in the VGs which is
+	# missed if we don't scan through the VGs again.  We could achieve this
+	# the other way and re-scan the LVs, but in general there are more LVs than
+	# VGs, thus this should be more efficient.  This happens when a LV interface
+	# changes causing the dbus object representing it to be removed and
+	# recreated.
+	if refresh and lv_changes > 0:
+		num_total_changes += load_vgs(
+			refresh=refresh,
+			emit_signal=emit_signal,
+			cache_refresh=False)[1]
 
 	return num_total_changes
 
