@@ -40,26 +40,14 @@ struct pvmove_params {
 static int _pvmove_target_present(struct cmd_context *cmd, int clustered)
 {
 	const struct segment_type *segtype;
-	unsigned attr = 0;
 	int found = 1;
-	static int _clustered_found = -1;
-
-	if (clustered && _clustered_found >= 0)
-		return _clustered_found;
 
 	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_MIRROR)))
 		return_0;
 
 	if (activation() && segtype->ops->target_present &&
-	    !segtype->ops->target_present(cmd, NULL, clustered ? &attr : NULL))
+	    !segtype->ops->target_present(cmd, NULL, NULL))
 		found = 0;
-
-	if (activation() && clustered) {
-		if (found && (attr & MIRROR_LOG_CLUSTERED))
-			_clustered_found = found = 1;
-		else
-			_clustered_found = found = 0;
-	}
 
 	return found;
 }

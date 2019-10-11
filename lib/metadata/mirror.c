@@ -161,8 +161,7 @@ uint32_t adjusted_mirror_region_size(struct cmd_context *cmd,
 				     uint32_t extent_size, uint32_t extents,
 				     uint32_t region_size, int internal, int clustered)
 {
-	uint64_t region_max, region_min;
-	uint32_t region_min_pow2;
+	uint64_t region_max;
 
 	region_max = (uint64_t) extents * extent_size;
 
@@ -175,44 +174,6 @@ uint32_t adjusted_mirror_region_size(struct cmd_context *cmd,
 			log_verbose("Using reduced mirror region size of %s",
 				    display_size(cmd, region_size));
 	}
-
-#ifdef CMIRROR_REGION_COUNT_LIMIT
-	if (clustered) {
-		/*
-		 * The CPG code used by cluster mirrors can only handle a
-		 * payload of < 1MB currently.  (This deficiency is tracked by
-		 * http://bugzilla.redhat.com/682771.)  The region size for cluster
-		 * mirrors must be restricted in such a way as to limit the
-		 * size of the bitmap to < 512kB, because there are two bitmaps
-		 * which get sent around during checkpointing while a cluster
-		 * mirror starts up.  Ergo, the number of regions must not
-		 * exceed 512k * 8.  We also need some room for the other
-		 * checkpointing structures as well, so we reduce by another
-		 * factor of two.
-		 *
-		 * This code should be removed when the CPG restriction is
-		 * lifted.
-		 */
-		region_min = region_max / CMIRROR_REGION_COUNT_LIMIT;
-		if (region_min > UINT32_MAX / 2) {
-			log_error("Can't find proper region size for too big mirror.");
-			return 0;
-		}
-		region_min_pow2 = UINT64_C(1) << (1 + 31 - clz(region_min));
-
-		if (region_size < region_min_pow2) {
-			if (internal)
-				log_print_unless_silent("Increasing mirror region size from %s to %s",
-							display_size(cmd, region_size),
-							display_size(cmd, region_min_pow2));
-			else
-				log_verbose("Increasing mirror region size from %s to %s",
-					    display_size(cmd, region_size),
-					    display_size(cmd, region_min_pow2));
-			region_size = region_min_pow2;
-		}
-	}
-#endif /* CMIRROR_REGION_COUNT_LIMIT */
 
 	return region_size;
 }
