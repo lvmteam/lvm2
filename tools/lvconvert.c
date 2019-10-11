@@ -4224,8 +4224,6 @@ static int _lvconvert_cachevol_attach_single(struct cmd_context *cmd,
 	if (!lockd_lv(cmd, cachevol_lv, "ex", LDLV_PERSISTENT))
 		goto_out;
 
-	cachevol_lv->status |= LV_CACHE_VOL;
-
 	if (!wipe_cache_pool(cachevol_lv))
 		goto_out;
 
@@ -4240,7 +4238,7 @@ static int _lvconvert_cachevol_attach_single(struct cmd_context *cmd,
 		goto_out;
 
 	/* Attach the cache to the main LV. */
-
+	cachevol_lv->status |= LV_CACHE_VOL;
 	if (!_cache_vol_attach(cmd, lv, cachevol_lv))
 		goto_out;
 
@@ -5551,8 +5549,6 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 	if (!archive(vg))
 		goto_bad;
 
-	lv_fast->status |= LV_CACHE_VOL;
-
 	/*
 	 * TODO: use libblkid to get the sector size of lv.  If it doesn't
 	 * match the block_size we are using for the writecache, then warn that
@@ -5566,6 +5562,8 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 		log_error("LV %s could not be zeroed.", display_lvname(lv_fast));
 		return ECMD_FAILED;
 	}
+
+	lv_fast->status |= LV_CACHE_VOL;
 
 	/*
 	 * Changes the vg struct to match the desired state.
