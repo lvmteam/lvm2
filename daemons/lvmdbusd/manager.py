@@ -107,10 +107,10 @@ class Manager(AutomatedProperties):
 		rc = cfg.load(log=False)
 
 		if rc != 0:
-			utils.log_debug('Manager.Refresh - exit %d' % (rc),
+			utils.log_debug('Manager.Refresh - exit %d %d' % (rc, lc),
 							'bg_black', 'fg_light_red')
 		else:
-			utils.log_debug('Manager.Refresh - exit %d' % (rc))
+			utils.log_debug('Manager.Refresh - exit %d %d' % (rc, lc))
 		return rc + lc
 
 	@dbus.service.method(
