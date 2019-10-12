@@ -1,5 +1,6 @@
 Version 2.03.06 - 
 ================================
+  Rename LV converted to cachevol to use _cvol suffix.
   Use normal LVs for wiping of cachevols.
   Reload cleanered cache DM only with cleaner policy.
   Fix cmd return when zering of cachevol fails.

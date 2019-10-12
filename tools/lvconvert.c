@@ -1840,6 +1840,8 @@ static int _lvconvert_split_and_keep_cachevol(struct cmd_context *cmd,
 				   struct logical_volume *lv,
 				   struct logical_volume *lv_fast)
 {
+	char cvol_name[NAME_LEN];
+	char *c;
 	struct lv_segment *cache_seg = first_seg(lv);
 	int cache_mode = cache_seg->cache_mode;
 	int noflush = 0;
@@ -1878,6 +1880,25 @@ static int _lvconvert_split_and_keep_cachevol(struct cmd_context *cmd,
 				
 	if (!lv_detach_cache_vol(lv, noflush))
 		return_0;
+
+	/* Cut off suffix _cvol */
+	if (!dm_strncpy(cvol_name, lv_fast->name, sizeof(cvol_name)) ||
+	    !(c = strstr(cvol_name, "_cvol"))) {
+		/* likely older instance of metadata */
+		log_debug("LV %s has no suffix for cachevol (skipping rename).",
+			  display_lvname(lv_fast));
+	} else {
+		*c = 0;
+		/* If the name is in use, generate new lvol%d */
+		if (lv_name_is_used_in_vg(lv->vg, cvol_name, NULL) &&
+		    !generate_lv_name(lv->vg, "lvol%d", cvol_name, sizeof(cvol_name))) {
+			log_error("Failed to generate unique name for unused logical volume.");
+			return 0;
+		}
+
+		if (!lv_rename_update(cmd, lv_fast, cvol_name, 0))
+			return_0;
+	}
 
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;
@@ -4193,6 +4214,7 @@ static int _lvconvert_cachevol_attach_single(struct cmd_context *cmd,
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *cachevol_lv;
 	const char *cachevol_name;
+	char cvol_name[NAME_LEN];
 
 	if (!(cachevol_name = arg_str_value(cmd, cachevol_ARG, NULL)))
 		goto_out;
@@ -4238,6 +4260,13 @@ static int _lvconvert_cachevol_attach_single(struct cmd_context *cmd,
 		goto_out;
 
 	/* Attach the cache to the main LV. */
+	if (dm_snprintf(cvol_name, sizeof(cvol_name), "%s_cvol", cachevol_lv->name) < 0) {
+		log_error("Can't prepare new metadata name for %s.", display_lvname(cachevol_lv));
+		return 0;
+	}
+	if (!lv_rename_update(cmd, cachevol_lv, cvol_name, 0))
+		return_0;
+
 	cachevol_lv->status |= LV_CACHE_VOL;
 	if (!_cache_vol_attach(cmd, lv, cachevol_lv))
 		goto_out;
