@@ -131,7 +131,6 @@ check lv_field $vg/$lv1 segtype "cache"
 check lv_field $vg/$lv1 cachemode "writeback"
 
 lvchange -an $vg/$lv1
-lvchange -an $vg/$lv2
 
 mkfs_mount_umount $lv1
 
@@ -156,7 +155,6 @@ check lv_field $vg/$lv1 segtype "cache"
 check lv_field $vg/$lv1 cachemode "writethrough"
 
 lvchange -an $vg/$lv1
-lvchange -an $vg/$lv2
 
 mkfs_mount_umount $lv1
 
