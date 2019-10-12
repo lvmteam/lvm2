@@ -1434,8 +1434,7 @@ int wipe_cache_pool(struct logical_volume *cache_pool_lv)
 	int r;
 
 	/* Only unused cache-pool could be activated and wiped */
-	if ((!lv_is_cache_pool(cache_pool_lv) && !lv_is_cache_vol(cache_pool_lv)) ||
-	    !dm_list_empty(&cache_pool_lv->segs_using_this_lv)) {
+	if (lv_is_used_cache_pool(cache_pool_lv) || lv_is_cache_vol(cache_pool_lv)) {
 		log_error(INTERNAL_ERROR "Failed to wipe cache pool for volume %s.",
 			  display_lvname(cache_pool_lv));
 		return 0;
