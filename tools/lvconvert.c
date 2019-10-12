@@ -1875,7 +1875,8 @@ static int _lvconvert_split_and_keep_cachevol(struct cmd_context *cmd,
 			return 0;
 		}
 
-		noflush = 1;
+		/* Switch internally to WRITETHROUGH which does not require flushing */
+		cache_seg->cache_mode = CACHE_MODE_WRITETHROUGH;
 	}
 				
 	if (!lv_detach_cache_vol(lv, noflush))
