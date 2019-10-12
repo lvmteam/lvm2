@@ -758,6 +758,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	struct lv_segment *cache_seg = first_seg(cache_lv);
 	struct logical_volume *corigin_lv;
 	struct logical_volume *cache_pool_lv;
+	cache_mode_t cache_mode;
 	int is_clear;
 
 	if (!lv_is_cache(cache_lv)) {
@@ -783,7 +784,9 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 		if (!deactivate_lv_with_sub_lv(cache_lv))
 			return_0;
 
-		switch (first_seg(cache_seg->pool_lv)->cache_mode) {
+		cache_mode = (lv_is_cache_pool(cache_seg->pool_lv)) ?
+			first_seg(cache_seg->pool_lv)->cache_mode : cache_seg->cache_mode;
+		switch (cache_mode) {
 		case CACHE_MODE_WRITETHROUGH:
 		case CACHE_MODE_PASSTHROUGH:
 			/* For inactive pass/writethrough just drop cache layer */
