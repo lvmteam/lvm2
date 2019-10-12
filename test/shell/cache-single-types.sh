@@ -49,7 +49,7 @@ lvconvert -y --type cache --cachevol $lv2 $vg/$lv1
 
 check lv_field $vg/$lv1 segtype cache
 
-lvs -a $vg/$lv2 --noheadings -o segtype >out
+lvs -a $vg/${lv2}_cvol --noheadings -o segtype >out
 grep raid1 out
 
 lvchange -ay $vg/$lv1
