@@ -90,6 +90,9 @@ def _root_pv_name(res, pv_name):
 		if v.Vg.Name == vg_name:
 			pv = ClientProxy(bus, v.Vg.Pvs[0], interfaces=(PV_INT, ))
 			return _root_pv_name(res, pv.Pv.Name)
+def _prune_lvs(res, interface, vg_object_path):
+	lvs = [lv for lv in res[interface] if lv.LvCommon.Vg == vg_object_path]
+	res[interface] = lvs
 
 
 def _prune(res, pv_filter):
@@ -106,11 +109,16 @@ def _prune(res, pv_filter):
 
 		vg_list = []
 		for v in res[VG_INT]:
-			# Only need to validate one of the PVs is in the selection set
 			if v.Vg.Pvs[0] in pv_lookup:
 				vg_list.append(v)
 
+				for interface in \
+					[LV_INT, THINPOOL_INT, LV_COMMON_INT,
+						CACHE_POOL_INT, CACHE_LV_INT, VDOPOOL_INT]:
+					_prune_lvs(res, interface, v.object_path)
+
 		res[VG_INT] = vg_list
+
 	return res
 
 
@@ -134,7 +142,7 @@ def get_objects():
 			rc[interface].append(proxy)
 
 	# At this point we have a full population of everything, we now need to
-	# prune the PV list and the VG list if we are using a sub selection
+	# prune the the objects if we are filtering PVs with a sub selection.
 	return _prune(rc, pv_device_list), bus
 
 
