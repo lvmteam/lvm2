@@ -5065,12 +5065,12 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 			failure |= FAILED_NOT_ENABLED;
 			goto_bad;
 		}
+	}
 
-		if (!cmd->handles_unknown_segments && vg_has_unknown_segments(vg)) {
-			log_error("Cannot change VG %s with unknown segments in it!", vg->name);
-			failure |= FAILED_NOT_ENABLED; /* FIXME new failure code here? */
-			goto_bad;
-		}
+	if (writing && !cmd->handles_unknown_segments && vg_has_unknown_segments(vg)) {
+		log_error("Cannot change VG %s with unknown segments in it!", vg->name);
+		failure |= FAILED_NOT_ENABLED; /* FIXME new failure code here? */
+		goto_bad;
 	}
 
 	/*
