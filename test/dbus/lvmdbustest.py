@@ -88,8 +88,12 @@ def _root_pv_name(res, pv_name):
 	vg_name = pv_name.split('/')[2]
 	for v in res[VG_INT]:
 		if v.Vg.Name == vg_name:
-			pv = ClientProxy(bus, v.Vg.Pvs[0], interfaces=(PV_INT, ))
-			return _root_pv_name(res, pv.Pv.Name)
+			for pv in res[PV_INT]:
+				if pv.object_path in v.Vg.Pvs:
+					return _root_pv_name(res, pv.Pv.Name)
+			return None
+
+
 def _prune_lvs(res, interface, vg_object_path):
 	lvs = [lv for lv in res[interface] if lv.LvCommon.Vg == vg_object_path]
 	res[interface] = lvs
