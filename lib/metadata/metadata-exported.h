@@ -153,6 +153,7 @@
 #define LV_VDO_POOL_DATA	UINT64_C(0x8000000000000000)    /* LV - Internal user only */
 
 #define LV_CACHE_VOL		UINT64_C(0x0010000000000000)	/* LV - also a PV flag */
+#define LV_CACHE_USES_CACHEVOL	UINT64_C(0x4000000000000000)	/* LV - also a PV flag */
 
 
 /* Format features flags */

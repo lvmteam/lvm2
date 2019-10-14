@@ -253,6 +253,7 @@ int detach_pool_lv(struct lv_segment *seg)
 		if (!remove_seg_from_segs_using_this_lv(seg->pool_lv, seg))
 			return_0;
 		seg->lv->status &= ~CACHE;
+		seg->lv->status &= ~LV_CACHE_USES_CACHEVOL;
 		lv_set_visible(seg->pool_lv);
 		seg->pool_lv->status &= ~LV_CACHE_VOL;
 		seg->pool_lv = NULL;

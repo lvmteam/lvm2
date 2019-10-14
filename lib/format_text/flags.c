@@ -72,7 +72,8 @@ static const struct flag _lv_flags[] = {
 	{LV_ACTIVATION_SKIP, "ACTIVATION_SKIP", COMPATIBLE_FLAG},
 	{LV_ERROR_WHEN_FULL, "ERROR_WHEN_FULL", COMPATIBLE_FLAG},
 	{LV_METADATA_FORMAT, "METADATA_FORMAT", SEGTYPE_FLAG},
-	{LV_CACHE_VOL, "CACHE_VOL", STATUS_FLAG},
+	{LV_CACHE_VOL, "CACHE_VOL", COMPATIBLE_FLAG},
+	{LV_CACHE_USES_CACHEVOL, "CACHE_USES_CACHEVOL", SEGTYPE_FLAG},
 	{LV_NOSCAN, NULL, 0},
 	{LV_TEMPORARY, NULL, 0},
 	{POOL_METADATA_SPARE, NULL, 0},
@@ -192,12 +193,21 @@ int read_flags(uint64_t *status, enum pv_vg_lv_e type, int mask, const struct dm
 			return 0;
 		}
 
-		for (f = 0; flags[f].description; f++)
+		/*
+		 * For a short time CACHE_VOL was a STATUS_FLAG, then it
+		 * was changed to COMPATIBLE_FLAG, so we want to read it
+		 * from either place.
+		 */
+		if (type == LV_FLAGS && !strcmp(cv->v.str, "CACHE_VOL"))
+			mask = (STATUS_FLAG | COMPATIBLE_FLAG);
+
+		for (f = 0; flags[f].description; f++) {
 			if ((flags[f].kind & mask) &&
 			    !strcmp(flags[f].description, cv->v.str)) {
 				s |= flags[f].mask;
 				break;
 			}
+		}
 
 		if (type == VG_FLAGS && !strcmp(cv->v.str, "PARTIAL")) {
 			/*
