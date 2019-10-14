@@ -5290,18 +5290,17 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 
 static int _writecache_zero(struct cmd_context *cmd, struct logical_volume *lv)
 {
-	struct wipe_params wp;
+	struct wipe_params wp = {
+		.do_wipe_signatures = 1, /* optional, to print warning if clobbering something */
+		.do_zero = 1,            /* required for dm-writecache to work */
+		.zero_sectors = 1
+	};
 	int ret;
 
 	if (!activate_lv(cmd, lv)) {
 		log_error("Failed to activate LV %s for zeroing.", display_lvname(lv));
 		return 0;
 	}
-
-	wp.do_wipe_signatures = 1; /* optional, to print warning if clobbering something */
-	wp.do_zero = 1;            /* required for dm-writecache to work */
-	wp.zero_sectors = 1;
-	wp.zero_value = 0;
 
 	ret = wipe_lv(lv, wp);
 
