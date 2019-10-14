@@ -1844,7 +1844,6 @@ static int _lvconvert_split_and_keep_cachevol(struct cmd_context *cmd,
 	char *c;
 	struct lv_segment *cache_seg = first_seg(lv);
 	int cache_mode = cache_seg->cache_mode;
-	int noflush = 0;
 
 	if (!archive(lv->vg))
 		return_0;
@@ -1878,8 +1877,8 @@ static int _lvconvert_split_and_keep_cachevol(struct cmd_context *cmd,
 		/* Switch internally to WRITETHROUGH which does not require flushing */
 		cache_seg->cache_mode = CACHE_MODE_WRITETHROUGH;
 	}
-				
-	if (!lv_detach_cache_vol(lv, noflush))
+
+	if (!lv_cache_remove(lv))
 		return_0;
 
 	/* Cut off suffix _cvol */
