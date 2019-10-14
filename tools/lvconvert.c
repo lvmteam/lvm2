@@ -5565,7 +5565,7 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 
 	if (!_writecache_zero(cmd, lv_fast)) {
 		log_error("LV %s could not be zeroed.", display_lvname(lv_fast));
-		return 0;
+		return ECMD_FAILED;
 	}
 
 	/*

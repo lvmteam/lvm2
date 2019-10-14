@@ -1,5 +1,6 @@
 Version 2.03.06 - 
 ================================
+  Fix cmd return when zering of cachevol fails.
   Extend lvs to show all VDO properties.
   Preserve VDO write policy with vdopool.
   Increase default vdo bio threads to 4.
