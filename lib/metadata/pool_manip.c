@@ -254,6 +254,7 @@ int detach_pool_lv(struct lv_segment *seg)
 			return_0;
 		seg->lv->status &= ~CACHE;
 		lv_set_visible(seg->pool_lv);
+		seg->pool_lv->status &= ~LV_CACHE_VOL;
 		seg->pool_lv = NULL;
 		return 1;
 	}
