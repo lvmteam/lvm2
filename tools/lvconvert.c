@@ -4259,7 +4259,11 @@ static int _lvconvert_cachevol_attach_single(struct cmd_context *cmd,
 	if (_raid_split_image_conversion(lv))
 		goto_out;
 
-	/* Attach the cache to the main LV. */
+	/*
+	 * The lvm tradition is to rename an LV with a special role-specific
+	 * suffix when it becomes hidden.  Here the _cvol suffix is added to
+	 * the fast LV name.  When the cache is detached, it's renamed back.
+	 */
 	if (dm_snprintf(cvol_name, sizeof(cvol_name), "%s_cvol", cachevol_lv->name) < 0) {
 		log_error("Can't prepare new metadata name for %s.", display_lvname(cachevol_lv));
 		return 0;
@@ -4277,6 +4281,8 @@ static int _lvconvert_cachevol_attach_single(struct cmd_context *cmd,
 	lv->status |= LV_CACHE_USES_CACHEVOL;
 
 	cachevol_lv->status |= LV_CACHE_VOL;
+
+	/* Attach the cache to the main LV. */
 
 	if (!_cache_vol_attach(cmd, lv, cachevol_lv))
 		goto_out;
@@ -5278,6 +5284,8 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 					struct logical_volume *lv,
 					struct logical_volume *lv_fast)
 {
+	char cvol_name[NAME_LEN];
+	char *c;
 	int noflush = 0;
 
 	/*
@@ -5314,6 +5322,27 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 
 	if (!lv_detach_writecache_cachevol(lv, noflush))
 		return_0;
+
+	/*
+	 * Rename lv_fast back to its original name, without the _cvol
+	 * suffix that was added when lv_fast was attached for caching.
+	 */
+	if (!dm_strncpy(cvol_name, lv_fast->name, sizeof(cvol_name)) ||
+	    !(c = strstr(cvol_name, "_cvol"))) {
+		log_debug("LV %s has no suffix for cachevol (skipping rename).",
+			display_lvname(lv_fast));
+	} else {
+		*c = 0;
+		/* If the name is in use, generate new lvol%d */
+		if (lv_name_is_used_in_vg(lv->vg, cvol_name, NULL) &&
+		    !generate_lv_name(lv->vg, "lvol%d", cvol_name, sizeof(cvol_name))) {
+			log_error("Failed to generate unique name for unused logical volume.");
+			return 0;
+		}
+
+		if (!lv_rename_update(cmd, lv_fast, cvol_name, 0))
+			return_0;
+	}
 
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;
@@ -5546,6 +5575,7 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 	char *lockd_fast_args = NULL;
 	char *lockd_fast_name = NULL;
 	struct id lockd_fast_id;
+	char cvol_name[NAME_LEN];
 
 	fast_name = arg_str_value(cmd, cachevol_ARG, "");
 
@@ -5601,6 +5631,18 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 		log_error("LV %s could not be zeroed.", display_lvname(lv_fast));
 		return ECMD_FAILED;
 	}
+
+	/*
+	 * The lvm tradition is to rename an LV with a special role-specific
+	 * suffix when it becomes hidden.  Here the _cvol suffix is added to
+	 * the fast LV name.  When the cache is detached, it's renamed back.
+	 */
+	if (dm_snprintf(cvol_name, sizeof(cvol_name), "%s_cvol", lv_fast->name) < 0) {
+		log_error("Can't prepare new metadata name for %s.", display_lvname(lv_fast));
+		return ECMD_FAILED;
+	}
+	if (!lv_rename_update(cmd, lv_fast, cvol_name, 0))
+		return_ECMD_FAILED;
 
 	lv_fast->status |= LV_CACHE_VOL;
 
