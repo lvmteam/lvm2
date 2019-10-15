@@ -969,8 +969,8 @@ int cache_set_metadata_format(struct lv_segment *seg, cache_metadata_format_t fo
 	return 1;
 }
 
-#define ONE_MB_S 2048 /* 1MB in sectors */
-#define ONE_GB_S 2097152 /* 1GB in sectors */
+#define ONE_MB_IN_SECTORS 2048 /* 1MB in sectors */
+#define ONE_GB_IN_SECTORS 2097152 /* 1GB in sectors */
 
 int cache_vol_set_params(struct cmd_context *cmd,
 		     struct logical_volume *cache_lv,
@@ -1082,18 +1082,32 @@ int cache_vol_set_params(struct cmd_context *cmd,
 		}
 	}
 
+	/*
+	 * cachevol size 8M to 16M  -> metadata size 4M
+	 *
+	 * cachevol size 16M to 4G  -> metadata size 8M
+	 *
+	 * cachevol size 4G to 16G  -> metadata size 16M
+	 *
+	 * cachevol size 16G to 32G -> metadata size 32M
+	 *
+	 * cachevol size 32G and up -> metadata size 64M
+	 */
 	if (!meta_size) {
-		if (pool_lv->size < (128 * ONE_MB_S))
-			meta_size = 16 * ONE_MB_S;
+		if (pool_lv->size <= (16 * ONE_MB_IN_SECTORS))
+			meta_size = 4 * ONE_MB_IN_SECTORS;
 
-		else if (pool_lv->size < ONE_GB_S)
-			meta_size = 32 * ONE_MB_S;
+		else if (pool_lv->size <= (4 * ONE_GB_IN_SECTORS))
+			meta_size = 8 * ONE_MB_IN_SECTORS;
 
-		else if (pool_lv->size < (128 * ONE_GB_S))
-			meta_size = 64 * ONE_MB_S;
+		else if (pool_lv->size <= (16 * ONE_GB_IN_SECTORS))
+			meta_size = 16 * ONE_MB_IN_SECTORS;
 
-		if (meta_size > (pool_lv->size / 2))
-			meta_size = pool_lv->size / 2;
+		else if (pool_lv->size <= (32 * ONE_GB_IN_SECTORS))
+			meta_size = 32 * ONE_MB_IN_SECTORS;
+
+		else
+			meta_size = 64 * ONE_MB_IN_SECTORS;
 
 		if (meta_size < min_meta_size)
 			meta_size = min_meta_size;
