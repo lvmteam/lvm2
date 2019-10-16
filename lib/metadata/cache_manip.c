@@ -178,18 +178,22 @@ void cache_check_for_warns(const struct lv_segment *seg)
 }
 
 /*
- * Returns minimum size of cache metadata volume for give  data and chunk size
- * (all values in sector)
- * Default meta size is: (Overhead + mapping size + hint size)
+ * Returns the minimum size of cache metadata volume for given cache data size and
+ * and cache chunk size (all in/out values in sectors)
+ * Default metadata size is: (Overhead + mapping size + hint size)
  */
 static uint64_t _cache_min_metadata_size(uint64_t data_size, uint32_t chunk_size)
 {
-	uint64_t min_meta_size;
+	/* Used space for mapping and hints for each cached chunk in bytes
+	 * (matching thin-tools cache_metadata_size.cc) */
+	const uint64_t chunk_overhead = (DM_BYTES_PER_BLOCK + DM_MAX_HINT_WIDTH + DM_HINT_OVERHEAD_PER_BLOCK);
+	const uint64_t transaction_overhead = DM_TRANSACTION_OVERHEAD * 1024; /* 4MiB */
 
-	min_meta_size = data_size / chunk_size;		/* nr_chunks */
-	min_meta_size *= (DM_BYTES_PER_BLOCK + DM_MAX_HINT_WIDTH + DM_HINT_OVERHEAD_PER_BLOCK);
-	min_meta_size = (min_meta_size + (SECTOR_SIZE - 1)) >> SECTOR_SHIFT;	/* in sectors */
-	min_meta_size += DM_TRANSACTION_OVERHEAD * (1024 >> SECTOR_SHIFT);
+	/* Number of cache chunks we have in caching volume */
+	uint64_t nr_chunks = data_size / chunk_size;
+	/* Minimal size of metadata volume converted back to sectors */
+	uint64_t min_meta_size = (transaction_overhead + nr_chunks * chunk_overhead +
+				  (SECTOR_SIZE - 1)) >> SECTOR_SHIFT;
 
 	return min_meta_size;
 }
