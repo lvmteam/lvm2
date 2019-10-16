@@ -734,6 +734,11 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 		retried_open = 1;
 
 		dm_list_iterate_items_safe(devl, devl2, &reopen_devs) {
+			if (!devl->dev) {
+				dm_list_del(&devl->list);
+				continue;
+			}
+
 			_drop_bad_aliases(devl->dev);
 
 			if (dm_list_empty(&devl->dev->aliases)) {
