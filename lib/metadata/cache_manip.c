@@ -341,12 +341,6 @@ int validate_lv_cache_create_pool(const struct logical_volume *pool_lv)
 {
 	struct lv_segment *seg;
 
-	if (!lv_is_cache_pool(pool_lv) && !lv_is_cache_vol(pool_lv)) {
-		log_error("Logical volume %s is not a cache pool.",
-			  display_lvname(pool_lv));
-		return 0;
-	}
-
 	if (lv_is_locked(pool_lv)) {
 		log_error("Cannot use locked cache pool %s.",
 			  display_lvname(pool_lv));
