@@ -39,9 +39,9 @@ xxd meta.raw > meta.txt
 # to help debug if the next grep fails
 ls -l meta.txt
 head -n 100 meta.txt
-grep -A4 -B4 1200 meta.txt
+grep -A4 -B4 '01200:' meta.txt
 
-grep -B1 "$vg {" meta.txt > meta.vg
+grep -B1 "$vg " meta.txt > meta.vg
 
 cat meta.vg
 
@@ -73,7 +73,7 @@ dd if="$dev1" of=meta.raw bs=1M seek=15 count=1
 
 xxd meta.raw > meta.txt
 
-grep -B1 "$vg {" meta.txt > meta.vg
+grep -B1 "$vg " meta.txt > meta.vg
 
 cat meta.vg
 
