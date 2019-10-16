@@ -3453,6 +3453,7 @@ static int _cache_vol_attach(struct cmd_context *cmd,
 			        struct logical_volume *lv,
 			        struct logical_volume *lv_fast)
 {
+	char cvol_name[NAME_LEN];
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *cache_lv;
 	uint32_t chunk_size = 0;
@@ -3473,6 +3474,18 @@ static int _cache_vol_attach(struct cmd_context *cmd,
 		goto_out;
 
 	if (!archive(vg))
+		goto_out;
+
+	/*
+	 * The lvm tradition is to rename an LV with a special role-specific
+	 * suffix when it becomes hidden.  Here the _cvol suffix is added to
+	 * the fast LV name.  When the cache is detached, it's renamed back.
+	 */
+	if (dm_snprintf(cvol_name, sizeof(cvol_name), "%s_cvol", lv_fast->name) < 0) {
+		log_error("Can't prepare new cachevol name for %s.", display_lvname(lv_fast));
+		goto out;
+	}
+	if (!lv_rename_update(cmd, lv_fast, cvol_name, 0))
 		goto_out;
 
 	lv_fast->status |= LV_CACHE_VOL; /* Mark as cachevol LV */
@@ -4216,7 +4229,6 @@ static int _lvconvert_cachevol_attach_single(struct cmd_context *cmd,
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *cachevol_lv;
 	const char *cachevol_name;
-	char cvol_name[NAME_LEN];
 
 	if (!(cachevol_name = arg_str_value(cmd, cachevol_ARG, NULL)))
 		goto_out;
@@ -4260,18 +4272,6 @@ static int _lvconvert_cachevol_attach_single(struct cmd_context *cmd,
 
 	if (_raid_split_image_conversion(lv))
 		goto_out;
-
-	/*
-	 * The lvm tradition is to rename an LV with a special role-specific
-	 * suffix when it becomes hidden.  Here the _cvol suffix is added to
-	 * the fast LV name.  When the cache is detached, it's renamed back.
-	 */
-	if (dm_snprintf(cvol_name, sizeof(cvol_name), "%s_cvol", cachevol_lv->name) < 0) {
-		log_error("Can't prepare new metadata name for %s.", display_lvname(cachevol_lv));
-		return 0;
-	}
-	if (!lv_rename_update(cmd, cachevol_lv, cvol_name, 0))
-		return_0;
 
 	/* Attach the cache to the main LV. */
 
