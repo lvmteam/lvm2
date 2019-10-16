@@ -15,6 +15,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+aux have_raid 1 3 0 || skip
 v1_15_0=0
 aux have_raid 1 15 0 && v1_15_0=1
 
