@@ -106,8 +106,20 @@ int attach_pool_lv(struct lv_segment *seg,
 	seg->origin = origin;
 	seg->lv->status |= seg_is_cache(seg) ? CACHE : THIN_VOLUME;
 
-	if (seg_is_cache(seg))
-		lv_set_hidden(pool_lv); /* Used cache-pool is hidden */
+	if (seg_is_cache(seg)) {
+		lv_set_hidden(pool_lv); /* Used cache-pool/cachevol is hidden */
+
+		if (lv_is_cache_vol(pool_lv))
+			/*
+			 * This flag is added to the segtype name so that old versions of lvm
+			 * (if they happen to be used with new metadata with a cache LV using a
+			 * cachevol) will report an error when they see the unknown
+			 * cache+CACHE_USES_CACHEVOL segment type.  Otherwise the old version
+			 * would expect to find a cache pool and fail.
+			 */
+			seg->lv->status |= LV_CACHE_USES_CACHEVOL;
+	}
+
 
 	if (origin && !add_seg_to_segs_using_this_lv(origin, seg))
 		return_0;

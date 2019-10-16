@@ -504,9 +504,6 @@ static int _cache_text_import(struct lv_segment *seg,
 
 	seg->lv->status |= strstr(seg->lv->name, "_corig") ? LV_PENDING_DELETE : 0;
 
-	if (!attach_pool_lv(seg, pool_lv, NULL, NULL, NULL))
-		return_0;
-
 	if (!_settings_text_import(seg, sn))
 		return_0;
 
@@ -547,12 +544,16 @@ static int _cache_text_import(struct lv_segment *seg,
 			if (!id_read_format(seg->data_id, uuid))
 				return SEG_LOG_ERROR("Couldn't format data_id in");
 		}
+		pool_lv->status |= LV_CACHE_VOL; /* Mark as cachevol LV */
 	} else {
 		/* Do not call this when LV is cache_vol. */
 		/* load order is unknown, could be cache origin or pool LV, so check for both */
 		if (!dm_list_empty(&pool_lv->segments))
 			_fix_missing_defaults(first_seg(pool_lv));
 	}
+
+	if (!attach_pool_lv(seg, pool_lv, NULL, NULL, NULL))
+		return_0;
 
 	return 1;
 }

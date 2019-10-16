@@ -3475,6 +3475,8 @@ static int _cache_vol_attach(struct cmd_context *cmd,
 	if (!archive(vg))
 		goto_out;
 
+	lv_fast->status |= LV_CACHE_VOL; /* Mark as cachevol LV */
+
 	/*
 	 * Changes the vg struct to match the desired state.
 	 *
@@ -4270,17 +4272,6 @@ static int _lvconvert_cachevol_attach_single(struct cmd_context *cmd,
 	}
 	if (!lv_rename_update(cmd, cachevol_lv, cvol_name, 0))
 		return_0;
-
-	/*
-	 * This flag is added to the segtype name so that old versions of lvm
-	 * (if they happen to be used with new metadata with a cache LV using a
-	 * cachevol) will report an error when they see the unknown
-	 * cache+CACHE_USES_CACHEVOL segment type.  Otherwise the old version
-	 * would expect to find a cache pool and fail.
-	 */
-	lv->status |= LV_CACHE_USES_CACHEVOL;
-
-	cachevol_lv->status |= LV_CACHE_VOL;
 
 	/* Attach the cache to the main LV. */
 
