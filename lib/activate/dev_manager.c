@@ -2374,9 +2374,11 @@ static int _add_cvol_subdev_to_dtree(struct dev_manager *dm, struct dm_tree *dtr
 	char *name ,*dlid;
 	union lvid lvid = { 0 };
 
-	/* TODO: Convert to use just  CVOL UUID with suffix */
 	memcpy(&lvid.id[0], &lv->vg->id, sizeof(struct id));
-	memcpy(&lvid.id[1], (meta_or_data) ? &lvseg->metadata_id : &lvseg->data_id, sizeof(struct id));
+	/* When ID is provided in form of metadata_id or data_id, otherwise use CVOL ID */
+	memcpy(&lvid.id[1],
+	       (meta_or_data && lvseg->metadata_id) ? lvseg->metadata_id :
+	       (lvseg->data_id) ? lvseg->data_id : &pool_lv->lvid.id[1], sizeof(struct id));
 
 	if (!(dlid = dm_build_dm_uuid(mem, UUID_PREFIX, (const char *)&lvid.s, layer)))
 		return_0;
@@ -3159,9 +3161,9 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		memset(&lvid_meta, 0, sizeof(lvid_meta));
 		memset(&lvid_data, 0, sizeof(lvid_meta));
 		memcpy(&lvid_meta.id[0], &vg->id, sizeof(struct id));
-		memcpy(&lvid_meta.id[1], &lvseg->metadata_id, sizeof(struct id));
+		memcpy(&lvid_meta.id[1], lvseg->metadata_id ? : &pool_lv->lvid.id[1], sizeof(struct id));
 		memcpy(&lvid_data.id[0], &vg->id, sizeof(struct id));
-		memcpy(&lvid_data.id[1], &lvseg->data_id, sizeof(struct id));
+		memcpy(&lvid_data.id[1], lvseg->data_id ? : &pool_lv->lvid.id[1], sizeof(struct id));
 
 		if (!(dlid_meta = dm_build_dm_uuid(dm->mem, UUID_PREFIX, (const char *)&lvid_meta.s, "cmeta")))
 			return_0;

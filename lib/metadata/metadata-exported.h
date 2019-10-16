@@ -506,8 +506,8 @@ struct lv_segment {
 	uint64_t metadata_len;			/* For cache */
 	uint64_t data_start;			/* For cache */
 	uint64_t data_len;			/* For cache */
-	struct id metadata_id;			/* For cache */
-	struct id data_id;			/* For cache */
+	struct id *metadata_id;			/* For cache, when NULL uses CVOL id */
+	struct id *data_id;			/* For cache, when NULL uses CVOL id */
 
 	cache_metadata_format_t cache_metadata_format;/* For cache_pool */
 	cache_mode_t cache_mode;		/* For cache_pool */

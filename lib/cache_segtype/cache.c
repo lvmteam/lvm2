@@ -528,17 +528,25 @@ static int _cache_text_import(struct lv_segment *seg,
 		if (!dm_config_get_uint64(sn, "data_len", &seg->data_len))
 			return SEG_LOG_ERROR("Couldn't read data_len in");
 
-		if (!dm_config_get_str(sn, "metadata_id", &uuid))
-			return SEG_LOG_ERROR("Couldn't read metadata_id in");
+		/* Will use CVOL ID, when metadata_id is not provided */
+		if (dm_config_has_node(sn, "metadata_id")) {
+			if (!(seg->metadata_id = dm_pool_alloc(seg->lv->vg->vgmem, sizeof(*seg->metadata_id))))
+				return SEG_LOG_ERROR("Couldn't allocate metadata_id in");
+			if (!dm_config_get_str(sn, "metadata_id", &uuid))
+				return SEG_LOG_ERROR("Couldn't read metadata_id in");
+			if (!id_read_format(seg->metadata_id, uuid))
+				return SEG_LOG_ERROR("Couldn't format metadata_id in");
+		}
 
-		if (!id_read_format(&seg->metadata_id, uuid))
-			return SEG_LOG_ERROR("Couldn't format metadata_id in");
-
-		if (!dm_config_get_str(sn, "data_id", &uuid))
-			return SEG_LOG_ERROR("Couldn't read data_id in");
-
-		if (!id_read_format(&seg->data_id, uuid))
-			return SEG_LOG_ERROR("Couldn't format data_id in");
+		/* Will use CVOL ID, when data_id is not provided */
+		if (dm_config_has_node(sn, "data_id")) {
+			if (!(seg->data_id = dm_pool_alloc(seg->lv->vg->vgmem, sizeof(*seg->data_id))))
+				return SEG_LOG_ERROR("Couldn't allocate data_id in");
+			if (!dm_config_get_str(sn, "data_id", &uuid))
+				return SEG_LOG_ERROR("Couldn't read data_id in");
+			if (!id_read_format(seg->data_id, uuid))
+				return SEG_LOG_ERROR("Couldn't format data_id in");
+		}
 	} else {
 		/* Do not call this when LV is cache_vol. */
 		/* load order is unknown, could be cache origin or pool LV, so check for both */
@@ -581,13 +589,17 @@ static int _cache_text_export(const struct lv_segment *seg, struct formatter *f)
 		outf(f, "data_start = " FMTu64, seg->data_start);
 		outf(f, "data_len = " FMTu64, seg->data_len);
 
-		if (!id_write_format(&seg->metadata_id, buffer, sizeof(buffer)))
-			return_0;
-		outf(f, "metadata_id = \"%s\"", buffer);
+		if (seg->metadata_id) {
+			if (!id_write_format(seg->metadata_id, buffer, sizeof(buffer)))
+				return_0;
+			outf(f, "metadata_id = \"%s\"", buffer);
+		}
 
-		if (!id_write_format(&seg->data_id, buffer, sizeof(buffer)))
-			return_0;
-		outf(f, "data_id = \"%s\"", buffer);
+		if (seg->data_id) {
+			if (!id_write_format(seg->data_id, buffer, sizeof(buffer)))
+				return_0;
+			outf(f, "data_id = \"%s\"", buffer);
+		}
 	}
 
 	return 1;
@@ -695,9 +707,9 @@ static int _cache_add_target_line(struct dev_manager *dm,
 		memset(&metadata_lvid, 0, sizeof(metadata_lvid));
 		memset(&data_lvid, 0, sizeof(data_lvid));
 		memcpy(&metadata_lvid.id[0], &seg->lv->vg->id, sizeof(struct id));
-		memcpy(&metadata_lvid.id[1], &seg->metadata_id, sizeof(struct id));
+		memcpy(&metadata_lvid.id[1], (seg->metadata_id) ? : &seg->pool_lv->lvid.id[1], sizeof(struct id));
 		memcpy(&data_lvid.id[0], &seg->lv->vg->id, sizeof(struct id));
-		memcpy(&data_lvid.id[1], &seg->data_id, sizeof(struct id));
+		memcpy(&data_lvid.id[1], (seg->data_id) ? : &seg->pool_lv->lvid.id[1], sizeof(struct id));
 
 		if (!(metadata_uuid = dm_build_dm_uuid(mem, UUID_PREFIX, (const char *)&metadata_lvid.s, "cmeta")))
 			return_0;

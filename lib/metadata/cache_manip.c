@@ -578,7 +578,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	struct lv_segment *cache_seg = first_seg(cache_lv);
 	struct logical_volume *corigin_lv;
 	struct logical_volume *cache_pool_lv;
-	const struct id *data_id, *metadata_id;
+	struct id *data_id, *metadata_id;
 	uint64_t data_len, metadata_len;
 	cache_mode_t cache_mode;
 	int is_clear;
@@ -668,9 +668,9 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 
 	/* Preserve currently imortant data from original cache segment.
 	 * TODO: can it be done without this ? */
-	data_id = &cache_seg->data_id;
+	data_id = cache_seg->data_id;
 	data_len = cache_seg->data_len;
-	metadata_id = &cache_seg->metadata_id;
+	metadata_id = cache_seg->metadata_id;
 	metadata_len = cache_seg->metadata_len;
 
 	/* Replace 'error' with 'cache' segtype */
@@ -691,8 +691,8 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	/* Restore preserved data into a new cache segment that is going to be removed. */
 	if ((cache_seg->data_len = data_len)) {
 		cache_seg->metadata_len = metadata_len;
-		memcpy(&cache_seg->data_id, data_id, sizeof(struct id));
-		memcpy(&cache_seg->metadata_id, metadata_id, sizeof(struct id));
+		cache_seg->data_id = data_id;
+		cache_seg->metadata_id = metadata_id;
 		cache_pool_lv->status |= LV_CACHE_VOL;
 		/* Unused settings set only for passing metadata validation. */
 		cache_seg->cache_mode = CACHE_MODE_WRITETHROUGH;
@@ -1215,8 +1215,8 @@ int cache_vol_set_params(struct cmd_context *cmd,
 	cache_seg->cache_metadata_format = format;
 	cache_seg->policy_name = policy_name;
 	cache_seg->policy_settings = policy_settings;
-	id_create(&cache_seg->metadata_id);
-	id_create(&cache_seg->data_id);
+	/* Since we add -cdata  and -cmeta to UUID we use CacheVol LV UUID */
+	cache_seg->data_id = cache_seg->metadata_id = NULL;
 
 	return 1;
 }

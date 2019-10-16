@@ -1,5 +1,6 @@
 Version 2.03.06 - 
 ================================
+  No longer store extra UUID for cmeta and cdata cachevol layer.
   Enhance activation of cache devices with cachevols.
   Add _cvol in list of protected suffixes and start use it with DM UUID.
   Rename LV converted to cachevol to use _cvol suffix.
