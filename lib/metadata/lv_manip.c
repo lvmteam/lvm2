@@ -6360,7 +6360,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return_0;
 
 	if (!archive(vg))
-		return 0;
+		return_0;
 
 	/* Special case removing a striped raid LV with allocated reshape space */
 	if (seg && seg->reshape_len) {
