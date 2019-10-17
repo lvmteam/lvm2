@@ -105,10 +105,10 @@ pvck --dump metadata_all --pvmetadatacopies 2 -f all3b "$dev3" > out3b
 diff out1 out2
 diff out1 out3
 
-grep "seqno 1 with" out1
-grep "seqno 1 with" out3b
-grep "seqno 2 with" out1
-grep "seqno 2 with" out3b
+grep "seqno 1" out1
+grep "seqno 1" out3b
+grep "seqno 2" out1
+grep "seqno 2" out3b
 
 diff all1 all2
 diff all1 all3
