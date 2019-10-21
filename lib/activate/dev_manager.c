@@ -2372,7 +2372,7 @@ static int _add_cvol_subdev_to_dtree(struct dev_manager *dm, struct dm_tree *dtr
 	struct lv_segment *lvseg = first_seg(lv);
 	struct dm_info info;
 	char *name ,*dlid;
-	union lvid lvid = { 0 };
+	union lvid lvid = { { { "" } } };
 
 	memcpy(&lvid.id[0], &lv->vg->id, sizeof(struct id));
 	/* When ID is provided in form of metadata_id or data_id, otherwise use CVOL ID */
