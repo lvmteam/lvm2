@@ -1841,7 +1841,6 @@ static int _lvconvert_split_and_keep_cachevol(struct cmd_context *cmd,
 				   struct logical_volume *lv_fast)
 {
 	char cvol_name[NAME_LEN];
-	char *c;
 	struct lv_segment *cache_seg = first_seg(lv);
 	int cache_mode = cache_seg->cache_mode;
 
@@ -1882,23 +1881,12 @@ static int _lvconvert_split_and_keep_cachevol(struct cmd_context *cmd,
 		return_0;
 
 	/* Cut off suffix _cvol */
-	if (!dm_strncpy(cvol_name, lv_fast->name, sizeof(cvol_name)) ||
-	    !(c = strstr(cvol_name, "_cvol"))) {
+	if (!drop_lvname_suffix(cvol_name, lv_fast->name, "cvol")) {
 		/* likely older instance of metadata */
 		log_debug("LV %s has no suffix for cachevol (skipping rename).",
 			  display_lvname(lv_fast));
-	} else {
-		*c = 0;
-		/* If the name is in use, generate new lvol%d */
-		if (lv_name_is_used_in_vg(lv->vg, cvol_name, NULL) &&
-		    !generate_lv_name(lv->vg, "lvol%d", cvol_name, sizeof(cvol_name))) {
-			log_error("Failed to generate unique name for unused logical volume.");
-			return 0;
-		}
-
-		if (!lv_rename_update(cmd, lv_fast, cvol_name, 0))
-			return_0;
-	}
+	} else if (!lv_uniq_rename_update(cmd, lv_fast, cvol_name, 0))
+		return_0;
 
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;
