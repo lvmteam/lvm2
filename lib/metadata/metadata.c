@@ -4884,7 +4884,7 @@ out:
 }
 
 struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const char *vgid,
-			     uint32_t read_flags, uint32_t lockd_state,
+			     uint32_t vg_read_flags, uint32_t lockd_state,
 			     uint32_t *error_flags, struct volume_group **error_vg)
 {
 	char uuidstr[64] __attribute__((aligned(8)));
@@ -4894,8 +4894,8 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	int missing_pv_dev = 0;
 	int missing_pv_flag = 0;
 	uint32_t failure = 0;
-	int writing = (read_flags & READ_FOR_UPDATE);
-	int activating = (read_flags & READ_FOR_ACTIVATE);
+	int writing = (vg_read_flags & READ_FOR_UPDATE);
+	int activating = (vg_read_flags & READ_FOR_ACTIVATE);
 
 	if (is_orphan_vg(vg_name)) {
 		log_very_verbose("Reading orphan VG %s", vg_name);
@@ -4921,7 +4921,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	 * of needing to write to them.
 	 */
 
-	if (!(read_flags & READ_WITHOUT_LOCK) &&
+	if (!(vg_read_flags & READ_WITHOUT_LOCK) &&
 	    !lock_vol(cmd, vg_name, (writing || activating) ? LCK_VG_WRITE : LCK_VG_READ, NULL)) {
 		log_error("Can't get lock for %s", vg_name);
 		failure |= FAILED_LOCKING;
@@ -4930,7 +4930,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 
 	if (!(vg = _vg_read(cmd, vg_name, vgid, 0, writing))) {
 		/* Some callers don't care if the VG doesn't exist and don't want an error message. */
-		if (!(read_flags & READ_OK_NOTFOUND))
+		if (!(vg_read_flags & READ_OK_NOTFOUND))
 			log_error("Volume group \"%s\" not found", vg_name);
 		failure |= FAILED_NOTFOUND;
 		goto_bad;
@@ -5164,12 +5164,12 @@ bad:
  * so vg_read should acquire an exclusive file lock on the vg.
  */
 struct volume_group *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
-			 const char *vgid, uint32_t read_flags, uint32_t lockd_state)
+			 const char *vgid, uint32_t vg_read_flags, uint32_t lockd_state)
 {
 	struct volume_group *vg;
 	uint32_t error_flags = 0;
 
-	vg = vg_read(cmd, vg_name, vgid, read_flags | READ_FOR_UPDATE, lockd_state, &error_flags, NULL);
+	vg = vg_read(cmd, vg_name, vgid, vg_read_flags | READ_FOR_UPDATE, lockd_state, &error_flags, NULL);
 
 	return vg;
 }

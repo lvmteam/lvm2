@@ -527,7 +527,7 @@ static void _choose_duplicates(struct cmd_context *cmd,
 	struct lvmcache_info *info;
 	struct device *dev1, *dev2;
 	uint32_t dev1_major, dev1_minor, dev2_major, dev2_minor;
-	uint64_t dev1_size, dev2_size, pv_size;
+	uint64_t dev1_size, dev2_size, pvsummary_size;
 	int in_subsys1, in_subsys2;
 	int is_dm1, is_dm2;
 	int has_fs1, has_fs2;
@@ -655,9 +655,9 @@ next:
 		if (!dev_get_size(dev2, &dev2_size))
 			dev2_size = 0;
 
-		pv_size = _get_pvsummary_size(devl->dev->pvid);
-		same_size1 = (dev1_size == pv_size);
-		same_size2 = (dev2_size == pv_size);
+		pvsummary_size = _get_pvsummary_size(devl->dev->pvid);
+		same_size1 = (dev1_size == pvsummary_size);
+		same_size2 = (dev2_size == pvsummary_size);
 
 		if ((device_hint = _get_pvsummary_device_hint(devl->dev->pvid))) {
 			same_name1 = !strcmp(device_hint, dev_name(dev1));
@@ -684,7 +684,7 @@ next:
 
 		log_debug_cache("PV %s: size %llu. %s is %llu. %s is %llu.",
 				devl->dev->pvid,
-				(unsigned long long)pv_size,
+				(unsigned long long)pvsummary_size,
 				dev_name(dev1), (unsigned long long)dev1_size,
 				dev_name(dev2), (unsigned long long)dev2_size);
 
