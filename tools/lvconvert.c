@@ -4757,7 +4757,7 @@ static int _lvconvert_split_cache_single(struct cmd_context *cmd,
 			if (lvremove_single(cmd, lv_fast, NULL) != ECMD_PROCESSED)
 				return ECMD_FAILED;
 		}
-
+		ret = 1;
 	} else if (lv_is_cache(lv_main) && lv_is_cache_vol(lv_fast)) {
 		if (cmd->command->command_enum == lvconvert_split_and_remove_cache_CMD) {
 			ret = _lvconvert_split_and_remove_cachevol(cmd, lv_main, lv_fast);
