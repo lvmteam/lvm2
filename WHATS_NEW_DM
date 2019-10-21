@@ -1,6 +1,6 @@
 Version 1.02.165 - 
 =================================
-  Add support for DM_GET_TARGET_VERSION.
+  Add support for DM_DEVICE_GET_TARGET_VERSION.
   Add debug of dmsetup udevcomplete with hexa print DM_COOKIE_COMPLETED.
   Fix versioning of dm_stats_create_region and dm_stats_create_region.
 
