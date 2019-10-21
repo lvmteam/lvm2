@@ -845,6 +845,8 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	      const char *new_name);
 int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 		     const char *new_name, int update_mda);
+int lv_uniq_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
+			  const char *new_name, int update_mda);
 
 /* Updates and reloads metadata for given lv */
 int lv_update_and_reload(struct logical_volume *lv);

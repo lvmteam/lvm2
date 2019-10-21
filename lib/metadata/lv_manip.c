@@ -4626,6 +4626,30 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 }
 
 /*
+ * Rename LV to new name, if name is occupies, lvol% is generated.
+ * VG must be locked by caller.
+ */
+int lv_uniq_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
+			  const char *new_name, int update_mda)
+{
+	char uniq_name[NAME_LEN];
+
+	/* If the name is in use, generate new lvol%d */
+	if (lv_name_is_used_in_vg(lv->vg, new_name, NULL)) {
+		if (!generate_lv_name(lv->vg, "lvol%d", uniq_name, sizeof(uniq_name))) {
+			log_error("Failed to generate unique name for unused logical volume.");
+			return 0;
+		}
+		new_name = uniq_name;
+	}
+
+	if (!lv_rename_update(cmd, lv, new_name, 0))
+		return_0;
+
+	return 1;
+}
+
+/*
  * Core of LV renaming routine.
  * VG must be locked by caller.
  */
