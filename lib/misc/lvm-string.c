@@ -290,3 +290,27 @@ char *first_substring(const char *str, ...)
 
 	return r;
 }
+
+/* Cut suffix (if present) and write the name into NAME_LEN sized new_name buffer
+ * When suffix is NULL, everythin past the last '_' is removed.
+ * Returns 1 when suffix was removed, 0 otherwise.
+ */
+int drop_lvname_suffix(char *new_name, const char *name, const char *suffix)
+{
+	char *c;
+
+	if (!dm_strncpy(new_name, name, NAME_LEN)) {
+		log_debug(INTERNAL_ERROR "Name is too long.");
+		return 0;
+	}
+
+	if (!(c = strrchr(new_name, '_')))
+		return 0;
+
+	if (suffix && strcmp(c + 1, suffix))
+		return 0;
+
+	*c = 0; /* remove suffix */
+
+	return 1;
+}

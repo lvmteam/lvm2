@@ -57,5 +57,6 @@ int is_reserved_lvname(const char *name);
  * first match or else NULL.
  */
 char *first_substring(const char *str, ...);
+int drop_lvname_suffix(char *new_name, const char *name, const char *suffix);
 
 #endif
