@@ -60,7 +60,7 @@ lvcreate --type cache-pool -n ${lv1}_pool -l 4 $vg "$dev5"
 lvcreate --type cache -n $lv1 -l 8 $vg/${lv1}_pool "$dev1"
 
 check lv_tree_on $vg ${lv1}_foo "$dev1"
-check lv_tree_on $vg ${lv1}_pool "$dev5"
+check lv_tree_on $vg ${lv1}_pool_cpool "$dev5"
 check lv_tree_on $vg ${lv1} "$dev1"
 
 aux mkdev_md5sum $vg $lv1
@@ -86,7 +86,7 @@ lvcreate --type raid1 -m 1 -l 8 -n $lv1 $vg "$dev1" "$dev2"
 lvcreate --type cache -l 4 -n ${lv1}_pool $vg/$lv1 "$dev5"
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg ${lv1} "$dev1" "$dev2"
-check lv_tree_on $vg ${lv1}_pool "$dev5"
+check lv_tree_on $vg ${lv1}_pool_cpool "$dev5"
 
 aux mkdev_md5sum $vg $lv1
 pvmove $mode "$dev1" "$dev3" 2>&1 | tee out
@@ -113,7 +113,7 @@ lvconvert --yes --type cache-pool $vg/${lv1}_pool --poolmetadata $vg/meta
 lvcreate --type cache -n $lv1 -L 8M $vg/${lv1}_pool "$dev5"
 
 check lv_tree_on $vg ${lv1}_foo "$dev1"
-check lv_tree_on $vg ${lv1}_pool "$dev1" "$dev2"
+check lv_tree_on $vg ${lv1}_pool_cpool "$dev1" "$dev2"
 check lv_tree_on $vg ${lv1} "$dev5"
 
 aux mkdev_md5sum $vg $lv1
@@ -121,7 +121,7 @@ aux mkdev_md5sum $vg $lv1
 #  LVs, both of which contain a RAID1 _rimage & _rmeta LV - 5 total LVs
 pvmove $mode "$dev1" "$dev3" 2>&1 | tee out
 check lv_tree_on $vg ${lv1}_foo "$dev3"
-not check lv_tree_on $vg ${lv1}_pool "$dev1"
+not check lv_tree_on $vg ${lv1}_pool_cpool "$dev1"
 #check lv_tree_on $vg ${lv1} "$dev5"
 #check dev_md5sum $vg $lv1
 
@@ -152,7 +152,7 @@ lvconvert --yes --thinpool $vg/thinpool --poolmetadata $vg/meta
 lvcreate -T $vg/thinpool -V 20 -n thin_lv
 
 check lv_tree_on $vg ${lv1}_foo "$dev1"
-check lv_tree_on $vg cachepool "$dev1" "$dev2"
+check lv_tree_on $vg cachepool_cpool "$dev1" "$dev2"
 check lv_tree_on $vg thinpool "$dev1" "$dev3" "$dev4"
 
 aux mkdev_md5sum $vg thin_lv
@@ -161,7 +161,7 @@ lvs -a -o name,attr,devices $vg
 pvmove $mode "$dev1" "$dev5" 2>&1 | tee out
 lvs -a -o name,attr,devices $vg
 check lv_tree_on $vg ${lv1}_foo "$dev5"
-not check lv_tree_on $vg cachepool "$dev1"
+not check lv_tree_on $vg cachepool_cpool "$dev1"
 check lv_tree_on $vg thinpool "$dev3" "$dev4" "$dev5" # Move non-cache tmeta
 #check dev_md5sum $vg/thin_lv
 

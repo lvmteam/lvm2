@@ -98,11 +98,11 @@ check lv_field $vg/$lv1 copy_percent "0.00"
 # there should be something present (value differs per policy version)
 test -n "$(get lv_field $vg/$lv1 data_percent)"
 test -n "$(get lv_field $vg/$lv1 metadata_percent)"
-check lv_field $vg/cpool copy_percent "0.00"
-test -n "$(get lv_field $vg/cpool data_percent)"
-test -n "$(get lv_field $vg/cpool metadata_percent)"
+check lv_field $vg/cpool_cpool copy_percent "0.00"
+test -n "$(get lv_field $vg/cpool_cpool data_percent)"
+test -n "$(get lv_field $vg/cpool_cpool metadata_percent)"
 # check we also display percent value for segmented output (-o+devices)
-lvs -a -o+devices $vg/cpool | tee out
+lvs -a -o+devices $vg/cpool_cpool | tee out
 grep "0.00" out
 lvremove -f $vg
 
@@ -155,8 +155,8 @@ check lv_not_exists $vg $lv1 pool1 pool1_cdata pool1_cmeta
 
 # Removal of cache pool leaves origin uncached
 check lv_field $vg/$lv2 segtype "cache"
-lvremove -f $vg/pool2
-check lv_not_exists $vg pool2 pool2_cdata pool2_cmeta
+lvremove -f $vg/pool2_cpool
+check lv_not_exists $vg pool2_cpool pool2_cpool_cdata pool2_cpool_cmeta
 check lv_field $vg/$lv2 segtype "linear"
 
 lvremove -f $vg
@@ -193,7 +193,7 @@ lvcreate -an -l1 -n $vg/$lv1
 # do not allow stripping for cache-pool
 fail lvcreate -H -i 2 -l1 -n cpool1 $vg/$lv1
 lvcreate -H -l1 -n cpool1 $vg/$lv1
-check lv_attr_bit perm $vg/cpool1 "w"
+check lv_attr_bit perm $vg/cpool1_cpool "w"
 check lv_attr_bit perm $vg/${lv1}_corig "w"
 check lv_attr_bit perm $vg/$lv1 "w"
 
@@ -204,16 +204,16 @@ fail lvcreate -H -l1 -pr -n cpool2 $vg/$lv2
 # read-only origin and -pr => read-only cache + origin
 lvcreate -an -pr -l1 -n $vg/$lv3
 lvcreate -an -H -l1 -pr -n cpool3 $vg/$lv3
-check lv_attr_bit perm $vg/cpool3 "w"
+check lv_attr_bit perm $vg/cpool3_cpool "w"
 check lv_attr_bit perm $vg/${lv3}_corig "r"
 check lv_attr_bit perm $vg/$lv3 "r"
 check inactive $vg $lv3
-check inactive $vg cpool3
+check inactive $vg cpool3_cpool
 
 # read-only origin and 'default' => read-only cache + origin
 lvcreate -an -pr -l1 -n $vg/$lv4
 lvcreate -H -l1 -n cpool4 $vg/$lv4
-check lv_attr_bit perm $vg/cpool4 "w"
+check lv_attr_bit perm $vg/cpool4_cpool "w"
 check lv_attr_bit perm $vg/${lv4}_corig "r"
 check lv_attr_bit perm $vg/$lv4 "r"
 
@@ -224,7 +224,7 @@ fail lvcreate -H -l1 -prw -n cpool5 $vg/$lv5
 # cached volume respects permissions
 lvcreate --type cache-pool -l1 -n $vg/cpool
 lvcreate -H -l1 -pr -n $lv6 $vg/cpool
-check lv_attr_bit perm $vg/cpool "w"
+check lv_attr_bit perm $vg/cpool_cpool "w"
 check lv_attr_bit perm $vg/$lv6 "r"
 
 lvremove -f $vg

@@ -262,7 +262,7 @@ lvs -a -o+segtype $vg
 check lv_field $vg/$lv5 segtype cache
 
 # check lv_field doesn't work for hidden lvs
-lvs -a -o segtype $vg/$lv3 > segtype
+lvs -a -o segtype $vg/${lv3}_cpool > segtype
 grep cache-pool segtype
 
 lvconvert --splitcache $vg/$lv5

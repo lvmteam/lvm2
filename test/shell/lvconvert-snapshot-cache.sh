@@ -32,38 +32,38 @@ lvcreate -aey -L1 -n ch $vg
 lvcreate -H -L1 -n cpool $vg/ch
 
 # Cannot create snapshot of cpool
-not lvcreate -s -L1 $vg/cpool 2>&1 | tee err
+not lvcreate -s -L1 $vg/cpool_cpool 2>&1 | tee err
 grep "not supported" err
 
 # Cannot create snapshot of cpool's meta
-not lvcreate -s -L1 $vg/cpool_cmeta 2>&1 | tee err
+not lvcreate -s -L1 $vg/cpool_cpool_cmeta 2>&1 | tee err
 grep "not supported" err
 
 # Cannot create snapshot of cpool's data
-not lvcreate -s -L1 $vg/cpool_cdata 2>&1 | tee err
+not lvcreate -s -L1 $vg/cpool_cpool_cdata 2>&1 | tee err
 grep "not supported" err
 
 # Cannot use cache-type as COW
 not lvconvert --yes --type snapshot $vg/cow $vg/ch 2>&1 | tee err
 grep "not accept" err
 
-not lvconvert --yes --type snapshot $vg/cow $vg/cpool 2>&1 | tee err
+not lvconvert --yes --type snapshot $vg/cow $vg/cpool_cpool 2>&1 | tee err
 grep "not accept" err
 
-not lvconvert --yes --type snapshot $vg/cow $vg/cpool_cdata 2>&1 | tee err
+not lvconvert --yes --type snapshot $vg/cow $vg/cpool_cpool_cdata 2>&1 | tee err
 grep "lv_is_visible" err
 
-not lvconvert --yes --type snapshot $vg/cow $vg/cpool_cmeta 2>&1 | tee err
+not lvconvert --yes --type snapshot $vg/cow $vg/cpool_cpool_cmeta 2>&1 | tee err
 grep "lv_is_visible" err
 
 # Cannot use thin-pool, _tdata, _tmeta as origin
-not lvconvert --yes --type snapshot $vg/cpool $vg/cow 2>&1 | tee err
+not lvconvert --yes --type snapshot $vg/cpool_cpool $vg/cow 2>&1 | tee err
 grep "not supported" err
 
-not lvconvert --yes --type snapshot $vg/cpool_cdata $vg/cow 2>&1 | tee err
+not lvconvert --yes --type snapshot $vg/cpool_cpool_cdata $vg/cow 2>&1 | tee err
 grep "not supported" err
 
-not lvconvert --yes --type snapshot $vg/cpool_cmeta $vg/cow 2>&1 | tee err
+not lvconvert --yes --type snapshot $vg/cpool_cpool_cmeta $vg/cow 2>&1 | tee err
 grep "not supported" err
 
 lvconvert --yes -s $vg/ch $vg/cow

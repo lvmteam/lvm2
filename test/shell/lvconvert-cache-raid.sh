@@ -60,25 +60,25 @@ lvs -a -o+seg_pe_ranges $vg
 lvconvert --yes --type cache-pool --poolmetadata $vg/cpool_meta $vg/cpool
 lvcreate -n corigin --type cache --cachepool $vg/cpool -l 10
 
-lvchange --syncaction repair $vg/cpool_cmeta
-aux wait_for_sync $vg cpool_cmeta
+lvchange --syncaction repair $vg/cpool_cpool_cmeta
+aux wait_for_sync $vg cpool_cpool_cmeta
 
-lvchange --syncaction repair $vg/cpool_cdata
-aux wait_for_sync $vg cpool_cdata
+lvchange --syncaction repair $vg/cpool_cpool_cdata
+aux wait_for_sync $vg cpool_cpool_cdata
 
-lvconvert -y --repair $vg/cpool_cmeta
-lvconvert -y --repair $vg/cpool_cdata
+lvconvert -y --repair $vg/cpool_cpool_cmeta
+lvconvert -y --repair $vg/cpool_cpool_cdata
 
 # do not allow reserved names for *new* LVs
-not lvconvert --splitmirrors 1 --name split_cmeta $vg/cpool_cmeta "$dev1"
-not lvconvert --splitmirrors 1 --name split_cdata $vg/cpool_cdata "$dev1"
+not lvconvert --splitmirrors 1 --name split_cmeta $vg/cpool_cpool_cmeta "$dev1"
+not lvconvert --splitmirrors 1 --name split_cdata $vg/cpool_cpool_cdata "$dev1"
 
 # but allow manipulating existing LVs with reserved names
-aux wait_for_sync $vg cpool_cmeta
-aux wait_for_sync $vg cpool_cdata
-lvconvert --yes --splitmirrors 1 --name split_meta $vg/cpool_cmeta "$dev1"
-lvconvert --yes --splitmirrors 1 --name split_data $vg/cpool_cdata "$dev1"
-not lvconvert --splitmirrors 1 --name split_data $vg/cpool_cdata "$dev1"
+aux wait_for_sync $vg cpool_cpool_cmeta
+aux wait_for_sync $vg cpool_cpool_cdata
+lvconvert --yes --splitmirrors 1 --name split_meta $vg/cpool_cpool_cmeta "$dev1"
+lvconvert --yes --splitmirrors 1 --name split_data $vg/cpool_cpool_cdata "$dev1"
+not lvconvert --splitmirrors 1 --name split_data $vg/cpool_cpool_cdata "$dev1"
 
 lvremove -f $vg
 
@@ -91,24 +91,24 @@ lvconvert -y --type cache-pool $vg/cp1
 lvcreate -l 20 -n co1 $vg
 lvconvert -y --type cache --cachepool cp1 $vg/co1
 
-lvconvert -y -m +1 --type raid1 $vg/cp1_cmeta
-check lv_field $vg/cp1_cmeta layout "raid,raid1"
-check lv_field $vg/cp1_cmeta role "private,cache,pool,metadata"
+lvconvert -y -m +1 --type raid1 $vg/cp1_cpool_cmeta
+check lv_field $vg/cp1_cpool_cmeta layout "raid,raid1"
+check lv_field $vg/cp1_cpool_cmeta role "private,cache,pool,metadata"
 
-lvconvert -y -m +1 --type raid1 $vg/cp1_cdata
-check lv_field $vg/cp1_cdata layout "raid,raid1"
-check lv_field $vg/cp1_cdata role "private,cache,pool,data"
+lvconvert -y -m +1 --type raid1 $vg/cp1_cpool_cdata
+check lv_field $vg/cp1_cpool_cdata layout "raid,raid1"
+check lv_field $vg/cp1_cpool_cdata role "private,cache,pool,data"
 
 sleep 5
 
 lvs -a -o+devices $vg
 
-not lvconvert -m -1  $vg/cp1_cmeta
+not lvconvert -m -1  $vg/cp1_cpool_cmeta
 
-lvconvert -y -m -1  $vg/cp1_cmeta
-check lv_field $vg/cp1_cmeta layout "linear"
-lvconvert -y -m -1  $vg/cp1_cdata
-check lv_field $vg/cp1_cdata layout "linear"
+lvconvert -y -m -1  $vg/cp1_cpool_cmeta
+check lv_field $vg/cp1_cpool_cmeta layout "linear"
+lvconvert -y -m -1  $vg/cp1_cpool_cdata
+check lv_field $vg/cp1_cpool_cdata layout "linear"
 
 lvremove -f $vg
 

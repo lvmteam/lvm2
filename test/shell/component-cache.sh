@@ -29,7 +29,7 @@ for j in 1 2
 do
 
 # Activate supported components
-for i in cpool_cmeta cpool_cdata corigin_corig
+for i in cpool_cpool_cmeta cpool_cpool_cdata corigin_corig
 do
 	test ! -e "$DM_DEV_DIR/$vg/$i"
 	lvchange -ay -y $vg/$i
@@ -73,7 +73,7 @@ lvcreate -H -L 4 -n tpool --cachepool $vg/cpool
 lvchange -an $vg
 lvs -a $vg
 # Cannot convert to thin-pool with component LV active
-lvchange -ay -y $vg/cpool_cmeta
+lvchange -ay -y $vg/cpool_cpool_cmeta
 
 # Conversion does not need to activate data device, so it can proceed ??
 lvconvert -y --thinpool $vg/tpool
