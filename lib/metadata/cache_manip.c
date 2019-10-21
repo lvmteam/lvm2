@@ -430,6 +430,7 @@ int validate_cache_chunk_size(struct cmd_context *cmd, uint32_t chunk_size)
 struct logical_volume *lv_cache_create(struct logical_volume *pool_lv,
 				       struct logical_volume *origin_lv)
 {
+	char cpool_name[NAME_LEN];
 	const struct segment_type *segtype;
 	struct cmd_context *cmd = pool_lv->vg->cmd;
 	struct logical_volume *cache_lv = origin_lv;
@@ -453,6 +454,17 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool_lv,
 
 	if (!attach_pool_lv(seg, pool_lv, NULL, NULL, NULL))
 		return_NULL;
+
+	if (lv_is_cache_pool(pool_lv)) {
+		/* Used cache-pool gets  _cpool suffix (easy to recognize from _cvol usage) */
+		if (dm_snprintf(cpool_name, sizeof(cpool_name), "%s_cpool", pool_lv->name) < 0) {
+			log_error("Can't prepare new cachepool name for %s.", display_lvname(pool_lv));
+			return NULL;
+		}
+
+		if (!lv_rename_update(cmd, pool_lv, cpool_name, 0))
+			return_NULL;
+	}
 
 	if (!seg->lv->profile) /* Inherit profile from cache-pool */
 		seg->lv->profile = seg->pool_lv->profile;

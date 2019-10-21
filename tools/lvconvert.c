@@ -4287,6 +4287,7 @@ static int _lvconvert_cachepool_attach_single(struct cmd_context *cmd,
 					  struct logical_volume *lv,
 					  struct processing_handle *handle)
 {
+	struct lv_segment *seg;
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *cachepool_lv;
 	const char *cachepool_name;
@@ -4333,15 +4334,14 @@ static int _lvconvert_cachepool_attach_single(struct cmd_context *cmd,
 			goto out;
 		}
 
-		if (!(cachepool_lv = find_lv(vg, cachepool_name))) {
-			log_error("LV %s cannot be found.", display_lvname(cachepool_lv));
+		/* cachepool_lv is converted into cache-pool data LV */
+		if (!(seg = get_only_segment_using_this_lv(cachepool_lv))) {
+			log_error(INTERNAL_ERROR "LV %s is not a cache pool data volume.",
+				  display_lvname(cachepool_lv));
 			goto out;
 		}
 
-		if (!lv_is_cache_pool(cachepool_lv)) {
-			log_error("LV %s is not a cache pool.", display_lvname(cachepool_lv));
-			goto out;
-		}
+		cachepool_lv = seg->lv;
 	} else {
 		if (!dm_list_empty(&cachepool_lv->segs_using_this_lv)) {
 			log_error("Cache pool %s is already in use.", cachepool_name);
