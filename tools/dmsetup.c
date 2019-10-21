@@ -2595,7 +2595,7 @@ static int _target_version(CMD_ARGS)
 	struct dm_task *dmt;
 	struct dm_versions *target;
 
-	if (!(dmt = dm_task_create(DM_GET_TARGET_VERSION)))
+	if (!(dmt = dm_task_create(DM_DEVICE_GET_TARGET_VERSION)))
 		return_0;
 
 	if (!dm_task_set_name(dmt, argv[0]))
