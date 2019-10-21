@@ -749,12 +749,6 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_is_set(cmd, activate_ARG) &&
-	    arg_is_set(cmd, autobackup_ARG)) {
-		log_error("-A option not necessary with -a option");
-		return EINVALID_CMD_LINE;
-	}
-
 	if (arg_is_set(cmd, maxphysicalvolumes_ARG) &&
 	    arg_sign_value(cmd, maxphysicalvolumes_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("MaxPhysicalVolumes may not be negative");
