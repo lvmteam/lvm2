@@ -2013,7 +2013,7 @@ static int _sysfs_get_kernel_name(uint32_t major, uint32_t minor, char *buf, siz
 		else {
 			log_sys_debug("readlink", sysfs_path);
 			r = _sysfs_find_kernel_name(major, minor, buf, buf_size);
-			goto bad;
+			goto out;
 		}
 		goto bad;
 	}
@@ -2034,6 +2034,7 @@ static int _sysfs_get_kernel_name(uint32_t major, uint32_t minor, char *buf, siz
 	strcpy(buf, name);
 	r = 1;
 bad:
+out:
 	dm_free(temp_buf);
 	dm_free(sysfs_path);
 
