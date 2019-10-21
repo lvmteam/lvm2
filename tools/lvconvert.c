@@ -1913,6 +1913,8 @@ static int _lvconvert_split_and_keep_cachepool(struct cmd_context *cmd,
 				   struct logical_volume *lv,
 				   struct logical_volume *lv_fast)
 {
+	char name[NAME_LEN];
+
 	if (!archive(lv->vg))
 		return_0;
 
@@ -1924,6 +1926,14 @@ static int _lvconvert_split_and_keep_cachepool(struct cmd_context *cmd,
 	}
 
 	if (!lv_cache_remove(lv))
+		return_0;
+
+	/* Cut off suffix _cpool */
+	if (!drop_lvname_suffix(name, lv_fast->name, "cpool")) {
+		/* likely older instance of metadata */
+		log_debug("LV %s has no suffix for cachepool (skipping rename).",
+			  display_lvname(lv_fast));
+	} else if (!lv_uniq_rename_update(cmd, lv_fast, name, 0))
 		return_0;
 
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
