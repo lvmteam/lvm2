@@ -1092,32 +1092,8 @@ int cache_vol_set_params(struct cmd_context *cmd,
 		}
 	}
 
-	/*
-	 * cachevol size 8M to 16M  -> metadata size 4M
-	 *
-	 * cachevol size 16M to 4G  -> metadata size 8M
-	 *
-	 * cachevol size 4G to 16G  -> metadata size 16M
-	 *
-	 * cachevol size 16G to 32G -> metadata size 32M
-	 *
-	 * cachevol size 32G and up -> metadata size 64M
-	 */
 	if (!meta_size) {
-		if (pool_lv->size <= (16 * ONE_MB_IN_SECTORS))
-			meta_size = 4 * ONE_MB_IN_SECTORS;
-
-		else if (pool_lv->size <= (4 * ONE_GB_IN_SECTORS))
-			meta_size = 8 * ONE_MB_IN_SECTORS;
-
-		else if (pool_lv->size <= (16 * ONE_GB_IN_SECTORS))
-			meta_size = 16 * ONE_MB_IN_SECTORS;
-
-		else if (pool_lv->size <= (32 * ONE_GB_IN_SECTORS))
-			meta_size = 32 * ONE_MB_IN_SECTORS;
-
-		else
-			meta_size = 64 * ONE_MB_IN_SECTORS;
+		meta_size = _cache_min_metadata_size(pool_lv->size, chunk_size);
 
 		if (meta_size < min_meta_size)
 			meta_size = min_meta_size;
