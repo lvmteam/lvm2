@@ -1087,7 +1087,7 @@ out:
 static void _insert_dirs(struct dm_list *dirs)
 {
 	struct dir_list *dl;
-	struct udev *udev;
+	struct udev *udev = NULL;
 	int with_udev;
 
 	with_udev = obtain_device_list_from_udev() &&
