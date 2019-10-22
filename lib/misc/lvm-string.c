@@ -157,6 +157,7 @@ static const char *_lvname_has_reserved_component_string(const char *lvname)
 		"_cdata",
 		"_cmeta",
 		"_corig",
+		"_cpool",
 		"_cvol",
 		"_wcorig",
 		"_mimage",
