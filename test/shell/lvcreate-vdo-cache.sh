@@ -22,9 +22,9 @@ SKIP_WITH_LVMPOLLD=1
 #
 
 #
-# FIXME: tempororarily disable this test until fixed VDO driver is relase
-#
-aux have_vdo 96 2 0 || skip
+# FIXME: tempororarily disable this test until fixed VDO driver is relased
+#        should really be 6.2.2 - currently goes with vdo-6.2.2.18
+aux have_vdo 6 2 1 || skip
 aux have_cache 1 3 0 || skip
 
 which mkfs.ext4 || skip
