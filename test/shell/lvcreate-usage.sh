@@ -221,7 +221,7 @@ lvremove -f $vg
 for i in pvmove snapshot ; do
 	invalid lvcreate -l1 -n ${i}1 $vg
 done
-for i in _cdata _cmeta _mimage _mlog _pmspare _tdata _tmeta _vorigin ; do
+for i in _cdata _cmeta _cpool _cvol _mimage _mlog _pmspare _tdata _tmeta _vorigin ; do
 	invalid lvcreate -l1 -n s_${i}_1 $vg
 done
 
