@@ -1437,7 +1437,7 @@ ID: pvck_general
 DESC: Check for metadata on a device
 
 pvck --dump String PV
-OO: --file String, --pvmetadatacopies MetadataCopiesPV, --labelsector Number
+OO: --settings String, --file String, --pvmetadatacopies MetadataCopiesPV, --labelsector Number
 ID: pvck_dump
 DESC: Print metadata from a device
 

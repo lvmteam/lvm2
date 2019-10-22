@@ -459,6 +459,10 @@ arg(setphysicalvolumesize_ARG, '\0', "setphysicalvolumesize", sizemb_VAL, 0, 0,
     "Overrides the automatically detected size of the PV.\n"
     "Use with care, or prior to reducing the physical size of the device.\n")
 
+arg(settings_ARG, '\0', "settings", string_VAL, ARG_GROUPABLE, 0,
+    "Specifies command specific settings in \"Key = Value\" form.\n"
+    "Repeat this option to specify multiple values.\n")
+
 arg(poll_ARG, '\0', "poll", bool_VAL, 0, 0,
     "When yes, start the background transformation of an LV.\n"
     "An incomplete transformation, e.g. pvmove or lvconvert interrupted\n"
