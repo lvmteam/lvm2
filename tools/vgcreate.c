@@ -48,8 +48,6 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	/* Don't create a new PV on top of an existing PV like pvcreate does. */
 	pp.preserve_existing = 1;
 
-	pp.check_consistent_block_size = 1;
-
 	if (!vgcreate_params_set_defaults(cmd, &vp_def, NULL))
 		return EINVALID_CMD_LINE;
 	vp_def.vg_name = vg_name;
