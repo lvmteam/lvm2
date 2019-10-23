@@ -3,6 +3,7 @@ Version 2.02.187 -
   Fix resize of thin-pool with data and metadata of different segtype.
   Fix splitting mirror leg in cluster.
   Fix activation order when removing merged snapshot.
+  Add support for DM_DEVICE_GET_TARGET_VERSION into device_mapper.
   Add lvextend-raid.sh to check on RaidLV extensions synchronization.
   Fix lvmetad shutdown and avoid lenghty timeouts when rebooting system.
   Prevent creating VGs with PVs with different logical block sizes.
@@ -10,6 +11,7 @@ Version 2.02.187 -
   Activate thin-pool layered volume as 'read-only' device.
   Ignore crypto devices with UUID signature CRYPT-SUBDEV.
   Enhance validation for thin and cache pool conversion and swapping.
+  Fixed activation on boot - lvm2 no longer activates incomplete VGs.
 
 Version 2.02.186 - 27th August 2019
 ===================================
