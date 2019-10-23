@@ -1,3 +1,6 @@
+Version 2.03.07 - 
+===================================
+
 Version 2.03.06 - 23rd October 2019
 ===================================
   Add _cpool suffix to cache-pool LV name when used by caching LV.
