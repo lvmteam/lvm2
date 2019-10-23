@@ -397,7 +397,8 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			/* Presence of exclusive LV decides whether pvmove must be also exclusive */
 			if (!seg_only_exclusive(seg)) {
 				holder = lv_lock_holder(lv);
-				if (seg_only_exclusive(first_seg(holder)) || lv_is_origin(holder) || lv_is_cow(holder))
+				if (seg_only_exclusive(first_seg(holder)) || lv_is_origin(holder) ||
+				    lv_is_cow(holder) || lv_is_active_exclusive(holder))
 					needs_exclusive = 1;
 			} else
 				needs_exclusive = 1;
