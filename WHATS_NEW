@@ -1,5 +1,5 @@
-Version 2.03.06 - 
-================================
+Version 2.03.06 - 23rd October 2019
+===================================
   Add _cpool suffix to cache-pool LV name when used by caching LV.
   No longer store extra UUID for cmeta and cdata cachevol layer.
   Enhance activation of cache devices with cachevols.
@@ -7,7 +7,7 @@ Version 2.03.06 -
   Rename LV converted to cachevol to use _cvol suffix.
   Use normal LVs for wiping of cachevols.
   Reload cleanered cache DM only with cleaner policy.
-  Fix cmd return when zering of cachevol fails.
+  Fix cmd return when zeroing of cachevol fails.
   Extend lvs to show all VDO properties.
   Preserve VDO write policy with vdopool.
   Increase default vdo bio threads to 4.
