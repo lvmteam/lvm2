@@ -621,7 +621,7 @@ allocation {
 	# Each additional thread after the first will use an additional 18MiB of RAM,
 	# plus 1.12 MiB of RAM per megabyte of configured read cache size.
 	# This configuration option has an automatic default value.
-	# vdo_bio_threads = 1
+	# vdo_bio_threads = 4
 
 	# Configuration option allocation/vdo_bio_rotation.
 	# Specifies the number of I/O operations to enqueue for each bio-submission
