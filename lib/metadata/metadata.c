@@ -2670,7 +2670,9 @@ int vg_validate(struct volume_group *vg)
 
 				}
 			} else {
-				if (lvl->lv->lock_args) {
+				if (lv_is_cache_vol(lvl->lv)) {
+					log_debug("lock_args will be ignored on cache vol");
+				} else if (lvl->lv->lock_args) {
 					log_error(INTERNAL_ERROR "LV %s/%s shouldn't have lock_args",
 						  vg->name, lvl->lv->name);
 					r = 0;

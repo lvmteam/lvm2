@@ -2368,6 +2368,14 @@ int lockd_lv(struct cmd_context *cmd, struct logical_volume *lv,
 		return 1;
 
 	/*
+	 * A cachevol LV is one exception, where the LV keeps lock_args (so
+	 * they do not need to be reallocated on split) but the lvmlockd lock
+	 * is not used.
+	 */
+	if (lv_is_cache_vol(lv))
+		return 1;
+
+	/*
 	 * LV type cannot be active concurrently on multiple hosts,
 	 * so shared mode activation is not allowed.
 	 */
