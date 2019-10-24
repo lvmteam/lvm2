@@ -41,11 +41,13 @@ ls -l meta.txt
 head -n 100 meta.txt
 grep -A4 -B4 '01200:' meta.txt
 
-grep -B1 "$vg " meta.txt > meta.vg
+_vg="$vg "
+_vg="${_vg:0:16}"
+grep -B1 "$_vg" meta.txt > meta.vg
 
 cat meta.vg
 
-grep -v $vg meta.vg > meta.zeros
+grep -v "$_vg" meta.vg > meta.zeros
 
 cat meta.zeros
 
@@ -73,11 +75,11 @@ dd if="$dev1" of=meta.raw bs=1M seek=15 count=1
 
 xxd meta.raw > meta.txt
 
-grep -B1 "$vg " meta.txt > meta.vg
+grep -B1 "$_vg" meta.txt > meta.vg
 
 cat meta.vg
 
-grep -v $vg meta.vg > meta.zeros
+grep -v "$_vg" meta.vg > meta.zeros
 
 cat meta.zeros
 
