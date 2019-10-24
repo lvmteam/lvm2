@@ -55,13 +55,14 @@ grep "$dev1" out
 grep "$dev2" out
 not grep "WARNING: Not using lvmetad" out
 
-# We don't care about the repair, and we know it's
-# not valid on this lv.  We are just running repair
-# because we know one side effect is to disable lvmetad.
-# FIXME: we should install lvmetactl so that we can
-# use that to directly disable lvmetad for tests like this.
-not lvconvert --repair $vg1/$lv1 2>&1 | tee out
+if aux have_raid 1 7 0 ; then
+# lvconvert validates repairable volumes.
+# We want to excercise if disabling of lvmetad works when it's running.
+# For this we create 'raid1' array and run repair on it.
+lvcreate --type raid1 -m1 --nosync -l1 --alloc anywhere -n $lv2 $vg1
+lvconvert -y --repair $vg1/$lv2 2>&1 | tee out
 grep "WARNING: Disabling lvmetad cache" out
+fi
 
 pvs  -vvvv 2>&1 | tee out
 grep "$dev1" out
