@@ -1330,11 +1330,15 @@ dummy transaction, but will require skipping the uuid check:
 
 mount /dev/VG/SnapLV /mnt -o nouuid
 
-Or, the uuid can be changed on disk before mounting:
+After the first mount with the above approach, the UUID can subsequently be
+changed using:
 
 xfs_admin -U generate /dev/VG/SnapLV
 .br
 mount /dev/VG/SnapLV /mnt
+
+Once the UUID has been changed, the mount command will no longer require
+the nouuid option.
 
 If the snapshot LV is readonly, the log recovery and uuid check need to be
 skipped while mounting readonly:
