@@ -470,7 +470,7 @@ cfg(devices_allow_changes_with_duplicate_pvs_CFG, "allow_changes_with_duplicate_
 	"Enabling this setting allows the VG to be used as usual even with\n"
 	"uncertain devices.\n")
 
-cfg(devices_allow_mixed_block_sizes_CFG, "allow_mixed_block_sizes", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, 0, vsn(2, 3, 6), NULL, 0, NULL,
+cfg(devices_allow_mixed_block_sizes_CFG, "allow_mixed_block_sizes", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, 1, vsn(2, 3, 6), NULL, 0, NULL,
 	"Allow PVs in the same VG with different logical block sizes.\n"
 	"When allowed, the user is responsible to ensure that an LV is\n"
 	"using PVs with matching block sizes when necessary.\n")
