@@ -1590,7 +1590,7 @@ struct device *dev_cache_get_by_devt(dev_t dev, struct dev_filter *f)
 		sysfs_dir = dm_sysfs_dir();
 		if (sysfs_dir && *sysfs_dir) {
 			/* First check if dev is sysfs to avoid useless scan */
-			if (dm_snprintf(path, sizeof(path), "%s/dev/block/%d:%d",
+			if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d",
 					sysfs_dir, (int)MAJOR(dev), (int)MINOR(dev)) < 0) {
 				log_error("dm_snprintf partition failed.");
 				return NULL;
