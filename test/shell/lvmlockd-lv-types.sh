@@ -131,9 +131,9 @@ check lva_field $vg/lv1 lockargs $LOCKARGS1
 
 lvconvert -y --type cache --cachepool $vg/cache1 $vg/lv1
 check lva_field $vg/lv1 lockargs $LOCKARGS1
-check lva_field $vg/cache1 lockargs ""
-check lva_field $vg/cache1_cdata lockargs ""
-check lva_field $vg/cache1_cmeta lockargs ""
+check lva_field $vg/cache1_cpool lockargs ""
+check lva_field $vg/cache1_cpool_cdata lockargs ""
+check lva_field $vg/cache1_cpool_cmeta lockargs ""
 
 lvconvert --splitcache $vg/lv1
 check lva_field $vg/lv1 lockargs $LOCKARGS1
