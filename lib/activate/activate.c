@@ -818,7 +818,8 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 				      with_open_count, with_read_ahead))
 				return_0;
 
-			if (status->seg_status.type == SEG_STATUS_SNAPSHOT) {
+			if (status->seg_status.type == SEG_STATUS_SNAPSHOT ||
+			    (lv_is_thin_volume(olv) && (status->seg_status.type == SEG_STATUS_THIN))) {
 				log_debug_activation("Snapshot merge is in progress, querying status of %s instead.",
 						     display_lvname(lv));
 				/*
