@@ -1,5 +1,6 @@
 Version 2.03.07 - 
 ===================================
+  Fix activation order when removing merged snapshot.
 
 Version 2.03.06 - 23rd October 2019
 ===================================
