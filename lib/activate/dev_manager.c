@@ -1594,6 +1594,9 @@ int dev_manager_thin_percent(struct dev_manager *dm,
 	return 1;
 }
 
+/*
+ * Explore state of running DM table to obtain currently used deviceId
+ */
 int dev_manager_thin_device_id(struct dev_manager *dm,
 			       const struct logical_volume *lv,
 			       uint32_t *device_id)
@@ -1603,10 +1606,16 @@ int dev_manager_thin_device_id(struct dev_manager *dm,
 	struct dm_info info;
 	uint64_t start, length;
 	char *params, *target_type = NULL;
+	const char *layer = lv_layer(lv);
 	int r = 0;
 
+	if (lv_is_merging_origin(lv) && !lv_info(lv->vg->cmd, lv, 1, NULL, 0, 0))
+		/* If the merge has already happened, that table
+		 * can already be using correct LV without -real layer */
+		layer = NULL;
+
 	/* Build dlid for the thin layer */
-	if (!(dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
+	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
 		return_0;
 
 	if (!(dmt = _setup_task_run(DM_DEVICE_TABLE, &info, NULL, dlid, 0, 0, 0, 0, 1, 0)))
