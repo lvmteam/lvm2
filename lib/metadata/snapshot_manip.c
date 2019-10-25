@@ -286,7 +286,6 @@ int vg_add_snapshot(struct logical_volume *origin,
 
 int vg_remove_snapshot(struct logical_volume *cow)
 {
-	int merging_snapshot = 0;
 	struct logical_volume *origin = origin_from_cow(cow);
 	int is_origin_active = lv_is_active(origin);
 
@@ -315,17 +314,6 @@ int vg_remove_snapshot(struct logical_volume *cow)
 		 * preload origin IFF "snapshot-merge" target is active
 		 * - IMPORTANT: avoids preload if inactivate merge is pending
 		 */
-		if (lv_has_target_type(origin->vg->vgmem, origin, NULL,
-				       TARGET_NAME_SNAPSHOT_MERGE)) {
-			/*
-			 * preload origin to:
-			 * - allow proper release of -cow
-			 * - avoid allocations with other devices suspended
-			 *   when transitioning from "snapshot-merge" to
-			 *   "snapshot-origin after a merge completes.
-			 */
-			merging_snapshot = 1;
-		}
 	}
 
 	if (!lv_remove(cow->snapshot->lv)) {
@@ -356,18 +344,13 @@ int vg_remove_snapshot(struct logical_volume *cow)
 		 * the LV lock on cluster has to be grabbed, so use
 		 * activate_lv() which resumes suspend cow device.
 		 */
-		if (!merging_snapshot && !activate_lv(cow->vg->cmd, cow)) {
+		if (!activate_lv(cow->vg->cmd, cow)) {
 			log_error("Failed to activate %s.", cow->name);
 			return 0;
 		}
 
 		if (!resume_lv(origin->vg->cmd, origin)) {
 			log_error("Failed to resume %s.", origin->name);
-			return 0;
-		}
-
-		if (merging_snapshot && !activate_lv(cow->vg->cmd, cow)) {
-			log_error("Failed to activate %s.", cow->name);
 			return 0;
 		}
 	}
