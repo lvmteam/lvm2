@@ -793,7 +793,6 @@ static void test_invalidate_after_write_error(void *context)
 
 static void test_invalidate_held_block(void *context)
 {
-
 	struct fixture *f = context;
 	struct mock_engine *me = f->me;
 	struct bcache *cache = f->cache;
@@ -807,6 +806,67 @@ static void test_invalidate_held_block(void *context)
 	_expect_write(me, fd, 0);
 	_expect(me, E_WAIT);
 	bcache_put(b);
+}
+
+//----------------------------------------------------------------
+// abort tests
+
+static void test_abort_no_blocks(void *context)
+{
+	struct fixture *f = context;
+	struct bcache *cache = f->cache;
+	int fd = 17;
+
+	// We have no expectations
+	bcache_abort_fd(cache, fd);
+}
+
+static void test_abort_single_block(void *context)
+{
+	struct fixture *f = context;
+	struct bcache *cache = f->cache;
+	struct block *b;
+	int fd = 17;
+
+	T_ASSERT(bcache_get(cache, fd, 0, GF_ZERO, &b));
+	bcache_put(b);
+
+	bcache_abort_fd(cache, fd);
+
+	// no write should be issued
+	T_ASSERT(bcache_flush(cache));
+}
+
+static void test_abort_only_specific_fd(void *context)
+{
+	struct fixture *f = context;
+	struct mock_engine *me = f->me;
+	struct bcache *cache = f->cache;
+	struct block *b;
+	int fd1 = 17, fd2 = 18;
+
+	T_ASSERT(bcache_get(cache, fd1, 0, GF_ZERO, &b));
+	bcache_put(b);
+
+	T_ASSERT(bcache_get(cache, fd1, 1, GF_ZERO, &b));
+	bcache_put(b);
+
+	T_ASSERT(bcache_get(cache, fd2, 0, GF_ZERO, &b));
+	bcache_put(b);
+
+	T_ASSERT(bcache_get(cache, fd2, 1, GF_ZERO, &b));
+	bcache_put(b);
+
+	bcache_abort_fd(cache, fd2);
+
+	// writes for fd1 should still be issued
+	_expect_write(me, fd1, 0);
+	_expect_write(me, fd1, 1);
+
+	_expect(me, E_WAIT);
+	_expect(me, E_WAIT);
+
+	T_ASSERT(bcache_flush(cache));
 }
 
 //----------------------------------------------------------------
@@ -897,6 +957,11 @@ static struct test_suite *_small_tests(void)
 	T("invalidate-read-error", "invalidate a block that errored", test_invalidate_after_read_error);
 	T("invalidate-write-error", "invalidate a block that errored", test_invalidate_after_write_error);
 	T("invalidate-fails-in-held", "invalidating a held block fails", test_invalidate_held_block);
+
+	T("abort-with-no-blocks", "you can call abort, even if there are no blocks in the cache", test_abort_no_blocks);
+	T("abort-single-block", "single block get silently discarded", test_abort_single_block);
+	T("abort-specific-fd", "abort doesn't effect other fds", test_abort_only_specific_fd);
+
 	T("concurrent-reads-after-invalidate", "prefetch should still issue concurrent reads after invalidate",
           test_concurrent_reads_after_invalidate);
 
