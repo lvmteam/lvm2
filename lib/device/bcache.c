@@ -1382,6 +1382,39 @@ bool bcache_invalidate_fd(struct bcache *cache, int fd)
 
 //----------------------------------------------------------------
 
+static bool _abort_v(struct radix_tree_iterator *it,
+                     uint8_t *kb, uint8_t *ke, union radix_value v)
+{
+	struct block *b = v.ptr;
+
+	if (b->ref_count) {
+		log_fatal("bcache_abort: block (%d, %llu) still held",
+			 b->fd, (unsigned long long) b->index);
+		return true;
+	}
+
+	_unlink_block(b);
+	_free_block(b);
+
+	// We can't remove the block from the radix tree yet because
+	// we're in the middle of an iteration.
+	return true;
+}
+
+void bcache_abort_fd(struct bcache *cache, int fd)
+{
+        union key k;
+	struct radix_tree_iterator it;
+
+	k.parts.fd = fd;
+
+	it.visit = _abort_v;
+	radix_tree_iterate(cache->rtree, k.bytes, k.bytes + sizeof(k.parts.fd), &it);
+	radix_tree_remove_prefix(cache->rtree, k.bytes, k.bytes + sizeof(k.parts.fd));
+}
+
+//----------------------------------------------------------------
+
 void bcache_set_last_byte(struct bcache *cache, int fd, uint64_t offset, int sector_size)
 {
 	_last_byte_fd = fd;
