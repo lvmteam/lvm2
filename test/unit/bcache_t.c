@@ -837,6 +837,29 @@ static void test_abort_single_block(void *context)
 	T_ASSERT(bcache_flush(cache));
 }
 
+static void test_abort_forces_reread(void *context)
+{
+	struct fixture *f = context;
+	struct mock_engine *me = f->me;
+	struct bcache *cache = f->cache;
+	struct block *b;
+	int fd = 17;
+
+	_expect_read(me, fd, 0);
+	_expect(me, E_WAIT);
+	T_ASSERT(bcache_get(cache, fd, 0, GF_DIRTY, &b));
+	bcache_put(b);
+
+	bcache_abort_fd(cache, fd);
+	T_ASSERT(bcache_flush(cache));
+
+	// Check the block is re-read
+	_expect_read(me, fd, 0);
+	_expect(me, E_WAIT);
+	T_ASSERT(bcache_get(cache, fd, 0, 0, &b));
+	bcache_put(b);
+}
+
 static void test_abort_only_specific_fd(void *context)
 {
 	struct fixture *f = context;
@@ -960,6 +983,7 @@ static struct test_suite *_small_tests(void)
 
 	T("abort-with-no-blocks", "you can call abort, even if there are no blocks in the cache", test_abort_no_blocks);
 	T("abort-single-block", "single block get silently discarded", test_abort_single_block);
+	T("abort-forces-read", "if a block has been discarded then another read is necc.", test_abort_forces_reread);
 	T("abort-specific-fd", "abort doesn't effect other fds", test_abort_only_specific_fd);
 
 	T("concurrent-reads-after-invalidate", "prefetch should still issue concurrent reads after invalidate",
