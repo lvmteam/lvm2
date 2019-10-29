@@ -999,7 +999,7 @@ static int _vg_update_embedded_copy(struct volume_group *vg, struct volume_group
 	if (!(cft = export_vg_to_config_tree(vg)))
 		return_0;
 
-	if (!(*vg_embedded = import_vg_from_config_tree(cft, vg->fid))) {
+	if (!(*vg_embedded = import_vg_from_config_tree(vg->cmd, vg->fid, cft))) {
 		dm_config_destroy(cft);
 		return_0;
 	}
@@ -5220,7 +5220,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 			goto out;
 		}
 
-		if (!(vg->vg_committed = import_vg_from_config_tree(cft, vg->fid)))
+		if (!(vg->vg_committed = import_vg_from_config_tree(cmd, vg->fid, cft)))
 			log_warn("WARNING: vg_read no vg copy: copy import failed");
 
 		dm_config_destroy(cft);

@@ -15,6 +15,7 @@
 
 #include "lib/misc/lib.h"
 #include "lib/metadata/metadata.h"
+#include "lib/commands/toolcontext.h"
 #include "import-export.h"
 
 /* FIXME Use tidier inclusion method */
@@ -181,7 +182,7 @@ struct volume_group *text_read_metadata(struct format_instance *fid,
 		if (!(*vsn)->check_version(cft))
 			continue;
 
-		if (!(vg = (*vsn)->read_vg(fid, cft, 0)))
+		if (!(vg = (*vsn)->read_vg(fid->fmt->cmd, fid->fmt, fid, cft)))
 			goto_out;
 
 		(*vsn)->read_desc(vg->vgmem, cft, when, desc);
@@ -210,9 +211,9 @@ struct volume_group *text_read_metadata_file(struct format_instance *fid,
 				  when, desc);
 }
 
-static struct volume_group *_import_vg_from_config_tree(const struct dm_config_tree *cft,
+static struct volume_group *_import_vg_from_config_tree(struct cmd_context *cmd,
 							struct format_instance *fid,
-							unsigned allow_lvmetad_extensions)
+							const struct dm_config_tree *cft)
 {
 	struct volume_group *vg = NULL;
 	struct text_vg_version_ops **vsn;
@@ -227,7 +228,7 @@ static struct volume_group *_import_vg_from_config_tree(const struct dm_config_t
 		 * The only path to this point uses cached vgmetadata,
 		 * so it can use cached PV state too.
 		 */
-		if (!(vg = (*vsn)->read_vg(fid, cft, allow_lvmetad_extensions)))
+		if (!(vg = (*vsn)->read_vg(cmd, fid->fmt, fid, cft)))
 			stack;
 		else {
 			set_pv_devices(fid, vg, NULL);
@@ -243,8 +244,21 @@ static struct volume_group *_import_vg_from_config_tree(const struct dm_config_t
 	return vg;
 }
 
-struct volume_group *import_vg_from_config_tree(const struct dm_config_tree *cft,
-						struct format_instance *fid)
+struct volume_group *import_vg_from_config_tree(struct cmd_context *cmd,
+						struct format_instance *fid,
+						const struct dm_config_tree *cft)
 {
-	return _import_vg_from_config_tree(cft, fid, 0);
+	return _import_vg_from_config_tree(cmd, fid, cft);
 }
+
+struct volume_group *vg_from_config_tree(struct cmd_context *cmd, const struct dm_config_tree *cft)
+{
+	static struct text_vg_version_ops *ops;
+
+	_init_text_import();
+
+	ops = _text_vsn_list[0];
+
+	return ops->read_vg(cmd, cmd->fmt, NULL, cft);
+}
+

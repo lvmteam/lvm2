@@ -993,7 +993,7 @@ static int _read_lvsegs(struct cmd_context *cmd,
 }
 
 static int _read_sections(struct cmd_context *cmd,
-			  struct format_type *fmt,
+			  const struct format_type *fmt,
 			  struct format_instance *fid,
 			  struct dm_pool *mem,
 			  const char *section, section_fn fn,
@@ -1016,19 +1016,18 @@ static int _read_sections(struct cmd_context *cmd,
 	}
 
 	for (n = n->child; n; n = n->sib) {
-		if (!fn(cmd, fmt, fid, mem, vg, vgsummary, n, vgn, pv_hash, lv_hash))
+		if (!fn(cmd, (struct format_type *)fmt, fid, mem, vg, vgsummary, n, vgn, pv_hash, lv_hash))
 			return_0;
 	}
 
 	return 1;
 }
 
-static struct volume_group *_read_vg(struct format_instance *fid,
-				     const struct dm_config_tree *cft,
-				     unsigned allow_lvmetad_extensions)
+static struct volume_group *_read_vg(struct cmd_context *cmd,
+				     const struct format_type *fmt,
+				     struct format_instance *fid,
+				     const struct dm_config_tree *cft)
 {
-	struct cmd_context *cmd = fid->fmt->cmd;
-	struct format_type *fmt = (struct format_type *)fid->fmt;
 	struct dm_pool *mem;
 	const struct dm_config_node *vgn;
 	const struct dm_config_value *cv;
@@ -1234,7 +1233,8 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	dm_hash_destroy(pv_hash);
 	dm_hash_destroy(lv_hash);
 
-	vg_set_fid(vg, fid);
+	if (fid)
+		vg_set_fid(vg, fid);
 
 	/*
 	 * Finished.

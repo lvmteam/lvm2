@@ -477,8 +477,10 @@ void lv_calculate_readahead(const struct logical_volume *lv, uint32_t *read_ahea
  * For internal metadata caching.
  */
 struct dm_config_tree *export_vg_to_config_tree(struct volume_group *vg);
-struct volume_group *import_vg_from_config_tree(const struct dm_config_tree *cft,
-						struct format_instance *fid);
+struct volume_group *import_vg_from_config_tree(struct cmd_context *cmd,
+						struct format_instance *fid,
+						const struct dm_config_tree *cft);
+struct volume_group *vg_from_config_tree(struct cmd_context *cmd, const struct dm_config_tree *cft);
 
 /*
  * Mirroring functions
