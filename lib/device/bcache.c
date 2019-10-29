@@ -293,6 +293,10 @@ static bool _async_issue(struct io_engine *ioe, enum dir d, int fd,
 
 	if (r < 0) {
 		_cb_free(e->cbs, cb);
+	       ((struct block *) context)->error = r;
+	       log_warn("io_submit <%c> off %llu bytes %llu return %d:%s",
+	                (d == DIR_READ) ? 'R' : 'W', (long long unsigned)offset,
+                        (long long unsigned) nbytes, r, strerror(-r));
 		return false;
 	}
 
@@ -869,8 +873,7 @@ static void _issue_low_level(struct block *b, enum dir d)
 	dm_list_move(&cache->io_pending, &b->list);
 
 	if (!cache->engine->issue(cache->engine, d, b->fd, sb, se, b->data, b)) {
-		/* FIXME: if io_submit() set an errno, return that instead of EIO? */
-		_complete_io(b, -EIO);
+		_complete_io(b, b->error);
 		return;
 	}
 }
