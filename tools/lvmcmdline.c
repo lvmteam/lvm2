@@ -1077,6 +1077,15 @@ int configtype_arg(struct cmd_context *cmd, struct arg_values *av)
 	return 0;
 }
 
+int repairtype_arg(struct cmd_context *cmd, struct arg_values *av)
+{
+	if (!strcmp(av->value, "pv_header") ||
+	    !strcmp(av->value, "metadata") ||
+	    !strcmp(av->value, "label_header"))
+		return 1;
+	return 0;
+}
+
 /*
  * FIXME: there's been a confusing mixup among:
  * resizeable, resizable, allocatable, allocation.

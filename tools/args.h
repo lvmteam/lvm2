@@ -214,11 +214,13 @@ arg(driverloaded_ARG, '\0', "driverloaded", bool_VAL, 0, 0,
     "For testing and debugging.\n")
 
 arg(dump_ARG, '\0', "dump", string_VAL, 0, 0,
-    "Dump metadata from a PV. Option values include \\fBmetadata\\fP\n"
-    "to print or save the current text metadata, \\fBmetadata_area\\fP\n"
-    "to save the entire text metadata area to a file, \\fBmetadata_all\\fP\n"
-    "to save the current and any previous complete versions of metadata\n"
-    "to a file, and \\fBheaders\\fP to print and check LVM headers.\n")
+    "Dump headers and metadata from a PV for debugging and repair.\n"
+    "Option values include: \\fBheaders\\fP to print and check LVM headers,\n"
+    "\\fBmetadata\\fP to print or save the current text metadata,\n"
+    "\\fBmetadata_all\\fP to list or save all versions of metadata,\n"
+    "\\fBmetadata_search\\fP to list or save all versions of metadata,\n"
+    "searching standard locations in case of damaged headers,\n"
+    "\\fBmetadata_area\\fP to save an entire text metadata area to a file.\n")
 
 arg(errorwhenfull_ARG, '\0', "errorwhenfull", bool_VAL, 0, 0,
     "Specifies thin pool behavior when data space is exhausted.\n"
@@ -544,9 +546,15 @@ arg(rebuild_ARG, '\0', "rebuild", pv_VAL, ARG_GROUPABLE, 0,
     "See \\fBlvmraid\\fP(7) for more information.\n")
 
 arg(repair_ARG, '\0', "repair", 0, 0, 0,
+    "#lvconvert\n"
     "Replace failed PVs in a raid or mirror LV, or run a repair\n"
     "utility on a thin pool. See \\fBlvmraid\\fP(7) and \\fBlvmthin\\fP(7)\n"
-    "for more information.\n")
+    "for more information.\n"
+    "#pvck\n"
+    "Repair headers and metadata on a PV.\n")
+
+arg(repairtype_ARG, '\0', "repairtype", repairtype_VAL, 0, 0,
+    "Repair headers and metadata on a PV. See command description.\n")
 
 arg(replace_ARG, '\0', "replace", pv_VAL, ARG_GROUPABLE, 0,
     "Replace a specific PV in a raid LV with another PV.\n"
@@ -1001,6 +1009,8 @@ arg(exported_ARG, 'e', "exported", 0, 0, 0,
 arg(physicalextent_ARG, 'E', "physicalextent", 0, 0, 0, NULL)
 
 arg(file_ARG, 'f', "file", string_VAL, 0, 0,
+    "#pvck\n"
+    "Metadata file to read or write.\n"
     "#lvmconfig\n"
     "#dumpconfig\n"
     "#config\n"

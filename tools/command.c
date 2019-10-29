@@ -122,6 +122,7 @@ static inline int syncaction_arg(struct cmd_context *cmd __attribute__((unused))
 static inline int reportformat_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av) { return 0; }
 static inline int configreport_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av) { return 0; }
 static inline int configtype_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av) { return 0; }
+static inline int repairtype_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av) { return 0; }
 
 /* needed to include commands.h when building man page generator */
 #define CACHE_VGMETADATA        0x00000001

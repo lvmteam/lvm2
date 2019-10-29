@@ -141,6 +141,7 @@ val(syncaction_VAL, syncaction_arg, "SyncAction", "check|repair")
 val(reportformat_VAL, reportformat_arg, "ReportFmt", "basic|json")
 val(configreport_VAL, configreport_arg, "ConfigReport", "log|vg|lv|pv|pvseg|seg")
 val(configtype_VAL, configtype_arg, "ConfigType", "current|default|diff|full|list|missing|new|profilable|profilable-command|profilable-metadata")
+val(repairtype_VAL, repairtype_arg, "RepairType", "pv_header|metadata|label_header")
 
 /* this should always be last */
 val(VAL_COUNT, NULL, NULL, NULL)
