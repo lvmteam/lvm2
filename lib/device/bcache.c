@@ -1376,7 +1376,10 @@ bool bcache_invalidate_fd(struct bcache *cache, int fd)
 	it.success = true;
 	it.it.visit = _invalidate_v;
 	radix_tree_iterate(cache->rtree, k.bytes, k.bytes + sizeof(k.parts.fd), &it.it);
-	radix_tree_remove_prefix(cache->rtree, k.bytes, k.bytes + sizeof(k.parts.fd));
+
+	if (it.success)
+		radix_tree_remove_prefix(cache->rtree, k.bytes, k.bytes + sizeof(k.parts.fd));
+
 	return it.success;
 }
 
