@@ -54,8 +54,8 @@ lvs -a $vg
 lvremove -f $vg
 
 # Check conversion of cached LV works as thin-pool
-lvcreate -L10 -n $lv $vg
-lvcreate -L10 -n $lv1 $vg
+lvcreate -aey -L10 -n $lv $vg
+lvcreate -aey -L10 -n $lv1 $vg
 lvcreate -H -L10 $vg/$lv
 
 # Stack of cache over cache is unsupported ATM
