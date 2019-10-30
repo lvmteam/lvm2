@@ -24,6 +24,8 @@
 #include "lib/activate/activate.h"
 #include "lib/label/hints.h"
 #include "lib/metadata/metadata.h"
+#include "lib/format_text/format-text.h"
+#include "lib/format_text/layout.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -917,6 +919,74 @@ static void _prepare_open_file_limit(struct cmd_context *cmd, unsigned int num_d
 		return;
 	}
 #endif
+}
+
+int label_scan_for_pvid(struct cmd_context *cmd, char *pvid, struct device **dev_out)
+{
+	char buf[LABEL_SIZE] __attribute__((aligned(8)));
+	struct dm_list devs;
+	struct dev_iter *iter;
+	struct device_list *devl, *devl2;
+	struct device *dev;
+	struct pv_header *pvh;
+	int ret = 0;
+
+	dm_list_init(&devs);
+
+	dev_cache_scan();
+
+	if (!(iter = dev_iter_create(cmd->filter, 0))) {
+		log_error("Scanning failed to get devices.");
+		return 0;
+	}
+
+	log_debug_devs("Filtering devices to scan");
+
+	while ((dev = dev_iter_get(cmd, iter))) {
+		if (!(devl = zalloc(sizeof(*devl))))
+			continue;
+		devl->dev = dev;
+		dm_list_add(&devs, &devl->list);
+	};
+	dev_iter_destroy(iter);
+
+	if (!scan_bcache) {
+		if (!_setup_bcache())
+			goto_out;
+	}
+
+	log_debug_devs("Reading labels for pvid");
+
+	dm_list_iterate_items(devl, &devs) {
+		dev = devl->dev;
+
+		memset(buf, 0, sizeof(buf));
+
+		if (!label_scan_open(dev))
+			continue;
+
+		if (!dev_read_bytes(dev, 512, LABEL_SIZE, buf)) {
+			_scan_dev_close(dev);
+			goto out;
+		}
+
+		pvh = (struct pv_header *)(buf + 32);
+
+		if (!memcmp(pvh->pv_uuid, pvid, ID_LEN)) {
+			*dev_out = devl->dev;
+			_scan_dev_close(dev);
+			break;
+		}
+
+		_scan_dev_close(dev);
+	}
+	ret = 1;
+ out:
+	dm_list_iterate_items_safe(devl, devl2, &devs) {
+		dm_list_del(&devl->list);
+		free(devl);
+	}
+	return ret;
 }
 
 /*
