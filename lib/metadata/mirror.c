@@ -1374,10 +1374,8 @@ struct dm_list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 			  struct logical_volume *lv)
 {
 	struct dm_list *lvs;
-	struct logical_volume *lv1;
-	struct lv_list *lvl, *lvl1;
-	struct lv_segment *seg;
-	uint32_t s;
+	struct lv_list *lvl;
+	struct seg_list *sl;
 
 	if (!(lvs = dm_pool_alloc(cmd->mem, sizeof(*lvs)))) {
 		log_error("lvs list alloc failed.");
@@ -1386,29 +1384,14 @@ struct dm_list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 
 	dm_list_init(lvs);
 
-	/* Loop through all LVs except the one supplied */
-	dm_list_iterate_items(lvl1, &vg->lvs) {
-		lv1 = lvl1->lv;
-		if (lv1 == lv)
-			continue;
-
+	dm_list_iterate_items(sl, &lv->segs_using_this_lv) {
 		/* Find whether any segment points at the supplied LV */
-		dm_list_iterate_items(seg, &lv1->segments) {
-			for (s = 0; s < seg->area_count; s++) {
-				if (seg_type(seg, s) != AREA_LV ||
-				    seg_lv(seg, s) != lv)
-					continue;
-				if (!(lvl = dm_pool_alloc(cmd->mem, sizeof(*lvl)))) {
-					log_error("lv_list alloc failed.");
-					return NULL;
-				}
-				lvl->lv = lv1;
-				dm_list_add(lvs, &lvl->list);
-				goto next_lv;
-			}
+		if (!(lvl = dm_pool_alloc(cmd->mem, sizeof(*lvl)))) {
+			log_error("lv_list alloc failed.");
+			return NULL;
 		}
-	      next_lv:
-		;
+		lvl->lv = sl->seg->lv;
+		dm_list_add(lvs, &lvl->list);
 	}
 
 	return lvs;
