@@ -1,5 +1,6 @@
 Version 2.02.187 - 
 ===================================
+  Fix splitting mirror leg in cluster.
   Fix activation order when removing merged snapshot.
   Add lvextend-raid.sh to check on RaidLV extensions synchronization.
   Fix lvmetad shutdown and avoid lenghty timeouts when rebooting system.
