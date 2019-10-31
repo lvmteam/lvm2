@@ -739,7 +739,7 @@ static int _split_mirror_images(struct logical_volume *lv,
 
 	act = lv_is_active(lv_lock_holder(lv));
 
-	if (act && (!deactivate_lv(cmd, new_lv) || !_activate_lv_like_model(lv, new_lv))) {
+	if (act && !_activate_lv_like_model(lv, new_lv)) {
 		log_error("Failed to rename newly split LV in the kernel");
 		return 0;
 	}
