@@ -213,7 +213,7 @@ static int _get_available_removed_sublvs(const struct logical_volume *lv, uint32
 		if (seg_type(seg, s) != AREA_LV || !(slv = seg_lv(seg, s))) {
 			log_error(INTERNAL_ERROR "Missing image sub lv in area %" PRIu32 " of LV %s.",
 				  s, display_lvname(lv));
-			return_0;
+			return 0;
 		}
 
 		(slv->status & LV_REMOVE_AFTER_RESHAPE) ? (*removed_slvs)++ : (*available_slvs)++;
@@ -619,10 +619,9 @@ static int _lv_update_reload_fns_reset_eliminate_lvs(struct logical_volume *lv, 
 
 	/* Update and reload to clear out reset flags in the metadata and in the kernel */
 	log_debug_metadata("Updating metadata mappings for %s.", display_lvname(lv));
-	if ((r != 2 || flags_reset) && !(r = (origin_only ? lv_update_and_reload_origin(lv) : lv_update_and_reload(lv)))) {
-		log_error(INTERNAL_ERROR "Update of LV %s failed.", display_lvname(lv));
-		return 0;
-	}
+	if ((r != 2 || flags_reset) &&
+	    !(r = (origin_only ? lv_update_and_reload_origin(lv) : lv_update_and_reload(lv))))
+		return_0;
 
 	return 1;
 }
@@ -1829,7 +1828,7 @@ static int _raid_reshape_add_images(struct logical_volume *lv,
 
 	if (new_image_count == old_image_count) {
 		log_error(INTERNAL_ERROR "No change of image count on LV %s.", display_lvname(lv));
-		return_0;
+		return 0;
 	}
 
 	vg = lv->vg;
@@ -1955,7 +1954,7 @@ static int _raid_reshape_remove_images(struct logical_volume *lv,
 
 	if (new_image_count == old_image_count) {
 		log_error(INTERNAL_ERROR "No change of image count on LV %s.", display_lvname(lv));
-		return_0;
+		return 0;
 	}
 
 	switch (_reshaped_state(lv, new_image_count, &devs_health, &devs_in_sync)) {
@@ -6374,8 +6373,8 @@ static int _conversion_options_allowed(const struct lv_segment *seg_from,
 			return_0;
 
 		if (dm_snprintf(fmt, sz, "%s%s%s", basic_fmt, (seg_from->segtype == *segtype_to) ? "" : type_fmt, question_fmt) < 0) {
-			log_error(INTERNAL_ERROR "dm_snprintf failed.");
-			return_0;
+			log_error("dm_snprintf failed.");
+			return 0;
 		}
 
 		if (yes_no_prompt(fmt, lvseg_name(seg_from), display_lvname(seg_from->lv),
@@ -7184,10 +7183,8 @@ int partial_raid_lv_supports_degraded_activation(const struct logical_volume *cl
 	if (!_lv_may_be_activated_in_degraded_mode(lv, &not_capable) || not_capable)
 		return_0;
 
-	if (!for_each_sub_lv(lv, _lv_may_be_activated_in_degraded_mode, &not_capable)) {
-		log_error(INTERNAL_ERROR "for_each_sub_lv failure.");
-		return 0;
-	}
+	if (!for_each_sub_lv(lv, _lv_may_be_activated_in_degraded_mode, &not_capable))
+		return_0;
 
 	return !not_capable;
 }
