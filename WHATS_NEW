@@ -1,5 +1,6 @@
 Version 2.03.07 - 
 ===================================
+  Improve mirror type leg splitting.
   Fix activation order when removing merged snapshot.
   Experimental VDO support for lvmdbusd.
 
