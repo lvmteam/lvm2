@@ -144,8 +144,6 @@ int revert_lv(struct cmd_context *cmd, const struct logical_volume *lv);
  */
 int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_layer,
 	    struct lvinfo *info, int with_open_count, int with_read_ahead);
-int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
-		    struct lvinfo *info, int with_open_count, int with_read_ahead);
 int lv_info_with_name_check(struct cmd_context *cmd, const struct logical_volume *lv,
 			    int use_layer, struct lvinfo *info);
 
