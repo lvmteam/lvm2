@@ -620,7 +620,7 @@ static int _lv_info(struct cmd_context *cmd, const struct logical_volume *lv,
 		    int use_layer, struct lvinfo *info,
 		    const struct lv_segment *seg,
 		    struct lv_seg_status *seg_status,
-		    int with_open_count, int with_read_ahead)
+		    int with_open_count, int with_read_ahead, int with_name_check)
 {
 	struct dm_info dminfo;
 
@@ -638,7 +638,7 @@ static int _lv_info(struct cmd_context *cmd, const struct logical_volume *lv,
 	/* New thin-pool has no layer, but -tpool suffix needs to be queried */
 	if (!use_layer && lv_is_new_thin_pool(lv)) {
 		/* Check if there isn't existing old thin pool mapping in the table */
-		if (!dev_manager_info(cmd, lv, NULL, 0, 0, &dminfo, NULL, NULL))
+		if (!dev_manager_info(cmd, lv, NULL, 0, 0, 0, &dminfo, NULL, NULL))
 			return_0;
 		if (!dminfo.exists)
 			use_layer = 1;
@@ -651,8 +651,9 @@ static int _lv_info(struct cmd_context *cmd, const struct logical_volume *lv,
 
 	if (!dev_manager_info(cmd, lv,
 			      (use_layer) ? lv_layer(lv) : NULL,
-			      with_open_count, with_read_ahead,
-			      &dminfo, (info) ? &info->read_ahead : NULL,
+			      with_open_count, with_read_ahead, with_name_check,
+			      &dminfo,
+			      (info) ? &info->read_ahead : NULL,
 			      seg_status))
 		return_0;
 
@@ -681,7 +682,16 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_la
 	if (!activation())
 		return 0;
 
-	return _lv_info(cmd, lv, use_layer, info, NULL, NULL, with_open_count, with_read_ahead);
+	return _lv_info(cmd, lv, use_layer, info, NULL, NULL, with_open_count, with_read_ahead, 0);
+}
+
+int lv_info_with_name_check(struct cmd_context *cmd, const struct logical_volume *lv,
+			    int use_layer, struct lvinfo *info)
+{
+	if (!activation())
+		return 0;
+
+	return _lv_info(cmd, lv, use_layer, info, NULL, NULL, 0, 0, 1);
 }
 
 /*
@@ -711,16 +721,16 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 		 * STATUS is collected from cache LV */
 		if (!(lv_seg = get_only_segment_using_this_lv(lv)))
 			return_0;
-		(void) _lv_info(cmd, lv_seg->lv, 1, NULL, lv_seg, &status->seg_status, 0, 0);
+		(void) _lv_info(cmd, lv_seg->lv, 1, NULL, lv_seg, &status->seg_status, 0, 0, 0);
 		return 1;
 	}
 
 	if (lv_is_thin_pool(lv)) {
 		/* Always collect status for '-tpool' */
-		if (_lv_info(cmd, lv, 1, &status->info, lv_seg, &status->seg_status, 0, 0) &&
+		if (_lv_info(cmd, lv, 1, &status->info, lv_seg, &status->seg_status, 0, 0, 0) &&
 		    (status->seg_status.type == SEG_STATUS_THIN_POOL)) {
 			/* There is -tpool device, but query 'active' state of 'fake' thin-pool */
-			if (!_lv_info(cmd, lv, 0, NULL, NULL, NULL, 0, 0) &&
+			if (!_lv_info(cmd, lv, 0, NULL, NULL, NULL, 0, 0, 0) &&
 			    !status->seg_status.thin_pool->needs_check)
 				status->info.exists = 0; /* So pool LV is not active */
 		}
@@ -729,10 +739,10 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 
 	if (lv_is_external_origin(lv)) {
 		if (!_lv_info(cmd, lv, 0, &status->info, NULL, NULL,
-			      with_open_count, with_read_ahead))
+			      with_open_count, with_read_ahead, 0))
 			return_0;
 
-		(void) _lv_info(cmd, lv, 1, NULL, lv_seg, &status->seg_status, 0, 0);
+		(void) _lv_info(cmd, lv, 1, NULL, lv_seg, &status->seg_status, 0, 0, 0);
 		return 1;
 	}
 
@@ -745,13 +755,13 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 		/* Show INFO for actual origin and grab status for merging origin */
 		if (!_lv_info(cmd, lv, 0, &status->info, lv_seg,
 			      lv_is_merging_origin(lv) ? &status->seg_status : NULL,
-			      with_open_count, with_read_ahead))
+			      with_open_count, with_read_ahead, 0))
 			return_0;
 
 		if (status->info.exists &&
 		    (status->seg_status.type != SEG_STATUS_SNAPSHOT)) /* Not merging */
 			/* Grab STATUS from layered -real */
-			(void) _lv_info(cmd, lv, 1, NULL, lv_seg, &status->seg_status, 0, 0);
+			(void) _lv_info(cmd, lv, 1, NULL, lv_seg, &status->seg_status, 0, 0, 0);
 		return 1;
 	}
 
@@ -760,7 +770,7 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 			olv = origin_from_cow(lv);
 
 			if (!_lv_info(cmd, olv, 0, &status->info, first_seg(olv), &status->seg_status,
-				      with_open_count, with_read_ahead))
+				      with_open_count, with_read_ahead, 0))
 				return_0;
 
 			if (status->seg_status.type == SEG_STATUS_SNAPSHOT ||
@@ -782,13 +792,13 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 
 	if (lv_is_vdo(lv)) {
 		if (!_lv_info(cmd, lv, 0, &status->info, NULL, NULL,
-			      with_open_count, with_read_ahead))
+			      with_open_count, with_read_ahead, 0))
 			return_0;
 		if (status->info.exists) {
 			/* Status for VDO pool */
 			(void) _lv_info(cmd, seg_lv(lv_seg, 0), 1, NULL,
 					first_seg(seg_lv(lv_seg, 0)),
-					&status->seg_status, 0, 0);
+					&status->seg_status, 0, 0, 0);
 			/* Use VDO pool segtype result for VDO segtype */
 			status->seg_status.seg = lv_seg;
 		}
@@ -797,10 +807,10 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 
 	if (lv_is_vdo_pool(lv)) {
 		/* Always collect status for '-vpool' */
-		if (_lv_info(cmd, lv, 1, &status->info, lv_seg, &status->seg_status, 0, 0) &&
+		if (_lv_info(cmd, lv, 1, &status->info, lv_seg, &status->seg_status, 0, 0, 0) &&
 		    (status->seg_status.type == SEG_STATUS_VDO_POOL)) {
 			/* There is -tpool device, but query 'active' state of 'fake' vdo-pool */
-			if (!_lv_info(cmd, lv, 0, NULL, NULL, NULL, 0, 0))
+			if (!_lv_info(cmd, lv, 0, NULL, NULL, NULL, 0, 0, 0))
 				status->info.exists = 0; /* So VDO pool LV is not active */
 		}
 
@@ -808,7 +818,7 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 	}
 
 	return _lv_info(cmd, lv, 0, &status->info, lv_seg, &status->seg_status,
-			with_open_count, with_read_ahead);
+			with_open_count, with_read_ahead, 0);
 }
 
 #define OPEN_COUNT_CHECK_RETRIES 25
@@ -2573,7 +2583,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 			     laopts->noscan ? " noscan" : "",
 			     laopts->temporary ? " temporary" : "");
 
-	if (!lv_info(cmd, lv, 0, &info, 0, 0))
+	if (!lv_info_with_name_check(cmd, lv, 0, &info))
 		goto_out;
 
 	/*

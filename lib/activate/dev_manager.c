@@ -248,6 +248,7 @@ static uint32_t _seg_len(const struct lv_segment *seg)
 static int _info_run(const char *dlid, struct dm_info *dminfo,
 		     uint32_t *read_ahead,
 		     struct lv_seg_status *seg_status,
+		     const char *name_check,
 		     int with_open_count, int with_read_ahead,
 		     uint32_t major, uint32_t minor)
 {
@@ -258,6 +259,7 @@ static int _info_run(const char *dlid, struct dm_info *dminfo,
 	void *target = NULL;
 	uint64_t target_start, target_length, start, length;
 	char *target_name, *target_params;
+	const char *dev_name;
 
 	if (seg_status) {
 		dmtask = DM_DEVICE_STATUS;
@@ -270,6 +272,11 @@ static int _info_run(const char *dlid, struct dm_info *dminfo,
 	if (!(dmt = _setup_task_run(dmtask, dminfo, NULL, dlid, 0, major, minor,
 				    with_open_count, with_flush, 0)))
 		return_0;
+
+	if (name_check && dminfo->exists &&
+	    (dev_name = dm_task_get_name(dmt)) &&
+	    (strcmp(name_check, dev_name) != 0))
+		dminfo->exists = 0;	/* mismatching name -> device does not exist */
 
 	if (with_read_ahead && dminfo->exists) {
 		if (!dm_task_get_read_ahead(dmt, read_ahead))
@@ -791,18 +798,19 @@ static int _original_uuid_format_check_required(struct cmd_context *cmd)
 
 static int _info(struct cmd_context *cmd,
 		 const char *name, const char *dlid,
-		 int with_open_count, int with_read_ahead,
+		 int with_open_count, int with_read_ahead, int with_name_check,
 		 struct dm_info *dminfo, uint32_t *read_ahead,
 		 struct lv_seg_status *seg_status)
 {
 	char old_style_dlid[sizeof(UUID_PREFIX) + 2 * ID_LEN];
 	const char *suffix, *suffix_position;
+	const char *name_check = (with_name_check) ? name : NULL;
 	unsigned i = 0;
 
 	log_debug_activation("Getting device info for %s [%s].", name, dlid);
 
 	/* Check for dlid */
-	if (!_info_run(dlid, dminfo, read_ahead, seg_status,
+	if (!_info_run(dlid, dminfo, read_ahead, seg_status, name_check,
 		       with_open_count, with_read_ahead, 0, 0))
 		return_0;
 
@@ -818,7 +826,8 @@ static int _info(struct cmd_context *cmd,
 			(void) strncpy(old_style_dlid, dlid, sizeof(old_style_dlid));
 			old_style_dlid[sizeof(old_style_dlid) - 1] = '\0';
 			if (!_info_run(old_style_dlid, dminfo, read_ahead, seg_status,
-				       with_open_count, with_read_ahead, 0, 0))
+				       name_check, with_open_count, with_read_ahead,
+				       0, 0))
 				return_0;
 			if (dminfo->exists)
 				return 1;
@@ -831,7 +840,7 @@ static int _info(struct cmd_context *cmd,
 
 	/* Check for dlid before UUID_PREFIX was added */
 	if (!_info_run(dlid + sizeof(UUID_PREFIX) - 1, dminfo, read_ahead, seg_status,
-		       with_open_count, with_read_ahead, 0, 0))
+		       name_check, with_open_count, with_read_ahead, 0, 0))
 		return_0;
 
 	return 1;
@@ -861,7 +870,7 @@ out:
 
 static int _info_by_dev(uint32_t major, uint32_t minor, struct dm_info *info)
 {
-	return _info_run(NULL, info, NULL, 0, 0, 0, major, minor);
+	return _info_run(NULL, info, NULL, NULL, NULL, 0, 0, major, minor);
 }
 
 int dev_manager_check_prefix_dm_major_minor(uint32_t major, uint32_t minor, const char *prefix)
@@ -883,7 +892,7 @@ int dev_manager_check_prefix_dm_major_minor(uint32_t major, uint32_t minor, cons
 
 int dev_manager_info(struct cmd_context *cmd,
 		     const struct logical_volume *lv, const char *layer,
-		     int with_open_count, int with_read_ahead,
+		     int with_open_count, int with_read_ahead, int with_name_check,
 		     struct dm_info *dminfo, uint32_t *read_ahead,
 		     struct lv_seg_status *seg_status)
 {
@@ -896,7 +905,8 @@ int dev_manager_info(struct cmd_context *cmd,
 	if (!(dlid = build_dm_uuid(cmd->mem, lv, layer)))
 		goto_out;
 
-	if (!(r = _info(cmd, name, dlid, with_open_count, with_read_ahead,
+	if (!(r = _info(cmd, name, dlid,
+			with_open_count, with_read_ahead, with_name_check,
 			dminfo, read_ahead, seg_status)))
 		stack;
 out:
@@ -2096,7 +2106,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (!(dlid = build_dm_uuid(dm->track_pending_delete ? dm->cmd->pending_delete_mem : dm->mem, lv, layer)))
 		return_0;
 
-	if (!_info(dm->cmd, name, dlid, 1, 0, &info, NULL, NULL))
+	if (!_info(dm->cmd, name, dlid, 1, 0, 0, &info, NULL, NULL))
 		return_0;
 
 	/*
@@ -2396,7 +2406,7 @@ static int _add_cvol_subdev_to_dtree(struct dev_manager *dm, struct dm_tree *dtr
 	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, pool_lv->name, layer)))
 		return_0;
 
-	if (!_info(dm->cmd, name, dlid, 1, 0, &info, NULL, NULL))
+	if (!_info(dm->cmd, name, dlid, 1, 0, 0, &info, NULL, NULL))
 		return_0;
 
 	if (info.exists) {
@@ -2692,7 +2702,7 @@ static char *_add_error_or_zero_device(struct dev_manager *dm, struct dm_tree *d
 				      seg->lv->name, errid)))
 		return_NULL;
 
-	if (!_info(dm->cmd, name, dlid, 1, 0, &info, NULL, NULL))
+	if (!_info(dm->cmd, name, dlid, 1, 0, 0, &info, NULL, NULL))
 		return_NULL;
 
 	if (!info.exists) {

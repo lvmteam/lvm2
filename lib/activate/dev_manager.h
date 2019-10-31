@@ -47,7 +47,7 @@ void dev_manager_exit(void);
  */
 int dev_manager_info(struct cmd_context *cmd, const struct logical_volume *lv,
 		     const char *layer,
-		     int with_open_count, int with_read_ahead,
+		     int with_open_count, int with_read_ahead, int with_name_check,
 		     struct dm_info *dminfo, uint32_t *read_ahead,
 		     struct lv_seg_status *seg_status);
 
