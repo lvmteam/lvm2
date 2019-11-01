@@ -15,6 +15,8 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+aux have_raid 1 7 0 || skip
+
 v1_15_0=0
 aux have_raid 1 15 0 && v1_15_0=1
 
@@ -33,7 +35,7 @@ aux prepare_pvs 2 $(($lvsz + 3 * $lvext))
 get_devs
 vgcreate -s 4k $vg ${DEVICES[@]}
 
-aux delay_dev "$dev1"  0 50
+aux delay_dev "$dev1"  0 150
 
 # Create raid1 LV consuming 1 MD bitmap page
 lvcreate --yes --type raid1 --regionsize ${regionsize}K -L$(($lvsz-$lvext))M -n $lv1 $vg
