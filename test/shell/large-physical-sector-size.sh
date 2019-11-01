@@ -22,7 +22,7 @@ LOGICAL_BLOCK_SIZE=4096
 # 4096 << 9 = 2MB physical block size
 PHYSICAL_BLOCK_SHIFT=9
 
-aux prepare_scsi_debug_dev 256 sector_size=$LOGICAL_BLOCK_SIZE physblk_exp=$PHYSICAL_BLOCK_SHIFT
+aux prepare_scsi_debug_dev 256 sector_size=$LOGICAL_BLOCK_SIZE physblk_exp=$PHYSICAL_BLOCK_SHIFT || skip
 
 check sysfs "$(< SCSI_DEBUG_DEV)" queue/logical_block_size "$LOGICAL_BLOCK_SIZE"
 
