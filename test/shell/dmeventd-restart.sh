@@ -31,10 +31,13 @@ dmeventd -R -f &
 echo $! >LOCAL_DMEVENTD
 sleep 2 # wait a bit, so we talk to the new dmeventd later
 
+check lv_field $vg/3way seg_monitor "monitored"
+check lv_field $vg/4way seg_monitor "monitored"
 lvchange --monitor y --verbose $vg/3way 2>&1 | tee lvchange.out
-grep 'already monitored' lvchange.out
+# only non-cluster tests can check command result
+test -e LOCAL_CLVMD || grep 'already monitored' lvchange.out
 lvchange --monitor y --verbose $vg/4way 2>&1 | tee lvchange.out
-grep 'already monitored' lvchange.out
+test -e LOCAL_CLVMD || grep 'already monitored' lvchange.out
 
 # now try what happens if no dmeventd is running
 kill -9 "$(< LOCAL_DMEVENTD)"
@@ -49,11 +52,14 @@ sleep 9
 not pgrep dmeventd
 rm LOCAL_DMEVENTD
 
+check lv_field $vg/3way seg_monitor "not monitored"
+check lv_field $vg/4way seg_monitor "not monitored"
+
 lvchange --monitor y --verbose $vg/3way 2>&1 | tee lvchange.out
 pgrep -o dmeventd >LOCAL_DMEVENTD
-not grep 'already monitored' lvchange.out
+test -e LOCAL_CLVMD || not grep 'already monitored' lvchange.out
 
 lvchange --monitor y --verbose $vg/$lv2 2>&1 | tee lvchange.out
-not grep 'already monitored' lvchange.out
+test -e LOCAL_CLVMD || not grep 'already monitored' lvchange.out
 
 vgremove -ff $vg
