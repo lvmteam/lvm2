@@ -62,7 +62,6 @@ if aux have_raid 1 7 0 ; then
 lvcreate --type raid1 -m1 --nosync -l1 --alloc anywhere -n $lv2 $vg1
 lvconvert -y --repair $vg1/$lv2 2>&1 | tee out
 grep "WARNING: Disabling lvmetad cache" out
-fi
 
 pvs  -vvvv 2>&1 | tee out
 grep "$dev1" out
@@ -80,6 +79,7 @@ grep "WARNING: Not using lvmetad" out
 
 pvremove "$dev1" 2>&1 | tee out
 grep "WARNING: Not using lvmetad" out
+fi
 
 pvscan --cache  2>&1 | tee out
 not grep "WARNING: Disabling lvmetad cache" out
