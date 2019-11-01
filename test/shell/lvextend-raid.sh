@@ -34,7 +34,7 @@ aux prepare_pvs 2 $(($lvsz + 3 * $lvext))
 get_devs
 vgcreate -s 4k $vg ${DEVICES[@]}
 
-aux delay_dev "$dev1"  0 50
+aux delay_dev "$dev1"  0 150
 
 # Create raid1 LV consuming 1 MD bitmap page
 lvcreate --yes --type raid1 --regionsize ${regionsize}K -L$(($lvsz-$lvext))M -n $lv1 $vg
