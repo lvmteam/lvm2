@@ -35,7 +35,7 @@ pvcreate "$DM_DEV_DIR/$vg/$lv"
 vgcreate -s 128K $vg1 "$DM_DEV_DIR/$vg/$lv"
 
 # Create simple cache LV
-lvcreate -L2 -n $lv1 $vg1
+lvcreate -aey -L2 -n $lv1 $vg1
 lvcreate -H -L2 $vg1/$lv1
 
 #lvs -ao+kernel_discards $vg1
