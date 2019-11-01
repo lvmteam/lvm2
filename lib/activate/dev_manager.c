@@ -259,7 +259,7 @@ static int _info_run(const char *dlid, struct dm_info *dminfo,
 	void *target = NULL;
 	uint64_t target_start, target_length, start, length;
 	char *target_name, *target_params;
-	const char *dev_name;
+	const char *devname;
 
 	if (seg_status) {
 		dmtask = DM_DEVICE_STATUS;
@@ -274,8 +274,8 @@ static int _info_run(const char *dlid, struct dm_info *dminfo,
 		return_0;
 
 	if (name_check && dminfo->exists &&
-	    (dev_name = dm_task_get_name(dmt)) &&
-	    (strcmp(name_check, dev_name) != 0))
+	    (devname = dm_task_get_name(dmt)) &&
+	    (strcmp(name_check, devname) != 0))
 		dminfo->exists = 0;	/* mismatching name -> device does not exist */
 
 	if (with_read_ahead && dminfo->exists) {
