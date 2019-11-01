@@ -887,7 +887,8 @@ static void main_loop(int cmd_timeout)
 	sigemptyset(&ss);
 	sigaddset(&ss, SIGINT);
 	sigaddset(&ss, SIGTERM);
-	pthread_sigmask(SIG_UNBLOCK, &ss, NULL);
+	if (pthread_sigmask(SIG_UNBLOCK, &ss, NULL))
+		log_warn("WARNING: Failed to unblock SIGCHLD.");
 	/* Main loop */
 	while (!quit) {
 		fd_set in;
@@ -1731,11 +1732,12 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 	   SIGUSR2 (kills subthreads) */
 	sigemptyset(&ss);
 	sigaddset(&ss, SIGUSR1);
-	pthread_sigmask(SIG_BLOCK, &ss, NULL);
-
+	if (pthread_sigmask(SIG_BLOCK, &ss, NULL))
+		log_warn("WARNING: Failed to block SIGUSR1.");
 	sigdelset(&ss, SIGUSR1);
 	sigaddset(&ss, SIGUSR2);
-	pthread_sigmask(SIG_UNBLOCK, &ss, NULL);
+	if (pthread_sigmask(SIG_UNBLOCK, &ss, NULL))
+		log_warn("WARNING: Failed to unblock SIGUSR2.");
 
 	/* Loop around doing PRE and POST functions until the client goes away */
 	while (!client->bits.localsock.finished) {

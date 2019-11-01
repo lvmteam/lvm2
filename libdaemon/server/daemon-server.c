@@ -663,14 +663,17 @@ void daemon_start(daemon_state s)
 		FD_SET(s.socket_fd, &in);
 
 		_reap(s, 0);
-		sigprocmask(SIG_SETMASK, &new_set, NULL);
+		if (sigprocmask(SIG_SETMASK, &new_set, NULL))
+			perror("sigprocmask error");
 		if (_shutdown_requested && !s.threads->next) {
-			sigprocmask(SIG_SETMASK, &old_set, NULL);
+			if (sigprocmask(SIG_SETMASK, &old_set, NULL))
+				perror("sigprocmask error");
 			INFO(&s, "%s shutdown requested", s.name);
 			break;
 		}
 		ret = pselect(s.socket_fd + 1, &in, NULL, NULL, _get_timeout(s), &old_set);
-		sigprocmask(SIG_SETMASK, &old_set, NULL);
+		if (sigprocmask(SIG_SETMASK, &old_set, NULL))
+			perror("sigprocmask error");
 
 		if (ret < 0) {
 			if (errno != EINTR && errno != EAGAIN &&
