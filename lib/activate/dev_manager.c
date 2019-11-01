@@ -278,7 +278,7 @@ static int _info_run(const char *dlid, struct dm_info *dminfo,
 	    (strcmp(name_check, devname) != 0))
 		dminfo->exists = 0;	/* mismatching name -> device does not exist */
 
-	if (with_read_ahead && dminfo->exists) {
+	if (with_read_ahead && read_ahead && dminfo->exists) {
 		if (!dm_task_get_read_ahead(dmt, read_ahead))
 			goto_out;
 	} else if (read_ahead)
