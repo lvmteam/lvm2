@@ -1688,7 +1688,7 @@ raid6_ls_6
 RAID6 N continue
 .br
 \[bu]
-Same as raid5_ls for N-1 disks with fixed Q-Syndrome N
+Same as raid5_ls for N-1 devices with fixed Q-Syndrome N
 .br
 \[bu]
 Used for RAID Takeover
@@ -1699,7 +1699,7 @@ raid6_la_6
 RAID6 N continue
 .br
 \[bu]
-Same as raid5_la for N-1 disks with fixed Q-Syndrome N
+Same as raid5_la for N-1 devices with fixed Q-Syndrome N
 .br
 \[bu]
 Used forRAID Takeover
@@ -1710,7 +1710,7 @@ raid6_rs_6
 RAID6 N continue
 .br
 \[bu]
-Same as raid5_rs for N-1 disks with fixed Q-Syndrome N
+Same as raid5_rs for N-1 devices with fixed Q-Syndrome N
 .br
 \[bu]
 Used for RAID Takeover
@@ -1721,7 +1721,7 @@ raid6_ra_6
 RAID6 N continue
 .br
 \[bu]
-Same as raid5_ra for N-1 disks with fixed Q-Syndrome N
+ame as raid5_ra for N-1 devices with fixed Q-Syndrome N
 .br
 \[bu]
 Used for RAID Takeover
