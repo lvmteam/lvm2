@@ -505,19 +505,22 @@ static int _handle_connect(daemon_state s)
 
 	client.socket_fd = accept(s.socket_fd, (struct sockaddr *) &sockaddr, &sl);
 	if (client.socket_fd < 0) {
-		if (errno != EAGAIN || !_shutdown_requested)
+		if (errno != EAGAIN)
 			ERROR(&s, "Failed to accept connection: %s.", strerror(errno));
-		return 0;
+		goto bad;
 	}
 
-	 if (fcntl(client.socket_fd, F_SETFD, FD_CLOEXEC))
+	if (_shutdown_requested) {
+		ERROR(&s, "Shutdown requested.");
+		goto bad;
+	}
+
+	if (fcntl(client.socket_fd, F_SETFD, FD_CLOEXEC))
 		WARN(&s, "setting CLOEXEC on client socket fd %d failed", client.socket_fd);
 
 	if (!(ts = malloc(sizeof(thread_state)))) {
-		if (close(client.socket_fd))
-			perror("close");
 		ERROR(&s, "Failed to allocate thread state");
-		return 0;
+		goto bad;
 	}
 
 	ts->next = s.threads->next;
@@ -529,10 +532,16 @@ static int _handle_connect(daemon_state s)
 
 	if ((errno = pthread_create(&ts->client.thread_id, NULL, _client_thread, ts))) {
 		ERROR(&s, "Failed to create client thread: %s.", strerror(errno));
-		return 0;
+		ts->active = 0;
+		goto bad;
 	}
 
 	return 1;
+bad:
+	if ((client.socket_fd >= 0) && close(client.socket_fd))
+		perror("close");
+
+	return 0;
 }
 
 static void _reap(daemon_state s, int waiting)
