@@ -51,12 +51,11 @@ wait
 # First take down $lv1 then it's pvmove0
 j=0
 for i in $lv1 pvmove0 pvmove0_mimage_0 pvmove0_mimage_1 ; do
-	while dmsetup status "$vg-$i"; do
-		dmsetup remove "$vg-$i" || {
-			j=$(( j + 1 ))
-			test $j -le 100 || die "Cannot take down devices."
-			sleep .1;
-		}
+	while dmsetup status "$vg-$i" ; do
+		dmsetup remove "$vg-$i" && break
+		j=$(( j + 1 ))
+		test $j -le 100 || die "Cannot take down devices."
+		sleep .1;
 	done
 done
 dmsetup table | grep $PREFIX
