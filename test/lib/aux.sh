@@ -1652,6 +1652,10 @@ wait_pvmove_lv_ready() {
 			retries=$((retries-1))
 		done
 	fi
+
+	# Adding settle here, to avoid remove, before processing of 'add' is finished
+	# (masking systemd-udevd issue)
+	udevadm settle --timeout=2 || true
 }
 
 # Holds device open with sleep which automatically expires after given timeout
