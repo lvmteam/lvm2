@@ -551,7 +551,8 @@ static void _reap(daemon_state s, int waiting)
 
 	while (ts) {
 		if (waiting || !ts->active) {
-			if ((errno = pthread_join(ts->client.thread_id, &rv)))
+			if (ts->client.thread_id &&
+			    (errno = pthread_join(ts->client.thread_id, &rv)))
 				ERROR(&s, "pthread_join failed: %s", strerror(errno));
 			last->next = ts->next;
 			free(ts);
