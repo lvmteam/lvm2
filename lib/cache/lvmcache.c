@@ -325,10 +325,12 @@ void lvmcache_save_vg(struct volume_group *vg, int precommitted)
 
 		dm_list_init(&svg->saved_vg_to_free);
 
-		dm_strncpy(svg->vgid, (const char *)vg->id.uuid, sizeof(svg->vgid));
+		/* Ignore result code, size we intentionally short-cut & pad with 0 */
+		(void) dm_strncpy(svg->vgid, (const char *)vg->id.uuid, sizeof(svg->vgid));
 
 		if (!dm_hash_insert(_saved_vg_hash, svg->vgid, svg)) {
 			log_error("lvmcache: failed to insert saved_vg %s", svg->vgid);
+			dm_free(svg);
 			return;
 		}
 	} else {
