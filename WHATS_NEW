@@ -1,5 +1,6 @@
 Version 2.03.07 - 
 ===================================
+  Fix resize of thin-pool with data and metadata of different segtype.
   Improve mirror type leg splitting.
   Fix activation order when removing merged snapshot.
   Experimental VDO support for lvmdbusd.
