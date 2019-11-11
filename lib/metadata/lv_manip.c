@@ -5446,6 +5446,8 @@ static struct logical_volume *_lvresize_setup_aux(struct logical_volume *lv,
 	struct lv_segment *mseg = last_seg(lv);
 
 	lp->alloc = lv->alloc;
+	lp->percent = PERCENT_NONE;
+	lp->segtype = mseg->segtype;
 	lp->mirrors = seg_is_mirrored(mseg) ? lv_mirror_count(lv) : 0;
 	lp->resizefs = 0;
 	lp->stripes = lp->mirrors ? mseg->area_count / lp->mirrors : 0;
