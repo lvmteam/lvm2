@@ -20,7 +20,7 @@ export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 aux have_thin 1 0 0 || skip
 aux have_raid 1 3 0 || skip
 
-aux prepare_vg 6
+aux prepare_vg 6 600
 
 lvcreate --type raid1 -l2 --nosync -n pool $vg
 lvconvert --yes --thinpool $vg/pool "$dev3"
@@ -48,5 +48,16 @@ lvextend --poolmetadatasize +1 --size +1 $vg/pool
 
 check lv_field $vg/pool_tdata lv_size "7.50m" -a
 check lv_field $vg/pool_tmeta lv_size "4.50m" -a
+
+lvremove -f $vg
+
+# check resize of pool and metadata being a different segtype
+# https://bugzilla.redhat.com/1722666
+lvcreate -L4 -n pool $vg
+lvcreate --type raid1 -m1 -L2 --nosync -n meta $vg
+lvconvert --yes --thinpool $vg/pool --poolmetadata $vg/meta
+# using big enough pool so resize of pool metadata is enforced
+# (and it's using a differnt segtype)
+lvextend -L3G $vg/pool
 
 vgremove -ff $vg
