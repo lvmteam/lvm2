@@ -79,6 +79,9 @@ grep "WARNING: Not using lvmetad" out
 
 pvremove "$dev1" 2>&1 | tee out
 grep "WARNING: Not using lvmetad" out
+else
+vgremove -y $vg1 2>&1 | tee out
+pvremove "$dev1" 2>&1 | tee out
 fi
 
 pvscan --cache  2>&1 | tee out
