@@ -266,7 +266,6 @@ static int _write_log_header(struct cmd_context *cmd, struct logical_volume *lv)
 	dev_set_last_byte(dev, sizeof(log_header));
 
 	if (!dev_write_bytes(dev, UINT64_C(0), sizeof(log_header), &log_header)) {
-		dev_unset_last_byte(dev);
 		log_error("Failed to write log header to %s.", name);
 		return 0;
 	}

@@ -277,7 +277,6 @@ static int _raw_write_mda_header(const struct format_type *fmt,
 	dev_set_last_byte(dev, start_byte + MDA_HEADER_SIZE);
 
 	if (!dev_write_bytes(dev, start_byte, MDA_HEADER_SIZE, mdah)) {
-		dev_unset_last_byte(dev);
 		log_error("Failed to write mda header to %s fd %d", dev_name(dev), dev->bcache_fd);
 		return 0;
 	}
@@ -989,7 +988,6 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 
 	if (!dev_write_bytes(mdac->area.dev, write1_start, (size_t)write1_size, write_buf)) {
 		log_error("Failed to write metadata to %s fd %d", devname, mdac->area.dev->bcache_fd);
-		dev_unset_last_byte(mdac->area.dev);
 		goto out;
 	}
 
@@ -1002,7 +1000,6 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		if (!dev_write_bytes(mdac->area.dev, write2_start, write2_size,
 				     write_buf + new_size - new_wrap)) {
 			log_error("Failed to write metadata wrap to %s fd %d", devname, mdac->area.dev->bcache_fd);
-			dev_unset_last_byte(mdac->area.dev);
 			goto out;
 		}
 	}
