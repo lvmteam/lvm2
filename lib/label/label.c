@@ -216,7 +216,7 @@ int label_write(struct device *dev, struct label *label)
 
 	if (!dev_write_bytes(dev, offset, LABEL_SIZE, buf)) {
 		log_debug_devs("Failed to write label to %s", dev_name(dev));
-		r = 0;
+		return 0;
 	}
 
 	dev_unset_last_byte(dev);
@@ -621,7 +621,6 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 	int submit_count;
 	int scan_failed;
 	int is_lvm_device;
-	int error;
 	int ret;
 
 	dm_list_init(&wait_devs);
@@ -668,12 +667,11 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 
 	dm_list_iterate_items_safe(devl, devl2, &wait_devs) {
 		bb = NULL;
-		error = 0;
 		scan_failed = 0;
 		is_lvm_device = 0;
 
 		if (!bcache_get(scan_bcache, devl->dev->bcache_fd, 0, 0, &bb)) {
-			log_debug_devs("Scan failed to read %s error %d.", dev_name(devl->dev), error);
+			log_debug_devs("Scan failed to read %s.", dev_name(devl->dev));
 			scan_failed = 1;
 			scan_read_errors++;
 			scan_failed_count++;
@@ -1385,6 +1383,7 @@ bool dev_write_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 	if (!bcache_write_bytes(scan_bcache, dev->bcache_fd, start, len, data)) {
 		log_error("Error writing device %s at %llu length %u.",
 			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
+		dev_unset_last_byte(dev);
 		label_scan_invalidate(dev);
 		return false;
 	}
@@ -1392,6 +1391,7 @@ bool dev_write_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 	if (!bcache_flush(scan_bcache)) {
 		log_error("Error writing device %s at %llu length %u.",
 			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
+		dev_unset_last_byte(dev);
 		label_scan_invalidate(dev);
 		return false;
 	}
