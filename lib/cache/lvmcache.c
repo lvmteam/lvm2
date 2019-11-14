@@ -1952,24 +1952,25 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller,
 
 			strncpy(dev->pvid, pvid_s, sizeof(dev->pvid));
 
-			/*
-			 * Keep the existing PV/dev in lvmcache, and save the
-			 * new duplicate in the list of duplicates.  After
-			 * scanning is complete, compare the duplicate devs
-			 * with those in lvmcache to check if one of the
-			 * duplicates is preferred and if so switch lvmcache to
-			 * use it.
-			 */
-
-			if (!(devl = zalloc(sizeof(*devl))))
-				return_NULL;
-			devl->dev = dev;
-
 			/* shouldn't happen */
 			if (dev_in_device_list(dev, &_initial_duplicates))
 				log_debug_cache("Initial duplicate already in list %s", dev_name(dev));
-			else
+			else {
+				/*
+				 * Keep the existing PV/dev in lvmcache, and save the
+				 * new duplicate in the list of duplicates.  After
+				 * scanning is complete, compare the duplicate devs
+				 * with those in lvmcache to check if one of the
+				 * duplicates is preferred and if so switch lvmcache to
+				 * use it.
+				 */
+
+				if (!(devl = zalloc(sizeof(*devl))))
+					return_NULL;
+				devl->dev = dev;
+
 				dm_list_add(&_initial_duplicates, &devl->list);
+			}
 
 			if (is_duplicate)
 				*is_duplicate = 1;
