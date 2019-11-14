@@ -359,10 +359,7 @@ static int _dump_all_text(struct cmd_context *cmd, const char *tofile, struct de
 			continue;
 		}
 
-		if (sscanf(line, "seqno = %u", &seqno) != 1) {
-			log_warn("WARNING: Failed to parse seqno.");
-			seqno = 0; /* Skip? */
-		}
+		sscanf(line, "seqno = %u", &seqno);
 
 		/*
 		 * The first three lines look like metadata with
