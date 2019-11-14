@@ -625,7 +625,8 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 	char devpath[PATH_MAX];
 	FILE *fp;
 	struct dev_iter *iter;
-	struct hint *hint;
+	struct hint hint;
+	struct hint *alloc_hint;
 	struct device *dev;
 	char *split[HINT_LINE_WORDS];
 	char *name, *pvid, *devn, *vgname, *p, *filter_str = NULL;
@@ -649,11 +650,7 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 		split[i] = NULL;
 
 	while (fgets(_hint_line, sizeof(_hint_line), fp)) {
-		if (!(hint = zalloc(sizeof(struct hint)))) {
-			ret = 0;
-			break;
-		}
-
+		memset(&hint, 0, sizeof(hint));
 		if (_hint_line[0] == '#')
 			continue;
 
@@ -751,19 +748,28 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 		vgname = split[3];
 
 		if (name && !strncmp(name, "scan:", 5))
-			strncpy(hint->name, name+5, PATH_MAX);
+			if (!dm_strncpy(hint.name, name + 5, sizeof(hint.name)))
+				continue;
 
 		if (pvid && !strncmp(pvid, "pvid:", 5))
-			strncpy(hint->pvid, pvid+5, ID_LEN);
+			if (!dm_strncpy(hint.pvid, pvid + 5, sizeof(hint.pvid)))
+				continue;
 
 		if (devn && sscanf(devn, "devn:%d:%d", &major, &minor) == 2)
-			hint->devt = makedev(major, minor);
+			hint.devt = makedev(major, minor);
 
 		if (vgname && (strlen(vgname) > 3) && (vgname[4] != '-'))
-			strncpy(hint->vgname, vgname+3, NAME_LEN);
+			if (!dm_strncpy(hint.vgname, vgname + 3, sizeof(hint.vgname)))
+				continue;
 
-		log_debug("add hint %s %s %d:%d %s", hint->name, hint->pvid, major, minor, vgname);
-		dm_list_add(hints, &hint->list);
+		if (!(alloc_hint = malloc(sizeof(struct hint)))) {
+			ret = 0;
+			break;
+		}
+		memcpy(alloc_hint, &hint, sizeof(hint));
+
+		log_debug("add hint %s %s %d:%d %s", hint.name, hint.pvid, major, minor, vgname);
+		dm_list_add(hints, &alloc_hint->list);
 		found++;
 	}
 
