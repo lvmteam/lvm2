@@ -586,29 +586,42 @@ static void _filter_to_str(struct cmd_context *cmd, int filter_cfg, char **strp)
 	char *str;
 	int pos = 0;
 	int len = 0;
+	int ret;
 
 	*strp = NULL;
 
-	if (!(cn = find_config_tree_array(cmd, filter_cfg, NULL)))
+	if (!(cn = find_config_tree_array(cmd, filter_cfg, NULL))) {
 		/* shouldn't happen because default is a|*| */
 		return;
+	}
 
-	for (cv = cn->v; cv; cv = cv->next)
-		if (cv->type == DM_CFG_STRING)
-			len += strlen(cv->v.str) + 1;
+	for (cv = cn->v; cv; cv = cv->next) {
+		if (cv->type != DM_CFG_STRING)
+			continue;
 
-	if (!len++ || !(str = malloc(len)))
+		len += (strlen(cv->v.str) + 1);
+	}
+	len++;
+
+	if (len == 1) {
+		/* shouldn't happen because default is a|*| */
 		return;
+	}
 
-	for (cv = cn->v; cv; cv = cv->next)
-		if (cv->type == DM_CFG_STRING) {
-			len = strlen(cv->v.str);
-			memcpy(str + pos, cv->v.str, len);
-			pos += len;
-			str[pos++] = 0;
-		}
+	if (!(str = malloc(len)))
+		return;
+	memset(str, 0, len);
 
-	str[pos] = 0;
+	for (cv = cn->v; cv; cv = cv->next) {
+		if (cv->type != DM_CFG_STRING)
+			continue;
+
+		ret = snprintf(str + pos, len - pos, "%s", cv->v.str);
+
+		if (ret >= len - pos)
+			break;
+		pos += ret;
+	}
 
 	*strp = str;
 }
