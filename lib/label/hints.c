@@ -1200,6 +1200,8 @@ check:
 			return;
 		}
 	}
+
+	free(name);
 }
 
 /*
@@ -1353,6 +1355,9 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints_out, int *newhints,
 		  dm_list_size(devs_out), dm_list_size(devs_in));
 
 	dm_list_splice(hints_out, &hints_list);
+
+	free(vgname);
+
 	return 1;
 }
 
