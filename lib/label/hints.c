@@ -688,13 +688,11 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 			_filter_to_str(cmd, devices_global_filter_CFG, &filter_str);
 			if (!filter_str || strcmp(filter_str, _hint_line + keylen)) {
 				log_debug("ignore hints with different global_filter");
-				if (filter_str)
-					free(filter_str);
+				free(filter_str);
 				*needs_refresh = 1;
 				break;
 			}
-			if (filter_str)
-				free(filter_str);
+			free(filter_str);
 			continue;
 		}
 
@@ -703,13 +701,11 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 			_filter_to_str(cmd, devices_filter_CFG, &filter_str);
 			if (!filter_str || strcmp(filter_str, _hint_line + keylen)) {
 				log_debug("ignore hints with different filter");
-				if (filter_str)
-					free(filter_str);
+				free(filter_str);
 				*needs_refresh = 1;
 				break;
 			}
-			if (filter_str)
-				free(filter_str);
+			free(filter_str);
 			continue;
 		}
 
@@ -907,13 +903,11 @@ int write_hint_file(struct cmd_context *cmd, int newhints)
 
 	_filter_to_str(cmd, devices_global_filter_CFG, &filter_str);
 	fprintf(fp, "global_filter:%s\n", filter_str ?: "-");
-	if (filter_str)
-		free(filter_str);
+	free(filter_str);
 
 	_filter_to_str(cmd, devices_filter_CFG, &filter_str);
 	fprintf(fp, "filter:%s\n", filter_str ?: "-");
-	if (filter_str)
-		free(filter_str);
+	free(filter_str);
 
 	fprintf(fp, "scan_lvs:%d\n", cmd->scan_lvs);
 
