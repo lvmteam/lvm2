@@ -656,7 +656,8 @@ void daemon_start(daemon_state s)
 		failed = 1; /* FD out of available selectable set */
 
 	sigfillset(&new_set);
-	sigprocmask(SIG_SETMASK, NULL, &old_set);
+	if (sigprocmask(SIG_SETMASK, NULL, &old_set))
+		perror("sigprocmask error");
 
 	while (!failed) {
 		_reset_timeout(s);
