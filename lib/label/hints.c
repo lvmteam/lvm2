@@ -716,10 +716,9 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 		keylen = strlen("scan_lvs:");
 		if (!strncmp(_hint_line, "scan_lvs:", keylen)) {
 			int scan_lvs = 0;
-			sscanf(_hint_line + keylen, "%u", &scan_lvs);
-
-			if (scan_lvs != cmd->scan_lvs) {
-				log_debug("ignore hints with different scan_lvs");
+			if ((sscanf(_hint_line + keylen, "%u", &scan_lvs) != 1) ||
+			    scan_lvs != cmd->scan_lvs) {
+				log_debug("ignore hints with different or unreadable scan_lvs");
 				*needs_refresh = 1;
 				break;
 			}
@@ -728,7 +727,11 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 
 		keylen = strlen("devs_hash:");
 		if (!strncmp(_hint_line, "devs_hash:", keylen)) {
-			sscanf(_hint_line + keylen, "%u %u", &read_hash, &read_count);
+			if (sscanf(_hint_line + keylen, "%u %u", &read_hash, &read_count) != 2) {
+				log_debug("ignore hints with invalid devs_hash");
+				*needs_refresh = 1;
+				break;
+			}
 			continue;
 		}
 
