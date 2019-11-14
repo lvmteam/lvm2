@@ -1175,7 +1175,8 @@ static void _get_single_vgname_cmd_arg(struct cmd_context *cmd,
 
 	if (!(st = strchr(arg, '/'))) {
 		/* simple vgname */
-		name = strdup(arg);
+		if (!(name = strdup(arg)))
+			return;
 		goto check;
 	}
 
@@ -1183,7 +1184,8 @@ static void _get_single_vgname_cmd_arg(struct cmd_context *cmd,
 	for (p = arg; p < st; p++)
 		namebuf[i++] = *p;
 
-	name = strdup(namebuf);
+	if (!(name = strdup(namebuf)))
+		return;
 
 check:
 	/*
