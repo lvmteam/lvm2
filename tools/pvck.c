@@ -417,11 +417,11 @@ static int _dump_all_text(struct cmd_context *cmd, const char *tofile, struct de
 				memset(line, 0, sizeof(line));
 				_copy_line(str1, line, &len);
 				log_print("%s", line);
-				if ((str2 = strstr(str1, "creation_time = "))) {
-					memset(line, 0, sizeof(line));
-					_copy_line(str2, line, &len);
-					log_print("%s\n", line);
-				}
+			}
+			if ((str2 = strstr(str1, "creation_time = "))) {
+				memset(line, 0, sizeof(line));
+				_copy_line(str2, line, &len);
+				log_print("%s\n", line);
 			}
 		}
 
