@@ -503,11 +503,11 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 			 *   which Node has pool active.
 			 */
 			if (!activate_lv(lv->vg->cmd, lv)) {
-				init_dmeventd_monitor(monitored);
+				(void) init_dmeventd_monitor(monitored);
 				return_0;
 			}
 			if (!lv_is_active(lv)) {
-				init_dmeventd_monitor(monitored);
+				(void) init_dmeventd_monitor(monitored);
 				log_error("Cannot activate thin pool %s, perhaps skipped in lvm.conf volume_list?",
 					  display_lvname(lv));
 				return 0;
