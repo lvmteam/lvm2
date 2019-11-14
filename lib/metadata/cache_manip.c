@@ -23,7 +23,6 @@
 #include "lib/config/defaults.h"
 #include "lib/metadata/lv_alloc.h"
 #include "lib/misc/lvm-signal.h"
-#include "lib/activate/dev_manager.h"
 
 /* https://github.com/jthornber/thin-provisioning-tools/blob/master/caching/cache_metadata_size.cc */
 #define DM_TRANSACTION_OVERHEAD		4096  /* KiB */

@@ -21,7 +21,6 @@
 #include "lib/locking/locking.h"
 #include "lib/metadata/metadata.h"
 #include "lib/mm/memlock.h"
-#include "lib/datastruct/str_list.h"
 #include "lib/format_text/format-text.h"
 #include "lib/config/config.h"
 
