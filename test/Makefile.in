@@ -315,7 +315,7 @@ lib/dm-version-expected: $(top_srcdir)/VERSION_DM .lib-dir-stamp
 CMDS = lvm $(shell cat $(top_builddir)/tools/.commands 2>/dev/null)
 LIB = $(addprefix lib/, $(LIB_SECURETEST) $(LIB_DMSECURETEST) $(LIB_SHARED) $(LIB_LOCAL) $(LIB_NOT) $(LIB_LINK_NOT) $(LIB_FLAVOURS))
 
-.tests-stamp: $(ALL) $(LIB) $(SUBDIRS) lib/version-expected lib/dm-version-expected unit-test
+.tests-stamp: .lib-dir-stamp $(ALL) $(LIB) $(SUBDIRS) lib/version-expected lib/dm-version-expected unit-test
 	@echo "    [TEST-STAMP]"
 	@if test "$(srcdir)" != . ; then \
 		echo "Linking tests to builddir."; \
