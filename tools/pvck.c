@@ -1455,8 +1455,7 @@ static int _dump_search(struct cmd_context *cmd,
 		uint64_t dev_bytes;
 		uint64_t extra_bytes;
 
-		if (!dev_get_size(dev, &dev_sectors))
-			return_ECMD_FAILED;
+		dev_get_size(dev, &dev_sectors);
 
 		dev_bytes = dev_sectors * 512;
 		extra_bytes = dev_bytes % ONE_MB_IN_BYTES;
