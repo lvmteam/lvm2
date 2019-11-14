@@ -1261,8 +1261,9 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints_out, int *newhints,
 	 */
 	if (_newhints_exists()) {
 		log_debug("get_hints: newhints file");
-		if (!_hints_exists())
-			_touch_hints();
+		if (!_hints_exists() && !_touch_hints())
+			return 0;
+
 		if (!_lock_hints(cmd, LOCK_EX, NONBLOCK))
 			return 0;
 		/* create new hints after scan */
