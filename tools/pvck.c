@@ -655,9 +655,8 @@ static int _dump_meta_area(struct device *dev, const char *tofile,
 	if (!tofile)
 		return_0;
 
-	if (!(meta_buf = malloc(mda_size)))
+	if (!(meta_buf = zalloc(mda_size)))
 		return_0;
-	memset(meta_buf, 0, mda_size);
 
 	if (!dev_read_bytes(dev, mda_offset, mda_size, meta_buf)) {
 		log_print("CHECK: failed to read metadata area at offset %llu size %llu",
@@ -713,12 +712,11 @@ static int _dump_current_text(struct device *dev,
 	int ri = rlocn_index; /* 0 or 1 */
 	int bad = 0;
 
-	if (!(meta_buf = malloc(meta_size))) {
+	if (!(meta_buf = zalloc(meta_size))) {
 		log_print("CHECK: mda_header_%d.raw_locn[%d] no mem for metadata text size %llu", mn, ri,
 			  (unsigned long long)meta_size);
 		return 0;
 	}
-	memset(meta_buf, 0, meta_size);
 
 	/*
 	 * Read the metadata text specified by the raw_locn so we can
@@ -1496,9 +1494,8 @@ static int _dump_search(struct cmd_context *cmd,
 	log_print("Searching for metadata in mda%d at offset %llu size %llu", mda_num,
 		  (unsigned long long)mda_offset, (unsigned long long)mda_size);
 
-	if (!(buf = malloc(mda_size)))
+	if (!(buf = zalloc(mda_size)))
 		return ECMD_FAILED;
-	memset(buf, 0, mda_size);
 
 	if (!dev_read_bytes(dev, mda_offset, mda_size, buf)) {
 		log_print("CHECK: failed to read metadata area at offset %llu size %llu",
