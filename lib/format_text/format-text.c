@@ -531,29 +531,6 @@ static struct volume_group *_vg_read_precommit_raw(struct format_instance *fid,
 	return vg;
 }
 
-#define MAX_DESC_LEN 2048
-
-static char *_build_desc_write(struct cmd_context *cmd, struct volume_group *vg)
-{
-	size_t len = strlen(cmd->cmd_line) + 32;
-	char *desc;
-
-	if (len > MAX_DESC_LEN)
-		len = MAX_DESC_LEN;
-
-	if (!(desc = zalloc(len)))
-		return_NULL;
-
-	vg->write_count++;
-
-	if (vg->write_count == 1)
-		dm_snprintf(desc, len, "Write from %s.", cmd->cmd_line);
-	else
-		dm_snprintf(desc, len, "Write[%u] from %s.", vg->write_count, cmd->cmd_line);
-
-	return desc;
-}
-
 /*
  * VG metadata updates:
  *
@@ -598,6 +575,7 @@ static char *_build_desc_write(struct cmd_context *cmd, struct volume_group *vg)
 static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 			 struct metadata_area *mda)
 {
+	char desc[2048];
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct text_fid_context *fidtc = (struct text_fid_context *) fid->private;
 	struct raw_locn *rlocn_old;
@@ -672,12 +650,15 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		write_buf_size = fidtc->write_buf_size;
 		new_size = fidtc->new_metadata_size;
 	} else {
-		char *desc = _build_desc_write(fid->fmt->cmd, vg);
+		if (!vg->write_count++)
+			(void) dm_snprintf(desc, sizeof(desc), "Write from %s.", vg->cmd->cmd_line);
+		else
+			(void) dm_snprintf(desc, sizeof(desc), "Write[%u] from %s.", vg->write_count, vg->cmd->cmd_line);
+
 		new_size = text_vg_export_raw(vg, desc, &write_buf, &write_buf_size);
 		fidtc->write_buf = write_buf;
 		fidtc->write_buf_size = write_buf_size;
 		fidtc->new_metadata_size = new_size;
-		free(desc);
 	}
 
 	if (!new_size || !write_buf) {
