@@ -420,7 +420,7 @@ check_duplicate:
 		log_error("pvscan[%d] PV %s is duplicate for PVID %s on %d:%d and %d:%d.",
 			  getpid(), dev_name(dev), dev->pvid, major, minor, file_major, file_minor);
 
-	if (file_vgname[0] && strcmp(file_vgname, vgname))
+	if (file_vgname[0] && vgname && strcmp(file_vgname, vgname))
 		log_error("pvscan[%d] PV %s has unexpected VG %s vs %s.",
 			  getpid(), dev_name(dev), vgname, file_vgname);
 

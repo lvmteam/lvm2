@@ -4284,7 +4284,8 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 		/*
 		 * When processing only specific PVs, we can quit once they've all been found.
 	 	 */
-		if (!process_all_pvs && dm_list_empty(arg_tags) && dm_list_empty(arg_devices))
+		if (!process_all_pvs && dm_list_empty(arg_tags) &&
+		    (!arg_devices || dm_list_empty(arg_devices)))
 			break;
 		log_set_report_object_name_and_id(NULL, NULL);
 	}

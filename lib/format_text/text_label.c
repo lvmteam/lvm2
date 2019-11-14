@@ -332,14 +332,12 @@ static int _read_mda_header_and_metadata(const struct format_type *fmt,
 		log_warn("WARNING: bad metadata header on %s at %llu.",
 			 dev_name(mdac->area.dev),
 			 (unsigned long long)mdac->area.start);
-		if (mda)
-			mda->header_start = mdac->area.start;
+		mda->header_start = mdac->area.start;
 		*bad_fields |= BAD_MDA_HEADER;
 		return 0;
 	}
 
-	if (mda)
-		mda->header_start = mdah->start;
+	mda->header_start = mdah->start;
 
 	mda_set_ignored(mda, rlocn_is_ignored(mdah->raw_locns));
 

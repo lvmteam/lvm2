@@ -341,7 +341,7 @@ static struct raw_locn *_read_metadata_location_vg(struct device_area *dev_area,
 	 * Don't try to check existing metadata
 	 * if given vgname is an empty string.
 	 */
-	if (!*vgname)
+	if (!vgname || !*vgname)
 		return rlocn;
 
 	/*
