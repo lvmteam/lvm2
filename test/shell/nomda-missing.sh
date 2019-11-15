@@ -74,6 +74,8 @@ check active $vg mirror12
 vgchange -a n $vg
 aux enable_dev "$dev3"
 aux disable_dev "$dev4"
+dmsetup table
+dmsetup info -c
 vgchange -aey $vg
 not vgck $vg
 
