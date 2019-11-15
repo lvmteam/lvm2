@@ -56,7 +56,7 @@ mount "$DM_DEV_DIR/$vg/$lv1" "$mount_dir"
 
 echo 3 >/proc/sys/vm/drop_caches
 # FIXME: This is filling up ram disk. Use sane amount of data please! Rate limit the data written!
-dd if=/dev/urandom of="$mount_dir/random" bs=1M count=50 conv=fdatasync
+dd if=/dev/urandom of="$mount_dir/random" bs=1M count=4 conv=fdatasync
 checksum_ "$mount_dir/random" >MD5
 
 # FIXME: wait_for_sync - is this really testing anything under load?
