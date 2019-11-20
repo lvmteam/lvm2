@@ -1391,10 +1391,22 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 					  DEFAULT_RAID1_MAX_IMAGES, lp->segtype->name, display_lvname(lv));
 				return 0;
 			}
+			if (!seg_is_raid1(seg) && lv_raid_has_integrity(lv)) {
+				log_error("Cannot add raid images with integrity for this raid level.");
+				return 0;
+			}
 			if (!lv_raid_change_image_count(lv, lp->yes, image_count,
 							(lp->region_size_supplied || !seg->region_size) ?
 							lp->region_size : seg->region_size , lp->pvh))
 				return_0;
+
+			if (lv_raid_has_integrity(lv)) {
+				struct integrity_settings *isettings = NULL;
+				if (!lv_get_raid_integrity_settings(lv, &isettings))
+					return_0;
+				if (!lv_add_integrity_to_raid(lv, isettings, lp->pvh, NULL))
+					return_0;
+			}
 
 			log_print_unless_silent("Logical volume %s successfully converted.",
 						display_lvname(lv));
@@ -1425,6 +1437,12 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			return 0;
 		}
 
+		if (lv_raid_has_integrity(lv)) {
+			/* FIXME: which conversions are happening here? */
+			log_error("This conversion is not supported for raid with integrity.");
+			return 0;
+		}
+
 		/* FIXME This needs changing globally. */
 		if (!arg_is_set(cmd, stripes_long_ARG))
 			lp->stripes = 0;
@@ -1444,6 +1462,12 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	}
 
 try_new_takeover_or_reshape:
+	if (lv_raid_has_integrity(lv)) {
+		/* FIXME: which conversions are happening here? */
+		log_error("This conversion is not supported for raid with integrity.");
+		return 0;
+	}
+
 	if (!_raid4_conversion_supported(lv, lp))
 		return 0;
 
@@ -5752,6 +5776,119 @@ int lvconvert_to_cache_with_cachevol_cmd(struct cmd_context *cmd, int argc, char
 
 	ret = process_each_lv(cmd, cmd->position_argc, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE, handle, NULL,
 			      &_lvconvert_cachevol_attach_single);
+
+	destroy_processing_handle(cmd, handle);
+
+	return ret;
+}
+
+static int _lvconvert_integrity_remove(struct cmd_context *cmd, struct logical_volume *lv)
+{
+	struct volume_group *vg = lv->vg;
+	int ret = 0;
+
+	if (!lv_is_integrity(lv) && !lv_is_raid(lv)) {
+		log_error("LV does not have integrity.");
+		return 0;
+	}
+
+	/* ensure it's not active elsewhere. */
+	if (!lockd_lv(cmd, lv, "ex", 0))
+		return_0;
+
+	if (!archive(vg))
+		return_0;
+
+	if (lv_is_raid(lv))
+		ret = lv_remove_integrity_from_raid(lv);
+	if (!ret)
+		return_0;
+
+	backup(vg);
+
+	log_print_unless_silent("Logical volume %s has removed integrity.", display_lvname(lv));
+	return 1;
+}
+
+static int _lvconvert_integrity_add(struct cmd_context *cmd, struct logical_volume *lv,
+				    struct integrity_settings *set)
+{
+	struct volume_group *vg = lv->vg;
+	struct dm_list *use_pvh;
+	int ret = 0;
+
+	/* ensure it's not active elsewhere. */
+	if (!lockd_lv(cmd, lv, "ex", 0))
+		return_0;
+
+	if (cmd->position_argc > 1) {
+		/* First pos arg is required LV, remaining are optional PVs. */
+		if (!(use_pvh = create_pv_list(cmd->mem, vg, cmd->position_argc - 1, cmd->position_argv + 1, 0)))
+			return_0;
+	} else
+		use_pvh = &vg->pvs;
+
+	if (!archive(vg))
+		return_0;
+
+	if (lv_is_partial(lv)) {
+		log_error("Cannot add integrity while LV is missing PVs.");
+		return 0;
+	}
+
+	if (lv_is_raid(lv))
+		ret = lv_add_integrity_to_raid(lv, set, use_pvh, NULL);
+	if (!ret)
+		return_0;
+
+	backup(vg);
+
+	log_print_unless_silent("Logical volume %s has added integrity.", display_lvname(lv));
+	return 1;
+}
+
+static int _lvconvert_integrity_single(struct cmd_context *cmd,
+					struct logical_volume *lv,
+					struct processing_handle *handle)
+{
+	struct integrity_settings settings;
+	int ret = 0;
+
+	memset(&settings, 0, sizeof(settings));
+
+	if (!integrity_mode_set(arg_str_value(cmd, raidintegritymode_ARG, NULL), &settings))
+		return_ECMD_FAILED;
+
+	if (arg_is_set(cmd, raidintegrityblocksize_ARG))
+		settings.block_size = arg_int_value(cmd, raidintegrityblocksize_ARG, 0);
+
+	if (arg_int_value(cmd, raidintegrity_ARG, 0))
+		ret = _lvconvert_integrity_add(cmd, lv, &settings);
+	else
+		ret = _lvconvert_integrity_remove(cmd, lv);
+
+	if (!ret)
+		return ECMD_FAILED;
+	return ECMD_PROCESSED;
+}
+
+int lvconvert_integrity_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	struct processing_handle *handle;
+	int ret;
+
+	if (!(handle = init_processing_handle(cmd, NULL))) {
+		log_error("Failed to initialize processing handle.");
+		return ECMD_FAILED;
+	}
+
+	/* Want to be able to remove integrity from partial LV */
+	cmd->handles_missing_pvs = 1;
+
+	cmd->cname->flags &= ~GET_VGNAME_FROM_OPTIONS;
+
+	ret = process_each_lv(cmd, cmd->position_argc, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE, handle, NULL,
+			      &_lvconvert_integrity_single);
 
 	destroy_processing_handle(cmd, handle);
 

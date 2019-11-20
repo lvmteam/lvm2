@@ -381,6 +381,11 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			return NULL;
 		}
 
+		if (lv_is_raid(lv) && lv_raid_has_integrity(lv)) {
+			log_error("Unable to pvmove device used for raid with integrity.");
+			return NULL;
+		}
+
 		seg = first_seg(lv);
 		if (!needs_exclusive) {
 			/* Presence of exclusive LV decides whether pvmove must be also exclusive */
@@ -623,6 +628,11 @@ static int _pvmove_setup_single(struct cmd_context *cmd,
 
 		if (lv_is_writecache(lv)) {
 			log_error("pvmove not allowed on LV using writecache.");
+			return ECMD_FAILED;
+		}
+
+		if (lv_is_raid(lv) && lv_raid_has_integrity(lv)) {
+			log_error("pvmove not allowed on raid LV with integrity.");
 			return ECMD_FAILED;
 		}
 	}

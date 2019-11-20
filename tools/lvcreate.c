@@ -858,7 +858,10 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	maxrecoveryrate_ARG,\
 	minrecoveryrate_ARG,\
 	raidmaxrecoveryrate_ARG,\
-	raidminrecoveryrate_ARG
+	raidminrecoveryrate_ARG, \
+	raidintegrity_ARG, \
+	raidintegritymode_ARG, \
+	raidintegrityblocksize_ARG
 
 #define SIZE_ARGS \
 	extents_ARG,\
@@ -1224,6 +1227,16 @@ static int _lvcreate_params(struct cmd_context *cmd,
 		if (!str_list_add(cmd->mem, &lp->tags, tag)) {
 			log_error("Unable to allocate memory for tag %s.", tag);
 			return 0;
+		}
+	}
+
+	if (seg_is_raid(lp) && arg_int_value(cmd, raidintegrity_ARG, 0)) {
+		lp->raidintegrity = 1;
+		if (arg_is_set(cmd, raidintegrityblocksize_ARG))
+			lp->integrity_settings.block_size = arg_int_value(cmd, raidintegrityblocksize_ARG, 0);
+		if (arg_is_set(cmd, raidintegritymode_ARG)) {
+			if (!integrity_mode_set(arg_str_value(cmd, raidintegritymode_ARG, NULL), &lp->integrity_settings))
+				return_0;
 		}
 	}
 

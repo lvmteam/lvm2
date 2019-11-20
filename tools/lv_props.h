@@ -52,5 +52,6 @@ lvp(is_cow_covering_origin_LVP, "lv_is_cow_covering_origin", NULL)
 lvp(is_visible_LVP, "lv_is_visible", NULL)
 lvp(is_historical_LVP, "lv_is_historical", NULL)
 lvp(is_raid_with_tracking_LVP, "lv_is_raid_with_tracking", NULL)
+lvp(is_raid_with_integrity_LVP, "lv_is_raid_with_integrity", NULL)
 lvp(LVP_COUNT, "", NULL)
 

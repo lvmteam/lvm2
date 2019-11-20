@@ -2535,6 +2535,13 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 	}
 
+	if ((cmd->partial_activation || cmd->degraded_activation) &&
+	    lv_is_partial(lv) && lv_is_raid(lv) && lv_raid_has_integrity((struct logical_volume *)lv)) {
+		cmd->partial_activation = 0;
+		cmd->degraded_activation = 0;
+		log_print("No degraded or partial activation for raid with integrity.");
+	}
+
 	if ((!lv->vg->cmd->partial_activation) && lv_is_partial(lv)) {
 		if (!lv_is_raid_type(lv) || !partial_raid_lv_supports_degraded_activation(lv)) {
 			log_error("Refusing activation of partial LV %s.  "

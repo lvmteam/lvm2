@@ -3173,7 +3173,7 @@ static int _copypercent_disp(struct dm_report *rh,
 	dm_percent_t percent = DM_PERCENT_INVALID;
 
 	/* TODO: just cache passes through lvseg_percent... */
-	if (lv_is_cache(lv) || lv_is_used_cache_pool(lv) ||
+	if (lv_is_integrity(lv) || lv_is_cache(lv) || lv_is_used_cache_pool(lv) ||
 	    (!lv_is_merging_origin(lv) && lv_is_raid(lv) && !seg_is_any_raid0(first_seg(lv))))
 		percent = lvseg_percent_with_info_and_seg_status(lvdm, PERCENT_GET_DIRTY);
 	else if (lv_is_raid(lv) && !seg_is_any_raid0(first_seg(lv)))

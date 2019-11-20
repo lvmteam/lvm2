@@ -46,7 +46,7 @@ typedef enum {
 } action_t;
 
 /* This list must match lib/misc/lvm-string.c:build_dm_uuid(). */
-const char *uuid_suffix_list[] = { "pool", "cdata", "cmeta", "cvol", "tdata", "tmeta", "vdata", "vpool", NULL};
+const char *uuid_suffix_list[] = { "pool", "cdata", "cmeta", "cvol", "tdata", "tmeta", "vdata", "vpool", "imeta", NULL};
 
 struct dlid_list {
 	struct dm_list list;
@@ -222,6 +222,10 @@ static int _get_segment_status_from_target_params(const char *target_name,
 		if (!dm_get_status_writecache(seg_status->mem, params, &(seg_status->writecache)))
 			return_0;
 		seg_status->type = SEG_STATUS_WRITECACHE;
+	} else if (segtype_is_integrity(segtype)) {
+		if (!dm_get_status_integrity(seg_status->mem, params, &(seg_status->integrity)))
+			return_0;
+		seg_status->type = SEG_STATUS_INTEGRITY;
 	} else
 		/*
 		 * TODO: Add support for other segment types too!
@@ -298,6 +302,9 @@ static int _info_run(const char *dlid, struct dm_info *dminfo,
 		/* Uses virtual size with headers for VDO pool device */
 		if (lv_is_vdo_pool(seg_status->seg->lv))
 			length = get_vdo_pool_virtual_size(seg_status->seg);
+
+		if (lv_is_integrity(seg_status->seg->lv))
+			length = seg_status->seg->integrity_data_sectors;
 
 		do {
 			target = dm_get_next_target(dmt, target, &target_start,
@@ -2620,6 +2627,10 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			if (!_add_lv_to_dtree(dm, dtree, seg->writecache, dm->activation ? origin_only : 1))
 				return_0;
 		}
+		if (seg->integrity_meta_dev && seg_is_integrity(seg)) {
+			if (!_add_lv_to_dtree(dm, dtree, seg->integrity_meta_dev, dm->activation ? origin_only : 1))
+				return_0;
+		}
 		if (seg->pool_lv &&
 		    (lv_is_cache_pool(seg->pool_lv) || lv_is_cache_vol(seg->pool_lv) || dm->track_external_lv_deps) &&
 		    /* When activating and not origin_only detect linear 'overlay' over pool */
@@ -3074,6 +3085,11 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 	if (seg->writecache && !laopts->origin_only &&
 	    !_add_new_lv_to_dtree(dm, dtree, seg->writecache, laopts,
 				  lv_layer(seg->writecache)))
+		return_0;
+
+	if (seg->integrity_meta_dev && !laopts->origin_only &&
+	    !_add_new_lv_to_dtree(dm, dtree, seg->integrity_meta_dev, laopts,
+				  lv_layer(seg->integrity_meta_dev)))
 		return_0;
 
 	/* Add any LVs used by this segment */

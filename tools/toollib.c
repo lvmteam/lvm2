@@ -718,11 +718,26 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 	return 1;
 }
 
+int integrity_mode_set(const char *mode, struct integrity_settings *settings)
+{
+	if (!mode || !strcmp(mode, "bitmap") || !strcmp(mode, "B"))
+		settings->mode[0] = 'B';
+	else if (!strcmp(mode, "journal") || !strcmp(mode, "J"))
+		settings->mode[0] = 'J';
+	else {
+		/* FIXME: the kernel has other modes, should we allow any of those? */
+		log_error("Invalid raid integrity mode (use \"bitmap\" or \"journal\")");
+		return 0;
+	}
+	return 1;
+}
+
 /* Shared code for changing activation state for vgchange/lvchange */
 int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 		       activation_change_t activate)
 {
 	int r = 1;
+	int integrity_recalculate;
 	struct logical_volume *snapshot_lv;
 
 	if (lv_is_cache_pool(lv)) {
@@ -780,8 +795,33 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
+	if ((integrity_recalculate = lv_has_integrity_recalculate_metadata(lv))) {
+		/* Don't want pvscan to write VG while running from systemd service. */
+		if (!strcmp(cmd->name, "pvscan")) {
+			log_error("Cannot activate uninitialized integrity LV %s from pvscan.",
+				  display_lvname(lv));
+			return 0;
+		}
+
+		if (vg_is_shared(lv->vg)) {
+			uint32_t lockd_state = 0;
+			if (!lockd_vg(cmd, lv->vg->name, "ex", 0, &lockd_state)) {
+				log_error("Cannot activate uninitialized integrity LV %s without lock.",
+					  display_lvname(lv));
+				return 0;
+			}
+		}
+	}
+
 	if (!lv_active_change(cmd, lv, activate))
 		return_0;
+
+	/* Write VG metadata to clear the integrity recalculate flag. */
+	if (integrity_recalculate && lv_is_active(lv)) {
+		log_print_unless_silent("Updating VG to complete initialization of integrity LV %s.",
+			  display_lvname(lv));
+		lv_clear_integrity_recalculate_metadata(lv);
+	}
 
 	set_lv_notify(lv->vg->cmd);
 
@@ -1143,6 +1183,7 @@ out:
 
 	return ok;
 }
+
 
 /* FIXME move to lib */
 static int _pv_change_tag(struct physical_volume *pv, const char *tag, int addtag)
@@ -2255,6 +2296,8 @@ static int _lv_is_prop(struct cmd_context *cmd, struct logical_volume *lv, int l
 		return lv_is_historical(lv);
 	case is_raid_with_tracking_LVP:
 		return lv_is_raid_with_tracking(lv);
+	case is_raid_with_integrity_LVP:
+		return lv_raid_has_integrity(lv);
 	default:
 		log_error(INTERNAL_ERROR "unknown lv property value lvp_enum %d", lvp_enum);
 	}
@@ -2309,6 +2352,8 @@ static int _lv_is_type(struct cmd_context *cmd, struct logical_volume *lv, int l
 		return seg_is_raid10(seg);
 	case writecache_LVT:
 		return seg_is_writecache(seg);
+	case integrity_LVT:
+		return seg_is_integrity(seg);
 	case error_LVT:
 		return !strcmp(seg->segtype->name, SEG_TYPE_NAME_ERROR);
 	case zero_LVT:
@@ -2367,6 +2412,8 @@ int get_lvt_enum(struct logical_volume *lv)
 		return raid10_LVT;
 	if (seg_is_writecache(seg))
 		return writecache_LVT;
+	if (seg_is_integrity(seg))
+		return integrity_LVT;
 
 	if (!strcmp(seg->segtype->name, SEG_TYPE_NAME_ERROR))
 		return error_LVT;

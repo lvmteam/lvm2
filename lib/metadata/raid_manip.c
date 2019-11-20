@@ -3119,6 +3119,11 @@ static int _raid_remove_images(struct logical_volume *lv, int yes,
 
 	/* Convert to linear? */
 	if (new_count == 1) {
+		if (lv_raid_has_integrity(lv)) {
+			log_error("Integrity must be removed before converting raid to linear.");
+			return 0;
+		}
+
 		if (!yes && yes_no_prompt("Are you sure you want to convert %s LV %s to type %s losing all resilience? [y/n]: ",
 					  lvseg_name(first_seg(lv)), display_lvname(lv), SEG_TYPE_NAME_LINEAR) == 'n') {
 			log_error("Logical volume %s NOT converted to \"%s\".",
@@ -3265,6 +3270,11 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 		return 0;
 	}
 
+	if (lv_raid_has_integrity(lv)) {
+		log_error("Integrity must be removed before splitting.");
+		return 0;
+	}
+
 	if ((old_count - new_count) != 1) {
 		log_error("Unable to split more than one image from %s.",
 			  display_lvname(lv));
@@ -3328,9 +3338,11 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 	}
 
 	/* Convert to linear? */
-	if ((new_count == 1) && !_raid_remove_top_layer(lv, &removal_lvs)) {
-		log_error("Failed to remove RAID layer after linear conversion.");
-		return 0;
+	if (new_count == 1) {
+		if (!_raid_remove_top_layer(lv, &removal_lvs)) {
+			log_error("Failed to remove RAID layer after linear conversion.");
+			return 0;
+		}
 	}
 
 	/* Get first item */
@@ -3429,6 +3441,11 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 	if (lv->vg->lock_type && !strcmp(lv->vg->lock_type, "sanlock")) {
 		log_error("Splitting raid image is not allowed with lock_type %s.",
 			  lv->vg->lock_type);
+		return 0;
+	}
+
+	if (lv_raid_has_integrity(lv)) {
+		log_error("Integrity must be removed before splitting.");
 		return 0;
 	}
 
@@ -6727,7 +6744,17 @@ static int _lv_raid_rebuild_or_replace(struct logical_volume *lv,
 	struct lv_segment *raid_seg = first_seg(lv);
 	struct lv_list *lvl;
 	char *tmp_names[raid_seg->area_count * 2];
+	char tmp_name_buf[NAME_LEN];
+	char *tmp_name_dup;
 	const char *action_str = rebuild ? "rebuild" : "replace";
+	int has_integrity;
+
+	if ((has_integrity = lv_raid_has_integrity(lv))) {
+		if (rebuild) {
+			log_error("Can't rebuild raid with integrity.");
+			return 0;
+		}
+	}
 
 	if (seg_is_any_raid0(raid_seg)) {
 		log_error("Can't replace any devices in %s LV %s.",
@@ -6992,6 +7019,15 @@ try_again:
 			tmp_names[s] = tmp_names[sd] = NULL;
 	}
 
+	/* Add integrity layer to any new images. */
+	if (has_integrity) {
+		struct integrity_settings *isettings = NULL;
+		if (!lv_get_raid_integrity_settings(lv, &isettings))
+			return_0;
+		if (!lv_add_integrity_to_raid(lv, isettings, NULL, NULL))
+			return_0;
+	}
+
 skip_alloc:
 	if (!lv_update_and_reload_origin(lv))
 		return_0;
@@ -7014,9 +7050,43 @@ skip_alloc:
 	if (!rebuild)
 		for (s = 0; s < raid_seg->area_count; s++) {
 			sd = s + raid_seg->area_count;
+
 			if (tmp_names[s] && tmp_names[sd]) {
-				seg_metalv(raid_seg, s)->name = tmp_names[s];
-				seg_lv(raid_seg, s)->name = tmp_names[sd];
+				struct logical_volume *lv_image = seg_lv(raid_seg, s);
+				struct logical_volume *lv_rmeta = seg_metalv(raid_seg, s);
+
+				lv_rmeta->name = tmp_names[s];
+				lv_image->name = tmp_names[sd];
+
+				if (lv_is_integrity(lv_image)) {
+					struct logical_volume *lv_imeta;
+					struct logical_volume *lv_iorig;
+					struct lv_segment *seg_image;
+
+					seg_image = first_seg(lv_image);
+					lv_imeta = seg_image->integrity_meta_dev;
+					lv_iorig = seg_lv(seg_image, 0);
+
+					if (dm_snprintf(tmp_name_buf, NAME_LEN, "%s_imeta", lv_image->name) < 0) {
+						stack;
+						continue;
+					}
+					if (!(tmp_name_dup = dm_pool_strdup(lv->vg->vgmem, tmp_name_buf))) {
+						stack;
+						continue;
+					}
+					lv_imeta->name = tmp_name_dup;
+
+					if (dm_snprintf(tmp_name_buf, NAME_LEN, "%s_iorig", lv_image->name) < 0) {
+						stack;
+						continue;
+					}
+					if (!(tmp_name_dup = dm_pool_strdup(lv->vg->vgmem, tmp_name_buf))) {
+						stack;
+						continue;
+					}
+					lv_iorig->name = tmp_name_dup;
+				}
 			}
 		}
 
@@ -7192,6 +7262,11 @@ int partial_raid_lv_supports_degraded_activation(const struct logical_volume *cl
 {
 	int not_capable = 0;
 	struct logical_volume * lv = (struct logical_volume *)clv; /* drop const */
+	
+	if (lv_raid_has_integrity(lv)) {
+		log_error("Integrity must be removed before degraded or partial activation of raid.");
+		return 0;
+	}
 
 	if (!_lv_may_be_activated_in_degraded_mode(lv, &not_capable) || not_capable)
 		return_0;

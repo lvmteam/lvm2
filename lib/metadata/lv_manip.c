@@ -134,7 +134,9 @@ enum {
 	LV_TYPE_SANLOCK,
 	LV_TYPE_CACHEVOL,
 	LV_TYPE_WRITECACHE,
-	LV_TYPE_WRITECACHEORIGIN
+	LV_TYPE_WRITECACHEORIGIN,
+	LV_TYPE_INTEGRITY,
+	LV_TYPE_INTEGRITYORIGIN
 };
 
 static const char *_lv_type_names[] = {
@@ -190,6 +192,8 @@ static const char *_lv_type_names[] = {
 	[LV_TYPE_CACHEVOL] =				"cachevol",
 	[LV_TYPE_WRITECACHE] =				"writecache",
 	[LV_TYPE_WRITECACHEORIGIN] =			"writecacheorigin",
+	[LV_TYPE_INTEGRITY] =				"integrity",
+	[LV_TYPE_INTEGRITYORIGIN] =			"integrityorigin",
 };
 
 static int _lv_layout_and_role_mirror(struct dm_pool *mem,
@@ -461,6 +465,43 @@ bad:
 	return 0;
 }
 
+static int _lv_layout_and_role_integrity(struct dm_pool *mem,
+				     const struct logical_volume *lv,
+				     struct dm_list *layout,
+				     struct dm_list *role,
+				     int *public_lv)
+{
+	int top_level = 0;
+
+	/* non-top-level LVs */
+	if (lv_is_integrity_metadata(lv)) {
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_INTEGRITY]) ||
+		    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_METADATA]))
+			goto_bad;
+	} else if (lv_is_integrity_origin(lv)) {
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_INTEGRITY]) ||
+		    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_ORIGIN]) ||
+		    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_INTEGRITYORIGIN]))
+			goto_bad;
+	} else
+		top_level = 1;
+
+	if (!top_level) {
+		*public_lv = 0;
+		return 1;
+	}
+
+	/* top-level LVs */
+	if (lv_is_integrity(lv)) {
+		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_INTEGRITY]))
+			goto_bad;
+	}
+
+	return 1;
+bad:
+	return 0;
+}
+
 static int _lv_layout_and_role_thick_origin_snapshot(struct dm_pool *mem,
 						     const struct logical_volume *lv,
 						     struct dm_list *layout,
@@ -575,6 +616,11 @@ int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 	/* Caches and related */
 	if ((lv_is_cache_type(lv) || lv_is_cache_origin(lv) || lv_is_writecache(lv) || lv_is_writecache_origin(lv)) &&
 	    !_lv_layout_and_role_cache(mem, lv, *layout, *role, &public_lv))
+		goto_bad;
+
+	/* Integrity related */
+	if ((lv_is_integrity(lv) || lv_is_integrity_origin(lv) || lv_is_integrity_metadata(lv)) &&
+	    !_lv_layout_and_role_integrity(mem, lv, *layout, *role, &public_lv))
 		goto_bad;
 
 	/* VDO and related */
@@ -1454,6 +1500,15 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 					if (seg->pool_lv && !detach_pool_lv(seg))
 						return_0;
 				} else if (!lv_remove(seg_lv(seg, 0)))
+					return_0;
+			}
+
+			if (delete && seg_is_integrity(seg)) {
+				/* Remove integrity origin in addition to integrity layer. */
+				if (!lv_remove(seg_lv(seg, 0)))
+					return_0;
+				/* Remove integrity metadata. */
+				if (seg->integrity_meta_dev && !lv_remove(seg->integrity_meta_dev))
 					return_0;
 			}
 
@@ -4111,11 +4166,14 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 				 uint32_t extents, uint32_t first_area,
 				 uint32_t mirrors, uint32_t stripes, uint32_t stripe_size)
 {
+	struct logical_volume *sub_lvs[DEFAULT_RAID_MAX_IMAGES];
 	const struct segment_type *segtype;
-	struct logical_volume *sub_lv, *meta_lv;
+	struct logical_volume *meta_lv, *sub_lv;
 	struct lv_segment *seg = first_seg(lv);
+	struct lv_segment *sub_lv_seg;
 	uint32_t fa, s;
 	int clear_metadata = 0;
+	int integrity_sub_lvs = 0;
 	uint32_t area_multiple = 1;
 
 	if (!(segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_STRIPED)))
@@ -4133,16 +4191,28 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 			area_multiple = seg->area_count;
 	}
 
+	for (s = 0; s < seg->area_count; s++) {
+		sub_lv = seg_lv(seg, s);
+		sub_lv_seg = sub_lv ? first_seg(sub_lv) : NULL;
+
+		if (sub_lv_seg && seg_is_integrity(sub_lv_seg)) {
+			sub_lvs[s] = seg_lv(sub_lv_seg, 0);
+			integrity_sub_lvs = 1;
+		} else
+			sub_lvs[s] = sub_lv;
+	}
+
 	for (fa = first_area, s = 0; s < seg->area_count; s++) {
-		if (is_temporary_mirror_layer(seg_lv(seg, s))) {
-			if (!_lv_extend_layered_lv(ah, seg_lv(seg, s), extents / area_multiple,
+		sub_lv = sub_lvs[s];
+
+		if (is_temporary_mirror_layer(sub_lv)) {
+			if (!_lv_extend_layered_lv(ah, sub_lv, extents / area_multiple,
 						   fa, mirrors, stripes, stripe_size))
 				return_0;
-			fa += lv_mirror_count(seg_lv(seg, s));
+			fa += lv_mirror_count(sub_lv);
 			continue;
 		}
 
-		sub_lv = seg_lv(seg, s);
 		if (!lv_add_segment(ah, fa, stripes, sub_lv, segtype,
 				    stripe_size, sub_lv->status, 0)) {
 			log_error("Aborting. Failed to extend %s in %s.",
@@ -4182,6 +4252,41 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 		}
 
 		fa += stripes;
+	}
+
+	/*
+	 * In raid+integrity, the lv_iorig raid images have been extended above.
+	 * Now propagate the new lv_iorig sizes up to the integrity LV layers
+	 * that are referencing the lv_iorig.
+	 */
+	if (integrity_sub_lvs) {
+		for (s = 0; s < seg->area_count; s++) {
+			struct logical_volume *lv_image;
+			struct logical_volume *lv_iorig;
+			struct logical_volume *lv_imeta;
+			struct lv_segment *seg_image;
+
+			lv_image = seg_lv(seg, s);
+			seg_image = first_seg(lv_image);
+
+			if (!(lv_imeta = seg_image->integrity_meta_dev)) {
+				log_error("1");
+				return_0;
+			}
+
+			if (!(lv_iorig = seg_lv(seg_image, 0))) {
+				log_error("2");
+				return_0;
+			}
+
+			/* new size in sectors */
+			lv_image->size = lv_iorig->size;
+			seg_image->integrity_data_sectors = lv_iorig->size;
+			/* new size in extents */
+			lv_image->le_count = lv_iorig->le_count;
+			seg_image->len = lv_iorig->le_count;
+			seg_image->area_len = lv_iorig->le_count;
+		}
 	}
 
 	seg->len += extents;
@@ -4344,6 +4449,13 @@ int lv_extend(struct logical_volume *lv,
 		if (!(r = _lv_extend_layered_lv(ah, lv, new_extents - lv->le_count, 0,
 						mirrors, stripes, stripe_size)))
 			goto_out;
+
+		if (lv_raid_has_integrity(lv)) {
+			if (!lv_extend_integrity_in_raid(lv, allocatable_pvs)) {
+				r = 0;
+				goto_out;
+			}
+		}
 
 		/*
 		 * If we are expanding an existing mirror, we can skip the
@@ -4536,6 +4648,9 @@ static int _for_each_sub_lv(struct logical_volume *lv, int level,
 			return_0;
 
 		if (!_for_each_sub_lv(seg->writecache, level, fn, data))
+			return_0;
+
+		if (!_for_each_sub_lv(seg->integrity_meta_dev, level, fn, data))
 			return_0;
 
 		for (s = 0; s < seg->area_count; s++) {
@@ -5064,6 +5179,12 @@ static int _lvresize_check(struct logical_volume *lv,
 		return 0;
 	}
 
+	if (lv_is_integrity(lv) || lv_raid_has_integrity(lv)) {
+		if (lp->resize == LV_REDUCE) {
+			log_error("Cannot reduce LV with integrity.");
+			return 0;
+		}
+	}
 	return 1;
 }
 
@@ -5612,6 +5733,9 @@ static int _lvresize_prepare(struct logical_volume **lv,
 
 	if (lv_is_thin_pool(*lv) || lv_is_vdo_pool(*lv))
 		*lv = seg_lv(first_seg(*lv), 0); /* switch to data LV */
+
+	if (lv_is_integrity(*lv))
+		*lv = seg_lv(first_seg(*lv), 0);
 
 	/* Resolve extents from size */
 	if (lp->size && !_lvresize_adjust_size(vg, lp->size, lp->sign, &lp->extents))
@@ -7948,6 +8072,11 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		/* FIXME Eventually support raid/mirrors with -m */
 		if (!(create_segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_STRIPED)))
 			return_0;
+
+	} else if (seg_is_integrity(lp)) {
+		if (!(create_segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_STRIPED)))
+			return_0;
+
 	} else if (seg_is_mirrored(lp) || (seg_is_raid(lp) && !seg_is_any_raid0(lp))) {
 		if (!(lp->region_size = adjusted_mirror_region_size(vg->cmd,
 								    vg->extent_size,
@@ -8196,6 +8325,15 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	if (test_mode()) {
 		log_verbose("Test mode: Skipping activation, zeroing and signature wiping.");
 		goto out;
+	}
+
+	if (seg_is_raid(lp) && lp->raidintegrity) {
+		log_debug("Adding integrity to new LV");
+
+		if (!lv_add_integrity_to_raid(lv, &lp->integrity_settings, lp->pvh, NULL))
+			goto revert_new_lv;
+
+		backup(vg);
 	}
 
 	/* Do not scan this LV until properly zeroed/wiped. */

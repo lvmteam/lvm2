@@ -512,6 +512,26 @@ arg(pvmetadatacopies_ARG, '\0', "pvmetadatacopies", pvmetadatacopies_VAL, 0, 0,
     "This may be useful in VGs containing many PVs (this places limitations\n"
     "on the ability to use vgsplit later.)\n")
 
+arg(raidintegrity_ARG, '\0', "raidintegrity", bool_VAL, 0, 0,
+    "Enable or disable data integrity checksums for raid images.\n")
+
+arg(raidintegrityblocksize_ARG, '\0', "raidintegrityblocksize", number_VAL, 0, 0,
+    "The block size to use for dm-integrity on raid images.\n"
+    "The integrity block size should usually match the device\n"
+    "logical block size, or the file system block size.\n"
+    "It may be less than the file system block size, but not\n"
+    "less than the device logical block size.\n"
+    "Possible values: 512, 1024, 2048, 4096.\n")
+
+arg(raidintegritymode_ARG, '\0', "raidintegritymode", string_VAL, 0, 0,
+    "Use a journal (default) or bitmap for keeping integrity checksums consistent\n"
+    "in case of a crash. The bitmap areas are recalculated after a crash, so corruption\n"
+    "in those areas would not be detected. A journal does not have this problem.\n"
+    "The journal mode doubles writes to storage, but can improve performance for\n"
+    "scattered writes packed into a single journal write.\n"
+    "bitmap mode can in theory achieve full write throughput of the device,\n"
+    "but would not benefit from the potential scattered write optimization.\n")
+
 arg(readonly_ARG, '\0', "readonly", 0, 0, 0,
     "Run the command in a special read-only mode which will read on-disk\n"
     "metadata without needing to take any locks. This can be used to peek\n"

@@ -59,6 +59,7 @@ struct dm_task {
 	int skip_lockfs;
 	int query_inactive_table;
 	int suppress_identical_reload;
+	int skip_reload_params_compare;
 	dm_add_node_t add_node;
 	uint64_t existing_table_size;
 	int cookie_set;

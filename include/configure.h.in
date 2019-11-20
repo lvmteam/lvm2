@@ -678,6 +678,9 @@
 /* Define to 1 to include built-in support for writecache. */
 #undef WRITECACHE_INTERNAL
 
+/* Define to 1 to include built-in support for integrity. */
+#undef INTEGRITY_INTERNAL
+
 /* Define to get access to GNU/Linux extension */
 #undef _GNU_SOURCE
 

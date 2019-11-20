@@ -380,6 +380,33 @@ int dm_get_status_writecache(struct dm_pool *mem, const char *params,
 	return 1;
 }
 
+int dm_get_status_integrity(struct dm_pool *mem, const char *params,
+			     struct dm_status_integrity **status)
+{
+	struct dm_status_integrity *s;
+	char recalc_str[16] = "\0";
+
+	if (!(s = dm_pool_zalloc(mem, sizeof(*s))))
+		return_0;
+
+	if (sscanf(params, "%llu %llu %s",
+		   (unsigned long long *)&s->number_of_mismatches,
+		   (unsigned long long *)&s->provided_data_sectors,
+		   recalc_str) != 3) {
+		log_error("Failed to parse integrity params: %s.", params);
+		dm_pool_free(mem, s);
+		return 0;
+	}
+
+	if (recalc_str[0] == '-')
+		s->recalc_sector = 0;
+	else
+		s->recalc_sector = strtoull(recalc_str, NULL, 0);
+
+	*status = s;
+	return 1;
+}
+
 int parse_thin_pool_status(const char *params, struct dm_status_thin_pool *s)
 {
 	int pos;

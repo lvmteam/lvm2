@@ -149,6 +149,9 @@ static const struct command_function _command_functions[CMD_COUNT] = {
 	{ lvconvert_to_vdopool_CMD, lvconvert_to_vdopool_cmd },
 	{ lvconvert_to_vdopool_param_CMD, lvconvert_to_vdopool_param_cmd },
 
+	/* lvconvert for integrity */
+	{ lvconvert_integrity_CMD, lvconvert_integrity_cmd },
+
 	{ pvscan_display_CMD, pvscan_display_cmd },
 	{ pvscan_cache_CMD, pvscan_cache_cmd },
 };

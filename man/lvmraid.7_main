@@ -785,6 +785,89 @@ configuration file itself.
         activation_mode
 
 
+.SH Data Integrity
+
+The device mapper integrity target can be used in combination with RAID
+levels 1,4,5,6,10 to detect and correct data corruption in RAID images. A
+dm-integrity layer is placed above each RAID image, and an extra sub LV is
+created to hold integrity metadata (data checksums) for each RAID image.
+When data is read from an image, integrity checksums are used to detect
+corruption. If detected, dm-raid reads the data from another (good) image
+to return to the caller.  dm-raid will also automatically write the good
+data back to the image with bad data to correct the corruption.
+
+When creating a RAID LV with integrity, or adding integrity, space is
+required for integrity metadata.  Every 500MB of LV data requires an
+additional 4MB to be allocated for integrity metadata, for each RAID
+image.
+
+Create a RAID LV with integrity:
+
+.B lvcreate \-\-type raidN \-\-raidintegrity y
+
+Add integrity to an existing RAID LV:
+
+.B lvconvert --raidintegrity y
+.I LV
+
+Remove integrity from a RAID LV:
+
+.B lvconvert --raidintegrity n
+.I LV
+
+.SS Integrity options
+
+.B --raidintegritymode journal|bitmap
+
+Use a journal (default) or bitmap for keeping integrity checksums
+consistent in case of a crash. The bitmap areas are recalculated after a
+crash, so corruption in those areas would not be detected. A journal does
+not have this problem.  The journal mode doubles writes to storage, but
+can improve performance for scattered writes packed into a single journal
+write.  bitmap mode can in theory achieve full write throughput of the
+device, but would not benefit from the potential scattered write
+optimization.
+
+.B --raidintegrityblocksize 512|1024|2048|4096
+
+The block size to use for dm-integrity on raid images.  The integrity
+block size should usually match the device logical block size, or the file
+system sector/block sizes.  It may be less than the file system
+sector/block size, but not less than the device logical block size.
+Possible values: 512, 1024, 2048, 4096.
+
+.SS Integrity initialization
+
+When integrity is added to an LV, the kernel needs to initialize the
+integrity metadata (checksums) for all blocks in the LV.  The data
+corruption checking performed by dm-integrity will only operate on areas
+of the LV that are already initialized.  The progress of integrity
+initialization is reported by the "syncpercent" LV reporting field (and
+under the Cpy%Sync lvs column.)
+
+.SS Integrity limitations
+
+To work around some limitations, it is possible to remove integrity from
+the LV, make the change, then add integrity again.  (Integrity metadata
+would need to initialized when added again.)
+
+LVM must be able to allocate the integrity metadata sub LV on a single PV
+that is already in use by the associated RAID image. This can potentially
+cause a problem during lvextend if the original PV holding the image and
+integrity metadata is full.  To work around this limitation, remove
+integrity, extend the LV, and add integrity again.
+
+Additional RAID images can be added to raid1 LVs, but not to other raid
+levels.
+
+A raid1 LV with integrity cannot be converted to linear (remove integrity
+to do this.)
+
+RAID LVs with integrity cannot yet be used as sub LVs with other LV types.
+
+The following are not yet permitted on RAID LVs with integrity: lvreduce,
+pvmove, snapshots, splitmirror, raid syncaction commands, raid rebuild.
+
 .SH RAID1 Tuning
 
 A RAID1 LV can be tuned so that certain devices are avoided for reading

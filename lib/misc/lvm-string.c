@@ -166,7 +166,9 @@ static const char *_lvname_has_reserved_component_string(const char *lvname)
 		"_rmeta",
 		"_tdata",
 		"_tmeta",
-		"_vdata"
+		"_vdata",
+		"_imeta",
+		"_iorig"
 	};
 	unsigned i;
 

@@ -1362,6 +1362,11 @@ static int _init_segtypes(struct cmd_context *cmd)
 		return 0;
 #endif
 
+#ifdef INTEGRITY_INTERNAL
+	if (!init_integrity_segtypes(cmd, &seglib))
+		return 0;
+#endif
+
 	return 1;
 }
 

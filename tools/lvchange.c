@@ -1573,6 +1573,11 @@ static int _lvchange_syncaction_single(struct cmd_context *cmd,
 				       struct logical_volume *lv,
 				       struct processing_handle *handle)
 {
+	if (lv_raid_has_integrity(lv)) {
+		log_error("Integrity must be removed to use syncaction commands.");
+		return_ECMD_FAILED;
+	}
+
 	/* If LV is inactive here, ensure it's not active elsewhere. */
 	if (!lockd_lv(cmd, lv, "ex", 0))
 		return_ECMD_FAILED;

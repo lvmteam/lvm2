@@ -38,6 +38,7 @@ enum {
 	SEG_STRIPED,
 	SEG_ZERO,
 	SEG_WRITECACHE,
+	SEG_INTEGRITY,
 	SEG_THIN_POOL,
 	SEG_THIN,
 	SEG_VDO,
@@ -78,6 +79,7 @@ static const struct {
 	{ SEG_STRIPED, "striped" },
 	{ SEG_ZERO, "zero"},
 	{ SEG_WRITECACHE, "writecache"},
+	{ SEG_INTEGRITY, "integrity"},
 	{ SEG_THIN_POOL, "thin-pool"},
 	{ SEG_THIN, "thin"},
 	{ SEG_VDO, "vdo" },
@@ -221,6 +223,11 @@ struct load_segment {
 	int writecache_pmem;				/* writecache, 1 if pmem, 0 if ssd */
 	uint32_t writecache_block_size;			/* writecache, in bytes */
 	struct writecache_settings writecache_settings;	/* writecache */
+
+	uint64_t integrity_data_sectors;		/* integrity (provided_data_sectors) */
+	struct dm_tree_node *integrity_meta_node;	/* integrity */
+	struct integrity_settings integrity_settings;	/* integrity */
+	int integrity_recalculate;			/* integrity */
 };
 
 /* Per-device properties */
@@ -266,6 +273,16 @@ struct load_properties {
 	 * they shall not be resumed before their commit.
 	 */
 	unsigned delay_resume_if_extended;
+
+	/*
+	 * When comparing table lines to decide if a reload is
+	 * needed, ignore any differences betwen the lvm device
+	 * params and the kernel-reported device params.
+	 * dm-integrity reports many internal parameters on the
+	 * table line when lvm does not explicitly set them,
+	 * causing lvm and the kernel to have differing params.
+	 */
+	unsigned skip_reload_params_compare;
 
 	/*
 	 * Call node_send_messages(), set to 2 if there are messages
@@ -2705,6 +2722,84 @@ static int _writecache_emit_segment_line(struct dm_task *dmt,
 	return 1;
 }
 
+static int _integrity_emit_segment_line(struct dm_task *dmt,
+				    struct load_segment *seg,
+				    char *params, size_t paramsize)
+{
+	struct integrity_settings *set = &seg->integrity_settings;
+	int pos = 0;
+	int count;
+	char origin_dev[DM_FORMAT_DEV_BUFSIZE];
+	char meta_dev[DM_FORMAT_DEV_BUFSIZE];
+
+	if (!_build_dev_string(origin_dev, sizeof(origin_dev), seg->origin))
+		return_0;
+
+	if (seg->integrity_meta_node &&
+	    !_build_dev_string(meta_dev, sizeof(meta_dev), seg->integrity_meta_node))
+		return_0;
+
+	count = 3; /* block_size, internal_hash, fix_padding options are always passed */
+
+	if (seg->integrity_meta_node)
+		count++;
+
+	if (seg->integrity_recalculate)
+		count++;
+
+	if (set->journal_sectors_set)
+		count++;
+	if (set->interleave_sectors_set)
+		count++;
+	if (set->buffer_sectors_set)
+		count++;
+	if (set->journal_watermark_set)
+		count++;
+	if (set->commit_time_set)
+		count++;
+	if (set->bitmap_flush_interval_set)
+		count++;
+	if (set->sectors_per_bit_set)
+		count++;
+
+	EMIT_PARAMS(pos, "%s 0 %u %s %d fix_padding block_size:%u internal_hash:%s",
+		    origin_dev,
+		    set->tag_size,
+		    set->mode,
+		    count,
+		    set->block_size,
+		    set->internal_hash);
+
+	if (seg->integrity_meta_node)
+		EMIT_PARAMS(pos, " meta_device:%s", meta_dev);
+
+	if (seg->integrity_recalculate)
+		EMIT_PARAMS(pos, " recalculate");
+
+	if (set->journal_sectors_set)
+		EMIT_PARAMS(pos, " journal_sectors:%u", set->journal_sectors);
+
+	if (set->interleave_sectors_set)
+		EMIT_PARAMS(pos, " ineterleave_sectors:%u", set->interleave_sectors);
+
+	if (set->buffer_sectors_set)
+		EMIT_PARAMS(pos, " buffer_sectors:%u", set->buffer_sectors);
+
+	if (set->journal_watermark_set)
+		EMIT_PARAMS(pos, " journal_watermark:%u", set->journal_watermark);
+
+	if (set->commit_time_set)
+		EMIT_PARAMS(pos, " commit_time:%u", set->commit_time);
+
+	if (set->bitmap_flush_interval_set)
+		EMIT_PARAMS(pos, " bitmap_flush_interval:%u", set->bitmap_flush_interval);
+
+	if (set->sectors_per_bit_set)
+		EMIT_PARAMS(pos, " sectors_per_bit:%llu", (unsigned long long)set->sectors_per_bit);
+
+	return 1;
+}
+
 static int _thin_pool_emit_segment_line(struct dm_task *dmt,
 					struct load_segment *seg,
 					char *params, size_t paramsize)
@@ -2889,6 +2984,10 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 		if (!_writecache_emit_segment_line(dmt, seg, params, paramsize))
 			return_0;
 		break;
+	case SEG_INTEGRITY:
+		if (!_integrity_emit_segment_line(dmt, seg, params, paramsize))
+			return_0;
+		break;
 	}
 
 	switch(seg->type) {
@@ -2901,6 +3000,7 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 	case SEG_THIN:
 	case SEG_CACHE:
 	case SEG_WRITECACHE:
+	case SEG_INTEGRITY:
 		break;
 	case SEG_CRYPT:
 	case SEG_LINEAR:
@@ -3005,6 +3105,9 @@ static int _load_node(struct dm_tree_node *dnode)
 	if (!dm_task_suppress_identical_reload(dmt))
 		log_warn("WARNING: Failed to suppress reload of identical tables.");
 
+	if (dnode->props.skip_reload_params_compare)
+		dm_task_skip_reload_params_compare(dmt);
+
 	if ((r = dm_task_run(dmt))) {
 		r = dm_task_get_info(dmt, &dnode->info);
 		if (r && !dnode->info.inactive_table)
@@ -3023,8 +3126,8 @@ static int _load_node(struct dm_tree_node *dnode)
 			if (!existing_table_size && dnode->props.delay_resume_if_new)
 				dnode->props.size_changed = 0;
 
-			log_debug_activation("Table size changed from %" PRIu64 " to %"
-					     PRIu64 " for %s.%s", existing_table_size,
+			log_debug_activation("Table size changed from %" PRIu64 " to %" PRIu64 " for %s.%s",
+					     existing_table_size,
 					     seg_start, _node_name(dnode),
 					     dnode->props.size_changed ? "" : " (Ignoring.)");
 
@@ -3136,7 +3239,10 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 		}
 
 		/* No resume for a device without parents or with unchanged or smaller size */
-		if (!dm_tree_node_num_children(child, 1) || (child->props.size_changed <= 0))
+		if (!dm_tree_node_num_children(child, 1))
+			continue;
+
+		if (child->props.size_changed <= 0)
 			continue;
 
 		if (!child->info.inactive_table && !child->info.suspended)
@@ -3734,6 +3840,48 @@ int dm_tree_node_add_writecache_target(struct dm_tree_node *node,
 		seg->writecache_settings.new_key = dm_pool_strdup(node->dtree->mem, settings->new_key);
 		seg->writecache_settings.new_val = dm_pool_strdup(node->dtree->mem, settings->new_val);
 	}
+
+	return 1;
+}
+
+int dm_tree_node_add_integrity_target(struct dm_tree_node *node,
+				  uint64_t size,
+				  const char *origin_uuid,
+				  const char *meta_uuid,
+				  struct integrity_settings *settings,
+				  int recalculate)
+{
+	struct load_segment *seg;
+
+	if (!(seg = _add_segment(node, SEG_INTEGRITY, size)))
+		return_0;
+
+	if (!meta_uuid) {
+		log_error("No integrity meta uuid.");
+		return 0;
+	}
+
+	if (!(seg->integrity_meta_node = dm_tree_find_node_by_uuid(node->dtree, meta_uuid))) {
+		log_error("Missing integrity's meta uuid %s.", meta_uuid);
+		return 0;
+	}
+
+	if (!_link_tree_nodes(node, seg->integrity_meta_node))
+		return_0;
+
+	if (!(seg->origin = dm_tree_find_node_by_uuid(node->dtree, origin_uuid))) {
+		log_error("Missing integrity's origin uuid %s.", origin_uuid);
+		return 0;
+	}
+
+	if (!_link_tree_nodes(node, seg->origin))
+		return_0;
+
+	memcpy(&seg->integrity_settings, settings, sizeof(struct integrity_settings));
+
+	seg->integrity_recalculate = recalculate;
+
+	node->props.skip_reload_params_compare = 1;
 
 	return 1;
 }

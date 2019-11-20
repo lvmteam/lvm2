@@ -668,6 +668,24 @@ case "$WRITECACHE" in
 esac
 
 ################################################################################
+dnl -- integrity inclusion type
+AC_MSG_CHECKING(whether to include integrity)
+AC_ARG_WITH(integrity,
+	    AC_HELP_STRING([--with-integrity=TYPE],
+			   [integrity support: internal/none [none]]),
+			   INTEGRITY=$withval, INTEGRITY="none")
+
+AC_MSG_RESULT($INTEGRITY)
+
+case "$INTEGRITY" in
+ none) ;;
+ internal)
+	AC_DEFINE([INTEGRITY_INTERNAL], 1, [Define to 1 to include built-in support for integrity.])
+	;;
+ *) AC_MSG_ERROR([--with-integrity parameter invalid]) ;;
+esac
+
+################################################################################
 dnl -- Disable readline
 AC_ARG_ENABLE([readline],
 	      AC_HELP_STRING([--disable-readline], [disable readline support]),

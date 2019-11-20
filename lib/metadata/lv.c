@@ -385,6 +385,17 @@ dm_percent_t lvseg_percent_with_info_and_seg_status(const struct lv_with_info_an
 	 *   Esentially rework  _target_percent API for segtype.
 	 */
 	switch (s->type) {
+	case SEG_STATUS_INTEGRITY:
+		if (type != PERCENT_GET_DIRTY)
+			p = DM_PERCENT_INVALID;
+		else if (!s->integrity->recalc_sector)
+			p = DM_PERCENT_INVALID;
+		else if (s->integrity->recalc_sector == s->integrity->provided_data_sectors)
+			p = DM_PERCENT_100;
+		else
+			p = dm_make_percent(s->integrity->recalc_sector,
+					    s->integrity->provided_data_sectors);
+		break;
 	case SEG_STATUS_CACHE:
 		if (s->cache->fail || s->cache->error)
 			p = DM_PERCENT_INVALID;
@@ -592,6 +603,8 @@ struct logical_volume *lv_origin_lv(const struct logical_volume *lv)
 	else if (lv_is_thin_volume(lv) && first_seg(lv)->external_lv)
 		origin = first_seg(lv)->external_lv;
 	else if (lv_is_writecache(lv) && first_seg(lv)->origin)
+		origin = first_seg(lv)->origin;
+	else if (lv_is_integrity(lv) && first_seg(lv)->origin)
 		origin = first_seg(lv)->origin;
 
 	return origin;
@@ -1208,10 +1221,13 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 		repstr[0] = (lv_is_merging_origin(lv)) ? 'O' : 'o';
 	else if (lv_is_pool_metadata(lv) ||
 		 lv_is_pool_metadata_spare(lv) ||
-		 lv_is_raid_metadata(lv))
+		 lv_is_raid_metadata(lv) ||
+		 lv_is_integrity_metadata(lv))
 		repstr[0] = 'e';
 	else if (lv_is_cache_type(lv) || lv_is_writecache(lv))
 		repstr[0] = 'C';
+	else if (lv_is_integrity(lv))
+		repstr[0] = 'g';
 	else if (lv_is_raid(lv))
 		repstr[0] = (lv_is_not_synced(lv)) ? 'R' : 'r';
 	else if (lv_is_mirror(lv))

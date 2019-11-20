@@ -234,6 +234,7 @@ int dm_task_suppress_identical_reload(struct dm_task *dmt);
 int dm_task_secure_data(struct dm_task *dmt);
 int dm_task_retry_remove(struct dm_task *dmt);
 int dm_task_deferred_remove(struct dm_task *dmt);
+void dm_task_skip_reload_params_compare(struct dm_task *dmt);
 
 /*
  * Record timestamp immediately after the ioctl returns.
@@ -391,6 +392,15 @@ struct dm_status_writecache {
 
 int dm_get_status_writecache(struct dm_pool *mem, const char *params,
                              struct dm_status_writecache **status);
+
+struct dm_status_integrity {
+	uint64_t number_of_mismatches;
+	uint64_t provided_data_sectors;
+	uint64_t recalc_sector;
+};
+
+int dm_get_status_integrity(struct dm_pool *mem, const char *params,
+                            struct dm_status_integrity **status);
 
 /*
  * Parse params from STATUS call for snapshot target
@@ -970,6 +980,35 @@ int dm_tree_node_add_writecache_target(struct dm_tree_node *node,
 				uint32_t writecache_block_size,
 				struct writecache_settings *settings);
 
+struct integrity_settings {
+	char mode[8];
+	uint32_t tag_size;
+	uint32_t block_size;       /* optional table param always set by lvm */
+	const char *internal_hash; /* optional table param always set by lvm */
+
+	uint32_t journal_sectors;
+	uint32_t interleave_sectors;
+	uint32_t buffer_sectors;
+	uint32_t journal_watermark;
+	uint32_t commit_time;
+	uint32_t bitmap_flush_interval;
+	uint64_t sectors_per_bit;
+
+	unsigned journal_sectors_set:1;
+	unsigned interleave_sectors_set:1;
+	unsigned buffer_sectors_set:1;
+	unsigned journal_watermark_set:1;
+	unsigned commit_time_set:1;
+	unsigned bitmap_flush_interval_set:1;
+	unsigned sectors_per_bit_set:1;
+};
+
+int dm_tree_node_add_integrity_target(struct dm_tree_node *node,
+				uint64_t size,
+				const char *origin_uuid,
+				const char *meta_uuid,
+				struct integrity_settings *settings,
+				int recalculate);
 
 /*
  * VDO target

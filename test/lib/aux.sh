@@ -1563,6 +1563,14 @@ have_writecache() {
 	target_at_least dm-writecache "$@"
 }
 
+have_integrity() {
+	lvm segtypes 2>/dev/null | grep -q integrity$ || {
+		echo "integrity is not built-in." >&2
+		return 1
+	}
+	target_at_least dm-integrity "$@"
+}
+
 have_raid() {
 	target_at_least dm-raid "$@"
 

@@ -742,6 +742,8 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 			seg_found++;
 		if (seg->metadata_lv == lv || seg->pool_lv == lv || seg->writecache == lv)
 			seg_found++;
+		if (seg->integrity_meta_dev == lv)
+			seg_found++;
 		if (seg_is_thin_volume(seg) && (seg->origin == lv || seg->external_lv == lv))
 			seg_found++;
 

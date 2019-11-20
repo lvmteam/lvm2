@@ -387,6 +387,8 @@ int validate_snapshot_origin(const struct logical_volume *origin_lv)
 		}
 	} else if (lv_is_raid_type(origin_lv) && !lv_is_raid(origin_lv)) {
 		err = "raid subvolumes";
+	} else if (lv_is_raid(origin_lv) && lv_raid_has_integrity((struct logical_volume *)origin_lv)) {
+		err = "raid with integrity";
 	} else if (lv_is_writecache(origin_lv)) {
 		err = "writecache";
 	}

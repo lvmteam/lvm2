@@ -918,6 +918,7 @@ enable_cache_check_needs_check
 with_vdo
 with_vdo_format
 with_writecache
+with_integrity
 enable_readline
 enable_realtime
 enable_ocf
@@ -1716,6 +1717,7 @@ Optional Packages:
   --with-vdo=TYPE         vdo support: internal/none [internal]
   --with-vdo-format=PATH  vdoformat tool: [autodetect]
   --with-writecache=TYPE  writecache support: internal/none [none]
+  --with-integrity=TYPE   integrity support: internal/none [none]
   --with-ocfdir=DIR       install OCF files in
                           [PREFIX/lib/ocf/resource.d/lvm2]
   --with-default-pid-dir=PID_DIR
@@ -9759,6 +9761,31 @@ $as_echo "#define WRITECACHE_INTERNAL 1" >>confdefs.h
 
 	;;
  *) as_fn_error $? "--with-writecache parameter invalid" "$LINENO" 5 ;;
+esac
+
+################################################################################
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to include integrity" >&5
+$as_echo_n "checking whether to include integrity... " >&6; }
+
+# Check whether --with-integrity was given.
+if test "${with_integrity+set}" = set; then :
+  withval=$with_integrity; INTEGRITY=$withval
+else
+  INTEGRITY="none"
+fi
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $INTEGRITY" >&5
+$as_echo "$INTEGRITY" >&6; }
+
+case "$INTEGRITY" in
+ none) ;;
+ internal)
+
+$as_echo "#define INTEGRITY_INTERNAL 1" >>confdefs.h
+
+	;;
+ *) as_fn_error $? "--with-integrity parameter invalid" "$LINENO" 5 ;;
 esac
 
 ################################################################################

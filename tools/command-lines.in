@@ -262,7 +262,7 @@ IO: --ignoreskippedcluster
 ID: lvchange_resync
 DESC: Resyncronize a mirror or raid LV.
 DESC: Use to reset 'R' attribute on a not initially synchronized LV.
-RULE: all not lv_is_pvmove lv_is_locked
+RULE: all not lv_is_pvmove lv_is_locked lv_is_raid_with_integrity
 RULE: all not LV_raid0
 
 lvchange --syncaction SyncAction VG|LV_raid|Tag|Select ...
@@ -359,7 +359,7 @@ OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert LV to raid or change raid layout
 DESC: (a specific raid level must be used, e.g. raid1).
-RULE: all not lv_is_locked lv_is_pvmove
+RULE: all not lv_is_locked lv_is_pvmove lv_is_raid_with_integrity
 
 lvconvert --mirrors SNumber LV
 OO: --regionsize RegionSize, --interval Number, --mirrorlog MirrorLog, OO_LVCONVERT
@@ -373,21 +373,21 @@ OO: OO_LVCONVERT, --interval Number, --regionsize RegionSize, --stripesize SizeK
 OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert raid LV to change number of stripe images.
-RULE: all not lv_is_locked lv_is_pvmove
+RULE: all not lv_is_locked lv_is_pvmove lv_is_raid_with_integrity
 RULE: all not LV_raid0 LV_raid1
 
 lvconvert --stripesize SizeKB LV_raid
 OO: OO_LVCONVERT, --interval Number, --regionsize RegionSize
 ID: lvconvert_raid_types
 DESC: Convert raid LV to change the stripe size.
-RULE: all not lv_is_locked lv_is_pvmove
+RULE: all not lv_is_locked lv_is_pvmove lv_is_raid_with_integrity
 RULE: all not LV_raid0 LV_raid1
 
 lvconvert --regionsize RegionSize LV_raid
 OO: OO_LVCONVERT
 ID: lvconvert_change_region_size
 DESC: Change the region size of an LV.
-RULE: all not lv_is_locked lv_is_pvmove
+RULE: all not lv_is_locked lv_is_pvmove lv_is_raid_with_integrity
 RULE: all not LV_raid0
 FLAGS: SECONDARY_SYNTAX
 
@@ -401,20 +401,20 @@ OO: OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_split_mirror_images
 DESC: Split images from a raid1 or mirror LV and use them to create a new LV.
-RULE: all not lv_is_locked lv_is_pvmove
+RULE: all not lv_is_locked lv_is_pvmove lv_is_raid_with_integrity
 
 lvconvert --splitmirrors Number --trackchanges LV_raid1_cache
 OO: OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_split_mirror_images
 DESC: Split images from a raid1 LV and track changes to origin for later merge.
-RULE: all not lv_is_locked lv_is_pvmove
+RULE: all not lv_is_locked lv_is_pvmove lv_is_raid_with_integrity
 
 lvconvert --mergemirrors LV_linear_raid|VG|Tag ...
 OO: OO_LVCONVERT
 ID: lvconvert_merge_mirror_images
 DESC: Merge LV images that were split from a raid1 LV.
-RULE: all not lv_is_locked lv_is_pvmove lv_is_merging_origin lv_is_virtual_origin lv_is_external_origin lv_is_merging_cow
+RULE: all not lv_is_locked lv_is_pvmove lv_is_merging_origin lv_is_virtual_origin lv_is_external_origin lv_is_merging_cow lv_is_raid_with_integrity
 
 lvconvert --mirrorlog MirrorLog LV_mirror
 OO: OO_LVCONVERT
@@ -434,7 +434,7 @@ OO: --thin, --originname LV_new, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_thin_with_external
 DESC: Convert LV to a thin LV, using the original LV as an external origin.
 RULE: all and lv_is_visible
-RULE: all not lv_is_locked
+RULE: all not lv_is_locked lv_is_raid_with_integrity
 RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 # alternate form of lvconvert --type thin
@@ -445,7 +445,7 @@ DESC: Convert LV to a thin LV, using the original LV as an external origin
 DESC: (infers --type thin).
 FLAGS: SECONDARY_SYNTAX
 RULE: all and lv_is_visible
-RULE: all not lv_is_locked
+RULE: all not lv_is_locked lv_is_raid_with_integrity
 RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 ---
@@ -455,6 +455,7 @@ OO: --cache, OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_cache_with_cachepool
 DESC: Attach a cache pool to an LV, converts the LV to type cache.
 RULE: all and lv_is_visible
+RULE: all not lv_is_raid_with_integrity
 RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 # alternate form of lvconvert --type cache
@@ -463,6 +464,7 @@ OO: --type cache, OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_cache_with_cachepool
 DESC: Attach a cache pool to an LV (infers --type cache).
 RULE: all and lv_is_visible
+RULE: all not lv_is_raid_with_integrity
 RULE: --poolmetadata not --readahead --stripesize --stripes_long
 FLAGS: SECONDARY_SYNTAX
 
@@ -473,6 +475,7 @@ OO: OO_LVCONVERT, --cachesettings String
 ID: lvconvert_to_writecache
 DESC: Attach a writecache to an LV, converts the LV to type writecache.
 RULE: all and lv_is_visible
+RULE: all not lv_is_raid_with_integrity
 
 ---
 
@@ -481,6 +484,7 @@ OO: --cache, OO_LVCONVERT_CACHE, OO_LVCONVERT, --poolmetadatasize SizeMB, --chun
 ID: lvconvert_to_cache_with_cachevol
 DESC: Attach a cache to an LV, converts the LV to type cache.
 RULE: all and lv_is_visible
+RULE: all not lv_is_raid_with_integrity
 
 # alternate form of lvconvert --type cache
 lvconvert --cache --cachevol LV LV_linear_striped_raid_thinpool
@@ -488,6 +492,7 @@ OO: OO_LVCONVERT_CACHE, OO_LVCONVERT, --poolmetadatasize SizeMB, --chunksize Siz
 ID: lvconvert_to_cache_with_cachevol
 DESC: Attach a cache to an LV, converts the LV to type cache.
 RULE: all and lv_is_visible
+RULE: all not lv_is_raid_with_integrity
 FLAGS: SECONDARY_SYNTAX
 
 ---
@@ -499,7 +504,7 @@ OP: PV ...
 ID: lvconvert_to_thinpool
 DESC: Convert LV to type thin-pool.
 RULE: all and lv_is_visible
-RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_virtual
+RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_virtual lv_is_raid_with_integrity
 RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 # This command syntax has two different meanings depending on
@@ -533,6 +538,7 @@ DESC: Convert LV to type thin-pool (variant, use --type thin-pool).
 DESC: Swap metadata LV in a thin pool (variant, use --swapmetadata).
 FLAGS: PREVIOUS_SYNTAX
 RULE: all and lv_is_visible
+RULE: all not lv_is_raid_with_integrity
 RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 ---
@@ -543,6 +549,7 @@ OP: PV ...
 ID: lvconvert_to_cachepool
 DESC: Convert LV to type cache-pool.
 RULE: --poolmetadata not --readahead --stripesize --stripes_long
+RULE: all not lv_is_raid_with_integrity
 
 # This command syntax has two different meanings depending on
 # whether the LV pos arg is already a cache pool or not.
@@ -574,6 +581,7 @@ DESC: Convert LV to type cache-pool (variant, use --type cache-pool).
 DESC: Swap metadata LV in a cache pool (variant, use --swapmetadata).
 FLAGS: PREVIOUS_SYNTAX
 RULE: all and lv_is_visible
+RULE: all not lv_is_raid_with_integrity
 RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 ---
@@ -583,7 +591,7 @@ OO: --name LV_new, --virtualsize SizeMB, --compression Bool, --deduplication Boo
 ID: lvconvert_to_vdopool
 DESC: Convert LV to type vdopool.
 RULE: all and lv_is_visible
-RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_virtual
+RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_virtual lv_is_raid_with_integrity
 
 lvconvert --vdopool LV_linear_striped_raid_cache
 OO: --type vdo-pool, OO_LVCONVERT,
@@ -591,7 +599,7 @@ OO: --type vdo-pool, OO_LVCONVERT,
 ID: lvconvert_to_vdopool_param
 DESC: Convert LV to type vdopool.
 RULE: all and lv_is_visible
-RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_virtual
+RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_virtual lv_is_raid_with_integrity
 FLAGS: SECONDARY_SYNTAX
 
 ---
@@ -757,6 +765,14 @@ FLAGS: SECONDARY_SYNTAX
 
 ---
 
+lvconvert --raidintegrity Bool LV_raid
+OO: --raidintegritymode String, --raidintegrityblocksize Number, OO_LVCONVERT
+OP: PV ...
+ID: lvconvert_integrity
+DESC: Add or remove data integrity checksums to raid images.
+
+---
+
 # --extents is not specified; it's an automatic alternative for --size
 
 OO_LVCREATE: --addtag Tag, --alloc Alloc, --autobackup Bool, --activate Active,
@@ -870,7 +886,8 @@ DESC: Create a raid1 or mirror LV (infers --type raid1|mirror).
 # R9,R10,R11,R12 (--type raid with any use of --stripes/--mirrors)
 lvcreate --type raid --size SizeMB VG
 OO: --mirrors PNumber, --stripes Number, --stripesize SizeKB,
---regionsize RegionSize, --minrecoveryrate SizeKB, --maxrecoveryrate SizeKB, OO_LVCREATE
+--regionsize RegionSize, --minrecoveryrate SizeKB, --maxrecoveryrate SizeKB,
+--raidintegrity Bool, --raidintegritymode String, --raidintegrityblocksize Number, OO_LVCREATE
 OP: PV ...
 ID: lvcreate_raid_any
 DESC: Create a raid LV (a specific raid level must be used, e.g. raid1).
