@@ -73,7 +73,7 @@ int lv_merge_segments(struct logical_volume *lv)
 
 #define seg_error(msg) do { \
 		log_error("LV %s, segment %u invalid: %s for %s segment.", \
-			  seg->lv->name, seg_count, (msg), lvseg_name(seg)); \
+			  display_lvname(seg->lv), seg_count, (msg), lvseg_name(seg)); \
 		if ((*error_count)++ > ERROR_MAX) \
 			return; \
 	} while (0)
@@ -86,14 +86,14 @@ int lv_merge_segments(struct logical_volume *lv)
  */
 #define raid_seg_error(msg) do { \
 	log_error("LV %s invalid: %s for %s segment", \
-		  seg->lv->name, (msg), lvseg_name(seg)); \
+		  display_lvname(seg->lv), (msg), lvseg_name(seg)); \
 	if ((*error_count)++ > ERROR_MAX) \
 		return; \
 } while (0)
 
 #define raid_seg_error_val(msg, val) do { \
 	log_error("LV %s invalid: %s (is %u) for %s segment", \
-		  seg->lv->name, (msg), (val), lvseg_name(seg)); \
+		  display_lvname(seg->lv), (msg), (val), lvseg_name(seg)); \
 	if ((*error_count)++ > ERROR_MAX) \
 		return; \
 } while(0)
