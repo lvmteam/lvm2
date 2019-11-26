@@ -1,5 +1,6 @@
 Version 2.02.187 - 
 ===================================
+  Ensure minimum required region size on striped RaidLV creation.
   Fix resize of thin-pool with data and metadata of different segtype.
   Fix splitting mirror leg in cluster.
   Fix activation order when removing merged snapshot.

@@ -574,6 +574,13 @@ static int _read_raid_params(struct cmd_context *cmd,
 			log_error("Minimum recovery rate cannot be higher than maximum.");
 			return 0;
 		}
+
+		if (lp->region_size < lp->stripe_size) {
+			log_print_unless_silent("Adjusting %s %s region size to required minimum of stripe size %s.",
+						lp->segtype->name, display_size(cmd, (uint64_t)lp->region_size),
+						display_size(cmd, (uint64_t)lp->stripe_size));
+			lp->region_size = lp->stripe_size;
+		}
 	}
 
 	return 1;
