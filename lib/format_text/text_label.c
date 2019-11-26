@@ -349,7 +349,7 @@ static int _read_mda_header_and_metadata(const struct format_type *fmt,
 		return 1;
 	}
 
-	if (!read_metadata_location_summary(fmt, mdah, mda_is_primary(mda), &mdac->area,
+	if (!read_metadata_location_summary(fmt, mda, mdah, mda_is_primary(mda), &mdac->area,
 					    vgsummary, &mdac->free_sectors)) {
 		if (vgsummary->zero_offset)
 			return 1;

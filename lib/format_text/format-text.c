@@ -1507,6 +1507,7 @@ static int _vg_remove_file(struct format_instance *fid __attribute__((unused)),
 }
 
 int read_metadata_location_summary(const struct format_type *fmt,
+		    struct metadata_area *mda,
 		    struct mda_header *mdah, int primary_mda, struct device_area *dev_area,
 		    struct lvmcache_vgsummary *vgsummary, uint64_t *mda_free_sectors)
 {
@@ -1563,6 +1564,17 @@ int read_metadata_location_summary(const struct format_type *fmt,
 			  (unsigned long long)(dev_area->start + rlocn->offset));
 		return 0;
 	}
+
+	/*
+	 * This function is used to read the vg summary during label scan.
+	 * Save the text start location and checksum during scan.  After the VG
+	 * lock is acquired in vg_read, we can reread the mda_header, and
+	 * compare rlocn->offset,checksum to what was saved during scan.  If
+	 * unchanged, it means that the metadata was not changed between scan
+	 * and the read.
+	 */
+	mda->scan_text_offset = rlocn->offset;
+	mda->scan_text_checksum = rlocn->checksum;
 
 	/*
 	 * When the current metadata wraps around the end of the metadata area

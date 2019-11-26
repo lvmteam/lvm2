@@ -4571,6 +4571,118 @@ void vg_write_commit_bad_mdas(struct cmd_context *cmd, struct volume_group *vg)
 	}
 }
 
+/*
+ * Reread an mda_header.  If the text offset is the same as was seen and saved
+ * by label scan, it means the metadata is unchanged and we do not need to
+ * reread metadata.
+ */
+
+static int _scan_text_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid)
+{
+	struct dm_list mda_list;
+	struct mda_list *mdal, *safe;
+	struct metadata_area *mda;
+	struct mda_context *mdac;
+	struct device_area *area;
+	struct mda_header *mdah;
+	struct raw_locn *rlocn;
+	struct device *dev;
+	uint32_t bad_fields;
+	int ret = 1;
+
+	/*
+	 * if cmd->can_use_one_scan, check one mda_header is unchanged,
+	 * else check that all mda_headers are unchanged.
+	 */
+
+	dm_list_init(&mda_list);
+
+	lvmcache_get_mdas(cmd, vgname, vgid, &mda_list);
+
+	dm_list_iterate_items(mdal, &mda_list) {
+		mda = mdal->mda;
+
+		if (!mda->scan_text_offset)
+			continue;
+
+		if (mda->mda_num != 1)
+			continue;
+
+		if (!(dev = mda_get_device(mda))) {
+			log_debug("rescan for text mismatch - no mda dev");
+			ret = 1;
+			goto out;
+		}
+
+		bad_fields = 0;
+
+		mdac = mda->metadata_locn;
+		area = &mdac->area;
+
+		/*
+		 * Invalidate mda_header in bcache so it will be reread from disk.
+		 */
+		if (!dev_invalidate_bytes(dev, 4096, 512)) {
+			log_debug("rescan for text mismatch - cannot invalidate");
+			ret = 1;
+			goto out;
+		}
+
+		if (!(mdah = raw_read_mda_header(cmd->fmt, area, 1, 0, &bad_fields))) {
+			log_debug("rescan for text mismatch - no mda header");
+			ret = 1;
+			goto out;
+		}
+
+		rlocn = mdah->raw_locns;
+
+		if (bad_fields) {
+			log_debug("rescan for text mismatch - bad_fields");
+			ret = 1;
+		} else if (rlocn->checksum != mda->scan_text_checksum) {
+			log_debug("rescan for text checksum mismatch - now %x prev %x",
+				  rlocn->checksum, mda->scan_text_checksum);
+			ret = 1;
+		} else if (rlocn->offset != mda->scan_text_offset) {
+			log_debug("rescan for text offset mismatch - now %llu prev %llu",
+				  (unsigned long long)rlocn->offset,
+				  (unsigned long long)mda->scan_text_offset);
+			ret = 1;
+		} else {
+			ret = 0;
+		}
+
+		dm_pool_free(cmd->mem, mdah);
+
+		/* For can_use_one_scan commands, return result from checking one mda. */
+		if (cmd->can_use_one_scan)
+			goto out;
+
+		/* For other commands, return mismatch immediately. */
+		if (ret)
+			goto_out;
+	}
+
+	if (ret) {
+		/* shouldn't happen */
+		log_debug("rescan for text mismatch - no mdas");
+		goto out;
+	}
+
+	ret = 0;
+
+out:
+	if (!ret)
+		log_debug("rescan skipped - text offset and checksum unchanged");
+
+	dm_list_iterate_items_safe(mdal, safe, &mda_list) {
+		dm_list_del(&mdal->list);
+		free(mdal);
+	}
+
+	return ret;
+}
+
 static struct volume_group *_vg_read(struct cmd_context *cmd,
 				     const char *vgname,
 				     const char *vgid,
@@ -4625,19 +4737,23 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	 * find the same inconsistency.  The VG repair (mistakenly done by
 	 * vg_read below) is supposed to fix that.
 	 *
-	 * FIXME: sort out the usage of the global lock (which is mixed up
-	 * with the orphan lock), and when we can tell that the global
-	 * lock is taken prior to the label scan, and still held here,
-	 * we can also skip the rescan in that case.
+	 * If the VG was not modified between the time we scanned the PVs
+	 * and now, when we hold the lock, then we don't need to rescan.
+	 * We can read the mda_header, and look at the text offset/checksum,
+	 * and if the current text offset/checksum matches what was seen during
+	 * label scan, we know that metadata is unchanged and doesn't need
+	 * to be rescanned.  For reporting/display commands (CAN_USE_ONE_SCAN/
+	 * can_use_one_scan), we check that the text offset/checksum are unchanged
+	 * in just one mda before deciding to skip rescanning.  For other commands,
+	 * we check that they are unchanged in all mdas.  This added checking is
+	 * probably unnecessary; all commands could likely just check a single mda.
 	 */
-	if (!cmd->can_use_one_scan || lvmcache_scan_mismatch(cmd, vgname, vgid)) {
+	if (lvmcache_scan_mismatch(cmd, vgname, vgid) || _scan_text_mismatch(cmd, vgname, vgid)) {
 		log_debug_metadata("Rescanning devices for %s %s", vgname, writing ? "rw" : "");
 		if (writing)
 			lvmcache_label_rescan_vg_rw(cmd, vgname, vgid);
 		else
 			lvmcache_label_rescan_vg(cmd, vgname, vgid);
-	} else {
-		log_debug_metadata("Skipped rescanning devices for %s", vgname);
 	}
 
 	/* Now determine the correct vgname if none was supplied */

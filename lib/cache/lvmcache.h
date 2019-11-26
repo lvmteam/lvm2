@@ -216,4 +216,8 @@ void lvmcache_get_bad_mdas(struct cmd_context *cmd,
                            const char *vgname, const char *vgid,
                            struct dm_list *bad_mda_list);
 
+void lvmcache_get_mdas(struct cmd_context *cmd,
+                       const char *vgname, const char *vgid,
+                       struct dm_list *mda_list);
+
 #endif
