@@ -338,13 +338,16 @@ int sync_local_dev_names(struct cmd_context* cmd)
  * an explicitly acquired ex global lock to sh in process_each.
  */
 
-static int _lockf_global(struct cmd_context *cmd, const char *mode, int convert)
+static int _lockf_global(struct cmd_context *cmd, const char *mode, int convert, int nonblock)
 {
 	uint32_t flags = 0;
 	int ret;
 
 	if (convert)
 		flags |= LCK_CONVERT;
+
+	if (nonblock)
+		flags |= LCK_NONBLOCK;
 
 	if (!strcmp(mode, "ex")) {
 		flags |= LCK_WRITE;
@@ -379,7 +382,7 @@ static int _lockf_global(struct cmd_context *cmd, const char *mode, int convert)
 
 int lockf_global(struct cmd_context *cmd, const char *mode)
 {
-	return _lockf_global(cmd, mode, 0);
+	return _lockf_global(cmd, mode, 0, 0);
 }
 
 int lockf_global_convert(struct cmd_context *cmd, const char *mode)
@@ -388,7 +391,12 @@ int lockf_global_convert(struct cmd_context *cmd, const char *mode)
 	if (cmd->lockf_global_ex && !strcmp(mode, "ex"))
 		return 1;
 
-	return _lockf_global(cmd, mode, 1);
+	return _lockf_global(cmd, mode, 1, 0);
+}
+
+int lockf_global_nonblock(struct cmd_context *cmd, const char *mode)
+{
+	return _lockf_global(cmd, mode, 0, 1);
 }
 
 int lock_global(struct cmd_context *cmd, const char *mode)

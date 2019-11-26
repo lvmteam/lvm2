@@ -5577,10 +5577,11 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	 * Reacquire the lock that was released above before waiting, then
 	 * check again that the devices can still be used.  If the second loop
 	 * finds them changed, or can't find them any more, then they aren't
-	 * used.
+	 * used.  Use a non-blocking request when reacquiring to avoid
+	 * potential deadlock since this is not the normal locking sequence.
 	 */
 
-	if (!lockf_global(cmd, "ex")) {
+	if (!lockf_global_nonblock(cmd, "ex")) {
 		log_error("Failed to reacquire global lock after prompt.");
 		goto_out;
 	}
