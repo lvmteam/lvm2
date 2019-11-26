@@ -415,8 +415,7 @@ aux enable_dev "$dev2"
 aux udev_wait
 cat /proc/mdstat
 # for some reason enabling dev2 starts an odd md dev
-mdadm --stop "$mddev" || true
-mdadm --stop --scan
+mdadm --stop $(lsblk -al -o NAME --noheadings "$dev2" | grep '^md') || true
 cat /proc/mdstat
 aux wipefs_a "$dev1" || true
 aux wipefs_a "$dev2" || true
@@ -480,8 +479,7 @@ aux enable_dev "$dev2"
 aux udev_wait
 cat /proc/mdstat
 # for some reason enabling dev2 starts an odd md dev
-mdadm --stop "$mddev" || true
-mdadm --stop --scan
+mdadm --stop $(lsblk -al -o NAME --noheadings "$dev2" | grep '^md') || true
 cat /proc/mdstat
 aux wipefs_a "$dev1" || true
 aux wipefs_a "$dev2" || true
@@ -619,8 +617,7 @@ aux enable_dev "$dev4"
 aux udev_wait
 cat /proc/mdstat
 # for some reason enabling dev2 starts an odd md dev
-mdadm --stop "$mddev" || true
-mdadm --stop --scan
+mdadm --stop $(lsblk -al -o NAME --noheadings "$dev2" | grep '^md') || true
 cat /proc/mdstat
 aux wipefs_a "$dev1" || true
 aux wipefs_a "$dev2" || true
