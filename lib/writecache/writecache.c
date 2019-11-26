@@ -214,7 +214,7 @@ static int _target_present(struct cmd_context *cmd,
 
 	if (!_writecache_checked) {
 		_writecache_checked = 1;
-		_writecache_present =  target_present(cmd, TARGET_NAME_WRITECACHE, 0);
+		_writecache_present =  target_present(cmd, TARGET_NAME_WRITECACHE, 1);
 	}
 
 	return _writecache_present;
