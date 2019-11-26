@@ -52,15 +52,17 @@ pvs
 grep -v -E "$dev1|$dev2" $HINTS > tmptest
 not grep scan: tmptest
 
-# test that 'pvs' submits only two reads, one for each PV in hints
+# test that 'pvs' submits only three reads, one for each PV in hints
+# for initial scan, and one more in vg_read rescan check
 
 if [ -e "/usr/bin/strace" ]; then
 strace -e io_submit pvs 2>&1|tee tmptest
-test "$(grep io_submit tmptest | wc -l)" -eq 2
+test "$(grep io_submit tmptest | wc -l)" -eq 3
 
-# test that 'pvs -a' submits six reads, one for each device
+# test that 'pvs -a' submits seven reads, one for each device,
+# and one more in vg_read rescan check
 strace -e io_submit pvs -a 2>&1|tee tmptest
-test "$(grep io_submit tmptest | wc -l)" -eq 6
+test "$(grep io_submit tmptest | wc -l)" -eq 7
 fi
 
 #
