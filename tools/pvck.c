@@ -226,10 +226,8 @@ static void _copy_out_metadata(char *buf, uint32_t start, uint32_t first_start, 
 	/* terminating 0 byte */
 	new_len++;
 
-	if (!(new_buf = malloc(new_len)))
+	if (!(new_buf = zalloc(new_len)))
 		return;
-
-	memset(new_buf, 0, new_len);
 
 	if (len_a) {
 		memcpy(new_buf, buf+start, len_a);
@@ -752,9 +750,8 @@ static int _dump_meta_area(struct device *dev, const char *tofile,
 	if (!tofile)
 		return_0;
 
-	if (!(meta_buf = malloc(mda_size)))
+	if (!(meta_buf = zalloc(mda_size)))
 		return_0;
-	memset(meta_buf, 0, mda_size);
 
 	if (!dev_read_bytes(dev, mda_offset, mda_size, meta_buf)) {
 		log_print("CHECK: failed to read metadata area at offset %llu size %llu",
@@ -2468,9 +2465,8 @@ static int _backup_file_to_raw_metadata(char *back_buf, uint64_t back_size,
 
 	text_max = back_size * 2;
 
-	if (!(text_buf = malloc(text_max)))
+	if (!(text_buf = zalloc(text_max)))
 		return_0;
-	memset(text_buf, 0, text_max);
 
 	p = back_buf;
 	text_pos = 0;
