@@ -4577,7 +4577,7 @@ void vg_write_commit_bad_mdas(struct cmd_context *cmd, struct volume_group *vg)
  * reread metadata.
  */
 
-static int _scan_text_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid)
+static bool _scan_text_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid)
 {
 	struct dm_list mda_list;
 	struct mda_list *mdal, *safe;
@@ -4588,7 +4588,7 @@ static int _scan_text_mismatch(struct cmd_context *cmd, const char *vgname, cons
 	struct raw_locn *rlocn;
 	struct device *dev;
 	uint32_t bad_fields;
-	int ret = 1;
+	bool ret = true;
 
 	/*
 	 * if cmd->can_use_one_scan, check one mda_header is unchanged,
@@ -4610,7 +4610,6 @@ static int _scan_text_mismatch(struct cmd_context *cmd, const char *vgname, cons
 
 		if (!(dev = mda_get_device(mda))) {
 			log_debug("rescan for text mismatch - no mda dev");
-			ret = 1;
 			goto out;
 		}
 
@@ -4624,13 +4623,11 @@ static int _scan_text_mismatch(struct cmd_context *cmd, const char *vgname, cons
 		 */
 		if (!dev_invalidate_bytes(dev, 4096, 512)) {
 			log_debug("rescan for text mismatch - cannot invalidate");
-			ret = 1;
 			goto out;
 		}
 
 		if (!(mdah = raw_read_mda_header(cmd->fmt, area, 1, 0, &bad_fields))) {
 			log_debug("rescan for text mismatch - no mda header");
-			ret = 1;
 			goto out;
 		}
 
@@ -4638,18 +4635,16 @@ static int _scan_text_mismatch(struct cmd_context *cmd, const char *vgname, cons
 
 		if (bad_fields) {
 			log_debug("rescan for text mismatch - bad_fields");
-			ret = 1;
 		} else if (rlocn->checksum != mda->scan_text_checksum) {
 			log_debug("rescan for text checksum mismatch - now %x prev %x",
 				  rlocn->checksum, mda->scan_text_checksum);
-			ret = 1;
 		} else if (rlocn->offset != mda->scan_text_offset) {
 			log_debug("rescan for text offset mismatch - now %llu prev %llu",
 				  (unsigned long long)rlocn->offset,
 				  (unsigned long long)mda->scan_text_offset);
-			ret = 1;
 		} else {
-			ret = 0;
+			/* the common case where fields match and no rescan needed */
+			ret = false;
 		}
 
 		dm_pool_free(cmd->mem, mdah);
@@ -4668,12 +4663,11 @@ static int _scan_text_mismatch(struct cmd_context *cmd, const char *vgname, cons
 		log_debug("rescan for text mismatch - no mdas");
 		goto out;
 	}
-
-	ret = 0;
-
 out:
 	if (!ret)
-		log_debug("rescan skipped - text offset and checksum unchanged");
+		log_debug("rescan skipped - unchanged offset %llu checksum %x",
+			  (unsigned long long)mda->scan_text_offset,
+			  mda->scan_text_checksum);
 
 	dm_list_iterate_items_safe(mdal, safe, &mda_list) {
 		dm_list_del(&mdal->list);
