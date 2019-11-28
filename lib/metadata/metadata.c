@@ -4932,13 +4932,12 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			log_debug_metadata("Drop dev for MD component from cache %s.", dev_name(dev));
 			lvmcache_del_dev(dev);
 
-			dm_list_iterate_items(mda, &fid->metadata_areas_in_use) {
-				if (mda_get_device(mda) != dev)
-					continue;
-				log_debug_metadata("Drop mda from MD component from mda list %s.", dev_name(dev));
-				dm_list_del(&mda->list);
-				break;
-			}
+			dm_list_iterate_items(mda, &fid->metadata_areas_in_use)
+				if (mda_get_device(mda) == dev) {
+					log_debug_metadata("Drop mda from MD component from mda list %s.", dev_name(dev));
+					dm_list_del(&mda->list);
+					break;
+				}
 		}
 	}
 
