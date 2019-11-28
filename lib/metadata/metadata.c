@@ -4878,10 +4878,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 		if (vg->seqno == vg_ret->seqno) {
 			release_vg(vg);
-			continue;
-		}
-
-		if (vg->seqno > vg_ret->seqno) {
+		} else if (vg->seqno > vg_ret->seqno) {
 			log_warn("WARNING: ignoring metadata seqno %u on %s for seqno %u on %s for VG %s.",
 				 vg_ret->seqno, dev_name(dev_ret),
 				 vg->seqno, dev_name(mda_dev), vg->name);
@@ -4890,17 +4887,13 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			vg_ret = vg;
 			dev_ret = mda_dev;
 			vg_fmtdata = NULL;
-			continue;
-		}
-
-		if (vg_ret->seqno > vg->seqno) {
+		} else { /* vg->seqno < vg_ret->seqno */
 			log_warn("WARNING: ignoring metadata seqno %u on %s for seqno %u on %s for VG %s.",
 				 vg->seqno, dev_name(mda_dev),
 				 vg_ret->seqno, dev_name(dev_ret), vg->name);
 			found_old_metadata = 1;
 			release_vg(vg);
 			vg_fmtdata = NULL;
-			continue;
 		}
 	}
 
