@@ -1,8 +1,10 @@
-Version 2.03.07 - 
-===================================
+Version 2.03.07 - 30th November 2019
+====================================
+  Subcommand in vgck for repairing headers and metadata.
   Ensure minimum required region size on striped RaidLV creation.
   Fix resize of thin-pool with data and metadata of different segtype.
   Improve mirror type leg splitting.
+  Improve error path handling in daemons on shutdown.
   Fix activation order when removing merged snapshot.
   Experimental VDO support for lvmdbusd.
 
