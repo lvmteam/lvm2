@@ -463,7 +463,8 @@ arg(setphysicalvolumesize_ARG, '\0', "setphysicalvolumesize", sizemb_VAL, 0, 0,
 
 arg(settings_ARG, '\0', "settings", string_VAL, ARG_GROUPABLE, 0,
     "Specifies command specific settings in \"Key = Value\" form.\n"
-    "Repeat this option to specify multiple values.\n")
+    "Combine multiple settings in quotes, or repeat the settings\n"
+    "option for each.\n")
 
 arg(poll_ARG, '\0', "poll", bool_VAL, 0, 0,
     "When yes, start the background transformation of an LV.\n"
