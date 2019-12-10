@@ -1429,6 +1429,7 @@ static int _check_uevent_generated(struct dm_ioctl *dmi)
 
 static int _create_and_load_v4(struct dm_task *dmt)
 {
+	struct dm_info info;
 	struct dm_task *task;
 	int r;
 	uint32_t cookie;
@@ -1459,6 +1460,9 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	if (!dm_task_run(task))
 		goto_bad;
 
+	if (!dm_task_get_info(task, &info) || !info.exists)
+		goto_bad;
+
 	dm_task_destroy(task);
 
 	/* Next load the table */
@@ -1476,6 +1480,8 @@ static int _create_and_load_v4(struct dm_task *dmt)
 		goto revert;
 	}
 
+	task->major = info.major;
+	task->minor = info.minor;
 	task->read_only = dmt->read_only;
 	task->head = dmt->head;
 	task->tail = dmt->tail;
