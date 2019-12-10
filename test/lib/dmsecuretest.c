@@ -48,6 +48,7 @@ int main (int argc, char *argv[])
 	char aes[] = "434r0pono02pn68sson9268222p3789q703sr62427o78o308518o3228s6n2122";
 	const char *device = (argc > 1) ? argv[1] : "/dev/loop0";  /* device for use */
 	const char *devname = (argc > 2) ? argv[2] : "test-secure"; /* name of dm device */
+	const char *cipher = (argc > 3) ? argv[3] : "aes-xts-plain64"; /* name of dm device */
 	uint32_t cookie = 0;
 	char table[300];
 	struct dm_task *dmt;
@@ -63,7 +64,7 @@ int main (int argc, char *argv[])
 		(void) dm_task_set_name(dmt, devname);
 		(void) dm_task_secure_data(dmt);
 		rot13(aes);
-		snprintf(table, sizeof(table), "aes-xts-plain64 %s 0 %s %u", aes, device, sz);
+		snprintf(table, sizeof(table), "%s %s 0 %s %u", cipher, aes, device, sz);
 		memset(aes, 0, sizeof(aes));
 		(void) dm_task_add_target(dmt, 0, sz, "crypt", table);
 		memset(table, 0, sizeof(table));
@@ -71,9 +72,8 @@ int main (int argc, char *argv[])
 		(void) dm_task_set_cookie(dmt, &cookie, DM_UDEV_DISABLE_LIBRARY_FALLBACK);
 		(void) dm_task_run(dmt);
 		(void) dm_task_destroy(dmt);
+		(void) dm_udev_wait(cookie); /* Finish udev processing */
 	}
-
-	dm_task_update_nodes();
 
 	/* At this point there should be no memory trace from a secure table line */
 
