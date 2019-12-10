@@ -874,7 +874,11 @@ prepare_devs() {
 	wait
 	finish_udev_transaction
 
-	if test -f CREATE_FAILED -a -n "$LVM_TEST_BACKING_DEVICE"; then
+	if test -f CREATE_FAILED ; then
+		if test -z "$LVM_TEST_BACKING_DEVICE"; then
+			echo "failed"
+			return 1
+		fi
 		LVM_TEST_BACKING_DEVICE=
 		rm -f BACKING_DEV CREATE_FAILED
 		prepare_devs "$@"
