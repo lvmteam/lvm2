@@ -45,7 +45,9 @@ sleep .5
 dmsetup status "$DMTEST"
 
 # generate core file for running&sleeping binary
-gcore "$PID"
+gcore "$PID" | tee out
+# check we capture core while  dmsecuretest was already sleeping
+grep "nanosleep" out
 kill "$PID" || true
 wait
 
@@ -55,7 +57,7 @@ cat cmdout
 not grep "$SECURE" "core.$PID" || {
 	## cp "core.$PID" /dev/shm/core
 	rm -f "core.$PID"
-        dmsetup remove "$DMTEST"
+	should dmsetup remove "$DMTEST" # go around weird bugs
 	die "!!! Secure string $SECURE found present in core.$PID !!!"
 }
 rm -f "core.$PID"
