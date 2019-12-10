@@ -382,7 +382,7 @@ teardown_devs_prefixed() {
 
 		while :; do
 			local sortby="name"
-			local num_devs=0
+			local progress=0
 
 			# HACK: sort also by minors - so we try to close 'possibly later' created device first
 			test "$i" = 0 || sortby="-minor"
@@ -392,23 +392,23 @@ teardown_devs_prefixed() {
 				DM_NAME=${dm##DM_NAME=}
 				DM_NAME=${DM_NAME%%;DM_OPEN*}
 				DM_OPEN=${dm##*;DM_OPEN=}
+				local force="-f"
 				if test "$i" = 0; then
 					if test "$once" = 1 ; then
 						once=0
 						echo "## removing stray mapped devices with names beginning with $prefix: "
 					fi
 					test "$DM_OPEN" = 0 || break  # stop loop with 1st. opened device
-					dmsetup remove "$DM_NAME" --mangle none || true # &>/dev/null || touch REMOVE_FAILED &
-				else
-					dmsetup remove -f "$DM_NAME" --mangle none || true
+					force=""
 				fi
 
-				num_devs=$(( num_devs + 1 ))
+				# Succesfull 'remove' signals progress
+				dmsetup remove $force "$DM_NAME" --mangle none && progress=1
 			done
 
 			test "$i" = 0 || break
 
-			test "$num_devs" -gt 0 || break
+			test "$progress" = 1 || break
 
 			udev_wait
 			wait
