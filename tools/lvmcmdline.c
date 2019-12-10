@@ -1086,6 +1086,18 @@ int repairtype_arg(struct cmd_context *cmd, struct arg_values *av)
 	return 0;
 }
 
+int dumptype_arg(struct cmd_context *cmd, struct arg_values *av)
+{
+	if (!strcmp(av->value, "headers") ||
+	    !strcmp(av->value, "metadata") ||
+	    !strcmp(av->value, "metadata_all") ||
+	    !strcmp(av->value, "metadata_search") ||
+	    !strcmp(av->value, "metadata_area") ||
+	    !strcmp(av->value, "backup_to_raw"))
+		return 1;
+	return 0;
+}
+
 /*
  * FIXME: there's been a confusing mixup among:
  * resizeable, resizable, allocatable, allocation.

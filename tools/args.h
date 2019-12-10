@@ -213,7 +213,7 @@ arg(driverloaded_ARG, '\0', "driverloaded", bool_VAL, 0, 0,
     "If set to no, the command will not attempt to use device-mapper.\n"
     "For testing and debugging.\n")
 
-arg(dump_ARG, '\0', "dump", string_VAL, 0, 0,
+arg(dump_ARG, '\0', "dump", dumptype_VAL, 0, 0,
     "Dump headers and metadata from a PV for debugging and repair.\n"
     "Option values include: \\fBheaders\\fP to print and check LVM headers,\n"
     "\\fBmetadata\\fP to print or save the current text metadata,\n"
