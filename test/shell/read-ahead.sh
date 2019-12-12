@@ -35,12 +35,11 @@ lvremove -ff $vg
 #COMM "read ahead is properly inherited from underlying PV"
 blockdev --setra 768 "$dev1"
 vgscan
-DEVICE=$(dmsetup deps -o blkdevname "$dev1" | sed -e "s,.*:\ (\(.*\)),/dev/\1,")
-RASZ=$(blockdev --getra "$DEVICE")
-SZ=$RASZ
-test "$RASZ" -ge 768 || SZ=768
+# is there something in the system changing readahead settings behind the scene...
+RASZ=$(blockdev --getra "$dev1")
+test "$RASZ" -ge 768 || RASZ=768
 lvcreate -n $lv -L4m $vg "$dev1"
-test "$(blockdev --getra "$DM_DEV_DIR/$vg/$lv")" -eq "$SZ"
+test "$(blockdev --getra "$DM_DEV_DIR/$vg/$lv")" -eq "$RASZ"
 lvremove -ff $vg
 
 # Check default, active/inactive values for read_ahead / kernel_read_ahead
