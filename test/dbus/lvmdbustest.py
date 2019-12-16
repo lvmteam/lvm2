@@ -193,11 +193,14 @@ def call_lvm(command):
 
 def supports_vdo():
 	cmd = ['segtypes']
+	modprobe = Popen(["modprobe", "kvdo"], stdout=PIPE, stderr=PIPE, close_fds=True, env=os.environ)
+	modprobe.communicate()
+	if modprobe.returncode != 0:
+		return False
 	rc, out, err = call_lvm(cmd)
-	if rc == 0:
-		if "vdo" in out:
-			return True
-	return False
+	if rc != 0 or "vdo" not in out:
+		return False
+	return True
 
 
 # noinspection PyUnresolvedReferences
