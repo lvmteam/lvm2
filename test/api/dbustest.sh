@@ -16,7 +16,9 @@ SKIP_WITH_CLVMD=1
 
 . lib/inittest
 
-aux prepare_pvs 6
+# NOTE: Some tests, namely anything with vdo, and
+# api/dbus_test_lv_interface_cache_lv.sh, require larger PVs
+aux prepare_pvs 6 6400
 
 # Required by test_nesting:
 aux extend_filter_LVMTEST
