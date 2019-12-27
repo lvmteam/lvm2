@@ -460,6 +460,28 @@ def lv_detach_cache(lv_full_name, detach_options, destroy_cache):
 	return call(cmd)
 
 
+def lv_vdo_compression(lv_path, enable, comp_options):
+	cmd = ['lvchange', '--compression']
+	if enable:
+		cmd.append('y')
+	else:
+		cmd.append('n')
+	cmd.extend(options_to_cli_args(comp_options))
+	cmd.append(lv_path)
+	return call(cmd)
+
+
+def lv_vdo_deduplication(lv_path, enable, dedup_options):
+	cmd = ['lvchange', '--deduplication']
+	if enable:
+		cmd.append('y')
+	else:
+		cmd.append('n')
+	cmd.extend(options_to_cli_args(dedup_options))
+	cmd.append(lv_path)
+	return call(cmd)
+
+
 def supports_json():
 	cmd = ['help']
 	rc, out, err = call(cmd)

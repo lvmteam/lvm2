@@ -1858,11 +1858,11 @@ class TestDbusService(unittest.TestCase):
 		self.assertEqual(pv_object_path, self._lookup(symlink))
 		self.assertEqual(pv_object_path, self._lookup(pv_device_path))
 
-	def _create_vdo_pool_and_lv(self):
+	def _create_vdo_pool_and_lv(self, vg_prefix="vdo_"):
 		pool_name = lv_n("_vdo_pool")
 		lv_name = lv_n()
 
-		vg_proxy = self._vg_create(vg_prefix="vdo_")
+		vg_proxy = self._vg_create(vg_prefix=vg_prefix)
 		vdo_pool_object_path = self.handle_return(
 			vg_proxy.VgVdo.CreateVdoPoolandLv(
 				pool_name, lv_name,
@@ -1902,6 +1902,34 @@ class TestDbusService(unittest.TestCase):
 		for _ in range(0, 2):
 			vg, _, _ = self._create_vdo_pool_and_lv()
 			self.handle_return(vg.Vg.Remove(dbus.Int32(g_tmo), EOD))
+
+	def test_vdo_pool_compression_deduplication(self):
+		if not self.vdo:
+			raise unittest.SkipTest('vdo not supported')
+
+		vg, pool, _lv = self._create_vdo_pool_and_lv(vg_prefix="vdo2_")
+
+		# compression and deduplication should be enabled by default
+		self.assertEqual(pool.VdoPool.Compression, "enabled")
+		self.assertEqual(pool.VdoPool.Deduplication, "enabled")
+
+		self.handle_return(
+			pool.VdoPool.DisableCompression(dbus.Int32(g_tmo), EOD))
+		self.handle_return(
+			pool.VdoPool.DisableDeduplication(dbus.Int32(g_tmo), EOD))
+		pool.update()
+		self.assertEqual(pool.VdoPool.Compression, "")
+		self.assertEqual(pool.VdoPool.Deduplication, "")
+
+		self.handle_return(
+			pool.VdoPool.EnableCompression(dbus.Int32(g_tmo), EOD))
+		self.handle_return(
+			pool.VdoPool.EnableDeduplication(dbus.Int32(g_tmo), EOD))
+		pool.update()
+		self.assertEqual(pool.VdoPool.Compression, "enabled")
+		self.assertEqual(pool.VdoPool.Deduplication, "enabled")
+
+		self.handle_return(vg.Vg.Remove(dbus.Int32(g_tmo), EOD))
 
 	def _test_lv_method_interface(self, lv):
 		self._rename_lv_test(lv)

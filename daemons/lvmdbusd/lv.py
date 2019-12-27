@@ -780,6 +780,72 @@ class LvVdoPool(Lv):
 	def DataLv(self):
 		return dbus.ObjectPath(self._data_lv)
 
+	@staticmethod
+	def _enable_disable_compression(pool_uuid, pool_name, enable, comp_options):
+		# Make sure we have a dbus object representing it
+		LvCommon.validate_dbus_object(pool_uuid, pool_name)
+		# Rename the logical volume
+		LvCommon.handle_execute(*cmdhandler.lv_vdo_compression(
+			pool_name, enable, comp_options))
+		return '/'
+
+	@dbus.service.method(
+		dbus_interface=VDO_POOL_INTERFACE,
+		in_signature='ia{sv}',
+		out_signature='o',
+		async_callbacks=('cb', 'cbe'))
+	def EnableCompression(self, tmo, comp_options, cb, cbe):
+		r = RequestEntry(
+			tmo, LvVdoPool._enable_disable_compression,
+			(self.Uuid, self.lvm_id, True, comp_options),
+			cb, cbe, False)
+		cfg.worker_q.put(r)
+
+	@dbus.service.method(
+	dbus_interface=VDO_POOL_INTERFACE,
+	in_signature='ia{sv}',
+	out_signature='o',
+	async_callbacks=('cb', 'cbe'))
+	def DisableCompression(self, tmo, comp_options, cb, cbe):
+		r = RequestEntry(
+			tmo, LvVdoPool._enable_disable_compression,
+			(self.Uuid, self.lvm_id, False, comp_options),
+			cb, cbe, False)
+		cfg.worker_q.put(r)
+
+	@staticmethod
+	def _enable_disable_deduplication(pool_uuid, pool_name, enable, dedup_options):
+		# Make sure we have a dbus object representing it
+		LvCommon.validate_dbus_object(pool_uuid, pool_name)
+		# Rename the logical volume
+		LvCommon.handle_execute(*cmdhandler.lv_vdo_deduplication(
+			pool_name, enable, dedup_options))
+		return '/'
+
+	@dbus.service.method(
+		dbus_interface=VDO_POOL_INTERFACE,
+		in_signature='ia{sv}',
+		out_signature='o',
+		async_callbacks=('cb', 'cbe'))
+	def EnableDeduplication(self, tmo, dedup_options, cb, cbe):
+		r = RequestEntry(
+			tmo, LvVdoPool._enable_disable_deduplication,
+			(self.Uuid, self.lvm_id, True, dedup_options),
+			cb, cbe, False)
+		cfg.worker_q.put(r)
+
+	@dbus.service.method(
+	dbus_interface=VDO_POOL_INTERFACE,
+	in_signature='ia{sv}',
+	out_signature='o',
+	async_callbacks=('cb', 'cbe'))
+	def DisableDeduplication(self, tmo, dedup_options, cb, cbe):
+		r = RequestEntry(
+			tmo, LvVdoPool._enable_disable_deduplication,
+			(self.Uuid, self.lvm_id, False, dedup_options),
+			cb, cbe, False)
+		cfg.worker_q.put(r)
+
 
 # noinspection PyPep8Naming
 class LvThinPool(Lv):
