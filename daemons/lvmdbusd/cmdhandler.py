@@ -398,6 +398,14 @@ def vg_create_vdo_pool_lv_and_lv(vg_name, pool_name, lv_name, data_size,
 	return call(cmd)
 
 
+def vg_create_vdo_pool(pool_full_name, lv_name, virtual_size, create_options):
+	cmd = ['lvconvert']
+	cmd.extend(options_to_cli_args(create_options))
+	cmd.extend(['--type', 'vdo-pool', '-n', lv_name, '--force', '-y',
+				'-V', '%dB' % virtual_size, pool_full_name])
+	return call(cmd)
+
+
 def lv_remove(lv_path, remove_options):
 	cmd = ['lvremove']
 	cmd.extend(options_to_cli_args(remove_options))

@@ -813,3 +813,35 @@ class VgVdo(Vg):
 							round_size(virtual_size),
 							create_options), cb, cbe)
 		cfg.worker_q.put(r)
+
+	@staticmethod
+	def _vdo_pool_create(uuid, vg_name, pool_lv, name, virtual_size, create_options):
+		Vg.validate_dbus_object(uuid, vg_name)
+
+		# Retrieve the full name of the pool lv
+		pool = cfg.om.get_object_by_path(pool_lv)
+		if not pool:
+			msg = 'LV with object path %s not present!' % \
+					(pool_lv)
+			raise dbus.exceptions.DBusException(VG_VDO_INTERFACE, msg)
+
+		Vg.handle_execute(*cmdhandler.vg_create_vdo_pool(
+			pool.lv_full_name(), name, virtual_size,
+			create_options))
+		return Vg.fetch_new_lv(vg_name, pool.Name)
+
+	@dbus.service.method(
+		dbus_interface=VG_VDO_INTERFACE,
+		in_signature='ostia{sv}',
+		out_signature='(oo)',
+		async_callbacks=('cb', 'cbe'))
+	def CreateVdoPool(self, pool_lv, name, virtual_size,
+						tmo, create_options, cb, cbe):
+		utils.validate_lv_name(VG_VDO_INTERFACE, self.Name, name)
+
+		r = RequestEntry(tmo, VgVdo._vdo_pool_create,
+							(self.state.Uuid, self.state.lvm_id,
+							pool_lv, name,
+							round_size(virtual_size),
+							create_options), cb, cbe)
+		cfg.worker_q.put(r)

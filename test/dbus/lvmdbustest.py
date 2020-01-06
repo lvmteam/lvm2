@@ -1903,6 +1903,44 @@ class TestDbusService(unittest.TestCase):
 			vg, _, _ = self._create_vdo_pool_and_lv()
 			self.handle_return(vg.Vg.Remove(dbus.Int32(g_tmo), EOD))
 
+	def _create_vdo_pool(self):
+		pool_name = lv_n('_vdo_pool')
+		lv_name = lv_n('_vdo_data')
+		vg_proxy = self._vg_create(vg_prefix="vdo_conv_")
+		lv = self._test_lv_create(
+			vg_proxy.Vg.LvCreate,
+			(dbus.String(pool_name), dbus.UInt64(mib(4096)),
+				dbus.Array([], signature='(ott)'), dbus.Int32(g_tmo),
+				EOD), vg_proxy.Vg, LV_BASE_INT)
+		lv_obj_path = self._lookup("%s/%s" % (vg_proxy.Vg.Name, pool_name))
+		self.assertNotEqual(lv_obj_path, "/")
+
+		vdo_pool_path = self.handle_return(
+			vg_proxy.VgVdo.CreateVdoPool(
+				dbus.ObjectPath(lv.object_path), lv_name,
+				dbus.UInt64(mib(8192)),
+				dbus.Int32(g_tmo),
+				EOD))
+
+		self.assertNotEqual(vdo_pool_path, "/")
+		self.assertEqual(
+			vdo_pool_path,
+			self._lookup("%s/%s" % (vg_proxy.Vg.Name, pool_name)))
+		intf = [LV_COMMON_INT, LV_INT]
+		vdo_lv_obj_path = self._lookup("%s/%s" % (vg_proxy.Vg.Name, lv_name))
+		vdo_lv = ClientProxy(self.bus, vdo_lv_obj_path, interfaces=intf)
+		intf.append(VDOPOOL_INT)
+		vdo_pool_lv = ClientProxy(self.bus, vdo_pool_path, interfaces=intf)
+		return vg_proxy, vdo_pool_lv, vdo_lv
+
+	def test_vdo_pool_convert(self):
+		# Basic vdo sanity testing
+		if not self.vdo:
+			raise unittest.SkipTest('vdo not supported')
+
+		vg, _pool, _lv = self._create_vdo_pool()
+		self.handle_return(vg.Vg.Remove(dbus.Int32(g_tmo), EOD))
+
 	def test_vdo_pool_compression_deduplication(self):
 		if not self.vdo:
 			raise unittest.SkipTest('vdo not supported')
