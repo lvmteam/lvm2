@@ -396,13 +396,15 @@ static int _update_extents_params(struct volume_group *vg,
 						     &lp->discards,
 						     &lp->zero_new_blocks))
 				return_0;
-		} else if (!update_cache_pool_params(vg->cmd, vg->profile, vg->extent_size,
-						     lp->segtype, lp->target_attr,
-						     lp->extents,
-						     &lp->pool_metadata_extents,
-						     &lp->thin_chunk_size_calc_policy,
-						     &lp->chunk_size))
-			return_0;
+		} else if (segtype_is_cache_pool(lp->segtype) || segtype_is_cache(lp->segtype)) {
+			if (!update_cache_pool_params(vg->cmd, vg->profile, vg->extent_size,
+						      lp->segtype, lp->target_attr,
+						      lp->extents,
+						      &lp->pool_metadata_extents,
+						      &lp->thin_chunk_size_calc_policy,
+						      &lp->chunk_size))
+				return_0;
+		}
 
 		if (lcp->percent == PERCENT_FREE || lcp->percent == PERCENT_PVS) {
 			if (lp->extents <= (2 * lp->pool_metadata_extents)) {
