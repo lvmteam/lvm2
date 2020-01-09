@@ -1,5 +1,7 @@
 Version 2.03.08 - 
 ====================================
+  Added VDO lvmdbusd methods for enable/disable compression & dedupe.
+  Added VDO lvmdbusd method for converting LV to VDO pool.
 
 Version 2.03.07 - 30th November 2019
 ====================================
