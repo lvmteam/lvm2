@@ -6438,6 +6438,12 @@ int lv_raid_convert(struct logical_volume *lv,
 	uint32_t available_slvs, removed_slvs;
 	takeover_fn_t takeover_fn;
 
+	/* FIXME Can't reshape volume in use - aka not toplevel devices */
+	if (!dm_list_empty(&lv->segs_using_this_lv)) {
+		log_error("Can't reshape stacked volume %s.", display_lvname(lv));
+		return 0;
+	}
+
 	/* FIXME If not active, prompt and activate */
 	/* FIXME Some operations do not require the LV to be active */
 	/* LV must be active to perform raid conversion operations */
