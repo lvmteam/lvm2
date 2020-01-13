@@ -1,5 +1,7 @@
 Version 2.02.187 - 
 ===================================
+  Avoid running cache input arg validation when creating vdo pool.
+  Prevent raid reshaping of stacked volumes.
   Ensure minimum required region size on striped RaidLV creation.
   Fix resize of thin-pool with data and metadata of different segtype.
   Fix splitting mirror leg in cluster.
