@@ -1385,4 +1385,8 @@ int vg_is_foreign(struct volume_group *vg);
 
 void vg_write_commit_bad_mdas(struct cmd_context *cmd, struct volume_group *vg);
 
+struct dm_list *create_pv_list(struct dm_pool *mem, struct volume_group *vg, int argc,
+		                                            char **argv, int allocatable_only);
+struct dm_list *clone_pv_list(struct dm_pool *mem, struct dm_list *pvsl);
+
 #endif
