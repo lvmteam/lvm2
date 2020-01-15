@@ -3,6 +3,13 @@ totem {
         version: 2
         secauth: off
         cluster_name: test
+        interface {
+            ingnumber: 0
+            bindnetaddr: 127.0.0.1
+            mcastaddr: 239.255.255.100
+            mcastport: 5405
+            ttl: 1
+        }
 }
 nodelist {
         node {
@@ -12,6 +19,8 @@ nodelist {
 }
 quorum {
         provider: corosync_votequorum
+        expected_votes: 1
+        two_node: 0
 }
 logging {
         to_syslog: yes
