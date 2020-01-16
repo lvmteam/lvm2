@@ -68,7 +68,15 @@ CLDFLAGS += @CLDFLAGS@
 ELDFLAGS += @ELDFLAGS@
 LDDEPS += @LDDEPS@
 LIB_SUFFIX = @LIB_SUFFIX@
-LVMINTERNAL_LIBS = -llvm-internal $(DMEVENT_LIBS) $(DAEMON_LIBS) $(SYSTEMD_LIBS) $(UDEV_LIBS) $(DL_LIBS) $(BLKID_LIBS)
+LVMINTERNAL_LIBS =\
+	-llvm-internal \
+	$(top_builddir)/base/libbase.a \
+	$(DMEVENT_LIBS) \
+	$(DAEMON_LIBS) \
+	$(SYSTEMD_LIBS) \
+	$(UDEV_LIBS) \
+	$(DL_LIBS) \
+	$(BLKID_LIBS)
 DL_LIBS = @DL_LIBS@
 RT_LIBS = @RT_LIBS@
 M_LIBS = @M_LIBS@
@@ -306,7 +314,7 @@ LIB_VERSION_DM := $(shell $(AWK) -F '.' '{printf "%s.%s",$$1,$$2}' $(top_srcdir)
 
 LIB_VERSION_APP := $(shell $(AWK) -F '[(). ]' '{printf "%s.%s",$$1,$$4}' $(top_srcdir)/VERSION)
 
-INCLUDES += -I$(srcdir) -I$(top_builddir)/include
+INCLUDES += -I$(top_srcdir) -I$(srcdir) -I$(top_builddir)/include
 
 INC_LNS = $(top_builddir)/include/.symlinks_created
 

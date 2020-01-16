@@ -51,18 +51,20 @@ DISTCLEAN_TARGETS += config.cache config.log config.status make.tmpl
 
 include make.tmpl
 
-libdm: include
-libdaemon: include
-lib: libdm libdaemon
-liblvm: lib
-daemons: lib libdaemon tools
-tools: lib libdaemon device-mapper
+include $(top_srcdir)/base/Makefile
+
+libdm: include $(top_builddir)/base/libbase.a
+libdaemon: include $(top_builddir)/base/libbase.a
+lib: libdm libdaemon $(top_builddir)/base/libbase.a
+liblvm: lib $(top_builddir)/base/libbase.a
+daemons: lib libdaemon tools $(top_builddir)/base/libbase.a
+tools: lib libdaemon device-mapper $(top_builddir)/base/libbase.a
 po: tools daemons
 man: tools
 all_man: tools
 scripts: liblvm libdm
-test: tools daemons
-unit-test: lib
+test: tools daemons $(top_builddir)/base/libbase.a
+unit-test: lib $(top_builddir)/base/libbase.a
 run-unit-test: unit-test
 
 lib.device-mapper: include.device-mapper
