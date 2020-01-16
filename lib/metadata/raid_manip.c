@@ -6216,6 +6216,13 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 	if (seg_flag) {
 		if (!(*segtype = get_segtype_from_flag(cmd, seg_flag)))
 			return_0;
+
+		/* FIXME Can't reshape volume in use - aka not toplevel devices */
+		if (!dm_list_empty(&seg_from->lv->segs_using_this_lv)) {
+			log_error("Can't reshape stacked volume %s.", display_lvname(seg_from->lv));
+			return 0;
+		}
+
 		if (segtype_sav != *segtype) {
 			log_warn("Replaced LV type %s%s with possible type %s.",
 				 segtype_sav->name, _get_segtype_alias_str(seg_from->lv, segtype_sav),
@@ -6443,12 +6450,6 @@ int lv_raid_convert(struct logical_volume *lv,
 	uint32_t data_copies = seg->data_copies;
 	uint32_t available_slvs, removed_slvs;
 	takeover_fn_t takeover_fn;
-
-	/* FIXME Can't reshape volume in use - aka not toplevel devices */
-	if (!dm_list_empty(&lv->segs_using_this_lv)) {
-		log_error("Can't reshape stacked volume %s.", display_lvname(lv));
-		return 0;
-	}
 
 	/* FIXME If not active, prompt and activate */
 	/* FIXME Some operations do not require the LV to be active */
