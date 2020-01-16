@@ -12,14 +12,13 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "units.h"
+#include "lib/device/bcache.h"
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
-#include "bcache.h"
-#include "framework.h"
-#include "units.h"
 
 #define SHOW_MOCK_CALLS 0
 

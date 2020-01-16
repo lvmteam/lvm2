@@ -61,7 +61,6 @@ struct block {
 
 	struct bcache *cache;
 	struct dm_list list;
-	struct dm_list hash;
 
 	unsigned flags;
 	unsigned ref_count;
