@@ -516,6 +516,8 @@ teardown() {
 	echo -n "## teardown..."
 	unset LVM_LOG_FILE_EPOCH
 
+	test ! -f ERR_DEV || should dmsetup remove $(cat ERR_DEV_NAME)
+
 	if test -f TESTNAME ; then
 
 	if test ! -f SKIP_THIS_TEST ; then
@@ -954,6 +956,8 @@ common_dev_() {
 		case "$tgtype" in
 		delay)
 			echo "$from $len delay $pvdev $(( pos + offset )) $read_ms $pvdev $(( pos + offset )) $write_ms" ;;
+		writeerror)
+			echo "$from $len delay $pvdev $(( pos + offset )) 0 $(cat ERR_DEV) 0 0" ;;
 		error|zero)
 			echo "$from $len $tgtype" ;;
 		esac
@@ -1079,6 +1083,29 @@ restore_from_devtable() {
 # i.e.  error_dev "$dev1" 8:32 96:8
 error_dev() {
 	common_dev_ error "$@"
+}
+
+#
+# Convert device to device with write errors but normal reads.
+# For this 'delay' dev is used and reroutes 'reads' back to original device
+# and for writes it will use extra new TEST-errordev (huge error target)
+# i.e.  writeerror_dev "$dev1" 8:32
+writeerror_dev() {
+	local name=${PREFIX}-errordev
+
+	if test ! -e ERR_DEV; then
+		# delay target is used for error mapping
+		if test ! -f HAVE_DM_DELAY ; then
+			target_at_least dm-delay 1 1 0 || return 0
+			touch HAVE_DM_DELAY
+		fi
+		dmsetup create -u "TEST-$name" "$name" --table "0 4611686018427387904 error"
+		# Take major:minor of our error device
+		echo "$name" > ERR_DEV_NAME
+		dmsetup info -c  --noheadings -o major,minor "$name" > ERR_DEV
+	fi
+
+	common_dev_ writeerror "$@"
 }
 
 #
