@@ -17,6 +17,10 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+# skip test early if there is no 'delay' target available
+aux target_at_least dm-delay 1 1 0 || skip "missing dm-delay target"
+touch HAVE_DM_DELAY
+
 #
 # Main
 #
