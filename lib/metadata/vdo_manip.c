@@ -317,19 +317,26 @@ static int _format_vdo_pool_data_lv(struct logical_volume *data_lv,
 	}
 
 	if (!*logical_size)
-		while (fgets(buf, sizeof(buf), f)) {
+		while (!feof(f) && fgets(buf, sizeof(buf), f)) {
 			/* TODO: Watch out for locales */
 			if (sscanf(buf, "Logical blocks defaulted to " FMTu64 " blocks", &lb) == 1) {
 				*logical_size = lb * DM_VDO_BLOCK_SIZE;
 				log_verbose("Available VDO logical blocks " FMTu64 " (%s).",
 					    lb, display_size(data_lv->vg->cmd, *logical_size));
-				break;
-			} else
-				log_warn("WARNING: Cannot parse output '%s' from %s.", buf, argv[0]);
+			}
+			if ((dpath = strchr(buf, '\n')))
+				*dpath = 0; /* cut last '\n' away */
+			if (buf[0])
+				log_print("  %s", buf); /* Print vdo_format messages */
 		}
 
 	if (!pipe_close(&pdata)) {
 		log_error("Command %s failed.", argv[0]);
+		return 0;
+	}
+
+	if (!*logical_size) {
+		log_error("Number of VDO logical blocks was not provided by vdo_format output.");
 		return 0;
 	}
 
