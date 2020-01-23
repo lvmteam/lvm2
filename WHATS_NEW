@@ -1,5 +1,7 @@
 Version 2.03.08 - 
 ====================================
+  Accept more output lines from vdo_format.
+  Prohibit reshaping of stacked raid LVs.
   Avoid running cache input arg validation when creating vdo pool.
   Prevent raid reshaping of stacked volumes.
   Added VDO lvmdbusd methods for enable/disable compression & dedupe.
