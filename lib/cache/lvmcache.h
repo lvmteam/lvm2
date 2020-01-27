@@ -161,11 +161,6 @@ struct device *lvmcache_device(struct lvmcache_info *info);
 unsigned lvmcache_mda_count(struct lvmcache_info *info);
 uint64_t lvmcache_smallest_mda_size(struct lvmcache_info *info);
 
-struct metadata_area *lvmcache_get_mda(struct cmd_context *cmd,
-                                      const char *vgname,
-                                      struct device *dev,
-                                      int use_mda_num);
-
 bool lvmcache_has_duplicate_devs(void);
 void lvmcache_del_dev_from_duplicates(struct device *dev);
 bool lvmcache_dev_is_unused_duplicate(struct device *dev);

@@ -2567,36 +2567,6 @@ int lvmcache_vginfo_has_pvid(struct lvmcache_vginfo *vginfo, char *pvid)
 	return 0;
 }
 
-struct metadata_area *lvmcache_get_mda(struct cmd_context *cmd,
-				       const char *vgname,
-				       struct device *dev,
-				       int use_mda_num)
-{
-	struct lvmcache_vginfo *vginfo;
-	struct lvmcache_info *info;
-	struct metadata_area *mda;
-
-	if (!use_mda_num)
-		use_mda_num = 1;
-
-	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, NULL)))
-		return NULL;
-
-	dm_list_iterate_items(info, &vginfo->infos) {
-		if (info->dev != dev)
-			continue;
-
-		dm_list_iterate_items(mda, &info->mdas) {
-			if ((use_mda_num == 1) && (mda->status & MDA_PRIMARY))
-				return mda;
-			if ((use_mda_num == 2) && !(mda->status & MDA_PRIMARY))
-				return mda;
-		}
-		return NULL;
-	}
-	return NULL;
-}
-
 /*
  * This is used by the metadata repair command to check if
  * the metadata on a dev needs repair because it's old.
