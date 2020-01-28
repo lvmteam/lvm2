@@ -1853,8 +1853,6 @@ static int _resolve_duplicate_vgnames(struct cmd_context *cmd,
 			if (lvmcache_vg_is_foreign(cmd, vgnl->vg_name, vgnl->vgid)) {
 				if (!id_write_format((const struct id*)vgnl->vgid, uuid, sizeof(uuid)))
 					stack;
-				log_warn("WARNING: Ignoring foreign VG with matching name %s UUID %s.",
-					 vgnl->vg_name, uuid);
 				dm_list_del(&vgnl->list);
 			} else {
 				found++;

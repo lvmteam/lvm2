@@ -1276,7 +1276,7 @@ int init_lvmcache_orphans(struct cmd_context *cmd)
 	struct format_type *fmt;
 
 	dm_list_iterate_items(fmt, &cmd->formats)
-		if (!lvmcache_add_orphan_vginfo(fmt->orphan_vg_name, fmt))
+		if (!lvmcache_add_orphan_vginfo(cmd, fmt->orphan_vg_name, fmt))
 			return_0;
 
 	return 1;

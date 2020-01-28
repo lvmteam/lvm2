@@ -49,7 +49,7 @@ struct lvmcache_info {
 
 /* One per VG */
 struct lvmcache_vginfo {
-	struct dm_list list;	/* Join these vginfos together */
+	struct dm_list list;	 /* _vginfos */
 	struct dm_list infos;	/* List head for lvmcache_infos */
 	struct dm_list outdated_infos; /* vg_read moves info from infos to outdated_infos */
 	struct dm_list pvsummaries; /* pv_list taken directly from vgsummary */
@@ -58,7 +58,6 @@ struct lvmcache_vginfo {
 	uint32_t status;
 	char vgid[ID_LEN + 1];
 	char _padding[7];
-	struct lvmcache_vginfo *next; /* Another VG with same name? */
 	char *creation_host;
 	char *system_id;
 	char *lock_type;
@@ -66,7 +65,15 @@ struct lvmcache_vginfo {
 	size_t mda_size;
 	int seqno;
 	bool scan_summary_mismatch; /* vgsummary from devs had mismatching seqno or checksum */
+	bool has_duplicate_local_vgname;   /* this local vg and another local vg have same name */
+	bool has_duplicate_foreign_vgname; /* this foreign vg and another foreign vg have same name */
 };
+
+/*
+ * Each VG found during scan gets a vginfo struct.
+ * Each vginfo is in _vginfos and _vgid_hash, and
+ * _vgname_hash (unless disabled due to duplicate vgnames).
+ */
 
 static struct dm_hash_table *_pvid_hash = NULL;
 static struct dm_hash_table *_vgid_hash = NULL;
@@ -262,16 +269,6 @@ void lvmcache_get_mdas(struct cmd_context *cmd,
 	}
 }
 
-static void _vginfo_attach_info(struct lvmcache_vginfo *vginfo,
-				struct lvmcache_info *info)
-{
-	if (!vginfo)
-		return;
-
-	info->vginfo = vginfo;
-	dm_list_add(&vginfo->infos, &info->list);
-}
-
 static void _vginfo_detach_info(struct lvmcache_info *info)
 {
 	if (!dm_list_empty(&info->list)) {
@@ -282,57 +279,80 @@ static void _vginfo_detach_info(struct lvmcache_info *info)
 	info->vginfo = NULL;
 }
 
-/* If vgid supplied, require a match. */
-struct lvmcache_vginfo *lvmcache_vginfo_from_vgname(const char *vgname, const char *vgid)
+static struct lvmcache_vginfo *_search_vginfos_list(const char *vgname, const char *vgid)
 {
 	struct lvmcache_vginfo *vginfo;
 
-	if (!vgname)
-		return lvmcache_vginfo_from_vgid(vgid);
-
-	if (!_vgname_hash) {
-		log_debug_cache(INTERNAL_ERROR "Internal lvmcache is no yet initialized.");
-		return NULL;
-	}
-
-	if (!(vginfo = dm_hash_lookup(_vgname_hash, vgname))) {
-		log_debug_cache("lvmcache has no info for vgname \"%s\"%s" FMTVGID ".",
-				vgname, (vgid) ? " with VGID " : "", (vgid) ? : "");
-		return NULL;
-	}
-
-	if (vgid)
-		do
-			if (!strncmp(vgid, vginfo->vgid, ID_LEN))
+	if (vgid) {
+		dm_list_iterate_items(vginfo, &_vginfos) {
+			if (!strcmp(vgid, vginfo->vgid))
 				return vginfo;
-		while ((vginfo = vginfo->next));
-
-	if  (!vginfo)
-		log_debug_cache("lvmcache has not found vgname \"%s\"%s" FMTVGID ".",
-				vgname, (vgid) ? " with VGID " : "", (vgid) ? : "");
-
-	return vginfo;
+		}
+	} else {
+		dm_list_iterate_items(vginfo, &_vginfos) {
+			if (!strcmp(vgname, vginfo->vgname))
+				return vginfo;
+		}
+	}
+	return NULL;
 }
 
-struct lvmcache_vginfo *lvmcache_vginfo_from_vgid(const char *vgid)
+static struct lvmcache_vginfo *_vginfo_lookup(const char *vgname, const char *vgid)
 {
 	struct lvmcache_vginfo *vginfo;
 	char id[ID_LEN + 1] __attribute__((aligned(8)));
 
-	if (!_vgid_hash || !vgid) {
-		log_debug_cache(INTERNAL_ERROR "Internal cache cannot lookup vgid.");
-		return NULL;
+	if (vgid) {
+		/* vgid not necessarily NULL-terminated */
+		(void) dm_strncpy(id, vgid, sizeof(id));
+
+		if ((vginfo = dm_hash_lookup(_vgid_hash, id))) {
+			if (vgname && strcmp(vginfo->vgname, vgname)) {
+				/* should never happen */
+				log_error(INTERNAL_ERROR "vginfo_lookup vgid %s has two names %s %s",
+					  id, vginfo->vgname, vgname);
+				return NULL;
+			}
+			return vginfo;
+		} else {
+			/* lookup by vgid that doesn't exist */
+			return NULL;
+		}
 	}
 
-	/* vgid not necessarily NULL-terminated */
-	(void) dm_strncpy(id, vgid, sizeof(id));
-
-	if (!(vginfo = dm_hash_lookup(_vgid_hash, id))) {
-		log_debug_cache("lvmcache has no info for vgid \"%s\"", id);
-		return NULL;
+	if (vgname && !_found_duplicate_vgnames) {
+		if ((vginfo = dm_hash_lookup(_vgname_hash, vgname))) {
+			if (vginfo->has_duplicate_local_vgname) {
+				/* should never happen, found_duplicate_vgnames should be set */
+				log_error(INTERNAL_ERROR "vginfo_lookup %s %s has_duplicate_local_vgname", vgname, vgid);
+				return NULL;
+			}
+			return vginfo;
+		}
 	}
 
-	return vginfo;
+	if (vgname && _found_duplicate_vgnames) {
+		if ((vginfo = _search_vginfos_list(vgname, vgid))) {
+			if (vginfo->has_duplicate_local_vgname) {
+				log_debug("vginfo_lookup %s %s has_duplicate_local_vgname return none", vgname, vgid);
+				return NULL;
+			}
+			return vginfo;
+		}
+	}
+
+	/* lookup by vgname that doesn't exist */
+	return NULL;
+}
+
+struct lvmcache_vginfo *lvmcache_vginfo_from_vgname(const char *vgname, const char *vgid)
+{
+	return _vginfo_lookup(vgname, vgid);
+}
+
+struct lvmcache_vginfo *lvmcache_vginfo_from_vgid(const char *vgid)
+{
+	return _vginfo_lookup(NULL, vgid);
 }
 
 const char *lvmcache_vgname_from_vgid(struct dm_pool *mem, const char *vgid)
@@ -353,17 +373,43 @@ const char *lvmcache_vgid_from_vgname(struct cmd_context *cmd, const char *vgnam
 {
 	struct lvmcache_vginfo *vginfo;
 
-	if (!(vginfo = dm_hash_lookup(_vgname_hash, vgname)))
-		return_NULL;
+	if (_found_duplicate_vgnames) {
+		if (!(vginfo = _search_vginfos_list(vgname, NULL)))
+			return_NULL;
+	} else {
+		if (!(vginfo = dm_hash_lookup(_vgname_hash, vgname)))
+			return_NULL;
+	}
 
-	if (!vginfo->next)
-		return dm_pool_strdup(cmd->mem, vginfo->vgid);
+	if (vginfo->has_duplicate_local_vgname) {
+		/*
+		 * return NULL if there is a local VG with the same name since
+		 * we don't know which to use.
+		 */
+		return NULL;
+	}
 
-	/*
-	 * There are multiple VGs with this name to choose from.
-	 * Return an error because we don't know which VG is intended.
-	 */
-	return NULL;
+	if (vginfo->has_duplicate_foreign_vgname)
+		return NULL;
+
+	return dm_pool_strdup(cmd->mem, vginfo->vgid);
+}
+
+bool lvmcache_has_duplicate_local_vgname(const char *vgid, const char *vgname)
+{
+	struct lvmcache_vginfo *vginfo;
+
+	if (_found_duplicate_vgnames) {
+		if (!(vginfo = _search_vginfos_list(vgname, vgid)))
+			return false;
+	} else {
+		if (!(vginfo = dm_hash_lookup(_vgname_hash, vgname)))
+			return false;
+	}
+
+	if (vginfo->has_duplicate_local_vgname)
+		return true;
+	return false;
 }
 
 /*
@@ -1148,49 +1194,18 @@ int lvmcache_pvid_in_unused_duplicates(const char *pvid)
 	return 0;
 }
 
-static int _free_vginfo(struct lvmcache_vginfo *vginfo)
+static void _free_vginfo(struct lvmcache_vginfo *vginfo)
 {
-	struct lvmcache_vginfo *primary_vginfo, *vginfo2;
-	int r = 1;
-
-	vginfo2 = primary_vginfo = lvmcache_vginfo_from_vgname(vginfo->vgname, NULL);
-
-	if (vginfo == primary_vginfo) {
-		dm_hash_remove(_vgname_hash, vginfo->vgname);
-		if (vginfo->next && !dm_hash_insert(_vgname_hash, vginfo->vgname,
-						    vginfo->next)) {
-			log_error("_vgname_hash re-insertion for %s failed",
-				  vginfo->vgname);
-			r = 0;
-		}
-	} else
-		while (vginfo2) {
-			if (vginfo2->next == vginfo) {
-				vginfo2->next = vginfo->next;
-				break;
-			}
-			vginfo2 = vginfo2->next;
-		}
-
-	free(vginfo->system_id);
 	free(vginfo->vgname);
+	free(vginfo->system_id);
 	free(vginfo->creation_host);
-
-	if (*vginfo->vgid && _vgid_hash &&
-	    lvmcache_vginfo_from_vgid(vginfo->vgid) == vginfo)
-		dm_hash_remove(_vgid_hash, vginfo->vgid);
-
-	dm_list_del(&vginfo->list);
-
 	free(vginfo);
-
-	return r;
 }
 
 /*
- * vginfo must be info->vginfo unless info is NULL
+ * Remove vginfo from standard lists/hashes.
  */
-static int _drop_vginfo(struct lvmcache_info *info, struct lvmcache_vginfo *vginfo)
+static void _drop_vginfo(struct lvmcache_info *info, struct lvmcache_vginfo *vginfo)
 {
 	if (info)
 		_vginfo_detach_info(info);
@@ -1198,12 +1213,16 @@ static int _drop_vginfo(struct lvmcache_info *info, struct lvmcache_vginfo *vgin
 	/* vginfo still referenced? */
 	if (!vginfo || is_orphan_vg(vginfo->vgname) ||
 	    !dm_list_empty(&vginfo->infos))
-		return 1;
+		return;
 
-	if (!_free_vginfo(vginfo))
-		return_0;
+	if (dm_hash_lookup(_vgname_hash, vginfo->vgname) == vginfo)
+		dm_hash_remove(_vgname_hash, vginfo->vgname);
 
-	return 1;
+	dm_hash_remove(_vgid_hash, vginfo->vgid);
+
+	dm_list_del(&vginfo->list); /* _vginfos list */
+
+	_free_vginfo(vginfo);
 }
 
 void lvmcache_del(struct lvmcache_info *info)
@@ -1261,180 +1280,150 @@ static int _lvmcache_update_vgid(struct lvmcache_info *info,
 	return 1;
 }
 
-static int _insert_vginfo(struct lvmcache_vginfo *new_vginfo, const char *vgid,
-			  uint32_t vgstatus, const char *creation_host,
-			  struct lvmcache_vginfo *primary_vginfo)
-{
-	struct lvmcache_vginfo *last_vginfo = primary_vginfo;
-	char uuid_primary[64] __attribute__((aligned(8)));
-	char uuid_new[64] __attribute__((aligned(8)));
-	int use_new = 0;
-
-	/* Pre-existing VG takes precedence. Unexported VG takes precedence. */
-	if (primary_vginfo) {
-		if (!id_write_format((const struct id *)vgid, uuid_new, sizeof(uuid_new)))
-			return_0;
-
-		if (!id_write_format((const struct id *)&primary_vginfo->vgid, uuid_primary,
-				     sizeof(uuid_primary)))
-			return_0;
-
-		_found_duplicate_vgnames = 1;
-
-		/*
-		 * vginfo is kept for each VG with the same name.
-		 * They are saved with the vginfo->next list.
-		 * These checks just decide the ordering of
-		 * that list.
-		 *
-		 * FIXME: it should no longer matter what order
-		 * the vginfo's are kept in, so we can probably
-		 * remove these comparisons and reordering entirely.
-		 *
-		 * If   Primary not exported, new exported => keep
-		 * Else Primary exported, new not exported => change
-		 * Else Primary has hostname for this machine => keep
-		 * Else Primary has no hostname, new has one => change
-		 * Else New has hostname for this machine => change
-		 * Else Keep primary.
-		 */
-		if (!(primary_vginfo->status & EXPORTED_VG) &&
-		    (vgstatus & EXPORTED_VG))
-			log_verbose("Cache: Duplicate VG name %s: "
-				    "Existing %s takes precedence over "
-				    "exported %s", new_vginfo->vgname,
-				    uuid_primary, uuid_new);
-		else if ((primary_vginfo->status & EXPORTED_VG) &&
-			   !(vgstatus & EXPORTED_VG)) {
-			log_verbose("Cache: Duplicate VG name %s: "
-				    "%s takes precedence over exported %s",
-				    new_vginfo->vgname, uuid_new,
-				    uuid_primary);
-			use_new = 1;
-		} else if (primary_vginfo->creation_host &&
-			   !strcmp(primary_vginfo->creation_host,
-				   primary_vginfo->fmt->cmd->hostname))
-			log_verbose("Cache: Duplicate VG name %s: "
-				    "Existing %s (created here) takes precedence "
-				    "over %s", new_vginfo->vgname, uuid_primary,
-				    uuid_new);
-		else if (!primary_vginfo->creation_host && creation_host) {
-			log_verbose("Cache: Duplicate VG name %s: "
-				    "%s (with creation_host) takes precedence over %s",
-				    new_vginfo->vgname, uuid_new,
-				    uuid_primary);
-			use_new = 1;
-		} else if (creation_host &&
-			   !strcmp(creation_host,
-				   primary_vginfo->fmt->cmd->hostname)) {
-			log_verbose("Cache: Duplicate VG name %s: "
-				    "%s (created here) takes precedence over %s",
-				    new_vginfo->vgname, uuid_new,
-				    uuid_primary);
-			use_new = 1;
-		} else {
-			log_verbose("Cache: Duplicate VG name %s: "
-				    "Prefer existing %s vs new %s",
-				    new_vginfo->vgname, uuid_primary, uuid_new);
-		}
-
-		if (!use_new) {
-			while (last_vginfo->next)
-				last_vginfo = last_vginfo->next;
-			last_vginfo->next = new_vginfo;
-			return 1;
-		}
-
-		dm_hash_remove(_vgname_hash, primary_vginfo->vgname);
-	}
-
-	if (!dm_hash_insert(_vgname_hash, new_vginfo->vgname, new_vginfo)) {
-		log_error("cache_update: vg hash insertion failed: %s",
-		  	new_vginfo->vgname);
-		return 0;
-	}
-
-	if (primary_vginfo)
-		new_vginfo->next = primary_vginfo;
-
-	return 1;
-}
-
-static int _lvmcache_update_vgname(struct lvmcache_info *info,
+static int _lvmcache_update_vgname(struct cmd_context *cmd,
+				   struct lvmcache_info *info,
 				   const char *vgname, const char *vgid,
-				   uint32_t vgstatus, const char *creation_host,
+				   const char *system_id,
 				   const struct format_type *fmt)
 {
-	struct lvmcache_vginfo *vginfo, *primary_vginfo;
-	char mdabuf[32];
+	char vgid_str[64] __attribute__((aligned(8)));
+	char other_str[64] __attribute__((aligned(8)));
+	struct lvmcache_vginfo *vginfo;
+	struct lvmcache_vginfo *other;
+	int vginfo_is_allowed;
+	int other_is_allowed;
 
 	if (!vgname || (info && info->vginfo && !strcmp(info->vginfo->vgname, vgname)))
 		return 1;
 
-	/* Remove existing vginfo entry */
-	if (info)
-		_drop_vginfo(info, info->vginfo);
+	if (!id_write_format((const struct id *)vgid, vgid_str, sizeof(vgid_str)))
+		stack;
 
-	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
+	/*
+	 * Add vginfo for orphan VG
+	 */
+	if (!info) {
+		if (!(vginfo = zalloc(sizeof(*vginfo)))) {
+			log_error("lvmcache adding vg list alloc failed %s", vgname);
+			return 0;
+		}
+		if (!(vginfo->vgname = strdup(vgname))) {
+			free(vginfo);
+			log_error("lvmcache adding vg name alloc failed %s", vgname);
+			return 0;
+		}
+		dm_list_init(&vginfo->infos);
+		dm_list_init(&vginfo->outdated_infos);
+		dm_list_init(&vginfo->pvsummaries);
+		vginfo->fmt = fmt;
+
+		if (!dm_hash_insert(_vgname_hash, vgname, vginfo)) {
+			free(vginfo->vgname);
+			free(vginfo);
+			return_0;
+		}
+
+		if (!_lvmcache_update_vgid(NULL, vginfo, vgid)) {
+			free(vginfo->vgname);
+			free(vginfo);
+			return_0;
+		}
+
+		/* Ensure orphans appear last on list_iterate */
+		dm_list_add(&_vginfos, &vginfo->list);
+		return 1;
+	}
+
+	_drop_vginfo(info, info->vginfo);
+
+	if (!(vginfo = lvmcache_vginfo_from_vgid(vgid))) {
 		/*
 	 	 * Create a vginfo struct for this VG and put the vginfo
 	 	 * into the hash table.
 	 	 */
 
+		log_debug_cache("lvmcache adding vginfo for %s %s", vgname, vgid_str);
+
 		if (!(vginfo = zalloc(sizeof(*vginfo)))) {
-			log_error("lvmcache_update_vgname: list alloc failed");
+			log_error("lvmcache adding vg list alloc failed %s", vgname);
 			return 0;
 		}
 		if (!(vginfo->vgname = strdup(vgname))) {
 			free(vginfo);
-			log_error("cache vgname alloc failed for %s", vgname);
+			log_error("lvmcache adding vg name alloc failed %s", vgname);
 			return 0;
 		}
 		dm_list_init(&vginfo->infos);
 		dm_list_init(&vginfo->outdated_infos);
 		dm_list_init(&vginfo->pvsummaries);
 
-		/*
-		 * A different VG (different uuid) can exist with the same name.
-		 * In this case, the two VGs will have separate vginfo structs,
-		 * but the second will be linked onto the existing vginfo->next,
-		 * not in the hash.
-		 */
-		primary_vginfo = lvmcache_vginfo_from_vgname(vgname, NULL);
+		if ((other = dm_hash_lookup(_vgname_hash, vgname))) {
+			log_debug_cache("lvmcache adding vginfo found duplicate VG name %s", vgname);
 
-		if (!_insert_vginfo(vginfo, vgid, vgstatus, creation_host, primary_vginfo)) {
-			free(vginfo->vgname);
-			free(vginfo);
-			return 0;
+			/*
+			 * A different VG (different uuid) can exist with the
+			 * same name.  In this case, the two VGs will have
+			 * separate vginfo structs, but one will be in the
+			 * vgname_hash.  If both vginfos are local/accessible,
+			 * then _found_duplicate_vgnames is set which will
+			 * disable any further use of the vgname_hash.
+			 */
+
+			if (!memcmp(other->vgid, vgid, ID_LEN)) {
+				/* shouldn't happen since we looked up by vgid above */
+				log_error(INTERNAL_ERROR "lvmcache_update_vgname %s %s %s %s",
+					  vgname, vgid_str, other->vgname, other->vgid);
+				free(vginfo->vgname);
+				free(vginfo);
+				return 0;
+			}
+
+			vginfo_is_allowed = is_system_id_allowed(cmd, system_id);
+			other_is_allowed = is_system_id_allowed(cmd, other->system_id);
+
+			if (vginfo_is_allowed && other_is_allowed) {
+				if (!id_write_format((const struct id *)other->vgid, other_str, sizeof(other_str)))
+					stack;
+
+				vginfo->has_duplicate_local_vgname = 1;
+				other->has_duplicate_local_vgname = 1;
+				_found_duplicate_vgnames = 1;
+
+				log_warn("WARNING: VG name %s is used by VGs %s and %s.",
+					 vgname, vgid_str, other_str);
+				log_warn("Fix duplicate VG names with vgrename uuid, a device filter, or system IDs.");
+			}
+
+			if (!vginfo_is_allowed && !other_is_allowed) {
+				vginfo->has_duplicate_foreign_vgname = 1;
+				other->has_duplicate_foreign_vgname = 1;
+			}
+
+			if (!other_is_allowed && vginfo_is_allowed) {
+				/* the accessible vginfo must be in vgnames_hash */
+				dm_hash_remove(_vgname_hash, vgname);
+				if (!dm_hash_insert(_vgname_hash, vgname, vginfo)) {
+					log_error("lvmcache adding vginfo to name hash failed %s", vgname);
+					return 0;
+				}
+			}
+		} else {
+			if (!dm_hash_insert(_vgname_hash, vgname, vginfo)) {
+				log_error("lvmcache adding vg to name hash failed %s", vgname);
+				free(vginfo->vgname);
+				free(vginfo);
+				return 0;
+			}
 		}
 
-		/* Ensure orphans appear last on list_iterate */
-		if (is_orphan_vg(vgname))
-			dm_list_add(&_vginfos, &vginfo->list);
-		else
-			dm_list_add_h(&_vginfos, &vginfo->list);
+		dm_list_add_h(&_vginfos, &vginfo->list);
 	}
 
-	if (info)
-		_vginfo_attach_info(vginfo, info);
-	else if (!_lvmcache_update_vgid(NULL, vginfo, vgid)) /* Orphans */
-		return_0;
-
-	/* FIXME Check consistency of list! */
 	vginfo->fmt = fmt;
+	info->vginfo = vginfo;
+	dm_list_add(&vginfo->infos, &info->list);
 
-	if (info) {
-		if (info->mdas.n)
-			sprintf(mdabuf, " with %u mda(s)", dm_list_size(&info->mdas));
-		else
-			mdabuf[0] = '\0';
-		log_debug_cache("lvmcache %s: now in VG %s%s%s%s%s.",
-				dev_name(info->dev),
-				vgname, vginfo->vgid[0] ? " (" : "",
-				vginfo->vgid[0] ? vginfo->vgid : "",
-				vginfo->vgid[0] ? ")" : "", mdabuf);
-	} else
-		log_debug_cache("lvmcache: Initialised VG %s.", vgname);
+	log_debug_cache("lvmcache %s: now in VG %s %s", dev_name(info->dev), vgname, vgid_str);
 
 	return 1;
 }
@@ -1511,9 +1500,9 @@ out:
 	return 1;
 }
 
-int lvmcache_add_orphan_vginfo(const char *vgname, struct format_type *fmt)
+int lvmcache_add_orphan_vginfo(struct cmd_context *cmd, const char *vgname, struct format_type *fmt)
 {
-	return _lvmcache_update_vgname(NULL, vgname, vgname, 0, "", fmt);
+	return _lvmcache_update_vgname(cmd, NULL, vgname, vgname, "", fmt);
 }
 
 static void _lvmcache_update_pvsummaries(struct lvmcache_vginfo *vginfo, struct lvmcache_vgsummary *vgsummary)
@@ -1545,6 +1534,7 @@ int lvmcache_update_vgname_and_id(struct cmd_context *cmd, struct lvmcache_info 
 		vgid = vgname;
 	}
 
+	/* FIXME: remove this, it shouldn't be needed */
 	/* If PV without mdas is already in a real VG, don't make it orphan */
 	if (is_orphan_vg(vgname) && info->vginfo &&
 	    mdas_empty_or_ignored(&info->mdas) &&
@@ -1556,7 +1546,7 @@ int lvmcache_update_vgname_and_id(struct cmd_context *cmd, struct lvmcache_info 
 	 * and attaches the info struct for the dev to the vginfo.
 	 * Puts the vginfo into the vgname hash table.
 	 */
-	if (!_lvmcache_update_vgname(info, vgname, vgid, vgsummary->vgstatus, vgsummary->creation_host, info->fmt)) {
+	if (!_lvmcache_update_vgname(cmd, info, vgname, vgid, vgsummary->system_id, info->fmt)) {
 		/* shouldn't happen, internal error */
 		log_error("Failed to update VG %s info in lvmcache.", vgname);
 		return 0;
@@ -2055,7 +2045,7 @@ update_vginfo:
 	return info;
 }
 
-static void _lvmcache_destroy_entry(struct lvmcache_info *info)
+static void _lvmcache_destroy_info(struct lvmcache_info *info)
 {
 	_vginfo_detach_info(info);
 	info->dev->pvid[0] = 0;
@@ -2063,20 +2053,11 @@ static void _lvmcache_destroy_entry(struct lvmcache_info *info)
 	free(info);
 }
 
-static void _lvmcache_destroy_vgnamelist(struct lvmcache_vginfo *vginfo)
-{
-	struct lvmcache_vginfo *next;
-
-	do {
-		next = vginfo->next;
-		if (!_free_vginfo(vginfo))
-			stack;
-	} while ((vginfo = next));
-}
-
 void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 {
-	log_debug_cache("Dropping VG info");
+	struct lvmcache_vginfo *vginfo, *vginfo2;
+
+	log_debug_cache("Destroy lvmcache content");
 
 	if (_vgid_hash) {
 		dm_hash_destroy(_vgid_hash);
@@ -2084,20 +2065,24 @@ void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 	}
 
 	if (_pvid_hash) {
-		dm_hash_iter(_pvid_hash, (dm_hash_iterate_fn) _lvmcache_destroy_entry);
+		dm_hash_iter(_pvid_hash, (dm_hash_iterate_fn) _lvmcache_destroy_info);
 		dm_hash_destroy(_pvid_hash);
 		_pvid_hash = NULL;
 	}
 
 	if (_vgname_hash) {
-		dm_hash_iter(_vgname_hash,
-			  (dm_hash_iterate_fn) _lvmcache_destroy_vgnamelist);
 		dm_hash_destroy(_vgname_hash);
 		_vgname_hash = NULL;
 	}
 
+	dm_list_iterate_items_safe(vginfo, vginfo2, &_vginfos) {
+		dm_list_del(&vginfo->list);
+		_free_vginfo(vginfo);
+	}
+
 	if (!dm_list_empty(&_vginfos))
-		log_error(INTERNAL_ERROR "_vginfos list should be empty");
+		log_error(INTERNAL_ERROR "vginfos list should be empty");
+
 	dm_list_init(&_vginfos);
 
 	/*
@@ -2109,6 +2094,8 @@ void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 	 * We want the same preferred devices to be chosen each time, so save
 	 * the unpreferred devs here so that _choose_preferred_devs can use
 	 * this to make the same choice each time.
+	 *
+	 * FIXME: I don't think is is needed any more.
 	 */
 	_destroy_device_list(&_prev_unused_duplicate_devs);
 	dm_list_splice(&_prev_unused_duplicate_devs, &_unused_duplicates);
@@ -2122,7 +2109,7 @@ void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 			stack;
 
 		dm_list_iterate_items(fmt, &cmd->formats) {
-			if (!lvmcache_add_orphan_vginfo(fmt->orphan_vg_name, fmt))
+			if (!lvmcache_add_orphan_vginfo(cmd, fmt->orphan_vg_name, fmt))
 				stack;
 		}
 	}

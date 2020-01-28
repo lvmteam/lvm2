@@ -75,7 +75,7 @@ struct lvmcache_info *lvmcache_add(struct cmd_context *cmd, struct labeller *lab
                                    struct device *dev, uint64_t label_sector,
                                    const char *vgname, const char *vgid,
                                    uint32_t vgstatus, int *is_duplicate);
-int lvmcache_add_orphan_vginfo(const char *vgname, struct format_type *fmt);
+int lvmcache_add_orphan_vginfo(struct cmd_context *cmd, const char *vgname, struct format_type *fmt);
 void lvmcache_del(struct lvmcache_info *info);
 void lvmcache_del_dev(struct device *dev);
 
@@ -169,6 +169,7 @@ int lvmcache_get_unused_duplicates(struct cmd_context *cmd, struct dm_list *head
 int vg_has_duplicate_pvs(struct volume_group *vg);
 
 int lvmcache_found_duplicate_vgnames(void);
+bool lvmcache_has_duplicate_local_vgname(const char *vgid, const char *vgname);
 
 int lvmcache_contains_lock_type_sanlock(struct cmd_context *cmd);
 
