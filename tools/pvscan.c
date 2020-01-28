@@ -582,7 +582,7 @@ static int _online_pvscan_single(struct metadata_area *mda, void *baton)
 
 	if (mda_is_ignored(mda))
 		return 1;
-	vg = mda->ops->vg_read(b->fid, "", mda, NULL, NULL);
+	vg = mda->ops->vg_read(b->cmd, b->fid, "", mda, NULL, NULL);
 	if (!vg) {
 		/*
 		 * Many or most cases of bad metadata would be found in

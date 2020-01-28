@@ -76,12 +76,14 @@ struct cached_vg_fmtdata;
 /* Per-format per-metadata area operations */
 struct metadata_area_ops {
 	struct dm_list list;
-	struct volume_group *(*vg_read) (struct format_instance * fi,
+	struct volume_group *(*vg_read) (struct cmd_context *cmd,
+					 struct format_instance * fi,
 					 const char *vg_name,
 					 struct metadata_area * mda,
 					 struct cached_vg_fmtdata **vg_fmtdata,
 					 unsigned *use_previous_vg);
-	struct volume_group *(*vg_read_precommit) (struct format_instance * fi,
+	struct volume_group *(*vg_read_precommit) (struct cmd_context *cmd,
+					 struct format_instance * fi,
 					 const char *vg_name,
 					 struct metadata_area * mda,
 					 struct cached_vg_fmtdata **vg_fmtdata,
@@ -326,7 +328,7 @@ struct format_handler {
 	 * Write a PV structure to disk. Fails if the PV is in a VG ie
 	 * pv->vg_name must be a valid orphan VG name
 	 */
-	int (*pv_write) (const struct format_type * fmt,
+	int (*pv_write) (struct cmd_context *cmd, const struct format_type * fmt,
 			 struct physical_volume * pv);
 
 	/*

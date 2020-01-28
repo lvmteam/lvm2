@@ -1532,7 +1532,7 @@ static void _lvmcache_update_pvsummaries(struct lvmcache_vginfo *vginfo, struct 
  * Returning 0 causes the caller to remove the info struct for this
  * device from lvmcache, which will make it look like a missing device.
  */
-int lvmcache_update_vgname_and_id(struct lvmcache_info *info, struct lvmcache_vgsummary *vgsummary)
+int lvmcache_update_vgname_and_id(struct cmd_context *cmd, struct lvmcache_info *info, struct lvmcache_vgsummary *vgsummary)
 {
 	const char *vgname = vgsummary->vgname;
 	const char *vgid = (char *)&vgsummary->vgid;
@@ -1735,7 +1735,7 @@ int lvmcache_update_vg_from_write(struct volume_group *vg)
 		(void) dm_strncpy(pvid_s, (char *) &pvl->pv->id, sizeof(pvid_s));
 		/* FIXME Could pvl->pv->dev->pvid ever be different? */
 		if ((info = lvmcache_info_from_pvid(pvid_s, pvl->pv->dev, 0)) &&
-		    !lvmcache_update_vgname_and_id(info, &vgsummary))
+		    !lvmcache_update_vgname_and_id(vg->cmd, info, &vgsummary))
 			return_0;
 	}
 
@@ -1819,7 +1819,7 @@ int lvmcache_update_vg_from_read(struct volume_group *vg, unsigned precommitted)
 		 * info's for PVs without metadata were not connected to the
 		 * vginfo by label_scan, so do it here.
 		 */
-		if (!lvmcache_update_vgname_and_id(info, &vgsummary)) {
+		if (!lvmcache_update_vgname_and_id(vg->cmd, info, &vgsummary)) {
 			log_debug_cache("lvmcache_update_vg %s failed to update info for %s",
 					vg->name, dev_name(info->dev));
 		}
@@ -1927,7 +1927,7 @@ static struct lvmcache_info * _create_info(struct labeller *labeller, struct dev
 	return info;
 }
 
-struct lvmcache_info *lvmcache_add(struct labeller *labeller,
+struct lvmcache_info *lvmcache_add(struct cmd_context *cmd, struct labeller *labeller,
 				   const char *pvid, struct device *dev, uint64_t label_sector,
 				   const char *vgname, const char *vgid, uint32_t vgstatus,
 				   int *is_duplicate)
@@ -2042,7 +2042,7 @@ update_vginfo:
 	if (vgid)
 		strncpy((char *)&vgsummary.vgid, vgid, sizeof(vgsummary.vgid));
 
-	if (!lvmcache_update_vgname_and_id(info, &vgsummary)) {
+	if (!lvmcache_update_vgname_and_id(cmd, info, &vgsummary)) {
 		if (created) {
 			dm_hash_remove(_pvid_hash, pvid_s);
 			strcpy(info->dev->pvid, "");

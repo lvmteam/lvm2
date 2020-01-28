@@ -3666,7 +3666,7 @@ int pv_write(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!pv->fmt->ops->pv_write(pv->fmt, pv))
+	if (!pv->fmt->ops->pv_write(cmd, pv->fmt, pv))
 		return_0;
 
 	pv->status &= ~UNLABELLED_PV;
@@ -4841,7 +4841,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			log_debug_metadata("Reading VG %s precommit metadata from %s %llu",
 				 vgname, dev_name(mda_dev), (unsigned long long)mda->header_start);
 
-			vg = mda->ops->vg_read_precommit(fid, vgname, mda, &vg_fmtdata, &use_previous_vg);
+			vg = mda->ops->vg_read_precommit(cmd, fid, vgname, mda, &vg_fmtdata, &use_previous_vg);
 
 			if (!vg && !use_previous_vg) {
 				log_warn("WARNING: Reading VG %s precommit on %s failed.", vgname, dev_name(mda_dev));
@@ -4852,7 +4852,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			log_debug_metadata("Reading VG %s metadata from %s %llu",
 				 vgname, dev_name(mda_dev), (unsigned long long)mda->header_start);
 
-			vg = mda->ops->vg_read(fid, vgname, mda, &vg_fmtdata, &use_previous_vg);
+			vg = mda->ops->vg_read(cmd, fid, vgname, mda, &vg_fmtdata, &use_previous_vg);
 
 			if (!vg && !use_previous_vg) {
 				log_warn("WARNING: Reading VG %s on %s failed.", vgname, dev_name(mda_dev));

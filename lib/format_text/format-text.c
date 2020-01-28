@@ -290,7 +290,8 @@ static int _raw_write_mda_header(const struct format_type *fmt,
  * in the label scanning path.
  */
 
-static struct raw_locn *_read_metadata_location_vg(struct device_area *dev_area,
+static struct raw_locn *_read_metadata_location_vg(struct cmd_context *cmd,
+				       struct device_area *dev_area,
 				       struct mda_header *mdah, int primary_mda,
 				       const char *vgname,
 				       int *precommitted)
@@ -369,7 +370,7 @@ static struct raw_locn *_read_metadata_location_vg(struct device_area *dev_area,
 		  vgnamebuf, vgname);
 
 	if ((info = lvmcache_info_from_pvid(dev_area->dev->pvid, dev_area->dev, 0)) &&
-	    !lvmcache_update_vgname_and_id(info, &vgsummary_orphan))
+	    !lvmcache_update_vgname_and_id(cmd, info, &vgsummary_orphan))
 		stack;
 
 	return NULL;
@@ -447,7 +448,8 @@ static uint64_t _next_rlocn_offset(struct volume_group *vg, struct raw_locn *rlo
 	return new_start;
 }
 
-static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
+static struct volume_group *_vg_read_raw_area(struct cmd_context *cmd,
+					      struct format_instance *fid,
 					      const char *vgname,
 					      struct device_area *area,
 					      struct cached_vg_fmtdata **vg_fmtdata,
@@ -468,7 +470,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 		goto out;
 	}
 
-	if (!(rlocn = _read_metadata_location_vg(area, mdah, primary_mda, vgname, &precommitted))) {
+	if (!(rlocn = _read_metadata_location_vg(cmd, area, mdah, primary_mda, vgname, &precommitted))) {
 		log_debug_metadata("VG %s not found on %s", vgname, dev_name(area->dev));
 		goto out;
 	}
@@ -503,7 +505,8 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 	return vg;
 }
 
-static struct volume_group *_vg_read_raw(struct format_instance *fid,
+static struct volume_group *_vg_read_raw(struct cmd_context *cmd,
+					 struct format_instance *fid,
 					 const char *vgname,
 					 struct metadata_area *mda,
 					 struct cached_vg_fmtdata **vg_fmtdata,
@@ -512,12 +515,13 @@ static struct volume_group *_vg_read_raw(struct format_instance *fid,
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct volume_group *vg;
 
-	vg = _vg_read_raw_area(fid, vgname, &mdac->area, vg_fmtdata, use_previous_vg, 0, mda_is_primary(mda));
+	vg = _vg_read_raw_area(cmd, fid, vgname, &mdac->area, vg_fmtdata, use_previous_vg, 0, mda_is_primary(mda));
 
 	return vg;
 }
 
-static struct volume_group *_vg_read_precommit_raw(struct format_instance *fid,
+static struct volume_group *_vg_read_precommit_raw(struct cmd_context *cmd,
+						   struct format_instance *fid,
 						   const char *vgname,
 						   struct metadata_area *mda,
 						   struct cached_vg_fmtdata **vg_fmtdata,
@@ -526,7 +530,7 @@ static struct volume_group *_vg_read_precommit_raw(struct format_instance *fid,
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct volume_group *vg;
 
-	vg = _vg_read_raw_area(fid, vgname, &mdac->area, vg_fmtdata, use_previous_vg, 1, mda_is_primary(mda));
+	vg = _vg_read_raw_area(cmd, fid, vgname, &mdac->area, vg_fmtdata, use_previous_vg, 1, mda_is_primary(mda));
 
 	return vg;
 }
@@ -1321,7 +1325,7 @@ static struct volume_group *_vg_read_file_name(struct format_instance *fid,
 	return vg;
 }
 
-static struct volume_group *_vg_read_file(struct format_instance *fid,
+static struct volume_group *_vg_read_file(struct cmd_context *cmd, struct format_instance *fid,
 					  const char *vgname,
 					  struct metadata_area *mda,
 					  struct cached_vg_fmtdata **vg_fmtdata,
@@ -1332,7 +1336,7 @@ static struct volume_group *_vg_read_file(struct format_instance *fid,
 	return _vg_read_file_name(fid, vgname, tc->path_live);
 }
 
-static struct volume_group *_vg_read_precommit_file(struct format_instance *fid,
+static struct volume_group *_vg_read_precommit_file(struct cmd_context *cmd, struct format_instance *fid,
 						    const char *vgname,
 						    struct metadata_area *mda,
 						    struct cached_vg_fmtdata **vg_fmtdata,
@@ -1713,7 +1717,7 @@ static int _set_ext_flags(struct physical_volume *pv, struct lvmcache_info *info
 }
 
 /* Only for orphans - FIXME That's not true any more */
-static int _text_pv_write(const struct format_type *fmt, struct physical_volume *pv)
+static int _text_pv_write(struct cmd_context *cmd, const struct format_type *fmt, struct physical_volume *pv)
 {
 	struct format_instance *fid = pv->fid;
 	const char *pvid = (const char *) (*pv->old_id.uuid ? &pv->old_id : &pv->id);
@@ -1725,7 +1729,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	unsigned mda_index;
 
 	/* Add a new cache entry with PV info or update existing one. */
-	if (!(info = lvmcache_add(fmt->labeller, (const char *) &pv->id,
+	if (!(info = lvmcache_add(cmd, fmt->labeller, (const char *) &pv->id,
 				  pv->dev,  pv->label_sector, pv->vg_name,
 				  is_orphan_vg(pv->vg_name) ? pv->vg_name : pv->vg ? (const char *) &pv->vg->id : NULL, 0, NULL)))
 		return_0;

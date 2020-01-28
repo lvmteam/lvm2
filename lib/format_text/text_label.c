@@ -370,7 +370,7 @@ static int _read_mda_header_and_metadata(const struct format_type *fmt,
  * the metadata is at for those PVs.
  */
 
-static int _text_read(struct labeller *labeller, struct device *dev, void *label_buf,
+static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct device *dev, void *label_buf,
 		      uint64_t label_sector, int *is_duplicate)
 {
 	struct lvmcache_vgsummary vgsummary;
@@ -410,7 +410,7 @@ static int _text_read(struct labeller *labeller, struct device *dev, void *label
 	 *
 	 * Other reasons for lvmcache_add to return NULL are internal errors.
 	 */
-	if (!(info = lvmcache_add(labeller, (char *)pvhdr->pv_uuid, dev, label_sector,
+	if (!(info = lvmcache_add(cmd, labeller, (char *)pvhdr->pv_uuid, dev, label_sector,
 				  FMT_TEXT_ORPHAN_VG_NAME,
 				  FMT_TEXT_ORPHAN_VG_NAME, 0, is_duplicate)))
 		return_0;
@@ -503,7 +503,7 @@ static int _text_read(struct labeller *labeller, struct device *dev, void *label
 		rv1 = _read_mda_header_and_metadata(fmt, mda1, &vgsummary, &bad_fields);
 
 		if (rv1 && !vgsummary.zero_offset && !vgsummary.mda_ignored) {
-			if (!lvmcache_update_vgname_and_id(info, &vgsummary)) {
+			if (!lvmcache_update_vgname_and_id(cmd, info, &vgsummary)) {
 				/* I believe this is only an internal error. */
 
 				dm_list_del(&mda1->list);
@@ -554,7 +554,7 @@ static int _text_read(struct labeller *labeller, struct device *dev, void *label
 		rv2 = _read_mda_header_and_metadata(fmt, mda2, &vgsummary, &bad_fields);
 
 		if (rv2 && !vgsummary.zero_offset && !vgsummary.mda_ignored) {
-			if (!lvmcache_update_vgname_and_id(info, &vgsummary)) {
+			if (!lvmcache_update_vgname_and_id(cmd, info, &vgsummary)) {
 				dm_list_del(&mda2->list);
 
 				/* Are there other cases besides mismatch and internal error? */

@@ -71,7 +71,7 @@ int lvmcache_label_rescan_vg(struct cmd_context *cmd, const char *vgname, const 
 int lvmcache_label_rescan_vg_rw(struct cmd_context *cmd, const char *vgname, const char *vgid);
 
 /* Add/delete a device */
-struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
+struct lvmcache_info *lvmcache_add(struct cmd_context *cmd, struct labeller *labeller, const char *pvid,
                                    struct device *dev, uint64_t label_sector,
                                    const char *vgname, const char *vgid,
                                    uint32_t vgstatus, int *is_duplicate);
@@ -80,7 +80,7 @@ void lvmcache_del(struct lvmcache_info *info);
 void lvmcache_del_dev(struct device *dev);
 
 /* Update things */
-int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
+int lvmcache_update_vgname_and_id(struct cmd_context *cmd, struct lvmcache_info *info,
 				  struct lvmcache_vgsummary *vgsummary);
 int lvmcache_update_vg_from_read(struct volume_group *vg, unsigned precommitted);
 int lvmcache_update_vg_from_write(struct volume_group *vg);

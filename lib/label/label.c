@@ -431,7 +431,7 @@ static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
 	 * info/vginfo structs.  That lvmcache info is used later when the
 	 * command wants to read the VG to do something to it.
 	 */
-	ret = labeller->ops->read(labeller, dev, label_buf, sector, &is_duplicate);
+	ret = labeller->ops->read(cmd, labeller, dev, label_buf, sector, &is_duplicate);
 
 	if (!ret) {
 		if (is_duplicate) {
