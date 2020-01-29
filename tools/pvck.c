@@ -788,7 +788,7 @@ static int _dump_current_text(struct device *dev,
 {
 	char *meta_buf;
 	struct dm_config_tree *cft;
-	const char *vgname = NULL;
+	char *vgname = NULL;
 	uint32_t crc;
 	uint32_t seqno = 0;
 	int mn = mda_num; /* 1 or 2 */
@@ -895,6 +895,7 @@ static int _dump_current_text(struct device *dev,
 
  out:
 	free(meta_buf);
+	free(vgname);
 	if (bad)
 		return 0;
 	return 1;
