@@ -47,7 +47,7 @@ dmsetup status "$DMTEST"
 # generate core file for running&sleeping binary
 gcore "$PID" | tee out
 # check we capture core while  dmsecuretest was already sleeping
-grep "nanosleep" out
+grep "nanosleep" out || grep kernel_vsyscall out
 kill "$PID" || true
 wait
 
