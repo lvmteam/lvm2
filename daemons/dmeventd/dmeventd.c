@@ -1485,37 +1485,34 @@ static int _client_read(struct dm_event_fifos *fifos,
 		t.tv_usec = 0;
 		ret = select(fifos->client + 1, &fds, NULL, NULL, &t);
 
-		if (!ret && !bytes)	/* nothing to read */
-			return 0;
+		if (!ret && bytes)
+			continue; /* trying to finish read */
 
-		if (!ret)	/* trying to finish read */
-			continue;
-
-		if (ret < 0)	/* error */
-			return 0;
+		if (ret <= 0)	/* nothing to read */
+			goto bad;
 
 		ret = read(fifos->client, buf + bytes, size - bytes);
 		bytes += ret > 0 ? ret : 0;
-		if (header && (bytes == 2 * sizeof(uint32_t))) {
+		if (!msg->data && (bytes == 2 * sizeof(uint32_t))) {
 			msg->cmd = ntohl(header[0]);
-			size = msg->size = ntohl(header[1]);
 			bytes = 0;
-			if (!size)
-				break; /* No data -> error */
-			buf = msg->data = malloc(msg->size);
-			if (!buf)
-				break; /* No mem -> error */
-			header = 0;
+
+			if (!(size = msg->size = ntohl(header[1])))
+				break;
+
+			if (!(buf = msg->data = malloc(msg->size)))
+				goto bad;
 		}
 	}
 
-	if (bytes != size) {
-		free(msg->data);
-		msg->data = NULL;
-		return 0;
-	}
+	if (bytes == size)
+		return 1;
 
-	return 1;
+bad:
+	free(msg->data);
+	msg->data = NULL;
+
+	return 0;
 }
 
 /*
