@@ -2114,7 +2114,7 @@ static int _query_lock_lv(struct cmd_context *cmd, struct volume_group *vg,
 	if (result == -ENOENT)
 		return 1;
 
-	return 1;
+	return ret;
 }
 
 /*
