@@ -1216,7 +1216,7 @@ out:
 
 static char *_slurp_stdin(void)
 {
-	char *buf, *pos;
+	char *newbuf, *buf, *pos;
 	size_t bufsize = DEFAULT_BUF_SIZE;
 	size_t total = 0;
 	ssize_t n = 0;
@@ -1245,10 +1245,12 @@ static char *_slurp_stdin(void)
 		pos += n;
 		if (total == bufsize - 1) {
 			bufsize *= 2;
-			if (!(buf = realloc(buf, bufsize))) {
+			if (!(newbuf = realloc(buf, bufsize))) {
 				log_error("Buffer memory extension to %" PRIsize_t " bytes failed.", bufsize);
+				free(buf);
 				return NULL;
 			}
+			buf = newbuf;
 		}
 	} while (1);
 
