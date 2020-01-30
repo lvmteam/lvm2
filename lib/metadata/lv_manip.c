@@ -8372,7 +8372,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		 * COW LV is activated via implicit activation of origin LV
 		 * Only the snapshot origin holds the LV lock in cluster
 		 */
-		if (!vg_add_snapshot(origin_lv, lv, NULL,
+		if (!origin_lv ||
+		    !vg_add_snapshot(origin_lv, lv, NULL,
 				     origin_lv->le_count, lp->chunk_size)) {
 			log_error("Couldn't create snapshot.");
 			goto deactivate_and_revert_new_lv;
