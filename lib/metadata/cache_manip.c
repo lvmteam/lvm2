@@ -222,7 +222,7 @@ int update_cache_pool_params(struct cmd_context *cmd,
 			*chunk_size = get_default_allocation_cache_pool_chunk_size_CFG(cmd,
 										       profile);
 			/* Use power-of-2 for min chunk size when unspecified */
-			min_chunk_size = 1 << (32 - clz(min_chunk_size - 1));
+			min_chunk_size = UINT64_C(1) << (32 - clz(min_chunk_size - 1));
 		}
 		if (*chunk_size < min_chunk_size) {
 			/*
