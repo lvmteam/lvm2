@@ -4277,6 +4277,11 @@ static int _raid0_to_striped_retrieve_segments_and_lvs(struct logical_volume *lv
 				return_0;
 		}
 
+		if (!data_seg) {
+			log_error(INTERNAL_ERROR "No segment for %s.", display_lvname(lv));
+			return 0;
+		}
+
 		/* Presumes all data LVs have equal size */
 		area_le += data_seg->len;
 	}
