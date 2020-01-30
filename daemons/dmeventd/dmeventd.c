@@ -2237,7 +2237,8 @@ int main(int argc, char *argv[])
 
 	_init_thread_signals();
 
-	pthread_mutex_init(&_global_mutex, NULL);
+	if (pthread_mutex_init(&_global_mutex, NULL))
+		exit(EXIT_FAILURE);
 
 	if (!_systemd_activation && !_open_fifos(&fifos))
 		exit(EXIT_FIFO_FAILURE);
