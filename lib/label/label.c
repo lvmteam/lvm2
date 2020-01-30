@@ -13,8 +13,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
+#include "base/memory/zalloc.h"
 #include "lib/label/label.h"
 #include "lib/misc/crc.h"
 #include "lib/mm/xlate.h"
@@ -24,7 +24,6 @@
 #include "lib/activate/activate.h"
 #include "lib/label/hints.h"
 #include "lib/metadata/metadata.h"
-#include "lib/format_text/format-text.h"
 #include "lib/format_text/layout.h"
 
 #include <sys/stat.h>

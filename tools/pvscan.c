@@ -20,7 +20,6 @@
 #include "lib/label/hints.h"
 
 #include <dirent.h>
-#include <sys/file.h>
 
 struct pvscan_params {
 	int new_pvs_found;

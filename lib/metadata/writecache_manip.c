@@ -21,7 +21,6 @@
 #include "lib/metadata/segtype.h"
 #include "lib/activate/activate.h"
 #include "lib/config/defaults.h"
-#include "lib/activate/dev_manager.h"
 
 int lv_is_writecache_origin(const struct logical_volume *lv)
 {

@@ -135,11 +135,10 @@
  *
  */
 
-#include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
+#include "base/memory/zalloc.h"
 #include "lib/label/label.h"
 #include "lib/misc/crc.h"
-#include "lib/mm/xlate.h"
 #include "lib/cache/lvmcache.h"
 #include "lib/device/bcache.h"
 #include "lib/commands/toolcontext.h"

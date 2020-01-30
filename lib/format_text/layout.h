@@ -18,10 +18,9 @@
 
 #include "lib/config/config.h"
 #include "lib/metadata/metadata.h"
+#include "lib/format_text/format-text.h"
 #include "lib/cache/lvmcache.h"
 #include "lib/uuid/uuid.h"
-
-/* disk_locn and data_area_list are defined in format-text.h */
 
 /*
  * PV header extension versions:
