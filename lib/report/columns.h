@@ -151,6 +151,10 @@ FIELD(LVSSTATUS, lv, STR, "VDOCompressionState", lvid, 0, vdo_compression_state,
 FIELD(LVSSTATUS, lv, STR, "VDOIndexState", lvid, 0, vdo_index_state, vdo_index_state, "For vdo pools, state of index for deduplication.", 0)
 FIELD(LVSSTATUS, lv, NUM, "VDOUsedSize", lvid, 0, vdo_used_size, vdo_used_size, "For vdo pools, currently used space.", 0)
 FIELD(LVSSTATUS, lv, NUM, "VDOSaving%", lvid, 0, vdo_saving_percent, vdo_saving_percent, "For vdo pools, percentage of saved space.", 0)
+FIELD(LVSSTATUS, lv, NUM, "WCacheTotalBlocks", lvid, 0, writecache_total_blocks, writecache_total_blocks, "Total writecache blocks.", 0)
+FIELD(LVSSTATUS, lv, NUM, "WCacheFreeBlocks", lvid, 0, writecache_free_blocks, writecache_free_blocks, "Total writecache free blocks.", 0)
+FIELD(LVSSTATUS, lv, NUM, "WCacheWritebackBlocks", lvid, 0, writecache_writeback_blocks, writecache_writeback_blocks, "Total writecache writeback blocks.", 0)
+FIELD(LVSSTATUS, lv, NUM, "WCacheErrors", lvid, 0, writecache_error, writecache_error, "Total writecache errors.", 0)
 /*
  * End of LVSSTATUS type fields
  */

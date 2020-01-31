@@ -279,6 +279,15 @@ GET_PV_NUM_PROPERTY_FN(pv_ba_size, SECTOR_SIZE * pv->ba_size)
 #define _cache_write_misses_set prop_not_implemented_set
 #define _cache_write_misses_get prop_not_implemented_get
 
+#define _writecache_total_blocks_set prop_not_implemented_set
+#define _writecache_total_blocks_get prop_not_implemented_get
+#define _writecache_free_blocks_set prop_not_implemented_set
+#define _writecache_free_blocks_get prop_not_implemented_get
+#define _writecache_writeback_blocks_set prop_not_implemented_set
+#define _writecache_writeback_blocks_get prop_not_implemented_get
+#define _writecache_error_set prop_not_implemented_set
+#define _writecache_error_get prop_not_implemented_get
+
 #define _vdo_operating_mode_set prop_not_implemented_set
 #define _vdo_operating_mode_get prop_not_implemented_get
 #define _vdo_compression_state_set prop_not_implemented_set

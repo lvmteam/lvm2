@@ -3875,6 +3875,27 @@ GENERATE_CACHE_STATUS_DISP_FN(read_misses)
 GENERATE_CACHE_STATUS_DISP_FN(write_hits)
 GENERATE_CACHE_STATUS_DISP_FN(write_misses)
 
+/*
+ * Macro to generate '_writecache_<cache_status_field_name>_disp' reporting function.
+ * The 'writecache_status_field_name' is field name from struct dm_writecache_status.
+ */
+#define GENERATE_WRITECACHE_STATUS_DISP_FN(writecache_status_field_name) \
+static int _writecache_ ## writecache_status_field_name ## _disp (struct dm_report *rh, \
+							struct dm_pool *mem, \
+							struct dm_report_field *field, \
+							const void *data, \
+							void *private) \
+{ \
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data; \
+	if (lvdm->seg_status.type != SEG_STATUS_WRITECACHE) \
+		return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64)); \
+	return dm_report_field_uint64(rh, field, &lvdm->seg_status.writecache->writecache_status_field_name); \
+}
+
+GENERATE_WRITECACHE_STATUS_DISP_FN(total_blocks)
+GENERATE_WRITECACHE_STATUS_DISP_FN(free_blocks)
+GENERATE_WRITECACHE_STATUS_DISP_FN(writeback_blocks)
+GENERATE_WRITECACHE_STATUS_DISP_FN(error)
 
 /*
  * Macro to generate '_vdo_<vdo_field_name>_disp' reporting function.

@@ -366,8 +366,8 @@ int dm_get_status_writecache(struct dm_pool *mem, const char *params,
 	if (!(s = dm_pool_zalloc(mem, sizeof(struct dm_status_writecache))))
 		return_0;
 
-	if (sscanf(params, "%u %llu %llu %llu",
-		   &s->error,
+	if (sscanf(params, "%llu %llu %llu %llu",
+		   (unsigned long long *)&s->error,
 		   (unsigned long long *)&s->total_blocks,
 		   (unsigned long long *)&s->free_blocks,
 		   (unsigned long long *)&s->writeback_blocks) != 4) {

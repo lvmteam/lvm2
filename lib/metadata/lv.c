@@ -405,6 +405,14 @@ dm_percent_t lvseg_percent_with_info_and_seg_status(const struct lv_with_info_an
 			}
 		}
 		break;
+	case SEG_STATUS_WRITECACHE:
+		if (type != PERCENT_GET_DATA)
+			p = DM_PERCENT_INVALID;
+		else {
+			uint64_t used = s->writecache->total_blocks - s->writecache->free_blocks;
+			p = dm_make_percent(used, s->writecache->total_blocks);
+		}
+		break;
 	case SEG_STATUS_RAID:
 		switch (type) {
 		case PERCENT_GET_DIRTY:

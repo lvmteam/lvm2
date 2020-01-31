@@ -383,7 +383,7 @@ int dm_get_status_cache(struct dm_pool *mem, const char *params,
 			struct dm_status_cache **status);
 
 struct dm_status_writecache {
-	uint32_t error;
+	uint64_t error;
 	uint64_t total_blocks;
 	uint64_t free_blocks;
 	uint64_t writeback_blocks;
