@@ -5504,6 +5504,12 @@ static int _get_writecache_settings(struct cmd_context *cmd, struct writecache_s
 		}
 	}
 
+	if (settings->high_watermark_set && settings->low_watermark_set &&
+	    (settings->high_watermark <= settings->low_watermark)) {
+		log_error("High watermark must be greater than or equal to low watermark.");
+		return 0;
+	}
+
 	return 1;
 }
 
