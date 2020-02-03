@@ -221,14 +221,14 @@ $ lvconvert --type writecache --cachevol fast \\
 Tunable options are:
 
 .IP \[bu] 2
-high_watermark = <count>
+high_watermark = <percent>
 
-Start writeback when the number of used blocks reach this watermark
+Start writeback when the writecache usage reaches this percent (0-100).
 
 .IP \[bu] 2
-low_watermark = <count>
+low_watermark = <percent>
 
-Stop writeback when the number of used blocks drops below this watermark
+Stop writeback when the writecache usage reaches this percent (0-100).
 
 .IP \[bu] 2
 writeback_jobs = <count>
