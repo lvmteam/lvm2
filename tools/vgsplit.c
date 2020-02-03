@@ -379,25 +379,25 @@ static int _move_cache(struct volume_group *vg_from,
 {
 	int is_moving;
 	struct dm_list *lvh, *lvht;
-	struct logical_volume *lv, *data, *meta, *orig;
+	struct logical_volume *lv, *data = NULL, *meta = NULL, *orig = NULL, *fast = NULL;
 	struct lv_segment *seg, *cache_seg;
 
 	dm_list_iterate_safe(lvh, lvht, &vg_from->lvs) {
 		lv = dm_list_item(lvh, struct lv_list)->lv;
 		seg = first_seg(lv);
 
-		if (!lv_is_cache(lv) && !lv_is_cache_pool(lv))
+		if (!lv_is_cache(lv) && !lv_is_writecache(lv) && !lv_is_cache_pool(lv) && !lv_is_cache_vol(lv))
 			continue;
-
-		if (lv_is_cache(lv) && lv_is_cache_vol(seg->pool_lv)) {
-			log_error("Cannot split while LV %s has cache attached.", display_lvname(lv));
-			return 0;
-		}
 
 		if (lv_is_cache(lv)) {
 			orig = seg_lv(seg, 0);
 			seg = first_seg(seg->pool_lv);
-		} else { /* lv_is_cache_pool */
+
+		} else if (lv_is_writecache(lv)) {
+			orig = seg_lv(seg, 0);
+			seg = first_seg(seg->writecache);
+
+		} else if (lv_is_cache_pool(lv) || lv_is_cache_vol(lv)) {
 			orig = NULL;
 			if (!dm_list_empty(&seg->lv->segs_using_this_lv)) {
 				if (!(cache_seg = get_only_segment_using_this_lv(seg->lv)))
@@ -406,16 +406,26 @@ static int _move_cache(struct volume_group *vg_from,
 			}
 		}
 
-		data = seg_lv(seg, 0);
-		meta = seg->metadata_lv;
+		if (lv_is_cache_vol(lv)) {
+			fast = lv;
+		} else {
+			data = seg_lv(seg, 0);
+			meta = seg->metadata_lv;
+		}
 
-		if ((orig && !lv_is_on_pvs(orig, &vg_to->pvs)) &&
-		    !lv_is_on_pvs(data, &vg_to->pvs) &&
-		    !lv_is_on_pvs(meta, &vg_to->pvs))
+		if (data && meta) {
+			if ((orig && !lv_is_on_pvs(orig, &vg_to->pvs)) &&
+			    !lv_is_on_pvs(data, &vg_to->pvs) &&
+			    !lv_is_on_pvs(meta, &vg_to->pvs))
+				continue;
+		}
+		
+		if (fast && orig &&
+		    !lv_is_on_pvs(orig, &vg_to->pvs) && !lv_is_on_pvs(fast, &vg_to->pvs))
 			continue;
 
 		/* Ensure all components are coming along */
-		if (orig) {
+		if (orig && data && meta) {
 			is_moving = _lv_is_in_vg(vg_to, orig);
 
 			if (_lv_is_in_vg(vg_to, data) != is_moving) {
@@ -431,10 +441,16 @@ static int _move_cache(struct volume_group *vg_from,
 					  display_lvname(orig), display_lvname(meta));
 				return 0;
 			}
-		} else if (_lv_is_in_vg(vg_to, data) != _lv_is_in_vg(vg_to, meta)) {
+
+		} else if (data && meta && (_lv_is_in_vg(vg_to, data) != _lv_is_in_vg(vg_to, meta))) {
 			log_error("Cannot split cache pool data %s and its metadata %s "
 				  "into separate VGs.",
 				  display_lvname(data), display_lvname(meta));
+			return 0;
+
+		} else if (orig && fast && (_lv_is_in_vg(vg_to, orig) != _lv_is_in_vg(vg_to, fast))) {
+			log_error("Cannot split cache origin %s and its cachevol %s into separate VGs.",
+				  display_lvname(orig), display_lvname(fast));
 			return 0;
 		}
 
