@@ -326,6 +326,8 @@ static int _lvmlockd_result(daemon_reply reply, int *result)
 {
 	int reply_result;
 
+	*result = NO_LOCKD_RESULT;
+
 	if (reply.error) {
 		log_error("lvmlockd_result reply error %d", reply.error);
 		return 0;
@@ -337,7 +339,7 @@ static int _lvmlockd_result(daemon_reply reply, int *result)
 	}
 
 	reply_result = daemon_reply_int(reply, "op_result", NO_LOCKD_RESULT);
-	if (reply_result == -1000) {
+	if (reply_result == NO_LOCKD_RESULT) {
 		log_error("lvmlockd_result no op_result");
 		return 0;
 	}
