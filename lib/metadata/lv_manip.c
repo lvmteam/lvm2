@@ -4535,6 +4535,9 @@ static int _for_each_sub_lv(struct logical_volume *lv, int level,
 		if (!_for_each_sub_lv(seg->pool_lv, level, fn, data))
 			return_0;
 
+		if (!_for_each_sub_lv(seg->writecache, level, fn, data))
+			return_0;
+
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) != AREA_LV)
 				continue;
@@ -6989,7 +6992,7 @@ int move_lv_segments(struct logical_volume *lv_to,
 int remove_layer_from_lv(struct logical_volume *lv,
 			 struct logical_volume *layer_lv)
 {
-	static const char _suffixes[][8] = { "_tdata", "_cdata", "_corig", "_vdata" };
+	static const char _suffixes[][8] = { "_tdata", "_cdata", "_corig", "_wcorig", "_vdata" };
 	struct logical_volume *parent_lv;
 	struct lv_segment *parent_seg;
 	struct segment_type *segtype;
@@ -7069,8 +7072,8 @@ int remove_layer_from_lv(struct logical_volume *lv,
 	 *   currently supported only for thin data layer
 	 *   FIXME: without strcmp it breaks mirrors....
 	 */
-	if (!strstr(layer_lv->name, "_mimage"))
-		for (r = 0; r < DM_ARRAY_SIZE(_suffixes); ++r)
+	if (!strstr(layer_lv->name, "_mimage")) {
+		for (r = 0; r < DM_ARRAY_SIZE(_suffixes); ++r) {
 			if (strstr(layer_lv->name, _suffixes[r]) == 0) {
 				lv_names.old = layer_lv->name;
 				lv_names.new = parent_lv->name;
@@ -7078,6 +7081,8 @@ int remove_layer_from_lv(struct logical_volume *lv,
 					return_0;
 				break;
 			}
+		}
+	}
 
 	return 1;
 }
@@ -7093,7 +7098,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 					   uint64_t status,
 					   const char *layer_suffix)
 {
-	static const char _suffixes[][8] = { "_tdata", "_cdata", "_corig", "_vdata" };
+	static const char _suffixes[][8] = { "_tdata", "_cdata", "_corig", "_wcorig", "_vdata" };
 	int r;
 	char name[NAME_LEN];
 	struct dm_str_list *sl;
