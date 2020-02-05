@@ -126,6 +126,12 @@ arg(cachepool_ARG, '\0', "cachepool", lv_VAL, 0, 0,
 arg(cachevol_ARG, '\0', "cachevol", lv_VAL, 0, 0,
     "The name of a cache volume.\n")
 
+arg(cachedevice_ARG, '\0', "cachedevice", pv_VAL, 0, 0,
+    "The name of a device to use for a cache.\n")
+
+arg(cachesize_ARG, '\0', "cachesize", sizemb_VAL, 0, 0,
+    "The size of cache to use.\n")
+
 arg(commandprofile_ARG, '\0', "commandprofile", string_VAL, 0, 0,
     "The command profile to use for command configuration.\n"
     "See \\fBlvm.conf\\fP(5) for more information about profiles.\n")
