@@ -730,7 +730,7 @@ static response vg_lookup(lvmetad_state *s, request r)
 	if (!(res.cft->root = n = dm_config_create_node(res.cft, "response")))
 		goto nomem_un;
 
-	if (!(n->v = dm_config_create_value(cft)))
+	if (!(n->v = dm_config_create_value(res.cft)))
 		goto nomem_un;
 
 	n->parent = res.cft->root;
