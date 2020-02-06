@@ -385,8 +385,11 @@ int validate_snapshot_origin(const struct logical_volume *origin_lv)
 			log_warn("WARNING: Consider using the raid1 mirror type to avoid this.");
 			log_warn("WARNING: See global/mirror_segtype_default in lvm.conf.");
 		}
-	} else if (lv_is_raid_type(origin_lv) && !lv_is_raid(origin_lv))
+	} else if (lv_is_raid_type(origin_lv) && !lv_is_raid(origin_lv)) {
 		err = "raid subvolumes";
+	} else if (lv_is_writecache(origin_lv)) {
+		err = "writecache";
+	}
 
 	if (err) {
 		log_error("Snapshots of %s are not supported.", err);
