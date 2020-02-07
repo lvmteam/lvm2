@@ -2298,6 +2298,13 @@ static int _raid_reshape(struct logical_volume *lv,
 	if ((new_image_count = new_stripes + seg->segtype->parity_devs) < 2)
 		return_0;
 
+	/* FIXME Can't reshape volume in use - aka not toplevel devices */
+	if (old_image_count < new_image_count &&
+	    !dm_list_empty(&seg->lv->segs_using_this_lv)) {
+		log_error("Unable to convert stacked volume %s.", display_lvname(seg->lv));
+		return 0;
+	}
+
 	if (!_check_max_raid_devices(new_image_count))
 		return_0;
 
@@ -6216,12 +6223,6 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 	if (seg_flag) {
 		if (!(*segtype = get_segtype_from_flag(cmd, seg_flag)))
 			return_0;
-
-		/* FIXME Can't reshape volume in use - aka not toplevel devices */
-		if (!dm_list_empty(&seg_from->lv->segs_using_this_lv)) {
-			log_error("Can't reshape stacked volume %s.", display_lvname(seg_from->lv));
-			return 0;
-		}
 
 		if (segtype_sav != *segtype) {
 			log_warn("Replaced LV type %s%s with possible type %s.",
