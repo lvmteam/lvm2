@@ -5580,13 +5580,13 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 
 	if (!seg_is_linear(first_seg(lv_fast))) {
 		log_error("LV %s must be linear to use as a writecache.", display_lvname(lv_fast));
-		return 0;
+		goto bad;
 	}
 
 	/* fast LV shouldn't generally be active by itself, but just in case. */
 	if (lv_info(cmd, lv_fast, 1, NULL, 0, 0)) {
 		log_error("LV %s must be inactive to attach.", display_lvname(lv_fast));
-		return 0;
+		goto bad;
 	}
 
 	memset(&settings, 0, sizeof(settings));
@@ -5594,13 +5594,13 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 
 	if (!_get_writecache_settings(cmd, &settings, &block_size_sectors)) {
 		log_error("Invalid writecache settings.");
-		return 0;
+		goto bad;
 	}
 
 	if (!arg_is_set(cmd, yes_ARG) &&
 	    yes_no_prompt("Erase all existing data on %s? [y/n]: ", display_lvname(lv_fast)) == 'n') {
 		log_error("Conversion aborted.");
-		return 0;
+		goto bad;
 	}
 
 	/* Ensure the two LVs are not active elsewhere. */
