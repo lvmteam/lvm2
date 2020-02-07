@@ -5578,6 +5578,11 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 		goto bad;
 	}
 
+	if (lv_fast == lv) {
+		log_error("Invalid cachevol LV.");
+		goto bad;
+	}
+
 	if (!seg_is_linear(first_seg(lv_fast))) {
 		log_error("LV %s must be linear to use as a writecache.", display_lvname(lv_fast));
 		goto bad;
