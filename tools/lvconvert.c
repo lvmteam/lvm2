@@ -5351,6 +5351,9 @@ static int _writecache_zero(struct cmd_context *cmd, struct logical_volume *lv)
 	};
 	int ret;
 
+	if (test_mode())
+		return 1;
+
 	if (!activate_lv(cmd, lv)) {
 		log_error("Failed to activate LV %s for zeroing.", display_lvname(lv));
 		return 0;
