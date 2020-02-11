@@ -1,5 +1,6 @@
 Version 2.03.09 - 
 ====================================
+  Fix showing of a dm kernel error when uncaching a volume with cachevol.
 
 Version 2.03.08 - 11th February 2020
 ====================================
