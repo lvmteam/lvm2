@@ -5351,6 +5351,11 @@ static int _writecache_zero(struct cmd_context *cmd, struct logical_volume *lv)
 	};
 	int ret;
 
+	if (!(lv->status & LVM_WRITE)) {
+		log_error("Cannot initialize readonly LV %s", display_lvname(lv));
+		return 0;
+	}
+
 	if (test_mode())
 		return 1;
 
