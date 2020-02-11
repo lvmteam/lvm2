@@ -1,9 +1,13 @@
-Version 2.03.08 - 
+Version 2.03.08 - 11th February 2020
 ====================================
+  Prevent problematic snapshots of writecache volumes.
   Add error handling for failing allocation in _reserve_area().
   Fix memleak in syncing of internal cache.
   Fix pvck dump_current_text memleak.
   Fix lvmlockd result code on error path for _query_lock_lv().
+  Update pvck man page and help output.
+  Reject invalid writecache high/low_watermark setting.
+  Report writecache status.
   Accept more output lines from vdo_format.
   Prohibit reshaping of stacked raid LVs.
   Avoid running cache input arg validation when creating vdo pool.
