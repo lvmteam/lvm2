@@ -3104,8 +3104,9 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 			return 0;
 		}
 
-		/* FIXME Tidy up all these type restrictions. */
+		/* FIXME Tidy up all these type restrictions. (Use a type whitelist?) */
 		if (lv_is_cache_type(metadata_lv) ||
+		    lv_is_writecache(metadata_lv) ||
 		    lv_is_thin_type(metadata_lv) ||
 		    lv_is_cow(metadata_lv) || lv_is_merging_cow(metadata_lv) ||
 		    lv_is_origin(metadata_lv) || lv_is_merging_origin(metadata_lv) ||
