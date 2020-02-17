@@ -127,5 +127,41 @@ umount $mount_dir
 lvchange -an $vg/$lv1
 lvchange -an $vg/$lv2
 
+
+# test3: attach writecache to an active LV
+
+lvchange -ay $vg/$lv1
+
+mkfs.xfs -f -s size=4096 "$DM_DEV_DIR/$vg/$lv1"
+
+mount "$DM_DEV_DIR/$vg/$lv1" $mount_dir
+
+cp pattern1 $mount_dir/pattern1
+ls -l $mount_dir
+
+lvconvert --yes --type writecache --cachevol $lv2 $vg/$lv1
+
+check lv_field $vg/$lv1 segtype writecache
+
+lvs -a $vg/${lv2}_cvol --noheadings -o segtype >out
+grep linear out
+
+cp pattern1 $mount_dir/pattern1.after
+
+diff pattern1 $mount_dir/pattern1
+diff pattern1 $mount_dir/pattern1.after
+
+umount $mount_dir
+lvchange -an $vg/$lv1
+lvchange -ay $vg/$lv1
+mount "$DM_DEV_DIR/$vg/$lv1" $mount_dir
+
+diff pattern1 $mount_dir/pattern1
+diff pattern1 $mount_dir/pattern1.after
+
+umount $mount_dir
+lvchange -an $vg/$lv1
+lvremove $vg/$lv1
+
 vgremove -ff $vg
 

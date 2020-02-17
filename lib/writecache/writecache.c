@@ -260,7 +260,7 @@ static int _writecache_add_target_line(struct dev_manager *dm,
 	if ((pmem = lv_on_pmem(seg->writecache)) < 0)
 		return_0;
 
-	if (!(origin_uuid = build_dm_uuid(mem, seg_lv(seg, 0), "real")))
+	if (!(origin_uuid = build_dm_uuid(mem, seg_lv(seg, 0), NULL)))
 		return_0;
 
 	if (!(fast_uuid = build_dm_uuid(mem, seg->writecache, "cvol")))
