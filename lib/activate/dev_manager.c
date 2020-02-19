@@ -3316,6 +3316,10 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (!layer && lv_is_new_thin_pool(lv))
 		layer = lv_layer(lv);
 
+	/* Adds -real to the dm uuid of wcorig LV. */
+	if (!layer && lv_is_writecache_origin(lv))
+		layer = lv_layer(lv); /* "real" */
+
 	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
 		return_0;
 

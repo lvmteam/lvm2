@@ -24,15 +24,15 @@
 
 int lv_is_writecache_origin(const struct logical_volume *lv)
 {
-	struct seg_list *sl;
+	struct lv_segment *seg;
 
-	dm_list_iterate_items(sl, &lv->segs_using_this_lv) {
-		if (!sl->seg || !sl->seg->lv || !sl->seg->origin)
-			continue;
-		if (lv_is_writecache(sl->seg->lv) && (sl->seg->origin == lv))
-			return 1;
-	}
-	return 0;
+	/* Make sure there's exactly one segment in segs_using_this_lv! */
+	if (dm_list_empty(&lv->segs_using_this_lv) ||
+	    (dm_list_size(&lv->segs_using_this_lv) > 1))
+		return 0;
+
+	seg = get_only_segment_using_this_lv(lv);
+	return seg && lv_is_writecache(seg->lv) && !lv_is_pending_delete(seg->lv) && (seg_lv(seg, 0) == lv);
 }
 
 int lv_is_writecache_cachevol(const struct logical_volume *lv)

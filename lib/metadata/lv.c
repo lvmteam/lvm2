@@ -830,7 +830,7 @@ const char *lv_layer(const struct logical_volume *lv)
 	if (lv_is_vdo_pool(lv))
 		return "vpool";
 
-	if (lv_is_origin(lv) || lv_is_external_origin(lv))
+	if (lv_is_origin(lv) || lv_is_external_origin(lv) || lv_is_writecache_origin(lv))
 		return "real";
 
 	return NULL;

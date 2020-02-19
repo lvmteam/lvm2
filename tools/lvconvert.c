@@ -5537,6 +5537,8 @@ static struct logical_volume *_lv_writecache_create(struct cmd_context *cmd,
 	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_WRITECACHE)))
 		return_NULL;
 
+	lv->status |= WRITECACHE;
+
 	/*
 	 * "lv_wcorig" is a new LV with new id, but with the segments from "lv".
 	 * "lv" keeps the existing name and id, but gets a new writecache segment,
