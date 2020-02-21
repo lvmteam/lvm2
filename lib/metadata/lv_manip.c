@@ -6638,7 +6638,7 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 		return 0;
 	}
 
-	if (lv_is_cache_origin(lv)) {
+	if (lv_is_cache_origin(lv) || lv_is_writecache_origin(lv)) {
 		if (!_lv_remove_segs_using_this_lv(cmd, lv, force, level, "cache origin"))
 			return_0;
 		/* Removal of cache LV also removes caching origin */
