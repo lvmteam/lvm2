@@ -19,12 +19,22 @@
 #include "lib/commands/toolcontext.h"
 #include "lib/display/display.h"
 #include "lib/metadata/segtype.h"
+#include "lib/metadata/lv_alloc.h"
 #include "lib/activate/activate.h"
 #include "lib/config/defaults.h"
 
 int lv_is_writecache_origin(const struct logical_volume *lv)
 {
 	struct lv_segment *seg;
+
+	/*
+	 * This flag is needed when removing writecache from an origin
+	 * in which case the lv connections have been destroyed and
+	 * identifying a writecache origin by these connections doesn't
+	 * work.
+	 */
+	if (lv->status & WRITECACHE_ORIGIN)
+		return 1;
 
 	/* Make sure there's exactly one segment in segs_using_this_lv! */
 	if (dm_list_empty(&lv->segs_using_this_lv) ||
@@ -46,46 +56,6 @@ int lv_is_writecache_cachevol(const struct logical_volume *lv)
 			return 1;
 	}
 	return 0;
-}
-
-static int _lv_writecache_detach(struct cmd_context *cmd, struct logical_volume *lv,
-				 struct logical_volume *lv_fast)
-{
-	struct lv_segment *seg = first_seg(lv);
-	struct logical_volume *origin;
-
-	if (!seg_is_writecache(seg)) {
-		log_error("LV %s segment is not writecache.", display_lvname(lv));
-		return 0;
-	}
-
-	if (!seg->writecache) {
-		log_error("LV %s writecache segment has no writecache.", display_lvname(lv));
-		return 0;
-	}
-
-	if (!(origin = seg_lv(seg, 0))) {
-		log_error("LV %s writecache segment has no origin", display_lvname(lv));
-		return 0;
-	}
-
-	if (!remove_seg_from_segs_using_this_lv(seg->writecache, seg))
-		return_0;
-
-	lv_set_visible(seg->writecache);
-
-	lv->status &= ~WRITECACHE;
-	seg->writecache = NULL;
-
-	lv_fast->status &= ~LV_CACHE_VOL;
-
-	if (!remove_layer_from_lv(lv, origin))
-		return_0;
-
-	if (!lv_remove(origin))
-		return_0;
-
-	return 1;
 }
 
 static int _get_writecache_kernel_error(struct cmd_context *cmd,
@@ -131,13 +101,64 @@ fail:
 	return 0;
 }
 
-int lv_detach_writecache_cachevol(struct logical_volume *lv, int noflush)
+static void _rename_detached_cvol(struct cmd_context *cmd, struct logical_volume *lv_fast)
+{
+	struct volume_group *vg = lv_fast->vg;
+	char cvol_name[NAME_LEN];
+	char *suffix, *cvol_name_dup;
+
+	/*
+	 * Rename lv_fast back to its original name, without the _cvol
+	 * suffix that was added when lv_fast was attached for caching.
+	 * If the name is in use, generate new lvol%d.
+	 * Failing to rename is not really a problem, so we intentionally
+	 * do not consider some things here as errors.
+	 */
+	if (!dm_strncpy(cvol_name, lv_fast->name, sizeof(cvol_name)) ||
+	    !(suffix  = strstr(cvol_name, "_cvol"))) {
+		log_debug("LV %s has no suffix for cachevol (skipping rename).",
+			display_lvname(lv_fast));
+		return;
+	}
+
+	*suffix = 0;
+	if (lv_name_is_used_in_vg(vg, cvol_name, NULL) &&
+	    !generate_lv_name(vg, "lvol%d", cvol_name, sizeof(cvol_name))) {
+		log_warn("Failed to generate new unique name for unused LV %s", lv_fast->name);
+		return;
+	}
+
+	if (!(cvol_name_dup = dm_pool_strdup(vg->vgmem, cvol_name))) {
+		stack;
+		return;
+	}
+
+	lv_fast->name = cvol_name_dup;
+}
+
+static int _lv_detach_writecache_cachevol_inactive(struct logical_volume *lv, int noflush)
 {
 	struct cmd_context *cmd = lv->vg->cmd;
+	struct volume_group *vg = lv->vg;
 	struct logical_volume *lv_fast;
+	struct logical_volume *lv_wcorig;
+	struct lv_segment *seg = first_seg(lv);
 	uint32_t kernel_error = 0;
 
-	lv_fast = first_seg(lv)->writecache;
+	if (!seg_is_writecache(seg)) {
+		log_error("LV %s segment is not writecache.", display_lvname(lv));
+		return 0;
+	}
+
+	if (!(lv_fast = seg->writecache)) {
+		log_error("LV %s writecache segment has no writecache.", display_lvname(lv));
+		return 0;
+	}
+
+	if (!(lv_wcorig = seg_lv(seg, 0))) {
+		log_error("LV %s writecache segment has no origin", display_lvname(lv));
+		return 0;
+	}
 
 	if (noflush)
 		goto detach;
@@ -157,6 +178,8 @@ int lv_detach_writecache_cachevol(struct logical_volume *lv, int noflush)
 
 	if (!sync_local_dev_names(cmd)) {
 		log_error("Failed to sync local devices before detaching writecache.");
+		if (!deactivate_lv(cmd, lv))
+			log_error("Failed to deactivate %s.", display_lvname(lv));
 		return 0;
 	}
 
@@ -176,7 +199,8 @@ int lv_detach_writecache_cachevol(struct logical_volume *lv, int noflush)
 
 	if (kernel_error) {
 		log_error("Failed to flush writecache (error %u) for %s.", kernel_error, display_lvname(lv));
-		deactivate_lv(cmd, lv);
+		if (!deactivate_lv(cmd, lv))
+			log_error("Failed to deactivate %s.", display_lvname(lv));
 		return 0;
 	}
 
@@ -188,11 +212,185 @@ int lv_detach_writecache_cachevol(struct logical_volume *lv, int noflush)
 	lv->status &= ~LV_TEMPORARY;
 
  detach:
-	if (!_lv_writecache_detach(cmd, lv, lv_fast)) {
-		log_error("Failed to detach writecache from %s", display_lvname(lv));
+	if (!remove_seg_from_segs_using_this_lv(lv_fast, seg))
+		return_0;
+
+	lv->status &= ~WRITECACHE;
+	seg->writecache = NULL;
+
+	if (!remove_layer_from_lv(lv, lv_wcorig))
+		return_0;
+
+	if (!lv_remove(lv_wcorig))
+		return_0;
+
+	lv_set_visible(lv_fast);
+	lv_fast->status &= ~LV_CACHE_VOL;
+
+	_rename_detached_cvol(cmd, lv_fast);
+
+	if (!vg_write(vg) || !vg_commit(vg))
+		return_0;
+
+	return 1;
+}
+
+static int _lv_detach_writecache_cachevol_active(struct logical_volume *lv, int noflush)
+{
+	struct cmd_context *cmd = lv->vg->cmd;
+	struct volume_group *vg = lv->vg;
+	struct logical_volume *lv_fast;
+	struct logical_volume *lv_wcorig;
+	struct logical_volume *lv_old;
+	struct lv_segment *seg = first_seg(lv);
+	uint32_t kernel_error = 0;
+
+	if (!seg_is_writecache(seg)) {
+		log_error("LV %s segment is not writecache.", display_lvname(lv));
+		return 0;
+	}
+
+	if (!(lv_fast = seg->writecache)) {
+		log_error("LV %s writecache segment has no writecache.", display_lvname(lv));
+		return 0;
+	}
+
+	if (!(lv_wcorig = seg_lv(seg, 0))) {
+		log_error("LV %s writecache segment has no origin", display_lvname(lv));
+		return 0;
+	}
+
+	if (noflush)
+		goto detach;
+
+	if (!lv_writecache_message(lv, "flush_on_suspend")) {
+		log_error("Failed to set flush_on_suspend in writecache detach %s.", display_lvname(lv));
+		return 0;
+	}
+
+ detach:
+	if (!remove_seg_from_segs_using_this_lv(lv_fast, seg)) {
+		log_error("Failed to remove seg in writecache detach.");
+		return 0;
+	}
+
+	lv->status &= ~WRITECACHE;
+	seg->writecache = NULL;
+
+	if (!remove_layer_from_lv(lv, lv_wcorig)) {
+		log_error("Failed to remove lv layer in writecache detach.");
+		return 0;
+	}
+
+	/*
+	 * vg_write(), suspend_lv(), vg_commit(), resume_lv().
+	 * usually done by lv_update_and_reload for an active lv,
+	 * but in this case we need to check for writecache errors
+	 * after suspend.
+	 */
+
+	if (!vg_write(vg)) {
+		log_error("Failed to write VG in writecache detach.");
+		return 0;
+	}
+
+	/*
+	 * The version of LV before removal of writecache.  When need to
+	 * check for kernel errors based on the old version of LV which
+	 * is still present in the kernel.
+	 */
+	if (!(lv_old = (struct logical_volume *)lv_committed(lv))) {
+		log_error("Failed to get lv_committed in writecache detach.");
+		return 0;
+	}
+
+	/*
+	 * suspend does not use 'lv' as we know it here, but grabs the
+	 * old (precommitted) version of 'lv' using lv_committed(),
+	 * which is from vg->vg_comitted.
+	 */
+	log_debug("Suspending writecache to detach %s", display_lvname(lv));
+
+	if (!suspend_lv(cmd, lv)) {
+		log_error("Failed to suspend LV in writecache detach.");
+		vg_revert(vg);
+		return 0;
+	}
+
+	log_debug("Checking writecache errors to detach.");
+
+	if (!_get_writecache_kernel_error(cmd, lv_old, &kernel_error)) {
+		log_error("Failed to get writecache error status for %s.", display_lvname(lv_old));
+		return 0;
+	}
+
+	if (kernel_error) {
+		log_error("Failed to flush writecache (error %u) for %s.", kernel_error, display_lvname(lv));
+		return 0;
+	}
+
+	if (!vg_commit(vg)) {
+		log_error("Failed to commit VG in writecache detach.");
+		return 0;
+	}
+
+	/*
+	 * Since vg_commit has happened, vg->vg_committed is now the
+	 * newest copy of lv, so resume uses the 'lv' that we know
+	 * here.
+	 */
+	log_debug("Resuming after writecache detached %s", display_lvname(lv));
+
+	if (!resume_lv(cmd, lv)) {
+		log_error("Failed to resume LV in writecache detach.");
+		return 0;
+	}
+
+	log_debug("Deactivating previous cachevol %s", display_lvname(lv_fast));
+
+	if (!deactivate_lv(cmd, lv_fast))
+		log_error("Failed to deactivate previous cachevol in writecache detach.");
+
+	/*
+	 * Needed for lv_is_writecache_origin to know lv_wcorig was
+	 * a writecache origin, which is needed so that the -real
+	 * dm uuid suffix is applied, which is needed for deactivate to
+	 * work. This is a hacky roundabout way of setting the -real
+	 * uuid suffix (it would be nice to have a deactivate command
+	 * that accepts a dm uuid.)
+	 */
+	lv_wcorig->status |= WRITECACHE_ORIGIN;
+
+	log_debug("Deactivating previous wcorig %s", display_lvname(lv_wcorig));
+
+	if (!lv_deactivate(cmd, NULL, lv_wcorig))
+		log_error("Failed to deactivate previous wcorig LV in writecache detach.");
+
+	log_debug("Removing previous wcorig %s", display_lvname(lv_wcorig));
+
+	if (!lv_remove(lv_wcorig)) {
+		log_error("Failed to remove previous wcorig LV in writecache detach.");
+		return 0;
+	}
+
+	lv_set_visible(lv_fast);
+	lv_fast->status &= ~LV_CACHE_VOL;
+
+	_rename_detached_cvol(cmd, lv_fast);
+
+	if (!vg_write(vg) || !vg_commit(vg)) {
+		log_error("Failed to write and commit VG in writecache detach.");
 		return 0;
 	}
 
 	return 1;
+}
+
+int lv_detach_writecache_cachevol(struct logical_volume *lv, int noflush)
+{
+	if (lv_is_active(lv))
+		return _lv_detach_writecache_cachevol_active(lv, noflush);
+	else
+		return _lv_detach_writecache_cachevol_inactive(lv, noflush);
 }
 

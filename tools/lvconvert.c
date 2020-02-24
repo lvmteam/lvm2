@@ -5311,18 +5311,7 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 					struct logical_volume *lv,
 					struct logical_volume *lv_fast)
 {
-	char cvol_name[NAME_LEN];
-	char *c;
 	int noflush = 0;
-
-	/*
-	 * LV must be inactive externally before detaching cache.
-	 */
-
-	if (lv_info(cmd, lv, 1, NULL, 0, 0)) {
-		log_error("LV %s must be inactive to detach writecache.", display_lvname(lv));
-		return 0;
-	}
 
 	if (!archive(lv->vg))
 		return_0;
@@ -5347,31 +5336,18 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 		noflush = 1;
 	}
 
-	if (!lv_detach_writecache_cachevol(lv, noflush))
-		return_0;
-
 	/*
-	 * Rename lv_fast back to its original name, without the _cvol
-	 * suffix that was added when lv_fast was attached for caching.
+	 * TODO: send a message to writecache in the kernel to start writing
+	 * back cache data to the origin.  Then release the vg lock and monitor
+	 * the progress of that writeback.  When it's complete we can reacquire
+	 * the vg lock, rescan the vg (ensure it hasn't changed), and do the
+	 * detach which should be quick since the writeback is complete.  If
+	 * this command is canceled while monitoring writeback, it should just
+	 * be rerun.  The LV will continue to have the writecache until this
+	 * command is run to completion.
 	 */
-	if (!dm_strncpy(cvol_name, lv_fast->name, sizeof(cvol_name)) ||
-	    !(c = strstr(cvol_name, "_cvol"))) {
-		log_debug("LV %s has no suffix for cachevol (skipping rename).",
-			display_lvname(lv_fast));
-	} else {
-		*c = 0;
-		/* If the name is in use, generate new lvol%d */
-		if (lv_name_is_used_in_vg(lv->vg, cvol_name, NULL) &&
-		    !generate_lv_name(lv->vg, "lvol%d", cvol_name, sizeof(cvol_name))) {
-			log_error("Failed to generate unique name for unused logical volume.");
-			return 0;
-		}
 
-		if (!lv_rename_update(cmd, lv_fast, cvol_name, 0))
-			return_0;
-	}
-
-	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
+	if (!lv_detach_writecache_cachevol(lv, noflush))
 		return_0;
 
 	backup(lv->vg);

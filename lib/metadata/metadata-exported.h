@@ -89,8 +89,7 @@
 #define PARTIAL_LV		UINT64_C(0x0000000001000000)	/* LV - derived flag, not
 							   written out in metadata*/
 
-//#define POSTORDER_FLAG	UINT64_C(0x0000000002000000) /* Not real flags, reserved for
-//#define POSTORDER_OPEN_FLAG	UINT64_C(0x0000000004000000)    temporary use inside vg_read_internal. */
+#define WRITECACHE_ORIGIN	UINT64_C(0x0000000002000000)
 #define INTEGRITY_METADATA	UINT64_C(0x0000000004000000)    /* LV - Internal use only */
 #define VIRTUAL_ORIGIN		UINT64_C(0x0000000008000000)	/* LV - internal use only */
 

@@ -6568,7 +6568,20 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
-	if (lv_is_used_cache_pool(lv) || lv_is_cache_vol(lv)) {
+	if (lv_is_cache_vol(lv)) {
+		if ((cache_seg = get_only_segment_using_this_lv(lv))) {
+			/* When used with cache, lvremove on cachevol also removes the cache! */
+		       	if (seg_is_cache(cache_seg)) {
+				if (!lv_cache_remove(cache_seg->lv))
+					return_0;
+			} else if (seg_is_writecache(cache_seg)) {
+				log_error("Detach cachevol before removing.");
+				return 0;
+			}
+		}
+	}
+
+	if (lv_is_used_cache_pool(lv)) {
 		/* Cache pool removal drops cache layer
 		 * If the cache pool is not linked, we can simply remove it. */
 		if (!(cache_seg = get_only_segment_using_this_lv(lv)))
@@ -6832,7 +6845,7 @@ static int _lv_update_and_reload(struct logical_volume *lv, int origin_only)
 	}
 
 	if (!(origin_only ? suspend_lv_origin(vg->cmd, lock_lv) : suspend_lv(vg->cmd, lock_lv))) {
-		log_error("Failed to lock logical volume %s.",
+		log_error("Failed to suspend logical volume %s.",
 			  display_lvname(lock_lv));
 		vg_revert(vg);
 	} else if (!(r = vg_commit(vg)))

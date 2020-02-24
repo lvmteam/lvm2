@@ -20,29 +20,21 @@ mkfs_mount_umount()
 {
         lvt=$1
 
-        lvchange -ay $vg/$lvt
-
         mkfs.xfs -f -s size=4096 "$DM_DEV_DIR/$vg/$lvt"
         mount "$DM_DEV_DIR/$vg/$lvt" "$mount_dir"
         cp pattern1 "$mount_dir/pattern1"
         dd if=/dev/zero of="$mount_dir/zeros2M" bs=1M count=32 conv=fdatasync
         umount "$mount_dir"
-
-        lvchange -an $vg/$lvt
 }
 
 mount_umount()
 {
         lvt=$1
 
-        lvchange -ay $vg/$lvt
-
         mount "$DM_DEV_DIR/$vg/$lvt" "$mount_dir"
         diff pattern1 "$mount_dir/pattern1"
         dd if="$mount_dir/zeros2M" of=/dev/null bs=1M count=32
         umount "$mount_dir"
-
-        lvchange -an $vg/$lvt
 }
 
 aux have_writecache 1 0 0 || skip
@@ -62,18 +54,39 @@ lvcreate -n $lv1 -l 16 -an $vg "$dev1" "$dev4"
 lvcreate -n $lv2 -l 4 -an $vg "$dev2"
 
 #
-# split when no devs are missing
+# split while inactive
 #
 
 lvconvert -y --type writecache --cachevol $lv2 $vg/$lv1
 
+lvchange -ay $vg/$lv1
+mkfs_mount_umount $lv1
+lvchange -an $vg/$lv1
+
+lvconvert --splitcache $vg/$lv1
+lvs -o segtype $vg/$lv1 | grep linear
+lvs -o segtype $vg/$lv2 | grep linear
+
+lvchange -ay $vg/$lv1
+mount_umount $lv1
+lvchange -an $vg/$lv1
+
+#
+# split while active
+#
+
+lvconvert -y --type writecache --cachevol $lv2 $vg/$lv1
+
+lvchange -ay $vg/$lv1
 mkfs_mount_umount $lv1
 
 lvconvert --splitcache $vg/$lv1
 lvs -o segtype $vg/$lv1 | grep linear
 lvs -o segtype $vg/$lv2 | grep linear
 
+lvchange -ay $vg/$lv1
 mount_umount $lv1
+lvchange -an $vg/$lv1
 
 #
 # split while cachevol is missing
@@ -81,7 +94,9 @@ mount_umount $lv1
 
 lvconvert -y --type writecache --cachevol $lv2 $vg/$lv1
 
+lvchange -ay $vg/$lv1
 mkfs_mount_umount $lv1
+lvchange -an $vg/$lv1
 
 aux disable_dev "$dev2"
 
@@ -108,7 +123,9 @@ lvcreate -n $lv2 -l 14 -an $vg "$dev2" "$dev3"
 
 lvconvert -y --type writecache --cachevol $lv2 $vg/$lv1
 
+lvchange -ay $vg/$lv1
 mkfs_mount_umount $lv1
+lvchange -an $vg/$lv1
 
 aux disable_dev "$dev3"
 
