@@ -1412,6 +1412,9 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 	} else if (lvdm->seg_status.type == SEG_STATUS_THIN) {
 		if (lvdm->seg_status.thin->fail)
 			repstr[8] = 'F';
+	} else if (lvdm->seg_status.type == SEG_STATUS_WRITECACHE) {
+		if (lvdm->seg_status.writecache->error)
+			repstr[8] = 'E';
 	} else if (lvdm->seg_status.type == SEG_STATUS_UNKNOWN)
 		repstr[8] = 'X'; /* Unknown */
 
