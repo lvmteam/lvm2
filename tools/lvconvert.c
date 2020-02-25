@@ -5395,12 +5395,16 @@ static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecach
 	if (!strncmp(key, "high_watermark", strlen("high_watermark"))) {
 		if (sscanf(val, "%llu", (unsigned long long *)&settings->high_watermark) != 1)
 			goto_bad;
+		if (settings->high_watermark > 100)
+			goto_bad;
 		settings->high_watermark_set = 1;
 		return 1;
 	}
 
 	if (!strncmp(key, "low_watermark", strlen("low_watermark"))) {
 		if (sscanf(val, "%llu", (unsigned long long *)&settings->low_watermark) != 1)
+			goto_bad;
+		if (settings->low_watermark > 100)
 			goto_bad;
 		settings->low_watermark_set = 1;
 		return 1;
