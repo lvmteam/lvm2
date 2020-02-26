@@ -217,6 +217,9 @@ int get_cache_params(struct cmd_context *cmd,
 		     const char **name,
 		     struct dm_config_tree **settings);
 
+int get_writecache_settings(struct cmd_context *cmd, struct writecache_settings *settings,
+                            uint32_t *block_size_sectors);
+
 int change_tag(struct cmd_context *cmd, struct volume_group *vg,
 	       struct logical_volume *lv, struct physical_volume *pv, int arg);
 

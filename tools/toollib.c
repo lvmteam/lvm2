@@ -1184,6 +1184,156 @@ out:
 	return ok;
 }
 
+static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecache_settings *settings,
+				       char *key, char *val, uint32_t *block_size_sectors)
+{
+	/* special case: block_size is not a setting but is set with the --cachesettings option */
+	if (!strncmp(key, "block_size", strlen("block_size"))) {
+		uint32_t block_size = 0;
+		if (sscanf(val, "%u", &block_size) != 1)
+			goto_bad;
+		if (block_size == 512)
+			*block_size_sectors = 1;
+		else if (block_size == 4096)
+			*block_size_sectors = 8;
+		else
+			goto_bad;
+		return 1;
+	}
+
+	if (!strncmp(key, "high_watermark", strlen("high_watermark"))) {
+		if (sscanf(val, "%llu", (unsigned long long *)&settings->high_watermark) != 1)
+			goto_bad;
+		if (settings->high_watermark > 100)
+			goto_bad;
+		settings->high_watermark_set = 1;
+		return 1;
+	}
+
+	if (!strncmp(key, "low_watermark", strlen("low_watermark"))) {
+		if (sscanf(val, "%llu", (unsigned long long *)&settings->low_watermark) != 1)
+			goto_bad;
+		if (settings->low_watermark > 100)
+			goto_bad;
+		settings->low_watermark_set = 1;
+		return 1;
+	}
+
+	if (!strncmp(key, "writeback_jobs", strlen("writeback_jobs"))) {
+		if (sscanf(val, "%llu", (unsigned long long *)&settings->writeback_jobs) != 1)
+			goto_bad;
+		settings->writeback_jobs_set = 1;
+		return 1;
+	}
+
+	if (!strncmp(key, "autocommit_blocks", strlen("autocommit_blocks"))) {
+		if (sscanf(val, "%llu", (unsigned long long *)&settings->autocommit_blocks) != 1)
+			goto_bad;
+		settings->autocommit_blocks_set = 1;
+		return 1;
+	}
+
+	if (!strncmp(key, "autocommit_time", strlen("autocommit_time"))) {
+		if (sscanf(val, "%llu", (unsigned long long *)&settings->autocommit_time) != 1)
+			goto_bad;
+		settings->autocommit_time_set = 1;
+		return 1;
+	}
+
+	if (!strncmp(key, "fua", strlen("fua"))) {
+		if (settings->nofua_set) {
+			log_error("Setting fua and nofua cannot both be set.");
+			return 0;
+		}
+		if (sscanf(val, "%u", &settings->fua) != 1)
+			goto_bad;
+		settings->fua_set = 1;
+		return 1;
+	}
+
+	if (!strncmp(key, "nofua", strlen("nofua"))) {
+		if (settings->fua_set) {
+			log_error("Setting fua and nofua cannot both be set.");
+			return 0;
+		}
+		if (sscanf(val, "%u", &settings->nofua) != 1)
+			goto_bad;
+		settings->nofua_set = 1;
+		return 1;
+	}
+
+	if (settings->new_key) {
+		log_error("Setting %s is not recognized. Only one unrecognized setting is allowed.", key);
+		return 0;
+	}
+
+	log_warn("Unrecognized writecache setting \"%s\" may cause activation failure.", key);
+	if (yes_no_prompt("Use unrecognized writecache setting? [y/n]: ") == 'n') {
+		log_error("Aborting writecache conversion.");
+		return 0;
+	}
+
+	log_warn("Using unrecognized writecache setting: %s = %s.", key, val);
+
+	settings->new_key = dm_pool_strdup(cmd->mem, key);
+	settings->new_val = dm_pool_strdup(cmd->mem, val);
+	return 1;
+
+ bad:
+	log_error("Invalid setting: %s", key);
+	return 0;
+}
+
+int get_writecache_settings(struct cmd_context *cmd, struct writecache_settings *settings,
+			    uint32_t *block_size_sectors)
+{
+	struct arg_value_group_list *group;
+	const char *str;
+	char key[64];
+	char val[64];
+	int num;
+	int pos;
+
+	/*
+	 * "grouped" means that multiple --cachesettings options can be used.
+	 * Each option is also allowed to contain multiple key = val pairs.
+	 */
+
+	dm_list_iterate_items(group, &cmd->arg_value_groups) {
+		if (!grouped_arg_is_set(group->arg_values, cachesettings_ARG))
+			continue;
+
+		if (!(str = grouped_arg_str_value(group->arg_values, cachesettings_ARG, NULL)))
+			break;
+
+		pos = 0;
+
+		while (pos < strlen(str)) {
+			/* scan for "key1=val1 key2 = val2  key3= val3" */
+
+			memset(key, 0, sizeof(key));
+			memset(val, 0, sizeof(val));
+
+			if (sscanf(str + pos, " %63[^=]=%63s %n", key, val, &num) != 2) {
+				log_error("Invalid setting at: %s", str+pos);
+				return 0;
+			}
+
+			pos += num;
+
+			if (!_get_one_writecache_setting(cmd, settings, key, val, block_size_sectors))
+				return_0;
+		}
+	}
+
+	if (settings->high_watermark_set && settings->low_watermark_set &&
+	    (settings->high_watermark <= settings->low_watermark)) {
+		log_error("High watermark must be greater than low watermark.");
+		return 0;
+	}
+
+	return 1;
+}
 
 /* FIXME move to lib */
 static int _pv_change_tag(struct physical_volume *pv, const char *tag, int addtag)

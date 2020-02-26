@@ -606,6 +606,78 @@ static int _lvchange_persistent(struct cmd_context *cmd,
 	return 1;
 }
 
+static int _lvchange_writecache(struct cmd_context *cmd,
+			   struct logical_volume *lv,
+			   uint32_t *mr)
+{
+	struct writecache_settings settings = { 0 };
+	uint32_t block_size_sectors = 0;
+	struct lv_segment *seg = first_seg(lv);
+	int set_count = 0;
+
+	if (!get_writecache_settings(cmd, &settings, &block_size_sectors))
+		return_0;
+
+	if (block_size_sectors && (seg->writecache_block_size != (block_size_sectors * 512))) {
+		log_error("Cannot change existing block size %u bytes.", seg->writecache_block_size);
+		return 0;
+	}
+
+	if (settings.high_watermark_set) {
+		seg->writecache_settings.high_watermark_set = settings.high_watermark_set;
+		seg->writecache_settings.high_watermark = settings.high_watermark;
+		set_count++;
+	}
+	if (settings.low_watermark_set) {
+		seg->writecache_settings.low_watermark_set = settings.low_watermark_set;
+		seg->writecache_settings.low_watermark = settings.low_watermark;
+		set_count++;
+	}
+	if (settings.writeback_jobs_set) {
+		seg->writecache_settings.writeback_jobs_set = settings.writeback_jobs_set;
+		seg->writecache_settings.writeback_jobs = settings.writeback_jobs;
+		set_count++;
+	}
+	if (settings.autocommit_blocks_set) {
+		seg->writecache_settings.autocommit_blocks_set = settings.autocommit_blocks_set;
+		seg->writecache_settings.autocommit_blocks = settings.autocommit_blocks;
+		set_count++;
+	}
+	if (settings.autocommit_time_set) {
+		seg->writecache_settings.autocommit_time_set = settings.autocommit_time_set;
+		seg->writecache_settings.autocommit_time = settings.autocommit_time;
+		set_count++;
+	}
+	if (settings.fua_set) {
+		seg->writecache_settings.fua_set = settings.fua_set;
+		seg->writecache_settings.fua = settings.fua;
+		set_count++;
+	}
+	if (settings.nofua_set) {
+		seg->writecache_settings.nofua_set = settings.nofua_set;
+		seg->writecache_settings.nofua = settings.nofua;
+		set_count++;
+	}
+
+	if (!set_count) {
+		/*
+		 * Empty settings can be used to clear all current settings,
+		 * lvchange --cachesettings "" vg/lv
+		 */
+		if (!arg_count(cmd, yes_ARG) &&
+		    yes_no_prompt("Clear all writecache settings? ") == 'n') {
+			log_print("No settings changed.");
+			return 1;
+		}
+		memset(&seg->writecache_settings, 0, sizeof(struct writecache_settings));
+	}
+
+	/* Request caller to commit and reload metadata */
+	*mr |= MR_RELOAD;
+
+	return 1;
+}
+
 static int _lvchange_cache(struct cmd_context *cmd,
 			   struct logical_volume *lv,
 			   uint32_t *mr)
@@ -618,6 +690,9 @@ static int _lvchange_cache(struct cmd_context *cmd,
 	struct lv_segment *setting_seg = NULL;
 	int r = 0, is_clean;
 	uint32_t chunk_size = 0; /* FYI: lvchange does NOT support its change */
+
+	if (lv_is_writecache(lv))
+		return _lvchange_writecache(cmd, lv, mr);
 
 	seg = first_seg(lv);
 

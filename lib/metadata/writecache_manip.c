@@ -22,6 +22,7 @@
 #include "lib/metadata/lv_alloc.h"
 #include "lib/activate/activate.h"
 #include "lib/config/defaults.h"
+#include "lib/datastruct/str_list.h"
 
 int lv_is_writecache_origin(const struct logical_volume *lv)
 {
@@ -392,5 +393,74 @@ int lv_detach_writecache_cachevol(struct logical_volume *lv, int noflush)
 		return _lv_detach_writecache_cachevol_active(lv, noflush);
 	else
 		return _lv_detach_writecache_cachevol_inactive(lv, noflush);
+}
+
+static int _writecache_setting_str_list_add(const char *field, uint64_t val, char *val_str, struct dm_list *result, struct dm_pool *mem)
+{
+	char buf[128];
+	char *list_item;
+	int len;
+
+	if (val_str) {
+		if (dm_snprintf(buf, sizeof(buf), "%s=%s", field, val_str) < 0)
+			return_0;
+	} else {
+		if (dm_snprintf(buf, sizeof(buf), "%s=%llu", field, (unsigned long long)val) < 0)
+			return_0;
+	}
+
+	len = strlen(buf) + 1;
+
+	if (!(list_item = dm_pool_zalloc(mem, len)))
+		return_0;
+
+	memcpy(list_item, buf, len);
+
+	if (!str_list_add_no_dup_check(mem, result, list_item))
+		return_0;
+
+	return 1;
+}
+
+int writecache_settings_to_str_list(struct writecache_settings *settings, struct dm_list *result, struct dm_pool *mem)
+{
+	int errors = 0;
+
+	if (settings->high_watermark_set)
+		if (!_writecache_setting_str_list_add("high_watermark", settings->high_watermark, NULL, result, mem))
+			errors++;
+
+	if (settings->low_watermark_set)
+		if (!_writecache_setting_str_list_add("low_watermark", settings->low_watermark, NULL, result, mem))
+			errors++;
+
+	if (settings->writeback_jobs_set)
+		if (!_writecache_setting_str_list_add("writeback_jobs", settings->writeback_jobs, NULL, result, mem))
+			errors++;
+
+	if (settings->autocommit_blocks_set)
+		if (!_writecache_setting_str_list_add("autocommit_blocks", settings->autocommit_blocks, NULL, result, mem))
+			errors++;
+
+	if (settings->autocommit_time_set)
+		if (!_writecache_setting_str_list_add("autocommit_time", settings->autocommit_time, NULL, result, mem))
+			errors++;
+
+	if (settings->fua_set)
+		if (!_writecache_setting_str_list_add("fua", (uint64_t)settings->fua, NULL, result, mem))
+			errors++;
+
+	if (settings->nofua_set)
+		if (!_writecache_setting_str_list_add("nofua", (uint64_t)settings->nofua, NULL, result, mem))
+			errors++;
+
+	if (settings->new_key && settings->new_val)
+		if (!_writecache_setting_str_list_add(settings->new_key, 0, settings->new_val, result, mem))
+			errors++;
+
+	if (errors)
+		log_warn("Failed to create list of writecache settings.");
+
+	return 1;
 }
 

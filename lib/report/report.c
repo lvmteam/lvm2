@@ -1430,6 +1430,16 @@ static int _cache_settings_disp(struct dm_report *rh, struct dm_pool *mem,
 	struct _str_list_append_baton baton;
 	struct dm_list dummy_list; /* dummy list to display "nothing" */
 
+	if (seg_is_writecache(seg)) {
+		if (!(result = str_list_create(mem)))
+			return_0;
+
+		if (!writecache_settings_to_str_list(&seg->writecache_settings, result, mem))
+			return_0;
+
+		return _field_set_string_list(rh, field, result, private, 0, NULL);
+	}
+
 	if (seg_is_cache(seg) && lv_is_cache_vol(seg->pool_lv))
 		setting_seg = seg;
 
