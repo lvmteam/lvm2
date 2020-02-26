@@ -34,14 +34,17 @@ get_devs
 #	'allocation/vdo_physical_threads = 0' \
 #	'allocation/vdo_cpu_threads = 1'
 
-aux lvmconf 'allocation/vdo_slab_size_mb = 128'
-
-
 vgcreate $SHARED -s 64K "$vg" "${DEVICES[@]}"
 
 # Create VDO device  (vdo-pool is ATM internal volume type)
-lvcreate --type vdo -L4G -n $lv1 $vg/$lv2
-check lv_field $vg/$lv1 size "1.24g"
+lvcreate --type vdo -L4G -n $lv1 $vg/$lv2 >out 2>&1
+# new vdoformat prints some more info
+if grep "data slabs" out ; then
+	# check we have match vdo_slab_size_mb == 128MB (aux.sh)
+	grep "each 128 MB" out
+fi
+
+check lv_field $vg/$lv1 size "<1.24g"
 check lv_field $vg/${lv2} size "4.00g"
 check lv_field $vg/${lv2}_vdata size "4.00g"
 lvremove -ff $vg
