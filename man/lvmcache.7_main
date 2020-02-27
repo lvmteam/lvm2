@@ -417,13 +417,13 @@ compact, and stores dirty bits in a separate btree, which improves the
 speed of shutting down the cache.  With \fBauto\fP, lvm selects the best
 option provided by the current dm-cache kernel module.
 
-.SS mirrored cache device
+.SS RAID1 cache device
 
 \&
 
-The fast LV holding the cache can be created as a raid1 mirror so that it
-can tolerate a device failure.  (When using dm-cache with separate data
-and metadata LVs, each of the sub-LVs can use raid1.)
+RAID1 can be used to create the fast LV holding the cache so that it can
+tolerate a device failure.  (When using dm-cache with separate data
+and metadata LVs, each of the sub-LVs can use RAID1.)
 
 .nf
 $ lvcreate -n main -L Size vg /dev/slow
