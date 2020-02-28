@@ -397,7 +397,7 @@ static int _dump_all_text(struct cmd_context *cmd, struct settings *set, const c
 		 * copy line of possible metadata to check for vgname
 		 */
 		memset(line, 0, sizeof(line));
-		_copy_line(p, line, &len, sizeof(line));
+		_copy_line(p, line, &len, sizeof(line)-1);
 		p += len;
 
 		if (!_check_vgname_start(line, &vgnamelen)) {
@@ -411,7 +411,7 @@ static int _dump_all_text(struct cmd_context *cmd, struct settings *set, const c
 		 * copy next line of metadata, which should contain id
 		 */
 		memset(line, 0, sizeof(line));
-		_copy_line(p, line, &len, sizeof(line));
+		_copy_line(p, line, &len, sizeof(line)-1);
 		p += len;
 
 		if (strncmp(line, "id = ", 5)) {
@@ -425,7 +425,7 @@ static int _dump_all_text(struct cmd_context *cmd, struct settings *set, const c
 		 * copy next line of metadata, which should contain seqno
 		 */
 		memset(line, 0, sizeof(line));
-		_copy_line(p, line, &len, sizeof(line));
+		_copy_line(p, line, &len, sizeof(line)-1);
 		p += len;
 
 		if (strncmp(line, "seqno = ", 8)) {
@@ -503,14 +503,14 @@ static int _dump_all_text(struct cmd_context *cmd, struct settings *set, const c
 			char *str1, *str2;
 			if ((str1 = strstr(text_buf, "description = "))) {
 				memset(line, 0, sizeof(line));
-				_copy_line(str1, line, &len, sizeof(line));
+				_copy_line(str1, line, &len, sizeof(line)-1);
 				if ((p = strchr(line, '\n')))
 					*p = '\0';
 				log_print("%s", line);
 			}
 			if (str1 && (str2 = strstr(str1, "creation_time = "))) {
 				memset(line, 0, sizeof(line));
-				_copy_line(str2, line, &len, sizeof(line));
+				_copy_line(str2, line, &len, sizeof(line)-1);
 				if ((p = strchr(line, '\n')))
 					*p = '\0';
 				log_print("%s\n", line);
@@ -2481,7 +2481,7 @@ static int _backup_file_to_raw_metadata(char *back_buf, uint64_t back_size,
 		memset(line, 0, sizeof(line));
 		len = 0;
 
-		_copy_line(p, line, &len, sizeof(line));
+		_copy_line(p, line, &len, sizeof(line)-1);
 		p += len;
 		back_pos += len;
 
@@ -2507,7 +2507,7 @@ static int _backup_file_to_raw_metadata(char *back_buf, uint64_t back_size,
 		len = 0;
 		len2 = 0;
 
-		_copy_line(p, line, &len, sizeof(line));
+		_copy_line(p, line, &len, sizeof(line)-1);
 
 		if (line[0] == '\0')
 			break;
