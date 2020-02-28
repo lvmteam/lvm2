@@ -280,6 +280,9 @@ static int _text_buf_parsable(char *text_buf, uint64_t text_size)
 
 #define MAX_LINE_CHECK 128
 
+#define MAX_DESC 1024
+char desc_line[MAX_DESC];
+
 static void _copy_line(char *in, char *out, int *len, int linesize)
 {
 	int i;
@@ -502,18 +505,18 @@ static int _dump_all_text(struct cmd_context *cmd, struct settings *set, const c
 		if (arg_is_set(cmd, verbose_ARG)) {
 			char *str1, *str2;
 			if ((str1 = strstr(text_buf, "description = "))) {
-				memset(line, 0, sizeof(line));
-				_copy_line(str1, line, &len, sizeof(line)-1);
-				if ((p = strchr(line, '\n')))
+				memset(desc_line, 0, sizeof(desc_line));
+				_copy_line(str1, desc_line, &len, sizeof(desc_line)-1);
+				if ((p = strchr(desc_line, '\n')))
 					*p = '\0';
-				log_print("%s", line);
+				log_print("%s", desc_line);
 			}
 			if (str1 && (str2 = strstr(str1, "creation_time = "))) {
-				memset(line, 0, sizeof(line));
-				_copy_line(str2, line, &len, sizeof(line)-1);
-				if ((p = strchr(line, '\n')))
+				memset(desc_line, 0, sizeof(desc_line));
+				_copy_line(str2, desc_line, &len, sizeof(desc_line)-1);
+				if ((p = strchr(desc_line, '\n')))
 					*p = '\0';
-				log_print("%s\n", line);
+				log_print("%s\n", desc_line);
 			}
 		}
 
