@@ -981,6 +981,13 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 		return 0;
 	}
 
+	/*
+	 * Not invalidating this range can cause an error reading
+	 * a larger range that overlaps this.
+	 */
+	if (!dev_invalidate_bytes(dev, lh_offset, 512))
+		stack;
+
 	lh = (struct label_header *)buf;
 
 	if (print_fields) {
