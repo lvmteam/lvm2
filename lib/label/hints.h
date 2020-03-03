@@ -24,6 +24,8 @@ struct hint {
 	unsigned chosen:1; /* this hint's dev was chosen for scanning */
 };
 
+void free_hints(struct dm_list *hints);
+
 int write_hint_file(struct cmd_context *cmd, int newhints);
 
 void clear_hint_file(struct cmd_context *cmd);

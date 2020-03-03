@@ -356,6 +356,16 @@ void hints_exit(struct cmd_context *cmd)
 	return _unlock_hints(cmd);
 }
 
+void free_hints(struct dm_list *hints)
+{
+	struct hint *hint, *hint2;
+
+	dm_list_iterate_items_safe(hint, hint2, hints) {
+		dm_list_del(&hint->list);
+		free(hint);
+	}
+}
+
 static struct hint *_find_hint_name(struct dm_list *hints, const char *name)
 {
 	struct hint *hint;
@@ -787,8 +797,10 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 	if (fclose(fp))
 		stack;
 
-	if (!ret)
+	if (!ret) {
+		free_hints(hints);
 		return 0;
+	}
 
 	if (!found)
 		return 1;
