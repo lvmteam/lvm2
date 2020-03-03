@@ -12,7 +12,7 @@
 
 . lib/inittest
 
-aux prepare_devs 4
+aux prepare_devs 8 512
 get_devs
 
 dd if=/dev/zero of="$dev1" || true
@@ -129,3 +129,36 @@ diff area1 area3b
 
 vgremove -ff $vg
 
+pvremove "$dev1"
+pvremove "$dev2"
+pvremove "$dev3"
+pvremove "$dev4"
+
+pvcreate --pvmetadatacopies 2 --metadatasize 32M "$dev1"
+
+vgcreate $SHARED -s 512K --metadatasize 32M $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6" "$dev7" "$dev8"
+
+for i in `seq 1 500`; do lvcreate -an -n lv$i -l1 $vg; done
+
+pvck --dump headers "$dev1" > h1
+
+pvck --dump metadata_search "$dev1" > m1
+grep "seqno 500" m1
+
+dd if="$dev1" of=dev1dd bs=1M count=32
+dd if=/dev/zero of="$dev1" bs=4K count=1
+
+# mda_size for mda1 is 32M - 4K
+pvck --dump metadata_search --settings "mda_num=1 mda_size=33550336" "$dev1" > m1b
+grep "seqno 500" m1b
+
+pvck --dump metadata_search --settings "mda_num=1 mda_size=33550336" dev1dd > m1c
+grep "seqno 500" m1c
+
+# mda_size for mda2 is 32M
+pvck --dump metadata_search --settings "mda_num=2 mda_size=33554432" "$dev1" > m2
+grep "seqno 500" m2
+
+dd if=dev1dd of="$dev1" bs=1M count=32
+
+vgremove -ff $vg
