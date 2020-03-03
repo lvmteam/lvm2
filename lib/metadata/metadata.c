@@ -3433,6 +3433,8 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 
 	dm_list_init(&head.list);
 
+	*consistent = 1;
+
 	if (!(vginfo = lvmcache_vginfo_from_vgname(orphan_vgname, NULL)))
 		return_NULL;
 
