@@ -258,7 +258,7 @@ static int _text_buf_parse(char *text_buf, uint64_t text_size, struct dm_config_
 		return 0;
 	}
 
-	if (!dm_config_parse(cft, text_buf, text_buf + text_size)) {
+	if (!dm_config_parse_without_dup_node_check(cft, text_buf, text_buf + text_size)) {
 		config_destroy(cft);
 		return 0;
 	}
@@ -952,7 +952,7 @@ static int _dump_current_text(struct device *dev, struct devicefile *def,
 		log_print("CHECK: failed to set up metadata parsing");
 		bad++;
 	} else {
-		if (!dm_config_parse(cft, meta_buf, meta_buf + meta_size)) {
+		if (!dm_config_parse_without_dup_node_check(cft, meta_buf, meta_buf + meta_size)) {
 			log_print("CHECK: failed to parse metadata text at %llu size %llu",
 				  (unsigned long long)(mda_offset + meta_offset),
 				   (unsigned long long)meta_size);
