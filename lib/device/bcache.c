@@ -515,6 +515,7 @@ static bool _sync_issue(struct io_engine *ioe, enum dir d, int fd,
 					  (unsigned long long)limit_nbytes,
 					  (unsigned long long)extra_nbytes,
 					  (unsigned long long)_last_byte_sector_size);
+				free(io);
 				return false;
 			}
 		}
