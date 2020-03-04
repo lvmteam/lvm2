@@ -752,7 +752,7 @@ static void _exit_timeout(void *unused __attribute__((unused)))
 static void *_timeout_thread(void *unused __attribute__((unused)))
 {
 	struct thread_status *thread;
-	struct timespec timeout;
+	struct timespec timeout, real_time;
 	time_t curr_time;
 	int ret;
 
@@ -763,7 +763,16 @@ static void *_timeout_thread(void *unused __attribute__((unused)))
 	while (!dm_list_empty(&_timeout_registry)) {
 		timeout.tv_sec = 0;
 		timeout.tv_nsec = 0;
+#ifndef HAVE_REALTIME
 		curr_time = time(NULL);
+#else
+		if (clock_gettime(CLOCK_REALTIME, &real_time)) {
+			log_error("Failed to read clock_gettime().");
+			break;
+		}
+		/* 10ms back to the future */
+		curr_time = real_time.tv_sec + ((real_time.tv_nsec > (1000000000 - 10000000)) ? 1 : 0);
+#endif
 
 		dm_list_iterate_items_gen(thread, &_timeout_registry, timeout_list) {
 			if (thread->next_time <= curr_time) {
