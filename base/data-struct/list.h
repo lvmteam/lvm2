@@ -1,6 +1,8 @@
 #ifndef BASE_DATA_STRUCT_LIST_H
 #define BASE_DATA_STRUCT_LIST_H
 
+#include <stddef.h> /* offsetof */
+
 //----------------------------------------------------------------
 
 /*
@@ -98,7 +100,7 @@ struct dm_list *dm_list_next(const struct dm_list *head, const struct dm_list *e
  * contained in a structure of type t, return the containing structure.
  */
 #define dm_list_struct_base(v, t, head) \
-    ((t *)((const char *)(v) - (const char *)&((t *) 0)->head))
+    ((t *)((const char *)(v) - offsetof(t, head)))
 
 /*
  * Given the address v of an instance of 'struct dm_list list' contained in
@@ -111,7 +113,7 @@ struct dm_list *dm_list_next(const struct dm_list *head, const struct dm_list *e
  * return another element f.
  */
 #define dm_struct_field(v, t, e, f) \
-    (((t *)((uintptr_t)(v) - (uintptr_t)&((t *) 0)->e))->f)
+    (((t *)((uintptr_t)(v) - offsetof(t, e)))->f)
 
 /*
  * Given the address v of a known element e in a known structure of type t,
