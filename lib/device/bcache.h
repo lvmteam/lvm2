@@ -16,18 +16,11 @@
 #define BCACHE_H
 
 #include "device_mapper/all.h"
+#include "base/memory/container_of.h"
 
 #include <linux/fs.h>
 #include <stdint.h>
 #include <stdbool.h>
-
-/*----------------------------------------------------------------*/
-
-// FIXME: move somewhere more sensible
-#define container_of(v, t, head) \
-    ((t *)((const char *)(v) - (const char *)&((t *) 0)->head))
-
-/*----------------------------------------------------------------*/
 
 enum dir {
 	DIR_READ,
