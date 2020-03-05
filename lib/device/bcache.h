@@ -25,7 +25,7 @@
 
 // FIXME: move somewhere more sensible
 #define container_of(v, t, head) \
-    ((t *)((const char *)(v) - (const char *)&((t *) 0)->head))
+    ((t *)((const char *)(v) - offsetof(t, head)))
 
 /*----------------------------------------------------------------*/
 

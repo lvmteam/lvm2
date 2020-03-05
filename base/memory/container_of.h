@@ -1,4 +1,4 @@
-// Copyright (C) 2018 Red Hat, Inc. All rights reserved.
+// Copyright (C) 2018 - 2020 Red Hat, Inc. All rights reserved.
 // 
 // This file is part of LVM2.
 //
@@ -13,10 +13,12 @@
 #ifndef BASE_MEMORY_CONTAINER_OF_H
 #define BASE_MEMORY_CONTAINER_OF_H
 
+#include <stddef.h>  // offsetof
+
 //----------------------------------------------------------------
 
 #define container_of(v, t, head) \
-    ((t *)((const char *)(v) - (const char *)&((t *) 0)->head))
+    ((t *)((const char *)(v) - offsetof(t, head)))
 
 //----------------------------------------------------------------
 
