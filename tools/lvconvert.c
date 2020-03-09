@@ -5603,6 +5603,16 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 		goto bad;
 	}
 
+	/*
+	 * To permit this we need to check the block size of the fs using lv
+	 * (recently in libblkid) so that we can use a matching writecache
+	 * block size.  We also want to do that if the lv is inactive.
+	 */
+	if (lv_is_active(lv)) {
+		log_error("LV %s must be inactive to attach writecache.", display_lvname(lv));
+		goto bad;
+	}
+
 	/* fast LV shouldn't generally be active by itself, but just in case. */
 	if (lv_info(cmd, lv_fast, 1, NULL, 0, 0)) {
 		log_error("LV %s must be inactive to attach.", display_lvname(lv_fast));
@@ -5642,15 +5652,6 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 		lockd_fast_name = dm_pool_strdup(cmd->mem, lv_fast->name);
 		memcpy(&lockd_fast_id, &lv_fast->lvid.id[1], sizeof(struct id));
 	}
-
-	/*
-	 * TODO: use libblkid to get the sector size of lv.  If it doesn't
-	 * match the block_size we are using for the writecache, then warn that
-	 * an existing file system on lv may become unmountable with the
-	 * writecache attached because of the changing sector size.  If this
-	 * happens, then use --splitcache, and reattach the writecache using a
-	 * writecache block_size value matching the sector size of lv.
-	 */
 
 	if (!_writecache_zero(cmd, lv_fast)) {
 		log_error("LV %s could not be zeroed.", display_lvname(lv_fast));
