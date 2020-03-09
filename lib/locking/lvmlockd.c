@@ -2679,7 +2679,7 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 			log_error("Failed to find origin LV %s/%s", vg->name, lp->origin_name);
 			return 0;
 		}
-		if (!lockd_lv(cmd, origin_lv, "ex", LDLV_PERSISTENT)) {
+		if (!lockd_lv(cmd, origin_lv, "ex", 0)) {
 			log_error("Failed to lock origin LV %s/%s", vg->name, lp->origin_name);
 			return 0;
 		}
