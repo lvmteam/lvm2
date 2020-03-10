@@ -9,7 +9,7 @@ lvm2-activation-generator - generator for systemd units to activate LVM volumes 
 The lvm2-activation-generator is called by \fBsystemd\fP(1) on boot to
 generate systemd units at runtime to activate LVM Logical Volumes (LVs)
 when global/event_activation=0 is set in \fBlvm.conf\fP(5).  These units use
-\fBvgchange -ay\fP to activate LVs.
+\fBvgchange -aay\fP to activate LVs.
 
 If event_activation=1, the lvm2-activation-generator exits immediately without
 generating any systemd units, and LVM fully relies on event-based
