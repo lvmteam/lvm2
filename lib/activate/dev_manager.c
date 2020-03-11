@@ -86,7 +86,7 @@ int read_only_lv(const struct logical_volume *lv, const struct lv_activate_opts 
 		return 0; /* Keep RAID SubLvs writable */
 
 	if (!layer) {
-		if (lv_is_thin_pool(lv))
+		if (lv_is_thin_pool(lv) || lv_is_vdo_pool(lv))
 			return 1;
 	}
 
