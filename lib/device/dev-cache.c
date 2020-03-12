@@ -357,12 +357,14 @@ static int _get_sysfs_value(const char *path, char *buf, size_t buf_size, int er
 	int r = 0;
 
 	if (!(fp = fopen(path, "r"))) {
-		log_sys_error("fopen", path);
+		if (error_if_no_value)
+			log_sys_error("fopen", path);
 		return 0;
 	}
 
 	if (!fgets(buf, buf_size, fp)) {
-		log_sys_error("fgets", path);
+		if (error_if_no_value)
+			log_sys_error("fgets", path);
 		goto out;
 	}
 
@@ -1460,6 +1462,7 @@ struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct d
 		_insert(name, info_available ? &buf : NULL, 0, obtain_device_list_from_udev());
 		d = (struct device *) dm_hash_lookup(_cache.names, name);
 		if (!d) {
+			log_debug_devs("Device name not found in dev_cache repeat dev_cache_scan for %s", name);
 			dev_cache_scan();
 			d = (struct device *) dm_hash_lookup(_cache.names, name);
 		}
@@ -1535,6 +1538,8 @@ struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t dev, struct 
 			}
 		}
 
+		log_debug_devs("Device num not found in dev_cache repeat dev_cache_scan for %d:%d",
+				(int)MAJOR(dev), (int)MINOR(dev));
 		dev_cache_scan();
 		d = _dev_cache_seek_devt(dev);
 	}

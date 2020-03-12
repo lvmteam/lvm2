@@ -94,7 +94,7 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 	}
 
 	if (fd <= 0) {
-		if (!dev_open_readonly(dev))
+		if (!dev_open_readonly_quiet(dev))
 			return_0;
 		fd = dev_fd(dev);
 		do_close = 1;
@@ -128,8 +128,10 @@ static int _dev_read_ahead_dev(struct device *dev, uint32_t *read_ahead)
 		return 1;
 	}
 
-	if (!dev_open_readonly(dev))
+	if (!dev_open_readonly_quiet(dev)) {
+		log_error("Failed to open to get readahead %s", dev_name(dev));
 		return_0;
+	}
 
 	if (ioctl(dev->fd, BLKRAGET, &read_ahead_long) < 0) {
 		log_sys_error("ioctl BLKRAGET", dev_name(dev));
@@ -194,7 +196,7 @@ int dev_get_direct_block_sizes(struct device *dev, unsigned int *physical_block_
 	}
 
 	if (fd <= 0) {
-		if (!dev_open_readonly(dev))
+		if (!dev_open_readonly_quiet(dev))
 			return 0;
 		fd = dev_fd(dev);
 		do_close = 1;

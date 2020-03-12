@@ -86,7 +86,7 @@ int dev_is_lv(struct device *dev)
 		return 0;
 
 	if (!fgets(buffer, sizeof(buffer), fp))
-		log_warn("Failed to read %s.", path);
+		log_debug("Failed to read %s.", path);
 	else if (!strncmp(buffer, "LVM-", 4))
 		ret = 1;
 
