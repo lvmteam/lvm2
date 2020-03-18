@@ -160,11 +160,11 @@ mount "$DM_DEV_DIR/$vg/$lv1" $mount_dir
 
 diff pattern1 $mount_dir/pattern1
 diff pattern1 $mount_dir/pattern1.after
+fi
 
 umount $mount_dir
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
-fi
 
 vgremove -ff $vg
 
