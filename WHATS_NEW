@@ -1,5 +1,5 @@
-Version 2.02.187 - 
-===================================
+Version 2.02.187 - 24th March 2020
+==================================
   Avoid running cache input arg validation when creating vdo pool.
   Prevent raid reshaping of stacked volumes.
   Ensure minimum required region size on striped RaidLV creation.
