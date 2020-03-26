@@ -1,3 +1,6 @@
+Version 1.02.173 - 
+==================================
+
 Version 1.02.171 - 26th March 2020
 ==================================
   Fix dm_list interators with gcc 10 optimization (-ftree-pta).

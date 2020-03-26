@@ -1,3 +1,6 @@
+Version 2.03.10 - 
+=================================
+
 Version 2.03.09 - 26th March 2020
 =================================
   Fix formating of vdopool (vdo_slab_size_mb was smaller by 2 bits).
