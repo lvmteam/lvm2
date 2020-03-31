@@ -26,6 +26,9 @@
 #include "lib/metadata/lv_alloc.h"
 #include "lib/config/defaults.h"
 
+static int _writecache_cleaner_supported;
+static int _writecache_max_age_supported;
+
 #define SEG_LOG_ERROR(t, p...) \
         log_error(t " segment %s of logical volume %s.", ## p,	\
                   dm_config_parent_name(sn), seg->lv->name), 0;
@@ -120,6 +123,18 @@ static int _writecache_text_import(struct lv_segment *seg,
 		seg->writecache_settings.nofua_set = 1;
 	}
 
+	if (dm_config_has_node(sn, "cleaner")) {
+		if (!dm_config_get_uint32(sn, "cleaner", &seg->writecache_settings.cleaner))
+			return SEG_LOG_ERROR("Unknown writecache_setting in");
+		seg->writecache_settings.cleaner_set = 1;
+	}
+
+	if (dm_config_has_node(sn, "max_age")) {
+		if (!dm_config_get_uint32(sn, "max_age", &seg->writecache_settings.max_age))
+			return SEG_LOG_ERROR("Unknown writecache_setting in");
+		seg->writecache_settings.max_age_set = 1;
+	}
+
 	if (dm_config_has_node(sn, "writecache_setting_key")) {
 		const char *key;
 		const char *val;
@@ -184,6 +199,14 @@ static int _writecache_text_export(const struct lv_segment *seg,
 	        outf(f, "nofua = %u", seg->writecache_settings.nofua);
 	}
 
+	if (seg->writecache_settings.cleaner_set && seg->writecache_settings.cleaner) {
+	        outf(f, "cleaner = %u", seg->writecache_settings.cleaner);
+	}
+
+	if (seg->writecache_settings.max_age_set) {
+	        outf(f, "max_age = %u", seg->writecache_settings.max_age);
+	}
+
 	if (seg->writecache_settings.new_key && seg->writecache_settings.new_val) {
 	        outf(f, "writecache_setting_key = \"%s\"",
 	                seg->writecache_settings.new_key);
@@ -208,6 +231,7 @@ static int _target_present(struct cmd_context *cmd,
 {
 	static int _writecache_checked = 0;
 	static int _writecache_present = 0;
+	uint32_t maj, min, patchlevel;
 
 	if (!activation())
 		return 0;
@@ -215,6 +239,19 @@ static int _target_present(struct cmd_context *cmd,
 	if (!_writecache_checked) {
 		_writecache_checked = 1;
 		_writecache_present =  target_present(cmd, TARGET_NAME_WRITECACHE, 1);
+
+		if (!target_version(TARGET_NAME_WRITECACHE, &maj, &min, &patchlevel))
+			return_0;
+
+		if (maj < 1) {
+			log_error("writecache target version older than minimum 1.0.0");
+			return 0;
+		}
+
+		if (min >= 2) {
+			_writecache_cleaner_supported = 1;
+			_writecache_max_age_supported = 1;
+		}
 	}
 
 	return _writecache_present;
@@ -255,6 +292,18 @@ static int _writecache_add_target_line(struct dev_manager *dm,
 	if (!seg->writecache) {
 		log_error(INTERNAL_ERROR "Passed segment has no writecache.");
 		return 0;
+	}
+
+	if (!_writecache_cleaner_supported && seg->writecache_settings.cleaner_set && seg->writecache_settings.cleaner) {
+		log_warn("WARNING: ignoring writecache setting \"cleaner\" which is not supported by kernel for LV %s.", seg->lv->name);
+		seg->writecache_settings.cleaner = 0;
+		seg->writecache_settings.cleaner_set = 0;
+	}
+
+	if (!_writecache_max_age_supported && seg->writecache_settings.max_age_set) {
+		log_warn("WARNING: ignoring writecache setting \"max_age\" which is not supported by kernel for LV %s.", seg->lv->name);
+		seg->writecache_settings.max_age = 0;
+		seg->writecache_settings.max_age_set = 0;
 	}
 
 	if ((pmem = lv_on_pmem(seg->writecache)) < 0)

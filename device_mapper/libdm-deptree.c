@@ -2670,6 +2670,10 @@ static int _writecache_emit_segment_line(struct dm_task *dmt,
 		count += 1;
 	if (seg->writecache_settings.nofua_set)
 		count += 1;
+	if (seg->writecache_settings.cleaner_set && seg->writecache_settings.cleaner)
+		count += 1;
+	if (seg->writecache_settings.max_age_set)
+		count += 2;
 	if (seg->writecache_settings.new_key)
 		count += 2;
 
@@ -2711,6 +2715,14 @@ static int _writecache_emit_segment_line(struct dm_task *dmt,
 
 	if (seg->writecache_settings.nofua_set) {
 		EMIT_PARAMS(pos, " nofua");
+	}
+
+	if (seg->writecache_settings.cleaner_set && seg->writecache_settings.cleaner) {
+		EMIT_PARAMS(pos, " cleaner");
+	}
+
+	if (seg->writecache_settings.max_age_set) {
+		EMIT_PARAMS(pos, " max_age %u", seg->writecache_settings.max_age);
 	}
 
 	if (seg->writecache_settings.new_key) {

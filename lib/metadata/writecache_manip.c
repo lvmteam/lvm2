@@ -454,6 +454,14 @@ int writecache_settings_to_str_list(struct writecache_settings *settings, struct
 		if (!_writecache_setting_str_list_add("nofua", (uint64_t)settings->nofua, NULL, result, mem))
 			errors++;
 
+	if (settings->cleaner_set && settings->cleaner)
+		if (!_writecache_setting_str_list_add("cleaner", (uint64_t)settings->cleaner, NULL, result, mem))
+			errors++;
+
+	if (settings->max_age_set)
+		if (!_writecache_setting_str_list_add("max_age", (uint64_t)settings->max_age, NULL, result, mem))
+			errors++;
+
 	if (settings->new_key && settings->new_val)
 		if (!_writecache_setting_str_list_add(settings->new_key, 0, settings->new_val, result, mem))
 			errors++;

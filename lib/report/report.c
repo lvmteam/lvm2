@@ -1434,7 +1434,7 @@ static int _cache_settings_disp(struct dm_report *rh, struct dm_pool *mem,
 		if (!(result = str_list_create(mem)))
 			return_0;
 
-		if (!writecache_settings_to_str_list(&seg->writecache_settings, result, mem))
+		if (!writecache_settings_to_str_list((struct writecache_settings *)&seg->writecache_settings, result, mem))
 			return_0;
 
 		return _field_set_string_list(rh, field, result, private, 0, NULL);

@@ -1262,6 +1262,20 @@ static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecach
 		return 1;
 	}
 
+	if (!strncmp(key, "cleaner", strlen("cleaner"))) {
+		if (sscanf(val, "%u", &settings->cleaner) != 1)
+			goto_bad;
+		settings->cleaner_set = 1;
+		return 1;
+	}
+
+	if (!strncmp(key, "max_age", strlen("max_age"))) {
+		if (sscanf(val, "%u", &settings->max_age) != 1)
+			goto_bad;
+		settings->max_age_set = 1;
+		return 1;
+	}
+
 	if (settings->new_key) {
 		log_error("Setting %s is not recognized. Only one unrecognized setting is allowed.", key);
 		return 0;

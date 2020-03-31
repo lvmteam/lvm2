@@ -951,6 +951,8 @@ struct writecache_settings {
 	uint64_t autocommit_time; /* in milliseconds */
 	uint32_t fua;
 	uint32_t nofua;
+	uint32_t cleaner;
+	uint32_t max_age;
 
 	/*
 	 * Allow an unrecognized key and its val to be passed to the kernel for
@@ -970,6 +972,8 @@ struct writecache_settings {
 	unsigned autocommit_time_set:1;
 	unsigned fua_set:1;
 	unsigned nofua_set:1;
+	unsigned cleaner_set:1;
+	unsigned max_age_set:1;
 };
 
 int dm_tree_node_add_writecache_target(struct dm_tree_node *node,
