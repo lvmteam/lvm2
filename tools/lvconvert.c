@@ -2325,7 +2325,8 @@ static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
 		goto deactivate_mlv;
 	}
 
-	if (thin_dump[0]) {
+	/* Check matching transactionId when thin-pool is used by lvm2 (transactionId != 0) */
+	if (first_seg(pool_lv)->transaction_id && thin_dump[0]) {
 		argv[0] = thin_dump;
 		argv[1] = pms_path;
 		argv[2] = NULL;
