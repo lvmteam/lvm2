@@ -1,5 +1,6 @@
 Version 2.02.188 - 
 ==================================
+  Fix support for lvconvert --repair used by foreign apps (i.e. Docker).
 
 Version 2.02.187 - 24th March 2020
 ==================================

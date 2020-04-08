@@ -1,5 +1,7 @@
 Version 1.02.172 - 
 ==================================
+  Fix dm_list interators with gcc 10 optimization (-ftree-pta).
+  Dmeventd handles timer without looping on short intervals.
 
 Version 1.02.170 - 24th March 2020
 ==================================
