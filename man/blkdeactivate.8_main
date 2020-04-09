@@ -9,6 +9,7 @@ blkdeactivate \(em utility to deactivate block devices
 .RB [ -l \  \fIlvm_options\fP ]
 .RB [ -m \  \fImpath_options\fP ]
 .RB [ -r \  \fImdraid_options\fP ]
+.RB [ -o \  \fIvdo_options\fP ]
 .RB [ -u ]
 .RB [ -v ]
 .RI [ device ]
@@ -70,6 +71,15 @@ Comma-separated list of MD RAID specific options:
 Wait MD device's resync, recovery or reshape action to complete
 before deactivation.
 .RE
+
+.TP
+.BR -o ", " --vdooptions \ \fIvdo_options\fP
+Comma-separated list of VDO specific options:
+.RS
+.IP \fIconfigfile=file\fP
+Use specified VDO configuration file.
+.RE
+
 .TP
 .BR -u ", " --umount
 Unmount a mounted device before trying to deactivate it.
@@ -120,4 +130,5 @@ of a device-mapper device fails, retry it and force removal.
 .BR lvm (8),
 .BR mdadm (8),
 .BR multipathd (8),
+.BR vdo (8),
 .BR umount (8)
