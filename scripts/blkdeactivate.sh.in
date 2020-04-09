@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2012-2017 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2012-2020 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -38,6 +38,7 @@ MDADM="/sbin/mdadm"
 MOUNTPOINT="/bin/mountpoint"
 MPATHD="/sbin/multipathd"
 UMOUNT="/bin/umount"
+VDO="/bin/vdo"
 
 sbindir="@SBINDIR@"
 DMSETUP="$sbindir/dmsetup"
@@ -54,6 +55,7 @@ DMSETUP_OPTS=""
 LVM_OPTS=""
 MDADM_OPTS=""
 MPATHD_OPTS=""
+VDO_OPTS=""
 
 LSBLK="/bin/lsblk -r --noheadings -o TYPE,KNAME,NAME,MOUNTPOINT"
 LSBLK_VARS="local devtype local kname local name local mnt"
@@ -124,6 +126,7 @@ usage() {
 	echo "    -l | --lvmoptions    LVM_OPTIONS    Comma separated LVM specific options"
 	echo "    -m | --mpathoptions  MPATH_OPTIONS  Comma separated DM-multipath specific options"
 	echo "    -r | --mdraidoptions MDRAID_OPTIONS Comma separated MD RAID specific options"
+        echo "    -o | --vdooptions    VDO_OPTIONS    Comma separated VDO specific options"
 	echo "    -u | --umount                       Unmount the device if mounted"
 	echo "    -v | --verbose                      Verbose mode (also implies -e)"
 	echo
@@ -138,6 +141,8 @@ usage() {
 	echo "      wait            wait for resync, recovery or reshape to complete first"
 	echo "    MPATH_OPTIONS:"
 	echo "      disablequeueing disable queueing on all DM-multipath devices first"
+        echo "    VDO_OPTIONS:"
+        echo "      configfile=file use specified VDO configuration file"
 
 	exit
 }
@@ -319,6 +324,23 @@ deactivate_md () {
 	fi
 }
 
+deactivate_vdo() {
+        local xname
+        xname=$(printf "%s" "$name")
+        test -b "$DEV_DIR/mapper/$xname" || return 0
+        test -z "${SKIP_DEVICE_LIST["$kname"]}" || return 1
+
+        deactivate_holders "$DEV_DIR/mapper/$xname" || return 1
+
+        echo -n "  [VDO]: deactivating VDO volume $xname... "
+        if eval "$VDO" stop $VDO_OPTS --name="$xname" "$OUT" "$ERR"; then
+                echo "done"
+        else
+                echo "skipping"
+                add_device_to_skip_list
+        fi
+}
+
 deactivate () {
 	######################################################################
 	# DEACTIVATION HOOKS FOR NEW DEVICE TYPES GO HERE!                   #
@@ -335,6 +357,8 @@ deactivate () {
 	######################################################################
 	if test "$devtype" = "lvm"; then
 		deactivate_lvm
+        elif test "$devtype" = "vdo"; then
+                deactivate_vdo
 	elif test "${kname:0:3}" = "dm-"; then
 		deactivate_dm
 	elif test "${kname:0:2}" = "md"; then
@@ -479,6 +503,20 @@ get_mpathopts() {
 	IFS=$ORIG_IFS
 }
 
+get_vdoopts() {
+        ORIG_IFS=$IFS; IFS=','
+
+        for opt in $1; do
+                case "$opt" in
+                        "") ;;
+                        configfile=*) tmp=${opt#*=}; VDO_OPTS+="--confFile=${tmp%%,*} " ;;
+                        *) echo "$opt: unknown VDO option"
+                esac
+        done
+
+        IFS=$ORIG_IFS
+}
+
 set_env() {
 	if test "$ERRORS" -eq "1"; then
 		unset ERR
@@ -493,6 +531,7 @@ set_env() {
 		LVM_OPTS+="-vvvv"
 		MDADM_OPTS+="-vv"
 		MPATHD_OPTS+="-v 3"
+                VDO_OPTS+="--verbose "
 	else
 		OUT="1>$DEV_DIR/null"
 	fi
@@ -508,6 +547,12 @@ set_env() {
 	else
 		MDADM_AVAILABLE=0
 	fi
+
+        if test -f $VDO; then
+                VDO_AVAILABLE=1
+        else
+                VDO_AVAILABLE=0
+        fi
 
 	MPATHD_RUNNING=0
 	test "$MPATHD_DO_DISABLEQUEUEING" -eq 1 && {
@@ -528,6 +573,7 @@ while test $# -ne 0; do
 		"-l"|"--lvmoptions") get_lvmopts "$2" ; shift ;;
 		"-m"|"--mpathoptions") get_mpathopts "$2" ; shift ;;
 		"-r"|"--mdraidoptions") get_mdraidopts "$2"; shift ;;
+                "-o"|"--vdooptions") get_vdoopts "$2"; shift ;;
 		"-u"|"--umount") DO_UMOUNT=1 ;;
 		"-v"|"--verbose") VERBOSE=1 ; ERRORS=1 ;;
 		"-vv") VERBOSE=1 ; ERRORS=1 ; set -x ;;
