@@ -278,7 +278,18 @@ int lvconvert_to_vdopool_param_cmd(struct cmd_context *cmd, int argc, char **arg
 
 int lvconvert_integrity_cmd(struct cmd_context *cmd, int argc, char **argv);
 
+int lvcreate_and_attach_writecache_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvcreate_and_attach_cache_cmd(struct cmd_context *cmd, int argc, char **argv);
+
 int pvscan_display_cmd(struct cmd_context *cmd, int argc, char **argv);
 int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv);
+
+
+int lvconvert_writecache_attach_single(struct cmd_context *cmd,
+                                        struct logical_volume *lv,
+                                        struct processing_handle *handle);
+int lvconvert_cachevol_attach_single(struct cmd_context *cmd,
+                                     struct logical_volume *lv,
+                                     struct processing_handle *handle);
 
 #endif

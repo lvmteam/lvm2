@@ -1420,6 +1420,9 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 		if (line[0] == '\n')
 			break;
 
+		if (!strcmp(line, "---") || !strcmp(line, "--"))
+			continue;
+
 		if ((n = strchr(line, '\n')))
 			*n = '\0';
 

@@ -126,7 +126,7 @@ arg(cachepool_ARG, '\0', "cachepool", lv_VAL, 0, 0,
 arg(cachevol_ARG, '\0', "cachevol", lv_VAL, 0, 0,
     "The name of a cache volume.\n")
 
-arg(cachedevice_ARG, '\0', "cachedevice", pv_VAL, 0, 0,
+arg(cachedevice_ARG, '\0', "cachedevice", pv_VAL, ARG_GROUPABLE, 0,
     "The name of a device to use for a cache.\n")
 
 arg(cachesize_ARG, '\0', "cachesize", sizemb_VAL, 0, 0,

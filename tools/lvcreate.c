@@ -766,7 +766,9 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	 *
 	 * Ordering of following type tests is IMPORTANT
 	 */
-	if ((segtype_str = arg_str_value(cmd, type_ARG, NULL))) {
+	if (lp->ignore_type) {
+		segtype_str = SEG_TYPE_NAME_STRIPED;
+	} else if ((segtype_str = arg_str_value(cmd, type_ARG, NULL))) {
 		lp->type = 1;
 		if (!strcmp(segtype_str, "linear")) {
 			segtype_str = "striped";
@@ -1799,3 +1801,152 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	destroy_processing_handle(cmd, handle);
 	return ret;
 }
+
+static int _lvcreate_and_attach_writecache_single(struct cmd_context *cmd,
+		const char *vg_name, struct volume_group *vg, struct processing_handle *handle)
+{
+	struct processing_params *pp = (struct processing_params *) handle->custom_handle;
+	struct lvcreate_params *lp = pp->lp;
+	struct logical_volume *lv;
+	int ret;
+
+	ret = _lvcreate_single(cmd, vg_name, vg, handle);
+
+	if (ret == ECMD_FAILED)
+		return ret;
+
+	if (!(lv = find_lv(vg, lp->lv_name))) {
+		log_error("Failed to find LV %s to add writecache.", lp->lv_name);
+		return ECMD_FAILED;
+	}
+
+	ret = lvconvert_writecache_attach_single(cmd, lv, handle);
+
+	if (ret == ECMD_FAILED) {
+		log_error("Removing new LV after failing to add writecache.");
+		if (!deactivate_lv(cmd, lv))
+			log_error("Failed to deactivate new LV %s.", display_lvname(lv));
+		if (!lv_remove_with_dependencies(cmd, lv, 1, 0))
+			log_error("Failed to remove new LV %s.", display_lvname(lv));
+		return ECMD_FAILED;
+	}
+
+	return ECMD_PROCESSED;
+}
+
+int lvcreate_and_attach_writecache_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	struct processing_handle *handle = NULL;
+	struct processing_params pp;
+	struct lvcreate_params lp = {
+		.major = -1,
+		.minor = -1,
+	};
+	struct lvcreate_cmdline_params lcp = { 0 };
+	int ret;
+
+	/*
+	 * Tell lvcreate to ignore --type since we are using lvcreate
+	 * to create a linear LV and using lvconvert to add cache.
+	 * (Would be better if lvcreate code was split up so we could
+	 * call a specific function that just created a linear/striped LV.)
+	 */
+	lp.ignore_type = 1;
+
+	if (!_lvcreate_params(cmd, argc, argv, &lp, &lcp)) {
+		stack;
+		return EINVALID_CMD_LINE;
+	}
+
+	pp.lp = &lp;
+	pp.lcp = &lcp;
+
+        if (!(handle = init_processing_handle(cmd, NULL))) {
+		log_error("Failed to initialize processing handle.");
+		return ECMD_FAILED;
+	}
+
+	handle->custom_handle = &pp;
+
+	ret = process_each_vg(cmd, 0, NULL, lp.vg_name, NULL, READ_FOR_UPDATE, 0, handle,
+			      &_lvcreate_and_attach_writecache_single);
+
+	_destroy_lvcreate_params(&lp);
+	destroy_processing_handle(cmd, handle);
+	return ret;
+}
+
+static int _lvcreate_and_attach_cache_single(struct cmd_context *cmd,
+		const char *vg_name, struct volume_group *vg, struct processing_handle *handle)
+{
+	struct processing_params *pp = (struct processing_params *) handle->custom_handle;
+	struct lvcreate_params *lp = pp->lp;
+	struct logical_volume *lv;
+	int ret;
+
+	ret = _lvcreate_single(cmd, vg_name, vg, handle);
+
+	if (ret == ECMD_FAILED)
+		return ret;
+
+	if (!(lv = find_lv(vg, lp->lv_name))) {
+		log_error("Failed to find LV %s to add cache.", lp->lv_name);
+		return ECMD_FAILED;
+	}
+
+	ret = lvconvert_cachevol_attach_single(cmd, lv, handle);
+
+	if (ret == ECMD_FAILED) {
+		log_error("Removing new LV after failing to add cache.");
+		if (!deactivate_lv(cmd, lv))
+			log_error("Failed to deactivate new LV %s.", display_lvname(lv));
+		if (!lv_remove_with_dependencies(cmd, lv, 1, 0))
+			log_error("Failed to remove new LV %s.", display_lvname(lv));
+		return ECMD_FAILED;
+	}
+
+	return ECMD_PROCESSED;
+}
+
+int lvcreate_and_attach_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	struct processing_handle *handle = NULL;
+	struct processing_params pp;
+	struct lvcreate_params lp = {
+		.major = -1,
+		.minor = -1,
+	};
+	struct lvcreate_cmdline_params lcp = { 0 };
+	int ret;
+
+	/*
+	 * Tell lvcreate to ignore --type since we are using lvcreate
+	 * to create a linear LV and using lvconvert to add cache.
+	 * (Would be better if lvcreate code was split up so we could
+	 * call a specific function that just created a linear/striped LV.)
+	 */
+	lp.ignore_type = 1;
+
+	if (!_lvcreate_params(cmd, argc, argv, &lp, &lcp)) {
+		stack;
+		return EINVALID_CMD_LINE;
+	}
+
+	pp.lp = &lp;
+	pp.lcp = &lcp;
+
+	if (!(handle = init_processing_handle(cmd, NULL))) {
+		log_error("Failed to initialize processing handle.");
+		return ECMD_FAILED;
+	}
+
+	handle->custom_handle = &pp;
+
+	ret = process_each_vg(cmd, 0, NULL, lp.vg_name, NULL, READ_FOR_UPDATE, 0, handle,
+			      &_lvcreate_and_attach_cache_single);
+
+	_destroy_lvcreate_params(&lp);
+	destroy_processing_handle(cmd, handle);
+	return ret;
+}
+

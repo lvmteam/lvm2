@@ -1219,84 +1219,104 @@ lvcreate --type cache --size SizeMB --cachepool LV_cachepool VG
 OO: --cache, OO_LVCREATE_POOL, OO_LVCREATE_CACHE, OO_LVCREATE,
 --stripes Number, --stripesize SizeKB
 OP: PV ...
-ID: lvcreate_cache_vol_with_new_origin
-DESC: Create a cache LV, first creating a new origin LV,
-DESC: then combining it with the existing cache pool named
-DESC: by the --cachepool arg.
+ID: lvcreate_and_attach_cachepool
+DESC: Create a new LV, then attach the specified cachepool
+DESC: which converts the new LV to type cache.
 
 # alternate form of lvcreate --type cache
+# (omits the --type cache option which is inferred)
 lvcreate --size SizeMB --cachepool LV_cachepool VG
 OO: --type cache, --cache, OO_LVCREATE_CACHE, OO_LVCREATE,
 --stripes Number, --stripesize SizeKB
 OP: PV ...
-ID: lvcreate_cache_vol_with_new_origin
-DESC: Create a cache LV, first creating a new origin LV,
-DESC: then combining it with the existing cache pool named
-DESC: by the --cachepool arg (variant, infers --type cache).
+ID: lvcreate_and_attach_cachepool_v2
+DESC: Create a new LV, then attach the specified cachepool
+DESC: which converts the new LV to type cache
+DESC: (variant, infers --type cache.)
 FLAGS: SECONDARY_SYNTAX
 
 # alternate form of lvcreate --type cache
+# (moves cachepool from option arg to position arg,
+# dropping the normal VG position arg)
 lvcreate --type cache --size SizeMB LV_cachepool
 OO: --cache, OO_LVCREATE_POOL, OO_LVCREATE_CACHE, OO_LVCREATE,
 --stripes Number, --stripesize SizeKB
 OP: PV ...
-ID: lvcreate_cache_vol_with_new_origin
-DESC: Create a cache LV, first creating a new origin LV,
-DESC: then combining it with the existing cache pool named
-DESC: in the first arg (variant, also use --cachepool).
+ID: lvcreate_and_attach_cachepool_v3
+DESC: Create a new LV, then attach the specified cachepool
+DESC: which converts the new LV to type cache.
+DESC: (variant, also use --cachepool).
 FLAGS: SECONDARY_SYNTAX
 
-# This is a ridiculously crazy command which nobody could
-# understand.  It should be be eliminated.  It does two different
-# things depending on whether LV in pos 1 is a cachepool LV
-# or not.  Both variations are unnecessary.
+# This command has two different meanings which ought to
+# have separate command defs, but since the syntax is the
+# same for both they have to share one command def with
+# an ambiguous meaning.  Which command is performed depends
+# on whether the LV in the first arg position is a
+# cachepool or not (we can't have two different command
+# defs that differ only in the type of LV in the arg position
+# because when parsing commands we don't know the LV type.)
 #
-# 1. If LV is a cachepool, then it's an alternate form of
-#    an already complicated command above.
+# 1. An alternate form of lvcreate_and_attach_cachepool_v3
+#    this syntax:         lvcreate --cache --size SizeMB LV_cachepool
+#    is alternative for:  lvcreate --type cache --size SizeMB LV_cachepool
 #
-# # alternate form for lvcreate_cache_vol_with_new_origin
-# lvcreate --cache --size SizeMB LV_cachepool
-# OO: --type cache, --cache, OO_LVCREATE_CACHE, OO_LVCREATE, --stripes Number, --stripesize SizeKB
-# OP: PV ...
-# ID: lvcreate_cache_vol_with_new_origin
-# DESC: Create a cache LV, first creating a new origin LV,
-# DESC: then combining it with the existing cache pool named
-# DESC: in the first arg (variant, infers --type cache,
-# DESC: also use --cachepool).
-#
-# 2. If LV is not a cachepool, then it's a disguised lvconvert.
-#
-# # FIXME: this should be done by lvconvert, and this command removed
-# lvcreate --type cache --size SizeMB LV
-# OO: OO_LVCREATE_POOL, OO_LVCREATE_CACHE, OO_LVCREATE
-# OP: PV ...
-# ID: lvcreate_convert_to_cache_vol_with_cachepool
-# DESC: Convert the specified LV to type cache after creating a new
-# DESC: cache pool LV to use (use lvconvert).
+# 2. An alternative to using lvconvert to convert LV to type cache,
+#    but in this case the cachepool is created internally and
+#    then attached to the LV arg.
 #
 # Note that stripes are accepted by the first and not by the
 # second, but it's not possible to validate this until after
 # the LV type is known.
-#
-# So, to define this syntax we have to combine both of
-# those variants, each crazy on it's own, into one
-# ridiculous command.
 
-# def1: alternate form of lvcreate --type cache, or
-# def2: it should be done by lvconvert.
 lvcreate --cache --size SizeMB LV
 OO: OO_LVCREATE_CACHE, OO_LVCREATE_POOL, OO_LVCREATE,
 --stripes Number, --stripesize SizeKB
 OP: PV ...
-ID: lvcreate_cache_vol_with_new_origin_or_convert_to_cache_vol_with_cachepool
-DESC: When LV is a cache pool, create a cache LV,
-DESC: first creating a new origin LV, then combining it with
-DESC: the existing cache pool named in the first arg
-DESC: (variant, infers --type cache, also use --cachepool).
-DESC: When LV is not a cache pool, convert the specified LV
-DESC: to type cache after creating a new cache pool LV to use
-DESC: (use lvconvert).
+ID: lvcreate_new_plus_old_cachepool_or_lvconvert_old_plus_new_cachepool
+DESC: When the LV arg is a cachepool, then create a new LV and
+DESC: attach the cachepool arg to it.
+DESC: (variant, use --type cache and --cachepool.)
+DESC: When the LV arg is not a cachepool, then create a new cachepool
+DESC: and attach it to the LV arg (alternative, use lvconvert.)
 FLAGS: SECONDARY_SYNTAX
+
+---
+
+# These all create a new origin LV, then forwards to lvconvert
+# which combines it with a cachevol (which already exists or
+# which needs to be created from cachedevice), converting
+# the new LV to type cache or writecache.
+
+lvcreate --type cache --size SizeMB --cachevol LV VG
+OO: OO_LVCREATE, OO_LVCREATE_CACHE, --stripes Number, --stripesize SizeKB
+OP: PV ...
+ID: lvcreate_and_attach_cachevol_for_cache
+DESC: Create a new LV, then attach the specified cachevol
+DESC: which converts the new LV to type cache.
+
+lvcreate --type cache --size SizeMB --cachedevice PV VG
+OO: OO_LVCREATE, OO_LVCREATE_CACHE, --cachesize SizeMB, --stripes Number, --stripesize SizeKB
+OP: PV ...
+ID: lvcreate_and_attach_cachedevice_for_cache
+DESC: Create a new LV, then attach a cachevol created from
+DESC: the specified cache device, which converts the
+DESC: new LV to type cache.
+
+lvcreate --type writecache --size SizeMB --cachevol LV VG
+OO: OO_LVCREATE, --cachesettings String, --stripes Number, --stripesize SizeKB
+OP: PV ...
+ID: lvcreate_and_attach_cachevol_for_writecache
+DESC: Create a new LV, then attach the specified cachevol
+DESC: which converts the new LV to type writecache.
+
+lvcreate --type writecache --size SizeMB --cachedevice PV VG
+OO: OO_LVCREATE, --cachesize SizeMB, --cachesettings String, --stripes Number, --stripesize SizeKB
+OP: PV ...
+ID: lvcreate_and_attach_cachedevice_for_writecache
+DESC: Create a new LV, then attach a cachevol created from
+DESC: the specified cache device, which converts the
+DESC: new LV to type writecache.
 
 ---
 

@@ -954,6 +954,7 @@ struct lvcreate_params {
 	int thin_chunk_size_calc_policy;
 	unsigned suppress_zero_warn : 1;
 	unsigned needs_lockd_init : 1;
+	unsigned ignore_type : 1;
 
 	const char *vg_name; /* only-used when VG is not yet opened (in /tools) */
 	const char *lv_name; /* all */

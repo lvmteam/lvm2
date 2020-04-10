@@ -4248,18 +4248,25 @@ int lvconvert_to_pool_cmd(struct cmd_context *cmd, int argc, char **argv)
 			       NULL, NULL, &_lvconvert_to_pool_single);
 }
 
+#define MAX_CACHEDEVS 8
+
 static int _lv_create_cachevol(struct cmd_context *cmd,
 			       struct volume_group *vg,
 			       struct logical_volume *lv,
-			       const char *dev_name,
 			       struct logical_volume **cachevol_lv)
 {
 	char cvname[NAME_LEN];
-	struct device *dev_fast;
 	struct dm_list *use_pvh;
-	uint64_t cache_size_sectors;
-	struct logical_volume *cachevol;
 	struct pv_list *pvl;
+	char *dev_name;
+	struct device *dev_fast;
+	char *dev_argv[MAX_CACHEDEVS];
+	int dev_argc = 0;
+	uint64_t cache_size_sectors = 0;
+	uint64_t full_size_sectors = 0;
+	uint64_t pv_size_sectors;
+	struct logical_volume *cachevol;
+	struct arg_value_group_list *group;
 	struct lvcreate_params lp = {
 		.activate = CHANGE_AN,
 		.alloc = ALLOC_INHERIT,
@@ -4275,45 +4282,83 @@ static int _lv_create_cachevol(struct cmd_context *cmd,
 		.suppress_zero_warn = 1,
 	};
 
-	if (dm_snprintf(cvname, NAME_LEN, "%s_cache", lv->name) < 0) {
-		log_error("Failed to create cachevol LV name.");
-		return 0;
-	}
-
-	if (!(dev_fast = dev_cache_get(cmd, dev_name, cmd->filter))) {
-		log_error("Device %s not found.", dev_name);
-		return 0;
-	}
-
-	if (!(pvl = find_pv_in_vg(vg, dev_name))) {
-		log_error("PV %s not found in VG.", dev_name);
-		return 0;
-	}
-
 	/*
-	 * If fast_dev is used in the VG, then require a cachesize to allocate
-	 * from it.  If fast_dev is not used in the VG, then prompt asking if
-	 * the entire dev should be used.
+	 * If cache size is not set, and all cachedevice's are unused,
+	 * then the cache size is the sum of all cachedevice sizes.
 	 */
-	if (!(cache_size_sectors = arg_uint64_value(cmd, cachesize_ARG, 0))) {
-		if (pvl->pv->pe_alloc_count) {
+	cache_size_sectors = arg_uint64_value(cmd, cachesize_ARG, 0);
+
+	dm_list_iterate_items(group, &cmd->arg_value_groups) {
+		if (!grouped_arg_is_set(group->arg_values, cachedevice_ARG))
+			continue;
+
+		if (!(dev_name = (char *)grouped_arg_str_value(group->arg_values, cachedevice_ARG, NULL)))
+			break;
+
+		if (dev_name[0] == '@') {
+			if (!cache_size_sectors) {
+				log_error("With tag as cachedevice, --cachesize is required.");
+				return 0;
+			}
+			goto add_dev_arg;
+		}
+
+		if (!(dev_fast = dev_cache_get(cmd, dev_name, cmd->filter))) {
+			log_error("Device %s not found.", dev_name);
+			return 0;
+		}
+
+		if (!(pvl = find_pv_in_vg(vg, dev_name))) {
+			log_error("PV %s not found in VG.", dev_name);
+			return 0;
+		}
+
+		/*
+		 * If the dev is used in the VG, then require a cachesize to allocate
+		 * from it.  If it is not used in the VG, then prompt asking if the
+		 * entire dev should be used.
+		 */
+		if (!cache_size_sectors && pvl->pv->pe_alloc_count) {
 			log_error("PV %s is in use, --cachesize is required.", dev_name);
 			return 0;
 		}
 
-		cache_size_sectors = (pvl->pv->pe_count * vg->extent_size);
+		if (!cache_size_sectors) {
+			pv_size_sectors = (pvl->pv->pe_count * vg->extent_size);
 
-		if (!arg_is_set(cmd, yes_ARG) &&
-		    yes_no_prompt("Use all %s from %s for cache? [y/n]: ",
-				  display_size(cmd, cache_size_sectors), dev_name) == 'n') {
-			log_print("Use --cachesize SizeMB to use a part of the cachedevice.");
-			log_error("Conversion aborted.");
+			if (!arg_is_set(cmd, yes_ARG) &&
+			    yes_no_prompt("Use all %s from %s for cache? [y/n]: ",
+					  display_size(cmd, pv_size_sectors), dev_name) == 'n') {
+				log_print("Use --cachesize SizeMB to use a part of the cachedevice.");
+				log_error("Conversion aborted.");
+				return 0;
+			}
+			full_size_sectors += pv_size_sectors;
+		}
+ add_dev_arg:
+		if (dev_argc >= MAX_CACHEDEVS) {
+			log_error("Cannot allocate from more than %u cache devices.", MAX_CACHEDEVS);
 			return 0;
 		}
+
+		dev_argv[dev_argc++] = dev_name;
 	}
 
-	if (!(use_pvh = create_pv_list(cmd->mem, vg, 1, (char **)&dev_name, 1))) {
+	if (!cache_size_sectors)
+		cache_size_sectors = full_size_sectors;
+
+	if (!dev_argc) {
+		log_error("No cachedevice specified to create a cachevol.");
+		return 0;
+	}
+
+	if (!(use_pvh = create_pv_list(cmd->mem, vg, dev_argc, dev_argv, 1))) {
 		log_error("cachedevice not found in VG %s.", dev_name);
+		return 0;
+	}
+
+	if (dm_snprintf(cvname, NAME_LEN, "%s_cache", lv->name) < 0) {
+		log_error("Failed to create cachevol LV name.");
 		return 0;
 	}
 
@@ -4338,27 +4383,19 @@ static int _lv_create_cachevol(struct cmd_context *cmd,
 	return 1;
 }
 
-static int _lvconvert_cachevol_attach_single(struct cmd_context *cmd,
-					  struct logical_volume *lv,
-					  struct processing_handle *handle)
+int lvconvert_cachevol_attach_single(struct cmd_context *cmd,
+				     struct logical_volume *lv,
+				     struct processing_handle *handle)
 {
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *lv_fast;
-	const char *fast_name, *dev_name;
-
-	fast_name = arg_str_value(cmd, cachevol_ARG, NULL);
-	dev_name = arg_str_value(cmd, cachedevice_ARG, NULL);
-
-	if (!fast_name && !dev_name)
-		goto_bad;
-
-	if (fast_name && dev_name)
-		goto_bad;
+	const char *fast_name;
 
 	/*
-	 * User specifies an existing cachevol to use.
+	 * User specifies an existing cachevol to use or a cachedevice
+	 * to create a cachevol from.
 	 */
-	if (fast_name) {
+	if ((fast_name = arg_str_value(cmd, cachevol_ARG, NULL))) {
 		if (!validate_lvname_param(cmd, &vg->name, &fast_name))
 			goto_bad;
 
@@ -4385,13 +4422,8 @@ static int _lvconvert_cachevol_attach_single(struct cmd_context *cmd,
 
 		if (!lockd_lv(cmd, lv_fast, "ex", 0))
 			goto_bad;
-	}
-
-	/*
-	 * User specifies a device and lvm creates a cachevol on it.
-	 */
-	if (dev_name) {
-		if (!_lv_create_cachevol(cmd, vg, lv, dev_name, &lv_fast))
+	} else {
+		if (!_lv_create_cachevol(cmd, vg, lv, &lv_fast))
 			goto_bad;
 	}
 
@@ -5705,7 +5737,7 @@ bad:
 	return 0;
 }
 
-static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
+int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 					struct logical_volume *lv,
 					struct processing_handle *handle)
 {
@@ -5713,7 +5745,7 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 	struct logical_volume *lv_wcorig;
 	struct logical_volume *lv_fast;
 	struct writecache_settings settings;
-	const char *fast_name, *dev_name;
+	const char *fast_name;
 	uint32_t block_size_sectors = 0;
 	char *lockd_fast_args = NULL;
 	char *lockd_fast_name = NULL;
@@ -5721,16 +5753,11 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 	char cvol_name[NAME_LEN];
 	int is_active;
 
-	fast_name = arg_str_value(cmd, cachevol_ARG, NULL);
-	dev_name = arg_str_value(cmd, cachedevice_ARG, NULL);
-
-	if (!fast_name && !dev_name)
-		goto_bad;
-
 	/*
-	 * User specifies an existing cachevol to use.
+	 * User specifies an existing cachevol to use or a cachedevice
+	 * to create a cachevol from.
 	 */
-	if (fast_name) {
+	if ((fast_name = arg_str_value(cmd, cachevol_ARG, NULL))) {
 		if (!validate_lvname_param(cmd, &vg->name, &fast_name))
 			goto_bad;
 
@@ -5765,13 +5792,8 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 			log_error("Conversion aborted.");
 			goto bad;
 		}
-	}
-
-	/*
-	 * User specifies a device and lvm creates a cachevol on it.
-	 */
-	if (dev_name) {
-		if (!_lv_create_cachevol(cmd, vg, lv, dev_name, &lv_fast))
+	} else {
+		if (!_lv_create_cachevol(cmd, vg, lv, &lv_fast))
 			goto_bad;
 	}
 
@@ -5808,7 +5830,7 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 	/* Ensure the LV is not active elsewhere. */
 	if (!lockd_lv(cmd, lv, "ex", 0))
 		goto_bad;
-	if (!dev_name && !lockd_lv(cmd, lv_fast, "ex", 0))
+	if (fast_name && !lockd_lv(cmd, lv_fast, "ex", 0))
 		goto_bad;
 
 	if (!archive(vg))
@@ -5899,7 +5921,7 @@ int lvconvert_to_writecache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	cmd->cname->flags &= ~GET_VGNAME_FROM_OPTIONS;
 
 	ret = process_each_lv(cmd, cmd->position_argc, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE, handle, NULL,
-			      &_lvconvert_writecache_attach_single);
+			      &lvconvert_writecache_attach_single);
 
 	destroy_processing_handle(cmd, handle);
 
@@ -5922,7 +5944,7 @@ int lvconvert_to_cache_with_cachevol_cmd(struct cmd_context *cmd, int argc, char
 	cmd->cname->flags &= ~GET_VGNAME_FROM_OPTIONS;
 
 	ret = process_each_lv(cmd, cmd->position_argc, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE, handle, NULL,
-			      &_lvconvert_cachevol_attach_single);
+			      &lvconvert_cachevol_attach_single);
 
 	destroy_processing_handle(cmd, handle);
 

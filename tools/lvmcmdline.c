@@ -154,6 +154,12 @@ static const struct command_function _command_functions[CMD_COUNT] = {
 	/* lvconvert for integrity */
 	{ lvconvert_integrity_CMD, lvconvert_integrity_cmd },
 
+	/* lvcreate */
+	{ lvcreate_and_attach_cachevol_for_cache_CMD,		lvcreate_and_attach_cache_cmd },
+	{ lvcreate_and_attach_cachedevice_for_cache_CMD,	lvcreate_and_attach_cache_cmd },
+	{ lvcreate_and_attach_cachevol_for_writecache_CMD,	lvcreate_and_attach_writecache_cmd },
+	{ lvcreate_and_attach_cachedevice_for_writecache_CMD,	lvcreate_and_attach_writecache_cmd },
+
 	{ pvscan_display_CMD, pvscan_display_cmd },
 	{ pvscan_cache_CMD, pvscan_cache_cmd },
 };
