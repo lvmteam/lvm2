@@ -1094,6 +1094,10 @@ int cache_vol_set_params(struct cmd_context *cmd,
 	if (!meta_size) {
 		meta_size = _cache_min_metadata_size(pool_lv->size, chunk_size);
 
+		/* fix bad value from _cache_min_metadata_size */
+		if (meta_size > (pool_lv->size / 2))
+			meta_size = pool_lv->size / 2;
+
 		if (meta_size < min_meta_size)
 			meta_size = min_meta_size;
 
