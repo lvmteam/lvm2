@@ -1,5 +1,6 @@
 Version 2.03.10 - 
 =================================
+  Add integrity with raid capability.
   Fix support for lvconvert --repair used by foreign apps (i.e. Docker).
 
 Version 2.03.09 - 26th March 2020
