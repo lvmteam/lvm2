@@ -8,7 +8,7 @@ Type=oneshot
 RemainAfterExit=yes
 
 # start lockspaces and wait for them to finish starting
-ExecStart=@SBINDIR@/lvm vgchange --lock-start --lock-opt autowait
+ExecStart=@SBINDIR@/lvm vgchange --lock-start --lock-opt auto
 
 # stop lockspaces and wait for them to finish stopping
 ExecStop=@SBINDIR@/lvmlockctl --stop-lockspaces --wait 1
