@@ -183,7 +183,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 	vg_name_new = skip_dev_dir(cmd, argv[1], NULL);
 
 	if (!validate_vg_rename_params(cmd, vg_name_old, vg_name_new))
-		return_0;
+		return_ECMD_FAILED;
 
 	if (!(vp.vg_name_old = dm_pool_strdup(cmd->mem, vg_name_old)))
 		return_ECMD_FAILED;
