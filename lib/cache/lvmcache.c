@@ -1032,15 +1032,6 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 
 	log_debug_cache("Finding VG info");
 
-	/* FIXME: can this happen? */
-	if (!cmd->filter) {
-		log_error("label scan is missing filter");
-		goto out;
-	}
-
-	if (!refresh_filters(cmd))
-		log_error("Scan failed to refresh device filter.");
-
 	/*
 	 * Duplicates found during this label scan are added to _initial_duplicates.
 	 */
@@ -1103,7 +1094,6 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 
 	r = 1;
 
-      out:
 	dm_list_iterate_items(vginfo, &_vginfos) {
 		if (is_orphan_vg(vginfo->vgname))
 			continue;

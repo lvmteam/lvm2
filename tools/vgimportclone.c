@@ -315,6 +315,8 @@ retry_name:
 		goto_out;
 	log_debug("Using new VG name %s.", vp.new_vgname);
 
+	lvmcache_destroy(cmd, 1, 0);
+
 	/*
 	 * Create a device filter so that we are only working with the devices
 	 * in arg_import.  With the original devs hidden (that arg_import were
@@ -325,7 +327,7 @@ retry_name:
 	init_internal_filtering(1);
 	dm_list_iterate_items(vd, &vp.arg_import)
 		internal_filter_allow(cmd->mem, vd->dev);
-	lvmcache_destroy(cmd, 1, 0);
+	refresh_filters(cmd);
 
 	log_debug("Changing VG %s to %s.", vp.old_vgname, vp.new_vgname);
 
