@@ -4010,17 +4010,6 @@ static int _access_vg_exported(struct cmd_context *cmd, struct volume_group *vg)
 	return 0;
 }
 
-/*
- * Test the validity of a VG handle returned by vg_read() or vg_read_for_update().
- */
-uint32_t vg_read_error(struct volume_group *vg_handle)
-{
-	if (!vg_handle)
-		return FAILED_ALLOCATION;
-
-	return SUCCESS;
-}
-
 struct format_instance *alloc_fid(const struct format_type *fmt,
 				  const struct format_instance_ctx *fic)
 {

@@ -744,9 +744,6 @@ struct volume_group *vg_read_for_update(struct cmd_context *cmd, const char *vg_
 			 const char *vgid, uint32_t read_flags, uint32_t lockd_state);
 struct volume_group *vg_read_orphans(struct cmd_context *cmd, const char *orphan_vgname);
 
-/* this is historical and being removed, don't use */
-uint32_t vg_read_error(struct volume_group *vg_handle);
-
 /* pe_start and pe_end relate to any existing data so that new metadata
 * areas can avoid overlap */
 struct physical_volume *pv_create(const struct cmd_context *cmd,

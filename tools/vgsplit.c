@@ -691,7 +691,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 		vg_to = vg_read_for_update(cmd, vg_name_to, NULL, 0, 0);
 
-		if (vg_read_error(vg_to)) {
+		if (!vg_to) {
 			log_error("Volume group \"%s\" became inconsistent: "
 				  "please fix manually", vg_name_to);
 			goto bad;
