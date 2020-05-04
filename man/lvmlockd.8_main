@@ -58,6 +58,10 @@ For default settings, see lvmlockd -h.
 .I path
         Set path to the socket to listen on.
 
+.B  --adopt-file
+.I path
+        Set path to the adopt file.
+
 .B  --syslog-priority | -S err|warning|debug
         Write log messages from this level up to syslog.
 
@@ -76,6 +80,8 @@ For default settings, see lvmlockd -h.
 .I seconds
         Override the default sanlock I/O timeout.
 
+.B --adopt | -A 0|1
+        Enable (1) or disable (0) lock adoption.
 
 .SH USAGE
 
@@ -548,7 +554,13 @@ necessary locks.
 .B lvmlockd failure
 
 If lvmlockd fails or is killed while holding locks, the locks are orphaned
-in the lock manager.
+in the lock manager.  Orphaned locks must be cleared or adopted before the
+associated resources can be accessed normally.  If lock adoption is
+enabled, lvmlockd keeps a record of locks in the adopt-file.  A subsequent
+instance of lvmlockd will then adopt locks orphaned by the previous
+instance.  Adoption must be enabled in both instances (--adopt|-A 1).
+Without adoption, the lock manager or host would require a reset to clear
+orphaned lock state.
 
 .B dlm/corosync failure
 

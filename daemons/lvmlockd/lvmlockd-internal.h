@@ -145,6 +145,7 @@ struct resource {
 	char name[MAX_NAME+1];		/* vg name or lv name */
 	int8_t type;			/* resource type LD_RT_ */
 	int8_t mode;
+	int8_t adopt_mode;
 	unsigned int sh_count;		/* number of sh locks on locks list */
 	uint32_t version;
 	uint32_t last_client_id;	/* last client_id to lock or unlock resource */

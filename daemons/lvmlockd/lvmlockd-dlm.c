@@ -398,10 +398,16 @@ static int lm_adopt_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 			  (void *)1, (void *)1, (void *)1,
 			  NULL, NULL);
 
-	if (rv == -1 && errno == -EAGAIN) {
+	if (rv == -1 && (errno == EAGAIN)) {
 		log_debug("S %s R %s adopt_dlm adopt mode %d try other mode",
 			  ls->name, r->name, ld_mode);
 		rv = -EUCLEAN;
+		goto fail;
+	}
+	if (rv == -1 && (errno == ENOENT)) {
+		log_debug("S %s R %s adopt_dlm adopt mode %d no lock",
+			  ls->name, r->name, ld_mode);
+		rv = -ENOENT;
 		goto fail;
 	}
 	if (rv < 0) {

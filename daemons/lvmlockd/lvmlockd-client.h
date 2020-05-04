@@ -14,6 +14,7 @@
 #include "libdaemon/client/daemon-client.h"
 
 #define LVMLOCKD_SOCKET DEFAULT_RUN_DIR "/lvmlockd.socket"
+#define LVMLOCKD_ADOPT_FILE DEFAULT_RUN_DIR "/lvmlockd.adopt"
 
 /* Wrappers to open/close connection */
 
