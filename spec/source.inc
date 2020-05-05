@@ -41,6 +41,7 @@
 %with vdo internal
 %with vdo-format %{_bindir}/vdoformat
 %with writecache internal
+%with integrity internal
 
 %global buildreq_udev systemd-devel
 %global req_udev udev >= 181-1
