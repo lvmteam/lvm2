@@ -22,9 +22,11 @@ mkdir -p $mnt
 
 aux prepare_devs 5 64
 
-for i in `seq 1 16384`; do echo -n "A" >> fileA; done
-for i in `seq 1 16384`; do echo -n "B" >> fileB; done
-for i in `seq 1 16384`; do echo -n "C" >> fileC; done
+PYTHON="$(which python3 python2 python 2>/dev/null | head -n 1)"
+test -n "$PYTHON" || skip
+$PYTHON -c "print 'A'*16384" >> fileA
+$PYTHON -c "print 'B'*16384" >> fileB
+$PYTHON -c "print 'C'*16384" >> fileC
 
 # generate random data
 dd if=/dev/urandom of=randA bs=512K count=2
