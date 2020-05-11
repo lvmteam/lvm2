@@ -326,6 +326,12 @@ devices {
 	# Enabling this setting allows the VG to be used as usual even with
 	# uncertain devices.
 	allow_changes_with_duplicate_pvs = 0
+
+	# Configuration option devices/allow_mixed_block_sizes.
+	# Allow PVs in the same VG with different logical block sizes.
+	# When allowed, the user is responsible to ensure that an LV is
+	# using PVs with matching block sizes when necessary.
+	allow_mixed_block_sizes = 1
 }
 
 # Configuration section allocation.
