@@ -635,7 +635,6 @@ static int _init_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg, in
 	const char *vg_lock_args = NULL;
 	const char *opts = NULL;
 	struct pv_list *pvl;
-	struct device *sector_dev;
 	uint32_t sector_size = 0;
 	unsigned int physical_block_size, logical_block_size;
 	int num_mb = 0;
@@ -656,16 +655,11 @@ static int _init_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg, in
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (!dev_get_direct_block_sizes(pvl->pv->dev, &physical_block_size, &logical_block_size))
 			continue;
-
-		if (!sector_size) {
-			sector_size = logical_block_size;
-			sector_dev = pvl->pv->dev;
-		} else if (sector_size != logical_block_size) {
-			log_error("Inconsistent logical block sizes for %s and %s.",
-				  dev_name(pvl->pv->dev), dev_name(sector_dev));
-			return 0;
-		}
+		if ((physical_block_size == 4096) || (logical_block_size == 4096))
+			sector_size = 4096;
 	}
+	if (!sector_size)
+		sector_size = 512;
 
 	log_debug("Using sector size %u for sanlock LV", sector_size);
 
