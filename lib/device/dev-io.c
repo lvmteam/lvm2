@@ -86,6 +86,9 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 	int fd = dev->bcache_fd;
 	int do_close = 0;
 
+	if (dm_list_empty(&dev->aliases))
+		return 0;
+
 	if (dev->size_seqno == _dev_size_seqno) {
 		log_very_verbose("%s: using cached size %" PRIu64 " sectors",
 				 name, dev->size);

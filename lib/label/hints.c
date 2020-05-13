@@ -419,6 +419,9 @@ static int _dev_in_hint_hash(struct cmd_context *cmd, struct device *dev)
 {
 	uint64_t devsize = 0;
 
+	if (dm_list_empty(&dev->aliases))
+		return 0;
+
 	if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "regex"))
 		return 0;
 
