@@ -351,6 +351,7 @@ static void _unlock_hints(struct cmd_context *cmd)
 
 void hints_exit(struct cmd_context *cmd)
 {
+	free_hints(&cmd->hints);
 	if (_hints_fd == -1)
 		return;
 	return _unlock_hints(cmd);
@@ -1321,6 +1322,7 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints_out, int *newhints,
 	 */
 	if (!_read_hint_file(cmd, &hints_list, &needs_refresh)) {
 		log_debug("get_hints: read fail");
+		free_hints(&hints_list);
 		_unlock_hints(cmd);
 		return 0;
 	}
@@ -1333,6 +1335,7 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints_out, int *newhints,
 	 */
 	if (needs_refresh) {
 		log_debug("get_hints: needs refresh");
+		free_hints(&hints_list);
 
 		if (!_lock_hints(cmd, LOCK_EX, NONBLOCK))
 			return 0;
