@@ -1189,6 +1189,8 @@ static void _free_vginfo(struct lvmcache_vginfo *vginfo)
 	free(vginfo->vgname);
 	free(vginfo->system_id);
 	free(vginfo->creation_host);
+	if (vginfo->lock_type)
+		free(vginfo->lock_type);
 	free(vginfo);
 }
 
