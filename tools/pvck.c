@@ -3065,10 +3065,8 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 
 	label_scan_setup_bcache();
 
-	if (arg_is_set(cmd, dump_ARG)) {
+	if ((dump = arg_str_value(cmd, dump_ARG, NULL))) {
 		cmd->use_hints = 0;
-
-		dump = arg_str_value(cmd, dump_ARG, NULL);
 
 		if (!strcmp(dump, "metadata"))
 			ret = _dump_metadata(cmd, dump, &set, labelsector, dev, def, PRINT_CURRENT, 0);
@@ -3096,10 +3094,8 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_PROCESSED;
 	}
 
-	if (arg_is_set(cmd, repairtype_ARG)) {
+	if ((repair = arg_str_value(cmd, repairtype_ARG, NULL))) {
 		cmd->use_hints = 0;
-
-		repair = arg_str_value(cmd, repairtype_ARG, NULL);
 
 		if (!strcmp(repair, "label_header"))
 			ret = _repair_label_header(cmd, repair, &set, labelsector, dev);
