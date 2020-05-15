@@ -56,7 +56,9 @@ dmsetup create "$THIN" --table "0 40960 thin $DM_DEV_DIR/mapper/$POOL 0"
 
 mkfs.ext4 "$DM_DEV_DIR/mapper/$THIN"
 
-dmsetup remove "$THIN"
+aux udev_wait
+
+dmsetup remove "$THIN" || { sleep .5 ; dmsetup remove "$THIN" }
 
 lvchange -an $vg/pool
 
