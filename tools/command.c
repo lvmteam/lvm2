@@ -2319,7 +2319,8 @@ static void _print_val_man(struct command_name *cname, int opt_enum, int val_enu
 	}
 
 	if (strchr(str, '|')) {
-		line = strdup(str);
+		if (!(line = strdup(str)))
+			return;
 		_split_line(line, &line_argc, line_argv, '|');
 		for (i = 0; i < line_argc; i++) {
 			if (i)
@@ -3606,9 +3607,12 @@ int main(int argc, char *argv[])
 		goto out_free;
 	}
 
-	if (optind < argc)
-		cmdname = strdup(argv[optind++]);
-	else {
+	if (optind < argc) {
+		if (!(cmdname = strdup(argv[optind++]))) {
+			log_error("Out of memory.");
+			goto out_free;
+		}
+	} else {
 		log_error("Missing command name.");
 		goto out_free;
 	}
