@@ -991,8 +991,13 @@ static int _vgchange_locktype_single(struct cmd_context *cmd, const char *vg_nam
 	 * deactivate it.
 	 */
 	if (vg->lock_type && !strcmp(vg->lock_type, "sanlock") &&
-	    (cmd->command->command_enum == vgchange_locktype_CMD))
-		deactivate_lv(cmd, vg->sanlock_lv);
+	    (cmd->command->command_enum == vgchange_locktype_CMD)) {
+		if (!deactivate_lv(cmd, vg->sanlock_lv)) {
+			log_error("Failed to deativate %s.",
+				  display_lvname(vg->sanlock_lv));
+			return ECMD_FAILED;
+		}
+	}
 
 	log_print_unless_silent("Volume group \"%s\" successfully changed", vg->name);
 
