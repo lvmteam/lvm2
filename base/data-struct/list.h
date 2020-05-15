@@ -1,7 +1,7 @@
 #ifndef BASE_DATA_STRUCT_LIST_H
 #define BASE_DATA_STRUCT_LIST_H
 
-#include <stddef.h> /* offsetof */
+#include "base/memory/container_of.h"
 
 //----------------------------------------------------------------
 
@@ -100,7 +100,7 @@ struct dm_list *dm_list_next(const struct dm_list *head, const struct dm_list *e
  * contained in a structure of type t, return the containing structure.
  */
 #define dm_list_struct_base(v, t, head) \
-    ((t *)((const char *)(v) - offsetof(t, head)))
+    container_of(v, t, head)
 
 /*
  * Given the address v of an instance of 'struct dm_list list' contained in

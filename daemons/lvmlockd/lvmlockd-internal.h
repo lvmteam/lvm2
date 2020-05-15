@@ -11,6 +11,8 @@
 #ifndef _LVM_LVMLOCKD_INTERNAL_H
 #define _LVM_LVMLOCKD_INTERNAL_H
 
+#include "base/memory/container_of.h"
+
 #define MAX_NAME 64
 #define MAX_ARGS 64
 
@@ -216,10 +218,6 @@ struct val_blk {
 
 /* lm_unlock flags */
 #define LMUF_FREE_VG 0x00000001
-
-#define container_of(ptr, type, member) ({                      \
-	const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
-	(type *)( (char *)__mptr - offsetof(type,member) );})
 
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
