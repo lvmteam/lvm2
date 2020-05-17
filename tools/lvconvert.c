@@ -5589,7 +5589,8 @@ static struct logical_volume *_lv_writecache_create(struct cmd_context *cmd,
 
 	memcpy(&seg->writecache_settings, settings, sizeof(struct writecache_settings));
 
-	add_seg_to_segs_using_this_lv(lv_fast, seg);
+	if (!add_seg_to_segs_using_this_lv(lv_fast, seg))
+		return_NULL;
 
 	return lv_wcorig;
 }
