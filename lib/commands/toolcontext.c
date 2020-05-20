@@ -41,6 +41,10 @@
 #include <syslog.h>
 #include <time.h>
 
+#ifdef APP_MACHINEID_SUPPORT
+#include <systemd/sd-id128.h>
+#endif
+
 #ifdef __linux__
 #  include <malloc.h>
 #endif
@@ -129,9 +133,12 @@ static const char *_read_system_id_from_file(struct cmd_context *cmd, const char
 	return system_id;
 }
 
+/* systemd-id128 new produced: f64406832c2140e8ac5422d1089aae03 */
+#define LVM_APPLICATION_ID SD_ID128_MAKE(f6,44,06,83,2c,21,40,e8,ac,54,22,d1,08,9a,ae,03)
+
 static const char *_system_id_from_source(struct cmd_context *cmd, const char *source)
 {
-	char filebuf[PATH_MAX];
+	char buf[PATH_MAX];
 	const char *file;
 	const char *etc_str;
 	const char *str;
@@ -150,10 +157,23 @@ static const char *_system_id_from_source(struct cmd_context *cmd, const char *s
 		goto out;
 	}
 
+#ifdef APP_MACHINEID_SUPPORT
+	if (!strcasecmp(source, "appmachineid")) {
+		sd_id128_t id;
+
+		sd_id128_get_machine_app_specific(LVM_APPLICATION_ID, &id);
+
+		if (dm_snprintf(buf, PATH_MAX, SD_ID128_FORMAT_STR, SD_ID128_FORMAT_VAL(id)) < 0)
+			stack;
+		system_id = system_id_from_string(cmd, buf);
+		goto out;
+	}
+#endif
+
 	if (!strcasecmp(source, "machineid") || !strcasecmp(source, "machine-id")) {
 		etc_str = find_config_tree_str(cmd, global_etc_CFG, NULL);
-		if (dm_snprintf(filebuf, sizeof(filebuf), "%s/machine-id", etc_str) != -1)
-			system_id = _read_system_id_from_file(cmd, filebuf);
+		if (dm_snprintf(buf, sizeof(buf), "%s/machine-id", etc_str) != -1)
+			system_id = _read_system_id_from_file(cmd, buf);
 		goto out;
 	}
 

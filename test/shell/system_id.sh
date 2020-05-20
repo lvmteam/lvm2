@@ -64,6 +64,17 @@ check vg_field $vg1 systemid "$SID"
 vgremove $vg1
 fi
 
+## appmachineid
+lvm version > lvmver
+if grep app-machineid lvmver; then
+aux lvmconf "global/system_id_source = appmachineid"
+lvm systemid | awk '{ print $3 }' > sid_lvm
+vgcreate $vg1 "$dev1"
+vgs -o systemid --noheadings $vg1 | awk '{print $1}' > sid_vg
+diff sid_lvm sid_vg
+vgremove $vg1
+fi
+
 ## uname
 
 SID1=$(uname -n)

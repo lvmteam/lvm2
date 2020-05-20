@@ -173,6 +173,22 @@ global {
 .fi
 .
 .TP
+.B appmachineid
+.br
+
+An LVM-specific derivation of /etc/machine-id is used as the system ID.
+See
+.BR machine-id (5)
+to check if machine-id is available on the host.
+
+.I lvm.conf
+.nf
+global {
+    system_id_source = "appmachineid"
+}
+.fi
+
+.TP
 .B machineid
 .br
 The content of /etc/machine-id is used as the system ID if available.
@@ -181,6 +197,7 @@ See
 and
 .BR systemd-machine-id-setup (1)
 to check if machine-id is available on the host.
+(appmachineid is recommended in place of machineid.)
 .sp
 .I lvm.conf
 .nf

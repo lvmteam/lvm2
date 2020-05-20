@@ -1106,6 +1106,26 @@ if test "$NOTIFYDBUS_SUPPORT" = yes; then
 fi
 
 ################################################################################
+dnl -- Build appmachineid
+AC_MSG_CHECKING(whether to build appmachineid)
+AC_ARG_ENABLE(app-machineid,
+	      AC_HELP_STRING([--enable-app-machineid],
+			     [enable LVM system ID using app-specific machine-id]),
+	      APP_MACHINEID_SUPPORT=$enableval, APP_MACHINEID_SUPPORT=no)
+AC_MSG_RESULT($APP_MACHINEID_SUPPORT)
+
+if test "$APP_MACHINEID_SUPPORT" = yes; then
+	AC_DEFINE([APP_MACHINEID_SUPPORT], 1, [Define to 1 to include code that uses libsystemd machine-id apis.])
+	SYSTEMD_LIBS="-lsystemd"
+fi
+
+################################################################################
+dnl -- Look for libsystemd libraries
+if test "$APP_MACHINEID_SUPPORT" = yes; then
+	PKG_CHECK_MODULES(APP_MACHINEID, systemd >= 234, [HAVE_APP_MACHINEID=yes], $bailout)
+fi
+
+################################################################################
 
 dnl -- Enable blkid wiping functionality
 AC_ARG_ENABLE(blkid_wiping,
