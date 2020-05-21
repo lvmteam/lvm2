@@ -17,9 +17,15 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+clean_thin_()
+{
+	aux udev_wait
+	dmsetup remove "$THIN" || { sleep .5 ; dmsetup remove "$THIN" ; }
+}
+
 cleanup_mounted_and_teardown()
 {
-	dmsetup remove $THIN || true
+	clean_thin_ || true
 	vgremove -ff $vg
 	aux teardown
 }
@@ -56,9 +62,7 @@ dmsetup create "$THIN" --table "0 40960 thin $DM_DEV_DIR/mapper/$POOL 0"
 
 mkfs.ext4 "$DM_DEV_DIR/mapper/$THIN"
 
-aux udev_wait
-
-dmsetup remove "$THIN" || { sleep .5 ; dmsetup remove "$THIN" }
+clean_thin_
 
 lvchange -an $vg/pool
 
@@ -72,3 +76,5 @@ lvchange -ay $vg/pool
 dmsetup create "$THIN" --table "0 40960 thin $DM_DEV_DIR/mapper/$POOL 0"
 
 fsck -n "$DM_DEV_DIR/mapper/$THIN"
+
+# exit calls cleanup_mounted_and_teardown
