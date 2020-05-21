@@ -22,11 +22,9 @@ mkdir -p $mnt
 
 aux prepare_devs 6 64
 
-PYTHON="$(which python3 python2 python 2>/dev/null | head -n 1)"
-test -n "$PYTHON" || skip
-$PYTHON -c "print 'A'*16384" >> fileA
-$PYTHON -c "print 'B'*16384" >> fileB
-$PYTHON -c "print 'C'*16384" >> fileC
+printf "%0.sA" {1..16384} >> fileA
+printf "%0.sB" {1..16384} >> fileB
+printf "%0.sC" {1..16384} >> fileC
 
 # generate random data
 dd if=/dev/urandom of=randA bs=512K count=2
