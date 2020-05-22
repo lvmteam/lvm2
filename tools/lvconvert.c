@@ -4264,6 +4264,11 @@ static int _lvconvert_cachevol_attach_single(struct cmd_context *cmd,
 		goto out;
 	}
 
+	if (lv_is_cache_vol(cachevol_lv)) {
+		log_error("LV %s is already used as a cachevol.", display_lvname(cachevol_lv));
+		goto out;
+	}
+
 	/* Ensure the LV is not active elsewhere. */
 	if (!lockd_lv(cmd, lv, "ex", 0))
 		goto_out;
@@ -4344,6 +4349,11 @@ static int _lvconvert_cachepool_attach_single(struct cmd_context *cmd,
 		if (lvt_enum != striped_LVT && lvt_enum != linear_LVT && lvt_enum != raid_LVT) {
 			log_error("LV %s with type %s cannot be converted to a cache pool.",
 				  display_lvname(cachepool_lv), lvtype ? lvtype->name : "unknown");
+			goto out;
+		}
+
+		if (lv_is_cache_vol(cachepool_lv)) {
+			log_error("LV %s is already used as a cachevol.", display_lvname(cachepool_lv));
 			goto out;
 		}
 
@@ -5626,6 +5636,11 @@ static int _lvconvert_writecache_attach_single(struct cmd_context *cmd,
 
 	if (!seg_is_linear(first_seg(lv_fast))) {
 		log_error("LV %s must be linear to use as a writecache.", display_lvname(lv_fast));
+		goto bad;
+	}
+
+	if (lv_is_cache_vol(lv_fast)) {
+		log_error("LV %s is already used as a cachevol.", display_lvname(lv_fast));
 		goto bad;
 	}
 

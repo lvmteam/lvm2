@@ -127,4 +127,17 @@ umount "$mount_dir"
 lvchange -an $vg/$lv1
 lvchange -an $vg/$lv2
 
+# misc tests
+
+lvremove $vg
+
+lvcreate -n $lv1 -l 2 -an $vg "$dev1"
+lvcreate -n $lv2 -l 2 -an $vg "$dev1"
+lvcreate -n $lv3 -l 2 -an $vg "$dev2"
+
+lvconvert -y --type writecache --cachevol $lv3 $vg/$lv1
+not lvconvert -y --type writecache --cachevol ${lv3}_cvol $vg/$lv2
+not lvconvert -y --type cache --cachevol ${lv3}_cvol $vg/$lv2
+not lvconvert -y --type cache --cachepool ${lv3}_cvol $vg/$lv2
+
 vgremove -ff $vg
