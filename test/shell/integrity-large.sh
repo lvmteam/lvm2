@@ -95,6 +95,14 @@ _wait_recalc() {
 		sleep 1
 	done
 
+	# TODO: There is some strange bug, first leg of RAID with integrity
+	# enabled never gets in sync. I saw this in BB, but not when executing
+	# the commands manually
+	if test -z "$sync"; then
+		echo "TEST WARNING: Resync of dm-integrity device '$checklv' failed"
+                dmsetup status "$DM_DEV_DIR/mapper/${checklv/\//-}"
+		exit
+	fi
 	echo "timeout waiting for recalc"
 	return 1
 }
