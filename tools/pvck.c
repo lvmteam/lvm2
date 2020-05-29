@@ -24,7 +24,6 @@
 
 #define PRINT_CURRENT 1
 #define PRINT_ALL 2
-#define PRINT_NONE 3
 
 #define ID_STR_SIZE 40 /* uuid formatted with dashes is 38 chars */
 
@@ -1389,7 +1388,6 @@ static int _dump_headers(struct cmd_context *cmd, const char *dump, struct setti
 {
 	uint64_t mda1_offset = 0, mda1_size = 0, mda2_offset = 0, mda2_size = 0; /* bytes */
 	uint32_t mda1_checksum, mda2_checksum;
-	int print_metadata = 0;
 	int mda_count = 0;
 	int bad = 0;
 
@@ -1402,17 +1400,14 @@ static int _dump_headers(struct cmd_context *cmd, const char *dump, struct setti
 		return 1;
 	}
 
-	if (!strcmp(dump, "headers_only"))
-		print_metadata = PRINT_NONE;
-
 	/*
 	 * The first mda is always 4096 bytes from the start of the device.
 	 */
-	if (!_dump_mda_header(cmd, set, 1, print_metadata, 0, NULL, dev, def, 4096, mda1_size, &mda1_checksum, NULL))
+	if (!_dump_mda_header(cmd, set, 1, 0, 0, NULL, dev, def, 4096, mda1_size, &mda1_checksum, NULL))
 		bad++;
 
 	if (mda2_offset) {
-		if (!_dump_mda_header(cmd, set, 1, print_metadata, 0, NULL, dev, def, mda2_offset, mda2_size, &mda2_checksum, NULL))
+		if (!_dump_mda_header(cmd, set, 1, 0, 0, NULL, dev, def, mda2_offset, mda2_size, &mda2_checksum, NULL))
 			bad++;
 
 		/* This probably indicates that one was committed and the other not. */
@@ -3086,9 +3081,6 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 			ret = _dump_search(cmd, dump, &set, labelsector, dev, def);
 
 		else if (!strcmp(dump, "headers"))
-			ret = _dump_headers(cmd, dump, &set, labelsector, dev, def);
-
-		else if (!strcmp(dump, "headers_only"))
 			ret = _dump_headers(cmd, dump, &set, labelsector, dev, def);
 
 		else if (!strcmp(dump, "backup_to_raw")) {

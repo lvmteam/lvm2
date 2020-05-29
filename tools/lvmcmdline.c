@@ -1092,7 +1092,6 @@ int repairtype_arg(struct cmd_context *cmd, struct arg_values *av)
 int dumptype_arg(struct cmd_context *cmd, struct arg_values *av)
 {
 	if (!strcmp(av->value, "headers") ||
-	    !strcmp(av->value, "headers_only") ||
 	    !strcmp(av->value, "metadata") ||
 	    !strcmp(av->value, "metadata_all") ||
 	    !strcmp(av->value, "metadata_search") ||
