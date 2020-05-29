@@ -1319,6 +1319,7 @@ static int _raid4_conversion_supported(struct logical_volume *lv, struct lvconve
 static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp)
 {
 	int image_count = 0;
+	int images_reduced = 0;
 	struct cmd_context *cmd = lv->vg->cmd;
 	struct lv_segment *seg = first_seg(lv);
 
@@ -1356,6 +1357,8 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			image_count -= lp->mirrors;
 		else
 			image_count = lp->mirrors + 1;
+
+		images_reduced = (image_count < lv_raid_image_count(lv));
 
 		if (image_count < 1) {
 			log_error("Unable to %s images by specified amount.",
@@ -1400,7 +1403,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 							lp->region_size : seg->region_size , lp->pvh))
 				return_0;
 
-			if (lv_raid_has_integrity(lv)) {
+			if (lv_raid_has_integrity(lv) && !images_reduced) {
 				struct integrity_settings *isettings = NULL;
 				if (!lv_get_raid_integrity_settings(lv, &isettings))
 					return_0;
