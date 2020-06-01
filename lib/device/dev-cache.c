@@ -66,6 +66,7 @@ static void _dev_init(struct device *dev, int max_error_count)
 	dev->phys_block_size = -1;
 	dev->block_size = -1;
 	dev->fd = -1;
+	dev->bcache_fd = -1;
 	dev->read_ahead = -1;
 	dev->max_error_count = max_error_count;
 
