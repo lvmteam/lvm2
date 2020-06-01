@@ -1418,6 +1418,11 @@ bool dev_write_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 	return true;
 }
 
+bool dev_invalidate_bytes(struct device *dev, uint64_t start, size_t len)
+{
+	return bcache_invalidate_bytes(scan_bcache, dev->bcache_fd, start, len);
+}
+
 bool dev_write_zeros(struct device *dev, uint64_t start, size_t len)
 {
 	if (test_mode())

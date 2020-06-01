@@ -33,6 +33,8 @@
 #include "lvmlockd.h"
 #include "time.h"
 #include "lvmnotify.h"
+#include "format_text/format-text.h"
+#include "format_text/layout.h"
 
 #include <math.h>
 #include <sys/param.h>
@@ -3758,6 +3760,118 @@ out:
 	return r;
 }
 
+/*
+ * Reread an mda_header.  If the text offset is the same as was seen and saved
+ * by label scan, it means the metadata is unchanged and we do not need to
+ * reread metadata.
+ *
+ * This is used to ensure that the metadata seen during scan still matches
+ * what's on disk.  If the scan data still matches what's on disk we don't
+ * need to reread the metadata from disk.  When we read the metadata from
+ * bcache it may come from the cache or from disk again if the cache has
+ * dropped it.
+ */
+
+static bool _scan_text_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid)
+{
+	struct dm_list mda_list;
+	struct mda_list *mdal, *safe;
+	struct metadata_area *mda;
+	struct mda_context *mdac;
+	struct device_area *area;
+	struct mda_header *mdah;
+	struct raw_locn *rlocn;
+	struct device *dev;
+	bool ret = true;
+
+	/*
+	 * if cmd->can_use_one_scan, check one mda_header is unchanged,
+	 * else check that all mda_headers are unchanged.
+	 */
+
+	dm_list_init(&mda_list);
+
+	lvmcache_get_mdas(cmd, vgname, vgid, &mda_list);
+
+	dm_list_iterate_items(mdal, &mda_list) {
+		mda = mdal->mda;
+
+		if (!mda->scan_text_offset)
+			continue;
+
+		if (!mda_is_primary(mda))
+			continue;
+
+		if (!(dev = mda_get_device(mda))) {
+			log_debug("rescan for text mismatch - no mda dev");
+			goto out;
+		}
+
+		mdac = mda->metadata_locn;
+		area = &mdac->area;
+
+		/*
+		 * Invalidate mda_header in bcache so it will be reread from disk.
+		 */
+		if (!dev_invalidate_bytes(dev, 4096, 512)) {
+			log_debug("rescan for text mismatch - cannot invalidate");
+			goto out;
+		}
+
+		if (!(mdah = raw_read_mda_header(cmd->fmt, area, 1))) {
+			log_debug("rescan for text mismatch - no mda header");
+			goto out;
+		}
+
+		rlocn = mdah->raw_locns;
+
+		if (rlocn->checksum != mda->scan_text_checksum) {
+			log_debug("rescan for text checksum mismatch on %s - now %x prev %x offset now %llu prev %llu",
+				  dev_name(dev),
+				  rlocn->checksum, mda->scan_text_checksum,
+				  (unsigned long long)rlocn->offset,
+				  (unsigned long long)mda->scan_text_offset);
+		} else if (rlocn->offset != mda->scan_text_offset) {
+			log_debug("rescan for text offset mismatch on %s - now %llu prev %llu checksum %x",
+				  dev_name(dev),
+				  (unsigned long long)rlocn->offset,
+				  (unsigned long long)mda->scan_text_offset,
+				  rlocn->checksum);
+		} else {
+			/* the common case where fields match and no rescan needed */
+			ret = false;
+		}
+
+		dm_pool_free(cmd->mem, mdah);
+
+		/* For can_use_one_scan commands, return result from checking one mda. */
+		if (cmd->can_use_one_scan)
+			goto out;
+
+		/* For other commands, return mismatch immediately. */
+		if (ret)
+			goto_out;
+	}
+
+	if (ret) {
+		/* shouldn't happen */
+		log_debug("rescan for text mismatch - no mdas");
+		goto out;
+	}
+out:
+	if (!ret)
+		log_debug("rescan skipped - unchanged offset %llu checksum %x",
+			  (unsigned long long)mda->scan_text_offset,
+			  mda->scan_text_checksum);
+
+	dm_list_iterate_items_safe(mdal, safe, &mda_list) {
+		dm_list_del(&mdal->list);
+		free(mdal);
+	}
+
+	return ret;
+}
+
 /* Caller sets consistent to 1 if it's safe for vg_read_internal to correct
  * inconsistent metadata on disk (i.e. the VG write lock is held).
  * This guarantees only consistent metadata is returned.
@@ -3902,7 +4016,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	 * lock is taken prior to the label scan, and still held here,
 	 * we can also skip the rescan in that case.
 	 */
-	if (!cmd->can_use_one_scan || lvmcache_scan_mismatch(cmd, vgname, vgid)) {
+	if (!cmd->can_use_one_scan ||
+	    lvmcache_scan_mismatch(cmd, vgname, vgid) || _scan_text_mismatch(cmd, vgname, vgid)) {
 		/* the skip rescan special case is for clvmd vg_read_by_vgid */
 		/* FIXME: this is not a warn flag, pass this differently */
 		if (warn_flags & SKIP_RESCAN)

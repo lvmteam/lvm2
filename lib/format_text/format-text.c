@@ -1199,6 +1199,7 @@ static int _scan_file(const struct format_type *fmt, const char *vgname)
 }
 
 int read_metadata_location_summary(const struct format_type *fmt,
+		    struct metadata_area *mda,
 		    struct mda_header *mdah, int primary_mda, struct device_area *dev_area,
 		    struct lvmcache_vgsummary *vgsummary, uint64_t *mda_free_sectors)
 {
@@ -1249,6 +1250,19 @@ int read_metadata_location_summary(const struct format_type *fmt,
 			  dev_name(dev_area->dev),
 			  (unsigned long long)(dev_area->start + rlocn->offset));
 		return 0;
+	}
+
+	/*
+	 * This function is used to read the vg summary during label scan.
+	 * Save the text start location and checksum during scan.  After the VG
+	 * lock is acquired in vg_read, we can reread the mda_header, and
+	 * compare rlocn->offset,checksum to what was saved during scan.  If
+	 * unchanged, it means that the metadata was not changed between scan
+	 * and the read.
+	 */
+	if (mda) {
+		mda->scan_text_offset = rlocn->offset;
+		mda->scan_text_checksum = rlocn->checksum;
 	}
 
 	/* We found a VG - now check the metadata */
@@ -1374,7 +1388,7 @@ static int _scan_raw(const struct format_type *fmt, const char *vgname __attribu
 			continue;
 		}
 
-		if (read_metadata_location_summary(fmt, mdah, 0, &rl->dev_area, &vgsummary, NULL)) {
+		if (read_metadata_location_summary(fmt, NULL, mdah, 0, &rl->dev_area, &vgsummary, NULL)) {
 			vg = _vg_read_raw_area(&fid, vgsummary.vgname, &rl->dev_area, NULL, NULL, 0, 0);
 			if (vg) {
 				lvmcache_update_vg(vg, 0);

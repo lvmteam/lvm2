@@ -79,6 +79,21 @@ bool bcache_read_bytes(struct bcache *cache, int fd, uint64_t start, size_t len,
 	return true;
 }
 
+bool bcache_invalidate_bytes(struct bcache *cache, int fd, uint64_t start, size_t len)
+{
+	block_address bb, be;
+	bool result = true;
+
+	byte_range_to_block_range(cache, start, len, &bb, &be);
+
+	for (; bb != be; bb++) {
+		if (!bcache_invalidate(cache, fd, bb))
+			result = false;
+	}
+
+	return result;
+}
+
 //----------------------------------------------------------------
 
 // Writing bytes and zeroing bytes are very similar, so we factor out

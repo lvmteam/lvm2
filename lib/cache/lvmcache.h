@@ -228,4 +228,8 @@ void lvmcache_drop_saved_vgid(const char *vgid);
 uint64_t lvmcache_max_metadata_size(void);
 void lvmcache_save_metadata_size(uint64_t val);
 
+void lvmcache_get_mdas(struct cmd_context *cmd,
+                       const char *vgname, const char *vgid,
+                       struct dm_list *mda_list);
+
 #endif

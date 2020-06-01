@@ -104,7 +104,7 @@ struct mda_context {
 #define MDA_SIZE_MIN (8 * (unsigned) lvm_getpagesize())
 #define MDA_ORIGINAL_ALIGNMENT 512	/* Original alignment used for start of VG metadata content */
 
-int read_metadata_location_summary(const struct format_type *fmt, struct mda_header *mdah, int primary_mda, 
+int read_metadata_location_summary(const struct format_type *fmt, struct metadata_area *mda, struct mda_header *mdah, int primary_mda, 
 		    struct device_area *dev_area, struct lvmcache_vgsummary *vgsummary,
 		    uint64_t *mda_free_sectors);
 

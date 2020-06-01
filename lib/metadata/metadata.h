@@ -173,6 +173,8 @@ struct metadata_area {
 	struct metadata_area_ops *ops;
 	void *metadata_locn;
 	uint32_t status;
+	uint64_t scan_text_offset; /* rlocn->offset seen during scan */
+	uint32_t scan_text_checksum; /* rlocn->checksum seen during scan */
 };
 struct metadata_area *mda_copy(struct dm_pool *mem,
 			       struct metadata_area *mda);
@@ -234,7 +236,7 @@ struct name_list {
 
 struct mda_list {
 	struct dm_list list;
-	struct device_area mda;
+	struct metadata_area *mda;
 };
 
 struct peg_list {

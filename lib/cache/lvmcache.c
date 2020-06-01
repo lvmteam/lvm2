@@ -3064,3 +3064,27 @@ uint64_t lvmcache_max_metadata_size(void)
 	return _max_metadata_size;
 }
 
+void lvmcache_get_mdas(struct cmd_context *cmd,
+		       const char *vgname, const char *vgid,
+                       struct dm_list *mda_list)
+{
+	struct lvmcache_vginfo *vginfo;
+	struct lvmcache_info *info;
+	struct mda_list *mdal;
+	struct metadata_area *mda, *mda2;
+
+	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
+		log_error(INTERNAL_ERROR "lvmcache_get_mdas no vginfo %s", vgname);
+		return;
+	}
+
+	dm_list_iterate_items(info, &vginfo->infos) {
+		dm_list_iterate_items_safe(mda, mda2, &info->mdas) {
+			if (!(mdal = dm_zalloc(sizeof(*mdal))))
+				continue;
+			mdal->mda = mda;
+			dm_list_add(mda_list, &mdal->list);
+		}
+	}
+}
+
