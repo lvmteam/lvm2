@@ -84,6 +84,7 @@ static DM_LIST_INIT(_unused_duplicates);
 static DM_LIST_INIT(_prev_unused_duplicate_devs);
 static int _vgs_locked = 0;
 static int _found_duplicate_vgnames = 0;
+static int _outdated_warning = 0;
 
 int lvmcache_init(struct cmd_context *cmd)
 {
@@ -1775,6 +1776,9 @@ int lvmcache_update_vg_from_read(struct volume_group *vg, unsigned precommitted)
 
 		log_warn("WARNING: outdated PV %s seqno %u has been removed in current VG %s seqno %u.",
 			 dev_name(info->dev), info->summary_seqno, vg->name, vginfo->seqno);
+
+		if (!_outdated_warning++)
+			log_warn("See vgck --updatemetadata to clear outdated metadata.");
 
 		_drop_vginfo(info, vginfo); /* remove from vginfo->infos */
 		dm_list_add(&vginfo->outdated_infos, &info->list);

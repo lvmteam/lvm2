@@ -1428,7 +1428,16 @@ arg(thin_ARG, 'T', "thin", 0, 0, 0,
     "See \\fBlvmthin\\fP(7) for more information about LVM thin provisioning.\n")
 
 arg(updatemetadata_ARG, '\0', "updatemetadata", 0, 0, 0,
-    "Update VG metadata to correct problems.\n")
+    "Update VG metadata to correct problems.\n"
+    "If VG metadata was updated while a PV was missing, and the PV\n"
+    "reappears with an old version of metadata, then this option\n"
+    "(or any other command that writes metadata) will update the\n"
+    "metadata on the previously missing PV. If a PV was removed\n"
+    "from a VG while it was missing, and the PV reappears, using\n"
+    "this option will clear the outdated metadata from the previously\n"
+    "missing PV. If metadata text is damaged on one PV, using this\n"
+    "option will replace the damaged metadata text. For more severe\n"
+    "damage, e.g. with headers, see \\fBpvck\\fP(8).\n")
 
 arg(uuid_ARG, 'u', "uuid", 0, 0, 0,
     "#pvchange\n"
