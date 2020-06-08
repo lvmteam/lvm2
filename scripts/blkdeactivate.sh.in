@@ -330,6 +330,12 @@ deactivate_vdo() {
         test -b "$DEV_DIR/mapper/$xname" || return 0
         test -z "${SKIP_DEVICE_LIST["$kname"]}" || return 1
 
+	# Skip VDO device deactivation if VDO tools missing.
+	test "$VDO_AVAILABLE" -eq 0 && {
+		add_device_to_skip_list
+		return 1
+	}
+
         deactivate_holders "$DEV_DIR/mapper/$xname" || return 1
 
         echo -n "  [VDO]: deactivating VDO volume $xname... "
