@@ -3961,7 +3961,7 @@ static int _vdo_ ## vdo_field_name ## _disp (struct dm_report *rh, struct dm_poo
 	if (!seg_is_vdo_pool(seg)) \
 		return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64)); \
 \
-	size = seg->vdo_params.vdo_field_name ## _mb * (1024 * 1024 >> SECTOR_SHIFT); \
+	size = seg->vdo_params.vdo_field_name ## _mb * (UINT64_C(1024) * 1024 >> SECTOR_SHIFT); \
 \
 	return _size64_disp(rh, mem, field, &size, private);\
 }
