@@ -84,7 +84,6 @@ lvconvert --splitcache $vg/$lv1
 lvs -o segtype $vg/$lv1 | grep linear
 lvs -o segtype $vg/$lv2 | grep linear
 
-lvchange -ay $vg/$lv1
 mount_umount $lv1
 lvchange -an $vg/$lv1
 
