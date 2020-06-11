@@ -650,11 +650,9 @@ out:
 int get_fs_block_size(struct device *dev, uint32_t *fs_block_size)
 {
 	char *block_size_str = NULL;
-	uint64_t block_size_val;
 
 	if ((block_size_str = blkid_get_tag_value(NULL, "BLOCK_SIZE", dev_name(dev)))) {
-		block_size_val = strtoull(block_size_str, NULL, 10);
-		*fs_block_size = (uint32_t)block_size_val;
+		*fs_block_size = (uint32_t)atoi(block_size_str);
 		free(block_size_str);
 		log_debug("Found blkid BLOCK_SIZE %u for fs on %s", *fs_block_size, dev_name(dev));
 		return 1;
