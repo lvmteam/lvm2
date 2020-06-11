@@ -587,13 +587,33 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 		}
 	}
 
+	if (!is_active) {
+		/* checking block size of fs on the lv requires the lv to be active */
+		if (!activate_lv(cmd, lv)) {
+			log_error("Failed to activate LV to check block size %s", display_lvname(lv));
+			goto bad;
+		}
+		if (!sync_local_dev_names(cmd))
+			stack;
+	}
+
 	/*
 	 * Set settings->block_size which will be copied to segment settings below.
 	 * integrity block size chosen based on device logical block size and
 	 * file system block size.
 	 */
-	if (!_set_integrity_block_size(cmd, lv, settings, lbs_4k, lbs_512, pbs_4k, pbs_512))
+	if (!_set_integrity_block_size(cmd, lv, settings, lbs_4k, lbs_512, pbs_4k, pbs_512)) {
+		if (!is_active && !deactivate_lv(cmd, lv))
+			stack;
 		goto_bad;
+	}
+
+	if (!is_active) {
+		if (!deactivate_lv(cmd, lv)) {
+			log_error("Failed to deactivate LV after checking block size %s", display_lvname(lv));
+			goto bad;
+		}
+	}
 
 	/*
 	 * For each rimage, move its segments to a new rimage_iorig and give
