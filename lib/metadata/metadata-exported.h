@@ -1114,6 +1114,9 @@ int lv_is_cache_origin(const struct logical_volume *lv);
 int lv_is_writecache_origin(const struct logical_volume *lv);
 int lv_is_writecache_cachevol(const struct logical_volume *lv);
 int writecache_settings_to_str_list(struct writecache_settings *settings, struct dm_list *result, struct dm_pool *mem);
+int lv_writecache_set_cleaner(struct logical_volume *lv);
+bool lv_writecache_is_clean(struct cmd_context *cmd, struct logical_volume *lv, uint64_t *dirty_blocks);
+bool writecache_cleaner_supported(struct cmd_context *cmd);
 
 int lv_is_integrity_origin(const struct logical_volume *lv);
 

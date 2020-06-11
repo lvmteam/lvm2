@@ -620,14 +620,14 @@ FLAGS: SECONDARY_SYNTAX
 ---
 
 lvconvert --splitcache LV_cachepool_cache_thinpool_vdopool_writecache
-OO: OO_LVCONVERT
+OO: OO_LVCONVERT, --cachesettings String
 ID: lvconvert_split_and_keep_cache
 DESC: Detach a cache from an LV.
 
 ---
 
 lvconvert --uncache LV_cache_thinpool_vdopool_writecache
-OO: OO_LVCONVERT
+OO: OO_LVCONVERT, --cachesettings String
 ID: lvconvert_split_and_remove_cache
 DESC: Detach and delete a cache from an LV.
 FLAGS: SECONDARY_SYNTAX

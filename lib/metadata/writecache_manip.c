@@ -58,9 +58,9 @@ int lv_is_writecache_cachevol(const struct logical_volume *lv)
 	return 0;
 }
 
-static int _get_writecache_kernel_error(struct cmd_context *cmd,
-					const struct logical_volume *lv,
-					uint32_t *kernel_error)
+static int _get_writecache_kernel_status(struct cmd_context *cmd,
+					 struct logical_volume *lv,
+					 struct dm_status_writecache *status_out)
 {
 	struct lv_with_info_and_seg_status status;
 
@@ -91,7 +91,10 @@ static int _get_writecache_kernel_error(struct cmd_context *cmd,
 		goto fail;
 	}
 
-	*kernel_error = status.seg_status.writecache->error;
+	status_out->error = status.seg_status.writecache->error;
+	status_out->total_blocks = status.seg_status.writecache->total_blocks;
+	status_out->free_blocks = status.seg_status.writecache->free_blocks;
+	status_out->writeback_blocks = status.seg_status.writecache->writeback_blocks;
 
 	dm_pool_destroy(status.seg_status.mem);
 	return 1;
@@ -99,6 +102,35 @@ static int _get_writecache_kernel_error(struct cmd_context *cmd,
 fail:
 	dm_pool_destroy(status.seg_status.mem);
 	return 0;
+}
+
+static int _get_writecache_kernel_error(struct cmd_context *cmd,
+					struct logical_volume *lv,
+					uint32_t *kernel_error)
+{
+	struct dm_status_writecache status = { 0 };
+
+	if (!_get_writecache_kernel_status(cmd, lv, &status))
+		return_0;
+
+	*kernel_error = status.error;
+	return 1;
+}
+
+bool lv_writecache_is_clean(struct cmd_context *cmd, struct logical_volume *lv, uint64_t *dirty_blocks)
+{
+	struct dm_status_writecache status = { 0 };
+
+	if (!_get_writecache_kernel_status(cmd, lv, &status)) 
+		return false;
+
+	if (dirty_blocks)
+		*dirty_blocks = status.total_blocks - status.free_blocks;
+
+	if (status.total_blocks == status.free_blocks)
+		return true;
+
+	return false;
 }
 
 static void _rename_detached_cvol(struct cmd_context *cmd, struct logical_volume *lv_fast)
@@ -319,7 +351,7 @@ static int _lv_detach_writecache_cachevol_active(struct logical_volume *lv, int 
 
 	log_debug("Checking writecache errors to detach.");
 
-	if (!_get_writecache_kernel_error(cmd, lv_old, &kernel_error)) {
+	if (!_get_writecache_kernel_error(cmd, (struct logical_volume *)lv_old, &kernel_error)) {
 		log_error("Failed to get writecache error status for %s.", display_lvname(lv_old));
 		return 0;
 	}
@@ -392,6 +424,27 @@ int lv_detach_writecache_cachevol(struct logical_volume *lv, int noflush)
 		return _lv_detach_writecache_cachevol_active(lv, noflush);
 	else
 		return _lv_detach_writecache_cachevol_inactive(lv, noflush);
+}
+
+int lv_writecache_set_cleaner(struct logical_volume *lv)
+{
+	struct lv_segment *seg = first_seg(lv);
+
+	seg->writecache_settings.cleaner = 1;
+	seg->writecache_settings.cleaner_set = 1;
+
+	if (lv_is_active(lv)) {
+		if (!lv_update_and_reload(lv)) {
+			log_error("Failed to update VG and reload LV.");
+			return 0;
+		}
+	} else {
+		if (!vg_write(lv->vg) || !vg_commit(lv->vg)) {
+			log_error("Failed to update VG.");
+			return 0;
+		}
+	}
+	return 1;
 }
 
 static int _writecache_setting_str_list_add(const char *field, uint64_t val, char *val_str, struct dm_list *result, struct dm_pool *mem)
