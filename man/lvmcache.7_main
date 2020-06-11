@@ -34,8 +34,6 @@ LVM refers to this using the LV type \fBwritecache\fP.
 
 .SH USAGE
 
-Both kinds of caching use similar lvm commands:
-
 .B 1. Identify main LV that needs caching
 
 The main LV may already exist, and is located on larger, slower devices.
@@ -133,6 +131,22 @@ attached.
   main vg -wi------- linear /dev/slow_hhd
 .fi
 
+.SS Create a new LV with caching.
+
+A new LV can be created with caching attached at the time of creation
+using the following command:
+
+.nf
+$ lvcreate --type cache|writecache -n Name -L Size
+	--cachedevice /dev/fast_ssd vg /dev/slow_hhd
+.fi
+
+The main LV is created with the specified Name and Size from the slow_hhd.
+A hidden fast LV is created on the fast_ssd and is then attached to the
+new main LV.  If the fast_ssd is unused, the entire disk will be used as
+the cache unless the --cachesize option is used to specify a size for the
+fast LV.  The --cachedevice option can be repeated to use multiple disks
+for the fast LV.
 
 .SH OPTIONS
 
@@ -161,6 +175,18 @@ data and metadata.  A cache pool is represented as a special type of LV
 that cannot be used directly.  If a standard LV is passed with this
 option, lvm will first convert it to a cache pool by combining it with
 another LV to use for metadata.  This option can be used with dm-cache.
+
+.B --cachedevice
+.I PV
+.br
+
+This option can be used in place of --cachevol, in which case a cachevol
+LV will be created using the specified device.  This option can be
+repeated to create a cachevol using multiple devices, or a tag name can be
+specified in which case the cachevol will be created using any of the
+devices with the given tag.  If a named cache device is unused, the entire
+device will be used to create the cachevol.  To create a cachevol of a
+specific size from the cache devices, include the --cachesize option.
 
 \&
 
