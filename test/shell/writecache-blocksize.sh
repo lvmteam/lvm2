@@ -264,7 +264,6 @@ blockdev --getpbsz "$dev2"
 
 # lbs 512, pbs 4k, xfs 4k, wc 4k
 vgcreate $SHARED $vg "$dev1"
-vgcreate $SHARED $vg "$dev1"
 vgextend $vg "$dev2"
 lvcreate -n $lv1 -l 8 -an $vg "$dev1"
 lvcreate -n $lv2 -l 4 -an $vg "$dev2"
