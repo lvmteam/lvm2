@@ -115,7 +115,10 @@ lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
 _add_data_to_lv
+lvchange -an $vg/$lv1
+# FIXME: if lv remains active during convert, then xfs mount fails related to block size, bug 1847180
 lvconvert --raidintegrity y $vg/$lv1
+lvchange -ay $vg/$lv1
 _wait_recalc $vg/${lv1}_rimage_0
 _wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg

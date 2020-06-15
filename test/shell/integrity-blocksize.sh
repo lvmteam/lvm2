@@ -54,6 +54,18 @@ mkdir -p $mnt
 vgcreate $vg1 $LOOP1 $LOOP2
 vgcreate $vg2 $LOOP3 $LOOP4
 
+# LOOP1/LOOP2 have LBS 512 and PBS 512
+# LOOP3/LOOP4 have LBS 4K and PBS 4K
+
+blockdev --getss $LOOP1
+blockdev --getpbsz $LOOP1
+blockdev --getss $LOOP2
+blockdev --getpbsz $LOOP2
+blockdev --getss $LOOP3
+blockdev --getpbsz $LOOP3
+blockdev --getss $LOOP4
+blockdev --getpbsz $LOOP4
+
 # lvcreate on dev512, result 512
 lvcreate --type raid1 -m1 --raidintegrity y -l 8 -n $lv1 $vg1
 pvck --dump metadata $LOOP1 | grep 'block_size = 512'
@@ -164,18 +176,22 @@ umount $mnt
 pvck --dump metadata $LOOP1 | grep 'block_size = 512'
 lvremove -y $vg1/$lv1
 
-# FIXME: kernel error reported, disallow this combination?
+# FIXME: if lv is active while integrity is added, then xfs mount fails related to block size, bug 1847180
 # lvconvert --bs 1024 on dev512, xfs 4096, result 1024
-#lvcreate --type raid1 -m1 -l 8 -n $lv1 $vg1
-#aux wipefs_a /dev/$vg1/$lv1
-#mkfs.xfs -f -s size=4096 "$DM_DEV_DIR/$vg1/$lv1"
-#blkid "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"4096\"
-#lvconvert --raidintegrity y --raidintegrityblocksize 1024 $vg1/$lv1
-#blkid "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"4096\"
-#mount "$DM_DEV_DIR/$vg1/$lv1" $mnt
-#umount $mnt
-#pvck --dump metadata $LOOP1 | grep 'block_size = 1024'
-#lvremove -y $vg1/$lv1
+lvcreate --type raid1 -m1 -l 8 -n $lv1 $vg1
+aux wipefs_a /dev/$vg1/$lv1
+mkfs.xfs -f -s size=4096 "$DM_DEV_DIR/$vg1/$lv1"
+blkid "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"4096\"
+# TODO: also test adding integrity when the lv is active,
+# and also when the lv is active and fs is mounted?
+lvchange -an $vg1/$lv1
+lvconvert --raidintegrity y --raidintegrityblocksize 1024 $vg1/$lv1
+lvchange -ay $vg1/$lv1
+blkid "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"4096\"
+mount "$DM_DEV_DIR/$vg1/$lv1" $mnt
+umount $mnt
+pvck --dump metadata $LOOP1 | grep 'block_size = 1024'
+lvremove -y $vg1/$lv1
 
 # lvconvert --bs 512 on dev512, ext4 1024, result 512
 lvcreate --type raid1 -m1 -l 8 -n $lv1 $vg1
@@ -196,10 +212,10 @@ mkfs.ext4 "$DM_DEV_DIR/$vg2/$lv1"
 not lvconvert --raidintegrity y --raidintegrityblocksize 512 $vg2/$lv1
 lvremove -y $vg2/$lv1
 
-# FIXME: need to use scsi_debug to create devs with LBS 512 PBS 4k
-# FIXME: lvconvert, fsunknown, LBS 512, PBS 4k: result 512
-# FIXME: lvconvert --bs 512, fsunknown, LBS 512, PBS 4k: result 512
-# FIXME: lvconvert --bs 4k, fsunknown, LBS 512, PBS 4k: result 4k
+# TODO: need to use scsi_debug to create devs with LBS 512 PBS 4k
+# TODO: lvconvert, fsunknown, LBS 512, PBS 4k: result 512
+# TODO: lvconvert --bs 512, fsunknown, LBS 512, PBS 4k: result 512
+# TODO: lvconvert --bs 4k, fsunknown, LBS 512, PBS 4k: result 4k
 
 # lvconvert on dev512, xfs 512, result 512, (detect fs with LV inactive)
 lvcreate --type raid1 -m1 -l 8 -n $lv1 $vg1
