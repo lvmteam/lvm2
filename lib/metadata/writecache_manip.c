@@ -19,7 +19,6 @@
 #include "lib/commands/toolcontext.h"
 #include "lib/display/display.h"
 #include "lib/metadata/segtype.h"
-#include "lib/metadata/lv_alloc.h"
 #include "lib/activate/activate.h"
 #include "lib/config/defaults.h"
 #include "lib/datastruct/str_list.h"
