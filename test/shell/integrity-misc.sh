@@ -95,7 +95,7 @@ _sync_percent() {
 	get lv_field "$checklv" sync_percent | cut -d. -f1
 }
 
-_wait_recalc() {
+_wait_sync() {
 	local checklv=$1
 
 	for i in $(seq 1 10) ; do
@@ -124,8 +124,9 @@ _wait_recalc() {
 # lvrename
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+_wait_sync $vg/${lv1}_rimage_0
+_wait_sync $vg/${lv1}_rimage_1
+_wait_sync $vg/$lv1
 _add_new_data_to_mnt
 umount $mnt
 lvrename $vg/$lv1 $vg/$lv2
@@ -141,8 +142,9 @@ vgremove -ff $vg
 # lv must be active
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg "$dev1" "$dev2"
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+_wait_sync $vg/${lv1}_rimage_0
+_wait_sync $vg/${lv1}_rimage_1
+_wait_sync $vg/$lv1
 _add_new_data_to_mnt
 lvconvert --replace "$dev1" $vg/$lv1 "$dev3"
 lvs -a -o+devices $vg > out
@@ -162,8 +164,9 @@ vgremove -ff $vg
 # same as prev but with bitmap mode
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y --raidintegritymode bitmap -n $lv1 -l 8 $vg "$dev1" "$dev2"
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+_wait_sync $vg/${lv1}_rimage_0
+_wait_sync $vg/${lv1}_rimage_1
+_wait_sync $vg/$lv1
 _add_new_data_to_mnt
 lvconvert --replace "$dev1" $vg/$lv1 "$dev3"
 lvs -a -o+devices $vg > out
@@ -185,8 +188,9 @@ vgremove -ff $vg
 # (like lvconvert --replace does for a dev that's not missing).
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg "$dev1" "$dev2"
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+_wait_sync $vg/${lv1}_rimage_0
+_wait_sync $vg/${lv1}_rimage_1
+_wait_sync $vg/$lv1
 _add_new_data_to_mnt
 aux disable_dev "$dev2"
 lvs -a -o+devices $vg > out
@@ -213,8 +217,9 @@ vgremove -ff $vg
 
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg "$dev1" "$dev2"
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+_wait_sync $vg/${lv1}_rimage_0
+_wait_sync $vg/${lv1}_rimage_1
+_wait_sync $vg/$lv1
 _add_new_data_to_mnt
 umount $mnt
 lvchange -an $vg/$lv1
