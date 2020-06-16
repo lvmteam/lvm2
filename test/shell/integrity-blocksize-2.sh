@@ -81,28 +81,29 @@ umount $mnt
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 
-# FIXME: the second xfs mount fails related to block size and converting active LV, bug 1847180
 # add integrity while LV is active, fs unmounted
-#lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
-#lvchange -an $vg/$lv1
-#lvchange -ay $vg/$lv1
-#mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
-#mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-#echo "hello world" > $mnt/hello
-#umount $mnt
-#lvchange -an $vg
-#lvchange -ay $vg
-#lvconvert --raidintegrity y $vg/$lv1
-#_wait_recalc $vg/${lv1}_rimage_0
-#_wait_recalc $vg/${lv1}_rimage_1
-#lvs -a -o+devices $vg
-#mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-#cat $mnt/hello | grep "hello world"
-#umount $mnt
-#lvchange -an $vg/$lv1
-#lvremove $vg/$lv1
+# lvconvert will use ribs 512 to avoid increasing LBS from 512 to 4k on active LV
+lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
+lvchange -an $vg/$lv1
+lvchange -ay $vg/$lv1
+mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+mount "$DM_DEV_DIR/$vg/$lv1" $mnt
+echo "hello world" > $mnt/hello
+umount $mnt
+lvchange -an $vg
+lvchange -ay $vg
+lvconvert --raidintegrity y $vg/$lv1
+_wait_recalc $vg/${lv1}_rimage_0
+_wait_recalc $vg/${lv1}_rimage_1
+lvs -a -o+devices $vg
+mount "$DM_DEV_DIR/$vg/$lv1" $mnt
+cat $mnt/hello | grep "hello world"
+umount $mnt
+lvchange -an $vg/$lv1
+lvremove $vg/$lv1
 
 # add integrity while LV is active, fs mounted
+# lvconvert will use ribs 512 to avoid increasing LBS from 512 to 4k on active LV
 lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1

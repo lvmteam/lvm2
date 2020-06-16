@@ -278,7 +278,7 @@ int lv_remove_integrity_from_raid(struct logical_volume *lv)
 	return 1;
 }
 
-static int _set_integrity_block_size(struct cmd_context *cmd, struct logical_volume *lv,
+static int _set_integrity_block_size(struct cmd_context *cmd, struct logical_volume *lv, int is_active,
 				     struct integrity_settings *settings,
 				     int lbs_4k, int lbs_512, int pbs_4k, int pbs_512)
 {
@@ -375,7 +375,13 @@ static int _set_integrity_block_size(struct cmd_context *cmd, struct logical_vol
 		}
 
 		if (!settings->block_size) {
-			if (fs_block_size <= 4096)
+			if (is_active && lbs_512) {
+				/* increasing the lbs from 512 to 4k under an active LV could cause problems
+				   for an application that expects a given io size/alignment is possible. */
+				settings->block_size = 512;
+				if (fs_block_size > 512)
+					log_print("Limiting integrity block size to 512 because the LV is active.");
+			} else if (fs_block_size <= 4096)
 				settings->block_size = fs_block_size;
 			else
 				settings->block_size = 4096; /* dm-integrity max is 4096 */
@@ -602,7 +608,7 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 	 * integrity block size chosen based on device logical block size and
 	 * file system block size.
 	 */
-	if (!_set_integrity_block_size(cmd, lv, settings, lbs_4k, lbs_512, pbs_4k, pbs_512)) {
+	if (!_set_integrity_block_size(cmd, lv, is_active, settings, lbs_4k, lbs_512, pbs_4k, pbs_512)) {
 		if (!is_active && !deactivate_lv(cmd, lv))
 			stack;
 		goto_bad;

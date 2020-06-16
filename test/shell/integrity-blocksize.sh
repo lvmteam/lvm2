@@ -140,12 +140,26 @@ umount $mnt
 pvck --dump metadata $LOOP3 | grep 'block_size = 4096'
 lvremove -y $vg2/$lv1
 
-# lvconvert on dev512, ext4 1024, result 1024 
+# lvconvert on dev512, ext4 1024, result 1024 (LV active when adding)
 lvcreate --type raid1 -m1 -l 8 -n $lv1 $vg1
 aux wipefs_a /dev/$vg1/$lv1
 mkfs.ext4 -b 1024 "$DM_DEV_DIR/$vg1/$lv1"
 blkid "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"1024\"
 lvconvert --raidintegrity y $vg1/$lv1
+blkid "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"1024\"
+mount "$DM_DEV_DIR/$vg1/$lv1" $mnt
+umount $mnt
+pvck --dump metadata $LOOP1 | grep 'block_size = 512'
+lvremove -y $vg1/$lv1
+
+# lvconvert on dev512, ext4 1024, result 1024 (LV inactive when adding)
+lvcreate --type raid1 -m1 -l 8 -n $lv1 $vg1
+aux wipefs_a /dev/$vg1/$lv1
+mkfs.ext4 -b 1024 "$DM_DEV_DIR/$vg1/$lv1"
+blkid "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"1024\"
+lvchange -an $vg1/$lv1
+lvconvert --raidintegrity y $vg1/$lv1
+lvchange -ay $vg1/$lv1
 blkid "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"1024\"
 mount "$DM_DEV_DIR/$vg1/$lv1" $mnt
 umount $mnt
@@ -176,15 +190,13 @@ umount $mnt
 pvck --dump metadata $LOOP1 | grep 'block_size = 512'
 lvremove -y $vg1/$lv1
 
-# FIXME: if lv is active while integrity is added, then xfs mount fails related to block size, bug 1847180
 # lvconvert --bs 1024 on dev512, xfs 4096, result 1024
 lvcreate --type raid1 -m1 -l 8 -n $lv1 $vg1
 aux wipefs_a /dev/$vg1/$lv1
 mkfs.xfs -f -s size=4096 "$DM_DEV_DIR/$vg1/$lv1"
 blkid "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"4096\"
-# TODO: also test adding integrity when the lv is active,
-# and also when the lv is active and fs is mounted?
 lvchange -an $vg1/$lv1
+# lv needs to be inactive to increase LBS from 512
 lvconvert --raidintegrity y --raidintegrityblocksize 1024 $vg1/$lv1
 lvchange -ay $vg1/$lv1
 blkid "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"4096\"
