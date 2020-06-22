@@ -236,34 +236,30 @@ _verify_data_on_lv
 lvremove $vg/$lv1
 lvremove $vg/$lv2
 
-# FIXME: test depends on unpushed commit
-# that enables two stage flush using cleaner
-#
 # Test attach while active, detach while active,
 # skip cleaner so flush message is used instead
-# 
-# lvcreate -n $lv1 -l 8 -an $vg "$dev1"
-# lvcreate -n $lv2 -l 4 -an $vg "$dev2"
-# lvchange -ay $vg/$lv1
-# _add_new_data_to_mnt
-# lvconvert --yes --type writecache --cachevol $lv2 $vg/$lv1
-# blockdev --getss "$DM_DEV_DIR/$vg/$lv1"
-# blockdev --getpbsz "$DM_DEV_DIR/$vg/$lv1"
-# _add_more_data_to_mnt
-# _verify_data_on_mnt
-# lvconvert --splitcache --cachesettings cleaner=0 $vg/$lv1
-# check lv_field $vg/$lv1 segtype linear
-# check lv_field $vg/$lv2 segtype linear
-# blockdev --getss "$DM_DEV_DIR/$vg/$lv1"
-# blockdev --getpbsz "$DM_DEV_DIR/$vg/$lv1"
-# _verify_data_on_mnt
-# _verify_more_data_on_mnt
-# umount $mnt
-# lvchange -an $vg/$lv1
-# lvchange -an $vg/$lv2
-# _verify_data_on_lv
-# lvremove $vg/$lv1
-# lvremove $vg/$lv2
+lvcreate -n $lv1 -l 8 -an $vg "$dev1"
+lvcreate -n $lv2 -l 4 -an $vg "$dev2"
+lvchange -ay $vg/$lv1
+_add_new_data_to_mnt
+lvconvert --yes --type writecache --cachevol $lv2 $vg/$lv1
+blockdev --getss "$DM_DEV_DIR/$vg/$lv1"
+blockdev --getpbsz "$DM_DEV_DIR/$vg/$lv1"
+_add_more_data_to_mnt
+_verify_data_on_mnt
+lvconvert --splitcache --cachesettings cleaner=0 $vg/$lv1
+check lv_field $vg/$lv1 segtype linear
+check lv_field $vg/$lv2 segtype linear
+blockdev --getss "$DM_DEV_DIR/$vg/$lv1"
+blockdev --getpbsz "$DM_DEV_DIR/$vg/$lv1"
+_verify_data_on_mnt
+_verify_more_data_on_mnt
+umount $mnt
+lvchange -an $vg/$lv1
+lvchange -an $vg/$lv2
+_verify_data_on_lv
+lvremove $vg/$lv1
+lvremove $vg/$lv2
  
 vgremove -ff $vg
  
