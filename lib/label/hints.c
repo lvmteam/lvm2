@@ -801,10 +801,8 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 	if (fclose(fp))
 		stack;
 
-	if (!ret) {
-		free_hints(hints);
+	if (!ret)
 		return 0;
-	}
 
 	if (!found)
 		return 1;
