@@ -199,6 +199,15 @@ back metadata it believes has changed but hasn't.
 \fB--updatemetadata\fP
 .br
 Update VG metadata to correct problems.
+If VG metadata was updated while a PV was missing, and the PV
+reappears with an old version of metadata, then this option
+(or any other command that writes metadata) will update the
+metadata on the previously missing PV. If a PV was removed
+from a VG while it was missing, and the PV reappears, using
+this option will clear the outdated metadata from the previously
+missing PV. If metadata text is damaged on one PV, using this
+option will replace the damaged metadata text. For more severe
+damage, e.g. with headers, see \fBpvck\fP(8).
 .ad b
 .HP
 .ad l

@@ -488,7 +488,7 @@ allocation {
 	# This configuration option does not have a default value defined.
 
 	# Configuration option allocation/thin_pool_metadata_require_separate_pvs.
-	# Thin pool metdata and data will always use different PVs.
+	# Thin pool metadata and data will always use different PVs.
 	thin_pool_metadata_require_separate_pvs = 0
 
 	# Configuration option allocation/thin_pool_zero.
@@ -525,6 +525,10 @@ allocation {
 	# 
 	# This configuration option has an automatic default value.
 	# thin_pool_chunk_size_policy = "generic"
+
+	# Configuration option allocation/zero_metadata.
+	# Zero whole metadata area before use with thin or cache pool.
+	zero_metadata = 1
 
 	# Configuration option allocation/thin_pool_chunk_size.
 	# The minimal chunk size in KiB for thin pool volumes.

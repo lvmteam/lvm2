@@ -23,6 +23,10 @@ lvconvert - Change logical volume layout
 .ad b
 .br
 .ad l
+    \fB--cachedevice\fP \fIPV\fP
+.ad b
+.br
+.ad l
     \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP
 .ad b
 .br
@@ -40,6 +44,10 @@ lvconvert - Change logical volume layout
 .br
 .ad l
     \fB--cachesettings\fP \fIString\fP
+.ad b
+.br
+.ad l
+    \fB--cachesize\fP \fISize\fP[m|UNIT]
 .ad b
 .br
 .ad l
@@ -738,6 +746,44 @@ Attach a cache to an LV, converts the LV to type cache.
 .br
 -
 
+Add a writecache to an LV, using a specified cache device.
+.br
+.P
+\fBlvconvert\fP \fB--type\fP \fBwritecache\fP \fB--cachedevice\fP \fIPV\fP \fILV\fP
+.br
+.RS 4
+.ad l
+[    \fB--cachesize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--cachesettings\fP \fIString\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+-
+
+Add a cache to an LV, using a specified cache device.
+.br
+.P
+\fBlvconvert\fP \fB--type\fP \fBcache\fP \fB--cachedevice\fP \fIPV\fP \fILV\fP
+.br
+.RS 4
+.ad l
+[    \fB--cachesize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--cachesettings\fP \fIString\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+-
+
 Convert LV to type thin-pool.
 .br
 .P
@@ -1135,6 +1181,12 @@ See \fBlvmcache\fP(7) for more information about LVM caching.
 .ad b
 .HP
 .ad l
+\fB--cachedevice\fP \fIPV\fP
+.br
+The name of a device to use for a cache.
+.ad b
+.HP
+.ad l
 \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP
 .br
 Specifies the cache metadata format used by cache target.
@@ -1179,6 +1231,12 @@ The special string value \fBdefault\fP switches
 settings back to their default kernel values and removes
 them from the list of settings stored in LVM metadata.
 See \fBlvmcache\fP(7) for more information.
+.ad b
+.HP
+.ad l
+\fB--cachesize\fP \fISize\fP[m|UNIT]
+.br
+The size of cache to use.
 .ad b
 .HP
 .ad l

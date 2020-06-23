@@ -577,6 +577,10 @@ Related to Thin Logical Volumes: (F)ailed.
 .br
 (F)ailed is set when related thin pool enters Failed state and no further I/O
 is permitted at all.
+.IP
+Related to writecache logical volumes: (E)rror.
+.br
+(E)rror is set dm-writecache reports an error.
 .IP 10 3
 s(k)ip activation: this volume is flagged to be skipped during activation.
 .SH SEE ALSO

@@ -31,6 +31,10 @@ lvcreate - Create a logical volume
 .ad b
 .br
 .ad l
+    \fB--cachedevice\fP \fIPV\fP
+.ad b
+.br
+.ad l
     \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP
 .ad b
 .br
@@ -48,6 +52,14 @@ lvcreate - Create a logical volume
 .br
 .ad l
     \fB--cachesettings\fP \fIString\fP
+.ad b
+.br
+.ad l
+    \fB--cachesize\fP \fISize\fP[m|UNIT]
+.ad b
+.br
+.ad l
+    \fB--cachevol\fP \fILV\fP
 .ad b
 .br
 .ad l
@@ -816,11 +828,9 @@ where the new thin pool is named by the --thinpool arg.
 .RE
 -
 
-Create a cache LV, first creating a new origin LV, 
+Create a new LV, then attach the specified cachepool 
 .br
-then combining it with the existing cache pool named 
-.br
-by the --cachepool arg.
+which converts the new LV to type cache.
 .br
 .P
 \fBlvcreate\fP \fB--type\fP \fBcache\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
@@ -871,6 +881,190 @@ by the --cachepool arg.
 .br
 .ad l
 [    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
+-
+
+Create a new LV, then attach the specified cachevol 
+.br
+which converts the new LV to type cache.
+.br
+.P
+\fBlvcreate\fP \fB--type\fP \fBcache\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
+.RS 5
+ \fB--cachevol\fP \fILV\fP \fIVG\fP
+.RE
+.br
+.RS 4
+.ad l
+[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+.ad b
+.br
+.ad l
+[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachepolicy\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachesettings\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
+-
+
+Create a new LV, then attach a cachevol created from 
+.br
+the specified cache device, which converts the 
+.br
+new LV to type cache.
+.br
+.P
+\fBlvcreate\fP \fB--type\fP \fBcache\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
+.RS 5
+ \fB--cachedevice\fP \fIPV\fP \fIVG\fP
+.RE
+.br
+.RS 4
+.ad l
+[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+.ad b
+.br
+.ad l
+[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachepolicy\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachesettings\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
+.ad b
+.br
+.ad l
+[    \fB--cachesize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
+-
+
+Create a new LV, then attach the specified cachevol 
+.br
+which converts the new LV to type writecache.
+.br
+.P
+\fBlvcreate\fP \fB--type\fP \fBwritecache\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
+.RS 5
+ \fB--cachevol\fP \fILV\fP \fIVG\fP
+.RE
+.br
+.RS 4
+.ad l
+[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+.ad b
+.br
+.ad l
+[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--cachesettings\fP \fIString\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
+-
+
+Create a new LV, then attach a cachevol created from 
+.br
+the specified cache device, which converts the 
+.br
+new LV to type writecache.
+.br
+.P
+\fBlvcreate\fP \fB--type\fP \fBwritecache\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
+.RS 5
+ \fB--cachedevice\fP \fIPV\fP \fIVG\fP
+.RE
+.br
+.RS 4
+.ad l
+[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+.ad b
+.br
+.ad l
+[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--cachesize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--cachesettings\fP \fIString\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1091,6 +1285,12 @@ See \fBlvmcache\fP(7) for more information about LVM caching.
 .ad b
 .HP
 .ad l
+\fB--cachedevice\fP \fIPV\fP
+.br
+The name of a device to use for a cache.
+.ad b
+.HP
+.ad l
 \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP
 .br
 Specifies the cache metadata format used by cache target.
@@ -1135,6 +1335,18 @@ The special string value \fBdefault\fP switches
 settings back to their default kernel values and removes
 them from the list of settings stored in LVM metadata.
 See \fBlvmcache\fP(7) for more information.
+.ad b
+.HP
+.ad l
+\fB--cachesize\fP \fISize\fP[m|UNIT]
+.br
+The size of cache to use.
+.ad b
+.HP
+.ad l
+\fB--cachevol\fP \fILV\fP
+.br
+The name of a cache volume.
 .ad b
 .HP
 .ad l
@@ -2659,11 +2871,11 @@ config setting sparse_segtype_default.
 .RE
 -
 
-Create a cache LV, first creating a new origin LV, 
+Create a new LV, then attach the specified cachepool 
 .br
-then combining it with the existing cache pool named 
+which converts the new LV to type cache 
 .br
-by the --cachepool arg (variant, infers --type cache).
+(variant, infers --type cache.)
 .br
 .P
 \fBlvcreate\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fB--cachepool\fP \fILV\fP\fI_cachepool\fP \fIVG\fP
@@ -2717,11 +2929,11 @@ by the --cachepool arg (variant, infers --type cache).
 .RE
 -
 
-Create a cache LV, first creating a new origin LV, 
+Create a new LV, then attach the specified cachepool 
 .br
-then combining it with the existing cache pool named 
+which converts the new LV to type cache. 
 .br
-in the first arg (variant, also use --cachepool).
+(variant, also use --cachepool).
 .br
 .P
 \fBlvcreate\fP \fB--type\fP \fBcache\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fILV\fP\fI_cachepool\fP
@@ -2779,19 +2991,15 @@ in the first arg (variant, also use --cachepool).
 .RE
 -
 
-When LV is a cache pool, create a cache LV, 
+When the LV arg is a cachepool, then create a new LV and 
 .br
-first creating a new origin LV, then combining it with 
+attach the cachepool arg to it. 
 .br
-the existing cache pool named in the first arg 
+(variant, use --type cache and --cachepool.) 
 .br
-(variant, infers --type cache, also use --cachepool). 
+When the LV arg is not a cachepool, then create a new cachepool 
 .br
-When LV is not a cache pool, convert the specified LV 
-.br
-to type cache after creating a new cache pool LV to use 
-.br
-(use lvconvert).
+and attach it to the LV arg (alternative, use lvconvert.)
 .br
 .P
 \fBlvcreate\fP \fB-H\fP|\fB--cache\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fILV\fP
