@@ -1,5 +1,6 @@
 Version 2.02.188 - 
 ==================================
+  Failure in zeroing or wiping will fail command (bypass with -Zn, -Wn).
   Fix support for lvconvert --repair used by foreign apps (i.e. Docker).
   Support interruption for bcache waiting.
   Fix bcache when device has too many failing writes.
