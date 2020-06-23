@@ -7582,14 +7582,14 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 		return 1;
 
 	if (!lv_is_active(lv)) {
-		log_error("Volume \"%s/%s\" is not active locally (volume_list activation filter?).",
-			  lv->vg->name, lv->name);
+		log_error("Volume %s is not active locally (volume_list activation filter?).",
+			  display_lvname(lv));
 		return 0;
 	}
 
 	/* Wait until devices are available */
 	if (!sync_local_dev_names(lv->vg->cmd)) {
-		log_error("Failed to sync local devices before wiping LV %s.",
+		log_error("Failed to sync local devices before wiping volume %s.",
 			  display_lvname(lv));
 		return 0;
 	}
@@ -7613,17 +7613,20 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 	}
 
 	if (!label_scan_open_rw(dev)) {
-		log_error("Failed to open %s/%s for wiping and zeroing.", lv->vg->name, lv->name);
-		goto out;
+		log_error("Failed to open %s for wiping and zeroing.", display_lvname(lv));
+		return 0;
 	}
 
 	if (wp.do_wipe_signatures) {
-		log_verbose("Wiping known signatures on logical volume \"%s/%s\"",
-			    lv->vg->name, lv->name);
+		log_verbose("Wiping known signatures on logical volume %s.",
+			    display_lvname(lv));
 		if (!wipe_known_signatures(lv->vg->cmd, dev, name, 0,
 					   TYPE_DM_SNAPSHOT_COW,
-					   wp.yes, wp.force, NULL))
-			stack;
+					   wp.yes, wp.force, NULL)) {
+			log_error("Filed to wipe signatures of logical volume %s.",
+				  display_lvname(lv));
+			return 0;
+		}
 	}
 
 	if (wp.do_zero) {
@@ -7632,21 +7635,23 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 		if (zero_sectors > lv->size)
 			zero_sectors = lv->size;
 
-		log_verbose("Initializing %s of logical volume \"%s/%s\" with value %d.",
+		log_verbose("Initializing %s of logical volume %s with value %d.",
 			    display_size(lv->vg->cmd, zero_sectors),
-			    lv->vg->name, lv->name, wp.zero_value);
+			    display_lvname(lv), wp.zero_value);
 
-		if (!wp.zero_value) {
-			if (!dev_write_zeros(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT))
-				stack;
-		} else {
-			if (!dev_set_bytes(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT, (uint8_t)wp.zero_value))
-				stack;
+		if ((wp.zero_value && !dev_set_bytes(dev, UINT64_C(0),
+						     (size_t) zero_sectors << SECTOR_SHIFT,
+						     (uint8_t)wp.zero_value)) ||
+		    !dev_write_zeros(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT)) {
+			log_error("Failed to initialize %s of logical volume %s with value %d.",
+				  display_size(lv->vg->cmd, zero_sectors),
+				  display_lvname(lv), wp.zero_value);
+			return 0;
 		}
 	}
 
 	label_scan_invalidate(dev);
-out:
+
 	lv->status &= ~LV_NOSCAN;
 
 	return 1;
