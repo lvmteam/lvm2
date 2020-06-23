@@ -42,6 +42,13 @@ init_lv_
 test_blkid_ || skip
 lvremove -f $vg/$lv1
 
+# Zeroing stops the command when there is a failure (write error in this case)
+aux error_dev "$dev1" "$(get first_extent_sector "$dev1"):2"
+not lvcreate -l1 -n $lv1 $vg 2>&1 | tee out
+grep "Failed to initialize" out
+aux enable_dev "$dev1"
+
+
 aux lvmconf "allocation/wipe_signatures_when_zeroing_new_lvs = 0"
 
 lvcreate -y -Zn -l1 -n $lv1 $vg 2>&1 | tee out
