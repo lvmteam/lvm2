@@ -49,6 +49,7 @@ struct lvmpolld_lv {
 	const enum poll_type type;
 	const char *const lvid;
 	const char *const lvmpolld_id;
+	const char *const devicesfile;
 	const char *const lvname; /* full vg/lv name */
 	const unsigned pdtimeout; /* in seconds */
 	const char *const sinterval;
@@ -101,7 +102,8 @@ struct lvmpolld_lv *pdlv_create(struct lvmpolld_state *ls, const char *id,
 			   const char *vgname, const char *lvname,
 			   const char *sysdir, enum poll_type type,
 			   const char *sinterval, unsigned pdtimeout,
-			   struct lvmpolld_store *pdst);
+			   struct lvmpolld_store *pdst,
+			   const char *devicesfile);
 
 /* only call with appropriate struct lvmpolld_store lock held */
 void pdlv_destroy(struct lvmpolld_lv *pdlv);

@@ -27,6 +27,8 @@ struct physical_volume {
 	struct id old_id;		/* Set during pvchange -u. */
 	struct device *dev;
 	const char *device_hint;	/* primary name last time metadata was written */
+	const char *device_id;
+	const char *device_id_type;
 	const struct format_type *fmt;
 	struct format_instance *fid;
 
@@ -77,6 +79,8 @@ char *pv_attr_dup(struct dm_pool *mem, const struct physical_volume *pv);
 const char *pv_dev_name(const struct physical_volume *pv);
 char *pv_uuid_dup(struct dm_pool *mem, const struct physical_volume *pv);
 char *pv_tags_dup(const struct physical_volume *pv);
+char *pv_deviceid_dup(struct dm_pool *mem, const struct physical_volume *pv);
+char *pv_deviceidtype_dup(struct dm_pool *mem, const struct physical_volume *pv);
 uint64_t pv_size(const struct physical_volume *pv);
 uint64_t pv_size_field(const struct physical_volume *pv);
 uint64_t pv_dev_size(const struct physical_volume *pv);

@@ -555,14 +555,15 @@ static struct lvmpolld_lv *construct_pdlv(request req, struct lvmpolld_state *ls
 				     const char *interval, const char *id,
 				     const char *vgname, const char *lvname,
 				     const char *sysdir, enum poll_type type,
-				     unsigned abort_polling, unsigned uinterval)
+				     unsigned abort_polling, unsigned uinterval,
+				     const char *devicesfile)
 {
 	const char **cmdargv, **cmdenvp;
 	struct lvmpolld_lv *pdlv;
 	unsigned handle_missing_pvs = daemon_request_int(req, LVMPD_PARM_HANDLE_MISSING_PVS, 0);
 
 	pdlv = pdlv_create(ls, id, vgname, lvname, sysdir, type,
-			   interval, uinterval, pdst);
+			   interval, uinterval, pdst, devicesfile);
 
 	if (!pdlv) {
 		ERROR(ls, "%s: %s", PD_LOG_PREFIX, "failed to create internal LV data structure.");
@@ -621,6 +622,7 @@ static response poll_init(client_handle h, struct lvmpolld_state *ls, request re
 	const char *lvname = daemon_request_str(req, LVMPD_PARM_LVNAME, NULL);
 	const char *vgname = daemon_request_str(req, LVMPD_PARM_VGNAME, NULL);
 	const char *sysdir = daemon_request_str(req, LVMPD_PARM_SYSDIR, NULL);
+	const char *devicesfile = daemon_request_str(req, LVMPD_PARM_DEVICESFILE, NULL);
 	unsigned abort_polling = daemon_request_int(req, LVMPD_PARM_ABORT, 0);
 
 	assert(type < POLL_TYPE_MAX);
@@ -680,7 +682,7 @@ static response poll_init(client_handle h, struct lvmpolld_state *ls, request re
 		pdlv->init_rq_count++; /* safe. protected by store lock */
 	} else {
 		pdlv = construct_pdlv(req, ls, pdst, interval, id, vgname,
-				      lvname, sysdir, type, abort_polling, 2 * uinterval);
+				      lvname, sysdir, type, abort_polling, 2 * uinterval, devicesfile);
 		if (!pdlv) {
 			pdst_unlock(pdst);
 			free(id);

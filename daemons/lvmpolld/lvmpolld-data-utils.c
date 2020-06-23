@@ -93,11 +93,13 @@ struct lvmpolld_lv *pdlv_create(struct lvmpolld_state *ls, const char *id,
 			   const char *vgname, const char *lvname,
 			   const char *sysdir, enum poll_type type,
 			   const char *sinterval, unsigned pdtimeout,
-			   struct lvmpolld_store *pdst)
+			   struct lvmpolld_store *pdst,
+			   const char *devicesfile)
 {
 	char *lvmpolld_id = strdup(id), /* copy */
 	     *full_lvname = _construct_full_lvname(vgname, lvname), /* copy */
 	     *lvm_system_dir_env = _construct_lvm_system_dir_env(sysdir); /* copy */
+	char *devicesfile_dup = devicesfile ? strdup(devicesfile) : NULL;
 
 	struct lvmpolld_lv tmp = {
 		.ls = ls,
@@ -105,6 +107,7 @@ struct lvmpolld_lv *pdlv_create(struct lvmpolld_state *ls, const char *id,
 		.lvmpolld_id = lvmpolld_id,
 		.lvid = _get_lvid(lvmpolld_id, sysdir),
 		.lvname = full_lvname,
+		.devicesfile = devicesfile_dup,
 		.lvm_system_dir_env = lvm_system_dir_env,
 		.sinterval = strdup(sinterval), /* copy */
 		.pdtimeout = pdtimeout < MIN_POLLING_TIMEOUT ? MIN_POLLING_TIMEOUT : pdtimeout,
@@ -124,6 +127,7 @@ struct lvmpolld_lv *pdlv_create(struct lvmpolld_state *ls, const char *id,
 	return pdlv;
 
 err:
+	free((void *)devicesfile_dup);
 	free((void *)full_lvname);
 	free((void *)lvmpolld_id);
 	free((void *)lvm_system_dir_env);
@@ -136,6 +140,7 @@ err:
 void pdlv_destroy(struct lvmpolld_lv *pdlv)
 {
 	free((void *)pdlv->lvmpolld_id);
+	free((void *)pdlv->devicesfile);
 	free((void *)pdlv->lvname);
 	free((void *)pdlv->sinterval);
 	free((void *)pdlv->lvm_system_dir_env);

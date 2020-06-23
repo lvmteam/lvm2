@@ -1390,6 +1390,8 @@ static int _pvscan_cache_all(struct cmd_context *cmd, int argc, char **argv,
 	_online_files_remove(_vgs_online_dir);
 	_online_files_remove(_pvs_lookup_dir);
 
+	unlink_searched_devnames(cmd);
+
 	/*
 	 * pvscan --cache removes existing hints and recreates new ones.
 	 * We begin by clearing hints at the start of the command.
@@ -1443,6 +1445,7 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 	struct dm_list pvscan_devs; /* struct device_list */
 	struct pvscan_arg *arg;
 	struct device_list *devl, *devl2;
+	int relax_deviceid_filter = 0;
 	int pv_count = 0;
 	int ret;
 
@@ -1451,7 +1454,10 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 
 	cmd->pvscan_cache_single = 1;
 
-	dev_cache_scan();
+	if (!setup_devices(cmd)) {
+		log_error("Failed to set up devices.");
+		return_0;
+	}
 
 	/*
 	 * Get list of args.  Do not use filters.
@@ -1490,10 +1496,26 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 
 	/*
 	 * Apply nodata filters.
-	 * bcache is not yet set up so no filters will do io.
+	 *
+	 * We want pvscan autoactivation to work when using a devices file
+	 * containing idtype=devname, in cases when the devname changes
+	 * after reboot.  To make this work, we have to relax the devices
+	 * file restrictions somewhat here in cases where the devices file
+	 * contains entries with idtype=devname: disable filter-deviceid
+	 * when applying the nodata filters here, and read the label header.
+	 * Once the label header is read, check if the label header pvid
+	 * is in the devices file, and ignore the device if it's not.
+	 * The downside of this is that pvscans from the system will read
+	 * devs belonging to other devices files.
+	 * Enable/disable this behavior with a config setting?
 	 */
-
+	 
 	log_debug("pvscan_cache_args: filter devs nodata");
+
+	if (cmd->enable_devices_file && device_ids_use_devname(cmd)) {
+		relax_deviceid_filter = 1;
+		cmd->filter_deviceid_skip = 1;
+	}
 
 	cmd->filter_nodata_only = 1;
 
@@ -1533,6 +1555,19 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 			continue;
 		}
 
+		/*
+		 * filter-deviceid is not being used because of unstable devnames,
+		 * so in place of that check if the pvid is in the devices file.
+		 */
+		if (relax_deviceid_filter) {
+			if (!get_du_for_pvid(cmd, devl->dev->pvid)) {
+				log_print("pvscan[%d] %s excluded by devices file (checking PVID).",
+					  getpid(), dev_name(devl->dev));
+				dm_list_del(&devl->list);
+				continue;
+			}
+		}
+
 		/* Applies all filters, including those that need data from dev. */
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, devl->dev, NULL)) {
 			log_print("pvscan[%d] %s excluded by filters: %s.", getpid(),
@@ -1540,6 +1575,9 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 			dm_list_del(&devl->list);
 		}
 	}
+
+	if (relax_deviceid_filter)
+		cmd->filter_deviceid_skip = 0;
 
 	if (dm_list_empty(&pvscan_devs))
 		return 1;
@@ -1564,8 +1602,10 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 	 * cases where this detects a change that the other methods
 	 * of detecting invalid hints doesn't catch.
 	 */
-	if (pv_count)
+	if (pv_count) {
 		invalidate_hints(cmd);
+		unlink_searched_devnames(cmd);
+	}
 
 	return ret;
 }

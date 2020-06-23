@@ -60,6 +60,7 @@ struct daemon_parms {
 	const char *progress_title;
 	uint64_t lv_type;
 	struct poll_functions *poll_fns;
+	char devicesfile[128];
 };
 
 int poll_daemon(struct cmd_context *cmd, unsigned background,

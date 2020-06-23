@@ -30,6 +30,7 @@ struct dev_filter *partitioned_filter_create(struct dev_types *dt);
 struct dev_filter *persistent_filter_create(struct dev_types *dt, struct dev_filter *f);
 struct dev_filter *sysfs_filter_create(void);
 struct dev_filter *signature_filter_create(struct dev_types *dt);
+struct dev_filter *deviceid_filter_create(struct cmd_context *cmd);
 
 struct dev_filter *internal_filter_create(void);
 int internal_filter_allow(struct dm_pool *mem, struct device *dev);
@@ -63,5 +64,7 @@ struct dev_filter *usable_filter_create(struct cmd_context *cmd, struct dev_type
 #define DEV_FILTERED_DEVTYPE		0x00000100
 #define DEV_FILTERED_MINSIZE		0x00000200
 #define DEV_FILTERED_UNUSABLE		0x00000400
+#define DEV_FILTERED_DEVICES_FILE	0x00000800
+#define DEV_FILTERED_DEVICES_LIST	0x00001000
 
 #endif 	/* _LVM_FILTER_H */

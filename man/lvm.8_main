@@ -173,6 +173,9 @@ Make exported Volume Groups known to the system.
 .B vgimportclone
 Import and rename duplicated Volume Group (e.g. a hardware snapshot).
 .TP
+.B vgimportdevices
+Add PVs from a VG to the devices file.
+.TP
 .B vgmerge
 Merge two Volume Groups.
 .TP
@@ -217,6 +220,9 @@ Extend the size of a Logical Volume.
 .B lvmconfig
 Display the configuration information after
 loading \fBlvm.conf\fP(5) and any other configuration files.
+.TP
+.B lvmdevices
+Manage the devices file.
 .TP
 .B lvmdiskscan
 Scan for all devices visible to LVM2.

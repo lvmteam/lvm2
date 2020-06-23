@@ -52,6 +52,20 @@ char *pv_tags_dup(const struct physical_volume *pv)
 	return tags_format_and_copy(pv->vg->vgmem, &pv->tags);
 }
 
+char *pv_deviceid_dup(struct dm_pool *mem, const struct physical_volume *pv)
+{
+	if (!pv->device_id)
+		return NULL;
+	return dm_pool_strdup(mem, pv->device_id);
+}
+
+char *pv_deviceidtype_dup(struct dm_pool *mem, const struct physical_volume *pv)
+{
+	if (!pv->device_id_type)
+		return NULL;
+	return dm_pool_strdup(mem, pv->device_id_type);
+}
+
 const struct format_type *pv_format_type(const struct physical_volume *pv)
 {
 	return pv_field(pv, fmt);

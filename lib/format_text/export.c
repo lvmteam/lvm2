@@ -23,6 +23,7 @@
 #include "lib/metadata/segtype.h"
 #include "lib/format_text/text_export.h"
 #include "lib/commands/toolcontext.h"
+#include "lib/device/device_id.h"
 #include "libdaemon/client/config-util.h"
 
 #include <stdarg.h>
@@ -527,6 +528,7 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 	struct physical_volume *pv;
 	char buffer[PATH_MAX * 2];
 	const char *name;
+	const char *idtype, *idname;
 
 	outf(f, "physical_volumes {");
 	_inc_indent(f);
@@ -554,6 +556,13 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 		outhint(f, "device = \"%s\"",
 			dm_escape_double_quotes(buffer, pv_dev_name(pv)));
 		outnl(f);
+
+		idtype = dev_idtype_for_metadata(vg->cmd, pv->dev);
+		idname = dev_idname_for_metadata(vg->cmd, pv->dev);
+		if (idtype && idname) {
+			outf(f, "device_id_type = \"%s\"", idtype);
+			outf(f, "device_id = \"%s\"", idname);
+		}
 
 		if (!_print_flag_config(f, pv->status, PV_FLAGS))
 			return_0;

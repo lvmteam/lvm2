@@ -19,6 +19,7 @@
 #include "lib/format_text/layout.h"
 #include "lib/mm/xlate.h"
 #include "lib/misc/crc.h"
+#include "lib/device/device_id.h"
 
 #define ONE_MB_IN_BYTES 1048576
 
@@ -3037,6 +3038,11 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 
 		clear_hint_file(cmd);
 
+		if (!setup_device(cmd, pv_name)) {
+			log_error("Failed to set up device %s.", pv_name);
+			return ECMD_FAILED;
+		}
+
 		if (!(dev = dev_cache_get(cmd, pv_name, NULL))) {
 			log_error("Cannot use %s: %s.", pv_name, devname_error_reason(pv_name));
 			return ECMD_FAILED;
@@ -3044,13 +3050,23 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (arg_is_set(cmd, dump_ARG)) {
+		struct stat sb;
+
 		pv_name = argv[0];
 
-		dev = dev_cache_get(cmd, pv_name, NULL);
-
-		if (!dev)
+		if (stat(pv_name, &sb) < 0) {
+			log_error("Cannot access %s.", pv_name);
+			return ECMD_FAILED;
+		}
+		if (S_ISREG(sb.st_mode))
 			def = get_devicefile(pv_name);
-
+		else if (S_ISBLK(sb.st_mode)) {
+			if (!setup_device(cmd, pv_name)) {
+				log_error("Failed to set up device %s.", pv_name);
+				return ECMD_FAILED;
+			}
+			dev = dev_cache_get(cmd, pv_name, NULL);
+		}
 		if (!dev && !def) {
 			log_error("Cannot use %s: %s.", pv_name, devname_error_reason(pv_name));
 			return ECMD_FAILED;
@@ -3072,6 +3088,19 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 
 	if (dev) {
 		char buf[4096];
+
+		/*
+		 * Check nodata filters including device_id filter,
+		 * then clear the result so the full filter can be
+		 * checked after reading the dev.
+		 */
+		cmd->filter_nodata_only = 1;
+		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, NULL)) {
+			log_error("Cannot use %s: %s.", pv_name, dev_filtered_reason(dev));
+			return ECMD_FAILED;
+		}
+		cmd->filter_nodata_only = 0;
+		cmd->filter->wipe(cmd, cmd->filter, dev, NULL);
 
 		/*
 		 * This buf is not used, but bcache data is used for subsequent
@@ -3154,6 +3183,11 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 	 * The old/original form of pvck, which did not do much,
 	 * but this is here to preserve the historical output.
 	 */
+
+	if (argc == 1)
+		setup_device(cmd, argv[0]);
+	else
+		setup_devices(cmd);
 
 	for (i = 0; i < argc; i++) {
 		pv_name = argv[i];

@@ -17,8 +17,10 @@
 
 #include "lvm2cmdline.h"
 #include "lib/label/label.h"
+#include "lib/device/device_id.h"
 #include "lvm-version.h"
 #include "lib/locking/lvmlockd.h"
+#include "lib/datastruct/str_list.h"
 
 #include "stub.h"
 #include "lib/misc/last-path-component.h"
@@ -2388,10 +2390,35 @@ static void _apply_current_output_settings(struct cmd_context *cmd)
 	init_silent(cmd->current_settings.silent);
 }
 
+static int _read_devices_list(struct cmd_context *cmd)
+{
+	struct arg_value_group_list *group;
+	const char *names;
+	struct dm_list *names_list;
+
+	dm_list_iterate_items(group, &cmd->arg_value_groups) {
+		if (!grouped_arg_is_set(group->arg_values, devices_ARG))
+			continue;
+
+		if (!(names = (char *)grouped_arg_str_value(group->arg_values, devices_ARG, NULL)))
+			continue;
+
+		if (!strchr(names, ',')) {
+			if (!str_list_add(cmd->mem, &cmd->deviceslist, names))
+				return 0;
+		} else {
+			if ((names_list = str_to_str_list(cmd->mem, names, ",", 1)))
+				dm_list_splice(&cmd->deviceslist, names_list);
+		}
+	}
+	return 1;
+}
+
 static int _get_current_settings(struct cmd_context *cmd)
 {
 	const char *activation_mode;
 	const char *hint_mode;
+	const char *search_mode;
 
 	_get_current_output_settings_from_args(cmd);
 
@@ -2445,6 +2472,10 @@ static int _get_current_settings(struct cmd_context *cmd)
 	else
 		cmd->use_hints = 0;
 
+	/* The hints file is associated with the default/system devices file. */
+	if (arg_is_set(cmd, devicesfile_ARG) || arg_is_set(cmd, devices_ARG))
+		cmd->use_hints = 0;
+
 	if ((hint_mode = find_config_tree_str(cmd, devices_hints_CFG, NULL))) {
 		if (!strcmp(hint_mode, "none")) {
 			cmd->enable_hints = 0;
@@ -2487,6 +2518,44 @@ static int _get_current_settings(struct cmd_context *cmd)
 	cmd->include_historical_lvs = arg_is_set(cmd, history_ARG) ? 1 : 0;
 	cmd->record_historical_lvs = find_config_tree_bool(cmd, metadata_record_lvs_history_CFG, NULL) ?
 							  (arg_is_set(cmd, nohistory_ARG) ? 0 : 1) : 0;
+
+	if (!(search_mode = find_config_tree_str(cmd, devices_search_for_devnames_CFG, NULL)))
+		cmd->search_for_devnames = DEFAULT_SEARCH_FOR_DEVNAMES;
+	else {
+		if (!strcmp(search_mode, "none") || !strcmp(search_mode, "auto") || !strcmp(search_mode, "all"))
+			cmd->search_for_devnames = search_mode;
+		else {
+			log_warn("Ignoring unknown search_for_devnames setting, using %s.", DEFAULT_SEARCH_FOR_DEVNAMES);
+			cmd->search_for_devnames = DEFAULT_SEARCH_FOR_DEVNAMES;
+		}
+	}
+
+	if (arg_is_set(cmd, devicesfile_ARG)) {
+		const char *devices_file = arg_str_value(cmd, devicesfile_ARG, NULL);
+		if (devices_file && !strlen(devices_file)) {
+			cmd->devicesfile = "";
+		} else if (!devices_file || !validate_name(devices_file)) {
+			log_error("Invalid devices file name.");
+			return EINVALID_CMD_LINE;
+		} else if (!(cmd->devicesfile = dm_pool_strdup(cmd->libmem, devices_file))) {
+			log_error("Failed to copy devices file name.");
+			return EINVALID_CMD_LINE;
+		}
+	}
+
+	dm_list_init(&cmd->deviceslist);
+
+	if (arg_is_set(cmd, devices_ARG)) {
+		if (cmd->devicesfile && strlen(cmd->devicesfile)) {
+			log_error("A --devices list cannot be used with --devicesfile.");
+			return EINVALID_CMD_LINE;
+		}
+		cmd->enable_devices_list = 1;
+		if (!_read_devices_list(cmd)) {
+			log_error("Failed to read --devices args.");
+			return EINVALID_CMD_LINE;
+		}
+	}
 
 	/*
 	 * This is set to zero by process_each which wants to print errors
@@ -3110,7 +3179,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (cmd->nolocking || _cmd_no_meta_proc(cmd))
 		nolocking = 1;
 
-	if (arg_is_set(cmd, sysinit_ARG))
+	if ((cmd->sysinit = arg_is_set(cmd, sysinit_ARG)))
 		sysinit = 1;
 
 	if (arg_is_set(cmd, readonly_ARG))

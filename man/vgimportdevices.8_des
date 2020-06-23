@@ -1,0 +1,11 @@
+vgimportdevices adds PVs from a VG to the devices file.  This is similar
+to using using lvmdevices --adddev to add each PV to the devices file
+individually.  vgimportdevices will also update the VG metadata to include
+the device IDs of each PV.  vgimportdevices will create a new devices file
+if none exists.
+
+When a devices file is used, the regex filter is ignored, except in the case
+of vgimportdevices which will apply the regex filter when looking for the VGs
+to import to the devices file.  Use vgimportdevices -a to import all VGs on a
+system to the devices file.
+

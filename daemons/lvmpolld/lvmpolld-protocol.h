@@ -35,6 +35,7 @@
 #define LVMPD_PARM_SYSDIR		"sysdir"
 #define LVMPD_PARM_VALUE		"value" /* either retcode or signal value */
 #define LVMPD_PARM_VGNAME		"vgname"
+#define LVMPD_PARM_DEVICESFILE		"devicesfile"
 
 #define LVMPD_RESP_FAILED	"failed"
 #define LVMPD_RESP_FINISHED	"finished"

@@ -238,6 +238,10 @@ GET_PV_NUM_PROPERTY_FN(pv_ba_start, SECTOR_SIZE * pv->ba_start)
 #define _pv_ba_start_set prop_not_implemented_set
 GET_PV_NUM_PROPERTY_FN(pv_ba_size, SECTOR_SIZE * pv->ba_size)
 #define _pv_ba_size_set prop_not_implemented_set
+GET_PV_STR_PROPERTY_FN(pv_device_id, pv->device_id)
+#define _pv_device_id_set prop_not_implemented_set
+GET_PV_STR_PROPERTY_FN(pv_device_id_type, pv->device_id_type)
+#define _pv_device_id_type_set prop_not_implemented_set
 
 #define _pv_allocatable_set prop_not_implemented_set
 #define _pv_allocatable_get prop_not_implemented_get

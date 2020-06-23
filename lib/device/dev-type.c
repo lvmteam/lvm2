@@ -363,6 +363,45 @@ static int _loop_is_with_partscan(struct device *dev)
 	return partscan;
 }
 
+int dev_get_partition_number(struct device *dev, int *num)
+{
+	char path[PATH_MAX];
+	char buf[8] = { 0 };
+	dev_t devt = dev->dev;
+	struct stat sb;
+
+	if (dev->part != -1) {
+		*num = dev->part;
+		return 1;
+	}
+
+	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/partition",
+			dm_sysfs_dir(), (int)MAJOR(devt), (int)MINOR(devt)) < 0) {
+		log_error("Failed to create sysfs path for %s", dev_name(dev));
+		return 0;
+	}
+
+	if (stat(path, &sb)) {
+		dev->part = 0;
+		*num = 0;
+		return 1;
+	}
+
+	if (!get_sysfs_value(path, buf, sizeof(buf), 0)) {
+		log_error("Failed to read sysfs path for %s", dev_name(dev));
+		return 0;
+	}
+
+	if (!buf[0]) {
+		log_error("Failed to read sysfs partition value for %s", dev_name(dev));
+		return 0;
+	}
+
+	dev->part = atoi(buf);
+	*num = dev->part;
+	return 1;
+}
+
 /* See linux/genhd.h and fs/partitions/msdos */
 #define PART_MAGIC 0xAA55
 #define PART_MAGIC_OFFSET UINT64_C(0x1FE)

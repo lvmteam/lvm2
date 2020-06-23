@@ -188,7 +188,7 @@
 #
 OO_ALL: --commandprofile String, --config String, --debug,
 --driverloaded Bool, --help, --nolocking, --lockopt String, --longhelp, --profile String, --quiet,
---verbose, --version, --yes, --test
+--verbose, --version, --yes, --test, --devicesfile String, --devices PV
 
 #
 # options for pvs, lvs, vgs, fullreport
@@ -1388,6 +1388,36 @@ ID: lvmconfig_general
 
 ---
 
+lvmdevices
+ID: lvmdevices_list
+DESC: Print devices in the devices file.
+
+lvmdevices --check
+ID: lvmdevices_check
+DESC: Check the devices file and report incorrect values.
+
+lvmdevices --update
+ID: lvmdevices_update
+DESC: Update the devices file to fix incorrect values.
+
+lvmdevices --adddev PV
+ID: lvmdevices_edit
+DESC: Add a device to the devices file.
+
+lvmdevices --deldev PV
+ID: lvmdevices_edit
+DESC: Remove a device from the devices file.
+
+lvmdevices --addpvid String
+ID: lvmdevices_edit
+DESC: Find the device with the given PVID and add it to the devices file.
+
+lvmdevices --delpvid String
+ID: lvmdevices_edit
+DESC: Remove the devices file entry for the given PVID.
+
+---
+
 lvreduce --size NSizeMB LV
 OO: --autobackup Bool, --force, --nofsck, --noudevsync,
 --reportformat ReportFmt, --resizefs
@@ -1768,8 +1798,20 @@ DESC: Import all VGs.
 ---
 
 vgimportclone PV ...
-OO: --basevgname VG, --import
+OO: --basevgname VG, --import, --importdevices
 ID: vgimportclone_general
+
+---
+
+vgimportdevices VG|Tag|Select ...
+OO: --select String, --foreign, --reportformat ReportFmt
+ID: vgimportdevices_some
+DESC: Add devices from specific VGs to the devices file.
+
+vgimportdevices --all
+OO: --foreign, --reportformat ReportFmt
+ID: vgimportdevices_all
+DESC: Add devices from all accessible VGs to the devices file.
 
 ---
 

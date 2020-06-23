@@ -69,6 +69,10 @@ xx(lvmconfig,
    "Display and manipulate configuration information",
    PERMITTED_READ_ONLY | NO_METADATA_PROCESSING)
 
+xx(lvmdevices,
+   "Manage the devices file",
+   0)
+
 xx(lvmdiskscan,
    "List devices that may be used as physical volumes",
    PERMITTED_READ_ONLY | ENABLE_ALL_DEVS | ALLOW_EXPORTED)
@@ -206,6 +210,10 @@ xx(vgimport,
 xx(vgimportclone,
    "Import a VG from cloned PVs",
    ALLOW_EXPORTED)
+
+xx(vgimportdevices,
+   "Add devices for a VG to the devices file.",
+   ALL_VGS_IS_DEFAULT | ALLOW_EXPORTED)
 
 xx(vgmerge,
    "Merge volume groups",

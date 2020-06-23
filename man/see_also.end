@@ -3,6 +3,7 @@
 .BR lvm (8)
 .BR lvm.conf (5)
 .BR lvmconfig (8)
+.BR lvmdevices (8)
 
 .BR pvchange (8)
 .BR pvck (8)
@@ -25,6 +26,7 @@
 .BR vgextend (8)
 .BR vgimport (8)
 .BR vgimportclone (8)
+.BR vgimportdevices (8)
 .BR vgmerge (8)
 .BR vgmknodes (8)
 .BR vgreduce (8)

@@ -142,6 +142,8 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	clear_hint_file(cmd);
 
+	cmd->create_edit_devices_file = 1;
+
 	lvmcache_label_scan(cmd);
 
 	if (!(handle = init_processing_handle(cmd, NULL))) {

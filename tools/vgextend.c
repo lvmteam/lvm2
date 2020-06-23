@@ -168,6 +168,8 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 
 	clear_hint_file(cmd);
 
+	cmd->edit_devices_file = 1;
+
 	lvmcache_label_scan(cmd);
 
 	if (!(handle = init_processing_handle(cmd, NULL))) {
@@ -181,6 +183,8 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 			return_ECMD_FAILED;
 		}
 	}
+
+	unlock_devices_file(cmd);
 
 	/*
 	 * It is always ok to add new PVs to a VG - even if there are

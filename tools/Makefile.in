@@ -27,6 +27,7 @@ SOURCES =\
 	lvdisplay.c \
 	lvextend.c \
 	lvmcmdline.c \
+	lvmdevices.c \
 	lvmdiskscan.c \
 	lvpoll.c \
 	lvreduce.c \
@@ -58,6 +59,7 @@ SOURCES =\
 	vgextend.c \
 	vgimport.c \
 	vgimportclone.c \
+	vgimportdevices.c \
 	vgmerge.c \
 	vgmknodes.c \
 	vgreduce.c \

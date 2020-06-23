@@ -247,6 +247,13 @@ static int _process_poll_init(const struct cmd_context *cmd, const char *poll_ty
 		goto out_req;
 	}
 
+	if (parms->devicesfile[0] &&
+	    !(daemon_request_extend(req, LVMPD_PARM_DEVICESFILE " = %s",
+			            parms->devicesfile, NULL))) {
+		log_error("Failed to create %s request." , poll_type);
+		goto out_req;
+	}
+
 	rep = daemon_send(_lvmpolld, req);
 
 	if (rep.error) {

@@ -206,6 +206,8 @@ FIELD(PVS, pv, SIZ, "BA Start", ba_start, 0, size64, pv_ba_start, "Offset to the
 FIELD(PVS, pv, SIZ, "BA Size", ba_size, 0, size64, pv_ba_size, "Size of PV Bootloader Area in current units.", 0)
 FIELD(PVS, pv, BIN, "PInUse", id, 0, pvinuse, pv_in_use, "Set if PV is used.", 0)
 FIELD(PVS, pv, BIN, "Duplicate", id, 0, pvduplicate, pv_duplicate, "Set if PV is an unchosen duplicate.", 0)
+FIELD(PVS, pv, STR, "DeviceID", id, 0, pvdeviceid, pv_device_id, "Device ID such as the WWID.", 0)
+FIELD(PVS, pv, STR, "DeviceIDType", id, 0, pvdeviceidtype, pv_device_id_type, "Type of device ID such as WWID.", 0)
 /*
  * End of PVS type fields
  */

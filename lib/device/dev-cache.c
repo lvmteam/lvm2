@@ -16,6 +16,7 @@
 #include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/device/dev-type.h"
+#include "lib/device/device_id.h"
 #include "lib/datastruct/btree.h"
 #include "lib/config/config.h"
 #include "lib/commands/toolcontext.h"
@@ -68,11 +69,13 @@ static void _dev_init(struct device *dev)
 	dev->bcache_fd = -1;
 	dev->bcache_di = -1;
 	dev->read_ahead = -1;
+	dev->part = -1;
 
 	dev->ext.enabled = 0;
 	dev->ext.src = DEV_EXT_NONE;
 
 	dm_list_init(&dev->aliases);
+	dm_list_init(&dev->ids);
 }
 
 void dev_destroy_file(struct device *dev)
@@ -376,7 +379,7 @@ out:
 	return 1;
 }
 
-static int _get_sysfs_value(const char *path, char *buf, size_t buf_size, int error_if_no_value)
+int get_sysfs_value(const char *path, char *buf, size_t buf_size, int error_if_no_value)
 {
 	FILE *fp;
 	size_t len;
@@ -417,7 +420,7 @@ static int _get_dm_uuid_from_sysfs(char *buf, size_t buf_size, int major, int mi
 		return 0;
 	}
 
-	return _get_sysfs_value(path, buf, buf_size, 0);
+	return get_sysfs_value(path, buf, buf_size, 0);
 }
 
 static struct dm_list *_get_or_add_list_by_index_key(struct dm_hash_table *idx, const char *key)
@@ -491,7 +494,7 @@ static struct device *_get_device_for_sysfs_dev_name_using_devno(const char *dev
 		return NULL;
 	}
 
-	if (!_get_sysfs_value(path, buf, sizeof(buf), 1))
+	if (!get_sysfs_value(path, buf, sizeof(buf), 1))
 		return_NULL;
 
 	if (sscanf(buf, "%d:%d", &major, &minor) != 2) {
@@ -935,7 +938,7 @@ static int _dev_cache_iterate_sysfs_for_index(const char *path)
 	return r;
 }
 
-int dev_cache_index_devs(void)
+static int dev_cache_index_devs(void)
 {
 	static int sysfs_has_dev_block = -1;
 	char path[PATH_MAX];
@@ -1284,11 +1287,19 @@ int dev_cache_check_for_open_devices(void)
 
 int dev_cache_exit(void)
 {
+	struct device *dev;
+	struct dm_hash_node *n;
 	int num_open = 0;
 
-	if (_cache.names)
+	if (_cache.names) {
 		if ((num_open = _check_for_open_devices(1)) > 0)
 			log_error(INTERNAL_ERROR "%d device(s) were left open and have been closed.", num_open);
+
+		dm_hash_iterate(n, _cache.names) {
+			dev = (struct device *) dm_hash_get_data(_cache.names, n);
+			free_dids(&dev->ids);
+		}
+	}
 
 	if (_cache.mem)
 		dm_pool_destroy(_cache.mem);
@@ -1703,3 +1714,335 @@ bool dev_cache_has_md_with_end_superblock(struct dev_types *dt)
 
 	return false;
 }
+
+static int _setup_devices_list(struct cmd_context *cmd)
+{
+	struct dm_str_list *strl;
+	struct dev_use *du;
+
+	/*
+	 * For each --devices arg, add a du to cmd->use_devices.
+	 * The du has devname is the devices arg value.
+	 */
+
+	dm_list_iterate_items(strl, &cmd->deviceslist) {
+		if (!(du = zalloc(sizeof(struct dev_use))))
+			return_0;
+
+		if (!(du->devname = strdup(strl->str)))
+			return_0;
+
+		dm_list_add(&cmd->use_devices, &du->list);
+	}
+
+	return 1;
+}
+
+static int _setup_devices_file_dmeventd(struct cmd_context *cmd)
+{
+	char path[PATH_MAX];
+	struct stat st;
+
+	/*
+	 * When command is run by dmeventd there is no --devicesfile
+	 * option that can enable/disable the use of a devices file.
+	 */
+	if (!find_config_tree_bool(cmd, devices_use_devicesfile_CFG, NULL)) {
+		cmd->enable_devices_file = 0;
+		return 1;
+	}
+
+	/*
+	 * If /etc/lvm/devices/dmeventd.devices exists, then use that.
+	 * The optional dmeventd.devices allows the user to control
+	 * which devices dmeventd will look at and use.
+	 * Otherwise, disable the devices file because dmeventd should
+	 * be able to manage LVs in any VG (i.e. LVs in a non-system
+	 * devices file.)
+	 */
+	if (dm_snprintf(path, sizeof(path), "%s/devices/dmeventd.devices", cmd->system_dir) < 0) {
+		log_warn("Failed to copy devices path");
+		cmd->enable_devices_file = 0;
+		return 1;
+	}
+
+	if (stat(path, &st)) {
+		/* No dmeventd.devices, so do not use a devices file. */
+		cmd->enable_devices_file = 0;
+		return 1;
+	}
+
+	cmd->enable_devices_file = 1;
+	(void) dm_strncpy(cmd->devices_file_path, path, sizeof(cmd->devices_file_path));
+	return 1;
+}
+	
+int setup_devices_file(struct cmd_context *cmd)
+{
+	char dirpath[PATH_MAX];
+	const char *filename = NULL;
+	struct stat st;
+	int rv;
+
+	if (cmd->run_by_dmeventd)
+		return _setup_devices_file_dmeventd(cmd);
+
+	if (cmd->devicesfile) {
+		/* --devicesfile <filename> or "" has been set which overrides
+		   lvm.conf settings use_devicesfile and devicesfile. */
+		if (!strlen(cmd->devicesfile))
+			cmd->enable_devices_file = 0;
+		else {
+			cmd->enable_devices_file = 1;
+			filename = cmd->devicesfile;
+		}
+		/* TODO: print a warning if --devicesfile system.devices
+		   while lvm.conf use_devicesfile=0. */
+	} else {
+		if (!find_config_tree_bool(cmd, devices_use_devicesfile_CFG, NULL))
+			cmd->enable_devices_file = 0;
+		else {
+			cmd->enable_devices_file = 1;
+			filename = find_config_tree_str(cmd, devices_devicesfile_CFG, NULL);
+			if (!validate_name(filename)) {
+				log_error("Invalid devices file name from config setting \"%s\".", filename);
+				return 0;
+			}
+		}
+	}
+
+	if (!cmd->enable_devices_file)
+		return 1;
+
+	if (dm_snprintf(dirpath, sizeof(dirpath), "%s/devices", cmd->system_dir) < 0) {
+		log_error("Failed to copy devices dir path");
+		return 0;
+	}
+
+	if (stat(dirpath, &st)) {
+		log_debug("Creating %s.", dirpath);
+		dm_prepare_selinux_context(dirpath, S_IFDIR);
+		rv = mkdir(dirpath, 0755);
+		dm_prepare_selinux_context(NULL, 0);
+
+		if ((rv < 0) && stat(dirpath, &st)) {
+			log_error("Failed to create %s %d", dirpath, errno);
+			return 0;
+		}
+	}
+	
+	if (dm_snprintf(cmd->devices_file_path, sizeof(cmd->devices_file_path),
+			"%s/devices/%s", cmd->system_dir, filename) < 0) {
+		log_error("Failed to copy devices file path");
+		return 0;
+	}
+	return 1;
+}
+
+/*
+ * Add all system devices to dev-cache, and attempt to
+ * match all devices_file entries to dev-cache entries.
+ */
+int setup_devices(struct cmd_context *cmd)
+{
+	int file_exists;
+	int lock_mode = 0;
+
+	if (cmd->enable_devices_list) {
+		if (!_setup_devices_list(cmd))
+			return_0;
+		goto scan;
+	}
+
+	if (!setup_devices_file(cmd))
+		return_0;
+
+	if (!cmd->enable_devices_file)
+		goto scan;
+
+	file_exists = devices_file_exists(cmd);
+
+	/*
+	 * Removing the devices file is another way of disabling the use of
+	 * a devices file, unless the command creates the devices file.
+	 */
+	if (!file_exists && !cmd->create_edit_devices_file) {
+		log_debug("Devices file not found, ignoring.");
+		cmd->enable_devices_file = 0;
+		goto scan;
+	}
+
+	/*
+	 * Don't let pvcreate or vgcreate create a new system devices file
+	 * unless it's specified explicitly with --devicesfile.  This avoids
+	 * a problem where a system is running with existing PVs, and is
+	 * not using a devices file based on the fact that the system
+	 * devices file doesn't exist.  If the user simply uses pvcreate
+	 * to create a new PV, they almost certainly do not want that to
+	 * create a new system devices file containing the new PV and none
+	 * of the existing PVs that the system is already using.
+	 * However, if they use the vgimportdevices or lvmdevices command
+	 * then they are clearly intending to use the devices file, so we
+	 * can create it.  Or, if they specify a non-system devices file
+	 * with pvcreate/vgcreate, then they clearly want to use a devices
+	 * file and we can create it (and creating a non-system devices file 
+	 * would not cause existing PVs to disappear from the main system.)
+	 *
+	 * An exception is if pvcreate/vgcreate get to device_id_write and
+	 * did not see any existing VGs during label scan.  In that case
+	 * they will create a new system devices file, since there will be
+	 * no VGs that the new file would hide.
+	 */
+	if (cmd->create_edit_devices_file && !cmd->devicesfile && !file_exists &&
+	    (!strncmp(cmd->name, "pvcreate", 8) || !strncmp(cmd->name, "vgcreate", 8))) {
+		/* The command will decide in device_ids_write whether to create
+		   a new system devices file. */
+		cmd->enable_devices_file = 0;
+		cmd->pending_devices_file = 1;
+		goto scan;
+	}
+
+	if (!file_exists && cmd->sysinit) {
+		cmd->enable_devices_file = 0;
+		goto scan;
+	}
+
+	if (!file_exists) {
+		/*
+		 * pvcreate/vgcreate/vgimportdevices/lvmdevices-add create
+		 * a new devices file here if it doesn't exist.
+		 * They have the create_edit_devices_file flag set.
+		 * First they create/lock-ex the devices file lockfile.
+		 * Other commands will not use a devices file if none exists.
+		 */
+		lock_mode = LOCK_EX;
+
+		if (!lock_devices_file(cmd, lock_mode)) {
+			log_error("Failed to lock the devices file to create.");
+			return 0;
+		}
+
+		/* The file will be created in device_ids_write() */
+		if (!devices_file_exists(cmd))
+			goto scan;
+	} else {
+		/*
+		 * Commands that intend to edit the devices file have
+		 * edit_devices_file or create_edit_devices_file set (create if
+		 * they can also create a new devices file) and lock it ex
+		 * here prior to reading.  Other commands that intend to just
+		 * read the devices file lock sh.
+		 */
+		lock_mode = (cmd->create_edit_devices_file || cmd->edit_devices_file) ? LOCK_EX : LOCK_SH;
+
+		if (!lock_devices_file(cmd, lock_mode)) {
+			log_error("Failed to lock the devices file.");
+			return 0;
+		}
+	}
+
+	/*
+	 * Read the list of device ids that lvm can use.
+	 * Adds a struct dev_id to cmd->use_devices for each one.
+	 */
+	if (!device_ids_read(cmd)) {
+		log_error("Failed to read the devices file.");
+		unlock_devices_file(cmd);
+		return 0;
+	}
+
+	/*
+	 * When the command is editing the devices file, it acquires
+	 * the ex lock above, will later call device_ids_write(), and
+	 * then unlock the lock after writing the file.
+	 * When the command is just reading the devices file, it's
+	 * locked sh above just before reading the file, and unlocked
+	 * here after reading.
+	 */
+	if (lock_mode == LOCK_SH)
+		unlock_devices_file(cmd);
+
+ scan:
+	/*
+	 * Add a 'struct device' to dev-cache for each device available on the system.
+	 * This will not open or read any devices, but may look at sysfs properties.
+	 * This list of devs comes from looking /dev entries, or from asking libudev.
+	 */
+	dev_cache_scan();
+
+	/*
+	 * Match entries from cmd->use_devices with device structs in dev-cache.
+	 */
+	device_ids_match(cmd);
+
+	return 1;
+}
+
+/*
+ * The alternative to setup_devices() when the command is interested
+ * in using only one PV.
+ *
+ * Add one system device to dev-cache, and attempt to
+ * match its dev-cache entry to a devices_file entry.
+ */
+int setup_device(struct cmd_context *cmd, const char *devname)
+{
+	struct stat buf;
+	struct device *dev;
+
+	if (cmd->enable_devices_list) {
+		if (!_setup_devices_list(cmd))
+			return_0;
+		goto scan;
+	}
+
+	if (!setup_devices_file(cmd))
+		return_0;
+
+	if (!cmd->enable_devices_file)
+		goto scan;
+
+	if (!devices_file_exists(cmd)) {
+		log_debug("Devices file not found, ignoring.");
+		cmd->enable_devices_file = 0;
+		goto scan;
+	}
+
+	if (!lock_devices_file(cmd, LOCK_SH)) {
+		log_error("Failed to lock the devices file to read.");
+		return 0;
+	}
+
+	if (!device_ids_read(cmd)) {
+		log_error("Failed to read the devices file.");
+		unlock_devices_file(cmd);
+		return 0;
+	}
+
+	unlock_devices_file(cmd);
+
+ scan:
+	if (stat(devname, &buf) < 0) {
+		log_error("Cannot access device %s.", devname);
+		return 0;
+	}
+
+	if (!S_ISBLK(buf.st_mode)) {
+		log_error("Invaild device type %s.", devname);
+		return 0;
+	}
+
+	if (!_insert_dev(devname, buf.st_rdev))
+		return_0;
+
+	if (!(dev = (struct device *) dm_hash_lookup(_cache.names, devname)))
+		return_0;
+
+	/* Match this device to an entry in devices_file so it will not
+	   be rejected by filter-deviceid. */
+	if (cmd->enable_devices_file)
+		device_ids_match_dev(cmd, dev);
+
+	return 1;
+}
+

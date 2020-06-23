@@ -29,6 +29,7 @@ SOURCES =\
 	device/bcache.c \
 	device/bcache-utils.c \
 	device/dev-cache.c \
+	device/device_id.c \
 	device/dev-ext.c \
 	device/dev-io.c \
 	device/dev-md.c \
@@ -52,6 +53,7 @@ SOURCES =\
 	filters/filter-usable.c \
 	filters/filter-internal.c \
 	filters/filter-signature.c \
+	filters/filter-deviceid.c \
 	format_text/archive.c \
 	format_text/archiver.c \
 	format_text/export.c \

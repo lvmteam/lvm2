@@ -83,6 +83,7 @@ int dev_is_md_with_end_superblock(struct dev_types *dt, struct device *dev);
 int major_max_partitions(struct dev_types *dt, int major);
 int dev_is_partitioned(struct dev_types *dt, struct device *dev);
 int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result);
+int dev_get_partition_number(struct device *dev, int *num);
 
 /* Various device properties */
 unsigned long dev_alignment_offset(struct dev_types *dt, struct device *dev);

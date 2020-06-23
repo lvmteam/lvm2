@@ -288,6 +288,32 @@ cfg_array(devices_preferred_names_CFG, "preferred_names", devices_CFG_SECTION, C
 	"preferred_names = [ \"^/dev/mpath/\", \"^/dev/mapper/mpath\", \"^/dev/[hs]d\" ]\n"
 	"#\n")
 
+cfg(devices_use_devicesfile_CFG, "use_devicesfile", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_USE_DEVICES_FILE, vsn(2, 3, 12), NULL, 0, NULL,
+	"Enable or disable the use of a devices file.\n"
+	"When enabled, lvm will only use devices that\n"
+	"are lised in the devices file. A devices file will\n"
+	"be used, regardless of this setting, when the --devicesfile\n"
+	"option is set to a specific file name.\n")
+
+cfg(devices_devicesfile_CFG, "devicesfile", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_DEVICES_FILE, vsn(2, 3, 12), NULL, 0, NULL,
+	"The name of the system devices file, listing devices that LVM should use.\n"
+	"This should not be used to select a non-system devices file.\n"
+	"The --devicesfile option is intended for alternative devices files.\n")
+
+cfg(devices_search_for_devnames_CFG, "search_for_devnames", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_SEARCH_FOR_DEVNAMES, vsn(2, 3, 12), NULL, 0, NULL,
+	"Look outside of the devices file for missing devname entries.\n"
+	"A devname entry is used for a device that does not have a stable\n"
+	"device id, e.g. wwid, so the unstable device name is used as\n"
+	"the device id. After reboot, or if the device is reattached,\n"
+	"the device name may change, in which case lvm will not find\n"
+	"the expected PV on the device listed in the devices file.\n"
+	"This setting controls whether lvm will search other devices,\n"
+	"outside the devices file, to look for the missing PV on a\n"
+	"renamed device. If \"none\", lvm will not look at other devices,\n"
+	"and the PV may appear to be missing. If \"auto\", lvm will look\n"
+	"at other devices, but only those that are likely to have the PV.\n"
+	"If \"all\", lvm will look at all devices on the system.\n")
+
 cfg_array(devices_filter_CFG, "filter", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, "#Sa|.*|", vsn(1, 0, 0), NULL, 0, NULL,
 	"Limit the block devices that are used by LVM commands.\n"
 	"This is a list of regular expressions used to accept or reject block\n"

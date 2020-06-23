@@ -3511,6 +3511,42 @@ static int _pvduplicate_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _binary_disp(rh, mem, field, duplicate, GET_FIRST_RESERVED_NAME(pv_duplicate_y), private);
 }
 
+static int _pvdeviceid_disp(struct dm_report *rh, struct dm_pool *mem,
+			    struct dm_report_field *field,
+			    const void *data, void *private)
+{
+	const struct physical_volume *pv = (const struct physical_volume *) data;
+	char *repstr;
+
+	if (!pv->device_id)
+		return _field_set_value(field, "", NULL);
+
+	if (!(repstr = pv_deviceid_dup(mem, pv))) {
+		log_error("Failed to allocate buffer.");
+		return 0;
+	}
+
+	return _field_set_value(field, repstr, NULL);
+}
+
+static int _pvdeviceidtype_disp(struct dm_report *rh, struct dm_pool *mem,
+			    struct dm_report_field *field,
+			    const void *data, void *private)
+{
+	const struct physical_volume *pv = (const struct physical_volume *) data;
+	char *repstr;
+
+	if (!pv->device_id_type)
+		return _field_set_value(field, "", NULL);
+
+	if (!(repstr = pv_deviceidtype_dup(mem, pv))) {
+		log_error("Failed to allocate buffer.");
+		return 0;
+	}
+
+	return _field_set_value(field, repstr, NULL);
+}
+
 static int _vgpermissions_disp(struct dm_report *rh, struct dm_pool *mem,
 			       struct dm_report_field *field,
 			       const void *data, void *private)

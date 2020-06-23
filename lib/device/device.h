@@ -39,6 +39,7 @@
 #define DEV_IS_MD_COMPONENT	0x00020000	/* device is an md component */
 #define DEV_UDEV_INFO_MISSING   0x00040000	/* we have no udev info for this device */
 #define DEV_IS_NVME		0x00080000	/* set if dev is nvme */
+#define DEV_MATCHED_USE_ID	0x00100000	/* matched an entry from cmd->use_devices */
 
 /*
  * Support for external device info.
@@ -57,12 +58,54 @@ struct dev_ext {
 	void *handle;
 };
 
+#define DEV_ID_TYPE_SYS_WWID   0x0001
+#define DEV_ID_TYPE_SYS_SERIAL 0x0002
+#define DEV_ID_TYPE_MPATH_UUID 0x0003
+#define DEV_ID_TYPE_MD_UUID    0x0004
+#define DEV_ID_TYPE_LOOP_FILE  0x0005
+#define DEV_ID_TYPE_CRYPT_UUID 0x0006
+#define DEV_ID_TYPE_LVMLV_UUID 0x0007
+#define DEV_ID_TYPE_DEVNAME    0x0008
+
+/*
+ * A device ID of a certain type for a device.
+ * A struct device may have multiple dev_id structs on dev->ids.
+ * One of them will be the one that's used, pointed to by dev->id.
+ */
+
+struct dev_id {
+	struct dm_list list;
+	struct device *dev;
+	uint16_t idtype;	/* DEV_ID_TYPE_ */
+	char *idname;		/* id string determined by idtype */
+};
+
+/*
+ * A device listed in devices file that lvm should use.
+ * Each entry in the devices file is represented by a struct dev_use.
+ * The structs are kept on cmd->use_devices.
+ * idtype/idname/pvid/part are set when reading the devices file.
+ * du->dev is set when a struct dev_use is matched to a struct device.
+ */
+
+struct dev_use {
+	struct dm_list list;
+	struct device *dev;
+	int part;
+	uint16_t idtype;
+	char *idname;
+	char *devname;
+	char *pvid;
+};
+
 /*
  * All devices in LVM will be represented by one of these.
  * pointer comparisons are valid.
  */
 struct device {
 	struct dm_list aliases;	/* struct dm_str_list */
+	struct dm_list ids; /* struct dev_id, different entries for different idtypes */
+	struct dev_id *id; /* points to the the ids entry being used for this dev */
 	dev_t dev;
 
 	/* private */
@@ -73,6 +116,7 @@ struct device {
 	int read_ahead;
 	int bcache_fd;
 	int bcache_di;
+	int part;		/* partition number */
 	uint32_t flags;
 	uint32_t filtered_flags;
 	unsigned size_seqno;

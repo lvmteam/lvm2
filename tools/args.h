@@ -44,6 +44,15 @@ arg(addtag_ARG, '\0', "addtag", tag_VAL, ARG_GROUPABLE, 0,
     "Adds a tag to a PV, VG or LV. This option can be repeated to add\n"
     "multiple tags at once. See \\fBlvm\\fP(8) for information about tags.\n")
 
+arg(adddev_ARG, '\0', "adddev", pv_VAL, 0, 0,
+    "Add a device to the devices file.\n")
+arg(deldev_ARG, '\0', "deldev", pv_VAL, 0, 0,
+    "Remove a device from the devices file.\n")
+arg(addpvid_ARG, '\0', "addpvid", string_VAL, 0, 0,
+    "Find a device with the PVID and add the device to the devices file.\n")
+arg(delpvid_ARG, '\0', "delpvid", string_VAL, 0, 0,
+    "Remove a device with the PVID from the devices file.\n")
+
 arg(aligned_ARG, '\0', "aligned", 0, 0, 0,
     "Use with --separator to align the output columns\n")
 
@@ -132,6 +141,9 @@ arg(cachedevice_ARG, '\0', "cachedevice", pv_VAL, ARG_GROUPABLE, 0,
 arg(cachesize_ARG, '\0', "cachesize", sizemb_VAL, 0, 0,
     "The size of cache to use.\n")
 
+arg(check_ARG, '\0', "check", 0, 0, 0,
+    "Check the content of the devices file.\n")
+
 arg(commandprofile_ARG, '\0', "commandprofile", string_VAL, 0, 0,
     "The command profile to use for command configuration.\n"
     "See \\fBlvm.conf\\fP(5) for more information about profiles.\n")
@@ -204,6 +216,18 @@ arg(deltag_ARG, '\0', "deltag", tag_VAL, ARG_GROUPABLE, 0,
 arg(detachprofile_ARG, '\0', "detachprofile", 0, 0, 0,
     "Detaches a metadata profile from a VG or LV.\n"
     "See \\fBlvm.conf\\fP(5) for more information about profiles.\n")
+
+arg(devices_ARG, '\0', "devices", pv_VAL, ARG_GROUPABLE, 0,
+    "Devices that the command can use. This option can be repeated\n"
+    "or accepts a comma separated list of devices. This overrides\n"
+    "the devices file.\n")
+
+arg(devicesfile_ARG, '\0', "devicesfile", string_VAL, 0, 0,
+    "A file listing devices that LVM should use.\n"
+    "The file must exist in /etc/lvm/devices/ and is managed\n"
+    "with the lvmdevices(8) command.\n"
+    "This overrides the lvm.conf devices/devicesfile and\n"
+    "devices/use_devicesfile settings.\n")
 
 arg(discards_ARG, '\0', "discards", discards_VAL, 0, 0,
     "Specifies how the device-mapper thin pool layer in the kernel should\n"
@@ -279,6 +303,9 @@ arg(ignoreunsupported_ARG, '\0', "ignoreunsupported", 0, 0, 0,
     "yet complete and they are not meant to be used in production. The \\fBcurrent\\fP\n"
     "and \\fBdiff\\fP types include unsupported settings in their output by default,\n"
     "all the other types ignore unsupported settings.\n")
+
+arg(importdevices_ARG, '\0', "importdevices", 0, 0, 0,
+    "Add devices to the devices file.\n")
 
 arg(labelsector_ARG, '\0', "labelsector", number_VAL, 0, 0,
     "By default the PV is labelled with an LVM2 identifier in its second\n"
@@ -774,6 +801,9 @@ arg(unbuffered_ARG, '\0', "unbuffered", 0, 0, 0,
 arg(uncache_ARG, '\0', "uncache", 0, 0, 0,
     "Separates a cache pool from a cache LV, and deletes the unused cache pool LV.\n"
     "Before the separation, the cache is flushed. Also see --splitcache.\n")
+
+arg(update_ARG, '\0', "update", 0, 0, 0,
+    "Update the content of the devices file.\n")
 
 arg(cachepolicy_ARG, '\0', "cachepolicy", string_VAL, 0, 0,
     "Specifies the cache policy for a cache LV.\n"

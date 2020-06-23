@@ -16,6 +16,7 @@
 #include "tools.h"
 #include "lib/format_text/format-text.h"
 #include "lib/label/hints.h"
+#include "lib/device/device_id.h"
 
 #include <sys/stat.h>
 #include <signal.h>
@@ -5301,13 +5302,20 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	 * going to rerun the filters and don't want to get the results saved
 	 * by the prior filtering.  The filtering in label scan will use full
 	 * md filter.
+	 *
+	 * We allow pvcreate to look outside devices file here to find
+	 * the target device, in case the user has not added the device
+	 * being pvcreated to the devices file.
 	 */
 	dm_list_iterate_items(devl, &scan_devs)
 		cmd->filter->wipe(cmd, cmd->filter, devl->dev, NULL);
 
 	cmd->use_full_md_check = 1;
 
-	log_debug("Scanning and filtering device args.");
+	if (cmd->enable_devices_file)
+		cmd->filter_deviceid_skip = 1;
+
+	log_debug("Scanning and filtering device args (%u).", dm_list_size(&scan_devs));
 	label_scan_devs(cmd, cmd->filter, &scan_devs);
 
 	/*
@@ -5320,6 +5328,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 			dm_list_add(&pp->arg_fail, &pd->list);
 		}
 	}
+	cmd->filter_deviceid_skip = 0;
 
 	/*
 	 * Can the command continue if some specified devices were not found?
@@ -5529,6 +5538,9 @@ do_command:
 	dm_list_iterate_items(devl, &rescan_devs)
 		cmd->filter->wipe(cmd, cmd->filter, devl->dev, NULL);
 
+	if (cmd->enable_devices_file)
+		cmd->filter_deviceid_skip = 1;
+
 	log_debug("Rescanning and filtering device args with exclusive open");
 	if (!label_scan_devs_excl(cmd, cmd->filter, &rescan_devs)) {
 		log_debug("Failed to rescan devs excl");
@@ -5542,6 +5554,7 @@ do_command:
 			dm_list_add(&pp->arg_fail, &pd->list);
 		}
 	}
+	cmd->filter_deviceid_skip = 0;
 
 	if (dm_list_empty(&pp->arg_process) && dm_list_empty(&remove_duplicates)) {
 		log_debug("No devices to process.");
@@ -5637,6 +5650,10 @@ do_command:
 				log_debug("Using existing orphan PV %s.", pv_dev_name(vgpvl->pv));
 				pvl->pv = vgpvl->pv;
 				dm_list_add(&pp->pvs, &pvl->list);
+
+				/* allow deviceidtype_ARG/deviceid_ARG ? */
+				device_id_add(cmd, pd->dev, (const char *)&pvl->pv->id.uuid, NULL, NULL);
+
 			} else {
 				log_error("Failed to find PV %s", pd->name);
 				dm_list_move(&pp->arg_fail, &pd->list);
@@ -5672,6 +5689,9 @@ do_command:
 			dm_list_move(&pp->arg_fail, &pd->list);
 			continue;
 		}
+
+		/* allow deviceidtype_ARG/deviceid_ARG ? */
+		device_id_add(cmd, pd->dev, (const char *)&pv->id.uuid, NULL, NULL);
 
 		log_verbose("Set up physical volume for \"%s\" with %" PRIu64
 			    " available sectors.", pv_name, pv_size(pv));
@@ -5717,6 +5737,8 @@ do_command:
 			continue;
 		}
 
+		device_id_pvremove(cmd, pd->dev);
+
 		log_print_unless_silent("Labels on physical volume \"%s\" successfully wiped.",
 					pd->name);
 	}
@@ -5733,9 +5755,14 @@ do_command:
 
 		lvmcache_del_dev_from_duplicates(pd->dev);
 
+		device_id_pvremove(cmd, pd->dev);
+
 		log_print_unless_silent("Labels on physical volume \"%s\" successfully wiped.",
 					pd->name);
 	}
+
+	/* TODO: when vgcreate uses only existing PVs this doesn't change and can be skipped */
+	device_ids_write(cmd);
 
 	/*
 	 * Don't keep devs open excl in bcache because the excl will prevent

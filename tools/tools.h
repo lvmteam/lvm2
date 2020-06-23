@@ -29,6 +29,7 @@
 #include "lib/config/defaults.h"
 #include "lib/device/dev-cache.h"
 #include "lib/device/device.h"
+#include "lib/device/device_id.h"
 #include "lib/display/display.h"
 #include "errors.h"
 #include "lib/metadata/metadata-exported.h"

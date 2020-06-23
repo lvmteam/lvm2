@@ -92,6 +92,12 @@ const char **cmdargv_ctr(const struct lvmpolld_lv *pdlv, const char *lvm_binary,
 	if (!add_to_cmd_arr(&cmd_argv, "-An", &i))
 		goto err;
 
+	if (pdlv->devicesfile) {
+		if (!add_to_cmd_arr(&cmd_argv, "--devicesfile", &i) ||
+		    !add_to_cmd_arr(&cmd_argv, pdlv->devicesfile, &i))
+			goto err;
+	}
+
 	/* terminating NULL */
 	if (!add_to_cmd_arr(&cmd_argv, NULL, &i))
 		goto err;

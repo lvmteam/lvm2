@@ -25,6 +25,7 @@
 #include "lib/label/hints.h"
 #include "lib/metadata/metadata.h"
 #include "lib/format_text/layout.h"
+#include "lib/device/device_id.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -805,16 +806,6 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 			}
 		}
 
-		/*
-		 * This will search the system's /dev for new path names and
-		 * could help us reopen the device if it finds a new preferred
-		 * path name for this dev's major:minor.  It does that by
-		 * inserting a new preferred path name on dev->aliases.  open
-		 * uses the first name from that list.
-		 */
-		log_debug_devs("Scanning refreshing device paths.");
-		dev_cache_scan();
-
 		/* Put devs that failed to open back on the original list to retry. */
 		dm_list_splice(devs, &reopen_devs);
 		goto scan_more;
@@ -936,6 +927,12 @@ static void _prepare_open_file_limit(struct cmd_context *cmd, unsigned int num_d
 #endif
 }
 
+/*
+ * Currently the only caller is pvck which probably doesn't need
+ * deferred filters checked after the read... it wants to know if
+ * anything has the pvid, even a dev that might be filtered.
+ */
+
 int label_scan_for_pvid(struct cmd_context *cmd, char *pvid, struct device **dev_out)
 {
 	char buf[LABEL_SIZE] __attribute__((aligned(8)));
@@ -948,7 +945,20 @@ int label_scan_for_pvid(struct cmd_context *cmd, char *pvid, struct device **dev
 
 	dm_list_init(&devs);
 
-	dev_cache_scan();
+	/*
+	 * Creates a list of available devices, does not open or read any,
+	 * and does not filter them.
+	 */
+	if (!setup_devices(cmd)) {
+		log_error("Failed to set up devices.");
+		return 0;
+	}
+
+	/*
+	 * Iterating over all available devices with cmd->filter filters
+	 * devices; those returned from dev_iter_get are the devs that
+	 * pass filters, and are those we can use.
+	 */
 
 	if (!(iter = dev_iter_create(cmd->filter, 0))) {
 		log_error("Scanning failed to get devices.");
@@ -1022,6 +1032,7 @@ int label_scan(struct cmd_context *cmd)
 	struct device_list *devl, *devl2;
 	struct device *dev;
 	uint64_t max_metadata_size_bytes;
+	int device_ids_invalid = 0;
 	int using_hints;
 	int create_hints = 0; /* NEWHINTS_NONE */
 
@@ -1038,12 +1049,17 @@ int label_scan(struct cmd_context *cmd)
 	}
 
 	/*
-	 * dev_cache_scan() creates a list of devices on the system
-	 * (saved in in dev-cache) which we can iterate through to
-	 * search for LVM devs.  The dev cache list either comes from
-	 * looking at dev nodes under /dev, or from udev.
+	 * Creates a list of available devices, does not open or read any,
+	 * and does not filter them.  The list of all available devices
+	 * is kept in "dev-cache", and comes from /dev entries or libudev.
+	 * The list of devs found here needs to be filtered to get the
+	 * list of devs we can use. The dev_iter calls using cmd->filter
+	 * are what filters the devs.
 	 */
-	dev_cache_scan();
+	if (!setup_devices(cmd)) {
+		log_error("Failed to set up devices.");
+		return 0;
+	}
 
 	/*
 	 * If we know that there will be md components with an end
@@ -1196,14 +1212,25 @@ int label_scan(struct cmd_context *cmd)
 		if (!validate_hints(cmd, &hints_list)) {
 			log_debug("Will scan %d remaining devices", dm_list_size(&all_devs));
 			_scan_list(cmd, cmd->filter, &all_devs, 0, NULL);
+			/* scan_devs are the devs that have been scanned */
+			dm_list_splice(&scan_devs, &all_devs);
 			free_hints(&hints_list);
 			using_hints = 0;
 			create_hints = 0;
+			/* invalid hints means a new dev probably appeared and
+			   we should search for any missing pvids again. */
+			unlink_searched_devnames(cmd);
 		} else {
 			/* The hints may be used by another device iteration. */
 			dm_list_splice(&cmd->hints, &hints_list);
 		}
 	}
+
+	/*
+	 * Check if the devices_file content is up to date and
+	 * if not update it.
+	 */
+	device_ids_validate(cmd, &scan_devs, &device_ids_invalid, 0);
 
 	dm_list_iterate_items_safe(devl, devl2, &all_devs) {
 		dm_list_del(&devl->list);
@@ -1239,7 +1266,7 @@ int label_scan(struct cmd_context *cmd)
 	 * (create_hints variable has NEWHINTS_X value which indicates
 	 * the reason for creating the new hints.)
 	 */
-	if (create_hints)
+	if (create_hints && !device_ids_invalid)
 		write_hint_file(cmd, create_hints);
 
 	return 1;
