@@ -129,6 +129,7 @@
 #define DEFAULT_THIN_POOL_DISCARDS "passdown"
 #define DEFAULT_THIN_POOL_ZERO 1
 #define DEFAULT_POOL_METADATA_SPARE 1 /* thin + cache */
+#define DEFAULT_ZERO_METADATA 1		/* thin + cache */
 
 #ifdef CACHE_CHECK_NEEDS_CHECK
 #  define DEFAULT_CACHE_CHECK_OPTION1 "-q"

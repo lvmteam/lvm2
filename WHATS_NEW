@@ -1,5 +1,6 @@
 Version 2.03.10 - 
 =================================
+  Zero pool metadata on allocation (disable with allocation/zero_metadata=0).
   Failure in zeroing or wiping will fail command (bypass with -Zn, -Wn).
   Fix running out of free buffers for async writing for larger writes.
   Add integrity with raid capability.
