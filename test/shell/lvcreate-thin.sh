@@ -237,4 +237,25 @@ not lvcreate -s $vg/lv1 -L4M -V2G --name $vg/lv4
 not lvcreate -T mirpool -L4M --alloc anywhere -m1 $vg
 not lvcreate --thinpool mirpool -L4M --alloc anywhere -m1 $vg
 
+
+# Check pool metadata volume is zeroed, when zero_metadata is enabled.
+# 1st. ensure 8megs of both PVs will have some non-0 data
+lvcreate -L8m -n $lv1 $vg "$dev1"
+lvextend -L+8m $vg/$lv1 "$dev2"
+dd if=/dev/urandom of="$DM_DEV_DIR/$vg/$lv1" bs=1M count=16 oflag=direct conv=fdatasync
+lvremove -ff $vg/$lv1
+
+lvcreate -l1 --poolmetadatasize 4m --conf 'allocation/zero_metadata=1' -vvvv -T $vg/pool
+lvchange -an $vg
+# component activation to check device was zeroed
+lvchange -y -ay $vg/pool_tmeta
+dd if="$DM_DEV_DIR/$vg/pool_tmeta" of=file bs=1M count=3 skip=1 iflag=direct conv=fdatasync
+
+md5sum -b file | tee out
+# md5sum of 3M of zeros
+grep d1dd210d6b1312cb342b56d02bd5e651 out
+lvchange -an $vg
+lvremove -ff $vg
+
+
 vgremove -ff $vg
