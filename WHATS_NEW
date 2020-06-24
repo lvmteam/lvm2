@@ -1,5 +1,6 @@
 Version 2.03.10 - 
 =================================
+  Fix running out of free buffers for async writing for larger writes.
   Add integrity with raid capability.
   Fix support for lvconvert --repair used by foreign apps (i.e. Docker).
 

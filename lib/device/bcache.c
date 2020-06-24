@@ -950,7 +950,7 @@ static struct block *_new_block(struct bcache *cache, int fd, block_address i, b
 	struct block *b;
 
 	b = _alloc_block(cache);
-	while (!b && !dm_list_empty(&cache->clean)) {
+	while (!b) {
 		b = _find_unused_clean_block(cache);
 		if (!b) {
 			if (can_wait) {
