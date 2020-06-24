@@ -1234,6 +1234,7 @@ activation/verify_udev_operations = $LVM_VERIFY_UDEV
 activation/raid_region_size = 512
 allocation/wipe_signatures_when_zeroing_new_lvs = 0
 allocation/vdo_slab_size_mb = 128
+allocation/zero_metadata = 0
 backup/archive = 0
 backup/backup = 0
 devices/cache_dir = "$TESTDIR/etc"
