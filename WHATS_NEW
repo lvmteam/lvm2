@@ -1,5 +1,6 @@
 Version 2.02.188 - 
 ==================================
+  Fix running out of free buffers for async writing for larger writes.
   Fix conversion to raid from striped lagging type.
   Fix conversion to 'mirrored' mirror log with larger regionsize.
   Fix support for lvconvert --repair used by foreign apps (i.e. Docker).
