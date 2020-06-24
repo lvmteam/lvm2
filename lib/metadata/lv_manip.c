@@ -4797,7 +4797,7 @@ static int _lvresize_check(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (seg && seg_is_any_raid5(seg) && seg->area_count < 3) {
+	if (seg && (seg_is_raid4(seg) || seg_is_any_raid5(seg)) && seg->area_count < 3) {
 		log_error("Cannot resize %s LV %s. Convert to more stripes first.",
 			  lvseg_name(seg), display_lvname(lv));
 		return 0;
