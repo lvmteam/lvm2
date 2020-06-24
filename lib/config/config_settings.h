@@ -594,7 +594,7 @@ cfg(allocation_cache_pool_max_chunks_CFG, "cache_pool_max_chunks", allocation_CF
 	"Using cache pool with more chunks may degrade cache performance.\n")
 
 cfg(allocation_thin_pool_metadata_require_separate_pvs_CFG, "thin_pool_metadata_require_separate_pvs", allocation_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_THIN_POOL_METADATA_REQUIRE_SEPARATE_PVS, vsn(2, 2, 89), NULL, 0, NULL,
-	"Thin pool metdata and data will always use different PVs.\n")
+	"Thin pool metadata and data will always use different PVs.\n")
 
 cfg(allocation_thin_pool_zero_CFG, "thin_pool_zero", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_THIN_POOL_ZERO, vsn(2, 2, 99), NULL, 0, NULL,
 	"Thin pool data chunks are zeroed before they are first used.\n"
@@ -624,6 +624,9 @@ cfg(allocation_thin_pool_chunk_size_policy_CFG, "thin_pool_chunk_size_policy", a
 	"    sysfs - the optimal_io_size. The chunk size is always at least\n"
 	"    512KiB.\n"
 	"#\n")
+
+cfg(allocation_zero_metadata_CFG, "zero_metadata", allocation_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_ZERO_METADATA, vsn(2, 2, 188), NULL, 0, NULL,
+	"Zero whole metadata area before use with thin or cache pool.\n")
 
 cfg_runtime(allocation_thin_pool_chunk_size_CFG, "thin_pool_chunk_size", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_UNDEFINED, CFG_TYPE_INT, vsn(2, 2, 99), 0, NULL,
 	"The minimal chunk size in KiB for thin pool volumes.\n"

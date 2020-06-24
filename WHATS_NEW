@@ -1,5 +1,6 @@
 Version 2.02.188 - 
 ==================================
+  Zero pool metadata on allocation (disable with allocation/zero_metadata=0).
   Failure in zeroing or wiping will fail command (bypass with -Zn, -Wn).
   Fix support for lvconvert --repair used by foreign apps (i.e. Docker).
   Support interruption for bcache waiting.

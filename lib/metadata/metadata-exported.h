@@ -780,6 +780,7 @@ struct wipe_params {
 	int do_wipe_signatures;	/* should we wipe known signatures found on LV? */
 	int yes;		/* answer yes automatically to all questions */
 	force_t force;		/* force mode */
+	int is_metadata;	/* wipe volume is metadata LV */
 };
 
 /* Zero out LV and/or wipe signatures */
@@ -943,6 +944,7 @@ struct lvcreate_params {
 	int thin_chunk_size_calc_policy;
 	unsigned suppress_zero_warn : 1;
 	unsigned needs_lockd_init : 1;
+	unsigned is_metadata : 1; /* created LV will be used as metadata LV (and can be zeroed) */
 
 	const char *vg_name; /* only-used when VG is not yet opened (in /tools) */
 	const char *lv_name; /* all */

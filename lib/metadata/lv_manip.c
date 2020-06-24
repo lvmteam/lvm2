@@ -7183,8 +7183,9 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 	struct device *dev;
 	char name[PATH_MAX];
 	uint64_t zero_sectors;
+	int zero_metadata;
 
-	if (!wp.do_zero && !wp.do_wipe_signatures)
+	if (!wp.do_zero && !wp.do_wipe_signatures && !wp.is_metadata)
 		/* nothing to do */
 		return 1;
 
@@ -7236,17 +7237,29 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 		}
 	}
 
-	if (wp.do_zero) {
-		zero_sectors = wp.zero_sectors ? : UINT64_C(4096) >> SECTOR_SHIFT;
-
-		if (zero_sectors > lv->size)
+	if (wp.do_zero || wp.is_metadata) {
+		zero_metadata = !wp.is_metadata ? 0 :
+			find_config_tree_bool(lv->vg->cmd, allocation_zero_metadata_CFG, NULL);
+		if (zero_metadata) {
+			log_debug("Metadata logical volume %s will be fully zeroed.",
+				  display_lvname(lv));
 			zero_sectors = lv->size;
+		} else {
+			if (wp.is_metadata) /* Verbosely notify metadata will not be fully zeroed */
+				log_verbose("Metadata logical volume %s not fully zeroed and may contain stale data.",
+					    display_lvname(lv));
+			zero_sectors = wp.zero_sectors ? : UINT64_C(4096) >> SECTOR_SHIFT;
+
+			if (zero_sectors > lv->size)
+				zero_sectors = lv->size;
+		}
 
 		log_verbose("Initializing %s of logical volume %s with value %d.",
 			    display_size(lv->vg->cmd, zero_sectors),
 			    display_lvname(lv), wp.zero_value);
 
-		if ((wp.zero_value && !dev_set_bytes(dev, UINT64_C(0),
+		if ((!wp.is_metadata &&
+		     wp.zero_value && !dev_set_bytes(dev, UINT64_C(0),
 						     (size_t) zero_sectors << SECTOR_SHIFT,
 						     (uint8_t)wp.zero_value)) ||
 		    !dev_write_zeros(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT)) {
@@ -8088,7 +8101,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				     .do_zero = lp->zero,
 				     .do_wipe_signatures = lp->wipe_signatures,
 				     .yes = lp->yes,
-				     .force = lp->force
+				     .force = lp->force,
+				     .is_metadata = lp->is_metadata,
 			     })) {
 			log_error("Aborting. Failed to wipe %s.", lp->snapshot
 				  ? "snapshot exception store" : "start of new LV");

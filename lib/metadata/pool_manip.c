@@ -532,8 +532,8 @@ int create_pool(struct logical_volume *pool_lv,
 				  display_lvname(pool_lv));
 			goto bad;
 		}
-		/* Clear 4KB of pool metadata device. */
-		if (!(r = wipe_lv(pool_lv, (struct wipe_params) { .do_zero = 1 }))) {
+		/* Clear pool metadata device. */
+		if (!(r = wipe_lv(pool_lv, (struct wipe_params) { .is_metadata = 1 }))) {
 			log_error("Aborting. Failed to wipe pool metadata %s.",
 				  display_lvname(pool_lv));
 		}
@@ -614,6 +614,7 @@ struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 		.tags = DM_LIST_HEAD_INIT(lvc.tags),
 		.temporary = 1,
 		.zero = 1,
+		.is_metadata = 1,
 	};
 
 	if (!(lvc.segtype = get_segtype_from_string(pool_lv->vg->cmd, SEG_TYPE_NAME_STRIPED)))
@@ -650,6 +651,7 @@ static struct logical_volume *_alloc_pool_metadata_spare(struct volume_group *vg
 		.tags = DM_LIST_HEAD_INIT(lp.tags),
 		.temporary = 1,
 		.zero = 1,
+		.is_metadata = 1,
 	};
 
 	if (!(lp.segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_STRIPED)))
