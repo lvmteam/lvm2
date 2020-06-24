@@ -5066,6 +5066,7 @@ static int _lvresize_check(struct logical_volume *lv,
 			   struct lvresize_params *lp)
 {
 	struct volume_group *vg = lv->vg;
+	struct lv_segment *seg = first_seg(lv);
 
 	if (lv_is_external_origin(lv)) {
 		/*
@@ -5086,6 +5087,12 @@ static int _lvresize_check(struct logical_volume *lv,
 	if (lv_is_raid_with_tracking(lv)) {
 		log_error("Cannot resize logical volume %s while it is "
 			  "tracking a split image.", display_lvname(lv));
+		return 0;
+	}
+
+	if (seg && seg_is_any_raid5(seg) && seg->area_count < 3) {
+		log_error("Cannot resize %s LV %s. Convert to more stripes first.",
+			  lvseg_name(seg), display_lvname(lv));
 		return 0;
 	}
 
