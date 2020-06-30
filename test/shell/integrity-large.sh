@@ -23,7 +23,7 @@ mnt="mnt"
 mkdir -p $mnt
 
 # raid1 LV needs to be extended to 512MB to test imeta being exended
-aux prepare_devs 4 600
+aux prepare_devs 4 632
 
 printf "%0.sA" {1..16384} >> fileA
 printf "%0.sB" {1..16384} >> fileB
@@ -131,8 +131,8 @@ _verify_data_on_lv
 _wait_recalc $vg/${lv1}_rimage_0
 _wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
-check lv_field $vg/${lv1}_rimage_0_imeta size "8.00m"
-check lv_field $vg/${lv1}_rimage_1_imeta size "8.00m"
+check lv_field $vg/${lv1}_rimage_0_imeta size "12.00m"
+check lv_field $vg/${lv1}_rimage_1_imeta size "12.00m"
 
 # provide space to extend the images onto new devs
 vgextend $vg "$dev3" "$dev4"
@@ -153,33 +153,35 @@ lvconvert --raidintegrity y $vg/$lv1
 _wait_recalc $vg/${lv1}_rimage_0
 _wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
-check lv_field $vg/${lv1}_rimage_0_imeta size "12.00m"
-check lv_field $vg/${lv1}_rimage_1_imeta size "12.00m"
+check lv_field $vg/${lv1}_rimage_0_imeta size "20.00m"
+check lv_field $vg/${lv1}_rimage_1_imeta size "20.00m"
 
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 
 # this succeeds because dev1,dev2 can hold rmeta+rimage
 lvcreate --type raid1 -n $lv1 -L 592M -an $vg "$dev1" "$dev2"
+lvs -a -o+devices $vg
+lvchange -an $vg/$lv1
+lvremove $vg/$lv1
 
 # this fails because dev1,dev2 can hold rmeta+rimage, but not imeta
 # and we require imeta to be on same devs as rmeta/rimeta
-not lvcreate --type raid1 --raidintegrity y -n $lv1 -L 592M -an $vg "$dev1" "$dev2"
+not lvcreate --type raid1 --raidintegrity y -n $lv1 -L 624M -an $vg "$dev1" "$dev2"
 lvs -a -o+devices $vg
-lvremove $vg/$lv1
 
 # this can allocate from more devs so there's enough space for imeta to
 # be allocated in the vg, but lvcreate fails because rmeta+rimage are
 # allocated from dev1,dev2, we restrict imeta to being allocated on the
 # same devs as rmeta/rimage, and dev1,dev2 can't fit imeta.
-not lvcreate --type raid1 --raidintegrity y -n $lv1 -L 592M -an $vg
+not lvcreate --type raid1 --raidintegrity y -n $lv1 -L 624M -an $vg
 lvs -a -o+devices $vg
 
 # counterintuitively, increasing the size will allow lvcreate to succeed
 # because rmeta+rimage are pushed to being allocated on dev1,dev2,dev3,dev4
 # which means imeta is now free to be allocated from dev3,dev4 which have
 # plenty of space
-lvcreate --type raid1 --raidintegrity y -n $lv1 -L 600M -an $vg
+lvcreate --type raid1 --raidintegrity y -n $lv1 -L 640M -an $vg
 lvs -a -o+devices $vg
 
 vgremove -ff $vg

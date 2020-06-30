@@ -28,6 +28,7 @@
 #define DEFAULT_BLOCK_SIZE 512
 
 #define ONE_MB_IN_BYTES 1048576
+#define ONE_GB_IN_BYTES 1073741824
 
 int lv_is_integrity_origin(const struct logical_volume *lv)
 {
@@ -45,10 +46,35 @@ int lv_is_integrity_origin(const struct logical_volume *lv)
 /*
  * Every 500M of data needs 4M of metadata.
  * (From trial and error testing.)
+ *
+ * plus some initial space for journals.
+ * (again from trial and error testing.)
  */
 static uint64_t _lv_size_bytes_to_integrity_meta_bytes(uint64_t lv_size_bytes)
 {
-	return ((lv_size_bytes / (500 * ONE_MB_IN_BYTES)) + 1) * (4 * ONE_MB_IN_BYTES);
+	uint64_t meta_bytes;
+	uint64_t initial_bytes;
+
+	/* Every 500M of data needs 4M of metadata. */
+	meta_bytes = ((lv_size_bytes / (500 * ONE_MB_IN_BYTES)) + 1) * (4 * ONE_MB_IN_BYTES);
+
+	/*
+	 * initial space used for journals
+	 * lv_size <= 512M -> 4M
+	 * lv_size <= 1G   -> 8M
+	 * lv_size <= 4G   -> 32M
+	 * lv_size > 4G    -> 64M
+	 */
+	if (lv_size_bytes <= (512 * ONE_MB_IN_BYTES))
+		initial_bytes = 4 * ONE_MB_IN_BYTES;
+	else if (lv_size_bytes <= ONE_GB_IN_BYTES)
+		initial_bytes = 8 * ONE_MB_IN_BYTES;
+	else if (lv_size_bytes <= (4ULL * ONE_GB_IN_BYTES))
+		initial_bytes = 32 * ONE_MB_IN_BYTES;
+	else if (lv_size_bytes > (4ULL * ONE_GB_IN_BYTES))
+		initial_bytes = 64 * ONE_MB_IN_BYTES;
+
+	return meta_bytes + initial_bytes;
 }
 
 /*
