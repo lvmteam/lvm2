@@ -27,7 +27,7 @@ class Manager(AutomatedProperties):
 
 	@property
 	def Version(self):
-		return dbus.String('1.0.0')
+		return dbus.String('1.1.0')
 
 	@staticmethod
 	def handle_execute(rc, out, err):
