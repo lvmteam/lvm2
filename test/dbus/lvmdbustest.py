@@ -1558,6 +1558,36 @@ class TestDbusService(unittest.TestCase):
 			cached_lv.Lv.Rename(dbus.String(new_name), dbus.Int32(g_tmo), EOD))
 		verify_cache_lv_count()
 
+	def test_writecache_lv(self):
+		vg = self._vg_create().Vg
+		data_lv = self._create_lv(size=mib(16), vg=vg)
+		cache_lv = self._create_lv(size=mib(16), vg=vg)
+
+		# both LVs need to be inactive
+		self.handle_return(data_lv.Lv.Deactivate(
+			dbus.UInt64(0), dbus.Int32(g_tmo), EOD))
+		data_lv.update()
+		self.handle_return(cache_lv.Lv.Deactivate(
+			dbus.UInt64(0), dbus.Int32(g_tmo), EOD))
+		cache_lv.update()
+
+		cached_lv_path = self.handle_return(
+			cache_lv.Lv.WriteCacheLv(
+				dbus.ObjectPath(data_lv.object_path),
+				dbus.Int32(g_tmo),
+				EOD))
+
+		intf = (LV_COMMON_INT, LV_INT, CACHE_LV_INT)
+		cached_lv = ClientProxy(self.bus, cached_lv_path, interfaces=intf)
+		self.assertEqual(cached_lv.LvCommon.SegType, ["writecache"])
+
+		uncached_lv_path = self.handle_return(
+				cached_lv.CachedLv.DetachCachePool(
+					dbus.Boolean(True),
+					dbus.Int32(g_tmo),
+					EOD))
+		self.assertTrue('/com/redhat/lvmdbus1/Lv' in uncached_lv_path)
+
 	def test_vg_change(self):
 		vg_proxy = self._vg_create()
 

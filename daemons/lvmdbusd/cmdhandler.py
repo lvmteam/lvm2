@@ -453,6 +453,15 @@ def lv_cache_lv(cache_pool_full_name, lv_full_name, cache_options):
 	return call(cmd)
 
 
+def lv_writecache_lv(cache_lv_full_name, lv_full_name, cache_options):
+	# lvconvert --type writecache --cachevol VG/CacheLV VG/OriginLV
+	cmd = ['lvconvert']
+	cmd.extend(options_to_cli_args(cache_options))
+	cmd.extend(['-y', '--type', 'writecache', '--cachevol',
+				cache_lv_full_name, lv_full_name])
+	return call(cmd)
+
+
 def lv_detach_cache(lv_full_name, detach_options, destroy_cache):
 	cmd = ['lvconvert']
 	if destroy_cache:
