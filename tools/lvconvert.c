@@ -5649,6 +5649,11 @@ static int _set_writecache_block_size(struct cmd_context *cmd,
 		stack;
 
 	if (!(fs_dev = dev_cache_get(cmd, pathname, NULL))) {
+		if (test_mode()) {
+			log_print("Test mode skips checking fs block size.");
+			fs_block_size = 0;
+			goto skip_fs;
+		}
 		log_error("Device for LV not found to check block size %s", pathname);
 		goto_bad;
 	}
@@ -5667,6 +5672,7 @@ static int _set_writecache_block_size(struct cmd_context *cmd,
 	 * With 512 LBS and 4K PBS, mkfs.xfs will use xfs sector size 4K.
 	 */
 	rv = get_fs_block_size(fs_dev, &fs_block_size);
+skip_fs:
 	if (!rv || !fs_block_size) {
 		if (lbs_4k && pbs_4k && !pbs_512) {
 			block_size = 4096;
