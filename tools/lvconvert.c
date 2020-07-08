@@ -5524,7 +5524,8 @@ static int _writecache_zero(struct cmd_context *cmd, struct logical_volume *lv)
 		return 0;
 	}
 
-	ret = wipe_lv(lv, wp);
+	if (!(ret = wipe_lv(lv, wp)))
+		stack;
 
 	if (!deactivate_lv(cmd, lv)) {
 		log_error("Failed to deactivate LV %s for zeroing.", display_lvname(lv));
