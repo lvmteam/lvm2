@@ -3279,7 +3279,11 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 			}
 			metadata_lv->status &= ~LV_ACTIVATION_SKIP;
 
-			if (!wipe_lv(metadata_lv, (struct wipe_params) { .do_zero = 1 })) {
+			if (!wipe_lv(metadata_lv, (struct wipe_params) {
+						  .do_wipe_signatures = 1,
+						  .is_metadata = 1,
+						  .yes = arg_count(cmd, yes_ARG),
+						  .force = arg_count(cmd, force_ARG) } )) {
 				log_error("Aborting. Failed to wipe metadata lv.");
 				goto bad;
 			}
@@ -5502,7 +5506,8 @@ static int _writecache_zero(struct cmd_context *cmd, struct logical_volume *lv)
 	struct wipe_params wp = {
 		.do_wipe_signatures = 1, /* optional, to print warning if clobbering something */
 		.do_zero = 1,            /* required for dm-writecache to work */
-		.zero_sectors = 1
+		.yes = arg_count(cmd, yes_ARG),
+		.force = arg_count(cmd, force_ARG)
 	};
 	int ret;
 
