@@ -7642,7 +7642,9 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 			if (wp.is_metadata) /* Verbosely notify metadata will not be fully zeroed */
 				log_verbose("Metadata logical volume %s not fully zeroed and may contain stale data.",
 					    display_lvname(lv));
-			zero_sectors = wp.zero_sectors ? : UINT64_C(4096) >> SECTOR_SHIFT;
+			zero_sectors = UINT64_C(4096) >> SECTOR_SHIFT;
+			if (wp.zero_sectors > zero_sectors)
+				zero_sectors = wp.zero_sectors;
 
 			if (zero_sectors > lv->size)
 				zero_sectors = lv->size;
