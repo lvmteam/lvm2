@@ -7304,12 +7304,10 @@ int activate_and_wipe_lvlist(struct dm_list *lv_list, int commit)
 		}
 
 	dm_list_iterate_items(lvl, lv_list) {
-		log_verbose("Wiping metadata area %s.", display_lvname(lvl->lv));
 		/* Wipe any know signatures */
-		if (!wipe_lv(lvl->lv, (struct wipe_params) { .do_wipe_signatures = 1, .do_zero = 1, .zero_sectors = 1 })) {
-			log_error("Failed to wipe %s.", display_lvname(lvl->lv));
+		if (!wipe_lv(lvl->lv, (struct wipe_params) { .do_zero = 1 /* TODO: is_metadata = 1 */ })) {
 			r = 0;
-			goto out;
+			goto_out;
 		}
 	}
 out:
