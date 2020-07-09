@@ -429,7 +429,8 @@ allocation {
 
 	# Configuration option allocation/cache_pool_metadata_require_separate_pvs.
 	# Cache pool metadata and data will always use different PVs.
-	cache_pool_metadata_require_separate_pvs = 0
+	# This configuration option has an automatic default value.
+	# cache_pool_metadata_require_separate_pvs = 0
 
 	# Configuration option allocation/cache_metadata_format.
 	# Sets default metadata format for new cache.
@@ -489,7 +490,8 @@ allocation {
 
 	# Configuration option allocation/thin_pool_metadata_require_separate_pvs.
 	# Thin pool metadata and data will always use different PVs.
-	thin_pool_metadata_require_separate_pvs = 0
+	# This configuration option has an automatic default value.
+	# thin_pool_metadata_require_separate_pvs = 0
 
 	# Configuration option allocation/thin_pool_zero.
 	# Thin pool data chunks are zeroed before they are first used.
@@ -528,7 +530,8 @@ allocation {
 
 	# Configuration option allocation/zero_metadata.
 	# Zero whole metadata area before use with thin or cache pool.
-	zero_metadata = 1
+	# This configuration option has an automatic default value.
+	# zero_metadata = 1
 
 	# Configuration option allocation/thin_pool_chunk_size.
 	# The minimal chunk size in KiB for thin pool volumes.
@@ -990,7 +993,8 @@ global {
 	# logs and conversion to disk/core works.
 	# 
 	# Not supported for regular operation!
-	support_mirrored_mirror_log = 0
+	# This configuration option has an automatic default value.
+	# support_mirrored_mirror_log = 0
 
 	# Configuration option global/raid10_segtype_default.
 	# The segment type used by the -i -m combination.
@@ -1048,7 +1052,8 @@ global {
 	# activated from these events (the default is all.)
 	# When event_activation is disabled, the system will generally run
 	# a direct activation command to activate LVs in complete VGs.
-	event_activation = 1
+	# This configuration option has an automatic default value.
+	# event_activation = 1
 
 	# Configuration option global/use_aio.
 	# Use async I/O when reading and writing devices.
@@ -1292,7 +1297,8 @@ activation {
 	# This enables additional checks (and if necessary, repairs) on entries
 	# in the device directory after udev has completed processing its
 	# events. Useful for diagnosing problems with LVM/udev interactions.
-	verify_udev_operations = 0
+	# This configuration option has an automatic default value.
+	# verify_udev_operations = 0
 
 	# Configuration option activation/retry_deactivation.
 	# Retry failed LV deactivation.
@@ -1317,23 +1323,27 @@ activation {
 	# When disabled, the striped target is used. The linear target is an
 	# optimised version of the striped target that only handles a single
 	# stripe.
-	use_linear_target = 1
+	# This configuration option has an automatic default value.
+	# use_linear_target = 1
 
 	# Configuration option activation/reserved_stack.
 	# Stack size in KiB to reserve for use while devices are suspended.
 	# Insufficent reserve risks I/O deadlock during device suspension.
-	reserved_stack = 64
+	# This configuration option has an automatic default value.
+	# reserved_stack = 64
 
 	# Configuration option activation/reserved_memory.
 	# Memory size in KiB to reserve for use while devices are suspended.
 	# Insufficent reserve risks I/O deadlock during device suspension.
-	reserved_memory = 8192
+	# This configuration option has an automatic default value.
+	# reserved_memory = 8192
 
 	# Configuration option activation/process_priority.
 	# Nice value used while devices are suspended.
 	# Use a high priority so that LVs are suspended
 	# for the shortest possible time.
-	process_priority = -18
+	# This configuration option has an automatic default value.
+	# process_priority = -18
 
 	# Configuration option activation/volume_list.
 	# Only LVs selected by this list are activated.
@@ -1450,7 +1460,8 @@ activation {
 	#   auto
 	#     Use default value chosen by kernel.
 	# 
-	readahead = "auto"
+	# This configuration option has an automatic default value.
+	# readahead = "auto"
 
 	# Configuration option activation/raid_fault_policy.
 	# Defines how a device failure in a RAID LV is handled.
@@ -1586,7 +1597,8 @@ activation {
 	# 8.4G, it is extended to 14.4G:
 	# vdo_pool_autoextend_threshold = 70
 	# 
-	vdo_pool_autoextend_threshold = 100
+	# This configuration option has an automatic default value.
+	# vdo_pool_autoextend_threshold = 100
 
 	# Configuration option activation/vdo_pool_autoextend_percent.
 	# Auto-extending a VDO pool adds this percent extra space.
@@ -1622,7 +1634,8 @@ activation {
 	# Use the old behavior of mlockall to pin all memory.
 	# Prior to version 2.02.62, LVM used mlockall() to pin the whole
 	# process's memory while activating devices.
-	use_mlockall = 0
+	# This configuration option has an automatic default value.
+	# use_mlockall = 0
 
 	# Configuration option activation/monitoring.
 	# Monitor LVs that are activated.
@@ -1637,7 +1650,8 @@ activation {
 	# intervals of this number of seconds. If this is set to 0 and there
 	# is only one thing to wait for, there are no progress reports, but
 	# the process is awoken immediately once the operation is complete.
-	polling_interval = 15
+	# This configuration option has an automatic default value.
+	# polling_interval = 15
 
 	# Configuration option activation/auto_set_activation_skip.
 	# Set the activation skip flag on new thin snapshot LVs.
@@ -2193,7 +2207,8 @@ dmeventd {
 	# failures. It removes failed devices from a volume group and
 	# reconfigures a mirror as necessary. If no mirror library is
 	# provided, mirrors are not monitored through dmeventd.
-	mirror_library = "libdevmapper-event-lvm2mirror.so"
+	# This configuration option has an automatic default value.
+	# mirror_library = "libdevmapper-event-lvm2mirror.so"
 
 	# Configuration option dmeventd/raid_library.
 	# This configuration option has an automatic default value.
@@ -2204,14 +2219,16 @@ dmeventd {
 	# libdevmapper-event-lvm2snapshot.so monitors the filling of snapshots
 	# and emits a warning through syslog when the usage exceeds 80%. The
 	# warning is repeated when 85%, 90% and 95% of the snapshot is filled.
-	snapshot_library = "libdevmapper-event-lvm2snapshot.so"
+	# This configuration option has an automatic default value.
+	# snapshot_library = "libdevmapper-event-lvm2snapshot.so"
 
 	# Configuration option dmeventd/thin_library.
 	# The library dmeventd uses when monitoring a thin device.
 	# libdevmapper-event-lvm2thin.so monitors the filling of a pool
 	# and emits a warning through syslog when the usage exceeds 80%. The
 	# warning is repeated when 85%, 90% and 95% of the pool is filled.
-	thin_library = "libdevmapper-event-lvm2thin.so"
+	# This configuration option has an automatic default value.
+	# thin_library = "libdevmapper-event-lvm2thin.so"
 
 	# Configuration option dmeventd/thin_command.
 	# The plugin runs command with each 5% increment when thin-pool data volume
