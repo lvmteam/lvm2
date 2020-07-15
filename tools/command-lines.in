@@ -359,7 +359,8 @@ OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert LV to raid or change raid layout
 DESC: (a specific raid level must be used, e.g. raid1).
-RULE: all not lv_is_locked lv_is_pvmove lv_is_raid_with_integrity
+RULE: all not lv_is_locked lv_is_pvmove
+RULE: lv_is_raid_with_integrity not --stripes_long --stripesize --regionsize --interval
 
 lvconvert --mirrors SNumber LV
 OO: --regionsize RegionSize, --interval Number, --mirrorlog MirrorLog, OO_LVCONVERT
