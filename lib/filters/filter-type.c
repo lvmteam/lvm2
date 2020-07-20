@@ -22,10 +22,13 @@ static int _passes_lvm_type_device_filter(struct cmd_context *cmd, struct dev_fi
 	struct dev_types *dt = (struct dev_types *) f->private;
 	const char *name = dev_name(dev);
 
+	dev->filtered_flags &= ~DEV_FILTERED_DEVTYPE;
+
 	/* Is this a recognised device type? */
 	if (!dt->dev_type_array[MAJOR(dev->dev)].max_partitions) {
 		log_debug_devs("%s: Skipping: Unrecognised LVM device type %"
 			       PRIu64, name, (uint64_t) MAJOR(dev->dev));
+		dev->filtered_flags |= DEV_FILTERED_DEVTYPE;
 		return 0;
 	}
 

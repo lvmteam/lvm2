@@ -52,4 +52,16 @@ typedef enum {
 } filter_mode_t;
 struct dev_filter *usable_filter_create(struct cmd_context *cmd, struct dev_types *dt, filter_mode_t mode);
 
+#define DEV_FILTERED_FWRAID		0x00000001
+#define DEV_FILTERED_INTERNAL		0x00000002
+#define DEV_FILTERED_MD_COMPONENT	0x00000004
+#define DEV_FILTERED_MPATH_COMPONENT	0x00000008
+#define DEV_FILTERED_PARTITIONED	0x00000010
+#define DEV_FILTERED_REGEX		0x00000020
+#define DEV_FILTERED_SIGNATURE		0x00000040
+#define DEV_FILTERED_SYSFS		0x00000080
+#define DEV_FILTERED_DEVTYPE		0x00000100
+#define DEV_FILTERED_MINSIZE		0x00000200
+#define DEV_FILTERED_UNUSABLE		0x00000400
+
 #endif 	/* _LVM_FILTER_H */

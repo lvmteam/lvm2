@@ -54,9 +54,10 @@ int dev_cache_has_scanned(void);
 
 int dev_cache_add_dir(const char *path);
 struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct dev_filter *f);
-const char *dev_cache_filtered_reason(const char *name);
 
 struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t device, struct dev_filter *f, int *filtered);
+
+struct device *dev_hash_get(const char *name);
 
 void dev_set_preferred_name(struct dm_str_list *sl, struct device *dev);
 

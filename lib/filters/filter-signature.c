@@ -27,6 +27,8 @@ static int _ignore_signature(struct cmd_context *cmd, struct dev_filter *f __att
 	char buf[BUFSIZE];
 	int ret = 0;
 
+	dev->filtered_flags &= ~DEV_FILTERED_SIGNATURE;
+
 	if (!scan_bcache) {
 		/* let pass, call again after scan */
 		log_debug_devs("filter signature deferred %s", dev_name(dev));
@@ -40,18 +42,21 @@ static int _ignore_signature(struct cmd_context *cmd, struct dev_filter *f __att
 		log_debug_devs("%s: Skipping: error in signature detection",
 			       dev_name(dev));
 		ret = 0;
+		dev->filtered_flags |= DEV_FILTERED_SIGNATURE;
 		goto out;
 	}
 
 	if (dev_is_lvm1(dev, buf, BUFSIZE)) {
 		log_debug_devs("%s: Skipping lvm1 device", dev_name(dev));
 		ret = 0;
+		dev->filtered_flags |= DEV_FILTERED_SIGNATURE;
 		goto out;
 	}
 
 	if (dev_is_pool(dev, buf, BUFSIZE)) {
 		log_debug_devs("%s: Skipping gfs-pool device", dev_name(dev));
 		ret = 0;
+		dev->filtered_flags |= DEV_FILTERED_SIGNATURE;
 		goto out;
 	}
 	ret = 1;

@@ -69,6 +69,8 @@ static int _ignore_fwraid(struct cmd_context *cmd, struct dev_filter *f __attrib
 {
 	int ret;
 
+	dev->filtered_flags &= ~DEV_FILTERED_FWRAID;
+
 	if (!fwraid_filtering())
 		return 1;
 
@@ -80,12 +82,14 @@ static int _ignore_fwraid(struct cmd_context *cmd, struct dev_filter *f __attrib
 		else
 			log_debug_devs(MSG_SKIPPING " [%s:%p]", dev_name(dev),
 					dev_ext_name(dev), dev->ext.handle);
+		dev->filtered_flags |= DEV_FILTERED_FWRAID;
 		return 0;
 	}
 
 	if (ret < 0) {
 		log_debug_devs("%s: Skipping: error in firmware RAID component detection",
 			       dev_name(dev));
+		dev->filtered_flags |= DEV_FILTERED_FWRAID;
 		return 0;
 	}
 

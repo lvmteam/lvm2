@@ -23,6 +23,7 @@
 #include "lib/mm/memlock.h"
 #include "lib/format_text/format-text.h"
 #include "lib/config/config.h"
+#include "lib/filters/filter.h"
 
 /* One per device */
 struct lvmcache_info {
@@ -2683,3 +2684,50 @@ bool lvmcache_is_outdated_dev(struct cmd_context *cmd,
 
 	return false;
 }
+
+const char *dev_filtered_reason(struct device *dev)
+{
+	if (dev->filtered_flags & DEV_FILTERED_REGEX)
+		return "device is rejected by filter config";
+	if (dev->filtered_flags & DEV_FILTERED_INTERNAL)
+		return "device is restricted internally";
+	if (dev->filtered_flags & DEV_FILTERED_MD_COMPONENT)
+		return "device is an md component";
+	if (dev->filtered_flags & DEV_FILTERED_MPATH_COMPONENT)
+		return "device is a multipath component";
+	if (dev->filtered_flags & DEV_FILTERED_PARTITIONED)
+		return "device is partitioned";
+	if (dev->filtered_flags & DEV_FILTERED_SIGNATURE)
+		return "device has a signature";
+	if (dev->filtered_flags & DEV_FILTERED_SYSFS)
+		return "device is missing sysfs info";
+	if (dev->filtered_flags & DEV_FILTERED_DEVTYPE)
+		return "device type is unknown";
+	if (dev->filtered_flags & DEV_FILTERED_MINSIZE)
+		return "device is too small (pv_min_size)";
+	if (dev->filtered_flags & DEV_FILTERED_UNUSABLE)
+		return "device is not in a usable state";
+
+	/* flag has not been added here */
+	if (dev->filtered_flags)
+		return "device is filtered";
+
+	return "device cannot be used";
+}
+
+const char *devname_error_reason(const char *devname)
+{
+	struct device *dev;
+
+	if ((dev = dev_hash_get(devname))) {
+		if (dev->filtered_flags)
+			return dev_filtered_reason(dev);
+		if (lvmcache_dev_is_unused_duplicate(dev))
+			return "device is a duplicate";
+		/* Avoid this case by adding by adding other more descriptive checks above. */
+		return "device cannot be used";
+	}
+
+	return "device not found";
+}
+

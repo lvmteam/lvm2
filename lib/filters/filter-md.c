@@ -86,6 +86,8 @@ static int _passes_md_filter(struct cmd_context *cmd, struct dev_filter *f __att
 {
 	int ret;
 
+	dev->filtered_flags &= ~DEV_FILTERED_MD_COMPONENT;
+
 	/*
 	 * When md_component_dectection=0, don't even try to skip md
 	 * components.
@@ -112,12 +114,14 @@ static int _passes_md_filter(struct cmd_context *cmd, struct dev_filter *f __att
 		else
 			log_debug_devs(MSG_SKIPPING " [%s:%p]", dev_name(dev),
 					dev_ext_name(dev), dev->ext.handle);
+		dev->filtered_flags |= DEV_FILTERED_MD_COMPONENT;
 		return 0;
 	}
 
 	if (ret < 0) {
 		log_debug_devs("%s: Skipping: error in md component detection",
 			       dev_name(dev));
+		dev->filtered_flags |= DEV_FILTERED_MD_COMPONENT;
 		return 0;
 	}
 

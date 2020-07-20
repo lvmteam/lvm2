@@ -217,4 +217,7 @@ void lvmcache_get_mdas(struct cmd_context *cmd,
                        const char *vgname, const char *vgid,
                        struct dm_list *mda_list);
 
+const char *dev_filtered_reason(struct device *dev);
+const char *devname_error_reason(const char *devname);
+
 #endif

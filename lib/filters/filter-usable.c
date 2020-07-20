@@ -113,6 +113,9 @@ static int _passes_usable_filter(struct cmd_context *cmd, struct dev_filter *f, 
 	struct dev_usable_check_params ucp = {0};
 	int r = 1;
 
+	dev->filtered_flags &= ~DEV_FILTERED_MINSIZE;
+	dev->filtered_flags &= ~DEV_FILTERED_UNUSABLE;
+
 	/* further checks are done on dm devices only */
 	if (dm_is_dm_major(MAJOR(dev->dev))) {
 		switch (mode) {
@@ -142,8 +145,10 @@ static int _passes_usable_filter(struct cmd_context *cmd, struct dev_filter *f, 
 			break;
 		}
 
-		if (!(r = device_is_usable(dev, ucp)))
+		if (!(r = device_is_usable(dev, ucp))) {
+			dev->filtered_flags |= DEV_FILTERED_UNUSABLE;
 			log_debug_devs("%s: Skipping unusable device.", dev_name(dev));
+		}
 	}
 
 	if (r) {
@@ -153,6 +158,8 @@ static int _passes_usable_filter(struct cmd_context *cmd, struct dev_filter *f, 
 			/* fall through */
 		case FILTER_MODE_PRE_LVMETAD:
 			r = _check_pv_min_size(dev);
+			if (!r)
+				dev->filtered_flags |= DEV_FILTERED_MINSIZE;
 			break;
 		case FILTER_MODE_POST_LVMETAD:
 			/* nothing to do here */

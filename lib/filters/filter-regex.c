@@ -151,6 +151,8 @@ static int _accept_p(struct cmd_context *cmd, struct dev_filter *f, struct devic
 	struct rfilter *rf = (struct rfilter *) f->private;
 	struct dm_str_list *sl;
 
+	dev->filtered_flags &= ~DEV_FILTERED_REGEX;
+
 	dm_list_iterate_items(sl, &dev->aliases) {
 		m = dm_regex_match(rf->engine, sl->str);
 
@@ -168,8 +170,10 @@ static int _accept_p(struct cmd_context *cmd, struct dev_filter *f, struct devic
 		first = 0;
 	}
 
-	if (rejected)
+	if (rejected) {
+		dev->filtered_flags |= DEV_FILTERED_REGEX;
 		log_debug_devs("%s: Skipping (regex)", dev_name(dev));
+	}
 
 	/*
 	 * pass everything that doesn't match

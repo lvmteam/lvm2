@@ -3040,7 +3040,7 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 		clear_hint_file(cmd);
 
 		if (!(dev = dev_cache_get(cmd, pv_name, cmd->filter))) {
-			log_error("No device found for %s %s.", pv_name, dev_cache_filtered_reason(pv_name));
+			log_error("Cannot use %s: %s.", pv_name, devname_error_reason(pv_name));
 			return ECMD_FAILED;
 		}
 	}
@@ -3054,7 +3054,7 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 			def = get_devicefile(pv_name);
 
 		if (!dev && !def) {
-			log_error("No device found for %s %s.", pv_name, dev_cache_filtered_reason(pv_name));
+			log_error("Cannot use %s: %s.", pv_name, devname_error_reason(pv_name));
 			return ECMD_FAILED;
 		}
 	}
@@ -3143,7 +3143,7 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 		pv_name = argv[i];
 
 		if (!(dev = dev_cache_get(cmd, argv[i], cmd->filter))) {
-			log_error("Device %s %s.", pv_name, dev_cache_filtered_reason(pv_name));
+			log_error("Cannot use %s: %s.", pv_name, devname_error_reason(pv_name));
 			continue;
 		}
 
