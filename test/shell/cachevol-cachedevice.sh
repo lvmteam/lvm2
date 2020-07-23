@@ -208,5 +208,15 @@ lvchange -ay $vg/$lv1
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 
+# if the cache name is used generate a new name
+lvcreate -n $lv1 -l8 -an $vg @slow
+lvcreate -n ${lv1}_cache -l1 -an $vg @slow
+lvconvert -y --type writecache --cachedevice @fast --cachesize 8M $vg/$lv1
+check lv_field $vg/$lv1 segtype writecache
+check lv_field $vg/${lv1}_cache0_cvol lv_size "8.00m"
+lvchange -ay $vg/$lv1
+lvchange -an $vg/$lv1
+lvremove $vg/$lv1
+
 vgremove -ff $vg
 

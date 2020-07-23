@@ -4267,6 +4267,7 @@ static int _lv_create_cachevol(struct cmd_context *cmd,
 			       struct logical_volume **cachevol_lv)
 {
 	char cvname[NAME_LEN];
+	char format[NAME_LEN];
 	struct dm_list *use_pvh;
 	struct pv_list *pvl;
 	char *dev_name;
@@ -4371,6 +4372,19 @@ static int _lv_create_cachevol(struct cmd_context *cmd,
 	if (dm_snprintf(cvname, NAME_LEN, "%s_cache", lv->name) < 0) {
 		log_error("Failed to create cachevol LV name.");
 		return 0;
+	}
+
+	if (find_lv(vg, cvname)) {
+		memset(format, 0, sizeof(cvname));
+		memset(cvname, 0, sizeof(cvname));
+		if (dm_snprintf(format, sizeof(format), "%s_cache%%d", lv->name) < 0) {
+			log_error("Failed to generate cachevol LV format.");
+			return 0;
+		}
+		if (!generate_lv_name(vg, format, cvname, sizeof(cvname))) {
+			log_error("Failed to generate cachevol LV name.");
+			return 0;
+		}
 	}
 
 	lp.lv_name = cvname;
