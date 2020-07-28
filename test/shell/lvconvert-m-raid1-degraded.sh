@@ -33,8 +33,10 @@ aux disable_dev "$dev1"
 vgreduce --force --removemissing $vg
 check raid_leg_status $vg $lv "DA"
 
-# Conversion to 2 legs must fail on degraded 2-legged raid1 LV
-not lvconvert -y -m1 $vg/$lv
+# Conversion to 2 legs does nothing on degraded 2-legged raid1 LV
+lvconvert -y -m1 $vg/$lv 2>&1 | tee out
+grep "already has 2 images" out
+# Check it remains degraded after the successful "conversion"
 check raid_leg_status $vg $lv "DA"
 
 # Repair has to succeed
