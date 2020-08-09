@@ -749,7 +749,7 @@ Attach a cache to an LV, converts the LV to type cache.
 Add a writecache to an LV, using a specified cache device.
 .br
 .P
-\fBlvconvert\fP \fB--type\fP \fBwritecache\fP \fB--cachedevice\fP \fIPV\fP \fILV\fP
+\fBlvconvert\fP \fB--type\fP \fBwritecache\fP \fB--cachedevice\fP \fIPV\fP \fILV\fP\fI_linear_striped_raid\fP
 .br
 .RS 4
 .ad l
@@ -768,7 +768,7 @@ Add a writecache to an LV, using a specified cache device.
 Add a cache to an LV, using a specified cache device.
 .br
 .P
-\fBlvconvert\fP \fB--type\fP \fBcache\fP \fB--cachedevice\fP \fIPV\fP \fILV\fP
+\fBlvconvert\fP \fB--type\fP \fBcache\fP \fB--cachedevice\fP \fIPV\fP \fILV\fP\fI_linear_striped_thinpool_raid\fP
 .br
 .RS 4
 .ad l
