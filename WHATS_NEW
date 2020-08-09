@@ -1,4 +1,4 @@
-Version 2.03.10 - 
+Version 2.03.10 - 09th August 2020
 ==================================
   Add writecache and integrity support to lvmdbusd.
   Generate unique cachevol name when default required from lvcreate.
