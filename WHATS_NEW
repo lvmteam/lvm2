@@ -1,6 +1,9 @@
 Version 2.03.10 - 
-=================================
-  Add writecache support to lvmdbusd.
+==================================
+  Add writecache and integrity support to lvmdbusd.
+  Generate unique cachevol name when default required from lvcreate.
+  Converting RAID1 volume to one with same number of legs now succeeds with a
+  warning.
   Fix conversion to raid from striped lagging type.
   Fix conversion to 'mirrored' mirror log with larger regionsize.
   Zero pool metadata on allocation (disable with allocation/zero_metadata=0).
