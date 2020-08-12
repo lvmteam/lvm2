@@ -7,7 +7,6 @@ There is no warranty - see COPYING and COPYING.LIB.
 
 Tarballs are available from:
   ftp://sourceware.org/pub/lvm2/
-  ftp://sources.redhat.com/pub/lvm2/
   https://github.com/lvmteam/lvm2/releases
 
 The source code is stored in git:
@@ -42,6 +41,9 @@ Report upstream bugs at:
 or open issues at:
   https://github.com/lvmteam/lvm2/issues
 
-The source code repository used until 7th June 2012 is accessible here:
-  http://sources.redhat.com/cgi-bin/cvsweb.cgi/LVM2/?cvsroot=lvm2.
+The source code repository used until 7th June 2012 is accessible using CVS:
 
+  cvs -d :pserver:cvs@sourceware.org:/cvs/lvm2 login cvs
+  cvs -d :pserver:cvs@sourceware.org:/cvs/lvm2 checkout LVM2
+
+The password is cvs.
