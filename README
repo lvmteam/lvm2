@@ -1,7 +1,6 @@
 This tree contains the LVM2 and device-mapper tools and libraries.
 
-This is development branch, for stable 2.02 release see 2018-06-01-stable
-branch.
+This is development branch, for stable 2.02 release see stable-2.02 branch.
 
 For more information about LVM2 read the changelog in the WHATS_NEW file.
 Installation instructions are in INSTALL.
@@ -10,7 +9,6 @@ There is no warranty - see COPYING and COPYING.LIB.
 
 Tarballs are available from:
   ftp://sourceware.org/pub/lvm2/
-  ftp://sources.redhat.com/pub/lvm2/
   https://github.com/lvmteam/lvm2/releases
 
 The source code is stored in git:
@@ -45,6 +43,9 @@ Report upstream bugs at:
 or open issues at:
   https://github.com/lvmteam/lvm2/issues
 
-The source code repository used until 7th June 2012 is accessible here:
-  http://sources.redhat.com/cgi-bin/cvsweb.cgi/LVM2/?cvsroot=lvm2.
+The source code repository used until 7th June 2012 is accessible using CVS:
 
+  cvs -d :pserver:cvs@sourceware.org:/cvs/lvm2 login cvs
+  cvs -d :pserver:cvs@sourceware.org:/cvs/lvm2 checkout LVM2
+
+The password is cvs.
