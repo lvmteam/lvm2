@@ -7625,6 +7625,7 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 		if (!wipe_known_signatures(lv->vg->cmd, dev, name, 0,
 					   TYPE_DM_SNAPSHOT_COW,
 					   wp.yes, wp.force, NULL)) {
+			label_scan_invalidate(dev);
 			log_error("Filed to wipe signatures of logical volume %s.",
 				  display_lvname(lv));
 			return 0;
@@ -7659,6 +7660,7 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 						     (size_t) zero_sectors << SECTOR_SHIFT,
 						     (uint8_t)wp.zero_value)) ||
 		    !dev_write_zeros(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT)) {
+			label_scan_invalidate(dev);
 			log_error("Failed to initialize %s of logical volume %s with value %d.",
 				  display_size(lv->vg->cmd, zero_sectors),
 				  display_lvname(lv), wp.zero_value);
