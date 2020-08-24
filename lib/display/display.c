@@ -399,7 +399,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 		   void *handle __attribute__((unused)))
 {
 	struct lvinfo info;
-	int inkernel, snap_active = 0;
+	int inkernel, snap_active = 0, partial = 0, raid_is_avail = 1;
 	char uuid[64] __attribute__((aligned(8)));
 	const char *access_str;
 	struct lv_segment *snap_seg = NULL, *mirror_seg = NULL;
@@ -553,11 +553,18 @@ int lvdisplay_full(struct cmd_context *cmd,
 		log_print("LV VDO Pool name       %s", seg_lv(seg, 0)->name);
 	}
 
+	if (lv_is_partial(lv)) {
+		partial = 1;
+		if (lv_is_raid(lv))
+			raid_is_avail = raid_is_available(lv) ? 1 : 0;
+	}
+
 	if (inkernel && info.suspended)
 		log_print("LV Status              suspended");
 	else if (activation())
-		log_print("LV Status              %savailable",
-			  inkernel ? "" : "NOT ");
+		log_print("LV Status              %savailable %s",
+			  (inkernel && raid_is_avail) ? "" : "NOT ",
+			  partial ? "(partial)" : "");
 
 /********* FIXME lv_number
     log_print("LV #                   %u", lv->lv_number + 1);

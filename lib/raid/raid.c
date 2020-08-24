@@ -25,6 +25,60 @@
 #include "lib/metadata/metadata.h"
 #include "lib/metadata/lv_alloc.h"
 
+/*
+ * below case think as available, return true:
+ * - raid 1: at least 1 disk live
+ * - raid 10: loose 1 disk
+ * - raid 4/5: loose 1 disk
+ * - raid 6: loose 2 disk
+ *
+ * raid 0: if there is any disk loose, return false
+ * */
+bool raid_is_available(const struct logical_volume *lv)
+{
+	int s, missing_pv = 0, exist_pv = 0;
+	bool ret = true;
+	struct lv_segment *seg = NULL;
+
+	dm_list_iterate_items(seg, &lv->segments) {
+		for (s = 0; s < seg->area_count; ++s) {
+			if (seg_type(seg, s) == AREA_LV) {
+				if (seg_lv(seg, s)->status & PARTIAL_LV)
+					missing_pv++;
+				else
+					exist_pv++;
+			}
+		}
+	}
+	if (seg_is_any_raid0(first_seg(lv))){
+		ret = missing_pv ? false : true;
+		goto out;
+	}
+	if (seg_is_raid1(first_seg(lv))){
+		ret = exist_pv ? true : false;
+		goto out;
+	}
+	if (seg_is_any_raid10(first_seg(lv))) {
+		ret = (missing_pv > 1) ? false : true;
+		goto out;
+	}
+	if (seg_is_raid4(first_seg(lv))) {
+		ret = (missing_pv > 1) ? false : true;
+		goto out;
+	}
+	if (seg_is_any_raid5(first_seg(lv))) {
+		ret = (missing_pv > 1) ? false : true;
+		goto out;
+	}
+	if (seg_is_any_raid6(first_seg(lv))) {
+		ret = (missing_pv > 2) ? false : true;
+		goto out;
+	}
+
+out:
+	return ret;
+}
+
 static int _raid_target_present(struct cmd_context *cmd,
 				const struct lv_segment *seg __attribute__((unused)),
 				unsigned *attributes);
