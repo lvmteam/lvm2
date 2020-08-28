@@ -1,5 +1,7 @@
 Version 2.02.188 - 
 ==================================
+  Preserve uint32_t for seqno handling.
+  Switch from mmap to plain read when loading regular files.
   Fix running out of free buffers for async writing for larger writes.
   Fix conversion to raid from striped lagging type.
   Fix conversion to 'mirrored' mirror log with larger regionsize.
