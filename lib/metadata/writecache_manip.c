@@ -59,7 +59,7 @@ int lv_is_writecache_cachevol(const struct logical_volume *lv)
 }
 
 static int _get_writecache_kernel_error(struct cmd_context *cmd,
-					struct logical_volume *lv,
+					const struct logical_volume *lv,
 					uint32_t *kernel_error)
 {
 	struct lv_with_info_and_seg_status status;
@@ -241,7 +241,7 @@ static int _lv_detach_writecache_cachevol_active(struct logical_volume *lv, int 
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *lv_fast;
 	struct logical_volume *lv_wcorig;
-	struct logical_volume *lv_old;
+	const struct logical_volume *lv_old;
 	struct lv_segment *seg = first_seg(lv);
 	uint32_t kernel_error = 0;
 
@@ -299,7 +299,7 @@ static int _lv_detach_writecache_cachevol_active(struct logical_volume *lv, int 
 	 * check for kernel errors based on the old version of LV which
 	 * is still present in the kernel.
 	 */
-	if (!(lv_old = (struct logical_volume *)lv_committed(lv))) {
+	if (!(lv_old = lv_committed(lv))) {
 		log_error("Failed to get lv_committed in writecache detach.");
 		return 0;
 	}
