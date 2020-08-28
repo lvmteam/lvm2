@@ -109,8 +109,8 @@ struct arg_values {
 
 struct arg_value_group_list {
         struct dm_list list;
-        struct arg_values arg_values[0];
 	uint32_t prio;
+        struct arg_values arg_values[0];
 };
 
 #define PERMITTED_READ_ONLY 	0x00000002
