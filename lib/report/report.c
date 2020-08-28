@@ -348,39 +348,39 @@ struct time_info {
 static int _is_time_num(time_id_t id)
 {
 	return ((id > TIME_NUM__START) && (id < TIME_NUM__END));
-};
+}
 
 /*
 static int _is_time_frame(time_id_t id)
 {
 	return ((id > TIME_FRAME__START) && (id < TIME_FRAME__END));
-};
+}
 */
 
 static int _is_time_label_date(time_id_t id)
 {
 	return ((id > TIME_LABEL_DATE__START) && (id < TIME_LABEL_DATE__END));
-};
+}
 
 static int _is_time_label_time(time_id_t id)
 {
 	return ((id > TIME_LABEL_TIME__START) && (id < TIME_LABEL_TIME__END));
-};
+}
 
 static int _is_time_unit(time_id_t id)
 {
 	return ((id > TIME_UNIT__START) && (id < TIME_UNIT__END));
-};
+}
 
 static int _is_time_weekday(time_id_t id)
 {
 	return ((id > TIME_WEEKDAY__START) && (id < TIME_WEEKDAY__END));
-};
+}
 
 static int _is_time_month(time_id_t id)
 {
 	return ((id > TIME_MONTH__START) && (id < TIME_MONTH__END));
-};
+}
 
 static const char *_skip_space(const char *s)
 {

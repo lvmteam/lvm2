@@ -1996,7 +1996,7 @@ static int _lv_postorder_level(struct logical_volume *lv, void *data)
 {
 	struct _lv_postorder_baton *baton = data;
 	return (data) ? _lv_postorder_visit(lv, baton->fn, baton->data) : 0;
-};
+}
 
 static int _lv_postorder_visit(struct logical_volume *lv,
 			       int (*fn)(struct logical_volume *lv, void *data),
