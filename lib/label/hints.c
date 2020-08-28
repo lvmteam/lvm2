@@ -737,7 +737,7 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 
 		keylen = strlen("scan_lvs:");
 		if (!strncmp(_hint_line, "scan_lvs:", keylen)) {
-			int scan_lvs = 0;
+			unsigned scan_lvs = 0;
 			if ((sscanf(_hint_line + keylen, "%u", &scan_lvs) != 1) ||
 			    scan_lvs != cmd->scan_lvs) {
 				log_debug("ignore hints with different or unreadable scan_lvs");

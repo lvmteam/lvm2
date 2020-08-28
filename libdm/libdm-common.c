@@ -510,7 +510,7 @@ int unmangle_string(const char *str, const char *str_name, size_t len,
 	int strict = mode != DM_STRING_MANGLING_NONE;
 	char str_rest[DM_NAME_LEN];
 	size_t i, j;
-	int code;
+	unsigned int code;
 	int r = 0;
 
 	if (!str || !buf)

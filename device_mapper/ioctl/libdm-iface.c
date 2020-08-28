@@ -205,7 +205,7 @@ static int _get_proc_number(const char *file, const char *name,
 	}
 
 	while (getline(&line, &len, fl) != -1) {
-		if (sscanf(line, "%d %255s\n", &num, &nm[0]) == 2) {
+		if (sscanf(line, "%u %255s\n", &num, &nm[0]) == 2) {
 			if (!strcmp(name, nm)) {
 				if (number) {
 					*number = num;

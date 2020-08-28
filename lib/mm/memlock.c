@@ -232,7 +232,7 @@ static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 		      const char *line, size_t *mstats)
 {
 	const struct dm_config_value *cv;
-	long from, to;
+	unsigned long from, to;
 	int pos;
 	unsigned i;
 	char fr, fw, fx, fp;

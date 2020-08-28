@@ -5239,9 +5239,9 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		dm_config_destroy(cft);
 	} else {
 		if (vg->vg_precommitted)
-			log_error(INTERNAL_ERROR "vg_read vg %p vg_precommitted %p", vg, vg->vg_precommitted);
+			log_error(INTERNAL_ERROR "vg_read vg %p vg_precommitted %p", (void *)vg, (void *)vg->vg_precommitted);
 		if (vg->vg_committed)
-			log_error(INTERNAL_ERROR "vg_read vg %p vg_committed %p", vg, vg->vg_committed);
+			log_error(INTERNAL_ERROR "vg_read vg %p vg_committed %p", (void *)vg, (void *)vg->vg_committed);
 	}
 out:
 	/* We return with the VG lock held when read is successful. */
@@ -5265,9 +5265,9 @@ bad:
 	 */
 	if (error_vg && vg) {
 		if (vg->vg_precommitted)
-			log_error(INTERNAL_ERROR "vg_read vg %p vg_precommitted %p", vg, vg->vg_precommitted);
+			log_error(INTERNAL_ERROR "vg_read vg %p vg_precommitted %p", (void *)vg, (void *)vg->vg_precommitted);
 		if (vg->vg_committed)
-			log_error(INTERNAL_ERROR "vg_read vg %p vg_committed %p", vg, vg->vg_committed);
+			log_error(INTERNAL_ERROR "vg_read vg %p vg_committed %p", (void *)vg, (void *)vg->vg_committed);
 
 		/* caller must unlock_vg and release_vg */
 		*error_vg = vg;
