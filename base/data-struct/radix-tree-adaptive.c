@@ -47,7 +47,7 @@ struct value_chain {
 struct prefix_chain {
 	struct value child;
 	unsigned len;
-	uint8_t prefix[0];
+	uint8_t prefix[];
 };
 
 struct node4 {

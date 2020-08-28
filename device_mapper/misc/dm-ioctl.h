@@ -183,7 +183,7 @@ struct dm_target_spec {
 struct dm_target_deps {
 	uint32_t count;	/* Array size */
 	uint32_t padding;	/* unused */
-	uint64_t dev[0];	/* out */
+	uint64_t dev[];		/* out */
 };
 
 /*
@@ -193,7 +193,7 @@ struct dm_name_list {
 	uint64_t dev;
 	uint32_t next;		/* offset to the next record from
 				   the _start_ of this */
-	char name[0];
+	char name[];
 };
 
 /*
@@ -203,7 +203,7 @@ struct dm_target_versions {
         uint32_t next;
         uint32_t version[3];
 
-        char name[0];
+        char name[];
 };
 
 /*
@@ -212,7 +212,7 @@ struct dm_target_versions {
 struct dm_target_msg {
 	uint64_t sector;	/* Device sector */
 
-	char message[0];
+	char message[];
 };
 
 /*

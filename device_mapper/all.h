@@ -164,20 +164,20 @@ struct dm_info {
 struct dm_deps {
 	uint32_t count;
 	uint32_t filler;
-	uint64_t device[0];
+	uint64_t device[];
 };
 
 struct dm_names {
 	uint64_t dev;
 	uint32_t next;		/* Offset to next struct from start of this struct */
-	char name[0];
+	char name[];
 };
 
 struct dm_versions {
 	uint32_t next;		/* Offset to next struct from start of this struct */
 	uint32_t version[3];
 
-	char name[0];
+	char name[];
 };
 
 int dm_get_library_version(char *version, size_t size);
