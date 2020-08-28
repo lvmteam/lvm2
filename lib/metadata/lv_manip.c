@@ -711,7 +711,7 @@ static int _round_down_pow2(int r)
 	return r & ~(r >> 1);
 }
 
-int get_default_region_size(struct cmd_context *cmd)
+uint32_t get_default_region_size(struct cmd_context *cmd)
 {
 	int pagesize = lvm_getpagesize();
 	int region_size = _get_default_region_size(cmd);
@@ -728,7 +728,7 @@ int get_default_region_size(struct cmd_context *cmd)
 			    region_size / 2);
 	}
 
-	return region_size;
+	return (uint32_t) region_size;
 }
 
 int add_seg_to_segs_using_this_lv(struct logical_volume *lv,
