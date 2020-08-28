@@ -66,7 +66,7 @@ struct cb_set {
 
 static struct cb_set *_cb_set_create(unsigned nr)
 {
-	int i;
+	unsigned i;
 	struct cb_set *cbs = malloc(sizeof(*cbs));
 
 	if (!cbs)
