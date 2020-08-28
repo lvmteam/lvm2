@@ -42,9 +42,9 @@ struct lvmcache_info {
 	bool mda1_bad;		/* label scan found bad metadata in mda1 */
 	bool mda2_bad;		/* label scan found bad metadata in mda2 */
 	bool summary_seqno_mismatch; /* two mdas on this dev has mismatching metadata */
-	int summary_seqno;      /* vg seqno found on this dev during scan */
-	int mda1_seqno;
-	int mda2_seqno;
+	uint32_t summary_seqno;      /* vg seqno found on this dev during scan */
+	uint32_t mda1_seqno;
+	uint32_t mda2_seqno;
 };
 
 /* One per VG */
@@ -63,7 +63,7 @@ struct lvmcache_vginfo {
 	char *lock_type;
 	uint32_t mda_checksum;
 	size_t mda_size;
-	int seqno;
+	uint32_t seqno;
 	bool scan_summary_mismatch; /* vgsummary from devs had mismatching seqno or checksum */
 	bool has_duplicate_local_vgname;   /* this local vg and another local vg have same name */
 	bool has_duplicate_foreign_vgname; /* this foreign vg and another foreign vg have same name */
