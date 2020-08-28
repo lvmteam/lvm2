@@ -1659,7 +1659,7 @@ struct alloc_handle {
 	 * Contains area_count lists of areas allocated to data stripes
 	 * followed by log_area_count lists of areas allocated to log stripes.
 	 */
-	struct dm_list alloced_areas[0];
+	struct dm_list alloced_areas[];
 };
 
 /*

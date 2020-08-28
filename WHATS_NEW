@@ -1,5 +1,6 @@
 Version 2.02.188 - 
 ==================================
+  Switch code base to use flexible array syntax.
   Preserve uint32_t for seqno handling.
   Switch from mmap to plain read when loading regular files.
   Fix running out of free buffers for async writing for larger writes.

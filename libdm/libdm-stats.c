@@ -65,7 +65,7 @@ struct dm_histogram {
 	const struct dm_stats_region *region;
 	uint64_t sum; /* Sum of histogram bin counts. */
 	int nr_bins; /* Number of histogram bins assigned. */
-	struct dm_histogram_bin bins[0];
+	struct dm_histogram_bin bins[];
 };
 
 /*

@@ -151,7 +151,7 @@ struct resource {
 	struct list_head locks;
 	struct list_head actions;
 	char lv_args[MAX_ARGS+1];
-	char lm_data[0];		/* lock manager specific data */
+	char lm_data[];			/* lock manager specific data */
 };
 
 #define LD_LF_PERSISTENT 0x00000001
