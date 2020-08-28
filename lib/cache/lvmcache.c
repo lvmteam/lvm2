@@ -60,7 +60,7 @@ struct lvmcache_vginfo {
 	char *lock_type;
 	uint32_t mda_checksum;
 	size_t mda_size;
-	int seqno;
+	uint32_t seqno;
 	int independent_metadata_location; /* metadata read from independent areas */
 	int scan_summary_mismatch; /* vgsummary from devs had mismatching seqno or checksum */
 };
