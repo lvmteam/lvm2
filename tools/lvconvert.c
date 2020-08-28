@@ -1173,6 +1173,8 @@ static int _lvconvert_validate_thin(struct logical_volume *lv,
 static int _raid_split_image_conversion(struct logical_volume *lv)
 {
 	const char *s;
+	char raidlv_name[NAME_LEN];
+	const struct logical_volume *tmp_lv;
 
 	if (lv_is_raid_with_tracking(lv)) {
 		log_error("Conversion of tracking raid1 LV %s is not supported.",
@@ -1182,12 +1184,7 @@ static int _raid_split_image_conversion(struct logical_volume *lv)
 
 	if (lv_is_raid_image(lv) &&
 	    (s = strstr(lv->name, "_rimage_"))) {
-		size_t len = s - lv->name;
-		char raidlv_name[len + 1];
-		const struct logical_volume *tmp_lv;
-
-		strncpy(raidlv_name, lv->name, len);
-		raidlv_name[len] = '\0';
+		(void) dm_strncpy(raidlv_name, lv->name, s - lv->name);
 
 		if (!(tmp_lv = find_lv(lv->vg, raidlv_name))) {
 			log_error(INTERNAL_ERROR "Failed to find RaidLV of RAID subvolume %s.",
