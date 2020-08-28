@@ -96,7 +96,7 @@ void dm_pools_check_leaks(void)
 			  p->orig_pool,
 			  p->name, p->stats.bytes);
 #else
-		log_error(" [%p] %s", p, p->name);
+		log_error(" [%p] %s", (void *)p, p->name);
 #endif
 	}
 	pthread_mutex_unlock(&_dm_pools_mutex);

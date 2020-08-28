@@ -689,7 +689,7 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 				       dev_name(devl->dev),
 				       (int)MAJOR(devl->dev->dev),
 				       (int)MINOR(devl->dev->dev),
-				       devl->dev->bcache_fd, bb);
+				       devl->dev->bcache_fd, (void *)bb);
 
 			ret = _process_block(cmd, f, devl->dev, bb, 0, 0, &is_lvm_device);
 

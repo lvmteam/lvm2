@@ -403,7 +403,7 @@ static int _stats_bound(const struct dm_stats *dms)
 	if (dms->bind_major > 0 || dms->bind_name || dms->bind_uuid)
 		return 1;
 	/* %p format specifier expects a void pointer. */
-	log_error("Stats handle at %p is not bound.", dms);
+	log_error("Stats handle at %p is not bound.", (const void *)dms);
 	return 0;
 }
 
