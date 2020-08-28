@@ -6356,13 +6356,17 @@ static void _usage(FILE *out)
 {
 	switch (_base_commands[_base_command].type) {
 	case DMSETUP_TYPE:
-		return _dmsetup_usage(out);
+		_dmsetup_usage(out);
+		break;
 	case LOSETUP_TYPE:
-		return _losetup_usage(out);
+		_losetup_usage(out);
+		break;
 	case STATS_TYPE:
-		return _stats_usage(out);
+		_stats_usage(out);
+		break;
 	case DEVMAP_NAME_TYPE:
-		return _devmap_name_usage(out);
+		_devmap_name_usage(out);
+		break;
 	}
 }
 
