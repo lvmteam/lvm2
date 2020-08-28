@@ -1,5 +1,7 @@
 Version 2.03.11 - 
 ==================================
+  Preserve uint32_t for seqno handling.
+  Switch from mmap to plain read when loading regular files.
   Fix missing device closing on wiping error path.
   Update lvmvdo man page and better explain DISCARD usage.
 
