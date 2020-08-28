@@ -33,7 +33,7 @@ static inline daemon_handle lvmlockd_open(const char *sock)
 
 static inline void lvmlockd_close(daemon_handle h)
 {
-	return daemon_close(h);
+	daemon_close(h);
 }
 
 /*

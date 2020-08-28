@@ -1459,8 +1459,10 @@ static void _stats_walk_start(const struct dm_stats *dms, uint64_t *flags,
 	if (!dms->regions)
 		return;
 
-	if (!(*flags & (DM_STATS_WALK_AREA | DM_STATS_WALK_REGION)))
-		return _group_walk_start(dms, flags, cur_r, cur_a, cur_g);
+	if (!(*flags & (DM_STATS_WALK_AREA | DM_STATS_WALK_REGION))) {
+		_group_walk_start(dms, flags, cur_r, cur_a, cur_g);
+		return;
+	}
 
 	/* initialise cursor state */
 	*cur_a = 0;

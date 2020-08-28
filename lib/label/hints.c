@@ -354,7 +354,7 @@ void hints_exit(struct cmd_context *cmd)
 	free_hints(&cmd->hints);
 	if (_hints_fd == -1)
 		return;
-	return _unlock_hints(cmd);
+	_unlock_hints(cmd);
 }
 
 void free_hints(struct dm_list *hints)
