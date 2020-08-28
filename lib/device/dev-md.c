@@ -50,7 +50,7 @@ static int _dev_has_md_magic(struct device *dev, uint64_t sb_offset)
 }
 
 #define IMSM_SIGNATURE "Intel Raid ISM Cfg Sig. "
-#define IMSM_SIG_LEN (strlen(IMSM_SIGNATURE))
+#define IMSM_SIG_LEN (sizeof(IMSM_SIGNATURE) - 1)
 
 static int _dev_has_imsm_magic(struct device *dev, uint64_t devsize_sectors)
 {
