@@ -6038,14 +6038,14 @@ static void usage(char *prog, FILE *file)
 int main(int argc, char *argv[])
 {
 	daemon_state ds = {
-		.daemon_main = main_loop,
-		.daemon_init = NULL,
-		.daemon_fini = NULL,
+		.name = "lvmlockd",
 		.pidfile = getenv("LVM_LVMLOCKD_PIDFILE"),
 		.socket_path = getenv("LVM_LVMLOCKD_SOCKET"),
 		.protocol = lvmlockd_protocol,
 		.protocol_version = lvmlockd_protocol_version,
-		.name = "lvmlockd",
+		.daemon_init = NULL,
+		.daemon_fini = NULL,
+		.daemon_main = main_loop,
 	};
 
 	static struct option long_options[] = {

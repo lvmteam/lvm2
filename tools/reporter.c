@@ -322,8 +322,8 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 	struct lv_segment *seg = pvseg->lvseg;
 
 	struct segment_type _freeseg_type = {
-		.name = "free",
 		.flags = SEG_VIRTUAL | SEG_CANNOT_BE_ZEROED,
+		.name = "free",
 	};
 
 	struct volume_group _free_vg = {
@@ -336,24 +336,24 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 	};
 
 	struct logical_volume _free_logical_volume = {
-		.vg = vg ?: &_free_vg,
 		.name = "",
+		.vg = vg ?: &_free_vg,
 		.status = VISIBLE_LV,
 		.major = -1,
 		.minor = -1,
-		.tags = DM_LIST_HEAD_INIT(_free_logical_volume.tags),
+		.snapshot_segs = DM_LIST_HEAD_INIT(_free_logical_volume.snapshot_segs),
 		.segments = DM_LIST_HEAD_INIT(_free_logical_volume.segments),
+		.tags = DM_LIST_HEAD_INIT(_free_logical_volume.tags),
 		.segs_using_this_lv = DM_LIST_HEAD_INIT(_free_logical_volume.segs_using_this_lv),
 		.indirect_glvs = DM_LIST_HEAD_INIT(_free_logical_volume.indirect_glvs),
-		.snapshot_segs = DM_LIST_HEAD_INIT(_free_logical_volume.snapshot_segs),
 	};
 
 	struct lv_segment _free_lv_segment = {
 		.lv = &_free_logical_volume,
 		.segtype = &_freeseg_type,
 		.len = pvseg->len,
-		.tags = DM_LIST_HEAD_INIT(_free_lv_segment.tags),
 		.origin_list = DM_LIST_HEAD_INIT(_free_lv_segment.origin_list),
+		.tags = DM_LIST_HEAD_INIT(_free_lv_segment.tags),
 	};
 
 	struct lv_with_info_and_seg_status status = {

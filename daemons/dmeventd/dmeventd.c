@@ -2028,8 +2028,8 @@ static int _reinstate_registrations(struct dm_event_fifos *fifos)
 static void _restart_dmeventd(void)
 {
 	struct dm_event_fifos fifos = {
-		.server = -1,
 		.client = -1,
+		.server = -1,
 		/* FIXME Make these either configurable or depend directly on dmeventd_path */
 		.client_path = DM_EVENT_FIFO_CLIENT,
 		.server_path = DM_EVENT_FIFO_SERVER

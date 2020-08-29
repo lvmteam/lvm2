@@ -615,8 +615,8 @@ static int _do_event(int cmd, char *dmeventd_path, struct dm_event_daemon_messag
 {
 	int ret;
 	struct dm_event_fifos fifos = {
-		.server = -1,
 		.client = -1,
+		.server = -1,
 		/* FIXME Make these either configurable or depend directly on dmeventd_path */
 		.client_path = DM_EVENT_FIFO_CLIENT,
 		.server_path = DM_EVENT_FIFO_SERVER

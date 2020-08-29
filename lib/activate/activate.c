@@ -2269,8 +2269,8 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned o
 			 const struct logical_volume *lv, const struct logical_volume *lv_pre)
 {
 	struct lv_activate_opts laopts = {
-		.origin_only = origin_only,
-		.exclusive = exclusive
+		.exclusive = exclusive,
+		.origin_only = origin_only
 	};
 
 	return _lv_suspend(cmd, lvid_s, &laopts, 0, lv, lv_pre);
@@ -2381,8 +2381,8 @@ int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
 			unsigned revert, const struct logical_volume *lv)
 {
 	struct lv_activate_opts laopts = {
-		.origin_only = origin_only,
 		.exclusive = exclusive,
+		.origin_only = origin_only,
 		.revert = revert
 	};
 
