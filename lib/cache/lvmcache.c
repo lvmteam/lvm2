@@ -2276,8 +2276,8 @@ int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted)
 	char pvid_s[ID_LEN + 1] __attribute__((aligned(8)));
 	struct lvmcache_vgsummary vgsummary = {
 		.vgname = vg->name,
-		.vgstatus = vg->status,
 		.vgid = vg->id,
+		.vgstatus = vg->status,
 		.system_id = vg->system_id,
 		.lock_type = vg->lock_type
 	};
