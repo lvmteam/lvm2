@@ -161,7 +161,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	pp->preserve_existing = 1;
 
 	/* pvcreate within vgextend cannot be forced. */
-	pp->force = 0;
+	pp->force = PROMPT;
 
 	if (!lock_global(cmd, "ex"))
 		return_ECMD_FAILED;

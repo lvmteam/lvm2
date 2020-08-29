@@ -1826,7 +1826,7 @@ static int _lvcreate_and_attach_writecache_single(struct cmd_context *cmd,
 		log_error("Removing new LV after failing to add writecache.");
 		if (!deactivate_lv(cmd, lv))
 			log_error("Failed to deactivate new LV %s.", display_lvname(lv));
-		if (!lv_remove_with_dependencies(cmd, lv, 1, 0))
+		if (!lv_remove_with_dependencies(cmd, lv, DONT_PROMPT, 0))
 			log_error("Failed to remove new LV %s.", display_lvname(lv));
 		return ECMD_FAILED;
 	}
@@ -1900,7 +1900,7 @@ static int _lvcreate_and_attach_cache_single(struct cmd_context *cmd,
 		log_error("Removing new LV after failing to add cache.");
 		if (!deactivate_lv(cmd, lv))
 			log_error("Failed to deactivate new LV %s.", display_lvname(lv));
-		if (!lv_remove_with_dependencies(cmd, lv, 1, 0))
+		if (!lv_remove_with_dependencies(cmd, lv, DONT_PROMPT, 0))
 			log_error("Failed to remove new LV %s.", display_lvname(lv));
 		return ECMD_FAILED;
 	}
