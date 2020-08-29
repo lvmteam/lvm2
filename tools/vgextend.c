@@ -111,7 +111,7 @@ static int _vgextend_single(struct cmd_context *cmd, const char *vg_name,
 
 		if ((mda_copies != VGMETADATACOPIES_UNMANAGED) &&
 		    (mda_copies != mda_used)) {
-			log_warn("WARNING: Changing preferred number of copies of VG %s metadata from %"PRIu32" to %"PRIu32,
+			log_warn("WARNING: Changing preferred number of copies of VG %s metadata from %" PRIu32 " to %" PRIu32,
 				 vg_name, mda_copies, mda_used);
 			vg_set_mda_copies(vg, mda_used);
 		}
