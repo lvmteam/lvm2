@@ -818,8 +818,7 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 	while ((dev = dev_iter_get(cmd, iter))) {
 		if (!_dev_in_hint_hash(cmd, dev))
 			continue;
-		memset(devpath, 0, sizeof(devpath));
-		strncpy(devpath, dev_name(dev), PATH_MAX);
+		(void) dm_strncpy(devpath, dev_name(dev), sizeof(devpath));
 		calc_hash = calc_crc(calc_hash, (const uint8_t *)devpath, strlen(devpath));
 		calc_count++;
 	}
