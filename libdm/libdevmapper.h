@@ -2242,7 +2242,7 @@ int dm_bit_get_next(dm_bitset_t bs, int last_bit);
 int dm_bit_get_last(dm_bitset_t bs);
 int dm_bit_get_prev(dm_bitset_t bs, int last_bit);
 
-#define DM_BITS_PER_INT (sizeof(int) * CHAR_BIT)
+#define DM_BITS_PER_INT ((unsigned)sizeof(int) * CHAR_BIT)
 
 #define dm_bit(bs, i) \
    ((bs)[((i) / DM_BITS_PER_INT) + 1] & (0x1 << ((i) & (DM_BITS_PER_INT - 1))))
