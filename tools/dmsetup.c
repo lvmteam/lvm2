@@ -6491,7 +6491,7 @@ static int _stats(CMD_ARGS)
 static int _process_tree_options(const char *options)
 {
 	const char *s, *end;
-	struct winsize winsz;
+	struct winsize winsz = { 0 };
 	size_t len;
 
 	/* Symbol set default */
