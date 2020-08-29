@@ -57,26 +57,27 @@ static unsigned char _nums[] = {
 	209
 };
 
-static struct dm_hash_node *_create_node(const char *str, unsigned len)
+static struct dm_hash_node *_create_node(const void *key, unsigned len)
 {
 	struct dm_hash_node *n = dm_malloc(sizeof(*n) + len);
 
 	if (n) {
-		memcpy(n->key, str, len);
+		memcpy(n->key, key, len);
 		n->keylen = len;
 	}
 
 	return n;
 }
 
-static unsigned long _hash(const char *str, unsigned len)
+static unsigned long _hash(const void *key, unsigned len)
 {
+	const unsigned char *str = key;
 	unsigned long h = 0, g;
 	unsigned i;
 
 	for (i = 0; i < len; i++) {
 		h <<= 4;
-		h += _nums[(unsigned char) *str++];
+		h += _nums[*str++];
 		g = h & ((unsigned long) 0xf << 16u);
 		if (g) {
 			h ^= g >> 16u;
