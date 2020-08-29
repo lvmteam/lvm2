@@ -7576,8 +7576,7 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 	struct device *dev;
 	char name[PATH_MAX];
 	uint64_t zero_sectors;
-	int zero_metadata = wp.is_metadata ?
-		find_config_tree_bool(lv->vg->cmd, allocation_zero_metadata_CFG, NULL) : 0;
+	int zero_metadata;
 
 	if (!wp.do_zero && !wp.do_wipe_signatures && !wp.is_metadata)
 		/* nothing to do */
