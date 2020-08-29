@@ -4333,7 +4333,7 @@ static int _lv_create_cachevol(struct cmd_context *cmd,
 		}
 
 		if (!cache_size_sectors) {
-			pv_size_sectors = (pvl->pv->pe_count * vg->extent_size);
+			pv_size_sectors = (pvl->pv->pe_count * (uint64_t)vg->extent_size);
 
 			if (!arg_is_set(cmd, yes_ARG) &&
 			    yes_no_prompt("Use all %s from %s for cache? [y/n]: ",
