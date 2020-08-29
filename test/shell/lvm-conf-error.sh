@@ -29,8 +29,10 @@ mount "$DM_DEV_DIR/$vg/$lv1" mnt
 cp etc/lvm.conf mnt
 
 # Figure where the file is placed in filesystem
-filefrag -e mnt/lvm.conf | tee frags
+filefrag -e mnt/lvm.conf | tee frags || rm -f frags
 umount mnt
+
+test -s frags || skip
 
 # 1st. sector for filesystem
 first_extent_sector=$(get first_extent_sector "$dev1")
