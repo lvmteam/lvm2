@@ -152,7 +152,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	pp->preserve_existing = 1;
 
 	/* pvcreate within vgextend cannot be forced. */
-	pp->force = 0;
+	pp->force = PROMPT;
 
 	/* Check for old md signatures at the end of devices. */
 	cmd->use_full_md_check = 1;
