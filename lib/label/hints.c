@@ -663,7 +663,7 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 	int found = 0;
 	int keylen;
 	int hv_major, hv_minor;
-	int major, minor;
+	int major = -1, minor = -1;
 	int ret = 1;
 	int i;
 

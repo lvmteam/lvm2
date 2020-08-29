@@ -176,7 +176,7 @@ static int _udev_dev_is_md_component(struct device *dev)
  */
 static int _native_dev_is_md_component(struct device *dev, uint64_t *offset_found, int full)
 {
-	uint64_t size, sb_offset;
+	uint64_t size, sb_offset = 0;
 	int ret;
 
 	if (!scan_bcache)

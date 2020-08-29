@@ -5614,7 +5614,7 @@ static int _set_writecache_block_size(struct cmd_context *cmd,
 	uint32_t block_size = 0;
 	int lbs_unknown = 0, lbs_4k = 0, lbs_512 = 0;
 	int pbs_unknown = 0, pbs_4k = 0, pbs_512 = 0;
-	int rv;
+	int rv = 0;
 
 	/* This is set if the user specified a writecache block size on the command line. */
 	if (*block_size_sectors)
