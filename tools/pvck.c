@@ -66,9 +66,9 @@ struct metadata_file {
 	char vgid_str[ID_STR_SIZE];
 };
 
-static char *_chars_to_str(void *in, void *out, int num, int max, const char *field)
+static char *_chars_to_str(const void *in, void *out, int num, int max, const char *field)
 {
-	char *i = in;
+	const char *i = in;
 	char *o = out;
 	int n;
 
@@ -95,10 +95,10 @@ static char *_chars_to_str(void *in, void *out, int num, int max, const char *fi
  * This is used to print mda_header.magic as a series of hex values
  * since it only contains some printable chars.
  */
-static char *_chars_to_hexstr(void *in, void *out, int num, int max, const char *field)
+static char *_chars_to_hexstr(const void *in, void *out, int num, int max, const char *field)
 {
 	char *tmp;
-	char *i = in;
+	const char *i = in;
 	int n;
 	int off = 0;
 	int ret;
@@ -732,7 +732,7 @@ static int _check_mda_header(struct mda_header *mh, int mda_num, uint64_t mda_of
 	}
 
 	if (memcmp(mh->magic, FMTT_MAGIC, sizeof(mh->magic))) {
-		log_print("CHECK: mda_header_%d.magic expected 0x%s", mda_num, _chars_to_hexstr((void *)&FMTT_MAGIC, str, 16, 256, "mda_header.magic"));
+		log_print("CHECK: mda_header_%d.magic expected 0x%s", mda_num, _chars_to_hexstr((const void *)&FMTT_MAGIC, str, 16, 256, "mda_header.magic"));
 		good_magic = 0;
 		bad++;
 	}
