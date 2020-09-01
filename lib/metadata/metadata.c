@@ -4679,7 +4679,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct volume_group *vg, *vg_ret = NULL;
 	struct metadata_area *mda, *mda2;
 	unsigned use_precommitted = precommitted;
-	struct device *mda_dev, *dev_ret, *dev;
+	struct device *mda_dev, *dev_ret = NULL, *dev;
 	struct cached_vg_fmtdata *vg_fmtdata = NULL;	/* Additional format-specific data about the vg */
 	struct pv_list *pvl;
 	int found_old_metadata = 0;
