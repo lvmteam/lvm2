@@ -1032,7 +1032,7 @@ void radix_tree_iterate(struct radix_tree *rt, uint8_t *kb, uint8_t *ke,
 {
 	struct lookup_result lr = _lookup_prefix(&rt->root, kb, ke);
 	if (lr.kb == ke || _prefix_chain_matches(&lr, ke))
-        	_iterate(lr.v, it);
+		(void) _iterate(lr.v, it);
 }
 
 //----------------------------------------------------------------

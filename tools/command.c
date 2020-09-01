@@ -367,7 +367,7 @@ static int _opt_str_to_num(struct command *cmd, char *str)
 	int i;
 	int first = 0, last = ARG_COUNT - 1, middle;
 
-	dm_strncpy(long_name, str, sizeof(long_name));
+	(void) dm_strncpy(long_name, str, sizeof(long_name));
 
 	if ((p = strstr(long_name, "_long")))
 		/*
@@ -802,7 +802,7 @@ static char *_get_oo_line(const char *str)
 	char str2[OO_NAME_LEN];
 	int i;
 
-	dm_strncpy(str2, str, sizeof(str2));
+	(void) dm_strncpy(str2, str, sizeof(str2));
 	if ((end = strchr(str2, ':')))
 		*end = '\0';
 	if ((end = strchr(str2, ',')))
