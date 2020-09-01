@@ -846,6 +846,7 @@ static int _dump_meta_area(struct device *dev, struct devicefile *def, const cha
 {
 	FILE *fp;
 	char *meta_buf;
+	int ret = 1;
 
 	if (!tofile)
 		return_0;
@@ -866,7 +867,11 @@ static int _dump_meta_area(struct device *dev, struct devicefile *def, const cha
 		return 0;
 	}
 
-	fwrite(meta_buf, mda_size - 512, 1, fp);
+	if (fwrite(meta_buf, mda_size - 512, 1, fp) != 1) {
+		log_error("Failed to write file %s metadata area size %llu.",
+			  tofile, (unsigned long long)mda_size);
+		ret = 0;
+	}
 
 	free(meta_buf);
 
@@ -874,7 +879,7 @@ static int _dump_meta_area(struct device *dev, struct devicefile *def, const cha
 		stack;
 	if (fclose(fp))
 		stack;
-	return 1;
+	return ret;
 }
 
 /* all sizes and offsets in bytes */
