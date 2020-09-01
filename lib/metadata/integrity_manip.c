@@ -885,3 +885,44 @@ int lv_get_raid_integrity_settings(struct logical_volume *lv, struct integrity_s
 	return 0;
 }
 
+int lv_integrity_mismatches(struct cmd_context *cmd,
+			    const struct logical_volume *lv,
+			    uint64_t *mismatches)
+{
+	struct lv_with_info_and_seg_status status;
+
+	memset(&status, 0, sizeof(status));
+	status.seg_status.type = SEG_STATUS_NONE;
+
+	status.seg_status.seg = first_seg(lv);
+
+	/* FIXME: why reporter_pool? */
+	if (!(status.seg_status.mem = dm_pool_create("reporter_pool", 1024))) {
+		log_error("Failed to get mem for LV status.");
+		return 0;
+	}
+
+	if (!lv_info_with_seg_status(cmd, first_seg(lv), &status, 1, 1)) {
+		log_error("Failed to get device mapper status for %s", display_lvname(lv));
+		goto fail;
+	}
+
+	if (!status.info.exists)
+		goto fail;
+
+	if (status.seg_status.type != SEG_STATUS_INTEGRITY) {
+		log_error("Invalid device mapper status type (%d) for %s",
+			  (uint32_t)status.seg_status.type, display_lvname(lv));
+		goto fail;
+	}
+
+	*mismatches = status.seg_status.integrity->number_of_mismatches;
+
+	dm_pool_destroy(status.seg_status.mem);
+	return 1;
+
+fail:
+	dm_pool_destroy(status.seg_status.mem);
+	return 0;
+}
+

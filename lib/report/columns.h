@@ -86,6 +86,7 @@ FIELD(LVS, lv, NUM, "MinSync", lvid, 0, raidminrecoveryrate, raid_min_recovery_r
 FIELD(LVS, lv, NUM, "MaxSync", lvid, 0, raidmaxrecoveryrate, raid_max_recovery_rate, "For RAID1, the maximum recovery I/O load in kiB/sec/disk.", 0)
 FIELD(LVS, lv, STR, "IntegMode", lvid, 0, raidintegritymode, raidintegritymode, "The integrity mode", 0)
 FIELD(LVS, lv, NUM, "IntegBlkSize", lvid, 0, raidintegrityblocksize, raidintegrityblocksize, "The integrity block size", 0)
+FIELD(LVS, lv, NUM, "IntegMismatches", lvid, 0, integritymismatches, integritymismatches, "The number of integrity mismatches.", 0)
 FIELD(LVS, lv, STR, "Move", lvid, 0, movepv, move_pv, "For pvmove, Source PV of temporary LV created by pvmove.", 0)
 FIELD(LVS, lv, STR, "Move UUID", lvid, 38, movepvuuid, move_pv_uuid, "For pvmove, the UUID of Source PV of temporary LV created by pvmove.", 0)
 FIELD(LVS, lv, STR, "Convert", lvid, 0, convertlv, convert_lv, "For lvconvert, Name of temporary LV created by lvconvert.", 0)

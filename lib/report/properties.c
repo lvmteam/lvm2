@@ -121,6 +121,15 @@ static uint32_t _raidintegrityblocksize(const struct logical_volume *lv)
 	return settings->block_size;
 }
 
+static uint64_t _integritymismatches(const struct logical_volume *lv)
+{
+	uint64_t cnt;
+
+	if (!lv_integrity_mismatches(lv->vg->cmd, lv, &cnt))
+		return 0;
+	return cnt;
+}
+
 static dm_percent_t _snap_percent(const struct logical_volume *lv)
 {
 	dm_percent_t percent;
@@ -434,6 +443,8 @@ GET_LV_STR_PROPERTY_FN(raidintegritymode, _raidintegritymode(lv))
 #define _raidintegritymode_set prop_not_implemented_set
 GET_LV_NUM_PROPERTY_FN(raidintegrityblocksize, _raidintegrityblocksize(lv))
 #define _raidintegrityblocksize_set prop_not_implemented_set
+GET_LV_NUM_PROPERTY_FN(integritymismatches, _integritymismatches(lv))
+#define _integritymismatches_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(move_pv, lv_move_pv_dup(lv->vg->vgmem, lv))
 #define _move_pv_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(move_pv_uuid, lv_move_pv_uuid_dup(lv->vg->vgmem, lv))

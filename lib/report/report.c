@@ -3323,6 +3323,21 @@ static int _raidintegrityblocksize_disp(struct dm_report *rh __attribute__((unus
 	return dm_report_field_uint32(rh, field, &settings->block_size);
 }
 
+static int _integritymismatches_disp(struct dm_report *rh __attribute__((unused)),
+				   struct dm_pool *mem,
+				   struct dm_report_field *field,
+				   const void *data,
+				   void *private __attribute__((unused)))
+{
+	struct logical_volume *lv = (struct logical_volume *) data;
+	uint64_t mismatches = 0;
+
+	if (lv_is_integrity(lv) && lv_integrity_mismatches(lv->vg->cmd, lv, &mismatches))
+		return dm_report_field_uint64(rh, field, &mismatches);
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
+}
+
 static int _datapercent_disp(struct dm_report *rh, struct dm_pool *mem,
 			     struct dm_report_field *field,
 			     const void *data, void *private)

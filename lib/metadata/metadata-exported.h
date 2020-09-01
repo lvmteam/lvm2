@@ -1415,5 +1415,6 @@ int lv_raid_has_integrity(struct logical_volume *lv);
 int lv_extend_integrity_in_raid(struct logical_volume *lv, struct dm_list *pvh);
 int lv_get_raid_integrity_settings(struct logical_volume *lv, struct integrity_settings **isettings);
 int integrity_mode_set(const char *mode, struct integrity_settings *settings);
+int lv_integrity_mismatches(struct cmd_context *cmd, const struct logical_volume *lv, uint64_t *mismatches);
 
 #endif
