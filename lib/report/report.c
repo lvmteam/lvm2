@@ -3271,6 +3271,58 @@ static int _raidmaxrecoveryrate_disp(struct dm_report *rh __attribute__((unused)
 	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
 }
 
+static int _raidintegritymode_disp(struct dm_report *rh __attribute__((unused)),
+				   struct dm_pool *mem,
+				   struct dm_report_field *field,
+				   const void *data,
+				   void *private __attribute__((unused)))
+{
+	struct logical_volume *lv = (struct logical_volume *) data;
+	struct integrity_settings *settings;
+	const char *mode = NULL;
+	char *repstr;
+
+	if (lv_raid_has_integrity(lv))
+		lv_get_raid_integrity_settings(lv, &settings);
+	else if (lv_is_integrity(lv))
+		settings = &first_seg(lv)->integrity_settings;
+
+	if (settings->mode[0]) {
+		if (settings->mode[0] == 'B')
+			mode = "bitmap";
+		else if (settings->mode[0] == 'J')
+			mode = "journal";
+
+		if (mode) {
+			if (!(repstr = dm_pool_strdup(mem, mode))) {
+				log_error("Failed to allocate buffer for mode.");
+				return 0;
+			}
+			return _field_set_value(field, repstr, NULL);
+		}
+	}
+	return _field_set_value(field, "", NULL);
+}
+
+static int _raidintegrityblocksize_disp(struct dm_report *rh __attribute__((unused)),
+				   struct dm_pool *mem,
+				   struct dm_report_field *field,
+				   const void *data,
+				   void *private __attribute__((unused)))
+{
+	struct logical_volume *lv = (struct logical_volume *) data;
+	struct integrity_settings *settings;
+
+	if (lv_raid_has_integrity(lv))
+		lv_get_raid_integrity_settings(lv, &settings);
+	else if (lv_is_integrity(lv))
+		settings = &first_seg(lv)->integrity_settings;
+	else
+		return dm_report_field_int32(rh, field, &GET_TYPE_RESERVED_VALUE(num_undef_32));
+
+	return dm_report_field_uint32(rh, field, &settings->block_size);
+}
+
 static int _datapercent_disp(struct dm_report *rh, struct dm_pool *mem,
 			     struct dm_report_field *field,
 			     const void *data, void *private)

@@ -91,6 +91,36 @@ static uint32_t _raidmaxrecoveryrate(const struct logical_volume *lv)
 	return first_seg(lv)->max_recovery_rate;
 }
 
+static const char *_raidintegritymode(const struct logical_volume *lv)
+{
+	struct integrity_settings *settings;
+
+	if (lv_raid_has_integrity((struct logical_volume *)lv))
+		lv_get_raid_integrity_settings((struct logical_volume *)lv, &settings);
+	else if (lv_is_integrity(lv))
+		settings = &first_seg(lv)->integrity_settings;
+
+	if (settings->mode[0] == 'B')
+		return "bitmap";
+	if (settings->mode[0] == 'J')
+		return "journal";
+	return "unknown";
+}
+
+static uint32_t _raidintegrityblocksize(const struct logical_volume *lv)
+{
+	struct integrity_settings *settings;
+
+	if (lv_raid_has_integrity((struct logical_volume *)lv))
+		lv_get_raid_integrity_settings((struct logical_volume *)lv, &settings);
+	else if (lv_is_integrity(lv))
+		settings = &first_seg(lv)->integrity_settings;
+	else
+		return 0;
+
+	return settings->block_size;
+}
+
 static dm_percent_t _snap_percent(const struct logical_volume *lv)
 {
 	dm_percent_t percent;
@@ -400,6 +430,10 @@ GET_LV_NUM_PROPERTY_FN(raid_max_recovery_rate, _raidmaxrecoveryrate(lv))
 #define _raid_max_recovery_rate_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(raid_sync_action, _raidsyncaction(lv))
 #define _raid_sync_action_set prop_not_implemented_set
+GET_LV_STR_PROPERTY_FN(raidintegritymode, _raidintegritymode(lv))
+#define _raidintegritymode_set prop_not_implemented_set
+GET_LV_NUM_PROPERTY_FN(raidintegrityblocksize, _raidintegrityblocksize(lv))
+#define _raidintegrityblocksize_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(move_pv, lv_move_pv_dup(lv->vg->vgmem, lv))
 #define _move_pv_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(move_pv_uuid, lv_move_pv_uuid_dup(lv->vg->vgmem, lv))
