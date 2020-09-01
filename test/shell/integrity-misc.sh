@@ -145,6 +145,7 @@ lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg "$dev1" "$dev2"
 _wait_sync $vg/${lv1}_rimage_0
 _wait_sync $vg/${lv1}_rimage_1
 _wait_sync $vg/$lv1
+lvs -o raidintegritymode $vg/$lv1 | grep journal
 _add_new_data_to_mnt
 lvconvert --replace "$dev1" $vg/$lv1 "$dev3"
 lvs -a -o+devices $vg > out
@@ -167,6 +168,7 @@ lvcreate --type raid1 -m1 --raidintegrity y --raidintegritymode bitmap -n $lv1 -
 _wait_sync $vg/${lv1}_rimage_0
 _wait_sync $vg/${lv1}_rimage_1
 _wait_sync $vg/$lv1
+lvs -o raidintegritymode $vg/$lv1 | grep bitmap
 _add_new_data_to_mnt
 lvconvert --replace "$dev1" $vg/$lv1 "$dev3"
 lvs -a -o+devices $vg > out

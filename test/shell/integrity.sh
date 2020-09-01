@@ -104,6 +104,10 @@ _test_fs_with_raid() {
 	umount $mnt
 	lvchange -an $vg/$lv1
 
+	# FIXME: this is only finding/corrupting the bit with raid1
+	# other raid levels may require looking at a different dev.
+	# (Attempt this xxd/tac/sed/xxd on each dev in the LV?)
+
 	xxd "$dev1" > dev1.txt
 	tac dev1.txt > dev1.rev
 	sed -e '0,/4242 4242 4242 4242 4242 4242 4242 4242/ s/4242 4242 4242 4242 4242 4242 4242 4242/4242 4242 4242 4242 4242 4242 4242 4243/' dev1.rev > dev1.rev.bad
@@ -224,6 +228,8 @@ lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg
 _wait_recalc $vg/${lv1}_rimage_0
 _wait_recalc $vg/${lv1}_rimage_1
 _test_fs_with_raid
+lvs -o integritymismatches $vg/${lv1}_rimage_0
+lvs -o integritymismatches $vg/${lv1}_rimage_1
 lvchange -an $vg/$lv1
 lvconvert --raidintegrity n $vg/$lv1
 lvremove $vg/$lv1
@@ -235,6 +241,9 @@ _wait_recalc $vg/${lv1}_rimage_0
 _wait_recalc $vg/${lv1}_rimage_1
 _wait_recalc $vg/${lv1}_rimage_2
 _test_fs_with_raid
+lvs -o integritymismatches $vg/${lv1}_rimage_0
+lvs -o integritymismatches $vg/${lv1}_rimage_1
+lvs -o integritymismatches $vg/${lv1}_rimage_2
 lvchange -an $vg/$lv1
 lvconvert --raidintegrity n $vg/$lv1
 lvremove $vg/$lv1
@@ -246,6 +255,9 @@ _wait_recalc $vg/${lv1}_rimage_0
 _wait_recalc $vg/${lv1}_rimage_1
 _wait_recalc $vg/${lv1}_rimage_2
 _test_fs_with_raid
+lvs -o integritymismatches $vg/${lv1}_rimage_0
+lvs -o integritymismatches $vg/${lv1}_rimage_1
+lvs -o integritymismatches $vg/${lv1}_rimage_2
 lvchange -an $vg/$lv1
 lvconvert --raidintegrity n $vg/$lv1
 lvremove $vg/$lv1
@@ -257,6 +269,9 @@ _wait_recalc $vg/${lv1}_rimage_0
 _wait_recalc $vg/${lv1}_rimage_1
 _wait_recalc $vg/${lv1}_rimage_2
 _test_fs_with_raid
+lvs -o integritymismatches $vg/${lv1}_rimage_0
+lvs -o integritymismatches $vg/${lv1}_rimage_1
+lvs -o integritymismatches $vg/${lv1}_rimage_2
 lvchange -an $vg/$lv1
 lvconvert --raidintegrity n $vg/$lv1
 lvremove $vg/$lv1
@@ -270,6 +285,11 @@ _wait_recalc $vg/${lv1}_rimage_2
 _wait_recalc $vg/${lv1}_rimage_3
 _wait_recalc $vg/${lv1}_rimage_4
 _test_fs_with_raid
+lvs -o integritymismatches $vg/${lv1}_rimage_0
+lvs -o integritymismatches $vg/${lv1}_rimage_1
+lvs -o integritymismatches $vg/${lv1}_rimage_2
+lvs -o integritymismatches $vg/${lv1}_rimage_3
+lvs -o integritymismatches $vg/${lv1}_rimage_4
 lvchange -an $vg/$lv1
 lvconvert --raidintegrity n $vg/$lv1
 lvremove $vg/$lv1
@@ -282,6 +302,10 @@ _wait_recalc $vg/${lv1}_rimage_1
 _wait_recalc $vg/${lv1}_rimage_2
 _wait_recalc $vg/${lv1}_rimage_3
 _test_fs_with_raid
+lvs -o integritymismatches $vg/${lv1}_rimage_0
+lvs -o integritymismatches $vg/${lv1}_rimage_1
+lvs -o integritymismatches $vg/${lv1}_rimage_2
+lvs -o integritymismatches $vg/${lv1}_rimage_3
 lvchange -an $vg/$lv1
 lvconvert --raidintegrity n $vg/$lv1
 lvremove $vg/$lv1
@@ -607,6 +631,8 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y --raidintegritymode bitmap -n $lv1 -l 8 $vg
 _test_fs_with_raid
+lvs -o integritymismatches $vg/${lv1}_rimage_0
+lvs -o integritymismatches $vg/${lv1}_rimage_1
 lvchange -an $vg/$lv1
 lvconvert --raidintegrity n $vg/$lv1
 lvremove $vg/$lv1
@@ -615,6 +641,11 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid6 --raidintegrity y --raidintegritymode bitmap -n $lv1 -l 8 $vg
 _test_fs_with_raid
+lvs -o integritymismatches $vg/${lv1}_rimage_0
+lvs -o integritymismatches $vg/${lv1}_rimage_1
+lvs -o integritymismatches $vg/${lv1}_rimage_2
+lvs -o integritymismatches $vg/${lv1}_rimage_3
+lvs -o integritymismatches $vg/${lv1}_rimage_4
 lvchange -an $vg/$lv1
 lvconvert --raidintegrity n $vg/$lv1
 lvremove $vg/$lv1
