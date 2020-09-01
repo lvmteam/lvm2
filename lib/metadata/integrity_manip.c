@@ -303,6 +303,21 @@ int lv_remove_integrity_from_raid(struct logical_volume *lv)
 	return 1;
 }
 
+int integrity_mode_set(const char *mode, struct integrity_settings *settings)
+{
+	if (!mode)
+		settings->mode[0] = DEFAULT_MODE;
+	else if (!strcmp(mode, "bitmap") || !strcmp(mode, "B"))
+		settings->mode[0] = 'B';
+	else if (!strcmp(mode, "journal") || !strcmp(mode, "J"))
+		settings->mode[0] = 'J';
+	else {
+		log_error("Invalid raid integrity mode (use \"bitmap\" or \"journal\")");
+		return 0;
+	}
+	return 1;
+}
+
 static int _set_integrity_block_size(struct cmd_context *cmd, struct logical_volume *lv, int is_active,
 				     struct integrity_settings *settings,
 				     int lbs_4k, int lbs_512, int pbs_4k, int pbs_512)

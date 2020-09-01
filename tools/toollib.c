@@ -718,20 +718,6 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 	return 1;
 }
 
-int integrity_mode_set(const char *mode, struct integrity_settings *settings)
-{
-	if (!mode || !strcmp(mode, "bitmap") || !strcmp(mode, "B"))
-		settings->mode[0] = 'B';
-	else if (!strcmp(mode, "journal") || !strcmp(mode, "J"))
-		settings->mode[0] = 'J';
-	else {
-		/* FIXME: the kernel has other modes, should we allow any of those? */
-		log_error("Invalid raid integrity mode (use \"bitmap\" or \"journal\")");
-		return 0;
-	}
-	return 1;
-}
-
 /* Shared code for changing activation state for vgchange/lvchange */
 int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 		       activation_change_t activate)
