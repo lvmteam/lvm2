@@ -16,10 +16,10 @@
 aux prepare_devs 4 128
 get_devs
 
-dd if=/dev/zero of="$dev1" bs=1M count=32 || true
-dd if=/dev/zero of="$dev2" bs=1M count=32 || true
-dd if=/dev/zero of="$dev3" bs=1M count=32 || true
-dd if=/dev/zero of="$dev4" bs=1M count=32 || true
+dd if=/dev/zero of="$dev1" bs=1M count=2 || true
+dd if=/dev/zero of="$dev2" bs=1M count=2 || true
+dd if=/dev/zero of="$dev3" bs=1M count=2 || true
+dd if=/dev/zero of="$dev4" bs=1M count=2 || true
 # clear entire dev to cover mda2
 dd if=/dev/zero of="$dev3" || true
 
@@ -146,7 +146,7 @@ pvcreate --pvmetadatacopies 2 --metadatasize 32M "$dev1"
 
 vgcreate $SHARED -s 512K --metadatasize 32M $vg "$dev1" "$dev2" "$dev3" "$dev4"
 
-for i in `seq 1 500`; do lvcreate -an -n lv$i -l1 $vg; done
+for i in $(seq 1 500); do echo "lvcreate -an -n lv$i -l1 $vg"; done | lvm
 
 pvck --dump headers "$dev1" > h1
 
