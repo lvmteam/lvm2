@@ -21,6 +21,10 @@ which md5sum || skip
 which mkfs.ext4 || skip
 aux have_raid 1 13 2 || skip
 
+case "$(uname -r)" in
+  5.[89]*) skip "Unfixed kernel" ;;
+esac
+
 mount_dir="mnt"
 
 cleanup_mounted_and_teardown()
