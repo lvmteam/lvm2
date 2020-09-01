@@ -966,7 +966,7 @@ int write_hint_file(struct cmd_context *cmd, int newhints)
 		 * detect when the devices on the system change, which
 		 * invalidates the existing hints.
 		 */
-		strncpy(devpath, dev_name(dev), PATH_MAX);
+		(void) dm_strncpy(devpath, dev_name(dev), sizeof(devpath));
 		hash = calc_crc(hash, (const uint8_t *)devpath, strlen(devpath));
 		count++;
 
