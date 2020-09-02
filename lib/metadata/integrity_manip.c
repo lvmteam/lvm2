@@ -847,7 +847,8 @@ int lv_raid_has_integrity(struct logical_volume *lv)
 	struct lv_segment *seg, *seg_image;
 	uint32_t s;
 
-	seg = first_seg(lv);
+	if (!(seg = first_seg(lv)))
+		return 0;
 
 	if (seg_is_raid(seg)) {
 		for (s = 0; s < seg->area_count; s++) {
