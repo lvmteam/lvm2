@@ -626,11 +626,6 @@ static int _pvmove_setup_single(struct cmd_context *cmd,
 			return ECMD_FAILED;
 		}
 
-		if (lv_is_writecache(lv)) {
-			log_error("pvmove not allowed on LV using writecache.");
-			return ECMD_FAILED;
-		}
-
 		if (lv_is_raid(lv) && lv_raid_has_integrity(lv)) {
 			log_error("pvmove not allowed on raid LV with integrity.");
 			return ECMD_FAILED;
