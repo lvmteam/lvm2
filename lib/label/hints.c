@@ -274,7 +274,7 @@ static int _clear_hints(struct cmd_context *cmd)
 	time_t t;
 
 	if (!(fp = fopen(_hints_file, "w"))) {
-		log_warn("Failed to clear hint file.");
+		log_debug("clear_hints open errno %d", errno);
 		/* shouldn't happen, but try to unlink in case */
 		_unlink_hints();
 		return 0;
