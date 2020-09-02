@@ -155,6 +155,9 @@ int lv_extend_integrity_in_raid(struct logical_volume *lv, struct dm_list *pvh)
 	uint32_t meta_extents, prev_meta_extents;
 	uint32_t area_count, s;
 
+	if (!lv_is_raid(lv))
+		return_0;
+
 	seg_top = first_seg(lv);
 		                
 	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_STRIPED)))
@@ -794,6 +797,11 @@ void lv_clear_integrity_recalculate_metadata(struct logical_volume *lv)
 	struct lv_segment *seg, *seg_image;
 	uint32_t s;
 
+	if (!lv_is_raid(lv) && !lv_is_integrity(lv)) {
+		log_error("Invalid LV type for clearing integrity");
+		return;
+	}
+
 	seg = first_seg(lv);
 
 	if (seg_is_raid(seg)) {
@@ -804,9 +812,6 @@ void lv_clear_integrity_recalculate_metadata(struct logical_volume *lv)
 		}
 	} else if (seg_is_integrity(seg)) {
 		seg->integrity_recalculate = 0;
-	} else {
-		log_error("Invalid LV type for clearing integrity");
-		return;
 	}
 
 	if (!vg_write(vg) || !vg_commit(vg)) {
@@ -821,6 +826,9 @@ int lv_has_integrity_recalculate_metadata(struct logical_volume *lv)
 	struct lv_segment *seg, *seg_image;
 	uint32_t s;
 	int ret = 0;
+
+	if (!lv_is_raid(lv) && !lv_is_integrity(lv))
+		return_0;
 
 	seg = first_seg(lv);
 
@@ -847,17 +855,17 @@ int lv_raid_has_integrity(struct logical_volume *lv)
 	struct lv_segment *seg, *seg_image;
 	uint32_t s;
 
-	if (!(seg = first_seg(lv)))
-		return 0;
+	if (!lv_is_raid(lv))
+		return_0;
 
-	if (seg_is_raid(seg)) {
-		for (s = 0; s < seg->area_count; s++) {
-			lv_image = seg_lv(seg, s);
-			seg_image = first_seg(lv_image);
+	seg = first_seg(lv);
 
-			if (seg_is_integrity(seg_image))
-				return 1;
-		}
+	for (s = 0; s < seg->area_count; s++) {
+		lv_image = seg_lv(seg, s);
+		seg_image = first_seg(lv_image);
+
+		if (seg_is_integrity(seg_image))
+			return 1;
 	}
 
 	return 0;
@@ -869,17 +877,18 @@ int lv_get_raid_integrity_settings(struct logical_volume *lv, struct integrity_s
 	struct lv_segment *seg, *seg_image;
 	uint32_t s;
 
+	if (!lv_is_raid(lv))
+		return_0;
+
 	seg = first_seg(lv);
 
-	if (seg_is_raid(seg)) {
-		for (s = 0; s < seg->area_count; s++) {
-			lv_image = seg_lv(seg, s);
-			seg_image = first_seg(lv_image);
+	for (s = 0; s < seg->area_count; s++) {
+		lv_image = seg_lv(seg, s);
+		seg_image = first_seg(lv_image);
 
-			if (seg_is_integrity(seg_image)) {
-				*isettings = &seg_image->integrity_settings;
-				return 1;
-			}
+		if (seg_is_integrity(seg_image)) {
+			*isettings = &seg_image->integrity_settings;
+			return 1;
 		}
 	}
 
@@ -891,6 +900,9 @@ int lv_integrity_mismatches(struct cmd_context *cmd,
 			    uint64_t *mismatches)
 {
 	struct lv_with_info_and_seg_status status;
+
+	if (!lv_is_integrity(lv))
+		return_0;
 
 	memset(&status, 0, sizeof(status));
 	status.seg_status.type = SEG_STATUS_NONE;
