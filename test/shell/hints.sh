@@ -338,6 +338,21 @@ pvs
 not diff $HINTS $PREV
 
 
+#
+# Test pvck --repair forces refresh
+#
+
+rm $HINTS $PREV
+pvs
+cp $HINTS $PREV
+pvck --repairtype label_header -y "$dev5"
+cat $NEWHINTS
+grep 'Created empty by pvck' $HINTS
+# this next pvs creates new hints
+pvs
+# the only diff will be "Created by..."
+not diff $HINTS $PREV
+
 
 #
 # Test incorrect dev-to-pvid info in hints is detected

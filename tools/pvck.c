@@ -3037,6 +3037,8 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_is_set(cmd, repairtype_ARG) || arg_is_set(cmd, repair_ARG)) {
 		pv_name = argv[0];
 
+		clear_hint_file(cmd);
+
 		if (!(dev = dev_cache_get(cmd, pv_name, cmd->filter))) {
 			log_error("No device found for %s %s.", pv_name, dev_cache_filtered_reason(pv_name));
 			return ECMD_FAILED;
