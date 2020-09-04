@@ -345,7 +345,7 @@ not diff $HINTS $PREV
 rm $HINTS $PREV
 pvs
 cp $HINTS $PREV
-pvck --repairtype label_header -y "$dev5"
+pvck --repairtype label_header -y "$dev3"
 cat $NEWHINTS
 grep 'Created empty by pvck' $HINTS
 # this next pvs creates new hints
