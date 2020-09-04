@@ -16,6 +16,9 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+lvm segtypes 2>/dev/null | grep writecache$ >/dev/null || {
+	skip 'Writecache is not built-in.'
+}
 aux have_cache 1 10 0 || skip
 which mkfs.xfs || skip
 
