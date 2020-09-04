@@ -8598,6 +8598,9 @@ out:
 	return lv;
 
 deactivate_and_revert_new_lv:
+	if (!sync_local_dev_names(lv->vg->cmd))
+		log_error("Failed to sync local devices before reverting %s.",
+			  display_lvname(lv));
 	if (!deactivate_lv(cmd, lv)) {
 		log_error("Unable to deactivate failed new LV %s. "
 			  "Manual intervention required.",  display_lvname(lv));
