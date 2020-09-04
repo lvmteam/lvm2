@@ -21,7 +21,7 @@ v1_15_0=0
 aux have_raid 1 15 0 && v1_15_0=1
 
 # Use smallest regionsize to save VG space
-regionsize=`getconf PAGESIZE` # in bytes
+regionsize=$(getconf PAGESIZE) # in bytes
 let pageregions=regionsize*8  # number of regions per MD bitmap page
 
 # in KiB
@@ -35,7 +35,14 @@ aux prepare_pvs 2 $(($lvsz + 3 * $lvext))
 get_devs
 vgcreate -s 4k $vg ${DEVICES[@]}
 
-aux delay_dev "$dev1"  0 150
+# Keep $dev1 & $dev2 always open via small active LVs.
+# This trick avoids race on system with scanning udev service
+# when device is 'in-use' and we cleared _rimage & _rmeta.
+lvcreate -l1 $vg "$dev1"
+lvcreate -l1 $vg "$dev2"
+
+sector=$(( $(get first_extent_sector "$dev2") + 2048 ))
+aux delayzero_dev "$dev2"  0 50 "${sector}:"
 
 # Create raid1 LV consuming 1 MD bitmap page
 lvcreate --yes --type raid1 --regionsize ${regionsize}K -L$(($lvsz-$lvext))M -n $lv1 $vg
@@ -45,10 +52,17 @@ aux wait_for_sync $vg $lv1
 check lv_field $vg/$lv1 sync_percent "100.00"
 check lv_field $vg/$lv1 region_size "4.00k"
 
+# to slow down extension - slowdown readings
+aux delayzero_dev "$dev1"  50 0 "${sector}:"
+
+dmsetup table
+dmsetup info -c
+dmsetup status
 # Extend so that full MD bitmap page is consumed
-lvextend -y -L+${lvext}M $vg/$lv1
+lvextend -vvvv -y -L+${lvext}M $vg/$lv1
 not check lv_field $vg/$lv1 sync_percent "100.00"
 check lv_field $vg/$lv1 size "$(($lvsz)).00m" $vg/$lv1
+lvs -a $vg
 aux wait_for_sync $vg $lv1
 check lv_field $vg/$lv1 sync_percent "100.00"
 
@@ -63,5 +77,8 @@ fi
 aux wait_for_sync $vg $lv1
 check lv_field $vg/$lv1 sync_percent "100.00"
 check lv_field $vg/$lv1 size "$(($lvsz+$lvext)).00m" $vg/$lv1
+
+aux enable_dev "$dev1"
+aux enable_dev "$dev2"
 
 vgremove -ff $vg
