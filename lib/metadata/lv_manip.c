@@ -7750,6 +7750,9 @@ out:
 			r = 0; /* Continue deactivating as many as possible. */
 		}
 
+	if (!sync_local_dev_names(vg->cmd))
+		log_debug("Failed to sync local device names after deactivation of wiped volumes.");
+
 	return r;
 }
 
