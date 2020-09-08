@@ -1,5 +1,6 @@
 Version 2.03.11 - 
 ==================================
+  Allow raid extension without flushing raid LV first.
   Use _rmeta and _rimage as origin only devices for table loading.
   Switch code base to use flexible array syntax.
   Fix 64bit math when calculation cachevol size.
