@@ -2642,10 +2642,11 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			    /* origin only for cache without pending delete */
 			    (!dm->track_pending_delete || !lv_is_cache(lv)) &&
 			    !_add_lv_to_dtree(dm, dtree, seg_lv(seg, s),
-					      lv_is_vdo_pool(seg_lv(seg, s)) ? 1 : 0))
+					      (lv_is_vdo_pool(seg_lv(seg, s)) ||
+					       lv_is_raid_image(seg_lv(seg, s))) ? 1 : 0))
 				return_0;
 			if (seg_is_raid_with_meta(seg) && seg->meta_areas && seg_metalv(seg, s) &&
-			    !_add_lv_to_dtree(dm, dtree, seg_metalv(seg, s), 0))
+			    !_add_lv_to_dtree(dm, dtree, seg_metalv(seg, s), 1))
 				return_0;
 		}
 
