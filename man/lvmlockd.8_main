@@ -115,7 +115,7 @@ use_lvmlockd = 1
 .br
 Assign each host a unique host_id in the range 1-2000 by setting
 .br
-/etc/lvm/lvmlocal.conf local/host_id
+#DEFAULT_SYS_DIR#/lvmlocal.conf local/host_id
 
 .SS 3. start lvmlockd
 

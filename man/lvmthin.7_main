@@ -902,7 +902,7 @@ To change these values globally, edit
 To change these values on a per-VG or per-LV basis, attach a "profile" to
 the VG or LV.  A profile is a collection of config settings, saved in a
 local text file (using the lvm.conf format).  lvm looks for profiles in
-the profile_dir directory, e.g. /etc/lvm/profile/.  Once attached to a VG
+the profile_dir directory, e.g. #DEFAULT_SYS_DIR#/profile/.  Once attached to a VG
 or LV, lvm will process the VG or LV using the settings from the attached
 profile.  A profile is named and referenced by its file name.
 
@@ -930,9 +930,9 @@ Extend the LV using the profile settings:
 .br
 .nf
 # lvmconfig config/profile_dir
-profile_dir="/etc/lvm/profile"
+profile_dir="#DEFAULT_SYS_DIR#/profile"
 
-# cat /etc/lvm/profile/pool0extend.profile
+# cat #DEFAULT_SYS_DIR#/profile/pool0extend.profile
 activation {
         thin_pool_autoextend_threshold=50
         thin_pool_autoextend_percent=10
