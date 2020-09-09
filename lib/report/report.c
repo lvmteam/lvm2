@@ -3286,6 +3286,8 @@ static int _raidintegritymode_disp(struct dm_report *rh __attribute__((unused)),
 		lv_get_raid_integrity_settings(lv, &settings);
 	else if (lv_is_integrity(lv))
 		settings = &first_seg(lv)->integrity_settings;
+	else
+		goto out;
 
 	if (settings->mode[0]) {
 		if (settings->mode[0] == 'B')
@@ -3301,6 +3303,7 @@ static int _raidintegritymode_disp(struct dm_report *rh __attribute__((unused)),
 			return _field_set_value(field, repstr, NULL);
 		}
 	}
+out:
 	return _field_set_value(field, "", NULL);
 }
 
