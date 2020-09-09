@@ -1,5 +1,6 @@
 Version 2.03.11 - 
 ==================================
+  Improving VDO man page examples.
   Switch code base to use flexible array syntax.
   Fix 64bit math when calculation cachevol size.
   Preserve uint32_t for seqno handling.

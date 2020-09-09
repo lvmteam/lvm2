@@ -138,14 +138,15 @@ that can keep 100% uncompressible data there.
 
 VDO allows to set large variety of options. Lots of these settings
 can be specified by lvm.conf or profile settings. User can prepare
-number of different profiles and just specify profile file name.
+number of different profiles in #DEFAULT_SYS_DIR#/profile directory
+and just specify profile file name.
 Check output of \fBlvmconfig --type full\fP for detailed description
 of all individual vdo settings.
 
 .I Example
 .br
 .nf
-# cat <<EOF > vdo.profile
+# cat <<EOF > #DEFAULT_SYS_DIR#/profile/vdo_create.profile
 allocation {
 	vdo_use_compression=1
 	vdo_use_deduplication=1
@@ -169,7 +170,7 @@ allocation {
 }
 EOF
 
-# lvcreate --vdo -L10G --metadataprofile vdo.profile vg/vdopool0
+# lvcreate --vdo -L10G --metadataprofile vdo_create vg/vdopool0
 # lvcreate --vdo -L10G --config 'allocation/vdo_cpu_threads=4' vg/vdopool1
 .fi
 
@@ -211,7 +212,7 @@ Note: \fBvdostats\fP(8) currently understands only /dev/mapper device names.
   vdopool0         vg dwi-ao---- 10.00g                 30.16
   [vdopool0_vdata] vg Dwi-ao---- 10.00g
 
-# vdostats --all /dev/mapper/vg-vdopool0
+# vdostats --all /dev/mapper/vg-vdopool0-vpool
 /dev/mapper/vg-vdopool0 :
   version                             : 30
   release version                     : 133524
@@ -306,7 +307,7 @@ resize will not work).
 .I Example
 .br
 .nf
-# lvcreate -L 5G -V 10G -n vdo1 vg/vpool
+# lvcreate --type vdo -L 5G -V 10G -n vdo1 vg/vpool
 # lvcreate --type cache-pool -L 1G -n cpool vg
 # lvconvert --cache --cachepool vg/cpool vg/vpool
 # lvconvert --uncache vg/vpool
