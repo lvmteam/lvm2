@@ -607,7 +607,7 @@ AC_MSG_CHECKING(whether to include vdo)
 AC_ARG_WITH(vdo,
 	    AC_HELP_STRING([--with-vdo=TYPE],
 			   [vdo support: internal/none [internal]]),
-			   VDO=$withval, VDO="none")
+			   VDO=$withval, VDO="internal")
 
 AC_MSG_RESULT($VDO)
 
@@ -655,7 +655,7 @@ AC_MSG_CHECKING(whether to include writecache)
 AC_ARG_WITH(writecache,
 	    AC_HELP_STRING([--with-writecache=TYPE],
 			   [writecache support: internal/none [none]]),
-			   WRITECACHE=$withval, WRITECACHE="none")
+			   WRITECACHE=$withval, WRITECACHE="internal")
 
 AC_MSG_RESULT($WRITECACHE)
 

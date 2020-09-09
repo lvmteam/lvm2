@@ -9586,7 +9586,7 @@ $as_echo_n "checking whether to include vdo... " >&6; }
 if test "${with_vdo+set}" = set; then :
   withval=$with_vdo; VDO=$withval
 else
-  VDO="none"
+  VDO="internal"
 fi
 
 
@@ -9746,7 +9746,7 @@ $as_echo_n "checking whether to include writecache... " >&6; }
 if test "${with_writecache+set}" = set; then :
   withval=$with_writecache; WRITECACHE=$withval
 else
-  WRITECACHE="none"
+  WRITECACHE="internal"
 fi
 
 
