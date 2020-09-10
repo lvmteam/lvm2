@@ -30,7 +30,7 @@ make.tmpl
 /config.log
 /config.status
 /configure.scan
-/cscope.out
+/cscope.*
 /html/
 /reports/
 /tags
