@@ -1,5 +1,6 @@
 Version 2.03.11 - 
 ==================================
+  Enhance --use-policy percentage rounding.
   Configure --with-vdo and --with-writecache as internal segments.
   Improving VDO man page examples.
   Switch code base to use flexible array syntax.
