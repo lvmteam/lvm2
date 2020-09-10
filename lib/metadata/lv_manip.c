@@ -5068,6 +5068,11 @@ static int _lvresize_check(struct logical_volume *lv,
 	struct volume_group *vg = lv->vg;
 	struct lv_segment *seg = first_seg(lv);
 
+	if (lv_is_writecache(lv)) {
+		log_error("Resize not yet allowed on LVs with writecache attached.");
+		return 0;
+	}
+
 	if (lv_is_external_origin(lv)) {
 		/*
 		 * Since external-origin can be activated read-only,
@@ -5791,11 +5796,6 @@ int lv_resize(struct logical_volume *lv,
 	int status;
 	struct device *dev;
 	char name[PATH_MAX];
-
-	if (lv_is_writecache(lv)) {
-		log_error("Resize not yet allowed on LVs with writecache attached.");
-		return 0;
-	}
 
 	if (!_lvresize_check(lv, lp))
 		return_0;
