@@ -1480,6 +1480,7 @@ wait_for_sync() {
 	done
 
 	echo "Sync is taking too long - assume stuck"
+	echo t >/proc/sysrq-trigger 2>/dev/null
 	return 1
 }
 
