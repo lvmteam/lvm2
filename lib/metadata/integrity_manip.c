@@ -828,7 +828,7 @@ int lv_has_integrity_recalculate_metadata(struct logical_volume *lv)
 	int ret = 0;
 
 	if (!lv_is_raid(lv) && !lv_is_integrity(lv))
-		return_0;
+		return 0;
 
 	seg = first_seg(lv);
 
@@ -856,7 +856,7 @@ int lv_raid_has_integrity(struct logical_volume *lv)
 	uint32_t s;
 
 	if (!lv_is_raid(lv))
-		return_0;
+		return 0;
 
 	seg = first_seg(lv);
 
