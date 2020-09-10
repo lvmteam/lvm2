@@ -224,7 +224,7 @@ int thin_pool_feature_supported(const struct logical_volume *lv, int feature)
 int pool_metadata_min_threshold(const struct lv_segment *pool_seg)
 {
 	/*
-	 * Hardcoded minimal requirment for thin pool target.
+	 * Hardcoded minimal requirement for thin pool target.
 	 *
 	 * In the metadata LV there should be minimum from either 4MiB of free space
 	 * or at least 25% of free space, which applies when the size of thin pool's
