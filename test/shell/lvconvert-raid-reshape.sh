@@ -64,7 +64,7 @@ function _lvconvert
 	[ "${level:0:7}" = "striped" ] && wait_and_check=0
 	[ "${level:0:5}" = "raid0" ] && wait_and_check=0
 
-	lvconvert -y --ty $req_level $R "$DM_DEV_DIR/$vg/$lv" || return $?
+	lvconvert -y --ty $req_level $R $vg/$lv || return $?
 
 	check lv_first_seg_field $vg/$lv segtype "$level"
 	check lv_first_seg_field $vg/$lv data_stripes $data_stripes
@@ -95,7 +95,7 @@ function _reshape_layout
 
 	[[ "$opts" =~ "--stripes" ]] && ignore_a_chars=1
 
-	lvconvert -y --ty $type $opts "$DM_DEV_DIR/$vg/$lv"
+	lvconvert -y --ty $type $opts $vg/$lv
 	check lv_first_seg_field $vg/$lv segtype "$type"
 	check lv_first_seg_field $vg/$lv data_stripes $data_stripes
 	check lv_first_seg_field $vg/$lv stripes $stripes
@@ -170,8 +170,8 @@ fi
 
 # No we got the data reshaped and the freed SubLVs still present
 # -> check takeover request gets rejected
-not lvconvert --yes --type striped "$DM_DEV_DIR/$vg/$lv1"
-not lvconvert --yes --type raid0 "$DM_DEV_DIR/$vg/$lv1"
+not lvconvert --yes --type striped $vg/$lv1
+not lvconvert --yes --type raid0 $vg/$lv1
 not lvconvert --yes --type "$DM_DEV_DIR/raid0_meta $vg/$lv1"
 not lvconvert --yes --type "$DM_DEV_DIR/raid6 $vg/$lv1"
 # Remove the freed SubLVs

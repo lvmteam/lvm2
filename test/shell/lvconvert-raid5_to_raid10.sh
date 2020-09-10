@@ -30,32 +30,32 @@ check lv_field $vg/$lv1 segtype "raid5"
 check lv_field $vg/$lv1 stripes 4
 check lv_field $vg/$lv1 data_stripes 3
 check lv_field $vg/$lv1 region_size "256.00k"
-wipefs -a $DM_DEV_DIR/$vg/$lv1
-mkfs -t ext4 $DM_DEV_DIR/$vg/$lv1
-fsck -fn $DM_DEV_DIR/$vg/$lv1
+wipefs -a "$DM_DEV_DIR/$vg/$lv1"
+mkfs -t ext4 "$DM_DEV_DIR/$vg/$lv1"
+fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 aux wait_for_sync $vg $lv1
-fsck -fn $DM_DEV_DIR/$vg/$lv1
+fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 # Convert raid5 -> raid10 (first step raid5 -> raid5_n)
 lvconvert -y --ty raid10 $vg/$lv1
-fsck -fn $DM_DEV_DIR/$vg/$lv1
+fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 check lv_field $vg/$lv1 segtype "raid5_n"
 check lv_field $vg/$lv1 stripes 4
 check lv_field $vg/$lv1 data_stripes 3
 check lv_field $vg/$lv1 region_size "256.00k"
 aux wait_for_sync $vg $lv1
-fsck -fn $DM_DEV_DIR/$vg/$lv1
+fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 # Convert raid5 -> raid10 (second step raid5_n -> raid0_meta)
 lvconvert -y --ty raid10 $vg/$lv1
 check lv_field $vg/$lv1 segtype "raid0_meta"
 check lv_field $vg/$lv1 stripes 3
 check lv_field $vg/$lv1 data_stripes 3
-fsck -fn $DM_DEV_DIR/$vg/$lv1
+fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 # Convert raid5 -> raid10 (third + last step raid0_meta -> raid10)
 lvconvert -y --ty raid10 -R 256K $vg/$lv1
-fsck -fn $DM_DEV_DIR/$vg/$lv1
+fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 check lv_field $vg/$lv1 segtype "raid10"
 check lv_field $vg/$lv1 stripes 6
 check lv_field $vg/$lv1 data_stripes 3

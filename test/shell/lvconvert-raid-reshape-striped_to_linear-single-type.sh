@@ -32,10 +32,10 @@ check lv_first_seg_field $vg/$lv segtype "striped"
 check lv_first_seg_field $vg/$lv stripes 4
 check lv_first_seg_field $vg/$lv data_stripes 4
 check lv_first_seg_field $vg/$lv stripesize "64.00k"
-wipefs -a $DM_DEV_DIR/$vg/$lv
-mkfs -t ext4 $DM_DEV_DIR/$vg/$lv
-fsck -fn $DM_DEV_DIR/$vg/$lv
-lvextend -y -L64M $DM_DEV_DIR/$vg/$lv
+wipefs -a "$DM_DEV_DIR/$vg/$lv"
+mkfs -t ext4 "$DM_DEV_DIR/$vg/$lv"
+fsck -fn "$DM_DEV_DIR/$vg/$lv"
+lvextend -y -L64M $vg/$lv
 
 # Convert striped -> raid5_n
 lvconvert -y --type linear $vg/$lv
@@ -47,14 +47,14 @@ check lv_field $vg/$lv stripesize "64.00k"
 check lv_field $vg/$lv regionsize "512.00k"
 check lv_field $vg/$lv reshape_len_le 0
 aux wait_for_sync $vg $lv
-fsck -fn $DM_DEV_DIR/$vg/$lv
+fsck -fn "$DM_DEV_DIR/$vg/$lv"
 
 # Restripe raid5_n LV to single data stripe
 #
 # Need --force in order to remove stripes thus shrinking LV size!
 lvconvert -y --force --type linear $vg/$lv
 aux wait_for_sync $vg $lv 1
-fsck -fn $DM_DEV_DIR/$vg/$lv
+fsck -fn "$DM_DEV_DIR/$vg/$lv"
 # Remove the now freed stripes
 lvconvert -y --type linear $vg/$lv
 check lv_field $vg/$lv segtype "raid5_n"
@@ -72,7 +72,7 @@ check lv_field $vg/$lv data_stripes 2
 check lv_field $vg/$lv stripesize 0
 check lv_field $vg/$lv regionsize "512.00k"
 check lv_field $vg/$lv reshape_len_le ""
-fsck -fn $DM_DEV_DIR/$vg/$lv
+fsck -fn "$DM_DEV_DIR/$vg/$lv"
 
 # Convert raid1 -> linear
 lvconvert -y --type linear $vg/$lv
@@ -81,6 +81,6 @@ check lv_first_seg_field $vg/$lv stripes 1
 check lv_first_seg_field $vg/$lv data_stripes 1
 check lv_first_seg_field $vg/$lv stripesize 0
 check lv_first_seg_field $vg/$lv regionsize 0
-fsck -fn $DM_DEV_DIR/$vg/$lv
+fsck -fn "$DM_DEV_DIR/$vg/$lv"
 
 vgremove -ff $vg

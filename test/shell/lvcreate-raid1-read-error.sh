@@ -28,6 +28,6 @@ aux wait_for_sync $vg $lv
 
 aux error_dev "$dev1" 20:500
 
-dd if=$DM_DEV_DIR/$vg/$lv iflag=direct,fullblock of=/dev/zero bs=128K count=1
+dd if="$DM_DEV_DIR/$vg/$lv" iflag=direct,fullblock of=/dev/zero bs=128K count=1
 
 vgremove --force $vg

@@ -90,7 +90,7 @@ wait
 
 checksum_ "$mount_dir/random" >MD5_new
 
-umount $mount_dir
+umount "$mount_dir"
 
 fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
