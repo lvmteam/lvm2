@@ -4940,7 +4940,8 @@ static uint32_t _adjust_amount(dm_percent_t percent, int policy_threshold, int p
 	 * Keep using DM_PERCENT_1 units for better precision.
 	 * Round-up to needed percentage value
 	 */
-	percent = ((percent + policy_threshold - 1) / policy_threshold) / (DM_PERCENT_1 / 100) - 100;
+	policy_threshold *= (DM_PERCENT_1 / 100);
+	percent = (percent + policy_threshold - 1) / policy_threshold - 100;
 
 	/* Use it if current policy amount is smaller */
 	return (policy_amount < percent) ? (uint32_t) percent : (uint32_t) policy_amount;
