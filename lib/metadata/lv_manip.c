@@ -4724,7 +4724,9 @@ static int _lvresize_adjust_policy(const struct logical_volume *lv,
 		min_threshold = pool_metadata_min_threshold(first_seg(lv)) / DM_PERCENT_1;
 		*meta_amount = _adjust_amount(percent, (min_threshold < policy_threshold) ?
 					      min_threshold : policy_threshold, policy_amount);
-
+		if (*meta_amount)
+			/* Compensate possible extra space consumption by kernel on resize */
+			(*meta_amount)++;
 		if (!lv_thin_pool_percent(lv, 0, &percent))
 			return_0;
 	} else {
