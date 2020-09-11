@@ -1,5 +1,6 @@
 Version 2.02.188 - 
 ==================================
+  Improve estimation of needed extents when creating thin-pool.
   Use extra 1% when resizing thin-pool metadata LV with --use-policy.
   Enhance --use-policy percentage rounding.
   Switch code base to use flexible array syntax.
