@@ -1625,7 +1625,7 @@ have_raid4 () {
 }
 
 have_cache() {
-	lvm segtypes 2>/dev/null | grep cache$ >/dev/null || {
+	lvm segtypes 2>/dev/null | grep ' cache-pool$' >/dev/null || {
 		echo "Cache is not built-in." >&2
 		return 1
 	}
