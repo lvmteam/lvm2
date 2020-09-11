@@ -342,6 +342,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 	int lv_skipped = 0;
 	int needs_exclusive = *exclusive;
 	const struct logical_volume *holder;
+	const char *new_lv_name;
 
 	/* FIXME Cope with non-contiguous => splitting existing segments */
 	if (!(lv_mirr = lv_create_empty("pvmove%d", NULL,
@@ -379,8 +380,13 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		if (lv == lv_mirr)
 			continue;
 
-		if (lv_name && strcmp(lv->name, top_level_lv_name(vg, lv_name)))
-			continue;
+		if (lv_name) {
+			if (!(new_lv_name = top_level_lv_name(vg, lv_name)))
+				return_NULL;
+
+			if (strcmp(lv->name, new_lv_name))
+				continue;
+		}
 
 		if (!lv_is_on_pvs(lv, source_pvl))
 			continue;
