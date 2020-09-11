@@ -1,5 +1,6 @@
 Version 2.03.11 - 
 ==================================
+  Use extra 1% when resizing thin-pool metadata LV with --use-policy.
   Enhance --use-policy percentage rounding.
   Configure --with-vdo and --with-writecache as internal segments.
   Improving VDO man page examples.
