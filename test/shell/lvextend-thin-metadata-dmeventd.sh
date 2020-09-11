@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2014-2016 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2014-2020 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -91,7 +91,7 @@ lvchange -an $vg/pool
 # Consume more then (100% - 4MiB) out of 32MiB metadata volume  (>87.5%)
 # (Test for less than 4MiB free space in metadata, which is less than 25%)
 DATA=7200  # Newer version of thin-pool have hidden reserve, so use lower value
-aux target_at_least dm-thin-pool 1 20 0 || DATA=7400
+aux target_at_least dm-thin-pool 1 19 0 || DATA=7400
 fake_metadata_ "$DATA" 2 >data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv2"
 # Swap volume with restored fake metadata
@@ -177,7 +177,7 @@ lvchange -an $vg
 
 #
 DATA=300  # Newer version of thin-pool have hidden reserve, so use lower value
-aux target_at_least dm-thin-pool 1 20 0 || DATA=350
+aux target_at_least dm-thin-pool 1 19 0 || DATA=350
 fake_metadata_ $DATA 2 >data
 lvchange -ay $vg/$lv1
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
