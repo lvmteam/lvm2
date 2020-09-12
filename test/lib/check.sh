@@ -216,7 +216,7 @@ in_sync() {
 		idx=6
 		type=${a[3]}
 		if [ "${a[$(( idx + 1 ))]}" != "idle" ]; then
-			echo "$lvm_name ($type$snap) is not in-sync"
+			echo "$lvm_name ($type$snap) is not in-sync    " "${a[@]}"
 			return 1
 		fi
 		;;
@@ -234,19 +234,19 @@ in_sync() {
 	c=${a[$idx]##*/}
 
 	if [ "$b" -eq 0 ] || [ "$b" != "$c" ]; then
-		echo "$lvm_name ($type$snap) is not in-sync"
+		echo "$lvm_name ($type$snap) is not in-sync    " "${a[@]}"
 		return 1
 	fi
 
 	if [[ ${a[$(( idx - 1 ))]} =~ a ]] ; then
 		[ "$ignore_a" = 0 ] && \
 			die "$lvm_name ($type$snap) in-sync, but 'a' characters in health status"
-		echo "$lvm_name ($type$snap) is not in-sync"
+		echo "$lvm_name ($type$snap) is not in-sync    " "${a[@]}"
 		[ "$ignore_a" = 1 ] && return 0
 		return 1
 	fi
 
-	echo "$lvm_name ($type$snap) is in-sync" "${a[@]}"
+	echo "$lvm_name ($type$snap) is in-sync    " "${a[@]}"
 }
 
 active() {
