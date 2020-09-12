@@ -18,7 +18,7 @@ SKIP_WITH_LVMPOLLD=1
 # Test reshaping under io load
 
 which mkfs.ext4 || skip
-aux have_raid 1 13 2 || skip
+aux have_raid 1 14 0 || skip
 
 mount_dir="mnt"
 
