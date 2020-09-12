@@ -887,8 +887,8 @@ static int read_adopt_file(struct list_head *vg_lockd)
 			continue;
 		else if (!strncmp(adopt_line, "lvmlockd", 8)) {
 			unsigned int v_major = 0, v_minor = 0;
-			sscanf(adopt_line, "lvmlockd adopt_version %u.%u", &v_major, &v_minor);
-			if (v_major != ADOPT_VERSION_MAJOR)
+			if ((sscanf(adopt_line, "lvmlockd adopt_version %u.%u", &v_major, &v_minor) != 2) ||
+			    (v_major != ADOPT_VERSION_MAJOR))
 				goto fail;
 
 		} else if (!strncmp(adopt_line, "VG:", 3)) {
