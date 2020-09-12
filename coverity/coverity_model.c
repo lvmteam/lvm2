@@ -46,6 +46,7 @@ const char *find_config_tree_str(struct cmd_context *cmd, int id, struct profile
 	return "STRING";
 }
 
+/*
 struct logical_volume *origin_from_cow(const struct logical_volume *lv)
 {
 	if (lv)
@@ -53,6 +54,7 @@ struct logical_volume *origin_from_cow(const struct logical_volume *lv)
 
 	__coverity_panic__();
 }
+*/
 
 /* simple_memccpy() from glibc */
 void *memccpy(void *dest, const void *src, int c, size_t n)
