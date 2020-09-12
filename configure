@@ -15299,8 +15299,8 @@ $as_echo "$as_me: WARNING: You should install latest cache_check vsn 0.7.0 to us
 fi
 
 if test -n "$VDO_CONFIGURE_WARN"; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: unrecognized 'vdoformat' tool is REQUIRED for VDO logical volume creation!" >&5
-$as_echo "$as_me: WARNING: unrecognized 'vdoformat' tool is REQUIRED for VDO logical volume creation!" >&2;}
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Unrecognized 'vdoformat' tool is REQUIRED for VDO logical volume creation!" >&5
+$as_echo "$as_me: WARNING: Unrecognized 'vdoformat' tool is REQUIRED for VDO logical volume creation!" >&2;}
 fi
 
 

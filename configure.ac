@@ -1900,7 +1900,7 @@ AS_IF([test -n "$CACHE_CHECK_VERSION_WARN"],
       [AC_MSG_WARN([You should install latest cache_check vsn 0.7.0 to use lvm2 cache metadata format 2])])
 
 AS_IF([test -n "$VDO_CONFIGURE_WARN"],
-      [AC_MSG_WARN([unrecognized 'vdoformat' tool is REQUIRED for VDO logical volume creation!])])
+      [AC_MSG_WARN([Unrecognized 'vdoformat' tool is REQUIRED for VDO logical volume creation!])])
 
 
 AS_IF([test "$ODIRECT" != yes],
