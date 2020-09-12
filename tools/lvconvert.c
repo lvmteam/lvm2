@@ -1825,11 +1825,6 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 	struct volume_group *vg = cow->vg;
 	const char *cow_name = display_lvname(cow);
 
-	if (!lv_is_snapshot(cow)) {
-		log_error(INTERNAL_ERROR "Cow volume %s is not a snapshot.", cow_name);
-		return 0;
-	}
-
 	if (lv_is_virtual_origin(origin_from_cow(cow))) {
 		log_error("Unable to split off snapshot %s with virtual origin.", cow_name);
 		return 0;
