@@ -18,6 +18,9 @@ export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
 . lib/inittest
 
+# FIXME  update test to make something useful on <16T
+aux can_use_16T || skip
+
 #
 # Main
 #
@@ -29,7 +32,7 @@ get_devs
 
 vgcreate $SHARED -s 4K "$vg" "${DEVICES[@]}"
 
-not lvcreate -T -L15.995T -vvvv --poolmetadatasize 5G $vg/pool
+not lvcreate -T -L15.995T --poolmetadatasize 5G $vg/pool
 
 lvs -ao+seg_pe_ranges $vg
 
