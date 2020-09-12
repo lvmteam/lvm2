@@ -686,8 +686,7 @@ void daemon_start(daemon_state s)
 			perror("sigprocmask error");
 
 		if (ret < 0) {
-			if (errno != EINTR && errno != EAGAIN &&
-			    (EWOULDBLOCK == EAGAIN || errno != EWOULDBLOCK))
+			if ((errno != EINTR) && (errno != EAGAIN))
 				perror("select error");
 			continue;
 		}
