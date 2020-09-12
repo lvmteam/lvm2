@@ -113,7 +113,7 @@ _wait_sync() {
 	# enabled never gets in sync. I saw this in BB, but not when executing
 	# the commands manually
 	if test -z "$sync"; then
-		echo "TEST WARNING: Resync of dm-integrity device '$checklv' failed"
+		echo "TEST\ WARNING: Resync of dm-integrity device '$checklv' failed"
                 dmsetup status "$DM_DEV_DIR/mapper/${checklv/\//-}"
 		exit
 	fi
