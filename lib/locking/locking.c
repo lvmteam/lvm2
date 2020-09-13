@@ -183,7 +183,11 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource, uint32_t fla
 
 	block_signals(flags);
 
-	ret = _locking.lock_resource(cmd, resource, flags, NULL);
+	if ((ret = _locking.lock_resource(cmd, resource, flags, NULL)))
+		/* ensure signals are blocked while VG_GLOBAL lock is held */
+		_update_vg_lock_count(resource, flags);
+	else
+		stack;
 
 	_unblock_signals();
 
@@ -287,8 +291,6 @@ out_hold:
 	else if (lck_type == LCK_UNLOCK)
 		lvmcache_unlock_vgname(resource);
 
-	/* FIXME: we shouldn't need to keep track of this either. */
-	_update_vg_lock_count(resource, flags);
 	return 1;
 
 out_fail:

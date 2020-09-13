@@ -1,5 +1,6 @@
 Version 2.03.11 - 
 ==================================
+  Restore lost signal blocking while VG lock is held.
   Improve estimation of needed extents when creating thin-pool.
   Use extra 1% when resizing thin-pool metadata LV with --use-policy.
   Enhance --use-policy percentage rounding.
