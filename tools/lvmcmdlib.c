@@ -21,7 +21,6 @@
 
 #include "tools/lvm2cmd.h"
 
-#include <signal.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <sys/resource.h>

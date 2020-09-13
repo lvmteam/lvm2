@@ -23,7 +23,6 @@
 #include "stub.h"
 #include "lib/misc/last-path-component.h"
 
-#include <signal.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <sys/resource.h>
