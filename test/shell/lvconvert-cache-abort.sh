@@ -21,33 +21,34 @@ aux have_cache 1 3 0 || skip
 
 aux prepare_vg 2
 
+SIZE_MB=4
+
 # Data device on later delayed dev1
 lvcreate -L4 -n cpool $vg "$dev1"
 lvconvert -y --type cache-pool $vg/cpool "$dev2"
-lvcreate -H -L 4 -n $lv1 --chunksize 32k --cachemode writeback --cachepool $vg/cpool $vg "$dev2"
+lvcreate -H -L $SIZE_MB -n $lv1 --chunksize 32k --cachemode writeback --cachepool $vg/cpool $vg "$dev2"
 
 #
 # Ensure cache gets promoted blocks
 #
-for i in $(seq 1 10) ; do
+for i in $(seq 1 3) ; do
 echo 3 >/proc/sys/vm/drop_caches
-dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=64K count=20 conv=fdatasync || true
+dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=1M count=$SIZE_MB conv=fdatasync || true
 echo 3 >/proc/sys/vm/drop_caches
-dd if="$DM_DEV_DIR/$vg/$lv1" of=/dev/null bs=64K count=20 || true
+dd if="$DM_DEV_DIR/$vg/$lv1" of=/dev/null bs=1M count=$SIZE_MB || true
 done
 
+aux delay_dev "$dev2" 0 300 "$(get first_extent_sector "$dev2"):"
+dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=1M count=$SIZE_MB
 
+lvdisplay --maps $vg
 # Delay dev to ensure we have some time to 'capture' interrupt in flush
-aux delay_dev "$dev1" 100 0 "$(get first_extent_sector "$dev1"):"
 
 # TODO, how to make writeback cache dirty
 test "$(get lv_field $vg/$lv1 cache_dirty_blocks)" -gt 0 || {
 	lvdisplay --maps $vg
 	skip "Cannot make a dirty writeback cache LV."
 }
-
-sync
-dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=4k count=100 conv=fdatasync
 
 LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -v --splitcache $vg/$lv1 >logconvert 2>&1 &
 PID_CONVERT=$!
@@ -57,9 +58,15 @@ for i in {1..50}; do
 	echo "Waiting for cleaner policy on $vg/$lv1"
 	sleep .05
 done
+
+# While lvconvert updated table to 'cleaner' policy now it 
+# should be running in 'Flushing' loop and just 1 KILL should
+# cause abortion of flushing
 kill -INT $PID_CONVERT
-aux enable_dev "$dev1"
+aux enable_dev "$dev2"
 wait
+
+#cat logconvert || true
 
 grep -E "Flushing.*aborted" logconvert || {
 	cat logconvert || true
