@@ -20,12 +20,6 @@ export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 . lib/inittest
 
 
-# With thin-pool version >= 1.19 and kernel >= 4.18
-# slightly less metadata can fit.
-BIG_DATA="generate_more_metadata"
-aux target_at_least dm-thin-pool 1 19 0 && \
-	aux kernel_at_least 4 18 0 && BIG_DATA=""
-
 meta_percent_() {
 	get lv_field $vg/pool metadata_percent | cut -d. -f1
 }
@@ -65,6 +59,12 @@ fake_metadata_() {
 test -n "$LVM_TEST_THIN_RESTORE_CMD" || LVM_TEST_THIN_RESTORE_CMD=$(which thin_restore) || skip
 "$LVM_TEST_THIN_RESTORE_CMD" -V || skip
 aux have_thin 1 10 0 || skip
+
+BIG_DATA=""
+case $("$LVM_TEST_THIN_RESTORE_CMD" -V) in
+	# With older version of thin-tool we got slightly more compact metadata
+	0.[0..6]*) BIG_DATA="generate_more_metadata" ;;
+esac
 
 aux prepare_dmeventd
 
