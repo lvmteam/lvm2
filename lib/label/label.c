@@ -1514,53 +1514,7 @@ bool dev_invalidate_bytes(struct device *dev, uint64_t start, size_t len)
 
 bool dev_write_zeros(struct device *dev, uint64_t start, size_t len)
 {
-	if (test_mode())
-		return true;
-
-	if (!scan_bcache) {
-		log_error("dev_write_zeros bcache not set up %s", dev_name(dev));
-		return false;
-	}
-
-	if (_in_bcache(dev) && !(dev->flags & DEV_BCACHE_WRITE)) {
-		/* FIXME: avoid tossing out bcache blocks just to replace fd. */
-		log_debug("Close and reopen to write %s", dev_name(dev));
-		_invalidate_fd(scan_bcache, dev->bcache_fd);
-		_scan_dev_close(dev);
-
-		dev->flags |= DEV_BCACHE_WRITE;
-		label_scan_open(dev);
-	}
-
-	if (dev->bcache_fd <= 0) {
-		/* This is not often needed. */
-		dev->flags |= DEV_BCACHE_WRITE;
-		if (!label_scan_open(dev)) {
-			log_error("Error opening device %s for writing at %llu length %u.",
-				  dev_name(dev), (unsigned long long)start, (uint32_t)len);
-			return false;
-		}
-	}
-
-	dev_set_last_byte(dev, start + len);
-
-	if (!bcache_zero_bytes(scan_bcache, dev->bcache_fd, start, len)) {
-		log_error("Error writing device %s at %llu length %u.",
-			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
-		dev_unset_last_byte(dev);
-		label_scan_invalidate(dev);
-		return false;
-	}
-
-	if (!bcache_flush(scan_bcache)) {
-		log_error("Error writing device %s at %llu length %u.",
-			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
-		dev_unset_last_byte(dev);
-		label_scan_invalidate(dev);
-		return false;
-	}
-	dev_unset_last_byte(dev);
-	return true;
+	return dev_set_bytes(dev, start, len, 0);
 }
 
 bool dev_set_bytes(struct device *dev, uint64_t start, size_t len, uint8_t val)
@@ -1593,7 +1547,8 @@ bool dev_set_bytes(struct device *dev, uint64_t start, size_t len, uint8_t val)
 
 	dev_set_last_byte(dev, start + len);
 
-	if (!bcache_set_bytes(scan_bcache, dev->bcache_fd, start, len, val)) {
+	if ((!val && !bcache_zero_bytes(scan_bcache, dev->bcache_fd, start, len)) ||
+	    !bcache_set_bytes(scan_bcache, dev->bcache_fd, start, len, val)) {
 		log_error("Error writing device %s at %llu length %u.",
 			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
 		dev_unset_last_byte(dev);
