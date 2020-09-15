@@ -390,7 +390,8 @@ struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 	}
 
 	if (!deactivate_lv(data_lv->vg->cmd, data_lv)) {
-		log_error("Aborting. Manual intervention required.");
+		log_error("Cannot deactivate formated VDO pool volume %s.",
+			  display_lvname(data_lv));
 		return NULL;
 	}
 
