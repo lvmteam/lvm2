@@ -888,10 +888,7 @@ int label_scan(struct cmd_context *cmd)
 		 * label_scan should not generally be called a second time,
 		 * so this will usually not be true.
 		 */
-		if (_in_bcache(dev)) {
-			_invalidate_fd(scan_bcache, dev->bcache_fd);
-			_scan_dev_close(dev);
-		}
+		label_scan_invalidate(dev);
 
 		/*
 		 * When md devices exist that use the old superblock at the
@@ -1072,12 +1069,8 @@ int label_scan_devs(struct cmd_context *cmd, struct dev_filter *f, struct dm_lis
 			return 0;
 	}
 
-	dm_list_iterate_items(devl, devs) {
-		if (_in_bcache(devl->dev)) {
-			_invalidate_fd(scan_bcache, devl->dev->bcache_fd);
-			_scan_dev_close(devl->dev);
-		}
-	}
+	dm_list_iterate_items(devl, devs)
+		label_scan_invalidate(devl->dev);
 
 	_scan_list(cmd, f, devs, NULL);
 
@@ -1092,10 +1085,7 @@ int label_scan_devs_rw(struct cmd_context *cmd, struct dev_filter *f, struct dm_
 	int failed = 0;
 
 	dm_list_iterate_items(devl, devs) {
-		if (_in_bcache(devl->dev)) {
-			_invalidate_fd(scan_bcache, devl->dev->bcache_fd);
-			_scan_dev_close(devl->dev);
-		}
+		label_scan_invalidate(devl->dev);
 
 		/* _scan_dev_open will open(RDWR) when this flag is set */
 		devl->dev->flags |= DEV_BCACHE_WRITE;
@@ -1114,10 +1104,7 @@ int label_scan_devs_excl(struct dm_list *devs)
 	int failed = 0;
 
 	dm_list_iterate_items(devl, devs) {
-		if (_in_bcache(devl->dev)) {
-			_invalidate_fd(scan_bcache, devl->dev->bcache_fd);
-			_scan_dev_close(devl->dev);
-		}
+		label_scan_invalidate(devl->dev);
 		/*
 		 * With this flag set, _scan_dev_open() done by
 		 * _scan_list() will do open EXCL
@@ -1215,10 +1202,7 @@ int label_read(struct device *dev)
 	dm_list_init(&one_dev);
 	dm_list_add(&one_dev, &devl->list);
 
-	if (_in_bcache(dev)) {
-		_invalidate_fd(scan_bcache, dev->bcache_fd);
-		_scan_dev_close(dev);
-	}
+	label_scan_invalidate(dev);
 
 	_scan_list(NULL, NULL, &one_dev, &failed);
 
@@ -1562,4 +1546,3 @@ void dev_unset_last_byte(struct device *dev)
 {
 	bcache_unset_last_byte(scan_bcache, dev->bcache_fd);
 }
-
