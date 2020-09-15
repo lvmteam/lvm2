@@ -774,9 +774,9 @@ struct logical_volume *lv_create_empty(const char *name,
 				       struct volume_group *vg);
 
 struct wipe_params {
-	int do_zero;		/* should we do zeroing of LV start? */
 	uint64_t zero_sectors;	/* sector count to zero */
-	int zero_value;		/* zero-out with this value */
+	uint8_t zero_value;	/* zero-out with this value */
+	int do_zero;		/* should we do zeroing of LV start? */
 	int do_wipe_signatures;	/* should we wipe known signatures found on LV? */
 	int yes;		/* answer yes automatically to all questions */
 	force_t force;		/* force mode */
