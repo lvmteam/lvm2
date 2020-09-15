@@ -325,8 +325,8 @@ static int _init_mirror_log(struct cmd_context *cmd,
 
 	if (activation()) {
 		if (!wipe_lv(log_lv, (struct wipe_params)
-			     { .do_zero = 1, .zero_sectors = log_lv->size,
-			       .zero_value = in_sync ? -1 : 0 })) {
+			     { .zero_sectors = log_lv->size, .do_zero = 1,
+			       .zero_value = in_sync ? 0xff : 0 })) {
 			log_error("Aborting. Failed to wipe mirror log.");
 			goto deactivate_and_revert_new_lv;
 		}
