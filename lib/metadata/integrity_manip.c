@@ -533,7 +533,7 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 	 */
 	for (s = 0; s < area_count; s++) {
 		struct logical_volume *meta_lv;
-		struct wipe_params wipe = { .do_zero = 1, .zero_sectors = 8 };
+		struct wipe_params wipe = { .do_zero = 1 };
 
 		if (s >= DEFAULT_RAID_MAX_IMAGES)
 			goto_bad;
