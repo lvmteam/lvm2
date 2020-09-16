@@ -50,7 +50,7 @@ which mkfs.xfs || skip
 
 case $(cache_check -V) in
 # support for v2 starts with version 0.7
-0.[0..6]*) skip 'At least version 0.7 of cache_check tool is needed.' ;;
+0.[0-6]*) skip 'At least version 0.7 of cache_check tool is needed.' ;;
 esac
 
 mount_dir="mnt"

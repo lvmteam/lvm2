@@ -63,7 +63,7 @@ aux have_thin 1 10 0 || skip
 BIG_DATA=""
 case $("$LVM_TEST_THIN_RESTORE_CMD" -V) in
 	# With older version of thin-tool we got slightly more compact metadata
-	0.[0..6]*) BIG_DATA="generate_more_metadata" ;;
+	0.[0-6]*) BIG_DATA="generate_more_metadata" ;;
 esac
 
 aux prepare_dmeventd
