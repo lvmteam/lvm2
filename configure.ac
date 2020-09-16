@@ -673,7 +673,7 @@ AC_MSG_CHECKING(whether to include integrity)
 AC_ARG_WITH(integrity,
 	    AC_HELP_STRING([--with-integrity=TYPE],
 			   [integrity support: internal/none [none]]),
-			   INTEGRITY=$withval, INTEGRITY="none")
+			   INTEGRITY=$withval, INTEGRITY="internal")
 
 AC_MSG_RESULT($INTEGRITY)
 

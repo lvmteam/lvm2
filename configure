@@ -9771,7 +9771,7 @@ $as_echo_n "checking whether to include integrity... " >&6; }
 if test "${with_integrity+set}" = set; then :
   withval=$with_integrity; INTEGRITY=$withval
 else
-  INTEGRITY="none"
+  INTEGRITY="internal"
 fi
 
 
