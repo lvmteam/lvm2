@@ -1414,6 +1414,8 @@ bool dev_write_zeros(struct device *dev, uint64_t start, size_t len)
 
 bool dev_set_bytes(struct device *dev, uint64_t start, size_t len, uint8_t val)
 {
+	bool rv;
+
 	if (test_mode())
 		return true;
 
@@ -1444,25 +1446,30 @@ bool dev_set_bytes(struct device *dev, uint64_t start, size_t len, uint8_t val)
 
 	dev_set_last_byte(dev, start + len);
 
-	if ((!val && !bcache_zero_bytes(scan_bcache, dev->bcache_fd, start, len)) ||
-	    !bcache_set_bytes(scan_bcache, dev->bcache_fd, start, len, val)) {
-		log_error("Error writing device %s at %llu length %u.",
+	if (!val)
+		rv = bcache_zero_bytes(scan_bcache, dev->bcache_fd, start, len);
+	else
+		rv = bcache_set_bytes(scan_bcache, dev->bcache_fd, start, len, val);
+
+	if (!rv) {
+		log_error("Error writing device value %s at %llu length %u.",
 			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
-		dev_unset_last_byte(dev);
-		label_scan_invalidate(dev);
-		return false;
+		goto fail;
 	}
 
 	if (!bcache_flush(scan_bcache)) {
 		log_error("Error writing device %s at %llu length %u.",
 			  dev_name(dev), (unsigned long long)start, (uint32_t)len);
-		dev_unset_last_byte(dev);
-		label_scan_invalidate(dev);
-		return false;
+		goto fail;
 	}
 
 	dev_unset_last_byte(dev);
 	return true;
+
+fail:
+	dev_unset_last_byte(dev);
+	label_scan_invalidate(dev);
+	return false;
 }
 
 void dev_set_last_byte(struct device *dev, uint64_t offset)
