@@ -24,8 +24,9 @@ mkdir -p $mnt
 aux prepare_devs 5 64
 
 printf "%0.sA" {1..16384} >> fileA
-printf "%0.sB" {1..16384} >> fileB
-printf "%0.sC" {1..16384} >> fileC
+# instead of long debug 'printf' log use 'sed' and just replace A->B|C
+sed -e 's,A,B,g' fileA > fileB
+sed -e 's,A,C,g' fileA > fileC
 
 # generate random data
 dd if=/dev/urandom of=randA bs=512K count=2
@@ -35,11 +36,11 @@ dd if=/dev/urandom of=randC bs=512K count=4
 _prepare_vg() {
 	# zero devs so we are sure to find the correct file data
 	# on the underlying devs when corrupting it
-	dd if=/dev/zero of="$dev1" || true
-	dd if=/dev/zero of="$dev2" || true
-	dd if=/dev/zero of="$dev3" || true
-	dd if=/dev/zero of="$dev4" || true
-	dd if=/dev/zero of="$dev5" || true
+	dd if=/dev/zero of="$dev1" bs=1M || true
+	dd if=/dev/zero of="$dev2" bs=1M || true
+	dd if=/dev/zero of="$dev3" bs=1M || true
+	dd if=/dev/zero of="$dev4" bs=1M || true
+	dd if=/dev/zero of="$dev5" bs=1M || true
 	vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 	pvs
 }
@@ -66,10 +67,13 @@ _test_fs_with_error() {
 	# on the last 4096 byte block.
 	xxd "$dev1" > dev1.txt
 	tac dev1.txt > dev1.rev
+	rm -f dev1.txt
 	sed -e '0,/4242 4242 4242 4242 4242 4242 4242 4242/ s/4242 4242 4242 4242 4242 4242 4242 4242/4242 4242 4242 4242 4242 4242 4242 4243/' dev1.rev > dev1.rev.bad
+	rm -f dev1.rev
 	tac dev1.rev.bad > dev1.bad
+	rm -f dev1.rev.bad
 	xxd -r dev1.bad > "$dev1"
-	rm dev1.txt dev1.rev dev1.rev.bad dev1.bad
+	rm -f dev1.bad
 
 	lvchange -ay $vg/$lv1
 	mount "$DM_DEV_DIR/$vg/$lv1" $mnt
