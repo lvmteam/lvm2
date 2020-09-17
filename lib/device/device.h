@@ -71,6 +71,7 @@ struct device {
 	int logical_block_size;  /* From BLKSSZGET: lowest possible block size that the storage device can address */
 	int read_ahead;
 	int bcache_fd;
+	int bcache_di;
 	uint32_t flags;
 	unsigned size_seqno;
 	uint64_t size;

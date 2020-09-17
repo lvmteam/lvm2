@@ -66,6 +66,7 @@ static void _dev_init(struct device *dev)
 {
 	dev->fd = -1;
 	dev->bcache_fd = -1;
+	dev->bcache_di = -1;
 	dev->read_ahead = -1;
 
 	dev->ext.enabled = 0;

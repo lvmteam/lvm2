@@ -4732,6 +4732,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	 * we check that they are unchanged in all mdas.  This added checking is
 	 * probably unnecessary; all commands could likely just check a single mda.
 	 */
+
 	if (lvmcache_scan_mismatch(cmd, vgname, vgid) || _scan_text_mismatch(cmd, vgname, vgid)) {
 		log_debug_metadata("Rescanning devices for %s %s", vgname, writing ? "rw" : "");
 		if (writing)

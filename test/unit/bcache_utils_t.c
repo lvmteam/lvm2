@@ -32,6 +32,7 @@
 
 struct fixture {
 	int fd;
+	int di;
 	char fname[32];
 	struct bcache *cache;
 };
@@ -84,6 +85,8 @@ static void *_fix_init(struct io_engine *engine)
 	f->cache = bcache_create(T_BLOCK_SIZE / 512, NR_BLOCKS, engine);
 	T_ASSERT(f->cache);
 
+	f->di = bcache_set_fd(f->fd);
+
         return f;
 }
 
@@ -107,6 +110,7 @@ static void _fix_exit(void *fixture)
 
 	bcache_destroy(f->cache);
 	close(f->fd);
+	bcache_clear_fd(f->di);
 	unlink(f->fname);
         free(f);
 }
@@ -140,7 +144,7 @@ static void _verify(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uint8_t
         	unsigned i;
         	size_t len2 = byte_e - byte_b;
 		uint8_t *buffer = malloc(len2);
-		T_ASSERT(bcache_read_bytes(f->cache, f->fd, byte_b, len2, buffer));
+		T_ASSERT(bcache_read_bytes(f->cache, f->di, byte_b, len2, buffer));
 		for (i = 0; i < len; i++)
         		T_ASSERT_EQUAL(buffer[i], _pattern_at(pat, byte_b + i));
         	free(buffer);
@@ -148,7 +152,7 @@ static void _verify(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uint8_t
 
 	// Verify again, driving bcache directly
 	for (; bb != be; bb++) {
-        	T_ASSERT(bcache_get(f->cache, f->fd, bb, 0, &b));
+        	T_ASSERT(bcache_get(f->cache, f->di, bb, 0, &b));
 
 		blen = _min(T_BLOCK_SIZE - offset, len);
         	_verify_bytes(b, bb * T_BLOCK_SIZE, offset, blen, pat);
@@ -170,7 +174,7 @@ static void _verify_set(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uin
 	uint64_t blen, len = byte_e - byte_b;
 
 	for (; bb != be; bb++) {
-        	T_ASSERT(bcache_get(f->cache, f->fd, bb, 0, &b));
+        	T_ASSERT(bcache_get(f->cache, f->di, bb, 0, &b));
 
 		blen = _min(T_BLOCK_SIZE - offset, len);
 		for (i = 0; i < blen; i++)
@@ -198,18 +202,18 @@ static void _do_write(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uint8
         for (i = 0; i < len; i++)
 		buffer[i] = _pattern_at(pat, byte_b + i);
 
-        T_ASSERT(bcache_write_bytes(f->cache, f->fd, byte_b, byte_e - byte_b, buffer));
+        T_ASSERT(bcache_write_bytes(f->cache, f->di, byte_b, byte_e - byte_b, buffer));
 	free(buffer);
 }
 
 static void _do_zero(struct fixture *f, uint64_t byte_b, uint64_t byte_e)
 {
-	T_ASSERT(bcache_zero_bytes(f->cache, f->fd, byte_b, byte_e - byte_b));
+	T_ASSERT(bcache_zero_bytes(f->cache, f->di, byte_b, byte_e - byte_b));
 }
 
 static void _do_set(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uint8_t val)
 {
-	T_ASSERT(bcache_set_bytes(f->cache, f->fd, byte_b, byte_e - byte_b, val));
+	T_ASSERT(bcache_set_bytes(f->cache, f->di, byte_b, byte_e - byte_b, val));
 }
 
 static void _reopen(struct fixture *f)
@@ -222,6 +226,8 @@ static void _reopen(struct fixture *f)
 
 	f->cache = bcache_create(T_BLOCK_SIZE / 512, NR_BLOCKS, engine);
 	T_ASSERT(f->cache);
+
+	f->di = bcache_set_fd(f->fd);
 }
 
 //----------------------------------------------------------------

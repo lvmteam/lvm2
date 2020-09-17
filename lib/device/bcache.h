@@ -34,7 +34,7 @@ typedef void io_complete_fn(void *context, int io_error);
 
 struct io_engine {
 	void (*destroy)(struct io_engine *e);
-	bool (*issue)(struct io_engine *e, enum dir d, int fd,
+	bool (*issue)(struct io_engine *e, enum dir d, int di,
 		      sector_t sb, sector_t se, void *data, void *context);
 	bool (*wait)(struct io_engine *e, io_complete_fn fn);
 	unsigned (*max_io)(struct io_engine *e);
@@ -48,7 +48,7 @@ struct io_engine *create_sync_io_engine(void);
 struct bcache;
 struct block {
 	/* clients may only access these three fields */
-	int fd;
+	int di;
 	uint64_t index;
 	void *data;
 
@@ -106,12 +106,12 @@ unsigned bcache_max_prefetches(struct bcache *cache);
  * they complete.  But we're talking a very small difference, and it's worth it
  * to keep callbacks out of this interface.
  */
-void bcache_prefetch(struct bcache *cache, int fd, block_address index);
+void bcache_prefetch(struct bcache *cache, int di, block_address index);
 
 /*
  * Returns true on success.
  */
-bool bcache_get(struct bcache *cache, int fd, block_address index,
+bool bcache_get(struct bcache *cache, int di, block_address index,
 	        unsigned flags, struct block **result);
 void bcache_put(struct block *b);
 
@@ -129,38 +129,42 @@ bool bcache_flush(struct bcache *cache);
  * 
  * If the block is currently held false will be returned.
  */
-bool bcache_invalidate(struct bcache *cache, int fd, block_address index);
+bool bcache_invalidate(struct bcache *cache, int di, block_address index);
 
 /*
  * Invalidates all blocks on the given descriptor.  Call this before closing
  * the descriptor to make sure everything is written back.
  */
-bool bcache_invalidate_fd(struct bcache *cache, int fd);
+bool bcache_invalidate_di(struct bcache *cache, int di);
 
 /*
  * Call this function if flush, or invalidate fail and you do not
  * wish to retry the writes.  This will throw away any dirty data
- * not written.  If any blocks for fd are held, then it will call
+ * not written.  If any blocks for di are held, then it will call
  * abort().
  */
-void bcache_abort_fd(struct bcache *cache, int fd);
+void bcache_abort_di(struct bcache *cache, int di);
 
 //----------------------------------------------------------------
 // The next four functions are utilities written in terms of the above api.
  
 // Prefetches the blocks neccessary to satisfy a byte range.
-void bcache_prefetch_bytes(struct bcache *cache, int fd, uint64_t start, size_t len);
+void bcache_prefetch_bytes(struct bcache *cache, int di, uint64_t start, size_t len);
 
 // Reads, writes and zeroes bytes.  Returns false if errors occur.
-bool bcache_read_bytes(struct bcache *cache, int fd, uint64_t start, size_t len, void *data);
-bool bcache_write_bytes(struct bcache *cache, int fd, uint64_t start, size_t len, void *data);
-bool bcache_zero_bytes(struct bcache *cache, int fd, uint64_t start, size_t len);
-bool bcache_set_bytes(struct bcache *cache, int fd, uint64_t start, size_t len, uint8_t val);
-bool bcache_invalidate_bytes(struct bcache *cache, int fd, uint64_t start, size_t len);
+bool bcache_read_bytes(struct bcache *cache, int di, uint64_t start, size_t len, void *data);
+bool bcache_write_bytes(struct bcache *cache, int di, uint64_t start, size_t len, void *data);
+bool bcache_zero_bytes(struct bcache *cache, int di, uint64_t start, size_t len);
+bool bcache_set_bytes(struct bcache *cache, int di, uint64_t start, size_t len, uint8_t val);
+bool bcache_invalidate_bytes(struct bcache *cache, int di, uint64_t start, size_t len);
 
-void bcache_set_last_byte(struct bcache *cache, int fd, uint64_t offset, int sector_size);
-void bcache_unset_last_byte(struct bcache *cache, int fd);
+void bcache_set_last_byte(struct bcache *cache, int di, uint64_t offset, int sector_size);
+void bcache_unset_last_byte(struct bcache *cache, int di);
 
 //----------------------------------------------------------------
+
+int bcache_set_fd(int fd); /* returns di */
+void bcache_clear_fd(int di);
+int bcache_change_fd(int di, int fd);
 
 #endif

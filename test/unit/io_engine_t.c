@@ -35,6 +35,7 @@ struct fixture {
 
 	char fname[64];
 	int fd;
+	int di;
 };
 
 static void _fill_buffer(uint8_t *buffer, uint8_t seed, size_t count)
@@ -102,6 +103,7 @@ static void _fix_exit(void *fixture)
         struct fixture *f = fixture;
 
 	close(f->fd);
+	bcache_clear_fd(f->di);
 	unlink(f->fname);
         free(f->data);
         if (f->e)
@@ -135,11 +137,14 @@ static void _complete_io(void *context, int io_error)
 static void _test_read(void *fixture)
 {
 	struct fixture *f = fixture;
-
 	struct io io;
+	struct bcache *cache = bcache_create(8, BLOCK_SIZE_SECTORS, f->e);
+	T_ASSERT(cache);
+
+	f->di = bcache_set_fd(f->fd);
 
 	_io_init(&io);
-	T_ASSERT(f->e->issue(f->e, DIR_READ, f->fd, 0, BLOCK_SIZE_SECTORS, f->data, &io));
+	T_ASSERT(f->e->issue(f->e, DIR_READ, f->di, 0, BLOCK_SIZE_SECTORS, f->data, &io));
 	T_ASSERT(f->e->wait(f->e, _complete_io));
 	T_ASSERT(io.completed);
 	T_ASSERT(!io.error);
@@ -150,11 +155,14 @@ static void _test_read(void *fixture)
 static void _test_write(void *fixture)
 {
 	struct fixture *f = fixture;
-
 	struct io io;
+	struct bcache *cache = bcache_create(8, BLOCK_SIZE_SECTORS, f->e);
+	T_ASSERT(cache);
+
+	f->di = bcache_set_fd(f->fd);
 
 	_io_init(&io);
-	T_ASSERT(f->e->issue(f->e, DIR_WRITE, f->fd, 0, BLOCK_SIZE_SECTORS, f->data, &io));
+	T_ASSERT(f->e->issue(f->e, DIR_WRITE, f->di, 0, BLOCK_SIZE_SECTORS, f->data, &io));
 	T_ASSERT(f->e->wait(f->e, _complete_io));
 	T_ASSERT(io.completed);
 	T_ASSERT(!io.error);
@@ -170,10 +178,12 @@ static void _test_write_bytes(void *fixture)
 	struct bcache *cache = bcache_create(8, BLOCK_SIZE_SECTORS, f->e);
 	T_ASSERT(cache);
 
-	// T_ASSERT(bcache_read_bytes(cache, f->fd, offset, sizeof(buf_in), buf_in));
+	f->di = bcache_set_fd(f->fd);
+
+	// T_ASSERT(bcache_read_bytes(cache, f->di, offset, sizeof(buf_in), buf_in));
 	_fill_buffer((uint8_t *) buf_out, 234, sizeof(buf_out));
-	T_ASSERT(bcache_write_bytes(cache, f->fd, offset, sizeof(buf_out), buf_out));
-	T_ASSERT(bcache_read_bytes(cache, f->fd, offset, sizeof(buf_in), buf_in));
+	T_ASSERT(bcache_write_bytes(cache, f->di, offset, sizeof(buf_out), buf_out));
+	T_ASSERT(bcache_read_bytes(cache, f->di, offset, sizeof(buf_in), buf_in));
 
 	_print_buffer("buf_out", (uint8_t *) buf_out, sizeof(buf_out));
 	_print_buffer("buf_in", (uint8_t *) buf_in, sizeof(buf_in));

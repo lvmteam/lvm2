@@ -5579,7 +5579,7 @@ do_command:
 	 * Wipe signatures on devices being created.
 	 */
 	dm_list_iterate_items_safe(pd, pd2, &pp->arg_create) {
-		label_scan_open(pd->dev);
+		label_scan_open_excl(pd->dev);
 
 		log_verbose("Wiping signatures on new PV %s.", pd->name);
 
