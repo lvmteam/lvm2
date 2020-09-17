@@ -18,6 +18,21 @@ aux have_integrity 1 5 0 || skip
 
 losetup -h | grep sector-size || skip
 
+
+cleanup_mounted_and_teardown()
+{
+	umount "$mnt" || true
+	vgremove -ff $vg1 $vg2 || true
+	losetup -d $LOOP1 || true
+	losetup -d $LOOP2 || true
+	losetup -d $LOOP3 || true
+	losetup -d $LOOP4 || true
+
+	rm -f loop{abcd}
+	aux teardown
+}
+
+
 # Tests with fs block sizes require a libblkid version that shows BLOCK_SIZE
 aux prepare_devs 1
 vgcreate $vg "$dev1"
@@ -26,6 +41,8 @@ mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
 blkid "$DM_DEV_DIR/$vg/$lv1" | grep BLOCK_SIZE || skip
 lvchange -an $vg
 vgremove -ff $vg
+
+trap 'cleanup_mounted_and_teardown' EXIT
 
 dd if=/dev/zero of=loopa bs=$((1024*1024)) count=64 2> /dev/null
 dd if=/dev/zero of=loopb bs=$((1024*1024)) count=64 2> /dev/null
@@ -270,15 +287,4 @@ pvck --dump metadata $LOOP3 | grep 'block_size = 4096'
 lvchange -an $vg2/$lv1
 lvremove -y $vg2/$lv1
 
-vgremove -ff $vg1
-vgremove -ff $vg2
-
-losetup -d $LOOP1
-losetup -d $LOOP2
-losetup -d $LOOP3
-losetup -d $LOOP4
-rm loopa
-rm loopb
-rm loopc
-rm loopd
-
+# remove of $vg1, $vg2 and loops in cleanup_mounted_and_teardown()
