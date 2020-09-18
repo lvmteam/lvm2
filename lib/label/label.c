@@ -1447,6 +1447,69 @@ int label_scan_open_rw(struct device *dev)
 	return label_scan_open(dev);
 }
 
+int label_scan_reopen_rw(struct device *dev)
+{
+	int flags = 0;
+	int prev_fd = dev->bcache_fd;
+	int fd;
+
+	if (!(dev->flags & DEV_IN_BCACHE)) {
+		if ((dev->bcache_fd != -1) || (dev->bcache_di != -1)) {
+			/* shouldn't happen */
+			log_debug("Reopen writeable %s uncached fd %d di %d",
+				  dev_name(dev), dev->bcache_fd, dev->bcache_di);
+			return 0;
+		}
+		goto do_open;
+	}
+
+	if ((dev->flags & DEV_BCACHE_WRITE))
+		return 1;
+
+	if (dev->bcache_fd == -1) {
+		log_error("Failed to open writable %s index %d fd none",
+			  dev_name(dev), dev->bcache_di);
+		return 0;
+	}
+	if (dev->bcache_di == -1) {
+		log_error("Failed to open writeable %s index none fd %d",
+			  dev_name(dev), dev->bcache_fd);
+		return 0;
+	}
+
+ do_open:
+	flags |= O_DIRECT;
+	flags |= O_NOATIME;
+	flags |= O_RDWR;
+
+	fd = open(dev_name(dev), flags, 0777);
+	if (fd < 0) {
+		log_error("Failed to open rw %s errno %d di %d fd %d.",
+			  dev_name(dev), errno, dev->bcache_di, dev->bcache_fd);
+		return 0;
+	}
+
+	if (!bcache_change_fd(dev->bcache_di, fd)) {
+		log_error("Failed to change to rw fd %s di %d fd %d.",
+			  dev_name(dev), dev->bcache_di, fd);
+		close(fd);
+		return 0;
+	}
+
+	if (close(dev->bcache_fd))
+		log_debug("reopen writeable %s close prev errno %d di %d fd %d.",
+			  dev_name(dev), errno, dev->bcache_di, dev->bcache_fd);
+
+	dev->flags |= DEV_IN_BCACHE;
+	dev->flags |= DEV_BCACHE_WRITE;
+	dev->bcache_fd = fd;
+
+	log_debug("reopen writable %s di %d prev %d fd %d",
+		  dev_name(dev), dev->bcache_di, prev_fd, fd);
+
+	return 1;
+}
+
 bool dev_read_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 {
 	if (!scan_bcache) {

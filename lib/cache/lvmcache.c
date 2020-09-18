@@ -996,6 +996,22 @@ int lvmcache_label_rescan_vg_rw(struct cmd_context *cmd, const char *vgname, con
 	return _label_rescan_vg(cmd, vgname, vgid, 1);
 }
 
+int lvmcache_label_reopen_vg_rw(struct cmd_context *cmd, const char *vgname, const char *vgid)
+{
+	struct lvmcache_vginfo *vginfo;
+	struct lvmcache_info *info;
+
+	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid)))
+		return_0;
+
+	dm_list_iterate_items(info, &vginfo->infos) {
+		if (!label_scan_reopen_rw(info->dev))
+			return_0;
+	}
+
+	return 1;
+}
+
 /*
  * Uses label_scan to populate lvmcache with 'vginfo' struct for each VG
  * and associated 'info' structs for those VGs.  Only VG summary information

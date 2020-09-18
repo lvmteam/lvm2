@@ -4689,6 +4689,15 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	log_debug_metadata("Reading VG %s %s", vgname ?: "<no name>", vgid ?: "<no vgid>");
 
 	/*
+	 * Devices are generally open readonly from scanning, and we need to
+	 * reopen them rw to update metadata.  We want to reopen them rw before
+	 * before rescanning and/or writing.  Reopening rw preserves the existing
+	 * bcache blocks for the devs.
+	 */
+	if (writing)
+		lvmcache_label_reopen_vg_rw(cmd, vgname, vgid);
+
+	/*
 	 * Rescan the devices that are associated with this vg in lvmcache.
 	 * This repeats what was done by the command's initial label scan,
 	 * but only the devices associated with this VG.
