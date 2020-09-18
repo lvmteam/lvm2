@@ -115,10 +115,13 @@ _test_fs_with_raid() {
 
 	xxd "$dev1" > dev1.txt
 	tac dev1.txt > dev1.rev
+	rm -f dev1.txt
 	sed -e '0,/4242 4242 4242 4242 4242 4242 4242 4242/ s/4242 4242 4242 4242 4242 4242 4242 4242/4242 4242 4242 4242 4242 4242 4242 4243/' dev1.rev > dev1.rev.bad
+	rm -f dev1.rev
 	tac dev1.rev.bad > dev1.bad
+	rm -f dev1.rev.bad
 	xxd -r dev1.bad > "$dev1"
-	rm dev1.txt dev1.rev dev1.rev.bad dev1.bad
+	rm -f dev1.bad
 
 	lvchange -ay $vg/$lv1
 	mount "$DM_DEV_DIR/$vg/$lv1" $mnt
