@@ -32,6 +32,8 @@ cleanup_mounted_and_teardown()
 	aux teardown
 }
 
+mnt="mnt"
+mkdir -p $mnt
 
 # Tests with fs block sizes require a libblkid version that shows BLOCK_SIZE
 aux prepare_devs 1
@@ -64,9 +66,6 @@ aux extend_filter "a|$LOOP3|"
 aux extend_filter "a|$LOOP4|"
 
 aux lvmconf 'devices/scan = "/dev"'
-
-mnt="mnt"
-mkdir -p $mnt
 
 vgcreate $vg1 $LOOP1 $LOOP2
 vgcreate $vg2 $LOOP3 $LOOP4
