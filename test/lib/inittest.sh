@@ -50,6 +50,7 @@ SKIP_WITH_LVMETAD=${SKIP_WITH_LVMETAD-}
 SKIP_WITH_LVMPOLLD=${SKIP_WITH_LVMPOLLD-}
 SKIP_WITH_LVMLOCKD=${SKIP_WITH_LVMLOCKD-}
 SKIP_ROOT_DM_CHECK=${SKIP_ROOT_DM_CHECK-}
+SKIP_WITH_LOW_SPACE=${SKIP_WITH_LOW_SPACE-50}
 
 test -n "$LVM_TEST_FLAVOUR" || { echo "NOTE: Empty flavour">&2; initskip; }
 test -f "lib/flavour-$LVM_TEST_FLAVOUR" || { echo "NOTE: Flavour '$LVM_TEST_FLAVOUR' does not exist">&2; initskip; }
@@ -134,10 +135,9 @@ elif test -z "$SKIP_ROOT_DM_CHECK" ; then
 fi
 
 echo "$TESTNAME" >TESTNAME
-
 # Require 50M of free space in testdir
-test "$(df -k -P . | awk '/\// {print $4}')" -gt 51200 || \
-	skip "Testing requires more then 50M of free space in directory $TESTDIR!\\n$(df -H | sed -e 's,^,## DF:   ,')"
+test "$(df -k -P . | awk '/\// {print $4}')" -gt $(( SKIP_WITH_LOW_SPACE * 1024 )) || \
+	skip "Testing requires more then ${SKIP_WITH_LOW_SPACE}M of free space in directory $TESTDIR!\\n$(df -H | sed -e 's,^,## DF:   ,')"
 
 echo "Kernel is $(uname -a)"
 # Report SELinux mode
