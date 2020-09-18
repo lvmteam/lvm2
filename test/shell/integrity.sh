@@ -23,10 +23,11 @@ mkdir -p $mnt
 
 aux prepare_devs 5 64
 
-printf "%0.sA" {1..16384} >> fileA
-# instead of long debug 'printf' log use 'sed' and just replace A->B|C
-sed -e 's,A,B,g' fileA > fileB
-sed -e 's,A,C,g' fileA > fileC
+# Use awk instead of anoyingly long log out from printf
+#printf "%0.sA" {1..16384} >> fileA
+awk 'BEGIN { while (z++ < 16384) printf "A" }' > fileA
+awk 'BEGIN { while (z++ < 16384) printf "B" }' > fileB
+awk 'BEGIN { while (z++ < 16384) printf "C" }' > fileC
 
 # generate random data
 dd if=/dev/urandom of=randA bs=512K count=2
