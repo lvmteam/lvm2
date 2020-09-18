@@ -1117,7 +1117,13 @@ restore_from_devtable() {
 	for dev in "$@"; do
 		local name=${dev##*/}
 		dmsetup load "$name" "$name.devtable"
-		dmsetup resume "$name"
+		if not dmsetup resume "$name" ; then
+			dmsetup clear $name
+			dmsetup resume $name
+			finish_udev_transaction
+			echo "Device $name has unusable table \"$(cat $name.devtable)\""
+			return 1
+		fi
 	done
 	finish_udev_transaction
 
