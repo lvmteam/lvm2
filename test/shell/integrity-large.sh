@@ -13,6 +13,7 @@
 # Test writecache usage
 
 SKIP_WITH_LVMPOLLD=1
+SKIP_WITH_LOW_SPACE=1100
 
 . lib/inittest
 
@@ -25,9 +26,24 @@ mkdir -p $mnt
 # raid1 LV needs to be extended to 512MB to test imeta being exended
 aux prepare_devs 4 632
 
-printf "%0.sA" {1..16384} >> fileA
-printf "%0.sB" {1..16384} >> fileB
-printf "%0.sC" {1..16384} >> fileC
+# this test may consume lot of disk space - so make sure cleaning works
+# also in failure case
+cleanup_mounted_and_teardown()
+{
+	umount "$mnt" 2>/dev/null || true
+	# Comment out this 'vgremove' when there is any need to analyze
+	# content of the failed test dir, otherwise all is deleted.
+	vgremove -ff $vg || true
+	aux teardown
+}
+
+trap 'cleanup_mounted_and_teardown' EXIT
+
+# Use awk instead of anoyingly long log out from printf
+#printf "%0.sA" {1..16384} >> fileA
+awk 'BEGIN { while (z++ < 16384) printf "A" }' > fileA
+awk 'BEGIN { while (z++ < 16384) printf "B" }' > fileB
+awk 'BEGIN { while (z++ < 16384) printf "C" }' > fileC
 
 # generate random data
 dd if=/dev/urandom of=randA bs=512K count=2
@@ -84,7 +100,7 @@ _sync_percent() {
 _wait_recalc() {
 	local checklv=$1
 
-	for i in $(seq 1 10) ; do
+	for i in $(seq 1 20) ; do
 		sync=$(_sync_percent "$checklv")
 		echo "sync_percent is $sync"
 
@@ -159,10 +175,15 @@ check lv_field $vg/${lv1}_rimage_1_imeta size "20.00m"
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 
+# As the test doesn't wait for full resync
+# delay legs so not all data need to be written.
+aux delay_dev "$dev1" 1000 0 "$(( $(get first_extent_sector "$dev1") + 16000 )):1200000"
+aux delay_dev "$dev2" 0 10 "$(( $(get first_extent_sector "$dev2") + 16000 )):1200000"
+
+
 # this succeeds because dev1,dev2 can hold rmeta+rimage
 lvcreate --type raid1 -n $lv1 -L 592M -an $vg "$dev1" "$dev2"
 lvs -a -o+devices $vg
-lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 
 # this fails because dev1,dev2 can hold rmeta+rimage, but not imeta
@@ -185,4 +206,3 @@ lvcreate --type raid1 --raidintegrity y -n $lv1 -L 640M -an $vg
 lvs -a -o+devices $vg
 
 vgremove -ff $vg
-
