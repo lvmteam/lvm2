@@ -22,10 +22,11 @@ mkdir -p $mnt
 
 aux prepare_devs 6 64
 
-printf "%0.sA" {1..16384} >> fileA
-# instead of long debug 'printf' log use 'sed' and just replace A->B|C
-sed -e 's,A,B,g' fileA > fileB
-sed -e 's,A,C,g' fileA > fileC
+# Use awk instead of anoyingly long log out from printf
+#printf "%0.sA" {1..16384} >> fileA
+awk 'BEGIN { while (z++ < 16384) printf "A" }' > fileA
+awk 'BEGIN { while (z++ < 16384) printf "B" }' > fileB
+awk 'BEGIN { while (z++ < 16384) printf "C" }' > fileC
 
 # generate random data
 dd if=/dev/urandom of=randA bs=512K count=2
@@ -143,10 +144,10 @@ aux disable_dev "$dev2"
 
 # wait for dmeventd to call lvconvert --repair which should
 # replace dev2 with dev4
+sync
 sleep 5
 
-lvs -a -o+devices $vg > out
-cat out
+lvs -a -o+devices $vg | tee out
 not grep "$dev2" out
 grep "$dev4" out
 
@@ -155,8 +156,7 @@ _verify_data_on_mnt
 
 aux enable_dev "$dev2"
 
-lvs -a -o+devices $vg > out
-cat out
+lvs -a -o+devices $vg | tee out
 not grep "$dev2" out
 grep "$dev4" out
 grep "$dev1" out
@@ -185,10 +185,10 @@ aux disable_dev "$dev1"
 
 # wait for dmeventd to call lvconvert --repair which should
 # replace dev1 and dev2 with dev4 and dev5
+sync
 sleep 5
 
-lvs -a -o+devices $vg > out
-cat out
+lvs -a -o+devices $vg | tee out
 not grep "$dev1" out
 not grep "$dev2" out
 grep "$dev4" out
@@ -201,8 +201,7 @@ _verify_data_on_mnt
 aux enable_dev "$dev1"
 aux enable_dev "$dev2"
 
-lvs -a -o+devices $vg > out
-cat out
+lvs -a -o+devices $vg | tee out
 not grep "$dev1" out
 not grep "$dev2" out
 grep "$dev4" out
@@ -233,10 +232,10 @@ aux disable_dev "$dev2"
 
 # wait for dmeventd to call lvconvert --repair which should
 # replace dev2 with dev6
+sync
 sleep 5
 
-lvs -a -o+devices $vg > out
-cat out
+lvs -a -o+devices $vg | tee out
 not grep "$dev2" out
 grep "$dev6" out
 
@@ -245,8 +244,7 @@ _verify_data_on_mnt
 
 aux enable_dev "$dev2"
 
-lvs -a -o+devices $vg > out
-cat out
+lvs -a -o+devices $vg | tee out
 not grep "$dev2" out
 grep "$dev6" out
 
@@ -273,10 +271,10 @@ aux disable_dev "$dev1"
 
 # wait for dmeventd to call lvconvert --repair which should
 # replace dev1 with dev5
+sync
 sleep 5
 
-lvs -a -o+devices $vg > out
-cat out
+lvs -a -o+devices $vg | tee out
 not grep "$dev1" out
 grep "$dev5" out
 
@@ -285,8 +283,7 @@ _verify_data_on_mnt
 
 aux enable_dev "$dev1"
 
-lvs -a -o+devices $vg > out
-cat out
+lvs -a -o+devices $vg | tee out
 not grep "$dev1" out
 grep "$dev5" out
 
