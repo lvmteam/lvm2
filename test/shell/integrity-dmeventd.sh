@@ -39,7 +39,7 @@ _prepare_vg() {
 }
 
 _add_new_data_to_mnt() {
-        mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+	mkfs.xfs -f -s size=4096 "$DM_DEV_DIR/$vg/$lv1"
 
         mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 

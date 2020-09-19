@@ -47,7 +47,7 @@ _prepare_vg() {
 }
 
 _test_fs_with_error() {
-	mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+	mkfs.xfs -f -s size=4096 "$DM_DEV_DIR/$vg/$lv1"
 
 	mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 
@@ -97,7 +97,7 @@ _test_fs_with_error() {
 }
 
 _test_fs_with_raid() {
-	mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+	mkfs.xfs -f -s size=4096 "$DM_DEV_DIR/$vg/$lv1"
 
 	mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 
@@ -144,7 +144,7 @@ _test_fs_with_raid() {
 }
 
 _add_new_data_to_mnt() {
-	mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+	mkfs.xfs -f -s size=4096 "$DM_DEV_DIR/$vg/$lv1"
 
 	mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 
