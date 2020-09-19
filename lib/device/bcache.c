@@ -1514,7 +1514,11 @@ void bcache_clear_fd(int di)
 int bcache_change_fd(int di, int fd)
 {
 	if (di >= _fd_table_size)
-		return -1;
+		return 0;
+	if (di < 0) {
+		log_error(INTERNAL_ERROR "Cannot change not openned DI with FD:%d", fd);
+		return 0;
+	}
 	_fd_table[di] = fd;
 	return 1;
 }
