@@ -399,6 +399,8 @@ lvcreate -l1 -an $vg
 # One PV, one mda, pv_header zeroed, unmatching dev name requires specified uuid
 _clear_devs "$dev1" "$dev2"
 vgcreate $vg "$dev1"
+#!!! FIXME: with this hits INTERNAL_ERROR
+#!!! vgcreate $vg "$dev1" "$dev2"
 pvck --dump headers "$dev1" || true
 UUID1=`pvck --dump headers "$dev1" | grep pv_header.pv_uuid | awk '{print $2}'`
 echo $UUID1
