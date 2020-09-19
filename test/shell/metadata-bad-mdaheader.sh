@@ -27,9 +27,9 @@ get_devs
 # is needed.
 #
 
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
-dd if=/dev/zero of="$dev3" || true
+dd if=/dev/zero of="$dev1" bs=1M count=1 oflag=direct
+dd if=/dev/zero of="$dev2" bs=1M count=1 oflag=direct
+dd if=/dev/zero of="$dev3" bs=1M count=1 oflag=direct
 
 vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3"
 
@@ -74,5 +74,3 @@ pvs "$dev3"
 
 vgchange -an $vg
 vgremove -ff $vg
-
-

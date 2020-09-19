@@ -32,9 +32,9 @@ lvcreate -H -L14 -n $lv1 --cachemode writeback --cachesettings migration_thresho
 
 for i in $(seq 1 10) ; do 
 echo 3 >/proc/sys/vm/drop_caches
-dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=64K count=20 conv=fdatasync || true
+dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=64K count=20 oflag=direct || true
 echo 3 >/proc/sys/vm/drop_caches
-dd if="$DM_DEV_DIR/$vg/$lv1" of=/dev/null bs=64K count=20 || true
+dd if="$DM_DEV_DIR/$vg/$lv1" of=/dev/null bs=64K count=20 oflag=direct || true
 done
 
 lvs -o+cache_dirty_blocks,cache_read_hits,cache_read_misses,cache_write_hits,cache_write_misses $vg/$lv1

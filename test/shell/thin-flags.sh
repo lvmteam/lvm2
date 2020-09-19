@@ -47,7 +47,7 @@ lvchange -an $vg
 
 # Overfill data area
 lvchange -ay $vg
-dd if=/dev/zero of="$DM_DEV_DIR/mapper/$vg-$lv2" bs=1M count=2
+dd if=/dev/zero of="$DM_DEV_DIR/mapper/$vg-$lv2" bs=1M count=2 oflag=direct
 check lv_attr_bit health $vg/pool "D"
 # TODO use spaces ??
 check lv_field $vg/pool lv_health_status "out_of_data"
@@ -78,7 +78,7 @@ lvchange -ay $vg
 
 lvchange -ay $vg/$lv2
 # Provisiong and last free bits in metadata
-dd if=/dev/zero of="$DM_DEV_DIR/mapper/$vg-$lv2" bs=32K count=1
+dd if=/dev/zero of="$DM_DEV_DIR/mapper/$vg-$lv2" bs=32K count=1 oflag=direct
 
 check lv_attr_bit health $vg/pool "M"
 # TODO - use spaces ??

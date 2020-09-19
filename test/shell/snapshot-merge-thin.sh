@@ -23,7 +23,7 @@ aux prepare_vg 2
 
 lvcreate -T -L1 -V1 -n $lv1 $vg/pool "$dev1"
 lvcreate -s -n $lv2 -L2 $vg/$lv1 "$dev2"
-dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv2" bs=1M count=1 conv=fdatasync
+dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv2" bs=1M count=1 oflag=direct
 
 # Initiate background merge
 lvconvert -b --merge $vg/$lv2

@@ -37,11 +37,11 @@ dd if=/dev/urandom of=randC bs=512K count=4
 _prepare_vg() {
 	# zero devs so we are sure to find the correct file data
 	# on the underlying devs when corrupting it
-	dd if=/dev/zero of="$dev1" bs=1M || true
-	dd if=/dev/zero of="$dev2" bs=1M || true
-	dd if=/dev/zero of="$dev3" bs=1M || true
-	dd if=/dev/zero of="$dev4" bs=1M || true
-	dd if=/dev/zero of="$dev5" bs=1M || true
+	dd if=/dev/zero of="$dev1" bs=1M oflag=direct || true
+	dd if=/dev/zero of="$dev2" bs=1M oflag=direct || true
+	dd if=/dev/zero of="$dev3" bs=1M oflag=direct || true
+	dd if=/dev/zero of="$dev4" bs=1M oflag=direct || true
+	dd if=/dev/zero of="$dev5" bs=1M oflag=direct || true
 	vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 	pvs
 }

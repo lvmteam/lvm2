@@ -17,11 +17,11 @@ SIZE_MB=80
 aux prepare_devs 4 $SIZE_MB
 get_devs
 
-dd if=/dev/zero of="$dev1" bs=1M count=2 conv=fdatasync
-dd if=/dev/zero of="$dev2" bs=1M count=2 conv=fdatasync
+dd if=/dev/zero of="$dev1" bs=1M count=2 oflag=direct
+dd if=/dev/zero of="$dev2" bs=1M count=2 oflag=direct
 # clear entire dev to cover mda2
-dd if=/dev/zero of="$dev3" bs=1M count=$SIZE_MB conv=fdatasync
-dd if=/dev/zero of="$dev4" bs=1M count=2 conv=fdatasync
+dd if=/dev/zero of="$dev3" bs=1M count=$SIZE_MB oflag=direct
+dd if=/dev/zero of="$dev4" bs=1M count=2 oflag=direct
 
 pvcreate "$dev1"
 pvcreate "$dev2"
@@ -136,10 +136,10 @@ vgremove -ff $vg
 
 
 # clear entire dev to cover mda2
-dd if=/dev/zero of="$dev1" bs=1M count=$SIZE_MB conv=fdatasync
-dd if=/dev/zero of="$dev2" bs=1M count=32 conv=fdatasync
-dd if=/dev/zero of="$dev3" bs=1M count=32 conv=fdatasync
-dd if=/dev/zero of="$dev4" bs=1M count=32 conv=fdatasync
+dd if=/dev/zero of="$dev1" bs=1M count=$SIZE_MB oflag=direct
+dd if=/dev/zero of="$dev2" bs=1M count=32 oflag=direct
+dd if=/dev/zero of="$dev3" bs=1M count=32 oflag=direct
+dd if=/dev/zero of="$dev4" bs=1M count=32 oflag=direct
 
 pvcreate --pvmetadatacopies 2 --metadatasize 32M "$dev1"
 
@@ -160,7 +160,7 @@ dd if="$dev1" of=dev1dd bs=1M count=34
 # Clear the header so that we force metadata_search to use
 # the settings instead of getting the mda_size/mda_offset
 # from the headers.
-dd if=/dev/zero of="$dev1" bs=4K count=1
+dd if=/dev/zero of="$dev1" bs=4K count=1 oflag=direct
 
 # Warning: these checks are based on copying specific numbers
 # seen when running these commands, but these numbers could
@@ -192,6 +192,6 @@ grep "seqno 477" m1b
 grep "seqno 478" m1b
 grep "seqno 500" m2
 
-dd if=dev1dd of="$dev1" bs=4K count=1
+dd if=dev1dd of="$dev1" bs=4K count=1 oflag=direct
 
 vgremove -ff $vg

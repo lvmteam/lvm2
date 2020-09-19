@@ -49,7 +49,7 @@ lvcreate -V10G $vg/pool3 -n $lv1
 lvcreate -V2G $vg/pool3 -n $lv2
 dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=512b count=1 conv=fdatasync
 # ...excercise write speed to 'zero' device ;)
-dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv2" bs=64K count=32767 conv=fdatasync
+dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv2" bs=64K count=32767 oflag=direct
 lvs -a $vg
 # Check the percentage is not shown as 0.00
 check lv_field $vg/$lv1 data_percent "0.01"

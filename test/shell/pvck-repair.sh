@@ -12,13 +12,33 @@
 
 . lib/inittest
 
-aux prepare_devs 2
+SIZE=34
+
+_prepare_vg() {
+	rm -f meta debug.log_DEBUG*
+	for i in "$@" ; do
+		dd if=/dev/zero of="$i" bs=1M count=1 oflag=direct
+	done
+	vgcreate $vg "$@"
+}
+
+_clear_devs() {
+	rm -f meta debug.log_DEBUG*
+	for i in "$@" ; do
+		dd if=/dev/zero of="$i" bs=1M count=$SIZE oflag=direct
+	done
+}
+
+_prepare_vg_with_copy() {
+        _clear_devs "$@"
+	vgcreate --pvmetadatacopies 2 $vg "$@"
+}
+
+aux prepare_devs 2 $SIZE
 get_devs
 
 # One PV, one mda, pv_header zeroed
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-vgcreate $vg "$dev1"
+_prepare_vg "$dev1"
 dd if=/dev/zero of="$dev1" bs=512 count=2
 pvck --dump headers "$dev1" || true
 pvck --dump metadata_search --settings seqno=1 -f meta "$dev1" || true
@@ -28,9 +48,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # One PV, one mda, mda_header zeroed
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-vgcreate $vg "$dev1"
+_prepare_vg "$dev1"
 dd if=/dev/zero of="$dev1" bs=512 count=1 seek=8
 pvck --dump headers "$dev1" || true
 pvck --dump metadata_search --settings seqno=1 -f meta "$dev1" || true
@@ -40,9 +58,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # One PV, one mda, pv_header and mda_header zeroed
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-vgcreate $vg "$dev1"
+_prepare_vg "$dev1"
 dd if=/dev/zero of="$dev1" bs=512 count=2
 dd if=/dev/zero of="$dev1" bs=512 count=1 seek=8
 pvck --dump headers "$dev1" || true
@@ -53,9 +69,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # One PV, one mda, metadata zeroed, use backup
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-vgcreate $vg "$dev1"
+_prepare_vg "$dev1"
 vgcfgbackup
 dd if=/dev/zero of="$dev1" bs=512 count=2 seek=9
 pvck --dump headers "$dev1" || true
@@ -67,9 +81,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # One PV, one mda, mda_header and metadata zeroed, use backup
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-vgcreate $vg "$dev1"
+_prepare_vg "$dev1"
 vgcfgbackup
 dd if=/dev/zero of="$dev1" bs=512 count=3 seek=8
 pvck --dump headers "$dev1" || true
@@ -81,9 +93,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # One PV, one mda, pv_header, mda_header and metadata zeroed, use backup
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-vgcreate $vg "$dev1"
+_prepare_vg "$dev1"
 vgcfgbackup
 dd if=/dev/zero of="$dev1" bs=512 count=2
 dd if=/dev/zero of="$dev1" bs=512 count=3 seek=8
@@ -96,9 +106,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # One PV, two mdas, pv_header zeroed
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-vgcreate --pvmetadatacopies 2 $vg "$dev1"
+_prepare_vg_with_copy "$dev1"
 dd if=/dev/zero of="$dev1" bs=512 count=2
 pvck --dump headers "$dev1" || true
 pvck --dump metadata_search --settings seqno=1 -f meta "$dev1" || true
@@ -108,9 +116,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # One PV, two mdas, mda_header1 zeroed
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-vgcreate --pvmetadatacopies 2 $vg "$dev1"
+_prepare_vg_with_copy "$dev1"
 pvck --dump headers "$dev1" || true
 dd if=/dev/zero of="$dev1" bs=512 count=1 seek=8
 pvck --dump headers "$dev1" || true
@@ -125,9 +131,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # One PV, two mdas, pv_header and mda_header1 zeroed
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-vgcreate --pvmetadatacopies 2 $vg "$dev1"
+_prepare_vg_with_copy "$dev1"
 pvck --dump headers "$dev1" || true
 dd if=/dev/zero of="$dev1" bs=512 count=2
 dd if=/dev/zero of="$dev1" bs=512 count=1 seek=8
@@ -143,9 +147,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # One PV, two mdas, metadata1 zeroed, use mda2
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-vgcreate --pvmetadatacopies 2 $vg "$dev1"
+_prepare_vg_with_copy "$dev1"
 pvck --dump headers "$dev1" || true
 dd if=/dev/zero of="$dev1" bs=512 count=2 seek=9
 pvck --dump headers "$dev1" || true
@@ -157,9 +159,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # One PV, two mdas, mda_header1 and metadata1 zeroed, use mda2
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-vgcreate --pvmetadatacopies 2 $vg "$dev1"
+_prepare_vg_with_copy "$dev1"
 pvck --dump headers "$dev1" || true
 dd if=/dev/zero of="$dev1" bs=512 count=3 seek=8
 pvck --dump headers "$dev1" || true
@@ -171,9 +171,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # One PV, two mdas, pv_header, mda_header1 and metadata1 zeroed, use mda2
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-vgcreate --pvmetadatacopies 2 $vg "$dev1"
+_prepare_vg_with_copy "$dev1"
 pvck --dump headers "$dev1" || true
 dd if=/dev/zero of="$dev1" bs=512 count=2
 dd if=/dev/zero of="$dev1" bs=512 count=3 seek=8
@@ -190,9 +188,7 @@ lvcreate -l1 -an $vg
 
 # One PV, two mdas, pv_header, both mda_header, and both metadata zeroed, use backup
 # only writes mda1 since there's no evidence that mda2 existed
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-vgcreate --pvmetadatacopies 2 $vg "$dev1"
+_prepare_vg_with_copy "$dev1"
 pvck --dump headers "$dev1" || true
 vgcfgbackup
 dd if=/dev/zero of="$dev1" bs=512 count=2
@@ -210,9 +206,7 @@ lvcreate -l1 -an $vg
 
 # One PV, two mdas, pv_header, both mda_header, and both metadata zeroed, use backup
 # writes mda1 and also mda2 because of the mda2 settings passed to repair
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-vgcreate --pvmetadatacopies 2 $vg "$dev1"
+_prepare_vg_with_copy "$dev1"
 pvck --dump headers "$dev1" || true
 vgcfgbackup
 dd if=/dev/zero of="$dev1" bs=512 count=2
@@ -229,10 +223,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # Two PV, one mda each, pv_header and mda_header zeroed on each
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
-vgcreate $vg "$dev1" "$dev2"
+_prepare_vg "$dev1" "$dev2"
 dd if=/dev/zero of="$dev1" bs=512 count=2
 dd if=/dev/zero of="$dev2" bs=512 count=2
 dd if=/dev/zero of="$dev1" bs=512 count=1 seek=8
@@ -248,10 +239,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # Two PV, one mda each, metadata zeroed on each, use backup
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
-vgcreate $vg "$dev1" "$dev2"
+_prepare_vg "$dev1" "$dev2"
 vgcfgbackup
 dd if=/dev/zero of="$dev1" bs=512 count=2 seek=9
 dd if=/dev/zero of="$dev2" bs=512 count=2 seek=9
@@ -265,10 +253,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # Two PV, one mda each, pv_header, mda_header and metadata zeroed on each, use backup
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
-vgcreate $vg "$dev1" "$dev2"
+_prepare_vg "$dev1" "$dev2"
 vgcfgbackup
 dd if=/dev/zero of="$dev1" bs=512 count=2
 dd if=/dev/zero of="$dev2" bs=512 count=2
@@ -284,10 +269,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # Two PV, one mda each, pv_header and mda_header zeroed on first
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
-vgcreate $vg "$dev1" "$dev2"
+_prepare_vg "$dev1" "$dev2"
 dd if=/dev/zero of="$dev1" bs=512 count=2
 dd if=/dev/zero of="$dev1" bs=512 count=1 seek=8
 pvck --dump headers "$dev1" || true
@@ -299,10 +281,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # Two PV, one mda each, metadata zeroed on first
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
-vgcreate $vg "$dev1" "$dev2"
+_prepare_vg "$dev1" "$dev2"
 dd if=/dev/zero of="$dev1" bs=512 count=2 seek=9
 pvck --dump headers "$dev1" || true
 pvck --dump headers "$dev2" || true
@@ -313,10 +292,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # Two PV, one mda each, pv_header, mda_header and metadata zeroed on first
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
-vgcreate $vg "$dev1" "$dev2"
+_prepare_vg "$dev1" "$dev2"
 dd if=/dev/zero of="$dev1" bs=512 count=2
 dd if=/dev/zero of="$dev1" bs=512 count=3 seek=8
 pvck --dump headers "$dev1" || true
@@ -328,9 +304,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # Two PV, one mda on first, no mda on second, zero header on first
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
+_clear_devs "$dev1" "$dev2"
 pvcreate "$dev1"
 pvcreate --pvmetadatacopies 0 "$dev2"
 vgcreate $vg "$dev1" "$dev2"
@@ -344,9 +318,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # Two PV, one mda on first, no mda on second, zero headers on both
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
+_clear_devs "$dev1" "$dev2"
 pvcreate "$dev1"
 pvcreate --pvmetadatacopies 0 "$dev2"
 vgcreate $vg "$dev1" "$dev2"
@@ -363,9 +335,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # Two PV, one mda on first, no mda on second, zero all on first
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
+_clear_devs "$dev1" "$dev2"
 pvcreate "$dev1"
 pvcreate --pvmetadatacopies 0 "$dev2"
 vgcreate $vg "$dev1" "$dev2"
@@ -382,9 +352,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # Two PV, two mda on each, pv_header and mda_header1 zeroed on both
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
+_clear_devs "$dev1" "$dev2"
 pvcreate --pvmetadatacopies 2 "$dev1"
 pvcreate --pvmetadatacopies 2 "$dev2"
 vgcreate $vg "$dev1" "$dev2"
@@ -407,9 +375,7 @@ lvcreate -l1 -an $vg
 
 # Two PV, one mda each, pv_header and mda_header zeroed on each,
 # non-standard data_offset/mda_size on first
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
+_clear_devs "$dev1" "$dev2"
 pvcreate --metadatasize 2048k --dataalignment 128k "$dev1"
 pvcreate "$dev2"
 vgcreate $vg "$dev1" "$dev2"
@@ -431,9 +397,7 @@ vgs $vg
 lvcreate -l1 -an $vg
 
 # One PV, one mda, pv_header zeroed, unmatching dev name requires specified uuid
-rm meta || true
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
+_clear_devs "$dev1" "$dev2"
 vgcreate $vg "$dev1"
 pvck --dump headers "$dev1" || true
 UUID1=`pvck --dump headers "$dev1" | grep pv_header.pv_uuid | awk '{print $2}'`
@@ -450,3 +414,4 @@ pvck --dump headers "$dev1" || true
 vgs $vg
 lvcreate -l1 -an $vg
 
+vgremove -f $vg

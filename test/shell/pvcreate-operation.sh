@@ -181,7 +181,7 @@ grep "Not enough space available for metadata area with index 1 on PV $dev1" err
 rm -f "$backupfile"
 
 # pvcreate wipes swap signature when forced
-dd if=/dev/zero of="$dev1" bs=1024 count=64
+dd if=/dev/zero of="$dev1" bs=64k count=1 oflag=direct
 mkswap "$dev1"
 blkid -c /dev/null "$dev1" | grep "swap"
 pvcreate -f "$dev1"

@@ -22,11 +22,11 @@ aux prepare_devs 3 8
 
 vgcreate $SHARED "$vg" "$dev1" "$dev2"
 lvcreate -l100%FREE -n $lv $vg
-dd if="$dev1" of="$dev3" bs=1M
+dd if="$dev1" of="$dev3" bs=1M oflag=direct
 pvs --config "devices/global_filter = [ \"a|$dev2|\", \"a|$dev3|\", \"r|.*|\" ]" 2>err
 grep "WARNING: Device mismatch detected for $vg/$lv which is accessing $dev1 instead of $dev3" err
 
-dd if=/dev/zero of="$dev3" bs=1M count=8
+dd if=/dev/zero of="$dev3" bs=1M count=8 oflag=direct
 lvremove -ff $vg
 
 # Also test if sub LVs with suffixes are correctly processed.

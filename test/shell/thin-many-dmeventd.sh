@@ -34,7 +34,7 @@ for i in $(seq 1 5)
 do
 	lvcreate --errorwhenfull y -Zn -T -L4M -V4M $vg/pool_${i} -n $lv${i}
         # Fill thin-pool to some capacity >50%
-	dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv${i}" bs=256K count=9 conv=fdatasync
+	dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv${i}" bs=256K count=9 oflag=direct
 done
 
 lvs -a $vg
@@ -63,7 +63,7 @@ do
 	DIFF=$(( END - START ))
 	test "$DIFF" -lt 8 || die "Creation of thin pool took more then 8 second! ($DIFF seconds)"
 	# Fill thin-pool to some capacity >50%
-	dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv${i}" bs=256K count=9 conv=fdatasync
+	dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv${i}" bs=256K count=9 oflag=direct
 done
 
 vgremove -f $vg
