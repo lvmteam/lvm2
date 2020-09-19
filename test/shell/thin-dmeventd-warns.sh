@@ -46,19 +46,19 @@ aux prepare_vg
 lvcreate -L8 -V8 -T $vg/pool -n $lv1
 
 
-dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=256K count=26
+dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=256K count=26 oflag=direct
 test "$(percent_)" -gt 80
 
 # Give it some time to dmeventd to log WARNING
 wait_warn_ 1
 
-dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=256K count=30
+dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=256K count=30 oflag=direct
 test "$(percent_)" -gt 90
 
 # Give it some time to dmeventd to log WARNING
 wait_warn_ 2
 
-dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=1M count=8
+dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=1M count=8 oflag=direct
 test "$(percent_)" -eq 100
 
 wait_warn_ 3
@@ -73,7 +73,7 @@ sleep 11
 # below 'WARNED' threshold.
 
 
-dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=256K count=30
+dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=256K count=30 oflag=direct
 test "$(percent_)" -gt 90
 
 lvs -a $vg
