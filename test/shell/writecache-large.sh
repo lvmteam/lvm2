@@ -33,9 +33,9 @@ blockdev --getpbsz "$dev2"
 mnt="mnt"
 mkdir -p $mnt
 
-for i in `seq 1 16384`; do echo -n "A" >> fileA; done
-for i in `seq 1 16384`; do echo -n "B" >> fileB; done
-for i in `seq 1 16384`; do echo -n "C" >> fileC; done
+awk 'BEGIN { while (z++ < 16384) printf "A" }' > fileA
+awk 'BEGIN { while (z++ < 16384) printf "B" }' > fileB
+awk 'BEGIN { while (z++ < 16384) printf "C" }' > fileC
 
 # generate random data
 dd if=/dev/urandom of=randA bs=512K count=2
