@@ -782,7 +782,7 @@ lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvcreate --type raid1 -m1 -n $lv2 -l 8 $vg
 lvconvert -y --type cache --cachevol $lv2 $vg/$lv1
 not lvconvert --raidintegrity y $vg/${lv1}_corig
-not lvconvert --raidintegrity y $vg/${lv2}_vol
+not lvconvert --raidintegrity y $vg/${lv2}_cvol
 lvremove -y $vg/$lv1
 
 lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
@@ -790,6 +790,7 @@ lvcreate --type raid1 -m1 -n $lv2 -l 8 $vg
 lvconvert -y --type cache --cachepool $lv2 $vg/$lv1
 not lvconvert --raidintegrity y $vg/${lv1}_corig
 not lvconvert --raidintegrity y $vg/${lv2}_cpool_cdata
+not lvconvert --raidintegrity y $vg/${lv2}_cpool_cmeta
 lvremove -y $vg/$lv1
 
 # cannot add integrity to raid that has a snapshot
