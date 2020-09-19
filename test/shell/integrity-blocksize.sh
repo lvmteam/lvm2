@@ -23,12 +23,13 @@ cleanup_mounted_and_teardown()
 {
 	umount "$mnt" || true
 	vgremove -ff $vg1 $vg2 || true
-	losetup -d $LOOP1 || true
-	losetup -d $LOOP2 || true
-	losetup -d $LOOP3 || true
-	losetup -d $LOOP4 || true
 
-	rm -f loop{abcd}
+	test -n "${LOOP1-}" && { losetup -d "$LOOP1" || true ; }
+	test -n "${LOOP2-}" && { losetup -d "$LOOP2" || true ; }
+	test -n "${LOOP3-}" && { losetup -d "$LOOP3" || true ; }
+	test -n "${LOOP4-}" && { losetup -d "$LOOP4" || true ; }
+
+	rm -f loop[abcd]
 	aux teardown
 }
 
@@ -57,10 +58,10 @@ dd if=/dev/zero of=loopb bs=1M count=64 oflag=sync
 dd if=/dev/zero of=loopc bs=1M count=64 oflag=sync
 dd if=/dev/zero of=loopd bs=1M count=64 oflag=sync
 
-LOOP1=$(losetup -f loopa --show)
-LOOP2=$(losetup -f loopb --show)
-LOOP3=$(losetup -f loopc --sector-size 4096 --show)
-LOOP4=$(losetup -f loopd --sector-size 4096 --show)
+LOOP1=$(losetup -f loopa --show) || skip "Cannot find free loop device"
+LOOP2=$(losetup -f loopb --show) || skip "Cannot find free loop device"
+LOOP3=$(losetup -f loopc --sector-size 4096 --show) || skip "Loop cannot handle --sector-size 4096"
+LOOP4=$(losetup -f loopd --sector-size 4096 --show) || skip "Loop cannot handle --sector-size 4096"
 
 echo $LOOP1
 echo $LOOP2
