@@ -137,7 +137,7 @@ _run_test() {
 }
 
 # scsi_debug devices with 512 LBS 512 PBS
-aux prepare_scsi_debug_dev 256
+aux prepare_scsi_debug_dev 256 || skip
 aux prepare_devs 2 64
 
 # Tests with fs block sizes require a libblkid version that shows BLOCK_SIZE
@@ -160,7 +160,7 @@ aux cleanup_scsi_debug_dev
 
 
 # lbs=512, pbs=4096
-aux prepare_scsi_debug_dev 256 sector_size=512 physblk_exp=3 || skip
+aux prepare_scsi_debug_dev 256 sector_size=512 physblk_exp=3
 aux prepare_devs 2 64
 
 _check_env "512" "4096"
