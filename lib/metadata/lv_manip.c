@@ -5465,6 +5465,27 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 		else
 			seg_size = lp->extents - existing_extents;
 
+		if (lv_is_vdo_pool_data(lv)) {
+			if (!(seg = get_only_segment_using_this_lv(lv)))
+				return_0;
+			/* Min growth is defined this way:  max(1 slab, 128M + 128K (recovery journal + slab summary)) */
+			new_extents = max(seg->vdo_params.slab_size_mb * 1024, UINT32_C(128 * 1024 + 128));
+			new_extents *= (1024 >> SECTOR_SHIFT); /* minimal growth (~128MiB..32GiB) in sectors */
+
+			if (new_extents > vg->extent_size) {
+				/* Minimal growth in extent size units */
+				new_extents = (new_extents + vg->extent_size - 1) / vg->extent_size;
+
+				if (new_extents > seg_size) {
+					/* Notify user about extra increase of extension */
+					log_print_unless_silent("Increasing incremention size from %s to %s to fit new VDO slab.",
+								display_size(cmd, (uint64_t)seg_size * vg->extent_size),
+								display_size(cmd, (uint64_t)new_extents * vg->extent_size));
+					seg_size = new_extents;
+				}
+			}
+		}
+
 		/* Convert PEs to LEs */
 		if (lp->extents_are_pes && !seg_is_striped(seg_last) && !seg_is_virtual(seg_last)) {
 			area_multiple = _calc_area_multiple(seg_last->segtype, seg_last->area_count, 0);

@@ -1,5 +1,6 @@
 Version 2.03.11 - 
 ==================================
+  Lvextend of vdo pool volumes ensure at least 1 new VDO slab is added.
   Use revert_lv() on reload error path after vg_revert().
   Configure --with-integrity enabled.
   Restore lost signal blocking while VG lock is held.
