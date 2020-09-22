@@ -5121,7 +5121,7 @@ static int _lvresize_check(struct logical_volume *lv,
 	    !lv_is_cow(lv) &&
 	    !lv_is_thin_pool(lv) &&
 	    !lv_is_vdo_pool(lv)) {
-		log_error("Policy-based resize is supported only for snapshot and thin pool volumes.");
+		log_error("Policy-based resize is supported only for snapshot, thin pool and vdo pool volumes.");
 		return 0;
 	}
 
