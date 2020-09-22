@@ -302,10 +302,10 @@ static int _vdo_pool_text_export(const struct lv_segment *seg, struct formatter 
 	const struct dm_vdo_target_params *vtp = &seg->vdo_params;
 
 	outf(f, "data = \"%s\"", seg_lv(seg, 0)->name);
-	outsize(f, seg->vdo_pool_header_size, "header_size = %u\t",
+	outsize(f, seg->vdo_pool_header_size, "header_size = %u",
 		seg->vdo_pool_header_size);
 	outsize(f, seg->vdo_pool_virtual_extents * (uint64_t) seg->lv->vg->extent_size,
-		"virtual_extents = %u\t", seg->vdo_pool_virtual_extents);
+		"virtual_extents = %u", seg->vdo_pool_virtual_extents);
 
 	outnl(f);
 
