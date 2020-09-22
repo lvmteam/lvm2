@@ -1,5 +1,6 @@
 Version 2.03.11 - 
 ==================================
+  Use revert_lv() on reload error path after vg_revert().
   Configure --with-integrity enabled.
   Restore lost signal blocking while VG lock is held.
   Improve estimation of needed extents when creating thin-pool.

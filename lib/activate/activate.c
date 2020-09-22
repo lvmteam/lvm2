@@ -2322,6 +2322,9 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 			      lv_is_thin_volume(lv) ? " thin only" : " without snapshots") : "",
 			     laopts->revert ? " (reverting)" : "");
 
+	if (laopts->revert)
+		goto needs_resume;
+
 	if (!lv_info(cmd, lv, laopts->origin_only, &info, 0, 0))
 		goto_out;
 

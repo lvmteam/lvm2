@@ -6858,6 +6858,10 @@ static int _lv_update_and_reload(struct logical_volume *lv, int origin_only)
 		log_error("Failed to suspend logical volume %s.",
 			  display_lvname(lock_lv));
 		vg_revert(vg);
+		if (!revert_lv(vg->cmd, lock_lv))
+			log_error("Failed to revert logical volume %s.",
+				  display_lvname(lock_lv));
+		return 0;
 	} else if (!(r = vg_commit(vg)))
 		stack; /* !vg_commit() has implict vg_revert() */
 	else
