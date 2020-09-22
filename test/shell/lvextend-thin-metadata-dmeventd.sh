@@ -61,10 +61,7 @@ test -n "$LVM_TEST_THIN_RESTORE_CMD" || LVM_TEST_THIN_RESTORE_CMD=$(which thin_r
 aux have_thin 1 10 0 || skip
 
 BIG_DATA=""
-case $("$LVM_TEST_THIN_RESTORE_CMD" -V) in
-	# With older version of thin-tool we got slightly more compact metadata
-	0.[0-6]*|0.7.0*) BIG_DATA="generate_more_metadata" ;;
-esac
+aux thin_restore_needs_more_volumes && BIG_DATA="generate_more_metadata"
 
 aux prepare_dmeventd
 
