@@ -47,7 +47,7 @@ lvchange -an $vg
 
 # Overfill data area
 lvchange -ay $vg
-dd if=/dev/zero of="$DM_DEV_DIR/mapper/$vg-$lv2" bs=1M count=2 oflag=direct
+dd if=/dev/zero of="$DM_DEV_DIR/mapper/$vg-$lv2" bs=1M count=2 oflag=direct || true
 check lv_attr_bit health $vg/pool "D"
 # TODO use spaces ??
 check lv_field $vg/pool lv_health_status "out_of_data"
@@ -67,8 +67,15 @@ lvchange -an $vg
 aux lvmconf 'global/thin_check_executable = ""'
 
 # Prepare some fake metadata prefilled to ~100%
-lvcreate -L2 -n $lv1 $vg # tmp for metadata
-aux prepare_thin_metadata 490 1 | tee data
+lvcreate -L2 -n $lv1 $vg "$dev2" # tmp for metadata
+
+VOLS=490
+aux thin_restore_needs_more_volumes || VOLS=445
+aux prepare_thin_metadata $VOLS 1 | tee data
+
+# Note: we like want to test BOTH sizes (445 & 490) as ATM it gives
+# different errors (5.9-rc5 kernel does not handle it as expected by this test)
+
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 
 # Swap volume with restored fake metadata
@@ -78,12 +85,14 @@ lvchange -ay $vg
 
 lvchange -ay $vg/$lv2
 # Provisiong and last free bits in metadata
-dd if=/dev/zero of="$DM_DEV_DIR/mapper/$vg-$lv2" bs=32K count=1 oflag=direct
+dd if=/dev/zero of="$DM_DEV_DIR/mapper/$vg-$lv2" bs=1M count=1 oflag=direct || true
 
 check lv_attr_bit health $vg/pool "M"
 # TODO - use spaces ??
 check lv_field $vg/pool lv_health_status "metadata_read_only"
 check lv_attr_bit health $vg/$lv2 "-"
+
+lvs -ao+seg_pe_ranges $vg
 
 # needs_check needs newer version
 if aux have_thin 1 16 0 ; then
