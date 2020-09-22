@@ -1,5 +1,6 @@
 Version 2.02.188 - 
 ==================================
+  Use revert_lv() on reload error path after vg_revert().
   Improve estimation of needed extents when creating thin-pool.
   Use extra 1% when resizing thin-pool metadata LV with --use-policy.
   Enhance --use-policy percentage rounding.
