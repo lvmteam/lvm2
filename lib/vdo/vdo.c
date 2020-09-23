@@ -362,19 +362,21 @@ static int _vdo_pool_add_target_line(struct dev_manager *dm,
 				     struct dm_tree_node *node, uint64_t len,
 				     uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
-	char *data_uuid;
+	char *vdo_pool_name, *data_uuid;
 
 	if (!seg_is_vdo_pool(seg)) {
 		log_error(INTERNAL_ERROR "Passed segment is not VDO pool.");
 		return 0;
 	}
+	if (!(vdo_pool_name = dm_build_dm_name(mem, seg->lv->vg->name, seg->lv->name, lv_layer(seg->lv))))
+		return_0;
 
 	if (!(data_uuid = build_dm_uuid(mem, seg_lv(seg, 0), lv_layer(seg_lv(seg, 0)))))
 		return_0;
 
 	/* VDO uses virtual size instead of its physical size */
 	if (!dm_tree_node_add_vdo_target(node, get_vdo_pool_virtual_size(seg),
-					 data_uuid, seg_lv(seg, 0)->size,
+					 vdo_pool_name, data_uuid, seg_lv(seg, 0)->size,
 					 &seg->vdo_params))
 		return_0;
 

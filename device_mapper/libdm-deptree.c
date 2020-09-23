@@ -4360,6 +4360,7 @@ int dm_tree_node_add_cache_target_base(struct dm_tree_node *node,
 
 int dm_tree_node_add_vdo_target(struct dm_tree_node *node,
 				uint64_t size,
+				const char *vdo_pool_name,
 				const char *data_uuid,
 				uint64_t data_size,
 				const struct dm_vdo_target_params *vtp)
@@ -4381,7 +4382,7 @@ int dm_tree_node_add_vdo_target(struct dm_tree_node *node,
 		return_0;
 
 	seg->vdo_params = *vtp;
-	seg->vdo_name = node->name;
+	seg->vdo_name = vdo_pool_name;
 	seg->vdo_data_size = data_size;
 
 	node->props.send_messages = 2;
