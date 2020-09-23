@@ -1790,6 +1790,9 @@ static int _lvconvert_raid_types(struct cmd_context *cmd, struct logical_volume 
 	if (lv_is_cache(lv))
 		lv = seg_lv(first_seg(lv), 0);
 
+	if (lv_is_vdo_pool(lv))
+		return _lvconvert_raid_types(cmd, seg_lv(first_seg(lv), 0), lp);
+
 	if (lv_is_mirror(lv)) {
 		ret = _convert_mirror(cmd, lv, lp);
 		goto out;
@@ -5064,6 +5067,7 @@ static int _lvconvert_raid_types_check(struct cmd_context *cmd, struct logical_v
 		    !lv_is_cache_pool_data(lv) &&
 		    !lv_is_thin_pool_metadata(lv) &&
 		    !lv_is_thin_pool_data(lv) &&
+		    !lv_is_vdo_pool_data(lv) &&
 		    !lv_is_used_cache_pool(lv) &&
 		    !lv_is_mirrored(lv) &&
 		    !lv_is_raid(lv))
