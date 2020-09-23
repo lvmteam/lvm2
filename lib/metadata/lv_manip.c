@@ -4717,6 +4717,12 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
+	if (lv_is_vdo_pool(lv) && lv_is_active(lv_lock_holder(lv))) {
+		log_error("Cannot rename active VDOPOOL volume %s.",
+			  display_lvname(lv));
+		return 0;
+	}
+
 	if (update_mda && !archive(vg))
 		return_0;
 
