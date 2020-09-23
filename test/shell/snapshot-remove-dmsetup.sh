@@ -61,7 +61,9 @@ dmsetup resume $vg1-snap
 wait $DMPID
 
 
-# Try how force removal works
+# Try how force removal works (and wait till there is no user)
+sync
+sleep .5
 dmsetup suspend $vg-$lv1
 # needs to fail as device is still open
 not dmsetup remove --force $vg1-snap &
