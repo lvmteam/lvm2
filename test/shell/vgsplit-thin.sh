@@ -27,6 +27,7 @@ get_devs
 vgcreate "$vg1" "${DEVICES[@]}"
 lvcreate -T -L8M $vg1/pool1 -V10M -n $lv1 "$dev1" "$dev2"
 lvcreate -T -L8M $vg1/pool2 -V10M -n $lv2 "$dev3" "$dev4"
+lvcreate -s -L2M -n snap $vg1/$lv1 "$dev2"
 
 # Test with external origin if available
 lvcreate -l1 -an -pr --zero n -n eorigin $vg1 "$dev5"
