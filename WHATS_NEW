@@ -1,5 +1,6 @@
 Version 2.03.11 - 
 ==================================
+  Enable vgsplit for VDO volumes.
   Lvextend of vdo pool volumes ensure at least 1 new VDO slab is added.
   Use revert_lv() on reload error path after vg_revert().
   Configure --with-integrity enabled.

@@ -125,6 +125,10 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 		    lv_is_thin_volume(lv))
 			continue;
 
+		if (lv_is_vdo_pool(lv) ||
+		    lv_is_vdo(lv))
+			continue;
+
 		if (lv_is_cache(lv) || lv_is_cache_pool(lv))
 			/* further checks by _move_cache() */
 			continue;
@@ -368,6 +372,42 @@ static int _move_thins(struct volume_group *vg_from,
 				if (!_move_one_lv(vg_from, vg_to, lvh, &lvht))
 					return_0;
 			}
+		}
+	}
+
+	return 1;
+}
+
+static int _move_vdos(struct volume_group *vg_from,
+		      struct volume_group *vg_to)
+{
+	struct dm_list *lvh, *lvht;
+	struct logical_volume *lv, *vdo_data_lv;
+	struct lv_segment *seg;
+
+	dm_list_iterate_safe(lvh, lvht, &vg_from->lvs) {
+		lv = dm_list_item(lvh, struct lv_list)->lv;
+
+		if (lv_is_vdo(lv)) {
+			seg = first_seg(lv);
+			vdo_data_lv = seg_lv(first_seg(seg_lv(seg, 0)), 0);
+
+			/* Ignore, if no allocations on PVs of @vg_to */
+			if (!lv_is_on_pvs(vdo_data_lv, &vg_to->pvs))
+				continue;
+
+			if (!_move_one_lv(vg_from, vg_to, lvh, &lvht))
+				return_0;
+		} else if (lv_is_vdo_pool(lv)) {
+			seg = first_seg(lv);
+			vdo_data_lv = seg_lv(seg, 0);
+
+			/* Ignore, if no allocations on PVs of @vg_to */
+			if (!lv_is_on_pvs(vdo_data_lv, &vg_to->pvs))
+				continue;
+
+			if (!_move_one_lv(vg_from, vg_to, lvh, &lvht))
+				return_0;
 		}
 	}
 
@@ -619,6 +659,10 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	/* Move required pools across */
 	if (!(_move_thins(vg_from, vg_to)))
+		goto_bad;
+
+	/* Move required vdo pools across */
+	if (!(_move_vdos(vg_from, vg_to)))
 		goto_bad;
 
 	/* Move required cache LVs across */
