@@ -532,7 +532,7 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 		if (!sync_local_dev_names(lv->vg->cmd)) {
 			log_error("Failed to sync local devices LV %s.",
 				  display_lvname(lv));
-			return 0;
+			ret = 0;
 		}
 
 		if (activate &&
