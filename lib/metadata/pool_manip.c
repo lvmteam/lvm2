@@ -296,7 +296,8 @@ int detach_pool_lv(struct lv_segment *seg)
 	if (!detach_thin_external_origin(seg))
 		return_0;
 
-	if (!attach_pool_message(first_seg(seg->pool_lv),
+	if (seg->device_id && /* Only thins with device_id > 0 can be deleted */
+	    !attach_pool_message(first_seg(seg->pool_lv),
 				 DM_THIN_MESSAGE_DELETE,
 				 NULL, seg->device_id, no_update))
 		return_0;
