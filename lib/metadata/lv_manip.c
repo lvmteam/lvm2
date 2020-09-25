@@ -7522,6 +7522,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	struct lv_segment *seg, *pool_seg;
 	int thin_pool_was_active = -1; /* not scanned, inactive, active */
 	int historical;
+	uint64_t transaction_id;
+	int ret;
 
 	if (new_lv_name && lv_name_is_used_in_vg(vg, new_lv_name, &historical)) {
 		log_error("%sLogical Volume \"%s\" already exists in "
@@ -7976,15 +7978,38 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		log_very_verbose("Cache pool is prepared.");
 	} else if (lv_is_thin_volume(lv)) {
 		/* For snapshot, suspend active thin origin first */
-		if (origin_lv && lv_is_active(origin_lv) && lv_is_thin_volume(origin_lv)) {
-			if (!suspend_lv_origin(cmd, origin_lv)) {
-				log_error("Failed to suspend thin snapshot origin %s/%s.",
-					  origin_lv->vg->name, origin_lv->name);
-				goto revert_new_lv;
+		if (origin_lv && lv_is_thin_volume(origin_lv) && lv_is_active(origin_lv)) {
+			if (!(ret = suspend_lv_origin(cmd, origin_lv))) {
+				log_error("Failed to suspend thin snapshot origin %s.",
+					  display_lvname(origin_lv));
 			}
+			/* Note: always proceed with resume_lv() to leave critical_section */
 			if (!resume_lv_origin(cmd, origin_lv)) { /* deptree updates thin-pool */
-				log_error("Failed to resume thin snapshot origin %s/%s.",
-					  origin_lv->vg->name, origin_lv->name);
+				log_error("Failed to resume thin snapshot origin %s.",
+					  display_lvname(origin_lv));
+				if (ret)
+					/* suspend with message was OK, only resume failed */
+					goto revert_new_lv; /* hard to fix things here */
+			}
+			if (!ret) {
+				/* Pool transaction_id has been incremented for this canceled transaction
+				 * and needs to be restored to the state from this canceled segment.
+				 * TODO: there is low chance actual suspend has failed
+				 */
+				if (!lv_thin_pool_transaction_id(pool_lv, &transaction_id)) {
+					log_error("Aborting. Failed to read transaction_id from thin pool %s.",
+						  display_lvname(pool_lv)); /* Can't even get thin pool transaction id ??? */
+				} else if (transaction_id != first_seg(pool_lv)->transaction_id) {
+					if (transaction_id == seg->transaction_id)
+						log_debug_metadata("Reverting back transaction_id " FMTu64 " for thin pool %s.",
+								   seg->transaction_id, display_lvname(pool_lv));
+					else
+						log_warn("WARNING: Metadata for thin pool %s have transaction_id " FMTu64
+							 ", but active pool has " FMTu64 ".",
+							 display_lvname(pool_lv), seg->transaction_id, transaction_id);
+					first_seg(pool_lv)->transaction_id = seg->transaction_id;
+					first_seg(lv)->device_id = 0; /* no delete of never existing thin device */
+				}
 				goto revert_new_lv;
 			}
 			/* At this point remove pool messages, snapshot is active */
