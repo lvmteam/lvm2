@@ -137,7 +137,7 @@ xx(pvmove,
 
 xx(lvpoll,
    "Continue already initiated poll operation on a logical volume",
-   ALLOW_HINTS)
+   0)
 
 xx(pvremove,
    "Remove LVM label(s) from physical volume(s)",
