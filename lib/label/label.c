@@ -1460,7 +1460,8 @@ int label_scan_reopen_rw(struct device *dev)
 				  dev_name(dev), dev->bcache_fd, dev->bcache_di);
 			return 0;
 		}
-		goto do_open;
+		dev->flags |= DEV_BCACHE_WRITE;
+		return _scan_dev_open(dev);
 	}
 
 	if ((dev->flags & DEV_BCACHE_WRITE))
@@ -1477,7 +1478,6 @@ int label_scan_reopen_rw(struct device *dev)
 		return 0;
 	}
 
- do_open:
 	flags |= O_DIRECT;
 	flags |= O_NOATIME;
 	flags |= O_RDWR;
