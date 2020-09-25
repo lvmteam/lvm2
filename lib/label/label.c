@@ -678,7 +678,6 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 	int scan_failed_count = 0;
 	int rem_prefetches;
 	int submit_count;
-	int scan_failed;
 	int is_lvm_device;
 	int ret;
 
@@ -726,12 +725,10 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 
 	dm_list_iterate_items_safe(devl, devl2, &wait_devs) {
 		bb = NULL;
-		scan_failed = 0;
 		is_lvm_device = 0;
 
 		if (!bcache_get(scan_bcache, devl->dev->bcache_di, 0, 0, &bb)) {
 			log_debug_devs("Scan failed to read %s.", dev_name(devl->dev));
-			scan_failed = 1;
 			scan_read_errors++;
 			scan_failed_count++;
 			lvmcache_del_dev(devl->dev);
@@ -746,7 +743,6 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 
 			if (!ret && is_lvm_device) {
 				log_debug_devs("Scan failed to process %s", dev_name(devl->dev));
-				scan_failed = 1;
 				scan_process_errors++;
 				scan_failed_count++;
 			}
@@ -761,7 +757,7 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 		 * read the block, or the device does not belong to lvm, then
 		 * drop it from bcache.
 		 */
-		if (scan_failed || !is_lvm_device) {
+		if (!is_lvm_device) {
 			_invalidate_di(scan_bcache, devl->dev->bcache_di);
 			_scan_dev_close(devl->dev);
 		}
