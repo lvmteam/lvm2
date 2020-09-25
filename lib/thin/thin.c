@@ -361,8 +361,11 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 				if (!lv_thin_pool_transaction_id(seg->lv, &transaction_id))
 					return_0; /* Thin pool should exist and work */
 				if ((transaction_id + 1) != seg->transaction_id) {
-					log_error("Can't create snapshot %s as origin %s is not suspended.",
-						  lmsg->u.lv->name, origin->name);
+					log_error("Omitting suspend of thin snapshot origin %s with expected "
+						  "transaction_id " FMTu64 ", but active pool has " FMTu64 ".",
+						  display_lvname(origin),
+						  !seg->transaction_id ? 0 : seg->transaction_id - 1,
+						  transaction_id);
 					return 0;
 				}
 			}
