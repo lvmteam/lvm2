@@ -66,19 +66,15 @@ int dev_manager_raid_message(struct dev_manager *dm,
 int dev_manager_cache_status(struct dev_manager *dm,
 			     const struct logical_volume *lv,
 			     struct lv_status_cache **status);
-int dev_manager_thin_pool_status(struct dev_manager *dm,
-				 const struct logical_volume *lv,
-				 struct dm_status_thin_pool **status,
-				 int flush);
-int dev_manager_thin_pool_percent(struct dev_manager *dm,
-				  const struct logical_volume *lv,
-				  int metadata, dm_percent_t *percent);
-int dev_manager_thin_percent(struct dev_manager *dm,
-			     const struct logical_volume *lv,
-			     int mapped, dm_percent_t *percent);
+int dev_manager_thin_status(struct dev_manager *dm,
+			    const struct logical_volume *lv, int flush,
+			    struct lv_status_thin **status);
 int dev_manager_thin_device_id(struct dev_manager *dm,
 			       const struct logical_volume *lv,
 			       uint32_t *device_id);
+int dev_manager_thin_pool_status(struct dev_manager *dm,
+				 const struct logical_volume *lv, int flush,
+				 struct lv_status_thin_pool **status);
 int dev_manager_suspend(struct dev_manager *dm, const struct logical_volume *lv,
 			struct lv_activate_opts *laopts, int lockfs, int flush_required);
 int dev_manager_activate(struct dev_manager *dm, const struct logical_volume *lv,

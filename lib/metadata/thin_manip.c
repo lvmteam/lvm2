@@ -243,51 +243,86 @@ int pool_metadata_min_threshold(const struct lv_segment *pool_seg)
 int pool_below_threshold(const struct lv_segment *pool_seg)
 {
 	struct cmd_context *cmd = pool_seg->lv->vg->cmd;
-	dm_percent_t percent;
+	struct lv_status_thin_pool *thin_pool_status = NULL;
 	dm_percent_t min_threshold = pool_metadata_min_threshold(pool_seg);
 	dm_percent_t threshold = DM_PERCENT_1 *
 		find_config_tree_int(cmd, activation_thin_pool_autoextend_threshold_CFG,
 				     lv_config_profile(pool_seg->lv));
+	int ret = 1;
 
-	/* Data */
-	if (!lv_thin_pool_percent(pool_seg->lv, 0, &percent))
+	if (threshold > DM_PERCENT_100)
+		threshold = DM_PERCENT_100;
+
+	/* FIXME: currently with FLUSH - this may block pool while holding VG lock
+	 * maybe try 2-phase version - 1st. check without commit
+	 * 2nd. quickly following with commit */
+	if (!lv_thin_pool_status(pool_seg->lv, 1, &thin_pool_status))
 		return_0;
 
-	if (percent > threshold || percent >= DM_PERCENT_100) {
+	if (thin_pool_status->thin_pool->fail |
+	    thin_pool_status->thin_pool->out_of_data_space |
+	    thin_pool_status->thin_pool->needs_check |
+	    thin_pool_status->thin_pool->error |
+	    thin_pool_status->thin_pool->read_only) {
+		log_warn("WARNING: Thin pool %s%s%s%s%s%s.",
+			 display_lvname(pool_seg->lv),
+			 thin_pool_status->thin_pool->fail ? " is failed" : "",
+			 thin_pool_status->thin_pool->out_of_data_space ? " is out of data space" : "",
+			 thin_pool_status->thin_pool->needs_check ? " needs check" : "",
+			 thin_pool_status->thin_pool->error ? " is erroring" : "",
+			 thin_pool_status->thin_pool->read_only ? " has read-only metadata" : "");
+		ret = 0;
+		if (thin_pool_status->thin_pool->fail)
+			goto out;
+	}
+
+	/* Data */
+
+	if (thin_pool_status->data_usage > threshold) {
 		log_debug("Threshold configured for free data space in "
 			  "thin pool %s has been reached (%s%% >= %s%%).",
 			  display_lvname(pool_seg->lv),
-			  display_percent(cmd, percent),
+			  display_percent(cmd, thin_pool_status->data_usage),
 			  display_percent(cmd, threshold));
-		return 0;
+		ret = 0;
 	}
 
 	/* Metadata */
-	if (!lv_thin_pool_percent(pool_seg->lv, 1, &percent))
-		return_0;
 
-
-	if (percent >= min_threshold) {
+	if (thin_pool_status->metadata_usage >= min_threshold) {
 		log_warn("WARNING: Remaining free space in metadata of thin pool %s "
 			 "is too low (%s%% >= %s%%). "
 			 "Resize is recommended.",
 			 display_lvname(pool_seg->lv),
-			 display_percent(cmd, percent),
+			 display_percent(cmd, thin_pool_status->metadata_usage),
 			 display_percent(cmd, min_threshold));
-		return 0;
+		ret = 0;
 	}
 
-
-	if (percent > threshold) {
+	if (thin_pool_status->metadata_usage > threshold) {
 		log_debug("Threshold configured for free metadata space in "
 			  "thin pool %s has been reached (%s%% > %s%%).",
 			  display_lvname(pool_seg->lv),
-			  display_percent(cmd, percent),
+			  display_percent(cmd, thin_pool_status->metadata_usage),
 			  display_percent(cmd, threshold));
-		return 0;
+		ret = 0;
 	}
 
-	return 1;
+	if ((thin_pool_status->thin_pool->transaction_id != pool_seg->transaction_id) &&
+	    (dm_list_empty(&pool_seg->thin_messages) ||
+	     ((thin_pool_status->thin_pool->transaction_id + 1) != pool_seg->transaction_id))) {
+		log_warn("WARNING: Thin pool %s has unexpected transaction id " FMTu64
+			 ", expecting " FMTu64 "%s.",
+			 display_lvname(pool_seg->lv),
+			 thin_pool_status->thin_pool->transaction_id,
+			 pool_seg->transaction_id,
+			 dm_list_empty(&pool_seg->thin_messages) ? "" : " or lower by 1");
+		ret = 0;
+	}
+out:
+	dm_pool_destroy(thin_pool_status->mem);
+
+	return ret;
 }
 
 /*
@@ -855,6 +890,7 @@ int check_new_thin_pool(const struct logical_volume *pool_lv)
 {
 	struct cmd_context *cmd = pool_lv->vg->cmd;
 	uint64_t transaction_id;
+	struct lv_status_thin_pool *status = NULL;
 
 	/* For transaction_id check LOCAL activation is required */
 	if (!activate_lv_excl_local(cmd, pool_lv)) {
@@ -864,11 +900,14 @@ int check_new_thin_pool(const struct logical_volume *pool_lv)
 	}
 
 	/* With volume lists, check pool really is locally active */
-	if (!lv_thin_pool_transaction_id(pool_lv, &transaction_id)) {
+	if (!lv_thin_pool_status(pool_lv, 1, &status)) {
 		log_error("Cannot read thin pool %s transaction id locally, perhaps skipped in lvm.conf volume_list?",
 			  display_lvname(pool_lv));
 		return 0;
 	}
+
+	transaction_id = status->thin_pool->transaction_id;
+	dm_pool_destroy(status->mem);
 
 	/* Require pool to have same transaction_id as new  */
 	if (first_seg(pool_lv)->transaction_id != transaction_id) {

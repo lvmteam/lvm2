@@ -103,47 +103,63 @@ static dm_percent_t _snap_percent(const struct logical_volume *lv)
 
 static dm_percent_t _data_percent(const struct logical_volume *lv)
 {
-	dm_percent_t percent;
-	struct lv_status_cache *status;
+	dm_percent_t percent = DM_PERCENT_INVALID;
+	struct lv_status_cache *cache_status;
+	struct lv_status_thin *thin_status;
+	struct lv_status_thin_pool *thin_pool_status;
 
 	if (lv_is_cow(lv))
 		return _snap_percent(lv);
 
 	if (lv_is_cache(lv) || lv_is_used_cache_pool(lv)) {
-		if (!lv_cache_status(lv, &status)) {
+		if (!lv_cache_status(lv, &cache_status))
 			stack;
-			return DM_PERCENT_INVALID;
+		else {
+			percent = cache_status->data_usage;
+			dm_pool_destroy(cache_status->mem);
 		}
-		percent = status->data_usage;
-		dm_pool_destroy(status->mem);
-		return percent;
+	} else  if (lv_is_thin_volume(lv)) {
+		if (!lv_thin_status(lv, 0, &thin_status))
+			stack;
+		else {
+			percent = thin_status->usage;
+			dm_pool_destroy(thin_status->mem);
+		}
+	} else if (lv_is_thin_pool(lv)) {
+		if (!lv_thin_pool_status(lv, 0, &thin_pool_status))
+			stack;
+		else {
+			percent = thin_pool_status->data_usage;
+			dm_pool_destroy(thin_pool_status->mem);
+		}
 	}
 
-	if (lv_is_thin_volume(lv))
-		return lv_thin_percent(lv, 0, &percent) ? percent : DM_PERCENT_INVALID;
-
-	return lv_thin_pool_percent(lv, 0, &percent) ? percent : DM_PERCENT_INVALID;
+	return percent;
 }
 
 static dm_percent_t _metadata_percent(const struct logical_volume *lv)
 {
-	dm_percent_t percent;
-	struct lv_status_cache *status;
+	dm_percent_t percent = DM_PERCENT_INVALID;
+	struct lv_status_cache *cache_status;
+	struct lv_status_thin_pool *thin_pool_status;
 
 	if (lv_is_cache(lv) || lv_is_used_cache_pool(lv)) {
-		if (!lv_cache_status(lv, &status)) {
+		if (!lv_cache_status(lv, &cache_status))
 			stack;
-			return DM_PERCENT_INVALID;
+		else {
+			percent = cache_status->metadata_usage;
+			dm_pool_destroy(cache_status->mem);
 		}
-		percent = status->metadata_usage;
-		dm_pool_destroy(status->mem);
-		return percent;
+	} else if (lv_is_thin_pool(lv)) {
+		if (!lv_thin_pool_status(lv, 0, &thin_pool_status))
+			stack;
+		else {
+			percent = thin_pool_status->metadata_usage;
+			dm_pool_destroy(thin_pool_status->mem);
+		}
 	}
 
-	if (lv_is_thin_pool(lv))
-		return lv_thin_pool_percent(lv, 1, &percent) ? percent : DM_PERCENT_INVALID;
-
-	return DM_PERCENT_INVALID;
+	return percent;
 }
 
 /* PV */

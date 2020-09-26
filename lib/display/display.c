@@ -406,10 +406,12 @@ int lvdisplay_full(struct cmd_context *cmd,
 	struct lv_segment *seg = NULL;
 	int lvm1compat;
 	dm_percent_t snap_percent;
-	int thin_data_active = 0, thin_metadata_active = 0;
+	int thin_pool_active = 0;
 	dm_percent_t thin_data_percent, thin_metadata_percent;
 	int thin_active = 0;
 	dm_percent_t thin_percent;
+	struct lv_status_thin *thin_status = NULL;
+	struct lv_status_thin_pool *thin_pool_status = NULL;
 	struct lv_status_cache *cache_status = NULL;
 
 	if (lv_is_historical(lv))
@@ -502,15 +504,18 @@ int lvdisplay_full(struct cmd_context *cmd,
 		if (seg->merge_lv)
 			log_print("LV merging to          %s",
 				  seg->merge_lv->name);
-		if (inkernel)
-			thin_active = lv_thin_percent(lv, 0, &thin_percent);
+		if (inkernel && (thin_active = lv_thin_status(lv, 0, &thin_status))) {
+			thin_percent = thin_status->usage;
+			dm_pool_destroy(thin_status->mem);
+		}
 		if (lv_is_merging_origin(lv))
 			log_print("LV merged with         %s",
 				  find_snapshot(lv)->lv->name);
 	} else if (lv_is_thin_pool(lv)) {
-		if (lv_info(cmd, lv, 1, &info, 1, 1) && info.exists) {
-			thin_data_active = lv_thin_pool_percent(lv, 0, &thin_data_percent);
-			thin_metadata_active = lv_thin_pool_percent(lv, 1, &thin_metadata_percent);
+		if ((thin_pool_active = lv_thin_pool_status(lv, 0, &thin_pool_status))) {
+			thin_data_percent = thin_pool_status->data_usage;
+			thin_metadata_percent = thin_pool_status->metadata_usage;
+			dm_pool_destroy(thin_pool_status->mem);
 		}
 		/* FIXME: display thin_pool targets transid for activated LV as well */
 		seg = first_seg(lv);
@@ -569,13 +574,12 @@ int lvdisplay_full(struct cmd_context *cmd,
 		dm_pool_destroy(cache_status->mem);
 	}
 
-	if (thin_data_active)
+	if (thin_pool_active) {
 		log_print("Allocated pool data    %s%%",
 			  display_percent(cmd, thin_data_percent));
-
-	if (thin_metadata_active)
 		log_print("Allocated metadata     %s%%",
 			  display_percent(cmd, thin_metadata_percent));
+	}
 
 	if (thin_active)
 		log_print("Mapped size            %s%%",

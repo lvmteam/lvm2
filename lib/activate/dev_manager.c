@@ -1472,9 +1472,6 @@ int dev_manager_cache_status(struct dev_manager *dm,
 	if (!(dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
 		return_0;
 
-	if (!(*status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_cache))))
-		return_0;
-
 	if (!(dmt = _setup_task_run(DM_DEVICE_STATUS, &info, NULL, dlid, 0, 0, 0, 0, 0, 0)))
 		return_0;
 
@@ -1497,8 +1494,11 @@ int dev_manager_cache_status(struct dev_manager *dm,
 	if (!dm_get_status_cache(dm->mem, params, &c))
 		goto_out;
 
-	(*status)->cache = c;
+	if (!(*status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_cache))))
+		goto_out;
+
 	(*status)->mem = dm->mem; /* User has to destroy this mem pool later */
+	(*status)->cache = c;
 	if (c->fail || c->error) {
 		(*status)->data_usage =
 			(*status)->metadata_usage =
@@ -1520,10 +1520,10 @@ out:
 }
 
 int dev_manager_thin_pool_status(struct dev_manager *dm,
-				 const struct logical_volume *lv,
-				 struct dm_status_thin_pool **status,
-				 int flush)
+				 const struct logical_volume *lv, int flush,
+				 struct lv_status_thin_pool **status)
 {
+	struct dm_status_thin_pool *dm_status;
 	const char *dlid;
 	struct dm_task *dmt;
 	struct dm_info info;
@@ -1544,10 +1544,30 @@ int dev_manager_thin_pool_status(struct dev_manager *dm,
 
 	dm_get_next_target(dmt, NULL, &start, &length, &type, &params);
 
-	/* FIXME Check for thin and check there's exactly one target */
+	if (!type || strcmp(type, TARGET_NAME_THIN_POOL)) {
+		log_error("Expected %s segment type but got %s instead.",
+			  TARGET_NAME_THIN_POOL, type ? type : "NULL");
+		goto out;
+	}
 
-	if (!dm_get_status_thin_pool(dm->mem, params, status))
+	if (!dm_get_status_thin_pool(dm->mem, params, &dm_status))
 		goto_out;
+
+	if (!(*status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_thin_pool))))
+		goto_out;
+
+	(*status)->mem = dm->mem;
+	(*status)->thin_pool = dm_status;
+
+	if (dm_status->fail || dm_status->error) {
+		(*status)->data_usage =
+			(*status)->metadata_usage = DM_PERCENT_INVALID;
+	} else {
+		(*status)->data_usage = dm_make_percent(dm_status->used_data_blocks,
+							dm_status->total_data_blocks);
+		(*status)->metadata_usage = dm_make_percent(dm_status->used_metadata_blocks,
+							    dm_status->total_metadata_blocks);
+	}
 
 	r = 1;
 out:
@@ -1556,52 +1576,68 @@ out:
 	return r;
 }
 
-int dev_manager_thin_pool_percent(struct dev_manager *dm,
-				  const struct logical_volume *lv,
-				  int metadata, dm_percent_t *percent)
+int dev_manager_thin_status(struct dev_manager *dm,
+			    const struct logical_volume *lv, int flush,
+			    struct lv_status_thin **status)
 {
-	char *name;
+	struct dm_status_thin *dm_status;
 	const char *dlid;
-	const char *layer = lv_layer(lv);
+	struct dm_task *dmt;
+	struct dm_info info;
+	uint64_t start, length;
+	char *type = NULL;
+	char *params = NULL;
+	uint64_t csize;
+	int r = 0;
 
-	/* Build a name for the top layer */
-	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
+	if (!(dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
 		return_0;
 
-	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
+	if (!(dmt = _setup_task_run(DM_DEVICE_STATUS, &info, NULL, dlid, 0, 0, 0, 0, flush, 0)))
 		return_0;
 
-	log_debug_activation("Getting device status percentage for %s.", name);
+	if (!info.exists)
+		goto_out;
 
-	if (!(_percent(dm, name, dlid, TARGET_NAME_THIN_POOL, 0,
-		       (metadata) ? lv : NULL, percent, NULL, 1)))
-		return_0;
+	dm_get_next_target(dmt, NULL, &start, &length, &type, &params);
 
-	return 1;
-}
+	if (!type || strcmp(type, TARGET_NAME_THIN)) {
+		log_error("Expected %s segment type but got %s instead.",
+			  TARGET_NAME_THIN, type ? type : "NULL");
+		goto out;
+	}
 
-int dev_manager_thin_percent(struct dev_manager *dm,
-			     const struct logical_volume *lv,
-			     int mapped, dm_percent_t *percent)
-{
-	char *name;
-	const char *dlid;
-	const char *layer = lv_layer(lv);
+	if (!dm_get_status_thin(dm->mem, params, &dm_status))
+		goto_out;
 
-	/* Build a name for the top layer */
-	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
-		return_0;
+	if (!(*status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_thin))))
+		goto_out;
 
-	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
-		return_0;
+	(*status)->mem = dm->mem;
+	(*status)->thin = dm_status;
 
-	log_debug_activation("Getting device status percentage for %s", name);
+	if (dm_status->fail)
+		(*status)->usage = DM_PERCENT_INVALID;
+	else {
+		/* Pool allocates whole chunk so round-up to nearest one */
+		csize = first_seg(first_seg(lv)->pool_lv)->chunk_size;
+		csize = ((lv->size + csize - 1) / csize) * csize;
+		if (dm_status->mapped_sectors > csize) {
+			log_warn("WARNING: LV %s maps %s while the size is only %s.",
+				 display_lvname(lv),
+				 display_size(dm->cmd, dm_status->mapped_sectors),
+				 display_size(dm->cmd, csize));
+			/* Don't show nonsense numbers like i.e. 1000% full */
+			dm_status->mapped_sectors = csize;
+		}
+		(*status)->usage = dm_make_percent(dm_status->mapped_sectors, csize);
+	}
 
-	if (!(_percent(dm, name, dlid, TARGET_NAME_THIN, 0,
-		       (mapped) ? NULL : lv, percent, NULL, 1)))
-		return_0;
+	r = 1;
+out:
+	dm_task_destroy(dmt);
 
-	return 1;
+	return r;
 }
 
 /*

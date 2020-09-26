@@ -861,6 +861,20 @@ int update_thin_pool_params(struct cmd_context *cmd,
 			    uint32_t *pool_metadata_extents,
 			    int *chunk_size_calc_method, uint32_t *chunk_size,
 			    thin_discards_t *discards, thin_zero_t *zero_new_blocks);
+
+struct lv_status_thin_pool {
+	struct dm_pool *mem;
+	struct dm_status_thin_pool *thin_pool;
+	dm_percent_t data_usage;
+	dm_percent_t metadata_usage;
+};
+
+struct lv_status_thin {
+	struct dm_pool *mem;
+	struct dm_status_thin *thin;
+	dm_percent_t usage;
+};
+
 const char *get_pool_discards_name(thin_discards_t discards);
 int set_pool_discards(thin_discards_t *discards, const char *str);
 struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
