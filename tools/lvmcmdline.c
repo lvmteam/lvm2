@@ -3646,7 +3646,7 @@ int lvm2_main(int argc, char **argv)
 	}
 
 	if (run_shell) {
-#ifdef READLINE_SUPPORT
+#if defined(READLINE_SUPPORT) || defined(EDITLINE_SUPPORT)
 		_nonroot_warning();
 		if (!_prepare_profiles(cmd)) {
 			ret = ECMD_FAILED;

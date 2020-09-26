@@ -692,6 +692,12 @@ AC_ARG_ENABLE([readline],
 	      READLINE=$enableval, READLINE=maybe)
 
 ################################################################################
+dnl -- Disable editline
+AC_ARG_ENABLE([editline],
+	      AC_HELP_STRING([--enable-editline], [enable editline support]),
+	      EDITLINE=$enableval, EDITLINE=no)
+
+################################################################################
 dnl -- Disable realtime clock support
 AC_MSG_CHECKING(whether to enable realtime support)
 AC_ARG_ENABLE(realtime,
@@ -1379,6 +1385,16 @@ dnl -- Check for getopt
 AC_CHECK_HEADERS(getopt.h, AC_DEFINE([HAVE_GETOPTLONG], 1, [Define to 1 if getopt_long is available.]))
 
 ################################################################################
+dnl -- Check for editline
+if test "$EDITLINE" == yes; then
+	PKG_CHECK_MODULES([EDITLINE], [libedit], [
+		AC_DEFINE([EDITLINE_SUPPORT], 1,
+			[Define to 1 to include the LVM editline shell.])], AC_MSG_ERROR(
+[libedit could not be found which is required for the --enable-readline option.])
+	)
+fi
+
+################################################################################
 dnl -- Check for readline (Shamelessly copied from parted 1.4.17)
 if test "$READLINE" != no; then
 	lvm_saved_libs=$LIBS
@@ -1509,6 +1525,12 @@ if test "$READLINE" = yes; then
 fi
 AC_MSG_CHECKING(whether to enable readline)
 AC_MSG_RESULT($READLINE)
+
+if test "$EDITLINE" = yes; then
+	AC_CHECK_HEADERS(editline/readline.h editline/history.h,,hard_bailout)
+fi
+AC_MSG_CHECKING(whether to enable editline)
+AC_MSG_RESULT($EDITLINE)
 
 if test "$BUILD_CMIRRORD" = yes; then
 	AC_CHECK_FUNCS(atexit,,hard_bailout)
@@ -1765,6 +1787,7 @@ AC_SUBST(QUORUM_CFLAGS)
 AC_SUBST(QUORUM_LIBS)
 AC_SUBST(RT_LIBS)
 AC_SUBST(READLINE_LIBS)
+AC_SUBST(EDITLINE_LIBS)
 AC_SUBST(REPLICATORS)
 AC_SUBST(SACKPT_CFLAGS)
 AC_SUBST(SACKPT_LIBS)

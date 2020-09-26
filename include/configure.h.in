@@ -126,6 +126,9 @@
 /* Library version */
 #undef DM_LIB_VERSION
 
+/* Define to 1 to include the LVM editline shell. */
+#undef EDITLINE_SUPPORT
+
 /* Path to fsadm binary. */
 #undef FSADM_PATH
 
@@ -175,6 +178,12 @@
 
 /* Define to 1 if you don't have `vprintf' but do have `_doprnt.' */
 #undef HAVE_DOPRNT
+
+/* Define to 1 if you have the <editline/history.h> header file. */
+#undef HAVE_EDITLINE_HISTORY_H
+
+/* Define to 1 if you have the <editline/readline.h> header file. */
+#undef HAVE_EDITLINE_READLINE_H
 
 /* Define to 1 if you have the <errno.h> header file. */
 #undef HAVE_ERRNO_H

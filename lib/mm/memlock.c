@@ -122,6 +122,7 @@ static const char * const _blacklist_maps[] = {
 	"/libpcre.so.",		/* not using pcre during mlock (selinux) */
 	"/libpcre2-",		/* not using pcre during mlock (selinux) */
 	"/libreadline.so.",	/* not using readline during mlock */
+	"/libedit.so.",		/* not using editline during mlock */
 	"/libresolv-",		/* not using during mlock (udev) */
 	"/libselinux.so.",	/* not using selinux during mlock */
 	"/libsepol.so.",	/* not using sepol during mlock */
