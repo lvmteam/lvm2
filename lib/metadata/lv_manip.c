@@ -4960,6 +4960,7 @@ static int _lvresize_adjust_policy(const struct logical_volume *lv,
 	dm_percent_t percent;
 	dm_percent_t min_threshold;
 	int policy_threshold, policy_amount;
+	struct lv_status_thin_pool *thin_pool_status;
 
 	*amount = *meta_amount = 0;
 
@@ -5009,18 +5010,19 @@ static int _lvresize_adjust_policy(const struct logical_volume *lv,
 	}
 
 	if (lv_is_thin_pool(lv)) {
-		if (!lv_thin_pool_percent(lv, 1, &percent))
+		if (!lv_thin_pool_status(lv, 0, &thin_pool_status))
 			goto_bad;
 
 		/* Resize below the minimal usable value */
 		min_threshold = pool_metadata_min_threshold(first_seg(lv)) / DM_PERCENT_1;
-		*meta_amount = _adjust_amount(percent, (min_threshold < policy_threshold) ?
+		*meta_amount = _adjust_amount(thin_pool_status->metadata_usage,
+					      (min_threshold < policy_threshold) ?
 					      min_threshold : policy_threshold, policy_amount);
 		if (*meta_amount)
 			/* Compensate possible extra space consumption by kernel on resize */
 			(*meta_amount)++;
-		if (!lv_thin_pool_percent(lv, 0, &percent))
-			goto_bad;
+		percent = thin_pool_status->data_usage;
+		dm_pool_destroy(thin_pool_status->mem);
 	} else if (lv_is_vdo_pool(lv)) {
 		if (!lv_vdo_pool_percent(lv, &percent))
 			goto_bad;
@@ -8464,17 +8466,21 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				 * and needs to be restored to the state from this canceled segment.
 				 * TODO: there is low chance actual suspend has failed
 				 */
-				if (!lv_thin_pool_transaction_id(pool_lv, &transaction_id)) {
+				struct lv_status_thin_pool *tpstatus;
+				if (!lv_thin_pool_status(pool_lv, 1, &tpstatus))
 					log_error("Aborting. Failed to read transaction_id from thin pool %s.",
 						  display_lvname(pool_lv)); /* Can't even get thin pool transaction id ??? */
-				} else if (transaction_id != first_seg(pool_lv)->transaction_id) {
-					if (transaction_id == seg->transaction_id)
-						log_debug_metadata("Reverting back transaction_id " FMTu64 " for thin pool %s.",
-								   seg->transaction_id, display_lvname(pool_lv));
-					else
+				else {
+					transaction_id = tpstatus->thin_pool->transaction_id;
+					dm_pool_destroy(tpstatus->mem);
+
+					if ((transaction_id != first_seg(pool_lv)->transaction_id) &&
+					    (transaction_id != seg->transaction_id))
 						log_warn("WARNING: Metadata for thin pool %s have transaction_id " FMTu64
 							 ", but active pool has " FMTu64 ".",
 							 display_lvname(pool_lv), seg->transaction_id, transaction_id);
+					log_debug_metadata("Restoring previous transaction_id " FMTu64 " for thin pool %s.",
+							   seg->transaction_id, display_lvname(pool_lv));
 					first_seg(pool_lv)->transaction_id = seg->transaction_id;
 					first_seg(lv)->device_id = 0; /* no delete of never existing thin device */
 				}
