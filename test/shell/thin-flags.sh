@@ -92,6 +92,9 @@ check lv_attr_bit health $vg/pool "M"
 check lv_field $vg/pool lv_health_status "metadata_read_only"
 check lv_attr_bit health $vg/$lv2 "-"
 
+not lvcreate -s $vg/$lv2
+not lvcreate -V10 -n $lv3 $vg/pool
+
 lvs -ao+seg_pe_ranges $vg
 
 # needs_check needs newer version
