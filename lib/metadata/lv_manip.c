@@ -8482,8 +8482,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				stack;
 				goto revert_new_lv;
 			}
-		}
-		if (!dm_list_empty(&first_seg(pool_lv)->thin_messages)) {
+		} else if (!dm_list_empty(&first_seg(pool_lv)->thin_messages)) {
 			/* Send message so that table preload knows new thin */
 			if (!lv_is_active(pool_lv)) {
 				/* Avoid multiple thin-pool activations in this case */
