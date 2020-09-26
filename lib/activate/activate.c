@@ -2365,8 +2365,6 @@ skip_read:
 	if (laopts->origin_only && lv_is_thin_volume(lv) && lv_is_thin_volume(lv_pre))
 		lockfs = 1;
 
-	critical_section_inc(cmd, "suspending");
-
 	if (!lv_is_locked(lv) && lv_is_locked(lv_pre) &&
 	    (pvmove_lv = find_pvmove_lv_in_lv(lv_pre))) {
 		/*
@@ -2408,16 +2406,23 @@ skip_read:
 			}
 			dm_list_add(&suspend_lvs, &lvl->list);
 		}
+
+		critical_section_inc(cmd, "suspending");
+
 		dm_list_iterate_items(lvl, &suspend_lvs)
 			if (!_lv_suspend_lv(lvl->lv, laopts, lockfs, 1)) {
 				critical_section_dec(cmd, "failed suspend");
 				goto_out; /* FIXME: resume on recovery path? */
 			}
-	} else  /* Standard suspend */
+
+	} else { /* Standard suspend */
+		critical_section_inc(cmd, "suspending");
+
 		if (!_lv_suspend_lv(lv, laopts, lockfs, flush_required)) {
 			critical_section_dec(cmd, "failed suspend");
 			goto_out;
 		}
+	}
 
 	r = 1;
 out:
