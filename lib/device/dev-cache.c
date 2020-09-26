@@ -1193,13 +1193,13 @@ static int _insert(const char *path, const struct stat *info,
 		}
 
 		if (rec && !_insert_dir(path))
-			return_0;
+			return 0;
 	} else {		/* add a device */
 		if (!S_ISBLK(info->st_mode))
 			return 1;
 
 		if (!_insert_dev(path, info->st_rdev))
-			return_0;
+			return 0;
 	}
 
 	return 1;
