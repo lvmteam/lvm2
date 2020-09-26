@@ -22,13 +22,18 @@ int main(int argc, char **argv)
 	return lvm2_main(argc, argv);
 }
 
-#ifdef READLINE_SUPPORT
+#if defined(READLINE_SUPPORT) || defined(EDITLINE_SUPPORT)
 
-#  include <readline/readline.h>
-#  include <readline/history.h>
-#  ifndef HAVE_RL_COMPLETION_MATCHES
-#    define rl_completion_matches(a, b) completion_matches((char *)a, b)
-#    define rl_completion_func_t CPPFunction
+#  ifdef READLINE_SUPPORT
+#    include <readline/readline.h>
+#    include <readline/history.h>
+#    ifndef HAVE_RL_COMPLETION_MATCHES
+#      define rl_completion_matches(a, b) completion_matches((char *)a, b)
+#      define rl_completion_func_t CPPFunction
+#    endif
+#  elif defined(EDITLINE_SUPPORT)
+#    include <editline/readline.h>
+#    include <editline/history.h>
 #  endif
 
 static struct cmdline_context *_cmdline;
@@ -348,4 +353,4 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 	return 0;
 }
 
-#endif	/* READLINE_SUPPORT */
+#endif	/* READLINE_SUPPORT || EDITLINE_SUPPORT */

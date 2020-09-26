@@ -140,8 +140,8 @@ INCLUDES += -I$(top_builddir)/tools
 
 lvm: $(OBJECTS) lvm.o $(top_builddir)/lib/liblvm-internal.a
 	@echo "    [CC] $@"
-	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $(OBJECTS) lvm.o \
-		$(LVMLIBS) $(READLINE_LIBS) $(LIBS)
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $+ \
+		$(DMEVENT_LIBS) $(LVMLIBS) $(READLINE_LIBS) $(EDITLINE_LIBS)
 
 DEFS_man-generator.o += -DMAN_PAGE_GENERATOR
 
