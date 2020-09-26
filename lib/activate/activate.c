@@ -2934,8 +2934,7 @@ int revert_lv(struct cmd_context *cmd, const struct logical_volume *lv)
 
 	ret = lv_resume_if_active(cmd, NULL, 0, 0, 1, lv_committed(lv));
 
-	critical_section_dec(cmd, "unlocking on resume");
+	critical_section_dec(cmd, "unlocking on revert");
 
 	return ret;
 }
-
