@@ -7559,10 +7559,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			return NULL;
 		}
 		/* Does LV need to be zeroed? */
-		if (lp->zero && !seg_is_thin(lp)) {
-			log_error("Can't wipe start of new LV without using "
-				  "device-mapper kernel driver.");
-			return NULL;
+		if (lp->zero) {
+			log_warn("WARNING: Skipping zeroing and wipping, compiled without activation support.");
+			lp->zero = 0;
+			lp->wipe_signatures = 0;
 		}
 	}
 

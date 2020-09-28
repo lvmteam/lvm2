@@ -544,9 +544,9 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 				return_0;
 			}
 			if (!lv_is_active(lv)) {
-				init_dmeventd_monitor(monitored);
-				log_error("Cannot activate thin pool %s, perhaps skipped in lvm.conf volume_list?",
-					  display_lvname(lv));
+				(void) init_dmeventd_monitor(monitored);
+				log_error("Cannot activate thin pool %s%s", display_lvname(lv),
+					  activation() ? ", perhaps skipped in lvm.conf volume_list?" : ".");
 				return 0;
 			}
 		} else

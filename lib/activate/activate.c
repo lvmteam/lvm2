@@ -186,8 +186,8 @@ void set_activation(int act, int silent)
 	if (warned || !act)
 		return;
 
-	log_error("Compiled without libdevmapper support. "
-		  "Can't enable activation.");
+	log_warn("WARNING: Compiled without libdevmapper support. "
+		 "Can't enable activation.");
 
 	warned = 1;
 }
@@ -222,20 +222,10 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_la
 {
 	return 0;
 }
-int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
-		    struct lvinfo *info, int with_open_count, int with_read_ahead)
-{
-	return 0;
-}
-int lv_info_with_seg_status(struct cmd_context *cmd, const struct logical_volume *lv,
-			    const struct lv_segment *lv_seg, int use_layer,
+int lv_info_with_seg_status(struct cmd_context *cmd,
+			    const struct lv_segment *lv_seg,
 			    struct lv_with_info_and_seg_status *status,
 			    int with_open_count, int with_read_ahead)
-{
-	return 0;
-}
-int lv_status(struct cmd_context *cmd, const struct lv_segment *lv_seg,
-	      int use_layer, struct lv_seg_status *lv_seg_status)
 {
 	return 0;
 }
@@ -282,6 +272,10 @@ int lv_raid_sync_action(const struct logical_volume *lv, char **sync_action)
 	return 0;
 }
 int lv_raid_message(const struct logical_volume *lv, const char *msg)
+{
+	return 0;
+}
+int lv_writecache_message(const struct logical_volume *lv, const char *msg)
 {
 	return 0;
 }
