@@ -1663,6 +1663,9 @@ int lvmcache_update_vgname_and_id(struct cmd_context *cmd, struct lvmcache_info 
 		 * second updated to seqno 4, first comes back and second goes
 		 * missing, first updated to seqno 4, second comes back, now
 		 * both are present with same seqno but different checksums.
+		 * FIXME: we should check if the majority of mda copies have one
+		 * checksum and if so use that copy of metadata, but if there's
+		 * not a majority, don't allow the VG to be modified/activated.
 		 */
 
 		if ((vginfo->mda_size != vgsummary->mda_size) || (vginfo->mda_checksum != vgsummary->mda_checksum)) {

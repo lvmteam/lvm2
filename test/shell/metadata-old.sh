@@ -175,3 +175,48 @@ lvs $vg/$lv4
 
 vgchange -an $vg
 vgremove -ff $vg
+
+# Test when the metadata on two PVs have the same seqno
+# but different checksums.
+
+dd if=/dev/zero of="$dev1" || true
+dd if=/dev/zero of="$dev2" || true
+
+pvcreate "$dev1"
+pvcreate "$dev2"
+
+vgcreate $SHARED $vg "$dev1" "$dev2"
+
+lvcreate -n $lv1 -l1 -an $vg
+
+pvck --dump metadata -f meta "$dev2"
+
+# change an unimportant character so the metadata is effectively
+# the same in content but will have a different checksum
+sed 's/Linux/linux/' meta > meta2
+
+# write out the changed metadata
+pvck --repair -y -f meta2 "$dev2"
+
+# the vg can still be used but will produce warnings
+# the mda on one pv is updated, but not the other,
+# which changes the error from a checksum inconsistency
+# into a seqno inconsistency.
+lvs $vg 2>&1 | tee out
+grep WARNING out
+grep $lv1 out
+lvcreate -n $lv2 -l1 -an $vg 2>&1 |tee out
+grep WARNING out
+lvs $vg 2>&1 | tee out
+grep WARNING out
+grep $lv1 out
+grep $lv2 out
+
+# correct the senqo inconsistency
+vgck --updatemetadata $vg
+lvs $vg 2>&1 | tee out
+not grep WARNING out
+grep $lv1 out
+grep $lv2 out
+
+vgremove -ff $vg
