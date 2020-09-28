@@ -1666,6 +1666,15 @@ static int _thin_pool_node_send_messages(struct dm_tree_node *dnode,
 	if (!have_messages || !send)
 		return 1; /* transaction_id is matching */
 
+	if (stp.fail || stp.read_only || stp.needs_check) {
+		log_error("Cannot send messages to thin pool %s%s%s%s.",
+			  _node_name(dnode),
+			  stp.fail ? " in failed state" : "",
+			  stp.read_only ? " with read only metadata" : "",
+			  stp.needs_check ? " which needs check first" : "");
+		return 0;
+	}
+
 	dm_list_iterate_items(tmsg, &seg->thin_messages) {
 		if (!(_thin_pool_node_message(dnode, tmsg)))
 			return_0;
