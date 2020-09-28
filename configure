@@ -1766,11 +1766,11 @@ Optional Packages:
   --with-ocfdir=DIR       install OCF files in
                           [PREFIX/lib/ocf/resource.d/lvm2]
   --with-default-pid-dir=PID_DIR
-                          Default directory to keep PID files in. [autodetect]
+                          default directory to keep PID files in [autodetect]
   --with-default-dm-run-dir=DM_RUN_DIR
-                          Default DM run directory. [autodetect]
+                          default DM run directory [autodetect]
   --with-default-run-dir=RUN_DIR
-                          Default LVM run directory. [autodetect_run_dir/lvm]
+                          default LVM run directory [autodetect_run_dir/lvm]
   --with-clvmd=TYPE       build cluster LVM Daemon
                           The following cluster manager combinations are valid:
                            * cman                  (RHEL5 or equivalent)
