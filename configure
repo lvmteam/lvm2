@@ -1722,16 +1722,16 @@ Optional Packages:
                           cache_restore tool: [autodetect]
   --with-vdo=TYPE         vdo support: internal/none [internal]
   --with-vdo-format=PATH  vdoformat tool: [autodetect]
-  --with-writecache=TYPE  writecache support: internal/none [none]
-  --with-integrity=TYPE   integrity support: internal/none [none]
+  --with-writecache=TYPE  writecache support: internal/none [internal]
+  --with-integrity=TYPE   integrity support: internal/none [internal]
   --with-ocfdir=DIR       install OCF files in
                           [PREFIX/lib/ocf/resource.d/lvm2]
   --with-default-pid-dir=PID_DIR
-                          Default directory to keep PID files in. [autodetect]
+                          default directory to keep PID files in [autodetect]
   --with-default-dm-run-dir=DM_RUN_DIR
-                          Default DM run directory. [autodetect]
+                          default DM run directory [autodetect]
   --with-default-run-dir=RUN_DIR
-                          Default LVM run directory. [autodetect_run_dir/lvm]
+                          default LVM run directory [autodetect_run_dir/lvm]
   --with-cmirrord-pidfile=PATH
                           cmirrord pidfile [PID_DIR/cmirrord.pid]
   --with-optimisation=OPT C optimisation flag [OPT=-O2]
