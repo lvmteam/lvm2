@@ -6506,6 +6506,9 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return 0;
 		}
 
+		if (!archive(vg))
+			return_0;
+
 		if (!lv_detach_writecache_cachevol(lv, 1)) {
 			log_error("Failed to detach writecache from %s", display_lvname(lv));
 			return 0;
