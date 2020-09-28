@@ -25,10 +25,6 @@
 #include "lib/metadata/metadata.h"
 #include "lib/metadata/lv_alloc.h"
 
-static int _raid_target_present(struct cmd_context *cmd,
-				const struct lv_segment *seg __attribute__((unused)),
-				unsigned *attributes);
-
 static void _raid_display(const struct lv_segment *seg)
 {
 	unsigned s;
@@ -240,6 +236,22 @@ static int _raid_text_export(const struct lv_segment *seg, struct formatter *f)
 	return _raid_text_export_raid(seg, f);
 }
 
+static int _raid_target_status_compatible(const char *type)
+{
+	return (strstr(type, "raid") != NULL);
+}
+
+static void _raid_destroy(struct segment_type *segtype)
+{
+	free((void *) segtype->dso);
+	free(segtype);
+}
+
+#ifdef DEVMAPPER_SUPPORT
+static int _raid_target_present(struct cmd_context *cmd,
+				const struct lv_segment *seg __attribute__((unused)),
+				unsigned *attributes);
+
 static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 				 struct dm_pool *mem __attribute__((unused)),
 				 struct cmd_context *cmd __attribute__((unused)),
@@ -357,18 +369,6 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 	return add_areas_line(dm, seg, node, 0u, seg->area_count);
 }
 
-static int _raid_target_status_compatible(const char *type)
-{
-	return (strstr(type, "raid") != NULL);
-}
-
-static void _raid_destroy(struct segment_type *segtype)
-{
-	free((void *) segtype->dso);
-	free(segtype);
-}
-
-#ifdef DEVMAPPER_SUPPORT
 static int _raid_target_percent(void **target_state,
 				dm_percent_t *percent,
 				struct dm_pool *mem,
@@ -569,9 +569,9 @@ static struct segtype_handler _raid_ops = {
 	.text_import_area_count = _raid_text_import_area_count,
 	.text_import = _raid_text_import,
 	.text_export = _raid_text_export,
-	.add_target_line = _raid_add_target_line,
 	.target_status_compatible = _raid_target_status_compatible,
 #ifdef DEVMAPPER_SUPPORT
+	.add_target_line = _raid_add_target_line,
 	.target_percent = _raid_target_percent,
 	.target_present = _raid_target_present,
 	.check_transient_status = _raid_transient_status,
