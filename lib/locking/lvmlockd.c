@@ -2374,6 +2374,7 @@ int lockd_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	    lv_is_thin_type(lv) ||
 	    lv_is_mirror_type(lv) ||
 	    lv_is_raid_type(lv) ||
+	    lv_is_vdo_type(lv) ||
 	    lv_is_cache_type(lv)) {
 		flags |= LDLV_MODE_NO_SH;
 	}
