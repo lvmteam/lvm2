@@ -106,7 +106,7 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 	if (ioctl(fd, BLKGETSIZE64, size) < 0) {
 		log_sys_error("ioctl BLKGETSIZE64", name);
 		if (do_close && !dev_close_immediate(dev))
-			log_sys_error("close", name);
+			stack;
 		return 0;
 	}
 
@@ -117,7 +117,7 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 	log_very_verbose("%s: size is %" PRIu64 " sectors", name, *size);
 
 	if (do_close && !dev_close_immediate(dev))
-		log_sys_error("close", name);
+		stack;
 
 	return 1;
 }
@@ -133,7 +133,7 @@ static int _dev_read_ahead_dev(struct device *dev, uint32_t *read_ahead)
 
 	if (!dev_open_readonly_quiet(dev)) {
 		log_error("Failed to open to get readahead %s", dev_name(dev));
-		return_0;
+		return 0;
 	}
 
 	if (ioctl(dev->fd, BLKRAGET, &read_ahead_long) < 0) {
@@ -449,7 +449,7 @@ int dev_open_readonly_quiet(struct device *dev)
 static void _close(struct device *dev)
 {
 	if (close(dev->fd))
-		log_sys_error("close", dev_name(dev));
+		log_sys_debug("close", dev_name(dev));
 	dev->fd = -1;
 
 	log_debug_devs("Closed %s", dev_name(dev));
