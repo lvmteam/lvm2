@@ -1222,8 +1222,19 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 	}
 
 	/* When removed last VDO user automatically removes VDO pool */
-	if (lv_is_vdo_pool(lv) && dm_list_empty(&(lv->segs_using_this_lv)))
-		return lv_remove(lv); /* FIXME: any upper level reporting */
+	if (lv_is_vdo_pool(lv) && dm_list_empty(&(lv->segs_using_this_lv))) {
+		struct volume_group *vg = lv->vg;
+
+		if (!lv_remove(lv)) /* FIXME: any upper level reporting */
+			return_0;
+
+		if (vg_is_shared(vg)) {
+			if (!lockd_lv_name(vg->cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args, "un", LDLV_PERSISTENT))
+				log_error("Failed to unlock vdo pool in lvmlockd.");
+			lockd_free_lv(vg->cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
+		}
+		return 1;
+	}
 
 	return 1;
 }
@@ -8730,9 +8741,15 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 			/* The VDO segment needs VDO pool which is layer above created striped data LV */
 			if (!(lp->segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_VDO_POOL)))
 				return_NULL;
+
+			/* We want a lockd lock for the new vdo pool, but not the vdo lv. */
+			lp->needs_lockd_init = 1;
+
 			/* Use vpool names for vdo-pool */
 			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name ? : "vpool%d")))
 				return_NULL;
+
+			lp->needs_lockd_init = 0;
 		} else {
 			log_error(INTERNAL_ERROR "Creation of pool for unsupported segment type %s.",
 				  lp->segtype->name);

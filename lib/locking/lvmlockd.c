@@ -2311,6 +2311,49 @@ static int _lockd_lv_thin(struct cmd_context *cmd, struct logical_volume *lv,
 			     pool_lv->lock_args, def_mode, flags);
 }
 
+static int _lockd_lv_vdo(struct cmd_context *cmd, struct logical_volume *lv,
+			 const char *def_mode, uint32_t flags)
+{
+	struct logical_volume *pool_lv = NULL;
+
+	if (lv_is_vdo(lv)) {
+		if (first_seg(lv))
+			pool_lv = seg_lv(first_seg(lv), 0);
+
+	} else if (lv_is_vdo_pool(lv)) {
+		pool_lv = lv;
+
+	} else if (lv_is_vdo_pool_data(lv)) {
+		return 1;
+
+	} else {
+		/* This should not happen AFAIK. */
+		log_error("Lock on incorrect vdo lv type %s/%s",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	if (!pool_lv) {
+		/* This happens in lvremove where it's harmless. */
+		log_debug("No vdo pool for %s/%s", lv->vg->name, lv->name);
+		return 0;
+	}
+
+	/*
+	 * Locking a locked lv (pool in this case) is a no-op.
+	 * Unlock when the pool is no longer active.
+	 */
+
+	if (def_mode && !strcmp(def_mode, "un") &&
+	    lv_is_vdo_pool(pool_lv) && lv_is_active(lv_lock_holder(pool_lv)))
+		return 1;
+
+	flags |= LDLV_MODE_NO_SH;
+
+	return lockd_lv_name(cmd, pool_lv->vg, pool_lv->name, &pool_lv->lvid.id[1],
+			     pool_lv->lock_args, def_mode, flags);
+}
+
 /*
  * If the VG has no lock_type, then this function can return immediately.
  * The LV itself may have no lock (NULL lv->lock_args), but the lock request
@@ -2351,6 +2394,9 @@ int lockd_lv(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (lv_is_thin_type(lv))
 		return _lockd_lv_thin(cmd, lv, def_mode, flags);
+
+	if (lv_is_vdo_type(lv))
+		return _lockd_lv_vdo(cmd, lv, def_mode, flags);
 
 	/*
 	 * An LV with NULL lock_args does not have a lock of its own.
@@ -2724,6 +2770,27 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 			return 0;
 		}
 
+	} else if (seg_is_vdo(lp)) {
+		struct lv_list *lvl;
+
+		/*
+		 * A vdo lv is being created in a vdo pool.  The vdo lv does
+		 * not have its own lock, the lock of the vdo pool is used, and
+		 * the vdo pool needs to be locked to create a vdo lv in it.
+		 */
+
+		if (!(lvl = find_lv_in_vg(vg, lp->pool_name))) {
+			log_error("Failed to find vdo pool %s/%s", vg->name, lp->pool_name);
+			return 0;
+		}
+
+		if (!lockd_lv(cmd, lvl->lv, "ex", LDLV_PERSISTENT)) {
+			log_error("Failed to lock vdo pool %s/%s", vg->name, lp->pool_name);
+			return 0;
+		}
+		lv->lock_args = NULL;
+		return 1;
+
 	} else {
 		/* Creating a normal lv. */
 		/* lv_name_lock = lv_name; */
@@ -2961,6 +3028,12 @@ int lockd_lv_uses_lock(struct logical_volume *lv)
 		return 0;
 
 	if (lv_is_pool_metadata_spare(lv))
+		return 0;
+
+	if (lv_is_vdo(lv))
+		return 0;
+
+	if (lv_is_vdo_pool_data(lv))
 		return 0;
 
 	if (lv_is_cache_vol(lv))
