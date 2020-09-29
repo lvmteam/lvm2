@@ -412,7 +412,7 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 	if (ioctl(fd, BLKGETSIZE64, size) < 0) {
 		log_sys_error("ioctl BLKGETSIZE64", name);
 		if (do_close && !dev_close_immediate(dev))
-			log_sys_error("close", name);
+			stack;
 		return 0;
 	}
 
@@ -423,7 +423,7 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 	log_very_verbose("%s: size is %" PRIu64 " sectors", name, *size);
 
 	if (do_close && !dev_close_immediate(dev))
-		log_sys_error("close", name);
+		stack;
 
 	return 1;
 }
@@ -713,7 +713,7 @@ int dev_test_excl(struct device *dev)
 static void _close(struct device *dev)
 {
 	if (close(dev->fd))
-		log_sys_error("close", dev_name(dev));
+		log_sys_debug("close", dev_name(dev));
 	dev->fd = -1;
 	dev->phys_block_size = -1;
 	dev->block_size = -1;
