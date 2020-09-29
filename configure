@@ -753,6 +753,8 @@ BUILD_CMIRRORD
 BLKID_PC
 MODPROBE_CMD
 MSGFMT
+EDITLINE_LIBS
+EDITLINE_CFLAGS
 PYTHON3_CONFIG
 pkgpyexecdir
 pyexecdir
@@ -920,6 +922,7 @@ with_vdo_format
 with_writecache
 with_integrity
 enable_readline
+enable_editline
 enable_realtime
 enable_ocf
 with_ocfdir
@@ -1015,7 +1018,9 @@ SYSTEMD_CFLAGS
 SYSTEMD_LIBS
 UDEV_CFLAGS
 UDEV_LIBS
-PYTHON'
+PYTHON
+EDITLINE_CFLAGS
+EDITLINE_LIBS'
 
 
 # Initialize some variables set by options.
@@ -1638,6 +1643,7 @@ Optional Features:
   --disable-cache_check_needs_check
                           required if cache_check version is < 0.5
   --disable-readline      disable readline support
+  --enable-editline       enable editline support
   --disable-realtime      disable realtime clock support
   --enable-ocf            enable Open Cluster Framework (OCF) compliant
                           resource agents
@@ -1816,6 +1822,10 @@ Some influential environment variables:
   UDEV_CFLAGS C compiler flags for UDEV, overriding pkg-config
   UDEV_LIBS   linker flags for UDEV, overriding pkg-config
   PYTHON      the Python interpreter
+  EDITLINE_CFLAGS
+              C compiler flags for EDITLINE, overriding pkg-config
+  EDITLINE_LIBS
+              linker flags for EDITLINE, overriding pkg-config
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -9798,6 +9808,15 @@ fi
 
 
 ################################################################################
+# Check whether --enable-editline was given.
+if test "${enable_editline+set}" = set; then :
+  enableval=$enable_editline; EDITLINE=$enableval
+else
+  EDITLINE=no
+fi
+
+
+################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable realtime support" >&5
 $as_echo_n "checking whether to enable realtime support... " >&6; }
 # Check whether --enable-realtime was given.
@@ -12809,6 +12828,86 @@ done
 
 
 ################################################################################
+if test "$EDITLINE" == yes; then
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for EDITLINE" >&5
+$as_echo_n "checking for EDITLINE... " >&6; }
+
+if test -n "$EDITLINE_CFLAGS"; then
+    pkg_cv_EDITLINE_CFLAGS="$EDITLINE_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libedit\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libedit") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_EDITLINE_CFLAGS=`$PKG_CONFIG --cflags "libedit" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$EDITLINE_LIBS"; then
+    pkg_cv_EDITLINE_LIBS="$EDITLINE_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libedit\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libedit") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_EDITLINE_LIBS=`$PKG_CONFIG --libs "libedit" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        EDITLINE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libedit" 2>&1`
+        else
+	        EDITLINE_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libedit" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$EDITLINE_PKG_ERRORS" >&5
+
+	as_fn_error $? "libedit could not be found which is required for the --enable-readline option." "$LINENO" 5
+
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	as_fn_error $? "libedit could not be found which is required for the --enable-readline option." "$LINENO" 5
+
+else
+	EDITLINE_CFLAGS=$pkg_cv_EDITLINE_CFLAGS
+	EDITLINE_LIBS=$pkg_cv_EDITLINE_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+
+$as_echo "#define EDITLINE_SUPPORT 1" >>confdefs.h
+
+fi
+fi
+
+################################################################################
 if test "$READLINE" != no; then
 	lvm_saved_libs=$LIBS
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing tgetent" >&5
@@ -13245,6 +13344,28 @@ fi
 $as_echo_n "checking whether to enable readline... " >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $READLINE" >&5
 $as_echo "$READLINE" >&6; }
+
+if test "$EDITLINE" = yes; then
+	for ac_header in editline/readline.h editline/history.h
+do :
+  as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
+ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
+if eval test \"x\$"$as_ac_Header"\" = x"yes"; then :
+  cat >>confdefs.h <<_ACEOF
+#define `$as_echo "HAVE_$ac_header" | $as_tr_cpp` 1
+_ACEOF
+
+else
+  hard_bailout
+fi
+
+done
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable editline" >&5
+$as_echo_n "checking whether to enable editline... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $EDITLINE" >&5
+$as_echo "$EDITLINE" >&6; }
 
 if test "$BUILD_CMIRRORD" = yes; then
 	for ac_func in atexit

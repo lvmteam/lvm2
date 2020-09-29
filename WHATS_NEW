@@ -1,5 +1,6 @@
 Version 2.03.11 - 
 ==================================
+  Add configure --enable-editline support as an alternative to readline.
   Enhance reporting and error handling when creating thin volumes.
   Enable vgsplit for VDO volumes.
   Lvextend of vdo pool volumes ensure at least 1 new VDO slab is added.
