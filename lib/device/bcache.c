@@ -66,22 +66,16 @@ struct control_block {
 struct cb_set {
 	struct dm_list free;
 	struct dm_list allocated;
-	struct control_block *vec;
+	struct control_block vec[];
 } control_block_set;
 
 static struct cb_set *_cb_set_create(unsigned nr)
 {
 	unsigned i;
-	struct cb_set *cbs = malloc(sizeof(*cbs));
+	struct cb_set *cbs = malloc(sizeof(*cbs) + nr * sizeof(*cbs->vec));
 
-	if (!cbs)
+	if (!cbs->vec)
 		return NULL;
-
-	cbs->vec = malloc(nr * sizeof(*cbs->vec));
-	if (!cbs->vec) {
-		free(cbs);
-		return NULL;
-	}
 
 	dm_list_init(&cbs->free);
 	dm_list_init(&cbs->allocated);
@@ -102,7 +96,6 @@ static void _cb_set_destroy(struct cb_set *cbs)
 		return;
 	}
 
-	free(cbs->vec);
 	free(cbs);
 }
 
