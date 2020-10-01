@@ -3839,7 +3839,7 @@ static int _get_arg_devices(struct cmd_context *cmd,
 		}
 
 		if (!(dil->dev = dev_cache_get(cmd, sl->str, cmd->filter))) {
-			log_error("Failed to find device for physical volume \"%s\".", sl->str);
+			log_error("Cannot use %s: %s", sl->str, devname_error_reason(sl->str));
 			ret_max = ECMD_FAILED;
 		} else {
 			strncpy(dil->pvid, dil->dev->pvid, ID_LEN);
