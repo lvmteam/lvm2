@@ -5248,7 +5248,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	dm_list_iterate_items_safe(pd, pd2, &pp->arg_devices) {
 		pd->dev = dev_cache_get(cmd, pd->name, cmd->filter);
 		if (!pd->dev) {
-			log_error("Device %s not found.", pd->name);
+			log_error("Cannot use %s: %s", pd->name, devname_error_reason(pd->name));
 			dm_list_del(&pd->list);
 			dm_list_add(&pp->arg_fail, &pd->list);
 		}
