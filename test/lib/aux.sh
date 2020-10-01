@@ -1595,7 +1595,7 @@ have_thin() {
 }
 
 have_vdo() {
-	lvm segtypes 2>/dev/null | grep vdo$ >/dev/null || {
+	lvm segtypes 2>/dev/null | grep 'vdo$' >/dev/null || {
 		echo "VDO is not built-in." >&2
 		return 1
 	}
@@ -1603,7 +1603,7 @@ have_vdo() {
 }
 
 have_writecache() {
-	lvm segtypes 2>/dev/null | grep -q writecache$ || {
+	lvm segtypes 2>/dev/null | grep 'writecache$' >/dev/null || {
 		echo "writecache is not built-in." >&2
 		return 1
 	}
@@ -1611,7 +1611,7 @@ have_writecache() {
 }
 
 have_integrity() {
-	lvm segtypes 2>/dev/null | grep -q integrity$ || {
+	lvm segtypes 2>/dev/null | grep 'integrity$' >/dev/null || {
 		echo "integrity is not built-in." >&2
 		return 1
 	}
