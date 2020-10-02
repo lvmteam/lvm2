@@ -1352,6 +1352,33 @@ if test "$SELINUX" = yes; then
 fi
 
 ################################################################################
+dnl -- Check BLKZEROOUT support
+
+AC_CACHE_CHECK([for BLKZEROOUT in sys/ioctl.h.],
+	[ac_cv_have_blkzeroout],
+	[AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+[#include <sys/ioctl.h>
+#include <linux/fs.h>
+int bar(void) { return ioctl(0, BLKZEROOUT, 0); }]
+	 )], [ac_cv_have_blkzeroout=yes], [ac_cv_have_blkzeroout=no])])
+
+
+AC_ARG_ENABLE(blkzeroout,
+	      AC_HELP_STRING([--disable-blkzeroout],
+			     [do not use BLKZEROOUT for device zeroing]),
+	      BLKZEROOUT=$enableval, BLKZEROOUT=yes)
+
+AC_MSG_CHECKING(whether to use BLKZEROOUT for device zeroing)
+if test "$BLKZEROOUT" = yes; then
+	AC_IF_YES(ac_cv_have_blkzeroout,
+		  AC_DEFINE(HAVE_BLKZEROOUT, 1,
+			    [Define if ioctl BLKZEROOUT can be used for device zeroing.]),
+		  BLKZEROOUT=no)
+fi
+AC_MSG_RESULT($BLKZEROOUT)
+
+
+################################################################################
 dnl -- Check for realtime clock support
 RT_LIBS=
 HAVE_REALTIME=no

@@ -963,6 +963,7 @@ enable_fsadm
 enable_blkdeactivate
 enable_dmeventd
 enable_selinux
+enable_blkzeroout
 enable_nls
 with_localedir
 with_confdir
@@ -1684,6 +1685,7 @@ Optional Features:
   --disable-blkdeactivate disable blkdeactivate
   --enable-dmeventd       enable the device-mapper event daemon
   --disable-selinux       disable selinux support
+  --disable-blkzeroout    do not use BLKZEROOUT for device zeroing
   --enable-nls            enable Native Language Support
 
 Optional Packages:
@@ -12706,6 +12708,61 @@ $as_echo "$as_me: WARNING: Disabling selinux" >&2;}
 fi
 
 fi
+
+################################################################################
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for BLKZEROOUT in sys/ioctl.h." >&5
+$as_echo_n "checking for BLKZEROOUT in sys/ioctl.h.... " >&6; }
+if ${ac_cv_have_blkzeroout+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <sys/ioctl.h>
+#include <linux/fs.h>
+int bar(void) { return ioctl(0, BLKZEROOUT, 0); }
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ac_cv_have_blkzeroout=yes
+else
+  ac_cv_have_blkzeroout=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_have_blkzeroout" >&5
+$as_echo "$ac_cv_have_blkzeroout" >&6; }
+
+
+# Check whether --enable-blkzeroout was given.
+if test "${enable_blkzeroout+set}" = set; then :
+  enableval=$enable_blkzeroout; BLKZEROOUT=$enableval
+else
+  BLKZEROOUT=yes
+fi
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use BLKZEROOUT for device zeroing" >&5
+$as_echo_n "checking whether to use BLKZEROOUT for device zeroing... " >&6; }
+if test "$BLKZEROOUT" = yes; then
+	if test $ac_cv_have_blkzeroout = yes; then :
+
+$as_echo "#define HAVE_BLKZEROOUT 1" >>confdefs.h
+
+else
+  BLKZEROOUT=no
+fi
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $BLKZEROOUT" >&5
+$as_echo "$BLKZEROOUT" >&6; }
+
 
 ################################################################################
 RT_LIBS=
