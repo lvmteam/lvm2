@@ -33,6 +33,11 @@
 #include "lib/label/label.h"
 #include "lib/misc/lvm-signal.h"
 
+#ifdef HAVE_BLKZEROOUT
+#include <sys/ioctl.h>
+#include <linux/fs.h>
+#endif
+
 typedef enum {
 	PREFERRED,
 	USE_AREA,
@@ -7713,6 +7718,33 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 			    display_size(lv->vg->cmd, zero_sectors),
 			    display_lvname(lv), wp.zero_value);
 
+#ifdef HAVE_BLKZEROOUT
+		if (!test_mode() && !wp.zero_value) {
+			/* TODO: maybe integrate with bcache_zero_set() */
+			const uint64_t end = zero_sectors << SECTOR_SHIFT;
+			uint64_t range[2] = { 0, 1024 * 1024 }; /* zeroing with 1M steps (for better ^C support) */
+			for (/* empty */ ; range[0] < end; range[0] += range[1]) {
+				if ((range[0] + range[1]) > end)
+					range[1] = end - range[0];
+
+				if (ioctl(dev->bcache_fd, BLKZEROOUT, &range)) {
+					if (errno == EINVAL)
+						goto retry_with_dev_set; /* Kernel without support for BLKZEROOUT */
+					log_sys_debug("ioctl", "BLKZEROOUT");
+					sigint_restore();
+					label_scan_invalidate(dev);
+					if (sigint_caught())
+						log_error("Interrupted initialization logical volume %s.",
+							  display_lvname(lv));
+					else
+						log_error("Failed to initialize logical volume %s at position " FMTu64 " and size " FMTu64 ".",
+							  display_lvname(lv), range[0], range[1]);
+					return 0;
+				}
+			}
+		} else
+retry_with_dev_set:
+#endif
 		if (!dev_set_bytes(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT, wp.zero_value)) {
 			sigint_restore();
 			if (sigint_caught()) {

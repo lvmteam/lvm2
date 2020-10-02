@@ -1,5 +1,6 @@
 Version 2.03.11 - 
 ==================================
+  Support using BLKZEROOUT for clearing devices.
   Support interruption when wipping LVs.
   Support interruption for bcache waiting.
   Fix bcache when device has too many failing writes.
