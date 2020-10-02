@@ -1,5 +1,6 @@
 Version 2.03.11 - 
 ==================================
+  Configure use own python path name order to prefer using python3.
   Add configure --enable-editline support as an alternative to readline.
   Enhance reporting and error handling when creating thin volumes.
   Enable vgsplit for VDO volumes.
