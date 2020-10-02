@@ -1,5 +1,6 @@
 Version 2.02.188 - 
 ==================================
+  Support interruption when wipping LVs.
   Add configure --enable-editline support as an alternative to readline.
   Zero pool metadata on allocation (disable with allocation/zero_metadata=0).
   Failure in zeroing or wiping will fail command (bypass with -Zn, -Wn).
