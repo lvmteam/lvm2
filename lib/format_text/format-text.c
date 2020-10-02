@@ -2216,8 +2216,10 @@ static int _create_vg_text_instance(struct format_instance *fid,
 		}
 
 		if (type & FMT_INSTANCE_MDAS) {
-			if (!(vginfo = lvmcache_vginfo_from_vgname(vg_name, vg_id)))
-				goto_out;
+			if (!(vginfo = lvmcache_vginfo_from_vgname(vg_name, vg_id))) {
+				log_debug("No cached vginfo for VG %s and ID %s.", vg_name, vg_id);
+				goto out;
+			}
 			if (!lvmcache_fid_add_mdas_vg(vginfo, fid))
 				goto_out;
 		}
