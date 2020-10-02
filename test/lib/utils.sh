@@ -171,6 +171,7 @@ STACKTRACE() {
 			test "$name" = "DEBUG" && { name="$name$idx" ; idx=$(( idx + 1 )) ; }
 			echo "<======== Debug log $i ========>"
 			sed -e "s,^,## $name: ," "$i"
+			mv -f "$i" "debug_${i#debug.}"
 		done
 		if test -e strace.log ; then
 			echo "<======== Strace debug log ========>"
