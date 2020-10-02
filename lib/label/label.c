@@ -417,7 +417,7 @@ static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
 		lvmcache_del_dev(dev); /* FIXME: if this is needed, fix it. */
 
 		*is_lvm_device = 0;
-		goto_out;
+		goto out;
 	}
 
 	dev->flags |= DEV_SCAN_FOUND_LABEL;
