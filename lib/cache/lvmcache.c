@@ -326,7 +326,7 @@ static struct lvmcache_vginfo *_vginfo_lookup(const char *vgname, const char *vg
 		if ((vginfo = dm_hash_lookup(_vgname_hash, vgname))) {
 			if (vginfo->has_duplicate_local_vgname) {
 				/* should never happen, found_duplicate_vgnames should be set */
-				log_error(INTERNAL_ERROR "vginfo_lookup %s %s has_duplicate_local_vgname", vgname, vgid);
+				log_error(INTERNAL_ERROR "vginfo_lookup %s has_duplicate_local_vgname.", vgname);
 				return NULL;
 			}
 			return vginfo;
@@ -336,7 +336,7 @@ static struct lvmcache_vginfo *_vginfo_lookup(const char *vgname, const char *vg
 	if (vgname && _found_duplicate_vgnames) {
 		if ((vginfo = _search_vginfos_list(vgname, vgid))) {
 			if (vginfo->has_duplicate_local_vgname) {
-				log_debug("vginfo_lookup %s %s has_duplicate_local_vgname return none", vgname, vgid);
+				log_debug("vginfo_lookup %s has_duplicate_local_vgname return none.", vgname);
 				return NULL;
 			}
 			return vginfo;
