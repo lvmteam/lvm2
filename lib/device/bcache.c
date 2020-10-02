@@ -963,7 +963,7 @@ static struct block *_new_block(struct bcache *cache, int di, block_address i, b
 			if (can_wait) {
 				if (dm_list_empty(&cache->io_pending))
 					_writeback(cache, 16);  // FIXME: magic number
-				_wait_io(cache);
+				_wait_all(cache);
 			} else {
 				log_debug("bcache no new blocks for di %d index %u",
 					  di, (uint32_t) i);
