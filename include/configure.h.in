@@ -172,6 +172,9 @@
 /* Define to 1 if you have the `atexit' function. */
 #undef HAVE_ATEXIT
 
+/* Define if ioctl BLKZEROOUT can be used for device zeroing. */
+#undef HAVE_BLKZEROOUT
+
 /* Define to 1 if canonicalize_file_name is available. */
 #undef HAVE_CANONICALIZE_FILE_NAME
 
