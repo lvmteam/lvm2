@@ -318,9 +318,7 @@ static bool _async_wait(struct io_engine *ioe, io_complete_fn fn)
 	struct async_engine *e = _to_async(ioe);
 
 	memset(&event, 0, sizeof(event));
-	do {
-		r = io_getevents(e->aio_context, 1, MAX_EVENT, event, NULL);
-	} while (r == -EINTR);
+	r = io_getevents(e->aio_context, 1, MAX_EVENT, event, NULL);
 
 	if (r < 0) {
 		log_sys_warn("io_getevents");
