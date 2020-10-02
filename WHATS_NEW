@@ -1,5 +1,6 @@
 Version 2.02.188 - 
 ==================================
+  Configure use own python path name order to prefer using python3.
   Enhance reporting and error handling when creating thin volumes.
   Use revert_lv() on reload error path after vg_revert().
   Improve estimation of needed extents when creating thin-pool.

@@ -1445,6 +1445,9 @@ if test "$PYTHON3_BINDINGS" = yes -o "$BUILD_LVMDBUSD" = yes; then
 	unset am_cv_pathless_PYTHON ac_cv_path_PYTHON am_cv_python_platform
 	unset am_cv_python_pythondir am_cv_python_version am_cv_python_pyexecdir
 	unset ac_cv_path_PYTHON_CONFIG ac_cv_path_ac_pt_PYTHON_CONFIG
+	m4_define_default([_AM_PYTHON_INTERPRETER_LIST],[ python3 python2 python dnl
+	python3.9 python3.8 python3.7 python3.6 python3.5 python3.4 python3.3 python3.2 python3.1 python3.0 dnl
+	python2.7 python2.6 python2.5 python2.4 python2.3 python2.2 python2.1 python2.0 ])
 	AM_PATH_PYTHON([3])
 	PYTHON3=$PYTHON
 	test -z "$PYTHON3" && AC_MSG_ERROR([python3 is required for --enable-python3_bindings or --enable-dbus-service but cannot be found])
