@@ -5774,14 +5774,15 @@ static int _lvconvert_detach_writecache_when_clean(struct cmd_context *cmd,
 	backup(vg);
 
 out_release:
+	if (ret)
+		log_print_unless_silent("Logical volume %s write cache has been detached.", display_lvname(lv));
+
 	unlock_and_release_vg(cmd, vg, vg->name);
 
 out_lockd:
 	if (!lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state))
 		stack;
 
-	if (ret)
-		log_print_unless_silent("Logical volume %s write cache has been detached.", display_lvname(lv));
 	return ret;
 }
 
