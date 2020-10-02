@@ -20,7 +20,6 @@ Version 2.03.11 -
   Fix 64bit math when calculation cachevol size.
   Preserve uint32_t for seqno handling.
   Switch from mmap to plain read when loading regular files.
-  Fix missing device closing on wiping error path.
   Update lvmvdo man page and better explain DISCARD usage.
 
 Version 2.03.10 - 09th August 2020

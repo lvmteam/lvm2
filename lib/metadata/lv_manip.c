@@ -7706,7 +7706,6 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 			    display_lvname(lv), wp.zero_value);
 
 		if (!dev_set_bytes(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT, wp.zero_value)) {
-			label_scan_invalidate(dev);
 			log_error("Failed to initialize %s of logical volume %s with value %d.",
 				  display_size(lv->vg->cmd, zero_sectors),
 				  display_lvname(lv), wp.zero_value);
