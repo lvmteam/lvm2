@@ -10,7 +10,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
@@ -32,7 +31,7 @@ aux prepare_pvs 4 64
 get_devs
 
 # build one large PV
-vgcreate $vg1 "$dev1" "$dev2" "$dev3"
+vgcreate $SHARED $vg1 "$dev1" "$dev2" "$dev3"
 
 # 32bit linux kernels are fragille with device size >= 16T
 # maybe  uname -m    [ x86_64 | i686 ]
@@ -42,7 +41,7 @@ lvcreate --type snapshot -l 100%FREE -n $lv $vg1 --virtualsize $TSIZE
 aux extend_filter_LVMTEST
 
 pvcreate "$DM_DEV_DIR/$vg1/$lv"
-vgcreate $vg -s 64K "$dev4" "$DM_DEV_DIR/$vg1/$lv"
+vgcreate $SHARED -s 64K $vg "$dev4" "$DM_DEV_DIR/$vg1/$lv"
 
 lvcreate -L1T -n $lv1 $vg
 invalid lvconvert --yes -c 8M --type thin --poolmetadatasize 1G $vg/$lv1

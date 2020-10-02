@@ -12,7 +12,6 @@
 
 # Test various supported conversion of snapshot
 
-SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -20,7 +19,7 @@ SKIP_WITH_LVMPOLLD=1
 aux prepare_pvs 2
 get_devs
 
-vgcreate -s 4k "$vg" "${DEVICES[@]}"
+vgcreate $SHARED -s 4k "$vg" "${DEVICES[@]}"
 
 lvcreate --type snapshot -V50 -L1 -n $lv1 -s $vg
 
