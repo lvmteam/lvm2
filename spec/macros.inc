@@ -58,11 +58,11 @@ fi \
 %%if %%{enable_systemd} \
 if [ $1 = 0 ]; then \
 	systemctl --no-reload disable lvm2-%%{-s*}.%%{-t*} > /dev/null 2>&1 || : \
-	%%if %%{-t*} == socket \
+	%%if "%%{-t*}" == "socket" \
 	systemctl --no-reload disable lvm2-%%{-s*}.service > /dev/null 2>&1 || : \
 	%%endif \
 	systemctl stop lvm2-%%{-s*}.%%{-t*} > /dev/null 2>&1 || : \
-	%%if %%{-t*} == socket \
+	%%if "%%{-t*}" == "socket" \
 	systemctl stop lvm2-%%{-s*}.service > /dev/null 2>&1 || : \
 	%%endif \
 fi \
