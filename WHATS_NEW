@@ -1,5 +1,6 @@
 Version 2.03.11 - 
 ==================================
+  Support interruption for bcache waiting.
   Fix bcache when device has too many failing writes.
   Fix bcache waiting for IO completion with failing disks.
   Configure use own python path name order to prefer using python3.
