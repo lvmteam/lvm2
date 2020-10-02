@@ -516,14 +516,14 @@ teardown() {
 	echo -n "## teardown..."
 	unset LVM_LOG_FILE_EPOCH
 
-	test ! -f ERR_DEV || should dmsetup remove $(cat ERR_DEV_NAME)
-	test ! -f ZERO_DEV || should dmsetup remove $(cat ZERO_DEV_NAME)
-
 	if test -f TESTNAME ; then
 
 	if test ! -f SKIP_THIS_TEST ; then
 		# Evaluate left devices only for non-skipped tests
-		TEST_LEAKED_DEVICES=$(dmsetup table | grep "$PREFIX" | grep -Ev "${PREFIX}(pv|[0-9])") || true
+		TEST_LEAKED_DEVICES=$(dmsetup table | grep "$PREFIX" | \
+			grep -Ev "${PREFIX}(pv|[0-9])" | \
+			grep -v "$(cat ERR_DEV_NAME 2>/dev/null)" | \
+			grep -v "$(cat ZERO_DEV_NAME 2>/dev/null)") || true
 	fi
 
 	kill_tagged_processes
