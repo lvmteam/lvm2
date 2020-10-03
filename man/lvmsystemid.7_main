@@ -122,7 +122,7 @@ accessible to any host.
 
 .B Owned:
 A local VG that has a system ID set, as viewed from the host with a
-matching system ID (the owner).  This VG type is acessible to the host.
+matching system ID (the owner).  This VG type is accessible to the host.
 
 .B Foreign:
 A local VG that has a system ID set, as viewed from any host with an

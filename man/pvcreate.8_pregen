@@ -64,7 +64,7 @@ default_data_alignment 1 (MiB), setting --metadatasize 2048k results in
 pe_start of 3 MiB and mda_size of 3068 KiB.  Alternatively, --metadatasize
 2044k results in pe_start at 2 MiB and mda_size of 2044 KiB.
 
-The alignment of pe_start described above may be automatically overriden
+The alignment of pe_start described above may be automatically overridden
 based on md device properties or device i/o properties reported in sysfs.
 These automatic adjustments can be enabled/disabled using lvm.conf
 settings md_chunk_alignment and data_alignment_offset_detection.
@@ -82,9 +82,9 @@ provides at least 2048 KiB of metadata space.
 Always check the resulting alignment and metadata size when using
 these options.
 
-To shift an aligned pe_start value, use the --dataaligmentoffset option.
+To shift an aligned pe_start value, use the --dataalignmentoffset option.
 The pe_start alignment is calculated as described above, and then the
-value specified with --dataaligmentoffset is added to produce the final
+value specified with --dataalignmentoffset is added to produce the final
 pe_start value.
 .SH USAGE
 \fBpvcreate\fP \fIPV\fP ...

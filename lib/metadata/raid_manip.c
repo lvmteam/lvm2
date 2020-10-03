@@ -5450,7 +5450,7 @@ static int _takeover_upconvert_wrapper(TAKEOVER_FN_ARGS)
 	extents_copied = seg->extents_copied;
 	seg_len = seg->len;
 
-	/* In case of raid4/5, adjust to allow for allocation of additonal image pairs */
+	/* In case of raid4/5, adjust to allow for allocation of additional image pairs */
 	if (seg_is_raid4(seg) || seg_is_any_raid5(seg)) {
 		if (!(seg->segtype = get_segtype_from_flag(lv->vg->cmd, SEG_RAID0_META)))
 			return_0;

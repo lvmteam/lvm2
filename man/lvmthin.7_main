@@ -394,7 +394,7 @@ the pmspare LV.
 \&
 
 If thin pool metadata is damaged, it may be repairable.
-Checking and repairing thin pool metadata is analagous to
+Checking and repairing thin pool metadata is analogous to
 running fsck/repair on a file system.
 
 When a thin pool LV is activated, lvm runs the thin_check command
@@ -689,7 +689,7 @@ with two configuration settings:
 .B thin_pool_autoextend_threshold
 .br
 is a percentage full value that defines when the thin pool LV should be
-extended.  Setting this to 100 disables automatic extention.  The minimum
+extended.  Setting this to 100 disables automatic extension.  The minimum
 value is 50.
 
 .BR lvm.conf (5)
@@ -716,7 +716,7 @@ the --ignoremonitoring option can be used.  With this option, the command
 will not ask dmeventd to monitor the thin pool LV.
 
 .IP \[bu]
-Setting thin_pool_autoextend_threshould to 100 disables automatic
+Setting thin_pool_autoextend_threshold to 100 disables automatic
 extension of thin pool LVs, even if they are being monitored by dmeventd.
 
 .P

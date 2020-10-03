@@ -553,7 +553,7 @@ Can also specify custom units e.g. \fB--units\ 3M\fP.
 .IR user_data
 .br
 Specify user data (a word) to be stored with a new region. The value
-is added to any internal auxilliary data (for example, group
+is added to any internal auxiliary data (for example, group
 information), and stored with the region in the aux_data field provided
 by the kernel. Whitespace is not permitted.
 .
@@ -1022,7 +1022,7 @@ Group identifier. This is a non-negative integer returned by the dmstats
 .TP
 .B interval_ns
 The estimated interval over which the current counter values have
-accumulated. The value is reported as an interger expressed in units
+accumulated. The value is reported as an integer expressed in units
 of nanoseconds.
 .TP
 .B interval

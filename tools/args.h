@@ -50,7 +50,7 @@ arg(aligned_ARG, '\0', "aligned", 0, 0, 0,
 arg(alloc_ARG, '\0', "alloc", alloc_VAL, 0, 0,
     "Determines the allocation policy when a command needs to allocate\n"
     "Physical Extents (PEs) from the VG. Each VG and LV has an allocation policy\n"
-    "which can be changed with vgchange/lvchange, or overriden on the\n"
+    "which can be changed with vgchange/lvchange, or overridden on the\n"
     "command line.\n"
     "\\fBnormal\\fP applies common sense rules such as not placing parallel stripes\n"
     "on the same PV.\n"
@@ -1108,7 +1108,7 @@ arg(maxlogicalvolumes_ARG, 'l', "maxlogicalvolumes", uint32_VAL, 0, 0,
     "Sets the maximum number of LVs allowed in a VG.\n")
 
 /*
- * The extents_VAL is overriden in configure_command_option_values()
+ * The extents_VAL is overridden in configure_command_option_values()
  * according to the command being run.  Different commands accept
  * different signs with the value.
  */
@@ -1167,7 +1167,7 @@ arg(lvmpartition_ARG, 'l', "lvmpartition", 0, 0, 0,
     "Only report PVs.\n")
 
 /*
- * The sizemb_VAL is overriden in configure_command_option_values()
+ * The sizemb_VAL is overridden in configure_command_option_values()
  * according to the command being run.  Different commands accept
  * different signs with the value.
  */

@@ -28,7 +28,7 @@ dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv2" bs=1M count=1 conv=fdatasync
 # Initiate background merge
 lvconvert -b --merge $vg/$lv2
 
-# Query status of snapshot immediatelly after start
+# Query status of snapshot immediately after start
 # - may hit race of checking already in-progress merge
 lvs -a -o+lv_merging,lv_merge_failed $vg
 

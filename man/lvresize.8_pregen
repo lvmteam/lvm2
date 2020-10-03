@@ -294,7 +294,7 @@ Common options for lvm:
 .br
 Determines the allocation policy when a command needs to allocate
 Physical Extents (PEs) from the VG. Each VG and LV has an allocation policy
-which can be changed with vgchange/lvchange, or overriden on the
+which can be changed with vgchange/lvchange, or overridden on the
 command line.
 \fBnormal\fP applies common sense rules such as not placing parallel stripes
 on the same PV.

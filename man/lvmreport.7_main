@@ -129,7 +129,7 @@ Definition of the set set of fields to use
 .br
 Field set to use. See \fBmain report specifics\fP and
 \fBlog report specifics\fP for information about field sets configured with
-global configuratin settings that this option overrides.
+global configuration settings that this option overrides.
 .IP - 3
 --options|-o+ FieldSet
 .br
@@ -240,7 +240,7 @@ this option suppresses the \fBmain report\fP output and it causes the
 .IP - 3
 --unbuffered
 .br
-Overrides report/bufffered configuration setting.
+Overrides report/buffered configuration setting.
 .RE
 
 .RE
@@ -1337,7 +1337,7 @@ field which is of type "size" - it's =, !=, >=, >, <= and <. You can find
 applicable comparison operators for other fields and other field types the
 same way.
 
-To demostrate selection functionality in LVM, we will create more LVs in
+To demonstrate selection functionality in LVM, we will create more LVs in
 addition to lvol0 and lvol1 we used in our previous examples.
 
 .nf
@@ -1686,9 +1686,9 @@ subreport here.
 Below is an extended example with \fBlvm fullreport\fP to illustrate
 combination of various options. The report output is in JSON format.
 Also, we configure "vg", "pvseg", "seg" and "log" subreport to contain
-only specified fields. For the "pvseg" subreport, we're intested only
+only specified fields. For the "pvseg" subreport, we're interested only
 in PV names having "sda" in their name. For the "log" subreport we're
-intested only in log lines related to either "lvol0" object or object
+interested only in log lines related to either "lvol0" object or object
 having "sda" in its name. Also, for the log subreport we define ordering
 to be based on "log_object_type" field.
 

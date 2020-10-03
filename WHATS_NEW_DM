@@ -550,7 +550,7 @@ Version 1.02.86 - 23rd June 2014
   Add DM_REPORT_FIELD_TYPE_STRING_LIST: separate string and string list fields.
   Add dm_str_list to libdevmapper for string list type definition and its reuse.
   Add dmsetup -S/--select to define selection criteria for dmsetup reports.
-  Add dm_report_init_with_selection to intialize report with selection criteria.
+  Add dm_report_init_with_selection to initialize report with selection criteria.
   Add DM_REPORT_FIELD_TYPE_SIZE: separate number and size reporting fields.
   Use RemoveOnStop for dm-event.socket systemd unit.
   Document env var 'DM_DEFAULT_NAME_MANGLING_MODE' in dmsetup man page.

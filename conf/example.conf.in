@@ -238,16 +238,16 @@ devices {
 	# Configuration option devices/md_chunk_alignment.
 	# Align the start of a PV data area with md device's stripe-width.
 	# This applies if a PV is placed directly on an md device.
-	# default_data_alignment will be overriden if it is not aligned
+	# default_data_alignment will be overridden if it is not aligned
 	# with the value detected for this setting.
-	# This setting is overriden by data_alignment_detection,
+	# This setting is overridden by data_alignment_detection,
 	# data_alignment, and the --dataalignment option.
 	md_chunk_alignment = 1
 
 	# Configuration option devices/default_data_alignment.
 	# Align the start of a PV data area with this number of MiB.
 	# Set to 1 for 1MiB, 2 for 2MiB, etc. Set to 0 to disable.
-	# This setting is overriden by data_alignment and the --dataalignment
+	# This setting is overridden by data_alignment and the --dataalignment
 	# option.
 	# This configuration option has an automatic default value.
 	# default_data_alignment = 1
@@ -261,9 +261,9 @@ devices {
 	# preferred unit of receiving I/O, e.g. MD stripe width.
 	# minimum_io_size is used if optimal_io_size is undefined (0).
 	# If md_chunk_alignment is enabled, that detects the optimal_io_size.
-	# default_data_alignment and md_chunk_alignment will be overriden
+	# default_data_alignment and md_chunk_alignment will be overridden
 	# if they are not aligned with the value detected for this setting.
-	# This setting is overriden by data_alignment and the --dataalignment
+	# This setting is overridden by data_alignment and the --dataalignment
 	# option.
 	data_alignment_detection = 1
 
@@ -272,7 +272,7 @@ devices {
 	# When non-zero, this setting overrides default_data_alignment.
 	# Set to 0 to disable, in which case default_data_alignment
 	# is used to align the first PE in units of MiB.
-	# This setting is overriden by the --dataalignment option.
+	# This setting is overridden by the --dataalignment option.
 	data_alignment = 0
 
 	# Configuration option devices/data_alignment_offset_detection.
@@ -283,7 +283,7 @@ devices {
 	# partitioning will have an alignment_offset of 3584 bytes (sector 7
 	# is the lowest aligned logical block, the 4KiB sectors start at
 	# LBA -1, and consequently sector 63 is aligned on a 4KiB boundary).
-	# This setting is overriden by the --dataalignmentoffset option.
+	# This setting is overridden by the --dataalignmentoffset option.
 	data_alignment_offset_detection = 1
 
 	# Configuration option devices/ignore_suspended_devices.

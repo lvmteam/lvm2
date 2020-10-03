@@ -1286,7 +1286,7 @@ int lockd_start_wait(struct cmd_context *cmd)
  * can provide in the lock-gl call.
  *
  * lockd_gl() and lockd_gl_create() differ in the specific cases where
- * ENOLS (no lockspace found) is overriden.  In the vgcreate case, the
+ * ENOLS (no lockspace found) is overridden.  In the vgcreate case, the
  * override cases are related to sanlock bootstrap, and the lock_type of
  * the vg being created is needed.
  *
