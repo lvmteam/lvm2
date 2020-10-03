@@ -1769,7 +1769,7 @@ Version 2.02.105 - 20th January 2014
   Allow lvmetad to reuse stale socket.
   Only unlink lvmetad socket on error if created by the same process.
   Append missing newline to lvmetad missing socket path error message.
-  Check for non-zero aligment in _text_pv_add_metadata_area() to not div by 0.
+  Check for non-zero alignment in _text_pv_add_metadata_area() to not div by 0.
   Add allocation/use_blkid_wiping to lvm.conf to enable blkid wiping.
   Enable blkid_wiping by default if the blkid library is present.
   Add configure --disable-blkid_wiping to disable libblkid signature detection.

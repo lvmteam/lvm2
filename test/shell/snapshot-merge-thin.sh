@@ -54,7 +54,7 @@ aux delay_dev "$dev1" 0 400 "$(get first_extent_sector "$dev1"):"
 # Initiate background merge
 lvconvert -b --merge $vg/$lv2
 
-# Query status of snapshot immediatelly after start
+# Query status of snapshot immediately after start
 # - may hit race of checking already in-progress merge
 #lvs -a -o+lv_merging,lv_merge_failed $vg
 check lv_field $vg/$lv1 lv_merging "merging"

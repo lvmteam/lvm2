@@ -427,15 +427,15 @@ cfg(devices_fw_raid_component_detection_CFG, "fw_raid_component_detection", devi
 cfg(devices_md_chunk_alignment_CFG, "md_chunk_alignment", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_MD_CHUNK_ALIGNMENT, vsn(2, 2, 48), NULL, 0, NULL,
 	"Align the start of a PV data area with md device's stripe-width.\n"
 	"This applies if a PV is placed directly on an md device.\n"
-	"default_data_alignment will be overriden if it is not aligned\n"
+	"default_data_alignment will be overridden if it is not aligned\n"
 	"with the value detected for this setting.\n"
-	"This setting is overriden by data_alignment_detection,\n"
+	"This setting is overridden by data_alignment_detection,\n"
 	"data_alignment, and the --dataalignment option.\n")
 
 cfg(devices_default_data_alignment_CFG, "default_data_alignment", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, FIRST_PE_AT_ONE_MB_IN_MB, vsn(2, 2, 75), NULL, 0, NULL,
 	"Align the start of a PV data area with this number of MiB.\n"
 	"Set to 1 for 1MiB, 2 for 2MiB, etc. Set to 0 to disable.\n"
-	"This setting is overriden by data_alignment and the --dataalignment\n"
+	"This setting is overridden by data_alignment and the --dataalignment\n"
 	"option.\n")
 
 cfg(devices_data_alignment_detection_CFG, "data_alignment_detection", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_DATA_ALIGNMENT_DETECTION, vsn(2, 2, 51), NULL, 0, NULL,
@@ -447,9 +447,9 @@ cfg(devices_data_alignment_detection_CFG, "data_alignment_detection", devices_CF
 	"preferred unit of receiving I/O, e.g. MD stripe width.\n"
 	"minimum_io_size is used if optimal_io_size is undefined (0).\n"
 	"If md_chunk_alignment is enabled, that detects the optimal_io_size.\n"
-	"default_data_alignment and md_chunk_alignment will be overriden\n"
+	"default_data_alignment and md_chunk_alignment will be overridden\n"
 	"if they are not aligned with the value detected for this setting.\n"
-	"This setting is overriden by data_alignment and the --dataalignment\n"
+	"This setting is overridden by data_alignment and the --dataalignment\n"
 	"option.\n")
 
 cfg(devices_data_alignment_CFG, "data_alignment", devices_CFG_SECTION, 0, CFG_TYPE_INT, 0, vsn(2, 2, 45), NULL, 0, NULL,
@@ -457,7 +457,7 @@ cfg(devices_data_alignment_CFG, "data_alignment", devices_CFG_SECTION, 0, CFG_TY
 	"When non-zero, this setting overrides default_data_alignment.\n"
 	"Set to 0 to disable, in which case default_data_alignment\n"
 	"is used to align the first PE in units of MiB.\n"
-	"This setting is overriden by the --dataalignment option.\n")
+	"This setting is overridden by the --dataalignment option.\n")
 
 cfg(devices_data_alignment_offset_detection_CFG, "data_alignment_offset_detection", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_DATA_ALIGNMENT_OFFSET_DETECTION, vsn(2, 2, 50), NULL, 0, NULL,
 	"Shift the start of an aligned PV data area based on sysfs information.\n"
@@ -467,7 +467,7 @@ cfg(devices_data_alignment_offset_detection_CFG, "data_alignment_offset_detectio
 	"partitioning will have an alignment_offset of 3584 bytes (sector 7\n"
 	"is the lowest aligned logical block, the 4KiB sectors start at\n"
 	"LBA -1, and consequently sector 63 is aligned on a 4KiB boundary).\n"
-	"This setting is overriden by the --dataalignmentoffset option.\n")
+	"This setting is overridden by the --dataalignmentoffset option.\n")
 
 cfg(devices_ignore_suspended_devices_CFG, "ignore_suspended_devices", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_IGNORE_SUSPENDED_DEVICES, vsn(1, 2, 19), NULL, 0, NULL,
 	"Ignore DM devices that have I/O suspended while scanning devices.\n"

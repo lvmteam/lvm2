@@ -180,7 +180,7 @@ parity 0 with data restart.)  See \fBRAID5 variants\fP below.
 
 raid6 is a form of striping like raid5, but uses two extra devices for
 parity blocks.  LV data and parity blocks are stored on each device, typically
-in a rotating pattern for perfomramce reasons.  The
+in a rotating pattern for performance reasons.  The
 LV data remains available if up to two devices fail.  The parity is used
 to recalculate data that is lost from one or two devices.  The minimum
 number of devices required is 5.
@@ -376,7 +376,7 @@ The \fBrepair\fP mode can make the RAID LV data consistent, but it does
 not know which data is correct.  The result may be consistent but
 incorrect data.  When two different blocks of data must be made
 consistent, it chooses the block from the device that would be used during
-RAID intialization.  However, if the PV holding corrupt data is known,
+RAID initialization.  However, if the PV holding corrupt data is known,
 lvchange --rebuild can be used in place of scrubbing to reconstruct the
 data on the bad device.
 
@@ -475,7 +475,7 @@ holds parity.  Each rmeta SubLV holds RAID metadata.
 
 .B raid5
 .br
-At least three rimage SubLVs each typcially hold a portion of LV data and parity
+At least three rimage SubLVs each typically hold a portion of LV data and parity
 (see section on raid5)
 Each rmeta SubLV holds RAID metadata.
 
@@ -1347,7 +1347,7 @@ The 'R' in the same column of the attribute field shows the freed image Sub LVs 
                            lv_rimage_6:0-33   8192
 .fi
 
-Now that the reshape is finished the 'R' atribute on the RaidLV shows images can be removed.
+Now that the reshape is finished the 'R' attribute on the RaidLV shows images can be removed.
 
 .nf
 # lvs -o lv_name,attr,segtype,seg_pe_ranges,dataoffset vg
@@ -1584,7 +1584,7 @@ conversion.
 
 Now we'll change the number of data stripes from 1 to 5 and request 128K stripe size
 in one command.  This will grow the size of the LV by a factor of 5 (we add 4 data stripes
-to the one given).  That additonal space can be used by e.g. growing any contained filesystem
+to the one given).  That additional space can be used by e.g. growing any contained filesystem
 or the LV can be reduced in size after the reshaping conversion has finished.
 
 .nf

@@ -77,7 +77,7 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 
 	if (dead) {
 		/*
-		 * Use the first event to run a repair ignoring any additonal ones.
+		 * Use the first event to run a repair ignoring any additional ones.
 		 *
 		 * We presume lvconvert to do pre-repair
 		 * checks to avoid bloat in this plugin.

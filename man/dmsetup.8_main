@@ -510,7 +510,7 @@ Suppress the headings line when using columnar output.
 .
 .HP
 .BR --noflush
-Do not flush outstading I/O when suspending a device, or do not
+Do not flush outstanding I/O when suspending a device, or do not
 commit thin-pool metadata when obtaining thin-pool status.
 .
 .HP

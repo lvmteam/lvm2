@@ -1650,14 +1650,14 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
  *
  * This function overrides default opt_names[] entries at run time according
  * to the command name, adjusting the value types accepted by various options.
- * So, for lvresize, opt_names[sizemb_VAL] is overriden to accept
+ * So, for lvresize, opt_names[sizemb_VAL] is overridden to accept
  * the relative (+ or -) value type ssizemb_VAL, instead of the default
  * sizemb_VAL.  This way, when lvresize processes the --size value, it
  * will use the ssize_mb_arg() function which accepts relative size values.
  * When lvcreate processes the --size value, it uses size_mb_arg() which
  * rejects signed values.
  *
- * The command defs in commands[] do not need to be overriden because
+ * The command defs in commands[] do not need to be overridden because
  * the command-lines.in defs have the context of a command, and are
  * described using the proper value type, e.g. this cmd def already
  * uses the relative size value: "lvresize --size SSizeMB LV",
