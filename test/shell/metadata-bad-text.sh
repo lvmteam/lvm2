@@ -297,20 +297,13 @@ vgchange -an $vg
 _clear_online_files
 
 # pvscan of one dev with bad metadata will result
-# in the dev acting like a PV without metadata,
-# which causes pvscan to scan all devs to find the
-# VG it belongs to.  In this case it finds all the
-# other devs in the VG are online and activates the
-# VG.
+# in the pvid online file being created but the 
+# VG will not be known.
 pvscan --cache -aay "$dev1"
 ls "$RUNDIR/lvm/pvs_online/$PVID1"
-ls "$RUNDIR/lvm/pvs_online/$PVID2"
-ls "$RUNDIR/lvm/pvs_online/$PVID3"
-ls "$RUNDIR/lvm/vgs_online/$vg"
-
-lvs $vg
-check lv_field $vg/$lv1 lv_active "active"
-vgchange -an $vg
+not ls "$RUNDIR/lvm/pvs_online/$PVID2"
+not ls "$RUNDIR/lvm/pvs_online/$PVID3"
+not ls "$RUNDIR/lvm/vgs_online/$vg"
 
 _clear_online_files
 
@@ -320,18 +313,6 @@ not ls "$RUNDIR/lvm/pvs_online/$PVID1"
 not ls "$RUNDIR/lvm/pvs_online/$PVID2"
 ls "$RUNDIR/lvm/pvs_online/$PVID3"
 not ls "$RUNDIR/lvm/vgs_online/$vg"
-
-# scan the next pv with bad metadata, causes pvscan to scan
-# and find all PVs and activate
-pvscan --cache -aay "$dev2"
-ls "$RUNDIR/lvm/pvs_online/$PVID1"
-ls "$RUNDIR/lvm/pvs_online/$PVID2"
-ls "$RUNDIR/lvm/pvs_online/$PVID3"
-ls "$RUNDIR/lvm/vgs_online/$vg"
-
-check lv_field $vg/$lv1 lv_active "active"
-vgchange -an $vg
-
 
 vgck --updatemetadata $vg
 

@@ -330,7 +330,7 @@ rm $HINTS $PREV
 pvs
 cp $HINTS $PREV
 # this next pvscan creates newhints to trigger a refresh
-pvscan --cache "$dev5"
+pvscan --cache "$dev4"
 cat $NEWHINTS
 # this next pvs creates new hints
 pvs

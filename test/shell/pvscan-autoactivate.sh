@@ -16,6 +16,7 @@ RUNDIR="/run"
 test -d "$RUNDIR" || RUNDIR="/var/run"
 PVS_ONLINE_DIR="$RUNDIR/lvm/pvs_online"
 VGS_ONLINE_DIR="$RUNDIR/lvm/vgs_online"
+PVS_LOOKUP_DIR="$RUNDIR/lvm/pvs_lookup"
 
 # FIXME: kills logic for running system
 _clear_online_files() {
@@ -23,6 +24,7 @@ _clear_online_files() {
 	aux udev_wait
 	rm -f "$PVS_ONLINE_DIR"/*
 	rm -f "$VGS_ONLINE_DIR"/*
+	rm -f "$PVS_LOOKUP_DIR"/*
 }
 
 . lib/inittest
@@ -34,6 +36,7 @@ lvcreate -n $lv1 -l 4 -a n $vg1
 
 test -d "$PVS_ONLINE_DIR" || mkdir -p "$PVS_ONLINE_DIR"
 test -d "$VGS_ONLINE_DIR" || mkdir -p "$VGS_ONLINE_DIR"
+test -d "$PVS_LOOKUP_DIR" || mkdir -p "$PVS_LOOKUP_DIR"
 _clear_online_files
 
 # check pvscan with no args scans and activates all
@@ -93,12 +96,9 @@ pvscan --cache -aay "$dev1"
 check lv_field $vg1/$lv1 lv_active "active"
 lvchange -an $vg1
 
-# test case where dev without metadata is scanned first
-# which triggers scanning all, which finds both
-
 _clear_online_files
 pvscan --cache -aay "$dev1"
-check lv_field $vg1/$lv1 lv_active "active"
+check lv_field $vg1/$lv1 lv_active ""
 pvscan --cache -aay "$dev2"
 check lv_field $vg1/$lv1 lv_active "active"
 lvchange -an $vg1
