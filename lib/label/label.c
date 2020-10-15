@@ -1255,6 +1255,54 @@ int label_scan(struct cmd_context *cmd)
 }
 
 /*
+ * Read the header of the disk and if it's a PV
+ * save the pvid in dev->pvid.
+ */
+int label_read_pvid(struct device *dev)
+{
+	char buf[4096] __attribute__((aligned(8)));
+	struct label_header *lh;
+	struct pv_header *pvh;
+
+	memset(buf, 0, sizeof(buf));
+
+	if (!label_scan_open(dev))
+		return_0;
+
+	/*
+	 * We could do:
+	 * dev_read_bytes(dev, 512, LABEL_SIZE, buf);
+	 * which works, but there's a bcache issue that
+	 * prevents proper invalidation after that.
+	 */
+	if (!dev_read_bytes(dev, 0, 4096, buf)) {
+		label_scan_invalidate(dev);
+		return 0;
+	}
+
+	lh = (struct label_header *)(buf + 512);
+	if (memcmp(lh->id, LABEL_ID, sizeof(lh->id))) {
+		/* Not an lvm deice */
+		label_scan_invalidate(dev);
+		return 0;
+	}
+
+	/*
+	 * wipefs -a just clears the type field, leaving the
+	 * rest of the label_header intact.
+	 */
+	if (memcmp(lh->type, LVM2_LABEL, sizeof(lh->type))) {
+		/* Not an lvm deice */
+		label_scan_invalidate(dev);
+		return 0;
+	}
+
+	pvh = (struct pv_header *)(buf + 512 + 32);
+	memcpy(dev->pvid, pvh->pv_uuid, ID_LEN);
+	return 1;
+}
+
+/*
  * Scan and cache lvm data from the listed devices.  If a device is already
  * scanned and cached, this replaces the previously cached lvm data for the
  * device.  This is called when vg_read() wants to guarantee that it is using

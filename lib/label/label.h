@@ -117,6 +117,7 @@ int label_scan_open(struct device *dev);
 int label_scan_open_excl(struct device *dev);
 int label_scan_open_rw(struct device *dev);
 int label_scan_reopen_rw(struct device *dev);
+int label_read_pvid(struct device *dev);
 
 int label_scan_for_pvid(struct cmd_context *cmd, char *pvid, struct device **dev_out);
 
