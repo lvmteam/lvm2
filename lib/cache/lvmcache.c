@@ -1116,7 +1116,7 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 
 		dm_list_iterate_items(devl, &add_cache_devs) {
 			log_debug_cache("Adding chosen duplicate %s", dev_name(devl->dev));
-			label_read(devl->dev);
+			label_scan_dev(devl->dev);
 		}
 
 		dm_list_splice(&_unused_duplicates, &del_cache_devs);

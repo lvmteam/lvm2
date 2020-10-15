@@ -1451,7 +1451,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 			/*
 			 * add info to lvmcache from the duplicate dev.
 			 */
-			label_read(devl->dev);
+			label_scan_dev(devl->dev);
 
 			/*
 			 * the info/label should now be found because
@@ -4892,7 +4892,7 @@ static int _pvcreate_check_used(struct cmd_context *cmd,
 	 * If a VG is using the dev, it adds basic VG info for it to
 	 * lvmcache.
 	 */
-	label_read(pd->dev);
+	label_scan_dev(pd->dev);
 
 	if (!pd->dev->pvid[0]) {
 		log_debug("Check pvcreate arg %s no PVID found", dev_name(pd->dev));

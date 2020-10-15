@@ -1394,7 +1394,7 @@ void label_scan_destroy(struct cmd_context *cmd)
  * device, this is not a commonly used function.
  */
 
-int label_read(struct device *dev)
+int label_scan_dev(struct device *dev)
 {
 	struct dm_list one_dev;
 	struct device_list *devl;
