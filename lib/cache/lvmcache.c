@@ -271,6 +271,21 @@ void lvmcache_get_mdas(struct cmd_context *cmd,
 	}
 }
 
+struct metadata_area *lvmcache_get_dev_mda(struct device *dev, int mda_num)
+{
+	struct lvmcache_info *info;
+	struct metadata_area *mda;
+
+	if (!(info = lvmcache_info_from_pvid(dev->pvid, dev, 0)))
+		return NULL;
+
+	dm_list_iterate_items(mda, &info->mdas) {
+		if (mda->mda_num == mda_num)
+			return mda;
+	}
+	return NULL;
+}
+
 static void _vginfo_detach_info(struct lvmcache_info *info)
 {
 	if (!dm_list_empty(&info->list)) {
