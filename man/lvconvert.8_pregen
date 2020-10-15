@@ -929,6 +929,10 @@ Detach a cache from an LV.
 \fBlvconvert\fP \fB--splitcache\fP \fILV\fP\fI_thinpool_cache_cachepool_vdopool_writecache\fP
 .br
 .RS 4
+.ad l
+[    \fB--cachesettings\fP \fIString\fP ]
+.ad b
+.br
 [ COMMON_OPTIONS ]
 .RE
 .br
@@ -2004,6 +2008,10 @@ Detach and delete a cache from an LV.
 \fBlvconvert\fP \fB--uncache\fP \fILV\fP\fI_thinpool_cache_vdopool_writecache\fP
 .br
 .RS 4
+.ad l
+[    \fB--cachesettings\fP \fIString\fP ]
+.ad b
+.br
 [ COMMON_OPTIONS ]
 .RE
 .br
