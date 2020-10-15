@@ -38,6 +38,10 @@ make.tmpl
 
 coverity/coverity_model.xml
 
+# gcov files:
+*.gcda
+*.gcno
+
 tools/man-generator
 tools/man-generator.c
 
