@@ -2136,7 +2136,7 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 	return r;
 }
 
-static int _create_node(struct dm_tree_node *dnode)
+static int _create_node(struct dm_tree_node *dnode, struct dm_tree_node *parent)
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -2185,36 +2185,13 @@ static int _create_node(struct dm_tree_node *dnode)
 				  "Unable to get DM task info for %s.",
 				  dnode->name);
 	}
+
+	if (r)
+		dm_list_add_h(&parent->activated, &dnode->activated_list);
 out:
 	dm_task_destroy(dmt);
 
 	return r;
-}
-
-/*
- * _remove_node
- *
- * This function is only used to remove a DM device that has failed
- * to load any table.
- */
-static int _remove_node(struct dm_tree_node *dnode)
-{
-	if (!dnode->info.exists)
-		return 1;
-
-	if (dnode->info.live_table || dnode->info.inactive_table) {
-		log_error(INTERNAL_ERROR
-			  "_remove_node called on device with loaded table(s).");
-		return 0;
-	}
-
-	if (!_deactivate_node(dnode->name, dnode->info.major, dnode->info.minor,
-			      &dnode->dtree->cookie, dnode->udev_flags, 0)) {
-		log_error("Failed to clean-up device with no table: %s.",
-			  _node_name(dnode));
-		return 0;
-	}
-	return 1;
 }
 
 static int _build_dev_string(char *devbuf, size_t bufsize, struct dm_tree_node *node)
@@ -3229,6 +3206,16 @@ static int _dm_tree_revert_activated(struct dm_tree_node *parent)
 	return 1;
 }
 
+static int _dm_tree_wait_and_revert_activated(struct dm_tree_node *dnode)
+{
+	if (!dm_udev_wait(dm_tree_get_cookie(dnode)))
+		stack;
+
+	dm_tree_set_cookie(dnode, 0);
+
+	return _dm_tree_revert_activated(dnode);
+}
+
 int dm_tree_preload_children(struct dm_tree_node *dnode,
 			     const char *uuid_prefix,
 			     size_t uuid_prefix_len)
@@ -3258,7 +3245,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 				return_0;
 
 		/* FIXME Cope if name exists with no uuid? */
-		if (!child->info.exists && !(node_created = _create_node(child)))
+		if (!child->info.exists && !(node_created = _create_node(child, dnode)))
 			return_0;
 
 		/* Propagate delayed resume from exteded child node */
@@ -3268,24 +3255,15 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 		if (!child->info.inactive_table &&
 		    child->props.segment_count &&
 		    !_load_node(child)) {
+			stack;
 			/*
-			 * If the table load does not succeed, we remove the
-			 * device in the kernel that would otherwise have an
-			 * empty table.  This makes the create + load of the
-			 * device atomic.  However, if other dependencies have
-			 * already been created and loaded; this code is
-			 * insufficient to remove those - only the node
-			 * encountering the table load failure is removed.
+			 * If the table load fails, try to device in the kernel
+			 * together with other created and preloaded devices.
 			 */
-			if (node_created) {
-				if (!_remove_node(child))
-					return_0;
-				if (!dm_udev_wait(dm_tree_get_cookie(dnode)))
-					stack;
-				dm_tree_set_cookie(dnode, 0);
-				(void) _dm_tree_revert_activated(child);
-			}
-			return_0;
+			if (!_dm_tree_wait_and_revert_activated(dnode))
+				stack;
+			r = 0;
+			continue;
 		}
 
 		/* No resume for a device without parents or with unchanged or smaller size */
@@ -3303,28 +3281,19 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 				  &child->info, &child->dtree->cookie, child->udev_flags,
 				  child->info.suspended)) {
 			log_error("Unable to resume %s.", _node_name(child));
-			/* If the device was not previously active, we might as well remove this node. */
-			if (!child->info.live_table &&
-			    !_deactivate_node(child->name, child->info.major, child->info.minor,
-					      &child->dtree->cookie, child->udev_flags, 0))
-				log_error("Unable to deactivate %s.", _node_name(child));
+			if (!_dm_tree_wait_and_revert_activated(dnode))
+				stack;
 			r = 0;
-			/* Each child is handled independently */
 			continue;
 		}
 
 		if (node_created) {
-			/* Collect newly introduced devices for revert */
-			dm_list_add_h(&dnode->activated, &child->activated_list);
-
 			/* When creating new node also check transaction_id. */
 			if (child->props.send_messages &&
 			    !_node_send_messages(child, uuid_prefix, uuid_prefix_len, 0)) {
 				stack;
-				if (!dm_udev_wait(dm_tree_get_cookie(dnode)))
+				if (!_dm_tree_wait_and_revert_activated(dnode))
 					stack;
-				dm_tree_set_cookie(dnode, 0);
-				(void) _dm_tree_revert_activated(dnode);
 				r = 0;
 				continue;
 			}
