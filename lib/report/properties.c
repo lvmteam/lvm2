@@ -168,7 +168,7 @@ static dm_percent_t _data_percent(const struct logical_volume *lv)
 		if (!lv_thin_pool_status(lv, 0, &thin_pool_status))
 			stack;
 		else {
-			percent = thin_pool_status->metadata_usage;
+			percent = thin_pool_status->data_usage;
 			dm_pool_destroy(thin_pool_status->mem);
 		}
 	}
