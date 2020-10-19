@@ -3292,9 +3292,8 @@ static void _print_man_all_positions_desc(struct command_name *cname)
 	       "capitalization, e.g. 'k' and 'K' both refer to 1024.\n"
 	       "The default input unit is specified by letter, followed by |UNIT.\n"
 	       "UNIT represents other possible input units: \\fBbBsSkKmMgGtTpPeE\\fP.\n"
-	       "b|B is bytes, s|S is sectors of 512 bytes, k|K is kilobytes,\n"
-	       "m|M is megabytes, g|G is gigabytes, t|T is terabytes,\n"
-	       "p|P is petabytes, e|E is exabytes.\n"
+	       "b|B is bytes, s|S is sectors of 512 bytes, k|K is KiB,\n"
+	       "m|M is MiB, g|G is GiB, t|T is TiB, p|P is PiB, e|E is EiB.\n"
 	       "(This should not be confused with the output control --units, where\n"
 	       "capital letters mean multiple of 1000.)\n");
 
