@@ -7682,13 +7682,10 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 					   TYPE_DM_SNAPSHOT_COW,
 					   wp.yes, wp.force, NULL)) {
 			sigint_restore();
-			if (sigint_caught()) {
-				log_error("Interrupted initialization logical volume %s.",
-					  display_lvname(lv));
-				return 0;
-			}
 			label_scan_invalidate(dev);
-			log_error("Filed to wipe signatures of logical volume %s.",
+			log_error("%s logical volume %s.",
+				  sigint_caught() ?
+				  "Interrupted initialization of" : "Failed to wipe signatures on",
 				  display_lvname(lv));
 			return 0;
 		}
@@ -7733,12 +7730,9 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 					log_sys_debug("ioctl", "BLKZEROOUT");
 					sigint_restore();
 					label_scan_invalidate(dev);
-					if (sigint_caught())
-						log_error("Interrupted initialization logical volume %s.",
-							  display_lvname(lv));
-					else
-						log_error("Failed to initialize logical volume %s at position " FMTu64 " and size " FMTu64 ".",
-							  display_lvname(lv), range[0], range[1]);
+					log_error("%s logical volume %s at position " FMTu64 " and size " FMTu64 ".",
+						  sigint_caught() ? "Interrupted initialization of" : "Failed to initialize",
+						  display_lvname(lv), range[0], range[1]);
 					return 0;
 				}
 			}
@@ -7747,12 +7741,8 @@ retry_with_dev_set:
 #endif
 		if (!dev_set_bytes(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT, wp.zero_value)) {
 			sigint_restore();
-			if (sigint_caught()) {
-				log_error("Interrupted initialization logical volume %s.",
-					  display_lvname(lv));
-				return 0;
-			}
-			log_error("Failed to initialize %s of logical volume %s with value %d.",
+			log_error("%s %s of logical volume %s with value %d.",
+				  sigint_caught() ? "Interrupted initialization" : "Failed to initialize",
 				  display_size(lv->vg->cmd, zero_sectors),
 				  display_lvname(lv), wp.zero_value);
 			return 0;
