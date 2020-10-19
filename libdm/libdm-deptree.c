@@ -1966,21 +1966,21 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 				r = 0;
 				continue;
 			}
+
+			/*
+			 * FIXME: Implement delayed error reporting
+			 * activation should be stopped only in the case,
+			 * the submission of transation_id message fails,
+			 * resume should continue further, just whole command
+			 * has to report failure.
+			 */
+			if (r && (child->props.send_messages > 1) &&
+			    !(r = _node_send_messages(child, uuid_prefix, uuid_prefix_len, 1)))
+				stack;
 		}
 		if (awaiting_peer_rename)
 			priority--; /* redo priority level */
 	}
-
-	/*
-	 * FIXME: Implement delayed error reporting
-	 * activation should be stopped only in the case,
-	 * the submission of transation_id message fails,
-	 * resume should continue further, just whole command
-	 * has to report failure.
-	 */
-	if (r && (dnode->props.send_messages > 1) &&
-	    !(r = _node_send_messages(dnode, uuid_prefix, uuid_prefix_len, 1)))
-		stack;
 
 	return r;
 }
