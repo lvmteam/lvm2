@@ -16,6 +16,7 @@
 #include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/filters/filter.h"
+#include "lib/commands/toolcontext.h"
 
 #ifdef __linux__
 
@@ -26,6 +27,9 @@ static int _ignore_signature(struct cmd_context *cmd, struct dev_filter *f __att
 {
 	char buf[BUFSIZE];
 	int ret = 0;
+
+	if (cmd->filter_nodata_only)
+		return 1;
 
 	dev->filtered_flags &= ~DEV_FILTERED_SIGNATURE;
 

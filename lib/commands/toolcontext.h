@@ -182,6 +182,7 @@ struct cmd_context {
 	unsigned pvscan_recreate_hints:1;	/* enable special case hint handling for pvscan --cache */
 	unsigned scan_lvs:1;
 	unsigned wipe_outdated_pvs:1;
+	unsigned filter_nodata_only:1;          /* only use filters that do not require data from the dev */
 
 	/*
 	 * Devices and filtering.

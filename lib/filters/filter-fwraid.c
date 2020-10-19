@@ -15,6 +15,7 @@
 #include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/filters/filter.h"
+#include "lib/commands/toolcontext.h"
 
 #ifdef UDEV_SYNC_SUPPORT
 #include <libudev.h>
@@ -68,6 +69,9 @@ static int _ignore_fwraid(struct cmd_context *cmd, struct dev_filter *f __attrib
 			   struct device *dev, const char *use_filter_name)
 {
 	int ret;
+
+	if (cmd->filter_nodata_only)
+		return 1;
 
 	dev->filtered_flags &= ~DEV_FILTERED_FWRAID;
 
