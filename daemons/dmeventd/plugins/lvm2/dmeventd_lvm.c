@@ -71,7 +71,7 @@ int dmeventd_lvm2_init(void)
 	if (!_lvm_handle) {
 		lvm2_log_fn(_lvm2_print_log);
 
-		if (!(_lvm_handle = lvm2_init()))
+		if (!(_lvm_handle = lvm2_init_threaded()))
 			goto out;
 
 		/*

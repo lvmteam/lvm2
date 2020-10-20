@@ -17,5 +17,10 @@
 
 void *lvm2_init(void)
 {
-	return cmdlib_lvm2_init(1);
+	return cmdlib_lvm2_init(1, 0);
+}
+
+void *lvm2_init_threaded(void)
+{
+	return cmdlib_lvm2_init(1, 1);
 }

@@ -59,6 +59,12 @@ void lvm2_log_fn(lvm2_log_fn_t log_fn);
 void *lvm2_init(void);
 
 /*
+ * Initialise library for threaded user
+ * Returns a handle so repeated use of lvm2_run is more efficient.
+ */
+void *lvm2_init_threaded(void);
+
+/*
  * Disable any dmeventd calls that the library may otherwise do. Useful to avoid
  * recursive calls from dmeventd to itself.
  */
