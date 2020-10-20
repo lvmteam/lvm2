@@ -60,13 +60,16 @@ static void _composite_destroy(struct dev_filter *f)
 	free(f);
 }
 
-static void _wipe(struct dev_filter *f)
+static void _wipe(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
 {
 	struct dev_filter **filters;
 
-	for (filters = (struct dev_filter **) f->private; *filters; ++filters)
+	for (filters = (struct dev_filter **) f->private; *filters; ++filters) {
+		if (use_filter_name && strcmp((*filters)->name, use_filter_name))
+			continue;
 		if ((*filters)->wipe)
-			(*filters)->wipe(*filters);
+			(*filters)->wipe(cmd, *filters, dev, use_filter_name);
+	}
 }
 
 struct dev_filter *composite_filter_create(int n, int use_dev_ext_info, struct dev_filter **filters)

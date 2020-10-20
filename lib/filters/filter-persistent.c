@@ -64,11 +64,17 @@ static int _init_hash(struct pfilter *pf)
 	return 1;
 }
 
-static void _persistent_filter_wipe(struct dev_filter *f)
+static void _persistent_filter_wipe(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
+	struct dm_str_list *sl;
 
-	dm_hash_wipe(pf->devices);
+	if (!dev) {
+		dm_hash_wipe(pf->devices);
+	} else {
+		dm_list_iterate_items(sl, &dev->aliases)
+			dm_hash_remove(pf->devices, sl->str);
+	}
 }
 
 static int _lookup_p(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
