@@ -30,10 +30,13 @@ test_equal_() {
 
 aux have_thin 1 10 0 || skip
 
-aux prepare_dmeventd
-
+# set reserved stack size above dmeventd 300KiB stack
+# ATM such value should be simply ignored
 aux lvmconf "activation/thin_pool_autoextend_percent = 10" \
-	    "activation/thin_pool_autoextend_threshold = 75"
+	    "activation/thin_pool_autoextend_threshold = 75" \
+	    "activation/reserved_stack = 512"
+
+aux prepare_dmeventd
 
 aux prepare_pvs 3 256
 get_devs
