@@ -1,5 +1,6 @@
 Version 2.02.188 - 
 ==================================
+  Dmevend lvm plugin ignores higher reserved_stack lvm.conf values.
   Support using BLKZEROOUT for clearing devices.
   Support interruption when wipping LVs.
   Add configure --enable-editline support as an alternative to readline.
