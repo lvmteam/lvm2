@@ -3302,7 +3302,9 @@ static int _close_stray_fds(const char *command, struct custom_fds *custom_fds)
 	return 1;
 }
 
-struct cmd_context *init_lvm(unsigned set_connections, unsigned set_filters)
+struct cmd_context *init_lvm(unsigned set_connections,
+			     unsigned set_filters,
+			     unsigned threaded)
 {
 	struct cmd_context *cmd;
 
@@ -3316,7 +3318,7 @@ struct cmd_context *init_lvm(unsigned set_connections, unsigned set_filters)
 	 */
 	dm_set_name_mangling_mode(DM_STRING_MANGLING_NONE);
 
-	if (!(cmd = create_toolcontext(0, NULL, 1, 0,
+	if (!(cmd = create_toolcontext(0, NULL, 1, threaded,
 			set_connections, set_filters))) {
 		udev_fin_library_context();
 		return_NULL;
@@ -3470,7 +3472,7 @@ int lvm2_main(int argc, char **argv)
 	if (!alias && (argc > 2) && !strcmp(argv[2], "-?"))
 		argv[2] = (char *)"-h";
 
-	if (!(cmd = init_lvm(0, 0)))
+	if (!(cmd = init_lvm(0, 0, 0)))
 		return EINIT_FAILED;
 
 	/* Store original argv location so we may customise it if we become a daemon */

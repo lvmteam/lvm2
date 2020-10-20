@@ -28,10 +28,10 @@ struct cmdline_context {
 
 int lvm2_main(int argc, char **argv);
 
-void *cmdlib_lvm2_init(unsigned static_compile);
+void *cmdlib_lvm2_init(unsigned static_compile, unsigned threaded);
 void lvm_fin(struct cmd_context *cmd);
 
-struct cmd_context *init_lvm(unsigned set_connections, unsigned set_filters);
+struct cmd_context *init_lvm(unsigned set_connections, unsigned set_filters, unsigned threaded);
 int lvm_register_commands(struct cmd_context *cmdtool, const char *name);
 int lvm_split(char *str, int *argc, char **argv, int max);
 int lvm_run_command(struct cmd_context *cmd, int argc, char **argv);

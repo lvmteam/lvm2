@@ -26,12 +26,12 @@
 #include <time.h>
 #include <sys/resource.h>
 
-void *cmdlib_lvm2_init(unsigned static_compile)
+void *cmdlib_lvm2_init(unsigned static_compile, unsigned threaded)
 {
 	struct cmd_context *cmd;
 
 	init_is_static(static_compile);
-	if (!(cmd = init_lvm(1, 1)))
+	if (!(cmd = init_lvm(1, 1, threaded)))
 		return NULL;
 
 	if (!lvm_register_commands(cmd, NULL))
