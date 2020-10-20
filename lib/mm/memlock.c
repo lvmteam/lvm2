@@ -167,10 +167,13 @@ static void _allocate_memory(void)
 	char *areas[max_areas];
 
 	/* Check if we could preallocate requested stack */
-	if ((getrlimit (RLIMIT_STACK, &limit) == 0) &&
-	    ((_size_stack * 2) < limit.rlim_cur) &&
-	    ((stack_mem = alloca(_size_stack))))
-		_touch_memory(stack_mem, _size_stack);
+	if (getrlimit(RLIMIT_STACK, &limit) == 0) {
+		limit.rlim_cur /= 2;
+		if (_size_stack > limit.rlim_cur)
+			_size_stack = limit.rlim_cur;
+		if ((stack_mem = alloca(_size_stack)))
+			_touch_memory(stack_mem, _size_stack);
+	}
 	/* FIXME else warn user setting got ignored */
 
         /*
