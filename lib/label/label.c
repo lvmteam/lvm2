@@ -1303,6 +1303,21 @@ int label_read_pvid(struct device *dev)
 }
 
 /*
+ * label_scan_devs without invalidating data for the devs first,
+ * when the caller wants to make use of any bcache data that
+ * they may have already read.
+ */
+int label_scan_devs_cached(struct cmd_context *cmd, struct dev_filter *f, struct dm_list *devs)
+{
+	if (!scan_bcache)
+		return 0;
+
+	_scan_list(cmd, f, devs, NULL);
+
+	return 1;
+}
+
+/*
  * Scan and cache lvm data from the listed devices.  If a device is already
  * scanned and cached, this replaces the previously cached lvm data for the
  * device.  This is called when vg_read() wants to guarantee that it is using
