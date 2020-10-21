@@ -3578,13 +3578,17 @@ static void _set_pv_device(struct format_instance *fid,
 	 * full a md check in label scan
 	 */
 	if (dev && cmd && cmd->md_component_detection && !cmd->use_full_md_check) {
+		uint64_t devsize = dev->size;
+
+		if (!devsize && !dev_get_size(dev, &devsize))
+			log_debug("No size for %s when setting PV dev.", dev_name(dev));
 
 		/* PV larger than dev not common, check for md component */
-		if (pv->size > dev->size)
+		else if (pv->size > devsize)
 			do_check = 1;
 
 		/* dev larger than PV can be common, limit check to auto mode */
-		else if ((pv->size < dev->size) && !strcmp(cmd->md_component_checks, "auto"))
+		else if ((pv->size < devsize) && !strcmp(cmd->md_component_checks, "auto"))
 			do_check = 1;
 
 		if (do_check && dev_is_md_component(dev, NULL, 1)) {
