@@ -13,6 +13,7 @@
 # Test single lv cache options
 
 SKIP_WITH_LVMPOLLD=1
+SKIP_WITH_LVMLOCKD=1
 
 . lib/inittest
 
@@ -48,7 +49,7 @@ dd if=/dev/urandom of=pattern1 bs=512K count=1
 
 aux prepare_devs 4
 
-vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4"
+vgcreate $vg "$dev1" "$dev2" "$dev3" "$dev4"
 
 
 #
