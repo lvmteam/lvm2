@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2007-2017 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2007-2020 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -130,7 +130,15 @@ dry() {
 		return 0
 	fi
 	verbose "Executing" "$@"
-	"$@"
+	$@
+}
+
+# Accept as succss also return code 1 with fsck
+accept_0_1() {
+	$@
+	local ret="$?"
+	test "$ret" -eq 1 || return "$ret"
+	# Filesystem was corrected
 }
 
 cleanup() {
@@ -455,9 +463,10 @@ resize_ext() {
 		if test -n "$MOUNTED" ; then
 			# Forced fsck -f for umounted extX filesystem.
 			case "$-" in
-			  *i*) dry "$FSCK" $YES -f "$VOLUME" ;;
-			  *) dry "$FSCK" -f -p "$VOLUME" ;;
+			*i*) FLAG=$YES ;;
+			*)   FLAG="-p" ;;
 			esac
+			accept_0_1 dry "$FSCK" -f $FLAG "$VOLUME" || error "Failed to fsck $VOLUME"
 		fi
 	fi
 
@@ -742,9 +751,11 @@ check() {
 	  "ext2"|"ext3"|"ext4"|"reiserfs")
 	        # check if executed from interactive shell environment
 		case "$-" in
-		  *i*) dry "$FSCK" $YES $FORCE "$VOLUME" ;;
-		  *) dry "$FSCK" $FORCE -p "$VOLUME" ;;
-		esac ;;
+		  *i*) FLAG=$YES ;;
+		  *)   FLAG="-p" ;;
+		esac
+		accept_0_1 dry "$FSCK" $FORCE $FLAG "$VOLUME" || error "Fsck $FSTYPE failed."
+		;;
 	  "crypto_LUKS")
 		which "$CRYPTSETUP" >"$NULL" 2>&1 || error "$CRYPTSETUP utility required."
 		check_luks ;;
