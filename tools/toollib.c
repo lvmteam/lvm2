@@ -4884,16 +4884,6 @@ static int _pvcreate_check_used(struct cmd_context *cmd,
 	log_debug("Checking %s for pvcreate %.32s.",
 		  dev_name(pd->dev), pd->dev->pvid[0] ? pd->dev->pvid : "");
 
-	/*
-	 * Since the device is likely not a PV yet, it was probably not
-	 * scanned by label_scan at the start of the command, so that
-	 * needs to be done first to find if there's a PV label or metadata
-	 * on it.  If there's a PV label, it sets dev->pvid.
-	 * If a VG is using the dev, it adds basic VG info for it to
-	 * lvmcache.
-	 */
-	label_scan_dev(pd->dev);
-
 	if (!pd->dev->pvid[0]) {
 		log_debug("Check pvcreate arg %s no PVID found", dev_name(pd->dev));
 		pd->is_not_pv = 1;
@@ -5189,6 +5179,31 @@ fail:
  * This function returns 1 (success) if the caller requires all specified
  * devices to be created, and all are created, or if the caller does not
  * require all specified devices to be created and one or more were created.
+ *
+ * Process of opening, scanning and filtering:
+ *
+ * - label scan and filter all devs
+ *   . open ro
+ *   . standard label scan at the start of command
+ *   . done prior to this function
+ *
+ * - label scan and filter dev args
+ *   . label_scan_devs(&scan_devs) in this function
+ *   . open ro
+ *   . uses full md component check
+ *   . typically the first scan and filter of pvcreate devs
+ *
+ * - close and reopen dev args
+ *   . open rw and excl
+ *   . done by label_scan_devs_excl
+ *
+ * - repeat label scan and filter dev args
+ *   . using reopened rw excl fd
+ *   . since something could have used dev
+ *     in the small window between close and reopen
+ *
+ * - wipe and write new headers
+ *   . using reopened rw excl fd
  */
 
 int pvcreate_each_device(struct cmd_context *cmd,
@@ -5201,6 +5216,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	struct volume_group *orphan_vg;
 	struct dm_list remove_duplicates;
 	struct dm_list arg_sort;
+	struct dm_list scan_devs;
 	struct dm_list rescan_devs;
 	struct pv_list *pvl;
 	struct pv_list *vgpvl;
@@ -5217,6 +5233,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 
 	dm_list_init(&remove_duplicates);
 	dm_list_init(&arg_sort);
+	dm_list_init(&scan_devs);
 	dm_list_init(&rescan_devs);
 
 	handle->custom_handle = pp;
@@ -5244,10 +5261,60 @@ int pvcreate_each_device(struct cmd_context *cmd,
 
 	/*
 	 * Translate arg names into struct device's.
+	 *
+	 * lvmcache_label_scan has already been run by the caller.
+	 * It has likely found and filtered pvremove args, but often
+	 * not pvcreate args, since pvcreate args are not typically PVs
+	 * yet (but may be.)
+	 *
+	 * We call label_scan_devs on the args, using the full
+	 * md filter (the previous scan likely did not use the
+	 * full md filter - we really only need to check the
+	 * command args to ensure they are not md components.)
+	 */
+
+	dm_list_iterate_items_safe(pd, pd2, &pp->arg_devices) {
+		struct device *dev;
+
+		/* No filter used here */
+		if (!(dev = dev_cache_get(cmd, pd->name, NULL))) {
+			log_error("No device found for %s.", pd->name);
+			dm_list_del(&pd->list);
+			dm_list_add(&pp->arg_fail, &pd->list);
+			continue;
+		}
+
+		if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
+			goto bad;
+
+		devl->dev = dev;
+		pd->dev = dev;
+
+		dm_list_add(&scan_devs, &devl->list);
+	}
+
+	if (dm_list_empty(&pp->arg_devices))
+		goto_bad;
+
+	/*
+	 * Clear the filtering results from lvmcache_label_scan because we are
+	 * going to rerun the filters and don't want to get the results saved
+	 * by the prior filtering.  The filtering in label scan will use full
+	 * md filter.
+	 */
+	dm_list_iterate_items(devl, &scan_devs)
+		cmd->filter->wipe(cmd, cmd->filter, devl->dev, NULL);
+
+	cmd->use_full_md_check = 1;
+
+	log_debug("Scanning and filtering device args.");
+	label_scan_devs(cmd, cmd->filter, &scan_devs);
+
+	/*
+	 * Check if the filtering done by label scan excluded any devices.
 	 */
 	dm_list_iterate_items_safe(pd, pd2, &pp->arg_devices) {
-		pd->dev = dev_cache_get(cmd, pd->name, cmd->filter);
-		if (!pd->dev) {
+		if (!cmd->filter->passes_filter(cmd, cmd->filter, pd->dev, NULL)) {
 			log_error("Cannot use %s: %s", pd->name, devname_error_reason(pd->name));
 			dm_list_del(&pd->list);
 			dm_list_add(&pp->arg_fail, &pd->list);
@@ -5455,11 +5522,34 @@ do_command:
 		dm_list_add(&rescan_devs, &devl->list);
 	}
 
-	log_debug("Rescanning devices with exclusive open");
-	if (!label_scan_devs_excl(&rescan_devs)) {
+	/*
+	 * We want label_scan excl to repeat the filter check in case something
+	 * changed to filter out a dev before we were able to get exclusive.
+	 */
+	dm_list_iterate_items(devl, &rescan_devs)
+		cmd->filter->wipe(cmd, cmd->filter, devl->dev, NULL);
+
+	log_debug("Rescanning and filtering device args with exclusive open");
+	if (!label_scan_devs_excl(cmd, cmd->filter, &rescan_devs)) {
 		log_debug("Failed to rescan devs excl");
 		goto bad;
 	}
+
+	dm_list_iterate_items_safe(pd, pd2, &pp->arg_process) {
+		if (!cmd->filter->passes_filter(cmd, cmd->filter, pd->dev, NULL)) {
+			log_error("Cannot use %s: %s", pd->name, devname_error_reason(pd->name));
+			dm_list_del(&pd->list);
+			dm_list_add(&pp->arg_fail, &pd->list);
+		}
+	}
+
+	if (dm_list_empty(&pp->arg_process) && dm_list_empty(&remove_duplicates)) {
+		log_debug("No devices to process.");
+		goto bad;
+	}
+
+	if (!dm_list_empty(&pp->arg_fail) && must_use_all)
+		goto_bad;
 
 	/*
 	 * If the global lock was unlocked to wait for prompts, then
@@ -5498,9 +5588,6 @@ do_command:
 	 * Wipe signatures on devices being created.
 	 */
 	dm_list_iterate_items_safe(pd, pd2, &pp->arg_create) {
-		/* FIXME: won't all already be open excl from label_scan_devs_excl above? */
-		label_scan_open_excl(pd->dev);
-
 		log_verbose("Wiping signatures on new PV %s.", pd->name);
 
 		if (!wipe_known_signatures(cmd, pd->dev, pd->name, TYPE_LVM1_MEMBER | TYPE_LVM2_MEMBER,
@@ -5577,9 +5664,6 @@ do_command:
 		}
 
 		pv_name = pd->name;
-
-		/* FIXME: won't all already be open excl from label_scan_devs_excl above? */
-		label_scan_open_excl(pd->dev);
 
 		log_debug("Creating a new PV on %s.", pv_name);
 

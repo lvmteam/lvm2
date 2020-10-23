@@ -669,7 +669,7 @@ static void _invalidate_di(struct bcache *cache, int di)
  */
 
 static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
-		      struct dm_list *devs, int *failed)
+		      struct dm_list *devs, int want_other_devs, int *failed)
 {
 	struct dm_list wait_devs;
 	struct dm_list done_devs;
@@ -759,9 +759,11 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 		 * Keep the bcache block of lvm devices we have processed so
 		 * that the vg_read phase can reuse it.  If bcache failed to
 		 * read the block, or the device does not belong to lvm, then
-		 * drop it from bcache.
+		 * drop it from bcache.  When "want_other_devs" is set, it
+		 * means the caller wants to scan and keep open non-lvm devs,
+		 * e.g. to pvcreate them.
 		 */
-		if (!is_lvm_device) {
+		if (!is_lvm_device && !want_other_devs) {
 			_invalidate_di(scan_bcache, devl->dev->bcache_di);
 			_scan_dev_close(devl->dev);
 		}
@@ -1146,7 +1148,7 @@ int label_scan(struct cmd_context *cmd)
 	/*
 	 * Do the main scan.
 	 */
-	_scan_list(cmd, cmd->filter, &scan_devs, NULL);
+	_scan_list(cmd, cmd->filter, &scan_devs, 0, NULL);
 
 	/*
 	 * Metadata could be larger than total size of bcache, and bcache
@@ -1193,7 +1195,7 @@ int label_scan(struct cmd_context *cmd)
 	if (using_hints) {
 		if (!validate_hints(cmd, &hints_list)) {
 			log_debug("Will scan %d remaining devices", dm_list_size(&all_devs));
-			_scan_list(cmd, cmd->filter, &all_devs, NULL);
+			_scan_list(cmd, cmd->filter, &all_devs, 0, NULL);
 			free_hints(&hints_list);
 			using_hints = 0;
 			create_hints = 0;
@@ -1312,7 +1314,7 @@ int label_scan_devs_cached(struct cmd_context *cmd, struct dev_filter *f, struct
 	if (!scan_bcache)
 		return 0;
 
-	_scan_list(cmd, f, devs, NULL);
+	_scan_list(cmd, f, devs, 0, NULL);
 
 	return 1;
 }
@@ -1339,7 +1341,7 @@ int label_scan_devs(struct cmd_context *cmd, struct dev_filter *f, struct dm_lis
 			_invalidate_di(scan_bcache, devl->dev->bcache_di);
 	}
 
-	_scan_list(cmd, f, devs, NULL);
+	_scan_list(cmd, f, devs, 0, NULL);
 
 	return 1;
 }
@@ -1359,12 +1361,12 @@ int label_scan_devs_rw(struct cmd_context *cmd, struct dev_filter *f, struct dm_
 		devl->dev->flags |= DEV_BCACHE_WRITE;
 	}
 
-	_scan_list(cmd, f, devs, NULL);
+	_scan_list(cmd, f, devs, 0, NULL);
 
 	return 1;
 }
 
-int label_scan_devs_excl(struct dm_list *devs)
+int label_scan_devs_excl(struct cmd_context *cmd, struct dev_filter *f, struct dm_list *devs)
 {
 	struct device_list *devl;
 	int failed = 0;
@@ -1379,7 +1381,7 @@ int label_scan_devs_excl(struct dm_list *devs)
 		devl->dev->flags |= DEV_BCACHE_WRITE;
 	}
 
-	_scan_list(NULL, NULL, devs, &failed);
+	_scan_list(cmd, f, devs, 1, &failed);
 
 	if (failed)
 		return 0;
@@ -1472,7 +1474,7 @@ int label_scan_dev(struct device *dev)
 
 	label_scan_invalidate(dev);
 
-	_scan_list(NULL, NULL, &one_dev, &failed);
+	_scan_list(NULL, NULL, &one_dev, 0, &failed);
 
 	free(devl);
 

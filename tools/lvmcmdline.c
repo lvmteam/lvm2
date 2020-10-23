@@ -2900,13 +2900,8 @@ static void _init_md_checks(struct cmd_context *cmd)
 
 	if (!strcmp(cmd->md_component_checks, "full"))
 		cmd->use_full_md_check = 1;
-	else if (!strcmp(cmd->md_component_checks, "auto")) {
-		/* use_full_md_check can also be set later */
-		if (!strcmp(cmd->name, "pvcreate") ||
-		    !strcmp(cmd->name, "vgcreate") ||
-		    !strcmp(cmd->name, "vgextend"))
-			cmd->use_full_md_check = 1;
-	}
+
+	/* use_full_md_check can also be set later */
 
 	log_debug("Using md_component_checks %s use_full_md_check %d",
 		  cmd->md_component_checks, cmd->use_full_md_check);
