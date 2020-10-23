@@ -61,7 +61,8 @@ cleanup_mounted_and_teardown()
 
 fscheck_ext3()
 {
-	fsck.ext3 -p -F -f "$dev_vg_lv"
+	# fsck with result code '1' is success
+	fsck.ext3 -p -F -f "$dev_vg_lv" || test "$?" -eq 1
 }
 
 fscheck_xfs()
@@ -113,6 +114,30 @@ if check_missing ext2; then
 	fscheck_ext3
 
 	lvresize -f -L20M $vg_lv
+
+	if which debugfs ; then
+		mkfs.ext2 -b4096 -j "$dev_vg_lv"
+		mount "$dev_vg_lv" "$mount_dir"
+		touch "$mount_dir/file"
+		umount "$mount_dir"
+		# generate a 'repariable' corruption
+		# so fsck returns code 1  (fs repaired)
+		debugfs -R "clri file" -w "$dev_vg_lv"
+
+		fsadm -v -f check "$dev_vg_lv"
+
+		# corrupting again
+		mount "$dev_vg_lv" "$mount_dir"
+		touch "$mount_dir/file"
+		umount "$mount_dir"
+		debugfs -R "clri file" -w "$dev_vg_lv"
+
+		mount "$dev_vg_lv" "$mount_dir"
+		fsadm -v -y --lvresize resize $vg_lv 10M
+		lvresize -L+10M -y -r -n $vg_lv
+		umount "$mount_dir" 2>/dev/null || true
+		fscheck_ext3
+	fi
 fi
 
 if check_missing ext3; then
