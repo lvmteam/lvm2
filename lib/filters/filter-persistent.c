@@ -272,8 +272,7 @@ static int _persistent_filter_dump(struct dev_filter *f, int merge_existing)
 		goto_out;
 
 	if (rename(tmp_file, pf->file))
-		log_error("%s: rename to %s failed: %s", tmp_file, pf->file,
-			  strerror(errno));
+		log_sys_debug("rename", tmp_file);
 
 	r = 1;
 
