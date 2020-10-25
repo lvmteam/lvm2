@@ -383,7 +383,7 @@ detect_device_size() {
 		test -n "$DEVSIZE" || error "Cannot read size of device \"$VOLUME\"."
 		SSSIZE=$("$BLOCKDEV" --getss "$VOLUME" || true)
 		test -n "$SSSIZE" || error "Cannot read sector size of device \"$VOLUME\"."
-		DEVSIZE=$(("$DEVSIZE" * "$SSSIZE"))
+		DEVSIZE=$(( $DEVSIZE * $SSSIZE ))
 	fi
 }
 
