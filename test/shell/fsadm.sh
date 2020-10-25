@@ -54,8 +54,8 @@ test ! -d "$mount_space_dir" && mkdir "$mount_space_dir"
 
 cleanup_mounted_and_teardown()
 {
-	umount "$mount_dir" || true
-	umount "$mount_space_dir" || true
+	umount "$mount_dir" 2>/dev/null || true
+	umount "$mount_space_dir" 2>/dev/null || true
 	aux teardown
 }
 
