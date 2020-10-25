@@ -7580,7 +7580,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	struct logical_volume *pool_lv = NULL;
 	struct logical_volume *tmp_lv;
 	const struct logical_volume *lock_lv;
-	struct lv_segment *seg, *pool_seg;
+	struct lv_segment *seg = NULL, *pool_seg;
 	int thin_pool_was_active = -1; /* not scanned, inactive, active */
 	int historical;
 	uint64_t transaction_id;

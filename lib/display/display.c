@@ -407,9 +407,9 @@ int lvdisplay_full(struct cmd_context *cmd,
 	int lvm1compat;
 	dm_percent_t snap_percent;
 	int thin_pool_active = 0;
-	dm_percent_t thin_data_percent, thin_metadata_percent;
+	dm_percent_t thin_data_percent = 0, thin_metadata_percent = 0;
 	int thin_active = 0;
-	dm_percent_t thin_percent;
+	dm_percent_t thin_percent = 0;
 	struct lv_status_thin *thin_status = NULL;
 	struct lv_status_thin_pool *thin_pool_status = NULL;
 	struct lv_status_cache *cache_status = NULL;
