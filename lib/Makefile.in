@@ -152,6 +152,18 @@ CFLOW_LIST_TARGET = $(LIB_NAME).cflow
 
 PROGS_CFLAGS = $(BLKID_CFLAGS) $(UDEV_CFLAGS)
 
+ifneq (,$(findstring $(MAKECMDGOALS),clean distclean))
+   SOURCES += \
+	integrity/integrity.c \
+	label/hints.c \
+	metadata/integrity_manip.c \
+	metadata/pv_list.c \
+	metadata/vdo_manip.c \
+	metadata/writecache_manip.c \
+	vdo/vdo.c \
+	writecache/writecache.c
+endif
+
 include $(top_builddir)/make.tmpl
 
 $(SUBDIRS): $(LIB_STATIC)

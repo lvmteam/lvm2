@@ -36,6 +36,11 @@ SOURCES =\
 	regex/ttree.c \
 	$(interface)/libdm-iface.c
 
+ifneq (,$(findstring $(MAKECMDGOALS),clean distclean))
+   SOURCES += \
+	dm-tools/dmsetup.c
+endif
+
 INCLUDES = -I$(srcdir)/$(interface)
 
 ifeq ("@STATIC_LINK@", "yes")

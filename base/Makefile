@@ -33,6 +33,12 @@ $(BASE_TARGET): $(BASE_OBJECTS)
 	$(Q) $(RM) $@
 	$(Q) $(AR) rsv $@ $(BASE_OBJECTS) > /dev/null
 
+ifneq (,$(findstring $(MAKECMDGOALS),clean distclean))
+   BASE_SOURCE += \
+	base/data-struct/hash.c \
+	base/data-struct/list.c
+endif
+
 ifeq ("$(DEPENDS)","yes")
 -include $(BASE_DEPENDS)
 endif
