@@ -77,5 +77,34 @@ pvmove -n $vg/$lv1 "$dev3" "$dev1"
 
 mount_umount $lv1
 lvchange -an $vg/$lv1
+lvremove -y $vg/$lv1
+
+
+#
+# Test partial and degraded activation
+#
+
+lvcreate -n $lv1 -l 16 -an $vg "$dev1" "$dev2"
+lvcreate -n $lv2 -l 16 -an $vg "$dev3" "$dev4"
+
+lvconvert -y --type writecache --cachevol $lv2 $vg/$lv1
+lvs -a -o+devices $vg
+lvchange -an $vg/$lv1
+
+aux hide_dev "$dev1"
+not lvchange -ay $vg/$lv1
+not lvchange -ay --partial $vg/$lv1
+not lvchange -ay --activationmode degraded $vg/$lv1
+aux unhide_dev "$dev1"
+lvchange -ay $vg/$lv1
+lvchange -an $vg/$lv1
+
+aux hide_dev "$dev3"
+not lvchange -ay $vg/$lv1
+not lvchange -ay --partial $vg/$lv1
+not lvchange -ay --activationmode degraded $vg/$lv1
+aux unhide_dev "$dev3"
+lvchange -ay $vg/$lv1
+lvchange -an $vg/$lv1
 
 vgremove -ff $vg

@@ -2530,6 +2530,14 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		}
 	}
 
+	if ((cmd->partial_activation || cmd->degraded_activation) && lv_is_writecache(lv)) {
+		struct logical_volume *lv_fast = first_seg(lv)->writecache;
+		if (lv_is_partial(lv) || (lv_fast && lv_is_partial(lv_fast))) {
+			log_error("Cannot use partial or degraded activation with writecache.");
+			goto out;
+		}
+	}
+
 	if (lv_has_unknown_segments(lv)) {
 		log_error("Refusing activation of LV %s containing "
 			  "an unrecognised segment.", display_lvname(lv));
