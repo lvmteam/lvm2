@@ -96,7 +96,7 @@ _test_fs_with_error() {
 	umount $mnt
 }
 
-_test_fs_with_raid() {
+_test_fs_with_read_repair() {
 	mkfs.xfs -f -s size=4096 "$DM_DEV_DIR/$vg/$lv1"
 
 	mount "$DM_DEV_DIR/$vg/$lv1" $mnt
@@ -134,6 +134,56 @@ _test_fs_with_raid() {
 	rm tmp
 
 	# read complete fileB, corruption is corrected by raid
+	dd if=$mnt/fileB of=tmp bs=1k
+	ls -l tmp
+	stat -c %s tmp | grep 16384
+	cmp -b fileB tmp
+	rm tmp
+
+	umount $mnt
+}
+
+_test_fs_with_syncaction_check() {
+	mkfs.xfs -f -s size=4096 "$DM_DEV_DIR/$vg/$lv1"
+
+	mount "$DM_DEV_DIR/$vg/$lv1" $mnt
+
+	# add original data
+	cp fileA $mnt
+	cp fileB $mnt
+	cp fileC $mnt
+
+	umount $mnt
+	lvchange -an $vg/$lv1
+
+	# FIXME: this is only finding/corrupting the bit with raid1
+	# other raid levels may require looking at a different dev.
+	# (Attempt this xxd/tac/sed/xxd on each dev in the LV?)
+
+	xxd "$dev1" > dev1.txt
+	tac dev1.txt > dev1.rev
+	rm -f dev1.txt
+	sed -e '0,/4242 4242 4242 4242 4242 4242 4242 4242/ s/4242 4242 4242 4242 4242 4242 4242 4242/4242 4242 4242 4242 4242 4242 4242 4243/' dev1.rev > dev1.rev.bad
+	rm -f dev1.rev
+	tac dev1.rev.bad > dev1.bad
+	rm -f dev1.rev.bad
+	xxd -r dev1.bad > "$dev1"
+	rm -f dev1.bad
+
+	lvchange -ay $vg/$lv1
+
+	lvchange --syncaction check $vg/$lv1
+
+	mount "$DM_DEV_DIR/$vg/$lv1" $mnt
+
+	# read complete fileA which was not corrupted
+	dd if=$mnt/fileA of=tmp bs=1k
+	ls -l tmp
+	stat -c %s tmp | grep 16384
+	cmp -b fileA tmp
+	rm tmp
+
+	# read complete fileB
 	dd if=$mnt/fileB of=tmp bs=1k
 	ls -l tmp
 	stat -c %s tmp | grep 16384
@@ -235,7 +285,7 @@ _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg
 _wait_recalc $vg/${lv1}_rimage_0
 _wait_recalc $vg/${lv1}_rimage_1
-_test_fs_with_raid
+_test_fs_with_read_repair
 lvs -o integritymismatches $vg/${lv1}_rimage_0
 lvs -o integritymismatches $vg/${lv1}_rimage_1
 lvchange -an $vg/$lv1
@@ -248,7 +298,7 @@ lvcreate --type raid1 -m2 --raidintegrity y -n $lv1 -l 8 $vg
 _wait_recalc $vg/${lv1}_rimage_0
 _wait_recalc $vg/${lv1}_rimage_1
 _wait_recalc $vg/${lv1}_rimage_2
-_test_fs_with_raid
+_test_fs_with_read_repair
 lvs -o integritymismatches $vg/${lv1}_rimage_0
 lvs -o integritymismatches $vg/${lv1}_rimage_1
 lvs -o integritymismatches $vg/${lv1}_rimage_2
@@ -262,7 +312,7 @@ lvcreate --type raid4 --raidintegrity y -n $lv1 -l 8 $vg
 _wait_recalc $vg/${lv1}_rimage_0
 _wait_recalc $vg/${lv1}_rimage_1
 _wait_recalc $vg/${lv1}_rimage_2
-_test_fs_with_raid
+_test_fs_with_read_repair
 lvs -o integritymismatches $vg/${lv1}_rimage_0
 lvs -o integritymismatches $vg/${lv1}_rimage_1
 lvs -o integritymismatches $vg/${lv1}_rimage_2
@@ -276,7 +326,7 @@ lvcreate --type raid5 --raidintegrity y -n $lv1 -l 8 $vg
 _wait_recalc $vg/${lv1}_rimage_0
 _wait_recalc $vg/${lv1}_rimage_1
 _wait_recalc $vg/${lv1}_rimage_2
-_test_fs_with_raid
+_test_fs_with_read_repair
 lvs -o integritymismatches $vg/${lv1}_rimage_0
 lvs -o integritymismatches $vg/${lv1}_rimage_1
 lvs -o integritymismatches $vg/${lv1}_rimage_2
@@ -292,7 +342,7 @@ _wait_recalc $vg/${lv1}_rimage_1
 _wait_recalc $vg/${lv1}_rimage_2
 _wait_recalc $vg/${lv1}_rimage_3
 _wait_recalc $vg/${lv1}_rimage_4
-_test_fs_with_raid
+_test_fs_with_read_repair
 lvs -o integritymismatches $vg/${lv1}_rimage_0
 lvs -o integritymismatches $vg/${lv1}_rimage_1
 lvs -o integritymismatches $vg/${lv1}_rimage_2
@@ -309,7 +359,89 @@ _wait_recalc $vg/${lv1}_rimage_0
 _wait_recalc $vg/${lv1}_rimage_1
 _wait_recalc $vg/${lv1}_rimage_2
 _wait_recalc $vg/${lv1}_rimage_3
-_test_fs_with_raid
+_test_fs_with_read_repair
+lvs -o integritymismatches $vg/${lv1}_rimage_0
+lvs -o integritymismatches $vg/${lv1}_rimage_1
+lvs -o integritymismatches $vg/${lv1}_rimage_2
+lvs -o integritymismatches $vg/${lv1}_rimage_3
+lvchange -an $vg/$lv1
+lvconvert --raidintegrity n $vg/$lv1
+lvremove $vg/$lv1
+vgremove -ff $vg
+
+# Test corrupting data on an image and verifying that
+# it is detected and corrected using syncaction check
+
+_prepare_vg
+lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg
+_wait_recalc $vg/${lv1}_rimage_0
+_wait_recalc $vg/${lv1}_rimage_1
+_test_fs_with_syncaction_check
+lvs -o integritymismatches $vg/${lv1}_rimage_0
+lvs -o integritymismatches $vg/${lv1}_rimage_1
+check lv_field $vg/${lv1}_rimage_0 integritymismatches "1"
+check lv_field $vg/${lv1}_rimage_1 integritymismatches "0"
+lvchange -an $vg/$lv1
+lvconvert --raidintegrity n $vg/$lv1
+lvremove $vg/$lv1
+vgremove -ff $vg
+
+_prepare_vg
+lvcreate --type raid4 --raidintegrity y -n $lv1 -l 8 $vg
+_wait_recalc $vg/${lv1}_rimage_0
+_wait_recalc $vg/${lv1}_rimage_1
+_wait_recalc $vg/${lv1}_rimage_2
+_test_fs_with_syncaction_check
+lvs -o integritymismatches $vg/${lv1}_rimage_0
+lvs -o integritymismatches $vg/${lv1}_rimage_1
+lvs -o integritymismatches $vg/${lv1}_rimage_2
+check lv_field $vg/${lv1}_rimage_0 integritymismatches "2"
+check lv_field $vg/${lv1}_rimage_1 integritymismatches "0"
+check lv_field $vg/${lv1}_rimage_2 integritymismatches "0"
+lvchange -an $vg/$lv1
+lvconvert --raidintegrity n $vg/$lv1
+lvremove $vg/$lv1
+vgremove -ff $vg
+
+_prepare_vg
+lvcreate --type raid5 --raidintegrity y -n $lv1 -l 8 $vg
+_wait_recalc $vg/${lv1}_rimage_0
+_wait_recalc $vg/${lv1}_rimage_1
+_wait_recalc $vg/${lv1}_rimage_2
+_test_fs_with_syncaction_check
+lvs -o integritymismatches $vg/${lv1}_rimage_0
+lvs -o integritymismatches $vg/${lv1}_rimage_1
+lvs -o integritymismatches $vg/${lv1}_rimage_2
+lvchange -an $vg/$lv1
+lvconvert --raidintegrity n $vg/$lv1
+lvremove $vg/$lv1
+vgremove -ff $vg
+
+_prepare_vg
+lvcreate --type raid6 --raidintegrity y -n $lv1 -l 8 $vg
+_wait_recalc $vg/${lv1}_rimage_0
+_wait_recalc $vg/${lv1}_rimage_1
+_wait_recalc $vg/${lv1}_rimage_2
+_wait_recalc $vg/${lv1}_rimage_3
+_wait_recalc $vg/${lv1}_rimage_4
+_test_fs_with_syncaction_check
+lvs -o integritymismatches $vg/${lv1}_rimage_0
+lvs -o integritymismatches $vg/${lv1}_rimage_1
+lvs -o integritymismatches $vg/${lv1}_rimage_2
+lvs -o integritymismatches $vg/${lv1}_rimage_3
+lvs -o integritymismatches $vg/${lv1}_rimage_4
+lvchange -an $vg/$lv1
+lvconvert --raidintegrity n $vg/$lv1
+lvremove $vg/$lv1
+vgremove -ff $vg
+
+_prepare_vg
+lvcreate --type raid10 --raidintegrity y -n $lv1 -l 8 $vg
+_wait_recalc $vg/${lv1}_rimage_0
+_wait_recalc $vg/${lv1}_rimage_1
+_wait_recalc $vg/${lv1}_rimage_2
+_wait_recalc $vg/${lv1}_rimage_3
+_test_fs_with_syncaction_check
 lvs -o integritymismatches $vg/${lv1}_rimage_0
 lvs -o integritymismatches $vg/${lv1}_rimage_1
 lvs -o integritymismatches $vg/${lv1}_rimage_2
@@ -621,7 +753,6 @@ _add_new_data_to_mnt
 not lvconvert -y -m-1 $vg/$lv1
 not lvconvert --splitmirrors 1 -n tmp -y $vg/$lv1
 not lvconvert --splitmirrors 1 --trackchanges -y $vg/$lv1
-not lvchange --syncaction check $vg/$lv1
 not lvchange --syncaction repair $vg/$lv1
 not lvreduce -L4M $vg/$lv1
 not lvcreate -s -n snap -L4M $vg/$lv1
@@ -638,7 +769,7 @@ vgremove -ff $vg
 
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y --raidintegritymode bitmap -n $lv1 -l 8 $vg
-_test_fs_with_raid
+_test_fs_with_read_repair
 lvs -o integritymismatches $vg/${lv1}_rimage_0
 lvs -o integritymismatches $vg/${lv1}_rimage_1
 lvchange -an $vg/$lv1
@@ -648,7 +779,7 @@ vgremove -ff $vg
 
 _prepare_vg
 lvcreate --type raid6 --raidintegrity y --raidintegritymode bitmap -n $lv1 -l 8 $vg
-_test_fs_with_raid
+_test_fs_with_read_repair
 lvs -o integritymismatches $vg/${lv1}_rimage_0
 lvs -o integritymismatches $vg/${lv1}_rimage_1
 lvs -o integritymismatches $vg/${lv1}_rimage_2

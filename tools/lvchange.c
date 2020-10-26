@@ -1658,8 +1658,10 @@ static int _lvchange_syncaction_single(struct cmd_context *cmd,
 				       struct logical_volume *lv,
 				       struct processing_handle *handle)
 {
-	if (lv_raid_has_integrity(lv)) {
-		log_error("Integrity must be removed to use syncaction commands.");
+	const char *msg = arg_str_value(cmd, syncaction_ARG, NULL);
+
+	if (lv_raid_has_integrity(lv) && !strcmp(msg, "repair")) {
+		log_error("Use syncaction check to detect and correct integrity checksum mismatches.");
 		return_ECMD_FAILED;
 	}
 
@@ -1667,7 +1669,7 @@ static int _lvchange_syncaction_single(struct cmd_context *cmd,
 	if (!lockd_lv(cmd, lv, "ex", 0))
 		return_ECMD_FAILED;
 
-	if (!lv_raid_message(lv, arg_str_value(cmd, syncaction_ARG, NULL)))
+	if (!lv_raid_message(lv, msg))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
