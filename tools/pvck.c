@@ -1406,9 +1406,10 @@ static int _dump_headers(struct cmd_context *cmd, const char *dump, struct setti
 	}
 
 	/*
-	 * The first mda is always 4096 bytes from the start of the device.
+	 * The first mda is usually 4096 bytes from the start of the device.
+	 * (If created by a machine with larger pages it could be 8k/16k/64k.)
 	 */
-	if (!_dump_mda_header(cmd, set, 1, 0, 0, NULL, dev, def, 4096, mda1_size, &mda1_checksum, NULL))
+	if (!_dump_mda_header(cmd, set, 1, 0, 0, NULL, dev, def, mda1_offset, mda1_size, &mda1_checksum, NULL))
 		bad++;
 
 	if (mda2_offset) {
@@ -1463,7 +1464,7 @@ static int _dump_metadata(struct cmd_context *cmd, const char *dump, struct sett
 	 * The first mda is always 4096 bytes from the start of the device.
 	 */
 	if (mda_num == 1) {
-		if (!_dump_mda_header(cmd, set, 0, print_metadata, print_area, tofile, dev, def, 4096, mda1_size, &mda1_checksum, NULL))
+		if (!_dump_mda_header(cmd, set, 0, print_metadata, print_area, tofile, dev, def, mda1_offset, mda1_size, &mda1_checksum, NULL))
 			bad++;
 	} else if (mda_num == 2) {
 		if (!mda2_offset) {
@@ -1497,7 +1498,7 @@ static int _dump_found(struct cmd_context *cmd, struct settings *set, uint64_t l
 		bad++;
 
 	if (found_label && mda1_offset) {
-		if (!_dump_mda_header(cmd, set, 0, 0, 0, NULL, dev, NULL, 4096, mda1_size, &mda1_checksum, &found_header1))
+		if (!_dump_mda_header(cmd, set, 0, 0, 0, NULL, dev, NULL, mda1_offset, mda1_size, &mda1_checksum, &found_header1))
 			bad++;
 	}
 
@@ -1681,7 +1682,7 @@ static int _dump_search(struct cmd_context *cmd, const char *dump, struct settin
 	 */
 	if ((mda_num == 1) && found_label && mda1_offset && mda1_size) {
 		/* use header values when available */
-		mda_offset = 4096;
+		mda_offset = mda1_offset;
 		mda_size = mda1_size;
 
 	} else if (mda_num == 1) {
