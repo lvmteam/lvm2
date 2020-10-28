@@ -3064,10 +3064,10 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_FAILED;
 	}
 
+	label_scan_setup_bcache();
+
 	if (dev) {
 		char buf[4096];
-
-		label_scan_setup_bcache();
 
 		/*
 		 * This buf is not used, but bcache data is used for subsequent
