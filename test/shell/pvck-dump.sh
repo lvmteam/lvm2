@@ -145,7 +145,7 @@ pvcreate --pvmetadatacopies 2 --metadatasize 32M "$dev1"
 
 vgcreate $SHARED -s 64K --metadatasize 32M $vg "$dev1" "$dev2" "$dev3" "$dev4"
 
-for i in $(seq 1 500); do lvcreate -an -n lv$i -l1 $vg; done 
+for i in $(seq 1 500); do echo "lvcreate -an -n lv$i -l1 $vg"; done | lvm
 
 pvck --dump headers "$dev1" > h1
 
