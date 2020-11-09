@@ -255,7 +255,7 @@ static int _target_present(struct cmd_context *cmd,
 			return 0;
 		}
 
-		if (min >= 2) {
+		if (min >= 3) {
 			_writecache_cleaner_supported = 1;
 			_writecache_max_age_supported = 1;
 		}
