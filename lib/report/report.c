@@ -3338,6 +3338,10 @@ static int _integritymismatches_disp(struct dm_report *rh __attribute__((unused)
 	if (lv_is_integrity(lv) && lv_integrity_mismatches(lv->vg->cmd, lv, &mismatches))
 		return dm_report_field_uint64(rh, field, &mismatches);
 
+	if (lv_is_raid(lv) && lv_raid_has_integrity(lv) &&
+	    lv_raid_integrity_total_mismatches(lv->vg->cmd, lv, &mismatches))
+		return dm_report_field_uint64(rh, field, &mismatches);
+
 	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
 }
 

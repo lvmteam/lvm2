@@ -895,11 +895,51 @@ int lv_get_raid_integrity_settings(struct logical_volume *lv, struct integrity_s
 	return 0;
 }
 
+int lv_raid_integrity_total_mismatches(struct cmd_context *cmd,
+			    const struct logical_volume *lv,
+			    uint64_t *mismatches)
+{
+	struct logical_volume *lv_image;
+	struct lv_segment *seg, *seg_image;
+	uint32_t s;
+	uint64_t mismatches_image;
+	uint64_t total = 0;
+	int errors = 0;
+
+	if (!lv_is_raid(lv))
+		return 0;
+
+	seg = first_seg(lv);
+
+	for (s = 0; s < seg->area_count; s++) {
+		lv_image = seg_lv(seg, s);
+		seg_image = first_seg(lv_image);
+
+		if (!seg_is_integrity(seg_image))
+			continue;
+
+		mismatches_image = 0;
+
+		if (!lv_integrity_mismatches(cmd, lv_image, &mismatches_image))
+			errors++;
+
+		total += mismatches_image;
+	}
+	*mismatches = total;
+
+	if (errors)
+		return 0;
+	return 1;
+}
+
 int lv_integrity_mismatches(struct cmd_context *cmd,
 			    const struct logical_volume *lv,
 			    uint64_t *mismatches)
 {
 	struct lv_with_info_and_seg_status status;
+
+	if (lv_is_raid(lv) && lv_raid_has_integrity((struct logical_volume *)lv))
+		return lv_raid_integrity_total_mismatches(cmd, lv, mismatches);
 
 	if (!lv_is_integrity(lv))
 		return_0;
