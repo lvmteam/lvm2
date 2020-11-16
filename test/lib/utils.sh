@@ -252,6 +252,11 @@ skip() {
 	exit 200
 }
 
+get_real_devs() {
+	REAL_DEVICES=( $(<REAL_DEVICES) )
+	export REAL_DEVICES
+}
+
 get_devs() {
 	local IFS=$IFS_NL
 	DEVICES=( $(<DEVICES) )
@@ -265,10 +270,21 @@ prepare_test_vars() {
 	lv=LV
 
 	for i in {1..16}; do
-		eval "dev$i=\"$DM_DEV_DIR/mapper/${PREFIX}pv$i\""
 		eval "lv$i=\"LV$i\""
 		eval "vg$i=\"${PREFIX}vg$i\""
 	done
+
+	if test -n "$LVM_TEST_DEVICE_LIST"; then
+		local count=0
+		while read path; do
+			count=$((  count + 1 ))
+			eval "dev$count=\"$path\""
+		done < $LVM_TEST_DEVICE_LIST
+	else
+		for i in {1..16}; do
+			eval "dev$i=\"$DM_DEV_DIR/mapper/${PREFIX}pv$i\""
+		done
+	fi
 }
 
 if test -z "${abs_top_builddir+varset}" && test -z "${installed_testsuite+varset}"; then

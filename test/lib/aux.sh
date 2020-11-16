@@ -657,6 +657,24 @@ prepare_ramdisk() {
 	touch RAMDISK
 }
 
+prepare_real_devs() {
+	aux lvmconf 'devices/scan = "/dev"'
+
+	touch REAL_DEVICES
+
+	if test -n "$LVM_TEST_DEVICE_LIST"; then
+		local count=0
+		while read path; do
+			REAL_DEVICES[$count]=$path
+			count=$((  count + 1 ))
+			aux extend_filter "a|$path|"
+			dd if=/dev/zero of="$path" bs=32k count=1
+			wipefs -a "$path" 2>/dev/null || true
+		done < $LVM_TEST_DEVICE_LIST
+	fi
+	printf "%s\\n" "${REAL_DEVICES[@]}" > REAL_DEVICES
+}
+
 # A drop-in replacement for prepare_loop() that uses scsi_debug to create
 # a ramdisk-based SCSI device upon which all LVM devices will be created
 # - scripts must take care not to use a DEV_SIZE that will enduce OOM-killer
@@ -908,7 +926,6 @@ prepare_devs() {
 #	( IFS=$'\n'; echo "${DEVICES[*]}" ) >DEVICES
 	echo "ok"
 }
-
 
 common_dev_() {
 	local tgtype=$1
