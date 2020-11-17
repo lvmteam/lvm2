@@ -202,7 +202,7 @@ static int _lvchange_activate(struct cmd_context *cmd, struct logical_volume *lv
 	    strcmp(lv->vg->system_id, cmd->system_id) &&
 	    is_change_activating(activate)) {
 		log_error("Cannot activate LVs in a foreign VG.");
-		return ECMD_FAILED;
+		return 0;
 	}
 
 	if (lv_activation_skip(lv, activate, arg_is_set(cmd, ignoreactivationskip_ARG)))
