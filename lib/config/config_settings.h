@@ -982,8 +982,7 @@ cfg(global_prioritise_write_locks_CFG, "prioritise_write_locks", global_CFG_SECT
 	"a volume group's metadata, instead of always granting the read-only\n"
 	"requests immediately, delay them to allow the read-write requests to\n"
 	"be serviced. Without this setting, write access may be stalled by a\n"
-	"high volume of read-only requests. This option only affects\n"
-	"locking_type 1 viz. local file-based locking.\n")
+	"high volume of read-only requests. This option only affects file locks.\n")
 
 cfg(global_library_dir_CFG, "library_dir", global_CFG_SECTION, CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, NULL, vsn(1, 0, 0), NULL, 0, NULL,
 	"Search this directory first for shared libraries.\n")
