@@ -822,12 +822,16 @@ wipefs_a() {
 	local dev=$1
 	shift
 
+#	lvmdevices --deldev $dev || true
+
 	if wipefs -V >/dev/null; then
 		wipefs -a "$dev"
 	else
 		dd if=/dev/zero of="$dev" bs=4096 count=8 || true
 		mdadm --zero-superblock "$dev" || true
 	fi
+
+#	lvmdevices --adddev $dev || true
 }
 
 prepare_backing_dev() {
@@ -912,6 +916,12 @@ prepare_devs() {
 		dd if=/dev/zero of="$d" bs=32k count=1
 		wipefs -a "$d" 2>/dev/null || true
 	done
+
+#	mkdir -p $TESTDIR/etc/lvm/devices || true
+#	rm $TESTDIR/etc/lvm/devices/system.devices || true
+#	for d in "${DEVICES[@]}"; do
+#		lvmdevices --adddev $dev || true
+#	done
 
 	#for i in `seq 1 $n`; do
 	#	local name="${PREFIX}$pvname$i"
