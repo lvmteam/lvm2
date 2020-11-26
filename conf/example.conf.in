@@ -937,8 +937,7 @@ global {
 	# a volume group's metadata, instead of always granting the read-only
 	# requests immediately, delay them to allow the read-write requests to
 	# be serviced. Without this setting, write access may be stalled by a
-	# high volume of read-only requests. This option only affects
-	# locking_type 1 viz. local file-based locking.
+	# high volume of read-only requests. This option only affects file locks.
 	prioritise_write_locks = 1
 
 	# Configuration option global/library_dir.
