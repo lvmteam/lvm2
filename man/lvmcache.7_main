@@ -303,6 +303,16 @@ afterwards.  Some underlying devices perform better with fua, some with
 nofua.  Testing is necessary to determine which.
 Applicable only to persistent memory.
 
+.IP \[bu] 2
+cleaner = 0|1
+
+Setting cleaner=1 enables the writecache cleaner mode in which data is
+gradually flushed from the cache.  If this is done prior to detaching the
+writecache, then the splitcache command will have little or no flushing to
+perform.  If not done beforehand, the splitcache command enables the
+cleaner mode and waits for flushing to complete before detaching the
+writecache.  Adding cleaner=0 to the splitcache command will skip the
+cleaner mode, and any required flushing is performed in device suspend.
 
 .SS dm-cache with separate data and metadata LVs
 
