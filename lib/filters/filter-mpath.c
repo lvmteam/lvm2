@@ -16,6 +16,7 @@
 #include "lib/misc/lib.h"
 #include "lib/filters/filter.h"
 #include "lib/activate/activate.h"
+#include "lib/commands/toolcontext.h"
 #ifdef UDEV_SYNC_SUPPORT
 #include <libudev.h>
 #include "lib/device/dev-ext-udev-constants.h"
@@ -27,7 +28,6 @@
 
 #define MPATH_PREFIX "mpath-"
 
-
 struct mpath_priv {
 	struct dm_pool *mem;
 	struct dev_filter f;
@@ -35,6 +35,9 @@ struct mpath_priv {
 	struct dm_hash_table *hash;
 };
 
+/*
+ * given "/dev/foo" return "foo"
+ */
 static const char *_get_sysfs_name(struct device *dev)
 {
 	const char *name;
@@ -53,6 +56,11 @@ static const char *_get_sysfs_name(struct device *dev)
 	return name;
 }
 
+/*
+ * given major:minor
+ * readlink translates /sys/dev/block/major:minor to /sys/.../foo
+ * from /sys/.../foo return "foo"
+ */
 static const char *_get_sysfs_name_by_devt(const char *sysfs_dir, dev_t devno,
 					  char *buf, size_t buf_size)
 {
@@ -102,27 +110,28 @@ static int _get_sysfs_string(const char *path, char *buffer, int max_size)
 	return r;
 }
 
-static int _get_sysfs_get_major_minor(const char *sysfs_dir, const char *kname, int *major, int *minor)
+static int _get_sysfs_dm_mpath(struct dev_types *dt, const char *sysfs_dir, const char *holder_name)
 {
-	char path[PATH_MAX], buffer[64];
+	char path[PATH_MAX];
+	char buffer[128];
 
-	if (dm_snprintf(path, sizeof(path), "%sblock/%s/dev", sysfs_dir, kname) < 0) {
+	if (dm_snprintf(path, sizeof(path), "%sblock/%s/dm/uuid", sysfs_dir, holder_name) < 0) {
 		log_error("Sysfs path string is too long.");
 		return 0;
 	}
 
+	buffer[0] = '\0';
+
 	if (!_get_sysfs_string(path, buffer, sizeof(buffer)))
 		return_0;
 
-	if (sscanf(buffer, "%d:%d", major, minor) != 2) {
-		log_error("Failed to parse major minor from %s", buffer);
-		return 0;
-	}
+	if (!strncmp(buffer, MPATH_PREFIX, 6))
+		return 1;
 
-	return 1;
+	return 0;
 }
 
-static int _get_parent_mpath(const char *dir, char *name, int max_size)
+static int _get_holder_name(const char *dir, char *name, int max_size)
 {
 	struct dirent *d;
 	DIR *dr;
@@ -155,7 +164,7 @@ static int _get_parent_mpath(const char *dir, char *name, int max_size)
 }
 
 #ifdef UDEV_SYNC_SUPPORT
-static int _udev_dev_is_mpath(struct device *dev)
+static int _udev_dev_is_mpath_component(struct device *dev)
 {
 	const char *value;
 	struct dev_ext *ext;
@@ -174,95 +183,148 @@ static int _udev_dev_is_mpath(struct device *dev)
 	return 0;
 }
 #else
-static int _udev_dev_is_mpath(struct device *dev)
+static int _udev_dev_is_mpath_component(struct device *dev)
 {
 	return 0;
 }
 #endif
 
-static int _native_dev_is_mpath(struct dev_filter *f, struct device *dev)
+static int _native_dev_is_mpath_component(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
 {
 	struct mpath_priv *mp = (struct mpath_priv *) f->private;
 	struct dev_types *dt = mp->dt;
-	const char *part_name, *name;
-	struct stat info;
-	char path[PATH_MAX], parent_name[PATH_MAX];
+	const char *part_name;
+	const char *name;               /* e.g. "sda" for "/dev/sda" */
+	char link_path[PATH_MAX];       /* some obscure, unpredictable sysfs path */
+	char holders_path[PATH_MAX];    /* e.g. "/sys/block/sda/holders/" */
+	char dm_dev_path[PATH_MAX];    /* e.g. "/dev/dm-1" */
+	char holder_name[128] = { 0 };  /* e.g. "dm-1" */
 	const char *sysfs_dir = dm_sysfs_dir();
-	int major = MAJOR(dev->dev);
-	int minor = MINOR(dev->dev);
+	int dev_major = MAJOR(dev->dev);
+	int dev_minor = MINOR(dev->dev);
+	int dm_dev_major;
+	int dm_dev_minor;
+	struct stat info;
 	dev_t primary_dev;
 	long look;
 
-	/* Limit this filter only to SCSI devices */
-	if (!major_is_scsi_device(dt, MAJOR(dev->dev)))
+	/* Limit this filter to SCSI or NVME devices */
+	if (!major_is_scsi_device(dt, dev_major) && !dev_is_nvme(dt, dev))
 		return 0;
 
 	switch (dev_get_primary_dev(dt, dev, &primary_dev)) {
+
 	case 2: /* The dev is partition. */
 		part_name = dev_name(dev); /* name of original dev for log_debug msg */
-		if (!(name = _get_sysfs_name_by_devt(sysfs_dir, primary_dev, parent_name, sizeof(parent_name))))
+
+		/* gets "foo" for "/dev/foo" where "/dev/foo" comes from major:minor */
+		if (!(name = _get_sysfs_name_by_devt(sysfs_dir, primary_dev, link_path, sizeof(link_path))))
 			return_0;
+
 		log_debug_devs("%s: Device is a partition, using primary "
 			       "device %s for mpath component detection",
 			       part_name, name);
 		break;
+
 	case 1: /* The dev is already a primary dev. Just continue with the dev. */
+
+		/* gets "foo" for "/dev/foo" */
 		if (!(name = _get_sysfs_name(dev)))
 			return_0;
 		break;
+
 	default: /* 0, error. */
-		log_warn("Failed to get primary device for %d:%d.", major, minor);
+		log_warn("Failed to get primary device for %d:%d.", dev_major, dev_minor);
 		return 0;
 	}
 
-	if (dm_snprintf(path, sizeof(path), "%sblock/%s/holders", sysfs_dir, name) < 0) {
+	if (dm_snprintf(holders_path, sizeof(holders_path), "%sblock/%s/holders", sysfs_dir, name) < 0) {
 		log_warn("Sysfs path to check mpath is too long.");
 		return 0;
 	}
 
 	/* also will filter out partitions */
-	if (stat(path, &info))
+	if (stat(holders_path, &info))
 		return 0;
 
 	if (!S_ISDIR(info.st_mode)) {
-		log_warn("Path %s is not a directory.", path);
+		log_warn("Path %s is not a directory.", holders_path);
 		return 0;
 	}
 
-	if (!_get_parent_mpath(path, parent_name, sizeof(parent_name)))
+	/*
+	 * If holders dir contains an entry such as "dm-1", then this sets
+	 * holder_name to "dm-1".
+	 *
+	 * If holders dir is empty, return 0 (this is generally where
+	 * devs that are not mpath components return.)
+	 */
+	if (!_get_holder_name(holders_path, holder_name, sizeof(holder_name)))
 		return 0;
 
-	if (!_get_sysfs_get_major_minor(sysfs_dir, parent_name, &major, &minor))
-		return_0;
-
-	if (major != dt->device_mapper_major)
+	if (dm_snprintf(dm_dev_path, sizeof(dm_dev_path), "%s/%s", cmd->dev_dir, holder_name) < 0) {
+		log_warn("dm device path to check mpath is too long.");
 		return 0;
+	}
 
-	/* Avoid repeated detection of multipath device and use first checked result */
-	look = (long) dm_hash_lookup_binary(mp->hash, &minor, sizeof(minor));
+	/*
+	 * stat "/dev/dm-1" which is the holder of the dev we're checking
+	 * dm_dev_major:dm_dev_minor come from stat("/dev/dm-1")
+	 */
+	if (stat(dm_dev_path, &info)) {
+		log_debug("filter-mpath %s holder %s stat result %d",
+			  dev_name(dev), dm_dev_path, errno);
+		return 0;
+	}
+	dm_dev_major = (int)MAJOR(info.st_rdev);
+	dm_dev_minor = (int)MINOR(info.st_rdev);
+	
+	if (dm_dev_major != dt->device_mapper_major) {
+		log_debug_devs("filter-mpath %s holder %s %d:%d does not have dm major",
+			       dev_name(dev), dm_dev_path, dm_dev_major, dm_dev_minor);
+		return 0;
+	}
+
+	/*
+	 * Save the result of checking that "/dev/dm-1" is an mpath device
+	 * to avoid repeating it for each path component.
+	 * The minor number of "/dev/dm-1" is added to the hash table with
+	 * const value 2 meaning that dm minor 1 (for /dev/dm-1) is a multipath dev
+	 * and const value 1 meaning that dm minor 1 is not a multipath dev.
+	 */
+	look = (long) dm_hash_lookup_binary(mp->hash, &dm_dev_minor, sizeof(dm_dev_minor));
 	if (look > 0) {
-		log_debug_devs("%s(%u:%u): already checked as %sbeing mpath.",
-			       parent_name, major, minor, (look > 1) ? "" : "not ");
+		log_debug_devs("filter-mpath %s holder %s %u:%u already checked as %sbeing mpath.",
+			       dev_name(dev), holder_name, dm_dev_major, dm_dev_minor, (look > 1) ? "" : "not ");
 		return (look > 1) ? 1 : 0;
 	}
 
-	if (lvm_dm_prefix_check(major, minor, MPATH_PREFIX)) {
-		(void) dm_hash_insert_binary(mp->hash, &minor, sizeof(minor), (void*)2);
+	/*
+	 * Returns 1 if /sys/block/<holder_name>/dm/uuid indicates that
+	 * <holder_name> is a dm device with dm uuid prefix mpath-.
+	 * When true, <holder_name> will be something like "dm-1".
+	 *
+	 * (Is a hash table worth it to avoid reading one sysfs file?)
+	 */
+	if (_get_sysfs_dm_mpath(dt, sysfs_dir, holder_name)) {
+		log_debug_devs("filter-mpath %s holder %s %u:%u ignore mpath component",
+			       dev_name(dev), holder_name, dm_dev_major, dm_dev_minor);
+		(void) dm_hash_insert_binary(mp->hash, &dm_dev_minor, sizeof(dm_dev_minor), (void*)2);
 		return 1;
 	}
 
-	(void) dm_hash_insert_binary(mp->hash, &minor, sizeof(minor), (void*)1);
+	(void) dm_hash_insert_binary(mp->hash, &dm_dev_minor, sizeof(dm_dev_minor), (void*)1);
 
 	return 0;
 }
 
-static int _dev_is_mpath(struct dev_filter *f, struct device *dev)
+static int _dev_is_mpath_component(struct cmd_context *cmd, struct dev_filter *f, struct device *dev)
 {
 	if (dev->ext.src == DEV_EXT_NONE)
-		return _native_dev_is_mpath(f, dev);
+		return _native_dev_is_mpath_component(cmd, f, dev);
 
 	if (dev->ext.src == DEV_EXT_UDEV)
-		return _udev_dev_is_mpath(dev);
+		return _udev_dev_is_mpath_component(dev);
 
 	log_error(INTERNAL_ERROR "Missing hook for mpath recognition "
 		  "using external device info source %s", dev_ext_name(dev));
@@ -272,11 +334,11 @@ static int _dev_is_mpath(struct dev_filter *f, struct device *dev)
 
 #define MSG_SKIPPING "%s: Skipping mpath component device"
 
-static int _ignore_mpath(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
+static int _ignore_mpath_component(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
 {
 	dev->filtered_flags &= ~DEV_FILTERED_MPATH_COMPONENT;
 
-	if (_dev_is_mpath(f, dev) == 1) {
+	if (_dev_is_mpath_component(cmd, f, dev) == 1) {
 		if (dev->ext.src == DEV_EXT_NONE)
 			log_debug_devs(MSG_SKIPPING, dev_name(dev));
 		else
@@ -303,8 +365,8 @@ static void _destroy(struct dev_filter *f)
 struct dev_filter *mpath_filter_create(struct dev_types *dt)
 {
 	const char *sysfs_dir = dm_sysfs_dir();
-	struct dm_pool *mem;
 	struct mpath_priv *mp;
+	struct dm_pool *mem;
 	struct dm_hash_table *hash;
 
 	if (!*sysfs_dir) {
@@ -328,19 +390,13 @@ struct dev_filter *mpath_filter_create(struct dev_types *dt)
 		goto bad;
 	}
 
-	if (!(mp = dm_pool_zalloc(mem, sizeof(*mp)))) {
-		log_error("mpath filter allocation failed.");
-		goto bad;
-	}
-
-	mp->f.passes_filter = _ignore_mpath;
+	mp->f.passes_filter = _ignore_mpath_component;
 	mp->f.destroy = _destroy;
 	mp->f.use_count = 0;
 	mp->f.private = mp;
 	mp->f.name = "mpath";
-
-	mp->mem = mem;
 	mp->dt = dt;
+	mp->mem = mem;
 	mp->hash = hash;
 
 	log_debug_devs("mpath filter initialised.");

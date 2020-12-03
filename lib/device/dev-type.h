@@ -95,6 +95,8 @@ int dev_is_rotational(struct dev_types *dt, struct device *dev);
 
 int dev_is_pmem(struct device *dev);
 
+int dev_is_nvme(struct dev_types *dt, struct device *dev);
+
 int dev_is_lv(struct device *dev);
 
 int get_fs_block_size(struct device *dev, uint32_t *fs_block_size);

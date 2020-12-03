@@ -21,6 +21,7 @@
 #include "lib/metadata/metadata.h"
 #include "lib/device/bcache.h"
 #include "lib/label/label.h"
+#include "lib/commands/toolcontext.h"
 
 #ifdef BLKID_WIPING_SUPPORT
 #include <blkid.h>
@@ -65,6 +66,31 @@ int dev_is_pmem(struct device *dev)
 		log_sys_debug("fclose", path);
 
 	return is_pmem ? 1 : 0;
+}
+
+/*
+ * An nvme device has major number 259 (BLKEXT), minor number <minor>,
+ * and reading /sys/dev/block/259:<minor>/device/dev shows a character
+ * device cmajor:cminor where cmajor matches the major number of the
+ * nvme character device entry in /proc/devices.  Checking all of that
+ * is excessive and unnecessary compared to just comparing /dev/name*.
+ */
+
+int dev_is_nvme(struct dev_types *dt, struct device *dev)
+{
+	struct dm_str_list *strl;
+
+	if (dev->flags & DEV_IS_NVME)
+		return 1;
+
+	dm_list_iterate_items(strl, &dev->aliases) {
+		if (!strncmp(strl->str, "/dev/nvme", 9)) {
+			log_debug("Found nvme device %s", dev_name(dev));
+			dev->flags |= DEV_IS_NVME;
+			return 1;
+		}
+	}
+	return 0;
 }
 
 int dev_is_lv(struct device *dev)
@@ -302,6 +328,9 @@ int dev_subsystem_part_major(struct dev_types *dt, struct device *dev)
 
 const char *dev_subsystem_name(struct dev_types *dt, struct device *dev)
 {
+	if (dev->flags & DEV_IS_NVME)
+		return "NVME";
+
 	if (MAJOR(dev->dev) == dt->device_mapper_major)
 		return "DM";
 
@@ -347,7 +376,6 @@ int major_is_scsi_device(struct dev_types *dt, int major)
 
 	return (dt->dev_type_array[major].flags & PARTITION_SCSI_DEVICE) ? 1 : 0;
 }
-
 
 static int _loop_is_with_partscan(struct device *dev)
 {
@@ -398,6 +426,28 @@ struct partition {
 	uint32_t nr_sects;
 } __attribute__((packed));
 
+static int _has_sys_partition(struct device *dev)
+{
+	char path[PATH_MAX];
+	struct stat info;
+	int major = (int) MAJOR(dev->dev);
+	int minor = (int) MINOR(dev->dev);
+
+	/* check if dev is a partition */
+	if (dm_snprintf(path, sizeof(path), "%s/dev/block/%d:%d/partition",
+			dm_sysfs_dir(), major, minor) < 0) {
+		log_error("dm_snprintf partition failed");
+		return 0;
+	}
+
+	if (stat(path, &info) == -1) {
+		if (errno != ENOENT)
+			log_sys_error("stat", path);
+		return 0;
+	}
+	return 1;
+}
+
 static int _is_partitionable(struct dev_types *dt, struct device *dev)
 {
 	int parts = major_max_partitions(dt, MAJOR(dev->dev));
@@ -413,6 +463,13 @@ static int _is_partitionable(struct dev_types *dt, struct device *dev)
 	if ((MAJOR(dev->dev) == dt->loop_major) &&
 	    _loop_is_with_partscan(dev))
 		return 1;
+
+	if (dev_is_nvme(dt, dev)) {
+		/* If this dev is already a partition then it's not partitionable. */
+		if (_has_sys_partition(dev))
+			return 0;
+		return 1;
+	}
 
 	if ((parts <= 1) || (MINOR(dev->dev) % parts))
 		return 0;
@@ -557,9 +614,16 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 	char path[PATH_MAX];
 	char temp_path[PATH_MAX];
 	char buffer[64];
-	struct stat info;
 	FILE *fp = NULL;
 	int parts, residue, size, ret = 0;
+
+	/*
+	 * /dev/nvme devs don't use the major:minor numbering like
+	 * block dev types that have their own major number, so
+	 * the calculation based on minor number doesn't work.
+	 */
+	if (dev_is_nvme(dt, dev))
+		goto sys_partition;
 
 	/*
 	 * Try to get the primary dev out of the
@@ -576,23 +640,14 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 		goto out;
 	}
 
+ sys_partition:
 	/*
 	 * If we can't get the primary dev out of the list of known device
 	 * types, try to look at sysfs directly then. This is more complex
 	 * way and it also requires certain sysfs layout to be present
 	 * which might not be there in old kernels!
 	 */
-
-	/* check if dev is a partition */
-	if (dm_snprintf(path, sizeof(path), "%s/dev/block/%d:%d/partition",
-			sysfs_dir, major, minor) < 0) {
-		log_error("dm_snprintf partition failed");
-		goto out;
-	}
-
-	if (stat(path, &info) == -1) {
-		if (errno != ENOENT)
-			log_sys_error("stat", path);
+	if (!_has_sys_partition(dev)) {
 		*result = dev->dev;
 		ret = 1;
 		goto out; /* dev is not a partition! */
