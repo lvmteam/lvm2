@@ -96,9 +96,19 @@ lvcreate -n $lv1 -L20M $vg
 lvcreate -n ${lv1}bar -L10M $vg
 trap 'cleanup_mounted_and_teardown' EXIT
 
+# prints help
+fsadm
+
+# check needs arg
+not fsadm check
+
 if check_missing ext2; then
 	mkfs.ext2 -b4096 -j "$dev_vg_lv"
 
+	# Check 'check' works
+	fsadm check $vg_lv
+	# Check 'resize' without size parameter works
+	fsadm resize $vg_lv
 	fsadm --lvresize resize $vg_lv 30M
 	# Fails - not enough space for 4M fs
 	not fsadm -y --lvresize resize "$dev_vg_lv" 4M
