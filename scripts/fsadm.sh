@@ -798,6 +798,7 @@ fi
 
 CHECK=""
 RESIZE=""
+NEWSIZE=""
 
 while [ "$#" -ne 0 ]
 do
@@ -811,8 +812,11 @@ do
 	  "-y"|"--yes") YES="-y" ;;
 	  "-l"|"--lvresize") DO_LVRESIZE=1 ;;
 	  "-c"|"--cryptresize") DO_CRYPTRESIZE=1 ;;
-	  "check") CHECK=$2 ; shift ;;
-	  "resize") RESIZE=$2 ; NEWSIZE=$3 ; shift 2 ;;
+	  "check") test -z "${2-}" && error "Missing <device>. (see: $TOOL --help)"
+		   CHECK=$2 ; shift ;;
+	  "resize") test -z "${2-}" && error "Missing <device>. (see: $TOOL --help)"
+		    RESIZE=$2 ; shift
+		    if test -n "${2-}" ; then NEWSIZE="${2-}" ; shift ; fi ;;
 	  *) error "Wrong argument \"$1\". (see: $TOOL --help)"
 	esac
 	shift
