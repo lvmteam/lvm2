@@ -194,6 +194,9 @@ char *lv_lock_args_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lvseg_kernel_discards_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_with_info_and_seg_status *lvdm);
 char *lv_time_dup(struct dm_pool *mem, const struct logical_volume *lv, int iso_mode);
 
+char *lv_dmpath_suffix_dup(struct dm_pool *mem, const struct logical_volume *lv,
+                           const char *suffix);
+
 typedef enum {
 	PERCENT_GET_DATA = 0,
 	PERCENT_GET_METADATA,

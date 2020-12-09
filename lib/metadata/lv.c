@@ -1034,6 +1034,37 @@ char *lv_dmpath_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	return repstr;
 }
 
+/* maybe factor a common function with lv_dmpath_dup */
+char *lv_dmpath_suffix_dup(struct dm_pool *mem, const struct logical_volume *lv,
+			   const char *suffix)
+{
+	char *name;
+	char *repstr;
+	size_t len;
+
+	if (!*lv->vg->name)
+		return dm_pool_strdup(mem, "");
+
+	if (!(name = dm_build_dm_name(mem, lv->vg->name, lv->name, NULL))) {
+		log_error("dm_build_dm_name failed");
+		return NULL;
+	}
+
+	len = strlen(dm_dir()) + strlen(name) + strlen(suffix) + 2;
+
+	if (!(repstr = dm_pool_zalloc(mem, len))) {
+		log_error("dm_pool_alloc failed");
+		return NULL;
+	}
+
+	if (dm_snprintf(repstr, len, "%s/%s%s", dm_dir(), name, suffix) < 0) {
+		log_error("lv_dmpath snprintf failed");
+		return NULL;
+	}
+
+	return repstr;
+}
+
 char *lv_uuid_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
 	return id_format_and_copy(mem ? mem : lv->vg->vgmem, &lv->lvid.id[1]);
