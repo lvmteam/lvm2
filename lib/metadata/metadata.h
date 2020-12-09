@@ -535,4 +535,8 @@ char *tags_format_and_copy(struct dm_pool *mem, const struct dm_list *tagsl);
 
 void set_pv_devices(struct format_instance *fid, struct volume_group *vg);
 
+int get_visible_lvs_using_pv(struct cmd_context *cmd, struct volume_group *vg, struct device *dev,
+                            struct dm_list *lvs_list);
+
+
 #endif

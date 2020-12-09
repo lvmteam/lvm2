@@ -5279,3 +5279,36 @@ struct volume_group *vg_read_for_update(struct cmd_context *cmd, const char *vg_
 
 	return vg;
 }
+
+int get_visible_lvs_using_pv(struct cmd_context *cmd, struct volume_group *vg, struct device *dev,
+			     struct dm_list *lvs_list)
+{
+	struct pv_list *pvl;
+	struct lv_list *lvl, *lvl2;
+	struct physical_volume *pv = NULL;
+
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (pvl->pv->dev == dev) {
+			pv = pvl->pv;
+			break;
+		}
+	}
+
+	if (!pv)
+		return_0;
+
+	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (!lv_is_visible(lvl->lv))
+			continue;
+		if (!lv_is_on_pv(lvl->lv, pv))
+			continue;
+
+		if (!(lvl2 = dm_pool_zalloc(cmd->mem, sizeof(*lvl2))))
+			return_0;
+		lvl2->lv = lvl->lv;
+		dm_list_add(lvs_list, &lvl2->list);
+	}
+
+	return 1;
+}
+

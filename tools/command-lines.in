@@ -1634,11 +1634,37 @@ DESC: Display PV information.
 
 pvscan --cache_long
 OO: --ignorelockingfailure, --reportformat ReportFmt,
---activate ay, --major Number, --minor Number, --noudevsync
+--major Number, --minor Number, --noudevsync
 OP: PV|String ...
 IO: --background
 ID: pvscan_cache
-DESC: Autoactivate a VG when all PVs are online.
+DESC: Record that a PV is online or offline.
+
+pvscan --cache_long --activate ay
+OO: --ignorelockingfailure, --reportformat ReportFmt,
+--major Number, --minor Number, --noudevsync
+OP: PV|String ...
+IO: --background
+ID: pvscan_cache
+DESC: Record that a PV is online and autoactivate the VG if complete.
+
+pvscan --cache_long --listvg PV
+OO: --ignorelockingfailure, --checkcomplete, --vgonline, --udevoutput
+ID: pvscan_cache
+DESC: Record that a PV is online and list the VG using the PV.
+
+pvscan --cache_long --listlvs PV
+OO: --ignorelockingfailure, --checkcomplete, --vgonline
+ID: pvscan_cache
+DESC: Record that a PV is online and list LVs using the PV.
+
+pvscan --listlvs PV
+ID: pvscan_cache
+DESC: List LVs using the PV.
+
+pvscan --listvg PV
+ID: pvscan_cache
+DESC: List the VG using the PV.
 
 ---
 

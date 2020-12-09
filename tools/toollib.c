@@ -813,6 +813,24 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 		lv_clear_integrity_recalculate_metadata(lv);
 	}
 
+	/*
+	 * When LVs are deactivated, then autoactivation of the VG is
+	 * "re-armed" by removing the vg online file.  So, after deactivation
+	 * of LVs, if PVs are disconnected and reconnected again, event
+	 * activation will trigger autoactivation again.  This secondary
+	 * autoactivation is somewhat different from, and not as important as
+	 * the initial autoactivation during system startup.  The secondary
+	 * autoactivation will happen to a VG on a running system and may be
+	 * mixing with user commands, so the end result is unpredictable.
+	 *
+	 * It's possible that we might want a config setting for usersto  
+	 * disable secondary autoactivations.  Once a system is up, the
+	 * user may want to take charge of activation changes to the VG
+	 * and not have the system autoactivation interfere.
+	 */
+	if (!is_change_activating(activate) && find_config_tree_bool(cmd, global_event_activation_CFG, NULL))
+		online_vg_file_remove(lv->vg->name);
+
 	set_lv_notify(lv->vg->cmd);
 
 	return r;

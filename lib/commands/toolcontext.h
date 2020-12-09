@@ -29,6 +29,7 @@ struct config_info {
 	int debug_classes;
 	int verbose;
 	int silent;
+	int suppress;
 	int test;
 	int yes;
 	int syslog;

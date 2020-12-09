@@ -2391,6 +2391,9 @@ static void _reset_current_settings_to_default(struct cmd_context *cmd)
 
 static void _get_current_output_settings_from_args(struct cmd_context *cmd)
 {
+	if (arg_is_set(cmd, udevoutput_ARG))
+		cmd->current_settings.suppress = 1;
+
 	if (arg_is_set(cmd, debug_ARG))
 		cmd->current_settings.debug = _LOG_FATAL + (arg_count(cmd, debug_ARG) - 1);
 
@@ -2406,6 +2409,7 @@ static void _get_current_output_settings_from_args(struct cmd_context *cmd)
 
 static void _apply_current_output_settings(struct cmd_context *cmd)
 {
+	log_suppress(cmd->current_settings.suppress);
 	init_debug(cmd->current_settings.debug);
 	init_debug_classes_logged(cmd->default_settings.debug_classes);
 	init_verbose(cmd->current_settings.verbose + VERBOSE_BASE_LEVEL);
