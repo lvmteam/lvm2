@@ -3662,6 +3662,7 @@ struct lvconvert_result {
 	unsigned need_polling:1;
 	unsigned wait_cleaner_writecache:1;
 	unsigned active_begin:1;
+	unsigned remove_cache:1;
 	struct dm_list poll_idls;
 };
 
@@ -4966,8 +4967,18 @@ static int _lvconvert_split_cache_single(struct cmd_context *cmd,
 			return ECMD_FAILED;
 
 		if (cmd->command->command_enum == lvconvert_split_and_remove_cache_CMD) {
-			if (lvremove_single(cmd, lv_fast, NULL) != ECMD_PROCESSED)
-				return ECMD_FAILED;
+			struct lvconvert_result *lr = (struct lvconvert_result *) handle->custom_handle;
+			/*
+			 * If detach is ongoing, then the remove needs to wait
+			 * until _lvconvert_detach_writecache_when_clean(),
+			 * after the detach has finished. When lr->remove_cache
+			 * has been set, when_clean() knows it should remove
+			 * lv_fast at the end.
+			 */
+			if (!lr->wait_cleaner_writecache) {
+				if (lvremove_single(cmd, lv_fast, NULL) != ECMD_PROCESSED)
+					return ECMD_FAILED;
+			}
 		}
 		ret = 1;
 	} else if (lv_is_cache(lv_main) && lv_is_cache_vol(lv_fast)) {
@@ -5637,6 +5648,10 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 		lr->wait_cleaner_writecache = 1;
 		lr->active_begin = active_begin;
 
+		/* The command wants to remove the cache after detaching. */
+		if (cmd->command->command_enum == lvconvert_split_and_remove_cache_CMD)
+			lr->remove_cache = 1;
+
 		dm_list_add(&lr->poll_idls, &idl->list);
 		return 1;
 	}
@@ -5679,6 +5694,7 @@ static int _lvconvert_detach_writecache_when_clean(struct cmd_context *cmd,
 	struct poll_operation_id *id;
 	struct volume_group *vg;
 	struct logical_volume *lv;
+	struct logical_volume *lv_fast;
 	uint32_t lockd_state, error_flags;
 	uint64_t dirty;
 	int ret;
@@ -5759,6 +5775,8 @@ static int _lvconvert_detach_writecache_when_clean(struct cmd_context *cmd,
 
 	log_print("Detaching writecache completed cleaning.");
 
+	lv_fast = first_seg(lv)->writecache;
+
 	/*
 	 * When the cleaner has finished, we can detach with noflush since
 	 * the cleaner has done the flushing.
@@ -5768,6 +5786,17 @@ static int _lvconvert_detach_writecache_when_clean(struct cmd_context *cmd,
 		log_error("Detaching writecache cachevol failed.");
 		ret = 0;
 		goto out_release;
+	}
+
+	/*
+	 * The detach was started by an uncache command that wants to remove
+	 * the cachevol after detaching.
+	 */
+	if (lr->remove_cache) {
+		if (lvremove_single(cmd, lv_fast, NULL) != ECMD_PROCESSED) {
+			log_error("Removing the writecache cachevol failed.");
+			ret = 0;
+		}
 	}
 
 	ret = 1;

@@ -149,5 +149,34 @@ lvchange -an $vg/$lv2
 lvremove $vg/$lv1
 lvremove $vg/$lv2
 
+# Repeat similar using uncache
+
+lvcreate -n $lv1 -L 560M -an $vg "$dev1"
+lvcreate -n $lv2 -L 500M -an $vg "$dev2"
+
+lvchange -ay $vg/$lv1
+lvconvert --yes --type writecache --cachevol $lv2 $vg/$lv1
+
+_add_new_data_to_mnt
+_add_more_data_to_mnt
+dd if=/dev/zero of=$mnt/big1 bs=1M count=100 oflag=sync
+
+umount $mnt
+lvchange -an $vg/$lv1
+
+lvconvert --uncache $vg/$lv1
+
+check lv_field $vg/$lv1 segtype linear
+not lvs $vg/$lv2
+
+lvchange -ay $vg/$lv1
+mount "$DM_DEV_DIR/$vg/$lv1" $mnt
+
+_verify_data_on_mnt
+_verify_more_data_on_mnt
+
+umount $mnt
+lvchange -an $vg/$lv1
+
 vgremove -ff $vg
 
