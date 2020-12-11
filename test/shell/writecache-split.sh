@@ -99,6 +99,11 @@ lvchange -an $vg/$lv1
 
 aux disable_dev "$dev2"
 
+lvs -a -o+lv_health_status $vg |tee out
+grep $lv1 out | grep partial
+grep $lv2 out | grep partial
+check lv_attr_bit health $vg/$lv1 "p"
+
 not lvconvert --splitcache $vg/$lv1
 lvconvert --splitcache --force --yes $vg/$lv1
 
@@ -127,6 +132,11 @@ mkfs_mount_umount $lv1
 lvchange -an $vg/$lv1
 
 aux disable_dev "$dev3"
+
+lvs -a -o+lv_health_status $vg |tee out
+grep $lv1 out | grep partial
+grep $lv2 out | grep partial
+check lv_attr_bit health $vg/$lv1 "p"
 
 not lvconvert --splitcache $vg/$lv1
 lvconvert --splitcache --force --yes $vg/$lv1
