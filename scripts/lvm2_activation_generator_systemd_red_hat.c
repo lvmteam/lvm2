@@ -160,7 +160,7 @@ static int generate_unit(struct generator *gen, int unit)
 	fputs("ExecStart=" LVM_PATH " vgchange -aay", f);
 	if (gen->cfg.sysinit_needed)
 		fputs(" --sysinit", f);
-	fputs("\nType=oneshot\n", f);
+	fputs("\nType=oneshot\nRemainAfterExit=yes\n", f);
 
 	if (fclose(f) < 0) {
 		_error("Failed to write unit file %s: %m.\n", unit_name);
