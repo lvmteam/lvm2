@@ -144,6 +144,19 @@ lvconvert -y --type cache --cachedevice "$dev2" $vg/$lv1
 check lv_field $vg/$lv1 segtype cache
 check lv_field $vg/${lv1}_cache_cvol segtype linear -a
 check lv_field $vg/${lv1}_cache_cvol lv_size "60.00m"
+lvs -o chunksize $vg/$lv1 |tee out
+grep 64.00k out
+lvchange -ay $vg/$lv1
+lvchange -an $vg/$lv1
+lvremove $vg/$lv1
+
+lvcreate -n $lv1 -l8 -an $vg "$dev1"
+lvconvert -y --type cache --cachedevice "$dev2" --chunksize 128k $vg/$lv1
+check lv_field $vg/$lv1 segtype cache
+check lv_field $vg/${lv1}_cache_cvol segtype linear -a
+check lv_field $vg/${lv1}_cache_cvol lv_size "60.00m"
+lvs -o chunksize $vg/$lv1 |tee out
+grep 128.00k out
 lvchange -ay $vg/$lv1
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1

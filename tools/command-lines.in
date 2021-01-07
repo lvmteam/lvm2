@@ -505,7 +505,7 @@ DESC: Add a writecache to an LV, using a specified cache device.
 RULE: all and lv_is_visible
 
 lvconvert --type cache --cachedevice PV LV_linear_striped_raid_thinpool
-OO: OO_LVCONVERT, --cachesize SizeMB, --cachesettings String
+OO: OO_LVCONVERT, --cachesize SizeMB, --cachesettings String, --chunksize SizeKB
 ID: lvconvert_to_cache_with_device
 DESC: Add a cache to an LV, using a specified cache device.
 RULE: all and lv_is_visible
