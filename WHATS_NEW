@@ -1,5 +1,7 @@
-Version 2.03.11 - 
-==================================
+Version 2.03.11 - 08th January 2021
+===================================
+  Fix pvck handling MDA at offset different from 4096.
+  Partial or degraded activation of writecache is not allowed.
   Enhance error handling for fsadm and hanled correct fsck result.
   Dmeventd lvm plugin ignores higher reserved_stack lvm.conf values.
   Support using BLKZEROOUT for clearing devices.
@@ -20,6 +22,9 @@ Version 2.03.11 -
   Enhance --use-policy percentage rounding.
   Configure --with-vdo and --with-writecache as internal segments.
   Improving VDO man page examples.
+  Allow pvmove of writecache origin.
+  Report integrity fields.
+  Integrity volumes defaults to journal mode.
   Switch code base to use flexible array syntax.
   Fix 64bit math when calculation cachevol size.
   Preserve uint32_t for seqno handling.
