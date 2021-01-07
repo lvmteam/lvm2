@@ -1,3 +1,6 @@
+Version 2.03.12 - 
+===================================
+
 Version 2.03.11 - 08th January 2021
 ===================================
   Fix pvck handling MDA at offset different from 4096.
