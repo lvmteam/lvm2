@@ -896,8 +896,9 @@ static int read_adopt_file(struct list_head *vg_lockd)
 				goto fail;
 
 			memset(vg_uuid, 0, sizeof(vg_uuid));
+			memset(lm_type_str, 0, sizeof(lm_type_str));
 
-			if (sscanf(adopt_line, "VG: %63s %64s %16s %64s",
+			if (sscanf(adopt_line, "VG: %63s %64s %15s %64s",
 				   vg_uuid, ls->vg_name, lm_type_str, ls->vg_args) != 4) {
 				goto fail;
 			}
@@ -916,8 +917,9 @@ static int read_adopt_file(struct list_head *vg_lockd)
 			r->type = LD_RT_LV;
 
 			memset(vg_uuid, 0, sizeof(vg_uuid));
+			memset(mode, 0, sizeof(mode));
 
-			if (sscanf(adopt_line, "LV: %64s %64s %s %8s %u",
+			if (sscanf(adopt_line, "LV: %64s %64s %s %7s %u",
 				   vg_uuid, r->name, r->lv_args, mode, &r->version) != 5) {
 				goto fail;
 			}
