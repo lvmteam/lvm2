@@ -1,5 +1,6 @@
 Version 2.03.12 - 
 ===================================
+  Fix corner case allocation for thin-pools.
 
 Version 2.03.11 - 08th January 2021
 ===================================
