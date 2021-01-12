@@ -1700,11 +1700,13 @@ static uint32_t _mirror_log_extents(uint32_t region_size, uint32_t pe_size, uint
 
 /* Is there enough total space or should we give up immediately? */
 static int _sufficient_pes_free(struct alloc_handle *ah, struct dm_list *pvms,
-				uint32_t allocated, uint32_t extents_still_needed)
+				uint32_t allocated, uint32_t log_still_needed,
+				uint32_t extents_still_needed)
 {
 	uint32_t area_extents_needed = (extents_still_needed - allocated) * ah->area_count / ah->area_multiple;
 	uint32_t parity_extents_needed = (extents_still_needed - allocated) * ah->parity_count / ah->area_multiple;
-	uint32_t metadata_extents_needed = ah->alloc_and_split_meta ? 0 : ah->metadata_area_count * RAID_METADATA_AREA_LEN + ah->log_len; /* One each */
+	uint32_t metadata_extents_needed = (ah->alloc_and_split_meta ? 0 : ah->metadata_area_count * RAID_METADATA_AREA_LEN) +
+	    (log_still_needed ? ah->log_len : 0); /* One each */
 	uint64_t total_extents_needed = (uint64_t)area_extents_needed + parity_extents_needed + metadata_extents_needed;
 	uint32_t free_pes = pv_maps_size(pvms);
 
@@ -3200,7 +3202,9 @@ static int _allocate(struct alloc_handle *ah,
 		old_allocated = alloc_state.allocated;
 		log_debug_alloc("Trying allocation using %s policy.", get_alloc_string(alloc));
 
-		if (!ah->approx_alloc && !_sufficient_pes_free(ah, pvms, alloc_state.allocated, ah->new_extents))
+		if (!ah->approx_alloc && !_sufficient_pes_free(ah, pvms, alloc_state.allocated,
+							       alloc_state.log_area_count_still_needed,
+							       ah->new_extents))
 			goto_out;
 
 		_init_alloc_parms(ah, &alloc_parms, alloc, prev_lvseg,
