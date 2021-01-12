@@ -1882,11 +1882,21 @@ static int _lvconvert_split_and_keep_cachevol(struct cmd_context *cmd,
 	char cvol_name[NAME_LEN];
 	struct lv_segment *cache_seg = first_seg(lv);
 	int cache_mode = cache_seg->cache_mode;
+	int direct_detach = 0;
 
 	if (!archive(lv->vg))
 		return_0;
 
 	log_debug("Detaching cachevol %s from LV %s.", display_lvname(lv_fast), display_lvname(lv));
+
+	/*
+	 * Allow forcible detach without activating or flushing
+	 * in case the cache is corrupt/damaged/invalid.
+	 * This would generally be done to rescue data from
+	 * the origin if the cache could not be repaired.
+	 */
+	if (!lv_is_active(lv) && arg_count(cmd, force_ARG))
+		direct_detach = 1;
 
 	/*
 	 * Detaching a writeback cache generally requires flushing;
@@ -1902,7 +1912,10 @@ static int _lvconvert_split_and_keep_cachevol(struct cmd_context *cmd,
 			log_error("Conversion aborted.");
 			return 0;
 		}
+		direct_detach = 1;
+	}
 
+	if (direct_detach) {
 		log_warn("WARNING: Data may be lost by detaching writeback cache without flushing.");
 
 		if (!arg_count(cmd, yes_ARG) &&
@@ -5554,7 +5567,13 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 	if (!archive(lv->vg))
 		return_0;
 
-	if (lv_is_partial(lv_fast)) {
+	/*
+	 * If the LV is inactive when we begin, then we want to
+	 * deactivate the LV at the end.
+	 */
+	active_begin = lv_is_active(lv);
+
+	if (lv_is_partial(lv_fast) || (!active_begin && arg_count(cmd, force_ARG))) {
 		if (!arg_count(cmd, force_ARG)) {
 			log_warn("WARNING: writecache on %s is not complete and cannot be flushed.", display_lvname(lv_fast));
 			log_warn("WARNING: cannot detach writecache from %s without --force.", display_lvname(lv));
@@ -5573,12 +5592,6 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 		
 		noflush = 1;
 	}
-
-	/*
-	 * If the LV is inactive when we begin, then we want to
-	 * deactivate the LV at the end.
-	 */
-	active_begin = lv_is_active(lv);
 
 	if (!noflush) {
 		/*

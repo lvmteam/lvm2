@@ -154,6 +154,40 @@ vgextend --restoremissing $vg "$dev3"
 vgremove -ff $vg
 
 #
+# split while cachevol is damaged
+#
+
+vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4"
+
+lvcreate -n $lv1 -l 16 -an $vg "$dev1" "$dev4"
+lvcreate -n $lv2 -l 4 -an $vg "$dev2"
+
+lvchange -ay $vg/$lv1
+
+mkfs_mount_umount $lv1
+
+lvconvert -y --type writecache --cachevol $lv2 $vg/$lv1
+
+mount "$DM_DEV_DIR/$vg/$lv1" "$mount_dir"
+diff pattern1 "$mount_dir/pattern1"
+cp pattern1 "$mount_dir/pattern2"
+umount "$mount_dir"
+lvchange -an $vg/$lv1
+
+dd if=/dev/zero of="$dev2" seek=1 bs=1M count=16
+
+lvconvert --splitcache --force --yes $vg/$lv1
+
+lvchange -ay $vg/$lv1
+
+mount "$DM_DEV_DIR/$vg/$lv1" "$mount_dir"
+diff pattern1 "$mount_dir/pattern1"
+umount "$mount_dir"
+lvchange -an $vg/$lv1
+
+vgremove -ff $vg
+
+#
 # splitcache when origin is raid
 #
 
