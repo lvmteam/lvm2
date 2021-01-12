@@ -6015,9 +6015,9 @@ skip_fs:
 		}
 
 		if (block_size_setting && (block_size_setting != block_size)) {
-			log_error("Cannot use writecache block size %u with unknown file system block size, logical block size %u, physical block size %u.",
-				  block_size_setting, lbs_4k ? 4096 : 512, pbs_4k ? 4096 : 512);
-			goto bad;
+			log_warn("WARNING: writecache block size %u does not match device block sizes, logical %u physical %u",
+				 block_size_setting, lbs_4k ? 4096 : 512, pbs_4k ? 4096 : 512);
+			block_size = block_size_setting;
 		}
 
 		if (block_size != 512) {
