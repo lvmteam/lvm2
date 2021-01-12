@@ -610,9 +610,9 @@ static uint64_t _estimate_metadata_size(uint32_t data_extents, uint32_t extent_s
 }
 
 /* Estimate maximal supportable thin pool data size for given chunk_size */
-static uint64_t _estimate_max_data_size(uint32_t chunk_size)
+static uint64_t _estimate_max_data_size(uint64_t max_metadata_size, uint32_t chunk_size)
 {
-	return  chunk_size * (DEFAULT_THIN_POOL_MAX_METADATA_SIZE * 2) * SECTOR_SIZE / UINT64_C(64);
+	return  max_metadata_size * chunk_size * SECTOR_SIZE / UINT64_C(64);
 }
 
 /* Estimate thin pool chunk size from data and metadata size (in sector units) */
@@ -662,6 +662,38 @@ int get_default_allocation_thin_pool_chunk_size(struct cmd_context *cmd, struct 
 	return 1;
 }
 
+/* Return max supported metadata size with selected cropping */
+uint64_t get_thin_pool_max_metadata_size(struct cmd_context *cmd, struct profile *profile,
+					 thin_crop_metadata_t *crop)
+{
+	*crop = find_config_tree_bool(cmd, allocation_thin_pool_crop_metadata_CFG, profile) ?
+		THIN_CROP_METADATA_YES : THIN_CROP_METADATA_NO;
+
+	return (*crop == THIN_CROP_METADATA_NO) ?
+		(2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE_V1_KB) : (2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE);
+}
+
+/*
+ * With existing crop method, check if the metadata_size would need cropping.
+ * If not, set UNSELECTED, otherwise print some verbose info about selected cropping
+ */
+thin_crop_metadata_t get_thin_pool_crop_metadata(struct cmd_context *cmd,
+						  thin_crop_metadata_t crop,
+						  uint64_t metadata_size)
+{
+	const uint64_t crop_size = (2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE);
+
+	if (metadata_size > crop_size) {
+		if (crop == THIN_CROP_METADATA_NO)
+			log_verbose("Using metadata size without cropping.");
+		else
+			log_verbose("Cropping metadata size to %s.", display_size(cmd, crop_size));
+	} else
+		crop = THIN_CROP_METADATA_UNSELECTED;
+
+	return crop;
+}
+
 int update_thin_pool_params(struct cmd_context *cmd,
 			    struct profile *profile,
 			    uint32_t extent_size,
@@ -669,10 +701,13 @@ int update_thin_pool_params(struct cmd_context *cmd,
 			    unsigned attr,
 			    uint32_t pool_data_extents,
 			    uint32_t *pool_metadata_extents,
+			    struct logical_volume *metadata_lv,
+			    thin_crop_metadata_t *crop_metadata,
 			    int *chunk_size_calc_method, uint32_t *chunk_size,
 			    thin_discards_t *discards, thin_zero_t *zero_new_blocks)
 {
-	uint64_t pool_metadata_size = (uint64_t) *pool_metadata_extents * extent_size;
+	uint64_t pool_metadata_size;
+	uint64_t max_metadata_size;
 	uint32_t estimate_chunk_size;
 	uint64_t max_pool_data_size;
 	const char *str;
@@ -702,7 +737,9 @@ int update_thin_pool_params(struct cmd_context *cmd,
 		*zero_new_blocks = find_config_tree_bool(cmd, allocation_thin_pool_zero_CFG, profile)
 			? THIN_ZERO_YES : THIN_ZERO_NO;
 
-	if (!pool_metadata_size) {
+	max_metadata_size = get_thin_pool_max_metadata_size(cmd, profile, crop_metadata);
+
+	if (!*pool_metadata_extents) {
 		if (!*chunk_size) {
 			if (!get_default_allocation_thin_pool_chunk_size(cmd, profile,
 									 chunk_size,
@@ -723,20 +760,20 @@ int update_thin_pool_params(struct cmd_context *cmd,
 		} else {
 			pool_metadata_size = _estimate_metadata_size(pool_data_extents, extent_size, *chunk_size);
 
-			if (pool_metadata_size > (DEFAULT_THIN_POOL_MAX_METADATA_SIZE * 2)) {
+			if (pool_metadata_size > max_metadata_size) {
 				/* Suggest bigger chunk size */
 				estimate_chunk_size =
 					_estimate_chunk_size(pool_data_extents, extent_size,
-							     (DEFAULT_THIN_POOL_MAX_METADATA_SIZE * 2), attr);
+							     max_metadata_size, attr);
 				log_warn("WARNING: Chunk size is too small for pool, suggested minimum is %s.",
 					 display_size(cmd, estimate_chunk_size));
 			}
 		}
 
 		/* Round up to extent size silently */
-		if (pool_metadata_size % extent_size)
-			pool_metadata_size += extent_size - pool_metadata_size % extent_size;
+		pool_metadata_size = dm_round_up(pool_metadata_size, extent_size);
 	} else {
+		pool_metadata_size = (uint64_t) *pool_metadata_extents * extent_size;
 		estimate_chunk_size = _estimate_chunk_size(pool_data_extents, extent_size,
 							   pool_metadata_size, attr);
 
@@ -751,7 +788,19 @@ int update_thin_pool_params(struct cmd_context *cmd,
 		}
 	}
 
-	max_pool_data_size = _estimate_max_data_size(*chunk_size);
+	/* Use not rounded max for data size */
+	max_pool_data_size = _estimate_max_data_size(max_metadata_size, *chunk_size);
+
+	if (!update_pool_metadata_min_max(cmd, extent_size,
+					  2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE,
+					  max_metadata_size,
+					  &pool_metadata_size,
+					  metadata_lv,
+					  pool_metadata_extents))
+		return_0;
+
+	*crop_metadata = get_thin_pool_crop_metadata(cmd, *crop_metadata, pool_metadata_size);
+
 	if ((max_pool_data_size / extent_size) < pool_data_extents) {
 		log_error("Selected chunk size %s cannot address more then %s of thin pool data space.",
 			  display_size(cmd, *chunk_size), display_size(cmd, max_pool_data_size));
@@ -762,22 +811,6 @@ int update_thin_pool_params(struct cmd_context *cmd,
 				display_size(cmd, *chunk_size), display_size(cmd, max_pool_data_size));
 
 	if (!validate_thin_pool_chunk_size(cmd, *chunk_size))
-		return_0;
-
-	if (pool_metadata_size > (2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE)) {
-		pool_metadata_size = 2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE;
-		if (*pool_metadata_extents)
-			log_warn("WARNING: Maximum supported pool metadata size is %s.",
-				 display_size(cmd, pool_metadata_size));
-	} else if (pool_metadata_size < (2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE)) {
-		pool_metadata_size = 2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE;
-		if (*pool_metadata_extents)
-			log_warn("WARNING: Minimum supported pool metadata size is %s.",
-				 display_size(cmd, pool_metadata_size));
-	}
-
-	if (!(*pool_metadata_extents =
-	      extents_from_size(cmd, pool_metadata_size, extent_size)))
 		return_0;
 
 	if ((uint64_t) *chunk_size > (uint64_t) pool_data_extents * extent_size) {
@@ -958,12 +991,5 @@ int validate_thin_pool_chunk_size(struct cmd_context *cmd, uint32_t chunk_size)
 
 uint64_t estimate_thin_pool_metadata_size(uint32_t data_extents, uint32_t extent_size, uint32_t chunk_size)
 {
-	uint64_t sz = _estimate_metadata_size(data_extents, extent_size, chunk_size);
-
-	if (sz > (2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE))
-		sz = 2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE;
-	else if (sz < (2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE))
-		sz = 2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE;
-
-	return sz;
+	return _estimate_metadata_size(data_extents, extent_size, chunk_size);
 }

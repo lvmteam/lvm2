@@ -742,6 +742,52 @@ int handle_pool_metadata_spare(struct volume_group *vg, uint32_t extents,
 	return 1;
 }
 
+int update_pool_metadata_min_max(struct cmd_context *cmd,
+				 uint32_t extent_size,
+				 uint64_t min_metadata_size,		/* required min */
+				 uint64_t max_metadata_size,		/* writable max */
+				 uint64_t *metadata_size,		/* current calculated */
+				 struct logical_volume *metadata_lv,	/* name of converted LV or NULL */
+				 uint32_t *metadata_extents)		/* resulting extent count */
+{
+	max_metadata_size = dm_round_up(max_metadata_size, extent_size);
+	min_metadata_size = dm_round_up(min_metadata_size, extent_size);
+
+	if (*metadata_size > max_metadata_size) {
+		if (metadata_lv) {
+			log_print_unless_silent("Size %s of pool metadata volume %s is bigger then maximum usable size %s.",
+						display_size(cmd, *metadata_size),
+						display_lvname(metadata_lv),
+						display_size(cmd, max_metadata_size));
+		} else {
+			if (*metadata_extents)
+				log_print_unless_silent("Reducing pool metadata size %s to maximum usable size %s.",
+							display_size(cmd, *metadata_size),
+							display_size(cmd, max_metadata_size));
+			*metadata_size = max_metadata_size;
+		}
+	} else if (*metadata_size < min_metadata_size) {
+		if (metadata_lv) {
+			log_error("Can't use volume %s with size %s as pool metadata. Minimal required size is %s.",
+				  display_lvname(metadata_lv),
+				  display_size(cmd, *metadata_size),
+				  display_size(cmd, min_metadata_size));
+			return 0;
+		} else {
+			if (*metadata_extents)
+				log_print_unless_silent("Extending pool metadata size %s to required minimal size %s.",
+							display_size(cmd, *metadata_size),
+							display_size(cmd, min_metadata_size));
+			*metadata_size = min_metadata_size;
+		}
+	}
+
+	if (!(*metadata_extents = extents_from_size(cmd, *metadata_size, extent_size)))
+		return_0;
+
+	return 1;
+}
+
 int vg_set_pool_metadata_spare(struct logical_volume *lv)
 {
 	char new_name[NAME_LEN];

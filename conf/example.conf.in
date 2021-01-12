@@ -493,6 +493,13 @@ allocation {
 	# This configuration option has an automatic default value.
 	# thin_pool_metadata_require_separate_pvs = 0
 
+	# Configuration option allocation/thin_pool_crop_metadata.
+	# Older version of lvm2 cropped pool's metadata size to 15.81 GiB.
+	# This is slightly less then the actual maximum 15.88 GiB.
+	# For compatibility with older version and use of cropped size set to 1.
+	# This configuration option has an automatic default value.
+	# thin_pool_crop_metadata = 0
+
 	# Configuration option allocation/thin_pool_zero.
 	# Thin pool data chunks are zeroed before they are first used.
 	# Zeroing with a larger thin pool chunk size reduces performance.

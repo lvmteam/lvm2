@@ -86,6 +86,7 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 	struct logical_volume *pool_data_lv, *pool_metadata_lv;
 	const char *discards_str = NULL;
 	uint32_t zero = 0;
+	uint32_t crop = 0;
 
 	if (!dm_config_get_str(sn, "metadata", &lv_name))
 		return SEG_LOG_ERROR("Metadata must be a string in");
@@ -130,6 +131,13 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 		return SEG_LOG_ERROR("Could not read zero_new_blocks for");
 
 	seg->zero_new_blocks = (zero) ? THIN_ZERO_YES : THIN_ZERO_NO;
+
+	if (dm_config_has_node(sn, "crop_metadata")) {
+		if (!dm_config_get_uint32(sn, "crop_metadata", &crop))
+			return SEG_LOG_ERROR("Could not read crop_metadata for");
+		seg->crop_metadata = (crop) ? THIN_CROP_METADATA_YES : THIN_CROP_METADATA_NO;
+		seg->lv->status |= LV_CROP_METADATA;
+	}
 
 	/* Read messages */
 	for (; sn; sn = sn->sib)
@@ -176,6 +184,9 @@ static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter
 			  seg->zero_new_blocks);
 		return 0;
 	}
+
+	if (seg->crop_metadata != THIN_CROP_METADATA_UNSELECTED)
+		outf(f, "crop_metadata = %u", (seg->crop_metadata == THIN_CROP_METADATA_YES) ? 1 : 0);
 
 	dm_list_iterate_items(tmsg, &seg->thin_messages) {
 		/* Extra validation */
@@ -307,11 +318,12 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 	else
 		low_water_mark = 0;
 
-	if (!dm_tree_node_add_thin_pool_target(node, len,
-					       seg->transaction_id,
-					       metadata_dlid, pool_dlid,
-					       seg->chunk_size, low_water_mark,
-					       (seg->zero_new_blocks == THIN_ZERO_YES) ? 0 : 1))
+	if (!dm_tree_node_add_thin_pool_target_v1(node, len,
+						  seg->transaction_id,
+						  metadata_dlid, pool_dlid,
+						  seg->chunk_size, low_water_mark,
+						  (seg->zero_new_blocks == THIN_ZERO_YES) ? 0 : 1,
+						  (seg->crop_metadata == THIN_CROP_METADATA_YES) ? 1 : 0))
 		return_0;
 
 	if (attr & THIN_FEATURE_DISCARDS) {

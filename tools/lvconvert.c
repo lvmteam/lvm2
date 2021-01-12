@@ -3032,6 +3032,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	const char *policy_name;
 	struct dm_config_tree *policy_settings = NULL;
 	int pool_metadata_spare;
+	thin_crop_metadata_t crop_metadata;
 	thin_discards_t discards;
 	thin_zero_t zero_new_blocks;
 	int r = 0;
@@ -3196,6 +3197,8 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 					     pool_segtype, target_attr,
 					     lv->le_count,
 					     &meta_extents,
+					     metadata_lv,
+					     &crop_metadata,
 					     &chunk_calc,
 					     &chunk_size,
 					     &discards, &zero_new_blocks))
@@ -3401,6 +3404,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 			goto_bad;
 	} else {
 		seg->transaction_id = 0;
+		seg->crop_metadata = crop_metadata;
 		seg->chunk_size = chunk_size;
 		seg->discards = discards;
 		seg->zero_new_blocks = zero_new_blocks;

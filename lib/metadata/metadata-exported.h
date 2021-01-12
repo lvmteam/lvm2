@@ -144,6 +144,7 @@
 
 #define LV_REMOVE_AFTER_RESHAPE	UINT64_C(0x0400000000000000)	/* LV needs to be removed after a shrinking reshape */
 #define LV_METADATA_FORMAT	UINT64_C(0x0800000000000000)    /* LV has segments with metadata format */
+#define LV_CROP_METADATA	UINT64_C(0x0000000000000400)	/* LV - also VG CLUSTERED */
 
 #define LV_RESHAPE		UINT64_C(0x1000000000000000)    /* Ongoing reshape (number of stripes, stripesize or raid algorithm change):
 								   used as SEGTYPE_FLAG to prevent activation on old runtime */
@@ -327,6 +328,12 @@ typedef enum {
 } thin_discards_t;
 
 typedef enum {
+	THIN_CROP_METADATA_UNSELECTED = 0,  /* 'auto' selects */
+	THIN_CROP_METADATA_NO,
+	THIN_CROP_METADATA_YES,
+} thin_crop_metadata_t;
+
+typedef enum {
 	CACHE_MODE_UNSELECTED = 0,
 	CACHE_MODE_WRITETHROUGH,
 	CACHE_MODE_WRITEBACK,
@@ -503,6 +510,7 @@ struct lv_segment {
 	uint64_t transaction_id;		/* For thin_pool, thin */
 	thin_zero_t zero_new_blocks;		/* For thin_pool */
 	thin_discards_t discards;		/* For thin_pool */
+	thin_crop_metadata_t crop_metadata;	/* For thin_pool */
 	struct dm_list thin_messages;		/* For thin_pool */
 	struct logical_volume *external_lv;	/* For thin */
 	struct logical_volume *pool_lv;		/* For thin, cache */
@@ -886,6 +894,8 @@ int update_thin_pool_params(struct cmd_context *cmd,
 			    unsigned attr,
 			    uint32_t pool_data_extents,
 			    uint32_t *pool_metadata_extents,
+			    struct logical_volume *metadata_lv,
+			    unsigned *crop_metadata,
 			    int *chunk_size_calc_method, uint32_t *chunk_size,
 			    thin_discards_t *discards, thin_zero_t *zero_new_blocks);
 
@@ -1012,6 +1022,7 @@ struct lvcreate_params {
 
 	uint64_t permission; /* all */
 	unsigned error_when_full; /* when segment supports it */
+	thin_crop_metadata_t crop_metadata;
 	uint32_t read_ahead; /* all */
 	int approx_alloc;     /* all */
 	alloc_policy_t alloc; /* all */

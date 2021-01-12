@@ -1104,7 +1104,7 @@ The default value is shown by:
 The amount of thin metadata depends on how many blocks are shared between
 thin LVs (i.e. through snapshots).  A thin pool with many snapshots may
 need a larger metadata LV.  Thin pool metadata LV sizes can be from 2MiB
-to 16GiB.
+to approximately 16GiB.
 
 When using lvcreate to create what will become a thin metadata LV, the
 size is specified with the -L|--size option.
@@ -1118,6 +1118,14 @@ It can be hard to predict the amount of metadata space that will be
 needed, so it is recommended to start with a size of 1GiB which should be
 enough for all practical purposes.  A thin pool metadata LV can later be
 manually or automatically extended if needed.
+
+Configurable setting
+.BR lvm.conf (5)
+.BR allocation / thin_pool_crop_metadata
+gives control over cropping to 15.81GiB to stay backward compatible with older
+versions of lvm2. With enabled cropping there can be observed some problems when
+using volumes above this size with thin tools (i.e. thin_repair).
+Cropping should be enabled only when compatibility is required.
 
 
 .SS Create a thin snapshot of an external, read only LV
