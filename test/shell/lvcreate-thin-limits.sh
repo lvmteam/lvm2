@@ -27,13 +27,35 @@ aux can_use_16T || skip
 aux have_thin 1 0 0 || skip
 which mkfs.ext4 || skip
 
-aux prepare_pvs 1 16777216
+# 16T device
+aux prepare_pvs 2 8388608
 get_devs
 
-vgcreate $SHARED -s 4K "$vg" "${DEVICES[@]}"
+# gives 16777215M device
+vgcreate $SHARED -s 4M "$vg" "${DEVICES[@]}"
 
-not lvcreate -T -L15.995T --poolmetadatasize 5G $vg/pool
+# For 1st. pass only single PV
+lvcreate -l100%PV --name $lv1 $vg "$dev2"
 
-lvs -ao+seg_pe_ranges $vg
+for i in 1 0
+do
+	SIZE=$(get vg_field "$vg" vg_free --units m)
+	SIZE=${SIZE%%\.*}
+
+	# ~16T - 2 * 5G + something  -> should not fit
+	not lvcreate -Zn -T -L$(( SIZE - 2 * 5 * 1024 + 1 )) --poolmetadatasize 5G $vg/pool
+
+	check vg_field "$vg" lv_count "$i"
+
+	# Should fit  data + metadata + pmspare
+	lvcreate -Zn -T -L$(( SIZE - 2 * 5 * 1024 )) --poolmetadatasize 5G $vg/pool
+
+	check vg_field "$vg" vg_free "0"
+
+	lvs -ao+seg_pe_ranges $vg
+
+        # Remove everything for 2nd. pass
+	lvremove -ff $vg
+done
 
 vgremove -ff $vg
