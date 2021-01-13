@@ -773,9 +773,13 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 bad:
 	log_error("Failed to add integrity.");
 
-	for (s = 0; s < revert_meta_lvs; s++) {
-		if (!lv_remove(imeta_lvs[s]))
-			log_error("New integrity metadata LV may require manual removal.");
+	if (revert_meta_lvs) {
+		for (s = 0; s < DEFAULT_RAID_MAX_IMAGES; s++) {
+			if (!imeta_lvs[s])
+				continue;
+			if (!lv_remove(imeta_lvs[s]))
+				log_error("New integrity metadata LV may require manual removal.");
+		}
 	}
 			       
 	if (!vg_write(vg) || !vg_commit(vg))
