@@ -1428,60 +1428,151 @@ struct device *dev_hash_get(const char *name)
 	return (struct device *) dm_hash_lookup(_cache.names, name);
 }
 
+static void _remove_alias(struct device *dev, const char *name)
+{
+	struct dm_str_list *strl;
+
+	dm_list_iterate_items(strl, &dev->aliases) {
+		if (!strcmp(strl->str, name)) {
+			dm_list_del(&strl->list);
+			return;
+		}
+	}
+}
+
+/*
+ * Check that paths for this dev still refer to the same dev_t.  This is known
+ * to drop invalid paths in the case where lvm deactivates an LV, which causes
+ * that LV path to go away, but that LV path is not removed from dev-cache (it
+ * probably should be).  Later a new path to a different LV is added to
+ * dev-cache, where the new LV has the same major:minor as the previously
+ * deactivated LV.  The new LV will find the existing struct dev, and that
+ * struct dev will have dev->aliases entries that refer to the name of the old
+ * deactivated LV.  Those old paths are all invalid and are dropped here.
+ */
+
+static void _verify_aliases(struct device *dev, const char *newname)
+{
+	struct dm_str_list *strl, *strl2;
+	struct stat st;
+
+	dm_list_iterate_items_safe(strl, strl2, &dev->aliases) {
+		/* newname was just stat'd and added by caller */
+		if (newname && !strcmp(strl->str, newname))
+			continue;
+
+		if (stat(strl->str, &st) || (st.st_rdev != dev->dev)) {
+			log_debug("Drop invalid path %s for %d:%d (new path %s).",
+				  strl->str, (int)MAJOR(dev->dev), (int)MINOR(dev->dev), newname ?: "");
+			dm_hash_remove(_cache.names, strl->str);
+			dm_list_del(&strl->list);
+		}
+	}
+}
+
 struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct dev_filter *f)
 {
-	struct stat buf;
-	struct device *d = (struct device *) dm_hash_lookup(_cache.names, name);
-	int info_available = 0;
-	int ret = 1;
+	struct device *dev = (struct device *) dm_hash_lookup(_cache.names, name);
+	struct stat st;
+	int ret;
 
-	if (d && (d->flags & DEV_REGULAR))
-		return d;
+	/*
+	 * DEV_REGULAR means that is "dev" is actually a file, not a device.
+	 * FIXME: I don't think dev-cache is used for files any more and this
+	 * can be dropped?
+	 */
+	if (dev && (dev->flags & DEV_REGULAR))
+		return dev;
 
-	/* If the entry's wrong, remove it */
-	if (stat(name, &buf) < 0) {
-		if (d)
+	/*
+	 * The requested path is invalid, remove any dev-cache
+	 * info for it.
+	 */
+	if (stat(name, &st)) {
+		if (dev) {
+			log_print("Device path %s is invalid for %d:%d %s.",
+				  name, (int)MAJOR(dev->dev), (int)MINOR(dev->dev), dev_name(dev));
+
 			dm_hash_remove(_cache.names, name);
-		log_sys_very_verbose("stat", name);
-		d = NULL;
-	} else
-		info_available = 1;
 
-	if (d && (buf.st_rdev != d->dev)) {
+			_remove_alias(dev, name);
+
+			/* Remove any other names in dev->aliases that are incorrect. */
+			_verify_aliases(dev, NULL);
+		}
+		return NULL;
+	}
+
+	if (!S_ISBLK(st.st_mode)) {
+		log_debug("Not a block device %s.", name);
+		return NULL;
+	}
+
+	/*
+	 * dev-cache has incorrect info for the requested path.
+	 * Remove incorrect info and then add new dev-cache entry.
+	 */
+	if (dev && (st.st_rdev != dev->dev)) {
+		log_print("Device path %s does not match %d:%d %s.",
+			  name, (int)MAJOR(dev->dev), (int)MINOR(dev->dev), dev_name(dev));
+
 		dm_hash_remove(_cache.names, name);
-		d = NULL;
+
+		_remove_alias(dev, name);
+
+		/* Remove any other names in dev->aliases that are incorrect. */
+		_verify_aliases(dev, NULL);
+
+		/* Add new dev-cache entry next. */
+		dev = NULL;
 	}
 
-	if (!d) {
-		_insert(name, info_available ? &buf : NULL, 0, obtain_device_list_from_udev());
-		d = (struct device *) dm_hash_lookup(_cache.names, name);
-		if (!d) {
-			log_debug_devs("Device name not found in dev_cache repeat dev_cache_scan for %s", name);
-			dev_cache_scan();
-			d = (struct device *) dm_hash_lookup(_cache.names, name);
+	/*
+	 * Either add a new struct dev for st_rdev and name,
+	 * or add name as a new alias for an existing struct dev
+	 * for st_rdev.
+	 */
+	if (!dev) {
+		_insert_dev(name, st.st_rdev);
+
+		/* Get the struct dev that was just added. */
+		dev = (struct device *) dm_hash_lookup(_cache.names, name);
+
+		if (!dev) {
+			log_error("Failed to get device %s", name);
+			return NULL;
 		}
+
+		_verify_aliases(dev, name);
 	}
 
-	if (!d)
-		return NULL;
+	/*
+	 * The caller passed a filter if they only want the dev if it
+	 * passes filters.
+	 */
 
-	if (d && (d->flags & DEV_REGULAR))
-		return d;
+	if (!f)
+		return dev;
 
-	if (f && !(d->flags & DEV_REGULAR)) {
-		ret = f->passes_filter(cmd, f, d, NULL);
+	ret = f->passes_filter(cmd, f, dev, NULL);
 
-		if (ret == -EAGAIN) {
-			log_debug_devs("get device by name defer filter %s", dev_name(d));
-			d->flags |= DEV_FILTER_AFTER_SCAN;
-			ret = 1;
-		}
+	/*
+	 * This might happen if this function is called before
+	 * filters can do i/o.  I don't think this will happen
+	 * any longer and this EAGAIN case can be removed.
+	 */
+	if (ret == -EAGAIN) {
+		log_debug_devs("dev_cache_get filter deferred %s", dev_name(dev));
+		dev->flags |= DEV_FILTER_AFTER_SCAN;
+		ret = 1;
 	}
 
-	if (f && !(d->flags & DEV_REGULAR) && !ret)
+	if (!ret) {
+		log_debug_devs("dev_cache_get filter excludes %s", dev_name(dev));
 		return NULL;
+	}
 
-	return d;
+	return dev;
 }
 
 static struct device *_dev_cache_seek_devt(dev_t dev)
