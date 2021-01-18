@@ -1243,6 +1243,11 @@ int label_scan(struct cmd_context *cmd)
 		free(devl);
 	}
 
+	dm_list_iterate_items_safe(devl, devl2, &filtered_devs) {
+		dm_list_del(&devl->list);
+		free(devl);
+	}
+
 	/*
 	 * If hints were not available/usable, then we scanned all devs,
 	 * and we now know which are PVs.  Save this list of PVs we've
