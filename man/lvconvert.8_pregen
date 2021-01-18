@@ -772,6 +772,10 @@ Add a cache to an LV, using a specified cache device.
 .br
 .RS 4
 .ad l
+[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
 [    \fB--cachesize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
