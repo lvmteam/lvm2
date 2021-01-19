@@ -1020,11 +1020,10 @@ static int _pvscan_aa(struct cmd_context *cmd, struct pvscan_aa_params *pp,
 	struct processing_handle *handle = NULL;
 	struct dm_str_list *sl, *sl2;
 	int no_quick = 0;
-	int ret;
+	int ret = ECMD_FAILED;
 
 	if (!(handle = init_processing_handle(cmd, NULL))) {
 		log_error("Failed to initialize processing handle.");
-		ret = ECMD_FAILED;
 		goto out;
 	}
 
