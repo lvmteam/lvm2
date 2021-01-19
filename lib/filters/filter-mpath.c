@@ -60,7 +60,7 @@ static const char *_get_sysfs_name_by_devt(const char *sysfs_dir, dev_t devno,
 	char path[PATH_MAX];
 	int size;
 
-	if (dm_snprintf(path, sizeof(path), "%s/dev/block/%d:%d", sysfs_dir,
+	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d", sysfs_dir,
 			(int) MAJOR(devno), (int) MINOR(devno)) < 0) {
 		log_error("Sysfs path string is too long.");
 		return NULL;
@@ -106,7 +106,7 @@ static int _get_sysfs_get_major_minor(const char *sysfs_dir, const char *kname, 
 {
 	char path[PATH_MAX], buffer[64];
 
-	if (dm_snprintf(path, sizeof(path), "%s/block/%s/dev", sysfs_dir, kname) < 0) {
+	if (dm_snprintf(path, sizeof(path), "%sblock/%s/dev", sysfs_dir, kname) < 0) {
 		log_error("Sysfs path string is too long.");
 		return 0;
 	}
@@ -215,7 +215,7 @@ static int _native_dev_is_mpath(struct dev_filter *f, struct device *dev)
 		return 0;
 	}
 
-	if (dm_snprintf(path, sizeof(path), "%s/block/%s/holders", sysfs_dir, name) < 0) {
+	if (dm_snprintf(path, sizeof(path), "%sblock/%s/holders", sysfs_dir, name) < 0) {
 		log_warn("Sysfs path to check mpath is too long.");
 		return 0;
 	}
