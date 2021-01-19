@@ -1140,9 +1140,13 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 			*mda1_offset = xlate64(dlocn->offset);
 			*mda1_size = xlate64(dlocn->size);
 
-			if (*mda1_offset != 4096) {
-				log_print("CHECK: pv_header.disk_locn[%d].offset expected 4096 # for first mda", di);
-				bad++;
+			/*
+			 * mda1 offset is page size from machine that created it,
+			 * warn if it's not one of the expected page sizes.
+			 */
+			if ((*mda1_offset != 4096) && (*mda1_offset != 8192) && (*mda1_offset != 65536)) {
+				log_print("WARNING: pv_header.disk_locn[%d].offset %llu is unexpected # for first mda",
+					  di, (unsigned long long)*mda1_offset);
 			}
 		} else {
 			*mda2_offset = xlate64(dlocn->offset);
