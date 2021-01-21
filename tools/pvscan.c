@@ -206,7 +206,7 @@ static char *_vgname_in_pvid_file_buf(char *buf)
 
 static int _online_pvid_file_read(char *path, int *major, int *minor, char *vgname)
 {
-	char buf[MAX_PVID_FILE_SIZE];
+	char buf[MAX_PVID_FILE_SIZE] = { 0 };
 	char *name;
 	int fd, rv;
 
@@ -216,9 +216,7 @@ static int _online_pvid_file_read(char *path, int *major, int *minor, char *vgna
 		return 0;
 	}
 
-	memset(buf, 0, sizeof(buf));
-
-	rv = read(fd, buf, sizeof(buf));
+	rv = read(fd, buf, sizeof(buf) - 1);
 	if (close(fd))
 		log_sys_debug("close", path);
 	if (!rv || rv < 0) {
@@ -350,7 +348,7 @@ static void _online_files_remove(const char *dirpath)
 static int _online_pvid_file_create(struct device *dev, const char *vgname)
 {
 	char path[PATH_MAX];
-	char buf[MAX_PVID_FILE_SIZE];
+	char buf[MAX_PVID_FILE_SIZE] = { 0 };
 	char file_vgname[NAME_LEN];
 	int file_major = 0, file_minor = 0;
 	int major, minor;
@@ -359,8 +357,6 @@ static int _online_pvid_file_create(struct device *dev, const char *vgname)
 	int len;
 	int len1 = 0;
 	int len2 = 0;
-
-	memset(buf, 0, sizeof(buf));
 
 	major = (int)MAJOR(dev->dev);
 	minor = (int)MINOR(dev->dev);
@@ -451,13 +447,14 @@ check_duplicate:
 
 static int _online_pvid_file_exists(const char *pvid)
 {
-	char path[PATH_MAX];
+	char path[PATH_MAX] = { 0 };
 	struct stat buf;
 	int rv;
 
-	memset(path, 0, sizeof(path));
-
-	snprintf(path, sizeof(path), "%s/%s", _pvs_online_dir, pvid);
+	if (dm_snprintf(path, sizeof(path), "%s/%s", _pvs_online_dir, pvid) < 0) {
+		log_debug(INTERNAL_ERROR "Path %s/%s is too long.", _pvs_online_dir, pvid);
+		return 0;
+	}
 
 	log_debug("Check pv online: %s", path);
 
