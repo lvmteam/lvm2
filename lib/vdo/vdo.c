@@ -25,6 +25,7 @@
 #include "lib/metadata/segtype.h"
 #include "base/memory/zalloc.h"
 
+static const char _vdo_module[] = MODULE_NAME_VDO;
 static unsigned _feature_mask;
 
 static int _bad_field(const char *field)
@@ -391,18 +392,21 @@ static int _vdo_target_present(struct cmd_context *cmd,
 	static const struct feature {
 		uint32_t maj;
 		uint32_t min;
+		uint32_t patchlevel;
 		unsigned vdo_feature;
 		const char *feature;
 	} _features[] = {
-		{ 1, 1, 0, "" },
-		//{ 9, 9, VDO_FEATURE_RESIZE, "resize" },
+		{ 6, 2, 3, VDO_FEATURE_ONLINE_RENAME, "online_rename" },
 	};
-	//static const char _lvmconf[] = "global/vdo_disabled_features";
+	static const char _lvmconf[] = "global/vdo_disabled_features";
 	static int _vdo_checked = 0;
 	static int _vdo_present = 0;
 	static unsigned _vdo_attrs = 0;
 	uint32_t i, maj, min, patchlevel;
 	const struct segment_type *segtype;
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
+	const char *str;
 
 	if (!activation())
 		return 0;
@@ -419,8 +423,8 @@ static int _vdo_target_present(struct cmd_context *cmd,
 		}
 
 		if (maj < 6 || (maj == 6 && min < 2)) {
-			log_warn("WARNING: VDO target version %u.%u.%u is too old.",
-				 maj, min, patchlevel);
+			log_warn("WARNING: Target %s version %u.%u.%u is too old.",
+				 _vdo_module, maj, min, patchlevel);
 			return 0;
 		}
 
@@ -437,15 +441,41 @@ static int _vdo_target_present(struct cmd_context *cmd,
 		/* Prepare for adding supported features */
 		for (i = 0; i < DM_ARRAY_SIZE(_features); ++i)
 			if ((maj > _features[i].maj) ||
-			    (maj == _features[i].maj && min >= _features[i].min))
+			    ((maj == _features[i].maj) && (min > _features[i].min)) ||
+			    ((maj == _features[i].maj) && (min == _features[i].min) && (patchlevel >= _features[i].patchlevel)))
 				_vdo_attrs |= _features[i].vdo_feature;
 			else
 				log_very_verbose("Target %s does not support %s.",
-						 TARGET_NAME_VDO,
+						 _vdo_module,
 						 _features[i].feature);
 	}
 
 	if (attributes) {
+		if (!_feature_mask) {
+			/* Support runtime lvm.conf changes, N.B. avoid 32 feature */
+			if ((cn = find_config_tree_array(cmd, global_vdo_disabled_features_CFG, NULL))) {
+				for (cv = cn->v; cv; cv = cv->next) {
+					if (cv->type != DM_CFG_STRING) {
+						log_warn("WARNING: Ignoring invalid string in config file %s.",
+							  _lvmconf);
+						continue;
+					}
+					str = cv->v.str;
+					if (!*str)
+						continue;
+					for (i = 0; i < DM_ARRAY_SIZE(_features); ++i)
+						if (strcasecmp(str, _features[i].feature) == 0)
+							_feature_mask |= _features[i].vdo_feature;
+				}
+			}
+			_feature_mask = ~_feature_mask;
+			for (i = 0; i < DM_ARRAY_SIZE(_features); ++i)
+				if ((_vdo_attrs & _features[i].vdo_feature) &&
+				    !(_feature_mask & _features[i].vdo_feature))
+					log_very_verbose("Target %s %s support disabled by %s.",
+							 _vdo_module,
+							 _features[i].feature, _lvmconf);
+		}
 		*attributes = _vdo_attrs & _feature_mask;
 	}
 
@@ -456,7 +486,7 @@ static int _vdo_modules_needed(struct dm_pool *mem,
 			   const struct lv_segment *seg __attribute__((unused)),
 			   struct dm_list *modules)
 {
-	if (!str_list_add(mem, modules, MODULE_NAME_VDO)) {
+	if (!str_list_add(mem, modules, _vdo_module)) {
 		log_error("String list allocation failed for VDO module.");
 		return 0;
 	}

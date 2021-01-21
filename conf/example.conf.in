@@ -1194,6 +1194,16 @@ global {
 	# This configuration option has an automatic default value.
 	# vdo_format_options = [ "" ]
 
+	# Configuration option global/vdo_disabled_features.
+	# Features to not use in the vdo driver.
+	# This can be helpful for testing, or to avoid using a feature that is
+	# causing problems. Features include: online_rename
+	#
+	# Example
+	# vdo_disabled_features = [ "online_rename" ]
+	#
+	# This configuration option does not have a default value defined.
+
 	# Configuration option global/fsadm_executable.
 	# The full path to the fsadm command.
 	# LVM uses this command to help with lvresize -r operations.

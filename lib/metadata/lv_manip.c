@@ -4738,6 +4738,8 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 	struct lv_names lv_names = { .old = lv->name };
 	int old_lv_is_historical = lv_is_historical(lv);
 	int historical;
+	unsigned attrs;
+	const struct segment_type *segtype;
 
 	/*
 	 * rename is not allowed on sub LVs except for pools
@@ -4763,9 +4765,15 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (lv_is_vdo_pool(lv) && lv_is_active(lv_lock_holder(lv))) {
-		log_error("Cannot rename active VDOPOOL volume %s.",
-			  display_lvname(lv));
-		return 0;
+		segtype = first_seg(lv)->segtype;
+		if (!segtype->ops->target_present ||
+		    !segtype->ops->target_present(lv->vg->cmd, NULL, &attrs) ||
+		    !(attrs & VDO_FEATURE_ONLINE_RENAME)) {
+			log_error("Cannot rename active VDOPOOL volume %s, "
+				  "VDO target feature support is missing.",
+				  display_lvname(lv));
+			return 0;
+		}
 	}
 
 	if (update_mda && !archive(vg))
