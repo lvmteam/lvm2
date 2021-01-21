@@ -28,13 +28,13 @@ local {
 	# main configuration file, e.g. lvm.conf. When used, it must be set to
 	# a unique value among all hosts sharing access to the storage,
 	# e.g. a host name.
-	# 
+	#
 	# Example
 	# Set no system ID:
 	# system_id = ""
 	# Set the system_id to a specific name:
 	# system_id = "host1"
-	# 
+	#
 	# This configuration option has an automatic default value.
 	# system_id = ""
 
