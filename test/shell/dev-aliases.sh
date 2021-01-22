@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2012 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2021 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -14,9 +14,9 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-aux prepare_devs 3
+aux have_cache 1 10 0 || skip
 
-vgcreate $vg $dev1 $dev2 $dev3
+aux prepare_vg 3
 
 #
 # This lvconvert command will deactivate LV1, then internally create a new
@@ -37,13 +37,13 @@ vgcreate $vg $dev1 $dev2 $dev3
 # wiping code would fail to open that stale name.
 #
 
-lvcreate -n $lv1 -L32M $vg $dev1
-lvcreate -n $lv2 -L16M $vg $dev2
+lvcreate -n $lv1 -L32M $vg "$dev1"
+lvcreate -n $lv2 -L16M $vg "$dev2"
 lvconvert -y --type cache-pool --poolmetadata $lv2 --cachemode writeback $vg/$lv1 --config='devices { preferred_names=["/dev/mapper/"] }' 
 lvremove -y $vg/$lv1
 
-lvcreate -n $lv1 -L32M $vg $dev1
-lvcreate -n $lv2 -L16M $vg $dev2
+lvcreate -n $lv1 -L32M $vg "$dev1"
+lvcreate -n $lv2 -L16M $vg "$dev2"
 lvconvert -y --type cache-pool --poolmetadata $lv2 $vg/$lv1
 lvremove -y $vg/$lv1
 
