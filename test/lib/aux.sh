@@ -1509,6 +1509,7 @@ thin_restore_needs_more_volumes() {
 	case $("$LVM_TEST_THIN_RESTORE_CMD" -V) in
 		# With older version of thin-tool we got slightly more compact metadata
 		0.[0-6]*|0.7.0*) return 0 ;;
+		0.8.5-2.el7) return 0 ;;
 	esac
 	return 1
 }
