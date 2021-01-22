@@ -7785,10 +7785,10 @@ retry_with_dev_set:
 #endif
 		if (!dev_set_bytes(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT, wp.zero_value)) {
 			sigint_restore();
-			log_error("%s %s of logical volume %s with value %d.",
+			log_error("%s logical volume %s with value %d and size %s.",
 				  sigint_caught() ? "Interrupted initialization" : "Failed to initialize",
-				  display_size(lv->vg->cmd, zero_sectors),
-				  display_lvname(lv), wp.zero_value);
+				  display_lvname(lv), wp.zero_value,
+				  display_size(lv->vg->cmd, zero_sectors));
 			return 0;
 		}
 	}
