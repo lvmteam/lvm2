@@ -4283,7 +4283,7 @@ static int _lv_create_cachevol(struct cmd_context *cmd,
 	char format[NAME_LEN];
 	struct dm_list *use_pvh;
 	struct pv_list *pvl;
-	char *device_name;
+	const char *device_name = "";
 	struct device *dev_fast;
 	char *dev_argv[MAX_CACHEDEVS];
 	int dev_argc = 0;
@@ -4317,7 +4317,7 @@ static int _lv_create_cachevol(struct cmd_context *cmd,
 		if (!grouped_arg_is_set(group->arg_values, cachedevice_ARG))
 			continue;
 
-		if (!(device_name = (char *)grouped_arg_str_value(group->arg_values, cachedevice_ARG, NULL)))
+		if (!(device_name = grouped_arg_str_value(group->arg_values, cachedevice_ARG, NULL)))
 			break;
 
 		if (device_name[0] == '@') {
@@ -4366,7 +4366,7 @@ static int _lv_create_cachevol(struct cmd_context *cmd,
 			return 0;
 		}
 
-		dev_argv[dev_argc++] = device_name;
+		dev_argv[dev_argc++] = (char*)device_name;
 	}
 
 	if (!cache_size_sectors)
