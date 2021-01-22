@@ -3015,7 +3015,7 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 	struct device *dev = NULL;
 	struct devicefile *def = NULL;
 	const char *dump, *repair;
-	const char *pv_name;
+	const char *pv_name = "";
 	uint64_t labelsector = 1;
 	int bad = 0;
 	int ret = 0;

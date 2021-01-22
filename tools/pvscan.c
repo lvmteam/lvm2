@@ -517,14 +517,13 @@ static int _lookup_file_contains_pvid(FILE *fp, char *pvid)
 static void _lookup_file_count_pvid_files(FILE *fp, const char *vgname, int *pvs_online, int *pvs_offline)
 {
 	char line[64];
-	char pvid[ID_LEN+1];
+	char pvid[ID_LEN+1] = { 0 };
 
 	log_debug("checking all pvid files using lookup file for %s", vgname);
 
 	rewind(fp);
 
 	while (fgets(line, sizeof(line), fp)) {
-		memset(pvid, 0, sizeof(pvid));
 		memcpy(pvid, line, ID_LEN);
 
 		if (strlen(pvid) != ID_LEN) {
@@ -583,65 +582,60 @@ static int _count_pvid_files_from_lookup_file(struct cmd_context *cmd, struct de
 					       int *pvs_online, int *pvs_offline,
 					       const char **vgname_out)
 {
-	char path[PATH_MAX];
+	char path[PATH_MAX] = { 0 };
 	FILE *fp;
 	DIR *dir;
 	struct dirent *de;
 	const char *vgname = NULL;
-	int online = 0, offline = 0;
 
+	*vgname_out = NULL;
 	*pvs_online = 0;
 	*pvs_offline = 0;
 
-	if (!(dir = opendir(_pvs_lookup_dir)))
-		goto_bad;
+	if (!(dir = opendir(_pvs_lookup_dir))) {
+		log_sys_debug("opendir", _pvs_lookup_dir);
+		return 0;
+	}
 
 	/*
 	 * Read each file in pvs_lookup to find dev->pvid, and if it's
 	 * found save the vgname of the file it's found in.
 	 */
-	while ((de = readdir(dir))) {
+	while (!vgname && (de = readdir(dir))) {
 		if (de->d_name[0] == '.')
 			continue;
 
-		memset(path, 0, sizeof(path));
-		snprintf(path, sizeof(path), "%s/%s", _pvs_lookup_dir, de->d_name);
+		if (dm_snprintf(path, sizeof(path), "%s/%s", _pvs_lookup_dir, de->d_name) < 0) {
+			log_warn("WARNING: Path %s/%s is too long.", _pvs_lookup_dir, de->d_name);
+			continue;
+		}
 
 		if (!(fp = fopen(path, "r"))) {
-			log_warn("Failed to open %s", path);
+			log_warn("WARNING: Failed to open %s.", path);
 			continue;
 		}
 
 		if (_lookup_file_contains_pvid(fp, dev->pvid)) {
-			vgname = dm_pool_strdup(cmd->mem, de->d_name);
-			break;
+			if ((vgname = dm_pool_strdup(cmd->mem, de->d_name)))
+				/*
+				 * stat pvid online file of each pvid listed in this file
+				 * the list of pvids from the file is the alternative to
+				 * using vg->pvs
+				 */
+				_lookup_file_count_pvid_files(fp, vgname, pvs_online, pvs_offline);
+			else
+				log_warn("WARNING: Failed to strdup vgname.");
 		}
 
 		if (fclose(fp))
-			stack;
+			log_sys_debug("fclose", path);
 	}
 	if (closedir(dir))
 		log_sys_debug("closedir", _pvs_lookup_dir);
 
-	if (!vgname)
-		goto_bad;
-
-	/*
-	 * stat pvid online file of each pvid listed in this file
-	 * the list of pvids from the file is the alternative to
-	 * using vg->pvs
-	 */
-	_lookup_file_count_pvid_files(fp, vgname, &online, &offline);
-
-	if (fclose(fp))
-		stack;
-
-	*pvs_online = online;
-	*pvs_offline = offline;
 	*vgname_out = vgname;
-	return 1;
-bad:
-	return 0;
+
+	return (vgname) ? 1 : 0;
 }
 
 static void _online_dir_setup(void)
