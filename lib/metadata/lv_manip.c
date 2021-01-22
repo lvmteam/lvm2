@@ -1470,6 +1470,8 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 	struct logical_volume *external_lv = NULL;
 	int is_raid10 = 0;
 	uint32_t data_copies = 0;
+	struct lv_list *lvl;
+	int is_last_pool = lv_is_pool(lv);
 
 	if (!dm_list_empty(&lv->segments)) {
 		seg = first_seg(lv);
@@ -1580,6 +1582,28 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 	    lv_is_active(external_lv) &&
 	    !lv_update_and_reload(external_lv))
 		return_0;
+
+	/* When removing last pool, automatically drop the spare volume */
+	if (is_last_pool && lv->vg->pool_metadata_spare_lv) {
+		/* TODO: maybe use a list of pools or a counter to avoid linear search through VG */
+		dm_list_iterate_items(lvl, &lv->vg->lvs)
+			if (lv_is_thin_type(lvl->lv) ||
+			    lv_is_cache_type(lvl->lv)) {
+				is_last_pool = 0;
+				break;
+			}
+
+		if (is_last_pool) {
+			/* This is purely internal LV volume, no question */
+			if (!deactivate_lv(lv->vg->cmd, lv->vg->pool_metadata_spare_lv)) {
+				log_error("Unable to deactivate spare logical volume %s.",
+					  display_lvname(lv->vg->pool_metadata_spare_lv));
+				return 0;
+			}
+			if (!lv_remove(lv->vg->pool_metadata_spare_lv))
+				return_0;
+		}
+	}
 
 	return 1;
 }
@@ -6433,10 +6457,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	struct logical_volume *lock_lv = lv;
 	struct lv_segment *cache_seg = NULL;
 	int ask_discard;
-	struct lv_list *lvl;
 	struct seg_list *sl;
 	struct lv_segment *seg = first_seg(lv);
-	int is_last_pool = lv_is_pool(lv);
 
 	vg = lv->vg;
 
@@ -6558,9 +6580,6 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		 */
 		struct logical_volume *cachevol_lv = first_seg(lv)->pool_lv;
 
-		if (lv_is_cache_pool(cachevol_lv))
-			is_last_pool = 1;
-
 		if (!archive(vg))
 			return_0;
 
@@ -6665,25 +6684,6 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			  historical ? "historical ": "",
 			  historical ? lv->this_glv->historical->name : lv->name);
 		return 0;
-	}
-
-	if (is_last_pool && vg->pool_metadata_spare_lv) {
-		/* When removed last pool, also remove the spare */
-		dm_list_iterate_items(lvl, &vg->lvs)
-			if (lv_is_pool_metadata(lvl->lv)) {
-				is_last_pool = 0;
-				break;
-			}
-		if (is_last_pool) {
-			/* This is purely internal LV volume, no question */
-			if (!deactivate_lv(cmd, vg->pool_metadata_spare_lv)) {
-				log_error("Unable to deactivate spare logical volume %s.",
-					  display_lvname(vg->pool_metadata_spare_lv));
-				return 0;
-			}
-			if (!lv_remove(vg->pool_metadata_spare_lv))
-				return_0;
-		}
 	}
 
 	/* store it on disks */
