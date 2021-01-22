@@ -1,5 +1,9 @@
 Version 2.03.12 - 
 ===================================
+  Support online rename of VDO pools.
+  Imporove removal of pmspare when last pool is removed.
+  Fix problem with wiping of converted LVs.
+  Fix memleak in scanning  (2.03.11).
   Fix corner case allocation for thin-pools.
 
 Version 2.03.11 - 08th January 2021
