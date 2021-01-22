@@ -32,22 +32,9 @@ export MKE2FS_CONFIG="$TESTDIR/lib/mke2fs.conf"
 
 aux prepare_vg 1 9000
 
-lvcreate --vdo -L4G -V2G --name $lv1 $vg/vpool1
-
+lvcreate --vdo -L4G -V2G --name $lv1 $vg/vpool
 # Test caching VDOPoolLV
-lvcreate -H -L10 $vg/vpool1
-
-# Current VDO target driver cannot handle online rename
-# once this will be supported - update this test
-not lvrename $vg/vpool1 $vg/vpool 2>&1 | tee out
-grep "Cannot rename" out
-
-lvchange -an $vg
-
-# Ofline should work
-lvrename $vg/vpool1 $vg/vpool
-
-lvchange -ay $vg
+lvcreate -H -L10 $vg/vpool
 
 mkfs.ext4 -E nodiscard "$DM_DEV_DIR/$vg/$lv1"
 
