@@ -459,14 +459,33 @@ int move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 	return _move_pv(vg_from, vg_to, pv_name, 1);
 }
 
+struct vg_from_to {
+	struct volume_group *from;
+	struct volume_group *to;
+};
+
+static int _move_pvs_used_by_lv_cb(struct logical_volume *lv, void *data)
+{
+	struct vg_from_to *v = (struct vg_from_to*) data;
+	struct lv_segment *lvseg;
+	unsigned s;
+
+	dm_list_iterate_items(lvseg, &lv->segments)
+		for (s = 0; s < lvseg->area_count; s++)
+			if (seg_type(lvseg, s) == AREA_PV)
+				if (!_move_pv(v->from, v->to,
+					      pv_dev_name(seg_pv(lvseg, s)), 0))
+					return_0;
+
+	return 1;
+}
+
 int move_pvs_used_by_lv(struct volume_group *vg_from,
 			struct volume_group *vg_to,
 			const char *lv_name)
 {
-	struct lv_segment *lvseg;
-	unsigned s;
+	struct vg_from_to data = { .from = vg_from, .to = vg_to };
 	struct lv_list *lvl;
-	struct logical_volume *lv;
 
 	/* FIXME: handle tags */
 	if (!(lvl = find_lv_in_vg(vg_from, lv_name))) {
@@ -475,28 +494,22 @@ int move_pvs_used_by_lv(struct volume_group *vg_from,
 		return 0;
 	}
 
-	if (vg_bad_status_bits(vg_from, RESIZEABLE_VG) ||
-	    vg_bad_status_bits(vg_to, RESIZEABLE_VG))
+	if (vg_bad_status_bits(vg_from, RESIZEABLE_VG)) {
+		log_error("Cannot move PV(s) from non resize volume group %s.", vg_from->name);
 		return 0;
-
-	dm_list_iterate_items(lvseg, &lvl->lv->segments) {
-		if (lvseg->log_lv)
-			if (!move_pvs_used_by_lv(vg_from, vg_to,
-						     lvseg->log_lv->name))
-				return_0;
-		for (s = 0; s < lvseg->area_count; s++) {
-			if (seg_type(lvseg, s) == AREA_PV) {
-				if (!_move_pv(vg_from, vg_to,
-					      pv_dev_name(seg_pv(lvseg, s)), 0))
-					return_0;
-			} else if (seg_type(lvseg, s) == AREA_LV) {
-				lv = seg_lv(lvseg, s);
-				if (!move_pvs_used_by_lv(vg_from, vg_to,
-							     lv->name))
-				    return_0;
-			}
-		}
 	}
+
+	if (vg_bad_status_bits(vg_to, RESIZEABLE_VG)) {
+		log_error("Cannot move PV(s) to non resize volume group %s.", vg_to->name);
+		return 0;
+	}
+
+	if (!for_each_sub_lv(lvl->lv, _move_pvs_used_by_lv_cb, &data))
+		return_0;
+
+	if (!_move_pvs_used_by_lv_cb(lvl->lv, &data))
+		return_0;
+
 	return 1;
 }
 
