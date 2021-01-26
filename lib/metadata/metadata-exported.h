@@ -26,6 +26,7 @@
 #include "lib/metadata/vg.h"
 #include "lib/metadata/lv.h"
 #include "lib/misc/lvm-percent.h"
+#include <stdbool.h>
 
 #define MAX_STRIPES 128U
 #define SECTOR_SHIFT 9L

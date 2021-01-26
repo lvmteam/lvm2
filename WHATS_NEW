@@ -1,5 +1,6 @@
 Version 2.03.12 - 
 ===================================
+  Enhance lvdisplay to report raid availiable/partial.
   Support online rename of VDO pools.
   Imporove removal of pmspare when last pool is removed.
   Fix problem with wiping of converted LVs.
