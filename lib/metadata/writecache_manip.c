@@ -75,7 +75,7 @@ static int _get_writecache_kernel_status(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!lv_info_with_seg_status(cmd, first_seg(lv), &status, 1, 1)) {
+	if (!lv_info_with_seg_status(cmd, first_seg(lv), &status, 0, 0)) {
 		log_error("Failed to get device mapper status for %s", display_lvname(lv));
 		goto fail;
 	}
@@ -434,8 +434,12 @@ int lv_writecache_set_cleaner(struct logical_volume *lv)
 	seg->writecache_settings.cleaner_set = 1;
 
 	if (lv_is_active(lv)) {
-		if (!lv_update_and_reload(lv)) {
-			log_error("Failed to update VG and reload LV.");
+		if (!vg_write(lv->vg) || !vg_commit(lv->vg)) {
+			log_error("Failed to update VG.");
+			return 0;
+		}
+		if (!lv_writecache_message(lv, "cleaner")) {
+			log_error("Failed to set writecache cleaner for %s.", display_lvname(lv));
 			return 0;
 		}
 	} else {

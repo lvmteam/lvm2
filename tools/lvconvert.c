@@ -5720,6 +5720,8 @@ static int _lvconvert_detach_writecache_when_clean(struct cmd_context *cmd,
 		return 0;
 	}
 
+	log_debug("detach writecache check clean reading vg %s", id->vg_name);
+
 	vg = vg_read(cmd, id->vg_name, NULL, READ_FOR_UPDATE, lockd_state, &error_flags, NULL);
 
 	if (!vg) {
