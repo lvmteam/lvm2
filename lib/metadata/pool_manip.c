@@ -683,6 +683,8 @@ static struct logical_volume *_alloc_pool_metadata_spare(struct volume_group *vg
 int handle_pool_metadata_spare(struct volume_group *vg, uint32_t extents,
 			       struct dm_list *pvh, int poolmetadataspare)
 {
+	/* Max usable size of any spare volume is currently 16GiB rouned to extent size */
+	const uint64_t MAX_SIZE = (UINT64_C(2 * 16) * 1024 * 1024 + vg->extent_size - 1) / vg->extent_size;
 	struct logical_volume *lv = vg->pool_metadata_spare_lv;
 	uint32_t seg_mirrors;
 	struct lv_segment *seg;
@@ -692,8 +694,11 @@ int handle_pool_metadata_spare(struct volume_group *vg, uint32_t extents,
 		/* Find maximal size of metadata LV */
 		dm_list_iterate_items(lvl, &vg->lvs)
 			if (lv_is_pool_metadata(lvl->lv) &&
-			    (lvl->lv->le_count > extents))
+			    (lvl->lv->le_count > extents)) {
 				extents = lvl->lv->le_count;
+				if (extents >= MAX_SIZE)
+					break;
+			}
 
 	if (!poolmetadataspare) {
 		/* TODO: Not showing when lvm.conf would define 'n' ? */
@@ -703,6 +708,9 @@ int handle_pool_metadata_spare(struct volume_group *vg, uint32_t extents,
 				 "metadata spare LV is not automated.");
 		return 1;
 	}
+
+	if (extents > MAX_SIZE)
+		extents = MAX_SIZE;
 
 	if (!lv) {
 		if (!_alloc_pool_metadata_spare(vg, extents, pvh))
