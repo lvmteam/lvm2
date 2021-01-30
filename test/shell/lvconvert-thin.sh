@@ -128,7 +128,7 @@ lvcreate -L1T -n $lv1 $vg
 lvcreate -L32G -n $lv2 $vg
 # Warning about bigger then needed
 lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $vg/$lv2 2>&1 | tee err
-grep "WARNING: Maximum" err
+grep -i "maximum" err
 lvremove -f $vg
 
 
