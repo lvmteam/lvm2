@@ -3189,6 +3189,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 					      pool_segtype, target_attr,
 					      lv->le_count,
 					      &meta_extents,
+					      metadata_lv,
 					      &chunk_calc,
 					      &chunk_size))
 			goto_bad;

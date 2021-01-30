@@ -1320,6 +1320,7 @@ int update_cache_pool_params(struct cmd_context *cmd,
 			     unsigned attr,
 			     uint32_t pool_data_extents,
 			     uint32_t *pool_metadata_extents,
+			     struct logical_volume *metadata_lv,
 			     int *chunk_size_calc_method, uint32_t *chunk_size);
 int validate_lv_cache_chunk_size(struct logical_volume *pool_lv, uint32_t chunk_size);
 int validate_lv_cache_create_pool(const struct logical_volume *pool_lv);
