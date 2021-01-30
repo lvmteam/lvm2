@@ -402,6 +402,7 @@ static int _update_extents_params(struct volume_group *vg,
 						      lp->segtype, lp->target_attr,
 						      lp->extents,
 						      &lp->pool_metadata_extents,
+						      NULL,
 						      &lp->thin_chunk_size_calc_policy,
 						      &lp->chunk_size))
 				return_0;
