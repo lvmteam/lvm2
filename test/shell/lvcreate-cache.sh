@@ -27,7 +27,6 @@ aux prepare_vg 5 80000
 
 aux lvmconf 'global/cache_disabled_features = [ "policy_smq" ]'
 
-
 #######################
 # Cache_Pool creation #
 #######################
@@ -173,17 +172,16 @@ dmsetup table ${vg}-$lv1 | grep cache  # ensure it is loaded in kernel
 
 lvremove -f $vg
 
-
 # Check minimum cache pool metadata size
-lvcreate -l 1 --type cache-pool --poolmetadatasize 1 $vg 2>out
-grep "WARNING: Minimum" out
+lvcreate -l 1 --type cache-pool --poolmetadatasize 1 $vg 2>&1 | tee out
+grep -i "minimal" out
+
 
 # FIXME: This test is failing in allocator with smaller VG sizes
-lvcreate -l 1 --type cache-pool --poolmetadatasize 17G $vg 2>out
-grep "WARNING: Maximum" out
+lvcreate -l 1 --type cache-pool --poolmetadatasize 17G $vg 2>&1 | tee out
+grep -i "maximum" out
 
 lvremove -f $vg
-
 ########################################
 # Cache conversion and r/w permissions #
 ########################################
