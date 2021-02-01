@@ -472,7 +472,7 @@ static int _check_feature(const struct raid_feature *feature, uint32_t maj, uint
 /* Check availability of raid10 taking data copies into consideration. */
 static bool _raid10_is_available(const struct logical_volume *lv)
 {
-	uint32_t i, rebuilds_per_group, s;
+	uint32_t i, rebuilds_per_group = 0, s;
 	const uint32_t copies = 2; /* FIXME: we only support 2-way mirrors (i.e. 2 data copies) in RAID10 for now. */
 	struct lv_segment *seg = first_seg(lv); /* We only have one segment in RaidLVs for now. */
 
