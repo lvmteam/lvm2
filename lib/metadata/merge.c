@@ -478,6 +478,8 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 			seg_error("sets discards");
 		if (!dm_list_empty(&seg->thin_messages))
 			seg_error("sets thin_messages list");
+		if (seg->lv->status & LV_CROP_METADATA)
+			seg_error("sets CROP_METADATA flag");
 	}
 
 	if (seg_is_thin_volume(seg)) {

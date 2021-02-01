@@ -249,7 +249,7 @@ static int _info_run(const char *dlid, struct dm_info *dminfo,
 	int dmtask;
 	int with_flush; /* TODO: arg for _info_run */
 	void *target = NULL;
-	uint64_t target_start, target_length, start, length;
+	uint64_t target_start, target_length, start, length, length_crop = 0;
 	char *target_name, *target_params;
 	const char *devname;
 
@@ -285,13 +285,15 @@ static int _info_run(const char *dlid, struct dm_info *dminfo,
 		/* Uses max DM_THIN_MAX_METADATA_SIZE sectors for metadata device */
 		if (lv_is_thin_pool_metadata(seg_status->seg->lv) &&
 		    (length > DM_THIN_MAX_METADATA_SIZE))
-			length = DM_THIN_MAX_METADATA_SIZE;
+			length_crop = DM_THIN_MAX_METADATA_SIZE;
 
 		do {
 			target = dm_get_next_target(dmt, target, &target_start,
 						    &target_length, &target_name, &target_params);
 
-			if ((start == target_start) && (length == target_length))
+			if ((start == target_start) &&
+			    ((length == target_length) ||
+			     (length_crop && (length_crop == target_length))))
 				break; /* Keep target_params when matching segment is found */
 
 			target_params = NULL; /* Marking this target_params unusable */

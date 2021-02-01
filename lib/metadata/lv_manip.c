@@ -5061,6 +5061,8 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 	uint32_t existing_extents;
 	uint32_t seg_size = 0;
 	uint32_t new_extents;
+	uint64_t max_metadata_size;
+	thin_crop_metadata_t crop;
 	int reducing = 0;
 
 	seg_last = last_seg(lv);
@@ -5200,6 +5202,33 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 					return 1;
 				}
 			}
+		} else if (lv_is_thin_pool_metadata(lv)) {
+			if (!(seg = get_only_segment_using_this_lv(lv)))
+				return_0;
+
+			max_metadata_size = get_thin_pool_max_metadata_size(cmd, vg->profile, &crop);
+
+			if (((uint64_t)lp->extents * vg->extent_size) > max_metadata_size) {
+				lp->extents = (max_metadata_size + vg->extent_size - 1) / vg->extent_size;
+				log_print_unless_silent("Reached maximum pool metadata size %s (%" PRIu32 " extents).",
+							display_size(vg->cmd, max_metadata_size), lp->extents);
+			}
+
+			if (existing_logical_extents >= lp->extents)
+				lp->extents = existing_logical_extents;
+
+			crop = get_thin_pool_crop_metadata(cmd, crop, (uint64_t)lp->extents * vg->extent_size);
+
+			if (seg->crop_metadata != crop) {
+				seg->crop_metadata = crop;
+				seg->lv->status |= LV_CROP_METADATA;
+				/* Crop change require reload even if there no size change */
+				lp->size_changed = 1;
+				log_print_unless_silent("Thin pool will use metadata without cropping.");
+			}
+
+			if (!(seg_size = lp->extents - existing_logical_extents))
+				return 1;  /* No change in metadata size */
 		}
 	} else {  /* If reducing, find stripes, stripesize & size of last segment */
 		if (lp->stripes || lp->stripe_size || lp->mirrors)
@@ -7941,6 +7970,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		first_seg(lv)->chunk_size = lp->chunk_size;
 		first_seg(lv)->zero_new_blocks = lp->zero_new_blocks;
 		first_seg(lv)->discards = lp->discards;
+		if ((first_seg(lv)->crop_metadata = lp->crop_metadata) == THIN_CROP_METADATA_NO)
+			lv->status |= LV_CROP_METADATA;
 		if (!recalculate_pool_chunk_size_with_dev_hints(lv, lp->thin_chunk_size_calc_policy)) {
 			stack;
 			goto revert_new_lv;

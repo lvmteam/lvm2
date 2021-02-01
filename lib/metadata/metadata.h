@@ -500,7 +500,20 @@ int pool_below_threshold(const struct lv_segment *pool_seg);
 int pool_check_overprovisioning(const struct logical_volume *lv);
 int create_pool(struct logical_volume *pool_lv, const struct segment_type *segtype,
 		struct alloc_handle *ah, uint32_t stripes, uint32_t stripe_size);
+uint64_t get_thin_pool_max_metadata_size(struct cmd_context *cmd, struct profile *profile,
+					 thin_crop_metadata_t *crop);
+thin_crop_metadata_t get_thin_pool_crop_metadata(struct cmd_context *cmd,
+						  thin_crop_metadata_t crop,
+						  uint64_t metadata_size);
 uint64_t estimate_thin_pool_metadata_size(uint32_t data_extents, uint32_t extent_size, uint32_t chunk_size);
+
+int update_pool_metadata_min_max(struct cmd_context *cmd,
+				 uint32_t extent_size,
+				 uint64_t min_metadata_size,		/* required min */
+				 uint64_t max_metadata_size,		/* writable max */
+				 uint64_t *metadata_size,		/* current calculated */
+				 struct logical_volume *metadata_lv,	/* name of converted LV or NULL */
+				 uint32_t *metadata_extents);		/* resulting extent count */
 
 /*
  * Begin skeleton for external LVM library
