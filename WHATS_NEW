@@ -1,5 +1,10 @@
 Version 2.02.188 - 
 ==================================
+  Allocation prints better error when metadata cannot fit on a single PV.
+  Pvmove can better resolve full thin-pool tree move.
+  Limit pool metadata spare to 16GiB.
+  Improves convertsion and allocation of pool metadata.
+  Support thin pool metadata 15.88GiB, adds 64MiB, thin_pool_crop_metadata=0.
   Enhance lvdisplay to report raid availiable/partial.
   Enhance error handling for fsadm and hanled correct fsck result.
   Stop logging rename errors from persintent filter.
