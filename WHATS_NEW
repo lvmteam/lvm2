@@ -1,5 +1,10 @@
 Version 2.03.12 - 
 ===================================
+  Allocation prints better error when metadata cannot fit on a single PV.
+  Pvmove can better resolve full thin-pool tree move.
+  Limit pool metadata spare to 16GiB.
+  Improves convertsion and allocation of pool metadata.
+  Support thin pool metadata 15.88GiB, adds 64MiB, thin_pool_crop_metadata=0.
   Enhance lvdisplay to report raid availiable/partial.
   Support online rename of VDO pools.
   Imporove removal of pmspare when last pool is removed.
