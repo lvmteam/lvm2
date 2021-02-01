@@ -1934,15 +1934,18 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t max_to_allocat
 			aa[smeta].pv = pva->map->pv;
 			aa[smeta].pe = pva->start;
 			aa[smeta].len = ah->log_len;
-
+			if (aa[smeta].len > pva->count) {
+				log_error("Metadata does not fit on a single PV.");
+				return 0;
+			}
 			log_debug_alloc("Allocating parallel metadata area %" PRIu32
 					" on %s start PE %" PRIu32
 					" length %" PRIu32 ".",
 					(smeta - (ah->area_count + ah->parity_count)),
 					pv_dev_name(aa[smeta].pv), aa[smeta].pe,
-					ah->log_len);
+					aa[smeta].len);
 
-			consume_pv_area(pva, ah->log_len);
+			consume_pv_area(pva, aa[smeta].len);
 			dm_list_add(&ah->alloced_areas[smeta], &aa[smeta].list);
 		}
 		aa[s].len = (ah->alloc_and_split_meta && !ah->split_metadata_is_allocated) ? len - ah->log_len : len;
