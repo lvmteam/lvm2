@@ -22,7 +22,7 @@ which mkfs.ext4 || skip
 aux have_raid 1 13 2 || skip
 
 case "$(uname -r)" in
-  5.[89]*|3.10.0-862*) die "Cannot run this test on unfixed kernel." ;;
+  5.[891]*|3.10.0-862*) die "Cannot run this test on unfixed kernel." ;;
 esac
 
 mount_dir="mnt"
