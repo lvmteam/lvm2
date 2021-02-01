@@ -3503,6 +3503,24 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 				      uint64_t low_water_mark,
 				      unsigned skip_block_zeroing)
 {
+	return dm_tree_node_add_thin_pool_target_v1(node, size, transaction_id,
+						    metadata_uuid, pool_uuid,
+						    data_block_size,
+						    low_water_mark,
+						    skip_block_zeroing,
+						    1);
+}
+
+int dm_tree_node_add_thin_pool_target_v1(struct dm_tree_node *node,
+					 uint64_t size,
+					 uint64_t transaction_id,
+					 const char *metadata_uuid,
+					 const char *pool_uuid,
+					 uint32_t data_block_size,
+					 uint64_t low_water_mark,
+					 unsigned skip_block_zeroing,
+					 unsigned crop_metadata)
+{
 	struct load_segment *seg, *mseg;
 	uint64_t devsize = 0;
 
@@ -3529,17 +3547,18 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 	if (!_link_tree_nodes(node, seg->metadata))
 		return_0;
 
-	/* FIXME: more complex target may need more tweaks */
-	dm_list_iterate_items(mseg, &seg->metadata->props.segs) {
-		devsize += mseg->size;
-		if (devsize > DM_THIN_MAX_METADATA_SIZE) {
-			log_debug_activation("Ignoring %" PRIu64 " of device.",
-					     devsize - DM_THIN_MAX_METADATA_SIZE);
-			mseg->size -= (devsize - DM_THIN_MAX_METADATA_SIZE);
-			devsize = DM_THIN_MAX_METADATA_SIZE;
-			/* FIXME: drop remaining segs */
+	if (crop_metadata)
+		/* FIXME: more complex target may need more tweaks */
+		dm_list_iterate_items(mseg, &seg->metadata->props.segs) {
+			devsize += mseg->size;
+			if (devsize > DM_THIN_MAX_METADATA_SIZE) {
+				log_debug_activation("Ignoring %" PRIu64 " of device.",
+						     devsize - DM_THIN_MAX_METADATA_SIZE);
+				mseg->size -= (devsize - DM_THIN_MAX_METADATA_SIZE);
+				devsize = DM_THIN_MAX_METADATA_SIZE;
+				/* FIXME: drop remaining segs */
+			}
 		}
-	}
 
 	if (!(seg->pool = dm_tree_find_node_by_uuid(node->dtree, pool_uuid))) {
 		log_error("Missing pool uuid %s.", pool_uuid);

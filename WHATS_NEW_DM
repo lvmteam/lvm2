@@ -1,5 +1,6 @@
 Version 1.02.172 - 
 ==================================
+  Add dm_tree_node_add_thin_pool_target_v1 with crop_metadata support.
   Add support for VDO in blkdeactivate script.
   Try to remove all created devices on dm preload tree error path.
   Fix dm_list interators with gcc 10 optimization (-ftree-pta).
