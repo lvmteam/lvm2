@@ -18,7 +18,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-aux have_raid 1 3 0 || skip
+aux have_raid 1 7 0 || skip
 
 aux prepare_vg 6
 get_devs
