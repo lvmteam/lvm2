@@ -1968,10 +1968,10 @@ int dm_tree_node_add_replicator_dev_target(struct dm_tree_node *node,
 #define DM_THIN_MIN_DATA_BLOCK_SIZE (UINT32_C(128))
 #define DM_THIN_MAX_DATA_BLOCK_SIZE (UINT32_C(2097152))
 /*
- * Max supported size for thin pool  metadata device (17112760320 bytes)
- * Limitation is hardcoded into the kernel and bigger device size
- * is not accepted.
+ * Max supported size for thin pool metadata device (17045913600 bytes)
  * drivers/md/dm-thin-metadata.h THIN_METADATA_MAX_SECTORS
+ * But here DM_THIN_MAX_METADATA_SIZE got defined incorrectly
+ * Correct size is (UINT64_C(255) * ((1 << 14) - 64) * (4096 / (1 << 9)))
  */
 #define DM_THIN_MAX_METADATA_SIZE   (UINT64_C(255) * (1 << 14) * (4096 / (1 << 9)) - 256 * 1024)
 
@@ -1983,6 +1983,16 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 				      uint32_t data_block_size,
 				      uint64_t low_water_mark,
 				      unsigned skip_block_zeroing);
+
+int dm_tree_node_add_thin_pool_target_v1(struct dm_tree_node *node,
+					 uint64_t size,
+					 uint64_t transaction_id,
+					 const char *metadata_uuid,
+					 const char *pool_uuid,
+					 uint32_t data_block_size,
+					 uint64_t low_water_mark,
+					 unsigned skip_block_zeroing,
+					 unsigned crop_metadata);
 
 /* Supported messages for thin provision target */
 typedef enum {
