@@ -1,5 +1,6 @@
 Version 2.03.12 - 
 ===================================
+  Check if lvcreate passes read_only_volume_list with tags and skips zeroing.
   Allocation prints better error when metadata cannot fit on a single PV.
   Pvmove can better resolve full thin-pool tree move.
   Limit pool metadata spare to 16GiB.

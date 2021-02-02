@@ -466,6 +466,11 @@ static int _passes_readonly_filter(struct cmd_context *cmd,
 	return _lv_passes_volumes_filter(cmd, lv, cn, activation_read_only_volume_list_CFG);
 }
 
+int lv_passes_readonly_filter(const struct logical_volume *lv)
+{
+	return _passes_readonly_filter(lv->vg->cmd, lv);
+}
+
 int library_version(char *version, size_t size)
 {
 	if (!activation())

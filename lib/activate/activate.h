@@ -208,6 +208,8 @@ int lvs_in_vg_opened(const struct volume_group *vg);
 
 int lv_is_active(const struct logical_volume *lv);
 
+int lv_passes_readonly_filter(const struct logical_volume *lv);
+
 /* Check is any component LV is active */
 const struct logical_volume *lv_component_is_active(const struct logical_volume *lv);
 const struct logical_volume *lv_holder_is_active(const struct logical_volume *lv);

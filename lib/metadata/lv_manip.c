@@ -7987,6 +7987,12 @@ static int _should_wipe_lv(struct lvcreate_params *lp,
 	     first_seg(first_seg(lv)->pool_lv)->zero_new_blocks))
 		return 0;
 
+	if (warn && (lv_passes_readonly_filter(lv))) {
+		log_warn("WARNING: Read-only activated logical volume %s not zeroed.",
+			 display_lvname(lv));
+		return 0;
+	}
+
 	/* Cannot zero read-only volume */
 	if ((lv->status & LVM_WRITE) &&
 	    (lp->zero || lp->wipe_signatures))
