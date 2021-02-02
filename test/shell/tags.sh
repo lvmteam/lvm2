@@ -52,6 +52,11 @@ check lv_field @firstlvtag1 tags "firstlvtag1"
 not check lv_field @secondlvtag1 tags "firstlvtag1"
 check lv_field $vg1/$lv2 tags "secondlvtag1"
 not check lv_field $vg1/$lv1 tags "secondlvtag1"
+
+# LV is not zeroed when tag matches read only volume list
+lvcreate -l1 $vg1 --addtag "RO" --config "activation/read_only_volume_list = [ \"@RO\" ]" 2>&1 | tee out
+grep "not zeroed" out
+
 vgremove -f $vg1
 
 # lvchange with --addtag and --deltag
