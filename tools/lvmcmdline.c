@@ -2427,13 +2427,15 @@ static int _get_current_settings(struct cmd_context *cmd)
 
 	/*
 	 * enable_hints is set to 1 if any commands are using hints.
-	 * use_hints is set to 1 if this command doesn't use the hints.
+	 * use_hints is set to 1 if this command should use the hints.
 	 * enable_hints=1 and use_hints=0 means that this command won't
 	 * use the hints, but it may invalidate the hints that are used
 	 * by other commands.
 	 *
 	 * enable_hints=0 means no commands are using hints, so this
 	 * command would not need to invalidate hints for other cmds.
+	 *
+	 * Code should check !enable_hints before checking use_hints.
 	 */
 	cmd->enable_hints = 1;
 
@@ -2444,8 +2446,10 @@ static int _get_current_settings(struct cmd_context *cmd)
 		cmd->use_hints = 0;
 
 	if ((hint_mode = find_config_tree_str(cmd, devices_hints_CFG, NULL))) {
-		if (!strcmp(hint_mode, "none"))
+		if (!strcmp(hint_mode, "none")) {
 			cmd->enable_hints = 0;
+			cmd->use_hints = 0;
+		}
 	}
 
 	cmd->partial_activation = 0;
