@@ -1582,23 +1582,30 @@ static int _reload_with_suppression_v4(struct dm_task *dmt)
 			t2->params[len] = '\0';
 
 		if (t1->start != t2->start) {
-			log_debug("reload %u:%u start diff", task->major, task->minor);
+			log_debug("reload %u:%u diff start %llu %llu type %s %s", task->major, task->minor,
+				   (unsigned long long)t1->start, (unsigned long long)t2->start, t1->type, t2->type);
 			goto no_match;
 		}
 		if (t1->length != t2->length) {
-			log_debug("reload %u:%u length diff", task->major, task->minor);
+			log_debug("reload %u:%u diff length %llu %llu type %s %s", task->major, task->minor,
+				  (unsigned long long)t1->length, (unsigned long long)t2->length, t1->type, t2->type);
 			goto no_match;
 		}
 		if (strcmp(t1->type, t2->type)) {
-			log_debug("reload %u:%u type diff %s %s", task->major, task->minor, t1->type, t2->type);
+			log_debug("reload %u:%u diff type %s %s", task->major, task->minor, t1->type, t2->type);
 			goto no_match;
 		}
 		if (strcmp(t1->params, t2->params)) {
-			if (dmt->skip_reload_params_compare)
-				log_debug("reload %u:%u skip params ignore %s %s",
-					  task->major, task->minor, t1->params, t2->params);
-			else {
-				log_debug("reload %u:%u params diff", task->major, task->minor);
+			if (dmt->skip_reload_params_compare) {
+				log_debug("reload %u:%u diff params ignore for type %s",
+					  task->major, task->minor, t1->type);
+				log_debug("reload params1 %s", t1->params);
+				log_debug("reload params2 %s", t2->params);
+			} else {
+				log_debug("reload %u:%u diff params for type %s",
+					  task->major, task->minor, t1->type);
+				log_debug("reload params1 %s", t1->params);
+				log_debug("reload params2 %s", t2->params);
 				goto no_match;
 			}
 		}
