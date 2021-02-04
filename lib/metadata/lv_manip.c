@@ -5209,7 +5209,7 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 			if (!(seg = get_only_segment_using_this_lv(lv)))
 				return_0;
 
-			max_metadata_size = get_thin_pool_max_metadata_size(cmd, vg->profile, &crop);
+			max_metadata_size = get_thin_pool_max_metadata_size(cmd, lv_config_profile(lv), &crop);
 
 			if (((uint64_t)lp->extents * vg->extent_size) > max_metadata_size) {
 				lp->extents = (max_metadata_size + vg->extent_size - 1) / vg->extent_size;
