@@ -1317,6 +1317,29 @@ static int _lv_segment_reduce(struct lv_segment *seg, uint32_t reduction)
 	return 1;
 }
 
+/* Handles also stacking */
+static int _setup_lv_size(struct logical_volume *lv, uint32_t extents)
+{
+	struct lv_segment *seg;
+
+	lv->le_count = extents;
+	lv->size = (uint64_t) extents * lv->vg->extent_size;
+
+	if (lv->size &&
+	    (lv_is_thin_pool_data(lv))) {
+		if (!(seg = get_only_segment_using_this_lv(lv)))
+			return_0;
+
+		/* Update pool segment from the layered LV */
+		seg->lv->le_count =
+			seg->len =
+			seg->area_len = lv->le_count;
+		seg->lv->size = lv->size;
+	}
+
+	return 1;
+}
+
 /*
  * Entry point for all LV reductions in size.
  */
@@ -1397,18 +1420,15 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 		count -= reduction;
 	}
 
-	seg = first_seg(lv);
+	if (!_setup_lv_size(lv, lv->le_count - extents * (is_raid10 ? data_copies : 1)))
+		return_0;
 
-	if (is_raid10) {
-		lv->le_count -= extents * data_copies;
-		if (seg)
+	if ((seg = first_seg(lv))) {
+		if (is_raid10)
 			seg->len = seg->area_len = lv->le_count;
-	} else
-		lv->le_count -= extents;
 
-	lv->size = (uint64_t) lv->le_count * lv->vg->extent_size;
-	if (seg)
 		seg->extents_copied = seg->len;
+	}
 
 	if (!delete)
 		return 1;
@@ -1793,28 +1813,6 @@ static void _init_alloc_parms(struct alloc_handle *ah,
 
 	if (can_split)
 		alloc_parms->flags |= A_CAN_SPLIT;
-}
-
-/* Handles also stacking */
-static int _setup_lv_size(struct logical_volume *lv, uint32_t extents)
-{
-	struct lv_segment *thin_pool_seg;
-
-	lv->le_count = extents;
-	lv->size = (uint64_t) extents * lv->vg->extent_size;
-
-	if (lv_is_thin_pool_data(lv)) {
-		if (!(thin_pool_seg = get_only_segment_using_this_lv(lv)))
-			return_0;
-
-		/* Update thin pool segment from the layered LV */
-		thin_pool_seg->lv->le_count =
-			thin_pool_seg->len =
-			thin_pool_seg->area_len = lv->le_count;
-		thin_pool_seg->lv->size = lv->size;
-	}
-
-	return 1;
 }
 
 static int _setup_alloced_segment(struct logical_volume *lv, uint64_t status,
