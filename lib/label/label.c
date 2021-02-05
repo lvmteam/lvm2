@@ -1205,34 +1205,6 @@ int label_scan(struct cmd_context *cmd)
 		}
 	}
 
-	/*
-	 * Stronger exclusion of md components that might have been
-	 * misidentified as PVs due to having an end-of-device md superblock.
-	 * If we're not using hints, and are not already doing a full md check
-	 * on devs being scanned, then if udev info is missing for a PV, scan
-	 * the end of the PV to verify it's not an md component.  The full
-	 * dev_is_md_component call will do new reads at the end of the dev.
-	 */
-	if (cmd->md_component_detection && !cmd->use_full_md_check && !using_hints &&
-	    !strcmp(cmd->md_component_checks, "auto")) {
-		int once = 0;
-		dm_list_iterate_items(devl, &scan_devs) {
-			if (!(devl->dev->flags & DEV_SCAN_FOUND_LABEL))
-				continue;
-			if (!(devl->dev->flags & DEV_UDEV_INFO_MISSING))
-				continue;
-			if (!once++)
-				log_debug_devs("Scanning end of PVs with no udev info for MD components");
-
-			if (dev_is_md_component(devl->dev, NULL, 1)) {
-				log_debug_devs("Scan dropping PV from MD component %s", dev_name(devl->dev));
-				devl->dev->flags &= ~DEV_SCAN_FOUND_LABEL;
-				lvmcache_del_dev(devl->dev);
-				lvmcache_del_dev_from_duplicates(devl->dev);
-			}
-		}
-	}
-
 	dm_list_iterate_items_safe(devl, devl2, &all_devs) {
 		dm_list_del(&devl->list);
 		free(devl);
@@ -1247,6 +1219,18 @@ int label_scan(struct cmd_context *cmd)
 		dm_list_del(&devl->list);
 		free(devl);
 	}
+
+	/*
+	 * Look for md components that might have been missed by filter-md
+	 * during the scan.  With the label scanning complete we have metadata
+	 * available that can sometimes offer a clue that a dev is actually an
+	 * md component (device name hint, pv size vs dev size).  In some of
+	 * those cases we may want to do a full md check on a dev that has been
+	 * scanned.  This is done before hints are written so that any devs
+	 * dropped due to being md components will not be included in a new
+	 * hint file.
+	 */
+	lvmcache_extra_md_component_checks(cmd);
 
 	/*
 	 * If hints were not available/usable, then we scanned all devs,

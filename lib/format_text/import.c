@@ -231,7 +231,7 @@ static struct volume_group *_import_vg_from_config_tree(struct cmd_context *cmd,
 		if (!(vg = (*vsn)->read_vg(cmd, fid->fmt, fid, cft)))
 			stack;
 		else {
-			set_pv_devices(fid, vg, NULL);
+			set_pv_devices(fid, vg);
 
 			if ((vg_missing = vg_missing_pv_count(vg)))
 				log_verbose("There are %d physical volumes missing.", vg_missing);

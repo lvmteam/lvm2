@@ -537,6 +537,6 @@ struct id pv_vgid(const struct physical_volume *pv);
 uint64_t find_min_mda_size(struct dm_list *mdas);
 char *tags_format_and_copy(struct dm_pool *mem, const struct dm_list *tagsl);
 
-void set_pv_devices(struct format_instance *fid, struct volume_group *vg, int *found_md_component);
+void set_pv_devices(struct format_instance *fid, struct volume_group *vg);
 
 #endif

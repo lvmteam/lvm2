@@ -3568,14 +3568,12 @@ bad:
  */
 static void _set_pv_device(struct format_instance *fid,
 			   struct volume_group *vg,
-			   struct physical_volume *pv,
-			   int *found_md_component)
+			   struct physical_volume *pv)
 {
 	char buffer[64] __attribute__((aligned(8)));
 	struct cmd_context *cmd = fid->fmt->cmd;
 	struct device *dev;
 	uint64_t size;
-	int do_check = 0;
 
 	if (!(dev = lvmcache_device_from_pvid(cmd, &pv->id, &pv->label_sector))) {
 		if (!id_write_format(&pv->id, buffer, sizeof(buffer)))
@@ -3586,35 +3584,6 @@ static void _set_pv_device(struct format_instance *fid,
 			log_warn("WARNING: Couldn't find device with uuid %s.", buffer);
 		else
 			log_debug_metadata("Couldn't find device with uuid %s.", buffer);
-	}
-
-	/*
-	 * If the device and PV are not the size, it's a clue that we might
-	 * be reading an MD component (but not necessarily). Skip this check
-	 * if md component detection is disabled or if we are already doing
-	 * full a md check in label scan
-	 */
-	if (dev && cmd && cmd->md_component_detection && !cmd->use_full_md_check) {
-		uint64_t devsize = dev->size;
-
-		if (!devsize && !dev_get_size(dev, &devsize))
-			log_debug("No size for %s when setting PV dev.", dev_name(dev));
-
-		/* PV larger than dev not common, check for md component */
-		else if (pv->size > devsize)
-			do_check = 1;
-
-		/* dev larger than PV can be common, limit check to auto mode */
-		else if ((pv->size < devsize) && !strcmp(cmd->md_component_checks, "auto"))
-			do_check = 1;
-
-		if (do_check && dev_is_md_component(dev, NULL, 1)) {
-			log_warn("WARNING: device %s is an md component, not setting device for PV.",
-				 dev_name(dev));
-			dev = NULL;
-			if (found_md_component)
-				*found_md_component = 1;
-		}
 	}
 
 	pv->dev = dev;
@@ -3658,12 +3627,12 @@ static void _set_pv_device(struct format_instance *fid,
  * Finds the 'struct device' that correponds to each PV in the metadata,
  * and may make some adjustments to vg fields based on the dev properties.
  */
-void set_pv_devices(struct format_instance *fid, struct volume_group *vg, int *found_md_component)
+void set_pv_devices(struct format_instance *fid, struct volume_group *vg)
 {
 	struct pv_list *pvl;
 
 	dm_list_iterate_items(pvl, &vg->pvs)
-		_set_pv_device(fid, vg, pvl->pv, found_md_component);
+		_set_pv_device(fid, vg, pvl->pv);
 }
 
 int pv_write(struct cmd_context *cmd,
@@ -4914,7 +4883,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	vg = NULL;
 
 	if (vg_ret)
-		set_pv_devices(fid, vg_ret, &found_md_component);
+		set_pv_devices(fid, vg_ret);
 
 	fid->ref_count--;
 

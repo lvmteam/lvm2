@@ -222,4 +222,6 @@ const char *devname_error_reason(const char *devname);
 
 struct metadata_area *lvmcache_get_dev_mda(struct device *dev, int mda_num);
 
+void lvmcache_extra_md_component_checks(struct cmd_context *cmd);
+
 #endif

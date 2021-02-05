@@ -1029,6 +1029,104 @@ int lvmcache_label_reopen_vg_rw(struct cmd_context *cmd, const char *vgname, con
 }
 
 /*
+ * During label_scan, the md component filter is applied to each device after
+ * the device header has been read.  This often just checks the start of the
+ * device for an md header, and if the device has an md header at the end, the
+ * md component filter wouldn't detect it.  In some cases, the full md filter
+ * is enabled during label_scan, in which case the md component filter will
+ * check both the start and end of the device for md superblocks.
+ *
+ * In this function, after label_scan is done, we may decide that a full md
+ * component check should be applied to a device if it hasn't been yet.  This
+ * is based on some clues or uncertainty that arose during label_scan.
+ *
+ * label_scan saved metadata info about pvs in lvmcache pvsummaries.  That
+ * pvsummary metadata includes the pv size.  So now, after label_scan is done,
+ * we can compare the pv size with the size of the device the pv was read from.
+ * If the pv and dev sizes do not match, it can sometimes be normal, but other
+ * times it can be a clue that label_scan mistakenly read the pv from an md
+ * component device instead of from the md device itself.  So for unmatching
+ * sizes, we do a full md component check on the device.
+ */
+
+void lvmcache_extra_md_component_checks(struct cmd_context *cmd)
+{
+	struct lvmcache_vginfo *vginfo, *vginfo2;
+	struct lvmcache_info *info, *info2;
+	struct device *dev;
+	const char *device_hint;
+	uint64_t devsize, pvsize;
+	int dropped = 0;
+	int do_check;
+
+	/*
+	 * use_full_md_check: if set then no more needs to be done here,
+	 * all devs have already been fully checked as md components.
+	 *
+	 * md_component_checks "full": use_full_md_check was set, and caused
+	 *  filter-md to already do a full check, no more is needed.
+	 *
+	 * md_component_checks "start": skip end of device md component checks,
+	 *  the start of device has already been checked by filter-md.
+	 *
+	 * md_component_checks "auto": do full checks only when lvm finds some
+	 * clue or reasons to believe it might be useful, which is what this
+	 * function is looking for.
+	 */
+	if (!cmd->md_component_detection || cmd->use_full_md_check ||
+	    !strcmp(cmd->md_component_checks, "none") || !strcmp(cmd->md_component_checks, "start"))
+		return;
+
+	/*
+	 * We want to avoid extra scanning for end-of-device md superblocks
+	 * whenever possible, since it can add up to a lot of extra io if we're
+	 * not careful to do it only when there's a good reason to believe a
+	 * dev is an md component.
+	 *
+	 * If the pv/dev size mismatches are commonly occuring for
+	 * non-md-components then we'll want to stop using that as a trigger
+	 * for the full md check.
+	 */
+
+	dm_list_iterate_items_safe(vginfo, vginfo2, &_vginfos) {
+		dm_list_iterate_items_safe(info, info2, &vginfo->infos) {
+			dev = info->dev;
+			device_hint = _get_pvsummary_device_hint(dev->pvid);
+			pvsize = _get_pvsummary_size(dev->pvid);
+			devsize = dev->size;
+			do_check = 0;
+
+			if (!devsize && !dev_get_size(dev, &devsize))
+				log_debug("No size for %s.", dev_name(dev));
+
+			/*
+			 * PV larger than dev not common; dev larger than PV
+			 * can be common, but not as often as PV larger.
+			 */
+			if (pvsize && devsize && (pvsize != devsize))
+				do_check = 1;
+			else if (device_hint && !strcmp(device_hint, "/dev/md"))
+				do_check = 1;
+
+			if (do_check) {
+				log_debug("extra md component check %llu %llu device_hint %s dev %s",
+					  (unsigned long long)pvsize, (unsigned long long)devsize,
+					  device_hint ?: "none", dev_name(dev));
+
+				if (dev_is_md_component(dev, NULL, 1)) {
+					log_debug("dropping PV from md component %s", dev_name(dev));
+					dev->flags &= ~DEV_SCAN_FOUND_LABEL;
+					/* lvmcache_del will also delete vginfo if info was last one */
+					lvmcache_del(info);
+					lvmcache_del_dev_from_duplicates(dev);
+					cmd->filter->wipe(cmd, cmd->filter, dev, NULL);
+				}
+			}
+		}
+	}
+}
+
+/*
  * Uses label_scan to populate lvmcache with 'vginfo' struct for each VG
  * and associated 'info' structs for those VGs.  Only VG summary information
  * is used to assemble the vginfo/info during the scan, so the resulting
@@ -1057,13 +1155,9 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	struct dm_list del_cache_devs;
 	struct dm_list add_cache_devs;
 	struct lvmcache_info *info;
-	struct lvmcache_vginfo *vginfo;
 	struct device_list *devl;
-	int vginfo_count = 0;
 
-	int r = 0;
-
-	log_debug_cache("Finding VG info");
+	log_debug_cache("lvmcache label scan begin");
 
 	/*
 	 * Duplicates found during this label scan are added to _initial_duplicates.
@@ -1125,17 +1219,8 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 		_warn_unused_duplicates(cmd);
 	}
 
-	r = 1;
-
-	dm_list_iterate_items(vginfo, &_vginfos) {
-		if (is_orphan_vg(vginfo->vgname))
-			continue;
-		vginfo_count++;
-	}
-
-	log_debug_cache("Found VG info for %d VGs", vginfo_count);
-
-	return r;
+	log_debug_cache("lvmcache label scan done");
+	return 1;
 }
 
 int lvmcache_get_vgnameids(struct cmd_context *cmd,

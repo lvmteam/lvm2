@@ -1176,9 +1176,12 @@ static int _online_devs(struct cmd_context *cmd, int do_all, struct dm_list *pvs
 	struct format_instance *fid;
 	struct metadata_area *mda1, *mda2;
 	struct volume_group *vg;
+	struct physical_volume *pv;
 	const char *vgname;
 	uint32_t ext_version, ext_flags;
+	uint64_t devsize;
 	int do_activate = arg_is_set(cmd, activate_ARG);
+	int do_full_check;
 	int pvs_online;
 	int pvs_offline;
 	int pvs_unknown;
@@ -1233,15 +1236,28 @@ static int _online_devs(struct cmd_context *cmd, int do_all, struct dm_list *pvs
 			goto online;
 		}
 
-		set_pv_devices(fid, vg, NULL);
+		set_pv_devices(fid, vg);
 
-		/*
-		 * Skip devs that are md components (set_pv_devices can do new
-		 * md check), are shared, or foreign.
-		 */
+		if (!(pv = find_pv(vg, dev))) {
+			log_print("pvscan[%d] PV %s not found in VG %s.", getpid(), dev_name(dev), vg->name);
+			release_vg(vg);
+			continue;
+		}
 
-        	if (dev->flags & DEV_IS_MD_COMPONENT) {
-			log_print("pvscan[%d] PV %s ignore MD component, ignore metadata.", getpid(), dev_name(dev));
+		devsize = dev->size;
+		if (!devsize)
+			dev_get_size(dev, &devsize);
+		do_full_check = 0;
+
+		/* If use_full_md_check is set then this has already been done by filter. */
+		if (!cmd->use_full_md_check) {
+			if (devsize && (pv->size != devsize))
+				do_full_check = 1;
+			if (pv->device_hint && !strncmp(pv->device_hint, "/dev/md", 7))
+				do_full_check = 1;
+		}
+		if (do_full_check && dev_is_md_component(dev, NULL, 1)) {
+			log_print("pvscan[%d] ignore md component %s.", getpid(), dev_name(dev));
 			release_vg(vg);
 			continue;
 		}
