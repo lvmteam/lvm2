@@ -6133,7 +6133,7 @@ out:
 
 	if (lp->resizefs && (lp->resize == LV_EXTEND) &&
 	    !_fsadm_cmd(FSADM_CMD_RESIZE, lv, lp->extents, lp->yes, lp->force, NULL))
-		return_0;
+		goto_bad;
 
 	ret = 1;
 bad:
