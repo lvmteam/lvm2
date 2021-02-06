@@ -5449,10 +5449,6 @@ static int _lvresize_volume(struct logical_volume *lv,
 			      lp->extents - lv->le_count,
 			      pvh, alloc, lp->approx_alloc))
 		return_0;
-	/* Check for over provisioning only when lv_extend() passed,
-	 * ATM this check does not fail */
-	else if (!pool_check_overprovisioning(lv))
-		return_0;
 
 	if (old_extents == lv->le_count)
 		log_print_unless_silent("Size of logical volume %s unchanged from %s (%" PRIu32 " extents).",
@@ -5705,6 +5701,11 @@ int lv_resize(struct logical_volume *lv,
 
 		backup(vg);
 	}
+
+	/* Check for over provisioning when extended */
+	if ((lp->resize == LV_EXTEND) && lv_is_thin_type(lv))
+		pool_check_overprovisioning(lv);
+
 out:
 	log_print_unless_silent("Logical volume %s successfully resized.",
 				display_lvname(lv));
