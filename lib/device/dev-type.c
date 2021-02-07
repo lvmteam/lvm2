@@ -78,19 +78,7 @@ int dev_is_pmem(struct device *dev)
 
 int dev_is_nvme(struct dev_types *dt, struct device *dev)
 {
-	struct dm_str_list *strl;
-
-	if (dev->flags & DEV_IS_NVME)
-		return 1;
-
-	dm_list_iterate_items(strl, &dev->aliases) {
-		if (!strncmp(strl->str, "/dev/nvme", 9)) {
-			log_debug("Found nvme device %s", dev_name(dev));
-			dev->flags |= DEV_IS_NVME;
-			return 1;
-		}
-	}
-	return 0;
+	return (dev->flags & DEV_IS_NVME) ? 1 : 0;
 }
 
 int dev_is_lv(struct device *dev)
