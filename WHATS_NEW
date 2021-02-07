@@ -1,5 +1,6 @@
 Version 2.02.188 - 
 ==================================
+  Support resize of cached volumes.
   Allocation prints better error when metadata cannot fit on a single PV.
   Pvmove can better resolve full thin-pool tree move.
   Limit pool metadata spare to 16GiB.

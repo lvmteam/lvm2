@@ -131,10 +131,6 @@ void cache_check_for_warns(const struct lv_segment *seg)
 	    first_seg(seg->pool_lv)->cache_mode == CACHE_MODE_WRITEBACK)
 		log_warn("WARNING: Data redundancy could be lost with writeback "
 			 "caching of raid logical volume!");
-
-	if (lv_is_thin_pool_data(seg->lv))
-		log_warn("WARNING: Cached thin pool's data cannot be currently "
-			 "resized and require manual uncache before resize!");
 }
 
 /*
