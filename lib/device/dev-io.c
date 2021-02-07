@@ -104,7 +104,7 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 	}
 
 	if (ioctl(fd, BLKGETSIZE64, size) < 0) {
-		log_sys_error("ioctl BLKGETSIZE64", name);
+		log_warn("WARNING: %s: ioctl BLKGETSIZE64 %s", name, strerror(errno));
 		if (do_close && !dev_close_immediate(dev))
 			stack;
 		return 0;
@@ -132,12 +132,13 @@ static int _dev_read_ahead_dev(struct device *dev, uint32_t *read_ahead)
 	}
 
 	if (!dev_open_readonly_quiet(dev)) {
-		log_error("Failed to open to get readahead %s", dev_name(dev));
+		log_warn("WARNING: Failed to open %s to get readahead %s.",
+			 dev_name(dev), strerror(errno));
 		return 0;
 	}
 
 	if (ioctl(dev->fd, BLKRAGET, &read_ahead_long) < 0) {
-		log_sys_error("ioctl BLKRAGET", dev_name(dev));
+		log_warn("WARNING: %s: ioctl BLKRAGET %s.", dev_name(dev), strerror(errno));
 		if (!dev_close_immediate(dev))
 			stack;
 		return 0;
@@ -170,7 +171,7 @@ static int _dev_discard_blocks(struct device *dev, uint64_t offset_bytes, uint64
 		       test_mode() ? " (test mode - suppressed)" : "");
 
 	if (!test_mode() && ioctl(dev->fd, BLKDISCARD, &discard_range) < 0) {
-		log_error("%s: BLKDISCARD ioctl at offset %" PRIu64 " size %" PRIu64 " failed: %s.",
+		log_warn("WARNING: %s: ioctl BLKDISCARD at offset %" PRIu64 " size %" PRIu64 " failed: %s.",
 			  dev_name(dev), offset_bytes, size_bytes, strerror(errno));
 		if (!dev_close_immediate(dev))
 			stack;

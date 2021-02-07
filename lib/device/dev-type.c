@@ -211,7 +211,7 @@ struct dev_types *create_dev_types(const char *proc_dir,
 				log_error("Expecting string in devices/types "
 					  "in config file");
 				if (fclose(pd))
-					log_sys_error("fclose", proc_devices);
+					log_sys_debug("fclose", proc_devices);
 				goto bad;
 			}
 			dev_len = strlen(cv->v.str);
@@ -222,7 +222,7 @@ struct dev_types *create_dev_types(const char *proc_dir,
 					  "in devices/types in config file",
 					  name);
 				if (fclose(pd))
-					log_sys_error("fclose", proc_devices);
+					log_sys_debug("fclose", proc_devices);
 				goto bad;
 			}
 			if (!cv->v.i) {
@@ -230,7 +230,7 @@ struct dev_types *create_dev_types(const char *proc_dir,
 					  "%s in devices/types in config file",
 					  name);
 				if (fclose(pd))
-					log_sys_error("fclose", proc_devices);
+					log_sys_debug("fclose", proc_devices);
 				goto bad;
 			}
 			if (dev_len <= strlen(line + i) &&
@@ -391,13 +391,13 @@ static int _has_sys_partition(struct device *dev)
 	/* check if dev is a partition */
 	if (dm_snprintf(path, sizeof(path), "%s/dev/block/%d:%d/partition",
 			dm_sysfs_dir(), major, minor) < 0) {
-		log_error("dm_snprintf partition failed");
+		log_warn("WARNING: %s: partition path is too long.", dev_name(dev));
 		return 0;
 	}
 
 	if (stat(path, &info) == -1) {
 		if (errno != ENOENT)
-			log_sys_error("stat", path);
+			log_sys_debug("stat", path);
 		return 0;
 	}
 	return 1;
@@ -563,7 +563,6 @@ int dev_is_partitioned(struct dev_types *dt, struct device *dev)
  */
 int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 {
-	const char *sysfs_dir = dm_sysfs_dir();
 	int major = (int) MAJOR(dev->dev);
 	int minor = (int) MINOR(dev->dev);
 	char path[PATH_MAX];
@@ -616,24 +615,25 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 	 * Parent's 'dev' sysfs attribute  = /sys/block/md0/dev
 	 */
 	if ((size = readlink(dirname(path), temp_path, sizeof(temp_path) - 1)) < 0) {
-		log_sys_error("readlink", path);
+		log_warn("WARNING: Readlink of %s failed.", path);
 		goto out;
 	}
 
 	temp_path[size] = '\0';
 
 	if (dm_snprintf(path, sizeof(path), "%s/block/%s/dev",
-			sysfs_dir, basename(dirname(temp_path))) < 0) {
-		log_error("dm_snprintf dev failed");
+			dm_sysfs_dir(), basename(dirname(temp_path))) < 0) {
+		log_warn("WARNING: sysfs path for %s is too long.",
+			 basename(dirname(temp_path)));
 		goto out;
 	}
 
 	/* finally, parse 'dev' attribute and create corresponding dev_t */
 	if (!(fp = fopen(path, "r"))) {
 		if (errno == ENOENT)
-			log_error("sysfs file %s does not exist.", path);
+			log_debug("sysfs file %s does not exist.", path);
 		else
-			log_sys_error("fopen", path);
+			log_sys_debug("fopen", path);
 		goto out;
 	}
 
@@ -643,7 +643,7 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 	}
 
 	if (sscanf(buffer, "%d:%d", &major, &minor) != 2) {
-		log_error("sysfs file %s not in expected MAJ:MIN format: %s",
+		log_warn("WARNING: sysfs file %s not in expected MAJ:MIN format: %s",
 			  path, buffer);
 		goto out;
 	}
@@ -651,7 +651,7 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 	ret = 2;
 out:
 	if (fp && fclose(fp))
-		log_sys_error("fclose", path);
+		log_sys_debug("fclose", path);
 
 	return ret;
 }
@@ -713,7 +713,7 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 				return 0;
 			}
 
-			log_error("WARNING: " MSG_FAILED_SIG_OFFSET MSG_WIPING_SKIPPED, type, name);
+			log_warn("WARNING: " MSG_FAILED_SIG_OFFSET MSG_WIPING_SKIPPED, type, name);
 			return 2;
 		}
 		if (blkid_probe_lookup_value(probe, "SBMAGIC", &magic, &len)) {
@@ -911,9 +911,9 @@ int wipe_known_signatures(struct cmd_context *cmd, struct device *dev,
 							 yes, force, wiped);
 #endif
 	if (blkid_wiping_enabled) {
-		log_warn("allocation/use_blkid_wiping=1 configuration setting is set "
+		log_warn("WARNING: allocation/use_blkid_wiping=1 configuration setting is set "
 			 "while LVM is not compiled with blkid wiping support.");
-		log_warn("Falling back to native LVM signature detection.");
+		log_warn("WARNING: Falling back to native LVM signature detection.");
 	}
 	return _wipe_known_signatures_with_lvm(dev, name,
 					       types_to_exclude,
@@ -929,7 +929,7 @@ static int _snprintf_attr(char *buf, size_t buf_size, const char *sysfs_dir,
 	if (dm_snprintf(buf, buf_size, "%s/dev/block/%d:%d/%s", sysfs_dir,
 			(int)MAJOR(dev), (int)MINOR(dev),
 			attribute) < 0) {
-		log_warn("dm_snprintf %s failed.", attribute);
+		log_warn("WARNING: sysfs path for %s attribute is too long.", attribute);
 		return 0;
 	}
 

@@ -42,7 +42,7 @@ static int *_fd_table;
 
 static void log_sys_warn(const char *call)
 {
-	log_warn("%s failed: %s", call, strerror(errno));
+	log_warn("WARNING: %s failed: %s.", call, strerror(errno));
 }
 
 // Assumes the list is not empty.
@@ -92,7 +92,7 @@ static void _cb_set_destroy(struct cb_set *cbs)
 	// never be in flight IO.
 	if (!dm_list_empty(&cbs->allocated)) {
 		// bail out
-		log_error("async io still in flight");
+		log_warn("WARNING: async io still in flight.");
 		return;
 	}
 
@@ -1351,26 +1351,26 @@ static bool _writeback_v(struct radix_tree_iterator *it,
 	struct block *b = v.ptr;
 
 	if (_test_flags(b, BF_DIRTY))
-        	_issue_write(b);
+		_issue_write(b);
 
-        return true;
+	return true;
 }
 
 static bool _invalidate_v(struct radix_tree_iterator *it,
                           uint8_t *kb, uint8_t *ke, union radix_value v)
 {
 	struct block *b = v.ptr;
-        struct invalidate_iterator *iit = container_of(it, struct invalidate_iterator, it);
+	struct invalidate_iterator *iit = container_of(it, struct invalidate_iterator, it);
 
 	if (b->error || _test_flags(b, BF_DIRTY)) {
-        	log_warn("bcache_invalidate: block (%d, %llu) still dirty",
-                         b->di, (unsigned long long) b->index);
-        	iit->success = false;
-        	return true;
+		log_warn("WARNING: bcache_invalidate: block (%d, %llu) still dirty.",
+			 b->di, (unsigned long long) b->index);
+		iit->success = false;
+		return true;
 	}
 
 	if (b->ref_count) {
-		log_warn("bcache_invalidate: block (%d, %llu) still held",
+		log_warn("WARNING: bcache_invalidate: block (%d, %llu) still held.",
 			 b->di, (unsigned long long) b->index);
 		iit->success = false;
 		return true;
@@ -1386,7 +1386,7 @@ static bool _invalidate_v(struct radix_tree_iterator *it,
 
 bool bcache_invalidate_di(struct bcache *cache, int di)
 {
-        union key k;
+	union key k;
 	struct invalidate_iterator it;
 
 	k.parts.di = di;
@@ -1429,7 +1429,7 @@ static bool _abort_v(struct radix_tree_iterator *it,
 
 void bcache_abort_di(struct bcache *cache, int di)
 {
-        union key k;
+	union key k;
 	struct radix_tree_iterator it;
 
 	k.parts.di = di;
@@ -1512,10 +1512,9 @@ int bcache_change_fd(int di, int fd)
 	if (di >= _fd_table_size)
 		return 0;
 	if (di < 0) {
-		log_error(INTERNAL_ERROR "Cannot change not openned DI with FD:%d", fd);
+		log_error(INTERNAL_ERROR "Cannot change not opened DI with FD:%d", fd);
 		return 0;
 	}
 	_fd_table[di] = fd;
 	return 1;
 }
-

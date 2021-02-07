@@ -403,7 +403,7 @@ static int _get_sysfs_value(const char *path, char *buf, size_t buf_size, int er
 		r = 1;
 out:
 	if (fclose(fp))
-		log_sys_error("fclose", path);
+		log_sys_debug("fclose", path);
 
 	return r;
 }
@@ -930,7 +930,7 @@ static int _dev_cache_iterate_sysfs_for_index(const char *path)
 	r = !partial_failure;
 
 	if (closedir(d))
-		log_sys_error("closedir", path);
+		log_sys_debug("closedir", path);
 
 	return r;
 }
@@ -956,7 +956,7 @@ int dev_cache_index_devs(void)
 				return 1;
 			}
 
-			log_sys_error("stat", path);
+			log_sys_debug("stat", path);
 			return 0;
 		}
 	} else if (!sysfs_has_dev_block)
