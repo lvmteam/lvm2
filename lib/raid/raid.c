@@ -550,10 +550,8 @@ static int _raid_target_present(struct cmd_context *cmd,
 	if (!_raid_checked) {
 		_raid_checked = 1;
 
-		if (!(_raid_present = target_present(cmd, TARGET_NAME_RAID, 1)))
-			return 0;
-
-		if (!target_version("raid", &maj, &min, &patchlevel))
+		if (!(_raid_present = target_present_version(cmd, TARGET_NAME_RAID, 1,
+							     &maj, &min, &patchlevel)))
 			return_0;
 
 		for (i = 0; i < DM_ARRAY_SIZE(_features); ++i)

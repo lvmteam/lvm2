@@ -689,11 +689,9 @@ static int _thin_target_present(struct cmd_context *cmd,
 	if (!_checked) {
 		_checked = 1;
 
-		if (!(_present = target_present(cmd, _thin_pool_module, 1)))
+		if (!(_present = target_present_version(cmd, _thin_pool_module, 1,
+							&maj, &min, &patchlevel)))
 			return 0;
-
-		if (!target_version(_thin_pool_module, &maj, &min, &patchlevel))
-			return_0;
 
 		for (i = 0; i < DM_ARRAY_SIZE(_features); ++i)
 			if ((maj > _features[i].maj) ||
