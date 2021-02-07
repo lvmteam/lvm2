@@ -405,7 +405,8 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 	if (!_mirrored_checked) {
 		_mirrored_checked = 1;
 
-		if (!(_mirrored_present = target_present(cmd, TARGET_NAME_MIRROR, 1)))
+		if (!(_mirrored_present = target_present_version(cmd, TARGET_NAME_MIRROR, 1,
+								 &maj, &min, &patchlevel)))
 			return 0;
 
 		/*

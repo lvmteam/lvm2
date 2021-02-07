@@ -419,7 +419,7 @@ static int _vdo_target_present(struct cmd_context *cmd,
 			/* Try to load kmod VDO module */
 			if (!module_present(cmd, MODULE_NAME_VDO) ||
 			    !target_version(TARGET_NAME_VDO, &maj, &min, &patchlevel))
-				return_0;
+				return 0;
 		}
 
 		if (maj < 6 || (maj == 6 && min < 2)) {

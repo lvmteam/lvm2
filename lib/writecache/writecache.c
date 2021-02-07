@@ -238,17 +238,9 @@ static int _target_present(struct cmd_context *cmd,
 
 	if (!_writecache_checked) {
 		_writecache_checked = 1;
-		_writecache_present = target_present(cmd, TARGET_NAME_WRITECACHE, 1);
-
-		if (!_writecache_present) {
-			log_error("dm-writecache module not found in kernel.");
+		if (!(_writecache_present = target_present_version(cmd, TARGET_NAME_WRITECACHE, 1.
+								   &maj, &min, &patchlevel)))
 			return 0;
-		}
-
-		if (!target_version(TARGET_NAME_WRITECACHE, &maj, &min, &patchlevel)) {
-			log_error("dm-writecache module version not found.");
-			return_0;
-		}
 
 		if (maj < 1) {
 			log_error("dm-writecache module version older than minimum 1.0.0");
