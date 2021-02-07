@@ -22,6 +22,22 @@ aux have_thin 1 0 0 || skip
 aux prepare_vg 3
 lvcreate -i2 -l2 -T $vg/pool2
 lvextend -l+2 $vg/pool2 "$dev2" "$dev3"
-should lvextend -l+100%FREE $vg/pool2
+lvextend -l+100%FREE $vg/pool2
+
+lvremove -f $vg
+
+lvcreate -L1 -n pool $vg
+# Does work only with thin-pools
+not lvextend --poolmetadatasize +1 $vg/pool
+lvconvert -y --thinpool $vg/pool --poolmetadatasize 2
+
+# _tdata cannot be used with --poolmetadata
+not lvextend --poolmetadatasize +1 $vg/pool_tdata
+lvextend --poolmetadatasize +1 $vg/pool_tmeta
+lvextend --poolmetadatasize +1 --size +1 $vg/pool
+check lv_field $vg/pool_tmeta size "4.00m"
+check lv_field $vg/lvol0_pmspare size "4.00m"
+
+not lvresize --poolmetadatasize -1 $vg/pool
 
 vgremove -ff $vg
