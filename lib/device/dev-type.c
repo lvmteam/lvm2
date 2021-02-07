@@ -36,39 +36,6 @@
 #include <ctype.h>
 
 /*
- * dev is pmem if /sys/dev/block/<major>:<minor>/queue/dax is 1
- */
-
-int dev_is_pmem(struct device *dev)
-{
-	FILE *fp;
-	char path[PATH_MAX];
-	int is_pmem = 0;
-
-	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/queue/dax",
-			dm_sysfs_dir(),
-			(int) MAJOR(dev->dev),
-			(int) MINOR(dev->dev)) < 0) {
-		log_warn("Sysfs path for %s dax is too long.", dev_name(dev));
-		return 0;
-	}
-
-	if (!(fp = fopen(path, "r")))
-		return 0;
-
-	if (fscanf(fp, "%d", &is_pmem) != 1)
-		log_warn("Failed to parse DAX %s.", path);
-
-	if (is_pmem)
-		log_debug("%s is pmem", dev_name(dev));
-
-	if (fclose(fp))
-		log_sys_debug("fclose", path);
-
-	return is_pmem ? 1 : 0;
-}
-
-/*
  * An nvme device has major number 259 (BLKEXT), minor number <minor>,
  * and reading /sys/dev/block/259:<minor>/device/dev shows a character
  * device cmajor:cminor where cmajor matches the major number of the
@@ -1078,6 +1045,13 @@ int dev_is_rotational(struct dev_types *dt, struct device *dev)
 {
 	return (int) _dev_topology_attribute(dt, "queue/rotational", dev, 1UL);
 }
+
+/* dev is pmem if /sys/dev/block/<major>:<minor>/queue/dax is 1 */
+int dev_is_pmem(struct dev_types *dt, struct device *dev)
+{
+	return (int) _dev_topology_attribute(dt, "queue/dax", dev, 0UL);
+}
+
 #else
 
 int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
@@ -1113,6 +1087,11 @@ unsigned long dev_discard_granularity(struct dev_types *dt, struct device *dev)
 int dev_is_rotational(struct dev_types *dt, struct device *dev)
 {
 	return 1;
+}
+
+int dev_is_pmem(struct dev_types *dt, struct device *dev)
+{
+	return 0;
 }
 #endif
 

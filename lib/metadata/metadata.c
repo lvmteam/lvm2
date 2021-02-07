@@ -4436,11 +4436,11 @@ int lv_on_pmem(struct logical_volume *lv)
 		for (s = 0; s < seg->area_count; s++) {
 			pv = seg_pv(seg, s);
 
-			if (dev_is_pmem(pv->dev)) {
-				log_debug("LV %s dev %s is pmem.", lv->name, dev_name(pv->dev));
+			if (dev_is_pmem(lv->vg->cmd->dev_types, pv->dev)) {
+				log_debug("LV %s dev %s is pmem.", display_lvname(lv), dev_name(pv->dev));
 				pmem_devs++;
 			} else {
-				log_debug("LV %s dev %s not pmem.", lv->name, dev_name(pv->dev));
+				log_debug("LV %s dev %s not pmem.", display_lvname(lv), dev_name(pv->dev));
 				other_devs++;
 			}
 		}
@@ -4452,7 +4452,7 @@ int lv_on_pmem(struct logical_volume *lv)
 	}
 
 	if (pmem_devs) {
-		log_debug("LV %s on pmem", lv->name);
+		log_debug("LV %s on pmem", display_lvname(lv));
 		return 1;
 	}
 
