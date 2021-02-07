@@ -944,8 +944,7 @@ static unsigned long _dev_topology_attribute(struct dev_types *dt,
 	const char *sysfs_dir = dm_sysfs_dir();
 	char path[PATH_MAX], buffer[64];
 	FILE *fp;
-	struct stat info;
-	dev_t uninitialized_var(primary);
+	dev_t primary = 0;
 	unsigned long result = default_value;
 	unsigned long value = 0UL;
 
@@ -963,9 +962,9 @@ static unsigned long _dev_topology_attribute(struct dev_types *dt,
 	 * - if not: either the kernel doesn't have topology support
 	 *   or the device could be a partition
 	 */
-	if (stat(path, &info) == -1) {
+	if (!(fp = fopen(path, "r"))) {
 		if (errno != ENOENT) {
-			log_sys_debug("stat", path);
+			log_sys_debug("fopen", path);
 			goto out;
 		}
 		if (!dev_get_primary_dev(dt, dev, &primary))
@@ -975,16 +974,11 @@ static unsigned long _dev_topology_attribute(struct dev_types *dt,
 		if (!_snprintf_attr(path, sizeof(path), sysfs_dir, attribute, primary))
 			goto_out;
 
-		if (stat(path, &info) == -1) {
+		if (!(fp = fopen(path, "r"))) {
 			if (errno != ENOENT)
-				log_sys_debug("stat", path);
+				log_sys_debug("fopen", path);
 			goto out;
 		}
-	}
-
-	if (!(fp = fopen(path, "r"))) {
-		log_sys_debug("fopen", path);
-		goto out;
 	}
 
 	if (!fgets(buffer, sizeof(buffer), fp)) {
@@ -993,7 +987,7 @@ static unsigned long _dev_topology_attribute(struct dev_types *dt,
 	}
 
 	if (sscanf(buffer, "%lu", &value) != 1) {
-		log_warn("sysfs file %s not in expected format: %s", path, buffer);
+		log_warn("WARNING: sysfs file %s not in expected format: %s", path, buffer);
 		goto out_close;
 	}
 
