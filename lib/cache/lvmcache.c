@@ -1056,7 +1056,6 @@ void lvmcache_extra_md_component_checks(struct cmd_context *cmd)
 	struct device *dev;
 	const char *device_hint;
 	uint64_t devsize, pvsize;
-	int dropped = 0;
 	int do_check;
 
 	/*
