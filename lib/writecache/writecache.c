@@ -238,7 +238,7 @@ static int _target_present(struct cmd_context *cmd,
 
 	if (!_writecache_checked) {
 		_writecache_checked = 1;
-		if (!(_writecache_present = target_present_version(cmd, TARGET_NAME_WRITECACHE, 1.
+		if (!(_writecache_present = target_present_version(cmd, TARGET_NAME_WRITECACHE, 1,
 								   &maj, &min, &patchlevel)))
 			return 0;
 

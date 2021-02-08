@@ -154,7 +154,7 @@ static int _snap_target_present(struct cmd_context *cmd,
 
 		if (!(_snap_present = (target_present_version(cmd, TARGET_NAME_SNAPSHOT, 1,
 							      &maj, &min, &patchlevel) &&
-				       target_present(cmd, TARGET_NAME_SNAPSHOT_ORIGIN, 0)))
+				       target_present(cmd, TARGET_NAME_SNAPSHOT_ORIGIN, 0))))
 			return 0;
 
 		if ((maj > 1 ||
