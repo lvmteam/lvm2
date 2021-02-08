@@ -1056,7 +1056,8 @@ void lvmcache_extra_md_component_checks(struct cmd_context *cmd)
 	struct device *dev;
 	const char *device_hint;
 	uint64_t devsize, pvsize;
-	int do_check;
+	int do_check_size, do_check_name;
+	int md_check_start;
 
 	/*
 	 * use_full_md_check: if set then no more needs to be done here,
@@ -1073,8 +1074,10 @@ void lvmcache_extra_md_component_checks(struct cmd_context *cmd)
 	 * function is looking for.
 	 */
 	if (!cmd->md_component_detection || cmd->use_full_md_check ||
-	    !strcmp(cmd->md_component_checks, "none") || !strcmp(cmd->md_component_checks, "start"))
+	    !strcmp(cmd->md_component_checks, "none"))
 		return;
+
+	md_check_start = !strcmp(cmd->md_component_checks, "start");
 
 	/*
 	 * We want to avoid extra scanning for end-of-device md superblocks
@@ -1093,7 +1096,8 @@ void lvmcache_extra_md_component_checks(struct cmd_context *cmd)
 			device_hint = _get_pvsummary_device_hint(dev->pvid);
 			pvsize = _get_pvsummary_size(dev->pvid);
 			devsize = dev->size;
-			do_check = 0;
+			do_check_size = 0;
+			do_check_name = 0;
 
 			if (!devsize && !dev_get_size(dev, &devsize))
 				log_debug("No size for %s.", dev_name(dev));
@@ -1103,23 +1107,43 @@ void lvmcache_extra_md_component_checks(struct cmd_context *cmd)
 			 * can be common, but not as often as PV larger.
 			 */
 			if (pvsize && devsize && (pvsize != devsize))
-				do_check = 1;
-			else if (device_hint && !strcmp(device_hint, "/dev/md"))
-				do_check = 1;
+				do_check_size = 1;
+			if (device_hint && !strncmp(device_hint, "/dev/md", 7))
+				do_check_name = 1;
 
-			if (do_check) {
-				log_debug("extra md component check %llu %llu device_hint %s dev %s",
+			if (!do_check_size && !do_check_name)
+				continue;
+
+			/*
+			 * If only the size is different (which can be fairly
+			 * common for non-md-component devs) and the user has
+			 * set "start" to disable full md checks, then skip it.
+			 * If the size is different, *and* the device name hint
+			 * looks like an md device, then it seems very likely
+			 * to be an md component, so do a full check on it even
+			 * if the user has set "start".
+			 * 
+			 * In "auto" mode, do a full check if either the size
+			 * or the name indicates a possible md component.
+			 */
+			if (do_check_size && !do_check_name && md_check_start) {
+				log_debug("extra md component check skip %llu %llu device_hint %s dev %s",
 					  (unsigned long long)pvsize, (unsigned long long)devsize,
 					  device_hint ?: "none", dev_name(dev));
+				continue;
+			}
 
-				if (dev_is_md_component(dev, NULL, 1)) {
-					log_debug("dropping PV from md component %s", dev_name(dev));
-					dev->flags &= ~DEV_SCAN_FOUND_LABEL;
-					/* lvmcache_del will also delete vginfo if info was last one */
-					lvmcache_del(info);
-					lvmcache_del_dev_from_duplicates(dev);
-					cmd->filter->wipe(cmd, cmd->filter, dev, NULL);
-				}
+			log_debug("extra md component check %llu %llu device_hint %s dev %s",
+				  (unsigned long long)pvsize, (unsigned long long)devsize,
+				  device_hint ?: "none", dev_name(dev));
+
+			if (dev_is_md_component(dev, NULL, 1)) {
+				log_debug("dropping PV from md component %s", dev_name(dev));
+				dev->flags &= ~DEV_SCAN_FOUND_LABEL;
+				/* lvmcache_del will also delete vginfo if info was last one */
+				lvmcache_del(info);
+				lvmcache_del_dev_from_duplicates(dev);
+				cmd->filter->wipe(cmd, cmd->filter, dev, NULL);
 			}
 		}
 	}
