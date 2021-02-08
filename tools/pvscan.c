@@ -1581,6 +1581,12 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 
 	dm_list_init(&complete_vgnames);
 
+	if (do_activate &&
+	    !find_config_tree_bool(cmd, global_event_activation_CFG, NULL)) {
+		log_verbose("Ignoring pvscan --cache -aay because event_activation is disabled.");
+		return ECMD_PROCESSED;
+	}
+
 	if (arg_is_set(cmd, major_ARG) + arg_is_set(cmd, minor_ARG))
 		devno_args = 1;
 
