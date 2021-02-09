@@ -250,7 +250,7 @@ RULE: --writebehind --writemostly and LV_raid1
 RULE: --cachemode --cachepolicy --cachesettings and LV_cache LV_cachepool LV_writecache
 RULE: --errorwhenfull --discards --zero and LV_thinpool
 RULE: --permission not lv_is_external_origin lv_is_raid_metadata lv_is_raid_image LV_thinpool
-RULE: --alloc --contiguous --metadataprofile --permission --persistent --profile --readahead not lv_is_thick_origin
+RULE: --alloc --contiguous --metadataprofile --persistent --profile --readahead not lv_is_thick_origin
 RULE: --alloc --discards --zero --cachemode --cachepolicy --cachesettings not lv_is_partial
 
 # It's unfortunate that activate needs to be optionally allowed here,
