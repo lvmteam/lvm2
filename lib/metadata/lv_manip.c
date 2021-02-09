@@ -8747,7 +8747,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		/* Create zero origin volume for spare snapshot */
 		if (lp->virtual_extents &&
 		    !(origin_lv = _create_virtual_origin(cmd, vg, lv->name,
-							 lp->permission,
+							 (lp->permission & ~LVM_WRITE),
 							 lp->virtual_extents)))
 			goto revert_new_lv;
 
