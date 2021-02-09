@@ -2162,15 +2162,21 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 		log_error("Cannot merge snapshot %s into the origin %s "
 			  "with merging snapshot %s.",
 			  display_lvname(lv), display_lvname(origin),
-			  display_lvname(find_snapshot(origin)->lv));
+			  display_lvname(snap_seg->lv));
 		return 0;
 	}
 
-	if (lv_is_external_origin(origin_from_cow(lv))) {
+	if (lv_is_external_origin(origin)) {
 		log_error("Cannot merge snapshot %s into "
 			  "the read-only external origin %s.",
-			  display_lvname(lv),
-			  display_lvname(origin_from_cow(lv)));
+			  display_lvname(lv), display_lvname(origin));
+		return 0;
+	}
+
+	if (!(origin->status & LVM_WRITE)) {
+		log_error("Cannot merge snapshot %s into "
+			  "the read-only origin %s. (Use lvchange -p rw).",
+			  display_lvname(lv), display_lvname(origin));
 		return 0;
 	}
 
