@@ -614,7 +614,12 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 	 * - basename ../../block/md0/md0  = md0
 	 * Parent's 'dev' sysfs attribute  = /sys/block/md0/dev
 	 */
-	if ((size = readlink(dirname(path), temp_path, sizeof(temp_path) - 1)) < 0) {
+	if (dm_snprintf(path, sizeof(path), "%s/dev/block/%d:%d",
+			dm_sysfs_dir(), major, minor) < 0) {
+		log_warn("WARNING: %s: major:minor sysfs path is too long.", dev_name(dev));
+		return 0;
+	}
+	if ((size = readlink(path, temp_path, sizeof(temp_path) - 1)) < 0) {
 		log_warn("WARNING: Readlink of %s failed.", path);
 		goto out;
 	}
