@@ -710,7 +710,7 @@ static struct dm_config_value *_get_def_array_values(struct cmd_context *cmd,
 		return array;
 	}
 
-	if (!(p = token = enc_value = strdup(def_enc_value))) {
+	if (!(token = enc_value = strdup(def_enc_value))) {
 		log_error("_get_def_array_values: strdup failed");
 		return NULL;
 	}
