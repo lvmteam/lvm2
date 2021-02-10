@@ -329,7 +329,7 @@ enum add_hash {
 
 static int _add_alias(struct device *dev, const char *path, enum add_hash hash)
 {
-	struct dm_str_list *sl = _zalloc(sizeof(*sl));
+	struct dm_str_list *sl;
 	struct dm_str_list *strl;
 	const char *oldpath;
 	int prefer_old = 1;
