@@ -491,7 +491,7 @@ static int _report_field_string_list(struct dm_report *rh,
 		delimiter = ",";
 	delimiter_len = strlen(delimiter);
 
-	i = pos = len = 0;
+	i = pos = 0;
 	dm_list_iterate_items(sl, data) {
 		arr[i].str = sl->str;
 		if (!sort) {

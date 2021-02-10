@@ -2231,7 +2231,7 @@ static int _mirror_emit_segment_line(struct dm_task *dmt, struct load_segment *s
 
 	EMIT_PARAMS(pos, " %u ", seg->mirror_area_count);
 
-	if (_emit_areas_line(dmt, seg, params, paramsize, &pos) <= 0)
+	if (!_emit_areas_line(dmt, seg, params, paramsize, &pos))
 		return_0;
 
 	if (handle_errors)
@@ -2433,7 +2433,7 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 	/* Print number of metadata/data device pairs */
 	EMIT_PARAMS(pos, " %u", area_count);
 
-	if (_emit_areas_line(dmt, seg, params, paramsize, &pos) <= 0)
+	if (!_emit_areas_line(dmt, seg, params, paramsize, &pos))
 		return_0;
 
 	return 1;
@@ -2561,7 +2561,6 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 			      size_t paramsize)
 {
 	int pos = 0;
-	int r;
 	int target_type_is_raid = 0;
 	char originbuf[DM_FORMAT_DEV_BUFSIZE], cowbuf[DM_FORMAT_DEV_BUFSIZE];
 
@@ -2572,8 +2571,7 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 		break;
 	case SEG_MIRRORED:
 		/* Mirrors are pretty complicated - now in separate function */
-		r = _mirror_emit_segment_line(dmt, seg, params, paramsize);
-		if (!r)
+		if (!_mirror_emit_segment_line(dmt, seg, params, paramsize))
 			return_0;
 		break;
 	case SEG_SNAPSHOT:
@@ -2619,9 +2617,8 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 	case SEG_RAID6_LA_6:
 	case SEG_RAID6_RA_6:
 		target_type_is_raid = 1;
-		r = _raid_emit_segment_line(dmt, major, minor, seg, seg_start,
-					    params, paramsize);
-		if (!r)
+		if (!_raid_emit_segment_line(dmt, major, minor, seg, seg_start,
+					     params, paramsize))
 			return_0;
 
 		break;
@@ -2652,10 +2649,9 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 	case SEG_CRYPT:
 	case SEG_LINEAR:
 	case SEG_STRIPED:
-		if ((r = _emit_areas_line(dmt, seg, params, paramsize, &pos)) <= 0) {
-			stack;
-			return r;
-		}
+		if (!_emit_areas_line(dmt, seg, params, paramsize, &pos))
+			return_0;
+
 		if (!params[0]) {
 			log_error("No parameters supplied for %s target "
 				  "%u:%u.", _dm_segtypes[seg->type].target,
