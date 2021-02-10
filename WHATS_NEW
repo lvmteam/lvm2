@@ -1,5 +1,8 @@
 Version 2.03.12 - 
 ===================================
+  Add workaround to avoid read of internal 'converted' devices.
+  Prohibit merging snapshot into the read-only thick snapshot origin.
+  Restore support for flipping rw/r permissions for thin snapshot origin.
   Support resize of cached volumes.
   Disable autoactivation with global/event_activation=0.
   Check if lvcreate passes read_only_volume_list with tags and skips zeroing.
