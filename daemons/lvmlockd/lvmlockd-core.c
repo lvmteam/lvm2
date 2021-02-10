@@ -872,7 +872,7 @@ static int read_adopt_file(struct list_head *vg_lockd)
 	char vg_uuid[72];
 	char lm_type_str[16];
 	char mode[8];
-	struct lockspace *ls, *ls2;
+	struct lockspace *ls = NULL, *ls2;
 	struct resource *r;
 	FILE *fp;
 
