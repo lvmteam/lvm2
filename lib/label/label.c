@@ -707,19 +707,6 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 		if (!rem_prefetches)
 			break;
 
-		/* FIXME: figure better solution to avoid opening DM we shouldn't open */
-		if (dm_is_dm_major(MAJOR(devl->dev->dev)) &&
-		    !device_is_usable(devl->dev, (struct dev_usable_check_params) {
-					.check_blocked = 1,
-					.check_suspended = ignore_suspended_devices(),
-					.check_reserved = 1,
-					.check_error_target = 1,
-				      })) {
-			log_debug_devs("Scan skips unusuable DM device %s.", dev_name(devl->dev));
-			dm_list_del(&devl->list);
-			continue;
-		}
-
 		if (!_in_bcache(devl->dev)) {
 			if (!_scan_dev_open(devl->dev)) {
 				log_debug_devs("Scan failed to open %s.", dev_name(devl->dev));
@@ -1432,6 +1419,7 @@ void label_scan_drop(struct cmd_context *cmd)
 		return;
 
 	while ((dev = dev_iter_get(cmd, iter))) {
+		cmd->filter->wipe(cmd, cmd->filter, dev, NULL);
 		if (_in_bcache(dev))
 			_scan_dev_close(dev);
 	}
