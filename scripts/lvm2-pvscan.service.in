@@ -4,6 +4,7 @@ Documentation=man:pvscan(8)
 DefaultDependencies=no
 StartLimitIntervalSec=0
 BindsTo=dev-block-%i.device
+After=systemd-udevd.service
 Before=shutdown.target
 Conflicts=shutdown.target
 
