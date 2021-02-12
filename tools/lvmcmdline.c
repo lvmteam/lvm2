@@ -3000,6 +3000,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	_get_current_output_settings_from_args(cmd);
 	_apply_current_output_settings(cmd);
 
+	log_debug("Version: %s", LVM_VERSION);
 	log_debug("Parsing: %s", cmd->cmd_line);
 
 	if (!(cmd->command = _find_command(cmd, cmd->name, &argc, argv)))
