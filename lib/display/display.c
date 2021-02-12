@@ -474,7 +474,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 					  snap_active ? "active" : "INACTIVE");
 		}
 		snap_seg = NULL;
-	} else if ((snap_seg = find_snapshot(lv))) {
+	} else if (lv_is_cow(lv) && (snap_seg = find_snapshot(lv))) {
 		if (inkernel &&
 		    (snap_active = lv_snapshot_percent(snap_seg->cow,
 						       &snap_percent)))
