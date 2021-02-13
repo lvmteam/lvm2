@@ -64,6 +64,9 @@ grep "Merging of thin snapshot $vg/snap will occur on next activation of $vg/${l
 not lvconvert --merge $vg/snap1 &>out
 grep "Cannot merge snapshot" out
 
+# Check lvdisplay is not crashing while merge needs to wait
+lvdisplay -a $vg
+
 umount mnt
 
 # Merge cannot happen
