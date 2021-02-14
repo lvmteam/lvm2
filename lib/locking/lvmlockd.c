@@ -382,6 +382,7 @@ static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, 
 {
 	struct device *dev;
 	char path[PATH_MAX];
+	char *name;
 	uint64_t old_size_bytes;
 	uint64_t new_size_bytes;
 	uint32_t extend_bytes;
@@ -423,8 +424,10 @@ static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, 
 
 	new_size_bytes = lv->size * SECTOR_SIZE;
 
-	if (dm_snprintf(path, sizeof(path), "%s/mapper/%s-%s", lv->vg->cmd->dev_dir,
-			lv->vg->name, lv->name) < 0) {
+	if (!(name = dm_build_dm_name(lv->vg->cmd->mem, lv->vg->name, lv->name, NULL)))
+		return_0;
+
+	if (dm_snprintf(path, sizeof(path), "%s/%s", dm_dir(), name) < 0) {
 		log_error("Extend sanlock LV %s name too long - extended size not zeroed.",
 			  display_lvname(lv));
 		return 0;
