@@ -436,13 +436,6 @@ static int _lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 	if (!activate_and_wipe_lvlist(&device_list, 0))
 		return 0;
 
-	/* Wait until devices are away */
-	if (!sync_local_dev_names(lv->vg->cmd)) {
-		log_error("Failed to sync local devices after updating %s.",
-			  display_lvname(lv));
-		return 0;
-	}
-
 	/* Put metadata sub-LVs back in place */
 	if (!_attach_metadata_devices(seg, &device_list)) {
 		log_error("Failed to reattach %s device after clearing.",
