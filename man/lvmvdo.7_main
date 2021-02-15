@@ -206,8 +206,6 @@ with the \fBactivation/vdo_pool_autoextend_percent\fP and
 
 Note: You cannot reduce the size of a VDOPoolLV.
 
-Note: You cannot change the size of a cached VDOPoolLV.
-
 .nf
 .B lvextend -L+AddingSize VG/VDOPoolLV
 .fi
@@ -264,9 +262,6 @@ Using a raid type LV for a VDODataLV.
 VDODataLV (accepts also VDOPoolLV) caching provides a mechanism
 to accelerate reads and writes of already compressed and deduplicated
 data blocks together with VDO metadata.
-
-A cached VDO data LV cannot be currently resized. Also, the threshold
-based automatic resize will not work.
 
 .I Example
 .nf
