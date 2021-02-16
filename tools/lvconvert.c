@@ -2940,6 +2940,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	thin_crop_metadata_t crop_metadata;
 	thin_discards_t discards;
 	thin_zero_t zero_new_blocks;
+	int error_when_full;
 	int r = 0;
 
 	/* for handling lvmlockd cases */
@@ -3313,6 +3314,18 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		seg->chunk_size = chunk_size;
 		seg->discards = discards;
 		seg->zero_new_blocks = zero_new_blocks;
+		if (crop_metadata == THIN_CROP_METADATA_NO)
+			pool_lv->status |= LV_CROP_METADATA;
+		if (!recalculate_pool_chunk_size_with_dev_hints(pool_lv, chunk_calc))
+			goto_bad;
+
+		/* Error when full */
+		if (arg_is_set(cmd, errorwhenfull_ARG))
+			error_when_full = arg_uint_value(cmd, errorwhenfull_ARG, 0);
+		else
+			error_when_full = find_config_tree_bool(cmd, activation_error_when_full_CFG, vg->profile);
+		if (error_when_full)
+			pool_lv->status |= LV_ERROR_WHEN_FULL;
 	}
 
 	/*
