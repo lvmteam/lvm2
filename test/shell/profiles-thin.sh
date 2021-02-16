@@ -59,6 +59,24 @@ check lv_field $vg/pool_performance profile "thin-performance"
 $SHOULD check lv_field $vg/pool_performance chunk_size 1.00m
 check lv_field $vg/pool_performance zero ""
 
+lvremove -f $vg
+
+#
+# Repeat same two creations via lvconvert
+#
+lvcreate -L8m --name pool_generic $vg
+lvconvert --yes --type thin-pool $vg/pool_generic
+check lv_field $vg/pool_generic chunk_size 64.00k
+check lv_field $vg/pool_generic zero "zero"
+
+
+lvcreate -L8m --name pool_performance $vg
+lvconvert --yes --type thin-pool --errorwhenfull y --profile thin-performance $vg/pool_performance
+check lv_field $vg/pool_performance profile "thin-performance"
+$SHOULD check lv_field $vg/pool_performance chunk_size 1.00m
+check lv_field $vg/pool_performance zero ""
+check lv_field $vg/pool_performance lv_when_full "error"
+
 vgremove -ff $vg
 
 if test -d "$DM_DEV_DIR/$vg" ; then
