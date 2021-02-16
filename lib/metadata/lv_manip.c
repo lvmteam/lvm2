@@ -7469,6 +7469,9 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	lv_where->le_count = layer_lv->le_count;
 	lv_where->size = (uint64_t) lv_where->le_count * lv_where->vg->extent_size;
 
+	if (lv_where->vg->fid->fmt->features & FMT_CONFIG_PROFILE)
+		lv_where->profile = lv_where->vg->cmd->profile_params->global_metadata_profile;
+
 	/*
 	 * recuresively rename sub LVs
 	 *   currently supported only for thin data layer
@@ -8693,7 +8696,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	}
 
 	if (seg_is_vdo_pool(lp)) {
-		if (!convert_vdo_pool_lv(lv, &lp->vdo_params, &lp->virtual_extents)) {
+		if (!convert_vdo_pool_lv(lv, &lp->vdo_params, &lp->virtual_extents, 1)) {
 			stack;
 			goto deactivate_and_revert_new_lv;
 		}

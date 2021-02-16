@@ -2699,6 +2699,7 @@ static int _prepare_profiles(struct cmd_context *cmd)
 		 * The --commandprofile is assumed otherwise.
 		 */
 		if (!strcmp(cmd->command->name, "lvcreate") ||
+		    !strcmp(cmd->command->name, "lvconvert") ||
 		    !strcmp(cmd->command->name, "vgcreate") ||
 		    !strcmp(cmd->command->name, "lvchange") ||
 		    !strcmp(cmd->command->name, "vgchange")) {

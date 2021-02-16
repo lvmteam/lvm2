@@ -355,7 +355,8 @@ static int _format_vdo_pool_data_lv(struct logical_volume *data_lv,
  */
 struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 					   const struct dm_vdo_target_params *vtp,
-					   uint32_t *virtual_extents)
+					   uint32_t *virtual_extents,
+					   int format)
 {
 	const uint64_t header_size = DEFAULT_VDO_POOL_HEADER_SIZE;
 	const uint32_t extent_size = data_lv->vg->extent_size;
@@ -384,9 +385,15 @@ struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 		return_0;
 
 	/* Format data LV as VDO volume */
-	if (!_format_vdo_pool_data_lv(data_lv, vtp, &vdo_logical_size)) {
-		log_error("Cannot format VDO pool volume %s.", display_lvname(data_lv));
-		return NULL;
+	if (format) {
+		if (!_format_vdo_pool_data_lv(data_lv, vtp, &vdo_logical_size)) {
+			log_error("Cannot format VDO pool volume %s.", display_lvname(data_lv));
+			return NULL;
+		}
+	} else {
+		log_verbose("Skiping VDO formating %s.", display_lvname(data_lv));
+		/* TODO: parse existing VDO data and retrieve vdo_logical_size */
+		vdo_logical_size = data_lv->size;
 	}
 
 	if (!deactivate_lv(data_lv->vg->cmd, data_lv)) {
