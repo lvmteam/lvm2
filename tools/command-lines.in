@@ -318,6 +318,8 @@ OO_LVCONVERT_POOL: --poolmetadata LV, --poolmetadatasize SizeMB,
 --poolmetadataspare Bool, --readahead Readahead, --chunksize SizeKB,
 --zero Bool, --metadataprofile String
 
+OO_LVCONVERT_THIN: --discards Discards --errorwhenfull Bool
+
 OO_LVCONVERT_CACHE: --cachemetadataformat CacheMetadataFormat,
 --cachemode CacheMode, --cachepolicy String,
 --cachesettings String, --zero Bool
@@ -514,7 +516,7 @@ RULE: all and lv_is_visible
 
 lvconvert --type thin-pool LV_linear_striped_raid_cache
 OO: --stripes_long Number, --stripesize SizeKB,
---discards Discards, OO_LVCONVERT_POOL, OO_LVCONVERT
+OO_LVCONVERT_THIN, OO_LVCONVERT_POOL, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_to_thinpool
 DESC: Convert LV to type thin-pool.
@@ -546,7 +548,7 @@ RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 lvconvert --thinpool LV_linear_striped_raid_cache_thinpool
 OO: --type thin-pool, --stripes_long Number, --stripesize SizeKB,
---discards Discards, OO_LVCONVERT_POOL, OO_LVCONVERT
+OO_LVCONVERT_THIN, OO_LVCONVERT_POOL, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_to_thinpool_or_swap_metadata
 DESC: Convert LV to type thin-pool (variant, use --type thin-pool).
