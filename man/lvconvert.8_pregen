@@ -87,6 +87,10 @@ lvconvert - Change logical volume layout
 .ad b
 .br
 .ad l
+    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP
+.ad b
+.br
+.ad l
  \fB-f\fP|\fB--force\fP
 .ad b
 .br
@@ -819,6 +823,10 @@ Convert LV to type thin-pool.
 .ad b
 .br
 .ad l
+[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [    \fB--poolmetadata\fP \fILV\fP ]
 .ad b
 .br
@@ -912,6 +920,18 @@ Convert LV to type vdopool.
 .br
 .ad l
 [ \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
 .ad b
 .br
 .ad l
@@ -1323,6 +1343,19 @@ See \fBlvmthin\fP(7) for more information.
 .br
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
+.ad b
+.HP
+.ad l
+\fB--errorwhenfull\fP \fBy\fP|\fBn\fP
+.br
+Specifies thin pool behavior when data space is exhausted.
+When yes, device-mapper will immediately return an error
+when a thin pool is full and an I/O request requires space.
+When no, device-mapper will queue these I/O requests for a
+period of time to allow the thin pool to be extended.
+Errors are returned if no space is available after the timeout.
+(Also see dm-thin-pool kernel module option no_space_timeout.)
+See \fBlvmthin\fP(7) for more information.
 .ad b
 .HP
 .ad l
@@ -1981,6 +2014,14 @@ Convert LV to type vdopool.
 .br
 .RS 4
 .ad l
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
 [ \fB-n\fP|\fB--name\fP \fILV\fP\fI_new\fP ]
 .ad b
 .br
@@ -1990,6 +2031,10 @@ Convert LV to type vdopool.
 .br
 .ad l
 [    \fB--type\fP \fBvdo-pool\fP ]
+.ad b
+.br
+.ad l
+[    \fB--metadataprofile\fP \fIString\fP ]
 .ad b
 .br
 .ad l
