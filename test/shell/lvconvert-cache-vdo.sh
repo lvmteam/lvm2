@@ -17,6 +17,10 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+percent_() {
+	get lv_field $vg/vpool data_percent | cut -d. -f1
+}
+
 aux have_vdo 6 2 0 || skip
 aux have_cache 1 3 0 || skip
 
@@ -41,9 +45,15 @@ lvchange -ay $vg
 check dev_md5sum $vg $lv1
 
 lvconvert --yes --cache --cachepool cpool $vg/vpool
-lvconvert --splitcache $vg/vpool
+
+VDODATA="$(percent_)"
+# Check resize of cached VDO pool
+lvextend -L+1G $vg/vpool
 
 lvs -a $vg
+# Check after resize usage is reduced
+test "$(percent_)" -lt $VDODATA
+lvconvert --splitcache $vg/vpool
 
 lvconvert --yes --cache --cachepool cpool $vg/$lv1
 check dev_md5sum $vg $lv1
