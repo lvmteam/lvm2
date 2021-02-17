@@ -414,13 +414,9 @@ static int _vdo_target_present(struct cmd_context *cmd,
 	if (!_vdo_checked) {
 		_vdo_checked = 1;
 
-		if (!target_present_version(cmd, TARGET_NAME_VDO, 0,
-					    &maj, &min, &patchlevel)) {
-			/* Try to load kmod VDO module */
-			if (!module_present(cmd, MODULE_NAME_VDO) ||
-			    !target_version(TARGET_NAME_VDO, &maj, &min, &patchlevel))
-				return 0;
-		}
+		if (!target_present_version(cmd, TARGET_NAME_VDO, 1,
+					    &maj, &min, &patchlevel))
+			return 0;
 
 		if (maj < 6 || (maj == 6 && min < 2)) {
 			log_warn("WARNING: Target %s version %u.%u.%u is too old.",
