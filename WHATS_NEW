@@ -1,5 +1,12 @@
 Version 2.03.12 - 
 ===================================
+  Check for presence of VDO target before starting any conversion.
+  Support metatadata profiles with volume VDO pool conversions.
+  Support -Zn for conversion of already formated VDO pools.
+  Avoid removing LVs on error path of lvconvert during creation volumes.
+  Fix crashing lvdisplay when thin volume was waiting for merge.
+  Support option --errorwhenfull when converting volume to thin-pool.
+  Improve thin-performance profile support conversion to thin-pool.
   Add workaround to avoid read of internal 'converted' devices.
   Prohibit merging snapshot into the read-only thick snapshot origin.
   Restore support for flipping rw/r permissions for thin snapshot origin.
