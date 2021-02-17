@@ -55,6 +55,12 @@ setup_merge_ $vg $lv1
 # make sure lvconvert --merge requires explicit LV listing
 not lvconvert --merge
 
+# check read-only origin is protected from being merge
+lvchange -pr $vg/$lv1
+not lvconvert --merge "$vg/$(snap_lv_name_ "$lv1")" |& tee out
+grep "read-only origin" out
+lvchange -prw $vg/$lv1
+
 # check exclusive lock is preserved after merge
 check lv_field "$vg/$lv1" lv_active_exclusively "active exclusively"
 lvconvert --merge "$vg/$(snap_lv_name_ "$lv1")"
