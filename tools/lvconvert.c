@@ -5472,6 +5472,14 @@ static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 	if (!(lvc.segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_VDO)))
 		return_0;
 
+	if (activation() && lvc.segtype->ops->target_present) {
+		if (!lvc.segtype->ops->target_present(cmd, NULL, &lvc.target_attr)) {
+			log_error("%s: Required device-mapper target(s) not detected in your kernel.",
+				  lvc.segtype->name);
+			return 0;
+		}
+	}
+
 	if (vg_is_shared(vg)) {
 		/* FIXME: need to swap locks betwen LVs? */
 		log_error("Unable to convert VDO pool in VG with lock_type %s", vg->lock_type);
