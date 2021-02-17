@@ -8809,7 +8809,9 @@ revert_new_lv:
 	lockd_free_lv(vg->cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
 
 	/* FIXME Better to revert to backup of metadata? */
-	if (!lv_remove(lv) || !vg_write(vg) || !vg_commit(vg))
+	/* Do not remove anything for create during conversion operation */
+	if (!strncmp(cmd->name, "lvconvert", 9) ||
+	    !lv_remove(lv) || !vg_write(vg) || !vg_commit(vg))
 		log_error("Manual intervention may be required to remove "
 			  "abandoned LV(s) before retrying.");
 	else
