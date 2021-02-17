@@ -1,5 +1,9 @@
 Version 2.02.188 - 
 ==================================
+  Avoid removing LVs on error path of lvconvert during creation volumes.
+  Fix crashing lvdisplay when thin volume was waiting for merge.
+  Support option --errorwhenfull when converting volume to thin-pool.
+  Improve thin-performance profile support conversion to thin-pool.
   Support resize of cached volumes.
   Allocation prints better error when metadata cannot fit on a single PV.
   Pvmove can better resolve full thin-pool tree move.
