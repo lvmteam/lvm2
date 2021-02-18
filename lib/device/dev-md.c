@@ -56,6 +56,16 @@ static int _dev_has_imsm_magic(struct device *dev, uint64_t devsize_sectors)
 {
 	char imsm_signature[IMSM_SIG_LEN];
 	uint64_t off = (devsize_sectors * 512) - 1024;
+	unsigned int physical_block_size = 0;
+	unsigned int logical_block_size = 0;
+
+	if (!dev_get_direct_block_sizes(dev, &physical_block_size, &logical_block_size))
+		return_0;
+
+	if (logical_block_size == 4096)
+		off = (devsize_sectors * 512) - 8192;
+	else
+		off = (devsize_sectors * 512) - 1024;
 
 	if (!dev_read_bytes(dev, off, IMSM_SIG_LEN, imsm_signature))
 		return_0;
