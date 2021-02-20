@@ -146,14 +146,6 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	lp->argc = --argc;
 	lp->argv = ++argv;
 
-	lp->alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, 0);
-	lp->yes = arg_is_set(cmd, yes_ARG);
-	lp->force = arg_is_set(cmd, force_ARG);
-	lp->nofsck = arg_is_set(cmd, nofsck_ARG);
-	lp->nosync = arg_is_set(cmd, nosync_ARG);
-	lp->resizefs = arg_is_set(cmd, resizefs_ARG);
-	lp->lockopt = arg_str_value(cmd, lockopt_ARG, NULL);
-
 	return 1;
 }
 
@@ -186,7 +178,15 @@ out:
 int lvresize(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct processing_handle *handle;
-	struct lvresize_params lp = { 0 };
+	struct lvresize_params lp = {
+		.alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, 0),
+		.yes = arg_is_set(cmd, yes_ARG),
+		.force = arg_is_set(cmd, force_ARG),
+		.nofsck = arg_is_set(cmd, nofsck_ARG),
+		.nosync = arg_is_set(cmd, nosync_ARG),
+		.resizefs = arg_is_set(cmd, resizefs_ARG),
+		.lockopt = arg_str_value(cmd, lockopt_ARG, NULL),
+	};
 	int ret;
 
 	if (!_lvresize_params(cmd, argc, argv, &lp)) {
