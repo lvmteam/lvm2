@@ -255,7 +255,7 @@ static int _read_params(struct cmd_context *cmd, struct lvconvert_params *lp)
 			}
 
 			if (arg_is_set(cmd, zero_ARG)) {
-				log_error("--zero is only available with snapshots or thin pools.");
+				log_error("--zero is only available with snapshots or pools.");
 				return 0;
 			}
 
