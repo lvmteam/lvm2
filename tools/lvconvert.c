@@ -2032,8 +2032,8 @@ static int _lvconvert_split_and_remove_cachepool(struct cmd_context *cmd,
 					  display_lvname(lv));
 				return 0;
 			}
-			log_warn("WARNING: Uncaching of partially missing writethrough cache volume %s might destroy your data.",
-				 display_lvname(lv));
+			log_warn("WARNING: Uncaching of partially missing %s cache volume %s might destroy your data.",
+				 cache_mode_num_to_str(first_seg(seg->pool_lv)->cache_mode), display_lvname(lv));
 		}
 
 		if (!arg_count(cmd, yes_ARG) &&
