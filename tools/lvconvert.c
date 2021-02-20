@@ -4693,12 +4693,12 @@ static int _lvconvert_to_thin_with_external_single(struct cmd_context *cmd,
 		}
 
 		if (!(thinpool_lv = find_lv(vg, thinpool_name))) {
-			log_error("LV %s cannot be found.", display_lvname(thinpool_lv));
+			log_error(INTERNAL_ERROR "LV %s cannot be found.", thinpool_name);
 			goto out;
 		}
 
 		if (!lv_is_thin_pool(thinpool_lv)) {
-			log_error("LV %s is not a thin pool.", display_lvname(thinpool_lv));
+			log_error(INTERNAL_ERROR "LV %s is not a thin pool.", display_lvname(thinpool_lv));
 			goto out;
 		}
 	}
