@@ -6126,7 +6126,7 @@ int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *lv_wcorig;
 	struct logical_volume *lv_fast;
-	struct writecache_settings settings;
+	struct writecache_settings settings = { 0 };
 	const char *fast_name;
 	uint32_t block_size_sectors = 0;
 	char *lockd_fast_args = NULL;
@@ -6180,10 +6180,6 @@ int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 	}
 
 	is_active = lv_is_active(lv);
-
-	is_active = lv_is_active(lv);
-
-	memset(&settings, 0, sizeof(settings));
 
 	if (!get_writecache_settings(cmd, &settings, &block_size_sectors)) {
 		log_error("Invalid writecache settings.");
