@@ -1465,7 +1465,8 @@ static struct logical_volume *_get_resizable_layer_lv(struct logical_volume *lv)
 	while (lv_is_cache(lv) || /* _corig */
 	       lv_is_integrity(lv) ||
 	       lv_is_thin_pool(lv) || /* _tdata */
-	       lv_is_vdo_pool(lv)) /* _vdata */
+	       lv_is_vdo_pool(lv) || /* _vdata */
+	       lv_is_writecache(lv)) /* _worigin */
 		lv = seg_lv(first_seg(lv), 0);  /* component-level down */
 
 	return lv;
@@ -1479,7 +1480,8 @@ static int _is_layered_lv(struct logical_volume *lv)
 	return (lv_is_cache_origin(lv) ||
 		lv_is_integrity_origin(lv) ||
 		lv_is_thin_pool_data(lv) ||
-		lv_is_vdo_pool_data(lv));
+		lv_is_vdo_pool_data(lv) ||
+		lv_is_writecache_origin(lv));
 }
 
 /* Find the topmost LV in the stack - usually such LV is visible. */
@@ -5173,11 +5175,6 @@ static int _lvresize_check(struct logical_volume *lv,
 	struct volume_group *vg = lv->vg;
 	struct lv_segment *seg = first_seg(lv);
 
-	if (lv_is_writecache(lv)) {
-		log_error("Resize not yet allowed on LVs with writecache attached.");
-		return 0;
-	}
-
 	if (lv_is_external_origin(lv)) {
 		/*
 		 * Since external-origin can be activated read-only,
@@ -5801,6 +5798,11 @@ static int _lvresize_check_type(const struct logical_volume *lv,
 		if (lv_is_vdo_pool_data(lv)) {
 			log_error("Cannot reduce VDO pool data volume %s.",
 				  display_lvname(lv));
+			return 0;
+		}
+		if (lv_is_writecache(lv)) {
+			/* TODO: detect kernel with support for reduction */
+			log_error("Reduce not yet allowed on LVs with writecache attached.");
 			return 0;
 		}
 	} else if (lp->resize == LV_EXTEND)  {
