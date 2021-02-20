@@ -656,7 +656,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	if (!remove_layer_from_lv(cache_lv, corigin_lv))
 		return_0;
 
-	/* Preserve currently imortant data from original cache segment.
+	/* Preserve currently important data from original cache segment.
 	 * TODO: can it be done without this ? */
 	data_id = cache_seg->data_id;
 	data_len = cache_seg->data_len;
