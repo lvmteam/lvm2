@@ -318,15 +318,14 @@ OO_LVCONVERT_POOL: --poolmetadata LV, --poolmetadatasize SizeMB,
 --poolmetadataspare Bool, --readahead Readahead, --chunksize SizeKB,
 --zero Bool, --metadataprofile String
 
-OO_LVCONVERT_THIN: --discards Discards --errorwhenfull Bool
+OO_LVCONVERT_THIN: --discards Discards, --errorwhenfull Bool
 
 OO_LVCONVERT_CACHE: --cachemetadataformat CacheMetadataFormat,
 --cachemode CacheMode, --cachepolicy String,
 --cachesettings String, --zero Bool
 
-OO_LVCONVERT_VDO: --metadataprofile String --readahead Readahead,
---compression Bool, --deduplication Bool
---zero Bool
+OO_LVCONVERT_VDO: --metadataprofile String, --readahead Readahead,
+--compression Bool, --deduplication Bool, --zero Bool
 
 OO_LVCONVERT: --alloc Alloc, --background, --force, --noudevsync
 
@@ -615,8 +614,7 @@ RULE: all and lv_is_visible
 RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_virtual lv_is_raid_with_integrity
 
 lvconvert --vdopool LV_linear_striped_raid_cache
-OO: --type vdo-pool, OO_LVCONVERT_VDO, OO_LVCONVERT
---name LV_new, --virtualsize SizeMB,
+OO: --type vdo-pool, OO_LVCONVERT_VDO, OO_LVCONVERT, --name LV_new, --virtualsize SizeMB,
 ID: lvconvert_to_vdopool_param
 DESC: Convert LV to type vdopool.
 RULE: all and lv_is_visible
