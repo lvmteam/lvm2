@@ -1,5 +1,6 @@
 Version 2.03.12 - 
 ===================================
+  Add devices file feature, off by default for now.
   Support extension of writecached volumes.
   Fix problem with unbound variable usage within fsadm.
   Check for presence of VDO target before starting any conversion.
