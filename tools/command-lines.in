@@ -309,7 +309,7 @@ OO_LVCONVERT_POOL: --poolmetadata LV, --poolmetadatasize SizeMB,
 --poolmetadataspare Bool, --readahead Readahead, --chunksize SizeKB,
 --zero Bool, --metadataprofile String
 
-OO_LVCONVERT_THIN: --discards Discards --errorwhenfull Bool
+OO_LVCONVERT_THIN: --discards Discards, --errorwhenfull Bool
 
 OO_LVCONVERT_CACHE: --cachemetadataformat CacheMetadataFormat,
 --cachemode CacheMode, --cachepolicy String,
