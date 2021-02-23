@@ -26,7 +26,7 @@
 
 //----------------------------------------------------------------
 
-#define T_BLOCK_SIZE 4096
+#define T_BLOCK_SIZE sysconf(_SC_PAGESIZE)
 #define NR_BLOCKS 64
 #define INIT_PATTERN 123
 

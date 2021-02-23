@@ -360,6 +360,7 @@ static void _large_fixture_exit(void *context)
  *--------------------------------------------------------------*/
 #define MEG 2048
 #define SECTOR_SHIFT 9
+#define PAGE_SIZE_SECTORS (sysconf(_SC_PAGE_SIZE) >> SECTOR_SHIFT)
 
 static void good_create(sector_t block_size, unsigned nr_cache_blocks)
 {
@@ -389,12 +390,12 @@ static void bad_create(sector_t block_size, unsigned nr_cache_blocks)
 
 static void test_create(void *fixture)
 {
-	good_create(8, 16);
+	good_create(PAGE_SIZE_SECTORS, 16);
 }
 
 static void test_nr_cache_blocks_must_be_positive(void *fixture)
 {
-	bad_create(8, 0);
+	bad_create(PAGE_SIZE_SECTORS, 0);
 }
 
 static void test_block_size_must_be_positive(void *fixture)
@@ -412,7 +413,7 @@ static void test_block_size_must_be_multiple_of_page_size(void *fixture)
 		bad_create(_bad_examples[i], 16);
 
 	for (i = 1; i < 100; i++)
-		good_create(i * 8, 16);
+		good_create(i * PAGE_SIZE_SECTORS, 16);
 }
 
 static void test_get_triggers_read(void *context)
