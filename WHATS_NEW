@@ -1,5 +1,7 @@
 Version 2.03.12 - 
 ===================================
+  Support extension of writecached volumes.
+  Fix problem with unbound variable usage within fsadm.
   Check for presence of VDO target before starting any conversion.
   Support metatadata profiles with volume VDO pool conversions.
   Support -Zn for conversion of already formated VDO pools.
@@ -29,7 +31,7 @@ Version 2.03.11 - 08th January 2021
 ===================================
   Fix pvck handling MDA at offset different from 4096.
   Partial or degraded activation of writecache is not allowed.
-  Enhance error handling for fsadm and hanled correct fsck result.
+  Enhance error handling for fsadm and handle correct fsck result.
   Dmeventd lvm plugin ignores higher reserved_stack lvm.conf values.
   Support using BLKZEROOUT for clearing devices.
   Support interruption when wipping LVs.
