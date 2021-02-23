@@ -163,7 +163,7 @@ cleanup() {
 		_FSADM_EXTOFF=$EXTOFF
 		export _FSADM_YES _FSADM_EXTOFF
 		unset FSADM_RUNNING
-		test -n "$LVM_BINARY" && PATH=$_SAVEPATH
+		test -n "${LVM_BINARY-}" && PATH=$_SAVEPATH
 		dry exec "$LVM" lvresize $VERB $FORCE -r -L"${NEWSIZE_ORIG}b" "$VOLUME_ORIG"
 	fi
 
