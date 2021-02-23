@@ -76,9 +76,6 @@ dev_vg_lv="$DM_DEV_DIR/$vg_lv"
 dev_vg_lv2="$DM_DEV_DIR/$vg_lv2"
 dev_vg_lv3="$DM_DEV_DIR/$vg_lv3"
 mount_dir="mnt"
-# for recursive call
-LVM_BINARY=$(which lvm)
-export LVM_BINARY
 
 test ! -d "$mount_dir" && mkdir "$mount_dir"
 
