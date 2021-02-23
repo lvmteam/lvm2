@@ -1,5 +1,6 @@
 Version 2.02.188 - 
 ==================================
+  Fix problem with unbound variable usage within fsadm.
   Avoid removing LVs on error path of lvconvert during creation volumes.
   Fix crashing lvdisplay when thin volume was waiting for merge.
   Support option --errorwhenfull when converting volume to thin-pool.
