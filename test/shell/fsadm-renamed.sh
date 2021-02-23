@@ -27,9 +27,6 @@ dev_vg_lv_ren="$DM_DEV_DIR/$vg_lv_ren"
 mount_dir="mnt"
 mount_space_dir="mnt space dir"
 mount_dolar_dir="mnt \$SPACE dir"
-# for recursive call
-LVM_BINARY=$(which lvm)
-export LVM_BINARY
 
 test ! -d "$mount_dir" && mkdir "$mount_dir"
 test ! -d "$mount_space_dir" && mkdir "$mount_space_dir"
