@@ -79,6 +79,14 @@ lvconvert - Change logical volume layout
 .ad b
 .br
 .ad l
+    \fB--devices\fP \fIPV\fP
+.ad b
+.br
+.ad l
+    \fB--devicesfile\fP \fIString\fP
+.ad b
+.br
+.ad l
     \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP
 .ad b
 .br
@@ -1146,6 +1154,14 @@ Common options for lvm:
 .ad b
 .br
 .ad l
+[    \fB--devices\fP \fIPV\fP ]
+.ad b
+.br
+.ad l
+[    \fB--devicesfile\fP \fIString\fP ]
+.ad b
+.br
+.ad l
 [    \fB--driverloaded\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
@@ -1323,6 +1339,24 @@ messages sent to the log file and/or syslog (if configured).
 .br
 Controls whether deduplication is enabled or disable for VDO volume.
 See \fBlvmvdo\fP(7) for more information about VDO usage.
+.ad b
+.HP
+.ad l
+\fB--devices\fP \fIPV\fP
+.br
+Devices that the command can use. This option can be repeated
+or accepts a comma separated list of devices. This overrides
+the devices file.
+.ad b
+.HP
+.ad l
+\fB--devicesfile\fP \fIString\fP
+.br
+A file listing devices that LVM should use.
+The file must exist in /etc/lvm/devices/ and is managed
+with the lvmdevices(8) command.
+This overrides the lvm.conf devices/devicesfile and
+devices/use_devicesfile settings.
 .ad b
 .HP
 .ad l
@@ -2265,6 +2299,7 @@ Detach and remove the cache pool from a cache LV.
 .BR lvm (8)
 .BR lvm.conf (5)
 .BR lvmconfig (8)
+.BR lvmdevices (8)
 
 .BR pvchange (8)
 .BR pvck (8)
@@ -2287,6 +2322,7 @@ Detach and remove the cache pool from a cache LV.
 .BR vgextend (8)
 .BR vgimport (8)
 .BR vgimportclone (8)
+.BR vgimportdevices (8)
 .BR vgmerge (8)
 .BR vgmknodes (8)
 .BR vgreduce (8)

@@ -26,6 +26,10 @@ changes the associated VG and PV UUIDs.
 [ \fB-i\fP|\fB--import\fP ]
 .ad b
 .br
+.ad l
+[    \fB--importdevices\fP ]
+.ad b
+.br
 [ COMMON_OPTIONS ]
 .RE
 .br
@@ -63,6 +67,14 @@ Common options for lvm:
 .br
 .ad l
 [    \fB--config\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[    \fB--devices\fP \fIPV\fP ]
+.ad b
+.br
+.ad l
+[    \fB--devicesfile\fP \fIString\fP ]
 .ad b
 .br
 .ad l
@@ -125,6 +137,24 @@ messages sent to the log file and/or syslog (if configured).
 .ad b
 .HP
 .ad l
+\fB--devices\fP \fIPV\fP
+.br
+Devices that the command can use. This option can be repeated
+or accepts a comma separated list of devices. This overrides
+the devices file.
+.ad b
+.HP
+.ad l
+\fB--devicesfile\fP \fIString\fP
+.br
+A file listing devices that LVM should use.
+The file must exist in /etc/lvm/devices/ and is managed
+with the lvmdevices(8) command.
+This overrides the lvm.conf devices/devicesfile and
+devices/use_devicesfile settings.
+.ad b
+.HP
+.ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
 .br
 If set to no, the command will not attempt to use device-mapper.
@@ -142,6 +172,12 @@ Display help text.
 .br
 Import exported VGs. Otherwise VGs that have been exported
 will not be changed (nor will their associated PVs).
+.ad b
+.HP
+.ad l
+\fB--importdevices\fP
+.br
+Add devices to the devices file.
 .ad b
 .HP
 .ad l
@@ -250,6 +286,7 @@ Rename the VG associated with "/dev/sdc" and "/dev/sdd" from "vg00" to "vg00_sna
 .BR lvm (8)
 .BR lvm.conf (5)
 .BR lvmconfig (8)
+.BR lvmdevices (8)
 
 .BR pvchange (8)
 .BR pvck (8)
@@ -272,6 +309,7 @@ Rename the VG associated with "/dev/sdc" and "/dev/sdd" from "vg00" to "vg00_sna
 .BR vgextend (8)
 .BR vgimport (8)
 .BR vgimportclone (8)
+.BR vgimportdevices (8)
 .BR vgmerge (8)
 .BR vgmknodes (8)
 .BR vgreduce (8)

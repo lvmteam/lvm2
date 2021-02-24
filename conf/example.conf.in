@@ -124,6 +124,38 @@ devices {
 	#
 	# This configuration option does not have a default value defined.
 
+	# Configuration option devices/use_devicesfile.
+	# Enable or disable the use of a devices file.
+	# When enabled, lvm will only use devices that
+	# are lised in the devices file. A devices file will
+	# be used, regardless of this setting, when the --devicesfile
+	# option is set to a specific file name.
+	# This configuration option has an automatic default value.
+	# use_devicesfile = 0
+
+	# Configuration option devices/devicesfile.
+	# The name of the system devices file, listing devices that LVM should use.
+	# This should not be used to select a non-system devices file.
+	# The --devicesfile option is intended for alternative devices files.
+	# This configuration option has an automatic default value.
+	# devicesfile = "system.devices"
+
+	# Configuration option devices/search_for_devnames.
+	# Look outside of the devices file for missing devname entries.
+	# A devname entry is used for a device that does not have a stable
+	# device id, e.g. wwid, so the unstable device name is used as
+	# the device id. After reboot, or if the device is reattached,
+	# the device name may change, in which case lvm will not find
+	# the expected PV on the device listed in the devices file.
+	# This setting controls whether lvm will search other devices,
+	# outside the devices file, to look for the missing PV on a
+	# renamed device. If "none", lvm will not look at other devices,
+	# and the PV may appear to be missing. If "auto", lvm will look
+	# at other devices, but only those that are likely to have the PV.
+	# If "all", lvm will look at all devices on the system.
+	# This configuration option has an automatic default value.
+	# search_for_devnames = "auto"
+
 	# Configuration option devices/filter.
 	# Limit the block devices that are used by LVM commands.
 	# This is a list of regular expressions used to accept or reject block
