@@ -426,12 +426,19 @@ static int _opt_str_to_num(struct command *cmd, char *str)
 int command_id_to_enum(const char *str)
 {
 	int i;
+	int first = 1, last = CMD_COUNT - 1, middle;
 
-	for (i = 1; i < CMD_COUNT; i++) {
-		if (!strcmp(str, cmd_names[i].name))
-			return cmd_names[i].cmd_enum;
+	while (first <= last) {
+		middle = first + (last - first) / 2;
+		if ((i = strcmp(cmd_names[middle].name, str)) < 0)
+			first = middle + 1;
+		else if (i > 0)
+			last = middle - 1;
+		else
+			return cmd_names[middle].cmd_enum;
 	}
 
+	log_error("Cannot find command %s.", str);
 	return CMD_NONE;
 }
 
@@ -509,18 +516,49 @@ static uint64_t _lv_to_bits(struct command *cmd, char *name)
 	return lvt_bits;
 }
 
-static struct command_name *_find_command_name(const char *name)
+struct command_name *find_command_name(const char *name)
 {
+	static int _command_names_count = -1;
+	int first = 0, last, middle;
 	int i;
 
+	if (_command_names_count == -1) {
+		/* Validate cmd_names & command_names arrays are properly sorted */
+		for (i = 1; i < CMD_COUNT - 2; i++)
+			if (strcmp(cmd_names[i].name, cmd_names[i + 1].name) > 0) {
+				log_error("File cmds.h has unsorted name entry %s.",
+					  cmd_names[i].name);
+				return 0;
+			}
+		for (i = 1; command_names[i].name; i++) /* assume > 1 */
+			if (strcmp(command_names[i - 1].name, command_names[i].name) > 0) {
+				log_error("File commands.h has unsorted name entry %s.",
+					  command_names[i].name);
+				return 0;
+			}
+		_command_names_count = i - 1;
+	}
+	last = _command_names_count;
+
+	while (first <= last) {
+		middle = first + (last - first) / 2;
+		if ((i = strcmp(command_names[middle].name, name)) < 0)
+			first = middle + 1;
+		else if (i > 0)
+			last = middle - 1;
+		else
+			return &command_names[middle];
+	}
+
+	return NULL;
+}
+
+static struct command_name *_find_command_name(const char *name)
+{
 	if (!islower(name[0]))
 		return NULL; /* Commands starts with lower-case */
 
-	for (i = 0; command_names[i].name; i++)
-		if (!strcmp(command_names[i].name, name))
-			return &command_names[i];
-
-	return NULL;
+	return find_command_name(name);
 }
 
 static const char *_is_command_name(char *str)

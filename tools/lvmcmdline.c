@@ -80,6 +80,7 @@ extern struct command_name command_names[];
  * Table of commands (as defined in command-lines.in)
  */
 struct command commands[COMMAND_COUNT];
+struct command *commands_idx[COMMAND_COUNT];
 
 static struct cmdline_context _cmdline;
 
@@ -1216,19 +1217,35 @@ static void _set_valid_args_for_command_name(int ci)
 	int opt_enum; /* foo_ARG from args.h */
 	int opt_syn;
 	int i, ro, oo, io;
+	int first = 0, last = COMMAND_COUNT - 1, middle;
+	const char *name = command_names[ci].name;
 
-	/*
-	 * all_args is indexed by the foo_ARG enum vals
-	 */
+	/* all_args is indexed by the foo_ARG enum vals */
+	/* Binary search in sorted array of long options (with duplicates) */
+	while (first <= last) {
+		middle = first + (last - first) / 2;
+		if ((i = strcmp(commands_idx[middle]->name, name)) < 0)
+			first = middle + 1;
+		else if (i > 0)
+			last = middle - 1;
+		else {
+			/* Matching command found.
+			 * As sorted array contains duplicates, found 1st. and last such cmd. */
+			i = middle;
+			while (middle > first && !strcmp(commands_idx[middle - 1]->name, name))
+				middle--;
+			while (i < last && !strcmp(commands_idx[i + 1]->name, name))
+				i++;
+			last = i;
+			break;
+		}
+	}
 
-	for (i = 0; i < COMMAND_COUNT; i++) {
-		if (strcmp(commands[i].name, command_names[ci].name))
-			continue;
-
+	while (middle <= last) {
+		i = commands_idx[middle++]->command_index;
 		for (ro = 0; ro < (commands[i].ro_count + commands[i].any_ro_count); ro++) {
 			opt_enum = commands[i].required_opt_args[ro].opt;
 			all_args[opt_enum] = 1;
-
 		}
 		for (oo = 0; oo < commands[i].oo_count; oo++) {
 			opt_enum = commands[i].optional_opt_args[oo].opt;
@@ -1275,17 +1292,6 @@ static void _set_valid_args_for_command_name(int ci)
 	command_names[ci].num_args = num_args;
 }
 
-static struct command_name *_find_command_name(const char *name)
-{
-	int i;
-
-	for (i = 0; command_names[i].name; i++)
-		if (!strcmp(command_names[i].name, name))
-			return &command_names[i];
-
-	return NULL;
-}
-
 static const struct command_function *_find_command_id_function(int command_enum)
 {
 	int i;
@@ -1307,6 +1313,14 @@ static void _unregister_commands(void)
 	_cmdline.command_names = NULL;
 	_cmdline.num_command_names = 0;
 	memset(&commands, 0, sizeof(commands));
+}
+
+static int _command_name_compare(const void *on1, const void *on2)
+{
+	const struct command * const *optname1 = on1;
+	const struct command * const *optname2 = on2;
+
+	return strcmp((*optname1)->name, (*optname2)->name);
 }
 
 int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
@@ -1332,6 +1346,8 @@ int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
 	_cmdline.num_commands = COMMAND_COUNT;
 
 	for (i = 0; i < COMMAND_COUNT; i++) {
+		commands_idx[i] = &commands[i];
+		commands[i].command_index = i;
 		commands[i].command_enum = command_id_to_enum(commands[i].command_id);
 
 		if (!commands[i].command_enum) {
@@ -1346,21 +1362,20 @@ int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
 
 		/* old style */
 		if (!commands[i].functions) {
-			struct command_name *cname = _find_command_name(commands[i].name);
+			struct command_name *cname = find_command_name(commands[i].name);
 			if (cname)
 				commands[i].fn = cname->fn;
 		}
 	}
 
-	/* Check how many command entries we have */
+	/* Sort all commands by its name for quick binary search */
+	qsort(commands_idx, COMMAND_COUNT, sizeof(long), _command_name_compare);
+
 	for (i = 0; command_names[i].name; i++)
-		;
-
-	_cmdline.num_command_names = i;
-	_cmdline.command_names = command_names;
-
-	for (i = 0; i < _cmdline.num_command_names; i++)
 		_set_valid_args_for_command_name(i);
+
+	_cmdline.num_command_names = i; /* Also counted how many command entries we have */
+	_cmdline.command_names = command_names;
 
 	return 1;
 }
@@ -2002,7 +2017,7 @@ static void _short_usage(const char *name)
 
 static int _usage(const char *name, int longhelp, int skip_notes)
 {
-	struct command_name *cname = _find_command_name(name);
+	struct command_name *cname = find_command_name(name);
 	struct command *cmd = NULL;
 	int show_full = longhelp;
 	int i;
@@ -2163,7 +2178,7 @@ static int _find_arg(const char *cmd_name, int goval)
 	int arg_enum;
 	int i;
 
-	if (!(cname = _find_command_name(cmd_name)))
+	if (!(cname = find_command_name(cmd_name)))
 		return -1;
 
 	for (i = 0; i < cname->num_args; i++) {
@@ -3051,7 +3066,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		return_ECMD_FAILED;
 
 	/* Look up command - will be NULL if not recognised */
-	if (!(cmd->cname = _find_command_name(cmd->name)))
+	if (!(cmd->cname = find_command_name(cmd->name)))
 		return ENO_SUCH_CMD;
 
 	if (!_process_command_line(cmd, &argc, &argv)) {
@@ -3699,7 +3714,7 @@ int lvm2_main(int argc, char **argv)
 	 */
 	if (!run_name)
 		run_shell = 1;
-	else if (!_find_command_name(run_name))
+	else if (!find_command_name(run_name))
 		run_script = 1;
 	else
 		run_command_name = run_name;
