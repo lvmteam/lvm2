@@ -246,19 +246,21 @@ struct cmd_name cmd_names[CMD_COUNT + 1] = {
 
 #ifdef MAN_PAGE_GENERATOR
 
-struct command_name command_names[MAX_COMMAND_NAMES] = {
+struct command_name command_names[] = {
 #define xx(a, b, c...) { # a, b, c },
 #include "commands.h"
 #undef xx
+	{ .name = NULL }
 };
 struct command commands[COMMAND_COUNT];
 
 #else /* MAN_PAGE_GENERATOR */
 
-struct command_name command_names[MAX_COMMAND_NAMES] = {
+struct command_name command_names[] = {
 #define xx(a, b, c...) { # a, b, c, a},
 #include "commands.h"
 #undef xx
+	{ .name = NULL }
 };
 extern struct command commands[COMMAND_COUNT]; /* defined in lvmcmdline.c */
 
@@ -514,12 +516,9 @@ static struct command_name *_find_command_name(const char *name)
 	if (!islower(name[0]))
 		return NULL; /* Commands starts with lower-case */
 
-	for (i = 0; i < MAX_COMMAND_NAMES; i++) {
-		if (!command_names[i].name)
-			break;
+	for (i = 0; command_names[i].name; i++)
 		if (!strcmp(command_names[i].name, name))
 			return &command_names[i];
-	}
 
 	return NULL;
 }
@@ -1270,10 +1269,7 @@ void factor_common_options(void)
 	int cn, opt_enum, ci, oo, ro, found;
 	struct command *cmd;
 
-	for (cn = 0; cn < MAX_COMMAND_NAMES; cn++) {
-		if (!command_names[cn].name)
-			break;
-
+	for (cn = 0; command_names[cn].name; cn++) {
 		/* already factored */
 		if (command_names[cn].variants)
 			continue;

@@ -74,7 +74,7 @@ extern struct lv_type lv_types[LVT_COUNT + 1];
 /*
  * Table of command names
  */
-extern struct command_name command_names[MAX_COMMAND_NAMES];
+extern struct command_name command_names[];
 
 /*
  * Table of commands (as defined in command-lines.in)
@@ -1278,13 +1278,11 @@ static void _set_valid_args_for_command_name(int ci)
 static struct command_name *_find_command_name(const char *name)
 {
 	int i;
-	
-	for (i = 0; i < MAX_COMMAND_NAMES; i++) {
-		if (!command_names[i].name)
-			break;
+
+	for (i = 0; command_names[i].name; i++)
 		if (!strcmp(command_names[i].name, name))
 			return &command_names[i];
-	}
+
 	return NULL;
 }
 
@@ -1354,14 +1352,12 @@ int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
 		}
 	}
 
-	_cmdline.command_names = command_names;
-	_cmdline.num_command_names = 0;
+	/* Check how many command entries we have */
+	for (i = 0; command_names[i].name; i++)
+		;
 
-	for (i = 0; i < MAX_COMMAND_NAMES; i++) {
-		if (!command_names[i].name)
-			break;
-		_cmdline.num_command_names++;
-	}
+	_cmdline.num_command_names = i;
+	_cmdline.command_names = command_names;
 
 	for (i = 0; i < _cmdline.num_command_names; i++)
 		_set_valid_args_for_command_name(i);
@@ -2074,11 +2070,8 @@ static void _usage_all(void)
 {
 	int i;
 
-	for (i = 0; i < MAX_COMMAND_NAMES; i++) {
-		if (!command_names[i].name)
-			break;
+	for (i = 0; command_names[i].name; i++)
 		_usage(command_names[i].name, 1, 1);
-	}
 
 	print_usage_notes(NULL);
 }

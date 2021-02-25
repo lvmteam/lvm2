@@ -30,8 +30,6 @@ struct command_function {
 	command_id_fn fn;
 };
 
-#define MAX_COMMAND_NAMES 64
-
 struct command_name {
 	const char *name;
 	const char *desc; /* general command description from commands.h */
