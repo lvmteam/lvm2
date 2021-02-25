@@ -1549,29 +1549,12 @@ struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct d
 	return dev;
 }
 
-static struct device *_dev_cache_seek_devt(dev_t dev)
-{
-	struct device *d = NULL;
-	struct dm_hash_node *n = dm_hash_get_first(_cache.names);
-	while (n) {
-		d = dm_hash_get_data(_cache.names, n);
-		if (d->dev == dev)
-			return d;
-		n = dm_hash_get_next(_cache.names, n);
-	}
-	return NULL;
-}
-
-/*
- * TODO This is very inefficient. We probably want a hash table indexed by
- * major:minor for keys to speed up these lookups.
- */
 struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t dev, struct dev_filter *f, int *filtered)
 {
 	char path[PATH_MAX];
 	const char *sysfs_dir;
 	struct stat info;
-	struct device *d = _dev_cache_seek_devt(dev);
+	struct device *d = (struct device *) btree_lookup(_cache.devices, (uint32_t) dev);
 	int ret;
 
 	if (filtered)
@@ -1600,7 +1583,7 @@ struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t dev, struct 
 		log_debug_devs("Device num not found in dev_cache repeat dev_cache_scan for %d:%d",
 				(int)MAJOR(dev), (int)MINOR(dev));
 		dev_cache_scan();
-		d = _dev_cache_seek_devt(dev);
+		d = (struct device *) btree_lookup(_cache.devices, (uint32_t) dev);
 	}
 
 	if (!d)
