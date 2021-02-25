@@ -29,13 +29,13 @@ xx(formats,
    "List available metadata formats",
    PERMITTED_READ_ONLY | NO_METADATA_PROCESSING)
 
-xx(help,
-   "Display help for commands",
-   PERMITTED_READ_ONLY | NO_METADATA_PROCESSING)
-
 xx(fullreport,
    "Display full report",
    PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH | ALLOW_HINTS | ALLOW_EXPORTED)
+
+xx(help,
+   "Display help for commands",
+   PERMITTED_READ_ONLY | NO_METADATA_PROCESSING)
 
 xx(lastlog,
    "Display last command's log report",
@@ -85,6 +85,10 @@ xx(lvmsar,
    "Create activity report",
    0)
 
+xx(lvpoll,
+   "Continue already initiated poll operation on a logical volume",
+   0)
+
 xx(lvreduce,
    "Reduce the size of a logical volume",
    ALLOW_HINTS)
@@ -113,10 +117,6 @@ xx(pvchange,
    "Change attributes of physical volume(s)",
    0)
 
-xx(pvresize,
-   "Resize physical volume(s)",
-   0)
-
 xx(pvck,
    "Check metadata on physical volumes",
    LOCKD_VG_SH | ALLOW_EXPORTED)
@@ -139,13 +139,13 @@ xx(pvmove,
    "Move extents from one physical volume to another",
    ALL_VGS_IS_DEFAULT | DISALLOW_TAG_ARGS)
 
-xx(lvpoll,
-   "Continue already initiated poll operation on a logical volume",
-   0)
-
 xx(pvremove,
    "Remove LVM label(s) from physical volume(s)",
    ENABLE_ALL_DEVS)
+
+xx(pvresize,
+   "Resize physical volume(s)",
+   0)
 
 xx(pvs,
    "Display information about physical volumes",
@@ -165,6 +165,10 @@ xx(systemid,
 
 xx(tags,
    "List tags defined on this host",
+   PERMITTED_READ_ONLY | NO_METADATA_PROCESSING)
+
+xx(version,
+   "Display software and driver version information",
    PERMITTED_READ_ONLY | NO_METADATA_PROCESSING)
 
 xx(vgcfgbackup,
@@ -246,7 +250,3 @@ xx(vgscan,
 xx(vgsplit,
    "Move physical volumes into a new or existing volume group",
    0)
-
-xx(version,
-   "Display software and driver version information",
-   PERMITTED_READ_ONLY | NO_METADATA_PROCESSING)
