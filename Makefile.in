@@ -154,6 +154,31 @@ install_all_man:
 install_tmpfiles_configuration:
 	$(MAKE) -C scripts install_tmpfiles_configuration
 
+help:
+	@echo -e "\nAvailable targets:"
+	@echo "  all			Default target."
+	@echo "  all_man		Build all man pages with generators."
+	@echo "  clean			Remove all compile files."
+	@echo "  device-mapper		Device mapper part of lvm2."
+	@echo "  dist			Generate distributable file."
+	@echo "  distclean		Remove all build files."
+	@echo "  generate		Generate man pages for sources."
+	@echo "  help			Display callable targets."
+	@echo "  install		Install all files."
+	@echo "  install_all_man	Install all man pages."
+	@echo "  install_cluster	Install cmirrord."
+	@echo "  install_device-mapper	Install device mapper files."
+	@echo "  install_initscripts	Install initialization scripts."
+	@echo "  install_lvm2		Install lvm2 files."
+	@echo "  install_systemd_units	Install systemd units."
+	@echo "  lcov			Generate lcov output."
+	@echo "  lcov-dated		Generate lcov with timedate suffix."
+	@echo "  lcov-reset		Reset lcov counters"
+	@echo "  man			Build man pages."
+	@echo "  rpm			Build rpm."
+	@echo "  run-unit-test		Run unit tests."
+	@echo "  tags			Generate c/etags."
+
 ifneq ("$(LCOV)", "")
 .PHONY: lcov-reset lcov lcov-dated
 
