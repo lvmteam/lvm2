@@ -1519,7 +1519,7 @@ static int _command_required_pos_matches(struct cmd_context *cmd, int ci, int rp
 	 * the VG position is allowed to be empty if --name VG/LV is used, or if the
 	 * LVM_VG_NAME env var is set.
 	 *
-	 * --thinpool VG/LV and --cachepool VG/LV can also function like --name 
+	 * --thinpool|--cachepool|--vdopool VG/LV can also function like --name
 	 * to provide the VG name in place of the positional arg.
 	 */
 	if (!strcmp(cmd->name, "lvcreate") &&
@@ -1528,6 +1528,7 @@ static int _command_required_pos_matches(struct cmd_context *cmd, int ci, int rp
 	    (arg_is_set(cmd, name_ARG) ||
 	     arg_is_set(cmd, thinpool_ARG) ||
 	     arg_is_set(cmd, cachepool_ARG) ||
+	     arg_is_set(cmd, vdopool_ARG) ||
 	     getenv("LVM_VG_NAME"))) {
 
 		if (getenv("LVM_VG_NAME"))
@@ -1547,6 +1548,9 @@ static int _command_required_pos_matches(struct cmd_context *cmd, int ci, int rp
 			if (strstr(name, "/"))
 				return 1;
 		}
+
+		if ((name = arg_str_value(cmd, vdopool_ARG, NULL)) && strstr(name, "/"))
+			return 1;
 	}
 
 	return 0;
