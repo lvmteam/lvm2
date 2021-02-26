@@ -17,6 +17,7 @@
 #include "lib/format_text/archiver.h"
 #include "lib/format_text/format-text.h"
 #include "lib/misc/lvm-string.h"
+#include "lib/misc/lvm-signal.h"
 #include "lib/cache/lvmcache.h"
 #include "lib/mm/memlock.h"
 #include "lib/commands/toolcontext.h"
@@ -155,7 +156,13 @@ static int _archive(struct volume_group *vg, int compulsory)
 
 int archive(struct volume_group *vg)
 {
-	return _archive(vg, 1);
+	int r;
+
+	sigint_allow();
+	r  = _archive(vg, 1);
+	sigint_restore();
+
+	return r;
 }
 
 int archive_display(struct cmd_context *cmd, const char *vg_name)
@@ -218,6 +225,7 @@ static int _backup(struct volume_group *vg)
 {
 	char name[PATH_MAX];
 	char *desc;
+	int r;
 
 	if (!(desc = _build_desc(vg->cmd->mem, vg->cmd->cmd_line, 0)))
 		return_0;
@@ -229,7 +237,11 @@ static int _backup(struct volume_group *vg)
 		return 0;
 	}
 
-	return backup_to_file(name, desc, vg);
+	sigint_allow();
+	r = backup_to_file(name, desc, vg);
+	sigint_restore();
+
+	return r;
 }
 
 int backup_locally(struct volume_group *vg)
