@@ -1,5 +1,9 @@
 Version 2.03.12 - 
 ===================================
+  Support interruption when taking archive and backup.
+  Accelerate large lvremoves.
+  Speedup search for cached device nodes.
+  Speedup command initialization.
   Add devices file feature, off by default for now.
   Support extension of writecached volumes.
   Fix problem with unbound variable usage within fsadm.
