@@ -3214,6 +3214,9 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		log_set_report_object_name_and_id(NULL, NULL);
 	}
 
+	if (vg->needs_backup)
+		backup(vg);
+
 	if (lvargs_supplied) {
 		/*
 		 * FIXME: lvm supports removal of LV with all its dependencies

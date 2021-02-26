@@ -6780,7 +6780,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 					display_lvname(pool_lv));
 	}
 
-	backup(vg);
+	vg->needs_backup = 1;
 
 	lockd_lv(cmd, lock_lv, "un", LDLV_PERSISTENT);
 	lockd_free_lv(cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
