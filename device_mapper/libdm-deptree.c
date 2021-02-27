@@ -2824,6 +2824,9 @@ static int _integrity_emit_segment_line(struct dm_task *dmt,
 	if (set->sectors_per_bit_set)
 		EMIT_PARAMS(pos, " sectors_per_bit:%llu", (unsigned long long)set->sectors_per_bit);
 
+	if (!dm_task_secure_data(dmt))
+		stack;
+
 	return 1;
 }
 
