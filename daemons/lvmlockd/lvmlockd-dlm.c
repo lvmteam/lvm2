@@ -327,8 +327,7 @@ int lm_rem_resource_dlm(struct lockspace *ls, struct resource *r)
 		log_error("S %s R %s rem_resource_dlm unlock error %d", ls->name, r->name, rv);
 	}
  out:
-	if (rdd->vb)
-		free(rdd->vb);
+	free(rdd->vb);
 
 	memset(rdd, 0, sizeof(struct rd_dlm));
 	r->lm_init = 0;

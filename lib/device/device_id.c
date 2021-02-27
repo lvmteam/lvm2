@@ -149,12 +149,9 @@ static int _searched_devnames_exists(struct cmd_context *cmd)
 
 void free_du(struct dev_use *du)
 {
-	if (du->idname)
-		free(du->idname);
-	if (du->devname)
-		free(du->devname);
-	if (du->pvid)
-		free(du->pvid);
+	free(du->idname);
+	free(du->devname);
+	free(du->pvid);
 	free(du);
 }
 
@@ -170,8 +167,7 @@ void free_dus(struct dm_list *dus)
 
 void free_did(struct dev_id *id)
 {
-	if (id->idname)
-		free(id->idname);
+	free(id->idname);
 	free(id);
 }
 
@@ -1213,8 +1209,7 @@ id_done:
 		du_devname->devname = NULL;
 	}
 
-	if (check_idname)
-		free((void *)check_idname);
+	free((void *)check_idname);
 
 	if (!update_du) {
 		log_debug("Adding new entry to devices file for %s PVID %s %s %s.",
@@ -1227,12 +1222,9 @@ id_done:
 			  dev_name(dev), update_matching_kind, update_matching_name);
 	}
 
-	if (du->idname)
-		free(du->idname);
-	if (du->devname)
-		free(du->devname);
-	if (du->pvid)
-		free(du->pvid);
+	free(du->idname);
+	free(du->devname);
+	free(du->pvid);
 
 	du->idtype = id->idtype;
 	du->idname = strdup(id->idname);
@@ -1604,8 +1596,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 					 dev_name(dev), dev->pvid, du->pvid ?: "none");
 				if (!(tmpdup = strdup(dev->pvid)))
 					continue;
-				if (du->pvid)
-					free(du->pvid);
+				free(du->pvid);
 				du->pvid = tmpdup;
 				update_file = 1;
 				*device_ids_invalid = 1;
@@ -1614,8 +1605,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 			if (du->pvid && (du->pvid[0] != '.')) {
 				log_warn("Device %s has no PVID (devices file %s)",
 					 dev_name(dev), du->pvid);
-				if (du->pvid)
-					free(du->pvid);
+				free(du->pvid);
 				du->pvid = NULL;
 				update_file = 1;
 				*device_ids_invalid = 1;
@@ -1627,8 +1617,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 				 dev_name(du->dev), du->devname ?: "none");
 			if (!(tmpdup = strdup(dev_name(du->dev))))
 				continue;
-			if (du->devname)
-				free(du->devname);
+			free(du->devname);
 			du->devname = tmpdup;
 			update_file = 1;
 			*device_ids_invalid = 1;
@@ -1686,8 +1675,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 					 devname, du->devname ?: "none");
 				if (!(tmpdup = strdup(devname)))
 					continue;
-				if (du->devname)
-					free(du->devname);
+				free(du->devname);
 				du->devname = tmpdup;
 				update_file = 1;
 				*device_ids_invalid = 1;
@@ -2029,24 +2017,18 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 		dup_devname3 = strdup(devname);
 		id = zalloc(sizeof(struct dev_id));
 		if (!dup_devname1 || !dup_devname2 || !dup_devname3 || !id) {
-			if (dup_devname1)
-				free(dup_devname1);
-			if (dup_devname2)
-				free(dup_devname2);
-			if (dup_devname3)
-				free(dup_devname3);
-			if (id)
-				free(id);
+			free(dup_devname1);
+			free(dup_devname2);
+			free(dup_devname3);
+			free(id);
 			stack;
 			continue;
 		}
 
 		log_warn("Devices file PVID %s updating IDNAME to %s.", dev->pvid, devname);
 
-		if (du->idname)
-			free(du->idname);
-		if (du->devname)
-			free(du->devname);
+		free(du->idname);
+		free(du->devname);
 		free_dids(&dev->ids);
 
 		du->idname = dup_devname1;

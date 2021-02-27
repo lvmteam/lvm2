@@ -658,8 +658,7 @@ static int clog_dtr(struct dm_ulog_request *rq)
 	if (lc->disk_fd != -1 && close(lc->disk_fd))
 		LOG_ERROR("Failed to close disk log: %s",
 			  strerror(errno));
-	if (lc->disk_buffer)
-		free(lc->disk_buffer);
+	free(lc->disk_buffer);
 	free(lc->clean_bits);
 	free(lc->sync_bits);
 	free(lc);

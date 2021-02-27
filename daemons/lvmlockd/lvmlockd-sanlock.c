@@ -1503,8 +1503,7 @@ out:
 fail:
 	if (lms && lms->sock)
 		close(lms->sock);
-	if (lms)
-		free(lms);
+	free(lms);
 	return ret;
 }
 
@@ -1634,8 +1633,7 @@ int lm_rem_resource_sanlock(struct lockspace *ls, struct resource *r)
 
 	/* FIXME: assert r->mode == UN or unlock if it's not? */
 
-	if (rds->vb)
-		free(rds->vb);
+	free(rds->vb);
 
 	memset(rds, 0, sizeof(struct rd_sanlock));
 	r->lm_init = 0;

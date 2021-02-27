@@ -189,8 +189,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	if (du) {
-		if (du->pvid)
-			free(du->pvid);
+		free(du->pvid);
 		if (!(du->pvid = strndup((char *)&pv->id, ID_LEN)))
 			log_error("Failed to set pvid for devices file.");
 		if (!device_ids_write(cmd))

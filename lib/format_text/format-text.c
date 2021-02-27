@@ -63,8 +63,7 @@ void free_text_fidtc(struct volume_group *vg)
 
 	fidtc->preserve = 0;
 
-	if (fidtc->write_buf)
-		free(fidtc->write_buf);
+	free(fidtc->write_buf);
 	fidtc->write_buf = NULL;
 	fidtc->write_buf_size = 0;
 	fidtc->new_metadata_size = 0;
@@ -2018,9 +2017,7 @@ static void _text_destroy(struct format_type *fmt)
 	if (fmt->orphan_vg)
 		free_orphan_vg(fmt->orphan_vg);
 
-	if (fmt->private)
-		free(fmt->private);
-
+	free(fmt->private);
 	free(fmt);
 }
 
