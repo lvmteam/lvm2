@@ -1563,9 +1563,6 @@ struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t dev, struct 
 	if (filtered)
 		*filtered = 0;
 
-	if (d && (d->flags & DEV_REGULAR))
-		return d;
-
 	if (!d) {
 		sysfs_dir = dm_sysfs_dir();
 		if (sysfs_dir && *sysfs_dir) {
@@ -1587,10 +1584,10 @@ struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t dev, struct 
 				(int)MAJOR(dev), (int)MINOR(dev));
 		dev_cache_scan();
 		d = (struct device *) btree_lookup(_cache.devices, (uint32_t) dev);
-	}
 
-	if (!d)
-		return NULL;
+		if (!d)
+			return NULL;
+	}
 
 	if (d->flags & DEV_REGULAR)
 		return d;
@@ -1611,6 +1608,7 @@ struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t dev, struct 
 
 	if (filtered)
 		*filtered = 1;
+
 	return NULL;
 }
 
