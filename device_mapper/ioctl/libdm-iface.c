@@ -493,7 +493,10 @@ static void _dm_task_free_targets(struct dm_task *dmt)
 
 	for (t = dmt->head; t; t = n) {
 		n = t->next;
-		_dm_zfree_string(t->params);
+		if (dmt->secure_data)
+			_dm_zfree_string(t->params);
+		else
+			free(t->params);
 		free(t->type);
 		free(t);
 	}
@@ -504,7 +507,10 @@ static void _dm_task_free_targets(struct dm_task *dmt)
 void dm_task_destroy(struct dm_task *dmt)
 {
 	_dm_task_free_targets(dmt);
-	_dm_zfree_dmi(dmt->dmi.v4);
+	if (dmt->secure_data)
+		_dm_zfree_dmi(dmt->dmi.v4);
+	else
+		free(dmt->dmi.v4);
 	free(dmt->dev_name);
 	free(dmt->mangled_dev_name);
 	free(dmt->newname);
