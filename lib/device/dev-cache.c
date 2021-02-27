@@ -28,6 +28,7 @@
 #endif
 #include <unistd.h>
 #include <dirent.h>
+#include <locale.h>
 
 struct dev_iter {
 	struct btree_iter *current;
@@ -809,16 +810,6 @@ static int _insert_dev(const char *path, dev_t d)
 	return 0;
 }
 
-static char *_join(const char *dir, const char *name)
-{
-	size_t len = strlen(dir) + strlen(name) + 2;
-	char *r = malloc(len);
-	if (r)
-		snprintf(r, len, "%s/%s", dir, name);
-
-	return r;
-}
-
 /*
  * Get rid of extra slashes in the path string.
  */
@@ -845,27 +836,39 @@ static int _insert_dir(const char *dir)
 {
 	int n, dirent_count, r = 1;
 	struct dirent **dirent;
-	char *path;
+	char path[PATH_MAX];
+	size_t len;
 
+	if (!dm_strncpy(path, dir, sizeof(path) - 1)) {
+		log_debug_devs("Dir path %s is too long", path);
+		return 0;
+	}
+	_collapse_slashes(path);
+	len = strlen(path);
+	if (len && path[len - 1] != '/')
+		path[len++] = '/';
+
+	setlocale(LC_COLLATE, "C"); /* Avoid sorting by locales */
 	dirent_count = scandir(dir, &dirent, NULL, alphasort);
 	if (dirent_count > 0) {
 		for (n = 0; n < dirent_count; n++) {
-			if (dirent[n]->d_name[0] == '.') {
-				free(dirent[n]);
+			if (dirent[n]->d_name[0] == '.')
+				continue;
+
+			if (!dm_strncpy(path + len, dirent[n]->d_name, sizeof(path) - len)) {
+				log_debug_devs("Path %s/%s is too long.", dir, dirent[n]->d_name);
+				r = 0;
 				continue;
 			}
 
-			if (!(path = _join(dir, dirent[n]->d_name)))
-				return_0;
-
-			_collapse_slashes(path);
 			r &= _insert(path, NULL, 1, 0);
-			free(path);
-
-			free(dirent[n]);
 		}
+
+		for (n = 0; n < dirent_count; n++)
+			free(dirent[n]);
 		free(dirent);
 	}
+	setlocale(LC_COLLATE, "");
 
 	return r;
 }
