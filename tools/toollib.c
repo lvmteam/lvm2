@@ -1407,6 +1407,12 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 
 	if (argc) {
 		for (; opt < argc; opt++) {
+			if (sigint_caught()) {
+				log_error("Interrupted.");
+				ret_max = ECMD_FAILED;
+				goto out;
+			}
+
 			if (!(dev = dev_cache_get(cmd, argv[opt], cmd->filter))) {
 				log_error("Failed to find device "
 					  "\"%s\".", argv[opt]);
@@ -1436,12 +1442,14 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 				ret_max = ret;
 
 			log_set_report_object_name_and_id(NULL, NULL);
-
-			if (sigint_caught())
-				break;
 		}
 
 		dm_list_iterate_items(devl, &process_duplicates) {
+			if (sigint_caught()) {
+				log_error("Interrupted.");
+				ret_max = ECMD_FAILED;
+				goto out;
+			}
 			/* 
 			 * remove the existing dev for this pvid from lvmcache
 			 * so that the duplicate dev can replace it.
@@ -1470,9 +1478,6 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 				ret_max = ret;
 
 			log_set_report_object_name_and_id(NULL, NULL);
-
-			if (sigint_caught())
-				break;
 		}
 
 		goto out;
@@ -1484,8 +1489,13 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 		goto out;
 	}
 
-	while ((dev = dev_iter_get(cmd, iter)))
-	{
+	while ((dev = dev_iter_get(cmd, iter)))	{
+		if (sigint_caught()) {
+			log_error("Interrupted.");
+			ret_max = ECMD_FAILED;
+			break;
+		}
+
 		if (!(label = lvmcache_get_dev_label(dev)))
 			continue;
 
@@ -1498,9 +1508,6 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 			ret_max = ret;
 
 		log_set_report_object_name_and_id(NULL, NULL);
-
-		if (sigint_caught())
-			break;
 	}
 
 	dev_iter_destroy(iter);
@@ -3064,11 +3071,6 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 		process_lv = process_lv && select_match_lv(cmd, handle, vg, lvl->lv) && _select_matches(handle);
 
-		if (sigint_caught()) {
-			ret_max = ECMD_FAILED;
-			goto_out;
-		}
-
 		if (!process_lv)
 			continue;
 
@@ -3174,6 +3176,11 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 			log_set_report_object_name_and_id(glvl->glv->historical->name, lv_uuid);
 
+			if (sigint_caught()) {
+				ret_max = ECMD_FAILED;
+				goto_out;
+			}
+
 			process_lv = process_all;
 
 			if (lvargs_supplied &&
@@ -3184,11 +3191,6 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			}
 
 			process_lv = process_lv && select_match_lv(cmd, handle, vg, lvl->lv) && _select_matches(handle);
-
-			if (sigint_caught()) {
-				ret_max = ECMD_FAILED;
-				goto_out;
-			}
 
 			if (!process_lv)
 				continue;
