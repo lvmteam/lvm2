@@ -66,6 +66,7 @@ daemons.device-mapper: libdm.device-mapper
 tools.device-mapper: libdm.device-mapper
 scripts.device-mapper: include.device-mapper
 device-mapper: tools.device-mapper daemons.device-mapper man.device-mapper
+device_mapper: device-mapper
 
 ifeq ("@INTL@", "yes")
 lib.pofile: include.pofile

@@ -310,6 +310,7 @@ all: $(SUBDIRS) $(TARGETS)
 
 install: all $(SUBDIRS.install)
 install_device-mapper: $(SUBDIRS.install_device-mapper)
+install_device_mapper: install_device-mapper
 cflow: $(SUBDIRS.cflow)
 
 $(SUBDIRS): $(SUBDIRS.device-mapper)
