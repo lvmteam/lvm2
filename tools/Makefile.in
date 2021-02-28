@@ -128,13 +128,13 @@ lvm: $(OBJECTS) lvm.o $(LVMINTERNAL_LIBS)
 
 DEFS_man-generator.o += -DMAN_PAGE_GENERATOR
 
-man-generator.c: command.c
+man-generator.c: $(srcdir)/command.c
 	@echo "    [LN] $@"
-	$(Q) $(LN_S) -f $< $@
+	$(Q) $(LN_S) -f $< $(@F)
 
 man-generator: man-generator.o
 	@echo "    [CC] $@"
-	$(Q) $(CC) $(CFLAGS) -o $@ $<
+	$(Q) $(CC) $(CFLAGS) -o $@ $(<F)
 
 lvm.static: $(OBJECTS) lvm-static.o $(LVMINTERNAL_LIBS)
 	@echo "    [CC] $@"
