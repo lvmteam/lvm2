@@ -337,8 +337,8 @@ LVMINTERNAL_LIBS = $(top_builddir)/lib/liblvm-internal.a $(INTERNAL_LIBS)
 
 all: $(SUBDIRS) $(TARGETS)
 
-install: all $(SUBDIRS.install)
-install_cluster: all $(SUBDIRS.install_cluster)
+install: $(SUBDIRS.install)
+install_cluster: $(SUBDIRS.install_cluster)
 install_device-mapper: $(SUBDIRS.install_device-mapper)
 install_device_mapper: install_device-mapper
 install_lvm2: $(SUBDIRS.install_lvm2)
