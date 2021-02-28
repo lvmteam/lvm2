@@ -82,7 +82,7 @@ CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))
 endif
 
 install_include: $(srcdir)/libdevmapper-event.h
-	@echo "    [INSTALL] $<"
+	@echo "    [INSTALL] $(<F)"
 	$(Q) $(INSTALL_DATA) -D $< $(includedir)/$(<F)
 
 install_pkgconfig: libdevmapper-event.pc

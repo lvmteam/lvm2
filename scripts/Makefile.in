@@ -59,7 +59,7 @@ install: install_lvm2 install_ocf install_device-mapper
 
 # FIXME Customise for other distributions
 install_initscripts:
-	@echo "    [INSTALL] $<"
+	@echo "    [INSTALL] initscripts"
 	$(Q) $(INSTALL_DIR) $(initdir)
 ifeq ("@BUILD_DMEVENTD@", "yes")
 	$(Q) $(INSTALL_SCRIPT) lvm2_monitoring_init_red_hat $(initdir)/lvm2-monitor
@@ -81,12 +81,12 @@ lvm2_activation_generator_systemd_red_hat: $(OBJECTS) $(LVMINTERNAL_LIBS)
 	$(Q) $(CC) -o $@ $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) $(LVMINTERNAL_LIBS) $(LIBS)
 
 install_systemd_generators:
-	@echo "    [INSTALL] $<"
+	@echo "    [INSTALL] systemd_generators"
 	$(Q) $(INSTALL_DIR) $(systemd_generator_dir)
 	$(Q) $(INSTALL_PROGRAM) lvm2_activation_generator_systemd_red_hat $(systemd_generator_dir)/lvm2-activation-generator
 
 install_systemd_units:	install_dbus_service
-	@echo "    [INSTALL] $<"
+	@echo "    [INSTALL] systemd_units"
 	$(Q) $(INSTALL_DIR) $(systemd_unit_dir)
 	$(Q) $(INSTALL_DATA) lvm2-pvscan.service $(systemd_unit_dir)/lvm2-pvscan@.service
 ifeq ("@BUILD_DMEVENTD@", "yes")
@@ -114,7 +114,7 @@ endif
 
 ifeq ("@BUILD_LVMDBUSD@", "yes")
 install_dbus_service:
-	@echo "    [INSTALL] $<"
+	@echo "    [INSTALL] dbus_service"
 	$(Q) $(INSTALL_DIR) $(dbusconfdir)
 	$(Q) $(INSTALL_DIR) $(dbusservicedir)
 	$(Q) $(INSTALL_DATA) $(top_srcdir)/scripts/com.redhat.lvmdbus1.conf $(dbusconfdir)
@@ -124,7 +124,7 @@ install_systemd_units:	install_dbus_service
 endif
 
 install_tmpfiles_configuration:
-	@echo "    [INSTALL] $<"
+	@echo "    [INSTALL] configuration"
 	$(Q) $(INSTALL_DIR) $(tmpfiles_dir)
 	$(Q) $(INSTALL_DATA) lvm2_tmpfiles_red_hat.conf $(tmpfiles_dir)/lvm2.conf
 

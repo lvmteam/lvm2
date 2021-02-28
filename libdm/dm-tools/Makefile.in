@@ -71,12 +71,12 @@ install_dmsetup_static: dmsetup.static
 	$(Q) $(LN_S) -f $(<F) $(staticdir)/dmstats
 
 
-dmfilemapd: $(LIB_SHARED) dmfilemapd.o
+dmfilemapd: dmfilemapd.o $(LIB_SHARED)
 	@echo "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) \
 	      -o $@ $+ $(DMLIBS)
 
-dmfilemapd.static: $(LIB_STATIC) dmfilemapd.o
+dmfilemapd.static: dmfilemapd.o $(LIB_STATIC)
 	@echo "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(ELDFLAGS) -static \
 	      -o $@ $+ $(DMLIBS) $(STATIC_LIBS)

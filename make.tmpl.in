@@ -440,19 +440,19 @@ endif
 DEFS+=-D_FILE_OFFSET_BITS=64
 
 %.o: %.c
-	@echo "    [CC] $<"
+	@echo "    [CC] $(<F)"
 	$(Q) $(CC) -c $(INCLUDES) $(VALGRIND_CFLAGS) $(PROGS_CFLAGS) $(DEFS) $(DEFS_$@) $(WFLAGS) $(WCFLAGS) $(CFLAGS) $(CFLAGS_$@) $< -o $@
 
 %.o: %.cpp
-	@echo "    [CXX] $<"
+	@echo "    [CXX] $(<F)"
 	$(Q) $(CXX) -c $(INCLUDES) $(VALGRIND_CFLAGS) $(DEFS) $(DEFS_$@) $(WFLAGS) $(CXXFLAGS) $(CXXFLAGS_$@) $< -o $@
 
 %.pot: %.c Makefile
-	@echo "    [CC] $@"
+	@echo "    [CC] $(<F)"
 	$(Q) $(CC) -E $(INCLUDES) $(VALGRIND_CFLAGS) $(PROGS_CFLAGS) -include $(top_builddir)/po/pogen.h $(DEFS) $(WFLAGS) $(CFLAGS) $< >$@
 
 %.so: %.o
-	@echo "    [CC] $<"
+	@echo "    [CC] $(<F)"
 	$(Q) $(CC) -c $(CFLAGS) $(CLDFLAGS) $< $(LIBS) -o $@
 
 ifneq (,$(LIB_SHARED))
@@ -502,7 +502,7 @@ $(LIB_STATIC): $(OBJECTS)
 	$(Q) $(AR) rsv $@ $(OBJECTS) > /dev/null
 
 %.d: %.c
-	@echo "    [DEP] $<"
+	@echo "    [DEP] $(<F)"
 	$(Q) $(MKDIR_P) $(dir $@); \
 	set -e; \
 	FILE=`echo $@ | sed 's/\\//\\\\\\//g;s/\\.d//g'`; \
@@ -514,7 +514,7 @@ $(LIB_STATIC): $(OBJECTS)
 	[ -s $@ ] || $(RM) $@
 
 %.mo: %.po
-	@echo "    [MSGFMT] $<"
+	@echo "    [MSGFMT] $(<F)"
 	$(Q) $(MSGFMT) -o $@ $<
 
 CLEAN_TARGETS += \
