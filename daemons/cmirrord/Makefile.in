@@ -33,6 +33,8 @@ cmirrord: $(OBJECTS)
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) \
 		$(LMLIBS) -L$(top_builddir)/libdm -ldevmapper $(LIBS)
 
-install: $(TARGETS)
+install_cluster: $(TARGETS)
 	@echo "    [INSTALL] $<"
-	$(Q) $(INSTALL_PROGRAM) -D cmirrord $(usrsbindir)/cmirrord
+	$(Q) $(INSTALL_PROGRAM) -D $< $(usrsbindir)/$(<F)
+
+install: install_cluster
