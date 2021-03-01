@@ -65,17 +65,21 @@ and prints it.
 .SS kill
 
 This is run by sanlock when it loses access to the storage holding leases
-for a VG.  It currently emits a syslog message stating that the VG must
-be immediately deactivated.  In the future it may automatically attempt to
-forcibly deactivate the VG.  For more, see
+for a VG.  It runs the command specified in lvm.conf
+lvmlockctl_kill_command to deactivate LVs in the VG.  If the specified
+command is successful, locks will be dropped for the VG in lvmlockd
+(the equivalent of lvmlockctl --drop will be run.)  If no command
+is specified, or the command fails, then the user must intervene
+to forcefully deactivate LVs in the VG, and if successful, run
+lvmlockctl --drop.  For more, see
 .BR lvmlockd (8).
 
 .SS drop
 
 This should only be run after a VG has been successfully deactivated
 following an lvmlockctl --kill command.  It clears the stale lockspace
-from lvmlockd.  In the future, this may become automatic along with an
-automatic handling of --kill.  For more, see
+from lvmlockd.  When lvmlockctl_kill_command is used, the --kill
+command may run drop automatically.  For more, see
 .BR lvmlockd (8).
 
 .SS gl-enable

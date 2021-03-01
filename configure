@@ -693,6 +693,7 @@ MANGLING
 LVM_RELEASE_DATE
 LVM_RELEASE
 LVM_PATH
+LVM_DIR
 LVM_PATCHLEVEL
 LVM_MINOR
 LVM_MAJOR
@@ -13766,9 +13767,11 @@ SYSCONFDIR="$(eval echo $(eval echo $sysconfdir))"
 
 SBINDIR="$(eval echo $(eval echo $sbindir))"
 LVM_PATH="$SBINDIR/lvm"
+LVM_DIR="$SBINDIR/"
 
 cat >>confdefs.h <<_ACEOF
 #define LVM_PATH "$LVM_PATH"
+#define LVM_DIR "$LVM_DIR"
 _ACEOF
 
 

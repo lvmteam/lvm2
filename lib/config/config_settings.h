@@ -1152,6 +1152,15 @@ cfg(global_sanlock_lv_extend_CFG, "sanlock_lv_extend", global_CFG_SECTION, CFG_D
 	"and can cause lvcreate to fail. Applicable only if LVM is compiled\n"
 	"with lockd support\n")
 
+cfg(global_lvmlockctl_kill_command_CFG, "lvmlockctl_kill_command", global_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, "", vsn(2, 3, 12), NULL, 0, NULL,
+	"The command that lvmlockctl --kill should use to force LVs offline.\n"
+	"The lvmlockctl --kill command is run when a shared VG has lost\n"
+	"access to locks (e.g. when sanlock has lost access to storage.)\n"
+	"An empty string means that there will be no automatic attempt by\n"
+	"lvmlockctl --kill to forcibly shut down LVs in the VG, and the user\n"
+	"can manually intervene as described in lvmlockd(8).\n"
+	"The VG name will be appended to the command specified here.\n")
+
 cfg(global_thin_check_executable_CFG, "thin_check_executable", global_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, THIN_CHECK_CMD, vsn(2, 2, 94), "@THIN_CHECK_CMD@", 0, NULL,
 	"The full path to the thin_check command.\n"
 	"LVM uses this command to check that a thin metadata device is in a\n"
