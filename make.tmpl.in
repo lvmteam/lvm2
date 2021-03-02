@@ -300,7 +300,7 @@ INCLUDES += -I$(srcdir) -I$(top_srcdir) -I$(top_builddir)/include -include confi
 #VDO_INCLUDES=-I@VDO_INCLUDE@
 
 DEPS = $(top_builddir)/make.tmpl $(top_srcdir)/VERSION \
-       $(top_builddir)/Makefile $(top_builddir)/include/configure.h
+       $(top_builddir)/Makefile
 
 OBJECTS = $(SOURCES:%.c=%.o) $(CXXSOURCES:%.cpp=%.o)
 POTFILES = $(SOURCES:%.c=%.pot)
@@ -436,14 +436,16 @@ endif
 
 .LIBPATTERNS = lib%.so lib%.a
 
+DEPFLAGS=-MT $@ -MMD -MP -MF $*.d
+
 # still needed in 2018 for 32bit builds
 DEFS+=-D_FILE_OFFSET_BITS=64
 
-%.o: %.c
+%.o: %.c $(DEPS)
 	@echo "    [CC] $(<F)"
-	$(Q) $(CC) -c $(INCLUDES) $(VALGRIND_CFLAGS) $(PROGS_CFLAGS) $(DEFS) $(DEFS_$@) $(WFLAGS) $(WCFLAGS) $(CFLAGS) $(CFLAGS_$@) $< -o $@
+	$(Q) $(CC) $(DEPFLAGS) -c $(INCLUDES) $(VALGRIND_CFLAGS) $(PROGS_CFLAGS) $(DEFS) $(DEFS_$@) $(WFLAGS) $(WCFLAGS) $(CFLAGS) $(CFLAGS_$@) $< -o $@
 
-%.o: %.cpp
+%.o: %.cpp $(DEPS)
 	@echo "    [CXX] $(<F)"
 	$(Q) $(CXX) -c $(INCLUDES) $(VALGRIND_CFLAGS) $(DEFS) $(DEFS_$@) $(WFLAGS) $(CXXFLAGS) $(CXXFLAGS_$@) $< -o $@
 
@@ -501,17 +503,8 @@ $(LIB_STATIC): $(OBJECTS)
 	$(Q) $(RM) $@
 	$(Q) $(AR) rsv $@ $(OBJECTS) > /dev/null
 
-%.d: %.c
-	@echo "    [DEP] $(<F)"
-	$(Q) $(MKDIR_P) $(dir $@); \
-	set -e; \
-	FILE=`echo $@ | sed 's/\\//\\\\\\//g;s/\\.d//g'`; \
-	DEPS=`echo $(DEPS) | sed -e 's/\\//\\\\\\//g'`; \
-	$(CC) -MM $(INCLUDES) $(VALGRIND_CFLAGS) $(PROGS_CFLAGS) $(DEFS) -o $@ $<; \
-	sed -i "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d $$FILE.pot: $$DEPS /g" $@; \
-	DEPLIST=`sed 's/ \\\\//;s/.*://;' < $@`; \
-	echo $$DEPLIST | fmt -1 | sed 's/ //g;s/\(.*\)/\1:/' >> $@; \
-	[ -s $@ ] || $(RM) $@
+%.d:
+.PRECIOUS: %.d
 
 %.mo: %.po
 	@echo "    [MSGFMT] $(<F)"
