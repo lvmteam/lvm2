@@ -586,9 +586,6 @@
 /* Path to lvm binary. */
 #undef LVM_PATH
 
-/* Path to lvm binary dir. */
-#undef LVM_DIR
-
 /* Define to 1 if `major', `minor', and `makedev' are declared in <mkdev.h>.
    */
 #undef MAJOR_IN_MKDEV
