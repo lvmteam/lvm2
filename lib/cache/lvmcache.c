@@ -2909,6 +2909,8 @@ const char *dev_filtered_reason(struct device *dev)
 		return "device is not in devices file";
 	if (dev->filtered_flags & DEV_FILTERED_DEVICES_LIST)
 		return "device is not in devices list";
+	if (dev->filtered_flags & DEV_FILTERED_IS_LV)
+		return "device is an LV";
 
 	/* flag has not been added here */
 	if (dev->filtered_flags)

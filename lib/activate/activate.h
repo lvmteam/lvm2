@@ -253,7 +253,7 @@ struct dev_usable_check_params {
  * Returns 1 if mapped device is not suspended, blocked or
  * is using a reserved name.
  */
-int device_is_usable(struct device *dev, struct dev_usable_check_params check);
+int device_is_usable(struct device *dev, struct dev_usable_check_params check, int *is_lv);
 
 /*
  * Declaration moved here from fs.h to keep header fs.h hidden

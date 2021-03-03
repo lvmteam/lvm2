@@ -111,6 +111,7 @@ static int _passes_usable_filter(struct cmd_context *cmd, struct dev_filter *f, 
 	filter_mode_t mode = data->mode;
 	int skip_lvs = data->skip_lvs;
 	struct dev_usable_check_params ucp = {0};
+	int is_lv = 0;
 	int r = 1;
 
 	dev->filtered_flags &= ~DEV_FILTERED_MINSIZE;
@@ -145,8 +146,11 @@ static int _passes_usable_filter(struct cmd_context *cmd, struct dev_filter *f, 
 			break;
 		}
 
-		if (!(r = device_is_usable(dev, ucp))) {
-			dev->filtered_flags |= DEV_FILTERED_UNUSABLE;
+		if (!(r = device_is_usable(dev, ucp, &is_lv))) {
+			if (is_lv)
+				dev->filtered_flags |= DEV_FILTERED_IS_LV;
+			else
+				dev->filtered_flags |= DEV_FILTERED_UNUSABLE;
 			log_debug_devs("%s: Skipping unusable device.", dev_name(dev));
 		}
 	}

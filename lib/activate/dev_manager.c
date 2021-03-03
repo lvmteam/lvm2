@@ -405,7 +405,7 @@ static int _ignore_blocked_mirror_devices(struct device *dev,
 					       .check_blocked = 1,
 					       .check_suspended = ignore_suspended_devices(),
 					       .check_error_target = 1,
-					       .check_reserved = 0 }))
+					       .check_reserved = 0 }, NULL))
 				goto out; /* safe to use */
 			stack;
 		}
@@ -620,7 +620,7 @@ static int _ignore_frozen_raid(struct device *dev, const char *params)
  *
  * Returns: 1 if usable, 0 otherwise
  */
-int device_is_usable(struct device *dev, struct dev_usable_check_params check)
+int device_is_usable(struct device *dev, struct dev_usable_check_params check, int *is_lv)
 {
 	struct dm_task *dmt;
 	struct dm_info info;
@@ -675,6 +675,8 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 
 	if (check.check_lv && uuid && !strncmp(uuid, "LVM-", 4)) {
 		/* Skip LVs */
+		if (is_lv)
+			*is_lv = 1;
 		goto out;
 	}
 
