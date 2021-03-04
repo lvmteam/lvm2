@@ -955,7 +955,8 @@ static int _build_pv_names(struct formatter *f, struct volume_group *vg)
 	int count = 0;
 	struct pv_list *pvl;
 	struct physical_volume *pv;
-	char buffer[32], *uuid, *name;
+	char buffer[32], *name;
+	char uuid[64];
 
 	if (!(f->mem = dm_pool_create("text pv_names", 512)))
 		return_0;
@@ -973,8 +974,7 @@ static int _build_pv_names(struct formatter *f, struct volume_group *vg)
 		if (!(name = dm_pool_strdup(f->mem, buffer)))
 			return_0;
 
-		if (!(uuid = dm_pool_zalloc(f->mem, 64)) ||
-		   !id_write_format(&pv->id, uuid, 64))
+		if (!id_write_format(&pv->id, uuid, sizeof(uuid)))
 			return_0;
 
 		if (!dm_hash_insert(f->pv_names, uuid, name))
