@@ -103,12 +103,12 @@ static int _archive(struct volume_group *vg, int compulsory)
 {
 	char *desc;
 
+	if (vg_is_archived(vg))
+		return 1; /* VG has been already archived */
+
 	/* Don't archive orphan VGs. */
 	if (is_orphan_vg(vg->name))
 		return 1;
-
-	if (vg_is_archived(vg))
-		return 1; /* VG has been already archived */
 
 	if (!vg->cmd->archive_params->enabled || !vg->cmd->archive_params->dir) {
 		vg->status |= ARCHIVED_VG;

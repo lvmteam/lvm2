@@ -31,7 +31,7 @@ int lv_is_origin(const struct logical_volume *lv)
 int lv_is_cow(const struct logical_volume *lv)
 {
 	/* Make sure a merging thin origin isn't confused as a cow LV */
-	return (!lv_is_thin_volume(lv) && !lv_is_origin(lv) && lv->snapshot) ? 1 : 0;
+	return (lv->snapshot && !lv_is_thin_volume(lv) && !lv_is_origin(lv)) ? 1 : 0;
 }
 
 struct logical_volume *find_cow(const struct logical_volume *snap)

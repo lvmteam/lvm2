@@ -371,7 +371,7 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 			seg_error("sets cleaner_policy");
 	}
 
-	if (lv_is_cache(lv) && seg->pool_lv && lv_is_cache_vol(seg->pool_lv)) {
+	if (seg->pool_lv && lv_is_cache(lv) && lv_is_cache_vol(seg->pool_lv)) {
 		cache_setting_seg = seg;
 		no_metadata_format = 1;
 	}
