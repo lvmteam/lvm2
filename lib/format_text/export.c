@@ -1040,62 +1040,53 @@ static int _text_vg_export(struct formatter *f,
 
 int text_vg_export_file(struct volume_group *vg, const char *desc, FILE *fp)
 {
-	struct formatter *f;
 	int r;
+	struct formatter f = {
+		.indent = 0,
+		.header = 1,
+		.out_with_comment = &_out_with_comment_file,
+		.nl = &_nl_file,
+		.data.fp = fp,
+	};
 
 	_init();
 
-	if (!(f = zalloc(sizeof(*f))))
-		return_0;
+	if ((r = _text_vg_export(&f, vg, desc)))
+		r = !ferror(f.data.fp);
 
-	f->data.fp = fp;
-	f->indent = 0;
-	f->header = 1;
-	f->out_with_comment = &_out_with_comment_file;
-	f->nl = &_nl_file;
-
-	r = _text_vg_export(f, vg, desc);
-	if (r)
-		r = !ferror(f->data.fp);
-	free(f);
 	return r;
 }
 
 /* Returns amount of buffer used incl. terminating NUL */
 size_t text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf, uint32_t *buf_size)
 {
-	struct formatter *f;
-	size_t r = 0;
+	size_t r;
+	struct formatter f = {
+		.indent = 0,
+		.header = 0,
+		.out_with_comment = &_out_with_comment_raw,
+		.nl = &_nl_raw,
+		.data.buf.size = 65536,	/* Initial metadata limit */
+	};
 
 	_init();
 
-	if (!(f = zalloc(sizeof(*f))))
-		return_0;
-
-	f->data.buf.size = 65536;	/* Initial metadata limit */
-	if (!(f->data.buf.start = zalloc(f->data.buf.size))) {
+	if (!(f.data.buf.start = zalloc(f.data.buf.size))) {
 		log_error("text_export buffer allocation failed");
-		goto out;
+		return 0;
 	}
 
-	f->indent = 0;
-	f->header = 0;
-	f->out_with_comment = &_out_with_comment_raw;
-	f->nl = &_nl_raw;
-
-	if (!_text_vg_export(f, vg, desc)) {
-		free(f->data.buf.start);
-		goto_out;
+	if (!_text_vg_export(&f, vg, desc)) {
+		free(f.data.buf.start);
+		return 0;
 	}
 
-	r = f->data.buf.used + 1;
-	*buf = f->data.buf.start;
+	r = f.data.buf.used + 1;
+	*buf = f.data.buf.start;
 
 	if (buf_size)
-		*buf_size = f->data.buf.size;
+		*buf_size = f.data.buf.size;
 
-      out:
-	free(f);
 	return r;
 }
 
