@@ -186,6 +186,8 @@ struct volume_group *text_read_metadata(struct format_instance *fid,
 			goto_out;
 
 		(*vsn)->read_desc(vg->vgmem, cft, when, desc);
+		vg->committed_cft = cft; /* Reuse CFT for recreation of committed VG */
+		cft = NULL;
 		break;
 	}
 
@@ -198,7 +200,8 @@ struct volume_group *text_read_metadata(struct format_instance *fid,
 		*use_previous_vg = 0;
 
       out:
-	config_destroy(cft);
+	if (cft)
+		config_destroy(cft);
 	return vg;
 }
 

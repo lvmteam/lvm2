@@ -50,9 +50,9 @@ struct volume_group {
 	 * The parsed committed (on-disk) copy of this VG; is NULL if this VG is committed
 	 * version (i.e. vg_committed == NULL *implies* this is the committed copy,
 	 * there is no guarantee that if this VG is the same as the committed one
-	 * this will be NULL). The pointer is maintained by calls to
-	 * _vg_update_vg_committed.
+	 * this will be NULL). The pointer is maintained by calls to vg_write & vg_commit
 	 */
+	struct dm_config_tree *committed_cft;
 	struct volume_group *vg_committed;
 	struct volume_group *vg_precommitted;
 

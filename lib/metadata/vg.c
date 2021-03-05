@@ -79,6 +79,8 @@ static void _free_vg(struct volume_group *vg)
 
 	log_debug_mem("Freeing VG %s at %p.", vg->name ? : "<no name>", (void *)vg);
 
+	if (vg->committed_cft)
+		config_destroy(vg->committed_cft);
 	dm_hash_destroy(vg->hostnames);
 	dm_pool_destroy(vg->vgmem);
 }

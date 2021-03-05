@@ -5186,8 +5186,6 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	 * FIXME: be specific about exactly when this works correctly.
 	 */
 	if (writing) {
-		struct dm_config_tree *cft;
-
 		if (dm_pool_locked(vg->vgmem)) {
 			/* FIXME: can this happen? */
 			log_warn("WARNING: vg_read no vg copy: pool locked.");
@@ -5208,15 +5206,15 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 			vg->vg_precommitted = NULL;
 		}
 
-		if (!(cft = export_vg_to_config_tree(vg))) {
+		if (!vg->committed_cft) {
 			log_warn("WARNING: vg_read no vg copy: copy export failed.");
-			goto out;
+			if (!(vg->committed_cft = export_vg_to_config_tree(vg)))
+				goto out;
 		}
 
-		if (!(vg->vg_committed = import_vg_from_config_tree(cmd, vg->fid, cft)))
+		if (!(vg->vg_committed = import_vg_from_config_tree(cmd, vg->fid, vg->committed_cft)))
 			log_warn("WARNING: vg_read no vg copy: copy import failed.");
 
-		dm_config_destroy(cft);
 	} else {
 		if (vg->vg_precommitted)
 			log_error(INTERNAL_ERROR "vg_read vg %p vg_precommitted %p", (void *)vg, (void *)vg->vg_precommitted);
