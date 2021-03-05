@@ -43,6 +43,7 @@ struct volume_group {
 	uint32_t seqno;		/* Metadata sequence number */
 	unsigned skip_validate_lock_args : 1;
 	unsigned needs_backup : 1;
+	unsigned needs_write_and_commit : 1;
 	uint32_t write_count; /* count the number of vg_write calls */
 
 	/*
@@ -129,6 +130,7 @@ struct volume_group {
 	struct dm_hash_table *hostnames; /* map of creation hostnames */
 	struct logical_volume *pool_metadata_spare_lv; /* one per VG */
 	struct logical_volume *sanlock_lv; /* one per VG */
+	struct dm_list msg_list;
 };
 
 struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,

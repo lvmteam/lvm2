@@ -6538,6 +6538,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	int ask_discard;
 	struct seg_list *sl;
 	struct lv_segment *seg = first_seg(lv);
+	char msg[NAME_LEN + 300], *msg_dup;
 
 	vg = lv->vg;
 
@@ -6609,6 +6610,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		if ((force == PROMPT) &&
 		    !lv_is_pending_delete(lv) &&
 		    lv_is_visible(lv)) {
+			if (vg->needs_write_and_commit && (!vg_write(vg) || !vg_commit(vg)))
+				return 0;
 			if (yes_no_prompt("Do you really want to remove%s active "
 					  "%slogical volume %s? [y/n]: ",
 					  ask_discard ? " and DISCARD" : "",
@@ -6644,12 +6647,16 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
-	if (!lv_is_historical(lv) && (force == PROMPT) && ask_discard &&
-	    yes_no_prompt("Do you really want to remove and DISCARD "
-			  "logical volume %s? [y/n]: ",
-			  display_lvname(lv)) == 'n') {
-		log_error("Logical volume %s not removed.", display_lvname(lv));
-		return 0;
+	if (!lv_is_historical(lv) && (force == PROMPT) && ask_discard) {
+		/* try to store on disks already confirmed removals */
+		if (vg->needs_write_and_commit && (!vg_write(vg) || !vg_commit(vg)))
+			return 0;
+		if (yes_no_prompt("Do you really want to remove and DISCARD "
+				  "logical volume %s? [y/n]: ",
+				  display_lvname(lv)) == 'n') {
+			log_error("Logical volume %s not removed.", display_lvname(lv));
+			return 0;
+		}
 	}
 
 	if (lv_is_cache(lv) && !lv_is_pending_delete(lv)) {
@@ -6765,8 +6772,11 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
-	/* store it on disks */
-	if (!vg_write(vg) || !vg_commit(vg))
+	if (!pool_lv && (!strcmp(cmd->name, "lvremove") || !strcmp(cmd->name, "vgremove"))) {
+		/* With lvremove & vgremove try to postpone commit after last such LV */
+		vg->needs_write_and_commit = 1;
+		log_debug_metadata("Postponing write and commit.");
+	} else if (!vg_write(vg) || !vg_commit(vg))  /* store it on disks */
 		return_0;
 
 	/* Release unneeded blocks in thin pool */
@@ -6785,10 +6795,18 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	lockd_lv(cmd, lock_lv, "un", LDLV_PERSISTENT);
 	lockd_free_lv(cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
 
-	if (!suppress_remove_message && (visible || historical))
-		log_print_unless_silent("%sogical volume \"%s\" successfully removed",
-					historical ? "Historical l" : "L",
-					historical ? lv->this_glv->historical->name : lv->name);
+	if (!suppress_remove_message && (visible || historical)) {
+		(void) dm_snprintf(msg, sizeof(msg),
+				   "%sogical volume \"%s\" successfully removed",
+				   historical ? "Historical l" : "L",
+				   historical ? lv->this_glv->historical->name : lv->name);
+		if (!vg->needs_write_and_commit)
+			log_print_unless_silent("%s", msg);
+		/* Keep print message for later display with next vg_write() and vg_commit() */
+		else if (!(msg_dup = dm_pool_strdup(vg->vgmem, msg)) ||
+			 !str_list_add_no_dup_check(vg->vgmem, &vg->msg_list, msg_dup))
+			return_0;
+	}
 
 	return 1;
 }

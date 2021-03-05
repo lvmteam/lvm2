@@ -3173,6 +3173,7 @@ static int _vg_commit_mdas(struct volume_group *vg)
 int vg_commit(struct volume_group *vg)
 {
 	struct pv_list *pvl;
+	struct dm_str_list *sl;
 	int ret;
 
 	ret = _vg_commit_mdas(vg);
@@ -3190,6 +3191,14 @@ int vg_commit(struct volume_group *vg)
 
 		/* This *is* the original now that it's commited. */
 		_vg_move_cached_precommitted_to_committed(vg);
+
+		if (vg->needs_write_and_commit){
+			/* Print buffered messages that have been finished with this commit. */
+			dm_list_iterate_items(sl, &vg->msg_list)
+				log_print_unless_silent("%s", sl->str);
+			dm_list_init(&vg->msg_list);
+			vg->needs_write_and_commit = 0;
+		}
 	}
 
 	/* If at least one mda commit succeeded, it was committed */

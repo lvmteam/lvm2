@@ -3216,6 +3216,10 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		log_set_report_object_name_and_id(NULL, NULL);
 	}
 
+	if (vg->needs_write_and_commit && (ret_max == ECMD_PROCESSED) &&
+	    (!vg_write(vg) || !vg_commit(vg)))
+		return_0;
+
 	if (vg->needs_backup)
 		backup(vg);
 
