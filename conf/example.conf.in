@@ -1122,6 +1122,17 @@ global {
 	# This configuration option has an automatic default value.
 	# sanlock_lv_extend = 256
 
+	# Configuration option global/lvmlockctl_kill_command.
+	# The command that lvmlockctl --kill should use to force LVs offline.
+	# The lvmlockctl --kill command is run when a shared VG has lost
+	# access to locks (e.g. when sanlock has lost access to storage.)
+	# An empty string means that there will be no automatic attempt by
+	# lvmlockctl --kill to forcibly shut down LVs in the VG, and the user
+	# can manually intervene as described in lvmlockd(8).
+	# The VG name will be appended to the command specified here.
+	# This configuration option has an automatic default value.
+	# lvmlockctl_kill_command = ""
+
 	# Configuration option global/thin_check_executable.
 	# The full path to the thin_check command.
 	# LVM uses this command to check that a thin metadata device is in a
