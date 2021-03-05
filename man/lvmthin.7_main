@@ -443,12 +443,12 @@ If the repair works, the thin pool LV and its thin LVs can be activated.
 User should manually check if repaired thin pool kernel metadata
 has all data for all lvm2 known LVs by individual activation of
 every thin LV. When all works, user should continue with fsck of
-all filesystems present these such volumes.
+all filesystems present on these volumes.
 Once the thin pool is considered fully functional user may remove ThinPoolLV_metaN
 (the LV containing the damaged thin pool metadata) for possible
 space reuse.
 For a better performance it may be useful to pvmove the new repaired metadata LV
-(written to previous pmspare volume) to a better PV (i.e. SSD)
+(written to previous pmspare volume) to a faster PV, e.g. SSD.
 
 If the repair operation fails, the thin pool LV and its thin LVs
 are not accessible and it may be necessary to restore their content
