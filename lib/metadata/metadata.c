@@ -996,32 +996,6 @@ static void _vg_move_cached_precommitted_to_committed(struct volume_group *vg)
 	vg->vg_precommitted = NULL;
 }
 
-/*
- * Update content of precommitted VG
- *
- * TODO: Optimize in the future, since lvmetad needs similar
- *       config tree processing in lvmetad_vg_update().
- */
-static int _vg_update_embedded_copy(struct volume_group *vg, struct volume_group **vg_embedded)
-{
-	struct dm_config_tree *cft;
-
-	_vg_wipe_cached_precommitted(vg);
-
-	/* Copy the VG using an export followed by import */
-	if (!(cft = export_vg_to_config_tree(vg)))
-		return_0;
-
-	if (!(*vg_embedded = import_vg_from_config_tree(vg->cmd, vg->fid, cft))) {
-		dm_config_destroy(cft);
-		return_0;
-	}
-
-	dm_config_destroy(cft);
-
-	return 1;
-}
-
 int lv_has_unknown_segments(const struct logical_volume *lv)
 {
 	struct lv_segment *seg;
@@ -3120,9 +3094,6 @@ int vg_write(struct volume_group *vg)
 			return 0;
 		}
 	}
-
-	if (!_vg_update_embedded_copy(vg, &vg->vg_precommitted)) /* prepare precommited */
-		return_0;
 
 	lockd_vg_update(vg);
 

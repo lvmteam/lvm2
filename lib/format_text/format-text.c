@@ -28,6 +28,7 @@
 #include "lib/mm/xlate.h"
 #include "lib/label/label.h"
 #include "lib/cache/lvmcache.h"
+#include "libdaemon/client/config-util.h"
 
 #include <unistd.h>
 #include <limits.h>
@@ -579,6 +580,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 			 struct metadata_area *mda)
 {
 	char desc[2048];
+	struct dm_config_tree *cft;
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct text_fid_context *fidtc = (struct text_fid_context *) fid->private;
 	struct raw_locn *rlocn_old;
@@ -662,6 +664,21 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		fidtc->write_buf = write_buf;
 		fidtc->write_buf_size = write_buf_size;
 		fidtc->new_metadata_size = new_size;
+
+		/* Immediatelly reuse existing buffer for parsing metadata back.
+		 * Such VG is then used for as precommitted VG and later committed VG.
+		 *
+		 * 'Lazy' creation of such VG might improve performance, but we
+		 * lose important validation that written metadata can be parsed. */
+		if (!(cft = config_tree_from_string_without_dup_node_check(write_buf))) {
+			log_error("Error parsing metadata for VG %s.", vg->name);
+			goto out;
+		}
+		release_vg(vg->vg_precommitted);
+		vg->vg_precommitted = import_vg_from_config_tree(vg->cmd, vg->fid, cft);
+		dm_config_destroy(cft);
+		if (!vg->vg_precommitted)
+			goto_out;
 	}
 
 	if (!new_size || !write_buf) {
