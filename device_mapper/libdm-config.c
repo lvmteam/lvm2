@@ -599,7 +599,7 @@ static struct dm_config_node *_section(struct parser *p, struct dm_config_node *
 		match(TOK_IDENTIFIER);
 	}
 
-	if (!strlen(str)) {
+	if (!*str) {
 		log_error("Parse error at byte %" PRIptrdiff_t " (line %d): empty section identifier",
 			  p->tb - p->fb + 1, p->line);
 		return NULL;
