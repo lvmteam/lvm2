@@ -17,10 +17,10 @@
 
 struct hint {
 	struct dm_list list;
-	char name[PATH_MAX];
-	char pvid[ID_LEN + 1];
-	char vgname[NAME_LEN];
 	dev_t devt;
+	char name[PATH_MAX]   __attribute__((aligned(8)));
+	char vgname[NAME_LEN] __attribute__((aligned(8)));
+	char pvid[ID_LEN + 1] __attribute__((aligned(8)));
 	unsigned chosen:1; /* this hint's dev was chosen for scanning */
 };
 
