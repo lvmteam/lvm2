@@ -46,7 +46,7 @@ struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
 	vg->vgmem = vgmem;
 	vg->alloc = ALLOC_NORMAL;
 
-	if (!(vg->hostnames = dm_hash_create(16))) {
+	if (!(vg->hostnames = dm_hash_create(14))) {
 		log_error("Failed to allocate VG hostname hashtable.");
 		dm_pool_destroy(vgmem);
 		return NULL;

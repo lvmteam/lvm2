@@ -960,7 +960,7 @@ static int _build_pv_names(struct formatter *f, struct volume_group *vg)
 	if (!(f->mem = dm_pool_create("text pv_names", 512)))
 		return_0;
 
-	if (!(f->pv_names = dm_hash_create(128)))
+	if (!(f->pv_names = dm_hash_create(115)))
 		return_0;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {

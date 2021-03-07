@@ -2474,7 +2474,7 @@ dm_percent_t dm_make_percent(uint64_t numerator, uint64_t denominator)
 
 int dm_report_value_cache_set(struct dm_report *rh, const char *name, const void *data)
 {
-	if (!rh->value_cache && (!(rh->value_cache = dm_hash_create(64)))) {
+	if (!rh->value_cache && (!(rh->value_cache = dm_hash_create(63)))) {
 		log_error("Failed to create cache for values used during reporting.");
 		return 0;
 	}

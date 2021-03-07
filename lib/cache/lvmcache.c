@@ -101,13 +101,13 @@ int lvmcache_init(struct cmd_context *cmd)
 	dm_list_init(&_unused_duplicates);
 	dm_list_init(&_prev_unused_duplicate_devs);
 
-	if (!(_vgname_hash = dm_hash_create(128)))
+	if (!(_vgname_hash = dm_hash_create(127)))
 		return 0;
 
-	if (!(_vgid_hash = dm_hash_create(128)))
+	if (!(_vgid_hash = dm_hash_create(126)))
 		return 0;
 
-	if (!(_pvid_hash = dm_hash_create(128)))
+	if (!(_pvid_hash = dm_hash_create(125)))
 		return 0;
 
 	return 1;

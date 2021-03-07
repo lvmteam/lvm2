@@ -380,13 +380,13 @@ struct dm_tree *dm_tree_create(void)
 	dtree->mem = dmem;
 	dtree->optional_uuid_suffixes = NULL;
 
-	if (!(dtree->devs = dm_hash_create(8))) {
+	if (!(dtree->devs = dm_hash_create(61))) {
 		log_error("dtree hash creation failed");
 		dm_pool_destroy(dtree->mem);
 		return NULL;
 	}
 
-	if (!(dtree->uuids = dm_hash_create(32))) {
+	if (!(dtree->uuids = dm_hash_create(31))) {
 		log_error("dtree uuid hash creation failed");
 		dm_hash_destroy(dtree->devs);
 		dm_pool_destroy(dtree->mem);

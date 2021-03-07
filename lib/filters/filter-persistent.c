@@ -58,7 +58,7 @@ static int _init_hash(struct pfilter *pf)
 	if (pf->devices)
 		dm_hash_destroy(pf->devices);
 
-	if (!(pf->devices = dm_hash_create(128)))
+	if (!(pf->devices = dm_hash_create(111)))
 		return_0;
 
 	return 1;

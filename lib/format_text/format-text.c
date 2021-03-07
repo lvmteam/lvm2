@@ -2223,7 +2223,7 @@ static int _create_vg_text_instance(struct format_instance *fid,
 		vg_name = fic->context.vg_ref.vg_name;
 		vg_id = fic->context.vg_ref.vg_id;
 
-		if (!(fid->metadata_areas_index = dm_hash_create(128))) {
+		if (!(fid->metadata_areas_index = dm_hash_create(116))) {
 			log_error("Couldn't create metadata index for format "
 				  "instance of VG %s.", vg_name);
 			return 0;

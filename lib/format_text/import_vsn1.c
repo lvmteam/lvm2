@@ -1074,7 +1074,7 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	 * The pv hash memorises the pv section names -> pv
 	 * structures.
 	 */
-	if (!(pv_hash = dm_hash_create(64))) {
+	if (!(pv_hash = dm_hash_create(59))) {
 		log_error("Couldn't create pv hash table.");
 		goto bad;
 	}
@@ -1083,7 +1083,7 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	 * The lv hash memorises the lv section names -> lv
 	 * structures.
 	 */
-	if (!(lv_hash = dm_hash_create(1024))) {
+	if (!(lv_hash = dm_hash_create(1023))) {
 		log_error("Couldn't create lv hash table.");
 		goto bad;
 	}

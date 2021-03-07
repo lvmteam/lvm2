@@ -374,7 +374,7 @@ struct dev_filter *mpath_filter_create(struct dev_types *dt)
 		return NULL;
 	}
 
-	if (!(hash = dm_hash_create(128))) {
+	if (!(hash = dm_hash_create(110))) {
 		log_error("mpath hash table creation failed.");
 		return NULL;
 	}

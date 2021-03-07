@@ -576,7 +576,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 
 	if (log_once) {
 		if (!_duplicated)
-			_duplicated = dm_hash_create(128);
+			_duplicated = dm_hash_create(117);
 		if (_duplicated) {
 			if (dm_hash_lookup(_duplicated, message))
 				level = _LOG_NOTICE;

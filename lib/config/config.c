@@ -1142,7 +1142,7 @@ int config_def_check(struct cft_check_handle *handle)
 	 * If section name is variable, use '#' as a substitute.
 	 */
 	if (!handle->cmd->cft_def_hash) {
-		if (!(handle->cmd->cft_def_hash = dm_hash_create(64))) {
+		if (!(handle->cmd->cft_def_hash = dm_hash_create(60))) {
 			log_error("Failed to create configuration definition hash.");
 			r = 0; goto out;
 		}
