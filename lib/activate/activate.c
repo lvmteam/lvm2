@@ -2049,12 +2049,6 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	if (!activation())
 		return 1;
 
-	/* Ignore origin_only unless LV is origin in both old and new metadata */
-	/* or LV is thin or thin pool volume */
-	if (!lv_is_thin_volume(lv) && !lv_is_thin_pool(lv) &&
-	    !(lv_is_origin(lv) && lv_is_origin(lv_pre)))
-		laopts->origin_only = 0;
-
 	if (test_mode()) {
 		_skip("Suspending %s%s.", display_lvname(lv),
 		      laopts->origin_only ? " origin without snapshots" : "");
@@ -2075,6 +2069,12 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	}
 
 	lv_calculate_readahead(lv, NULL);
+
+	/* Ignore origin_only unless LV is origin in both old and new metadata */
+	/* or LV is thin or thin pool volume */
+	if (!lv_is_thin_volume(lv) && !lv_is_thin_pool(lv) &&
+	    !(lv_is_origin(lv) && lv_is_origin(lv_pre)))
+		laopts->origin_only = 0;
 
 	/*
 	 * Preload devices for the LV.
