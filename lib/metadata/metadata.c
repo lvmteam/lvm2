@@ -1664,9 +1664,12 @@ struct logical_volume *find_lv_in_vg_by_lvid(struct volume_group *vg,
 {
 	struct lv_list *lvl;
 
+	if (memcmp(&lvid->id[0], &vg->id, sizeof(vg->id)))
+		return NULL; /* Check VG does not match */
+
 	dm_list_iterate_items(lvl, &vg->lvs)
-		if (!strncmp(lvl->lv->lvid.s, lvid->s, sizeof(*lvid)))
-			return lvl->lv;
+		if (!memcmp(&lvid->id[1], &lvl->lv->lvid.id[1], sizeof(lvid->id[1])))
+			return lvl->lv; /* LV uuid match */
 
 	return NULL;
 }
