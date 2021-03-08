@@ -37,8 +37,11 @@ struct dm_hash_table {
 	struct dm_hash_node **slots;
 };
 
-/* Permutation of the Integers 0 through 255 */
-static unsigned char _nums[] = {
+#if 0 /* TO BE REMOVED */
+static unsigned _hash(const void *key, unsigned len)
+{
+	/* Permutation of the Integers 0 through 255 */
+	static unsigned char _nums[] = {
 	1, 14, 110, 25, 97, 174, 132, 119, 138, 170, 125, 118, 27, 233, 140, 51,
 	87, 197, 177, 107, 234, 169, 56, 68, 30, 7, 173, 73, 188, 40, 36, 65,
 	49, 213, 104, 190, 57, 211, 148, 223, 48, 115, 15, 2, 67, 186, 210, 28,
@@ -63,23 +66,9 @@ static unsigned char _nums[] = {
 	44, 38, 31, 149, 135, 0, 216, 52, 63, 23, 37, 69, 39, 117, 146, 184,
 	163, 200, 222, 235, 248, 243, 219, 10, 152, 131, 123, 229, 203, 76, 120,
 	209
-};
+	};
 
-static struct dm_hash_node *_create_node(const void *key, unsigned len)
-{
-	struct dm_hash_node *n = malloc(sizeof(*n) + len);
-
-	if (n) {
-		memcpy(n->key, key, len);
-		n->keylen = len;
-	}
-
-	return n;
-}
-
-static unsigned _hash(const void *key, unsigned len)
-{
-	const unsigned char *str = key;
+	const uint8_t *str = key;
 	unsigned h = 0, g;
 	unsigned i;
 
@@ -94,6 +83,73 @@ static unsigned _hash(const void *key, unsigned len)
 	}
 
 	return h;
+}
+
+/* In-kernel DM hashing, still lots of collisions */
+static unsigned _hash_in_kernel(const char *key, unsigned len)
+{
+	const unsigned char *str = (unsigned char *)key;
+	const unsigned hash_mult = 2654435387U;
+	unsigned hash = 0, i;
+
+	for (i = 0; i < len; ++i)
+		hash = (hash + str[i]) * hash_mult;
+
+	return hash;
+}
+#endif
+
+#undef get16bits
+#if (defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__)))
+#define get16bits(d) (*((const uint16_t *) (d)))
+#endif
+
+#if !defined (get16bits)
+#define get16bits(d) ((((uint32_t)(((const uint8_t *)(d))[1])) << 8)\
+                       +(uint32_t)(((const uint8_t *)(d))[0]) )
+#endif
+
+/*
+ * Adapted Bob Jenkins hash to read by 2 bytes if possible.
+ * https://secure.wikimedia.org/wikipedia/en/wiki/Jenkins_hash_function
+ *
+ * Reduces amount of hash collisions
+ */
+static unsigned _hash(const void *key, unsigned len)
+{
+	const uint8_t *str = (uint8_t*) key;
+	unsigned hash = 0, i;
+	unsigned sz = len / 2;
+
+	for(i = 0; i < sz; ++i) {
+		hash += get16bits(str + 2 * i);
+		hash += (hash << 10);
+		hash ^= (hash >> 6);
+	}
+
+	if (len & 1) {
+		hash += str[len - 1];
+		hash += (hash << 10);
+		hash ^= (hash >> 6);
+	}
+
+	hash += (hash << 3);
+	hash ^= (hash >> 11);
+	hash += (hash << 15);
+
+	return hash;
+}
+
+static struct dm_hash_node *_create_node(const void *key, unsigned len)
+{
+	struct dm_hash_node *n = malloc(sizeof(*n) + len);
+
+	if (n) {
+		memcpy(n->key, key, len);
+		n->keylen = len;
+	}
+
+	return n;
 }
 
 struct dm_hash_table *dm_hash_create(unsigned size_hint)
