@@ -81,6 +81,7 @@ help:
 	@echo "  check_system		Run all tests using udev."
 	@echo "  check_local		Run tests."
 	@echo "  check_lvmpolld         Run tests with lvmpolld daemon."
+	@echo "  check_devicesfile	Run tests using a devices file."
 	@echo "  check_all_lvmpolld     Run all tests with lvmpolld daemon."
 	@echo "  check_lvmlockd_sanlock Run tests with lvmlockd and sanlock."
 	@echo "  check_lvmlockd_dlm     Run tests with lvmlockd and dlm."
@@ -148,6 +149,11 @@ check_all_lvmpolld: .tests-stamp
 		--flavours ndev-lvmpolld --only $(T) --skip $(S)
 endif
 
+check_devicesfile: .tests-stamp
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir $(LVM_TEST_RESULTS) \
+		--flavours ndev-devicesfile --only $(T) --skip $(S)
+
 ifeq ("@BUILD_LVMLOCKD@", "yes")
 check_lvmlockd_sanlock: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
@@ -179,6 +185,7 @@ EXECDIR = $(libexecdir)/lvm2-testsuite
 LIB_FLAVOURS = \
  flavour-ndev-lvmpolld\
  flavour-ndev-vanilla\
+ flavour-ndev-devicesfile\
  flavour-udev-lvmpolld\
  flavour-udev-lvmlockd-sanlock\
  flavour-udev-lvmlockd-dlm\

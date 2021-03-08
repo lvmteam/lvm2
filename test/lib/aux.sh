@@ -822,7 +822,9 @@ wipefs_a() {
 	local dev=$1
 	shift
 
-#	lvmdevices --deldev $dev || true
+	if test -n "$LVM_TEST_DEVICES_FILE"; then
+		lvmdevices --deldev $dev || true
+	fi
 
 	if wipefs -V >/dev/null; then
 		wipefs -a "$dev"
@@ -831,7 +833,10 @@ wipefs_a() {
 		mdadm --zero-superblock "$dev" || true
 	fi
 
-#	lvmdevices --adddev $dev || true
+	if test -n "$LVM_TEST_DEVICES_FILE"; then
+		lvmdevices --adddev $dev || true
+	fi
+
 }
 
 prepare_backing_dev() {
@@ -917,11 +922,13 @@ prepare_devs() {
 		wipefs -a "$d" 2>/dev/null || true
 	done
 
-#	mkdir -p $TESTDIR/etc/lvm/devices || true
-#	rm $TESTDIR/etc/lvm/devices/system.devices || true
-#	for d in "${DEVICES[@]}"; do
-#		lvmdevices --adddev $dev || true
-#	done
+	if test -n "$LVM_TEST_DEVICES_FILE"; then
+		mkdir -p $TESTDIR/etc/lvm/devices || true
+		rm $TESTDIR/etc/lvm/devices/system.devices || true
+		for d in "${DEVICES[@]}"; do
+			lvmdevices --adddev $dev || true
+		done
+	fi
 
 	#for i in `seq 1 $n`; do
 	#	local name="${PREFIX}$pvname$i"
@@ -1276,6 +1283,7 @@ generate_config() {
 	LVM_TEST_LOCKING=${LVM_TEST_LOCKING:-1}
 	LVM_TEST_LVMPOLLD=${LVM_TEST_LVMPOLLD:-0}
 	LVM_TEST_LVMLOCKD=${LVM_TEST_LVMLOCKD:-0}
+	LVM_TEST_DEVICES_FILE=${LVM_TEST_DEVICES_FILE:-0}
         # FIXME:dct: This is harmful! Variables are unused here and are tested not being empty elsewhere:
 	#LVM_TEST_LOCK_TYPE_SANLOCK=${LVM_TEST_LOCK_TYPE_SANLOCK:-0}
 	#LVM_TEST_LOCK_TYPE_DLM=${LVM_TEST_LOCK_TYPE_DLM:-0}
@@ -1310,6 +1318,7 @@ devices/md_component_detection = 0
 devices/scan = "$DM_DEV_DIR"
 devices/sysfs_scan = 1
 devices/write_cache_state = 0
+devices/use_devicesfile = $LVM_TEST_DEVICES_FILE
 global/abort_on_internal_errors = 1
 global/cache_check_executable = "$LVM_TEST_CACHE_CHECK_CMD"
 global/cache_dump_executable = "$LVM_TEST_CACHE_DUMP_CMD"
