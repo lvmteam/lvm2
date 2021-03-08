@@ -6610,7 +6610,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			    !lv_is_pending_delete(lv) &&
 			    lv_is_visible(lv)) {
 				if (vg->needs_write_and_commit && (!vg_write(vg) || !vg_commit(vg)))
-					return 0;
+					return_0;
 				if (yes_no_prompt("Do you really want to remove%s active "
 						  "%slogical volume %s? [y/n]: ",
 						  ask_discard ? " and DISCARD" : "",
@@ -6651,7 +6651,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!lv_is_historical(lv) && (force == PROMPT) && ask_discard) {
 		/* try to store on disks already confirmed removals */
 		if (vg->needs_write_and_commit && (!vg_write(vg) || !vg_commit(vg)))
-			return 0;
+			return_0;
 		if (yes_no_prompt("Do you really want to remove and DISCARD "
 				  "logical volume %s? [y/n]: ",
 				  display_lvname(lv)) == 'n') {
