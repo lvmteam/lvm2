@@ -6602,26 +6602,27 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	/* FIXME Ensure not referred to by another existing LVs */
 	ask_discard = find_config_tree_bool(cmd, devices_issue_discards_CFG, NULL);
 
-	if (!lv_is_cache_vol(lv) &&
-	    lv_is_active(lv)) {
-		if (!lv_check_not_in_use(lv, 1))
-			return_0;
-
-		if ((force == PROMPT) &&
-		    !lv_is_pending_delete(lv) &&
-		    lv_is_visible(lv)) {
-			if (vg->needs_write_and_commit && (!vg_write(vg) || !vg_commit(vg)))
-				return 0;
-			if (yes_no_prompt("Do you really want to remove%s active "
-					  "%slogical volume %s? [y/n]: ",
-					  ask_discard ? " and DISCARD" : "",
-					  vg_is_clustered(vg) ? "clustered " : "",
-					  display_lvname(lv)) == 'n') {
-				log_error("Logical volume %s not removed.", display_lvname(lv));
-				return 0;
+	if (!lv_is_cache_vol(lv)) {
+		switch (lv_check_not_in_use(lv, 1)) {
+		case 0: return_0;
+		case 1: /* Active, not in use */
+			if ((force == PROMPT) &&
+			    !lv_is_pending_delete(lv) &&
+			    lv_is_visible(lv)) {
+				if (vg->needs_write_and_commit && (!vg_write(vg) || !vg_commit(vg)))
+					return 0;
+				if (yes_no_prompt("Do you really want to remove%s active "
+						  "%slogical volume %s? [y/n]: ",
+						  ask_discard ? " and DISCARD" : "",
+						  vg_is_clustered(vg) ? "clustered " : "",
+						  display_lvname(lv)) == 'n') {
+					log_error("Logical volume %s not removed.", display_lvname(lv));
+					return 0;
+				}
+				ask_discard = 0;
 			}
-
-			ask_discard = 0;
+			break;
+		default: /* Not active */ ;
 		}
 	}
 
