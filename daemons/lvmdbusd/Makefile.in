@@ -15,7 +15,7 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
-lvmdbusdir = $(DESTDIR)$(python3dir)/lvmdbusd
+lvmdbusdir = $(python3dir)/lvmdbusd
 
 LVMDBUS_SRCDIR_FILES = \
 	automatedproperties.py \
@@ -57,12 +57,12 @@ install_lvmdbusd: $(LVMDBUSD)
 	@echo "    [INSTALL] $<"
 	$(Q) $(INSTALL_DIR) $(sbindir)
 	$(Q) $(INSTALL_SCRIPT) $(LVMDBUSD) $(sbindir)
-	$(Q) $(INSTALL_DIR) $(lvmdbusdir)
-	$(Q) (cd $(srcdir); $(INSTALL_DATA) $(LVMDBUS_SRCDIR_FILES) $(lvmdbusdir))
-	$(Q) $(INSTALL_DATA) $(LVMDBUS_BUILDDIR_FILES) $(lvmdbusdir)
+	$(Q) $(INSTALL_DIR) $(DESTDIR)$(lvmdbusdir)
+	$(Q) (cd $(srcdir); $(INSTALL_DATA) $(LVMDBUS_SRCDIR_FILES) $(DESTDIR)$(lvmdbusdir))
+	$(Q) $(INSTALL_DATA) $(LVMDBUS_BUILDDIR_FILES) $(DESTDIR)$(lvmdbusdir)
 	$(Q) PYTHON=$(PYTHON3) $(PYCOMPILE) --destdir "$(DESTDIR)" --basedir "$(lvmdbusdir)" $(LVMDBUS_SRCDIR_FILES) $(LVMDBUS_BUILDDIR_FILES)
-	$(Q) $(CHMOD) 755 $(lvmdbusdir)/__pycache__
-	$(Q) $(CHMOD) 444 $(lvmdbusdir)/__pycache__/*.py[co]
+	$(Q) $(CHMOD) 755 $(DESTDIR)$(lvmdbusdir)/__pycache__
+	$(Q) $(CHMOD) 444 $(DESTDIR)$(lvmdbusdir)/__pycache__/*.py[co]
 
 install_lvm2: install_lvmdbusd
 
