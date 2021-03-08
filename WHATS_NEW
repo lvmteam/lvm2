@@ -1,5 +1,9 @@
 Version 2.03.12 - 
 ===================================
+  Improve hash function with less collisions and make it faster.
+  Reduce ioctl count when deactivating volumes.
+  Reduce number of metadata parsing.
+  Enhance performance of lvremove and vgremove commands.
   Support interruption when taking archive and backup.
   Accelerate large lvremoves.
   Speedup search for cached device nodes.
