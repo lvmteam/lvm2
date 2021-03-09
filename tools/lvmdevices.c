@@ -14,7 +14,6 @@
 
 #include "tools.h"
 #include "lib/cache/lvmcache.h"
-#include "lib/filters/filter.h"
 #include "lib/device/device_id.h"
 
 static void _search_devs_for_pvids(struct cmd_context *cmd, struct dm_list *search_pvids, struct dm_list *found_devs)

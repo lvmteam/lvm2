@@ -14,7 +14,6 @@
 
 #include "tools.h"
 #include "lib/cache/lvmcache.h"
-#include "lib/filters/filter.h"
 #include "lib/device/device_id.h"
 
 struct vgimportclone_params {

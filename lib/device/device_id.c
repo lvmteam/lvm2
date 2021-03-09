@@ -18,7 +18,6 @@
 #include "lib/device/device.h"
 #include "lib/device/device_id.h"
 #include "lib/device/dev-type.h"
-#include "lib/device/device-types.h"
 #include "lib/label/label.h"
 #include "lib/metadata/metadata.h"
 #include "lib/format_text/layout.h"
