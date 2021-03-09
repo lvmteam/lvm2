@@ -761,7 +761,7 @@ out:
 
 static void _device_ids_update_try(struct cmd_context *cmd)
 {
-	int held;
+	int held = 0;
 
 	/* Defer updates to non-pvscan-cache commands. */
 	if (cmd->pvscan_cache_single) {

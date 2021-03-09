@@ -379,7 +379,7 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 	struct label_header *lh = (struct label_header *) label_buf;
 	struct pv_header *pvhdr;
 	struct pv_header_extension *pvhdr_ext;
-	struct metadata_area *mda;
+	struct metadata_area *mda = NULL;
 	struct metadata_area *mda1 = NULL;
 	struct metadata_area *mda2 = NULL;
 	struct disk_locn *dlocn_xl;

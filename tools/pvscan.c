@@ -1088,7 +1088,7 @@ static int _get_args(struct cmd_context *cmd, int argc, char **argv,
 	struct arg_value_group_list *current_group;
 	struct pvscan_arg *arg;
 	const char *arg_name;
-	int major, minor;
+	int major = -1, minor = -1;
 
 	/* Process position args, which can be /dev/name or major:minor */
 
