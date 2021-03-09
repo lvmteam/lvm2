@@ -661,6 +661,11 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 			(void) dm_snprintf(desc, sizeof(desc), "Write[%u] from %s.", vg->write_count, vg->cmd->cmd_line);
 
 		new_size = text_vg_export_raw(vg, desc, &write_buf, &write_buf_size);
+		if (!new_size || !write_buf) {
+			log_error("VG %s metadata writing failed", vg->name);
+			goto out;
+		}
+
 		fidtc->write_buf = write_buf;
 		fidtc->write_buf_size = write_buf_size;
 		fidtc->new_metadata_size = new_size;
@@ -679,11 +684,6 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		dm_config_destroy(cft);
 		if (!vg->vg_precommitted)
 			goto_out;
-	}
-
-	if (!new_size || !write_buf) {
-		log_error("VG %s metadata writing failed", vg->name);
-		goto out;
 	}
 
 	log_debug_metadata("VG %s seqno %u metadata write to %s mda_start %llu mda_size %llu mda_last %llu",
