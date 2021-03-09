@@ -2682,7 +2682,7 @@ out_rem:
 
 	log_debug("S %s clearing locks", ls->name);
 
-	rv = clear_locks(ls, free_vg, drop_vg);
+	(void) clear_locks(ls, free_vg, drop_vg);
 
 	/*
 	 * Tell any other hosts in the lockspace to leave it

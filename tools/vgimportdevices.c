@@ -113,7 +113,7 @@ int vgimportdevices(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct vgimportdevices_params vp = { 0 };
 	struct processing_handle *handle;
-	int ret = ECMD_PROCESSED;
+	int ret = ECMD_FAILED;
 
 	if (arg_is_set(cmd, foreign_ARG))
 		cmd->include_foreign_vgs = 1;
@@ -152,7 +152,6 @@ int vgimportdevices(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!(handle = init_processing_handle(cmd, NULL))) {
 		log_error("Failed to initialize processing handle.");
-		ret = ECMD_FAILED;
 		goto out;
 	}
 	handle->custom_handle = &vp;
