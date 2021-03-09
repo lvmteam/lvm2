@@ -198,7 +198,7 @@ static int _native_dev_is_mpath_component(struct cmd_context *cmd, struct dev_fi
 	char link_path[PATH_MAX];       /* some obscure, unpredictable sysfs path */
 	char holders_path[PATH_MAX];    /* e.g. "/sys/block/sda/holders/" */
 	char dm_dev_path[PATH_MAX];    /* e.g. "/dev/dm-1" */
-	char holder_name[128] = { 0 };  /* e.g. "dm-1" */
+	char holder_name[256];		/* e.g. "dm-1" */
 	const char *sysfs_dir = dm_sysfs_dir();
 	int dev_major = MAJOR(dev->dev);
 	int dev_minor = MINOR(dev->dev);
