@@ -5158,6 +5158,7 @@ static int _stats_group_segments(struct dm_stats *dms, uint64_t *region_ids,
 		return 0;
 	}
 
+	*regions = 0;
 	for (i = 0; i < count; i++) {
 		/*
 		 * We don't expect large numbers of segments (compared to e.g.

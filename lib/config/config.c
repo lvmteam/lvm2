@@ -1141,6 +1141,8 @@ int config_def_check(struct cft_check_handle *handle)
 	 * sections and settings with full path as a key.
 	 * If section name is variable, use '#' as a substitute.
 	 */
+	*vp = 0;
+	*rp = 0;
 	if (!handle->cmd->cft_def_hash) {
 		if (!(handle->cmd->cft_def_hash = dm_hash_create(60))) {
 			log_error("Failed to create configuration definition hash.");
