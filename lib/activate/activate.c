@@ -2846,7 +2846,7 @@ static int _deactivate_sub_lv_cb(struct logical_volume *lv, void *data)
  */
 int deactivate_lv_with_sub_lv(const struct logical_volume *lv)
 {
-	struct logical_volume *flv;
+	struct logical_volume *flv = NULL;
 
 	if (!deactivate_lv(lv->vg->cmd, lv)) {
 		log_error("Cannot deactivate logical volume %s.",
@@ -2856,7 +2856,7 @@ int deactivate_lv_with_sub_lv(const struct logical_volume *lv)
 
 	if (!for_each_sub_lv((struct logical_volume *)lv, _deactivate_sub_lv_cb, &flv)) {
 		log_error("Cannot deactivate subvolume %s of logical volume %s.",
-			  display_lvname(flv), display_lvname(lv));
+			  (flv) ? display_lvname(flv) : "", display_lvname(lv));
 		return 0;
 	}
 
