@@ -74,7 +74,7 @@ static struct cb_set *_cb_set_create(unsigned nr)
 	unsigned i;
 	struct cb_set *cbs = malloc(sizeof(*cbs) + nr * sizeof(*cbs->vec));
 
-	if (!cbs->vec)
+	if (!cbs)
 		return NULL;
 
 	dm_list_init(&cbs->free);
