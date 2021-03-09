@@ -93,23 +93,26 @@ static uint32_t _raidmaxrecoveryrate(const struct logical_volume *lv)
 
 static const char *_raidintegritymode(const struct logical_volume *lv)
 {
-	struct integrity_settings *settings;
+	struct integrity_settings *settings = NULL;
 
 	if (lv_raid_has_integrity((struct logical_volume *)lv))
 		lv_get_raid_integrity_settings((struct logical_volume *)lv, &settings);
 	else if (lv_is_integrity(lv))
 		settings = &first_seg(lv)->integrity_settings;
 
-	if (settings->mode[0] == 'B')
-		return "bitmap";
-	if (settings->mode[0] == 'J')
-		return "journal";
+	if (settings) {
+		switch (settings->mode[0]) {
+		case 'B': return "bitmap";
+		case 'J': return "journal";
+		}
+	}
+
 	return "unknown";
 }
 
 static uint32_t _raidintegrityblocksize(const struct logical_volume *lv)
 {
-	struct integrity_settings *settings;
+	struct integrity_settings *settings = NULL;
 
 	if (lv_raid_has_integrity((struct logical_volume *)lv))
 		lv_get_raid_integrity_settings((struct logical_volume *)lv, &settings);
@@ -118,7 +121,7 @@ static uint32_t _raidintegrityblocksize(const struct logical_volume *lv)
 	else
 		return 0;
 
-	return settings->block_size;
+	return (settings) ? settings->block_size : 0;
 }
 
 static uint64_t _integritymismatches(const struct logical_volume *lv)

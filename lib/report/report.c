@@ -3278,7 +3278,7 @@ static int _raidintegritymode_disp(struct dm_report *rh __attribute__((unused)),
 				   void *private __attribute__((unused)))
 {
 	struct logical_volume *lv = (struct logical_volume *) data;
-	struct integrity_settings *settings;
+	struct integrity_settings *settings = NULL;
 	const char *mode = NULL;
 	char *repstr;
 
@@ -3289,7 +3289,7 @@ static int _raidintegritymode_disp(struct dm_report *rh __attribute__((unused)),
 	else
 		goto out;
 
-	if (settings->mode[0]) {
+	if (settings && settings->mode[0]) {
 		if (settings->mode[0] == 'B')
 			mode = "bitmap";
 		else if (settings->mode[0] == 'J')
@@ -3314,13 +3314,14 @@ static int _raidintegrityblocksize_disp(struct dm_report *rh __attribute__((unus
 				   void *private __attribute__((unused)))
 {
 	struct logical_volume *lv = (struct logical_volume *) data;
-	struct integrity_settings *settings;
+	struct integrity_settings *settings = NULL;
 
 	if (lv_raid_has_integrity(lv))
 		lv_get_raid_integrity_settings(lv, &settings);
 	else if (lv_is_integrity(lv))
 		settings = &first_seg(lv)->integrity_settings;
-	else
+
+	if (!settings)
 		return dm_report_field_int32(rh, field, &GET_TYPE_RESERVED_VALUE(num_undef_32));
 
 	return dm_report_field_uint32(rh, field, &settings->block_size);
