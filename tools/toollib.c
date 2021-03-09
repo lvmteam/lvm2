@@ -4006,6 +4006,7 @@ static int _process_duplicate_pvs(struct cmd_context *cmd,
 	};
 
 	struct volume_group dummy_vg = {
+		.extent_size = 1,
 		.fid = &dummy_fid,
 		.name = "",
 		.system_id = (char *) "",
