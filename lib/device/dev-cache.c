@@ -1713,8 +1713,10 @@ static int _setup_devices_list(struct cmd_context *cmd)
 		if (!(du = zalloc(sizeof(struct dev_use))))
 			return_0;
 
-		if (!(du->devname = strdup(strl->str)))
+		if (!(du->devname = strdup(strl->str))) {
+			free(du);
 			return_0;
+		}
 
 		dm_list_add(&cmd->use_devices, &du->list);
 	}
