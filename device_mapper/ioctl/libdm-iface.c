@@ -1140,12 +1140,12 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
 	case DM_DEVICE_DEPS:
-	case DM_DEVICE_INFO:
 	case DM_DEVICE_LIST:
 	case DM_DEVICE_STATUS:
 	case DM_DEVICE_TABLE:
 	case DM_DEVICE_TARGET_MSG:
 		min_size = 16 * 1024;
+		break;
 	default:
 		min_size = 2 * 1024;
 	}
