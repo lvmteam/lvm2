@@ -110,7 +110,7 @@ int dm_is_empty_dir(const char *dir)
 	DIR *d;
 
 	if (!(d = opendir(dir))) {
-		log_sys_error("opendir", dir);
+		log_sys_debug("opendir", dir);
 		return 0;
 	}
 

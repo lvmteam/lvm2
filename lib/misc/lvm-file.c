@@ -141,26 +141,6 @@ int dir_exists(const char *path)
 	return 1;
 }
 
-int is_empty_dir(const char *dir)
-{
-	struct dirent *dirent;
-	DIR *d;
-
-	if (!(d = opendir(dir))) {
-		log_sys_error("opendir", dir);
-		return 0;
-	}
-
-	while ((dirent = readdir(d)))
-		if (strcmp(dirent->d_name, ".") && strcmp(dirent->d_name, ".."))
-			break;
-
-	if (closedir(d))
-		log_sys_error("closedir", dir);
-
-	return dirent ? 0 : 1;
-}
-
 void sync_dir(const char *file)
 {
 	int fd;

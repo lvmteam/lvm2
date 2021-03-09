@@ -41,11 +41,6 @@ int lvm_rename(const char *old, const char *new);
 int path_exists(const char *path);
 int dir_exists(const char *path);
 
-/*
- * Return 1 if dir is empty
- */
-int is_empty_dir(const char *dir);
-
 /* Sync directory changes */
 void sync_dir(const char *file);
 
