@@ -4335,7 +4335,7 @@ char *tags_format_and_copy(struct dm_pool *mem, const struct dm_list *tagsl)
 const struct logical_volume *lv_committed(const struct logical_volume *lv)
 {
 	struct volume_group *vg;
-	struct logical_volume *found_lv;
+	const struct logical_volume *found_lv;
 
 	if (!lv)
 		return NULL;
@@ -4348,7 +4348,7 @@ const struct logical_volume *lv_committed(const struct logical_volume *lv)
 	if (!(found_lv = find_lv_in_vg_by_lvid(vg, &lv->lvid))) {
 		log_error(INTERNAL_ERROR "LV %s (UUID %s) not found in committed metadata.",
 			  display_lvname(lv), lv->lvid.s);
-		return NULL;
+		found_lv = lv; /* Use uncommitted LV as best effort */
 	}
 
 	return found_lv;
