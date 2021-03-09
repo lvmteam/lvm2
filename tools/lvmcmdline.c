@@ -3510,7 +3510,7 @@ static int _close_stray_fds(const char *command, struct custom_fds *custom_fds)
 	}
 
 	if (closedir(d))
-		log_sys_error("closedir", _fd_dir);
+		log_sys_debug("closedir", _fd_dir);
 #endif
 
 	return 1;

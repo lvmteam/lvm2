@@ -380,7 +380,7 @@ static int _find_dm_name_of_device(dev_t st_rdev, char *buf, size_t buf_len)
 	}
 
 	if (closedir(d))
-		log_sys_error("closedir", _dm_dir);
+		log_sys_debug("closedir", _dm_dir);
 
 	return r;
 }

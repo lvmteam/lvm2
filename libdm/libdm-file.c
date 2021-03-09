@@ -118,7 +118,7 @@ int dm_is_empty_dir(const char *dir)
 			break;
 
 	if (closedir(d))
-		log_sys_error("closedir", dir);
+		log_sys_debug("closedir", dir);
 
 	return dirent ? 0 : 1;
 }

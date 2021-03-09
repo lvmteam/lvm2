@@ -666,7 +666,7 @@ static int _index_dev_by_vgid_and_lvid(struct device *dev)
 	r = 1;
 out:
 	if (closedir(d))
-		log_sys_error("closedir", path);
+		log_sys_debug("closedir", path);
 
 	return r;
 }

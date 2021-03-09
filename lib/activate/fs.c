@@ -93,7 +93,7 @@ static void _rm_blks(const char *dir)
 	DIR *d;
 
 	if (!(d = opendir(dir))) {
-		log_sys_error("opendir", dir);
+		log_sys_debug("opendir", dir);
 		return;
 	}
 
@@ -104,7 +104,7 @@ static void _rm_blks(const char *dir)
 			continue;
 
 		if (dm_snprintf(path, sizeof(path), "%s/%s", dir, name) == -1) {
-			log_error("Couldn't create path for %s", name);
+			log_debug("Couldn't create path for %s.", name);
 			continue;
 		}
 
@@ -113,12 +113,12 @@ static void _rm_blks(const char *dir)
 				continue;
 			log_very_verbose("Removing %s", path);
 			if (unlink(path) < 0)
-				log_sys_error("unlink", path);
+				log_sys_debug("unlink", path);
 		}
 	}
 
 	if (closedir(d))
-		log_sys_error("closedir", dir);
+		log_sys_debug("closedir", dir);
 }
 
 static int _mk_link(const char *dev_dir, const char *vg_name,
@@ -169,7 +169,7 @@ static int _mk_link(const char *dev_dir, const char *vg_name,
 
 			log_very_verbose("Removing %s", lvm1_group_path);
 			if (unlink(lvm1_group_path) < 0)
-				log_sys_error("unlink", lvm1_group_path);
+				log_sys_debug("unlink", lvm1_group_path);
 		}
 	}
 

@@ -218,15 +218,15 @@ static int _read_devs(struct dev_set *ds, const char *dir, unsigned sysfs_depth)
 
 		if (dm_snprintf(path, sizeof(path), "%s/%s", dir,
 				 d->d_name) < 0) {
-			log_error("sysfs path name too long: %s in %s",
-				  d->d_name, dir);
+			log_warn("WARGNING: sysfs path name too long: %s in %s.",
+				 d->d_name, dir);
 			continue;
 		}
 
 		/* devices have a "dev" file */
 		if (dm_snprintf(file, sizeof(file), "%s/dev", path) < 0) {
-			log_error("sysfs path name too long: %s in %s",
-				  d->d_name, dir);
+			log_warn("WARGNING: sysfs path name too long: %s in %s.",
+				 d->d_name, dir);
 			continue;
 		}
 
@@ -242,7 +242,7 @@ static int _read_devs(struct dev_set *ds, const char *dir, unsigned sysfs_depth)
 	}
 
 	if (closedir(dr))
-		log_sys_error("closedir", dir);
+		log_sys_debug("closedir", dir);
 
 	return r;
 }

@@ -1346,7 +1346,7 @@ static int _process_mapper_dir(struct dm_task *dmt)
 	}
 
 	if (closedir(d))
-		log_sys_error("closedir", dir);
+		log_sys_debug("closedir", dir);
 
 	return r;
 }

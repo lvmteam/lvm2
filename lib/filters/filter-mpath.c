@@ -158,7 +158,7 @@ static int _get_holder_name(const char *dir, char *name, int max_size)
 	}
 
 	if (closedir(dr))
-		log_sys_error("closedir", dir);
+		log_sys_debug("closedir", dir);
 
 	return r;
 }
