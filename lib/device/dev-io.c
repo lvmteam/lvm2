@@ -124,7 +124,7 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 
 static int _dev_read_ahead_dev(struct device *dev, uint32_t *read_ahead)
 {
-	long read_ahead_long;
+	long read_ahead_long = 0;
 
 	if (dev->read_ahead != -1) {
 		*read_ahead = (uint32_t) dev->read_ahead;

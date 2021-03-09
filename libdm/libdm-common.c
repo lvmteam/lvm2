@@ -1222,7 +1222,7 @@ int get_dev_node_read_ahead(const char *dev_name, uint32_t major, uint32_t minor
 	int len;
 	int r = 1;
 	int fd;
-	long read_ahead_long;
+	long read_ahead_long = 0;
 
 	/*
 	 * If we know the device number, use sysfs if we can.

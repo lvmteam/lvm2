@@ -891,7 +891,7 @@ static int _wipe_signature(struct device *dev, const char *type, const char *nam
 			   int (*signature_detection_fn)(struct device *dev, uint64_t *offset_found, int full))
 {
 	int wipe;
-	uint64_t offset_found;
+	uint64_t offset_found = 0;
 
 	wipe = signature_detection_fn(dev, &offset_found, 1);
 	if (wipe == -1) {

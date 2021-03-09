@@ -81,7 +81,7 @@ typedef struct dasd_information2_t {
 int dasd_is_cdl_formatted(struct device *dev)
 {
 	int ret = 0;
-	dasd_information2_t dasd_info2;
+	dasd_information2_t dasd_info2 = { 0 };
 
 	if (!dev_open_readonly(dev))
 		return_0;
