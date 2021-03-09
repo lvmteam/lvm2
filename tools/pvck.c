@@ -1720,7 +1720,7 @@ static int _dump_search(struct cmd_context *cmd, const char *dump, struct settin
 		log_print("Override defaults with --settings \"mda_offset=<bytes> mda_size=<bytes>\"");
 	} else {
 		log_error("No mda location.");
-		return_0;
+		return 0;
 	}
 
  search:

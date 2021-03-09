@@ -4060,7 +4060,7 @@ static int _process_duplicate_pvs(struct cmd_context *cmd,
 		 */
 		if (!(info = lvmcache_info_from_pvid(devl->dev->pvid, NULL, 0))) {
 			log_error(INTERNAL_ERROR "No info for pvid");
-			return_ECMD_FAILED;
+			return ECMD_FAILED;
 		}
 
 		vgname = lvmcache_vgname_from_info(info);
@@ -5343,7 +5343,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	 */
 	if (must_use_all && !dm_list_empty(&pp->arg_fail)) {
 		log_error("Command requires all devices to be found.");
-		return_0;
+		return 0;
 	}
 
 	/*

@@ -258,10 +258,12 @@ struct dm_list *create_pv_list(struct dm_pool *mem, struct volume_group *vg, int
 			return_NULL;
 	}
 
-	if (dm_list_empty(r))
+	if (dm_list_empty(r)) {
 		log_error("No specified PVs have space available.");
+		return NULL;
+	}
 
-	return dm_list_empty(r) ? NULL : r;
+	return r;
 }
 
 struct dm_list *clone_pv_list(struct dm_pool *mem, struct dm_list *pvsl)
@@ -277,7 +279,7 @@ struct dm_list *clone_pv_list(struct dm_pool *mem, struct dm_list *pvsl)
 	dm_list_init(r);
 
 	dm_list_iterate_items(pvl, pvsl) {
-		if (!(new_pvl = dm_pool_zalloc(mem, sizeof(*new_pvl)))) {
+		if (!(new_pvl = dm_pool_alloc(mem, sizeof(*new_pvl)))) {
 			log_error("Unable to allocate physical volume list.");
 			return NULL;
 		}

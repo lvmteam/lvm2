@@ -276,7 +276,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		 */
 		if (!(dev = dev_cache_get(cmd, devname, NULL))) {
 			log_error("No device found for %s.", devname);
-			goto_bad;
+			goto bad;
 		}
 
 		/*
@@ -412,7 +412,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 
 		if (!(du = get_du_for_pvid(cmd, pvid))) {
 			log_error("PVID not found in devices file.");
-			goto_bad;
+			goto bad;
 		}
 
 		dm_list_del(&du->list);
@@ -420,7 +420,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		if ((du2 = get_du_for_pvid(cmd, pvid))) {
 			log_error("Multiple devices file entries for PVID %s (%s %s), remove by device name.",
 				  pvid, du->devname, du2->devname);
-			goto_bad;
+			goto bad;
 		}
 
 		if (du->devname && (du->devname[0] != '.')) {

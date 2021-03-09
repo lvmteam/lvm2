@@ -2682,15 +2682,13 @@ int vg_validate(struct volume_group *vg)
 	}
 
 	if (!(vhash.historical_lvname = dm_hash_create(dm_list_size(&vg->historical_lvs)))) {
-		log_error("Failed to allocate historical LV name hash");
 		r = 0;
-		goto out;
+		goto_out;
 	}
 
         if (!(vhash.historical_lvid = dm_hash_create(dm_list_size(&vg->historical_lvs)))) {
-                log_error("Failed to allocate historical LV uuid hash");
                 r = 0;
-                goto out;
+                goto_out;
         }
 
 	dm_list_iterate_items(glvl, &vg->historical_lvs) {
@@ -3043,8 +3041,7 @@ int vg_write(struct volume_group *vg)
 		}
 
 		if (!mda->ops->vg_write) {
-			log_error("Format does not support writing volume"
-				  "group metadata areas");
+			log_error("Format does not support writing volume group metadata areas.");
 			revert = 1;
 			break;
 		}

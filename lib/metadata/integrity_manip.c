@@ -332,20 +332,20 @@ static int _set_integrity_block_size(struct cmd_context *cmd, struct logical_vol
 
 	if (lbs_4k && lbs_512) {
 		log_error("Integrity requires consistent logical block size for LV devices.");
-		goto_bad;
+		goto bad;
 	}
 
 	if (settings->block_size &&
 	    (settings->block_size != 512 && settings->block_size != 1024 &&
 	     settings->block_size != 2048 && settings->block_size != 4096)) {
 		log_error("Invalid integrity block size, possible values are 512, 1024, 2048, 4096");
-		goto_bad;
+		goto bad;
 	}
 
 	if (lbs_4k && settings->block_size && (settings->block_size < 4096)) {
 		log_error("Integrity block size %u not allowed with device logical block size 4096.",
 			  settings->block_size);
-		goto_bad;
+		goto bad;
 	}
 
 	if (!strcmp(cmd->name, "lvcreate")) {
@@ -369,11 +369,11 @@ static int _set_integrity_block_size(struct cmd_context *cmd, struct logical_vol
 		if (dm_snprintf(pathname, sizeof(pathname), "%s%s/%s", cmd->dev_dir,
 				lv->vg->name, lv->name) < 0) {
 			log_error("Path name too long to get LV block size %s", display_lvname(lv));
-			goto_bad;
+			goto bad;
 		}
 		if (!(fs_dev = dev_cache_get(cmd, pathname, NULL))) {
 			log_error("Device for LV not found to check block size %s", display_lvname(lv));
-			goto_bad;
+			goto bad;
 		}
 
 		/*
@@ -435,7 +435,7 @@ static int _set_integrity_block_size(struct cmd_context *cmd, struct logical_vol
 			if (settings->block_size > fs_block_size) {
 				log_error("Integrity block size %u cannot be larger than file system block size %u.",
 					  settings->block_size, fs_block_size);
-				goto_bad;
+				goto bad;
 			}
 			log_print("Using integrity block size %u for file system block size %u.",
 				  settings->block_size, fs_block_size);
@@ -550,7 +550,7 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 
 		if (!seg_is_striped(first_seg(lv_image))) {
 			log_error("raid image must be linear to add integrity");
-			goto_bad;
+			goto bad;
 		}
 
 		/*
@@ -570,7 +570,7 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 
 		if (!get_pv_list_for_lv(cmd->mem, lv_image, &allocatable_pvs)) {
 			log_error("Failed to build list of PVs for %s.", display_lvname(lv_image));
-			goto_bad;
+			goto bad;
 		}
 
 		dm_list_iterate_items(pvl, &allocatable_pvs) {
@@ -620,19 +620,19 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 
 		if (!activate_lv(cmd, meta_lv)) {
 			log_error("Failed to activate LV %s to zero", display_lvname(meta_lv));
-			goto_bad;
+			goto bad;
 		}
 
 		if (!wipe_lv(meta_lv, wipe)) {
 			log_error("Failed to zero LV for integrity metadata %s", display_lvname(meta_lv));
 			if (deactivate_lv(cmd, meta_lv))
 				log_error("Failed to deactivate LV %s after zero", display_lvname(meta_lv));
-			goto_bad;
+			goto bad;
 		}
 
 		if (!deactivate_lv(cmd, meta_lv)) {
 			log_error("Failed to deactivate LV %s after zero", display_lvname(meta_lv));
-			goto_bad;
+			goto bad;
 		}
 	}
 
@@ -726,7 +726,7 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 		/* vg_write(), suspend_lv(), vg_commit(), resume_lv() */
 		if (!lv_update_and_reload(lv)) {
 			log_error("LV update and reload failed");
-			goto_bad;
+			goto bad;
 		}
 		revert_meta_lvs = 0;
 
@@ -747,7 +747,7 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 
 		if (!activate_lv(cmd, lv)) {
 			log_error("Failed to activate integrity LV to initialize.");
-			goto_bad;
+			goto bad;
 		}
 	}
 

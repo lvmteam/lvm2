@@ -1456,7 +1456,7 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 
 	if (!setup_devices(cmd)) {
 		log_error("Failed to set up devices.");
-		return_0;
+		return 0;
 	}
 
 	/*

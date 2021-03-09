@@ -356,12 +356,12 @@ static int _get_dev_health(struct logical_volume *lv, uint32_t *kernel_devs,
 
 	if (!lv_raid_dev_count(lv, kernel_devs)) {
 		log_error("Failed to get device count.");
-		return_0;
+		return 0;
 	}
 
 	if (!lv_raid_dev_health(lv, &rh)) {
 		log_error("Failed to get device health.");
-		return_0;
+		return 0;
 	}
 
 	d = (unsigned) strlen(rh);
@@ -1056,7 +1056,7 @@ static int _alloc_image_components(struct logical_volume *lv,
 	if (!(lvl_array = dm_pool_alloc(lv->vg->vgmem,
 					sizeof(*lvl_array) * count * 2))) {
 		log_error("Memory allocation failed.");
-		return_0;
+		return 0;
 	}
 
 	if (!(parallel_areas = build_parallel_areas_from_lv(lv, 0, 1)))
@@ -2186,7 +2186,7 @@ static int _vg_write_lv_suspend_commit_backup(struct volume_group *vg,
 
 	if (!vg_write(vg)) {
 		log_error("Write of VG %s failed.", vg->name);
-		return_0;
+		return 0;
 	}
 
 	if (!(r = (origin_only ? suspend_lv_origin(vg->cmd, lock_lv) :

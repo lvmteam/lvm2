@@ -3976,7 +3976,7 @@ static int _lvconvert_replace_pv_single(struct cmd_context *cmd, struct logical_
 			continue;
 		if (!(tmp_str = grouped_arg_str_value(group->arg_values, replace_ARG, NULL))) {
 			log_error("Failed to get '--replace' argument");
-			return_ECMD_FAILED;
+			return ECMD_FAILED;
 		}
 		if (!(replace_pvs[i++] = dm_pool_strdup(cmd->mem, tmp_str)))
 			return_ECMD_FAILED;
@@ -4192,7 +4192,7 @@ int lvconvert_combine_split_snapshot_cmd(struct cmd_context *cmd, int argc, char
 		if (!(vglv = dm_pool_alloc(cmd->mem, vglv_sz)) ||
 		    dm_snprintf(vglv, vglv_sz, "%s/%s", vgname, lvname2_orig) < 0) {
        			log_error("vg/lv string alloc failed.");
-			return_ECMD_FAILED;
+			return ECMD_FAILED;
 		}
 
 		/* vglv is now vgname/lvname2 and replaces lvname2_orig */
@@ -5976,7 +5976,7 @@ static int _set_writecache_block_size(struct cmd_context *cmd,
 
 	if (!get_pv_list_for_lv(cmd->mem, lv, &pvs_list)) {
 		log_error("Failed to build list of PVs for %s.", display_lvname(lv));
-		goto_bad;
+		goto bad;
 	}
 
 	dm_list_iterate_items(pvl, &pvs_list) {
@@ -6006,19 +6006,19 @@ static int _set_writecache_block_size(struct cmd_context *cmd,
 
 	if (lbs_4k && lbs_512) {
 		log_error("Writecache requires consistent logical block size for LV devices.");
-		goto_bad;
+		goto bad;
 	}
 
 	if (lbs_4k && block_size_setting && (block_size_setting < 4096)) {
 		log_error("Writecache block size %u not allowed with device logical block size 4096.",
 			  block_size_setting);
-		goto_bad;
+		goto bad;
 	}
 
 	if (dm_snprintf(pathname, sizeof(pathname), "%s/%s/%s", cmd->dev_dir,
 			lv->vg->name, lv->name) < 0) {
 		log_error("Path name too long to get LV block size %s", display_lvname(lv));
-		goto_bad;
+		goto bad;
 	}
 
 	if (!sync_local_dev_names(cmd))
@@ -6031,7 +6031,7 @@ static int _set_writecache_block_size(struct cmd_context *cmd,
 			goto skip_fs;
 		}
 		log_error("Device for LV not found to check block size %s", pathname);
-		goto_bad;
+		goto bad;
 	}
 
 	/*
@@ -6102,7 +6102,7 @@ skip_fs:
 		else {
 			log_error("Writecache block size %u cannot be larger than file system block size %u.",
 				  block_size_setting, fs_block_size);
-			goto_bad;
+			goto bad;
 		}
 	}
 

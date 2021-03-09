@@ -1367,7 +1367,7 @@ int add_lv_segment_areas(struct lv_segment *seg, uint32_t new_area_count)
 	if (!(newareas = dm_pool_zalloc(seg->lv->vg->vgmem, areas_sz))) {
 		log_error("Failed to allocate widened LV segment for %s.",
 			  display_lvname(seg->lv));
-		return_0;
+		return 0;
 	}
 
 	if (seg->area_count)
@@ -4359,12 +4359,12 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 
 			if (!(lv_imeta = seg_image->integrity_meta_dev)) {
 				log_error("1");
-				return_0;
+				return 0;
 			}
 
 			if (!(lv_iorig = seg_lv(seg_image, 0))) {
 				log_error("2");
-				return_0;
+				return 0;
 			}
 
 			/* new size in sectors */
