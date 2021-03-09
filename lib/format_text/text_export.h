@@ -20,9 +20,7 @@
 #define outhint(args...) do {if (!out_hint(args)) return_0;} while (0)
 #define outfc(args...) do {if (!out_text_with_comment(args)) return_0;} while (0)
 #define outf(args...) do {if (!out_text(args)) return_0;} while (0)
-#define outfgo(args...) do {if (!out_text(args)) goto_out;} while (0)
 #define outnl(f) do {if (!out_newline(f)) return_0;} while (0)
-#define outnlgo(f) do {if (!out_newline(f)) goto_out;} while (0)
 
 struct formatter;
 struct lv_segment;

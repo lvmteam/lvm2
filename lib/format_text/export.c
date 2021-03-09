@@ -880,45 +880,50 @@ bad:
 	return 0;
 }
 
-static int _print_historical_lv(struct formatter *f, struct historical_logical_volume *hlv)
+static int _print_historical_lv_with_descendants(struct formatter *f, struct historical_logical_volume *hlv,
+						 char *descendants_buffer)
 {
 	char buffer[40];
-	char *descendants_buffer = NULL;
-	int r = 0;
 
 	if (!id_write_format(&hlv->lvid.id[1], buffer, sizeof(buffer)))
-		goto_out;
+		return_0;
 
-	if (!_alloc_printed_indirect_descendants(&hlv->indirect_glvs, &descendants_buffer))
-		goto_out;
-
-	outnlgo(f);
-	outfgo(f, "%s {", hlv->name);
+	outnl(f);
+	outf(f, "%s {", hlv->name);
 	_inc_indent(f);
 
-	outfgo(f, "id = \"%s\"", buffer);
+	outf(f, "id = \"%s\"", buffer);
 
 	if (!_print_timestamp(f, "creation_time", hlv->timestamp, buffer, sizeof(buffer)))
-		goto_out;
+		return_0;
 
 	if (!_print_timestamp(f, "removal_time", hlv->timestamp_removed, buffer, sizeof(buffer)))
-		goto_out;
+		return_0;
 
 	if (hlv->indirect_origin) {
 		if (hlv->indirect_origin->is_historical)
-			outfgo(f, "origin = \"%s%s\"", HISTORICAL_LV_PREFIX, hlv->indirect_origin->historical->name);
+			outf(f, "origin = \"%s%s\"", HISTORICAL_LV_PREFIX, hlv->indirect_origin->historical->name);
 		else
-			outfgo(f, "origin = \"%s\"", hlv->indirect_origin->live->name);
+			outf(f, "origin = \"%s\"", hlv->indirect_origin->live->name);
 	}
 
 	if (descendants_buffer)
-		outfgo(f, "descendants = %s", descendants_buffer);
+		outf(f, "descendants = %s", descendants_buffer);
 
 	_dec_indent(f);
-	outfgo(f, "}");
+	outf(f, "}");
 
-	r = 1;
-out:
+	return 1;
+}
+
+static int _print_historical_lv(struct formatter *f, struct historical_logical_volume *hlv)
+{
+	char *descendants_buffer = NULL;
+	int r = 0;
+
+	if (_alloc_printed_indirect_descendants(&hlv->indirect_glvs, &descendants_buffer))
+		r = _print_historical_lv_with_descendants(f, hlv, descendants_buffer);
+
 	free(descendants_buffer);
 
 	return r;
