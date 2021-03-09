@@ -3173,7 +3173,8 @@ int vg_commit(struct volume_group *vg)
 			dm_list_init(&vg->msg_list);
 			vg->needs_write_and_commit = 0;
 		}
-	}
+		vg->needs_backup = 0;
+        }
 
 	/* If at least one mda commit succeeded, it was committed */
 	return ret;
