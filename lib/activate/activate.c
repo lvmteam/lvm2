@@ -834,8 +834,10 @@ int lv_check_not_in_use(const struct logical_volume *lv, int error_if_used)
 	struct lvinfo info;
 	unsigned int open_count_check_retries;
 
-	if (!lv_info(lv->vg->cmd, lv, 0, &info, 1, 0) || !info.exists || !info.open_count)
-		return !info.exists ? 2 : 1;
+	if (!lv_info(lv->vg->cmd, lv, 0, &info, 1, 0) || !info.exists)
+		return 2;
+	else if (!info.open_count)
+		return 1;
 
 	/* If sysfs is not used, use open_count information only. */
 	if (dm_sysfs_dir()) {
