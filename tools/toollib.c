@@ -3082,7 +3082,11 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			goto out;
 		}
 		final_lvl->lv = lvl->lv;
-		dm_list_add(&final_lvs, &final_lvl->list);
+		if (lv_is_thin_pool(lvl->lv)) {
+			/* Add to the front of the list */
+			dm_list_add_h(&final_lvs, &final_lvl->list);
+		} else
+			dm_list_add(&final_lvs, &final_lvl->list);
 	}
 	log_set_report_object_name_and_id(NULL, NULL);
 
