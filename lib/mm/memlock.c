@@ -551,7 +551,7 @@ static void _lock_mem(struct cmd_context *cmd)
 
 static void _unlock_mem(struct cmd_context *cmd)
 {
-	size_t unlock_mstats;
+	size_t unlock_mstats = 0;
 
 	log_very_verbose("Unlocking memory");
 

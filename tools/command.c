@@ -3595,7 +3595,7 @@ static void _print_man_secondary(char *name)
 
 int main(int argc, char *argv[])
 {
-	struct cmd_context cmdtool;
+	struct cmd_context cmdtool = { 0 };
 	char *cmdname = NULL;
 	char *desfile = NULL;
 	char *stdout_buf;
