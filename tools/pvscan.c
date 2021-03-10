@@ -1351,14 +1351,11 @@ static int _online_devs(struct cmd_context *cmd, int do_all, struct dm_list *pvs
 		}
 
 		if (pvs_unknown) {
-			log_print("pvscan[%d] PV %s online, VG unknown.", getpid(), dev_name(dev));
-			vg_complete = 0;
-
+			log_print("pvscan[%d] PV %s online, VG unknown.",
+				  getpid(), dev_name(dev));
 		} else if (pvs_offline) {
 			log_print("pvscan[%d] PV %s online, VG %s incomplete (need %d).",
 				  getpid(), dev_name(dev), vgname, pvs_offline);
-			vg_complete = 0;
-
 		} else {
 			log_print("pvscan[%d] PV %s online, VG %s is complete.", getpid(), dev_name(dev), vgname);
 			if (!str_list_add(cmd->mem, complete_vgnames, dm_pool_strdup(cmd->mem, vgname)))
