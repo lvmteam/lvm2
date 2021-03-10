@@ -4463,6 +4463,7 @@ int process_each_pv(struct cmd_context *cmd,
 		ret_max = ret;
 		if (ret_max == ECMD_FAILED)
 			goto_out;
+		ret_max = ECMD_FAILED; /* but ATM we've returned FAILED for all cases */
 	}
 
 	ret = _process_pvs_in_vgs(cmd, read_flags, &all_vgnameids, &all_devices,
