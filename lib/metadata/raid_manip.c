@@ -584,18 +584,18 @@ static int _lv_update_reload_fns_reset_eliminate_lvs(struct logical_volume *lv, 
 		 * Returning 2 from pre function -> lv is suspended and
 		 * metadata got updated, don't need to do it again
 		 */
-		if (!(r = (origin_only ? resume_lv_origin(lv->vg->cmd, lock_lv) :
-					 resume_lv(lv->vg->cmd, lock_lv)))) {
+		if (!(origin_only ? resume_lv_origin(lv->vg->cmd, lock_lv) :
+					 resume_lv(lv->vg->cmd, lock_lv))) {
 			log_error("Failed to resume %s.", display_lvname(lv));
 			return 0;
 		}
 
 	/* Update metadata and reload mappings including flags (e.g. LV_REBUILD, LV_RESHAPE_DELTA_DISKS_PLUS) */
-	} else if (!(r = (origin_only ? lv_update_and_reload_origin(lv) : lv_update_and_reload(lv))))
+	} else if (!(origin_only ? lv_update_and_reload_origin(lv) : lv_update_and_reload(lv)))
 		return_0;
 
 	/* Eliminate any residual LV and don't commit the metadata */
-	if (!(r = _eliminate_extracted_lvs_optional_write_vg(lv->vg, removal_lvs, 0)))
+	if (!_eliminate_extracted_lvs_optional_write_vg(lv->vg, removal_lvs, 0))
 		return_0;
 
 	/*
@@ -620,7 +620,7 @@ static int _lv_update_reload_fns_reset_eliminate_lvs(struct logical_volume *lv, 
 	/* Update and reload to clear out reset flags in the metadata and in the kernel */
 	log_debug_metadata("Updating metadata mappings for %s.", display_lvname(lv));
 	if ((r != 2 || flags_reset) &&
-	    !(r = (origin_only ? lv_update_and_reload_origin(lv) : lv_update_and_reload(lv))))
+	    !(origin_only ? lv_update_and_reload_origin(lv) : lv_update_and_reload(lv)))
 		return_0;
 
 	return 1;

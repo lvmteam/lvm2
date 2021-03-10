@@ -218,7 +218,7 @@ struct dm_list *str_to_str_list(struct dm_pool *mem, const char *str,
 		return NULL;
 	}
 
-	p1 = p2 = str;
+	p1 = str;
 	while (*p1) {
 		if (!(p2 = strstr(p1, delim)))
 			next = p2 = str + strlen(str);
