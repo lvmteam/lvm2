@@ -3074,7 +3074,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		if (!process_lv)
 			continue;
 
-		log_very_verbose("Adding %s/%s to the list of LVs to be processed.", vg->name, lvl->lv->name);
+		log_very_verbose("Adding %s to the list of LVs to be processed.", display_lvname(lvl->lv));
 
 		if (!(final_lvl = dm_pool_zalloc(cmd->mem, sizeof(struct lv_list)))) {
 			log_error("Failed to allocate final LV list item.");
