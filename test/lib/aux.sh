@@ -837,6 +837,7 @@ wipefs_a() {
 		lvmdevices --adddev $dev || true
 	fi
 
+	udev_wait
 }
 
 prepare_backing_dev() {
