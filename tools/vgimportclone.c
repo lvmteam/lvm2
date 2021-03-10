@@ -190,6 +190,7 @@ static int _get_other_devs(struct cmd_context *cmd, struct dm_list *new_devs, st
 	struct dev_iter *iter;
 	struct device *dev;
 	struct device_list *devl;
+	int r = 1;
 
 	if (!(iter = dev_iter_create(cmd->filter, 0)))
 		return_0;
@@ -197,14 +198,16 @@ static int _get_other_devs(struct cmd_context *cmd, struct dm_list *new_devs, st
 	while ((dev = dev_iter_get(cmd, iter))) {
 		if (_get_device_list(new_devs, dev))
 			continue;
-		if (!(devl = malloc(sizeof(*devl))))
-			return_0;
+		if (!(devl = malloc(sizeof(*devl)))) {
+			r = 0;
+			goto_bad;
+		}
 		devl->dev = dev;
 		dm_list_add(other_devs, &devl->list);
 	}
-
+bad:
 	dev_iter_destroy(iter);
-	return 1;
+	return r;
 }
 
 int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
