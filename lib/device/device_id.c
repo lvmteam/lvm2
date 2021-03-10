@@ -689,7 +689,8 @@ int device_ids_write(struct cmd_context *cmd)
 	}
 
 	if ((dir_fd = open(dirpath, O_RDONLY)) < 0) {
-		fclose(fp);
+		if (fclose(fp))
+                        log_sys_debug("fclose", tmpfile);
 		ret = 0;
 		goto out;
 	}
@@ -782,9 +783,10 @@ static void _device_ids_update_try(struct cmd_context *cmd)
 	if (!lock_devices_file_try(cmd, LOCK_EX, &held)) {
 		log_debug("Skip devices file update (busy).");
 	} else {
-		if (device_ids_version_unchanged(cmd))
-			device_ids_write(cmd);
-		else
+		if (device_ids_version_unchanged(cmd)) {
+			if (!device_ids_write(cmd))
+				stack;
+		} else
 			log_debug("Skip devices file update (changed).");
 	}
 	if (!held)

@@ -582,7 +582,8 @@ retry_open:
 
 	if (di == -1) {
 		log_error("Failed to set bcache fd.");
-		close(fd);
+		if (close(fd))
+			log_sys_debug("close", name);
 		dev->bcache_fd = -1;
 		return 0;
 	}
@@ -1592,7 +1593,8 @@ int label_scan_reopen_rw(struct device *dev)
 	if (!bcache_change_fd(dev->bcache_di, fd)) {
 		log_error("Failed to change to rw fd %s di %d fd %d.",
 			  dev_name(dev), dev->bcache_di, fd);
-		close(fd);
+		if (close(fd))
+			log_sys_debug("close", dev_name(dev));
 		return 0;
 	}
 

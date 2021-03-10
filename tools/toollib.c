@@ -5770,7 +5770,8 @@ do_command:
 	}
 
 	/* TODO: when vgcreate uses only existing PVs this doesn't change and can be skipped */
-	device_ids_write(cmd);
+	if (!device_ids_write(cmd))
+		stack;
 
 	/*
 	 * Don't keep devs open excl in bcache because the excl will prevent
