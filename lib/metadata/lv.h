@@ -57,6 +57,7 @@ struct logical_volume {
 
 	uint64_t timestamp;
 	unsigned new_lock_args:1;
+	unsigned to_remove:1; /* set when LV is known to be removed */
 	const char *hostname;
 	const char *lock_args;
 };

@@ -6589,6 +6589,9 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return 0;
 		}
 		lock_lv = pool_lv;
+		if (pool_lv->to_remove)
+			/* Thin pool is to be removed so skip updating it when possible */
+			pool_lv = NULL;
 	}
 
 	if (lv_is_locked(lv)) {
@@ -6823,6 +6826,11 @@ static int _lv_remove_segs_using_this_lv(struct cmd_context *cmd, struct logical
 			log_error("Logical volume \"%s\" not removed.", lv->name);
 			return 0;
 		}
+
+	/* Make aware users of this LV, it's going to be removed, so they
+	 * can skip any updates of itself */
+	lv->to_remove = 1;
+
 	/*
 	 * Not using _safe iterator here - since we may delete whole subtree
 	 * (similar as process_each_lv_in_vg())
