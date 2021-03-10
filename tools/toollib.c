@@ -3853,7 +3853,7 @@ static int _get_arg_devices(struct cmd_context *cmd,
 
 		if (!(dil->dev = dev_cache_get(cmd, sl->str, cmd->filter))) {
 			log_error("Cannot use %s: %s", sl->str, devname_error_reason(sl->str));
-			ret_max = ECMD_FAILED;
+			ret_max = EINIT_FAILED;
 		} else {
 			strncpy(dil->pvid, dil->dev->pvid, ID_LEN);
 			dm_list_add(arg_devices, &dil->list);
@@ -4458,9 +4458,12 @@ int process_each_pv(struct cmd_context *cmd,
 		goto_out;
 	}
 
-	if ((ret = _get_arg_devices(cmd, &arg_pvnames, &arg_devices)) != ECMD_PROCESSED)
-		/* get_arg_devices reports the error for any PV names not found. */
-		ret_max = ECMD_FAILED;
+	if ((ret = _get_arg_devices(cmd, &arg_pvnames, &arg_devices)) != ECMD_PROCESSED) {
+		/* get_arg_devices reports EINIT_FAILED for any PV names not found. */
+		ret_max = ret;
+		if (ret_max == ECMD_FAILED)
+			goto_out;
+	}
 
 	ret = _process_pvs_in_vgs(cmd, read_flags, &all_vgnameids, &all_devices,
 				  &arg_devices, &arg_tags,
