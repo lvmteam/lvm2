@@ -16,10 +16,10 @@ SKIP_WITH_LVMPOLLD=1
 
 losetup -h | grep sector-size || skip
 which fallocate || skip
-which wipefs || skip
 
 fallocate -l 2M loopa
 fallocate -l 2M loopb
+sync
 LOOP1=$(losetup -f loopa --sector-size 4096 --show)
 LOOP2=$(losetup -f loopb --show)
 
@@ -40,7 +40,7 @@ vgcreate --config 'devices/allow_mixed_block_sizes=1' $vg "$dev1" "$dev2"
 vgs --config 'devices/allow_mixed_block_sizes=1' $vg
 
 for i in "$dev1" "$dev2" ; do
-	wipefs -a "$i"
+	aux wipefs_a "$i"
 	# FIXME - we are not missing notification for hinting
 	# likely in more places - as the test should be able to work without
 	# system's udev working only on real /dev dir.
