@@ -39,11 +39,5 @@ lvs -a
 # When component LVs are active, thin-pool cannot be actived
 not lvcreate -V20 $vg/pool
 
-
-# FIXME: ATM removal of thin volumes goes 1-by-1 and needs to activate thin-pool.
-# And thin-pool cannot be activate thus vgremove fails.
-# To fix this it would need to be able to remove volumes without activation.
-should vgremove -f $vg
-
-# -ff bypass activation failure
-vgremove -ff $vg
+# Rremoval of thin volumes should not need to activate thin-pool.
+vgremove -f $vg
