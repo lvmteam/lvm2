@@ -6663,31 +6663,6 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
-	if (lv_is_cache(lv) && !lv_is_pending_delete(lv)) {
-		/* Handles both cachepool & cachevol based cached LVs.
-		 * It's placed before deactivation, so it can try to uncache
-		 * 'active' LV if possible
-		 */
-		struct logical_volume *cachevol_lv = first_seg(lv)->pool_lv;
-
-		if (!archive(vg))
-			return_0;
-
-		if (!lv_cache_remove(lv))
-			return_0;
-
-		if (!lv_remove_single(cmd, cachevol_lv, force,
-				      suppress_remove_message)) {
-			if (force < DONT_PROMPT_OVERRIDE) {
-				log_error("Failed to uncache %s.", display_lvname(lv));
-				return 0;
-			}
-			/* Proceed with -ff */
-			log_print_unless_silent("Ignoring uncache failure of %s.",
-						display_lvname(lv));
-		}
-	}
-
 	/* Used cache pool, COW or historical LV cannot be activated */
 	if (!lv_is_used_cache_pool(lv) &&
 	    !lv_is_cache_vol(lv) &&
