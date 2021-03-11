@@ -29,6 +29,7 @@
 #include "lib/metadata/segtype.h"
 #include "lib/misc/sharedlib.h"
 #include "lib/metadata/metadata.h"
+#include "lib/misc/lvm-signal.h"
 
 #include <limits.h>
 #include <fcntl.h>
@@ -863,25 +864,24 @@ int lv_check_not_in_use(const struct logical_volume *lv, int error_if_used)
 	}
 
 	open_count_check_retries = retry_deactivation() ? OPEN_COUNT_CHECK_RETRIES : 1;
-	while (info.open_count > 0 && open_count_check_retries--) {
-		if (!open_count_check_retries) {
-			if (error_if_used)
-				log_error("Logical volume %s in use.", display_lvname(lv));
-			else
-				log_debug_activation("Logical volume %s in use.", display_lvname(lv));
-			return 0;
-		}
+	while (open_count_check_retries--) {
+		if (interruptible_usleep(OPEN_COUNT_CHECK_USLEEP_DELAY))
+			break;  /* interrupted */
 
-		usleep(OPEN_COUNT_CHECK_USLEEP_DELAY);
 		log_debug_activation("Retrying open_count check for %s.",
 				     display_lvname(lv));
-		if (!lv_info(lv->vg->cmd, lv, 0, &info, 1, 0)) {
+		if (!lv_info(lv->vg->cmd, lv, 0, &info, 1, 0) || !info.exists) {
 			stack; /* device dissappeared? */
-			break;
-		}
+			return 1;
+		} else if (!info.open_count)
+			return 1;
 	}
 
-	return 1;
+	if (error_if_used)
+		log_error("Logical volume %s in use.", display_lvname(lv));
+	else
+		log_debug_activation("Logical volume %s in use.", display_lvname(lv));
+	return 0;
 }
 
 /*
