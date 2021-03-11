@@ -402,7 +402,6 @@ static int _raid_transient_status(struct dm_pool *mem,
 {
 	int failed = 0, r = 0;
 	unsigned i;
-	struct lvinfo info;
 	struct logical_volume *lv;
 	struct dm_status_raid *sr;
 
@@ -421,7 +420,7 @@ static int _raid_transient_status(struct dm_pool *mem,
 	if (seg->meta_areas)
 		for (i = 0; i < seg->area_count; ++i) {
 			lv = seg_metalv(seg, i);
-			if (!lv_info(lv->vg->cmd, lv, 0, &info, 0, 0)) {
+			if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0)) {
 				log_error("Check for existence of raid meta %s failed.",
 					  display_lvname(lv));
 				goto out;
@@ -430,7 +429,7 @@ static int _raid_transient_status(struct dm_pool *mem,
 
 	for (i = 0; i < seg->area_count; ++i) {
 		lv = seg_lv(seg, i);
-		if (!lv_info(lv->vg->cmd, lv, 0, &info, 0, 0)) {
+		if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0)) {
 			log_error("Check for existence of raid image %s failed.",
 				  display_lvname(lv));
 			goto out;
