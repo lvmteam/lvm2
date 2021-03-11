@@ -6707,7 +6707,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* Clear thin pool stacked messages */
-	if (pool_lv && !pool_has_message(first_seg(pool_lv), lv, 0) &&
+	if (pool_lv && pool_has_message(first_seg(pool_lv), lv, 0) &&
 	    !update_pool_lv(pool_lv, 1)) {
 		if (force < DONT_PROMPT_OVERRIDE) {
 			log_error("Failed to update pool %s.", display_lvname(pool_lv));
