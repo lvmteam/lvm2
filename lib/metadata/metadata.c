@@ -4603,7 +4603,7 @@ static bool _scan_text_mismatch(struct cmd_context *cmd, const char *vgname, con
 
 		/* For other commands, return mismatch immediately. */
 		if (ret)
-			goto_out;
+			goto out;
 	}
 
 	if (ret) {

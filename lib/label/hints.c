@@ -448,7 +448,7 @@ static int _dev_in_hint_hash(struct cmd_context *cmd, struct device *dev)
 		return 0;
 
 	if (!dev_get_size(dev, &devsize) || !devsize)
-		return_0;
+		return 0;
 
 	return 1;
 }
