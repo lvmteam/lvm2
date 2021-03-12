@@ -472,7 +472,7 @@ static void _set_time_prefix(char *prefix, int buflen)
 	if (!len)
 		goto fail;
 
-	len = dm_snprintf(prefix + len, buflen - len, ".%ld ", ts.tv_nsec/1000);
+	len = dm_snprintf(prefix + len, buflen - len, ".%06ld ", ts.tv_nsec/1000);
 	if (len < 0)
 		goto fail;
 
