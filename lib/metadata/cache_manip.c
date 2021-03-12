@@ -470,13 +470,7 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 
 	//FIXME: use polling to do this...
 	for (;;) {
-		sigint_allow();
-		if (cleaner_policy)
-			/* TODO: Use centralized place */
-			usleep(500000);
-		sigint_restore();
-		if (sigint_caught()) {
-			sigint_clear();
+		if (cleaner_policy && interruptible_usleep(500000)) {
 			log_error("Flushing of %s aborted.", display_lvname(cache_lv));
 			if (cache_seg->cleaner_policy) {
 				cache_seg->cleaner_policy = 0;
