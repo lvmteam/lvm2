@@ -4958,7 +4958,7 @@ static int _lvconvert_split_cache_single(struct cmd_context *cmd,
 	struct logical_volume *lv_main = NULL;
 	struct logical_volume *lv_fast = NULL;
 	struct lv_segment *seg;
-	int ret;
+	int ret = 0;
 
 	if (lv_is_writecache(lv)) {
 		lv_main = lv;
@@ -5031,10 +5031,8 @@ static int _lvconvert_split_cache_single(struct cmd_context *cmd,
 			log_print_unless_silent("Logical volume %s is not cached and %s is unused.",
 						display_lvname(lv), display_lvname(lv_fast));
 
-		} else  {
+		} else
 			log_error(INTERNAL_ERROR "Unknown cache split command.");
-			ret = 0;
-		}
 
 	} else if (lv_is_cache(lv_main) && lv_is_cache_pool(lv_fast)) {
 		if (cmd->command->command_enum == lvconvert_split_and_remove_cache_CMD)
@@ -5043,14 +5041,10 @@ static int _lvconvert_split_cache_single(struct cmd_context *cmd,
 		else if (cmd->command->command_enum == lvconvert_split_and_keep_cache_CMD)
 			ret = _lvconvert_split_and_keep_cachepool(cmd, lv_main, lv_fast);
 
-		else  {
+		else
 			log_error(INTERNAL_ERROR "Unknown cache split command.");
-			ret = 0;
-		}
-	} else {
+	} else
 		log_error(INTERNAL_ERROR "Unknown cache split command.");
-		ret = 0;
-	}
 
 	if (!ret)
 		return ECMD_FAILED;
