@@ -16,6 +16,8 @@
 #ifndef _LVM_SIGNAL_H
 #define _LVM_SIGNAL_H
 
+#include <unistd.h>
+
 void remove_ctrl_c_handler(void);
 void install_ctrl_c_handler(void);
 int init_signals(int suppress_messages);
@@ -28,4 +30,5 @@ void sigint_clear(void);
 void block_signals(uint32_t flags);
 void unblock_signals(void);
 
+int interruptible_usleep(useconds_t usec);
 #endif

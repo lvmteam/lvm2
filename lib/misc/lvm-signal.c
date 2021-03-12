@@ -153,3 +153,16 @@ void unblock_signals(void)
 
 	_signals_blocked = 0;
 }
+
+/* usleep with enabled signal handler.
+ * Returns 1 when there was interruption */
+int interruptible_usleep(useconds_t usec)
+{
+	int r;
+
+	sigint_allow();
+	r = usleep(usec);
+	sigint_restore();
+
+	return (sigint_caught() || r) ? 1 : 0;
+}
