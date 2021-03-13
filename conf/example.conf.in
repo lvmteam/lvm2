@@ -1335,7 +1335,7 @@ activation {
 
 	# Configuration option activation/udev_sync.
 	# Use udev notifications to synchronize udev and LVM.
-	# The --nodevsync option overrides this setting.
+	# The --noudevsync option overrides this setting.
 	# When disabled, LVM commands will not wait for notifications from
 	# udev, but continue irrespective of any possible udev processing in
 	# the background. Only use this if udev is not running or has rules

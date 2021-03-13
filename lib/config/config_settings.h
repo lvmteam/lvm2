@@ -1323,7 +1323,7 @@ cfg(global_io_memory_size_CFG, "io_memory_size", global_CFG_SECTION, CFG_DEFAULT
 
 cfg(activation_udev_sync_CFG, "udev_sync", activation_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_UDEV_SYNC, vsn(2, 2, 51), NULL, 0, NULL,
 	"Use udev notifications to synchronize udev and LVM.\n"
-	"The --nodevsync option overrides this setting.\n"
+	"The --noudevsync option overrides this setting.\n"
 	"When disabled, LVM commands will not wait for notifications from\n"
 	"udev, but continue irrespective of any possible udev processing in\n"
 	"the background. Only use this if udev is not running or has rules\n"
