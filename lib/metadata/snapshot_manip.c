@@ -325,6 +325,16 @@ int vg_remove_snapshot(struct logical_volume *cow)
 	cow->snapshot = NULL;
 	lv_set_visible(cow);
 
+	/* When origin with all its snapshots is going to be remove
+	 * don't bother with individual manipulation with COWs
+	 * Note: removal proceeds only when origin is inactive */
+	if (is_origin_active && origin->to_remove) {
+		origin->vg->needs_write_and_commit = 1;
+		log_debug_metadata("Postponing write and commit for remove of snapshot %s.",
+				   display_lvname(cow));
+		return 1;
+	}
+
 	if (!vg_write(origin->vg))
 		return_0;
 

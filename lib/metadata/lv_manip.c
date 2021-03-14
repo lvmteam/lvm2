@@ -6823,13 +6823,10 @@ static int _lv_remove_segs_using_this_lv(struct cmd_context *cmd, struct logical
 	    yes_no_prompt("Removing %s \"%s\" will remove %u dependent volume(s). "
 			  "Proceed? [y/n]: ", lv_type, lv->name,
 			  dm_list_size(&lv->segs_using_this_lv)) == 'n') {
-			log_error("Logical volume \"%s\" not removed.", lv->name);
-			return 0;
-		}
-
-	/* Make aware users of this LV, it's going to be removed, so they
-	 * can skip any updates of itself */
-	lv->to_remove = 1;
+		lv->to_remove = 0;
+		log_error("Logical volume \"%s\" not removed.", lv->name);
+		return 0;
+	}
 
 	/*
 	 * Not using _safe iterator here - since we may delete whole subtree
@@ -6858,6 +6855,10 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	struct lvinfo info;
 	struct lv_list *lvl;
 	struct logical_volume *origin;
+
+	/* Make aware users of this LV, it's going to be removed, so they
+	 * can skip any updates of itself */
+	lv->to_remove = 1;
 
 	if (!level && lv_is_cow(lv)) {
 		/*
