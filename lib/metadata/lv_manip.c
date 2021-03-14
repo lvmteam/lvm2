@@ -6834,12 +6834,12 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	struct lv_list *lvl;
 	struct logical_volume *origin;
 
-	if (lv_is_cow(lv)) {
+	if (!level && lv_is_cow(lv)) {
 		/*
 		 * A merging snapshot cannot be removed directly unless
 		 * it has been invalidated or failed merge removal is requested.
 		 */
-		if (lv_is_merging_cow(lv) && !level) {
+		if (lv_is_merging_cow(lv)) {
 			if (lv_info(lv->vg->cmd, lv, 0, &info, 1, 0) &&
 			    info.exists && info.live_table) {
 				if (!lv_snapshot_percent(lv, &snap_percent)) {
@@ -6864,7 +6864,7 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 						  display_lvname(origin_from_cow(lv))) == 'n')
 					goto no_remove;
 			}
-		} else if (!level && lv_is_virtual_origin(origin = origin_from_cow(lv)))
+		} else if (lv_is_virtual_origin(origin = origin_from_cow(lv)))
 			/* If this is a sparse device, remove its origin too. */
 			/* Stacking is not supported */
 			lv = origin;
