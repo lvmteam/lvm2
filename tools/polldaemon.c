@@ -21,7 +21,7 @@
 
 #include <time.h>
 
-#define WAIT_AT_LEAST_NANOSECS 100000
+#define WAIT_AT_LEAST_NANOSECS 100000000
 
 progress_t poll_mirror_progress(struct cmd_context *cmd,
 				struct logical_volume *lv, const char *name,
@@ -127,7 +127,7 @@ static void _nanosleep(unsigned secs, unsigned allow_zero_time)
 
 static void _sleep_and_rescan_devices(struct cmd_context *cmd, struct daemon_parms *parms)
 {
-	if (parms->interval && !parms->aborting) {
+	if (!parms->aborting) {
 		/*
 		 * FIXME: do we really need to drop everything and then rescan
 		 * everything between each iteration?  What change exactly does
@@ -136,7 +136,7 @@ static void _sleep_and_rescan_devices(struct cmd_context *cmd, struct daemon_par
 		 */
 		lvmcache_destroy(cmd, 1, 0);
 		label_scan_destroy(cmd);
-		_nanosleep(parms->interval, 1);
+		_nanosleep(parms->interval, 0);
 		lvmcache_label_scan(cmd);
 	}
 }
