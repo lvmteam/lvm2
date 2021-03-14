@@ -2397,12 +2397,6 @@ int vg_validate(struct volume_group *vg)
 			}
 		}
 
-		if (lv_is_cow(lvl->lv))
-			num_snapshots++;
-
-		if (lv_is_visible(lvl->lv))
-			lv_visible_count++;
-
 		if (!check_lv_segments(lvl->lv, 0)) {
 			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
 				  lvl->lv->name);
@@ -2427,19 +2421,12 @@ int vg_validate(struct volume_group *vg)
 				r = 0;
 			}
 
-		if (lvl->lv->status & VISIBLE_LV)
-			continue;
-
-		/* snapshots */
-		if (lv_is_cow(lvl->lv))
-			continue;
-
-		/* virtual origins are always hidden */
-		if (lv_is_origin(lvl->lv) && !lv_is_virtual_origin(lvl->lv))
-			continue;
-
-		/* count other non-snapshot invisible volumes */
-		hidden_lv_count++;
+		if (lv_is_visible(lvl->lv))
+			lv_visible_count++;
+		else if (lv_is_cow(lvl->lv))
+			num_snapshots++;
+		else		/* count other non-snapshot invisible volumes */
+			hidden_lv_count++;
 
 		/*
 		 *  FIXME: add check for unreferenced invisible LVs
