@@ -6799,7 +6799,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (!suppress_remove_message && (visible || historical)) {
 		(void) dm_snprintf(msg, sizeof(msg),
-				   "%sogical volume \"%s\" successfully removed",
+				   "%sogical volume \"%s\" successfully removed.",
 				   historical ? "Historical l" : "L",
 				   historical ? lv->this_glv->historical->name : lv->name);
 		if (!vg->needs_write_and_commit)
@@ -6820,11 +6820,11 @@ static int _lv_remove_segs_using_this_lv(struct cmd_context *cmd, struct logical
 	struct seg_list *sl;
 
 	if ((force == PROMPT) &&
-	    yes_no_prompt("Removing %s \"%s\" will remove %u dependent volume(s). "
-			  "Proceed? [y/n]: ", lv_type, lv->name,
+	    yes_no_prompt("Removing %s %s will remove %u dependent volume(s). "
+			  "Proceed? [y/n]: ", lv_type, display_lvname(lv),
 			  dm_list_size(&lv->segs_using_this_lv)) == 'n') {
 		lv->to_remove = 0;
-		log_error("Logical volume \"%s\" not removed.", lv->name);
+		log_error("Logical volume %s not removed.", display_lvname(lv));
 		return 0;
 	}
 
