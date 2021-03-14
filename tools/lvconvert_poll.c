@@ -111,9 +111,9 @@ int lvconvert_merge_finish(struct cmd_context *cmd,
 	struct lv_segment *snap_seg = find_snapshot(lv);
 
 	if (!lv_is_merging_origin(lv)) {
-		log_error("Logical volume %s has no merging snapshot.",
+		log_print("Logical volume %s is no longer merging origin, polling has finished.",
 			  display_lvname(lv));
-		return 0;
+		return 1;
 	}
 
 	log_print_unless_silent("Merge of snapshot into logical volume %s has finished.",
@@ -141,8 +141,11 @@ progress_t poll_merge_progress(struct cmd_context *cmd,
 {
 	dm_percent_t percent = DM_PERCENT_0;
 
-	if (!lv_is_merging_origin(lv) ||
-	    !lv_snapshot_percent(lv, &percent)) {
+	if (!lv_is_merging_origin(lv))
+		/* Nothing to monitor here */
+		return PROGRESS_FINISHED_ALL;
+
+	if (!lv_snapshot_percent(lv, &percent)) {
 		log_error("%s: Failed query for merging percentage. Aborting merge.",
 			  display_lvname(lv));
 		return PROGRESS_CHECK_FAILED;

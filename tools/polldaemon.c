@@ -172,8 +172,13 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 		vg = vg_read(cmd, id->vg_name, NULL, READ_FOR_UPDATE, lockd_state, &error_flags, NULL);
 		if (!vg) {
 			/* What more could we do here? */
-			log_error("ABORTING: Can't reread VG for %s error flags %x.", id->display_name, error_flags);
-			ret = 0;
+			if (error_flags & FAILED_NOTFOUND) {
+				log_print_unless_silent("Can't find VG %s. No longer active.", id->display_name);
+				ret = 1;
+			} else {
+				log_error("ABORTING: Can't reread VG for %s error flags %x.", id->display_name, error_flags);
+				ret = 0;
+			}
 			goto out;
 		}
 
