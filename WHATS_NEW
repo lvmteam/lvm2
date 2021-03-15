@@ -1,5 +1,10 @@
 Version 2.03.12 - 
 ===================================
+  Merge polling does not fail, when LV is found to be already merged.
+  Poll volumes with at least 100ms delays.
+  Do not flush dm cache when cached LV is going to be removed.
+  Support interruption while waiting on device close before deactivation.
+  Flush thin-pool messages before removing more thin volumes.
   Improve hash function with less collisions and make it faster.
   Reduce ioctl count when deactivating volumes.
   Reduce number of metadata parsing.
