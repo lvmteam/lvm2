@@ -31,34 +31,34 @@
 
 set -euE -o pipefail
 
-TOOL=fsadm
+TOOL="fsadm"
 
 _SAVEPATH=$PATH
 PATH="/sbin:/usr/sbin:/bin:/usr/sbin:$PATH"
 
 # utilities
-TUNE_EXT=tune2fs
-RESIZE_EXT=resize2fs
-TUNE_REISER=reiserfstune
-RESIZE_REISER=resize_reiserfs
-TUNE_XFS=xfs_info
-RESIZE_XFS=xfs_growfs
+TUNE_EXT="tune2fs"
+RESIZE_EXT="resize2fs"
+TUNE_REISER="reiserfstune"
+RESIZE_REISER="resize_reiserfs"
+TUNE_XFS="xfs_info"
+RESIZE_XFS="xfs_growfs"
 
-MOUNT=mount
-UMOUNT=umount
-MKDIR=mkdir
-RMDIR=rmdir
-BLOCKDEV=blockdev
-BLKID=blkid
-DATE=date
-GREP=grep
-READLINK=readlink
+MOUNT="mount"
+UMOUNT="umount"
+MKDIR="mkdir"
+RMDIR="rmdir"
+BLOCKDEV="blockdev"
+BLKID="blkid"
+DATE="date"
+GREP="grep"
+READLINK="readlink"
 READLINK_E="-e"
-FSCK=fsck
-XFS_CHECK=xfs_check
+FSCK="fsck"
+XFS_CHECK="xfs_check"
 # XFS_REPAIR -n is used when XFS_CHECK is not found
-XFS_REPAIR=xfs_repair
-CRYPTSETUP=cryptsetup
+XFS_REPAIR="xfs_repair"
+CRYPTSETUP="cryptsetup"
 
 # user may override lvm location by setting LVM_BINARY
 LVM=${LVM_BINARY:-lvm}
@@ -69,8 +69,8 @@ VERB=
 FORCE=
 EXTOFF=${_FSADM_EXTOFF:-0}
 DO_LVRESIZE=0
-FSTYPE=unknown
-VOLUME=unknown
+FSTYPE="unknown"
+VOLUME="unknown"
 TEMPDIR="${TMPDIR:-/tmp}/${TOOL}_${RANDOM}$$/m"
 DM_DEV_DIR="${DM_DEV_DIR:-/dev}"
 BLOCKSIZE=
@@ -321,10 +321,10 @@ detect_mounted_with_proc_self_mountinfo() {
 # device (which could have been renamed).
 # We need to visit every mount point and check it's major minor
 detect_mounted_with_proc_mounts() {
-	MOUNTED=$("$GREP" "^$VOLUME[ \\t]" "$PROCMOUNTS")
+	MOUNTED=$("$GREP" "^${VOLUME}[ \\t]" "$PROCMOUNTS")
 
 	# for empty string try again with real volume name
-	test -z "$MOUNTED" && MOUNTED=$("$GREP" "^$RVOLUME[ \\t]" "$PROCMOUNTS")
+	test -z "$MOUNTED" && MOUNTED=$("$GREP" "^${RVOLUME}[ \\t]" "$PROCMOUNTS")
 
 	MOUNTDEV=$(echo -n -e "${MOUNTED%% *}")
 	# cut device name prefix and trim everything past mountpoint
@@ -335,8 +335,8 @@ detect_mounted_with_proc_mounts() {
 	# for systems with different device names - check also mount output
 	if test -z "$MOUNTED" ; then
 		# will not work with spaces in paths
-		MOUNTED=$(LC_ALL=C "$MOUNT" | "$GREP" "^$VOLUME[ \\t]")
-		test -z "$MOUNTED" && MOUNTED=$(LC_ALL=C "$MOUNT" | "$GREP" "^$RVOLUME[ \\t]")
+		MOUNTED=$(LC_ALL=C "$MOUNT" | "$GREP" "^${VOLUME}[ \\t]")
+		test -z "$MOUNTED" && MOUNTED=$(LC_ALL=C "$MOUNT" | "$GREP" "^${RVOLUME}[ \\t]")
 		MOUNTDEV=${MOUNTED%% on *}
 		MOUNTED=${MOUNTED##* on }
 		MOUNTED=${MOUNTED% type *} # allow type in the mount name

@@ -18,24 +18,24 @@
 
 # following external commands are used throughout the script
 # echo and test are internal in bash at least
-MKDIR=mkdir # need -p
-TAR=tar # need czf
-RM=rm # need -rf
-CP=cp
-TAIL=tail # we need -n
-LS=ls # need -la
-PS=ps # need alx
-SED=sed
-DD=dd
-CUT=cut
-GREP=grep
-DATE=date
-BASENAME=basename
-UDEVADM=udevadm
-UNAME=uname
-TR=tr
-SOCAT=socat # either socat or nc is needed for dumping lvmetad state
-NC=nc
+MKDIR="mkdir" # need -p
+TAR="tar" # need czf
+RM="rm" # need -rf
+CP="cp"
+TAIL="tail" # we need -n
+LS="ls" # need -la
+PS="ps" # need alx
+SED="sed"
+DD="dd"
+CUT="cut"
+GREP="grep"
+DATE="date"
+BASENAME="basename"
+UDEVADM="udevadm"
+UNAME="uname"
+TR="tr"
+SOCAT="socat" # either socat or nc is needed for dumping lvmetad state
+NC="nc"
 
 if test "@ODIRECT@" = yes; then
     DDFLAGS='iflag=direct oflag=direct'

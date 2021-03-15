@@ -807,7 +807,7 @@ wait_md_create() {
 	local md=$1
 
 	while :; do
-		if ! grep `basename $md` /proc/mdstat; then
+		if ! grep "$(basename $md)" /proc/mdstat; then
 			echo "$md not ready"
 			cat /proc/mdstat
 			sleep 2
@@ -1365,7 +1365,7 @@ EOF
 			echo "$s {"
 			local k
 			for k in $(grep ^"$s"/ "$config_values" | cut -f1 -d= | sed -e 's, *$,,' | sort | uniq); do
-				grep "^$k[ \t=]" "$config_values" | tail -n 1 | sed -e "s,^$s/,	 ," || true
+				grep "^${k}[ \t=]" "$config_values" | tail -n 1 | sed -e "s,^$s/,	 ," || true
 			done
 			echo "}"
 			echo

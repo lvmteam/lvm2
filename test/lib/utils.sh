@@ -267,7 +267,7 @@ get_devs() {
 
 prepare_test_vars() {
 	vg="${PREFIX}vg"
-	lv=LV
+	lv="LV"
 
 	for i in {1..16}; do
 		eval "lv$i=\"LV$i\""

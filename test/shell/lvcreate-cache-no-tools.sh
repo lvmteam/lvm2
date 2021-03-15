@@ -20,9 +20,9 @@ SKIP_WITH_LVMPOLLD=1
 if test -e LOCAL_CLVMD ; then
 # In cluster, the error from activation is logged in clvmd
 # so we can only check resulting state of activation
-	GREP=echo
+	GREP="echo"
 else
-	GREP=grep
+	GREP="grep"
 fi
 
 make_fake_() {
