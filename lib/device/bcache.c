@@ -1401,7 +1401,7 @@ bool bcache_invalidate_di(struct bcache *cache, int di)
 	radix_tree_iterate(cache->rtree, k.bytes, k.bytes + sizeof(k.parts.di), &it.it);
 
 	if (it.success)
-		radix_tree_remove_prefix(cache->rtree, k.bytes, k.bytes + sizeof(k.parts.di));
+		(void) radix_tree_remove_prefix(cache->rtree, k.bytes, k.bytes + sizeof(k.parts.di));
 
 	return it.success;
 }
@@ -1436,7 +1436,7 @@ void bcache_abort_di(struct bcache *cache, int di)
 
 	it.visit = _abort_v;
 	radix_tree_iterate(cache->rtree, k.bytes, k.bytes + sizeof(k.parts.di), &it);
-	radix_tree_remove_prefix(cache->rtree, k.bytes, k.bytes + sizeof(k.parts.di));
+	(void) radix_tree_remove_prefix(cache->rtree, k.bytes, k.bytes + sizeof(k.parts.di));
 }
 
 //----------------------------------------------------------------
