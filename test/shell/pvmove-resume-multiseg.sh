@@ -78,6 +78,9 @@ test_pvmove_resume() {
 		aux prepare_clvmd
 	fi
 
+##	rm -f debug.log_DEBUG*
+#	lvs -ao+devices  $vg
+
 	# call resume function (see below)
 	# with expected number of spawned
 	# bg polling as parameter
@@ -153,7 +156,7 @@ pvmove_fg() {
 	aux enable_dev "$dev4"
 	aux enable_dev "$dev5"
 
-	pvmove
+	LVM_TEST_TAG="kill_me_$PREFIX" pvmove
 }
 
 pvmove_bg() {
@@ -198,8 +201,8 @@ pvmove_fg_single() {
 	aux enable_dev "$dev4"
 	aux enable_dev "$dev5"
 
-	pvmove "$dev1"
-	pvmove "$dev3"
+	LVM_TEST_TAG="kill_me_$PREFIX" pvmove "$dev1"
+	LVM_TEST_TAG="kill_me_$PREFIX" pvmove "$dev3"
 }
 
 pvmove_bg_single() {
