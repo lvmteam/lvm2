@@ -839,8 +839,7 @@ static int _info(struct cmd_context *cmd,
 			if (strcmp(suffix_position + 1, suffix))
 				continue;
 
-			(void) strncpy(old_style_dlid, dlid, sizeof(old_style_dlid));
-			old_style_dlid[sizeof(old_style_dlid) - 1] = '\0';
+			(void) dm_strncpy(old_style_dlid, dlid, sizeof(old_style_dlid));
 			if (!_info_run(old_style_dlid, dminfo, read_ahead, seg_status,
 				       name_check, with_open_count, with_read_ahead,
 				       0, 0))
