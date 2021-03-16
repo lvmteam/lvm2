@@ -16,7 +16,7 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 case "$(uname -r)" in
-  3.10.0-862*) die "Cannot run this test on unfixed kernel." ;;
+  3.10.0-862*) skip "Cannot run this test on unfixed kernel." ;;
 esac
 
 # Test reshaping under io load

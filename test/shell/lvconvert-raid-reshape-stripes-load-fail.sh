@@ -18,7 +18,7 @@ SKIP_WITH_LVMPOLLD=1
 # Test reshaping under io load
 
 case "$(uname -r)" in
-  3.10.0-862*) die "Cannot run this test on unfixed kernel." ;;
+  3.10.0-862*) skip "Cannot run this test on unfixed kernel." ;;
 esac
 
 which mkfs.ext4 || skip

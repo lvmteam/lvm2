@@ -22,7 +22,8 @@ which mkfs.ext4 || skip
 aux have_raid 1 13 2 || skip
 
 case "$(uname -r)" in
-  5.[891]*|3.10.0-862*) die "Cannot run this test on unfixed kernel." ;;
+  5.[891]*) die "Cannot run this test on unfixed kernel." ;;
+  3.10.0-862*) skip "Cannot run this test on unfixed kernel." ;;
   4.18.0-*.el8*)
     REL="$(uname -r)"
     REL="${REL#4.18.0-}"
