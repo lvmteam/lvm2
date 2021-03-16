@@ -4557,7 +4557,7 @@ static bool _scan_text_mismatch(struct cmd_context *cmd, const char *vgname, con
 			continue;
 
 		if (!(dev = mda_get_device(mda))) {
-			log_debug("rescan for text mismatch - no mda dev");
+			log_debug("Rescan for text mismatch - no mda dev.");
 			goto out;
 		}
 
@@ -4570,24 +4570,24 @@ static bool _scan_text_mismatch(struct cmd_context *cmd, const char *vgname, con
 		 * Invalidate mda_header in bcache so it will be reread from disk.
 		 */
 		if (!dev_invalidate_bytes(dev, 4096, 512)) {
-			log_debug("rescan for text mismatch - cannot invalidate");
+			log_debug("Rescan for text mismatch - cannot invalidate.");
 			goto out;
 		}
 
 		if (!(mdah = raw_read_mda_header(cmd->fmt, area, 1, 0, &bad_fields))) {
-			log_debug("rescan for text mismatch - no mda header");
+			log_debug("Rescan for text mismatch - no mda header.");
 			goto out;
 		}
 
 		rlocn = mdah->raw_locns;
 
 		if (bad_fields) {
-			log_debug("rescan for text mismatch - bad_fields");
+			log_debug("Rescan for text mismatch - bad_fields.");
 		} else if (rlocn->checksum != mda->scan_text_checksum) {
-			log_debug("rescan for text checksum mismatch - now %x prev %x",
+			log_debug("Rescan for text checksum mismatch - now %x prev %x.",
 				  rlocn->checksum, mda->scan_text_checksum);
 		} else if (rlocn->offset != mda->scan_text_offset) {
-			log_debug("rescan for text offset mismatch - now %llu prev %llu",
+			log_debug("Rescan for text offset mismatch - now %llu prev %llu.",
 				  (unsigned long long)rlocn->offset,
 				  (unsigned long long)mda->scan_text_offset);
 		} else {
@@ -4608,12 +4608,12 @@ static bool _scan_text_mismatch(struct cmd_context *cmd, const char *vgname, con
 
 	if (ret) {
 		/* shouldn't happen */
-		log_debug("rescan for text mismatch - no mdas");
+		log_debug("Rescan for text mismatch - no mdas.");
 		goto out;
 	}
 out:
 	if (!ret)
-		log_debug("rescan skipped - unchanged offset %llu checksum %x",
+		log_debug("Rescan skipped - unchanged offset %llu checksum %x.",
 			  (unsigned long long)mda->scan_text_offset,
 			  mda->scan_text_checksum);
 
@@ -4809,7 +4809,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		if (!vg)
 			continue;
 
-		if (vg && !vg_ret) {
+		if (!vg_ret) {
 			vg_ret = vg;
 			dev_ret = mda_dev;
 			continue;
