@@ -85,7 +85,7 @@ else
   echo "Skipping RAID6 tests"
 fi
 
-if aux have_raid 1 10 1; then
+if aux have_raid 1 12 0; then
 # Create 6-way raid01
 lvcreate --yes -aey --type raid10 -i 3 -m 1 --stripesize 128K -R 256K -L8M -n $lv1 $vg
 check lv_field $vg/$lv1 segtype "raid10"
