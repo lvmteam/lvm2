@@ -44,7 +44,7 @@ mimages_are_on_ ()
 	local i
 
 	echo "Check if mirror images of $lv are on PVs" "${list_pvs[@]}"
-	printf "%s\n" "${list_pvs[@]}" | sort | uniq > out1
+	printf "%s\n" "${list_pvs[@]}" | sort | uniq | tee out1
 
 	get lv_field_lv_ "$vg" lv_name -a | grep "${lv}_mimage_" | tee lvs_log
 	test -s lvs_log || return 1
@@ -54,13 +54,8 @@ mimages_are_on_ ()
 	done < lvs_log
 
 	for i in "${mimages[@]}"; do
-		echo "Checking $vg/$i"
-		lvs -a -o+devices "$vg/$i"
-	done
-
-	for i in "${mimages[@]}"; do
 		get lv_devices "$vg/$i"
-	done | sort | uniq > out2
+	done | sort | uniq | tee out2
 
 	diff --ignore-blank-lines out1 out2
 }
@@ -116,7 +111,7 @@ prepare_lvs_()
 
 check_and_cleanup_lvs_()
 {
-	lvs -a -o+devices $vg
+	lvs -a -o+lv_uuid,devices $vg
 	prepare_lvs_
 }
 
