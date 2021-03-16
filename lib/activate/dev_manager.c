@@ -627,7 +627,8 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check, i
 	const char *name, *uuid;
 	uint64_t start, length;
 	char *target_type = NULL;
-	char *params, *vgname = NULL, *lvname, *layer;
+	char *params, *vgname, *lvname, *layer;
+	char vg_name[NAME_LEN];
 	void *next = NULL;
 	int only_error_target = 1;
 	int r = 0;
@@ -652,44 +653,49 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check, i
 		goto out;
 	}
 
-	/* Check internal lvm devices */
-	if (check.check_reserved &&
-	    uuid && !strncmp(uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1)) {
-		if (strlen(uuid) > (sizeof(UUID_PREFIX) + 2 * ID_LEN)) { /* 68 */
-			log_debug_activation("%s: Reserved uuid %s on internal LV device %s not usable.",
-					     dev_name(dev), uuid, name);
-			goto out;
+	if (uuid && (check.check_reserved || check.check_lv)) {
+		if (!strncmp(uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1)) { /* with LVM- prefix */
+			if (check.check_reserved) {
+				/* Check internal lvm devices */
+				if (strlen(uuid) > (sizeof(UUID_PREFIX) + 2 * ID_LEN)) { /* 68 with suffix */
+					log_debug_activation("%s: Reserved uuid %s on internal LV device %s not usable.",
+							     dev_name(dev), uuid, name);
+					goto out;
+				}
+
+				/* Recognize some older reserved LVs just from the LV name (snapshot, pvmove...) */
+				vgname = vg_name;
+				if (!dm_strncpy(vg_name, name, sizeof(vg_name)) ||
+				    !dm_split_lvm_name(NULL, NULL, &vgname, &lvname, &layer))
+					goto_out;
+
+				/* FIXME: fails to handle dev aliases i.e. /dev/dm-5, replace with UUID suffix */
+				if (lvname && (is_reserved_lvname(lvname) || *layer)) {
+					log_debug_activation("%s: Reserved internal LV device %s/%s%s%s not usable.",
+							     dev_name(dev), vgname, lvname, *layer ? "-" : "", layer);
+					goto out;
+				}
+			}
+
+			if (check.check_lv) {
+				/* Skip LVs */
+				if (is_lv)
+					*is_lv = 1;
+				goto out;
+			}
 		}
 
-		if (!(vgname = strdup(name)) ||
-		    !dm_split_lvm_name(NULL, NULL, &vgname, &lvname, &layer))
-			goto_out;
-
-		/* FIXME: fails to handle dev aliases i.e. /dev/dm-5, replace with UUID suffix */
-		if (lvname && (is_reserved_lvname(lvname) || *layer)) {
-			log_debug_activation("%s: Reserved internal LV device %s/%s%s%s not usable.",
-					     dev_name(dev), vgname, lvname, *layer ? "-" : "", layer);
+		if (check.check_reserved &&
+		    (!strncmp(uuid, CRYPT_TEMP, sizeof(CRYPT_TEMP) - 1) ||
+		     !strncmp(uuid, CRYPT_SUBDEV, sizeof(CRYPT_SUBDEV) - 1) ||
+		     !strncmp(uuid, STRATIS, sizeof(STRATIS) - 1))) {
+			/* Skip private crypto devices */
+			log_debug_activation("%s: Reserved uuid %s on %s device %s not usable.",
+					     dev_name(dev), uuid,
+					     uuid[0] == 'C' ? "crypto" : "stratis",
+					     name);
 			goto out;
 		}
-	}
-
-	if (check.check_lv && uuid && !strncmp(uuid, "LVM-", 4)) {
-		/* Skip LVs */
-		if (is_lv)
-			*is_lv = 1;
-		goto out;
-	}
-
-	if (check.check_reserved && uuid &&
-	    (!strncmp(uuid, CRYPT_TEMP, sizeof(CRYPT_TEMP) - 1) ||
-	     !strncmp(uuid, CRYPT_SUBDEV, sizeof(CRYPT_SUBDEV) - 1) ||
-	     !strncmp(uuid, STRATIS, sizeof(STRATIS) - 1))) {
-		/* Skip private crypto devices */
-		log_debug_activation("%s: Reserved uuid %s on %s device %s not usable.",
-				     dev_name(dev), uuid,
-				     uuid[0] == 'C' ? "crypto" : "stratis",
-				     name);
-		goto out;
 	}
 
 	/* FIXME Also check for mpath no paths */
@@ -777,7 +783,6 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check, i
 	r = 1;
 
       out:
-	free(vgname);
 	dm_task_destroy(dmt);
 	return r;
 }
