@@ -17,7 +17,7 @@ SKIP_WITH_LVMPOLLD=1
 
 aux have_raid 1 3 0 || skip
 PROGRESS=0
-aux have_raid 1 13 0 && PROGRESS=1
+aux have_raid 1 15 0 && PROGRESS=1
 
 # Use smallest regionsize to save VG space
 regionsize=$(getconf PAGESIZE) # in bytes
