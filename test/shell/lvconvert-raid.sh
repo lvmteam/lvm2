@@ -232,6 +232,11 @@ lvcreate -aey -l 2 -n $lv1 $vg "$dev1"
 lvconvert -y -m 1 $vg/$lv1 \
 	--config 'global { mirror_segtype_default = "raid1" }' "$dev2"
 lvs --noheadings -o attr $vg/$lv1 | grep '^[[:space:]]*r'
+for i in {1..10}; do
+	check raid_leg_status $vg $lv1 "Aa" && break
+	check raid_leg_status $vg $lv1 "aa" || die "Cannot wait for Aa on $vg/$lv1"
+	sleep .1
+done
 not lvconvert --yes -m 0 $vg/$lv1 "$dev1"
 lvconvert --yes -m 0 $vg/$lv1 "$dev2"
 aux enable_dev "$dev2"
