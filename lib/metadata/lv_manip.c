@@ -8471,10 +8471,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	/* Unlock memory if possible */
 	memlock_unlock(vg->cmd);
 
-	if (segtype_is_vdo(create_segtype) && pool_lv) {
+	if (pool_lv && segtype_is_vdo(create_segtype))
 		if (!set_lv_segment_area_lv(first_seg(lv), 0, pool_lv, 0, LV_VDO_POOL))
 			return_NULL;
-	}
 
 	if (lv_is_cache_pool(lv)) {
 		if (!cache_set_params(first_seg(lv),
