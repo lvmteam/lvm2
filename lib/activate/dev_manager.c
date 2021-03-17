@@ -1437,7 +1437,7 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 
 int dev_manager_raid_status(struct dev_manager *dm,
 			    const struct logical_volume *lv,
-			    struct dm_status_raid **status)
+			    struct lv_status_raid **status, int *exists)
 {
 	int r = 0;
 	const char *dlid;
@@ -1447,6 +1447,11 @@ int dev_manager_raid_status(struct dev_manager *dm,
 	char *type = NULL;
 	char *params = NULL;
 	const char *layer = lv_layer(lv);
+	struct dm_status_raid *sr;
+
+	*exists = -1;
+	if (!(*status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_cache))))
+		return_0;
 
 	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
 		return_0;
@@ -1454,8 +1459,11 @@ int dev_manager_raid_status(struct dev_manager *dm,
 	if (!(dmt = _setup_task_run(DM_DEVICE_STATUS, &info, NULL, dlid, 0, 0, 0, 0, 0, 0)))
 		return_0;
 
-	if (!info.exists)
-		goto_out;
+	if (!(*exists = info.exists))
+		goto out;
+
+	log_debug_activation("Checking raid status for volume %s.",
+			     display_lvname(lv));
 
 	dm_get_next_target(dmt, NULL, &start, &length, &type, &params);
 
@@ -1467,8 +1475,12 @@ int dev_manager_raid_status(struct dev_manager *dm,
 
 	/* FIXME Check there's only one target */
 
-	if (!dm_get_status_raid(dm->mem, params, status))
+	if (!dm_get_status_raid(dm->mem, params, &sr))
 		goto_out;
+
+	(*status)->mem = dm->mem; /* User has to destroy this mem pool later */
+	(*status)->raid = sr;
+	(*status)->in_sync = dm_make_percent(sr->insync_regions, sr->total_regions);
 
 	r = 1;
 out:

@@ -1239,6 +1239,11 @@ int collapse_mirrored_lv(struct logical_volume *lv);
 int shift_mirror_images(struct lv_segment *mirrored_seg, unsigned mimage);
 
 /* ++  metadata/raid_manip.c */
+struct lv_status_raid {
+	struct dm_pool *mem;
+	struct dm_status_raid *raid;
+	dm_percent_t in_sync;
+};
 int lv_is_raid_with_tracking(const struct logical_volume *lv);
 uint32_t lv_raid_image_count(const struct logical_volume *lv);
 int lv_raid_change_image_count(struct logical_volume *lv,

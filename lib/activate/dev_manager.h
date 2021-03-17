@@ -59,7 +59,7 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 			       dm_percent_t *percent, uint32_t *event_nr);
 int dev_manager_raid_status(struct dev_manager *dm,
 			    const struct logical_volume *lv,
-			    struct dm_status_raid **status);
+			    struct lv_status_raid **status, int *exists);
 int dev_manager_raid_message(struct dev_manager *dm,
 			     const struct logical_volume *lv,
 			     const char *msg);

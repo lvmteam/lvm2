@@ -972,35 +972,28 @@ int lv_raid_percent(const struct logical_volume *lv, dm_percent_t *percent)
 
 int lv_raid_data_offset(const struct logical_volume *lv, uint64_t *data_offset)
 {
-	int r;
-	struct dev_manager *dm;
-	struct dm_status_raid *status;
+	struct lv_status_raid *raid_status;
 
 	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
 		return 0;
 
 	log_debug_activation("Checking raid data offset and dev sectors for LV %s/%s",
 			     lv->vg->name, lv->name);
-	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
-		return_0;
 
-	if (!(r = dev_manager_raid_status(dm, lv, &status))) {
-		dev_manager_destroy(dm);
-		return_0;
-	}
+	if (!lv_raid_status(lv, &raid_status))
+                return_0;
 
-	*data_offset = status->data_offset;
+	*data_offset = raid_status->raid->data_offset;
 
-	dev_manager_destroy(dm);
+	dm_pool_destroy(raid_status->mem);
 
-	return r;
+	return 1;
 }
 
 int lv_raid_dev_health(const struct logical_volume *lv, char **dev_health)
 {
-	int r;
-	struct dev_manager *dm;
-	struct dm_status_raid *status;
+	int r = 1;
+	struct lv_status_raid *raid_status;
 
 	*dev_health = NULL;
 
@@ -1010,25 +1003,23 @@ int lv_raid_dev_health(const struct logical_volume *lv, char **dev_health)
 	log_debug_activation("Checking raid device health for LV %s.",
 			     display_lvname(lv));
 
-	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
-		return_0;
+	if (!lv_raid_status(lv, &raid_status))
+                return_0;
 
-	if (!(r = dev_manager_raid_status(dm, lv, &status)) ||
-	    !(*dev_health = dm_pool_strdup(lv->vg->cmd->mem,
-					   status->dev_health))) {
-		dev_manager_destroy(dm);
-		return_0;
+	if (!(*dev_health = dm_pool_strdup(lv->vg->cmd->mem,
+					  raid_status->raid->dev_health))) {
+		stack;
+                r = 0;
 	}
 
-	dev_manager_destroy(dm);
+	dm_pool_destroy(raid_status->mem);
 
 	return r;
 }
 
 int lv_raid_dev_count(const struct logical_volume *lv, uint32_t *dev_cnt)
 {
-	struct dev_manager *dm;
-	struct dm_status_raid *status;
+	struct lv_status_raid *raid_status;
 
 	*dev_cnt = 0;
 
@@ -1037,24 +1028,20 @@ int lv_raid_dev_count(const struct logical_volume *lv, uint32_t *dev_cnt)
 
 	log_debug_activation("Checking raid device count for LV %s/%s",
 			     lv->vg->name, lv->name);
-	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
+
+	if (!lv_raid_status(lv, &raid_status))
 		return_0;
 
-	if (!dev_manager_raid_status(dm, lv, &status)) {
-		dev_manager_destroy(dm);
-		return_0;
-	}
-	*dev_cnt = status->dev_count;
+	*dev_cnt = raid_status->raid->dev_count;
 
-	dev_manager_destroy(dm);
+	dm_pool_destroy(raid_status->mem);
 
 	return 1;
 }
 
 int lv_raid_mismatch_count(const struct logical_volume *lv, uint64_t *cnt)
 {
-	struct dev_manager *dm;
-	struct dm_status_raid *status;
+	struct lv_status_raid *raid_status;
 
 	*cnt = 0;
 
@@ -1064,25 +1051,20 @@ int lv_raid_mismatch_count(const struct logical_volume *lv, uint64_t *cnt)
 	log_debug_activation("Checking raid mismatch count for LV %s.",
 			     display_lvname(lv));
 
-	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
+	if (!lv_raid_status(lv, &raid_status))
 		return_0;
 
-	if (!dev_manager_raid_status(dm, lv, &status)) {
-		dev_manager_destroy(dm);
-		return_0;
-	}
-	*cnt = status->mismatch_count;
+	*cnt = raid_status->raid->mismatch_count;
 
-	dev_manager_destroy(dm);
+	dm_pool_destroy(raid_status->mem);
 
 	return 1;
 }
 
 int lv_raid_sync_action(const struct logical_volume *lv, char **sync_action)
 {
-	struct dev_manager *dm;
-	struct dm_status_raid *status;
-	char *action;
+	struct lv_status_raid *raid_status;
+	int r = 1;
 
 	*sync_action = NULL;
 
@@ -1092,30 +1074,27 @@ int lv_raid_sync_action(const struct logical_volume *lv, char **sync_action)
 	log_debug_activation("Checking raid sync_action for LV %s.",
 			     display_lvname(lv));
 
-	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
+	if (!lv_raid_status(lv, &raid_status))
 		return_0;
 
 	/* status->sync_action can be NULL if dm-raid version < 1.5.0 */
-	if (!dev_manager_raid_status(dm, lv, &status) ||
-	    !status->sync_action ||
-	    !(action = dm_pool_strdup(lv->vg->cmd->mem,
-				      status->sync_action))) {
-		dev_manager_destroy(dm);
-		return_0;
+	if (!raid_status->raid->sync_action ||
+	    !(*sync_action = dm_pool_strdup(lv->vg->cmd->mem,
+					    raid_status->raid->sync_action))) {
+		stack;
+		r = 0;
 	}
 
-	*sync_action = action;
+	dm_pool_destroy(raid_status->mem);
 
-	dev_manager_destroy(dm);
-
-	return 1;
+	return r;
 }
 
 int lv_raid_message(const struct logical_volume *lv, const char *msg)
 {
+	struct lv_status_raid *raid_status;
+	struct dev_manager *dm = NULL;
 	int r = 0;
-	struct dev_manager *dm;
-	struct dm_status_raid *status;
 
 	if (!seg_is_raid(first_seg(lv))) {
 		/*
@@ -1140,16 +1119,10 @@ int lv_raid_message(const struct logical_volume *lv, const char *msg)
 		return 0;
 	}
 
-	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
+	if (!lv_raid_status(lv, &raid_status))
 		return_0;
 
-	if (!(r = dev_manager_raid_status(dm, lv, &status))) {
-		log_error("Failed to retrieve status of %s.",
-			  display_lvname(lv));
-		goto out;
-	}
-
-	if (!status->sync_action) {
+	if (!raid_status->raid->sync_action) {
 		log_error("Kernel driver does not support this action: %s", msg);
 		goto out;
 	}
@@ -1171,17 +1144,41 @@ int lv_raid_message(const struct logical_volume *lv, const char *msg)
 		log_error("\"%s\" is not a supported sync operation.", msg);
 		goto out;
 	}
-	if (strcmp(status->sync_action, "idle")) {
+	if (strcmp(raid_status->raid->sync_action, "idle")) {
 		log_error("%s state is currently \"%s\".  Unable to switch to \"%s\".",
-			  display_lvname(lv), status->sync_action, msg);
+			  display_lvname(lv), raid_status->raid->sync_action, msg);
 		goto out;
 	}
 
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
+		return_0;
+
 	r = dev_manager_raid_message(dm, lv, msg);
 out:
-	dev_manager_destroy(dm);
+	if (dm)
+		dev_manager_destroy(dm);
+	dm_pool_destroy(raid_status->mem);
 
 	return r;
+}
+
+int lv_raid_status(const struct logical_volume *lv, struct lv_status_raid **status)
+{
+	struct dev_manager *dm;
+	int exists;
+
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
+		return_0;
+
+	if (!dev_manager_raid_status(dm, lv, status, &exists)) {
+		dev_manager_destroy(dm);
+		if (exists)
+			stack;
+		return 0;
+	}
+	/* User has to call dm_pool_destroy(status->mem)! */
+
+	return 1;
 }
 
 int lv_writecache_message(const struct logical_volume *lv, const char *msg)
