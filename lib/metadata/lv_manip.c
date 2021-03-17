@@ -8500,8 +8500,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 		if (lp->error_when_full)
 			lv->status |= LV_ERROR_WHEN_FULL;
-	} else if (pool_lv && lv_is_virtual(lv)) { /* going to be a thin volume */
-		seg = first_seg(lv);
+	} else if (pool_lv && lv_is_virtual(lv) && /* not yet thin LV */
+		   (seg = first_seg(lv)) &&
+		   seg_is_thin(seg)) { /* going to be a thin volume */
 		pool_seg = first_seg(pool_lv);
 		if (!(seg->device_id = get_free_pool_device_id(pool_seg)))
 			return_NULL;
