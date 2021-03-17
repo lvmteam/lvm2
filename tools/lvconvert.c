@@ -3086,8 +3086,8 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	/* Allow to have only thinpool active and restore it's active state. */
 	activate_pool = to_thinpool && lv_is_active(lv);
 
-	/* Wipe metadata_lv by default, but allow skipping this for cache pools. */
-	zero_metadata = (to_cachepool) ? arg_int_value(cmd, zero_ARG, 1) : 1;
+	/* Wipe metadata_lv by default, but allow skipping on user's request. */
+	zero_metadata = arg_int_value(cmd, zero_ARG, 1);
 
 	/* An existing LV needs to have its lock freed once it becomes a data LV. */
 	if (vg_is_shared(vg) && lv->lock_args) {
@@ -3250,8 +3250,8 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 
 	if (zero_metadata)
 		log_warn("THIS WILL DESTROY CONTENT OF LOGICAL VOLUME (filesystem etc.)");
-	else if (to_cachepool)
-		log_warn("WARNING: Using mismatched cache pool metadata MAY DESTROY YOUR DATA!");
+	else
+		log_warn("WARNING: Using mismatched pool metadata MAY DESTROY YOUR DATA!");
 
 	if (!arg_count(cmd, yes_ARG) &&
 	    yes_no_prompt("Do you really want to convert %s? [y/n]: ",
