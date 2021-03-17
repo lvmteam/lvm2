@@ -435,7 +435,7 @@ FLAGS: SECONDARY_SYNTAX
 # lvconvert utilities for creating/maintaining thin and cache objects.
 # Create a new command set for these and migrate them out of lvconvert?
 
-lvconvert --type thin --thinpool LV LV_linear_striped_raid_cache_thin
+lvconvert --type thin --thinpool LV LV_linear_striped_raid_cache_thin_error_zero
 OO: --thin, --originname LV_new, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_thin_with_external
 DESC: Convert LV to a thin LV, using the original LV as an external origin.
@@ -444,7 +444,7 @@ RULE: all not lv_is_locked lv_is_raid_with_integrity
 RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 # alternate form of lvconvert --type thin
-lvconvert --thin --thinpool LV LV_linear_striped_raid_cache_thin
+lvconvert --thin --thinpool LV LV_linear_striped_raid_cache_thin_error_zero
 OO: --type thin, --originname LV_new, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_thin_with_external
 DESC: Convert LV to a thin LV, using the original LV as an external origin
@@ -517,7 +517,7 @@ RULE: all and lv_is_visible
 
 ---
 
-lvconvert --type thin-pool LV_linear_striped_raid_cache
+lvconvert --type thin-pool LV_linear_striped_raid_cache_error_zero
 OO: --stripes_long Number, --stripesize SizeKB,
 OO_LVCONVERT_THIN, OO_LVCONVERT_POOL, OO_LVCONVERT
 OP: PV ...
@@ -593,7 +593,7 @@ RULE: all not lv_is_raid_with_integrity
 # This command syntax is deprecated, and the primary forms
 # of creating a pool or swapping metadata should be used.
 
-lvconvert --cachepool LV_linear_striped_raid_cachepool
+lvconvert --cachepool LV_linear_striped_raid_cachepool_error_zero
 OO: --type cache-pool, OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_to_cachepool_or_swap_metadata
