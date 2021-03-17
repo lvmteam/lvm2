@@ -1558,7 +1558,7 @@ out:
 
 int dev_manager_cache_status(struct dev_manager *dm,
 			     const struct logical_volume *lv,
-			     struct lv_status_cache **status)
+			     struct lv_status_cache **status, int *exists)
 {
 	int r = 0;
 	const char *dlid;
@@ -1569,14 +1569,18 @@ int dev_manager_cache_status(struct dev_manager *dm,
 	char *params = NULL;
 	struct dm_status_cache *c;
 
+	*exists = -1;
 	if (!(dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
 		return_0;
 
 	if (!(dmt = _setup_task_run(DM_DEVICE_STATUS, &info, NULL, dlid, 0, 0, 0, 0, 0, 0)))
 		return_0;
 
-	if (!info.exists)
-		goto_out;
+	if (!(*exists = info.exists))
+		goto out;
+
+	log_debug_activation("Checking status for cache volume %s.",
+			     display_lvname(lv));
 
 	dm_get_next_target(dmt, NULL, &start, &length, &type, &params);
 
@@ -1621,7 +1625,7 @@ out:
 
 int dev_manager_thin_pool_status(struct dev_manager *dm,
 				 const struct logical_volume *lv, int flush,
-				 struct lv_status_thin_pool **status)
+				 struct lv_status_thin_pool **status, int *exists)
 {
 	struct dm_status_thin_pool *dm_status;
 	const char *dlid;
@@ -1632,6 +1636,10 @@ int dev_manager_thin_pool_status(struct dev_manager *dm,
 	char *params = NULL;
 	int r = 0;
 
+	*exists = -1;
+	if (!(*status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_thin_pool))))
+		return_0;
+
 	/* Build dlid for the thin pool layer */
 	if (!(dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
 		return_0;
@@ -1639,8 +1647,11 @@ int dev_manager_thin_pool_status(struct dev_manager *dm,
 	if (!(dmt = _setup_task_run(DM_DEVICE_STATUS, &info, NULL, dlid, 0, 0, 0, 0, flush, 0)))
 		return_0;
 
-	if (!info.exists)
-		goto_out;
+	if (!(*exists = info.exists))
+		goto out;
+
+	log_debug_activation("Checking thin pool status for LV %s.",
+			     display_lvname(lv));
 
 	dm_get_next_target(dmt, NULL, &start, &length, &type, &params);
 
@@ -1651,9 +1662,6 @@ int dev_manager_thin_pool_status(struct dev_manager *dm,
 	}
 
 	if (!dm_get_status_thin_pool(dm->mem, params, &dm_status))
-		goto_out;
-
-	if (!(*status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_thin_pool))))
 		goto_out;
 
 	(*status)->mem = dm->mem;
@@ -1678,7 +1686,7 @@ out:
 
 int dev_manager_thin_status(struct dev_manager *dm,
 			    const struct logical_volume *lv, int flush,
-			    struct lv_status_thin **status)
+			    struct lv_status_thin **status, int *exists)
 {
 	struct dm_status_thin *dm_status;
 	const char *dlid;
@@ -1690,14 +1698,21 @@ int dev_manager_thin_status(struct dev_manager *dm,
 	uint64_t csize;
 	int r = 0;
 
+	*exists = -1;
+	if (!(*status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_thin))))
+		return_0;
+
 	if (!(dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
 		return_0;
 
 	if (!(dmt = _setup_task_run(DM_DEVICE_STATUS, &info, NULL, dlid, 0, 0, 0, 0, flush, 0)))
 		return_0;
 
-	if (!info.exists)
-		goto_out;
+	if (!(*exists = info.exists))
+		goto out;
+
+	log_debug_activation("Checking thin status for LV %s.",
+			     display_lvname(lv));
 
 	dm_get_next_target(dmt, NULL, &start, &length, &type, &params);
 
@@ -1708,9 +1723,6 @@ int dev_manager_thin_status(struct dev_manager *dm,
 	}
 
 	if (!dm_get_status_thin(dm->mem, params, &dm_status))
-		goto_out;
-
-	if (!(*status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_thin))))
 		goto_out;
 
 	(*status)->mem = dm->mem;
@@ -1745,7 +1757,7 @@ out:
  */
 int dev_manager_thin_device_id(struct dev_manager *dm,
 			       const struct logical_volume *lv,
-			       uint32_t *device_id)
+			       uint32_t *device_id, int *exists)
 {
 	const char *dlid;
 	struct dm_task *dmt;
@@ -1755,6 +1767,7 @@ int dev_manager_thin_device_id(struct dev_manager *dm,
 	const char *layer = lv_layer(lv);
 	int r = 0;
 
+	*exists = -1;
 	if (lv_is_merging_origin(lv) && !lv_info(lv->vg->cmd, lv, 1, NULL, 0, 0))
 		/* If the merge has already happened, that table
 		 * can already be using correct LV without -real layer */
@@ -1767,8 +1780,11 @@ int dev_manager_thin_device_id(struct dev_manager *dm,
 	if (!(dmt = _setup_task_run(DM_DEVICE_TABLE, &info, NULL, dlid, 0, 0, 0, 0, 1, 0)))
 		return_0;
 
-	if (!info.exists)
-		goto_out;
+	if (!(*exists = info.exists))
+		goto out;
+
+	log_debug_activation("Checking device id for LV %s.",
+			     display_lvname(lv));
 
 	if (dm_get_next_target(dmt, NULL, &start, &length,
 			       &target_type, &params)) {
@@ -1797,11 +1813,9 @@ out:
 }
 
 int dev_manager_vdo_pool_status(struct dev_manager *dm,
-				const struct logical_volume *lv,
-				struct lv_status_vdo **vdo_status,
-				int flush)
+				const struct logical_volume *lv, int flush,
+				struct lv_status_vdo **status, int *exists)
 {
-	struct lv_status_vdo *status;
 	const char *dlid;
 	struct dm_info info;
 	uint64_t start, length;
@@ -1810,12 +1824,9 @@ int dev_manager_vdo_pool_status(struct dev_manager *dm,
 	char *params = NULL;
 	int r = 0;
 
-	*vdo_status = NULL;
-
-	if (!(status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_vdo)))) {
-		log_error("Cannot allocate VDO status structure.");
-		return 0;
-	}
+	*exists = -1;
+	if (!(*status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_vdo))))
+		return_0;
 
 	if (!(dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
 		return_0;
@@ -1823,8 +1834,11 @@ int dev_manager_vdo_pool_status(struct dev_manager *dm,
 	if (!(dmt = _setup_task_run(DM_DEVICE_STATUS, &info, NULL, dlid, 0, 0, 0, 0, flush, 0)))
 		return_0;
 
-	if (!info.exists)
-		goto_out;
+	if (!(*exists = info.exists))
+		goto out;
+
+	log_debug_activation("Checking VDO pool status for LV %s.",
+			     display_lvname(lv));
 
 	if (dm_get_next_target(dmt, NULL, &start, &length, &type, &params)) {
 		log_error("More then one table line found for %s.",
@@ -1838,11 +1852,10 @@ int dev_manager_vdo_pool_status(struct dev_manager *dm,
 		goto out;
 	}
 
-	if (!parse_vdo_pool_status(dm->mem, lv, params, status))
+	if (!parse_vdo_pool_status(dm->mem, lv, params, *status))
 		goto_out;
 
-	status->mem = dm->mem;
-	*vdo_status = status;
+	(*status)->mem = dm->mem;
 
 	r = 1;
 out:

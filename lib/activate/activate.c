@@ -1216,6 +1216,7 @@ int lv_cache_status(const struct logical_volume *cache_lv,
 {
 	struct dev_manager *dm;
 	struct lv_segment *cache_seg;
+	int exists;
 
 	if (lv_is_cache_pool(cache_lv)) {
 		if (dm_list_empty(&cache_lv->segs_using_this_lv) ||
@@ -1233,21 +1234,14 @@ int lv_cache_status(const struct logical_volume *cache_lv,
 		return 0;
 	}
 
-	if (!lv_info(cache_lv->vg->cmd, cache_lv, 1, NULL, 0, 0)) {
-		log_error("Cannot check status for locally inactive cache volume %s.",
-			  display_lvname(cache_lv));
-		return 0;
-	}
-
-	log_debug_activation("Checking status for cache volume %s.",
-			     display_lvname(cache_lv));
-
 	if (!(dm = dev_manager_create(cache_lv->vg->cmd, cache_lv->vg->name, 1)))
 		return_0;
 
-	if (!dev_manager_cache_status(dm, cache_lv, status)) {
+	if (!dev_manager_cache_status(dm, cache_lv, status, &exists)) {
 		dev_manager_destroy(dm);
-		return_0;
+		if (exists)
+			stack;
+		return 0;
 	}
 	/* User has to call dm_pool_destroy(status->mem)! */
 
@@ -1258,19 +1252,16 @@ int lv_thin_pool_status(const struct logical_volume *lv, int flush,
 			struct lv_status_thin_pool **thin_pool_status)
 {
 	struct dev_manager *dm;
-
-	if (!lv_info(lv->vg->cmd, lv, 1, NULL, 0, 0))
-		return 0;
-
-	log_debug_activation("Checking thin pool status for LV %s.",
-			     display_lvname(lv));
+	int exists;
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
 
-	if (!dev_manager_thin_pool_status(dm, lv, flush, thin_pool_status)) {
+	if (!dev_manager_thin_pool_status(dm, lv, flush, thin_pool_status, &exists)) {
 		dev_manager_destroy(dm);
-		return_0;
+		if (exists)
+			stack;
+		return 0;
 	}
 
 	/* User has to call dm_pool_destroy(thin_pool_status->mem)! */
@@ -1282,19 +1273,16 @@ int lv_thin_status(const struct logical_volume *lv, int flush,
 		   struct lv_status_thin **thin_status)
 {
 	struct dev_manager *dm;
-
-	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
-		return 0;
-
-	log_debug_activation("Checking thin status for LV %s.",
-			     display_lvname(lv));
+	int exists;
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
 
-	if (!dev_manager_thin_status(dm, lv, flush, thin_status)) {
+	if (!dev_manager_thin_status(dm, lv, flush, thin_status, &exists)) {
 		dev_manager_destroy(dm);
-		return_0;
+		if (exists)
+			stack;
+		return 0;
 	}
 
 	/* User has to call dm_pool_destroy(thin_status->mem)! */
@@ -1304,20 +1292,16 @@ int lv_thin_status(const struct logical_volume *lv, int flush,
 
 int lv_thin_device_id(const struct logical_volume *lv, uint32_t *device_id)
 {
-	int r;
 	struct dev_manager *dm;
-
-	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
-		return 0;
-
-	log_debug_activation("Checking device id for LV %s.",
-			     display_lvname(lv));
+	int exists;
+	int r;
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
 
-	if (!(r = dev_manager_thin_device_id(dm, lv, device_id)))
-		stack;
+	if (!(r = dev_manager_thin_device_id(dm, lv, device_id, &exists)))
+		if (exists)
+			stack;
 
 	dev_manager_destroy(dm);
 
@@ -1334,28 +1318,22 @@ int lv_thin_device_id(const struct logical_volume *lv, uint32_t *device_id)
 int lv_vdo_pool_status(const struct logical_volume *lv, int flush,
 		       struct lv_status_vdo **vdo_status)
 {
-	int r = 0;
 	struct dev_manager *dm;
-
-	if (!lv_info(lv->vg->cmd, lv, 1, NULL, 0, 0))
-		return 0;
-
-	log_debug_activation("Checking VDO pool status for LV %s.",
-			     display_lvname(lv));
+	int exists;
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, !lv_is_pvmove(lv))))
 		return_0;
 
-	if (!dev_manager_vdo_pool_status(dm, lv, vdo_status, flush))
-		goto_out;
+	if (!dev_manager_vdo_pool_status(dm, lv, flush, vdo_status, &exists)) {
+		dev_manager_destroy(dm);
+		if (exists)
+			stack;
+		return 0;
+	}
 
 	/* User has to call dm_pool_destroy(vdo_status->mem) */
-	r = 1;
-out:
-	if (!r)
-		dev_manager_destroy(dm);
 
-	return r;
+	return 1;
 }
 
 int lv_vdo_pool_percent(const struct logical_volume *lv, dm_percent_t *percent)
