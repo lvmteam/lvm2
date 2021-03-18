@@ -1,5 +1,11 @@
 Version 2.03.12 - 
 ===================================
+  Support lvconvert -Zn with thin-pool conversion.
+  Support error and zero segtype for thin-pool data for testing.
+  Support mixed extension for striped, error and zero segtypes.
+  Support resize also for stacked virtual volumes.
+  Skip dm-zero devices just like with dm-error target.
+  Reduce ioctl() calls when checking target status.
   Merge polling does not fail, when LV is found to be already merged.
   Poll volumes with at least 100ms delays.
   Do not flush dm cache when cached LV is going to be removed.
