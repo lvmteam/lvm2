@@ -3554,8 +3554,8 @@ int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
 		dm_list_add(&lv->segments, &seg->list);
 	}
 
-	lv->le_count += extents;
-	lv->size += (uint64_t) extents *lv->vg->extent_size;
+	if (!_setup_lv_size(lv, lv->le_count + extents))
+		return_0;
 
 	return 1;
 }
