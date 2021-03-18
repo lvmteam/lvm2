@@ -22,6 +22,7 @@
 #include "lib/metadata/lv_alloc.h"
 #include "lib/misc/lvm-string.h"
 #include "lib/locking/lvmlockd.h"
+#include "lib/misc/lvm-signal.h"
 
 typedef int (*fn_on_lv_t)(struct logical_volume *lv, void *data);
 static int _eliminate_extracted_lvs_optional_write_vg(struct volume_group *vg,
@@ -392,6 +393,7 @@ static int _raid_in_sync(const struct logical_volume *lv)
 {
 	int retries = _RAID_IN_SYNC_RETRIES;
 	dm_percent_t sync_percent;
+	struct lv_status_raid *raid_status;
 
 	if (seg_is_striped(first_seg(lv)))
 		return 1;
@@ -403,17 +405,21 @@ static int _raid_in_sync(const struct logical_volume *lv)
 		 * the array is 100% in sync.
 		 * https://bugzilla.redhat.com/1210637
 		 */
-		if (!lv_raid_percent(lv, &sync_percent)) {
+		if (!lv_raid_status(lv, &raid_status)) {
 			log_error("Unable to determine sync status of %s.",
 				  display_lvname(lv));
 			return 0;
 		}
+		sync_percent = raid_status->in_sync;
+		dm_pool_destroy(raid_status->mem);
+
 		if (sync_percent > DM_PERCENT_0)
 			break;
 		if (retries == _RAID_IN_SYNC_RETRIES)
 			log_warn("WARNING: Sync status for %s is inconsistent.",
 				 display_lvname(lv));
-		usleep(500000);
+		if (interruptible_usleep(500000))
+			return_0;
 	} while (--retries);
 
 	return (sync_percent == DM_PERCENT_100) ? 1 : 0;
