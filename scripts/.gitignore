@@ -1,11 +1,12 @@
+blkdeactivate.sh
 blk_availability_init_red_hat
 blk_availability_systemd_red_hat.service
-blkdeactivate.sh
 clvmd_init_red_hat
 cmirrord_init_red_hat
 com.redhat.lvmdbus1.service
 dm_event_systemd_red_hat.service
 dm_event_systemd_red_hat.socket
+lvm2-pvscan.service
 lvm2_activation_generator_systemd_red_hat
 lvm2_cluster_activation_red_hat.sh
 lvm2_cluster_activation_systemd_red_hat.service
@@ -16,6 +17,7 @@ lvm2_lvmetad_init_red_hat
 lvm2_lvmetad_systemd_red_hat.service
 lvm2_lvmetad_systemd_red_hat.socket
 lvm2_lvmlockd_systemd_red_hat.service
+lvm2_lvmlocking_systemd_red_hat.service
 lvm2_lvmpolld_init_red_hat
 lvm2_lvmpolld_systemd_red_hat.service
 lvm2_lvmpolld_systemd_red_hat.socket
@@ -24,6 +26,5 @@ lvm2_monitoring_systemd_red_hat.service
 lvm2_pvscan_systemd_red_hat@.service
 lvm2_tmpfiles_red_hat.conf
 lvmdump.sh
-lvm2-pvscan.service
 lvmlockd.service
 lvmlocks.service

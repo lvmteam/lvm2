@@ -1,1 +1,3 @@
 *.h
+.symlinks
+.symlinks_created
