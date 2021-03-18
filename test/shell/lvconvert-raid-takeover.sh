@@ -16,7 +16,7 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 which mkfs.ext4 || skip
-aux have_raid 1 9 0 || skip
+aux have_raid 1 12 0 || skip
 
 correct_raid4_layout=0
 aux have_raid 1 9 1 && correct_raid4_layout=1
