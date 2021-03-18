@@ -630,7 +630,7 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check, i
 	char *params, *vgname, *lvname, *layer;
 	char vg_name[NAME_LEN];
 	void *next = NULL;
-	int only_error_target = 1;
+	int only_error_or_zero_target = 1;
 	int r = 0;
 
 	if (!(dmt = _setup_task_run(DM_DEVICE_STATUS, &info, NULL, NULL, NULL,
@@ -766,13 +766,15 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check, i
 			goto out;
 		}
 
-		if (strcmp(target_type, TARGET_NAME_ERROR))
-			only_error_target = 0;
+		if (only_error_or_zero_target &&
+		    strcmp(target_type, TARGET_NAME_ERROR) &&
+		    strcmp(target_type, TARGET_NAME_ZERO))
+			only_error_or_zero_target = 0;
 	} while (next);
 
-	/* Skip devices consisting entirely of error targets. */
+	/* Skip devices consisting entirely of error or zero targets. */
 	/* FIXME Deal with device stacked above error targets? */
-	if (check.check_error_target && only_error_target) {
+	if (check.check_error_target && only_error_or_zero_target) {
 		log_debug_activation("%s: Error device %s not usable.",
 				     dev_name(dev), name);
 		goto out;
