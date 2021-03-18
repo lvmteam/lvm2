@@ -34,4 +34,13 @@ check lv_field $vg/$lv1 segtype "zero"
 check lv_field $vg/$lv1 seg_count "1"
 check lv_field $vg/$lv1 seg_size_pe "4"   # 4 * 512
 
+lvextend -L+1 --type error $vg/$lv1
+lvextend -L+1 --type linear $vg/$lv1
+lvextend -L+1 --type striped $vg/$lv1
+lvextend -L+1 --type zero $vg/$lv1
+
+lvs -o+segtype,seg_size $vg
+check lv_field $vg/$lv1 seg_count "4"
+check lv_field $vg/$lv1 size "6.00m"
+
 vgremove -ff $vg

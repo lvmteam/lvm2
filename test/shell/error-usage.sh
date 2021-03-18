@@ -32,4 +32,15 @@ check lv_field $vg/$lv1 seg_size_pe "4"   # 4 * 512 => 2M
 # FIXME should we print info we are ignoring stripping?
 lvextend -L+1 -I64 -i2 $vg/$lv1
 
+# We support mixing error with zero & linear targets
+lvextend -L+1 --type zero $vg/$lv1
+lvextend -L+1 --type linear $vg/$lv1
+lvextend -L+1 --type striped $vg/$lv1
+lvextend -L+1 --type error $vg/$lv1
+
+# 4 segments:  error 3m, zero 1m, linear 2m, error 1m
+lvs -o+segtype,seg_size $vg
+check lv_field $vg/$lv1 seg_count "4"
+check lv_field $vg/$lv1 size "7.00m"
+
 vgremove -ff $vg
