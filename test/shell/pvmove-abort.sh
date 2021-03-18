@@ -22,7 +22,7 @@ aux target_at_least dm-mirror 1 10 0 || skip
 # Throttle mirroring
 aux throttle_dm_mirror || skip
 
-aux prepare_pvs 3 60
+aux prepare_pvs 3 90
 
 vgcreate -s 512k $vg "$dev1" "$dev2"
 pvcreate --metadatacopies 0 "$dev3"
@@ -34,8 +34,8 @@ for backgroundarg in "-b" "" ;
 do
 
 # Create multisegment LV
-lvcreate -an -Zn -l40 -n $lv1 $vg "$dev1"
-lvcreate -an -Zn -l50 -n $lv2 $vg "$dev2"
+lvcreate -an -Zn -l60 -n $lv1 $vg "$dev1"
+lvcreate -an -Zn -l80 -n $lv2 $vg "$dev2"
 
 cmd1=(pvmove -i1 $backgroundarg $mode "$dev1" "$dev3")
 cmd2=(pvmove -i1 $backgroundarg $mode "$dev2" "$dev3")
