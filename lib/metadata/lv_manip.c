@@ -5456,14 +5456,26 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 
 	seg_last = last_seg(lv);
 
-	/* FIXME Support LVs with mixed segment types */
-	if (lp->segtype && (lp->segtype != seg_last->segtype)) {
-		log_error("VolumeType does not match (%s).", lp->segtype->name);
-		return 0;
+	if (!lp->segtype)
+		/* Use segment type of last segment */
+		lp->segtype = seg_last->segtype;
+	else if (lp->segtype != seg_last->segtype) {
+		/* Support newseg error or zero with lastseg striped
+		 * and newseg striped with lastseg error or zero */
+		if ((segtype_is_error(lp->segtype) || segtype_is_zero(lp->segtype) ||
+		     segtype_is_striped(lp->segtype)) &&
+		    (segtype_is_striped(seg_last->segtype) ||
+		     segtype_is_error(seg_last->segtype) || segtype_is_zero(seg_last->segtype))) {
+			if (!lp->stripes)
+				lp->stripes = 1;
+		} else {
+			log_error("VolumeType does not match (%s).", lp->segtype->name);
+			return 0;
+		}
+		/* FIXME Support more LVs with mixed segment types */
+		log_print_unless_silent("Logical volume %s is using mixing segment types %s and %s.",
+					display_lvname(lv), seg_last->segtype->name, lp->segtype->name);
 	}
-
-	/* Use segment type of last segment */
-	lp->segtype = seg_last->segtype;
 
 	/* For virtual devices, just pretend the physical size matches. */
 	existing_physical_extents = saved_existing_physical_extents = _lv_pe_count(lv);

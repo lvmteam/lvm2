@@ -20,9 +20,17 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 {
 	const char *cmd_name = command_name(cmd);
 	const char *type_str = arg_str_value(cmd, type_ARG, NULL);
+	int only_linear = 0;
 
-	if (type_str && !(lp->segtype = get_segtype_from_string(cmd, type_str)))
-		return_0;
+	if (type_str) {
+		if (!strcmp(type_str, "linear")) {
+			type_str = "striped";
+			only_linear = 1; /* User requested linear only target */
+		}
+
+		if (!(lp->segtype = get_segtype_from_string(cmd, type_str)))
+			return_0;
+	}
 
 	if (!strcmp(cmd_name, "lvreduce"))
 		lp->resize = LV_REDUCE;
@@ -134,6 +142,11 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	if ((lp->stripes = arg_uint_value(cmd, stripes_ARG, 0)) &&
 	    (arg_sign_value(cmd, stripes_ARG, SIGN_NONE) == SIGN_MINUS)) {
 		log_error("Stripes argument may not be negative.");
+		return 0;
+	}
+
+	if (only_linear && lp->stripes > 1) {
+		log_error("Cannot use stripes with linear type.");
 		return 0;
 	}
 
