@@ -597,7 +597,7 @@ Merge LV images that were split from a raid1 LV.
 Convert LV to a thin LV, using the original LV as an external origin.
 .br
 .P
-\fBlvconvert\fP \fB--type\fP \fBthin\fP \fB--thinpool\fP \fILV\fP \fILV\fP\fI_linear_striped_thin_cache_raid\fP
+\fBlvconvert\fP \fB--type\fP \fBthin\fP \fB--thinpool\fP \fILV\fP \fILV\fP\fI_linear_striped_thin_cache_raid_error_zero\fP
 .br
 .RS 4
 .ad l
@@ -803,7 +803,7 @@ Add a cache to an LV, using a specified cache device.
 Convert LV to type thin-pool.
 .br
 .P
-\fBlvconvert\fP \fB--type\fP \fBthin-pool\fP \fILV\fP\fI_linear_striped_cache_raid\fP
+\fBlvconvert\fP \fB--type\fP \fBthin-pool\fP \fILV\fP\fI_linear_striped_cache_raid_error_zero\fP
 .br
 .RS 4
 .ad l
@@ -1899,7 +1899,7 @@ Convert LV to a thin LV, using the original LV as an external origin
 (infers --type thin).
 .br
 .P
-\fBlvconvert\fP \fB-T\fP|\fB--thin\fP \fB--thinpool\fP \fILV\fP \fILV\fP\fI_linear_striped_thin_cache_raid\fP
+\fBlvconvert\fP \fB-T\fP|\fB--thin\fP \fB--thinpool\fP \fILV\fP \fILV\fP\fI_linear_striped_thin_cache_raid_error_zero\fP
 .br
 .RS 4
 .ad l
