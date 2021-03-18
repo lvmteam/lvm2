@@ -230,7 +230,7 @@ static void _get_sysfs_dir(struct cmd_context *cmd, char *buf, size_t buf_size)
 		return;
 	}
 
-	strncpy(buf, sys_mnt, buf_size);
+	(void) dm_strncpy(buf, sys_mnt, buf_size);
 }
 
 static uint32_t _parse_debug_fields(struct cmd_context *cmd, int cfg, const char *cfgname)
