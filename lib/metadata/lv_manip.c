@@ -1605,6 +1605,21 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 					return_0;
 			}
 
+			if (seg_is_thin_pool(seg)) {
+				/* For some segtypes the size may differ between the segment size and its layered LV
+				 * i.e. thin-pool and tdata.
+				 *
+				 * This can get useful, when we will support multiple commits
+				 * while resizing a stacked LV.
+				 */
+				if (seg->len != seg_lv(seg, 0)->le_count) {
+					seg->len = seg_lv(seg, 0)->le_count;
+					/* FIXME: ATM capture as error as it should not happen. */
+					log_debug(INTERNAL_ERROR "Pool size mismatched data size for %s",
+						  display_lvname(seg->lv));
+				}
+			}
+
 			dm_list_del(&seg->list);
 			reduction = seg->len;
 		} else
