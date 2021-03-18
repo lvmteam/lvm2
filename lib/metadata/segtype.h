@@ -115,6 +115,8 @@ struct dev_manager;
 #define SEG_TYPE_NAME_RAID6_N_6		"raid6_n_6"
 
 #define segtype_is_linear(segtype)	(!strcmp((segtype)->name, SEG_TYPE_NAME_LINEAR))
+#define segtype_is_error(segtype)	(!strcmp((segtype)->name, SEG_TYPE_NAME_ERROR))
+#define segtype_is_zero(segtype)	(!strcmp((segtype)->name, SEG_TYPE_NAME_ZERO))
 #define segtype_is_striped_target(segtype)	((segtype)->flags & SEG_STRIPED_TARGET ? 1 : 0)
 #define segtype_is_cache(segtype)	((segtype)->flags & SEG_CACHE ? 1 : 0)
 #define segtype_is_cache_pool(segtype)	((segtype)->flags & SEG_CACHE_POOL ? 1 : 0)
