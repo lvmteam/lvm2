@@ -441,12 +441,10 @@ static int _raid_target_percent(void **target_state,
 
 	*total_numerator += sr->insync_regions;
 	*total_denominator += sr->total_regions;
+	*percent = dm_make_percent(sr->insync_regions, sr->total_regions);
 
 	if (seg)
-		seg->extents_copied = (uint64_t) seg->area_len
-			* dm_make_percent(sr->insync_regions , sr->total_regions) / DM_PERCENT_100;
-
-	*percent = dm_make_percent(sr->insync_regions, sr->total_regions);
+		seg->extents_copied = (uint64_t) seg->area_len * *percent / DM_PERCENT_100;
 
 	dm_pool_free(mem, sr);
 
