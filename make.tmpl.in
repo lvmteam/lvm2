@@ -443,14 +443,17 @@ DEFS+=-D_FILE_OFFSET_BITS=64
 
 %.o: %.c $(DEPS)
 	@echo "    [CC] $(<F)"
+	@mkdir -p $(@D)
 	$(Q) $(CC) $(DEPFLAGS) -c $(INCLUDES) $(VALGRIND_CFLAGS) $(PROGS_CFLAGS) $(DEFS) $(DEFS_$@) $(WFLAGS) $(WCFLAGS) $(CFLAGS) $(CFLAGS_$@) $< -o $@
 
 %.o: %.cpp $(DEPS)
 	@echo "    [CXX] $(<F)"
+	@mkdir -p $(@D)
 	$(Q) $(CXX) -c $(INCLUDES) $(VALGRIND_CFLAGS) $(DEFS) $(DEFS_$@) $(WFLAGS) $(CXXFLAGS) $(CXXFLAGS_$@) $< -o $@
 
-%.pot: %.c Makefile
+%.pot: %.c $(DEPS)
 	@echo "    [CC] $(<F)"
+	@mkdir -p $(@D)
 	$(Q) $(CC) -E $(INCLUDES) $(VALGRIND_CFLAGS) $(PROGS_CFLAGS) -include $(top_builddir)/po/pogen.h $(DEFS) $(WFLAGS) $(CFLAGS) $< >$@
 
 %.so: %.o
