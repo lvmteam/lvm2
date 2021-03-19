@@ -178,6 +178,22 @@ int lv_passes_auto_activation_filter(struct cmd_context *cmd, struct logical_vol
 	return _lv_passes_volumes_filter(cmd, lv, cn, activation_auto_activation_volume_list_CFG);
 }
 
+static int _passes_readonly_filter(struct cmd_context *cmd,
+				   const struct logical_volume *lv)
+{
+	const struct dm_config_node *cn;
+
+	if (!(cn = find_config_tree_array(cmd, activation_read_only_volume_list_CFG, NULL)))
+		return 0;
+
+	return _lv_passes_volumes_filter(cmd, lv, cn, activation_read_only_volume_list_CFG);
+}
+
+int lv_passes_readonly_filter(const struct logical_volume *lv)
+{
+	return _passes_readonly_filter(lv->vg->cmd, lv);
+}
+
 #ifndef DEVMAPPER_SUPPORT
 void set_activation(int act, int silent)
 {
@@ -272,6 +288,10 @@ int lv_raid_sync_action(const struct logical_volume *lv, char **sync_action)
 	return 0;
 }
 int lv_raid_message(const struct logical_volume *lv, const char *msg)
+{
+	return 0;
+}
+int lv_raid_status(const struct logical_volume *lv, struct lv_status_raid **status)
 {
 	return 0;
 }
@@ -454,22 +474,6 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 	}
 
 	return _lv_passes_volumes_filter(cmd, lv, cn, activation_volume_list_CFG);
-}
-
-static int _passes_readonly_filter(struct cmd_context *cmd,
-				   const struct logical_volume *lv)
-{
-	const struct dm_config_node *cn;
-
-	if (!(cn = find_config_tree_array(cmd, activation_read_only_volume_list_CFG, NULL)))
-		return 0;
-
-	return _lv_passes_volumes_filter(cmd, lv, cn, activation_read_only_volume_list_CFG);
-}
-
-int lv_passes_readonly_filter(const struct logical_volume *lv)
-{
-	return _passes_readonly_filter(lv->vg->cmd, lv);
 }
 
 int library_version(char *version, size_t size)
