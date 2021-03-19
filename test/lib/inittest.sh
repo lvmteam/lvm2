@@ -78,9 +78,11 @@ if test -z "$SKIP_ROOT_DM_CHECK" ; then
 	dmsetup table | not grep "${PREFIX}[^0-9]" || die "DM table already has devices with prefix $PREFIX!"
 fi
 
-if test -z "$LVM_TEST_DIR"; then LVM_TEST_DIR=$TMPDIR; fi
-TESTDIR=$(mkdtemp "${LVM_TEST_DIR:-/tmp}" "$PREFIX.XXXXXXXXXX") || \
-	die "failed to create temporary directory in ${LVM_TEST_DIR:-$TESTOLDPWD}"
+test -n "$LVM_TEST_DIR" || LVM_TEST_DIR=${TMPDIR:-/tmp}
+test "$LVM_TEST_DIR" = "/dev" || die "Setting LVM_TEST_DIR=/dev is not supported"
+
+TESTDIR=$(mkdtemp "$LVM_TEST_DIR" "$PREFIX.XXXXXXXXXX") || \
+	die "failed to create temporary directory in \"$LVM_TEST_DIR\""
 RUNNING_DMEVENTD=$(pgrep dmeventd || true)
 
 export TESTOLDPWD TESTDIR COMMON_PREFIX PREFIX RUNNING_DMEVENTD
