@@ -79,7 +79,7 @@ if test -z "$SKIP_ROOT_DM_CHECK" ; then
 fi
 
 test -n "$LVM_TEST_DIR" || LVM_TEST_DIR=${TMPDIR:-/tmp}
-test "$LVM_TEST_DIR" = "/dev" || die "Setting LVM_TEST_DIR=/dev is not supported"
+test "$LVM_TEST_DIR" = "/dev" && die "Setting LVM_TEST_DIR=/dev is not supported!"
 
 TESTDIR=$(mkdtemp "$LVM_TEST_DIR" "$PREFIX.XXXXXXXXXX") || \
 	die "failed to create temporary directory in \"$LVM_TEST_DIR\""
