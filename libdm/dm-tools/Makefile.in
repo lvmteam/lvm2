@@ -20,6 +20,11 @@ all: device-mapper
 
 SOURCES2 = dmsetup.c
 TARGETS_DM = dmsetup
+
+CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES2))
+CFLOW_TARGET := $(TARGETS_DM)
+-include $(top_builddir)/libdm/libdevmapper.cflow
+
 install_device-mapper: install_dmsetup_dynamic
 
 ifeq ("@STATIC_LINK@", "yes")

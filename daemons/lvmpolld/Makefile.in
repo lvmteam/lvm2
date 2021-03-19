@@ -19,11 +19,10 @@ SOURCES = lvmpolld-core.c lvmpolld-data-utils.c lvmpolld-cmd-utils.c
 
 TARGETS = lvmpolld
 
-.PHONY: install_lvmpolld
+CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))
+CFLOW_TARGET := $(TARGETS)
 
-CFLOW_LIST = $(SOURCES)
-CFLOW_LIST_TARGET = $(LIB_NAME).cflow
-CFLOW_TARGET = lvmpolld
+.PHONY: install_lvmpolld
 
 include $(top_builddir)/make.tmpl
 

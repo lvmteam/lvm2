@@ -22,6 +22,9 @@ SOURCES = clogd.c cluster.c compat.c functions.c link_mon.c local.c logging.c
 
 TARGETS = cmirrord
 
+CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))
+CFLOW_TARGET := $(TARGETS)
+
 include $(top_builddir)/make.tmpl
 
 LMLIBS += $(CPG_LIBS)

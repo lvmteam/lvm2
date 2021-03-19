@@ -109,9 +109,9 @@ endif
 EXPORTED_HEADER = $(srcdir)/lvm2cmd.h
 EXPORTED_FN_PREFIX = lvm2
 
-CFLOW_LIST = lvmcmdlib.c lvm2cmd.c
-CFLOW_LIST_TARGET = liblvm2cmd.cflow
 CFLOW_TARGET = lvm
+CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES) lvmcmdlib.c lvm2cmd.c)
+-include $(top_builddir)/lib/liblvm-internal.cflow
 
 include $(top_builddir)/make.tmpl
 
@@ -198,11 +198,7 @@ command-lines-input.h: $(srcdir)/command-lines.in Makefile
 
 $(SOURCES:%.c=%.d) $(SOURCES2:%.c=%.d): command-lines-input.h command-count.h cmds.h
 $(SOURCES:%.c=%.o) $(SOURCES2:%.c=%.o): command-lines-input.h command-count.h cmds.h
-
-ifneq ("$(CFLOW_CMD)", "")
-CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))
--include $(top_builddir)/lib/liblvm-internal.cflow
-endif
+lvm.cflow lvm.xref lvm.tree lvm.xref: command-lines-input.h command-count.h cmds.h
 
 .PHONY: install_cmdlib_dynamic install_cmdlib_static install_cmdlib_include \
 	install_tools_dynamic install_tools_static

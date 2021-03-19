@@ -347,8 +347,7 @@ $(SUBDIRS.generate):
 ifneq ("$(CFLOW_LIST_TARGET)", "")
 CLEAN_CFLOW += $(CFLOW_LIST_TARGET)
 $(CFLOW_LIST_TARGET): $(CFLOW_LIST)
-	echo "CFLOW_SOURCES += $(addprefix \
-		\$$(top_srcdir)$(subst $(top_srcdir),,$(srcdir))/, $(CFLOW_LIST))" > $@
+	echo "CFLOW_SOURCES += $(addprefix $(abs_srcdir)/, $(CFLOW_LIST))" > $@
 cflow: $(CFLOW_LIST_TARGET)
 endif
 
@@ -362,23 +361,22 @@ CLEAN_CFLOW += \
 
 ifneq ("$(CFLOW_CMD)", "")
 CFLOW_FLAGS +=\
- --cpp="$(CC) -E" \
+ --cpp="$(CC) -E $(INCLUDES) $(VALGRIND_CFLAGS) $(BLKID_CFLAGS) $(DEFS) \
+ -I$(top_srcdir)/libdm/ioctl \
+ -I$(top_srcdir)/libdm" \
  --symbol _ISbit:wrapper \
  --symbol __attribute__:wrapper \
- --symbol __const__:wrapper \
  --symbol __const:type \
- --symbol __restrict:type \
+ --symbol __const__:wrapper \
  --symbol __extension__:wrapper \
+ --symbol __leaf__:wrapper \
  --symbol __nonnull:wrapper \
  --symbol __nothrow__:wrapper \
  --symbol __pure__:wrapper \
  --symbol __REDIRECT:wrapper \
  --symbol __REDIRECT_NTH:wrapper \
- --symbol __wur:wrapper \
- -I$(top_srcdir)/libdm \
- -I$(top_srcdir)/libdm/ioctl \
- -I$(top_srcdir)/daemons/dmeventd/plugins/lvm2/ \
- $(INCLUDES) $(DEFS)
+ --symbol __restrict:type \
+ --symbol __wur:wrapper
 
 $(CFLOW_TARGET).cflow: $(CFLOW_SOURCES)
 	$(CFLOW_CMD) -o$@ $(CFLOW_FLAGS) $(CFLOW_SOURCES)

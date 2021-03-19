@@ -34,6 +34,9 @@ SOURCES2 = lvmlockctl.c
 
 TARGETS = lvmlockd lvmlockctl
 
+CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))
+CFLOW_TARGET = lvmlockd
+
 .PHONY: install_lvmlockd
 
 include $(top_builddir)/make.tmpl

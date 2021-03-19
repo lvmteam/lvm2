@@ -25,9 +25,6 @@ LIB_NAME = libdevmapper-event-lvm2mirror
 LIB_SHARED = $(LIB_NAME).$(LIB_SUFFIX)
 LIB_VERSION = $(LIB_VERSION_LVM)
 
-CFLOW_LIST = $(SOURCES)
-CFLOW_LIST_TARGET = $(LIB_NAME).cflow
-
 include $(top_builddir)/make.tmpl
 
 install_lvm2: install_dm_plugin
