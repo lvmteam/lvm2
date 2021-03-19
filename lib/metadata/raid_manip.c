@@ -2945,11 +2945,16 @@ static int _raid_allow_extraction(struct logical_volume *lv,
 	    !lv_raid_dev_health(lv, &dev_health))
 		return_0;
 
-	if (!strcmp("resync", sync_action))
-		return 1;
+	if (!strcmp("resync", sync_action)) {
+		if (!lv_is_on_pvs(seg_lv(seg, 0), target_pvs) &&
+		    !lv_is_on_pvs(seg_metalv(seg, 0), target_pvs))
+			return 1;
+		log_error("Unable to remove primary RAID image while array resyncing.");
+		return 0;
+	}
 
 	/* If anything other than "recover", rebuild or "idle" */
-        /* Targets reports for a while 'idle' state, before recover starts */
+	/* Targets reports for a while 'idle' state, before recover starts */
 	if (strcmp("recover", sync_action) &&
 	    strcmp("rebuild", sync_action) &&
 	    strcmp("idle", sync_action)) {
