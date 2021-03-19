@@ -232,12 +232,6 @@ lvcreate -aey -l 2 -n $lv1 $vg "$dev1"
 lvconvert -y -m 1 $vg/$lv1 \
 	--config 'global { mirror_segtype_default = "raid1" }' "$dev2"
 lvs --noheadings -o attr $vg/$lv1 | grep '^[[:space:]]*r'
-# FIXME: lvconvert/lvcreate should trace state of target
-for i in {1..10}; do
-	dmsetup status | grep $vg-$lv1: | tee out
-	grep -E "recover|rebuild" out && break
-	sleep .05
-done
 not lvconvert --yes -m 0 $vg/$lv1 "$dev1"
 lvconvert --yes -m 0 $vg/$lv1 "$dev2"
 aux enable_dev "$dev2"
