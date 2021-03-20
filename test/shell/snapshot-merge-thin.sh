@@ -49,7 +49,7 @@ lvcreate -s -n $lv2 -L2 $vg/$lv1 "$dev2"
 dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv2" bs=1M count=1 oflag=direct
 
 lvs -a -o+lv_merging,lv_merge_failed $vg
-aux delay_dev "$dev1" 0 100 "$(get first_extent_sector "$dev1"):"
+aux delay_dev "$dev1" 0 400 "$(get first_extent_sector "$dev1"):"
 
 # Initiate background merge
 lvconvert -b --merge $vg/$lv2
