@@ -398,7 +398,14 @@ static int _raid_in_sync(const struct logical_volume *lv)
 	if (seg_is_striped(first_seg(lv)))
 		return 1;
 
-	do {
+	if (!lv_is_raid(lv)) {
+		/* For non raid - fallback to mirror percentage */
+		if (!lv_mirror_percent(lv->vg->cmd, lv, 0, &sync_percent, NULL)) {
+			log_error("Cannot determine sync percentage of %s.",
+				  display_lvname(lv));
+			return 0;
+		}
+	} else do {
 		/*
 		 * FIXME We repeat the status read here to workaround an
 		 * unresolved kernel bug when we see 0 even though the
