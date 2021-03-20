@@ -38,12 +38,9 @@ _sync() {
 _check_raid_in_loop() {
 	local vg=$1
 	local lv=$2
-	local A=$3
-	local B=$(echo $A | tr A a)
+	local health=$3
 	for i in {1..10} ; do
-		check raid_leg_status $vg $lv ${A} && return 0
-		# Only when there is initial 'a..a' we will wait for a while
-		check raid_leg_status $vg $lv ${B} || break
+		check raid_leg_status $vg $lv ${health} && return 0
 		sleep .05
 	done
 	die "Cannot get $A status for $vg/$lv";
