@@ -20,6 +20,7 @@ SKIP_WITH_CLVMD=1
 
 . lib/inittest
 
+aux throttle_dm_mirror 50 || :
 aux prepare_pvs 4 30
 
 vgcreate -s 128k $vg "$dev1"
@@ -34,9 +35,9 @@ test_pvmove_resume() {
 	lvcreate -an -Zn -l30 -n $lv1 $vg
 	lvcreate -an -Zn -l30 -n $lv1 $vg1
 
-	aux delay_dev "$dev3" 0 1000 "$(get first_extent_sector "$dev3"):"
+	aux delay_dev "$dev3" 0 200 "$(get first_extent_sector "$dev3"):"
 	test -e HAVE_DM_DELAY || { lvremove -f $vg $vg1; return 0; }
-	aux delay_dev "$dev4" 0 1000 "$(get first_extent_sector "$dev4"):"
+	aux delay_dev "$dev4" 0 200 "$(get first_extent_sector "$dev4"):"
 
 	pvmove -i5 "$dev1" &
 	PVMOVE=$!
