@@ -404,7 +404,10 @@ ifneq ("$(CFLOW_CMD)", "")
 CFLOW_FLAGS +=\
  --cpp="$(CC) -E $(INCLUDES) $(VALGRIND_CFLAGS) $(BLKID_CFLAGS) $(DEFS)" \
  --symbol _ISbit:wrapper \
+ --symbol __asm__:wrapper \
  --symbol __attribute__:wrapper \
+ --symbol __inline:=inline \
+ --symbol __inline__:=inline \
  --symbol __const:type \
  --symbol __const__:wrapper \
  --symbol __extension__:wrapper \
@@ -414,7 +417,7 @@ CFLOW_FLAGS +=\
  --symbol __pure__:wrapper \
  --symbol __REDIRECT:wrapper \
  --symbol __REDIRECT_NTH:wrapper \
- --symbol __restrict:type \
+ --symbol __restrict:=restrict \
  --symbol __wur:wrapper
 
 $(CFLOW_TARGET).cflow: $(CFLOW_SOURCES)
