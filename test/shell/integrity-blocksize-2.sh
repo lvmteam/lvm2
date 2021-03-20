@@ -15,6 +15,8 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 aux have_integrity 1 5 0 || skip
+# Avoid 4K ramdisk devices on older kernels
+aux kernel_at_least  5 10 || export LVM_TEST_PREFER_BRD=0
 
 mnt="mnt"
 mkdir -p $mnt
