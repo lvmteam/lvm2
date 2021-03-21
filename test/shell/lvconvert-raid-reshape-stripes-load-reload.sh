@@ -21,15 +21,6 @@ which md5sum || skip
 which mkfs.ext4 || skip
 aux have_raid 1 13 2 || skip
 
-case "$(uname -r)" in
-  5.[891]*) die "Cannot run this test on unfixed kernel." ;;
-  3.10.0-862*) skip "Cannot run this test on unfixed kernel." ;;
-  4.18.0-*.el8*)
-    REL="$(uname -r)"
-    REL="${REL#4.18.0-}"
-    [[ "${REL%%.*}" -lt 283 ]] || die "Cannot run this test on unfixed kernel." ;;
-esac
-
 mount_dir="mnt"
 
 cleanup_mounted_and_teardown()
@@ -57,8 +48,8 @@ check lv_first_seg_field $vg/$lv1 segtype "raid5_ls"
 check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
 check lv_first_seg_field $vg/$lv1 data_stripes 10
 check lv_first_seg_field $vg/$lv1 stripes 11
-wipefs -a /dev/$vg/$lv1
-mkfs -t ext4 /dev/$vg/$lv1
+wipefs -a "$DM_DEV_DIR/$vg/$lv1"
+mkfs -t ext4 "$DM_DEV_DIR/$vg/$lv1"
 
 mkdir -p "$mount_dir"
 mount "$DM_DEV_DIR/$vg/$lv1" "$mount_dir"
@@ -80,6 +71,10 @@ check lv_first_seg_field $vg/$lv1 data_stripes 15
 check lv_first_seg_field $vg/$lv1 stripes 16
 
 # Reload table during reshape to test for data corruption
+case "$(uname -r)" in
+  5.[891]*|3.10.0-862*|4.18.0-*.el8*)
+	should not echo "Skipping table reload test on on unfixed kernel!!!" ;;
+  *)
 for i in {0..5}
 do
 	dmsetup table $vg-$lv1|dmsetup load $vg-$lv1
@@ -87,6 +82,8 @@ do
 	dmsetup resume $vg-$lv1
 	sleep 0.3
 done
+
+esac
 
 aux delay_dev "$dev2" 0
 
