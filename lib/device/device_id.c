@@ -604,7 +604,7 @@ out:
 int device_ids_write(struct cmd_context *cmd)
 {
 	char dirpath[PATH_MAX];
-	char tmpfile[PATH_MAX];
+	char tmppath[PATH_MAX];
 	char version_buf[VERSION_LINE_MAX] = {0};
 	FILE *fp;
 	int dir_fd;
@@ -674,14 +674,14 @@ int device_ids_write(struct cmd_context *cmd)
 		goto out;
 	}
 
-	if (dm_snprintf(tmpfile, sizeof(tmpfile), "%s_new", cmd->devices_file_path) < 0) {
+	if (dm_snprintf(tmppath, sizeof(tmppath), "%s_new", cmd->devices_file_path) < 0) {
 		ret = 0;
 		goto out;
 	}
 
-	unlink(tmpfile); /* in case a previous file was left */
+	unlink(tmppath); /* in case a previous file was left */
 
-	if (!(fp = fopen(tmpfile, "w+"))) {
+	if (!(fp = fopen(tmppath, "w+"))) {
 		log_warn("Cannot open tmp devices_file to write.");
 		ret = 0;
 		goto out;
@@ -689,7 +689,7 @@ int device_ids_write(struct cmd_context *cmd)
 
 	if ((dir_fd = open(dirpath, O_RDONLY)) < 0) {
 		if (fclose(fp))
-                        log_sys_debug("fclose", tmpfile);
+                        log_sys_debug("fclose", tmppath);
 		ret = 0;
 		goto out;
 	}
@@ -744,7 +744,7 @@ int device_ids_write(struct cmd_context *cmd)
 	if (fclose(fp))
 		stack;
 
-	if (rename(tmpfile, cmd->devices_file_path) < 0) {
+	if (rename(tmppath, cmd->devices_file_path) < 0) {
 		log_error("Failed to replace devices file errno %d", errno);
 		ret = 0;
 	}
