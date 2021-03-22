@@ -13404,7 +13404,7 @@ $as_echo_n "checking whether to enable readline... " >&6; }
 $as_echo "$READLINE" >&6; }
 
 if test "$EDITLINE" = yes; then
-	for ac_header in editline/readline.h editline/history.h
+	for ac_header in editline/readline.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
 ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"

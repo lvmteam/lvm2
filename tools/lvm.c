@@ -33,7 +33,6 @@ int main(int argc, char **argv)
 #    endif
 #  elif defined(EDITLINE_SUPPORT)
 #    include <editline/readline.h>
-#    include <editline/history.h>
 #  endif
 
 static struct cmdline_context *_cmdline;

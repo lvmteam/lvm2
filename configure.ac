@@ -1420,7 +1420,7 @@ if test "$EDITLINE" == yes; then
 	PKG_CHECK_MODULES([EDITLINE], [libedit], [
 		AC_DEFINE([EDITLINE_SUPPORT], 1,
 			[Define to 1 to include the LVM editline shell.])], AC_MSG_ERROR(
-[libedit could not be found which is required for the --enable-readline option.])
+[libedit could not be found which is required for the --enable-editline option.])
 	)
 fi
 
@@ -1557,7 +1557,7 @@ AC_MSG_CHECKING(whether to enable readline)
 AC_MSG_RESULT($READLINE)
 
 if test "$EDITLINE" = yes; then
-	AC_CHECK_HEADERS(editline/readline.h editline/history.h,,hard_bailout)
+	AC_CHECK_HEADERS(editline/readline.h,,hard_bailout)
 fi
 AC_MSG_CHECKING(whether to enable editline)
 AC_MSG_RESULT($EDITLINE)
