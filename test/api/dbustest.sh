@@ -28,18 +28,7 @@ aux extend_filter_LVMTEST
 
 # We need the lvmdbusd.profile for the daemon to utilize JSON
 # output
-mkdir -p "$TESTDIR/etc/profile"
-cp -v "$TESTOLDPWD/lib/lvmdbusd.profile" "$TESTDIR/etc/profile/"
-
-# Need to set this up so that the lvmdbusd service knows which
-# binary to be running, which should be the one we just built
-LVM_BINARY=$(which lvm 2>/dev/null)
-export LVM_BINARY
-
-# skip if we don't have our own lvmetad...
-if test -z "${installed_testsuite+varset}"; then
-	(echo "$LVM_BINARY" | grep -q "$abs_builddir") || skip
-fi
+aux prepare_profiles "lvmdbusd"
 
 aux prepare_lvmdbusd
 
