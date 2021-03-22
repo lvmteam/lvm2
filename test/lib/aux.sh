@@ -466,12 +466,10 @@ kill_sleep_kill_() {
 		pid=$(< "$pidfile")
 		rm -f "$pidfile"
 		kill -TERM "$pid" 2>/dev/null || return 0
-		if test "$slow" -eq 0 ; then sleep .1 ; else sleep 1 ; fi
-		kill -KILL "$pid" 2>/dev/null || true
-		local wait=0
-		while ps "$pid" > /dev/null && test "$wait" -le 10; do
-			sleep .5
-			wait=$(( wait + 1 ))
+		for i in {0..10} ; do
+			ps "$pid" >/dev/null || return 0
+			if test "$slow" -eq 0 ; then sleep .2 ; else sleep 1 ; fi
+			kill -KILL "$pid" 2>/dev/null || true
 		done
 	fi
 }
