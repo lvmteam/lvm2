@@ -18,19 +18,14 @@ SKIP_WITH_LVMPOLLD=1
 # skip this test if mdadm or sfdisk (or others) aren't available
 which sfdisk || skip
 
-test -f /proc/mdstat && grep -q raid0 /proc/mdstat || \
-	modprobe raid0 || skip
-mddev="/dev/md33"
-not grep $mddev /proc/mdstat || skip
-
 aux lvmconf 'devices/md_component_detection = 1'
 aux extend_filter_md "a|/dev/md|"
 
 aux prepare_devs 2
 
 # create 2 disk MD raid0 array (stripe_width=128K)
-mdadm --create --metadata=1.0 "$mddev" --level 0 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
-aux wait_md_create "$mddev"
+aux mdadm_create --metadata=1.0 --level=0 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
+mddev=$(< MD_DEV)
 
 pvdev="$mddev"
 
@@ -111,17 +106,16 @@ EOF
     fi
 fi
 
-mdadm --stop "$mddev"
-aux udev_wait
+aux cleanup_md_dev
 aux wipefs_a "$dev1"
 aux wipefs_a "$dev2"
-aux udev_wait
 
 # Test newer topology-aware alignment detection w/ --dataalignment override
 if aux kernel_at_least 2 6 33 ; then
 
-    mdadm --create --metadata=1.0 "$mddev" --level 0 --chunk=1024 --raid-devices=2 "$dev1" "$dev2"
-    aux wait_md_create "$mddev"
+    aux mdadm_create --metadata=1.0 --level 0 --chunk=1024 --raid-devices=2 "$dev1" "$dev2"
+    mddev=$(< MD_DEV)
+
     pvdev="$mddev"
 
     # optimal_io_size=2097152, minimum_io_size=1048576
@@ -138,10 +132,7 @@ if aux kernel_at_least 2 6 33 ; then
 	--config 'devices { md_chunk_alignment=0 }' "$pvdev"
     check pv_field "$pvdev" pe_start "192.00k"
 
-    mdadm --stop "$mddev"
-    aux udev_wait
+    aux cleanup_md_dev
     aux wipefs_a "$dev1"
     aux wipefs_a "$dev2"
-    aux udev_wait
-
 fi
