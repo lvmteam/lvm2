@@ -20,7 +20,7 @@ SKIP_WITH_LVMLOCKD=1
 . lib/inittest
 
 aux prepare_pvs 5 30
-aux throttle_dm_mirror 50 || :
+aux throttle_dm_mirror || :
 
 vgcreate -s 128k $vg "$dev1" "$dev2" "$dev3"
 pvcreate --metadatacopies 0 "$dev4" "$dev5"
