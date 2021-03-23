@@ -818,10 +818,16 @@ wipefs_a() {
 		echo "$have_wipefs" > HAVE_WIPEFS
 	fi
 
+	udev_wait
 	if [ "$have_wipefs" = "1" ] ; then
-		wipefs -a "$dev"
+		wipefs -a "$dev" || {
+			echo "$dev: device in-use, retrying wipe again."
+			sleep 1
+			udev_wait
+			wipefs -a "$dev"
+		}
 	else
-		dd if=/dev/zero of="$dev" bs=4096 count=8 >/dev/null || true
+		dd if=/dev/zero of="$dev" bs=4096 count=8 oflag=direct >/dev/null || true
 		mdadm --zero-superblock "$dev" 2>/dev/null || true
 	fi
 
