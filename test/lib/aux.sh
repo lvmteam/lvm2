@@ -580,6 +580,12 @@ teardown() {
 		rm -rf "${TESTDIR:?}" || echo BLA
 	}
 
+	# Remove any dangling symlink in /dev/disk (our tests can confuse udev)
+	find /dev/disk -type l ! -exec test -e {} \; -print | xargs rm -f
+
+	# Remove any metadata archives and backups from this test on system
+	rm -f /etc/lvm/archive/${PREFIX}* /etc/lvm/backup/${PREFIX}*
+
 	echo "ok"
 }
 
