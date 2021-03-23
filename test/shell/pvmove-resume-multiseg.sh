@@ -19,8 +19,8 @@ SKIP_WITH_LVMLOCKD=1
 
 . lib/inittest
 
-aux prepare_pvs 5 30
-aux throttle_dm_mirror || :
+aux prepare_pvs 5 40
+aux throttle_dm_mirror 50 || :
 
 vgcreate -s 128k $vg "$dev1" "$dev2" "$dev3"
 pvcreate --metadatacopies 0 "$dev4" "$dev5"
@@ -29,10 +29,10 @@ vgextend $vg "$dev4" "$dev5"
 # $1 resume fn
 test_pvmove_resume() {
 	# Create multisegment LV
-	lvcreate -an -Zn -l30 -n $lv1 $vg "$dev1"
-	lvextend -l+30 $vg/$lv1 "$dev2"
+	lvcreate -an -Zn -l50 -n $lv1 $vg "$dev1"
+	lvextend -l+50 $vg/$lv1 "$dev2"
 	# next LV on same VG and differetnt PV (we want to test 2 pvmoves per VG)
-	lvcreate -an -Zn -l30 -n $lv2 $vg "$dev3"
+	lvcreate -an -Zn -l50 -n $lv2 $vg "$dev3"
 
 	aux delay_dev "$dev4" 0 200 "$(get first_extent_sector "$dev4"):"
 	test -e HAVE_DM_DELAY || { lvremove -f $vg; return 0; }
