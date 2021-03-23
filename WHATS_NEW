@@ -1,5 +1,6 @@
 Version 2.03.12 - 
 ===================================
+  Do not include editline/history.h when using editline library.
   Support lvconvert -Zn with thin-pool conversion.
   Support error and zero segtype for thin-pool data for testing.
   Support mixed extension for striped, error and zero segtypes.
