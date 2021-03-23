@@ -783,11 +783,21 @@ cleanup_md_dev() {
 	mddev=$(< MD_DEV)
 	base=$(basename "$mddev")
 
+	# try to find and remove any DM device on top of cleaned MD
+	# assume  /dev/mdXXX is  9:MINOR
+	local minor=${mddev##/dev/md}
+	for i in $(dmsetup table | grep 9:$minor | cut -d: -f1) ; do
+		dmsetup remove $i || {
+			dmsetup --force remove $i || true
+		}
+	done
+
 	for i in {0..10} ; do
 		grep -q "$base" /proc/mdstat || break
 		test "$i" = 0 || {
 			sleep .1
 			echo "$mddev is still present, stopping again"
+			cat /proc/mdstat
 		}
 		mdadm --stop "$mddev" || true
 		udev_wait  # wait till events are process, not zeroing to early
