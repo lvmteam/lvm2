@@ -796,7 +796,7 @@ cleanup_md_dev() {
 	test "$DM_DEV_DIR" = "/dev" || rm -f "$(< MD_DEV_PV)"
 
 	for dev in $(< MD_DEVICES); do
-		mdadm --zero-superblock "$dev" 2>/dev/null
+		mdadm --zero-superblock "$dev" 2>/dev/null || true
 	done
 	udev_wait
 	rm -f MD_DEV MD_DEVICES MD_DEV_PV
