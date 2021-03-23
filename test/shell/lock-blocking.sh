@@ -17,6 +17,9 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+# Make sure the placement of locking dir is known
+aux lvmconf "global/locking_dir = \"$TESTDIR/var/lock/lvm\""
+
 aux prepare_devs 3
 pvcreate "$dev1" "$dev2"
 vgcreate $SHARED $vg "$dev1" "$dev2"
