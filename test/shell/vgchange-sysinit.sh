@@ -22,6 +22,8 @@ aux prepare_pvs 2 8
 var_lock="$DM_DEV_DIR/$vg1/$lv1"
 # keep in sync with aux configured lockingdir
 mount_dir="var/lock/lvm"
+mkdir -p $mount_dir
+aux lvmconf "global/locking_dir = \"$TESTDIR/$mount_dir\""
 
 cleanup_mounted_and_teardown()
 {
