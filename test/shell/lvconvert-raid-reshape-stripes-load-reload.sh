@@ -19,7 +19,7 @@ SKIP_WITH_LVMPOLLD=1
 
 which md5sum || skip
 which mkfs.ext4 || skip
-aux have_raid 1 13 2 || skip
+aux have_raid 1 14 || skip
 
 mount_dir="mnt"
 
