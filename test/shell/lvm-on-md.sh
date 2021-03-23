@@ -93,7 +93,7 @@ not grep "Not using device" out
 not vgchange -ay $vg
 
 # should not show an active lv
-not dmsetup table $vg-$lv1
+not dmsetup info $vg-$lv1
 
 # should not allow updating vg
 not lvcreate -l1 $vg
@@ -107,7 +107,7 @@ test ! -f "$RUNDIR/lvm/pvs_online/$PVIDMD"
 test ! -f "$RUNDIR/lvm/vgs_online/$vg"
 
 # should not show an active lv
-not dmsetup table $vg-$lv1
+not dmsetup info $vg-$lv1
 
 mdadm --assemble "$mddev" "$dev1" "$dev2"
 aux udev_wait
@@ -130,7 +130,7 @@ test ! -f "$RUNDIR/lvm/pvs_online/$PVIDMD"
 test ! -f "$RUNDIR/lvm/vgs_online/$vg"
 
 # should not show an active lv
-not dmsetup table $vg-$lv1
+not dmsetup info $vg-$lv1
 
 vgchange -ay $vg
 
@@ -247,7 +247,7 @@ grep "$dev3" out
 not vgchange -ay $vg
 
 # should not show an active lv
-not dmsetup table $vg-$lv1
+not dmsetup info $vg-$lv1
 
 # should not allow updating vg
 not lvcreate -l1 $vg
@@ -261,7 +261,7 @@ test ! -f "$RUNDIR/lvm/pvs_online/$PVIDMD"
 test ! -f "$RUNDIR/lvm/vgs_online/$vg"
 
 # should not show an active lv
-not dmsetup table $vg-$lv1
+not dmsetup info $vg-$lv1
 
 # start the md dev
 mdadm --assemble "$mddev" "$dev1" "$dev2"
@@ -285,7 +285,7 @@ test ! -f "$RUNDIR/lvm/pvs_online/$PVIDMD"
 test ! -f "$RUNDIR/lvm/vgs_online/$vg"
 
 # should not show an active lv
-not dmsetup table $vg-$lv1
+not dmsetup info $vg-$lv1
 
 vgchange -ay $vg
 
