@@ -37,7 +37,7 @@ aux extend_filter "a|$LOOP|"
 
 # creation should fail for 'partitioned' loop device
 not pvcreate -y "$LOOP"
-not vgcreate $SHARED vg "$LOOP"
+not vgcreate $SHARED ${PREFIX}vg "$LOOP"
 
 aux teardown_devs
 
@@ -61,4 +61,4 @@ aux extend_filter "a|$LOOP|"
 # creation should pass for 'non-partitioned' loop device
 pvcreate -y "$LOOP"
 
-vgcreate $SHARED vg "$LOOP"
+vgcreate $SHARED ${PREFIX}vg "$LOOP"
