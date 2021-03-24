@@ -25,6 +25,7 @@
 #include <syslog.h>
 #include <ctype.h>
 #include <time.h>
+#include <systemd/sd-journal.h>
 
 static FILE *_log_file;
 static char _log_file_path[PATH_MAX];
@@ -40,6 +41,7 @@ static char _msg_prefix[30] = "  ";
 static int _abort_on_internal_errors_config = 0;
 static uint32_t _debug_file_fields;
 static uint32_t _debug_output_fields;
+static uint32_t _log_journal = 0;
 
 static lvm2_log_fn_t _lvm2_log_fn = NULL;
 
@@ -455,6 +457,11 @@ void init_debug_output_fields(uint32_t debug_fields)
 	_debug_output_fields = debug_fields;
 }
 
+void init_log_journal(uint32_t fields)
+{
+	_log_journal = fields;
+}
+
 static void _set_time_prefix(char *prefix, int buflen)
 {
 
@@ -609,6 +616,33 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 	}
 
       log_it:
+
+	if (_log_journal) {
+		int to_journal = 0;
+
+		/* By default the visible command output is _LOG_WARN or less. */
+
+		if (_log_journal & LOG_JOURNAL_DEBUG)
+			to_journal = 1;
+		if ((_log_journal & LOG_JOURNAL_OUTPUT) && (log_level(level) <= _LOG_WARN))
+			to_journal = 1;
+
+		if (to_journal) {
+			int prio;
+			switch (log_level(level)) {
+			case _LOG_ERR:    prio = LOG_ERR; break;
+			case _LOG_WARN:   prio = LOG_WARNING; break;
+			case _LOG_INFO:   prio = LOG_INFO; break;
+			case _LOG_NOTICE: prio = LOG_NOTICE; break;
+			case _LOG_DEBUG:  prio = LOG_DEBUG; break;
+			default:          prio = LOG_INFO;
+			}
+			va_copy(ap, orig_ap);
+			sd_journal_printv(prio, trformat, ap);
+			va_end(ap);
+		}
+	}
+
 	if (!logged_via_report && ((verbose_level() >= level) && !_log_suppress)) {
 		if (verbose_level() > _LOG_DEBUG) {
 			memset(buf, 0, sizeof(buf));
@@ -792,3 +826,60 @@ void log_set_report_object_name_and_id(const char *name, const char *id)
 	_log_report.object_name = name;
 	_log_report.object_id = id;
 }
+
+/*
+ * TODO: log/journal=["daemon_command"]
+ *       daemon_command: record commands that are run by an lvm daemon.
+ *       (i.e. not commands run directly by a user.)
+ *       For this we need to be able to clearly identify when a command is
+ *       being run by dmeventd/lvmpolld/lvmdbusd.
+ *
+ * TODO: log/journal_commmand_names=["lvcreate","lvconvert"]
+ * This would restrict log/journal=["command"] to the listed command names.
+ * Also allow "!command" to exclude a command, e.g. ["!pvs"]
+ *
+ * TODO: log/journal_daemon_command_names=["lvcreate","lvconvert"]
+ * This would restrict log/journal=["dameon_command"] to the listed command names.
+ *
+ * TODO: log/journal_daemon_names=["dmeventd"]
+ * This would restrict log/journal=["daemon_command"] to commands run by
+ * the named daemon.
+ *
+ * TODO: log/command_to_file=<path> would write this info to the file.
+ *
+ * TODO: log/debug_to_file=<path> would write full debugging to the file.
+ *       (the same effect as log/file=<path> log/level=7)
+ */
+
+void log_command(const char *cmd_line, const char *cmd_name, const char *cmd_id)
+{
+	if (_log_journal & LOG_JOURNAL_COMMAND) {
+
+		/*
+		 * TODO: DAEMON=dmeventd|lvmpolld|lvmdbusd,
+		 * Could we include caller info such as libblkid, udev rule, etc?
+		 * Does systemd already record the caller for us?
+		 */
+
+		/* The command line, pid, and other things are automatically included. */
+
+		sd_journal_send("MESSAGE=lvm command %s", cmd_name,
+				"MESSAGE_ID=3ca432788c374e4ba684b834188eca36",
+				"LVM_CMD_NAME=%s", cmd_name,
+				"LVM_CMD_ID=%s", cmd_id,
+				"PRIORITY=%i", LOG_INFO,
+				NULL);
+	}
+}
+
+uint32_t log_journal_str_to_val(const char *str)
+{
+	if (!strcasecmp(str, "command"))
+		return LOG_JOURNAL_COMMAND;
+	if (!strcasecmp(str, "output"))
+		return LOG_JOURNAL_OUTPUT;
+	if (!strcasecmp(str, "debug"))
+		return LOG_JOURNAL_DEBUG;
+	return 0;
+}
+

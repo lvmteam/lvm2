@@ -42,6 +42,7 @@ struct config_info {
 	int udev_sync;
 	int udev_fallback;
 	int issue_discards;
+	uint32_t journal;
 	const char *msg_prefix;
 	const char *fmt_name;
 	const char *dmeventd_executable;

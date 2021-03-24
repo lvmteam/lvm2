@@ -340,6 +340,33 @@ static int _parse_debug_classes(struct cmd_context *cmd)
 	return debug_classes;
 }
 
+static uint32_t _parse_log_journal(struct cmd_context *cmd, int cfg, const char *cfgname)
+{
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
+	uint32_t fields = 0;
+	uint32_t val;
+
+	if (!(cn = find_config_tree_array(cmd, cfg, NULL))) {
+		log_debug("Unable to find configuration for log/%s.", cfgname);
+		return 0;
+	}
+
+	for (cv = cn->v; cv; cv = cv->next) {
+		if (cv->type != DM_CFG_STRING) {
+			log_verbose("log/%s contains a value which is not a string.  Ignoring.", cfgname);
+			continue;
+		}
+
+		if ((val = log_journal_str_to_val(cv->v.str)))
+			fields |= val;
+		else
+			log_verbose("Unrecognised value for log/%s: %s", cfgname, cv->v.str);
+	}
+
+	return fields;
+}
+
 static void _init_logging(struct cmd_context *cmd)
 {
 	int append = 1;
@@ -407,6 +434,9 @@ static void _init_logging(struct cmd_context *cmd)
 
 	init_debug_file_fields(_parse_debug_fields(cmd, log_debug_file_fields_CFG, "debug_file_fields"));
 	init_debug_output_fields(_parse_debug_fields(cmd, log_debug_output_fields_CFG, "debug_output_fields"));
+
+	cmd->default_settings.journal = _parse_log_journal(cmd, log_journal_CFG, "journal");
+	init_log_journal(cmd->default_settings.journal);
 
 	t = time(NULL);
 	ctime_r(&t, &timebuf[0]);

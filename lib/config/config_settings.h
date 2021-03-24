@@ -873,6 +873,12 @@ cfg(log_syslog_CFG, "syslog", log_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_B
 cfg(log_file_CFG, "file", log_CFG_SECTION, CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, NULL, vsn(1, 0, 0), NULL, 0, NULL,
 	"Write error and debug log messages to a file specified here.\n")
 
+cfg_array(log_journal_CFG, "journal", log_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, NULL, vsn(2, 3, 12), NULL, 0, NULL,
+	  "Record lvm information in the systemd journal.\n"
+	  "command: record commands that are run.\n"
+	  "output: record default output from commands.\n"
+	  "debug: record debug messages from commands.\n")
+
 cfg(log_overwrite_CFG, "overwrite", log_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_OVERWRITE, vsn(1, 0, 0), NULL, 0, NULL,
 	"Overwrite the log file each time the program is run.\n")
 

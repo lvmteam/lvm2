@@ -2017,6 +2017,8 @@ out:
 	log_debug("Recognised command %s (id %d / enum %d).",
 		  commands[best_i].command_id, best_i, commands[best_i].command_enum);
 
+	log_command(cmd->cmd_line, commands[best_i].name, commands[best_i].command_id);
+
 	return &commands[best_i];
 }
 
@@ -2405,6 +2407,15 @@ static void _get_current_output_settings_from_args(struct cmd_context *cmd)
 		cmd->current_settings.verbose = 0;
 		cmd->current_settings.silent = (arg_count(cmd, quiet_ARG) > 1) ? 1 : 0;
 	}
+
+	/*
+	 * default_settings.journal is already set from config and has already been
+	 * applied using init_log_journal().
+	 * current_settings have been set to default_settings.
+	 * now --journal value adds to current_settings.
+	 */
+	if (arg_is_set(cmd, journal_ARG))
+		cmd->current_settings.journal |= log_journal_str_to_val(arg_str_value(cmd, journal_ARG, ""));
 }
 
 static void _apply_current_output_settings(struct cmd_context *cmd)
@@ -2414,6 +2425,7 @@ static void _apply_current_output_settings(struct cmd_context *cmd)
 	init_debug_classes_logged(cmd->default_settings.debug_classes);
 	init_verbose(cmd->current_settings.verbose + VERBOSE_BASE_LEVEL);
 	init_silent(cmd->current_settings.silent);
+	init_log_journal(cmd->current_settings.journal);
 }
 
 static int _read_devices_list(struct cmd_context *cmd)

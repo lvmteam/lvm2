@@ -63,6 +63,10 @@
 #define LOG_DEBUG_FIELD_FILELINE	0x0004
 #define LOG_DEBUG_FIELD_MESSAGE		0x0008
 
+#define LOG_JOURNAL_COMMAND             0x0001
+#define LOG_JOURNAL_OUTPUT              0x0002
+#define LOG_JOURNAL_DEBUG               0x0004
+
 
 /*
  * Classes available for debug log messages.

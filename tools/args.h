@@ -323,6 +323,14 @@ arg(ignoreunsupported_ARG, '\0', "ignoreunsupported", 0, 0, 0,
 arg(importdevices_ARG, '\0', "importdevices", 0, 0, 0,
     "Add devices to the devices file.\n")
 
+arg(journal_ARG, '\0', "journal", string_VAL, 0, 0,
+    "Record information in the systemd journal.\n"
+    "This information is in addition to information\n"
+    "enabled by the lvm.conf log/journal setting.\n"
+    "command: record information about the command.\n"
+    "output: record the default command output.\n"
+    "debug: record full command debugging.\n")
+
 arg(labelsector_ARG, '\0', "labelsector", number_VAL, 0, 0,
     "By default the PV is labelled with an LVM2 identifier in its second\n"
     "sector (sector 1). This lets you use a different sector near the\n"
