@@ -436,10 +436,19 @@ sysfs() {
 raid_leg_status() {
 	local st
 	local val
-	st=$(dmsetup status "$1-$2")
-	val=$(echo "$st" | cut -d ' ' -f 6)
-	test "$val" = "$3" || \
-		die "$1-$2 status $val != $3  ($st)"
+
+	# Ignore inconsisten raid status 0/xxxxx idle
+	for i in {100..0} ; do
+		st=( $(dmsetup status $1-$2) ) || die "Unable to get status of $vg/$lv1"
+		b=( $(echo "${st[6]}" | sed s:/:' ':) )
+		[ "${b[0]}" = "0" ] || {
+			test "${st[5]}" = "$3" || break
+			return 0
+		}
+		sleep .1
+	done
+
+	die "$1-$2 status ${st[5]} != $3  ($st)"
 }
 
 grep_dmsetup() {
