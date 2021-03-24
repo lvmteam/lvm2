@@ -378,7 +378,7 @@ detect_mounted() {
 detect_device_size() {
 	# check if blockdev supports getsize64
 	DEVSIZE=$("$BLOCKDEV" --getsize64 "$VOLUME" 2>"$NULL" || true)
-	if test -n "$DEVSIZE" ; then
+	if test -z "$DEVSIZE" ; then
 		DEVSIZE=$("$BLOCKDEV" --getsize "$VOLUME" || true)
 		test -n "$DEVSIZE" || error "Cannot read size of device \"$VOLUME\"."
 		SSSIZE=$("$BLOCKDEV" --getss "$VOLUME" || true)
