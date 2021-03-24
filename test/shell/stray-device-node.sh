@@ -18,6 +18,9 @@ SKIP_WITH_LVMPOLLD=1
 aux prepare_devs 3
 get_devs
 
+# Avoid manipulation with real /dev dir
+test "$DM_DEV_DIR" = "/dev" && skip "Skipping stray test on real /dev dir"
+
 cp -r "$dev1" "$DM_DEV_DIR/stray"
 
 vgcreate $SHARED "$vg" "${DEVICES[@]}"
@@ -29,3 +32,5 @@ aux disable_dev "$dev1"
 pvscan
 vgreduce --removemissing --force $vg
 aux enable_dev "$dev1"
+
+rm -f "$DM_DEV_DIR/stray"
