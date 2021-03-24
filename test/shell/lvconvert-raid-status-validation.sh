@@ -36,25 +36,28 @@ vgcreate $SHARED -s 2m "$vg" "${DEVICES[@]}"
 ###########################################
 # Upconverted RAID1 should never have all 'a's in status output
 ###########################################
-aux delay_dev "$dev2" 0 50
+aux delay_dev "$dev2" 0 20
 lvcreate -aey -l 2 -n $lv1 $vg "$dev1"
 lvconvert --type raid1 -y -m 1 $vg/$lv1 "$dev2"
-while ! check in_sync $vg $lv1; do
-        a=( $(dmsetup status $vg-$lv1) ) || die "Unable to get status of $vg/$lv1"
+for i in {100..0}; do
+	check in_sync $vg $lv1 && break
+	a=( $(dmsetup status $vg-$lv1) ) || die "Unable to get status of $vg/$lv1"
 	b=( $(echo "${a[6]}" | sed s:/:' ':) )
 	if [ "${b[0]}" -ne "${b[1]}" ]; then
 		# First, 'check in_sync' should only need to check the ratio
 		#  If we are here, it is probably doing more than that.
 		# If not in-sync, then we should only ever see "Aa"
-		[ "${a[5]}" == "Aa" ]
+		# Ignore until raid starts to report consistent data
+		[ "${b[0]}" = "0" ] || [ "${a[5]}" == "Aa" ]
 	else
 		[ "${a[5]}" != "aa" ]
 		should [ "${a[5]}" == "AA" ] # RHBZ 1507719
 	fi
-        sleep .1
+	sleep .1
 done
 aux enable_dev "$dev2"
 lvremove -ff $vg
+test "$i" -gt 0 || die "Unable to get in sync $vg/$lv1"
 
 ###########################################
 # Upconverted RAID1 should not be at 100% right after upconvert
@@ -71,13 +74,15 @@ lvremove -ff $vg
 ###########################################
 # Catch anything suspicious with linear -> RAID1 upconvert
 ###########################################
-aux delay_dev "$dev2" 0 50
+aux delay_dev "$dev2" 0 20
 lvcreate -aey -l 2 -n $lv1 $vg "$dev1"
 lvconvert --type raid1 -y -m 1 $vg/$lv1 "$dev2"
-while true; do
-        a=( $(dmsetup status $vg-$lv1) ) || die "Unable to get status of $vg/$lv1"
+for i in {100..0}; do
+	a=( $(dmsetup status $vg-$lv1) ) || die "Unable to get status of $vg/$lv1"
 	b=( $(echo "${a[6]}" | sed s:/:' ':) )
-	if [ "${b[0]}" -ne "${b[1]}" ]; then
+	if [ "${b[0]}" -eq "0" ]; then
+	      : # Ignore until raid starts to report consistent data
+	elif [ "${b[0]}" -ne "${b[1]}" ]; then
 		# If the sync operation ("recover" in this case) is not
 		# finished, then it better be as follows:
 		[ "${a[5]}" = "Aa" ]
@@ -96,7 +101,7 @@ while true; do
 		should [ "${a[7]}" = "idle" ] # RHBZ 1507719
 		break
 	fi
-        sleep .1
+	sleep .1
 done
 aux enable_dev "$dev2"
 lvremove -ff $vg
@@ -104,14 +109,16 @@ lvremove -ff $vg
 ###########################################
 # Catch anything suspicious with RAID1 2-way -> 3-way upconvert
 ###########################################
-aux delay_dev "$dev3" 0 50
+aux delay_dev "$dev3" 0 20
 lvcreate --type raid1 -m 1 -aey -l 2 -n $lv1 $vg "$dev1" "$dev2"
 aux wait_for_sync $vg $lv1
 lvconvert -y -m +1 $vg/$lv1 "$dev3"
-while true; do
-        a=( $(dmsetup status $vg-$lv1) ) || die "Unable to get status of $vg/$lv1"
+for i in {100..0}; do
+	a=( $(dmsetup status $vg-$lv1) ) || die "Unable to get status of $vg/$lv1"
 	b=( $(echo "${a[6]}" | sed s:/:' ':) )
-	if [ "${b[0]}" -ne "${b[1]}" ]; then
+	if [ "${b[0]}" -eq "0" ]; then
+	      : # Ignore until raid starts to report consistent data
+	elif [ "${b[0]}" -ne "${b[1]}" ]; then
 		# If the sync operation ("recover" in this case) is not
 		# finished, then it better be as follows:
 		[ "${a[5]}" = "AAa" ]
@@ -125,20 +132,23 @@ while true; do
 		should [ "${a[7]}" = "idle" ] # RHBZ 1507719
 		break
 	fi
-        sleep .1
+	sleep .1
 done
 aux enable_dev "$dev3"
 lvremove -ff $vg
+test "$i" -gt 0 || die "Unable to get in sync $vg/$lv1"
 
 ###########################################
 # Catch anything suspicious with RAID1 initial resync
 ###########################################
-aux delay_dev "$dev2" 0 50
+aux delay_dev "$dev2" 0 20
 lvcreate --type raid1 -m 1 -aey -l 2 -n $lv1 $vg "$dev1" "$dev2"
-while true; do
-        a=( $(dmsetup status $vg-$lv1) ) || die "Unable to get status of $vg/$lv1"
+for i in {100..0}; do
+	a=( $(dmsetup status $vg-$lv1) ) || die "Unable to get status of $vg/$lv1"
 	b=( $(echo "${a[6]}" | sed s:/:' ':) )
-	if [ "${b[0]}" -ne "${b[1]}" ]; then
+	if [ "${b[0]}" -eq "0" ]; then
+	      : # Ignore until raid starts to report consistent data
+	elif [ "${b[0]}" -ne "${b[1]}" ]; then
 		# If the sync operation ("resync" in this case) is not
 		# finished, then it better be as follows:
 		[ "${a[5]}" = "aa" ]
@@ -153,9 +163,10 @@ while true; do
 		should [ "${a[7]}" = "idle" ] # RHBZ 1507719
 		break
 	fi
-        sleep .1
+	sleep .1
 done
 aux enable_dev "$dev2"
 lvremove -ff $vg
+test "$i" -gt 0 || die "Unable to get in sync $vg/$lv1"
 
 vgremove -ff $vg
