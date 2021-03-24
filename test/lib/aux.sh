@@ -581,7 +581,9 @@ teardown() {
 	}
 
 	# Remove any dangling symlink in /dev/disk (our tests can confuse udev)
-	find /dev/disk -type l ! -exec test -e {} \; -print | xargs rm -f
+	test -d /dev/disk && {
+		find /dev/disk -type l ! -exec test -e {} \; -print | xargs rm -f || true
+	}
 
 	# Remove any metadata archives and backups from this test on system
 	rm -f /etc/lvm/archive/${PREFIX}* /etc/lvm/backup/${PREFIX}*
