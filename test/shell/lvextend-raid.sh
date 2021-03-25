@@ -74,7 +74,8 @@ check lv_field $vg/$lv1 sync_percent "100.00"
 lvextend -y -L+${lvext}M $vg/$lv1
 if [ $PROGRESS -eq 1 ]
 then
-	not check lv_field $vg/$lv1 sync_percent "100.00"
+	# Even with delayed devices wre are catching races here.
+	should not check lv_field $vg/$lv1 sync_percent "100.00"
 else
 	check lv_field $vg/$lv1 sync_percent "100.00"
 fi
