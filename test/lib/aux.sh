@@ -1743,11 +1743,11 @@ dmsetup_wrapped() {
 awk_parse_init_count_in_lvmpolld_dump() {
 	printf '%s' \
 	\
-	$'BEGINFILE { x=0; answ=0; FS="="; key="[[:space:]]*"vkey }' \
+	$'BEGINFILE { x=0; answ=0 }' \
 	$'{' \
 		$'if (/.*{$/) { x++ }' \
 		$'else if (/.*}$/) { x-- }' \
-		$'else if ( x == 2 && $1 ~ key) { value=substr($2, 2); value=substr(value, 1, length(value) - 1); }' \
+		$'else if ( x == 2 && $1 ~ "[[:space:]]*"vkey) { value=substr($2, 2); value=substr(value, 1, length(value) - 1); }' \
 		$'if ( x == 2 && value == vvalue && $1 ~ /[[:space:]]*init_requests_count/) { answ=$2 }' \
 		$'if (answ > 0) { exit 0 }' \
 	$'}' \
@@ -1756,7 +1756,7 @@ awk_parse_init_count_in_lvmpolld_dump() {
 
 check_lvmpolld_init_rq_count() {
 	local ret
-	ret=$(awk -v vvalue="$2" -v vkey="${3:-lvname}" "$(awk_parse_init_count_in_lvmpolld_dump)" lvmpolld_dump.txt)
+	ret=$(awk -v vvalue="$2" -v vkey="${3:-lvname}" -F= "$(awk_parse_init_count_in_lvmpolld_dump)" lvmpolld_dump.txt)
 	test "$ret" -eq "$1" || {
 		die "check_lvmpolld_init_rq_count failed. Expected $1, got $ret"
 	}
@@ -1779,7 +1779,7 @@ wait_pvmove_lv_ready() {
 			}
 			test -z "$lvid" || {
 				lvmpolld_dump > lvmpolld_dump.txt
-				! check_lvmpolld_init_rq_count 1 "$lvid" lvid || break;
+				check_lvmpolld_init_rq_count 1 "$lvid" lvid && break;
 			}
 			sleep .1
 			retries=$((retries-1))
