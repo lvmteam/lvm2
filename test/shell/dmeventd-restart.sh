@@ -41,7 +41,7 @@ test -e LOCAL_CLVMD || grep 'already monitored' lvchange.out
 
 # now try what happens if no dmeventd is running
 kill -9 "$(< LOCAL_DMEVENTD)"
-rm LOCAL_DMEVENTD
+rm LOCAL_DMEVENTD debug.log*
 
 dmeventd -R -f &
 echo $! >LOCAL_DMEVENTD
@@ -52,11 +52,12 @@ sleep 9
 not pgrep dmeventd
 rm LOCAL_DMEVENTD
 
+# First lvs restarts 'dmeventd' (initiate a socket connection to a daemon)
 check lv_field $vg/3way seg_monitor "not monitored"
+pgrep -o dmeventd >LOCAL_DMEVENTD
 check lv_field $vg/4way seg_monitor "not monitored"
 
 lvchange --monitor y --verbose $vg/3way 2>&1 | tee lvchange.out
-pgrep -o dmeventd >LOCAL_DMEVENTD
 test -e LOCAL_CLVMD || not grep 'already monitored' lvchange.out
 
 lvchange --monitor y --verbose $vg/$lv2 2>&1 | tee lvchange.out
