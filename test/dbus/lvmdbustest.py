@@ -59,7 +59,7 @@ if pv_device_list:
 
 
 def vg_n(prefix=None):
-	name = rs(8, '_vg')
+	name = g_prefix + '_vg'
 	if prefix:
 		name = prefix + name
 	return name
@@ -1838,7 +1838,6 @@ class TestDbusService(unittest.TestCase):
 		# typically utilizes loopback, this test is skipped in
 		# those environments.
 		pv_object_path = self.objs[PV_INT][0].object_path
-
 		if not self.objs[PV_INT][0].Pv.Name.startswith("/dev"):
 			raise unittest.SkipTest('test not running in /dev')
 
@@ -1867,8 +1866,9 @@ class TestDbusService(unittest.TestCase):
 
 		# Lets locate a symlink for it
 		devices = glob('/dev/disk/*/*')
+		rp_pv_device_path = os.path.realpath(pv_device_path)
 		for d in devices:
-			if pv_device_path == os.path.realpath(d):
+			if rp_pv_device_path == os.path.realpath(d):
 				symlink = d
 				break
 
@@ -1878,14 +1878,16 @@ class TestDbusService(unittest.TestCase):
 		rc = self._lookup(symlink)
 		self.assertEqual(rc, '/')
 
-		pv_object_path = self._pv_create(symlink)
+		### pv_object_path = self._pv_create(symlink)
+		### Test is limited by filter rules and must use  /dev/mapper/LVMTEST path
+		pv_object_path = self._pv_create(pv_device_path)
+
 		self.assertNotEqual(pv_object_path, '/')
 
 		pv_proxy = ClientProxy(self.bus, pv_object_path, interfaces=(PV_INT, ))
 		self.assertEqual(pv_proxy.Pv.Name, pv_device_path)
 
 		# Lets check symlink lookup
-		self.assertEqual(pv_object_path, self._lookup(symlink))
 		self.assertEqual(pv_object_path, self._lookup(pv_device_path))
 
 	def _create_vdo_pool_and_lv(self, vg_prefix="vdo_"):
