@@ -38,11 +38,11 @@ not lvs "${DEVICES[@]}"
 # validate testing machine with its services is in expected state and will not interfere with tests
 if systemctl -a >out 2>/dev/null ; then
 	for i in dm-event lvm2-lvmpolld lvm2-monitor ; do
-	echo $i
-		grep $i out | not grep -v masked || {
-			cat out
-			should not echo "Present unmasked $i service/socket may randomize testing results!"
-			echo "+++++ Stop & Mask with systemctl +++++"
-		}
+		grep $i out > mout || continue
+		grep -v masked mout || continue
+		should not echo "Present unmasked $i service/socket may randomize testing results!"
+		echo "+++++ Stop & Mask with systemctl +++++"
+		touch show_out
 	done
+	test ! -e show_out || cat out
 fi
