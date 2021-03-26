@@ -26,6 +26,9 @@ g_tmo = 0
 # Prefix on created objects to enable easier clean-up
 g_prefix = os.getenv('PREFIX', '')
 
+# Check dev dir prefix for test suite  (LVM_TEST_DEVDIR
+dm_dev_dir = os.getenv('DM_DEV_DIR', '/dev')
+
 # Use the session bus instead of the system bus
 use_session = os.getenv('LVM_DBUSD_USE_SESSION', False)
 
@@ -59,10 +62,10 @@ if pv_device_list:
 
 
 def vg_n(prefix=None):
-	name = g_prefix + '_vg'
+	name = rs(8, '_vg')
 	if prefix:
 		name = prefix + name
-	return name
+	return g_prefix + name
 
 
 def lv_n(suffix=None):
@@ -70,7 +73,7 @@ def lv_n(suffix=None):
 		s = '_lv'
 	else:
 		s = suffix
-	return g_prefix + rs(8, s)
+	return rs(8, s)
 
 
 def _is_testsuite_pv(pv_name):
@@ -338,7 +341,7 @@ class TestDbusService(unittest.TestCase):
 		if not pv_paths:
 			pv_paths = self._all_pv_object_paths()
 
-		vg_name = vg_n(prefix=vg_prefix)
+		vg_name = vg_n()
 
 		vg_path = self.handle_return(
 			self.objs[MANAGER_INT][0].Manager.VgCreate(
@@ -1811,7 +1814,7 @@ class TestDbusService(unittest.TestCase):
 			pv_object_path, vg.Vg.Pvs, "Expecting PV object path in Vg.Pvs")
 
 		lv = self._create_lv(
-			vg=vg.Vg, size=vg.Vg.FreeBytes, suffix="_pv")
+			vg=vg.Vg, size=vg.Vg.FreeBytes, suffix="_pv0")
 		device_path = '/dev/%s/%s' % (vg.Vg.Name, lv.LvCommon.Name)
 		new_pv_object_path = self._pv_create(device_path)
 
@@ -1837,6 +1840,9 @@ class TestDbusService(unittest.TestCase):
 		# by editing lvm.conf with "devices/scan_lvs = 1"  As testing
 		# typically utilizes loopback, this test is skipped in
 		# those environments.
+
+		if dm_dev_dir != '/dev':
+			raise unittest.SkipTest('test not running in real /dev')
 		pv_object_path = self.objs[PV_INT][0].object_path
 		if not self.objs[PV_INT][0].Pv.Name.startswith("/dev"):
 			raise unittest.SkipTest('test not running in /dev')
