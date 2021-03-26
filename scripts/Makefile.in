@@ -92,7 +92,6 @@ install_systemd_generators:
 install_systemd_units:	install_dbus_service
 	@echo "    [INSTALL] systemd_units"
 	$(Q) $(INSTALL_DIR) $(systemd_unit_dir)
-	$(Q) $(INSTALL_DATA) lvm2-pvscan.service $(systemd_unit_dir)/lvm2-pvscan@.service
 ifeq ("@BUILD_DMEVENTD@", "yes")
 	$(Q) $(INSTALL_DATA) dm_event_systemd_red_hat.socket $(systemd_unit_dir)/dm-event.socket
 	$(Q) $(INSTALL_DATA) dm_event_systemd_red_hat.service $(systemd_unit_dir)/dm-event.service
