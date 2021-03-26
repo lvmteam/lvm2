@@ -32,4 +32,8 @@ aux prepare_profiles "lvmdbusd"
 
 aux prepare_lvmdbusd
 
+# Example for testing individual test:
+#"$TESTOLDPWD/dbus/lvmdbustest.py" -v TestDbusService.test_lv_interface_cache_lv
+#"$TESTOLDPWD/dbus/lvmdbustest.py" -v TestDbusService.test_pv_symlinks
+
 "$TESTOLDPWD/dbus/lvmdbustest.py" -v
