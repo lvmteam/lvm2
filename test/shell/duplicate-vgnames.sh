@@ -399,7 +399,7 @@ grep $UUID2 out | grep active
 grep $UUID3 out | not grep active
 vgchange -an
 
-not vgchange -ay $vg1
+not vgchange -ay -vvvv $vg1
 lvs --foreign -o vguuid,active |tee out
 grep $UUID1 out | not grep active
 grep $UUID2 out | not grep active
