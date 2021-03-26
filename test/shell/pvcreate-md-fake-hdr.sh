@@ -59,7 +59,7 @@ sleep 3
 # print what  blkid thinks about each PV
 for i in "$dev1" "$dev2" "$dev3" "$dev4"
 do
-	blkid -c /dev/null -w /dev/null "$i" || echo "Unknown signature"
+	blkid -c /dev/null "$i" || echo "Unknown signature"
 done
 
 # expect open count for each PV to be 0
