@@ -88,8 +88,8 @@ if mdadm --detail "$mddev" ; then
 fi
 
 # now reassemble array from  PV1 & PV2
-mdadm --assemble --verbose "$mddev" "$dev1" "$dev2"
-aux udev_wait
+aux mdadm_assemble --verbose "$mddev" "$dev1" "$dev2"
+
 sleep 1
 
 # and let 'fake hdr' to be fixed from master/primary leg

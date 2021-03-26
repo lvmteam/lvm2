@@ -27,19 +27,6 @@ _clear_online_files() {
 
 . lib/inittest
 
-which mdadm || skip
-
-STRACE=
-[ "$DM_DEV_DIR" = "/dev" ] && mdadm -V 2>&1 | grep " v3.2" && {
-	# use this 'trick' to slow down mdadm which otherwise
-	# is racing with udev rule since mdadm internally
-	# opens and closes raid leg devices in RW mode and then
-	# tries to get exlusive access to the leg device during
-	# insertion to kernel and fails during assembly
-        # There could be more affted version of mdadm.
-	STRACE="strace -f -o /dev/null"
-}
-
 # This stops lvm from taking advantage of hints which
 # will have already excluded md components.
 
@@ -121,8 +108,7 @@ test ! -f "$RUNDIR/lvm/vgs_online/$vg"
 # should not show an active lv
 not dmsetup info $vg-$lv1
 
-$STRACE mdadm --assemble "$mddev" "$dev1" "$dev2"
-aux udev_wait
+aux mdadm_assemble "$mddev" "$dev1" "$dev2"
 
 not pvs "$dev1"
 not pvs "$dev2"
@@ -276,8 +262,7 @@ test ! -f "$RUNDIR/lvm/vgs_online/$vg"
 not dmsetup info $vg-$lv1
 
 # start the md dev
-$STRACE mdadm --assemble "$mddev" "$dev1" "$dev2"
-aux udev_wait
+aux mdadm_assemble "$mddev" "$dev1" "$dev2"
 
 not pvs "$dev1"
 not pvs "$dev2"
