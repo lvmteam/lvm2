@@ -12,6 +12,8 @@
 
 test_description='Hello world for vgcreate $SHARED with lvmlockd and sanlock'
 
+SKIP_WITH_LVMPOLLD=1
+
 . lib/inittest
 
 [ -z "$LVM_TEST_LVMLOCKD" ] && skip
@@ -23,4 +25,3 @@ vgcreate $SHARED $vg "$dev1"
 vgs -o+locktype,lockargs $vg
 
 vgremove $vg
-
