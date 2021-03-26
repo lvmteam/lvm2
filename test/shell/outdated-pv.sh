@@ -10,10 +10,11 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+SKIP_WITH_LVMPOLLD=1
+
 . lib/inittest
 
-aux prepare_devs 3
-get_devs
+aux prepare_vg 3
 
 #
 # Test handling of "outdated PV" which occurs when a PV goes missing
@@ -21,8 +22,6 @@ get_devs
 # Then the PV reappears with the old VG metadata that shows it is a
 # member.  That outdated metadata needs to be cleared.
 #
-
-vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3"
 
 lvcreate -n $lv1 -l1 -an $vg "$dev1"
 lvcreate -n $lv2 -l1 -an $vg "$dev1"
@@ -63,4 +62,3 @@ pvs "$dev2" | tee out
 grep "$vg" out
 
 vgremove -ff $vg
-

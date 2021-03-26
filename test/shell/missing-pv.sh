@@ -10,12 +10,11 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+SKIP_WITH_LVMPOLLD=1
+
 . lib/inittest
 
-aux prepare_devs 3
-get_devs
-
-vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3"
+aux prepare_vg 3
 
 lvcreate -n $lv1 -L8M --type mirror -m 1 $vg
 lvcreate -n $lv2 -L8M --type mirror -m 1 $vg
@@ -147,6 +146,4 @@ pvs
 vgs
 lvs -a -o+devices
 
-vgchange -an $vg
 vgremove -ff $vg
-

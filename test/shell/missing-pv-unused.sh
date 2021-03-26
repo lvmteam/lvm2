@@ -10,12 +10,11 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+SKIP_WITH_LVMPOLLD=1
+
 . lib/inittest
 
-aux prepare_devs 3
-get_devs
-
-vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3"
+aux prepare_vg 3
 
 lvcreate -n $lv1 -L8M $vg "$dev2"
 lvcreate -n $lv2 -L8M $vg "$dev3"
@@ -23,10 +22,6 @@ lvcreate -n $lv3 -L8M $vg "$dev2"
 lvcreate -n $lv4 -L8M $vg "$dev3"
 
 vgchange -an $vg
-
-pvs
-vgs
-lvs -a -o+devices
 
 # Fail device that is not used by any LVs.
 aux disable_dev "$dev1"
@@ -81,6 +76,4 @@ pvs
 vgs
 lvs -a -o+devices
 
-vgchange -an $vg
 vgremove -ff $vg
-

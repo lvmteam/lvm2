@@ -12,6 +12,8 @@
 
 # Check what happens when reading of lvm.conf fails
 
+SKIP_WITH_LVMPOLLD=1
+
 . lib/inittest
 
 MKFS=mkfs.ext3
