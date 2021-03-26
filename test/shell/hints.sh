@@ -12,8 +12,10 @@
 
 SKIP_WITH_LVMPOLLD=1
 
-/* hints are currently disabled with lvmlockd */
+# hints are currently disabled with lvmlockd
 SKIP_WITH_LVMLOCKD=1
+
+. lib/inittest
 
 RUNDIR="/run"
 test -d "$RUNDIR" || RUNDIR="/var/run"
@@ -21,8 +23,6 @@ HINTS="$RUNDIR/lvm/hints"
 NOHINTS="$RUNDIR/lvm/nohints"
 NEWHINTS="$RUNDIR/lvm/newhints"
 PREV="$RUNDIR/lvm/prev-hints"
-
-. lib/inittest
 
 # TODO:
 # Test commands that ignore hints
@@ -55,7 +55,7 @@ not grep scan: tmptest
 # test that 'pvs' submits only three reads, one for each PV in hints
 # for initial scan, and one more in vg_read rescan check
 
-if [ -e "/usr/bin/strace" ]; then
+if which strace; then
 strace -e io_submit pvs 2>&1|tee tmptest
 test "$(grep io_submit tmptest | wc -l)" -eq 3
 
@@ -413,4 +413,3 @@ grep $vg4 $HINTS
 vgremove -y $vg4
 vgremove -y $vg2
 vgremove -y $vg1
-
