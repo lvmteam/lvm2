@@ -98,7 +98,22 @@ not lvcreate -V10 -n $lv3 $vg/pool
 lvs -ao+seg_pe_ranges $vg
 
 # needs_check needs newer version
-if aux have_thin 1 16 0 ; then
+if aux have_thin 1 19 0 ; then
+	check lv_attr_bit state $vg/pool "a"
+
+	dmsetup suspend $vg-pool-tpool
+
+	check lv_attr_bit state $vg/pool "s"
+
+	dmsetup resume $vg-pool-tpool
+
+	lvresize -L+2M $vg/pool_tmeta
+
+	# Newer version recovers when metadata grow up
+	check lv_attr_bit state $vg/pool "a"
+	check lv_field $vg/pool lv_health_status ""
+
+elif aux have_thin 1 16 0 ; then
 	check lv_attr_bit state $vg/pool "c"
 	check lv_field $vg/pool lv_check_needed "check needed"
 
