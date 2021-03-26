@@ -780,6 +780,22 @@ mdadm_create() {
 	done
 }
 
+mdadm_assemble() {
+	STRACE=
+	[ "$DM_DEV_DIR" = "/dev" ] && mdadm -V 2>&1 | grep " v3.2" && {
+		# use this 'trick' to slow down mdadm which otherwise
+		# is racing with udev rule since mdadm internally
+		# opens and closes raid leg devices in RW mode and then
+		# tries to get exlusive access to the leg device during
+		# insertion to kernel and fails during assembly
+		# There can be some other affected version of mdadm.
+		STRACE="strace -f -o /dev/null"
+	}
+
+	$STRACE mdadm --assemble "$@"
+	udev_wait
+}
+
 cleanup_md_dev() {
 	local IFS=$IFS_NL
 	local i
