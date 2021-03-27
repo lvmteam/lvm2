@@ -52,6 +52,8 @@ aux wait_for_sync $vg $lv1
 not lvconvert -m +1 $vg/$lv1 \
     "$dev5:0-1" "$dev1" "$dev2" "$dev3" "$dev4"
 lvconvert -y -m +1 $vg/$lv1 "$dev5"
+aux wait_for_sync $vg $lv1
+# Cannot pass without --yes
 not lvconvert -m 0 $vg/$lv1
 lvconvert -y -m 0 $vg/$lv1
 # Should work due to '--alloc anywhere'
