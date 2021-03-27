@@ -19,9 +19,20 @@ which fallocate || skip
 
 fallocate -l 2M loopa
 fallocate -l 2M loopb
-sync
-LOOP1=$(losetup -f loopa --sector-size 4096 --show)
-LOOP2=$(losetup -f loopb --show)
+
+# Fight a weird occasional race in losetup usage:
+#
+# losetup: loopa: failed to set up loop device: Resource temporarily unavailable
+# 	loop0: detected capacity change from 0 to 4096
+# 	loop_set_block_size: loop0 () has still dirty pages (nrpages=2)
+for i in {1..5} ; do
+	LOOP1=$(losetup -f loopa --sector-size 4096 --show || true)
+	test -n "$LOOP1" && break
+done
+for i in {1..5} ; do
+	LOOP2=$(losetup -f loopb --show || true)
+	test -n "$LOOP2" && break
+done
 
 # prepare devX mapping so it works for real & fake dev dir
 d=1
