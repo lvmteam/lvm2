@@ -341,7 +341,7 @@ class TestDbusService(unittest.TestCase):
 		if not pv_paths:
 			pv_paths = self._all_pv_object_paths()
 
-		vg_name = vg_n()
+		vg_name = vg_n(prefix=vg_prefix)
 
 		vg_path = self.handle_return(
 			self.objs[MANAGER_INT][0].Manager.VgCreate(
