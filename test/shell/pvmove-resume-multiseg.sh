@@ -20,7 +20,7 @@ SKIP_WITH_LVMLOCKD=1
 . lib/inittest
 
 aux prepare_pvs 5 40
-aux throttle_dm_mirror 40 || :
+aux throttle_dm_mirror 60 || :
 
 vgcreate -s 128k $vg "$dev1" "$dev2" "$dev3"
 pvcreate --metadatacopies 0 "$dev4" "$dev5"
@@ -48,16 +48,16 @@ test_pvmove_resume() {
 	aux wait_pvmove_lv_ready "$vg-pvmove1" 300
 	kill -9 $PVMOVE
 
+	while dmsetup status "$vg-$lv1"; do dmsetup remove "$vg-$lv1" || true; done
+	while dmsetup status "$vg-$lv2"; do dmsetup remove "$vg-$lv2" || true; done
+	while dmsetup status "$vg-pvmove0"; do dmsetup remove "$vg-pvmove0" || true; done
+	while dmsetup status "$vg-pvmove1"; do dmsetup remove "$vg-pvmove1" || true; done
+
 	if test -e LOCAL_LVMPOLLD ; then
 		aux prepare_lvmpolld
 	fi
 
 	wait
-
-	while dmsetup status "$vg-$lv1"; do dmsetup remove "$vg-$lv1" || true; done
-	while dmsetup status "$vg-$lv2"; do dmsetup remove "$vg-$lv2" || true; done
-	while dmsetup status "$vg-pvmove0"; do dmsetup remove "$vg-pvmove0" || true; done
-	while dmsetup status "$vg-pvmove1"; do dmsetup remove "$vg-pvmove1" || true; done
 
 	check lv_attr_bit type $vg/pvmove0 "p"
 	check lv_attr_bit type $vg/pvmove1 "p"
