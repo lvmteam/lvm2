@@ -1861,6 +1861,9 @@ class TestDbusService(unittest.TestCase):
 		pv = self.objs[PV_INT][0]
 		pv_device_path = pv.Pv.Name
 
+		if dm_dev_dir != '/dev':
+			raise unittest.SkipTest('test not running in real /dev')
+
 		if not pv_device_path.startswith("/dev"):
 			raise unittest.SkipTest('test not running in /dev')
 
