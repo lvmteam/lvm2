@@ -99,9 +99,9 @@ lvs -ao+seg_pe_ranges $vg
 
 # needs_check needs newer version
 THINMINVER="1 20 0"
-aux kernel_at_least 4.18 && THINMINVER="1 19 0" # kernel >=4.18 already had changes from 1.20
+aux kernel_at_least 4 18 && THINMINVER="1 19 0" # kernel >=4.18 already had changes from 1.20
 
-if aux have_thin $THINVER ; then
+if aux have_thin $THINMINVER ; then
 	check lv_attr_bit state $vg/pool "a"
 
 	dmsetup suspend $vg-pool-tpool
