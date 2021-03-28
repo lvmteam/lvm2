@@ -19,8 +19,9 @@ SKIP_WITH_LVMLOCKD=1
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && aux throttle_dm_mirror 20 || :
+
 aux prepare_pvs 5 40
-aux throttle_dm_mirror 60 || :
 
 vgcreate -s 128k $vg "$dev1" "$dev2" "$dev3"
 pvcreate --metadatacopies 0 "$dev4" "$dev5"
@@ -48,15 +49,8 @@ test_pvmove_resume() {
 	aux wait_pvmove_lv_ready "$vg-pvmove1" 300
 	kill -9 $PVMOVE
 
-	while dmsetup status "$vg-$lv1"; do dmsetup remove "$vg-$lv1" || true; done
-	while dmsetup status "$vg-$lv2"; do dmsetup remove "$vg-$lv2" || true; done
-	while dmsetup status "$vg-pvmove0"; do dmsetup remove "$vg-pvmove0" || true; done
-	while dmsetup status "$vg-pvmove1"; do dmsetup remove "$vg-pvmove1" || true; done
-
-	if test -e LOCAL_LVMPOLLD ; then
-		aux prepare_lvmpolld
-	fi
-
+	aux remove_dm_devs "$vg-$lv1" "$vg-$lv2" "$vg-pvmove0" "$vg-pvmove1"
+	test -e LOCAL_LVMPOLLD && aux prepare_lvmpolld
 	wait
 
 	check lv_attr_bit type $vg/pvmove0 "p"
@@ -90,13 +84,11 @@ test_pvmove_resume() {
 	aux enable_dev "$dev4"
 	aux enable_dev "$dev5"
 
-	i=0
-	while get lv_field $vg name -a | grep -E "^\[?pvmove"; do
-		# wait for 30 secs at max
-		test $i -ge 300 && die "Pvmove is too slow or does not progress."
+	for i in {0..300} ; do # wait for 30 secs at max
+		get lv_field $vg name -a | grep -E "^\[?pvmove" || break
 		sleep .1
-		i=$((i + 1))
 	done
+	test $i -ge 300 && die "Pvmove is too slow or does not progress."
 
 	aux kill_tagged_processes
 

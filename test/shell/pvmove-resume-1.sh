@@ -20,7 +20,8 @@ SKIP_WITH_CLVMD=1
 
 . lib/inittest
 
-aux throttle_dm_mirror 50 || :
+test -e LOCAL_LVMPOLLD && aux throttle_dm_mirror 20 || :
+
 aux prepare_pvs 4 30
 
 vgcreate -s 128k $vg "$dev1"
@@ -49,23 +50,9 @@ test_pvmove_resume() {
 	aux wait_pvmove_lv_ready "$vg1-pvmove0" 300
 	kill -9 $PVMOVE
 
-	if test -e LOCAL_LVMPOLLD ; then
-		aux prepare_lvmpolld
-	fi
-
+	aux remove_dm_devs "$vg-$lv1" "$vg1-$lv1" "$vg-pvmove0" "$vg1-pvmove0"
+	test -e LOCAL_LVMPOLLD && aux prepare_lvmpolld
 	wait
-
-	local finished
-	for i in {1..100}; do
-		finished=1
-		for d in  "$vg-$lv1" "$vg1-$lv1" "$vg-pvmove0" "$vg1-pvmove0" ; do
-			dmsetup status "$d" 2>/dev/null && {
-				dmsetup remove "$d" || finished=0
-			}
-		done
-		test "$finished" -eq 0 || break
-	done
-	test "$finished" -eq 0 && die "Can't remove device"
 
 	check lv_attr_bit type $vg/pvmove0 "p"
 	check lv_attr_bit type $vg1/pvmove0 "p"

@@ -49,12 +49,11 @@ dd if="$dev3"  of="$dev2" bs=64k count=1 conv=fdatasync
 # remove VG on PV3 & PV4
 vgremove -f $vg
 
-sleep 3
 aux udev_wait
 # too bad  'dd' wakes up  md array reassembling
 mdadm --detail "$mddev" || true
 mdadm --stop "$mddev" || true
-sleep 3
+sleep 1
 
 # print what  blkid thinks about each PV
 for i in "$dev1" "$dev2" "$dev3" "$dev4"
