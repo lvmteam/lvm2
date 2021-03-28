@@ -125,7 +125,7 @@ vgremove -f $vg1
 
 pvcreate "$dev3"
 
-PVID3=`pvs $dev3 --noheading -o uuid | tr -d - | awk '{print $1}'`
+PVID3=$(pvs "$dev3" --noheading -o uuid | tr -d - | awk '{print $1}')
 echo $PVID3
 
 not ls "$RUNDIR/lvm/pvs_online/$PVID3"
@@ -220,7 +220,7 @@ vgremove -ff $vg3
 pvremove "$dev8"
 pvcreate -y --setphysicalvolumesize 8M "$dev8"
 
-PVID8=`pvs $dev8 --noheading -o uuid | tr -d - | awk '{print $1}'`
+PVID8=$(pvs "$dev8" --noheading -o uuid | tr -d - | awk '{print $1}')
 echo $PVID8
 
 vgcreate $vg3 "$dev8"
@@ -238,4 +238,3 @@ ls "$RUNDIR/lvm/vgs_online/$vg3"
 vgchange -an $vg3
 
 vgremove -ff $vg3
-

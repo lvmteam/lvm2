@@ -146,7 +146,7 @@ not pvs "$dev5"
 
 # create a new temp device that will cause hint hash to change
 DEVNAME=${PREFIX}pv99
-echo "0 `blockdev --getsize $dev5` linear $dev5 0" | dmsetup create $DEVNAME
+echo "0 $(blockdev --getsize "$dev5") linear $dev5 0" | dmsetup create $DEVNAME
 dmsetup status $DEVNAME
 
 cp $HINTS $PREV
@@ -391,7 +391,7 @@ rm tmp-old tmp-new tmp-newuuid
 #
 
 # this vgcreate invalidates current hints
-vgcreate $vg3 $dev4
+vgcreate $vg3 "$dev4"
 # this pvs creates new hints
 pvs
 cp $HINTS tmp-old

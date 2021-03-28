@@ -21,61 +21,60 @@ SKIP_WITH_LVMPOLLD=1
 aux have_raid 1 7 0 || skip
 
 aux prepare_vg 6
-get_devs
 
 # raid0 loosing a leg
 lvcreate -aey --type raid0 -i5 -l5 -n $lv $vg
 lvdisplay $vg/$lv|grep "LV Status *available"
-aux disable_dev $dev1
+aux disable_dev "$dev1"
 lvdisplay $vg/$lv|grep "LV Status *NOT available (partial)"
-aux enable_dev $dev1
+aux enable_dev "$dev1"
 lvremove -y $vg/$lv
 
 # raid1 loosing a leg/all legs
-lvcreate -aey --type raid1 -m1 -l5 -n $lv $vg $dev1 $dev2
+lvcreate -aey --type raid1 -m1 -l5 -n $lv $vg "$dev1" "$dev2"
 lvdisplay $vg/$lv|grep "LV Status *available"
-aux disable_dev $dev1
+aux disable_dev "$dev1"
 lvdisplay $vg/$lv|grep "LV Status *available (partial)"
-aux disable_dev $dev2
+aux disable_dev "$dev2"
 lvdisplay $vg/$lv|grep "LV Status *NOT available (partial)"
-aux enable_dev $dev1 $dev2
+aux enable_dev "$dev1" "$dev2"
 lvremove -y $vg/$lv
 
 # raid5 loosing a leg/2 legs
 lvcreate -aey --type raid5 -i3 -l5 -n $lv $vg
 lvdisplay $vg/$lv|grep "LV Status *available"
-aux disable_dev $dev1
+aux disable_dev "$dev1"
 lvdisplay $vg/$lv|grep "LV Status *available (partial)"
-aux disable_dev $dev2
+aux disable_dev "$dev2"
 lvdisplay $vg/$lv|grep "LV Status *NOT available (partial)"
-aux enable_dev $dev1 $dev2
+aux enable_dev "$dev1" "$dev2"
 lvremove -y $vg/$lv
 
 # raid6 loosing a leg/2 legs/3 legs
 lvcreate -aey --type raid6 -i3 -l5 -n $lv $vg
 lvdisplay $vg/$lv|grep "LV Status *available"
-aux disable_dev $dev1
+aux disable_dev "$dev1"
 lvdisplay $vg/$lv|grep "LV Status *available (partial)"
-aux disable_dev $dev2
+aux disable_dev "$dev2"
 lvdisplay $vg/$lv|grep "LV Status *available (partial)"
-aux disable_dev $dev3
+aux disable_dev "$dev3"
 lvdisplay $vg/$lv|grep "LV Status *NOT available (partial)"
-aux enable_dev $dev1 $dev2 $dev3
+aux enable_dev "$dev1" "$dev2" "$dev3"
 lvremove -y $vg/$lv
 
 # raid10 loosing a leg per mirror group / a complete mirror group
 lvcreate -aey --type raid10 -i3 -l3 -n $lv $vg
 lvdisplay $vg/$lv|grep "LV Status *available"
-aux disable_dev $dev1
+aux disable_dev "$dev1"
 lvdisplay $vg/$lv|grep "LV Status *available (partial)"
-aux disable_dev $dev3
+aux disable_dev "$dev3"
 lvdisplay $vg/$lv|grep "LV Status *available (partial)"
-aux disable_dev $dev6
+aux disable_dev "$dev6"
 lvdisplay $vg/$lv|grep "LV Status *available (partial)"
-aux enable_dev $dev1 $dev3 $dev6
+aux enable_dev "$dev1" "$dev3" "$dev6"
 lvdisplay $vg/$lv|grep "LV Status *available"
-aux disable_dev $dev1 $dev2
+aux disable_dev "$dev1" "$dev2"
 lvdisplay $vg/$lv|grep "LV Status *NOT available (partial)"
-aux enable_dev $dev1 $dev2
+aux enable_dev "$dev1" "$dev2"
 
 vgremove -y -f $vg

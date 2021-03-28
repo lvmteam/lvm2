@@ -25,7 +25,7 @@ aux lvmconf 'allocation/maximise_cling = 0' \
 aux prepare_vg 8 80
 get_devs
 
-offset=$(get first_extent_sector $dev1)
+offset=$(get first_extent_sector "$dev1")
 
 function delay
 {

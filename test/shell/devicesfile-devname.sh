@@ -31,41 +31,41 @@ _clear_online_files() {
 }
 
 DFDIR="$LVM_SYSTEM_DIR/devices"
-mkdir $DFDIR || true
+mkdir "$DFDIR" || true
 DF="$DFDIR/system.devices"
 ORIG="$DFDIR/orig.devices"
 
 aux lvmconf 'devices/use_devicesfile = 1'
 
-pvcreate $dev1
-ls $DF
-grep $dev1 $DF
+pvcreate "$dev1"
+ls "$DF"
+grep "$dev1" "$DF"
 
-pvcreate $dev2
-grep $dev2 $DF
+pvcreate "$dev2"
+grep "$dev2" "$DF"
 
-pvcreate $dev3
-grep $dev3 $DF
+pvcreate "$dev3"
+grep "$dev3" "$DF"
 
-vgcreate $vg1 $dev1 $dev2
+vgcreate $vg1 "$dev1" "$dev2"
 
 # PVID with dashes for matching pvs -o+uuid output
-OPVID1=`pvs $dev1 --noheading -o uuid | awk '{print $1}'`
-OPVID2=`pvs $dev2 --noheading -o uuid | awk '{print $1}'`
-OPVID3=`pvs $dev3 --noheading -o uuid | awk '{print $1}'`
+OPVID1=`pvs "$dev1" --noheading -o uuid | awk '{print $1}'`
+OPVID2=`pvs "$dev2" --noheading -o uuid | awk '{print $1}'`
+OPVID3=`pvs "$dev3" --noheading -o uuid | awk '{print $1}'`
 
 # PVID without dashes for matching devices file fields
-PVID1=`pvs $dev1 --noheading -o uuid | tr -d - | awk '{print $1}'`
-PVID2=`pvs $dev2 --noheading -o uuid | tr -d - | awk '{print $1}'`
-PVID3=`pvs $dev3 --noheading -o uuid | tr -d - | awk '{print $1}'`
+PVID1=`pvs "$dev1" --noheading -o uuid | tr -d - | awk '{print $1}'`
+PVID2=`pvs "$dev2" --noheading -o uuid | tr -d - | awk '{print $1}'`
+PVID3=`pvs "$dev3" --noheading -o uuid | tr -d - | awk '{print $1}'`
 
-lvmdevices --deldev $dev3
+lvmdevices --deldev "$dev3"
 
-not grep $dev3 $DF
-not grep $PVID3 $DF
-not pvs $dev3
+not grep "$dev3" "$DF"
+not grep "$PVID3" "$DF"
+not pvs "$dev3"
 
-cp $DF $ORIG
+cp "$DF" "$ORIG"
 
 lvcreate -l4 -an -i2 -n $lv1 $vg1
 
@@ -98,150 +98,150 @@ lvcreate -l4 -an -i2 -n $lv1 $vg1
 
 # edit DF idname, s/dev1/dev3/, where new dev is not in DF
 
-sed -e "s|IDNAME=$dev1|IDNAME=$dev3|" $ORIG > $DF
-cat $DF
+sed -e "s|IDNAME=$dev1|IDNAME=$dev3|" "$ORIG" > "$DF"
+cat "$DF"
 # pvs reports correct info 
 pvs -o+uuid | tee pvs.out
 grep $vg1 pvs.out > out
-not grep $OPVID3 out
-not grep $dev3 out
-grep $OPVID1 out |tee out2
-grep $dev1 out2
+not grep "$OPVID3" out
+not grep "$dev3" out
+grep "$OPVID1" out |tee out2
+grep "$dev1" out2
 # pvs fixed the DF
-not grep $PVID3 $DF
-not grep $dev3 $DF
-grep $PVID1 $DF |tee out
-grep IDNAME=$dev1 out
-cat $DF
+not grep "$PVID3" "$DF"
+not grep "$dev3" "$DF"
+grep "$PVID1" "$DF" |tee out
+grep "IDNAME=$dev1" out
+cat "$DF"
 
-sed -e "s|IDNAME=$dev1|IDNAME=$dev3|" $ORIG > $DF
-cat $DF
+sed -e "s|IDNAME=$dev1|IDNAME=$dev3|" "$ORIG" > "$DF"
+cat "$DF"
 # lvcreate uses correct dev
-lvcreate -l1 -n $lv2 -an $vg1 $dev1
+lvcreate -l1 -n $lv2 -an $vg1 "$dev1"
 # lvcreate fixed the DF
-not grep $PVID3 $DF
-not grep $dev3 $DF
-grep $PVID1 $DF |tee out
-grep IDNAME=$dev1 out
+not grep "$PVID3" "$DF"
+not grep "$dev3" "$DF"
+grep "$PVID1" "$DF" |tee out
+grep "IDNAME=$dev1" out
 # pvs reports correct dev
 pvs -o+uuid | tee pvs.out
 grep $vg1 pvs.out > out
-not grep $OPVID3 out
-not grep $dev3 out
-grep $OPVID1 out |tee out2
-grep $dev1 out2
+not grep "$OPVID3" out
+not grep "$dev3" out
+grep "$OPVID1" out |tee out2
+grep "$dev1" out2
 lvremove $vg1/$lv2
-cat $DF
+cat "$DF"
 
-sed -e "s|IDNAME=$dev1|IDNAME=$dev3|" $ORIG > $DF
-cat $DF
+sed -e "s|IDNAME=$dev1|IDNAME=$dev3|" "$ORIG" > "$DF"
+cat "$DF"
 # lvmdevices fixes the DF
 lvmdevices --update
-not grep $PVID3 $DF
-not grep $dev3 $DF
-grep $PVID1 $DF |tee out
-grep IDNAME=$dev1 out
-cat $DF
+not grep "$PVID3" "$DF"
+not grep "$dev3" "$DF"
+grep "$PVID1" "$DF" |tee out
+grep "IDNAME=$dev1" out
+cat "$DF"
 
 # edit DF idname, s/dev1/dev2/, creating two entries with same idname
 
-sed -e "s|IDNAME=$dev1|IDNAME=$dev2|" $ORIG > $DF
-cat $DF
+sed -e "s|IDNAME=$dev1|IDNAME=$dev2|" "$ORIG" > "$DF"
+cat "$DF"
 # pvs reports correct info
 pvs -o+uuid | tee pvs.out
 grep $vg1 pvs.out > out
-grep $OPVID1 out |tee out2
-grep $dev1 out2
-grep $OPVID2 out |tee out2
-grep $dev2 out2
+grep "$OPVID1" out |tee out2
+grep "$dev1" out2
+grep "$OPVID2" out |tee out2
+grep "$dev2" out2
 # pvs fixed the DF
-grep $PVID1 $DF |tee out
-grep IDNAME=$dev1 out
-grep $PVID2 $DF |tee out
-grep IDNAME=$dev2 out
-cat $DF
+grep "$PVID1" "$DF" |tee out
+grep "IDNAME=$dev1" out
+grep "$PVID2" "$DF" |tee out
+grep "IDNAME=$dev2" out
+cat "$DF"
 
-sed -e "s|IDNAME=$dev1|IDNAME=$dev2|" $ORIG > $DF
-cat $DF
+sed -e "s|IDNAME=$dev1|IDNAME=$dev2|" "$ORIG" > "$DF"
+cat "$DF"
 # lvcreate uses correct dev
-lvcreate -l1 -n $lv2 -an $vg1 $dev1
+lvcreate -l1 -n $lv2 -an $vg1 "$dev1"
 # lvcreate fixed the DF
-grep $PVID1 $DF |tee out
-grep IDNAME=$dev1 out
-grep $PVID2 $DF |tee out
-grep IDNAME=$dev2 out
+grep "$PVID1" "$DF" |tee out
+grep "IDNAME=$dev1" out
+grep "$PVID2" "$DF" |tee out
+grep "IDNAME=$dev2" out
 # pvs reports correct info
 pvs -o+uuid | tee pvs.out
 grep $vg1 pvs.out > out
-grep $OPVID1 out |tee out2
-grep $dev1 out2
-grep $OPVID2 out |tee out2
-grep $dev2 out2
+grep "$OPVID1" out |tee out2
+grep "$dev1" out2
+grep "$OPVID2" out |tee out2
+grep "$dev2" out2
 lvremove $vg1/$lv2
-cat $DF
+cat "$DF"
 
-sed -e "s|IDNAME=$dev1|IDNAME=$dev2|" $ORIG > $DF
-cat $DF
+sed -e "s|IDNAME=$dev1|IDNAME=$dev2|" "$ORIG" > "$DF"
+cat "$DF"
 # lvmdevices fixes the DF
 lvmdevices --update
-grep $PVID1 $DF |tee out
-grep IDNAME=$dev1 out
-grep $PVID2 $DF |tee out
-grep IDNAME=$dev2 out
-cat $DF
+grep "$PVID1" "$DF" |tee out
+grep "IDNAME=$dev1" out
+grep "$PVID2" "$DF" |tee out
+grep "IDNAME=$dev2" out
+cat "$DF"
 
 # edit DF idname, swap dev1 and dev2
 
-sed -e "s|IDNAME=$dev1|IDNAME=tmpname|" $ORIG > tmp1.devices
+sed -e "s|IDNAME=$dev1|IDNAME=tmpname|" "$ORIG" > tmp1.devices
 sed -e "s|IDNAME=$dev2|IDNAME=$dev1|" tmp1.devices > tmp2.devices
-sed -e "s|IDNAME=tmpname|IDNAME=$dev2|" tmp2.devices > $DF
-cat $DF
+sed -e "s|IDNAME=tmpname|IDNAME=$dev2|" tmp2.devices > "$DF"
+cat "$DF"
 # pvs reports correct info
 pvs -o+uuid | tee pvs.out
 grep $vg1 pvs.out > out
-grep $OPVID1 out |tee out2
-grep $dev1 out2
-grep $OPVID2 out |tee out2
-grep $dev2 out2
+grep "$OPVID1" out |tee out2
+grep "$dev1" out2
+grep "$OPVID2" out |tee out2
+grep "$dev2" out2
 # pvs fixed the DF
-grep $PVID1 $DF |tee out
-grep IDNAME=$dev1 out
-grep $PVID2 $DF |tee out
-grep IDNAME=$dev2 out
-cat $DF
+grep "$PVID1" "$DF" |tee out
+grep "IDNAME=$dev1" out
+grep "$PVID2" "$DF" |tee out
+grep "IDNAME=$dev2" out
+cat "$DF"
 
-sed -e "s|IDNAME=$dev1|IDNAME=tmpname|" $ORIG > tmp1.devices
+sed -e "s|IDNAME=$dev1|IDNAME=tmpname|" "$ORIG" > tmp1.devices
 sed -e "s|IDNAME=$dev2|IDNAME=$dev1|" tmp1.devices > tmp2.devices
-sed -e "s|IDNAME=tmpname|IDNAME=$dev2|" tmp2.devices > $DF
-cat $DF
+sed -e "s|IDNAME=tmpname|IDNAME=$dev2|" tmp2.devices > "$DF"
+cat "$DF"
 # lvcreate uses correct dev
-lvcreate -l1 -n $lv2 -an $vg1 $dev1
+lvcreate -l1 -n $lv2 -an $vg1 "$dev1"
 # lvcreate fixed the DF
-grep $PVID1 $DF |tee out
-grep IDNAME=$dev1 out
-grep $PVID2 $DF |tee out
-grep IDNAME=$dev2 out
+grep "$PVID1" "$DF" |tee out
+grep "IDNAME=$dev1" out
+grep "$PVID2" "$DF" |tee out
+grep "IDNAME=$dev2" out
 # pvs reports correct info
 pvs -o+uuid | tee pvs.out
 grep $vg1 pvs.out > out
-grep $OPVID1 out |tee out2
-grep $dev1 out2
-grep $OPVID2 out |tee out2
-grep $dev2 out2
+grep "$OPVID1" out |tee out2
+grep "$dev1" out2
+grep "$OPVID2" out |tee out2
+grep "$dev2" out2
 lvremove $vg1/$lv2
-cat $DF
+cat "$DF"
 
-sed -e "s|IDNAME=$dev1|IDNAME=tmpname|" $ORIG > tmp1.devices
+sed -e "s|IDNAME=$dev1|IDNAME=tmpname|" "$ORIG" > tmp1.devices
 sed -e "s|IDNAME=$dev2|IDNAME=$dev1|" tmp1.devices > tmp2.devices
-sed -e "s|IDNAME=tmpname|IDNAME=$dev2|" tmp2.devices > $DF
-cat $DF
+sed -e "s|IDNAME=tmpname|IDNAME=$dev2|" tmp2.devices > "$DF"
+cat "$DF"
 # lvmdevices fixes the DF
 lvmdevices --update
-grep $PVID1 $DF |tee out
-grep IDNAME=$dev1 out
-grep $PVID2 $DF |tee out
-grep IDNAME=$dev2 out
-cat $DF
+grep "$PVID1" "$DF" |tee out
+grep "IDNAME=$dev1" out
+grep "$PVID2" "$DF" |tee out
+grep "IDNAME=$dev2" out
+cat "$DF"
 
 
 #
@@ -253,91 +253,91 @@ cat $DF
 
 # edit DF devname, s/dev1/dev3/, where new dev is not in DF
 
-sed -e "s|DEVNAME=$dev1|DEVNAME=$dev3|" $ORIG > $DF
-cat $DF
+sed -e "s|DEVNAME=$dev1|DEVNAME=$dev3|" "$ORIG" > "$DF"
+cat "$DF"
 # pvs reports correct info
 pvs -o+uuid | tee pvs.out
 grep $vg1 pvs.out > out
-not grep $OPVID3 out
-not grep $dev3 out
-grep $OPVID1 out |tee out2
-grep $dev1 out2
+not grep "$OPVID3" out
+not grep "$dev3" out
+grep "$OPVID1" out |tee out2
+grep "$dev1" out2
 # pvs fixed the DF
-not grep $PVID3 $DF
-not grep $dev3 $DF
-grep $PVID1 $DF |tee out
-grep DEVNAME=$dev1 out
-cat $DF
+not grep "$PVID3" "$DF"
+not grep "$dev3" "$DF"
+grep "$PVID1" "$DF" |tee out
+grep "DEVNAME=$dev1" out
+cat "$DF"
 
-sed -e "s|DEVNAME=$dev1|DEVNAME=$dev3|" $ORIG > $DF
-cat $DF
+sed -e "s|DEVNAME=$dev1|DEVNAME=$dev3|" "$ORIG" > "$DF"
+cat "$DF"
 # lvmdevices fixes the DF
 lvmdevices --update
-not grep $PVID3 $DF
-not grep $dev3 $DF
-grep $PVID1 $DF |tee out
-grep IDNAME=$dev1 out
-cat $DF
+not grep "$PVID3" "$DF"
+not grep "$dev3" "$DF"
+grep "$PVID1" "$DF" |tee out
+grep "IDNAME=$dev1" out
+cat "$DF"
 
 # edit DF devname, s/dev1/dev2/, creating two entries with same devname
 
-sed -e "s|DEVNAME=$dev1|DEVNAME=$dev2|" $ORIG > $DF
-cat $DF
+sed -e "s|DEVNAME=$dev1|DEVNAME=$dev2|" "$ORIG" > "$DF"
+cat "$DF"
 # pvs reports correct info
 pvs -o+uuid | tee pvs.out
 grep $vg1 pvs.out > out
-grep $OPVID1 out |tee out2
-grep $dev1 out2
-grep $OPVID2 out |tee out2
-grep $dev2 out2
+grep "$OPVID1" out |tee out2
+grep "$dev1" out2
+grep "$OPVID2" out |tee out2
+grep "$dev2" out2
 # pvs fixed the DF
-grep $PVID1 $DF |tee out
-grep DEVNAME=$dev1 out
-grep $PVID2 $DF |tee out
-grep DEVNAME=$dev2 out
-cat $DF
+grep "$PVID1" "$DF" |tee out
+grep "DEVNAME=$dev1" out
+grep "$PVID2" "$DF" |tee out
+grep "DEVNAME=$dev2" out
+cat "$DF"
 
-sed -e "s|DEVNAME=$dev1|DEVNAME=$dev2|" $ORIG > $DF
-cat $DF
+sed -e "s|DEVNAME=$dev1|DEVNAME=$dev2|" "$ORIG" > "$DF"
+cat "$DF"
 # lvmdevices fixes the DF
 lvmdevices --update
-grep $PVID1 $DF |tee out
-grep IDNAME=$dev1 out
-grep $PVID2 $DF |tee out
-grep IDNAME=$dev2 out
-cat $DF
+grep "$PVID1" "$DF" |tee out
+grep "IDNAME=$dev1" out
+grep "$PVID2" "$DF" |tee out
+grep "IDNAME=$dev2" out
+cat "$DF"
 
 # edit DF devname, swap dev1 and dev2
 
-sed -e "s|DEVNAME=$dev1|DEVNAME=tmpname|" $ORIG > tmp1.devices
+sed -e "s|DEVNAME=$dev1|DEVNAME=tmpname|" "$ORIG" > tmp1.devices
 sed -e "s|DEVNAME=$dev2|DEVNAME=$dev1|" tmp1.devices > tmp2.devices
-sed -e "s|DEVNAME=tmpname|DEVNAME=$dev2|" tmp2.devices > $DF
-cat $DF
+sed -e "s|DEVNAME=tmpname|DEVNAME=$dev2|" tmp2.devices > "$DF"
+cat "$DF"
 # pvs reports correct info
 pvs -o+uuid | tee pvs.out
 grep $vg1 pvs.out > out
-grep $OPVID1 out |tee out2
-grep $dev1 out2
-grep $OPVID2 out |tee out2
-grep $dev2 out2
+grep "$OPVID1" out |tee out2
+grep "$dev1" out2
+grep "$OPVID2" out |tee out2
+grep "$dev2" out2
 # pvs fixed the DF
-grep $PVID1 $DF |tee out
-grep DEVNAME=$dev1 out
-grep $PVID2 $DF |tee out
-grep DEVNAME=$dev2 out
-cat $DF
+grep "$PVID1" "$DF" |tee out
+grep "DEVNAME=$dev1" out
+grep "$PVID2" "$DF" |tee out
+grep "DEVNAME=$dev2" out
+cat "$DF"
 
-sed -e "s|DEVNAME=$dev1|DEVNAME=tmpname|" $ORIG > tmp1.devices
+sed -e "s|DEVNAME=$dev1|DEVNAME=tmpname|" "$ORIG" > tmp1.devices
 sed -e "s|DEVNAME=$dev2|DEVNAME=$dev1|" tmp1.devices > tmp2.devices
-sed -e "s|DEVNAME=tmpname|DEVNAME=$dev2|" tmp2.devices > $DF
-cat $DF
+sed -e "s|DEVNAME=tmpname|DEVNAME=$dev2|" tmp2.devices > "$DF"
+cat "$DF"
 # lvmdevices fixes the DF
 lvmdevices --update
-grep $PVID1 $DF |tee out
-grep IDNAME=$dev1 out
-grep $PVID2 $DF |tee out
-grep IDNAME=$dev2 out
-cat $DF
+grep "$PVID1" "$DF" |tee out
+grep "IDNAME=$dev1" out
+grep "$PVID2" "$DF" |tee out
+grep "IDNAME=$dev2" out
+cat "$DF"
 
 
 #
@@ -349,111 +349,111 @@ cat $DF
 
 # edit DF idname&devname, s/dev1/dev3/, where new dev is not in DF
 
-sed -e "s|DEVNAME=$dev1|DEVNAME=$dev3|" $ORIG > tmp1.devices
-sed -e "s|IDNAME=$dev1|IDNAME=$dev3|" tmp1.devices > $DF
-cat $DF
+sed -e "s|DEVNAME=$dev1|DEVNAME=$dev3|" "$ORIG" > tmp1.devices
+sed -e "s|IDNAME=$dev1|IDNAME=$dev3|" tmp1.devices > "$DF"
+cat "$DF"
 # pvs reports correct info
 pvs -o+uuid | tee pvs.out
 grep $vg1 pvs.out > out
-not grep $OPVID3 out
-not grep $dev3 out
-grep $OPVID1 out |tee out2
-grep $dev1 out2
+not grep "$OPVID3" out
+not grep "$dev3" out
+grep "$OPVID1" out |tee out2
+grep "$dev1" out2
 # pvs fixed the DF
-not grep $PVID3 $DF
-not grep $dev3 $DF
-grep $PVID1 $DF |tee out
-grep DEVNAME=$dev1 out
-grep IDNAME=$dev1 out
-cat $DF
+not grep "$PVID3" "$DF"
+not grep "$dev3" "$DF"
+grep "$PVID1" "$DF" |tee out
+grep "DEVNAME=$dev1" out
+grep "IDNAME=$dev1" out
+cat "$DF"
 
-sed -e "s|DEVNAME=$dev1|DEVNAME=$dev3|" $ORIG > tmp1.devices
-sed -e "s|IDNAME=$dev1|IDNAME=$dev3|" tmp1.devices > $DF
-cat $DF
+sed -e "s|DEVNAME=$dev1|DEVNAME=$dev3|" "$ORIG" > tmp1.devices
+sed -e "s|IDNAME=$dev1|IDNAME=$dev3|" tmp1.devices > "$DF"
+cat "$DF"
 # lvmdevices fixes the DF
 lvmdevices --update
-not grep $PVID3 $DF
-not grep $dev3 $DF
-grep $PVID1 $DF |tee out
-grep DEVNAME=$dev1 out
-grep IDNAME=$dev1 out
-cat $DF
+not grep "$PVID3" "$DF"
+not grep "$dev3" "$DF"
+grep "$PVID1" "$DF" |tee out
+grep "DEVNAME=$dev1" out
+grep "IDNAME=$dev1" out
+cat "$DF"
 
 # edit DF idname&devname, s/dev1/dev2/, creating two entries with same devname
 
-sed -e "s|DEVNAME=$dev1|DEVNAME=$dev2|" tmp1.devices > $DF
-sed -e "s|IDNAME=$dev1|IDNAME=$dev2|" tmp1.devices > $DF
-cat $DF
+sed -e "s|DEVNAME=$dev1|DEVNAME=$dev2|" tmp1.devices > "$DF"
+sed -e "s|IDNAME=$dev1|IDNAME=$dev2|" tmp1.devices > "$DF"
+cat "$DF"
 # pvs reports correct info
 pvs -o+uuid | tee pvs.out
 grep $vg1 pvs.out > out
-grep $OPVID1 out |tee out2
-grep $dev1 out2
-grep $OPVID2 out |tee out2
-grep $dev2 out2
+grep "$OPVID1" out |tee out2
+grep "$dev1" out2
+grep "$OPVID2" out |tee out2
+grep "$dev2" out2
 # pvs fixed the DF
-grep $PVID1 $DF |tee out
-grep DEVNAME=$dev1 out
-grep IDNAME=$dev1 out
-grep $PVID2 $DF |tee out
-grep DEVNAME=$dev2 out
-grep IDNAME=$dev2 out
-cat $DF
+grep "$PVID1" "$DF" |tee out
+grep "DEVNAME=$dev1" out
+grep "IDNAME=$dev1" out
+grep "$PVID2" "$DF" |tee out
+grep "DEVNAME=$dev2" out
+grep "IDNAME=$dev2" out
+cat "$DF"
 
-sed -e "s|DEVNAME=$dev1|DEVNAME=$dev2|" tmp1.devices > $DF
-sed -e "s|IDNAME=$dev1|IDNAME=$dev2|" tmp1.devices > $DF
-cat $DF
+sed -e "s|DEVNAME=$dev1|DEVNAME=$dev2|" tmp1.devices > "$DF"
+sed -e "s|IDNAME=$dev1|IDNAME=$dev2|" tmp1.devices > "$DF"
+cat "$DF"
 # lvmdevices fixes the DF
 lvmdevices --update
-grep $PVID1 $DF |tee out
-grep DEVNAME=$dev1 out
-grep IDNAME=$dev1 out
-grep $PVID2 $DF |tee out
-grep DEVNAME=$dev2 out
-grep IDNAME=$dev2 out
-cat $DF
+grep "$PVID1" "$DF" |tee out
+grep "DEVNAME=$dev1" out
+grep "IDNAME=$dev1" out
+grep "$PVID2" "$DF" |tee out
+grep "DEVNAME=$dev2" out
+grep "IDNAME=$dev2" out
+cat "$DF"
 
 # edit DF devname, swap dev1 and dev2
 
-sed -e "s|DEVNAME=$dev1|DEVNAME=tmpname|" $ORIG > tmp1.devices
+sed -e "s|DEVNAME=$dev1|DEVNAME=tmpname|" "$ORIG" > tmp1.devices
 sed -e "s|DEVNAME=$dev2|DEVNAME=$dev1|" tmp1.devices > tmp2.devices
 sed -e "s|DEVNAME=tmpname|DEVNAME=$dev2|" tmp2.devices > tmp3.devices
 sed -e "s|IDNAME=$dev1|IDNAME=tmpname|" tmp3.devices > tmp4.devices
 sed -e "s|IDNAME=$dev2|IDNAME=$dev1|" tmp4.devices > tmp5.devices
-sed -e "s|IDNAME=tmpname|IDNAME=$dev2|" tmp5.devices > $DF
-cat $DF
+sed -e "s|IDNAME=tmpname|IDNAME=$dev2|" tmp5.devices > "$DF"
+cat "$DF"
 # pvs reports correct info
 pvs -o+uuid | tee pvs.out
 grep $vg1 pvs.out > out
-grep $OPVID1 out |tee out2
-grep $dev1 out2
-grep $OPVID2 out |tee out2
-grep $dev2 out2
+grep "$OPVID1" out |tee out2
+grep "$dev1" out2
+grep "$OPVID2" out |tee out2
+grep "$dev2" out2
 # pvs fixed the DF
-grep $PVID1 $DF |tee out
-grep DEVNAME=$dev1 out
-grep IDNAME=$dev1 out
-grep $PVID2 $DF |tee out
-grep DEVNAME=$dev2 out
-grep IDNAME=$dev2 out
-cat $DF
+grep "$PVID1" "$DF" |tee out
+grep "DEVNAME=$dev1" out
+grep "IDNAME=$dev1" out
+grep "$PVID2" "$DF" |tee out
+grep "DEVNAME=$dev2" out
+grep "IDNAME=$dev2" out
+cat "$DF"
 
-sed -e "s|DEVNAME=$dev1|DEVNAME=tmpname|" $ORIG > tmp1.devices
+sed -e "s|DEVNAME=$dev1|DEVNAME=tmpname|" "$ORIG" > tmp1.devices
 sed -e "s|DEVNAME=$dev2|DEVNAME=$dev1|" tmp1.devices > tmp2.devices
 sed -e "s|DEVNAME=tmpname|DEVNAME=$dev2|" tmp2.devices > tmp3.devices
 sed -e "s|IDNAME=$dev1|IDNAME=tmpname|" tmp3.devices > tmp4.devices
 sed -e "s|IDNAME=$dev2|IDNAME=$dev1|" tmp4.devices > tmp5.devices
-sed -e "s|IDNAME=tmpname|IDNAME=$dev2|" tmp5.devices > $DF
-cat $DF
+sed -e "s|IDNAME=tmpname|IDNAME=$dev2|" tmp5.devices > "$DF"
+cat "$DF"
 # lvmdevices fixes the DF
 lvmdevices --update
-grep $PVID1 $DF |tee out
-grep DEVNAME=$dev1 out
-grep IDNAME=$dev1 out
-grep $PVID2 $DF |tee out
-grep DEVNAME=$dev2 out
-grep IDNAME=$dev2 out
-cat $DF
+grep "$PVID1" "$DF" |tee out
+grep "DEVNAME=$dev1" out
+grep "IDNAME=$dev1" out
+grep "$PVID2" "$DF" |tee out
+grep "DEVNAME=$dev2" out
+grep "IDNAME=$dev2" out
+cat "$DF"
 
 #
 # check that pvscan --cache -aay does the right thing:
@@ -465,52 +465,52 @@ cat $DF
 
 # edit DF idname&devname, s/dev1/dev3/, where new dev is not in DF
 
-sed -e "s|DEVNAME=$dev1|DEVNAME=$dev3|" $ORIG > tmp1.devices
-sed -e "s|IDNAME=$dev1|IDNAME=$dev3|" tmp1.devices > $DF
-cat $DF
+sed -e "s|DEVNAME=$dev1|DEVNAME=$dev3|" "$ORIG" > tmp1.devices
+sed -e "s|IDNAME=$dev1|IDNAME=$dev3|" tmp1.devices > "$DF"
+cat "$DF"
 _clear_online_files
-pvscan --cache -aay $dev1
-pvscan --cache -aay $dev2
-pvscan --cache -aay $dev3
-cat $DF
+pvscan --cache -aay "$dev1"
+pvscan --cache -aay "$dev2"
+pvscan --cache -aay "$dev3"
+cat "$DF"
 # pvscan does not fix DF
-grep $dev3 $DF
-not grep $dev1 $DF
-ls "$RUNDIR/lvm/pvs_online/$PVID1"
+grep "$dev3" "$DF"
+not grep "$dev1" "$DF"
+ls "$RUNDIR/lvm/pvs_online/"$PVID1""
 ls "$RUNDIR/lvm/pvs_online/$PVID2"
-not ls "$RUNDIR/lvm/pvs_online/$PVID3"
+not ls "$RUNDIR/lvm/pvs_online/"$PVID3""
 check lv_field $vg1/$lv1 lv_active "active"
 # pvs updates the DF
 pvs |tee out
-grep $dev1 out
-grep $dev2 out
-not grep $dev3 out
-grep $dev1 $DF
-grep $dev2 $DF
-not grep $dev3 $DF
+grep "$dev1" out
+grep "$dev2" out
+not grep "$dev3" out
+grep "$dev1" "$DF"
+grep "$dev2" "$DF"
+not grep "$dev3" "$DF"
 vgchange -an $vg1
 
 # edit DF idname&devname, swap dev1 and dev2
 
 vgremove -y $vg1
-vgcreate $vg1 $dev1
+vgcreate $vg1 "$dev1"
 lvcreate -n $lv1 -l1 -an $vg1
-vgcreate $vg2 $dev2
+vgcreate $vg2 "$dev2"
 lvcreate -n $lv2 -l1 -an $vg2
 
-cat $DF
-sed -e "s|DEVNAME=$dev1|DEVNAME=tmpname|" $ORIG > tmp1.devices
+cat "$DF"
+sed -e "s|DEVNAME=$dev1|DEVNAME=tmpname|" "$ORIG" > tmp1.devices
 sed -e "s|DEVNAME=$dev2|DEVNAME=$dev1|" tmp1.devices > tmp2.devices
 sed -e "s|DEVNAME=tmpname|DEVNAME=$dev2|" tmp2.devices > tmp3.devices
 sed -e "s|IDNAME=$dev1|IDNAME=tmpname|" tmp3.devices > tmp4.devices
 sed -e "s|IDNAME=$dev2|IDNAME=$dev1|" tmp4.devices > tmp5.devices
-sed -e "s|IDNAME=tmpname|IDNAME=$dev2|" tmp5.devices > $DF
-cat $DF
+sed -e "s|IDNAME=tmpname|IDNAME=$dev2|" tmp5.devices > "$DF"
+cat "$DF"
 
 _clear_online_files
 
 # pvscan creates the correct online files and activates correct vg
-pvscan --cache -aay $dev1
+pvscan --cache -aay "$dev1"
 ls "$RUNDIR/lvm/pvs_online/$PVID1"
 ls "$RUNDIR/lvm/vgs_online/$vg1"
 not ls "$RUNDIR/lvm/pvs_online/$PVID2"
@@ -519,30 +519,30 @@ not ls "$RUNDIR/lvm/vgs_online/$vg2"
 dmsetup status $vg1-$lv1
 not dmsetup status $vg2-$lv2
 
-pvscan --cache -aay $dev2
+pvscan --cache -aay "$dev2"
 ls "$RUNDIR/lvm/pvs_online/$PVID2"
 ls "$RUNDIR/lvm/vgs_online/$vg2"
 dmsetup status $vg2-$lv2
 
-pvscan --cache -aay $dev3
+pvscan --cache -aay "$dev3"
 not ls "$RUNDIR/lvm/pvs_online/$PVID3"
 
 # pvscan did not correct DF
-cat $DF
-grep $PVID1 $DF |tee out
-grep $dev2 out
-not grep $dev1 out
-grep $PVID2 $DF |tee out
-grep $dev1 out
-not grep $dev2 out
+cat "$DF"
+grep "$PVID1" "$DF" |tee out
+grep "$dev2" out
+not grep "$dev1" out
+grep "$PVID2" "$DF" |tee out
+grep "$dev1" out
+not grep "$dev2" out
 
 # pvs corrects DF
 pvs
-grep $PVID1 $DF |tee out
-grep $dev1 out
-not grep $dev2 out
-grep $PVID2 $DF |tee out
-grep $dev2 out
-not grep $dev1 out
+grep "$PVID1" "$DF" |tee out
+grep "$dev1" out
+not grep "$dev2" out
+grep "$PVID2" "$DF" |tee out
+grep "$dev2" out
+not grep "$dev1" out
 
 vgremove -ff $vg1
