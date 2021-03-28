@@ -1110,6 +1110,28 @@ enable_dev() {
 	finish_udev_transaction
 }
 
+# Try to remove list of DM device from table
+remove_dm_devs() {
+	local remove=( "$@" )
+	local held
+	local i
+
+	for i in {1..50}; do
+		held=()
+		for d in "${remove[@]}" ; do
+			dmsetup remove "$d" 2>/dev/null || {
+				dmsetup info -c "$d" 2>/dev/null && {
+					held+=( "$d" )
+					dmsetup status "$d"
+				}
+			}
+		done
+		test ${#held[@]} -eq 0 && return
+		remove=( "${held[@]}" )
+	done
+	die "Can't remove device(s) ${held[@]}"
+}
+
 # Throttle down performance of kcopyd when mirroring i.e. disk image
 throttle_sys="/sys/module/dm_mirror/parameters/raid1_resync_throttle"
 throttle_dm_mirror() {
