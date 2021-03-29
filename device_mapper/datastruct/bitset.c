@@ -242,18 +242,3 @@ bad:
 	}
 	return NULL;
 }
-
-#if defined(__GNUC__)
-/*
- * Maintain backward compatibility with older versions that did not
- * accept a 'min_num_bits' argument to dm_bitset_parse_list().
- */
-dm_bitset_t dm_bitset_parse_list_v1_02_129(const char *str, struct dm_pool *mem);
-dm_bitset_t dm_bitset_parse_list_v1_02_129(const char *str, struct dm_pool *mem)
-{
-	return dm_bitset_parse_list(str, mem, 0);
-}
-
-#else /* if defined(__GNUC__) */
-
-#endif
