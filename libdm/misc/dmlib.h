@@ -72,7 +72,7 @@
 #define DM_EXPORT_SYMBOL_BASE(func)
 #endif
 
-#include "lib/misc/util.h"
+#include "libdm/dm-tools/util.h"
 
 #include "libdm/libdevmapper.h"
 #include "libdm/misc/dm-logging.h"
