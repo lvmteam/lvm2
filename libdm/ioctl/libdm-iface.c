@@ -2188,7 +2188,7 @@ void dm_lib_exit(void)
 	_version_checked = 0;
 }
 
-#if defined(__GNUC__)
+#if defined(GNU_SYMVER)
 /*
  * Maintain binary backward compatibility.
  * Version script mechanism works with 'gcc' compatible compilers only.

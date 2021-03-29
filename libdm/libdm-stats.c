@@ -5069,7 +5069,7 @@ int dm_stats_start_filemapd(int fd, uint64_t group_id, const char *path,
  * current dm_stats_create_region() version.
  */
 
-#if defined(__GNUC__)
+#if defined(GNU_SYMVER)
 int dm_stats_create_region_v1_02_106(struct dm_stats *dms, uint64_t *region_id,
 				     uint64_t start, uint64_t len, int64_t step,
 				     int precise, const char *program_id,

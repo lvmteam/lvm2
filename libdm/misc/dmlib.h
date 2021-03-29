@@ -37,7 +37,7 @@
  * specified version string.
  *
  * Since versioning is only available when compiling with GCC the entire
- * compatibility version should be enclosed in '#if defined(__GNUC__)',
+ * compatibility version should be enclosed in '#if defined(GNU_SYMVER)',
  * for example:
  *
  *   int dm_foo(int bar)
@@ -62,7 +62,7 @@
  * versions of library symbols prior to the introduction of symbol
  * versioning: it must never be used for new symbols.
  */
-#if defined(__GNUC__)
+#if defined(GNU_SYMVER)
 #define DM_EXPORT_SYMBOL(func, ver) \
 	__asm__(".symver " #func "_v" #ver ", " #func "@DM_" #ver )
 #define DM_EXPORT_SYMBOL_BASE(func) \

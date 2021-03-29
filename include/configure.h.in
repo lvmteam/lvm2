@@ -132,6 +132,9 @@
 /* Path to fsadm binary. */
 #undef FSADM_PATH
 
+/* Define to use GNU versioning in the shared library. */
+#undef GNU_SYMVER
+
 /* Define to 1 if you have the `alarm' function. */
 #undef HAVE_ALARM
 

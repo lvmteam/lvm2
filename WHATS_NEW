@@ -1,5 +1,6 @@
 Version 2.03.12 - 
 ===================================
+  Add configure option --with/out-symvers for non-glibc builds.
   Report error when the filesystem is missing on fsadm resized volume.
   Handle better blockdev with --getsize64 support for fsadm.
   Do not include editline/history.h when using editline library.

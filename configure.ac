@@ -30,13 +30,11 @@ AC_CANONICAL_TARGET([])
 AS_IF([test -z "$CFLAGS"], [COPTIMISE_FLAG="-O2"])
 case "$host_os" in
 	linux*)
-		CLDFLAGS="${CLDFLAGS-"$LDFLAGS"} -Wl,--version-script,.export.sym"
 		# equivalent to -rdynamic
 		ELDFLAGS="-Wl,--export-dynamic"
 		# FIXME Generate list and use --dynamic-list=.dlopen.sym
 		CLDWHOLEARCHIVE="-Wl,-whole-archive"
 		CLDNOWHOLEARCHIVE="-Wl,-no-whole-archive"
-		LDDEPS="$LDDEPS .export.sym"
 		LIB_SUFFIX=so
 		DEVMAPPER=yes
 		BUILD_LVMPOLLD=no
@@ -51,7 +49,6 @@ case "$host_os" in
 		;;
 	darwin*)
 		CFLAGS="$CFLAGS -no-cpp-precomp -fno-common"
-		CLDFLAGS="${CLDFLAGS-"$LDFLAGS"}"
 		ELDFLAGS=
 		CLDWHOLEARCHIVE="-all_load"
 		CLDNOWHOLEARCHIVE=
@@ -824,6 +821,29 @@ AC_ARG_WITH(optimisation,
 			   [C optimisation flag [OPT=-O2]]),
 	    COPTIMISE_FLAG=$withval)
 AC_MSG_RESULT($COPTIMISE_FLAG)
+
+################################################################################
+dnl -- Symbol versioning
+AC_MSG_CHECKING(whether to use symbol versioning)
+AC_ARG_WITH(symvers,
+	    AC_HELP_STRING([--with-symvers=STYLE],
+			   [use symbol versioning of the shared library [default=gnu]]),
+			   [ case "$withval" in
+				gnu|no) symvers=$withval ;;
+				*) AC_MSG_ERROR(Unknown argument to with-symvers) ;;
+			     esac], symvers=gnu)
+AC_MSG_RESULT($symvers)
+
+if test "$GCC" = "yes" && test "$symvers" = "gnu" ; then
+	AC_DEFINE(GNU_SYMVER, 1,
+		  [Define to use GNU versioning in the shared library.])
+		   case "$host_os" in
+			linux*)
+			CLDFLAGS="${CLDFLAGS-"$LDFLAGS"} -Wl,--version-script,.export.sym"
+			LDDEPS="$LDDEPS .export.sym"
+			;;
+		   esac
+fi
 
 ################################################################################
 dnl -- Enable profiling

@@ -3849,7 +3849,7 @@ void dm_tree_node_set_callback(struct dm_tree_node *dnode,
 	dnode->callback_data = data;
 }
 
-#if defined(__GNUC__)
+#if defined(GNU_SYMVER)
 /*
  * Backward compatible implementations.
  *

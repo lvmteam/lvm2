@@ -934,6 +934,7 @@ enable_cmirrord
 with_cmirrord_pidfile
 enable_debug
 with_optimisation
+with_symvers
 enable_profiling
 enable_valgrind_pool
 enable_devmapper
@@ -1749,6 +1750,8 @@ Optional Packages:
   --with-cmirrord-pidfile=PATH
                           cmirrord pidfile [PID_DIR/cmirrord.pid]
   --with-optimisation=OPT C optimisation flag [OPT=-O2]
+  --with-symvers=STYLE    use symbol versioning of the shared library
+                          [default=gnu]
   --with-lvmlockd-pidfile=PATH
                           lvmlockd pidfile [PID_DIR/lvmlockd.pid]
   --with-lvmpolld-pidfile=PATH
@@ -3103,13 +3106,11 @@ if test -z "$CFLAGS"; then :
 fi
 case "$host_os" in
 	linux*)
-		CLDFLAGS="${CLDFLAGS-"$LDFLAGS"} -Wl,--version-script,.export.sym"
 		# equivalent to -rdynamic
 		ELDFLAGS="-Wl,--export-dynamic"
 		# FIXME Generate list and use --dynamic-list=.dlopen.sym
 		CLDWHOLEARCHIVE="-Wl,-whole-archive"
 		CLDNOWHOLEARCHIVE="-Wl,-no-whole-archive"
-		LDDEPS="$LDDEPS .export.sym"
 		LIB_SUFFIX=so
 		DEVMAPPER=yes
 		BUILD_LVMPOLLD=no
@@ -3124,7 +3125,6 @@ case "$host_os" in
 		;;
 	darwin*)
 		CFLAGS="$CFLAGS -no-cpp-precomp -fno-common"
-		CLDFLAGS="${CLDFLAGS-"$LDFLAGS"}"
 		ELDFLAGS=
 		CLDWHOLEARCHIVE="-all_load"
 		CLDNOWHOLEARCHIVE=
@@ -10392,6 +10392,35 @@ fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $COPTIMISE_FLAG" >&5
 $as_echo "$COPTIMISE_FLAG" >&6; }
+
+################################################################################
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use symbol versioning" >&5
+$as_echo_n "checking whether to use symbol versioning... " >&6; }
+
+# Check whether --with-symvers was given.
+if test "${with_symvers+set}" = set; then :
+  withval=$with_symvers;  case "$withval" in
+				gnu|no) symvers=$withval ;;
+				*) as_fn_error $? "Unknown argument to with-symvers" "$LINENO" 5 ;;
+			     esac
+else
+  symvers=gnu
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $symvers" >&5
+$as_echo "$symvers" >&6; }
+
+if test "$GCC" = "yes" && test "$symvers" = "gnu" ; then
+
+$as_echo "#define GNU_SYMVER 1" >>confdefs.h
+
+		   case "$host_os" in
+			linux*)
+			CLDFLAGS="${CLDFLAGS-"$LDFLAGS"} -Wl,--version-script,.export.sym"
+			LDDEPS="$LDDEPS .export.sym"
+			;;
+		   esac
+fi
 
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to gather gcov profiling data" >&5
