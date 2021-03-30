@@ -115,7 +115,7 @@ lvresize - Resize a logical volume
 .ad b
 .br
 .ad l
-    \fB--type\fP \fBlinear\fP|\fBstriped\fP|\fBsnapshot\fP|\fBmirror\fP|\fBraid\fP|\fBthin\fP|\fBcache\fP|\fBvdo\fP|\fBthin-pool\fP|\fBcache-pool\fP|\fBvdo-pool\fP
+    \fB--type\fP \fBlinear\fP|\fBstriped\fP|\fBsnapshot\fP|\fBraid\fP|\fBmirror\fP|\fBthin\fP|\fBthin-pool\fP|\fBvdo\fP|\fBvdo-pool\fP|\fBcache\fP|\fBcache-pool\fP|\fBwritecache\fP
 .ad b
 .br
 .ad l
@@ -232,7 +232,7 @@ Common options for command:
 .ad b
 .br
 .ad l
-[    \fB--type\fP \fBlinear\fP|\fBstriped\fP|\fBsnapshot\fP|\fBmirror\fP|\fBraid\fP|\fBthin\fP|\fBcache\fP|\fBvdo\fP|\fBthin-pool\fP|\fBcache-pool\fP|\fBvdo-pool\fP ]
+[    \fB--type\fP \fBlinear\fP|\fBstriped\fP|\fBsnapshot\fP|\fBraid\fP|\fBmirror\fP|\fBthin\fP|\fBthin-pool\fP|\fBvdo\fP|\fBvdo-pool\fP|\fBcache\fP|\fBcache-pool\fP|\fBwritecache\fP ]
 .ad b
 .RE
 
@@ -556,7 +556,7 @@ back metadata it believes has changed but hasn't.
 .ad b
 .HP
 .ad l
-\fB--type\fP \fBlinear\fP|\fBstriped\fP|\fBsnapshot\fP|\fBmirror\fP|\fBraid\fP|\fBthin\fP|\fBcache\fP|\fBvdo\fP|\fBthin-pool\fP|\fBcache-pool\fP|\fBvdo-pool\fP
+\fB--type\fP \fBlinear\fP|\fBstriped\fP|\fBsnapshot\fP|\fBraid\fP|\fBmirror\fP|\fBthin\fP|\fBthin-pool\fP|\fBvdo\fP|\fBvdo-pool\fP|\fBcache\fP|\fBcache-pool\fP|\fBwritecache\fP
 .br
 The LV type, also known as "segment type" or "segtype".
 See usage descriptions for the specific ways to use these types.
