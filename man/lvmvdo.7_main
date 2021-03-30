@@ -121,8 +121,8 @@ VDO allows to set a large variety of options. Lots of these settings
 can be specified in lvm.conf or profile settings. You can prepare
 a number of different profiles in the #DEFAULT_SYS_DIR#/profile directory
 and just specify the profile file name.
-Check the output of \fBlvmconfig --type full\fP for a detailed description
-of all individual VDO settings.
+Check the output of \fBlvmconfig --type default --withcomments\fP
+for a detailed description of all individual VDO settings.
 
 .I Example
 .nf
