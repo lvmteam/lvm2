@@ -215,7 +215,7 @@ prepare_dmeventd() {
 }
 
 prepare_lvmpolld() {
-	lvmconf "global/use_lvmpolld = 1"
+	test -e LOCAL_LVMPOLLD || lvmconf "global/use_lvmpolld = 1"
 
 	local run_valgrind=""
 	test "${LVM_VALGRIND_LVMPOLLD:-0}" -eq 0 || run_valgrind="run_valgrind"
@@ -226,11 +226,11 @@ prepare_lvmpolld() {
 	$run_valgrind lvmpolld -f "$@" -s "$TESTDIR/lvmpolld.socket" -B "$TESTDIR/lib/lvm" -l all &
 	echo $! > LOCAL_LVMPOLLD
 	for i in {200..0} ; do
-		test "$i" -eq 0 && die "Startup of lvmpolld is too slow."
 		test -e "$TESTDIR/lvmpolld.socket" && break
 		echo -n .;
 		sleep .1;
 	done # wait for the socket
+	test "$i" -gt 0 || die "Startup of lvmpolld is too slow."
 	echo ok
 }
 
@@ -1126,7 +1126,10 @@ remove_dm_devs() {
 				}
 			}
 		done
-		test ${#held[@]} -eq 0 && return
+		test ${#held[@]} -eq 0 && {
+		        rm -f debug.log*
+			return
+		}
 		remove=( "${held[@]}" )
 	done
 	die "Can't remove device(s) ${held[@]}"
@@ -1801,8 +1804,8 @@ check_lvmpolld_init_rq_count() {
 }
 
 wait_pvmove_lv_ready() {
-	# given sleep .1 this is about 60 secs of waiting
-	local retries=${2-300}
+	# given sleep .1 this is about 20 secs of waiting
+	local retries=${2-100}
 
 	if [ -e LOCAL_LVMPOLLD ]; then
 		local lvid=""
@@ -1810,10 +1813,8 @@ wait_pvmove_lv_ready() {
 			test "$retries" -le 0 && die "Waiting for lvmpolld timed out"
 			test -n "$lvid" || {
 				# wait till wanted LV really appears
-				lvid=$(get lv_field "${1//-//}" vg_uuid,lv_uuid -a 2>/dev/null) && {
-					lvid=${lvid//\ /}
-					lvid=${lvid//-/}
-				}
+				lvid=$(dmsetup info --noheadings -c -o uuid "$1" 2>/dev/null || true)
+				lvid=${lvid##LVM-}
 			}
 			test -z "$lvid" || {
 				lvmpolld_dump > lvmpolld_dump.txt

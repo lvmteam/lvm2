@@ -19,8 +19,6 @@ SKIP_WITH_LVMLOCKD=1
 
 . lib/inittest
 
-test -e LOCAL_LVMPOLLD && aux throttle_dm_mirror 20 || :
-
 aux prepare_pvs 5 40
 
 vgcreate -s 128k $vg "$dev1" "$dev2" "$dev3"
@@ -35,23 +33,23 @@ test_pvmove_resume() {
 	# next LV on same VG and differetnt PV (we want to test 2 pvmoves per VG)
 	lvcreate -an -Zn -l50 -n $lv2 $vg "$dev3"
 
-	aux delay_dev "$dev4" 0 200 "$(get first_extent_sector "$dev4"):"
+	aux delay_dev "$dev4" 0 30 "$(get first_extent_sector "$dev4"):"
 	test -e HAVE_DM_DELAY || { lvremove -f $vg; return 0; }
-	aux delay_dev "$dev5" 0 200 "$(get first_extent_sector "$dev5"):"
+	aux delay_dev "$dev5" 0 30 "$(get first_extent_sector "$dev5"):"
 
 	pvmove -i5 "$dev1" "$dev4" &
 	PVMOVE=$!
-	aux wait_pvmove_lv_ready "$vg-pvmove0" 300
-	kill -9 $PVMOVE
+	aux wait_pvmove_lv_ready "$vg-pvmove0"
+	kill $PVMOVE
 
 	pvmove -i5 -n $vg/$lv2 "$dev3" "$dev5" &
 	PVMOVE=$!
-	aux wait_pvmove_lv_ready "$vg-pvmove1" 300
-	kill -9 $PVMOVE
+	aux wait_pvmove_lv_ready "$vg-pvmove1"
+	kill $PVMOVE
 
-	aux remove_dm_devs "$vg-$lv1" "$vg-$lv2" "$vg-pvmove0" "$vg-pvmove1"
 	test -e LOCAL_LVMPOLLD && aux prepare_lvmpolld
 	wait
+	aux remove_dm_devs "$vg-$lv1" "$vg-$lv2" "$vg-pvmove0" "$vg-pvmove1"
 
 	check lv_attr_bit type $vg/pvmove0 "p"
 	check lv_attr_bit type $vg/pvmove1 "p"
@@ -73,22 +71,18 @@ test_pvmove_resume() {
 		aux prepare_clvmd
 	fi
 
-##	rm -f debug.log_DEBUG*
-#	lvs -ao+devices  $vg
-
 	# call resume function (see below)
 	# with expected number of spawned
 	# bg polling as parameter
 	$1 2
 
-	aux enable_dev "$dev4"
-	aux enable_dev "$dev5"
+	aux enable_dev "$dev4" "$dev5"
 
-	for i in {0..300} ; do # wait for 30 secs at max
+	for i in {100..0} ; do # wait for 10 secs at max
 		get lv_field $vg name -a | grep -E "^\[?pvmove" || break
 		sleep .1
 	done
-	test $i -ge 300 && die "Pvmove is too slow or does not progress."
+	test $i -gt 0 || die "Pvmove is too slow or does not progress."
 
 	aux kill_tagged_processes
 
