@@ -269,6 +269,8 @@ GET_PV_STR_PROPERTY_FN(pv_device_id_type, pv->device_id_type)
 #define _vg_extendable_get prop_not_implemented_get
 #define _vg_exported_set prop_not_implemented_set
 #define _vg_exported_get prop_not_implemented_get
+#define _vg_autoactivation_set prop_not_implemented_set
+#define _vg_autoactivation_get prop_not_implemented_get
 #define _vg_partial_set prop_not_implemented_set
 #define _vg_partial_get prop_not_implemented_get
 #define _vg_allocation_policy_set prop_not_implemented_set
@@ -323,6 +325,8 @@ GET_PV_STR_PROPERTY_FN(pv_device_id_type, pv->device_id_type)
 #define _lv_skip_activation_get prop_not_implemented_get
 #define _lv_check_needed_set prop_not_implemented_set
 #define _lv_check_needed_get prop_not_implemented_get
+#define _lv_autoactivation_set prop_not_implemented_set
+#define _lv_autoactivation_get prop_not_implemented_get
 #define _lv_historical_set prop_not_implemented_set
 #define _lv_historical_get prop_not_implemented_get
 

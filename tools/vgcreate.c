@@ -118,6 +118,9 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	    !vg_set_mda_copies(vg, vp_new.vgmetadatacopies))
 		goto_bad;
 
+	if (arg_is_set(cmd, setautoactivation_ARG) && !arg_int_value(cmd, setautoactivation_ARG, 1))
+		vg->status |= NOAUTOACTIVATE;
+
 	/* attach the pv's */
 	if (!vg_extend_each_pv(vg, &pp))
 		goto_bad;

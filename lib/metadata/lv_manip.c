@@ -8569,6 +8569,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	lv_set_activation_skip(lv, lp->activation_skip & ACTIVATION_SKIP_SET,
 			       lp->activation_skip & ACTIVATION_SKIP_SET_ENABLED);
+
+	if (lp->noautoactivate)
+		lv->status |= LV_NOAUTOACTIVATE;
+
 	/*
 	 * Check for autoactivation.
 	 * If the LV passes the auto activation filter, activate

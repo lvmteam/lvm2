@@ -224,7 +224,7 @@ OO_LVCHANGE_META: --addtag Tag, --deltag Tag,
 --compression Bool, --deduplication Bool,
 --detachprofile, --metadataprofile String, --profile String,
 --permission Permission, --readahead Readahead, --setactivationskip Bool,
---errorwhenfull Bool, --discards Discards, --zero Bool,
+--setautoactivation Bool, --errorwhenfull Bool, --discards Discards, --zero Bool,
 --cachemode CacheMode, --cachepolicy String, --cachesettings String,
 --minrecoveryrate SizeKB, --maxrecoveryrate SizeKB,
 --writebehind Number, --writemostly WriteMostlyPV, --persistent n
@@ -799,7 +799,7 @@ OO_LVCREATE: --addtag Tag, --alloc Alloc, --autobackup Bool, --activate Active,
 --metadataprofile String, --minor Number, --monitor Bool, --name String, --nosync,
 --noudevsync, --permission Permission, --persistent Bool, --readahead Readahead,
 --reportformat ReportFmt, --setactivationskip Bool, --wipesignatures Bool,
---zero Bool
+--zero Bool, --setautoactivation Bool
 
 OO_LVCREATE_CACHE: --cachemode CacheMode, --cachepolicy String, --cachesettings String,
 --chunksize SizeKB, --cachemetadataformat CacheMetadataFormat
@@ -1662,7 +1662,8 @@ OO_VGCHANGE_META: --addtag Tag, --deltag Tag,
 --logicalvolume Uint32, --maxphysicalvolumes Uint32, --alloc Alloc, --uuid,
 --pvmetadatacopies MetadataCopiesPV, --vgmetadatacopies MetadataCopiesVG,
 --physicalextentsize SizeMB, --resizeable Bool,
---profile String, --detachprofile, --metadataprofile String
+--profile String, --detachprofile, --metadataprofile String,
+--setautoactivation Bool
 
 vgchange OO_VGCHANGE_META
 OO: --poll Bool, OO_VGCHANGE
@@ -1742,7 +1743,7 @@ OO: --addtag Tag, --alloc Alloc, --autobackup Bool, --clustered Bool, --maxlogic
 --physicalextentsize SizeMB, --force, --zero Bool, --labelsector Number,
 --metadatasize SizeMB, --pvmetadatacopies MetadataCopiesPV, --vgmetadatacopies MetadataCopiesVG,
 --reportformat ReportFmt, --dataalignment SizeKB, --dataalignmentoffset SizeKB,
---shared, --systemid String, --locktype LockType
+--shared, --systemid String, --locktype LockType, --setautoactivation Bool
 ID: vgcreate_general
 
 ---

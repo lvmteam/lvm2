@@ -3573,6 +3573,15 @@ static int _vgexported_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _binary_disp(rh, mem, field, exported, GET_FIRST_RESERVED_NAME(vg_exported_y), private);
 }
 
+static int _vgautoactivation_disp(struct dm_report *rh, struct dm_pool *mem,
+			    struct dm_report_field *field,
+			    const void *data, void *private)
+{
+	const struct volume_group *vg = (const struct volume_group *)data;
+	int aa_yes = (vg->status & NOAUTOACTIVATE) ? 0 : 1;
+	return _binary_disp(rh, mem, field, aa_yes, "enabled", private);
+}
+
 static int _vgpartial_disp(struct dm_report *rh, struct dm_pool *mem,
 			   struct dm_report_field *field,
 			   const void *data, void *private)
@@ -3967,6 +3976,14 @@ static int _lvskipactivation_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	int skip_activation = (((const struct logical_volume *) data)->status & LV_ACTIVATION_SKIP) != 0;
 	return _binary_disp(rh, mem, field, skip_activation, "skip activation", private);
+}
+
+static int _lvautoactivation_disp(struct dm_report *rh, struct dm_pool *mem,
+				  struct dm_report_field *field,
+				  const void *data, void *private)
+{
+	int aa_yes = (((const struct logical_volume *) data)->status & LV_NOAUTOACTIVATE) ? 0 : 1;
+	return _binary_disp(rh, mem, field, aa_yes, "enabled", private);
 }
 
 static int _lvhistorical_disp(struct dm_report *rh, struct dm_pool *mem,

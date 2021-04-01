@@ -87,6 +87,17 @@ arg(atversion_ARG, '\0', "atversion", string_VAL, 0, 0,
     "which does not contain any newer settings for which LVM would\n"
     "issue a warning message when checking the configuration.\n")
 
+arg(setautoactivation_ARG, '\0', "setautoactivation", bool_VAL, 0, 0,
+    "Set the autoactivation property on a VG or LV.\n"
+    "Display the property with vgs or lvs \"-o autoactivation\".\n"
+    "When the autoactivation property is disabled, the VG or LV\n"
+    "will not be activated by a command doing autoactivation\n"
+    "(vgchange, lvchange, or pvscan using -aay.)\n"
+    "If autoactivation is disabled on a VG, no LVs will be autoactivated\n"
+    "in that VG, and the LV autoactivation property has no effect.\n"
+    "If autoactivation is enabled on a VG, autoactivation can be disabled\n"
+    "for individual LVs.\n")
+
 arg(binary_ARG, '\0', "binary", 0, 0, 0,
     "Use binary values \"0\" or \"1\" instead of descriptive literal values\n"
     "for columns that have exactly two valid values to report (not counting\n"
@@ -960,12 +971,17 @@ arg(activate_ARG, 'a', "activate", activation_VAL, 0, 0,
     "link and present this as the name of the device.\n"
     "The location and name of the underlying device node may depend on\n"
     "the distribution, configuration (e.g. udev), or release version.\n"
-    "\\fBay\\fP specifies autoactivation, in which case an LV is activated\n"
-    "only if it matches an item in lvm.conf activation/auto_activation_volume_list.\n"
-    "If the list is not set, all LVs are considered to match, and if\n"
-    "if the list is set but empty, no LVs match.\n"
-    "Autoactivation should be used during system boot to make it possible\n"
-    "to select which LVs should be automatically activated by the system.\n"
+    "\\fBay\\fP specifies autoactivation, which is used by system-generated\n"
+    "activation commands.  By default, LVs are autoactivated.\n"
+    "An autoactivation property can be set on a VG or LV to disable autoactivation,\n"
+    "see --setautoactivation y|n in vgchange, lvchange, vgcreate, and lvcreate.\n"
+    "Display the property with vgs or lvs \"-o autoactivation\".\n"
+    "The lvm.conf auto_activation_volume_list includes names of VGs or LVs\n"
+    "that should be autoactivated, and anything not listed is not autoactivated.\n"
+    "When auto_activation_volume_list is undefined (the default), it has no effect.\n"
+    "If auto_activation_volume_list is defined and empty, no LVs are autoactivated.\n"
+    "Items included by auto_activation_volume_list will not be autoactivated if\n"
+    "the autoactivation property has been disabled.\n"
     "See \\fBlvmlockd\\fP(8) for more information about activation options \\fBey\\fP and \\fBsy\\fP for shared VGs.\n"
     "#lvcreate\n"
     "Controls the active state of the new LV.\n"

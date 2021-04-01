@@ -117,6 +117,10 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		    !lv_passes_auto_activation_filter(cmd, lv))
 			continue;
 
+		/* vg NOAUTOACTIVATE flag was already checked */
+		if ((activate == CHANGE_AAY) && (lv->status & LV_NOAUTOACTIVATE))
+			continue;
+
 		expected_count++;
 
 		if (!lv_change_activate(cmd, lv, activate)) {
@@ -207,6 +211,11 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 	    do_activate) {
 		log_error("Cannot activate LVs in a foreign VG.");
 		return 0;
+	}
+
+	if ((activate == CHANGE_AAY) && (vg->status & NOAUTOACTIVATE)) {
+		log_debug("Autoactivation is disabled for VG %s.", vg->name);
+		return 1;
 	}
 
 	/*
@@ -313,6 +322,26 @@ static int _vgchange_resizeable(struct cmd_context *cmd,
 		vg->status |= RESIZEABLE_VG;
 	else
 		vg->status &= ~RESIZEABLE_VG;
+
+	return 1;
+}
+
+static int _vgchange_autoactivation(struct cmd_context *cmd,
+				    struct volume_group *vg)
+{
+	int aa_no_arg = !arg_int_value(cmd, setautoactivation_ARG, 0);
+	int aa_no_meta = (vg->status & NOAUTOACTIVATE) ? 1 : 0;
+
+	if ((aa_no_arg && aa_no_meta) || (!aa_no_arg && !aa_no_meta)) {
+		log_error("Volume group autoactivation is already %s.",
+			  aa_no_arg ? "no" : "yes");
+		return 0;
+	}
+
+	if (aa_no_arg)
+		vg->status |= NOAUTOACTIVATE;
+	else
+		vg->status &= ~NOAUTOACTIVATE;
 
 	return 1;
 }
@@ -619,6 +648,7 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		{ logicalvolume_ARG, &_vgchange_logicalvolume },
 		{ maxphysicalvolumes_ARG, &_vgchange_physicalvolumes },
 		{ resizeable_ARG, &_vgchange_resizeable },
+		{ setautoactivation_ARG, &_vgchange_autoactivation },
 		{ deltag_ARG, &_vgchange_deltag },
 		{ addtag_ARG, &_vgchange_addtag },
 		{ physicalextentsize_ARG, &_vgchange_pesize },
@@ -707,6 +737,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		arg_is_set(cmd, logicalvolume_ARG) ||
 		arg_is_set(cmd, maxphysicalvolumes_ARG) ||
 		arg_is_set(cmd, resizeable_ARG) ||
+		arg_is_set(cmd, setautoactivation_ARG) ||
 		arg_is_set(cmd, uuid_ARG) ||
 		arg_is_set(cmd, physicalextentsize_ARG) ||
 		arg_is_set(cmd, alloc_ARG) ||

@@ -742,6 +742,9 @@ static int _read_activation_params(struct cmd_context *cmd,
 	if (arg_is_set(cmd, ignoreactivationskip_ARG))
 		lp->activation_skip |= ACTIVATION_SKIP_IGNORE;
 
+	if (arg_is_set(cmd, setautoactivation_ARG) && !arg_int_value(cmd, setautoactivation_ARG, 1))
+		lp->noautoactivate = 1;
+
 	return 1;
 }
 

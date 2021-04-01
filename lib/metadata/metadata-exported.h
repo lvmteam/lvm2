@@ -57,7 +57,9 @@
 #define ALLOCATABLE_PV		UINT64_C(0x0000000000000008)	/* PV */
 #define ARCHIVED_VG		ALLOCATABLE_PV		/* VG, reuse same bit */
 
-//#define SPINDOWN_LV		UINT64_C(0x0000000000000010)	/* LV */
+#define LV_NOAUTOACTIVATE	UINT64_C(0x0000000000000010)   /* LV - also a PV flag */
+#define NOAUTOACTIVATE		UINT64_C(0x0000000000000010)   /* VG - also a PV flag */
+
 //#define BADBLOCK_ON		UINT64_C(0x0000000000000020)	/* LV */
 #define VISIBLE_LV		UINT64_C(0x0000000000000040)	/* LV */
 #define FIXED_MINOR		UINT64_C(0x0000000000000080)	/* LV */
@@ -157,6 +159,7 @@
 
 #define LV_CACHE_VOL		UINT64_C(0x0010000000000000)	/* LV - also a PV flag */
 #define LV_CACHE_USES_CACHEVOL	UINT64_C(0x4000000000000000)	/* LV - also a PV flag */
+
 
 
 /* Format features flags */
@@ -972,6 +975,7 @@ struct lvcreate_params {
 #define ACTIVATION_SKIP_SET_ENABLED	0x02 /* set the LV activation skip flag state to 'enabled' */
 #define ACTIVATION_SKIP_IGNORE		0x04 /* request to ignore LV activation skip flag (if any) */
 	int activation_skip; /* activation skip flags */
+	int noautoactivate; /* 1 if --setautoactivation n */
 	activation_change_t activate; /* non-snapshot, non-mirror */
 	thin_discards_t discards;     /* thin */
 	thin_zero_t zero_new_blocks;

@@ -215,6 +215,10 @@ static int _lvchange_activate(struct cmd_context *cmd, struct logical_volume *lv
 	    !lv_passes_auto_activation_filter(cmd, lv))
 		return 1;
 
+	if ((activate == CHANGE_AAY) &&
+	    ((lv->status & LV_NOAUTOACTIVATE) || (lv->vg->status & NOAUTOACTIVATE)))
+		return 1;
+
 	if (!lv_change_activate(cmd, lv, activate))
 		return_0;
 
@@ -1009,6 +1013,28 @@ static int _lvchange_activation_skip(struct logical_volume *lv, uint32_t *mr)
 	return 1;
 }
 
+static int _lvchange_autoactivation(struct logical_volume *lv, uint32_t *mr)
+{
+	int aa_no_arg = !arg_int_value(lv->vg->cmd, setautoactivation_ARG, 0);
+	int aa_no_meta = (lv->status & LV_NOAUTOACTIVATE);
+
+	if ((aa_no_arg && aa_no_meta) || (!aa_no_arg && !aa_no_meta))
+		return 1;
+
+	if (aa_no_arg)
+		lv->status |= LV_NOAUTOACTIVATE;
+	else
+		lv->status &= ~LV_NOAUTOACTIVATE;
+
+	log_verbose("Changing autoactivation flag to %s for LV %s.",
+		    display_lvname(lv), aa_no_arg ? "no" : "yes");
+
+	/* Request caller to commit+backup metadata */
+	*mr |= MR_COMMIT;
+
+	return 1;
+}
+
 static int _lvchange_compression(struct logical_volume *lv, uint32_t *mr)
 {
 	struct cmd_context *cmd = lv->vg->cmd;
@@ -1112,6 +1138,7 @@ static int _option_allows_group_commit(int opt_enum)
 		metadataprofile_ARG,
 		detachprofile_ARG,
 		setactivationskip_ARG,
+		setautoactivation_ARG,
 		-1
 	};
 
@@ -1248,6 +1275,11 @@ static int _lvchange_properties_single(struct cmd_context *cmd,
 		case setactivationskip_ARG:
 			docmds++;
 			doit += _lvchange_activation_skip(lv, &mr);
+			break;
+
+		case setautoactivation_ARG:
+			docmds++;
+			doit += _lvchange_autoactivation(lv, &mr);
 			break;
 
 		case compression_ARG:
