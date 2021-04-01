@@ -2488,6 +2488,14 @@ static int _get_current_settings(struct cmd_context *cmd)
 	if (arg_is_set(cmd, devicesfile_ARG) || arg_is_set(cmd, devices_ARG))
 		cmd->use_hints = 0;
 
+	/*
+	 * During system init, hints are repeatedly invalidated due to PVs
+	 * appearing, so it's wasted effort to try to maintain hints.
+	 * Hints are only effective when devices are in a steady-state.
+	 */
+	if (arg_is_set(cmd, sysinit_ARG))
+		cmd->use_hints = 0;
+
 	if ((hint_mode = find_config_tree_str(cmd, devices_hints_CFG, NULL))) {
 		if (!strcmp(hint_mode, "none")) {
 			cmd->enable_hints = 0;
