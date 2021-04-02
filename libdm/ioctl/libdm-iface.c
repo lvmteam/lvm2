@@ -2225,6 +2225,8 @@ int dm_task_get_info_base(struct dm_task *dmt, struct dm_info *info)
 	return 1;
 }
 
+#endif
+
 int dm_task_get_info_with_deferred_remove(struct dm_task *dmt, struct dm_info *info);
 int dm_task_get_info_with_deferred_remove(struct dm_task *dmt, struct dm_info *info)
 {
@@ -2237,4 +2239,3 @@ int dm_task_get_info_with_deferred_remove(struct dm_task *dmt, struct dm_info *i
 
 	return 1;
 }
-#endif
