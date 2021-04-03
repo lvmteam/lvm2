@@ -6,6 +6,7 @@ dm_stats_bind_uuid
 dm_stats_buffer_destroy
 dm_stats_clear_region
 dm_stats_create
+dm_stats_create_region
 dm_stats_delete_region
 dm_stats_destroy
 dm_stats_get_area_start
