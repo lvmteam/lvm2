@@ -64,6 +64,7 @@ include $(top_builddir)/make.tmpl
 
 all: device-mapper
 device-mapper: $(TARGETS)
+plugins.device-mapper: $(LIB_SHARED)
 
 CFLAGS_dmeventd.o += $(EXTRA_EXEC_CFLAGS)
 LIBS += $(PTHREAD_LIBS) -L$(top_builddir)/libdm -ldevmapper
