@@ -3311,15 +3311,16 @@ int dm_tree_node_add_raid_target_with_params_v2(struct dm_tree_node *node,
 	return 1;
 }
 
-int dm_tree_node_add_cache_target(struct dm_tree_node *node,
-				  uint64_t size,
-				  uint64_t feature_flags, /* DM_CACHE_FEATURE_* */
-				  const char *metadata_uuid,
-				  const char *data_uuid,
-				  const char *origin_uuid,
-				  const char *policy_name,
-				  const struct dm_config_node *policy_settings,
-				  uint32_t data_block_size)
+DM_EXPORT_NEW_SYMBOL(int, dm_tree_node_add_cache_target, 1_02_138)
+	(struct dm_tree_node *node,
+	 uint64_t size,
+	 uint64_t feature_flags, /* DM_CACHE_FEATURE_* */
+	 const char *metadata_uuid,
+	 const char *data_uuid,
+	 const char *origin_uuid,
+	 const char *policy_name,
+	 const struct dm_config_node *policy_settings,
+	 uint32_t data_block_size)
 {
 	struct dm_config_node *cn;
 	struct load_segment *seg;
@@ -3858,8 +3859,8 @@ void dm_tree_node_set_callback(struct dm_tree_node *dnode,
  */
 
 /* Backward compatible dm_tree_node_size_changed() implementations. */
+DM_EXPORT_SYMBOL_BASE(dm_tree_node_size_changed)
 int dm_tree_node_size_changed_base(const struct dm_tree_node *dnode);
-DM_EXPORT_SYMBOL_BASE(dm_tree_node_size_changed);
 int dm_tree_node_size_changed_base(const struct dm_tree_node *dnode)
 {
 	/* Base does not make difference between smaller and bigger */
@@ -3874,6 +3875,7 @@ int dm_tree_node_size_changed_base(const struct dm_tree_node *dnode)
  * the new function dm_tree_node_add_cache_target which detects unknown
  * feature flags and returns error for them.
  */
+DM_EXPORT_SYMBOL_BASE(dm_tree_node_add_cache_target)
 int dm_tree_node_add_cache_target_base(struct dm_tree_node *node,
 				       uint64_t size,
 				       uint64_t feature_flags, /* DM_CACHE_FEATURE_* */
@@ -3883,7 +3885,6 @@ int dm_tree_node_add_cache_target_base(struct dm_tree_node *node,
 				       const char *policy_name,
 				       const struct dm_config_node *policy_settings,
 				       uint32_t data_block_size);
-DM_EXPORT_SYMBOL_BASE(dm_tree_node_add_cache_target);
 int dm_tree_node_add_cache_target_base(struct dm_tree_node *node,
 				       uint64_t size,
 				       uint64_t feature_flags,

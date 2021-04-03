@@ -709,7 +709,8 @@ int dm_format_dev(char *buf, int bufsize, uint32_t dev_major,
 	return 1;
 }
 
-int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
+DM_EXPORT_NEW_SYMBOL(int, dm_task_get_info, 1_02_97)
+	(struct dm_task *dmt, struct dm_info *info)
 {
 	if (!dmt->dmi.v4)
 		return 0;
@@ -2210,8 +2211,8 @@ void dm_lib_exit(void)
  * no code in this file accidentally calls it.
  */
 
+DM_EXPORT_SYMBOL_BASE(dm_task_get_info)
 int dm_task_get_info_base(struct dm_task *dmt, struct dm_info *info);
-DM_EXPORT_SYMBOL_BASE(dm_task_get_info);
 int dm_task_get_info_base(struct dm_task *dmt, struct dm_info *info)
 {
 	struct dm_info new_info;

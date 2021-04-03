@@ -247,11 +247,11 @@ bad:
  * Maintain backward compatibility with older versions that did not
  * accept a 'min_num_bits' argument to dm_bitset_parse_list().
  */
+DM_EXPORT_SYMBOL(dm_bitset_parse_list, 1_02_129)
 dm_bitset_t dm_bitset_parse_list_v1_02_129(const char *str, struct dm_pool *mem);
 dm_bitset_t dm_bitset_parse_list_v1_02_129(const char *str, struct dm_pool *mem)
 {
 	return dm_bitset_parse_list(str, mem, 0);
 }
-DM_EXPORT_SYMBOL(dm_bitset_parse_list, 1_02_129);
 
 #endif
