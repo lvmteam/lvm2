@@ -90,7 +90,7 @@ struct report_group_item {
 	struct dm_list list;
 	struct dm_report_group *group;
 	struct dm_report *report;
-	union {
+	union store_u {
 		uint32_t orig_report_flags;
 		uint32_t finished_count;
 	} store;
@@ -207,7 +207,7 @@ struct selection_str_list {
 };
 
 struct field_selection_value {
-	union {
+	union value_u {
 		const char *s;
 		uint64_t i;
 		time_t t;
@@ -227,7 +227,7 @@ struct field_selection {
 struct selection_node {
 	struct dm_list list;
 	uint32_t type;
-	union {
+	union selection_u {
 		struct field_selection *item;
 		struct dm_list set;
 	} selection;

@@ -39,7 +39,7 @@ struct clog_request {
 	 * machine.  If the two are equal, there is no need
 	 * to do endian conversions.
 	 */
-	union {
+	union version_u {
 		uint64_t version[2]; /* LE version and native version */
 		struct dm_list list;
 	} u;

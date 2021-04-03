@@ -1548,7 +1548,7 @@ static void cpg_config_callback(cpg_handle_t handle, const struct cpg_name *gnam
 				   member_list, member_list_entries);
 }
 
-cpg_callbacks_t cpg_callbacks = {
+static cpg_callbacks_t cpg_callbacks = {
 	.cpg_deliver_fn = cpg_message_callback,
 	.cpg_confchg_fn = cpg_config_callback,
 };
