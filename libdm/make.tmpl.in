@@ -250,9 +250,6 @@ endif
 # end of fPIC protection
 endif
 
-LDFLAGS += -L$(top_builddir)/libdm
-CLDFLAGS += -L$(top_builddir)/libdm
-
 # Combination of DEBUG_POOL and DEBUG_ENFORCE_POOL_LOCKING is not suppored.
 #DEFS += -DDEBUG_POOL
 # Default pool locking is using the crc checksum. With mprotect memory
