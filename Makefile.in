@@ -83,8 +83,9 @@ cflow: include.cflow
 endif
 
 ifneq ("@CSCOPE_CMD@", "")
+CSCOPE_DIRS = base daemons device_mapper include lib libdaemon scripts tools
 cscope.out:
-	@CSCOPE_CMD@ -b -R -s$(top_srcdir)
+	@CSCOPE_CMD@ -b -R $(patsubst %,-s%,$(addprefix $(srcdir)/,$(CSCOPE_DIRS)))
 all: cscope.out
 endif
 DISTCLEAN_TARGETS += cscope.out
