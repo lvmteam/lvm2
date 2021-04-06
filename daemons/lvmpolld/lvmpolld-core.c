@@ -149,7 +149,7 @@ static void _lvmpolld_global_unlock(struct lvmpolld_state *ls)
 static int _fini(struct daemon_state *s)
 {
 	int done;
-	const struct timespec t = { .tv_nsec = 250000000 }; /* .25 sec */
+	const struct timespec t = { .tv_nsec = 10000000 }; /* .01 sec */
 	struct lvmpolld_state *ls = s->private;
 
 	DEBUGLOG(s, "fini");
@@ -236,9 +236,7 @@ static int poll_for_output(struct lvmpolld_lv *pdlv, struct lvmpolld_thread_data
 	}
 
 	while (1) {
-		do {
-			r = poll(fds, 2, pdlv_get_timeout(pdlv) * 1000);
-		} while (r < 0 && errno == EINTR);
+		r = poll(fds, 2, pdlv_get_timeout(pdlv) * 1000);
 
 		DEBUGLOG(pdlv->ls, "%s: %s %d", PD_LOG_PREFIX, "poll() returned", r);
 		if (r < 0) {

@@ -122,10 +122,12 @@ static void _nanosleep(unsigned secs, unsigned allow_zero_time)
 	if (!secs && !allow_zero_time)
 		wtime.tv_nsec = WAIT_AT_LEAST_NANOSECS;
 
-	while (!nanosleep(&wtime, &wtime) && errno == EINTR) {}
+	sigint_allow();
+	nanosleep(&wtime, &wtime);
+	sigint_restore();
 }
 
-static void _sleep_and_rescan_devices(struct cmd_context *cmd, struct daemon_parms *parms)
+static int _sleep_and_rescan_devices(struct cmd_context *cmd, struct daemon_parms *parms)
 {
 	if (!parms->aborting) {
 		/*
@@ -137,8 +139,12 @@ static void _sleep_and_rescan_devices(struct cmd_context *cmd, struct daemon_par
 		lvmcache_destroy(cmd, 1, 0);
 		label_scan_destroy(cmd);
 		_nanosleep(parms->interval, 0);
+		if (sigint_caught())
+			return_0;
 		lvmcache_label_scan(cmd);
 	}
+
+	return 1;
 }
 
 int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
@@ -150,14 +156,18 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 	uint32_t lockd_state = 0;
 	uint32_t error_flags = 0;
 	int ret;
+	unsigned wait_before_testing = parms->wait_before_testing;
 
-	if (!parms->wait_before_testing)
+	if (!wait_before_testing)
 		lvmcache_label_scan(cmd);
 
 	/* Poll for completion */
 	while (!finished) {
-		if (parms->wait_before_testing)
-			_sleep_and_rescan_devices(cmd, parms);
+		if (wait_before_testing &&
+		    !_sleep_and_rescan_devices(cmd, parms)) {
+			log_error("ABORTING: Polling interrupted for %s.", id->display_name);
+			return 0;
+		}
 
 		/*
 		 * An ex VG lock is needed because the check can call finish_copy
@@ -220,20 +230,7 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 		if (!lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state))
 			stack;
 
-		/*
-		 * FIXME Sleeping after testing, while preferred, also works around
-		 * unreliable "finished" state checking in _percent_run.  If the
-		 * above _check_lv_status is deferred until after the first sleep it
-		 * may be that a polldaemon will run without ever completing.
-		 *
-		 * This happens when one snapshot-merge polldaemon is racing with
-		 * another (polling the same LV).  The first to see the LV status
-		 * reach the "finished" state will alter the LV that the other
-		 * polldaemon(s) are polling.  These other polldaemon(s) can then
-		 * continue polling an LV that doesn't have a "status".
-		 */
-		if (!parms->wait_before_testing && !finished)
-			_sleep_and_rescan_devices(cmd, parms);
+		wait_before_testing = 1;
 	}
 
 	return 1;
