@@ -1,5 +1,6 @@
 Version 1.02.177 - 
 ====================================
+  Fix symbol versioning build with -O2 -flto.
   Add dm_tree_node_add_thin_pool_target_v1 with crop_metadata support.
 
 Version 1.02.175 - 08th January 2021
