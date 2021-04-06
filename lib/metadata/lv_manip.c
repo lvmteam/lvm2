@@ -4970,7 +4970,7 @@ static int _request_confirmation(const struct logical_volume *lv,
 
 	log_warn("THIS MAY DESTROY YOUR DATA (filesystem etc.)");
 
-	if (!lp->force) {
+	if (!lp->force && !lp->yes) {
 		if (yes_no_prompt("Do you really want to reduce %s? [y/n]: ",
 				  display_lvname(lv)) == 'n') {
 			log_error("Logical volume %s NOT reduced.",
