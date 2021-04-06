@@ -77,7 +77,10 @@
 #  endif
 # endif
 #ifndef DM_EXPORT_NEW_SYMBOL
-#define DM_EXPORT_NEW_SYMBOL(rettype, func, ver) rettype func
+#define DM_EXPORT_NEW_SYMBOL(rettype, func, ver) \
+	__typeof__(func) func ##_v ##ver; \
+	__asm__(".symver " #func "_v" #ver ", " #func "@@DM_" #ver ); \
+	rettype func ##_v ##ver
 #define DM_EXPORT_SYMBOL(func, ver) \
 	__asm__(".symver " #func "_v" #ver ", " #func "@DM_" #ver );
 #define DM_EXPORT_SYMBOL_BASE(func) \
