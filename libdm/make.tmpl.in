@@ -53,11 +53,9 @@ WC = @WC@
 AR = @AR@
 RM = rm -f
 
-
-LIBS = @LIBS@
-LIBS += $(SELINUX_LIBS) $(UDEV_LIBS) $(BLKID_LIBS) $(RT_LIBS) -lm
+LIBS += @LIBS@ $(PTHREAD_LIBS) $(SELINUX_LIBS) $(UDEV_LIBS) $(RT_LIBS) $(M_LIBS)
 # Extra libraries always linked with static binaries
-STATIC_LIBS = $(SELINUX_LIBS) $(UDEV_LIBS) $(BLKID_LIBS)
+STATIC_LIBS = $(PTHREAD_LIBS)
 DEFS += @DEFS@
 # FIXME set this only where it's needed, not globally?
 CFLAGS ?= @COPTIMISE_FLAG@ @CFLAGS@

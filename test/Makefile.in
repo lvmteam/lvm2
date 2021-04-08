@@ -258,7 +258,7 @@ lib/dmsecuretest: lib/dmsecuretest.o .lib-dir-stamp $(INTERNAL_LIBS)
 
 lib/securetest: lib/dmsecuretest.o .lib-dir-stamp
 	@echo "    [CC] $@"
-	$(Q) $(CC) -g $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $< -L$(top_builddir)/libdm/ioctl -ldevmapper $(LIBS)
+	$(Q) $(CC) -g $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $< -L$(interfacebuilddir) -ldevmapper $(LIBS)
 
 lib/runner.o: $(wildcard $(srcdir)/lib/*.h)
 

@@ -83,7 +83,7 @@ TARGETS =\
 
 INSTALL_LVM_TARGETS = install_tools_dynamic
 INSTALL_DMSETUP_TARGETS =
-INSTALL_CMDLIB_TARGETS = install_cmdlib_dynamic install_cmdlib_include 
+INSTALL_CMDLIB_TARGETS = install_cmdlib_dynamic install_cmdlib_include
 
 ifeq ("@STATIC_LINK@", "yes")
   TARGETS += lvm.static
@@ -91,7 +91,6 @@ ifeq ("@STATIC_LINK@", "yes")
   INSTALL_CMDLIB_TARGETS += install_cmdlib_static
 endif
 
-LVMLIBS = $(SYSTEMD_LIBS) -L$(top_builddir)/libdm -ldevmapper $(LIBS) -laio
 LIB_VERSION = $(LIB_VERSION_LVM)
 INCLUDES = -I$(top_builddir)/tools
 
@@ -123,8 +122,8 @@ CFLAGS_lvm.o += $(EXTRA_EXEC_CFLAGS)
 
 lvm: $(OBJECTS) lvm.o $(LVMINTERNAL_LIBS)
 	@echo "    [CC] $@"
-	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $+ \
-		$(DMEVENT_LIBS) $(READLINE_LIBS) $(EDITLINE_LIBS) $(LVMLIBS)
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) \
+		-o $@ $+ $(LVMLIBS)
 
 DEFS_man-generator.o += -DMAN_PAGE_GENERATOR
 
@@ -138,8 +137,8 @@ man-generator: man-generator.o
 
 lvm.static: $(OBJECTS) lvm-static.o $(LVMINTERNAL_LIBS)
 	@echo "    [CC] $@"
-	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -static -L$(interfacebuilddir) -o $@ $+ \
-	      $(DMEVENT_LIBS) $(STATIC_LIBS) $(LVMLIBS)
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -static -L$(interfacebuilddir) \
+		-o $@ $+ $(LVMLIBS) $(STATIC_LIBS)
 
 liblvm2cmd.a: $(top_builddir)/lib/liblvm-internal.a $(OBJECTS) lvmcmdlib.o lvm2cmd.o
 	@echo "    [AR] $@"
@@ -156,7 +155,7 @@ liblvm2cmd.$(LIB_SUFFIX): liblvm2cmd.a $(LDDEPS)
 	$(Q) $(CC) -shared -Wl,-soname,$@.$(LIB_VERSION) \
 		$(CFLAGS) $(CLDFLAGS) -o $@ \
 		@CLDWHOLEARCHIVE@ $< @CLDNOWHOLEARCHIVE@ \
-		$(LVMINTERNAL_LIBS) $(LVMLIBS)
+		$(INTERNAL_LIBS) $(LVMLIBS)
 
 liblvm2cmd.$(LIB_SUFFIX).$(LIB_VERSION): liblvm2cmd.$(LIB_SUFFIX)
 	@echo "    [LN] $@"

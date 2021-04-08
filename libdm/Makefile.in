@@ -59,11 +59,9 @@ include $(top_builddir)/libdm/make.tmpl
 
 PROGS_CFLAGS = $(UDEV_CFLAGS)
 
-LIBS += $(SELINUX_LIBS) $(UDEV_LIBS) $(PTHREAD_LIBS) $(RT_LIBS) $(M_LIBS)
+device-mapper: $(TARGETS)
 
-device-mapper: all
-
-dm-tools.device-mapper: $(TARGETS)
+dm-tools.device-mapper: device-mapper
 
 libdevmapper.$(LIB_SUFFIX) libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION): $(LIB_SHARED)
 	@echo "    [LN] $<"

@@ -47,6 +47,7 @@ endif
 
 LIB_VERSION = $(LIB_VERSION_DM)
 LIB_SHARED = $(LIB_NAME).$(LIB_SUFFIX)
+LIBS = $(PTHREAD_LIBS) -L$(interfacebuilddir) -ldevmapper
 
 CLEAN_TARGETS = dmeventd.static $(LIB_NAME).a
 
@@ -67,16 +68,15 @@ device-mapper: $(TARGETS)
 plugins.device-mapper: $(LIB_SHARED)
 
 CFLAGS_dmeventd.o += $(EXTRA_EXEC_CFLAGS)
-LIBS += $(PTHREAD_LIBS) -L$(top_builddir)/libdm -ldevmapper
 
 dmeventd: $(LIB_SHARED) dmeventd.o
 	@echo "    [CC] $@"
-	$(Q) $(CC) $(CFLAGS) -L. $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) dmeventd.o \
-		-o $@ $(DL_LIBS) $(DMEVENT_LIBS) $(LIBS) -lm
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) dmeventd.o \
+		-o $@ $(DL_LIBS) $(DMEVENT_LIBS) $(LIBS)
 
 dmeventd.static: $(LIB_STATIC) dmeventd.o
 	@echo "    [CC] $@"
-	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -static -L. -L$(interfacebuilddir) dmeventd.o \
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -static dmeventd.o \
 		-o $@ $(DL_LIBS) $(DMEVENT_LIBS) $(LIBS) $(STATIC_LIBS)
 
 ifeq ("@PKGCONFIG@", "yes")

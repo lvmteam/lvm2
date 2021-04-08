@@ -61,9 +61,10 @@ PYTHON2 = @PYTHON2@
 PYTHON3 = @PYTHON3@
 PYCOMPILE = $(top_srcdir)/autoconf/py-compile
 
-LIBS += @LIBS@ $(SELINUX_LIBS) $(UDEV_LIBS) $(BLKID_LIBS) $(RT_LIBS) $(M_LIBS)
+LIBS += @LIBS@ $(SELINUX_LIBS) $(UDEV_LIBS) $(RT_LIBS) $(M_LIBS)
+LVMLIBS = $(DMEVENT_LIBS) $(READLINE_LIBS) $(EDITLINE_LIBS) $(SYSTEMD_LIBS) $(BLKID_LIBS) $(AIO_LIBS) $(LIBS)
 # Extra libraries always linked with static binaries
-STATIC_LIBS = $(SELINUX_LIBS) $(UDEV_LIBS) $(BLKID_LIBS)
+STATIC_LIBS = $(PTHREAD_LIBS)
 DEFS += @DEFS@
 # FIXME set this only where it's needed, not globally?
 CFLAGS ?= @COPTIMISE_FLAG@ @CFLAGS@
@@ -146,6 +147,7 @@ vpath %.po $(srcdir)
 vpath %.exported_symbols $(srcdir)
 
 interface = @interface@
+interfacebuilddir = $(top_builddir)/libdm/$(interface)
 rpmbuilddir = $(abs_top_builddir)/build
 
 # The number of jobs to run, if blank, defaults to the make standard

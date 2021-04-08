@@ -42,16 +42,19 @@ CLEAN_TARGETS += $(UNIT_DEPENDS) $(UNIT_OBJECTS) \
 	$(UNIT_SOURCE:%.c=%.gcno) \
 	$(UNIT_TARGET)
 
+lib/liblvm-internal.a: lib
+libdaemon/client/libdaemonclient.a: libdaemon
+
 $(UNIT_TARGET): $(UNIT_OBJECTS) $(LVMINTERNAL_LIBS)
 	@echo "    [LD] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) \
-	      -o $@ $+ $(DMEVENT_LIBS) $(SYSTEMD_LIBS) -L$(top_builddir)/libdm -ldevmapper $(LIBS) -laio
+	      -o $@ $+ $(LVMLIBS)
 
-.PHONEY: run-unit-test unit-test
+.PHONY: run-unit-test unit-test
 unit-test: $(UNIT_TARGET)
 run-unit-test: $(UNIT_TARGET)
 	@echo "Running unit tests"
-	LD_LIBRARY_PATH=libdm $(UNIT_TARGET) run
+	LD_LIBRARY_PATH=$(top_builddir)/libdm $(UNIT_TARGET) run
 
 ifeq ("$(DEPENDS)","yes")
 -include $(UNIT_SOURCE:%.c=%.d)
