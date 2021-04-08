@@ -1,5 +1,6 @@
 
 SKIP_WITH_LVMPOLLD=1
+SKIP_WITH_LVMLOCKD=1
 
 RUNDIR="/run"
 test -d "$RUNDIR" || RUNDIR="/var/run"
@@ -24,7 +25,7 @@ aux prepare_devs 1
 #
 
 # default
-vgcreate $SHARED $vg "$dev1"
+vgcreate $vg "$dev1"
 lvcreate -n $lv1 -l1 -an $vg
 check vg_field $vg autoactivation "enabled"
 check lv_field $vg/$lv1 autoactivation "enabled"
@@ -84,7 +85,7 @@ vgremove -y $vg
 #
 
 # default
-vgcreate $SHARED $vg "$dev1"
+vgcreate $vg "$dev1"
 lvcreate -n $lv1 -l1 -an $vg
 
 # --aa=n
@@ -127,7 +128,7 @@ vgremove -y $vg
 # test vgcreate --setautoactivation, lvcreate --setautoactivation
 #
 
-vgcreate $SHARED $vg "$dev1"
+vgcreate $vg "$dev1"
 lvcreate -n $lv1 -l1 -an $vg
 lvcreate -n $lv2 -l1 --setautoactivation y -an $vg
 lvcreate -n $lv3 -l1 --setautoactivation n -an $vg
@@ -155,7 +156,7 @@ vgchange -an $vg
 vgremove -y $vg
 _clear_online_files
 
-vgcreate $SHARED --setautoactivation y $vg "$dev1"
+vgcreate --setautoactivation y $vg "$dev1"
 lvcreate -n $lv1 -l1 -an $vg
 lvcreate -n $lv2 -l1 --setautoactivation y -an $vg
 lvcreate -n $lv3 -l1 --setautoactivation n -an $vg
@@ -183,7 +184,7 @@ vgchange -an $vg
 vgremove -y $vg
 _clear_online_files
 
-vgcreate $SHARED --setautoactivation n $vg "$dev1"
+vgcreate --setautoactivation n $vg "$dev1"
 lvcreate -n $lv1 -l1 -an $vg
 lvcreate -n $lv2 -l1 --setautoactivation y -an $vg
 lvcreate -n $lv3 -l1 --setautoactivation n -an $vg
@@ -213,7 +214,7 @@ _clear_online_files
 # test combination of --aa and auto_activation_volume_list
 #
 
-vgcreate $SHARED $vg "$dev1"
+vgcreate $vg "$dev1"
 lvcreate -n $lv1 -l1 -an $vg
 lvcreate -n $lv2 -l1 --setautoactivation n -an $vg
 check vg_field $vg autoactivation "enabled"
@@ -290,7 +291,7 @@ _clear_online_files
 
 vgremove -y $vg
 
-vgcreate $SHARED --setautoactivation n $vg "$dev1"
+vgcreate --setautoactivation n $vg "$dev1"
 lvcreate -n $lv1 -l1 -an $vg
 lvcreate -n $lv2 -l1 --setautoactivation n -an $vg
 check vg_field $vg autoactivation ""
