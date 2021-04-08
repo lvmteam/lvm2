@@ -289,7 +289,7 @@ AC_ARG_WITH(default-name-mangling,
 	    MANGLING=$withval, MANGLING=auto)
 case "$MANGLING" in
  auto) mangling=DM_STRING_MANGLING_AUTO;;
- none|disabled) mangling=DM_STRING_MANGLING_NONE;;
+ no|none|disabled) mangling=DM_STRING_MANGLING_NONE;;
  hex) mangling=DM_STRING_MANGLING_HEX;;
  *) AC_MSG_ERROR([--with-default-name-mangling parameter invalid]);;
 esac
@@ -301,12 +301,12 @@ dnl -- snapshots inclusion type
 AC_MSG_CHECKING(whether to include snapshots)
 AC_ARG_WITH(snapshots,
 	    AC_HELP_STRING([--with-snapshots=TYPE],
-			   [snapshot support: internal/shared/none [internal]]),
+			   [snapshot support: internal/none [internal]]),
 	    SNAPSHOTS=$withval, SNAPSHOTS=internal)
 AC_MSG_RESULT($SNAPSHOTS)
 
 case "$SNAPSHOTS" in
-  none|shared) ;;
+  no|none|shared) ;;
   internal) AC_DEFINE([SNAPSHOT_INTERNAL], 1,
 		      [Define to 1 to include built-in support for snapshots.]) ;;
   *) AC_MSG_ERROR([--with-snapshots parameter invalid]) ;;
@@ -317,12 +317,12 @@ dnl -- mirrors inclusion type
 AC_MSG_CHECKING(whether to include mirrors)
 AC_ARG_WITH(mirrors,
 	    AC_HELP_STRING([--with-mirrors=TYPE],
-			   [mirror support: internal/shared/none [internal]]),
+			   [mirror support: internal/none [internal]]),
 	    MIRRORS=$withval, MIRRORS=internal)
 AC_MSG_RESULT($MIRRORS)
 
 case "$MIRRORS" in
-  none|shared) ;;
+  no|none|shared) ;;
   internal) AC_DEFINE([MIRRORED_INTERNAL], 1,
 		      [Define to 1 to include built-in support for mirrors.]) ;;
   *) AC_MSG_ERROR([--with-mirrors parameter invalid]) ;;
@@ -352,14 +352,17 @@ AC_DEFINE_UNQUOTED([DEFAULT_RAID10_SEGTYPE], ["$DEFAULT_RAID10_SEGTYPE"],
 AC_ARG_WITH(default-sparse-segtype,
 	    AC_HELP_STRING([--with-default-sparse-segtype=TYPE],
 			   [default sparse segtype: thin/snapshot [thin]]),
-			   DEFAULT_SPARSE_SEGTYPE=$withval, DEFAULT_SPARSE_SEGTYPE="thin")
+			   [ case "$withval" in
+				thin|snapshot) DEFAULT_SPARSE_SEGTYPE=$withval ;;
+				*) AC_MSG_ERROR(--with-default-sparse-segtype parameter invalid) ;;
+			     esac], DEFAULT_SPARSE_SEGTYPE="thin")
 
 ################################################################################
 dnl -- thin provisioning
 AC_MSG_CHECKING(whether to include thin provisioning)
 AC_ARG_WITH(thin,
 	    AC_HELP_STRING([--with-thin=TYPE],
-			   [thin provisioning support: internal/shared/none [internal]]),
+			   [thin provisioning support: internal/none [internal]]),
 	    THIN=$withval, THIN=internal)
 AC_ARG_WITH(thin-check,
 	    AC_HELP_STRING([--with-thin-check=PATH],
@@ -381,7 +384,7 @@ AC_ARG_WITH(thin-restore,
 AC_MSG_RESULT($THIN)
 
 case "$THIN" in
-  none)  test "$DEFAULT_SPARSE_SEGTYPE" = "thin" && DEFAULT_SPARSE_SEGTYPE="snapshot" ;;
+  no|none)  test "$DEFAULT_SPARSE_SEGTYPE" = "thin" && DEFAULT_SPARSE_SEGTYPE="snapshot" ;;
   shared) ;;
   internal) AC_DEFINE([THIN_INTERNAL], 1,
 		      [Define to 1 to include built-in support for thin provisioning.]) ;;
@@ -458,7 +461,6 @@ case "$THIN" in
 	if test "$THIN_CHECK_NEEDS_CHECK" = yes; then
 		AC_DEFINE([THIN_CHECK_NEEDS_CHECK], 1, [Define to 1 if the external 'thin_check' tool requires the --clear-needs-check-flag option])
 	fi
-
 	;;
 esac
 
@@ -479,7 +481,7 @@ dnl -- cache inclusion type
 AC_MSG_CHECKING(whether to include cache)
 AC_ARG_WITH(cache,
 	    AC_HELP_STRING([--with-cache=TYPE],
-			   [cache support: internal/shared/none [internal]]),
+			   [cache support: internal/none [internal]]),
 			   CACHE=$withval, CACHE="internal")
 AC_ARG_WITH(cache-check,
 	    AC_HELP_STRING([--with-cache-check=PATH],
@@ -500,7 +502,7 @@ AC_ARG_WITH(cache-restore,
 AC_MSG_RESULT($CACHE)
 
 case "$CACHE" in
- none|shared) ;;
+ no|none|shared) ;;
  internal) AC_DEFINE([CACHE_INTERNAL], 1, [Define to 1 to include built-in support for cache.]) ;;
  *) AC_MSG_ERROR([--with-cache parameter invalid]) ;;
 esac
@@ -613,8 +615,8 @@ AC_ARG_WITH(vdo-format,
 			   [vdoformat tool: [autodetect]]),
 			   VDO_FORMAT_CMD=$withval, VDO_FORMAT_CMD="autodetect")
 case "$VDO" in
- none) ;;
- internal) 
+ no|none) ;;
+ internal)
 	AC_DEFINE([VDO_INTERNAL], 1, [Define to 1 to include built-in support for vdo.])
 	if test "$VDO_FORMAT_CMD" = "autodetect"; then
 		AC_PATH_TOOL(VDO_FORMAT_CMD, vdoformat, [], [$PATH])
@@ -643,7 +645,7 @@ AC_DEFINE_UNQUOTED([VDO_FORMAT_CMD], ["$VDO_FORMAT_CMD"],
 #AC_ARG_WITH(vdo-lib,
 #            AC_HELP_STRING([--with-vdo-lib=PATH],
 #                           [vdo support: Path to utils lib: [/usr/lib]]),
-#                           VDO_LIB=$withval, VDO_LIB="/usr/lib") 
+#                           VDO_LIB=$withval, VDO_LIB="/usr/lib")
 #AC_MSG_RESULT($VDO_LIB)
 
 ################################################################################
@@ -657,8 +659,8 @@ AC_ARG_WITH(writecache,
 AC_MSG_RESULT($WRITECACHE)
 
 case "$WRITECACHE" in
- none) ;;
- internal) 
+ no|none) ;;
+ internal)
 	AC_DEFINE([WRITECACHE_INTERNAL], 1, [Define to 1 to include built-in support for writecache.])
 	;;
  *) AC_MSG_ERROR([--with-writecache parameter invalid]) ;;
@@ -675,7 +677,7 @@ AC_ARG_WITH(integrity,
 AC_MSG_RESULT($INTEGRITY)
 
 case "$INTEGRITY" in
- none) ;;
+ no|none) ;;
  internal)
 	AC_DEFINE([INTEGRITY_INTERNAL], 1, [Define to 1 to include built-in support for integrity.])
 	;;
@@ -830,7 +832,7 @@ AC_ARG_WITH(symvers,
 			   [use symbol versioning of the shared library [default=gnu]]),
 			   [ case "$withval" in
 				gnu|no) symvers=$withval ;;
-				*) AC_MSG_ERROR(Unknown argument to with-symvers) ;;
+				*) AC_MSG_ERROR(--with-symvers parameter invalid) ;;
 			     esac], symvers=gnu)
 AC_MSG_RESULT($symvers)
 

@@ -1713,22 +1713,21 @@ Optional Packages:
                           create nodes on resume or create [ON=resume]
   --with-default-name-mangling=MANGLING
                           default name mangling: auto/none/hex [auto]
-  --with-snapshots=TYPE   snapshot support: internal/shared/none [internal]
-  --with-mirrors=TYPE     mirror support: internal/shared/none [internal]
+  --with-snapshots=TYPE   snapshot support: internal/none [internal]
+  --with-mirrors=TYPE     mirror support: internal/none [internal]
   --with-default-mirror-segtype=TYPE
                           default mirror segtype: raid1/mirror [raid1]
   --with-default-raid10-segtype=TYPE
                           default mirror segtype: raid10/mirror [raid10]
   --with-default-sparse-segtype=TYPE
                           default sparse segtype: thin/snapshot [thin]
-  --with-thin=TYPE        thin provisioning support: internal/shared/none
-                          [internal]
+  --with-thin=TYPE        thin provisioning support: internal/none [internal]
   --with-thin-check=PATH  thin_check tool: [autodetect]
   --with-thin-dump=PATH   thin_dump tool: [autodetect]
   --with-thin-repair=PATH thin_repair tool: [autodetect]
   --with-thin-restore=PATH
                           thin_restore tool: [autodetect]
-  --with-cache=TYPE       cache support: internal/shared/none [internal]
+  --with-cache=TYPE       cache support: internal/none [internal]
   --with-cache-check=PATH cache_check tool: [autodetect]
   --with-cache-dump=PATH  cache_dump tool: [autodetect]
   --with-cache-repair=PATH
@@ -8385,7 +8384,7 @@ fi
 
 case "$MANGLING" in
  auto) mangling=DM_STRING_MANGLING_AUTO;;
- none|disabled) mangling=DM_STRING_MANGLING_NONE;;
+ no|none|disabled) mangling=DM_STRING_MANGLING_NONE;;
  hex) mangling=DM_STRING_MANGLING_HEX;;
  *) as_fn_error $? "--with-default-name-mangling parameter invalid" "$LINENO" 5;;
 esac
@@ -8412,7 +8411,7 @@ fi
 $as_echo "$SNAPSHOTS" >&6; }
 
 case "$SNAPSHOTS" in
-  none|shared) ;;
+  no|none|shared) ;;
   internal)
 $as_echo "#define SNAPSHOT_INTERNAL 1" >>confdefs.h
  ;;
@@ -8434,7 +8433,7 @@ fi
 $as_echo "$MIRRORS" >&6; }
 
 case "$MIRRORS" in
-  none|shared) ;;
+  no|none|shared) ;;
   internal)
 $as_echo "#define MIRRORED_INTERNAL 1" >>confdefs.h
  ;;
@@ -8479,7 +8478,10 @@ _ACEOF
 
 # Check whether --with-default-sparse-segtype was given.
 if test "${with_default_sparse_segtype+set}" = set; then :
-  withval=$with_default_sparse_segtype; DEFAULT_SPARSE_SEGTYPE=$withval
+  withval=$with_default_sparse_segtype;  case "$withval" in
+				thin|snapshot) DEFAULT_SPARSE_SEGTYPE=$withval ;;
+				*) as_fn_error $? "--with-default-sparse-segtype parameter invalid" "$LINENO" 5 ;;
+			     esac
 else
   DEFAULT_SPARSE_SEGTYPE="thin"
 fi
@@ -8533,7 +8535,7 @@ fi
 $as_echo "$THIN" >&6; }
 
 case "$THIN" in
-  none)  test "$DEFAULT_SPARSE_SEGTYPE" = "thin" && DEFAULT_SPARSE_SEGTYPE="snapshot" ;;
+  no|none)  test "$DEFAULT_SPARSE_SEGTYPE" = "thin" && DEFAULT_SPARSE_SEGTYPE="snapshot" ;;
   shared) ;;
   internal)
 $as_echo "#define THIN_INTERNAL 1" >>confdefs.h
@@ -9014,7 +9016,6 @@ $as_echo "$THIN_CHECK_NEEDS_CHECK" >&6; }
 $as_echo "#define THIN_CHECK_NEEDS_CHECK 1" >>confdefs.h
 
 	fi
-
 	;;
 esac
 
@@ -9089,7 +9090,7 @@ fi
 $as_echo "$CACHE" >&6; }
 
 case "$CACHE" in
- none|shared) ;;
+ no|none|shared) ;;
  internal)
 $as_echo "#define CACHE_INTERNAL 1" >>confdefs.h
  ;;
@@ -9626,7 +9627,7 @@ else
 fi
 
 case "$VDO" in
- none) ;;
+ no|none) ;;
  internal)
 
 $as_echo "#define VDO_INTERNAL 1" >>confdefs.h
@@ -9778,7 +9779,7 @@ fi
 $as_echo "$WRITECACHE" >&6; }
 
 case "$WRITECACHE" in
- none) ;;
+ no|none) ;;
  internal)
 
 $as_echo "#define WRITECACHE_INTERNAL 1" >>confdefs.h
@@ -9803,7 +9804,7 @@ fi
 $as_echo "$INTEGRITY" >&6; }
 
 case "$INTEGRITY" in
- none) ;;
+ no|none) ;;
  internal)
 
 $as_echo "#define INTEGRITY_INTERNAL 1" >>confdefs.h
@@ -10401,7 +10402,7 @@ $as_echo_n "checking whether to use symbol versioning... " >&6; }
 if test "${with_symvers+set}" = set; then :
   withval=$with_symvers;  case "$withval" in
 				gnu|no) symvers=$withval ;;
-				*) as_fn_error $? "Unknown argument to with-symvers" "$LINENO" 5 ;;
+				*) as_fn_error $? "--with-symvers parameter invalid" "$LINENO" 5 ;;
 			     esac
 else
   symvers=gnu
