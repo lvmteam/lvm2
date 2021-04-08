@@ -11,7 +11,10 @@ lvconvert - Change logical volume layout
 .br
 .P
 .ad l
-    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP
+    \fB--alloc\fP 
+.nh
+\fBcontiguous\fP|\:\fBcling\fP|\:\fBcling_by_tags\fP|\:\fBnormal\fP|\:\fBanywhere\fP|\:\fBinherit\fP
+.hy
 .ad b
 .br
 .ad l
@@ -259,7 +262,10 @@ lvconvert - Change logical volume layout
 .ad b
 .br
 .ad l
-    \fB--type\fP \fBlinear\fP|\fBstriped\fP|\fBsnapshot\fP|\fBraid\fP|\fBmirror\fP|\fBthin\fP|\fBthin-pool\fP|\fBvdo\fP|\fBvdo-pool\fP|\fBcache\fP|\fBcache-pool\fP|\fBwritecache\fP
+    \fB--type\fP 
+.nh
+\fBlinear\fP|\:\fBstriped\fP|\:\fBsnapshot\fP|\:\fBraid\fP|\:\fBmirror\fP|\:\fBthin\fP|\:\fBthin-pool\fP|\:\fBvdo\fP|\:\fBvdo-pool\fP|\:\fBcache\fP|\:\fBcache-pool\fP|\:\fBwritecache\fP
+.hy
 .ad b
 .br
 .ad l
@@ -1110,7 +1116,11 @@ Common options for command:
 .ad b
 .br
 .ad l
-[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+[    \fB--alloc\fP 
+.nh
+\fBcontiguous\fP|\:\fBcling\fP|\:\fBcling_by_tags\fP|\:\fBnormal\fP|\:\fBanywhere\fP|\:\fBinherit\fP
+.hy
+]
 .ad b
 .br
 .ad l
@@ -1186,10 +1196,14 @@ Common options for lvm:
 .ad b
 .RE
 .SH OPTIONS
-.HP
+.TP
 .ad l
-\fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP
+\fB--alloc\fP 
+.nh
+\fBcontiguous\fP|\:\fBcling\fP|\:\fBcling_by_tags\fP|\:\fBnormal\fP|\:\fBanywhere\fP|\:\fBinherit\fP
+.hy
 .br
+.ad b
 Determines the allocation policy when a command needs to allocate
 Physical Extents (PEs) from the VG. Each VG and LV has an allocation policy
 which can be changed with vgchange/lvchange, or overridden on the
@@ -1206,39 +1220,39 @@ e.g. by placing two stripes on the same PV.
 Optional positional PV args on the command line can also be used to limit
 which PVs the command will use for allocation.
 See \fBlvm\fP(8) for more information about allocation.
-.ad b
-.HP
+.TP
 .ad l
 \fB-b\fP|\fB--background\fP
 .br
+.ad b
 If the operation requires polling, this option causes the command to
 return before the operation is complete, and polling is done in the
 background.
-.ad b
-.HP
+.TP
 .ad l
 \fB-H\fP|\fB--cache\fP
 .br
+.ad b
 Specifies the command is handling a cache LV or cache pool.
 See --type cache and --type cache-pool.
 See \fBlvmcache\fP(7) for more information about LVM caching.
-.ad b
-.HP
+.TP
 .ad l
 \fB--cachedevice\fP \fIPV\fP
 .br
-The name of a device to use for a cache.
 .ad b
-.HP
+The name of a device to use for a cache.
+.TP
 .ad l
 \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP
 .br
-Specifies the cache metadata format used by cache target.
 .ad b
-.HP
+Specifies the cache metadata format used by cache target.
+.TP
 .ad l
 \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP
 .br
+.ad b
 Specifies when writes to a cache LV should be considered complete.
 \fBwriteback\fP considers a write complete as soon as it is
 stored in the cache pool.
@@ -1250,24 +1264,24 @@ cache pool LV. With \fBpassthrough\fP, all reads are served
 from the origin LV (all reads miss the cache) and all writes are
 forwarded to the origin LV; additionally, write hits cause cache
 block invalidates. See \fBlvmcache\fP(7) for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB--cachepolicy\fP \fIString\fP
 .br
+.ad b
 Specifies the cache policy for a cache LV.
 See \fBlvmcache\fP(7) for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB--cachepool\fP \fILV\fP
 .br
-The name of a cache pool.
 .ad b
-.HP
+The name of a cache pool.
+.TP
 .ad l
 \fB--cachesettings\fP \fIString\fP
 .br
+.ad b
 Specifies tunable values for a cache LV in "Key = Value" form.
 Repeat this option to specify multiple values.
 (The default values should usually be adequate.)
@@ -1275,23 +1289,23 @@ The special string value \fBdefault\fP switches
 settings back to their default kernel values and removes
 them from the list of settings stored in LVM metadata.
 See \fBlvmcache\fP(7) for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB--cachesize\fP \fISize\fP[m|UNIT]
 .br
-The size of cache to use.
 .ad b
-.HP
+The size of cache to use.
+.TP
 .ad l
 \fB--cachevol\fP \fILV\fP
 .br
-The name of a cache volume.
 .ad b
-.HP
+The name of a cache volume.
+.TP
 .ad l
 \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT]
 .br
+.ad b
 The size of chunks in a snapshot, cache pool or thin pool.
 For snapshots, the value must be a power of 2 between 4KiB and 512KiB
 and the default value is 4.
@@ -1302,66 +1316,66 @@ and the default value starts with 64 and scales up to fit the
 pool metadata size within 128MiB, if the pool metadata size is not specified.
 The value must be a multiple of 64KiB.
 See \fBlvmthin\fP(7) and \fBlvmcache\fP(7) for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB--commandprofile\fP \fIString\fP
 .br
+.ad b
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
-.ad b
-.HP
+.TP
 .ad l
 \fB--compression\fP \fBy\fP|\fBn\fP
 .br
+.ad b
 Controls whether compression is enabled or disable for VDO volume.
 See \fBlvmvdo\fP(7) for more information about VDO usage.
-.ad b
-.HP
+.TP
 .ad l
 \fB--config\fP \fIString\fP
 .br
+.ad b
 Config settings for the command. These override lvm.conf settings.
 The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
-.ad b
-.HP
+.TP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
 .br
+.ad b
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
-.ad b
-.HP
+.TP
 .ad l
 \fB--deduplication\fP \fBy\fP|\fBn\fP
 .br
+.ad b
 Controls whether deduplication is enabled or disable for VDO volume.
 See \fBlvmvdo\fP(7) for more information about VDO usage.
-.ad b
-.HP
+.TP
 .ad l
 \fB--devices\fP \fIPV\fP
 .br
+.ad b
 Devices that the command can use. This option can be repeated
 or accepts a comma separated list of devices. This overrides
 the devices file.
-.ad b
-.HP
+.TP
 .ad l
 \fB--devicesfile\fP \fIString\fP
 .br
+.ad b
 A file listing devices that LVM should use.
 The file must exist in /etc/lvm/devices/ and is managed
 with the lvmdevices(8) command.
 This overrides the lvm.conf devices/devicesfile and
 devices/use_devicesfile settings.
-.ad b
-.HP
+.TP
 .ad l
 \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP
 .br
+.ad b
 Specifies how the device-mapper thin pool layer in the kernel should
 handle discards.
 \fBignore\fP causes the thin pool to ignore discards.
@@ -1370,18 +1384,18 @@ allow reuse of unneeded extents in the thin pool.
 \fBpassdown\fP causes the thin pool to process discards itself
 (like nopassdown) and pass the discards to the underlying device.
 See \fBlvmthin\fP(7) for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
 .br
+.ad b
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
-.ad b
-.HP
+.TP
 .ad l
 \fB--errorwhenfull\fP \fBy\fP|\fBn\fP
 .br
+.ad b
 Specifies thin pool behavior when data space is exhausted.
 When yes, device-mapper will immediately return an error
 when a thin pool is full and an I/O request requires space.
@@ -1390,57 +1404,57 @@ period of time to allow the thin pool to be extended.
 Errors are returned if no space is available after the timeout.
 (Also see dm-thin-pool kernel module option no_space_timeout.)
 See \fBlvmthin\fP(7) for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB-f\fP|\fB--force\fP ...
 .br
+.ad b
 Override various checks, confirmations and protections.
 Use with extreme caution.
-.ad b
-.HP
+.TP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
-Display help text.
 .ad b
-.HP
+Display help text.
+.TP
 .ad l
 \fB-i\fP|\fB--interval\fP \fINumber\fP
 .br
-Report progress at regular intervals.
 .ad b
-.HP
+Report progress at regular intervals.
+.TP
 .ad l
 \fB--lockopt\fP \fIString\fP
 .br
+.ad b
 Used to pass options for special cases to lvmlockd.
 See \fBlvmlockd\fP(8) for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB--longhelp\fP
 .br
-Display long help text.
 .ad b
-.HP
+Display long help text.
+.TP
 .ad l
 \fB--merge\fP
 .br
+.ad b
 An alias for --mergethin, --mergemirrors, or --mergesnapshot,
 depending on the type of LV.
-.ad b
-.HP
+.TP
 .ad l
 \fB--mergemirrors\fP
 .br
+.ad b
 Merge LV images that were split from a raid1 LV.
 See --splitmirrors with --trackchanges.
-.ad b
-.HP
+.TP
 .ad l
 \fB--mergesnapshot\fP
 .br
+.ad b
 Merge COW snapshot LV into its origin.
 When merging a snapshot, if both the origin and snapshot LVs are not open,
 the merge will start immediately. Otherwise, the merge will start the
@@ -1453,27 +1467,27 @@ reads or writes to the origin appear as being directed to the snapshot
 being merged. When the merge finishes, the merged snapshot is removed.
 Multiple snapshots may be specified on the command line or a @tag may be
 used to specify multiple snapshots be merged to their respective origin.
-.ad b
-.HP
+.TP
 .ad l
 \fB--mergethin\fP
 .br
+.ad b
 Merge thin LV into its origin LV.
 The origin thin LV takes the content of the thin snapshot,
 and the thin snapshot LV is removed.
 See \fBlvmthin\fP(7) for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB--metadataprofile\fP \fIString\fP
 .br
+.ad b
 The metadata profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
-.ad b
-.HP
+.TP
 .ad l
 \fB--mirrorlog\fP \fBcore\fP|\fBdisk\fP
 .br
+.ad b
 Specifies the type of mirror log for LVs with the "mirror" type
 (does not apply to the "raid1" type.)
 \fBdisk\fP is a persistent log and requires a small amount of
@@ -1483,11 +1497,11 @@ In this case, the mirror must be synchronized (by copying LV data from
 the first device to others) each time the LV is activated, e.g. after reboot.
 \fBmirrored\fP is a persistent log that is itself mirrored, but
 should be avoided. Instead, use the raid1 type for log redundancy.
-.ad b
-.HP
+.TP
 .ad l
 \fB-m\fP|\fB--mirrors\fP [\fB+\fP|\fB-\fP]\fINumber\fP
 .br
+.ad b
 Specifies the number of mirror images in addition to the original LV
 image, e.g. --mirrors 1 means there are two images of the data, the
 original and one mirror image.
@@ -1504,93 +1518,93 @@ the number is added to the current number of images,
 or the minus prefix \fB-\fP can be used, in which case
 the number is subtracted from the current number of images.
 See \fBlvmraid\fP(7) for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB-n\fP|\fB--name\fP \fIString\fP
 .br
+.ad b
 Specifies the name of a new LV.
 When unspecified, a default name of "lvol#" is
 generated, where # is a number generated by LVM.
-.ad b
-.HP
+.TP
 .ad l
 \fB--nolocking\fP
 .br
-Disable locking.
 .ad b
-.HP
+Disable locking.
+.TP
 .ad l
 \fB--noudevsync\fP
 .br
+.ad b
 Disables udev synchronisation. The process will not wait for notification
 from udev. It will continue irrespective of any possible udev processing
 in the background. Only use this if udev is not running or has rules that
 ignore the devices LVM creates.
-.ad b
-.HP
+.TP
 .ad l
 \fB--originname\fP \fILV\fP
 .br
+.ad b
 Specifies the name to use for the external origin LV when converting an LV
 to a thin LV. The LV being converted becomes a read-only external origin
 with this name.
-.ad b
-.HP
+.TP
 .ad l
 \fB--poolmetadata\fP \fILV\fP
 .br
-The name of a an LV to use for storing pool metadata.
 .ad b
-.HP
+The name of a an LV to use for storing pool metadata.
+.TP
 .ad l
 \fB--poolmetadatasize\fP \fISize\fP[m|UNIT]
 .br
-Specifies the size of the new pool metadata LV.
 .ad b
-.HP
+Specifies the size of the new pool metadata LV.
+.TP
 .ad l
 \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP
 .br
+.ad b
 Enable or disable the automatic creation and management of a
 spare pool metadata LV in the VG. A spare metadata LV is reserved
 space that can be used when repairing a pool.
-.ad b
-.HP
+.TP
 .ad l
 \fB--profile\fP \fIString\fP
 .br
+.ad b
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
-.ad b
-.HP
+.TP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
 .br
+.ad b
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer 'no'.
-.ad b
-.HP
+.TP
 .ad l
 \fB--raidintegrity\fP \fBy\fP|\fBn\fP
 .br
-Enable or disable data integrity checksums for raid images.
 .ad b
-.HP
+Enable or disable data integrity checksums for raid images.
+.TP
 .ad l
 \fB--raidintegrityblocksize\fP \fINumber\fP
 .br
+.ad b
 The block size to use for dm-integrity on raid images.
 The integrity block size should usually match the device
 logical block size, or the file system block size.
 It may be less than the file system block size, but not
 less than the device logical block size.
 Possible values: 512, 1024, 2048, 4096.
-.ad b
-.HP
+.TP
 .ad l
 \fB--raidintegritymode\fP \fIString\fP
 .br
+.ad b
 Use a journal (default) or bitmap for keeping integrity checksums consistent
 in case of a crash. The bitmap areas are recalculated after a crash, so corruption
 in those areas would not be detected. A journal does not have this problem.
@@ -1598,135 +1612,135 @@ The journal mode doubles writes to storage, but can improve performance for
 scattered writes packed into a single journal write.
 bitmap mode can in theory achieve full write throughput of the device,
 but would not benefit from the potential scattered write optimization.
-.ad b
-.HP
+.TP
 .ad l
 \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP
 .br
+.ad b
 Sets read ahead sector count of an LV.
 \fBauto\fP is the default which allows the kernel to choose
 a suitable value automatically.
 \fBnone\fP is equivalent to zero.
-.ad b
-.HP
+.TP
 .ad l
 \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT]
 .br
+.ad b
 Size of each raid or mirror synchronization region.
 lvm.conf activation/raid_region_size can be used to
 configure a default.
-.ad b
-.HP
+.TP
 .ad l
 \fB--repair\fP
 .br
+.ad b
 Replace failed PVs in a raid or mirror LV, or run a repair
 utility on a thin pool. See \fBlvmraid\fP(7) and \fBlvmthin\fP(7)
 for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB--replace\fP \fIPV\fP
 .br
+.ad b
 Replace a specific PV in a raid LV with another PV.
 The new PV to use can be optionally specified after the LV.
 Multiple PVs can be replaced by repeating this option.
 See \fBlvmraid\fP(7) for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB-s\fP|\fB--snapshot\fP
 .br
+.ad b
 Combine a former COW snapshot LV with a former origin LV to reverse
 a previous --splitsnapshot command.
-.ad b
-.HP
+.TP
 .ad l
 \fB--splitcache\fP
 .br
+.ad b
 Separates a cache pool from a cache LV, and keeps the unused cache pool LV.
 Before the separation, the cache is flushed. Also see --uncache.
-.ad b
-.HP
+.TP
 .ad l
 \fB--splitmirrors\fP \fINumber\fP
 .br
+.ad b
 Splits the specified number of images from a raid1 or mirror LV
 and uses them to create a new LV. If --trackchanges is also specified,
 changes to the raid1 LV are tracked while the split LV remains detached.
 If --name is specified, then the images are permanently split from the
 original LV and changes are not tracked.
-.ad b
-.HP
+.TP
 .ad l
 \fB--splitsnapshot\fP
 .br
+.ad b
 Separates a COW snapshot from its origin LV. The LV that is split off
 contains the chunks that differ from the origin LV along with metadata
 describing them. This LV can be wiped and then destroyed with lvremove.
-.ad b
-.HP
+.TP
 .ad l
 \fB--startpoll\fP
 .br
-Start polling an LV to continue processing a conversion.
 .ad b
-.HP
+Start polling an LV to continue processing a conversion.
+.TP
 .ad l
 \fB--stripes\fP \fINumber\fP
 .br
+.ad b
 Specifies the number of stripes in a striped LV. This is the number of
 PVs (devices) that a striped LV is spread across. Data that
 appears sequential in the LV is spread across multiple devices in units of
 the stripe size (see --stripesize). This does not apply to
 existing allocated space, only newly allocated space can be striped.
-.ad b
-.HP
+.TP
 .ad l
 \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT]
 .br
+.ad b
 The amount of data that is written to one device before
 moving to the next in a striped LV.
-.ad b
-.HP
+.TP
 .ad l
 \fB--swapmetadata\fP
 .br
+.ad b
 Extracts the metadata LV from a pool and replaces it with another specified LV.
 The extracted LV is preserved and given the name of the LV that replaced it.
 Use for repair only. When the metadata LV is swapped out of the pool, it can
 be activated directly and used with thin provisioning tools:
 \fBcache_dump\fP(8), \fBcache_repair\fP(8), \fBcache_restore\fP(8),
 \fBthin_dump\fP(8), \fBthin_repair\fP(8), \fBthin_restore\fP(8).
-.ad b
-.HP
+.TP
 .ad l
 \fB-t\fP|\fB--test\fP
 .br
+.ad b
 Run in test mode. Commands will not update metadata.
 This is implemented by disabling all metadata writing but nevertheless
 returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
-.ad b
-.HP
+.TP
 .ad l
 \fB-T\fP|\fB--thin\fP
 .br
+.ad b
 Specifies the command is handling a thin LV or thin pool.
 See --type thin, --type thin-pool, and --virtualsize.
 See \fBlvmthin\fP(7) for more information about LVM thin provisioning.
-.ad b
-.HP
+.TP
 .ad l
 \fB--thinpool\fP \fILV\fP
 .br
-The name of a thin pool LV.
 .ad b
-.HP
+The name of a thin pool LV.
+.TP
 .ad l
 \fB--trackchanges\fP
 .br
+.ad b
 Can be used with --splitmirrors on a raid1 LV. This causes
 changes to the original raid1 LV to be tracked while the split images
 remain detached. This is a temporary state that allows the read-only
@@ -1735,11 +1749,14 @@ Only the regions with changed data are resynchronized during merge.
 While a raid1 LV is tracking changes, operations on it are limited to
 merging the split image (see --mergemirrors) or permanently splitting
 the image (see --splitmirrors with --name.
-.ad b
-.HP
+.TP
 .ad l
-\fB--type\fP \fBlinear\fP|\fBstriped\fP|\fBsnapshot\fP|\fBraid\fP|\fBmirror\fP|\fBthin\fP|\fBthin-pool\fP|\fBvdo\fP|\fBvdo-pool\fP|\fBcache\fP|\fBcache-pool\fP|\fBwritecache\fP
+\fB--type\fP 
+.nh
+\fBlinear\fP|\:\fBstriped\fP|\:\fBsnapshot\fP|\:\fBraid\fP|\:\fBmirror\fP|\:\fBthin\fP|\:\fBthin-pool\fP|\:\fBvdo\fP|\:\fBvdo-pool\fP|\:\fBcache\fP|\:\fBcache-pool\fP|\:\fBwritecache\fP
+.hy
 .br
+.ad b
 The LV type, also known as "segment type" or "segtype".
 See usage descriptions for the specific ways to use these types.
 For more information about redundancy and performance (\fBraid\fP<N>, \fBmirror\fP, \fBstriped\fP, \fBlinear\fP) see \fBlvmraid\fP(7).
@@ -1751,45 +1768,45 @@ Several commands omit an explicit type option because the type
 is inferred from other options or shortcuts
 (e.g. --stripes, --mirrors, --snapshot, --virtualsize, --thin, --cache, --vdo).
 Use inferred types with care because it can lead to unexpected results.
-.ad b
-.HP
+.TP
 .ad l
 \fB--uncache\fP
 .br
+.ad b
 Separates a cache pool from a cache LV, and deletes the unused cache pool LV.
 Before the separation, the cache is flushed. Also see --splitcache.
-.ad b
-.HP
+.TP
 .ad l
 \fB--usepolicies\fP
 .br
+.ad b
 Perform an operation according to the policy configured in lvm.conf
 or a profile.
-.ad b
-.HP
+.TP
 .ad l
 \fB--vdopool\fP \fILV\fP
 .br
+.ad b
 The name of a VDO pool LV.
 See \fBlvmvdo\fP(7) for more information about VDO usage.
-.ad b
-.HP
+.TP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
 .br
+.ad b
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
-.ad b
-.HP
+.TP
 .ad l
 \fB--version\fP
 .br
-Display version information.
 .ad b
-.HP
+Display version information.
+.TP
 .ad l
 \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
 .br
+.ad b
 The virtual size of a new thin LV.
 See \fBlvmthin\fP(7) for more information about LVM thin provisioning.
 Using virtual size (-V) and actual size (-L) together creates
@@ -1802,37 +1819,36 @@ When using a snapshot to create a sparse LV, a hidden virtual device
 is created using the zero target, and the LV has the suffix _vorigin.
 Snapshots are less efficient than thin provisioning when creating
 large sparse LVs (GiB).
-.ad b
-.HP
+.TP
 .ad l
 \fB-y\fP|\fB--yes\fP
 .br
+.ad b
 Do not prompt for confirmation interactively but always assume the
 answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
-.ad b
-.HP
+.TP
 .ad l
 \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP
 .br
+.ad b
 For snapshots, this controls zeroing of the first 4KiB of data in the
 snapshot. If the LV is read-only, the snapshot will not be zeroed.
 For thin pools, this controls zeroing of provisioned blocks.
 Provisioning of large zeroed chunks negatively impacts performance.
-.ad b
 .SH VARIABLES
-.HP
+.TP
 \fIVG\fP
 .br
 Volume Group name.  See \fBlvm\fP(8) for valid names.
-.HP
+.TP
 \fILV\fP
 .br
 Logical Volume name.  See \fBlvm\fP(8) for valid names.
 An LV positional arg generally includes the VG name and LV name, e.g. VG/LV.
 LV followed by _<type> indicates that an LV of the
 given type is required. (raid represents raid<N> type)
-.HP
+.TP
 \fIPV\fP
 .br
 Physical Volume name, a device path under /dev.
@@ -1842,16 +1858,16 @@ of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
 Start and end range (inclusive): \fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
 Start and length range (counting from 0): \fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
-.HP
+.TP
 \fITag\fP
 .br
 Tag name.  See \fBlvm\fP(8) for information about tag names and using tags
 in place of a VG, LV or PV.
-.HP
+.TP
 \fIString\fP
 .br
 See the option description for information about the string content.
-.HP
+.TP
 \fISize\fP[UNIT]
 .br
 Size is an input number that accepts an optional unit.
@@ -2295,70 +2311,71 @@ Detach and remove the cache pool from a cache LV.
 .br
 .B lvconvert --uncache vg/lvol1
 .SH SEE ALSO
+.nh
+.ad l
+.BR lvm (8),
+.BR lvm.conf (5),
+.BR lvmconfig (8),
+.BR lvmdevices (8),
 
-.BR lvm (8)
-.BR lvm.conf (5)
-.BR lvmconfig (8)
-.BR lvmdevices (8)
+.BR pvchange (8),
+.BR pvck (8),
+.BR pvcreate (8),
+.BR pvdisplay (8),
+.BR pvmove (8),
+.BR pvremove (8),
+.BR pvresize (8),
+.BR pvs (8),
+.BR pvscan (8),
 
-.BR pvchange (8)
-.BR pvck (8)
-.BR pvcreate (8)
-.BR pvdisplay (8)
-.BR pvmove (8)
-.BR pvremove (8)
-.BR pvresize (8)
-.BR pvs (8)
-.BR pvscan (8) 
+.BR vgcfgbackup (8),
+.BR vgcfgrestore (8),
+.BR vgchange (8),
+.BR vgck (8),
+.BR vgcreate (8),
+.BR vgconvert (8),
+.BR vgdisplay (8),
+.BR vgexport (8),
+.BR vgextend (8),
+.BR vgimport (8),
+.BR vgimportclone (8),
+.BR vgimportdevices (8),
+.BR vgmerge (8),
+.BR vgmknodes (8),
+.BR vgreduce (8),
+.BR vgremove (8),
+.BR vgrename (8),
+.BR vgs (8),
+.BR vgscan (8),
+.BR vgsplit (8),
 
-.BR vgcfgbackup (8)
-.BR vgcfgrestore (8)
-.BR vgchange (8)
-.BR vgck (8)
-.BR vgcreate (8)
-.BR vgconvert (8)
-.BR vgdisplay (8)
-.BR vgexport (8)
-.BR vgextend (8)
-.BR vgimport (8)
-.BR vgimportclone (8)
-.BR vgimportdevices (8)
-.BR vgmerge (8)
-.BR vgmknodes (8)
-.BR vgreduce (8)
-.BR vgremove (8)
-.BR vgrename (8)
-.BR vgs (8)
-.BR vgscan (8)
-.BR vgsplit (8) 
+.BR lvcreate (8),
+.BR lvchange (8),
+.BR lvconvert (8),
+.BR lvdisplay (8),
+.BR lvextend (8),
+.BR lvreduce (8),
+.BR lvremove (8),
+.BR lvrename (8),
+.BR lvresize (8),
+.BR lvs (8),
+.BR lvscan (8),
 
-.BR lvcreate (8)
-.BR lvchange (8)
-.BR lvconvert (8)
-.BR lvdisplay (8)
-.BR lvextend (8)
-.BR lvreduce (8)
-.BR lvremove (8)
-.BR lvrename (8)
-.BR lvresize (8)
-.BR lvs (8)
-.BR lvscan (8)
+.BR lvm-fullreport (8),
+.BR lvm-lvpoll (8),
+.BR lvm2-activation-generator (8),
+.BR blkdeactivate (8),
+.BR lvmdump (8),
 
-.BR lvm-fullreport (8)
-.BR lvm-lvpoll (8)
-.BR lvm2-activation-generator (8)
-.BR blkdeactivate (8)
-.BR lvmdump (8)
+.BR dmeventd (8),
+.BR lvmpolld (8),
+.BR lvmlockd (8),
+.BR lvmlockctl (8),
+.BR cmirrord (8),
+.BR lvmdbusd (8),
 
-.BR dmeventd (8)
-.BR lvmpolld (8)
-.BR lvmlockd (8)
-.BR lvmlockctl (8)
-.BR cmirrord (8)
-.BR lvmdbusd (8)
-
-.BR lvmsystemid (7)
-.BR lvmreport (7)
-.BR lvmraid (7)
-.BR lvmthin (7)
+.BR lvmsystemid (7),
+.BR lvmreport (7),
+.BR lvmraid (7),
+.BR lvmthin (7),
 .BR lvmcache (7)

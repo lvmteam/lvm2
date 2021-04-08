@@ -206,202 +206,202 @@ Common options for lvm:
 .ad b
 .RE
 .SH OPTIONS
-.HP
+.TP
 .ad l
 \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP
 .br
+.ad b
 Auto-activate LVs in a VG when the PVs scanned have completed the VG.
 (Only \fBay\fP is applicable.)
-.ad b
-.HP
+.TP
 .ad l
 \fB--cache\fP
 .br
-Scan one or more devices and record that they are online.
 .ad b
-.HP
+Scan one or more devices and record that they are online.
+.TP
 .ad l
 \fB--commandprofile\fP \fIString\fP
 .br
+.ad b
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
-.ad b
-.HP
+.TP
 .ad l
 \fB--config\fP \fIString\fP
 .br
+.ad b
 Config settings for the command. These override lvm.conf settings.
 The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
-.ad b
-.HP
+.TP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
 .br
+.ad b
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
-.ad b
-.HP
+.TP
 .ad l
 \fB--devices\fP \fIPV\fP
 .br
+.ad b
 Devices that the command can use. This option can be repeated
 or accepts a comma separated list of devices. This overrides
 the devices file.
-.ad b
-.HP
+.TP
 .ad l
 \fB--devicesfile\fP \fIString\fP
 .br
+.ad b
 A file listing devices that LVM should use.
 The file must exist in /etc/lvm/devices/ and is managed
 with the lvmdevices(8) command.
 This overrides the lvm.conf devices/devicesfile and
 devices/use_devicesfile settings.
-.ad b
-.HP
+.TP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
 .br
+.ad b
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
-.ad b
-.HP
+.TP
 .ad l
 \fB-e\fP|\fB--exported\fP
 .br
-Only show PVs belonging to exported VGs.
 .ad b
-.HP
+Only show PVs belonging to exported VGs.
+.TP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
-Display help text.
 .ad b
-.HP
+Display help text.
+.TP
 .ad l
 \fB--ignorelockingfailure\fP
 .br
+.ad b
 Allows a command to continue with read-only metadata
 operations after locking failures.
-.ad b
-.HP
+.TP
 .ad l
 \fB--lockopt\fP \fIString\fP
 .br
+.ad b
 Used to pass options for special cases to lvmlockd.
 See \fBlvmlockd\fP(8) for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB--longhelp\fP
 .br
-Display long help text.
 .ad b
-.HP
+Display long help text.
+.TP
 .ad l
 \fB-j\fP|\fB--major\fP \fINumber\fP
 .br
-The major number of a device.
 .ad b
-.HP
+The major number of a device.
+.TP
 .ad l
 \fB--minor\fP \fINumber\fP
 .br
-The minor number of a device.
 .ad b
-.HP
+The minor number of a device.
+.TP
 .ad l
 \fB--nolocking\fP
 .br
-Disable locking.
 .ad b
-.HP
+Disable locking.
+.TP
 .ad l
 \fB--noudevsync\fP
 .br
+.ad b
 Disables udev synchronisation. The process will not wait for notification
 from udev. It will continue irrespective of any possible udev processing
 in the background. Only use this if udev is not running or has rules that
 ignore the devices LVM creates.
-.ad b
-.HP
+.TP
 .ad l
 \fB-n\fP|\fB--novolumegroup\fP
 .br
-Only show PVs not belonging to any VG.
 .ad b
-.HP
+Only show PVs not belonging to any VG.
+.TP
 .ad l
 \fB--profile\fP \fIString\fP
 .br
+.ad b
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
-.ad b
-.HP
+.TP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
 .br
+.ad b
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer 'no'.
-.ad b
-.HP
+.TP
 .ad l
 \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
 .br
+.ad b
 Overrides current output format for reports which is defined globally by
 the report/output_format setting in lvm.conf.
 \fBbasic\fP is the original format with columns and rows.
 If there is more than one report per command, each report is prefixed
 with the report name for identification. \fBjson\fP produces report
 output in JSON format. See \fBlvmreport\fP(7) for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB-s\fP|\fB--short\fP
 .br
-Short listing format.
 .ad b
-.HP
+Short listing format.
+.TP
 .ad l
 \fB-t\fP|\fB--test\fP
 .br
+.ad b
 Run in test mode. Commands will not update metadata.
 This is implemented by disabling all metadata writing but nevertheless
 returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
-.ad b
-.HP
+.TP
 .ad l
 \fB-u\fP|\fB--uuid\fP
 .br
-Show UUIDs in addition to device names.
 .ad b
-.HP
+Show UUIDs in addition to device names.
+.TP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
 .br
+.ad b
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
-.ad b
-.HP
+.TP
 .ad l
 \fB--version\fP
 .br
-Display version information.
 .ad b
-.HP
+Display version information.
+.TP
 .ad l
 \fB-y\fP|\fB--yes\fP
 .br
+.ad b
 Do not prompt for confirmation interactively but always assume the
 answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
-.ad b
 .SH VARIABLES
-.HP
+.TP
 \fIPV\fP
 .br
 Physical Volume name, a device path under /dev.
@@ -411,11 +411,11 @@ of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
 Start and end range (inclusive): \fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
 Start and length range (counting from 0): \fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
-.HP
+.TP
 \fIString\fP
 .br
 See the option description for information about the string content.
-.HP
+.TP
 \fISize\fP[UNIT]
 .br
 Size is an input number that accepts an optional unit.
@@ -431,70 +431,71 @@ capital letters mean multiple of 1000.)
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH SEE ALSO
+.nh
+.ad l
+.BR lvm (8),
+.BR lvm.conf (5),
+.BR lvmconfig (8),
+.BR lvmdevices (8),
 
-.BR lvm (8)
-.BR lvm.conf (5)
-.BR lvmconfig (8)
-.BR lvmdevices (8)
+.BR pvchange (8),
+.BR pvck (8),
+.BR pvcreate (8),
+.BR pvdisplay (8),
+.BR pvmove (8),
+.BR pvremove (8),
+.BR pvresize (8),
+.BR pvs (8),
+.BR pvscan (8),
 
-.BR pvchange (8)
-.BR pvck (8)
-.BR pvcreate (8)
-.BR pvdisplay (8)
-.BR pvmove (8)
-.BR pvremove (8)
-.BR pvresize (8)
-.BR pvs (8)
-.BR pvscan (8) 
+.BR vgcfgbackup (8),
+.BR vgcfgrestore (8),
+.BR vgchange (8),
+.BR vgck (8),
+.BR vgcreate (8),
+.BR vgconvert (8),
+.BR vgdisplay (8),
+.BR vgexport (8),
+.BR vgextend (8),
+.BR vgimport (8),
+.BR vgimportclone (8),
+.BR vgimportdevices (8),
+.BR vgmerge (8),
+.BR vgmknodes (8),
+.BR vgreduce (8),
+.BR vgremove (8),
+.BR vgrename (8),
+.BR vgs (8),
+.BR vgscan (8),
+.BR vgsplit (8),
 
-.BR vgcfgbackup (8)
-.BR vgcfgrestore (8)
-.BR vgchange (8)
-.BR vgck (8)
-.BR vgcreate (8)
-.BR vgconvert (8)
-.BR vgdisplay (8)
-.BR vgexport (8)
-.BR vgextend (8)
-.BR vgimport (8)
-.BR vgimportclone (8)
-.BR vgimportdevices (8)
-.BR vgmerge (8)
-.BR vgmknodes (8)
-.BR vgreduce (8)
-.BR vgremove (8)
-.BR vgrename (8)
-.BR vgs (8)
-.BR vgscan (8)
-.BR vgsplit (8) 
+.BR lvcreate (8),
+.BR lvchange (8),
+.BR lvconvert (8),
+.BR lvdisplay (8),
+.BR lvextend (8),
+.BR lvreduce (8),
+.BR lvremove (8),
+.BR lvrename (8),
+.BR lvresize (8),
+.BR lvs (8),
+.BR lvscan (8),
 
-.BR lvcreate (8)
-.BR lvchange (8)
-.BR lvconvert (8)
-.BR lvdisplay (8)
-.BR lvextend (8)
-.BR lvreduce (8)
-.BR lvremove (8)
-.BR lvrename (8)
-.BR lvresize (8)
-.BR lvs (8)
-.BR lvscan (8)
+.BR lvm-fullreport (8),
+.BR lvm-lvpoll (8),
+.BR lvm2-activation-generator (8),
+.BR blkdeactivate (8),
+.BR lvmdump (8),
 
-.BR lvm-fullreport (8)
-.BR lvm-lvpoll (8)
-.BR lvm2-activation-generator (8)
-.BR blkdeactivate (8)
-.BR lvmdump (8)
+.BR dmeventd (8),
+.BR lvmpolld (8),
+.BR lvmlockd (8),
+.BR lvmlockctl (8),
+.BR cmirrord (8),
+.BR lvmdbusd (8),
 
-.BR dmeventd (8)
-.BR lvmpolld (8)
-.BR lvmlockd (8)
-.BR lvmlockctl (8)
-.BR cmirrord (8)
-.BR lvmdbusd (8)
-
-.BR lvmsystemid (7)
-.BR lvmreport (7)
-.BR lvmraid (7)
-.BR lvmthin (7)
+.BR lvmsystemid (7),
+.BR lvmreport (7),
+.BR lvmraid (7),
+.BR lvmthin (7),
 .BR lvmcache (7)

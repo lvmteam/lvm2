@@ -1086,10 +1086,12 @@ global {
 	# Activate LVs based on system-generated device events.
 	# When a device appears on the system, a system-generated event runs
 	# the pvscan command to activate LVs if the new PV completes the VG.
-	# Use auto_activation_volume_list to select which LVs should be
-	# activated from these events (the default is all.)
 	# When event_activation is disabled, the system will generally run
 	# a direct activation command to activate LVs in complete VGs.
+	# Activation commands that are run by the system, either from events
+	# or at fixed points during startup, use autoactivation (-aay).  See
+	# the --setautoactivation option or the auto_activation_volume_list
+	# setting to configure autoactivation for specific VGs or LVs.
 	# This configuration option has an automatic default value.
 	# event_activation = 1
 
@@ -1430,22 +1432,22 @@ activation {
 	# This configuration option does not have a default value defined.
 
 	# Configuration option activation/auto_activation_volume_list.
-	# Only LVs selected by this list are auto-activated.
-	# This list works like volume_list, but it is used only by
-	# auto-activation commands. It does not apply to direct activation
-	# commands. If this list is defined, an LV is only auto-activated
-	# if it matches an entry in this list. If this list is undefined, it
-	# imposes no limits on LV auto-activation (all are allowed.) If this
-	# list is defined and empty, i.e. "[]", then no LVs are selected for
-	# auto-activation. An LV that is selected by this list for
-	# auto-activation, must also be selected by volume_list (if defined)
-	# before it is activated. Auto-activation is an activation command that
-	# includes the 'a' argument: --activate ay or -a ay. The 'a' (auto)
-	# argument for auto-activation is meant to be used by activation
-	# commands that are run automatically by the system, as opposed to LVM
-	# commands run directly by a user. A user may also use the 'a' flag
-	# directly to perform auto-activation. Also see pvscan(8) for more
-	# information about auto-activation.
+	# A list of VGs or LVs that should be autoactivated.
+	# Autoactivation is an activation command run with -aay,
+	# i.e. vgchange -aay, lvchange -aay, or pvscan --cache -aay.
+	# When this list is defined, an autoactivation command will only
+	# activate LVs included in the list. If this list is undefined,
+	# it has no effect. If this list is defined but empty, then no
+	# LVs will be autoactivated. LVs can be included in the list by
+	# LV name, VG name (applies to all LVs in the VG), or tag name.
+	# VGs and LVs can also have an autoactivation property set in
+	# metadata, see --setautoactivation. LVs included in this list
+	# will not be autoactivated if the VG or LV autoactivation
+	# property is disabled (see vgs or lvs "-o autoactivation").
+	# The volume_list setting and the "activation skip" property
+	# also apply to autoactivation.
+	# The -aay option is meant to be used by activation commands that
+	# are run automatically by the system, e.g. from systemd services.
 	#
 	# Accepted values:
 	#   vgname

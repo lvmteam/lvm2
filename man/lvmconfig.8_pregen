@@ -31,7 +31,11 @@ line settings from --config.
 .ad b
 .br
 .ad l
-[    \fB--typeconfig\fP \fBcurrent\fP|\fBdefault\fP|\fBdiff\fP|\fBfull\fP|\fBlist\fP|\fBmissing\fP|\fBnew\fP|\fBprofilable\fP|\fBprofilable-command\fP|\fBprofilable-metadata\fP ]
+[    \fB--typeconfig\fP 
+.nh
+\fBcurrent\fP|\:\fBdefault\fP|\:\fBdiff\fP|\:\fBfull\fP|\:\fBlist\fP|\:\fBmissing\fP|\:\fBnew\fP|\:\fBprofilable\fP|\:\fBprofilable-command\fP|\:\fBprofilable-metadata\fP
+.hy
+]
 .ad b
 .br
 .ad l
@@ -173,10 +177,11 @@ Common options for lvm:
 .ad b
 .RE
 .SH OPTIONS
-.HP
+.TP
 .ad l
 \fB--atversion\fP \fIString\fP
 .br
+.ad b
 Specify an LVM version in x.y.z format where x is the major version,
 the y is the minor version and z is the patchlevel (e.g. 2.2.106).
 When configuration is displayed, the configuration settings recognized
@@ -184,116 +189,116 @@ at this LVM version will be considered only. This can be used
 to display a configuration that a certain LVM version understands and
 which does not contain any newer settings for which LVM would
 issue a warning message when checking the configuration.
-.ad b
-.HP
+.TP
 .ad l
 \fB--commandprofile\fP \fIString\fP
 .br
+.ad b
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
-.ad b
-.HP
+.TP
 .ad l
 \fB--config\fP \fIString\fP
 .br
+.ad b
 Config settings for the command. These override lvm.conf settings.
 The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
-.ad b
-.HP
+.TP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
 .br
+.ad b
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
-.ad b
-.HP
+.TP
 .ad l
 \fB--devices\fP \fIPV\fP
 .br
+.ad b
 Devices that the command can use. This option can be repeated
 or accepts a comma separated list of devices. This overrides
 the devices file.
-.ad b
-.HP
+.TP
 .ad l
 \fB--devicesfile\fP \fIString\fP
 .br
+.ad b
 A file listing devices that LVM should use.
 The file must exist in /etc/lvm/devices/ and is managed
 with the lvmdevices(8) command.
 This overrides the lvm.conf devices/devicesfile and
 devices/use_devicesfile settings.
-.ad b
-.HP
+.TP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
 .br
+.ad b
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
-.ad b
-.HP
+.TP
 .ad l
 \fB-f\fP|\fB--file\fP \fIString\fP
 .br
-Write output to the named file.
 .ad b
-.HP
+Write output to the named file.
+.TP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
-Display help text.
 .ad b
-.HP
+Display help text.
+.TP
 .ad l
 \fB--ignoreadvanced\fP
 .br
-Exclude advanced configuration settings from the output.
 .ad b
-.HP
+Exclude advanced configuration settings from the output.
+.TP
 .ad l
 \fB--ignorelocal\fP
 .br
+.ad b
 Ignore the local section. The local section should be defined in
 the lvmlocal.conf file, and should contain config settings
 specific to the local host which should not be copied to
 other hosts.
-.ad b
-.HP
+.TP
 .ad l
 \fB--ignoreunsupported\fP
 .br
+.ad b
 Exclude unsupported configuration settings from the output. These settings are
 either used for debugging and development purposes only or their support is not
 yet complete and they are not meant to be used in production. The \fBcurrent\fP
 and \fBdiff\fP types include unsupported settings in their output by default,
 all the other types ignore unsupported settings.
-.ad b
-.HP
+.TP
 .ad l
 \fB-l\fP|\fB--list\fP
 .br
+.ad b
 List config settings with summarizing comment. This is the same as using
 options --typeconfig list --withsummary.
-.ad b
-.HP
+.TP
 .ad l
 \fB--lockopt\fP \fIString\fP
 .br
+.ad b
 Used to pass options for special cases to lvmlockd.
 See \fBlvmlockd\fP(8) for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB--longhelp\fP
 .br
-Display long help text.
 .ad b
-.HP
+Display long help text.
+.TP
 .ad l
 \fB--mergedconfig\fP
 .br
+.ad b
 When the command is run with --config
 and/or --commandprofile (or using LVM_COMMAND_PROFILE
 environment variable), --profile, or --metadataprofile,
@@ -301,78 +306,81 @@ merge all the contents of the "config cascade" before displaying it.
 Without merging, only the configuration at the front of the
 cascade is displayed.
 See \fBlvm.conf\fP(5) for more information about config.
-.ad b
-.HP
+.TP
 .ad l
 \fB--metadataprofile\fP \fIString\fP
 .br
+.ad b
 The metadata profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
-.ad b
-.HP
+.TP
 .ad l
 \fB--nolocking\fP
 .br
-Disable locking.
 .ad b
-.HP
+Disable locking.
+.TP
 .ad l
 \fB--profile\fP \fIString\fP
 .br
+.ad b
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
-.ad b
-.HP
+.TP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
 .br
+.ad b
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer 'no'.
-.ad b
-.HP
+.TP
 .ad l
 \fB--showdeprecated\fP
 .br
+.ad b
 Include deprecated configuration settings in the output. These settings
 are deprecated after a certain version. If a concrete version is specified
 with --atversion, deprecated settings are automatically included
 if the specified version is lower than the version in which the settings were
 deprecated. The current and diff types include deprecated settings
 in their output by default, all the other types ignore deprecated settings.
-.ad b
-.HP
+.TP
 .ad l
 \fB--showunsupported\fP
 .br
+.ad b
 Include unsupported configuration settings in the output. These settings
 are either used for debugging or development purposes only, or their support
 is not yet complete and they are not meant to be used in production. The
 current and diff types include unsupported settings in their
 output by default, all the other types ignore unsupported settings.
-.ad b
-.HP
+.TP
 .ad l
 \fB--sinceversion\fP \fIString\fP
 .br
+.ad b
 Specify an LVM version in x.y.z format where x is the major version,
 the y is the minor version and z is the patchlevel (e.g. 2.2.106).
 This option is currently applicable only with --typeconfig new
 to display all configuration settings introduced since given version.
-.ad b
-.HP
+.TP
 .ad l
 \fB-t\fP|\fB--test\fP
 .br
+.ad b
 Run in test mode. Commands will not update metadata.
 This is implemented by disabling all metadata writing but nevertheless
 returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
-.ad b
-.HP
+.TP
 .ad l
-\fB--typeconfig\fP \fBcurrent\fP|\fBdefault\fP|\fBdiff\fP|\fBfull\fP|\fBlist\fP|\fBmissing\fP|\fBnew\fP|\fBprofilable\fP|\fBprofilable-command\fP|\fBprofilable-metadata\fP
+\fB--typeconfig\fP 
+.nh
+\fBcurrent\fP|\:\fBdefault\fP|\:\fBdiff\fP|\:\fBfull\fP|\:\fBlist\fP|\:\fBmissing\fP|\:\fBnew\fP|\:\fBprofilable\fP|\:\fBprofilable-command\fP|\:\fBprofilable-metadata\fP
+.hy
 .br
+.ad b
 \fBcurrent\fP prints the config settings that would be applied
 to an lvm command (assuming the command does not override them
 on the command line.) This includes:
@@ -405,89 +413,88 @@ with their default values.
 \fBprofilable-command\fP prints settings with their default values that can be set from a command profile.
 \fBprofilable-metadata\fP prints settings with their default values that can be set from a metadata profile.
 Also see \fBlvm.conf\fP(5).
-.ad b
-.HP
+.TP
 .ad l
 \fB--unconfigured\fP
 .br
-Internal option used for generating config file during build.
 .ad b
-.HP
+Internal option used for generating config file during build.
+.TP
 .ad l
 \fB--validate\fP
 .br
+.ad b
 Validate current configuration used and exit with appropriate
 return code. The validation is done only for the configuration
 at the front of the "config cascade". To validate the whole
 merged configuration tree, also use --mergedconfig.
 The validation is done even if lvm.conf config/checks is disabled.
-.ad b
-.HP
+.TP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
 .br
+.ad b
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
-.ad b
-.HP
+.TP
 .ad l
 \fB--version\fP
 .br
-Display version information.
 .ad b
-.HP
+Display version information.
+.TP
 .ad l
 \fB--withcomments\fP
 .br
+.ad b
 Display a full comment for each configuration node. For deprecated
 settings, also display comments about deprecation.
-.ad b
-.HP
+.TP
 .ad l
 \fB--withgeneralpreamble\fP
 .br
-Include general config file preamble.
 .ad b
-.HP
+Include general config file preamble.
+.TP
 .ad l
 \fB--withlocalpreamble\fP
 .br
-Include local config file preamble.
 .ad b
-.HP
+Include local config file preamble.
+.TP
 .ad l
 \fB--withspaces\fP
 .br
-Where appropriate, add more spaces in output for better readability.
 .ad b
-.HP
+Where appropriate, add more spaces in output for better readability.
+.TP
 .ad l
 \fB--withsummary\fP
 .br
-Display a one line comment for each configuration node.
 .ad b
-.HP
+Display a one line comment for each configuration node.
+.TP
 .ad l
 \fB--withversions\fP
 .br
+.ad b
 Also display a comment containing the version of introduction for
 each configuration node. If the setting is deprecated, also display
 the version since which it is deprecated.
-.ad b
-.HP
+.TP
 .ad l
 \fB-y\fP|\fB--yes\fP
 .br
+.ad b
 Do not prompt for confirmation interactively but always assume the
 answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
-.ad b
 .SH VARIABLES
-.HP
+.TP
 \fIString\fP
 .br
 See the option description for information about the string content.
-.HP
+.TP
 \fISize\fP[UNIT]
 .br
 Size is an input number that accepts an optional unit.
@@ -503,70 +510,71 @@ capital letters mean multiple of 1000.)
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH SEE ALSO
+.nh
+.ad l
+.BR lvm (8),
+.BR lvm.conf (5),
+.BR lvmconfig (8),
+.BR lvmdevices (8),
 
-.BR lvm (8)
-.BR lvm.conf (5)
-.BR lvmconfig (8)
-.BR lvmdevices (8)
+.BR pvchange (8),
+.BR pvck (8),
+.BR pvcreate (8),
+.BR pvdisplay (8),
+.BR pvmove (8),
+.BR pvremove (8),
+.BR pvresize (8),
+.BR pvs (8),
+.BR pvscan (8),
 
-.BR pvchange (8)
-.BR pvck (8)
-.BR pvcreate (8)
-.BR pvdisplay (8)
-.BR pvmove (8)
-.BR pvremove (8)
-.BR pvresize (8)
-.BR pvs (8)
-.BR pvscan (8) 
+.BR vgcfgbackup (8),
+.BR vgcfgrestore (8),
+.BR vgchange (8),
+.BR vgck (8),
+.BR vgcreate (8),
+.BR vgconvert (8),
+.BR vgdisplay (8),
+.BR vgexport (8),
+.BR vgextend (8),
+.BR vgimport (8),
+.BR vgimportclone (8),
+.BR vgimportdevices (8),
+.BR vgmerge (8),
+.BR vgmknodes (8),
+.BR vgreduce (8),
+.BR vgremove (8),
+.BR vgrename (8),
+.BR vgs (8),
+.BR vgscan (8),
+.BR vgsplit (8),
 
-.BR vgcfgbackup (8)
-.BR vgcfgrestore (8)
-.BR vgchange (8)
-.BR vgck (8)
-.BR vgcreate (8)
-.BR vgconvert (8)
-.BR vgdisplay (8)
-.BR vgexport (8)
-.BR vgextend (8)
-.BR vgimport (8)
-.BR vgimportclone (8)
-.BR vgimportdevices (8)
-.BR vgmerge (8)
-.BR vgmknodes (8)
-.BR vgreduce (8)
-.BR vgremove (8)
-.BR vgrename (8)
-.BR vgs (8)
-.BR vgscan (8)
-.BR vgsplit (8) 
+.BR lvcreate (8),
+.BR lvchange (8),
+.BR lvconvert (8),
+.BR lvdisplay (8),
+.BR lvextend (8),
+.BR lvreduce (8),
+.BR lvremove (8),
+.BR lvrename (8),
+.BR lvresize (8),
+.BR lvs (8),
+.BR lvscan (8),
 
-.BR lvcreate (8)
-.BR lvchange (8)
-.BR lvconvert (8)
-.BR lvdisplay (8)
-.BR lvextend (8)
-.BR lvreduce (8)
-.BR lvremove (8)
-.BR lvrename (8)
-.BR lvresize (8)
-.BR lvs (8)
-.BR lvscan (8)
+.BR lvm-fullreport (8),
+.BR lvm-lvpoll (8),
+.BR lvm2-activation-generator (8),
+.BR blkdeactivate (8),
+.BR lvmdump (8),
 
-.BR lvm-fullreport (8)
-.BR lvm-lvpoll (8)
-.BR lvm2-activation-generator (8)
-.BR blkdeactivate (8)
-.BR lvmdump (8)
+.BR dmeventd (8),
+.BR lvmpolld (8),
+.BR lvmlockd (8),
+.BR lvmlockctl (8),
+.BR cmirrord (8),
+.BR lvmdbusd (8),
 
-.BR dmeventd (8)
-.BR lvmpolld (8)
-.BR lvmlockd (8)
-.BR lvmlockctl (8)
-.BR cmirrord (8)
-.BR lvmdbusd (8)
-
-.BR lvmsystemid (7)
-.BR lvmreport (7)
-.BR lvmraid (7)
-.BR lvmthin (7)
+.BR lvmsystemid (7),
+.BR lvmreport (7),
+.BR lvmraid (7),
+.BR lvmthin (7),
 .BR lvmcache (7)

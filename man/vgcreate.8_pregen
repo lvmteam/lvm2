@@ -59,7 +59,11 @@ device.
 .ad b
 .br
 .ad l
-[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+[    \fB--alloc\fP 
+.nh
+\fBcontiguous\fP|\:\fBcling\fP|\:\fBcling_by_tags\fP|\:\fBnormal\fP|\:\fBanywhere\fP|\:\fBinherit\fP
+.hy
+]
 .ad b
 .br
 .ad l
@@ -104,6 +108,10 @@ device.
 .br
 .ad l
 [    \fB--locktype\fP \fBsanlock\fP|\fBdlm\fP|\fBnone\fP ]
+.ad b
+.br
+.ad l
+[    \fB--setautoactivation\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -178,17 +186,21 @@ Common options for lvm:
 .ad b
 .RE
 .SH OPTIONS
-.HP
+.TP
 .ad l
 \fB--addtag\fP \fITag\fP
 .br
+.ad b
 Adds a tag to a PV, VG or LV. This option can be repeated to add
 multiple tags at once. See \fBlvm\fP(8) for information about tags.
-.ad b
-.HP
+.TP
 .ad l
-\fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP
+\fB--alloc\fP 
+.nh
+\fBcontiguous\fP|\:\fBcling\fP|\:\fBcling_by_tags\fP|\:\fBnormal\fP|\:\fBanywhere\fP|\:\fBinherit\fP
+.hy
 .br
+.ad b
 Determines the allocation policy when a command needs to allocate
 Physical Extents (PEs) from the VG. Each VG and LV has an allocation policy
 which can be changed with vgchange/lvchange, or overridden on the
@@ -205,192 +217,192 @@ e.g. by placing two stripes on the same PV.
 Optional positional PV args on the command line can also be used to limit
 which PVs the command will use for allocation.
 See \fBlvm\fP(8) for more information about allocation.
-.ad b
-.HP
+.TP
 .ad l
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
 .br
+.ad b
 Specifies if metadata should be backed up automatically after a change.
 Enabling this is strongly advised! See \fBvgcfgbackup\fP(8) for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB-c\fP|\fB--clustered\fP \fBy\fP|\fBn\fP
 .br
+.ad b
 This option was specific to clvm and is now replaced by
 the --shared option with \fBlvmlockd\fP(8).
-.ad b
-.HP
+.TP
 .ad l
 \fB--commandprofile\fP \fIString\fP
 .br
+.ad b
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
-.ad b
-.HP
+.TP
 .ad l
 \fB--config\fP \fIString\fP
 .br
+.ad b
 Config settings for the command. These override lvm.conf settings.
 The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
-.ad b
-.HP
+.TP
 .ad l
 \fB--dataalignment\fP \fISize\fP[k|UNIT]
 .br
+.ad b
 Align the start of a PV data area with a multiple of this number.
 To see the location of the first Physical Extent (PE) of an existing PV,
 use pvs -o +pe_start. In addition, it may be shifted by an alignment offset,
 see --dataalignmentoffset.
 Also specify an appropriate PE size when creating a VG.
-.ad b
-.HP
+.TP
 .ad l
 \fB--dataalignmentoffset\fP \fISize\fP[k|UNIT]
 .br
-Shift the start of the PV data area by this additional offset.
 .ad b
-.HP
+Shift the start of the PV data area by this additional offset.
+.TP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
 .br
+.ad b
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
-.ad b
-.HP
+.TP
 .ad l
 \fB--devices\fP \fIPV\fP
 .br
+.ad b
 Devices that the command can use. This option can be repeated
 or accepts a comma separated list of devices. This overrides
 the devices file.
-.ad b
-.HP
+.TP
 .ad l
 \fB--devicesfile\fP \fIString\fP
 .br
+.ad b
 A file listing devices that LVM should use.
 The file must exist in /etc/lvm/devices/ and is managed
 with the lvmdevices(8) command.
 This overrides the lvm.conf devices/devicesfile and
 devices/use_devicesfile settings.
-.ad b
-.HP
+.TP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
 .br
+.ad b
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
-.ad b
-.HP
+.TP
 .ad l
 \fB-f\fP|\fB--force\fP ...
 .br
+.ad b
 Override various checks, confirmations and protections.
 Use with extreme caution.
-.ad b
-.HP
+.TP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
-Display help text.
 .ad b
-.HP
+Display help text.
+.TP
 .ad l
 \fB--labelsector\fP \fINumber\fP
 .br
+.ad b
 By default the PV is labelled with an LVM2 identifier in its second
 sector (sector 1). This lets you use a different sector near the
 start of the disk (between 0 and 3 inclusive - see LABEL_SCAN_SECTORS
 in the source). Use with care.
-.ad b
-.HP
+.TP
 .ad l
 \fB--lockopt\fP \fIString\fP
 .br
+.ad b
 Used to pass options for special cases to lvmlockd.
 See \fBlvmlockd\fP(8) for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB--locktype\fP \fBsanlock\fP|\fBdlm\fP|\fBnone\fP
 .br
+.ad b
 Specify the VG lock type directly in place of using --shared.
 See \fBlvmlockd\fP(8) for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB--longhelp\fP
 .br
-Display long help text.
 .ad b
-.HP
+Display long help text.
+.TP
 .ad l
 \fB-l\fP|\fB--maxlogicalvolumes\fP \fINumber\fP
 .br
-Sets the maximum number of LVs allowed in a VG.
 .ad b
-.HP
+Sets the maximum number of LVs allowed in a VG.
+.TP
 .ad l
 \fB-p\fP|\fB--maxphysicalvolumes\fP \fINumber\fP
 .br
+.ad b
 Sets the maximum number of PVs that can belong to the VG.
 The value 0 removes any limitation.
 For large numbers of PVs, also see options --pvmetadatacopies,
 and --vgmetadatacopies for improving performance.
-.ad b
-.HP
+.TP
 .ad l
 \fB--metadataprofile\fP \fIString\fP
 .br
+.ad b
 The metadata profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
-.ad b
-.HP
+.TP
 .ad l
 \fB--metadatasize\fP \fISize\fP[m|UNIT]
 .br
+.ad b
 The approximate amount of space used for each VG metadata area.
 The size may be rounded.
-.ad b
-.HP
+.TP
 .ad l
 \fB-M\fP|\fB--metadatatype\fP \fBlvm2\fP
 .br
+.ad b
 Specifies the type of on-disk metadata to use.
 \fBlvm2\fP (or just \fB2\fP) is the current, standard format.
 \fBlvm1\fP (or just \fB1\fP) is no longer used.
-.ad b
-.HP
+.TP
 .ad l
 \fB--nolocking\fP
 .br
-Disable locking.
 .ad b
-.HP
+Disable locking.
+.TP
 .ad l
 \fB-s\fP|\fB--physicalextentsize\fP \fISize\fP[m|UNIT]
 .br
+.ad b
 Sets the physical extent size of PVs in the VG.
 The value must be either a power of 2 of at least 1 sector
 (where the sector size is the largest sector size of the PVs
 currently used in the VG), or at least 128KiB.
 Once this value has been set, it is difficult to change
 without recreating the VG, unless no extents need moving.
-.ad b
-.HP
+.TP
 .ad l
 \fB--profile\fP \fIString\fP
 .br
+.ad b
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
-.ad b
-.HP
+.TP
 .ad l
 \fB--pvmetadatacopies\fP \fB0\fP|\fB1\fP|\fB2\fP
 .br
+.ad b
 The number of metadata areas to set aside on a PV for storing VG metadata.
 When 2, one copy of the VG metadata is stored at the front of the PV
 and a second copy is stored at the end.
@@ -398,39 +410,53 @@ When 1, one copy of the VG metadata is stored at the front of the PV.
 When 0, no copies of the VG metadata are stored on the given PV.
 This may be useful in VGs containing many PVs (this places limitations
 on the ability to use vgsplit later.)
-.ad b
-.HP
+.TP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
 .br
+.ad b
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer 'no'.
-.ad b
-.HP
+.TP
 .ad l
 \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
 .br
+.ad b
 Overrides current output format for reports which is defined globally by
 the report/output_format setting in lvm.conf.
 \fBbasic\fP is the original format with columns and rows.
 If there is more than one report per command, each report is prefixed
 with the report name for identification. \fBjson\fP produces report
 output in JSON format. See \fBlvmreport\fP(7) for more information.
+.TP
+.ad l
+\fB--setautoactivation\fP \fBy\fP|\fBn\fP
+.br
 .ad b
-.HP
+Set the autoactivation property on a VG or LV.
+Display the property with vgs or lvs "-o autoactivation".
+When the autoactivation property is disabled, the VG or LV
+will not be activated by a command doing autoactivation
+(vgchange, lvchange, or pvscan using -aay.)
+If autoactivation is disabled on a VG, no LVs will be autoactivated
+in that VG, and the LV autoactivation property has no effect.
+If autoactivation is enabled on a VG, autoactivation can be disabled
+for individual LVs.
+.TP
 .ad l
 \fB--shared\fP
 .br
+.ad b
 Create a shared VG using lvmlockd if LVM is compiled with lockd support.
 lvmlockd will select lock type sanlock or dlm depending on which lock
 manager is running. This allows multiple hosts to share a VG on shared
 devices. lvmlockd and a lock manager must be configured and running.
 See \fBlvmlockd\fP(8) for more information about shared VGs.
-.ad b
-.HP
+.TP
 .ad l
 \fB--systemid\fP \fIString\fP
 .br
+.ad b
 Specifies the system ID that will be given to the new VG, overriding the
 system ID of the host running the command. A VG is normally created
 without this option, in which case the new VG is given the system ID of
@@ -438,34 +464,34 @@ the host creating it. Using this option requires caution because the
 system ID of the new VG may not match the system ID of the host running
 the command, leaving the VG inaccessible to the host.
 See \fBlvmsystemid\fP(7) for more information.
-.ad b
-.HP
+.TP
 .ad l
 \fB-t\fP|\fB--test\fP
 .br
+.ad b
 Run in test mode. Commands will not update metadata.
 This is implemented by disabling all metadata writing but nevertheless
 returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
-.ad b
-.HP
+.TP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
 .br
+.ad b
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
-.ad b
-.HP
+.TP
 .ad l
 \fB--version\fP
 .br
-Display version information.
 .ad b
-.HP
+Display version information.
+.TP
 .ad l
 \fB--[vg]metadatacopies\fP \fBall\fP|\fBunmanaged\fP|\fINumber\fP
 .br
+.ad b
 Number of copies of the VG metadata that are kept.
 VG metadata is kept in VG metadata areas on PVs in the VG,
 i.e. reserved space at the start and/or end of the PVs.
@@ -479,29 +505,28 @@ The number can also be replaced with special string values:
 metadataignore flags.
 \fBall\fP causes LVM to first clear the metadataignore flags on
 all PVs, and then to become unmanaged.
-.ad b
-.HP
+.TP
 .ad l
 \fB-y\fP|\fB--yes\fP
 .br
+.ad b
 Do not prompt for confirmation interactively but always assume the
 answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
-.ad b
-.HP
+.TP
 .ad l
 \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP
 .br
+.ad b
 Controls if the first 4 sectors (2048 bytes) of the device are wiped.
 The default is to wipe these sectors unless either or both of
 --restorefile or --uuid are specified.
-.ad b
 .SH VARIABLES
-.HP
+.TP
 \fIVG\fP
 .br
 Volume Group name.  See \fBlvm\fP(8) for valid names.
-.HP
+.TP
 \fIPV\fP
 .br
 Physical Volume name, a device path under /dev.
@@ -511,11 +536,11 @@ of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
 Start and end range (inclusive): \fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
 Start and length range (counting from 0): \fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
-.HP
+.TP
 \fIString\fP
 .br
 See the option description for information about the string content.
-.HP
+.TP
 \fISize\fP[UNIT]
 .br
 Size is an input number that accepts an optional unit.
@@ -536,70 +561,71 @@ Create a VG with two PVs, using the default physical extent size.
 .br
 .B vgcreate myvg /dev/sdk1 /dev/sdl1
 .SH SEE ALSO
+.nh
+.ad l
+.BR lvm (8),
+.BR lvm.conf (5),
+.BR lvmconfig (8),
+.BR lvmdevices (8),
 
-.BR lvm (8)
-.BR lvm.conf (5)
-.BR lvmconfig (8)
-.BR lvmdevices (8)
+.BR pvchange (8),
+.BR pvck (8),
+.BR pvcreate (8),
+.BR pvdisplay (8),
+.BR pvmove (8),
+.BR pvremove (8),
+.BR pvresize (8),
+.BR pvs (8),
+.BR pvscan (8),
 
-.BR pvchange (8)
-.BR pvck (8)
-.BR pvcreate (8)
-.BR pvdisplay (8)
-.BR pvmove (8)
-.BR pvremove (8)
-.BR pvresize (8)
-.BR pvs (8)
-.BR pvscan (8) 
+.BR vgcfgbackup (8),
+.BR vgcfgrestore (8),
+.BR vgchange (8),
+.BR vgck (8),
+.BR vgcreate (8),
+.BR vgconvert (8),
+.BR vgdisplay (8),
+.BR vgexport (8),
+.BR vgextend (8),
+.BR vgimport (8),
+.BR vgimportclone (8),
+.BR vgimportdevices (8),
+.BR vgmerge (8),
+.BR vgmknodes (8),
+.BR vgreduce (8),
+.BR vgremove (8),
+.BR vgrename (8),
+.BR vgs (8),
+.BR vgscan (8),
+.BR vgsplit (8),
 
-.BR vgcfgbackup (8)
-.BR vgcfgrestore (8)
-.BR vgchange (8)
-.BR vgck (8)
-.BR vgcreate (8)
-.BR vgconvert (8)
-.BR vgdisplay (8)
-.BR vgexport (8)
-.BR vgextend (8)
-.BR vgimport (8)
-.BR vgimportclone (8)
-.BR vgimportdevices (8)
-.BR vgmerge (8)
-.BR vgmknodes (8)
-.BR vgreduce (8)
-.BR vgremove (8)
-.BR vgrename (8)
-.BR vgs (8)
-.BR vgscan (8)
-.BR vgsplit (8) 
+.BR lvcreate (8),
+.BR lvchange (8),
+.BR lvconvert (8),
+.BR lvdisplay (8),
+.BR lvextend (8),
+.BR lvreduce (8),
+.BR lvremove (8),
+.BR lvrename (8),
+.BR lvresize (8),
+.BR lvs (8),
+.BR lvscan (8),
 
-.BR lvcreate (8)
-.BR lvchange (8)
-.BR lvconvert (8)
-.BR lvdisplay (8)
-.BR lvextend (8)
-.BR lvreduce (8)
-.BR lvremove (8)
-.BR lvrename (8)
-.BR lvresize (8)
-.BR lvs (8)
-.BR lvscan (8)
+.BR lvm-fullreport (8),
+.BR lvm-lvpoll (8),
+.BR lvm2-activation-generator (8),
+.BR blkdeactivate (8),
+.BR lvmdump (8),
 
-.BR lvm-fullreport (8)
-.BR lvm-lvpoll (8)
-.BR lvm2-activation-generator (8)
-.BR blkdeactivate (8)
-.BR lvmdump (8)
+.BR dmeventd (8),
+.BR lvmpolld (8),
+.BR lvmlockd (8),
+.BR lvmlockctl (8),
+.BR cmirrord (8),
+.BR lvmdbusd (8),
 
-.BR dmeventd (8)
-.BR lvmpolld (8)
-.BR lvmlockd (8)
-.BR lvmlockctl (8)
-.BR cmirrord (8)
-.BR lvmdbusd (8)
-
-.BR lvmsystemid (7)
-.BR lvmreport (7)
-.BR lvmraid (7)
-.BR lvmthin (7)
+.BR lvmsystemid (7),
+.BR lvmreport (7),
+.BR lvmraid (7),
+.BR lvmthin (7),
 .BR lvmcache (7)
