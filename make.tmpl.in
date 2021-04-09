@@ -454,7 +454,7 @@ DEFS+=-D_FILE_OFFSET_BITS=64
 %.o: %.cpp $(DEPS)
 	@echo "    [CXX] $(<F)"
 	@mkdir -p $(@D)
-	$(Q) $(CXX) -c $(INCLUDES) $(VALGRIND_CFLAGS) $(DEFS) $(DEFS_$@) $(WFLAGS) $(CXXFLAGS) $(CXXFLAGS_$@) $< -o $@
+	$(Q) $(CXX) $(DEPFLAGS) -c $(INCLUDES) $(VALGRIND_CFLAGS) $(DEFS) $(DEFS_$@) $(WFLAGS) $(CXXFLAGS) $(CXXFLAGS_$@) $< -o $@
 
 %.pot: %.c $(DEPS)
 	@echo "    [CC] $(<F)"

@@ -47,8 +47,6 @@ include $(top_srcdir)/base/Makefile
 include $(top_srcdir)/device_mapper/Makefile
 include $(top_srcdir)/test/unit/Makefile
 
-libdm: include
-libdaemon: include
 lib: libdaemon $(BASE_TARGET) $(DEVICE_MAPPER_TARGET)
 daemons: lib libdaemon tools
 scripts: lib
@@ -59,11 +57,8 @@ all_man: tools
 test: tools daemons
 unit-test  run-unit-test: test
 
-lib.device-mapper: include.device-mapper
-libdm.device-mapper: include.device-mapper
 daemons.device-mapper: libdm.device-mapper
 tools.device-mapper: libdm.device-mapper
-scripts.device-mapper: include.device-mapper
 device-mapper: tools.device-mapper daemons.device-mapper man.device-mapper
 device_mapper: device-mapper
 
