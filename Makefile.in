@@ -76,8 +76,8 @@ daemons.cflow: tools.cflow
 cflow: include.cflow
 endif
 
+CSCOPE_DIRS = base daemons device_mapper include lib libdaemon scripts tools libdm test
 ifneq ("@CSCOPE_CMD@", "")
-CSCOPE_DIRS = base daemons device_mapper include lib libdaemon scripts tools
 cscope.out:
 	@CSCOPE_CMD@ -b -R $(patsubst %,-s%,$(addprefix $(srcdir)/,$(CSCOPE_DIRS)))
 all: cscope.out
@@ -204,8 +204,8 @@ endif
 ifneq ($(shell which ctags 2>/dev/null),)
 .PHONY: tags
 tags:
-	test -z "$(shell find $(top_srcdir) -type f -name '*.[ch]' -newer tags 2>/dev/null | head -1)" || $(RM) tags
-	test -f tags || find $(top_srcdir) -maxdepth 5 -type f -name '*.[ch]' -exec ctags -a '{}' +
+	test -z "$(shell find $(addprefix $(top_srcdir)/,$(CSCOPE_DIRS)) -type f -name '*.[ch]' -newer tags 2>/dev/null | head -1)" || $(RM) tags
+	test -f tags || find $(addprefix $(top_srcdir)/,$(CSCOPE_DIRS)) -maxdepth 5 -type f -name '*.[ch]' -exec ctags -a '{}' +
 
 CLEAN_TARGETS += tags
 endif
