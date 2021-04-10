@@ -7,6 +7,7 @@
 .de OPT_GROUP
 .  RB [ group_id ]
 ..
+.
 .de OPT_PATH
 .  RB [ abs_path ]
 ..
@@ -16,7 +17,7 @@
 ..
 .
 .de OPT_DEBUG
-.  RB [ foreground [ verbose ] ]
+.  RB [ foreground [ verbose ]]
 ..
 .
 .SH NAME
@@ -27,12 +28,14 @@ dmfilemapd \(em device-mapper filemap monitoring daemon
 .
 .de CMD_DMFILEMAPD
 .  ad l
+.  nh
 .  IR dmfilemapd
 .  OPT_FD
 .  OPT_GROUP
 .  OPT_PATH
 .  OPT_MODE
 .  OPT_DEBUG
+.  hy
 .  ad b
 ..
 .CMD_DMFILEMAPD
@@ -103,7 +106,6 @@ between 1 and 3, stdio will be retained and the daemon will log
 messages to stdout and stderr that match the specified verbosity
 level.
 .
-.
 .SH MODES
 .
 The file map monitoring daemon can monitor files in two distinct
@@ -113,7 +115,6 @@ cause the daemon to terminate.
 
 In both modes, the daemon will always shut down when the group
 being monitored is deleted.
-
 .P
 .B Follow inode
 .P
@@ -125,7 +126,6 @@ to the file.
 
 This mode is useful if the file is expected to be renamed, or moved
 within the file system, while it is being monitored.
-
 .P
 .B Follow path
 .P
@@ -173,6 +173,7 @@ Start the daemon in the background, in follow-path mode
 Start the daemon in follow-inode mode, disable forking and enable
 verbose logging
 .br
+.ad l
 #
 .B dmfilemapd 3 0 /var/tmp/data inode 1 3 3< /var/tmp/data
 .br
@@ -196,7 +197,7 @@ exiting _filemap_monitor_get_events() with deleted=0, check=0
 .br
 Waiting for check interval
 .br
-.P
+.ad b
 .
 .SH AUTHORS
 .

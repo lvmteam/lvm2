@@ -21,15 +21,17 @@ dmsetup \(em low level logical volume management
 .B dmsetup
 .de CMD_CREATE
 .  ad l
+.  nh
 .  BR create
 .  IR device_name
 .  RB [ -u | --uuid
 .  IR uuid ]
-.  RB \%[ --addnodeoncreate | --addnodeonresume ]
-.  RB \%[ -n | --notable | --table
-.  IR \%table | table_file ]
+.  RB [ --addnodeoncreate |\: --addnodeonresume ]
+.  RB [ -n | --notable |\: --table
+.  IR table |\: table_file ]
 .  RB [ --readahead
-.  RB \%[ + ] \fIsectors | auto | none ]
+.  RB [ + ] \fIsectors |\: auto | none ]
+.  hy
 .  ad b
 ..
 .CMD_CREATE
@@ -77,14 +79,15 @@ dmsetup \(em low level logical volume management
 .B dmsetup
 .de CMD_INFOLONG
 .  ad l
+.  nh
 .  BR info
 .  BR -c | -C | --columns
 .  RB [ --count
 .  IR count ]
 .  RB [ --interval
 .  IR seconds ]
-.  RB \%[ --nameprefixes ]
-.  RB \%[ --noheadings ]
+.  RB [ --nameprefixes ]
+.  RB [ --noheadings ]
 .  RB [ -o
 .  IR fields ]
 .  RB [ -O | --sort
@@ -92,6 +95,7 @@ dmsetup \(em low level logical volume management
 .  RB [ --separator
 .  IR separator ]
 .  RI [ device_name ]
+.  hy
 .  ad b
 ..
 .CMD_INFOLONG
@@ -112,6 +116,7 @@ dmsetup \(em low level logical volume management
 .B dmsetup
 .de CMD_LS
 .  ad l
+.  nh
 .  BR ls
 .  RB [ --target
 .  IR target_type ]
@@ -120,6 +125,7 @@ dmsetup \(em low level logical volume management
 .  RB [ --tree ]
 .  RB [ -o
 .  IR options ]
+.  hy
 .  ad b
 ..
 .CMD_LS
@@ -222,12 +228,14 @@ dmsetup \(em low level logical volume management
 .B dmsetup
 .de CMD_SETGEOMETRY
 .  ad l
+.  nh
 .  BR setgeometry
 .  IR device_name
 .  IR cyl
 .  IR head
 .  IR sect
 .  IR start
+.  hy
 .  ad b
 ..
 .CMD_SETGEOMETRY
@@ -267,10 +275,12 @@ dmsetup \(em low level logical volume management
 .B dmsetup
 .de CMD_SUSPEND
 .  ad l
+.  nh
 .  BR suspend
 .  RB [ --nolockfs ]
 .  RB [ --noflush ]
 .  IR device_name ...
+.  hy
 .  ad b
 ..
 .CMD_SUSPEND
@@ -279,12 +289,14 @@ dmsetup \(em low level logical volume management
 .B dmsetup
 .de CMD_TABLE
 .  ad l
+.  nh
 .  BR table
 .  RB [ --concise ]
 .  RB [ --target
 .  IR target_type ]
 .  RB [ --showkeys ]
 .  RI [ device_name ...]
+.  hy
 .  ad b
 ..
 .CMD_TABLE
@@ -353,10 +365,12 @@ dmsetup \(em low level logical volume management
 .B dmsetup
 .de CMD_WAIT
 .  ad l
+.  nh
 .  BR wait
 .  RB [ --noflush ]
 .  IR device_name
 .  RI [ event_nr ]
+.  hy
 .  ad b
 ..
 .CMD_WAIT
@@ -365,11 +379,13 @@ dmsetup \(em low level logical volume management
 .B dmsetup
 .de CMD_WIPE_TABLE
 .  ad l
+.  nh
 .  BR wipe_table
 .  IR device_name ...
 .  RB [ -f | --force ]
 .  RB [ --noflush ]
 .  RB [ --nolockfs ]
+.  hy
 .  ad b
 ..
 .CMD_WIPE_TABLE
@@ -1032,8 +1048,11 @@ A concise representation of one of more devices.
 - A semi-colon separates devices.
 .TP
 The representation of a device takes the form:
-.sp
-<name>,<uuid>,<minor>,<flags>,<table>[,<table>+][;<dev_name>,<uuid>,<minor>,<flags>,<table>[,<table>+]]
+.ad l
+.nh
+<name>,<uuid>,\:<minor>,<flags>,\:<table>\:[,<table>+]\:[;<dev_name>,<uuid>,\:<minor>,<flags>,<table>\:[,<table>+]]
+.hy
+.ad b
 .TP
 The fields are:
 .
@@ -1063,13 +1082,19 @@ One line of the table. See TABLE FORMAT above.
 .
 # A simple linear read-only device
 .br
-test-linear-small,,,ro,0 2097152 linear /dev/loop0 0, 2097152 2097152 linear /dev/loop1 0
-.br
+.ad l
+.nh
+test-linear-small,,,ro,\:0 2097152 linear /dev/loop0 0,\:2097152 2097152 linear /dev/loop1 0
+.hy
+.ad b
 .sp
 # Two linear devices
 .br
-test-linear-small,,,,0 2097152 linear /dev/loop0 0;test-linear-large,,,, 0 2097152 linear /dev/loop1 0, 2097152 2097152 linear /dev/loop2 0
-.br
+.ad l
+.nh
+test-linear-small,,,,\:0 2097152 linear /dev/loop0 0;\:test-linear-large,\:,,,\:0 2097152 linear /dev/loop1 0, 2097152 2097152 linear /dev/loop2 0
+.hy
+.ad b
 .
 .SH ENVIRONMENT VARIABLES
 .
