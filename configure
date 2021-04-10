@@ -795,6 +795,8 @@ PKGCONFIGINIT_CFLAGS
 PKG_CONFIG_LIBDIR
 PKG_CONFIG_PATH
 PKG_CONFIG
+AIO_LIBS
+AIO_CFLAGS
 VDO_FORMAT_CMD
 CACHE_RESTORE_CMD
 CACHE_REPAIR_CMD
@@ -998,6 +1000,8 @@ CXX
 CXXFLAGS
 CCC
 CPP
+AIO_CFLAGS
+AIO_LIBS
 PKG_CONFIG
 PKG_CONFIG_PATH
 PKG_CONFIG_LIBDIR
@@ -1797,6 +1801,8 @@ Some influential environment variables:
   CXX         C++ compiler command
   CXXFLAGS    C++ compiler flags
   CPP         C preprocessor
+  AIO_CFLAGS  C compiler flags for AIO
+  AIO_LIBS    linker flags for AIO
   PKG_CONFIG  path to pkg-config utility
   PKG_CONFIG_PATH
               directories to add to pkg-config's search path
@@ -6088,7 +6094,7 @@ fi
 
 
 for ac_header in assert.h ctype.h dirent.h errno.h fcntl.h float.h \
-  getopt.h inttypes.h langinfo.h libaio.h libgen.h limits.h locale.h paths.h \
+  getopt.h inttypes.h langinfo.h libgen.h limits.h locale.h paths.h \
   signal.h stdarg.h stddef.h stdio.h stdlib.h string.h sys/file.h \
   sys/ioctl.h syslog.h sys/mman.h sys/param.h sys/resource.h sys/stat.h \
   sys/time.h sys/types.h sys/utsname.h sys/wait.h time.h \
@@ -6121,6 +6127,19 @@ fi
 
 done
 
+for ac_header in libaio.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "libaio.h" "ac_cv_header_libaio_h" "$ac_includes_default"
+if test "x$ac_cv_header_libaio_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBAIO_H 1
+_ACEOF
+ LVM_NEEDS_LIBAIO_WARN=
+else
+  LVM_NEEDS_LIBAIO_WARN=y
+fi
+
+done
 
 case "$host_os" in
 	linux*)
@@ -9814,6 +9833,14 @@ $as_echo "#define INTEGRITY_INTERNAL 1" >>confdefs.h
 esac
 
 ################################################################################
+# Allow users to override default location for libaio
+# there seems to be no pkg-config support available
+AIO_CFLAGS=
+AIO_LIBS=${AIO_LIBS:--laio}
+
+
+
+################################################################################
 # Check whether --enable-readline was given.
 if test "${enable_readline+set}" = set; then :
   enableval=$enable_readline; READLINE=$enableval
@@ -10757,7 +10784,6 @@ TESTSUITE_DATA='${datarootdir}/lvm2-testsuite'
 cat >>confdefs.h <<_ACEOF
 #define TESTSUITE_DATA "$(eval echo $(eval echo $TESTSUITE_DATA))"
 _ACEOF
-
 
 
 ################################################################################
@@ -15524,6 +15550,10 @@ if test -n "$VDO_CONFIGURE_WARN"; then :
 $as_echo "$as_me: WARNING: Unrecognized 'vdoformat' tool is REQUIRED for VDO logical volume creation!" >&2;}
 fi
 
+if test -n "$LVM_NEEDS_LIBAIO_WARN"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only libdm part can be build without libaio:  make [install_]device-mapper" >&5
+$as_echo "$as_me: WARNING: Only libdm part can be build without libaio:  make [install_]device-mapper" >&2;}
+fi
 
 if test "$ODIRECT" != yes; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: O_DIRECT disabled: low-memory pvmove may lock up" >&5

@@ -101,14 +101,14 @@ AC_HEADER_SYS_WAIT
 AC_HEADER_TIME
 
 AC_CHECK_HEADERS([assert.h ctype.h dirent.h errno.h fcntl.h float.h \
-  getopt.h inttypes.h langinfo.h libaio.h libgen.h limits.h locale.h paths.h \
+  getopt.h inttypes.h langinfo.h libgen.h limits.h locale.h paths.h \
   signal.h stdarg.h stddef.h stdio.h stdlib.h string.h sys/file.h \
   sys/ioctl.h syslog.h sys/mman.h sys/param.h sys/resource.h sys/stat.h \
   sys/time.h sys/types.h sys/utsname.h sys/wait.h time.h \
   unistd.h], , [AC_MSG_ERROR(bailing out)])
 
 AC_CHECK_HEADERS(termios.h sys/statvfs.h sys/timerfd.h sys/vfs.h linux/magic.h linux/fiemap.h)
-
+AC_CHECK_HEADERS(libaio.h,LVM_NEEDS_LIBAIO_WARN=,LVM_NEEDS_LIBAIO_WARN=y)
 case "$host_os" in
 	linux*)
 		AC_CHECK_HEADERS(asm/byteorder.h linux/fs.h malloc.h,,AC_MSG_ERROR(bailing out)) ;;
@@ -685,6 +685,14 @@ case "$INTEGRITY" in
 esac
 
 ################################################################################
+# Allow users to override default location for libaio
+# there seems to be no pkg-config support available
+AIO_CFLAGS=
+AIO_LIBS=${AIO_LIBS:--laio}
+AC_ARG_VAR([AIO_CFLAGS], [C compiler flags for AIO])
+AC_ARG_VAR([AIO_LIBS], [linker flags for AIO])
+
+################################################################################
 dnl -- Disable readline
 AC_ARG_ENABLE([readline],
 	      AC_HELP_STRING([--disable-readline], [disable readline support]),
@@ -880,7 +888,6 @@ dnl -- Set LVM2 testsuite data
 TESTSUITE_DATA='${datarootdir}/lvm2-testsuite'
 # double eval needed ${datarootdir} -> ${prefix}/share -> real path
 AC_DEFINE_UNQUOTED(TESTSUITE_DATA, ["$(eval echo $(eval echo $TESTSUITE_DATA))"], [Path to testsuite data])
-
 
 ################################################################################
 dnl -- Enable valgrind awareness of memory pools
@@ -1977,6 +1984,8 @@ AS_IF([test -n "$CACHE_CHECK_VERSION_WARN"],
 AS_IF([test -n "$VDO_CONFIGURE_WARN"],
       [AC_MSG_WARN([Unrecognized 'vdoformat' tool is REQUIRED for VDO logical volume creation!])])
 
+AS_IF([test -n "$LVM_NEEDS_LIBAIO_WARN"],
+      [AC_MSG_WARN([Only libdm part can be build without libaio:  make [[install_]]device-mapper])])
 
 AS_IF([test "$ODIRECT" != yes],
       [AC_MSG_WARN([O_DIRECT disabled: low-memory pvmove may lock up])])
