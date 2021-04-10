@@ -929,7 +929,7 @@ int dm_task_add_target(struct dm_task *dmt, uint64_t start, uint64_t size,
 
 #ifdef HAVE_SELINUX
 static int _selabel_lookup(const char *path, mode_t mode,
-			   security_context_t *scontext)
+			   char **scontext)
 {
 #ifdef HAVE_SELINUX_LABEL_H
 	if (!_selabel_handle &&
@@ -972,7 +972,7 @@ static int _is_selinux_enabled(void)
 int dm_prepare_selinux_context(const char *path, mode_t mode)
 {
 #ifdef HAVE_SELINUX
-	security_context_t scontext = NULL;
+	char *scontext = NULL;
 
 	if (_is_selinux_enabled() <= 0)
 		return 1;
@@ -1000,7 +1000,7 @@ int dm_prepare_selinux_context(const char *path, mode_t mode)
 int dm_set_selinux_context(const char *path, mode_t mode)
 {
 #ifdef HAVE_SELINUX
-	security_context_t scontext = NULL;
+	char *scontext = NULL;
 
 	if (_is_selinux_enabled() <= 0)
 		return 1;
