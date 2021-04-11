@@ -3188,10 +3188,10 @@ static void _print_man_all_options_desc(struct command_name *cname)
 		if (opt_names[opt_enum].desc) {
 			printf("\n");
 			printf(".br\n");
+			printf(".ad b\n");
 			_print_man_option_desc(cname, opt_enum);
-		}
-
-		printf(".ad b\n");
+		} else
+			printf(".ad b\n");
 	}
 }
 
