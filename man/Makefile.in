@@ -133,7 +133,7 @@ SEE_ALSO=$(srcdir)/see_also.end
 	) > $@
 
 define SUBSTVARS
-$(Q)$(SED) -e "s+#VERSION#+$(LVM_VERSION)+" \
+$(SED) -e "s+#VERSION#+$(LVM_VERSION)+" \
 	-e "s+#DEFAULT_SYS_DIR#+$(DEFAULT_SYS_DIR)+" \
 	-e "s+#DEFAULT_ARCHIVE_DIR#+$(DEFAULT_ARCHIVE_DIR)+" \
 	-e "s+#DEFAULT_BACKUP_DIR#+$(DEFAULT_BACKUP_DIR)+" \
@@ -157,7 +157,7 @@ endef
 # - in "$vg-$lv"
 # - in single one in '\\f.-'
 define ESCAPEHYPHENS
-$(Q)$(SED) -i -e "s+\([ [:alpha:]]\)-\{7\}+\1\\\-\\\-\\\-\\\-\\\-\\\-\\\-+g" \
+$(SED) -i -e "s+\([ [:alpha:]]\)-\{7\}+\1\\\-\\\-\\\-\\\-\\\-\\\-\\\-+g" \
 	  -e "s+\([ [:alpha:]]\)-\{6\}+\1\\\-\\\-\\\-\\\-\\\-\\\-+g" \
 	  -e "s+\([ [:alpha:]]\)-\{5\}+\1\\\-\\\-\\\-\\\-\\\-+g" \
 	  -e "s+\([ [:alpha:]]\)-\{4\}+\1\\\-\\\-\\\-\\\-+g" \
