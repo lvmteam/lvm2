@@ -1805,6 +1805,6 @@ lvm> abc
 .fi
 
 .SH SEE ALSO
-\fBlvm\fP (8),
-\fBlvmconfig\fP (8),
-\fBlvm fullreport\fP (8)
+.BR lvm (8),
+.BR lvmconfig (8),
+.BR "lvm fullreport" (8)
