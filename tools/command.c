@@ -2559,10 +2559,7 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 				continue;
 
 			if (sep) {
-				printf(",\n");
-				printf(".ad b\n");
-				printf(".br\n");
-				printf(".ad l\n");
+				printf("\n.br\n");
 				printf(" ");
 			}
 
@@ -2591,10 +2588,7 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 				continue;
 
 			if (sep) {
-				printf(",\n");
-				printf(".ad b\n");
-				printf(".br\n");
-				printf(".ad l\n");
+				printf("\n.br\n");
 				printf(" ");
 			} else
 				printf(".ad l\n");
