@@ -128,7 +128,7 @@ static inline int dumptype_arg(struct cmd_context *cmd __attribute__((unused)), 
 #define CACHE_VGMETADATA        0x00000001
 #define PERMITTED_READ_ONLY     0x00000002
 #define ALL_VGS_IS_DEFAULT      0x00000004
-#define ENABLE_ALL_DEVS         0x00000008      
+#define ENABLE_ALL_DEVS         0x00000008
 #define ALLOW_UUID_AS_NAME      0x00000010
 #define LOCKD_VG_SH             0x00000020
 #define NO_METADATA_PROCESSING  0x00000040
@@ -709,7 +709,6 @@ static void _set_pos_def(struct command *cmd, char *str, struct arg_def *def)
  * Save an option arg in a struct arg_def.
  * Parse str for anything that can follow --option.
  */
-
 static void _set_opt_def(struct cmd_context *cmdtool, struct command *cmd, char *str, struct arg_def *def)
 {
 	char *argv[MAX_LINE_ARGC];
@@ -767,7 +766,6 @@ static void _set_opt_def(struct cmd_context *cmdtool, struct command *cmd, char 
 				def->flags |= ARG_DEF_FLAG_NEW_LV;
 			else if (val_enum == vg_VAL)
 				def->flags |= ARG_DEF_FLAG_NEW_VG;
-				
 		}
 	}
 }
@@ -1120,7 +1118,6 @@ static void _add_required_opt_line(struct cmd_context *cmdtool, struct command *
  * and flag CMD_FLAG_ANY_REQUIRED_OPT is set on the cmd indicating
  * this special case.
  */
- 
 static void _include_required_opt_args(struct cmd_context *cmdtool, struct command *cmd, char *str)
 {
 	char *oo_line;
