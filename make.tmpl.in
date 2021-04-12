@@ -269,7 +269,7 @@ endif
 endif
 
 ifeq ("@BUILD_DMEVENTD@", "yes")
-  DMEVENT_LIBS = -ldevmapper-event
+  DMEVENT_LIBS = -ldevmapper-event -L$(interfacebuilddir) -ldevmapper
   LDFLAGS += -L$(top_builddir)/daemons/dmeventd
   CLDFLAGS += -L$(top_builddir)/daemons/dmeventd
 endif
