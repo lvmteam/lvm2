@@ -1,5 +1,9 @@
 Version 2.03.12 - 
 ===================================
+  Better hyphenation usage in man pages.
+  Replace use of deprecated security_context_t with char*.
+  Configure supports AIO_LIBS and AIO_CFLAGS.
+  Improve build process for static builds.
   Improve signal handling with lvmpolld.
   Signal handler can interrupt command also for SIGTERM.
   Lvreduce --yes support.
