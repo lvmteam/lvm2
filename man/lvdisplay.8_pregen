@@ -186,13 +186,13 @@ Common options for lvm:
 .ad b
 .RE
 .SH OPTIONS
-.TP
+.HP
 .ad l
 \fB--aligned\fP
 .br
 .ad b
 Use with --separator to align the output columns
-.TP
+.HP
 .ad l
 \fB-a\fP|\fB--all\fP
 .br
@@ -200,7 +200,7 @@ Use with --separator to align the output columns
 Show information about internal LVs.
 These are components of normal LVs, such as mirrors,
 which are not independently accessible, e.g. not mountable.
-.TP
+.HP
 .ad l
 \fB--binary\fP
 .br
@@ -208,28 +208,28 @@ which are not independently accessible, e.g. not mountable.
 Use binary values "0" or "1" instead of descriptive literal values
 for columns that have exactly two valid values to report (not counting
 the "unknown" value which denotes that the value could not be determined).
-.TP
+.HP
 .ad l
 \fB-c\fP|\fB--colon\fP
 .br
 .ad b
 Generate colon separated output for easier parsing in scripts or programs.
 Also see \fBvgs\fP(8) which provides considerably more control over the output.
-.TP
+.HP
 .ad l
 \fB-C\fP|\fB--columns\fP
 .br
 .ad b
 Display output in columns, the equivalent of \fBvgs\fP(8).
 Options listed are the same as options given in \fBvgs\fP(8).
-.TP
+.HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
 .br
 .ad b
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
-.TP
+.HP
 .ad l
 \fB--config\fP \fIString\fP
 .br
@@ -238,20 +238,20 @@ Config settings for the command. These override lvm.conf settings.
 The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
-.TP
+.HP
 .ad l
 \fB--configreport\fP \fBlog\fP|\fBvg\fP|\fBlv\fP|\fBpv\fP|\fBpvseg\fP|\fBseg\fP
 .br
 .ad b
 See \fBlvmreport\fP(7).
-.TP
+.HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
 .br
 .ad b
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
-.TP
+.HP
 .ad l
 \fB--devices\fP \fIPV\fP
 .br
@@ -259,7 +259,7 @@ messages sent to the log file and/or syslog (if configured).
 Devices that the command can use. This option can be repeated
 or accepts a comma separated list of devices. This overrides
 the devices file.
-.TP
+.HP
 .ad l
 \fB--devicesfile\fP \fIString\fP
 .br
@@ -269,27 +269,27 @@ The file must exist in /etc/lvm/devices/ and is managed
 with the lvmdevices(8) command.
 This overrides the lvm.conf devices/devicesfile and
 devices/use_devicesfile settings.
-.TP
+.HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
 .br
 .ad b
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
-.TP
+.HP
 .ad l
 \fB--foreign\fP
 .br
 .ad b
 Report/display foreign VGs that would otherwise be skipped.
 See \fBlvmsystemid\fP(7) for more information about foreign VGs.
-.TP
+.HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 .ad b
 Display help text.
-.TP
+.HP
 .ad l
 \fB-H\fP|\fB--history\fP
 .br
@@ -297,33 +297,33 @@ Display help text.
 Include historical LVs in the output.
 (This has no effect unless LVs were removed while
 lvm.conf metadata/record_lvs_history was enabled.
-.TP
+.HP
 .ad l
 \fB--ignorelockingfailure\fP
 .br
 .ad b
 Allows a command to continue with read-only metadata
 operations after locking failures.
-.TP
+.HP
 .ad l
 \fB--lockopt\fP \fIString\fP
 .br
 .ad b
 Used to pass options for special cases to lvmlockd.
 See \fBlvmlockd\fP(8) for more information.
-.TP
+.HP
 .ad l
 \fB--logonly\fP
 .br
 .ad b
 Suppress command report and display only log report.
-.TP
+.HP
 .ad l
 \fB--longhelp\fP
 .br
 .ad b
 Display long help text.
-.TP
+.HP
 .ad l
 \fB-m\fP|\fB--maps\fP
 .br
@@ -331,27 +331,27 @@ Display long help text.
 Display the mapping of logical extents to PVs and physical extents.
 To map physical extents to logical extents use:
 pvs --segments -o+lv_name,seg_start_pe,segtype
-.TP
+.HP
 .ad l
 \fB--noheadings\fP
 .br
 .ad b
 Suppress the headings line that is normally the first line of output.
 Useful if grepping the output.
-.TP
+.HP
 .ad l
 \fB--nolocking\fP
 .br
 .ad b
 Disable locking.
-.TP
+.HP
 .ad l
 \fB--nosuffix\fP
 .br
 .ad b
 Suppress the suffix on output sizes. Use with --units
 (except h and H) if processing the output.
-.TP
+.HP
 .ad l
 \fB-o\fP|\fB--options\fP \fIString\fP
 .br
@@ -373,21 +373,21 @@ Use field name \fBlv_all\fP to view all LV fields,
 \fBpvseg_all\fP all PV segment columns.
 See the lvm.conf report section for more config options.
 See \fBlvmreport\fP(7) for more information about reporting.
-.TP
+.HP
 .ad l
 \fB--profile\fP \fIString\fP
 .br
 .ad b
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
-.TP
+.HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
 .br
 .ad b
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer 'no'.
-.TP
+.HP
 .ad l
 \fB--readonly\fP
 .br
@@ -398,7 +398,7 @@ inside metadata used by a virtual machine image while the virtual
 machine is running. No attempt will be made to communicate with the
 device-mapper kernel driver, so this option is unable to report whether
 or not LVs are actually in use.
-.TP
+.HP
 .ad l
 \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
 .br
@@ -409,12 +409,12 @@ the report/output_format setting in lvm.conf.
 If there is more than one report per command, each report is prefixed
 with the report name for identification. \fBjson\fP produces report
 output in JSON format. See \fBlvmreport\fP(7) for more information.
-.TP
+.HP
 .ad l
 \fB--segments\fP
 .br
 .ad b
-.TP
+.HP
 .ad l
 \fB-S\fP|\fB--select\fP \fIString\fP
 .br
@@ -427,13 +427,13 @@ Rows can be displayed with an additional "selected" field (-o selected)
 showing 1 if the row matches the selection and 0 otherwise.
 For non-reporting commands which process LVM entities, the selection is
 used to choose items to process.
-.TP
+.HP
 .ad l
 \fB--separator\fP \fIString\fP
 .br
 .ad b
 String to use to separate each column. Useful if grepping the output.
-.TP
+.HP
 .ad l
 \fB--shared\fP
 .br
@@ -441,14 +441,14 @@ String to use to separate each column. Useful if grepping the output.
 Report/display shared VGs that would otherwise be skipped when
 lvmlockd is not being used on the host.
 See \fBlvmlockd\fP(8) for more information about shared VGs.
-.TP
+.HP
 .ad l
 \fB-O\fP|\fB--sort\fP \fIString\fP
 .br
 .ad b
 Comma-separated ordered list of columns to sort by. Replaces the default
 selection. Precede any column with \fB-\fP for a reverse sort on that column.
-.TP
+.HP
 .ad l
 \fB-t\fP|\fB--test\fP
 .br
@@ -458,13 +458,13 @@ This is implemented by disabling all metadata writing but nevertheless
 returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
-.TP
+.HP
 .ad l
 \fB--unbuffered\fP
 .br
 .ad b
 Produce output immediately without sorting or aligning the columns properly.
-.TP
+.HP
 .ad l
 \fB--units\fP \fBr\fP|\fBR\fP|\fBh\fP|\fBH\fP|\fBb\fP|\fBB\fP|\fBs\fP|\fBS\fP|\fBk\fP|\fBK\fP|\fBm\fP|\fBM\fP|\fBg\fP|\fBG\fP|\fBt\fP|\fBT\fP|\fBp\fP|\fBP\fP|\fBe\fP|\fBE\fP
 .br
@@ -475,20 +475,20 @@ human-(r)eadable with '<' rounding indicator,
 (g)igabytes, (t)erabytes, (p)etabytes, (e)xabytes.
 Capitalise to use multiples of 1000 (S.I.) instead of 1024.
 Custom units can be specified, e.g. --units 3M.
-.TP
+.HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
 .br
 .ad b
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
-.TP
+.HP
 .ad l
 \fB--version\fP
 .br
 .ad b
 Display version information.
-.TP
+.HP
 .ad l
 \fB-y\fP|\fB--yes\fP
 .br
@@ -497,25 +497,25 @@ Do not prompt for confirmation interactively but always assume the
 answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .SH VARIABLES
-.TP
+.HP
 \fIVG\fP
 .br
 Volume Group name.  See \fBlvm\fP(8) for valid names.
-.TP
+.HP
 \fILV\fP
 .br
 Logical Volume name.  See \fBlvm\fP(8) for valid names.
 An LV positional arg generally includes the VG name and LV name, e.g. VG/LV.
-.TP
+.HP
 \fITag\fP
 .br
 Tag name.  See \fBlvm\fP(8) for information about tag names and using tags
 in place of a VG, LV or PV.
-.TP
+.HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-.TP
+.HP
 \fISize\fP[UNIT]
 .br
 Size is an input number that accepts an optional unit.

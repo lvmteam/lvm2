@@ -633,7 +633,7 @@ Common options for lvm:
 .ad b
 .RE
 .SH OPTIONS
-.TP
+.HP
 .ad l
 \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP
 .br
@@ -662,7 +662,7 @@ If auto_activation_volume_list is defined and empty, no LVs are autoactivated.
 Items included by auto_activation_volume_list will not be autoactivated if
 the autoactivation property has been disabled.
 See \fBlvmlockd\fP(8) for more information about activation options \fBey\fP and \fBsy\fP for shared VGs.
-.TP
+.HP
 .ad l
 \fB--activationmode\fP \fBpartial\fP|\fBdegraded\fP|\fBcomplete\fP
 .br
@@ -677,14 +677,14 @@ and is the most restrictive mode.
 should only be used for recovery or repair.
 For default, see lvm.conf/activation_mode.
 See \fBlvmraid\fP(7) for more information.
-.TP
+.HP
 .ad l
 \fB--addtag\fP \fITag\fP
 .br
 .ad b
 Adds a tag to a PV, VG or LV. This option can be repeated to add
 multiple tags at once. See \fBlvm\fP(8) for information about tags.
-.TP
+.HP
 .ad l
 \fB--alloc\fP 
 .nh
@@ -708,21 +708,21 @@ e.g. by placing two stripes on the same PV.
 Optional positional PV args on the command line can also be used to limit
 which PVs the command will use for allocation.
 See \fBlvm\fP(8) for more information about allocation.
-.TP
+.HP
 .ad l
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
 .br
 .ad b
 Specifies if metadata should be backed up automatically after a change.
 Enabling this is strongly advised! See \fBvgcfgbackup\fP(8) for more information.
-.TP
+.HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
 .br
 .ad b
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
-.TP
+.HP
 .ad l
 \fB--config\fP \fIString\fP
 .br
@@ -731,28 +731,28 @@ Config settings for the command. These override lvm.conf settings.
 The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
-.TP
+.HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
 .br
 .ad b
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
-.TP
+.HP
 .ad l
 \fB--deltag\fP \fITag\fP
 .br
 .ad b
 Deletes a tag from a PV, VG or LV. This option can be repeated to delete
 multiple tags at once. See \fBlvm\fP(8) for information about tags.
-.TP
+.HP
 .ad l
 \fB--detachprofile\fP
 .br
 .ad b
 Detaches a metadata profile from a VG or LV.
 See \fBlvm.conf\fP(5) for more information about profiles.
-.TP
+.HP
 .ad l
 \fB--devices\fP \fIPV\fP
 .br
@@ -760,7 +760,7 @@ See \fBlvm.conf\fP(5) for more information about profiles.
 Devices that the command can use. This option can be repeated
 or accepts a comma separated list of devices. This overrides
 the devices file.
-.TP
+.HP
 .ad l
 \fB--devicesfile\fP \fIString\fP
 .br
@@ -770,55 +770,55 @@ The file must exist in /etc/lvm/devices/ and is managed
 with the lvmdevices(8) command.
 This overrides the lvm.conf devices/devicesfile and
 devices/use_devicesfile settings.
-.TP
+.HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
 .br
 .ad b
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
-.TP
+.HP
 .ad l
 \fB-f\fP|\fB--force\fP ...
 .br
 .ad b
 Override various checks, confirmations and protections.
 Use with extreme caution.
-.TP
+.HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 .ad b
 Display help text.
-.TP
+.HP
 .ad l
 \fB-K\fP|\fB--ignoreactivationskip\fP
 .br
 .ad b
 Ignore the "activation skip" LV flag during activation
 to allow LVs with the flag set to be activated.
-.TP
+.HP
 .ad l
 \fB--ignorelockingfailure\fP
 .br
 .ad b
 Allows a command to continue with read-only metadata
 operations after locking failures.
-.TP
+.HP
 .ad l
 \fB--ignoremonitoring\fP
 .br
 .ad b
 Do not interact with dmeventd unless --monitor is specified.
 Do not use this if dmeventd is already monitoring a device.
-.TP
+.HP
 .ad l
 \fB--lockopt\fP \fIString\fP
 .br
 .ad b
 Used to pass options for special cases to lvmlockd.
 See \fBlvmlockd\fP(8) for more information.
-.TP
+.HP
 .ad l
 \fB--lockstart\fP
 .br
@@ -826,7 +826,7 @@ See \fBlvmlockd\fP(8) for more information.
 Start the lockspace of a shared VG in lvmlockd.
 lvmlockd locks becomes available for the VG, allowing LVM to use the VG.
 See \fBlvmlockd\fP(8) for more information.
-.TP
+.HP
 .ad l
 \fB--lockstop\fP
 .br
@@ -834,26 +834,26 @@ See \fBlvmlockd\fP(8) for more information.
 Stop the lockspace of a shared VG in lvmlockd.
 lvmlockd locks become unavailable for the VG, preventing LVM from using the VG.
 See \fBlvmlockd\fP(8) for more information.
-.TP
+.HP
 .ad l
 \fB--locktype\fP \fBsanlock\fP|\fBdlm\fP|\fBnone\fP
 .br
 .ad b
 Change the VG lock type to or from a shared lock type used with lvmlockd.
 See \fBlvmlockd\fP(8) for more information.
-.TP
+.HP
 .ad l
 \fB-l\fP|\fB--logicalvolume\fP \fINumber\fP
 .br
 .ad b
 Sets the maximum number of LVs allowed in a VG.
-.TP
+.HP
 .ad l
 \fB--longhelp\fP
 .br
 .ad b
 Display long help text.
-.TP
+.HP
 .ad l
 \fB-p\fP|\fB--maxphysicalvolumes\fP \fINumber\fP
 .br
@@ -862,14 +862,14 @@ Sets the maximum number of PVs that can belong to the VG.
 The value 0 removes any limitation.
 For large numbers of PVs, also see options --pvmetadatacopies,
 and --vgmetadatacopies for improving performance.
-.TP
+.HP
 .ad l
 \fB--metadataprofile\fP \fIString\fP
 .br
 .ad b
 The metadata profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
-.TP
+.HP
 .ad l
 \fB--monitor\fP \fBy\fP|\fBn\fP
 .br
@@ -878,13 +878,13 @@ Start (yes) or stop (no) monitoring an LV with dmeventd.
 dmeventd monitors kernel events for an LV, and performs
 automated maintenance for the LV in reponse to specific events.
 See \fBdmeventd\fP(8) for more information.
-.TP
+.HP
 .ad l
 \fB--nolocking\fP
 .br
 .ad b
 Disable locking.
-.TP
+.HP
 .ad l
 \fB--noudevsync\fP
 .br
@@ -893,7 +893,7 @@ Disables udev synchronisation. The process will not wait for notification
 from udev. It will continue irrespective of any possible udev processing
 in the background. Only use this if udev is not running or has rules that
 ignore the devices LVM creates.
-.TP
+.HP
 .ad l
 \fB-P\fP|\fB--partial\fP
 .br
@@ -902,7 +902,7 @@ Commands will do their best to activate LVs with missing PV extents.
 Missing extents may be replaced with error or zero segments
 according to the lvm.conf missing_stripe_filler setting.
 Metadata may not be changed with this option.
-.TP
+.HP
 .ad l
 \fB-s\fP|\fB--physicalextentsize\fP \fISize\fP[m|UNIT]
 .br
@@ -916,7 +916,7 @@ without recreating the VG, unless no extents need moving.
 Before increasing the physical extent size, you might need to use lvresize,
 pvresize and/or pvmove so that everything fits. For example, every
 contiguous range of extents used in a LV must start and end on an extent boundary.
-.TP
+.HP
 .ad l
 \fB--poll\fP \fBy\fP|\fBn\fP
 .br
@@ -928,14 +928,14 @@ When no, background transformation of an LV will not occur, and the
 transformation will not complete. It may not be appropriate to immediately
 poll an LV after activation, in which case --poll n can be used to defer
 polling until a later --poll y command.
-.TP
+.HP
 .ad l
 \fB--profile\fP \fIString\fP
 .br
 .ad b
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
-.TP
+.HP
 .ad l
 \fB--pvmetadatacopies\fP \fB0\fP|\fB1\fP|\fB2\fP
 .br
@@ -947,14 +947,14 @@ When 1, one copy of the VG metadata is stored at the front of the PV.
 When 0, no copies of the VG metadata are stored on the given PV.
 This may be useful in VGs containing many PVs (this places limitations
 on the ability to use vgsplit later.)
-.TP
+.HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
 .br
 .ad b
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer 'no'.
-.TP
+.HP
 .ad l
 \fB--readonly\fP
 .br
@@ -965,7 +965,7 @@ inside metadata used by a virtual machine image while the virtual
 machine is running. No attempt will be made to communicate with the
 device-mapper kernel driver, so this option is unable to report whether
 or not LVs are actually in use.
-.TP
+.HP
 .ad l
 \fB--refresh\fP
 .br
@@ -974,7 +974,7 @@ If the LV is active, reload its metadata.
 This is not necessary in normal operation, but may be useful
 if something has gone wrong, or if some form of manual LV
 sharing is being used.
-.TP
+.HP
 .ad l
 \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
 .br
@@ -985,14 +985,14 @@ the report/output_format setting in lvm.conf.
 If there is more than one report per command, each report is prefixed
 with the report name for identification. \fBjson\fP produces report
 output in JSON format. See \fBlvmreport\fP(7) for more information.
-.TP
+.HP
 .ad l
 \fB-x\fP|\fB--resizeable\fP \fBy\fP|\fBn\fP
 .br
 .ad b
 Enables or disables the addition or removal of PVs to/from a VG
 (by vgextend/vgreduce).
-.TP
+.HP
 .ad l
 \fB-S\fP|\fB--select\fP \fIString\fP
 .br
@@ -1005,7 +1005,7 @@ Rows can be displayed with an additional "selected" field (-o selected)
 showing 1 if the row matches the selection and 0 otherwise.
 For non-reporting commands which process LVM entities, the selection is
 used to choose items to process.
-.TP
+.HP
 .ad l
 \fB--setautoactivation\fP \fBy\fP|\fBn\fP
 .br
@@ -1019,7 +1019,7 @@ If autoactivation is disabled on a VG, no LVs will be autoactivated
 in that VG, and the LV autoactivation property has no effect.
 If autoactivation is enabled on a VG, autoactivation can be disabled
 for individual LVs.
-.TP
+.HP
 .ad l
 \fB--sysinit\fP
 .br
@@ -1031,7 +1031,7 @@ acts as a shortcut which selects an appropriate set of options. Currently,
 this is equivalent to using --ignorelockingfailure, --ignoremonitoring,
 --poll n, and setting env var LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES.
 vgchange/lvchange skip autoactivation, and defer to pvscan autoactivation.
-.TP
+.HP
 .ad l
 \fB--systemid\fP \fIString\fP
 .br
@@ -1040,7 +1040,7 @@ Changes the system ID of the VG.  Using this option requires caution
 because the VG may become foreign to the host running the command,
 leaving the host unable to access it.
 See \fBlvmsystemid\fP(7) for more information.
-.TP
+.HP
 .ad l
 \fB-t\fP|\fB--test\fP
 .br
@@ -1050,26 +1050,26 @@ This is implemented by disabling all metadata writing but nevertheless
 returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
-.TP
+.HP
 .ad l
 \fB-u\fP|\fB--uuid\fP
 .br
 .ad b
 Generate new random UUID for specified VGs.
-.TP
+.HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
 .br
 .ad b
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
-.TP
+.HP
 .ad l
 \fB--version\fP
 .br
 .ad b
 Display version information.
-.TP
+.HP
 .ad l
 \fB--[vg]metadatacopies\fP \fBall\fP|\fBunmanaged\fP|\fINumber\fP
 .br
@@ -1087,7 +1087,7 @@ The number can also be replaced with special string values:
 metadataignore flags.
 \fBall\fP causes LVM to first clear the metadataignore flags on
 all PVs, and then to become unmanaged.
-.TP
+.HP
 .ad l
 \fB-y\fP|\fB--yes\fP
 .br
@@ -1096,26 +1096,26 @@ Do not prompt for confirmation interactively but always assume the
 answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .SH VARIABLES
-.TP
+.HP
 \fIVG\fP
 .br
 Volume Group name.  See \fBlvm\fP(8) for valid names.
-.TP
+.HP
 \fITag\fP
 .br
 Tag name.  See \fBlvm\fP(8) for information about tag names and using tags
 in place of a VG, LV or PV.
-.TP
+.HP
 \fISelect\fP
 .br
 Select indicates that a required positional parameter can
 be omitted if the \fB--select\fP option is used.
 No arg appears in this position.
-.TP
+.HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-.TP
+.HP
 \fISize\fP[UNIT]
 .br
 Size is an input number that accepts an optional unit.

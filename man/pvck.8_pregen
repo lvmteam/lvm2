@@ -389,14 +389,14 @@ Common options for lvm:
 .ad b
 .RE
 .SH OPTIONS
-.TP
+.HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
 .br
 .ad b
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
-.TP
+.HP
 .ad l
 \fB--config\fP \fIString\fP
 .br
@@ -405,14 +405,14 @@ Config settings for the command. These override lvm.conf settings.
 The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
-.TP
+.HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
 .br
 .ad b
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
-.TP
+.HP
 .ad l
 \fB--devices\fP \fIPV\fP
 .br
@@ -420,7 +420,7 @@ messages sent to the log file and/or syslog (if configured).
 Devices that the command can use. This option can be repeated
 or accepts a comma separated list of devices. This overrides
 the devices file.
-.TP
+.HP
 .ad l
 \fB--devicesfile\fP \fIString\fP
 .br
@@ -430,14 +430,14 @@ The file must exist in /etc/lvm/devices/ and is managed
 with the lvmdevices(8) command.
 This overrides the lvm.conf devices/devicesfile and
 devices/use_devicesfile settings.
-.TP
+.HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
 .br
 .ad b
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
-.TP
+.HP
 .ad l
 \fB--dump\fP 
 .nh
@@ -452,19 +452,19 @@ Option values include: \fBheaders\fP to print and check LVM headers,
 \fBmetadata_search\fP to list or save all versions of metadata,
 searching standard locations in case of damaged headers,
 \fBmetadata_area\fP to save an entire text metadata area to a file.
-.TP
+.HP
 .ad l
 \fB-f\fP|\fB--file\fP \fIString\fP
 .br
 .ad b
 Metadata file to read or write.
-.TP
+.HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 .ad b
 Display help text.
-.TP
+.HP
 .ad l
 \fB--labelsector\fP \fINumber\fP
 .br
@@ -473,33 +473,33 @@ By default the PV is labelled with an LVM2 identifier in its second
 sector (sector 1). This lets you use a different sector near the
 start of the disk (between 0 and 3 inclusive - see LABEL_SCAN_SECTORS
 in the source). Use with care.
-.TP
+.HP
 .ad l
 \fB--lockopt\fP \fIString\fP
 .br
 .ad b
 Used to pass options for special cases to lvmlockd.
 See \fBlvmlockd\fP(8) for more information.
-.TP
+.HP
 .ad l
 \fB--longhelp\fP
 .br
 .ad b
 Display long help text.
-.TP
+.HP
 .ad l
 \fB--nolocking\fP
 .br
 .ad b
 Disable locking.
-.TP
+.HP
 .ad l
 \fB--profile\fP \fIString\fP
 .br
 .ad b
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
-.TP
+.HP
 .ad l
 \fB--[pv]metadatacopies\fP \fB0\fP|\fB1\fP|\fB2\fP
 .br
@@ -511,26 +511,26 @@ When 1, one copy of the VG metadata is stored at the front of the PV.
 When 0, no copies of the VG metadata are stored on the given PV.
 This may be useful in VGs containing many PVs (this places limitations
 on the ability to use vgsplit later.)
-.TP
+.HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
 .br
 .ad b
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer 'no'.
-.TP
+.HP
 .ad l
 \fB--repair\fP
 .br
 .ad b
 Repair headers and metadata on a PV.
-.TP
+.HP
 .ad l
 \fB--repairtype\fP \fBpv_header\fP|\fBmetadata\fP|\fBlabel_header\fP
 .br
 .ad b
 Repair headers and metadata on a PV. See command description.
-.TP
+.HP
 .ad l
 \fB--settings\fP \fIString\fP
 .br
@@ -538,7 +538,7 @@ Repair headers and metadata on a PV. See command description.
 Specifies command specific settings in "Key = Value" form.
 Combine multiple settings in quotes, or repeat the settings
 option for each.
-.TP
+.HP
 .ad l
 \fB-t\fP|\fB--test\fP
 .br
@@ -548,20 +548,20 @@ This is implemented by disabling all metadata writing but nevertheless
 returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
-.TP
+.HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
 .br
 .ad b
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
-.TP
+.HP
 .ad l
 \fB--version\fP
 .br
 .ad b
 Display version information.
-.TP
+.HP
 .ad l
 \fB-y\fP|\fB--yes\fP
 .br
@@ -570,7 +570,7 @@ Do not prompt for confirmation interactively but always assume the
 answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .SH VARIABLES
-.TP
+.HP
 \fIPV\fP
 .br
 Physical Volume name, a device path under /dev.
@@ -580,11 +580,11 @@ of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
 Start and end range (inclusive): \fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
 Start and length range (counting from 0): \fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
-.TP
+.HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-.TP
+.HP
 \fISize\fP[UNIT]
 .br
 Size is an input number that accepts an optional unit.
