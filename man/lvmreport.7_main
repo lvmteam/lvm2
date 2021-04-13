@@ -874,7 +874,7 @@ segs_sort="vg_name,lv_name,seg_start"
 
 .nf
 # pvs
-  PV         VG Fmt  Attr PSize   PFree 
+  PV         VG Fmt  Attr PSize   PFree
   /dev/sda   vg lvm2 a--  100.00m 88.00m
   /dev/sdb   vg lvm2 a--  100.00m 92.00m
 
@@ -889,13 +889,13 @@ segs_sort="vg_name,lv_name,seg_start"
   /dev/sdb   vg lvm2 a--  100.00m 92.00m     2    23
 
 # vgs
-  VG #PV #LV #SN Attr   VSize   VFree  
+  VG #PV #LV #SN Attr   VSize   VFree
   vg   2   2   0 wz--n- 200.00m 180.00m
 
 # lvs
   LV    VG Attr       LSize Pool Origin Move Log Cpy%Sync Convert
-  lvol0 vg -wi-a----- 4.00m                                    
-  lvol1 vg rwi-a-r--- 4.00m                      100.00          
+  lvol0 vg -wi-a----- 4.00m
+  lvol1 vg rwi-a-r--- 4.00m                      100.00
 
 # lvs --segments
   LV    VG Attr       #Str Type   SSize
@@ -917,8 +917,8 @@ lvs_sort="-lv_time"
 
 # lvs
   LV    LSize Origin Pool Cpy%Sync
-  lvol1 4.00m             100.00  
-  lvol0 4.00m  
+  lvol1 4.00m             100.00
+  lvol0 4.00m
 .fi
 
 You can use \fB-o|--options\fP command line option to override current
@@ -931,18 +931,18 @@ configuration directly on command line.
   lvol0 4.00m
 
 # lvs -o+lv_layout
-  LV    LSize Origin Pool Cpy%Sync Layout    
+  LV    LSize Origin Pool Cpy%Sync Layout
   lvol1 4.00m             100.00   raid,raid1
-  lvol0 4.00m                      linear    
+  lvol0 4.00m                      linear
 
 # lvs -o-origin
   LV    LSize Pool Cpy%Sync
-  lvol1 4.00m      100.00  
-  lvol0 4.00m              
+  lvol1 4.00m      100.00
+  lvol0 4.00m
 
 # lvs -o lv_name,lv_size,origin -o+lv_layout -o-origin -O lv_name
-  LV    LSize Layout    
-  lvol0 4.00m linear    
+  LV    LSize Layout
+  lvol0 4.00m linear
   lvol1 4.00m raid,raid1
 .fi
 
@@ -1012,11 +1012,11 @@ compact_output=1
 
 # lvs
   LV    LSize Cpy%Sync
-  lvol1 4.00m 100.00  
-  lvol0 4.00m  
+  lvol1 4.00m 100.00
+  lvol0 4.00m
 
 # lvs vg/lvol0
-  LV    LSize 
+  LV    LSize
   lvol0 4.00m
 .fi
 
@@ -1031,17 +1031,17 @@ compact_output_cols="origin"
 
 # lvs
   LV    LSize Pool Cpy%Sync
-  lvol1 4.00m      100.00  
-  lvol0 4.00m    
+  lvol1 4.00m      100.00
+  lvol0 4.00m
 
 # lvs vg/lvol0
-  LV    LSize Pool 
-  lvol0 4.00m    
+  LV    LSize Pool
+  lvol0 4.00m
 
-# lvs -o#pool_lv        
+# lvs -o#pool_lv
   LV    LSize Origin Cpy%Sync
-  lvol1 4.00m        100.00  
-  lvol0 4.00m                
+  lvol1 4.00m        100.00
+  lvol0 4.00m
 .fi
 
 We will use \fBreport/compact_output=1\fP for subsequent examples.
@@ -1057,8 +1057,8 @@ configuration setting (or \fB--nosuffix\fP command line option) to change this.
 .nf
 # lvs --units b --nosuffix
   LV    LSize   Cpy%Sync
-  lvol1 4194304 100.00  
-  lvol0 4194304    
+  lvol1 4194304 100.00
+  lvol0 4194304
 .fi
 
 If you want to configure whether report headings are displayed or not, use
@@ -1067,8 +1067,8 @@ line option).
 
 .nf
 # lvs --noheadings
-  lvol1 4.00m 100.00  
-  lvol0 4.00m     
+  lvol1 4.00m 100.00
+  lvol0 4.00m
 .fi
 
 In some cases, it may be useful to display report content as key=value pairs
@@ -1124,12 +1124,12 @@ properly.
 # lvs --separator " | "
   LV | LSize | Cpy%Sync
   lvol1 | 4.00m | 100.00
-  lvol0 | 4.00m | 
+  lvol0 | 4.00m |
 
 # lvs --separator " | " --aligned
   LV    | LSize | Cpy%Sync
-  lvol1 | 4.00m | 100.00  
-  lvol0 | 4.00m |         
+  lvol1 | 4.00m | 100.00
+  lvol0 | 4.00m |
 .fi
 
 Let's display one one more field in addition ("lv_tags" in this example)
@@ -1137,8 +1137,8 @@ for the lvs report output.
 
 .nf
 # lvs -o+lv_tags
-  LV    LSize Cpy%Sync LV Tags  
-  lvol1 4.00m 100.00            
+  LV    LSize Cpy%Sync LV Tags
+  lvol1 4.00m 100.00
   lvol0 4.00m          tagA,tagB
 .fi
 
@@ -1152,8 +1152,8 @@ definition.
 list_item_separator=";"
 
 # lvs -o+tags
-  LV    LSize Cpy%Sync LV Tags  
-  lvol1 4.00m 100.00            
+  LV    LSize Cpy%Sync LV Tags
+  lvol1 4.00m 100.00
   lvol0 4.00m          tagA;tagB
 .fi
 
@@ -1169,9 +1169,9 @@ and time is displayed, including timezone.
 time_format="%Y-%m-%d %T %z"
 
 # lvs -o+time
-  LV    LSize Cpy%Sync CTime                     
-  lvol1 4.00m 100.00   2016-08-29 12:53:36 +0200 
-  lvol0 4.00m          2016-08-29 10:15:17 +0200 
+  LV    LSize Cpy%Sync CTime
+  lvol1 4.00m 100.00   2016-08-29 12:53:36 +0200
+  lvol0 4.00m          2016-08-29 10:15:17 +0200
 .fi
 
 We can change time format in similar way as we do when using \fBdate\fP(1)
@@ -1185,9 +1185,9 @@ below, we decided to use %s for number of seconds since Epoch (1970-01-01 UTC).
 time_format="%s"
 
 # lvs
-  LV    Attr       LSize Cpy%Sync LV Tags   CTime                     
-  lvol1 rwi-a-r--- 4.00m 100.00             1472468016                
-  lvol0 -wi-a----- 4.00m          tagA,tagB 1472458517     
+  LV    Attr       LSize Cpy%Sync LV Tags   CTime
+  lvol1 rwi-a-r--- 4.00m 100.00             1472468016
+  lvol0 -wi-a----- 4.00m          tagA,tagB 1472458517
 .fi
 
 The \fBlvs\fP does not display hidden LVs by default - to include these LVs
@@ -1197,12 +1197,12 @@ these hidden LVs are displayed within square brackets.
 .nf
 # lvs -a
   LV               LSize Cpy%Sync
-  lvol1            4.00m 100.00  
-  [lvol1_rimage_0] 4.00m         
-  [lvol1_rmeta_0]  4.00m         
-  [lvol1_rimage_1] 4.00m         
-  [lvol1_rmeta_1]  4.00m         
-  lvol0            4.00m      
+  lvol1            4.00m 100.00
+  [lvol1_rimage_0] 4.00m
+  [lvol1_rmeta_0]  4.00m
+  [lvol1_rimage_1] 4.00m
+  [lvol1_rmeta_1]  4.00m
+  lvol0            4.00m
 .fi
 
 You can configure LVM to display the square brackets for hidden LVs or not with
@@ -1214,12 +1214,12 @@ mark_hidden_devices=0
 
 # lvs -a
   LV             LSize Cpy%Sync
-  lvol1          4.00m 100.00  
-  lvol1_rimage_0 4.00m         
-  lvol1_rmeta_0  4.00m         
-  lvol1_rimage_1 4.00m         
-  lvol1_rmeta_1  4.00m         
-  lvol0          4.00m     
+  lvol1          4.00m 100.00
+  lvol1_rimage_0 4.00m
+  lvol1_rmeta_0  4.00m
+  lvol1_rimage_1 4.00m
+  lvol1_rmeta_1  4.00m
+  lvol0          4.00m
 .fi
 
 It's not recommended to use LV marks for hidden devices to decide whether the
@@ -1229,13 +1229,13 @@ used by LVM only and they should not be accessed directly by end users.
 
 .nf
 # lvs -a -o+lv_role
-  LV             LSize Cpy%Sync Role                 
-  lvol1          4.00m 100.00   public               
-  lvol1_rimage_0 4.00m          private,raid,image   
+  LV             LSize Cpy%Sync Role
+  lvol1          4.00m 100.00   public
+  lvol1_rimage_0 4.00m          private,raid,image
   lvol1_rmeta_0  4.00m          private,raid,metadata
-  lvol1_rimage_1 4.00m          private,raid,image   
+  lvol1_rimage_1 4.00m          private,raid,image
   lvol1_rmeta_1  4.00m          private,raid,metadata
-  lvol0          4.00m          public     
+  lvol0          4.00m          public
 .fi
 
 Some of the reporting fields that LVM reports are of binary nature. For such
@@ -1245,7 +1245,7 @@ undefined).
 
 .nf
 # lvs -o+lv_active_locally
-  LV    LSize Cpy%Sync ActLocal      
+  LV    LSize Cpy%Sync ActLocal
   lvol1 4.00m 100.00   active locally
   lvol0 4.00m          active locally
 .fi
@@ -1258,7 +1258,7 @@ We can change the way how these binary values are displayed with
 binary_values_as_numeric=1
 
 # lvs -o+lv_active_locally
-  LV    LSize Cpy%Sync ActLocal  
+  LV    LSize Cpy%Sync ActLocal
   lvol1 4.00m 100.00            1
   lvol0 4.00m                   1
 .fi
@@ -1342,11 +1342,11 @@ addition to lvol0 and lvol1 we used in our previous examples.
 
 .nf
 # lvs -o name,size,origin,snap_percent,tags,time
-  LV    LSize Origin Snap%  LV Tags        CTime                     
-  lvol4 4.00m lvol2  24.61                 2016-09-09 16:57:44 +0200 
-  lvol3 4.00m lvol2  5.08                  2016-09-09 16:56:48 +0200 
-  lvol2 8.00m               tagA,tagC,tagD 2016-09-09 16:55:12 +0200 
-  lvol1 4.00m                              2016-08-29 12:53:36 +0200 
+  LV    LSize Origin Snap%  LV Tags        CTime
+  lvol4 4.00m lvol2  24.61                 2016-09-09 16:57:44 +0200
+  lvol3 4.00m lvol2  5.08                  2016-09-09 16:56:48 +0200
+  lvol2 8.00m               tagA,tagC,tagD 2016-09-09 16:55:12 +0200
+  lvol1 4.00m                              2016-08-29 12:53:36 +0200
   lvol0 4.00m               tagA,tagB      2016-08-29 10:15:17 +0200
 .fi
 
@@ -1359,29 +1359,29 @@ together.
 
 .nf
 # lvs -o name,size,snap_percent -S 'size=8m'
-  LV    LSize 
+  LV    LSize
   lvol2 8.00m
 
 # lvs -o name,size,snap_percent -S 'size=8'
-  LV    LSize 
+  LV    LSize
   lvol2 8.00m
 
 # lvs -o name,size,snap_percent -S 'size < 5000k'
-  LV    LSize Snap% 
-  lvol4 4.00m 24.61 
-  lvol3 4.00m 5.08  
-  lvol1 4.00m       
-  lvol0 4.00m 
+  LV    LSize Snap%
+  lvol4 4.00m 24.61
+  lvol3 4.00m 5.08
+  lvol1 4.00m
+  lvol0 4.00m
 
 # lvs -o name,size,snap_percent -S 'size < 5000k && snap_percent > 20'
-  LV    LSize Snap% 
-  lvol4 4.00m 24.61 
+  LV    LSize Snap%
+  lvol4 4.00m 24.61
 
 # lvs -o name,size,snap_percent \\
     -S '(size < 5000k && snap_percent > 20%) || name=lvol2'
-  LV    LSize Snap% 
-  lvol4 4.00m 24.61 
-  lvol2 8.00m       
+  LV    LSize Snap%
+  lvol4 4.00m 24.61
+  lvol2 8.00m
 .fi
 
 You can also use selection together with processing-oriented commands.
@@ -1409,14 +1409,14 @@ that matches. If the subset has only one item, we can leave out { }.
 
 .nf
 # lvs -o name,tags -S 'tags={tagA}'
-  LV    LV Tags       
+  LV    LV Tags
   lvol2 tagA,tagC,tagD
-  lvol0 tagA,tagB   
-  
+  lvol0 tagA,tagB
+
 # lvs -o name,tags -S 'tags=tagA'
-  LV    LV Tags       
+  LV    LV Tags
   lvol2 tagA,tagC,tagD
-  lvol0 tagA,tagB   
+  lvol0 tagA,tagB
 .fi
 
 Depending on whether we use "&&" (or ",") or "||" ( or "#") as delimiter
@@ -1425,23 +1425,23 @@ we either match subset ("&&" or ",") or even intersection ("||" or "#").
 
 .nf
 # lvs -o name,tags -S 'tags={tagA,tagC,tagD}'
-  LV    LV Tags       
+  LV    LV Tags
   lvol2 tagA,tagC,tagD
 
 # lvs -o name,tags -S 'tags={tagA || tagC || tagD}'
-  LV    LV Tags       
+  LV    LV Tags
   lvol2 tagA,tagC,tagD
-  lvol0 tagA,tagB     
+  lvol0 tagA,tagB
 .fi
 
 To match the complete set, use [ ] with "&&" (or ",") as delimiter for items.
 Also note that the order in which we define items in the set is not relevant.
 
 .nf
-# lvs -o name,tags -S 'tags=[tagA]'                
+# lvs -o name,tags -S 'tags=[tagA]'
 
 # lvs -o name,tags -S 'tags=[tagB,tagA]'
-  LV    LV Tags  
+  LV    LV Tags
   lvol0 tagA,tagB
 .fi
 
@@ -1449,9 +1449,9 @@ If you use [ ] with "||" (or "#"), this is exactly the same as using { }.
 
 .nf
 # lvs -o name,tags -S 'tags=[tagA || tagC || tagD]'
-  LV    LV Tags       
+  LV    LV Tags
   lvol2 tagA,tagC,tagD
-  lvol0 tagA,tagB  
+  lvol0 tagA,tagB
 .fi
 
 To match a set with no items, use "" to denote this (note that we have
@@ -1460,15 +1460,15 @@ the example below because it's blank and so it gets compacted).
 
 .nf
 # lvs -o name,tags -S 'tags=""'
-  LV    
+  LV
   lvol4
   lvol3
   lvol1
 
 # lvs -o name,tags -S 'tags!=""'
-  LV    LV Tags       
+  LV    LV Tags
   lvol2 tagA,tagC,tagD
-  lvol0 tagA,tagB  
+  lvol0 tagA,tagB
 .fi
 
 When doing selection based on time fields, we can use either standard,
@@ -1477,40 +1477,40 @@ are using standard forms.
 
 .nf
 # lvs -o name,time
-  LV    CTime                     
-  lvol4 2016-09-09 16:57:44 +0200 
-  lvol3 2016-09-09 16:56:48 +0200 
-  lvol2 2016-09-09 16:55:12 +0200 
-  lvol1 2016-08-29 12:53:36 +0200 
-  lvol0 2016-08-29 10:15:17 +0200 
+  LV    CTime
+  lvol4 2016-09-09 16:57:44 +0200
+  lvol3 2016-09-09 16:56:48 +0200
+  lvol2 2016-09-09 16:55:12 +0200
+  lvol1 2016-08-29 12:53:36 +0200
+  lvol0 2016-08-29 10:15:17 +0200
 
 # lvs -o name,time -S 'time since "2016-09-01"'
-  LV    CTime                     
-  lvol4 2016-09-09 16:57:44 +0200 
-  lvol3 2016-09-09 16:56:48 +0200 
-  lvol2 2016-09-09 16:55:12 +0200 
+  LV    CTime
+  lvol4 2016-09-09 16:57:44 +0200
+  lvol3 2016-09-09 16:56:48 +0200
+  lvol2 2016-09-09 16:55:12 +0200
 
 # lvs -o name,time -S 'time since "2016-09-09 16:56"'
-  LV    CTime                     
-  lvol4 2016-09-09 16:57:44 +0200 
-  lvol3 2016-09-09 16:56:48 +0200 
+  LV    CTime
+  lvol4 2016-09-09 16:57:44 +0200
+  lvol3 2016-09-09 16:56:48 +0200
 
 # lvs -o name,time -S 'time since "2016-09-09 16:57:30"'
-  LV    CTime                     
-  lvol4 2016-09-09 16:57:44 +0200 
+  LV    CTime
+  lvol4 2016-09-09 16:57:44 +0200
 
-# lvs -o name,time \\ 
+# lvs -o name,time \\
     -S 'time since "2016-08-29" && time until "2016-09-09 16:55:12"'
-  LV    CTime                     
-  lvol2 2016-09-09 16:55:12 +0200 
-  lvol1 2016-08-29 12:53:36 +0200 
-  lvol0 2016-08-29 10:15:17 +0200 
+  LV    CTime
+  lvol2 2016-09-09 16:55:12 +0200
+  lvol1 2016-08-29 12:53:36 +0200
+  lvol0 2016-08-29 10:15:17 +0200
 
 # lvs -o name,time \\
     -S 'time since "2016-08-29" && time before "2016-09-09 16:55:12"'
-  LV    CTime                     
-  lvol1 2016-08-29 12:53:36 +0200 
-  lvol0 2016-08-29 10:15:17 +0200 
+  LV    CTime
+  lvol1 2016-08-29 12:53:36 +0200
+  lvol0 2016-08-29 10:15:17 +0200
 .fi
 
 Time operators have synonyms: ">=" for since, "<=" for until,
@@ -1519,75 +1519,75 @@ Time operators have synonyms: ">=" for since, "<=" for until,
 .nf
 # lvs -o name,time \\
     -S 'time >= "2016-08-29" && time <= "2016-09-09 16:55:30"'
-  LV    CTime                     
-  lvol2 2016-09-09 16:55:12 +0200 
-  lvol1 2016-08-29 12:53:36 +0200 
-  lvol0 2016-08-29 10:15:17 +0200 
+  LV    CTime
+  lvol2 2016-09-09 16:55:12 +0200
+  lvol1 2016-08-29 12:53:36 +0200
+  lvol0 2016-08-29 10:15:17 +0200
 
 # lvs -o name,time \\
     -S 'time since "2016-08-29" && time < "2016-09-09 16:55:12"'
-  LV    CTime                     
-  lvol1 2016-08-29 12:53:36 +0200 
-  lvol0 2016-08-29 10:15:17 +0200 
+  LV    CTime
+  lvol1 2016-08-29 12:53:36 +0200
+  lvol0 2016-08-29 10:15:17 +0200
 .fi
 
 Example below demonstrates using absolute time expression.
 
 .nf
 # lvs -o name,time --config report/time_format="%s"
-  LV    CTime                     
-  lvol4 1473433064                
-  lvol3 1473433008                
-  lvol2 1473432912                
-  lvol1 1472468016                
-  lvol0 1472458517  
+  LV    CTime
+  lvol4 1473433064
+  lvol3 1473433008
+  lvol2 1473432912
+  lvol1 1472468016
+  lvol0 1472458517
 
 # lvs -o name,time -S 'time since @1473433008'
-  LV    CTime                     
-  lvol4 2016-09-09 16:57:44 +0200 
-  lvol3 2016-09-09 16:56:48 +0200 
+  LV    CTime
+  lvol4 2016-09-09 16:57:44 +0200
+  lvol3 2016-09-09 16:56:48 +0200
 .fi
 
 Examples below demonstrates using freeform time expressions.
 
 .nf
 # lvs -o name,time -S 'time since "2 weeks ago"'
-  LV    CTime                     
-  lvol4 2016-09-09 16:57:44 +0200 
-  lvol3 2016-09-09 16:56:48 +0200 
-  lvol2 2016-09-09 16:55:12 +0200 
-  lvol1 2016-08-29 12:53:36 +0200 
-  lvol0 2016-08-29 10:15:17 +0200 
+  LV    CTime
+  lvol4 2016-09-09 16:57:44 +0200
+  lvol3 2016-09-09 16:56:48 +0200
+  lvol2 2016-09-09 16:55:12 +0200
+  lvol1 2016-08-29 12:53:36 +0200
+  lvol0 2016-08-29 10:15:17 +0200
 
 # lvs -o name,time -S 'time since "1 week ago"'
-  LV    CTime                     
-  lvol4 2016-09-09 16:57:44 +0200 
-  lvol3 2016-09-09 16:56:48 +0200 
-  lvol2 2016-09-09 16:55:12 +0200 
+  LV    CTime
+  lvol4 2016-09-09 16:57:44 +0200
+  lvol3 2016-09-09 16:56:48 +0200
+  lvol2 2016-09-09 16:55:12 +0200
 
 # lvs -o name,time -S 'time since "2 weeks ago"'
-  LV    CTime                     
-  lvol1 2016-08-29 12:53:36 +0200 
-  lvol0 2016-08-29 10:15:17 +0200 
+  LV    CTime
+  lvol1 2016-08-29 12:53:36 +0200
+  lvol0 2016-08-29 10:15:17 +0200
 
 # lvs -o name,time -S 'time before "1 week ago"'
-  LV    CTime                     
-  lvol1 2016-08-29 12:53:36 +0200 
-  lvol0 2016-08-29 10:15:17 +0200 
+  LV    CTime
+  lvol1 2016-08-29 12:53:36 +0200
+  lvol0 2016-08-29 10:15:17 +0200
 
 # lvs -o name,time -S 'time since "68 hours ago"'
-  LV    CTime                     
-  lvol4 2016-09-09 16:57:44 +0200 
-  lvol3 2016-09-09 16:56:48 +0200 
-  lvol2 2016-09-09 16:55:12 +0200 
+  LV    CTime
+  lvol4 2016-09-09 16:57:44 +0200
+  lvol3 2016-09-09 16:56:48 +0200
+  lvol2 2016-09-09 16:55:12 +0200
 
 # lvs -o name,time -S 'time since "1 year 3 months ago"'
-  LV    CTime                     
-  lvol4 2016-09-09 16:57:44 +0200 
-  lvol3 2016-09-09 16:56:48 +0200 
-  lvol2 2016-09-09 16:55:12 +0200 
-  lvol1 2016-08-29 12:53:36 +0200 
-  lvol0 2016-08-29 10:15:17 +0200 
+  LV    CTime
+  lvol4 2016-09-09 16:57:44 +0200
+  lvol3 2016-09-09 16:56:48 +0200
+  lvol2 2016-09-09 16:55:12 +0200
+  lvol1 2016-08-29 12:53:36 +0200
+  lvol0 2016-08-29 10:15:17 +0200
 .fi
 
 .SS Command log reporting
@@ -1615,9 +1615,9 @@ command_log_selection="!(log_type=status && message=success)"
   Logical Volume
   ==============
   LV    LSize Cpy%Sync
-  lvol1 4.00m 100.00  
-  lvol0 4.00m         
-  
+  lvol1 4.00m 100.00
+  lvol0 4.00m
+
   Command Log
   ===========
   Seq LogType Context ObjType ObjName ObjGrp  Msg     Errno RetCode
@@ -1638,9 +1638,9 @@ command_log_selection="all"
   Logical Volume
   ==============
   LV    LSize Cpy%Sync
-  lvol1 4.00m 100.00  
-  lvol0 4.00m         
-  
+  lvol1 4.00m 100.00
+  lvol0 4.00m
+
   Command Log
   ===========
   Seq LogType Context    ObjType ObjName ObjGrp  Msg     Errno RetCode
@@ -1670,7 +1670,7 @@ To configure the log report directly on command line, we need to use
   LV    LSize
   lvol1 4.00m
   lvol0 4.00m
-  
+
   Command Log
   ===========
   ObjType ObjName Msg     RetCode
@@ -1763,9 +1763,9 @@ lvm> lvs
   Logical Volume
   ==============
   LV    LSize Cpy%Sync
-  lvol1 4.00m 100.00  
-  lvol0 4.00m         
-  
+  lvol1 4.00m 100.00
+  lvol0 4.00m
+
   Command Log
   ===========
   Seq LogType Context    ObjType ObjName ObjGrp  Msg     Errno RetCode
@@ -1774,7 +1774,7 @@ lvm> lvs
     3 status  processing vg      vg              success     0       1
     4 status  shell      cmd     lvs             success     0       1
 
-lvm> lastlog    
+lvm> lastlog
   Command Log
   ===========
   Seq LogType Context    ObjType ObjName ObjGrp  Msg     Errno RetCode

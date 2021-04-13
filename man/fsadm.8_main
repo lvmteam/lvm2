@@ -1,24 +1,27 @@
 .TH "FSADM" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" "\""
+.
 .SH "NAME"
+.
 fsadm \(em utility to resize or check filesystem on a device
+.
 .SH SYNOPSIS
 .
 .PD 0
 .ad l
-.HP 5
+.TP 6
 .B fsadm
 .RI [ options ]
 .BR check
 .IR device
 .
-.HP
+.TP
 .B fsadm
 .RI [ options ]
 .BR resize
 .IR device
 .RI [ new_size ]
-.PD
 .ad b
+.PD
 .
 .SH DESCRIPTION
 .
@@ -34,44 +37,36 @@ filesystem.
 .
 .SH OPTIONS
 .
-.HP
+.TP
 .BR -e | --ext-offline
-.br
 Unmount ext2/ext3/ext4 filesystem before doing resize.
 .
-.HP
+.TP
 .BR -f | --force
-.br
 Bypass some sanity checks.
 .
-.HP
+.TP
 .BR -h | --help
-.br
 Display the help text.
 .
-.HP
+.TP
 .BR -n | --dry-run
-.br
 Print commands without running them.
 .
-.HP
+.TP
 .BR -v | --verbose
-.br
 Be more verbose.
 .
-.HP
+.TP
 .BR -y | --yes
-.br
 Answer "yes" at any prompts.
 .
-.HP
+.TP
 .BR -c | --cryptresize
-.br
 Resize dm-crypt mapping together with filesystem detected on the device. The dm-crypt device must be recognizable by cryptsetup(8).
 .
-.HP
+.TP
 .BR \fInew_size [ B | K | M | G | T | P | E ]
-.br
 Absolute number of filesystem blocks to be in the filesystem,
 or an absolute size using a suffix (in powers of 1024).
 If new_size is not supplied, the whole device is used.
@@ -91,30 +86,37 @@ Resize the filesystem on logical volume \fI/dev/vg/test\fP to 1000 megabytes.
 If \fI/dev/vg/test\fP contains ext2/ext3/ext4
 filesystem it will be unmounted prior the resize.
 All [y/n] questions will be answered 'y'.
-.sp
+.P
+#
 .B fsadm -e -y resize /dev/vg/test 1000M
 .
 .SH ENVIRONMENT VARIABLES
 .
 .TP
-.B "TMPDIR   "
+.B TMPDIR
 The temporary directory name for mount points. Defaults to "\fI/tmp\fP".
 .TP
 .B DM_DEV_DIR
 The device directory name.
 Defaults to "\fI/dev\fP" and must be an absolute path.
-
+.
 .SH SEE ALSO
+.
 .nh
+.ad l
 .BR lvm (8),
 .BR lvresize (8),
 .BR lvm.conf (5),
+.P
 .BR fsck (8),
 .BR tune2fs (8),
 .BR resize2fs (8),
+.P
 .BR reiserfstune (8),
 .BR resize_reiserfs (8),
+.P
 .BR xfs_info (8),
 .BR xfs_growfs (8),
 .BR xfs_check (8),
+.P
 .BR cryptsetup (8)

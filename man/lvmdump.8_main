@@ -1,7 +1,11 @@
 .TH LVMDUMP 8 "LVM TOOLS #VERSION#" "Red Hat, Inc."
+.
 .SH NAME
+.
 lvmdump \(em create lvm2 information dumps for diagnostic purposes
+.
 .SH SYNOPSIS
+.
 .B lvmdump
 .RB [ -a ]
 .RB [ -c ]
@@ -13,46 +17,54 @@ lvmdump \(em create lvm2 information dumps for diagnostic purposes
 .RB [ -p ]
 .RB [ -s ]
 .RB [ -u ]
+.
 .SH DESCRIPTION
+.
 lvmdump is a tool to dump various information concerning LVM2.
 By default, it creates a tarball suitable for submission along
 with a problem report.
-.PP
+.P
 The content of the tarball is as follows:
-.br
-- dmsetup info
-.br
-- table of currently running processes
-.br
-- recent entries from /var/log/messages (containing system messages)
-.br
-- complete lvm configuration and cache (content of #DEFAULT_SYS_DIR#)
-.br
-- list of device nodes present under /dev
-.br
-- list of files present /sys/block
-.br
-- list of files present /sys/devices/virtual/block
-.br
-- if enabled with -m, metadata dump will be also included
-.br
-- if enabled with -a, debug output of vgscan, pvscan and list of all available volume groups, physical volumes and logical volumes will be included
-.br
-- if enabled with -l, lvmetad state if running
-.br
-- if enabled with -p, lvmpolld state if running
-.br
-- if enabled with -s, system info and context
-.br
-- if enabled with -u, udev info and context
+.ad l
+.PD 0
+.IP \[bu] 2
+dmsetup info
+.IP \[bu]
+table of currently running processes
+.IP \[bu]
+recent entries from /var/log/messages (containing system messages)
+.IP \[bu]
+complete lvm configuration and cache (content of #DEFAULT_SYS_DIR#)
+.IP \[bu]
+list of device nodes present under /dev
+.IP \[bu]
+list of files present /sys/block
+.IP \[bu]
+list of files present /sys/devices/virtual/block
+.IP \[bu]
+if enabled with -m, metadata dump will be also included
+.IP \[bu]
+if enabled with -a, debug output of vgscan, pvscan and list of all available volume groups, physical volumes and logical volumes will be included
+.IP \[bu]
+if enabled with -l, lvmetad state if running
+.IP \[bu]
+if enabled with -p, lvmpolld state if running
+.IP \[bu]
+if enabled with -s, system info and context
+.IP \[bu]
+if enabled with -u, udev info and context
+.PD
+.ad b
+.
 .SH OPTIONS
+.
 .TP
 .B -a
 Advanced collection.
 \fBWARNING\fR: if lvm is already hung, then this script may hang as well
 if \fB-a\fR is used.
 .TP
-.B -d  \fIdirectory
+.B -d \fIdirectory
 Dump into a directory instead of tarball
 By default, lvmdump will produce a single compressed tarball containing
 all the information. Using this option, it can be instructed to only
@@ -92,16 +104,19 @@ Gather udev info and context: /etc/udev/udev.conf file, udev daemon version
 (content of /lib/udev/rules.d and /etc/udev/rules.d directory),
 list of files in /lib/udev directory and dump of current udev
 database content (the output of 'udevadm info --export-db' command).
+.
 .SH ENVIRONMENT VARIABLES
+.
 .TP
-\fBLVM_BINARY\fP
+.B LVM_BINARY
 The LVM2 binary to use.
 Defaults to "lvm".
-Sometimes you might need to set this to "#LVM_PATH#/lvm.static", for example.
+Sometimes you might need to set this to "#LVM_PATH#.static", for example.
 .TP
-\fBDMSETUP_BINARY\fP
+.B DMSETUP_BINARY
 The dmsetup binary to use.
 Defaults to "dmsetup".
-.PP
+.
 .SH SEE ALSO
+.
 .BR lvm (8)

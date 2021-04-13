@@ -24,13 +24,13 @@ dmsetup \(em low level logical volume management
 .  nh
 .  BR create
 .  IR device_name
-.  RB [ -u | --uuid
-.  IR uuid ]
-.  RB [ --addnodeoncreate |\: --addnodeonresume ]
 .  RB [ -n | --notable |\: --table
 .  IR table |\: table_file ]
 .  RB [ --readahead
 .  RB [ + ] \fIsectors |\: auto | none ]
+.  RB [ -u | --uuid
+.  IR uuid ]
+.  RB [ --addnodeoncreate |\: --addnodeonresume ]
 .  hy
 .  ad b
 ..
@@ -86,12 +86,12 @@ dmsetup \(em low level logical volume management
 .  IR count ]
 .  RB [ --interval
 .  IR seconds ]
-.  RB [ --nameprefixes ]
 .  RB [ --noheadings ]
 .  RB [ -o
 .  IR fields ]
 .  RB [ -O | --sort
 .  IR sort_fields ]
+.  RB [ --nameprefixes ]
 .  RB [ --separator
 .  IR separator ]
 .  RI [ device_name ]
@@ -120,11 +120,11 @@ dmsetup \(em low level logical volume management
 .  BR ls
 .  RB [ --target
 .  IR target_type ]
+.  RB [ -o
+.  IR options ]
 .  RB [ --exec
 .  IR command ]
 .  RB [ --tree ]
-.  RB [ -o
-.  IR options ]
 .  hy
 .  ad b
 ..
@@ -391,10 +391,10 @@ dmsetup \(em low level logical volume management
 .CMD_WIPE_TABLE
 .PD
 .P
-.HP
 .PD 0
+.TP
 .B devmap_name \fImajor minor
-.HP
+.TP
 .B devmap_name \fImajor:minor
 .PD
 .ad b
@@ -404,10 +404,10 @@ dmsetup \(em low level logical volume management
 dmsetup manages logical devices that use the device-mapper driver.
 Devices are created by loading a table that specifies a target for
 each sector (512 bytes) in the logical device.
-
+.P
 The first argument to dmsetup is a command.
 The second argument is the logical device name or uuid.
-
+.P
 Invoking the dmsetup tool as \fBdevmap_name\fP
 (which is not normally distributed and is supported
 only for historical reasons) is equivalent to
@@ -417,66 +417,53 @@ only for historical reasons) is equivalent to
 .
 .SH OPTIONS
 .
-.HP
-.BR --addnodeoncreate
-.br
+.TP
+.B --addnodeoncreate
 Ensure \fI/dev/mapper\fP node exists after \fBdmsetup create\fP.
 .
-.HP
-.BR --addnodeonresume
-.br
+.TP
+.B --addnodeonresume
 Ensure \fI/dev/mapper\fP node exists after \fBdmsetup resume\fP (default with udev).
 .
-.HP
-.BR --checks
-.br
+.TP
+.B --checks
 Perform additional checks on the operations requested and report
 potential problems.  Useful when debugging scripts.
 In some cases these checks may slow down operations noticeably.
 .
-.HP
+.TP
 .BR -c | -C | --columns
-.br
 Display output in columns rather than as Field: Value lines.
 .
-.HP
-.BR --count
-.IR count
-.br
+.TP
+.B --count \fIcount
 Specify the number of times to repeat a report. Set this to zero
 continue until interrupted.  The default interval is one second.
 .
-.HP
+.TP
 .BR -f | --force
-.br
 Try harder to complete operation.
 .
-.HP
+.TP
 .BR -h | --help
-.br
 Outputs a summary of the commands available, optionally including
 the list of report fields (synonym with \fBhelp\fP command).
 .
-.HP
-.BR --inactive
-.br
+.TP
+.B --inactive
 When returning any table information from the kernel report on the
 inactive table instead of the live table.
 Requires kernel driver version 4.16.0 or above.
 .
-.HP
-.BR --interval
-.IR seconds
-.br
+.TP
+.B --interval \fIseconds
 Specify the interval in seconds between successive iterations for
 repeating reports. If \fB--interval\fP is specified but \fB--count\fP
 is not, reports will continue to repeat until interrupted.
 The default interval is one second.
 .
-.HP
-.BR --manglename
-.BR auto | hex | none
-.br
+.TP
+.BR --manglename " " auto | hex | none
 Mangle any character not on a whitelist using mangling_mode when
 processing device-mapper device names and UUIDs. The names and UUIDs
 are mangled on input and unmangled on output where the mangling mode
@@ -493,26 +480,20 @@ Mangling mode could be also set through
 \fBDM_DEFAULT_NAME_MANGLING_MODE\fP
 environment variable.
 .
-.HP
-.BR -j | --major
-.IR major
-.br
+.TP
+.BR -j | --major " " \fImajor
 Specify the major number.
 .
-.HP
-.BR -m | --minor
-.IR minor
-.br
+.TP
+.BR -m | --minor " " \fIminor
 Specify the minor number.
 .
-.HP
+.TP
 .BR -n | --notable
-.br
 When creating a device, don't load any table.
 .
-.HP
-.BR --nameprefixes
-.br
+.TP
+.B --nameprefixes
 Add a "DM_" prefix plus the field name to the output.  Useful with
 \fB--noheadings\fP to produce a list of
 field=value pairs that can be used to set environment variables
@@ -520,45 +501,37 @@ field=value pairs that can be used to set environment variables
 .BR udev (7)
 rules).
 .
-.HP
-.BR --noheadings
+.TP
+.B --noheadings
 Suppress the headings line when using columnar output.
 .
-.HP
-.BR --noflush
+.TP
+.B --noflush
 Do not flush outstanding I/O when suspending a device, or do not
 commit thin-pool metadata when obtaining thin-pool status.
 .
-.HP
-.BR --nolockfs
-.br
+.TP
+.B --nolockfs
 Do not attempt to synchronize filesystem eg, when suspending a device.
 .
-.HP
-.BR --noopencount
-.br
+.TP
+.B --noopencount
 Tell the kernel not to supply the open reference count for the device.
 .
-.HP
-.BR --noudevrules
-.br
+.TP
+.B --noudevrules
 Do not allow udev to manage nodes for devices in device-mapper directory.
 .
-.HP
-.BR --noudevsync
-.br
+.TP
+.B --noudevsync
 Do not synchronise with udev when creating, renaming or removing devices.
 .
-.HP
-.BR -o | --options
-.IR options
-.br
+.TP
+.BR -o | --options " " \fIoptions
 Specify which fields to display.
 .
-.HP
-.BR --readahead
-.RB [ + ] \fIsectors | auto | none
-.br
+.TP
+.BR --readahead \ [ + ] \fIsectors | auto | none
 Specify read ahead size in units of sectors.
 The default value is \fBauto\fP which allows the kernel to choose
 a suitable value automatically.  The \fB+\fP prefix lets you
@@ -566,15 +539,12 @@ specify a minimum value which will not be used if it is
 smaller than the value chosen by the kernel.
 The value \fBnone\fP is equivalent to specifying zero.
 .
-.HP
+.TP
 .BR -r | --readonly
-.br
 Set the table being loaded read-only.
 .
-.HP
-.BR -S | --select
-.IR selection
-.br
+.TP
+.BR -S | --select " " \fIselection
 Process only items that match \fIselection\fP criteria.  If the command is
 producing report output, adding the "selected" column (\fB-o
 selected\fP) displays all rows and shows 1 if the row matches the
@@ -584,49 +554,38 @@ comparison operators. As a quick help and to see full list of column names that
 can be used in selection and the set of supported selection operators, check
 the output of \fBdmsetup\ info\ -c\ -S\ help\fP command.
 .
-.HP
-.BR --table
-.IR table
-.br
+.TP
+.B --table \fItable
 Specify a one-line table directly on the command line.
 See below for more information on the table format.
 .
-.HP
-.BR --udevcookie
-.IR cookie
-.br
+.TP
+.B --udevcookie \fIcookie
 Use cookie for udev synchronisation.
 Note: Same cookie should be used for same type of operations i.e. creation of
 multiple different devices. It's not adviced to combine different
 operations on the single device.
 .
-.HP
-.BR -u | --uuid
-.br
+.TP
+.BR -u | --uuid " " \fIuuid
 Specify the \fIuuid\fP.
 .
-.HP
+.TP
 .BR -y | --yes
-.br
 Answer yes to all prompts automatically.
 .
-.HP
-.BR -v | --verbose
-.RB [ -v | --verbose ]
-.br
+.TP
+.BR -v | --verbose " [" -v | --verbose ]
 Produce additional output.
 .
-.HP
-.BR --verifyudev
-.br
+.TP
+.B --verifyudev
 If udev synchronisation is enabled, verify that udev operations get performed
 correctly and try to fix up the device nodes afterwards if not.
 .
-.HP
-.BR --version
-.br
+.TP
+.B --version
 Display the library and kernel driver version.
-.br
 .
 .SH COMMANDS
 .
@@ -656,7 +615,7 @@ Flags defaults to read-write (rw) or may be read-only (ro).
 Uuid, minor number and flags are optional so those fields may be empty.
 A semi-colon separates specifications of different devices.
 Use a backslash to escape the following character, for example a comma or semi-colon in a name or table. See also CONCISE FORMAT below.
-. 
+.
 .HP
 .CMD_DEPS
 .br
@@ -701,11 +660,11 @@ Fields are comma-separated and chosen from the following list:
 .BR events ,
 .BR uuid .
 Attributes are:
-.RI ( L )ive,
-.RI ( I )nactive,
-.RI ( s )uspended,
-.RI ( r )ead-only,
-.RI read-( w )rite.
+.RB ( L )ive,
+.RB ( I )nactive,
+.RB ( s )uspended,
+.RB ( r )ead-only,
+.RB read-( w )rite.
 Precede the list with '\fB+\fP' to append
 to the default selection of columns instead of replacing it.
 Precede any sort field with '\fB-\fP' for a reverse sort on that column.
@@ -838,7 +797,7 @@ Outputs status information for each of the device's targets.
 With \fB--target\fP, only information relating to the specified target type
 any is displayed.  With \fB--noflush\fP, the thin target (from version 1.3.0)
 doesn't commit any outstanding changes to disk before reporting its statistics.
-
+.
 .HP
 .CMD_SUSPEND
 .br
@@ -964,13 +923,12 @@ Creates a striped area.
 e.g. striped 2 32 /dev/hda1 0 /dev/hdb1 0
 will map the first chunk (16k) as follows:
 .RS
-.RS
+.IP
  LV chunk 1 -> hda1, chunk 1
  LV chunk 2 -> hdb1, chunk 1
  LV chunk 3 -> hda1, chunk 2
  LV chunk 4 -> hdb1, chunk 2
  etc.
-.RE
 .RE
 .TP
 .B error

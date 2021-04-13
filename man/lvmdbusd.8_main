@@ -8,31 +8,28 @@ lvmdbusd \(em LVM D-Bus daemon
 .
 .ad l
 .B lvmdbusd
-.RB [ --debug \]
-.RB [ --udev \]
+.RB [ --debug ]
+.RB [ --udev ]
 .ad b
 .
 .SH DESCRIPTION
 .
 lvmdbusd is a service which provides a D-Bus API to the logical volume manager (LVM).
-Run 
+Run
 .BR lvmdbusd (8)
 as root.
 .
 .SH OPTIONS
 .
-.HP
-.BR --debug 
-.br
-Enable debug statements 
+.TP 8
+.B --debug
+Enable debug statements
 .
-.HP
-.BR --udev
-.br
+.TP
+.B --udev
 Use udev events to trigger updates
 .
 .SH SEE ALSO
 .
-.nh
 .BR dbus-send (1),
 .BR lvm (8)

@@ -23,70 +23,63 @@ dmeventd is the event monitoring daemon for device-mapper devices.
 Library plugins can register and carry out actions triggered when
 particular events occur.
 .
-.
 .SH OPTIONS
 .
-.HP
-.BR -d
-.br
-Repeat from 1 to 3 times (
-.BR -d ,
+.TP
+.B -d
+Repeat from 1 to 3 times
+.RB ( -d ,
 .BR -dd ,
-.BR -ddd
-) to increase the detail of
+.BR -ddd )
+to increase the detail of
 debug messages sent to syslog.
 Each extra d adds more debugging information.
 .
-.HP
-.BR -f
-.br
+.TP
+.B -f
 Don't fork, run in the foreground.
 .
-.HP
-.BR -h
-.br
+.TP
+.B -h
 Show help information.
 .
-.HP
-.BR -l
-.br
+.TP
+.B -l
 Log through stdout and stderr instead of syslog.
 This option works only with option -f, otherwise it is ignored.
 .
-.HP
-.BR -?
-.br
+.TP
+.B -?
 Show help information on stderr.
 .
-.HP
-.BR -R
-.br
+.TP
+.B -R
 Replace a running dmeventd instance. The running dmeventd must be version
 2.02.77 or newer. The new dmeventd instance will obtain a list of devices and
 events to monitor from the currently running daemon.
 .
-.HP
-.BR -V
-.br
+.TP
+.B -V
 Show version of dmeventd.
 .
 .SH LVM PLUGINS
 .
-.HP
-.BR Mirror
+.TP
+.B Mirror
+Attempts to handle device failure automatically.
 .br
-Attempts to handle device failure automatically. See
+See
 .BR lvm.conf (5).
 .
-.HP
-.BR Raid
+.TP
+.B Raid
+Attempts to handle device failure automatically.
 .br
-Attempts to handle device failure automatically. See
+See
 .BR lvm.conf (5).
 .
-.HP
-.BR Snapshot
-.br
+.TP
+.B Snapshot
 Monitors how full a snapshot is becoming and emits a warning to
 syslog when it exceeds 80% full.
 The warning is repeated when 85%, 90% and 95% of the snapshot is filled.
@@ -95,9 +88,8 @@ See
 Snapshot which runs out of space gets invalid and when it is mounted,
 it gets umounted if possible.
 .
-.HP
-.BR Thin
-.br
+.TP
+.B Thin
 Monitors how full a thin pool data and metadata is becoming and emits
 a warning to syslog when it exceeds 80% full.
 The warning is repeated when more then 85%, 90% and 95%
@@ -123,12 +115,11 @@ Command is executed with environmental variable
 in this environment will not try to interact with dmeventd.
 To see the fullness of a thin pool command may check these
 two environmental variables
-\fBDMEVENTD_THIN_POOL_DATA\fP and \fBDMEVENTD_THIN_POOL_METADATA\fP.
+\fBDMEVENTD_THIN_POOL_DATA\fP and \fBDMEVENTD_THIN_POOL_\:METADATA\fP.
 Command can also read status with tools like \fBlvs\fP(8).
-
-.HP
-.BR Vdo
-.br
+.
+.TP
+.B Vdo
 Monitors how full a VDO pool data is becoming and emits
 a warning to syslog when it exceeds 80% full.
 The warning is repeated when more then 85%, 90% and 95%
