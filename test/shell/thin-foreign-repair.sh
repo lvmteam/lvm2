@@ -77,22 +77,4 @@ dmsetup create "$THIN" --table "0 40960 thin $DM_DEV_DIR/mapper/$POOL 0"
 
 fsck -n "$DM_DEV_DIR/mapper/$THIN"
 
-clean_thin_
-
-lvchange -an $vg
-
-# Take a copy of metadata
-lvchange -y -ay $vg/pool_tmeta
-
-lvcreate -L2 -n $lv1 $vg
-dd if="$DM_DEV_DIR/$vg/pool_tmeta" of="$DM_DEV_DIR/$vg/$lv1" bs=1M count=1
-
-# Use zero backend for data device
-lvcreate --type zero -L2 -n $lv2 $vg
-
-lvconvert --thinpool $vg/$lv2 --poolmetadata $vg/$lv1 -Zn -y
-
-# Metadata should NOT be zeroed and device should be available
-dmsetup create "$THIN" --table "0 40960 thin $DM_DEV_DIR/$vg/$lv2 0"
-
 # exit calls cleanup_mounted_and_teardown
