@@ -147,41 +147,57 @@ $(SED) -e "s+#VERSION#+$(LVM_VERSION)+" \
 	-e "s+#DEFAULT_MANGLING#+$(DEFAULT_MANGLING)+" $< > $@
 endef
 
-# Escape any '-':
+# Escape any '-' to '\-'  (except ^.TH line)
+# and fix unwanted changes:
+#    '\\-'  back to '\-'
+#    words like 'device\-mapper' back to 'device-mapper',
+#    \[\->] \[<\-] back to \[->], \[<-]
+#    however for some words i.e. '*-pool' we want '*\-pool'
+#    also 'vg-lv,[systemd-]machine-id,lvm-full,lvm-lvpoll' should go with \-
 #
-# - multiple (>= 2)
-# - in ' -'
-# - in ranges
-# - in middle of options (e.g. '--use-policies') and their arguments
-# - in symbolic use (e.g. '->')
-# - in "$vg-$lv"
-# - in single one in '\\f.-'
 define ESCAPEHYPHENS
-$(SED) -i -e "s+\([ [:alpha:]]\)-\{7\}+\1\\\-\\\-\\\-\\\-\\\-\\\-\\\-+g" \
-	  -e "s+\([ [:alpha:]]\)-\{6\}+\1\\\-\\\-\\\-\\\-\\\-\\\-+g" \
-	  -e "s+\([ [:alpha:]]\)-\{5\}+\1\\\-\\\-\\\-\\\-\\\-+g" \
-	  -e "s+\([ [:alpha:]]\)-\{4\}+\1\\\-\\\-\\\-\\\-+g" \
-	  -e "s+\([ [:alpha:]]\)-\{3\}+\1\\\-\\\-\\\-+g" \
-	  -e "s+\([ [:alpha:]]\)-\{2\}+\1\\\-\\\-+g" \
-	  -e "s+\([^\]\)-\([[:alnum:]\?]\)+\1\\\-\2+g" \
-	  -e "s+ --+\\\-\\\-+g" \
-	  -e "s+|-|+|\\\-|+g" \
-	  -e "s+|-\\\-+\\\-\\\-+g" \
-	  -e "s+ -\"+ \\\-\"+g" \
-	  -e "s+'--'+'\\\-\\\-'+g" \
-	  -e "s+^--+\\\-\\\-+g" \
-	  -e "s+\([[:alnum:]]\) - \([[:alnum:]]\)+\1 \\\- \2+g" \
-	  -e "s+\(<\)-+\1\\\-+g" \
-	  -e "s+[^\\]-\(>\)+\\\-\1+g" \
-	  -e "s+\([[:alnum:]]\{2,\}\)\\\-\([[:alnum:]]\{2,\}\)+\1-\2+g" \
-	  -e "s+\(\\\-\\\-[[:alnum:]]\{2,\}\)-+\1\\\-+g" \
-	  -e "s+\(lvm2\-activation\)+lvm2\\\-activation+" \
-	  -e "s+\([^\\]\)-pool+\1\\\-pool+g" \
-	  -e "s+\([[:digit:]]\)-\([[:digit:]]\)+\1\\\-\2+g" \
-	  -e "s+\\\-git+\-git+g" \
-	  -e "s+\(vg.*\)\-lv+\1\\\-lv+g" \
-	  -e "s+\([[:digit:]]\{4\}\)\\\-\([[:digit:]]\{2\}\)\\\-\([[:digit:]]\{2\}\)+\1-\2-\3+g" $@
+$(SED) -i -e "/^.TH/ !s+-+\\\-+g" \
+	  -e "s+\\\[\]-+\\\-+g" \
+	  -e "s+\(^\|[^[:alnum:]\-]\)\([[:alpha:]]\{1,\}\)\\\-\((\|[([:alpha:]]\{2,\}\)+\1\2-\3+g" \
+	  -e "s+\([[:alpha:]]\)-\(pool\)+\1\\\-\2+g" \
+	  -e "s+[\][[]\(<\{0,1\}\)\\\-+\\\[\1-+g" \
+	  -e "s+\(vg.\{1,\}[^\]\)-lv+\1\\\-lv+g" \
+	  -e "s+systemd-machine+systemd\\\-machine+g" \
+	  -e "s+machine-id+machine\\\-id+g" \
+	  -e "s+lvm-full+lvm\\\-full+g" \
+	  -e "s+lvm-lvpoll+lvm\\\-lvpoll+g" \
+	  $@
 endef
+
+.PHONY: checksed
+checksed:
+	$(Q) echo "cmd -a -b retry -c ret --use-policy -d" > $@
+	$(Q) echo "cmd \fI-u\fB -d retry \fI--use-pol --use-poli 4.0 --use \"-L|--size\"" >> $@
+	$(Q) echo "cmd --use-pol" >> $@
+	$(Q) echo "cmd --[raid]use device-mapper thin-pool \fB-\fP sdb1:1000-1999 \fB-t\fP|\fB--test\fP -? -o-field3" >> $@
+	$(Q) echo "cmd -dd---- \[->] \[<-] -*- -o#field5 -o-field3 -d" >> $@
+	$(Q) echo "-d" >> $@
+	$(Q) echo ".TH 2.03.12(2)-git" >> $@
+	$(Q) echo "--verbose" >> $@
+	$(Q) echo ".BR -- [ raid ] most  -- [ raid ] most" >> $@
+	$(Q) echo ".BR | --verbose|--verb  --verbose  --verbose --verbose --verbose" >> $@
+	$(Q) echo "skip - unint --aa-dd- --aa-dd-- ---aa-dd 4.0 \-a\-b" >> $@
+	$(Q) echo "cmd \-a \-b retry \-c ret \-\-use\-policy \-d" > $@-e
+	$(Q) echo "cmd \fI\-u\fB \-d retry \fI\-\-use\-pol \-\-use\-poli 4.0 \-\-use \"\-L|\-\-size\"" >> $@-e
+	$(Q) echo "cmd \-\-use\-pol" >> $@-e
+	$(Q) echo "cmd \-\-[raid]use device-mapper thin\-pool \fB\-\fP sdb1:1000\-1999 \fB\-t\fP|\fB\-\-test\fP \-? \-o\-field3" >> $@-e
+	$(Q) echo "cmd \-dd\-\-\-\- \[->] \[<-] \-*\- \-o#field5 \-o\-field3 \-d" >> $@-e
+	$(Q) echo "\-d" >> $@-e
+	$(Q) echo ".TH 2.03.12(2)-git" >> $@-e
+	$(Q) echo "\-\-verbose" >> $@-e
+	$(Q) echo ".BR \-\- [ raid ] most  \-\- [ raid ] most" >> $@-e
+	$(Q) echo ".BR | \-\-verbose|\-\-verb  \-\-verbose  \-\-verbose \-\-verbose \-\-verbose" >> $@-e
+	$(Q) echo "skip \- unint \-\-aa\-dd\- \-\-aa\-dd\-\- \-\-\-aa\-dd 4.0 \-a\-b" >> $@-e
+	$(Q) $(ESCAPEHYPHENS)
+	$(Q) echo "--- H Y P H E N A T E D ---"
+	$(Q) cat $@
+	$(Q) diff -u $@-e $@
+	$(Q) $(RM) $@ $@-e
 
 %.5: $(srcdir)/%.5_main
 	@echo "    [MAN] $@"
