@@ -1,279 +1,303 @@
 .TH "LVMRAID" "7" "LVM TOOLS #VERSION#" "Red Hat, Inc" "\""
-
+.
+.de ipbu
+.PD 0
+.IP "     \[bu]"
+.PD
+..
+.
+.de ipbu_npd
+.IP "     \[bu]"
+..
+.
 .SH NAME
+.
 lvmraid \(em LVM RAID
-
+.
 .SH DESCRIPTION
-
+.
 \fBlvm\fP(8) RAID is a way to create a Logical Volume (LV) that uses
 multiple physical devices to improve performance or tolerate device
 failures.  In LVM, the physical devices are Physical Volumes (PVs) in a
 single Volume Group (VG).
-
+.P
 How LV data blocks are placed onto PVs is determined by the RAID level.
 RAID levels are commonly referred to as 'raid' followed by a number, e.g.
 raid1, raid5 or raid6.  Selecting a RAID level involves making tradeoffs
 among: physical device requirements, fault tolerance, and performance.  A
 description of the RAID levels can be found at
 .br
-www.snia.org/sites/default/files/SNIA_DDF_Technical_Position_v2.0.pdf
-
+.I www.snia.org/sites/default/files/SNIA_DDF_Technical_Position_v2.0.pdf
+.P
 LVM RAID uses both Device Mapper (DM) and Multiple Device (MD) drivers
 from the Linux kernel.  DM is used to create and manage visible LVM
 devices, and MD is used to place data on physical devices.
-
+.P
 LVM creates hidden LVs (dm devices) layered between the visible LV and
 physical devices.  LVs in the middle layers are called sub LVs.
 For LVM raid, a sub LV pair to store data and metadata (raid superblock
 and write intent bitmap) is created per raid image/leg (see lvs command examples below).
-
-.SH Create a RAID LV
-
+.
+.SH USAGE
+.
 To create a RAID LV, use lvcreate and specify an LV type.
 The LV type corresponds to a RAID level.
 The basic RAID levels that can be used are:
-.B raid0, raid1, raid4, raid5, raid6, raid10.
-
+.BR raid0 ", " raid1 ", " raid4 ", " raid5 ", " raid6 ", " raid10 .
+.P
 .B lvcreate --type
 .I RaidLevel
-[\fIOPTIONS\fP]
+.RI [ OPTIONS ]
 .B --name
 .I Name
 .B --size
 .I Size
 .I VG
-[\fIPVs\fP]
-
+.RI [ PVs ]
+.P
 To display the LV type of an existing LV, run:
-
-.B lvs -o name,segtype
-\fILV\fP
-
+.P
+.B lvs -o name,segtype \fILV
+.P
 (The LV type is also referred to as "segment type" or "segtype".)
-
+.P
 LVs can be created with the following types:
-
+.
 .SS raid0
-
-\&
-
+.
 Also called striping, raid0 spreads LV data across multiple devices in
 units of stripe size.  This is used to increase performance.  LV data will
 be lost if any of the devices fail.
-
+.P
 .B lvcreate --type raid0
-[\fB--stripes\fP \fINumber\fP \fB--stripesize\fP \fISize\fP]
-\fIVG\fP
-[\fIPVs\fP]
-
-.HP
-.B --stripes
-specifies the number of devices to spread the LV across.
-
-.HP
+.RB [ --stripes
+.I Number
 .B --stripesize
-specifies the size of each stripe in kilobytes.  This is the amount of
+.IR Size ]
+.I VG
+.RI [ PVs ]
+.
+.TP
+.B --stripes \fINumber
+specifies the \fINumber\fP of devices to spread the LV across.
+.
+.TP
+.B --stripesize \fISize
+specifies the \fISize\fP of each stripe in kilobytes.  This is the amount of
 data that is written to one device before moving to the next.
 .P
-
 \fIPVs\fP specifies the devices to use.  If not specified, lvm will choose
 \fINumber\fP devices, one for each stripe based on the number of PVs
 available or supplied.
-
+.
 .SS raid1
-
-\&
-
+.
 Also called mirroring, raid1 uses multiple devices to duplicate LV data.
 The LV data remains available if all but one of the devices fail.
 The minimum number of devices (i.e. sub LV pairs) required is 2.
-
+.P
 .B lvcreate --type raid1
 [\fB--mirrors\fP \fINumber\fP]
 \fIVG\fP
 [\fIPVs\fP]
-
-.HP
-.B --mirrors
-specifies the number of mirror images in addition to the original LV
+.
+.TP
+.B --mirrors \fINumber
+specifies the \fINumber\fP of mirror images in addition to the original LV
 image, e.g. --mirrors 1 means there are two images of the data, the
 original and one mirror image.
 .P
-
 \fIPVs\fP specifies the devices to use.  If not specified, lvm will choose
 \fINumber\fP devices, one for each image.
-
+.
 .SS raid4
-
-\&
-
+.
 raid4 is a form of striping that uses an extra, first device dedicated to
 storing parity blocks.  The LV data remains available if one device fails.  The
 parity is used to recalculate data that is lost from a single device.  The
 minimum number of devices required is 3.
-
+.P
 .B lvcreate --type raid4
 [\fB--stripes\fP \fINumber\fP \fB--stripesize\fP \fISize\fP]
 \fIVG\fP
 [\fIPVs\fP]
-
-.HP
-.B --stripes
-specifies the number of devices to use for LV data.  This does not include
+.
+.TP
+.B --stripes \fINumber
+specifies the \fINumber\fP of devices to use for LV data.  This does not include
 the extra device lvm adds for storing parity blocks.  A raid4 LV with
 \fINumber\fP stripes requires \fINumber\fP+1 devices.  \fINumber\fP must
 be 2 or more.
-
-.HP
-.B --stripesize
-specifies the size of each stripe in kilobytes.  This is the amount of
+.
+.TP
+.B --stripesize \fISize
+specifies the \fISize\fP of each stripe in kilobytes.  This is the amount of
 data that is written to one device before moving to the next.
 .P
-
 \fIPVs\fP specifies the devices to use.  If not specified, lvm will choose
 \fINumber\fP+1 separate devices.
-
+.P
 raid4 is called non-rotating parity because the parity blocks are always
 stored on the same device.
-
+.
 .SS raid5
-
-\&
-
+.
 raid5 is a form of striping that uses an extra device for storing parity
 blocks.  LV data and parity blocks are stored on each device, typically in
 a rotating pattern for performance reasons.  The LV data remains available
 if one device fails.  The parity is used to recalculate data that is lost
 from a single device.  The minimum number of devices required is 3 (unless
 converting from 2 legged raid1 to reshape to more stripes; see reshaping).
-
+.P
 .B lvcreate --type raid5
 [\fB--stripes\fP \fINumber\fP \fB--stripesize\fP \fISize\fP]
 \fIVG\fP
 [\fIPVs\fP]
-
-.HP
-.B --stripes
-specifies the number of devices to use for LV data.  This does not include
+.
+.TP
+.B --stripes \fINumber
+specifies the \fINumber\fP of devices to use for LV data.  This does not include
 the extra device lvm adds for storing parity blocks.  A raid5 LV with
 \fINumber\fP stripes requires \fINumber\fP+1 devices.  \fINumber\fP must
 be 2 or more.
-
-.HP
-.B --stripesize
-specifies the size of each stripe in kilobytes.  This is the amount of
+.
+.TP
+.B --stripesize \fISize
+specifies the \fISize\fP of each stripe in kilobytes.  This is the amount of
 data that is written to one device before moving to the next.
 .P
-
 \fIPVs\fP specifies the devices to use.  If not specified, lvm will choose
 \fINumber\fP+1 separate devices.
-
+.P
 raid5 is called rotating parity because the parity blocks are placed on
 different devices in a round-robin sequence.  There are variations of
 raid5 with different algorithms for placing the parity blocks.  The
 default variant is raid5_ls (raid5 left symmetric, which is a rotating
-parity 0 with data restart.)  See \fBRAID5 variants\fP below.
-
+parity 0 with data restart.)  See \fBRAID5 VARIANTS\fP below.
+.
 .SS raid6
-
-\&
-
+.
 raid6 is a form of striping like raid5, but uses two extra devices for
 parity blocks.  LV data and parity blocks are stored on each device, typically
 in a rotating pattern for performance reasons.  The
 LV data remains available if up to two devices fail.  The parity is used
 to recalculate data that is lost from one or two devices.  The minimum
 number of devices required is 5.
-
+.P
 .B lvcreate --type raid6
 [\fB--stripes\fP \fINumber\fP \fB--stripesize\fP \fISize\fP]
 \fIVG\fP
 [\fIPVs\fP]
-
-.HP
-.B --stripes
-specifies the number of devices to use for LV data.  This does not include
+.
+.TP
+.B --stripes \fINumber
+specifies the \fINumber\fP of devices to use for LV data.  This does not include
 the extra two devices lvm adds for storing parity blocks.  A raid6 LV with
 \fINumber\fP stripes requires \fINumber\fP+2 devices.  \fINumber\fP must be
 3 or more.
-
-.HP
-.B --stripesize
-specifies the size of each stripe in kilobytes.  This is the amount of
+.
+.TP
+.B --stripesize \fISize
+specifies the \fISize\fP of each stripe in kilobytes.  This is the amount of
 data that is written to one device before moving to the next.
 .P
-
 \fIPVs\fP specifies the devices to use.  If not specified, lvm will choose
 \fINumber\fP+2 separate devices.
-
+.P
 Like raid5, there are variations of raid6 with different algorithms for
 placing the parity blocks.  The default variant is raid6_zr (raid6 zero
 restart, aka left symmetric, which is a rotating parity 0 with data
-restart.)  See \fBRAID6 variants\fP below.
-
+restart.)  See \fBRAID6 VARIANTS\fP below.
+.
 .SS raid10
-
-\&
-
+.
 raid10 is a combination of raid1 and raid0, striping data across mirrored
 devices.  LV data remains available if one or more devices remains in each
 mirror set.  The minimum number of devices required is 4.
-
+.TP
 .B lvcreate --type raid10
-.RS
 [\fB--mirrors\fP \fINumberMirrors\fP]
 .br
 [\fB--stripes\fP \fINumberStripes\fP \fB--stripesize\fP \fISize\fP]
 .br
 \fIVG\fP
 [\fIPVs\fP]
-.RE
-
-.HP
-.B --mirrors
+.
+.TP
+.B --mirrors \fINumberMirrors
 specifies the number of mirror images within each stripe.  e.g.
 --mirrors 1 means there are two images of the data, the original and one
 mirror image.
-
-.HP
-.B --stripes
+.
+.TP
+.B --stripes \fINumberStripes
 specifies the total number of devices to use in all raid1 images (not the
 number of raid1 devices to spread the LV across, even though that is the
 effective result).  The number of devices in each raid1 mirror will be
-NumberStripes/(NumberMirrors+1), e.g. mirrors 1 and stripes 4 will stripe
+\fINumberStripes\fP/(\fINumberMirrors\fP+1), e.g. mirrors 1 and stripes 4 will stripe
 data across two raid1 mirrors, where each mirror is devices.
-
-.HP
-.B --stripesize
-specifies the size of each stripe in kilobytes.  This is the amount of
+.
+.TP
+.B --stripesize \fISize
+specifies the \fISize\fP of each stripe in kilobytes.  This is the amount of
 data that is written to one device before moving to the next.
 .P
-
 \fIPVs\fP specifies the devices to use.  If not specified, lvm will choose
 the necessary devices.  Devices are used to create mirrors in the
 order listed, e.g. for mirrors 1, stripes 2, listing PV1 PV2 PV3 PV4
 results in mirrors PV1/PV2 and PV3/PV4.
-
+.P
 RAID10 is not mirroring on top of stripes, which would be RAID01, which is
 less tolerant of device failures.
-
-
-.SH Synchronization
-
+.
+.SS Configuration Options
+.
+There are a number of options in the LVM configuration file that affect
+the behavior of RAID LVs.  The tunable options are listed
+below.  A detailed description of each can be found in the LVM
+configuration file itself.
+.RS
+mirror_segtype_default
+.br
+raid10_segtype_default
+.br
+raid_region_size
+.br
+raid_fault_policy
+.br
+activation_mode
+.RE
+.
+.SS Monitoring
+.
+When a RAID LV is activated the \fBdmeventd\fP(8) process is started to
+monitor the health of the LV.  Various events detected in the kernel can
+cause a notification to be sent from device-mapper to the monitoring
+process, including device failures and synchronization completion (e.g.
+for initialization or scrubbing).
+.P
+The LVM configuration file contains options that affect how the monitoring
+process will respond to failure events (e.g. raid_fault_policy).  It is
+possible to turn on and off monitoring with lvchange, but it is not
+recommended to turn this off unless you have a thorough knowledge of the
+consequences.
+.
+.SS Synchronization
+.
 Synchronization is the process that makes all the devices in a RAID LV
 consistent with each other.
-
+.P
 In a RAID1 LV, all mirror images should have the same data.  When a new
 mirror image is added, or a mirror image is missing data, then images need
 to be synchronized.  Data blocks are copied from an existing image to a
 new or outdated image to make them match.
-
+.P
 In a RAID 4/5/6 LV, parity blocks and data blocks should match based on
 the parity calculation.  When the devices in a RAID LV change, the data
 and parity blocks can become inconsistent and need to be synchronized.
 Correct blocks are read, parity is calculated, and recalculated blocks are
 written.
-
+.P
 The RAID implementation keeps track of which parts of a RAID LV are
 synchronized.  When a RAID LV is first created and activated the first
 synchronization is called initialization.  A pointer stored in the raid
@@ -282,96 +306,86 @@ restarted after a deactivation of the RaidLV or a crash.  Any writes to
 the RaidLV dirties the respective region of the write intent bitmap which
 allow for fast recovery of the regions after a crash.  Without this, the
 entire LV would need to be synchronized every time it was activated.
-
+.P
 Automatic synchronization happens when a RAID LV is activated, but it is
 usually partial because the bitmaps reduce the areas that are checked.
 A full sync becomes necessary when devices in the RAID LV are replaced.
-
+.P
 The synchronization status of a RAID LV is reported by the
 following command, where "Cpy%Sync" = "100%" means sync is complete:
-
+.P
 .B lvs -a -o name,sync_percent
-
-
+.
 .SS Scrubbing
-
+.
 Scrubbing is a full scan of the RAID LV requested by a user.
 Scrubbing can find problems that are missed by partial synchronization.
-
+.P
 Scrubbing assumes that RAID metadata and bitmaps may be inaccurate, so it
 verifies all RAID metadata, LV data, and parity blocks.  Scrubbing can
 find inconsistencies caused by hardware errors or degradation.  These
 kinds of problems may be undetected by automatic synchronization which
 excludes areas outside of the RAID write-intent bitmap.
-
+.P
 The command to scrub a RAID LV can operate in two different modes:
-
+.P
 .B lvchange --syncaction
 .BR check | repair
 .I LV
-
-.HP
+.
+.TP
 .B check
 Check mode is read-only and only detects inconsistent areas in the RAID
 LV, it does not correct them.
-
-.HP
+.
+.TP
 .B repair
 Repair mode checks and writes corrected blocks to synchronize any
 inconsistent areas.
-
 .P
-
 Scrubbing can consume a lot of bandwidth and slow down application I/O on
 the RAID LV.  To control the I/O rate used for scrubbing, use:
-
-.HP
-.B --maxrecoveryrate
-\fISize\fP[k|UNIT]
-.br
+.
+.TP
+.BR --maxrecoveryrate " " \fISize [k|UNIT]
 Sets the maximum recovery rate for a RAID LV.  \fISize\fP is specified as
 an amount per second for each device in the array.  If no suffix is given,
 then KiB/sec/device is used.  Setting the recovery rate to \fB0\fP
 means it will be unbounded.
-
-.HP
-.BR --minrecoveryrate
-\fISize\fP[k|UNIT]
-.br
+.
+.TP
+.BR --minrecoveryrate " " \fISize [k|UNIT]
 Sets the minimum recovery rate for a RAID LV.  \fISize\fP is specified as
 an amount per second for each device in the array.  If no suffix is given,
 then KiB/sec/device is used.  Setting the recovery rate to \fB0\fP
 means it will be unbounded.
-
 .P
-
 To display the current scrubbing in progress on an LV, including
 the syncaction mode and percent complete, run:
-
+.P
 .B lvs -a -o name,raid_sync_action,sync_percent
-
+.P
 After scrubbing is complete, to display the number of inconsistent blocks
 found, run:
-
+.P
 .B lvs -o name,raid_mismatch_count
-
+.P
 Also, if mismatches were found, the lvs attr field will display the letter
 "m" (mismatch) in the 9th position, e.g.
-
+.P
 .nf
 # lvs -o name,vgname,segtype,attr vg/lv
   LV VG   Type  Attr
   lv vg   raid1 Rwi-a-r-m-
 .fi
-
-
+.
 .SS Scrubbing Limitations
-
+.
 The \fBcheck\fP mode can only report the number of inconsistent blocks, it
 cannot report which blocks are inconsistent.  This makes it impossible to
 know which device has errors, or if the errors affect file system data,
 metadata or nothing at all.
-
+.P
 The \fBrepair\fP mode can make the RAID LV data consistent, but it does
 not know which data is correct.  The result may be consistent but
 incorrect data.  When two different blocks of data must be made
@@ -379,72 +393,72 @@ consistent, it chooses the block from the device that would be used during
 RAID initialization.  However, if the PV holding corrupt data is known,
 lvchange --rebuild can be used in place of scrubbing to reconstruct the
 data on the bad device.
-
+.P
 Future developments might include:
-
+.P
 Allowing a user to choose the correct version of data during repair.
-
+.P
 Using a majority of devices to determine the correct version of data to
 use in a 3-way RAID1 or RAID6 LV.
-
+.P
 Using a checksumming device to pin-point when and where an error occurs,
 allowing it to be rewritten.
-
-
-.SH SubLVs
-
+.
+.SS SubLVs
+.
 An LV is often a combination of other hidden LVs called SubLVs.  The
 SubLVs either use physical devices, or are built from other SubLVs
 themselves.  SubLVs hold LV data blocks, RAID parity blocks, and RAID
 metadata.  SubLVs are generally hidden, so the lvs -a option is required
 to display them:
-
+.P
 .B lvs -a -o name,segtype,devices
-
+.P
 SubLV names begin with the visible LV name, and have an automatic suffix
 indicating its role:
-
-.IP \(bu 3
+.
+.ipbu_npd
 SubLVs holding LV data or parity blocks have the suffix _rimage_#.
+.br
 These SubLVs are sometimes referred to as DataLVs.
-
-.IP \(bu 3
+.
+.ipbu_npd
 SubLVs holding RAID metadata have the suffix _rmeta_#.  RAID metadata
 includes superblock information, RAID type, bitmap, and device health
-information.  These SubLVs are sometimes referred to as MetaLVs.
-
+information.
+.br
+These SubLVs are sometimes referred to as MetaLVs.
 .P
-
 SubLVs are an internal implementation detail of LVM.  The way they are
 used, constructed and named may change.
-
+.P
 The following examples show the SubLV arrangement for each of the basic
 RAID LV types, using the fewest number of devices allowed for each.
-
-.SS Examples
-
+.P
+.I Examples
+.P
 .B raid0
 .br
 Each rimage SubLV holds a portion of LV data.  No parity is used.
 No RAID metadata is used.
-
+.P
 .nf
 # lvcreate --type raid0 --stripes 2 --name lvr0 ...
-
+.P
 # lvs -a -o name,segtype,devices
   lvr0            raid0  lvr0_rimage_0(0),lvr0_rimage_1(0)
   [lvr0_rimage_0] linear /dev/sda(...)
   [lvr0_rimage_1] linear /dev/sdb(...)
 .fi
-
+.P
 .B raid1
 .br
 Each rimage SubLV holds a complete copy of LV data.  No parity is used.
 Each rmeta SubLV holds RAID metadata.
-
+.P
 .nf
 # lvcreate --type raid1 --mirrors 1 --name lvr1 ...
-
+.P
 # lvs -a -o name,segtype,devices
   lvr1            raid1  lvr1_rimage_0(0),lvr1_rimage_1(0)
   [lvr1_rimage_0] linear /dev/sda(...)
@@ -452,15 +466,15 @@ Each rmeta SubLV holds RAID metadata.
   [lvr1_rmeta_0]  linear /dev/sda(...)
   [lvr1_rmeta_1]  linear /dev/sdb(...)
 .fi
-
+.P
 .B raid4
 .br
 At least three rimage SubLVs each hold a portion of LV data and one rimage SubLV
 holds parity.  Each rmeta SubLV holds RAID metadata.
-
+.P
 .nf
 # lvcreate --type raid4 --stripes 2 --name lvr4 ...
-
+.P
 # lvs -a -o name,segtype,devices
   lvr4            raid4  lvr4_rimage_0(0),\\
                          lvr4_rimage_1(0),\\
@@ -472,16 +486,16 @@ holds parity.  Each rmeta SubLV holds RAID metadata.
   [lvr4_rmeta_1]  linear /dev/sdb(...)
   [lvr4_rmeta_2]  linear /dev/sdc(...)
 .fi
-
+.P
 .B raid5
 .br
 At least three rimage SubLVs each typically hold a portion of LV data and parity
 (see section on raid5)
 Each rmeta SubLV holds RAID metadata.
-
+.P
 .nf
 # lvcreate --type raid5 --stripes 2 --name lvr5 ...
-
+.P
 # lvs -a -o name,segtype,devices
   lvr5            raid5  lvr5_rimage_0(0),\\
                          lvr5_rimage_1(0),\\
@@ -493,16 +507,16 @@ Each rmeta SubLV holds RAID metadata.
   [lvr5_rmeta_1]  linear /dev/sdb(...)
   [lvr5_rmeta_2]  linear /dev/sdc(...)
 .fi
-
+.P
 .B raid6
 .br
 At least five rimage SubLVs each typically hold a portion of LV data and parity.
 (see section on raid6)
 Each rmeta SubLV holds RAID metadata.
-
+.P
 .nf
 # lvcreate --type raid6 --stripes 3 --name lvr6
-
+.P
 # lvs -a -o name,segtype,devices
   lvr6            raid6  lvr6_rimage_0(0),\\
                          lvr6_rimage_1(0),\\
@@ -523,15 +537,15 @@ Each rmeta SubLV holds RAID metadata.
   [lvr6_rmeta_4]  linear /dev/sde(...)
   [lvr6_rmeta_5]  linear /dev/sdf(...)
 .fi
-
+.P
 .B raid10
 .br
 At least four rimage SubLVs each hold a portion of LV data.  No parity is used.
 Each rmeta SubLV holds RAID metadata.
-
+.P
 .nf
 # lvcreate --type raid10 --stripes 2 --mirrors 1 --name lvr10
-
+.P
 # lvs -a -o name,segtype,devices
   lvr10            raid10 lvr10_rimage_0(0),\\
                           lvr10_rimage_1(0),\\
@@ -546,49 +560,46 @@ Each rmeta SubLV holds RAID metadata.
   [lvr10_rmeta_2]  linear /dev/sdc(...)
   [lvr10_rmeta_3]  linear /dev/sdd(...)
 .fi
-
-
-.SH Device Failure
-
+.
+.SH DEVICE FAILURE
+.
 Physical devices in a RAID LV can fail or be lost for multiple reasons.
 A device could be disconnected, permanently failed, or temporarily
 disconnected.  The purpose of RAID LVs (levels 1 and higher) is to
 continue operating in a degraded mode, without losing LV data, even after
 a device fails.  The number of devices that can fail without the loss of
 LV data depends on the RAID level:
-
-.IP \[bu] 3
+.
+.ipbu
 RAID0 (striped) LVs cannot tolerate losing any devices.  LV data will be
 lost if any devices fail.
-
-.IP \[bu] 3
+.
+.ipbu
 RAID1 LVs can tolerate losing all but one device without LV data loss.
-
-.IP \[bu] 3
+.
+.ipbu
 RAID4 and RAID5 LVs can tolerate losing one device without LV data loss.
-
-.IP \[bu] 3
+.
+.ipbu
 RAID6 LVs can tolerate losing two devices without LV data loss.
-
-.IP \[bu] 3
+.
+.ipbu
 RAID10 is variable, and depends on which devices are lost.  It stripes
 across multiple mirror groups with raid1 layout thus it can tolerate
 losing all but one device in each of these groups without LV data loss.
-
 .P
-
 If a RAID LV is missing devices, or has other device-related problems, lvs
 reports this in the health_status (and attr) fields:
-
+.P
 .B lvs -o name,lv_health_status
-
+.
+.TP
 .B partial
-.br
 Devices are missing from the LV.  This is also indicated by the letter "p"
 (partial) in the 9th position of the lvs attr field.
-
+.
+.TP
 .B refresh needed
-.br
 A device was temporarily missing but has returned.  The LV needs to be
 refreshed to use the device again (which will usually require
 partial synchronization).  This is also indicated by the letter "r" (refresh
@@ -596,58 +607,56 @@ needed) in the 9th position of the lvs attr field.  See
 \fBRefreshing an LV\fP.  This could also indicate a problem with the
 device, in which case it should be be replaced, see
 \fBReplacing Devices\fP.
-
+.
+.TP
 .B mismatches exist
-.br
 See
 .BR Scrubbing .
-
+.P
 Most commands will also print a warning if a device is missing, e.g.
 .br
 .nf
 WARNING: Device for PV uItL3Z-wBME-DQy0-... not found or rejected ...
 .fi
-
+.P
 This warning will go away if the device returns or is removed from the
 VG (see \fBvgreduce --removemissing\fP).
-
-
+.
 .SS Activating an LV with missing devices
-
+.
 A RAID LV that is missing devices may be activated or not, depending on
 the "activation mode" used in lvchange:
-
+.P
 .B lvchange -ay --activationmode
 .BR complete | degraded | partial
 .I LV
-
+.
+.TP
 .B complete
-.br
 The LV is only activated if all devices are present.
-
+.
+.TP
 .B degraded
-.br
 The LV is activated with missing devices if the RAID level can
 tolerate the number of missing devices without LV data loss.
-
+.
+.TP
 .B partial
-.br
 The LV is always activated, even if portions of the LV data are missing
 because of the missing device(s).  This should only be used to perform
 extreme recovery or repair operations.
-
+.P
+Default activation mode when not specified by the command:
+.br
 .BR lvm.conf (5)
 .B activation/activation_mode
-.br
-controls the activation mode when not specified by the command.
-
+.P
 The default value is printed by:
-.nf
-lvmconfig --type default activation/activation_mode
-.fi
-
+.br
+# lvmconfig --type default activation/activation_mode
+.
 .SS Replacing Devices
-
+.
 Devices in a RAID LV can be replaced by other devices in the VG.  When
 replacing devices that are no longer visible on the system, use lvconvert
 --repair.  When replacing devices that are still visible, use lvconvert
@@ -655,16 +664,16 @@ replacing devices that are no longer visible on the system, use lvconvert
 of data LVs that were previously in the LV.  The replace option can be
 repeated to replace multiple PVs.  Replacement devices can be optionally
 listed with either option.
-
+.P
 .B lvconvert --repair
 .I LV
 [\fINewPVs\fP]
-
+.P
 .B lvconvert --replace
 \fIOldPV\fP
 .I LV
 [\fINewPV\fP]
-
+.P
 .B lvconvert
 .B --replace
 \fIOldPV1\fP
@@ -673,120 +682,86 @@ listed with either option.
 ...
 .I LV
 [\fINewPVs\fP]
-
-New devices require synchronization with existing devices, see
+.P
+New devices require synchronization with existing devices.
+.br
+See
 .BR Synchronization .
-
+.
 .SS Refreshing an LV
-
+.
 Refreshing a RAID LV clears any transient device failures (device was
 temporarily disconnected) and returns the LV to its fully redundant mode.
 Restoring a device will usually require at least partial synchronization
 (see \fBSynchronization\fP).  Failure to clear a transient failure results
 in the RAID LV operating in degraded mode until it is reactivated.  Use
 the lvchange command to refresh an LV:
-
+.P
 .B lvchange --refresh
 .I LV
-
+.P
 .nf
 # lvs -o name,vgname,segtype,attr,size vg
   LV VG   Type  Attr       LSize
   lv vg   raid1 Rwi-a-r-r- 100.00g
-
+.P
 # lvchange --refresh vg/lv
-
+.P
 # lvs -o name,vgname,segtype,attr,size vg
   LV VG   Type  Attr       LSize
   lv vg   raid1 Rwi-a-r--- 100.00g
 .fi
-
+.
 .SS Automatic repair
-
+.
 If a device in a RAID LV fails, device-mapper in the kernel notifies the
 .BR dmeventd (8)
 monitoring process (see \fBMonitoring\fP).
 dmeventd can be configured to automatically respond using:
-
+.br
 .BR lvm.conf (5)
 .B activation/raid_fault_policy
-
+.P
 Possible settings are:
-
+.
+.TP
 .B warn
-.br
 A warning is added to the system log indicating that a device has
 failed in the RAID LV.  It is left to the user to repair the LV, e.g.
 replace failed devices.
-
+.
+.TP
 .B allocate
-.br
 dmeventd automatically attempts to repair the LV using spare devices
 in the VG.  Note that even a transient failure is treated as a permanent
 failure under this setting.  A new device is allocated and full
 synchronization is started.
-
-The specific command run by dmeventd to warn or repair is:
+.P
+The specific command run by \fBdmeventd\fP(8) to warn or repair is:
 .br
 .B lvconvert --repair --use-policies
 .I LV
-
-
+.
 .SS Corrupted Data
-
+.
 Data on a device can be corrupted due to hardware errors without the
 device ever being disconnected or there being any fault in the software.
 This should be rare, and can be detected (see \fBScrubbing\fP).
-
-
+.
 .SS Rebuild specific PVs
-
+.
 If specific PVs in a RAID LV are known to have corrupt data, the data on
 those PVs can be reconstructed with:
-
+.P
 .B lvchange --rebuild
 .I PV
 .I LV
-
+.P
 The rebuild option can be repeated with different PVs to replace the data
 on multiple PVs.
-
-
-.SH Monitoring
-
-When a RAID LV is activated the \fBdmeventd\fP(8) process is started to
-monitor the health of the LV.  Various events detected in the kernel can
-cause a notification to be sent from device-mapper to the monitoring
-process, including device failures and synchronization completion (e.g.
-for initialization or scrubbing).
-
-The LVM configuration file contains options that affect how the monitoring
-process will respond to failure events (e.g. raid_fault_policy).  It is
-possible to turn on and off monitoring with lvchange, but it is not
-recommended to turn this off unless you have a thorough knowledge of the
-consequences.
-
-
-.SH Configuration Options
-
-There are a number of options in the LVM configuration file that affect
-the behavior of RAID LVs.  The tunable options are listed
-below.  A detailed description of each can be found in the LVM
-configuration file itself.
-.br
-        mirror_segtype_default
-.br
-        raid10_segtype_default
-.br
-        raid_region_size
-.br
-        raid_fault_policy
-.br
-        activation_mode
-
-
-.SH Data Integrity
-
+.
+.SH DATA INTEGRITY
+.
 The device mapper integrity target can be used in combination with RAID
 levels 1,4,5,6,10 to detect and correct data corruption in RAID images. A
 dm-integrity layer is placed above each RAID image, and an extra sub LV is
@@ -795,30 +770,28 @@ When data is read from an image, integrity checksums are used to detect
 corruption. If detected, dm-raid reads the data from another (good) image
 to return to the caller.  dm-raid will also automatically write the good
 data back to the image with bad data to correct the corruption.
-
+.P
 When creating a RAID LV with integrity, or adding integrity, space is
 required for integrity metadata.  Every 500MB of LV data requires an
 additional 4MB to be allocated for integrity metadata, for each RAID
 image.
-
+.P
 Create a RAID LV with integrity:
-
-.B lvcreate \-\-type raidN \-\-raidintegrity y
-
+.br
+.B lvcreate --type raidN --raidintegrity y
+.P
 Add integrity to an existing RAID LV:
-
-.B lvconvert --raidintegrity y
-.I LV
-
+.br
+.B lvconvert --raidintegrity y \fILV
+.P
 Remove integrity from a RAID LV:
-
-.B lvconvert --raidintegrity n
-.I LV
-
+.br
+.B lvconvert --raidintegrity n \fILV
+.
 .SS Integrity options
-
-.B --raidintegritymode journal|bitmap
-
+.
+.TP
+.BR --raidintegritymode " " journal | bitmap
 Use a journal (default) or bitmap for keeping integrity checksums
 consistent in case of a crash. The bitmap areas are recalculated after a
 crash, so corruption in those areas would not be detected. A journal does
@@ -827,181 +800,175 @@ can improve performance for scattered writes packed into a single journal
 write.  bitmap mode can in theory achieve full write throughput of the
 device, but would not benefit from the potential scattered write
 optimization.
-
-.B --raidintegrityblocksize 512|1024|2048|4096
-
+.
+.TP
+.BR --raidintegrityblocksize " " 512 | 1024 | 2048 | 4096
 The block size to use for dm-integrity on raid images.  The integrity
 block size should usually match the device logical block size, or the file
 system sector/block sizes.  It may be less than the file system
 sector/block size, but not less than the device logical block size.
 Possible values: 512, 1024, 2048, 4096.
-
+.
 .SS Integrity initialization
-
+.
 When integrity is added to an LV, the kernel needs to initialize the
 integrity metadata (checksums) for all blocks in the LV.  The data
 corruption checking performed by dm-integrity will only operate on areas
 of the LV that are already initialized.  The progress of integrity
 initialization is reported by the "syncpercent" LV reporting field (and
 under the Cpy%Sync lvs column.)
-
+.
 .SS Integrity limitations
-
+.
 To work around some limitations, it is possible to remove integrity from
 the LV, make the change, then add integrity again.  (Integrity metadata
 would need to initialized when added again.)
-
+.P
 LVM must be able to allocate the integrity metadata sub LV on a single PV
 that is already in use by the associated RAID image. This can potentially
 cause a problem during lvextend if the original PV holding the image and
 integrity metadata is full.  To work around this limitation, remove
 integrity, extend the LV, and add integrity again.
-
+.P
 Additional RAID images can be added to raid1 LVs, but not to other raid
 levels.
-
+.P
 A raid1 LV with integrity cannot be converted to linear (remove integrity
 to do this.)
-
+.P
 RAID LVs with integrity cannot yet be used as sub LVs with other LV types.
-
+.P
 The following are not yet permitted on RAID LVs with integrity: lvreduce,
 pvmove, snapshots, splitmirror, raid syncaction commands, raid rebuild.
-
-.SH RAID1 Tuning
-
+.
+.SH RAID1 TUNING
+.
 A RAID1 LV can be tuned so that certain devices are avoided for reading
 while all devices are still written to.
-
+.P
 .B lvchange
 .BR -- [ raid ] writemostly
 \fIPV\fP[\fB:y\fP|\fBn\fP|\fBt\fP]
 .I LV
-
+.P
 The specified device will be marked as "write mostly", which means that
 reading from this device will be avoided, and other devices will be
 preferred for reading (unless no other devices are available.)  This
 minimizes the I/O to the specified device.
-
+.P
 If the PV name has no suffix, the write mostly attribute is set.  If the
 PV name has the suffix \fB:n\fP, the write mostly attribute is cleared,
 and the suffix \fB:t\fP toggles the current setting.
-
+.P
 The write mostly option can be repeated on the command line to change
 multiple devices at once.
-
+.P
 To report the current write mostly setting, the lvs attr field will show
 the letter "w" in the 9th position when write mostly is set:
-
+.P
 .B lvs -a -o name,attr
-
+.P
 When a device is marked write mostly, the maximum number of outstanding
 writes to that device can be configured.  Once the maximum is reached,
 further writes become synchronous.  When synchronous, a write to the LV
 will not complete until writes to all the mirror images are complete.
-
+.P
 .B lvchange
 .BR -- [ raid ] writebehind
 .I Number
 .I LV
-
+.P
 To report the current write behind setting, run:
-
+.P
 .B lvs -o name,raid_write_behind
-
+.P
 When write behind is not configured, or set to 0, all LV writes are
 synchronous.
-
-
-.SH RAID Takeover
-
+.
+.SH RAID TAKEOVER
+.
 RAID takeover is converting a RAID LV from one RAID level to another, e.g.
 raid5 to raid6.  Changing the RAID level is usually done to increase or
 decrease resilience to device failures or to restripe LVs.  This is done
 using lvconvert and specifying the new RAID level as the LV type:
-
+.P
 .B lvconvert --type
 .I RaidLevel
 .I LV
 [\fIPVs\fP]
-
+.P
 The most common and recommended RAID takeover conversions are:
-
-.HP
-\fBlinear\fP to \fBraid1\fP
-.br
+.
+.TP
+.BR linear " to " raid1
 Linear is a single image of LV data, and
 converting it to raid1 adds a mirror image which is a direct copy of the
 original linear image.
-
-.HP
-\fBstriped\fP/\fBraid0\fP to \fBraid4/5/6\fP
-.br
+.
+.TP
+.BR striped / raid0 " to " raid4 / 5 / 6
 Adding parity devices to a
 striped volume results in raid4/5/6.
-
 .P
-
 Unnatural conversions that are not recommended include converting between
 striped and non-striped types.  This is because file systems often
 optimize I/O patterns based on device striping values.  If those values
 change, it can decrease performance.
-
+.P
 Converting to a higher RAID level requires allocating new SubLVs to hold
 RAID metadata, and new SubLVs to hold parity blocks for LV data.
 Converting to a lower RAID level removes the SubLVs that are no longer
 needed.
-
+.P
 Conversion often requires full synchronization of the RAID LV (see
 \fBSynchronization\fP).  Converting to RAID1 requires copying all LV data
 blocks to N new images on new devices.  Converting to a parity RAID level
 requires reading all LV data blocks, calculating parity, and writing the
 new parity blocks.  Synchronization can take a long time depending on the
 throughpout of the devices used and the size of the RaidLV.  It can degrade
-performance (rate controls also apply to conversion; see
-\fB--minrecoveryrate\fP
-and
-\fB--maxrecoveryrate\fP.)
-
+performance. Rate controls also apply to conversion; see
+\fB--minrecoveryrate\fP and \fB--maxrecoveryrate\fP.
+.P
 Warning: though it is possible to create \fBstriped\fP LVs  with up to 128 stripes,
 a maximum of 64 stripes can be converted to \fBraid0\fP, 63 to \fBraid4/5\fP and
 62 to \fBraid6\fP because of the added parity SubLVs.
 A \fBstriped\fP LV with a maximum of 32 stripes can be converted to \fBraid10\fP.
-
+.
 .P
-
+.
 The following takeover conversions are currently possible:
 .br
-.IP \(bu 3
+.ipbu
 between striped and raid0.
-.IP \(bu 3
+.ipbu
 between linear and raid1.
-.IP \(bu 3
+.ipbu
 between mirror and raid1.
-.IP \(bu 3
+.ipbu
 between raid1 with two images and raid4/5.
-.IP \(bu 3
+.ipbu
 between striped/raid0 and raid4.
-.IP \(bu 3
+.ipbu
 between striped/raid0 and raid5.
-.IP \(bu 3
+.ipbu
 between striped/raid0 and raid6.
-.IP \(bu 3
+.ipbu
 between raid4 and raid5.
-.IP \(bu 3
+.ipbu
 between raid4/raid5 and raid6.
-.IP \(bu 3
+.ipbu
 between striped/raid0 and raid10.
-.IP \(bu 3
+.ipbu
 between striped and raid4.
-
+.PD
+.
 .SS Indirect conversions
-
+.
 Converting from one raid level to another may require multiple steps,
 converting first to intermediate raid levels.
-
-.B linear to raid6
-
+.P
+.BR linear " to " raid6
+.P
 To convert an LV from linear to raid6:
 .br
 1. convert to raid1 with two images
@@ -1013,7 +980,7 @@ To convert an LV from linear to raid6:
 4. convert to raid6 (internally raid6_ls_6)
 .br
 5. convert to raid6 (internally raid6_zr, reshape)
-
+.P
 The commands to perform the steps above are:
 .br
 1. lvconvert --type raid1 --mirrors 1 LV
@@ -1025,14 +992,14 @@ The commands to perform the steps above are:
 4. lvconvert --type raid6 LV
 .br
 5. lvconvert --type raid6 LV
-
+.P
 The final conversion from raid6_ls_6 to raid6_zr is done to avoid the
 potential write/recovery performance reduction in raid6_ls_6 because of
 the dedicated parity device.  raid6_zr rotates data and parity blocks to
 avoid this.
-
-.B linear to striped
-
+.P
+.BR linear " to " striped
+.P
 To convert an LV from linear to striped:
 .br
 1. convert to raid1 with two images
@@ -1042,7 +1009,7 @@ To convert an LV from linear to striped:
 3. convert to raid5_n with five 128k stripes (reshape)
 .br
 4. convert raid5_n to striped
-
+.P
 The commands to perform the steps above are:
 .br
 1. lvconvert --type raid1 --mirrors 1 LV
@@ -1052,41 +1019,40 @@ The commands to perform the steps above are:
 3. lvconvert --stripes 5 --stripesize 128k LV
 .br
 4. lvconvert --type striped LV
-
+.P
 The raid5_n type in step 2 is used because it has dedicated parity SubLVs
 at the end, and can be converted to striped directly.  The stripe size is
 increased in step 3 to add extra space for the conversion process.  This
 step grows the LV size by a factor of five.  After conversion, this extra
 space can be reduced (or used to grow the file system using the LV).
-
+.P
 Reversing these steps will convert a striped LV to linear.
-
-.B raid6 to striped
-
+.P
+.BR raid6 " to " striped
+.P
 To convert an LV from raid6_nr to striped:
 .br
 1. convert to raid6_n_6
 .br
 2. convert to striped
-
+.P
 The commands to perform the steps above are:
 .br
 1. lvconvert --type raid6_n_6 LV
 .br
 2. lvconvert --type striped LV
-
-
-.SS Examples
-
+.P
+.I Examples
+.P
 Converting an LV from \fBlinear\fP to \fBraid1\fP.
-
+.P
 .nf
 # lvs -a -o name,segtype,size vg
   LV   Type   LSize
   lv   linear 300.00g
-
+.P
 # lvconvert --type raid1 --mirrors 1 vg/lv
-
+.P
 # lvs -a -o name,segtype,size vg
   LV            Type   LSize
   lv            raid1  300.00g
@@ -1095,9 +1061,9 @@ Converting an LV from \fBlinear\fP to \fBraid1\fP.
   [lv_rmeta_0]  linear   3.00m
   [lv_rmeta_1]  linear   3.00m
 .fi
-
+.P
 Converting an LV from \fBmirror\fP to \fBraid1\fP.
-
+.P
 .nf
 # lvs -a -o name,segtype,size vg
   LV            Type   LSize
@@ -1105,9 +1071,9 @@ Converting an LV from \fBmirror\fP to \fBraid1\fP.
   [lv_mimage_0] linear 100.00g
   [lv_mimage_1] linear 100.00g
   [lv_mlog]     linear   3.00m
-
+.P
 # lvconvert --type raid1 vg/lv
-
+.P
 # lvs -a -o name,segtype,size vg
   LV            Type   LSize
   lv            raid1  100.00g
@@ -1116,20 +1082,20 @@ Converting an LV from \fBmirror\fP to \fBraid1\fP.
   [lv_rmeta_0]  linear   3.00m
   [lv_rmeta_1]  linear   3.00m
 .fi
-
+.P
 Converting an LV from \fBlinear\fP to \fBraid1\fP (with 3 images).
-
+.P
 .nf
 # lvconvert --type raid1 --mirrors 2 vg/lv
 .fi
-
+.P
 Converting an LV from \fBstriped\fP (with 4 stripes) to \fBraid6_n_6\fP.
-
+.P
 .nf
 # lvcreate --stripes 4 -L64M -n lv vg
-
+.P
 # lvconvert --type raid6 vg/lv
-
+.P
 # lvs -a -o lv_name,segtype,sync_percent,data_copies
   LV            Type      Cpy%Sync #Cpy
   lv            raid6_n_6 100.00      3
@@ -1146,42 +1112,41 @@ Converting an LV from \fBstriped\fP (with 4 stripes) to \fBraid6_n_6\fP.
   [lv_rmeta_4]  linear
   [lv_rmeta_5]  linear
 .fi
-
+.P
 This convert begins by allocating MetaLVs (rmeta_#) for each of the
 existing stripe devices.  It then creates 2 additional MetaLV/DataLV pairs
 (rmeta_#/rimage_#) for dedicated raid6 parity.
-
+.P
 If rotating data/parity is required, such as with raid6_nr, it must be
 done by reshaping (see below).
-
-
-.SH RAID Reshaping
-
+.
+.SH RAID RESHAPING
+.
 RAID reshaping is changing attributes of a RAID LV while keeping the same
 RAID level.  This includes changing RAID layout, stripe size, or number of
 stripes.
-
+.P
 When changing the RAID layout or stripe size, no new SubLVs (MetaLVs or
 DataLVs) need to be allocated, but DataLVs are extended by a small amount
 (typically 1 extent).  The extra space allows blocks in a stripe to be
 updated safely, and not be corrupted in case of a crash.  If a crash occurs,
 reshaping can just be restarted.
-
+.P
 (If blocks in a stripe were updated in place, a crash could leave them
 partially updated and corrupted.  Instead, an existing stripe is quiesced,
 read, changed in layout, and the new stripe written to free space.  Once
 that is done, the new stripe is unquiesced and used.)
-
-.SS Examples
-
+.P
+.I Examples
+.br
 (Command output shown in examples may change.)
-
+.P
 Converting raid6_n_6 to raid6_nr with rotating data/parity.
-
+.P
 This conversion naturally follows a previous conversion from striped/raid0
 to raid6_n_6 (shown above).  It completes the transition to a more
 traditional RAID6.
-
+.P
 .nf
 # lvs -o lv_name,segtype,sync_percent,data_copies
   LV            Type      Cpy%Sync #Cpy
@@ -1198,9 +1163,9 @@ traditional RAID6.
   [lv_rmeta_3]  linear
   [lv_rmeta_4]  linear
   [lv_rmeta_5]  linear
-
+.P
 # lvconvert --type raid6_nr vg/lv
-
+.P
 # lvs -a -o lv_name,segtype,sync_percent,data_copies
   LV            Type     Cpy%Sync #Cpy
   lv            raid6_nr 100.00      3
@@ -1221,10 +1186,10 @@ traditional RAID6.
   [lv_rmeta_4]  linear
   [lv_rmeta_5]  linear
 .fi
-
+.P
 The DataLVs are larger (additional segment in each) which provides space
 for out-of-place reshaping.  The result is:
-
+.P
 .nf
 # lvs -a -o lv_name,segtype,seg_pe_ranges,dataoffset
   LV            Type     PE Ranges          DOff
@@ -1243,14 +1208,14 @@ for out-of-place reshaping.  The result is:
   [lv_rmeta_2]  linear   /dev/sdab:0-0
   [lv_rmeta_3]  linear   /dev/sdac:0-0
 .fi
-
+.P
 All segments with PE ranges '33-33' provide the out-of-place reshape space.
 The dataoffset column shows that the data was moved from initial offset 0 to
 2048 sectors on each component DataLV.
-
+.P
 For performance reasons the raid6_nr RaidLV can be restriped.
 Convert it from 3-way striped to 5-way-striped.
-
+.P
 .nf
 # lvconvert --stripes 5 vg/lv
   Using default stripesize 64.00 KiB.
@@ -1259,11 +1224,11 @@ Convert it from 3-way striped to 5-way-striped.
   Run "lvresize -l99 vg/lv" to shrink it or use the additional \\
   capacity.
   Logical volume vg/lv successfully converted.
-
+.P
 # lvs vg/lv
   LV   VG     Attr       LSize   Cpy%Sync
   lv   vg     rwi-a-r-s- 652.00m 52.94
-
+.P
 # lvs -a -o lv_name,attr,segtype,seg_pe_ranges,dataoffset vg
   LV            Attr       Type     PE Ranges          DOff
   lv            rwi-a-r--- raid6_nr lv_rimage_0:0-33 \\
@@ -1289,12 +1254,12 @@ Convert it from 3-way striped to 5-way-striped.
   [lv_rmeta_5]  ewi-aor--- linear   /dev/sdae:0-0
   [lv_rmeta_6]  ewi-aor--- linear   /dev/sdaf:0-0
 .fi
-
+.P
 Stripes also can be removed from raid5 and 6.
 Convert the 5-way striped raid6_nr LV to 4-way-striped.
 The force option needs to be used, because removing stripes
 (i.e. image SubLVs) from a RaidLV will shrink its size.
-
+.P
 .nf
 # lvconvert --stripes 4 vg/lv
   Using default stripesize 64.00 KiB.
@@ -1307,7 +1272,7 @@ The force option needs to be used, because removing stripes
   WARNING: to remove freed stripes after the conversion has finished,\\
   you have to run "lvconvert --stripes 4 vg/lv"
   Logical volume vg/lv successfully converted.
-
+.P
 # lvs -a -o lv_name,attr,segtype,seg_pe_ranges,dataoffset vg
   LV            Attr       Type     PE Ranges          DOff
   lv            rwi-a-r-s- raid6_nr lv_rimage_0:0-33 \\
@@ -1333,10 +1298,10 @@ The force option needs to be used, because removing stripes
   [lv_rmeta_5]  ewi-aor--- linear   /dev/sdae:0-0
   [lv_rmeta_6]  ewi-aor-R- linear   /dev/sdaf:0-0
 .fi
-
+.P
 The 's' in column 9 of the attribute field shows the RaidLV is still reshaping.
 The 'R' in the same column of the attribute field shows the freed image Sub LVs which will need removing once the reshaping finished.
-
+.P
 .nf
 # lvs -o lv_name,attr,segtype,seg_pe_ranges,dataoffset vg
   LV   Attr       Type     PE Ranges          DOff
@@ -1346,9 +1311,9 @@ The 'R' in the same column of the attribute field shows the freed image Sub LVs 
                            lv_rimage_5:0-33 \\
                            lv_rimage_6:0-33   8192
 .fi
-
+.P
 Now that the reshape is finished the 'R' attribute on the RaidLV shows images can be removed.
-
+.P
 .nf
 # lvs -o lv_name,attr,segtype,seg_pe_ranges,dataoffset vg
   LV   Attr       Type     PE Ranges          DOff
@@ -1358,14 +1323,14 @@ Now that the reshape is finished the 'R' attribute on the RaidLV shows images ca
                            lv_rimage_5:0-33 \\
                            lv_rimage_6:0-33   8192
 .fi
-
+.P
 This is achieved by repeating the command ("lvconvert --stripes 4 vg/lv" would be sufficient).
-
+.P
 .nf
 # lvconvert --stripes 4 vg/lv
   Using default stripesize 64.00 KiB.
   Logical volume vg/lv successfully converted.
-
+.P
 # lvs -a -o lv_name,attr,segtype,seg_pe_ranges,dataoffset vg
   LV            Attr       Type     PE Ranges          DOff
   lv            rwi-a-r--- raid6_nr lv_rimage_0:0-33 \\
@@ -1387,7 +1352,7 @@ This is achieved by repeating the command ("lvconvert --stripes 4 vg/lv" would b
   [lv_rmeta_3]  ewi-aor--- linear   /dev/sdac:0-0
   [lv_rmeta_4]  ewi-aor--- linear   /dev/sdad:0-0
   [lv_rmeta_5]  ewi-aor--- linear   /dev/sdae:0-0
-
+.P
 # lvs -a -o lv_name,attr,segtype,reshapelen vg
   LV            Attr       Type     RSize
   lv            rwi-a-r--- raid6_nr 24.00m
@@ -1407,17 +1372,17 @@ This is achieved by repeating the command ("lvconvert --stripes 4 vg/lv" would b
   [lv_rmeta_4]  ewi-aor--- linear
   [lv_rmeta_5]  ewi-aor--- linear
 .fi
-
+.P
 Future developments might include automatic removal of the freed images.
-
+.P
 If the reshape space shall be removed any lvconvert command not changing the layout can be used:
-
+.P
 .nf
 # lvconvert --stripes 4 vg/lv
   Using default stripesize 64.00 KiB.
   No change in RAID LV vg/lv layout, freeing reshape space.
   Logical volume vg/lv successfully converted.
-
+.P
 # lvs -a -o lv_name,attr,segtype,reshapelen vg
   LV            Attr       Type     RSize
   lv            rwi-a-r--- raid6_nr    0
@@ -1437,9 +1402,9 @@ If the reshape space shall be removed any lvconvert command not changing the lay
   [lv_rmeta_4]  ewi-aor--- linear
   [lv_rmeta_5]  ewi-aor--- linear
 .fi
-
+.P
 In case the RaidLV should be converted to striped:
-
+.P
 .nf
 # lvconvert --type striped vg/lv
   Unable to convert LV vg/lv from raid6_nr to striped.
@@ -1453,11 +1418,11 @@ In case the RaidLV should be converted to striped:
     raid6_rs_6
     raid6_n_6
 .fi
-
+.P
 A direct conversion isn't possible thus the command informed about the possible ones.
 raid6_n_6 is suitable to convert to striped so convert to it first (this is a reshape
 changing the raid6 layout from raid6_nr to raid6_n_6).
-
+.P
 .nf
 # lvconvert --type raid6_n_6
   Using default stripesize 64.00 KiB.
@@ -1465,13 +1430,13 @@ changing the raid6 layout from raid6_nr to raid6_n_6).
 Are you sure you want to convert raid6_nr LV vg/lv? [y/n]: y
   Logical volume vg/lv successfully converted.
 .fi
-
+.P
 Wait for the reshape to finish.
-
+.P
 .nf
 # lvconvert --type striped vg/lv
   Logical volume vg/lv successfully converted.
-
+.P
 # lvs -o lv_name,attr,segtype,seg_pe_ranges,dataoffset vg
   LV   Attr       Type    PE Ranges  DOff
   lv   -wi-a----- striped /dev/sda:2-32 \\
@@ -1483,14 +1448,14 @@ Wait for the reshape to finish.
                           /dev/sdab:34-35 \\
                           /dev/sdac:34-35
 .fi
-
+.P
 From striped we can convert to raid10
-
+.P
 .nf
 # lvconvert --type raid10 vg/lv
   Using default stripesize 64.00 KiB.
   Logical volume vg/lv successfully converted.
-
+.P
 # lvs -o lv_name,attr,segtype,seg_pe_ranges,dataoffset vg
   LV   Attr       Type   PE Ranges          DOff
   lv   rwi-a-r--- raid10 lv_rimage_0:0-32 \\
@@ -1498,7 +1463,7 @@ From striped we can convert to raid10
                          lv_rimage_1:0-32 ... \\
                          lv_rimage_3:0-32 \\
                          lv_rimage_7:0-32   0
-
+.P
 # lvs -a -o lv_name,attr,segtype,seg_pe_ranges,dataoffset vg
   WARNING: Cannot find matching striped segment for vg/lv_rimage_3.
   LV            Attr       Type   PE Ranges          DOff
@@ -1527,29 +1492,28 @@ From striped we can convert to raid10
   [lv_rmeta_6]  ewi-aor--- linear /dev/sdaf:0-0
   [lv_rmeta_7]  ewi-aor--- linear /dev/sdag:0-0
 .fi
-
+.P
 raid10 allows to add stripes but can't remove them.
-
-
+.P
 A more elaborate example to convert from linear to striped
 with interim conversions to raid1 then raid5 followed
 by restripe (4 steps).
-
+.P
 We start with the linear LV.
-
+.P
 .nf
 # lvs -a -o name,size,segtype,syncpercent,datastripes,\\
             stripesize,reshapelenle,devices vg
   LV   LSize   Type   Cpy%Sync #DStr Stripe RSize Devices
   lv   128.00m linear              1     0        /dev/sda(0)
 .fi
-
+.P
 Then convert it to a 2-way raid1.
-
+.P
 .nf
 # lvconvert --mirrors 1 vg/lv
   Logical volume vg/lv successfully converted.
-
+.P
 # lvs -a -o name,size,segtype,datastripes,\\
             stripesize,reshapelenle,devices vg
   LV            LSize   Type   #DStr Stripe RSize Devices
@@ -1560,17 +1524,17 @@ Then convert it to a 2-way raid1.
   [lv_rmeta_0]    4.00m linear     1     0        /dev/sda(32)
   [lv_rmeta_1]    4.00m linear     1     0        /dev/sdhx(0)
 .fi
-
+.P
 Once the raid1 LV is fully synchronized we convert it to raid5_n (only 2-way raid1
 LVs can be converted to raid5).  We select raid5_n here because it has dedicated parity
 SubLVs at the end and can be converted to striped directly without any additional
 conversion.
-
+.P
 .nf
 # lvconvert --type raid5_n vg/lv
   Using default stripesize 64.00 KiB.
   Logical volume vg/lv successfully converted.
-
+.P
 # lvs -a -o name,size,segtype,syncpercent,datastripes,\\
             stripesize,reshapelenle,devices vg
   LV            LSize   Type    #DStr Stripe RSize Devices
@@ -1581,12 +1545,12 @@ conversion.
   [lv_rmeta_0]    4.00m linear      1     0        /dev/sda(32)
   [lv_rmeta_1]    4.00m linear      1     0        /dev/sdhx(0)
 .fi
-
+.P
 Now we'll change the number of data stripes from 1 to 5 and request 128K stripe size
 in one command.  This will grow the size of the LV by a factor of 5 (we add 4 data stripes
 to the one given).  That additional space can be used by e.g. growing any contained filesystem
 or the LV can be reduced in size after the reshaping conversion has finished.
-
+.P
 .nf
 # lvconvert --stripesize 128k --stripes 5 vg/lv
   Converting stripesize 64.00 KiB of raid5_n LV vg/lv to 128.00 KiB.
@@ -1594,7 +1558,7 @@ or the LV can be reduced in size after the reshaping conversion has finished.
   it from 32 to 160 extents!
   Run "lvresize -l32 vg/lv" to shrink it or use the additional capacity.
   Logical volume vg/lv successfully converted.
-
+.P
 # lvs -a -o name,size,segtype,datastripes,\\
             stripesize,reshapelenle,devices
   LV            LSize   Type    #DStr Stripe  RSize Devices
@@ -1623,13 +1587,13 @@ or the LV can be reduced in size after the reshaping conversion has finished.
   [lv_rmeta_4]    4.00m linear      1      0        /dev/sdhu(0)
   [lv_rmeta_5]    4.00m linear      1      0        /dev/sdht(0)
 .fi
-
+.P
 Once the conversion has finished we can can convert to striped.
-
+.P
 .nf
 # lvconvert --type striped vg/lv
   Logical volume vg/lv successfully converted.
-
+.P
 # lvs -a -o name,size,segtype,datastripes,\\
             stripesize,reshapelenle,devices vg
   LV   LSize   Type    #DStr Stripe  RSize Devices
@@ -1644,194 +1608,168 @@ Once the conversion has finished we can can convert to striped.
                                            /dev/sdhv(1),\\
                                            /dev/sdhu(1)
 .fi
-
+.P
 Reversing these steps will convert a given striped LV to linear.
-
+.P
 Mind the facts that stripes are removed thus the capacity of the RaidLV will shrink
 and that changing the RaidLV layout will influence its performance.
-
+.P
 "lvconvert --stripes 1 vg/lv" for converting to 1 stripe will inform upfront about
 the reduced size to allow for resizing the content or growing the RaidLV before
 actually converting to 1 stripe.  The \fB--force\fP option is needed to
 allow stripe removing conversions to prevent data loss.
-
-Of course any interim step can be the intended last one (e.g. striped -> raid1).
-..
-
-.SH RAID5 Variants
-
+.P
+Of course any interim step can be the intended last one (e.g. striped \[->] raid1).
+.
+.SH RAID5 VARIANTS
+.
+.TP
 raid5_ls
-.br
-\[bu]
+.ipbu
 RAID5 left symmetric
-.br
-\[bu]
+.ipbu
 Rotating parity N with data restart
-
+.
+.TP
 raid5_la
-.br
-\[bu]
-RAID5 left symmetric
-.br
-\[bu]
+.ipbu
+RAID5 left asymmetric
+.ipbu
 Rotating parity N with data continuation
-
+.
+.TP
 raid5_rs
-.br
-\[bu]
+.ipbu
 RAID5 right symmetric
-.br
-\[bu]
+.ipbu
 Rotating parity 0 with data restart
-
+.
+.TP
 raid5_ra
-.br
-\[bu]
+.ipbu
 RAID5 right asymmetric
-.br
-\[bu]
+.ipbu
 Rotating parity 0 with data continuation
-
+.
+.TP
 raid5_n
-.br
-\[bu]
+.ipbu
 RAID5 parity n
-.br
-\[bu]
+.ipbu
 Dedicated parity device n used for striped/raid0 conversions
-.br
-\[bu]
+.ipbu
 Used for RAID Takeover
-
-.SH RAID6 Variants
-
-raid6
-.br
-\[bu]
+.
+.SH RAID6 VARIANTS
+.
+.TP
+.RB raid6\ \  "  "
+.ipbu
 RAID6 zero restart (aka left symmetric)
-.br
-\[bu]
+.ipbu
 Rotating parity 0 with data restart
-.br
-\[bu]
+.ipbu
 Same as raid6_zr
-
+.
+.TP
 raid6_zr
-.br
-\[bu]
+.ipbu
 RAID6 zero restart (aka left symmetric)
-.br
-\[bu]
+.ipbu
 Rotating parity 0 with data restart
-
+.
+.TP
 raid6_nr
-.br
-\[bu]
+.ipbu
 RAID6 N restart (aka right symmetric)
-.br
-\[bu]
+.ipbu
 Rotating parity N with data restart
-
+.
+.TP
 raid6_nc
-.br
-\[bu]
+.ipbu
 RAID6 N continue
-.br
-\[bu]
+.ipbu
 Rotating parity N with data continuation
-
+.
+.TP
 raid6_n_6
-.br
-\[bu]
+.ipbu
 RAID6 last parity devices
-.br
-\[bu]
+.ipbu
 Fixed dedicated last devices (P-Syndrome N-1 and Q-Syndrome N)
-.RS 2
 with striped data used for striped/raid0 conversions
-.RE
-.br
-\[bu]
+.ipbu
 Used for RAID Takeover
-
+.
+.TP
 raid6_{ls,rs,la,ra}_6
-.br
-\[bu]
+.ipbu
 RAID6 last parity device
-.br
-\[bu]
+.ipbu
 Dedicated last parity device used for conversions from/to
-.RS 2
 raid5_{ls,rs,la,ra}
-.RE
-
+.
+.TP
 raid6_ls_6
-.br
-\[bu]
+.ipbu
 RAID6 N continue
-.br
-\[bu]
+.ipbu
 Same as raid5_ls for N-1 devices with fixed Q-Syndrome N
-.br
-\[bu]
+.ipbu
 Used for RAID Takeover
-
+.
+.TP
 raid6_la_6
-.br
-\[bu]
+.ipbu
 RAID6 N continue
-.br
-\[bu]
+.ipbu
 Same as raid5_la for N-1 devices with fixed Q-Syndrome N
-.br
-\[bu]
+.ipbu
 Used forRAID Takeover
-
+.
+.TP
 raid6_rs_6
-.br
-\[bu]
+.ipbu
 RAID6 N continue
-.br
-\[bu]
+.ipbu
 Same as raid5_rs for N-1 devices with fixed Q-Syndrome N
-.br
-\[bu]
+.ipbu
 Used for RAID Takeover
-
+.
+.TP
 raid6_ra_6
-.br
-\[bu]
+.ipbu
 RAID6 N continue
-.br
-\[bu]
-ame as raid5_ra for N-1 devices with fixed Q-Syndrome N
-.br
-\[bu]
+.ipbu
+Same as raid5_ra for N-1 devices with fixed Q-Syndrome N
+.ipbu
 Used for RAID Takeover
-
-
+.
+.
 .ig
-.SH RAID Duplication
-
+.
+.SH RAID DUPLICATION
+.
 RAID LV conversion (takeover or reshaping) can be done out-of-place by
 copying the LV data onto new devices while changing the RAID properties.
 Copying avoids modifying the original LV but requires additional devices.
 Once the LV data has been copied/converted onto the new devices, there are
 multiple options:
-
+.P
 1. The RAID LV can be switched over to run from just the new devices, and
 the original copy of the data removed.  The converted LV then has the new
 RAID properties, and exists on new devices.  The old devices holding the
 original data can be removed or reused.
-
+.P
 2. The new copy of the data can be dropped, leaving the original RAID LV
 unchanged and using its original devices.
-
+.P
 3. The new copy of the data can be separated and used as a new independent
 LV, leaving the original RAID LV unchanged on its original devices.
-
+.P
 The command to start duplication is:
-
+.P
 .B lvconvert --type
 .I RaidLevel
 [\fB--stripes\fP \fINumber\fP \fB--stripesize\fP \fISize\fP]
@@ -1840,76 +1778,72 @@ The command to start duplication is:
 .I LV
 [\fIPVs\fP]
 .RE
-
-.HP
+.P
+.TP
 .B --duplicate
 .br
 Specifies that the LV conversion should be done out-of-place, copying
 LV data to new devices while converting.
-
-.HP
+.P
+.TP
 .BR --type , --stripes , --stripesize
 .br
 Specifies the RAID properties to use when creating the copy.
-
 .P
 \fIPVs\fP specifies the new devices to use.
-
+.P
 The steps in the duplication process:
-
-.IP \(bu 3
+.P
+.ipbu
 LVM creates a new LV on new devices using the specified RAID properties
 (type, stripes, etc) and optionally specified devices.
-
-.IP \(bu 3
+.P
+.ipbu
 LVM changes the visible RAID LV to type raid1, making the original LV the
 first raid1 image (SubLV 0), and the new LV the second raid1 image
 (SubLV 1).
-
-.IP \(bu 3
+.P
+.ipbu
 The RAID1 synchronization process copies data from the original LV
 image (SubLV 0) to the new LV image (SubLV 1).
-
-.IP \(bu 3
+.P
+.ipbu
 When synchronization is complete, the original and new LVs are
 mirror images of each other and can be separated.
-
 .P
-
 The duplication process retains both the original and new LVs (both
 SubLVs) until an explicit unduplicate command is run to separate them.  The
 unduplicate command specifies if the original LV should use the old
 devices (SubLV 0) or the new devices (SubLV 1).
-
+.P
 To make the RAID LV use the data on the old devices, and drop the copy on
 the new devices, specify the name of SubLV 0 (suffix _dup_0):
-
+.P
 .B lvconvert --unduplicate
 .BI --name
 .IB LV _dup_0
 .I LV
-
+.P
 To make the RAID LV use the data copy on the new devices, and drop the old
 devices, specify the name of SubLV 1 (suffix _dup_1):
-
+.P
 .B lvconvert --unduplicate
 .BI --name
 .IB LV _dup_1
 .I LV
-
+.P
 FIXME: To make the LV use the data on the original devices, but keep the
 data copy as a new LV, ...
-
+.P
 FIXME: include how splitmirrors can be used.
-
-
-.SH RAID1E
-
+.
+.SS RAID1E
+.
 TODO
 ..
-
-.SH History
-
+.
+.SH HISTORY
+.
 The 2.6.38-rc1 version of the Linux kernel introduced a device-mapper
 target to interface with the software RAID (MD) personalities.  This
 provided device-mapper with RAID 4/5/6 capabilities and a larger
@@ -1919,4 +1853,15 @@ added to LVM version 2.02.87.  The capabilities of the LVM \fBraid1\fP
 type have surpassed the old \fBmirror\fP type.  raid1 is now recommended
 instead of mirror.  raid1 became the default for mirroring in LVM version
 2.02.100.
-
+.
+.SH SEE ALSO
+.
+.nh
+.ad l
+.BR lvm (8),
+.BR lvm.conf (5),
+.BR lvcreate (8),
+.BR lvconvert (8),
+.BR lvchange (8),
+.BR lvextend (8),
+.BR dmeventd (8)
