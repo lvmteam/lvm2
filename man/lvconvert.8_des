@@ -67,5 +67,5 @@ Striped raid types support converting the layout, their stripesize and
 their number of stripes.
 
 The striped raid types combined with raid1 allow for conversion from
-linear -> striped/raid0/raid0_meta and vice-versa by e.g. linear <-> raid1
-<-> raid5_n (then adding stripes) <-> striped/raid0/raid0_meta.
+linear \[->] striped/raid0/raid0_meta and vice-versa by e.g. linear \[<>] raid1
+\[<>] raid5_n (then adding stripes) \[<>] striped/raid0/raid0_meta.

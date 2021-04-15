@@ -389,9 +389,10 @@ dmsetup \(em low level logical volume management
 .  ad b
 ..
 .CMD_WIPE_TABLE
-.PD
-.P
-.PD 0
+.
+.TP
+\ \&
+.
 .TP
 .B devmap_name \fImajor minor
 .TP
@@ -423,7 +424,7 @@ Ensure \fI/dev/mapper\fP node exists after \fBdmsetup create\fP.
 .
 .TP
 .B --addnodeonresume
-Ensure \fI/dev/mapper\fP node exists after \fBdmsetup resume\fP (default with udev).
+Ensure \fI/dev/mapper\fP node exists after \fBdmsetup\ resume\fP (default with udev).
 .
 .TP
 .B --checks
@@ -473,7 +474,7 @@ if already mangled, error on mixed),
 \fBhex\fP (always do the mangling) and
 \fBnone\fP (no mangling).
 Default mode is \fB#DEFAULT_MANGLING#\fP.
-Character whitelist: 0-9, A-Z, a-z, #+-.:=@_. This whitelist is
+Character whitelist: 0-9, A-Z, a-z, #+\-.:=@_. This whitelist is
 also supported by udev. Any character not on a whitelist is replaced
 with its hex value (two digits) prefixed by \\x.
 Mangling mode could be also set through
@@ -924,10 +925,10 @@ e.g. striped 2 32 /dev/hda1 0 /dev/hdb1 0
 will map the first chunk (16k) as follows:
 .RS
 .IP
- LV chunk 1 -> hda1, chunk 1
- LV chunk 2 -> hdb1, chunk 1
- LV chunk 3 -> hda1, chunk 2
- LV chunk 4 -> hdb1, chunk 2
+ LV chunk 1 \[->] hda1, chunk 1
+ LV chunk 2 \[->] hdb1, chunk 1
+ LV chunk 3 \[->] hda1, chunk 2
+ LV chunk 4 \[->] hdb1, chunk 2
  etc.
 .RE
 .TP
@@ -980,21 +981,17 @@ documentation directory for the device-mapper package.)
 .
 .SH EXAMPLES
 .
+.nf
 # A table to join two disks together
-.br
 0 1028160 linear /dev/hda 0
-.br
 1028160 3903762 linear /dev/hdb 0
-.br
+.P
 # A table to stripe across the two disks,
-.br
 # and add the spare space from
-.br
 # hdb to the back of the volume
-.br
 0 2056320 striped 2 32 /dev/hda 0 /dev/hdb 0
-.br
 2056320 2875602 linear /dev/hdb 1028160
+.fi
 .
 .SH CONCISE FORMAT
 .
@@ -1026,33 +1023,33 @@ The minor number of the device.  If empty, the kernel assigns a suitable minor n
 .TP
 .B flags
 Supported flags are:
-.sp
+.br
+.ad l
 .B ro
 Sets the table being loaded for the device read-only
 .br
 .B rw
 Sets the table being loaded for the device read-write (default)
+.ad b
 .TP
 .B table
 One line of the table. See TABLE FORMAT above.
 .
 .SH EXAMPLES
 .
+.PD 0
+.ad l
+.nh
 # A simple linear read-only device
-.br
-.ad l
-.nh
+.TP
 test-linear-small,,,ro,\:0 2097152 linear /dev/loop0 0,\:2097152 2097152 linear /dev/loop1 0
-.hy
-.ad b
-.sp
+.P
 # Two linear devices
-.br
-.ad l
-.nh
+.TP
 test-linear-small,,,,\:0 2097152 linear /dev/loop0 0;\:test-linear-large,\:,,,\:0 2097152 linear /dev/loop1 0, 2097152 2097152 linear /dev/loop2 0
 .hy
 .ad b
+.PD
 .
 .SH ENVIRONMENT VARIABLES
 .
@@ -1079,6 +1076,10 @@ Original version: Joe Thornber <thornber@redhat.com>
 .BR udev (7),
 .BR udevadm (8)
 .P
-LVM2 resource page: https://www.sourceware.org/lvm2/
+LVM2 resource page:
+.UR https://www.sourceware.org/lvm2
+.UE
 .br
-Device-mapper resource page: http://sources.redhat.com/dm/
+Device-mapper resource page:
+.UR http://sources.redhat.com/dm
+.UE

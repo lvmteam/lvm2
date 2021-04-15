@@ -32,15 +32,15 @@ dmsetup info
 .IP \[bu]
 table of currently running processes
 .IP \[bu]
-recent entries from /var/log/messages (containing system messages)
+recent entries from \fI/var/log/messages\fP (containing system messages)
 .IP \[bu]
-complete lvm configuration and cache (content of #DEFAULT_SYS_DIR#)
+complete lvm configuration and cache (content of \fI#DEFAULT_SYS_DIR#\fP)
 .IP \[bu]
-list of device nodes present under /dev
+list of device nodes present under \fI/dev\fP
 .IP \[bu]
-list of files present /sys/block
+list of files present \fI/sys/block\fP
 .IP \[bu]
-list of files present /sys/devices/virtual/block
+list of files present \fI/sys/devices/virtual/block\fP
 .IP \[bu]
 if enabled with -m, metadata dump will be also included
 .IP \[bu]
@@ -99,9 +99,9 @@ controlling LVM functionality and the content of systemd journal for
 current boot.
 .TP
 .B -u
-Gather udev info and context: /etc/udev/udev.conf file, udev daemon version
+Gather udev info and context: \fI/etc/udev/udev.conf\fP file, udev daemon version
 (output of 'udevadm info --version' command), udev rules currently used in the system
-(content of /lib/udev/rules.d and /etc/udev/rules.d directory),
+(content of \fI/lib/udev/rules.d\fP and \fI/etc/udev/rules.d\fP directory),
 list of files in /lib/udev directory and dump of current udev
 database content (the output of 'udevadm info --export-db' command).
 .
@@ -110,13 +110,17 @@ database content (the output of 'udevadm info --export-db' command).
 .TP
 .B LVM_BINARY
 The LVM2 binary to use.
-Defaults to "lvm".
-Sometimes you might need to set this to "#LVM_PATH#.static", for example.
+Defaults to "\fBlvm\fP".
+Sometimes you might need to set this to "\fI#LVM_PATH#.static\fP", for example.
 .TP
 .B DMSETUP_BINARY
 The dmsetup binary to use.
-Defaults to "dmsetup".
+Defaults to "\fBdmsetup\fP".
 .
 .SH SEE ALSO
 .
-.BR lvm (8)
+.BR lvm (8),
+.BR lvmpolld (8),
+.P
+.BR udev (8),
+.BR udevadm (8)

@@ -258,7 +258,7 @@ The valid characters for VG and LV names are:
 .BR a - z
 .BR A - Z
 .BR 0 - 9
-.BR "+ _ . -"
+.B + _ . -
 .P
 VG names cannot begin with a hyphen.
 The name of a new LV also cannot begin with a hyphen.  However, if the
@@ -274,11 +274,31 @@ argument.)
 .P
 There are also various reserved names that are used internally by lvm that can
 not be used as LV or VG names. A VG cannot be called anything that exists in
-\fI/dev/\fP at the time of creation, nor can it be called '.' or '..'.
-An LV cannot be called '.', '..', 'snapshot' or 'pvmove'.
+\fI/dev/\fP at the time of creation, nor can it be called
+.RB ' . '
+or
+.RB ' .. '.
+An LV cannot be called
+.RB ' . ',
+.RB ' .. ',
+.RB ' snapshot '
+or
+.RB ' pvmove '.
 The LV name may also not contain any of the following strings:
-\fR'_cdata', '_cmeta', '_corig', '_mlog', '_mimage', '_pmspare',
-\fR'_rimage', '_rmeta', '_tdata', '_tmeta', '_vorigin' or '_vdata'.
+.RB ' _cdata ',
+.RB ' _cmeta ',
+.RB ' _corig ',
+.RB ' _mimage ',
+.RB ' _mlog ',
+.RB ' _pmspare ',
+.RB ' _rimage ',
+.RB ' _rmeta ',
+.RB ' _tdata ',
+.RB ' _tmeta ',
+.RB ' _vdata ',
+.RB ' _vorigin '
+or
+.RB ' _wcorig '.
 A directory bearing the name of each Volume Group is created under
 \fI/dev\fP when any of its Logical Volumes are activated.
 Each active Logical Volume is accessible from this directory as a symbolic

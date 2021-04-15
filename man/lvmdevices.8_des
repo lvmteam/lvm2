@@ -1,5 +1,5 @@
 The LVM devices file lists devices that lvm can use.  The default file is
-/etc/lvm/devices/system.devices, and the lvmdevices(8) command is used to
+\fI#DEFAULT_SYS_DIR#/devices/system.devices\fP, and the \fBlvmdevices\fP(8) command is used to
 add or remove device entries.  If the file does not exist, or if lvm.conf
 includes use_devicesfile=0, then lvm will not use a devices file.
 
@@ -34,7 +34,7 @@ overriding the devices file.  The listed devices act as a sort of devices
 file in terms of limiting which devices lvm will see and use.  Devices
 that are not listed will appear to be missing to the lvm command.
     
-Multiple devices files can be kept in /etc/lvm/devices, which allows lvm
+Multiple devices files can be kept in \fI#DEFAULT_SYS_DIR#/devices\fP, which allows lvm
 to be used with different sets of devices, e.g. system devices do not need
 to be exposed to a specific application, and the application can use lvm on
 its own devices that are not exposed to the system.  The option

@@ -68,14 +68,14 @@ and is equivalent to a comma-separated list \fB-l wire,debug\fP.
 .TP
 .BR -p | --pidfile " " \fIpidfile_path
 Path to the pidfile. This overrides both the built-in default
-(#DEFAULT_PID_DIR#/lvmpolld.pid) and the environment variable
+(\fI#DEFAULT_PID_DIR#/lvmpolld.pid\fP) and the environment variable
 \fBLVM_LVMPOLLD_PIDFILE\fP.  This file is used to prevent more
 than one instance of the daemon running simultaneously.
 .
 .TP
 .BR -s | --socket " " \fIsocket_path
 Path to the socket file. This overrides both the built-in default
-(#DEFAULT_RUN_DIR#/lvmpolld.socket) and the environment variable
+(\fI#DEFAULT_RUN_DIR#/lvmpolld.socket\fP) and the environment variable
 \fBLVM_LVMPOLLD_SOCKET\fP.
 .
 .TP
@@ -85,7 +85,7 @@ option is omitted or the value given is zero the daemon never shutdowns on idle.
 .
 .TP
 .BR -B | --binary " " \fIlvm_binary_path
-Optional path to alternative LVM binary (default: #LVM_PATH#). Use for
+Optional path to alternative LVM binary (default: \fI#LVM_PATH#\fP). Use for
 testing purposes only.
 .
 .TP

@@ -12,7 +12,8 @@ for primary storage.
 .P
 Deduplication is a technique for reducing the consumption of storage
 resources by eliminating multiple copies of duplicate blocks. Compression
-takes the individual unique blocks and shrinks them. These reduced blocks are then efficiently packed together into
+takes the individual unique blocks and shrinks them. 
+These reduced blocks are then efficiently packed together into
 physical blocks. Thin provisioning manages the mapping from logical blocks
 presented by VDO to where the data has actually been physically stored,
 and also eliminates any blocks of all zeroes.
@@ -135,7 +136,7 @@ that can keep 100% incompressible data there.
 .
 VDO allows to set a large variety of options. Lots of these settings
 can be specified in lvm.conf or profile settings. You can prepare
-a number of different profiles in the #DEFAULT_SYS_DIR#/profile directory
+a number of different profiles in the \fI#DEFAULT_SYS_DIR#/profile\fP directory
 and just specify the profile file name.
 Check the output of \fBlvmconfig --type default --withcomments\fP
 for a detailed description of all individual VDO settings.
@@ -144,25 +145,27 @@ for a detailed description of all individual VDO settings.
 .nf
 # cat <<EOF > #DEFAULT_SYS_DIR#/profile/vdo_create.profile
 allocation {
-	vdo_use_compression=1
-	vdo_use_deduplication=1
-	vdo_use_metadata_hints=1
-	vdo_minimum_io_size=4096
-	vdo_block_map_cache_size_mb=128
-	vdo_block_map_period=16380
-	vdo_check_point_frequency=0
-	vdo_use_sparse_index=0
-	vdo_index_memory_size_mb=256
-	vdo_slab_size_mb=2048
-	vdo_ack_threads=1
-	vdo_bio_threads=1
-	vdo_bio_rotation=64
-	vdo_cpu_threads=2
-	vdo_hash_zone_threads=1
-	vdo_logical_threads=1
-	vdo_physical_threads=1
-	vdo_write_policy="auto"
-	vdo_max_discard=1
+.RS
+vdo_use_compression=1
+vdo_use_deduplication=1
+vdo_use_metadata_hints=1
+vdo_minimum_io_size=4096
+vdo_block_map_cache_size_mb=128
+vdo_block_map_period=16380
+vdo_check_point_frequency=0
+vdo_use_sparse_index=0
+vdo_index_memory_size_mb=256
+vdo_slab_size_mb=2048
+vdo_ack_threads=1
+vdo_bio_threads=1
+vdo_bio_rotation=64
+vdo_cpu_threads=2
+vdo_hash_zone_threads=1
+vdo_logical_threads=1
+vdo_physical_threads=1
+vdo_write_policy="auto"
+vdo_max_discard=1
+.RE
 }
 EOF
 .P
@@ -175,7 +178,7 @@ EOF
 Disable or enable the compression and deduplication for VDOPoolLV
 (the volume that maintains all VDO LV(s) associated with it).
 .P
-.B lvchange --compression [y|n] --deduplication [y|n] VG/VDOPoolLV
+.B lvchange --compression y|n --deduplication y|n VG/VDOPoolLV
 .P
 .I Example
 .nf
@@ -191,7 +194,7 @@ in the content of the virtual data for the VDOLV and how much space is already
 consumed with all the data and metadata blocks in the VDOPoolLV.
 For a detailed description, use the \fBvdostats\fP(8) command.
 .P
-Note: \fBvdostats\fP(8) currently understands only /dev/mapper device names.
+Note: \fBvdostats\fP(8) currently understands only \fI/dev/mapper\fP device names.
 .P
 .I Example
 .nf
@@ -218,11 +221,11 @@ You can add more space to hold VDO data and metadata by
 extending the VDODataLV using the commands
 \fBlvresize\fP(8) and \fBlvextend\fP(8).
 The extension needs to add at least one new VDO slab. You can configure
-the slab size with the \fBallocation/vdo_slab_size_mb\fP setting.
+the slab size with the \fB\%allocation/\:vdo_slab_size_mb\fP setting.
 .P
 You can also enable automatic size extension of a monitored VDOPoolLV
 with the \fBactivation/vdo_pool_autoextend_percent\fP and
-\fBactivation/vdo_pool_autoextend_threshold\fP settings.
+\fB\%activation/\:vdo_pool_autoextend_threshold\fP settings.
 .P
 Note: You cannot reduce the size of a VDOPoolLV.
 .P
@@ -287,9 +290,9 @@ Using a raid type LV for a VDODataLV.
 # lvconvert --type vdo-pool -V 10G vg/vdopool
 .fi
 .
-.SS \n+[step]. Caching a VDODataLV or a VDOPoolLV
+.SS \n+[step]. Caching a VDOPoolLV
 .
-VDODataLV (accepts also VDOPoolLV) caching provides a mechanism
+VDOPoolLV (accepts also VDODataLV volume name) caching provides a mechanism
 to accelerate reads and writes of already compressed and deduplicated
 data blocks together with VDO metadata.
 .P

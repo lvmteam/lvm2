@@ -61,54 +61,54 @@ Stop all lockspaces.
 .
 .SH USAGE
 .
-.SS info
-.
+.TP
+.B --info
 This collects and displays lock state from lvmlockd.  The display is
 primitive, incomplete and will change in future version.  To print the raw
 lock state from lvmlockd, combine this option with --dump|-d.
 .
-.SS dump
-.
+.TP
+.B --dump
 This collects the circular log buffer of debug statements from lvmlockd
 and prints it.
 .
-.SS kill
-.
+.TP
+.B --kill
 This is run by sanlock when it loses access to the storage holding leases
 for a VG.  It runs the command specified in lvm.conf
 lvmlockctl_kill_command to deactivate LVs in the VG.  If the specified
 command is successful, locks will be dropped for the VG in lvmlockd
-(the equivalent of lvmlockctl --drop will be run.)  If no command
+(the equivalent of \fBlvmlockctl --drop\fP will be run.)  If no command
 is specified, or the command fails, then the user must intervene
 to forcefully deactivate LVs in the VG, and if successful, run
-lvmlockctl --drop.  For more, see
+\fBlvmlockctl --drop\fP.  For more, see
 .BR lvmlockd (8).
 .
-.SS drop
-.
+.TP
+.B --drop
 This should only be run after a VG has been successfully deactivated
 following an lvmlockctl --kill command.  It clears the stale lockspace
 from lvmlockd.  When lvmlockctl_kill_command is used, the --kill
 command may run drop automatically.  For more, see
 .BR lvmlockd (8).
 .
-.SS gl-enable
-.
+.TP
+.B --gl-enable
 This enables the global lock in a sanlock VG.  This is necessary if the VG
 that previously held the global lock is removed.  For more, see
 .BR lvmlockd (8).
 .
-.SS gl-disable
-.
+.TP
+.B --gl-disable
 This disables the global lock in a sanlock VG.  This is necessary if the
 global lock has mistakenly been enabled in more than one VG.  The global
 lock should be disabled in all but one sanlock VG.  For more, see
 .BR lvmlockd (8).
 .
-.SS stop-lockspaces
-.
+.TP
+.B --stop-lockspaces
 This tells lvmlockd to stop all lockspaces.  It can be useful to stop
-lockspaces for VGs that the vgchange --lock-stop comand can no longer
+lockspaces for VGs that the \fBvgchange --lock-stop\fP command can no longer
 see, or to stop the dlm global lockspace which is not directly stopped by
 the vgchange command.  The wait and force options can be used with this
 command.

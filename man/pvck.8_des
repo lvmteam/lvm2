@@ -48,7 +48,7 @@ Save the entire text metadata area to a file without processing.
 .B --repair
 .br
 Repair headers and metadata on a PV.  This uses a metadata input file that
-was extracted by --dump, or a backup file (from /etc/lvm/backup).  When
+was extracted by --dump, or a backup file (from \fI#DEFAULT_BACKUP_DIR#\fP).  When
 possible, use metadata saved by --dump from another PV in the same VG (or
 from a second metadata area on the PV).
 

@@ -44,7 +44,7 @@ dmfilemapd \(em device-mapper filemap monitoring daemon
 .
 .SH DESCRIPTION
 .
-The dmfilemapd daemon monitors groups of \fBdmstats\fP regions that
+The dmfilemapd daemon monitors groups of \fBdmstats\fP(8) regions that
 correspond to the extents of a file, adding and removing regions to
 reflect the changing state of the file on-disk.
 .P
@@ -174,28 +174,20 @@ verbose logging
 .ad l
 #
 .B dmfilemapd 3 0 /var/tmp/data inode 1 3 3< /var/tmp/data
-.br
+.nf
 Starting dmfilemapd with fd=3, group_id=0 mode=inode, path=/var/tmp/data
-.br
 dm version   [ opencount flush ]   [16384] (*1)
-.br
 dm info   (253:0) [ opencount flush ]   [16384] (*1)
-.br
 dm message   (253:0) [ opencount flush ]  @stats_list dmstats [16384] (*1)
-.br
 Read alias 'data' from aux_data
-.br
 Found group_id 0: alias="data"
-.br
 dm_stats_walk_init: initialised flags to 4000000000000
-.br
 starting stats walk with   GROUP
-.br
 exiting _filemap_monitor_get_events() with deleted=0, check=0
-.br
 Waiting for check interval
-.br
+.fi
 .ad b
+
 .
 .SH AUTHORS
 .
@@ -205,6 +197,10 @@ Bryn M. Reeves <bmr@redhat.com>
 .
 .BR dmstats (8)
 .P
-LVM2 resource page: https://www.sourceware.org/lvm2/
+LVM2 resource page:
+.UR https://www.sourceware.org/lvm2
+.UE
 .br
-Device-mapper resource page: http://sources.redhat.com/dm/
+Device-mapper resource page:
+.UR http://sources.redhat.com/dm
+.UE

@@ -341,7 +341,8 @@ caching the main LV.
 .nf
 # lvcreate -n fast -L DataSize vg /dev/fast_ssd1
 # lvcreate -n fastmeta -L MetadataSize vg /dev/fast_ssd2
-# lvconvert --type cache --cachepool fast --poolmetadata fastmeta vg/main
+# lvconvert --type cache --cachepool fast \\
+        --poolmetadata fastmeta vg/main
 .fi
 .
 .SS dm-cache cache modes
@@ -397,7 +398,7 @@ Command to display the chunk size:
 .B lvs -o+chunksize VG/LV
 .P
 .BR lvm.conf (5)
-.B cache_pool_chunk_size
+.B allocation/cache_pool_chunk_size
 .P
 controls the default chunk size.
 .P
@@ -470,7 +471,7 @@ defines the default cache settings.
 .
 Cache pools allows to set a variety of options. Lots of these settings
 can be specified in lvm.conf or profile settings. You can prepare
-a number of different profiles in the #DEFAULT_SYS_DIR#/profile directory
+a number of different profiles in the \fI#DEFAULT_SYS_DIR#/profile\fP directory
 and just specify the metadata profile file name when caching LV or creating cache-pool.
 Check the output of \fBlvmconfig --type default --withcomments\fP
 for a detailed description of all individual cache settings.
@@ -479,22 +480,31 @@ for a detailed description of all individual cache settings.
 .nf
 # cat <<EOF > #DEFAULT_SYS_DIR#/profile/cache_big_chunk.profile
 allocation {
-	cache_pool_metadata_require_separate_pvs=0
-	cache_pool_chunk_size=512
-	cache_metadata_format=2
-	cache_mode="writethrough"
-	cache_policy="smq"
-	cache_settings {
-		smq {
-			migration_threshold=8192
-			random_threshold=4096
-		}
-	}
+.RS
+cache_pool_metadata_require_separate_pvs=0
+cache_pool_chunk_size=512
+cache_metadata_format=2
+cache_mode="writethrough"
+cache_policy="smq"
+cache_settings {
+.RS
+smq {
+.RS
+migration_threshold=8192
+random_threshold=4096
+.RE
+}
+.RE
+}
+.RE
 }
 EOF
 .P
-# lvcreate --cache -L10G --metadataprofile cache_big_chunk vg/main  /dev/fast_ssd
-# lvcreate --cache -L10G --config 'allocation/cache_pool_chunk_size=512' vg/main /dev/fast_ssd
+
+# lvcreate --cache -L10G --metadataprofile cache_big_chunk vg/main \\
+        /dev/fast_ssd
+# lvcreate --cache -L10G vg/main --config \\
+        'allocation/cache_pool_chunk_size=512' /dev/fast_ssd
 .fi
 .
 .SS dm-cache spare metadata LV
@@ -538,7 +548,7 @@ or the longer variant
 .P
 .nf
 # lvcreate --type cache --size CacheDataSize \\
-	--name NameCachePool VG/LV [FastPVs]
+        --name NameCachePool VG/LV [FastPVs]
 .fi
 .P
 In this command, the specified LV already exists, and is the main LV to be
@@ -575,6 +585,6 @@ and the existing main LV is being converted to type cache.)
 .BR vgreduce (8),
 .BR vgsplit (8),
 .P
-.BR cache_dump (8),
 .BR cache_check (8),
+.BR cache_dump (8),
 .BR cache_repair (8)

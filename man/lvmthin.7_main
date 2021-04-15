@@ -870,7 +870,7 @@ To change these values globally, edit
 To change these values on a per-VG or per-LV basis, attach a "profile" to
 the VG or LV.  A profile is a collection of config settings, saved in a
 local text file (using the lvm.conf format).  lvm looks for profiles in
-the profile_dir directory, e.g. #DEFAULT_SYS_DIR#/profile/.  Once attached to a VG
+the profile_dir directory, e.g. \fI#DEFAULT_SYS_DIR#/profile/\fP.  Once attached to a VG
 or LV, lvm will process the VG or LV using the settings from the attached
 profile.  A profile is named and referenced by its file name.
 .P
@@ -901,8 +901,10 @@ profile_dir="#DEFAULT_SYS_DIR#/profile"
 .P
 # cat #DEFAULT_SYS_DIR#/profile/pool0extend.profile
 activation {
-        thin_pool_autoextend_threshold=50
-        thin_pool_autoextend_percent=10
+.RS
+thin_pool_autoextend_threshold=50
+thin_pool_autoextend_percent=10
+.RE
 }
 .P
 # lvchange --metadataprofile pool0extend vg/pool0

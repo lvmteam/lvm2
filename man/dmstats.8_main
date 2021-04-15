@@ -90,7 +90,7 @@ dmstats \(em device-mapper statistics management
 .  ad l
 .  nh
 .  BR create
-.  IR device_name... | file_path... | \fB--alldevices
+.  IR device_name ...| file_path ...| \fB--alldevices
 .  RB [ --areas
 .  IR nr_areas | \fB--areasize
 .  IR area_size ]
@@ -334,7 +334,7 @@ groups. Normally the device-mapper filemap monitoring daemon,
 \fBdmfilemapd\fP, is started for each file mapped group to update the
 set of regions as the file changes on-disk: use of this option
 disables this behaviour.
-.P
+.sp
 Regions in the group may still be updated with the
 \fBupdate_filemap\fP command, or by starting the daemon manually.
 .
@@ -345,29 +345,29 @@ monitoring daemon can monitor files in two distinct ways: the mode
 affects the behaviour of the daemon when a file under monitoring is
 renamed or unlinked, and the conditions which cause the daemon to
 terminate.
-.P
+.sp
 The \fBfollow_mode\fP argument is either "inode", for follow-inode
 mode, or "path", for follow-path.
-.P
+.sp
 If follow-inode mode is used, the daemon will hold the file open, and
 continue to update regions from the same file descriptor. This means
 that the mapping will follow rename, move (within the same file
 system), and unlink operations. This mode is useful if the file is
 expected to be moved, renamed, or unlinked while it is being
 monitored.
-.P
+.sp
 In follow-inode mode, the daemon will exit once it detects that the
 file has been unlinked and it is the last holder of a reference to it.
-.P
+.sp
 If follow-path is used, the daemon will re-open the provided path on
 each monitoring iteration. This means that the group will be updated
 to reflect a new file being moved to the same path as the original
 file. This mode is useful for files that are expected to be updated
 via unlink and rename.
-.P
+.sp
 In follow-path mode, the daemon will exit if the file is removed and
 not replaced within a brief tolerance interval.
-.P
+.sp
 In either mode, the daemon exits automatically if the monitored group
 is removed.
 .
@@ -494,7 +494,7 @@ optional suffix selects units of:
 When used with \fBcreate\fP, create a new statistics region for each
 target contained in the given device(s). This causes a separate region
 to be allocated for each segment of the device.
-.P
+.sp
 The newly created regions are automatically placed into a group unless
 the \fB--nogroup\fP option is given. When grouping is enabled a group
 alias may be specified using the \fB--alias\fP option.
@@ -537,23 +537,23 @@ regions (with the exception of in-flight IO counters).
 .CMD_CREATE
 .br
 Creates one or more new statistics regions on the specified device(s).
-.P
+.sp
 The region will span the entire device unless \fB--start\fP and
 \fB--length\fP or \fB--segments\fP are given. The \fB--start\fP an
 \fB--length\fP options allow a region of arbitrary length to be placed
 at an arbitrary offset into the device. The \fB--segments\fP option
 causes a new region to be created for each target in the corresponding
 device-mapper device's table.
-.P
+.sp
 If the \fB--precise\fP option is used the command will attempt to
 create a region using nanosecond precision counters.
-.P
+.sp
 If \fB--bounds\fP is given a latency histogram will be tracked for
 the new region. The boundaries of the histogram bins are given as a
 comma separated list of latency values. There is an implicit lower bound
 of zero on the first bin and an implicit upper bound of infinity (or the
 configured interval duration) on the final bin.
-.P
+.sp
 Latencies are given in nanoseconds. An optional unit suffix of ns, us,
 ms, or s may be given after each value to specify units of nanoseconds,
 microseconds, miliseconds or seconds respectively, so for example, 10ms
@@ -561,19 +561,19 @@ is equivalent to 10000000. Latency values with a precision of less than
 one milisecond can only be used when precise timestamps are enabled: if
 \fB--precise\fP is not given and values less than one milisecond are
 used it will be enabled automatically.
-.P
+.sp
 An optional \fBprogram_id\fP or \fBuser_data\fP string may be associated
 with the region. A \fBprogram_id\fP may then be used to select regions
 for subsequent list, print, and report operations. The \fBuser_data\fP
 stores an arbitrary string and is not used by dmstats or the
 device-mapper kernel statistics subsystem.
-.P
+.sp
 By default dmstats creates regions with a \fBprogram_id\fP of
 "dmstats".
-.P
+.sp
 On success the \fBregion_id\fP of the newly created region is printed
 to stdout.
-.P
+.sp
 If the \fB--filemap\fP option is given with a regular file, or list
 of files, as the \fBfile_path\fP argument, instead of creating regions
 with parameters specified on the command line, \fBdmstats\fP will open
@@ -581,20 +581,20 @@ the files located at \fBfile_path\fP and create regions corresponding to
 the physical extents allocated to the file. This can be used to monitor
 statistics for individual files in the file system, for example, virtual
 machine images, swap areas, or large database files.
-.P
+.sp
 To work with the \fB--filemap\fP option, files must be located on a
 local file system, backed by a device-mapper device, that supports
 physical extent data using the FIEMAP ioctl (Ext4 and XFS for e.g.).
-.P
+.sp
 By default regions that map a file are placed into a group and the
 group alias is set to the basename of the file. This behaviour can be
 overridden with the \fB--alias\fP and \fB--nogroup\fP options.
-.P
+.sp
 Creating a group that maps a file automatically starts a daemon,
 \fBdmfilemapd\fP to monitor the file and update the mapping as the
 extents allocated to the file change. This behaviour can be disabled
 using the \fB--nomonitor\fP option.
-.P
+.sp
 Use the \fB--group\fP option to only display information for groups
 when listing and reporting.
 .
@@ -604,17 +604,17 @@ when listing and reporting.
 Delete the specified statistics region. All counters and resources used
 by the region are released and the region will not appear in the output
 of subsequent list, print, or report operations.
-.P
+.sp
 All regions registered on a device may be removed using
 \fB--allregions\fP.
-.P
+.sp
 To remove all regions on all devices both \fB--allregions\fP and
 \fB--alldevices\fP must be used.
-.P
+.sp
 If a \fB--groupid\fP is given instead of a \fB--regionid\fP the
 command will attempt to delete the group and all regions that it
 contains.
-.P
+.sp
 If a deleted region is the first member of a group of regions the group
 will also be removed.
 .
@@ -623,19 +623,19 @@ will also be removed.
 .br
 Combine one or more statistics regions on the specified device into a
 group.
-.P
+.sp
 The list of regions to be grouped is specified with \fB--regions\fP
 and an optional alias may be assigned with \fB--alias\fP. The set of
 regions is given as a comma-separated list of region identifiers. A
 continuous range of identifers spanning from \fBR1\fP to \fBR2\fP may
 be expressed as '\fBR1\fP-\fBR2\fP'.
-.P
+.sp
 Regions that have a histogram configured can be grouped: in this case
 the number of histogram bins and their bounds must match exactly.
-.P
+.sp
 On success the group list and newly created \fBgroup_id\fP are
 printed to stdout.
-.P
+.sp
 The group metadata is stored with the first (lowest numbered)
 \fBregion_id\fP in the group: deleting this region will also delete
 the group and other group members will be returned to their prior
@@ -653,20 +653,21 @@ the list of report fields.
 List the statistics regions, areas, or groups registered on the device.
 If the \fB--allprograms\fP switch is given all regions will be listed
 regardless of region program ID values.
-.P
+.sp
 By default only regions and groups are included in list output. If
 \fB-v\fP or \fB--verbose\fP is given the report will also include a
 row of information for each configured group and for each area contained
 in each region displayed.
-.P
+.sp
 Regions that contain a single area are by default omitted from the
 verbose list since their properties are identical to the area that they
 contain - to view all regions regardless of the number of areas present
 use \fB--region\fP). To also view the areas contained within regions
 use \fB--area\fP.
-.P
+.sp
 If \fB--histogram\fP is given the report will include the bin count
 and latency boundary values for any configured histograms.
+.
 .HP
 .CMD_PRINT
 .br
@@ -680,16 +681,16 @@ Start a report for the specified object or for all present objects. If
 the count argument is specified, the report will repeat at a fixed
 interval set by the \fB--interval\fP option. The default interval is
 one second.
-.P
+.sp
 If the \fB--allprograms\fP switch is given, all regions will be
 listed, regardless of region program ID values.
-.P
+.sp
 If the \fB--histogram\fP is given the report will include the histogram
 values and latency boundaries.
-.P
+.sp
 If the \fB--relative\fP is used the default histogram field displays
 bin values as a percentage of the total number of I/Os.
-.P
+.sp
 Object types (areas, regions and groups) to include in the report are
 selected using the \fB--area\fP, \fB--region\fP, and \fB--group\fP
 options.
@@ -699,27 +700,28 @@ options.
 .br
 Remove an existing group and return all the group's regions to their
 original state.
-.P
+.sp
 The group to be removed is specified using \fB--groupid\fP.
+.
 .HP
 .CMD_UPDATE_FILEMAP
 .br
 Update a group of \fBdmstats\fP regions specified by \fBgroup_id\fP,
 that were previously created with \fB--filemap\fP, either directly,
 or by starting the monitoring daemon, \fBdmfilemapd\fP.
-.P
+.sp
 This will add and remove regions to reflect changes in the allocated
 extents of the file on-disk, since the time that it was crated or last
 updated.
-.P
+.sp
 Use of this command is not normally needed since the \fBdmfilemapd\fP
 daemon will automatically monitor filemap groups and perform these
 updates when required.
-.P
+.sp
 If a filemapped group was created with \fB--nomonitor\fP, or the
 daemon has been killed, the \fBupdate_filemap\fP can be used to
 manually force an update or start a new daemon.
-.P
+.sp
 Use \fB--nomonitor\fP to force a direct update and disable starting
 the monitoring daemon.
 .
@@ -1229,9 +1231,13 @@ Bryn M. Reeves <bmr@redhat.com>
 .
 .BR dmsetup (8)
 .P
-LVM2 resource page: https://www.sourceware.org/lvm2/
+LVM2 resource page:
+.UR https://www.sourceware.org/lvm2
+.UE
 .br
-Device-mapper resource page: http://sources.redhat.com/dm/
+Device-mapper resource page:
+.UR http://sources.redhat.com/dm
+.UE
 .P
 Device-mapper statistics kernel documentation
 .br

@@ -1,4 +1,4 @@
-.TH LVM.CONF 5 "LVM TOOLS #VERSION#" "Red Hat, Inc." \" -*- nroff -*-
+.TH LVM.CONF 5 "LVM TOOLS #VERSION#" "Red Hat, Inc."
 .
 .SH NAME
 .
@@ -6,7 +6,7 @@ lvm.conf \(em Configuration file for LVM2
 .
 .SH SYNOPSIS
 .
-.B #DEFAULT_SYS_DIR#/lvm.conf
+.I #DEFAULT_SYS_DIR#/lvm.conf
 .
 .SH DESCRIPTION
 .
@@ -16,7 +16,7 @@ being loaded - settings read in later override earlier
 settings.  File timestamps are checked between commands and if
 any have changed, all the files are reloaded.
 .P
-For a description of each lvm.conf setting, run:
+For a description of each \fBlvm.conf\fP(5) setting, run:
 .P
 .B lvmconfig --typeconfig default --withcomments --withspaces
 .P
@@ -97,11 +97,11 @@ When several configuration methods are used at the same time
 and when LVM looks for the value of a particular setting, it traverses
 this \fBconfig cascade\fP from left to right:
 .P
-\fBdirect config override on command line\fP ->
-\fBcommand profile config\fP ->
-\fBmetadata profile config\fP ->
-\fBtag config\fP ->
-\fBlvmlocal.conf\fP ->
+\fBdirect config override on command line\fP \[->]
+\fBcommand profile config\fP \[->]
+\fBmetadata profile config\fP \[->]
+\fBtag config\fP \[->]
+\fBlvmlocal.conf\fP \[->]
 \fBlvm.conf\fP
 .P
 No part of this cascade is compulsory. If there's no setting value found at
@@ -214,9 +214,9 @@ e.g. umask:
 .br
 .I #DEFAULT_CACHE_DIR#/.cache
 .br
-.I #DEFAULT_LOCK_DIR#
-.br
 .I #DEFAULT_PROFILE_DIR#
+.br
+.I #DEFAULT_LOCK_DIR#
 .
 .SH SEE ALSO
 .

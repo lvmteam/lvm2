@@ -66,7 +66,7 @@ to the first image).
 
 Create a 1TiB thin LV mythin, with 256GiB thinpool tpool0 in vg00.
 .br
-.B lvcreate --T --size 256G --name mythin vg00/tpool0
+.B lvcreate -T -V 1T --size 256G --name mythin vg00/tpool0
 
 Create a 1TiB thin LV, first creating a new thin pool for it, where
 the thin pool has 100MiB of space, uses 2 stripes, has a 64KiB stripe

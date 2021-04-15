@@ -45,9 +45,11 @@ MD devices are handled using the \fBmdadm\fP(8) command.
 Comma separated list of device-mapper specific options.
 Accepted \fBdmsetup\fP(8) options are:
 .RS
-.IP \fIretry\fP
+.TP
+.B retry
 Retry removal several times in case of failure.
-.IP \fIforce\fP
+.TP
+.B force
 Force device removal.
 .RE
 .
@@ -66,19 +68,32 @@ Display the help text.
 .BR -l | --lvmoptions " " \fIlvm_options
 Comma-separated list of LVM specific options:
 .RS
-.IP \fIretry\fP
+.TP
+.B retry
 Retry removal several times in case of failure.
-.IP \fIwholevg\fP
+.TP
+.B wholevg
 Deactivate the whole LVM Volume Group when processing a Logical Volume.
 Deactivating the Volume Group as a whole is quicker than deactivating
 each Logical Volume separately.
 .RE
 .
 .TP
+.BR -r | --mdraidoptions " " \fImdraid_options
+Comma-separated list of MD RAID specific options:
+.RS
+.TP
+.B wait
+Wait MD device's resync, recovery or reshape action to complete
+before deactivation.
+.RE
+.
+.TP
 .BR -m | --mpathoptions " " \fImpath_options
 Comma-separated list of device-mapper multipath specific options:
 .RS
-.IP \fIdisablequeueing\fP
+.TP
+.B disablequeueing
 Disable queueing on all multipath devices before deactivation.
 This avoids a situation where blkdeactivate may end up waiting if
 all the paths are unavailable for any underlying device-mapper multipath
@@ -86,19 +101,11 @@ device.
 .RE
 .
 .TP
-.BR -r | --mdraidoptions " " \fImdraid_options
-Comma-separated list of MD RAID specific options:
-.RS
-.IP \fIwait\fP
-Wait MD device's resync, recovery or reshape action to complete
-before deactivation.
-.RE
-.
-.TP
 .BR -o | --vdooptions " " \fIvdo_options
 Comma-separated list of VDO specific options:
 .RS
-.IP \fIconfigfile=file\fP
+.TP
+.BR configfile = \fIfile
 Use specified VDO configuration file.
 .RE
 .
@@ -118,21 +125,18 @@ devices.
 .br
 #
 .B blkdeactivate
-.br
 .P
 Deactivate all supported block devices found in the system, unmounting any
 mounted devices first, if possible.
 .br
 #
 .B blkdeactivate -u
-.br
 .P
 Deactivate the device /dev/vg/lvol0 together with all its holders, unmounting
 any mounted devices first, if possible.
 .br
 #
 .B blkdeactivate -u /dev/vg/lvol0
-.br
 .P
 Deactivate all supported block devices found in the system. If the deactivation
 of a device-mapper device fails, retry it. Deactivate the whole
@@ -140,7 +144,6 @@ Volume Group at once when processing an LVM Logical Volume.
 .br
 #
 .B blkdeactivate -u -d retry -l wholevg
-.br
 .P
 Deactivate all supported block devices found in the system. If the deactivation
 of a device-mapper device fails, retry it and force removal.

@@ -1,11 +1,13 @@
+.
 .SH SEE ALSO
+.
 .nh
 .ad l
 .BR lvm (8),
 .BR lvm.conf (5),
 .BR lvmconfig (8),
 .BR lvmdevices (8),
-
+.P
 .BR pvchange (8),
 .BR pvck (8),
 .BR pvcreate (8),
@@ -15,7 +17,7 @@
 .BR pvresize (8),
 .BR pvs (8),
 .BR pvscan (8),
-
+.P
 .BR vgcfgbackup (8),
 .BR vgcfgrestore (8),
 .BR vgchange (8),
@@ -36,7 +38,7 @@
 .BR vgs (8),
 .BR vgscan (8),
 .BR vgsplit (8),
-
+.P
 .BR lvcreate (8),
 .BR lvchange (8),
 .BR lvconvert (8),
@@ -48,20 +50,20 @@
 .BR lvresize (8),
 .BR lvs (8),
 .BR lvscan (8),
-
+.P
 .BR lvm-fullreport (8),
 .BR lvm-lvpoll (8),
 .BR lvm2-activation-generator (8),
 .BR blkdeactivate (8),
 .BR lvmdump (8),
-
+.P
 .BR dmeventd (8),
 .BR lvmpolld (8),
 .BR lvmlockd (8),
 .BR lvmlockctl (8),
 .BR cmirrord (8),
 .BR lvmdbusd (8),
-
+.P
 .BR lvmsystemid (7),
 .BR lvmreport (7),
 .BR lvmraid (7),
