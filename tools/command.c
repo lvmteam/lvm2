@@ -2445,6 +2445,7 @@ static const char *_man_long_opt_name(const char *cmdname, int opt_enum)
 {
 	static char long_opt_name[LONG_OPT_NAME_LEN];
 	const char *long_opt;
+	int i;
 
 	memset(&long_opt_name, 0, sizeof(long_opt_name));
 
@@ -2479,6 +2480,25 @@ static const char *_man_long_opt_name(const char *cmdname, int opt_enum)
 	default:
 		long_opt = opt_names[opt_enum].long_opt;
 		break;
+	}
+
+	if (strchr(long_opt, '[')) {
+		for (i = 0; i < sizeof(long_opt_name); ++long_opt, ++i) {
+			if (i < (sizeof(long_opt_name) - 8))
+				switch(*long_opt) {
+				case '[':
+					strcpy(long_opt_name + i, "\\fP[\\fB");
+					i += 6;
+					continue;
+				case ']':
+					strcpy(long_opt_name + i, "\\fP]\\fB");
+					i += 6;
+					continue;
+				}
+			long_opt_name[i] = *long_opt;
+		}
+		long_opt_name[i] = 0;
+		return long_opt_name;
 	}
 
 	return long_opt;
