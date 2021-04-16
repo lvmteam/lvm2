@@ -1,5 +1,6 @@
+.
 .SH EXAMPLES
-
+.
 If the partition table is corrupted or lost on /dev/sda, and you suspect
 there was an LVM partition at approximately 100 MiB, then this
 area of the disk can be scanned using the \fB--labelsector\fP

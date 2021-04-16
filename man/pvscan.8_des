@@ -3,38 +3,38 @@ like
 .BR pvs (8)
 or
 .BR pvdisplay (8).
-
+.P
 When the --cache and -aay options are used, pvscan records which PVs are
 available on the system, and activates LVs in completed VGs.  A VG is
 complete when pvscan sees that the final PV in the VG has appeared.  This
 is used by event-based system startup (systemd, udev) to activate LVs.
-
+.P
 The four main variations of this are:
-
+.P
 .B pvscan --cache
-.IR device
-
+.I device
+.P
 If device is present, lvm adds a record that the PV on device is online.
 If device is not present, lvm removes the online record for the PV.
 In most cases, the pvscan will only read the named devices.
-
+.P
 .B pvscan --cache -aay
 .IR device ...
-
+.P
 This begins by performing the same steps as above.  Afterward, if the VG
 for the specified PV is complete, then pvscan will activate LVs in the VG
 (the same as vgchange -aay vgname would do.)
-
+.P
 .B pvscan --cache
-
+.P
 This first clears all existing PV online records, then scans all devices
 on the system, adding PV online records for any PVs that are found.
-
+.P
 .B pvscan --cache -aay
-
+.P
 This begins by performing the same steps as pvscan --cache.  Afterward, it
 activates LVs in any complete VGs.
-
+.P
 To prevent devices from being scanned by pvscan --cache, add them
 to
 .BR lvm.conf (5)
@@ -42,19 +42,18 @@ to
 For more information, see:
 .br
 .B lvmconfig --withcomments devices/global_filter
-
+.P
 Auto-activation of VGs or LVs can be enabled/disabled using:
 .br
 .BR lvm.conf (5)
 .B activation/auto_activation_volume_list
-
+.P
 For more information, see:
 .br
 .B lvmconfig --withcomments activation/auto_activation_volume_list
-
+.P
 To disable auto-activation, explicitly set this list to an empty list,
 i.e. auto_activation_volume_list = [ ].
-
+.P
 When this setting is undefined (e.g. commented), then all LVs are
 auto-activated.
-

@@ -1,7 +1,7 @@
 pvck checks and repairs LVM metadata on PVs.
-
+.P
 .SS Dump options 
-
+.P
 .B headers
 .br
 Print LVM on-disk headers and structures: label_header, pv_header,
@@ -12,7 +12,7 @@ a 512 byte sector at offset 4096 bytes.  A second mda_header can
 optionally exist near the end of the device.  The metadata text exists in
 an area (about 1MiB by default) immediately following the mda_header
 sector.  The metadata text is checked but not printed (see other options).
-
+.P
 .B metadata
 .br
 Print the current LVM VG metadata text (or save to a file), using headers
@@ -20,7 +20,7 @@ to locate the latest copy of metadata.  If headers are damaged, metadata
 may not be found (see metadata_search).  Use --settings "mda_num=2" to
 look in mda2 (the second mda at the end of the device, if used).  The
 metadata text is printed to stdout or saved to a file with --file.
-
+.P
 .B metadata_all
 .br
 List all versions of VG metadata found in the metadata area, using headers
@@ -28,7 +28,7 @@ to locate metadata.  Full copies of all metadata are saved to a file with
 the --file option.  If headers are damaged, metadata may not be found (see
 metadata_search).  Use --settings "mda_num=2" as above.  Use -v to include
 descriptions and dates when listing metadata versions.
-
+.P
 .B metadata_search
 .br
 List all versions of VG metadata found in the metadata area, searching
@@ -38,20 +38,20 @@ save one specific version of metadata, use --settings
 "metadata_offset=<offset>", where the offset is taken from the list of
 versions found.  Use -v to include descriptions and dates when listing
 metadata versions.
-
+.P
 .B metadata_area
 .br
 Save the entire text metadata area to a file without processing.
-
+.P
 .SS Repair options
-
+.P
 .B --repair
 .br
 Repair headers and metadata on a PV.  This uses a metadata input file that
 was extracted by --dump, or a backup file (from \fI#DEFAULT_BACKUP_DIR#\fP).  When
 possible, use metadata saved by --dump from another PV in the same VG (or
 from a second metadata area on the PV).
-
+.P
 There are cases where the PV UUID needs to be specified for the PV being
 repaired.  It is specified using --settings "pv_uuid=<UUID>".  In
 particular, if the device name for the PV being repaired does not match
@@ -60,52 +60,52 @@ the correct PV UUID.  When headers are damaged on more than one PV in a
 VG, it is important for the user to determine the correct PV UUID and
 specify it in --settings.  Otherwise, the wrong PV UUID could be used if
 device names have been swapped since the metadata was last written.
-
+.P
 If a PV has no metadata areas and the pv_header is damaged, then the
 repair will not know to create no metadata areas during repair.  It will
 by default repair metadata in mda1.  To repair with no metadata areas, use
 --settings "mda_offset=0 mda_size=0".
-
+.P
 There are cases where repair should be run on all PVs in the VG (using the
 same metadata file):  if all PVs in the VG are damaged, if using an old
 metadata version, or if a backup file is used instead of raw metadata
 (taken from pvck dump.)
-
+.P
 Using --repair is equivalent to running --repairtype pv_header followed by
 --repairtype metadata.
-
+.P
 .B --repairtype pv_header
 .br
 Repairs the header sector, containing the pv_header and label_header.
-
+.P
 .B --repairtype metadata
 .br
 Repairs the mda_header and metadata text.  It requires the headers to be
 correct (having been undamaged or already repaired).
-
+.P
 .B --repairtype label_header
 .br
 Repairs label_header fields, leaving the pv_header (in the same sector)
 unchanged.  (repairtype pv_header should usually be used instead.)
-
+.P
 .SS Settings
-
+.P
 The --settings option controls or overrides certain dump or repair
 behaviors.  All offset and size values in settings are in bytes (units are
 not recognized.)  These settings are subject to change.
-
+.P
 .B mda_num=1|2
 .br
 Select which metadata area should be used.  By default the first metadata
 area (1) is used.  mda1 is always located at offset 4096.  mda2, at the
 end of the device, often does not exist (it's not created by default.) If
 mda1 is erased, mda2, if it exists, will often still have metadata.
-
+.P
 \fBmetadata_offset=\fP\fIbytes\fP
 .br
 Select metadata text at this offset.  Use with metadata_search to
 print/save one instance of metadata text.
-
+.P
 \fBmda_offset=\fP\fIbytes\fP \fBmda_size=\fP\fIbytes\fP
 .br
 Refers to a metadata area (mda) location and size.  An mda includes an
@@ -113,18 +113,18 @@ mda_header and circular metadata text buffer.  Setting this forces
 metadata_search look for metadata in the given area instead of the
 standard locations.  When set to zero with repair, it indicates no
 metadata areas should exist.
-
+.P
 \fBmda2_offset=\fP\fIbytes\fP \fBmda2_size=\fP\fIbytes\fP
 .br
 When repairing a pv_header, this forces a specific offset and size for
 mda2 that should be recorded in the pv_header.
-
+.P
 \fBpv_uuid=\fP\fIuuid\fP
 .br
 Specify the PV UUID of the device being repaired.  When not specified,
 repair will attempt to determine the correct PV UUID by matching a device
 name in the metadata.
-
+.P
 \fBdevice_size=\fP\fIbytes\fP
 .br
 \fBdata_offset=\fP\fIbytes\fP
@@ -134,4 +134,3 @@ be specified directly, in which case these values are not taken from a
 metadata file (where they usually come from), and the metadata file can be
 omitted.  data_offset is the starting location of the first physical
 extent (data), which follows the first metadata area.
-

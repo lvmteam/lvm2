@@ -1,5 +1,6 @@
+.
 .SH EXAMPLES
-
+.
 Add two PVs to a VG.
 .br
 .B vgextend vg00 /dev/sda4 /dev/sdn1

@@ -1,5 +1,6 @@
+.
 .SH EXAMPLES
-
+.
 Reduce the size of an LV by 3 logical extents:
 .br
 .B lvreduce -l -3 vg00/lvol1

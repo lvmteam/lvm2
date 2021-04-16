@@ -328,7 +328,7 @@ UUID of the intended VG: --select vg_uuid=<uuid>
 .P
 An exception is if all but one of the VGs with the shared name is foreign
 (see
-.BR lvmsystemid (7).)
+.BR lvmsystemid (7)).
 In this case, the one VG that is not foreign is assumed to be the intended
 VG and is processed.
 .P

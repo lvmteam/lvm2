@@ -1,5 +1,6 @@
+.
 .SH NOTES
-
+.
 To replace PVs, \fBvgdisplay --partial --verbose\fP will show the
 UUIDs and sizes of any PVs that are no longer present. If a PV in the VG
 is lost and you wish to substitute another of the same size, use

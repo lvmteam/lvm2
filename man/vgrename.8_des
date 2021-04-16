@@ -1,5 +1,5 @@
 vgrename renames a VG.
-
+.P
 All VGs visible to a system need to have different names, otherwise many
 LVM commands will refuse to run or give warning messages. VGs with the
 same name can occur when disks are moved between machines, or filters are

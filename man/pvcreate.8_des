@@ -2,25 +2,25 @@ pvcreate initializes a Physical Volume (PV) on a device so the device is
 recognized as belonging to LVM.  This allows the PV to be used in a Volume
 Group (VG).  An LVM disk label is written to the device, and LVM metadata
 areas are initialized.  A PV can be placed on a whole device or partition.
-
+.P
 Use \fBvgcreate\fP(8) to create a new VG on the PV, or \fBvgextend\fP(8)
 to add the PV to an existing VG.  Use \fBpvremove\fP(8) to remove the LVM
 disk label from the device.
-
+.P
 The force option will create a PV without confirmation.  Repeating the
 force option (\fB-ff\fP) will forcibly create a PV, overriding checks that
 normally prevent it, e.g. if the PV is already in a VG.
-
+.P
 .B Metadata location, size, and alignment
-
+.P
 The LVM disk label begins 512 bytes from the start of the device, and is
 512 bytes in size.
-
+.P
 The LVM metadata area begins at an offset (from the start of the device)
 equal to the page size of the machine creating the PV (often 4 KiB.) The
 metadata area contains a 512 byte header and a multi-KiB circular buffer
 that holds text copies of the VG metadata.
-
+.P
 With default settings, the first physical extent (PE), which contains LV
 data, is 1 MiB from the start of the device.  This location is controlled
 by \fBdefault_data_alignment\fP in lvm.conf, which is set to 1 (MiB) by
@@ -29,7 +29,7 @@ can be checked with:
 .br
 .B pvs -o pe_start
 .I PV
-
+.P
 The size of the LVM metadata area is the space between the the start of
 the metadata area and the first PE.  When metadata begins at 4 KiB and the
 first PE is at 1024 KiB, the metadata area size is 1020 KiB.  This can be
@@ -37,7 +37,7 @@ checked with:
 .br
 .B pvs -o mda_size
 .I PV
-
+.P
 The mda_size cannot be increased after pvcreate, so if larger metadata is
 needed, it must be set during pvcreate.  Two copies of the VG metadata
 must always fit within the metadata area, so the maximum VG metadata size
@@ -45,7 +45,7 @@ is around half the mda_size.  This can be checked with:
 .br
 .B vgs -o mda_free
 .I VG
-
+.P
 A larger metadata area can be set with --metadatasize.  The resulting
 mda_size may be larger than specified due to default_data_alignment
 placing pe_start on a MiB boundary, and the fact that the metadata area
@@ -53,12 +53,12 @@ extends to the first PE.  With metadata starting at 4 KiB and
 default_data_alignment 1 (MiB), setting --metadatasize 2048k results in
 pe_start of 3 MiB and mda_size of 3068 KiB.  Alternatively, --metadatasize
 2044k results in pe_start at 2 MiB and mda_size of 2044 KiB.
-
+.P
 The alignment of pe_start described above may be automatically overridden
 based on md device properties or device i/o properties reported in sysfs.
 These automatic adjustments can be enabled/disabled using lvm.conf
 settings md_chunk_alignment and data_alignment_offset_detection.
-
+.P
 To use a different pe_start alignment, use the --dataalignment option.
 The --metadatasize option would also typically be used in this case
 because the metadata area size also determines the location of pe_start.
@@ -71,7 +71,7 @@ The pe_start of 2176 KiB is the nearest even multiple of 128 KiB that
 provides at least 2048 KiB of metadata space.
 Always check the resulting alignment and metadata size when using
 these options.
-
+.P
 To shift an aligned pe_start value, use the --dataalignmentoffset option.
 The pe_start alignment is calculated as described above, and then the
 value specified with --dataalignmentoffset is added to produce the final

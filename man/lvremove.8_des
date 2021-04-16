@@ -1,18 +1,18 @@
 lvremove removes one or more LVs. For standard LVs, this returns the
 logical extents that were used by the LV to the VG for use by other LVs.
-
+.P
 Confirmation will be requested before deactivating any active LV prior to
 removal.  LVs cannot be deactivated or removed while they are open (e.g.
 if they contain a mounted filesystem). Removing an origin LV will also
 remove all dependent snapshots.
-
+.P
 When a single force option is used, LVs are removed without confirmation,
 and the command will try to deactivate unused LVs.
-
+.P
 To remove damaged LVs, two force options may be required (\fB-ff\fP).
-
+.P
 \fBHistorical LVs\fP
-
+.P
 If the configuration setting \fBmetadata/record_lvs_history\fP is enabled
 and the LV being removed forms part of the history of at least one LV that
 is still present, then a simplified representation of the LV will be

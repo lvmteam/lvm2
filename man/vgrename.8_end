@@ -1,9 +1,10 @@
+.
 .SH EXAMPLES
-
+.
 Rename VG "vg02" to "myvg":
 .br
 .B vgrename "vg02" "myvg"
-
+.P
 Rename the VG with the specified UUID to "myvg".
 .br
 .B vgrename Zvlifi-Ep3t-e0Ng-U42h-o0ye-KHu1-nl7Ns4 myvg

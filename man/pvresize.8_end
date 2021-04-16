@@ -1,11 +1,15 @@
+.
 .SH NOTES
+.
 pvresize will refuse to shrink a PV if it has allocated extents beyond the
 new end.
+.
 .SH EXAMPLES
+.
 Expand a PV after enlarging the partition.
 .br
 .B pvresize /dev/sda1
-
+.P
 Shrink a PV prior to shrinking the partition (ensure that the PV size is
 appropriate for the intended new partition size).
 .br
