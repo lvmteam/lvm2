@@ -3538,7 +3538,7 @@ static int _print_man(char *name, char *des_file, int secondary)
 		if (!prev_cmd || strcmp(prev_cmd->name, cmd->name)) {
 			printf(".SH NAME\n");
 			if (cname && cname->desc)
-				printf("%s - %s\n", lvmname, cname->desc);
+				printf("%s \\(em %s\n", lvmname, cname->desc);
 			else
 				printf("%s\n", lvmname);
 
@@ -3600,7 +3600,7 @@ static int _print_man(char *name, char *des_file, int secondary)
 			_print_man_all_positions_desc(cname);
 		} else {
 			if (cname->variants > 2)
-				printf("-\n");
+				printf("\\(em\n");
 		}
 
 		printf("\n");
@@ -3647,8 +3647,8 @@ static void _print_man_secondary(char *name)
 
 		_print_man_usage(lvmname, cmd);
 
-		printf("-\n");
-		printf("\n");
+		printf("\\(em\n");
+		printf(".P\n");
 	}
 }
 
