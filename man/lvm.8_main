@@ -24,11 +24,11 @@ kernel.
 The lvm command, and other commands listed below, are the command-line
 tools for LVM.  A separate manual page describes each command in detail.
 .P
-If \fBlvm\fP is invoked with no arguments it presents a readline prompt
-(assuming it was compiled with readline support).
+If \fBlvm\fP is invoked with no arguments it presents a #DEFAULT_LIBLINE# prompt
+(assuming it was compiled with #DEFAULT_LIBLINE# support).
 LVM commands may be entered interactively at this prompt with
-readline facilities including history and command name and option
-completion.  Refer to \fBreadline\fP(3) for details.
+#DEFAULT_LIBLINE# facilities including history and command name and option
+completion.  Refer to \fB#DEFAULT_LIBLINE#\fP(3) for details.
 .P
 If \fBlvm\fP is invoked with argv[0] set to the name of a specific
 LVM command (for example by using a hard or soft link) it acts as
@@ -409,7 +409,7 @@ Message text may also change.
 .
 .TP
 .B HOME
-Directory containing \fI.lvm_history\fP if the internal readline
+Directory containing \fI.lvm_history\fP if the internal #DEFAULT_LIBLINE#
 shell is invoked.
 .TP
 .B LVM_OUT_FD
@@ -561,4 +561,4 @@ Prepends source file name and code line number with libdm debugging.
 .P
 .BR dmsetup (8),
 .BR dmstats (8),
-.BR readline (3)
+.BR #DEFAULT_LIBLINE# (3)

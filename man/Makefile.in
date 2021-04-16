@@ -132,6 +132,15 @@ SEE_ALSO=$(srcdir)/see_also.end
 	    fi \
 	) > $@
 
+#
+# When EDITLINE_LIBS is defined, we are compiling with libedit
+#
+ifneq ("$(EDITLINE_LIBS)", "")
+DEFAULT_LIBLINE=editline
+else
+DEFAULT_LIBLINE=readline
+endif
+
 define SUBSTVARS
 $(SED) -e "s+#VERSION#+$(LVM_VERSION)+" \
 	-e "s+#DEFAULT_SYS_DIR#+$(DEFAULT_SYS_DIR)+" \
@@ -144,6 +153,7 @@ $(SED) -e "s+#VERSION#+$(LVM_VERSION)+" \
 	-e "s+#DEFAULT_RUN_DIR#+$(DEFAULT_RUN_DIR)+" \
 	-e "s+#DEFAULT_PID_DIR#+$(DEFAULT_PID_DIR)+" \
 	-e "s+#SYSTEMD_GENERATOR_DIR#+$(SYSTEMD_GENERATOR_DIR)+" \
+	-e "s+#DEFAULT_LIBLINE#+$(DEFAULT_LIBLINE)+" \
 	-e "s+#DEFAULT_MANGLING#+$(DEFAULT_MANGLING)+" $< > $@
 endef
 
