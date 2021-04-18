@@ -122,13 +122,13 @@ SEE_ALSO=$(srcdir)/see_also.end
 %.8_gen: $(srcdir)/%.8_des $(srcdir)/%.8_end $(MANGENERATOR) $(TESTMAN)
 	$(Q)set -e ; ( \
 	    if [ ! -s $(TESTMAN) ] ; then \
-		cat $(srcdir)/$(@:%.8_gen=%.8_pregen) ; \
+		cat $(srcdir)/$(@:%.8_gen=%.8_pregen) \
+		    $(srcdir)/$(basename $@).8_end $(SEE_ALSO) ; \
 	    else \
 		MANCMD=$(basename $@) && \
 		$(MANGENERATOR) --primary $$MANCMD $< && \
 		$(MANGENERATOR) --secondary $$MANCMD && \
-		cat $(srcdir)/$(basename $@).8_end && \
-		cat $(SEE_ALSO) ; \
+		cat $(srcdir)/$(basename $@).8_end $(SEE_ALSO) ; \
 	    fi \
 	) > $@
 
@@ -262,11 +262,13 @@ install: install_lvm2 install_device-mapper install_cluster
 install_all_man: install install_systemd_generators
 
 # Copy generated man pages back to source tree as fallback for machines where generator doesn't work
-pregenerated_man: all
+pregenerated_man: $(MANGENERATOR) $(TESTMAN)
 	@echo "    [GENERATE] $^"
-	$(Q) set -e ; for i in $(srcdir)/*.8_des; do \
+	$(Q) set -e ; test -s $(TESTMAN) && for i in $(srcdir)/*.8_des; do \
 		CMD=`basename $$i .8_des`; \
-		cat $${CMD}.8_gen > $(srcdir)/$$CMD.8_pregen ; \
+		( $(MANGENERATOR) --primary $$CMD $$i && \
+		$(MANGENERATOR) --secondary $$CMD )  \
+		> $(srcdir)/$$CMD.8_pregen ; \
 	done
 
 generate: pregenerated_man
