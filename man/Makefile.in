@@ -32,8 +32,8 @@ CMIRRORDMAN = cmirrord.8
 LVMDBUSDMAN = lvmdbusd.8
 
 MAN5=lvm.conf.5
-MAN7=lvmsystemid.7 lvmreport.7 \
-     lvmcache.7 lvmraid.7 lvmthin.7 lvmvdo.7
+MAN7=lvmsystemid.7 lvmreport.7 lvmraid.7
+
 MAN8=lvm.8 lvmdump.8 lvm-fullreport.8 lvm-lvpoll.8 \
      lvcreate.8 lvchange.8 lvmconfig.8 lvconvert.8 lvdisplay.8 \
      lvextend.8 lvreduce.8 lvremove.8 lvrename.8 lvresize.8 lvs.8 \
@@ -49,6 +49,7 @@ MAN8CLUSTER=
 MAN8SYSTEMD_GENERATORS=lvm2-activation-generator.8
 
 ifeq (,$(findstring $(MAKECMDGOALS), distclean all_man install_all_man))
+  MAN7 += lvmcache.7 lvmthin.7 lvmvdo.7
   MAN8+=$(FSADMMAN) $(LVMPOLLDMAN) $(LVMLOCKDMAN) $(LVMDBUSDMAN)
   MAN8DM+=$(BLKDEACTIVATEMAN) $(DMEVENTDMAN) $(DMFILEMAPDMAN)
   MAN8CLUSTER+=$(CMIRRORDMAN)
@@ -84,6 +85,23 @@ else
   ifeq ("@BUILD_CMIRRORD@", "yes")
     MAN8CLUSTER+=$(CMIRRORDMAN)
   endif
+
+  ifeq ("@CACHE@", "internal")
+    MAN7 += lvmcache.7
+  else
+    ifeq ("@WRITECACHE@", "internal")
+      MAN7 += lvmcache.7
+    endif
+  endif
+
+  ifeq ("@THIN@", "internal")
+    MAN7 += lvmthin.7
+  endif
+
+  ifeq ("@VDO@", "internal")
+    MAN7 += lvmvdo.7
+  endif
+
 endif
 
 MAN5DIR=$(mandir)/man5
