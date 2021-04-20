@@ -1709,6 +1709,15 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 		}
 
 		/*
+		 * If the cmd def has an implied type, specified in AUTOTYPE,
+		 * then if the user command has --type, it must match.
+		 */
+		if (type_arg && commands[i].autotype && strcmp(type_arg, commands[i].autotype))
+			continue;
+		if (type_arg && commands[i].autotype2 && strcmp(type_arg, commands[i].autotype2))
+			continue;
+
+		/*
 		 * '--type foo' is special.  If the user has set --type foo, then
 		 * we will only look at command defs that include the same --type foo
 		 * (as required or optional).  We'll never match some command based

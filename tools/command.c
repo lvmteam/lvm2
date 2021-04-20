@@ -645,6 +645,13 @@ static int _is_desc_line(char *str)
 	return 0;
 }
 
+static int _is_autotype_line(char *str)
+{
+	if (!strncmp(str, "AUTOTYPE:", 6))
+		return 1;
+	return 0;
+}
+
 static int _is_flags_line(char *str)
 {
 	if (!strncmp(str, "FLAGS:", 6))
@@ -1209,6 +1216,19 @@ static void _add_flags(struct command *cmd, char *line)
 		cmd->cmd_flags |= CMD_FLAG_PREVIOUS_SYNTAX;
 }
 
+static void _add_autotype(struct cmd_context *cmdtool, struct command *cmd, char *line)
+{
+	int line_argc;
+	char *line_argv[MAX_LINE_ARGC];
+
+	_split_line(line, &line_argc, line_argv, ' ');
+
+	if (cmd->autotype)
+		cmd->autotype2 = dm_pool_strdup(cmdtool->libmem, line_argv[1]);
+	else
+		cmd->autotype = dm_pool_strdup(cmdtool->libmem, line_argv[1]);
+}
+
 #define MAX_RULE_OPTS 64
 
 static void _add_rule(struct cmd_context *cmdtool, struct command *cmd, char *line)
@@ -1532,6 +1552,11 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 				}
 			} else
 				cmd->desc = desc;
+			continue;
+		}
+
+		if (_is_autotype_line(line_argv[0]) && !skip && cmd) {
+			_add_autotype(cmdtool, cmd, line_orig);
 			continue;
 		}
 
@@ -1951,6 +1976,14 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 		goto op_count;
 
 	if (cmd->oo_count) {
+		if (cmd->autotype) {
+			printf("\n\t");
+			if (!cmd->autotype2)
+				printf("[ --type %s (implied) ]", cmd->autotype);
+			else
+				printf("[ --type %s|%s (implied) ]", cmd->autotype, cmd->autotype2);
+		}
+
 		if (include_extents) {
 			printf("\n\t[ -l|--extents ");
 			_print_val_usage(cmd, extents_ARG, opt_names[extents_ARG].val_enum);
@@ -2726,6 +2759,15 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 	if (cmd->oo_count) {
 		printf(".RS 4\n");
 		printf(".ad l\n");
+
+		if (cmd->autotype) {
+			if (!cmd->autotype2)
+				printf("[ \\fB--type %s\\fP (implied) ]\n", cmd->autotype);
+			else
+				printf("[ \\fB--type %s\\fP|\\fB%s\\fP (implied) ]\n", cmd->autotype, cmd->autotype2);
+			printf(".br\n");
+			sep = 1;
+		}
 
 		if (include_extents) {
 			/*
