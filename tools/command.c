@@ -1979,9 +1979,9 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 		if (cmd->autotype) {
 			printf("\n\t");
 			if (!cmd->autotype2)
-				printf("[ --type %s (implied) ]", cmd->autotype);
+				printf("[ --type %s ] (implied)", cmd->autotype);
 			else
-				printf("[ --type %s|%s (implied) ]", cmd->autotype, cmd->autotype2);
+				printf("[ --type %s|%s ] (implied)", cmd->autotype, cmd->autotype2);
 		}
 
 		if (include_extents) {
@@ -2762,9 +2762,9 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 
 		if (cmd->autotype) {
 			if (!cmd->autotype2)
-				printf("[ \\fB--type %s\\fP (implied) ]\n", cmd->autotype);
+				printf("[ \\fB--type %s\\fP ] (implied)\n", cmd->autotype);
 			else
-				printf("[ \\fB--type %s\\fP|\\fB%s\\fP (implied) ]\n", cmd->autotype, cmd->autotype2);
+				printf("[ \\fB--type %s\\fP|\\fB%s\\fP ] (implied)\n", cmd->autotype, cmd->autotype2);
 			printf(".br\n");
 			sep = 1;
 		}
