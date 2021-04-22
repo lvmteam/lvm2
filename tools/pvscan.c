@@ -1232,7 +1232,8 @@ static int _online_devs(struct cmd_context *cmd, int do_all, struct dm_list *pvs
 
 		if (!vg) {
 			log_print("pvscan[%d] PV %s has no VG metadata.", getpid(), dev_name(dev));
-			fmt->ops->destroy_instance(fid);
+			if (fid)
+				fmt->ops->destroy_instance(fid);
 			goto online;
 		}
 
