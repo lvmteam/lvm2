@@ -1657,7 +1657,7 @@ bool dev_write_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 		_scan_dev_close(dev);
 
 		dev->flags |= DEV_BCACHE_WRITE;
-		label_scan_open(dev);
+		(void) label_scan_open(dev); /* checked later */
 	}
 
 	if (dev->bcache_di < 0) {

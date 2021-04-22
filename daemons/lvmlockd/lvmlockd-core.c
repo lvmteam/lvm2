@@ -4968,7 +4968,7 @@ static void *client_thread_main(void *arg_in)
 	}
 out:
 	if (adopt_opt && lock_acquire_written)
-		unlink(adopt_file);
+		(void) unlink(adopt_file);
 	return NULL;
 }
 
@@ -5740,13 +5740,13 @@ static void adopt_locks(void)
 	if (count_start_fail || count_adopt_fail)
 		goto fail;
 
-	unlink(adopt_file);
+	(void) unlink(adopt_file);
 	write_adopt_file();
 	log_debug("adopt_locks done");
 	return;
 
 fail:
-	unlink(adopt_file);
+	(void) unlink(adopt_file);
 	log_error("adopt_locks failed, reset host");
 }
 

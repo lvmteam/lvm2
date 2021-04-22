@@ -679,7 +679,7 @@ int device_ids_write(struct cmd_context *cmd)
 		goto out;
 	}
 
-	unlink(tmppath); /* in case a previous file was left */
+	(void) unlink(tmppath); /* in case a previous file was left */
 
 	if (!(fp = fopen(tmppath, "w+"))) {
 		log_warn("Cannot open tmp devices_file to write.");
