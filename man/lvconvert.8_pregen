@@ -1650,22 +1650,21 @@ LV1 types: mirror
 .P
 \(em
 .P
-Convert LV to a thin LV, using the original LV as an external origin 
-.br
-(infers --type thin).
+Convert LV to a thin LV, using the original LV as an external origin.
 .br
 .P
 \fBlvconvert\fP \fB-T\fP|\fB--thin\fP \fB--thinpool\fP \fILV\fP \fILV1\fP
 .br
 .RS 4
 .ad l
+[ \fB--type thin\fP ] (implied)
+.br
+.br
 [ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
 .br
 [ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
-.br
-[    \fB--type\fP \fBthin\fP ]
 .br
 [    \fB--originname\fP \fILV\fP\fI_new\fP ]
 .br
@@ -1687,20 +1686,21 @@ LV1 types: linear striped thin cache raid error zero
 .P
 \(em
 .P
-Attach a cache pool to an LV (infers --type cache).
+Attach a cache pool to an LV.
 .br
 .P
 \fBlvconvert\fP \fB-H\fP|\fB--cache\fP \fB--cachepool\fP \fILV\fP \fILV1\fP
 .br
 .RS 4
 .ad l
+[ \fB--type cache\fP ] (implied)
+.br
+.br
 [ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
 .br
 [ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
-.br
-[    \fB--type\fP \fBcache\fP ]
 .br
 [    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
 .br
@@ -1766,6 +1766,9 @@ Convert LV to type vdopool.
 .br
 .RS 4
 .ad l
+[ \fB--type vdo-pool\fP ] (implied)
+.br
+.br
 [ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .br
 [ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
@@ -1773,8 +1776,6 @@ Convert LV to type vdopool.
 [ \fB-n\fP|\fB--name\fP \fILV\fP\fI_new\fP ]
 .br
 [ \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] ]
-.br
-[    \fB--type\fP \fBvdo-pool\fP ]
 .br
 [    \fB--metadataprofile\fP \fIString\fP ]
 .br
@@ -1875,11 +1876,12 @@ origin LV (first arg) to reverse a splitsnapshot command.
 .br
 .RS 4
 .ad l
+[ \fB--type snapshot\fP ] (implied)
+.br
+.br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
 .br
 [ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
-.br
-[    \fB--type\fP \fBsnapshot\fP ]
 .br
 [ COMMON_OPTIONS ]
 .ad b

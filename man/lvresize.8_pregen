@@ -409,7 +409,7 @@ output in JSON format. See \fBlvmreport\fP(7) for more information.
 .HP
 \fB-r\fP|\fB--resizefs\fP
 .br
-Resize underlying filesystem together with the LV using fsadm(8).
+Resize underlying filesystem together with the LV using \fBfsadm\fP(8).
 .
 .HP
 \fB-L\fP|\fB--size\fP [\fB+\fP|\fB-\fP]\fISize\fP[m|UNIT]

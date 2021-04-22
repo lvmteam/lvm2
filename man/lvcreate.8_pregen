@@ -225,9 +225,9 @@ Create a linear LV.
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB--type linear\fP ] (implied)
 .br
-[    \fB--type\fP \fBlinear\fP ]
+[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
 .br
 [ COMMON_OPTIONS ]
 .ad b
@@ -238,18 +238,18 @@ Create a linear LV.
 .P
 \(em
 .P
-Create a striped LV (infers --type striped).
+Create a striped LV.
 .br
 .P
 \fBlvcreate\fP \fB-i\fP|\fB--stripes\fP \fINumber\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
 .br
 .RS 4
 .ad l
+[ \fB--type striped\fP ] (implied)
+.br
 [ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
 .br
 [ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
-.br
-[    \fB--type\fP \fBstriped\fP ]
 .br
 [ COMMON_OPTIONS ]
 .ad b
@@ -260,16 +260,16 @@ Create a striped LV (infers --type striped).
 .P
 \(em
 .P
-Create a raid1 or mirror LV (infers --type raid1|mirror).
+Create a raid1 or mirror LV.
 .br
 .P
 \fBlvcreate\fP \fB-m\fP|\fB--mirrors\fP \fINumber\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB--type raid1\fP|\fBmirror\fP ] (implied)
 .br
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
 .br
 [ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
 .br
@@ -336,6 +336,8 @@ Create a raid10 LV.
 .br
 .RS 4
 .ad l
+[ \fB--type raid10\fP ] (implied)
+.br
 [ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
 .br
 [ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
@@ -362,6 +364,8 @@ Create a COW snapshot LV of an origin LV.
 .br
 .RS 4
 .ad l
+[ \fB--type snapshot\fP ] (implied)
+.br
 [ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
 .br
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
@@ -369,8 +373,6 @@ Create a COW snapshot LV of an origin LV.
 [ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
 .br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
-.br
-[    \fB--type\fP \fBsnapshot\fP ]
 .br
 [ COMMON_OPTIONS ]
 .ad b
@@ -455,16 +457,17 @@ Create a cache pool.
 .P
 \(em
 .P
-Create a thin LV in a thin pool (infers --type thin).
+Create a thin LV in a thin pool.
 .br
 .P
 \fBlvcreate\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fB--thinpool\fP \fILV\fP \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-T\fP|\fB--thin\fP ]
+[ \fB--type thin\fP ] (implied)
 .br
-[    \fB--type\fP \fBthin\fP ]
+.br
+[ \fB-T\fP|\fB--thin\fP ]
 .br
 [ COMMON_OPTIONS ]
 .ad b
@@ -472,16 +475,15 @@ Create a thin LV in a thin pool (infers --type thin).
 .P
 \(em
 .P
-Create a thin LV that is a snapshot of an existing thin LV 
-.br
-(infers --type thin).
+Create a thin LV that is a snapshot of an existing thin LV.
 .br
 .P
 \fBlvcreate\fP \fB-s\fP|\fB--snapshot\fP \fILV1\fP
 .br
 .RS 4
 .ad l
-[    \fB--type\fP \fBthin\fP ]
+[ \fB--type thin\fP ] (implied)
+.br
 .br
 [ COMMON_OPTIONS ]
 .ad b
@@ -1685,13 +1687,15 @@ Create a sparse COW snapshot LV of a virtual origin LV
 .P
 \(em
 .P
-Create a thin pool (infers --type thin-pool).
+Create a thin pool.
 .br
 .P
 \fBlvcreate\fP \fB-T\fP|\fB--thin\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
 .br
 .RS 4
 .ad l
+[ \fB--type thin-pool\fP ] (implied)
+.br
 [ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
 .br
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
@@ -1699,8 +1703,6 @@ Create a thin pool (infers --type thin-pool).
 [ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
 .br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
-.br
-[    \fB--type\fP \fBthin-pool\fP ]
 .br
 [    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .br
@@ -1719,15 +1721,15 @@ Create a thin pool (infers --type thin-pool).
 .P
 \(em
 .P
-Create a thin pool named by the --thinpool arg 
-.br
-(infers --type thin-pool).
+Create a thin pool named in --thinpool.
 .br
 .P
 \fBlvcreate\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fB--thinpool\fP \fILV\fP\fI_new\fP \fIVG\fP
 .br
 .RS 4
 .ad l
+[ \fB--type thin-pool\fP ] (implied)
+.br
 [ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
 .br
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
@@ -1737,8 +1739,6 @@ Create a thin pool named by the --thinpool arg
 [ \fB-T\fP|\fB--thin\fP ]
 .br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
-.br
-[    \fB--type\fP \fBthin-pool\fP ]
 .br
 [    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .br
@@ -1841,18 +1841,17 @@ LV1 types: thinpool
 .P
 Create a thin LV in the thin pool named in the first arg 
 .br
-(variant, infers --type thin, also see --thinpool for 
-.br
-naming pool.)
+(also see --thinpool for naming pool.)
 .br
 .P
 \fBlvcreate\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fILV1\fP
 .br
 .RS 4
 .ad l
-[ \fB-T\fP|\fB--thin\fP ]
+[ \fB--type thin\fP ] (implied)
 .br
-[    \fB--type\fP \fBthin\fP ]
+.br
+[ \fB-T\fP|\fB--thin\fP ]
 .br
 [ COMMON_OPTIONS ]
 .ad b
@@ -1883,16 +1882,15 @@ LV1 types: thin
 .P
 \(em
 .P
-Create a thin LV that is a snapshot of an existing thin LV 
-.br
-(infers --type thin).
+Create a thin LV that is a snapshot of an existing thin LV.
 .br
 .P
 \fBlvcreate\fP \fB-T\fP|\fB--thin\fP \fILV1\fP
 .br
 .RS 4
 .ad l
-[    \fB--type\fP \fBthin\fP ]
+[ \fB--type thin\fP ] (implied)
+.br
 .br
 [ COMMON_OPTIONS ]
 .ad b
@@ -1904,16 +1902,15 @@ LV1 types: thin
 .P
 \(em
 .P
-Create a thin LV that is a snapshot of an external origin LV 
-.br
-(infers --type thin).
+Create a thin LV that is a snapshot of an external origin LV.
 .br
 .P
 \fBlvcreate\fP \fB-s\fP|\fB--snapshot\fP \fB--thinpool\fP \fILV\fP \fILV\fP
 .br
 .RS 4
 .ad l
-[    \fB--type\fP \fBthin\fP ]
+[ \fB--type thin\fP ] (implied)
+.br
 .br
 [ COMMON_OPTIONS ]
 .ad b
@@ -1928,6 +1925,8 @@ Create a VDO LV with VDO pool.
 .br
 .RS 4
 .ad l
+[ \fB--type vdo\fP ] (implied)
+.br
 [ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
 .br
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
@@ -1935,8 +1934,6 @@ Create a VDO LV with VDO pool.
 [ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
 .br
 [ \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] ]
-.br
-[    \fB--type\fP \fBvdo\fP ]
 .br
 [    \fB--vdopool\fP \fILV\fP\fI_new\fP ]
 .br
@@ -1960,6 +1957,8 @@ Create a VDO LV with VDO pool.
 .br
 .RS 4
 .ad l
+[ \fB--type vdo\fP ] (implied)
+.br
 [ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
 .br
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
@@ -1967,10 +1966,6 @@ Create a VDO LV with VDO pool.
 [ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
 .br
 [ \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] ]
-.br
-[    \fB--vdo\fP ]
-.br
-[    \fB--type\fP \fBvdo\fP ]
 .br
 [    \fB--compression\fP \fBy\fP|\fBn\fP ]
 .br
@@ -2026,9 +2021,7 @@ where the new thin pool is named by the --thinpool arg.
 .P
 Create a thin LV, first creating a thin pool for it, 
 .br
-where the new thin pool is named by the --thinpool arg 
-.br
-(variant, infers --type thin).
+where the new thin pool is named by --thinpool.
 .br
 .P
 \fBlvcreate\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
@@ -2038,6 +2031,8 @@ where the new thin pool is named by the --thinpool arg
 .br
 .RS 4
 .ad l
+[ \fB--type thin\fP ] (implied)
+.br
 [ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
 .br
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
@@ -2047,8 +2042,6 @@ where the new thin pool is named by the --thinpool arg
 [ \fB-T\fP|\fB--thin\fP ]
 .br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
-.br
-[    \fB--type\fP \fBthin\fP ]
 .br
 [    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .br
@@ -2116,7 +2109,7 @@ where the new thin pool is named in the first arg,
 .br
 or the new thin pool name is generated when the first 
 .br
-arg is a VG name (variant, infers --type thin).
+arg is a VG name.
 .br
 .P
 \fBlvcreate\fP \fB-T\fP|\fB--thin\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
@@ -2126,6 +2119,8 @@ arg is a VG name (variant, infers --type thin).
 .br
 .RS 4
 .ad l
+[ \fB--type thin\fP ] (implied)
+.br
 [ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
 .br
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
@@ -2133,8 +2128,6 @@ arg is a VG name (variant, infers --type thin).
 [ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
 .br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
-.br
-[    \fB--type\fP \fBthin\fP ]
 .br
 [    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .br
@@ -2153,15 +2146,11 @@ arg is a VG name (variant, infers --type thin).
 .P
 \(em
 .P
-Create a thin LV, first creating a thin pool for it 
-.br
-(infers --type thin). 
+Create a thin LV, first creating a thin pool for it. 
 .br
 Create a sparse snapshot of a virtual origin LV 
 .br
-(infers --type snapshot). 
-.br
-Chooses --type thin or --type snapshot according to 
+Chooses type thin or snapshot according to 
 .br
 config setting sparse_segtype_default.
 .br
@@ -2170,6 +2159,8 @@ config setting sparse_segtype_default.
 .br
 .RS 4
 .ad l
+[ \fB--type thin\fP|\fBsnapshot\fP ] (implied)
+.br
 [ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
 .br
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
@@ -2181,8 +2172,6 @@ config setting sparse_segtype_default.
 [ \fB-T\fP|\fB--thin\fP ]
 .br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
-.br
-[    \fB--type\fP \fIString\fP ]
 .br
 [    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .br
@@ -2203,15 +2192,15 @@ config setting sparse_segtype_default.
 .P
 Create a new LV, then attach the specified cachepool 
 .br
-which converts the new LV to type cache 
-.br
-(variant, infers --type cache.)
+which converts the new LV to type cache.
 .br
 .P
 \fBlvcreate\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fB--cachepool\fP \fILV\fP \fIVG\fP
 .br
 .RS 4
 .ad l
+[ \fB--type cache\fP ] (implied)
+.br
 [ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
 .br
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
@@ -2221,8 +2210,6 @@ which converts the new LV to type cache
 [ \fB-H\fP|\fB--cache\fP ]
 .br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
-.br
-[    \fB--type\fP \fBcache\fP ]
 .br
 [    \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
 .br
@@ -2302,6 +2289,8 @@ and attach it to the LV arg (alternative, use lvconvert.)
 .br
 .RS 4
 .ad l
+[ \fB--type cache\fP ] (implied)
+.br
 [ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
 .br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
@@ -2309,8 +2298,6 @@ and attach it to the LV arg (alternative, use lvconvert.)
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
 .br
 [ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
-.br
-[    \fB--type\fP \fBcache\fP ]
 .br
 [    \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
 .br
