@@ -128,7 +128,7 @@ static int _read_id(struct id *id, const struct dm_config_node *cn, const char *
 	return 1;
 }
 
-static int _read_flag_config(const struct dm_config_node *n, uint64_t *status, int type)
+static int _read_flag_config(const struct dm_config_node *n, uint64_t *status, enum pv_vg_lv_e type)
 {
 	const struct dm_config_value *cv;
 	*status = 0;
