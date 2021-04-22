@@ -1800,9 +1800,7 @@ static void res_process(struct lockspace *ls, struct resource *r,
 			act->result = -EINVAL;
 			list_del(&act->list);
 			add_client_result(act);
-		}
-
-		if (act->op == LD_OP_LOCK && act->mode == LD_LK_UN) {
+		} else if (act->op == LD_OP_LOCK && act->mode == LD_LK_UN) {
 			rv = res_unlock(ls, r, act);
 
 			if (rv == -ENOENT && (act->flags & LD_AF_UNLOCK_CANCEL))
