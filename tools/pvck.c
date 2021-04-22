@@ -3187,8 +3187,8 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 
 	if (argc == 1)
 		setup_device(cmd, argv[0]);
-	else
-		setup_devices(cmd);
+	else if (!setup_devices(cmd))
+		return ECMD_FAILED;
 
 	for (i = 0; i < argc; i++) {
 		pv_name = argv[i];
