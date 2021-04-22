@@ -1510,7 +1510,8 @@ struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct d
 	 * for st_rdev.
 	 */
 	if (!dev) {
-		_insert_dev(name, st.st_rdev);
+		if (!_insert_dev(name, st.st_rdev))
+			return_NULL;
 
 		/* Get the struct dev that was just added. */
 		dev = (struct device *) dm_hash_lookup(_cache.names, name);
