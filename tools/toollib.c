@@ -4000,6 +4000,7 @@ static int _process_duplicate_pvs(struct cmd_context *cmd,
 	int ret = 0;
 
 	struct physical_volume dummy_pv = {
+		.pe_size = 1,
 		.tags = DM_LIST_HEAD_INIT(dummy_pv.tags),
 		.segments= DM_LIST_HEAD_INIT(dummy_pv.segments),
 	};
