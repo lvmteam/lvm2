@@ -293,13 +293,13 @@ static int _compare_paths(const char *path0, const char *path1)
 	/* We prefer symlinks - they exist for a reason!
 	 * So we prefer a shorter path before the first symlink in the name.
 	 * FIXME Configuration option to invert this? */
-	while (s0) {
-		s0 = strchr(s0, '/');
-		s1 = strchr(s1, '/');
-		if (s0) {
+	while (s0 && s1) {
+		if ((s0 = strchr(s0, '/')))
 			*s0 = '\0';
+
+		if ((s1 = strchr(s1, '/')))
 			*s1 = '\0';
-		}
+
 		if (lstat(p0, &stat0)) {
 			log_sys_very_verbose("lstat", p0);
 			return 1;
@@ -312,10 +312,10 @@ static int _compare_paths(const char *path0, const char *path1)
 			return 0;
 		if (!S_ISLNK(stat0.st_mode) && S_ISLNK(stat1.st_mode))
 			return 1;
-		if (s0) {
+		if (s0)
 			*s0++ = '/';
+		if (s1)
 			*s1++ = '/';
-		}
 	}
 
 	/* ASCII comparison */
