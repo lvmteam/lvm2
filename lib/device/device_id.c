@@ -523,7 +523,7 @@ int device_ids_read(struct cmd_context *cmd)
 			_copy_idline_str(line, _devices_file_systemid, sizeof(_devices_file_systemid));
 			log_debug("read devices file systemid %s", _devices_file_systemid);
 			if ((!cmd->system_id && _devices_file_systemid[0]) ||
-			    strcmp(cmd->system_id, _devices_file_systemid)) {
+			    (cmd->system_id && strcmp(cmd->system_id, _devices_file_systemid))) {
 				log_warn("WARNING: ignoring devices file with wrong system id %s vs local %s.",
 					  _devices_file_systemid[0] ? _devices_file_systemid : "none", cmd->system_id ?: "none");
 				free_dus(&cmd->use_devices);
@@ -1077,7 +1077,8 @@ id_done:
 		if (du_devid && (du_devid != du_dev)) {
 			log_warn("WARNING: device %s (%s) and %s (%s) have duplicate device ID.",
 				 dev_name(dev), id->idname,
-				 du_pvid->dev ? dev_name(du_pvid->dev) : "none", du_pvid->idname);
+				 (du_pvid && du_pvid->dev) ? dev_name(du_pvid->dev) : "none",
+				 du_pvid ? du_pvid->idname : "");
 		}
 
 		if (du_pvid && (du_pvid != du_dev)) {
