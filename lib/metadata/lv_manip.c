@@ -6821,7 +6821,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 					display_lvname(pool_lv));
 	}
 
-	lockd_lv(cmd, lock_lv, "un", LDLV_PERSISTENT);
+	if (!lockd_lv(cmd, lv, "un", LDLV_PERSISTENT))
+		log_warn("WARNING: Failed to unlock %s.", display_lvname(lv));
 	lockd_free_lv(cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
 
 	if (!suppress_remove_message && (visible || historical)) {
@@ -8858,7 +8859,8 @@ deactivate_and_revert_new_lv:
 	}
 
 revert_new_lv:
-	lockd_lv(cmd, lv, "un", LDLV_PERSISTENT);
+	if (!lockd_lv(cmd, lv, "un", LDLV_PERSISTENT))
+		log_warn("WARNING: Failed to unlock %s.", display_lvname(lv));
 	lockd_free_lv(vg->cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
 
 	/* FIXME Better to revert to backup of metadata? */
