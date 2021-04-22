@@ -1373,7 +1373,8 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 
 		if (!*lp->type_str) {
 			lp->type_str = SEG_TYPE_NAME_RAID1;
-			lp->segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_RAID1);
+			if (!(lp->segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_RAID1)))
+				return_0;
 			type_enforced = 1;
 		}
 	}
