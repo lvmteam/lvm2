@@ -25,13 +25,14 @@ fsadm \(em utility to resize or check filesystem on a device
 .
 .SH DESCRIPTION
 .
-fsadm utility checks or resizes the filesystem on a device.
+fsadm utility checks or resizes the filesystem on a device (can be
+also dm-crypt encrypted device).
 It tries to use the same API for
 .BR ext2 ,
 .BR ext3 ,
 .BR ext4 ,
 .BR ReiserFS
-.RB and
+and
 .BR XFS
 filesystem.
 .
@@ -48,6 +49,12 @@ Bypass some sanity checks.
 .TP
 .BR -h | --help
 Display the help text.
+.
+.TP
+.BR -l | --lvresize
+Resize also given lvm2 logical volume. More volume management
+functionality is provided with complementary \fBlvresize\fP(8) and the option
+.BR -r | --resizefs.
 .
 .TP
 .BR -n | --dry-run
