@@ -3773,7 +3773,7 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 	struct field_selection *fs;
 	struct selection_node *sn;
 	const char *ws, *we; /* field name */
-	const char *vs, *ve; /* value */
+	const char *vs = NULL, *ve = NULL; /* value */
 	const char *last;
 	uint32_t flags, field_num;
 	int implicit;
