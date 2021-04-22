@@ -987,18 +987,22 @@ static int read_options(int argc, char *argv[])
 			break;
 		case 'k':
 			kill_vg = 1;
+			free(arg_vg_name);
 			arg_vg_name = strdup(optarg);
 			break;
 		case 'r':
 			drop_vg = 1;
+			free(arg_vg_name);
 			arg_vg_name = strdup(optarg);
 			break;
 		case 'E':
 			gl_enable = 1;
+			free(arg_vg_name);
 			arg_vg_name = strdup(optarg);
 			break;
 		case 'D':
 			gl_disable = 1;
+			free(arg_vg_name);
 			arg_vg_name = strdup(optarg);
 			break;
 		case 'S':

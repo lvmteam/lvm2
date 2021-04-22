@@ -1774,6 +1774,7 @@ static int _get_one_setting(struct cmd_context *cmd, struct settings *set, char 
 	}
 
 	if (!strncmp(key, "backup_file", strlen("backup_file"))) {
+		free(set->backup_file);
 		if ((set->backup_file = strdup(val)))
 			return 1;
 		return 0;
