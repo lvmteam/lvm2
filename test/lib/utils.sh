@@ -279,7 +279,7 @@ prepare_test_vars() {
 		while read path; do
 			count=$((  count + 1 ))
 			eval "dev$count=\"$path\""
-		done < $LVM_TEST_DEVICE_LIST
+		done < "$LVM_TEST_DEVICE_LIST"
 	else
 		for i in {1..16}; do
 			eval "dev$i=\"$DM_DEV_DIR/mapper/${PREFIX}pv$i\""

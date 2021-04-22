@@ -586,7 +586,7 @@ teardown() {
 	}
 
 	# Remove any metadata archives and backups from this test on system
-	rm -f /etc/lvm/archive/${PREFIX}* /etc/lvm/backup/${PREFIX}*
+	rm -f /etc/lvm/archive/"${PREFIX}"* /etc/lvm/backup/"${PREFIX}"*
 
 	echo "ok"
 }
@@ -669,7 +669,7 @@ prepare_real_devs() {
 			aux extend_filter "a|$path|"
 			dd if=/dev/zero of="$path" bs=32k count=1
 			wipefs -a "$path" 2>/dev/null || true
-		done < $LVM_TEST_DEVICE_LIST
+		done < "$LVM_TEST_DEVICE_LIST"
 	fi
 	printf "%s\\n" "${REAL_DEVICES[@]}" > REAL_DEVICES
 }
@@ -810,9 +810,9 @@ cleanup_md_dev() {
 	# try to find and remove any DM device on top of cleaned MD
 	# assume  /dev/mdXXX is  9:MINOR
 	local minor=${mddev##/dev/md}
-	for i in $(dmsetup table | grep 9:$minor | cut -d: -f1) ; do
-		dmsetup remove $i || {
-			dmsetup --force remove $i || true
+	for i in $(dmsetup table | grep 9:"$minor" | cut -d: -f1) ; do
+		dmsetup remove "$i" || {
+			dmsetup --force remove "$i" || true
 		}
 	done
 
@@ -842,7 +842,7 @@ wipefs_a() {
 	shift
 
 	if test -n "$LVM_TEST_DEVICES_FILE"; then
-		lvmdevices --deldev $dev || true
+		lvmdevices --deldev "$dev" || true
 	fi
 
 	if test -f HAVE_WIPEFS ; then
@@ -866,7 +866,7 @@ wipefs_a() {
 	fi
 
 	if test -n "$LVM_TEST_DEVICES_FILE"; then
-		lvmdevices --adddev $dev || true
+		lvmdevices --adddev "$dev" || true
 	fi
 
 	udev_wait
@@ -954,10 +954,10 @@ prepare_devs() {
 	done
 
 	if test -n "$LVM_TEST_DEVICES_FILE"; then
-		mkdir -p $TESTDIR/etc/lvm/devices || true
-		rm $TESTDIR/etc/lvm/devices/system.devices || true
+		mkdir -p "$TESTDIR/etc/lvm/devices" || true
+		rm "$TESTDIR/etc/lvm/devices/system.devices" || true
 		for d in "${DEVICES[@]}"; do
-			lvmdevices --adddev $dev || true
+			lvmdevices --adddev "$dev" || true
 		done
 	fi
 

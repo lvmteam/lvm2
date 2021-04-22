@@ -18,11 +18,11 @@
 
 # following external commands are used throughout the script
 # echo and test are internal in bash at least
-RM=rm
-BASENAME=basename
-MKTEMP=mktemp
-READLINK=readlink
-GETOPT=getopt
+RM="rm"
+BASENAME="basename"
+MKTEMP="mktemp"
+READLINK="readlink"
+GETOPT="getopt"
 
 # user may override lvm location by setting LVM_BINARY
 LVM=${LVM_BINARY:-lvm}
@@ -145,7 +145,7 @@ do
             shift
             ;;
         -v|--verbose)
-            let VERBOSE_COUNT=VERBOSE_COUNT+1
+            VERBOSE_COUNT=$(( VERBOSE_COUNT + 1 ))
             if [ -z "$VERBOSE" ]
             then
                 VERBOSE="-v"

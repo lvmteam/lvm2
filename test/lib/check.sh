@@ -157,7 +157,7 @@ mirror_nonredundant() {
 	attr=$(get lv_field "$lv" attr)
 	(echo "$attr" | grep "^......m...$" >/dev/null) || {
 		if (echo "$attr" | grep "^o.........$" >/dev/null) &&
-		   lvs -a $1 | grep -F "[${2}_mimage" >/dev/null; then
+		   lvs -a "$1" | grep -F "[${2}_mimage" >/dev/null; then
 			echo "TEST WARNING: $lv is a snapshot origin and looks like a mirror,"
 			echo "assuming it is actually a mirror"
 		else
@@ -439,7 +439,7 @@ raid_leg_status() {
 
 	# Ignore inconsisten raid status 0/xxxxx idle
 	for i in {100..0} ; do
-		st=( $(dmsetup status $1-$2) ) || die "Unable to get status of $vg/$lv1"
+		st=( $(dmsetup status "$1-$2") ) || die "Unable to get status of $vg/$lv1"
 		b=( $(echo "${st[6]}" | sed s:/:' ':) )
 		[ "${b[0]}" = "0" ] || {
 			test "${st[5]}" = "$3" || break
@@ -448,7 +448,7 @@ raid_leg_status() {
 		sleep .1
 	done
 
-	die "$1-$2 status ${st[5]} != $3  ($st)"
+	die "$1-$2 status ${st[5]} != $3  (${st[*]})"
 }
 
 grep_dmsetup() {

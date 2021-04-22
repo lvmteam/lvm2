@@ -163,7 +163,7 @@ if (( clustered )); then
 
 	{
 	for i in nodes status services; do
-		cap_i=$(echo "$i"|tr a-z A-Z)
+		cap_i=$(echo "$i"|tr "[:lower:]" "[:upper:]")
 		echo "$cap_i:"
 		echo "----------------------------------"
 		log "cman_tool $i 2>> \"$log\""

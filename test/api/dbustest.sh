@@ -18,7 +18,7 @@ SKIP_WITH_CLVMD=1
 . lib/inittest
 
 # Unsupported with valgrid testing
-test ${LVM_VALGRIND:-0} -eq 0 || skip "Unsupported with valgrind"
+test "${LVM_VALGRIND:-0}" -eq 0 || skip "Unsupported with valgrind"
 
 # NOTE: Some tests, namely anything with vdo, and
 # api/dbus_test_lv_interface_cache_lv.sh, require larger PVs
