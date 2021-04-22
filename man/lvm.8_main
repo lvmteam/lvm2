@@ -288,6 +288,7 @@ The LV name may also not contain any of the following strings:
 .RB ' _cdata ',
 .RB ' _cmeta ',
 .RB ' _corig ',
+.RB ' _iorig ',
 .RB ' _mimage ',
 .RB ' _mlog ',
 .RB ' _pmspare ',
