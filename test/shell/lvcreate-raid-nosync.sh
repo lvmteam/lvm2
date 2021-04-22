@@ -60,7 +60,7 @@ done
 
 # raid1 supports resynchronization
 lvcreate --type raid1 -m 2 -Zn -l 4 -n $lv1 $vg
-check raid_leg_status $vg $lv1 "aaa"
+should check raid_leg_status $vg $lv1 "aaa"
 _sync "AAA"
 
 # raid1 supports --nosync
@@ -72,7 +72,7 @@ for r in $segtypes
 do
 	# raid4/5 support resynchronization
 	lvcreate --type $r -Zn -i 3 -L10 -n $lv1 $vg
-	check raid_leg_status $vg $lv1 "aaaa"
+	should check raid_leg_status $vg $lv1 "aaaa"
 	_sync "AAAA"
 
 	# raid4/5 support --nosync
@@ -83,7 +83,7 @@ done
 
 # raid6 supports resynchronization
 lvcreate --type raid6 -Zn -i 3 -l 4 -n $lv1 $vg
-check raid_leg_status $vg $lv1 "aaaaa"
+should check raid_leg_status $vg $lv1 "aaaaa"
 _sync "AAAAA"
 
 # raid6 rejects --nosync; it has to initialize P- and Q-Syndromes
@@ -91,7 +91,7 @@ not lvcreate --type raid6 --nosync -Zn -i 3 -l 1 -n $lv1 $vg
 
 # raid10 supports resynchronization
 lvcreate --type raid10 -m 1 -Zn -i 3 -L10 -n $lv1 $vg
-check raid_leg_status $vg $lv1 "aaaaaa"
+should check raid_leg_status $vg $lv1 "aaaaaa"
 _sync "AAAAAA"
 
 # raid10 supports --nosync
