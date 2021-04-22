@@ -2522,7 +2522,7 @@ static const char *_man_long_opt_name(const char *cmdname, int opt_enum)
 	}
 
 	if (strchr(long_opt, '[')) {
-		for (i = 0; i < sizeof(long_opt_name); ++long_opt, ++i) {
+		for (i = 0; i < sizeof(long_opt_name) - 1; ++long_opt, ++i) {
 			if (i < (sizeof(long_opt_name) - 8))
 				switch(*long_opt) {
 				case '[':
