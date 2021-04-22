@@ -54,7 +54,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	/* If in a VG, must change using volume group. */
-	if (!is_orphan(pv)) {
+	if (vg && !is_orphan(pv)) {
 		if (tagargs && !(vg->fid->fmt->features & FMT_TAGS)) {
 			log_error("Volume group containing %s does not "
 				  "support tags", pv_name);
@@ -134,7 +134,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	if (arg_is_set(cmd, metadataignore_ARG)) {
-		if ((vg_mda_copies(vg) != VGMETADATACOPIES_UNMANAGED) &&
+		if (vg && (vg_mda_copies(vg) != VGMETADATACOPIES_UNMANAGED) &&
 		    (arg_count(cmd, force_ARG) == PROMPT) &&
 		    yes_no_prompt("Override preferred number of copies "
 				  "of VG %s metadata? [y/n]: ",
@@ -175,7 +175,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	log_verbose("Updating physical volume \"%s\"", pv_name);
-	if (!is_orphan(pv)) {
+	if (vg && !is_orphan(pv)) {
 		if (!vg_write(vg) || !vg_commit(vg)) {
 			log_error("Failed to store physical volume \"%s\" in "
 				  "volume group \"%s\"", pv_name, vg->name);
