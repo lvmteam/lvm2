@@ -6558,7 +6558,7 @@ static int _lv_remove_check_in_use(struct logical_volume *lv, force_t force)
 {
 	struct volume_group *vg = lv->vg;
 	const char *volume_type = "";
-	char buffer[50 * NAME_LEN * 2] = "";
+	char buffer[50 + NAME_LEN * 2] = "";
 	int active;
 	int issue_discards =
 		(vg->cmd->current_settings.issue_discards &&
