@@ -1008,21 +1008,24 @@ id_done:
 			break;
 		}
 	}
-	if (found_id && !strcmp(id->idname, idname)) {
-		free((char *)idname);
-	} else if (found_id && strcmp(id->idname, idname)) {
+
+	if (found_id && idname && strcmp(id->idname, idname)) {
 		dm_list_del(&id->list);
 		free_did(id);
 		found_id = 0;
 	}
 	if (!found_id) {
-		if (!(id = zalloc(sizeof(struct dev_id))))
+		if (!(id = zalloc(sizeof(struct dev_id)))) {
+			free((char *)idname);
 			return_0;
+		}
 		id->idtype = idtype;
 		id->idname = (char *)idname;
 		id->dev = dev;
 		dm_list_add(&dev->ids, &id->list);
-	}
+	} else
+		free((char*)idname);
+
 	dev->id = id;
 	dev->flags |= DEV_MATCHED_USE_ID;
 
