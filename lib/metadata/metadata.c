@@ -4954,7 +4954,8 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		log_very_verbose("Reading orphan VG %s.", vg_name);
 		vg = vg_read_orphans(cmd, vg_name);
 		*error_flags = 0;
-		*error_vg = NULL;
+		if (error_vg)
+			*error_vg = NULL;
 		return vg;
 	}
 
