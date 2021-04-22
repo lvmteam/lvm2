@@ -653,18 +653,21 @@ static int _daemonise(struct filemap_monitor *fm)
 	}
 
 	if (!_verbose) {
-		if (close(STDIN_FILENO))
-			_early_log("Error closing stdin");
-		if (close(STDOUT_FILENO))
-			_early_log("Error closing stdout");
-		if (close(STDERR_FILENO))
-			_early_log("Error closing stderr");
-		if ((open("/dev/null", O_RDONLY) < 0) ||
-	            (open("/dev/null", O_WRONLY) < 0) ||
-		    (open("/dev/null", O_WRONLY) < 0)) {
-			_early_log("Error opening stdio streams.");
+		if ((fd = open("/dev/null", O_RDWR)) == -1) {
+			_early_log("Error opening /dev/null.");
 			return 0;
 		}
+
+		if ((dup2(fd, STDIN_FILENO) == -1) ||
+		    (dup2(fd, STDOUT_FILENO) == -1) ||
+		    (dup2(fd, STDERR_FILENO) == -1)) {
+			if (fd > STDERR_FILENO)
+				(void) close(fd);
+			_early_log("Error redirecting stdin/out/err to null.");
+			return 0;
+		}
+		if (fd > STDERR_FILENO)
+			(void) close(fd);
 	}
 	/* TODO: Use libdaemon/server/daemon-server.c _daemonise() */
 	for (fd = (int) sysconf(_SC_OPEN_MAX) - 1; fd > STDERR_FILENO; fd--) {
