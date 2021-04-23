@@ -14,3 +14,9 @@ space on PV /dev/sdk3. This is equivalent to specifying
 Extend an LV by 16MiB using specific physical extents.
 .br
 .B lvextend -L+16m vg01/lvol01 /dev/sda:8-9 /dev/sdb:8-9
+.P
+Extend an LV to use all remaining free space in volume group
+and all resize its filesystem with
+.BR fsadm (8).
+.br
+.B lvextend -l+100%FREE -r vg01/lvol01

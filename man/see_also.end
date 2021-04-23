@@ -63,6 +63,7 @@
 .BR lvmlockctl (8),
 .BR cmirrord (8),
 .BR lvmdbusd (8),
+.BR fsadm (8),
 .P
 .BR lvmsystemid (7),
 .BR lvmreport (7),
