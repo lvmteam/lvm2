@@ -341,8 +341,9 @@ static int _move_thins(struct volume_group *vg_from,
 
 			if ((_lv_is_in_vg(vg_to, data_lv) ||
 			     _lv_is_in_vg(vg_to, seg->external_lv))) {
-				if (_lv_is_in_vg(vg_from, seg->external_lv) ||
-				    _lv_is_in_vg(vg_from, data_lv)) {
+				if (seg->external_lv &&
+				    (_lv_is_in_vg(vg_from, seg->external_lv) ||
+				     _lv_is_in_vg(vg_from, data_lv))) {
 					log_error("Can't split external origin %s "
 						  "and pool %s between two Volume Groups.",
 						  display_lvname(seg->external_lv),
