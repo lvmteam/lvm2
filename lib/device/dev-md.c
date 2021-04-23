@@ -55,7 +55,7 @@ static int _dev_has_md_magic(struct device *dev, uint64_t sb_offset)
 static int _dev_has_imsm_magic(struct device *dev, uint64_t devsize_sectors)
 {
 	char imsm_signature[IMSM_SIG_LEN];
-	uint64_t off = (devsize_sectors * 512) - 1024;
+	uint64_t off;
 	unsigned int physical_block_size = 0;
 	unsigned int logical_block_size = 0;
 
