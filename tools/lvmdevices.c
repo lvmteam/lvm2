@@ -181,8 +181,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 				continue;
 			dev = du->dev;
 
-			if (!label_read_pvid(dev))
-				continue;
+			label_read_pvid(dev);
 
 			/*
 			 * label_read_pvid has read the first 4K of the device
@@ -284,8 +283,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		 * (it's ok if the device is not a PV and has no PVID)
 		 */
 		label_scan_setup_bcache();
-		if (!label_read_pvid(dev))
-			goto_bad;
+		label_read_pvid(dev);
 
 		/*
 		 * Allow filtered devices to be added to devices_file, but
