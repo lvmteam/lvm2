@@ -848,7 +848,7 @@ static int _get_devs_from_saved_vg(struct cmd_context *cmd, const char *vgname,
 			goto bad;
 		}
 
-		if (!(devl = zalloc(sizeof(*devl))))
+		if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
 			goto_bad;
 
 		devl->dev = dev;
