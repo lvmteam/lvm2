@@ -1097,7 +1097,7 @@ int label_scan(struct cmd_context *cmd)
 		 * so this will usually do nothing.
 		 */
 		label_scan_invalidate(dev);
-	};
+	}
 	dev_iter_destroy(iter);
 
 	/*

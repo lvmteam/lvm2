@@ -311,7 +311,7 @@ static int _move_raids(struct volume_group *vg_from,
 		/* Ignore, if no allocations on PVs of @vg_to */
 		if (!lv_is_on_pvs(lv, &vg_to->pvs))
 			continue;
- 
+
 		/* If allocations are on PVs of @vg_to -> move RAID LV stack across */
 		if (!_move_one_lv(vg_from, vg_to, lvh, &lvht))
 			return_0;
@@ -460,7 +460,7 @@ static int _move_cache(struct volume_group *vg_from,
 			    !lv_is_on_pvs(meta, &vg_to->pvs))
 				continue;
 		}
-		
+
 		if (fast && orig &&
 		    !lv_is_on_pvs(orig, &vg_to->pvs) && !lv_is_on_pvs(fast, &vg_to->pvs))
 			continue;
