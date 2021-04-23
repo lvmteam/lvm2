@@ -128,6 +128,10 @@ all_man: man
 
 $(MAN5) $(MAN7) $(MAN8) $(MAN8SO) $(MAN8DM) $(MAN8CLUSTER) $(MAN8SYSTEMD_GENERATORS): Makefile
 
+$(MANGENERATOR):
+	@echo "    [MAKE] $<"
+	$(Q) $(MAKE) -C $(top_builddir) tools
+
 # Test whether or not the man page generator works
 $(TESTMAN): $(MANGENERATOR) Makefile
 	@echo "    [TSTMAN] $@"
