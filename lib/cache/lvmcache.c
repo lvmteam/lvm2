@@ -2818,7 +2818,7 @@ void lvmcache_get_outdated_devs(struct cmd_context *cmd,
 	}
 
 	dm_list_iterate_items(info, &vginfo->outdated_infos) {
-		if (!(devl = zalloc(sizeof(*devl))))
+		if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
 			return;
 		devl->dev = info->dev;
 		dm_list_add(devs, &devl->list);
