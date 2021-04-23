@@ -1546,7 +1546,15 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 	label_scan_setup_bcache();
 
 	dm_list_iterate_items_safe(devl, devl2, &pvscan_devs) {
-		if (!label_read_pvid(devl->dev)) {
+		int has_pvid;
+
+		if (!label_read_pvid(devl->dev, &has_pvid)) {
+			log_print("pvscan[%d] %s cannot read.", getpid(), dev_name(devl->dev));
+			dm_list_del(&devl->list);
+			continue;
+		}
+
+		if (!has_pvid) {
 			/* Not an lvm device */
 			log_print("pvscan[%d] %s not an lvm device.", getpid(), dev_name(devl->dev));
 			dm_list_del(&devl->list);

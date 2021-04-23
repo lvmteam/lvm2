@@ -1912,6 +1912,7 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 	 */
 	dm_list_iterate_items(devl, &search_devs) {
 		dev = devl->dev;
+		int has_pvid;
 
 		/*
 		 * We only need to check devs that would use ID_TYPE_DEVNAME
@@ -1935,11 +1936,17 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 
 		/*
 		 * Reads 4K from the start of the disk.
+		 * Returns 0 if the dev cannot be read.
 		 * Looks for LVM header, and sets dev->pvid if the device is a PV.
-		 * Returns 0 if the dev has no lvm label or no PVID.
+		 * Sets has_pvid=1 if the dev has an lvm PVID.
 		 * This loop may look at and skip many non-LVM devices.
 		 */
-		if (!label_read_pvid(dev)) {
+		if (!label_read_pvid(dev, &has_pvid)) {
+			no_pvid++;
+			continue;
+		}
+
+		if (!has_pvid) {
 			no_pvid++;
 			continue;
 		}

@@ -1277,7 +1277,7 @@ int label_scan(struct cmd_context *cmd)
  * Read the header of the disk and if it's a PV
  * save the pvid in dev->pvid.
  */
-int label_read_pvid(struct device *dev)
+int label_read_pvid(struct device *dev, int *has_pvid)
 {
 	char buf[4096] __attribute__((aligned(8)));
 	struct label_header *lh;
@@ -1296,14 +1296,17 @@ int label_read_pvid(struct device *dev)
 	 */
 	if (!dev_read_bytes(dev, 0, 4096, buf)) {
 		label_scan_invalidate(dev);
-		return 0;
+		return_0;
 	}
+
+	if (has_pvid)
+		*has_pvid = 0;
 
 	lh = (struct label_header *)(buf + 512);
 	if (memcmp(lh->id, LABEL_ID, sizeof(lh->id))) {
 		/* Not an lvm deice */
 		label_scan_invalidate(dev);
-		return 0;
+		return 1;
 	}
 
 	/*
@@ -1313,8 +1316,11 @@ int label_read_pvid(struct device *dev)
 	if (memcmp(lh->type, LVM2_LABEL, sizeof(lh->type))) {
 		/* Not an lvm deice */
 		label_scan_invalidate(dev);
-		return 0;
+		return 1;
 	}
+
+	if (has_pvid)
+		*has_pvid = 1;
 
 	pvh = (struct pv_header *)(buf + 512 + 32);
 	memcpy(dev->pvid, pvh->pv_uuid, ID_LEN);

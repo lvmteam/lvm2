@@ -62,8 +62,12 @@ static void _search_devs_for_pvids(struct cmd_context *cmd, struct dm_list *sear
 	 * searching for.
 	 */
 	dm_list_iterate_items_safe(devl, devl2, &devs) {
+		int has_pvid;
+
 		/* sets dev->pvid if an lvm label with pvid is found */
-		if (!label_read_pvid(devl->dev))
+		if (!label_read_pvid(devl->dev, &has_pvid))
+			continue;
+		if (!has_pvid)
 			continue;
 
 		found = 0;
@@ -181,7 +185,8 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 				continue;
 			dev = du->dev;
 
-			label_read_pvid(dev);
+			if (!label_read_pvid(dev, NULL))
+				continue;
 
 			/*
 			 * label_read_pvid has read the first 4K of the device
@@ -283,7 +288,10 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		 * (it's ok if the device is not a PV and has no PVID)
 		 */
 		label_scan_setup_bcache();
-		label_read_pvid(dev);
+		if (!label_read_pvid(dev, NULL)) {
+			log_error("Failed to read %s.", devname);
+			goto bad;
+		}
 
 		/*
 		 * Allow filtered devices to be added to devices_file, but
