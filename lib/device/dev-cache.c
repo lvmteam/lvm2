@@ -1490,7 +1490,7 @@ struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct d
 	 * Remove incorrect info and then add new dev-cache entry.
 	 */
 	if (dev && (st.st_rdev != dev->dev)) {
-		log_print("Device path %s does not match %d:%d %s.",
+		log_debug("Device path %s does not match %d:%d %s.",
 			  name, (int)MAJOR(dev->dev), (int)MINOR(dev->dev), dev_name(dev));
 
 		dm_hash_remove(_cache.names, name);
