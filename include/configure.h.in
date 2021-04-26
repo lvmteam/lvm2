@@ -1,5 +1,8 @@
 /* include/configure.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Define to 1 to include code that uses libsystemd machine-id apis. */
+#undef APP_MACHINEID_SUPPORT
+
 /* Define to 1 to use libblkid detection of signatures when wiping. */
 #undef BLKID_WIPING_SUPPORT
 
