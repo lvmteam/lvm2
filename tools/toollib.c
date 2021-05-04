@@ -5028,7 +5028,7 @@ static int _pvremove_check_used(struct cmd_context *cmd,
 	if (!(info = lvmcache_info_from_pvid(pd->dev->pvid, pd->dev, 0))) {
 		if (pp->force)
 			return 1;
-		log_error("Failed to read lvm info for %s PVID %s.", dev_name(pd->dev), pd->dev->pvid);
+		log_error("No PV found on device %s.", dev_name(pd->dev));
 		dm_list_move(&pp->arg_fail, &pd->list);
 		return 0;
 	}
