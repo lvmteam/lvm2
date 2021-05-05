@@ -44,7 +44,7 @@ void internal_filter_clear(void);
  * r|.*|             - reject everything else
  */
 
-struct dev_filter *regex_filter_create(const struct dm_config_value *patterns);
+struct dev_filter *regex_filter_create(const struct dm_config_value *patterns, int config_filter, int config_global_filter);
 
 typedef enum {
 	FILTER_MODE_NO_LVMETAD,

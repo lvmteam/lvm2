@@ -1106,7 +1106,7 @@ static struct dev_filter *_init_filter_chain(struct cmd_context *cmd)
 
 	/* global regex filter. Optional. */
 	if ((cn = find_config_tree_node(cmd, devices_global_filter_CFG, NULL))) {
-		if (!(filters[nr_filt] = regex_filter_create(cn->v))) {
+		if (!(filters[nr_filt] = regex_filter_create(cn->v, 0, 1))) {
 			log_error("Failed to create global regex device filter");
 			goto bad;
 		}
@@ -1115,7 +1115,7 @@ static struct dev_filter *_init_filter_chain(struct cmd_context *cmd)
 
 	/* regex filter. Optional. */
 	if ((cn = find_config_tree_node(cmd, devices_filter_CFG, NULL))) {
-		if (!(filters[nr_filt] = regex_filter_create(cn->v))) {
+		if (!(filters[nr_filt] = regex_filter_create(cn->v, 1, 0))) {
 			log_error("Failed to create regex device filter");
 			goto bad;
 		}
