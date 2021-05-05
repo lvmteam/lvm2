@@ -5948,7 +5948,6 @@ static int _set_writecache_block_size(struct cmd_context *cmd,
 				      uint32_t *block_size_sectors)
 {
 	char pathname[PATH_MAX];
-	struct device *fs_dev;
 	struct dm_list pvs_list;
 	struct pv_list *pvl;
 	uint32_t fs_block_size = 0;
@@ -6011,17 +6010,10 @@ static int _set_writecache_block_size(struct cmd_context *cmd,
 		goto bad;
 	}
 
-	if (!sync_local_dev_names(cmd))
-		stack;
-
-	if (!(fs_dev = dev_cache_get(cmd, pathname, NULL))) {
-		if (test_mode()) {
-			log_print("Test mode skips checking fs block size.");
-			fs_block_size = 0;
-			goto skip_fs;
-		}
-		log_error("Device for LV not found to check block size %s", pathname);
-		goto bad;
+	if (test_mode()) {
+		log_print("Test mode skips checking fs block size.");
+		fs_block_size = 0;
+		goto skip_fs;
 	}
 
 	/*
@@ -6037,7 +6029,7 @@ static int _set_writecache_block_size(struct cmd_context *cmd,
 	 *
 	 * With 512 LBS and 4K PBS, mkfs.xfs will use xfs sector size 4K.
 	 */
-	rv = get_fs_block_size(fs_dev, &fs_block_size);
+	rv = get_fs_block_size(pathname, &fs_block_size);
 skip_fs:
 	if (!rv || !fs_block_size) {
 		if (lbs_4k && pbs_4k && !pbs_512) {

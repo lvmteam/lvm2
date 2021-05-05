@@ -326,7 +326,6 @@ static int _set_integrity_block_size(struct cmd_context *cmd, struct logical_vol
 				     int lbs_4k, int lbs_512, int pbs_4k, int pbs_512)
 {
 	char pathname[PATH_MAX];
-	struct device *fs_dev;
 	uint32_t fs_block_size = 0;
 	int rv;
 
@@ -371,10 +370,6 @@ static int _set_integrity_block_size(struct cmd_context *cmd, struct logical_vol
 			log_error("Path name too long to get LV block size %s", display_lvname(lv));
 			goto bad;
 		}
-		if (!(fs_dev = dev_cache_get(cmd, pathname, NULL))) {
-			log_error("Device for LV not found to check block size %s", display_lvname(lv));
-			goto bad;
-		}
 
 		/*
 		 * get_fs_block_size() returns the libblkid BLOCK_SIZE value,
@@ -387,7 +382,7 @@ static int _set_integrity_block_size(struct cmd_context *cmd, struct logical_vol
 		 * value the block size, but it's possible values are not the same
 		 * as xfs's, and do not seem to relate directly to the device LBS.
 		 */
-		rv = get_fs_block_size(fs_dev, &fs_block_size);
+		rv = get_fs_block_size(pathname, &fs_block_size);
 		if (!rv || !fs_block_size) {
 			int use_bs;
 

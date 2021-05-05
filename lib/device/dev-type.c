@@ -701,23 +701,23 @@ out:
 }
 
 #ifdef BLKID_WIPING_SUPPORT
-int get_fs_block_size(struct device *dev, uint32_t *fs_block_size)
+int get_fs_block_size(const char *pathname, uint32_t *fs_block_size)
 {
 	char *block_size_str = NULL;
 
-	if ((block_size_str = blkid_get_tag_value(NULL, "BLOCK_SIZE", dev_name(dev)))) {
+	if ((block_size_str = blkid_get_tag_value(NULL, "BLOCK_SIZE", pathname))) {
 		*fs_block_size = (uint32_t)atoi(block_size_str);
 		free(block_size_str);
-		log_debug("Found blkid BLOCK_SIZE %u for fs on %s", *fs_block_size, dev_name(dev));
+		log_debug("Found blkid BLOCK_SIZE %u for fs on %s", *fs_block_size, pathname);
 		return 1;
 	} else {
-		log_debug("No blkid BLOCK_SIZE for fs on %s", dev_name(dev));
+		log_debug("No blkid BLOCK_SIZE for fs on %s", pathname);
 		*fs_block_size = 0;
 		return 0;
 	}
 }
 #else
-int get_fs_block_size(struct device *dev, uint32_t *fs_block_size)
+int get_fs_block_size(const char *pathname, uint32_t *fs_block_size)
 {
 	log_debug("Disabled blkid BLOCK_SIZE for fs.");
 	*fs_block_size = 0;
