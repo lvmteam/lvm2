@@ -6106,6 +6106,7 @@ int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 					struct processing_handle *handle)
 {
 	struct volume_group *vg = lv->vg;
+	struct logical_volume *lv_update;
 	struct logical_volume *lv_wcorig;
 	struct logical_volume *lv_fast;
 	struct writecache_settings settings = { 0 };
@@ -6228,6 +6229,15 @@ int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 
 	lv_fast->status |= LV_CACHE_VOL;
 
+	/* When the lv arg is a thinpool, redirect update to data sub lv. */
+
+	if (lv_is_thin_pool(lv)) {
+		lv_update = seg_lv(first_seg(lv), 0);
+		log_verbose("Redirecting operation to data sub LV %s.", display_lvname(lv_update));
+	} else {
+		lv_update = lv;
+	}
+
 	/*
 	 * Changes the vg struct to match the desired state.
 	 *
@@ -6240,7 +6250,7 @@ int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 	 *   gets new id, becomes hidden, gets segments from lv.
 	 */
 
-	if (!(lv_wcorig = _lv_writecache_create(cmd, lv, lv_fast, block_size_sectors, &settings)))
+	if (!(lv_wcorig = _lv_writecache_create(cmd, lv_update, lv_fast, block_size_sectors, &settings)))
 		goto_bad;
 
 	/*
@@ -6248,7 +6258,7 @@ int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 	 * where the old LV is suspended and the new LV is resumed.
 	 */
 
-	if (!lv_update_and_reload(lv))
+	if (!lv_update_and_reload(lv_update))
 		goto_bad;
 
 	lockd_lv(cmd, lv, "un", 0);

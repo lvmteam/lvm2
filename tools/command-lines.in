@@ -493,7 +493,7 @@ AUTOTYPE: cache
 
 ---
 
-lvconvert --type writecache --cachevol LV LV_linear_striped_raid
+lvconvert --type writecache --cachevol LV LV_linear_striped_raid_thinpool
 OO: OO_LVCONVERT, --cachesettings String
 ID: lvconvert_to_writecache
 DESC: Attach a writecache to an LV, converts the LV to type writecache.
@@ -520,7 +520,7 @@ FLAGS: SECONDARY_SYNTAX
 
 ---
 
-lvconvert --type writecache --cachedevice PV LV_linear_striped_raid
+lvconvert --type writecache --cachedevice PV LV_linear_striped_raid_thinpool
 OO: OO_LVCONVERT, --cachesize SizeMB, --cachesettings String
 ID: lvconvert_to_writecache_with_device
 DESC: Add a writecache to an LV, using a specified cache device.
