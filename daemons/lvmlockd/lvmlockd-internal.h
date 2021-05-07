@@ -121,7 +121,7 @@ struct client {
 #define DEFAULT_MAX_RETRIES 4
 
 struct pvs {
-	const char **path;
+	char **path;
 	int num;
 };
 
@@ -338,7 +338,9 @@ EXTERN int gl_use_idm;
 EXTERN int gl_vg_removed;
 EXTERN char gl_lsname_dlm[MAX_NAME+1];
 EXTERN char gl_lsname_sanlock[MAX_NAME+1];
+EXTERN char gl_lsname_idm[MAX_NAME+1];
 EXTERN int global_dlm_lockspace_exists;
+EXTERN int global_idm_lockspace_exists;
 
 EXTERN int daemon_test; /* run as much as possible without a live lock manager */
 EXTERN int daemon_debug;
