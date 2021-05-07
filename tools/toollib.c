@@ -591,15 +591,15 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 	 * new VG, and is it compatible with current lvm.conf settings.
 	 *
 	 * The end result is to set vp_new->lock_type to:
-	 * none | clvm | dlm | sanlock.
+	 * none | clvm | dlm | sanlock | idm.
 	 *
 	 * If 'vgcreate --lock-type <arg>' is set, the answer is given
-	 * directly by <arg> which is one of none|clvm|dlm|sanlock.
+	 * directly by <arg> which is one of none|clvm|dlm|sanlock|idm.
 	 *
 	 * 'vgcreate --clustered y' is the way to create clvm VGs.
 	 *
 	 * 'vgcreate --shared' is the way to create lockd VGs.
-	 * lock_type of sanlock or dlm is selected based on
+	 * lock_type of sanlock, dlm or idm is selected based on
 	 * which lock manager is running.
 	 *
 	 *
@@ -646,7 +646,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 	 * - lvmlockd is used
 	 * - VGs with CLUSTERED set are ignored (requires clvmd)
 	 * - VGs with lockd type can be used
-	 * - vgcreate can create new VGs with lock_type sanlock or dlm
+	 * - vgcreate can create new VGs with lock_type sanlock, dlm or idm
 	 * - 'vgcreate --clustered y' fails
 	 * - 'vgcreate --shared' works
 	 * - 'vgcreate' (neither option) creates a local VG
@@ -658,7 +658,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 		lock_type = arg_str_value(cmd, locktype_ARG, "");
 
 		if (arg_is_set(cmd, shared_ARG) && !is_lockd_type(lock_type)) {
-			log_error("The --shared option requires lock type sanlock or dlm.");
+			log_error("The --shared option requires lock type sanlock, dlm or idm.");
 			return 0;
 		}
 
@@ -697,6 +697,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 
 	case LOCK_TYPE_SANLOCK:
 	case LOCK_TYPE_DLM:
+	case LOCK_TYPE_IDM:
 		if (!use_lvmlockd) {
 			log_error("Using a shared lock type requires lvmlockd.");
 			return 0;

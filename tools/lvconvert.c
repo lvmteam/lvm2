@@ -3416,6 +3416,8 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 				pool_lv->lock_args = "pending";
 			else if (!strcmp(vg->lock_type, "dlm"))
 				pool_lv->lock_args = "dlm";
+			else if (!strcmp(vg->lock_type, "idm"))
+				pool_lv->lock_args = "idm";
 			/* The lock_args will be set in vg_write(). */
 		}
 	}
