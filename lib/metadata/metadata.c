@@ -2235,6 +2235,13 @@ static int _validate_lv_lock_args(struct logical_volume *lv)
 				   lv->vg->name, display_lvname(lv), lv->lock_args);
 			r = 0;
 		}
+
+	} else if (!strcmp(lv->vg->lock_type, "idm")) {
+		if (strcmp(lv->lock_args, "idm")) {
+			log_error(INTERNAL_ERROR "LV %s/%s has invalid lock_args \"%s\"",
+				   lv->vg->name, display_lvname(lv), lv->lock_args);
+			r = 0;
+		}
 	}
 
 	return r;
@@ -2569,7 +2576,8 @@ int vg_validate(struct volume_group *vg)
 			r = 0;
 		}
 
-		if (strcmp(vg->lock_type, "sanlock") && strcmp(vg->lock_type, "dlm")) {
+		if (strcmp(vg->lock_type, "sanlock") && strcmp(vg->lock_type, "dlm") &&
+		    strcmp(vg->lock_type, "idm")) {
 			log_error(INTERNAL_ERROR "VG %s has unknown lock_type %s",
 				  vg->name, vg->lock_type);
 			r = 0;
@@ -4354,6 +4362,8 @@ int is_lockd_type(const char *lock_type)
 	if (!strcmp(lock_type, "dlm"))
 		return 1;
 	if (!strcmp(lock_type, "sanlock"))
+		return 1;
+	if (!strcmp(lock_type, "idm"))
 		return 1;
 	return 0;
 }

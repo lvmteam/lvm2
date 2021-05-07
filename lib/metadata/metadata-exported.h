@@ -356,6 +356,7 @@ typedef enum {
 	LOCK_TYPE_CLVM = 1,
 	LOCK_TYPE_DLM = 2,
 	LOCK_TYPE_SANLOCK = 3,
+	LOCK_TYPE_IDM = 4,
 } lock_type_t;
 
 struct cmd_context;

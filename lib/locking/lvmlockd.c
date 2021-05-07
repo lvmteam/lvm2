@@ -553,7 +553,8 @@ static int _deactivate_sanlock_lv(struct cmd_context *cmd, struct volume_group *
 	return 1;
 }
 
-static int _init_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
+static int _init_vg(struct cmd_context *cmd, struct volume_group *vg,
+		    const char *lock_type)
 {
 	daemon_reply reply;
 	const char *reply_str;
@@ -569,7 +570,7 @@ static int _init_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
 	reply = _lockd_send("init_vg",
 				"pid = " FMTd64, (int64_t) getpid(),
 				"vg_name = %s", vg->name,
-				"vg_lock_type = %s", "dlm",
+				"vg_lock_type = %s", lock_type,
 				NULL);
 
 	if (!_lockd_result(reply, &result, NULL)) {
@@ -589,10 +590,12 @@ static int _init_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
 		log_error("VG %s init failed: invalid parameters for dlm", vg->name);
 		break;
 	case -EMANAGER:
-		log_error("VG %s init failed: lock manager dlm is not running", vg->name);
+		log_error("VG %s init failed: lock manager %s is not running",
+			  vg->name, lock_type);
 		break;
 	case -EPROTONOSUPPORT:
-		log_error("VG %s init failed: lock manager dlm is not supported by lvmlockd", vg->name);
+		log_error("VG %s init failed: lock manager %s is not supported by lvmlockd",
+			  vg->name, lock_type);
 		break;
 	case -EEXIST:
 		log_error("VG %s init failed: a lockspace with the same name exists", vg->name);
@@ -616,7 +619,7 @@ static int _init_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
 		goto out;
 	}
 
-	vg->lock_type = "dlm";
+	vg->lock_type = lock_type;
 	vg->lock_args = vg_lock_args;
 
 	if (!vg_write(vg) || !vg_commit(vg)) {
@@ -629,6 +632,16 @@ static int _init_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
 out:
 	daemon_reply_destroy(reply);
 	return ret;
+}
+
+static int _init_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
+{
+	return _init_vg(cmd, vg, "dlm");
+}
+
+static int _init_vg_idm(struct cmd_context *cmd, struct volume_group *vg)
+{
+	return _init_vg(cmd, vg, "idm");
 }
 
 static int _init_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg, int lv_lock_count)
@@ -794,7 +807,7 @@ out:
 
 /* called after vg_remove on disk */
 
-static int _free_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
+static int _free_vg(struct cmd_context *cmd, struct volume_group *vg)
 {
 	daemon_reply reply;
 	uint32_t lockd_flags = 0;
@@ -820,16 +833,27 @@ static int _free_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	if (!ret)
-		log_error("_free_vg_dlm lvmlockd result %d", result);
+		log_error("%s: lock type %s lvmlockd result %d",
+			  __func__, vg->lock_type, result);
 
 	daemon_reply_destroy(reply);
 
 	return 1;
 }
 
+static int _free_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
+{
+	return _free_vg(cmd, vg);
+}
+
+static int _free_vg_idm(struct cmd_context *cmd, struct volume_group *vg)
+{
+	return _free_vg(cmd, vg);
+}
+
 /* called before vg_remove on disk */
 
-static int _busy_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
+static int _busy_vg(struct cmd_context *cmd, struct volume_group *vg)
 {
 	daemon_reply reply;
 	uint32_t lockd_flags = 0;
@@ -864,11 +888,22 @@ static int _busy_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	if (!ret)
-		log_error("_busy_vg_dlm lvmlockd result %d", result);
+		log_error("%s: lock type %s lvmlockd result %d", __func__,
+			  vg->lock_type, result);
 
  out:
 	daemon_reply_destroy(reply);
 	return ret;
+}
+
+static int _busy_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
+{
+	return _busy_vg(cmd, vg);
+}
+
+static int _busy_vg_idm(struct cmd_context *cmd, struct volume_group *vg)
+{
+	return _busy_vg(cmd, vg);
 }
 
 /* called before vg_remove on disk */
@@ -976,6 +1011,8 @@ int lockd_init_vg(struct cmd_context *cmd, struct volume_group *vg,
 		return _init_vg_dlm(cmd, vg);
 	case LOCK_TYPE_SANLOCK:
 		return _init_vg_sanlock(cmd, vg, lv_lock_count);
+	case LOCK_TYPE_IDM:
+		return _init_vg_idm(cmd, vg);
 	default:
 		log_error("Unknown lock_type.");
 		return 0;
@@ -1017,7 +1054,8 @@ int lockd_free_vg_before(struct cmd_context *cmd, struct volume_group *vg,
 	 * When removing (not changing), each LV is locked
 	 * when it is removed, they do not need checking here.
 	 */
-	if (lock_type_num == LOCK_TYPE_DLM || lock_type_num == LOCK_TYPE_SANLOCK) {
+	if (lock_type_num == LOCK_TYPE_DLM || lock_type_num == LOCK_TYPE_SANLOCK ||
+	    lock_type_num == LOCK_TYPE_IDM) {
 		if (changing && !_lockd_all_lvs(cmd, vg)) {
 			log_error("Cannot change VG %s with active LVs", vg->name);
 			return 0;
@@ -1041,6 +1079,9 @@ int lockd_free_vg_before(struct cmd_context *cmd, struct volume_group *vg,
 	case LOCK_TYPE_SANLOCK:
 		/* returning an error will prevent vg_remove() */
 		return _free_vg_sanlock(cmd, vg);
+	case LOCK_TYPE_IDM:
+		/* returning an error will prevent vg_remove() */
+		return _busy_vg_idm(cmd, vg);
 	default:
 		log_error("Unknown lock_type.");
 		return 0;
@@ -1058,6 +1099,9 @@ void lockd_free_vg_final(struct cmd_context *cmd, struct volume_group *vg)
 		break;
 	case LOCK_TYPE_DLM:
 		_free_vg_dlm(cmd, vg);
+		break;
+	case LOCK_TYPE_IDM:
+		_free_vg_idm(cmd, vg);
 		break;
 	default:
 		log_error("Unknown lock_type.");
@@ -2679,6 +2723,7 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 		return 1;
 	case LOCK_TYPE_SANLOCK:
 	case LOCK_TYPE_DLM:
+	case LOCK_TYPE_IDM:
 		break;
 	default:
 		log_error("lockd_init_lv: unknown lock_type.");
@@ -2821,6 +2866,8 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 		lv->lock_args = "pending";
 	else if (!strcmp(vg->lock_type, "dlm"))
 		lv->lock_args = "dlm";
+	else if (!strcmp(vg->lock_type, "idm"))
+		lv->lock_args = "idm";
 
 	return 1;
 }
@@ -2836,6 +2883,7 @@ int lockd_free_lv(struct cmd_context *cmd, struct volume_group *vg,
 		return 1;
 	case LOCK_TYPE_DLM:
 	case LOCK_TYPE_SANLOCK:
+	case LOCK_TYPE_IDM:
 		if (!lock_args)
 			return 1;
 		return _free_lv(cmd, vg, lv_name, lv_id, lock_args);
@@ -3006,6 +3054,10 @@ const char *lockd_running_lock_type(struct cmd_context *cmd, int *found_multiple
 	case LOCK_TYPE_DLM:
 		log_debug("lvmlockd found dlm");
 		lock_type = "dlm";
+		break;
+	case LOCK_TYPE_IDM:
+		log_debug("lvmlockd found idm");
+		lock_type = "idm";
 		break;
 	default:
 		log_error("Failed to find a running lock manager.");

@@ -95,6 +95,8 @@ const char *get_lock_type_string(lock_type_t lock_type)
 		return "dlm";
 	case LOCK_TYPE_SANLOCK:
 		return "sanlock";
+	case LOCK_TYPE_IDM:
+		return "idm";
 	}
 	return "invalid";
 }
@@ -111,6 +113,8 @@ lock_type_t get_lock_type_from_string(const char *str)
 		return LOCK_TYPE_DLM;
 	if (!strcmp(str, "sanlock"))
 		return LOCK_TYPE_SANLOCK;
+	if (!strcmp(str, "idm"))
+		return LOCK_TYPE_IDM;
 	return LOCK_TYPE_INVALID;
 }
 
