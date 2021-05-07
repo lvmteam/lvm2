@@ -551,7 +551,7 @@ Attach a writecache to an LV, converts the LV to type writecache.
 .RE
 .P
 .RS 4
-LV1 types: linear striped raid
+LV1 types: linear striped thinpool raid
 .RE
 .P
 \(em
@@ -605,7 +605,7 @@ Add a writecache to an LV, using a specified cache device.
 .RE
 .P
 .RS 4
-LV1 types: linear striped raid
+LV1 types: linear striped thinpool raid
 .RE
 .P
 \(em
