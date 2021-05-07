@@ -747,6 +747,7 @@ BUILD_DMFILEMAPD
 BUILD_LOCKDDLM_CONTROL
 BUILD_LOCKDDLM
 BUILD_LOCKDSANLOCK
+BUILD_LOCKDIDM
 BUILD_LVMLOCKD
 BUILD_LVMPOLLD
 BUILD_LVMDBUSD
@@ -782,6 +783,8 @@ LOCKD_DLM_LIBS
 LOCKD_DLM_CFLAGS
 LOCKD_SANLOCK_LIBS
 LOCKD_SANLOCK_CFLAGS
+LOCKD_IDM_LIBS
+LOCKD_IDM_CFLAGS
 VALGRIND_LIBS
 VALGRIND_CFLAGS
 GENPNG
@@ -946,6 +949,7 @@ enable_lvmpolld
 enable_lvmlockd_sanlock
 enable_lvmlockd_dlm
 enable_lvmlockd_dlmcontrol
+enable_lvmlockd_idm
 enable_use_lvmlockd
 with_lvmlockd_pidfile
 enable_use_lvmpolld
@@ -1019,6 +1023,8 @@ LOCKD_DLM_CFLAGS
 LOCKD_DLM_LIBS
 LOCKD_DLM_CONTROL_CFLAGS
 LOCKD_DLM_CONTROL_LIBS
+LOCKD_IDM_CFLAGS
+LOCKD_IDM_LIBS
 NOTIFY_DBUS_CFLAGS
 NOTIFY_DBUS_LIBS
 BLKID_CFLAGS
@@ -1678,6 +1684,7 @@ Optional Features:
   --enable-lvmlockd-dlm   enable the LVM lock daemon using dlm
   --enable-lvmlockd-dlmcontrol
                           enable lvmlockd remote refresh using libdlmcontrol
+  --enable-lvmlockd-idm   enable the LVM lock daemon using idm
   --disable-use-lvmlockd  disable usage of LVM lock daemon
   --disable-use-lvmpolld  disable usage of LVM Poll Daemon
   --enable-dmfilemapd     enable the dmstats filemap daemon
@@ -1832,6 +1839,10 @@ Some influential environment variables:
               C compiler flags for LOCKD_DLM_CONTROL, overriding pkg-config
   LOCKD_DLM_CONTROL_LIBS
               linker flags for LOCKD_DLM_CONTROL, overriding pkg-config
+  LOCKD_IDM_CFLAGS
+              C compiler flags for LOCKD_IDM, overriding pkg-config
+  LOCKD_IDM_LIBS
+              linker flags for LOCKD_IDM, overriding pkg-config
   NOTIFY_DBUS_CFLAGS
               C compiler flags for NOTIFY_DBUS, overriding pkg-config
   NOTIFY_DBUS_LIBS
@@ -3124,6 +3135,7 @@ case "$host_os" in
 		LOCKDSANLOCK=no
 		LOCKDDLM=no
 		LOCKDDLM_CONTROL=no
+		LOCKDIDM=no
 		ODIRECT=yes
 		DM_IOCTLS=yes
 		SELINUX=yes
@@ -11187,6 +11199,167 @@ $as_echo "yes" >&6; }
 fi
 
 $as_echo "#define LOCKDDLM_CONTROL_SUPPORT 1" >>confdefs.h
+
+	BUILD_LVMLOCKD=yes
+fi
+
+################################################################################
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build lvmlockdidm" >&5
+$as_echo_n "checking whether to build lvmlockdidm... " >&6; }
+# Check whether --enable-lvmlockd-idm was given.
+if test "${enable_lvmlockd_idm+set}" = set; then :
+  enableval=$enable_lvmlockd_idm; LOCKDIDM=$enableval
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $LOCKDIDM" >&5
+$as_echo "$LOCKDIDM" >&6; }
+
+BUILD_LOCKDIDM=$LOCKDIDM
+
+if test "$BUILD_LOCKDIDM" = yes; then
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for LOCKD_IDM" >&5
+$as_echo_n "checking for LOCKD_IDM... " >&6; }
+
+if test -n "$LOCKD_IDM_CFLAGS"; then
+    pkg_cv_LOCKD_IDM_CFLAGS="$LOCKD_IDM_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libseagate_ilm >= 0.1.0\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libseagate_ilm >= 0.1.0") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LOCKD_IDM_CFLAGS=`$PKG_CONFIG --cflags "libseagate_ilm >= 0.1.0" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$LOCKD_IDM_LIBS"; then
+    pkg_cv_LOCKD_IDM_LIBS="$LOCKD_IDM_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libseagate_ilm >= 0.1.0\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libseagate_ilm >= 0.1.0") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LOCKD_IDM_LIBS=`$PKG_CONFIG --libs "libseagate_ilm >= 0.1.0" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        LOCKD_IDM_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libseagate_ilm >= 0.1.0" 2>&1`
+        else
+	        LOCKD_IDM_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libseagate_ilm >= 0.1.0" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$LOCKD_IDM_PKG_ERRORS" >&5
+
+	$bailout
+elif test $pkg_failed = untried; then
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	$bailout
+else
+	LOCKD_IDM_CFLAGS=$pkg_cv_LOCKD_IDM_CFLAGS
+	LOCKD_IDM_LIBS=$pkg_cv_LOCKD_IDM_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+fi
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for BLKID" >&5
+$as_echo_n "checking for BLKID... " >&6; }
+
+if test -n "$BLKID_CFLAGS"; then
+    pkg_cv_BLKID_CFLAGS="$BLKID_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"blkid >= 2.24\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "blkid >= 2.24") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_BLKID_CFLAGS=`$PKG_CONFIG --cflags "blkid >= 2.24" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$BLKID_LIBS"; then
+    pkg_cv_BLKID_LIBS="$BLKID_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"blkid >= 2.24\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "blkid >= 2.24") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_BLKID_LIBS=`$PKG_CONFIG --libs "blkid >= 2.24" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        BLKID_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "blkid >= 2.24" 2>&1`
+        else
+	        BLKID_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "blkid >= 2.24" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$BLKID_PKG_ERRORS" >&5
+
+	$bailout
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	$bailout
+else
+	BLKID_CFLAGS=$pkg_cv_BLKID_CFLAGS
+	BLKID_LIBS=$pkg_cv_BLKID_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	HAVE_LOCKD_IDM=yes
+fi
+
+$as_echo "#define LOCKDIDM_SUPPORT 1" >>confdefs.h
 
 	BUILD_LVMLOCKD=yes
 fi

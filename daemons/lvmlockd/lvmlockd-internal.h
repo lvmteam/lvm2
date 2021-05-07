@@ -20,6 +20,7 @@
 #define R_NAME_GL          "GLLK"
 #define R_NAME_VG          "VGLK"
 #define S_NAME_GL_DLM      "lvm_global"
+#define S_NAME_GL_IDM      "lvm_global"
 #define LVM_LS_PREFIX      "lvm_"           /* ls name is prefix + vg_name */
 /* global lockspace name for sanlock is a vg name */
 
@@ -29,6 +30,7 @@ enum {
 	LD_LM_UNUSED = 1, /* place holder so values match lib/locking/lvmlockd.h */
 	LD_LM_DLM = 2,
 	LD_LM_SANLOCK = 3,
+	LD_LM_IDM = 4,
 };
 
 /* operation types */
@@ -118,6 +120,11 @@ struct client {
  */
 #define DEFAULT_MAX_RETRIES 4
 
+struct pvs {
+	const char **path;
+	int num;
+};
+
 struct action {
 	struct list_head list;
 	uint32_t client_id;
@@ -140,6 +147,7 @@ struct action {
 	char vg_args[MAX_ARGS+1];
 	char lv_args[MAX_ARGS+1];
 	char vg_sysid[MAX_NAME+1];
+	struct pvs pvs;			/* PV list for idm */
 };
 
 struct resource {
@@ -184,6 +192,7 @@ struct lockspace {
 	uint64_t free_lock_offset;	/* for sanlock, start search for free lock here */
 	int free_lock_sector_size;	/* for sanlock */
 	int free_lock_align_size;	/* for sanlock */
+	struct pvs pvs;			/* for idm: PV list */
 
 	uint32_t start_client_id;	/* client_id that started the lockspace */
 	pthread_t thread;		/* makes synchronous lock requests */
@@ -325,6 +334,7 @@ static inline int list_empty(const struct list_head *head)
 EXTERN int gl_type_static;
 EXTERN int gl_use_dlm;
 EXTERN int gl_use_sanlock;
+EXTERN int gl_use_idm;
 EXTERN int gl_vg_removed;
 EXTERN char gl_lsname_dlm[MAX_NAME+1];
 EXTERN char gl_lsname_sanlock[MAX_NAME+1];
@@ -618,5 +628,103 @@ static inline int lm_support_sanlock(void)
 }
 
 #endif /* sanlock support */
+
+#ifdef LOCKDIDM_SUPPORT
+
+int lm_data_size_idm(void);
+int lm_init_vg_idm(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
+int lm_prepare_lockspace_idm(struct lockspace *ls);
+int lm_add_lockspace_idm(struct lockspace *ls, int adopt);
+int lm_rem_lockspace_idm(struct lockspace *ls, int free_vg);
+int lm_lock_idm(struct lockspace *ls, struct resource *r, int ld_mode,
+		struct val_blk *vb_out, char *lv_uuid, struct pvs *pvs,
+		int adopt);
+int lm_convert_idm(struct lockspace *ls, struct resource *r,
+		   int ld_mode, uint32_t r_version);
+int lm_unlock_idm(struct lockspace *ls, struct resource *r,
+		  uint32_t r_version, uint32_t lmu_flags);
+int lm_hosts_idm(struct lockspace *ls, int notify);
+int lm_get_lockspaces_idm(struct list_head *ls_rejoin);
+int lm_is_running_idm(void);
+int lm_rem_resource_idm(struct lockspace *ls, struct resource *r);
+
+static inline int lm_support_idm(void)
+{
+	return 1;
+}
+
+#else
+
+static inline int lm_data_size_idm(void)
+{
+	return -1;
+}
+
+static inline int lm_init_vg_idm(char *ls_name, char *vg_name, uint32_t flags,
+			  char *vg_args)
+{
+	return -1;
+}
+
+static inline int lm_prepare_lockspace_idm(struct lockspace *ls)
+{
+	return -1;
+}
+
+static inline int lm_add_lockspace_idm(struct lockspace *ls, int adopt)
+{
+	return -1;
+}
+
+static inline int lm_rem_lockspace_idm(struct lockspace *ls, int free_vg)
+{
+	return -1;
+}
+
+static inline int lm_lock_idm(struct lockspace *ls, struct resource *r, int ld_mode,
+		       struct val_blk *vb_out, char *lv_uuid, struct pvs *pvs,
+		       int adopt)
+{
+	return -1;
+}
+
+static inline int lm_convert_idm(struct lockspace *ls, struct resource *r,
+			  int ld_mode, uint32_t r_version)
+{
+	return -1;
+}
+
+static inline int lm_unlock_idm(struct lockspace *ls, struct resource *r,
+			 uint32_t r_version, uint32_t lmu_flags)
+{
+	return -1;
+}
+
+static inline int lm_hosts_idm(struct lockspace *ls, int notify)
+{
+	return -1;
+}
+
+static inline int lm_get_lockspaces_idm(struct list_head *ls_rejoin)
+{
+	return -1;
+}
+
+static inline int lm_is_running_idm(void)
+{
+	return 0;
+}
+
+static inline int lm_rem_resource_idm(struct lockspace *ls, struct resource *r)
+{
+	return -1;
+}
+
+static inline int lm_support_idm(void)
+{
+	return 0;
+}
+
+#endif /* Seagate IDM support */
 
 #endif	/* _LVM_LVMLOCKD_INTERNAL_H */
