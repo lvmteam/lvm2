@@ -25,6 +25,11 @@ static int _use_lvmlockd = 0;         /* is 1 if command is configured to use lv
 static int _lvmlockd_connected = 0;   /* is 1 if command is connected to lvmlockd */
 static int _lvmlockd_init_failed = 0; /* used to suppress further warnings */
 
+struct lvmlockd_pvs {
+	char **path;
+	int num;
+};
+
 void lvmlockd_set_socket(const char *sock)
 {
 	_lvmlockd_socket = sock;
@@ -178,23 +183,199 @@ static int _lockd_result(daemon_reply reply, int *result, uint32_t *lockd_flags)
 	return 1;
 }
 
-static daemon_reply _lockd_send(const char *req_name, ...)
+static daemon_reply _lockd_send_with_pvs(const char *req_name,
+				const struct lvmlockd_pvs *lock_pvs, ...)
 {
-	va_list ap;
 	daemon_reply repl;
 	daemon_request req;
+	int i;
+	char key[32];
+	const char *val;
+	va_list ap;
 
 	req = daemon_request_make(req_name);
 
-	va_start(ap, req_name);
+	va_start(ap, lock_pvs);
 	daemon_request_extend_v(req, ap);
 	va_end(ap);
+
+	/* Pass PV list */
+	if (lock_pvs && lock_pvs->num) {
+		daemon_request_extend(req, "path_num = " FMTd64,
+				      (int64_t)(lock_pvs)->num, NULL);
+
+		for (i = 0; i < lock_pvs->num; i++) {
+			snprintf(key, sizeof(key), "path[%d] = %%s", i);
+			val = lock_pvs->path[i] ? lock_pvs->path[i] : "none";
+			daemon_request_extend(req, key, val, NULL);
+		}
+	}
 
 	repl = daemon_send(_lvmlockd, req);
 
 	daemon_request_destroy(req);
 
 	return repl;
+}
+
+#define _lockd_send(req_name, args...)	\
+	_lockd_send_with_pvs(req_name, NULL, ##args)
+
+static int _lockd_retrive_vg_pv_num(struct volume_group *vg)
+{
+	struct pv_list *pvl;
+	int num = 0;
+
+	dm_list_iterate_items(pvl, &vg->pvs)
+		num++;
+
+	return num;
+}
+
+static void _lockd_retrive_vg_pv_list(struct volume_group *vg,
+				      struct lvmlockd_pvs *lock_pvs)
+{
+	struct pv_list *pvl;
+	int pv_num, i;
+
+	memset(lock_pvs, 0x0, sizeof(*lock_pvs));
+
+	pv_num = _lockd_retrive_vg_pv_num(vg);
+	if (!pv_num) {
+		log_error("Fail to any PVs for VG %s", vg->name);
+		return;
+	}
+
+	/* Allocate buffer for PV list */
+	lock_pvs->path = zalloc(sizeof(*lock_pvs->path) * pv_num);
+	if (!lock_pvs->path) {
+		log_error("Fail to allocate PV list for VG %s", vg->name);
+		return;
+	}
+
+	i = 0;
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		lock_pvs->path[i] = strdup(pv_dev_name(pvl->pv));
+		if (!lock_pvs->path[i]) {
+			log_error("Fail to allocate PV path for VG %s", vg->name);
+			goto fail;
+		}
+
+		log_debug("VG %s find PV device %s", vg->name, lock_pvs->path[i]);
+		i++;
+	}
+
+	lock_pvs->num = pv_num;
+	return;
+
+fail:
+	for (i = 0; i < pv_num; i++) {
+		if (!lock_pvs->path[i])
+			continue;
+		free(lock_pvs->path[i]);
+	}
+	free(lock_pvs->path);
+	return;
+}
+
+static int _lockd_retrive_lv_pv_num(struct volume_group *vg,
+				    const char *lv_name)
+{
+	struct logical_volume *lv = find_lv(vg, lv_name);
+	struct pv_list *pvl;
+	int num;
+
+	if (!lv)
+		return 0;
+
+	num = 0;
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (lv_is_on_pv(lv, pvl->pv))
+			num++;
+	}
+
+	return num;
+}
+
+static void _lockd_retrive_lv_pv_list(struct volume_group *vg,
+				      const char *lv_name,
+				      struct lvmlockd_pvs *lock_pvs)
+{
+	struct logical_volume *lv = find_lv(vg, lv_name);
+	struct pv_list *pvl;
+	int pv_num, i = 0;
+
+	memset(lock_pvs, 0x0, sizeof(*lock_pvs));
+
+	/* Cannot find any existed LV? */
+	if (!lv)
+		return;
+
+	pv_num = _lockd_retrive_lv_pv_num(vg, lv_name);
+	if (!pv_num) {
+		/*
+		 * Fixup for 'lvcreate --type error -L1 -n $lv1 $vg', in this
+		 * case, the drive path list is empty since it doesn't establish
+		 * the structure 'pvseg->lvseg->lv->name'.
+		 *
+		 * So create drive path list with all drives in the VG.
+		 */
+		log_error("Fail to find any PVs for %s/%s, try to find PVs from VG instead",
+			  vg->name, lv_name);
+		_lockd_retrive_vg_pv_list(vg, lock_pvs);
+		return;
+	}
+
+	/* Allocate buffer for PV list */
+	lock_pvs->path = malloc(sizeof(*lock_pvs->path) * pv_num);
+	if (!lock_pvs->path) {
+		log_error("Fail to allocate PV list for %s/%s", vg->name, lv_name);
+		return;
+	}
+
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (lv_is_on_pv(lv, pvl->pv)) {
+			lock_pvs->path[i] = strdup(pv_dev_name(pvl->pv));
+			if (!lock_pvs->path[i]) {
+				log_error("Fail to allocate PV path for LV %s/%s",
+					  vg->name, lv_name);
+				goto fail;
+			}
+
+			log_debug("Find PV device %s for LV %s/%s",
+				  lock_pvs->path[i], vg->name, lv_name);
+			i++;
+		}
+	}
+
+	lock_pvs->num = pv_num;
+	return;
+
+fail:
+	for (i = 0; i < pv_num; i++) {
+		if (!lock_pvs->path[i])
+			continue;
+		free(lock_pvs->path[i]);
+		lock_pvs->path[i] = NULL;
+	}
+	free(lock_pvs->path);
+	lock_pvs->path = NULL;
+	lock_pvs->num = 0;
+	return;
+}
+
+static void _lockd_free_pv_list(struct lvmlockd_pvs *lock_pvs)
+{
+	int i;
+
+	for (i = 0; i < lock_pvs->num; i++) {
+		free(lock_pvs->path[i]);
+		lock_pvs->path[i] = NULL;
+	}
+
+	free(lock_pvs->path);
+	lock_pvs->path = NULL;
+	lock_pvs->num = 0;
 }
 
 /*
@@ -227,6 +408,7 @@ static int _lockd_request(struct cmd_context *cmd,
 		          const char *lv_lock_args,
 		          const char *mode,
 		          const char *opts,
+			  const struct lvmlockd_pvs *lock_pvs,
 		          int *result,
 		          uint32_t *lockd_flags)
 {
@@ -251,7 +433,8 @@ static int _lockd_request(struct cmd_context *cmd,
 		cmd_name = "none";
 
 	if (vg_name && lv_name) {
-		reply = _lockd_send(req_name,
+		reply = _lockd_send_with_pvs(req_name,
+					lock_pvs,
 					"cmd = %s", cmd_name,
 					"pid = " FMTd64, (int64_t) pid,
 					"mode = %s", mode,
@@ -271,7 +454,8 @@ static int _lockd_request(struct cmd_context *cmd,
 			  req_name, mode, vg_name, lv_name, *result, *lockd_flags);
 
 	} else if (vg_name) {
-		reply = _lockd_send(req_name,
+		reply = _lockd_send_with_pvs(req_name,
+					lock_pvs,
 					"cmd = %s", cmd_name,
 					"pid = " FMTd64, (int64_t) pid,
 					"mode = %s", mode,
@@ -288,7 +472,8 @@ static int _lockd_request(struct cmd_context *cmd,
 			  req_name, mode, vg_name, *result, *lockd_flags);
 
 	} else {
-		reply = _lockd_send(req_name,
+		reply = _lockd_send_with_pvs(req_name,
+					lock_pvs,
 					"cmd = %s", cmd_name,
 					"pid = " FMTd64, (int64_t) pid,
 					"mode = %s", mode,
@@ -1134,6 +1319,7 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int start_i
 	int host_id = 0;
 	int result;
 	int ret;
+	struct lvmlockd_pvs lock_pvs;
 
 	memset(uuid, 0, sizeof(uuid));
 
@@ -1169,7 +1355,15 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int start_i
 		host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
 	}
 
-	reply = _lockd_send("start_vg",
+	/*
+	 * Create the VG's PV list when start the VG, the PV list
+	 * is passed to lvmlockd, and the the PVs path will be used
+	 * to send SCSI commands for idm locking scheme.
+	 */
+	if (!strcmp(vg->lock_type, "idm")) {
+		_lockd_retrive_vg_pv_list(vg, &lock_pvs);
+		reply = _lockd_send_with_pvs("start_vg",
+				&lock_pvs,
 				"pid = " FMTd64, (int64_t) getpid(),
 				"vg_name = %s", vg->name,
 				"vg_lock_type = %s", vg->lock_type,
@@ -1179,6 +1373,20 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int start_i
 				"host_id = " FMTd64, (int64_t) host_id,
 				"opts = %s", start_init ? "start_init" : "none",
 				NULL);
+		_lockd_free_pv_list(&lock_pvs);
+	} else {
+		reply = _lockd_send_with_pvs("start_vg",
+				NULL,
+				"pid = " FMTd64, (int64_t) getpid(),
+				"vg_name = %s", vg->name,
+				"vg_lock_type = %s", vg->lock_type,
+				"vg_lock_args = %s", vg->lock_args ?: "none",
+				"vg_uuid = %s", uuid[0] ? uuid : "none",
+				"version = " FMTd64, (int64_t) vg->seqno,
+				"host_id = " FMTd64, (int64_t) host_id,
+				"opts = %s", start_init ? "start_init" : "none",
+				NULL);
+	}
 
 	if (!_lockd_result(reply, &result, &lockd_flags)) {
 		ret = 0;
@@ -1406,7 +1614,7 @@ int lockd_global_create(struct cmd_context *cmd, const char *def_mode, const cha
  req:
 	if (!_lockd_request(cmd, "lock_gl",
 			      NULL, vg_lock_type, NULL, NULL, NULL, NULL, mode, NULL,
-			      &result, &lockd_flags)) {
+			      NULL, &result, &lockd_flags)) {
 		/* No result from lvmlockd, it is probably not running. */
 		log_error("Global lock failed: check that lvmlockd is running.");
 		return 0;
@@ -1642,7 +1850,7 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 
 	if (!_lockd_request(cmd, "lock_gl",
 			    NULL, NULL, NULL, NULL, NULL, NULL, mode, opts,
-			    &result, &lockd_flags)) {
+			    NULL, &result, &lockd_flags)) {
 		/* No result from lvmlockd, it is probably not running. */
 
 		/* We don't care if an unlock fails. */
@@ -1910,7 +2118,7 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 
 	if (!_lockd_request(cmd, "lock_vg",
 			      vg_name, NULL, NULL, NULL, NULL, NULL, mode, NULL,
-			      &result, &lockd_flags)) {
+			      NULL, &result, &lockd_flags)) {
 		/*
 		 * No result from lvmlockd, it is probably not running.
 		 * Decide if it is ok to continue without a lock in
@@ -2170,6 +2378,7 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 	uint32_t lockd_flags;
 	int refreshed = 0;
 	int result;
+	struct lvmlockd_pvs lock_pvs;
 
 	/*
 	 * Verify that when --readonly is used, no LVs should be activated or used.
@@ -2235,13 +2444,28 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
  retry:
 	log_debug("lockd LV %s/%s mode %s uuid %s", vg->name, lv_name, mode, lv_uuid);
 
-	if (!_lockd_request(cmd, "lock_lv",
-			       vg->name, vg->lock_type, vg->lock_args,
-			       lv_name, lv_uuid, lock_args, mode, opts,
-			       &result, &lockd_flags)) {
-		/* No result from lvmlockd, it is probably not running. */
-		log_error("Locking failed for LV %s/%s", vg->name, lv_name);
-		return 0;
+	/* Pass PV list for IDM lock type */
+	if (!strcmp(vg->lock_type, "idm")) {
+		_lockd_retrive_lv_pv_list(vg, lv_name, &lock_pvs);
+		if (!_lockd_request(cmd, "lock_lv",
+				       vg->name, vg->lock_type, vg->lock_args,
+				       lv_name, lv_uuid, lock_args, mode, opts,
+				       &lock_pvs, &result, &lockd_flags)) {
+			_lockd_free_pv_list(&lock_pvs);
+			/* No result from lvmlockd, it is probably not running. */
+			log_error("Locking failed for LV %s/%s", vg->name, lv_name);
+			return 0;
+		}
+		_lockd_free_pv_list(&lock_pvs);
+	} else {
+		if (!_lockd_request(cmd, "lock_lv",
+				       vg->name, vg->lock_type, vg->lock_args,
+				       lv_name, lv_uuid, lock_args, mode, opts,
+				       NULL, &result, &lockd_flags)) {
+			/* No result from lvmlockd, it is probably not running. */
+			log_error("Locking failed for LV %s/%s", vg->name, lv_name);
+			return 0;
+		}
 	}
 
 	/* The lv was not active/locked. */
