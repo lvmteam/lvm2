@@ -1,10 +1,13 @@
-Version 2.03.12 - 
-===================================
+Version 2.03.12 - 07th May 2021
+===============================
+  Allow attaching cache to thin data volume.
   Fix memleak when generating list of outdated pvs.
   Better hyphenation usage in man pages.
   Replace use of deprecated security_context_t with char*.
   Configure supports AIO_LIBS and AIO_CFLAGS.
   Improve build process for static builds.
+  New --setautoactivation option to modify LV or VG auto activation.
+  New metadata based autoactivation property for LVs and VGs.
   Improve signal handling with lvmpolld.
   Signal handler can interrupt command also for SIGTERM.
   Lvreduce --yes support.
@@ -20,6 +23,7 @@ Version 2.03.12 -
   Merge polling does not fail, when LV is found to be already merged.
   Poll volumes with at least 100ms delays.
   Do not flush dm cache when cached LV is going to be removed.
+  New lvmlockctl_kill_command configuration option.
   Support interruption while waiting on device close before deactivation.
   Flush thin-pool messages before removing more thin volumes.
   Improve hash function with less collisions and make it faster.
@@ -33,6 +37,7 @@ Version 2.03.12 -
   Add devices file feature, off by default for now.
   Support extension of writecached volumes.
   Fix problem with unbound variable usage within fsadm.
+  Fix IMSM MD RAID detection on 4k devices.
   Check for presence of VDO target before starting any conversion.
   Support metatadata profiles with volume VDO pool conversions.
   Support -Zn for conversion of already formated VDO pools.
@@ -49,11 +54,11 @@ Version 2.03.12 -
   Allocation prints better error when metadata cannot fit on a single PV.
   Pvmove can better resolve full thin-pool tree move.
   Limit pool metadata spare to 16GiB.
-  Improves convertsion and allocation of pool metadata.
+  Improves conversion and allocation of pool metadata.
   Support thin pool metadata 15.88GiB, adds 64MiB, thin_pool_crop_metadata=0.
-  Enhance lvdisplay to report raid availiable/partial.
+  Enhance lvdisplay to report raid available/partial.
   Support online rename of VDO pools.
-  Imporove removal of pmspare when last pool is removed.
+  Improve removal of pmspare when last pool is removed.
   Fix problem with wiping of converted LVs.
   Fix memleak in scanning  (2.03.11).
   Fix corner case allocation for thin-pools.
@@ -256,7 +261,6 @@ Version 2.03.00 - 10th October 2018
   Remove clvmd
   Remove lvmlib (api)
   Remove lvmetad
-  lvconvert: provide possible layouts between linear and striped/raid
   Use versionsort to fix archive file expiry beyond 100000 files.
 
 Version 2.02.178-rc1 - 24th May 2018
