@@ -1134,6 +1134,7 @@ AS_IF([test "$BLKID_WIPING" != "no"], [
 		BLKID_WIPING="yes"
 		BLKID_PC="blkid"
 		DEFAULT_USE_BLKID_WIPING=1
+		BLKID_STATIC_LIBS=$("$PKG_CONFIG" --static --libs blkid)
 		AC_DEFINE([BLKID_WIPING_SUPPORT], 1, [Define to 1 to use libblkid detection of signatures when wiping.])
 	], [
 		AS_IF([test "$BLKID_WIPING" = "maybe"], [
@@ -1159,6 +1160,7 @@ AC_MSG_RESULT([$UDEV_SYNC])
 
 AS_IF([test "$UDEV_SYNC" = "yes"], [
 	PKG_CHECK_MODULES(UDEV, libudev >= 143, [UDEV_PC="libudev"])
+	UDEV_STATIC_LIBS=$("$PKG_CONFIG" --static --libs libudev)
 	AC_DEFINE([UDEV_SYNC_SUPPORT], 1, [Define to 1 to enable synchronisation with udev processing.])
 
 	AC_CHECK_LIB(udev, udev_device_get_is_initialized, AC_DEFINE([HAVE_LIBUDEV_UDEV_DEVICE_GET_IS_INITIALIZED], 1,
@@ -1376,17 +1378,23 @@ dnl -- Check for selinux
 AS_IF([test "$SELINUX" = "yes"], [
 	AC_CHECK_LIB([sepol], [sepol_check_context], [
 		AC_DEFINE([HAVE_SEPOL], 1, [Define to 1 if sepol_check_context is available.])
-		SELINUX_LIBS="-lsepol"])
+		SEPOL_LIBS="-lsepol"])
+
+	PKG_CHECK_EXISTS([libselinux],
+			 [PKG_CHECK_MODULES([SELINUX], [libselinux],
+					    [SELINUX_STATIC_LIBS=$("$PKG_CONFIG" --static --libs libselinux)])])
 
 	AC_CHECK_LIB([selinux], [is_selinux_enabled], [
 		AC_CHECK_HEADERS([selinux/selinux.h],, hard_bailout)
 		AC_CHECK_HEADERS([selinux/label.h])
 		AC_DEFINE([HAVE_SELINUX], 1, [Define to 1 to include support for selinux.])
-		SELINUX_LIBS="-lselinux $SELINUX_LIBS"
+		SELINUX_LIBS=${SELINUX_LIBS:--lselinux}
+		SELINUX_STATIC_LIBS=${SELINUX_STATIC_LIBS:-$SELINUX_LIBS $SEPOL_LIBS}
 		SELINUX_PC="libselinux"
 		HAVE_SELINUX=yes ], [
 		AC_MSG_WARN(Disabling selinux)
 		SELINUX_LIBS=
+		SELINUX_STATIC_LIBS=
 		SELINUX_PC=
 		HAVE_SELINUX=no ])
 ])
@@ -1792,6 +1800,7 @@ AC_ARG_VAR([READLINE_LIBS], [linker flags for readline])
 AC_SUBST(AWK)
 AC_SUBST(BLKDEACTIVATE)
 AC_SUBST(BLKID_PC)
+AC_SUBST(BLKID_STATIC_LIBS)
 AC_SUBST(BUILD_CMIRRORD)
 AC_SUBST(BUILD_DMEVENTD)
 AC_SUBST(BUILD_DMFILEMAPD)
@@ -1882,6 +1891,7 @@ AC_SUBST(RT_LIBS)
 AC_SUBST(SBINDIR)
 AC_SUBST(SELINUX_LIBS)
 AC_SUBST(SELINUX_PC)
+AC_SUBST(SELINUX_STATIC_LIBS)
 AC_SUBST(SILENT_RULES)
 AC_SUBST(SNAPSHOTS)
 AC_SUBST(STATICDIR)
@@ -1899,6 +1909,7 @@ AC_SUBST(UDEV_HAS_BUILTIN_BLKID)
 AC_SUBST(UDEV_PC)
 AC_SUBST(UDEV_RULES)
 AC_SUBST(UDEV_RULE_EXEC_DETECTION)
+AC_SUBST(UDEV_STATIC_LIBS)
 AC_SUBST(UDEV_SYNC)
 AC_SUBST(USE_TRACKING)
 AC_SUBST(USRSBINDIR)
