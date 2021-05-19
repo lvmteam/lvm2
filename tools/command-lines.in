@@ -534,7 +534,7 @@ RULE: all and lv_is_visible
 
 ---
 
-lvconvert --type thin-pool LV_linear_striped_raid_cache_error_zero
+lvconvert --type thin-pool LV_linear_striped_raid_cache_writecache_error_zero
 OO: --stripes_long Number, --stripesize SizeKB,
 OO_LVCONVERT_THINPOOL, OO_LVCONVERT_POOL, OO_LVCONVERT
 OP: PV ...
@@ -566,7 +566,7 @@ RULE: --poolmetadata not --readahead --stripesize --stripes_long
 # This command syntax is deprecated, and the primary forms
 # of creating a pool or swapping metadata should be used.
 
-lvconvert --thinpool LV_linear_striped_raid_cache_thinpool
+lvconvert --thinpool LV_linear_striped_raid_cache_writecache_thinpool
 OO: --stripes_long Number, --stripesize SizeKB,
 OO_LVCONVERT_THINPOOL, OO_LVCONVERT_POOL, OO_LVCONVERT
 OP: PV ...
