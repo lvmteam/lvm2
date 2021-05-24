@@ -21,6 +21,18 @@
 #include "lib/config/defaults.h"
 #include "lib/display/display.h"
 
+struct logical_volume *data_lv_from_thin_pool(struct logical_volume *pool_lv)
+{
+	struct lv_segment *seg_thinpool = first_seg(pool_lv);
+
+	if (!seg_thinpool || !seg_is_thin_pool(seg_thinpool)) {
+		log_error(INTERNAL_ERROR "data_lv_from_thin_pool arg not thin pool %s", pool_lv->name);
+		return NULL;
+	}
+
+	return seg_thinpool->areas[0].u.lv.lv;
+}
+
 /* TODO: drop unused no_update */
 int attach_pool_message(struct lv_segment *pool_seg, dm_thin_message_t type,
 			struct logical_volume *lv, uint32_t delete_id,

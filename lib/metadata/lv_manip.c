@@ -6692,6 +6692,25 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return_0;
 	}
 
+	/* if thin pool data lv is writecache, then detach and remove the writecache */
+	if (lv_is_thin_pool(lv)) {
+		struct logical_volume *data_lv = data_lv_from_thin_pool(lv);
+
+		if (data_lv && lv_is_writecache(data_lv)) {
+			struct logical_volume *cachevol_lv = first_seg(data_lv)->writecache;
+
+			if (!lv_detach_writecache_cachevol(data_lv, 1)) {
+				log_error("Failed to detach writecache from %s", display_lvname(data_lv));
+				return 0;
+			}
+
+			if (!lv_remove_single(cmd, cachevol_lv, force, 1)) {
+				log_error("Failed to remove cachevol %s.", display_lvname(cachevol_lv));
+				return 0;
+			}
+		}
+	}
+
 	if (lv_is_writecache(lv)) {
 		struct logical_volume *cachevol_lv = first_seg(lv)->writecache;
 

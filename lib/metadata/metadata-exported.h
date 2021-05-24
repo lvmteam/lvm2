@@ -928,6 +928,8 @@ int handle_pool_metadata_spare(struct volume_group *vg, uint32_t extents,
 int vg_set_pool_metadata_spare(struct logical_volume *lv);
 int vg_remove_pool_metadata_spare(struct volume_group *vg);
 
+struct logical_volume *data_lv_from_thin_pool(struct logical_volume *pool_lv);
+
 int attach_thin_external_origin(struct lv_segment *seg,
 				struct logical_volume *external_lv);
 int detach_thin_external_origin(struct lv_segment *seg);
