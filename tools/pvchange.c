@@ -248,7 +248,32 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 
 	set_pv_notify(cmd);
 
-	clear_hint_file(cmd);
+	/*
+	 * Changing a PV uuid is the only pvchange that invalidates hints.
+	 * Invalidating hints (clear_hint_file) is called at the start of
+	 * the command and takes the hints lock.
+	 * The global lock must always be taken first, then the hints lock
+	 * (the required lock ordering.)
+	 *
+	 * Because of these constraints, the global lock is taken ex here
+	 * for any PV uuid change, even though the global lock is technically
+	 * required only for changing an orphan PV (we don't know until later
+	 * if the PV is an orphan).  The VG lock is used when changing
+	 * non-orphan PVs.
+	 *
+	 * For changes other than uuid on an orphan PV, the global lock is
+	 * taken sh by process_each, then converted to ex in pvchange_single,
+	 * which works because the hints lock is not held.
+	 *
+	 * (Eventually, perhaps always do lock_global(ex) here to simplify.)
+	 */
+	if (arg_is_set(cmd, uuid_ARG)) {
+		if (!lock_global(cmd, "ex")) {
+			ret = ECMD_FAILED;
+			goto out;
+		}
+		clear_hint_file(cmd);
+	}
 
 	ret = process_each_pv(cmd, argc, argv, NULL, 0, READ_FOR_UPDATE, handle, _pvchange_single);
 
