@@ -52,8 +52,8 @@ def filter_event(action, device):
 	# when appropriate.
 	refresh = False
 
-	if '.ID_FS_TYPE_NEW' in device:
-		fs_type_new = device['.ID_FS_TYPE_NEW']
+	if 'ID_FS_TYPE' in device:
+		fs_type_new = device['ID_FS_TYPE']
 
 		if 'LVM' in fs_type_new:
 			refresh = True
