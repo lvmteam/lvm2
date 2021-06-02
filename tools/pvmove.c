@@ -387,6 +387,15 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			return NULL;
 		}
 
+		if (lv_is_writecache(lv)) {
+			struct logical_volume *lv_cachevol = first_seg(lv)->writecache;
+			if (lv_is_on_pvs(lv_cachevol, source_pvl)) {
+				log_error("Unable to move device used for writecache cachevol %s.", display_lvname(lv_cachevol));
+				return NULL;
+			}
+
+		}
+
 		if (lv_is_raid(lv) && lv_raid_has_integrity(lv)) {
 			log_error("Unable to pvmove device used for raid with integrity.");
 			return NULL;
