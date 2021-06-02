@@ -4412,6 +4412,9 @@ int lv_on_pmem(struct logical_volume *lv)
 
 	dm_list_iterate_items(seg, &lv->segments) {
 		for (s = 0; s < seg->area_count; s++) {
+			if (seg_type(seg, s) != AREA_PV)
+				continue;
+
 			pv = seg_pv(seg, s);
 
 			if (dev_is_pmem(lv->vg->cmd->dev_types, pv->dev)) {
