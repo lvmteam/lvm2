@@ -85,6 +85,7 @@ help:
 	@echo "  check_all_lvmpolld     Run all tests with lvmpolld daemon."
 	@echo "  check_lvmlockd_sanlock Run tests with lvmlockd and sanlock."
 	@echo "  check_lvmlockd_dlm     Run tests with lvmlockd and dlm."
+	@echo "  check_lvmlockd_idm	Run tests with lvmlockd and idm."
 	@echo "  check_lvmlockd_test    Run tests with lvmlockd --test."
 	@echo "  run-unit-test          Run only unit tests (root not needed)."
 	@echo "  clean			Clean dir."
@@ -169,6 +170,13 @@ check_lvmlockd_dlm: .tests-stamp
 endif
 
 ifeq ("@BUILD_LVMLOCKD@", "yes")
+check_lvmlockd_idm: .tests-stamp
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir $(LVM_TEST_RESULTS) \
+		--flavours udev-lvmlockd-idm --only shell/aa-lvmlockd-idm-prepare.sh,$(T),shell/zz-lvmlockd-idm-remove.sh --skip $(S)
+endif
+
+ifeq ("@BUILD_LVMLOCKD@", "yes")
 check_lvmlockd_test: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir $(LVM_TEST_RESULTS) \
@@ -189,6 +197,7 @@ LIB_FLAVOURS = \
  flavour-udev-lvmpolld\
  flavour-udev-lvmlockd-sanlock\
  flavour-udev-lvmlockd-dlm\
+ flavour-udev-lvmlockd-idm\
  flavour-udev-lvmlockd-test\
  flavour-udev-vanilla
 

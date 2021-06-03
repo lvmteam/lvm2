@@ -36,6 +36,12 @@ LOCKARGS2="dlm"
 LOCKARGS3="dlm"
 fi
 
+if test -n "$LVM_TEST_LOCK_TYPE_IDM" ; then
+LOCKARGS1="idm"
+LOCKARGS2="idm"
+LOCKARGS3="idm"
+fi
+
 aux prepare_devs 5
 
 vgcreate --shared $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
