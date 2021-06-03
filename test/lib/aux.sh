@@ -897,6 +897,20 @@ wipefs_a() {
 	udev_wait
 }
 
+cleanup_idm_context() {
+	local dev=$1
+
+	if [ -n "$LVM_TEST_LOCK_TYPE_IDM" ]; then
+		sg_dev=`sg_map26 ${dev}`
+		echo "Cleanup IDM context for drive ${dev} ($sg_dev)"
+		sg_raw -v -r 512 -o /tmp/idm_tmp_data.bin $sg_dev \
+			88 00 01 00 00 00 00 20 FF 01 00 00 00 01 00 00
+		sg_raw -v -s 512 -i /tmp/idm_tmp_data.bin $sg_dev \
+			8E 00 FF 00 00 00 00 00 00 00 00 00 00 01 00 00
+		rm /tmp/idm_tmp_data.bin
+	fi
+}
+
 prepare_backing_dev() {
 	local size=${1=32}
 	shift
@@ -989,12 +1003,15 @@ prepare_devs() {
 		return $?
 	fi
 
-	for d in "${BACKING_DEVICE_ARRAY[@]}"; do
-		cnt=$((`blockdev --getsize64 $d` / 1024 / 1024))
-		cnt=$(( cnt < 1000 ? cnt : 1000 ))
-		dd if=/dev/zero of="$d" bs=1MB count=$cnt
-		wipefs -a "$d" 2>/dev/null || true
-	done
+	if [ -n "$LVM_TEST_BACKING_DEVICE" ]; then
+		for d in "${BACKING_DEVICE_ARRAY[@]}"; do
+			cnt=$((`blockdev --getsize64 $d` / 1024 / 1024))
+			cnt=$(( cnt < 1000 ? cnt : 1000 ))
+			dd if=/dev/zero of="$d" bs=1MB count=$cnt
+			wipefs -a "$d" 2>/dev/null || true
+			cleanup_idm_context "$d"
+		done
+	fi
 
 	# non-ephemeral devices need to be cleared between tests
 	test -f LOOP -o -f RAMDISK || for d in "${DEVICES[@]}"; do
