@@ -901,11 +901,22 @@ prepare_backing_dev() {
 	local size=${1=32}
 	shift
 
+	if test -n "$LVM_TEST_BACKING_DEVICE"; then
+		IFS=',' read -r -a BACKING_DEVICE_ARRAY <<< "$LVM_TEST_BACKING_DEVICE"
+
+		for d in "${BACKING_DEVICE_ARRAY[@]}"; do
+			if test ! -b "$d"; then
+				echo "Device $d doesn't exist!"
+				return 1
+			fi
+		done
+	fi
+
 	if test -f BACKING_DEV; then
 		BACKING_DEV=$(< BACKING_DEV)
 		return 0
-	elif test -b "$LVM_TEST_BACKING_DEVICE"; then
-		BACKING_DEV=$LVM_TEST_BACKING_DEVICE
+	elif test -n "$LVM_TEST_BACKING_DEVICE"; then
+		BACKING_DEV=${BACKING_DEVICE_ARRAY[0]}
 		echo "$BACKING_DEV" > BACKING_DEV
 		return 0
 	elif test "${LVM_TEST_PREFER_BRD-1}" = "1" && \
@@ -953,7 +964,14 @@ prepare_devs() {
 		local dev="$DM_DEV_DIR/mapper/$name"
 		DEVICES[$count]=$dev
 		count=$((  count + 1 ))
-		echo 0 $size linear "$BACKING_DEV" $(( ( i - 1 ) * size + ( header_shift * 2048 ) )) > "$name.table"
+		# If the backing device number can meet the requirement for PV devices,
+		# then allocate a dedicated backing device for PV; otherwise, rollback
+		# to use single backing device for device-mapper.
+		if [ -n "$LVM_TEST_BACKING_DEVICE" ] && [ $n -le ${#BACKING_DEVICE_ARRAY[@]} ]; then
+			echo 0 $size linear "${BACKING_DEVICE_ARRAY[$(( count - 1 ))]}" $(( header_shift * 2048 )) > "$name.table"
+		else
+			echo 0 $size linear "$BACKING_DEV" $(( ( i - 1 ) * size + ( header_shift * 2048 ) )) > "$name.table"
+		fi
 		dmsetup create -u "TEST-$name" "$name" "$name.table" || touch CREATE_FAILED &
 		test -f CREATE_FAILED && break;
 	done
@@ -970,6 +988,13 @@ prepare_devs() {
 		prepare_devs "$@"
 		return $?
 	fi
+
+	for d in "${BACKING_DEVICE_ARRAY[@]}"; do
+		cnt=$((`blockdev --getsize64 $d` / 1024 / 1024))
+		cnt=$(( cnt < 1000 ? cnt : 1000 ))
+		dd if=/dev/zero of="$d" bs=1MB count=$cnt
+		wipefs -a "$d" 2>/dev/null || true
+	done
 
 	# non-ephemeral devices need to be cleared between tests
 	test -f LOOP -o -f RAMDISK || for d in "${DEVICES[@]}"; do
