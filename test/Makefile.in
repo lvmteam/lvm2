@@ -171,6 +171,7 @@ endif
 
 ifeq ("@BUILD_LVMLOCKD@", "yes")
 check_lvmlockd_idm: .tests-stamp
+	$(INSTALL_PROGRAM) lib/idm_inject_failure $(EXECDIR)
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir $(LVM_TEST_RESULTS) \
 		--flavours udev-lvmlockd-idm --only shell/aa-lvmlockd-idm-prepare.sh,$(T),shell/zz-lvmlockd-idm-remove.sh --skip $(S)
@@ -268,6 +269,10 @@ lib/dmsecuretest: lib/dmsecuretest.o .lib-dir-stamp $(INTERNAL_LIBS)
 lib/securetest: lib/dmsecuretest.o .lib-dir-stamp
 	@echo "    [CC] $@"
 	$(Q) $(CC) -g $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $< -L$(interfacebuilddir) -ldevmapper $(LIBS)
+
+lib/idm_inject_failure: lib/idm_inject_failure.o .lib-dir-stamp
+	@echo "    [CC] $@"
+	$(Q) $(CC) -g $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $< $(INTERNAL_LIBS) $(LIBS) -lseagate_ilm
 
 lib/runner.o: $(wildcard $(srcdir)/lib/*.h)
 
