@@ -93,6 +93,7 @@ help:
 	@echo -e "\nSupported variables:"
 	@echo "  LVM_TEST_AUX_TRACE	Set for verbose messages for aux scripts []."
 	@echo "  LVM_TEST_BACKING_DEVICE Set device used for testing (see also LVM_TEST_DIR)."
+	@echo "  LVM_TEST_MULTI_HOST	Set multiple hosts used for testing."
 	@echo "  LVM_TEST_CAN_CLOBBER_DMESG Allow to clobber dmesg buffer without /dev/kmsg. (1)"
 	@echo "  LVM_TEST_DEVDIR	Set to '/dev' to run on real /dev."
 	@echo "  LVM_TEST_PREFER_BRD	Prefer using brd (ramdisk) over loop for testing [1]."
