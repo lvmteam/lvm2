@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-# Test writecache usage
+# Test dm-writecache and dm-cache with different block size combinations
 
 SKIP_WITH_LVMPOLLD=1
 
@@ -94,6 +94,7 @@ _verify_data_on_lv() {
 	lvchange -an $vg/$lv1
 }
 
+# Check that the LBS/PBS that were set up is accurately reported for the devs.
 _check_env() {
 
 	check sysfs "$(< SCSI_DEBUG_DEV)" queue/logical_block_size "$1"
@@ -105,24 +106,33 @@ _check_env() {
 	blockdev --getpbsz "$dev2"
 }
 
+#
+# _run_test $BS1 $BS2 $type $optname "..."
+#
+# $BS1:    the xfs sectsz is verified to match $BS1, after mkfs
+# $BS2:    the lv1 LBS is verified to match $BS2, after cache is added to lv1
+# $type    is cache or writecache to use in lvconvert --type $type
+# $optname is either --cachevol or --cachepool to use in lvconvert
+# "..." a sector size option to use in mkfs.xfs
+#
+
 _run_test() {
 	vgcreate $SHARED $vg "$dev1"
 	vgextend $vg "$dev2"
 	lvcreate -n $lv1 -l 8 -an $vg "$dev1"
 	lvcreate -n $lv2 -l 4 -an $vg "$dev2"
 	lvchange -ay $vg/$lv1
-	mkfs.xfs -f $2 "$DM_DEV_DIR/$vg/$lv1" |tee out
+	mkfs.xfs -f $5 "$DM_DEV_DIR/$vg/$lv1" |tee out
 	grep "sectsz=$1" out
 	_add_new_data_to_mnt
-	lvconvert --yes --type writecache --cachevol $lv2 $vg/$lv1
+	lvconvert --yes --type $3 $4 $lv2 $vg/$lv1
 	blockdev --getss "$DM_DEV_DIR/$vg/$lv1" |tee out
-	grep "$1" out
+	grep "$2" out
 	blockdev --getpbsz "$DM_DEV_DIR/$vg/$lv1"
 	_add_more_data_to_mnt
 	_verify_data_on_mnt
 	lvconvert --splitcache $vg/$lv1
 	check lv_field $vg/$lv1 segtype linear
-	check lv_field $vg/$lv2 segtype linear
 	blockdev --getss "$DM_DEV_DIR/$vg/$lv1"
 	blockdev --getpbsz "$DM_DEV_DIR/$vg/$lv1"
 	_verify_data_on_mnt
@@ -136,7 +146,7 @@ _run_test() {
 	vgremove $vg
 }
 
-# scsi_debug devices with 512 LBS 512 PBS
+# Setup: LBS 512, PBS 512
 aux prepare_scsi_debug_dev 256 || skip
 aux prepare_devs 2 64
 
@@ -150,43 +160,58 @@ vgremove -ff $vg
 
 _check_env "512" "512"
 
-# lbs 512, pbs 512, xfs 512, wc 512
-_run_test 512 ""
+# lbs 512, pbs 512, xfs 512, wc bs 512
+_run_test 512 512 "writecache" "--cachevol" ""
+# lbs 512, pbs 512, xfs 512, cache bs 512
+_run_test 512 512 "cache" "--cachevol"  ""
+_run_test 512 512 "cache" "--cachepool" ""
 
-# lbs 512, pbs 512, xfs -s 4096, wc 4096
-_run_test 4096 "-s size=4096"
+# lbs 512, pbs 512, xfs -s 4096, wc bs 4096
+_run_test 4096 4096 "writecache" "--cachevol" "-s size=4096"
+# lbs 512, pbs 512, xfs -s 4096, cache bs 512
+_run_test 4096 512 "cache" "--cachevol"  "-s size=4096"
+_run_test 4096 512 "cache" "--cachepool" "-s size=4096"
 
 aux cleanup_scsi_debug_dev
 
 
-# lbs=512, pbs=4096
+# Setup: LBS 512, PBS 4096
 aux prepare_scsi_debug_dev 256 sector_size=512 physblk_exp=3
 aux prepare_devs 2 64
 
 _check_env "512" "4096"
 
-# lbs 512, pbs 4k, xfs 4k, wc 4k
-_run_test 4096 ""
+# lbs 512, pbs 4k, xfs 4k, wc bs 4k
+_run_test 4096 4096 "writecache" "--cachevol" ""
+# lbs 512, pbs 4k, xfs 4k, cache bs 512
+_run_test 4096 512 "cache" "--cachevol"  ""
+_run_test 4096 512 "cache" "--cachepool" ""
 
-# lbs 512, pbs 4k, xfs -s 512, wc 512
-_run_test 512 "-s size=512"
+# lbs 512, pbs 4k, xfs -s 512, wc bs 512
+_run_test 512 512 "writecache" "--cachevol" "-s size=512"
+# lbs 512, pbs 4k, xfs -s 512, cache bs 512
+_run_test 512 512 "cache" "--cachevol"  "-s size=512"
+_run_test 512 512 "cache" "--cachepool" "-s size=512"
 
 aux cleanup_scsi_debug_dev
 
 
-# scsi_debug devices with 4K LBS and 4K PBS
+# Setup: LBS 4096, PBS 4096
 aux prepare_scsi_debug_dev 256 sector_size=4096
 aux prepare_devs 2 64
 
 _check_env "4096" "4096"
 
-# lbs 4k, pbs 4k, xfs 4k, wc 4k
-_run_test 4096 ""
+# lbs 4k, pbs 4k, xfs 4k, wc bs 4k
+_run_test 4096 4096 "writecache" "--cachevol" ""
+# lbs 4k, pbs 4k, xfs 4k, cache bs 4k
+_run_test 4096 4096 "cache" "--cachevol"  ""
+_run_test 4096 4096 "cache" "--cachepool" ""
 
 aux cleanup_scsi_debug_dev
 
 
-# scsi_debug devices with 512 LBS 512 PBS
+# Setup: LBS 512, PBS 512
 aux prepare_scsi_debug_dev 256 || skip
 aux prepare_devs 2 64
 
@@ -222,3 +247,4 @@ lvremove $vg/$lv2
 vgremove $vg
 
 aux cleanup_scsi_debug_dev
+
