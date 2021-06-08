@@ -2146,6 +2146,7 @@ void print_usage_common_lvm(struct command_name *cname, struct command *cmd)
 void print_usage_common_cmd(struct command_name *cname, struct command *cmd)
 {
 	int oo, opt_enum;
+	int found_common_command = 0;
 
 	/*
 	 * when there's more than one variant, options that
@@ -2153,6 +2154,18 @@ void print_usage_common_cmd(struct command_name *cname, struct command *cmd)
 	 */
 
 	if (cname->variants < 2)
+		return;
+
+	for (opt_enum = 0; opt_enum < ARG_COUNT; opt_enum++) {
+		if (!cname->common_options[opt_enum])
+			continue;
+		if (_is_lvm_all_opt(opt_enum))
+			continue;
+		found_common_command = 1;
+		break;
+	}
+
+	if (!found_common_command)
 		return;
 
 	printf("  Common options for command:");
@@ -2213,7 +2226,7 @@ void print_usage_common_cmd(struct command_name *cname, struct command *cmd)
 		printf(" ]");
 	}
 
-	printf(".P\n");
+	printf("\n\n");
 }
 
 void print_usage_notes(struct command_name *cname)
@@ -2994,11 +3007,24 @@ static void _print_man_usage_common_cmd(struct command *cmd)
 {
 	struct command_name *cname;
 	int i, sep, oo, opt_enum;
+	int found_common_command = 0;
 
 	if (!(cname = _find_command_name(cmd->name)))
 		return;
 
 	if (cname->variants < 2)
+		return;
+
+	for (opt_enum = 0; opt_enum < ARG_COUNT; opt_enum++) {
+		if (!cname->common_options[opt_enum])
+			continue;
+		if (_is_lvm_all_opt(opt_enum))
+			continue;
+		found_common_command = 1;
+		break;
+	}
+
+	if (!found_common_command)
 		return;
 
 	printf("Common options for command:\n");
