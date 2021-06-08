@@ -675,8 +675,6 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 
 	for (i = 0; i < DM_ARRAY_SIZE(_vgchange_args); ++i) {
 		if (arg_is_set(cmd, _vgchange_args[i].arg)) {
-			if (!archive(vg))
-				return_ECMD_FAILED;
 			if (!_vgchange_args[i].fn(cmd, vg))
 				return_ECMD_FAILED;
 		}
@@ -1002,9 +1000,6 @@ static int _vgchange_locktype_single(struct cmd_context *cmd, const char *vg_nam
 			             struct volume_group *vg,
 			             struct processing_handle *handle)
 {
-	if (!archive(vg))
-		return_ECMD_FAILED;
-
 	if (!_vgchange_locktype(cmd, vg))
 		return_ECMD_FAILED;
 
@@ -1201,9 +1196,6 @@ static int _vgchange_systemid_single(struct cmd_context *cmd, const char *vg_nam
 			             struct volume_group *vg,
 			             struct processing_handle *handle)
 {
-	if (!archive(vg))
-		return_ECMD_FAILED;
-
 	if (!_vgchange_system_id(cmd, vg))
 		return_ECMD_FAILED;
 

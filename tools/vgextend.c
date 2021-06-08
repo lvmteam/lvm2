@@ -60,9 +60,6 @@ static int _vgextend_restoremissing(struct cmd_context *cmd __attribute__((unuse
 	int fixed = 0;
 	unsigned i;
 
-	if (!archive(vg))
-		return_0;
-
 	for (i = 0; i < pp->pv_count; i++)
 		if (_restore_pv(vg, pp->pv_names[i]))
 			fixed++;
@@ -98,9 +95,6 @@ static int _vgextend_single(struct cmd_context *cmd, const char *vg_name,
 		log_error("Volume group %s not changed", vg_name);
 		return ECMD_FAILED;
 	}
-
-	if (!archive(vg))
-		return_ECMD_FAILED;
 
 	if (!vg_extend_each_pv(vg, pp))
 		goto_out;

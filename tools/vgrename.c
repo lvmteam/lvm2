@@ -103,9 +103,6 @@ static int _vgrename_single(struct cmd_context *cmd, const char *vg_name,
 
 	dev_dir = cmd->dev_dir;
 
-	if (!archive(vg))
-		goto error;
-
 	if (!lockd_rename_vg_before(cmd, vg)) {
 		stack;
 		goto error;

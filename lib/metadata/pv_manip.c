@@ -623,9 +623,6 @@ int pv_resize_single(struct cmd_context *cmd,
 	const char *vg_name = pv->vg_name;
 	int vg_needs_pv_write = 0;
 
-	if (!archive(vg))
-		goto out;
-
 	if (!(pv->fmt->features & FMT_RESIZE_PV)) {
 		log_error("Physical volume %s format does not support resizing.",
 			  pv_name);

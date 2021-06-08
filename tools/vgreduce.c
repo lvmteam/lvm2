@@ -157,9 +157,6 @@ static int _vgreduce_repair_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_PROCESSED;
 	}
 
-	if (!archive(vg))
-		return_ECMD_FAILED;
-
 	if (vp->force) {
 		if (!_make_vg_consistent(cmd, vg))
 			return_ECMD_FAILED;

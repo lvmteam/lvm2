@@ -45,10 +45,6 @@ static int vgexport_single(struct cmd_context *cmd __attribute__((unused)),
 		}
 	}
 
-
-	if (!archive(vg))
-		goto_bad;
-
 	vg->status |= EXPORTED_VG;
 	vg->system_id = NULL;
 

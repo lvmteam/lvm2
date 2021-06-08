@@ -33,9 +33,6 @@ static int _vgimport_single(struct cmd_context *cmd,
 		goto bad;
 	}
 
-	if (!archive(vg))
-		goto_bad;
-
 	vg->status &= ~EXPORTED_VG;
 
 	if (!vg_is_shared(vg))

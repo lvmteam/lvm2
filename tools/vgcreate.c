@@ -148,9 +148,6 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	if (!archive(vg))
-		goto_bad;
-
 	/* Store VG on disk(s) */
 	if (!vg_write(vg) || !vg_commit(vg))
 		goto_bad;

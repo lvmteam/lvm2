@@ -4834,9 +4834,6 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
-	if (update_mda && !archive(vg))
-		return_0;
-
 	if (old_lv_is_historical) {
 		/*
 		 * Historical LVs have neither sub LVs nor any
@@ -6146,9 +6143,6 @@ int lv_resize(struct logical_volume *lv,
 	if (!lockd_lv_resize(cmd, lock_lv, "ex", 0, lp))
 		return_0;
 
-	if (!archive(vg))
-		return_0;
-
 	/* Remove any striped raid reshape space for LV resizing */
 	if (aux_lv && first_seg(aux_lv)->reshape_len)
 		if (!lv_raid_free_reshape_space(aux_lv))
@@ -6719,9 +6713,6 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return 0;
 		}
 
-		if (!archive(vg))
-			return_0;
-
 		if (!lv_detach_writecache_cachevol(lv, 1)) {
 			log_error("Failed to detach writecache from %s", display_lvname(lv));
 			return 0;
@@ -6740,9 +6731,6 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	    !lv_is_cow(lv) && !lv_is_historical(lv) &&
 	    !deactivate_lv_with_sub_lv(lv))
 		/* FIXME Review and fix the snapshot error paths! */
-		return_0;
-
-	if (!archive(vg))
 		return_0;
 
 	/* Special case removing a striped raid LV with allocated reshape space */
@@ -8457,9 +8445,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			  vg->name, vg->free_count, lp->extents);
 		return NULL;
 	}
-
-	if (!archive(vg))
-		return_NULL;
 
 	if (pool_lv && segtype_is_thin_volume(create_segtype)) {
 		/* Ensure all stacked messages are submitted */

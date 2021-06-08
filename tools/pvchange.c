@@ -65,8 +65,6 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 				  "logical volumes", pv_name);
 			goto bad;
 		}
-		if (!archive(vg))
-			goto_bad;
 	} else {
 		if (tagargs) {
 			log_error("Can't change tag on Physical Volume %s not "

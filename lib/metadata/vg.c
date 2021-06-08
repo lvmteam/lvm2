@@ -694,9 +694,6 @@ int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	pvl = find_pv_in_vg(vg, name);
 
-	if (!archive(vg))
-		goto_bad;
-
 	log_verbose("Removing \"%s\" from volume group \"%s\"", name, vg->name);
 
 	if (pvl)

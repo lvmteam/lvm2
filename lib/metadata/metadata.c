@@ -614,9 +614,6 @@ int vg_remove_check(struct volume_group *vg)
 		return 0;
 	}
 
-	if (!archive(vg))
-		return 0;
-
 	return 1;
 }
 
@@ -2977,6 +2974,9 @@ int vg_write(struct volume_group *vg)
 
 	if (vg->cmd->wipe_outdated_pvs)
 		_wipe_outdated_pvs(vg->cmd, vg);
+
+	if (!vg_is_archived(vg) && vg->vg_committed && !archive(vg->vg_committed))
+		return_0;
 
 	if (critical_section())
 		log_error(INTERNAL_ERROR

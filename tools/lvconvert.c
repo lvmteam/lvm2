@@ -1861,9 +1861,6 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 		}
 	}
 
-	if (!archive(vg))
-		return_0;
-
 	log_verbose("Splitting snapshot %s from its origin.", display_lvname(cow));
 
 	if (!vg_remove_snapshot(cow))
@@ -2796,9 +2793,6 @@ static int _lvconvert_to_thin_with_external(struct cmd_context *cmd,
 	if (!(lvc.segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_THIN)))
 		return_0;
 
-	if (!archive(vg))
-		return_0;
-
 	/*
 	 * New thin LV needs to be created (all messages sent to pool) In this
 	 * case thin volume is created READ-ONLY and also warn about not
@@ -2978,9 +2972,6 @@ static int _lvconvert_swap_pool_metadata(struct cmd_context *cmd,
 			  display_lvname(metadata_lv));
 		return 0;
 	}
-
-	if (!archive(vg))
-		return_0;
 
 	/* Swap names between old and new metadata LV */
 
@@ -3286,9 +3277,6 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		meta_readahead = arg_uint_value(cmd, readahead_ARG, cmd->default_settings.read_ahead);
 		meta_alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
 
-		if (!archive(vg))
-			goto_bad;
-
 		if (!(metadata_lv = alloc_pool_metadata(lv,
 							meta_name,
 							meta_readahead,
@@ -3304,9 +3292,6 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 				  display_lvname(metadata_lv));
 			goto bad;
 		}
-
-		if (!archive(vg))
-			goto_bad;
 
 		if (zero_metadata) {
 			metadata_lv->status |= LV_ACTIVATION_SKIP;
@@ -3554,9 +3539,6 @@ static int _cache_vol_attach(struct cmd_context *cmd,
 		return_0;
 
 	if (!get_cache_params(cmd, &chunk_size, &cache_metadata_format, &cache_mode, &policy_name, &policy_settings))
-		goto_out;
-
-	if (!archive(vg))
 		goto_out;
 
 	/*
@@ -5525,9 +5507,6 @@ static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 		}
 	}
 
-	if (!archive(vg))
-		goto_out;
-
 	if (!convert_vdo_pool_lv(lv, &vdo_params, &lvc.virtual_extents, zero_vdopool))
 		goto_out;
 
@@ -6198,9 +6177,6 @@ int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 	if (fast_name && !lockd_lv(cmd, lv_fast, "ex", 0))
 		goto_bad;
 
-	if (!archive(vg))
-		goto_bad;
-
 	/*
 	 * lv keeps the same lockd lock it had before, the lock for
 	 * lv_fast is kept but is not used while it's attached, and
@@ -6339,9 +6315,6 @@ static int _lvconvert_integrity_remove(struct cmd_context *cmd, struct logical_v
 	if (!lockd_lv(cmd, lv, "ex", 0))
 		return_0;
 
-	if (!archive(vg))
-		return_0;
-
 	if (lv_is_raid(lv))
 		ret = lv_remove_integrity_from_raid(lv);
 	if (!ret)
@@ -6370,9 +6343,6 @@ static int _lvconvert_integrity_add(struct cmd_context *cmd, struct logical_volu
 			return_0;
 	} else
 		use_pvh = &vg->pvs;
-
-	if (!archive(vg))
-		return_0;
 
 	if (lv_is_partial(lv)) {
 		log_error("Cannot add integrity while LV is missing PVs.");

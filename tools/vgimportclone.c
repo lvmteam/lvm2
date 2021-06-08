@@ -110,9 +110,6 @@ static int _update_vg(struct cmd_context *cmd, struct volume_group *vg,
 	 * Write changes.
 	 */
 
-	if (!archive(vg))
-		goto_bad;
-
 	if (vp->import_vg)
 		vg->status &= ~EXPORTED_VG;
 

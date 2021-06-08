@@ -709,9 +709,6 @@ static int _pvmove_setup_single(struct cmd_context *cmd,
 							     vg, pv, pp->alloc)))
 			goto_out;
 
-		if (!archive(vg))
-			goto_out;
-
 		if (!(lv_mirr = _set_up_pvmove_lv(cmd, vg, source_pvl, lv_name,
 						  allocatable_pvs, pp->alloc,
 						  &lvs_changed, &exclusive)))
