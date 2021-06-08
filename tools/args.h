@@ -228,6 +228,11 @@ arg(detachprofile_ARG, '\0', "detachprofile", 0, 0, 0,
     "Detaches a metadata profile from a VG or LV.\n"
     "See \\fBlvm.conf\\fP(5) for more information about profiles.\n")
 
+arg(deviceidtype_ARG, '\0', "deviceidtype", string_VAL, 0, 0,
+    "The type of device ID to use for the device.\n"
+    "If the specified type is available for the device,\n"
+    "then it will override the default type that lvm would use.\n")
+
 arg(devices_ARG, '\0', "devices", pv_VAL, ARG_GROUPABLE, 0,
     "Devices that the command can use. This option can be repeated\n"
     "or accepts a comma separated list of devices. This overrides\n"

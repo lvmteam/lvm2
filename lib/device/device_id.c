@@ -931,6 +931,7 @@ int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid_
 	/*
 	 * Choose the device_id type for the device being added.
 	 *
+	 * 0. use an idtype specified by the user
 	 * 1. use an idtype specific to a special/virtual device type
 	 *    e.g. loop, mpath, crypt, lvmlv, md, etc.
 	 * 2. use an idtype specified by user option.
@@ -938,6 +939,24 @@ int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid_
 	 * 4. use sys_serial, if it exists.
 	 * 5. use devname as the last resort.
 	 */
+
+	if (idtype_arg) {
+		if (!(idtype = idtype_from_str(idtype_arg)))
+			log_warn("WARNING: ignoring unknown device_id type %s.", idtype_arg);
+		else {
+			if (id_arg) {
+				if ((idname = strdup(id_arg)))
+					goto id_done;
+				log_warn("WARNING: ignoring device_id name %s.", id_arg);
+			}
+
+			if ((idname = device_id_system_read(cmd, dev, idtype)))
+				goto id_done;
+
+			log_warn("WARNING: ignoring deviceidtype %s which is not available for device.", idtype_arg);
+			idtype = 0;
+		}
+	}
 
 	if (MAJOR(dev->dev) == cmd->dev_types->device_mapper_major) {
 		if (_dev_has_mpath_uuid(cmd, dev, &idname)) {
@@ -970,19 +989,6 @@ int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid_
 	if (MAJOR(dev->dev) == cmd->dev_types->drbd_major) {
 		/* TODO */
 		log_warn("Missing support for DRBD idtype");
-	}
-
-	if (idtype_arg) {
-		if (!(idtype = idtype_from_str(idtype_arg)))
-			log_warn("WARNING: ignoring unknown device_id type %s.", idtype_arg);
-		else {
-			if (id_arg) {
-				if (!(idname = strdup(id_arg)))
-					stack;
-				goto id_done;
-			}
-			goto id_name;
-		}
 	}
 
 	/*

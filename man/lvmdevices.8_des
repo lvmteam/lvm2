@@ -9,18 +9,18 @@ remove it from the devices file with lvmdevices --deldev.  The
 vgimportdevices(8) command adds all PVs from a VG to the devices file,
 and updates the VG metadata to include device IDs of the PVs.
 .P
-Commands adding new devices to the devices file necessarily look outside
-the existing devices file to find the devices to add.  pvcreate, vgcreate,
-and vgextend also look outside the devices file to create new PVs and add
-them to the devices file.
+Commands that add new devices to the devices file necessarily look outside
+the existing devices file to find the devices being added.  pvcreate,
+vgcreate, and vgextend also look outside the devices file to create new
+PVs and add those PVs to the devices file.
 .P
 LVM records devices in the devices file using hardware-specific IDs, such
 as the WWID, and attempts to use subsystem-specific IDs for virtual device
-types (which also aim to be as unique and stable as possible.)
-These device IDs are also written in the VG metadata.  When no hardware or
+types (which also aim to be as unique and stable as possible.) These
+device IDs are also written in the VG metadata.  When no hardware or
 virtual ID is available, lvm falls back using the unstable device name as
-the device ID.  When devnames are used, lvm performs extra scanning to
-find devices if their devname changes, e.g. after reboot.
+the device ID.  When devnames are used as IDs, lvm performs extra scanning
+to find devices if their devname changes, e.g. after reboot.
 .P
 When proper device IDs are used, an lvm command will not look at devices
 outside the devices file, but when devnames are used as a fallback, lvm
@@ -34,12 +34,13 @@ overriding the devices file.  The listed devices act as a sort of devices
 file in terms of limiting which devices lvm will see and use.  Devices
 that are not listed will appear to be missing to the lvm command.
 .P
-Multiple devices files can be kept in \fI#DEFAULT_SYS_DIR#/devices\fP, which allows lvm
-to be used with different sets of devices, e.g. system devices do not need
-to be exposed to a specific application, and the application can use lvm on
-its own devices that are not exposed to the system.  The option
---devicesfile <filename> is used to select the devices file to use with the
-command.  Without the option set, the default system devices file is used.
+Multiple devices files can be kept \fI#DEFAULT_SYS_DIR#/devices\fP, which
+allows lvm to be used with different sets of devices.  For example, system
+devices do not need to be exposed to a specific application, and the
+application can use lvm on its own devices that are not exposed to the
+system.  The option --devicesfile <filename> is used to select the devices
+file to use with the command.  Without the option set, the default system
+devices file is used.
 .P
 Setting --devicesfile "" causes lvm to not use a devices file.
 .P
@@ -59,3 +60,42 @@ if it does not yet exist.
 .P
 It is recommended to use lvm commands to make changes to the devices file to
 ensure proper updates.
+.P
+The device ID and device ID type are included in the VG metadata and can
+be reported with pvs -o deviceid,deviceidtype.  (Note that the lvmdevices
+command does not update VG metadata, but subsequent lvm commands modifying
+the metadata will include the device ID.)
+.P
+Possible device ID types are:
+.br
+.IP \[bu] 2
+.B sys_wwid
+uses the wwid reported by sysfs.  This is the first choice for non-virtual
+devices.
+.IP \[bu] 2
+.B sys_serial
+uses the serial number reported by sysfs.  This is the second choice for
+non-virtual devices.
+.IP \[bu] 2
+.B mpath_uuid
+is used for dm multipath devices, reported by sysfs.
+.IP \[bu] 2
+.B crypt_uuid
+is used for dm crypt devices, reported by sysfs.
+.IP \[bu] 2
+.B md_uuid
+is used for md devices, reported by sysfs.
+.B lvmlv_uuid
+is used if a PV is placed on top of an lvm LV, reported by sysfs.
+.IP \[bu] 2
+.B loop_file
+is used for loop devices, the backing file name repored by sysfs.
+.IP \[bu] 2
+.B devname
+the device name is used if no other type applies.
+.P
+
+The default choice for device ID type can be overriden using lvmdevices
+--addev --deviceidtype <type>.  If the specified type is available for the
+device it will be used, otherwise the device will be added using the type
+that would otherwise be chosen.

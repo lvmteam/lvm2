@@ -1430,6 +1430,7 @@ ID: lvmdevices_update
 DESC: Update the devices file to fix incorrect values.
 
 lvmdevices --adddev PV
+OO: --deviceidtype String
 ID: lvmdevices_edit
 DESC: Add a device to the devices file.
 

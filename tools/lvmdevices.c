@@ -265,6 +265,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_is_set(cmd, adddev_ARG)) {
 		const char *devname;
+		const char *deviceidtype;
 
 		if (!(devname = arg_str_value(cmd, adddev_ARG, NULL)))
 			goto_bad;
@@ -311,8 +312,10 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 				 dev_name(dev), dev_filtered_reason(dev));
 		}
 
-		/* allow deviceidtype_ARG/deviceid_ARG ? */
-		if (!device_id_add(cmd, dev, dev->pvid, NULL, NULL))
+		/* also allow deviceid_ARG ? */
+		deviceidtype = arg_str_value(cmd, deviceidtype_ARG, NULL);
+
+		if (!device_id_add(cmd, dev, dev->pvid, deviceidtype, NULL))
 			goto_bad;
 		if (!device_ids_write(cmd))
 			goto_bad;
