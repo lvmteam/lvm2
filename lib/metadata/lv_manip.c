@@ -6178,8 +6178,6 @@ int lv_resize(struct logical_volume *lv,
 		/* Update lvm pool metadata (drop messages). */
 		if (!update_pool_lv(lock_lv, 0))
 			goto_bad;
-
-		backup(vg);
 	}
 
 	/* Check for over provisioning when extended */
@@ -7024,7 +7022,7 @@ no_remove:
 static int _lv_update_and_reload(struct logical_volume *lv, int origin_only)
 {
 	struct volume_group *vg = lv->vg;
-	int do_backup = 0, r = 0;
+	int r = 0;
 	const struct logical_volume *lock_lv = lv_lock_holder(lv);
 
 	log_very_verbose("Updating logical volume %s on disk(s)%s.",
@@ -7048,8 +7046,6 @@ static int _lv_update_and_reload(struct logical_volume *lv, int origin_only)
 		return 0;
 	} else if (!(r = vg_commit(vg)))
 		stack; /* !vg_commit() has implict vg_revert() */
-	else
-		do_backup = 1;
 
 	log_very_verbose("Updating logical volume %s in kernel.",
 			 display_lvname(lock_lv));
@@ -7059,9 +7055,6 @@ static int _lv_update_and_reload(struct logical_volume *lv, int origin_only)
 			  display_lvname(lock_lv));
 		r = 0;
 	}
-
-	if (do_backup && !critical_section())
-		backup(vg);
 
 	return r;
 }
@@ -8595,8 +8588,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		/* Pool created metadata LV, but better avoid recover when vg_write/commit fails */
 		return_NULL;
 
-	backup(vg);
-
 	if (test_mode()) {
 		log_verbose("Test mode: Skipping activation, zeroing and signature wiping.");
 		goto out;
@@ -8607,8 +8598,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 		if (!lv_add_integrity_to_raid(lv, &lp->integrity_settings, lp->pvh, NULL))
 			goto revert_new_lv;
-
-		backup(vg);
 	}
 
 	/* Do not scan this LV until properly zeroed/wiped. */
@@ -8708,7 +8697,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				goto revert_new_lv;
 			}
 		}
-		backup(vg);
 
 		if (!lv_active_change(cmd, lv, lp->activate)) {
 			log_error("Failed to activate thin %s.", lv->name);
@@ -8829,7 +8817,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			if (!vg_write(vg) || !vg_commit(vg))
 				return_NULL; /* Metadata update fails, deep troubles */
 
-			backup(vg);
 			/*
 			 * FIXME We do not actually need snapshot-origin as an active device,
 			 * as virtual origin is already 'hidden' private device without
@@ -8873,8 +8860,6 @@ revert_new_lv:
 	    !lv_remove(lv) || !vg_write(vg) || !vg_commit(vg))
 		log_error("Manual intervention may be required to remove "
 			  "abandoned LV(s) before retrying.");
-	else
-		backup(vg);
 
 	return NULL;
 }

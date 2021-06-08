@@ -2210,9 +2210,6 @@ static int _vg_write_lv_suspend_commit_backup(struct volume_group *vg,
 	} else if (!(r = vg_commit(vg)))
 		stack; /* !vg_commit() has implicit vg_revert() */
 
-	if (r && do_backup)
-		backup(vg);
-
 	return r;
 }
 
@@ -2220,8 +2217,6 @@ static int _vg_write_commit_backup(struct volume_group *vg)
 {
 	if (!vg_write(vg) || !vg_commit(vg))
 		return_0;
-
-	backup(vg);
 
 	return 1;
 }
@@ -2847,7 +2842,6 @@ static int _raid_add_images(struct logical_volume *lv,
 				  display_lvname(lv));
 			return 0;
 		}
-		backup(lv->vg);
 	}
 
 	return 1;
@@ -3172,8 +3166,6 @@ static int _raid_remove_images(struct logical_volume *lv, int yes,
 	if (!lv_update_and_reload_origin(lv))
 		return_0;
 
-	backup(lv->vg);
-
 	return 1;
 }
 
@@ -3430,8 +3422,6 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;
-
-	backup(lv->vg);
 
 	return 1;
 }
@@ -3915,8 +3905,6 @@ static int _eliminate_extracted_lvs_optional_write_vg(struct volume_group *vg,
 	if (vg_write_requested) {
 		if (!vg_write(vg) || !vg_commit(vg))
 			return_0;
-
-		backup(vg);
 	}
 
 	/* Wait for events following any deactivation. */

@@ -991,6 +991,7 @@ static void _vg_move_cached_precommitted_to_committed(struct volume_group *vg)
 	release_vg(vg->vg_committed);
 	vg->vg_committed = vg->vg_precommitted;
 	vg->vg_precommitted = NULL;
+	vg->needs_backup = 1;
 }
 
 int lv_has_unknown_segments(const struct logical_volume *lv)
@@ -3165,8 +3166,7 @@ int vg_commit(struct volume_group *vg)
 			dm_list_init(&vg->msg_list);
 			vg->needs_write_and_commit = 0;
 		}
-		vg->needs_backup = 0;
-        }
+	}
 
 	/* If at least one mda commit succeeded, it was committed */
 	return ret;

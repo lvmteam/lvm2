@@ -141,8 +141,6 @@ static int _vgrename_single(struct cmd_context *cmd, const char *vg_name,
 
 	lockd_rename_vg_final(cmd, vg, 1);
 
-	if (!backup(vg))
-		stack;
 	if (!backup_remove(cmd, vg_name))
 		stack;
 

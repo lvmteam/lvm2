@@ -120,8 +120,5 @@ int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
-	/* FIXME backup positioning */
-	backup(vg);
-
 	return 1;
 }

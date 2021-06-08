@@ -279,7 +279,6 @@ int backup_locally(struct volume_group *vg)
 
 int backup(struct volume_group *vg)
 {
-	vg->needs_backup = 0;
 
 	/* Unlock memory if possible */
 	memlock_unlock(vg->cmd);

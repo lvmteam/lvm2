@@ -1263,8 +1263,6 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 				    new_mimage_count, new_log_count, lp->pvh))
 		return_0;
 
-	backup(lv->vg);
-
 	if (!lp->need_polling)
 		log_print_unless_silent("Logical volume %s converted.",
 					display_lvname(lv));
@@ -1866,8 +1864,6 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 	if (!vg_remove_snapshot(cow))
 		return_0;
 
-	backup(vg);
-
 	log_print_unless_silent("Logical Volume %s split from its origin.", display_lvname(cow));
 
 	return 1;
@@ -1941,8 +1937,6 @@ static int _lvconvert_split_and_keep_cachevol(struct cmd_context *cmd,
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;
 
-	backup(lv->vg);
-
 	return 1;
 }
 
@@ -1988,8 +1982,6 @@ static int _lvconvert_split_and_keep_cachepool(struct cmd_context *cmd,
 
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;
-
-	backup(lv->vg);
 
 	log_print_unless_silent("Logical volume %s is not cached and %s is unused.",
 				display_lvname(lv), display_lvname(lv_fast));
@@ -2224,7 +2216,6 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 		/* Store and commit vg but skip starting the merge */
 		if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 			return_0;
-		backup(lv->vg);
 	} else {
 		/* Perform merge */
 		if (!lv_update_and_reload(origin))
@@ -2335,8 +2326,6 @@ static int _lvconvert_merge_thin_snapshot(struct cmd_context *cmd,
 	log_print_unless_silent("Merging of thin snapshot %s will occur on "
 				"next activation of %s.",
 				display_lvname(lv), display_lvname(origin));
-	backup(lv->vg);
-
 	return 1;
 }
 
@@ -2860,8 +2849,6 @@ revert_new_lv:
 	if (!lv_remove(thin_lv) || !vg_write(vg) || !vg_commit(vg))
 		log_error("Manual intervention may be required to remove "
 			  "abandoned LV(s) before retrying.");
-	else
-		backup(vg);
 
 	return 0;
 }
@@ -2999,7 +2986,6 @@ static int _lvconvert_swap_pool_metadata(struct cmd_context *cmd,
 	if (!vg_write(vg) || !vg_commit(vg))
 		return_0;
 
-	backup(vg);
 	return 1;
 }
 
@@ -3472,8 +3458,6 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	r = 1;
 
 out:
-	backup(vg);
-
 	if (r)
 		log_print_unless_silent("Converted %s to %s pool.",
 					converted_names, to_cachepool ? "cache" : "thin");
@@ -3509,8 +3493,6 @@ revert_new_lv:
 		if (!lv_remove(metadata_lv) || !vg_write(vg) || !vg_commit(vg))
 			log_error("Manual intervention may be required to remove "
 				  "abandoned LV(s) before retrying.");
-		else
-			backup(vg);
 	}
 
 	return 0;
@@ -5701,8 +5683,6 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 	if (!lv_detach_writecache_cachevol(lv, noflush))
 		return_0;
 
-	backup(lv->vg);
-
 	log_print_unless_silent("Logical volume %s writecache has been detached.",
 				display_lvname(lv));
 	return 1;
@@ -5827,7 +5807,6 @@ static int _lvconvert_detach_writecache_when_clean(struct cmd_context *cmd,
 	}
 
 	ret = 1;
-	backup(vg);
 
 out_release:
 	if (ret)
@@ -6320,8 +6299,6 @@ static int _lvconvert_integrity_remove(struct cmd_context *cmd, struct logical_v
 	if (!ret)
 		return_0;
 
-	backup(vg);
-
 	log_print_unless_silent("Logical volume %s has removed integrity.", display_lvname(lv));
 	return 1;
 }
@@ -6353,8 +6330,6 @@ static int _lvconvert_integrity_add(struct cmd_context *cmd, struct logical_volu
 		ret = lv_add_integrity_to_raid(lv, set, use_pvh, NULL);
 	if (!ret)
 		return_0;
-
-	backup(vg);
 
 	log_print_unless_silent("Logical volume %s has added integrity.", display_lvname(lv));
 	return 1;

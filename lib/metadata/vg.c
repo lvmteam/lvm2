@@ -739,8 +739,6 @@ int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 			goto bad;
 		}
 
-		backup(vg);
-
 		log_print_unless_silent("Removed \"%s\" from volume group \"%s\"",
 				name, vg->name);
 	}
@@ -751,4 +749,13 @@ bad:
 		free_pv_fid(pvl->pv);
 	release_vg(orphan_vg);
 	return r;
+}
+
+void vg_backup_if_needed(struct volume_group *vg)
+{
+	if (!vg || !vg->needs_backup)
+		return;
+
+	vg->needs_backup = 0;
+	backup(vg->vg_committed);
 }

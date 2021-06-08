@@ -72,8 +72,6 @@ static int _vgextend_restoremissing(struct cmd_context *cmd __attribute__((unuse
 	if (!vg_write(vg) || !vg_commit(vg))
 		return_ECMD_FAILED;
 
-	backup(vg);
-
 	log_print_unless_silent("Volume group \"%s\" successfully extended", vg_name);
 
 	return ECMD_PROCESSED;
@@ -115,8 +113,6 @@ static int _vgextend_single(struct cmd_context *cmd, const char *vg_name,
 
 	if (!vg_write(vg) || !vg_commit(vg))
 		goto_out;
-
-	backup(vg);
 
 	log_print_unless_silent("Volume group \"%s\" successfully extended", vg_name);
 	ret = ECMD_PROCESSED;

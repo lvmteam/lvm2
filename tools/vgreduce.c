@@ -169,7 +169,6 @@ static int _vgreduce_repair_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
-	backup(vg);
 	return ECMD_PROCESSED;
 }
 

@@ -72,7 +72,6 @@ static int _vgimportdevices_single(struct cmd_context *cmd,
 	if (updated_pvs) {
 		if (!vg_write(vg) || !vg_commit(vg))
 			goto_bad;
-		backup(vg);
 	}
 
 	return ECMD_PROCESSED;

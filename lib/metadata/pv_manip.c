@@ -687,7 +687,6 @@ int pv_resize_single(struct cmd_context *cmd,
 				  "volume group \"%s\"", pv_name, vg_name);
 			goto out;
 		}
-		backup(vg);
 	}
 
 	log_print_unless_silent("Physical volume \"%s\" changed", pv_name);

@@ -167,8 +167,6 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	unlock_vg(cmd, vg, vp_new.vg_name);
 
-	backup(vg);
-
 	log_print_unless_silent("Volume group \"%s\" successfully created%s%s",
 				vg->name,
 				vg->system_id ? " with system ID " : "", vg->system_id ? : "");

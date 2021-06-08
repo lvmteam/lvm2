@@ -684,8 +684,6 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		if (!vg_write(vg) || !vg_commit(vg))
 			return_ECMD_FAILED;
 
-		backup(vg);
-
 		log_print_unless_silent("Volume group \"%s\" successfully changed", vg->name);
 	}
 
@@ -1006,8 +1004,6 @@ static int _vgchange_locktype_single(struct cmd_context *cmd, const char *vg_nam
 	if (!vg_write(vg) || !vg_commit(vg))
 		return_ECMD_FAILED;
 
-	backup(vg);
-
 	/*
 	 * When init_vg_sanlock is called for vgcreate, the lockspace remains
 	 * started and lvmlock remains active, but when called for
@@ -1201,8 +1197,6 @@ static int _vgchange_systemid_single(struct cmd_context *cmd, const char *vg_nam
 
 	if (!vg_write(vg) || !vg_commit(vg))
 		return_ECMD_FAILED;
-
-	backup(vg);
 
 	log_print_unless_silent("Volume group \"%s\" successfully changed", vg->name);
 
