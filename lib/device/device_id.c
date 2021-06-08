@@ -325,8 +325,12 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 	else if (idtype == DEV_ID_TYPE_MD_UUID)
 		_read_sys_block(cmd, dev, "md/uuid", sysbuf, sizeof(sysbuf));
 
-	else if (idtype == DEV_ID_TYPE_LOOP_FILE)
+	else if (idtype == DEV_ID_TYPE_LOOP_FILE) {
 		_read_sys_block(cmd, dev, "loop/backing_file", sysbuf, sizeof(sysbuf));
+		/* if backing file is deleted, fall back to devname */
+		if (strstr(sysbuf, "(deleted)"))
+			sysbuf[0] = '\0';
+	}
 
 	else if (idtype == DEV_ID_TYPE_DEVNAME) {
 		if (!(idname = strdup(dev_name(dev))))
