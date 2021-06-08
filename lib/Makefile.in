@@ -34,6 +34,7 @@ SOURCES =\
 	device/dev-ext.c \
 	device/dev-io.c \
 	device/dev-md.c \
+	device/dev-mpath.c \
 	device/dev-swap.c \
 	device/dev-type.c \
 	device/dev-luks.c \

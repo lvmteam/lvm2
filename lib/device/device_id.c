@@ -180,7 +180,7 @@ void free_dids(struct dm_list *ids)
 	}
 }
 
-static int _read_sys_block(struct cmd_context *cmd, struct device *dev, const char *suffix, char *sysbuf, int sysbufsize)
+int read_sys_block(struct cmd_context *cmd, struct device *dev, const char *suffix, char *sysbuf, int sysbufsize)
 {
 	char path[PATH_MAX];
 	dev_t devt = dev->dev;
@@ -246,7 +246,7 @@ static int _dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, cons
 	char sysbuf[PATH_MAX] = { 0 };
 	const char *idname;
 
-	if (!_read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf)))
+	if (!read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf)))
 		return 0;
 
 	if (!_dm_uuid_has_prefix(sysbuf, "mpath-"))
@@ -265,7 +265,7 @@ static int _dev_has_crypt_uuid(struct cmd_context *cmd, struct device *dev, cons
 	char sysbuf[PATH_MAX] = { 0 };
 	const char *idname;
 
-	if (!_read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf)))
+	if (!read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf)))
 		return 0;
 
 	if (!_dm_uuid_has_prefix(sysbuf, "CRYPT-"))
@@ -284,7 +284,7 @@ static int _dev_has_lvmlv_uuid(struct cmd_context *cmd, struct device *dev, cons
 	char sysbuf[PATH_MAX] = { 0 };
 	const char *idname;
 
-	if (!_read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf)))
+	if (!read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf)))
 		return 0;
 
 	if (!_dm_uuid_has_prefix(sysbuf, "LVM-"))
@@ -304,10 +304,10 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 	const char *idname = NULL;
 
 	if (idtype == DEV_ID_TYPE_SYS_WWID) {
-		_read_sys_block(cmd, dev, "device/wwid", sysbuf, sizeof(sysbuf));
+		read_sys_block(cmd, dev, "device/wwid", sysbuf, sizeof(sysbuf));
 
 		if (!sysbuf[0])
-			_read_sys_block(cmd, dev, "wwid", sysbuf, sizeof(sysbuf));
+			read_sys_block(cmd, dev, "wwid", sysbuf, sizeof(sysbuf));
 
 		/* scsi_debug wwid begins "t10.Linux   scsi_debug ..." */
 		if (strstr(sysbuf, "scsi_debug"))
@@ -319,22 +319,22 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 	}
 
 	else if (idtype == DEV_ID_TYPE_SYS_SERIAL)
-		_read_sys_block(cmd, dev, "device/serial", sysbuf, sizeof(sysbuf));
+		read_sys_block(cmd, dev, "device/serial", sysbuf, sizeof(sysbuf));
 
 	else if (idtype == DEV_ID_TYPE_MPATH_UUID)
-		_read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf));
+		read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf));
 
 	else if (idtype == DEV_ID_TYPE_CRYPT_UUID)
-		_read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf));
+		read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf));
 
 	else if (idtype == DEV_ID_TYPE_LVMLV_UUID)
-		_read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf));
+		read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf));
 
 	else if (idtype == DEV_ID_TYPE_MD_UUID)
-		_read_sys_block(cmd, dev, "md/uuid", sysbuf, sizeof(sysbuf));
+		read_sys_block(cmd, dev, "md/uuid", sysbuf, sizeof(sysbuf));
 
 	else if (idtype == DEV_ID_TYPE_LOOP_FILE) {
-		_read_sys_block(cmd, dev, "loop/backing_file", sysbuf, sizeof(sysbuf));
+		read_sys_block(cmd, dev, "loop/backing_file", sysbuf, sizeof(sysbuf));
 		/* if backing file is deleted, fall back to devname */
 		if (strstr(sysbuf, "(deleted)"))
 			sysbuf[0] = '\0';
@@ -372,17 +372,17 @@ static int _dev_has_stable_id(struct cmd_context *cmd, struct device *dev)
 			return 1;
 	}
 
-	if (_read_sys_block(cmd, dev, "device/wwid", sysbuf, sizeof(sysbuf)))
+	if (read_sys_block(cmd, dev, "device/wwid", sysbuf, sizeof(sysbuf)))
 		return 1;
 
-	if (_read_sys_block(cmd, dev, "wwid", sysbuf, sizeof(sysbuf)))
+	if (read_sys_block(cmd, dev, "wwid", sysbuf, sizeof(sysbuf)))
 		return 1;
 
-	if (_read_sys_block(cmd, dev, "device/serial", sysbuf, sizeof(sysbuf)))
+	if (read_sys_block(cmd, dev, "device/serial", sysbuf, sizeof(sysbuf)))
 		return 1;
 
 	if ((MAJOR(dev->dev) == cmd->dev_types->device_mapper_major)) {
-		if (!_read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf)))
+		if (!read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf)))
 			goto_out;
 
 		if (_dm_uuid_has_prefix(sysbuf, "mpath-"))
@@ -394,11 +394,11 @@ static int _dev_has_stable_id(struct cmd_context *cmd, struct device *dev)
 	}
 
 	if ((MAJOR(dev->dev) == cmd->dev_types->md_major) &&
-	    _read_sys_block(cmd, dev, "md/uuid", sysbuf, sizeof(sysbuf)))
+	    read_sys_block(cmd, dev, "md/uuid", sysbuf, sizeof(sysbuf)))
 		return 1;
 
 	if ((MAJOR(dev->dev) == cmd->dev_types->loop_major) &&
-	    _read_sys_block(cmd, dev, "loop/backing_file", sysbuf, sizeof(sysbuf)))
+	    read_sys_block(cmd, dev, "loop/backing_file", sysbuf, sizeof(sysbuf)))
 		return 1;
  out:
 	/* DEV_ID_TYPE_DEVNAME would be used for this dev. */
@@ -1190,7 +1190,7 @@ id_done:
 			if (!label_scan_open(du_devid->dev))
 				log_warn("Cannot open %s", dev_name(du_devid->dev));
 
-			if (dev_is_partitioned(cmd->dev_types, du_devid->dev)) {
+			if (dev_is_partitioned(cmd, du_devid->dev)) {
 				/* Check if existing entry is whole device and new entry is a partition of it. */
 				ret1 = dev_get_primary_dev(cmd->dev_types, dev, &devt1);
 				if ((ret1 == 2) && (devt1 == du_devid->dev->dev))

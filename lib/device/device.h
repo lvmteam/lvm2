@@ -205,4 +205,7 @@ void dev_destroy_file(struct device *dev);
 /* Return a valid device name from the alias list; NULL otherwise */
 const char *dev_name_confirmed(struct device *dev, int quiet);
 
+int dev_mpath_init(const char *config_wwids_file);
+void dev_mpath_exit(void);
+
 #endif

@@ -35,7 +35,7 @@ static int _swap_detect_signature(const char *buf)
 	return 0;
 }
 
-int dev_is_swap(struct device *dev, uint64_t *offset_found, int full)
+int dev_is_swap(struct cmd_context *cmd, struct device *dev, uint64_t *offset_found, int full)
 {
 	char buf[10];
 	uint64_t size;

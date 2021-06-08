@@ -21,29 +21,24 @@
 static int _and_p(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
 {
 	struct dev_filter **filters;
-	int ret;
+	int ret = 1;
+
+	dev_ext_enable(dev, external_device_info_source());
 
 	for (filters = (struct dev_filter **) f->private; *filters; ++filters) {
 		if (use_filter_name && strcmp((*filters)->name, use_filter_name))
 			continue;
 		ret = (*filters)->passes_filter(cmd, *filters, dev, use_filter_name);
 
-		if (!ret)
-			return 0;	/* No 'stack': a filter, not an error. */
+		if (!ret) {
+			ret = 0;	/* No 'stack': a filter, not an error. */
+			break;
+		}
 	}
 
-	return 1;
-}
-
-static int _and_p_with_dev_ext_info(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
-{
-	int r;
-
-	dev_ext_enable(dev, external_device_info_source());
-	r = _and_p(cmd, f, dev, use_filter_name);
 	dev_ext_disable(dev);
 
-	return r;
+	return ret;
 }
 
 static void _composite_destroy(struct dev_filter *f)
@@ -72,7 +67,7 @@ static void _wipe(struct cmd_context *cmd, struct dev_filter *f, struct device *
 	}
 }
 
-struct dev_filter *composite_filter_create(int n, int use_dev_ext_info, struct dev_filter **filters)
+struct dev_filter *composite_filter_create(int n, struct dev_filter **filters)
 {
 	struct dev_filter **filters_copy, *cft;
 
@@ -93,7 +88,7 @@ struct dev_filter *composite_filter_create(int n, int use_dev_ext_info, struct d
 		return NULL;
 	}
 
-	cft->passes_filter = use_dev_ext_info ? _and_p_with_dev_ext_info : _and_p;
+	cft->passes_filter = _and_p;
 	cft->destroy = _composite_destroy;
 	cft->wipe = _wipe;
 	cft->use_count = 0;

@@ -3228,6 +3228,11 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 
 	_init_md_checks(cmd);
 
+	if (!dev_mpath_init(find_config_tree_str_allow_empty(cmd, devices_multipath_wwids_file_CFG, NULL))) {
+		ret = ECMD_FAILED;
+		goto_out;
+	}
+
 	if (!_cmd_no_meta_proc(cmd) && !_init_lvmlockd(cmd)) {
 		ret = ECMD_FAILED;
 		goto_out;
@@ -3248,6 +3253,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 
       out:
 
+	dev_mpath_exit();
 	hints_exit(cmd);
 	lvmcache_destroy(cmd, 1, 1);
 	label_scan_destroy(cmd);
@@ -3541,9 +3547,6 @@ struct cmd_context *init_lvm(unsigned set_connections,
 {
 	struct cmd_context *cmd;
 
-	if (!udev_init_library_context())
-		stack;
-
 	/*
 	 * It's not necessary to use name mangling for LVM:
 	 *   - the character set used for LV names is subset of udev character set
@@ -3551,9 +3554,7 @@ struct cmd_context *init_lvm(unsigned set_connections,
 	 */
 	dm_set_name_mangling_mode(DM_STRING_MANGLING_NONE);
 
-	if (!(cmd = create_toolcontext(0, NULL, 1, threaded,
-			set_connections, set_filters))) {
-		udev_fin_library_context();
+	if (!(cmd = create_toolcontext(0, NULL, 1, threaded, set_connections, set_filters))) {
 		return_NULL;
 	}
 
@@ -3561,7 +3562,6 @@ struct cmd_context *init_lvm(unsigned set_connections,
 
 	if (stored_errno()) {
 		destroy_toolcontext(cmd);
-		udev_fin_library_context();
 		return_NULL;
 	}
 

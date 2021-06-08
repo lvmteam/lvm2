@@ -238,22 +238,10 @@ cfg(devices_obtain_device_list_from_udev_CFG, "obtain_device_list_from_udev", de
 	"udev support for this setting to apply.\n")
 
 cfg(devices_external_device_info_source_CFG, "external_device_info_source", devices_CFG_SECTION, 0, CFG_TYPE_STRING, DEFAULT_EXTERNAL_DEVICE_INFO_SOURCE, vsn(2, 2, 116), NULL, 0, NULL,
-	"Select an external device information source.\n"
-	"Some information may already be available in the system and LVM can\n"
-	"use this information to determine the exact type or use of devices it\n"
-	"processes. Using an existing external device information source can\n"
-	"speed up device processing as LVM does not need to run its own native\n"
-	"routines to acquire this information. For example, this information\n"
-	"is used to drive LVM filtering like MD component detection, multipath\n"
-	"component detection, partition detection and others.\n"
-	"#\n"
-	"Accepted values:\n"
-	"  none\n"
-	"    No external device information source is used.\n"
-	"  udev\n"
-	"    Reuse existing udev database records. Applicable only if LVM is\n"
-	"    compiled with udev support.\n"
-	"#\n")
+	"Enable device information from udev.\n"
+	"If set to \"udev\", lvm will supplement its own native device information\n"
+	"with information from libudev. This can potentially improve the detection\n"
+	"of MD component devices and multipath component devices.\n")
 
 cfg(devices_hints_CFG, "hints", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_HINTS, vsn(2, 3, 2), NULL, 0, NULL,
 	"Use a local file to remember which devices have PVs on them.\n"
@@ -392,6 +380,10 @@ cfg(devices_scan_lvs_CFG, "scan_lvs", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEF
 
 cfg(devices_multipath_component_detection_CFG, "multipath_component_detection", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_MULTIPATH_COMPONENT_DETECTION, vsn(2, 2, 89), NULL, 0, NULL,
 	"Ignore devices that are components of DM multipath devices.\n")
+
+cfg(devices_multipath_wwids_file_CFG, "multipath_wwids_file", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED | CFG_ALLOW_EMPTY, CFG_TYPE_STRING, DEFAULT_WWIDS_FILE, vsn(2, 3, 13), NULL, 0, NULL,
+	"The path to the multipath wwids file used for multipath component detection.\n"
+	"Set this to an empty string to disable the use of the multipath wwids file.\n")
 
 cfg(devices_md_component_detection_CFG, "md_component_detection", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_MD_COMPONENT_DETECTION, vsn(1, 0, 18), NULL, 0, NULL,
 	"Enable detection and exclusion of MD component devices.\n"

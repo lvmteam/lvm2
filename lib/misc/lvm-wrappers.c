@@ -25,10 +25,19 @@ struct udev *_udev;
 int udev_init_library_context(void)
 {
 	if (_udev)
-		udev_unref(_udev);
+		return 1;
+
+	if (getenv("DM_DISABLE_UDEV"))
+		return 0;
 
 	if (!(_udev = udev_new())) {
 		log_error("Failed to create udev library context.");
+		return 0;
+	}
+
+	if (!udev_is_running()) {
+		udev_unref(_udev);
+		_udev = NULL;
 		return 0;
 	}
 
@@ -37,7 +46,8 @@ int udev_init_library_context(void)
 
 void udev_fin_library_context(void)
 {
-	udev_unref(_udev);
+	if (_udev)
+		udev_unref(_udev);
 	_udev = NULL;
 }
 

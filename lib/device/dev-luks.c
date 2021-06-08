@@ -18,7 +18,7 @@
 #define LUKS_SIGNATURE "LUKS\xba\xbe"
 #define LUKS_SIGNATURE_SIZE 6
 
-int dev_is_luks(struct device *dev, uint64_t *offset_found, int full)
+int dev_is_luks(struct cmd_context *cmd, struct device *dev, uint64_t *offset_found, int full)
 {
 	char buf[LUKS_SIGNATURE_SIZE];
 	int ret = -1;

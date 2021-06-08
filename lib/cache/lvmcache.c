@@ -692,7 +692,7 @@ next:
 	 */
 
 	info = lvmcache_info_from_pvid(pvid, NULL, 0);
-	if (info && dev_is_md_component(info->dev, NULL, 1)) {
+	if (info && dev_is_md_component(cmd, info->dev, NULL, 1)) {
 		/* does not go in del_cache_devs which become unused_duplicates */
 		log_debug_cache("PV %s drop MD component from scan selection %s", pvid, dev_name(info->dev));
 		lvmcache_del(info);
@@ -700,7 +700,7 @@ next:
 	}
 
 	dm_list_iterate_items_safe(devl, devl_safe, &altdevs) {
-		if (dev_is_md_component(devl->dev, NULL, 1)) {
+		if (dev_is_md_component(cmd, devl->dev, NULL, 1)) {
 			log_debug_cache("PV %s drop MD component from scan duplicates %s", pvid, dev_name(devl->dev));
 			dm_list_del(&devl->list);
 		}
@@ -1204,7 +1204,7 @@ void lvmcache_extra_md_component_checks(struct cmd_context *cmd)
 				  (unsigned long long)pvsize, (unsigned long long)devsize,
 				  device_hint ?: "none", dev_name(dev));
 
-			if (dev_is_md_component(dev, NULL, 1)) {
+			if (dev_is_md_component(cmd, dev, NULL, 1)) {
 				log_debug("dropping PV from md component %s", dev_name(dev));
 				dev->flags &= ~DEV_SCAN_FOUND_LABEL;
 				/* lvmcache_del will also delete vginfo if info was last one */

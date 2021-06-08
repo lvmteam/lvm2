@@ -17,6 +17,7 @@
 #include "lib/device/dev-type.h"
 #include "lib/mm/xlate.h"
 #include "lib/misc/crc.h"
+#include "lib/commands/toolcontext.h"
 #ifdef UDEV_SYNC_SUPPORT
 #include <libudev.h> /* for MD detection using udev db records */
 #include "lib/device/dev-ext-udev-constants.h"
@@ -144,25 +145,16 @@ static int _dev_has_ddf_magic(struct device *dev, uint64_t devsize_sectors, uint
 	return 0;
 }
 
-/*
- * _udev_dev_is_md_component() only works if
- *   external_device_info_source="udev"
- *
- * but
- *
- * udev_dev_is_md_component() in dev-type.c only works if
- *   obtain_device_list_from_udev=1
- *
- * and neither of those config setting matches very well
- * with what we're doing here.
- */
-
 #ifdef UDEV_SYNC_SUPPORT
-static int _udev_dev_is_md_component(struct device *dev)
+static int _dev_is_md_component_udev(struct device *dev)
 {
 	const char *value;
 	struct dev_ext *ext;
 
+	/*
+	 * external_device_info_source="udev" enables these udev checks.
+	 * external_device_info_source="none" disables them.
+	 */
 	if (!(ext = dev_ext_get(dev)))
 		return_0;
 
@@ -172,7 +164,7 @@ static int _udev_dev_is_md_component(struct device *dev)
 	return !strcmp(value, DEV_EXT_UDEV_BLKID_TYPE_SW_RAID);
 }
 #else
-static int _udev_dev_is_md_component(struct device *dev)
+static int _dev_is_md_component_udev(struct device *dev)
 {
 	return 0;
 }
@@ -181,13 +173,16 @@ static int _udev_dev_is_md_component(struct device *dev)
 /*
  * Returns -1 on error
  */
-static int _native_dev_is_md_component(struct device *dev, uint64_t *offset_found, int full)
+static int _dev_is_md_component_native(struct device *dev, uint64_t *offset_found, int full)
 {
 	uint64_t size, sb_offset = 0;
 	int ret;
 
-	if (!scan_bcache)
-		return -EAGAIN;
+	/* i/o layer has not been set up */
+	if (!scan_bcache) {
+		log_error(INTERNAL_ERROR "dev_is_md_component_native requires io layer.");
+		return -1;
+	}
 
 	if (!dev_get_size(dev, &size)) {
 		stack;
@@ -295,41 +290,20 @@ out:
 	return ret;
 }
 
-int dev_is_md_component(struct device *dev, uint64_t *offset_found, int full)
+int dev_is_md_component(struct cmd_context *cmd, struct device *dev, uint64_t *offset_found, int full)
 {
-	int ret;
+	if (_dev_is_md_component_native(dev, offset_found, full) == 1)
+		goto found;
 
-	/*
-	 * If non-native device status source is selected, use it
-	 * only if offset_found is not requested as this
-	 * information is not in udev db.
-	 */
-	if ((dev->ext.src == DEV_EXT_NONE) || offset_found) {
-		ret = _native_dev_is_md_component(dev, offset_found, full);
-
-		if (!full) {
-			if (!ret || (ret == -EAGAIN)) {
-				if (udev_dev_is_md_component(dev))
-					ret = 1;
-			}
-		}
-		if (ret && (ret != -EAGAIN))
-			dev->flags |= DEV_IS_MD_COMPONENT;
-		return ret;
+	if (external_device_info_source() == DEV_EXT_UDEV) {
+		if (_dev_is_md_component_udev(dev) == 1)
+			goto found;
 	}
+	return 0;
 
-	if (dev->ext.src == DEV_EXT_UDEV) {
-		ret = _udev_dev_is_md_component(dev);
-		if (ret && (ret != -EAGAIN))
-			dev->flags |= DEV_IS_MD_COMPONENT;
-		return ret;
-	}
-
-	log_error(INTERNAL_ERROR "Missing hook for MD device recognition "
-		  "using external device info source %s", dev_ext_name(dev));
-
-	return -1;
-
+found:
+	dev->flags |= DEV_IS_MD_COMPONENT;
+	return 1;
 }
 
 static int _md_sysfs_attribute_snprintf(char *path, size_t size,
@@ -552,7 +526,8 @@ int dev_is_md_with_end_superblock(struct dev_types *dt, struct device *dev)
 
 #else
 
-int dev_is_md_component(struct device *dev __attribute__((unused)),
+int dev_is_md_component(struct cmd_context *cmd __attribute__((unused)),
+	      struct device *dev __attribute__((unused)),
 	      uint64_t *sb __attribute__((unused)))
 {
 	return 0;

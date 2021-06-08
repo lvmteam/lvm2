@@ -98,7 +98,7 @@ static int _passes_md_filter(struct cmd_context *cmd, struct dev_filter *f __att
 	if (!md_filtering())
 		return 1;
 
-	ret = dev_is_md_component(dev, NULL, cmd->use_full_md_check);
+	ret = dev_is_md_component(cmd, dev, NULL, cmd->use_full_md_check);
 
 	if (ret == -EAGAIN) {
 		/* let pass, call again after scan */

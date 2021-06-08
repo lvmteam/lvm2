@@ -1193,16 +1193,6 @@ static int _online_devs(struct cmd_context *cmd, int do_all, struct dm_list *pvs
 
 		log_debug("online_devs %s %s", dev_name(dev), dev->pvid);
 
-		/*
-		 * This should already have been done by the filter, but make
-		 * another check directly with udev in case the filter was not
-		 * using udev and the native version didn't catch it.
-		 */
-		if (udev_dev_is_mpath_component(dev)) {
-			log_print("pvscan[%d] ignore multipath component %s.", getpid(), dev_name(dev));
-			continue;
-		}
-
 		if (!(info = lvmcache_info_from_pvid(dev->pvid, dev, 0))) {
 			if (!do_all)
 				log_print("pvscan[%d] ignore %s with no lvm info.", getpid(), dev_name(dev));
@@ -1257,7 +1247,7 @@ static int _online_devs(struct cmd_context *cmd, int do_all, struct dm_list *pvs
 			if (pv->device_hint && !strncmp(pv->device_hint, "/dev/md", 7))
 				do_full_check = 1;
 		}
-		if (do_full_check && dev_is_md_component(dev, NULL, 1)) {
+		if (do_full_check && dev_is_md_component(cmd, dev, NULL, 1)) {
 			log_print("pvscan[%d] ignore md component %s.", getpid(), dev_name(dev));
 			release_vg(vg);
 			continue;

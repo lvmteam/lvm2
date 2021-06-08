@@ -22,7 +22,6 @@
 
 static int _passes_partitioned_filter(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
 {
-	struct dev_types *dt = (struct dev_types *) f->private;
 	int ret;
 
 	if (cmd->filter_nodata_only)
@@ -30,7 +29,7 @@ static int _passes_partitioned_filter(struct cmd_context *cmd, struct dev_filter
 
 	dev->filtered_flags &= ~DEV_FILTERED_PARTITIONED;
 
-	ret = dev_is_partitioned(dt, dev);
+	ret = dev_is_partitioned(cmd, dev);
 
 	if (ret == -EAGAIN) {
 		/* let pass, call again after scan */
@@ -72,7 +71,6 @@ struct dev_filter *partitioned_filter_create(struct dev_types *dt)
 	f->passes_filter = _passes_partitioned_filter;
 	f->destroy = _partitioned_filter_destroy;
 	f->use_count = 0;
-	f->private = dt;
 	f->name = "partitioned";
 
 	log_debug_devs("Partitioned filter initialised.");

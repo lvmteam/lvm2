@@ -402,15 +402,12 @@ static void _init_logging(struct cmd_context *cmd)
 	reset_lvm_errno(1);
 }
 
-static int _check_disable_udev(const char *msg) {
+static int _check_disable_udev(const char *msg)
+{
 	if (getenv("DM_DISABLE_UDEV")) {
-		log_very_verbose("DM_DISABLE_UDEV environment variable set. "
-				 "Overriding configuration to use "
-				 "udev_rules=0, udev_sync=0, verify_udev_operations=1.");
-		if (udev_is_running())
-			log_warn("Udev is running and DM_DISABLE_UDEV environment variable is set. "
-				 "Bypassing udev, LVM will %s.", msg);
-
+		log_very_verbose("DM_DISABLE_UDEV environment variable set.");
+		log_very_verbose("Overriding configuration to use udev_rules=0, udev_sync=0, verify_udev_operations=1.");
+		log_very_verbose("LVM will %s.", msg);
 		return 1;
 	}
 
@@ -563,7 +560,7 @@ static int _init_system_id(struct cmd_context *cmd)
 static int _process_config(struct cmd_context *cmd)
 {
 	mode_t old_umask;
-	const char *dev_ext_info_src;
+	const char *dev_ext_info_src = NULL;
 	const char *read_ahead;
 	struct stat st;
 	const struct dm_config_node *cn;
@@ -597,14 +594,25 @@ static int _process_config(struct cmd_context *cmd)
 #endif
 
 	dev_ext_info_src = find_config_tree_str(cmd, devices_external_device_info_source_CFG, NULL);
-	if (dev_ext_info_src && !strcmp(dev_ext_info_src, "none"))
-		init_external_device_info_source(DEV_EXT_NONE);
-	else if (dev_ext_info_src && !strcmp(dev_ext_info_src, "udev"))
-		init_external_device_info_source(DEV_EXT_UDEV);
-	else {
-		log_error("Invalid external device info source specification.");
-		return 0;
+
+	if (dev_ext_info_src &&
+	    strcmp(dev_ext_info_src, "none") &&
+	    strcmp(dev_ext_info_src, "udev")) {
+		log_warn("WARNING: unknown external device info source, using none.");
+		dev_ext_info_src = NULL;
 	}
+
+	if (dev_ext_info_src && !strcmp(dev_ext_info_src, "udev")) {
+		if (udev_init_library_context()) {
+			init_external_device_info_source(DEV_EXT_UDEV);
+		} else {
+			log_warn("WARNING: failed to init udev for external device info, using none.");
+			dev_ext_info_src = NULL;
+		}
+	}
+
+	if (!dev_ext_info_src || !strcmp(dev_ext_info_src, "none"))
+		init_external_device_info_source(DEV_EXT_NONE);
 
 	/* proc dir */
 	if (dm_snprintf(cmd->proc_dir, sizeof(cmd->proc_dir), "%s",
@@ -1018,16 +1026,10 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	if (!dev_cache_init(cmd))
 		return_0;
 
-	/*
-	 * Override existing config and hardcode device_list_from_udev = 0 if:
-	 *   - udev is not running
-	 *   - udev is disabled using DM_DISABLE_UDEV environment variable
-	 */
-	if (_check_disable_udev("obtain device list by scanning device directory"))
-		device_list_from_udev = 0;
-	else
-		device_list_from_udev = udev_is_running() ?
-			find_config_tree_bool(cmd, devices_obtain_device_list_from_udev_CFG, NULL) : 0;
+	if ((device_list_from_udev = find_config_tree_bool(cmd, devices_obtain_device_list_from_udev_CFG, NULL))) {
+		if (!udev_init_library_context())
+			device_list_from_udev = 0;
+	}
 
 	init_obtain_device_list_from_udev(device_list_from_udev);
 
@@ -1182,7 +1184,7 @@ static struct dev_filter *_init_filter_chain(struct cmd_context *cmd)
 			nr_filt++;
 	}
 
-	if (!(composite = composite_filter_create(nr_filt, 1, filters)))
+	if (!(composite = composite_filter_create(nr_filt, filters)))
 		goto_bad;
 
 	return composite;
