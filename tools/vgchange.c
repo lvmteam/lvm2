@@ -640,6 +640,7 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	int ret = ECMD_PROCESSED;
 	unsigned i;
 	activation_change_t activate;
+	int changed = 0;
 
 	static const struct {
 		int arg;
@@ -677,10 +678,11 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		if (arg_is_set(cmd, _vgchange_args[i].arg)) {
 			if (!_vgchange_args[i].fn(cmd, vg))
 				return_ECMD_FAILED;
+			changed = 1;
 		}
 	}
 
-	if (vg_is_archived(vg)) {
+	if (changed) {
 		if (!vg_write(vg) || !vg_commit(vg))
 			return_ECMD_FAILED;
 

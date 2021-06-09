@@ -1,5 +1,6 @@
 Version 2.03.13 - 
 ===============================
+  Simplified handling of archive() and backup() internal calls.
   Fix load of kvdo target when it is not present in memory (2.03.12).
 
 Version 2.03.12 - 07th May 2021
