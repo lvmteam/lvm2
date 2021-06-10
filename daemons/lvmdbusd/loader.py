@@ -75,11 +75,10 @@ def common(retrieve, o_type, search_keys,
 
 		object_path = None
 
+	to_remove = []
 	if refresh:
-		for k in list(existing_paths.keys()):
-			cfg.om.remove_object(cfg.om.get_object_by_path(k), True)
-			num_changes += 1
+		to_remove = list(existing_paths.keys())
 
 	num_changes += len(rc)
 
-	return rc, num_changes
+	return rc, num_changes, to_remove

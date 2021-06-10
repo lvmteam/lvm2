@@ -20,22 +20,30 @@ import traceback
 
 def _main_thread_load(refresh=True, emit_signal=True):
 	num_total_changes = 0
+	to_remove = []
 
-	num_total_changes += load_pvs(
+	(changes, remove) = load_pvs(
 		refresh=refresh,
 		emit_signal=emit_signal,
-		cache_refresh=False)[1]
-	num_total_changes += load_vgs(
-		refresh=refresh,
-		emit_signal=emit_signal,
-		cache_refresh=False)[1]
+		cache_refresh=False)[1:]
+	num_total_changes += changes
+	to_remove.extend(remove)
 
-	lv_changes = load_lvs(
+	(changes, remove) = load_vgs(
 		refresh=refresh,
 		emit_signal=emit_signal,
-		cache_refresh=False)[1]
+		cache_refresh=False)[1:]
+
+	num_total_changes += changes
+	to_remove.extend(remove)
+
+	(lv_changes, remove) = load_lvs(
+		refresh=refresh,
+		emit_signal=emit_signal,
+		cache_refresh=False)[1:]
 
 	num_total_changes += lv_changes
+	to_remove.extend(remove)
 
 	# When the LVs change it can cause another change in the VGs which is
 	# missed if we don't scan through the VGs again.  We could achieve this
@@ -44,10 +52,23 @@ def _main_thread_load(refresh=True, emit_signal=True):
 	# changes causing the dbus object representing it to be removed and
 	# recreated.
 	if refresh and lv_changes > 0:
-		num_total_changes += load_vgs(
+		(changes, remove) = load_vgs(
 			refresh=refresh,
 			emit_signal=emit_signal,
-			cache_refresh=False)[1]
+			cache_refresh=False)[1:]
+
+	num_total_changes += changes
+	to_remove.extend(remove)
+
+	# Remove any objects that are no longer needed.  We do this after we process
+	# all the objects to ensure that references still exist for objects that
+	# are processed after them.
+	to_remove.reverse()
+	for i in to_remove:
+		dbus_obj = cfg.om.get_object_by_path(i)
+		if dbus_obj:
+			cfg.om.remove_object(dbus_obj, True)
+			num_total_changes += 1
 
 	return num_total_changes
 
