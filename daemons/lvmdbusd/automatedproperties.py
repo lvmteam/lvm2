@@ -157,14 +157,15 @@ class AutomatedProperties(dbus.service.Object):
 		if not self._ap_search_method:
 			return 0
 
-		search = self.lvm_id
-		if search_key:
-			search = search_key
-
 		# Either we have the new object state or we need to go fetch it
 		if object_state:
 			new_state = object_state
 		else:
+			if search_key:
+				search = search_key
+			else:
+				search = self.lvm_id
+
 			new_state = self._ap_search_method([search])[0]
 			assert isinstance(new_state, State)
 
