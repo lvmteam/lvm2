@@ -9,13 +9,14 @@
 
 import subprocess
 from . import cfg
-from .cmdhandler import options_to_cli_args, LvmExecutionMeta
+from .cmdhandler import options_to_cli_args, LvmExecutionMeta, call_lvm
 import dbus
 from .utils import pv_range_append, pv_dest_ranges, log_error, log_debug,\
-	add_no_notify
-import os
+					mt_async_call
+from .request import RequestEntry
 import threading
 import time
+import traceback
 
 
 def pv_move_lv_cmd(move_options, lv_full_name,
@@ -39,58 +40,50 @@ def lv_merge_cmd(merge_options, lv_full_name):
 	return cmd
 
 
+def _load_wrapper(ignored):
+	cfg.load()
+
+
+def _move_callback(job_state, line_str):
+	try:
+		if line_str.count(':') == 2:
+			(device, ignore, percentage) = line_str.split(':')
+
+			job_state.Percent = int(round(
+				float(percentage.strip()[:-1]), 1))
+
+			# While the move is in progress we need to periodically update
+			# the state to reflect where everything is at.  we will do this
+			# by scheduling the load to occur in the main work queue.
+			r = RequestEntry(
+				-1, _load_wrapper, ("_move_callback: load",), None, None, False)
+			cfg.worker_q.put(r)
+	except ValueError:
+		log_error("Trying to parse percentage which failed for %s" % line_str)
+
+
 def _move_merge(interface_name, command, job_state):
 	# We need to execute these command stand alone by forking & exec'ing
 	# the command always as we will be getting periodic output from them on
 	# the status of the long running operation.
-	command.insert(0, cfg.LVM_CMD)
 
-	# Instruct lvm to not register an event with us
-	command = add_no_notify(command)
-
-	#(self, start, ended, cmd, ec, stdout_txt, stderr_txt)
 	meta = LvmExecutionMeta(time.time(), 0, command, -1000, None, None)
-
 	cfg.blackbox.add(meta)
 
-	process = subprocess.Popen(command, stdout=subprocess.PIPE,
-								env=os.environ,
-								stderr=subprocess.PIPE, close_fds=True)
-
-	log_debug("Background process for %s is %d" %
-				(str(command), process.pid))
-
-	lines_iterator = iter(process.stdout.readline, b"")
-	for line in lines_iterator:
-		line_str = line.decode("utf-8")
-
-		# Check to see if the line has the correct number of separators
-		try:
-			if line_str.count(':') == 2:
-				(device, ignore, percentage) = line_str.split(':')
-				job_state.Percent = round(
-					float(percentage.strip()[:-1]), 1)
-
-				# While the move is in progress we need to periodically update
-				# the state to reflect where everything is at.
-				cfg.load()
-		except ValueError:
-			log_error("Trying to parse percentage which failed for %s" %
-				line_str)
-
-	out = process.communicate()
+	ec, stdout, stderr = call_lvm(command, line_cb=_move_callback,
+									cb_data=job_state)
 
 	with meta.lock:
 		meta.ended = time.time()
-		meta.ec = process.returncode
-		meta.stderr_txt = out[1]
+		meta.ec = ec
+		meta.stderr_txt = stderr
 
-	if process.returncode == 0:
+	if ec == 0:
 		job_state.Percent = 100
 	else:
 		raise dbus.exceptions.DBusException(
 			interface_name,
-			'Exit code %s, stderr = %s' % (str(process.returncode), out[1]))
+			'Exit code %s, stderr = %s' % (str(ec), stderr))
 
 	cfg.load()
 	return '/'

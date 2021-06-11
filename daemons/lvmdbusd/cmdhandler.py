@@ -8,6 +8,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from subprocess import Popen, PIPE
+import select
 import time
 import threading
 from itertools import chain
@@ -16,7 +17,8 @@ import traceback
 import os
 
 from lvmdbusd import cfg
-from lvmdbusd.utils import pv_dest_ranges, log_debug, log_error, add_no_notify
+from lvmdbusd.utils import pv_dest_ranges, log_debug, log_error, add_no_notify,\
+							make_non_block, read_decoded
 from lvmdbusd.lvm_shell_proxy import LVMShellProxy
 
 try:
@@ -82,16 +84,23 @@ def _debug_c(cmd, exit_code, out):
 	log_error(("STDERR=\n %s\n" % out[1]))
 
 
-def call_lvm(command, debug=False):
+def call_lvm(command, debug=False, line_cb=None,
+			 cb_data=None):
 	"""
 	Call an executable and return a tuple of exitcode, stdout, stderr
-	:param command:     Command to execute
-	:param debug:       Dump debug to stdout
-	"""
-	# print 'STACK:'
-	# for line in traceback.format_stack():
-	#    print line.strip()
+	:param command: Command to execute
+	:param debug:   Dump debug to stdout
+	:param line_cb:	Call the supplied function for each line read from
+					stdin, CALL MUST EXECUTE QUICKLY and not *block*
+					otherwise call_lvm function will fail to read
+					stdin/stdout.  Return value of call back is ignored
+	:param cb_data: Supplied to callback to allow caller access to
+								its own data
 
+	# Callback signature
+	def my_callback(my_context, line_read_stdin)
+		pass
+	"""
 	# Prepend the full lvm executable so that we can run different versions
 	# in different locations on the same box
 	command.insert(0, cfg.LVM_CMD)
@@ -99,10 +108,44 @@ def call_lvm(command, debug=False):
 
 	process = Popen(command, stdout=PIPE, stderr=PIPE, close_fds=True,
 					env=os.environ)
-	out = process.communicate()
 
-	stdout_text = bytes(out[0]).decode("utf-8")
-	stderr_text = bytes(out[1]).decode("utf-8")
+	stdout_text = ""
+	stderr_text = ""
+	stdout_index = 0
+	make_non_block(process.stdout)
+	make_non_block(process.stderr)
+
+	while True:
+		try:
+			rd_fd = [process.stdout.fileno(), process.stderr.fileno()]
+			ready = select.select(rd_fd, [], [], 2)
+
+			for r in ready[0]:
+				if r == process.stdout.fileno():
+					stdout_text += read_decoded(process.stdout)
+				elif r == process.stderr.fileno():
+					stderr_text += read_decoded(process.stderr)
+
+			if line_cb is not None:
+				# Process the callback for each line read!
+				while True:
+					i = stdout_text.find("\n", stdout_index)
+					if i != -1:
+						try:
+							line_cb(cb_data, stdout_text[stdout_index:i])
+						except:
+							st = traceback.format_exc()
+							log_error("call_lvm: line_cb exception: \n %s" % st)
+						stdout_index = i + 1
+					else:
+						break
+
+			# Check to see if process has terminated, None when running
+			if process.poll() is not None:
+				break
+		except IOError as ioe:
+			log_debug("call_lvm:" + str(ioe))
+			pass
 
 	if debug or process.returncode != 0:
 		_debug_c(command, process.returncode, (stdout_text, stderr_text))

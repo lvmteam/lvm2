@@ -14,6 +14,7 @@ import ctypes
 import os
 import string
 import datetime
+from fcntl import fcntl, F_GETFL, F_SETFL
 
 import dbus
 from lvmdbusd import cfg
@@ -681,3 +682,16 @@ def _remove_objects(dbus_objects_rm):
 # Remove dbus objects from main thread
 def mt_remove_dbus_objects(objs):
 	MThreadRunner(_remove_objects, objs).done()
+
+
+# Make stream non-blocking
+def make_non_block(stream):
+	flags = fcntl(stream, F_GETFL)
+	fcntl(stream, F_SETFL, flags | os.O_NONBLOCK)
+
+
+def read_decoded(stream):
+	tmp = stream.read()
+	if tmp:
+		return tmp.decode("utf-8")
+	return ''

@@ -13,7 +13,6 @@
 
 import subprocess
 import shlex
-from fcntl import fcntl, F_GETFL, F_SETFL
 import os
 import traceback
 import sys
@@ -29,7 +28,8 @@ except ImportError:
 
 
 from lvmdbusd.cfg import LVM_CMD
-from lvmdbusd.utils import log_debug, log_error, add_no_notify
+from lvmdbusd.utils import log_debug, log_error, add_no_notify, make_non_block,\
+							read_decoded
 
 SHELL_PROMPT = "lvm> "
 
@@ -42,13 +42,6 @@ def _quote_arg(arg):
 
 
 class LVMShellProxy(object):
-
-	@staticmethod
-	def _read(stream):
-		tmp = stream.read()
-		if tmp:
-			return tmp.decode("utf-8")
-		return ''
 
 	# Read until we get prompt back and a result
 	# @param: no_output	Caller expects no output to report FD
@@ -75,11 +68,11 @@ class LVMShellProxy(object):
 
 				for r in ready[0]:
 					if r == self.lvm_shell.stdout.fileno():
-						stdout += LVMShellProxy._read(self.lvm_shell.stdout)
+						stdout += read_decoded(self.lvm_shell.stdout)
 					elif r == self.report_stream.fileno():
-						report += LVMShellProxy._read(self.report_stream)
+						report += read_decoded(self.report_stream)
 					elif r == self.lvm_shell.stderr.fileno():
-						stderr += LVMShellProxy._read(self.lvm_shell.stderr)
+						stderr += read_decoded(self.lvm_shell.stderr)
 
 				# Check to see if the lvm process died on us
 				if self.lvm_shell.poll():
@@ -124,11 +117,6 @@ class LVMShellProxy(object):
 		assert (num_written == len(cmd_bytes))
 		self.lvm_shell.stdin.flush()
 
-	@staticmethod
-	def _make_non_block(stream):
-		flags = fcntl(stream, F_GETFL)
-		fcntl(stream, F_SETFL, flags | os.O_NONBLOCK)
-
 	def __init__(self):
 
 		# Create a temp directory
@@ -162,8 +150,8 @@ class LVMShellProxy(object):
 			stderr=subprocess.PIPE, close_fds=True, shell=True)
 
 		try:
-			LVMShellProxy._make_non_block(self.lvm_shell.stdout)
-			LVMShellProxy._make_non_block(self.lvm_shell.stderr)
+			make_non_block(self.lvm_shell.stdout)
+			make_non_block(self.lvm_shell.stderr)
 
 			# wait for the first prompt
 			errors = self._read_until_prompt(no_output=True)[2]
