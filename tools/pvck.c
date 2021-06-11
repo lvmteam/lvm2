@@ -3037,6 +3037,9 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_is_set(cmd, repairtype_ARG) || arg_is_set(cmd, repair_ARG)) {
 		pv_name = argv[0];
 
+		if (!lock_global(cmd, "ex"))
+			return ECMD_FAILED;
+
 		clear_hint_file(cmd);
 
 		if (!setup_device(cmd, pv_name)) {
