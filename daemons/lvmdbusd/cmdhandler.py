@@ -627,7 +627,13 @@ def lvm_full_report_json():
 			assert(type(out) == dict)
 			return out
 		else:
-			return json.loads(out)
+			try:
+				return json.loads(out)
+			except json.decoder.JSONDecodeError as joe:
+				log_error("JSONDecodeError %s, \n JSON=\n%s\n" %
+							(str(joe), out))
+				raise joe
+
 	return None
 
 
