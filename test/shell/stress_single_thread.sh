@@ -13,6 +13,8 @@
 
 SKIP_WITH_LVMPOLLD=1
 
+[ -z "$LVM_TEST_LOCK_TYPE_IDM" ] && skip;
+
 . lib/inittest
 
 aux prepare_vg 3
