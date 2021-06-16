@@ -1132,6 +1132,7 @@ id_done:
 
 			if (yes_no_prompt("Add device with duplicate PV to devices file?") == 'n') {
 				log_print("Device not added.");
+				free((void *)check_idname);
 				return 1;
 			}
 		}

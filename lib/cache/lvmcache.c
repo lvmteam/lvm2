@@ -854,6 +854,11 @@ next:
 				dev_name(dev1), has_lv1 ? "is used for" : "is not used for",
 				dev_name(dev2), has_lv2 ? "is used for" : "is not used for");
 
+		free((void *)idname1);
+		free((void *)idname2);
+		idname1 = NULL;
+		idname2 = NULL;
+
 		change = 0;
 
 		if (prev_unchosen1 && !prev_unchosen2) {

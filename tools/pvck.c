@@ -3053,7 +3053,7 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	if (arg_is_set(cmd, dump_ARG)) {
+	if ((dump = arg_str_value(cmd, dump_ARG, NULL))) {
 		struct stat sb;
 
 		pv_name = argv[0];
@@ -3121,7 +3121,7 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	if ((dump = arg_str_value(cmd, dump_ARG, NULL))) {
+	if (dump) {
 		cmd->use_hints = 0;
 
 		if (!strcmp(dump, "metadata"))
@@ -3145,6 +3145,7 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 		} else
 			log_error("Unknown dump value.");
 
+		free(def);
 		if (!ret)
 			return ECMD_FAILED;
 		return ECMD_PROCESSED;
