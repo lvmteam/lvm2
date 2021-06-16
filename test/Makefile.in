@@ -171,7 +171,7 @@ check_lvmlockd_dlm: .tests-stamp
 endif
 
 ifeq ("@BUILD_LVMLOCKD@", "yes")
-check_lvmlockd_idm: .tests-stamp
+check_lvmlockd_idm: .tests-stamp lib/idm_inject_failure
 	$(INSTALL_PROGRAM) lib/idm_inject_failure $(EXECDIR)
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir $(LVM_TEST_RESULTS) \
