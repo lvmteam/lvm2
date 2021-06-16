@@ -22,8 +22,8 @@ get_devs
 
 pvcreate -M2 "${DEVICES[@]}"
 
-vgcreate --shared -M2 "$vg1" "$dev1" "$dev2" "$dev3"
-vgcreate --shared -M2 "$vg2" "$dev4" "$dev5" "$dev6"
+vgcreate $SHARED -M2 "$vg1" "$dev1" "$dev2" "$dev3"
+vgcreate $SHARED -M2 "$vg2" "$dev4" "$dev5" "$dev6"
 
 test_vg_thread1()
 {
