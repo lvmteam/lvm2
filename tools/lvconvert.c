@@ -4769,7 +4769,7 @@ static int _lvconvert_to_pool_or_swap_metadata_single(struct cmd_context *cmd,
 
 	switch (cmd->command->command_enum) {
 	case lvconvert_to_thinpool_or_swap_metadata_CMD:
-		if (lv_is_cache(lv))
+		if (lv_is_cache(lv) || lv_is_writecache(lv))
 			/* For cached LV check the cache origin LV type */
 			lvt_enum = get_lvt_enum(seg_lv(first_seg(lv), 0));
 		to_thinpool = 1;
