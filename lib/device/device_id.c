@@ -308,6 +308,10 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 
 		if (!sysbuf[0])
 			_read_sys_block(cmd, dev, "wwid", sysbuf, sizeof(sysbuf));
+
+		/* scsi_debug wwid begins "t10.Linux   scsi_debug ..." */
+		if (strstr(sysbuf, "scsi_debug"))
+			sysbuf[0] = '\0';
 	}
 
 	else if (idtype == DEV_ID_TYPE_SYS_SERIAL)
