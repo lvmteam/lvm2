@@ -5992,24 +5992,13 @@ static int _set_writecache_block_size(struct cmd_context *cmd,
 	rv = get_fs_block_size(pathname, &fs_block_size);
 skip_fs:
 	if (!rv || !fs_block_size) {
-		if (lbs_4k && pbs_4k && !pbs_512) {
-			block_size = 4096;
-		} else if (lbs_512 && pbs_512 && !pbs_4k) {
-			block_size = 512;
-		} else if (lbs_512 && pbs_4k) {
-			if (block_size_setting == 4096)
-				block_size = 4096;
-			else
-				block_size = 512;
-		} else {
-			block_size = 512;
-		}
-
-		if (block_size_setting && (block_size_setting != block_size)) {
-			log_warn("WARNING: writecache block size %u does not match device block sizes, logical %u physical %u",
-				 block_size_setting, lbs_4k ? 4096 : 512, pbs_4k ? 4096 : 512);
+		if (block_size_setting)
 			block_size = block_size_setting;
-		}
+		else
+			block_size = 4096;
+
+		log_print("Using writecache block size %u for unknown file system block size, logical block size %u, physical block size %u.",
+			 block_size, lbs_4k ? 4096 : 512, pbs_4k ? 4096 : 512);
 
 		if (block_size != 512) {
 			log_warn("WARNING: unable to detect a file system block size on %s", display_lvname(lv));
@@ -6021,8 +6010,6 @@ skip_fs:
 			}
 		}
 
-		log_print("Using writecache block size %u for unknown file system block size, logical block size %u, physical block size %u.",
-			 block_size, lbs_4k ? 4096 : 512, pbs_4k ? 4096 : 512);
 		goto out;
 	}
 
