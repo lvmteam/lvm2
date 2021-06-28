@@ -393,7 +393,8 @@ struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 	} else {
 		log_verbose("Skiping VDO formating %s.", display_lvname(data_lv));
 		/* TODO: parse existing VDO data and retrieve vdo_logical_size */
-		vdo_logical_size = data_lv->size;
+		if (!*virtual_extents)
+			vdo_logical_size = data_lv->size;
 	}
 
 	if (!deactivate_lv(data_lv->vg->cmd, data_lv)) {
