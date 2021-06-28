@@ -1,5 +1,7 @@
 Version 2.03.13 - 
 ===============================
+  Support configurable allocation/vdo_pool_header_size.
+  Fix handling of lvconvert --type vdo-pool --virtualsize.
   Simplified handling of archive() and backup() internal calls.
   Fix load of kvdo target when it is not present in memory (2.03.12).
 
