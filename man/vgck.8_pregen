@@ -46,13 +46,6 @@ Rewrite VG metadata to correct problems.
 .ad b
 .RE
 .P
-Common options for command:
-.
-.RS 4
-.ad l
-.ad b
-.RE
-.P
 Common options for lvm:
 .
 .RS 4

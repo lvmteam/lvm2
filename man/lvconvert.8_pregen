@@ -670,7 +670,7 @@ Convert LV to type thin-pool.
 .RE
 .P
 .RS 4
-LV1 types: linear striped cache raid error zero
+LV1 types: linear striped cache raid error zero writecache
 .RE
 .P
 \(em
