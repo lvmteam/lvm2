@@ -816,6 +816,9 @@ cfg(allocation_vdo_max_discard_CFG, "vdo_max_discard", allocation_CFG_SECTION, C
 	"increased latency for the individual discard requests.\n"
 	"The default and minimum is 1. The maximum is UINT_MAX / 4096.\n")
 
+cfg(allocation_vdo_pool_header_size_CFG, "vdo_pool_header_size", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_POOL_HEADER_SIZE_KB, vsn(2, 3, 12), NULL, 0, NULL,
+	"Specified the emptry header size in KiB at the front and end of vdo pool device.\n")
+
 cfg(log_report_command_log_CFG, "report_command_log", log_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED | CFG_DISALLOW_INTERACTIVE, CFG_TYPE_BOOL, DEFAULT_COMMAND_LOG_REPORT, vsn(2, 2, 158), NULL, 0, NULL,
 	"Enable or disable LVM log reporting.\n"
 	"If enabled, LVM will collect a log of operations, messages,\n"

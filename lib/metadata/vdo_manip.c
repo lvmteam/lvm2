@@ -356,9 +356,9 @@ static int _format_vdo_pool_data_lv(struct logical_volume *data_lv,
 struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 					   const struct dm_vdo_target_params *vtp,
 					   uint32_t *virtual_extents,
-					   int format)
+					   int format,
+					   uint64_t vdo_pool_header_size)
 {
-	const uint64_t header_size = DEFAULT_VDO_POOL_HEADER_SIZE;
 	const uint32_t extent_size = data_lv->vg->extent_size;
 	struct cmd_context *cmd = data_lv->vg->cmd;
 	struct logical_volume *vdo_pool_lv = data_lv;
@@ -379,7 +379,7 @@ struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 
 	if (*virtual_extents)
 		vdo_logical_size =
-			_get_virtual_size(*virtual_extents, extent_size, header_size);
+			_get_virtual_size(*virtual_extents, extent_size, vdo_pool_header_size);
 
 	if (!dm_vdo_validate_target_params(vtp, vdo_logical_size))
 		return_0;
@@ -403,7 +403,7 @@ struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 		return NULL;
 	}
 
-	vdo_logical_size -= 2 * header_size;
+	vdo_logical_size -= 2 * vdo_pool_header_size;
 
 	if (vdo_logical_size < extent_size) {
 		if (!*virtual_extents)
@@ -426,7 +426,7 @@ struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 	vdo_pool_seg = first_seg(vdo_pool_lv);
 	vdo_pool_seg->segtype = vdo_pool_segtype;
 	vdo_pool_seg->vdo_params = *vtp;
-	vdo_pool_seg->vdo_pool_header_size = DEFAULT_VDO_POOL_HEADER_SIZE;
+	vdo_pool_seg->vdo_pool_header_size = vdo_pool_header_size;
 	vdo_pool_seg->vdo_pool_virtual_extents = *virtual_extents;
 
 	vdo_pool_lv->status |= LV_VDO_POOL;
@@ -453,6 +453,7 @@ int set_vdo_write_policy(enum dm_vdo_write_policy *vwp, const char *policy)
 
 int fill_vdo_target_params(struct cmd_context *cmd,
 			   struct dm_vdo_target_params *vtp,
+			   uint64_t *vdo_pool_header_size,
 			   struct profile *profile)
 {
 	const char *policy;
@@ -500,6 +501,8 @@ int fill_vdo_target_params(struct cmd_context *cmd,
 	policy = find_config_tree_str(cmd, allocation_vdo_write_policy_CFG, profile);
 	if (!set_vdo_write_policy(&vtp->write_policy, policy))
 		return_0;
+
+	*vdo_pool_header_size = 2 * find_config_tree_int64(cmd, allocation_vdo_pool_header_size_CFG, profile);
 
 	return 1;
 }

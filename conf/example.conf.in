@@ -733,6 +733,11 @@ allocation {
 	# The default and minimum is 1. The maximum is UINT_MAX / 4096.
 	# This configuration option has an automatic default value.
 	# vdo_max_discard = 1
+
+	# Configuration option allocation/vdo_pool_header_size.
+	# Specified the emptry header size in KiB at the front and end of vdo pool device.
+	# This configuration option has an automatic default value.
+	# vdo_pool_header_size = 512
 }
 
 # Configuration section log.

@@ -181,8 +181,7 @@
  * VDO pool will reverve some sectors in the front and the back of pool device to avoid
  * seeing same device twice in the system.
  */
-#define DEFAULT_VDO_POOL_HEADER_SIZE  (1024)   // 512KiB
-
+#define DEFAULT_VDO_POOL_HEADER_SIZE_KB  (512)
 
 
 #define DEFAULT_FSADM_PATH FSADM_PATH

@@ -1097,7 +1097,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 
 		// FIXME: prefiling here - this is wrong place
 		// but will work for this moment
-		if (!fill_vdo_target_params(cmd, &lp->vdo_params, NULL))
+		if (!fill_vdo_target_params(cmd, &lp->vdo_params, &lp->vdo_pool_header_size, NULL))
 			return_0;
 
 		if (arg_is_set(cmd, compression_ARG))

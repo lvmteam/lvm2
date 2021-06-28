@@ -1034,6 +1034,7 @@ struct lvcreate_params {
 	int approx_alloc;     /* all */
 	alloc_policy_t alloc; /* all */
 	struct dm_vdo_target_params vdo_params; /* vdo */
+	uint64_t vdo_pool_header_size; /* VDO */
 
 	int raidintegrity;
 	const char *raidintegritymode;
@@ -1368,10 +1369,12 @@ int parse_vdo_pool_status(struct dm_pool *mem, const struct logical_volume *vdo_
 struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 					   const struct dm_vdo_target_params *vtp,
 					   uint32_t *virtual_extents,
-					   int format);
+					   int format,
+					   uint64_t vdo_pool_header_size);
 int set_vdo_write_policy(enum dm_vdo_write_policy *vwp, const char *policy);
 int fill_vdo_target_params(struct cmd_context *cmd,
 			   struct dm_vdo_target_params *vtp,
+			   uint64_t *vdo_pool_header_size,
 			   struct profile *profile);
 /* --  metadata/vdo_manip.c */
 
