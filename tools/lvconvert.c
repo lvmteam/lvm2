@@ -5404,7 +5404,7 @@ static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 					struct processing_handle *handle)
 {
 	const char *vg_name = NULL;
-	unsigned int zero_vdopool;
+	unsigned int vdo_pool_zero;
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *vdo_lv;
 	struct dm_vdo_target_params vdo_params; /* vdo */
@@ -5463,12 +5463,12 @@ static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 		goto out;
 	}
 
-	zero_vdopool = arg_int_value(cmd, zero_ARG, 1);
+	vdo_pool_zero = arg_int_value(cmd, zero_ARG, 1);
 
 	log_warn("WARNING: Converting logical volume %s to VDO pool volume %s formating.",
-		 display_lvname(lv), zero_vdopool ? "with" : "WITHOUT");
+		 display_lvname(lv), vdo_pool_zero ? "with" : "WITHOUT");
 
-	if (zero_vdopool)
+	if (vdo_pool_zero)
 		log_warn("THIS WILL DESTROY CONTENT OF LOGICAL VOLUME (filesystem etc.)");
 	else
 		log_warn("WARNING: Using invalid VDO pool data MAY DESTROY YOUR DATA!");
@@ -5480,7 +5480,7 @@ static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 		goto out;
 	}
 
-	if (zero_vdopool) {
+	if (vdo_pool_zero) {
 		if (!wipe_lv(lv, (struct wipe_params) { .do_zero = 1, .do_wipe_signatures = 1,
 			     .yes = arg_count(cmd, yes_ARG),
 			     .force = arg_count(cmd, force_ARG)})) {
@@ -5489,7 +5489,7 @@ static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 		}
 	}
 
-	if (!convert_vdo_pool_lv(lv, &vdo_params, &lvc.virtual_extents, zero_vdopool))
+	if (!convert_vdo_pool_lv(lv, &vdo_params, &lvc.virtual_extents, vdo_pool_zero))
 		goto_out;
 
 	dm_list_init(&lvc.tags);
