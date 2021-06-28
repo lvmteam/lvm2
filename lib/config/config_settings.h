@@ -807,7 +807,7 @@ cfg(allocation_vdo_write_policy_CFG, "vdo_write_policy", allocation_CFG_SECTION,
 	"        Data which has not been flushed is not guaranteed to persist in this mode.\n")
 
 cfg(allocation_vdo_max_discard_CFG, "vdo_max_discard", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_MAX_DISCARD, VDO_1ST_VSN, NULL, 0, NULL,
-	"Specified te maximum size of discard bio accepted, in 4096 byte blocks.\n"
+	"Specified the maximum size of discard bio accepted, in 4096 byte blocks.\n"
 	"I/O requests to a VDO volume are normally split into 4096-byte blocks,\n"
 	"and processed up to 2048 at a time. However, discard requests to a VDO volume\n"
 	"can be automatically split to a larger size, up to <max discard> 4096-byte blocks\n"
