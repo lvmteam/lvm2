@@ -130,6 +130,7 @@ bool dev_write_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 bool dev_write_zeros(struct device *dev, uint64_t start, size_t len);
 bool dev_set_bytes(struct device *dev, uint64_t start, size_t len, uint8_t val);
 bool dev_invalidate_bytes(struct device *dev, uint64_t start, size_t len);
+void dev_invalidate(struct device *dev);
 void dev_set_last_byte(struct device *dev, uint64_t offset);
 void dev_unset_last_byte(struct device *dev);
 

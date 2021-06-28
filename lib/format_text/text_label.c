@@ -327,6 +327,9 @@ static int _read_mda_header_and_metadata(const struct format_type *fmt,
 {
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct mda_header *mdah;
+	int retries = 0;
+
+ retry:
 
 	if (!(mdah = raw_read_mda_header(fmt, &mdac->area, (mda->mda_num == 1), 0, bad_fields))) {
 		log_warn("WARNING: bad metadata header on %s at %llu.",
@@ -353,6 +356,38 @@ static int _read_mda_header_and_metadata(const struct format_type *fmt,
 					    vgsummary, &mdac->free_sectors)) {
 		if (vgsummary->zero_offset)
 			return 1;
+
+		/*
+		 * This code is used by label_scan to get a summary of the
+		 * VG metadata that will be properly read later by vg_read.
+		 * The initial read of this device during label_scan
+		 * populates bcache with the first 128K of data from the
+		 * device.  That block of data contains the mda_header
+		 * (at 4k) but will often not include the metadata text,
+		 * which is often located further into the metadata area
+		 * (beyond the 128K block saved in bcache.)
+		 * So read_metadata_location_summary will usually get the
+		 * mda_header from bcache which was read initially, and
+		 * then it will often need to do a new disk read to get
+		 * the actual metadata text that the mda_header points to.
+		 * Since there is no locking around label_scan, it's
+		 * possible (but very rare) that the entire metadata area
+		 * can be rewritten by other commands between the time that
+		 * this command read the mda_header and the time that it
+		 * reads the metadata text.  This means the expected metadata
+		 * text isn't found, and an error is returned here.
+		 * To handle this, invalidate all data in bcache for this
+		 * device and reread the mda_header and metadata text back to
+		 * back, so inconsistency is less likely (without locking
+		 * there's no guarantee, e.g. if the command is blocked
+		 * somehow between the two reads.)
+		 */
+		if (!retries) {
+			log_print("Retrying metadata scan.");
+			retries++;
+			dev_invalidate(mdac->area.dev);
+			goto retry;
+		}
 
 		log_warn("WARNING: bad metadata text on %s in mda%d",
 			 dev_name(mdac->area.dev), mda->mda_num);

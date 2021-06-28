@@ -1704,6 +1704,11 @@ bool dev_invalidate_bytes(struct device *dev, uint64_t start, size_t len)
 	return bcache_invalidate_bytes(scan_bcache, dev->bcache_di, start, len);
 }
 
+void dev_invalidate(struct device *dev)
+{
+	bcache_invalidate_di(scan_bcache, dev->bcache_di);
+}
+
 bool dev_write_zeros(struct device *dev, uint64_t start, size_t len)
 {
 	return dev_set_bytes(dev, start, len, 0);

@@ -1563,6 +1563,14 @@ int read_metadata_location_summary(const struct format_type *fmt,
 		return 0;
 	}
 
+	/*
+	 * This code reading the start of the metadata area and verifying that
+	 * it looks like a vgname can be removed.  The checksum verifies it.
+	 */
+	log_debug_metadata("Reading metadata_vgname summary from %s at %llu",
+			   dev_name(dev_area->dev),
+			   (unsigned long long)(dev_area->start + rlocn->offset));
+
 	memset(namebuf, 0, sizeof(namebuf));
 
 	if (!dev_read_bytes(dev_area->dev, dev_area->start + rlocn->offset, NAME_LEN, namebuf))
