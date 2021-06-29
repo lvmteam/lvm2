@@ -296,23 +296,10 @@ static struct raw_locn *_read_metadata_location_vg(struct cmd_context *cmd,
 				       const char *vgname,
 				       int *precommitted)
 {
-	size_t len;
-	char vgnamebuf[NAME_LEN + 2] __attribute__((aligned(8)));
 	struct raw_locn *rlocn, *rlocn_precommitted;
-	struct lvmcache_info *info;
-	struct lvmcache_vgsummary vgsummary_orphan = {
-		.vgname = FMT_TEXT_ORPHAN_VG_NAME,
-	};
-	int rlocn_was_ignored;
-
-	dm_list_init(&vgsummary_orphan.pvsummaries);
-
-	memcpy(&vgsummary_orphan.vgid, FMT_TEXT_ORPHAN_VG_NAME, sizeof(FMT_TEXT_ORPHAN_VG_NAME));
 
 	rlocn = mdah->raw_locns;	/* Slot 0 */
 	rlocn_precommitted = rlocn + 1;	/* Slot 1 */
-
-	rlocn_was_ignored = rlocn_is_ignored(rlocn);
 
 	/* Should we use precommitted metadata? */
 	if (*precommitted && rlocn_precommitted->size &&
@@ -338,42 +325,7 @@ static struct raw_locn *_read_metadata_location_vg(struct cmd_context *cmd,
 	if (!rlocn->offset && !rlocn->size)
 		return NULL;
 
-	/*
-	 * Don't try to check existing metadata
-	 * if given vgname is an empty string.
-	 */
-	if (!vgname || !*vgname)
-		return rlocn;
-
-	/*
-	 * If live rlocn has ignored flag, data will be out-of-date so skip further checks.
-	 */
-	if (rlocn_was_ignored)
-		return rlocn;
-
-	/*
-	 * Verify that the VG metadata pointed to by the rlocn
-	 * begins with a valid vgname.
-	 */
-	memset(vgnamebuf, 0, sizeof(vgnamebuf));
-
-	if (!dev_read_bytes(dev_area->dev, dev_area->start + rlocn->offset, NAME_LEN, vgnamebuf))
-		goto fail;
-
-	if (!strncmp(vgnamebuf, vgname, len = strlen(vgname)) &&
-	    (isspace(vgnamebuf[len]) || vgnamebuf[len] == '{'))
-		return rlocn;
- fail:
-	log_error("Metadata on %s at %llu has wrong VG name \"%s\" expected %s.",
-		  dev_name(dev_area->dev),
-		  (unsigned long long)(dev_area->start + rlocn->offset),
-		  vgnamebuf, vgname);
-
-	if ((info = lvmcache_info_from_pvid(dev_area->dev->pvid, dev_area->dev, 0)) &&
-	    !lvmcache_update_vgname_and_id(cmd, info, &vgsummary_orphan))
-		stack;
-
-	return NULL;
+	return rlocn;
 }
 
 /*
@@ -487,9 +439,13 @@ static struct volume_group *_vg_read_raw_area(struct cmd_context *cmd,
 				rlocn->checksum,
 				&when, &desc);
 
-	if (!vg) {
-		/* FIXME: detect and handle errors, and distinguish from the optimization
-		   that skips parsing the metadata which also returns NULL. */
+	if (!vg && !*use_previous_vg) {
+		log_warn("WARNING: failed to read metadata text on %s at %llu size %llu for VG %s.",
+			 dev_name(area->dev),
+			 (unsigned long long)(area->start + rlocn->offset),
+			 (unsigned long long)rlocn->size,
+			 vgname);
+		return NULL;
 	}
 
 	log_debug_metadata("Found metadata on %s at %llu size %llu for VG %s",
@@ -498,7 +454,7 @@ static struct volume_group *_vg_read_raw_area(struct cmd_context *cmd,
 			   (unsigned long long)rlocn->size,
 			   vgname);
 
-	if (vg && precommitted)
+	if (precommitted)
 		vg->status |= PRECOMMITTED;
 
       out:
@@ -1533,8 +1489,6 @@ int read_metadata_location_summary(const struct format_type *fmt,
 {
 	struct raw_locn *rlocn;
 	uint32_t wrap = 0;
-	unsigned int len = 0;
-	char namebuf[NAME_LEN + 1] __attribute__((aligned(8)));
 	uint64_t max_size;
 
 	if (!mdah) {
@@ -1560,36 +1514,6 @@ int read_metadata_location_summary(const struct format_type *fmt,
 				   dev_name(dev_area->dev),
 				   (unsigned long long)(dev_area->start + rlocn->offset));
 		vgsummary->zero_offset = 1;
-		return 0;
-	}
-
-	/*
-	 * This code reading the start of the metadata area and verifying that
-	 * it looks like a vgname can be removed.  The checksum verifies it.
-	 */
-	log_debug_metadata("Reading metadata_vgname summary from %s at %llu",
-			   dev_name(dev_area->dev),
-			   (unsigned long long)(dev_area->start + rlocn->offset));
-
-	memset(namebuf, 0, sizeof(namebuf));
-
-	if (!dev_read_bytes(dev_area->dev, dev_area->start + rlocn->offset, NAME_LEN, namebuf))
-		stack;
-
-	while (namebuf[len] && !isspace(namebuf[len]) && namebuf[len] != '{' &&
-	       len < (NAME_LEN - 1))
-		len++;
-
-	namebuf[len] = '\0';
-
-	/*
-	 * Check that the text metadata in the circular buffer begins with a
-	 * valid vg name.
-	 */
-	if (!validate_name(namebuf)) {
-		log_warn("WARNING: Metadata location on %s at %llu begins with invalid VG name.",
-			  dev_name(dev_area->dev),
-			  (unsigned long long)(dev_area->start + rlocn->offset));
 		return 0;
 	}
 
