@@ -118,6 +118,14 @@ mkdir -p "$mount_dir"
 
 aux prepare_devs 6 70 # want 64M of usable space from each dev
 
+# Tests with fs block sizes require a libblkid version that shows BLOCK_SIZE
+vgcreate $vg "$dev1"
+lvcreate -n $lv1 -L50 $vg
+mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+blkid -c /dev/null "$DM_DEV_DIR/$vg/$lv1" | grep BLOCK_SIZE || skip
+lvchange -an $vg
+vgremove -ff $vg
+
 # generate random data
 dd if=/dev/urandom of=pattern bs=512K count=1
 
