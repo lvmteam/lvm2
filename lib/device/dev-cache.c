@@ -1139,7 +1139,7 @@ static int _insert(const char *path, const struct stat *info,
 	return 1;
 }
 
-void dev_cache_scan(void)
+void dev_cache_scan(struct cmd_context *cmd)
 {
 	log_debug_devs("Creating list of system devices.");
 
@@ -1147,7 +1147,8 @@ void dev_cache_scan(void)
 
 	_insert_dirs(&_cache.dirs);
 
-	(void) dev_cache_index_devs();
+	if (cmd->check_devs_used)
+		(void) dev_cache_index_devs();
 }
 
 int dev_cache_has_scanned(void)
@@ -1583,7 +1584,7 @@ struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t dev, struct 
 
 		log_debug_devs("Device num not found in dev_cache repeat dev_cache_scan for %d:%d",
 				(int)MAJOR(dev), (int)MINOR(dev));
-		dev_cache_scan();
+		dev_cache_scan(cmd);
 		d = (struct device *) btree_lookup(_cache.devices, (uint32_t) dev);
 
 		if (!d)
@@ -1953,7 +1954,7 @@ int setup_devices(struct cmd_context *cmd)
 	 * This will not open or read any devices, but may look at sysfs properties.
 	 * This list of devs comes from looking /dev entries, or from asking libudev.
 	 */
-	dev_cache_scan();
+	dev_cache_scan(cmd);
 
 	/*
 	 * Match entries from cmd->use_devices with device structs in dev-cache.

@@ -1627,6 +1627,8 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 
 	dm_list_init(&complete_vgnames);
 
+	cmd->check_devs_used = 0;
+
 	if (do_activate &&
 	    !find_config_tree_bool(cmd, global_event_activation_CFG, NULL)) {
 		log_verbose("Ignoring pvscan --cache -aay because event_activation is disabled.");

@@ -1608,6 +1608,7 @@ struct cmd_context *create_toolcontext(unsigned is_clvmd,
 	cmd->handles_missing_pvs = 0;
 	cmd->handles_unknown_segments = 0;
 	cmd->hosttags = 0;
+	cmd->check_devs_used = 1;
 	dm_list_init(&cmd->arg_value_groups);
 	dm_list_init(&cmd->formats);
 	dm_list_init(&cmd->segtypes);

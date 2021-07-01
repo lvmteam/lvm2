@@ -192,6 +192,7 @@ struct cmd_context {
 	unsigned filter_nodata_only:1;          /* only use filters that do not require data from the dev */
 	unsigned run_by_dmeventd:1;		/* command is being run by dmeventd */
 	unsigned sysinit:1;			/* --sysinit is used */
+	unsigned check_devs_used:1;		/* check devs used by LVs */
 
 	/*
 	 * Devices and filtering.

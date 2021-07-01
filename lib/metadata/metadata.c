@@ -5132,7 +5132,8 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	if (!check_pv_dev_sizes(vg))
 		log_warn("WARNING: One or more devices used as PVs in VG %s have changed sizes.", vg->name);
 
-	_check_devs_used_correspond_with_vg(vg);
+	if (cmd->check_devs_used)
+		_check_devs_used_correspond_with_vg(vg);
 
 	if (!_access_vg_lock_type(cmd, vg, lockd_state, &failure)) {
 		/* Either FAILED_LOCK_TYPE or FAILED_LOCK_MODE were set. */
