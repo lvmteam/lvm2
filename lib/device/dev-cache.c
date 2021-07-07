@@ -412,7 +412,7 @@ out:
 	return r;
 }
 
-static int _get_dm_uuid_from_sysfs(char *buf, size_t buf_size, int major, int minor)
+int get_dm_uuid_from_sysfs(char *buf, size_t buf_size, int major, int minor)
 {
 	char path[PATH_MAX];
 
@@ -533,7 +533,7 @@ static int _get_vgid_and_lvid_for_dev(struct device *dev)
 	char uuid[DM_UUID_LEN];
 	size_t uuid_len;
 
-	if (!_get_dm_uuid_from_sysfs(uuid, sizeof(uuid), (int) MAJOR(dev->dev), (int) MINOR(dev->dev)))
+	if (!get_dm_uuid_from_sysfs(uuid, sizeof(uuid), (int) MAJOR(dev->dev), (int) MINOR(dev->dev)))
 		return_0;
 
 	uuid_len = strlen(uuid);

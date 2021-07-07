@@ -139,6 +139,8 @@ struct arg_value_group_list {
 #define ALLOW_HINTS		 0x00004000
 /* Command can access exported vg. */
 #define ALLOW_EXPORTED           0x00008000
+/* Command checks and reports warning if devs used by LV are incorrect. */
+#define CHECK_DEVS_USED		 0x00010000
 
 
 void usage(const char *name);

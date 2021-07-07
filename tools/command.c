@@ -141,7 +141,7 @@ static inline int dumptype_arg(struct cmd_context *cmd __attribute__((unused)), 
 #define CAN_USE_ONE_SCAN	 0x00002000
 #define ALLOW_HINTS              0x00004000
 #define ALLOW_EXPORTED           0x00008000
-
+#define CHECK_DEVS_USED          0x00010000
 
 /* create foo_CMD enums for command def ID's in command-lines.in */
 

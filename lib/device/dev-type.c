@@ -22,6 +22,7 @@
 #include "lib/device/bcache.h"
 #include "lib/label/label.h"
 #include "lib/commands/toolcontext.h"
+#include "device_mapper/misc/dm-ioctl.h"
 
 #ifdef BLKID_WIPING_SUPPORT
 #include <blkid.h>
@@ -34,6 +35,7 @@
 
 #include <libgen.h>
 #include <ctype.h>
+#include <dirent.h>
 
 /*
  * An nvme device has major number 259 (BLKEXT), minor number <minor>,
@@ -75,6 +77,121 @@ int dev_is_lv(struct device *dev)
 		log_sys_debug("fclose", path);
 
 	return ret;
+}
+
+int dev_is_used_by_active_lv(struct cmd_context *cmd, struct device *dev, int *used_by_lv_count,
+			     char **used_by_dm_name, char **used_by_vg_uuid, char **used_by_lv_uuid)
+{
+	char holders_path[PATH_MAX];
+	char dm_dev_path[PATH_MAX];
+	char dm_uuid[DM_UUID_LEN];
+	struct stat info;
+	DIR *d;
+	struct dirent *dirent;
+	char *holder_name;
+	int dm_dev_major, dm_dev_minor;
+	size_t lvm_prefix_len = sizeof(UUID_PREFIX) - 1;
+	size_t lvm_uuid_len = sizeof(UUID_PREFIX) - 1 + 2 * ID_LEN;
+	size_t uuid_len;
+	int used_count = 0;
+	char *used_name = NULL;
+	char *used_vgid = NULL;
+	char *used_lvid = NULL;
+
+	/*
+	 * An LV using this device will be listed as a "holder" in the device's
+	 * sysfs "holders" dir.
+	 */
+
+	if (dm_snprintf(holders_path, sizeof(holders_path), "%sdev/block/%d:%d/holders/", dm_sysfs_dir(), (int) MAJOR(dev->dev), (int) MINOR(dev->dev)) < 0) {
+		log_error("%s: dm_snprintf failed for path to holders directory.", dev_name(dev));
+		return 0;
+	}
+
+	if (!(d = opendir(holders_path)))
+		return 0;
+
+	while ((dirent = readdir(d))) {
+		if (!strcmp(".", dirent->d_name) || !strcmp("..", dirent->d_name))
+			continue;
+
+		holder_name = dirent->d_name;
+
+		/*
+		 * dirent->d_name is the dev name of the holder, e.g. "dm-1"
+		 * from this name, create path "/dev/dm-1" to run stat on.
+		 */
+		
+		if (dm_snprintf(dm_dev_path, sizeof(dm_dev_path), "%s/%s", cmd->dev_dir, holder_name) < 0)
+			continue;
+
+		/*
+		 * stat "/dev/dm-1" which is the holder of the dev we're checking
+		 * dm_dev_major:dm_dev_minor come from stat("/dev/dm-1")
+		 */
+		if (stat(dm_dev_path, &info))
+			continue;
+
+		dm_dev_major = (int)MAJOR(info.st_rdev);
+		dm_dev_minor = (int)MINOR(info.st_rdev);
+        
+		if (dm_dev_major != cmd->dev_types->device_mapper_major)
+			continue;
+
+		/*
+		 * if "dm-1" is a dm device, then check if it's an LVM LV
+		 * by reading /sys/block/<holder_name>/dm/uuid and seeing
+		 * if the uuid begins with LVM-
+		 * UUID_PREFIX is "LVM-"
+		 */
+
+		dm_uuid[0] = '\0';
+
+		if (!get_dm_uuid_from_sysfs(dm_uuid, sizeof(dm_uuid), dm_dev_major, dm_dev_minor))
+			continue;
+
+		if (!strncmp(dm_uuid, UUID_PREFIX, 4))
+			used_count++;
+
+		if (used_by_dm_name && !used_name)
+			used_name = dm_pool_strdup(cmd->mem, holder_name);
+
+		if (!used_by_vg_uuid && !used_by_lv_uuid)
+			continue;
+
+		/*
+		 * UUID for LV is either "LVM-<vg_uuid><lv_uuid>" or
+		 * "LVM-<vg_uuid><lv_uuid>-<suffix>", where vg_uuid and lv_uuid
+		 * has length of ID_LEN and suffix len is not restricted (only
+		 * restricted by whole DM UUID max len).
+		 */
+
+		uuid_len = strlen(dm_uuid);
+
+		if (((uuid_len == lvm_uuid_len) ||
+		    ((uuid_len > lvm_uuid_len) && (dm_uuid[lvm_uuid_len] == '-'))) &&
+		    !strncmp(dm_uuid, UUID_PREFIX, lvm_prefix_len)) {
+
+			if (used_by_vg_uuid && !used_vgid)
+				used_vgid = dm_pool_strndup(cmd->mem, dm_uuid + lvm_prefix_len, ID_LEN);
+
+			if (used_by_lv_uuid && !used_lvid)
+				used_lvid = dm_pool_strndup(cmd->mem, dm_uuid + lvm_prefix_len + ID_LEN, ID_LEN);
+		}
+	}
+
+	if (used_by_lv_count)
+		*used_by_lv_count = used_count;
+	if (used_by_dm_name)
+		*used_by_dm_name = used_name;
+	if (used_by_vg_uuid)
+		*used_by_vg_uuid = used_vgid;
+	if (used_by_lv_uuid)
+		*used_by_lv_uuid = used_lvid;
+
+	if (used_count)
+		return 1;
+	return 0;
 }
 
 struct dev_types *create_dev_types(const char *proc_dir,

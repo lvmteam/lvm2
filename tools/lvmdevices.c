@@ -15,6 +15,7 @@
 #include "tools.h"
 #include "lib/cache/lvmcache.h"
 #include "lib/device/device_id.h"
+#include "lib/device/dev-type.h"
 
 static void _search_devs_for_pvids(struct cmd_context *cmd, struct dm_list *search_pvids, struct dm_list *found_devs)
 {
@@ -389,7 +390,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		 * dev_cache_scan uses sysfs to check if an LV is using each dev
 		 * and sets this flag is so.
 		 */
-		if (dev->flags & DEV_USED_FOR_LV) {
+		if (dev_is_used_by_active_lv(cmd, dev, NULL, NULL, NULL, NULL)) {
 			if (!arg_count(cmd, yes_ARG) &&
 			    yes_no_prompt("Device %s is used by an active LV, continue to remove? ", devname) == 'n') {
 				log_error("Device not removed.");
@@ -435,7 +436,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 
 		if (du->devname && (du->devname[0] != '.')) {
 			if ((dev = dev_cache_get(cmd, du->devname, NULL)) &&
-			    (dev->flags & DEV_USED_FOR_LV)) {
+			    dev_is_used_by_active_lv(cmd, dev, NULL, NULL, NULL, NULL)) {
 				if (!arg_count(cmd, yes_ARG) &&
 			    	    yes_no_prompt("Device %s is used by an active LV, continue to remove? ", du->devname) == 'n') {
 					log_error("Device not removed.");

@@ -61,14 +61,14 @@ static int _update_vg(struct cmd_context *cmd, struct volume_group *vg,
 	/*
 	 * N.B. lvs_in_vg_activated() is not smart enough to distinguish
 	 * between LVs that are active in the original VG vs the cloned VG
-	 * that's being imported, so check DEV_USED_FOR_LV.
+	 * that's being imported, so check dev_is_used_by_active_lv.
 	 */
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (is_missing_pv(pvl->pv) || !pvl->pv->dev) {
 			log_error("VG is missing a device.");
 			goto bad;
 		}
-		if (pvl->pv->dev->flags & DEV_USED_FOR_LV) {
+		if (dev_is_used_by_active_lv(cmd, pvl->pv->dev, NULL, NULL, NULL, NULL)) {
 			log_error("Device %s has active LVs, deactivate first.", dev_name(pvl->pv->dev));
 			devs_used_for_lv++;
 		}

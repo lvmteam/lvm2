@@ -799,8 +799,8 @@ next:
 				same_id2 = !strcmp(idname2, device_id);
 		}
 
-		has_lv1 = (dev1->flags & DEV_USED_FOR_LV) ? 1 : 0;
-		has_lv2 = (dev2->flags & DEV_USED_FOR_LV) ? 1 : 0;
+		has_lv1 = dev_is_used_by_active_lv(cmd, dev1, NULL, NULL, NULL, NULL);
+		has_lv2 = dev_is_used_by_active_lv(cmd, dev2, NULL, NULL, NULL, NULL);
 
 		in_subsys1 = dev_subsystem_part_major(dt, dev1);
 		in_subsys2 = dev_subsystem_part_major(dt, dev2);

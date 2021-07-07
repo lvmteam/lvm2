@@ -68,13 +68,12 @@ struct dev_iter *dev_iter_create(struct dev_filter *f, int unused);
 void dev_iter_destroy(struct dev_iter *iter);
 struct device *dev_iter_get(struct cmd_context *cmd, struct dev_iter *iter);
 
-void dev_reset_error_count(struct cmd_context *cmd);
-
 void dev_cache_failed_path(struct device *dev, const char *path);
 
 bool dev_cache_has_md_with_end_superblock(struct dev_types *dt);
 
 int get_sysfs_value(const char *path, char *buf, size_t buf_size, int error_if_no_value);
+int get_dm_uuid_from_sysfs(char *buf, size_t buf_size, int major, int minor);
 
 int setup_devices_file(struct cmd_context *cmd);
 int setup_devices(struct cmd_context *cmd);
