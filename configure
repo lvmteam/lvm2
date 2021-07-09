@@ -747,7 +747,6 @@ BUILD_DMFILEMAPD
 BUILD_LOCKDDLM_CONTROL
 BUILD_LOCKDDLM
 BUILD_LOCKDSANLOCK
-BUILD_LOCKDIDM
 BUILD_LVMLOCKD
 BUILD_LVMPOLLD
 BUILD_LVMDBUSD
@@ -773,18 +772,18 @@ UDEV_LIBS
 UDEV_CFLAGS
 SYSTEMD_LIBS
 SYSTEMD_CFLAGS
-BLKID_LIBS
-BLKID_CFLAGS
 NOTIFY_DBUS_LIBS
 NOTIFY_DBUS_CFLAGS
+BLKID_LIBS
+BLKID_CFLAGS
+LOCKD_IDM_LIBS
+LOCKD_IDM_CFLAGS
 LOCKD_DLM_CONTROL_LIBS
 LOCKD_DLM_CONTROL_CFLAGS
 LOCKD_DLM_LIBS
 LOCKD_DLM_CFLAGS
 LOCKD_SANLOCK_LIBS
 LOCKD_SANLOCK_CFLAGS
-LOCKD_IDM_LIBS
-LOCKD_IDM_CFLAGS
 VALGRIND_LIBS
 VALGRIND_CFLAGS
 GENPNG
@@ -1025,10 +1024,10 @@ LOCKD_DLM_CONTROL_CFLAGS
 LOCKD_DLM_CONTROL_LIBS
 LOCKD_IDM_CFLAGS
 LOCKD_IDM_LIBS
-NOTIFY_DBUS_CFLAGS
-NOTIFY_DBUS_LIBS
 BLKID_CFLAGS
 BLKID_LIBS
+NOTIFY_DBUS_CFLAGS
+NOTIFY_DBUS_LIBS
 SYSTEMD_CFLAGS
 SYSTEMD_LIBS
 UDEV_CFLAGS
@@ -1843,13 +1842,13 @@ Some influential environment variables:
               C compiler flags for LOCKD_IDM, overriding pkg-config
   LOCKD_IDM_LIBS
               linker flags for LOCKD_IDM, overriding pkg-config
+  BLKID_CFLAGS
+              C compiler flags for BLKID, overriding pkg-config
+  BLKID_LIBS  linker flags for BLKID, overriding pkg-config
   NOTIFY_DBUS_CFLAGS
               C compiler flags for NOTIFY_DBUS, overriding pkg-config
   NOTIFY_DBUS_LIBS
               linker flags for NOTIFY_DBUS, overriding pkg-config
-  BLKID_CFLAGS
-              C compiler flags for BLKID, overriding pkg-config
-  BLKID_LIBS  linker flags for BLKID, overriding pkg-config
   SYSTEMD_CFLAGS
               C compiler flags for SYSTEMD, overriding pkg-config
   SYSTEMD_LIBS
@@ -11260,7 +11259,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -11278,7 +11277,7 @@ fi
 
 	$bailout
 elif test $pkg_failed = untried; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	$bailout
 else
@@ -11286,6 +11285,7 @@ else
 	LOCKD_IDM_LIBS=$pkg_cv_LOCKD_IDM_LIBS
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
+	HAVE_LOCKD_IDM=yes
 fi
 
 pkg_failed=no
@@ -14201,6 +14201,8 @@ _ACEOF
 
 
 ################################################################################
+
+
 
 
 
