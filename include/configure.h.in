@@ -687,6 +687,9 @@
 /* Enable a valgrind aware build of pool */
 #undef VALGRIND_POOL
 
+/* Path to vdoimport binary. */
+#undef VDOIMPORT_PATH
+
 /* The path to 'vdoformat', if available. */
 #undef VDO_FORMAT_CMD
 

@@ -70,6 +70,7 @@ fi
 %{_sbindir}/vgdisplay
 %{_sbindir}/vgexport
 %{_sbindir}/vgextend
+%{_sbindir}/vdoimport
 %{_sbindir}/vgimport
 %{_sbindir}/vgimportclone
 %{_sbindir}/vgimportdevices

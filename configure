@@ -643,6 +643,8 @@ WRITE_INSTALL
 WRITECACHE
 VDO_LIB
 VDO_INCLUDE
+VDOIMPORT_PATH
+VDOIMPORT
 VDO
 VALGRIND_POOL
 USRSBINDIR
@@ -969,6 +971,7 @@ enable_dbus_service
 enable_pkgconfig
 enable_write_install
 enable_fsadm
+enable_vdoimport
 enable_blkdeactivate
 enable_dmeventd
 enable_selinux
@@ -1707,6 +1710,7 @@ Optional Features:
   --enable-pkgconfig      install pkgconfig support
   --enable-write_install  install user writable files
   --disable-fsadm         disable fsadm
+  --disable-vdoimport     disable vdoimport
   --disable-blkdeactivate disable blkdeactivate
   --enable-dmeventd       enable the device-mapper event daemon
   --disable-selinux       disable selinux support
@@ -3139,6 +3143,7 @@ case "$host_os" in
 		DM_IOCTLS=yes
 		SELINUX=yes
 		FSADM=yes
+		VDOIMPORT=yes
 		BLKDEACTIVATE=yes
 		;;
 	darwin*)
@@ -3152,6 +3157,7 @@ case "$host_os" in
 		DM_IOCTLS=no
 		SELINUX=no
 		FSADM=no
+		VDOIMPORT=no
 		BLKDEACTIVATE=no
 		;;
 	*)
@@ -12544,6 +12550,18 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $FSADM" >&5
 $as_echo "$FSADM" >&6; }
 
+
+################################################################################
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to install vdoimport" >&5
+$as_echo_n "checking whether to install vdoimport... " >&6; }
+# Check whether --enable-vdoimport was given.
+if test "${enable_vdoimport+set}" = set; then :
+  enableval=$enable_vdoimport; VDOIMPORT=$enableval
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $VDOIMPORT" >&5
+$as_echo "$VDOIMPORT" >&6; }
+
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to install blkdeactivate" >&5
 $as_echo_n "checking whether to install blkdeactivate... " >&6; }
@@ -14027,6 +14045,13 @@ FSADM_PATH="$SBINDIR/fsadm"
 
 cat >>confdefs.h <<_ACEOF
 #define FSADM_PATH "$FSADM_PATH"
+_ACEOF
+
+
+VDOIMPORT_PATH="$SBINDIR/vdoimport"
+
+cat >>confdefs.h <<_ACEOF
+#define VDOIMPORT_PATH "$VDOIMPORT_PATH"
 _ACEOF
 
 

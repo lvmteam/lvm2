@@ -46,6 +46,7 @@ case "$host_os" in
 		DM_IOCTLS=yes
 		SELINUX=yes
 		FSADM=yes
+		VDOIMPORT=yes
 		BLKDEACTIVATE=yes
 		;;
 	darwin*)
@@ -59,6 +60,7 @@ case "$host_os" in
 		DM_IOCTLS=no
 		SELINUX=no
 		FSADM=no
+		VDOIMPORT=no
 		BLKDEACTIVATE=no
 		;;
 	*)
@@ -1311,6 +1313,14 @@ AC_ARG_ENABLE(fsadm, AC_HELP_STRING([--disable-fsadm], [disable fsadm]),
 	      FSADM=$enableval)
 AC_MSG_RESULT($FSADM)
 
+
+################################################################################
+dnl -- Enable vdoimport
+AC_MSG_CHECKING(whether to install vdoimport)
+AC_ARG_ENABLE(vdoimport, AC_HELP_STRING([--disable-vdoimport], [disable vdoimport]),
+	      VDOIMPORT=$enableval)
+AC_MSG_RESULT($VDOIMPORT)
+
 ################################################################################
 dnl -- Enable blkdeactivate
 AC_MSG_CHECKING(whether to install blkdeactivate)
@@ -1666,6 +1676,9 @@ USRSBINDIR="$(eval echo $(eval echo $usrsbindir))"
 FSADM_PATH="$SBINDIR/fsadm"
 AC_DEFINE_UNQUOTED(FSADM_PATH, ["$FSADM_PATH"], [Path to fsadm binary.])
 
+VDOIMPORT_PATH="$SBINDIR/vdoimport"
+AC_DEFINE_UNQUOTED(VDOIMPORT_PATH, ["$VDOIMPORT_PATH"], [Path to vdoimport binary.])
+
 ################################################################################
 dnl -- dmeventd pidfile and executable path
 if test "$BUILD_DMEVENTD" = yes; then
@@ -1902,6 +1915,8 @@ AC_SUBST(SILENT_RULES)
 AC_SUBST(USRSBINDIR)
 AC_SUBST(VALGRIND_POOL)
 AC_SUBST(VDO)
+AC_SUBST(VDOIMPORT)
+AC_SUBST(VDOIMPORT_PATH)
 AC_SUBST(VDO_FORMAT_CMD)
 AC_SUBST(VDO_INCLUDE)
 AC_SUBST(VDO_LIB)

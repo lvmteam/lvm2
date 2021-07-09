@@ -31,6 +31,10 @@ ifeq ("@FSADM@", "yes")
 	LVM_SCRIPTS += fsadm.sh
 endif
 
+ifeq ("@VDOIMPORT@", "yes")
+	LVM_SCRIPTS += vdoimport.sh
+endif
+
 ifeq ("@BLKDEACTIVATE@", "yes")
 	DM_SCRIPTS += blkdeactivate.sh
 endif
