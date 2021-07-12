@@ -966,8 +966,13 @@ static void _destroy_config(struct cmd_context *cmd)
 	/* CONFIG_FILE/CONFIG_MERGED_FILES */
 	if ((cft = remove_config_tree_by_source(cmd, CONFIG_MERGED_FILES)))
 		config_destroy(cft);
-	else if ((cft = remove_config_tree_by_source(cmd, CONFIG_FILE)))
+	else if ((cft = remove_config_tree_by_source(cmd, CONFIG_FILE))) {
+		dm_list_iterate_items(cfl, &cmd->config_files) {
+			if (cfl->cft == cft)
+				dm_list_del(&cfl->list);
+		}
 		config_destroy(cft);
+	}
 
 	dm_list_iterate_items(cfl, &cmd->config_files)
 		config_destroy(cfl->cft);
