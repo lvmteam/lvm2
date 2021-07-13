@@ -1611,6 +1611,7 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	struct pvscan_aa_params pp = { 0 };
 	struct dm_list complete_vgnames;
 	int do_activate = arg_is_set(cmd, activate_ARG);
+	int event_activation;
 	int devno_args = 0;
 	int do_all;
 	int ret;
@@ -1618,6 +1619,13 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	dm_list_init(&complete_vgnames);
 
 	cmd->check_devs_used = 0;
+
+	event_activation = find_config_tree_bool(cmd, global_event_activation_CFG, NULL);
+
+	if (do_activate && !event_activation) {
+		log_verbose("Ignoring pvscan --cache -aay because event_activation is disabled.");
+		return ECMD_PROCESSED;
+	}
 
 	if (arg_is_set(cmd, major_ARG) + arg_is_set(cmd, minor_ARG))
 		devno_args = 1;
@@ -1629,17 +1637,17 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 
 	do_all = !argc && !devno_args;
 
-	if (!do_all && !find_config_tree_bool(cmd, global_event_activation_CFG, NULL)) {
-		log_verbose("Ignoring pvscan --cache because event_activation is disabled.");
-		return ECMD_PROCESSED;
-	}
-
 	_online_dir_setup();
 
 	if (do_all) {
 		if (!_pvscan_cache_all(cmd, argc, argv, &complete_vgnames))
 			return ECMD_FAILED;
 	} else {
+		if (!event_activation) {
+			/* Avoid doing anything for device removal: pvscan --cache <devno> */
+			log_verbose("Ignoring pvscan --cache because event_activation is disabled.");
+			return ECMD_PROCESSED;
+		}
 		if (!_pvscan_cache_args(cmd, argc, argv, &complete_vgnames))
 			return ECMD_FAILED;
 	}
