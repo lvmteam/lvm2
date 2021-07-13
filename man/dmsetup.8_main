@@ -140,6 +140,14 @@ dmsetup \(em low level logical volume management
 .
 .HP
 .B dmsetup
+.de CMD_MEASURE
+.  BR measure
+.  RI [ device_name ...]
+..
+.CMD_MEASURE
+.
+.HP
+.B dmsetup
 .de CMD_MESSAGE
 .  BR message
 .  IR device_name
@@ -708,6 +716,13 @@ names and not for device UUIDs because the kernel does not allow changing
 the UUID of active devices. Any incorrect UUIDs are reported only and they
 must be manually corrected by deactivating the device first and then
 reactivating it with proper mangling mode used (see also \fB--manglename\fP).
+.
+.HP
+.CMD_MEASURE
+.br
+Show the data that \fIdevice_name\fP would report to the IMA subsystem
+if a measurement was triggered at the current time.
+This is for debugging and does not actually trigger a measurement.
 .
 .HP
 .CMD_MESSAGE

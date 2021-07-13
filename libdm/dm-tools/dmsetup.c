@@ -2446,6 +2446,9 @@ static int _status(CMD_ARGS)
 	if (_switches[NOFLUSH_ARG] && !dm_task_no_flush(dmt))
 		goto_out;
 
+	if (!dm_task_ima_measurement(dmt))
+		goto_out;
+
 	if (!_task_run(dmt))
 		goto_out;
 
@@ -6255,6 +6258,7 @@ static struct command _dmsetup_commands[] = {
 	{"reload", "<device> [<table>|<table_file>]", 0, 2, 0, 0, _load},
 	{"wipe_table", "[-f|--force] [--noflush] [--nolockfs] <device>...", 0, -1, 2, 0, _error_device},
 	{"rename", "<device> [--setuuid] <new_name_or_uuid>", 1, 2, 0, 0, _rename},
+	{"measure", "[<device>...]", 0, -1, 2, 0, _status},
 	{"message", "<device> <sector> <message>", 2, -1, 0, 0, _message},
 	{"ls", "[--target <target_type>] [--exec <command>] [-o <options>] [--tree]", 0, 0, 0, 0, _ls},
 	{"info", "[<device>...]", 0, -1, 1, 0, _info},

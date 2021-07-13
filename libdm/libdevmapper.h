@@ -235,6 +235,7 @@ int dm_task_suppress_identical_reload(struct dm_task *dmt);
 int dm_task_secure_data(struct dm_task *dmt);
 int dm_task_retry_remove(struct dm_task *dmt);
 int dm_task_deferred_remove(struct dm_task *dmt);
+int dm_task_ima_measurement(struct dm_task *dmt);
 
 /*
  * Record timestamp immediately after the ioctl returns.
