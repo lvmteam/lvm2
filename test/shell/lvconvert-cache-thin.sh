@@ -67,4 +67,26 @@ fail lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $vg/$lv
 # Thin-pool CAN use cached data LV
 lvconvert --yes --thinpool $vg/$lv
 
+lvremove -f $vg
+
+# Check we can active snapshot of cached external origin (BZ: 1967744)
+lvcreate -T -L10M $vg/pool "$dev1"
+
+lvcreate -L10M -n origin $vg "$dev1"
+lvcreate -H -L4M -n CPOOL $vg/origin "$dev2"
+
+# Use cached origin as external origin
+lvconvert -y -T --thinpool $vg/pool --originname extorig origin
+
+# Check we can easily create snapshot of such LV
+lvcreate -y -kn -n snap -s $vg/origin
+
+# Deactivate everything and do a component activation of _cmeta volume
+lvchange -an $vg
+lvchange -ay -y $vg/CPOOL_cpool_cmeta
+
+# Now this must fail since component volume is active
+not lvcreate -y -kn -n snap2 -s $vg/origin |& tee err
+grep "cmeta is active" err
+
 vgremove -f $vg

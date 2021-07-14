@@ -2740,7 +2740,10 @@ static int _component_cb(struct logical_volume *lv, void *data)
 	    (lv_is_thin_pool(lv) && pool_is_active(lv)))
 		return -1;
 
-	if (lv_is_active(lv)) {
+	/* External origin is activated through thinLV and uses -real suffix.
+	 * Note: for old clustered logic we would need to check for all thins */
+	if ((lv_is_external_origin(lv) && lv_info(lv->vg->cmd, lv, 1, NULL, 0, 0)) ||
+	    lv_is_active(lv)) {
 		if (!lv_is_component(lv) || lv_is_visible(lv))
 			return -1;	/* skip whole subtree */
 
