@@ -150,10 +150,13 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <dirent.h>
 #include <time.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #include <sys/sysmacros.h>
+
+int online_pvid_file_read(char *path, int *major, int *minor, char *vgname);
 
 static const char *_hints_file = DEFAULT_RUN_DIR "/hints";
 static const char *_nohints_file = DEFAULT_RUN_DIR "/nohints";
@@ -1278,6 +1281,109 @@ check:
 	free(name);
 }
 
+static int _get_hints_from_pvs_online(struct cmd_context *cmd, struct dm_list *hints_out,
+				      struct dm_list *devs_in, struct dm_list *devs_out)
+{
+	char path[PATH_MAX];
+	char file_vgname[NAME_LEN];
+	struct dm_list hints_list;
+	struct hint file_hint;
+	struct hint *alloc_hint;
+	struct hint *hint, *hint2;
+	struct device_list *devl, *devl2;
+	int file_major, file_minor;
+	int found = 0;
+	DIR *dir;
+	struct dirent *de;
+	char *vgname = NULL;
+	char *pvid;
+
+	dm_list_init(&hints_list);
+
+	if (!(dir = opendir(PVS_ONLINE_DIR)))
+		return 0;
+
+	while ((de = readdir(dir))) {
+		if (de->d_name[0] == '.')
+			continue;
+
+		pvid = de->d_name;
+
+		if (strlen(pvid) != ID_LEN) /* 32 */
+			continue;
+
+		memset(path, 0, sizeof(path));
+		snprintf(path, sizeof(path), "%s/%s", PVS_ONLINE_DIR, pvid);
+
+		memset(&file_hint, 0, sizeof(file_hint));
+		memset(file_vgname, 0, sizeof(file_vgname));
+		file_major = 0;
+		file_minor = 0;
+
+		if (!online_pvid_file_read(path, &file_major, &file_minor, file_vgname))
+			continue;
+
+		if (!dm_strncpy(file_hint.pvid, pvid, sizeof(file_hint.pvid)))
+			continue;
+
+		file_hint.devt = makedev(file_major, file_minor);
+
+		if (file_vgname[0] && validate_name(file_vgname)) {
+			if (!dm_strncpy(file_hint.vgname, file_vgname, sizeof(file_hint.vgname)))
+				continue;
+		}
+
+		if (!(alloc_hint = malloc(sizeof(struct hint))))
+			continue;
+
+		memcpy(alloc_hint, &file_hint, sizeof(struct hint));
+
+		log_debug("add hint %s %d:%d %s from pvs_online", file_hint.pvid, file_major, file_minor, file_vgname);
+		dm_list_add(&hints_list, &alloc_hint->list);
+		found++;
+	}
+
+	if (closedir(dir))
+		stack;
+
+	log_debug("accept hints found %d from pvs_online", found);
+
+	_get_single_vgname_cmd_arg(cmd, &hints_list, &vgname);
+
+	/*
+	 * apply_hints equivalent, move devs from devs_in to devs_out if
+	 * their devno matches the devno of a hint (and if the hint matches
+	 * the vgname when a vgname is present.)
+	 */
+	dm_list_iterate_items_safe(devl, devl2, devs_in) {
+		dm_list_iterate_items_safe(hint, hint2, &hints_list) {
+			if ((MAJOR(devl->dev->dev) == MAJOR(hint->devt)) &&
+			    (MINOR(devl->dev->dev) == MINOR(hint->devt))) {
+
+				if (vgname && hint->vgname[0] && strcmp(vgname, hint->vgname))
+					goto next_dev;
+
+				snprintf(hint->name, sizeof(hint->name), "%s", dev_name(devl->dev));
+				hint->chosen = 1;
+
+				dm_list_del(&devl->list);
+				dm_list_add(devs_out, &devl->list);
+			}
+		}
+ next_dev:
+		;
+	}
+
+	log_debug("applied hints using %d other %d vgname %s from pvs_online",
+		  dm_list_size(devs_out), dm_list_size(devs_in), vgname ?: "");
+
+	dm_list_splice(hints_out, &hints_list);
+
+	free(vgname);
+
+	return 1;
+}
+
 /*
  * Returns 0: no hints are used.
  *  . newhints is set if this command should create new hints after scan
@@ -1299,7 +1405,7 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints_out, int *newhints,
 	*newhints = NEWHINTS_NONE;
 
 	/* No commands are using hints. */
-	if (!cmd->enable_hints)
+	if (!cmd->enable_hints && !cmd->hints_pvs_online)
 		return 0;
 
 	/*
@@ -1318,6 +1424,19 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints_out, int *newhints,
 	/* This command does not use hints. */
 	if (!cmd->use_hints)
 		return 0;
+
+	/*
+	 * enable_hints is 0 for the special hints=pvs_online
+	 * and by lvm.conf hints="none" does not disable hints=pvs_online.
+	 * hints=pvs_online can be disabled with --nohints.
+	 */
+	if (cmd->hints_pvs_online) {
+		if (!_get_hints_from_pvs_online(cmd, &hints_list, devs_in, devs_out)) {
+			log_debug("get_hints: pvs_online failed");
+			return 0;
+		}
+		return 1;
+	}
 
 	/*
 	 * Check if another command created the nohints file to prevent us from

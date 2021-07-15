@@ -2540,6 +2540,8 @@ static int _get_current_settings(struct cmd_context *cmd)
 		if (!strcmp(hint_mode, "none")) {
 			cmd->enable_hints = 0;
 			cmd->use_hints = 0;
+		} else if (!strcmp(hint_mode, "pvs_online")) {
+			cmd->hints_pvs_online = 1;
 		}
 	}
 

@@ -183,6 +183,7 @@ struct cmd_context {
 	unsigned enable_hints:1;		/* hints are enabled for cmds in general */
 	unsigned use_hints:1;			/* if hints are enabled this cmd can use them */
 	unsigned pvscan_recreate_hints:1;	/* enable special case hint handling for pvscan --cache */
+	unsigned hints_pvs_online:1;		/* hints="pvs_online" */
 	unsigned scan_lvs:1;
 	unsigned wipe_outdated_pvs:1;
 	unsigned enable_devices_list:1;		/* command is using --devices option */

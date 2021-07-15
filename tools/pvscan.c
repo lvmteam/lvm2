@@ -21,6 +21,8 @@
 
 #include <dirent.h>
 
+int online_pvid_file_read(char *path, int *major, int *minor, char *vgname);
+
 struct pvscan_params {
 	int new_pvs_found;
 	int pvs_found;
@@ -225,7 +227,7 @@ static char *_vgname_in_pvid_file_buf(char *buf)
 
 #define MAX_PVID_FILE_SIZE 512
 
-static int _online_pvid_file_read(char *path, int *major, int *minor, char *vgname)
+int online_pvid_file_read(char *path, int *major, int *minor, char *vgname)
 {
 	char buf[MAX_PVID_FILE_SIZE] = { 0 };
 	char *name;
@@ -328,7 +330,7 @@ static void _online_pvid_file_remove_devno(int major, int minor)
 		file_minor = 0;
 		memset(file_vgname, 0, sizeof(file_vgname));
 
-		_online_pvid_file_read(path, &file_major, &file_minor, file_vgname);
+		online_pvid_file_read(path, &file_major, &file_minor, file_vgname);
 
 		if ((file_major == major) && (file_minor == minor)) {
 			log_debug("Unlink pv online %s", path);
@@ -447,7 +449,7 @@ check_duplicate:
 
 	memset(file_vgname, 0, sizeof(file_vgname));
 
-	_online_pvid_file_read(path, &file_major, &file_minor, file_vgname);
+	online_pvid_file_read(path, &file_major, &file_minor, file_vgname);
 
 	if ((file_major == major) && (file_minor == minor)) {
 		log_debug("Existing online file for %d:%d", major, minor);
@@ -847,7 +849,7 @@ static int _get_devs_from_saved_vg(struct cmd_context *cmd, const char *vgname,
 		file_minor = 0;
 		memset(file_vgname, 0, sizeof(file_vgname));
 
-		_online_pvid_file_read(path, &file_major, &file_minor, file_vgname);
+		online_pvid_file_read(path, &file_major, &file_minor, file_vgname);
 
 		if (file_vgname[0] && strcmp(vgname, file_vgname)) {
 			log_error_pvscan(cmd, "Wrong VG found for %d:%d PVID %s: %s vs %s",
@@ -1254,7 +1256,7 @@ static void _set_pv_devices_online(struct cmd_context *cmd, struct volume_group 
 		minor = 0;
 		file_vgname[0] = '\0';
 
-		_online_pvid_file_read(path, &major, &minor, file_vgname);
+		online_pvid_file_read(path, &major, &minor, file_vgname);
 
 		if (file_vgname[0] && strcmp(vg->name, file_vgname)) {
 			log_warn("WARNING: VG %s PV %s wrong vgname in online file %s",

@@ -328,4 +328,8 @@
 
 #define DEFAULT_WWIDS_FILE "/etc/multipath/wwids"
 
+#define PVS_ONLINE_DIR DEFAULT_RUN_DIR "/pvs_online"
+#define VGS_ONLINE_DIR DEFAULT_RUN_DIR "/vgs_online"
+#define PVS_LOOKUP_DIR DEFAULT_RUN_DIR "/pvs_lookup"
+
 #endif				/* _LVM_DEFAULTS_H */
