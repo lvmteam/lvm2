@@ -70,6 +70,8 @@ Common options for command:
 .hy
 ]
 .br
+[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+.br
 [    \fB--\fP[\fBvg\fP]\fBmetadatacopies\fP \fBall\fP|\fBunmanaged\fP|\fINumber\fP ]
 .ad b
 .RE
@@ -233,6 +235,13 @@ Move only PVs used by the named LV.
 \fB--nolocking\fP
 .br
 Disable locking.
+.
+.HP
+\fB--poolmetadataspare\fP \fBy\fP|\fBn\fP
+.br
+Enable or disable the automatic creation and management of a
+spare pool metadata LV in the VG. A spare metadata LV is reserved
+space that can be used when repairing a pool.
 .
 .HP
 \fB--profile\fP \fIString\fP

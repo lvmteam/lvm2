@@ -1912,7 +1912,7 @@ ID: vgscan_general
 
 ---
 
-OO_VGSPLIT: --autobackup Bool
+OO_VGSPLIT: --autobackup Bool, --poolmetadataspare Bool
 
 # used only when the destination VG is new
 OO_VGSPLIT_NEW: --alloc Alloc,

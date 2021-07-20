@@ -525,6 +525,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	int existing_vg = 0;
 	int r = ECMD_FAILED;
 	const char *lv_name;
+	int poolmetadataspare = arg_int_value(cmd, poolmetadataspare_ARG, DEFAULT_POOL_METADATA_SPARE);
 
 	if ((arg_is_set(cmd, name_ARG) + argc) < 3) {
 		log_error("Existing VG, new VG and either physical volumes "
@@ -698,6 +699,13 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	 * FIXME: recover automatically or instruct the user?
 	 */
 	vg_to->status |= EXPORTED_VG;
+
+
+	if (!handle_pool_metadata_spare(vg_to, 0, &vg_to->pvs, poolmetadataspare))
+		goto_bad;
+
+	if (!handle_pool_metadata_spare(vg_from, 0, &vg_from->pvs, poolmetadataspare))
+		goto_bad;
 
 	if (!archive(vg_to))
 		goto_bad;

@@ -722,6 +722,17 @@ int handle_pool_metadata_spare(struct volume_group *vg, uint32_t extents,
 		return 1;
 	}
 
+	if (!extents) {
+		/* pmspare is not needed */
+		if (lv) {
+			log_debug_metadata("Dropping unused pool metadata spare LV %s.",
+					   display_lvname(lv));
+			if (!lv_remove_single(vg->cmd, lv, DONT_PROMPT, 0))
+				return_0;
+		}
+		return 1;
+	}
+
 	if (extents > MAX_SIZE)
 		extents = MAX_SIZE;
 
