@@ -65,6 +65,10 @@ static int _vgremove_single(struct cmd_context *cmd, const char *vg_name,
 		}
 	}
 
+	if (vg->pool_metadata_spare_lv &&
+	    !lvremove_single(cmd, vg->pool_metadata_spare_lv, &void_handle))
+		return_ECMD_FAILED;
+
 	if (!lockd_free_vg_before(cmd, vg, 0))
 		return_ECMD_FAILED;
 
