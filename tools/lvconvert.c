@@ -5966,6 +5966,23 @@ static int _set_writecache_block_size(struct cmd_context *cmd,
 		goto bad;
 	}
 
+	/*
+	 * When attaching writecache to thin pool data, the fs block sizes
+	 * would need to be checked on each thin LV which isn't practical, so
+	 * default to 512, and require the user to specify 4k when appropriate.
+	 */
+	if (lv_is_thin_pool(lv) || lv_is_thin_pool_data(lv)) {
+		if (block_size_setting)
+			block_size = block_size_setting;
+		else
+			block_size = 512;
+
+		log_print("Using writecache block size %u for thin pool data, logical block size %u, physical block size %u.",
+			 block_size, lbs_4k ? 4096 : 512, pbs_4k ? 4096 : 512);
+
+		goto out;
+	}
+
 	if (dm_snprintf(pathname, sizeof(pathname), "%s/%s/%s", cmd->dev_dir,
 			lv->vg->name, lv->name) < 0) {
 		log_error("Path name too long to get LV block size %s", display_lvname(lv));
