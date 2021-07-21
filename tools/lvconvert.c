@@ -6124,6 +6124,12 @@ int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 			log_error("Failed to activate LV to check block size %s", display_lvname(lv));
 			goto bad;
 		}
+		if (!sync_local_dev_names(cmd)) {
+			log_error("Failed to sync local dev names.");
+			if (!deactivate_lv(cmd, lv))
+				stack;
+			goto bad;
+		}
 	}
 
 	if (!_set_writecache_block_size(cmd, lv, &block_size_sectors)) {
