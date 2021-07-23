@@ -80,3 +80,45 @@ grep "Duplicate logical volume name \"$lv1\" in \"$vg2\" and \"$vg1" err
 check pvlv_counts $vg1 2 1 0
 check pvlv_counts $vg2 2 1 0
 vgremove -f $vg1 $vg2
+
+
+# 'vgmerge' handle pmspare for merged VG
+if aux have_thin 1 5 0; then
+
+# With disabled pmspare nothing is created
+vgcreate $vg1 "$dev1" "$dev2"
+vgcreate $vg2 "$dev3" "$dev4"
+lvcreate -T -L8M $vg1/pool1 --poolmetadatasize 8M --poolmetadataspare n
+lvcreate -T -L8M $vg2/pool2 --poolmetadatasize 4M --poolmetadataspare n
+vgchange -an $vg1 $vg2
+
+vgmerge --poolmetadataspare n $vg1 $vg2
+check lv_not_exists $vg/lvol0_pmspare
+vgremove -ff $vg1
+
+
+# With pmspare handling there are one created
+vgcreate $vg1 "$dev1" "$dev2"
+vgcreate $vg2 "$dev3" "$dev4"
+lvcreate -T -L8M $vg1/pool1 --poolmetadatasize 8M --poolmetadataspare n
+lvcreate -T -L8M $vg2/pool2 --poolmetadatasize 4M --poolmetadataspare n
+vgchange -an $vg1 $vg2
+
+vgmerge $vg1 $vg2
+check lv_field $vg1/lvol0_pmspare size "8.00m"
+vgremove -ff $vg1
+
+
+# When merged, bigger pmspare is preserved
+vgcreate $vg1 "$dev1" "$dev2"
+vgcreate $vg2 "$dev3" "$dev4"
+lvcreate -T -L8M $vg1/pool1 --poolmetadatasize 8M
+lvcreate -T -L8M $vg2/pool2 --poolmetadatasize 4M
+vgchange -an $vg1 $vg2
+
+vgmerge $vg1 $vg2
+
+check lv_field $vg1/lvol0_pmspare size "8.00m"
+vgremove -ff $vg1
+
+fi
