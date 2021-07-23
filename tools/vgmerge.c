@@ -92,6 +92,20 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		}
 	}
 
+	if (vg_from->pool_metadata_spare_lv &&
+	    vg_to->pool_metadata_spare_lv) {
+		if (vg_from->pool_metadata_spare_lv->le_count >
+		    vg_to->pool_metadata_spare_lv->le_count)
+			/* Preserve bigger pmspare from  VG_FROM */
+			lv = vg_to->pool_metadata_spare_lv;
+		else
+			lv = vg_from->pool_metadata_spare_lv;
+
+		log_debug_metadata("Removing pool metadata spare %s.", display_lvname(lv));
+		if (!lv_remove_single(cmd, lv, DONT_PROMPT, 0))
+				return_ECMD_FAILED;
+	}
+
 	if (!vgs_are_compatible(cmd, vg_from, vg_to))
 		goto_bad;
 
