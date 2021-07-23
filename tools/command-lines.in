@@ -1847,7 +1847,7 @@ DESC: Add devices from all accessible VGs to the devices file.
 ---
 
 vgmerge VG VG
-OO: --autobackup Bool, --list
+OO: --autobackup Bool, --list, --poolmetadataspare Bool
 ID: vgmerge_general
 
 ---

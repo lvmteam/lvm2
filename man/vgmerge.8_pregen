@@ -27,6 +27,8 @@ of both VGs fit into the destination VG's limits.
 .br
 [ \fB-l\fP|\fB--list\fP ]
 .br
+[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
@@ -145,6 +147,13 @@ Display long help text.
 \fB--nolocking\fP
 .br
 Disable locking.
+.
+.HP
+\fB--poolmetadataspare\fP \fBy\fP|\fBn\fP
+.br
+Enable or disable the automatic creation and management of a
+spare pool metadata LV in the VG. A spare metadata LV is reserved
+space that can be used when repairing a pool.
 .
 .HP
 \fB--profile\fP \fIString\fP

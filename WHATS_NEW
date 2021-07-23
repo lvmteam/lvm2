@@ -1,6 +1,6 @@
 Version 2.03.13 - 
 ===============================
-  Support --poolmetadataspare with vgsplit.
+  Support --poolmetadataspare with vgsplit and vgmerge.
   Fix detection of active components of external origin volume.
   Add vdoimport tool to support conversion of VDO volumes.
   Support configurable allocation/vdo_pool_header_size.
