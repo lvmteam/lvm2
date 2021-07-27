@@ -1919,7 +1919,7 @@ static int _sysfs_find_kernel_name(uint32_t major, uint32_t minor, char *buf, si
 			continue;
 
 		if ((sz = dm_snprintf(path, sizeof(path), "%sblock/%s/dev",
-				      _sysfs_dir, name)) == -1) {
+				      _sysfs_dir, name)) < 5) {
 			log_warn("Couldn't create path for %s.", name);
 			continue;
 		}
