@@ -124,7 +124,8 @@ int dev_mpath_init(const char *config_wwids_file)
 
 	_wwid_hash_tab = wwid_tab;
 
-	_read_wwid_file(config_wwids_file);
+	if (config_wwids_file)
+		_read_wwid_file(config_wwids_file);
 
 	return 1;
 }
