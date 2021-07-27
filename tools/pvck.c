@@ -343,14 +343,15 @@ static uint64_t mda2_size_from_offset(struct device *dev, uint64_t mda2_offset)
 }
 
 struct devicefile {
-	char path[PATH_MAX];
 	int fd;
+	char path[0];
 };
 
-static struct devicefile *get_devicefile(const char *path)
+static struct devicefile *get_devicefile(struct cmd_context *cmd, const char *path)
 {
 	struct stat sb;
 	struct devicefile *def;
+	size_t len;
 
 	if (stat(path, &sb))
 		return_NULL;
@@ -358,18 +359,14 @@ static struct devicefile *get_devicefile(const char *path)
 	if ((sb.st_mode & S_IFMT) != S_IFREG)
 		return_NULL;
 
-	if (!(def = malloc(sizeof(struct devicefile))))
+	len = strlen(path) + 1;
+	if (!(def = dm_pool_alloc(cmd->mem, sizeof(struct devicefile) + len)))
 		return_NULL;
 
-	if (dm_snprintf(def->path, PATH_MAX, "%s", path) < 0) {
-		free(def);
-		return_NULL;
-	}
+	memcpy(def->path, path, len);
 
-	if ((def->fd = open(path, O_RDONLY)) < 0) {
-		free(def);
+	if ((def->fd = open(path, O_RDONLY)) < 0)
 		return_NULL;
-	}
 
 	return def;
 }
@@ -1774,8 +1771,7 @@ static int _get_one_setting(struct cmd_context *cmd, struct settings *set, char 
 	}
 
 	if (!strncmp(key, "backup_file", strlen("backup_file"))) {
-		free(set->backup_file);
-		if ((set->backup_file = strdup(val)))
+		if ((set->backup_file = dm_pool_strdup(cmd->mem, val)))
 			return 1;
 		return 0;
 	}
@@ -3063,7 +3059,7 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_FAILED;
 		}
 		if (S_ISREG(sb.st_mode))
-			def = get_devicefile(pv_name);
+			def = get_devicefile(cmd, pv_name);
 		else if (S_ISBLK(sb.st_mode)) {
 			if (!setup_device(cmd, pv_name)) {
 				log_error("Failed to set up device %s.", pv_name);
@@ -3145,7 +3141,6 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 		} else
 			log_error("Unknown dump value.");
 
-		free(def);
 		if (!ret)
 			return ECMD_FAILED;
 		return ECMD_PROCESSED;
