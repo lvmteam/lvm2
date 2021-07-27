@@ -1685,6 +1685,11 @@ static int _lvchange_syncaction_single(struct cmd_context *cmd,
 {
 	const char *msg = arg_str_value(cmd, syncaction_ARG, NULL);
 
+	if (!msg) {
+		log_error(INTERNAL_ERROR "Missing syncaction arg.");
+		return ECMD_FAILED;
+	}
+
 	if (lv_raid_has_integrity(lv) && !strcmp(msg, "repair")) {
 		log_error("Use syncaction check to detect and correct integrity checksum mismatches.");
 		return ECMD_FAILED;
