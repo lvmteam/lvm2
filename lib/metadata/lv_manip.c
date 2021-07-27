@@ -23,7 +23,6 @@
 #include "lib/metadata/pv_alloc.h"
 #include "lib/display/display.h"
 #include "lib/metadata/segtype.h"
-#include "lib/format_text/archiver.h"
 #include "lib/activate/activate.h"
 #include "lib/datastruct/str_list.h"
 #include "lib/config/defaults.h"
