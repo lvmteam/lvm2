@@ -563,7 +563,7 @@ int module_present(struct cmd_context *cmd, const char *target_name)
 			    dm_sysfs_dir(), target_name);
 
 	if (i > 0) {
-		while (path[--i] != '/')  /* stop on dm_ */
+		while ((i > 0) && path[--i] != '/')  /* stop on dm_ */
 			if (path[i] == '-')
 				path[i] = '_'; /* replace '-' with '_' */
 
