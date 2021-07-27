@@ -180,6 +180,9 @@ int dev_is_used_by_active_lv(struct cmd_context *cmd, struct device *dev, int *u
 		}
 	}
 
+	if (closedir(d))
+		log_sys_debug("closedir", holders_path);
+
 	if (used_by_lv_count)
 		*used_by_lv_count = used_count;
 	if (used_by_dm_name)
