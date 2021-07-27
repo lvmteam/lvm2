@@ -141,6 +141,8 @@ struct arg_value_group_list {
 #define ALLOW_EXPORTED           0x00008000
 /* Command checks and reports warning if devs used by LV are incorrect. */
 #define CHECK_DEVS_USED		 0x00010000
+/* Command prints devices file entries that were not found. */
+#define DEVICE_ID_NOT_FOUND      0x00020000
 
 
 void usage(const char *name);

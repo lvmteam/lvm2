@@ -2475,6 +2475,8 @@ static int _get_current_settings(struct cmd_context *cmd)
 
 	cmd->check_devs_used = (cmd->cname->flags & CHECK_DEVS_USED) ? 1 : 0;
 
+	cmd->print_device_id_not_found = (cmd->cname->flags & DEVICE_ID_NOT_FOUND) ? 1 : 0;
+
 	/*
 	 * enable_hints is set to 1 if any commands are using hints.
 	 * use_hints is set to 1 if this command should use the hints.

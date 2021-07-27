@@ -193,6 +193,7 @@ struct cmd_context {
 	unsigned run_by_dmeventd:1;		/* command is being run by dmeventd */
 	unsigned sysinit:1;			/* --sysinit is used */
 	unsigned check_devs_used:1;		/* check devs used by LVs */
+	unsigned print_device_id_not_found;	/* print devices file entries not found */
 
 	/*
 	 * Devices and filtering.

@@ -1511,6 +1511,9 @@ void device_ids_match(struct cmd_context *cmd)
 		dev_iter_destroy(iter);
 	}
 
+	if (!cmd->print_device_id_not_found)
+		return;
+
 	/*
 	 * Look for entries in devices file for which we found no device.
 	 */
