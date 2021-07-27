@@ -270,8 +270,10 @@ static void _check_raid_seg(struct lv_segment *seg, int *error_count)
 	if (!seg->area_count)
 		raid_seg_error("zero area count");
 
-	if (!seg->areas)
+	if (!seg->areas) {
 		raid_seg_error("zero areas");
+		return;
+	}
 
 	if (seg->extents_copied > seg->len)
 		raid_seg_error_val("extents_copied too large", seg->extents_copied);
