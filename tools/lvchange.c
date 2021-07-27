@@ -1535,6 +1535,7 @@ int lvchange_activate_cmd(struct cmd_context *cmd, int argc, char **argv)
 	init_background_polling(arg_is_set(cmd, sysinit_ARG) ? 0 : arg_int_value(cmd, poll_ARG, DEFAULT_BACKGROUND_POLLING));
 	cmd->handles_missing_pvs = 1;
 	cmd->lockd_vg_default_sh = 1;
+	cmd->ignore_device_name_mismatch = 1;
 
 	/*
 	 * Include foreign VGs that contain active LVs.
@@ -1619,6 +1620,7 @@ int lvchange_refresh_cmd(struct cmd_context *cmd, int argc, char **argv)
 	init_background_polling(arg_is_set(cmd, sysinit_ARG) ? 0 : arg_int_value(cmd, poll_ARG, DEFAULT_BACKGROUND_POLLING));
 	cmd->handles_missing_pvs = 1;
 	cmd->lockd_vg_default_sh = 1;
+	cmd->ignore_device_name_mismatch = 1;
 
 	return process_each_lv(cmd, argc, argv, NULL, NULL, 0,
 			       NULL, &_lvchange_refresh_check, &_lvchange_refresh_single);
@@ -1792,6 +1794,7 @@ int lvchange_monitor_poll_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
 	init_background_polling(arg_is_set(cmd, sysinit_ARG) ? 0 : arg_int_value(cmd, poll_ARG, DEFAULT_BACKGROUND_POLLING));
 	cmd->handles_missing_pvs = 1;
+	cmd->ignore_device_name_mismatch = 1;
 	return process_each_lv(cmd, argc, argv, NULL, NULL, 0,
 			       NULL, &_lvchange_monitor_poll_check, &_lvchange_monitor_poll_single);
 }

@@ -1639,6 +1639,15 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 			}
 		}
 
+		/*
+		 * Avoid thrashing changes to the devices file during
+		 * startup due to device names that are still being
+		 * established.  Commands that may run during startup
+		 * should set this flag.
+		 */
+		if (cmd->ignore_device_name_mismatch)
+			continue;
+
 		if (!du->devname || strcmp(dev_name(du->dev), du->devname)) {
 			log_warn("Device %s has updated name (devices file %s)",
 				 dev_name(du->dev), du->devname ?: "none");

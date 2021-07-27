@@ -1622,6 +1622,8 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 
 	cmd->print_device_id_not_found = 0;
 
+	cmd->ignore_device_name_mismatch = 1;
+
 	event_activation = find_config_tree_bool(cmd, global_event_activation_CFG, NULL);
 
 	if (do_activate && !event_activation) {
