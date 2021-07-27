@@ -873,7 +873,7 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 	const char *offset = NULL, *type = NULL, *magic = NULL,
 		   *usage = NULL, *label = NULL, *uuid = NULL;
 	loff_t offset_value;
-	size_t len;
+	size_t len = 0;
 
 	if (!blkid_probe_lookup_value(probe, "TYPE", &type, NULL)) {
 		if (_type_in_flag_list(type, types_to_exclude))
