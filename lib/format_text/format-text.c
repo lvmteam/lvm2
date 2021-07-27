@@ -454,7 +454,7 @@ static struct volume_group *_vg_read_raw_area(struct cmd_context *cmd,
 			   (unsigned long long)rlocn->size,
 			   vgname);
 
-	if (precommitted)
+	if (vg && precommitted)
 		vg->status |= PRECOMMITTED;
 
       out:
