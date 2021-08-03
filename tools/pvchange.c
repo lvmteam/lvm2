@@ -25,6 +25,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 {
 	struct pvchange_params *params = (struct pvchange_params *) handle->custom_handle;
 	const char *pv_name = pv_dev_name(pv);
+	char pvid[ID_LEN + 1]  __attribute__((aligned(8))) = { 0 };
 	char uuid[64] __attribute__((aligned(8)));
 	struct dev_use *du = NULL;
 	unsigned done = 0;
@@ -187,8 +188,9 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	if (du) {
+		memcpy(pvid, &pv->id.uuid, ID_LEN);
 		free(du->pvid);
-		if (!(du->pvid = strndup((char *)&pv->id, ID_LEN)))
+		if (!(du->pvid = strdup(pvid)))
 			log_error("Failed to set pvid for devices file.");
 		if (!device_ids_write(cmd))
 			log_warn("Failed to update devices file.");

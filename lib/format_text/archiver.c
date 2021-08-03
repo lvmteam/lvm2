@@ -413,7 +413,8 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg,
 				return 0;
 			}
 			pv->vg_name = vg->name;
-			pv->vgid = vg->id;
+			/* both are struct id */
+			memcpy(&pv->vg_id, &vg->id, sizeof(struct id));
 
 			if (!(new_pvl = dm_pool_zalloc(vg->vgmem, sizeof(*new_pvl)))) {
 				log_error("Failed to allocate PV list item for \"%s\".",

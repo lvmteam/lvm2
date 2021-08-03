@@ -219,7 +219,8 @@ static int _read_pv(struct cmd_context *cmd,
 	if (!(pv->vg_name = dm_pool_strdup(mem, vg->name)))
 		return_0;
 
-	memcpy(&pv->vgid, &vg->id, sizeof(vg->id));
+	/* both are struct id */
+	memcpy(&pv->vg_id, &vg->id, sizeof(struct id));
 
 	if (!_read_flag_config(pvn, &pv->status, PV_FLAGS)) {
 		log_error("Couldn't read status flags for physical volume.");
@@ -1302,6 +1303,7 @@ static int _read_vgsummary(const struct format_type *fmt, const struct dm_config
 	const struct dm_config_node *vgn;
 	struct dm_pool *mem = fmt->cmd->mem;
 	const char *str;
+	struct id id;
 
 	if (!dm_config_get_str(cft->root, "creation_host", &str))
 		str = "";
@@ -1322,10 +1324,12 @@ static int _read_vgsummary(const struct format_type *fmt, const struct dm_config
 
 	vgn = vgn->child;
 
-	if (!_read_id(&vgsummary->vgid, vgn, "id")) {
+	if (!_read_id(&id, vgn, "id")) {
 		log_error("Couldn't read uuid for volume group %s.", vgsummary->vgname);
 		return 0;
 	}
+
+	memcpy(vgsummary->vgid, &id, ID_LEN);
 
 	if (!_read_flag_config(vgn, &vgsummary->vgstatus, VG_FLAGS)) {
 		log_error("Couldn't find status flags for volume group %s.",

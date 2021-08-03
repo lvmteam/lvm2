@@ -40,6 +40,7 @@ static int _vgrename_single(struct cmd_context *cmd, const char *vg_name,
 	struct vgrename_params *vp = (struct vgrename_params *) handle->custom_handle;
 	char old_path[PATH_MAX];
 	char new_path[PATH_MAX];
+	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct id id;
 	const char *name;
 	char *dev_dir;
@@ -69,10 +70,13 @@ static int _vgrename_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
-	if (id_read_format_try(&id, vp->vg_name_new) &&
-	    (name = lvmcache_vgname_from_vgid(cmd->mem, (const char *)&id))) {
-		log_error("New VG name \"%s\" matches the UUID of existing VG %s", vp->vg_name_new, name);
-		return ECMD_FAILED;
+	if (id_read_format_try(&id, vp->vg_name_new)) {
+		memcpy(vgid, &id, ID_LEN);
+
+		if ((name = lvmcache_vgname_from_vgid(cmd->mem, vgid))) {
+			log_error("New VG name \"%s\" matches the UUID of existing VG %s", vp->vg_name_new, name);
+			return ECMD_FAILED;
+		}
 	}
 
 	/*

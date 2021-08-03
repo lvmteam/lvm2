@@ -3845,7 +3845,7 @@ static int _get_arg_devices(struct cmd_context *cmd,
 	int ret_max = ECMD_PROCESSED;
 
 	dm_list_iterate_items(sl, arg_pvnames) {
-		if (!(dil = dm_pool_alloc(cmd->mem, sizeof(*dil)))) {
+		if (!(dil = dm_pool_zalloc(cmd->mem, sizeof(*dil)))) {
 			log_error("device_id_list alloc failed.");
 			return ECMD_FAILED;
 		}
@@ -3854,7 +3854,7 @@ static int _get_arg_devices(struct cmd_context *cmd,
 			log_error("Cannot use %s: %s", sl->str, devname_error_reason(sl->str));
 			ret_max = EINIT_FAILED;
 		} else {
-			strncpy(dil->pvid, dil->dev->pvid, ID_LEN);
+			memcpy(dil->pvid, dil->dev->pvid, ID_LEN);
 			dm_list_add(arg_devices, &dil->list);
 		}
 	}
@@ -3883,12 +3883,12 @@ static int _get_all_devices(struct cmd_context *cmd,
 			if (!(dev = dev_cache_get(cmd, hint->name, NULL)))
 				continue;
 
-			if (!(dil = dm_pool_alloc(cmd->mem, sizeof(*dil)))) {
+			if (!(dil = dm_pool_zalloc(cmd->mem, sizeof(*dil)))) {
 				log_error("device_id_list alloc failed.");
 				return ECMD_FAILED;
 			}
 
-			strncpy(dil->pvid, hint->pvid, ID_LEN);
+			memcpy(dil->pvid, hint->pvid, ID_LEN);
 			dil->dev = dev;
 			dm_list_add(all_devices, &dil->list);
 		}
@@ -3903,12 +3903,12 @@ static int _get_all_devices(struct cmd_context *cmd,
 	}
 
 	while ((dev = dev_iter_get(cmd, iter))) {
-		if (!(dil = dm_pool_alloc(cmd->mem, sizeof(*dil)))) {
+		if (!(dil = dm_pool_zalloc(cmd->mem, sizeof(*dil)))) {
 			log_error("device_id_list alloc failed.");
 			goto out;
 		}
 
-		strncpy(dil->pvid, dev->pvid, ID_LEN);
+		memcpy(dil->pvid, dev->pvid, ID_LEN);
 		dil->dev = dev;
 		dm_list_add(all_devices, &dil->list);
 	}
@@ -4105,6 +4105,7 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 			      process_single_pv_fn_t process_single_pv)
 {
 	log_report_t saved_log_report_state = log_get_report_state();
+	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	char pv_uuid[64] __attribute__((aligned(8)));
 	char vg_uuid[64] __attribute__((aligned(8)));
 	int handle_supplied = handle != NULL;
@@ -4229,8 +4230,10 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 		log_set_report_object_name_and_id(NULL, NULL);
 	}
 
-	if (!is_orphan_vg(vg->name))
-		lvmcache_get_outdated_devs(cmd, vg->name, (const char *)&vg->id, &outdated_devs);
+	if (!is_orphan_vg(vg->name)) {
+		memcpy(vgid, &vg->id, ID_LEN);
+		lvmcache_get_outdated_devs(cmd, vg->name, vgid, &outdated_devs);
+	}
 	dm_list_iterate_items(devl, &outdated_devs)
 		_device_list_remove(all_devices, devl->dev);
 
@@ -5239,6 +5242,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	struct pv_list *pvl;
 	struct pv_list *vgpvl;
 	struct device_list *devl;
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	const char *pv_name;
 	unsigned int physical_block_size, logical_block_size;
 	unsigned int prev_pbs = 0, prev_lbs = 0;
@@ -5411,7 +5415,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	 */
 	if (!pp->is_remove && pp->uuid_str) {
 		struct device *dev;
-		if ((dev = lvmcache_device_from_pvid(cmd, &pp->pva.id, NULL))) {
+		if ((dev = lvmcache_device_from_pv_id(cmd, &pp->pva.id, NULL))) {
 			dm_list_iterate_items_safe(pd, pd2, &pp->arg_devices) {
 				if (pd->dev != dev) {
 					log_error("UUID %s already in use on \"%s\".", pp->uuid_str, dev_name(dev));
@@ -5669,7 +5673,8 @@ do_command:
 				dm_list_add(&pp->pvs, &pvl->list);
 
 				/* allow deviceidtype_ARG/deviceid_ARG ? */
-				device_id_add(cmd, pd->dev, (const char *)&pvl->pv->id.uuid, NULL, NULL);
+				memcpy(pvid, &pvl->pv->id.uuid, ID_LEN);
+				device_id_add(cmd, pd->dev, pvid, NULL, NULL);
 
 			} else {
 				log_error("Failed to find PV %s", pd->name);
@@ -5708,7 +5713,8 @@ do_command:
 		}
 
 		/* allow deviceidtype_ARG/deviceid_ARG ? */
-		device_id_add(cmd, pd->dev, (const char *)&pv->id.uuid, NULL, NULL);
+		memcpy(pvid, &pv->id.uuid, ID_LEN);
+		device_id_add(cmd, pd->dev, pvid, NULL, NULL);
 
 		log_verbose("Set up physical volume for \"%s\" with %" PRIu64
 			    " available sectors.", pv_name, pv_size(pv));

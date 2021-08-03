@@ -40,7 +40,7 @@ struct settings {
 	uint64_t device_size;      /* bytes */
 	uint64_t data_offset;      /* bytes, start of data (pe_start) */
 	uint32_t seqno;
-	struct id pvid;
+	struct id pv_id;
 
 	int mda_num;               /* 1 or 2 for first or second mda */
 	char *backup_file;
@@ -1820,10 +1820,10 @@ static int _get_one_setting(struct cmd_context *cmd, struct settings *set, char 
 
 	if (!strncmp(key, "pv_uuid", strlen("pv_uuid"))) {
 		if (strchr(val, '-') && (strlen(val) == 32)) {
-			memcpy(&set->pvid, val, 32);
+			memcpy(&set->pv_id, val, 32);
 			set->pvid_set = 1;
 			return 1;
-		} else if (id_read_format_try(&set->pvid, val)) {
+		} else if (id_read_format_try(&set->pv_id, val)) {
 			set->pvid_set = 1;
 			return 1;
 		} else {
@@ -1971,18 +1971,14 @@ static int _get_pv_info_from_metadata(struct cmd_context *cmd, struct settings *
 				     uint64_t *device_size_sectors,
 				     uint64_t *pe_start_sectors)
 {
-	int8_t pvid_cur[ID_LEN+1];  /* found in existing pv_header */
-	int8_t pvid_set[ID_LEN+1];  /* set by user in --settings */
-	int8_t pvid_use[ID_LEN+1];  /* the pvid chosen to use */
-	int pvid_cur_valid = 0;     /* pvid_cur is valid */
-	int pvid_use_valid = 0;     /* pvid_use is valid */
+	char pvid_cur[ID_LEN + 1] = { 0 };  /* found in existing pv_header */
+	char pvid_set[ID_LEN + 1] = { 0 };  /* set by user in --settings */
+	char pvid_use[ID_LEN + 1] = { 0 };  /* the pvid chosen to use */
+	int pvid_cur_valid = 0;             /* pvid_cur is valid */
+	int pvid_use_valid = 0;             /* pvid_use is valid */
 	struct dm_config_tree *cft = NULL;
 	struct volume_group *vg = NULL;
 	struct pv_list *pvl;
-
-	memset(pvid_cur, 0, sizeof(pvid_cur));
-	memset(pvid_set, 0, sizeof(pvid_set));
-	memset(pvid_use, 0, sizeof(pvid_use));
 
 	/*
 	 * Check if there's a valid existing PV UUID at the expected location.
@@ -1996,14 +1992,14 @@ static int _get_pv_info_from_metadata(struct cmd_context *cmd, struct settings *
 	}
 
 	if (set->pvid_set) {
-		memcpy(&pvid_set, &set->pvid, ID_LEN);
+		memcpy(&pvid_set, &set->pv_id, ID_LEN);
 		memcpy(&pvid_use, &pvid_set, ID_LEN);
 		pvid_use_valid = 1;
 	}
 
 	if (pvid_cur_valid && set->pvid_set && memcmp(&pvid_cur, &pvid_set, ID_LEN)) {
 		log_warn("WARNING: existing PV UUID %s does not match pv_uuid setting %s.",
-			 (char *)&pvid_cur, (char *)&pvid_set);
+			 pvid_cur, pvid_set);
 
 		memcpy(&pvid_use, &pvid_set, ID_LEN);
 		pvid_use_valid = 1;
@@ -2041,7 +2037,7 @@ static int _get_pv_info_from_metadata(struct cmd_context *cmd, struct settings *
 		}
 	} else {
 		dm_list_iterate_items(pvl, &vg->pvs) {
-			if (id_equal(&pvl->pv->id, (struct id *)&pvid_use))
+			if (!memcmp(&pvl->pv->id.uuid, &pvid_use, ID_LEN))
 				goto copy_pv;
 		}
 	}
@@ -2055,9 +2051,9 @@ static int _get_pv_info_from_metadata(struct cmd_context *cmd, struct settings *
 	 * . the metadata has no PV with a device name hint matching this device
 	 */
 	if (set->pvid_set)
-		log_error("PV UUID %s not found in metadata file.", (char *)&pvid_set);
+		log_error("PV UUID %s not found in metadata file.", pvid_set);
 	else if (pvid_cur_valid)
-		log_error("PV UUID %s in existing pv_header not found in metadata file.", (char *)&pvid_cur);
+		log_error("PV UUID %s in existing pv_header not found in metadata file.", pvid_cur);
 	else if (!pvid_use_valid)
 		log_error("PV name %s not found in metadata file.", dev_name(dev));
 
@@ -2216,7 +2212,7 @@ static int _repair_pv_header(struct cmd_context *cmd, const char *repair,
 			     uint64_t labelsector, struct device *dev)
 {
 	char head_buf[512];
-	int8_t pvid[ID_LEN+1];
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct device *dev_with_pvid = NULL;
 	struct label_header *lh;
 	struct pv_header *pvh;
@@ -2233,8 +2229,6 @@ static int _repair_pv_header(struct cmd_context *cmd, const char *repair,
 	int mda_count = 0;
 	int found_label = 0;
 	int di;
-
-	memset(&pvid, 0, ID_LEN+1);
 
 	lh_offset = labelsector * 512; /* from start of disk */
 
@@ -2346,7 +2340,7 @@ static int _repair_pv_header(struct cmd_context *cmd, const char *repair,
 	if (set->device_size_set && set->pvid_set && set->data_offset_set && !mf->filename) {
 		device_size = set->device_size;
 		pe_start_sectors = set->data_offset >> SECTOR_SHIFT;
-		memcpy(&pvid, &set->pvid, ID_LEN);
+		memcpy(pvid, &set->pv_id, ID_LEN);
 
 		if (get_size && (get_size != device_size)) {
 			log_warn("WARNING: device_size setting %llu bytes does not match device size %llu bytes.",
@@ -2378,7 +2372,7 @@ static int _repair_pv_header(struct cmd_context *cmd, const char *repair,
 	 * dev_size and pe_start from the metadata to use in the pv_header.
 	 */
 	if (!_get_pv_info_from_metadata(cmd, set, dev, pvh, found_label,
-					mf->text_buf, mf->text_size, (char *)&pvid,
+					mf->text_buf, mf->text_size, pvid,
 					&device_size_sectors, &pe_start_sectors))
 		goto fail;
 
@@ -2392,13 +2386,13 @@ static int _repair_pv_header(struct cmd_context *cmd, const char *repair,
 	 * Read all devs to verify the pvid that will be written does not exist
 	 * on another device.
 	 */
-	if (!label_scan_for_pvid(cmd, (char *)&pvid, &dev_with_pvid)) {
+	if (!label_scan_for_pvid(cmd, pvid, &dev_with_pvid)) {
 		log_error("Failed to scan devices to check PV UUID.");
 		goto fail;
 	}
 
 	if (dev_with_pvid && (dev_with_pvid != dev)) {
-		log_error("Cannot use PV UUID %s which exists on %s", (char *)&pvid, dev_name(dev_with_pvid));
+		log_error("Cannot use PV UUID %s which exists on %s", pvid, dev_name(dev_with_pvid));
 		goto fail;
 	}
 
@@ -2466,7 +2460,7 @@ static int _repair_pv_header(struct cmd_context *cmd, const char *repair,
 	 */
 
 	log_print("Writing label_header.crc 0x%08x pv_header uuid %s device_size %llu",
-		  head_crc, (char *)&pvid, (unsigned long long)device_size);
+		  head_crc, pvid, (unsigned long long)device_size);
 
 	log_print("Writing data_offset %llu mda1_offset %llu mda1_size %llu mda2_offset %llu mda2_size %llu",
 		  (unsigned long long)data_offset,

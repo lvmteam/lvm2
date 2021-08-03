@@ -409,6 +409,7 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 		      uint64_t label_sector, int *is_duplicate)
 {
 	struct lvmcache_vgsummary vgsummary;
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct lvmcache_info *info;
 	const struct format_type *fmt = labeller->fmt;
 	struct label_header *lh = (struct label_header *) label_buf;
@@ -431,6 +432,8 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 	 */
 	pvhdr = (struct pv_header *) ((char *) label_buf + xlate32(lh->offset_xl));
 
+	memcpy(pvid, &pvhdr->pv_uuid, ID_LEN);
+
 	/*
 	 * FIXME: stop adding the device to lvmcache initially as an orphan
 	 * (and then moving it later) and instead just add it when we know the
@@ -445,7 +448,7 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 	 *
 	 * Other reasons for lvmcache_add to return NULL are internal errors.
 	 */
-	if (!(info = lvmcache_add(cmd, labeller, (char *)pvhdr->pv_uuid, dev, label_sector,
+	if (!(info = lvmcache_add(cmd, labeller, pvid, dev, label_sector,
 				  FMT_TEXT_ORPHAN_VG_NAME,
 				  FMT_TEXT_ORPHAN_VG_NAME, 0, is_duplicate)))
 		return_0;
@@ -495,8 +498,9 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 	if (!(ext_version = xlate32(pvhdr_ext->version)))
 		goto scan_mdas;
 
-	log_debug_metadata("%s: PV header extension version " FMTu32 " found",
-			   dev_name(dev), ext_version);
+	if (ext_version != PV_HEADER_EXTENSION_VSN)
+		log_debug_metadata("Found pv_header_extension version " FMTu32 " on %s",
+				   ext_version, dev_name(dev));
 
 	/* Extension version */
 	lvmcache_set_ext_version(info, xlate32(pvhdr_ext->version));

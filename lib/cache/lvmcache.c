@@ -316,7 +316,7 @@ static struct lvmcache_vginfo *_search_vginfos_list(const char *vgname, const ch
 
 	if (vgid) {
 		dm_list_iterate_items(vginfo, &_vginfos) {
-			if (!strcmp(vgid, vginfo->vgid))
+			if (!memcmp(vgid, vginfo->vgid, ID_LEN))
 				return vginfo;
 		}
 	} else {
@@ -328,20 +328,21 @@ static struct lvmcache_vginfo *_search_vginfos_list(const char *vgname, const ch
 	return NULL;
 }
 
-static struct lvmcache_vginfo *_vginfo_lookup(const char *vgname, const char *vgid)
+static struct lvmcache_vginfo *_vginfo_lookup(const char *vgname, const char *vgid_arg)
 {
+	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct lvmcache_vginfo *vginfo;
-	char id[ID_LEN + 1] __attribute__((aligned(8)));
 
-	if (vgid) {
-		/* vgid not necessarily NULL-terminated */
-		(void) dm_strncpy(id, vgid, sizeof(id));
+	/* In case vgid is not null terminated */
+	if (vgid_arg)
+		memcpy(vgid, vgid_arg, ID_LEN);
 
-		if ((vginfo = dm_hash_lookup(_vgid_hash, id))) {
+	if (vgid_arg) {
+		if ((vginfo = dm_hash_lookup(_vgid_hash, vgid))) {
 			if (vgname && strcmp(vginfo->vgname, vgname)) {
 				/* should never happen */
 				log_error(INTERNAL_ERROR "vginfo_lookup vgid %s has two names %s %s",
-					  id, vginfo->vgname, vgname);
+					  vgid, vginfo->vgname, vgname);
 				return NULL;
 			}
 			return vginfo;
@@ -363,7 +364,7 @@ static struct lvmcache_vginfo *_vginfo_lookup(const char *vgname, const char *vg
 	}
 
 	if (vgname && _found_duplicate_vgnames) {
-		if ((vginfo = _search_vginfos_list(vgname, vgid))) {
+		if ((vginfo = _search_vginfos_list(vgname, vgid[0] ? vgid : NULL))) {
 			if (vginfo->has_duplicate_local_vgname) {
 				log_debug("vginfo_lookup %s has_duplicate_local_vgname return none.", vgname);
 				return NULL;
@@ -450,17 +451,18 @@ bool lvmcache_has_duplicate_local_vgname(const char *vgid, const char *vgname)
  * When the device being worked with is known, pass that dev as the second arg.
  * This ensures that when duplicates exist, the wrong dev isn't used.
  */
-struct lvmcache_info *lvmcache_info_from_pvid(const char *pvid, struct device *dev, int valid_only)
+struct lvmcache_info *lvmcache_info_from_pvid(const char *pvid_arg, struct device *dev, int valid_only)
 {
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct lvmcache_info *info;
-	char id[ID_LEN + 1] __attribute__((aligned(8)));
 
-	if (!_pvid_hash || !pvid)
+	if (!_pvid_hash || !pvid_arg)
 		return NULL;
 
-	(void) dm_strncpy(id, pvid, sizeof(id));
+	/* For cases where pvid_arg is not null terminated. */
+	memcpy(pvid, pvid_arg, ID_LEN);
 
-	if (!(info = dm_hash_lookup(_pvid_hash, id)))
+	if (!(info = dm_hash_lookup(_pvid_hash, pvid)))
 		return NULL;
 
 	/*
@@ -468,11 +470,21 @@ struct lvmcache_info *lvmcache_info_from_pvid(const char *pvid, struct device *d
 	 */
 	if (dev && info->dev && (info->dev != dev)) {
 		log_debug_cache("Ignoring lvmcache info for dev %s because dev %s was requested for PVID %s.",
-				dev_name(info->dev), dev_name(dev), id);
+				dev_name(info->dev), dev_name(dev), pvid);
 		return NULL;
 	}
 
 	return info;
+}
+
+struct lvmcache_info *lvmcache_info_from_pv_id(const struct id *pv_id, struct device *dev, int valid_only)
+{
+	/*
+	 * Since we know that lvmcache_info_from_pvid directly above
+	 * does not assume pvid_arg is null-terminated, we make an
+	 * exception here and cast a struct id to char *.
+	 */
+	return lvmcache_info_from_pvid((const char *)pv_id, dev, valid_only);
 }
 
 const struct format_type *lvmcache_fmt_from_info(struct lvmcache_info *info)
@@ -487,16 +499,18 @@ const char *lvmcache_vgname_from_info(struct lvmcache_info *info)
 	return NULL;
 }
 
-static uint64_t _get_pvsummary_size(char *pvid)
+static uint64_t _get_pvsummary_size(const char *pvid_arg)
 {
-	char pvid_s[ID_LEN + 1] __attribute__((aligned(8)));
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct lvmcache_vginfo *vginfo;
 	struct pv_list *pvl;
 
+	/* In case pvid_arg is not null terminated. */
+	memcpy(pvid, pvid_arg, ID_LEN);
+
 	dm_list_iterate_items(vginfo, &_vginfos) {
 		dm_list_iterate_items(pvl, &vginfo->pvsummaries) {
-			(void) dm_strncpy(pvid_s, (char *) &pvl->pv->id, sizeof(pvid_s));
-			if (!strcmp(pvid_s, pvid))
+			if (!memcmp(pvid, &pvl->pv->id.uuid, ID_LEN))
 				return pvl->pv->size;
 		}
 	}
@@ -504,16 +518,18 @@ static uint64_t _get_pvsummary_size(char *pvid)
 	return 0;
 }
 
-static const char *_get_pvsummary_device_hint(char *pvid)
+static const char *_get_pvsummary_device_hint(const char *pvid_arg)
 {
-	char pvid_s[ID_LEN + 1] __attribute__((aligned(8)));
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct lvmcache_vginfo *vginfo;
 	struct pv_list *pvl;
 
+	/* In case pvid_arg is not null terminated. */
+	memcpy(pvid, pvid_arg, ID_LEN);
+
 	dm_list_iterate_items(vginfo, &_vginfos) {
 		dm_list_iterate_items(pvl, &vginfo->pvsummaries) {
-			(void) dm_strncpy(pvid_s, (char *) &pvl->pv->id, sizeof(pvid_s));
-			if (!strcmp(pvid_s, pvid))
+			if (!memcmp(pvid, &pvl->pv->id.uuid, ID_LEN))
 				return pvl->pv->device_hint;
 		}
 	}
@@ -521,16 +537,18 @@ static const char *_get_pvsummary_device_hint(char *pvid)
 	return NULL;
 }
 
-static const char *_get_pvsummary_device_id(char *pvid, const char **device_id_type)
+static const char *_get_pvsummary_device_id(const char *pvid_arg, const char **device_id_type)
 {
-	char pvid_s[ID_LEN + 1] __attribute__((aligned(8)));
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct lvmcache_vginfo *vginfo;
 	struct pv_list *pvl;
 
+	/* In case pvid_arg is not null terminated. */
+	memcpy(pvid, pvid_arg, ID_LEN);
+
 	dm_list_iterate_items(vginfo, &_vginfos) {
 		dm_list_iterate_items(pvl, &vginfo->pvsummaries) {
-			(void) dm_strncpy(pvid_s, (char *) &pvl->pv->id, sizeof(pvid_s));
-			if (!strcmp(pvid_s, pvid)) {
+			if (!memcmp(&pvid, &pvl->pv->id.uuid, ID_LEN)) {
 				*device_id_type = pvl->pv->device_id_type;
 				return pvl->pv->device_id;
 			}
@@ -552,7 +570,7 @@ int vg_has_duplicate_pvs(struct volume_group *vg)
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		dm_list_iterate_items(devl, &_unused_duplicates) {
-			if (id_equal(&pvl->pv->id, (const struct id *)devl->dev->pvid))
+			if (!memcmp(&pvl->pv->id.uuid, devl->dev->pvid, ID_LEN))
 				return 1;
 		}
 	}
@@ -566,15 +584,17 @@ bool lvmcache_dev_is_unused_duplicate(struct device *dev)
 
 static void _warn_unused_duplicates(struct cmd_context *cmd)
 {
-	char uuid[64] __attribute__((aligned(8)));
+	char pvid_dashed[64] __attribute__((aligned(8)));
 	struct lvmcache_info *info;
 	struct device_list *devl;
+	struct id id;
 
 	dm_list_iterate_items(devl, &_unused_duplicates) {
-		if (!id_write_format((const struct id *)devl->dev->pvid, uuid, sizeof(uuid)))
+		memcpy(&id, devl->dev->pvid, ID_LEN);
+		if (!id_write_format(&id, pvid_dashed, sizeof(pvid_dashed)))
 			stack;
 
-		log_warn("WARNING: Not using device %s for PV %s.", dev_name(devl->dev), uuid);
+		log_warn("WARNING: Not using device %s for PV %s.", dev_name(devl->dev), pvid_dashed);
 	}
 
 	dm_list_iterate_items(devl, &_unused_duplicates) {
@@ -582,11 +602,12 @@ static void _warn_unused_duplicates(struct cmd_context *cmd)
 		if (!(info = lvmcache_info_from_pvid(devl->dev->pvid, NULL, 0)))
 			continue;
 
-		if (!id_write_format((const struct id *)info->dev->pvid, uuid, sizeof(uuid)))
+		memcpy(&id, info->dev->pvid, ID_LEN);
+		if (!id_write_format(&id, pvid_dashed, sizeof(pvid_dashed)))
 			stack;
 
 		log_warn("WARNING: PV %s prefers device %s because %s.",
-			 uuid, dev_name(info->dev), info->dev->duplicate_prefer_reason);
+			 pvid_dashed, dev_name(info->dev), info->dev->duplicate_prefer_reason);
 	}
 }
 
@@ -636,7 +657,7 @@ static void _choose_duplicates(struct cmd_context *cmd,
 			       struct dm_list *del_cache_devs,
 			       struct dm_list *add_cache_devs)
 {
-	char *pvid;
+	const char *pvid;
 	const char *reason;
 	const char *device_hint;
 	struct dm_list altdevs;
@@ -1370,28 +1391,15 @@ int lvmcache_get_vgnameids(struct cmd_context *cmd,
 	return 1;
 }
 
-static struct device *_device_from_pvid(const struct id *pvid, uint64_t *label_sector)
+struct device *lvmcache_device_from_pv_id(struct cmd_context *cmd, const struct id *pv_id, uint64_t *label_sector)
 {
 	struct lvmcache_info *info;
 
-	if ((info = lvmcache_info_from_pvid((const char *) pvid, NULL, 0))) {
+	if ((info = lvmcache_info_from_pv_id(pv_id, NULL, 0))) {
 		if (info->label && label_sector)
 			*label_sector = info->label->sector;
 		return info->dev;
 	}
-
-	return NULL;
-}
-
-struct device *lvmcache_device_from_pvid(struct cmd_context *cmd, const struct id *pvid, uint64_t *label_sector)
-{
-	struct device *dev;
-
-	dev = _device_from_pvid(pvid, label_sector);
-	if (dev)
-		return dev;
-
-	log_debug_devs("No device with uuid %s.", (const char *)pvid);
 	return NULL;
 }
 
@@ -1400,7 +1408,7 @@ int lvmcache_pvid_in_unused_duplicates(const char *pvid)
 	struct device_list *devl;
 
 	dm_list_iterate_items(devl, &_unused_duplicates) {
-		if (!strncmp(devl->dev->pvid, pvid, ID_LEN))
+		if (!memcmp(devl->dev->pvid, pvid, ID_LEN))
 			return 1;
 	}
 	return 0;
@@ -1455,7 +1463,7 @@ void lvmcache_del_dev(struct device *dev)
 {
 	struct lvmcache_info *info;
 
-	if ((info = lvmcache_info_from_pvid((const char *)dev->pvid, dev, 0)))
+	if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 0)))
 		lvmcache_del(info);
 }
 
@@ -1467,7 +1475,7 @@ static int _lvmcache_update_vgid(struct lvmcache_info *info,
 				 const char *vgid)
 {
 	if (!vgid || !vginfo ||
-	    !strncmp(vginfo->vgid, vgid, ID_LEN))
+	    !memcmp(vginfo->vgid, vgid, ID_LEN))
 		return 1;
 
 	if (vginfo && *vginfo->vgid)
@@ -1478,7 +1486,8 @@ static int _lvmcache_update_vgid(struct lvmcache_info *info,
 		return 1;
 	}
 
-	(void) dm_strncpy(vginfo->vgid, vgid, sizeof(vginfo->vgid));
+	memset(vginfo->vgid, 0, sizeof(vginfo->vgid));
+	memcpy(vginfo->vgid, vgid, ID_LEN);
 	if (!dm_hash_insert(_vgid_hash, vginfo->vgid, vginfo)) {
 		log_error("_lvmcache_update: vgid hash insertion failed: %s",
 			  vginfo->vgid);
@@ -1499,8 +1508,8 @@ static int _lvmcache_update_vgname(struct cmd_context *cmd,
 				   const char *system_id,
 				   const struct format_type *fmt)
 {
-	char vgid_str[64] __attribute__((aligned(8)));
-	char other_str[64] __attribute__((aligned(8)));
+	char vgid_dashed[64] __attribute__((aligned(8)));
+	char other_dashed[64] __attribute__((aligned(8)));
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_vginfo *other;
 	int vginfo_is_allowed;
@@ -1509,7 +1518,7 @@ static int _lvmcache_update_vgname(struct cmd_context *cmd,
 	if (!vgname || (info && info->vginfo && !strcmp(info->vginfo->vgname, vgname)))
 		return 1;
 
-	if (!id_write_format((const struct id *)vgid, vgid_str, sizeof(vgid_str)))
+	if (!id_write_format((const struct id *)vgid, vgid_dashed, sizeof(vgid_dashed)))
 		stack;
 
 	/*
@@ -1555,7 +1564,7 @@ static int _lvmcache_update_vgname(struct cmd_context *cmd,
 	 	 * into the hash table.
 	 	 */
 
-		log_debug_cache("lvmcache adding vginfo for %s %s", vgname, vgid_str);
+		log_debug_cache("lvmcache adding vginfo for %s %s", vgname, vgid_dashed);
 
 		if (!(vginfo = zalloc(sizeof(*vginfo)))) {
 			log_error("lvmcache adding vg list alloc failed %s", vgname);
@@ -1585,7 +1594,7 @@ static int _lvmcache_update_vgname(struct cmd_context *cmd,
 			if (!memcmp(other->vgid, vgid, ID_LEN)) {
 				/* shouldn't happen since we looked up by vgid above */
 				log_error(INTERNAL_ERROR "lvmcache_update_vgname %s %s %s %s",
-					  vgname, vgid_str, other->vgname, other->vgid);
+					  vgname, vgid, other->vgname, other->vgid);
 				free(vginfo->vgname);
 				free(vginfo);
 				return 0;
@@ -1595,7 +1604,7 @@ static int _lvmcache_update_vgname(struct cmd_context *cmd,
 			other_is_allowed = is_system_id_allowed(cmd, other->system_id);
 
 			if (vginfo_is_allowed && other_is_allowed) {
-				if (!id_write_format((const struct id *)other->vgid, other_str, sizeof(other_str)))
+				if (!id_write_format((const struct id *)other->vgid, other_dashed, sizeof(other_dashed)))
 					stack;
 
 				vginfo->has_duplicate_local_vgname = 1;
@@ -1603,7 +1612,7 @@ static int _lvmcache_update_vgname(struct cmd_context *cmd,
 				_found_duplicate_vgnames = 1;
 
 				log_warn("WARNING: VG name %s is used by VGs %s and %s.",
-					 vgname, vgid_str, other_str);
+					 vgname, vgid_dashed, other_dashed);
 				log_warn("Fix duplicate VG names with vgrename uuid, a device filter, or system IDs.");
 			}
 
@@ -1636,7 +1645,7 @@ static int _lvmcache_update_vgname(struct cmd_context *cmd,
 	info->vginfo = vginfo;
 	dm_list_add(&vginfo->infos, &info->list);
 
-	log_debug_cache("lvmcache %s: now in VG %s %s", dev_name(info->dev), vgname, vgid_str);
+	log_debug_cache("lvmcache %s: now in VG %s %s", dev_name(info->dev), vgname, vgid);
 
 	return 1;
 }
@@ -1737,7 +1746,7 @@ static void _lvmcache_update_pvsummaries(struct lvmcache_vginfo *vginfo, struct 
 int lvmcache_update_vgname_and_id(struct cmd_context *cmd, struct lvmcache_info *info, struct lvmcache_vgsummary *vgsummary)
 {
 	const char *vgname = vgsummary->vgname;
-	const char *vgid = (char *)&vgsummary->vgid;
+	const char *vgid = vgsummary->vgid;
 	struct lvmcache_vginfo *vginfo;
 
 	if (!vgname && !info->vginfo) {
@@ -1926,21 +1935,21 @@ int lvmcache_update_vgname_and_id(struct cmd_context *cmd, struct lvmcache_info 
 
 int lvmcache_update_vg_from_write(struct volume_group *vg)
 {
+	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct pv_list *pvl;
 	struct lvmcache_info *info;
-	char pvid_s[ID_LEN + 1] __attribute__((aligned(8)));
 	struct lvmcache_vgsummary vgsummary = {
 		.vgname = vg->name,
-		.vgid = vg->id,
 		.vgstatus = vg->status,
 		.system_id = vg->system_id,
 		.lock_type = vg->lock_type
 	};
 
+	memcpy(vgid, &vg->id, ID_LEN);
+	memcpy(vgsummary.vgid, vgid, ID_LEN);
+
 	dm_list_iterate_items(pvl, &vg->pvs) {
-		(void) dm_strncpy(pvid_s, (char *) &pvl->pv->id, sizeof(pvid_s));
-		/* FIXME Could pvl->pv->dev->pvid ever be different? */
-		if ((info = lvmcache_info_from_pvid(pvid_s, pvl->pv->dev, 0)) &&
+		if ((info = lvmcache_info_from_pv_id(&pvl->pv->id, pvl->pv->dev, 0)) &&
 		    !lvmcache_update_vgname_and_id(vg->cmd, info, &vgsummary))
 			return_0;
 	}
@@ -1961,20 +1970,23 @@ int lvmcache_update_vg_from_write(struct volume_group *vg)
 
 int lvmcache_update_vg_from_read(struct volume_group *vg, unsigned precommitted)
 {
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
+	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct pv_list *pvl;
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_info *info, *info2;
 	struct metadata_area *mda;
-	char pvid_s[ID_LEN + 1] __attribute__((aligned(8)));
 	struct lvmcache_vgsummary vgsummary = {
 		.vgname = vg->name,
-		.vgid = vg->id,
 		.vgstatus = vg->status,
 		.system_id = vg->system_id,
 		.lock_type = vg->lock_type
 	};
 
-	if (!(vginfo = lvmcache_vginfo_from_vgname(vg->name, (const char *)&vg->id))) {
+	memcpy(vgid, &vg->id, ID_LEN);
+	memcpy(vgsummary.vgid, vgid, ID_LEN);
+
+	if (!(vginfo = lvmcache_vginfo_from_vgname(vg->name, vgid))) {
 		log_error(INTERNAL_ERROR "lvmcache_update_vg %s no vginfo", vg->name);
 		return 0;
 	}
@@ -2008,12 +2020,11 @@ int lvmcache_update_vg_from_read(struct volume_group *vg, unsigned precommitted)
 	}
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
-		(void) dm_strncpy(pvid_s, (char *) &pvl->pv->id, sizeof(pvid_s));
+		memcpy(pvid, &pvl->pv->id.uuid, ID_LEN);
 
-		if (!(info = lvmcache_info_from_pvid(pvid_s, pvl->pv->dev, 0))) {
+		if (!(info = lvmcache_info_from_pvid(pvid, pvl->pv->dev, 0))) {
 			log_debug_cache("lvmcache_update_vg %s no info for %s %s",
-					vg->name,
-					(char *) &pvl->pv->id,
+					vg->name, pvid,
 					pvl->pv->dev ? dev_name(pvl->pv->dev) : "missing");
 			continue;
 		}
@@ -2137,22 +2148,29 @@ static struct lvmcache_info * _create_info(struct labeller *labeller, struct dev
 }
 
 struct lvmcache_info *lvmcache_add(struct cmd_context *cmd, struct labeller *labeller,
-				   const char *pvid, struct device *dev, uint64_t label_sector,
-				   const char *vgname, const char *vgid, uint32_t vgstatus,
+				   const char *pvid_arg, struct device *dev, uint64_t label_sector,
+				   const char *vgname, const char *vgid_arg, uint32_t vgstatus,
 				   int *is_duplicate)
 {
-	char pvid_s[ID_LEN + 1] __attribute__((aligned(8)));
-	char uuid[64] __attribute__((aligned(8)));
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
+	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
+	char pvid_dashed[64] __attribute__((aligned(8)));
 	struct lvmcache_vgsummary vgsummary = { 0 };
 	struct lvmcache_info *info;
 	struct lvmcache_info *info_lookup;
 	struct device_list *devl;
 	int created = 0;
 
-	(void) dm_strncpy(pvid_s, pvid, sizeof(pvid_s));
+	/* pvid_arg and vgid_arg may not be null terminated */
+	memcpy(pvid, pvid_arg, ID_LEN);
 
-	if (!id_write_format((const struct id *)&pvid_s, uuid, sizeof(uuid)))
+	if (vgid_arg)
+		memcpy(vgid, vgid_arg, ID_LEN);
+
+	if (!id_write_format((const struct id *)&pvid, pvid_dashed, sizeof(pvid_dashed)))
 		stack;
+
+	log_debug_cache("Found PVID %s on %s", pvid, dev_name(dev));
 
 	/*
 	 * Find existing info struct in _pvid_hash or create a new one.
@@ -2161,7 +2179,7 @@ struct lvmcache_info *lvmcache_add(struct cmd_context *cmd, struct labeller *lab
 	 * devs for the duplicate case is checked below.
 	 */
 
-	info = lvmcache_info_from_pvid(pvid_s, NULL, 0);
+	info = lvmcache_info_from_pvid(pvid, NULL, 0);
 
 	if (!info)
 		info = lvmcache_info_from_pvid(dev->pvid, NULL, 0);
@@ -2180,9 +2198,10 @@ struct lvmcache_info *lvmcache_add(struct cmd_context *cmd, struct labeller *lab
 	if (!created) {
 		if (info->dev != dev) {
 			log_debug_cache("Saving initial duplicate device %s previously seen on %s with PVID %s.",
-					dev_name(dev), dev_name(info->dev), uuid);
+					dev_name(dev), dev_name(info->dev), pvid_dashed);
 
-			strncpy(dev->pvid, pvid_s, sizeof(dev->pvid));
+			memset(&dev->pvid, 0, sizeof(dev->pvid));
+			memcpy(dev->pvid, pvid, ID_LEN);
 
 			/* shouldn't happen */
 			if (dev_in_device_list(dev, &_initial_duplicates))
@@ -2209,10 +2228,10 @@ struct lvmcache_info *lvmcache_add(struct cmd_context *cmd, struct labeller *lab
 			return NULL;
 		}
 
-		if (info->dev->pvid[0] && pvid[0] && strcmp(pvid_s, info->dev->pvid)) {
+		if (info->dev->pvid[0] && pvid[0] && memcmp(pvid, info->dev->pvid, ID_LEN)) {
 			/* This happens when running pvcreate on an existing PV. */
 			log_debug_cache("Changing pvid on dev %s from %s to %s",
-					dev_name(info->dev), info->dev->pvid, pvid_s);
+					dev_name(info->dev), info->dev->pvid, pvid);
 		}
 
 		if (info->label->labeller != labeller) {
@@ -2231,30 +2250,31 @@ struct lvmcache_info *lvmcache_add(struct cmd_context *cmd, struct labeller *lab
 	 * Add or update the _pvid_hash mapping, pvid to info.
 	 */
 
-	info_lookup = dm_hash_lookup(_pvid_hash, pvid_s);
-	if ((info_lookup == info) && !strcmp(info->dev->pvid, pvid_s))
+	info_lookup = dm_hash_lookup(_pvid_hash, pvid);
+	if ((info_lookup == info) && !memcmp(info->dev->pvid, pvid, ID_LEN))
 		goto update_vginfo;
 
 	if (info->dev->pvid[0])
 		dm_hash_remove(_pvid_hash, info->dev->pvid);
 
-	strncpy(info->dev->pvid, pvid_s, sizeof(info->dev->pvid));
+	memset(info->dev->pvid, 0, sizeof(info->dev->pvid));
+	memcpy(info->dev->pvid, pvid, ID_LEN);
 
-	if (!dm_hash_insert(_pvid_hash, pvid_s, info)) {
-		log_error("Adding pvid to hash failed %s", pvid_s);
+	if (!dm_hash_insert(_pvid_hash, pvid, info)) {
+		log_error("Adding pvid to hash failed %s", pvid);
 		return NULL;
 	}
 
 update_vginfo:
 	vgsummary.vgstatus = vgstatus;
 	vgsummary.vgname = vgname;
-	if (vgid)
-		strncpy((char *)&vgsummary.vgid, vgid, sizeof(vgsummary.vgid));
+	if (vgid[0])
+		memcpy(vgsummary.vgid, vgid, ID_LEN);
 
 	if (!lvmcache_update_vgname_and_id(cmd, info, &vgsummary)) {
 		if (created) {
-			dm_hash_remove(_pvid_hash, pvid_s);
-			strcpy(info->dev->pvid, "");
+			dm_hash_remove(_pvid_hash, pvid);
+			info->dev->pvid[0] = 0;
 			free(info->label);
 			free(info);
 		}
@@ -2379,7 +2399,8 @@ int lvmcache_populate_pv_fields(struct lvmcache_info *info,
 	pv->fmt = info->fmt;
 	pv->size = info->device_size >> SECTOR_SHIFT;
 	pv->vg_name = FMT_TEXT_ORPHAN_VG_NAME;
-	memcpy(&pv->id, &info->dev->pvid, sizeof(pv->id));
+	memset(&pv->id, 0, sizeof(pv->id));
+	memcpy(&pv->id, &info->dev->pvid, ID_LEN);
 
 	if (!pv->size) {
 		log_error("PV %s size is zero.", dev_name(info->dev));
@@ -2646,9 +2667,8 @@ int lvmcache_lookup_mda(struct lvmcache_vgsummary *vgsummary)
 			vgsummary->creation_host = vginfo->creation_host;
 			vgsummary->vgstatus = vginfo->status;
 			vgsummary->seqno = vginfo->seqno;
-			/* vginfo->vgid has 1 extra byte then vgsummary->vgid */
-			memcpy(&vgsummary->vgid, vginfo->vgid, sizeof(vgsummary->vgid));
-
+			memset(&vgsummary->vgid, 0, sizeof(vgsummary->vgid));
+			memcpy(&vgsummary->vgid, vginfo->vgid, ID_LEN);
 			return 1;
 		}
 	}
@@ -2762,12 +2782,16 @@ uint64_t lvmcache_max_metadata_size(void)
 	return _max_metadata_size;
 }
 
-int lvmcache_vginfo_has_pvid(struct lvmcache_vginfo *vginfo, char *pvid)
+int lvmcache_vginfo_has_pvid(struct lvmcache_vginfo *vginfo, const char *pvid_arg)
 {
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct lvmcache_info *info;
 
+	/* In case pvid_arg is not null terminated. */
+	memcpy(pvid, pvid_arg, ID_LEN);
+
 	dm_list_iterate_items(info, &vginfo->infos) {
-		if (!strcmp(info->dev->pvid, pvid))
+		if (!memcmp(info->dev->pvid, pvid, ID_LEN))
 			return 1;
 	}
 	return 0;

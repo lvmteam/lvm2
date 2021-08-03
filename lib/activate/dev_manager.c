@@ -2118,7 +2118,7 @@ static int _check_holder(struct dev_manager *dm, struct dm_tree *dtree,
 		if (!strncmp(default_uuid_prefix, uuid, default_uuid_prefix_len))
 			uuid += default_uuid_prefix_len;
 
-		if (!strncmp(uuid, (char*)&lv->vg->id, sizeof(lv->vg->id)) &&
+		if (!memcmp(uuid, &lv->vg->id, ID_LEN) &&
 		    !dm_tree_find_node_by_uuid(dtree, uuid)) {
 			/* trims any UUID suffix (i.e. -cow) */
 			(void) dm_strncpy((char*)&id, uuid, 2 * sizeof(struct id) + 1);

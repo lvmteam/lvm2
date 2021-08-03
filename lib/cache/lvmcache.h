@@ -47,7 +47,7 @@ struct lvmcache_vginfo;
  */
 struct lvmcache_vgsummary {
 	const char *vgname;
-	struct id vgid;
+	char vgid[ID_LEN + 1];
 	uint64_t vgstatus;
 	char *creation_host;
 	const char *system_id;
@@ -96,9 +96,10 @@ struct lvmcache_vginfo *lvmcache_vginfo_from_vgname(const char *vgname,
 					   const char *vgid);
 struct lvmcache_vginfo *lvmcache_vginfo_from_vgid(const char *vgid);
 struct lvmcache_info *lvmcache_info_from_pvid(const char *pvid, struct device *dev, int valid_only);
+struct lvmcache_info *lvmcache_info_from_pv_id(const struct id *pv_id, struct device *dev, int valid_only);
 const char *lvmcache_vgname_from_vgid(struct dm_pool *mem, const char *vgid);
 const char *lvmcache_vgid_from_vgname(struct cmd_context *cmd, const char *vgname);
-struct device *lvmcache_device_from_pvid(struct cmd_context *cmd, const struct id *pvid, uint64_t *label_sector);
+struct device *lvmcache_device_from_pv_id(struct cmd_context *cmd, const struct id *pv_id, uint64_t *label_sector);
 const char *lvmcache_vgname_from_info(struct lvmcache_info *info);
 const struct format_type *lvmcache_fmt_from_info(struct lvmcache_info *info);
 
@@ -181,7 +182,7 @@ int lvmcache_vg_is_foreign(struct cmd_context *cmd, const char *vgname, const ch
 
 bool lvmcache_scan_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid);
 
-int lvmcache_vginfo_has_pvid(struct lvmcache_vginfo *vginfo, char *pvid);
+int lvmcache_vginfo_has_pvid(struct lvmcache_vginfo *vginfo, const char *pvid_arg);
 
 uint64_t lvmcache_max_metadata_size(void);
 void lvmcache_save_metadata_size(uint64_t val);

@@ -867,7 +867,7 @@ struct dev_use *get_du_for_pvid(struct cmd_context *cmd, const char *pvid)
 	dm_list_iterate_items(du, &cmd->use_devices) {
 		if (!du->pvid)
 			continue;
-		if (!strcmp(du->pvid, pvid))
+		if (!memcmp(du->pvid, pvid, ID_LEN))
 			return du;
 	}
 	return NULL;
@@ -1695,7 +1695,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 		/*
 		 * A good match based on pvid.
 		 */
-		if (dev->pvid[0] && !strcmp(dev->pvid, du->pvid)) {
+		if (dev->pvid[0] && !memcmp(dev->pvid, du->pvid, ID_LEN)) {
 			const char *devname = dev_name(dev);
 
 			if (strcmp(devname, du->idname)) {

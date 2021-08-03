@@ -517,7 +517,7 @@ static int _lookup_file_contains_pvid(FILE *fp, char *pvid)
 static void _lookup_file_count_pvid_files(FILE *fp, const char *vgname, int *pvs_online, int *pvs_offline)
 {
 	char line[64];
-	char pvid[ID_LEN+1] = { 0 };
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 
 	log_debug("checking all pvid files using lookup file for %s", vgname);
 
@@ -695,13 +695,15 @@ do_lookup:
 
 static void _count_pvid_files(struct volume_group *vg, int *pvs_online, int *pvs_offline)
 {
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct pv_list *pvl;
 
 	*pvs_online = 0;
 	*pvs_offline = 0;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
-		if (_online_pvid_file_exists((const char *)&pvl->pv->id.uuid))
+		memcpy(pvid, &pvl->pv->id.uuid, ID_LEN);
+		if (_online_pvid_file_exists(pvid))
 			(*pvs_online)++;
 		else
 			(*pvs_offline)++;
@@ -793,12 +795,12 @@ static int _get_devs_from_saved_vg(struct cmd_context *cmd, const char *vgname,
 {
 	char path[PATH_MAX];
 	char file_vgname[NAME_LEN];
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	char uuidstr[64] __attribute__((aligned(8)));
 	struct pv_list *pvl;
 	struct device_list *devl;
 	struct device *dev;
 	struct volume_group *vg;
-	const char *pvid;
 	const char *name1, *name2;
 	dev_t devno;
 	int file_major = 0, file_minor = 0;
@@ -814,7 +816,7 @@ static int _get_devs_from_saved_vg(struct cmd_context *cmd, const char *vgname,
 		goto_bad;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
-		pvid = (const char *)&pvl->pv->id.uuid;
+		memcpy(pvid, &pvl->pv->id.uuid, ID_LEN);
 
 		memset(path, 0, sizeof(path));
 		snprintf(path, sizeof(path), "%s/%s", _pvs_online_dir, pvid);

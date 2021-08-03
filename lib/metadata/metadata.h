@@ -531,7 +531,7 @@ int update_pool_metadata_min_max(struct cmd_context *cmd,
  */
 struct id pv_id(const struct physical_volume *pv);
 const struct format_type *pv_format_type(const struct physical_volume *pv);
-struct id pv_vgid(const struct physical_volume *pv);
+struct id pv_vg_id(const struct physical_volume *pv);
 
 uint64_t find_min_mda_size(struct dm_list *mdas);
 char *tags_format_and_copy(struct dm_pool *mem, const struct dm_list *tagsl);

@@ -33,11 +33,11 @@ struct physical_volume {
 	struct format_instance *fid;
 
 	/*
-	 * vg_name and vgid are used before the parent VG struct exists.
+	 * vg_name and vg_id are used before the parent VG struct exists.
 	 * FIXME: Investigate removal/substitution with 'vg' fields.
 	 */
 	const char *vg_name;
-	struct id vgid;
+	struct id vg_id; /* variables named "vgid" are char ID_LEN+1 */
 
 	/*
 	 * 'vg' is set and maintained when the PV belongs to a 'pvs'

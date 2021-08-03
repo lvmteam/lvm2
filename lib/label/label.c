@@ -307,9 +307,8 @@ static struct labeller *_find_lvm_header(struct device *dev,
 
 		dm_list_iterate_items(li, &_labellers) {
 			if (li->l->ops->can_handle(li->l, (char *) lh, block_sector + sector)) {
-				log_very_verbose("%s: %s label detected at sector %llu", 
-						 dev_name(dev), li->name,
-						 (unsigned long long)(block_sector + sector));
+				log_debug("Found label at sector %llu on %s",
+					  (unsigned long long)(block_sector + sector), dev_name(dev));
 				if (found) {
 					log_error("Ignoring additional label on %s at sector %llu",
 						  dev_name(dev),

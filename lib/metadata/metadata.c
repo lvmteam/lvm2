@@ -275,15 +275,17 @@ void add_pvl_to_vgs(struct volume_group *vg, struct pv_list *pvl)
 
 void del_pvl_from_vgs(struct volume_group *vg, struct pv_list *pvl)
 {
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct lvmcache_info *info;
 
 	vg->pv_count--;
 	dm_list_del(&pvl->list);
 
+	memcpy(pvid, &pvl->pv->id.uuid, ID_LEN);
+
 	pvl->pv->vg = vg->fid->fmt->orphan_vg; /* orphan */
-	if ((info = lvmcache_info_from_pvid((const char *) &pvl->pv->id, pvl->pv->dev, 0)))
-		lvmcache_fid_add_mdas(info, vg->fid->fmt->orphan_vg->fid,
-				      (const char *) &pvl->pv->id, ID_LEN);
+	if ((info = lvmcache_info_from_pvid(pvid, pvl->pv->dev, 0)))
+		lvmcache_fid_add_mdas(info, vg->fid->fmt->orphan_vg->fid, pvid, ID_LEN);
 	pv_set_fid(pvl->pv, vg->fid->fmt->orphan_vg->fid);
 }
 
@@ -349,7 +351,8 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 		return 0;
 	}
 
-	memcpy(&pv->vgid, &vg->id, sizeof(vg->id));
+	/* both are struct id */
+	memcpy(&pv->vg_id, &vg->id, sizeof(struct id));
 
 	/* Units of 512-byte sectors */
 	pv->pe_size = vg->extent_size;
@@ -1662,7 +1665,7 @@ struct logical_volume *find_lv_in_vg_by_lvid(const struct volume_group *vg,
 {
 	struct lv_list *lvl;
 
-	if (memcmp(&lvid->id[0], &vg->id, sizeof(vg->id)))
+	if (memcmp(&lvid->id[0], &vg->id, ID_LEN))
 		return NULL; /* Check VG does not match */
 
 	dm_list_iterate_items(lvl, &vg->lvs)
@@ -2847,6 +2850,7 @@ static int _handle_historical_lvs(struct volume_group *vg)
 
 static void _wipe_outdated_pvs(struct cmd_context *cmd, struct volume_group *vg)
 {
+	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct dm_list devs;
 	struct dm_list *mdas = NULL;
 	struct device_list *devl;
@@ -2865,12 +2869,14 @@ static void _wipe_outdated_pvs(struct cmd_context *cmd, struct volume_group *vg)
 	 * vginfo->outdated_infos list.  Here we clear the PVs on that list.
 	 */
 
-	lvmcache_get_outdated_devs(cmd, vg->name, (const char *)&vg->id, &devs);
+	memcpy(vgid, &vg->id.uuid, ID_LEN);
+
+	lvmcache_get_outdated_devs(cmd, vg->name, vgid, &devs);
 
 	dm_list_iterate_items(devl, &devs) {
 		dev = devl->dev;
 
-		lvmcache_get_outdated_mdas(cmd, vg->name, (const char *)&vg->id, dev, &mdas);
+		lvmcache_get_outdated_mdas(cmd, vg->name, vgid, dev, &mdas);
 
 		if (mdas) {
 			dm_list_iterate_items(mda, mdas) {
@@ -2905,7 +2911,7 @@ static void _wipe_outdated_pvs(struct cmd_context *cmd, struct volume_group *vg)
 	 * removed) but we only need to wipe pvs once, so clear the outdated
 	 * list so it won't be wiped again.
 	 */
-	lvmcache_del_outdated_devs(cmd, vg->name, (const char *)&vg->id);
+	lvmcache_del_outdated_devs(cmd, vg->name, vgid);
 }
 
 /*
@@ -2914,12 +2920,15 @@ static void _wipe_outdated_pvs(struct cmd_context *cmd, struct volume_group *vg)
  */
 int vg_write(struct volume_group *vg)
 {
+	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct dm_list *mdah;
 	struct pv_list *pvl, *pvl_safe, *new_pvl;
 	struct metadata_area *mda;
 	struct lv_list *lvl;
 	struct device *mda_dev;
 	int revert = 0, wrote = 0;
+
+	memcpy(vgid, &vg->id.uuid, ID_LEN);
 
 	if (vg_is_shared(vg)) {
 		dm_list_iterate_items(lvl, &vg->lvs) {
@@ -3031,7 +3040,7 @@ int vg_write(struct volume_group *vg)
 		 * dev, and then it's later changed to not ignored, and
 		 * we see the old metadata.
 		 */
-		if (lvmcache_has_old_metadata(vg->cmd, vg->name, (const char *)&vg->id, mda_dev)) {
+		if (lvmcache_has_old_metadata(vg->cmd, vg->name, vgid, mda_dev)) {
 			log_warn("WARNING: updating old metadata to %u on %s for VG %s.",
 				 vg->seqno, dev_name(mda_dev), vg->name);
 		}
@@ -3438,15 +3447,14 @@ static int _check_devs_used_correspond_with_lv(struct dm_pool *mem, struct dm_li
 static int _check_devs_used_correspond_with_vg(struct volume_group *vg)
 {
 	struct dm_pool *mem;
-	char vgid[ID_LEN + 1];
+	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct pv_list *pvl;
 	struct lv_list *lvl;
 	struct dm_list *list;
 	struct device_list *dl;
 	int found_inconsistent = 0;
 
-	strncpy(vgid, (const char *) vg->id.uuid, sizeof(vgid));
-	vgid[ID_LEN] = '\0';
+	memcpy(vgid, &vg->id.uuid, ID_LEN);
 
 	/* Mark all PVs in VG as used. */
 	dm_list_iterate_items(pvl, &vg->pvs) {
@@ -3505,6 +3513,7 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 					struct volume_group *vg,
 					struct lvmcache_info *info)
 {
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct physical_volume *pv;
 	struct device *dev = lvmcache_device(info);
 
@@ -3528,7 +3537,9 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 	if (!alloc_pv_segment_whole_pv(vg->vgmem, pv))
 		goto_bad;
 
-	lvmcache_fid_add_mdas(info, vg->fid, (const char *) &pv->id, ID_LEN);
+	memcpy(pvid, &pv->id.uuid, ID_LEN);
+
+	lvmcache_fid_add_mdas(info, vg->fid, pvid, ID_LEN);
 	pv_set_fid(pv, vg->fid);
 	return pv;
 bad:
@@ -3551,7 +3562,7 @@ static void _set_pv_device(struct format_instance *fid,
 	struct device *dev;
 	uint64_t size;
 
-	if (!(dev = lvmcache_device_from_pvid(cmd, &pv->id, &pv->label_sector))) {
+	if (!(dev = lvmcache_device_from_pv_id(cmd, &pv->id, &pv->label_sector))) {
 		if (!id_write_format(&pv->id, buffer, sizeof(buffer)))
 			buffer[0] = '\0';
 
@@ -4447,6 +4458,7 @@ int vg_is_foreign(struct volume_group *vg)
 
 void vg_write_commit_bad_mdas(struct cmd_context *cmd, struct volume_group *vg)
 {
+	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct dm_list bad_mda_list;
 	struct mda_list *mdal;
 	struct metadata_area *mda;
@@ -4454,7 +4466,9 @@ void vg_write_commit_bad_mdas(struct cmd_context *cmd, struct volume_group *vg)
 
 	dm_list_init(&bad_mda_list);
 
-	lvmcache_get_bad_mdas(cmd, vg->name, (const char *)&vg->id, &bad_mda_list);
+	memcpy(vgid, &vg->id.uuid, ID_LEN);
+
+	lvmcache_get_bad_mdas(cmd, vg->name, vgid, &bad_mda_list);
 
 	dm_list_iterate_items(mdal, &bad_mda_list) {
 		mda = mdal->mda;
@@ -4883,7 +4897,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	 */
 	if (found_md_component) {
 		dm_list_iterate_items(pvl, &vg_ret->pvs) {
-			if (!(dev = lvmcache_device_from_pvid(cmd, &pvl->pv->id, NULL)))
+			if (!(dev = lvmcache_device_from_pv_id(cmd, &pvl->pv->id, NULL)))
 				continue;
 
 			/* dev_is_md_component set this flag if it was found */

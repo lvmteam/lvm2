@@ -1667,8 +1667,9 @@ static int _set_ext_flags(struct physical_volume *pv, struct lvmcache_info *info
 /* Only for orphans - FIXME That's not true any more */
 static int _text_pv_write(struct cmd_context *cmd, const struct format_type *fmt, struct physical_volume *pv)
 {
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
+	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct format_instance *fid = pv->fid;
-	const char *pvid = (const char *) (*pv->old_id.uuid ? &pv->old_id : &pv->id);
 	struct label *label;
 	struct lvmcache_info *info;
 	struct mda_context *mdac;
@@ -1676,10 +1677,18 @@ static int _text_pv_write(struct cmd_context *cmd, const struct format_type *fmt
 	struct _write_single_mda_baton baton;
 	unsigned mda_index;
 
+	if (is_orphan_vg(pv->vg_name))
+		memcpy(vgid, pv->vg_name, ID_LEN);
+	else if (pv->vg)
+		memcpy(vgid, &pv->vg->id.uuid, ID_LEN);
+
+	memcpy(pvid, &pv->id.uuid, ID_LEN);
+
 	/* Add a new cache entry with PV info or update existing one. */
-	if (!(info = lvmcache_add(cmd, fmt->labeller, (const char *) &pv->id,
+	if (!(info = lvmcache_add(cmd, fmt->labeller, pvid,
 				  pv->dev,  pv->label_sector, pv->vg_name,
-				  is_orphan_vg(pv->vg_name) ? pv->vg_name : pv->vg ? (const char *) &pv->vg->id : NULL, 0, NULL)))
+				  vgid[0] ? vgid : NULL,
+				  0, NULL)))
 		return_0;
 
 	/* lvmcache_add() creates info and info->label structs for the dev, get info->label. */
@@ -1697,6 +1706,13 @@ static int _text_pv_write(struct cmd_context *cmd, const struct format_type *fmt
 	 * The fid_get_mda_indexed fn can handle that transparently,
 	 * just pass the right format_instance in.
 	 */
+
+	/* FIXME: why is old needed here? */
+	if (*pv->old_id.uuid)
+		memcpy(pvid, &pv->old_id.uuid, ID_LEN);
+	else
+		memcpy(pvid, &pv->id.uuid, ID_LEN);
+
 	for (mda_index = 0; mda_index < FMT_TEXT_MAX_MDAS_PER_PV; mda_index++) {
 		if (!(mda = fid_get_mda_indexed(fid, pvid, ID_LEN, mda_index)))
 			continue;
@@ -1775,7 +1791,7 @@ static int _text_pv_needs_rewrite(const struct format_type *fmt, struct physical
 	if (!pv->dev)
 		return 1;
 
-	if (!(info = lvmcache_info_from_pvid((const char *)&pv->id, pv->dev, 0))) {
+	if (!(info = lvmcache_info_from_pv_id(&pv->id, pv->dev, 0))) {
 		log_error("Failed to find cached info for PV %s.", pv_dev_name(pv));
 		return 0;
 	}
@@ -2007,14 +2023,19 @@ static int _text_pv_setup(const struct format_type *fmt,
 			  struct physical_volume *pv,
 			  struct volume_group *vg)
 {
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct format_instance *fid = pv->fid;
-	const char *pvid = (const char *) (*pv->old_id.uuid ? &pv->old_id : &pv->id);
 	struct lvmcache_info *info;
 	unsigned mda_index;
 	struct metadata_area *pv_mda, *pv_mda_copy;
 	struct mda_context *pv_mdac;
 	uint64_t pe_count;
 	uint64_t size_reduction = 0;
+
+	if (*pv->old_id.uuid)
+		memcpy(pvid, &pv->old_id.uuid, ID_LEN);
+	else
+		memcpy(pvid, &pv->id.uuid, ID_LEN);
 
 	/* If PV has its own format instance, add mdas from pv->fid to vg->fid. */
 	if (pv->fid != vg->fid) {
@@ -2181,6 +2202,7 @@ static int _add_metadata_area_to_pv(struct physical_volume *pv,
 				    uint64_t mda_size,
 				    unsigned mda_ignored)
 {
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct metadata_area *mda;
 	struct mda_context *mdac;
 	struct mda_lists *mda_lists = (struct mda_lists *) pv->fmt->private;
@@ -2215,7 +2237,9 @@ static int _add_metadata_area_to_pv(struct physical_volume *pv,
 	memset(&mdac->rlocn, 0, sizeof(mdac->rlocn));
 	mda_set_ignored(mda, mda_ignored);
 
-	fid_add_mda(pv->fid, mda, (char *) &pv->id, ID_LEN, mda_index);
+	memcpy(pvid, &pv->id.uuid, ID_LEN);
+
+	fid_add_mda(pv->fid, mda, pvid, ID_LEN, mda_index);
 
 	return 1;
 }
@@ -2231,8 +2255,8 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 				      uint64_t mda_size,
 				      unsigned mda_ignored)
 {
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct format_instance *fid = pv->fid;
-	const char *pvid = (const char *) (*pv->old_id.uuid ? &pv->old_id : &pv->id);
 	uint64_t ba_size, pe_start, first_unallocated;
 	uint64_t alignment, alignment_offset;
 	uint64_t disk_size;
@@ -2245,6 +2269,11 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 	struct mda_context *mdac;
 	const char *limit_name;
 	int limit_applied = 0;
+
+	if (*pv->old_id.uuid)
+		memcpy(pvid, &pv->old_id.uuid, ID_LEN);
+	else
+		memcpy(pvid, &pv->id.uuid, ID_LEN);
 
 	if (mda_index >= FMT_TEXT_MAX_MDAS_PER_PV) {
 		log_error(INTERNAL_ERROR "invalid index of value %u used "
@@ -2475,6 +2504,8 @@ bad:
 static int _remove_metadata_area_from_pv(struct physical_volume *pv,
 					 unsigned mda_index)
 {
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
+
 	if (mda_index >= FMT_TEXT_MAX_MDAS_PER_PV) {
 		log_error(INTERNAL_ERROR "can't remove metadata area with "
 					 "index %u from PV %s. Metadata "
@@ -2484,8 +2515,9 @@ static int _remove_metadata_area_from_pv(struct physical_volume *pv,
 		return 0;
 	}
 
-	return fid_remove_mda(pv->fid, NULL, (const char *) &pv->id,
-			      ID_LEN, mda_index);
+	memcpy(pvid, &pv->id.uuid, ID_LEN);
+
+	return fid_remove_mda(pv->fid, NULL, pvid, ID_LEN, mda_index);
 }
 
 static int _text_pv_remove_metadata_area(const struct format_type *fmt,
@@ -2500,13 +2532,18 @@ static int _text_pv_resize(const struct format_type *fmt,
 			   struct volume_group *vg,
 			   uint64_t size)
 {
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct format_instance *fid = pv->fid;
-	const char *pvid = (const char *) (*pv->old_id.uuid ? &pv->old_id : &pv->id);
 	struct metadata_area *mda;
 	struct mda_context *mdac;
 	uint64_t size_reduction;
 	uint64_t mda_size;
 	unsigned mda_ignored;
+
+	if (*pv->old_id.uuid)
+		memcpy(pvid, &pv->old_id.uuid, ID_LEN);
+	else
+		memcpy(pvid, &pv->id.uuid, ID_LEN);
 
 	/*
 	 * First, set the new size and update the cache and reset pe_count.
