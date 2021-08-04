@@ -1324,7 +1324,7 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 				du->dev = dev;
 				dev->id = id;
 				dev->flags |= DEV_MATCHED_USE_ID;
-				log_debug("compare match %s %s to %s",
+				log_debug("Match device_id %s %s to %s",
 					  idtype_to_str(du->idtype), du->idname, dev_name(dev));
 				return 1;
 			} else {
@@ -1370,7 +1370,7 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 		du->dev = dev;
 		dev->id = id;
 		dev->flags |= DEV_MATCHED_USE_ID;
-		log_debug("compare match %s %s to %s",
+		log_debug("Match device_id %s %s to %s",
 			  idtype_to_str(du->idtype), du->idname, dev_name(dev));
 		return 1;
 	}

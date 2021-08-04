@@ -77,6 +77,7 @@ int get_dm_uuid_from_sysfs(char *buf, size_t buf_size, int major, int minor);
 
 int setup_devices_file(struct cmd_context *cmd);
 int setup_devices(struct cmd_context *cmd);
+int setup_devices_no_file_match(struct cmd_context *cmd);
 int setup_device(struct cmd_context *cmd, const char *devname);
 
 #endif

@@ -927,6 +927,14 @@ static int _pvscan_aa_quick(struct cmd_context *cmd, struct pvscan_aa_params *pp
 	}
 
 	/*
+	 * The list of devs do not need to be filtered or checked
+	 * against the devices file because a dev is only returned
+	 * that has a pv online file, and a dev will only have a
+	 * pv online file if it's been processed by a previous
+	 * pvscan, which did the filtering and devices file check.
+	 */
+
+	/*
 	 * Lock the VG before scanning so we don't need to
 	 * rescan in _vg_read.  (The lock_vol and the
 	 * label rescan are then disabled in vg_read.)
@@ -1060,9 +1068,25 @@ static int _pvscan_aa(struct cmd_context *cmd, struct pvscan_aa_params *pp,
 	 */
 	if (!saved_vg || (dm_list_size(vgnames) > 1) || no_quick) {
 		uint32_t read_flags = READ_FOR_ACTIVATE;
+
+		log_debug("autoactivate slow");
+
+		/*
+		 * PROCESS_SKIP_SCAN: we have already done lvmcache_label_scan
+		 * so tell process_each to skip it.
+		 */
 		if (do_all)
 			read_flags |= PROCESS_SKIP_SCAN;
-		log_debug("autoactivate slow");
+
+		/*
+		 * When the command is processing specific devs (not all), it
+		 * has done setup_devices_no_file_match() to avoid matching ids
+		 * fo all devs unnecessarily, but now that we're falling back
+		 * to process_each_vg() we need to complete the id matching.
+		 */
+		if (!do_all)
+			device_ids_match(cmd);
+
 		ret = process_each_vg(cmd, 0, NULL, NULL, vgnames, read_flags, 0, handle, _pvscan_aa_single);
 	}
 
@@ -1442,7 +1466,12 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 
 	cmd->pvscan_cache_single = 1;
 
-	if (!setup_devices(cmd)) {
+	/*
+	 * "no_file_match" means that when the devices file is used,
+	 * setup_devices will skip matching devs to devices file entries.
+	 * Specific devs must be matched later with device_ids_match_dev().
+	 */
+	if (!setup_devices_no_file_match(cmd)) {
 		log_error("Failed to set up devices.");
 		return 0;
 	}
@@ -1499,6 +1528,19 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 	 */
 	 
 	log_debug("pvscan_cache_args: filter devs nodata");
+
+	/*
+	 * Match dev args with the devices file because
+	 * setup_devices_no_file_match() was used above which skipped checking
+	 * the devices file.  If a match fails here do not exclude it, that
+	 * will be done below by passes_filter() which runs filter-deviceid.
+	 * The relax_deviceid_filter case needs to be able to work around
+	 * unmatching devs.
+	 */
+	if (cmd->enable_devices_file) {
+		dm_list_iterate_items_safe(devl, devl2, &pvscan_devs)
+			device_ids_match_dev(cmd, devl->dev);
+	}
 
 	if (cmd->enable_devices_file && device_ids_use_devname(cmd)) {
 		relax_deviceid_filter = 1;

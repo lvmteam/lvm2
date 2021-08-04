@@ -1829,7 +1829,7 @@ int setup_devices_file(struct cmd_context *cmd)
  * Add all system devices to dev-cache, and attempt to
  * match all devices_file entries to dev-cache entries.
  */
-int setup_devices(struct cmd_context *cmd)
+static int _setup_devices(struct cmd_context *cmd, int no_file_match)
 {
 	int file_exists;
 	int lock_mode = 0;
@@ -1957,11 +1957,28 @@ int setup_devices(struct cmd_context *cmd)
 	dev_cache_scan(cmd);
 
 	/*
+	 * The caller uses "no_file_match" if it wants to match specific devs
+	 * itself, instead of matching everything in device_ids_match.
+	 */
+	if (no_file_match && cmd->enable_devices_file)
+		return 1;
+
+	/*
 	 * Match entries from cmd->use_devices with device structs in dev-cache.
 	 */
 	device_ids_match(cmd);
 
 	return 1;
+}
+
+int setup_devices(struct cmd_context *cmd)
+{
+	return _setup_devices(cmd, 0);
+}
+
+int setup_devices_no_file_match(struct cmd_context *cmd)
+{
+	return _setup_devices(cmd, 1);
 }
 
 /*
