@@ -67,25 +67,13 @@ devices {
 	# setting applies only to the udev-managed device directory; other
 	# directories will be scanned fully. LVM needs to be compiled with
 	# udev support for this setting to apply.
-	obtain_device_list_from_udev = 1
+	obtain_device_list_from_udev = 0
 
 	# Configuration option devices/external_device_info_source.
-	# Select an external device information source.
-	# Some information may already be available in the system and LVM can
-	# use this information to determine the exact type or use of devices it
-	# processes. Using an existing external device information source can
-	# speed up device processing as LVM does not need to run its own native
-	# routines to acquire this information. For example, this information
-	# is used to drive LVM filtering like MD component detection, multipath
-	# component detection, partition detection and others.
-	#
-	# Accepted values:
-	#   none
-	#     No external device information source is used.
-	#   udev
-	#     Reuse existing udev database records. Applicable only if LVM is
-	#     compiled with udev support.
-	#
+	# Enable device information from udev.
+	# If set to "udev", lvm will supplement its own native device information
+	# with information from libudev. This can potentially improve the detection
+	# of MD component devices and multipath component devices.
 	external_device_info_source = "none"
 
 	# Configuration option devices/hints.
@@ -231,6 +219,12 @@ devices {
 	# Configuration option devices/multipath_component_detection.
 	# Ignore devices that are components of DM multipath devices.
 	multipath_component_detection = 1
+
+	# Configuration option devices/multipath_wwids_file.
+	# The path to the multipath wwids file used for multipath component detection.
+	# Set this to an empty string to disable the use of the multipath wwids file.
+	# This configuration option has an automatic default value.
+	# multipath_wwids_file = "/etc/multipath/wwids"
 
 	# Configuration option devices/md_component_detection.
 	# Enable detection and exclusion of MD component devices.
