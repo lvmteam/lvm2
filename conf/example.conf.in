@@ -33,15 +33,18 @@ config {
 	# any configuration mismatch is ignored and the default value is used
 	# without any warning (a message about the configuration key not being
 	# found is issued in verbose mode only).
-	checks = 1
+	# This configuration option has an automatic default value.
+	# checks = 1
 
 	# Configuration option config/abort_on_errors.
 	# Abort the LVM process if a configuration mismatch is found.
-	abort_on_errors = 0
+	# This configuration option has an automatic default value.
+	# abort_on_errors = 0
 
 	# Configuration option config/profile_dir.
 	# Directory where LVM looks for configuration profiles.
-	profile_dir = "@DEFAULT_SYS_DIR@/@DEFAULT_PROFILE_SUBDIR@"
+	# This configuration option has an automatic default value.
+	# profile_dir = "@DEFAULT_SYS_DIR@/@DEFAULT_PROFILE_SUBDIR@"
 }
 
 # Configuration section devices.
@@ -52,12 +55,14 @@ devices {
 	# Directory in which to create volume group device nodes.
 	# Commands also accept this as a prefix on volume group names.
 	# This configuration option is advanced.
-	dir = "/dev"
+	# This configuration option has an automatic default value.
+	# dir = "/dev"
 
 	# Configuration option devices/scan.
 	# Directories containing device nodes to use with LVM.
 	# This configuration option is advanced.
-	scan = [ "/dev" ]
+	# This configuration option has an automatic default value.
+	# scan = [ "/dev" ]
 
 	# Configuration option devices/obtain_device_list_from_udev.
 	# Obtain the list of available devices from udev.
@@ -67,14 +72,16 @@ devices {
 	# setting applies only to the udev-managed device directory; other
 	# directories will be scanned fully. LVM needs to be compiled with
 	# udev support for this setting to apply.
-	obtain_device_list_from_udev = 0
+	# This configuration option has an automatic default value.
+	# obtain_device_list_from_udev = 0
 
 	# Configuration option devices/external_device_info_source.
 	# Enable device information from udev.
 	# If set to "udev", lvm will supplement its own native device information
 	# with information from libudev. This can potentially improve the detection
 	# of MD component devices and multipath component devices.
-	external_device_info_source = "none"
+	# This configuration option has an automatic default value.
+	# external_device_info_source = "none"
 
 	# Configuration option devices/hints.
 	# Use a local file to remember which devices have PVs on them.
@@ -119,7 +126,7 @@ devices {
 	# be used, regardless of this setting, when the --devicesfile
 	# option is set to a specific file name.
 	# This configuration option has an automatic default value.
-	# use_devicesfile = 0
+	# use_devicesfile = 1
 
 	# Configuration option devices/devicesfile.
 	# The name of the system devices file, listing devices that LVM should use.
@@ -200,7 +207,8 @@ devices {
 	# Restrict device scanning to block devices appearing in sysfs.
 	# This is a quick way of filtering out block devices that are not
 	# present on the system. sysfs must be part of the kernel and mounted.)
-	sysfs_scan = 1
+	# This configuration option has an automatic default value.
+	# sysfs_scan = 1
 
 	# Configuration option devices/scan_lvs.
 	# Scan LVM LVs for layered PVs, allowing LVs to be used as PVs.
@@ -214,11 +222,19 @@ devices {
 	# use PVs that exist on LVs, and will not allow a PV to be created on
 	# an LV. The LVs are ignored using a built in device filter that
 	# identifies and excludes LVs.
-	scan_lvs = 0
+	# This configuration option has an automatic default value.
+	# scan_lvs = 0
 
 	# Configuration option devices/multipath_component_detection.
 	# Ignore devices that are components of DM multipath devices.
-	multipath_component_detection = 1
+	# This configuration option has an automatic default value.
+	# multipath_component_detection = 1
+
+	# Configuration option devices/multipath_wwids_file.
+	# The path to the multipath wwids file used for multipath component detection.
+	# Set this to an empty string to disable the use of the multipath wwids file.
+	# This configuration option has an automatic default value.
+	# multipath_wwids_file = "/etc/multipath/wwids"
 
 	# Configuration option devices/multipath_wwids_file.
 	# The path to the multipath wwids file used for multipath component detection.
@@ -235,7 +251,8 @@ devices {
 	# In cases where the MD superblock is located at the end of the
 	# component devices, it is more difficult for LVM to consistently
 	# identify an MD component, see the md_component_checks setting.
-	md_component_detection = 1
+	# This configuration option has an automatic default value.
+	# md_component_detection = 1
 
 	# Configuration option devices/md_component_checks.
 	# The checks LVM should use to detect MD component devices.
@@ -259,7 +276,8 @@ devices {
 	# Ignore devices that are components of firmware RAID devices.
 	# LVM must use an external_device_info_source other than none for this
 	# detection to execute.
-	fw_raid_component_detection = 0
+	# This configuration option has an automatic default value.
+	# fw_raid_component_detection = 0
 
 	# Configuration option devices/md_chunk_alignment.
 	# Align the start of a PV data area with md device's stripe-width.
@@ -268,7 +286,8 @@ devices {
 	# with the value detected for this setting.
 	# This setting is overridden by data_alignment_detection,
 	# data_alignment, and the --dataalignment option.
-	md_chunk_alignment = 1
+	# This configuration option has an automatic default value.
+	# md_chunk_alignment = 1
 
 	# Configuration option devices/default_data_alignment.
 	# Align the start of a PV data area with this number of MiB.
@@ -291,7 +310,8 @@ devices {
 	# if they are not aligned with the value detected for this setting.
 	# This setting is overridden by data_alignment and the --dataalignment
 	# option.
-	data_alignment_detection = 1
+	# This configuration option has an automatic default value.
+	# data_alignment_detection = 1
 
 	# Configuration option devices/data_alignment.
 	# Align the start of a PV data area with this number of KiB.
@@ -299,7 +319,8 @@ devices {
 	# Set to 0 to disable, in which case default_data_alignment
 	# is used to align the first PE in units of MiB.
 	# This setting is overridden by the --dataalignment option.
-	data_alignment = 0
+	# This configuration option has an automatic default value.
+	# data_alignment = 0
 
 	# Configuration option devices/data_alignment_offset_detection.
 	# Shift the start of an aligned PV data area based on sysfs information.
@@ -310,13 +331,15 @@ devices {
 	# is the lowest aligned logical block, the 4KiB sectors start at
 	# LBA -1, and consequently sector 63 is aligned on a 4KiB boundary).
 	# This setting is overridden by the --dataalignmentoffset option.
-	data_alignment_offset_detection = 1
+	# This configuration option has an automatic default value.
+	# data_alignment_offset_detection = 1
 
 	# Configuration option devices/ignore_suspended_devices.
 	# Ignore DM devices that have I/O suspended while scanning devices.
 	# Otherwise, LVM waits for a suspended device to become accessible.
 	# This should only be needed in recovery situations.
-	ignore_suspended_devices = 0
+	# This configuration option has an automatic default value.
+	# ignore_suspended_devices = 0
 
 	# Configuration option devices/ignore_lvm_mirrors.
 	# Do not scan 'mirror' LVs to avoid possible deadlocks.
@@ -335,18 +358,21 @@ devices {
 	# a scan of the mirror's labels. The 'mirror' scanning problems do not
 	# apply to LVM RAID types like 'raid1' which handle failures in a
 	# different way, making them a better choice for VG stacking.
-	ignore_lvm_mirrors = 1
+	# This configuration option has an automatic default value.
+	# ignore_lvm_mirrors = 1
 
 	# Configuration option devices/require_restorefile_with_uuid.
 	# Allow use of pvcreate --uuid without requiring --restorefile.
-	require_restorefile_with_uuid = 1
+	# This configuration option has an automatic default value.
+	# require_restorefile_with_uuid = 1
 
 	# Configuration option devices/pv_min_size.
 	# Minimum size in KiB of block devices which can be used as PVs.
 	# In a clustered environment all nodes must use the same value.
 	# Any value smaller than 512KiB is ignored. The previous built-in
 	# value was 512.
-	pv_min_size = 2048
+	# This configuration option has an automatic default value.
+	# pv_min_size = 2048
 
 	# Configuration option devices/issue_discards.
 	# Issue discards to PVs that are no longer used by an LV.
@@ -359,7 +385,8 @@ devices {
 	# benefit from discards, but SSDs and thinly provisioned LUNs
 	# generally do. If enabled, discards will only be issued if both the
 	# storage and kernel provide support.
-	issue_discards = 0
+	# This configuration option has an automatic default value.
+	# issue_discards = 0
 
 	# Configuration option devices/allow_changes_with_duplicate_pvs.
 	# Allow VG modification while a PV appears on multiple devices.
@@ -372,13 +399,15 @@ devices {
 	# or activating LVs in it while a PV appears on multiple devices.
 	# Enabling this setting allows the VG to be used as usual even with
 	# uncertain devices.
-	allow_changes_with_duplicate_pvs = 0
+	# This configuration option has an automatic default value.
+	# allow_changes_with_duplicate_pvs = 0
 
 	# Configuration option devices/allow_mixed_block_sizes.
 	# Allow PVs in the same VG with different logical block sizes.
 	# When allowed, the user is responsible to ensure that an LV is
 	# using PVs with matching block sizes when necessary.
-	allow_mixed_block_sizes = 0
+	# This configuration option has an automatic default value.
+	# allow_mixed_block_sizes = 0
 }
 
 # Configuration section allocation.
@@ -410,7 +439,8 @@ allocation {
 	# policies to detect more situations where data can be grouped onto
 	# the same disks. This setting can be used to disable the changes
 	# and revert to the previous algorithm.
-	maximise_cling = 1
+	# This configuration option has an automatic default value.
+	# maximise_cling = 1
 
 	# Configuration option allocation/use_blkid_wiping.
 	# Use blkid to detect and erase existing signatures on new PVs and LVs.
@@ -420,7 +450,8 @@ allocation {
 	# code is currently able to recognize: MD device signatures,
 	# swap signature, and LUKS signatures. To see the list of signatures
 	# recognized by blkid, check the output of the 'blkid -k' command.
-	use_blkid_wiping = @DEFAULT_USE_BLKID_WIPING@
+	# This configuration option has an automatic default value.
+	# use_blkid_wiping = @DEFAULT_USE_BLKID_WIPING@
 
 	# Configuration option allocation/wipe_signatures_when_zeroing_new_lvs.
 	# Look for and erase any signatures while zeroing a new LV.
@@ -437,12 +468,14 @@ allocation {
 	# use_blkid_wiping.) Wiping each detected signature must be confirmed.
 	# When this setting is disabled, signatures on new LVs are not detected
 	# or erased unless the --wipesignatures option is used directly.
-	wipe_signatures_when_zeroing_new_lvs = 1
+	# This configuration option has an automatic default value.
+	# wipe_signatures_when_zeroing_new_lvs = 1
 
 	# Configuration option allocation/mirror_logs_require_separate_pvs.
 	# Mirror logs and images will always use different PVs.
 	# The default setting changed in version 2.02.85.
-	mirror_logs_require_separate_pvs = 0
+	# This configuration option has an automatic default value.
+	# mirror_logs_require_separate_pvs = 0
 
 	# Configuration option allocation/raid_stripe_all_devices.
 	# Stripe across all PVs when RAID stripes are not specified.
@@ -791,7 +824,8 @@ log {
 
 	# Configuration option log/verbose.
 	# Controls the messages sent to stdout or stderr.
-	verbose = 0
+	# This configuration option has an automatic default value.
+	# verbose = 0
 
 	# Configuration option log/silent.
 	# Suppress all non-essential messages from stdout.
@@ -802,25 +836,37 @@ log {
 	# for syslog and lvm2_log_fn purposes.
 	# Any 'yes' or 'no' questions not overridden by other arguments are
 	# suppressed and default to 'no'.
-	silent = 0
+	# This configuration option has an automatic default value.
+	# silent = 0
 
 	# Configuration option log/syslog.
 	# Send log messages through syslog.
-	syslog = 1
+	# This configuration option has an automatic default value.
+	# syslog = 1
 
 	# Configuration option log/file.
 	# Write error and debug log messages to a file specified here.
 	# This configuration option does not have a default value defined.
 
+	# Configuration option log/journal.
+	# Record lvm information in the systemd journal.
+	# command: record commands that are run.
+	# output: record default output from commands.
+	# debug: record debug messages from commands.
+	# This configuration option has an automatic default value.
+	# journal = [ ]
+
 	# Configuration option log/overwrite.
 	# Overwrite the log file each time the program is run.
-	overwrite = 0
+	# This configuration option has an automatic default value.
+	# overwrite = 0
 
 	# Configuration option log/level.
 	# The level of log messages that are sent to the log file or syslog.
 	# There are 6 syslog-like log levels currently in use: 2 to 7 inclusive.
 	# 7 is the most verbose (LOG_DEBUG).
-	level = 0
+	# This configuration option has an automatic default value.
+	# level = 0
 
 	# Configuration option log/indent.
 	# Indent messages according to their severity.
@@ -829,7 +875,8 @@ log {
 
 	# Configuration option log/command_names.
 	# Display the command name on each line of output.
-	command_names = 0
+	# This configuration option has an automatic default value.
+	# command_names = 0
 
 	# Configuration option log/prefix.
 	# A prefix to use before the log message text.
@@ -837,12 +884,14 @@ log {
 	# Two spaces allows you to see/grep the severity of each message.
 	# To make the messages look similar to the original LVM tools use:
 	# indent = 0, command_names = 1, prefix = " -- "
-	prefix = "  "
+	# This configuration option has an automatic default value.
+	# prefix = "  "
 
 	# Configuration option log/activation.
 	# Log messages during activation.
 	# Don't use this in low memory situations (can deadlock).
-	activation = 0
+	# This configuration option has an automatic default value.
+	# activation = 0
 
 	# Configuration option log/debug_classes.
 	# Select log messages by class.
@@ -850,7 +899,8 @@ log {
 	# debug output if the class is listed here. Classes currently
 	# available: memory, devices, io, activation, allocation,
 	# metadata, cache, locking, lvmpolld. Use "all" to see everything.
-	debug_classes = [ "memory", "devices", "io", "activation", "allocation", "metadata", "cache", "locking", "lvmpolld", "dbus" ]
+	# This configuration option has an automatic default value.
+	# debug_classes = [ "memory", "devices", "io", "activation", "allocation", "metadata", "cache", "locking", "lvmpolld", "dbus" ]
 
 	# Configuration option log/debug_file_fields.
 	# The fields included in debug output written to log file.
@@ -877,30 +927,36 @@ backup {
 	# Configuration option backup/backup.
 	# Maintain a backup of the current metadata configuration.
 	# Think very hard before turning this off!
-	backup = 1
+	# This configuration option has an automatic default value.
+	# backup = 1
 
 	# Configuration option backup/backup_dir.
 	# Location of the metadata backup files.
 	# Remember to back up this directory regularly!
-	backup_dir = "@DEFAULT_SYS_DIR@/@DEFAULT_BACKUP_SUBDIR@"
+	# This configuration option has an automatic default value.
+	# backup_dir = "@DEFAULT_SYS_DIR@/@DEFAULT_BACKUP_SUBDIR@"
 
 	# Configuration option backup/archive.
 	# Maintain an archive of old metadata configurations.
 	# Think very hard before turning this off.
-	archive = 1
+	# This configuration option has an automatic default value.
+	# archive = 1
 
 	# Configuration option backup/archive_dir.
 	# Location of the metdata archive files.
 	# Remember to back up this directory regularly!
-	archive_dir = "@DEFAULT_SYS_DIR@/@DEFAULT_ARCHIVE_SUBDIR@"
+	# This configuration option has an automatic default value.
+	# archive_dir = "@DEFAULT_SYS_DIR@/@DEFAULT_ARCHIVE_SUBDIR@"
 
 	# Configuration option backup/retain_min.
 	# Minimum number of archives to keep.
-	retain_min = 10
+	# This configuration option has an automatic default value.
+	# retain_min = 10
 
 	# Configuration option backup/retain_days.
 	# Minimum number of days to keep archive files.
-	retain_days = 30
+	# This configuration option has an automatic default value.
+	# retain_days = 30
 }
 
 # Configuration section shell.
@@ -909,7 +965,8 @@ shell {
 
 	# Configuration option shell/history_size.
 	# Number of lines of history to store in ~/.lvm_history.
-	history_size = 100
+	# This configuration option has an automatic default value.
+	# history_size = 100
 }
 
 # Configuration section global.
@@ -919,16 +976,19 @@ global {
 	# Configuration option global/umask.
 	# The file creation mask for any files and directories created.
 	# Interpreted as octal if the first digit is zero.
-	umask = 077
+	# This configuration option has an automatic default value.
+	# umask = 077
 
 	# Configuration option global/test.
 	# No on-disk metadata changes will be made in test mode.
 	# Equivalent to having the -t option on every command.
-	test = 0
+	# This configuration option has an automatic default value.
+	# test = 0
 
 	# Configuration option global/units.
 	# Default value for --units argument.
-	units = "r"
+	# This configuration option has an automatic default value.
+	# units = "r"
 
 	# Configuration option global/si_unit_consistency.
 	# Distinguish between powers of 1024 and 1000 bytes.
@@ -936,13 +996,15 @@ global {
 	# e.g. KiB, MiB, GiB, and powers of 1000 bytes, e.g. KB, MB, GB.
 	# If scripts depend on the old behaviour, disable this setting
 	# temporarily until they are updated.
-	si_unit_consistency = 1
+	# This configuration option has an automatic default value.
+	# si_unit_consistency = 1
 
 	# Configuration option global/suffix.
 	# Display unit suffix for sizes.
 	# This setting has no effect if the units are in human-readable form
 	# (global/units = "h") in which case the suffix is always displayed.
-	suffix = 1
+	# This configuration option has an automatic default value.
+	# suffix = 1
 
 	# Configuration option global/activation.
 	# Enable/disable communication with the kernel device-mapper.
@@ -950,26 +1012,31 @@ global {
 	# activating any logical volumes. If the device-mapper driver
 	# is not present in the kernel, disabling this should suppress
 	# the error messages.
-	activation = 1
+	# This configuration option has an automatic default value.
+	# activation = 1
 
 	# Configuration option global/proc.
 	# Location of proc filesystem.
 	# This configuration option is advanced.
-	proc = "/proc"
+	# This configuration option has an automatic default value.
+	# proc = "/proc"
 
 	# Configuration option global/etc.
 	# Location of /etc system configuration directory.
-	etc = "@CONFDIR@"
+	# This configuration option has an automatic default value.
+	# etc = "@CONFDIR@"
 
 	# Configuration option global/wait_for_locks.
 	# When disabled, fail if a lock request would block.
-	wait_for_locks = 1
+	# This configuration option has an automatic default value.
+	# wait_for_locks = 1
 
 	# Configuration option global/locking_dir.
 	# Directory to use for LVM command file locks.
 	# Local non-LV directory that holds file-based locks while commands are
 	# in progress. A directory like /tmp that may get wiped on reboot is OK.
-	locking_dir = "@DEFAULT_LOCK_DIR@"
+	# This configuration option has an automatic default value.
+	# locking_dir = "@DEFAULT_LOCK_DIR@"
 
 	# Configuration option global/prioritise_write_locks.
 	# Allow quicker VG write access during high volume read access.
@@ -978,7 +1045,8 @@ global {
 	# requests immediately, delay them to allow the read-write requests to
 	# be serviced. Without this setting, write access may be stalled by a
 	# high volume of read-only requests. This option only affects file locks.
-	prioritise_write_locks = 1
+	# This configuration option has an automatic default value.
+	# prioritise_write_locks = 1
 
 	# Configuration option global/library_dir.
 	# Search this directory first for shared libraries.
@@ -988,7 +1056,8 @@ global {
 	# Abort a command that encounters an internal error.
 	# Treat any internal errors as fatal errors, aborting the process that
 	# encountered the internal error. Please only enable for debugging.
-	abort_on_internal_errors = 0
+	# This configuration option has an automatic default value.
+	# abort_on_internal_errors = 0
 
 	# Configuration option global/metadata_read_only.
 	# No operations that change on-disk metadata are permitted.
@@ -996,7 +1065,8 @@ global {
 	# repair will still be allowed to proceed exactly as if the repair had
 	# been performed (except for the unchanged vg_seqno). Inappropriate
 	# use could mess up your system, so seek advice first!
-	metadata_read_only = 0
+	# This configuration option has an automatic default value.
+	# metadata_read_only = 0
 
 	# Configuration option global/mirror_segtype_default.
 	# The segment type used by the short mirroring option -m.
@@ -1022,7 +1092,8 @@ global {
 	#     cluster-aware and cannot be used in a shared (active/active)
 	#     fashion in a cluster.
 	#
-	mirror_segtype_default = "@DEFAULT_MIRROR_SEGTYPE@"
+	# This configuration option has an automatic default value.
+	# mirror_segtype_default = "@DEFAULT_MIRROR_SEGTYPE@"
 
 	# Configuration option global/support_mirrored_mirror_log.
 	# Enable mirrored 'mirror' log type for testing.
@@ -1052,7 +1123,8 @@ global {
 	#     effectively creating a RAID 0+1 array. The layering is suboptimal
 	#     in terms of providing redundancy and performance.
 	#
-	raid10_segtype_default = "@DEFAULT_RAID10_SEGTYPE@"
+	# This configuration option has an automatic default value.
+	# raid10_segtype_default = "@DEFAULT_RAID10_SEGTYPE@"
 
 	# Configuration option global/sparse_segtype_default.
 	# The segment type used by the -V -L combination.
@@ -1072,7 +1144,8 @@ global {
 	#     metadata. It has better performance, especially when more data
 	#     is used. It also supports full snapshots.
 	#
-	sparse_segtype_default = "@DEFAULT_SPARSE_SEGTYPE@"
+	# This configuration option has an automatic default value.
+	# sparse_segtype_default = "@DEFAULT_SPARSE_SEGTYPE@"
 
 	# Configuration option global/lvdisplay_shows_full_device_path.
 	# Enable this to reinstate the previous lvdisplay name format.
@@ -1107,7 +1180,8 @@ global {
 	# Applicable only if LVM is compiled with lockd support in which
 	# case there is also lvmlockd(8) man page available for more
 	# information.
-	use_lvmlockd = 0
+	# This configuration option has an automatic default value.
+	# use_lvmlockd = 0
 
 	# Configuration option global/lvmlockd_lock_retries.
 	# Retry lvmlockd lock requests this many times.
@@ -1280,15 +1354,18 @@ global {
 	#   uname
 	#     Set the system ID from the hostname (uname) of the system.
 	#     System IDs beginning localhost are not permitted.
+	#   appmachineid
+	#     Use an LVM-specific derivation of the local machine-id as the
+	#     system ID. See 'man machine-id'.
 	#   machineid
-	#     Use the contents of the machine-id file to set the system ID.
-	#     Some systems create this file at installation time.
-	#     See 'man machine-id' and global/etc.
+	#     Use the contents of the machine-id file to set the system ID
+	#     (appmachineid is recommended.)
 	#   file
 	#     Use the contents of another file (system_id_file) to set the
 	#     system ID.
 	#
-	system_id_source = "none"
+	# This configuration option has an automatic default value.
+	# system_id_source = "none"
 
 	# Configuration option global/system_id_file.
 	# The full path to the file containing a system ID.
@@ -1308,13 +1385,15 @@ global {
 	# and to use its own control group. When this option is disabled, LVM
 	# commands will supervise long running operations by forking themselves.
 	# Applicable only if LVM is compiled with lvmpolld support.
-	use_lvmpolld = @DEFAULT_USE_LVMPOLLD@
+	# This configuration option has an automatic default value.
+	# use_lvmpolld = @DEFAULT_USE_LVMPOLLD@
 
 	# Configuration option global/notify_dbus.
 	# Enable D-Bus notification from LVM commands.
 	# When enabled, an LVM command that changes PVs, changes VG metadata,
 	# or changes the activation state of an LV will send a notification.
-	notify_dbus = 1
+	# This configuration option has an automatic default value.
+	# notify_dbus = 1
 
 	# Configuration option global/io_memory_size.
 	# The amount of memory in KiB that LVM allocates to perform disk io.
@@ -1335,7 +1414,8 @@ activation {
 	# Useful for debugging problems with activation. Some of the checks may
 	# be expensive, so it's best to use this only when there seems to be a
 	# problem.
-	checks = 0
+	# This configuration option has an automatic default value.
+	# checks = 0
 
 	# Configuration option activation/udev_sync.
 	# Use udev notifications to synchronize udev and LVM.
@@ -1346,14 +1426,16 @@ activation {
 	# that ignore the devices LVM creates. If enabled when udev is not
 	# running, and LVM processes are waiting for udev, run the command
 	# 'dmsetup udevcomplete_all' to wake them up.
-	udev_sync = 1
+	# This configuration option has an automatic default value.
+	# udev_sync = 1
 
 	# Configuration option activation/udev_rules.
 	# Use udev rules to manage LV device nodes and symlinks.
 	# When disabled, LVM will manage the device nodes and symlinks for
 	# active LVs itself. Manual intervention may be required if this
 	# setting is changed while LVs are active.
-	udev_rules = 1
+	# This configuration option has an automatic default value.
+	# udev_rules = 1
 
 	# Configuration option activation/verify_udev_operations.
 	# Use extra checks in LVM to verify udev operations.
@@ -1368,7 +1450,8 @@ activation {
 	# If LV deactivation fails, LVM will retry for a few seconds before
 	# failing. This may happen because a process run from a quick udev rule
 	# temporarily opened the device.
-	retry_deactivation = 1
+	# This configuration option has an automatic default value.
+	# retry_deactivation = 1
 
 	# Configuration option activation/missing_stripe_filler.
 	# Method to fill missing stripes when activating an incomplete LV.
@@ -1379,7 +1462,8 @@ activation {
 	# other than 'error' with mirrored or snapshotted volumes is likely to
 	# result in data corruption.
 	# This configuration option is advanced.
-	missing_stripe_filler = "error"
+	# This configuration option has an automatic default value.
+	# missing_stripe_filler = "error"
 
 	# Configuration option activation/use_linear_target.
 	# Use the linear target to optimize single stripe LVs.
@@ -1501,7 +1585,8 @@ activation {
 	# The clean/dirty state of data is tracked for each region.
 	# The value is rounded down to a power of two if necessary, and
 	# is ignored if it is not a multiple of the machine memory page size.
-	raid_region_size = 2048
+	# This configuration option has an automatic default value.
+	# raid_region_size = 2048
 
 	# Configuration option activation/error_when_full.
 	# Return errors if a thin pool runs out of space.
@@ -1546,7 +1631,8 @@ activation {
 	#     Attempt to use any extra physical volumes in the VG as spares and
 	#     replace faulty devices.
 	#
-	raid_fault_policy = "warn"
+	# This configuration option has an automatic default value.
+	# raid_fault_policy = "warn"
 
 	# Configuration option activation/mirror_image_fault_policy.
 	# Defines how a device failure in a 'mirror' LV is handled.
@@ -1583,13 +1669,15 @@ activation {
 	#     'remove' if no suitable device and space can be allocated for the
 	#     replacement.
 	#
-	mirror_image_fault_policy = "remove"
+	# This configuration option has an automatic default value.
+	# mirror_image_fault_policy = "remove"
 
 	# Configuration option activation/mirror_log_fault_policy.
 	# Defines how a device failure in a 'mirror' log LV is handled.
 	# The mirror_image_fault_policy description for mirrored LVs also
 	# applies to mirrored log LVs.
-	mirror_log_fault_policy = "allocate"
+	# This configuration option has an automatic default value.
+	# mirror_log_fault_policy = "allocate"
 
 	# Configuration option activation/snapshot_autoextend_threshold.
 	# Auto-extend a snapshot when its usage exceeds this percent.
@@ -1604,7 +1692,8 @@ activation {
 	# 840M, it is extended to 1.44G:
 	# snapshot_autoextend_threshold = 70
 	#
-	snapshot_autoextend_threshold = 100
+	# This configuration option has an automatic default value.
+	# snapshot_autoextend_threshold = 100
 
 	# Configuration option activation/snapshot_autoextend_percent.
 	# Auto-extending a snapshot adds this percent extra space.
@@ -1617,7 +1706,8 @@ activation {
 	# 840M, it is extended to 1.44G:
 	# snapshot_autoextend_percent = 20
 	#
-	snapshot_autoextend_percent = 20
+	# This configuration option has an automatic default value.
+	# snapshot_autoextend_percent = 20
 
 	# Configuration option activation/thin_pool_autoextend_threshold.
 	# Auto-extend a thin pool when its usage exceeds this percent.
@@ -1632,7 +1722,8 @@ activation {
 	# 840M, it is extended to 1.44G:
 	# thin_pool_autoextend_threshold = 70
 	#
-	thin_pool_autoextend_threshold = 100
+	# This configuration option has an automatic default value.
+	# thin_pool_autoextend_threshold = 100
 
 	# Configuration option activation/thin_pool_autoextend_percent.
 	# Auto-extending a thin pool adds this percent extra space.
@@ -1645,7 +1736,8 @@ activation {
 	# 840M, it is extended to 1.44G:
 	# thin_pool_autoextend_percent = 20
 	#
-	thin_pool_autoextend_percent = 20
+	# This configuration option has an automatic default value.
+	# thin_pool_autoextend_percent = 20
 
 	# Configuration option activation/vdo_pool_autoextend_threshold.
 	# Auto-extend a VDO pool when its usage exceeds this percent.
@@ -1704,7 +1796,8 @@ activation {
 	# Monitor LVs that are activated.
 	# The --ignoremonitoring option overrides this setting.
 	# When enabled, LVM will ask dmeventd to monitor activated LVs.
-	monitoring = 1
+	# This configuration option has an automatic default value.
+	# monitoring = 1
 
 	# Configuration option activation/polling_interval.
 	# Check pvmove or lvconvert progress at this interval (seconds).
@@ -1746,7 +1839,8 @@ activation {
 	#     This setting should not normally be used, but may sometimes
 	#     assist with data recovery.
 	#
-	activation_mode = "degraded"
+	# This configuration option has an automatic default value.
+	# activation_mode = "degraded"
 
 	# Configuration option activation/lock_start_list.
 	# Locking is started only for VGs selected by this list.

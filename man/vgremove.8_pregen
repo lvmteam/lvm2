@@ -67,6 +67,8 @@ Common options for lvm:
 .br
 [    \fB--driverloaded\fP \fBy\fP|\fBn\fP ]
 .br
+[    \fB--journal\fP \fIString\fP ]
+.br
 [    \fB--lockopt\fP \fIString\fP ]
 .br
 [    \fB--longhelp\fP ]
@@ -136,6 +138,16 @@ Use with extreme caution.
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
+.
+.HP
+\fB--journal\fP \fIString\fP
+.br
+Record information in the systemd journal.
+This information is in addition to information
+enabled by the lvm.conf log/journal setting.
+command: record information about the command.
+output: record the default command output.
+debug: record full command debugging.
 .
 .HP
 \fB--lockopt\fP \fIString\fP

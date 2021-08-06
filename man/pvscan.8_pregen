@@ -6,12 +6,80 @@ pvscan \(em List all physical volumes
 .
 .SH SYNOPSIS
 .
-\fBpvscan\fP \fIoption_args\fP
+\fBpvscan\fP \fIoption_args\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
 .br
     [ \fIposition_args\fP ]
 .br
+.P
+.ad l
+ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP
+.br
+    \fB--cache\fP
+.br
+    \fB--checkcomplete\fP
+.br
+    \fB--commandprofile\fP \fIString\fP
+.br
+    \fB--config\fP \fIString\fP
+.br
+ \fB-d\fP|\fB--debug\fP
+.br
+    \fB--devices\fP \fIPV\fP
+.br
+    \fB--devicesfile\fP \fIString\fP
+.br
+    \fB--driverloaded\fP \fBy\fP|\fBn\fP
+.br
+ \fB-e\fP|\fB--exported\fP
+.br
+ \fB-h\fP|\fB--help\fP
+.br
+    \fB--ignorelockingfailure\fP
+.br
+    \fB--journal\fP \fIString\fP
+.br
+    \fB--listlvs\fP
+.br
+    \fB--listvg\fP
+.br
+    \fB--lockopt\fP \fIString\fP
+.br
+    \fB--longhelp\fP
+.br
+ \fB-j\fP|\fB--major\fP \fINumber\fP
+.br
+    \fB--minor\fP \fINumber\fP
+.br
+    \fB--nolocking\fP
+.br
+    \fB--noudevsync\fP
+.br
+ \fB-n\fP|\fB--novolumegroup\fP
+.br
+    \fB--profile\fP \fIString\fP
+.br
+ \fB-q\fP|\fB--quiet\fP
+.br
+    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
+.br
+ \fB-s\fP|\fB--short\fP
+.br
+ \fB-t\fP|\fB--test\fP
+.br
+    \fB--udevoutput\fP
+.br
+ \fB-u\fP|\fB--uuid\fP
+.br
+ \fB-v\fP|\fB--verbose\fP
+.br
+    \fB--version\fP
+.br
+    \fB--vgonline\fP
+.br
+ \fB-y\fP|\fB--yes\fP
+.ad b
 .
 .SH DESCRIPTION
 .
@@ -92,20 +160,28 @@ Display PV information.
 .br
 [ \fB-u\fP|\fB--uuid\fP ]
 .br
+[    \fB--ignorelockingfailure\fP ]
+.br
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
 .P
-Autoactivate a VG when all PVs are online.
+\(em
+.P
+Record that a PV is online or offline.
 .br
 .P
 \fBpvscan\fP \fB--cache\fP
 .br
 .RS 4
 .ad l
-[ \fB-a\fP|\fB--activate\fP \fBay\fP ]
-.br
 [ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.br
+[    \fB--ignorelockingfailure\fP ]
+.br
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .br
 [    \fB--minor\fP \fINumber\fP ]
 .br
@@ -118,15 +194,99 @@ Autoactivate a VG when all PVs are online.
 [ \fIString\fP|\fIPV\fP ... ]
 .RE
 .P
-Common options for command:
-.
+\(em
+.P
+Record that a PV is online and autoactivate the VG if complete.
+.br
+.P
+\fBpvscan\fP \fB--cache\fP \fB-a\fP|\fB--activate\fP \fBay\fP
+.br
+.RS 4
+.ad l
+[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+.br
+[    \fB--ignorelockingfailure\fP ]
+.br
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.br
+[    \fB--minor\fP \fINumber\fP ]
+.br
+[    \fB--noudevsync\fP ]
+.br
+[ COMMON_OPTIONS ]
+.ad b
+.RE
+.RS 4
+[ \fIString\fP|\fIPV\fP ... ]
+.RE
+.P
+\(em
+.P
+Record that a PV is online and list the VG using the PV.
+.br
+.P
+\fBpvscan\fP \fB--cache\fP \fB--listvg\fP \fIPV\fP
+.br
 .RS 4
 .ad l
 [    \fB--ignorelockingfailure\fP ]
 .br
-[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+[    \fB--checkcomplete\fP ]
+.br
+[    \fB--vgonline\fP ]
+.br
+[    \fB--udevoutput\fP ]
+.br
+[ COMMON_OPTIONS ]
 .ad b
 .RE
+.P
+\(em
+.P
+Record that a PV is online and list LVs using the PV.
+.br
+.P
+\fBpvscan\fP \fB--cache\fP \fB--listlvs\fP \fIPV\fP
+.br
+.RS 4
+.ad l
+[    \fB--ignorelockingfailure\fP ]
+.br
+[    \fB--checkcomplete\fP ]
+.br
+[    \fB--vgonline\fP ]
+.br
+[ COMMON_OPTIONS ]
+.ad b
+.RE
+.P
+\(em
+.P
+List LVs using the PV.
+.br
+.P
+\fBpvscan\fP \fB--listlvs\fP \fIPV\fP
+.br
+.RS 4
+.ad l
+[ COMMON_OPTIONS ]
+.ad b
+.RE
+.P
+\(em
+.P
+List the VG using the PV.
+.br
+.P
+\fBpvscan\fP \fB--listvg\fP \fIPV\fP
+.br
+.RS 4
+.ad l
+[ COMMON_OPTIONS ]
+.ad b
+.RE
+.P
+\(em
 .P
 Common options for lvm:
 .
@@ -153,6 +313,8 @@ Common options for lvm:
 [    \fB--devicesfile\fP \fIString\fP ]
 .br
 [    \fB--driverloaded\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--journal\fP \fIString\fP ]
 .br
 [    \fB--lockopt\fP \fIString\fP ]
 .br
@@ -181,6 +343,15 @@ Auto-activate LVs in a VG when the PVs scanned have completed the VG.
 \fB--cache\fP
 .br
 Scan one or more devices and record that they are online.
+.
+.HP
+\fB--checkcomplete\fP
+.br
+Check if all the devices used by a VG or LV are present,
+and print "complete" or "incomplete" for each listed
+VG or LV.  This option is used as a part of event-based
+autoactivation, so pvscan will do nothing if this option
+is set and event_activation=0 in the config settings.
 .
 .HP
 \fB--commandprofile\fP \fIString\fP
@@ -239,6 +410,26 @@ Display help text.
 .br
 Allows a command to continue with read-only metadata
 operations after locking failures.
+.
+.HP
+\fB--journal\fP \fIString\fP
+.br
+Record information in the systemd journal.
+This information is in addition to information
+enabled by the lvm.conf log/journal setting.
+command: record information about the command.
+output: record the default command output.
+debug: record full command debugging.
+.
+.HP
+\fB--listlvs\fP
+.br
+Print a list of LVs that use the device.
+.
+.HP
+\fB--listvg\fP
+.br
+Print the VG that uses the device.
 .
 .HP
 \fB--lockopt\fP \fIString\fP
@@ -323,6 +514,11 @@ error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .
 .HP
+\fB--udevoutput\fP
+.br
+Command output is modified to be imported from a udev rule.
+.
+.HP
 \fB-u\fP|\fB--uuid\fP
 .br
 Show UUIDs in addition to device names.
@@ -337,6 +533,12 @@ of messages sent to stdout and stderr.
 \fB--version\fP
 .br
 Display version information.
+.
+.HP
+\fB--vgonline\fP
+.br
+The first command to see a complete VG will report it uniquely.
+Other commands to see the complete VG will report it differently.
 .
 .HP
 \fB-y\fP|\fB--yes\fP
