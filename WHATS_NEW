@@ -1,5 +1,5 @@
-Version 2.03.13 - 
-===============================
+Version 2.03.13 - 11th August 2021
+==================================
   Changes in udev support:
   - obtain_device_list_from_udev defaults to 0.
   - see devices/external_device_info_source,
