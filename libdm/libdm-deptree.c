@@ -2489,7 +2489,7 @@ static int _cache_emit_segment_line(struct dm_task *dmt,
 	EMIT_PARAMS(pos, " %s", name);
 
 	/* Do not pass migration_threshold 2048 which is default */
-	EMIT_PARAMS(pos, " %u", (seg->policy_argc + (seg->migration_threshold != 2048) ? 1 : 0) * 2);
+	EMIT_PARAMS(pos, " %u", (seg->policy_argc + (seg->migration_threshold != 2048 ? 1 : 0)) * 2);
 	if (seg->migration_threshold != 2048)
 		    EMIT_PARAMS(pos, " migration_threshold %u", seg->migration_threshold);
 	if (seg->policy_settings)
