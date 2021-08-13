@@ -1622,7 +1622,7 @@ int lvchange_refresh_cmd(struct cmd_context *cmd, int argc, char **argv)
 	cmd->lockd_vg_default_sh = 1;
 	cmd->ignore_device_name_mismatch = 1;
 
-	return process_each_lv(cmd, argc, argv, NULL, NULL, 0,
+	return process_each_lv(cmd, argc, argv, NULL, NULL, READ_FOR_ACTIVATE,
 			       NULL, &_lvchange_refresh_check, &_lvchange_refresh_single);
 }
 
