@@ -27,6 +27,19 @@ aux prepare_devs 1
 SIDFILE="etc/lvm_test.conf"
 LVMLOCAL="etc/lvmlocal.conf"
 
+DFDIR="$LVM_SYSTEM_DIR/devices"
+DF="$DFDIR/system.devices"
+
+# Avoid system id validation in the devices file
+# which gets in the way of the test switching the
+# local system id.
+clear_df_systemid() {
+	if [[ -f $DF ]]; then
+		sed -e "s|SYSTEMID=.||" "$DF" > tmpdf
+		cp tmpdf $DF
+	fi
+}
+
 # create vg with system_id using each source
 
 ## none
@@ -38,7 +51,8 @@ check vg_field $vg1 systemid "$SID"
 vgremove $vg1
 
 # FIXME - print 'life' config data
-eval "$(lvmconfig global/etc 2>/dev/null || lvmconfig --type default global/etc)"
+#eval "$(lvmconfig global/etc 2>/dev/null || lvmconfig --type default global/etc)"
+etc="/etc"
 
 ## machineid
 if [ -e "$etc/machine-id" ]; then
@@ -77,6 +91,7 @@ rm -f "$LVMLOCAL"
 
 SID=sidfoofile
 echo "$SID" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 vgcreate $vg1 "$dev1"
@@ -89,6 +104,7 @@ vgremove $vg1
 SID1=sidfoofile1
 SID2=sidfoofile2
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # create a vg, overriding the local system_id so the vg looks foreign
@@ -108,6 +124,7 @@ vgs --foreign $vg1 >err
 grep $vg1 err
 # change the local system_id to the second value, making the vg not foreign
 echo "$SID2" > "$SIDFILE"
+clear_df_systemid
 # we can now see and remove the vg
 vgs $vg1 >err
 grep $vg1 err
@@ -118,6 +135,7 @@ vgremove $vg1
 SID1=sidfoofile1
 SID2=sidfoofile2
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
@@ -127,6 +145,7 @@ vgs >err
 grep $vg1 err
 # change the local system_id, making the vg foreign
 echo "$SID2" > "$SIDFILE"
+clear_df_systemid
 # normal vgs doesn't see the vg
 vgs >err
 not grep $vg1 err
@@ -135,6 +154,7 @@ vgs --foreign >err
 grep $vg1 err
 # change the local system_id back to the first value, making the vg not foreign
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 vgs >err
 grep $vg1 err
 vgremove $vg1
@@ -144,6 +164,7 @@ vgremove $vg1
 SID1=sidfoofile1
 SID2=sidfoofile2
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
@@ -161,6 +182,7 @@ vgs --foreign >err
 grep $vg1 err
 # change the local system_id to the second system_id so we can remove the vg
 echo "$SID2" > "$SIDFILE"
+clear_df_systemid
 vgs >err
 grep $vg1 err
 vgremove $vg1
@@ -172,6 +194,7 @@ vgremove $vg1
 SID1=sidfoofile1
 SID2=sidfoofile2
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
@@ -183,6 +206,7 @@ grep $vg1 err
 check lv_exists $vg1 $lv1
 # change our system_id, making the vg foreign, but accessible
 echo "$SID2" > "$SIDFILE"
+clear_df_systemid
 vgs >err
 grep $vg1 err
 check lv_exists $vg1 $lv1
@@ -193,6 +217,7 @@ not lvremove $vg1/$lv1
 not vgremove $vg1
 # change our system_id back to match the vg so it's not foreign
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 vgs >err
 grep $vg1 err
 lvremove $vg1/$lv1
@@ -202,6 +227,7 @@ vgremove $vg1
 
 SID1=sidfoofile1
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
@@ -220,12 +246,14 @@ vgremove $vg1
 
 SID1=sidfoofile1
 rm -f "$SIDFILE"
+clear_df_systemid
 # create a vg with no system_id
 aux lvmconf "global/system_id_source = none"
 vgcreate $vg1 "$dev1"
 check vg_field $vg1 systemid ""
 # set a local system_id
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # check we can see and use the vg with no system_id
@@ -239,6 +267,7 @@ vgremove $vg1
 
 SID1=sidfoofile1
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
@@ -269,6 +298,7 @@ SID2=012345678901234567890123456789012345678901234567890123456789012345678901234
 
 # max len system_id should appear normally
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
@@ -281,6 +311,7 @@ vgremove $vg1
 
 # max+1 len system_id should be missing the last character
 echo "$SID2" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
@@ -300,6 +331,7 @@ SID1=012345678901234567890123456789012345678901234567890123456789012345678901234
 # The string is truncated to max length (128) before the invalid character is omitted
 SID2=012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789abcdefg
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
@@ -316,6 +348,7 @@ SID1="?%$&A.@1]"
 # SID1 without the invalid characters
 SID2=A.1
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
@@ -334,6 +367,7 @@ vgremove $vg1
 SID1=sidfoofile1
 SID2=sidfoofile2
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
@@ -344,6 +378,7 @@ grep $vg1 err
 grep "$dev1" err
 # change the local system_id, making the vg foreign
 echo "$SID2" > "$SIDFILE"
+clear_df_systemid
 # normal pvs does not see the vg or pv
 pvs >err
 not grep $vg1 err
@@ -354,6 +389,7 @@ grep $vg1 err
 grep "$dev1" err
 # change the local system_id back so the vg can be removed
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 vgremove $vg1
 rm -f "$SIDFILE"
 
@@ -363,6 +399,7 @@ rm -f "$SIDFILE"
 SID1=sidfoofile1
 SID2=sidfoofile2
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
@@ -375,6 +412,7 @@ grep $vg1 err
 grep $lv1 err
 # change the local system_id, making the vg foreign
 echo "$SID2" > "$SIDFILE"
+clear_df_systemid
 # normal lvs does not see the vg or lv
 lvs >err
 not grep $vg1 err
@@ -385,6 +423,7 @@ grep $vg1 err
 grep $lv1 err
 # change the local system_id back so the vg can be removed
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 lvremove $vg1/$lv1
 vgremove $vg1
 rm -f "$SIDFILE"
@@ -395,6 +434,7 @@ SID1=sidfoofile1
 SID2=sidfoofile2
 rm -f "$LVMLOCAL"
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
@@ -404,6 +444,7 @@ vgs >err
 grep $vg1 err
 # change the local system_id, making the vg foreign
 echo "$SID2" > "$SIDFILE"
+clear_df_systemid
 # normal vgs doesn't see the vg
 vgs >err
 not grep $vg1 err
@@ -420,6 +461,7 @@ rm -f "$LVMLOCAL"
 # vgcreate --systemid "" creates a vg without a system_id even if source is set
 SID1=sidfoofile1
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
@@ -436,6 +478,7 @@ rm -f "$SIDFILE"
 # vgchange --systemid "" clears the system_id on owned vg
 SID1=sidfoofile1
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
@@ -461,6 +504,7 @@ SID1=sidfoofile1
 SID2=sidfoofile2
 rm -f "$LVMLOCAL"
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
@@ -470,6 +514,7 @@ vgs >err
 grep $vg1 err
 # change the local system_id, making the vg foreign
 echo "$SID2" > "$SIDFILE"
+clear_df_systemid
 # normal vgs doesn't see the vg
 vgs >err
 not grep $vg1 err
@@ -482,6 +527,7 @@ not vgchange --yes --systemid "" $vg1
 not vgchange --yes --systemid foo $vg1
 # change our system_id back so we can remove the vg
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 vgremove $vg1
 
 # vgcfgbackup backs up foreign vg with --foreign
@@ -489,6 +535,7 @@ SID1=sidfoofile1
 SID2=sidfoofile2
 rm -f "$LVMLOCAL"
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
@@ -498,6 +545,7 @@ vgs >err
 grep $vg1 err
 # change the local system_id, making the vg foreign
 echo "$SID2" > "$SIDFILE"
+clear_df_systemid
 # normal vgs doesn't see the vg
 vgs >err
 not grep $vg1 err
@@ -506,6 +554,7 @@ not vgcfgbackup $vg1
 vgcfgbackup --foreign $vg1
 # change our system_id back so we can remove the vg
 echo "$SID1" > "$SIDFILE"
+clear_df_systemid
 vgremove $vg1
 rm -f "$SIDFILE"
 
@@ -562,6 +611,7 @@ rm -f $LVMLOCAL
 # vgcreate with source file, but no system_id_file config
 SID=""
 rm -f "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file"
 vgcreate $vg1 "$dev1" 2>&1 | tee err
 vgs -o+systemid $vg1
@@ -572,6 +622,7 @@ vgremove $vg1
 # vgcreate with source file, but system_id_file does not exist
 SID=""
 rm -f "$SIDFILE"
+clear_df_systemid
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
 vgcreate $vg1 "$dev1" 2>&1 | tee err

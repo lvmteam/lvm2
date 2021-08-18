@@ -201,6 +201,7 @@ blockdev --getpbsz "$LOOP1" | grep 512
 blockdev --getpbsz "$LOOP2" | grep 512
 
 aux extend_filter "a|$dev3|" "a|$dev4|"
+aux extend_devices "$dev3" "$dev4"
 
 # place main LV on dev1 with LBS 512, PBS 4096
 # and the cache on dev3 with LBS 512, PBS 512

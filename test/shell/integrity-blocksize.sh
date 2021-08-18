@@ -72,6 +72,10 @@ aux extend_filter "a|$LOOP1|"
 aux extend_filter "a|$LOOP2|"
 aux extend_filter "a|$LOOP3|"
 aux extend_filter "a|$LOOP4|"
+aux extend_devices "$LOOP1"
+aux extend_devices "$LOOP2"
+aux extend_devices "$LOOP3"
+aux extend_devices "$LOOP4"
 
 aux lvmconf 'devices/scan = "/dev"'
 

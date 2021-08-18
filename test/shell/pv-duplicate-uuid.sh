@@ -20,8 +20,8 @@ aux prepare_devs 3
 
 pvcreate "$dev1"
 UUID1=$(get pv_field "$dev1" uuid)
-pvcreate --config "devices{filter=[\"a|$dev2|\",\"r|.*|\"]}" -u "$UUID1" --norestorefile "$dev2"
-pvcreate --config "devices{filter=[\"a|$dev3|\",\"r|.*|\"]}" -u "$UUID1" --norestorefile "$dev3"
+pvcreate --devices "$dev2" -u "$UUID1" --norestorefile "$dev2"
+pvcreate --devices "$dev3" -u "$UUID1" --norestorefile "$dev3"
 
 pvscan --cache 2>&1 | tee out
 
@@ -35,7 +35,7 @@ test "$(grep -c $UUID1 main)" -eq 1
 COUNT=$(grep --count "Not using device" warn)
 [ "$COUNT" -eq 2 ]
 
-pvs -o+uuid --config "devices{filter=[\"a|$dev2|\",\"r|.*|\"]}" 2>&1 | tee out
+pvs -o+uuid --devices $dev2 2>&1 | tee out
 
 rm warn main || true
 grep    WARNING out > warn || true

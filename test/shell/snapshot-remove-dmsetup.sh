@@ -23,9 +23,10 @@ aux prepare_vg 5
 
 # Create stacked device
 lvcreate --type snapshot -s -L10 -n $lv1 $vg --virtualsize 100M
+aux lvmconf "devices/scan_lvs = 1"
 aux extend_filter_LVMTEST
+aux extend_devices "$DM_DEV_DIR"/$vg/$lv1
 vgcreate $vg1 "$DM_DEV_DIR"/$vg/$lv1
-
 
 lvcreate -L20 -n $lv1 $vg1
 lvcreate -L10 -n snap -s $vg1/$lv1

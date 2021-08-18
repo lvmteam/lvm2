@@ -77,6 +77,8 @@ lvremove -f $vg
 lvcreate --type snapshot -s -l 100%FREE -n $lv $vg --virtualsize $TSIZE
 
 aux extend_filter_LVMTEST
+aux extend_devices "$DM_DEV_DIR/$vg/$lv"
+aux lvmconf "devices/scan_lvs = 1"
 aux lvmconf "activation/snapshot_autoextend_percent = 20" \
             "activation/snapshot_autoextend_threshold = 50"
 

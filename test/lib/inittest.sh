@@ -63,6 +63,8 @@ test -n "$SKIP_WITH_LVMPOLLD" && test -n "$LVM_TEST_LVMPOLLD" && test -z "$LVM_T
 
 test -n "$SKIP_WITH_LVMLOCKD" && test -n "$LVM_TEST_LVMLOCKD" && initskip
 
+test -n "$SKIP_WITH_DEVICES_FILE" && test -n "$LVM_TEST_DEVICES_FILE" && initskip
+
 unset CDPATH
 
 export LVM_TEST_BACKING_DEVICE LVM_TEST_DEVDIR LVM_TEST_NODEBUG LVM_TEST_FAILURE

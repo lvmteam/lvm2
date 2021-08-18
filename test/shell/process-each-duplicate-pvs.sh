@@ -11,6 +11,16 @@ test_description='Test duplicate PVs'
 SKIP_WITH_LVMPOLLD=1
 SKIP_WITH_CLVMD=1
 
+# This test should work with real device ids (not devnames).
+# When PVs are being overwritten by the test, the devices file is
+# excluding them since with idtype=devname the devices file falls
+# back to including devs based on PVIDs in the devices file,
+# but the 'dd' is clobbering the PVIDs so those devs aren't included
+# so the 'pvs' commands below don't report them. 
+# In general this is better behavior, but needs to be tested
+# with proper device ids.
+SKIP_WITH_DEVICES_FILE=1
+
 . lib/inittest
 
 aux prepare_devs 6 16

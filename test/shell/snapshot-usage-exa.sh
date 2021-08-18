@@ -26,7 +26,10 @@ get_devs
 # Prepare large enough backend device
 vgcreate -s 4M "$vg" "${DEVICES[@]}"
 lvcreate --type snapshot -s -l 100%FREE -n $lv $vg --virtualsize 15P
+
+aux lvmconf "devices/scan_lvs = 1"
 aux extend_filter_LVMTEST
+aux extend_devices "$DM_DEV_DIR/$vg/$lv"
 
 # Check usability with largest extent size
 pvcreate "$DM_DEV_DIR/$vg/$lv"

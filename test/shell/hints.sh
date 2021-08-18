@@ -141,6 +141,12 @@ not cat $NEWHINTS
 # Test that adding a new device and removing a device
 # causes hints to be recreated.
 #
+# with a devices file the appearance of a new device on
+# the system does not disturb lvm, so this test doesn't
+# apply
+#
+
+if ! lvmdevices; then
 
 not pvs "$dev5"
 
@@ -182,6 +188,9 @@ diff scan1 scan2
 grep devs_hash $PREV > devs_hash1
 grep devs_hash $HINTS > devs_hash2
 not diff devs_hash1 devs_hash2
+
+# end of new device test for non-devicesfile case
+fi
 
 #
 # Test that hints don't change from a bunch of commands

@@ -26,6 +26,9 @@ aux extend_filter_LVMTEST
 
 lvcreate -L10 -V10 -n $lv1 -T $vg/pool1
 
+aux extend_devices "$DM_DEV_DIR/$vg/$lv1"
+aux lvmconf "devices/scan_lvs = 1"
+
 pvcreate "$DM_DEV_DIR/$vg/$lv1"
 pvremove "$DM_DEV_DIR/$vg/$lv1"
 

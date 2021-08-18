@@ -287,35 +287,6 @@ pvscan --devices "$dev4" --cache -aay "$dev4"
 check lv_field $vg2/$lv2 lv_active "active"
 vgchange -an $vg2
 
-
-# verify --devicesfile and --devices are not affected by a filter
-# hide_dev excludes using existing filter
-aux hide_dev "$dev2"
-aux hide_dev "$dev4"
-pvs --devicesfile test.devices "$dev1"
-pvs --devicesfile test.devices "$dev2"
-not pvs --devicesfile test.devices "$dev3"
-not pvs --devicesfile test.devices "$dev4"
-pvs --devices "$dev1" "$dev1"
-pvs --devices "$dev2" "$dev2"
-pvs --devices "$dev3" "$dev3"
-pvs --devices "$dev4" "$dev4"
-pvs --devices "$dev5" "$dev5"
-pvs --devices "$dev1","$dev2","$dev3","$dev4","$dev5" "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" | tee out
-grep "$dev1" out
-grep "$dev2" out
-grep "$dev3" out
-grep "$dev4" out
-grep "$dev5" out
-vgchange --devices "$dev1","$dev2" -ay $vg1
-check lv_field $vg1/$lv1 lv_active "active"
-lvchange --devices "$dev1","$dev2" -an $vg1/$lv1
-vgchange --devices "$dev3","$dev4" -ay $vg2
-check lv_field $vg2/$lv2 lv_active "active"
-lvchange --devices "$dev3","$dev4" -an $vg2/$lv2
-aux unhide_dev "$dev2"
-aux unhide_dev "$dev4"
-
 vgchange --devicesfile "" -an
 vgremove --devicesfile "" -y $vg1
 vgremove --devicesfile "" -y $vg2
@@ -636,3 +607,61 @@ grep "$dev2" "$DFDIR/test.devices"
 rm "$DFDIR/test.devices"
 vgcreate --devicesfile test.devices $vg3 "$dev3"
 grep "$dev3" "$DFDIR/test.devices"
+
+#
+# verify --devicesfile and --devices are not affected by a filter
+# This is last because it sets lvm.conf filter and
+# I haven't found a way of removing the filter from
+# the config after setting it.
+#
+
+aux lvmconf 'devices/use_devicesfile = 0'
+wipe_all
+rm -f "$DF"
+rm -f "$DFDIR/test.devices"
+
+vgcreate --devicesfile test.devices $vg1 "$dev1" "$dev2"
+grep "$dev1" "$DFDIR/test.devices"
+grep "$dev2" "$DFDIR/test.devices"
+not ls "$DFDIR/system.devices"
+
+# create two VGs outside the special devices file
+vgcreate $vg2 "$dev3" "$dev4"
+vgcreate $vg3 "$dev5" "$dev6"
+not grep "$dev3" "$DFDIR/test.devices"
+not grep "$dev5" "$DFDIR/test.devices"
+not ls "$DFDIR/system.devices"
+
+lvcreate -l4 -an -i2 -n $lv1 $vg1
+lvcreate -l4 -an -i2 -n $lv2 $vg2
+lvcreate -l4 -an -i2 -n $lv3 $vg3
+
+aux lvmconf "devices/filter = [ \"r|$dev2|\" \"r|$dev4|\" ]"
+
+pvs --devicesfile test.devices "$dev1"
+pvs --devicesfile test.devices "$dev2"
+not pvs --devicesfile test.devices "$dev3"
+not pvs --devicesfile test.devices "$dev4"
+pvs --devices "$dev1" "$dev1"
+pvs --devices "$dev2" "$dev2"
+pvs --devices "$dev3" "$dev3"
+pvs --devices "$dev4" "$dev4"
+pvs --devices "$dev5" "$dev5"
+pvs --devices "$dev1","$dev2","$dev3","$dev4","$dev5" "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" | tee out
+grep "$dev1" out
+grep "$dev2" out
+grep "$dev3" out
+grep "$dev4" out
+grep "$dev5" out
+vgchange --devices "$dev1","$dev2" -ay $vg1
+check lv_field $vg1/$lv1 lv_active "active"
+lvchange --devices "$dev1","$dev2" -an $vg1/$lv1
+vgchange --devices "$dev3","$dev4" -ay $vg2
+check lv_field $vg2/$lv2 lv_active "active"
+lvchange --devices "$dev3","$dev4" -an $vg2/$lv2
+
+vgchange -an --devicesfile test.devices $vg1
+vgremove -y --devicesfile test.devices $vg1
+vgremove -y $vg2
+vgremove -y $vg3
+

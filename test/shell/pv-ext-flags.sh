@@ -64,6 +64,7 @@ dd if=dev1_backup of="$dev1" bs=1M
 # prepare a VG with $dev1 and $dev both having 1 MDA
 aux enable_dev "$dev2"
 vgremove -ff $vg1
+pvremove -ff -y "$dev1"
 pvcreate --metadatacopies 1 "$dev1"
 vgcreate $vg1 "$dev1" "$dev2"
 
@@ -122,6 +123,7 @@ dd if=dev1_backup of="$dev1" bs=1M
 # prepare a VG with $dev1 and $dev both having 1 MDA
 aux enable_dev "$dev2"
 vgremove -ff $vg1
+pvremove -ff -y "$dev1"
 pvcreate --metadatacopies 1 "$dev1"
 vgcreate $vg1 "$dev1" "$dev2"
 

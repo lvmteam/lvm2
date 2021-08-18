@@ -34,6 +34,7 @@ ls -la "${LOOP}"*
 test -e "${LOOP}p1"
 
 aux extend_filter "a|$LOOP|"
+aux extend_devices "$LOOP"
 
 # creation should fail for 'partitioned' loop device
 not pvcreate -y "$LOOP"
@@ -57,6 +58,7 @@ ls -la "${LOOP}"*
 test ! -e "${LOOP}p1"
 
 aux extend_filter "a|$LOOP|"
+aux extend_devices "$LOOP"
 
 # creation should pass for 'non-partitioned' loop device
 pvcreate -y "$LOOP"

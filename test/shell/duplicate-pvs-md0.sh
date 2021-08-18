@@ -60,6 +60,7 @@ for pass in "auto" "start" ; do
 #
 aux mdadm_create --metadata=1.0 --level="$MD_LEVEL" --chunk=64 --raid-devices=2 "$dev1" "$dev2"
 mddev=$(< MD_DEV)
+lvmdevices --adddev $mddev || true
 
 pvcreate "$mddev"
 PVIDMD=$(get pv_field "$mddev" uuid | tr -d - )
@@ -118,6 +119,7 @@ check inactive $vg $lv1
 
 vgchange -an $vg
 vgremove -f $vg
+lvmdevices --deldev $mddev || true
 aux cleanup_md_dev
 
 
@@ -129,6 +131,7 @@ aux cleanup_md_dev
 
 aux mdadm_create --metadata=1.0 --level="$MD_LEVEL" --chunk=64 --raid-devices=2 "$dev1" "$dev2"
 mddev=$(< MD_DEV)
+lvmdevices --adddev $mddev || true
 
 pvcreate "$mddev"
 PVIDMD=$(get pv_field "$mddev" uuid | tr -d - )
@@ -188,6 +191,7 @@ aux udev_wait
 
 aux mdadm_create --metadata=1.0 --level="$MD_LEVEL" --chunk=64 --raid-devices=2 "$dev1" "$dev2"
 mddev=$(< MD_DEV)
+lvmdevices --adddev $mddev || true
 
 pvcreate "$mddev"
 PVIDMD=$(get pv_field "$mddev" uuid | tr -d - )
@@ -235,6 +239,7 @@ test ! -f "$RUNDIR/lvm/pvs_online/$PVIDMD"
 test ! -f "$RUNDIR/lvm/vgs_online/$vg"
 
 aux enable_dev "$dev2"
+lvmdevices --deldev $mddev || true
 aux cleanup_md_dev
 
 aux wipefs_a "$dev1"
@@ -250,6 +255,7 @@ if [ "$MD_LEVEL" = "1" ] ; then
 #
 aux mdadm_create --metadata=1.0 --level="$MD_LEVEL" --chunk=64 --raid-devices=3 "$dev1" "$dev2" "$dev4"
 mddev=$(< MD_DEV)
+lvmdevices --adddev $mddev || true
 
 pvcreate "$mddev"
 PVIDMD=$(get pv_field "$mddev" uuid | tr -d - )

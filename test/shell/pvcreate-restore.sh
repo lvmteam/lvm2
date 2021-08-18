@@ -22,6 +22,10 @@ lvcreate --type snapshot -s -L10 -n $lv2 $vg --virtualsize 4T
 lvcreate --type snapshot -s -L10 -n $lv3 $vg --virtualsize 4194300M
 
 aux extend_filter_LVMTEST
+aux lvmconf "devices/scan_lvs = 1"
+aux extend_devices "$DM_DEV_DIR/$vg/$lv1"
+aux extend_devices "$DM_DEV_DIR/$vg/$lv2"
+aux extend_devices "$DM_DEV_DIR/$vg/$lv3"
 
 vgcreate $vg1 "$DM_DEV_DIR/$vg/$lv2"
 

@@ -16,10 +16,14 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 aux extend_filter_LVMTEST
+aux lvmconf "devices/scan_lvs = 1"
+
 aux prepare_pvs 3
 
 vgcreate $SHARED $vg1 "$dev1" "$dev2"
 lvcreate -n $lv1 -l 100%FREE $vg1
+
+aux extend_devices "$DM_DEV_DIR/$vg1/$lv1"
 
 #top VG
 pvcreate "$DM_DEV_DIR/$vg1/$lv1"

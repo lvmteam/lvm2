@@ -45,6 +45,7 @@ for i in "$LOOP1" "$LOOP2"; do
 done
 
 aux extend_filter "a|$dev1|" "a|$dev2|"
+aux extend_devices "$dev1" "$dev2"
 
 not vgcreate --config 'devices/allow_mixed_block_sizes=0' $vg "$dev1" "$dev2"
 vgcreate --config 'devices/allow_mixed_block_sizes=1' $vg "$dev1" "$dev2"
