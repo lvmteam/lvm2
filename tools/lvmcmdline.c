@@ -2446,6 +2446,8 @@ static int _get_current_settings(struct cmd_context *cmd)
 	if (arg_is_set(cmd, test_ARG))
 		cmd->current_settings.test = arg_is_set(cmd, test_ARG);
 
+	cmd->current_settings.yes = arg_count(cmd, yes_ARG);
+
 	if (arg_is_set(cmd, driverloaded_ARG)) {
 		cmd->current_settings.activation =
 		    arg_int_value(cmd, driverloaded_ARG,

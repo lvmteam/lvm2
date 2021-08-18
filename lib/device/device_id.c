@@ -1138,7 +1138,8 @@ id_done:
 				 du_pvid->dev ? dev_name(du_pvid->dev) : "none", du_pvid->idname,
 				 pvid);
 
-			if (yes_no_prompt("Add device with duplicate PV to devices file?") == 'n') {
+			if (!cmd->current_settings.yes &&
+			    yes_no_prompt("Add device with duplicate PV to devices file?") == 'n') {
 				log_print("Device not added.");
 				free((void *)check_idname);
 				return 1;

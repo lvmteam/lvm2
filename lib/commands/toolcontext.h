@@ -30,6 +30,7 @@ struct config_info {
 	int verbose;
 	int silent;
 	int test;
+	int yes;
 	int syslog;
 	int activation;
 	int suffix;
