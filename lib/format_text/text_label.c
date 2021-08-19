@@ -561,7 +561,7 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 				bad_mda_count++;
 			} else {
 				/* The normal success path */
-				log_debug("Scanned %s mda1 seqno %u", dev_name(dev), vgsummary.seqno);
+				log_debug("Found metadata seqno %u in mda1 on %s", vgsummary.seqno, dev_name(dev));
 				good_mda_count++;
 			}
 		}
@@ -611,7 +611,7 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 				bad_mda_count++;
 			} else {
 				/* The normal success path */
-				log_debug("Scanned %s mda2 seqno %u", dev_name(dev), vgsummary.seqno);
+				log_debug("Found metadata seqno %u in mda2 on %s", vgsummary.seqno, dev_name(dev));
 				good_mda_count++;
 			}
 		}

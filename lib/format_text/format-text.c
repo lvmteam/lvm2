@@ -305,20 +305,8 @@ static struct raw_locn *_read_metadata_location_vg(struct cmd_context *cmd,
 	if (*precommitted && rlocn_precommitted->size &&
 	    (rlocn_precommitted->offset != rlocn->offset)) {
 		rlocn = rlocn_precommitted;
-		log_debug_metadata("VG %s metadata check %s mda %llu slot1 offset %llu size %llu",
-				   vgname ?: "",
-				   dev_name(dev_area->dev),
-				   (unsigned long long)dev_area->start,
-				   (unsigned long long)rlocn->offset,
-				   (unsigned long long)rlocn->size);
 	} else {
 		*precommitted = 0;
-		log_debug_metadata("VG %s metadata check %s mda %llu slot0 offset %llu size %llu",
-				   vgname ?: "",
-				   dev_name(dev_area->dev),
-				   (unsigned long long)dev_area->start,
-				   (unsigned long long)rlocn->offset,
-				   (unsigned long long)rlocn->size);
 	}
 
 	/* Do not check non-existent metadata. */
@@ -440,19 +428,22 @@ static struct volume_group *_vg_read_raw_area(struct cmd_context *cmd,
 				&when, &desc);
 
 	if (!vg && !*use_previous_vg) {
-		log_warn("WARNING: failed to read metadata text on %s at %llu size %llu for VG %s.",
-			 dev_name(area->dev),
+		log_warn("WARNING: Failed to read metadata text at %llu off %llu size %llu VG %s on %s",
 			 (unsigned long long)(area->start + rlocn->offset),
+			 (unsigned long long)rlocn->offset,
 			 (unsigned long long)rlocn->size,
-			 vgname);
+			 vgname,
+			 dev_name(area->dev));
+
 		return NULL;
 	}
 
-	log_debug_metadata("Found metadata on %s at %llu size %llu for VG %s",
-			   dev_name(area->dev),
+	log_debug_metadata("Found metadata text at %llu off %llu size %llu VG %s on %s",
 			   (unsigned long long)(area->start + rlocn->offset),
+			   (unsigned long long)rlocn->offset,
 			   (unsigned long long)rlocn->size,
-			   vgname);
+			   vgname,
+			   dev_name(area->dev));
 
 	if (vg && precommitted)
 		vg->status |= PRECOMMITTED;
