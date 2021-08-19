@@ -2268,7 +2268,7 @@ static int _lock_devices_file(struct cmd_context *cmd, int mode, int nonblock, i
 	fd = open(_devices_lockfile, O_CREAT|O_RDWR, S_IRUSR | S_IWUSR);
 	if (fd < 0) {
 		log_debug("lock_devices_file open errno %d", errno);
-		if (cmd->sysinit)
+		if (cmd->sysinit || cmd->ignorelockingfailure)
 			return 1;
 		return 0;
 	}
@@ -2284,7 +2284,7 @@ static int _lock_devices_file(struct cmd_context *cmd, int mode, int nonblock, i
 
 	if (close(fd))
 		stack;
-	if (cmd->sysinit)
+	if (cmd->sysinit || cmd->ignorelockingfailure)
 		return 1;
 	return 0;
 }

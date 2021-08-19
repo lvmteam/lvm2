@@ -3190,6 +3190,8 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
+	cmd->ignorelockingfailure = arg_is_set(cmd, ignorelockingfailure_ARG);
+
 	/* Defaults to 1 if not set. */
 	locking_type = find_config_tree_int(cmd, global_locking_type_CFG, NULL);
 
@@ -3224,7 +3226,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		if (!_cmd_no_meta_proc(cmd))
 			log_warn("WARNING: File locking is disabled.");
 	} else {
-		if (!init_locking(cmd, sysinit, readonly, arg_is_set(cmd, ignorelockingfailure_ARG))) {
+		if (!init_locking(cmd, sysinit, readonly, cmd->ignorelockingfailure)) {
 			ret = ECMD_FAILED;
 			goto_out;
 		}
