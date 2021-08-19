@@ -491,6 +491,11 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_READ, NULL)) {
+		log_error("Can't get lock for orphan PVs.");
+		return ECMD_FAILED;
+	}
+
 	/*
 	 * This a special case where use_lvmetad=1 in lvm.conf but pvscan
 	 * cannot use lvmetad for some reason.  In this case pvscan should
@@ -780,6 +785,7 @@ out:
 
 	if (!sync_local_dev_names(cmd))
 		stack;
+	unlock_vg(cmd, NULL, VG_ORPHANS);
 	unlock_vg(cmd, NULL, VG_GLOBAL);
 	return ret;
 }
