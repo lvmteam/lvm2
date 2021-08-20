@@ -43,8 +43,22 @@ vgimport $vg1
 fail vgimport $vg1
 vgchange -ay $vg1
 
+# Since the devices file is using devnames as ids,
+# it will not automatically know that dev2 is a
+# duplicate after the dd, so we need to remove dev2
+# from df, then add it again after the dd.
+if lvmdevices; then
+	lvmdevices --deldev "$dev2"
+fi
+
 # Clone the LUN
 dd if="$dev1" of="$dev2" bs=256K count=1
+
+# Requires -y to confirm prompt about adding
+# a duplicate pvid.
+if lvmdevices; then
+	lvmdevices -y --adddev "$dev2"
+fi
 
 # Verify pvs works on each device to give us vgname
 aux hide_dev "$dev2"
@@ -55,8 +69,15 @@ aux hide_dev "$dev1"
 check pv_field "$dev2" vg_name $vg1
 aux unhide_dev "$dev1"
 
+lvmdevices || true
+pvs -a -o+uuid
+
 # Import the cloned PV to a new VG
 vgimportclone --basevgname $vg2 "$dev2"
+
+lvmdevices || true
+pvs -a -o+uuid
+vgs
 
 # Verify we can activate / deactivate the LV from both VGs
 lvchange -ay $vg1/$lv1 $vg2/$lv1

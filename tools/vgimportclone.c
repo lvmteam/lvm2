@@ -160,7 +160,7 @@ static int _update_vg(struct cmd_context *cmd, struct volume_group *vg,
 	 * will be included in the metadata.  The device file is written
 	 * (with these additions) at the end of the command.
 	 */
-	if (vp->import_devices) {
+	if (vp->import_devices || cmd->enable_devices_file) {
 		dm_list_iterate_items(devl, &vp->new_devs) {
 			if (!device_id_add(cmd, devl->dev, devl->dev->pvid, NULL, NULL)) {
 				log_error("Failed to add device id for %s.", dev_name(devl->dev));
@@ -506,7 +506,7 @@ retry_name:
 	 * Should we be using device_ids_validate to check/fix other
 	 * devs in the devices file?
 	 */
-	if (vp.import_devices) {
+	if (vp.import_devices || cmd->enable_devices_file) {
 		if (!device_ids_write(cmd)) {
 			log_error("Failed to write devices file.");
 			goto out;
