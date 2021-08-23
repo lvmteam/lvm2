@@ -321,17 +321,24 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 	else if (idtype == DEV_ID_TYPE_SYS_SERIAL)
 		read_sys_block(cmd, dev, "device/serial", sysbuf, sizeof(sysbuf));
 
-	else if (idtype == DEV_ID_TYPE_MPATH_UUID)
+	else if (idtype == DEV_ID_TYPE_MPATH_UUID) {
 		read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf));
+		/* if (strncmp(sysbuf, "mpath", 5)) sysbuf[0] = '\0'; */
+	}
 
-	else if (idtype == DEV_ID_TYPE_CRYPT_UUID)
+	else if (idtype == DEV_ID_TYPE_CRYPT_UUID) {
 		read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf));
+		/* if (strncmp(sysbuf, "CRYPT", 5)) sysbuf[0] = '\0'; */
+	}
 
-	else if (idtype == DEV_ID_TYPE_LVMLV_UUID)
+	else if (idtype == DEV_ID_TYPE_LVMLV_UUID) {
 		read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf));
+		/* if (strncmp(sysbuf, "LVM", 3)) sysbuf[0] = '\0'; */
+	}
 
-	else if (idtype == DEV_ID_TYPE_MD_UUID)
+	else if (idtype == DEV_ID_TYPE_MD_UUID) {
 		read_sys_block(cmd, dev, "md/uuid", sysbuf, sizeof(sysbuf));
+	}
 
 	else if (idtype == DEV_ID_TYPE_LOOP_FILE) {
 		read_sys_block(cmd, dev, "loop/backing_file", sysbuf, sizeof(sysbuf));
@@ -1292,6 +1299,36 @@ void device_id_pvremove(struct cmd_context *cmd, struct device *dev)
 	}
 }
 
+static int _idtype_compatible_with_major_number(struct cmd_context *cmd, int idtype, int major)
+{
+	if (idtype == DEV_ID_TYPE_MPATH_UUID ||
+	    idtype == DEV_ID_TYPE_CRYPT_UUID ||
+	    idtype == DEV_ID_TYPE_LVMLV_UUID)
+		return (major == cmd->dev_types->device_mapper_major);
+
+	if (idtype == DEV_ID_TYPE_MD_UUID)
+		return (major == cmd->dev_types->md_major);
+
+	if (idtype == DEV_ID_TYPE_LOOP_FILE)
+		return (major == cmd->dev_types->loop_major);
+
+	if (major == cmd->dev_types->device_mapper_major)
+		return (idtype == DEV_ID_TYPE_MPATH_UUID ||
+			idtype == DEV_ID_TYPE_CRYPT_UUID ||
+			idtype == DEV_ID_TYPE_LVMLV_UUID ||
+			idtype == DEV_ID_TYPE_DEVNAME);
+
+	if (major == cmd->dev_types->md_major)
+		return (idtype == DEV_ID_TYPE_MD_UUID ||
+			idtype == DEV_ID_TYPE_DEVNAME);
+
+	if (major == cmd->dev_types->loop_major)
+		return (idtype == DEV_ID_TYPE_LOOP_FILE ||
+			idtype == DEV_ID_TYPE_DEVNAME);
+
+	return 1;
+}
+
 /*
  * check for dev->ids entry with du->idtype, if found compare it,
  * if not, system_read of this type and add entry to dev->ids, compare it.
@@ -1305,6 +1342,14 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 	int part;
 
 	if (!du->idname || !du->idtype)
+		return 0;
+
+	/*
+	 * Some idtypes can only match devices with a specific major number,
+	 * so we can skip trying to match certain du entries based simply on
+	 * the major number of dev.
+	 */
+	if (!_idtype_compatible_with_major_number(cmd, du->idtype, (int)MAJOR(dev->dev)))
 		return 0;
 
 	if (!dev_get_partition_number(dev, &part)) {

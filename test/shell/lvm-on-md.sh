@@ -13,11 +13,16 @@
 SKIP_WITH_LVMPOLLD=1
 SKIP_WITH_LVMLOCKD=1
 
+. lib/inittest
+
 RUNDIR="/run"
 test -d "$RUNDIR" || RUNDIR="/var/run"
 PVS_ONLINE_DIR="$RUNDIR/lvm/pvs_online"
 VGS_ONLINE_DIR="$RUNDIR/lvm/vgs_online"
 HINTS="$RUNDIR/lvm/hints"
+
+DFDIR="$LVM_SYSTEM_DIR/devices"
+DF="$DFDIR/system.devices"
 
 _clear_online_files() {
         # wait till udev is finished
@@ -25,7 +30,6 @@ _clear_online_files() {
         rm -f "$PVS_ONLINE_DIR"/* "$VGS_ONLINE_DIR"/*
 }
 
-. lib/inittest
 
 # This stops lvm from taking advantage of hints which
 # will have already excluded md components.
@@ -35,7 +39,8 @@ _clear_online_files() {
 # want to rely on that ability in this test.
 aux lvmconf "devices/md_component_detection = 1" \
 	"devices/hints = \"none\"" \
-	"devices/obtain_device_list_from_udev = 0"
+	"devices/obtain_device_list_from_udev = 0" \
+	"devices/search_for_devnames = \"none\""
 
 aux extend_filter_md "a|/dev/md|"
 
@@ -53,6 +58,9 @@ aux mdadm_create --metadata=1.0 --level=$level --chunk=64 --raid-devices=2 "$dev
 mddev=$(< MD_DEV)
 
 vgcreate $vg "$mddev"
+
+lvmdevices || true
+pvs -o+deviceidtype,deviceid
 
 PVIDMD=$(get pv_field "$mddev" uuid | tr -d - )
 
@@ -158,7 +166,10 @@ done
 # Repeat tests using the default config settings
 
 aux lvmconf "devices/hints = \"all\"" \
-	"devices/obtain_device_list_from_udev = 1"
+	"devices/obtain_device_list_from_udev = 1" \
+	"devices/search_for_devnames = \"none\""
+
+rm $DF || true
 
 # create 2 disk MD raid0 array
 # by default using metadata format 1.0 with data at the end of device
@@ -216,7 +227,7 @@ aux udev_wait
 # duplicate PVs which are eventually recognized as md components
 # and dropped.
 pvs 2>&1|tee out1
-grep -v WARNING out1 > out2
+grep -v -e WARNING -e "Devices file PVID" out1 > out2
 not grep "Not using device" out2
 not grep "$mddev" out2
 not grep "$dev1" out2
@@ -225,7 +236,7 @@ grep "$dev3" out2
 cat "$HINTS"
 
 pvs 2>&1|tee out1
-grep -v WARNING out1 > out2
+grep -v -e WARNING -e "Devices file PVID" out1 > out2
 not grep "Not using device" out2
 not grep "$mddev" out2
 not grep "$dev1" out2
