@@ -46,7 +46,7 @@ case "$host_os" in
 		DM_IOCTLS=yes
 		SELINUX=yes
 		FSADM=yes
-		VDOIMPORT=yes
+		LVMIMPORTVDO=yes
 		BLKDEACTIVATE=yes
 		;;
 	darwin*)
@@ -60,7 +60,7 @@ case "$host_os" in
 		DM_IOCTLS=no
 		SELINUX=no
 		FSADM=no
-		VDOIMPORT=no
+		LVMIMPORTVDO=no
 		BLKDEACTIVATE=no
 		;;
 	*)
@@ -1317,9 +1317,9 @@ AC_MSG_RESULT($FSADM)
 ################################################################################
 dnl -- Enable lvm_import_vdo
 AC_MSG_CHECKING(whether to install lvm_import_vdo)
-AC_ARG_ENABLE(vdoimport, AC_HELP_STRING([--disable-vdoimport], [disable vdoimport]),
-	      VDOIMPORT=$enableval)
-AC_MSG_RESULT($VDOIMPORT)
+AC_ARG_ENABLE(lvmimportvdo, AC_HELP_STRING([--disable-lvmimportvdo], [disable lvm_import_vdo]),
+	      LVMIMPORTVDO=$enableval)
+AC_MSG_RESULT($LVMIMPORTVDO)
 
 ################################################################################
 dnl -- Enable blkdeactivate
@@ -1676,8 +1676,8 @@ USRSBINDIR="$(eval echo $(eval echo $usrsbindir))"
 FSADM_PATH="$SBINDIR/fsadm"
 AC_DEFINE_UNQUOTED(FSADM_PATH, ["$FSADM_PATH"], [Path to fsadm binary.])
 
-VDOIMPORT_PATH="$SBINDIR/lvm_import_vdo"
-AC_DEFINE_UNQUOTED(VDOIMPORT_PATH, ["$VDOIMPORT_PATH"], [Path to lvm_import_vdo binary.])
+LVMIMPORTVDO_PATH="$SBINDIR/lvm_import_vdo"
+AC_DEFINE_UNQUOTED(LVMIMPORTVDO_PATH, ["$LVMIMPORTVDO_PATH"], [Path to lvm_import_vdo script.])
 
 ################################################################################
 dnl -- dmeventd pidfile and executable path
@@ -1855,6 +1855,8 @@ AC_SUBST(LVM_PATCHLEVEL)
 AC_SUBST(LVM_PATH)
 AC_SUBST(LVM_RELEASE)
 AC_SUBST(LVM_RELEASE_DATE)
+AC_SUBST(LVMIMPORTVDO)
+AC_SUBST(LVMIMPORTVDO_PATH)
 AC_SUBST(localedir)
 AC_SUBST(MANGLING)
 AC_SUBST(MIRRORS)
@@ -1915,8 +1917,6 @@ AC_SUBST(SILENT_RULES)
 AC_SUBST(USRSBINDIR)
 AC_SUBST(VALGRIND_POOL)
 AC_SUBST(VDO)
-AC_SUBST(VDOIMPORT)
-AC_SUBST(VDOIMPORT_PATH)
 AC_SUBST(VDO_FORMAT_CMD)
 AC_SUBST(VDO_INCLUDE)
 AC_SUBST(VDO_LIB)

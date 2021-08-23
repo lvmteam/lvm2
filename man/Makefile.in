@@ -23,7 +23,7 @@ else
 endif
 
 FSADMMAN = fsadm.8
-VDOIMPORTMAN = lvm_import_vdo.8
+LVMIMPORTVDOMAN = lvm_import_vdo.8
 BLKDEACTIVATEMAN = blkdeactivate.8
 DMEVENTDMAN = dmeventd.8
 DMFILEMAPDMAN = dmfilemapd.8
@@ -51,7 +51,7 @@ MAN8SYSTEMD_GENERATORS=lvm2-activation-generator.8
 
 ifeq (,$(findstring $(MAKECMDGOALS), distclean all_man install_all_man))
   MAN7 += lvmcache.7 lvmthin.7 lvmvdo.7
-  MAN8+=$(FSADMMAN) $(LVMPOLLDMAN) $(LVMLOCKDMAN) $(LVMDBUSDMAN) $(VDOIMPORTMAN)
+  MAN8+=$(FSADMMAN) $(LVMPOLLDMAN) $(LVMLOCKDMAN) $(LVMDBUSDMAN) $(LVMIMPORTVDOMAN)
   MAN8DM+=$(BLKDEACTIVATEMAN) $(DMEVENTDMAN) $(DMFILEMAPDMAN)
   MAN8CLUSTER+=$(CMIRRORDMAN)
 else
@@ -59,8 +59,8 @@ else
     MAN8+=$(FSADMMAN)
   endif
 
-  ifeq ("@VDOIMPORT@", "yes")
-    MAN8+=$(VDOIMPORTMAN)
+  ifeq ("@LVMIMPORTVDO@", "yes")
+    MAN8+=$(LVMIMPORTVDOMAN)
   endif
 
   ifeq ("@BUILD_LVMDBUSD@", "yes")

@@ -89,4 +89,3 @@ Defaults to "\fI/dev\fP" and must be an absolute path.
 .BR lvm.conf (5),
 .P
 .BR vdo (8),
-.BR vdo2lvm (8),

@@ -571,6 +571,9 @@
 /* Path to lvmconfig binary. */
 #undef LVMCONFIG_PATH
 
+/* Path to lvm_import_vdo script. */
+#undef LVMIMPORTVDO_PATH
+
 /* Path to lvmlockd pidfile. */
 #undef LVMLOCKD_PIDFILE
 
@@ -686,9 +689,6 @@
 
 /* Enable a valgrind aware build of pool */
 #undef VALGRIND_POOL
-
-/* Path to lvm_import_vdo binary. */
-#undef VDOIMPORT_PATH
 
 /* The path to 'vdoformat', if available. */
 #undef VDO_FORMAT_CMD

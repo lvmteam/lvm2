@@ -643,8 +643,6 @@ WRITE_INSTALL
 WRITECACHE
 VDO_LIB
 VDO_INCLUDE
-VDOIMPORT_PATH
-VDOIMPORT
 VDO
 VALGRIND_POOL
 USRSBINDIR
@@ -693,6 +691,8 @@ OCFDIR
 OCF
 MIRRORS
 MANGLING
+LVMIMPORTVDO_PATH
+LVMIMPORTVDO
 LVM_RELEASE_DATE
 LVM_RELEASE
 LVM_PATH
@@ -971,7 +971,7 @@ enable_dbus_service
 enable_pkgconfig
 enable_write_install
 enable_fsadm
-enable_vdoimport
+enable_lvmimportvdo
 enable_blkdeactivate
 enable_dmeventd
 enable_selinux
@@ -1710,7 +1710,7 @@ Optional Features:
   --enable-pkgconfig      install pkgconfig support
   --enable-write_install  install user writable files
   --disable-fsadm         disable fsadm
-  --disable-vdoimport     disable vdoimport
+  --disable-lvmimportvdo  disable lvm_import_vdo
   --disable-blkdeactivate disable blkdeactivate
   --enable-dmeventd       enable the device-mapper event daemon
   --disable-selinux       disable selinux support
@@ -3143,7 +3143,7 @@ case "$host_os" in
 		DM_IOCTLS=yes
 		SELINUX=yes
 		FSADM=yes
-		VDOIMPORT=yes
+		LVMIMPORTVDO=yes
 		BLKDEACTIVATE=yes
 		;;
 	darwin*)
@@ -3157,7 +3157,7 @@ case "$host_os" in
 		DM_IOCTLS=no
 		SELINUX=no
 		FSADM=no
-		VDOIMPORT=no
+		LVMIMPORTVDO=no
 		BLKDEACTIVATE=no
 		;;
 	*)
@@ -12554,13 +12554,13 @@ $as_echo "$FSADM" >&6; }
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to install lvm_import_vdo" >&5
 $as_echo_n "checking whether to install lvm_import_vdo... " >&6; }
-# Check whether --enable-vdoimport was given.
-if test "${enable_vdoimport+set}" = set; then :
-  enableval=$enable_vdoimport; VDOIMPORT=$enableval
+# Check whether --enable-lvmimportvdo was given.
+if test "${enable_lvmimportvdo+set}" = set; then :
+  enableval=$enable_lvmimportvdo; LVMIMPORTVDO=$enableval
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $VDOIMPORT" >&5
-$as_echo "$VDOIMPORT" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $LVMIMPORTVDO" >&5
+$as_echo "$LVMIMPORTVDO" >&6; }
 
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to install blkdeactivate" >&5
@@ -14048,10 +14048,10 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-VDOIMPORT_PATH="$SBINDIR/lvm_import_vdo"
+LVMIMPORTVDO_PATH="$SBINDIR/lvm_import_vdo"
 
 cat >>confdefs.h <<_ACEOF
-#define VDOIMPORT_PATH "$VDOIMPORT_PATH"
+#define LVMIMPORTVDO_PATH "$LVMIMPORTVDO_PATH"
 _ACEOF
 
 

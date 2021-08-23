@@ -14,11 +14,11 @@
 #
 # Author: Zdenek Kabelac <zkabelac at redhat.com>
 #
-# Script for converting VDO volumes to lvm2 VDO LVs
+# Script for importing VDO volumes to lvm2 managed VDO LVs
 #
 # Needed utilities:
 #  lvm, dmsetup,
-#  vdo, vdo2lvm,
+#  vdo,
 #  grep, awk, sed, blockdev, readlink, mkdir
 #
 # Conversion is using  'vdo convert' support from VDO manager to move
@@ -305,7 +305,7 @@ EOF
 		}
 
 		# Obtain free space in this new PV
-		# after 'vdo convert/vdo2lvm' call there is +2M free space at the front of the device
+		# after 'vdo convert' call there is +2M free space at the front of the device
 		case "$DRY" in
 		0) pvfree=$("$LVM" pvs -o devsize --units b --nosuffix --noheadings "$DEVICE") ;;
 		*) pvfree=$("$BLOCKDEV" --getsize64 "$DEVICE") ;;
