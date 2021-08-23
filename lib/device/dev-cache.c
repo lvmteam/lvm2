@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <locale.h>
+#include <sys/file.h>
 
 struct dev_iter {
 	struct btree_iter *current;

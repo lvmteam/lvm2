@@ -17,6 +17,8 @@
 #include "lib/device/device_id.h"
 #include "lib/device/dev-type.h"
 
+#include <sys/file.h>
+
 static void _search_devs_for_pvids(struct cmd_context *cmd, struct dm_list *search_pvids, struct dm_list *found_devs)
 {
 	struct dev_iter *iter;
