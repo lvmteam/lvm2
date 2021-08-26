@@ -62,7 +62,7 @@ fi
 %{_sbindir}/pvs
 %{_sbindir}/pvscan
 %if %{have_with vdo}
-%{_sbindir}/vdoimport
+%{_sbindir}/lvm_import_vdo
 %endif
 %{_sbindir}/vgcfgbackup
 %{_sbindir}/vgcfgrestore
@@ -126,7 +126,7 @@ fi
 %{_mandir}/man8/pvs.8.gz
 %{_mandir}/man8/pvscan.8.gz
 %if %{have_with vdo}
-%{_mandir}/man8/vdoimport.8.gz
+%{_mandir}/man8/lvm_import_vdo.8.gz
 %endif
 %{_mandir}/man8/vgcfgbackup.8.gz
 %{_mandir}/man8/vgcfgrestore.8.gz
