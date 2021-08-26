@@ -2,14 +2,14 @@
 .
 .SH "NAME"
 .
-vdoimport \(em utility to import VDO volumes into a new volume group.
+lvm_import_vdo \(em utility to import VDO volumes into a new volume group.
 .
 .SH SYNOPSIS
 .
 .PD 0
 .ad l
 .TP 10
-.B vdoimport
+.B lvm_import_vdo
 .RI [ options ]
 .IR device
 .
@@ -17,7 +17,7 @@ vdoimport \(em utility to import VDO volumes into a new volume group.
 .
 .SH DESCRIPTION
 .
-vdoimport utility imports VDO volumes created and managed by
+lvm_import_vdo utility imports VDO volumes created and managed by
 .BR vdo (8)
 manager into
 .BR lvm2 (8)
@@ -69,7 +69,7 @@ A status code of 1 is used for failure.
 Convert VDO volume created by vdo manager into logical volume LV1 with within volume group VG1.
 .P
 #
-.B vdoimport --name VG1/LV1 /dev/mapper/vdo-volume
+.B lvm_import_vdo --name VG1/LV1 /dev/mapper/vdo-volume
 .
 .SH ENVIRONMENT VARIABLES
 .

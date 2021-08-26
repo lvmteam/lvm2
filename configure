@@ -12552,8 +12552,8 @@ $as_echo "$FSADM" >&6; }
 
 
 ################################################################################
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to install vdoimport" >&5
-$as_echo_n "checking whether to install vdoimport... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to install lvm_import_vdo" >&5
+$as_echo_n "checking whether to install lvm_import_vdo... " >&6; }
 # Check whether --enable-vdoimport was given.
 if test "${enable_vdoimport+set}" = set; then :
   enableval=$enable_vdoimport; VDOIMPORT=$enableval
@@ -14048,7 +14048,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-VDOIMPORT_PATH="$SBINDIR/vdoimport"
+VDOIMPORT_PATH="$SBINDIR/lvm_import_vdo"
 
 cat >>confdefs.h <<_ACEOF
 #define VDOIMPORT_PATH "$VDOIMPORT_PATH"

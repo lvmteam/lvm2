@@ -54,12 +54,12 @@ vdo create $VDOCONF --name "$VDONAME" --device="$DM_DEV_DIR/$vg/$lv1" --vdoLogic
 mkfs -E nodiscard "$DM_DEV_DIR/mapper/$VDONAME"
 
 # Different VG name fails
-not vdoimport -y -v --name $vg1/$lv1 "$DM_DEV_DIR/$vg/$lv1"
+not lvm_import_vdo -y -v --name $vg1/$lv1 "$DM_DEV_DIR/$vg/$lv1"
 
 # Try just dry run and observe logging
-vdoimport --dry-run -y -v --name $lv1 "$DM_DEV_DIR/$vg/$lv1"
+lvm_import_vdo --dry-run -y -v --name $lv1 "$DM_DEV_DIR/$vg/$lv1"
 
-vdoimport -y --name $lv1 "$DM_DEV_DIR/$vg/$lv1"
+lvm_import_vdo -y --name $lv1 "$DM_DEV_DIR/$vg/$lv1"
 
 # ATM needed - since we do not call 'vdo convert' in this case
 vdo remove $VDOCONF --force --name "$VDONAME" || true
@@ -79,13 +79,13 @@ vdo create $VDOCONF --name "$VDONAME" --device="$dev1" --vdoLogicalSize=31G
 mkfs -E nodiscard "$DM_DEV_DIR/mapper/$VDONAME"
 
 # Fail with an already existing volume group $vg2
-not vdoimport --dry-run -y -v --name $vg2/$lv1 "$dev1" |& tee err
+not lvm_import_vdo --dry-run -y -v --name $vg2/$lv1 "$dev1" |& tee err
 grep "already existing volume group" err
 
 # User can also convert already stopped VDO volume
 vdo stop $VDOCONF --name "$VDONAME"
 
-vdoimport -y -v --name $vg/$lv1 "$dev1"
+lvm_import_vdo -y -v --name $vg/$lv1 "$dev1"
 
 fsck -n "$DM_DEV_DIR/$vg/$lv1"
 
@@ -102,7 +102,7 @@ vdo create $VDOCONF --name "$VDONAME" --device="$dev1" --vdoLogicalSize=23G
 
 mkfs -E nodiscard "$DM_DEV_DIR/mapper/$VDONAME"
 
-vdoimport -y -v --name $vg1/$lv2 "$dev1"
+lvm_import_vdo -y -v --name $vg1/$lv2 "$dev1"
 
 fsck -n "$DM_DEV_DIR/$vg1/$lv2"
 

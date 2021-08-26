@@ -23,7 +23,7 @@ else
 endif
 
 FSADMMAN = fsadm.8
-VDOIMPORTMAN = vdoimport.8
+VDOIMPORTMAN = lvm_import_vdo.8
 BLKDEACTIVATEMAN = blkdeactivate.8
 DMEVENTDMAN = dmeventd.8
 DMFILEMAPDMAN = dmfilemapd.8

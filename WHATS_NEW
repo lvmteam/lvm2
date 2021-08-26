@@ -1,5 +1,6 @@
 Version 2.03.14 - 
 ==================================
+  Rename vdoimport to lvm_import_vdo.
 
 Version 2.03.13 - 11th August 2021
 ==================================

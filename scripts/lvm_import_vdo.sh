@@ -28,7 +28,7 @@
 
 set -euE -o pipefail
 
-TOOL=vdoimport
+TOOL=lvm_import_vdo
 
 _SAVEPATH=$PATH
 PATH="/sbin:/usr/sbin:/bin:/usr/sbin:$PATH"

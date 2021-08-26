@@ -1315,8 +1315,8 @@ AC_MSG_RESULT($FSADM)
 
 
 ################################################################################
-dnl -- Enable vdoimport
-AC_MSG_CHECKING(whether to install vdoimport)
+dnl -- Enable lvm_import_vdo
+AC_MSG_CHECKING(whether to install lvm_import_vdo)
 AC_ARG_ENABLE(vdoimport, AC_HELP_STRING([--disable-vdoimport], [disable vdoimport]),
 	      VDOIMPORT=$enableval)
 AC_MSG_RESULT($VDOIMPORT)
@@ -1676,8 +1676,8 @@ USRSBINDIR="$(eval echo $(eval echo $usrsbindir))"
 FSADM_PATH="$SBINDIR/fsadm"
 AC_DEFINE_UNQUOTED(FSADM_PATH, ["$FSADM_PATH"], [Path to fsadm binary.])
 
-VDOIMPORT_PATH="$SBINDIR/vdoimport"
-AC_DEFINE_UNQUOTED(VDOIMPORT_PATH, ["$VDOIMPORT_PATH"], [Path to vdoimport binary.])
+VDOIMPORT_PATH="$SBINDIR/lvm_import_vdo"
+AC_DEFINE_UNQUOTED(VDOIMPORT_PATH, ["$VDOIMPORT_PATH"], [Path to lvm_import_vdo binary.])
 
 ################################################################################
 dnl -- dmeventd pidfile and executable path
