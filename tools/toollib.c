@@ -5333,7 +5333,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 
 	cmd->use_full_md_check = 1;
 
-	if (cmd->enable_devices_file)
+	if (cmd->enable_devices_file && !pp->is_remove)
 		cmd->filter_deviceid_skip = 1;
 
 	log_debug("Scanning and filtering device args (%u).", dm_list_size(&scan_devs));
@@ -5559,7 +5559,7 @@ do_command:
 	dm_list_iterate_items(devl, &rescan_devs)
 		cmd->filter->wipe(cmd, cmd->filter, devl->dev, NULL);
 
-	if (cmd->enable_devices_file)
+	if (cmd->enable_devices_file && !pp->is_remove)
 		cmd->filter_deviceid_skip = 1;
 
 	log_debug("Rescanning and filtering device args with exclusive open");
