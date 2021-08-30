@@ -33,8 +33,10 @@ void *cmdlib_lvm2_init(unsigned static_compile, unsigned threaded)
 	if (!(cmd = init_lvm(1, 1, threaded)))
 		return NULL;
 
-	if (!lvm_register_commands(cmd, NULL))
+	if (!lvm_register_commands(cmd, NULL)) {
+		free(cmd);
 		return NULL;
+	}
 
 	return (void *) cmd;
 }
