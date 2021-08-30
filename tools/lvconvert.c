@@ -5428,7 +5428,7 @@ static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 		return_0;
 
 	lvc.virtual_extents = extents_from_size(cmd,
-						arg_uint_value(cmd, virtualsize_ARG, 0),
+						arg_uint64_value(cmd, virtualsize_ARG, UINT64_C(0)),
 						vg->extent_size);
 
 	if (!(lvc.segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_VDO)))
