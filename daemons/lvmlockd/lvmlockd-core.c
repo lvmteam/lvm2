@@ -965,13 +965,16 @@ static int read_adopt_file(struct list_head *vg_lockd)
 
 			if (sscanf(adopt_line, "VG: %63s %64s %15s %64s",
 				   vg_uuid, ls->vg_name, lm_type_str, ls->vg_args) != 4) {
+				free(ls);
 				goto fail;
 			}
 
 			memcpy(ls->vg_uuid, vg_uuid, 64);
 
-			if ((ls->lm_type = str_to_lm(lm_type_str)) < 0)
+			if ((ls->lm_type = str_to_lm(lm_type_str)) < 0) {
+				free(ls);
 				goto fail;
+			}
 
 			list_add(&ls->list, vg_lockd);
 
@@ -986,11 +989,14 @@ static int read_adopt_file(struct list_head *vg_lockd)
 
 			if (sscanf(adopt_line, "LV: %64s %64s %s %7s %u",
 				   vg_uuid, r->name, r->lv_args, mode, &r->version) != 5) {
+				free_resource(r);
 				goto fail;
 			}
 
-			if ((r->adopt_mode = str_to_mode(mode)) == LD_LK_IV)
+			if ((r->adopt_mode = str_to_mode(mode)) == LD_LK_IV) {
+				free_resource(r);
 				goto fail;
+			}
 
 			if (ls && !memcmp(ls->vg_uuid, vg_uuid, 64)) {
 				list_add(&r->list, &ls->resources);
@@ -1007,6 +1013,7 @@ static int read_adopt_file(struct list_head *vg_lockd)
 
 			if (r) {
 				log_error("No lockspace found for resource %s vg_uuid %s", r->name, vg_uuid);
+				free_resource(r);
 				goto fail;
 			}
 		}
