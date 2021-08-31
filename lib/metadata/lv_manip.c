@@ -8721,6 +8721,14 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			goto revert_new_lv;
 		}
 		lv->status &= ~LV_TEMPORARY;
+	} else if (seg_is_vdo_pool(lp)) {
+		lv->status |= LV_TEMPORARY;
+		if (!activate_lv(cmd, lv)) {
+			log_error("Aborting. Failed to activate temporary "
+				  "volume for VDO pool creation.");
+			goto revert_new_lv;
+		}
+		lv->status &= ~LV_TEMPORARY;
 	} else if (!lv_active_change(cmd, lv, lp->activate)) {
 		log_error("Failed to activate new LV %s.", display_lvname(lv));
 		goto deactivate_and_revert_new_lv;
@@ -8746,6 +8754,12 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 					 1, lp->vdo_pool_header_size)) {
 			stack;
 			goto deactivate_and_revert_new_lv;
+		}
+		if ((lv->status & LV_ACTIVATION_SKIP) &&
+		    !deactivate_lv(cmd, lv)) {
+			log_error("Aborting. Couldn't deactivate VDO LV %s with skipped activation.",
+				  display_lvname(lv));
+			return NULL; /* Let's retry on error path */
 		}
 	} else if (seg_is_cache(lp) || (origin_lv && lv_is_cache_pool(lv))) {
 		/* Finish cache conversion magic */

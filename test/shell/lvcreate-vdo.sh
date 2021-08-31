@@ -79,7 +79,7 @@ not fsck -n "$DM_DEV_DIR/mapper/$vg-${lv2}"
 lvremove -ff $vg
 
 
-lvcreate --type vdo -L10G -V1T -n $lv1 $vg
+lvcreate --type vdo -L10G -V1T -ky -n $lv1 $vg
 lvs -a $vg
 lvremove -ff $vg
 
