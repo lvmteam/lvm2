@@ -1,5 +1,9 @@
 Version 2.03.14 - 
 ==================================
+  Improve lvm_import_vdo script.
+  Support VDO LV with lvcreate -ky.
+  Fix lvconvert for VDO LV bigger then 2T.
+  Create VDO LVs automatically without zeroing.
   Rename vdoimport to lvm_import_vdo.
 
 Version 2.03.13 - 11th August 2021

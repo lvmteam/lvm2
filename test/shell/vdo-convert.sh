@@ -61,10 +61,26 @@ lvm_import_vdo --dry-run -y -v --name $lv1 "$DM_DEV_DIR/$vg/$lv1"
 
 lvm_import_vdo -y --name $lv1 "$DM_DEV_DIR/$vg/$lv1"
 
-# ATM needed - since we do not call 'vdo convert' in this case
-vdo remove $VDOCONF --force --name "$VDONAME" || true
+# ensure VDO device is not left in config file
+vdo remove $VDOCONF --force --name "$VDONAME" 2>/dev/null || true
+
+lvremove -f $vg
+
+
+# Test user can specify different VDO LV name (so the original LV is renamed)
+lvcreate -y -L5G -n $lv1 $vg
+
+vdo create $VDOCONF --name "$VDONAME" --device="$DM_DEV_DIR/$vg/$lv1" --vdoLogicalSize=10G
+
+lvm_import_vdo -y --name $vg/$lv2 "$DM_DEV_DIR/$vg/$lv1"
+
+check lv_exists $vg $lv2
+check lv_not_exists $vg $lv1
 
 vgremove -f $vg
+
+# ensure VDO device is not left in config file
+vdo remove $VDOCONF --force --name "$VDONAME" 2>/dev/null || true
 
 aux wipefs_a "$dev1"
 
@@ -72,11 +88,9 @@ aux wipefs_a "$dev1"
 vgcreate $vg2 "$dev2"
 
 #
-# Check conversion of VDO volume on  non-LV device
+# Check conversion of VDO volume on non-LV device and with >2T size
 #
-vdo create $VDOCONF --name "$VDONAME" --device="$dev1" --vdoLogicalSize=31G
-
-mkfs -E nodiscard "$DM_DEV_DIR/mapper/$VDONAME"
+vdo create $VDOCONF --name "$VDONAME" --device="$dev1" --vdoLogicalSize=3T
 
 # Fail with an already existing volume group $vg2
 not lvm_import_vdo --dry-run -y -v --name $vg2/$lv1 "$dev1" |& tee err
@@ -87,7 +101,7 @@ vdo stop $VDOCONF --name "$VDONAME"
 
 lvm_import_vdo -y -v --name $vg/$lv1 "$dev1"
 
-fsck -n "$DM_DEV_DIR/$vg/$lv1"
+check lv_field $vg/$lv1 size "3.00t"
 
 vgremove -f $vg
 

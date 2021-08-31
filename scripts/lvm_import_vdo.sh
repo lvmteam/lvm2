@@ -41,9 +41,14 @@ BLOCKDEV="blockdev"
 READLINK="readlink"
 READLINK_E="-e"
 MKDIR="mkdir"
+DMSETUP="dmsetup"
 
 TEMPDIR="${TMPDIR:-/tmp}/${TOOL}_${RANDOM}$$"
 DM_DEV_DIR="${DM_DEV_DIR:-/dev}"
+
+DEVICENAME=""
+DEVMAJOR=0
+DEVMINOR=0
 
 DRY=0
 VERB=""
@@ -147,8 +152,6 @@ get_largest_extent_size_() {
 # dereference device name if it is symbolic link
 detect_lv_() {
 	local DEVICE=$1
-	local MAJOR
-	local MINOR
 	local SYSVOLUME
 	local MAJORMINOR
 
@@ -161,17 +164,21 @@ detect_lv_() {
 	  /dev/dm-[0-9]*)
 		read -r <"/sys/block/${RDEVICE#/dev/}/dm/name" SYSVOLUME 2>&1 && DEVICE="$DM_DEV_DIR/mapper/$SYSVOLUME"
 		read -r <"/sys/block/${RDEVICE#/dev/}/dev" MAJORMINOR 2>&1 || error "Cannot get major:minor for \"$DEVICE\"."
-		MAJOR=${MAJORMINOR%%:*}
-		MINOR=${MAJORMINOR##*:}
+		DEVMAJOR=${MAJORMINOR%%:*}
+		DEVMINOR=${MAJORMINOR##*:}
 		;;
 	  *)
-		STAT=$(stat --format "MAJOR=\$((0x%t)) MINOR=\$((0x%T))" "$RDEVICE")
+		STAT=$(stat --format "DEVMAJOR=\$((0x%t)) DEVMINOR=\$((0x%T))" "$RDEVICE")
 		test -n "$STAT" || error "Cannot get major:minor for \"$DEVICE\"."
 		eval "$STAT"
 		;;
 	esac
 
-	eval "$(dmsetup info -c -j "$MAJOR" -m "$MINOR" -o uuid,name --noheadings --nameprefixes --separator ' ')"
+	DEV="$("$DMSETUP" info -c -j "$DEVMAJOR" -m "$DEVMINOR" -o uuid,name --noheadings --nameprefixes --separator ' ' 2>/dev/null)"
+	case "$DEV" in
+	Device*)  ;; # no devices
+	*)	eval "$DEV" ;;
+	esac
 }
 
 # parse yaml config files into 'prefix_yaml_part_names=("value")' strings
@@ -226,20 +233,26 @@ convert2lvm_() {
 	local TRVDONAME
 	local EXTENTSZ
 	local IS_LV=1
+	local FOUND=""
+	local MAJOR=0
+	local MINOR=0
+	local DM_VG_NAME
+	local DM_LV_NAME
 
 	DM_UUID=""
 	detect_lv_ "$DEVICE"
 	case "$DM_UUID" in
-		LVM-*)	eval "$(dmsetup splitname --nameprefixes --noheadings --separator ' ' "$DM_NAME")"
+		LVM-*)	eval "$("$DMSETUP" splitname --nameprefixes --noheadings --separator ' ' "$DM_NAME")"
 			if [ -z "$VGNAME" ] || [ "$VGNAME" = "$LVNAME" ]  ; then
 				VGNAME=$DM_VG_NAME
+				LVNAME=$DM_LV_NAME
 			elif test "$VGNAME" != "$DM_VG_NAME" ; then
 				error "Volume group name \"$VGNAME\" does not match name \"$DM_VG_NAME\" for device \"$DEVICE\"."
 			fi
 			;;
 		*) IS_LV=0
 			# Check $VGNANE does not already exists
-			"$LVM" vgs "$VGNAME" && error "Cannot use already existing volume group name \"$VGNAME\"."
+			"$LVM" vgs "$VGNAME" >/dev/null 2>&1 && error "Cannot use already existing volume group name \"$VGNAME\"."
 			;;
 	esac
 
@@ -247,15 +260,37 @@ convert2lvm_() {
 
 	"$MKDIR" -p -m 0000 "$TEMPDIR" || error "Failed to create $TEMPDIR."
 
+	# TODO: might use directly  /etc/vdoconf.yml (avoding need of 'vdo' manager)
 	verbose "Getting YAML VDO configuration."
 	"$VDO" printConfigFile $VDOCONF >"$TEMPDIR/vdoconf.yml"
 
-	VDONAME=$(awk -v DNAME="$DEVICE" '/.*VDOService$/ {VNAME=substr($1, 0, length($1) - 1)} /[[:space:]]*device:/ { if ($2 ~ DNAME) {print VNAME}}' "$TEMPDIR/vdoconf.yml")
+	# Check list of devices in VDO configure file for their major:minor
+	# and match with given $DEVICE devmajor:devminor
+	for i in $(awk '/.*device:/ {print $2}' "$TEMPDIR/vdoconf.yml") ; do
+		local DEV
+		DEV=$("$READLINK" $READLINK_E "$i") || continue
+		STAT=$(stat --format "MAJOR=\$((0x%t)) MINOR=\$((0x%T))" "$DEV" 2>/dev/null) || continue
+		eval "$STAT"
+		test "$MAJOR" = "$DEVMAJOR" && test "$MINOR" = "$DEVMINOR" && {
+			test -z "$FOUND" || error "VDO configuration contains duplicate entries $FOUND and $i"
+			FOUND=$i
+		}
+	done
+
+	test -n "$FOUND" || error "Can't find matching device in vdo configuration file."
+	verbose "Found matching device $FOUND  $MAJOR:$MINOR"
+
+	VDONAME=$(awk -v DNAME="$FOUND" '/.*VDOService$/ {VNAME=substr($1, 0, length($1) - 1)} /[[:space:]]*device:/ { if ($2 ~ DNAME) {print VNAME}}' "$TEMPDIR/vdoconf.yml")
 	TRVDONAME=$(echo "$VDONAME" | tr '-' '_')
 
 	# When VDO volume is 'active', check it's not mounted/being used
-	eval "$(dmsetup info -c -o open  "$VDONAME" --noheadings --nameprefixes || true)"
-	test "${DM_OPEN:-0}" -eq 0 || error "Cannot converted VDO volume \"$VDONAME\" which is in use!"
+	DM_OPEN="$("$DMSETUP" info -c -o open  "$VDONAME" --noheadings --nameprefixes 2>/dev/null || true)"
+	case "$DM_OPEN" in
+	Device*) ;; # no devices
+	*) 	eval "$DM_OPEN"
+		test "${DM_OPEN:-0}" -eq 0 || error "Cannot converted VDO volume \"$VDONAME\" which is in use!"
+		;;
+	esac
 
 	#parse_yaml_ "$TEMPDIR/vdoconf.yml" _
 	eval "$(parse_yaml_ "$TEMPDIR/vdoconf.yml" _ | grep "$TRVDONAME" | sed -e "s/_config_vdos_$TRVDONAME/vdo/g")"
@@ -263,8 +298,7 @@ convert2lvm_() {
 	vdo_logicalSize=$(get_kb_size_with_unit_ "$vdo_logicalSize")
 	vdo_physicalSize=$(get_kb_size_with_unit_ "$vdo_physicalSize")
 
-	verbose "Going to convert physical sized VDO device $vdo_physicalSize KiB."
-	verbose "With logical volume of size $vdo_logicalSize KiB."
+	verbose "Converted VDO device has logical/physical size $vdo_logicalSize/$vdo_physicalSize KiB."
 
 	PARAMS=$(cat <<EOF
 allocation {
@@ -313,7 +347,7 @@ EOF
 
 		pvfree=$(( pvfree / 1024 - 2048 ))	# to KiB
 	else
-		pvfree=$("$LVM" lvs -o size --units b --nosuffix --noheadings "$VGNAME/$LVNAME")
+		pvfree=$("$LVM" lvs -o size --units b --nosuffix --noheadings "$DM_VG_NAME/$DM_LV_NAME")
 		pvfree=$(( pvfree / 1024 ))		# to KiB
 	fi
 
@@ -334,11 +368,11 @@ EOF
 		vg_extent_size=$(( vg_extent_size / 1024 ))
 
 		test "$vg_extent_size" -le "$EXTENTSZ" || {
-			error "Please vgchange extent_size to at most $EXTENTSZ KiB or extend and align virtual size on $vg_extent_size KiB."
+			error "Please vgchange extent_size to at most $EXTENTSZ KiB or extend and align virtual size of VDO device on $vg_extent_size KiB."
 		}
 		verbose "Renaming existing LV to be used as _vdata volume for VDO pool LV."
-		dry "$LVM" lvrename $YES $VERB "$VGNAME/$LVNAME" "$VGNAME/${LVNAME}_vpool" || {
-			error "Rename of LV \"$VGNAME/$LVNAME\" failed, while VDO header has been already moved!"
+		dry "$LVM" lvrename $YES $VERB "$VGNAME/$DM_LV_NAME" "$VGNAME/${LVNAME}_vpool" || {
+			error "Rename of LV \"$VGNAME/$DM_LV_NAME\" failed, while VDO header has been already moved!"
 		}
 	fi
 
@@ -371,6 +405,8 @@ do
 	esac
 	shift
 done
+
+test -n "$DEVICENAME" || error "Device name is not specified. (see: $TOOL --help)"
 
 # do conversion
 convert2lvm_ "$DEVICENAME"
