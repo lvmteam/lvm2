@@ -2885,7 +2885,8 @@ static int _vdo_emit_segment_line(struct dm_task *dmt,
 		    seg->vdo_params.block_map_era_length,
 		    seg->vdo_params.use_metadata_hints ? "on" : "off" ,
 		    (seg->vdo_params.write_policy == DM_VDO_WRITE_POLICY_SYNC) ? "sync" :
-			(seg->vdo_params.write_policy == DM_VDO_WRITE_POLICY_ASYNC) ? "async" : "auto", // policy
+			(seg->vdo_params.write_policy == DM_VDO_WRITE_POLICY_ASYNC) ? "async" :
+			(seg->vdo_params.write_policy == DM_VDO_WRITE_POLICY_ASYNC_UNSAFE) ? "async-unsafe" : "auto", // policy
 		    seg->vdo_name,
 		    seg->vdo_params.max_discard,
 		    seg->vdo_params.ack_threads,

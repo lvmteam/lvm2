@@ -796,7 +796,9 @@ cfg(allocation_vdo_write_policy_CFG, "vdo_write_policy", allocation_CFG_SECTION,
 	"sync  - Writes are acknowledged only after data is stably written.\n"
 	"        This policy is not supported if the underlying storage is not also synchronous.\n"
 	"async - Writes are acknowledged after data has been cached for writing to stable storage.\n"
-	"        Data which has not been flushed is not guaranteed to persist in this mode.\n")
+	"        Data which has not been flushed is not guaranteed to persist in this mode.\n"
+	"async-unsafe - Writes are handled like 'async' but there is no guarantee of the atomicity async provides.\n"
+	"        This mode should only be used for better performance when atomicity is not required.\n")
 
 cfg(allocation_vdo_max_discard_CFG, "vdo_max_discard", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_MAX_DISCARD, VDO_1ST_VSN, NULL, 0, NULL,
 	"Specified the maximum size of discard bio accepted, in 4096 byte blocks.\n"

@@ -81,6 +81,8 @@ const char *get_vdo_write_policy_name(enum dm_vdo_write_policy policy)
 		return "sync";
 	case DM_VDO_WRITE_POLICY_ASYNC:
 		return "async";
+	case DM_VDO_WRITE_POLICY_ASYNC_UNSAFE:
+		return "async-unsafe";
 	default:
 		log_debug(INTERNAL_ERROR "Unrecognized VDO write policy: %u.", policy);
 		/* Fall through */
@@ -441,6 +443,8 @@ int set_vdo_write_policy(enum dm_vdo_write_policy *vwp, const char *policy)
 		*vwp = DM_VDO_WRITE_POLICY_SYNC;
 	else if (strcasecmp(policy, "async") == 0)
 		*vwp = DM_VDO_WRITE_POLICY_ASYNC;
+	else if (strcasecmp(policy, "async-unsafe") == 0)
+		*vwp = DM_VDO_WRITE_POLICY_ASYNC_UNSAFE;
 	else if (strcasecmp(policy, "auto") == 0)
 		*vwp = DM_VDO_WRITE_POLICY_AUTO;
 	else {

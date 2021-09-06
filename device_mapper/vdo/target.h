@@ -69,7 +69,8 @@ bool dm_vdo_status_parse(struct dm_pool *mem, const char *input,
 enum dm_vdo_write_policy {
 	DM_VDO_WRITE_POLICY_AUTO = 0,
 	DM_VDO_WRITE_POLICY_SYNC,
-	DM_VDO_WRITE_POLICY_ASYNC
+	DM_VDO_WRITE_POLICY_ASYNC,
+	DM_VDO_WRITE_POLICY_ASYNC_UNSAFE
 };
 
 // FIXME: review whether we should use the createParams from the userlib

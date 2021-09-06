@@ -100,6 +100,7 @@ bool dm_vdo_validate_target_params(const struct dm_vdo_target_params *vtp,
 	switch (vtp->write_policy) {
 	case DM_VDO_WRITE_POLICY_SYNC:
 	case DM_VDO_WRITE_POLICY_ASYNC:
+	case DM_VDO_WRITE_POLICY_ASYNC_UNSAFE:
 	case DM_VDO_WRITE_POLICY_AUTO:
 		break;
 	default:

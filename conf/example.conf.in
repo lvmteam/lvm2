@@ -713,6 +713,8 @@ allocation {
 	#         This policy is not supported if the underlying storage is not also synchronous.
 	# async - Writes are acknowledged after data has been cached for writing to stable storage.
 	#         Data which has not been flushed is not guaranteed to persist in this mode.
+	# async-unsafe - Writes are handled like 'async' but there is no guarantee of the atomicity async provides.
+	#         This mode should only be used for better performance when atomicity is not required.
 	# This configuration option has an automatic default value.
 	# vdo_write_policy = "auto"
 
