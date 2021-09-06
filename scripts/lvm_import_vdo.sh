@@ -320,7 +320,7 @@ allocation {
 	vdo_logical_threads = $vdo_logicalThreads
 	vdo_physical_threads = $vdo_physicalThreads
 	vdo_write_policy = $vdo_writePolicy
-	vdo_max_discard = $(( $(get_kb_size_with_unit_ "$vdo_maxDiscardSize") * 1024 ))
+	vdo_max_discard = $(( $(get_kb_size_with_unit_ "$vdo_maxDiscardSize") / 4 ))
 	vdo_pool_header_size = 0
 }
 EOF
