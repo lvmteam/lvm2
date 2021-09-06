@@ -122,3 +122,59 @@ fsck -n "$DM_DEV_DIR/$vg1/$lv2"
 
 vgremove -f $vg1
 
+aux teardown_devs
+
+
+# Check with some real non-DM device from system
+# this needs to dropping DM_DEV_DIR
+
+aux prepare_loop 60000 || skip
+
+test -f LOOP
+LOOP=$(< LOOP)
+
+aux extend_filter "a|$LOOP|"
+aux extend_devices "$LOOP"
+
+#
+# Unfortunatelly generates this in syslog:
+#
+# vdo-start-by-dev@loop0.service: Main process exited, code=exited, status=1/FAILURE
+# vdo-start-by-dev@loop0.service: Failed with result 'exit-code'.
+# Failed to start Start VDO volume backed by loop0.
+#
+# TODO:  Could be handled by:
+#
+# systemctl mask vdo-start-by-dev@
+# systemctl unmask vdo-start-by-dev@
+#
+# automate...
+#
+vdo create $VDOCONF --name "$VDONAME" --device="$LOOP" --vdoLogicalSize=23G \
+	--blockMapCacheSize 192 \
+	--blockMapPeriod 2048 \
+	--emulate512 disabled \
+	--indexMem 0.5 \
+	--maxDiscardSize 10 \
+	--sparseIndex disabled \
+	--vdoAckThreads 2 \
+	--vdoBioRotationInterval 8 \
+	--vdoBioThreads 2 \
+	--vdoCpuThreads 5 \
+	--vdoHashZoneThreads 3 \
+	--vdoLogicalThreads 3 \
+	--writePolicy async-unsafe
+
+# Get VDO table line
+dmsetup table "$VDONAME" | tr " " "\n" | sed -e '5,6d' -e '12d' | tee vdo-orig
+
+DM_DEV_DIR= lvm_import_vdo -y --name $vg/$lv "$LOOP"
+lvs -a $vg
+
+dmsetup table "$vg-${lv}_vpool-vpool" | tr " " "\n" | sed -e '5,6d' -e '12d' | tee new-vdo-lv
+
+# Check there is a match between VDO and LV managed volume
+# (when differentiating parameters are deleted first)
+diff -u vdo-orig new-vdo-lv || die "Found mismatching VDO table lines!"
+
+check lv_field $vg/$lv size "23.00g"

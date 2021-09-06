@@ -50,6 +50,7 @@ DM_DEV_DIR="${DM_DEV_DIR:-/dev}"
 DEVICENAME=""
 DEVMAJOR=0
 DEVMINOR=0
+PROMPTING=""
 
 DRY=0
 VERB=""
@@ -57,7 +58,8 @@ FORCE=""
 YES=""
 
 # default name for converted VG and its VDO LV
-NAME="vdovg/vdolvol"
+DEFAULT_NAME="vdovg/vdolvol"
+NAME=""
 
 # help message
 tool_usage() {
@@ -100,6 +102,7 @@ dry() {
 cleanup() {
 	trap '' 2
 
+	test -z "$PROMPTING" || echo "No"
 	rm -rf "$TEMPDIR"
 	# error exit status for break
 	exit "${1:-1}"
@@ -175,7 +178,9 @@ detect_lv_() {
 		;;
 	esac
 
-	DEV="$("$DMSETUP" info -c -j "$DEVMAJOR" -m "$DEVMINOR" -o uuid,name --noheadings --nameprefixes --separator ' ' 2>/dev/null)"
+	test "$DEVMAJOR" != "$(grep device-mapper /proc/devices | cut -f1 -d' ')" && return
+
+	DEV="$("$DMSETUP" info -c -j "$DEVMAJOR" -m "$DEVMINOR" -o uuid,name --noheadings --nameprefixes --separator ' ')"
 	case "$DEV" in
 	Device*)  ;; # no devices
 	*)	eval "$DEV" ;;
@@ -244,15 +249,31 @@ convert2lvm_() {
 	detect_lv_ "$DEVICE"
 	case "$DM_UUID" in
 		LVM-*)	eval "$("$DMSETUP" splitname --nameprefixes --noheadings --separator ' ' "$DM_NAME")"
-			if [ -z "$VGNAME" ] || [ "$VGNAME" = "$LVNAME" ]  ; then
+			if [ -z "$VGNAME" ] || [ "$VGNAME" = "$LVNAME" ] ; then
 				VGNAME=$DM_VG_NAME
-				LVNAME=$DM_LV_NAME
+				verbose "Using existing volume group name $VGNAME."
+				test -n "$LVNAME" || LVNAME=$DM_LV_NAME
 			elif test "$VGNAME" != "$DM_VG_NAME" ; then
-				error "Volume group name \"$VGNAME\" does not match name \"$DM_VG_NAME\" for device \"$DEVICE\"."
+				error "Volume group name \"$VGNAME\" does not match name \"$DM_VG_NAME\" for VDO device \"$DEVICE\"."
 			fi
 			;;
-		*) IS_LV=0
-			# Check $VGNANE does not already exists
+		*)	IS_LV=0
+			# Check if we need to generate unused $VGNANE
+			if [ -z "$VGNAME" ] || [ "$VGNAME" = "$LVNAME" ] ; then
+				VGNAME=${DEFAULT_NAME%/*}
+				# Find largest matching VG name to our 'default' vgname
+				LASTVGNAME=$(LC_ALL=C "$LVM" vgs -oname -O-name --noheadings -S name=~${VGNAME} | grep -E "$VGNAME[0-9]? ?" | head -1)
+				if test -n "$LASTVGNAME" ; then
+					LASTVGNAME=${LASTVGNAME#*${VGNAME}}
+					# If the number is becoming too high, try some random number
+					test "$LASTVGNAME" -gt 99999999 2>/dev/null && LASTVGNAME=$RANDOM
+					# Generate new unused VG name
+					VGNAME="${VGNAME}$(( ${LASTVGNAME} + 1 ))"
+					verbose "Selected unused volume group name $VGNAME."
+				fi
+			fi
+			# New VG is created, LV name should be always unused.
+			test -n "$LVNAME" || LVNAME=${DEFAULT_NAME#*/}
 			"$LVM" vgs "$VGNAME" >/dev/null 2>&1 && error "Cannot use already existing volume group name \"$VGNAME\"."
 			;;
 	esac
@@ -327,6 +348,19 @@ allocation {
 EOF
 )
 	verbose "VDO conversion paramaters: $PARAMS"
+
+	# If user has not provided '--yes', prompt before conversion
+	if test -z "$YES" ; then
+		PROMPTING=yes
+		echo -n "Convert VDO device \"$DEVICE\" to VDO LV \"$VGNAME/$LVNAME\"? [y|N]: "
+		read -n 1 -s ANSWER
+		case "${ANSWER:0:1}" in
+			y|Y )  echo "Yes" ;;
+			* )    echo "No" ; PROMPTING=""; exit ;;
+		esac
+		PROMPTING=""
+		YES="-y" # From now, now prompting
+	fi
 
 	verbose "Stopping VDO volume."
 	dry "$VDO" stop $VDOCONF --name "$VDONAME"
