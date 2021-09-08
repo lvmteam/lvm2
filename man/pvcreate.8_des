@@ -7,9 +7,10 @@ Use \fBvgcreate\fP(8) to create a new VG on the PV, or \fBvgextend\fP(8)
 to add the PV to an existing VG.  Use \fBpvremove\fP(8) to remove the LVM
 disk label from the device.
 .P
-The force option will create a PV without confirmation.  Repeating the
-force option (\fB-ff\fP) will forcibly create a PV, overriding checks that
-normally prevent it, e.g. if the PV is already in a VG.
+The force option will create a PV without confirmation, and will overwrite
+partition headers.  Repeating the force option (\fB-ff\fP) will override other
+checks that would normally prevent a pvcreate, e.g. if the PV is already in a
+VG.
 .P
 .B Metadata location, size, and alignment
 .P

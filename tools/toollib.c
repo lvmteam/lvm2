@@ -5243,6 +5243,10 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	if (cmd->enable_devices_file && !pp->is_remove)
 		cmd->filter_deviceid_skip = 1;
 
+	/* pvcreate -f overwrites partitions */
+	if (pp->force && !pp->is_remove)
+		cmd->filter_partitioned_skip = 1;
+
 	log_debug("Scanning and filtering device args (%u).", dm_list_size(&scan_devs));
 	label_scan_devs(cmd, cmd->filter, &scan_devs);
 
@@ -5257,6 +5261,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 		}
 	}
 	cmd->filter_deviceid_skip = 0;
+	cmd->filter_partitioned_skip = 0;
 
 	/*
 	 * Can the command continue if some specified devices were not found?
@@ -5469,6 +5474,9 @@ do_command:
 	if (cmd->enable_devices_file && !pp->is_remove)
 		cmd->filter_deviceid_skip = 1;
 
+	if (pp->force && !pp->is_remove)
+		cmd->filter_partitioned_skip = 1;
+
 	log_debug("Rescanning and filtering device args with exclusive open");
 	if (!label_scan_devs_excl(cmd, cmd->filter, &rescan_devs)) {
 		log_debug("Failed to rescan devs excl");
@@ -5482,7 +5490,9 @@ do_command:
 			dm_list_add(&pp->arg_fail, &pd->list);
 		}
 	}
+
 	cmd->filter_deviceid_skip = 0;
+	cmd->filter_partitioned_skip = 0;
 
 	if (dm_list_empty(&pp->arg_process) && dm_list_empty(&remove_duplicates)) {
 		log_debug("No devices to process.");
