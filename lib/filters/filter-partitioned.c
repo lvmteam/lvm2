@@ -27,6 +27,9 @@ static int _passes_partitioned_filter(struct cmd_context *cmd, struct dev_filter
 	if (cmd->filter_nodata_only)
 		return 1;
 
+	if (cmd->filter_partitioned_skip)
+		return 1;
+
 	dev->filtered_flags &= ~DEV_FILTERED_PARTITIONED;
 
 	ret = dev_is_partitioned(cmd, dev);

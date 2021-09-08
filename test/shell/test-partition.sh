@@ -16,7 +16,6 @@
 #
 
 
-
 SKIP_WITH_LVMPOLLD=1
 
 LVM_TEST_CONFIG_DEVICES="types = [\"device-mapper\", 142]"
@@ -25,7 +24,7 @@ LVM_TEST_CONFIG_DEVICES="types = [\"device-mapper\", 142]"
 
 which sfdisk || skip
 
-aux prepare_pvs 1 30
+aux prepare_pvs 2 30
 
 pvs "$dev1"
 
@@ -33,3 +32,12 @@ pvs "$dev1"
 echo "1 2" | sfdisk --force "$dev1"
 
 not pvs "$dev1"
+
+wipefs -a "$dev2"
+echo "1 2" | sfdisk --force "$dev2"
+partprobe
+not pvcreate "$dev2"
+pvcreate -f "$dev2"
+pvs "$dev2"
+pvremove "$dev2"
+
