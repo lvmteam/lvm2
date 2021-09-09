@@ -157,6 +157,7 @@ out:
 
 static int _get_segment_status_from_target_params(const char *target_name,
 						  const char *params,
+						  const struct dm_info *dminfo,
 						  struct lv_seg_status *seg_status)
 {
 	const struct lv_segment *seg = seg_status->seg;
@@ -216,7 +217,7 @@ static int _get_segment_status_from_target_params(const char *target_name,
 			return_0;
 		seg_status->type = SEG_STATUS_SNAPSHOT;
 	} else if (segtype_is_vdo_pool(segtype)) {
-		if (!parse_vdo_pool_status(seg_status->mem, seg->lv, params, &seg_status->vdo_pool))
+		if (!parse_vdo_pool_status(seg_status->mem, seg->lv, params, dminfo, &seg_status->vdo_pool))
 			return_0;
 		seg_status->type = SEG_STATUS_VDO_POOL;
 	} else if (segtype_is_writecache(segtype)) {
@@ -320,7 +321,7 @@ static int _info_run(const char *dlid, struct dm_info *dminfo,
 		} while (target);
 
 		if (!target_name ||
-		    !_get_segment_status_from_target_params(target_name, target_params, seg_status))
+		    !_get_segment_status_from_target_params(target_name, target_params, dminfo, seg_status))
 			stack;
 	}
 
@@ -1886,7 +1887,7 @@ int dev_manager_vdo_pool_status(struct dev_manager *dm,
 		goto out;
 	}
 
-	if (!parse_vdo_pool_status(dm->mem, lv, params, *status))
+	if (!parse_vdo_pool_status(dm->mem, lv, params, &info, *status))
 		goto_out;
 
 	(*status)->mem = dm->mem;

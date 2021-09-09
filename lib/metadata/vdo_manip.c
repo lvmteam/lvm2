@@ -125,48 +125,56 @@ int update_vdo_pool_virtual_size(struct lv_segment *vdo_pool_seg)
 	return 1;
 }
 
-static int _sysfs_get_kvdo_value(const char *dm_name, const char *vdo_param, uint64_t *value)
+static int _sysfs_get_kvdo_value(const char *dm_name, const struct dm_info *dminfo,
+				 const char *vdo_param, uint64_t *value)
 {
 	char path[PATH_MAX];
 	char temp[64];
 	int fd, size, r = 0;
 
-	if (dm_snprintf(path, sizeof(path), "%skvdo/%s/%s",
-			dm_sysfs_dir(), dm_name, vdo_param) < 0) {
-		log_error("Failed to build kmod path.");
+	if (dm_snprintf(path, sizeof(path), "%s/block/dm-%d/vdo/%s",
+			dm_sysfs_dir(), dminfo->minor, vdo_param) < 0) {
+		log_debug("Failed to build kvdo path.");
 		return 0;
 	}
 
 	if ((fd = open(path, O_RDONLY)) < 0) {
-		if (errno != ENOENT)
-			log_sys_error("open", path);
-		else
+		/* try with older location */
+		if (dm_snprintf(path, sizeof(path), "%skvdo/%s/%s",
+				dm_sysfs_dir(), dm_name, vdo_param) < 0) {
+			log_debug("Failed to build kvdo path.");
+			return 0;
+		}
+
+		if ((fd = open(path, O_RDONLY)) < 0) {
 			log_sys_debug("open", path);
-		goto bad;
+			goto bad;
+		}
 	}
 
 	if ((size = read(fd, temp, sizeof(temp) - 1)) < 0) {
-		log_sys_error("read", path);
+		log_sys_debug("read", path);
 		goto bad;
 	}
 	temp[size] = 0;
 	errno = 0;
 	*value = strtoll(temp, NULL, 0);
 	if (errno) {
-		log_sys_error("strtool", path);
+		log_sys_debug("strtool", path);
 		goto bad;
 	}
 
 	r = 1;
 bad:
 	if (fd >= 0 && close(fd))
-		log_sys_error("close", path);
+		log_sys_debug("close", path);
 
 	return r;
 }
 
 int parse_vdo_pool_status(struct dm_pool *mem, const struct logical_volume *vdo_pool_lv,
-			  const char *params, struct lv_status_vdo *status)
+			  const char *params, const struct dm_info *dminfo,
+			  struct lv_status_vdo *status)
 {
 	struct dm_vdo_status_parse_result result;
 	char *dm_name;
@@ -190,15 +198,11 @@ int parse_vdo_pool_status(struct dm_pool *mem, const struct logical_volume *vdo_
 
 	status->vdo = result.status;
 
-	if (result.status->operating_mode == DM_VDO_MODE_NORMAL) {
-		if (!_sysfs_get_kvdo_value(dm_name, "statistics/data_blocks_used",
-					   &status->data_blocks_used))
-			return_0;
-
-		if (!_sysfs_get_kvdo_value(dm_name, "statistics/logical_blocks_used",
-					   &status->logical_blocks_used))
-			return_0;
-
+	if ((result.status->operating_mode == DM_VDO_MODE_NORMAL) &&
+	    _sysfs_get_kvdo_value(dm_name, dminfo, "statistics/data_blocks_used",
+				  &status->data_blocks_used) &&
+	    _sysfs_get_kvdo_value(dm_name, dminfo, "statistics/logical_blocks_used",
+				  &status->logical_blocks_used)) {
 		status->usage = dm_make_percent(result.status->used_blocks,
 						result.status->total_blocks);
 		status->saving = dm_make_percent(status->logical_blocks_used - status->data_blocks_used,

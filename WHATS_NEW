@@ -1,5 +1,6 @@
 Version 2.03.14 - 
 ==================================
+  Support newer location for VDO statistics.
   Add support for VDO async-unsage write policy.
   Improve lvm_import_vdo script.
   Support VDO LV with lvcreate -ky.
