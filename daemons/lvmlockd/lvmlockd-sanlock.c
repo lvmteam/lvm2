@@ -234,11 +234,8 @@ static uint64_t daemon_test_lv_count;
  */
 static void strcpy_name_len(char *buf, char *str, int len)
 {
-	char tmp_name[SANLK_NAME_LEN + 1] = { 0 };
-
-	strncpy(tmp_name, str, SANLK_NAME_LEN);
-
-	memcpy(buf, str, SANLK_NAME_LEN);
+	/* coverity[buffer_size_warning] */
+	strncpy(buf, str, SANLK_NAME_LEN);
 }
 
 static int lock_lv_name_from_args(char *vg_args, char *lock_lv_name)
