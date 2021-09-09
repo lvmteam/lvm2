@@ -262,7 +262,7 @@ convert2lvm_() {
 			if [ -z "$VGNAME" ] || [ "$VGNAME" = "$LVNAME" ] ; then
 				VGNAME=${DEFAULT_NAME%/*}
 				# Find largest matching VG name to our 'default' vgname
-				LASTVGNAME=$(LC_ALL=C "$LVM" vgs -oname -O-name --noheadings -S name=~${VGNAME} | grep -E "$VGNAME[0-9]? ?" | head -1)
+				LASTVGNAME=$(LC_ALL=C "$LVM" vgs -oname -O-name --noheadings -S name=~${VGNAME} | grep -E "$VGNAME[0-9]? ?" | head -1 || true)
 				if test -n "$LASTVGNAME" ; then
 					LASTVGNAME=${LASTVGNAME#*${VGNAME}}
 					# If the number is becoming too high, try some random number
