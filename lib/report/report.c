@@ -819,7 +819,7 @@ static void _adjust_time_for_granularity(struct time_info *info, struct tm *tm, 
 
 #define SECS_PER_MINUTE 60
 #define SECS_PER_HOUR   3600
-#define SECS_PER_DAY    86400
+#define SECS_PER_DAY    ((time_t)86400)
 
 static int _days_in_month[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
