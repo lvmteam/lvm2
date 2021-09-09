@@ -17,6 +17,7 @@
 #include "lib/device/device_id.h"
 #include "lib/device/dev-type.h"
 
+/* coverity[unnecessary_header] needed for MuslC */
 #include <sys/file.h>
 
 static void _search_devs_for_pvids(struct cmd_context *cmd, struct dm_list *search_pvids, struct dm_list *found_devs)

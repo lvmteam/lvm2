@@ -47,6 +47,7 @@ static uint32_t _log_seqnum = 1;
  */
 #define FIELD(type, strct, sorttype, head, field_name, width, func, id, desc, writeable) field_ ## id,
 enum {
+/* coverity[unnecessary_header] */
 #include "columns.h"
 };
 #undef FIELD
@@ -4340,6 +4341,7 @@ typedef struct label type_label;
 typedef dev_known_type_t type_devtype;
 
 static const struct dm_report_field_type _fields[] = {
+/* coverity[unnecessary_header] */
 #include "columns.h"
 {0, 0, 0, 0, "", "", NULL, NULL},
 };
@@ -4350,6 +4352,7 @@ static const struct dm_report_field_type _devtypes_fields[] = {
 };
 
 static const struct dm_report_field_type _log_fields[] = {
+/* coverity[unnecessary_header] */
 #include "columns-cmdlog.h"
 {0, 0, 0, 0, "", "", NULL, NULL},
 };

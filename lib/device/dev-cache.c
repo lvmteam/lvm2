@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <locale.h>
+/* coverity[unnecessary_header] needed for MuslC */
 #include <sys/file.h>
 
 struct dev_iter {

@@ -22,6 +22,7 @@
  * in runtime we are linked agains systems libdm 'older' library
  * which does not provide this symbol and plugin fails to load
  */
+/* coverity[unnecessary_header] used for parsing */
 #include "device_mapper/vdo/status.c"
 
 #include <sys/wait.h>

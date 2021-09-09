@@ -22,6 +22,7 @@
 #include "lib/locking/lvmlockd.h"
 #include "lib/datastruct/str_list.h"
 
+/* coverity[unnecessary_header] */
 #include "stub.h"
 #include "lib/misc/last-path-component.h"
 
