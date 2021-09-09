@@ -45,6 +45,9 @@ Specifies the name of converted VDO LV. When the name is not specified,
 some automatic name is selected. In case the converted VDO volume is
 already using LV a backend device, the name of this LV is used for VDO LV.
 In this case also the of volume group must stay same.
+Automatic name may change between releases and currently selects
+"vdolv" as LV name and VG name is selected from sequence
+"vdovg", "vdovg1", ...
 .
 .TP
 .BR -v | --verbose
