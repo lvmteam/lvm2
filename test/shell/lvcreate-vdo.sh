@@ -47,6 +47,7 @@ fi
 check lv_field $vg/$lv1 size "<1.24g"
 check lv_field $vg/${lv2} size "4.00g"
 check lv_field $vg/${lv2}_vdata size "4.00g"
+check lv_field $vg/${lv1} data_percent "0.00"
 lvremove -ff $vg
 
 
