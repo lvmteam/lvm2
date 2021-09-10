@@ -3586,6 +3586,8 @@ static int _run_script(struct cmd_context *cmd, int argc, char **argv)
 	int ret = ENO_SUCH_CMD;
 	int magic_number = 0;
 	char *script_file = argv[0];
+	int largc;
+	char *largv[MAX_ARGS];
 
 	if ((script = fopen(script_file, "r")) == NULL)
 		return ENO_SUCH_CMD;
@@ -3607,17 +3609,17 @@ static int _run_script(struct cmd_context *cmd, int argc, char **argv)
 			ret = EINVALID_CMD_LINE;
 			break;
 		}
-		if (lvm_split(buffer, &argc, argv, MAX_ARGS) == MAX_ARGS) {
+		if (lvm_split(buffer, &largc, largv, MAX_ARGS) == MAX_ARGS) {
 			buffer[50] = '\0';
 			log_error("Too many arguments: %s", buffer);
 			ret = EINVALID_CMD_LINE;
 			break;
 		}
-		if (!argc)
+		if (!largc)
 			continue;
-		if (!strcmp(argv[0], "quit") || !strcmp(argv[0], "exit"))
+		if (!strcmp(largv[0], "quit") || !strcmp(largv[0], "exit"))
 			break;
-		ret = lvm_run_command(cmd, argc, argv);
+		ret = lvm_run_command(cmd, largc, largv);
 		/*
 		 * FIXME: handling scripts with invalid or failing commands
 		 * could use some cleaning up, e.g. error_message_produced
