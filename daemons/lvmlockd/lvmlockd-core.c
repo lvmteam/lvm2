@@ -2989,6 +2989,7 @@ static int add_lockspace_thread(const char *ls_name,
 	}
 
 	if (vg_uuid)
+		/* coverity[buffer_size_warning] */
 		strncpy(ls->vg_uuid, vg_uuid, 64);
 
 	if (vg_name)

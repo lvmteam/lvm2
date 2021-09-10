@@ -1245,9 +1245,11 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	     (dmt->minor < 0) || (dmt->major < 0)))
 		/* When RESUME or RELOAD sets maj:min and dev_name, use just maj:min,
 		 * passed dev_name is useful for better error/debug messages */
+		/* coverity[buffer_size_warning] */
 		strncpy(dmi->name, DEV_NAME(dmt), sizeof(dmi->name));
 
 	if (DEV_UUID(dmt))
+		/* coverity[buffer_size_warning] */
 		strncpy(dmi->uuid, DEV_UUID(dmt), sizeof(dmi->uuid));
 
 	if (dmt->type == DM_DEVICE_SUSPEND)
