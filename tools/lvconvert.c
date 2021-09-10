@@ -6294,7 +6294,6 @@ int lvconvert_to_cache_with_cachevol_cmd(struct cmd_context *cmd, int argc, char
 
 static int _lvconvert_integrity_remove(struct cmd_context *cmd, struct logical_volume *lv)
 {
-	struct volume_group *vg = lv->vg;
 	int ret = 0;
 
 	if (!lv_is_integrity(lv) && !lv_is_raid(lv)) {
