@@ -50,7 +50,7 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[],
 	     int *rstatus, int sync_needed)
 {
 	pid_t pid;
-	int status;
+	int status = 0;
 	char buf[PATH_MAX * 2];
 
 	if (rstatus)

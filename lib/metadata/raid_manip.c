@@ -46,7 +46,7 @@ static int _check_restriping(uint32_t new_stripes, struct logical_volume *lv)
  */
 static int _reshape_is_supported(struct cmd_context *cmd, const struct segment_type *segtype)
 {
-	unsigned attrs;
+	unsigned attrs = 0;
 
 	if (!segtype->ops->target_present ||
             !segtype->ops->target_present(cmd, NULL, &attrs) ||
@@ -65,7 +65,7 @@ static int _reshape_is_supported(struct cmd_context *cmd, const struct segment_t
 static int _rebuild_with_emptymeta_is_supported(struct cmd_context *cmd,
 						const struct segment_type *segtype)
 {
-	unsigned attrs;
+	unsigned attrs = 0;
 
 	if (!segtype->ops->target_present ||
             !segtype->ops->target_present(cmd, NULL, &attrs) ||

@@ -749,7 +749,7 @@ static const char *_get_default_cache_policy(struct cmd_context *cmd)
 static cache_metadata_format_t _get_default_cache_metadata_format(struct cmd_context *cmd)
 {
 	const struct segment_type *segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_CACHE);
-	unsigned attr;
+	unsigned attr = 0;
 	cache_metadata_format_t f;
 
 	if (!segtype ||

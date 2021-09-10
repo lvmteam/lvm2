@@ -5216,7 +5216,7 @@ static int _lvresize_check(struct logical_volume *lv,
 
 	if (lv_is_raid(lv) &&
 	    lp->resize == LV_REDUCE) {
-		unsigned attrs;
+		unsigned attrs = 0;
 		const struct segment_type *segtype = first_seg(lv)->segtype;
 
 		if (!segtype->ops->target_present ||

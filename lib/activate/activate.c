@@ -1491,7 +1491,7 @@ int lvs_in_vg_opened(const struct volume_group *vg)
  */
 int raid4_is_supported(struct cmd_context *cmd, const struct segment_type *segtype)
 {
-	unsigned attrs;
+	unsigned attrs = 0;
 
 	if (segtype_is_raid4(segtype) &&
 	    (!segtype->ops->target_present ||
