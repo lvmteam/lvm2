@@ -460,6 +460,11 @@ arg(noheadings_ARG, '\0', "noheadings", 0, 0, 0,
     "Suppress the headings line that is normally the first line of output.\n"
     "Useful if grepping the output.\n")
 
+arg(nohints_ARG, '\0', "nohints", 0, 0, 0,
+    "Do not use the hints file to locate devices for PVs. A command may read\n"
+    "more devices to find PVs when hints are not used. The command will still\n"
+    "perform standard hint file invalidation where appropriate.\n")
+
 arg(nohistory_ARG, '\0', "nohistory", 0, 0, 0,
     "Do not record history of LVs being removed.\n"
     "This has no effect unless the configuration setting\n"

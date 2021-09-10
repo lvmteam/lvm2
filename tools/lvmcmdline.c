@@ -2512,6 +2512,14 @@ static int _get_current_settings(struct cmd_context *cmd)
 	if (arg_is_set(cmd, sysinit_ARG))
 		cmd->use_hints = 0;
 
+	/*
+	 * Don't use hints from this command, but enable_hints will
+	 * remain set unless hints=none in the config.  See above re
+	 * the meaning of use_hints=0 && enable_hints=1.
+	 */
+	if (arg_is_set(cmd, nohints_ARG))
+		cmd->use_hints = 0;
+
 	if ((hint_mode = find_config_tree_str(cmd, devices_hints_CFG, NULL))) {
 		if (!strcmp(hint_mode, "none")) {
 			cmd->enable_hints = 0;

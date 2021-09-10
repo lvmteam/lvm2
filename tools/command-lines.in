@@ -204,7 +204,7 @@
 #
 OO_ALL: --commandprofile String, --config String, --debug,
 --driverloaded Bool, --help, --nolocking, --lockopt String, --longhelp, --profile String, --quiet,
---verbose, --version, --yes, --test, --devicesfile String, --devices PV
+--verbose, --version, --yes, --test, --devicesfile String, --devices PV, --nohints
 
 #
 # options for pvs, lvs, vgs, fullreport
