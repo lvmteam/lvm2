@@ -356,7 +356,7 @@ EOF
 		read -n 1 -s ANSWER
 		case "${ANSWER:0:1}" in
 			y|Y )  echo "Yes" ;;
-			* )    echo "No" ; PROMPTING=""; exit ;;
+			* )    echo "No" ; PROMPTING=""; exit 1 ;;
 		esac
 		PROMPTING=""
 		YES="-y" # From now, now prompting
