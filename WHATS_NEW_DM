@@ -1,5 +1,6 @@
 Version 1.02.181 - 
 ===================================
+  Fix bug in construction of cache table line (regression from 1.02.159).
 
 Version 1.02.179 - 11th August 2021
 ===================================
