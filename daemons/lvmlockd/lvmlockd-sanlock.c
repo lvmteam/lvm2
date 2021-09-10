@@ -1660,7 +1660,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 	struct sanlk_options opt;
 	uint64_t lock_lv_offset;
 	uint32_t flags = 0;
-	struct val_blk vb;
+	struct val_blk vb = { 0 };
 	int added = 0;
 	int rv;
 

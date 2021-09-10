@@ -4519,7 +4519,7 @@ static int _stats_unmap_regions(struct dm_stats *dms, uint64_t group_id,
 	struct dm_stats_region *region = NULL;
 	struct dm_stats_group *group = NULL;
 	uint64_t nr_kept, nr_old;
-	struct _extent ext;
+	struct _extent ext = { 0 };
 	int64_t i;
 
 	group = &dms->groups[group_id];
@@ -4607,7 +4607,7 @@ static uint64_t *_stats_map_file_regions(struct dm_stats *dms, int fd,
 	struct dm_pool *extent_mem = NULL;
 	struct _extent *old_ext;
 	char *hist_arg = NULL;
-	struct statfs fsbuf;
+	struct statfs fsbuf = { 0 };
 	int64_t nr_kept = 0;
 	struct stat buf;
 	int update;

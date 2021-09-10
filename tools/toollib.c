@@ -123,7 +123,7 @@ const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
 	size_t devdir_len = strlen(cmd->dev_dir);
 	const char *dmdir = dm_dir() + devdir_len;
 	size_t dmdir_len = strlen(dmdir), vglv_sz;
-	char *vgname, *lvname, *layer, *vglv;
+	char *vgname = NULL, *lvname, *layer, *vglv;
 
 	/* FIXME Do this properly */
 	if (*vg_name == '/')

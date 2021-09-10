@@ -456,6 +456,7 @@ static int _merge_mirror_images(struct logical_volume *lv,
 		return 1;
 
 	img_lvs = alloca(sizeof(*img_lvs) * addition);
+	memset(img_lvs, 0, sizeof(*img_lvs) * addition);
 
 	dm_list_iterate_items(lvl, mimages)
 		img_lvs[i++] = lvl->lv;
@@ -1531,6 +1532,7 @@ static int _form_mirror(struct cmd_context *cmd, struct alloc_handle *ah,
 	 * create mirror image LVs
 	 */
 	img_lvs = alloca(sizeof(*img_lvs) * mirrors);
+	memset(img_lvs, 0, sizeof(*img_lvs) * mirrors);
 
 	if (!_create_mimage_lvs(ah, mirrors, stripes, stripe_size, lv, img_lvs, log))
 		return_0;

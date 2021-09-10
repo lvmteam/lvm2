@@ -126,7 +126,7 @@ static struct dm_list *_scan_archive(struct dm_pool *mem,
 	int i, count;
 	uint32_t ix;
 	char vgname_found[64], *path;
-	struct dirent **dirent;
+	struct dirent **dirent = NULL;
 	struct archive_file *af;
 	struct dm_list *results;
 

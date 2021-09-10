@@ -372,7 +372,7 @@ static void debug_print(struct lvmpolld_state *ls, const char * const* ptr)
 
 static void *fork_and_poll(void *args)
 {
-	int outfd, errfd, state;
+	int outfd, errfd, state = 0;
 	struct lvmpolld_thread_data *data;
 	pid_t r;
 

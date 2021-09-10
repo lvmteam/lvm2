@@ -893,7 +893,7 @@ static int _setup_bcache(void)
 static void _prepare_open_file_limit(struct cmd_context *cmd, unsigned int num_devs)
 {
 #ifdef HAVE_PRLIMIT
-	struct rlimit old, new;
+	struct rlimit old = { 0 }, new;
 	unsigned int want = num_devs + BASE_FD_COUNT;
 	int rv;
 

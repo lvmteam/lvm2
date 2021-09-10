@@ -836,7 +836,7 @@ static void _collapse_slashes(char *str)
 static int _insert_dir(const char *dir)
 {
 	int n, dirent_count, r = 1;
-	struct dirent **dirent;
+	struct dirent **dirent = NULL;
 	char path[PATH_MAX];
 	size_t len;
 

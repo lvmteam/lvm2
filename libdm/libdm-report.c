@@ -2331,7 +2331,7 @@ static const char *_reserved_name(struct dm_report *rh,
 				  uint32_t field_num, const char *s, size_t len)
 {
 	dm_report_reserved_handler handler;
-	const char *canonical_name;
+	const char *canonical_name = NULL;
 	const char **name;
 	char *tmp_s;
 	char c;
@@ -3909,7 +3909,7 @@ static struct selection_node *_parse_ex(struct dm_report *rh,
 	static const char _pe_expected_msg[] = "Syntax error: right parenthesis expected at \'%s\'";
 	struct selection_node *sn = NULL;
 	uint32_t t;
-	const char *tmp;
+	const char *tmp = NULL;
 
 	t = _tok_op_log(s, next, SEL_MODIFIER_NOT | SEL_PRECEDENCE_PS);
 	if (t == SEL_MODIFIER_NOT) {
@@ -3955,7 +3955,7 @@ static struct selection_node *_parse_and_ex(struct dm_report *rh,
 					    struct selection_node *and_sn)
 {
 	struct selection_node *n;
-	const char *tmp;
+	const char *tmp = NULL;
 
 	n = _parse_ex(rh, s, next);
 	if (!n)
@@ -3987,7 +3987,7 @@ static struct selection_node *_parse_or_ex(struct dm_report *rh,
 					   struct selection_node *or_sn)
 {
 	struct selection_node *n;
-	const char *tmp;
+	const char *tmp = NULL;
 
 	n = _parse_and_ex(rh, s, next, NULL);
 	if (!n)
