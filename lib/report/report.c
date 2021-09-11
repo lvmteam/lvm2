@@ -882,7 +882,6 @@ static int _translate_time_items(struct dm_report *rh, struct time_info *info,
 	long multiplier = 1;
 	struct tm tm_now;
 	time_id_t id;
-	char *end;
 	long num;
 	struct tm tm; /* absolute time */
 	time_t t = 0; /* offset into past before absolute time */
@@ -899,7 +898,7 @@ static int _translate_time_items(struct dm_report *rh, struct time_info *info,
 
 		if (_is_time_num(id)) {
 			errno = 0;
-			num = strtol(ti->s, &end, 10);
+			num = strtol(ti->s, NULL, 10);
 			if (errno) {
 				log_error("_translate_time_items: invalid time.");
 				return 0;
