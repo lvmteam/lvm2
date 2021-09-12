@@ -292,16 +292,7 @@ struct dm_tree_node {
 	dm_node_callback_fn callback;
 	void *callback_data;
 
-	/*
-	 * TODO:
-	 *	Add advanced code which tracks of send ioctls and their
-	 *	proper revert operation for more advanced recovery
-	 *	Current code serves mostly only to recovery when
-	 *	thin pool metadata check fails and command would
-	 *	have left active thin data and metadata subvolumes.
-	 */
-	struct dm_list activated;	/* Head of activated nodes for preload revert */
-	struct dm_list activated_list;	/* List of activated nodes for preload revert */
+	int activated;                  /* tracks activation during preload */
 };
 
 struct dm_tree {
@@ -336,7 +327,6 @@ struct dm_tree *dm_tree_create(void)
 	dtree->root.dtree = dtree;
 	dm_list_init(&dtree->root.uses);
 	dm_list_init(&dtree->root.used_by);
-	dm_list_init(&dtree->root.activated);
 	dtree->skip_lockfs = 0;
 	dtree->no_flush = 0;
 	dtree->mem = dmem;
@@ -521,7 +511,6 @@ static struct dm_tree_node *_create_dm_tree_node(struct dm_tree *dtree,
 
 	dm_list_init(&node->uses);
 	dm_list_init(&node->used_by);
-	dm_list_init(&node->activated);
 	dm_list_init(&node->props.segs);
 
 	dev = MKDEV(info->major, info->minor);
@@ -2036,7 +2025,7 @@ static int _create_node(struct dm_tree_node *dnode, struct dm_tree_node *parent)
 	}
 
 	if (r)
-		dm_list_add_h(&parent->activated, &dnode->activated_list);
+		dnode->activated = 1;
 out:
 	dm_task_destroy(dmt);
 
@@ -2793,26 +2782,29 @@ out:
 	return r;
 }
 
-/*
- * Currently try to deactivate only nodes created during preload.
- * New node is always attached to the front of activated_list
- */
-static int _dm_tree_revert_activated(struct dm_tree_node *parent)
+/* Try to deactivate only nodes created during preload. */
+static int _dm_tree_revert_activated(struct dm_tree_node *dnode)
 {
+	void *handle = NULL;
 	struct dm_tree_node *child;
 
-	dm_list_iterate_items_gen(child, &parent->activated, activated_list) {
-		log_debug_activation("Reverting %s.", _node_name(child));
-		if (child->callback) {
-			log_debug_activation("Dropping callback for %s.", _node_name(child));
-			child->callback = NULL;
+	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
+		if (child->activated) {
+			if (child->callback) {
+				log_debug_activation("Dropping callback for %s.", _node_name(child));
+				child->callback = NULL;
+			}
+
+			log_debug_activation("Reverting %s.", _node_name(child));
+			if (!_deactivate_node(child->name, child->info.major, child->info.minor,
+					      &child->dtree->cookie, child->udev_flags, 0)) {
+				log_debug_activation("Unable to deactivate %s.", _node_name(child));
+				return 0;
+			}
 		}
-		if (!_deactivate_node(child->name, child->info.major, child->info.minor,
-				      &child->dtree->cookie, child->udev_flags, 0)) {
-			log_error("Unable to deactivate %s.", _node_name(child));
-			return 0;
-		}
-		if (!_dm_tree_revert_activated(child))
+
+		if (dm_tree_node_num_children(child, 0) &&
+		    !_dm_tree_revert_activated(child))
 			return_0;
 	}
 
