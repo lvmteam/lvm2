@@ -618,6 +618,9 @@ static int _cache_add_target_line(struct dev_manager *dm,
 {
 	struct lv_segment *cache_pool_seg;
 	struct lv_segment *setting_seg;
+	struct dm_config_node *policy_settings;
+	struct dm_config_node *cn;
+	unsigned  i, j;
 	union lvid metadata_lvid;
 	union lvid data_lvid;
 	char *metadata_uuid, *data_uuid, *origin_uuid;
@@ -718,6 +721,61 @@ static int _cache_add_target_line(struct dev_manager *dm,
 			return_0;
 	}
 
+	policy_settings = seg->cleaner_policy ? NULL : setting_seg->policy_settings;
+	if (policy_settings && cache_pool_seg->policy_name) {
+		static const struct act {
+			const char *name;
+			const char *settings[20];
+		} _accepted[] = {
+			{
+				"MQ", {
+					"migration_threshold", "sequential_threshold", "random_threshold",
+					"read_promote_adjustment", "write_promote_adjustment",
+					"discard_promote_adjustment", NULL
+				},
+			}, {
+				"SMQ", {
+					"migration_threshold", NULL
+				}
+			}
+		};
+
+                /* Check if cache settings are acceptable to knownm policies */
+		for (i = 0; i < DM_ARRAY_SIZE(_accepted); i++) {
+			if (strcasecmp(cache_pool_seg->policy_name, _accepted[i].name))
+				continue;
+
+			for (cn = policy_settings->child; cn; cn = cn->sib) {
+				for (j = 0; _accepted[i].settings[j]; j++)
+					if (strcmp(cn->key, _accepted[i].settings[j]) == 0)
+						break; /* -> Valid setting */
+
+				/* Have we found 'unsupported' cache setting? */
+				if (!_accepted[i].settings[j]) {
+					/* Make a copy of policy settings a remove unsupported settings and Warn */
+					if (!(policy_settings = dm_config_clone_node_with_mem(mem, policy_settings, 0)))
+						return_0;
+				restart:
+					for (cn = policy_settings->child; cn; cn = cn->sib) {
+						for (j = 0; _accepted[i].settings[j]; j++) {
+							if (strcmp(cn->key, _accepted[i].settings[j]) == 0)
+								break; /* need to be dropped */
+						}
+						if (!_accepted[i].settings[j]) {
+							log_warn("WARNING: %s cache policy does not support \"%s=" FMTu64 "\" setting, "
+								 "remove with 'lvchange --cachesettings \"%s=default\" ...'.",
+								 _accepted[i].name, cn->key, cn->v->v.i, cn->key);
+							dm_config_remove_node(policy_settings, cn);
+							goto restart;
+						}
+					}
+					break;
+				}
+			}
+			break;
+		}
+	}
+
 	if (!dm_tree_node_add_cache_target(node, len,
 					   feature_flags,
 					   metadata_uuid,
@@ -726,7 +784,7 @@ static int _cache_add_target_line(struct dev_manager *dm,
 					   seg->cleaner_policy ? "cleaner" :
 						   /* undefined policy name -> likely an old "mq" */
 						   cache_pool_seg->policy_name ? : "mq",
-					   seg->cleaner_policy ? NULL : setting_seg->policy_settings,
+					   policy_settings,
 					   seg->metadata_start,
 					   seg->metadata_len,
 					   seg->data_start,
