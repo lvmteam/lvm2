@@ -8789,9 +8789,35 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			return_NULL; /* revert? */
 
 		if (!lv_update_and_reload(lv)) {
-			/* FIXME Do a better revert */
-			log_error("Aborting. Manual intervention required.");
-			return NULL; /* FIXME: revert */
+			char name[NAME_LEN];
+
+			log_debug("Reverting created caching layer.");
+
+			tmp_lv = seg_lv(first_seg(lv), 0); /* tmp corigin */
+			pool_lv = first_seg(lv)->pool_lv;
+
+			if (!detach_pool_lv(first_seg(lv)))
+				return_NULL;
+			if (!remove_layer_from_lv(lv, tmp_lv))
+				return_NULL;
+			if (!lv_remove(tmp_lv))
+				return_NULL;
+
+			/* Either we need to preserve existing LV and remove created cache pool LV.
+			   Or we need to preserve existing cache pool LV and remove created new LV. */
+			if (origin_lv)
+				lv = pool_lv; // created cache pool to be reverted as new LV
+			else {
+				/* Cut off suffix _cpool from preserved existing cache pool */
+				if (!drop_lvname_suffix(name, pool_lv->name, "cpool")) {
+					/* likely older instance of metadata */
+					log_debug("LV %s has no suffix for cachepool (skipping rename).",
+						  display_lvname(pool_lv));
+				} else if (!lv_uniq_rename_update(cmd, pool_lv, name, 0))
+					return_NULL;
+			}
+
+			goto deactivate_and_revert_new_lv;
 		}
 	} else if (lp->snapshot) {
 		/* Deactivate zeroed COW, avoid any race usage */
