@@ -38,7 +38,7 @@ do
 
 # Testing pvmove of thin LV
 lvcreate -aey -l 2 -n ${lv1}_foo $vg "$dev1"
-lvcreate -aey -T $vg/${lv1}_pool -l 4 -V 8 -n $lv1 "$dev1"
+lvcreate -aey -T $vg/${lv1}_pool -l8 -V 8 -n $lv1 "$dev1"
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg $lv1 "$dev1"
 aux mkdev_md5sum $vg $lv1
@@ -54,7 +54,7 @@ lvremove -ff $vg
 
 # Testing pvmove of thin LV on RAID
 lvcreate -aey -l 2 -n ${lv1}_foo $vg "$dev1"
-lvcreate -aey --type raid1 -m 1 -l 4 -n ${lv1}_raid1_pool $vg "$dev1" "$dev2"
+lvcreate -aey --type raid1 -m 1 -l 8 -n ${lv1}_raid1_pool $vg "$dev1" "$dev2"
 lvcreate -aey --type raid1 -m 1 -L 2 -n ${lv1}_raid1_meta $vg "$dev1" "$dev2"
 lvconvert --yes --thinpool $vg/${lv1}_raid1_pool \
         --poolmetadata ${lv1}_raid1_meta
