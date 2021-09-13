@@ -275,6 +275,19 @@ dmsetup status | grep $vg-corigin | grep 'migration_threshold 1233'
 lvremove -f $vg
 
 
+####################################################
+# S/MQ policy does not accept random string settings
+####################################################
+
+lvcreate -L1 -n $lv1 $vg
+lvcreate -L1 -H $vg/$lv1 --cachesettings  unknown=0  |& tee out
+
+grep "not support \"unknown=0\"" out
+
+# But still the caching should proceed and LV should be available
+check lv_exists $vg/$lv1
+
+
 ##############################
 # Test things that should fail
 ##############################
