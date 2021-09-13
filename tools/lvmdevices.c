@@ -127,6 +127,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 	struct device_list *devl;
 	struct device *dev;
 	struct dev_use *du, *du2;
+	const char *deviceidtype;
 	int changes = 0;
 
 	dm_list_init(&search_pvids);
@@ -269,7 +270,6 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_is_set(cmd, adddev_ARG)) {
 		const char *devname;
-		const char *deviceidtype;
 
 		if (!(devname = arg_str_value(cmd, adddev_ARG, NULL)))
 			goto_bad;
@@ -366,7 +366,8 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 			goto bad;
 		}
 		dm_list_iterate_items(devl, &found_devs) {
-			if (!device_id_add(cmd, devl->dev, devl->dev->pvid, NULL, NULL))
+			deviceidtype = arg_str_value(cmd, deviceidtype_ARG, NULL);
+			if (!device_id_add(cmd, devl->dev, devl->dev->pvid, deviceidtype, NULL))
 				goto_bad;
 		}
 		if (!device_ids_write(cmd))

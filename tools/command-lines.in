@@ -1439,6 +1439,7 @@ ID: lvmdevices_edit
 DESC: Remove a device from the devices file.
 
 lvmdevices --addpvid String
+OO: --deviceidtype String
 ID: lvmdevices_edit
 DESC: Find the device with the given PVID and add it to the devices file.
 
