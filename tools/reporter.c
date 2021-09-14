@@ -828,7 +828,7 @@ static int _get_report_options(struct cmd_context *cmd,
 {
 	int action;
 	struct arg_value_group_list *current_group;
-	struct dm_list *final_opts_list[REPORT_IDX_COUNT];
+	struct dm_list *final_opts_list[REPORT_IDX_COUNT] = { NULL };
 	struct dm_list *opts_list = NULL;
 	struct dm_str_list *sl;
 	struct dm_pool *mem;
