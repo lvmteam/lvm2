@@ -232,6 +232,18 @@ static int _lockd_retrive_vg_pv_num(struct volume_group *vg)
 	return num;
 }
 
+static void _lockd_free_pv_list(struct lvmlockd_pvs *lock_pvs)
+{
+	int i;
+
+	for (i = 0; i < lock_pvs->num; i++)
+		free(lock_pvs->path[i]);
+
+	free(lock_pvs->path);
+	lock_pvs->path = NULL;
+	lock_pvs->num = 0;
+}
+
 static void _lockd_retrive_vg_pv_list(struct volume_group *vg,
 				      struct lvmlockd_pvs *lock_pvs)
 {
@@ -269,13 +281,7 @@ static void _lockd_retrive_vg_pv_list(struct volume_group *vg,
 	return;
 
 fail:
-	for (i = 0; i < pv_num; i++) {
-		if (!lock_pvs->path[i])
-			continue;
-		free(lock_pvs->path[i]);
-	}
-	free(lock_pvs->path);
-	return;
+	_lockd_free_pv_list(lock_pvs);
 }
 
 static int _lockd_retrive_lv_pv_num(struct volume_group *vg,
@@ -327,7 +333,7 @@ static void _lockd_retrive_lv_pv_list(struct volume_group *vg,
 	}
 
 	/* Allocate buffer for PV list */
-	lock_pvs->path = malloc(sizeof(*lock_pvs->path) * pv_num);
+	lock_pvs->path = zalloc(sizeof(*lock_pvs->path) * pv_num);
 	if (!lock_pvs->path) {
 		log_error("Fail to allocate PV list for %s/%s", vg->name, lv_name);
 		return;
@@ -352,30 +358,7 @@ static void _lockd_retrive_lv_pv_list(struct volume_group *vg,
 	return;
 
 fail:
-	for (i = 0; i < pv_num; i++) {
-		if (!lock_pvs->path[i])
-			continue;
-		free(lock_pvs->path[i]);
-		lock_pvs->path[i] = NULL;
-	}
-	free(lock_pvs->path);
-	lock_pvs->path = NULL;
-	lock_pvs->num = 0;
-	return;
-}
-
-static void _lockd_free_pv_list(struct lvmlockd_pvs *lock_pvs)
-{
-	int i;
-
-	for (i = 0; i < lock_pvs->num; i++) {
-		free(lock_pvs->path[i]);
-		lock_pvs->path[i] = NULL;
-	}
-
-	free(lock_pvs->path);
-	lock_pvs->path = NULL;
-	lock_pvs->num = 0;
+	_lockd_free_pv_list(lock_pvs);
 }
 
 /*
