@@ -6280,6 +6280,7 @@ int main(int argc, char *argv[])
 		.daemon_fini = NULL,
 		.daemon_main = main_loop,
 	};
+	daemon_host_id_file = NULL;
 
 	static struct option long_options[] = {
 		{"help",            no_argument,       0, 'h' },
@@ -6332,9 +6333,11 @@ int main(int argc, char *argv[])
 			daemon_debug = 1;
 			break;
 		case 'p':
+			free((void*)ds.pidfile);
 			ds.pidfile = strdup(optarg);
 			break;
 		case 's':
+			free((void*)ds.socket_path);
 			ds.socket_path = strdup(optarg);
 			break;
 		case 'g':
@@ -6354,6 +6357,7 @@ int main(int argc, char *argv[])
 			daemon_host_id = atoi(optarg);
 			break;
 		case 'F':
+			free((void*)daemon_host_id_file);
 			daemon_host_id_file = strdup(optarg);
 			break;
 		case 'o':
