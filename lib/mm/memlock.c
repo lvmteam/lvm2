@@ -357,7 +357,7 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 			_maps_buffer = line;
 		}
 		if (lseek(_maps_fd, 0, SEEK_SET))
-			log_sys_error("lseek", _procselfmaps);
+			log_sys_debug("lseek", _procselfmaps);
 		for (len = 0 ; len < _maps_len; len += n) {
 			if (!(n = read(_maps_fd, _maps_buffer + len, _maps_len - len)))
 				break; /* EOF */
@@ -561,7 +561,7 @@ static void _unlock_mem(struct cmd_context *cmd)
 	if (!_use_mlockall) {
 		_restore_mmap();
 		if (close(_maps_fd))
-			log_sys_error("close", _procselfmaps);
+			log_sys_debug("close", _procselfmaps);
 		free(_maps_buffer);
 		_maps_buffer = NULL;
 		if (_mstats < unlock_mstats) {
