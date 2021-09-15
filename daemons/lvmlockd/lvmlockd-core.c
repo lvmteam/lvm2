@@ -438,18 +438,11 @@ static void free_pvs_path(struct pvs *pvs)
 {
 	int i;
 
-	for (i = 0; i < pvs->num; i++) {
-		if (!pvs->path[i])
-			continue;
-
+	for (i = 0; i < pvs->num; i++)
 		free((char *)pvs->path[i]);
-		pvs->path[i] = NULL;
-	}
 
-	if (!pvs->path) {
-		free(pvs->path);
-		pvs->path = NULL;
-	}
+	free(pvs->path);
+	pvs->path = NULL;
 }
 
 static char **alloc_and_copy_pvs_path(struct pvs *dst, struct pvs *src)
@@ -563,10 +556,8 @@ static struct lock *alloc_lock(void)
 
 static void free_action(struct action *act)
 {
-	if (act->path) {
-		free(act->path);
-		act->path = NULL;
-	}
+	free(act->path);
+	act->path = NULL;
 
 	free_pvs_path(&act->pvs);
 

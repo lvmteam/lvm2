@@ -456,8 +456,9 @@ int lm_add_lockspace_idm(struct lockspace *ls, int adopt)
 fail:
 	if (lmi && lmi->sock)
 		close(lmi->sock);
-	if (lmi)
-		free(lmi);
+
+	free(lmi);
+
 	return rv;
 }
 
@@ -506,8 +507,7 @@ int lm_rem_resource_idm(struct lockspace *ls, struct resource *r)
 {
 	struct rd_idm *rdi = (struct rd_idm *)r->lm_data;
 
-	if (rdi->vb)
-		free(rdi->vb);
+	free(rdi->vb);
 
 	memset(rdi, 0, sizeof(struct rd_idm));
 	r->lm_init = 0;
