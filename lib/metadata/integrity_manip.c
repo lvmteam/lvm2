@@ -86,7 +86,7 @@ static int _lv_create_integrity_metadata(struct cmd_context *cmd,
 				struct lvcreate_params *lp,
 				struct logical_volume **meta_lv)
 {
-	char metaname[NAME_LEN];
+	char metaname[NAME_LEN] = { 0 };
 	uint64_t lv_size_bytes, meta_bytes, meta_sectors;
 	struct logical_volume *lv;
 	struct lvcreate_params lp_meta = {
