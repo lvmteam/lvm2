@@ -310,7 +310,7 @@ convert2lvm_() {
 	case "$DM_OPEN" in
 	Device*) ;; # no devices
 	*)	eval "$DM_OPEN"
-		test "${DM_OPEN:-0}" -eq 0 || error "Cannot converted VDO volume \"$VDONAME\" which is in use!"
+		test "${DM_OPEN:-0}" -eq 0 || error "Cannot convert VDO volume \"$VDONAME\" which is in use!"
 		;;
 	esac
 
