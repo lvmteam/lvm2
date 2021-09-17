@@ -2144,7 +2144,8 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 			/* I don't think this would happen */
 			log_warn("WARNING: new device %s for PVID %s does not pass filter %s.",
 				 dev_name(dev), dil->pvid, dev_filtered_reason(dev));
-			du->dev = NULL;
+			if (du) /* Should not happen 'du' is NULL */
+				du->dev = NULL;
 			dev->flags &= ~DEV_MATCHED_USE_ID;
 		}
 	}
