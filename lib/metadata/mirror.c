@@ -657,6 +657,11 @@ static int _split_mirror_images(struct logical_volume *lv,
 		dm_list_add(&split_images, &lvl->list);
 	}
 
+	if (!new_lv) {
+		log_error(INTERNAL_ERROR "New LV not found.");
+		return 0;
+	}
+
 	new_lv->name = dm_pool_strdup(lv->vg->vgmem, split_name);
 	if (!new_lv->name) {
 		log_error("Unable to rename newly split LV.");

@@ -104,7 +104,10 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_PROCESSED;
 	}
 
-	if (!_check_all_dm_devices(vg_name, &found)) {
+	if (!vg_name) {
+		log_error(INTERNAL_ERROR "VG name is not set.");
+		return ECMD_FAILED;
+	} else if (!_check_all_dm_devices(vg_name, &found)) {
 		log_warn("WARNING: Failed to check for active volumes in volume group \"%s\".", vg_name);
 	} else if (found) {
 		log_warn("WARNING: Found %u active volume(s) in volume group \"%s\".",
