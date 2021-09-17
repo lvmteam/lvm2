@@ -270,18 +270,13 @@ static void _lockd_retrive_vg_pv_list(struct volume_group *vg,
 		lock_pvs->path[i] = strdup(pv_dev_name(pvl->pv));
 		if (!lock_pvs->path[i]) {
 			log_error("Fail to allocate PV path for VG %s", vg->name);
-			goto fail;
+			_lockd_free_pv_list(lock_pvs);
+			return;
 		}
 
 		log_debug("VG %s find PV device %s", vg->name, lock_pvs->path[i]);
-		i++;
+		lock_pvs->num = ++i;
 	}
-
-	lock_pvs->num = pv_num;
-	return;
-
-fail:
-	_lockd_free_pv_list(lock_pvs);
 }
 
 static int _lockd_retrive_lv_pv_num(struct volume_group *vg,
@@ -345,20 +340,15 @@ static void _lockd_retrive_lv_pv_list(struct volume_group *vg,
 			if (!lock_pvs->path[i]) {
 				log_error("Fail to allocate PV path for LV %s/%s",
 					  vg->name, lv_name);
-				goto fail;
+				_lockd_free_pv_list(lock_pvs);
+				return;
 			}
 
 			log_debug("Find PV device %s for LV %s/%s",
 				  lock_pvs->path[i], vg->name, lv_name);
-			i++;
+			lock_pvs->num = ++i;
 		}
 	}
-
-	lock_pvs->num = pv_num;
-	return;
-
-fail:
-	_lockd_free_pv_list(lock_pvs);
 }
 
 /*
