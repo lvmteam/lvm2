@@ -59,7 +59,7 @@ Answer "yes" at any prompts.
 .
 .TP
 .BR --dry-run
-Print commands without running them.
+Print verbosely commands without running them.
 .
 .
 .SH DIAGNOSTICS

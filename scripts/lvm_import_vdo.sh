@@ -73,7 +73,7 @@ tool_usage() {
 	echo "	  -n | --name	      Specifies VG/LV name for converted VDO volume"
 	echo "	  -v | --verbose      Be verbose"
 	echo "	  -y | --yes	      Answer \"yes\" at any prompts"
-	echo "	       --dry-run      Print commands without running them"
+	echo "	       --dry-run      Print verbosely commands without running them"
 
 	exit
 }
@@ -434,7 +434,7 @@ do
 	  "-n"|"--name"   ) shift; NAME=$1 ;;
 	  "-v"|"--verbose") VERB="-v" ;;
 	  "-y"|"--yes"    ) YES="-y" ;;
-	  "--dry-run"     ) DRY="1" ;;
+	  "--dry-run"     ) DRY="1" ; VERB="-v" ;;
 	  "-*") error "Wrong argument \"$1\". (see: $TOOL --help)" ;;
 	  *) DEVICENAME=$1 ;;  # device name does not start with '-'
 	esac
