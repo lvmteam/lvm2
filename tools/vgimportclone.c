@@ -194,7 +194,7 @@ static int _get_other_devs(struct cmd_context *cmd, struct dm_list *new_devs, st
 	while ((dev = dev_iter_get(cmd, iter))) {
 		if (_get_device_list(new_devs, dev))
 			continue;
-		if (!(devl = malloc(sizeof(*devl)))) {
+		if (!(devl = zalloc(sizeof(*devl)))) {
 			r = 0;
 			goto_bad;
 		}
@@ -278,7 +278,7 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 			goto out;
 		}
 
-		if (!(devl = malloc(sizeof(*devl))))
+		if (!(devl = zalloc(sizeof(*devl))))
 			goto_out;
 
 		devl->dev = dev;

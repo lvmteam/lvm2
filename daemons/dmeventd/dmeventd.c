@@ -2069,7 +2069,7 @@ static void _restart_dmeventd(void)
 			++count;
 		}
 
-	if (!(_initial_registrations = malloc(sizeof(char*) * (count + 1)))) {
+	if (!(_initial_registrations = zalloc(sizeof(char*) * (count + 1)))) {
 		fprintf(stderr, "Memory allocation registration failed.\n");
 		goto bad;
 	}
