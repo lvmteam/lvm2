@@ -81,6 +81,8 @@ static const char *_show_method(enum method m)
 static void _expect(struct mock_engine *e, enum method m)
 {
 	struct mock_call *mc = malloc(sizeof(*mc));
+
+	T_ASSERT(mc);
 	mc->m = m;
 	mc->match_args = false;
 	dm_list_add(&e->expected_calls, &mc->list);
@@ -89,6 +91,8 @@ static void _expect(struct mock_engine *e, enum method m)
 static void _expect_read(struct mock_engine *e, int di, block_address b)
 {
 	struct mock_call *mc = malloc(sizeof(*mc));
+
+	T_ASSERT(mc);
 	mc->m = E_ISSUE;
 	mc->match_args = true;
 	mc->d = DIR_READ;
@@ -102,6 +106,8 @@ static void _expect_read(struct mock_engine *e, int di, block_address b)
 static void _expect_read_any(struct mock_engine *e)
 {
 	struct mock_call *mc = malloc(sizeof(*mc));
+
+	T_ASSERT(mc);
 	mc->m = E_ISSUE;
 	mc->match_args = false;
 	mc->issue_r = true;
@@ -112,6 +118,8 @@ static void _expect_read_any(struct mock_engine *e)
 static void _expect_write(struct mock_engine *e, int di, block_address b)
 {
 	struct mock_call *mc = malloc(sizeof(*mc));
+
+	T_ASSERT(mc);
 	mc->m = E_ISSUE;
 	mc->match_args = true;
 	mc->d = DIR_WRITE;
@@ -125,6 +133,8 @@ static void _expect_write(struct mock_engine *e, int di, block_address b)
 static void _expect_read_bad_issue(struct mock_engine *e, int di, block_address b)
 {
 	struct mock_call *mc = malloc(sizeof(*mc));
+
+	T_ASSERT(mc);
 	mc->m = E_ISSUE;
 	mc->match_args = true;
 	mc->d = DIR_READ;
@@ -138,6 +148,8 @@ static void _expect_read_bad_issue(struct mock_engine *e, int di, block_address 
 static void _expect_write_bad_issue(struct mock_engine *e, int di, block_address b)
 {
 	struct mock_call *mc = malloc(sizeof(*mc));
+
+	T_ASSERT(mc);
 	mc->m = E_ISSUE;
 	mc->match_args = true;
 	mc->d = DIR_WRITE;
@@ -151,6 +163,8 @@ static void _expect_write_bad_issue(struct mock_engine *e, int di, block_address
 static void _expect_read_bad_wait(struct mock_engine *e, int di, block_address b)
 {
 	struct mock_call *mc = malloc(sizeof(*mc));
+
+	T_ASSERT(mc);
 	mc->m = E_ISSUE;
 	mc->match_args = true;
 	mc->d = DIR_READ;
@@ -164,6 +178,8 @@ static void _expect_read_bad_wait(struct mock_engine *e, int di, block_address b
 static void _expect_write_bad_wait(struct mock_engine *e, int di, block_address b)
 {
 	struct mock_call *mc = malloc(sizeof(*mc));
+
+	T_ASSERT(mc);
 	mc->m = E_ISSUE;
 	mc->match_args = true;
 	mc->d = DIR_WRITE;
@@ -292,6 +308,8 @@ static struct mock_engine *_mock_create(unsigned max_io, sector_t block_size)
 {
 	struct mock_engine *m = malloc(sizeof(*m));
 
+	T_ASSERT(m);
+
 	m->e.destroy = _mock_destroy;
 	m->e.issue = _mock_issue;
 	m->e.wait = _mock_wait;
@@ -316,6 +334,8 @@ struct fixture {
 static struct fixture *_fixture_init(sector_t block_size, unsigned nr_cache_blocks)
 {
 	struct fixture *f = malloc(sizeof(*f));
+
+	T_ASSERT(f);
 
 	f->me = _mock_create(16, block_size);
 	T_ASSERT(f->me);
@@ -605,7 +625,7 @@ static void test_flush_waits_for_all_dirty(void *context)
 			_expect(me, E_WAIT);
 	}
 
-	bcache_flush(cache);
+	T_ASSERT(bcache_flush(cache));
 	_no_outstanding_expectations(me);
 }
 
@@ -1008,7 +1028,7 @@ static struct test_suite *_large_tests(void)
 
 void bcache_tests(struct dm_list *all_tests)
 {
-        dm_list_add(all_tests, &_tiny_tests()->list);
+	dm_list_add(all_tests, &_tiny_tests()->list);
 	dm_list_add(all_tests, &_small_tests()->list);
 	dm_list_add(all_tests, &_large_tests()->list);
 }

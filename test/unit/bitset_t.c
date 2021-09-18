@@ -41,6 +41,8 @@ static void test_get_next(void *fixture)
         int i, j, last = 0, first;
         dm_bitset_t bs = dm_bitset_create(mem, NR_BITS);
 
+	T_ASSERT(bs);
+
         for (i = 0; i < NR_BITS; i++)
                 T_ASSERT(!dm_bit(bs, i));
 
@@ -76,7 +78,11 @@ static void test_equal(void *fixture)
         dm_bitset_t bs1 = dm_bitset_create(mem, NR_BITS);
         dm_bitset_t bs2 = dm_bitset_create(mem, NR_BITS);
 
-        int i, j;
+	int i, j;
+
+	T_ASSERT(bs1);
+	T_ASSERT(bs2);
+
         for (i = 0, j = 1; i < NR_BITS; i += j, j++) {
                 dm_bit_set(bs1, i);
                 dm_bit_set(bs2, i);
@@ -102,7 +108,12 @@ static void test_and(void *fixture)
         dm_bitset_t bs2 = dm_bitset_create(mem, NR_BITS);
         dm_bitset_t bs3 = dm_bitset_create(mem, NR_BITS);
 
-        int i, j;
+	int i, j;
+
+	T_ASSERT(bs1);
+	T_ASSERT(bs2);
+	T_ASSERT(bs3);
+
         for (i = 0, j = 1; i < NR_BITS; i += j, j++) {
                 dm_bit_set(bs1, i);
                 dm_bit_set(bs2, i);

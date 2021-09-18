@@ -186,7 +186,8 @@ static const char *_fake_lvmconfig(const char *output)
 	fprintf(fp, "EOF\n");
 
 	fclose(fp);
-	chmod(path, 0770);
+	if (chmod(path, 0770))
+		test_fail("chmod 0777 failed on path %s", path);
 
 	return path;
 }

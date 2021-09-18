@@ -144,6 +144,10 @@ static void _verify(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uint8_t
         	unsigned i;
         	size_t len2 = byte_e - byte_b;
 		uint8_t *buffer = malloc(len2);
+
+		T_ASSERT(buffer);
+		memset(buffer, 0, len2);
+
 		T_ASSERT(bcache_read_bytes(f->cache, f->di, byte_b, len2, buffer));
 		for (i = 0; i < len; i++)
         		T_ASSERT_EQUAL(buffer[i], _pattern_at(pat, byte_b + i));
@@ -197,7 +201,9 @@ static void _do_write(struct fixture *f, uint64_t byte_b, uint64_t byte_e, uint8
         unsigned i;
         size_t len = byte_e - byte_b;
         uint8_t *buffer = malloc(len);
-        T_ASSERT(buffer);
+
+	T_ASSERT(buffer);
+	memset(buffer, 0, len);
 
         for (i = 0; i < len; i++)
 		buffer[i] = _pattern_at(pat, byte_b + i);

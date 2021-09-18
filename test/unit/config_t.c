@@ -96,8 +96,14 @@ static void test_parse(void *fixture)
 static void test_clone(void *fixture)
 {
 	struct dm_config_tree *tree = dm_config_from_string(conf);
-	struct dm_config_node *n = dm_config_clone_node(tree, tree->root, 1);
+	struct dm_config_node *n;
 	const struct dm_config_value *value;
+
+	T_ASSERT(tree);
+
+	n = dm_config_clone_node(tree, tree->root, 1);
+
+	T_ASSERT(n);
 
 	/* Check that the nodes are actually distinct. */
 	T_ASSERT(n != tree->root);
@@ -136,7 +142,14 @@ static void test_cascade(void *fixture)
 {
 	struct dm_config_tree *t1 = dm_config_from_string(conf),
 		              *t2 = dm_config_from_string(overlay),
-		              *tree = dm_config_insert_cascaded_tree(t2, t1);
+			      *tree;
+
+	T_ASSERT(t1);
+	T_ASSERT(t2);
+
+	tree = dm_config_insert_cascaded_tree(t2, t1);
+
+	T_ASSERT(tree);
 
 	T_ASSERT(!strcmp(dm_config_tree_find_str(tree, "id", "foo"), "yoda-soda"));
 	T_ASSERT(!strcmp(dm_config_tree_find_str(tree, "idt", "foo"), "foo"));

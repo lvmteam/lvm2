@@ -146,6 +146,8 @@ static void _test_read(void *fixture)
 
 	f->di = bcache_set_fd(f->fd);
 
+	T_ASSERT(f->di >= 0);
+
 	_io_init(&io);
 	T_ASSERT(f->e->issue(f->e, DIR_READ, f->di, 0, BLOCK_SIZE_SECTORS, f->data, &io));
 	T_ASSERT(f->e->wait(f->e, _complete_io));
@@ -163,6 +165,8 @@ static void _test_write(void *fixture)
 	T_ASSERT(cache);
 
 	f->di = bcache_set_fd(f->fd);
+
+	T_ASSERT(f->di >= 0);
 
 	_io_init(&io);
 	T_ASSERT(f->e->issue(f->e, DIR_WRITE, f->di, 0, BLOCK_SIZE_SECTORS, f->data, &io));
