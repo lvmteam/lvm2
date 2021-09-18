@@ -6762,6 +6762,8 @@ static int _process_losetup_switches(const char *base, int *argcp, char ***argvp
 	if (!_table ||
 	    !_loop_table(_table, (size_t) LOOP_TABLE_SIZE, loop_file, device_name, offset)) {
 		log_error("Could not build device-mapper table for %s.", (*argvp)[0]);
+		free(loop_file);
+		free(_table);
 		free(device_name);
 		return 0;
 	}
@@ -6770,6 +6772,7 @@ static int _process_losetup_switches(const char *base, int *argcp, char ***argvp
 	_command = "create";
 	(*argvp)[0] = device_name ;
 	*argcp = 1;
+	free(loop_file);
 
 	return 1;
 }
