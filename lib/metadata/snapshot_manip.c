@@ -111,13 +111,18 @@ int cow_has_min_chunks(const struct volume_group *vg, uint32_t cow_extents, uint
 
 int lv_is_cow_covering_origin(const struct logical_volume *lv)
 {
-	return lv_is_cow(lv) &&
-		(lv->size >= _cow_max_size(lv->vg->cmd, origin_from_cow(lv)->size,
-					   find_snapshot(lv)->chunk_size));
+	const struct logical_volume *origin;
+
+	return (lv_is_cow(lv) &&
+		(origin = origin_from_cow(lv)) &&
+		(lv->size >= _cow_max_size(lv->vg->cmd, origin->size,
+					   find_snapshot(lv)->chunk_size)));
 }
 
 int lv_is_visible(const struct logical_volume *lv)
 {
+	const struct logical_volume *origin;
+
 	if (lv_is_historical(lv))
 		return 1;
 
@@ -125,13 +130,16 @@ int lv_is_visible(const struct logical_volume *lv)
 		return 0;
 
 	if (lv_is_cow(lv)) {
-		if (lv_is_virtual_origin(origin_from_cow(lv)))
+		if (!(origin = origin_from_cow(lv)))
+			return_0;
+
+		if (lv_is_virtual_origin(origin))
 			return 1;
 
 		if (lv_is_merging_cow(lv))
 			return 0;
 
-		return lv_is_visible(origin_from_cow(lv));
+		return lv_is_visible(origin);
 	}
 
 	return lv->status & VISIBLE_LV ? 1 : 0;
@@ -160,6 +168,9 @@ struct logical_volume *origin_from_cow(const struct logical_volume *lv)
 {
 	if (lv->snapshot)
 		return lv->snapshot->origin;
+
+	log_debug(INTERNAL_ERROR "Cannot get origin from snapshot %s.",
+		  display_lvname(lv));
 	return NULL;
 }
 
@@ -286,8 +297,15 @@ int vg_add_snapshot(struct logical_volume *origin,
 
 int vg_remove_snapshot(struct logical_volume *cow)
 {
-	struct logical_volume *origin = origin_from_cow(cow);
-	int is_origin_active = lv_is_active(origin);
+	struct logical_volume *origin;
+	int is_origin_active;
+
+	if (!lv_is_cow(cow))
+		return_0;
+
+	origin = origin_from_cow(cow);
+
+	is_origin_active = lv_is_active(origin);
 
 	if (is_origin_active &&
 	    lv_is_virtual_origin(origin)) {

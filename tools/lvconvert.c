@@ -2142,10 +2142,15 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 					 struct logical_volume **lv_to_poll)
 {
 	int merge_on_activate = 0;
-	struct logical_volume *origin = origin_from_cow(lv);
+	struct logical_volume *origin;
 	struct lv_segment *snap_seg = find_snapshot(lv);
 	struct lvinfo info;
 	dm_percent_t snap_percent;
+
+	if (!snap_seg)
+		return_0;
+
+	origin = origin_from_cow(lv);
 
 	/* Check if merge is possible */
 	if (lv_is_merging_origin(origin)) {
