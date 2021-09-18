@@ -4349,7 +4349,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 		if (ret > ret_max)
 			ret_max = ret;
 
-		if (!skip)
+		if (!skip && vg)
 			unlock_vg(cmd, vg, vg->name);
 endvg:
 		if (error_vg)
