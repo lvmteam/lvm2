@@ -6305,6 +6305,7 @@ int main(int argc, char *argv[])
 		case '0':
 			break;
 		case 128:
+			free((void *) adopt_file);
 			adopt_file = strdup(optarg);
 			break;
 		case 'h':
