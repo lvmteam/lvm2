@@ -629,7 +629,7 @@ check_unlinked:
 static int _daemonise(struct filemap_monitor *fm)
 {
 	pid_t pid = 0;
-	int fd;
+	int fd, ffd;
 
 	if (!setsid()) {
 		_early_log("setsid failed.");
@@ -670,10 +670,10 @@ static int _daemonise(struct filemap_monitor *fm)
 			(void) close(fd);
 	}
 	/* TODO: Use libdaemon/server/daemon-server.c _daemonise() */
-	for (fd = (int) sysconf(_SC_OPEN_MAX) - 1; fd > STDERR_FILENO; fd--) {
-		if (fd == fm->fd)
+	for (ffd = (int) sysconf(_SC_OPEN_MAX) - 1; ffd > STDERR_FILENO; --ffd) {
+		if (ffd == fm->fd)
 			continue;
-		(void) close(fd);
+		(void) close(ffd);
 	}
 
 	return 1;
