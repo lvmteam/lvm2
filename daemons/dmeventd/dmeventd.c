@@ -1072,6 +1072,7 @@ out:
 	 * "label at end of compound statement" */
 	;
 
+	/* coverity[lock_order] _global_mutex is kept locked */
 	pthread_cleanup_pop(1);
 
 	return NULL;

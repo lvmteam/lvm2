@@ -392,6 +392,7 @@ struct io_engine *create_async_io_engine(void)
 
 	e->page_mask = (unsigned) _pagesize - 1;
 
+	/* coverity[leaked_storage] 'e' is not leaking */
 	return &e->e;
 }
 
@@ -606,7 +607,8 @@ struct io_engine *create_sync_io_engine(void)
         e->e.wait = _sync_wait;
         e->e.max_io = _sync_max_io;
 
-        dm_list_init(&e->complete);
+	dm_list_init(&e->complete);
+	/* coverity[leaked_storage] 'e' is not leaking */
         return &e->e;
 }
 

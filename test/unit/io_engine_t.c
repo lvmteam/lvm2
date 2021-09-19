@@ -89,6 +89,7 @@ static void *_fix_init(void)
         	test_fail("posix_memalign failed");
 
         snprintf(f->fname, sizeof(f->fname), "unit-test-XXXXXX");
+	/* coverity[secure_temp] don't care */
 	f->fd = mkstemp(f->fname);
 	T_ASSERT(f->fd >= 0);
 

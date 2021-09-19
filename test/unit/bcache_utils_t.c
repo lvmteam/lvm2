@@ -67,6 +67,7 @@ static void *_fix_init(struct io_engine *engine)
         T_ASSERT(f);
 
         snprintf(f->fname, sizeof(f->fname), "unit-test-XXXXXX");
+	/* coverity[secure_temp] don't care */
 	f->fd = mkstemp(f->fname);
 	T_ASSERT(f->fd >= 0);
 
@@ -243,6 +244,7 @@ static void _reopen(struct fixture *f)
 
 static uint8_t _random_pattern(void)
 {
+	/* coverity[dont_call] don't care */
 	return random();
 }
 

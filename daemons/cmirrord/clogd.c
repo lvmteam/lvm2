@@ -245,6 +245,7 @@ static void daemonize(void)
 	}
 
 	LOG_OPEN("cmirrord", LOG_PID, LOG_DAEMON);
+	/* coverity[leaked_handle] devnull cannot leak here */
 }
 
 /*

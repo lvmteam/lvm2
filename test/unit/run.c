@@ -200,6 +200,7 @@ static void _run_test(struct test_details *t, bool use_colour, unsigned *passed,
 
 		(*passed)++;
 		fprintf(stderr, "%s[     OK]%s\n", green(use_colour), normal(use_colour));
+		/* coverity[leaked_storage]  fixture released by fixture_exit */
 	}
 }
 

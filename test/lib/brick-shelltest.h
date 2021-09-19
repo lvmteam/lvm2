@@ -482,6 +482,7 @@ struct Source {
 
     virtual void sync( Sink *sink ) {
         ssize_t sz;
+        /* coverity[stack_use_local_overflow] */
         char buf[ 128 * 1024 ];
         if ( (sz = read(fd, buf, sizeof(buf) - 1)) > 0 )
             sink->push( std::string( buf, sz ) );

@@ -111,6 +111,8 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 			_exit(ECMD_FAILED);
 	}
 
+	/* coverity[leaked_handle] null_fd does not leak here */
+
 	return 1;
 }
 

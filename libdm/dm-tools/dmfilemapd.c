@@ -664,6 +664,7 @@ static int _daemonise(struct filemap_monitor *fm)
 			if (fd > STDERR_FILENO)
 				(void) close(fd);
 			_early_log("Error redirecting stdin/out/err to null.");
+			/* coverity[leaked_handle] no leak */
 			return 0;
 		}
 		if (fd > STDERR_FILENO)

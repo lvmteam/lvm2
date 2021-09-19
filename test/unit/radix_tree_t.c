@@ -169,6 +169,7 @@ static void test_prefix_keys_reversed(void *fixture)
 static void _gen_key(uint8_t *b, uint8_t *e)
 {
 	for (; b != e; b++)
+		/* coverity[dont_call] don't care */
 		*b = rand() % 256;
 }
 

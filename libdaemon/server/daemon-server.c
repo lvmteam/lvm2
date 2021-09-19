@@ -408,6 +408,8 @@ static void _daemonise(daemon_state s)
 	}
 
 	setsid();
+
+	/* coverity[leaked_handle] 'fd' handle is not leaking */
 }
 
 response daemon_reply_simple(const char *id, ...)
