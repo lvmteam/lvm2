@@ -186,7 +186,7 @@ static int _lockd_result(daemon_reply reply, int *result, uint32_t *lockd_flags)
 static daemon_reply _lockd_send_with_pvs(const char *req_name,
 				const struct lvmlockd_pvs *lock_pvs, ...)
 {
-	daemon_reply repl;
+	daemon_reply repl = { .error = -1 };
 	daemon_request req;
 	int i;
 	char key[32];
@@ -201,18 +201,23 @@ static daemon_reply _lockd_send_with_pvs(const char *req_name,
 
 	/* Pass PV list */
 	if (lock_pvs && lock_pvs->num) {
-		daemon_request_extend(req, "path_num = " FMTd64,
-				      (int64_t)(lock_pvs)->num, NULL);
-
+		if (!daemon_request_extend(req, "path_num = " FMTd64,
+					   (int64_t)(lock_pvs)->num, NULL)) {
+			log_error("Failed to create pvs request.");
+			goto bad;
+		}
 		for (i = 0; i < lock_pvs->num; i++) {
 			snprintf(key, sizeof(key), "path[%d] = %%s", i);
 			val = lock_pvs->path[i] ? lock_pvs->path[i] : "none";
-			daemon_request_extend(req, key, val, NULL);
+			if (!daemon_request_extend(req, key, val, NULL)) {
+				log_error("Failed to create pvs request.");
+				goto bad;
+			}
 		}
 	}
 
 	repl = daemon_send(_lvmlockd, req);
-
+bad:
 	daemon_request_destroy(req);
 
 	return repl;
