@@ -185,7 +185,7 @@ static const char *_fake_lvmconfig(const char *output)
 	fprintf(fp, "%s", output);
 	fprintf(fp, "EOF\n");
 
-	fclose(fp);
+	(void) fclose(fp);
 	if (chmod(path, 0770))
 		test_fail("chmod 0777 failed on path %s", path);
 
@@ -234,7 +234,7 @@ static void _test_get_config(void *fixture)
 				test_fail("_get_config() <- '%s' unexpectedly succeeded", t->output);
 		}
 
-		unlink(path);
+		(void) unlink(path);
 	}
 }
 

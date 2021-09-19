@@ -734,7 +734,7 @@ static void _block_remove(struct block *b)
         k.parts.di = b->di;
         k.parts.b = b->index;
 
-	radix_tree_remove(b->cache->rtree, k.bytes, k.bytes + sizeof(k.bytes));
+	(void) radix_tree_remove(b->cache->rtree, k.bytes, k.bytes + sizeof(k.bytes));
 }
 
 //----------------------------------------------------------------

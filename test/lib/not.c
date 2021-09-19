@@ -80,7 +80,7 @@ int main(int args, char **argv) {
 			val = "5";
 
 		if (val)
-			setenv("LVM_EXPECTED_EXIT_STATUS", val, 1);
+			(void) setenv("LVM_EXPECTED_EXIT_STATUS", val, 1);
 
 		execvp(argv[1], &argv[1]);
 		/* should not be accessible */

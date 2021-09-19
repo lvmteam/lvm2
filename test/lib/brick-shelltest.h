@@ -102,7 +102,7 @@ struct dir {
         if ( !d )
             throw syserr( "error opening directory", p );
     }
-    ~dir() { closedir( d ); }
+    ~dir() { (void) closedir( d ); }
 };
 
 typedef std::vector< std::string > Listing;
@@ -111,8 +111,8 @@ inline void fsync_name( std::string n )
 {
     int fd = open( n.c_str(), O_WRONLY );
     if ( fd >= 0 ) {
-        fsync( fd );
-        close( fd );
+        (void) fsync( fd );
+        (void) close( fd );
     }
 }
 
@@ -464,8 +464,8 @@ struct FileSink : FdSink {
 
     ~FileSink() {
         if ( fd >= 0 ) {
-            fsync( fd );
-            close( fd );
+            (void) fsync( fd );
+            (void) close( fd );
         }
     }
 };
@@ -515,7 +515,7 @@ struct Source {
     Source( int _fd = -1 ) : fd( _fd ) {}
     virtual ~Source() {
         if ( fd >= 0 )
-            ::close( fd );
+            (void) ::close( fd );
     }
 };
 
@@ -570,7 +570,7 @@ struct KMsg : Source {
                 can_clear = false;
         } else if ( lseek( fd, 0L, SEEK_END ) == (off_t) -1 ) {
             fprintf( stderr, "lseek log %s %s\n", read_msg, strerror( errno ) );
-            close(fd);
+            (void) close(fd);
             fd = -1;
         }
 #endif
@@ -712,13 +712,13 @@ struct TestProcess
         if ( !interactive ) {
             int devnull = ::open( "/dev/null", O_RDONLY );
             if ( devnull >= 0 ) { /* gcc really doesn't like to not have stdin */
-                dup2( devnull, STDIN_FILENO );
-                close( devnull );
+                (void) dup2( devnull, STDIN_FILENO );
+                (void) close( devnull );
             } else
-                close( STDIN_FILENO );
-            dup2( fd, STDOUT_FILENO );
-            dup2( fd, STDERR_FILENO );
-            close( fd );
+                (void) close( STDIN_FILENO );
+            (void) dup2( fd, STDOUT_FILENO );
+            (void) dup2( fd, STDERR_FILENO );
+            (void) close( fd );
         }
 
         setpgid( 0, 0 );
@@ -804,7 +804,7 @@ struct TestCase {
                 if ( waitpid( pid, &status, WNOHANG ) == 0 ) {
                     system( "echo t > /proc/sysrq-trigger 2> /dev/null" );
                     kill( -pid, SIGKILL );
-                    waitpid( pid, &status, 0 );
+                    (void) waitpid( pid, &status, 0 );
                 }
                 timeout = true;
                 io.sync( true );
@@ -897,7 +897,7 @@ struct TestCase {
 
     void parent()
     {
-        ::close( child.fd );
+        (void) ::close( child.fd );
         setupIO();
 
         journal->started( id() );
@@ -957,9 +957,9 @@ struct TestCase {
             exit(201);
         } else if (pid == 0) {
             io.close();
-            chdir( options.workdir.c_str() );
+            (void) chdir( options.workdir.c_str() );
             if ( !options.flavour_envvar.empty() )
-                setenv( options.flavour_envvar.c_str(), flavour.c_str(), 1 );
+                (void) setenv( options.flavour_envvar.c_str(), flavour.c_str(), 1 );
             child.exec();
         } else {
             parent();
@@ -1053,7 +1053,7 @@ struct Main {
         if ( options.cont )
             journal.read();
         else
-            ::unlink( journal.location.c_str() );
+            (void) ::unlink( journal.location.c_str() );
     }
 
     int run() {

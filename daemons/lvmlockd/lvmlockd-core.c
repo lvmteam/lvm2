@@ -919,7 +919,7 @@ static void write_adopt_file(void)
 	pthread_mutex_unlock(&lockspaces_mutex);
 
 	fflush(fp);
-	fclose(fp);
+	(void) fclose(fp);
 }
 
 static int read_adopt_file(struct list_head *vg_lockd)
@@ -1010,11 +1010,11 @@ static int read_adopt_file(struct list_head *vg_lockd)
 		}
 	}
 
-	fclose(fp);
+	(void) fclose(fp);
 	return 0;
 
 fail:
-	fclose(fp);
+	(void) fclose(fp);
 	return -1;
 }
 

@@ -31,25 +31,25 @@ static void test_percent_100(void *fixture)
 	T_ASSERT_EQUAL(p1_100, DM_PERCENT_100);
 	T_ASSERT_NOT_EQUAL(n_100, DM_PERCENT_100);
 
-        dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(p_100));
+	(void) dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(p_100));
 	T_ASSERT_EQUAL(strcmp(buf, "100.00"), 0);
 
-	dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(p1_100));
+	(void) dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(p1_100));
 	T_ASSERT_EQUAL(strcmp(buf, "100.00"), 0);
 
-	dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(n_100));
+	(void) dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(n_100));
 	T_ASSERT_NOT_EQUAL(strcmp(buf, "99.99"), 0); /* Would like to gett */
 
-	dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_round_float(n_100, 2));
+	(void) dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_round_float(n_100, 2));
 	T_ASSERT_EQUAL(strcmp(buf, "99.99"), 0);
 
-	dm_snprintf(buf, sizeof(buf), "%.3f", dm_percent_to_round_float(n_100, 3));
+	(void) dm_snprintf(buf, sizeof(buf), "%.3f", dm_percent_to_round_float(n_100, 3));
 	T_ASSERT_EQUAL(strcmp(buf, "99.999"), 0);
 
-	dm_snprintf(buf, sizeof(buf), "%.4f", dm_percent_to_round_float(n_100, 4));
+	(void) dm_snprintf(buf, sizeof(buf), "%.4f", dm_percent_to_round_float(n_100, 4));
 	T_ASSERT_EQUAL(strcmp(buf, "99.9999"), 0);
 
-	dm_snprintf(buf, sizeof(buf), "%d", (int)dm_percent_to_round_float(n_100, 0));
+	(void) dm_snprintf(buf, sizeof(buf), "%d", (int)dm_percent_to_round_float(n_100, 0));
 	T_ASSERT_EQUAL(strcmp(buf, "99"), 0);
 }
 
@@ -66,22 +66,22 @@ static void test_percent_0(void *fixture)
 	T_ASSERT_EQUAL(p1_0, DM_PERCENT_0);
 	T_ASSERT_NOT_EQUAL(n_0, DM_PERCENT_0);
 
-        dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(p_0));
+	(void) dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(p_0));
 	T_ASSERT_EQUAL(strcmp(buf, "0.00"), 0);
 
-	dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(p1_0));
+	(void) dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(p1_0));
 	T_ASSERT_EQUAL(strcmp(buf, "0.00"), 0);
 
-	dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(n_0));
+	(void) dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(n_0));
 	T_ASSERT_NOT_EQUAL(strcmp(buf, "0.01"), 0);
 
-	dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_round_float(n_0, 2));
+	(void) dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_round_float(n_0, 2));
 	T_ASSERT_EQUAL(strcmp(buf, "0.01"), 0);
 
-	dm_snprintf(buf, sizeof(buf), "%.3f", dm_percent_to_round_float(n_0, 3));
+	(void) dm_snprintf(buf, sizeof(buf), "%.3f", dm_percent_to_round_float(n_0, 3));
 	T_ASSERT_EQUAL(strcmp(buf, "0.001"), 0);
 
-	dm_snprintf(buf, sizeof(buf), "%d", (int)dm_percent_to_round_float(n_0, 0));
+	(void) dm_snprintf(buf, sizeof(buf), "%d", (int)dm_percent_to_round_float(n_0, 0));
 	T_ASSERT_EQUAL(strcmp(buf, "1"), 0);
 }
 
