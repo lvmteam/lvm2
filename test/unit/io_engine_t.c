@@ -154,7 +154,7 @@ static void _test_read(void *fixture)
 	T_ASSERT(io.completed);
 	T_ASSERT(!io.error);
 
-	_check_buffer(f->data, 123, sizeof(f->data));
+	_check_buffer(f->data, 123, SECTOR_SIZE * BLOCK_SIZE_SECTORS);
 }
 
 static void _test_write(void *fixture)
