@@ -2236,7 +2236,7 @@ static int _process_command_line(struct cmd_context *cmd, int *argc, char ***arg
 	*ptr = '\0';
 	memset(o, 0, sizeof(*o));
 
-	optarg = 0;
+	optarg = (char*) "";
 	optind = OPTIND_INIT;
 	while ((goval = GETOPTLONG_FN(*argc, *argv, str, opts, NULL)) >= 0) {
 

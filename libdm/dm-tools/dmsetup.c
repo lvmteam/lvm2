@@ -6680,7 +6680,7 @@ static int _process_losetup_switches(const char *base, int *argcp, char ***argvp
 	};
 #endif
 
-	optarg = 0;
+	optarg = (char*) "";
 	optind = OPTIND_INIT;
 	while ((c = GETOPTLONG_FN(*argcp, *argvp, "ade:fo:v",
 				  long_options, NULL)) != -1 ) {
@@ -6976,7 +6976,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		return r;
 	}
 
-	optarg = 0;
+	optarg = (char*) "";
 	optind = OPTIND_INIT;
 	while ((ind = -1, c = GETOPTLONG_FN(*argcp, *argvp, "cCfG:hj:m:M:no:O:rS:u:U:vy",
 					    long_options, NULL)) != -1) {
