@@ -358,10 +358,16 @@ static unsigned _async_max_io(struct io_engine *e)
 
 struct io_engine *create_async_io_engine(void)
 {
+	static int _pagesize = 0;
 	int r;
-	struct async_engine *e = malloc(sizeof(*e));
+	struct async_engine *e;
 
-	if (!e)
+	if ((_pagesize <= 0) && (_pagesize = sysconf(_SC_PAGESIZE)) < 0) {
+		log_warn("_SC_PAGESIZE returns negative value.");
+		return NULL;
+	}
+
+	if (!(e = malloc(sizeof(*e))))
 		return NULL;
 
 	e->e.destroy = _async_destroy;
@@ -384,7 +390,7 @@ struct io_engine *create_async_io_engine(void)
 		return NULL;
 	}
 
-	e->page_mask = sysconf(_SC_PAGESIZE) - 1;
+	e->page_mask = (unsigned) _pagesize - 1;
 
 	return &e->e;
 }
@@ -1087,12 +1093,12 @@ static void _preemptive_writeback(struct bcache *cache)
 struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks,
 			     struct io_engine *engine)
 {
+	static long _pagesize = 0;
 	struct bcache *cache;
 	unsigned max_io = engine->max_io(engine);
-	long pgsize = sysconf(_SC_PAGESIZE);
 	int i;
 
-	if (pgsize < 0) {
+	if ((_pagesize <= 0) && ((_pagesize = sysconf(_SC_PAGESIZE)) < 0)) {
 		log_warn("WARNING: _SC_PAGESIZE returns negative value.");
 		return NULL;
 	}
@@ -1107,7 +1113,7 @@ struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks,
 		return NULL;
 	}
 
-	if (block_sectors & ((pgsize >> SECTOR_SHIFT) - 1)) {
+	if (block_sectors & ((_pagesize >> SECTOR_SHIFT) - 1)) {
 		log_warn("bcache block size must be a multiple of page size");
 		return NULL;
 	}
@@ -1144,7 +1150,7 @@ struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks,
 	cache->write_misses = 0;
 	cache->prefetches = 0;
 
-	if (!_init_free_list(cache, nr_cache_blocks, pgsize)) {
+	if (!_init_free_list(cache, nr_cache_blocks, _pagesize)) {
 		cache->engine->destroy(cache->engine);
 		radix_tree_destroy(cache->rtree);
 		free(cache);

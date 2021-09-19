@@ -380,7 +380,7 @@ static void _large_fixture_exit(void *context)
  *--------------------------------------------------------------*/
 #define MEG 2048
 #define SECTOR_SHIFT 9
-#define PAGE_SIZE_SECTORS (sysconf(_SC_PAGE_SIZE) >> SECTOR_SHIFT)
+#define PAGE_SIZE_SECTORS ((PAGE_SIZE) >> SECTOR_SHIFT)
 
 static void good_create(sector_t block_size, unsigned nr_cache_blocks)
 {

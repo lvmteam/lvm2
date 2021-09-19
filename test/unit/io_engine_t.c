@@ -28,8 +28,7 @@
 #define SECTOR_SHIFT 9
 #define SECTOR_SIZE 512
 #define BLOCK_SIZE_SECTORS 8
-#define PAGE_SIZE sysconf(_SC_PAGESIZE)
-#define PAGE_SIZE_SECTORS (PAGE_SIZE >> SECTOR_SHIFT)
+#define PAGE_SIZE_SECTORS ((PAGE_SIZE) >> SECTOR_SHIFT)
 #define NR_BLOCKS 64
 
 struct fixture {

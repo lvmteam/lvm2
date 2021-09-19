@@ -44,6 +44,8 @@ void test_fail(const char *fmt, ...)
 extern jmp_buf test_k;
 #define TEST_FAILED 1
 
+#define PAGE_SIZE ({ int ps = sysconf(_SC_PAGESIZE); (ps > 0) ? ps : 4096 ; })
+
 //-----------------------------------------------------------------
 
 #endif
