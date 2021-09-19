@@ -1699,6 +1699,10 @@ int lv_empty(struct logical_volume *lv)
 int replace_lv_with_error_segment(struct logical_volume *lv)
 {
 	uint32_t len = lv->le_count;
+	struct segment_type *segtype;
+
+	if (!(segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_ERROR)))
+		return_0;
 
 	if (len && !lv_empty(lv))
 		return_0;
@@ -1717,7 +1721,7 @@ int replace_lv_with_error_segment(struct logical_volume *lv)
 
 	/* FIXME Check for any attached LVs that will become orphans e.g. mirror logs */
 
-	if (!lv_add_virtual_segment(lv, 0, len, get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_ERROR)))
+	if (!lv_add_virtual_segment(lv, 0, len, segtype))
 		return_0;
 
 	return 1;
