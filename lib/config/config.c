@@ -522,7 +522,7 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 	if (!(dev->flags & DEV_REGULAR) || size2)
 		use_plain_read = 0;
 
-	if (!(buf = malloc(size + size2))) {
+	if (!(buf = zalloc(size + size2))) {
 		log_error("Failed to allocate circular buffer.");
 		return 0;
 	}

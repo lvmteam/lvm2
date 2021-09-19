@@ -223,6 +223,7 @@ static int _online_pvid_file_read(char *path, int *major, int *minor, char *vgna
 		log_warn("No info in %s", path);
 		return 0;
 	}
+	buf[rv] = 0; /* \0 terminated buffer */
 
 	if (sscanf(buf, "%d:%d", major, minor) != 2) {
 		log_warn("No device numbers in %s", path);

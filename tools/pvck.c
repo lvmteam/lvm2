@@ -2955,7 +2955,7 @@ static int _read_metadata_file(struct cmd_context *cmd, struct metadata_file *mf
 		goto out;
 	}
 
-	if (!(text_buf = zalloc(text_size + 1)))
+	if (!(text_buf = malloc(text_size + 1)))
 		goto_out;
 
 	rv = read(fd, text_buf, text_size);
@@ -2964,8 +2964,7 @@ static int _read_metadata_file(struct cmd_context *cmd, struct metadata_file *mf
 		free(text_buf);
 		goto out;
 	}
-
-	text_size += 1; /* null terminating byte */
+	text_buf[text_size++] = 0; /* null terminating byte */
 
 	if (close(fd))
 		stack;
