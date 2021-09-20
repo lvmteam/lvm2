@@ -477,14 +477,14 @@ struct lvmcache_info *lvmcache_info_from_pvid(const char *pvid_arg, struct devic
 	return info;
 }
 
-struct lvmcache_info *lvmcache_info_from_pv_id(const struct id *pv_id, struct device *dev, int valid_only)
+struct lvmcache_info *lvmcache_info_from_pv_id(const struct id *pvid, struct device *dev, int valid_only)
 {
 	/*
 	 * Since we know that lvmcache_info_from_pvid directly above
 	 * does not assume pvid_arg is null-terminated, we make an
 	 * exception here and cast a struct id to char *.
 	 */
-	return lvmcache_info_from_pvid((const char *)pv_id, dev, valid_only);
+	return lvmcache_info_from_pvid((const char *)pvid, dev, valid_only);
 }
 
 const struct format_type *lvmcache_fmt_from_info(struct lvmcache_info *info)
@@ -1391,11 +1391,11 @@ int lvmcache_get_vgnameids(struct cmd_context *cmd,
 	return 1;
 }
 
-struct device *lvmcache_device_from_pv_id(struct cmd_context *cmd, const struct id *pv_id, uint64_t *label_sector)
+struct device *lvmcache_device_from_pv_id(struct cmd_context *cmd, const struct id *pvid, uint64_t *label_sector)
 {
 	struct lvmcache_info *info;
 
-	if ((info = lvmcache_info_from_pv_id(pv_id, NULL, 0))) {
+	if ((info = lvmcache_info_from_pv_id(pvid, NULL, 0))) {
 		if (info->label && label_sector)
 			*label_sector = info->label->sector;
 		return info->dev;
