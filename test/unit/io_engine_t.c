@@ -104,13 +104,15 @@ static void _fix_exit(void *fixture)
 {
         struct fixture *f = fixture;
 
-	close(f->fd);
-	bcache_clear_fd(f->di);
-	unlink(f->fname);
-        free(f->data);
-        if (f->e)
-                f->e->destroy(f->e);
-        free(f);
+	if (f) {
+		(void) close(f->fd);
+		bcache_clear_fd(f->di);
+		(void) unlink(f->fname);
+		free(f->data);
+		if (f->e)
+			f->e->destroy(f->e);
+		free(f);
+	}
 }
 
 static void _test_create(void *fixture)

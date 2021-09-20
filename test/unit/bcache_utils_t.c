@@ -109,11 +109,13 @@ static void _fix_exit(void *fixture)
 {
         struct fixture *f = fixture;
 
-	bcache_destroy(f->cache);
-	close(f->fd);
-	bcache_clear_fd(f->di);
-	unlink(f->fname);
-        free(f);
+	if (f) {
+		bcache_destroy(f->cache);
+		(void) close(f->fd);
+		bcache_clear_fd(f->di);
+		(void) unlink(f->fname);
+		free(f);
+	}
 }
 
 //----------------------------------------------------------------

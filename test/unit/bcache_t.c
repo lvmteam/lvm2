@@ -349,10 +349,12 @@ static struct fixture *_fixture_init(sector_t block_size, unsigned nr_cache_bloc
 
 static void _fixture_exit(struct fixture *f)
 {
-	_expect(f->me, E_DESTROY);
-	bcache_destroy(f->cache);
+	if (f) {
+		_expect(f->me, E_DESTROY);
+		bcache_destroy(f->cache);
 
-	free(f);
+		free(f);
+	}
 }
 
 static void *_small_fixture_init(void)

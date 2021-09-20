@@ -28,7 +28,8 @@ static void *rt_init(void)
 
 static void rt_exit(void *fixture)
 {
-	radix_tree_destroy(fixture);
+	if (fixture)
+		radix_tree_destroy(fixture);
 }
 
 static void test_create_destroy(void *fixture)

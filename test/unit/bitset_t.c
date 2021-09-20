@@ -31,7 +31,8 @@ static void *_mem_init(void) {
 
 static void _mem_exit(void *mem)
 {
-	dm_pool_destroy(mem);
+	if (mem)
+		dm_pool_destroy(mem);
 }
 
 static void test_get_next(void *fixture)
