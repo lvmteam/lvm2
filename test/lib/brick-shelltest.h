@@ -755,7 +755,7 @@ struct TestCase {
     }
 
     void pipe() {
-        int fds[2];
+        int fds[2] = { 0 };
 
         if (socketpair( PF_UNIX, SOCK_STREAM, 0, fds )) {
             perror("socketpair");
@@ -981,7 +981,9 @@ struct TestCase {
     }
 
     TestCase( Journal &j, Options opt, std::string path, std::string _name, std::string _flavour )
-        : child( path ), name( _name ), flavour( _flavour ), timeout( false ),
+        : child( path ), name( _name ), flavour( _flavour ),
+          iobuf( NULL ), usage( { 0 } ), status( 0 ), timeout( false ),
+          pid( 0 ), start( 0 ), end( 0 ), silent_start( 0 ),
           last_update( 0 ), last_heartbeat( 0 ), options( opt ), journal( &j )
     {
     }
@@ -1085,7 +1087,7 @@ struct Main {
         return journal.count( Journal::FAILED ) || journal.count( Journal::TIMEOUT ) ? 1 : 0;
     }
 
-    Main( Options o ) : die( false ), journal( o.outdir ), options( o ) {}
+    Main( Options o ) : die( false ), start( 0 ), journal( o.outdir ), options( o ) {}
 };
 
 namespace {

@@ -271,6 +271,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "out of memory\n");
 		exit(1);
 	}
+	memset(t_array, 0, sizeof(*t_array) * nr_tests);
 
 	i = 0;
 	dm_list_iterate_items (ts, &suites)

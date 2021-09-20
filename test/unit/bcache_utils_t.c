@@ -52,9 +52,10 @@ static void *_fix_init(struct io_engine *engine)
         uint8_t buffer[T_BLOCK_SIZE];
         struct fixture *f = malloc(sizeof(*f));
         unsigned b, i;
-	struct statvfs fsdata;
+	struct statvfs fsdata = { 0 };
 	static int _runs_is_tmpfs = -1;
 
+	memset(buffer, 0, sizeof(buffer));
 	if (_runs_is_tmpfs == -1) {
 		// With testing in tmpfs directory O_DIRECT cannot be used
 		// tmpfs has  f_fsid == 0  (unsure if this is best guess)
