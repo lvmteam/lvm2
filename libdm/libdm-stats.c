@@ -4519,7 +4519,7 @@ static int _stats_unmap_regions(struct dm_stats *dms, uint64_t group_id,
 	struct dm_stats_region *region = NULL;
 	struct dm_stats_group *group = NULL;
 	uint64_t nr_kept, nr_old;
-	struct _extent ext = { 0 };
+	struct _extent ext = { .id = 0 };
 	int64_t i;
 
 	group = &dms->groups[group_id];
