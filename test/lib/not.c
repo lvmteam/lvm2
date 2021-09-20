@@ -86,7 +86,11 @@ int main(int args, char **argv) {
 		/* should not be accessible */
 		return FAILURE;
 	} else {		/* parent */
-		waitpid(pid, &status, 0);
+		if (waitpid(pid, &status, 0) < 0) {
+			fprintf(stderr, "Process %d failed on waitpid.\n", pid);
+			return FAILURE;
+		}
+
 		if (!WIFEXITED(status)) {
 			if (WIFSIGNALED(status))
 				fprintf(stderr,

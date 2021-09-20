@@ -424,7 +424,8 @@ struct FdSink : Sink {
     {
         TimedBuffer::Line line = stream.shift( force );
         std::string out = fmt.format( line );
-        write( fd, out.c_str(), out.length() );
+        if ( write( fd, out.c_str(), out.length() ) < (int)out.length() )
+            perror( "short write" );
     }
 
     virtual void sync( bool force ) {
