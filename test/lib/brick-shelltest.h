@@ -988,7 +988,7 @@ struct TestCase {
 
     TestCase( Journal &j, Options opt, std::string path, std::string _name, std::string _flavour )
         : child( path ), name( _name ), flavour( _flavour ),
-          iobuf( NULL ), usage( { 0 } ), status( 0 ), timeout( false ),
+          iobuf( NULL ), usage( (struct rusage) { { 0 } } ), status( 0 ), timeout( false ),
           pid( 0 ), start( 0 ), end( 0 ), silent_start( 0 ),
           last_update( 0 ), last_heartbeat( 0 ), options( opt ), journal( &j )
     {
