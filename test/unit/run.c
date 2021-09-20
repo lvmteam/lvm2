@@ -125,7 +125,9 @@ static void _print_path_delta(FILE *stream,
 			fprintf(stream, "\n");
 	}
 
-	len = common_prefix * 2 + (new[new_len - 1].e - new[new_len - 1].b);
+	if (new_len > 0)
+		len = common_prefix * 2 + (new[new_len - 1].e - new[new_len - 1].b);
+
 	fprintf(stream, "  ");
 	for (d = len; d < 60; d++)
 		fprintf(stream, ".");
