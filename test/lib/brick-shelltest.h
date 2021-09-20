@@ -536,7 +536,11 @@ struct FileSource : Source {
                 lseek( fd, 0, SEEK_END );
         }
         if ( fd >= 0 )
-            Source::sync( s );
+            try {
+                Source::sync( s );
+            } catch (...) {
+                perror("failed to sync");
+            }
     }
 };
 
