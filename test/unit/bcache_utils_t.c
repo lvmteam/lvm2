@@ -339,7 +339,7 @@ static void _test_zero_many_boundaries(void *fixture)
 
 static void _set_cycle(struct fixture *f, uint64_t b, uint64_t e)
 {
-	uint8_t val = random();
+	uint8_t val = _random_pattern();
 
 	_verify(f, b, e, INIT_PATTERN);
 	_do_set(f, b, e, val); 
