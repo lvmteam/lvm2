@@ -240,7 +240,7 @@ static unsigned _filter(const char *pattern, struct test_details **tests, unsign
 	}
 
 	for (i = 0; i < nr; i++)
-		if (!regexec(&rx, tests[i]->path, 0, NULL, 0))
+		if (tests[i] && !regexec(&rx, tests[i]->path, 0, NULL, 0))
 			tests[found++] = tests[i];
 
 	regfree(&rx);

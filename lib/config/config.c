@@ -932,7 +932,7 @@ static int _check_value_differs_from_default(struct cft_check_handle *handle,
 				} else {
 					str = v_def ? v_def->v.str
 						    : cfg_def_get_default_value(handle->cmd, def, CFG_TYPE_STRING, NULL);
-					diff = strcmp(str, v->v.str);
+					diff = str ? strcmp(str, v->v.str) : 0;
 				}
 				break;
 			case DM_CFG_EMPTY_ARRAY:

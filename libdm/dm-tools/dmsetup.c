@@ -6426,9 +6426,10 @@ static const struct command *_find_command(const struct command *commands,
 {
 	int i;
 
-	for (i = 0; commands[i].name; i++)
-		if (!strcmp(commands[i].name, name))
-			return commands + i;
+	if (name)
+		for (i = 0; commands[i].name; i++)
+			if (!strcmp(commands[i].name, name))
+				return commands + i;
 
 	return NULL;
 }

@@ -4015,9 +4015,9 @@ int main(int argc, char *argv[])
 
 	factor_common_options();
 
-	if (primary)
+	if (primary && cmdname)
 		r = _print_man(cmdname, desfile, secondary);
-	else if (secondary) {
+	else if (secondary && cmdname) {
 		r = 1;
 		_print_man_secondary(cmdname);
 	} else if (check) {
