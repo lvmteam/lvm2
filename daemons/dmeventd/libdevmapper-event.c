@@ -709,15 +709,11 @@ int dm_event_unregister_handler(const struct dm_event_handler *dmevh)
 static char *_fetch_string(char **src, const int delimiter)
 {
 	char *p, *ret;
+	size_t len = (p = strchr(*src, delimiter)) ?
+		p - *src : strlen(*src);
 
-	if ((p = strchr(*src, delimiter)))
-		*p = 0;
-
-	if ((ret = strdup(*src)))
-		*src += strlen(ret) + 1;
-
-	if (p)
-		*p = delimiter;
+	if ((ret = strndup(*src, len)))
+		*src += len + 1;
 
 	return ret;
 }
