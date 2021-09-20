@@ -3178,9 +3178,10 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 	 * but this is here to preserve the historical output.
 	 */
 
-	if (argc == 1)
-		setup_device(cmd, argv[0]);
-	else if (!setup_devices(cmd))
+	if (argc == 1) {
+		if (!setup_device(cmd, argv[0]))
+			return_ECMD_FAILED;
+	} else if (!setup_devices(cmd))
 		return_ECMD_FAILED;
 
 	for (i = 0; i < argc; i++) {
