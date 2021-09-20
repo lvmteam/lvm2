@@ -1234,7 +1234,12 @@ static int _online_devs(struct cmd_context *cmd, int do_all, struct dm_list *pvs
 		}
 
 		fmt = lvmcache_fmt(info);
-		fid = fmt->ops->create_instance(fmt, &fic);
+		if (!(fid = fmt->ops->create_instance(fmt, &fic))) {
+			log_error("pvscan[%d] failed to create format instance.", getpid());
+			ret = 0;
+			continue;
+		}
+
 		vg = NULL;
 
 		mda1 = lvmcache_get_dev_mda(dev, 1);
