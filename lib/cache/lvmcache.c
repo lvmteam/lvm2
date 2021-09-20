@@ -477,14 +477,14 @@ struct lvmcache_info *lvmcache_info_from_pvid(const char *pvid_arg, struct devic
 	return info;
 }
 
-struct lvmcache_info *lvmcache_info_from_pv_id(const struct id *pvid, struct device *dev, int valid_only)
+struct lvmcache_info *lvmcache_info_from_pv_id(const struct id *pv_id_arg, struct device *dev, int valid_only)
 {
 	/*
 	 * Since we know that lvmcache_info_from_pvid directly above
 	 * does not assume pvid_arg is null-terminated, we make an
 	 * exception here and cast a struct id to char *.
 	 */
-	return lvmcache_info_from_pvid((const char *)pvid, dev, valid_only);
+	return lvmcache_info_from_pvid((const char *)pv_id_arg, dev, valid_only);
 }
 
 const struct format_type *lvmcache_fmt_from_info(struct lvmcache_info *info)
