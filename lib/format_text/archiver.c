@@ -50,8 +50,6 @@ int archive_init(struct cmd_context *cmd, const char *dir,
 		return 0;
 	}
 
-	cmd->archive_params->dir = NULL;
-
 	if (!*dir)
 		return 1;
 
@@ -195,7 +193,6 @@ int backup_init(struct cmd_context *cmd, const char *dir,
 		return 0;
 	}
 
-	cmd->backup_params->dir = NULL;
 	if (!*dir)
 		return 1;
 
