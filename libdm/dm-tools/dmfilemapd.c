@@ -671,12 +671,11 @@ static int _daemonise(struct filemap_monitor *fm)
 			(void) close(fd);
 	}
 	/* TODO: Use libdaemon/server/daemon-server.c _daemonise() */
-	for (ffd = (int) sysconf(_SC_OPEN_MAX) - 1; ffd > STDERR_FILENO; --ffd) {
-		if (ffd == fm->fd)
-			continue;
-		(void) close(ffd);
-	}
+	for (ffd = (int) sysconf(_SC_OPEN_MAX) - 1; ffd > STDERR_FILENO; --ffd)
+		if (ffd != fm->fd)
+			(void) close(ffd);
 
+	/* coverity[leaked_handle] no leak */
 	return 1;
 }
 
