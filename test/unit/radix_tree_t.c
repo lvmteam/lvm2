@@ -800,7 +800,7 @@ static void __invalidate(struct radix_tree *rt, int fd)
 
 	k.parts.fd = fd;
 	radix_tree_remove_prefix(rt, k.bytes, k.bytes + sizeof(k.parts.fd));
-	radix_tree_is_well_formed(rt);
+	T_ASSERT(radix_tree_is_well_formed(rt));
 }
 
 static void test_bcache_scenario3(void *fixture)
