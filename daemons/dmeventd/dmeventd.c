@@ -678,6 +678,9 @@ static int _get_status(struct message_data *message_data)
 	char **buffers;
 	char *message;
 
+	if (!message_data->id)
+		return -EINVAL;
+
 	_lock_mutex();
 	count = dm_list_size(&_thread_registry);
 	buffers = alloca(sizeof(char*) * count);
