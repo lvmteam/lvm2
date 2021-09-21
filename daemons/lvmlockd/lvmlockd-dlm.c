@@ -801,7 +801,8 @@ int lm_refresh_lv_start_dlm(struct action *act)
 	strncpy(path, act->path, PATH_MAX-1);
 
 	/* skip past dev */
-	p = strchr(path + 1, '/');
+	if (!(p = strchr(path + 1, '/')))
+		return -EINVAL;
 
 	/* skip past slashes */
 	while (*p == '/')
