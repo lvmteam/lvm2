@@ -31,8 +31,8 @@ done
 
 aux extend_filter_LVMTEST
 
-pvcreate "$DM_DEV_DIR"/$vg/$lv[12345]
-vgcreate $vg1 "$DM_DEV_DIR"/$vg/$lv[12345]
+pvcreate "$DM_DEV_DIR"/$vg/${lv}[12345]
+vgcreate $vg1 "$DM_DEV_DIR"/$vg/${lv}[12345]
 
 
 #

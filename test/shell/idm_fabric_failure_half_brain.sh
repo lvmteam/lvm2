@@ -15,8 +15,8 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-[ -z "$LVM_TEST_LOCK_TYPE_IDM" ] && skip;
-[ -z "$LVM_TEST_FAILURE" ] && skip;
+[ -z "$LVM_TEST_LOCK_TYPE_IDM" ] && skip
+[ -z "$LVM_TEST_FAILURE" ] && skip
 
 aux prepare_devs 2
 aux extend_filter_LVMTEST
@@ -55,7 +55,7 @@ for dev in /dev/*; do
 done
 
 for d in "${drive_list[@]}"; do
-	[ -f /sys/block/$d/device/delete ] && echo 1 > /sys/block/$d/device/delete
+	[ -f "/sys/block/$d/device/delete" ] && echo 1 > "/sys/block/$d/device/delete"
 done
 
 # Fail to create new logic volume
@@ -68,7 +68,7 @@ not check grep_lvmlockd_dump "S lvm_$vg kill_vg"
 
 # Rescan drives so can probe the deleted drives and join back them
 for h in "${host_list[@]}"; do
-	[ -f /sys/class/scsi_host/${h}/scan ] && echo "- - -" > /sys/class/scsi_host/${h}/scan
+	[ -f "/sys/class/scsi_host/${h}/scan" ] && echo "- - -" > "/sys/class/scsi_host/${h}/scan"
 done
 
 # After the drive is reconnected, $vg should be visible again.

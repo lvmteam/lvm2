@@ -476,9 +476,9 @@ cat "$DF"
 # pvscan does not fix DF
 grep "$dev3" "$DF"
 not grep "$dev1" "$DF"
-ls "$RUNDIR/lvm/pvs_online/"$PVID1""
+ls "$RUNDIR/lvm/pvs_online/$PVID1"
 ls "$RUNDIR/lvm/pvs_online/$PVID2"
-not ls "$RUNDIR/lvm/pvs_online/"$PVID3""
+not ls "$RUNDIR/lvm/pvs_online/$PVID3"
 check lv_field $vg1/$lv1 lv_active "active"
 # pvs updates the DF
 pvs |tee out

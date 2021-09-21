@@ -168,7 +168,7 @@ vdo create $VDOCONF --name "$VDONAME" --device="$LOOP" --vdoLogicalSize=23G \
 # Get VDO table line
 dmsetup table "$VDONAME" | tr " " "\n" | sed -e '5,6d' -e '12d' | tee vdo-orig
 
-DM_DEV_DIR= lvm_import_vdo -y --name $vg/$lv "$LOOP"
+DM_DEV_DIR="" lvm_import_vdo -y --name $vg/$lv "$LOOP"
 lvs -a $vg
 
 dmsetup table "$vg-${lv}_vpool-vpool" | tr " " "\n" | sed -e '5,6d' -e '12d' | tee new-vdo-lv

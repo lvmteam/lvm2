@@ -122,7 +122,7 @@ cp $DF df2
 
 # vgcreate from existing pvs, already in df
 
-vgcreate $vg ${REAL_DEVICES[@]}
+vgcreate $vg "${REAL_DEVICES[@]}"
 
 vgremove $vg
 rm $DF
@@ -130,7 +130,7 @@ rm $DF
 # vgcreate from existing pvs, adding to df
 
 touch $DF
-vgcreate $vg ${REAL_DEVICES[@]}
+vgcreate $vg "${REAL_DEVICES[@]}"
 
 grep IDNAME $DF > df.ids
 grep IDNAME df2 > df2.ids
@@ -242,7 +242,7 @@ grep $dev2 $DF
 rm $DF
 wipe_all
 
-vgcreate $vg ${REAL_DEVICES[@]}
+vgcreate $vg "${REAL_DEVICES[@]}"
 rm $DF
 touch $DF
 

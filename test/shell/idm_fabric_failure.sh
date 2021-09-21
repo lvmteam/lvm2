@@ -14,7 +14,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-[ -z "$LVM_TEST_FAILURE" ] && skip;
+[ -z "$LVM_TEST_FAILURE" ] && skip
 
 aux prepare_devs 3
 aux extend_filter_LVMTEST
@@ -33,17 +33,17 @@ HOST2=`readlink /sys/block/$DRIVE2 | awk -F'/' '{print $6}'`
 HOST3=`readlink /sys/block/$DRIVE3 | awk -F'/' '{print $6}'`
 
 # Emulate fabric failure
-echo 1 > /sys/block/$DRIVE1/device/delete
-[ -f /sys/block/$DRIVE2/device/delete ] && echo 1 > /sys/block/$DRIVE2/device/delete
-[ -f /sys/block/$DRIVE3/device/delete ] && echo 1 > /sys/block/$DRIVE3/device/delete
+echo 1 > "/sys/block/$DRIVE1/device/delete"
+[ -f "/sys/block/$DRIVE2/device/delete" ] && echo 1 > "/sys/block/$DRIVE2/device/delete"
+[ -f "/sys/block/$DRIVE3/device/delete" ] && echo 1 > "/sys/block/$DRIVE3/device/delete"
 
 # Wait for 10s and will not lead to timeout
 sleep 10
 
 # Rescan drives so can probe the deleted drives and join back them
-echo "- - -" > /sys/class/scsi_host/${HOST1}/scan
-echo "- - -" > /sys/class/scsi_host/${HOST2}/scan
-echo "- - -" > /sys/class/scsi_host/${HOST3}/scan
+echo "- - -" > "/sys/class/scsi_host/${HOST1}/scan"
+echo "- - -" > "/sys/class/scsi_host/${HOST2}/scan"
+echo "- - -" > "/sys/class/scsi_host/${HOST3}/scan"
 
 not check grep_lvmlockd_dump "S lvm_$vg kill_vg"
 

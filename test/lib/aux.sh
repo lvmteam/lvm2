@@ -607,7 +607,7 @@ teardown() {
 
 	# Remove any dangling symlink in /dev/disk (our tests can confuse udev)
 	test -d /dev/disk && {
-		find /dev/disk -type l ! -exec /usr/bin/test -e {} \; -print | xargs rm -f || true
+		find /dev/disk -type l ! -exec /usr/bin/test -e {} \; -print0 | xargs -0 rm -f || true
 	}
 
 	# Remove any metadata archives and backups from this test on system
@@ -1200,7 +1200,7 @@ remove_dm_devs() {
 		}
 		remove=( "${held[@]}" )
 	done
-	die "Can't remove device(s) ${held[@]}"
+	die "Can't remove device(s) ${held[*]}"
 }
 
 # Throttle down performance of kcopyd when mirroring i.e. disk image

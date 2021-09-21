@@ -53,8 +53,8 @@ do
 
 	# When fully zeroed, it should be zero - so almost no output from hexdump
 	case "$i" in
-	0) test $(wc -l < out) -ge 10 ;; # should not be zeroed
-	1) test $(wc -l < out) -le 10 ;; # should be zeroed
+	0) test "$(wc -l < out)" -ge 10 ;; # should not be zeroed
+	1) test "$(wc -l < out)" -le 10 ;; # should be zeroed
 	esac
 
 	lvremove -f $vg/pool

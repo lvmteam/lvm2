@@ -15,8 +15,8 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-[ -z "$LVM_TEST_LOCK_TYPE_IDM" ] && skip;
-[ -z "$LVM_TEST_FAILURE" ] && skip;
+[ -z "$LVM_TEST_LOCK_TYPE_IDM" ] && skip
+[ -z "$LVM_TEST_FAILURE" ] && skip
 
 aux prepare_devs 1
 aux extend_filter_LVMTEST
@@ -34,7 +34,7 @@ vgcreate $SHARED $vg "$dev1"
 # Create new logic volume
 lvcreate -a ey --zero n -l 1 -n $lv1 $vg
 
-drive_list=($DRIVE1)
+drive_list=( "$DRIVE1" )
 
 # Find all drives with the same WWN and delete them from system,
 # so that we can emulate the same drive with multiple paths are
@@ -52,7 +52,7 @@ for dev in /dev/*; do
 done
 
 for d in "${drive_list[@]}"; do
-	[ -f /sys/block/$d/device/delete ] && echo 1 > /sys/block/$d/device/delete
+	[ -f "/sys/block/$d/device/delete" ] && echo 1 > "/sys/block/$d/device/delete"
 done
 
 # Fail to create new logic volume
@@ -66,7 +66,7 @@ lvmlockctl --drop $vg
 
 # Rescan drives so can probe the deleted drives and join back them
 for h in "${host_list[@]}"; do
-	[ -f /sys/class/scsi_host/${h}/scan ] && echo "- - -" > /sys/class/scsi_host/${h}/scan
+	[ -f "/sys/class/scsi_host/${h}/scan" ] && echo "- - -" > "/sys/class/scsi_host/${h}/scan"
 done
 
 # After the drive is reconnected, $vg should be visible again.
