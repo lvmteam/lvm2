@@ -31,11 +31,11 @@ vgcreate $SHARED -s 64K "$vg" "${DEVICES[@]}"
 
 # Size 0 is not valid
 invalid lvcreate -L4M --chunksize 128 --poolmetadatasize 0 -T $vg/pool1 2>out
-lvcreate -Zn -L4M --chunksize 128 --poolmetadatasize 16k -T $vg/pool1 2>&1 >out
+lvcreate -Zn -L4M --chunksize 128 --poolmetadatasize 16k -T $vg/pool1 >out 2>&1
 grep -i "minimal" out
 # FIXME: metadata allocation fails, if PV doesn't have at least 16GB
 # i.e. pool metadata device cannot be multisegment
-lvcreate -Zn -L4M --chunksize 64k --poolmetadatasize 17G -T $vg/pool2 2>&1 >out
+lvcreate -Zn -L4M --chunksize 64k --poolmetadatasize 17G -T $vg/pool2 >out 2>&1
 grep "maximum" out
 check lv_field $vg/pool1_tmeta size "2.00m"
 check lv_field $vg/pool2_tmeta size "<15.88g"

@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 # Copyright (C) 2014 Red Hat, Inc. All rights reserved.
@@ -141,4 +140,3 @@ check pv_field "$dev1" ba_start 384.00k --units k
 check pv_field "$dev1" ba_size  256.00k --units k
 check pv_field "$dev1" pe_start 640.00k --units k
 pvremove "$dev1"
-

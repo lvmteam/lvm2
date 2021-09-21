@@ -53,7 +53,7 @@ test_pvmove_resume() {
 		# errors, based on the fact pvmove is killed -9
 		# Restart clvmd
 		kill "$(< LOCAL_CLVMD)"
-		for i in {1 100} ; do
+		for i in {1..100} ; do
 			test $i -eq 100 && die "Shutdown of clvmd is too slow."
 			test -e "$CLVMD_PIDFILE" || break
 			sleep .1
