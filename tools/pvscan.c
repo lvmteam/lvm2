@@ -1268,8 +1268,12 @@ static int _online_devs(struct cmd_context *cmd, int do_all, struct dm_list *pvs
 		}
 
 		devsize = dev->size;
-		if (!devsize)
-			dev_get_size(dev, &devsize);
+		if (!devsize &&
+		    !dev_get_size(dev, &devsize)) {
+			log_print("pvscan[%d] PV %s can get device size.", getpid(), dev_name(dev));
+			release_vg(vg);
+			continue;
+		}
 		do_full_check = 0;
 
 		/* If use_full_md_check is set then this has already been done by filter. */
