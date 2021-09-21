@@ -2085,7 +2085,6 @@ static void _restart_dmeventd(void)
 		}
 		message += strlen(message) + 1;
 	}
-	_initial_registrations[count] = NULL;
 
 	if (version >= 2) {
 		if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_GET_PARAMETERS, "-", "-", 0, 0)) {
