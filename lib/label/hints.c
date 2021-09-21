@@ -821,7 +821,7 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 			if (!dm_strncpy(hint.vgname, vgname + 3, sizeof(hint.vgname)))
 				continue;
 
-		if (!(alloc_hint = malloc(sizeof(struct hint)))) {
+		if (!(alloc_hint = zalloc(sizeof(struct hint)))) {
 			ret = 0;
 			break;
 		}
