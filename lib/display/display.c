@@ -974,7 +974,7 @@ char yes_no_prompt(const char *prompt, ...)
 
 		c = tolower(c);
 
-		if ((ret > 0) && (c == answer[0]))
+		if ((ret > 0) && answer && (c == answer[0]))
 			answer++;	/* Matching, next char */
 		else if (c == '\n') {
 			if (feof(stdin))
@@ -1000,7 +1000,7 @@ char yes_no_prompt(const char *prompt, ...)
 			/* Ignore any whitespace before */
 			--i;
 			goto nextchar;
-		} else if ((ret > 0) && isspace(c)) {
+		} else if ((ret > 0) && answer && isspace(c)) {
 			/* Ignore any whitespace after */
 			while (*answer)
 				answer++; /* jump to end-of-word */
