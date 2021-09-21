@@ -40,6 +40,11 @@ aux prepare_devs 2 10000
 aux extend_filter_LVMTEST
 
 
+
+
+# Conversion can be made with this version of vdo driver
+aux have_vdo 6 2 5 || skip
+
 #
 #  Check conversion of VDO volume made on some LV
 #
