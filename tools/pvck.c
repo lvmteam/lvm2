@@ -379,6 +379,9 @@ static bool _read_bytes(struct device *dev, struct devicefile *def, uint64_t sta
 	if (dev)
 		return dev_read_bytes(dev, start, len, data);
 
+	if (!def)
+		return false;
+
 	off = lseek(def->fd, start, SEEK_SET);
 	if (off != start)
 		return false;
