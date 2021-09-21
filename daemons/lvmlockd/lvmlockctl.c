@@ -457,6 +457,7 @@ retry:
 	if (count < dump_len)
 		goto retry;
 
+	dump_buf[count] = 0;
 	rv = 0;
 	if ((info && dump) || !strcmp(req_name, "dump"))
 		printf("%s\n", dump_buf);

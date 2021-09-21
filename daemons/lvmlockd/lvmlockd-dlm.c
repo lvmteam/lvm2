@@ -119,6 +119,7 @@ static int read_cluster_name(char *clustername)
 			log_error(close_error_msg, fd);
 		return rv;
 	}
+	clustername[rv] = 0;
 
 	n = strstr(clustername, "\n");
 	if (n)
