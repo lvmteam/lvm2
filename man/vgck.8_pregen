@@ -76,6 +76,8 @@ Common options for lvm:
 .br
 [    \fB--longhelp\fP ]
 .br
+[    \fB--nohints\fP ]
+.br
 [    \fB--nolocking\fP ]
 .br
 [    \fB--profile\fP \fIString\fP ]
@@ -144,6 +146,13 @@ See \fBlvmlockd\fP(8) for more information.
 \fB--longhelp\fP
 .br
 Display long help text.
+.
+.HP
+\fB--nohints\fP
+.br
+Do not use the hints file to locate devices for PVs. A command may read
+more devices to find PVs when hints are not used. The command will still
+perform standard hint file invalidation where appropriate.
 .
 .HP
 \fB--nolocking\fP

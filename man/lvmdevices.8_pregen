@@ -42,6 +42,8 @@ lvmdevices \(em Manage the devices file
 .br
     \fB--longhelp\fP
 .br
+    \fB--nohints\fP
+.br
     \fB--nolocking\fP
 .br
     \fB--profile\fP \fIString\fP
@@ -239,6 +241,8 @@ Find the device with the given PVID and add it to the devices file.
 .br
 .RS 4
 .ad l
+[    \fB--deviceidtype\fP \fIString\fP ]
+.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
@@ -287,6 +291,8 @@ Common options for lvm:
 [    \fB--lockopt\fP \fIString\fP ]
 .br
 [    \fB--longhelp\fP ]
+.br
+[    \fB--nohints\fP ]
 .br
 [    \fB--nolocking\fP ]
 .br
@@ -388,6 +394,13 @@ See \fBlvmlockd\fP(8) for more information.
 \fB--longhelp\fP
 .br
 Display long help text.
+.
+.HP
+\fB--nohints\fP
+.br
+Do not use the hints file to locate devices for PVs. A command may read
+more devices to find PVs when hints are not used. The command will still
+perform standard hint file invalidation where appropriate.
 .
 .HP
 \fB--nolocking\fP

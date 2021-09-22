@@ -110,6 +110,8 @@ Common options for lvm:
 .br
 [    \fB--longhelp\fP ]
 .br
+[    \fB--nohints\fP ]
+.br
 [    \fB--nolocking\fP ]
 .br
 [    \fB--profile\fP \fIString\fP ]
@@ -229,6 +231,13 @@ be used to set environment variables (for example, in udev rules).
 .br
 Suppress the headings line that is normally the first line of output.
 Useful if grepping the output.
+.
+.HP
+\fB--nohints\fP
+.br
+Do not use the hints file to locate devices for PVs. A command may read
+more devices to find PVs when hints are not used. The command will still
+perform standard hint file invalidation where appropriate.
 .
 .HP
 \fB--nolocking\fP

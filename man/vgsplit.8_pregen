@@ -106,6 +106,8 @@ Common options for lvm:
 .br
 [    \fB--longhelp\fP ]
 .br
+[    \fB--nohints\fP ]
+.br
 [    \fB--nolocking\fP ]
 .br
 [    \fB--profile\fP \fIString\fP ]
@@ -230,6 +232,13 @@ Specifies the type of on-disk metadata to use.
 \fB-n\fP|\fB--name\fP \fIString\fP
 .br
 Move only PVs used by the named LV.
+.
+.HP
+\fB--nohints\fP
+.br
+Do not use the hints file to locate devices for PVs. A command may read
+more devices to find PVs when hints are not used. The command will still
+perform standard hint file invalidation where appropriate.
 .
 .HP
 \fB--nolocking\fP
