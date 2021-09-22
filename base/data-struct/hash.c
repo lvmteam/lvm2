@@ -23,7 +23,7 @@ struct dm_hash_node {
 	unsigned data_len;
 	unsigned keylen;
 	unsigned hash;
-	char key[];
+	char key[0];
 };
 
 struct dm_hash_table {

@@ -20,7 +20,7 @@ struct dm_hash_node {
 	void *data;
 	unsigned data_len;
 	unsigned keylen;
-	char key[];
+	char key[0];
 };
 
 struct dm_hash_table {

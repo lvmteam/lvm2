@@ -44,7 +44,7 @@ struct labeller_i {
 	struct dm_list list;
 
 	struct labeller *l;
-	char name[];
+	char name[0];
 };
 
 static struct dm_list _labellers;

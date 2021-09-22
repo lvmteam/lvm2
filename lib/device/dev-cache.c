@@ -39,7 +39,7 @@ struct dev_iter {
 
 struct dir_list {
 	struct dm_list list;
-	char dir[];
+	char dir[0];
 };
 
 static struct {
