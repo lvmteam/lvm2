@@ -710,7 +710,7 @@ static char *_fetch_string(char **src, const int delimiter)
 {
 	char *p, *ret;
 	size_t len = (p = strchr(*src, delimiter)) ?
-		p - *src : strlen(*src);
+		(size_t)(p - *src) : strlen(*src);
 
 	if ((ret = strndup(*src, len)))
 		*src += len + 1;

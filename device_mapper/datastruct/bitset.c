@@ -150,7 +150,8 @@ dm_bitset_t dm_bitset_parse_list(const char *str, struct dm_pool *mem,
 				 size_t min_num_bits)
 {
 	unsigned a, b;
-	int c, old_c, totaldigits, ndigits, nmaskbits;
+	int c, old_c, totaldigits, ndigits;
+	size_t nmaskbits;
 	int at_start, in_range;
 	dm_bitset_t mask = NULL;
 	const char *start = str;
