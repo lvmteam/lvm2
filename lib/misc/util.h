@@ -89,6 +89,14 @@ static unsigned _dm_clzll(unsigned long long x)
 #define clzll(x) _dm_clzll((x))
 #endif /* ifdef HAVE___BUILTIN_CLZLL */
 
+#ifndef HAVE_FFS
+#ifdef HAVE___BUILTIN_FFS
+#define ffs(x) __builtin_ffs((x))
+#else
+#error ffs() not implemented!
+#endif /* ifdef HAVE___BUILTIN_FFS */
+#endif /* ifndef HAVE_FFS */
+
 #define KERNEL_VERSION(major, minor, release) (((major) << 16) + ((minor) << 8) + (release))
 
 /* Define some portable printing types */
