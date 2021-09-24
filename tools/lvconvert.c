@@ -95,7 +95,7 @@ struct convert_poll_id_list {
 };
 
 /* FIXME Temporary function until the enum replaces the separate variables */
-static void _set_conv_type(struct lvconvert_params *lp, int conv_type)
+static void _set_conv_type(struct lvconvert_params *lp, conversion_type_t conv_type)
 {
 	if (lp->conv_type != CONV_OTHER)
 		log_error(INTERNAL_ERROR "Changing conv_type from %d to %d.", lp->conv_type, conv_type);
