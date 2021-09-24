@@ -380,8 +380,10 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 		return 0;
 	}
 
-#ifdef O_DIRECT_SUPPORT
+#if defined(O_NOATIME) || defined(O_DIRECT_SUPPORT)
       opened:
+#endif
+#ifdef O_DIRECT_SUPPORT
 	if (direct)
 		dev->flags |= DEV_O_DIRECT_TESTED;
 #endif
