@@ -566,7 +566,7 @@ static struct dm_tree_node *_find_dm_tree_node_by_uuid(struct dm_tree *dtree,
 	default_uuid_prefix = dm_uuid_prefix();
 	default_uuid_prefix_len = strlen(default_uuid_prefix);
 
-	if (suffix_list && (suffix_position = rindex(uuid, '-'))) {
+	if (suffix_list && (suffix_position = strrchr(uuid, '-'))) {
 		while ((suffix = suffix_list[i++])) {
 			if (strcmp(suffix_position + 1, suffix))
 				continue;

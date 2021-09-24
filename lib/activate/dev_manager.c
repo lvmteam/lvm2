@@ -838,7 +838,7 @@ static int _info(struct cmd_context *cmd,
 		return 1;
 
 	/* Check for original version of dlid before the suffixes got added in 2.02.106 */
-	if ((suffix_position = rindex(dlid, '-'))) {
+	if ((suffix_position = strrchr(dlid, '-'))) {
 		while ((suffix = uuid_suffix_list[i++])) {
 			if (strcmp(suffix_position + 1, suffix))
 				continue;
