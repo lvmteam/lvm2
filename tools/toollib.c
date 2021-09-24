@@ -49,7 +49,7 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 	int null_fd;
 	pid_t pid;
 	struct sigaction act = {
-		{_sigchld_handler},
+		.sa_handler = _sigchld_handler,
 		.sa_flags = SA_NOCLDSTOP,
 	};
 
