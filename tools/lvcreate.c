@@ -18,9 +18,9 @@
 #include <fcntl.h>
 
 struct lvcreate_cmdline_params {
-	percent_type_t percent;
 	uint64_t size;
 	uint64_t virtual_size; /* snapshot, thin */
+	percent_type_t percent;
 	char **pvs;
 	uint32_t pv_count;
 };
