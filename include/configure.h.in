@@ -194,6 +194,9 @@
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
 
+/* Define to 1 if you have the `ffs' function. */
+#undef HAVE_FFS
+
 /* Define to 1 if you have the <float.h> header file. */
 #undef HAVE_FLOAT_H
 
@@ -519,6 +522,9 @@
 /* valgrind.h found */
 #undef HAVE_VALGRIND
 
+/* Define to 1 if you have the `versionsort' function. */
+#undef HAVE_VERSIONSORT
+
 /* Define to 1 if you have the `vfork' function. */
 #undef HAVE_VFORK
 
@@ -542,6 +548,9 @@
 
 /* Define to 1 if the system has the `__builtin_clzll' built-in function */
 #undef HAVE___BUILTIN_CLZLL
+
+/* Define to 1 if the system has the `__builtin_ffs' built-in function */
+#undef HAVE___BUILTIN_FFS
 
 /* Define to 1 to include built-in support for integrity. */
 #undef INTEGRITY_INTERNAL

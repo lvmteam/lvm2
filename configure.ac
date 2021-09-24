@@ -144,6 +144,7 @@ AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 AX_GCC_BUILTIN([__builtin_clz])
 AX_GCC_BUILTIN([__builtin_clzll])
+AX_GCC_BUILTIN([__builtin_ffs])
 
 
 AC_DEFINE([_GNU_SOURCE], 1, [Define to get access to GNU/Linux extension])
@@ -156,7 +157,7 @@ AC_CHECK_FUNCS([ftruncate gethostname getpagesize gettimeofday localtime_r \
   memchr memset mkdir mkfifo munmap nl_langinfo pselect realpath rmdir setenv \
   setlocale strcasecmp strchr strcspn strdup strerror strncasecmp strndup \
   strrchr strspn strstr strtol strtoul uname], , [AC_MSG_ERROR(bailing out)])
-AC_CHECK_FUNCS([prlimit])
+AC_CHECK_FUNCS([ffs prlimit versionsort])
 AC_FUNC_ALLOCA
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_CHOWN
