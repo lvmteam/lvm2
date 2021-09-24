@@ -677,7 +677,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 			}
 
 		} else {
-			log_error("Using a shared lock type requires lvmlockd.");
+			log_error("Using a shared lock type requires lvmlockd (lvm.conf use_lvmlockd.)");
 			return 0;
 		}
 
