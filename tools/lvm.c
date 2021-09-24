@@ -19,6 +19,7 @@
 
 int main(int argc, char **argv)
 {
+	/* coverity[os_cmd_sink] intentionally passing argv */
 	return lvm2_main(argc, argv);
 }
 

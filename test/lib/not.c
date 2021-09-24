@@ -82,6 +82,7 @@ int main(int args, char **argv) {
 		if (val)
 			(void) setenv("LVM_EXPECTED_EXIT_STATUS", val, 1);
 
+		/* coverity[os_cmd_sink] intentionally passing argv + 1 */
 		execvp(argv[1], &argv[1]);
 		/* should not be accessible */
 		return FAILURE;
