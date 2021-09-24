@@ -326,9 +326,9 @@ struct segment_type *init_unknown_segtype(struct cmd_context *cmd,
  */
 #define RAID_FEATURE_NEW_DEVICES_ACCEPT_REBUILD	(1U << 6) /* version 1.9.0 */
 
+bool raid_is_available(const struct logical_volume *lv);
 #ifdef RAID_INTERNAL
 int init_raid_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
-bool raid_is_available(const struct logical_volume *lv);
 #endif
 
 #define THIN_FEATURE_DISCARDS			(1U << 0)
