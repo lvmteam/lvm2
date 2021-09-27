@@ -964,12 +964,8 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	r = 1;
 
       out:
-	if (!r) {
-		free(fidtc->write_buf);
-		fidtc->write_buf = NULL;
-		fidtc->write_buf_size = 0;
-		fidtc->new_metadata_size = 0;
-	}
+	if (!r)
+		free_text_fidtc(vg);
 
 	return r;
 }
@@ -1154,12 +1150,8 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 	r = 1;
 
       out:
-	if (!precommit && !fidtc->preserve) {
-		free(fidtc->write_buf);
-		fidtc->write_buf = NULL;
-		fidtc->write_buf_size = 0;
-		fidtc->new_metadata_size = 0;
-	}
+	if (!precommit && !fidtc->preserve)
+		free_text_fidtc(vg);
 
 	return r;
 }
