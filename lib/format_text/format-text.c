@@ -42,6 +42,7 @@ struct text_fid_context {
 	char *write_buf;         /* buffer containing metadata text to write to disk */
 	uint32_t write_buf_size; /* mem size of write_buf, increases in 64K multiples */
 	uint32_t new_metadata_size; /* size of text metadata in buf */
+	uint32_t checksum;       /* crc32 checksum for new metadata */
 	unsigned preserve:1;
 };
 
@@ -542,6 +543,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	uint64_t write2_start = 0, write2_last = 0, write2_size = 0;
 	uint32_t write1_over = 0, write2_over = 0;
 	uint32_t write_buf_size;
+	uint32_t checksum;
 	uint32_t extra_size;
 	uint32_t bad_fields = 0;
 	char *write_buf = NULL;
@@ -601,6 +603,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		write_buf = fidtc->write_buf;
 		write_buf_size = fidtc->write_buf_size;
 		new_size = fidtc->new_metadata_size;
+		checksum = fidtc->checksum;
 	} else {
 		if (!vg->write_count++)
 			(void) dm_snprintf(desc, sizeof(desc), "Write from %s.", vg->cmd->cmd_line);
@@ -631,6 +634,8 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		dm_config_destroy(cft);
 		if (!vg->vg_precommitted)
 			goto_out;
+
+		fidtc->checksum = checksum = calc_crc(INITIAL_CRC, (uint8_t *)write_buf, new_size);
 	}
 
 	log_debug_metadata("VG %s seqno %u metadata write to %s mda_start %llu mda_size %llu mda_last %llu",
@@ -954,13 +959,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 
 	dev_unset_last_byte(mdac->area.dev);
 
-	rlocn_new->checksum = calc_crc(INITIAL_CRC,
-				       (uint8_t *)write_buf,
-				       (uint32_t)(new_size - new_wrap));
-	if (new_wrap)
-		rlocn_new->checksum = calc_crc(rlocn_new->checksum,
-					(uint8_t *)write_buf + new_size - new_wrap,
-					(uint32_t)new_wrap);
+	rlocn_new->checksum = checksum;
 
 	r = 1;
 

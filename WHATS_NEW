@@ -1,5 +1,6 @@
 Version 2.03.14 - 
 ==================================
+  Optimize computation of crc32 check sum with multiple PVs.
   Enhance recover path on cache creation failure.
   Filter out unsupported MQ/SMQ cache policy setting.
   Fix memleak in mpath filter.
