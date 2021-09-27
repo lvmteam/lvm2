@@ -951,7 +951,7 @@ uint64_t lv_origin_size(const struct logical_volume *lv)
 	struct lv_segment *seg;
 
 	if (lv_is_cow(lv))
-		return (uint64_t) find_snapshot(lv)->len * lv->vg->extent_size;
+		return find_snapshot(lv)->lv->size;
 
 	if (lv_is_thin_volume(lv) && (seg = first_seg(lv)) &&
 	    seg->external_lv)
