@@ -3043,6 +3043,11 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	int skip_hyphens;
 	int refresh_done = 0;
 
+	/* Avoid excessive access to /etc/localtime and set TZ variable for glibc
+	 * so it does not need to check /etc/localtime everytime that needs that info */
+	if (!getenv("TZ"))
+		setenv("TZ", ":/etc/localtime", 0);
+
 	init_error_message_produced(0);
 
 	/* each command should start out with sigint flag cleared */
