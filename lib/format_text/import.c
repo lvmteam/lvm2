@@ -187,6 +187,7 @@ struct volume_group *text_read_metadata(struct format_instance *fid,
 
 		(*vsn)->read_desc(vg->vgmem, cft, when, desc);
 		vg->committed_cft = cft; /* Reuse CFT for recreation of committed VG */
+		vg->buffer_size_hint = size + size2;
 		cft = NULL;
 		break;
 	}

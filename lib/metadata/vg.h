@@ -45,6 +45,7 @@ struct volume_group {
 	unsigned needs_backup : 1;
 	unsigned needs_write_and_commit : 1;
 	uint32_t write_count; /* count the number of vg_write calls */
+	uint32_t buffer_size_hint; /* hint with buffer size of parsed VG */
 
 	/*
 	 * The parsed committed (on-disk) copy of this VG; is NULL if this VG is committed

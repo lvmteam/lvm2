@@ -1071,7 +1071,7 @@ size_t text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf,
 		.header = 0,
 		.out_with_comment = &_out_with_comment_raw,
 		.nl = &_nl_raw,
-		.data.buf.size = 65536,	/* Initial metadata limit */
+		.data.buf.size = vg->buffer_size_hint + 16384,	/* Initial metadata limit */
 	};
 
 	_init();
