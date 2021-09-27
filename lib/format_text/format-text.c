@@ -1570,7 +1570,11 @@ int read_metadata_location_summary(const struct format_type *fmt,
 	/* Keep track of largest metadata size we find. */
 	lvmcache_save_metadata_size(rlocn->size);
 
-	lvmcache_lookup_mda(vgsummary);
+	if (lvmcache_lookup_mda(vgsummary)) {
+		log_debug("Skipping read of already known VG metadata with matching mda checksum on %s.",
+			  dev_name(dev_area->dev));
+		goto out;
+	}
 
 	if (!text_read_metadata_summary(fmt, dev_area->dev, MDA_CONTENT_REASON(primary_mda),
 				(off_t) (dev_area->start + rlocn->offset),
@@ -1591,7 +1595,7 @@ int read_metadata_location_summary(const struct format_type *fmt,
 			  (unsigned long long)(dev_area->start + rlocn->offset));
 		return 0;
 	}
-
+out:
 	log_debug_metadata("Found metadata summary on %s at %llu size %llu for VG %s",
 			   dev_name(dev_area->dev),
 			   (unsigned long long)(dev_area->start + rlocn->offset),
