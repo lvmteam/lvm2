@@ -2446,7 +2446,8 @@ static int _status(CMD_ARGS)
 	if (_switches[NOFLUSH_ARG] && !dm_task_no_flush(dmt))
 		goto_out;
 
-	if (!dm_task_ima_measurement(dmt))
+	if (!strcmp(cmd->name, "measure") &&
+	    !dm_task_ima_measurement(dmt))
 		goto_out;
 
 	if (!_task_run(dmt))
