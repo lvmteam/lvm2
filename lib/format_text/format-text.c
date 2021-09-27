@@ -1082,61 +1082,22 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 
 	rlocn_set_ignored(rlocn_slot0, mda_is_ignored(mda));
 
-	if (mdac->rlocn.size) {
-		if (precommit) {
-			log_debug_metadata("VG %s metadata precommit seq %u on %s mda header at %llu %s",
-					   vg->name, vg->seqno, dev_name(mdac->area.dev),
-					   (unsigned long long)mdac->area.start,
-					   mda_is_ignored(mda) ? "(ignored)" : "(used)");
+	log_debug_metadata("VG %s metadata %scommit %sseq %u on %s mda header at %llu %s.",
+			   vg->name,
+			   (precommit) ? "pre" : "",
+			   (!mdac->rlocn.size) ? "empty ": "",
+			   vg->seqno, dev_name(mdac->area.dev),
+			   (unsigned long long)mdac->area.start,
+			   mda_is_ignored(mda) ? "(ignored)" : "(used)");
 
-			log_debug_metadata("VG %s metadata precommit slot0 offset %llu size %llu slot1 offset %llu size %llu",
-					   vg->name,
-					   (unsigned long long)mdab->raw_locns[0].offset,
-					   (unsigned long long)mdab->raw_locns[0].size,
-					   (unsigned long long)mdab->raw_locns[1].offset,
-					   (unsigned long long)mdab->raw_locns[1].size);
-
-		} else {
-			log_debug_metadata("VG %s metadata commit seq %u on %s mda header at %llu %s",
-					   vg->name, vg->seqno, dev_name(mdac->area.dev),
-					   (unsigned long long)mdac->area.start,
-					   mda_is_ignored(mda) ? "(ignored)" : "(used)");
-
-			log_debug_metadata("VG %s metadata commit slot0 offset %llu size %llu slot1 offset %llu size %llu",
-					   vg->name,
-					   (unsigned long long)mdab->raw_locns[0].offset,
-					   (unsigned long long)mdab->raw_locns[0].size,
-					   (unsigned long long)mdab->raw_locns[1].offset,
-					   (unsigned long long)mdab->raw_locns[1].size);
-		}
-	} else {
-		if (precommit) {
-			log_debug_metadata("VG %s metadata precommit empty seq %u on %s mda header at %llu %s",
-					   vg->name, vg->seqno, dev_name(mdac->area.dev),
-					   (unsigned long long)mdac->area.start,
-					   mda_is_ignored(mda) ? "(ignored)" : "(used)");
-
-			log_debug_metadata("VG %s metadata precommit empty slot0 offset %llu size %llu slot1 offset %llu size %llu",
-					   vg->name,
-					   (unsigned long long)mdab->raw_locns[0].offset,
-					   (unsigned long long)mdab->raw_locns[0].size,
-					   (unsigned long long)mdab->raw_locns[1].offset,
-					   (unsigned long long)mdab->raw_locns[1].size);
-
-		} else {
-			log_debug_metadata("VG %s metadata commit empty seq %u on %s mda header at %llu %s",
-					   vg->name, vg->seqno, dev_name(mdac->area.dev),
-					   (unsigned long long)mdac->area.start,
-					   mda_is_ignored(mda) ? "(ignored)" : "(used)");
-
-			log_debug_metadata("VG %s metadata commit empty slot0 offset %llu size %llu slot1 offset %llu size %llu",
-					   vg->name,
-					   (unsigned long long)mdab->raw_locns[0].offset,
-					   (unsigned long long)mdab->raw_locns[0].size,
-					   (unsigned long long)mdab->raw_locns[1].offset,
-					   (unsigned long long)mdab->raw_locns[1].size);
-		}
-	}
+	log_debug_metadata("VG %s metadata %scommit %sslot0 offset %llu size %llu slot1 offset %llu size %llu.",
+			   vg->name,
+			   (precommit) ? "pre" : "",
+			   (!mdac->rlocn.size) ? "empty ": "",
+			   (unsigned long long)mdab->raw_locns[0].offset,
+			   (unsigned long long)mdab->raw_locns[0].size,
+			   (unsigned long long)mdab->raw_locns[1].offset,
+			   (unsigned long long)mdab->raw_locns[1].size);
 
 	rlocn_set_ignored(mdab->raw_locns, mda_is_ignored(mda));
 
