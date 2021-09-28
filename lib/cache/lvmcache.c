@@ -237,6 +237,20 @@ void lvmcache_save_bad_mda(struct lvmcache_info *info, struct metadata_area *mda
 	dm_list_add(&info->bad_mdas, &mda->list);
 }
 
+void lvmcache_del_save_bad_mda(struct lvmcache_info *info, int mda_num, int bad_mda_flag)
+{
+	struct metadata_area *mda, *mda_safe;
+
+	dm_list_iterate_items_safe(mda, mda_safe, &info->mdas) {
+		if (mda->mda_num == mda_num) {
+			dm_list_del(&mda->list);
+			mda->bad_fields |= bad_mda_flag;
+			lvmcache_save_bad_mda(info, mda);
+			break;
+		}
+	}
+}
+
 void lvmcache_get_bad_mdas(struct cmd_context *cmd,
 			   const char *vgname, const char *vgid,
                            struct dm_list *bad_mda_list)

@@ -465,6 +465,24 @@ static struct volume_group *_vg_read_raw(struct cmd_context *cmd,
 
 	vg = _vg_read_raw_area(cmd, fid, vgname, &mdac->area, vg_fmtdata, use_previous_vg, 0, mda_is_primary(mda));
 
+	if (!vg && !*use_previous_vg) {
+		/*
+		 * This condition (corrupt metadata text) is often seen in the
+		 * label_scan()/_text_read() phase, where this code corresponds to
+		 * the lvmcache_save_bad_mda() in _text_read().  In this case we
+		 * have two mda structs to deal with, one in lvmcache from label scan,
+		 * and the mda copy on fid->metadata_areas_in_use.
+		 */
+		struct device *dev = mdac->area.dev;
+		struct lvmcache_info *info = lvmcache_info_from_pvid(dev->pvid, dev, 0);
+		log_warn("WARNING: reading %s mda%d failed to read metadata.", dev_name(dev), mda_is_primary(mda)?1:2);
+		log_warn("WARNING: repair VG metadata on %s with vgck --updatemetadata.", dev_name(dev));
+		/* remove mda from lvmcache, saving it in info->bad_mdas for possible repair with updatemetadata */
+		lvmcache_del_save_bad_mda(info, mda->mda_num, BAD_MDA_TEXT);
+		/* remove mda from fid */
+		fid_remove_mda(fid, mda, NULL, 0, 0);
+	}
+
 	return vg;
 }
 

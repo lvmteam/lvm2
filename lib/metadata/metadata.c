@@ -4798,7 +4798,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	 * fid->metadata_areas_in_use by create_instance above, and here we
 	 * read VG metadata from each of those mdas.
 	 */
-	dm_list_iterate_items(mda, &fid->metadata_areas_in_use) {
+	dm_list_iterate_items_safe(mda, mda2, &fid->metadata_areas_in_use) {
 		mda_dev = mda_get_device(mda);
 
 		/* I don't think this can happen */

@@ -210,6 +210,8 @@ void lvmcache_del_outdated_devs(struct cmd_context *cmd,
 
 void lvmcache_save_bad_mda(struct lvmcache_info *info, struct metadata_area *mda);
 
+void lvmcache_del_save_bad_mda(struct lvmcache_info *info, int mda_num, int bad_mda_flag);
+
 void lvmcache_get_bad_mdas(struct cmd_context *cmd,
                            const char *vgname, const char *vgid,
                            struct dm_list *bad_mda_list);

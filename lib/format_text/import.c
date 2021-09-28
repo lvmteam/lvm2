@@ -157,13 +157,12 @@ struct volume_group *text_read_metadata(struct format_instance *fid,
 		if (!config_file_read_fd(cft, dev, MDA_CONTENT_REASON(primary_mda), offset, size,
 					 offset2, size2, checksum_fn, checksum,
 					 skip_parse, 1)) {
-			/* FIXME: handle errors */
-			log_error("Couldn't read volume group metadata from %s.", dev_name(dev));
+			log_warn("WARNING: couldn't read volume group metadata from %s.", dev_name(dev));
 			goto out;
 		}
 	} else {
 		if (!config_file_read(cft)) {
-			log_error("Couldn't read volume group metadata from file.");
+			log_warn("WARNING: couldn't read volume group metadata from file.");
 			goto out;
 		}
 	}
