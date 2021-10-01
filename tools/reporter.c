@@ -1203,7 +1203,7 @@ static int _full_report_single(struct cmd_context *cmd,
 	int orphan = is_orphan_vg(vg->name);
 	int r = ECMD_FAILED;
 
-	if (orphan && !dm_list_size(&vg->pvs))
+	if (orphan && dm_list_empty(&vg->pvs))
 		return ECMD_PROCESSED;
 
 	args->full_report_vg = vg;

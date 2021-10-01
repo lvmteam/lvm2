@@ -3172,7 +3172,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	log_set_report_object_name_and_id(NULL, NULL);
 
 	if (handle->include_historical_lvs && !tags_supplied) {
-		if (!dm_list_size(&_historical_lv.segments))
+		if (dm_list_empty(&_historical_lv.segments))
 			dm_list_add(&_historical_lv.segments, &_historical_lv_segment.list);
 		_historical_lv.vg = vg;
 

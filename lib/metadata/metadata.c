@@ -2739,7 +2739,7 @@ int vg_validate(struct volume_group *vg)
 			continue;
 		}
 
-		if (!hlv->indirect_origin && !dm_list_size(&hlv->indirect_glvs)) {
+		if (!hlv->indirect_origin && dm_list_empty(&hlv->indirect_glvs)) {
 			log_error(INTERNAL_ERROR "Historical LV %s is not part of any LV chain in VG %s", hlv->name, vg->name);
 			r = 0;
 			continue;
