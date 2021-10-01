@@ -5015,7 +5015,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		unlock_vg(cmd, NULL, vg_name);
 		log_error("VG name not found for vgid %s", vgid);
 		failure |= FAILED_NOTFOUND;
-		goto_bad;
+		goto bad;
 	}
 
 	/*
@@ -5037,7 +5037,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		if (!(vg_read_flags & READ_OK_NOTFOUND))
 			log_error("Volume group \"%s\" not found", vg_name);
 		failure |= FAILED_NOTFOUND;
-		goto_bad;
+		goto bad;
 	}
 
 	/*
@@ -5053,7 +5053,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		if (!(vg_read_flags & READ_OK_NOTFOUND))
 			log_error("Volume group \"%s\" not found.", vg_name);
 		failure |= FAILED_NOTFOUND;
-		goto_bad;
+		goto bad;
 	}
 
 	/*
@@ -5264,7 +5264,7 @@ bad:
 
 		/* caller must unlock_vg and release_vg */
 		*error_vg = vg;
-		return_NULL;
+		return NULL;
 	}
 
 	if (vg) {
