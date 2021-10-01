@@ -1,5 +1,6 @@
 Version 2.03.14 - 
 ==================================
+  Print info message with too many or too large archived files.
   Reduce metadata readings during scanning phase.
   Optimize computation of crc32 check sum with multiple PVs.
   Enhance recover path on cache creation failure.
