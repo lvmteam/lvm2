@@ -5225,14 +5225,14 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		}
 
 		if (!vg->committed_cft) {
-			log_warn("WARNING: vg_read no vg copy: copy export failed.");
-			if (!(vg->committed_cft = export_vg_to_config_tree(vg)))
-				goto out;
+			log_error(INTERNAL_ERROR "Missing committed config tree.");
+			goto out;
 		}
 
-		if (!(vg->vg_committed = import_vg_from_config_tree(cmd, vg->fid, vg->committed_cft)))
-			log_warn("WARNING: vg_read no vg copy: copy import failed.");
-
+		if (!(vg->vg_committed = import_vg_from_config_tree(cmd, vg->fid, vg->committed_cft))) {
+			log_error("Failed to import written VG.");
+			goto out;
+		}
 	} else {
 		if (vg->vg_precommitted)
 			log_error(INTERNAL_ERROR "vg_read vg %p vg_precommitted %p", (void *)vg, (void *)vg->vg_precommitted);
