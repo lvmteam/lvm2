@@ -4977,12 +4977,13 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	int writing = (vg_read_flags & READ_FOR_UPDATE);
 	int activating = (vg_read_flags & READ_FOR_ACTIVATE);
 
+	*error_flags = SUCCESS;
+	if (error_vg)
+		*error_vg = NULL;
+
 	if (is_orphan_vg(vg_name)) {
 		log_very_verbose("Reading orphan VG %s.", vg_name);
 		vg = vg_read_orphans(cmd, vg_name);
-		*error_flags = 0;
-		if (error_vg)
-			*error_vg = NULL;
 		return vg;
 	}
 
@@ -5240,11 +5241,8 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	}
 out:
 	/* We return with the VG lock held when read is successful. */
-	*error_flags = SUCCESS;
-	if (error_vg)
-		*error_vg = NULL;
-	return vg;
 
+	return vg;
 bad:
 	*error_flags = failure;
 
@@ -5273,9 +5271,8 @@ bad:
 		unlock_vg(cmd, vg, vg_name);
 		release_vg(vg);
 	}
-	if (error_vg)
-		*error_vg = NULL;
-	return_NULL;
+
+	return NULL;
 }
 
 /*
