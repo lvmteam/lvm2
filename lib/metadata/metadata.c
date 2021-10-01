@@ -1701,17 +1701,19 @@ struct generic_logical_volume *find_historical_glv(const struct volume_group *vg
 
 int lv_name_is_used_in_vg(const struct volume_group *vg, const char *name, int *historical)
 {
-	int found = 0;
+	int found;
 
-	if (find_lv(vg, name)) {
+	if (historical)
+		*historical = 0;
+
+	if (find_lv(vg, name))
 		found = 1;
-		if (historical)
-			*historical = 0;
-	} else if (find_historical_glv(vg, name, 0, NULL)) {
+	else if (find_historical_glv(vg, name, 0, NULL)) {
 		found = 1;
 		if (historical)
 			*historical = 1;
-	}
+	} else
+		found = 0;
 
 	return found;
 }
