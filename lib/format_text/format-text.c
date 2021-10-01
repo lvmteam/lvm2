@@ -1988,7 +1988,7 @@ static int _text_pv_setup(const struct format_type *fmt,
 			  struct physical_volume *pv,
 			  struct volume_group *vg)
 {
-	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
+	char pvid[ID_LEN + 1] __attribute__((aligned(8)));
 	struct format_instance *fid = pv->fid;
 	struct lvmcache_info *info;
 	unsigned mda_index;
@@ -1997,6 +1997,7 @@ static int _text_pv_setup(const struct format_type *fmt,
 	uint64_t pe_count;
 	uint64_t size_reduction = 0;
 
+	pvid[ID_LEN] = 0;
 	if (*pv->old_id.uuid)
 		memcpy(pvid, &pv->old_id.uuid, ID_LEN);
 	else
@@ -2167,7 +2168,7 @@ static int _add_metadata_area_to_pv(struct physical_volume *pv,
 				    uint64_t mda_size,
 				    unsigned mda_ignored)
 {
-	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
+	char pvid[ID_LEN + 1] __attribute__((aligned(8)));
 	struct metadata_area *mda;
 	struct mda_context *mdac;
 	struct mda_lists *mda_lists = (struct mda_lists *) pv->fmt->private;
@@ -2202,6 +2203,7 @@ static int _add_metadata_area_to_pv(struct physical_volume *pv,
 	memset(&mdac->rlocn, 0, sizeof(mdac->rlocn));
 	mda_set_ignored(mda, mda_ignored);
 
+	pvid[ID_LEN] = 0;
 	memcpy(pvid, &pv->id.uuid, ID_LEN);
 
 	fid_add_mda(pv->fid, mda, pvid, ID_LEN, mda_index);
@@ -2675,4 +2677,3 @@ int text_wipe_outdated_pv_mda(struct cmd_context *cmd, struct device *dev,
 
 	return 1;
 }
-
