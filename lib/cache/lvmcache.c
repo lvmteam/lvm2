@@ -2166,20 +2166,14 @@ struct lvmcache_info *lvmcache_add(struct cmd_context *cmd, struct labeller *lab
 				   const char *vgname, const char *vgid_arg, uint32_t vgstatus,
 				   int *is_duplicate)
 {
-	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
-	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
+	const char *pvid = pvid_arg;
+	const char *vgid = vgid_arg;
 	char pvid_dashed[64] __attribute__((aligned(8)));
 	struct lvmcache_vgsummary vgsummary = { 0 };
 	struct lvmcache_info *info;
 	struct lvmcache_info *info_lookup;
 	struct device_list *devl;
 	int created = 0;
-
-	/* pvid_arg and vgid_arg may not be null terminated */
-	memcpy(pvid, pvid_arg, ID_LEN);
-
-	if (vgid_arg)
-		memcpy(vgid, vgid_arg, ID_LEN);
 
 	if (!id_write_format((const struct id *)&pvid, pvid_dashed, sizeof(pvid_dashed)))
 		stack;
@@ -2282,7 +2276,7 @@ struct lvmcache_info *lvmcache_add(struct cmd_context *cmd, struct labeller *lab
 update_vginfo:
 	vgsummary.vgstatus = vgstatus;
 	vgsummary.vgname = vgname;
-	if (vgid[0])
+	if (vgid && vgid[0])
 		memcpy(vgsummary.vgid, vgid, ID_LEN);
 
 	if (!lvmcache_update_vgname_and_id(cmd, info, &vgsummary)) {
