@@ -1648,18 +1648,6 @@ struct lv_list *find_lv_in_vg(const struct volume_group *vg,
 	return NULL;
 }
 
-struct lv_list *find_lv_in_lv_list(const struct dm_list *ll,
-				   const struct logical_volume *lv)
-{
-	struct lv_list *lvl;
-
-	dm_list_iterate_items(lvl, ll)
-		if (lvl->lv == lv)
-			return lvl;
-
-	return NULL;
-}
-
 struct logical_volume *find_lv_in_vg_by_lvid(const struct volume_group *vg,
 					     const union lvid *lvid)
 {
