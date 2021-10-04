@@ -856,6 +856,17 @@ int device_ids_use_devname(struct cmd_context *cmd)
 	return 0;
 }
 
+static int _device_ids_use_lvmlv(struct cmd_context *cmd)
+{
+	struct dev_use *du;
+
+	dm_list_iterate_items(du, &cmd->use_devices) {
+		if (du->idtype == DEV_ID_TYPE_LVMLV_UUID)
+			return 1;
+	}
+	return 0;
+}
+
 struct dev_use *get_du_for_dev(struct cmd_context *cmd, struct device *dev)
 {
 	struct dev_use *du;
@@ -1297,6 +1308,57 @@ void device_id_pvremove(struct cmd_context *cmd, struct device *dev)
 		free(du->pvid);
 		du->pvid = NULL;
 	}
+}
+
+void device_id_update_vg_uuid(struct cmd_context *cmd, struct volume_group *vg, struct id *old_vg_id)
+{
+	struct dev_use *du;
+	struct lv_list *lvl;
+	char old_vgid[ID_LEN+1] = { 0 };
+	char new_vgid[ID_LEN+1] = { 0 };
+	char old_idname[PATH_MAX];
+	int update = 0;
+
+	if (!cmd->enable_devices_file)
+		goto out;
+
+	/* Without this setting there is no stacking LVs on PVs. */
+	if (!cmd->scan_lvs)
+		goto out;
+
+	/* Check if any devices file entries are stacked on LVs. */
+	if (!_device_ids_use_lvmlv(cmd))
+		goto out;
+
+	memcpy(old_vgid, old_vg_id, ID_LEN);
+	memcpy(new_vgid, &vg->id, ID_LEN);
+
+	/*
+	 * for each LV in VG, if there is a du for that LV (meaning a PV exists
+	 * on the LV), then update the du idname, replacing the old vgid with
+	 * the new vgid.
+	 */
+	dm_list_iterate_items(lvl, &vg->lvs) {
+		memset(old_idname, 0, sizeof(old_idname));
+		memcpy(old_idname, "LVM-", 4);
+		memcpy(old_idname+4, old_vgid, ID_LEN);
+		memcpy(old_idname+4+ID_LEN, &lvl->lv->lvid.id[1], ID_LEN);
+
+		if ((du = _get_du_for_device_id(cmd, DEV_ID_TYPE_LVMLV_UUID, old_idname))) {
+			log_debug("device_id update %s pvid %s vgid %s to %s",
+				  du->devname ?: ".", du->pvid ?: ".", old_vgid, new_vgid);
+			memcpy(du->idname+4, new_vgid, ID_LEN);
+			update = 1;
+
+			if (du->dev && du->dev->id && (du->dev->id->idtype == DEV_ID_TYPE_LVMLV_UUID))
+				memcpy(du->dev->id->idname+4, new_vgid, ID_LEN);
+		}
+	}
+
+	if (update)
+		device_ids_write(cmd);
+ out:
+	unlock_devices_file(cmd);
 }
 
 static int _idtype_compatible_with_major_number(struct cmd_context *cmd, int idtype, int major)

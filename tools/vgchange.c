@@ -14,6 +14,7 @@
  */
 
 #include "tools.h"
+#include "lib/device/device_id.h"
 
 struct vgchange_params {
 	int lock_start_count;
@@ -412,11 +413,14 @@ static int _vgchange_uuid(struct cmd_context *cmd __attribute__((unused)),
 			  struct volume_group *vg)
 {
 	struct lv_list *lvl;
+	struct id old_vg_id;
 
 	if (lvs_in_vg_activated(vg)) {
 		log_error("Volume group has active logical volumes");
 		return 0;
 	}
+
+	memcpy(&old_vg_id, &vg->id, ID_LEN);
 
 	if (!id_create(&vg->id)) {
 		log_error("Failed to generate new random UUID for VG %s.",
@@ -427,6 +431,12 @@ static int _vgchange_uuid(struct cmd_context *cmd __attribute__((unused)),
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		memcpy(&lvl->lv->lvid, &vg->id, sizeof(vg->id));
 	}
+
+	/*
+	 * If any LVs in this VG have PVs stacked on them, then
+	 * update the device_id of the stacked PV.
+	 */
+	device_id_update_vg_uuid(cmd, vg, &old_vg_id);
 
 	return 1;
 }
@@ -801,6 +811,14 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 
 	if (noupdate)
 		cmd->ignore_device_name_mismatch = 1;
+
+	/*
+	 * If the devices file includes PVs stacked on LVs, then
+	 * vgchange --uuid may need to update the devices file.
+	 * No PV-on-LV stacked is done without scan_lvs set.
+	 */
+	if (arg_is_set(cmd, uuid_ARG) && cmd->scan_lvs)
+		cmd->edit_devices_file = 1;
 
 	/*
 	 * Include foreign VGs that contain active LVs.

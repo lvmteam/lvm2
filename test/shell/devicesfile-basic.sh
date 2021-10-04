@@ -608,6 +608,25 @@ rm "$DFDIR/test.devices"
 vgcreate --devicesfile test.devices $vg3 "$dev3"
 grep "$dev3" "$DFDIR/test.devices"
 
+# vgchange uuid handles stacked PVs on VGs
+
+wipe_all
+rm -f "$DF"
+vgcreate $vg1 "$dev1"
+lvcreate -l8 -n $lv1 $vg1
+aux lvmconf 'devices/scan_lvs = 1'
+pvcreate "$DM_DEV_DIR/$vg1/$lv1"
+pvs "$DM_DEV_DIR/$vg1/$lv1"
+grep "$DM_DEV_DIR/$vg1/$lv1" $DF
+vgchange -an $vg1
+vgchange --uuid $vg1
+vgchange -ay $vg1
+pvs "$DM_DEV_DIR/$vg1/$lv1"
+vgchange -an $vg1
+not pvs "$DM_DEV_DIR/$vg1/$lv1"
+aux lvmconf 'devices/scan_lvs = 0'
+vgremove -y $vg1
+
 #
 # verify --devicesfile and --devices are not affected by a filter
 # This is last because it sets lvm.conf filter and
