@@ -377,11 +377,10 @@ static void _init_logging(struct cmd_context *cmd)
 
 	/* Syslog */
 	cmd->default_settings.syslog = find_config_tree_bool(cmd, log_syslog_CFG, NULL);
-	if (cmd->default_settings.syslog != 1)
+	if (cmd->default_settings.syslog)
+		init_syslog(1, DEFAULT_LOG_FACILITY);
+	else
 		fin_syslog();
-
-	if (cmd->default_settings.syslog > 1)
-		init_syslog(cmd->default_settings.syslog);
 
 	/* Debug level for log file output */
 	cmd->default_settings.debug = find_config_tree_int(cmd, log_level_CFG, NULL);
@@ -1652,8 +1651,6 @@ struct cmd_context *create_toolcontext(unsigned is_clvmd,
 #ifdef INTL_PACKAGE
 	bindtextdomain(INTL_PACKAGE, LOCALEDIR);
 #endif
-
-	init_syslog(DEFAULT_LOG_FACILITY);
 
 	if (!(cmd = zalloc(sizeof(*cmd)))) {
 		log_error("Failed to allocate command context");

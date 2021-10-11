@@ -312,8 +312,13 @@ void init_log_while_suspended(int log_while_suspended)
 	_log_while_suspended = log_while_suspended;
 }
 
-void init_syslog(int facility)
+void init_syslog(int enable, int facility)
 {
+	if (!enable) {
+		_syslog = 0;
+		return;
+	}
+
 	if (getenv("LVM_SUPPRESS_SYSLOG"))
 		return;
 
