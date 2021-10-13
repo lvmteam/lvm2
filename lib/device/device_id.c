@@ -543,11 +543,8 @@ int device_ids_read(struct cmd_context *cmd)
 			log_debug("read devices file systemid %s", _devices_file_systemid);
 			if ((!cmd->system_id && _devices_file_systemid[0]) ||
 			    (cmd->system_id && strcmp(cmd->system_id, _devices_file_systemid))) {
-				log_warn("WARNING: ignoring devices file with wrong system id %s vs local %s.",
+				log_warn("WARNING: devices file has unmatching system id %s vs local %s.",
 					  _devices_file_systemid[0] ? _devices_file_systemid : "none", cmd->system_id ?: "none");
-				free_dus(&cmd->use_devices);
-				ret = 0;
-				goto out;
 			}
 			continue;
 		}
@@ -613,7 +610,6 @@ int device_ids_read(struct cmd_context *cmd)
 
 		dm_list_add(&cmd->use_devices, &du->list);
 	}
-out:
 	if (fclose(fp))
 		stack;
 
