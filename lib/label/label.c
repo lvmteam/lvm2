@@ -403,6 +403,7 @@ static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
 			memset(dev->pvid, 0, sizeof(dev->pvid));
 		}
 
+		dev->flags |= DEV_SCAN_FOUND_NOLABEL;
 		*is_lvm_device = 0;
 		goto out;
 	}
