@@ -2168,15 +2168,17 @@ struct lvmcache_info *lvmcache_add(struct cmd_context *cmd, struct labeller *lab
 {
 	const char *pvid = pvid_arg;
 	const char *vgid = vgid_arg;
-	char pvid_dashed[64] __attribute__((aligned(8)));
 	struct lvmcache_vgsummary vgsummary = { 0 };
 	struct lvmcache_info *info;
 	struct lvmcache_info *info_lookup;
 	struct device_list *devl;
 	int created = 0;
 
-	if (!id_write_format((const struct id *)&pvid, pvid_dashed, sizeof(pvid_dashed)))
-		stack;
+	/*
+	 * Note: ensure that callers of lvmcache_add() pass null terminated
+	 * pvid and vgid strings, and do not pass char* that is type cast
+	 * from struct id.
+	 */
 
 	log_debug_cache("Found PVID %s on %s", pvid, dev_name(dev));
 
@@ -2206,7 +2208,7 @@ struct lvmcache_info *lvmcache_add(struct cmd_context *cmd, struct labeller *lab
 	if (!created) {
 		if (info->dev != dev) {
 			log_debug_cache("Saving initial duplicate device %s previously seen on %s with PVID %s.",
-					dev_name(dev), dev_name(info->dev), pvid_dashed);
+					dev_name(dev), dev_name(info->dev), pvid);
 
 			memset(&dev->pvid, 0, sizeof(dev->pvid));
 			memcpy(dev->pvid, pvid, ID_LEN);
