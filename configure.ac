@@ -1145,9 +1145,10 @@ AS_IF([test "$APP_MACHINEID_SUPPORT" = yes],
       SYSTEMD_MIN_VERSION=234)
 
 dnl -- Look for libsystemd libraries
-AS_IF([test -n "SYSTEMD_MIN_VERSION"],
+AS_IF([test -n "SYSTEMD_MIN_VERSION"],[
+      pkg_config_init
       PKG_CHECK_MODULES(SYSTEMD, systemd >= "$SYSTEMD_MIN_VERSION", [], $bailout)
-      SYSTEMD_LIBS="-lsystemd")
+      SYSTEMD_LIBS="-lsystemd"])
 
 ################################################################################
 
