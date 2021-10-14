@@ -373,20 +373,20 @@ int archive_list_file(struct cmd_context *cmd, const char *file)
 	}
 
 	if (!(af.name = strrchr(file, '/'))) {
-		log_error("No '/' in file path %s found.", file);
-		return 0;
+		af.name = file;
+		path[0] = 0;
+	} else {
+		len = (size_t)(af.name - file);
+
+		if (len >= sizeof(path)) {
+			log_error(INTERNAL_ERROR "Passed file path name %s is too long.", file);
+			return 0;
+		}
+
+		memcpy(path, file, len);
+		path[len] = 0;
+		af.name++;  /* jump over '/' */
 	}
-
-	len = (size_t)(af.name - file);
-
-	if (len >= sizeof(path)) {
-		log_error(INTERNAL_ERROR "Passed file path name %s is too long.", file);
-		return 0;
-	}
-
-	memcpy(path, file, len);
-	path[len] = 0;
-	af.name++;  /* jump over '/' */
 
 	_display_archive(cmd, path, &af);
 
