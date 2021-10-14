@@ -1295,7 +1295,7 @@ static int _online_devs(struct cmd_context *cmd, int do_all, struct dm_list *pvs
 	int pvs_online;
 	int pvs_offline;
 	int pvs_unknown;
-	int vg_complete;
+	int vg_complete = 0;
 	int do_full_check;
 	int ret = 1;
 
