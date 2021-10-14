@@ -126,7 +126,7 @@ devices {
 	# be used, regardless of this setting, when the --devicesfile
 	# option is set to a specific file name.
 	# This configuration option has an automatic default value.
-	# use_devicesfile = 1
+	# use_devicesfile = 0
 
 	# Configuration option devices/devicesfile.
 	# The name of the system devices file, listing devices that LVM should use.
@@ -229,12 +229,6 @@ devices {
 	# Ignore devices that are components of DM multipath devices.
 	# This configuration option has an automatic default value.
 	# multipath_component_detection = 1
-
-	# Configuration option devices/multipath_wwids_file.
-	# The path to the multipath wwids file used for multipath component detection.
-	# Set this to an empty string to disable the use of the multipath wwids file.
-	# This configuration option has an automatic default value.
-	# multipath_wwids_file = "/etc/multipath/wwids"
 
 	# Configuration option devices/multipath_wwids_file.
 	# The path to the multipath wwids file used for multipath component detection.
@@ -842,7 +836,7 @@ log {
 	# Configuration option log/syslog.
 	# Send log messages through syslog.
 	# This configuration option has an automatic default value.
-	# syslog = 1
+	# syslog = 0
 
 	# Configuration option log/file.
 	# Write error and debug log messages to a file specified here.

@@ -52,6 +52,8 @@ pvscan \(em List all physical volumes
 .br
     \fB--minor\fP \fINumber\fP
 .br
+    \fB--nohints\fP
+.br
     \fB--nolocking\fP
 .br
     \fB--noudevsync\fP
