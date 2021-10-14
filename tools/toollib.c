@@ -828,7 +828,7 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 	 * user may want to take charge of activation changes to the VG
 	 * and not have the system autoactivation interfere.
 	 */
-	if (!is_change_activating(activate) && find_config_tree_bool(cmd, global_event_activation_CFG, NULL))
+	if (!is_change_activating(activate) && cmd->event_activation)
 		online_vg_file_remove(lv->vg->name);
 
 	set_lv_notify(lv->vg->cmd);

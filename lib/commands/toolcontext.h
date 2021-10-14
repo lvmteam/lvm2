@@ -199,6 +199,8 @@ struct cmd_context {
 	unsigned check_devs_used:1;		/* check devs used by LVs */
 	unsigned print_device_id_not_found:1;	/* print devices file entries not found */
 	unsigned ignore_device_name_mismatch:1; /* skip updating devices file names */
+	unsigned backup_disabled:1;		/* skip repeated debug message */
+	unsigned event_activation:1;		/* whether event_activation is set */
 
 	/*
 	 * Devices and filtering.

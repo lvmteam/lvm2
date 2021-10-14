@@ -271,7 +271,7 @@ static void _lookup_file_remove(char *vgname)
 
 	log_debug("Unlink pvs_lookup: %s", path);
 
-	if (unlink(path))
+	if (unlink(path) && (errno != ENOENT))
 		log_sys_debug("unlink", path);
 }
 
@@ -292,7 +292,7 @@ void online_vg_file_remove(const char *vgname)
 
 	log_debug("Unlink vg online: %s", path);
 
-	if (unlink(path))
+	if (unlink(path) && (errno != ENOENT))
 		log_sys_debug("unlink", path);
 }
 
@@ -332,7 +332,7 @@ static void _online_pvid_file_remove_devno(int major, int minor)
 
 		if ((file_major == major) && (file_minor == minor)) {
 			log_debug("Unlink pv online %s", path);
-			if (unlink(path))
+			if (unlink(path) && (errno != ENOENT))
 				log_sys_debug("unlink", path);
 
 			if (file_vgname[0]) {
@@ -360,7 +360,7 @@ static void _online_files_remove(const char *dirpath)
 
 		memset(path, 0, sizeof(path));
 		snprintf(path, sizeof(path), "%s/%s", dirpath, de->d_name);
-		if (unlink(path))
+		if (unlink(path) && (errno != ENOENT))
 			log_sys_debug("unlink", path);
 	}
 	if (closedir(dir))

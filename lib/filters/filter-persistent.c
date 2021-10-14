@@ -137,7 +137,8 @@ static int _lookup_p(struct cmd_context *cmd, struct dev_filter *f, struct devic
 			l = PF_GOOD_DEVICE;
 		}
 
-		log_debug_devs("filter caching %s %s", pass ? "good" : "bad", dev_name(dev));
+		if (!dev->filtered_flags) /* skipping reason already logged by filter */
+			log_debug_devs("filter caching %s %s", pass ? "good" : "bad", dev_name(dev));
 
 		dm_list_iterate_items(sl, &dev->aliases)
 			if (!dm_hash_insert(pf->devices, sl->str, l)) {

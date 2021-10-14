@@ -626,7 +626,10 @@ void check_current_backup(struct volume_group *vg)
 	int old_suppress;
 
 	if (!vg->cmd->backup_params->enabled || !vg->cmd->backup_params->dir) {
-		log_debug("Skipping check for current backup, since backup is disabled.");
+		if (!vg->cmd->backup_disabled) {
+			log_debug("Skipping check for current backup, since backup is disabled.");
+			vg->cmd->backup_disabled = 1;
+		}
 		return;
 	}
 
