@@ -1922,7 +1922,9 @@ static int _text_pv_initialise(const struct format_type *fmt,
 		pv->pe_count = pva->extent_count;
 
 	if ((pv->pe_start + pv->pe_count * (uint64_t)pv->pe_size - 1) > pv->size) {
-		log_error("Physical extents end beyond end of device %s.",
+		log_error("Physical extents (%s) end beyond end of device (%s) %s.",
+			  display_size(pv->fmt->cmd, pv->pe_start + pv->pe_count * (uint64_t)pv->pe_size - 1),
+			  display_size(pv->fmt->cmd, pv->size),
 			  pv_dev_name(pv));
 		return 0;
 	}
