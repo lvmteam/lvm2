@@ -11646,7 +11646,7 @@ $as_echo "#define APP_MACHINEID_SUPPORT 1" >>confdefs.h
       SYSTEMD_MIN_VERSION=234
 fi
 
-if test -n "SYSTEMD_MIN_VERSION"; then :
+if test -n "$SYSTEMD_MIN_VERSION"; then :
 
       pkg_config_init
 
