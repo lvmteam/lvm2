@@ -121,7 +121,7 @@ systemd_generator_dir = $(DESTDIR)$(SYSTEMD_GENERATOR_DIR)
 systemd_dir = $(DESTDIR)@systemdutildir@
 tmpfiles_dir = $(DESTDIR)@tmpfilesdir@
 ocf_scriptdir = $(DESTDIR)@OCFDIR@
-pythonprefix = $(DESTDIR)$(prefix)
+PYTHON_PREFIX = $(DESTDIR)$(prefix)
 
 # N.B. No $(DESTDIR) prefix here.
 python2dir = @PYTHON2DIR@
