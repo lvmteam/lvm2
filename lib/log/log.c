@@ -25,7 +25,10 @@
 #include <syslog.h>
 #include <ctype.h>
 #include <time.h>
+
+#ifdef SYSTEMD_JOURNAL_SUPPORT
 #include <systemd/sd-journal.h>
+#endif
 
 static FILE *_log_file;
 static char _log_file_path[PATH_MAX];
@@ -622,6 +625,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 
       log_it:
 
+#ifdef SYSTEMD_JOURNAL_SUPPORT
 	if (_log_journal) {
 		int to_journal = 0;
 
@@ -647,6 +651,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 			va_end(ap);
 		}
 	}
+#endif
 
 	if (!logged_via_report && ((verbose_level() >= level) && !_log_suppress)) {
 		if (verbose_level() > _LOG_DEBUG) {
@@ -858,6 +863,7 @@ void log_set_report_object_name_and_id(const char *name, const char *id)
 
 void log_command(const char *cmd_line, const char *cmd_name, const char *cmd_id)
 {
+#ifdef SYSTEMD_JOURNAL_SUPPORT
 	if (_log_journal & LOG_JOURNAL_COMMAND) {
 
 		/*
@@ -875,6 +881,7 @@ void log_command(const char *cmd_line, const char *cmd_name, const char *cmd_id)
 				"PRIORITY=%i", LOG_INFO,
 				NULL);
 	}
+#endif
 }
 
 uint32_t log_journal_str_to_val(const char *str)
