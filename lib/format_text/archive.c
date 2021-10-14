@@ -47,9 +47,8 @@
  * with the least recent at the head.
  */
 struct archive_file {
-	struct dm_list list;
-
 	const char *name;
+	struct dm_list list;
 	uint32_t index;
 };
 
