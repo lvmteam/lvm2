@@ -1488,7 +1488,7 @@ void label_scan_destroy(struct cmd_context *cmd)
  * device, this is not a commonly used function.
  */
 
-int label_scan_dev(struct device *dev)
+int label_scan_dev(struct cmd_context *cmd, struct device *dev)
 {
 	struct dm_list one_dev;
 	struct device_list *devl;
@@ -1503,7 +1503,7 @@ int label_scan_dev(struct device *dev)
 
 	label_scan_invalidate(dev);
 
-	_scan_list(NULL, NULL, &one_dev, 0, &failed);
+	_scan_list(cmd, NULL, &one_dev, 0, &failed);
 
 	free(devl);
 

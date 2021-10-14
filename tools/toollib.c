@@ -1481,7 +1481,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 			/*
 			 * add info to lvmcache from the duplicate dev.
 			 */
-			label_scan_dev(devl->dev);
+			label_scan_dev(cmd, devl->dev);
 
 			/*
 			 * the info/label should now be found because
