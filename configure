@@ -8467,11 +8467,10 @@ $as_echo_n "checking default for use_devicesfile... " >&6; }
 
 # Check whether --with-default-use-devices-file was given.
 if test "${with_default_use_devices_file+set}" = set; then :
-  withval=$with_default_use_devices_file; DEFAULT_USE_DEVICES_FILE=$enableval
+  withval=$with_default_use_devices_file; DEFAULT_USE_DEVICES_FILE=$withval
 else
   DEFAULT_USE_DEVICES_FILE=0
 fi
-
 case "$DEFAULT_USE_DEVICES_FILE" in
  0|1);;
  *) as_fn_error $? "--with-default-use-devices-file parameter invalid" "$LINENO" 5;;

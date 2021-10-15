@@ -290,7 +290,7 @@ dnl -- Default settings for lvm.conf { devices/use_devicesfile }
 AC_MSG_CHECKING(default for use_devicesfile)
 AC_ARG_WITH(default-use-devices-file,
 	      AS_HELP_STRING([--with-default-use-devices-file], [default for lvm.conf devices/use_devicesfile = [0]]),
-	      DEFAULT_USE_DEVICES_FILE=$enableval, DEFAULT_USE_DEVICES_FILE=0)
+	      DEFAULT_USE_DEVICES_FILE=$withval, DEFAULT_USE_DEVICES_FILE=0)
 case "$DEFAULT_USE_DEVICES_FILE" in
  0|1);;
  *) AC_MSG_ERROR([--with-default-use-devices-file parameter invalid]);;
