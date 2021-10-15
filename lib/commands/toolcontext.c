@@ -159,9 +159,11 @@ static const char *_system_id_from_source(struct cmd_context *cmd, const char *s
 
 #ifdef APP_MACHINEID_SUPPORT
 	if (!strcasecmp(source, "appmachineid")) {
-		sd_id128_t id;
+		sd_id128_t id = { 0 };
 
-		sd_id128_get_machine_app_specific(LVM_APPLICATION_ID, &id);
+		if (sd_id128_get_machine_app_specific(LVM_APPLICATION_ID, &id) != 0)
+			log_warn("WARNING: sd_id128_get_machine_app_specific() failed %s (%d).",
+				 strerror(errno), errno);
 
 		if (dm_snprintf(buf, PATH_MAX, SD_ID128_FORMAT_STR, SD_ID128_FORMAT_VAL(id)) < 0)
 			stack;
