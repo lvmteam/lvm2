@@ -2354,7 +2354,7 @@ static int _match_pv_tags(const struct dm_config_node *cling_tag_list_cn,
 	const struct dm_config_value *cv;
 	const char *str;
 	const char *tag_matched;
-	struct dm_list *tags_to_match = mem ? NULL : pv_tags ? : &pv2->tags;
+	struct dm_list *tags_to_match = mem ? NULL : pv_tags ? : ((pv2) ? &pv2->tags : NULL);
 	struct dm_str_list *sl;
 	unsigned first_tag = 1;
 
@@ -2409,7 +2409,7 @@ static int _match_pv_tags(const struct dm_config_node *cling_tag_list_cn,
 				continue;
 			}
 
-			if (!str_list_match_list(&pv1->tags, tags_to_match, &tag_matched))
+			if (tags_to_match && !str_list_match_list(&pv1->tags, tags_to_match, &tag_matched))
 				continue;
 
 			if (!pv_tags) {
