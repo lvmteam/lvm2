@@ -3016,9 +3016,7 @@ static int add_lockspace_thread(const char *ls_name,
 				!alloc_and_copy_pvs_path(&ls2->pvs, &ls->pvs)) {
 			log_debug("add_lockspace_thread %s fails to allocate pvs", ls->name);
 			rv = -ENOMEM;
-		}
-
-		if (ls2->thread_stop) {
+		} else if (ls2->thread_stop) {
 			log_debug("add_lockspace_thread %s exists and stopping", ls->name);
 			rv = -EAGAIN;
 		} else if (!ls2->create_fail && !ls2->create_done) {
