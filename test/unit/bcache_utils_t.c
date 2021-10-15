@@ -86,7 +86,7 @@ static void *_fix_init(struct io_engine *engine)
 	}
 
 	if (!_runs_is_tmpfs) {
-		close(f->fd);
+		(void) close(f->fd);
 		// reopen with O_DIRECT
 		f->fd = open(f->fname, O_RDWR | O_DIRECT);
 		T_ASSERT(f->fd >= 0);
