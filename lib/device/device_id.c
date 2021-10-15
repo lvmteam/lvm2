@@ -1351,8 +1351,9 @@ void device_id_update_vg_uuid(struct cmd_context *cmd, struct volume_group *vg, 
 		}
 	}
 
-	if (update)
-		device_ids_write(cmd);
+	if (update &&
+	    !device_ids_write(cmd))
+		stack;
  out:
 	unlock_devices_file(cmd);
 }
