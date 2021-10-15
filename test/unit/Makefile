@@ -54,7 +54,12 @@ $(UNIT_TARGET): $(UNIT_OBJECTS) $(LVMINTERNAL_LIBS)
 unit-test: $(UNIT_TARGET)
 run-unit-test: $(UNIT_TARGET)
 	@echo "Running unit tests"
-	LD_LIBRARY_PATH=$(top_builddir)/libdm $(UNIT_TARGET) run
+	test -n "$$LVM_TEST_DIR" || LVM_TEST_DIR=$${TMPDIR:-/tmp} ;\
+		TESTDIR=$$(mktemp -d -t -p "$$LVM_TEST_DIR" "LVMTEST.XXXXXXXXXX") ;\
+		cd "$$TESTDIR" ;\
+		LD_LIBRARY_PATH=$(abs_top_builddir)/libdm:$(abs_top_builddir)/daemons/dmeventd $(abs_top_builddir)/$(UNIT_TARGET) run ;\
+		cd $$OLDPWD ;\
+		$(RM) -r "$${TESTDIR:?}"
 
 ifeq ("$(DEPENDS)","yes")
 -include $(UNIT_SOURCE:%.c=%.d)
