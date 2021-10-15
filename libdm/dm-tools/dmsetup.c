@@ -5846,12 +5846,12 @@ static int _stats_report(CMD_ARGS)
 	if (_switches[ALL_PROGRAMS_ARG])
 		_program_id = "";
 
-	if (_switches[VERBOSE_ARG] && !strcmp(subcommand, "list"))
+	if (_switches[VERBOSE_ARG] && subcommand && !strcmp(subcommand, "list"))
 		_statstype |= (DM_STATS_WALK_ALL
 			       | DM_STATS_WALK_SKIP_SINGLE_AREA);
 
 	/* suppress duplicates unless the user has requested all regions */
-	if (!strcmp(subcommand, "report") && !objtype_args)
+	if (subcommand && !objtype_args && !strcmp(subcommand, "report"))
 		/* suppress duplicate rows of output */
 		_statstype |= (DM_STATS_WALK_ALL
 			       | DM_STATS_WALK_SKIP_SINGLE_AREA);
