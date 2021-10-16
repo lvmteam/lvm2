@@ -503,7 +503,7 @@ static int _create_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg,
 		.read_ahead = DM_READ_AHEAD_NONE,
 		.stripes = 1,
 		.vg_name = vg->name,
-		.lv_name = dm_pool_strdup(cmd->mem, lock_lv_name),
+		.lv_name = lock_lv_name,
 		.zero = 1,
 	};
 
