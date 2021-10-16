@@ -38,10 +38,6 @@ case "$host_os" in
 		LIB_SUFFIX=so
 		DEVMAPPER=yes
 		BUILD_LVMPOLLD=no
-		LOCKDSANLOCK=no
-		LOCKDDLM=no
-		LOCKDDLM_CONTROL=no
-		LOCKDIDM=no
 		ODIRECT=yes
 		DM_IOCTLS=yes
 		SELINUX=yes
@@ -946,7 +942,7 @@ AC_MSG_CHECKING(whether to build lvmpolld)
 AC_ARG_ENABLE(lvmpolld,
 	      AS_HELP_STRING([--enable-lvmpolld],
 			     [enable the LVM Polling Daemon]),
-	      LVMPOLLD=$enableval)
+	      LVMPOLLD=$enableval, LVMPOLLD=no)
 test -n "$LVMPOLLD" && BUILD_LVMPOLLD=$LVMPOLLD
 AC_MSG_RESULT($BUILD_LVMPOLLD)
 
@@ -958,7 +954,7 @@ AC_MSG_CHECKING(whether to build lvmlockdsanlock)
 AC_ARG_ENABLE(lvmlockd-sanlock,
 	      AS_HELP_STRING([--enable-lvmlockd-sanlock],
 			     [enable the LVM lock daemon using sanlock]),
-	      LOCKDSANLOCK=$enableval)
+	      LOCKDSANLOCK=$enableval, LOCKDSANLOCK=no)
 AC_MSG_RESULT($LOCKDSANLOCK)
 
 BUILD_LOCKDSANLOCK=$LOCKDSANLOCK
@@ -976,7 +972,7 @@ AC_MSG_CHECKING(whether to build lvmlockddlm)
 AC_ARG_ENABLE(lvmlockd-dlm,
 	      AS_HELP_STRING([--enable-lvmlockd-dlm],
 			     [enable the LVM lock daemon using dlm]),
-	      LOCKDDLM=$enableval)
+	      LOCKDDLM=$enableval, LOCKDDLM=no)
 AC_MSG_RESULT($LOCKDDLM)
 
 BUILD_LOCKDDLM=$LOCKDDLM
@@ -994,7 +990,7 @@ AC_MSG_CHECKING(whether to build lvmlockddlmcontrol)
 AC_ARG_ENABLE(lvmlockd-dlmcontrol,
 	      AS_HELP_STRING([--enable-lvmlockd-dlmcontrol],
 			     [enable lvmlockd remote refresh using libdlmcontrol]),
-	      LOCKDDLM_CONTROL=$enableval)
+	      LOCKDDLM_CONTROL=$enableval, LOCKDDLM_CONTROL=no)
 AC_MSG_RESULT($LOCKDDLM_CONTROL)
 
 BUILD_LOCKDDLM_CONTROL=$LOCKDDLM_CONTROL
@@ -1012,7 +1008,7 @@ AC_MSG_CHECKING(whether to build lvmlockdidm)
 AC_ARG_ENABLE(lvmlockd-idm,
 	      AS_HELP_STRING([--enable-lvmlockd-idm],
 			     [enable the LVM lock daemon using idm]),
-	      LOCKDIDM=$enableval)
+	      LOCKDIDM=$enableval, LOCKDIDM=no)
 AC_MSG_RESULT($LOCKDIDM)
 
 BUILD_LOCKDIDM=$LOCKDIDM
@@ -1020,7 +1016,7 @@ BUILD_LOCKDIDM=$LOCKDIDM
 dnl -- Look for Seagate IDM libraries
 if test "$BUILD_LOCKDIDM" = yes; then
 	PKG_CHECK_MODULES(LOCKD_IDM, libseagate_ilm >= 0.1.0, [HAVE_LOCKD_IDM=yes], $bailout)
-	PKG_CHECK_MODULES(BLKID, blkid >= 2.24, [HAVE_LOCKD_IDM=yes], $bailout)
+	PKG_CHECK_EXISTS(blkid >= 2.24, [HAVE_LOCKD_IDM=yes], $bailout)
 	AC_DEFINE([LOCKDIDM_SUPPORT], 1, [Define to 1 to include code that uses lvmlockd IDM option.])
 	BUILD_LVMLOCKD=yes
 fi
@@ -1250,19 +1246,6 @@ if test "$UDEV_RULE" != no ; then
 	fi
 	AC_MSG_RESULT($UDEV_HAS_BUILTIN_BLKID)
 fi
-
-################################################################################
-dnl -- Compatibility mode
-AC_ARG_ENABLE(compat,
-	      AS_HELP_STRING([--enable-compat],
-			     [enable support for old device-mapper versions]),
-	      DM_COMPAT=$enableval, DM_COMPAT=no)
-
-AS_IF([test "$DM_COMPAT" = yes],
-      [AC_DEFINE([DM_COMPAT], 1, [Define to enable compat protocol])
-      AC_MSG_ERROR([--enable-compat is not currently supported.
-Since device-mapper version 1.02.66, only one version (4) of the device-mapper
-ioctl protocol is supported.])])
 
 ################################################################################
 dnl -- Compatible units suffix mode
