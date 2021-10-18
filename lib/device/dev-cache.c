@@ -53,6 +53,7 @@ static struct {
 	const char *dev_dir;
 
 	int has_scanned;
+	long st_dev;
 	struct dm_list dirs;
 	struct dm_list files;
 
@@ -1064,11 +1065,18 @@ static void _insert_dirs(struct dm_list *dirs)
 	struct dir_list *dl;
 	struct udev *udev = NULL;
 	int with_udev;
+	struct stat tinfo;
 
 	with_udev = obtain_device_list_from_udev() &&
 		    (udev = udev_get_library_context());
 
 	dm_list_iterate_items(dl, &_cache.dirs) {
+		if (stat(dl->dir, &tinfo) < 0) {
+			log_warn("WARNING: Cannot use dir %s, %s.",
+				 dl->dir, strerror(errno));
+			continue;
+		}
+		_cache.st_dev = tinfo.st_dev;
 		if (with_udev) {
 			if (!_insert_udev_dir(udev, dl->dir))
 				log_debug_devs("%s: Failed to insert devices from "
@@ -1101,7 +1109,6 @@ static void _insert_dirs(struct dm_list *dirs)
 static int _insert(const char *path, const struct stat *info,
 		   int rec, int check_with_udev_db)
 {
-	static long _st_dev = -1;
 	struct stat tinfo;
 
 	if (!info) {
@@ -1112,20 +1119,12 @@ static int _insert(const char *path, const struct stat *info,
 		info = &tinfo;
 	}
 
-	if (_st_dev == -1)
-		_st_dev = info->st_dev; /* first dir device */
-
 	if (check_with_udev_db && !_device_in_udev_db(info->st_rdev)) {
 		log_very_verbose("%s: Not in udev db", path);
 		return 0;
 	}
 
 	if (S_ISDIR(info->st_mode)) {	/* add a directory */
-		if (info->st_dev != _st_dev) {
-			log_debug_devs("%s: Different filesystem in directory", path);
-			return 1;
-		}
-
 		/* check it's not a symbolic link */
 		if (lstat(path, &tinfo) < 0) {
 			log_sys_very_verbose("lstat", path);
@@ -1134,6 +1133,11 @@ static int _insert(const char *path, const struct stat *info,
 
 		if (S_ISLNK(tinfo.st_mode)) {
 			log_debug_devs("%s: Symbolic link to directory", path);
+			return 1;
+		}
+
+		if (info->st_dev != _cache.st_dev) {
+			log_debug_devs("%s: Different filesystem in directory", path);
 			return 1;
 		}
 
