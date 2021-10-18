@@ -1101,6 +1101,7 @@ static void _insert_dirs(struct dm_list *dirs)
 static int _insert(const char *path, const struct stat *info,
 		   int rec, int check_with_udev_db)
 {
+	static long _st_dev = -1;
 	struct stat tinfo;
 
 	if (!info) {
@@ -1111,12 +1112,20 @@ static int _insert(const char *path, const struct stat *info,
 		info = &tinfo;
 	}
 
+	if (_st_dev == -1)
+		_st_dev = info->st_dev; /* first dir device */
+
 	if (check_with_udev_db && !_device_in_udev_db(info->st_rdev)) {
 		log_very_verbose("%s: Not in udev db", path);
 		return 0;
 	}
 
 	if (S_ISDIR(info->st_mode)) {	/* add a directory */
+		if (info->st_dev != _st_dev) {
+			log_debug_devs("%s: Different filesystem in directory", path);
+			return 1;
+		}
+
 		/* check it's not a symbolic link */
 		if (lstat(path, &tinfo) < 0) {
 			log_sys_very_verbose("lstat", path);
