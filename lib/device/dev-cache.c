@@ -1099,9 +1099,17 @@ static int _device_in_udev_db(const dev_t d)
 static void _insert_dirs(struct dm_list *dirs)
 {
 	struct dir_list *dl;
+	struct stat tinfo;
 
-	dm_list_iterate_items(dl, &_cache.dirs)
+	dm_list_iterate_items(dl, &_cache.dirs) {
+		if (stat(dl->dir, &tinfo) < 0) {
+			log_warn("WARNING: Cannot use dir %s, %s.",
+				 dl->dir, strerror(errno));
+			continue;
+		}
+		_cache.st_dev = tinfo.st_dev;
 		_insert_dir(dl->dir);
+	}
 }
 
 #endif	/* UDEV_SYNC_SUPPORT */
