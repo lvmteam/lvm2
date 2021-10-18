@@ -32,6 +32,7 @@ int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid,
 void device_id_pvremove(struct cmd_context *cmd, struct device *dev);
 void device_ids_match(struct cmd_context *cmd);
 int device_ids_match_dev(struct cmd_context *cmd, struct device *dev);
+void device_ids_match_device_list(struct cmd_context *cmd);
 void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, int *device_ids_invalid, int noupdate);
 int device_ids_version_unchanged(struct cmd_context *cmd);
 void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_list, int *search_count, int noupdate);
