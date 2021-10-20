@@ -1362,7 +1362,7 @@ static int _online_devs(struct cmd_context *cmd, int do_all, struct dm_list *pvs
 		devsize = dev->size;
 		if (!devsize &&
 		    !dev_get_size(dev, &devsize)) {
-			log_print("pvscan[%d] PV %s can get device size.", getpid(), dev_name(dev));
+			log_print_pvscan(cmd, "PV %s missing device size.", dev_name(dev));
 			release_vg(vg);
 			continue;
 		}
@@ -1800,7 +1800,7 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 		int has_pvid;
 
 		if (!label_read_pvid(devl->dev, &has_pvid)) {
-			log_print("pvscan[%d] %s cannot read.", getpid(), dev_name(devl->dev));
+			log_print_pvscan(cmd, "%s cannot read label.", dev_name(devl->dev));
 			dm_list_del(&devl->list);
 			continue;
 		}
