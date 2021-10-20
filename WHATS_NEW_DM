@@ -1,5 +1,5 @@
-Version 1.02.181 - 
-===================================
+Version 1.02.181 - 20th October 2021
+====================================
   Add IMA support with 'dmsetup measure' command.
   Add defines DM_NAME_LIST_FLAG_HAS_UUID, DM_NAME_LIST_FLAG_DOESNT_HAVE_UUID.
   Enhance tracking of activated devices when preloading dm tree.

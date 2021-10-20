@@ -1,5 +1,5 @@
-Version 2.03.14 - 
-==================================
+Version 2.03.14 - 20th October 2021
+===================================
   Device scanning is skipping directories on different filesystems.
   Print info message with too many or too large archived files.
   Reduce metadata readings during scanning phase.
