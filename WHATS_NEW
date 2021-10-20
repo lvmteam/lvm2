@@ -1,6 +1,6 @@
 Version 2.03.14 - 
 ==================================
-  Device scanning is skipping different filesystems.
+  Device scanning is skipping directories on different filesystems.
   Print info message with too many or too large archived files.
   Reduce metadata readings during scanning phase.
   Optimize computation of crc32 check sum with multiple PVs.
@@ -8,7 +8,7 @@ Version 2.03.14 -
   Filter out unsupported MQ/SMQ cache policy setting.
   Fix memleak in mpath filter.
   Support newer location for VDO statistics.
-  Add support for VDO async-unsage write policy.
+  Add support for VDO async-unsafe write policy.
   Improve lvm_import_vdo script.
   Support VDO LV with lvcreate -ky.
   Fix lvconvert for VDO LV bigger then 2T.
