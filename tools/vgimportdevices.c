@@ -173,6 +173,17 @@ int vgimportdevices(struct cmd_context *cmd, int argc, char **argv)
 	cmd->create_edit_devices_file = 1;
 
 	/*
+	 * This helps a user bootstrap existing shared VGs into the devices
+	 * file. Reading the vg to import devices requires locking, but
+	 * lockstart won't find the vg before it's in the devices file.
+	 * So, allow importing devices without an lvmlockd lock (in a
+	 * a shared vg the vg metadata won't be updated with device ids,
+	 * so the lvmlockd lock isn't protecting vg modification.)
+	 */
+	cmd->lockd_gl_disable = 1;
+	cmd->lockd_vg_disable = 1;
+
+	/*
 	 * For each VG:
 	 * device_id_add() each PV in the VG
 	 * update device_ids in the VG (potentially)
