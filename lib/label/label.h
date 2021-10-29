@@ -134,4 +134,6 @@ void dev_invalidate(struct device *dev);
 void dev_set_last_byte(struct device *dev, uint64_t offset);
 void dev_unset_last_byte(struct device *dev);
 
+void prepare_open_file_limit(struct cmd_context *cmd, unsigned int num_devs);
+
 #endif

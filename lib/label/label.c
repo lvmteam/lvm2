@@ -891,7 +891,7 @@ static int _setup_bcache(void)
 
 #define BASE_FD_COUNT 32 /* Number of open files we want apart from devs */
 
-static void _prepare_open_file_limit(struct cmd_context *cmd, unsigned int num_devs)
+void prepare_open_file_limit(struct cmd_context *cmd, unsigned int num_devs)
 {
 #ifdef HAVE_PRLIMIT
 	struct rlimit old = { 0 }, new;
@@ -1165,7 +1165,7 @@ int label_scan(struct cmd_context *cmd)
 	 * which we want to keep open) is higher than the current
 	 * soft limit.
 	 */
-	_prepare_open_file_limit(cmd, dm_list_size(&scan_devs));
+	prepare_open_file_limit(cmd, dm_list_size(&scan_devs));
 
 	/*
 	 * Do the main scan.

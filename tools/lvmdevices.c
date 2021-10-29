@@ -176,6 +176,9 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Failed to read the devices file.");
 		return ECMD_FAILED;
 	}
+
+	prepare_open_file_limit(cmd, dm_list_size(&cmd->use_devices));
+
 	dev_cache_scan(cmd);
 	device_ids_match(cmd);
 
