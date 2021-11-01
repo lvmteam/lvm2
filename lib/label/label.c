@@ -1207,8 +1207,6 @@ int label_scan(struct cmd_context *cmd)
 			 (unsigned long long)want_size_kb);
 	}
 
-	dm_list_init(&cmd->hints);
-
 	/*
 	 * If we're using hints to limit which devs we scanned, verify
 	 * that those hints were valid, and if not we need to scan the
@@ -1220,17 +1218,15 @@ int label_scan(struct cmd_context *cmd)
 			_scan_list(cmd, cmd->filter, &all_devs, 0, NULL);
 			/* scan_devs are the devs that have been scanned */
 			dm_list_splice(&scan_devs, &all_devs);
-			free_hints(&hints_list);
 			using_hints = 0;
 			create_hints = 0;
 			/* invalid hints means a new dev probably appeared and
 			   we should search for any missing pvids again. */
 			unlink_searched_devnames(cmd);
-		} else {
-			/* The hints may be used by another device iteration. */
-			dm_list_splice(&cmd->hints, &hints_list);
 		}
 	}
+
+	free_hints(&hints_list);
 
 	/*
 	 * Check if the devices_file content is up to date and

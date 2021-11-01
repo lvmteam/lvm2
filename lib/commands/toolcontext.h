@@ -206,7 +206,6 @@ struct cmd_context {
 	 * Devices and filtering.
 	 */
 	struct dev_filter *filter;
-	struct dm_list hints;
 	struct dm_list use_devices;		/* struct dev_use for each entry in devices file */
 	const char *md_component_checks;
 	const char *search_for_devnames;	/* config file setting */
