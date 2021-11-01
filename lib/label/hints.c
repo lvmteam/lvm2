@@ -365,7 +365,6 @@ static void _unlock_hints(struct cmd_context *cmd)
 
 void hints_exit(struct cmd_context *cmd)
 {
-	free_hints(&cmd->hints);
 	if (_hints_fd == -1)
 		return;
 	_unlock_hints(cmd);

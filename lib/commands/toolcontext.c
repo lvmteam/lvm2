@@ -1605,7 +1605,6 @@ struct cmd_context *create_config_context(void)
 
 	dm_list_init(&cmd->config_files);
 	dm_list_init(&cmd->tags);
-	dm_list_init(&cmd->hints);
 
 	if (!_init_lvm_conf(cmd))
 		goto_out;
@@ -1670,7 +1669,6 @@ struct cmd_context *create_toolcontext(unsigned is_clvmd,
 	dm_list_init(&cmd->formats);
 	dm_list_init(&cmd->segtypes);
 	dm_list_init(&cmd->tags);
-	dm_list_init(&cmd->hints);
 	dm_list_init(&cmd->config_files);
 	label_init();
 
