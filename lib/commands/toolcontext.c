@@ -1143,19 +1143,6 @@ static struct dev_filter *_init_filter_chain(struct cmd_context *cmd)
 	 * Update MAX_FILTERS definition above when adding new filters.
 	 */
 
-	/*
-	 * sysfs filter. Only available on 2.6 kernels.  Non-critical.
-	 * Listed first because it's very efficient at eliminating
-	 * unavailable devices.
-	 *
-	 * TODO: I suspect that using the lvm_type and device_id
-	 * filters before this one may be more efficient.
-	 */
-	if (find_config_tree_bool(cmd, devices_sysfs_scan_CFG, NULL)) {
-		if ((filters[nr_filt] = sysfs_filter_create()))
-			nr_filt++;
-	}
-
 	/* internal filter used by command processing. */
 	if (!(filters[nr_filt] = internal_filter_create())) {
 		log_error("Failed to create internal device filter");
@@ -1194,6 +1181,17 @@ static struct dev_filter *_init_filter_chain(struct cmd_context *cmd)
 		goto bad;
 	}
 	nr_filt++;
+
+	/*
+	 * sysfs filter. Only available on 2.6 kernels.  Non-critical.
+	 * Eliminates unavailable devices.
+	 * TODO: this may be unnecessary now with device ids
+	 * (currently not used for devs match to device id using syfs)
+	 */
+	if (find_config_tree_bool(cmd, devices_sysfs_scan_CFG, NULL)) {
+		if ((filters[nr_filt] = sysfs_filter_create()))
+			nr_filt++;
+	}
 
 	/* usable device filter. Required. */
 	if (!(filters[nr_filt] = usable_filter_create(cmd, cmd->dev_types, FILTER_MODE_NO_LVMETAD))) {
