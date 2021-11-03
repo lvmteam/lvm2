@@ -121,6 +121,6 @@ LABEL="direct_pvscan"
 #  MD    |          |      X      |       X*       |                   |
 #  loop  |          |      X      |       X*       |                   |
 #  other |    X     |             |       X        |                   |   X
-RUN+="(LVM_EXEC)/lvm pvscan --background --cache --activate ay --major $major --minor $minor", ENV{LVM_SCANNED}="1"
+RUN+="(LVM_EXEC)/lvm pvscan --cache --aay --autoactivation event --major $major --minor $minor", ENV{LVM_SCANNED}="1"
 
 LABEL="lvm_end"

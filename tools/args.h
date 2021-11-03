@@ -87,6 +87,12 @@ arg(atversion_ARG, '\0', "atversion", string_VAL, 0, 0,
     "which does not contain any newer settings for which LVM would\n"
     "issue a warning message when checking the configuration.\n")
 
+arg(autoactivation_ARG, '\0', "autoactivation", string_VAL, 0, 0,
+    "Specify if autoactivation is being used from an event.\n"
+    "This allows the command to apply settings that are specific\n"
+    "to event activation, such as device scanning optimizations\n"
+    "using pvs_online files created by event-based pvscans.\n")
+
 arg(setautoactivation_ARG, '\0', "setautoactivation", bool_VAL, 0, 0,
     "Set the autoactivation property on a VG or LV.\n"
     "Display the property with vgs or lvs \"-o autoactivation\".\n"

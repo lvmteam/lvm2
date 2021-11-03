@@ -19,6 +19,7 @@
 struct vgchange_params {
 	int lock_start_count;
 	unsigned int lock_start_sanlock : 1;
+	unsigned int vg_complete_to_activate : 1;
 };
 
 /*
@@ -195,10 +196,11 @@ int vgchange_background_polling(struct cmd_context *cmd, struct volume_group *vg
 }
 
 int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
-		      activation_change_t activate)
+		      activation_change_t activate, int vg_complete_to_activate)
 {
 	int lv_open, active, monitored = 0, r = 1;
 	const struct lv_list *lvl;
+	struct pv_list *pvl;
 	int do_activate = is_change_activating(activate);
 
 	/*
@@ -217,6 +219,15 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 	if ((activate == CHANGE_AAY) && (vg->status & NOAUTOACTIVATE)) {
 		log_debug("Autoactivation is disabled for VG %s.", vg->name);
 		return 1;
+	}
+
+	if (do_activate && vg_complete_to_activate) {
+		dm_list_iterate_items(pvl, &vg->pvs) {
+			if (!pvl->pv->dev) {
+				log_print("VG %s is incomplete.", vg->name);
+				return 1;
+			}
+		}
 	}
 
 	/*
@@ -647,6 +658,7 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			    struct volume_group *vg,
 			    struct processing_handle *handle)
 {
+	struct vgchange_params *vp = (struct vgchange_params *)handle->custom_handle;
 	int ret = ECMD_PROCESSED;
 	unsigned i;
 	activation_change_t activate;
@@ -701,7 +713,7 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 
 	if (arg_is_set(cmd, activate_ARG)) {
 		activate = (activation_change_t) arg_uint_value(cmd, activate_ARG, 0);
-		if (!vgchange_activate(cmd, vg, activate))
+		if (!vgchange_activate(cmd, vg, activate, vp->vg_complete_to_activate))
 			return_ECMD_FAILED;
 	} else if (arg_is_set(cmd, refresh_ARG)) {
 		/* refreshes the visible LVs (which starts polling) */
@@ -722,8 +734,38 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	return ret;
 }
 
+static int _check_autoactivation(struct cmd_context *cmd, struct vgchange_params *vp, int *skip_command)
+{
+	const char *aa;
+
+	if (!(aa = arg_str_value(cmd, autoactivation_ARG, NULL)))
+		return 1;
+
+	if (strcmp(aa, "event")) {
+		log_print("Skip vgchange for unknown autoactivation value.");
+		*skip_command = 1;
+		return 1;
+	}
+
+	if (!find_config_tree_bool(cmd, global_event_activation_CFG, NULL)) {
+		log_print("Skip vgchange for event and event_activation=0.");
+		*skip_command = 1;
+		return 1;
+	}
+
+	vp->vg_complete_to_activate = 1;
+
+	if (!arg_is_set(cmd, nohints_ARG))
+		cmd->hints_pvs_online = 1;
+	else
+		cmd->use_hints = 0;
+
+	return 1;
+}
+
 int vgchange(struct cmd_context *cmd, int argc, char **argv)
 {
+	struct vgchange_params vp = { 0 };
 	struct processing_handle *handle;
 	uint32_t flags = 0;
 	int ret;
@@ -837,6 +879,14 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 			cmd->lockd_vg_enforce_sh = 1;
 	}
 
+	if (arg_is_set(cmd, autoactivation_ARG)) {
+		int skip_command = 0;
+		if (!_check_autoactivation(cmd, &vp, &skip_command))
+			return ECMD_FAILED;
+		if (skip_command)
+			return ECMD_PROCESSED;
+	}
+
 	if (update)
 		flags |= READ_FOR_UPDATE;
 	else if (arg_is_set(cmd, activate_ARG))
@@ -846,6 +896,8 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Failed to initialize processing handle.");
 		return ECMD_FAILED;
 	}
+
+	handle->custom_handle = &vp;
 
 	ret = process_each_vg(cmd, argc, argv, NULL, NULL, flags, 0, handle, &_vgchange_single);
 

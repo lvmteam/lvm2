@@ -750,7 +750,7 @@ static int _pvscan_aa_single(struct cmd_context *cmd, const char *vg_name,
 
 	log_debug("pvscan autoactivating VG %s.", vg_name);
 
-	if (!vgchange_activate(cmd, vg, CHANGE_AAY)) {
+	if (!vgchange_activate(cmd, vg, CHANGE_AAY, 1)) {
 		log_error_pvscan(cmd, "%s: autoactivation failed.", vg->name);
 		pp->activate_errors++;
 	}
@@ -1038,7 +1038,7 @@ static int _pvscan_aa_quick(struct cmd_context *cmd, struct pvscan_aa_params *pp
 
 	log_debug("pvscan autoactivating VG %s.", vgname);
 
-	if (!vgchange_activate(cmd, vg, CHANGE_AAY)) {
+	if (!vgchange_activate(cmd, vg, CHANGE_AAY, 1)) {
 		log_error_pvscan(cmd, "%s: autoactivation failed.", vg->name);
 		pp->activate_errors++;
 	}
@@ -1869,12 +1869,35 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 	return ret;
 }
 
+static int _get_autoactivation(struct cmd_context *cmd, int event_activation, int *skip_command)
+{
+	const char *aa_str;
+
+	if (!(aa_str = arg_str_value(cmd, autoactivation_ARG, NULL)))
+		return 1;
+
+	if (strcmp(aa_str, "event")) {
+		log_print_pvscan(cmd, "Skip pvscan for unknown autoactivation value.");
+		*skip_command = 1;
+		return 1;
+	}
+	
+	if (!event_activation) {
+		log_print_pvscan(cmd, "Skip pvscan for event with event_activation=0.");
+		*skip_command = 1;
+		return 1;
+	}
+
+	return 1;
+}
+
 int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct pvscan_aa_params pp = { 0 };
 	struct dm_list complete_vgnames;
 	int do_activate = arg_is_set(cmd, activate_ARG);
 	int event_activation;
+	int skip_command = 0;
 	int devno_args = 0;
 	int do_all;
 	int ret;
@@ -1946,6 +1969,13 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 			log_verbose("Ignoring pvscan --cache because event_activation is disabled.");
 			return ECMD_PROCESSED;
 		}
+
+		if (!_get_autoactivation(cmd, event_activation, &skip_command))
+			return_ECMD_FAILED;
+
+		if (skip_command)
+			return ECMD_PROCESSED;
+
 		if (!_pvscan_cache_args(cmd, argc, argv, &complete_vgnames))
 			return ECMD_FAILED;
 	}

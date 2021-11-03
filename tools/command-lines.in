@@ -1642,14 +1642,15 @@ DESC: Record that a PV is online or offline.
 
 pvscan --cache_long --activate ay
 OO: --ignorelockingfailure, --reportformat ReportFmt,
---major Number, --minor Number, --noudevsync
+--major Number, --minor Number, --noudevsync, --autoactivation String
 OP: PV|String ...
 IO: --background
 ID: pvscan_cache
 DESC: Record that a PV is online and autoactivate the VG if complete.
 
 pvscan --cache_long --listvg PV
-OO: --ignorelockingfailure, --checkcomplete, --vgonline, --udevoutput
+OO: --ignorelockingfailure, --checkcomplete, --vgonline, --udevoutput,
+--autoactivation String
 ID: pvscan_cache
 DESC: Record that a PV is online and list the VG using the PV.
 
@@ -1747,7 +1748,8 @@ DESC: Start or stop processing LV conversions.
 
 vgchange --activate Active
 OO: --activationmode ActivationMode, --ignoreactivationskip, --partial, --sysinit,
---readonly, --ignorelockingfailure, --monitor Bool, --poll Bool, OO_VGCHANGE
+--readonly, --ignorelockingfailure, --monitor Bool, --poll Bool,
+--autoactivation String, OO_VGCHANGE
 OP: VG|Tag|Select ...
 IO: --ignoreskippedcluster
 ID: vgchange_activate
