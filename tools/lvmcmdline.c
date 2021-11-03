@@ -2393,8 +2393,10 @@ static void _reset_current_settings_to_default(struct cmd_context *cmd)
 
 static void _get_current_output_settings_from_args(struct cmd_context *cmd)
 {
-	if (arg_is_set(cmd, udevoutput_ARG))
+	if (arg_is_set(cmd, udevoutput_ARG)) {
 		cmd->current_settings.suppress = 1;
+		cmd->udevoutput = 1;
+	}
 
 	if (arg_is_set(cmd, debug_ARG))
 		cmd->current_settings.debug = _LOG_FATAL + (arg_count(cmd, debug_ARG) - 1);

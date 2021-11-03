@@ -295,6 +295,4 @@ int lvconvert_cachevol_attach_single(struct cmd_context *cmd,
                                      struct logical_volume *lv,
                                      struct processing_handle *handle);
 
-void online_vg_file_remove(const char *vgname);
-
 #endif

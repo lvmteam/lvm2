@@ -17,6 +17,7 @@
 #include "lib/format_text/format-text.h"
 #include "lib/label/hints.h"
 #include "lib/device/device_id.h"
+#include "lib/device/online.h"
 
 #include <sys/stat.h>
 #include <signal.h>

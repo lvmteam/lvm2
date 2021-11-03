@@ -40,6 +40,7 @@ SOURCES =\
 	device/dev-luks.c \
 	device/dev-dasd.c \
 	device/dev-lvm1-pool.c \
+	device/online.c \
 	display/display.c \
 	error/errseg.c \
 	unknown/unknown.c \

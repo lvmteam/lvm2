@@ -202,6 +202,7 @@ struct cmd_context {
 	unsigned ignore_device_name_mismatch:1; /* skip updating devices file names */
 	unsigned backup_disabled:1;		/* skip repeated debug message */
 	unsigned event_activation:1;		/* whether event_activation is set */
+	unsigned udevoutput:1;
 
 	/*
 	 * Devices and filtering.

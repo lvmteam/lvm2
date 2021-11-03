@@ -146,6 +146,7 @@
 #include "lib/label/hints.h"
 #include "lib/device/dev-type.h"
 #include "lib/device/device_id.h"
+#include "lib/device/online.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -155,8 +156,6 @@
 #include <sys/types.h>
 #include <sys/file.h>
 #include <sys/sysmacros.h>
-
-int online_pvid_file_read(char *path, int *major, int *minor, char *vgname);
 
 static const char *_hints_file = DEFAULT_RUN_DIR "/hints";
 static const char *_nohints_file = DEFAULT_RUN_DIR "/nohints";
