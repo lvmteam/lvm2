@@ -1679,7 +1679,7 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 	dm_list_init(&pvscan_args);
 	dm_list_init(&pvscan_devs);
 
-	cmd->pvscan_cache_single = 1;
+	cmd->expect_missing_vg_device = 1;
 
 	/*
 	 * Special pvscan-specific setup steps to avoid looking

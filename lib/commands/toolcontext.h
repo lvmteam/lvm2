@@ -174,7 +174,7 @@ struct cmd_context {
 	unsigned activate_component:1;		/* command activates component LV */
 	unsigned process_component_lvs:1;	/* command processes also component LVs */
 	unsigned mirror_warn_printed:1;		/* command already printed warning about non-monitored mirrors */
-	unsigned pvscan_cache_single:1;
+	unsigned expect_missing_vg_device:1;	/* when reading a vg it's expected that a dev for a pv isn't found */
 	unsigned can_use_one_scan:1;
 	unsigned is_clvmd:1;
 	unsigned md_component_detection:1;

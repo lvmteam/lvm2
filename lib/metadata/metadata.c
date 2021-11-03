@@ -3558,7 +3558,7 @@ static void _set_pv_device(struct format_instance *fid,
 		if (!id_write_format(&pv->id, buffer, sizeof(buffer)))
 			buffer[0] = '\0';
 
-		if (cmd && !cmd->pvscan_cache_single &&
+		if (cmd && !cmd->expect_missing_vg_device &&
 		    (!vg_is_foreign(vg) && !cmd->include_foreign_vgs))
 			log_warn("WARNING: Couldn't find device with uuid %s.", buffer);
 		else
@@ -5084,7 +5084,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		if (!pvl->pv->dev) {
 			/* The obvious and common case of a missing device. */
 
-			if (vg_is_foreign(vg) && !cmd->include_foreign_vgs)
+			if ((vg_is_foreign(vg) && !cmd->include_foreign_vgs) || cmd->expect_missing_vg_device)
 				log_debug("VG %s is missing PV %s (last written to %s)", vg_name, uuidstr, pvl->pv->device_hint ?: "na");
 			else if (pvl->pv->device_hint)
 				log_warn("WARNING: VG %s is missing PV %s (last written to %s).", vg_name, uuidstr, pvl->pv->device_hint);

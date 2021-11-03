@@ -778,9 +778,8 @@ static void _device_ids_update_try(struct cmd_context *cmd)
 {
 	int held = 0;
 
-	/* Defer updates to non-pvscan-cache commands. */
-	if (cmd->pvscan_cache_single) {
-		log_print("pvscan[%d] skip updating devices file.", getpid());
+	if (cmd->expect_missing_vg_device) {
+		log_print("skip updating devices file.");
 		return;
 	}
 
