@@ -10,5 +10,5 @@ Conflicts=shutdown.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=@SBINDIR@/lvm pvscan --cache --activate ay %i
+ExecStart=@SBINDIR@/lvm pvscan --cache --activate ay --autoactivation event %i
 ExecStop=@SBINDIR@/lvm pvscan --cache %i
