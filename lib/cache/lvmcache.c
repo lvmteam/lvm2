@@ -572,6 +572,16 @@ static const char *_get_pvsummary_device_id(const char *pvid_arg, const char **d
 	return NULL;
 }
 
+int lvmcache_pvsummary_count(const char *vgname)
+{
+	struct lvmcache_vginfo *vginfo;
+
+	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, NULL)))
+		return_0;
+
+	return dm_list_size(&vginfo->pvsummaries);
+}
+
 /*
  * Check if any PVs in vg->pvs have the same PVID as any
  * entries in _unused_duplicates.

@@ -219,6 +219,8 @@ udevadm trigger -c add /sys/block/$BDEV3
 aux udev_wait
 wait_lvm_activate $vg4
 
+ls "$RUNDIR/lvm/pvs_lookup/"
+cat "$RUNDIR/lvm/pvs_lookup/$vg4" || true
 ls "$RUNDIR/lvm/pvs_online/$PVID1"
 ls "$RUNDIR/lvm/pvs_online/$PVID2"
 ls "$RUNDIR/lvm/pvs_online/$PVID3"
@@ -375,6 +377,7 @@ touch $DF
 mdadm --create --metadata=1.0 "$mddev" --level 1 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
 wait_md_create "$mddev"
 vgcreate $vg9 "$mddev"
+lvmdevices --adddev "$mddev" || true
 
 PVIDMD=`pvs $mddev --noheading -o uuid | tr -d - | awk '{print $1}'`
 BDEVMD=$(basename "$mddev")

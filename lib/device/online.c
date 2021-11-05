@@ -81,6 +81,64 @@ int online_pvid_file_read(char *path, int *major, int *minor, char *vgname)
 	return 1;
 }
 
+void free_po_list(struct dm_list *list)
+{
+	struct pv_online *po, *po2;
+
+	dm_list_iterate_items_safe(po, po2, list) {
+		dm_list_del(&po->list);
+		free(po);
+	}
+}
+
+int get_pvs_online(struct dm_list *pvs_online, const char *vgname)
+{
+	char path[PATH_MAX];
+	char file_vgname[NAME_LEN];
+	DIR *dir;
+	struct dirent *de;
+	struct pv_online *po;
+	int file_major = 0, file_minor = 0;
+
+	if (!(dir = opendir(PVS_ONLINE_DIR)))
+		return 0;
+
+	while ((de = readdir(dir))) {
+		if (de->d_name[0] == '.')
+			continue;
+
+		if (strlen(de->d_name) != ID_LEN)
+			continue;
+
+		memset(path, 0, sizeof(path));
+		snprintf(path, sizeof(path), "%s/%s", PVS_ONLINE_DIR, de->d_name);
+
+		file_major = 0;
+		file_minor = 0;
+		memset(file_vgname, 0, sizeof(file_vgname));
+
+		if (!online_pvid_file_read(path, &file_major, &file_minor, file_vgname))
+			continue;
+
+		if (vgname && strcmp(file_vgname, vgname))
+			continue;
+
+		if (!(po = zalloc(sizeof(*po))))
+			continue;
+
+		memcpy(po->pvid, de->d_name, ID_LEN);
+		if (file_major || file_minor)
+			po->devno = MKDEV(file_major, file_minor);
+		if (file_vgname[0])
+			strncpy(po->vgname, file_vgname, NAME_LEN-1);
+
+		dm_list_add(pvs_online, &po->list);
+	}
+	if (closedir(dir))
+		log_sys_debug("closedir", PVS_ONLINE_DIR);
+	return 1;
+}
+
 /*
  * When a PV goes offline, remove the vg online file for that VG
  * (even if other PVs for the VG are still online).  This means
@@ -250,6 +308,62 @@ int online_pvid_file_exists(const char *pvid)
 	return 0;
 }
 
+int get_pvs_lookup(struct dm_list *pvs_online, const char *vgname)
+{
+	char lookup_path[PATH_MAX] = { 0 };
+	char path[PATH_MAX] = { 0 };
+	char line[64];
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
+	char file_vgname[NAME_LEN];
+	struct pv_online *po;
+	int file_major = 0, file_minor = 0;
+	FILE *fp;
+
+	if (dm_snprintf(lookup_path, sizeof(path), "%s/%s", PVS_LOOKUP_DIR, vgname) < 0)
+		return_0;
+
+	if (!(fp = fopen(lookup_path, "r")))
+		return_0;
+
+	while (fgets(line, sizeof(line), fp)) {
+		memcpy(pvid, line, ID_LEN);
+		if (strlen(pvid) != ID_LEN)
+			goto_bad;
+
+		memset(path, 0, sizeof(path));
+		snprintf(path, sizeof(path), "%s/%s", PVS_ONLINE_DIR, pvid);
+
+		file_major = 0;
+		file_minor = 0;
+		memset(file_vgname, 0, sizeof(file_vgname));
+
+		if (!online_pvid_file_read(path, &file_major, &file_minor, file_vgname))
+			goto_bad;
+
+		if (vgname && strcmp(file_vgname, vgname))
+			goto_bad;
+
+		if (!(po = zalloc(sizeof(*po))))
+			goto_bad;
+
+		memcpy(po->pvid, pvid, ID_LEN);
+		if (file_major || file_minor)
+			po->devno = MKDEV(file_major, file_minor);
+		if (file_vgname[0])
+			strncpy(po->vgname, file_vgname, NAME_LEN-1);
+
+		dm_list_add(pvs_online, &po->list);
+	}
+
+	fclose(fp);
+	return 1;
+
+bad:
+	free_po_list(pvs_online);
+	fclose(fp);
+	return 0;
+}
+
 void online_dir_setup(struct cmd_context *cmd)
 {
 	struct stat st;
@@ -301,6 +415,4 @@ do_lookup:
 
 	if ((rv < 0) && stat(PVS_LOOKUP_DIR, &st))
 		log_error_pvscan(cmd, "Failed to create %s %d", PVS_LOOKUP_DIR, errno);
-
-
 }

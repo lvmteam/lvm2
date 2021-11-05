@@ -79,8 +79,7 @@ int setup_devices_file(struct cmd_context *cmd);
 int setup_devices(struct cmd_context *cmd);
 int setup_device(struct cmd_context *cmd, const char *devname);
 
-/* Normal device setup functions are split up for pvscan optimization. */
-int setup_devices_for_pvscan_cache(struct cmd_context *cmd);
+int setup_devices_for_online_autoactivation(struct cmd_context *cmd);
 int setup_devname_in_dev_cache(struct cmd_context *cmd, const char *devname);
 int setup_devno_in_dev_cache(struct cmd_context *cmd, dev_t devno);
 

@@ -41,5 +41,8 @@ void hints_exit(struct cmd_context *cmd);
 
 void pvscan_recreate_hints_begin(struct cmd_context *cmd);
 
+void get_single_vgname_cmd_arg(struct cmd_context *cmd,
+                               struct dm_list *hints, char **vgname);
+
 #endif
 

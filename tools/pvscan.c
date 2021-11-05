@@ -1378,7 +1378,7 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 	 * Does not do dev_cache_scan (adds nothing to dev-cache), and
 	 * does not do any device id matching.
 	 */
-	if (!setup_devices_for_pvscan_cache(cmd)) {
+	if (!setup_devices_for_online_autoactivation(cmd)) {
 		log_error_pvscan(cmd, "Failed to set up devices.");
 		return 0;
 	}

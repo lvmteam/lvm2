@@ -2056,12 +2056,12 @@ int setup_device(struct cmd_context *cmd, const char *devname)
 }
 
 /*
- * pvscan --cache is specialized/optimized to look only at command args,
+ * autoactivation is specialized/optimized to look only at command args,
  * so this just sets up the devices file, then individual devices are
- * added to dev-cache and matched with device_ids later in pvscan.
+ * added to dev-cache and matched with device_ids.
  */
 
-int setup_devices_for_pvscan_cache(struct cmd_context *cmd)
+int setup_devices_for_online_autoactivation(struct cmd_context *cmd)
 {
 	if (cmd->enable_devices_list) {
 		if (!_setup_devices_list(cmd))

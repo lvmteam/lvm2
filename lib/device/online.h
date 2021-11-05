@@ -15,6 +15,14 @@
 #ifndef _ONLINE_H
 #define _ONLINE_H
 
+struct pv_online {
+	struct dm_list list;
+	struct device *dev;
+	dev_t devno;
+	char pvid[ID_LEN + 1];
+	char vgname[NAME_LEN];
+};
+
 /*
  * Avoid a duplicate pvscan[%d] prefix when logging to the journal.
  * FIXME: this should probably replace if (udevoutput) with
@@ -42,5 +50,8 @@ void online_vg_file_remove(const char *vgname);
 int online_pvid_file_create(struct cmd_context *cmd, struct device *dev, const char *vgname);
 int online_pvid_file_exists(const char *pvid);
 void online_dir_setup(struct cmd_context *cmd);
+int get_pvs_online(struct dm_list *pvs_online, const char *vgname);
+int get_pvs_lookup(struct dm_list *pvs_online, const char *vgname);
+void free_po_list(struct dm_list *list);
 
 #endif

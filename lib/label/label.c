@@ -26,6 +26,7 @@
 #include "lib/metadata/metadata.h"
 #include "lib/format_text/layout.h"
 #include "lib/device/device_id.h"
+#include "lib/device/online.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -1018,6 +1019,187 @@ int label_scan_for_pvid(struct cmd_context *cmd, char *pvid, struct device **dev
 		free(devl);
 	}
 	return ret;
+}
+
+/*
+ * Use files under /run/lvm/, created by pvscan --cache autoactivation,
+ * to optimize device setup/scanning for a command that is run for a
+ * specific vg name.  autoactivation happens during system startup
+ * when the hints file is not useful, so this uses the online files as
+ * an alternative.
+ */ 
+
+int label_scan_vg_online(struct cmd_context *cmd, const char *vgname)
+{
+	struct dm_list pvs_online;
+	struct dm_list devs;
+	struct pv_online *po;
+	struct device_list *devl, *devl2;
+	int relax_deviceid_filter = 0;
+	int metadata_pv_count;
+
+	dm_list_init(&pvs_online);
+	dm_list_init(&devs);
+
+	/* reads devices file, does not populate dev-cache */
+	if (!setup_devices_for_online_autoactivation(cmd))
+		return 0;
+
+	/*
+	 * First attempt to use /run/lvm/pvs_lookup/vgname which should be
+	 * used in cases where all PVs in a VG do not contain metadata.
+	 * When the pvs_lookup file does not exist, then simply use all
+	 * /run/lvm/pvs_online/pvid files that contain a matching vgname.
+	 * The list of po structs represents the PVs in the VG, and the
+	 * info from the online files tell us which devices those PVs are
+	 * located on.
+	 */
+	if (!get_pvs_lookup(&pvs_online, vgname)) {
+		if (!get_pvs_online(&pvs_online, vgname))
+			goto bad;
+	}
+
+	/* for each po devno add a struct dev to dev-cache */
+
+	dm_list_iterate_items(po, &pvs_online) {
+		if (!setup_devno_in_dev_cache(cmd, po->devno)) {
+			log_error("No device set up for %d:%d PVID %s",
+				  (int)MAJOR(po->devno), (int)MINOR(po->devno), po->pvid);
+			goto bad;
+		}
+
+		if (!(po->dev = dev_cache_get_by_devt(cmd, po->devno, NULL, NULL))) {
+			log_error("No device found for %d:%d PVID %s",
+				  (int)MAJOR(po->devno), (int)MINOR(po->devno), po->pvid);
+			goto bad;
+		}
+
+		if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
+			goto_bad;
+
+		devl->dev = po->dev;
+		dm_list_add(&devs, &devl->list);
+	}
+
+	/*
+	 * factor code common to pvscan_cache_args
+	 */
+
+	if (cmd->enable_devices_file) {
+		dm_list_iterate_items(devl, &devs)
+			device_ids_match_dev(cmd, devl->dev);
+	}
+
+	if (cmd->enable_devices_list)
+		device_ids_match_device_list(cmd);
+
+	if (cmd->enable_devices_file && device_ids_use_devname(cmd)) {
+		relax_deviceid_filter = 1;
+		cmd->filter_deviceid_skip = 1;
+	}
+
+	cmd->filter_nodata_only = 1;
+
+	dm_list_iterate_items_safe(devl, devl2, &devs) {
+		if (!cmd->filter->passes_filter(cmd, cmd->filter, devl->dev, NULL)) {
+			log_print("%s excluded by filters: %s.",
+				  dev_name(devl->dev), dev_filtered_reason(devl->dev));
+			dm_list_del(&devl->list);
+		}
+	}
+
+	cmd->filter_nodata_only = 0;
+
+	/*
+	 * Clear the results of nodata filters that were saved by the
+	 * persistent filter so that the complete set of filters will
+	 * be checked by passes_filter below.
+	 */
+	dm_list_iterate_items(devl, &devs)
+		cmd->filter->wipe(cmd, cmd->filter, devl->dev, NULL);
+
+	/*
+	 * Read header from each dev.
+	 * Eliminate non-lvm devs.
+	 * Apply all filters.
+	 */
+
+	log_debug("label_scan_vg_online: read and filter devs");
+
+	label_scan_setup_bcache();
+
+	dm_list_iterate_items_safe(devl, devl2, &devs) {
+		int has_pvid;
+
+		if (!label_read_pvid(devl->dev, &has_pvid)) {
+			log_print("%s cannot read label.", dev_name(devl->dev));
+			dm_list_del(&devl->list);
+			continue;
+		}
+
+		if (!has_pvid) {
+			/* Not an lvm device */
+			log_print("%s not an lvm device.", dev_name(devl->dev));
+			dm_list_del(&devl->list);
+			continue;
+		}
+
+		/*
+		 * filter-deviceid is not being used because of unstable devnames,
+		 * so in place of that check if the pvid is in the devices file.
+		 */
+		if (relax_deviceid_filter) {
+			if (!get_du_for_pvid(cmd, devl->dev->pvid)) {
+				log_print("%s excluded by devices file (checking PVID).",
+					  dev_name(devl->dev));
+				dm_list_del(&devl->list);
+				continue;
+			}
+		}
+
+		/* Applies all filters, including those that need data from dev. */
+		if (!cmd->filter->passes_filter(cmd, cmd->filter, devl->dev, NULL)) {
+			log_print("%s excluded by filters: %s.",
+				  dev_name(devl->dev), dev_filtered_reason(devl->dev));
+			dm_list_del(&devl->list);
+		}
+	}
+
+	if (relax_deviceid_filter)
+		cmd->filter_deviceid_skip = 0;
+
+	free_po_list(&pvs_online);
+
+	if (dm_list_empty(&devs))
+		return 1;
+
+	/*
+	 * Scan devs to populate lvmcache info, which includes the mda info that's
+	 * needed to read vg metadata.
+	 * bcache data from label_read_pvid above is not invalidated so it can
+	 * be reused (more data may need to be read depending on how much of the
+	 * metadata was covered when reading the pvid.)
+	 */
+	_scan_list(cmd, NULL, &devs, 0, NULL);
+
+	/*
+	 * Check if all PVs from the VG were found after scanning the devs
+	 * produced from the online files.  The online files are effectively
+	 * hints that usually work, but are not definitive, so we need to
+	 * be able to fall back to a standard label scan if the online hints
+	 * gave fewer PVs than listed in VG metadata.
+	 */
+	metadata_pv_count = lvmcache_pvsummary_count(vgname);
+	if (metadata_pv_count != dm_list_size(&devs)) {
+		log_debug("Incorrect PV list from online files %d metadata %d.",
+			   dm_list_size(&devs), metadata_pv_count);
+		return 0;
+	}
+
+	return 1;
+bad:
+	free_po_list(&pvs_online);
+	return 0;
 }
 
 /*

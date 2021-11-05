@@ -15,6 +15,7 @@
 
 #include "tools.h"
 #include "lib/device/device_id.h"
+#include "lib/label/hints.h"
 
 struct vgchange_params {
 	int lock_start_count;
@@ -755,10 +756,7 @@ static int _check_autoactivation(struct cmd_context *cmd, struct vgchange_params
 
 	vp->vg_complete_to_activate = 1;
 
-	if (!arg_is_set(cmd, nohints_ARG))
-		cmd->hints_pvs_online = 1;
-	else
-		cmd->use_hints = 0;
+	cmd->use_hints = 0;
 
 	return 1;
 }
@@ -767,6 +765,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct vgchange_params vp = { 0 };
 	struct processing_handle *handle;
+	char *vgname = NULL;
 	uint32_t flags = 0;
 	int ret;
 
@@ -885,6 +884,20 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_FAILED;
 		if (skip_command)
 			return ECMD_PROCESSED;
+
+		/*
+		 * Special label scan optimized for autoactivation
+		 * that is based on info read from /run/lvm/ files
+		 * created by pvscan --cache during autoactivation.
+		 * (Add an option to disable this optimization?)
+		 */
+		get_single_vgname_cmd_arg(cmd, NULL, &vgname);
+		if (vgname) {
+			if (!label_scan_vg_online(cmd, vgname))
+				log_debug("Standard label_scan required in place of online scan.");
+			else
+				flags |= PROCESS_SKIP_SCAN;
+		}
 	}
 
 	if (update)
