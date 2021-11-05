@@ -1037,6 +1037,7 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname)
 	struct device_list *devl, *devl2;
 	int relax_deviceid_filter = 0;
 	int metadata_pv_count;
+	int try_dev_scan = 0;
 
 	dm_list_init(&pvs_online);
 	dm_list_init(&devs);
@@ -1059,19 +1060,25 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname)
 			goto bad;
 	}
 
-	/* for each po devno add a struct dev to dev-cache */
-
+	/*
+	 * For each po devno add a struct dev to dev-cache.  This is a faster
+	 * alternative to the usual dev_cache_scan() which looks at all
+	 * devices.  If this optimization fails, then fall back to the usual
+	 * dev_cache_scan().
+	 */
 	dm_list_iterate_items(po, &pvs_online) {
 		if (!setup_devno_in_dev_cache(cmd, po->devno)) {
-			log_error("No device set up for %d:%d PVID %s",
+			log_debug("No device set up for quick mapping of %d:%d PVID %s",
 				  (int)MAJOR(po->devno), (int)MINOR(po->devno), po->pvid);
-			goto bad;
+			try_dev_scan = 1;
+			break;
 		}
 
 		if (!(po->dev = dev_cache_get_by_devt(cmd, po->devno, NULL, NULL))) {
-			log_error("No device found for %d:%d PVID %s",
+			log_debug("No device found for quick mapping of %d:%d PVID %s",
 				  (int)MAJOR(po->devno), (int)MINOR(po->devno), po->pvid);
-			goto bad;
+			try_dev_scan = 1;
+			break;
 		}
 
 		if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
@@ -1079,6 +1086,30 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname)
 
 		devl->dev = po->dev;
 		dm_list_add(&devs, &devl->list);
+	}
+
+	/*
+	 * Translating a devno (major:minor) into a device name can be
+	 * problematic for some devices that have unusual sysfs layouts, so if
+	 * this happens, do a full dev_cache_scan, which is slower, but is
+	 * sure to find the device.
+	 */
+	if (try_dev_scan) {
+		dev_cache_scan(cmd);
+		dm_list_iterate_items(po, &pvs_online) {
+			if (po->dev)
+				continue;
+			if (!(po->dev = dev_cache_get_by_devt(cmd, po->devno, NULL, NULL))) {
+				log_error("No device found for %d:%d PVID %s",
+					  (int)MAJOR(po->devno), (int)MINOR(po->devno), po->pvid);
+				goto bad;
+			}
+			if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
+				goto_bad;
+
+			devl->dev = po->dev;
+			dm_list_add(&devs, &devl->list);
+		}
 	}
 
 	/*
