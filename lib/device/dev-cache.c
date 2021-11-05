@@ -2125,7 +2125,7 @@ static char *_get_devname_from_devno(struct cmd_context *cmd, dev_t devno)
 		}
 
 		if (!(dir = opendir(path)))
-			return NULL;
+			goto try_partition;
 
 		while ((dirent = readdir(dir))) {
 			if (dirent->d_name[0] == '.')
@@ -2175,6 +2175,7 @@ static char *_get_devname_from_devno(struct cmd_context *cmd, dev_t devno)
 	 * major minor #blocks name
 	 */
 
+try_partition:
 	if (!(fp = fopen("/proc/partitions", "r")))
 		return NULL;
 
