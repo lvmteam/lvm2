@@ -21,35 +21,50 @@
 
 #include <dirent.h>
 
-static char *_vgname_in_pvid_file_buf(char *buf)
+/*
+ * file contains:
+ * <major>:<minor>\n
+ * vg:<vgname>\n
+ * dev:<devname>\n\0
+ *
+ * It's possible that vg and dev may not exist.
+ */
+
+static int _copy_pvid_file_field(const char *field, char *buf, int bufsize, char *out, int outsize)
 {
-	char *p, *n;
+	char *p;
+	int i = 0;
+	
+	if (!(p = strstr(buf, field)))
+		return 0;
 
-	/*
-	 * file contains:
-	 * <major>:<minor>\n
-	 * vg:<vgname>\n\0
-	 */
+	p += strlen(field);
 
-	if (!(p = strchr(buf, '\n')))
-		return NULL;
+	while (1) {
+		if (*p == '\n')
+			break;
+		if (*p == '\0')
+			break;
 
-	p++; /* skip \n */
+		if (p >= (buf + bufsize))
+			return 0;
+		if (i >= outsize-1)
+			return 0;
 
-	if (*p && !strncmp(p, "vg:", 3)) {
-		if ((n = strchr(p, '\n')))
-			*n = '\0';
-		return p + 3;
+		out[i] = *p;
+
+		i++;
+		p++;
 	}
-	return NULL;
+
+	return i ? 1 : 0;
 }
 
 #define MAX_PVID_FILE_SIZE 512
 
-int online_pvid_file_read(char *path, int *major, int *minor, char *vgname)
+int online_pvid_file_read(char *path, int *major, int *minor, char *vgname, char *devname)
 {
 	char buf[MAX_PVID_FILE_SIZE] = { 0 };
-	char *name;
 	int fd, rv;
 
 	fd = open(path, O_RDONLY);
@@ -72,12 +87,47 @@ int online_pvid_file_read(char *path, int *major, int *minor, char *vgname)
 		return 0;
 	}
 
-	/* vgname points to an offset in buf */
-	if ((name = _vgname_in_pvid_file_buf(buf)))
-		strncpy(vgname, name, NAME_LEN);
-	else
-		log_debug("No vgname in %s", path);
+	if (vgname) {
+		if (!strstr(buf, "vg:")) {
+			log_debug("No vgname in %s", path);
+			vgname[0] = '\0';
+			goto copy_dev;
+		}
 
+		if (!_copy_pvid_file_field("vg:", buf, MAX_PVID_FILE_SIZE, vgname, NAME_LEN)) {
+			log_warn("Ignoring invalid vg field in %s", path);
+			vgname[0] = '\0';
+			goto copy_dev;
+		}
+
+		if (!validate_name(vgname)) {
+			log_warn("Ignoring invalid vgname in %s (%s)", path, vgname);
+			vgname[0] = '\0';
+			goto copy_dev;
+		}
+	}
+
+ copy_dev:
+	if (devname) {
+		if (!strstr(buf, "dev:")) {
+			log_debug("No devname in %s", path);
+			devname[0] = '\0';
+			goto out;
+		}
+
+		if (!_copy_pvid_file_field("dev:", buf, MAX_PVID_FILE_SIZE, devname, NAME_LEN)) {
+			log_warn("Ignoring invalid devname field in %s", path);
+			devname[0] = '\0';
+			goto out;
+		}
+
+		if (strncmp(devname, "/dev/", 5)) {
+			log_warn("Ignoring invalid devname in %s (%s)", path, devname);
+			devname[0] = '\0';
+			goto out;
+		}
+	}
+ out:
 	return 1;
 }
 
@@ -95,6 +145,7 @@ int get_pvs_online(struct dm_list *pvs_online, const char *vgname)
 {
 	char path[PATH_MAX];
 	char file_vgname[NAME_LEN];
+	char file_devname[NAME_LEN];
 	DIR *dir;
 	struct dirent *de;
 	struct pv_online *po;
@@ -116,8 +167,9 @@ int get_pvs_online(struct dm_list *pvs_online, const char *vgname)
 		file_major = 0;
 		file_minor = 0;
 		memset(file_vgname, 0, sizeof(file_vgname));
+		memset(file_devname, 0, sizeof(file_devname));
 
-		if (!online_pvid_file_read(path, &file_major, &file_minor, file_vgname))
+		if (!online_pvid_file_read(path, &file_major, &file_minor, file_vgname, file_devname))
 			continue;
 
 		if (vgname && strcmp(file_vgname, vgname))
@@ -130,15 +182,18 @@ int get_pvs_online(struct dm_list *pvs_online, const char *vgname)
 		if (file_major || file_minor)
 			po->devno = MKDEV(file_major, file_minor);
 		if (file_vgname[0])
-			strncpy(po->vgname, file_vgname, NAME_LEN-1);
+			strncpy(po->vgname, file_vgname, NAME_LEN);
+		if (file_devname[0])
+			strncpy(po->devname, file_devname, NAME_LEN);
 
+		log_debug("Found PV online %s for VG %s %s", path, vgname, file_devname);
 		dm_list_add(pvs_online, &po->list);
 	}
 
 	if (closedir(dir))
 		log_sys_debug("closedir", PVS_ONLINE_DIR);
 
-	log_debug("PVs online found %d for %s", dm_list_size(pvs_online), vgname ?: "all");
+	log_debug("Found PVs online %d for %s", dm_list_size(pvs_online), vgname ?: "all");
 
 	return 1;
 }
@@ -195,6 +250,9 @@ int online_pvid_file_create(struct cmd_context *cmd, struct device *dev, const c
 	char path[PATH_MAX];
 	char buf[MAX_PVID_FILE_SIZE] = { 0 };
 	char file_vgname[NAME_LEN];
+	char file_devname[NAME_LEN];
+	char devname[NAME_LEN];
+	int devnamelen;
 	int file_major = 0, file_minor = 0;
 	int major, minor;
 	int fd;
@@ -202,6 +260,7 @@ int online_pvid_file_create(struct cmd_context *cmd, struct device *dev, const c
 	int len;
 	int len1 = 0;
 	int len2 = 0;
+	int len3 = 0;
 
 	major = (int)MAJOR(dev->dev);
 	minor = (int)MINOR(dev->dev);
@@ -218,13 +277,22 @@ int online_pvid_file_create(struct cmd_context *cmd, struct device *dev, const c
 
 	if (vgname) {
 		if ((len2 = dm_snprintf(buf + len1, sizeof(buf) - len1, "vg:%s\n", vgname)) < 0) {
-			log_print_pvscan(cmd, "Incomplete online file for %s %d:%d vg %s.", dev_name(dev), major, minor, vgname);
+			log_print("Incomplete online file for %s %d:%d vg %s.", dev_name(dev), major, minor, vgname);
 			/* can still continue without vgname */
 			len2 = 0;
 		}
 	}
 
-	len = len1 + len2;
+	devnamelen = dm_snprintf(devname, sizeof(devname), "%s", dev_name(dev));
+	if ((devnamelen > 5) && (devnamelen < NAME_LEN-1)) {
+		if ((len3 = dm_snprintf(buf + len1 + len2, sizeof(buf) - len1 - len2, "dev:%s\n", devname)) < 0) {
+			log_print("Incomplete devname in online file for %s.", dev_name(dev));
+			/* can continue without devname */
+			len3 = 0;
+		}
+	}
+
+	len = len1 + len2 + len3;
 
 	log_debug("Create pv online: %s %d:%d %s", path, major, minor, dev_name(dev));
 
@@ -269,8 +337,9 @@ check_duplicate:
 	 */
 
 	memset(file_vgname, 0, sizeof(file_vgname));
+	memset(file_devname, 0, sizeof(file_devname));
 
-	online_pvid_file_read(path, &file_major, &file_minor, file_vgname);
+	online_pvid_file_read(path, &file_major, &file_minor, file_vgname, file_devname);
 
 	if ((file_major == major) && (file_minor == minor)) {
 		log_debug("Existing online file for %d:%d", major, minor);
@@ -280,8 +349,8 @@ check_duplicate:
 	/* Don't know how vgname might not match, but it's not good so fail. */
 
 	if ((file_major != major) || (file_minor != minor))
-		log_error_pvscan(cmd, "PV %s is duplicate for PVID %s on %d:%d and %d:%d.",
-			         dev_name(dev), dev->pvid, major, minor, file_major, file_minor);
+		log_error_pvscan(cmd, "PV %s %d:%d is duplicate for PVID %s on %d:%d %s.",
+			         dev_name(dev), major, minor, dev->pvid, file_major, file_minor, file_devname);
 
 	if (file_vgname[0] && vgname && strcmp(file_vgname, vgname))
 		log_error_pvscan(cmd, "PV %s has unexpected VG %s vs %s.",
@@ -319,6 +388,7 @@ int get_pvs_lookup(struct dm_list *pvs_online, const char *vgname)
 	char line[64];
 	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	char file_vgname[NAME_LEN];
+	char file_devname[NAME_LEN];
 	struct pv_online *po;
 	int file_major = 0, file_minor = 0;
 	FILE *fp;
@@ -340,8 +410,9 @@ int get_pvs_lookup(struct dm_list *pvs_online, const char *vgname)
 		file_major = 0;
 		file_minor = 0;
 		memset(file_vgname, 0, sizeof(file_vgname));
+		memset(file_devname, 0, sizeof(file_devname));
 
-		if (!online_pvid_file_read(path, &file_major, &file_minor, file_vgname))
+		if (!online_pvid_file_read(path, &file_major, &file_minor, file_vgname, file_devname))
 			goto_bad;
 
 		if (vgname && strcmp(file_vgname, vgname))
@@ -355,11 +426,14 @@ int get_pvs_lookup(struct dm_list *pvs_online, const char *vgname)
 			po->devno = MKDEV(file_major, file_minor);
 		if (file_vgname[0])
 			strncpy(po->vgname, file_vgname, NAME_LEN-1);
+		if (file_devname[0])
+			strncpy(po->devname, file_devname, NAME_LEN-1);
 
+		log_debug("Found PV online lookup %s for VG %s on %s", path, vgname, file_devname);
 		dm_list_add(pvs_online, &po->list);
 	}
 
-	log_debug("PVs online lookup found %d for %s", dm_list_size(pvs_online), vgname);
+	log_debug("Found PVs online lookup %d for %s", dm_list_size(pvs_online), vgname);
 
 	fclose(fp);
 	return 1;

@@ -2241,3 +2241,53 @@ int setup_devno_in_dev_cache(struct cmd_context *cmd, dev_t devno)
 	return setup_devname_in_dev_cache(cmd, devname);
 }
 
+struct device *setup_dev_in_dev_cache(struct cmd_context *cmd, dev_t devno, const char *devname)
+{
+	struct device *dev;
+	struct stat buf;
+	int major = (int)MAJOR(devno);
+	int minor = (int)MINOR(devno);
+
+	if (devname) {
+		if (stat(devname, &buf) < 0) {
+			log_error("Cannot access device %s for %d:%d.", devname, major, minor);
+			if (!(devname = _get_devname_from_devno(cmd, devno))) {
+				log_error("No device name found from %d:%d.", major, minor);
+				return_NULL;
+			}
+			if (stat(devname, &buf) < 0) {
+				log_error("Cannot access device %s from %d:%d.", devname, major, minor);
+				return_NULL;
+			}
+		}
+	} else {
+		if (!(devname = _get_devname_from_devno(cmd, devno))) {
+			log_error("No device name found from %d:%d.", major, minor);
+			return_NULL;
+		}
+		if (stat(devname, &buf) < 0) {
+			log_error("Cannot access device %s from %d:%d.", devname, major, minor);
+			return_NULL;
+		}
+	}
+
+	if (!S_ISBLK(buf.st_mode)) {
+		log_error("Invaild device type %s.", devname);
+		return_NULL;
+	}
+
+	if (devno && (buf.st_rdev != devno)) {
+		log_warn("Found %s devno %d:%d expected %d:%d.", devname,
+			  (int)MAJOR(buf.st_rdev), (int)MINOR(buf.st_rdev), major, minor);
+	}
+
+	if (!_insert_dev(devname, buf.st_rdev))
+		return_NULL;
+
+	if (!(dev = (struct device *) dm_hash_lookup(_cache.names, devname))) {
+		log_error("Device lookup failed for %d:%d %s", major, minor, devname);
+		return_NULL;
+	}
+
+	return dev;
+}

@@ -1073,26 +1073,18 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 	}
 
 	/*
-	 * For each po devno add a struct dev to dev-cache.  This is a faster
+	 * For each po add a struct dev to dev-cache.  This is a faster
 	 * alternative to the usual dev_cache_scan() which looks at all
 	 * devices.  If this optimization fails, then fall back to the usual
 	 * dev_cache_scan().
 	 */
 	dm_list_iterate_items(po, &pvs_online) {
-		if (!setup_devno_in_dev_cache(cmd, po->devno)) {
-			log_debug("No device set up for quick mapping of %d:%d PVID %s",
-				  (int)MAJOR(po->devno), (int)MINOR(po->devno), po->pvid);
+		if (!(po->dev = setup_dev_in_dev_cache(cmd, po->devno, po->devname[0] ? po->devname : NULL))) {
+			log_debug("No device found for quick mapping of online PV %d:%d %s PVID %s",
+				  (int)MAJOR(po->devno), (int)MINOR(po->devno), po->devname, po->pvid);
 			try_dev_scan = 1;
-			break;
+			continue;
 		}
-
-		if (!(po->dev = dev_cache_get_by_devt(cmd, po->devno, NULL, NULL))) {
-			log_debug("No device found for quick mapping of %d:%d PVID %s",
-				  (int)MAJOR(po->devno), (int)MINOR(po->devno), po->pvid);
-			try_dev_scan = 1;
-			break;
-		}
-
 		if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
 			goto_bad;
 

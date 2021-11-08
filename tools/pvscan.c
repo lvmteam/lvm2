@@ -223,7 +223,7 @@ static void _online_pvid_file_remove_devno(int major, int minor)
 		file_minor = 0;
 		memset(file_vgname, 0, sizeof(file_vgname));
 
-		online_pvid_file_read(path, &file_major, &file_minor, file_vgname);
+		online_pvid_file_read(path, &file_major, &file_minor, file_vgname, NULL);
 
 		if ((file_major == major) && (file_minor == minor)) {
 			log_debug("Unlink pv online %s", path);
@@ -509,6 +509,7 @@ static int _get_devs_from_saved_vg(struct cmd_context *cmd, const char *vgname,
 {
 	char path[PATH_MAX];
 	char file_vgname[NAME_LEN];
+	char file_devname[NAME_LEN];
 	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	char uuidstr[64] __attribute__((aligned(8)));
 	struct pv_list *pvl;
@@ -538,8 +539,9 @@ static int _get_devs_from_saved_vg(struct cmd_context *cmd, const char *vgname,
 		file_major = 0;
 		file_minor = 0;
 		memset(file_vgname, 0, sizeof(file_vgname));
+		memset(file_devname, 0, sizeof(file_devname));
 
-		online_pvid_file_read(path, &file_major, &file_minor, file_vgname);
+		online_pvid_file_read(path, &file_major, &file_minor, file_vgname, file_devname);
 
 		if (file_vgname[0] && strcmp(vgname, file_vgname)) {
 			log_error_pvscan(cmd, "Wrong VG found for %d:%d PVID %s: %s vs %s",
@@ -549,13 +551,8 @@ static int _get_devs_from_saved_vg(struct cmd_context *cmd, const char *vgname,
 
 		devno = MKDEV(file_major, file_minor);
 
-		if (!setup_devno_in_dev_cache(cmd, devno)) {
-			log_error_pvscan(cmd, "No device set up for %d:%d PVID %s", file_major, file_minor, pvid);
-			goto bad;
-		}
-
-		if (!(dev = dev_cache_get_by_devt(cmd, devno, NULL, NULL))) {
-			log_error_pvscan(cmd, "No device found for %d:%d PVID %s", file_major, file_minor, pvid);
+		if (!(dev = setup_dev_in_dev_cache(cmd, devno, file_devname[0] ? file_devname : NULL))) {
+			log_error_pvscan(cmd, "No device set up for online PV %d:%d %s PVID %s", file_major, file_minor, file_devname, pvid);
 			goto bad;
 		}
 
@@ -888,16 +885,12 @@ static int _get_args_devs(struct cmd_context *cmd, struct dm_list *pvscan_args,
 	/* in common usage, no dev will be found for a devno */
 
 	dm_list_iterate_items(arg, pvscan_args) {
-		if (arg->devname) {
-			if (!setup_devname_in_dev_cache(cmd, arg->devname))
-				log_error_pvscan(cmd, "No device set up for name arg %s", arg->devname);
-			arg->dev = dev_cache_get(cmd, arg->devname, NULL);
-		} else if (arg->devno) {
-			if (!setup_devno_in_dev_cache(cmd, arg->devno))
-				log_error_pvscan(cmd, "No device set up for devno arg %d", (int)arg->devno);
-			arg->dev = dev_cache_get_by_devt(cmd, arg->devno, NULL, NULL);
-		} else
+		if (!arg->devname && !arg->devno)
 			return_0;
+		if (!(arg->dev = setup_dev_in_dev_cache(cmd, arg->devno, arg->devname))) {
+			log_error_pvscan(cmd, "No device set up for arg %s %d:%d",
+					 arg->devname ?: "", (int)MAJOR(arg->devno), (int)MINOR(arg->devno));
+		}
 	}
 
 	dm_list_iterate_items(arg, pvscan_args) {
@@ -917,6 +910,7 @@ static void _set_pv_devices_online(struct cmd_context *cmd, struct volume_group 
 {
 	char path[PATH_MAX];
 	char file_vgname[NAME_LEN];
+	char file_devname[NAME_LEN];
 	char pvid[ID_LEN+1] = { 0 };
 	struct pv_list *pvl;
 	struct device *dev;
@@ -944,9 +938,10 @@ static void _set_pv_devices_online(struct cmd_context *cmd, struct volume_group 
 
 		major = 0;
 		minor = 0;
-		file_vgname[0] = '\0';
+		memset(file_vgname, 0, sizeof(file_vgname));
+		memset(file_devname, 0, sizeof(file_devname));
 
-		online_pvid_file_read(path, &major, &minor, file_vgname);
+		online_pvid_file_read(path, &major, &minor, file_vgname, file_devname);
 
 		if (file_vgname[0] && strcmp(vg->name, file_vgname)) {
 			log_warn("WARNING: VG %s PV %s wrong vgname in online file %s",
@@ -957,9 +952,9 @@ static void _set_pv_devices_online(struct cmd_context *cmd, struct volume_group 
 
 		devno = MKDEV(major, minor);
 
-		if (!(dev = dev_cache_get_by_devt(cmd, devno, NULL, NULL))) {
-			log_print_pvscan(cmd, "VG %s PV %s no device found for %d:%d",
-					 vg->name, pvid, major, minor);
+		if (!(dev = setup_dev_in_dev_cache(cmd, devno, file_devname[0] ? file_devname : NULL))) {
+			log_print_pvscan(cmd, "VG %s PV %s no device found for online PV %d:%d %s",
+					 vg->name, pvid, major, minor, file_devname);
 			pvl->pv->status |= MISSING_PV;
 			continue;
 		}
