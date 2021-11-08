@@ -19,61 +19,135 @@ _clear_online_files() {
 
 aux prepare_devs 4
 
+# Because mapping devno to devname gets dm name from sysfs
+aux lvmconf 'devices/scan = "/dev"'
+base1=$(basename $dev1)
+base2=$(basename $dev2)
+base3=$(basename $dev3)
+base4=$(basename $dev4)
+aux extend_filter "a|/dev/mapper/$base1|"
+aux extend_filter "a|/dev/mapper/$base2|"
+aux extend_filter "a|/dev/mapper/$base3|"
+aux extend_filter "a|/dev/mapper/$base4|"
+
 vgcreate $vg1 "$dev1" "$dev2"
 vgcreate $vg2 "$dev3"
 pvcreate "$dev4"
 
 lvcreate -l1 -n $lv1 -an $vg1
+lvcreate -l1 -n $lv2 -an $vg1
 lvcreate -l1 -n $lv1 -an $vg2
 
-# With no pv online files, vgchange that uses online files
-# will find no PVs to activate from.
+# Expected use, with vg name and all online files exist for vgchange.
 
 _clear_online_files
 
-not vgchange -aay --autoactivation event $vg1
-not vgchange -aay --autoactivation event $vg2
-vgchange -aay --autoactivation event
-
-check lv_field $vg1/$lv1 lv_active ""
-check lv_field $vg2/$lv1 lv_active ""
-
-# incomplete vg will not be activated
-
 pvscan --cache "$dev1"
+pvscan --cache "$dev2"
 vgchange -aay --autoactivation event $vg1
-# VG foo is incomplete
-check lv_field $vg1/$lv1 lv_active ""
-
-# complete vg is activated
+check lv_field $vg1/$lv1 lv_active "active"
+check lv_field $vg1/$lv2 lv_active "active"
+check lv_field $vg2/$lv1 lv_active ""
 
 pvscan --cache "$dev3"
 vgchange -aay --autoactivation event $vg2
 check lv_field $vg2/$lv1 lv_active "active"
 
-pvscan --cache "$dev2"
-vgchange -aay --autoactivation event $vg1
-check lv_field $vg1/$lv1 lv_active "active"
+# Count io to check the pvs_online optimization 
+# is working to limit scanning.
 
-vgchange -an $vg1
-vgchange -an $vg2
-
-# the same tests but using command options matching udev rule
-
+vgchange -an
 _clear_online_files
 
-pvscan --cache --listvg --checkcomplete --vgonline --autoactivation event --udevoutput --journal=output "$dev1"
-vgchange -aay --autoactivation event $vg1
-# VG foo is incomplete
+pvscan --cache "$dev1"
+pvscan --cache "$dev2"
+strace -e io_submit vgchange -aay --autoactivation event $vg1 2>&1|tee trace.out
+test "$(grep io_submit trace.out | wc -l)" -eq 4
+rm trace.out
+
+strace -e io_submit pvscan --cache "$dev3" 2>&1|tee trace.out
+test "$(grep io_submit trace.out | wc -l)" -eq 1
+rm trace.out
+
+strace -e io_submit vgchange -aay --autoactivation event $vg2 2>&1|tee trace.out
+test "$(grep io_submit trace.out | wc -l)" -eq 2
+rm trace.out
+
+# non-standard usage: no VG name arg, vgchange will only used pvs_online files
+
+vgchange -an
+_clear_online_files
+
+vgchange -aay --autoactivation event
 check lv_field $vg1/$lv1 lv_active ""
+check lv_field $vg1/$lv2 lv_active ""
+check lv_field $vg2/$lv1 lv_active ""
+
+pvscan --cache "$dev1"
+vgchange -aay --autoactivation event
+check lv_field $vg1/$lv1 lv_active ""
+check lv_field $vg1/$lv2 lv_active ""
+check lv_field $vg2/$lv1 lv_active ""
+
+pvscan --cache "$dev2"
+vgchange -aay --autoactivation event
+check lv_field $vg1/$lv1 lv_active "active"
+check lv_field $vg1/$lv2 lv_active "active"
+check lv_field $vg2/$lv1 lv_active ""
+
+pvscan --cache "$dev3"
+vgchange -aay --autoactivation event
+check lv_field $vg2/$lv1 lv_active "active"
+
+# non-standard usage: include VG name arg, but missing or incomplete pvs_online files
+
+vgchange -an
+_clear_online_files
+
+# all missing pvs_online, vgchange falls back to full label scan
+vgchange -aay --autoactivation event $vg1
+check lv_field $vg1/$lv1 lv_active "active"
+check lv_field $vg1/$lv2 lv_active "active"
+
+vgchange -an
+_clear_online_files
+
+# incomplete pvs_online, vgchange falls back to full label scan
+pvscan --cache "$dev1"
+vgchange -aay --autoactivation event $vg1
+check lv_field $vg1/$lv1 lv_active "active"
+check lv_field $vg1/$lv2 lv_active "active"
+
+vgchange -an
+_clear_online_files
+
+# incomplete pvs_online, pvs_online from different vg,
+# no pvs_online found for vg arg so vgchange falls back to full label scan
+
+pvscan --cache "$dev3"
+vgchange -aay --autoactivation event $vg1
+check lv_field $vg1/$lv1 lv_active "active"
+check lv_field $vg1/$lv2 lv_active "active"
+check lv_field $vg2/$lv1 lv_active ""
+
+vgchange -aay --autoactivation event $vg2
+check lv_field $vg2/$lv1 lv_active "active"
+
+vgchange -an
+_clear_online_files
+
+# same tests but using command options matching udev rule
+
+pvscan --cache --listvg --checkcomplete --vgonline --autoactivation event --udevoutput --journal=output "$dev1"
+pvscan --cache --listvg --checkcomplete --vgonline --autoactivation event --udevoutput --journal=output "$dev2"
+vgchange -aay --autoactivation event $vg1
+check lv_field $vg1/$lv1 lv_active "active"
+check lv_field $vg1/$lv2 lv_active "active"
+check lv_field $vg2/$lv1 lv_active ""
 
 pvscan --cache --listvg --checkcomplete --vgonline --autoactivation event --udevoutput --journal=output "$dev3"
 vgchange -aay --autoactivation event $vg2
 check lv_field $vg2/$lv1 lv_active "active"
-
-pvscan --cache --listvg --checkcomplete --vgonline --autoactivation event --udevoutput --journal=output "$dev2"
-vgchange -aay --autoactivation event $vg1
-check lv_field $vg1/$lv1 lv_active "active"
 
 vgchange -an $vg1
 vgchange -an $vg2

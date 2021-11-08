@@ -1023,13 +1023,13 @@ int label_scan_for_pvid(struct cmd_context *cmd, char *pvid, struct device **dev
 
 /*
  * Use files under /run/lvm/, created by pvscan --cache autoactivation,
- * to optimize device setup/scanning for a command that is run for a
- * specific vg name.  autoactivation happens during system startup
- * when the hints file is not useful, so this uses the online files as
- * an alternative.
- */ 
-
-int label_scan_vg_online(struct cmd_context *cmd, const char *vgname)
+ * to optimize device setup/scanning.  autoactivation happens during
+ * system startup when the hints file is not useful, but he pvs_online
+ * files can provide a similar optimization to the hints file.
+ */
+ 
+int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
+			 int *found_none, int *found_all, int *found_incomplete)
 {
 	struct dm_list pvs_online;
 	struct dm_list devs;
@@ -1041,6 +1041,8 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname)
 
 	dm_list_init(&pvs_online);
 	dm_list_init(&devs);
+
+	log_debug_devs("Finding online devices to scan");
 
 	/* reads devices file, does not populate dev-cache */
 	if (!setup_devices_for_online_autoactivation(cmd))
@@ -1055,9 +1057,19 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname)
 	 * info from the online files tell us which devices those PVs are
 	 * located on.
 	 */
-	if (!get_pvs_lookup(&pvs_online, vgname)) {
-		if (!get_pvs_online(&pvs_online, vgname))
+	if (vgname) {
+		if (!get_pvs_lookup(&pvs_online, vgname)) {
+			if (!get_pvs_online(&pvs_online, vgname))
+				goto bad;
+		}
+	} else {
+		if (!get_pvs_online(&pvs_online, NULL))
 			goto bad;
+	}
+
+	if (dm_list_empty(&pvs_online)) {
+		*found_none = 1;
+		return 1;
 	}
 
 	/*
@@ -1201,8 +1213,10 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname)
 
 	free_po_list(&pvs_online);
 
-	if (dm_list_empty(&devs))
+	if (dm_list_empty(&devs)) {
+		*found_none = 1;
 		return 1;
+	}
 
 	/*
 	 * Scan devs to populate lvmcache info, which includes the mda info that's
@@ -1220,13 +1234,17 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname)
 	 * be able to fall back to a standard label scan if the online hints
 	 * gave fewer PVs than listed in VG metadata.
 	 */
-	metadata_pv_count = lvmcache_pvsummary_count(vgname);
-	if (metadata_pv_count != dm_list_size(&devs)) {
-		log_debug("Incorrect PV list from online files %d metadata %d.",
-			   dm_list_size(&devs), metadata_pv_count);
-		return 0;
+	if (vgname) {
+		metadata_pv_count = lvmcache_pvsummary_count(vgname);
+		if (metadata_pv_count > dm_list_size(&devs)) {
+			log_debug("Incomplete PV list from online files %d metadata %d.",
+				  dm_list_size(&devs), metadata_pv_count);
+			*found_incomplete = 1;
+			return 1;
+		}
 	}
 
+	*found_all = 1;
 	return 1;
 bad:
 	free_po_list(&pvs_online);

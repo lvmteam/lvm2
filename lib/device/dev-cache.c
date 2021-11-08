@@ -2164,7 +2164,7 @@ static char *_get_devname_from_devno(struct cmd_context *cmd, dev_t devno)
 		}
 
 		if (devname[0]) {
-			log_debug("Found %s for %d:%d from sys", devname, major, minor);
+			log_debug("Found %s for %d:%d from sys dm", devname, major, minor);
 			return _strdup(devname);
 		}
 		return NULL;

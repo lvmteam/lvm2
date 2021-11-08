@@ -879,7 +879,9 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (arg_is_set(cmd, autoactivation_ARG)) {
+		int found_none = 0, found_all = 0, found_incomplete = 0;
 		int skip_command = 0;
+
 		if (!_check_autoactivation(cmd, &vp, &skip_command))
 			return ECMD_FAILED;
 		if (skip_command)
@@ -889,14 +891,49 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		 * Special label scan optimized for autoactivation
 		 * that is based on info read from /run/lvm/ files
 		 * created by pvscan --cache during autoactivation.
-		 * (Add an option to disable this optimization?)
+		 * Add an option to disable this optimization?  e.g.
+		 * "online_skip" in --autoactivation / auto_activation_settings
+		 *
+		 * In some cases it might be useful to strictly follow
+		 * the online files, and not fall back to a standard
+		 * label scan when no pvs or incomplete pvs are found
+		 * from the online files.  Add option for that?  e.g.
+		 * "online_only" in --autoactivation / auto_activation_settings
+		 *
+		 * Generally the way that vgchange -aay --autoactivation event
+		 * is currently used, it will not be called until pvscan --cache
+		 * has found the VG is complete, so it will not generally be
+		 * following the paths that fall back to standard label_scan.
+		 *
+		 * TODO: Like pvscan_aa_quick, this could do lock_vol(vgname)
+		 * before label_scan_vg_online, then set cmd->can_use_one_scan=1
+		 * to avoid rescanning in _vg_read called by process_each_vg.
 		 */
 		get_single_vgname_cmd_arg(cmd, NULL, &vgname);
-		if (vgname) {
-			if (!label_scan_vg_online(cmd, vgname))
-				log_debug("Standard label_scan required in place of online scan.");
-			else
+		if (!label_scan_vg_online(cmd, vgname, &found_none, &found_all, &found_incomplete)) {
+			log_print("PVs online error%s%s, using all devices.", vgname ? " for VG " : "", vgname ?: "");
+		} else {
+			if (!vgname) {
+				/* Not expected usage, activate any VGs that are complete based on pvs_online. */
 				flags |= PROCESS_SKIP_SCAN;
+			} else if (found_all) {
+				/* The expected and optimal usage, only online PVs are read. */
+				flags |= PROCESS_SKIP_SCAN;
+			/*
+			} else if (online_only) {
+				log_print("PVs online %s.", found_none ? "not found" : "incomplete");
+				return vgname ? ECMD_FAILED : ECMD_PROCESSED;
+			*/
+			} else if (found_none) {
+				/* Not expected usage, use full label_scan in process_each */
+				log_print("PVs online not found for VG %s, using all devices.", vgname);
+			} else if (found_incomplete) {
+				/* Not expected usage, use full label_scan in process_each */
+				log_print("PVs online incomplete for VG %s, using all devicess.", vgname);
+			} else {
+				/* Shouldn't happen */
+				log_print("PVs online unknown for VG %s, using all devices.", vgname);
+			}
 		}
 	}
 
