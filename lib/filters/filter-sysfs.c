@@ -15,6 +15,8 @@
 #include "lib/misc/lib.h"
 #include "lib/filters/filter.h"
 
+static int _sys_dev_block_found;
+
 #ifdef __linux__
 
 static int _accept_p(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
@@ -22,6 +24,9 @@ static int _accept_p(struct cmd_context *cmd, struct dev_filter *f, struct devic
 	char path[PATH_MAX];
 	const char *sysfs_dir;
 	struct stat info;
+
+	if (!_sys_dev_block_found)
+		return 1;
 
 	dev->filtered_flags &= ~DEV_FILTERED_SYSFS;
 
@@ -57,6 +62,26 @@ static void _destroy(struct dev_filter *f)
 	free(f);
 }
 
+static void _check_sys_dev_block(void)
+{
+	char path[PATH_MAX];
+	const char *sysfs_dir;
+	struct stat info;
+
+	sysfs_dir = dm_sysfs_dir();
+	if (sysfs_dir && *sysfs_dir) {
+		if (dm_snprintf(path, sizeof(path), "%sdev/block", sysfs_dir) < 0)
+			return;
+
+		if (lstat(path, &info)) {
+			log_debug("filter-sysfs disabled: /sys/dev/block not found");
+			_sys_dev_block_found = 0;
+		} else {
+			_sys_dev_block_found = 1;
+		}
+	}
+}
+
 struct dev_filter *sysfs_filter_create(void)
 {
 	const char *sysfs_dir = dm_sysfs_dir();
@@ -66,6 +91,9 @@ struct dev_filter *sysfs_filter_create(void)
 		log_verbose("No proc filesystem found: skipping sysfs filter");
 		return NULL;
 	}
+
+	/* support old kernels that don't have this */
+	_check_sys_dev_block();
 
 	if (!(f = zalloc(sizeof(*f))))
 		goto_bad;
