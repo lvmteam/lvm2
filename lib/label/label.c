@@ -1044,10 +1044,6 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 
 	log_debug_devs("Finding online devices to scan");
 
-	/* reads devices file, does not populate dev-cache */
-	if (!setup_devices_for_online_autoactivation(cmd))
-		return 0;
-
 	/*
 	 * First attempt to use /run/lvm/pvs_lookup/vgname which should be
 	 * used in cases where all PVs in a VG do not contain metadata.

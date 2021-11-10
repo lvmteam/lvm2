@@ -56,13 +56,14 @@ check lv_field $vg2/$lv1 lv_active "active"
 # Count io to check the pvs_online optimization 
 # is working to limit scanning.
 
+if which strace; then
 vgchange -an
 _clear_online_files
 
 pvscan --cache "$dev1"
 pvscan --cache "$dev2"
 strace -e io_submit vgchange -aay --autoactivation event $vg1 2>&1|tee trace.out
-test "$(grep io_submit trace.out | wc -l)" -eq 4
+test "$(grep io_submit trace.out | wc -l)" -eq 3
 rm trace.out
 
 strace -e io_submit pvscan --cache "$dev3" 2>&1|tee trace.out
@@ -72,6 +73,7 @@ rm trace.out
 strace -e io_submit vgchange -aay --autoactivation event $vg2 2>&1|tee trace.out
 test "$(grep io_submit trace.out | wc -l)" -eq 2
 rm trace.out
+fi
 
 # non-standard usage: no VG name arg, vgchange will only used pvs_online files
 
