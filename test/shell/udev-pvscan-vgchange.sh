@@ -71,15 +71,11 @@ wipe_all() {
 	done
 }
 
-# udevadm trigger runs udev rule which runs systemd-run --no-wait vgchange -aay
-# Because of --no-wait, we need to wait for the transient systemd
-# service to be gone before checking the effects of the vgchange.
-
 wait_lvm_activate() {
 	local vgw=$1
 	local wait=0
 
-	while systemctl status lvm-activate-$vgw > /dev/null && test "$wait" -le 30; do
+	while systemctl status lvm-activate-$vgw | grep "active (running)" && test "$wait" -le 30; do
 		sleep .2
 		wait=$(( wait + 1 ))
 	done
