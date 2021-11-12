@@ -289,7 +289,7 @@ static int _write_lookup_file(struct cmd_context *cmd, struct volume_group *vg)
 		line[ID_LEN+1] = '\0';
 
 		if (write(fd, &line, ID_LEN+1) < 0)
-			log_sys_debug("write", path);
+			log_error_pvscan(cmd, "Failed to write lookup entry %s %s", path, line);
 	}
 
 	if (close(fd))
@@ -1137,22 +1137,39 @@ static int _online_devs(struct cmd_context *cmd, int do_all, struct dm_list *pvs
 
 			if (vg) {
 				/*
-				 * Use the VG metadata from this PV for a list of all
-				 * PVIDs.  Write a lookup file of PVIDs in case another
-				 * pvscan needs it.  After writing lookup file, recheck
-				 * pvid files to resolve a possible race with another
-				 * pvscan reading the lookup file that missed it.
+				 * Check if the VG is complete by checking that
+				 * pvs_online/<pvid> files exist for all vg->pvs.
 				 */
 				log_debug("checking all pvid files from vg %s", vg->name);
 				_count_pvid_files(vg, &pvs_online, &pvs_offline);
-	
-				if (pvs_offline && _write_lookup_file(cmd, vg)) {
-					log_debug("rechecking all pvid files from vg %s", vg->name);
-					_count_pvid_files(vg, &pvs_online, &pvs_offline);
-					if (!pvs_offline)
-						log_print_pvscan(cmd, "VG %s complete after recheck.", vg->name);
+
+				/*
+				 * When there is more than one PV in the VG, write
+				 * /run/lvm/pvs_lookup/<vgname> with a list of PVIDs in
+				 * the VG.  This is used in case a later PV comes
+				 * online that has no metadata, in which case pvscan
+				 * for that PV needs to use the lookup file to check if
+				 * the VG is complete.  The lookup file is also used by
+				 * vgchange -aay --autoactivation event <vgname>
+				 * to check if all pvs_online files for the VG exist.
+				 *
+				 * For multiple concurrent pvscan's, they will race to
+				 * create the lookup file and the first will succeed.
+				 *
+				 * After writing the lookup file, recheck pvid files to
+				 * resolve a possible race with another pvscan reading
+				 * the lookup file that missed it.
+				 */
+				if (dm_list_size(&vg->pvs) > 1) {
+					if (_write_lookup_file(cmd, vg)) {
+						if (pvs_offline) {
+							log_debug("rechecking all pvid files from vg %s", vg->name);
+							_count_pvid_files(vg, &pvs_online, &pvs_offline);
+							if (!pvs_offline)
+								log_print_pvscan(cmd, "VG %s complete after recheck.", vg->name);
+						}
+					}
 				}
-	
 				vgname = vg->name;
 			} else {
 				/*
