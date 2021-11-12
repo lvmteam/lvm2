@@ -1022,6 +1022,35 @@ int label_scan_for_pvid(struct cmd_context *cmd, char *pvid, struct device **dev
 }
 
 /*
+ * Clear state that label_scan_vg_online() created so it will not
+ * confuse the standard label_scan() that the caller falls back to.
+ * the results of filtering (call filter->wipe)
+ * the results of matching device_id (reset dev and du)
+ * the results of scanning in lvmcache
+ */
+static void _clear_scan_state(struct cmd_context *cmd, struct dm_list *devs)
+{
+	struct device_list *devl;
+	struct device *dev;
+	struct dev_use *du;
+
+	dm_list_iterate_items(devl, devs) {
+		dev = devl->dev;
+
+		cmd->filter->wipe(cmd, cmd->filter, dev, NULL);
+		dev->flags &= ~DEV_MATCHED_USE_ID;
+		dev->id = NULL;
+
+		if ((du = get_du_for_dev(cmd, dev)))
+			du->dev = NULL;
+
+		lvmcache_del_dev(dev);
+
+		memset(dev->pvid, 0, ID_LEN);
+	}
+}
+
+/*
  * Use files under /run/lvm/, created by pvscan --cache autoactivation,
  * to optimize device setup/scanning.  autoactivation happens during
  * system startup when the hints file is not useful, but he pvs_online
@@ -1033,6 +1062,7 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 {
 	struct dm_list pvs_online;
 	struct dm_list devs;
+	struct dm_list devs_drop;
 	struct pv_online *po;
 	struct device_list *devl, *devl2;
 	int relax_deviceid_filter = 0;
@@ -1041,6 +1071,7 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 
 	dm_list_init(&pvs_online);
 	dm_list_init(&devs);
+	dm_list_init(&devs_drop);
 
 	log_debug_devs("Finding online devices to scan");
 
@@ -1116,6 +1147,15 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 	 * factor code common to pvscan_cache_args
 	 */
 
+	/*
+	 * Match devs with the devices file because special/optimized
+	 * device setup was used which does not check the devices file.
+	 * If a match fails here do not exclude it, that will be done below by
+	 * passes_filter() which runs filter-deviceid. The
+	 * relax_deviceid_filter case needs to be able to work around
+	 * unmatching devs.
+	 */
+
 	if (cmd->enable_devices_file) {
 		dm_list_iterate_items(devl, &devs)
 			device_ids_match_dev(cmd, devl->dev);
@@ -1127,6 +1167,8 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 	if (cmd->enable_devices_file && device_ids_use_devname(cmd)) {
 		relax_deviceid_filter = 1;
 		cmd->filter_deviceid_skip = 1;
+		/* PVIDs read from devs matched to devices file below instead. */
+		log_debug("Skipping device_id filtering due to devname ids.");
 	}
 
 	cmd->filter_nodata_only = 1;
@@ -1136,6 +1178,7 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 			log_print("%s excluded by filters: %s.",
 				  dev_name(devl->dev), dev_filtered_reason(devl->dev));
 			dm_list_del(&devl->list);
+			dm_list_add(&devs_drop, &devl->list);
 		}
 	}
 
@@ -1160,11 +1203,13 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 	label_scan_setup_bcache();
 
 	dm_list_iterate_items_safe(devl, devl2, &devs) {
+		struct dev_use *du;
 		int has_pvid;
 
 		if (!label_read_pvid(devl->dev, &has_pvid)) {
 			log_print("%s cannot read label.", dev_name(devl->dev));
 			dm_list_del(&devl->list);
+			dm_list_add(&devs_drop, &devl->list);
 			continue;
 		}
 
@@ -1172,6 +1217,7 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 			/* Not an lvm device */
 			log_print("%s not an lvm device.", dev_name(devl->dev));
 			dm_list_del(&devl->list);
+			dm_list_add(&devs_drop, &devl->list);
 			continue;
 		}
 
@@ -1180,11 +1226,16 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 		 * so in place of that check if the pvid is in the devices file.
 		 */
 		if (relax_deviceid_filter) {
-			if (!get_du_for_pvid(cmd, devl->dev->pvid)) {
+			if (!(du = get_du_for_pvid(cmd, devl->dev->pvid))) {
 				log_print("%s excluded by devices file (checking PVID).",
 					  dev_name(devl->dev));
 				dm_list_del(&devl->list);
+				dm_list_add(&devs_drop, &devl->list);
 				continue;
+			} else {
+				/* Special case matching for devname entries based on pvid. */
+				log_debug("Match device_id %s %s to %s: matching PVID",
+					  idtype_to_str(du->idtype), du->idname, dev_name(devl->dev));
 			}
 		}
 
@@ -1193,6 +1244,7 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 			log_print("%s excluded by filters: %s.",
 				  dev_name(devl->dev), dev_filtered_reason(devl->dev));
 			dm_list_del(&devl->list);
+			dm_list_add(&devs_drop, &devl->list);
 		}
 	}
 
@@ -1202,6 +1254,7 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 	free_po_list(&pvs_online);
 
 	if (dm_list_empty(&devs)) {
+		_clear_scan_state(cmd, &devs_drop);
 		*found_none = 1;
 		return 1;
 	}
@@ -1227,6 +1280,8 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 		if (metadata_pv_count > dm_list_size(&devs)) {
 			log_debug("Incomplete PV list from online files %d metadata %d.",
 				  dm_list_size(&devs), metadata_pv_count);
+			_clear_scan_state(cmd, &devs_drop);
+			_clear_scan_state(cmd, &devs);
 			*found_incomplete = 1;
 			return 1;
 		}
@@ -1235,6 +1290,8 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 	*found_all = 1;
 	return 1;
 bad:
+	_clear_scan_state(cmd, &devs_drop);
+	_clear_scan_state(cmd, &devs);
 	free_po_list(&pvs_online);
 	return 0;
 }
@@ -1527,7 +1584,7 @@ int label_read_pvid(struct device *dev, int *has_pvid)
 
 	lh = (struct label_header *)(buf + 512);
 	if (memcmp(lh->id, LABEL_ID, sizeof(lh->id))) {
-		/* Not an lvm deice */
+		/* Not an lvm device */
 		label_scan_invalidate(dev);
 		return 1;
 	}
@@ -1537,7 +1594,7 @@ int label_read_pvid(struct device *dev, int *has_pvid)
 	 * rest of the label_header intact.
 	 */
 	if (memcmp(lh->type, LVM2_LABEL, sizeof(lh->type))) {
-		/* Not an lvm deice */
+		/* Not an lvm device */
 		label_scan_invalidate(dev);
 		return 1;
 	}

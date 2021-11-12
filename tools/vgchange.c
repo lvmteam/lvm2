@@ -802,7 +802,7 @@ static int _vgchange_autoactivation_setup(struct cmd_context *cmd,
 	 */
 	if (!label_scan_vg_online(cmd, vgname, &found_none, &found_all, &found_incomplete)) {
 		log_print("PVs online error%s%s, using all devices.", vgname ? " for VG " : "", vgname ?: "");
-		return 1;
+		goto bad;
 	}
 
 	/*
@@ -815,24 +815,16 @@ static int _vgchange_autoactivation_setup(struct cmd_context *cmd,
 	}
 
 	/*
-	 * The expected and optimal usage, because the udev rule calls
-	 * vgchange -aay --autoactivation event vgname when all PVs
-	 * for vgname are found online.  Only online pvs are used.
+	 * The expected and optimal usage, which is the purpose of
+	 * this function.  We expect online files to be found for
+	 * all PVs because the udev rule calls
+	 * vgchange -aay --autoactivation event <vgname>
+	 * only after all PVs for vgname are found online.
 	 */
 	if (found_all) {
 		*flags |= PROCESS_SKIP_SCAN;
 		*vgname_ret = vgname;
 		return 1;
-	}
-
-	/*
-	 * The online scanning optimiziation didn't work, so undo the vg
-	 * locking optimization before falling back to normal processing.
-	 */
-	if (vg_locked) {
-		unlock_vg(cmd, NULL, vgname);
-		*flags &= ~READ_WITHOUT_LOCK;
-		cmd->can_use_one_scan = 0;
 	}
 
 	/*
@@ -842,7 +834,7 @@ static int _vgchange_autoactivation_setup(struct cmd_context *cmd,
 	 */
 	if (found_none) {
 		log_print("PVs online not found for VG %s, using all devices.", vgname);
-		return 1;
+		goto bad;
 	}
 
 	/*
@@ -852,7 +844,7 @@ static int _vgchange_autoactivation_setup(struct cmd_context *cmd,
 	 */
 	if (found_incomplete) {
 		log_print("PVs online incomplete for VG %s, using all devicess.", vgname);
-		return 1;
+		goto bad;
 	}
 
 	/*
@@ -860,7 +852,19 @@ static int _vgchange_autoactivation_setup(struct cmd_context *cmd,
 	 * process_each.  (No optimization used.)
 	 */
 	log_print("PVs online unknown for VG %s, using all devices.", vgname);
+
+ bad:
+	/*
+	 * The online scanning optimization didn't work, so undo the vg
+	 * locking optimization before falling back to normal processing.
+	 */
+	if (vg_locked) {
+		unlock_vg(cmd, NULL, vgname);
+		*flags &= ~READ_WITHOUT_LOCK;
+		cmd->can_use_one_scan = 0;
+	}
 	return 1;
+
 }
 
 int vgchange(struct cmd_context *cmd, int argc, char **argv)
