@@ -415,8 +415,17 @@ int get_pvs_lookup(struct dm_list *pvs_online, const char *vgname)
 		if (!online_pvid_file_read(path, &file_major, &file_minor, file_vgname, file_devname))
 			goto_bad;
 
-		if (vgname && strcmp(file_vgname, vgname))
+		/*
+		 * PVs without metadata will not have a vgname in their pvid
+		 * file, but the purpose of using the lookup file is that we
+		 * know the PV is for this VG even without the pvid vgname
+		 * field.
+		 */
+		if (vgname && file_vgname[0] && strcmp(file_vgname, vgname)) {
+			/* Should never happen */
+			log_error("Incorrect VG lookup file %s PVID %s %s.", vgname, pvid, file_vgname);
 			goto_bad;
+		}
 
 		if (!(po = zalloc(sizeof(*po))))
 			goto_bad;
