@@ -400,3 +400,13 @@ mdadm --stop "$mddev"
 aux udev_wait
 wipe_all
 
+systemctl stop lvm-activate-$vg1
+systemctl stop lvm-activate-$vg2
+systemctl stop lvm-activate-$vg3
+systemctl stop lvm-activate-$vg4
+systemctl stop lvm-activate-$vg5
+systemctl stop lvm-activate-$vg6
+systemctl stop lvm-activate-$vg7
+systemctl stop lvm-activate-$vg8
+systemctl stop lvm-activate-$vg9
+
