@@ -414,6 +414,12 @@ EOF
 	verbose "Converting to VDO pool."
 	dry "$LVM" lvconvert $YES $VERB $FORCE --config "$PARAMS" -Zn -V "${vdo_logicalSize}k" -n "$LVNAME" --type vdo-pool "$VGNAME/${LVNAME}_vpool"
 
+	# Note: that this is spelled OPPOSITE the other $IS_LV checks.
+	if [ "$IS_LV" = "1" ]; then
+		verbose "Removing now-unused VDO entry from VDO config."
+		dry "$VDO" remove $VDOCONF --force --verbose --name "$VDONAME"
+	fi
+
 	rm -fr "$TEMPDIR"
 }
 
