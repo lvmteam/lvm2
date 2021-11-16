@@ -1390,6 +1390,16 @@ int get_hints(struct cmd_context *cmd, struct dm_list *hints_out, int *newhints,
 		log_debug("get_hints: needs refresh");
 		free_hints(&hints_list);
 
+		/*
+		 * This is not related to hints, and is probably unnecessary,
+		 * but it could possibly help.  When hints become invalid it's
+		 * usually becaues devs on the system have changed, and that
+		 * also means that a missing devices file entry might be found
+		 * by searching devices again.  (the searched_devnames
+		 * mechanism should eventually be replaced)
+		 */
+		unlink_searched_devnames(cmd);
+
 		if (!_lock_hints(cmd, LOCK_EX, NONBLOCK))
 			return 0;
 

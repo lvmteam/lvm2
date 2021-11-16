@@ -74,6 +74,8 @@ void unlink_searched_devnames(struct cmd_context *cmd)
 
 	if (unlink(_searched_file))
 		log_debug("unlink %s errno %d", _searched_file, errno);
+	else
+		log_debug("unlink %s", _searched_file);
 }
 
 static int _searched_devnames_exists(struct cmd_context *cmd)
@@ -780,7 +782,7 @@ static void _device_ids_update_try(struct cmd_context *cmd)
 
 	/* Defer updates to non-pvscan-cache commands. */
 	if (cmd->pvscan_cache_single) {
-		log_print("pvscan[%d] skip updating devices file.", getpid());
+		log_print("Devices file update skipped."); 
 		return;
 	}
 
@@ -1441,8 +1443,22 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 	const char *idname;
 	int part;
 
-	if (!du->idname || !du->idtype)
+	/*
+	 * The idname will be removed from an entry with devname type when the
+	 * devname is read and found to hold a different PVID than the PVID in
+	 * the entry.  At that point we only have the PVID and no known
+	 * location for it.
+	 */
+	if (!du->idname || !du->idtype) {
+		/*
+		log_debug("Mismatch device_id %s %s %s to %s",
+			  du->idtype ? idtype_to_str(du->idtype) : "idtype_missing",
+			  du->idname ? du->idname : "idname_missing",
+			  du->devname ? du->devname : "devname_missing",
+			  dev_name(dev));
+		*/
 		return 0;
+	}
 
 	/*
 	 * Some idtypes can only match devices with a specific major number,
@@ -1956,6 +1972,14 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 		if ((du->idtype == DEV_ID_TYPE_DEVNAME) && !du->dev && du->pvid)
 			*device_ids_invalid = 1;
 	}
+
+	/*
+	 * When a new devname/pvid mismatch is discovered, a new search for the
+	 * pvid should be permitted (searched_devnames may exist to suppress
+	 * searching for other pvids.)
+	 */
+	if (update_file)
+		unlink_searched_devnames(cmd);
 
 	/* FIXME: for wrong devname cases, wait to write new until device_ids_find_renamed_devs? */
 
