@@ -2031,12 +2031,19 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 	search_auto = !strcmp(cmd->search_for_devnames, "auto");
 
 	dm_list_iterate_items(du, &cmd->use_devices) {
-		if (du->dev)
-			continue;
 		if (!du->pvid)
 			continue;
 		if (du->idtype != DEV_ID_TYPE_DEVNAME)
 			continue;
+
+		/*
+		 * if the old incorrect devname is now a device that's
+		 * filtered and not scanned, e.g. an mpath component,
+		 * then we want to look for the pvid on a new device.
+		 */
+		if (du->dev && !du->dev->filtered_flags)
+			continue;
+
 		if (!(dil = dm_pool_zalloc(cmd->mem, sizeof(*dil))))
 			continue;
 
@@ -2061,6 +2068,11 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 	 * the searched file, so a subsequent lvm command will do the search
 	 * again.  In future perhaps we could add a policy to automatically
 	 * remove a devices file entry that's not been found for some time.
+	 *
+	 * TODO: like the hint file, add a hash of all devnames to the searched
+	 * file so it can be ignored and removed if the devs/hash change.
+	 * If hints are enabled, the hints invalidation could also remove the
+	 * searched file.
 	 */
 	if (_searched_devnames_exists(cmd)) {
 		log_debug("Search for PVIDs skipped for %s", _searched_file);
