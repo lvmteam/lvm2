@@ -57,9 +57,11 @@ dd if="$dev1" of=dev1_backup bs=1M
 
 # pvcreate and pvremove can be forced even if the PV is marked as used
 pvremove -ff -y "$dev1"
+lvmdevices --deldev "$dev1" || true
 dd if=dev1_backup of="$dev1" bs=1M
 pvcreate -ff -y "$dev1"
 dd if=dev1_backup of="$dev1" bs=1M
+lvmdevices --adddev "$dev1" || true
 
 # prepare a VG with $dev1 and $dev both having 1 MDA
 aux enable_dev "$dev2"
@@ -116,9 +118,11 @@ dd if="$dev1" of=dev1_backup bs=1M
 
 # pvcreate and pvremove can be forced even if the PV is marked as used
 pvremove -ff -y "$dev1"
+lvmdevices --deldev "$dev1" || true
 dd if=dev1_backup of="$dev1" bs=1M
 pvcreate -ff -y "$dev1"
 dd if=dev1_backup of="$dev1" bs=1M
+lvmdevices --adddev "$dev1" || true
 
 # prepare a VG with $dev1 and $dev both having 1 MDA
 aux enable_dev "$dev2"
