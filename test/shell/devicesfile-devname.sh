@@ -545,4 +545,73 @@ grep "$PVID2" "$DF" |tee out
 grep "$dev2" out
 not grep "$dev1" out
 
+vgchange -an $vg1
+vgchange -an $vg2
+vgremove -ff $vg1
+vgremove -ff $vg2
+
+# devnames change so the new devname now refers to a filtered device,
+# e.g. an mpath or md component, which is not scanned
+
+wait_md_create() {
+        local md=$1
+
+        while :; do
+                if ! grep "$(basename $md)" /proc/mdstat; then
+                        echo "$md not ready"
+                        cat /proc/mdstat
+                        sleep 2
+                else
+                        break
+                fi
+        done
+        echo "$md" > WAIT_MD_DEV
+}
+
+aux wipefs_a "$dev1"
+aux wipefs_a "$dev2"
+aux wipefs_a "$dev3"
+aux wipefs_a "$dev4"
+
+mddev="/dev/md33"
+not grep $mddev /proc/mdstat || skip
+
+rm "$DF"
+touch "$DF"
+vgcreate $vg1 "$dev1" "$dev2"
+cat "$DF"
+cp "$DF" "$ORIG"
+
+# PVID with dashes for matching pvs -o+uuid output
+OPVID1=`pvs "$dev1" --noheading -o uuid | awk '{print $1}'`
+OPVID2=`pvs "$dev2" --noheading -o uuid | awk '{print $1}'`
+
+# PVID without dashes for matching devices file fields
+PVID1=`pvs "$dev1" --noheading -o uuid | tr -d - | awk '{print $1}'`
+PVID2=`pvs "$dev2" --noheading -o uuid | tr -d - | awk '{print $1}'`
+
+mdadm --create --metadata=1.0 "$mddev" --level 1 --chunk=64 --raid-devices=2 "$dev3" "$dev4"
+wait_md_create "$mddev"
+
+sed -e "s|DEVNAME=$dev1|DEVNAME=$dev3|" "$ORIG" > tmp1.devices
+sed -e "s|IDNAME=$dev1|IDNAME=$dev3|" tmp1.devices > "$DF"
+cat "$DF"
+pvs -o+uuid |tee out
+grep "$dev1" out
+grep "$dev2" out
+grep "$OPVID1" out
+grep "$OPVID2" out
+not grep "$dev3" out
+not grep "$dev4" out
+
+grep "$dev1" "$DF"
+grep "$dev2" "$DF"
+grep "$PVID1" "$DF"
+grep "$PVID2" "$DF"
+not grep "$dev3" "$DF"
+not grep "$dev4" "$DF"
+
+mdadm --stop "$mddev"
+aux udev_wait
+
 vgremove -ff $vg1
