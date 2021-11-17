@@ -1359,10 +1359,10 @@ OO: --aligned, --all, --binary, --colon, --columns,
 --configreport ConfigReport, --foreign, --history, --ignorelockingfailure,
 --logonly, --maps, --noheadings,
 --nosuffix, --options String, --sort String, --readonly,
---reportformat ReportFmt, --segments, --select String, --separator String,
+--segments, --select String, --separator String,
 --shared, --unbuffered, --units Units
 OP: VG|LV|Tag ...
-IO: --partial, --ignoreskippedcluster
+IO: --partial, --ignoreskippedcluster, --reportformat ReportFmt
 ID: lvdisplay_general
 
 ---
@@ -1590,10 +1590,10 @@ pvdisplay
 OO: --aligned, --all, --binary, --colon, --columns, --configreport ConfigReport,
 --foreign, --ignorelockingfailure,
 --logonly, --maps, --noheadings, --nosuffix, --options String,
---readonly, --reportformat ReportFmt, --select String, --separator String, --shared,
+--readonly, --select String, --separator String, --shared,
 --short, --sort String, --unbuffered, --units Units
 OP: PV|Tag ...
-IO: --ignoreskippedcluster
+IO: --ignoreskippedcluster, --reportformat ReportFmt
 ID: pvdisplay_general
 
 ---
@@ -1811,10 +1811,10 @@ vgdisplay
 OO: --activevolumegroups, --aligned, --binary, --colon, --columns,
 --configreport ConfigReport, --foreign, --ignorelockingfailure,
 --logonly, --noheadings, --nosuffix,
---options String, --readonly, --reportformat ReportFmt, --select String,
+--options String, --readonly, --select String,
 --shared, --short, --separator String, --sort String, --unbuffered, --units Units
 OP: VG|Tag ...
-IO: --partial, --ignoreskippedcluster
+IO: --partial, --ignoreskippedcluster, --reportformat ReportFmt
 ID: vgdisplay_general
 
 ---
