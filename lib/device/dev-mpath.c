@@ -482,3 +482,74 @@ found:
 	return 1;
 }
 
+const char *dev_mpath_component_wwid(struct cmd_context *cmd, struct device *dev)
+{
+	char slaves_path[PATH_MAX];
+	char wwid_path[PATH_MAX];
+	char sysbuf[PATH_MAX] = { 0 };
+	char *slave_name;
+	const char *wwid = NULL;
+	struct stat info;
+	DIR *dr;
+	struct dirent *de;
+
+	/* /sys/dev/block/253:7/slaves/sda/device/wwid */
+
+	if (dm_snprintf(slaves_path, sizeof(slaves_path), "%s/dev/block/%d:%d/slaves",
+			dm_sysfs_dir(), (int)MAJOR(dev->dev), (int)MINOR(dev->dev)) < 0) {
+		log_warn("Sysfs path to check mpath components is too long.");
+		return NULL;
+	}
+
+	if (stat(slaves_path, &info))
+		return NULL;
+
+	if (!S_ISDIR(info.st_mode)) {
+		log_warn("Path %s is not a directory.", slaves_path);
+		return NULL;
+	}
+
+	/* Get wwid from first component */
+
+	if (!(dr = opendir(slaves_path))) {
+		log_debug("Device %s has no slaves dir", dev_name(dev));
+		return NULL;
+	}
+
+	while ((de = readdir(dr))) {
+		if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
+			continue;
+
+		/* slave_name "sda" */
+		slave_name = de->d_name;
+
+		/* read /sys/block/sda/device/wwid */
+
+		if (dm_snprintf(wwid_path, sizeof(wwid_path), "%s/block/%s/device/wwid",
+       				dm_sysfs_dir(), slave_name) < 0) {
+			log_warn("Failed to create sysfs wwid path for %s", slave_name);
+			continue;
+		}
+
+		get_sysfs_value(wwid_path, sysbuf, sizeof(sysbuf), 0);
+		if (!sysbuf[0])
+			continue;
+
+		if (strstr(sysbuf, "scsi_debug")) {
+			int i;
+			for (i = 0; i < strlen(sysbuf); i++) {
+				if (sysbuf[i] == ' ')
+					sysbuf[i] = '_';
+			}
+		}
+
+		if ((wwid = dm_pool_strdup(cmd->mem, sysbuf)))
+			break;
+	}
+	if (closedir(dr))
+		stack;
+
+	return wwid;
+}
+
+

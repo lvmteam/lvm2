@@ -63,6 +63,8 @@ int dev_is_swap(struct cmd_context *cmd, struct device *dev, uint64_t *signature
 int dev_is_luks(struct cmd_context *cmd, struct device *dev, uint64_t *signature, int full);
 int dasd_is_cdl_formatted(struct device *dev);
 
+const char *dev_mpath_component_wwid(struct cmd_context *cmd, struct device *dev);
+
 int dev_is_lvm1(struct device *dev, char *buf, int buflen);
 int dev_is_pool(struct device *dev, char *buf, int buflen);
 

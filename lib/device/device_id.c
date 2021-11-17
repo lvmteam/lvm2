@@ -243,7 +243,7 @@ static int _dm_uuid_has_prefix(char *sysbuf, const char *prefix)
 }
 
 /* the dm uuid uses the wwid of the underlying dev */
-static int _dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, const char **idname_out)
+int dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, const char **idname_out)
 {
 	char sysbuf[PATH_MAX] = { 0 };
 	const char *idname;
@@ -988,7 +988,7 @@ int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid_
 	}
 
 	if (MAJOR(dev->dev) == cmd->dev_types->device_mapper_major) {
-		if (_dev_has_mpath_uuid(cmd, dev, &idname)) {
+		if (dev_has_mpath_uuid(cmd, dev, &idname)) {
 			idtype = DEV_ID_TYPE_MPATH_UUID;
 			goto id_done;
 		}
