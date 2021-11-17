@@ -3058,6 +3058,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	int i;
 	int skip_hyphens;
 	int refresh_done = 0;
+	int io;
 
 	/* Avoid excessive access to /etc/localtime and set TZ variable for glibc
 	 * so it does not need to check /etc/localtime everytime that needs that info */
@@ -3139,6 +3140,20 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!(cmd->command = _find_command(cmd, cmd->name, &argc, argv)))
 		return EINVALID_CMD_LINE;
+
+	/*
+	 * If option --foo is set which is listed in IO (ignore option) in
+	 * command-lines.in, then unset foo.  Commands won't usually use an
+	 * ignored option, but there can be shared code that checks for --foo,
+	 * and should not find it to be set.
+	 */
+	for (io = 0; io < cmd->command->io_count; io++) {
+		int opt = cmd->command->ignore_opt_args[io].opt;
+		if (arg_is_set(cmd, opt)) {
+			log_debug("Ignore opt %d", opt);
+			cmd->opt_arg_values[opt].count = 0;
+		}
+	}
 
 	/*
 	 * Remaining position args after command name and --options are removed.
