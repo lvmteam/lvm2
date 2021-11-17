@@ -56,4 +56,6 @@ void unlink_searched_devnames(struct cmd_context *cmd);
 
 int read_sys_block(struct cmd_context *cmd, struct device *dev, const char *suffix, char *sysbuf, int sysbufsize);
 
+int dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, const char **idname_out);
+
 #endif

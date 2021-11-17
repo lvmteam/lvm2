@@ -243,7 +243,7 @@ static int _dm_uuid_has_prefix(char *sysbuf, const char *prefix)
 }
 
 /* the dm uuid uses the wwid of the underlying dev */
-static int _dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, const char **idname_out)
+int dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, const char **idname_out)
 {
 	char sysbuf[PATH_MAX] = { 0 };
 	const char *idname;
@@ -312,8 +312,13 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 			read_sys_block(cmd, dev, "wwid", sysbuf, sizeof(sysbuf));
 
 		/* scsi_debug wwid begins "t10.Linux   scsi_debug ..." */
-		if (strstr(sysbuf, "scsi_debug"))
-			sysbuf[0] = '\0';
+		if (strstr(sysbuf, "scsi_debug")) {
+                        int i;
+                        for (i = 0; i < strlen(sysbuf); i++) {
+                                if (sysbuf[i] == ' ')
+                                        sysbuf[i] = '_';
+                        }
+		}
 
 		/* qemu wwid begins "t10.ATA     QEMU HARDDISK ..." */
 		if (strstr(sysbuf, "QEMU HARDDISK"))
@@ -982,7 +987,7 @@ int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid_
 	}
 
 	if (MAJOR(dev->dev) == cmd->dev_types->device_mapper_major) {
-		if (_dev_has_mpath_uuid(cmd, dev, &idname)) {
+		if (dev_has_mpath_uuid(cmd, dev, &idname)) {
 			idtype = DEV_ID_TYPE_MPATH_UUID;
 			goto id_done;
 		}

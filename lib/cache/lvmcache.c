@@ -635,6 +635,102 @@ static void _warn_unused_duplicates(struct cmd_context *cmd)
 	}
 }
 
+static int _all_multipath_components(struct cmd_context *cmd, struct lvmcache_info *info, const char *pvid,
+				     struct dm_list *altdevs, struct device **dev_mpath)
+{
+	struct device_list *devl;
+	struct device *dev_mp = NULL;
+	struct device *dev1 = NULL;
+	struct device *dev;
+	const char *wwid1 = NULL;
+	const char *wwid;
+	int diff_wwid = 0;
+	int same_wwid = 0;
+	int dev_is_mp;
+
+	*dev_mpath = NULL;
+
+	/* This function only makes sense with more than one dev. */
+	if ((info && dm_list_empty(altdevs)) || (!info && (dm_list_size(altdevs) == 1))) {
+		log_debug("Skip multipath component checks with single device for PVID %s", pvid);
+		return 0;
+	}
+
+	log_debug("Checking for multipath components for duplicate PVID %s", pvid);
+
+	if (info) {
+		dev = info->dev;
+		dev_is_mp = (cmd->dev_types->device_mapper_major == MAJOR(dev->dev)) && dev_has_mpath_uuid(cmd, dev, NULL);
+
+		if (dev_is_mp) {
+			if ((wwid1 = dev_mpath_component_wwid(cmd, dev))) {
+				dev_mp = dev;
+				dev1 = dev;
+			}
+		} else {
+			if ((wwid1 = device_id_system_read(cmd, dev, DEV_ID_TYPE_SYS_WWID)))
+				dev1 = dev;
+		}
+	}
+
+	dm_list_iterate_items(devl, altdevs) {
+		dev = devl->dev;
+		dev_is_mp = (cmd->dev_types->device_mapper_major == MAJOR(dev->dev)) && dev_has_mpath_uuid(cmd, dev, NULL);
+
+		if (dev_is_mp)
+			wwid = dev_mpath_component_wwid(cmd, dev);
+		else
+			wwid = device_id_system_read(cmd, dev, DEV_ID_TYPE_SYS_WWID);
+
+		if (!wwid && wwid1) {
+			log_print("Different wwids for duplicate PVs %s %s %s none",
+				  dev_name(dev1), wwid1, dev_name(dev));
+			diff_wwid++;
+			continue;
+		}
+
+		if (!wwid)
+			continue;
+
+		if (!wwid1) {
+			wwid1 = wwid;
+			dev1 = dev;
+			continue;
+		}
+
+		/* Different wwids indicates these are not multipath components. */
+		if (strcmp(wwid1, wwid)) {
+			log_print("Different wwids for duplicate PVs %s %s %s %s",
+				  dev_name(dev1), wwid1, dev_name(dev), wwid);
+			diff_wwid++;
+			continue;
+		}
+
+		/* Different mpath devs with the same wwid shouldn't happen. */
+		if (dev_is_mp && dev_mp) {
+			log_print("Found multiple multipath devices for PVID %s WWID %s: %s %s",
+				   pvid, wwid1, dev_name(dev_mp), dev_name(dev));
+			continue;
+		}
+
+		log_debug("Same wwids for duplicate PVs %s %s", dev_name(dev1), dev_name(dev));
+		same_wwid++;
+
+		/* Save the mpath device so it can be used as the PV. */
+		if (dev_is_mp)
+			dev_mp = dev;
+	}
+
+	if (diff_wwid || !same_wwid)
+		return 0;
+
+	if (dev_mp)
+		log_debug("Found multipath device %s for PVID %s WWID %s.", dev_name(dev_mp), pvid, wwid1);
+
+	*dev_mpath = dev_mp;
+	return 1;
+}
+
 /*
  * If we've found devices with the same PVID, decide which one
  * to use.
@@ -690,6 +786,8 @@ static void _choose_duplicates(struct cmd_context *cmd,
 	struct device_list *devl, *devl_safe, *devl_add, *devl_del;
 	struct lvmcache_info *info;
 	struct device *dev1, *dev2;
+	struct device *dev_mpath;
+	struct device *dev_drop;
 	const char *device_id = NULL, *device_id_type = NULL;
 	const char *idname1 = NULL, *idname2 = NULL;
 	uint32_t dev1_major, dev1_minor, dev2_major, dev2_minor;
@@ -712,6 +810,7 @@ static void _choose_duplicates(struct cmd_context *cmd,
 next:
 	dm_list_init(&altdevs);
 	pvid = NULL;
+	dev_mpath = NULL;
 
 	dm_list_iterate_items_safe(devl, devl_safe, &_initial_duplicates) {
 		if (!pvid) {
@@ -730,30 +829,103 @@ next:
 		return;
 	}
 
+	info = lvmcache_info_from_pvid(pvid, NULL, 0);
+
 	/*
-	 * Get rid of any md components before comparing alternatives.
-	 * (Since an md component can never be used, it's not an
-	 * option to use like other kinds of alternatives.)
+	 * Usually and ideally, components of md and multipath devs should have
+	 * been excluded by filters, and not scanned for a PV.  In some unusual
+	 * cases the components can get through the filters, and a PV can be
+	 * found on them.  Detecting the same PVID on both the component and
+	 * the md/mpath device gives us a last chance to drop the component.
+	 * An md/mpath component device is completely ignored, as if it had
+	 * been filtered, and not kept in the list unused duplicates.
 	 */
 
-	info = lvmcache_info_from_pvid(pvid, NULL, 0);
+	/*
+	 * Get rid of multipath components based on matching wwids.
+	 */
+	if (_all_multipath_components(cmd, info, pvid, &altdevs, &dev_mpath)) {
+		if (info && dev_mpath && (info->dev != dev_mpath)) {
+			/*
+			 * info should be dropped from lvmcache and info->dev
+			 * should be treated as if it had been excluded by a filter.
+			 * dev_mpath should be added to lvmcache by the caller.
+			 */
+			dev_drop = info->dev;
+
+			/* Have caller add dev_mpath to lvmcache. */
+			log_debug("Using multipath device %s for PVID %s.", dev_name(dev_mpath), pvid);
+			if ((devl_add = zalloc(sizeof(*devl_add)))) {
+				devl_add->dev = dev_mpath;
+				dm_list_add(add_cache_devs, &devl_add->list);
+			}
+
+			/* Remove dev_mpath from altdevs. */
+			if ((devl = _get_devl_in_device_list(dev_mpath, &altdevs)))
+				dm_list_del(&devl->list);
+
+			/* Remove info from lvmcache that came from the component dev. */
+			log_debug("Ignoring multipath component %s with PVID %s (dropping info)", dev_name(dev_drop), pvid);
+			lvmcache_del(info);
+			info = NULL;
+
+			/* Make the component dev look like it was filtered. */
+			cmd->filter->wipe(cmd, cmd->filter, dev_drop, NULL);
+			dev_drop->flags &= ~DEV_SCAN_FOUND_LABEL;
+		}
+
+		if (info && !dev_mpath) {
+			/*
+			 * Only mpath component devs were found and no actual
+			 * multipath dev, so drop the component from lvmcache.
+			 */
+			dev_drop = info->dev;
+
+			log_debug("Ignoring multipath component %s with PVID %s (dropping info)", dev_name(dev_drop), pvid);
+			lvmcache_del(info);
+			info = NULL;
+
+			/* Make the component dev look like it was filtered. */
+			cmd->filter->wipe(cmd, cmd->filter, dev_drop, NULL);
+			dev_drop->flags &= ~DEV_SCAN_FOUND_LABEL;
+		}
+
+		dm_list_iterate_items_safe(devl, devl_safe, &altdevs) {
+			/*
+			 * The altdevs are all mpath components that should look
+			 * like they were filtered, they are not in lvmcache.
+			 */
+			dev_drop = devl->dev;
+
+			log_debug("Ignoring multipath component %s with PVID %s (dropping duplicate)", dev_name(dev_drop), pvid);
+			dm_list_del(&devl->list);
+
+			cmd->filter->wipe(cmd, cmd->filter, dev_drop, NULL);
+			dev_drop->flags &= ~DEV_SCAN_FOUND_LABEL;
+		}
+		goto next;
+	}
+
+	/*
+	 * Get rid of any md components.
+	 * FIXME: use a function like _all_multipath_components to pick the actual md device.
+	 */
 	if (info && dev_is_md_component(cmd, info->dev, NULL, 1)) {
 		/* does not go in del_cache_devs which become unused_duplicates */
-		log_debug_cache("PV %s drop MD component from scan selection %s", pvid, dev_name(info->dev));
+		log_debug("Ignoring md component %s with PVID %s (dropping info)", dev_name(info->dev), pvid);
 		lvmcache_del(info);
 		info = NULL;
 	}
 
 	dm_list_iterate_items_safe(devl, devl_safe, &altdevs) {
 		if (dev_is_md_component(cmd, devl->dev, NULL, 1)) {
-			log_debug_cache("PV %s drop MD component from scan duplicates %s", pvid, dev_name(devl->dev));
+			log_debug("Ignoring md component %s with PVID %s (dropping duplicate)", dev_name(devl->dev), pvid);
 			dm_list_del(&devl->list);
 		}
 	}
 
 	if (dm_list_empty(&altdevs))
 		goto next;
-
 
 	/*
 	 * Find the device for the pvid that's currently in lvmcache.
