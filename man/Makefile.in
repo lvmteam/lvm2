@@ -33,7 +33,7 @@ CMIRRORDMAN = cmirrord.8
 LVMDBUSDMAN = lvmdbusd.8
 
 MAN5=lvm.conf.5
-MAN7=lvmsystemid.7 lvmreport.7 lvmraid.7
+MAN7=lvmsystemid.7 lvmreport.7 lvmraid.7 lvmautoactivation.7
 
 MAN8=lvm.8 lvmdump.8 lvm-fullreport.8 lvm-lvpoll.8 \
      lvcreate.8 lvchange.8 lvmconfig.8 lvconvert.8 lvdisplay.8 \
