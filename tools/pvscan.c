@@ -816,6 +816,45 @@ out:
 	return ret;
 }
 
+/*
+ * The optimization in which only the pvscan arg devname is added to dev-cache
+ * does not work if there's an lvm.conf filter containing symlinks to the dev
+ * like /dev/disk/by-id/lvm-pv-uuid-xyz entries.  A full dev_cache_scan will
+ * associate the symlinks with the system dev name passed to pvscan, which lets
+ * filter-regex match the devname with the symlink name in the filter.
+ */
+static int _filter_uses_symlinks(struct cmd_context *cmd, int filter_cfg)
+{
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
+
+	if ((cn = find_config_tree_array(cmd, filter_cfg, NULL))) {
+        	for (cv = cn->v; cv; cv = cv->next) {
+			if (cv->type != DM_CFG_STRING)
+				continue;
+			if (!cv->v.str)
+				continue;
+
+			if (!strncmp(cv->v.str, "/dev/disk/", 10))
+				return 1;
+			if (!strncmp(cv->v.str, "/dev/mapper/", 12))
+				return 1;
+			if (cv->v.str[0] == '/')
+				continue;
+
+			/* In case /dev/disk/by was omitted */
+			if (strstr(cv->v.str, "lvm-pv-uuid"))
+				return 1;
+			if (strstr(cv->v.str, "dm-uuid"))
+				return 1;
+			if (strstr(cv->v.str, "wwn-"))
+				return 1;
+		}
+	}
+
+	return 0;
+}
+
 struct pvscan_arg {
 	struct dm_list list;
 	const char *devname;
@@ -879,6 +918,30 @@ static int _get_args_devs(struct cmd_context *cmd, struct dm_list *pvscan_args,
 {
 	struct pvscan_arg *arg;
 	struct device_list *devl;
+
+	/*
+	 * If no devices file is used, and lvm.conf filter is set to
+	 * accept /dev/disk/by-id/lvm-pv-uuid-xyz or another symlink,
+	 * but pvscan --cache is passed devname or major:minor, so
+	 * pvscan needs to match its arg device to the filter symlink.
+	 * setup_dev_in_dev_cache() adds /dev/sda2 to dev-cache which
+	 * does not match a symlink to /dev/sda2, so we need a full
+	 * dev_cache_scan that will associate all symlinks to sda2,
+	 * which allows filter-regex to work.  This case could be
+	 * optimized if needed by adding dev-cache entries for each
+	 * filter "a" entry (filter symlink patterns would still need
+	 * a full dev_cache_scan.)
+	 * (When no devices file is used and 69-dm-lvm.rules is
+	 * used which calls pvscan directly, symlinks may not
+	 * have been created by other rules when pvscan runs, so
+	 * the full dev_cache_scan may still not find them.)
+	 */
+	if (!cmd->enable_devices_file && !cmd->enable_devices_list &&
+	    (_filter_uses_symlinks(cmd, devices_filter_CFG) ||
+	     _filter_uses_symlinks(cmd, devices_global_filter_CFG))) {
+		log_print_pvscan(cmd, "finding all devices for filter symlinks.");
+		dev_cache_scan(cmd);
+	}
 
 	/* pass NULL filter when getting devs from dev-cache, filtering is done separately */
 

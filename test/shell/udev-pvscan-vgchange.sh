@@ -381,8 +381,13 @@ BDEVMD=$(basename "$mddev")
 lvcreate -l1 -an -n $lv1 $vg9
 lvcreate -l1 -an -n $lv2 $vg9
 
+mdadm --stop "$mddev"
+systemctl stop lvm-activate-$vg9 || true
 _clear_online_files
+mdadm --assemble "$mddev" "$dev1" "$dev2"
 
+# this trigger might be redundant because the mdadm --assemble
+# probably triggers an add uevent
 udevadm trigger --settle -c add /sys/block/$BDEVMD
 
 wait_lvm_activate $vg9
@@ -409,4 +414,52 @@ systemctl stop lvm-activate-$vg6
 systemctl stop lvm-activate-$vg7
 systemctl stop lvm-activate-$vg8
 systemctl stop lvm-activate-$vg9
+
+
+# no devices file, filter with symlink of PV
+# the pvscan needs to look at all dev names to
+# match the symlink in the filter with the
+# dev name (or major minor) passed to pvscan.
+# This test doesn't really belong in this file
+# because it's not testing lvm-activate.
+
+aux lvmconf 'devices/use_devicesfile = 0'
+_clear_online_files
+rm "$DF"
+vgcreate $vg10 "$dev1"
+lvcreate -l1 -an -n $lv1 $vg10 "$dev1"
+
+PVID1=$(pvs "$dev1" --noheading -o uuid | tr -d - | awk '{print $1}')
+# PVID with dashes
+OPVID1=`pvs "$dev1" --noheading -o uuid | awk '{print $1}'`
+
+udevadm trigger --settle -c add /sys/block/$BDEV1
+
+# uevent from the trigger should create this symlink
+ls /dev/disk/by-id/lvm-pv-uuid-$OPVID1
+
+vgchange -an $vg10
+systemctl stop lvm-activate-$vg10
+_clear_online_files
+
+aux lvmconf "devices/filter = [ \"a|/dev/disk/by-id/lvm-pv-uuid-$OPVID1|\", \"r|.*|\" ]"
+aux lvmconf 'devices/global_filter = [ "a|.*|" ]'
+
+pvscan --cache -aay "$dev1"
+
+check lv_field $vg10/$lv1 lv_active "active"
+
+vgchange -an $vg10
+_clear_online_files
+
+aux lvmconf 'devices/filter = [ "a|lvm-pv-uuid|", "r|.*|" ]'
+aux lvmconf 'devices/global_filter = [ "a|.*|" ]'
+
+pvscan --cache -aay "$dev1"
+
+check lv_field $vg10/$lv1 lv_active "active"
+
+vgchange -an $vg10
+vgremove -y $vg10
+wipe_all
 
