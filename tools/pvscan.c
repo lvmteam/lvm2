@@ -564,7 +564,8 @@ static int _get_devs_from_saved_vg(struct cmd_context *cmd, const char *vgname,
 		name1 = dev_name(dev);
 		name2 = pvl->pv->device_hint;
 
-		if (strcmp(name1, name2)) {
+		/* Probably pointless since dev is from online file which was already checked. */
+		if (!strncmp(name2, "/dev/md", 7) && strncmp(name1, "/dev/md", 7)) {
 			if (!id_write_format((const struct id *)pvid, uuidstr, sizeof(uuidstr)))
 				uuidstr[0] = '\0';
 			log_print_pvscan(cmd, "PVID %s read from %s last written to %s.", uuidstr, name1, name2);
@@ -1119,7 +1120,7 @@ static int _online_devs(struct cmd_context *cmd, int do_all, struct dm_list *pvs
 		do_full_check = 0;
 
 		/* If use_full_md_check is set then this has already been done by filter. */
-		if (!cmd->use_full_md_check) {
+		if (!cmd->use_full_md_check && (cmd->dev_types->md_major != MAJOR(dev->dev))) {
 			if (devsize && (pv->size != devsize))
 				do_full_check = 1;
 			if (pv->device_hint && !strncmp(pv->device_hint, "/dev/md", 7))
