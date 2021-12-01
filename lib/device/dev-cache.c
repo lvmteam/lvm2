@@ -2102,7 +2102,7 @@ int setup_devices_for_online_autoactivation(struct cmd_context *cmd)
 static char *_get_devname_from_devno(struct cmd_context *cmd, dev_t devno)
 {
 	char path[PATH_MAX];
-	char devname[PATH_MAX];
+	char devname[PATH_MAX] = { 0 };
 	char namebuf[NAME_LEN];
 	char line[1024];
 	int major = MAJOR(devno);
@@ -2113,6 +2113,9 @@ static char *_get_devname_from_devno(struct cmd_context *cmd, dev_t devno)
 	DIR *dir;
 	struct dirent *dirent;
 	FILE *fp;
+
+	if (!devno)
+		return NULL;
 
 	/*
 	 * $ ls /sys/dev/block/8:0/device/block/
@@ -2251,6 +2254,8 @@ struct device *setup_dev_in_dev_cache(struct cmd_context *cmd, dev_t devno, cons
 	if (devname) {
 		if (stat(devname, &buf) < 0) {
 			log_error("Cannot access device %s for %d:%d.", devname, major, minor);
+			if (!devno)
+				return_NULL;
 			if (!(devname = _get_devname_from_devno(cmd, devno))) {
 				log_error("No device name found from %d:%d.", major, minor);
 				return_NULL;
