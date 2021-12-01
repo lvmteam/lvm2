@@ -828,6 +828,7 @@ static int _filter_uses_symlinks(struct cmd_context *cmd, int filter_cfg)
 {
 	const struct dm_config_node *cn;
 	const struct dm_config_value *cv;
+	const char *fname;
 
 	if ((cn = find_config_tree_array(cmd, filter_cfg, NULL))) {
         	for (cv = cn->v; cv; cv = cv->next) {
@@ -836,19 +837,22 @@ static int _filter_uses_symlinks(struct cmd_context *cmd, int filter_cfg)
 			if (!cv->v.str)
 				continue;
 
-			if (!strncmp(cv->v.str, "/dev/disk/", 10))
-				return 1;
-			if (!strncmp(cv->v.str, "/dev/mapper/", 12))
-				return 1;
-			if (cv->v.str[0] == '/')
+			fname = cv->v.str;
+
+			if (fname[0] != 'a')
 				continue;
 
+			if (strstr(fname, "/dev/disk/"))
+				return 1;
+			if (strstr(fname, "/dev/mapper/"))
+				return 1;
+
 			/* In case /dev/disk/by was omitted */
-			if (strstr(cv->v.str, "lvm-pv-uuid"))
+			if (strstr(fname, "lvm-pv-uuid"))
 				return 1;
-			if (strstr(cv->v.str, "dm-uuid"))
+			if (strstr(fname, "dm-uuid"))
 				return 1;
-			if (strstr(cv->v.str, "wwn-"))
+			if (strstr(fname, "wwn-"))
 				return 1;
 		}
 	}
