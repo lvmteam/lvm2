@@ -673,6 +673,9 @@ int device_ids_write(struct cmd_context *cmd)
 		cmd->enable_devices_file = 1;
 	}
 
+	if (test_mode())
+		return 1;
+
 	if (_devices_file_version[0]) {
 		if (sscanf(_devices_file_version, "%u.%u.%u", &df_major, &df_minor, &df_counter) != 3) {
 			/* don't update a file we can't parse */
