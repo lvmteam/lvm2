@@ -892,6 +892,7 @@ uint32_t log_journal_str_to_val(const char *str)
 		return LOG_JOURNAL_OUTPUT;
 	if (!strcasecmp(str, "debug"))
 		return LOG_JOURNAL_DEBUG;
+	log_warn("Ignoring unrecognized journal value.");
 	return 0;
 }
 
