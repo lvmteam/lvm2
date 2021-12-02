@@ -304,6 +304,7 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 {
 	char sysbuf[PATH_MAX] = { 0 };
 	const char *idname = NULL;
+	int i;
 
 	if (idtype == DEV_ID_TYPE_SYS_WWID) {
 		read_sys_block(cmd, dev, "device/wwid", sysbuf, sizeof(sysbuf));
@@ -311,18 +312,10 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 		if (!sysbuf[0])
 			read_sys_block(cmd, dev, "wwid", sysbuf, sizeof(sysbuf));
 
-		/* scsi_debug wwid begins "t10.Linux   scsi_debug ..." */
-		if (strstr(sysbuf, "scsi_debug")) {
-                        int i;
-                        for (i = 0; i < strlen(sysbuf); i++) {
-                                if (sysbuf[i] == ' ')
-                                        sysbuf[i] = '_';
-                        }
-		}
-
 		/* qemu wwid begins "t10.ATA     QEMU HARDDISK ..." */
 		if (strstr(sysbuf, "QEMU HARDDISK"))
 			sysbuf[0] = '\0';
+
 	}
 
 	else if (idtype == DEV_ID_TYPE_SYS_SERIAL)
@@ -358,6 +351,11 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 		if (!(idname = strdup(dev_name(dev))))
 			goto_bad;
 		return idname;
+	}
+
+	for (i = 0; i < strlen(sysbuf); i++) {
+		if (isblank(sysbuf[i]) || isspace(sysbuf[i]) || iscntrl(sysbuf[i]))
+			sysbuf[i] = '_';
 	}
 
 	if (!sysbuf[0])
