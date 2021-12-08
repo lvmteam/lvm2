@@ -486,12 +486,20 @@ int library_version(char *version, size_t size)
 
 int driver_version(char *version, size_t size)
 {
+	static char _vsn[80] = { 0 };
+
 	if (!activation())
 		return 0;
 
 	log_very_verbose("Getting driver version");
 
-	return dm_driver_version(version, size);
+	if (!_vsn[0] &&
+	    !dm_driver_version(_vsn, sizeof(_vsn)))
+		return_0;
+
+	(void) dm_strncpy(version, _vsn, size);
+
+	return 1;
 }
 
 int target_version(const char *target_name, uint32_t *maj,
