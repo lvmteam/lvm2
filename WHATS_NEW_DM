@@ -1,5 +1,6 @@
 Version 1.02.183 - 
 ====================================
+  Unmangle UUIDs for DM_DEVICE_LIST ioctl.
 
 Version 1.02.181 - 20th October 2021
 ====================================
