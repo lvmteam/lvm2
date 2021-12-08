@@ -616,8 +616,7 @@ int dm_check_version(void)
 int dm_cookie_supported(void)
 {
 	return (dm_check_version() &&
-		_dm_version >= 4 &&
-		_dm_version_minor >= 15);
+		((_dm_version == 4) ? _dm_version_minor >= 15 : _dm_version > 4));
 }
 
 static int _dm_inactive_supported(void)
@@ -1441,8 +1440,7 @@ static int _udev_complete(struct dm_task *dmt)
 static int _check_uevent_generated(struct dm_ioctl *dmi)
 {
 	if (!dm_check_version() ||
-	    _dm_version < 4 ||
-	    _dm_version_minor < 17)
+	    ((_dm_version == 4) ? _dm_version_minor < 17 : _dm_version < 4))
 		/* can't check, assume uevent is generated */
 		return 1;
 
