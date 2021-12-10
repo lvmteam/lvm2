@@ -2041,8 +2041,6 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	_destroy_segtypes(&cmd->segtypes);
 	_destroy_formats(cmd, &cmd->formats);
 	_destroy_filters(cmd);
-	if (cmd->mem)
-		dm_pool_destroy(cmd->mem);
 	devices_file_exit(cmd);
 	dev_cache_exit();
 	_destroy_dev_types(cmd);
@@ -2050,16 +2048,10 @@ void destroy_toolcontext(struct cmd_context *cmd)
 
 	if ((cft_cmdline = remove_config_tree_by_source(cmd, CONFIG_STRING)))
 		config_destroy(cft_cmdline);
-	_destroy_config(cmd);
 
 	if (cmd->cft_def_hash)
 		dm_hash_destroy(cmd->cft_def_hash);
 
-	if (cmd->libmem)
-		dm_pool_destroy(cmd->libmem);
-
-	if (cmd->pending_delete_mem)
-		dm_pool_destroy(cmd->pending_delete_mem);
 #ifndef VALGRIND_POOL
 	if (cmd->linebuffer) {
 		/* Reset stream buffering to defaults */
@@ -2084,7 +2076,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 		free(cmd->linebuffer);
 	}
 #endif
-	free(cmd);
+	destroy_config_context(cmd);
 
 	lvmpolld_disconnect();
 
