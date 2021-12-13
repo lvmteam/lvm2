@@ -43,6 +43,7 @@ static const dev_known_type_t _dev_known_types[] = {
 	{"ubd", 16, "User-mode virtual block device"},
 	{"ataraid", 16, "ATA Raid"},
 	{"drbd", 16, "Distributed Replicated Block Device (DRBD)"},
+	{"rbd", 16, "Ceph rados object as a Linux block device"},
 	{"emcpower", 16, "EMC Powerpath"},
 	{"power2", 16, "EMC Powerpath"},
 	{"i2o_block", 16, "i2o Block Disk"},
