@@ -824,12 +824,16 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	autobackup_ARG,\
 	available_ARG,\
 	contiguous_ARG,\
+	devices_ARG,\
+	devicesfile_ARG,\
 	ignoreactivationskip_ARG,\
 	ignoremonitoring_ARG,\
+	journal_ARG,\
 	metadataprofile_ARG,\
 	monitor_ARG,\
 	mirrors_ARG,\
 	name_ARG,\
+	nohints_ARG,\
 	noudevsync_ARG,\
 	permission_ARG,\
 	persistent_ARG,\
