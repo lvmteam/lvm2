@@ -107,7 +107,7 @@ vgchange -aay --autoactivation event <vgname>
 .
 .IP \[bu] 2
 the activation command output can be seen from
-systemctl status lvm-activate-<vgname>
+journalctl -u lvm-activate-<vgname>
 .P
 .
 .SS pvscan options
