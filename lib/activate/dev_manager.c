@@ -138,8 +138,16 @@ static struct dm_task *_setup_task_run(int task, struct dm_info *info,
 	if (!with_flush && !dm_task_no_flush(dmt))
 		log_warn("WARNING: Failed to set no_flush.");
 
-	if (task == DM_DEVICE_TARGET_MSG)
+	switch (task) {
+	case DM_DEVICE_TARGET_MSG:
 		return dmt; /* TARGET_MSG needs more local tweaking before task_run() */
+	case DM_DEVICE_LIST:
+		if (!dm_task_set_newuuid(dmt, " ")) // new uuid has no meaning here
+			log_warn("WARNING: Failed to query uuid with LIST.");
+		break;
+	default:
+		break;
+	}
 
 	if (!dm_task_run(dmt))
 		goto_out;
@@ -917,6 +925,25 @@ int dev_manager_check_prefix_dm_major_minor(uint32_t major, uint32_t minor, cons
 	if (!(uuid = dm_task_get_uuid(dmt)) || strncasecmp(uuid, prefix, strlen(prefix)))
 		r = 0;
 
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
+int dev_manager_get_device_list(const char *prefix, struct dm_list **devs, unsigned *devs_features)
+{
+	struct dm_task *dmt;
+	int r = 1;
+
+	if (!(dmt = _setup_task_run(DM_DEVICE_LIST, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0)))
+		return_0;
+
+	if (!dm_task_get_device_list(dmt, devs, devs_features)) {
+		r = 0;
+		goto_out;
+	}
+
+    out:
 	dm_task_destroy(dmt);
 
 	return r;

@@ -624,6 +624,15 @@ int target_present(struct cmd_context *cmd, const char *target_name,
 				      &maj, &min, &patchlevel);
 }
 
+int get_device_list(const struct volume_group *vg, struct dm_list **devs,
+		    unsigned *devs_features)
+{
+	if (!activation())
+		return 0;
+
+	return dev_manager_get_device_list(NULL, devs, devs_features);
+}
+
 /*
  * When '*info' is NULL, returns 1 only when LV is active.
  * When '*info' != NULL, returns 1 when info structure is populated.
