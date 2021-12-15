@@ -173,6 +173,16 @@ struct dm_names {
 	char name[];
 };
 
+struct dm_active_device {
+	struct dm_list list;
+	int major;
+	int minor;
+	char *name;	/* device name */
+
+	uint32_t event_nr; /* valid when DM_DEVICE_LIST_HAS_EVENT_NR is set */
+	char *uuid;	/* valid uuid when DM_DEVICE_LIST_HAS_UUID is set */
+};
+
 struct dm_versions {
 	uint32_t next;		/* Offset to next struct from start of this struct */
 	uint32_t version[3];
@@ -210,6 +220,25 @@ const char *dm_task_get_message_response(struct dm_task *dmt);
  */
 const char *dm_task_get_name(const struct dm_task *dmt);
 struct dm_names *dm_task_get_names(struct dm_task *dmt);
+/*
+ * Retrieve the list of devices and put them into easily accessible
+ * struct dm_active_device list elements.
+ * devs_features provides flag-set with used features so it's easy to check
+ * whether the kernel provides i.e. UUID info together with DM names
+ */
+#define DM_DEVICE_LIST_HAS_EVENT_NR	1
+#define DM_DEVICE_LIST_HAS_UUID		2
+int dm_task_get_device_list(struct dm_task *dmt, struct dm_list **devs_list,
+			    unsigned *devs_features);
+/*
+ * -1: no idea about uuid (not provided by DM_DEVICE_LIST ioctl)
+ *  0: uuid not present
+ *  1: listed and dm_active_device will be set for not NULL pointer
+ */
+int dm_device_list_find_by_uuid(struct dm_list *devs_list, const char *uuid,
+				const struct dm_active_device **dev);
+/* Release all associated memory with list of active DM devices */
+void dm_device_list_destroy(struct dm_list **devs_list);
 
 int dm_task_set_ro(struct dm_task *dmt);
 int dm_task_set_newname(struct dm_task *dmt, const char *newname);

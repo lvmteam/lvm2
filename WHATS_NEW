@@ -1,5 +1,6 @@
 Version 2.03.15 - 
 ===================================
+  Introduce function to utilize UUIDs from DM_DEVICE_LIST.
   Increase some hash table size to better support large device sets.
 
 Version 2.03.14 - 20th October 2021
