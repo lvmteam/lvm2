@@ -87,7 +87,7 @@ static int _passes_usable_filter(struct cmd_context *cmd, struct dev_filter *f, 
 			break;
 		}
 
-		if (!(r = device_is_usable(dev, ucp, &is_lv))) {
+		if (!(r = device_is_usable(cmd, dev, ucp, &is_lv))) {
 			if (is_lv)
 				dev->filtered_flags |= DEV_FILTERED_IS_LV;
 			else
