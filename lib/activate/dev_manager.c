@@ -964,6 +964,16 @@ int dev_manager_info(struct cmd_context *cmd,
 	if (!(dlid = build_dm_uuid(cmd->mem, lv, layer)))
 		goto_out;
 
+	if (!cmd->disable_dm_devs &&
+	    cmd->cache_dm_devs &&
+	    !dm_device_list_find_by_uuid(cmd->cache_dm_devs, dlid, NULL)) {
+		log_debug("Cached as inactive %s.", name);
+		if (dminfo)
+			memset(dminfo, 0, sizeof(*dminfo));
+		r = 1;
+		goto out;
+	}
+
 	if (!(r = _info(cmd, name, dlid,
 			with_open_count, with_read_ahead, with_name_check,
 			dminfo, read_ahead, seg_status)))
@@ -2245,6 +2255,13 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (!(dlid = build_dm_uuid(dm->track_pending_delete ? dm->cmd->pending_delete_mem : dm->mem, lv, layer)))
 		return_0;
 
+	if (!dm->cmd->disable_dm_devs &&
+	    dm->cmd->cache_dm_devs &&
+	    !dm_device_list_find_by_uuid(dm->cmd->cache_dm_devs, dlid, NULL)) {
+		log_debug("Cached as not present %s.", name);
+		return 1;
+	}
+
 	if (!_info(dm->cmd, name, dlid, 1, 0, 0, &info, NULL, NULL))
 		return_0;
 
@@ -2390,6 +2407,9 @@ static int _pool_callback(struct dm_tree_node *node,
 			return 0;
 		}
 	}
+
+	dm_device_list_destroy(&cmd->cache_dm_devs); /* Cache no longer valid */
+
 	log_debug("Running check command on %s", mpath);
 
 	if (data->skip_zero) {
@@ -3777,6 +3797,7 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 	struct dm_tree_node *root;
 	char *dlid;
 	int r = 0;
+	unsigned tmp_state;
 
 	if (action < DM_ARRAY_SIZE(_action_names))
 		log_debug_activation("Creating %s%s tree for %s.",
@@ -3796,8 +3817,16 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 	dm->suspend = (action == SUSPEND_WITH_LOCKFS) || (action == SUSPEND);
 	dm->track_external_lv_deps = 1;
 
+	/* ATM do not use caching for anything else then striped target.
+	 * And also skip for CLEAN action */
+	tmp_state = dm->cmd->disable_dm_devs;
+	if (!seg_is_striped_target(first_seg(lv)) || (action == CLEAN))
+		dm->cmd->disable_dm_devs = 1;
+
 	if (!(dtree = _create_partial_dtree(dm, lv, laopts->origin_only)))
 		return_0;
+
+	dm->cmd->disable_dm_devs = tmp_state;
 
 	if (!(root = dm_tree_find_node(dtree, 0, 0))) {
 		log_error("Lost dependency tree root node.");

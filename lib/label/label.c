@@ -1719,6 +1719,41 @@ void label_scan_invalidate_lv(struct cmd_context *cmd, struct logical_volume *lv
 	}
 }
 
+void label_scan_invalidate_lvs(struct cmd_context *cmd, struct dm_list *lvs)
+{
+	struct dm_list *devs;
+	struct dm_active_device *dm_dev;
+	unsigned devs_features = 0;
+	struct device *dev;
+	struct lv_list *lvl;
+	dev_t devt;
+
+	if (get_device_list(NULL, &devs, &devs_features)) {
+		if (devs_features & DM_DEVICE_LIST_HAS_UUID) {
+			dm_list_iterate_items(dm_dev, devs)
+				if (dm_dev->uuid &&
+				    strncmp(dm_dev->uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1) == 0) {
+					devt = MKDEV(dm_dev->major, dm_dev->minor);
+					if ((dev = dev_cache_get_by_devt(cmd, devt, NULL, NULL)))
+						label_scan_invalidate(dev);
+				}
+			/* ATM no further caching for any lvconvert command
+			 * TODO: any other command to be skipped ??
+			 */
+			if (strcmp(cmd->name, "lvconvert")) {
+				dm_device_list_destroy(&cmd->cache_dm_devs);
+				cmd->cache_dm_devs = devs; /* cache to avoid unneeded checks */
+				devs = NULL;
+			}
+		}
+		dm_device_list_destroy(&devs);
+	}
+
+	if (!(devs_features & DM_DEVICE_LIST_HAS_UUID))
+		dm_list_iterate_items(lvl, lvs)
+			label_scan_invalidate_lv(cmd, lvl->lv);
+}
+
 /*
  * Empty the bcache of all blocks and close all open fds,
  * but keep the bcache set up.

@@ -203,6 +203,7 @@ struct cmd_context {
 	unsigned event_activation:1;		/* whether event_activation is set */
 	unsigned udevoutput:1;
 	unsigned online_vg_file_removed:1;
+	unsigned disable_dm_devs:1;		/* temporarily disable use of dm devs cache */
 
 	/*
 	 * Devices and filtering.
@@ -213,6 +214,8 @@ struct cmd_context {
 	const char *search_for_devnames;	/* config file setting */
 	const char *devicesfile;                /* from --devicesfile option */
 	struct dm_list deviceslist;             /* from --devices option, struct dm_str_list */
+
+	struct dm_list *cache_dm_devs;		/* cache with UUIDs from DM_DEVICE_LIST (when available) */
 
 	/*
 	 * Configuration.

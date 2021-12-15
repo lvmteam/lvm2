@@ -3122,8 +3122,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	 * in bcache, and needs to be closed so the open fd doesn't
 	 * interfere with processing the LV.
 	 */
-	dm_list_iterate_items(lvl, &final_lvs)
-		label_scan_invalidate_lv(cmd, lvl->lv);
+	label_scan_invalidate_lvs(cmd, &final_lvs);
 
 	dm_list_iterate_items(lvl, &final_lvs) {
 		lv_uuid[0] = '\0';

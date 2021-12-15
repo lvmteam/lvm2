@@ -110,6 +110,7 @@ int label_scan_devs_excl(struct cmd_context *cmd, struct dev_filter *f, struct d
 int label_scan_dev(struct cmd_context *cmd, struct device *dev);
 void label_scan_invalidate(struct device *dev);
 void label_scan_invalidate_lv(struct cmd_context *cmd, struct logical_volume *lv);
+void label_scan_invalidate_lvs(struct cmd_context *cmd, struct dm_list *lvs);
 void label_scan_drop(struct cmd_context *cmd);
 void label_scan_destroy(struct cmd_context *cmd);
 int label_scan_setup_bcache(void);

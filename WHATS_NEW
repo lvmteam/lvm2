@@ -1,5 +1,6 @@
 Version 2.03.15 - 
 ===================================
+  Use cache or active DM device when available with new kernels.
   Introduce function to utilize UUIDs from DM_DEVICE_LIST.
   Increase some hash table size to better support large device sets.
 
