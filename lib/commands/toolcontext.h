@@ -202,6 +202,7 @@ struct cmd_context {
 	unsigned backup_disabled:1;		/* skip repeated debug message */
 	unsigned event_activation:1;		/* whether event_activation is set */
 	unsigned udevoutput:1;
+	unsigned online_vg_file_removed:1;
 
 	/*
 	 * Devices and filtering.

@@ -829,8 +829,11 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 	 * user may want to take charge of activation changes to the VG
 	 * and not have the system autoactivation interfere.
 	 */
-	if (!is_change_activating(activate) && cmd->event_activation)
+	if (!is_change_activating(activate) && cmd->event_activation &&
+	    !cmd->online_vg_file_removed) {
+		cmd->online_vg_file_removed = 1;
 		online_vg_file_remove(lv->vg->name);
+	}
 
 	set_lv_notify(lv->vg->cmd);
 
@@ -2982,6 +2985,8 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	struct dm_list found_arg_lvnames;
 	struct glv_list *glvl, *tglvl;
 	int do_report_ret_code = 1;
+
+	cmd->online_vg_file_removed = 0;
 
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_LV);
 
