@@ -3335,8 +3335,8 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	 * ignore everything supplied on the command line of the
 	 * completed command.
 	 */
-	_reset_current_settings_to_default(cmd);
-	_apply_current_settings(cmd);
+	//_reset_current_settings_to_default(cmd);
+	//_apply_current_settings(cmd);
 
 	/*
 	 * free off any memory the command used.
