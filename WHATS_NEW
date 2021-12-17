@@ -1,5 +1,6 @@
 Version 2.03.15 - 
 ===================================
+  Increase some hash table size to better support large device sets.
 
 Version 2.03.14 - 20th October 2021
 ===================================
