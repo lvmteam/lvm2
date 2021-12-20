@@ -857,20 +857,10 @@ static int _get_devs_from_saved_vg(struct cmd_context *cmd, const char *vgname,
 
 		devno = MKDEV(file_major, file_minor);
 
-		if (!setup_devno_in_dev_cache(cmd, devno)) {
-			log_error_pvscan(cmd, "No device set up for %d:%d PVID %s", file_major, file_minor, pvid);
-			goto bad;
-		}
-
 		if (!(dev = dev_cache_get_by_devt(cmd, devno, NULL, NULL))) {
 			log_error_pvscan(cmd, "No device found for %d:%d PVID %s", file_major, file_minor, pvid);
 			goto bad;
 		}
-
-		/*
-		 * Do not need to match device_id here, see comment after
-		 * get_devs_from_saved_vg about relying on pvid online file.
-		 */
 
 		name1 = dev_name(dev);
 		name2 = pvl->pv->device_hint;
@@ -1109,11 +1099,17 @@ static int _pvscan_aa(struct cmd_context *cmd, struct pvscan_aa_params *pp,
 		 * PROCESS_SKIP_SCAN: we have already done lvmcache_label_scan
 		 * so tell process_each to skip it.
 		 */
+		if (do_all)
+			read_flags |= PROCESS_SKIP_SCAN;
 
+		/*
+		 * When the command is processing specific devs (not all), it
+		 * has done setup_devices_no_file_match() to avoid matching ids
+		 * fo all devs unnecessarily, but now that we're falling back
+		 * to process_each_vg() we need to complete the id matching.
+		 */
 		if (!do_all)
-			lvmcache_label_scan(cmd);
-
-		read_flags |= PROCESS_SKIP_SCAN;
+			device_ids_match(cmd);
 
 		ret = process_each_vg(cmd, 0, NULL, NULL, vgnames, read_flags, 0, handle, _pvscan_aa_single);
 	}
@@ -1196,15 +1192,11 @@ static int _get_args_devs(struct cmd_context *cmd, struct dm_list *pvscan_args,
 	/* in common usage, no dev will be found for a devno */
 
 	dm_list_iterate_items(arg, pvscan_args) {
-		if (arg->devname) {
-			if (!setup_devname_in_dev_cache(cmd, arg->devname))
-				log_error_pvscan(cmd, "No device set up for name arg %s", arg->devname);
+		if (arg->devname)
 			arg->dev = dev_cache_get(cmd, arg->devname, NULL);
-		} else if (arg->devno) {
-			if (!setup_devno_in_dev_cache(cmd, arg->devno))
-				log_error_pvscan(cmd, "No device set up for devno arg %d", (int)arg->devno);
+		else if (arg->devno)
 			arg->dev = dev_cache_get_by_devt(cmd, arg->devno, NULL, NULL);
-		} else
+		else
 			return_0;
 	}
 
@@ -1680,13 +1672,11 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 	cmd->pvscan_cache_single = 1;
 
 	/*
-	 * Special pvscan-specific setup steps to avoid looking
-	 * at any devices except for device args.
-	 * Read devices file and determine if devices file will be used.
-	 * Does not do dev_cache_scan (adds nothing to dev-cache), and
-	 * does not do any device id matching.
+	 * "no_file_match" means that when the devices file is used,
+	 * setup_devices will skip matching devs to devices file entries.
+	 * Specific devs must be matched later with device_ids_match_dev().
 	 */
-	if (!setup_devices_for_pvscan_cache(cmd)) {
+	if (!setup_devices_no_file_match(cmd)) {
 		log_error_pvscan(cmd, "Failed to set up devices.");
 		return 0;
 	}
@@ -1745,21 +1735,17 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 	log_debug("pvscan_cache_args: filter devs nodata");
 
 	/*
-	 * Match dev args with the devices file because special/optimized
-	 * device setup was used above which does not check the devices file.
-	 * If a match fails here do not exclude it, that will be done below by
-	 * passes_filter() which runs filter-deviceid. The
-	 * relax_deviceid_filter case needs to be able to work around
+	 * Match dev args with the devices file because
+	 * setup_devices_no_file_match() was used above which skipped checking
+	 * the devices file.  If a match fails here do not exclude it, that
+	 * will be done below by passes_filter() which runs filter-deviceid.
+	 * The relax_deviceid_filter case needs to be able to work around
 	 * unmatching devs.
 	 */
-
 	if (cmd->enable_devices_file) {
-		dm_list_iterate_items(devl, &pvscan_devs)
+		dm_list_iterate_items_safe(devl, devl2, &pvscan_devs)
 			device_ids_match_dev(cmd, devl->dev);
-
 	}
-	if (cmd->enable_devices_list)
-		device_ids_match_device_list(cmd);
 
 	if (cmd->enable_devices_file && device_ids_use_devname(cmd)) {
 		relax_deviceid_filter = 1;

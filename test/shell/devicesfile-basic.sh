@@ -283,7 +283,7 @@ not ls "$RUNDIR/lvm/pvs_online/$PVID3"
 # arg in devices list
 _clear_online_files
 pvscan --devices "$dev3" --cache -aay "$dev3"
-pvscan --devices "$dev4","$dev3" --cache -aay "$dev4"
+pvscan --devices "$dev4" --cache -aay "$dev4"
 check lv_field $vg2/$lv2 lv_active "active"
 vgchange -an $vg2
 

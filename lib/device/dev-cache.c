@@ -1852,7 +1852,7 @@ int setup_devices_file(struct cmd_context *cmd)
  * Add all system devices to dev-cache, and attempt to
  * match all devices_file entries to dev-cache entries.
  */
-int setup_devices(struct cmd_context *cmd)
+static int _setup_devices(struct cmd_context *cmd, int no_file_match)
 {
 	int file_exists;
 	int lock_mode = 0;
@@ -1980,11 +1980,28 @@ int setup_devices(struct cmd_context *cmd)
 	dev_cache_scan(cmd);
 
 	/*
+	 * The caller uses "no_file_match" if it wants to match specific devs
+	 * itself, instead of matching everything in device_ids_match.
+	 */
+	if (no_file_match && cmd->enable_devices_file)
+		return 1;
+
+	/*
 	 * Match entries from cmd->use_devices with device structs in dev-cache.
 	 */
 	device_ids_match(cmd);
 
 	return 1;
+}
+
+int setup_devices(struct cmd_context *cmd)
+{
+	return _setup_devices(cmd, 0);
+}
+
+int setup_devices_no_file_match(struct cmd_context *cmd)
+{
+	return _setup_devices(cmd, 1);
 }
 
 /*
@@ -2053,190 +2070,5 @@ int setup_device(struct cmd_context *cmd, const char *devname)
 		device_ids_match_dev(cmd, dev);
 
 	return 1;
-}
-
-/*
- * pvscan --cache is specialized/optimized to look only at command args,
- * so this just sets up the devices file, then individual devices are
- * added to dev-cache and matched with device_ids later in pvscan.
- */
-
-int setup_devices_for_pvscan_cache(struct cmd_context *cmd)
-{
-	if (cmd->enable_devices_list) {
-		if (!_setup_devices_list(cmd))
-			return_0;
-		return 1;
-	}
-
-	if (!setup_devices_file(cmd))
-		return_0;
-
-	if (!cmd->enable_devices_file)
-		return 1;
-
-	if (!devices_file_exists(cmd)) {
-		log_debug("Devices file not found, ignoring.");
-		cmd->enable_devices_file = 0;
-		return 1;
-	}
-
-	if (!lock_devices_file(cmd, LOCK_SH)) {
-		log_error("Failed to lock the devices file to read.");
-		return 0;
-	}
-
-	if (!device_ids_read(cmd)) {
-		log_error("Failed to read the devices file.");
-		unlock_devices_file(cmd);
-		return 0;
-	}
-
-	unlock_devices_file(cmd);
-	return 1;
-}
-
-
-/* Get a device name from a devno. */
-
-static char *_get_devname_from_devno(struct cmd_context *cmd, dev_t devno)
-{
-	char path[PATH_MAX];
-	char devname[PATH_MAX];
-	char namebuf[NAME_LEN];
-	char line[1024];
-	int major = MAJOR(devno);
-	int minor = MINOR(devno);
-	int line_major;
-	int line_minor;
-	uint64_t line_blocks;
-	DIR *dir;
-	struct dirent *dirent;
-	FILE *fp;
-
-	/*
-	 * $ ls /sys/dev/block/8:0/device/block/
-	 * sda
-	 */
-	if (major_is_scsi_device(cmd->dev_types, major)) {
-		if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/device/block",
-				dm_sysfs_dir(), major, minor) < 0) {
-			return NULL;
-		}
-
-		if (!(dir = opendir(path)))
-			return NULL;
-
-		while ((dirent = readdir(dir))) {
-			if (dirent->d_name[0] == '.')
-				continue;
-			if (dm_snprintf(devname, sizeof(devname), "/dev/%s", dirent->d_name) < 0) {
-				devname[0] = '\0';
-				stack;
-			}
-			break;
-		}
-		closedir(dir);
-
-		if (devname[0]) {
-			log_debug("Found %s for %d:%d from sys", devname, major, minor);
-			return _strdup(devname);
-		}
-		return NULL;
-	}
-
-	/*
-	 * $ cat /sys/dev/block/253:3/dm/name
-	 * mpatha
-	 */
-	if (major == cmd->dev_types->device_mapper_major) {
-		if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/dm/name",
-				dm_sysfs_dir(), major, minor) < 0) {
-			return NULL;
-		}
-
-		if (!get_sysfs_value(path, namebuf, sizeof(namebuf), 0))
-			return NULL;
-
-		if (dm_snprintf(devname, sizeof(devname), "/dev/mapper/%s", namebuf) < 0) {
-			devname[0] = '\0';
-			stack;
-		}
-
-		if (devname[0]) {
-			log_debug("Found %s for %d:%d from sys", devname, major, minor);
-			return _strdup(devname);
-		}
-		return NULL;
-	}
-
-	/*
-	 * /proc/partitions lists
-	 * major minor #blocks name
-	 */
-
-	if (!(fp = fopen("/proc/partitions", "r")))
-		return NULL;
-
-	while (fgets(line, sizeof(line), fp)) {
-		if (sscanf(line, "%u %u %llu %s", &line_major, &line_minor, (unsigned long long *)&line_blocks, namebuf) != 4)
-			continue;
-		if (line_major != major)
-			continue;
-		if (line_minor != minor)
-			continue;
-
-		if (dm_snprintf(devname, sizeof(devname), "/dev/%s", namebuf) < 0) {
-			devname[0] = '\0';
-			stack;
-		}
-		break;
-	}
-	fclose(fp);
-
-	if (devname[0]) {
-		log_debug("Found %s for %d:%d from proc", devname, major, minor);
-		return _strdup(devname);
-	}
-
-	/*
-	 * If necessary, this could continue searching by stat'ing /dev entries.
-	 */
-
-	return NULL;
-}
-
-int setup_devname_in_dev_cache(struct cmd_context *cmd, const char *devname)
-{
-	struct stat buf;
-	struct device *dev;
-
-	if (stat(devname, &buf) < 0) {
-		log_error("Cannot access device %s.", devname);
-		return 0;
-	}
-
-	if (!S_ISBLK(buf.st_mode)) {
-		log_error("Invaild device type %s.", devname);
-		return 0;
-	}
-
-	if (!_insert_dev(devname, buf.st_rdev))
-		return_0;
-
-	if (!(dev = (struct device *) dm_hash_lookup(_cache.names, devname)))
-		return_0;
-
-	return 1;
-}
-
-int setup_devno_in_dev_cache(struct cmd_context *cmd, dev_t devno)
-{
-	const char *devname;
-
-	if (!(devname = _get_devname_from_devno(cmd, devno)))
-		return_0;
-
-	return setup_devname_in_dev_cache(cmd, devname);
 }
 

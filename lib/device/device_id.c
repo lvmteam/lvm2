@@ -1534,22 +1534,6 @@ int device_ids_match_dev(struct cmd_context *cmd, struct device *dev)
  * passes the filter.
  */
 
-void device_ids_match_device_list(struct cmd_context *cmd)
-{
-	struct dev_use *du;
-
-	dm_list_iterate_items(du, &cmd->use_devices) {
-		if (du->dev)
-			continue;
-		if (!(du->dev = dev_cache_get(cmd, du->devname, NULL))) {
-			log_warn("Device not found for %s.", du->devname);
-		} else {
-			/* Should we set dev->id?  Which idtype?  Use --deviceidtype? */
-			du->dev->flags |= DEV_MATCHED_USE_ID;
-		}
-	}
-}
-
 void device_ids_match(struct cmd_context *cmd)
 {
 	struct dev_iter *iter;
@@ -1557,7 +1541,16 @@ void device_ids_match(struct cmd_context *cmd)
 	struct device *dev;
 
 	if (cmd->enable_devices_list) {
-		device_ids_match_device_list(cmd);
+		dm_list_iterate_items(du, &cmd->use_devices) {
+			if (du->dev)
+				continue;
+			if (!(du->dev = dev_cache_get(cmd, du->devname, NULL))) {
+				log_warn("Device not found for %s.", du->devname);
+			} else {
+				/* Should we set dev->id?  Which idtype?  Use --deviceidtype? */
+				du->dev->flags |= DEV_MATCHED_USE_ID;
+			}
+		}
 		return;
 	}
 
