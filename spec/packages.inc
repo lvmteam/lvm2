@@ -163,7 +163,7 @@ fi
 %endif
 %if %{enable_udev}
  %{_udevdir}/11-dm-lvm.rules
- %{_udevdir}/69-dm-lvm.rules
+ %{_udevdir}/69-dm-lvm-metad.rules
 %endif
 %dir %{_sysconfdir}/lvm
 %ghost %{_sysconfdir}/lvm/cache/.cache
@@ -189,6 +189,7 @@ fi
  %{_tmpfilesdir}/%{name}.conf
  %{_unitdir}/blk-availability.service
  %{_unitdir}/lvm2-monitor.service
+ %{_unitdir}/lvm2-pvscan@.service
  %attr(555, -, -) %{_prefix}/lib/systemd/system-generators/lvm2-activation-generator
  %if %{have_service lvmpolld}
   %{_unitdir}/lvm2-lvmpolld.service
