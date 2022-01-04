@@ -61,8 +61,6 @@ and more, using a more compact and configurable output format.
 .br
 [    \fB--readonly\fP ]
 .br
-[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
-.br
 [    \fB--separator\fP \fIString\fP ]
 .br
 [    \fB--shared\fP ]
@@ -318,16 +316,6 @@ inside metadata used by a virtual machine image while the virtual
 machine is running. No attempt will be made to communicate with the
 device-mapper kernel driver, so this option is unable to report whether
 or not LVs are actually in use.
-.
-.HP
-\fB--reportformat\fP \fBbasic\fP|\fBjson\fP
-.br
-Overrides current output format for reports which is defined globally by
-the report/output_format setting in \fBlvm.conf\fP(5).
-\fBbasic\fP is the original format with columns and rows.
-If there is more than one report per command, each report is prefixed
-with the report name for identification. \fBjson\fP produces report
-output in JSON format. See \fBlvmreport\fP(7) for more information.
 .
 .HP
 \fB-S\fP|\fB--select\fP \fIString\fP
