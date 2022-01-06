@@ -354,9 +354,11 @@ static struct lvmcache_vginfo *_vginfo_lookup(const char *vgname, const char *vg
 	if (vgid_arg) {
 		if ((vginfo = dm_hash_lookup(_vgid_hash, vgid))) {
 			if (vgname && strcmp(vginfo->vgname, vgname)) {
-				/* should never happen */
-				log_error(INTERNAL_ERROR "vginfo_lookup vgid %s has two names %s %s",
-					  vgid, vginfo->vgname, vgname);
+				log_warn("WARNING: lookup found duplicate VGID %s for VGs %s and %s.", vgid, vginfo->vgname, vgname);
+				if ((vginfo = dm_hash_lookup(_vgname_hash, vgname))) {
+					if (!memcmp(vginfo->vgid, vgid, ID_LEN))
+						return vginfo;
+				}
 				return NULL;
 			}
 			return vginfo;
@@ -1884,7 +1886,17 @@ static int _lvmcache_update_vgname(struct cmd_context *cmd,
 
 	_drop_vginfo(info, info->vginfo);
 
-	if (!(vginfo = lvmcache_vginfo_from_vgid(vgid))) {
+	vginfo = lvmcache_vginfo_from_vgid(vgid);
+	if (vginfo && strcmp(vginfo->vgname, vgname)) {
+		log_warn("WARNING: fix duplicate VGID %s for VGs %s and %s (see vgchange -u).", vgid_dashed, vgname, vginfo->vgname);
+		vginfo = lvmcache_vginfo_from_vgname(vgname, NULL);
+		if (vginfo && memcmp(vginfo->vgid, vgid, ID_LEN)) {
+			log_error("Ignoring %s with conflicting VG info %s %s.", dev_name(info->dev), vgid_dashed, vgname);
+			return_0;
+		}
+	}
+
+	if (!vginfo) {
 		/*
 	 	 * Create a vginfo struct for this VG and put the vginfo
 	 	 * into the hash table.
