@@ -727,30 +727,6 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		backup(vg_from);
 	}
 
-	/*
-	 * Finally, remove the EXPORTED flag from the new VG and write it out.
-	 * We need to unlock vg_to because vg_read_for_update wants to lock it.
-	 */
-	if (!test_mode()) {
-		unlock_vg(cmd, NULL, vg_name_to);
-		release_vg(vg_to);
-
-		/*
-		 * This command uses the exported vg flag internally, but
-		 * exported VGs are not allowed to be split from the command
-		 * level, so ALLOW_EXPORTED is not set in commands.h.
-		 */
-		cmd->include_exported_vgs = 1;
-
-		vg_to = vg_read_for_update(cmd, vg_name_to, NULL, 0, 0);
-
-		if (!vg_to) {
-			log_error("Volume group \"%s\" became inconsistent: "
-				  "please fix manually", vg_name_to);
-			goto bad;
-		}
-	}
-
 	vg_to->status &= ~EXPORTED_VG;
 
 	if (!vg_write(vg_to) || !vg_commit(vg_to))
