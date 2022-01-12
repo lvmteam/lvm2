@@ -84,7 +84,6 @@ void lvmcache_del_dev(struct device *dev);
 int lvmcache_update_vgname_and_id(struct cmd_context *cmd, struct lvmcache_info *info,
 				  struct lvmcache_vgsummary *vgsummary);
 int lvmcache_update_vg_from_read(struct volume_group *vg, unsigned precommitted);
-int lvmcache_update_vg_from_write(struct volume_group *vg);
 
 void lvmcache_lock_vgname(const char *vgname, int read_only);
 void lvmcache_unlock_vgname(const char *vgname);

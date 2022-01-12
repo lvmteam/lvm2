@@ -3102,7 +3102,6 @@ static int _vg_commit_mdas(struct volume_group *vg)
 	DM_LIST_INIT(ignored);
 	int failed = 0;
 	int good = 0;
-	int cache_updated = 0;
 
 	/* Rearrange the metadata_areas_in_use so ignored mdas come first. */
 	dm_list_iterate_items_safe(mda, tmda, &vg->fid->metadata_areas_in_use)
@@ -3123,12 +3122,6 @@ static int _vg_commit_mdas(struct volume_group *vg)
 			failed = 1;
 		} else
 			good++;
-
-		/* Update cache first time we succeed */
-		if (!failed && !cache_updated) {
-			lvmcache_update_vg_from_write(vg);
-			cache_updated = 1;
-		}
 	}
 	if (good)
 		return 1;

@@ -2240,50 +2240,6 @@ int lvmcache_update_vgname_and_id(struct cmd_context *cmd, struct lvmcache_info 
 }
 
 /*
- * FIXME: quit trying to mirror changes that a command is making into lvmcache.
- *
- * First, it's complicated and hard to ensure it's done correctly in every case
- * (it would be much easier and safer to just toss out what's in lvmcache and
- * reread the info to recreate it from scratch instead of trying to make sure
- * every possible discrete state change is correct.)
- *
- * Second, it's unnecessary if commands just use the vg they are modifying
- * rather than also trying to get info from lvmcache.  The lvmcache state
- * should be populated by label_scan, used to perform vg_read's, and then
- * ignored (or dropped so it can't be used).
- *
- * lvmcache info is already used very little after a command begins its
- * operation.  The code that's supposed to keep the lvmcache in sync with
- * changes being made to disk could be half wrong and we wouldn't know it.
- * That creates a landmine for someone who might try to use a bit of it that
- * isn't being updated correctly.
- */
-
-int lvmcache_update_vg_from_write(struct volume_group *vg)
-{
-	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
-	struct pv_list *pvl;
-	struct lvmcache_info *info;
-	struct lvmcache_vgsummary vgsummary = {
-		.vgname = vg->name,
-		.vgstatus = vg->status,
-		.system_id = vg->system_id,
-		.lock_type = vg->lock_type
-	};
-
-	memcpy(vgid, &vg->id, ID_LEN);
-	memcpy(vgsummary.vgid, vgid, ID_LEN);
-
-	dm_list_iterate_items(pvl, &vg->pvs) {
-		if ((info = lvmcache_info_from_pv_id(&pvl->pv->id, pvl->pv->dev, 0)) &&
-		    !lvmcache_update_vgname_and_id(vg->cmd, info, &vgsummary))
-			return_0;
-	}
-
-	return 1;
-}
-
-/*
  * The lvmcache representation of a VG after label_scan can be incorrect
  * because the label_scan does not use the full VG metadata to construct
  * vginfo/info.  PVs that don't hold VG metadata weren't attached to the vginfo
