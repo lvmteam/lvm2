@@ -3100,7 +3100,6 @@ static int _vg_commit_mdas(struct volume_group *vg)
 {
 	struct metadata_area *mda, *tmda;
 	DM_LIST_INIT(ignored);
-	int failed = 0;
 	int good = 0;
 
 	/* Rearrange the metadata_areas_in_use so ignored mdas come first. */
@@ -3115,11 +3114,9 @@ static int _vg_commit_mdas(struct volume_group *vg)
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
 		if (mda->status & MDA_FAILED)
 			continue;
-		failed = 0;
 		if (mda->ops->vg_commit &&
 		    !mda->ops->vg_commit(vg->fid, vg, mda)) {
 			stack;
-			failed = 1;
 		} else
 			good++;
 	}
