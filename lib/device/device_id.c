@@ -2278,7 +2278,8 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 			continue;
 		}
 
-		log_warn("Devices file PVID %s updating IDNAME to %s.", dev->pvid, devname);
+		if (!noupdate)
+			log_warn("Devices file PVID %s updating IDNAME to %s.", dev->pvid, devname);
 
 		free(du->idname);
 		free(du->devname);

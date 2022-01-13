@@ -159,7 +159,8 @@ arg(cachesize_ARG, '\0', "cachesize", sizemb_VAL, 0, 0,
     "The size of cache to use.\n")
 
 arg(check_ARG, '\0', "check", 0, 0, 0,
-    "Check the content of the devices file.\n")
+    "Checks the content of the devices file.\n"
+    "Reports incorrect device names or PVIDs for entries.\n")
 
 arg(commandprofile_ARG, '\0', "commandprofile", string_VAL, 0, 0,
     "The command profile to use for command configuration.\n"
