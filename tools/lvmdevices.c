@@ -128,7 +128,6 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 	struct device *dev;
 	struct dev_use *du, *du2;
 	const char *deviceidtype;
-	int changes = 0;
 
 	dm_list_init(&search_pvids);
 	dm_list_init(&found_devs);
@@ -184,7 +183,10 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_is_set(cmd, check_ARG) || arg_is_set(cmd, update_ARG)) {
 		int search_count = 0;
+		int update_needed = 0;
 		int invalid = 0;
+
+		unlink_searched_devnames(cmd);
 
 		label_scan_setup_bcache();
 
@@ -225,6 +227,8 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		 * run just above.
 		 */
 		device_ids_validate(cmd, NULL, &invalid, 1);
+		if (invalid)
+			update_needed = 1;
 
 		/*
 		 * Find and fix any devname entries that have moved to a
@@ -240,32 +244,23 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 				label_scan_invalidate(du->dev);
 		}
 
-		/*
-		 * check du->part
-		 */
-		dm_list_iterate_items(du, &cmd->use_devices) {
-			int part = 0;
-			if (!du->dev)
-				continue;
-			dev = du->dev;
-
-			dev_get_partition_number(dev, &part);
-
-			if (part != du->part) {
-				log_warn("Device %s partition %u has incorrect PART in devices file (%u)",
-					 dev_name(dev), part, du->part);
-				du->part = part;
-				changes++;
-			}
-		}
-
 		if (arg_is_set(cmd, update_ARG)) {
-			if (invalid || !dm_list_empty(&found_devs)) {
+			if (update_needed || !dm_list_empty(&found_devs)) {
 				if (!device_ids_write(cmd))
 					goto_bad;
 				log_print("Updated devices file to version %s", devices_file_version());
 			} else {
 				log_print("No update for devices file is needed.");
+			}
+		} else {
+			/*
+			 * --check exits with an error if the devices file
+			 * needs updates, i.e. running --update would make
+			 * changes.
+			 */
+			if (update_needed) {
+				log_error("Updates needed for devices file.");
+				goto bad;
 			}
 		}
 		goto out;
