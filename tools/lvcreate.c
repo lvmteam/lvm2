@@ -1851,29 +1851,27 @@ static int _lvcreate_and_attach_writecache_single(struct cmd_context *cmd,
 int lvcreate_and_attach_writecache_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct processing_handle *handle = NULL;
-	struct processing_params pp;
 	struct lvcreate_params lp = {
 		.major = -1,
 		.minor = -1,
+		/*
+		 * Tell lvcreate to ignore --type since we are using lvcreate
+		 * to create a linear LV and using lvconvert to add cache.
+		 * (Would be better if lvcreate code was split up so we could
+		 * call a specific function that just created a linear/striped LV.)
+		 */
+		.ignore_type = 1,
 	};
 	struct lvcreate_cmdline_params lcp = { 0 };
+	struct processing_params pp = {
+	    .lp = &lp,
+	    .lcp = &lcp,
+	};
 	int ret;
-
-	/*
-	 * Tell lvcreate to ignore --type since we are using lvcreate
-	 * to create a linear LV and using lvconvert to add cache.
-	 * (Would be better if lvcreate code was split up so we could
-	 * call a specific function that just created a linear/striped LV.)
-	 */
-	lp.ignore_type = 1;
-
 	if (!_lvcreate_params(cmd, argc, argv, &lp, &lcp)) {
 		stack;
 		return EINVALID_CMD_LINE;
 	}
-
-	pp.lp = &lp;
-	pp.lcp = &lcp;
 
         if (!(handle = init_processing_handle(cmd, NULL))) {
 		log_error("Failed to initialize processing handle.");
@@ -1925,29 +1923,28 @@ static int _lvcreate_and_attach_cache_single(struct cmd_context *cmd,
 int lvcreate_and_attach_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct processing_handle *handle = NULL;
-	struct processing_params pp;
 	struct lvcreate_params lp = {
 		.major = -1,
 		.minor = -1,
+		/*
+		 * Tell lvcreate to ignore --type since we are using lvcreate
+		 * to create a linear LV and using lvconvert to add cache.
+		 * (Would be better if lvcreate code was split up so we could
+		 * call a specific function that just created a linear/striped LV.)
+		 */
+		.ignore_type = 1,
 	};
 	struct lvcreate_cmdline_params lcp = { 0 };
+	struct processing_params pp = {
+	    .lp = &lp,
+	    .lcp = &lcp,
+	};
 	int ret;
-
-	/*
-	 * Tell lvcreate to ignore --type since we are using lvcreate
-	 * to create a linear LV and using lvconvert to add cache.
-	 * (Would be better if lvcreate code was split up so we could
-	 * call a specific function that just created a linear/striped LV.)
-	 */
-	lp.ignore_type = 1;
 
 	if (!_lvcreate_params(cmd, argc, argv, &lp, &lcp)) {
 		stack;
 		return EINVALID_CMD_LINE;
 	}
-
-	pp.lp = &lp;
-	pp.lcp = &lcp;
 
 	if (!(handle = init_processing_handle(cmd, NULL))) {
 		log_error("Failed to initialize processing handle.");
@@ -1963,4 +1960,3 @@ int lvcreate_and_attach_cache_cmd(struct cmd_context *cmd, int argc, char **argv
 	destroy_processing_handle(cmd, handle);
 	return ret;
 }
-
