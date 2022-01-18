@@ -823,6 +823,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	alloc_ARG,\
 	autobackup_ARG,\
 	available_ARG,\
+	cachesettings_ARG,\
 	contiguous_ARG,\
 	devices_ARG,\
 	devicesfile_ARG,\
@@ -846,8 +847,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	cachemetadataformat_ARG,\
 	cachemode_ARG,\
 	cachepool_ARG,\
-	cachepolicy_ARG,\
-	cachesettings_ARG
+	cachepolicy_ARG
 
 #define MIRROR_ARGS \
 	corelog_ARG,\
