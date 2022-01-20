@@ -1691,6 +1691,7 @@ static int _lvcreate_single(struct cmd_context *cmd, const char *vg_name,
 	struct lvcreate_params *lp = pp->lp;
 	struct lvcreate_cmdline_params *lcp = pp->lcp;
 	struct logical_volume *spare = vg->pool_metadata_spare_lv;
+	struct logical_volume *lv;
 	int ret = ECMD_FAILED;
 
 	if (!_read_activation_params(cmd, vg, lp))
@@ -1759,8 +1760,11 @@ static int _lvcreate_single(struct cmd_context *cmd, const char *vg_name,
 		lp->needs_lockd_init = 1;
 	}
 
-	if (!lv_create_single(vg, lp))
+	if (!(lv = lv_create_single(vg, lp)))
 		goto_out;
+
+	if (!lp->lv_name)
+		lp->lv_name = lv->name; /* Get created LV name when it was not specified */
 
 	ret = ECMD_PROCESSED;
 out:
