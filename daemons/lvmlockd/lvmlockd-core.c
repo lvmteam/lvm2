@@ -4777,7 +4777,7 @@ static void client_recv_action(struct client *cl)
 	const char *path;
 	const char *str;
 	struct pvs pvs;
-	char buf[17];	/* "path[%d]\0", %d outputs signed integer so max to 10 bytes */
+	char buf[18];	/* "path[%d]\0", %d outputs signed integer so max to 10 bytes */
 	int64_t val;
 	uint32_t opts = 0;
 	int result = 0;
