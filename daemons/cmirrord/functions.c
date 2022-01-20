@@ -34,7 +34,7 @@
 #define LOG_OFFSET 2
 
 #define RESYNC_HISTORY 50
-#define RESYNC_BUFLEN 128
+#define RESYNC_BUFLEN 270
 //static char resync_history[RESYNC_HISTORY][128];
 //static int idx = 0;
 #define LOG_SPRINT(_lc, f, arg...) do {					\
