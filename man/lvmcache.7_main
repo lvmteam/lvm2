@@ -299,6 +299,39 @@ perform.  If not done beforehand, the splitcache command enables the
 cleaner mode and waits for flushing to complete before detaching the
 writecache.  Adding cleaner=0 to the splitcache command will skip the
 cleaner mode, and any required flushing is performed in device suspend.
+
+.SS dm-writecache using metadata profiles
+
+Writecache allows to set a variety of options. Lots of these settings
+can be specified in lvm.conf or profile settings. You can prepare
+a number of different profiles in the \fI#DEFAULT_SYS_DIR#/profile\fP directory
+and just specify the metadata profile file name when writecaching LV.
+.P
+.I Example
+.nf
+# cat <<EOF > #DEFAULT_SYS_DIR#/profile/cache_writecache.profile
+allocation {
+.RS
+cache_settings {
+.RS
+writecache {
+.RS
+high_watermark=60
+writeback_jobs=1024
+.RE
+}
+.RE
+}
+.RE
+}
+EOF
+.P
+
+# lvcreate -an -L10G --name wcache vg /dev/fast_ssd
+# lvcreate --type writecache -L10G --name main  --cachevol wcache \\
+   --metadataprofile cache_writecache vg /dev/slow_hdd
+.fi
+
 .
 .SS dm-cache with separate data and metadata LVs
 .
