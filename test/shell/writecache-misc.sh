@@ -52,6 +52,12 @@ aux prepare_devs 4
 vgcreate $vg "$dev1" "$dev2" "$dev3" "$dev4"
 
 
+# Create writecache without a specified name so it gets automatic name
+lvcreate -n $lv1 -l 4 -an $vg "$dev1"
+lvcreate -y --type writecache -l 4 --cachevol $lv1 $vg "$dev2"
+check lv_exists $vg lvol0
+lvremove -y $vg
+
 #
 # Test pvmove with writecache
 #
