@@ -315,7 +315,6 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 		/* qemu wwid begins "t10.ATA     QEMU HARDDISK ..." */
 		if (strstr(sysbuf, "QEMU HARDDISK"))
 			sysbuf[0] = '\0';
-
 	}
 
 	else if (idtype == DEV_ID_TYPE_SYS_SERIAL)
@@ -366,7 +365,6 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 
 	return idname;
  bad:
-	log_debug("No idtype %s for %s", idtype_to_str(idtype), dev_name(dev));
 	return NULL;
 }
 
@@ -378,20 +376,40 @@ static int _dev_has_stable_id(struct cmd_context *cmd, struct device *dev)
 {
 	char sysbuf[PATH_MAX] = { 0 };
 	struct dev_id *id;
+	const char *idname;
 
+	/*
+	 * An idtype other than DEVNAME is stable, i.e. it doesn't change after
+	 * reboot or device reattach.
+	 * An id on dev->ids with idtype set and !idname means that idtype does
+	 * not exist for the dev.  (Optimization to avoid repeated negative
+	 * system_read.)
+	 */
 	dm_list_iterate_items(id, &dev->ids) {
-		if (id->idtype != DEV_ID_TYPE_DEVNAME)
+		if ((id->idtype != DEV_ID_TYPE_DEVNAME) && id->idname)
 			return 1;
 	}
 
-	if (read_sys_block(cmd, dev, "device/wwid", sysbuf, sizeof(sysbuf)))
-		return 1;
+	/*
+	 * Use device_id_system_read() instead of read_sys_block() when
+	 * system_read ignores some values from sysfs.
+	 */
 
-	if (read_sys_block(cmd, dev, "wwid", sysbuf, sizeof(sysbuf)))
+	if ((idname = device_id_system_read(cmd, dev, DEV_ID_TYPE_SYS_WWID))) {
+		free((void*)idname);
 		return 1;
+	}
 
-	if (read_sys_block(cmd, dev, "device/serial", sysbuf, sizeof(sysbuf)))
+	if ((idname = device_id_system_read(cmd, dev, DEV_ID_TYPE_SYS_SERIAL))) {
+		free((void*)idname);
 		return 1;
+	}
+
+	if ((MAJOR(dev->dev) == cmd->dev_types->loop_major) &&
+	    (idname = device_id_system_read(cmd, dev, DEV_ID_TYPE_LOOP_FILE))) {
+		free((void*)idname);
+		return 1;
+	}
 
 	if ((MAJOR(dev->dev) == cmd->dev_types->device_mapper_major)) {
 		if (!read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf)))
@@ -409,9 +427,6 @@ static int _dev_has_stable_id(struct cmd_context *cmd, struct device *dev)
 	    read_sys_block(cmd, dev, "md/uuid", sysbuf, sizeof(sysbuf)))
 		return 1;
 
-	if ((MAJOR(dev->dev) == cmd->dev_types->loop_major) &&
-	    read_sys_block(cmd, dev, "loop/backing_file", sysbuf, sizeof(sysbuf)))
-		return 1;
  out:
 	/* DEV_ID_TYPE_DEVNAME would be used for this dev. */
 	return 0;
@@ -2169,6 +2184,12 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 		 *
 		 * TODO: in auto mode should we look in other non-system
 		 * devices files and skip any devs included in those?
+		 *
+		 * Note that a user can override a stable id type and use
+		 * devname for a device's id, in which case this optimization
+		 * can prevent a search from finding a renamed dev.  So, if a
+		 * user forces a devname id, then they should probably also
+		 * set search_for_devnames=all.
 		 */
 		if (search_auto && _dev_has_stable_id(cmd, dev)) {
 			other_idtype++;
