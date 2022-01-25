@@ -15,9 +15,6 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
-SOURCES = lvm2_activation_generator_systemd_red_hat.c
-TARGETS = lvm2_activation_generator_systemd_red_hat
-
 include $(top_builddir)/make.tmpl
 
 ifeq ("@BUILD_DMEVENTD@", "yes")
@@ -77,17 +74,6 @@ endif
 ifeq ("@BLKDEACTIVATE@", "yes")
 	$(Q) $(INSTALL_SCRIPT) blk_availability_init_red_hat $(initdir)/blk-availability
 endif
-
-CFLAGS_lvm2_activation_generator_systemd_red_hat.o += $(EXTRA_EXEC_CFLAGS)
-
-lvm2_activation_generator_systemd_red_hat: $(OBJECTS) $(LVMINTERNAL_LIBS)
-	@echo "    [CC] $@"
-	$(Q) $(CC) -o $@ $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) $(LVMINTERNAL_LIBS) $(LIBS)
-
-install_systemd_generators:
-	@echo "    [INSTALL] systemd_generators"
-	$(Q) $(INSTALL_DIR) $(systemd_generator_dir)
-	$(Q) $(INSTALL_PROGRAM) lvm2_activation_generator_systemd_red_hat $(systemd_generator_dir)/lvm2-activation-generator
 
 install_systemd_units:	install_dbus_service
 	@echo "    [INSTALL] systemd_units"

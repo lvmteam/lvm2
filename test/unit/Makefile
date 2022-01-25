@@ -16,7 +16,6 @@
 UNIT_SOURCE=\
 	device_mapper/vdo/status.c \
 	\
-	test/unit/activation-generator_t.c \
 	test/unit/bcache_t.c \
 	test/unit/bcache_utils_t.c \
 	test/unit/bitset_t.c \

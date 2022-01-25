@@ -47,7 +47,6 @@ MAN8=lvm.8 lvmdump.8 lvm-fullreport.8 lvm-lvpoll.8 \
 MAN8SO=lvm-config.8 lvm-dumpconfig.8
 MAN8DM=dmsetup.8 dmstats.8
 MAN8CLUSTER=
-MAN8SYSTEMD_GENERATORS=lvm2-activation-generator.8
 
 ifeq (,$(findstring $(MAKECMDGOALS), distclean all_man install_all_man))
   MAN7 += lvmcache.7 lvmthin.7 lvmvdo.7
@@ -119,7 +118,7 @@ TESTMAN=test.gen
 include $(top_builddir)/make.tmpl
 
 CLEAN_TARGETS+=$(MAN5) $(MAN7) $(MAN8) $(MAN8SO) $(MAN8:%.8=%.8_gen) $(MAN8CLUSTER) \
-	$(MAN8SYSTEMD_GENERATORS) $(MAN8DM) $(TESTMAN)
+	$(MAN8DM) $(TESTMAN)
 
 all: man device-mapper
 
@@ -127,11 +126,11 @@ all: man device-mapper
 
 device-mapper: $(MAN8DM)
 
-man: $(MAN5) $(MAN7) $(MAN8) $(MAN8SO) $(MAN8CLUSTER) $(MAN8SYSTEMD_GENERATORS)
+man: $(MAN5) $(MAN7) $(MAN8) $(MAN8SO) $(MAN8CLUSTER)
 
 all_man: man
 
-$(MAN5) $(MAN7) $(MAN8) $(MAN8SO) $(MAN8DM) $(MAN8CLUSTER) $(MAN8SYSTEMD_GENERATORS): Makefile
+$(MAN5) $(MAN7) $(MAN8) $(MAN8SO) $(MAN8DM) $(MAN8CLUSTER): Makefile
 
 $(MANGENERATOR):
 	@echo "    [MAKE] $<"
@@ -285,11 +284,6 @@ ifdef MAN8CLUSTER
 endif
 
 install_device-mapper: $(MAN8DM)
-	@echo "    [INSTALL] $^"
-	$(Q) $(INSTALL) -d $(MAN8DIR)
-	$(Q) $(INSTALL_DATA) $^ $(MAN8DIR)/
-
-install_systemd_generators: $(MAN8SYSTEMD_GENERATORS)
 	@echo "    [INSTALL] $^"
 	$(Q) $(INSTALL) -d $(MAN8DIR)
 	$(Q) $(INSTALL_DATA) $^ $(MAN8DIR)/

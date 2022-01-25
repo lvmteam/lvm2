@@ -101,9 +101,6 @@ fi
 %{_mandir}/man8/lvm-config.8.gz
 %{_mandir}/man8/lvm-dumpconfig.8.gz
 %{_mandir}/man8/lvm.8.gz
-%if %{enable_systemd}
- %{_mandir}/man8/lvm2-activation-generator.8.gz
-%endif
 %{_mandir}/man8/lvmconfig.8.gz
 %{_mandir}/man8/lvmdevices.8.gz
 %{_mandir}/man8/lvmdiskscan.8.gz
@@ -190,7 +187,6 @@ fi
  %{_tmpfilesdir}/%{name}.conf
  %{_unitdir}/blk-availability.service
  %{_unitdir}/lvm2-monitor.service
- %attr(555, -, -) %{_prefix}/lib/systemd/system-generators/lvm2-activation-generator
  %if %{have_service lvmpolld}
   %{_unitdir}/lvm2-lvmpolld.service
   %{_unitdir}/lvm2-lvmpolld.socket

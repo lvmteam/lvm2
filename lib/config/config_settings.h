@@ -1119,16 +1119,11 @@ cfg(global_lvdisplay_shows_full_device_path_CFG, "lvdisplay_shows_full_device_pa
 	"was never a valid path in the /dev filesystem.\n")
 
 cfg(global_event_activation_CFG, "event_activation", global_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, 1, vsn(2, 3, 1), 0, 0, NULL,
-	"Activate LVs based on system-generated device events.\n"
-	"When a PV appears on the system, a system-generated uevent triggers\n"
-	"the lvm2-pvscan service which runs the pvscan --cache -aay command.\n"
-	"If the new PV completes a VG, pvscan autoactivates LVs in the VG.\n"
-	"When event_activation is disabled, the lvm2-activation services are\n"
-	"generated and run at fixed points during system startup.  These\n"
-	"services run vgchange -aay to autoactivate LVs in VGs that happen\n"
-	"to be present at that point in time.\n"
-	"See the --setautoactivation option or the auto_activation_volume_list\n"
-	"setting to configure autoactivation for specific VGs or LVs.\n")
+	"Disable event based autoactivation commands.\n"
+	"WARNING: setting this to zero may cause machine startup to fail.\n"
+	"Previously, setting this to zero would enable static autoactivation\n"
+	"services (via the lvm2-activation-generator), but the autoactivation\n"
+	"services and generator have been removed.\n")
 
 cfg(global_use_lvmetad_CFG, "use_lvmetad", global_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, 0, vsn(2, 2, 93), 0, vsn(2, 3, 0), NULL,
 	NULL)

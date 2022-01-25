@@ -563,7 +563,6 @@ Prepends source file name and code line number with libdm debugging.
 .P
 .BR lvm-fullreport (8),
 .BR lvm-lvpoll (8),
-.BR lvm2-activation-generator (8),
 .BR blkdeactivate (8),
 .BR lvmdump (8),
 .P
