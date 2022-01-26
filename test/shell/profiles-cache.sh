@@ -66,7 +66,6 @@ lvcreate -n $lv1 -l 4 -an $vg "$dev1"
 lvcreate -y --type writecache -l 4 --cachevol $lv1 -n $lv2 --metadataprofile $PFILE $vg "$dev2"
 check lv_field $vg/$lv2 cachesettings "high_watermark=60"
 lvremove -y $vg
-exit
 
 # Check chunk_size is grabbed from configuration
 lvcreate -L1G --config 'allocation/cache_pool_chunk_size=512' --type cache-pool $vg/cpool
