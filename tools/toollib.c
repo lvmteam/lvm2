@@ -900,6 +900,10 @@ void lv_spawn_background_polling(struct cmd_context *cmd,
 	const char *pvname;
 	const struct logical_volume *lv_mirr = NULL;
 
+	/* Ensure there is nothing waiting on cookie */
+	if (!sync_local_dev_names(cmd))
+		log_warn("Failed to sync local dev names.");
+
 	if (lv_is_pvmove(lv))
 		lv_mirr = lv;
 	else if (lv_is_locked(lv))
