@@ -2231,7 +2231,7 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 			/* Race during table reload prevented merging */
 			merge_on_activate = 1;
 
-		} else if (!lv_info(cmd, origin, 0, &info, 0, 0) || !info.exists) {
+		} else if (!lv_is_active(origin)) {
 			log_print_unless_silent("Conversion starts after activation.");
 			merge_on_activate = 1;
 		} else {
@@ -3687,7 +3687,6 @@ static int _lvconvert_repair_pvs_mirror(struct cmd_context *cmd, struct logical_
 	struct lvconvert_result *lr = (struct lvconvert_result *) handle->custom_handle;
 	struct lvconvert_params lp = { 0 };
 	struct convert_poll_id_list *idl;
-	struct lvinfo info;
 	int ret;
 
 	/*
@@ -3721,7 +3720,7 @@ static int _lvconvert_repair_pvs_mirror(struct cmd_context *cmd, struct logical_
 	ret = _lvconvert_mirrors_repair(cmd, lv, &lp, use_pvh);
 
 	if (lp.need_polling) {
-		if (!lv_info(cmd, lv, 0, &info, 0, 0) || !info.exists)
+		if (!lv_is_active(lv))
 			log_print_unless_silent("Conversion starts after activation.");
 		else {
 			if (!(idl = _convert_poll_id_list_create(cmd, lv)))
@@ -5061,7 +5060,6 @@ static int _lvconvert_raid_types_single(struct cmd_context *cmd, struct logical_
 	struct lvconvert_params *lp = (struct lvconvert_params *) handle->custom_handle;
 	struct dm_list *use_pvh;
 	struct convert_poll_id_list *idl;
-	struct lvinfo info;
 	int ret;
 
 	if (cmd->position_argc > 1) {
@@ -5083,7 +5081,7 @@ static int _lvconvert_raid_types_single(struct cmd_context *cmd, struct logical_
 
 	if (lp->need_polling) {
 		/* _lvconvert() call may alter the reference in lp->lv_to_poll */
-		if (!lv_info(cmd, lp->lv_to_poll, 0, &info, 0, 0) || !info.exists)
+		if (!lv_is_active(lp->lv_to_poll))
 			log_print_unless_silent("Conversion starts after activation.");
 		else {
 			if (!(idl = _convert_poll_id_list_create(cmd, lp->lv_to_poll)))

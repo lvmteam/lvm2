@@ -171,9 +171,7 @@ static int _lvchange_monitoring(struct cmd_context *cmd,
 static int _lvchange_background_polling(struct cmd_context *cmd,
 					struct logical_volume *lv)
 {
-	struct lvinfo info;
-
-	if (!lv_info(cmd, lv, 0, &info, 0, 0) || !info.exists) {
+	if (!lv_is_active(lv)) {
 		log_error("Logical volume %s is not active.", display_lvname(lv));
 		return 0;
 	}
