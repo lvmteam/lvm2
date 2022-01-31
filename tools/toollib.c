@@ -1317,12 +1317,15 @@ static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecach
 int get_writecache_settings(struct cmd_context *cmd, struct writecache_settings *settings,
 			    uint32_t *block_size_sectors)
 {
+	const struct dm_config_node *cns, *cn1, *cn2;
 	struct arg_value_group_list *group;
 	const char *str;
 	char key[64];
 	char val[64];
 	int num;
 	int pos;
+	int rn;
+	int found = 0;
 
 	/*
 	 * "grouped" means that multiple --cachesettings options can be used.
@@ -1354,8 +1357,51 @@ int get_writecache_settings(struct cmd_context *cmd, struct writecache_settings 
 			if (!_get_one_writecache_setting(cmd, settings, key, val, block_size_sectors))
 				return_0;
 		}
+		found = 1;
 	}
 
+	if (found)
+		goto out;
+
+	/*
+	 * If there were no settings on the command line, look for settings in
+	 * lvm.conf
+	 *
+	 * TODO: support profiles
+	 */
+
+	if (!(cns = find_config_tree_node(cmd, allocation_cache_settings_CFG_SECTION, NULL)))
+		goto out;
+
+	for (cn1 = cns->child; cn1; cn1 = cn1->sib) {
+		if (!cn1->child)
+			continue; /* Ignore section without settings */
+
+		if (cn1->v || strcmp(cn1->key, "writecache") != 0)
+			continue; /* Ignore non-matching settings */
+
+		cn2 = cn1->child;
+
+		for (; cn2; cn2 = cn2->sib) {
+			memset(val, 0, sizeof(val));
+
+			if (cn2->v->type == DM_CFG_INT)
+				rn = dm_snprintf(val, sizeof(val), FMTd64, cn2->v->v.i);
+			else if (cn2->v->type == DM_CFG_STRING)
+				rn = dm_snprintf(val, sizeof(val), "%s", cn2->v->v.str);
+			else
+				rn = -1;
+			if (rn < 0) {
+				log_error("Invalid lvm.conf writecache setting value for %s.", cn2->key);
+				return 0;
+			}
+
+			if (!_get_one_writecache_setting(cmd, settings, (char *)cn2->key, val, block_size_sectors))
+				return_0;
+		}
+	}
+
+ out:
 	if (settings->high_watermark_set && settings->low_watermark_set &&
 	    (settings->high_watermark <= settings->low_watermark)) {
 		log_error("High watermark must be greater than low watermark.");
