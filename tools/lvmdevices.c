@@ -383,28 +383,27 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		 * No filter because we always want to allow removing a device
 		 * by name from the devices file.
 		 */
-		if (!(dev = dev_cache_get(cmd, devname, NULL))) {
-			log_error("No device found for %s.", devname);
-			goto bad;
-		}
-
-		/*
-		 * dev_cache_scan uses sysfs to check if an LV is using each dev
-		 * and sets this flag is so.
-		 */
-		if (dev_is_used_by_active_lv(cmd, dev, NULL, NULL, NULL, NULL)) {
-			if (!arg_count(cmd, yes_ARG) &&
-			    yes_no_prompt("Device %s is used by an active LV, continue to remove? ", devname) == 'n') {
-				log_error("Device not removed.");
-				goto bad;
+		if ((dev = dev_cache_get(cmd, devname, NULL))) {
+			/*
+			 * dev_cache_scan uses sysfs to check if an LV is using each dev
+			 * and sets this flag is so.
+			 */
+			if (dev_is_used_by_active_lv(cmd, dev, NULL, NULL, NULL, NULL)) {
+				if (!arg_count(cmd, yes_ARG) &&
+			    	    yes_no_prompt("Device %s is used by an active LV, continue to remove? ", devname) == 'n') {
+					log_error("Device not removed.");
+					goto bad;
+				}
 			}
+			if ((du = get_du_for_dev(cmd, dev)))
+				goto dev_del;
 		}
 
-		if (!(du = get_du_for_dev(cmd, dev))) {
-			log_error("Device not found in devices file.");
+		if (!(du = get_du_for_devname(cmd, devname))) {
+			log_error("No devices file entry for %s.", devname);
 			goto bad;
 		}
-
+ dev_del:
 		dm_list_del(&du->list);
 		free_du(du);
 		device_ids_write(cmd);

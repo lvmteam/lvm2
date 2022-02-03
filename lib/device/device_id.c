@@ -909,7 +909,7 @@ struct dev_use *get_du_for_pvid(struct cmd_context *cmd, const char *pvid)
 	return NULL;
 }
 
-static struct dev_use *_get_du_for_devname(struct cmd_context *cmd, const char *devname)
+struct dev_use *get_du_for_devname(struct cmd_context *cmd, const char *devname)
 {
 	struct dev_use *du;
 
@@ -1108,7 +1108,7 @@ id_done:
 	du_pvid = get_du_for_pvid(cmd, pvid);
 
 	/* Is there already an entry using this device's name? */
-	du_devname = _get_du_for_devname(cmd, dev_name(dev));
+	du_devname = get_du_for_devname(cmd, dev_name(dev));
 
 	/* Is there already an entry using the device_id for this device? */
 	du_devid = _get_du_for_device_id(cmd, id->idtype, id->idname);
@@ -1529,7 +1529,7 @@ int device_ids_match_dev(struct cmd_context *cmd, struct device *dev)
 	struct dev_use *du;
 
 	/* First check the du entry with matching devname since it's likely correct. */
-	if ((du = _get_du_for_devname(cmd, dev_name(dev)))) {
+	if ((du = get_du_for_devname(cmd, dev_name(dev)))) {
 		if (_match_du_to_dev(cmd, du, dev))
 			return 1;
 	}

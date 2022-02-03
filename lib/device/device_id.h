@@ -41,6 +41,7 @@ void device_id_update_vg_uuid(struct cmd_context *cmd, struct volume_group *vg, 
 
 struct dev_use *get_du_for_dev(struct cmd_context *cmd, struct device *dev);
 struct dev_use *get_du_for_pvid(struct cmd_context *cmd, const char *pvid);
+struct dev_use *get_du_for_devname(struct cmd_context *cmd, const char *devname);
 
 char *devices_file_version(void);
 int devices_file_exists(struct cmd_context *cmd);
