@@ -1151,16 +1151,11 @@ global {
 	# lvdisplay_shows_full_device_path = 0
 
 	# Configuration option global/event_activation.
-	# Activate LVs based on system-generated device events.
-	# When a PV appears on the system, a system-generated uevent triggers
-	# the lvm2-pvscan service which runs the pvscan --cache -aay command.
-	# If the new PV completes a VG, pvscan autoactivates LVs in the VG.
-	# When event_activation is disabled, the lvm2-activation services are
-	# generated and run at fixed points during system startup.  These
-	# services run vgchange -aay to autoactivate LVs in VGs that happen
-	# to be present at that point in time.
-	# See the --setautoactivation option or the auto_activation_volume_list
-	# setting to configure autoactivation for specific VGs or LVs.
+	# Disable event based autoactivation commands.
+	# WARNING: setting this to zero may cause machine startup to fail.
+	# Previously, setting this to zero would enable static autoactivation
+	# services (via the lvm2-activation-generator), but the autoactivation
+	# services and generator have been removed.
 	# This configuration option has an automatic default value.
 	# event_activation = 1
 

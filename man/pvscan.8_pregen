@@ -16,6 +16,8 @@ pvscan \(em List all physical volumes
 .ad l
  \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP
 .br
+    \fB--autoactivation\fP \fIString\fP
+.br
     \fB--cache\fP
 .br
     \fB--checkcomplete\fP
@@ -91,59 +93,50 @@ like
 or
 .BR pvdisplay (8).
 .P
-When the --cache and -aay options are used, pvscan records which PVs are
-available on the system, and activates LVs in completed VGs.  A VG is
-complete when pvscan sees that the final PV in the VG has appeared.  This
-is used by event-based system startup (systemd, udev) to activate LVs.
-.P
-The four main variations of this are:
+When --cache is used, pvscan updates runtime lvm state on the system, or
+with -aay performs autoactivation.
 .P
 .B pvscan --cache
 .I device
 .P
-If device is present, lvm adds a record that the PV on device is online.
+If device is present, lvm records that the PV on device is online.
 If device is not present, lvm removes the online record for the PV.
-In most cases, the pvscan will only read the named devices.
-.P
-.B pvscan --cache -aay
-.IR device ...
-.P
-This begins by performing the same steps as above.  Afterward, if the VG
-for the specified PV is complete, then pvscan will activate LVs in the VG
-(the same as vgchange -aay vgname would do.)
+pvscan only reads the named device.
 .P
 .B pvscan --cache
 .P
-This first clears all existing PV online records, then scans all devices
-on the system, adding PV online records for any PVs that are found.
+Updates the runtime state for all lvm devices.
+.P
+.B pvscan --cache -aay
+.I device
+.P
+Performs the --cache steps for the device, then checks if the VG using the
+device is complete.  If so, LVs in the VG are autoactivated, the same as
+vgchange -aay vgname would do.  (A device name may be replaced with major
+and minor numbers.)
 .P
 .B pvscan --cache -aay
 .P
-This begins by performing the same steps as pvscan --cache.  Afterward, it
-activates LVs in any complete VGs.
+Performs the --cache steps for all devices, then autoactivates any complete VGs.
 .P
-To prevent devices from being scanned by pvscan --cache, add them
-to
-.BR lvm.conf (5)
-.B devices/global_filter.
-For more information, see:
-.br
-.B lvmconfig --withcomments devices/global_filter
+.B pvscan --cache --listvg|--listlvs
+.I device
 .P
-Auto-activation of VGs or LVs can be enabled/disabled using:
-.br
+Performs the --cache steps for the device, then prints the name of the VG
+using the device, or the names of LVs using the device.  --checkcomplete
+is usually included to check if all PVs for the VG or LVs are online.
+When this command is called by a udev rule, the output must conform to
+udev rule specifications (see --udevoutput.)  The udev rule will use the
+results to perform autoactivation.
+.P
+Autoactivation of VGs or LVs can be enabled/disabled using vgchange or
+lvchange with --setautoactivation y|n, or by adding names to
 .BR lvm.conf (5)
 .B activation/auto_activation_volume_list
 .P
-For more information, see:
-.br
-.B lvmconfig --withcomments activation/auto_activation_volume_list
-.P
-To disable auto-activation, explicitly set this list to an empty list,
-i.e. auto_activation_volume_list = [ ].
-.P
-When this setting is undefined (e.g. commented), then all LVs are
-auto-activated.
+See
+.BR lvmautoactivation (7)
+for more information about how pvscan is used for autoactivation.
 .
 .SH USAGE
 .
@@ -215,6 +208,8 @@ Record that a PV is online and autoactivate the VG if complete.
 .br
 [    \fB--noudevsync\fP ]
 .br
+[    \fB--autoactivation\fP \fIString\fP ]
+.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
@@ -238,6 +233,8 @@ Record that a PV is online and list the VG using the PV.
 [    \fB--vgonline\fP ]
 .br
 [    \fB--udevoutput\fP ]
+.br
+[    \fB--autoactivation\fP \fIString\fP ]
 .br
 [ COMMON_OPTIONS ]
 .ad b
@@ -340,6 +337,14 @@ Common options for lvm:
 .br
 Auto-activate LVs in a VG when the PVs scanned have completed the VG.
 (Only \fBay\fP is applicable.)
+.
+.HP
+\fB--autoactivation\fP \fIString\fP
+.br
+Specify if autoactivation is being used from an event.
+This allows the command to apply settings that are specific
+to event activation, such as device scanning optimizations
+using pvs_online files created by event-based pvscans.
 .
 .HP
 \fB--cache\fP

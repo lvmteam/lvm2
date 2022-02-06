@@ -25,6 +25,8 @@ vgchange \(em Change volume group attributes
 \%\fBcontiguous\fP|\:\fBcling\fP|\:\fBcling_by_tags\fP|\:\fBnormal\fP|\:\fBanywhere\fP|\:\fBinherit\fP
 .hy
 .br
+    \fB--autoactivation\fP \fIString\fP
+.br
  \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
 .br
     \fB--commandprofile\fP \fIString\fP
@@ -286,6 +288,8 @@ Activate or deactivate LVs.
 .br
 [    \fB--poll\fP \fBy\fP|\fBn\fP ]
 .br
+[    \fB--autoactivation\fP \fIString\fP ]
+.br
 [    \fB--ignoremonitoring\fP ]
 .br
 [    \fB--noudevsync\fP ]
@@ -514,6 +518,14 @@ e.g. by placing two stripes on the same PV.
 Optional positional PV args on the command line can also be used to limit
 which PVs the command will use for allocation.
 See \fBlvm\fP(8) for more information about allocation.
+.
+.HP
+\fB--autoactivation\fP \fIString\fP
+.br
+Specify if autoactivation is being used from an event.
+This allows the command to apply settings that are specific
+to event activation, such as device scanning optimizations
+using pvs_online files created by event-based pvscans.
 .
 .HP
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP

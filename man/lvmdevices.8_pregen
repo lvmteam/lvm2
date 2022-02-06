@@ -322,7 +322,8 @@ Find a device with the PVID and add the device to the devices file.
 .HP
 \fB--check\fP
 .br
-Check the content of the devices file.
+Checks the content of the devices file.
+Reports incorrect device names or PVIDs for entries.
 .
 .HP
 \fB--commandprofile\fP \fIString\fP
