@@ -1,5 +1,6 @@
-Version 2.03.15 - 
-===================================
+Version 2.03.15 - 07th February 2022
+====================================
+  Remove service based autoactivation. global/event_activation = 0 is NOOP.
   Improve support for metadata profiles for --type writecache.
   Use cache or active DM device when available with new kernels.
   Introduce function to utilize UUIDs from DM_DEVICE_LIST.
