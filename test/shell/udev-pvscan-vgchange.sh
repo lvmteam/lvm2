@@ -75,7 +75,7 @@ wait_lvm_activate() {
 	local vgw=$1
 	local wait=0
 
-	while systemctl status lvm-activate-$vgw | grep "active (running)" && test "$wait" -le 30; do
+	while systemctl status lvm-activate-$vgw > /dev/null && test "$wait" -le 30; do
 		sleep .2
 		wait=$(( wait + 1 ))
 	done
@@ -382,7 +382,6 @@ lvcreate -l1 -an -n $lv1 $vg9
 lvcreate -l1 -an -n $lv2 $vg9
 
 mdadm --stop "$mddev"
-systemctl stop lvm-activate-$vg9 || true
 _clear_online_files
 mdadm --assemble "$mddev" "$dev1" "$dev2"
 
@@ -404,17 +403,6 @@ vgremove -y $vg9
 mdadm --stop "$mddev"
 aux udev_wait
 wipe_all
-
-systemctl stop lvm-activate-$vg1
-systemctl stop lvm-activate-$vg2
-systemctl stop lvm-activate-$vg3
-systemctl stop lvm-activate-$vg4
-systemctl stop lvm-activate-$vg5
-systemctl stop lvm-activate-$vg6
-systemctl stop lvm-activate-$vg7
-systemctl stop lvm-activate-$vg8
-systemctl stop lvm-activate-$vg9
-
 
 # no devices file, filter with symlink of PV
 # the pvscan needs to look at all dev names to
@@ -439,7 +427,6 @@ udevadm trigger --settle -c add /sys/block/$BDEV1
 ls /dev/disk/by-id/lvm-pv-uuid-$OPVID1
 
 vgchange -an $vg10
-systemctl stop lvm-activate-$vg10
 _clear_online_files
 
 aux lvmconf "devices/filter = [ \"a|/dev/disk/by-id/lvm-pv-uuid-$OPVID1|\", \"r|.*|\" ]"
