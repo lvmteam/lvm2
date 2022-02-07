@@ -2601,7 +2601,7 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 	fmt->ops = &_text_handler;
 	fmt->name = FMT_TEXT_NAME;
 	fmt->alias = FMT_TEXT_ALIAS;
-	fmt->orphan_vg_name = ORPHAN_VG_NAME(FMT_TEXT_NAME);
+	strncpy(fmt->orphan_vg_name, ORPHAN_VG_NAME(FMT_TEXT_NAME), sizeof(fmt->orphan_vg_name));
 	fmt->features = FMT_SEGMENTS | FMT_TAGS | FMT_PRECOMMIT |
 			FMT_UNLIMITED_VOLS | FMT_RESIZE_PV |
 			FMT_UNLIMITED_STRIPESIZE | FMT_CONFIG_PROFILE |

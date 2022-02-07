@@ -410,6 +410,7 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 {
 	struct lvmcache_vgsummary vgsummary;
 	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
+	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct lvmcache_info *info;
 	const struct format_type *fmt = labeller->fmt;
 	struct label_header *lh = (struct label_header *) label_buf;
@@ -433,6 +434,7 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 	pvhdr = (struct pv_header *) ((char *) label_buf + xlate32(lh->offset_xl));
 
 	memcpy(pvid, &pvhdr->pv_uuid, ID_LEN);
+	strncpy(vgid, FMT_TEXT_ORPHAN_VG_NAME, ID_LEN);
 
 	/*
 	 * FIXME: stop adding the device to lvmcache initially as an orphan
@@ -449,8 +451,8 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 	 * Other reasons for lvmcache_add to return NULL are internal errors.
 	 */
 	if (!(info = lvmcache_add(cmd, labeller, pvid, dev, label_sector,
-				  FMT_TEXT_ORPHAN_VG_NAME,
-				  FMT_TEXT_ORPHAN_VG_NAME, 0, is_duplicate)))
+				  vgid,
+				  vgid, 0, is_duplicate)))
 		return_0;
 
 	lvmcache_set_device_size(info, xlate64(pvhdr->device_size_xl));

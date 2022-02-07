@@ -371,7 +371,7 @@ struct format_type {
 	struct labeller *labeller;
 	const char *name;
 	const char *alias;
-	const char *orphan_vg_name;
+	char orphan_vg_name[ID_LEN];
 	struct volume_group *orphan_vg; /* Only one ever exists. */
 	uint32_t features;
 	void *library;

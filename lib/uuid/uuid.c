@@ -168,6 +168,11 @@ int id_write_format(const struct id *id, char *buffer, size_t size)
 
 	assert(ID_LEN == 32);
 
+	if (id->uuid[0] == '#') {
+		(void) dm_strncpy(buffer, (char*)id->uuid, size);
+		return 1;
+	}
+
 	/* split into groups separated by dashes */
 	if (size < (32 + 6 + 1)) {
 		if (size > 0)
