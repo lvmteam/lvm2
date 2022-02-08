@@ -2197,7 +2197,7 @@ static int _validate_lock_args_chars(const char *lock_args)
 
 static int _validate_vg_lock_args(struct volume_group *vg)
 {
-	if (!_validate_lock_args_chars(vg->lock_args)) {
+	if (!vg->lock_args || !_validate_lock_args_chars(vg->lock_args)) {
 		log_error(INTERNAL_ERROR "VG %s has invalid lock_args chars", vg->name);
 		return 0;
 	}
