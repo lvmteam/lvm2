@@ -40,6 +40,7 @@
 #define DEV_IS_NVME		0x00040000	/* set if dev is nvme */
 #define DEV_MATCHED_USE_ID	0x00080000	/* matched an entry from cmd->use_devices */
 #define DEV_SCAN_FOUND_NOLABEL	0x00100000	/* label_scan read, passed filters, but no lvm label */
+#define DEV_SCAN_NOT_READ	0x00200000	/* label_scan not able to read dev */
 
 /*
  * Support for external device info.

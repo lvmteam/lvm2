@@ -1747,6 +1747,13 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 			continue;
 
 		/*
+		 * The matched device could not be read so we do not have
+		 * the PVID from disk and cannot verify the devices file entry.
+		 */
+		if (dev->flags & DEV_SCAN_NOT_READ)
+			continue;
+
+		/*
 		 * du and dev may have been matched, but the dev could still
 		 * have been excluded by other filters during label scan.
 		 * This shouldn't generally happen, but if it does the user
@@ -1826,6 +1833,13 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 		 * so they are the only devs we can verify PVID for.
 		 */
 		if (scanned_devs && !dev_in_device_list(dev, scanned_devs))
+			continue;
+
+		/*
+		 * The matched device could not be read so we do not have
+		 * the PVID from disk and cannot verify the devices file entry.
+		 */
+		if (dev->flags & DEV_SCAN_NOT_READ)
 			continue;
 
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "persistent")) {

@@ -236,6 +236,7 @@ static int _touch_newhints(void)
 		return_0;
 	if (fclose(fp))
 		stack;
+	log_debug("newhints created");
 	return 1;
 }
 
@@ -505,6 +506,19 @@ int validate_hints(struct cmd_context *cmd, struct dm_list *hints)
 		/* The cmd hasn't needed this hint's dev so it's not been scanned. */
 		if (!hint->chosen)
 			continue;
+
+		/* 
+		 * label_scan was unable to read the dev so we don't know its pvid.
+		 * Since we are unable to verify the hint is correct, it's possible
+		 * that the PVID is actually found on a different device, so don't
+		 * depend on hints. (This would also fail the following pvid check.)
+		 */
+		if (dev->flags & DEV_SCAN_NOT_READ) {
+			log_debug("Uncertain hint for unread device %d:%d %s",
+				  major(hint->devt), minor(hint->devt), dev_name(dev));
+			ret = 0;
+			continue;
+		}
 
 		if (strcmp(dev->pvid, hint->pvid)) {
 			log_debug("Invalid hint device %d:%d %s pvid %s had hint pvid %s",

@@ -687,6 +687,8 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 
 	dm_list_iterate_items_safe(devl, devl2, devs) {
 
+		devl->dev->flags &= ~DEV_SCAN_NOT_READ;
+
 		/*
 		 * If we prefetch more devs than blocks in the cache, then the
 		 * cache will wait for earlier reads to complete, toss the
@@ -702,6 +704,7 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 				log_debug_devs("Scan failed to open %s.", dev_name(devl->dev));
 				dm_list_del(&devl->list);
 				dm_list_add(&reopen_devs, &devl->list);
+				devl->dev->flags |= DEV_SCAN_NOT_READ;
 				continue;
 			}
 		}
@@ -725,6 +728,7 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 			log_debug_devs("Scan failed to read %s.", dev_name(devl->dev));
 			scan_read_errors++;
 			scan_failed_count++;
+			devl->dev->flags |= DEV_SCAN_NOT_READ;
 			lvmcache_del_dev(devl->dev);
 			if (bb)
 				bcache_put(bb);
@@ -1389,6 +1393,10 @@ int label_scan(struct cmd_context *cmd)
 	 * filter", and this result needs to be cleared (wiped) so that the
 	 * complete set of filters (including those that require data) can be
 	 * checked in _process_block, where headers have been read.
+	 *
+	 * FIXME: devs that are filtered with data in _process_block
+	 * are not moved to the filtered_devs list like devs filtered
+	 * here without data.  Does that have any effect?
 	 */
 	log_debug_devs("Filtering devices to scan (nodata)");
 
