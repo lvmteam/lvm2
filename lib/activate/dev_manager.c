@@ -2254,6 +2254,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 {
 	char *dlid, *name;
 	struct dm_info info, info2;
+	const struct dm_active_device *dev;
 
 	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
@@ -2262,15 +2263,20 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		return_0;
 
 	if (!dm->cmd->disable_dm_devs &&
-	    dm->cmd->cache_dm_devs &&
-	    !dm_device_list_find_by_uuid(dm->cmd->cache_dm_devs, dlid, NULL)) {
-		log_debug("Cached as not present %s.", name);
-		return 1;
-	}
-
-	if (!_info(dm->cmd, name, dlid, 0, 0, 0, &info, NULL, NULL))
+	    dm->cmd->cache_dm_devs) {
+		if (!dm_device_list_find_by_uuid(dm->cmd->cache_dm_devs, dlid, &dev)) {
+			log_debug("Cached as not present %s.", name);
+			return 1;
+		}
+		info = (struct dm_info) {
+			.exists = 1,
+			.major = dev->major,
+			.minor = dev->minor,
+		};
+		log_debug("Cached as present %s %s (%d:%d).",
+			  name, dlid, info.major, info.minor);
+	} else if (!_info(dm->cmd, name, dlid, 0, 0, 0, &info, NULL, NULL))
 		return_0;
-
 	/*
 	 * For top level volumes verify that existing device match
 	 * requested major/minor and that major/minor pair is available for use
