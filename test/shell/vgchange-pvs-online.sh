@@ -19,6 +19,9 @@ _clear_online_files() {
 
 aux prepare_devs 4
 
+# skip rhel5 which doesn't seem to have /dev/mapper/LVMTESTpv1
+aux driver_at_least 4 15 || skip
+
 DFDIR="$LVM_SYSTEM_DIR/devices"
 mkdir -p "$DFDIR" || true
 DF="$DFDIR/system.devices"
