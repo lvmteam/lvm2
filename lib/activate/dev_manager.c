@@ -107,6 +107,8 @@ static struct dm_task *_setup_task_run(int task, struct dm_info *info,
 				       int with_flush,
 				       int query_inactive)
 {
+	char vsn[80];
+	unsigned maj, min;
 	struct dm_task *dmt;
 
 	if (!(dmt = dm_task_create(task)))
@@ -142,7 +144,11 @@ static struct dm_task *_setup_task_run(int task, struct dm_info *info,
 	case DM_DEVICE_TARGET_MSG:
 		return dmt; /* TARGET_MSG needs more local tweaking before task_run() */
 	case DM_DEVICE_LIST:
-		if (!dm_task_set_newuuid(dmt, " ")) // new uuid has no meaning here
+		/* Use 'newuuid' only with DM version that supports it */
+		if (driver_version(vsn, sizeof(vsn)) &&
+		    (sscanf(vsn, "%u.%u", &maj, &min) == 2) &&
+		    (maj == 4 ? min >= 19 : maj > 4) &&
+		    !dm_task_set_newuuid(dmt, " ")) // new uuid has no meaning here
 			log_warn("WARNING: Failed to query uuid with LIST.");
 		break;
 	default:
