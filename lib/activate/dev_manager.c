@@ -204,7 +204,7 @@ static int _get_segment_status_from_target_params(const char *target_name,
 	    /* If kernel's type isn't an exact match is it compatible? */
 	    (!segtype->ops->target_status_compatible ||
 	     !segtype->ops->target_status_compatible(target_name))) {
-		log_warn(INTERNAL_ERROR "WARNING: Segment type %s found does not match expected type %s for %s.",
+		log_warn("WARNING: Detected %s segment type does not match expected type %s for %s.",
 			 target_name, segtype->name, display_lvname(seg_status->seg->lv));
 		return 0;
 	}
