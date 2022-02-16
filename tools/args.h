@@ -862,12 +862,13 @@ arg(cachepolicy_ARG, '\0', "cachepolicy", string_VAL, 0, 0,
     "See \\fBlvmcache\\fP(7) for more information.\n")
 
 arg(cachesettings_ARG, '\0', "cachesettings", string_VAL, ARG_GROUPABLE, 0,
-    "Specifies tunable values for a cache LV in \"Key = Value\" form.\n"
-    "Repeat this option to specify multiple values.\n"
-    "(The default values should usually be adequate.)\n"
-    "The special string value \\fBdefault\\fP switches\n"
-    "settings back to their default kernel values and removes\n"
-    "them from the list of settings stored in LVM metadata.\n"
+    "Specifies tunable kernel options for dm-cache or dm-writecache LVs.\n"
+    "Use the form 'option=value' or 'option1=value option2=value', or\n"
+    "repeat --cachesettings for each option being set.\n"
+    "These settings override the default kernel behaviors which are\n"
+    "usually adequate. To remove cachesettings and revert to the default\n"
+    "kernel behaviors, use --cachesettings 'default' for dm-cache or\n"
+    "an empty string --cachesettings '' for dm-writecache.\n"
     "See \\fBlvmcache\\fP(7) for more information.\n")
 
 arg(unconfigured_ARG, '\0', "unconfigured", 0, 0, 0,
