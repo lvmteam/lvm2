@@ -108,6 +108,7 @@ FIELD(LVS, lv, TIM, "RTime", lvid, 26, lvtimeremoved, lv_time_removed, "Removal 
 FIELD(LVS, lv, STR, "Host", lvid, 10, lvhost, lv_host, "Creation host of the LV, if known.", 0)
 FIELD(LVS, lv, STR_LIST, "Modules", lvid, 0, modules, lv_modules, "Kernel device-mapper modules required for this LV.", 0)
 FIELD(LVS, lv, BIN, "Historical", lvid, 0, lvhistorical, lv_historical, "Set if the LV is historical.", 0)
+FIELD(LVS, lv, NUM, "WCacheBlkSize", lvid, 0, writecache_block_size, writecache_block_size, "The writecache block size", 0)
 /*
  * End of LVS type fields
  */

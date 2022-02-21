@@ -222,6 +222,8 @@ vgextend $vg "$dev2"
 lvcreate -n $lv1 -l 8 -an $vg "$dev1"
 lvcreate -n $lv2 -l 4 -an $vg "$dev2"
 lvconvert --yes --type writecache --cachevol $lv2 --cachesettings "block_size=4096" $vg/$lv1
+lvs -o writecacheblocksize $vg/$lv1 |tee out
+grep 4096 out
 lvchange -ay $vg/$lv1
 mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1" |tee out
 grep "sectsz=4096" out

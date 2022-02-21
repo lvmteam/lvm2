@@ -353,6 +353,8 @@ GET_PV_STR_PROPERTY_FN(pv_device_id_type, pv->device_id_type)
 #define _writecache_writeback_blocks_get prop_not_implemented_get
 #define _writecache_error_set prop_not_implemented_set
 #define _writecache_error_get prop_not_implemented_get
+#define _writecache_block_size_set prop_not_implemented_set
+#define _writecache_block_size_get prop_not_implemented_get
 
 #define _vdo_operating_mode_set prop_not_implemented_set
 #define _vdo_operating_mode_get prop_not_implemented_get
