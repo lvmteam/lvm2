@@ -3346,6 +3346,26 @@ static int _integritymismatches_disp(struct dm_report *rh __attribute__((unused)
 	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
 }
 
+static int _writecache_block_size_disp(struct dm_report *rh __attribute__((unused)),
+				   struct dm_pool *mem,
+				   struct dm_report_field *field,
+				   const void *data,
+				   void *private __attribute__((unused)))
+{
+	struct logical_volume *lv = (struct logical_volume *) data;
+	uint32_t bs = 0;
+
+	if (lv_is_writecache(lv)) {
+		struct lv_segment *seg = first_seg(lv);
+		bs = seg->writecache_block_size;
+	}
+
+	if (!bs)
+		return dm_report_field_int32(rh, field, &GET_TYPE_RESERVED_VALUE(num_undef_32));
+
+	return dm_report_field_uint32(rh, field, &bs);
+}
+
 static int _datapercent_disp(struct dm_report *rh, struct dm_pool *mem,
 			     struct dm_report_field *field,
 			     const void *data, void *private)

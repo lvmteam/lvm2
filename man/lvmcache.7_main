@@ -241,6 +241,10 @@ It is also possible to specify a sector size of 4096 to mkfs.xfs when
 creating the file system.  In this case the writecache block size of 4096
 can be used.
 .P
+The writecache block size is displayed by the command:
+.br
+lvs -o writecacheblocksize VG/LV
+.P
 .SS dm-writecache memory usage
 .P
 The amount of main system memory used by dm-writecache can be a factor
