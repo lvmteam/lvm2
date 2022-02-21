@@ -240,6 +240,18 @@ The writecache block size should be chosen to match the xfs sectsz value.
 It is also possible to specify a sector size of 4096 to mkfs.xfs when
 creating the file system.  In this case the writecache block size of 4096
 can be used.
+.P
+.SS dm-writecache memory usage
+.P
+The amount of main system memory used by dm-writecache can be a factor
+when selecting the writecache cachevol size and the writecache block size.
+.P
+.IP \[bu] 2
+writecache block size 4096: each 100 GiB of writecache cachevol uses
+slighly over 2 GiB of system memory.
+.IP \[bu] 2
+writecache block size 512: each 100 GiB of writecache cachevol uses
+a little over 16 GiB of system memory.
 .
 .SS dm-writecache settings
 .
