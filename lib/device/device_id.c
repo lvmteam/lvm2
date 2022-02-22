@@ -347,6 +347,8 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 	}
 
 	else if (idtype == DEV_ID_TYPE_DEVNAME) {
+		if (dm_list_empty(&dev->aliases))
+			goto_bad;
 		if (!(idname = strdup(dev_name(dev))))
 			goto_bad;
 		return idname;
@@ -938,6 +940,10 @@ int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid_
 	int part = 0;
 
 	if (!dev_get_partition_number(dev, &part))
+		return_0;
+
+	/* Ensure valid dev_name(dev) below. */
+	if (dm_list_empty(&dev->aliases))
 		return_0;
 
 	/*
@@ -1820,6 +1826,9 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 		if (dev->flags & DEV_SCAN_NOT_READ)
 			continue;
 
+		if (dm_list_empty(&dev->aliases))
+			continue;
+
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "persistent")) {
 			log_warn("Devices file %s is excluded by filter: %s.",
 				 dev_name(dev), dev_filtered_reason(dev));
@@ -2197,14 +2206,14 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 	dm_list_iterate_items(dil, &search_pvids) {
 		char *dup_devname1, *dup_devname2, *dup_devname3;
 
-		if (!dil->dev) {
+		if (!dil->dev || dm_list_empty(&dil->dev->aliases)) {
 			not_found++;
 			continue;
 		}
-		found++;
 
 		dev = dil->dev;
 		devname = dev_name(dev);
+		found++;
 
 		if (!(du = get_du_for_pvid(cmd, dil->pvid))) {
 			/* shouldn't happen */

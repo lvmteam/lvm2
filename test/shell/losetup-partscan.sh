@@ -33,6 +33,8 @@ aux udev_wait
 ls -la "${LOOP}"*
 test -e "${LOOP}p1"
 
+aux lvmconf 'devices/scan = "/dev"'
+
 aux extend_filter "a|$LOOP|"
 aux extend_devices "$LOOP"
 

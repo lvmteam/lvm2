@@ -1565,9 +1565,23 @@ int label_scan_open_rw(struct device *dev)
 
 int label_scan_reopen_rw(struct device *dev)
 {
+	const char *name;
 	int flags = 0;
 	int prev_fd = dev->bcache_fd;
 	int fd;
+
+	if (dm_list_empty(&dev->aliases)) {
+		log_error("Cannot reopen rw device %d:%d with no valid paths di %d fd %d.",
+			  (int)MAJOR(dev->dev), (int)MINOR(dev->dev), dev->bcache_di, dev->bcache_fd);
+		return 0;
+	}
+
+	name = dev_name(dev);
+	if (!name || name[0] != '/') {
+		log_error("Cannot reopen rw device %d:%d with no valid name di %d fd %d.",
+			  (int)MAJOR(dev->dev), (int)MINOR(dev->dev), dev->bcache_di, dev->bcache_fd);
+		return 0;
+	}
 
 	if (!(dev->flags & DEV_IN_BCACHE)) {
 		if ((dev->bcache_fd != -1) || (dev->bcache_di != -1)) {
@@ -1598,7 +1612,7 @@ int label_scan_reopen_rw(struct device *dev)
 	flags |= O_NOATIME;
 	flags |= O_RDWR;
 
-	fd = open(dev_name(dev), flags, 0777);
+	fd = open(name, flags, 0777);
 	if (fd < 0) {
 		log_error("Failed to open rw %s errno %d di %d fd %d.",
 			  dev_name(dev), errno, dev->bcache_di, dev->bcache_fd);
