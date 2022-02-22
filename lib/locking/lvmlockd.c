@@ -272,6 +272,8 @@ static void _lockd_retrive_vg_pv_list(struct volume_group *vg,
 
 	i = 0;
 	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (!pvl->pv->dev || dm_list_empty(&pvl->pv->dev->aliases))
+			continue;
 		lock_pvs->path[i] = strdup(pv_dev_name(pvl->pv));
 		if (!lock_pvs->path[i]) {
 			log_error("Fail to allocate PV path for VG %s", vg->name);
@@ -341,6 +343,8 @@ static void _lockd_retrive_lv_pv_list(struct volume_group *vg,
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (lv_is_on_pv(lv, pvl->pv)) {
+			if (!pvl->pv->dev || dm_list_empty(&pvl->pv->dev->aliases))
+				continue;
 			lock_pvs->path[i] = strdup(pv_dev_name(pvl->pv));
 			if (!lock_pvs->path[i]) {
 				log_error("Fail to allocate PV path for LV %s/%s",

@@ -2947,6 +2947,10 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 
 	/* FIXME Avoid repeating identical stat in dm_tree_node_add_target_area */
 	for (s = start_area; s < areas; s++) {
+
+		/* FIXME: dev_name() does not return NULL!  It needs to check if dm_list_empty(&dev->aliases)
+		   but this knot of logic is too complex to pull apart without careful deconstruction. */
+
 		if ((seg_type(seg, s) == AREA_PV &&
 		     (!seg_pvseg(seg, s) || !seg_pv(seg, s) || !seg_dev(seg, s) ||
 		       !(name = dev_name(seg_dev(seg, s))) || !*name ||
@@ -2965,7 +2969,10 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 				return_0;
 			num_error_areas++;
 		} else if (seg_type(seg, s) == AREA_PV) {
-			if (!dm_tree_node_add_target_area(node, dev_name(seg_dev(seg, s)), NULL,
+			struct device *dev = seg_dev(seg, s);
+			name = dm_list_empty(&dev->aliases) ? NULL : dev_name(dev);
+
+			if (!dm_tree_node_add_target_area(node, name, NULL,
 				    (seg_pv(seg, s)->pe_start + (extent_size * seg_pe(seg, s)))))
 				return_0;
 			num_existing_areas++;

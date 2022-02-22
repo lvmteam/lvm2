@@ -966,6 +966,9 @@ static int _wipe_known_signatures_with_blkid(struct device *dev, const char *nam
 
 	/* TODO: Should we check for valid dev - _dev_is_valid(dev)? */
 
+	if (dm_list_empty(&dev->aliases))
+		goto_out;
+
 	if (!(probe = blkid_new_probe_from_filename(dev_name(dev)))) {
 		log_error("Failed to create a new blkid probe for device %s.", dev_name(dev));
 		goto out;

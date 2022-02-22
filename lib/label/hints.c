@@ -500,6 +500,8 @@ int validate_hints(struct cmd_context *cmd, struct dm_list *hints)
 	if (!(iter = dev_iter_create(NULL, 0)))
 		return 0;
 	while ((dev = dev_iter_get(cmd, iter))) {
+		if (dm_list_empty(&dev->aliases))
+			continue;
 		if (!(hint = _find_hint_name(hints, dev_name(dev))))
 			continue;
 

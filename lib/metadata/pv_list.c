@@ -152,6 +152,11 @@ static int _create_pv_entry(struct dm_pool *mem, struct pv_list *pvl,
 	struct pv_list *new_pvl = NULL, *pvl2;
 	struct dm_list *pe_ranges;
 
+	if (!pvl->pv->dev || dm_list_empty(&pvl->pv->dev->aliases)) {
+		log_error("Failed to create PV entry for missing device.");
+		return 0;
+	}
+
 	pvname = pv_dev_name(pvl->pv);
 	if (allocatable_only && !(pvl->pv->status & ALLOCATABLE_PV)) {
 		log_warn("WARNING: Physical volume %s not allocatable.", pvname);

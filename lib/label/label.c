@@ -1130,6 +1130,7 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 	 * sure to find the device.
 	 */
 	if (try_dev_scan) {
+		log_debug("Repeat dev cache scan to translate devnos.");
 		dev_cache_scan(cmd);
 		dm_list_iterate_items(po, &pvs_online) {
 			if (po->dev)
@@ -1736,6 +1737,12 @@ void label_scan_invalidate_lvs(struct cmd_context *cmd, struct dm_list *lvs)
 	struct lv_list *lvl;
 	dev_t devt;
 
+	/*
+	 * FIXME: this is all unnecessary unless there are PVs stacked on LVs,
+	 * so we can skip all of this if scan_lvs=0.
+	 */
+	log_debug("invalidating devs for any pvs on lvs");
+
 	if (get_device_list(NULL, &devs, &devs_features)) {
 		if (devs_features & DM_DEVICE_LIST_HAS_UUID) {
 			dm_list_iterate_items(dm_dev, devs)
@@ -1879,9 +1886,23 @@ int label_scan_open_rw(struct device *dev)
 
 int label_scan_reopen_rw(struct device *dev)
 {
+	const char *name;
 	int flags = 0;
 	int prev_fd = dev->bcache_fd;
 	int fd;
+
+	if (dm_list_empty(&dev->aliases)) {
+		log_error("Cannot reopen rw device %d:%d with no valid paths di %d fd %d.",
+			  (int)MAJOR(dev->dev), (int)MINOR(dev->dev), dev->bcache_di, dev->bcache_fd);
+		return 0;
+	}
+
+	name = dev_name(dev);
+	if (!name || name[0] != '/') {
+		log_error("Cannot reopen rw device %d:%d with no valid name di %d fd %d.",
+			  (int)MAJOR(dev->dev), (int)MINOR(dev->dev), dev->bcache_di, dev->bcache_fd);
+		return 0;
+	}
 
 	if (!(dev->flags & DEV_IN_BCACHE)) {
 		if ((dev->bcache_fd != -1) || (dev->bcache_di != -1)) {
@@ -1912,7 +1933,7 @@ int label_scan_reopen_rw(struct device *dev)
 	flags |= O_NOATIME;
 	flags |= O_RDWR;
 
-	fd = open(dev_name(dev), flags, 0777);
+	fd = open(name, flags, 0777);
 	if (fd < 0) {
 		log_error("Failed to open rw %s errno %d di %d fd %d.",
 			  dev_name(dev), errno, dev->bcache_di, dev->bcache_fd);

@@ -679,6 +679,11 @@ int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 		return r;
 	}
 
+	if (!pv->dev || dm_list_empty(&pv->dev->aliases)) {
+		log_error("No device found for PV.");
+		return r;
+	}
+
 	log_debug("vgreduce_single VG %s PV %s", vg->name, pv_dev_name(pv));
 
 	if (pv_pe_alloc_count(pv)) {

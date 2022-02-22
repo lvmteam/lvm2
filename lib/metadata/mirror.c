@@ -1231,14 +1231,23 @@ int remove_mirrors_from_segments(struct logical_volume *lv,
 const char *get_pvmove_pvname_from_lv_mirr(const struct logical_volume *lv_mirr)
 {
 	struct lv_segment *seg;
+	struct device *dev;
 
 	dm_list_iterate_items(seg, &lv_mirr->segments) {
 		if (!seg_is_mirrored(seg))
 			continue;
-		if (seg_type(seg, 0) == AREA_PV)
-			return dev_name(seg_dev(seg, 0));
-		if (seg_type(seg, 0) == AREA_LV)
-			return dev_name(seg_dev(first_seg(seg_lv(seg, 0)), 0));
+		if (seg_type(seg, 0) == AREA_PV) {
+			dev = seg_dev(seg, 0);
+			if (!dev || dm_list_empty(&dev->aliases))
+				return NULL;
+			return dev_name(dev);
+		}
+		if (seg_type(seg, 0) == AREA_LV) {
+			dev = seg_dev(first_seg(seg_lv(seg, 0)), 0);
+			if (!dev || dm_list_empty(&dev->aliases))
+				return NULL;
+			return dev_name(dev);
+		}
 	}
 
 	return NULL;
