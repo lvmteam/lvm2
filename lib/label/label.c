@@ -1134,7 +1134,7 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 		dm_list_iterate_items(po, &pvs_online) {
 			if (po->dev)
 				continue;
-			if (!(po->dev = dev_cache_get_by_devt(cmd, po->devno, NULL, NULL))) {
+			if (!(po->dev = dev_cache_get_by_devt(cmd, po->devno))) {
 				log_error("No device found for %d:%d PVID %s",
 					  (int)MAJOR(po->devno), (int)MINOR(po->devno), po->pvid);
 				goto bad;
@@ -1722,7 +1722,7 @@ void label_scan_invalidate_lv(struct cmd_context *cmd, struct logical_volume *lv
 	if (lv_info(cmd, lv, 0, &lvinfo, 0, 0) && lvinfo.exists) {
 		/* FIXME: Still unclear what is it supposed to find */
 		devt = MKDEV(lvinfo.major, lvinfo.minor);
-		if ((dev = dev_cache_get_by_devt(cmd, devt, NULL, NULL)))
+		if ((dev = dev_cache_get_by_devt(cmd, devt)))
 			label_scan_invalidate(dev);
 	}
 }
@@ -1742,7 +1742,7 @@ void label_scan_invalidate_lvs(struct cmd_context *cmd, struct dm_list *lvs)
 				if (dm_dev->uuid &&
 				    strncmp(dm_dev->uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1) == 0) {
 					devt = MKDEV(dm_dev->major, dm_dev->minor);
-					if ((dev = dev_cache_get_by_devt(cmd, devt, NULL, NULL)))
+					if ((dev = dev_cache_get_by_devt(cmd, devt)))
 						label_scan_invalidate(dev);
 				}
 			/* ATM no further caching for any lvconvert command
