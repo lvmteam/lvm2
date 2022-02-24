@@ -351,7 +351,7 @@ static int _add_alias(struct device *dev, const char *path, enum add_hash hash)
 			goto out;
 		}
 
-	if (!(path = dm_pool_strdup(_cache.mem, path)) ||
+	if (!(path = _strdup(path)) ||
 	    !(sl = _zalloc(sizeof(*sl)))) {
 		log_error("Failed to add allias to dev cache.");
 		return 0;
@@ -1162,6 +1162,17 @@ static int _insert(const char *path, const struct stat *info,
 	return 1;
 }
 
+static void _drop_all_aliases(struct device *dev)
+{
+	struct dm_str_list *strl, *strl2;
+
+	dm_list_iterate_items_safe(strl, strl2, &dev->aliases) {
+		log_debug("Drop alias for %d:%d %s.", (int)MAJOR(dev->dev), (int)MINOR(dev->dev), strl->str);
+		dm_hash_remove(_cache.names, strl->str);
+		dm_list_del(&strl->list);
+	}
+}
+
 void dev_cache_scan(struct cmd_context *cmd)
 {
 	log_debug_devs("Creating list of system devices.");
@@ -1371,59 +1382,6 @@ int dev_cache_add_dir(const char *path)
 	return 1;
 }
 
-/* Check cached device name is still valid before returning it */
-/* This should be a rare occurrence */
-/* set quiet if the cache is expected to be out-of-date */
-/* FIXME Make rest of code pass/cache struct device instead of dev_name */
-const char *dev_name_confirmed(struct device *dev, int quiet)
-{
-	struct stat buf;
-	const char *name;
-	int r;
-
-	if ((dev->flags & DEV_REGULAR))
-		return dev_name(dev);
-
-	while ((r = stat(name = dm_list_item(dev->aliases.n,
-					  struct dm_str_list)->str, &buf)) ||
-	       (buf.st_rdev != dev->dev)) {
-		if (r < 0) {
-			if (quiet)
-				log_sys_debug("stat", name);
-			else
-				log_sys_error("stat", name);
-		}
-		if (quiet)
-			log_debug_devs("Path %s no longer valid for device(%d,%d)",
-				       name, (int) MAJOR(dev->dev),
-				       (int) MINOR(dev->dev));
-		else
-			log_warn("Path %s no longer valid for device(%d,%d)",
-				 name, (int) MAJOR(dev->dev),
-				 (int) MINOR(dev->dev));
-
-		/* Remove the incorrect hash entry */
-		dm_hash_remove(_cache.names, name);
-
-		/* Leave list alone if there isn't an alternative name */
-		/* so dev_name will always find something to return. */
-		/* Otherwise add the name to the correct device. */
-		if (dm_list_size(&dev->aliases) > 1) {
-			dm_list_del(dev->aliases.n);
-			if (!r)
-				_insert(name, &buf, 0, obtain_device_list_from_udev());
-			continue;
-		}
-
-		/* Scanning issues this inappropriately sometimes. */
-		log_debug_devs("Aborting - please provide new pathname for what "
-			       "used to be %s", name);
-		return NULL;
-	}
-
-	return dev_name(dev);
-}
-
 struct device *dev_hash_get(const char *name)
 {
 	return (struct device *) dm_hash_lookup(_cache.names, name);
@@ -1452,26 +1410,23 @@ static void _remove_alias(struct device *dev, const char *name)
  * deactivated LV.  Those old paths are all invalid and are dropped here.
  */
 
-static void _verify_aliases(struct device *dev, const char *newname)
+static void _verify_aliases(struct device *dev)
 {
 	struct dm_str_list *strl, *strl2;
 	struct stat st;
 
 	dm_list_iterate_items_safe(strl, strl2, &dev->aliases) {
-		/* newname was just stat'd and added by caller */
-		if (newname && !strcmp(strl->str, newname))
-			continue;
-
 		if (stat(strl->str, &st) || (st.st_rdev != dev->dev)) {
-			log_debug("Drop invalid path %s for %d:%d (new path %s).",
-				  strl->str, (int)MAJOR(dev->dev), (int)MINOR(dev->dev), newname ?: "");
+			log_debug("Drop alias for %d:%d invalid path %s %d:%d.",
+				  (int)MAJOR(dev->dev), (int)MINOR(dev->dev), strl->str,
+				  (int)MAJOR(st.st_rdev), (int)MINOR(st.st_rdev));
 			dm_hash_remove(_cache.names, strl->str);
 			dm_list_del(&strl->list);
 		}
 	}
 }
 
-struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct dev_filter *f)
+static struct device *_dev_cache_get(struct cmd_context *cmd, const char *name, struct dev_filter *f, int existing)
 {
 	struct device *dev = (struct device *) dm_hash_lookup(_cache.names, name);
 	struct stat st;
@@ -1485,13 +1440,18 @@ struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct d
 	if (dev && (dev->flags & DEV_REGULAR))
 		return dev;
 
+	if (dev && dm_list_empty(&dev->aliases)) {
+		/* shouldn't happen */
+		log_warn("Ignoring dev with no valid paths for %s.", name);
+		return NULL;
+	}
+
 	/*
-	 * The requested path is invalid, remove any dev-cache
-	 * info for it.
+	 * The requested path is invalid, remove any dev-cache info for it.
 	 */
 	if (stat(name, &st)) {
 		if (dev) {
-			log_print("Device path %s is invalid for %d:%d %s.",
+			log_debug("Device path %s is invalid for %d:%d %s.",
 				  name, (int)MAJOR(dev->dev), (int)MINOR(dev->dev), dev_name(dev));
 
 			dm_hash_remove(_cache.names, name);
@@ -1499,8 +1459,14 @@ struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct d
 			_remove_alias(dev, name);
 
 			/* Remove any other names in dev->aliases that are incorrect. */
-			_verify_aliases(dev, NULL);
+			_verify_aliases(dev);
 		}
+		return NULL;
+	}
+
+	if (dev && dm_list_empty(&dev->aliases)) {
+		/* shouldn't happen */
+		log_warn("Ignoring dev with no valid paths for %s.", name);
 		return NULL;
 	}
 
@@ -1514,26 +1480,41 @@ struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct d
 	 * Remove incorrect info and then add new dev-cache entry.
 	 */
 	if (dev && (st.st_rdev != dev->dev)) {
-		log_debug("Device path %s does not match %d:%d %s.",
-			  name, (int)MAJOR(dev->dev), (int)MINOR(dev->dev), dev_name(dev));
+		struct device *dev_by_devt = (struct device *) btree_lookup(_cache.devices, (uint32_t) st.st_rdev);
 
-		dm_hash_remove(_cache.names, name);
+		/*
+		 * lvm commands create this condition when they
+		 * activate/deactivate LVs combined with creating new LVs.
+		 * The command does not purge dev structs when deactivating
+		 * an LV (which it probably should do), but the better
+		 * approach would be not using dev-cache at all for LVs.
+		 */
 
-		_remove_alias(dev, name);
+		log_debug("Dropping aliases for device entry %d:%d %s for new device %d:%d %s.",
+			  (int)MAJOR(dev->dev), (int)MINOR(dev->dev), dev_name(dev),
+			  (int)MAJOR(st.st_rdev), (int)MINOR(st.st_rdev), name);
 
-		/* Remove any other names in dev->aliases that are incorrect. */
-		_verify_aliases(dev, NULL);
+		_drop_all_aliases(dev);
 
-		/* Add new dev-cache entry next. */
-		dev = NULL;
-	}
+		if (dev_by_devt) {
+			log_debug("Dropping aliases for device entry %d:%d %s for new device %d:%d %s.",
+				   (int)MAJOR(dev_by_devt->dev), (int)MINOR(dev_by_devt->dev), dev_name(dev_by_devt),
+				   (int)MAJOR(st.st_rdev), (int)MINOR(st.st_rdev), name);
 
-	/*
-	 * Either add a new struct dev for st_rdev and name,
-	 * or add name as a new alias for an existing struct dev
-	 * for st_rdev.
-	 */
-	if (!dev) {
+			_drop_all_aliases(dev_by_devt);
+		}
+
+#if 0
+		/*
+		 * I think only lvm's own dm devs should be added here, so use
+		 * a warning to look for any other unknown cases.
+		 */
+		if (MAJOR(st.st_rdev) != cmd->dev_types->device_mapper_major) {
+			log_warn("WARNING: new device appeared %d:%d %s",
+				  (int)MAJOR(st.st_rdev), (int)(MINOR(st.st_rdev)), name);
+		}
+#endif
+
 		if (!_insert_dev(name, st.st_rdev))
 			return_NULL;
 
@@ -1545,9 +1526,77 @@ struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct d
 			return NULL;
 		}
 
-		_verify_aliases(dev, name);
+		goto out;
 	}
 
+	if (dev && dm_list_empty(&dev->aliases)) {
+		/* shouldn't happen */
+		log_warn("Ignoring dev with no valid paths for %s.", name);
+		return NULL;
+	}
+
+	if (!dev && existing)
+		return_NULL;
+
+	/*
+	 * This case should never be hit for a PV. It should only
+	 * happen when the command is opening a new LV it has created.
+	 * Add an arg to all callers indicating when the arg should be
+	 * new (for an LV) and not existing.
+	 * FIXME: fix this further by not using dev-cache struct devs
+	 * at all for new dm devs (LVs) that lvm uses.  Make the
+	 * dev-cache contain only devs for PVs.
+	 * Places to fix that use a dev for LVs include:
+	 * . lv_resize opening lv to discard
+	 * . wipe_lv opening lv to zero it
+	 * . _extend_sanlock_lv opening lv to extend it
+	 * . _write_log_header opening lv to write header
+	 * Also, io to LVs should not go through bcache.
+	 * bcache should contain only labels and metadata
+	 * scanned from PVs.
+	 */
+	if (!dev) {
+		/*
+		 * This case should only be used for new devices created by this
+		 * command (opening LVs it's created), so if a dev exists for the
+		 * dev_t referenced by the name, then drop all aliases for before
+		 * _insert_dev adds the new name.  lvm commands actually hit this
+		 * fairly often when it uses some LV, deactivates the LV, then
+		 * creates some new LV which ends up with the same major:minor.
+		 * Without dropping the aliases, it's plausible that lvm commands
+		 * could end up using the wrong dm device.
+		 */
+		struct device *dev_by_devt = (struct device *) btree_lookup(_cache.devices, (uint32_t) st.st_rdev);
+		if (dev_by_devt) {
+			log_debug("Dropping aliases for %d:%d before adding new path %s.",
+				  (int)MAJOR(st.st_rdev), (int)(MINOR(st.st_rdev)), name);
+			_drop_all_aliases(dev_by_devt);
+		}
+
+#if 0
+		/*
+		 * I think only lvm's own dm devs should be added here, so use
+		 * a warning to look for any other unknown cases.
+		 */
+		if (MAJOR(st.st_rdev) != cmd->dev_types->device_mapper_major) {
+			log_warn("WARNING: new device appeared %d:%d %s",
+				  (int)MAJOR(st.st_rdev), (int)(MINOR(st.st_rdev)), name);
+		}
+#endif
+
+		if (!_insert_dev(name, st.st_rdev))
+			return_NULL;
+
+		/* Get the struct dev that was just added. */
+		dev = (struct device *) dm_hash_lookup(_cache.names, name);
+
+		if (!dev) {
+			log_error("Failed to get device %s", name);
+			return NULL;
+		}
+	}
+
+ out:
 	/*
 	 * The caller passed a filter if they only want the dev if it
 	 * passes filters.
@@ -1575,6 +1624,16 @@ struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct d
 	}
 
 	return dev;
+}
+
+struct device *dev_cache_get_existing(struct cmd_context *cmd, const char *name, struct dev_filter *f)
+{
+	return _dev_cache_get(cmd, name, f, 1);
+}
+
+struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct dev_filter *f)
+{
+	return _dev_cache_get(cmd, name, f, 0);
 }
 
 struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t devt)
@@ -1653,8 +1712,10 @@ int dev_fd(struct device *dev)
 
 const char *dev_name(const struct device *dev)
 {
-	return (dev && dev->aliases.n) ? dm_list_item(dev->aliases.n, struct dm_str_list)->str :
-	    unknown_device_name();
+	if (dev && dev->aliases.n && !dm_list_empty(&dev->aliases))
+		return dm_list_item(dev->aliases.n, struct dm_str_list)->str;
+	else
+		return unknown_device_name();
 }
 
 bool dev_cache_has_md_with_end_superblock(struct dev_types *dt)

@@ -58,6 +58,9 @@ static int _dev_get_size_file(struct device *dev, uint64_t *size)
 	const char *name = dev_name(dev);
 	struct stat info;
 
+	if (dm_list_empty(&dev->aliases))
+		return_0;
+
 	if (dev->size_seqno == _dev_size_seqno) {
 		log_very_verbose("%s: using cached size %" PRIu64 " sectors",
 				 name, dev->size);
@@ -87,7 +90,7 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 	int do_close = 0;
 
 	if (dm_list_empty(&dev->aliases))
-		return 0;
+		return_0;
 
 	if (dev->size_seqno == _dev_size_seqno) {
 		log_very_verbose("%s: using cached size %" PRIu64 " sectors",
@@ -305,6 +308,13 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 	if ((flags & O_EXCL))
 		need_excl = 1;
 
+	if (dm_list_empty(&dev->aliases)) {
+		/* shouldn't happen */
+		log_print("Cannot open device %d:%d with no valid paths.", (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
+		return 0;
+	}
+	name = dev_name(dev);
+
 	if (dev->fd >= 0) {
 		if (((dev->flags & DEV_OPENED_RW) || !need_rw) &&
 		    ((dev->flags & DEV_OPENED_EXCL) || !need_excl)) {
@@ -314,7 +324,7 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 
 		if (dev->open_count && !need_excl)
 			log_debug_devs("%s: Already opened read-only. Upgrading "
-				       "to read-write.", dev_name(dev));
+				       "to read-write.", name);
 
 		/* dev_close_immediate will decrement this */
 		dev->open_count++;
@@ -327,11 +337,7 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 
 	if (critical_section())
 		/* FIXME Make this log_error */
-		log_verbose("dev_open(%s) called while suspended",
-			    dev_name(dev));
-
-	if (!(name = dev_name_confirmed(dev, quiet)))
-		return_0;
+		log_verbose("dev_open(%s) called while suspended", name);
 
 #ifdef O_DIRECT_SUPPORT
 	if (direct) {
@@ -372,9 +378,9 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 		}
 #endif
 		if (quiet)
-			log_sys_debug("open", name);
+			log_debug("Failed to open device path %s (%d).", name, errno);
 		else
-			log_sys_error("open", name);
+			log_error("Failed to open device path %s (%d).", name, errno);
 
 		dev->flags |= DEV_OPEN_FAILURE;
 		return 0;
@@ -415,10 +421,12 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 	if ((flags & O_CREAT) && !(flags & O_TRUNC))
 		dev->end = lseek(dev->fd, (off_t) 0, SEEK_END);
 
-	log_debug_devs("Opened %s %s%s%s", dev_name(dev),
-		       dev->flags & DEV_OPENED_RW ? "RW" : "RO",
-		       dev->flags & DEV_OPENED_EXCL ? " O_EXCL" : "",
-		       dev->flags & DEV_O_DIRECT ? " O_DIRECT" : "");
+	if (!quiet) {
+		log_debug_devs("Opened %s %s%s%s", name,
+				dev->flags & DEV_OPENED_RW ? "RW" : "RO",
+				dev->flags & DEV_OPENED_EXCL ? " O_EXCL" : "",
+				dev->flags & DEV_O_DIRECT ? " O_DIRECT" : "");
+	}
 
 	dev->flags &= ~DEV_OPEN_FAILURE;
 	return 1;
