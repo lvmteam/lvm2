@@ -1577,7 +1577,7 @@ void device_ids_match_device_list(struct cmd_context *cmd)
 	dm_list_iterate_items(du, &cmd->use_devices) {
 		if (du->dev)
 			continue;
-		if (!(du->dev = dev_cache_get(cmd, du->devname, NULL))) {
+		if (!(du->dev = dev_cache_get_existing(cmd, du->devname, NULL))) {
 			log_warn("Device not found for %s.", du->devname);
 		} else {
 			/* Should we set dev->id?  Which idtype?  Use --deviceidtype? */
@@ -1625,7 +1625,7 @@ void device_ids_match(struct cmd_context *cmd)
 		 * the du/dev pairs in preparation for using the filters.
 		 */
 		if (du->devname &&
-		    (dev = dev_cache_get(cmd, du->devname, NULL))) {
+		    (dev = dev_cache_get_existing(cmd, du->devname, NULL))) {
 			/* On successful match, du, dev, and id are linked. */
 			if (_match_du_to_dev(cmd, du, dev))
 				continue;

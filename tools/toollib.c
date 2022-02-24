@@ -1488,7 +1488,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 				goto out;
 			}
 
-			if (!(dev = dev_cache_get(cmd, argv[opt], cmd->filter))) {
+			if (!(dev = dev_cache_get_existing(cmd, argv[opt], cmd->filter))) {
 				log_error("Failed to find device "
 					  "\"%s\".", argv[opt]);
 				ret_max = ECMD_FAILED;
@@ -3925,7 +3925,7 @@ static int _get_arg_devices(struct cmd_context *cmd,
 			return ECMD_FAILED;
 		}
 
-		if (!(dil->dev = dev_cache_get(cmd, sl->str, cmd->filter))) {
+		if (!(dil->dev = dev_cache_get_existing(cmd, sl->str, cmd->filter))) {
 			log_error("Cannot use %s: %s", sl->str, devname_error_reason(sl->str));
 			ret_max = EINIT_FAILED;
 		} else {
@@ -5261,7 +5261,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 		struct device *dev;
 
 		/* No filter used here */
-		if (!(dev = dev_cache_get(cmd, pd->name, NULL))) {
+		if (!(dev = dev_cache_get_existing(cmd, pd->name, NULL))) {
 			log_error("No device found for %s.", pd->name);
 			dm_list_del(&pd->list);
 			dm_list_add(&pp->arg_fail, &pd->list);
