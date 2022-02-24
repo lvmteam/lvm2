@@ -857,7 +857,7 @@ static int _get_devs_from_saved_vg(struct cmd_context *cmd, const char *vgname,
 
 		devno = MKDEV(file_major, file_minor);
 
-		if (!(dev = dev_cache_get_by_devt(cmd, devno, NULL, NULL))) {
+		if (!(dev = dev_cache_get_by_devt(cmd, devno))) {
 			log_error_pvscan(cmd, "No device found for %d:%d PVID %s", file_major, file_minor, pvid);
 			goto bad;
 		}
@@ -1195,7 +1195,7 @@ static int _get_args_devs(struct cmd_context *cmd, struct dm_list *pvscan_args,
 		if (arg->devname)
 			arg->dev = dev_cache_get(cmd, arg->devname, NULL);
 		else if (arg->devno)
-			arg->dev = dev_cache_get_by_devt(cmd, arg->devno, NULL, NULL);
+			arg->dev = dev_cache_get_by_devt(cmd, arg->devno);
 		else
 			return_0;
 	}
@@ -1257,7 +1257,7 @@ static void _set_pv_devices_online(struct cmd_context *cmd, struct volume_group 
 
 		devno = MKDEV(major, minor);
 
-		if (!(dev = dev_cache_get_by_devt(cmd, devno, NULL, NULL))) {
+		if (!(dev = dev_cache_get_by_devt(cmd, devno))) {
 			log_print_pvscan(cmd, "VG %s PV %s no device found for %d:%d",
 					 vg->name, pvid, major, minor);
 			pvl->pv->status |= MISSING_PV;

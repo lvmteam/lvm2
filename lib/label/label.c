@@ -1443,7 +1443,7 @@ void label_scan_invalidate_lv(struct cmd_context *cmd, struct logical_volume *lv
 	if (lv_info(cmd, lv, 0, &lvinfo, 0, 0) && lvinfo.exists) {
 		/* FIXME: Still unclear what is it supposed to find */
 		devt = MKDEV(lvinfo.major, lvinfo.minor);
-		if ((dev = dev_cache_get_by_devt(cmd, devt, NULL, NULL)))
+		if ((dev = dev_cache_get_by_devt(cmd, devt)))
 			label_scan_invalidate(dev);
 	}
 }

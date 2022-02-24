@@ -1577,63 +1577,13 @@ struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct d
 	return dev;
 }
 
-struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t dev, struct dev_filter *f, int *filtered)
+struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t devt)
 {
-	char path[PATH_MAX];
-	const char *sysfs_dir;
-	struct stat info;
-	struct device *d = (struct device *) btree_lookup(_cache.devices, (uint32_t) dev);
-	int ret;
+	struct device *dev = (struct device *) btree_lookup(_cache.devices, (uint32_t) devt);
 
-	if (filtered)
-		*filtered = 0;
-
-	if (!d) {
-		sysfs_dir = dm_sysfs_dir();
-		if (sysfs_dir && *sysfs_dir) {
-			/* First check if dev is sysfs to avoid useless scan */
-			if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d",
-					sysfs_dir, (int)MAJOR(dev), (int)MINOR(dev)) < 0) {
-				log_error("dm_snprintf partition failed.");
-				return NULL;
-			}
-
-			if (lstat(path, &info)) {
-				log_debug("No sysfs entry for %d:%d errno %d at %s.",
-					  (int)MAJOR(dev), (int)MINOR(dev), errno, path);
-				return NULL;
-			}
-		}
-
-		log_debug_devs("Device num not found in dev_cache repeat dev_cache_scan for %d:%d",
-				(int)MAJOR(dev), (int)MINOR(dev));
-		dev_cache_scan(cmd);
-		d = (struct device *) btree_lookup(_cache.devices, (uint32_t) dev);
-
-		if (!d)
-			return NULL;
-	}
-
-	if (d->flags & DEV_REGULAR)
-		return d;
-
-	if (!f)
-		return d;
-
-	ret = f->passes_filter(cmd, f, d, NULL);
-
-	if (ret == -EAGAIN) {
-		log_debug_devs("get device by number defer filter %s", dev_name(d));
-		d->flags |= DEV_FILTER_AFTER_SCAN;
-		ret = 1;
-	}
-
-	if (ret)
-		return d;
-
-	if (filtered)
-		*filtered = 1;
-
+	if (dev)
+		return dev;
+	log_debug_devs("No devno %d:%d in dev cache.", (int)MAJOR(devt), (int)MINOR(devt));
 	return NULL;
 }
 
