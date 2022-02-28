@@ -459,7 +459,6 @@ static int _scan_dev_open(struct device *dev)
 	const char *name;
 	const char *modestr;
 	struct stat sbuf;
-	int retried = 0;
 	int flags = 0;
 	int fd, di;
 
@@ -479,14 +478,23 @@ static int _scan_dev_open(struct device *dev)
 		return 0;
 	}
 
+ next_name:
 	/*
 	 * All the names for this device (major:minor) are kept on
 	 * dev->aliases, the first one is the primary/preferred name.
+	 *
+	 * The default name preferences in dev-cache mean that the first
+	 * name in dev->aliases is not a symlink for scsi devices, but is
+	 * the /dev/mapper/ symlink for mpath devices.
+	 *
+	 * If preferred names are set to symlinks, should this
+	 * first attempt to open using a non-symlink?
+	 *
+	 * dm_list_first() returns NULL if the list is empty.
 	 */
 	if (!(name_list = dm_list_first(&dev->aliases))) {
-		/* Shouldn't happen */
-		log_error("Device open %s %d:%d has no path names.",
-			  dev_name(dev), (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
+		log_error("Device open %d:%d has no path names.",
+			  (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
 		return 0;
 	}
 	name_sl = dm_list_item(name_list, struct dm_str_list);
@@ -514,50 +522,34 @@ static int _scan_dev_open(struct device *dev)
 		modestr = "ro";
 	}
 
-retry_open:
-
 	fd = open(name, flags, 0777);
-
 	if (fd < 0) {
 		if ((errno == EBUSY) && (flags & O_EXCL)) {
 			log_error("Can't open %s exclusively.  Mounted filesystem?",
 				  dev_name(dev));
+			return 0;
 		} else {
-			int major, minor;
-
 			/*
-			 * Shouldn't happen, if it does, print stat info to help figure
-			 * out what's wrong.
+			 * drop name from dev->aliases and use verify_aliases to
+			 * drop any other invalid aliases before retrying open with
+			 * any remaining valid paths.
 			 */
-
-			major = (int)MAJOR(dev->dev);
-			minor = (int)MINOR(dev->dev);
-
-			log_error("Device open %s %d:%d failed errno %d", name, major, minor, errno);
-
-			if (stat(name, &sbuf)) {
-				log_debug_devs("Device open %s %d:%d stat failed errno %d",
-					       name, major, minor, errno);
-			} else if (sbuf.st_rdev != dev->dev) {
-				log_debug_devs("Device open %s %d:%d stat %d:%d does not match.",
-					       name, major, minor,
-					       (int)MAJOR(sbuf.st_rdev), (int)MINOR(sbuf.st_rdev));
-			}
-
-			if (!retried) {
-				/*
-				 * FIXME: remove this, the theory for this retry is that
-				 * there may be a udev race that we can sometimes mask by
-				 * retrying.  This is here until we can figure out if it's
-				 * needed and if so fix the real problem.
-				 */
-				usleep(5000);
-				log_debug_devs("Device open %s retry", dev_name(dev));
-				retried = 1;
-				goto retry_open;
-			}
+			log_debug("Drop alias for %d:%d failed open %s (%d)",
+				  (int)MAJOR(dev->dev), (int)MINOR(dev->dev), name, errno);
+			dev_cache_failed_path(dev, name);
+			dev_cache_verify_aliases(dev);
+			goto next_name;
 		}
-		return 0;
+	}
+
+	/* Verify that major:minor from the path still match dev. */
+	if ((fstat(fd, &sbuf) < 0) || (sbuf.st_rdev != dev->dev)) {
+		log_warn("Invalid path %s for device %d:%d, trying different path.",
+			 name, (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
+		(void)close(fd);
+		dev_cache_failed_path(dev, name);
+		dev_cache_verify_aliases(dev);
+		goto next_name;
 	}
 
 	dev->flags |= DEV_IN_BCACHE;
@@ -605,37 +597,6 @@ static int _scan_dev_close(struct device *dev)
 	return 1;
 }
 
-static void _drop_bad_aliases(struct device *dev)
-{
-	struct dm_str_list *strl, *strl2;
-	const char *name;
-	struct stat sbuf;
-	int major = (int)MAJOR(dev->dev);
-	int minor = (int)MINOR(dev->dev);
-	int bad;
-
-	dm_list_iterate_items_safe(strl, strl2, &dev->aliases) {
-		name = strl->str;
-		bad = 0;
-
-		if (stat(name, &sbuf)) {
-			bad = 1;
-			log_debug_devs("Device path check %d:%d %s stat failed errno %d",
-					major, minor, name, errno);
-		} else if (sbuf.st_rdev != dev->dev) {
-			bad = 1;
-			log_debug_devs("Device path check %d:%d %s stat %d:%d does not match.",
-				       major, minor, name,
-				       (int)MAJOR(sbuf.st_rdev), (int)MINOR(sbuf.st_rdev));
-		}
-
-		if (bad) {
-			log_debug_devs("Device path check %d:%d dropping path %s.", major, minor, name);
-			dev_cache_failed_path(dev, name);
-		}
-	}
-}
-
 // Like bcache_invalidate, only it throws any dirty data away if the
 // write fails.
 static void _invalidate_di(struct bcache *cache, int di)
@@ -663,10 +624,8 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 	char headers_buf[HEADERS_BUF_SIZE];
 	struct dm_list wait_devs;
 	struct dm_list done_devs;
-	struct dm_list reopen_devs;
 	struct device_list *devl, *devl2;
 	struct block *bb;
-	int retried_open = 0;
 	int scan_read_errors = 0;
 	int scan_process_errors = 0;
 	int scan_failed_count = 0;
@@ -677,7 +636,6 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 
 	dm_list_init(&wait_devs);
 	dm_list_init(&done_devs);
-	dm_list_init(&reopen_devs);
 
 	log_debug_devs("Scanning %d devices for VG info", dm_list_size(devs));
 
@@ -701,9 +659,9 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 
 		if (!_in_bcache(devl->dev)) {
 			if (!_scan_dev_open(devl->dev)) {
-				log_debug_devs("Scan failed to open %s.", dev_name(devl->dev));
+				log_debug_devs("Scan failed to open %d:%d %s.",
+					       (int)MAJOR(devl->dev->dev), (int)MINOR(devl->dev->dev), dev_name(devl->dev));
 				dm_list_del(&devl->list);
-				dm_list_add(&reopen_devs, &devl->list);
 				devl->dev->flags |= DEV_SCAN_NOT_READ;
 				continue;
 			}
@@ -787,41 +745,6 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 	if (!dm_list_empty(devs))
 		goto scan_more;
 
-	/*
-	 * We're done scanning all the devs.  If we failed to open any of them
-	 * the first time through, refresh device paths and retry.  We failed
-	 * to open the devs on the reopen_devs list.
-	 *
-	 * FIXME: it's not clear if or why this helps.
-	 */
-	if (!dm_list_empty(&reopen_devs)) {
-		if (retried_open) {
-			/* Don't try again. */
-			scan_failed_count += dm_list_size(&reopen_devs);
-			dm_list_splice(&done_devs, &reopen_devs);
-			goto out;
-		}
-		retried_open = 1;
-
-		dm_list_iterate_items_safe(devl, devl2, &reopen_devs) {
-			_drop_bad_aliases(devl->dev);
-
-			if (dm_list_empty(&devl->dev->aliases)) {
-				log_warn("WARNING: Scan ignoring device %d:%d with no paths.",
-					 (int)MAJOR(devl->dev->dev),
-					 (int)MINOR(devl->dev->dev));
-					 
-				dm_list_del(&devl->list);
-				lvmcache_del_dev(devl->dev);
-				scan_failed_count++;
-			}
-		}
-
-		/* Put devs that failed to open back on the original list to retry. */
-		dm_list_splice(devs, &reopen_devs);
-		goto scan_more;
-	}
-out:
 	log_debug_devs("Scanned devices: read errors %d process errors %d failed %d",
 			scan_read_errors, scan_process_errors, scan_failed_count);
 

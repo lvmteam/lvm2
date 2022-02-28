@@ -1410,7 +1410,7 @@ static void _remove_alias(struct device *dev, const char *name)
  * deactivated LV.  Those old paths are all invalid and are dropped here.
  */
 
-static void _verify_aliases(struct device *dev)
+void dev_cache_verify_aliases(struct device *dev)
 {
 	struct dm_str_list *strl, *strl2;
 	struct stat st;
@@ -1459,7 +1459,7 @@ static struct device *_dev_cache_get(struct cmd_context *cmd, const char *name, 
 			_remove_alias(dev, name);
 
 			/* Remove any other names in dev->aliases that are incorrect. */
-			_verify_aliases(dev);
+			dev_cache_verify_aliases(dev);
 		}
 		return NULL;
 	}
