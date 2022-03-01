@@ -6070,6 +6070,69 @@ bad:
 	return 0;
 }
 
+static int _check_writecache_memory(struct cmd_context *cmd, struct logical_volume *lv_fast,
+				     uint32_t block_size_sectors)
+{
+	char line[128];
+	FILE *fp;
+	uint64_t cachevol_size_bytes = lv_fast->size * SECTOR_SIZE;
+	uint64_t need_mem_bytes = 0;
+	uint64_t proc_mem_bytes = 0;
+	uint64_t need_mem_gb;
+	uint64_t proc_mem_gb;
+	unsigned long long proc_mem_kb = 0;
+
+	if (!(fp = fopen("/proc/meminfo", "r")))
+		goto skip_proc;
+
+	while (fgets(line, sizeof(line), fp)) {
+		if (strncmp(line, "MemTotal:", 9))
+			continue;
+		if (sscanf(line, "%*s%llu%*s", &proc_mem_kb) != 1)
+			break;
+		break;
+	}
+	(void)fclose(fp);
+
+	proc_mem_bytes = proc_mem_kb * 1024;
+
+ skip_proc:
+	/* dm-writecache memory consumption per block is 88 bytes */
+	if (block_size_sectors == 8) {
+		need_mem_bytes = cachevol_size_bytes * 88 / 4096;
+	} else if (block_size_sectors == 1) {
+		need_mem_bytes = cachevol_size_bytes * 88 / 512;
+	} else {
+		/* shouldn't happen */
+		log_warn("Unknown memory usage for unknown writecache block_size_sectors %u", block_size_sectors);
+		return 1;
+	}
+
+	need_mem_gb = need_mem_bytes / 1073741824;
+	proc_mem_gb = proc_mem_bytes / 1073741824;
+
+	/*
+	 * warn if writecache needs > 50% of main memory, and
+	 * confirm if writecache needs > 90% of main memory.
+	 */
+	if (need_mem_bytes >= (proc_mem_bytes / 2)) {
+		log_warn("WARNING: writecache size %s will use %llu GiB of system memory (%llu GiB).",
+			  display_size(cmd, lv_fast->size),
+			  (unsigned long long)need_mem_gb,
+			  (unsigned long long)proc_mem_gb);
+
+		if (need_mem_gb >= (proc_mem_gb * 9 / 10)) {
+			if (!arg_is_set(cmd, yes_ARG) &&
+			    yes_no_prompt("Continue adding writecache? [y/n]: ") == 'n') {
+				log_error("Conversion aborted.");
+				return 0;
+			}
+		}
+	}
+
+	return 1;
+}
+
 int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 					struct logical_volume *lv,
 					struct processing_handle *handle)
@@ -6153,6 +6216,12 @@ int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 	}
 
 	if (!_set_writecache_block_size(cmd, lv, &block_size_sectors)) {
+		if (!is_active && !deactivate_lv(cmd, lv))
+			stack;
+		goto_bad;
+	}
+
+	if (!_check_writecache_memory(cmd, lv_fast, block_size_sectors)) {
 		if (!is_active && !deactivate_lv(cmd, lv))
 			stack;
 		goto_bad;
