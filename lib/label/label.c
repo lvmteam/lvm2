@@ -1661,9 +1661,11 @@ void label_scan_invalidate_lvs(struct cmd_context *cmd, struct dm_list *lvs)
 	dev_t devt;
 
 	/*
-	 * FIXME: this is all unnecessary unless there are PVs stacked on LVs,
-	 * so we can skip all of this if scan_lvs=0.
+	 * This is only needed when the command sees PVs stacked on LVs which
+	 * will only happen with scan_lvs=1.
 	 */
+	if (!cmd->scan_lvs)
+		return;
 	log_debug("invalidating devs for any pvs on lvs");
 
 	if (get_device_list(NULL, &devs, &devs_features)) {
