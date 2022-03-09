@@ -1710,13 +1710,11 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	/*
-	 * If obtain_device_list_from_udev was set to 1, force it to 0.
-	 * Don't ask udev for info since pvscan is running from udev.
-	 * If a pvscan attempts to get dev info from udev, udev can
-	 * repeatedly return errors about the dev not being initialized
-	 * which will stall the pvscan.
+	 * Do not use udev for device listing or device info because pvscan
+	 * is used to populate udev info.
 	 */
 	init_obtain_device_list_from_udev(0);
+	init_external_device_info_source(DEV_EXT_NONE);
 
 	if (arg_is_set(cmd, major_ARG) + arg_is_set(cmd, minor_ARG))
 		devno_args = 1;
