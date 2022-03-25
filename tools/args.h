@@ -499,7 +499,8 @@ arg(nohistory_ARG, '\0', "nohistory", 0, 0, 0,
     "metadata/record_lvs_history is enabled.\n")
 
 arg(nolocking_ARG, '\0', "nolocking", 0, 0, 0,
-    "Disable locking.\n")
+    "Disable locking. Use with caution, concurrent commands may produce\n")
+    "incorrect results.\n")
 
 arg(norestorefile_ARG, '\0', "norestorefile", 0, 0, 0,
     "In conjunction with --uuid, this allows a uuid to be specified\n"

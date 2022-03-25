@@ -3267,10 +3267,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_is_set(cmd, readonly_ARG))
 		readonly = 1;
 
-	if (cmd->nolocking) {
-		if (!_cmd_no_meta_proc(cmd))
-			log_warn("WARNING: File locking is disabled.");
-	} else {
+	if (!cmd->nolocking) {
 		if (!init_locking(cmd, sysinit, readonly, cmd->ignorelockingfailure)) {
 			ret = ECMD_FAILED;
 			goto_out;
