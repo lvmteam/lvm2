@@ -15,6 +15,7 @@
 #include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/filters/filter.h"
+#include "lib/device/device_id.h"
 
 #ifdef __linux__
 
@@ -22,11 +23,27 @@
 
 static int _ignore_mpath_component(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
 {
+	dev_t mpath_devno = 0;
+
 	dev->filtered_flags &= ~DEV_FILTERED_MPATH_COMPONENT;
 
-	if (dev_is_mpath_component(cmd, dev)) {
+	if (dev_is_mpath_component(cmd, dev, &mpath_devno)) {
 		log_debug_devs("%s: Skipping mpath component device", dev_name(dev));
 		dev->filtered_flags |= DEV_FILTERED_MPATH_COMPONENT;
+
+		/*
+		 * Warn about misconfig where an mpath component is
+		 * in the devices file, but its mpath device is not.
+		 */
+		if ((dev->flags & DEV_MATCHED_USE_ID) && mpath_devno) {
+			if (!get_du_for_devno(cmd, mpath_devno)) {
+				struct device *mpath_dev = dev_cache_get_by_devt(cmd, mpath_devno);
+				log_warn("WARNING: devices file is missing %s (%d:%d) using multipath component %s.",
+					 mpath_dev ? dev_name(mpath_dev) : "unknown",
+					 (int)MAJOR(mpath_devno), (int)MINOR(mpath_devno), dev_name(dev));
+			}
+		}
+
 		return 0;
 	}
 

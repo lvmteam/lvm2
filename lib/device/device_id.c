@@ -887,6 +887,17 @@ static int _device_ids_use_lvmlv(struct cmd_context *cmd)
 	return 0;
 }
 
+struct dev_use *get_du_for_devno(struct cmd_context *cmd, dev_t devno)
+{
+	struct dev_use *du;
+
+	dm_list_iterate_items(du, &cmd->use_devices) {
+		if (du->dev && du->dev->dev == devno)
+			return du;
+	}
+	return NULL;
+}
+
 struct dev_use *get_du_for_dev(struct cmd_context *cmd, struct device *dev)
 {
 	struct dev_use *du;

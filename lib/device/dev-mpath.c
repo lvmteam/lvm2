@@ -272,7 +272,9 @@ static int _dev_is_mpath_component_udev(struct device *dev)
 }
 #endif
 
-static int _dev_is_mpath_component_sysfs(struct cmd_context *cmd, struct device *dev)
+/* mpath_devno is major:minor of the dm multipath device currently using the component dev. */
+
+static int _dev_is_mpath_component_sysfs(struct cmd_context *cmd, struct device *dev, dev_t *mpath_devno)
 {
 	struct dev_types *dt = cmd->dev_types;
 	const char *part_name;
@@ -426,6 +428,8 @@ static int _dev_is_mpath_component_sysfs(struct cmd_context *cmd, struct device 
 	if (closedir(dr))
 		stack;
 
+	if (is_mpath_component)
+		*mpath_devno = MKDEV(dm_dev_major, dm_dev_minor);
 	return is_mpath_component;
 }
 
@@ -464,9 +468,9 @@ static int _dev_in_wwid_file(struct cmd_context *cmd, struct device *dev)
 	return 0;
 }
 
-int dev_is_mpath_component(struct cmd_context *cmd, struct device *dev)
+int dev_is_mpath_component(struct cmd_context *cmd, struct device *dev, dev_t *holder_devno)
 {
-	if (_dev_is_mpath_component_sysfs(cmd, dev) == 1)
+	if (_dev_is_mpath_component_sysfs(cmd, dev, holder_devno) == 1)
 		goto found;
 
 	if (_dev_in_wwid_file(cmd, dev))
