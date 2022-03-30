@@ -16,6 +16,7 @@
 #include "lib/cache/lvmcache.h"
 #include "lib/device/device_id.h"
 #include "lib/device/dev-type.h"
+#include "lib/filters/filter.h"
 
 /* coverity[unnecessary_header] needed for MuslC */
 #include <sys/file.h>
@@ -182,6 +183,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 	device_ids_match(cmd);
 
 	if (arg_is_set(cmd, check_ARG) || arg_is_set(cmd, update_ARG)) {
+		int update_set = arg_is_set(cmd, update_ARG);
 		int search_count = 0;
 		int update_needed = 0;
 		int invalid = 0;
@@ -229,6 +231,47 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		device_ids_validate(cmd, NULL, &invalid, 1);
 		if (invalid)
 			update_needed = 1;
+
+		/*
+		 * Remove multipath components.
+		 * Add multipath devs that had components listed.
+		 */
+		dm_list_iterate_items_safe(du, du2, &cmd->use_devices) {
+			dev_t mpath_devno;
+			struct device *mpath_dev;
+
+			if (!du->dev)
+				continue;
+			dev = du->dev;
+
+			if (!(dev->filtered_flags & DEV_FILTERED_MPATH_COMPONENT))
+				continue;
+
+			/* redundant given the flag check, but used to get devno */
+			if (!dev_is_mpath_component(cmd, dev, &mpath_devno))
+				continue;
+
+			update_needed = 1;
+			if (update_set) {
+				log_print("Removing multipath component %s.", dev_name(du->dev));
+				dm_list_del(&du->list);
+			}
+
+			if (!(mpath_dev = dev_cache_get_by_devt(cmd, mpath_devno)))
+				continue;
+
+			if (!get_du_for_dev(cmd, mpath_dev)) {
+				if (update_set) {
+					log_print("Adding multipath device %s for multipath component %s.",
+						  dev_name(mpath_dev), dev_name(du->dev));
+					if (!device_id_add(cmd, mpath_dev, dev->pvid, NULL, NULL))
+						stack;
+				} else {
+					log_print("Missing multipath device %s for multipath component %s.",
+						  dev_name(mpath_dev), dev_name(du->dev));
+				}
+			}
+		}
 
 		/*
 		 * Find and fix any devname entries that have moved to a

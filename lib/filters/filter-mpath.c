@@ -21,6 +21,8 @@
 
 #include <dirent.h>
 
+static int _lvmdevices_update_msg;
+
 static int _ignore_mpath_component(struct cmd_context *cmd, struct dev_filter *f, struct device *dev, const char *use_filter_name)
 {
 	dev_t mpath_devno = 0;
@@ -41,6 +43,10 @@ static int _ignore_mpath_component(struct cmd_context *cmd, struct dev_filter *f
 				log_warn("WARNING: devices file is missing %s (%d:%d) using multipath component %s.",
 					 mpath_dev ? dev_name(mpath_dev) : "unknown",
 					 (int)MAJOR(mpath_devno), (int)MINOR(mpath_devno), dev_name(dev));
+				if (!_lvmdevices_update_msg && strcmp(get_cmd_name(), "lvmdevices")) {
+					log_warn("See lvmdevices --update for devices file update.");
+					_lvmdevices_update_msg = 1;
+				}
 			}
 		}
 
