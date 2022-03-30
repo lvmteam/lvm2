@@ -6179,7 +6179,7 @@ int lv_resize(struct logical_volume *lv,
 
 	if (lv_is_thin_pool(lock_lv)) {
 		/* Update lvm pool metadata (drop messages). */
-		if (!update_pool_lv(lock_lv, 0))
+		if (!update_pool_lv(lock_lv, 1))
 			goto_bad;
 	}
 
