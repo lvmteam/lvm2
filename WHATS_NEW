@@ -1,5 +1,6 @@
 Version 2.03.16 - 
 ====================================
+  Fix lossing of delete message on thin-pool extension.
 
 Version 2.03.15 - 07th February 2022
 ====================================
