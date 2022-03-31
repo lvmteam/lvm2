@@ -1744,7 +1744,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 		 * probably wants to do something about it.
 		 */
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "persistent")) {
-			log_warn("Devices file %s is excluded by filter: %s.",
+			log_warn("Devices file %s is excluded: %s.",
 				 dev_name(dev), dev_filtered_reason(dev));
 			continue;
 		}
@@ -1830,7 +1830,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 			continue;
 
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "persistent")) {
-			log_warn("Devices file %s is excluded by filter: %s.",
+			log_warn("Devices file %s is excluded: %s.",
 				 dev_name(dev), dev_filtered_reason(dev));
 			/* FIXME: what if this dev is wrongly matched and should be checked below? */
 			continue;
@@ -2266,7 +2266,7 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, NULL)) {
 			/* I don't think this would happen */
-			log_warn("WARNING: new device %s for PVID %s does not pass filter %s.",
+			log_warn("WARNING: new device %s for PVID %s is excluded: %s.",
 				 dev_name(dev), dil->pvid, dev_filtered_reason(dev));
 			if (du) /* Should not happen 'du' is NULL */
 				du->dev = NULL;

@@ -311,8 +311,8 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 	 */
 	dm_list_iterate_items(devl, &vp.new_devs) {
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, devl->dev, "persistent")) {
-			/* FIXME: print which filter */
-			log_error("Device %s was excluded by filters.", dev_name(devl->dev));
+			log_error("Device %s is excluded: %s.",
+				  dev_name(devl->dev), dev_filtered_reason(devl->dev));
 			goto out;
 		}
 	}
