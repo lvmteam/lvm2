@@ -1542,7 +1542,7 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 
 	dm_list_iterate_items_safe(devl, devl2, &pvscan_devs) {
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, devl->dev, NULL)) {
-			log_print_pvscan(cmd, "%s excluded by filters: %s.",
+			log_print_pvscan(cmd, "%s excluded: %s.",
 					 dev_name(devl->dev), dev_filtered_reason(devl->dev));
 			dm_list_del(&devl->list);
 		}
@@ -1599,7 +1599,7 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 
 		/* Applies all filters, including those that need data from dev. */
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, devl->dev, NULL)) {
-			log_print_pvscan(cmd, "%s excluded by filters: %s.",
+			log_print_pvscan(cmd, "%s excluded: %s.",
 					 dev_name(devl->dev), dev_filtered_reason(devl->dev));
 			dm_list_del(&devl->list);
 		}

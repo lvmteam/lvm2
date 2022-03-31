@@ -113,7 +113,7 @@ static void _search_devs_for_pvids(struct cmd_context *cmd, struct dm_list *sear
 		dev = devl->dev;
 		cmd->filter->wipe(cmd, cmd->filter, dev, NULL);
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, NULL)) {
-			log_warn("WARNING: PVID %s found on %s which is excluded by filter: %s",
+			log_warn("WARNING: PVID %s found on %s which is excluded: %s",
 			 	  dev->pvid, dev_name(dev), dev_filtered_reason(dev));
 			dm_list_del(&devl->list);
 		}
@@ -353,7 +353,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		cmd->filter_deviceid_skip = 1;
 
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, NULL)) {
-			log_warn("WARNING: adding device %s that is excluded by filter: %s.",
+			log_warn("WARNING: adding device %s that is excluded: %s.",
 				 dev_name(dev), dev_filtered_reason(dev));
 		}
 
