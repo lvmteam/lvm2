@@ -99,14 +99,6 @@ static int _passes_md_filter(struct cmd_context *cmd, struct dev_filter *f __att
 		return 1;
 
 	ret = dev_is_md_component(cmd, dev, NULL, cmd->use_full_md_check);
-
-	if (ret == -EAGAIN) {
-		/* let pass, call again after scan */
-		dev->flags |= DEV_FILTER_AFTER_SCAN;
-		log_debug_devs("filter md deferred %s", dev_name(dev));
-		return 1;
-	}
-
 	if (ret == 0)
 		return 1;
 

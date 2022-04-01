@@ -178,12 +178,6 @@ static int _dev_is_md_component_native(struct device *dev, uint64_t *offset_foun
 	uint64_t size, sb_offset = 0;
 	int ret;
 
-	/* i/o layer has not been set up */
-	if (!scan_bcache) {
-		log_error(INTERNAL_ERROR "dev_is_md_component_native requires io layer.");
-		return -1;
-	}
-
 	if (!dev_get_size(dev, &size)) {
 		stack;
 		return -1;

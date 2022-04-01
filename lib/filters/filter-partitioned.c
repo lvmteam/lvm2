@@ -30,14 +30,6 @@ static int _passes_partitioned_filter(struct cmd_context *cmd, struct dev_filter
 	dev->filtered_flags &= ~DEV_FILTERED_PARTITIONED;
 
 	ret = dev_is_partitioned(cmd, dev);
-
-	if (ret == -EAGAIN) {
-		/* let pass, call again after scan */
-		log_debug_devs("filter partitioned deferred %s", dev_name(dev));
-		dev->flags |= DEV_FILTER_AFTER_SCAN;
-		return 1;
-	}
-
 	if (ret) {
 		if (dev->ext.src == DEV_EXT_NONE)
 			log_debug_devs(MSG_SKIPPING, dev_name(dev));

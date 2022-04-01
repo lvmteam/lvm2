@@ -674,11 +674,6 @@ static int _dev_is_partitioned_native(struct dev_types *dt, struct device *dev)
 {
 	int r;
 
-	if (!scan_bcache) {
-		log_error(INTERNAL_ERROR "dev_is_partitioned_native requires i/o.");
-		return -1;
-	}
-
 	/* Unpartitioned DASD devices are not supported. */
 	if ((MAJOR(dev->dev) == dt->dasd_major) && dasd_is_cdl_formatted(dev))
 		return 1;

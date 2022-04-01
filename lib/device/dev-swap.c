@@ -42,9 +42,6 @@ int dev_is_swap(struct cmd_context *cmd, struct device *dev, uint64_t *offset_fo
 	unsigned page;
 	int ret = 0;
 
-	if (!scan_bcache)
-		return -EAGAIN;
-
 	if (!dev_get_size(dev, &size)) {
 		stack;
 		return -1;

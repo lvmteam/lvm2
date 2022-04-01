@@ -33,13 +33,6 @@ static int _ignore_signature(struct cmd_context *cmd, struct dev_filter *f __att
 
 	dev->filtered_flags &= ~DEV_FILTERED_SIGNATURE;
 
-	if (!scan_bcache) {
-		/* let pass, call again after scan */
-		log_debug_devs("filter signature deferred %s", dev_name(dev));
-		dev->flags |= DEV_FILTER_AFTER_SCAN;
-		return 1;
-	}
-
 	memset(buf, 0, BUFSIZE);
 
 	if (!dev_read_bytes(dev, 0, BUFSIZE, buf)) {

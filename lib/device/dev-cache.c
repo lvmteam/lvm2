@@ -1606,18 +1606,6 @@ static struct device *_dev_cache_get(struct cmd_context *cmd, const char *name, 
 		return dev;
 
 	ret = f->passes_filter(cmd, f, dev, NULL);
-
-	/*
-	 * This might happen if this function is called before
-	 * filters can do i/o.  I don't think this will happen
-	 * any longer and this EAGAIN case can be removed.
-	 */
-	if (ret == -EAGAIN) {
-		log_debug_devs("dev_cache_get filter deferred %s", dev_name(dev));
-		dev->flags |= DEV_FILTER_AFTER_SCAN;
-		ret = 1;
-	}
-
 	if (!ret) {
 		log_debug_devs("dev_cache_get filter excludes %s", dev_name(dev));
 		return NULL;
@@ -1688,15 +1676,8 @@ struct device *dev_iter_get(struct cmd_context *cmd, struct dev_iter *iter)
 
 		f = iter->filter;
 
-		if (f && !(d->flags & DEV_REGULAR)) {
+		if (f && !(d->flags & DEV_REGULAR))
 			ret = f->passes_filter(cmd, f, d, NULL);
-
-			if (ret == -EAGAIN) {
-				log_debug_devs("get device by iter defer filter %s", dev_name(d));
-				d->flags |= DEV_FILTER_AFTER_SCAN;
-				ret = 1;
-			}
-		}
 
 		if (!f || (d->flags & DEV_REGULAR) || ret)
 			return d;

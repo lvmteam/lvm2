@@ -23,9 +23,6 @@ int dev_is_luks(struct cmd_context *cmd, struct device *dev, uint64_t *offset_fo
 	char buf[LUKS_SIGNATURE_SIZE];
 	int ret = -1;
 
-	if (!scan_bcache)
-		return -EAGAIN;
-
 	if (offset_found)
 		*offset_found = 0;
 
