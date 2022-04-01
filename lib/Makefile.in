@@ -54,7 +54,6 @@ SOURCES =\
 	filters/filter-partitioned.c \
 	filters/filter-type.c \
 	filters/filter-usable.c \
-	filters/filter-internal.c \
 	filters/filter-signature.c \
 	filters/filter-deviceid.c \
 	format_text/archive.c \

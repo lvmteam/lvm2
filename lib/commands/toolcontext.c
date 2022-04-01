@@ -1128,7 +1128,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	return 1;
 }
 
-#define MAX_FILTERS 11
+#define MAX_FILTERS 10
 
 static struct dev_filter *_init_filter_chain(struct cmd_context *cmd)
 {
@@ -1142,13 +1142,6 @@ static struct dev_filter *_init_filter_chain(struct cmd_context *cmd)
 	 * Failure to initialise some filters is not fatal.
 	 * Update MAX_FILTERS definition above when adding new filters.
 	 */
-
-	/* internal filter used by command processing. */
-	if (!(filters[nr_filt] = internal_filter_create())) {
-		log_error("Failed to create internal device filter");
-		goto bad;
-	}
-	nr_filt++;
 
 	/* global regex filter. Optional. */
 	if ((cn = find_config_tree_node(cmd, devices_global_filter_CFG, NULL))) {
