@@ -7505,5 +7505,9 @@ out:
 	if (_initial_timestamp)
 		dm_timestamp_destroy(_initial_timestamp);
 
+        fflush(stdout);
+        fflush(stderr);
+        if (ferror(stdout) || ferror(stderr))
+            return 1;
 	return (_switches[HELP_ARG] || _switches[VERSION_ARG]) ? 0 : ret;
 }
