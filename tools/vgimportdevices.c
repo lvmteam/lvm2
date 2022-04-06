@@ -57,8 +57,7 @@ static int _vgimportdevices_single(struct cmd_context *cmd,
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		pv = pvl->pv;
 
-		if (!idtypestr && pv->device_id_type)
-			idtypestr = pv->device_id_type;
+		idtypestr = pv->device_id_type;
 
 		memcpy(pvid, &pvl->pv->id.uuid, ID_LEN);
 		device_id_add(cmd, pv->dev, pvid, idtypestr, NULL);
