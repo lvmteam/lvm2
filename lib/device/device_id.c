@@ -935,7 +935,7 @@ struct dev_use *get_du_for_devname(struct cmd_context *cmd, const char *devname)
 	return NULL;
 }
 
-static struct dev_use *_get_du_for_device_id(struct cmd_context *cmd, uint16_t idtype, const char *idname)
+struct dev_use *get_du_for_device_id(struct cmd_context *cmd, uint16_t idtype, const char *idname)
 {
 	struct dev_use *du;
 
@@ -1128,7 +1128,7 @@ id_done:
 	du_devname = get_du_for_devname(cmd, dev_name(dev));
 
 	/* Is there already an entry using the device_id for this device? */
-	du_devid = _get_du_for_device_id(cmd, id->idtype, id->idname);
+	du_devid = get_du_for_device_id(cmd, id->idtype, id->idname);
 
 	if (du_dev)
 		log_debug("device_id_add %s pvid %s matches entry %p dev %s",
@@ -1322,7 +1322,7 @@ void device_id_update_vg_uuid(struct cmd_context *cmd, struct volume_group *vg, 
 		memcpy(old_idname+4, old_vgid, ID_LEN);
 		memcpy(old_idname+4+ID_LEN, &lvl->lv->lvid.id[1], ID_LEN);
 
-		if ((du = _get_du_for_device_id(cmd, DEV_ID_TYPE_LVMLV_UUID, old_idname))) {
+		if ((du = get_du_for_device_id(cmd, DEV_ID_TYPE_LVMLV_UUID, old_idname))) {
 			log_debug("device_id update %s pvid %s vgid %s to %s",
 				  du->devname ?: ".", du->pvid ?: ".", old_vgid, new_vgid);
 			memcpy(du->idname+4, new_vgid, ID_LEN);

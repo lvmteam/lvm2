@@ -46,8 +46,12 @@ arg(addtag_ARG, '\0', "addtag", tag_VAL, ARG_GROUPABLE, 0,
 
 arg(adddev_ARG, '\0', "adddev", pv_VAL, 0, 0,
     "Add a device to the devices file.\n")
-arg(deldev_ARG, '\0', "deldev", pv_VAL, 0, 0,
-    "Remove a device from the devices file.\n")
+
+arg(deldev_ARG, '\0', "deldev", string_VAL, 0, 0,
+    "Remove a device from the devices file.\n"
+    "When used alone, --deldev specifies a device name.\n"
+    "When used with --deviceidtype, --deldev specifies a device id.\n")
+
 arg(addpvid_ARG, '\0', "addpvid", string_VAL, 0, 0,
     "Find a device with the PVID and add the device to the devices file.\n")
 arg(delpvid_ARG, '\0', "delpvid", string_VAL, 0, 0,

@@ -43,6 +43,7 @@ struct dev_use *get_du_for_devno(struct cmd_context *cmd, dev_t devno);
 struct dev_use *get_du_for_dev(struct cmd_context *cmd, struct device *dev);
 struct dev_use *get_du_for_pvid(struct cmd_context *cmd, const char *pvid);
 struct dev_use *get_du_for_devname(struct cmd_context *cmd, const char *devname);
+struct dev_use *get_du_for_device_id(struct cmd_context *cmd, uint16_t idtype, const char *idname);
 
 char *devices_file_version(void);
 int devices_file_exists(struct cmd_context *cmd);

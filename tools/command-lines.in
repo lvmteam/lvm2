@@ -1434,7 +1434,8 @@ OO: --deviceidtype String
 ID: lvmdevices_edit
 DESC: Add a device to the devices file.
 
-lvmdevices --deldev PV
+lvmdevices --deldev PV|String
+OO: --deviceidtype String
 ID: lvmdevices_edit
 DESC: Remove a device from the devices file.
 

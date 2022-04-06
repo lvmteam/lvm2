@@ -135,6 +135,24 @@ lvmdevices --deldev "$LOOP1"
 not grep "$LOOP1" $DF
 lvmdevices --deldev "$LOOP2"
 not grep "$LOOP2" $DF
+rm $DF
+
+# deldev using idname
+lvmdevices --adddev "$LOOP1"
+lvmdevices --adddev "$LOOP2"
+vgcreate $vg "$LOOP1" "$LOOP2"
+IDNAME1=`pvs "$LOOP1" --noheading -o deviceid | tr -d - | awk '{print $1}'`
+IDNAME2=`pvs "$LOOP2" --noheading -o deviceid | tr -d - | awk '{print $1}'`
+lvmdevices --deldev "$IDNAME2" --deviceidtype loop_file
+not grep "$IDNAME2" $DF
+not grep "$LOOP2" $DF
+lvmdevices --deldev "$IDNAME1" --deviceidtype loop_file
+not grep "$IDNAME1" $DF
+not grep "$LOOP1" $DF
+lvmdevices --adddev "$LOOP1"
+lvmdevices --adddev "$LOOP2"
+vgremove $vg
+rm $DF
 
 # add/delpvid with default idtype loop_file
 lvmdevices --addpvid "$PVID1"
@@ -151,6 +169,7 @@ not grep "$PVID1" $DF
 lvmdevices --delpvid "$PVID2"
 not grep "$LOOP2" $DF
 not grep "$PVID2" $DF
+rm $DF
 
 # add/deldev with non-default idtype devname
 lvmdevices --adddev "$LOOP1" --deviceidtype devname
@@ -165,6 +184,7 @@ lvmdevices --deldev "$LOOP1"
 not grep "$LOOP1" $DF
 lvmdevices --deldev "$LOOP2"
 not grep "$LOOP2" $DF
+rm $DF
 
 # add/delpvid with non-default idtype devname
 lvmdevices --addpvid "$PVID1" --deviceidtype devname
@@ -179,6 +199,7 @@ lvmdevices --deldev "$LOOP1"
 not grep "$LOOP1" $DF
 lvmdevices --deldev "$LOOP2"
 not grep "$LOOP2" $DF
+rm $DF
 
 # add/deldev when dev is missing, using default idtype
 lvmdevices --adddev "$LOOP1"

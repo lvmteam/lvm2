@@ -416,11 +416,14 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
-	if (arg_is_set(cmd, deldev_ARG)) {
+	if (arg_is_set(cmd, deldev_ARG) && !arg_is_set(cmd, deviceidtype_ARG)) {
 		const char *devname;
 
 		if (!(devname = arg_str_value(cmd, deldev_ARG, NULL)))
 			goto_bad;
+
+		if (strncmp(devname, "/dev/", 5))
+			log_warn("WARNING: to remove a device by device id, include --deviceidtype.");
 
 		/*
 		 * No filter because we always want to allow removing a device
@@ -447,6 +450,48 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 			goto bad;
 		}
  dev_del:
+		dm_list_del(&du->list);
+		free_du(du);
+		device_ids_write(cmd);
+		goto out;
+	}
+
+	/*
+	 * By itself, --deldev <devname> specifies a device name to remove.
+	 * With an id type specified, --deldev specifies a device id to remove:
+	 * --deldev <idname> --deviceidtype <idtype>
+	 */
+	if (arg_is_set(cmd, deldev_ARG) && arg_is_set(cmd, deviceidtype_ARG)) {
+		const char *idtype_str = arg_str_value(cmd, deviceidtype_ARG, NULL);
+		const char *idname = arg_str_value(cmd, deldev_ARG, NULL);
+		int idtype;
+
+		if (!idtype_str || !idname || !strlen(idname) || !strlen(idtype_str))
+			goto_bad;
+
+		if (!(idtype = idtype_from_str(idtype_str))) {
+			log_error("Unknown device_id type.");
+			goto_bad;
+		}
+
+		if (!strncmp(idname, "/dev/", 5))
+			log_warn("WARNING: to remove a device by name, do not include --deviceidtype.");
+
+		if (!(du = get_du_for_device_id(cmd, idtype, idname))) {
+			log_error("No devices file entry with device id %s %s.", idtype_str, idname);
+			goto_bad;
+		}
+
+		dev = du->dev;
+
+		if (dev && dev_is_used_by_active_lv(cmd, dev, NULL, NULL, NULL, NULL)) {
+			if (!arg_count(cmd, yes_ARG) &&
+			    yes_no_prompt("Device %s is used by an active LV, continue to remove? ", dev_name(dev)) == 'n') {
+				log_error("Device not removed.");
+				goto bad;
+			}
+		}
+
 		dm_list_del(&du->list);
 		free_du(du);
 		device_ids_write(cmd);
