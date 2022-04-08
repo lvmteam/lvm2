@@ -684,10 +684,10 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 			break;
 		}
 
-		if (rv) {
+		if (rv < 0) {
 			log_error("clear lv resource area %llu error %d",
 				  (unsigned long long)offset, rv);
-			break;
+			return rv;
 		}
 		offset += align_size;
 	}
