@@ -217,6 +217,12 @@ int get_cache_params(struct cmd_context *cmd,
 		     const char **name,
 		     struct dm_config_tree **settings);
 
+#define VDO_CHANGE_ONLINE  1
+#define VDO_CHANGE_OFFLINE 2
+int get_vdo_settings(struct cmd_context *cmd,
+		     struct dm_vdo_target_params *vtp,
+		     int *updated);
+
 int get_writecache_settings(struct cmd_context *cmd, struct writecache_settings *settings,
                             uint32_t *block_size_sectors);
 

@@ -1200,6 +1200,183 @@ out:
 	return ok;
 }
 
+/*
+ * Compare VDO option name, skip any '_' in name
+ * and also allow to use it without  vdo_[use_] prefix
+ */
+static int _compare_vdo_option(const char *b1, const char *b2)
+{
+	if (strncasecmp(b1, "vdo", 3) == 0) // skip vdo prefix
+		b1 += 3;
+
+	if ((tolower(*b1) != tolower(*b2)) &&
+	    (strncmp(b2, "use_", 4) == 0))
+		b2 += 4;  // try again with skipped prefix 'use_'
+
+	while (*b1 && *b2) {
+		if (tolower(*b1) == tolower(*b2)) {
+			++b1;
+			++b2;
+			continue;	// matching char
+		}
+
+		if (*b1 == '_')
+			++b1;           // skip to next char
+		else if (*b2 == '_')
+			++b2;           // skip to next char
+		else
+			break;          // mismatch
+	}
+
+	return (*b1 || *b2) ? 0 : 1;
+}
+
+#define CHECK_AND_SET(var, onoff) \
+	option = #var;\
+	if (_compare_vdo_option(cn->key, option)) {\
+		if (is_lvchange || !cn->v || (cn->v->type != DM_CFG_INT))\
+			goto err;\
+		if (vtp->var != cn->v->v.i) {\
+			vtp->var = cn->v->v.i;\
+			u |= onoff;\
+		}\
+		continue;\
+	}
+
+#define DO_OFFLINE(var) \
+	CHECK_AND_SET(var, VDO_CHANGE_OFFLINE)
+
+#define DO_ONLINE(var) \
+	CHECK_AND_SET(var, VDO_CHANGE_ONLINE)
+
+int get_vdo_settings(struct cmd_context *cmd,
+		     struct dm_vdo_target_params *vtp,
+		     int *updated)
+{
+	const char *str, *option = NULL;
+	struct arg_value_group_list *group;
+	struct dm_config_tree *result = NULL, *prev = NULL, *current = NULL;
+	struct dm_config_node *cn;
+	int r = 0, u = 0, is_lvchange;
+	int use_compression = vtp->use_compression;
+	int use_deduplication = vtp->use_deduplication;
+	int checked_lvchange;
+
+	if (updated)
+		*updated = 0;
+
+	// Group all --vdosettings
+	dm_list_iterate_items(group, &cmd->arg_value_groups) {
+		if (!grouped_arg_is_set(group->arg_values, vdosettings_ARG))
+			continue;
+
+		if (!(current = dm_config_create()))
+			goto_out;
+		if (prev)
+			current->cascade = prev;
+		prev = current;
+
+		if (!(str = grouped_arg_str_value(group->arg_values,
+						  vdosettings_ARG,
+						  NULL)))
+			goto_out;
+
+		if (!dm_config_parse_without_dup_node_check(current, str, str + strlen(str)))
+			goto_out;
+	}
+
+	if (current) {
+		if (!(result = dm_config_flatten(current)))
+			goto_out;
+
+		checked_lvchange = !strcmp(cmd->name, "lvchange");
+
+		/* Use all acceptable VDO options */
+		for (cn = result->root; cn; cn = cn->sib) {
+			is_lvchange = 0;
+			DO_OFFLINE(ack_threads);
+			DO_OFFLINE(bio_rotation);
+			DO_OFFLINE(bio_threads);
+			DO_OFFLINE(block_map_cache_size_mb);
+			DO_OFFLINE(block_map_era_length);
+			DO_OFFLINE(block_map_period); // alias for block_map_era_length
+			DO_OFFLINE(cpu_threads);
+			DO_OFFLINE(hash_zone_threads);
+			DO_OFFLINE(logical_threads);
+			DO_OFFLINE(max_discard);
+			DO_OFFLINE(physical_threads);
+
+			// Support also these - even when we have regular opts for them
+			DO_ONLINE(use_compression);
+			DO_ONLINE(use_deduplication);
+
+			// Settings bellow cannot be changed with lvchange command
+			is_lvchange = checked_lvchange;
+
+			DO_OFFLINE(check_point_frequency);
+			DO_OFFLINE(index_memory_size_mb);
+			DO_OFFLINE(minimum_io_size);
+			DO_OFFLINE(slab_size_mb);
+			DO_OFFLINE(use_metadata_hints);
+			DO_OFFLINE(use_sparse_index);
+
+			option = "write_policy";
+			if (_compare_vdo_option(cn->key, option)) {
+				if (is_lvchange || !cn->v || (cn->v->type != DM_CFG_STRING))
+					goto err;
+				if (!set_vdo_write_policy(&vtp->write_policy, cn->v->v.str))
+					goto_out;
+				u |= VDO_CHANGE_OFFLINE;
+				continue;
+			}
+
+			log_error("Unknown VDO setting \"%s\".", cn->key);
+			goto out;
+		}
+	}
+
+	if (arg_is_set(cmd, compression_ARG)) {
+		vtp->use_compression = arg_int_value(cmd, compression_ARG, 0);
+		if (vtp->use_compression != use_compression)
+			u |= VDO_CHANGE_ONLINE;
+	}
+
+	if (arg_is_set(cmd, deduplication_ARG)) {
+		vtp->use_deduplication = arg_int_value(cmd, deduplication_ARG, 0);
+		if (vtp->use_deduplication != use_deduplication)
+			u |= VDO_CHANGE_ONLINE;
+	}
+
+	if (updated) {
+		// validation of updated VDO option
+		if (!dm_vdo_validate_target_params(vtp, 0 /* vdo_size */)) {
+err:
+			if (is_lvchange)
+				log_error("Cannot change VDO setting \"vdo_%s\" in existing VDO pool.",
+					  option);
+			else
+				log_error("Invalid argument for VDO setting \"vdo_%s\".",
+					  option);
+			goto out;
+		}
+
+		*updated = u;
+	}
+
+	r = 1;
+out:
+	if (result)
+		dm_config_destroy(result);
+
+	while (prev) {
+		current = prev->cascade;
+		dm_config_destroy(prev);
+		prev = current;
+	}
+
+	return r;
+}
+
 static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecache_settings *settings,
 				       char *key, char *val, uint32_t *block_size_sectors)
 {

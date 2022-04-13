@@ -5454,13 +5454,8 @@ static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 	if (!fill_vdo_target_params(cmd, &vdo_params, &vdo_pool_header_size, vg->profile))
 		goto_out;
 
-	if (arg_is_set(cmd, compression_ARG))
-		vdo_params.use_compression =
-			arg_int_value(cmd, compression_ARG, 0);
-
-	if (arg_is_set(cmd, deduplication_ARG))
-		vdo_params.use_deduplication =
-			arg_int_value(cmd, deduplication_ARG, 0);
+	if (!get_vdo_settings(cmd, &vdo_params, NULL))
+		return_0;
 
 	if (!activate_lv(cmd, lv)) {
 		log_error("Cannot activate %s.", display_lvname(lv));

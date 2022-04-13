@@ -912,6 +912,15 @@ arg(vdopool_ARG, '\0', "vdopool", lv_VAL, 0, 0,
     "The name of a VDO pool LV.\n"
     "See \\fBlvmvdo\\fP(7) for more information about VDO usage.\n")
 
+arg(vdosettings_ARG, '\0', "vdosettings", string_VAL, ARG_GROUPABLE, 0,
+    "Specifies tunable VDO options for VDO LVs.\n"
+    "Use the form 'option=value' or 'option1=value option2=value', or\n"
+    "repeat --vdosettings for each option being set.\n"
+    "These settings override the default VDO behaviors.\n"
+    "To remove vdosettings and revert to the default\n"
+    "VDO behaviors, use --vdosettings 'default'.\n"
+    "See \\fBlvmvdo\\fP(7) for more information.\n")
+
 arg(version_ARG, '\0', "version", 0, 0, 0,
     "Display version information.\n")
 

@@ -79,8 +79,12 @@ not fsck -n "$DM_DEV_DIR/mapper/$vg-${lv2}"
 
 lvremove -ff $vg
 
+# Unknown settings does not pass
+# TODO: try to catch this in parser and 'fail'
+not lvcreate --type vdo --vdosettings 'ack_Xthreads=4' -L10G -V1T -ky -n $lv1 $vg
 
-lvcreate --type vdo -L10G -V1T -ky -n $lv1 $vg
+lvcreate --type vdo --vdosettings 'ack_threads=4' -L10G -V1T -ky -n $lv1 $vg
+check lv_field $vg/$lv1 vdo_ack_threads "4"
 lvs -a $vg
 lvremove -ff $vg
 
