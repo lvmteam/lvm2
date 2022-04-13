@@ -1298,15 +1298,15 @@ void device_id_update_vg_uuid(struct cmd_context *cmd, struct volume_group *vg, 
 	int update = 0;
 
 	if (!cmd->enable_devices_file)
-		goto out;
+		return;
 
 	/* Without this setting there is no stacking LVs on PVs. */
 	if (!cmd->scan_lvs)
-		goto out;
+		return;
 
 	/* Check if any devices file entries are stacked on LVs. */
 	if (!_device_ids_use_lvmlv(cmd))
-		goto out;
+		return;
 
 	memcpy(old_vgid, old_vg_id, ID_LEN);
 	memcpy(new_vgid, &vg->id, ID_LEN);
@@ -1336,7 +1336,6 @@ void device_id_update_vg_uuid(struct cmd_context *cmd, struct volume_group *vg, 
 	if (update &&
 	    !device_ids_write(cmd))
 		stack;
- out:
 	unlock_devices_file(cmd);
 }
 
