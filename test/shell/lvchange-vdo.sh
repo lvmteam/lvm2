@@ -48,8 +48,16 @@ check grep_dmsetup status $vg-vdopool-vpool " online online "
 lvchange --compression n --deduplication n $vg/vdopool
 check grep_dmsetup status $vg-vdopool-vpool " offline offline "
 
+# --vdosettings needs inactive LV
+not lvchange --vdosettings 'ack_threads=8' $vg/vdopool
 
 lvchange -an $vg/$lv1
+
+# With inactive vdo-pool changes are applied
+# explicit option --compression has highest priority
+lvchange --vdosettings 'ack_threads=5 compression=0' --compression y $vg/vdopool
+check lv_field $vg/$lv1 vdo_ack_threads "5"
+check lv_field $vg/$lv1 vdo_compression "enabled"
 
 # Test activation
 lvchange -aly $vg/$lv1

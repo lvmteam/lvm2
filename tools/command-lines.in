@@ -243,6 +243,7 @@ OO_LVCHANGE_META: --addtag Tag, --deltag Tag,
 --setautoactivation Bool, --errorwhenfull Bool, --discards Discards, --zero Bool,
 --cachemode CacheMode, --cachepolicy String, --cachesettings String,
 --minrecoveryrate SizeKB, --maxrecoveryrate SizeKB,
+--vdosettings String,
 --writebehind Number, --writemostly WriteMostlyPV, --persistent n
 
 # It's unfortunate that activate needs to be optionally allowed here;
@@ -341,7 +342,8 @@ OO_LVCONVERT_CACHE: --cachemetadataformat CacheMetadataFormat,
 --cachesettings String, --zero Bool
 
 OO_LVCONVERT_VDO: --metadataprofile String, --readahead Readahead,
---compression Bool, --deduplication Bool, --zero Bool
+--compression Bool, --deduplication Bool, --vdosettings String,
+--zero Bool
 
 OO_LVCONVERT: --alloc Alloc, --background, --force, --noudevsync
 
@@ -839,7 +841,7 @@ OO_LVCREATE_POOL: --poolmetadatasize SizeMB, --poolmetadataspare Bool, --chunksi
 
 OO_LVCREATE_THINPOOL: --discards Discards, --errorwhenfull Bool
 
-OO_LVCREATE_VDO: --compression Bool, --deduplication Bool
+OO_LVCREATE_VDO: --compression Bool, --deduplication Bool, --vdosettings String
 ---
 
 lvcreate --type error --size SizeMB VG

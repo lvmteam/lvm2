@@ -28,12 +28,12 @@ lvcreate -L5G -n $lv1 $vg
 not lvconvert --type vdo-pool $vg/$lv1 |& tee out
 grep "WARNING" out
 
-
-lvconvert -y --type vdo-pool $vg/$lv1
+# Check --vdosettings is also applied to converted vdo-pool
+lvconvert -y --type vdo-pool --vdosettings 'ack_threads=5' $vg/$lv1
+check lv_field $vg/$lv1 vdo_ack_threads "5"
 lvremove -f $vg
 
-
-# 
+#
 lvcreate -L5G -n $lv1 $vg
 lvconvert -y --vdopool $vg/$lv1
 lvremove -f $vg

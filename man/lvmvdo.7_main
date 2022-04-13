@@ -132,6 +132,19 @@ that can keep 100% incompressible data there.
 # lvconvert --type vdo-pool -n vdo0 -V10G vg/ExistingLV
 .fi
 .
+.SS \n+[step]. Change the compression and deduplication of a VDOPoolLV
+.
+Disable or enable the compression and deduplication for VDOPoolLV
+(the volume that maintains all VDO LV(s) associated with it).
+.P
+.B lvchange --compression y|n --deduplication y|n VG/VDOPoolLV
+.P
+.I Example
+.nf
+# lvchange --compression n  vg/vdopool0
+# lvchange --deduplication y vg/vdopool1
+.fi
+.
 .SS \n+[step]. Change the default settings used for creating a VDOPoolLV
 .
 VDO allows to set a large variety of options. Lots of these settings
@@ -173,17 +186,27 @@ EOF
 # lvcreate --vdo -L10G --config 'allocation/vdo_cpu_threads=4' vg/vdopool1
 .fi
 .
-.SS \n+[step]. Change the compression and deduplication of a VDOPoolLV
+.SS \n+[step]. Set or change VDO settings with option --vdosettings
 .
-Disable or enable the compression and deduplication for VDOPoolLV
-(the volume that maintains all VDO LV(s) associated with it).
-.P
-.B lvchange --compression y|n --deduplication y|n VG/VDOPoolLV
+Use the form 'option=value' or 'option1=value option2=value',
+or repeat --vdosettings for each option being set.
+Options are listed in the Example section above, for the full description see
+.BR lvm.conf (5).
+Options can omit 'vdo_' and 'vdo_use_' prefixes and all its underscores.
+So i.e.  vdo_use_metadata_hints=1  and  metadatahints=1 are equivalent.
+To change the option for an already existing VDOPoolLV use
+.BR lvchange (8)
+command. However not all option can be changed.
+Only compression and deduplication options can be also changed for an active VDO LV.
+Lowest priority options are specified with configuration file,
+then with --vdosettings and highest are expliction option --compression
+and --deduplication.
 .P
 .I Example
+.P
 .nf
-# lvchange --compression n  vg/vdopool0
-# lvchange --deduplication y vg/vdopool1
+# lvcreate --vdo -L10G --vdosettings 'ack_threads=1 hash_zone_threads=2' vg/vdopool0
+# lvchange --vdosettings 'bio_threads=2 deduplication=1' vg/vdopool0
 .fi
 .
 .SS \n+[step]. Checking the usage of VDOPoolLV

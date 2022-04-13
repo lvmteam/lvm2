@@ -755,6 +755,43 @@ out:
 	return r;
 }
 
+static int _lvchange_vdo(struct cmd_context *cmd,
+			 struct logical_volume *lv,
+			 uint32_t *mr)
+{
+	struct lv_segment *seg;
+	int updated = 0;
+
+	seg = first_seg(lv);
+
+	// With VDO LV given flip to VDO pool
+	if (seg_is_vdo(seg))
+		seg = first_seg(seg_lv(seg, 0));
+
+	if (!get_vdo_settings(cmd, &seg->vdo_params, &updated))
+		return_0;
+
+	if ((updated & VDO_CHANGE_OFFLINE) &&
+	    lv_info(cmd, seg->lv, 1, NULL, 0, 0)) {
+		log_error("Cannot change VDO settings for active VDO pool %s.",
+			  display_lvname(seg->lv));
+		// TODO maybe add --force support with prompt here
+		log_print_unless_silent("VDO pool %s with all its LVs needs to be deactivated.",
+					display_lvname(seg->lv));
+		return 0;
+	}
+
+	if (updated) {
+		if (!dm_vdo_validate_target_params(&seg->vdo_params, 0 /* vdo_size */))
+			return_0;
+
+		/* Request caller to commit and reload metadata */
+		*mr |= MR_RELOAD;
+	}
+
+	return 1;
+}
+
 static int _lvchange_tag(struct cmd_context *cmd, struct logical_volume *lv,
 			 int arg, uint32_t *mr)
 {
@@ -1154,6 +1191,7 @@ static int _option_requires_direct_commit(int opt_enum)
 		cachemode_ARG,
 		cachepolicy_ARG,
 		cachesettings_ARG,
+		vdosettings_ARG,
 		-1
 	};
 
@@ -1354,7 +1392,10 @@ static int _lvchange_properties_single(struct cmd_context *cmd,
 			docmds++;
 			doit += _lvchange_cache(cmd, lv, &mr);
 			break;
-
+		case vdosettings_ARG:
+			docmds++;
+			doit += _lvchange_vdo(cmd, lv, &mr);
+			break;
 		default:
 			log_error(INTERNAL_ERROR "Failed to check for option %s",
 				  arg_long_option_name(i));
