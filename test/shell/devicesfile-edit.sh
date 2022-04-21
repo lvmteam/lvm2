@@ -141,8 +141,8 @@ rm $DF
 lvmdevices --adddev "$LOOP1"
 lvmdevices --adddev "$LOOP2"
 vgcreate $vg "$LOOP1" "$LOOP2"
-IDNAME1=`pvs "$LOOP1" --noheading -o deviceid | tr -d - | awk '{print $1}'`
-IDNAME2=`pvs "$LOOP2" --noheading -o deviceid | tr -d - | awk '{print $1}'`
+IDNAME1=`pvs "$LOOP1" --noheading -o deviceid | awk '{print $1}'`
+IDNAME2=`pvs "$LOOP2" --noheading -o deviceid | awk '{print $1}'`
 lvmdevices --deldev "$IDNAME2" --deviceidtype loop_file
 not grep "$IDNAME2" $DF
 not grep "$LOOP2" $DF
