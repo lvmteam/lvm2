@@ -17,12 +17,14 @@
 #include "lib/activate/activate.h"
 #include "lib/commands/toolcontext.h"
 #include "lib/device/device_id.h"
+#include "lib/datastruct/str_list.h"
 #ifdef UDEV_SYNC_SUPPORT
 #include <libudev.h>
 #include "lib/device/dev-ext-udev-constants.h"
 #endif
 
 #include <dirent.h>
+#include <ctype.h>
 
 #define MPATH_PREFIX "mpath-"
 
@@ -35,15 +37,167 @@
  * If dm-3 is not an mpath device, then the constant "1" is stored in
  * the hash table with the key of the dm minor number.
  */
-static struct dm_pool *_hash_mem;
+static struct dm_pool *_wwid_mem;
 static struct dm_hash_table *_minor_hash_tab;
 static struct dm_hash_table *_wwid_hash_tab;
+static struct dm_list _ignored;
+static struct dm_list _ignored_exceptions;
 
 #define MAX_WWID_LINE 512
 
-/*
- * do we need to check the multipath.conf blacklist?
- */
+static void _read_blacklist_file(const char *path)
+{
+	FILE *fp;
+	char line[MAX_WWID_LINE];
+	char wwid[MAX_WWID_LINE];
+	char *word, *p;
+	int section_black = 0;
+	int section_exceptions = 0;
+	int found_quote;
+	int found_three;
+	int i, j;
+
+	if (!(fp = fopen(path, "r")))
+		return;
+
+	while (fgets(line, sizeof(line), fp)) {
+		word = NULL;
+
+		/* skip initial white space on the line */
+		for (i = 0; i < MAX_WWID_LINE; i++) {
+			if ((line[i] == '\n') || (line[i] == '\0'))
+				break;
+			if (isspace(line[i]))
+				continue;
+			word = &line[i];
+			break;
+		}
+
+		if (!word || word[0] == '#')
+			continue;
+
+		/* identify the start of the section we want to read */
+		if (strchr(word, '{')) {
+			if (!strncmp(word, "blacklist_exceptions", 20))
+				section_exceptions = 1;
+			else if (!strncmp(word, "blacklist", 9))
+				section_black = 1;
+			continue;
+		}
+		/* identify the end of the section we've been reading */
+		if (strchr(word, '}')) {
+			section_exceptions = 0;
+			section_black = 0;
+			continue;
+		}
+		/* skip lines that are not in a section we want */
+		if (!section_black && !section_exceptions)
+			continue;
+
+		/*
+		 * read a wwid from the blacklist{_exceptions} section.
+		 * does not recognize other non-wwid entries in the
+		 * section, and skips those (should the entire mp
+		 * config filtering be disabled if non-wwids are seen?
+		 */
+		if (!(p = strstr(word, "wwid")))
+			continue;
+
+		i += 4; /* skip "wwid" */
+
+		/*
+		 * copy wwid value from the line.
+		 * the wwids copied here need to match the
+		 * wwids read from /etc/multipath/wwids,
+		 * which are matched to wwids from sysfs.
+		 */
+
+		memset(wwid, 0, sizeof(wwid));
+		found_quote = 0;
+		found_three = 0;
+		j = 0;
+
+		for (; i < MAX_WWID_LINE; i++) {
+			if ((line[i] == '\n') || (line[i] == '\0'))
+				break;
+			if (!j && isspace(line[i]))
+				continue;
+			if (isspace(line[i]))
+				break;
+			/* quotes around wwid are optional */
+			if ((line[i] == '"') && !found_quote) {
+				found_quote = 1;
+				continue;
+			}
+			/* second quote is end of wwid */
+			if ((line[i] == '"') && found_quote)
+				break;
+			/* ignore first "3" in wwid */
+			if ((line[i] == '3') && !found_three) {
+				found_three = 1;
+				continue;
+			}
+
+			wwid[j] = line[i];
+			j++;
+		}
+
+		if (j < 8)
+			continue;
+
+		log_debug("multipath wwid %s in %s %s",
+			  wwid, section_exceptions ? "blacklist_exceptions" : "blacklist", path);
+
+		if (section_exceptions) {
+			if (!str_list_add(_wwid_mem, &_ignored_exceptions, dm_pool_strdup(_wwid_mem, wwid)))
+				stack;
+		} else {
+			if (!str_list_add(_wwid_mem, &_ignored, dm_pool_strdup(_wwid_mem, wwid)))
+				stack;
+		}
+	}
+
+	if (fclose(fp))
+		stack;
+}
+
+static void _read_wwid_exclusions(void)
+{
+	char path[PATH_MAX] = { 0 };
+	DIR *dir;
+	struct dirent *de;
+	struct dm_str_list *sl, *sl2;
+	int rem_count = 0;
+
+	_read_blacklist_file("/etc/multipath.conf");
+
+	if ((dir = opendir("/etc/multipath/conf.d"))) {
+		while ((de = readdir(dir))) {
+			if (de->d_name[0] == '.')
+				continue;
+			snprintf(path, PATH_MAX-1, "/etc/multipath/conf.d/%s", de->d_name);
+			_read_blacklist_file(path);
+		}
+		closedir(dir);
+	}
+
+	/* for each wwid in ignored_exceptions, remove it from ignored */
+
+	dm_list_iterate_items_safe(sl, sl2, &_ignored) {
+		if (str_list_match_item(&_ignored_exceptions, sl->str))
+			str_list_del(&_ignored, sl->str);
+	}
+
+	/* for each wwid in ignored, remove it from wwid_hash */
+
+	dm_list_iterate_items(sl, &_ignored) {
+		dm_hash_remove_binary(_wwid_hash_tab, sl->str, strlen(sl->str));
+		rem_count++;
+	}
+
+	if (rem_count)
+		log_debug("multipath config ignored %d wwids", rem_count);
+}
 
 static void _read_wwid_file(const char *config_wwids_file)
 {
@@ -93,6 +247,9 @@ int dev_mpath_init(const char *config_wwids_file)
 	struct dm_hash_table *minor_tab;
 	struct dm_hash_table *wwid_tab;
 
+	dm_list_init(&_ignored);
+	dm_list_init(&_ignored_exceptions);
+
 	if (!(mem = dm_pool_create("mpath", 256))) {
 		log_error("mpath pool creation failed.");
 		return 0;
@@ -104,7 +261,7 @@ int dev_mpath_init(const char *config_wwids_file)
 		return 0;
 	}
 
-	_hash_mem = mem;
+	_wwid_mem = mem;
 	_minor_hash_tab = minor_tab;
 
 	/* multipath_wwids_file="" disables the use of the file */
@@ -116,16 +273,18 @@ int dev_mpath_init(const char *config_wwids_file)
 	if (!(wwid_tab = dm_hash_create(110))) {
 		log_error("mpath hash table creation failed.");
 		dm_hash_destroy(_minor_hash_tab);
-		dm_pool_destroy(_hash_mem);
+		dm_pool_destroy(_wwid_mem);
 		_minor_hash_tab = NULL;
-		_hash_mem = NULL;
+		_wwid_mem = NULL;
 		return 0;
 	}
 
 	_wwid_hash_tab = wwid_tab;
 
-	if (config_wwids_file)
+	if (config_wwids_file) {
 		_read_wwid_file(config_wwids_file);
+		_read_wwid_exclusions();
+	}
 
 	return 1;
 }
@@ -136,12 +295,12 @@ void dev_mpath_exit(void)
 		dm_hash_destroy(_minor_hash_tab);
 	if (_wwid_hash_tab)
 		dm_hash_destroy(_wwid_hash_tab);
-	if (_hash_mem)
-		dm_pool_destroy(_hash_mem);
+	if (_wwid_mem)
+		dm_pool_destroy(_wwid_mem);
 
 	_minor_hash_tab = NULL;
 	_wwid_hash_tab = NULL;
-	_hash_mem = NULL;
+	_wwid_mem = NULL;
 }
 
 
