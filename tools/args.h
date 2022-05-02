@@ -235,8 +235,9 @@ arg(deviceidtype_ARG, '\0', "deviceidtype", string_VAL, 0, 0,
     "then it will override the default type that lvm would use.\n")
 
 arg(devices_ARG, '\0', "devices", pv_VAL, ARG_GROUPABLE, 0,
-    "Devices that the command can use. This option can be repeated\n"
-    "or accepts a comma separated list of devices. This overrides\n"
+    "Restricts the devices that are visible and accessible to the command.\n"
+    "Devices not listed will appear to be missing. This option can be\n"
+    "repeated, or accepts a comma separated list of devices. This overrides\n"
     "the devices file.\n")
 
 arg(devicesfile_ARG, '\0', "devicesfile", string_VAL, 0, 0,
