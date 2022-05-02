@@ -204,7 +204,8 @@ metadata/record_lvs_history is enabled.
 .HP
 \fB--nolocking\fP
 .br
-Disable locking.
+Disable locking. Use with caution, concurrent commands may produce
+incorrect results.
 .
 .HP
 \fB--noudevsync\fP

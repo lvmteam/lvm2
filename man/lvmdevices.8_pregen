@@ -24,7 +24,7 @@ lvmdevices \(em Manage the devices file
 .br
  \fB-d\fP|\fB--debug\fP
 .br
-    \fB--deldev\fP \fIPV\fP
+    \fB--deldev\fP \fIString\fP
 .br
     \fB--delpvid\fP \fIString\fP
 .br
@@ -152,6 +152,7 @@ is used for dm crypt devices, reported by sysfs.
 .IP \[bu] 2
 .B md_uuid
 is used for md devices, reported by sysfs.
+.IP \[bu] 2
 .B lvmlv_uuid
 is used if a PV is placed on top of an lvm LV, reported by sysfs.
 .IP \[bu] 2
@@ -226,10 +227,12 @@ Add a device to the devices file.
 Remove a device from the devices file.
 .br
 .P
-\fBlvmdevices\fP \fB--deldev\fP \fIPV\fP
+\fBlvmdevices\fP \fB--deldev\fP \fIString\fP|\fIPV\fP
 .br
 .RS 4
 .ad l
+[    \fB--deviceidtype\fP \fIString\fP ]
+.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
@@ -346,9 +349,11 @@ Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .
 .HP
-\fB--deldev\fP \fIPV\fP
+\fB--deldev\fP \fIString\fP
 .br
 Remove a device from the devices file.
+When used alone, --deldev specifies a device name.
+When used with --deviceidtype, --deldev specifies a device id.
 .
 .HP
 \fB--delpvid\fP \fIString\fP
@@ -420,7 +425,8 @@ perform standard hint file invalidation where appropriate.
 .HP
 \fB--nolocking\fP
 .br
-Disable locking.
+Disable locking. Use with caution, concurrent commands may produce
+incorrect results.
 .
 .HP
 \fB--profile\fP \fIString\fP

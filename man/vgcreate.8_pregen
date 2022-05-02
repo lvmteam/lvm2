@@ -313,7 +313,8 @@ perform standard hint file invalidation where appropriate.
 .HP
 \fB--nolocking\fP
 .br
-Disable locking.
+Disable locking. Use with caution, concurrent commands may produce
+incorrect results.
 .
 .HP
 \fB-s\fP|\fB--physicalextentsize\fP \fISize\fP[m|UNIT]
