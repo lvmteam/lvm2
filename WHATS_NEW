@@ -1,5 +1,6 @@
 Version 2.03.16 - 
 ====================================
+  Fix segfault when handling selection with historical LVs.
   Add support --vdosettings with lvcreate, lvconvert, lvchange.
   Fix lossing of delete message on thin-pool extension.
 
