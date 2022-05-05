@@ -3392,13 +3392,14 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 				process_lv = 1;
 			}
 
-			process_lv = process_lv && select_match_lv(cmd, handle, vg, lvl->lv) && _select_matches(handle);
+			_historical_lv.this_glv = glvl->glv;
+			_historical_lv.name = glvl->glv->historical->name;
+
+			process_lv = process_lv && select_match_lv(cmd, handle, vg, &_historical_lv) && _select_matches(handle);
 
 			if (!process_lv)
 				continue;
 
-			_historical_lv.this_glv = glvl->glv;
-			_historical_lv.name = glvl->glv->historical->name;
 			log_very_verbose("Processing historical LV %s in VG %s.", glvl->glv->historical->name, vg->name);
 
 			ret = process_single_lv(cmd, &_historical_lv, handle);
