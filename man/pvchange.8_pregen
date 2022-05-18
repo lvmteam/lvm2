@@ -179,8 +179,9 @@ multiple tags at once. See \fBlvm\fP(8) for information about tags.
 .HP
 \fB--devices\fP \fIPV\fP
 .br
-Devices that the command can use. This option can be repeated
-or accepts a comma separated list of devices. This overrides
+Restricts the devices that are visible and accessible to the command.
+Devices not listed will appear to be missing. This option can be
+repeated, or accepts a comma separated list of devices. This overrides
 the devices file.
 .
 .HP
