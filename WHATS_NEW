@@ -1,3 +1,6 @@
+Version 2.03.17 - 
+===============================
+
 Version 2.03.16 - 18th May 2022
 ===============================
   Fix segfault when handling selection with historical LVs.
