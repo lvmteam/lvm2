@@ -127,6 +127,8 @@ def main():
 		log_error("You cannot specify --lvmshell and --nojson")
 		sys.exit(1)
 
+	log_debug("Using lvm binary: %s" % cfg.LVM_CMD)
+
 	# We will dynamically add interfaces which support vdo if it
 	# exists.
 	cfg.vdo_support = supports_vdo()
