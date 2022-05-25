@@ -75,7 +75,7 @@ class LVMShellProxy(object):
 						stderr += read_decoded(self.lvm_shell.stderr)
 
 				# Check to see if the lvm process died on us
-				if self.lvm_shell.poll():
+				if self.lvm_shell.poll() is not None:
 					raise Exception(self.lvm_shell.returncode, "%s" % stderr)
 
 				if stdout.endswith(SHELL_PROMPT):
