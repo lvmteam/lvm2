@@ -23,6 +23,9 @@ import os
 
 g_tmo = 0
 
+# Approx. min size
+VDO_MIN_SIZE = mib(8192)
+
 # Prefix on created objects to enable easier clean-up
 g_prefix = os.getenv('PREFIX', '')
 
@@ -1155,7 +1158,7 @@ class TestDbusService(unittest.TestCase):
 				return
 
 		# This may not pass
-		for i in [48, 64, 128]:
+		for i in [64, 128]:
 			yes = self._test_expired_timer(i)
 			if yes:
 				break
@@ -1907,8 +1910,8 @@ class TestDbusService(unittest.TestCase):
 		vdo_pool_object_path = self.handle_return(
 			vg_proxy.VgVdo.CreateVdoPoolandLv(
 				pool_name, lv_name,
-				dbus.UInt64(mib(4096)),		# Appears to be minimum size
-				dbus.UInt64(mib(8192)),
+				dbus.UInt64(VDO_MIN_SIZE),
+				dbus.UInt64(VDO_MIN_SIZE * 2),
 				dbus.Int32(g_tmo),
 				EOD))
 
@@ -1950,7 +1953,7 @@ class TestDbusService(unittest.TestCase):
 		vg_proxy = self._vg_create(vg_prefix="vdo_conv_")
 		lv = self._test_lv_create(
 			vg_proxy.Vg.LvCreate,
-			(dbus.String(pool_name), dbus.UInt64(mib(4096)),
+			(dbus.String(pool_name), dbus.UInt64(VDO_MIN_SIZE),
 				dbus.Array([], signature='(ott)'), dbus.Int32(g_tmo),
 				EOD), vg_proxy.Vg, LV_BASE_INT)
 		lv_obj_path = self._lookup("%s/%s" % (vg_proxy.Vg.Name, pool_name))
@@ -1959,7 +1962,7 @@ class TestDbusService(unittest.TestCase):
 		vdo_pool_path = self.handle_return(
 			vg_proxy.VgVdo.CreateVdoPool(
 				dbus.ObjectPath(lv.object_path), lv_name,
-				dbus.UInt64(mib(8192)),
+				dbus.UInt64(VDO_MIN_SIZE),
 				dbus.Int32(g_tmo),
 				EOD))
 
@@ -2083,6 +2086,7 @@ if __name__ == '__main__':
 		std_err_print('\n*** Testing only lvm shell mode ***\n')
 
 	for g_tmo in [0, 15]:
+		std_err_print('Testing TMO=%d\n' % g_tmo)
 		if mode == 0:
 			if set_execution(False, r):
 				r.register_result(unittest.main(exit=False))
