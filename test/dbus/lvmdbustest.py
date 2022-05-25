@@ -40,9 +40,10 @@ pv_device_list = os.getenv('LVM_DBUSD_PV_DEVICE_LIST', None)
 
 # Default is to test all modes
 # 0 == Only test fork & exec mode
-# 1 == Test both fork & exec & lvm shell mode (default)
+# 1 == Only test lvm shell mode
+# 2 == Test both fork & exec & lvm shell mode (default)
 # Other == Test just lvm shell mode
-test_shell = os.getenv('LVM_DBUSD_TEST_MODE', 1)
+test_shell = os.getenv('LVM_DBUSD_TEST_MODE', 2)
 
 # LVM binary to use
 LVM_EXECUTABLE = os.getenv('LVM_BINARY', '/usr/sbin/lvm')
@@ -2081,16 +2082,19 @@ if __name__ == '__main__':
 	if mode == 0:
 		std_err_print('\n*** Testing only lvm fork & exec test mode ***\n')
 	elif mode == 1:
+		std_err_print('\n*** Testing only lvm shell mode ***\n')
+	elif mode == 2:
 		std_err_print('\n*** Testing fork & exec & lvm shell mode ***\n')
 	else:
-		std_err_print('\n*** Testing only lvm shell mode ***\n')
+		std_err_print("Unsupported \"LVM_DBUSD_TEST_MODE\"=%d, [0-2] valid" % mode)
+		sys.exit(1)
 
 	for g_tmo in [0, 15]:
 		std_err_print('Testing TMO=%d\n' % g_tmo)
 		if mode == 0:
 			if set_execution(False, r):
 				r.register_result(unittest.main(exit=False))
-		elif mode == 2:
+		elif mode == 1:
 			if set_execution(True, r):
 				r.register_result(unittest.main(exit=False))
 		else:
