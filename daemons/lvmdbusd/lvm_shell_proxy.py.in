@@ -238,24 +238,34 @@ class LVMShellProxy(object):
 
 
 if __name__ == "__main__":
-	shell = LVMShellProxy()
-	in_line = "start"
+	print("USING LVM BINARY: %s " % LVM_CMD)
+
 	try:
-		while in_line:
-			in_line = input("lvm> ")
-			if in_line:
-				start = time.time()
-				ret, out, err = shell.call_lvm(in_line.split())
-				end = time.time()
+		if len(sys.argv) > 1 and sys.argv[1] == "bisect":
+			shell = LVMShellProxy()
+			shell.exit_shell()
+		else:
+			shell = LVMShellProxy()
+			in_line = "start"
+			try:
+				while in_line:
+					in_line = input("lvm> ")
+					if in_line:
+						start = time.time()
+						ret, out, err = shell.call_lvm(in_line.split())
+						end = time.time()
 
-				print(("RC: %d" % ret))
-				print(("OUT:\n%s" % out))
-				print(("ERR:\n%s" % err))
+						print(("RC: %d" % ret))
+						print(("OUT:\n%s" % out))
+						print(("ERR:\n%s" % err))
 
-				print("Command     = %f seconds" % (end - start))
-	except KeyboardInterrupt:
-		pass
-	except EOFError:
-		pass
+						print("Command     = %f seconds" % (end - start))
+			except KeyboardInterrupt:
+				pass
+			except EOFError:
+				pass
 	except Exception:
 		traceback.print_exc(file=sys.stdout)
+		sys.exit(1)
+
+	sys.exit(0)
