@@ -135,7 +135,8 @@ class LVMShellProxy(object):
 		self.report_stream = os.fdopen(self.report_fd, 'rb', 0)
 
 		# Setup the environment for using our own socket for reporting
-		local_env = copy.deepcopy(os.environ)
+		local_env = {}
+		local_env["LC_ALL"] = "C"
 		local_env["LVM_REPORT_FD"] = "32"
 		local_env["LVM_COMMAND_PROFILE"] = "lvmdbusd"
 
