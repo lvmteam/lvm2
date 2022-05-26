@@ -129,30 +129,28 @@ class LVMShellProxy(object):
 		except FileExistsError:
 			pass
 
-		# We have to open non-blocking as the other side isn't open until
-		# we actually fork the process.
+		# Open the fifo for use to read and for lvm child process to write to.
 		self.report_fd = os.open(tmp_file, os.O_NONBLOCK)
 		self.report_stream = os.fdopen(self.report_fd, 'rb', 0)
+		lvm_fd = os.open(tmp_file, os.O_WRONLY)
 
-		# Setup the environment for using our own socket for reporting
-		local_env = {}
-		local_env["LC_ALL"] = "C"
-		local_env["LVM_REPORT_FD"] = "32"
-		local_env["LVM_COMMAND_PROFILE"] = "lvmdbusd"
-
-		# Disable the abort logic if lvm logs too much, which easily happens
-		# when utilizing the lvm shell.
-		local_env["LVM_LOG_FILE_MAX_LINES"] = "0"
+		# Set up the environment for using our own socket for reporting and disable the abort
+		# logic if lvm logs too much, which easily happens when utilizing the lvm shell.
+		local_env = {"LC_ALL": "C", "LVM_REPORT_FD": "%s" % lvm_fd, "LVM_COMMAND_PROFILE": "lvmdbusd",
+					 "LVM_LOG_FILE_MAX_LINES": "0"}
 
 		# run the lvm shell
 		self.lvm_shell = subprocess.Popen(
-			[LVM_CMD + " 32>%s" % tmp_file],
+			[LVM_CMD],
 			stdin=subprocess.PIPE, stdout=subprocess.PIPE, env=local_env,
-			stderr=subprocess.PIPE, close_fds=True, shell=True)
+			stderr=subprocess.PIPE, close_fds=True, pass_fds=(lvm_fd,), shell=False)
 
 		try:
 			make_non_block(self.lvm_shell.stdout)
 			make_non_block(self.lvm_shell.stderr)
+
+			# Close our copy of the lvm_fd, child process is open in its process space
+			os.close(lvm_fd)
 
 			# wait for the first prompt
 			errors = self._read_until_prompt(no_output=True)[2]
