@@ -1864,6 +1864,15 @@ int setup_devices(struct cmd_context *cmd)
 	file_exists = devices_file_exists(cmd);
 
 	/*
+	 * Fail if user specifies a file name that doesn't exist and
+	 * the command is not creating a new devices file.
+	 */
+	if (!file_exists && !cmd->create_edit_devices_file && cmd->devicesfile && strlen(cmd->devicesfile)) {
+		log_error("Devices file not found: %s", cmd->devices_file_path);
+		return 0;
+	}
+
+	/*
 	 * Removing the devices file is another way of disabling the use of
 	 * a devices file, unless the command creates the devices file.
 	 */
