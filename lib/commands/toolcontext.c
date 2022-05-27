@@ -1912,7 +1912,6 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	_destroy_segtypes(&cmd->segtypes);
 	_destroy_formats(cmd, &cmd->formats);
 
-	devices_file_exit(cmd);
 	if (!dev_cache_exit())
 		stack;
 	_destroy_dev_types(cmd);
