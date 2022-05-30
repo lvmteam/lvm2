@@ -29,6 +29,12 @@
 
 int main(int argc, const char **argv)
 {
+
+    if (getuid() != 0) {
+        std::cout << "Skipping tests, root is required, current UID: " << getuid() << "\n";
+        return 0;
+    }
+
     try {
         return brick::shelltest::run( argc, argv, "LVM_TEST_FLAVOUR" );
     } catch (std::exception const& e) {
