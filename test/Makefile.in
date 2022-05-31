@@ -369,6 +369,7 @@ LIB = $(addprefix lib/, $(LIB_SECURETEST) $(LIB_DMSECURETEST) $(LIB_SHARED) $(LI
 	$(Q) $(LN_S) -f $(abs_top_srcdir)/conf/thin-performance.profile lib/
 	$(Q) $(LN_S) -f $(abs_top_srcdir)/scripts/fsadm.sh lib/fsadm
 	$(Q) $(LN_S) -f $(abs_top_srcdir)/scripts/lvm_import_vdo.sh lib/lvm_import_vdo
+	$(Q) which vdo || $(LN_S) -f $(abs_top_srcdir)/test/lib/lvm_vdo_wrapper.sh lib/vdo
 	@test "$(srcdir)" = . || \
 		for i in $(LIB_LVMLOCKD_CONF) $(LIB_MKE2FS_CONF); do \
 			test -n "$(Q)" || echo "$(LN_S) -f $(abs_top_srcdir)/test/lib/$$i lib/"; \
