@@ -125,15 +125,6 @@ get_kb_size_with_unit_() {
 	esac
 }
 
-get_mb_size_with_unit_() {
-	case "$1" in
-	*[mM]) echo $(( ${1%[mM]} )) ;;
-	*[gG]) echo $(( ${1%[gG]} * 1024 )) ;;
-	*[tT]) echo $(( ${1%[tT]} * 1024 * 1024 )) ;;
-	*[pP]) echo $(( ${1%[pP]} * 1024 * 1024 * 1024 )) ;;
-	esac
-}
-
 # Figure out largest possible extent size usable for VG
 # $1   physical size
 # $2   logical size
@@ -328,12 +319,12 @@ allocation {
 	vdo_use_deduplication = $(get_enabled_value_ "$vdo_deduplication")
 	vdo_use_metadata_hints=1
 	vdo_minimum_io_size = $vdo_logicalBlockSize
-	vdo_block_map_cache_size_mb = $(get_mb_size_with_unit_ "$vdo_blockMapCacheSize")
+	vdo_block_map_cache_size_mb = $(( $(get_kb_size_with_unit_ "$vdo_blockMapCacheSize") / 1024 ))
 	vdo_block_map_period = $vdo_blockMapPeriod
 	vdo_check_point_frequency = $vdo_indexCfreq
 	vdo_use_sparse_index = $(get_enabled_value_ "$vdo_indexSparse")
 	vdo_index_memory_size_mb = $(awk "BEGIN {print $vdo_indexMemory * 1024}")
-	vdo_slab_size_mb = $(get_mb_size_with_unit_ "$vdo_blockMapCacheSize")
+	vdo_slab_size_mb = $(( $(get_kb_size_with_unit_ "$vdo_blockMapCacheSize") / 1024 ))
 	vdo_ack_threads = $vdo_ackThreads
 	vdo_bio_threads = $vdo_bioThreads
 	vdo_bio_rotation = $vdo_bioRotationInterval
