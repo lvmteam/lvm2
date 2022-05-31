@@ -1,6 +1,7 @@
 Version 2.03.17 - 
 ===============================
-  Fix lvconvert --test --type vdo-pool execution.
+ Fix lvconvert --test --type vdo-pool execution.
+ Fix vdo_slab_size_mb value for converted VDO volume.
 
 Version 2.03.16 - 
 ====================================

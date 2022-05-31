@@ -408,7 +408,7 @@ EOF
 	# Note: that this is spelled OPPOSITE the other $IS_LV checks.
 	if [ "$IS_LV" = "1" ]; then
 		verbose "Removing now-unused VDO entry from VDO config."
-		dry "$VDO" remove $VDOCONF --force --verbose --name "$VDONAME"
+		dry "$VDO" remove $VDOCONF $VERB --force --name "$VDONAME"
 	fi
 
 	rm -fr "$TEMPDIR"
