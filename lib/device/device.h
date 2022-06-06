@@ -59,6 +59,14 @@ struct dev_ext {
 	void *handle;
 };
 
+#define DEV_WWID_SIZE 128
+
+struct dev_wwid {
+	struct dm_list list;
+	int type;
+	char id[DEV_WWID_SIZE];
+};
+
 #define DEV_ID_TYPE_SYS_WWID   0x0001
 #define DEV_ID_TYPE_SYS_SERIAL 0x0002
 #define DEV_ID_TYPE_MPATH_UUID 0x0003
@@ -105,6 +113,7 @@ struct dev_use {
  */
 struct device {
 	struct dm_list aliases;	/* struct dm_str_list */
+	struct dm_list wwids; /* struct dev_wwid, used for multipath component detection */
 	struct dm_list ids; /* struct dev_id, different entries for different idtypes */
 	struct dev_id *id; /* points to the the ids entry being used for this dev */
 	dev_t dev;
@@ -206,5 +215,9 @@ void dev_destroy_file(struct device *dev);
 
 int dev_mpath_init(const char *config_wwids_file);
 void dev_mpath_exit(void);
+struct dev_wwid *add_wwid(char *id, int id_type, struct dm_list *ids);
+void free_wwids(struct dm_list *ids);
+int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list *ids);
+int format_t10_id(const unsigned char *in, int in_bytes, unsigned char *out, int out_bytes);
 
 #endif

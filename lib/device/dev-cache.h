@@ -74,6 +74,7 @@ void dev_cache_failed_path(struct device *dev, const char *path);
 bool dev_cache_has_md_with_end_superblock(struct dev_types *dt);
 
 int get_sysfs_value(const char *path, char *buf, size_t buf_size, int error_if_no_value);
+int get_sysfs_binary(const char *path, char *buf, size_t buf_size, int *retlen);
 int get_dm_uuid_from_sysfs(char *buf, size_t buf_size, int major, int minor);
 
 int setup_devices_file(struct cmd_context *cmd);
