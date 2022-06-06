@@ -41,6 +41,7 @@ SOURCES =\
 	device/dev-dasd.c \
 	device/dev-lvm1-pool.c \
 	device/online.c \
+	device/parse_vpd.c \
 	display/display.c \
 	error/errseg.c \
 	unknown/unknown.c \

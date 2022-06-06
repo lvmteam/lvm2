@@ -182,7 +182,9 @@ void free_dids(struct dm_list *ids)
 	}
 }
 
-int read_sys_block(struct cmd_context *cmd, struct device *dev, const char *suffix, char *sysbuf, int sysbufsize)
+static int _read_sys_block(struct cmd_context *cmd, struct device *dev,
+			   const char *suffix, char *sysbuf, int sysbufsize,
+			   int binary, int *retlen)
 {
 	char path[PATH_MAX];
 	dev_t devt = dev->dev;
@@ -196,11 +198,17 @@ int read_sys_block(struct cmd_context *cmd, struct device *dev, const char *suff
 		return 0;
 	}
 
-	get_sysfs_value(path, sysbuf, sysbufsize, 0);
+	if (binary) {
+		ret = get_sysfs_binary(path, sysbuf, sysbufsize, retlen);
+		if (ret && !*retlen)
+			ret = 0;
+	} else {
+		ret = get_sysfs_value(path, sysbuf, sysbufsize, 0);
+		if (ret && !sysbuf[0])
+			ret = 0;
+	}
 
-	if (sysbuf[0]) {
-		if (prim)
-			log_debug("Using primary device_id for partition %s.", dev_name(dev));
+	if (ret) {
 		sysbuf[sysbufsize - 1] = '\0';
 		return 1;
 	}
@@ -218,6 +226,19 @@ int read_sys_block(struct cmd_context *cmd, struct device *dev, const char *suff
 
  fail:
 	return 0;
+}
+
+int read_sys_block(struct cmd_context *cmd, struct device *dev,
+		   const char *suffix, char *sysbuf, int sysbufsize)
+{
+	return _read_sys_block(cmd, dev, suffix, sysbuf, sysbufsize, 0, NULL);
+}
+
+int read_sys_block_binary(struct cmd_context *cmd, struct device *dev,
+			  const char *suffix, char *sysbuf, int sysbufsize,
+			  int *retlen)
+{
+	return _read_sys_block(cmd, dev, suffix, sysbuf, sysbufsize, 1, retlen);
 }
 
 static int _dm_uuid_has_prefix(char *sysbuf, const char *prefix)

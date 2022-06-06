@@ -80,6 +80,7 @@ static void _dev_init(struct device *dev)
 
 	dm_list_init(&dev->aliases);
 	dm_list_init(&dev->ids);
+	dm_list_init(&dev->wwids);
 }
 
 void dev_destroy_file(struct device *dev)
@@ -380,6 +381,22 @@ out:
 		return 0;
 	}
 
+	return 1;
+}
+
+int get_sysfs_binary(const char *path, char *buf, size_t buf_size, int *retlen)
+{
+	int ret;
+	int fd;
+
+	fd = open(path, O_RDONLY);
+	if (fd < 0)
+		return 0;
+	ret = read(fd, buf, buf_size);
+	close(fd);
+	if (ret <= 0)
+		return 0;
+	*retlen = ret;
 	return 1;
 }
 
@@ -1336,6 +1353,7 @@ int dev_cache_exit(void)
 		dm_hash_iterate(n, _cache.names) {
 			dev = (struct device *) dm_hash_get_data(_cache.names, n);
 			free_dids(&dev->ids);
+			free_wwids(&dev->wwids);
 		}
 	}
 

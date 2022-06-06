@@ -200,11 +200,12 @@ static void _read_wwid_exclusions(void)
 		log_debug("multipath config ignored %d wwids", rem_count);
 }
 
-static void _read_wwid_file(const char *config_wwids_file)
+static void _read_wwid_file(const char *config_wwids_file, int *entries)
 {
 	FILE *fp;
 	char line[MAX_WWID_LINE];
 	char *wwid, *p;
+	char typestr[2] = { 0 };
 	int count = 0;
 
 	if (config_wwids_file[0] != '/') {
@@ -226,8 +227,17 @@ static void _read_wwid_file(const char *config_wwids_file)
 		if (line[0] == '/')
 			wwid++;
 
-		/* skip the initial '3' */
-		wwid++;
+
+		/*
+		 * the initial character is the id type,
+		 * 1 is t10, 2 is eui, 3 is naa, 8 is scsi name.
+		 * wwids are stored in the hash table without the type charater.
+		 * It seems that sometimes multipath does not include
+		 * the type charater (seen with t10 scsi_debug devs).
+		 */
+		typestr[0] = *wwid;
+		if (typestr[0] == '1' || typestr[0] == '2' || typestr[0] == '3')
+			wwid++;
 
 		if ((p = strchr(wwid, '/')))
 			*p = '\0';
@@ -240,6 +250,7 @@ static void _read_wwid_file(const char *config_wwids_file)
 		stack;
 
 	log_debug("multipath wwids read %d from %s", count, config_wwids_file);
+	*entries = count;
 }
 
 int dev_mpath_init(const char *config_wwids_file)
@@ -247,6 +258,7 @@ int dev_mpath_init(const char *config_wwids_file)
 	struct dm_pool *mem;
 	struct dm_hash_table *minor_tab;
 	struct dm_hash_table *wwid_tab;
+	int entries = 0;
 
 	dm_list_init(&_ignored);
 	dm_list_init(&_ignored_exceptions);
@@ -283,8 +295,14 @@ int dev_mpath_init(const char *config_wwids_file)
 	_wwid_hash_tab = wwid_tab;
 
 	if (config_wwids_file) {
-		_read_wwid_file(config_wwids_file);
+		_read_wwid_file(config_wwids_file, &entries);
 		_read_wwid_exclusions();
+	}
+
+	if (!entries) {
+		/* reading dev wwids is skipped with null wwid_hash_tab */
+		dm_hash_destroy(_wwid_hash_tab);
+		_wwid_hash_tab = NULL;
 	}
 
 	return 1;
@@ -434,10 +452,10 @@ static int _dev_is_mpath_component_udev(struct device *dev)
 
 /* mpath_devno is major:minor of the dm multipath device currently using the component dev. */
 
-static int _dev_is_mpath_component_sysfs(struct cmd_context *cmd, struct device *dev, dev_t *mpath_devno)
+static int _dev_is_mpath_component_sysfs(struct cmd_context *cmd, struct device *dev,
+					 int primary_result, dev_t primary_dev, dev_t *mpath_devno)
 {
 	struct dev_types *dt = cmd->dev_types;
-	const char *part_name;
 	const char *name;               /* e.g. "sda" for "/dev/sda" */
 	char link_path[PATH_MAX];       /* some obscure, unpredictable sysfs path */
 	char holders_path[PATH_MAX];    /* e.g. "/sys/block/sda/holders/" */
@@ -451,25 +469,15 @@ static int _dev_is_mpath_component_sysfs(struct cmd_context *cmd, struct device 
 	int dm_dev_major;
 	int dm_dev_minor;
 	struct stat info;
-	dev_t primary_dev;
 	int is_mpath_component = 0;
 
-	/* multipathing is only known to exist for SCSI or NVME devices */
-	if (!major_is_scsi_device(dt, dev_major) && !dev_is_nvme(dt, dev))
-		return 0;
-
-	switch (dev_get_primary_dev(dt, dev, &primary_dev)) {
+	switch (primary_result) {
 
 	case 2: /* The dev is partition. */
-		part_name = dev_name(dev); /* name of original dev for log_debug msg */
 
 		/* gets "foo" for "/dev/foo" where "/dev/foo" comes from major:minor */
 		if (!(name = _get_sysfs_name_by_devt(sysfs_dir, primary_dev, link_path, sizeof(link_path))))
 			return_0;
-
-		log_debug_devs("%s: Device is a partition, using primary "
-			       "device %s for mpath component detection",
-			       part_name, name);
 		break;
 
 	case 1: /* The dev is already a primary dev. Just continue with the dev. */
@@ -593,53 +601,201 @@ static int _dev_is_mpath_component_sysfs(struct cmd_context *cmd, struct device 
 	return is_mpath_component;
 }
 
-static int _dev_in_wwid_file(struct cmd_context *cmd, struct device *dev)
+static int _read_sys_wwid(struct cmd_context *cmd, struct device *dev,
+			  char *idbuf, int idbufsize)
 {
-	char sysbuf[PATH_MAX] = { 0 };
+	char idtmp[DEV_WWID_SIZE];
+
+	if (!read_sys_block(cmd, dev, "device/wwid", idbuf, idbufsize)) {
+		/* the wwid file is not under device for nvme devs */
+		if (!read_sys_block(cmd, dev, "wwid", idbuf, idbufsize))
+			return 0;
+	}
+	if (!idbuf[0])
+		return 0;
+
+	/* in t10 id, replace series of spaces with one _ like multipath */
+	if (!strncmp(idbuf, "t10.", 4) && strchr(idbuf, ' ')) {
+		if (idbufsize < DEV_WWID_SIZE)
+			return 0;
+		memcpy(idtmp, idbuf, DEV_WWID_SIZE);
+		memset(idbuf, 0, idbufsize);
+		format_t10_id((const unsigned char *)idtmp, DEV_WWID_SIZE, (unsigned char *)idbuf, idbufsize);
+	}
+	return 1;
+}
+
+#define VPD_SIZE 4096
+
+static int _read_sys_vpd_wwids(struct cmd_context *cmd, struct device *dev,
+			       struct dm_list *ids)
+{
+	unsigned char vpd_data[VPD_SIZE] = { 0 };
+	int vpd_datalen = 0;
+
+	if (!read_sys_block_binary(cmd, dev, "device/vpd_pg83", (char *)vpd_data, VPD_SIZE, &vpd_datalen))
+		return 0;
+	if (!vpd_datalen)
+		return 0;
+
+	/* adds dev_wwid entry to dev->wwids for each id in vpd data */
+	parse_vpd_ids(vpd_data, vpd_datalen, ids);
+	return 1;
+}
+
+void free_wwids(struct dm_list *ids)
+{
+	struct dev_wwid *dw, *safe;
+
+	dm_list_iterate_items_safe(dw, safe, ids) {
+		dm_list_del(&dw->list);
+		free(dw);
+	}
+}
+
+static int _wwid_type_num(char *id)
+{
+	if (!strncmp(id, "naa.", 4))
+		return 3;
+	else if (!strncmp(id, "eui.", 4))
+		return 2;
+	else if (!strncmp(id, "t10.", 4))
+		return 1;
+	else
+		return -1;
+}
+
+/*
+ * TODO: if each of the different wwid types (naa/eui/t10) were
+ * represented by different DEV_ID_TYPE_FOO values, and used
+ * as device_id types, then we could drop struct dev_wwid and
+ * drop dev->wwids, and just use dev->ids for each of the
+ * different wwids found in vpd_pg83.  This would also require
+ * the ability to handle both the original method of replacing
+ * every space in the id string with _ and the new/multipath
+ * format_t10_id replacing series of spaces with one _.
+ */
+struct dev_wwid *add_wwid(char *id, int id_type, struct dm_list *ids)
+{
+	struct dev_wwid *dw;
+	int len;
+
+	if (!id_type) {
+		id_type = _wwid_type_num(id);
+		if (id_type == -1)
+			log_debug("unknown wwid type %s", id);
+	}
+
+	if (!(dw = zalloc(sizeof(struct dev_wwid))))
+		return NULL;
+	len = strlen(id);
+	if (len >= DEV_WWID_SIZE)
+		len = DEV_WWID_SIZE - 1;
+	memcpy(dw->id, id, len);
+	dw->type = id_type;
+	dm_list_add(ids, &dw->list);
+	return dw;
+}
+
+/*
+ * we save ids with format: naa.<value>, eui.<value>, t10.<value>.
+ * multipath wwids file uses format: 3<value>, 2<value>, 1<value>.
+ * The values are saved in wwid_hash_tab without the type prefix.
+ */
+
+static int _dev_in_wwid_file(struct cmd_context *cmd, struct device *dev,
+			     int primary_result, dev_t primary_dev)
+{
+	char idbuf[DEV_WWID_SIZE] = { 0 };
+	struct dev_wwid *dw;
 	char *wwid;
-	long look;
 
 	if (!_wwid_hash_tab)
 		return 0;
 
-	if (!read_sys_block(cmd, dev, "device/wwid", sysbuf, sizeof(sysbuf)))
-		return 0;
-
-	if (!sysbuf[0])
-		return 0;
+	/*
+	 * Check the primary device, not the partition.
+	 */
+	if (primary_result == 2) {
+		if (!(dev = dev_cache_get_by_devt(cmd, primary_dev))) {
+			log_debug("dev_is_mpath_component %s no primary dev", dev_name(dev));
+			return 0;
+		}
+	}
 
 	/*
-	 * sysfs prints wwid as <typestr>.<value>
-	 * multipath wwid uses '3'<value>
-	 * does "<typestr>." always correspond to "3"?
+	 * This function may be called multiple times for the same device, in
+	 * particular if partitioned for each partition.
 	 */
-	if (!(wwid = strchr(sysbuf, '.')))
-		return 0;
+	if (!dm_list_empty(&dev->wwids))
+		goto lookup;
 
-	/* skip the type and dot, just as '3' was skipped from wwids entry */
-	wwid++;
-	
-	look = (long) dm_hash_lookup_binary(_wwid_hash_tab, wwid, strlen(wwid));
+	/*
+	 * Get all the ids for the device from vpd_pg83 and check if any of
+	 * those are in /etc/multipath/wwids.  These ids should include the
+	 * value printed from the sysfs wwid file.
+	 */
+	_read_sys_vpd_wwids(cmd, dev, &dev->wwids);
+	if (!dm_list_empty(&dev->wwids))
+		goto lookup;
 
-	if (look) {
-		log_debug_devs("dev_is_mpath_component %s multipath wwid %s", dev_name(dev), wwid);
-		return 1;
+	/*
+	 * This will read the sysfs wwid file, nvme devices in particular have
+	 * a wwid file but not a vpd_pg83 file.
+	 */
+	if (_read_sys_wwid(cmd, dev, idbuf, sizeof(idbuf)))
+		add_wwid(idbuf, 0, &dev->wwids);
+
+ lookup:
+	dm_list_iterate_items(dw, &dev->wwids) {
+		if (dw->type == 1 || dw->type == 2 || dw->type == 3)
+			wwid = &dw->id[4];
+		else
+			wwid = dw->id;
+
+		if (dm_hash_lookup_binary(_wwid_hash_tab, wwid, strlen(wwid))) {
+			log_debug_devs("dev_is_mpath_component %s %s in wwids file", dev_name(dev), dw->id);
+			return 1;
+		}
 	}
+
 	return 0;
 }
 
 int dev_is_mpath_component(struct cmd_context *cmd, struct device *dev, dev_t *holder_devno)
 {
-	if (_dev_is_mpath_component_sysfs(cmd, dev, holder_devno) == 1)
+	struct dev_types *dt = cmd->dev_types;
+	int primary_result;
+	dev_t primary_dev;
+
+	/*
+	 * multipath only uses SCSI or NVME devices
+	 */
+	if (!major_is_scsi_device(dt, MAJOR(dev->dev)) && !dev_is_nvme(dt, dev))
+		return 0;
+
+	/*
+	 * primary_result 2: dev is a partition, primary_dev is the whole device
+	 * primary_result 1: dev is a whole device
+	 */
+	primary_result = dev_get_primary_dev(dt, dev, &primary_dev);
+
+	if (_dev_is_mpath_component_sysfs(cmd, dev, primary_result, primary_dev, holder_devno) == 1)
 		goto found;
 
-	if (_dev_in_wwid_file(cmd, dev))
+	if (_dev_in_wwid_file(cmd, dev, primary_result, primary_dev))
 		goto found;
 
 	if (external_device_info_source() == DEV_EXT_UDEV) {
 		if (_dev_is_mpath_component_udev(dev) == 1)
 			goto found;
 	}
+
+	/*
+	 * TODO: save the result of this function in dev->flags and use those
+	 * flags on repeated calls to avoid repeating the work multiple times
+	 * for the same device when there are partitions on the device.
+	 */
 
 	return 0;
 found:
