@@ -1170,7 +1170,7 @@ class TestDbusService(unittest.TestCase):
 				return
 
 		# This may not pass
-		for i in [64, 128]:
+		for i in [128, 256]:
 			yes = self._test_expired_timer(i)
 			if yes:
 				break
