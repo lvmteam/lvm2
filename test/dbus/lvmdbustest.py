@@ -886,8 +886,19 @@ class TestDbusService(unittest.TestCase):
 				j.Remove()
 
 				break
+			else:
+				# Most of the time we will get this exception as expected, but there is
+				# a race condition between checking if it's complete and removing it (we want to try to remove while
+				# it's not complete to raise the exception)
+				# Thus, we can't reliably use self.assertRaises.
+				# We have included it here to test this path in the daemon.
+				try:
+					j.Remove()
+				except dbus.exceptions.DBusException:
+					pass
 
 			if j.Wait(1):
+				self.assertTrue(j.Wait(0))
 				j.update()
 				self.assertTrue(j.Complete)
 
