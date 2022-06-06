@@ -54,7 +54,7 @@ static void _read_blacklist_file(const char *path)
 	int section_black = 0;
 	int section_exceptions = 0;
 	int found_quote;
-	int found_three;
+	int found_type;
 	int i, j;
 
 	if (!(fp = fopen(path, "r")))
@@ -114,7 +114,7 @@ static void _read_blacklist_file(const char *path)
 
 		memset(wwid, 0, sizeof(wwid));
 		found_quote = 0;
-		found_three = 0;
+		found_type = 0;
 		j = 0;
 
 		for (; i < MAX_WWID_LINE; i++) {
@@ -132,9 +132,10 @@ static void _read_blacklist_file(const char *path)
 			/* second quote is end of wwid */
 			if ((line[i] == '"') && found_quote)
 				break;
-			/* ignore first "3" in wwid */
-			if ((line[i] == '3') && !found_three) {
-				found_three = 1;
+			/* exclude initial 3/2/1 for naa/eui/t10 */
+			if (!j && !found_type &&
+			    ((line[i] == '3') || (line[i] == '2') || (line[i] == '1'))) {
+				found_type = 1;
 				continue;
 			}
 
