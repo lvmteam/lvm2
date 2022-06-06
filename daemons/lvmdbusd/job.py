@@ -226,3 +226,21 @@ class Job(AutomatedProperties):
 	def Uuid(self):
 		import uuid
 		return uuid.uuid1()
+
+	# Override the property "getters" implementation for the job interface, so a user can query a job while the queue
+	# is processing items.  Originally all the property get methods were this way, but we changed this in
+	# e53454d6de07de56736303dd2157c3859f6fa848
+
+	# Properties
+	# noinspection PyUnusedLocal
+	@dbus.service.method(dbus_interface=dbus.PROPERTIES_IFACE,
+						 in_signature='ss', out_signature='v')
+	def Get(self, interface_name, property_name):
+		# Note: If we get an exception in this handler we won't know about it,
+		# only the side effect of no returned value!
+		return AutomatedProperties._get_prop(self, interface_name, property_name)
+
+	@dbus.service.method(dbus_interface=dbus.PROPERTIES_IFACE,
+						 in_signature='s', out_signature='a{sv}')
+	def GetAll(self, interface_name):
+		return AutomatedProperties._get_all_prop(self, interface_name)
