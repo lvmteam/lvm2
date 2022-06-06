@@ -123,7 +123,7 @@ class LVMShellProxy(object):
 		tmp_file = "%s/lvmdbus_report" % (tmp_dir)
 
 		try:
-			# Lets create fifo for the report output
+			# Let's create a fifo for the report output
 			os.mkfifo(tmp_file, 0o600)
 		except FileExistsError:
 			pass
@@ -162,7 +162,7 @@ class LVMShellProxy(object):
 		except:
 			raise
 		finally:
-			# These will get deleted when the FD count goes to zero so we
+			# These will get deleted when the FD count goes to zero, so we
 			# can be sure to clean up correctly no matter how we finish
 			os.unlink(tmp_file)
 			os.rmdir(tmp_dir)
