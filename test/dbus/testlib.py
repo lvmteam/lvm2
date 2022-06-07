@@ -183,6 +183,7 @@ class RemoteInterface(object):
 					verify_type(
 						vl, self.introspect[self.interface]
 						['properties'][kl]['p_type'])
+				self.p_name[kl] = True
 				setattr(self, kl, vl)
 
 	@property
@@ -196,6 +197,7 @@ class RemoteInterface(object):
 		self.interface = interface
 		self.introspect = introspect
 		self.tmo = 0
+		self.p_name = {}
 
 		if timelimit >= 0:
 			self.tmo = float(timelimit)
@@ -213,7 +215,7 @@ class RemoteInterface(object):
 
 	def _wrapper(self, _method_name, *args, **kwargs):
 
-		# Lets see how long a method takes to execute, in call cases we should
+		# Let's see how long a method takes to execute, in call cases we should
 		# return something when the time limit has been reached.
 		start = time.time()
 		result = getattr(self.dbus_interface, _method_name)(*args, **kwargs)
@@ -240,6 +242,14 @@ class RemoteInterface(object):
 
 	def update(self):
 		self._set_props()
+
+	def get_property_names(self):
+		return self.p_name.keys()
+
+	def get_property_value(self, name):
+		prop_interface = dbus.Interface(
+			self.dbus_object, 'org.freedesktop.DBus.Properties')
+		return prop_interface.Get(self.interface, name)
 
 
 class ClientProxy(object):

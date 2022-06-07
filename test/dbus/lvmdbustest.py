@@ -677,6 +677,20 @@ class TestDbusService(unittest.TestCase):
 				EOD), vg, LV_BASE_INT)
 		self._validate_lookup("%s/%s" % (vg.Name, lv_name), lv.object_path)
 
+	def test_prop_get(self):
+		lv_name = lv_n()
+		vg = self._vg_create().Vg
+		lv = self._test_lv_create(
+			vg.LvCreate,
+				(dbus.String(lv_name), dbus.UInt64(mib(4)),
+				dbus.Array([], signature='(ott)'), dbus.Int32(g_tmo),
+				EOD), vg, LV_BASE_INT)
+		ri = RemoteInterface(lv.dbus_object, interface=LV_COMMON_INT, introspect=False)
+
+		ri.update()
+		for prop_name in ri.get_property_names():
+			self.assertEqual(ri.get_property_value(prop_name), getattr(ri, prop_name))
+
 	def test_lv_create_job(self):
 		lv_name = lv_n()
 		vg = self._vg_create().Vg
