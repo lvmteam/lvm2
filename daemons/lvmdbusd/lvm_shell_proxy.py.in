@@ -122,11 +122,8 @@ class LVMShellProxy(object):
 		tmp_dir = tempfile.mkdtemp(prefix="lvmdbus_")
 		tmp_file = "%s/lvmdbus_report" % (tmp_dir)
 
-		try:
-			# Let's create a fifo for the report output
-			os.mkfifo(tmp_file, 0o600)
-		except FileExistsError:
-			pass
+		# Create a fifo for the report output
+		os.mkfifo(tmp_file, 0o600)
 
 		# Open the fifo for use to read and for lvm child process to write to.
 		self.report_fd = os.open(tmp_file, os.O_NONBLOCK)
