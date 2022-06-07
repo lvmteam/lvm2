@@ -54,7 +54,7 @@ vgcreate $vg "$dev1"
 
 lvcreate -L5G -n $lv1 $vg
 
-vdo create $VDOCONF --name "$VDONAME" --device="$DM_DEV_DIR/$vg/$lv1" --vdoLogicalSize=10G
+vdo create $VDOCONF --name "$VDONAME" --device "$DM_DEV_DIR/$vg/$lv1" --vdoSlabSize 128M --vdoLogicalSize 10G
 
 mkfs -E nodiscard "$DM_DEV_DIR/mapper/$VDONAME"
 
@@ -75,7 +75,7 @@ lvremove -f $vg
 # Test user can specify different VDO LV name (so the original LV is renamed)
 lvcreate -y -L5G -n $lv1 $vg
 
-vdo create $VDOCONF --name "$VDONAME" --device="$DM_DEV_DIR/$vg/$lv1" --vdoLogicalSize=10G
+vdo create $VDOCONF --name "$VDONAME" --device "$DM_DEV_DIR/$vg/$lv1" --vdoSlabSize 128M --vdoLogicalSize 10G
 
 lvm_import_vdo -y --name $vg/$lv2 "$DM_DEV_DIR/$vg/$lv1"
 
@@ -95,7 +95,7 @@ vgcreate $vg2 "$dev2"
 #
 # Check conversion of VDO volume on non-LV device and with >2T size
 #
-vdo create $VDOCONF --name "$VDONAME" --device="$dev1" --vdoLogicalSize=3T
+vdo create $VDOCONF --name "$VDONAME" --device "$dev1" --vdoSlabSize 128M --vdoLogicalSize 3T
 
 # Fail with an already existing volume group $vg2
 not lvm_import_vdo --dry-run -y -v --name $vg2/$lv1 "$dev1" |& tee err
@@ -117,7 +117,7 @@ vgremove -f $vg
 aux teardown_devs
 aux prepare_devs 1 23456
 
-vdo create $VDOCONF --name "$VDONAME" --device="$dev1" --vdoLogicalSize=23G
+vdo create $VDOCONF --name "$VDONAME" --device "$dev1" --vdoSlabSize 128M --vdoLogicalSize 23G
 
 mkfs -E nodiscard "$DM_DEV_DIR/mapper/$VDONAME"
 
@@ -137,6 +137,7 @@ aux prepare_loop 60000 || skip
 
 test -f LOOP
 LOOP=$(< LOOP)
+LOOP="${DM_DEV_DIR}/${LOOP##/dev/}"
 
 aux extend_filter "a|$LOOP|"
 aux extend_devices "$LOOP"
@@ -155,7 +156,7 @@ aux extend_devices "$LOOP"
 #
 # automate...
 #
-vdo create $VDOCONF --name "$VDONAME" --device="$LOOP" --vdoLogicalSize=23G \
+vdo create $VDOCONF --name "$VDONAME" --device "$LOOP" --vdoSlabSize 128M --vdoLogicalSize 23G\
 	--blockMapCacheSize 192 \
 	--blockMapPeriod 2048 \
 	--emulate512 disabled \
@@ -173,7 +174,7 @@ vdo create $VDOCONF --name "$VDONAME" --device="$LOOP" --vdoLogicalSize=23G \
 # Get VDO table line
 dmsetup table "$VDONAME" | tr " " "\n" | sed -e '5,6d' -e '12d' | tee vdo-orig
 
-DM_DEV_DIR="" lvm_import_vdo -y --name $vg/$lv "$LOOP"
+lvm_import_vdo -y --name $vg/$lv "$LOOP"
 lvs -a $vg
 
 dmsetup table "$vg-${lv}_vpool-vpool" | tr " " "\n" | sed -e '5,6d' -e '12d' | tee new-vdo-lv
