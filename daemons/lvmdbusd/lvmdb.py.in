@@ -13,14 +13,13 @@ from collections import OrderedDict
 
 import pprint as prettyprint
 import os
-import sys
 
 from lvmdbusd import cmdhandler
 from lvmdbusd.utils import log_debug, log_error
 
 
 class DataStore(object):
-	def __init__(self, usejson=True, vdo_support=False):
+	def __init__(self, vdo_support=False):
 		self.pvs = {}
 		self.vgs = {}
 		self.lvs = {}
@@ -35,40 +34,8 @@ class DataStore(object):
 		self.lvs_in_vgs = {}
 		self.pvs_in_vgs = {}
 
-		# self.refresh()
 		self.num_refreshes = 0
-
-		if usejson:
-			self.json = cmdhandler.supports_json()
-		else:
-			self.json = usejson
-
 		self.vdo_support = vdo_support
-
-	@staticmethod
-	def _insert_record(table, key, record, allowed_multiple):
-		if key in table:
-			existing = table[key]
-
-			for rec_k, rec_v in record.items():
-				if rec_k in allowed_multiple:
-					# This column name allows us to store multiple value for
-					# each type
-					if not isinstance(existing[rec_k], list):
-						existing_value = existing[rec_k]
-						existing[rec_k] = [existing_value, rec_v]
-					else:
-						existing[rec_k].append(rec_v)
-				else:
-					# If something is not expected to have changing values
-					# lets ensure that
-					if existing[rec_k] != rec_v:
-						raise RuntimeError(
-							"existing[%s]=%s != %s" %
-							(rec_k, str(existing[rec_k]),
-							str(rec_v)))
-		else:
-			table[key] = record
 
 	@staticmethod
 	def _pvs_parse_common(c_pvs, c_pvs_in_vgs, c_lookup):
@@ -83,22 +50,6 @@ class DataStore(object):
 
 			# Lookup for translating between /dev/<name> and pv uuid
 			c_lookup[p['pv_name']] = p['pv_uuid']
-
-	@staticmethod
-	def _parse_pvs(_pvs):
-		pvs = sorted(_pvs, key=lambda pk: pk['pv_name'])
-
-		c_pvs = OrderedDict()
-		c_lookup = {}
-		c_pvs_in_vgs = {}
-
-		for p in pvs:
-			DataStore._insert_record(
-				c_pvs, p['pv_uuid'], p,
-				['pvseg_start', 'pvseg_size', 'segtype'])
-
-		DataStore._pvs_parse_common(c_pvs, c_pvs_in_vgs, c_lookup)
-		return c_pvs, c_lookup, c_pvs_in_vgs
 
 	@staticmethod
 	def _parse_pvs_json(_all):
@@ -140,28 +91,6 @@ class DataStore(object):
 		DataStore._pvs_parse_common(c_pvs, c_pvs_in_vgs, c_lookup)
 
 		return c_pvs, c_lookup, c_pvs_in_vgs
-
-	@staticmethod
-	def _parse_vgs(_vgs):
-		vgs = sorted(_vgs, key=lambda vk: vk['vg_uuid'])
-
-		c_vgs = OrderedDict()
-		c_lookup = {}
-
-		for i in vgs:
-			vg_name = i['vg_name']
-
-			# Lvm allows duplicate vg names.  When this occurs, each subsequent
-			# matching VG name will be called vg_name:vg_uuid.  Note: ':' is an
-			# invalid character for lvm VG names
-			if vg_name in c_lookup:
-				vg_name = "%s:%s" % (vg_name, i['vg_uuid'])
-				i['vg_name'] = vg_name
-
-			c_lookup[vg_name] = i['vg_uuid']
-			DataStore._insert_record(c_vgs, i['vg_uuid'], i, [])
-
-		return c_vgs, c_lookup
 
 	@staticmethod
 	def _parse_vgs_json(_all):
@@ -226,22 +155,6 @@ class DataStore(object):
 					(i['lv_uuid'], i['lv_name']))
 
 		return c_lvs, c_lvs_in_vgs, c_lvs_hidden, c_lv_full_lookup
-
-	@staticmethod
-	def _parse_lvs(_lvs):
-		lvs = sorted(_lvs, key=lambda vk: vk['lv_name'])
-
-		c_lvs = OrderedDict()
-		c_lv_full_lookup = OrderedDict()
-
-		for i in lvs:
-			full_name = "%s/%s" % (i['vg_name'], i['lv_name'])
-			c_lv_full_lookup[full_name] = i['lv_uuid']
-			DataStore._insert_record(
-				c_lvs, i['lv_uuid'], i,
-				['seg_pe_ranges', 'segtype'])
-
-		return DataStore._parse_lvs_common(c_lvs, c_lv_full_lookup)
 
 	def _parse_lvs_json(self, _all):
 
@@ -401,22 +314,12 @@ class DataStore(object):
 			log_debug("lvmdb - refresh entry")
 
 		# Grab everything first then parse it
-		if self.json:
-			# Do a single lvm retrieve for everything in json
-			a = cmdhandler.lvm_full_report_json()
+		# Do a single lvm retrieve for everything in json
+		a = cmdhandler.lvm_full_report_json()
 
-			_pvs, _pvs_lookup, _pvs_in_vgs = self._parse_pvs_json(a)
-			_vgs, _vgs_lookup = self._parse_vgs_json(a)
-			_lvs, _lvs_in_vgs, _lvs_hidden, _lvs_lookup = self._parse_lvs_json(a)
-
-		else:
-			_raw_pvs = cmdhandler.pv_retrieve_with_segs()
-			_raw_vgs = cmdhandler.vg_retrieve(None)
-			_raw_lvs = cmdhandler.lv_retrieve_with_segments()
-
-			_pvs, _pvs_lookup, _pvs_in_vgs = self._parse_pvs(_raw_pvs)
-			_vgs, _vgs_lookup = self._parse_vgs(_raw_vgs)
-			_lvs, _lvs_in_vgs, _lvs_hidden, _lvs_lookup = self._parse_lvs(_raw_lvs)
+		_pvs, _pvs_lookup, _pvs_in_vgs = self._parse_pvs_json(a)
+		_vgs, _vgs_lookup = self._parse_vgs_json(a)
+		_lvs, _lvs_in_vgs, _lvs_hidden, _lvs_lookup = self._parse_lvs_json(a)
 
 		# Set all
 		self.pvs = _pvs
@@ -527,13 +430,7 @@ class DataStore(object):
 if __name__ == "__main__":
 	pp = prettyprint.PrettyPrinter(indent=4)
 
-	use_json = False
-
-	if len(sys.argv) != 1:
-		print(len(sys.argv))
-		use_json = True
-
-	ds = DataStore(use_json)
+	ds = DataStore()
 	ds.refresh()
 
 	print("PVS")

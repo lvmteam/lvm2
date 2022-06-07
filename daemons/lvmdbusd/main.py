@@ -29,7 +29,7 @@ from .utils import log_debug, log_error
 import argparse
 import os
 import sys
-from .cmdhandler import LvmFlightRecorder, supports_vdo
+from .cmdhandler import LvmFlightRecorder, supports_vdo, supports_json
 from .request import RequestEntry
 
 
@@ -116,6 +116,15 @@ def main():
 	os.environ["LC_ALL"] = "C"
 
 	cfg.args = parser.parse_args()
+
+	if not cfg.args.use_json:
+		log_error("Daemon no longer supports lvm without JSON support, exiting!")
+		sys.exit(1)
+	else:
+		if not supports_json():
+			log_error("Un-supported version of LVM, daemon requires JSON output, exiting!")
+			sys.exit(1)
+
 	cfg.create_request_entry = RequestEntry
 
 	# We create a flight recorder in cmdhandler too, but we replace it here
@@ -157,7 +166,7 @@ def main():
 	cfg.om = Lvm(BASE_OBJ_PATH)
 	cfg.om.register_object(Manager(MANAGER_OBJ_PATH))
 
-	cfg.db = lvmdb.DataStore(cfg.args.use_json, cfg.vdo_support)
+	cfg.db = lvmdb.DataStore(vdo_support=cfg.vdo_support)
 
 	# Using a thread to process requests, we cannot hang the dbus library
 	# thread that is handling the dbus interface

@@ -220,38 +220,6 @@ def _dc(cmd, args):
 	return c
 
 
-def parse(out):
-	rc = []
-
-	for line in out.split('\n'):
-		# This line includes separators, so process them
-		if SEP in line:
-			elem = line.split(SEP)
-			cleaned_elem = []
-			for e in elem:
-				e = e.strip()
-				cleaned_elem.append(e)
-
-			if len(cleaned_elem) > 1:
-				rc.append(cleaned_elem)
-		else:
-			t = line.strip()
-			if len(t) > 0:
-				rc.append(t)
-	return rc
-
-
-def parse_column_names(out, column_names):
-	lines = parse(out)
-	rc = []
-
-	for i in range(0, len(lines)):
-		d = dict(list(zip(column_names, lines[i])))
-		rc.append(d)
-
-	return rc
-
-
 def options_to_cli_args(options):
 	rc = []
 	for k, v in list(dict(options).items()):
@@ -637,46 +605,6 @@ def lvm_full_report_json():
 	return None
 
 
-def pv_retrieve_with_segs(device=None):
-	d = []
-	err = ""
-	out = ""
-	rc = 0
-
-	columns = ['pv_name', 'pv_uuid', 'pv_fmt', 'pv_size', 'pv_free',
-				'pv_used', 'dev_size', 'pv_mda_size', 'pv_mda_free',
-				'pv_ba_start', 'pv_ba_size', 'pe_start', 'pv_pe_count',
-				'pv_pe_alloc_count', 'pv_attr', 'pv_tags', 'vg_name',
-				'vg_uuid', 'pvseg_start', 'pvseg_size', 'segtype', 'pv_missing']
-
-	# Lvm has some issues where it returns failure when querying pvs when other
-	# operations are in process, see:
-	# https://bugzilla.redhat.com/show_bug.cgi?id=1274085
-	for i in range(0, 10):
-		cmd = _dc('pvs', ['-o', ','.join(columns)])
-
-		if device:
-			cmd.extend(device)
-
-		rc, out, err = call(cmd)
-
-		if rc == 0:
-			d = parse_column_names(out, columns)
-			break
-		else:
-			time.sleep(0.2)
-			log_debug("LVM Bug workaround, retrying pvs command...")
-
-	if rc != 0:
-		msg = "We were unable to get pvs to return without error after " \
-			"trying 10 times, RC=%d, STDERR=(%s), STDOUT=(%s)" % \
-			(rc, err, out)
-		log_error(msg)
-		raise RuntimeError(msg)
-
-	return d
-
-
 def pv_resize(device, size_bytes, create_options):
 	cmd = ['pvresize']
 
@@ -831,53 +759,6 @@ def activate_deactivate(op, name, activate, control_flags, options):
 	return call(cmd)
 
 
-def vg_retrieve(vg_specific):
-	if vg_specific:
-		assert isinstance(vg_specific, list)
-
-	columns = ['vg_name', 'vg_uuid', 'vg_fmt', 'vg_size', 'vg_free',
-				'vg_sysid', 'vg_extent_size', 'vg_extent_count',
-				'vg_free_count', 'vg_profile', 'max_lv', 'max_pv',
-				'pv_count', 'lv_count', 'snap_count', 'vg_seqno',
-				'vg_mda_count', 'vg_mda_free', 'vg_mda_size',
-				'vg_mda_used_count', 'vg_attr', 'vg_tags']
-
-	cmd = _dc('vgs', ['-o', ','.join(columns)])
-
-	if vg_specific:
-		cmd.extend(vg_specific)
-
-	d = []
-	rc, out, err = call(cmd)
-	if rc == 0:
-		d = parse_column_names(out, columns)
-
-	return d
-
-
-def lv_retrieve_with_segments():
-	columns = ['lv_uuid', 'lv_name', 'lv_path', 'lv_size',
-				'vg_name', 'pool_lv_uuid', 'pool_lv', 'origin_uuid',
-				'origin', 'data_percent',
-				'lv_attr', 'lv_tags', 'vg_uuid', 'lv_active', 'data_lv',
-				'metadata_lv', 'seg_pe_ranges', 'segtype', 'lv_parent',
-				'lv_role', 'lv_layout',
-				'snap_percent', 'metadata_percent', 'copy_percent',
-				'sync_percent', 'lv_metadata_size', 'move_pv', 'move_pv_uuid']
-
-	cmd = _dc('lvs', ['-a', '-o', ','.join(columns)])
-	rc, out, err = call(cmd)
-
-	d = []
-
-	if rc == 0:
-		d = parse_column_names(out, columns)
-
-	return d
-
-
 if __name__ == '__main__':
-	pv_data = pv_retrieve_with_segs()
-
-	for p in pv_data:
-		print(str(p))
+	# Leave this for future debug as needed
+	pass
