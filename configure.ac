@@ -1605,6 +1605,11 @@ AC_ARG_WITH(usrsbindir,
 			   [usrsbin executables in DIR [PREFIX/sbin]]),
 	    usrsbindir=$withval, usrsbindir='${prefix}/sbin')
 
+AC_ARG_WITH(libexecdir,
+	    AS_HELP_STRING([--with-libexecdir=DIR],
+			   [libexec executables in DIR [PREFIX/libexec]]),
+	    libexecdir=$withval, libexecdir='${prefix}/libexec')
+
 ################################################################################
 AC_ARG_WITH(udev_prefix,
 	    AS_HELP_STRING([--with-udev-prefix=UPREFIX],
@@ -1708,6 +1713,11 @@ AC_DEFINE_UNQUOTED(FSADM_PATH, ["$FSADM_PATH"], [Path to fsadm binary.])
 
 LVMIMPORTVDO_PATH="$SBINDIR/lvm_import_vdo"
 AC_DEFINE_UNQUOTED(LVMIMPORTVDO_PATH, ["$LVMIMPORTVDO_PATH"], [Path to lvm_import_vdo script.])
+
+LIBEXECDIR="$(eval echo $(eval echo $libexecdir))"
+
+LVRESIZE_FS_HELPER_PATH="$LIBEXECDIR/lvresize_fs_helper"
+AC_DEFINE_UNQUOTED(LVRESIZE_FS_HELPER_PATH, ["$LVRESIZE_FS_HELPER_PATH"], [Path to lvresize_fs_helper script.])
 
 ################################################################################
 dnl -- dmeventd pidfile and executable path
@@ -1878,6 +1888,7 @@ AC_SUBST(DM_LIB_PATCHLEVEL)
 AC_SUBST(ELDFLAGS)
 AC_SUBST(FSADM)
 AC_SUBST(FSADM_PATH)
+AC_SUBST(LVRESIZE_FS_HELPER_PATH)
 AC_SUBST(BLKDEACTIVATE)
 AC_SUBST(HAVE_LIBDL)
 AC_SUBST(HAVE_REALTIME)
@@ -1976,6 +1987,7 @@ AC_SUBST(systemdutildir)
 AC_SUBST(tmpfilesdir)
 AC_SUBST(usrlibdir)
 AC_SUBST(usrsbindir)
+AC_SUBST(libexecdir)
 
 ################################################################################
 dnl -- First and last lines should not contain files to generate in order to

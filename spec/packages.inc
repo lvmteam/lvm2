@@ -34,6 +34,7 @@ fi
 %doc COPYING COPYING.LIB INSTALL README VERSION WHATS_NEW
 %doc doc/lvm_fault_handling.txt
 %{_sbindir}/fsadm
+%{_libexecdir}/lvresize_fs_helper
 %{_sbindir}/lvchange
 %{_sbindir}/lvconvert
 %{_sbindir}/lvcreate

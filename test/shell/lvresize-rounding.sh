@@ -52,7 +52,7 @@ lvcreate -an -Zn -l1 -n $lv1 -i3 $vg
 lvextend -l+100%FREE -i3 $vg/$lv1
 check vg_field $vg vg_free_count 2
 
-lvreduce -f -l50%LV $vg/$lv1
+lvreduce -f --fs ignore -l50%LV $vg/$lv1
 vgremove -f $vg
 
 vgcreate $SHARED -s 4M $vg "$dev1" "$dev2" "$dev3"
@@ -72,21 +72,21 @@ lvextend -l+100%FREE $vg/lv
 check vg_field $vg vg_free_count 0
 
 # Rounds up and should reduce just by 3 extents
-lvreduce -f -l-4 $vg/lv
+lvreduce -f --fs ignore -l-4 $vg/lv
 check vg_field $vg vg_free_count 3
 
 # Should round up to 15 extents
 lvextend -f -l+1 $vg/lv
 check vg_field $vg vg_free_count 0
 
-lvreduce -f -l-4 $vg/lv
+lvreduce -f --fs ignore -l-4 $vg/lv
 check vg_field $vg vg_free_count 3
 
 lvextend -l90%VG $vg/lv
 check vg_field $vg vg_free_count 0
 
-not lvreduce -f -l-10%LV $vg/lv
+not lvreduce -f --fs ignore -l-10%LV $vg/lv
 check vg_field $vg vg_free_count 0
 
-lvreduce -f -l-20%LV $vg/lv
+lvreduce -f --fs ignore -l-20%LV $vg/lv
 check vg_field $vg vg_free_count 3

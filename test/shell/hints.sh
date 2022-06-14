@@ -264,8 +264,8 @@ lvcreate -l1 -n $lv2 $vg1
 lvcreate -l1 -an -n $lv3 $vg1
 lvchange -an $vg1
 lvremove $vg1/$lv3
-lvresize -l+1 $vg1/$lv2
-lvresize -l-1 $vg1/$lv2
+lvresize --fs ignore -l+1 $vg1/$lv2
+lvresize --fs ignore -l-1 $vg1/$lv2
 lvdisplay
 pvdisplay
 vgdisplay

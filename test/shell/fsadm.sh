@@ -113,18 +113,18 @@ if check_missing ext2; then
 	fsadm --lvresize resize $vg_lv 30M
 	# Fails - not enough space for 4M fs
 	not fsadm -y --lvresize resize "$dev_vg_lv" 4M
-	lvresize -L+10M -r $vg_lv
-	lvreduce -L10M -r $vg_lv
+	lvresize -L+10M --fs resize_fsadm $vg_lv
+	lvreduce -L10M --fs resize_fsadm $vg_lv
 
 	fscheck_ext3
 	mount "$dev_vg_lv" "$mount_dir"
 	not fsadm -y --lvresize resize $vg_lv 4M
-	echo n | not lvresize -L4M -r -n $vg_lv
-	lvresize -L+20M -r -n $vg_lv
+	echo n | not lvresize -L4M --fs resize_fsadm -n $vg_lv
+	lvresize -L+20M --fs resize_fsadm -n $vg_lv
 	umount "$mount_dir"
 	fscheck_ext3
 
-	lvresize -f -L20M $vg_lv
+	lvresize --fs ignore -y -L20M $vg_lv
 
 	if which debugfs ; then
 		mkfs.ext2 -b4096 -j "$dev_vg_lv"
@@ -145,7 +145,7 @@ if check_missing ext2; then
 
 		mount "$dev_vg_lv" "$mount_dir"
 		fsadm -v -y --lvresize resize $vg_lv 10M
-		lvresize -L+10M -y -r -n $vg_lv
+		lvresize -L+10M -y --fs resize_fsadm -n $vg_lv
 		umount "$mount_dir" 2>/dev/null || true
 		fscheck_ext3
 	fi
@@ -158,24 +158,24 @@ if check_missing ext3; then
 	fsadm --lvresize resize $vg_lv 30M
 	# Fails - not enough space for 4M fs
 	not fsadm -y --lvresize resize "$dev_vg_lv" 4M
-	lvresize -L+10M -r $vg_lv
-	lvreduce -L10M -r $vg_lv
+	lvresize -L+10M --fs resize_fsadm $vg_lv
+	lvreduce -L10M --fs resize_fsadm $vg_lv
 
 	fscheck_ext3
 	mount "$dev_vg_lv" "$mount_dir"
-	lvresize -L+10M -r $vg_lv
+	lvresize -L+10M --fs resize_fsadm $vg_lv
 	mount "$dev_vg_lv2" "$mount_space_dir"
 	fsadm --lvresize -e -y resize $vg_lv2 25M
 
 	not fsadm -y --lvresize resize $vg_lv 4M
 	echo n | not lvresize -L4M -r -n $vg_lv
-	lvresize -L+20M -r -n $vg_lv
-	lvresize -L-10M -r -y $vg_lv
+	lvresize -L+20M --fs resize_fsadm -n $vg_lv
+	lvresize -L-10M --fs resize_fsadm -y $vg_lv
 	umount "$mount_dir"
 	umount "$mount_space_dir"
 	fscheck_ext3
 
-	lvresize -f -L20M $vg_lv
+	lvresize --fs ignore -y -L20M $vg_lv
 fi
 
 if check_missing xfs; then
@@ -183,23 +183,24 @@ if check_missing xfs; then
 	mkfs.xfs -l internal -f "$dev_vg_lv"
 
 	fsadm --lvresize resize $vg_lv 320M
-	lvresize -L+10M -r $vg_lv
-	not lvreduce -L10M -r $vg_lv
+	# Fails - not enough space for 4M fs
+	lvresize -L+10M --fs resize_fsadm $vg_lv
+	not lvreduce -L10M --fs resize_fsadm $vg_lv
 
 	fscheck_xfs
 	mount "$dev_vg_lv" "$mount_dir"
-	lvresize -L+10M -r -n $vg_lv
+	lvresize -L+10M --fs resize_fsadm -n $vg_lv
 	umount "$mount_dir"
 	fscheck_xfs
 
-	lvresize -f -L20M $vg_lv
+	lvresize --fs ignore -y -L20M $vg_lv
 fi
 
 if check_missing reiserfs; then
 	mkfs.reiserfs -s 513 -f "$dev_vg_lv"
 
 	fsadm --lvresize resize $vg_lv 30M
-	lvresize -L+10M -r $vg_lv
+	lvresize -L+10M --fs resize_fsadm $vg_lv
 	fsadm --lvresize -y resize $vg_lv 10M
 
 	fscheck_reiserfs
@@ -209,7 +210,7 @@ if check_missing reiserfs; then
 	umount "$mount_dir"
 	fscheck_reiserfs
 
-	lvresize -f -L20M $vg_lv
+	lvresize --fs ignore -y -L20M $vg_lv
 fi
 
 vgremove -ff $vg

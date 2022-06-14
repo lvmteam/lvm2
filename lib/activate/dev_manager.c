@@ -4028,3 +4028,78 @@ out:
 
 	return r;
 }
+
+/*
+ * crypt offset is usually the LUKS header size but can be larger.
+ * The LUKS header is usually 2MB for LUKS1 and 16MB for LUKS2.
+ * The offset needs to be subtracted from the LV size to get the
+ * size used to resize the crypt device.
+ */
+int get_crypt_table_offset(dev_t crypt_devt, uint32_t *offset_bytes)
+{
+	struct dm_task *dmt = dm_task_create(DM_DEVICE_TABLE);
+	uint64_t start, length;
+	char *target_type = NULL;
+	void *next = NULL;
+	char *params = NULL;
+	char offset_str[32] = { 0 };
+	int copy_offset = 0;
+	int spaces = 0;
+	int i, i_off = 0;
+
+	if (!dmt)
+		return_0;
+
+	if (!dm_task_set_major_minor(dmt, (int)MAJOR(crypt_devt), (int)MINOR(crypt_devt), 0)) {
+		dm_task_destroy(dmt);
+		return_0;
+	}
+
+	/* Non-blocking status read */
+	if (!dm_task_no_flush(dmt))
+		log_warn("WARNING: Can't set no_flush for dm status.");
+
+	if (!dm_task_run(dmt)) {
+		dm_task_destroy(dmt);
+		return_0;
+	}
+
+	next = dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
+
+	if (!target_type || !params || strcmp(target_type, "crypt")) {
+		dm_task_destroy(dmt);
+		return_0;
+	}
+
+	/*
+	 * get offset from params string:
+	 * <cipher> <key> <iv_offset> <device> <offset> [<#opt_params> <opt_params>]
+	 * <offset> is reported in 512 byte sectors.
+	 */
+	for (i = 0; i < strlen(params); i++) {
+		if (params[i] == ' ') {
+			spaces++;
+			if (spaces == 4)
+				copy_offset = 1;
+			if (spaces == 5)
+				break;
+			continue;
+		}
+		if (!copy_offset)
+			continue;
+
+		offset_str[i_off++] = params[i];
+
+		if (i_off == sizeof(offset_str)) {
+			offset_str[0] = '\0';
+			break;
+		}
+	}
+	dm_task_destroy(dmt);
+
+	if (!offset_str[0])
+		return_0;
+
+	*offset_bytes = ((uint32_t)strtoul(offset_str, NULL, 0) * 512);
+	return 1;
+}

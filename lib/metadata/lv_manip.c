@@ -31,6 +31,7 @@
 #include "lib/locking/lvmlockd.h"
 #include "lib/label/label.h"
 #include "lib/misc/lvm-signal.h"
+#include "lib/device/filesystem.h"
 
 #ifdef HAVE_BLKZEROOUT
 #include <sys/ioctl.h>
@@ -4946,13 +4947,6 @@ static int _lv_reduce_confirmation(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (lv_is_vdo(lv) && !info.exists) {
-		log_error("Logical volume %s must be activated "
-			  "before reducing device size.",
-			  display_lvname(lv));
-		return 0;
-	}
-
 	if (!info.exists)
 		return 1;
 
@@ -5565,10 +5559,8 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 			if (!(seg_size = lp->extents - existing_logical_extents))
 				return 1;  /* No change in metadata size */
 		}
-	} else {  /* If reducing, find stripes, stripesize & size of last segment */
-		if (lp->stripes || lp->stripe_size || lp->mirrors)
-			log_print_unless_silent("Ignoring stripes, stripesize and mirrors "
-						"arguments when reducing.");
+	} else { 
+		/* If reducing, find stripes, stripesize & size of last segment */
 
 		if (lp->sign == SIGN_MINUS)  {
 			if (lp->extents >= existing_extents) {
@@ -5933,7 +5925,7 @@ static void _setup_params_for_extend_metadata(struct logical_volume *lv,
 	lp->percent = PERCENT_NONE;
 	lp->segtype = mseg->segtype;
 	lp->mirrors = seg_is_mirrored(mseg) ? lv_mirror_count(lv) : 0;
-	lp->resizefs = 0;
+	lp->fsopt[0] = '\0';
 	lp->stripes = lp->mirrors ? mseg->area_count / lp->mirrors : 0;
 	lp->stripe_size = mseg->stripe_size;
 }
@@ -5974,6 +5966,581 @@ static int _lv_resize_check_used(struct logical_volume *lv)
 	return 1;
 }
 
+/*
+ * --fs checksize: check fs size and allow the lv to reduce if the fs is not
+ * 		using the affected space, i.e. the fs does not need to be
+ *		resized.  fail the command without reducing the fs or lv if
+ *		the fs is using the affected space.
+ *
+ * --fs resize --fsmode manage: resize the fs, mounting/unmounting the fs
+ *  		as needed, but avoiding mounting/unmounted when possible.
+ *
+ * --fs resize --fsmode nochange: resize the fs without changing the current
+ *		mount/unmount state. fail the command without reducing the
+ *		fs or lv if the fs resize would require mounting or unmounting.
+ *
+ * --fs resize --fsmode offline: resize the fs only while it's unmounted
+ *		unmounting the fs if needed.  fail the commandn without
+ *		reducing the fs or lv if the fs resize would require having
+ *		the fs mounted.
+ *
+ * --fs resize_fsadm: old method using fsadm script to do everything
+ */
+static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
+			    struct lvresize_params *lp, uint64_t newsize_bytes_lv,
+			    uint64_t newsize_bytes_fs, struct fs_info *fsi)
+{
+	const char *fs_reduce_cmd = "";
+	const char *cmp_desc = "";
+	int equal = 0, smaller = 0, larger = 0;
+	int is_ext_fstype = 0;
+	int confirm_mount_change = 0;
+
+	/*
+	 * Allow reducing the LV for other fs types if the fs is not using
+	 * space that's being reduced.
+	 */
+	if (!strcmp(fsi->fstype, "ext2") ||
+	    !strcmp(fsi->fstype, "ext3") ||
+	    !strcmp(fsi->fstype, "ext4") ||
+	    !strcmp(fsi->fstype, "xfs")) {
+		log_debug("Found fs %s last_byte %llu newsize_bytes_fs %llu",
+			  fsi->fstype,
+			  (unsigned long long)fsi->fs_last_byte,
+			  (unsigned long long)newsize_bytes_fs);
+		if (!strncmp(fsi->fstype, "ext", 3)) {
+			is_ext_fstype = 1;
+			fs_reduce_cmd = " resize2fs";
+		}
+	}
+
+	if (!fsi->mounted)
+		log_print("File system %s%s found on %s.",
+			  fsi->fstype, fsi->needs_crypt ? "+crypto_LUKS" : "",
+			  display_lvname(lv));
+	else
+		log_print("File system %s%s found on %s mounted at %s.",
+			  fsi->fstype, fsi->needs_crypt ? "+crypto_LUKS" : "",
+			  display_lvname(lv), fsi->mount_dir);
+
+	if (!fsi->fs_last_byte) {
+		log_error("File system size unknown: update libblkid for FSLASTBLOCK, or see --fs resize_fsadm.");
+		return 0;
+	}
+
+	if ((equal = (fsi->fs_last_byte == newsize_bytes_fs)))
+		cmp_desc = "equal to";
+	else if ((smaller = (fsi->fs_last_byte < newsize_bytes_fs)))
+		cmp_desc = "smaller than";
+	else if ((larger = (fsi->fs_last_byte > newsize_bytes_fs)))
+		cmp_desc = "larger than";
+
+	log_print("File system size (%s) is %s the requested size (%s).",
+		  display_size(cmd, fsi->fs_last_byte/512), cmp_desc,
+		  display_size(cmd, newsize_bytes_fs/512));
+
+	/*
+	 * FS reduce is not needed, it's not using the affected space.
+	 */
+	if (smaller || equal) {
+		log_print("File system reduce is not needed, skipping.");
+		fsi->needs_reduce = 0;
+		return 1;
+	}
+
+	/*
+	 * FS reduce is required, but checksize does not allow it.
+	 */
+	if (!strcmp(lp->fsopt, "checksize")) {
+		if (is_ext_fstype)
+			log_error("File system reduce is required (see resize2fs or --resizefs.)");
+		else
+			log_error("File system reduce is required and not supported (%s).", fsi->fstype);
+		return 0;
+	}
+
+	/*
+	 * FS reduce required, ext* supports it, xfs does not.
+	 */
+	if (is_ext_fstype) {
+		log_print("File system reduce is required using resize2fs.");
+	} else {
+		log_error("File system reduce is required and not supported (%s).", fsi->fstype);
+		return 0;
+	}
+
+	/*
+	 * Set fstype-specific requirements for running fs resize command.
+	 * ext2,3,4 require the fs to be unmounted to shrink with resize2fs,
+	 * and they require e2fsck to be run first, unless resize2fs -f is used.
+	 */
+	if (is_ext_fstype) {
+		/* it's traditional to run fsck before shrink */
+		if (!lp->nofsck)
+			fsi->needs_fsck = 1;
+
+		/* ext2,3,4 require fs to be unmounted to shrink */
+		if (fsi->mounted)
+			fsi->needs_unmount = 1;
+
+		fsi->needs_reduce = 1;
+	} else {
+		/*
+		 * Shouldn't reach here since no other fs types get this far.
+		 * A future fs supporting shrink may require the fs to be
+		 * mounted or unmounted to run the fs shrink command.
+		 * set fsi->needs_unmount or fs->needs_mount according to
+		 * the fs-specific shrink command's requirement.
+		 */
+		log_error("File system %s: fs reduce not implemented.", fsi->fstype);
+		return 0;
+	}
+
+	/*
+	 * FS reduce may require mounting or unmounting, check the fsopt value
+	 * from the user, and the current mount state to decide if fs resize
+	 * can be done.
+	 */
+	if (!strcmp(lp->fsopt, "resize") && !strcmp(lp->fsmode, "nochange")) {
+		/* can't mount|unmount to run fs resize */
+		if (fsi->needs_mount) {
+			log_error("File system needs to be mounted to reduce fs (see --fsmode).");
+			return 0;
+		}
+		if (fsi->needs_unmount) {
+			log_error("File system needs to be unmounted to reduce fs (see --fsmode).");
+			return 0;
+		}
+	} else if (!strcmp(lp->fsopt, "resize") && !strcmp(lp->fsmode, "offline")) {
+		/* we can unmount if needed to run fs resize */
+		if (fsi->needs_mount) {
+			log_error("File system needs to be mounted to reduce fs (see --fsmode).");
+			return 0;
+		}
+	} else if (!strcmp(lp->fsopt, "resize") && !strcmp(lp->fsmode, "manage")) {
+		/* we can mount|unmount as needed to run fs resize */
+		/* confirm mount change unless --fsmode manage is set explicitly */
+
+		if (fsi->needs_mount || fsi->needs_unmount)
+			confirm_mount_change = 1;
+
+		if (lp->user_set_fsmode)
+			confirm_mount_change = 0;
+	} else {
+		log_error("Unknown file system resize options: --fs %s --fsmode %s", lp->fsopt, lp->fsmode);
+		return 0;
+	}
+
+	/*
+	 * If future file systems can be reduced while mounted, then suppress
+	 * needs_fsck here if the fs is already mounted.
+	 */
+
+	if (fsi->needs_unmount)
+		log_print("File system unmount is needed for reduce.");
+	if (fsi->needs_fsck)
+		log_print("File system fsck will be run before reduce.");
+	if (fsi->needs_mount)
+		log_print("File system mount is needed for reduce.");
+	if (fsi->needs_crypt)
+		log_print("cryptsetup resize is needed for reduce.");
+
+	/*
+	 * Use a confirmation prompt because mount|unmount is needed, and
+	 * no specific --fsmode was set (i.e. the user did not give specific
+	 * direction about how to handle mounting|unmounting with --fsmode.)
+	 */
+	if (!lp->yes && confirm_mount_change) {
+		if (yes_no_prompt("Continue with %s file system reduce steps:%s%s%s%s%s? [y/n]:",
+				  fsi->fstype,
+				  fsi->needs_unmount ? " unmount," : "",
+				  fsi->needs_fsck ? " fsck," : "",
+				  fsi->needs_mount ? " mount," : "",
+				  fsi->needs_crypt ? " cryptsetup," : "",
+				  fsi->needs_reduce ? fs_reduce_cmd : "") == 'n') {
+			log_error("File system not reduced.");
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+static int _fs_extend_allow(struct cmd_context *cmd, struct logical_volume *lv,
+			    struct lvresize_params *lp, struct fs_info *fsi)
+{
+	const char *fs_extend_cmd = "";
+	int is_ext_fstype = 0;
+	int confirm_mount_change = 0;
+
+	if (!strcmp(fsi->fstype, "ext2") ||
+	    !strcmp(fsi->fstype, "ext3") ||
+	    !strcmp(fsi->fstype, "ext4") ||
+	    !strcmp(fsi->fstype, "xfs")) {
+		log_debug("Found fs %s last_byte %llu",
+			  fsi->fstype, (unsigned long long)fsi->fs_last_byte);
+		if (!strncmp(fsi->fstype, "ext", 3))
+			is_ext_fstype = 1;
+	} else {
+		log_error("File system extend is not supported (%s).", fsi->fstype);
+		return 0;
+	}
+
+	if (!fsi->mounted)
+		log_print("File system %s%s found on %s.",
+			  fsi->fstype, fsi->needs_crypt ? "+crypto_LUKS" : "",
+			  display_lvname(lv));
+	else
+		log_print("File system %s%s found on %s mounted at %s.",
+			  fsi->fstype, fsi->needs_crypt ? "+crypto_LUKS" : "",
+			  display_lvname(lv), fsi->mount_dir);
+
+	/*
+	 * FS extend may require mounting or unmounting, check the fsopt value
+	 * from the user, and the current mount state to decide if fs extend
+	 * can be done.
+	 */
+
+	if (is_ext_fstype) {
+		fs_extend_cmd = " resize2fs";
+
+		/*
+		 * ext* can be extended while it's mounted or unmounted.  If
+		 * the fs is unmounted, it's traditional to run fsck before
+		 * running the fs extend.
+		 *
+		 * --fs resize --fsmode nochange: don't change mount condition.
+		 * if mounted: fs_extend
+		 * if unmounted: fsck, fs_extend
+		 *
+		 * --fs resize --fsmode offline: extend offline, so unmount first if mounted.
+		 * if mounted: unmount, fsck, fs_extend
+		 * if unmounted: fsck, fs_extend
+		 *
+		 * --fs resize --fsmode manage: do any mount or unmount that's necessary,
+		 * avoiding unnecessary mounting/unmounting.
+		 * if mounted: fs_extend
+		 * if unmounted: fsck, fs_extend
+		 */
+		if (!strcmp(lp->fsopt, "resize") && !strcmp(lp->fsmode, "nochange")) {
+			if (fsi->mounted)
+				fsi->needs_extend = 1;
+			else if (fsi->unmounted) {
+				fsi->needs_fsck = 1;
+				fsi->needs_extend = 1;
+			}
+		} else if (!strcmp(lp->fsopt, "resize") && !strcmp(lp->fsmode, "offline")) {
+			if (fsi->mounted) {
+				fsi->needs_unmount = 1;
+				fsi->needs_fsck = 1;
+				fsi->needs_extend = 1;
+			} else if (fsi->unmounted) {
+				fsi->needs_fsck = 1;
+				fsi->needs_extend = 1;
+			}
+		} else if (!strcmp(lp->fsopt, "resize") && !strcmp(lp->fsmode, "manage")) {
+			if (fsi->mounted)
+				fsi->needs_extend = 1;
+			else if (fsi->unmounted) {
+				fsi->needs_fsck = 1;
+				fsi->needs_extend = 1;
+			}
+		}
+
+		if (lp->nofsck)
+			fsi->needs_fsck = 0;
+
+	} else if (!strcmp(fsi->fstype, "xfs")) {
+		fs_extend_cmd = " xfs_growfs";
+
+		/*
+		 * xfs must be mounted to extend.
+		 *
+		 * --fs resize --fsmode nochange: don't change mount condition.
+		 * if mounted: fs_extend
+		 * if unmounted: fail
+		 *
+		 * --fs resize --fsmode offline: extend offline, so unmount first if mounted.
+		 * if mounted: fail
+		 * if unmounted: fail
+		 *
+		 * --fs resize --fsmode manage: do any mount or unmount that's necessary,
+		 * avoiding unnecessary mounting/unmounting.
+		 * if mounted: fs_extend
+		 * if unmounted: mount, fs_extend
+		 */
+		if (!strcmp(lp->fsopt, "resize") && !strcmp(lp->fsmode, "nochange")) {
+			if (fsi->mounted)
+				fsi->needs_extend = 1;
+			else if (fsi->unmounted) {
+				log_error("File system must be mounted to extend (see --fsmode).");
+				return 0;
+			}
+		} else if (!strcmp(lp->fsopt, "resize") && !strcmp(lp->fsmode, "offline")) {
+			log_error("File system must be mounted to extend (see --fsmode).");
+			return 0;
+		} else if (!strcmp(lp->fsopt, "resize") && !strcmp(lp->fsmode, "manage")) {
+			if (fsi->mounted)
+				fsi->needs_extend = 1;
+			else if (fsi->unmounted) {
+				fsi->needs_mount = 1;
+				fsi->needs_extend = 1;
+			}
+		}
+
+	} else {
+		/* shouldn't reach here */
+		log_error("File system type %s not handled.", fsi->fstype);
+		return 0;
+	}
+
+	/*
+	 * Skip needs_fsck if the fs is mounted and we can extend the fs while
+	 * it's mounted.
+	 */
+	if (fsi->mounted && !fsi->needs_unmount && fsi->needs_fsck) {
+		log_print("File system fsck skipped for extending mounted fs.");
+		fsi->needs_fsck = 0;
+	}
+
+	if (fsi->needs_unmount)
+		log_print("File system unmount is needed for extend.");
+	if (fsi->needs_fsck)
+		log_print("File system fsck will be run before extend.");
+	if (fsi->needs_mount)
+		log_print("File system mount is needed for extend.");
+	if (fsi->needs_crypt)
+		log_print("cryptsetup resize is needed for extend.");
+
+	/*
+	 * Use a confirmation prompt when mount|unmount is needed if
+	 * the user did not give specific direction about how to handle
+	 * mounting|unmounting with --fsmode.
+	 */
+	if (!strcmp(lp->fsopt, "resize") && !lp->user_set_fsmode &&
+	    (fsi->needs_mount || fsi->needs_unmount))
+		confirm_mount_change = 1;
+
+	if (!lp->yes && confirm_mount_change) {
+		if (yes_no_prompt("Continue with %s file system extend steps:%s%s%s%s%s? [y/n]:",
+				  fsi->fstype,
+				  fsi->needs_unmount ? " unmount," : "",
+				  fsi->needs_fsck ? " fsck," : "",
+				  fsi->needs_mount ? " mount," : "",
+				  fsi->needs_crypt ? " cryptsetup," : "",
+				  fsi->needs_extend ? fs_extend_cmd : "") == 'n') {
+			log_error("File system not extended.");
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
+		      struct lvresize_params *lp)
+{
+	struct fs_info fsinfo;
+	struct fs_info fsinfo2;
+	uint64_t newsize_bytes_lv;
+	uint64_t newsize_bytes_fs;
+	int ret = 0;
+
+	memset(&fsinfo, 0, sizeof(fsinfo));
+	memset(&fsinfo2, 0, sizeof(fsinfo));
+
+	if (!fs_get_info(cmd, lv, &fsinfo, 1))
+		goto_out;
+
+	if (fsinfo.nofs) {
+		ret = 1;
+		goto_out;
+	}
+
+	/* extent_size units is SECTOR_SIZE (512) */
+	newsize_bytes_lv = lp->extents * lv->vg->extent_size * SECTOR_SIZE;
+	newsize_bytes_fs = newsize_bytes_lv;
+
+	/*
+	 * If needs_crypt, then newsize_bytes passed to fs_reduce_script() and
+	 * crypt_resize_script() needs to be decreased by the offset of crypt
+	 * data on the LV (usually the size of the LUKS header which is usually
+	 * 2MB for LUKS1 and 16MB for LUKS2.)
+	 */
+	if (fsinfo.needs_crypt) {
+		newsize_bytes_fs -= fsinfo.crypt_offset_bytes;
+		log_print("File system size %llub is adjusted for crypt data offset %ub.",
+			  (unsigned long long)newsize_bytes_fs, fsinfo.crypt_offset_bytes);
+	}
+
+	/*
+	 * Based on the --fs command option, the fs type, the last block used,
+	 * and the mount state, determine if LV reduce is allowed.  If not
+	 * returns 0 and lvreduce should fail.  If allowed, returns 1 and sets
+	 * fsinfo.needs_* for any steps that are required to reduce the LV.
+	 */
+	if (!_fs_reduce_allow(cmd, lv, lp, newsize_bytes_lv, newsize_bytes_fs, &fsinfo))
+		goto_out;
+
+	/*
+	 * Uncommon special case in which the FS does not need to be shrunk,
+	 * but the crypt dev over the LV should be shrunk to correspond with
+	 * the LV size, so that the FS does not see an incorrect device size.
+	 */
+	if (!fsinfo.needs_reduce && fsinfo.needs_crypt && !test_mode()) {
+		ret = crypt_resize_script(cmd, lv, &fsinfo, newsize_bytes_fs);
+		goto out;
+	}
+
+	/*
+	 * fs reduce is not needed to reduce the LV.
+	 */
+	if (!fsinfo.needs_reduce) {
+		ret = 1;
+		goto_out;
+	}
+
+	if (test_mode()) {
+		if (fsinfo.needs_unmount)
+			log_print("Skip unmount in test mode.");
+		if (fsinfo.needs_fsck)
+			log_print("Skip fsck in test mode.");
+		if (fsinfo.needs_mount)
+			log_print("Skip mount in test mode.");
+		if (fsinfo.needs_crypt)
+			log_print("Skip cryptsetup in test mode.");
+		log_print("Skip fs reduce in test mode.");
+		ret = 1;
+		goto out;
+	}
+
+	/*
+	 * mounting, unmounting, fsck, and shrink command can all take a long
+	 * time to run, and this lvm command should not block other lvm
+	 * commands from running during that time, so release the vg lock
+	 * around the long-running steps, and reacquire after.
+	 */
+	unlock_vg(cmd, lv->vg, lv->vg->name);
+
+	if (!fs_reduce_script(cmd, lv, &fsinfo, newsize_bytes_fs, lp->fsmode))
+		goto_out;
+
+	if (!lock_vol(cmd, lv->vg->name, LCK_VG_WRITE, NULL)) {
+		log_error("Failed to lock VG, cannot reduce LV.");
+		ret = 0;
+		goto out;
+	}
+
+	/*
+	 * Check that the vg wasn't changed while it was unlocked.
+	 * (can_use_one_scan: check just one mda in the vg for changes)
+	 */
+	cmd->can_use_one_scan = 1;
+	if (scan_text_mismatch(cmd, lv->vg->name, NULL)) {
+		log_print("VG was changed during fs operations, restarting.");
+		lp->vg_changed_error = 1;
+		ret = 0;
+		goto out;
+	}
+
+	/*
+	 * Re-check the fs last block which should now be less than the
+	 * requested (reduced) LV size.
+	 */
+	if (!fs_get_info(cmd, lv, &fsinfo2, 0))
+		goto_out;
+
+	if (fsinfo.fs_last_byte && (fsinfo2.fs_last_byte > newsize_bytes_fs)) {
+		log_error("File system last byte %llu is greater than new size %llu bytes.",
+			  (unsigned long long)fsinfo2.fs_last_byte,
+			  (unsigned long long)newsize_bytes_fs);
+		goto_out;
+	}
+
+	ret = 1;
+ out:
+	return ret;
+}
+
+static int _fs_extend(struct cmd_context *cmd, struct logical_volume *lv,
+		      struct lvresize_params *lp)
+{
+	struct fs_info fsinfo;
+	uint64_t newsize_bytes_lv;
+	uint64_t newsize_bytes_fs;
+	int ret = 0;
+
+	memset(&fsinfo, 0, sizeof(fsinfo));
+
+	if (!fs_get_info(cmd, lv, &fsinfo, 1))
+		goto_out;
+
+	if (fsinfo.nofs) {
+		ret = 1;
+		goto_out;
+	}
+
+	/*
+	 * Note: here in the case of extend, newsize_bytes_lv/newsize_bytes_fs 
+	 * are only calculated and used for log messages.  The extend commands
+	 * do not use these values, they just extend to the new LV size that
+	 * is visible to them.
+	 */
+
+	/* extent_size units is SECTOR_SIZE (512) */
+	newsize_bytes_lv = lp->extents * lv->vg->extent_size * SECTOR_SIZE;
+	newsize_bytes_fs = newsize_bytes_lv;
+	if (fsinfo.needs_crypt) {
+		newsize_bytes_fs -= fsinfo.crypt_offset_bytes;
+		log_print("File system size %llub is adjusted for crypt data offset %ub.",
+			  (unsigned long long)newsize_bytes_fs, fsinfo.crypt_offset_bytes);
+	}
+
+	/*
+	 * Decide if fs should be extended based on the --fs option,
+	 * the fs type and the mount state.
+	 */
+	if (!_fs_extend_allow(cmd, lv, lp, &fsinfo))
+		goto_out;
+
+	/*
+	 * fs extend is not needed
+	 */
+	if (!fsinfo.needs_extend) {
+		ret = 1;
+		goto_out;
+	}
+
+	if (test_mode()) {
+		if (fsinfo.needs_unmount)
+			log_print("Skip unmount in test mode.");
+		if (fsinfo.needs_fsck)
+			log_print("Skip fsck in test mode.");
+		if (fsinfo.needs_mount)
+			log_print("Skip mount in test mode.");
+		if (fsinfo.needs_crypt)
+			log_print("Skip cryptsetup in test mode.");
+		log_print("Skip fs extend in test mode.");
+		ret = 1;
+		goto out;
+	}
+
+	/*
+	 * mounting, unmounting and extend command can all take a long
+	 * time to run, and this lvm command should not block other lvm
+	 * commands from running during that time, so release the vg
+	 * lock around the long-running steps.
+	 */
+	unlock_vg(cmd, lv->vg, lv->vg->name);
+
+	if (!fs_extend_script(cmd, lv, &fsinfo, newsize_bytes_fs, lp->fsmode))
+		goto_out;
+
+	ret = 1;
+ out:
+	return ret;
+}
+
 int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	      struct lvresize_params *lp)
 {
@@ -5989,7 +6556,9 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	int meta_size_matches = 0;
 	int is_extend = (lp->resize == LV_EXTEND);
 	int is_reduce = (lp->resize == LV_REDUCE);
+	int is_active = 0;
 	int activated = 0;
+	int activated_checksize = 0;
 	int status;
 	int ret = 0;
 
@@ -6016,26 +6585,6 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	    !lv_is_lockd_sanlock_lv(lv)) {
 		log_error("Can't resize internal logical volume %s.", display_lvname(lv));
 		return 0;
-	}
-
-	/*
-	 * resizefs applies to the LV command arg, not to the top LV or lower
-	 * resizable LV.
-	 */
-	if (lp->resizefs) {
-		if (!lv_is_active(lv)) {
-			log_error("Logical volume %s must be activated before resizing filesystem.",
-       				  display_lvname(lv));
-			return 0;
-		}
-		/* types of LVs that can hold a file system */
-		if (!(lv_is_linear(lv) || lv_is_striped(lv) || lv_is_raid(lv) ||
-		      lv_is_mirror(lv) || lv_is_thin_volume(lv) || lv_is_vdo(lv) ||
-		      lv_is_cache(lv) || lv_is_writecache(lv))) {
-			log_print_unless_silent("Ignoring --resizefs for LV type %s.",
-						seg ? seg->segtype->name : "unknown");
-			lp->resizefs = 0;
-		}
 	}
 
 	/*
@@ -6197,10 +6746,6 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 
 		if (!_lv_resize_check_type(lv_main, lp))
 			return_0;
-
-		if (is_reduce && !main_size_matches && !lp->resizefs &&
-		    !_lv_reduce_confirmation(lv, lp))
-			return_0;
 	}
 
 	/*
@@ -6265,19 +6810,92 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	 * So active temporarily pool LV (with on disk metadata) then use
 	 * suspend and resume and deactivate pool LV, instead of searching for
 	 * an active thin volume.
+	 *
+	 * FIXME: why are thin pools activated where other LV types return
+	 * error if inactive?
 	 */
 	if (lv_is_thin_pool(lv_top) && !lv_is_active(lv_top)) {
-		if (!activation()) {
-			log_error("Cannot resize %s without using device-mapper kernel driver.",
-       				  display_lvname(lv_top));
-			return_0;
+	       	if (!activation()) {
+			log_error("Cannot activate to resize %s without using device-mapper kernel driver.",
+				  display_lvname(lv_top));
+			return 0;
 		}
 		if (!activate_lv(cmd, lv_top)) {
 			log_error("Failed to activate %s.", display_lvname(lv_top));
-			return_0;
+			return 0;
 		}
+		if (!sync_local_dev_names(cmd))
+			stack;
 		activated = 1;
 	}
+
+	/*
+	 * Disable fsopt checksize for lvextend.
+	 */
+	if (is_extend && !strcmp(lp->fsopt, "checksize"))
+		lp->fsopt[0] = '\0';
+
+	/*
+	 * Disable fsopt if LV type cannot hold a file system.
+	 */
+	if (lp->fsopt[0] &&
+	    !(lv_is_linear(lv) || lv_is_striped(lv) || lv_is_raid(lv) ||
+	      lv_is_mirror(lv) || lv_is_thin_volume(lv) || lv_is_vdo(lv) ||
+	      lv_is_cache(lv) || lv_is_writecache(lv))) {
+		log_print_unless_silent("Ignoring fs resizing options for LV type %s.",
+					seg ? seg->segtype->name : "unknown");
+		lp->fsopt[0] = '\0';
+	}
+
+	/*
+	 * Using an option to resize the fs has always/traditionally required
+	 * the LV to already be active, so keep that behavior.  Reducing an
+	 * inactive LV will activate the LV to look for a fs that would be
+	 * damaged.
+	 */
+	is_active = lv_is_active(lv_top);
+
+	if (is_reduce && !is_active && !strcmp(lp->fsopt, "checksize")) {
+		if (!activate_lv(cmd, lv_top)) {
+			log_error("Failed to activate %s to check for fs.", display_lvname(lv_top));
+			goto out;
+		}
+		if (!sync_local_dev_names(cmd))
+			stack;
+		activated_checksize = 1;
+
+	} else if (lp->fsopt[0] && !is_active) {
+		log_error("Logical volume %s must be active for file system %s.",
+			  display_lvname(lv_top), lp->fsopt);
+		goto out;
+	}
+
+	/*
+	 * Return an error without resizing the LV if the user requested
+	 * a file system resize when no file system exists on the LV.
+	 * (fs checksize does not require a fs to exist.)
+	 */
+	if (lp->fsopt[0] && strcmp(lp->fsopt, "checksize") && lp->user_set_fs) {
+		char lv_path[PATH_MAX];
+		char fstype[FSTYPE_MAX];
+		int nofs = 0;
+
+		if (dm_snprintf(lv_path, sizeof(lv_path), "%s%s/%s", cmd->dev_dir,
+				lv_top->vg->name, lv_top->name) < 0) {
+			log_error("Couldn't create LV path for %s.", display_lvname(lv_top));
+			goto out;
+		}
+		if (!fs_block_size_and_type(lv_path, NULL, fstype, &nofs) || nofs) {
+			log_error("File system not found for --resizefs or --fs options.");
+			goto out;
+		}
+	}
+
+	/*
+	 * Warn and confirm if checksize has been disabled for reduce.
+	 */
+	if (is_reduce && !lp->fsopt[0] && !_lv_reduce_confirmation(lv_top, lp))
+		goto_out;
 
 	/*
 	 * If the LV is locked due to being active, this lock call is a no-op.
@@ -6286,25 +6904,30 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!lockd_lv_resize(cmd, lv_top, "ex", 0, lp))
 		goto_out;
 
-	/*
-	 * Check the file system, and shrink the fs before reducing lv.
-	 * TODO: libblkid fs type, fs last_block, mount state,
-	 *       unlock vg, mount|unmount if needed, fork fs shrink,
-	 *       lock vg, rescan devs, recheck fs type last_block.
-	 *       (at end mount|unmount if needed to restore initial state.)
-	 */
-	if (lp->resizefs && !lp->nofsck &&
+	/* Part of old approach to fs handling using fsadm.  */
+	if (!strcmp(lp->fsopt, "resize_fsadm") && !lp->nofsck &&
 	    !_fsadm_cmd(FSADM_CMD_CHECK, lv_top, 0, lp->yes, lp->force, &status)) {
 		if (status != FSADM_CHECK_FAILS_FOR_MOUNTED) {
 			log_error("Filesystem check failed.");
 			goto out;
 		}
-		/* some filesystems support online resize */
 	}
-	if (lp->resizefs && is_reduce &&
-	    !_fsadm_cmd(FSADM_CMD_RESIZE, lv_top, lp->extents, lp->yes, lp->force, NULL)) {
-		log_error("Filesystem resize failed.");
-		goto out;
+
+	if (is_reduce && lp->fsopt[0]) {
+		if (!strcmp(lp->fsopt, "resize_fsadm")) {
+			/* Old approach to fs handling using fsadm. */
+			if (!_fsadm_cmd(FSADM_CMD_RESIZE, lv_top, lp->extents, lp->yes, lp->force, NULL)) {
+				log_error("Filesystem resize failed.");
+				goto out;
+			}
+		} else {
+			/* New approach to fs handling using fs info. */
+			if (!_fs_reduce(cmd, lv_top, lp))
+				goto_out;
+		}
+
+		if (activated_checksize && !deactivate_lv(cmd, lv_top))
+			log_warn("Problem deactivating %s.", display_lvname(lv_top));
 	}
 
 	/*
@@ -6319,9 +6942,9 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	 * Remove any striped raid reshape space for LV resizing (not common).
 	 */
 	if (lv_meta && first_seg(lv_meta)->reshape_len && !lv_raid_free_reshape_space(lv_meta))
-		return_0;
+		goto_out;
 	if (lv_main && first_seg(lv_main)->reshape_len && !lv_raid_free_reshape_space(lv_main))
-		return_0;
+		goto_out;
 
 	/*
 	 * The core of the actual lv resizing.
@@ -6376,22 +6999,28 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 			stack;
 	}
 
-	/*
-	 * Extend the file system.
-	 * TODO: libblkid fs type, mount state,
-	 *       unlock vg, mount|unmount if needed, fork fs grow,
-	 *       mount|unmount if needed to restore initial state.
-	 */
-	if (lp->resizefs && is_extend &&
-	    !_fsadm_cmd(FSADM_CMD_RESIZE, lv_top, lp->extents, lp->yes, lp->force, NULL)) {
-		log_warn("Filesystem resize failed.");
-		goto out;
+	if (is_extend && lp->fsopt[0]) {
+		if (!strcmp(lp->fsopt, "resize_fsadm")) {
+			/* Old approach to fs handling using fsadm. */
+			if (!_fsadm_cmd(FSADM_CMD_RESIZE, lv_top, lp->extents, lp->yes, lp->force, NULL)) {
+				log_error("File system extend error.");
+				lp->extend_fs_error = 1;
+				goto out;
+			}
+		} else {
+			/* New approach to fs handling using fs info. */
+			if (!_fs_extend(cmd, lv_top, lp)) {
+				log_error("File system extend error.");
+				lp->extend_fs_error = 1;
+				goto out;
+			}
+		}
 	}
 
 	ret = 1;
 
  out:
-	if (activated) {
+	if (activated || activated_checksize) {
 		if (!sync_local_dev_names(cmd))
 			stack;
 		if (!deactivate_lv(cmd, lv_top))

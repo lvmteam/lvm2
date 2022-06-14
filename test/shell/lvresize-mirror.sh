@@ -29,7 +29,7 @@ for deactivate in true false; do
 	check mirror_images_contiguous $vg $lv1
 
 # reduce 2-way mirror
-	lvreduce -f -l-2 $vg/$lv1
+	lvreduce -f --fs ignore -l-2 $vg/$lv1
 	check mirror $vg $lv1 "$dev3"
 
 # extend 2-way mirror (cling if not contiguous)

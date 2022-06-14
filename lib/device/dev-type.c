@@ -26,6 +26,11 @@
 
 #ifdef BLKID_WIPING_SUPPORT
 #include <blkid.h>
+/*
+ * FIXME: recent addition to blkid.h copied here.
+ * Remove this and require a recent libblkid version from configure.
+ */
+#define BLKID_SUBLKS_FSINFO     (1 << 11) /* read and define fs properties from superblock */
 #endif
 
 #ifdef UDEV_SYNC_SUPPORT
@@ -880,10 +885,96 @@ out:
 	blkid_free_probe(probe);
 	return ret;
 }
+
+int fs_get_blkid(const char *pathname, struct fs_info *fsi)
+{
+	blkid_probe probe = NULL;
+	const char *str;
+	size_t len;
+	uint64_t fslastblock = 0;
+	unsigned int fsblocksize = 0;
+	int no_block_size = 0, no_fslastblock = 0, no_fsblocksize = 0;
+	int rc;
+
+	if (!(probe = blkid_new_probe_from_filename(pathname))) {
+		log_error("Failed libblkid probe setup for %s", pathname);
+		return 0;
+	}
+
+	blkid_probe_enable_superblocks(probe, 1);
+	blkid_probe_set_superblocks_flags(probe,
+			BLKID_SUBLKS_LABEL | BLKID_SUBLKS_LABELRAW |
+			BLKID_SUBLKS_UUID | BLKID_SUBLKS_UUIDRAW |
+			BLKID_SUBLKS_TYPE | BLKID_SUBLKS_SECTYPE |
+			BLKID_SUBLKS_USAGE | BLKID_SUBLKS_VERSION |
+			BLKID_SUBLKS_MAGIC | BLKID_SUBLKS_FSINFO);
+	rc = blkid_do_safeprobe(probe);
+	if (rc < 0) {
+		log_error("Failed libblkid probe for %s", pathname);
+		blkid_free_probe(probe);
+		return 0;
+	} else if (rc == 1) {
+		/* no file system on the device */
+		log_print("No file system found on %s.", pathname);
+		fsi->nofs = 1;
+		blkid_free_probe(probe);
+		return 1;
+	}
+
+	if (!blkid_probe_lookup_value(probe, "TYPE", &str, &len) && len)
+		strncpy(fsi->fstype, str, sizeof(fsi->fstype)-1);
+	else {
+		/* any difference from blkid_do_safeprobe rc=1? */
+		log_print("No file system type on %s.", pathname);
+		fsi->nofs = 1;
+		blkid_free_probe(probe);
+		return 1;
+	}
+
+	if (!blkid_probe_lookup_value(probe, "BLOCK_SIZE", &str, &len) && len)
+		fsi->fs_block_size_bytes = atoi(str);
+	else
+		no_block_size = 1;
+
+	if (!blkid_probe_lookup_value(probe, "FSLASTBLOCK", &str, &len) && len)
+		fslastblock = strtoull(str, NULL, 0);
+	else
+		no_fslastblock = 1;
+
+	if (!blkid_probe_lookup_value(probe, "FSBLOCKSIZE", &str, &len) && len)
+		fsblocksize = (unsigned int)atoi(str);
+	else
+		no_fsblocksize = 1;
+
+	blkid_free_probe(probe);
+
+	/* We don't expect to get this info for luks */
+	if (strcmp(fsi->fstype, "crypto_LUKS") && (no_block_size || no_fslastblock || no_fsblocksize)) {
+		log_print("Missing libblkid %s%s%sfor %s",
+			  no_block_size ? "BLOCK_SIZE " : "",
+			  no_fslastblock ? "FSLASTBLOCK " : "",
+			  no_fsblocksize ? "FSBLOCKSIZE " : "",
+			  pathname);
+	}
+
+	if (fslastblock && fsblocksize)
+		fsi->fs_last_byte = fslastblock * fsblocksize;
+
+	log_debug("libblkid TYPE %s BLOCK_SIZE %d FSLASTBLOCK %llu FSBLOCKSIZE %u fs_last_byte %llu",
+		  fsi->fstype, fsi->fs_block_size_bytes, (unsigned long long)fslastblock, fsblocksize,
+		  (unsigned long long)fsi->fs_last_byte);
+	return 1;
+}
+
 #else
 int fs_block_size_and_type(const char *pathname, uint32_t *fs_block_size_bytes, char *fstype, int *nofs)
 {
 	log_debug("Disabled blkid BLOCK_SIZE for fs.");
+	return 0;
+}
+int fs_get_blkid(const char *pathname, struct fs_info *fsi)
+{
+	log_debug("Disabled blkid for fs info.");
 	return 0;
 }
 #endif

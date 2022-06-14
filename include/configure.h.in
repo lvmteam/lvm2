@@ -127,8 +127,9 @@
 /* Define to 1 to include the LVM editline shell. */
 #undef EDITLINE_SUPPORT
 
-/* Path to fsadm binary. */
+/* Paths to binaries. */
 #undef FSADM_PATH
+#undef LVRESIZE_FS_HELPER_PATH
 
 /* Define to use GNU versioning in the shared library. */
 #undef GNU_SYMVER

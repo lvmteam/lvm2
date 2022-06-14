@@ -34,8 +34,8 @@ lvresize -y -l8 $vg/$lv1
 lvresize -y -L16 $vg/$lv1
 lvresize -y -l+1 $vg/$lv1
 lvresize -y -L+1 $vg/$lv1
-lvresize -y -l-1 $vg/$lv1
-lvresize -y -L-1 $vg/$lv1
+lvresize -y --fs ignore -l-1 $vg/$lv1
+lvresize -y --fs ignore -L-1 $vg/$lv1
 
 lvcreate -an -n $lv2 -l4 $vg
 lvextend -y -l8 $vg/$lv2
@@ -46,12 +46,12 @@ not lvextend -y -l-1 $vg/$lv2
 not lvextend -y -L-1 $vg/$lv2
 
 lvcreate -an -n $lv3 -l64 $vg
-lvreduce -y -l32 $vg/$lv3
-lvreduce -y -L8 $vg/$lv3
-lvreduce -y -l-1 $vg/$lv3
-lvreduce -y -L-1 $vg/$lv3
-not lvreduce -y -l+1 $vg/$lv3
-not lvreduce -y -L+1 $vg/$lv3
+lvreduce -y --fs ignore -l32 $vg/$lv3
+lvreduce -y --fs ignore -L8 $vg/$lv3
+lvreduce -y --fs ignore -l-1 $vg/$lv3
+lvreduce -y --fs ignore -L-1 $vg/$lv3
+not lvreduce -y --fs ignore -l+1 $vg/$lv3
+not lvreduce -y --fs ignore -L+1 $vg/$lv3
 
 # relative with percent extents
 

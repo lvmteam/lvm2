@@ -164,7 +164,7 @@ cleanup() {
 		export _FSADM_YES _FSADM_EXTOFF
 		unset FSADM_RUNNING
 		test -n "${LVM_BINARY-}" && PATH=$_SAVEPATH
-		dry exec "$LVM" lvresize $VERB $FORCE -r -L"${NEWSIZE_ORIG}b" "$VOLUME_ORIG"
+		dry exec "$LVM" lvresize $VERB $FORCE $YES --fs resize_fsadm -L"${NEWSIZE_ORIG}b" "$VOLUME_ORIG"
 	fi
 
 	# error exit status for break

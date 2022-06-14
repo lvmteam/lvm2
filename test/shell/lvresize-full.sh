@@ -69,7 +69,10 @@ grep -v "20000 blocks" out
 
 # Also check it fails when the user 'resize' volume without
 # resizing fs and then retries with '-r'.
-lvreduce -f -l50%VG $vg/$lv1
-fail lvresize -r -f -l50%VG $vg/$lv1
+# The first lvreduce intentionally ignores the fs and intentionally
+# corrupts the fs so that the second lvresize will fail when it runs
+# fsck.
+lvreduce -f --fs ignore -l50%VG $vg/$lv1
+fail lvresize -r -f -l20%VG $vg/$lv1
 
 lvremove -ff $vg

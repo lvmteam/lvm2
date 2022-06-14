@@ -301,6 +301,32 @@ arg(foreign_ARG, '\0', "foreign", 0, 0, 0,
     "Report/display foreign VGs that would otherwise be skipped.\n"
     "See \\fBlvmsystemid\\fP(7) for more information about foreign VGs.\n")
 
+arg(fs_ARG, '\0', "fs", string_VAL, 0, 0,
+    "Control file system resizing when resizing an LV.\n"
+    "\\fBchecksize\\fP: Check the fs size and reduce the LV if the fs is not\n"
+    "using the reduced space (fs reduce is not needed.) If the reduced space\n"
+    "is used by the fs, then do not resize the fs or LV, and return an error.\n"
+    "(checksize only applies when reducing, and does nothing for extend.)\n"
+    "\\fBresize\\fP: Resize the fs by calling the fs-specific resize command.\n"
+    "This may also include mounting, unmounting, or running fsck. See --fsmode to\n"
+    "control mounting behavior, and --nofsck to disable fsck.\n"
+    "\\fBresize_fsadm\\fP: Use the old method of calling fsadm to handle the fs\n"
+    "(deprecated.) Warning: this option does not prevent lvreduce from destroying\n"
+    "file systems that are unmounted (or mounted if prompts are skipped.)\n"
+    "\\fBignore\\fP: Resize the LV without checking for or handling a file system.\n"
+    "Warning: using ignore when reducing the LV size may destroy the file system.\n")
+
+arg(fsmode_ARG, '\0', "fsmode", string_VAL, 0, 0,
+    "Control file system mounting behavior for fs resize.\n"
+    "\\fBmanage\\fP: Mount or unmount the fs as needed to resize the fs,\n"
+    "and attempt to restore the original mount state at the end.\n"
+    "\\fBnochange\\fP: Do not mount or unmount the fs. If mounting or unmounting\n"
+    "is required to resize the fs, then do not resize the fs or the LV and fail\n"
+    "the command.\n"
+    "\\fBoffline\\fP: Unmount the fs if it is mounted, and resize the fs while it\n"
+    "is unmounted. If mounting is required to resize the fs, then do not resize\n"
+    "the fs or the LV and fail the command.\n")
+
 arg(handlemissingpvs_ARG, '\0', "handlemissingpvs", 0, 0, 0,
     "Allows a polling operation to continue when PVs are missing,\n"
     "e.g. for repairs due to faulty devices.\n")
@@ -1384,9 +1410,7 @@ arg(name_ARG, 'n', "name", string_VAL, 0, 0,
     "Move only PVs used by the named LV.\n")
 
 arg(nofsck_ARG, 'n', "nofsck", 0, 0, 0,
-    "Do not perform fsck before resizing filesystem when filesystem\n"
-    "requires it. You may need to use --force to proceed with\n"
-    "this option.\n")
+    "Do not perform fsck when resizing the file system with --resizefs.\n")
 
 arg(novolumegroup_ARG, 'n', "novolumegroup", 0, 0, 0,
     "Only show PVs not belonging to any VG.\n")
@@ -1452,7 +1476,10 @@ arg(readahead_ARG, 'r', "readahead", readahead_VAL, 0, 0,
     "\\fBnone\\fP is equivalent to zero.\n")
 
 arg(resizefs_ARG, 'r', "resizefs", 0, 0, 0,
-    "Resize underlying filesystem together with the LV using \\fBfsadm\\fP(8).\n")
+    "Resize the fs using the fs-specific resize command.\n"
+    "May include mounting, unmounting, or running fsck. See --fsmode to control\n"
+    "mounting behavior, and --nofsck to disable fsck. See --fs for more options\n"
+    "(--resizefs is equivalent to --fs resize.)\n")
 
 /* Not used */
 arg(reset_ARG, 'R', "reset", 0, 0, 0, NULL)

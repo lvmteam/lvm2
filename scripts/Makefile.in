@@ -56,7 +56,11 @@ install_device-mapper: $(DM_SCRIPTS:.sh=_install)
 
 install_ocf: $(OCF_SCRIPTS:.ocf=_install)
 
-install: install_lvm2 install_ocf install_device-mapper
+install_libexec:
+	$(Q) $(INSTALL_SCRIPT) lvresize_fs_helper.sh $(libexecdir)/lvresize_fs_helper
+
+install: install_lvm2 install_ocf install_device-mapper install_libexec
+
 
 # FIXME Customise for other distributions
 install_initscripts:

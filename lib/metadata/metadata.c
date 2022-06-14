@@ -4533,7 +4533,7 @@ void vg_write_commit_bad_mdas(struct cmd_context *cmd, struct volume_group *vg)
  * reread metadata.
  */
 
-static bool _scan_text_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid)
+bool scan_text_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid)
 {
 	DM_LIST_INIT(mda_list);
 	struct mda_list *mdal, *safe;
@@ -4706,7 +4706,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	 * probably unnecessary; all commands could likely just check a single mda.
 	 */
 
-	if (lvmcache_scan_mismatch(cmd, vgname, vgid) || _scan_text_mismatch(cmd, vgname, vgid)) {
+	if (lvmcache_scan_mismatch(cmd, vgname, vgid) || scan_text_mismatch(cmd, vgname, vgid)) {
 		log_debug_metadata("Rescanning devices for %s %s", vgname, writing ? "rw" : "");
 		if (writing)
 			lvmcache_label_rescan_vg_rw(cmd, vgname, vgid);

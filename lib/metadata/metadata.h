@@ -541,5 +541,7 @@ void set_pv_devices(struct format_instance *fid, struct volume_group *vg);
 int get_visible_lvs_using_pv(struct cmd_context *cmd, struct volume_group *vg, struct device *dev,
                             struct dm_list *lvs_list);
 
+bool scan_text_mismatch(struct cmd_context *cmd, const char *vgname, const char *vgid);
+
 
 #endif

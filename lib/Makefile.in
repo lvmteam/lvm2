@@ -40,6 +40,7 @@ SOURCES =\
 	device/dev-luks.c \
 	device/dev-dasd.c \
 	device/dev-lvm1-pool.c \
+	device/filesystem.c \
 	device/online.c \
 	device/parse_vpd.c \
 	display/display.c \
