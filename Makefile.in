@@ -110,7 +110,7 @@ rpm: dist
 	$(LN_S) -f $(abs_top_srcdir)/spec/build.inc $(rpmbuilddir)/SOURCES
 	$(LN_S) -f $(abs_top_srcdir)/spec/macros.inc $(rpmbuilddir)/SOURCES
 	$(LN_S) -f $(abs_top_srcdir)/spec/packages.inc $(rpmbuilddir)/SOURCES
-	DM_VER=$$(cut -d- -f1 $(top_srcdir)/VERSION_DM);\
+	DM_VER=$$(cut -d' ' -f1 $(top_srcdir)/VERSION_DM | cut -d- -f1);\
 	GIT_VER=$$(cd $(top_srcdir); git describe | cut -d- --output-delimiter=. -f2,3 || echo 0);\
 	$(SED) -e "s,\(device_mapper_version\) [0-9.]*$$,\1 $$DM_VER," \
 	    -e "s,^\(Version:[^0-9%]*\)[0-9.]*$$,\1 $(LVM_VER)," \
