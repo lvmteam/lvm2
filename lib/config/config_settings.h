@@ -118,6 +118,7 @@
  * the previous default value was set (uncommented) in lvm.conf.
  */
 #include "lib/config/defaults.h"
+#include "device_mapper/vdo/vdo_limits.h"
 
 cfg_section(root_CFG_SECTION, "(root)", root_CFG_SECTION, 0, vsn(0, 0, 0), 0, NULL, NULL)
 
@@ -708,12 +709,11 @@ cfg(allocation_vdo_use_deduplication_CFG, "vdo_use_deduplication", allocation_CF
 cfg(allocation_vdo_use_metadata_hints_CFG, "vdo_use_metadata_hints", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_USE_METADATA_HINTS, VDO_1ST_VSN, NULL, 0, NULL,
 	"Enables or disables whether VDO volume should tag its latency-critical\n"
 	"writes with the REQ_SYNC flag. Some device mapper targets such as dm-raid5\n"
-	"process writes with this flag at a higher priority.\n"
-	"Default is enabled.\n")
+	"process writes with this flag at a higher priority.\n")
 
 cfg(allocation_vdo_minimum_io_size_CFG, "vdo_minimum_io_size", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_MINIMUM_IO_SIZE, VDO_1ST_VSN, NULL, 0, NULL,
 	"The minimum IO size for VDO volume to accept, in bytes.\n"
-	"Valid values are 512 or 4096. The recommended and default value is 4096.\n")
+	"Valid values are 512 or 4096. The recommended value is 4096.\n")
 
 cfg(allocation_vdo_block_map_cache_size_mb_CFG, "vdo_block_map_cache_size_mb", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_BLOCK_MAP_CACHE_SIZE_MB, VDO_1ST_VSN, NULL, 0, NULL,
 	"Specifies the amount of memory in MiB allocated for caching block map\n"
@@ -726,7 +726,8 @@ cfg(allocation_vdo_block_map_era_length_CFG, "vdo_block_map_period", allocation_
 	"The speed with which the block map cache writes out modified block map pages.\n"
 	"A smaller era length is likely to reduce the amount time spent rebuilding,\n"
 	"at the cost of increased block map writes during normal operation.\n"
-	"The maximum and recommended value is 16380; the minimum value is 1.\n")
+	"The maximum and recommended value is " DM_TO_STRING(DM_VDO_BLOCK_MAP_ERA_LENGTH_MAXIMUM)
+	"; the minimum value is " DM_TO_STRING(DM_VDO_BLOCK_MAP_ERA_LENGTH_MINIMUM) ".\n")
 
 cfg(allocation_vdo_check_point_frequency_CFG, "vdo_check_point_frequency", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_CHECK_POINT_FREQUENCY, VDO_1ST_VSN, NULL, 0, NULL,
 	"The default check point frequency for VDO volume.\n")
@@ -748,27 +749,34 @@ cfg(allocation_vdo_slab_size_mb_CFG, "vdo_slab_size_mb", allocation_CFG_SECTION,
 cfg(allocation_vdo_ack_threads_CFG, "vdo_ack_threads", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_ACK_THREADS, VDO_1ST_VSN, NULL, 0, NULL,
 	"Specifies the number of threads to use for acknowledging\n"
 	"completion of requested VDO I/O operations.\n"
-	"The value must be at in range [0..100].\n")
+	"The value must be at in range [" DM_TO_STRING(DM_VDO_ACK_THREADS_MINIMUM) ".."
+	DM_TO_STRING(DM_VDO_ACK_THREADS_MAXIMUM) "].\n")
 
 cfg(allocation_vdo_bio_threads_CFG, "vdo_bio_threads", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_BIO_THREADS, VDO_1ST_VSN, NULL, 0, NULL,
 	"Specifies the number of threads to use for submitting I/O\n"
 	"operations to the storage device of VDO volume.\n"
-	"The value must be in range [1..100]\n"
+	"The value must be in range [" DM_TO_STRING(DM_VDO_BIO_THREADS_MINIMUM) ".."
+	DM_TO_STRING(DM_VDO_BIO_THREADS_MAXIMUM) "].\n"
 	"Each additional thread after the first will use an additional 18MiB of RAM,\n"
 	"plus 1.12 MiB of RAM per megabyte of configured read cache size.\n")
 
 cfg(allocation_vdo_bio_rotation_CFG, "vdo_bio_rotation", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_BIO_ROTATION, VDO_1ST_VSN, NULL, 0, NULL,
 	"Specifies the number of I/O operations to enqueue for each bio-submission\n"
-	"thread before directing work to the next. The value must be in range [1..1024].\n")
+	"thread before directing work to the next. The value must be in range ["
+	DM_TO_STRING(DM_VDO_BIO_ROTATION_MINIMUM) ".."
+	DM_TO_STRING(DM_VDO_BIO_ROTATION_MAXIMUM) "].\n")
 
 cfg(allocation_vdo_cpu_threads_CFG, "vdo_cpu_threads", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_CPU_THREADS, VDO_1ST_VSN, NULL, 0, NULL,
 	"Specifies the number of threads to use for CPU-intensive work such as\n"
-	"hashing or compression for VDO volume. The value must be in range [1..100]\n")
+	"hashing or compression for VDO volume. The value must be in range ["
+	DM_TO_STRING(DM_VDO_CPU_THREADS_MINIMUM) ".."
+	DM_TO_STRING(DM_VDO_CPU_THREADS_MAXIMUM) "].\n")
 
 cfg(allocation_vdo_hash_zone_threads_CFG, "vdo_hash_zone_threads", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_HASH_ZONE_THREADS, VDO_1ST_VSN, NULL, 0, NULL,
 	"Specifies the number of threads across which to subdivide parts of the VDO\n"
 	"processing based on the hash value computed from the block data.\n"
-	"The value must be at in range [0..100].\n"
+	"The value must be at in range [" DM_TO_STRING(DM_VDO_HASH_ZONE_THREADS_MINIMUM) ".."
+	DM_TO_STRING(DM_VDO_HASH_ZONE_THREADS_MAXIMUM) "].\n"
 	"vdo_hash_zone_threads, vdo_logical_threads and vdo_physical_threads must be\n"
 	"either all zero or all non-zero.\n")
 
@@ -777,7 +785,8 @@ cfg(allocation_vdo_logical_threads_CFG, "vdo_logical_threads", allocation_CFG_SE
 	"processing based on the hash value computed from the block data.\n"
 	"A logical thread count of 9 or more will require explicitly specifying\n"
 	"a sufficiently large block map cache size, as well.\n"
-	"The value must be in range [0..100].\n"
+	"The value must be in range [" DM_TO_STRING(DM_VDO_LOGICAL_THREADS_MINIMUM) ".."
+	DM_TO_STRING(DM_VDO_LOGICAL_THREADS_MAXIMUM) "].\n"
 	"vdo_hash_zone_threads, vdo_logical_threads and vdo_physical_threads must be\n"
 	"either all zero or all non-zero.\n")
 
@@ -785,7 +794,8 @@ cfg(allocation_vdo_physical_threads_CFG, "vdo_physical_threads", allocation_CFG_
 	"Specifies the number of threads across which to subdivide parts of the VDO\n"
 	"processing based on physical block addresses.\n"
 	"Each additional thread after the first will use an additional 10MiB of RAM.\n"
-	"The value must be in range [0..16].\n"
+	"The value must be in range [" DM_TO_STRING(DM_VDO_PHYSICAL_THREADS_MINIMUM) ".."
+	DM_TO_STRING(DM_VDO_PHYSICAL_THREADS_MAXIMUM) "].\n"
 	"vdo_hash_zone_threads, vdo_logical_threads and vdo_physical_threads must be\n"
 	"either all zero or all non-zero.\n")
 
