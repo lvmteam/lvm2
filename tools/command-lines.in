@@ -1593,10 +1593,10 @@ pvdisplay
 OO: --aligned, --all, --binary, --colon, --columns, --configreport ConfigReport,
 --foreign, --ignorelockingfailure,
 --logonly, --maps, --noheadings, --nosuffix, --options String,
---readonly, --select String, --separator String, --shared,
+--readonly, --reportformat ReportFmt, --select String, --separator String, --shared,
 --short, --sort String, --unbuffered, --units Units
 OP: PV|Tag ...
-IO: --ignoreskippedcluster, --reportformat ReportFmt
+IO: --ignoreskippedcluster
 ID: pvdisplay_general
 
 ---
