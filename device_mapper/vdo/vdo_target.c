@@ -18,14 +18,15 @@
 #include "vdo_limits.h"
 #include "target.h"
 
+/* validate vdo target parameters and  'vdo_size' in sectors */
 bool dm_vdo_validate_target_params(const struct dm_vdo_target_params *vtp,
 				   uint64_t vdo_size)
 {
 	bool valid = true;
 
 	/* 512 or 4096 bytes only ATM */
-	if ((vtp->minimum_io_size != 1) &&
-	    (vtp->minimum_io_size != 8)) {
+	if ((vtp->minimum_io_size != (512 >> SECTOR_SHIFT)) &&
+	    (vtp->minimum_io_size != (4096 >> SECTOR_SHIFT))) {
 		log_error("VDO minimum io size %u is unsupported.",
 			  vtp->minimum_io_size);
 		valid = false;
@@ -127,10 +128,10 @@ bool dm_vdo_validate_target_params(const struct dm_vdo_target_params *vtp,
 		valid = false;
 	}
 
-	if (vdo_size >= (DM_VDO_LOGICAL_SIZE_MAXIMUM_MB * UINT64_C(1024 * 2))) {
+	if (vdo_size > DM_VDO_LOGICAL_SIZE_MAXIMUM) {
 		log_error("VDO logical size is by " FMTu64 "KiB bigger then limit " FMTu64 "TiB.",
-			  (vdo_size - (DM_VDO_LOGICAL_SIZE_MAXIMUM_MB * UINT64_C(1024 * 2))) / 2,
-			  DM_VDO_LOGICAL_SIZE_MAXIMUM_MB / UINT64_C(1024) / UINT64_C(1024));
+			  (vdo_size - DM_VDO_LOGICAL_SIZE_MAXIMUM) / 2,
+			  DM_VDO_LOGICAL_SIZE_MAXIMUM / (UINT64_C(1024) * 1024 * 1024 * 1024 >> SECTOR_SHIFT));
 		valid = false;
 	}
 
