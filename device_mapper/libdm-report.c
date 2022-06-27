@@ -4382,6 +4382,11 @@ static int _is_json_report(struct dm_report *rh)
 		rh->group_item->group->type == DM_REPORT_GROUP_JSON_STD);
 }
 
+static int _is_pure_numeric_field(struct dm_report_field *field)
+{
+	return field->props->flags & (DM_REPORT_FIELD_TYPE_NUMBER | DM_REPORT_FIELD_TYPE_PERCENT);
+}
+
 /*
  * Produce report output
  */
@@ -4401,10 +4406,16 @@ static int _output_field(struct dm_report *rh, struct dm_report_field *field)
 		if (!dm_pool_grow_object(rh->mem, JSON_QUOTE, 1) ||
 		    !dm_pool_grow_object(rh->mem, fields[field->props->field_num].id, 0) ||
 		    !dm_pool_grow_object(rh->mem, JSON_QUOTE, 1) ||
-		    !dm_pool_grow_object(rh->mem, JSON_PAIR, 1) ||
-		    !dm_pool_grow_object(rh->mem, JSON_QUOTE, 1)) {
-			log_error("dm_report: Unable to extend output line");
-			return 0;
+		    !dm_pool_grow_object(rh->mem, JSON_PAIR, 1)) {
+			log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
+			goto bad;
+		}
+
+		if (!(_is_json_std_report(rh) && _is_pure_numeric_field(field))) {
+			if (!dm_pool_grow_object(rh->mem, JSON_QUOTE, 1)) {
+				log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
+				goto bad;
+			}
 		}
 	} else if (rh->flags & DM_REPORT_OUTPUT_FIELD_NAME_PREFIX) {
 		if (!(field_id = strdup(fields[field->props->field_num].id))) {
@@ -4513,9 +4524,11 @@ static int _output_field(struct dm_report *rh, struct dm_report_field *field)
 			}
 		}
 	} else if (_is_json_report(rh)) {
-		if (!dm_pool_grow_object(rh->mem, JSON_QUOTE, 1)) {
-			log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
-			goto bad;
+		if (!(_is_json_std_report(rh) && _is_pure_numeric_field(field))) {
+			if (!dm_pool_grow_object(rh->mem, JSON_QUOTE, 1)) {
+				log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
+				goto bad;
+			}
 		}
 	}
 
