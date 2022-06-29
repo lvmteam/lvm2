@@ -4359,6 +4359,7 @@ static int _sort_rows(struct dm_report *rh)
 #define JSON_ARRAY_START       "["
 #define JSON_ARRAY_END         "]"
 #define JSON_ESCAPE_CHAR       "\\"
+#define JSON_NULL              "null"
 
 #define UNABLE_TO_EXTEND_OUTPUT_LINE_MSG "dm_report: Unable to extend output line"
 
@@ -4448,8 +4449,13 @@ static int _output_field(struct dm_report *rh, struct dm_report_field *field)
 		}
 	}
 
-	repstr = field->report_string;
+	if (_is_json_std_report(rh) && _is_pure_numeric_field(field) && !*field->report_string)
+		repstr = JSON_NULL;
+	else
+		repstr = field->report_string;
+
 	width = field->props->width;
+
 	if (!(rh->flags & DM_REPORT_OUTPUT_ALIGNED)) {
 		if (_is_json_report(rh)) {
 			/* Escape any JSON_QUOTE that may appear in reported string. */
