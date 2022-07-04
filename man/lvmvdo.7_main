@@ -12,7 +12,7 @@ for primary storage.
 .P
 Deduplication is a technique for reducing the consumption of storage
 resources by eliminating multiple copies of duplicate blocks. Compression
-takes the individual unique blocks and shrinks them. 
+takes the individual unique blocks and shrinks them.
 These reduced blocks are then efficiently packed together into
 physical blocks. Thin provisioning manages the mapping from logical blocks
 presented by VDO to where the data has actually been physically stored,
@@ -358,8 +358,17 @@ take otherwise as device is already expected to be empty.
 .
 .SS \n+[step]. Memory usage
 .
-The VDO target requires 370 MiB of RAM plus an additional 268 MiB
-per each 1 TiB of physical storage managed by the volume.
+The VDO target requires 38 MiB of RAM and several variable amounts:
+.IP \(bu 2
+1.15 MiB of RAM for each 1 MiB of configured block map cache size.
+The block map cache requires a minimum of 150 MiB RAM.
+.br
+.IP \(bu
+1.6 MiB of RAM for each 1 TiB of logical space.
+.br
+.IP \(bu
+268 MiB of RAM for each 1 TiB of physical storage managed by the volume.
+.br
 .P
 UDS requires a minimum of 250 MiB of RAM,
 which is also the default amount that deduplication uses.
