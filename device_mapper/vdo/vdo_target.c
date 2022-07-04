@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2018-2022 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -35,6 +35,13 @@ bool dm_vdo_validate_target_params(const struct dm_vdo_target_params *vtp,
 	    (vtp->block_map_cache_size_mb > DM_VDO_BLOCK_MAP_CACHE_SIZE_MAXIMUM_MB)) {
 		log_error("VDO block map cache size %u out of range.",
 			  vtp->block_map_cache_size_mb);
+		valid = false;
+	}
+
+	if ((vtp->block_map_era_length < DM_VDO_BLOCK_MAP_ERA_LENGTH_MINIMUM) ||
+	    (vtp->block_map_era_length > DM_VDO_BLOCK_MAP_ERA_LENGTH_MAXIMUM)) {
+		log_error("VDO block map era length %u out of range.",
+			  vtp->block_map_era_length);
 		valid = false;
 	}
 
