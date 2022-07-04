@@ -1142,7 +1142,7 @@ Delete all regions on all devices
 #
 .B dmstats delete --alldevices --allregions
 .P
-Create a whole-device region with areas 10GiB in size on vg00/lvol1
+Create a whole-device region with areas 10 GiB in size on vg00/lvol1
 using dmsetup
 .br
 .br
@@ -1151,7 +1151,7 @@ using dmsetup
 .br
 vg00-lvol1: Created new region with 5 area(s) as region ID 1
 .P
-Create a 1GiB region with 16 areas at the start of vg00/lvol1
+Create a 1 GiB region with 16 areas at the start of vg00/lvol1
 .br
 #
 .B dmstats create --start 0 --len 1G --areas=16 vg00/lvol1

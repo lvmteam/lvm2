@@ -323,7 +323,7 @@ incorrect results.
 Sets the physical extent size of PVs in the VG.
 The value must be either a power of 2 of at least 1 sector
 (where the sector size is the largest sector size of the PVs
-currently used in the VG), or at least 128KiB.
+currently used in the VG), or at least 128 KiB.
 Once this value has been set, it is difficult to change
 without recreating the VG, unless no extents need moving.
 .

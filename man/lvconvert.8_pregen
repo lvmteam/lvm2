@@ -1091,14 +1091,14 @@ The name of a cache volume.
 \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT]
 .br
 The size of chunks in a snapshot, cache pool or thin pool.
-For snapshots, the value must be a power of 2 between 4KiB and 512KiB
+For snapshots, the value must be a power of 2 between 4 KiB and 512 KiB
 and the default value is 4.
-For a cache pool the value must be between 32KiB and 1GiB
+For a cache pool the value must be between 32 KiB and 1 GiB
 and the default value is 64.
-For a thin pool the value must be between 64KiB and 1GiB
+For a thin pool the value must be between 64 KiB and 1 GiB
 and the default value starts with 64 and scales up to fit the
-pool metadata size within 128MiB, if the pool metadata size is not specified.
-The value must be a multiple of 64KiB.
+pool metadata size within 128 MiB, if the pool metadata size is not specified.
+The value must be a multiple of 64 KiB.
 See \fBlvmthin\fP(7) and \fBlvmcache\fP(7) for more information.
 .
 .HP
@@ -1589,7 +1589,7 @@ answer yes. Use with extreme caution.
 .HP
 \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP
 .br
-For snapshots, this controls zeroing of the first 4KiB of data in the
+For snapshots, this controls zeroing of the first 4 KiB of data in the
 snapshot. If the LV is read-only, the snapshot will not be zeroed.
 For thin pools, this controls zeroing of provisioned blocks.
 Provisioning of large zeroed chunks negatively impacts performance.

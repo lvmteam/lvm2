@@ -2,7 +2,7 @@
 .SH EXAMPLES
 .
 .P
-Create a striped LV with 3 stripes, a stripe size of 8KiB and a size of 100MiB.
+Create a striped LV with 3 stripes, a stripe size of 8 KiB and a size of 100 MiB.
 The LV name is chosen by lvcreate.
 .br
 .B lvcreate -i 3 -I 8 -L 100m vg00
@@ -33,17 +33,17 @@ for overwriting 20% of the size of the original LV.
 .br
 .B lvcreate -s -l 20%ORIGIN -n mysnap vg00/mylv
 .P
-Create a sparse LV with 1TiB of virtual space, and actual space just under
-100MiB.
+Create a sparse LV with 1 TiB of virtual space, and actual space just under
+100 MiB.
 .br
 .B lvcreate --snapshot --virtualsize 1t --size 100m --name mylv vg00
 .P
-Create a linear LV with a usable size of 64MiB on specific physical extents.
+Create a linear LV with a usable size of 64 MiB on specific physical extents.
 .br
 .B lvcreate -L 64m -n mylv vg00 /dev/sda:0-7 /dev/sdb:0-7
 .P
-Create a RAID5 LV with a usable size of 5GiB, 3 stripes, a stripe size of
-64KiB, using a total of 4 devices (including one for parity).
+Create a RAID5 LV with a usable size of 5 GiB, 3 stripes, a stripe size of
+64 KiB, using a total of 4 devices (including one for parity).
 .br
 .B lvcreate --type raid5 -L 5G -i 3 -I 64 -n mylv vg00
 .P
@@ -57,7 +57,7 @@ the VG, in which case \fB-i 7\fP must be used to get to the current maximum of
 .B --type raid5 -l 100%FREE -n mylv vg00
 .RE
 .P
-Create RAID10 LV with a usable size of 5GiB, using 2 stripes, each on
+Create RAID10 LV with a usable size of 5 GiB, using 2 stripes, each on
 a two-image mirror. (Note that the \fB-i\fP and \fB-m\fP arguments behave
 differently:
 \fB-i\fP specifies the total number of stripes,
@@ -66,13 +66,13 @@ to the first image).
 .br
 .B lvcreate --type raid10 -L 5G -i 2 -m 1 -n mylv vg00
 .P
-Create a 1TiB thin LV mythin, with 256GiB thinpool tpool0 in vg00.
+Create a 1 TiB thin LV mythin, with 256 GiB thinpool tpool0 in vg00.
 .br
 .B lvcreate -T -V 1T --size 256G --name mythin vg00/tpool0
 .P
-Create a 1TiB thin LV, first creating a new thin pool for it, where
-the thin pool has 100MiB of space, uses 2 stripes, has a 64KiB stripe
-size, and 256KiB chunk size.
+Create a 1 TiB thin LV, first creating a new thin pool for it, where
+the thin pool has 100 MiB of space, uses 2 stripes, has a 64 KiB stripe
+size, and 256 KiB chunk size.
 .br
 .B lvcreate --type thin --name mylv --thinpool mypool
 .RS
@@ -102,6 +102,6 @@ then combining the new origin LV with an existing cache pool.
 .B -L 100G -n mylv vg00 /dev/slow1
 .RE
 .P
-Create a VDO LV vdo0 with VDOPoolLV size of 10GiB and name vpool1.
+Create a VDO LV vdo0 with VDOPoolLV size of 10 GiB and name vpool1.
 .br
 .B lvcreate --vdo --size 10G --name vdo0 vg00/vpool1

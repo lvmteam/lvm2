@@ -455,7 +455,7 @@ defines the default cache mode.
 .
 The size of data blocks managed by dm-cache can be specified with the
 --chunksize option when caching is started.  The default unit is KiB.  The
-value must be a multiple of 32KiB between 32KiB and 1GiB. Cache chunks
+value must be a multiple of 32 KiB between 32 KiB and 1 GiB. Cache chunks
 bigger then 512KiB shall be only used when necessary.
 .P
 Using a chunk size that is too large can result in wasteful use of the
@@ -495,9 +495,9 @@ account of normal io traffic going to the devices.
 .P
 User can set migration threshold via cache policy settings as
 "migration_threshold=<#sectors>" to set the maximum number
-of sectors being migrated, the default being 2048 sectors (1MiB).
+of sectors being migrated, the default being 2048 sectors (1 MiB).
 .P
-Command to set migration threshold to 2MiB (4096 sectors):
+Command to set migration threshold to 2 MiB (4096 sectors):
 .P
 .B lvcreate --cachepolicy 'migration_threshold=4096' VG/LV
 .P
