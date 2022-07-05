@@ -1655,7 +1655,10 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_LABEL);
 
-	lvmcache_label_scan(cmd);
+	if (!lvmcache_label_scan(cmd)) {
+		ret_max = ECMD_FAILED;
+		goto_out;
+	}
 
 	if (argc) {
 		for (; opt < argc; opt++) {
@@ -2435,8 +2438,13 @@ int process_each_vg(struct cmd_context *cmd,
 	 * Scan all devices to populate lvmcache with initial
 	 * list of PVs and VGs.
 	 */
-	if (!(read_flags & PROCESS_SKIP_SCAN))
-		lvmcache_label_scan(cmd);
+	if (!(read_flags & PROCESS_SKIP_SCAN)) {
+		if (!lvmcache_label_scan(cmd)) {
+			ret_max = ECMD_FAILED;
+			goto_out;
+		}
+	}
+
 
 	/*
 	 * A list of all VGs on the system is needed when:
@@ -3987,7 +3995,10 @@ int process_each_lv(struct cmd_context *cmd,
 	 * Scan all devices to populate lvmcache with initial
 	 * list of PVs and VGs.
 	 */
-	lvmcache_label_scan(cmd);
+	if (!lvmcache_label_scan(cmd)) {
+		ret_max = ECMD_FAILED;
+		goto_out;
+	}
 
 	/*
 	 * A list of all VGs on the system is needed when:
@@ -4623,8 +4634,12 @@ int process_each_pv(struct cmd_context *cmd,
 		goto_out;
 	}
 
-	if (!(read_flags & PROCESS_SKIP_SCAN))
-		lvmcache_label_scan(cmd);
+	if (!(read_flags & PROCESS_SKIP_SCAN)) {
+		if (!lvmcache_label_scan(cmd)) {
+			ret_max = ECMD_FAILED;
+			goto_out;
+		}
+	}
 
 	if (!lvmcache_get_vgnameids(cmd, &all_vgnameids, only_this_vgname, 1)) {
 		ret_max = ret;

@@ -84,7 +84,10 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	cmd->create_edit_devices_file = 1;
 
-	lvmcache_label_scan(cmd);
+	if (!lvmcache_label_scan(cmd)) {
+		unlock_vg(cmd, NULL, vp_new.vg_name);
+		return_ECMD_FAILED;
+	}
 
 	if (lvmcache_vginfo_from_vgname(vp_new.vg_name, NULL)) {
 		unlock_vg(cmd, NULL, vp_new.vg_name);

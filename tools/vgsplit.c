@@ -559,7 +559,8 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	lvmcache_label_scan(cmd);
+	if (!lvmcache_label_scan(cmd))
+		return_ECMD_FAILED;
 
 	if (!(vginfo_to = lvmcache_vginfo_from_vgname(vg_name_to, NULL))) {
 		if (!validate_name(vg_name_to)) {

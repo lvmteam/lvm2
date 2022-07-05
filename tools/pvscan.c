@@ -1407,7 +1407,8 @@ static int _pvscan_cache_all(struct cmd_context *cmd, int argc, char **argv,
 	 * which we want 'pvscan --cache' to do, and that uses
 	 * info from lvmcache, e.g. duplicate pv info.
 	 */
-	lvmcache_label_scan(cmd);
+	if (!lvmcache_label_scan(cmd))
+		return_0;
 
 	cmd->pvscan_recreate_hints = 0;
 	cmd->use_hints = 0;

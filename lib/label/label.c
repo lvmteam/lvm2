@@ -801,7 +801,7 @@ static int _setup_bcache(void)
 	}
 
 	if (!(scan_bcache = bcache_create(BCACHE_BLOCK_SIZE_IN_SECTORS, cache_blocks, ioe))) {
-		log_error("Failed to create bcache with %d cache blocks.", cache_blocks);
+		log_error("Failed to set up io layer with %d blocks.", cache_blocks);
 		return 0;
 	}
 
@@ -1292,7 +1292,7 @@ int label_scan(struct cmd_context *cmd)
 	 * data to invalidate.)
 	 */
 	if (!(iter = dev_iter_create(NULL, 0))) {
-		log_error("Scanning failed to get devices.");
+		log_error("Failed to get device list.");
 		return 0;
 	}
 	while ((dev = dev_iter_get(cmd, iter))) {

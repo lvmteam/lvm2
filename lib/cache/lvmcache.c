@@ -1612,7 +1612,8 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	 * with infos/vginfos based on reading headers from
 	 * each device, and a vg summary from each mda.
 	 */
-	label_scan(cmd);
+	if (!label_scan(cmd))
+		return_0;
 
 	/*
 	 * When devnames are used as device ids (which is dispreferred),
