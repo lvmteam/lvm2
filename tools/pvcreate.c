@@ -144,7 +144,8 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	cmd->create_edit_devices_file = 1;
 
-	lvmcache_label_scan(cmd);
+	if (!lvmcache_label_scan(cmd))
+		return_ECMD_FAILED;
 
 	if (!(handle = init_processing_handle(cmd, NULL))) {
 		log_error("Failed to initialize processing handle.");

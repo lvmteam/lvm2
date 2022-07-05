@@ -132,7 +132,10 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 
 	clear_hint_file(cmd);
 
-	lvmcache_label_scan(cmd);
+	if (!lvmcache_label_scan(cmd)) {
+		unlock_vg(cmd, NULL, vg_name);
+		return_ECMD_FAILED;
+	}
 
 	cmd->handles_unknown_segments = 1;
 

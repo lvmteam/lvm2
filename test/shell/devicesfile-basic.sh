@@ -107,6 +107,7 @@ not vgs --devicesfile test.devices $vg2
 # misspelled override name fails
 not vgs --devicesfile doesnotexist $vg1
 not vgs --devicesfile doesnotexist $vg2
+not vgs --devicesfile doesnotexist
 
 # devicesfile and devices cannot be used together
 not vgs --devicesfile test.devices --devices "$dev1","$dev1" $vg1
