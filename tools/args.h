@@ -416,6 +416,10 @@ arg(logonly_ARG, '\0', "logonly", 0, 0, 0,
 arg(longhelp_ARG, '\0', "longhelp", 0, 0, 0,
     "Display long help text.\n")
 
+arg(majoritypvs_ARG, '\0', "majoritypvs", 0, 0, 0,
+    "Change the VG system ID if the majority of PVs in the VG\n"
+    "are present (one more than half).\n")
+
 arg(maxrecoveryrate_ARG, '\0', "maxrecoveryrate", sizekb_VAL, 0, 0,
     "Sets the maximum recovery rate for a RAID LV.  The rate value\n"
     "is an amount of data per second for each device in the array.\n"

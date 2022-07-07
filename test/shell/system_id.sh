@@ -22,7 +22,7 @@ print_lvmlocal() {
 
 . lib/inittest
 
-aux prepare_devs 1
+aux prepare_devs 5
 
 SIDFILE="etc/lvm_test.conf"
 LVMLOCAL="etc/lvmlocal.conf"
@@ -540,6 +540,73 @@ not vgchange --yes --systemid foo $vg1
 echo "$SID1" > "$SIDFILE"
 clear_df_systemid
 vgremove $vg1
+
+# vgchange --systemid --majoritypvs
+SID1=sidfoofile1
+SID2=sidfoofile2
+rm -f "$LVMLOCAL"
+echo "$SID1" > "$SIDFILE"
+clear_df_systemid
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
+# create a vg
+vgcreate $vg1 "$dev1" "$dev2" "$dev3"
+vgcreate $vg2 "$dev4" "$dev5"
+# normal vgs sees the vg
+# change the local system_id, making the vg foreign
+echo "$SID2" > "$SIDFILE"
+clear_df_systemid
+# normal vgs doesn't see the vg
+vgs >err
+not grep $vg1 err
+not grep $vg2 err
+# using --foreign we can see the vg
+vgs --foreign >err
+grep $vg1 err
+grep $vg2 err
+# cannot clear the system_id of the foreign vg
+not vgchange --yes --systemid "" $vg1
+not vgchange --yes --systemid "" $vg2
+# cannot set the system_id of the foreign vg
+not vgchange --yes --systemid foo $vg1
+not vgchange --yes --systemid foo $vg2
+# we are local node SID2, foreign node is SID1
+# use extra_system_ids to take over the foreign vg, making it local
+vgchange --config "local/extra_system_ids=[\"${SID1}\"]" --systemid $SID2 $vg1
+vgs $vg1
+# make it foreign again
+vgchange --yes --systemid sidfoofile1 $vg1
+not vgs $vg1
+# both vgs are foreign, drop dev1/dev4 so both vgs are missing a device
+aux hide_dev "$dev1"
+aux hide_dev "$dev4"
+not pvs "$dev1"
+not pvs "$dev4"
+# neither VG can be changed because both are missing a dev
+not vgchange --config "local/extra_system_ids=[\"${SID1}\"]" --systemid $SID2 $vg1
+not vgchange --config "local/extra_system_ids=[\"${SID1}\"]" --systemid $SID2 $vg2
+# using majoritypvs, vg1 can be changed because 2 of 3 PVs exist
+vgchange --majoritypvs --config "local/extra_system_ids=[\"${SID1}\"]" --systemid $SID2 $vg1
+vgs $vg1
+# using majoritypvs, vg2 cannot be changed because 1 of 2 PVs exist
+not vgchange --majoritypvs --config "local/extra_system_ids=[\"${SID1}\"]" --systemid $SID2 $vg2
+not vgs $vg2
+vgs --foreign $vg2
+# dev1/dev4 return so we can take over vg2 now
+# vg1 will complain about stale metadata on dev1
+aux unhide_dev "$dev1"
+aux unhide_dev "$dev4"
+vgs
+pvs
+vgchange --majoritypvs --config "local/extra_system_ids=[\"${SID1}\"]" --systemid $SID2 $vg2
+vgs $vg2
+# update metadata on dev1
+vgck --updatemetadata $vg1
+vgs $vg1
+clear_df_systemid
+vgremove $vg1
+vgremove $vg2
+
 
 # vgcfgbackup backs up foreign vg with --foreign
 SID1=sidfoofile1

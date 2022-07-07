@@ -1383,6 +1383,24 @@ static int _vgchange_systemid_single(struct cmd_context *cmd, const char *vg_nam
 			             struct volume_group *vg,
 			             struct processing_handle *handle)
 {
+	if (arg_is_set(cmd, majoritypvs_ARG)) {
+		struct pv_list *pvl;
+		int missing_pvs = 0;
+		int found_pvs = 0;
+
+		dm_list_iterate_items(pvl, &vg->pvs) {
+			if (!pvl->pv->dev)
+				missing_pvs++;
+			else
+				found_pvs++;
+		}
+		if (found_pvs <= missing_pvs) {
+			log_error("Cannot change system ID without the majority of PVs (found %d of %d)",
+				  found_pvs, found_pvs+missing_pvs);
+			return ECMD_FAILED;
+		}
+	}
+
 	if (!_vgchange_system_id(cmd, vg))
 		return_ECMD_FAILED;
 
@@ -1414,6 +1432,9 @@ int vgchange_systemid_cmd(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Failed to initialize processing handle.");
 		return ECMD_FAILED;
 	}
+
+	if (arg_is_set(cmd, majoritypvs_ARG))
+		cmd->handles_missing_pvs = 1;
 
 	ret = process_each_vg(cmd, argc, argv, NULL, NULL, READ_FOR_UPDATE, 0, handle, &_vgchange_systemid_single);
 
