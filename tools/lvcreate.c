@@ -253,6 +253,7 @@ static int _update_extents_params(struct volume_group *vg,
 	uint32_t stripesize_extents;
 	uint32_t extents;
 	uint32_t base_calc_extents;
+	uint32_t vdo_pool_max_extents;
 
 	if (lcp->size &&
 	    !(lp->extents = extents_from_size(vg->cmd, lcp->size,
@@ -320,6 +321,23 @@ static int _update_extents_params(struct volume_group *vg,
 		default:
 			log_error(INTERNAL_ERROR "Unsupported percent type %u.", lcp->percent);
 			return 0;
+	}
+
+	if (seg_is_vdo(lp)) {
+		vdo_pool_max_extents = get_vdo_pool_max_extents(&lp->vdo_params, vg->extent_size);
+		if (extents > vdo_pool_max_extents) {
+			if (lcp->percent == PERCENT_NONE) {
+				log_error("Can't use %s size. Maximal supported VDO POOL volume size with slab size %s is %s.",
+					  display_size(vg->cmd, (uint64_t)vg->extent_size * extents),
+					  display_size(vg->cmd, (uint64_t)lp->vdo_params.slab_size_mb << (20 - SECTOR_SHIFT)),
+					  display_size(vg->cmd, (uint64_t)vg->extent_size * vdo_pool_max_extents));
+				return 0;
+			}
+			extents = vdo_pool_max_extents;
+			log_verbose("Using maximal supported VDO POOL volume size %s (with slab size %s).",
+				    display_size(vg->cmd, (uint64_t)vg->extent_size * extents),
+				    display_size(vg->cmd, (uint64_t)lp->vdo_params.slab_size_mb << (20 - SECTOR_SHIFT)));
+		}
 	}
 
 	if (lcp->percent != PERCENT_NONE) {
@@ -699,14 +717,22 @@ static int _read_cache_params(struct cmd_context *cmd,
 }
 
 static int _read_vdo_params(struct cmd_context *cmd,
-			    struct lvcreate_params *lp)
+			    struct lvcreate_params *lp,
+			    struct lvcreate_cmdline_params *lcp)
 {
 	if (!seg_is_vdo(lp))
 		return 1;
 
 	// prefiling settings here
-	if (!fill_vdo_target_params(cmd, &lp->vdo_params,  &lp->vdo_pool_header_size, NULL))
+	if (!fill_vdo_target_params(cmd, &lp->vdo_params, &lp->vdo_pool_header_size, NULL))
 		return_0;
+
+	if ((lcp->virtual_size <= DM_VDO_LOGICAL_SIZE_MAXIMUM) &&
+	    ((lcp->virtual_size + lp->vdo_pool_header_size) > DM_VDO_LOGICAL_SIZE_MAXIMUM)) {
+		log_verbose("Dropping VDO pool header size to 0 to support maximal size %s.",
+			    display_size(cmd, DM_VDO_LOGICAL_SIZE_MAXIMUM));
+		lp->vdo_pool_header_size = 0;
+	}
 
 	// override with optional vdo settings
 	if (!get_vdo_settings(cmd, &lp->vdo_params, NULL))
@@ -1203,7 +1229,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 			      &lp->pool_metadata_size, &lp->pool_metadata_spare,
 			      &lp->chunk_size, &lp->discards, &lp->zero_new_blocks)) ||
 	    !_read_cache_params(cmd, lp) ||
-	    !_read_vdo_params(cmd, lp) ||
+	    !_read_vdo_params(cmd, lp, lcp) ||
 	    !_read_mirror_and_raid_params(cmd, lp))
 		return_0;
 
@@ -1589,10 +1615,16 @@ static int _check_pool_parameters(struct cmd_context *cmd,
 }
 
 static int _check_vdo_parameters(struct volume_group *vg, struct lvcreate_params *lp,
-				  struct lvcreate_cmdline_params *lcp)
+				 struct lvcreate_cmdline_params *lcp)
 {
-	if (seg_is_vdo(lp) && lp->snapshot) {
+	if (lp->snapshot) {
 		log_error("Please either create VDO or snapshot.");
+		return 0;
+	}
+
+	if (lcp->virtual_size > DM_VDO_LOGICAL_SIZE_MAXIMUM) {
+		log_error("Maximal supported VDO virtual size is %s.",
+			  display_size(vg->cmd, DM_VDO_LOGICAL_SIZE_MAXIMUM));
 		return 0;
 	}
 
@@ -1716,11 +1748,11 @@ static int _lvcreate_single(struct cmd_context *cmd, const char *vg_name,
 	if (seg_is_thin(lp) && !_check_thin_parameters(vg, lp, lcp))
 		goto_out;
 
-	if (!_check_pool_parameters(cmd, vg, lp, lcp))
-		goto_out;
-
 	if (seg_is_vdo(lp) && !_check_vdo_parameters(vg, lp, lcp))
 		return_0;
+
+	if (!_check_pool_parameters(cmd, vg, lp, lcp))
+		goto_out;
 
 	/* All types are checked */
 	if (!_check_zero_parameters(cmd, lp))

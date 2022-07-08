@@ -127,6 +127,20 @@ int update_vdo_pool_virtual_size(struct lv_segment *vdo_pool_seg)
 	return 1;
 }
 
+uint32_t get_vdo_pool_max_extents(const struct dm_vdo_target_params *vtp,
+				  uint32_t extent_size)
+{
+	uint64_t max_extents = (DM_VDO_PHYSICAL_SIZE_MAXIMUM + extent_size - 1) / extent_size;
+	uint64_t max_slab_extents = ((extent_size - 1 + DM_VDO_SLABS_MAXIMUM *
+				      ((uint64_t)vtp->slab_size_mb << (20 - SECTOR_SHIFT))) /
+				     extent_size);
+
+	max_extents = (max_slab_extents < max_extents) ? max_slab_extents : max_extents;
+
+	return (max_extents > UINT32_MAX) ? UINT32_MAX : (uint32_t)max_extents;
+}
+
+
 static int _sysfs_get_kvdo_value(const char *dm_name, const struct dm_info *dminfo,
 				 const char *vdo_param, uint64_t *value)
 {
