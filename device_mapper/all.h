@@ -1020,6 +1020,7 @@ int dm_tree_node_add_integrity_target(struct dm_tree_node *node,
  */
 int dm_tree_node_add_vdo_target(struct dm_tree_node *node,
 				uint64_t size,
+				uint32_t vdo_version,
 				const char *vdo_pool_name,
 				const char *data_uuid,
 				uint64_t data_size,

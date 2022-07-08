@@ -174,6 +174,8 @@ vdo create $VDOCONF --name "$VDONAME" --device "$LOOP" --vdoSlabSize 128M --vdoL
 # Get VDO table line
 dmsetup table "$VDONAME" | tr " " "\n" | sed -e '5,6d' -e '12d' | tee vdo-orig
 
+aux lvmconf 'global/vdo_disabled_features = [ "version4" ]'
+
 lvm_import_vdo -y --name $vg/$lv "$LOOP"
 lvs -a $vg
 

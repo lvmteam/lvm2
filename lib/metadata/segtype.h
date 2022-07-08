@@ -353,6 +353,7 @@ int init_vdo_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
 #endif
 
 #define VDO_FEATURE_ONLINE_RENAME		(1U << 0) /* version 6.2.3 */
+#define VDO_FEATURE_VERSION4			(1U << 1) /* version 8.2.0 */
 
 int init_writecache_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
 

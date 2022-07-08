@@ -214,6 +214,7 @@ struct load_segment {
 	uint32_t device_id;		/* Thin */
 
 	// VDO params
+	uint32_t vdo_version;		/* VDO - version of target table line */
 	struct dm_tree_node *vdo_data;  /* VDO */
 	struct dm_vdo_target_params vdo_params; /* VDO */
 	const char *vdo_name;           /* VDO - device name is ALSO passed as table arg */
@@ -2865,18 +2866,28 @@ static int _vdo_emit_segment_line(struct dm_task *dmt,
 		return 0;
 	}
 
-	EMIT_PARAMS(pos, "V2 %s " FMTu64 " %u " FMTu64 " %u %s %s %s "
-		    "maxDiscard %u ack %u bio %u bioRotationInterval %u cpu %u hash %u logical %u physical %u",
-		    data_dev,
-		    seg->vdo_data_size / 8, // this parameter is in 4K units
-		    seg->vdo_params.minimum_io_size * UINT32_C(512), //  sector to byte units
-		    seg->vdo_params.block_map_cache_size_mb * UINT64_C(256),	// 1MiB -> 4KiB units
-		    seg->vdo_params.block_map_era_length,
-		    seg->vdo_params.use_metadata_hints ? "on" : "off" ,
-		    (seg->vdo_params.write_policy == DM_VDO_WRITE_POLICY_SYNC) ? "sync" :
-			(seg->vdo_params.write_policy == DM_VDO_WRITE_POLICY_ASYNC) ? "async" :
-			(seg->vdo_params.write_policy == DM_VDO_WRITE_POLICY_ASYNC_UNSAFE) ? "async-unsafe" : "auto", // policy
-		    seg->vdo_name,
+	if (seg->vdo_version < 4) {
+		EMIT_PARAMS(pos, "V2 %s " FMTu64 " %u " FMTu64 " %u %s %s %s ",
+			    data_dev,
+			    seg->vdo_data_size / 8, // this parameter is in 4K units
+			    seg->vdo_params.minimum_io_size * UINT32_C(512), //  sector to byte units
+			    seg->vdo_params.block_map_cache_size_mb * UINT64_C(256),	// 1MiB -> 4KiB units
+			    seg->vdo_params.block_map_era_length,
+			    seg->vdo_params.use_metadata_hints ? "on" : "off" ,
+			    (seg->vdo_params.write_policy == DM_VDO_WRITE_POLICY_SYNC) ? "sync" :
+			    (seg->vdo_params.write_policy == DM_VDO_WRITE_POLICY_ASYNC) ? "async" :
+			    (seg->vdo_params.write_policy == DM_VDO_WRITE_POLICY_ASYNC_UNSAFE) ? "async-unsafe" : "auto", // policy
+			    seg->vdo_name);
+	} else {
+		EMIT_PARAMS(pos, "V4 %s " FMTu64 " %u " FMTu64 " %u ",
+			    data_dev,
+			    seg->vdo_data_size / 8, // this parameter is in 4K units
+			    seg->vdo_params.minimum_io_size * UINT32_C(512), //  sector to byte units
+			    seg->vdo_params.block_map_cache_size_mb * UINT64_C(256),	// 1MiB -> 4KiB units
+			    seg->vdo_params.block_map_era_length);
+	}
+
+	EMIT_PARAMS(pos, "maxDiscard %u ack %u bio %u bioRotationInterval %u cpu %u hash %u logical %u physical %u",
 		    seg->vdo_params.max_discard,
 		    seg->vdo_params.ack_threads,
 		    seg->vdo_params.bio_threads,
@@ -4323,6 +4334,7 @@ void dm_tree_node_set_callback(struct dm_tree_node *dnode,
 
 int dm_tree_node_add_vdo_target(struct dm_tree_node *node,
 				uint64_t size,
+				uint32_t vdo_version,
 				const char *vdo_pool_name,
 				const char *data_uuid,
 				uint64_t data_size,
@@ -4344,6 +4356,7 @@ int dm_tree_node_add_vdo_target(struct dm_tree_node *node,
 	if (!_link_tree_nodes(node, seg->vdo_data))
 		return_0;
 
+	seg->vdo_version = vdo_version;
 	seg->vdo_params = *vtp;
 	seg->vdo_name = vdo_pool_name;
 	seg->vdo_data_size = data_size;
