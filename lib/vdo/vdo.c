@@ -355,8 +355,8 @@ static int _vdo_pool_target_status_compatible(const char *type)
 }
 
 static int _vdo_pool_add_target_line(struct dev_manager *dm,
-				     struct dm_pool *mem __attribute__((unused)),
-				     struct cmd_context *cmd __attribute__((unused)),
+				     struct dm_pool *mem,
+				     struct cmd_context *cmd,
 				     void **target_state __attribute__((unused)),
 				     struct lv_segment *seg,
 				     const struct lv_activate_opts *laopts __attribute__((unused)),
@@ -369,6 +369,10 @@ static int _vdo_pool_add_target_line(struct dev_manager *dm,
 		log_error(INTERNAL_ERROR "Passed segment is not VDO pool.");
 		return 0;
 	}
+
+	if (!check_vdo_constrains(cmd, seg->lv->size, seg_lv(seg, 0)->size, &seg->vdo_params))
+		return_0;
+
 	if (!(vdo_pool_name = dm_build_dm_name(mem, seg->lv->vg->name, seg->lv->name, lv_layer(seg->lv))))
 		return_0;
 

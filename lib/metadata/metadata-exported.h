@@ -1377,6 +1377,8 @@ int fill_vdo_target_params(struct cmd_context *cmd,
 			   struct dm_vdo_target_params *vtp,
 			   uint64_t *vdo_pool_header_size,
 			   struct profile *profile);
+int check_vdo_constrains(struct cmd_context *cmd, uint64_t physical_size,
+			 uint64_t virtual_size, struct dm_vdo_target_params *vtp);
 /* --  metadata/vdo_manip.c */
 
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,
