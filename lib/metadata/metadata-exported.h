@@ -1364,6 +1364,8 @@ const char *get_vdo_operating_mode_name(enum dm_vdo_operating_mode mode);
 const char *get_vdo_write_policy_name(enum dm_vdo_write_policy policy);
 uint64_t get_vdo_pool_virtual_size(const struct lv_segment *vdo_pool_seg);
 int update_vdo_pool_virtual_size(struct lv_segment *vdo_pool_seg);
+uint32_t get_vdo_pool_max_extents(const struct dm_vdo_target_params *vtp,
+				  uint32_t extent_size);
 int parse_vdo_pool_status(struct dm_pool *mem, const struct logical_volume *vdo_pool_lv,
 			  const char *params, const struct dm_info *dminfo,
 			  struct lv_status_vdo *status);
