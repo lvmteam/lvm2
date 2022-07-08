@@ -227,10 +227,11 @@ static int _format_vdo_pool_data_lv(struct logical_volume *data_lv,
 				    const struct dm_vdo_target_params *vtp,
 				    uint64_t *logical_size)
 {
-	char *dpath;
+	char *dpath, *c;
 	const struct dm_config_node *cn;
 	const struct dm_config_value *cv;
 	struct pipe_data pdata;
+	uint64_t logical_size_aligned = 1;
 	FILE *f;
 	uint64_t lb;
 	unsigned slabbits;
@@ -247,7 +248,9 @@ static int _format_vdo_pool_data_lv(struct logical_volume *data_lv,
 		return 0;
 	}
 
+reformat:
 	if (*logical_size) {
+		logical_size_aligned = 0;
 		if (dm_snprintf(buf_args[args], sizeof(buf_args[0]), "--logical-size=" FMTu64 "K",
 			       (*logical_size / 2)) < 0)
 			return_0;
@@ -332,8 +335,8 @@ static int _format_vdo_pool_data_lv(struct logical_volume *data_lv,
 				log_verbose("Available VDO logical blocks " FMTu64 " (%s).",
 					    lb, display_size(data_lv->vg->cmd, *logical_size));
 			}
-		if ((dpath = strchr(buf, '\n')))
-			*dpath = 0; /* cut last '\n' away */
+		if ((c = strchr(buf, '\n')))
+			*c = 0; /* cut last '\n' away */
 		if (buf[0])
 			log_print("  %s", buf); /* Print vdo_format messages */
 	}
@@ -346,6 +349,19 @@ static int _format_vdo_pool_data_lv(struct logical_volume *data_lv,
 	if (!*logical_size) {
 		log_error("Number of VDO logical blocks was not provided by vdo_format output.");
 		return 0;
+	}
+
+	if (logical_size_aligned) {
+		// align obtained size to extent size
+		logical_size_aligned = *logical_size / data_lv->vg->extent_size * data_lv->vg->extent_size;
+		if (*logical_size != logical_size_aligned) {
+			*logical_size = logical_size_aligned;
+			argv[1] = (char*) "--force";
+			args = 2;
+			log_verbose("Reformating VDO to align virtual size %s by extent size.",
+				    display_size(data_lv->vg->cmd, *logical_size));
+			goto reformat;
+		}
 	}
 
 	return 1;
