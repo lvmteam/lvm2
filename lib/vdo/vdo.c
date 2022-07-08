@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2019 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2018-2022 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -364,6 +364,10 @@ static int _vdo_pool_add_target_line(struct dev_manager *dm,
 				     uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
 	char *vdo_pool_name, *data_uuid;
+	unsigned attrs = 0;
+
+	if (seg->segtype->ops->target_present)
+		seg->segtype->ops->target_present(cmd, NULL, &attrs);
 
 	if (!seg_is_vdo_pool(seg)) {
 		log_error(INTERNAL_ERROR "Passed segment is not VDO pool.");
@@ -381,6 +385,7 @@ static int _vdo_pool_add_target_line(struct dev_manager *dm,
 
 	/* VDO uses virtual size instead of its physical size */
 	if (!dm_tree_node_add_vdo_target(node, get_vdo_pool_virtual_size(seg),
+					 !(attrs & VDO_FEATURE_VERSION4) ? 2 : 4,
 					 vdo_pool_name, data_uuid, seg_lv(seg, 0)->size,
 					 &seg->vdo_params))
 		return_0;
@@ -390,7 +395,7 @@ static int _vdo_pool_add_target_line(struct dev_manager *dm,
 
 static int _vdo_target_present(struct cmd_context *cmd,
 			       const struct lv_segment *seg __attribute__((unused)),
-			       unsigned *attributes __attribute__((unused)))
+			       unsigned *attributes)
 {
 	/* List of features with their kernel target version */
 	static const struct feature {
@@ -401,6 +406,7 @@ static int _vdo_target_present(struct cmd_context *cmd,
 		const char *feature;
 	} _features[] = {
 		{ 6, 2, 3, VDO_FEATURE_ONLINE_RENAME, "online_rename" },
+		{ 8, 2, 0, VDO_FEATURE_VERSION4, "version4" },
 	};
 	static const char _lvmconf[] = "global/vdo_disabled_features";
 	static int _vdo_checked = 0;
