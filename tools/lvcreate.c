@@ -1730,6 +1730,10 @@ static int _lvcreate_single(struct cmd_context *cmd, const char *vg_name,
 	if (!_update_extents_params(vg, lp, lcp))
 		goto_out;
 
+	if (seg_is_vdo(lp) && !check_vdo_constrains(cmd, (uint64_t)lp->extents * vg->extent_size,
+						    lcp->virtual_size, &lp->vdo_params))
+		return_0;
+
 	if (seg_is_thin(lp) && !_validate_internal_thin_processing(lp))
 		goto_out;
 

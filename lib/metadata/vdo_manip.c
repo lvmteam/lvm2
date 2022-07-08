@@ -23,6 +23,8 @@
 #include "lib/config/defaults.h"
 #include "lib/misc/lvm-exec.h"
 
+#include <sys/sysinfo.h> // sysinfo
+
 const char *get_vdo_compression_state_name(enum dm_vdo_compression_state state)
 {
 	switch (state) {
@@ -511,6 +513,148 @@ int fill_vdo_target_params(struct cmd_context *cmd,
 		return_0;
 
 	*vdo_pool_header_size = 2 * find_config_tree_int64(cmd, allocation_vdo_pool_header_size_CFG, profile);
+
+	return 1;
+}
+
+static int _get_sysinfo_memory(uint64_t *total_mb, uint64_t *available_mb)
+{
+	struct sysinfo si = { 0 };
+
+	*total_mb = *available_mb = UINT64_MAX;
+
+	if (sysinfo(&si) != 0)
+		return 0;
+
+	log_debug("Sysinfo free:%lu  bufferram:%lu  sharedram:%lu  freehigh:%lu  unit:%u.",
+		  si.freeram >> 20, si.bufferram >> 20, si.sharedram >> 20,
+		  si.freehigh >> 20, si.mem_unit);
+
+	*available_mb = ((uint64_t)(si.freeram + si.bufferram) * si.mem_unit) >> 30;
+	*total_mb = si.totalram >> 30;
+
+	return 1;
+}
+
+typedef struct mem_table_s {
+	const char *name;
+	uint64_t *value;
+} mem_table_t;
+
+static int _compare_mem_table_s(const void *a, const void *b){
+	return strcmp(((const mem_table_t*)a)->name, ((const mem_table_t*)b)->name);
+}
+
+static int _get_memory_info(uint64_t *total_mb, uint64_t *available_mb)
+{
+	uint64_t anon_pages, mem_available, mem_free, mem_total, shmem, swap_free;
+	uint64_t can_swap;
+	mem_table_t mt[] = {
+		{ "AnonPages",    &anon_pages },
+		{ "MemAvailable", &mem_available },
+		{ "MemFree",	  &mem_free },
+		{ "MemTotal",	  &mem_total },
+		{ "Shmem",	  &shmem },
+		{ "SwapFree",	  &swap_free },
+	};
+
+	char line[128], namebuf[32], *e, *tail;
+	FILE *fp;
+	mem_table_t findme = { namebuf, NULL };
+	mem_table_t *found;
+
+	if (!(fp = fopen("/proc/meminfo", "r")))
+		return _get_sysinfo_memory(total_mb, available_mb);
+
+	while (fgets(line, sizeof(line), fp)) {
+		if (!(e = strchr(line, ':')))
+			break;
+
+		if ((++e - line) > sizeof(namebuf))
+			continue; // something too long
+
+		(void)dm_strncpy((char*)findme.name, line, e - line);
+
+		found = bsearch(&findme, mt, DM_ARRAY_SIZE(mt), sizeof(mem_table_t),
+				_compare_mem_table_s);
+		if (!found)
+			continue; // not interesting
+
+		*(found->value) = (uint64_t) strtoull(e, &tail, 10);
+
+		if ((e == tail) || errno)
+			log_debug("Failing to parse value from %s.", line);
+		else
+			log_debug("Parsed %s = " FMTu64 " KiB.", found->name, *(found->value));
+	}
+	(void)fclose(fp);
+
+	// use at most 2/3 of swap space to keep machine usable
+	can_swap = (anon_pages + shmem) * 2 / 3;
+	swap_free = swap_free * 2 / 3;
+
+	if (can_swap > swap_free)
+		can_swap = swap_free;
+
+	// TODO: add more constrains, i.e. 3/4 of physical RAM...
+
+	*total_mb = mem_total >> 10;
+	*available_mb = (mem_available + can_swap) >> 10;
+
+	return 1;
+}
+
+static uint64_t _round_1024(uint64_t s)
+{
+	return (s + ((1 << 10) - 1)) >> 10;
+}
+
+static uint64_t _round_sectors_to_tib(uint64_t s)
+{
+	return  (s + ((UINT64_C(1) << (40 - SECTOR_SHIFT)) - 1)) >> (40 - SECTOR_SHIFT);
+}
+
+int check_vdo_constrains(struct cmd_context *cmd, uint64_t physical_size,
+			 uint64_t virtual_size, struct dm_vdo_target_params *vtp)
+{
+	uint64_t req_mb, total_mb, available_mb;
+	uint64_t phy_mb = _round_sectors_to_tib(UINT64_C(268) * physical_size); // 268 MiB per 1 TiB of physical size
+	uint64_t virt_mb = _round_1024(UINT64_C(1638) * _round_sectors_to_tib(virtual_size)); // 1.6 MiB per 1 TiB
+	uint64_t cache_mb = _round_1024(UINT64_C(1177) * vtp->block_map_cache_size_mb); // 1.15 MiB per 1 MiB cache size
+	char msg[512];
+
+	if (cache_mb < 150)
+		cache_mb = 150; // always at least 150 MiB for block map
+
+	// total required memory for VDO target
+	req_mb = 38 + vtp->index_memory_size_mb + virt_mb + phy_mb + cache_mb;
+
+	_get_memory_info(&total_mb, &available_mb);
+
+	(void)snprintf(msg, sizeof(msg), "VDO configuration needs %s RAM for physical volume size %s, "
+		       "%s RAM for virtual volume size %s, %s RAM for block map cache size %s and "
+		       "%s RAM for index memory.",
+		       display_size(cmd, phy_mb << (20 - SECTOR_SHIFT)),
+		       display_size(cmd, physical_size),
+		       display_size(cmd, virt_mb << (20 - SECTOR_SHIFT)),
+		       display_size(cmd, virtual_size),
+		       display_size(cmd, cache_mb << (20 - SECTOR_SHIFT)),
+		       display_size(cmd, ((uint64_t)vtp->block_map_cache_size_mb) << (20 - SECTOR_SHIFT)),
+		       display_size(cmd, ((uint64_t)vtp->index_memory_size_mb) << (20 - SECTOR_SHIFT)));
+
+	if (req_mb > available_mb) {
+		log_error("Not enough free memory for VDO target. %s RAM is required, but only %s RAM is available.",
+			  display_size(cmd, req_mb << (20 - SECTOR_SHIFT)),
+			  display_size(cmd, available_mb << (20 - SECTOR_SHIFT)));
+		log_print_unless_silent("%s", msg);
+		return 0;
+	}
+
+	log_debug("VDO requires %s RAM, currently available %s RAM.",
+		  display_size(cmd, req_mb << (20 - SECTOR_SHIFT)),
+		  display_size(cmd, available_mb << (20 - SECTOR_SHIFT)));
+
+	log_verbose("%s", msg);
 
 	return 1;
 }
