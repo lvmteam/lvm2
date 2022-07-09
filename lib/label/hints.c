@@ -146,7 +146,6 @@
 #include "lib/label/hints.h"
 #include "lib/device/dev-type.h"
 #include "lib/device/device_id.h"
-#include "lib/device/online.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>

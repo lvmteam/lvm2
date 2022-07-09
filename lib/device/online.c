@@ -16,7 +16,6 @@
 #include "lib/misc/lib.h"
 #include "lib/commands/toolcontext.h"
 #include "lib/device/device.h"
-#include "lib/device/device_id.h"
 #include "lib/device/online.h"
 
 #include <dirent.h>

@@ -19,7 +19,6 @@
 #include "libdm/misc/dm-ioctl.h"
 
 #include <stdarg.h>
-#include <sys/param.h>
 #include <sys/utsname.h>
 
 #define MAX_TARGET_PARAMSIZE 500000

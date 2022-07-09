@@ -20,7 +20,6 @@
 #include <errno.h>
 #include <fcntl.h> /* help musl C */
 #include <pthread.h>
-#include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/time.h>
