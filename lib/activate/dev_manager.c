@@ -3842,10 +3842,11 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 	if (!seg_is_striped_target(first_seg(lv)) || (action == CLEAN))
 		dm->cmd->disable_dm_devs = 1;
 
-	if (!(dtree = _create_partial_dtree(dm, lv, laopts->origin_only)))
-		return_0;
-
+	dtree = _create_partial_dtree(dm, lv, laopts->origin_only);
 	dm->cmd->disable_dm_devs = tmp_state;
+
+	if (!dtree)
+		return_0;
 
 	if (!(root = dm_tree_find_node(dtree, 0, 0))) {
 		log_error("Lost dependency tree root node.");
