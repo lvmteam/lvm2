@@ -1343,23 +1343,23 @@ int get_vdo_settings(struct cmd_context *cmd,
 			u |= VDO_CHANGE_ONLINE;
 	}
 
-	if (updated) {
-		// validation of updated VDO option
-		if (!dm_vdo_validate_target_params(vtp, 0 /* vdo_size */)) {
-err:
-			if (is_lvchange)
-				log_error("Cannot change VDO setting \"vdo_%s\" in existing VDO pool.",
-					  option);
-			else
-				log_error("Invalid argument for VDO setting \"vdo_%s\".",
-					  option);
-			goto out;
-		}
+	// validation of updated VDO option
+	if (!dm_vdo_validate_target_params(vtp, 0 /* vdo_size */))
+		goto_out;
 
+	if (updated)
 		*updated = u;
-	}
 
-	r = 1;
+	r = 1; // success
+	goto out;
+err:
+	if (is_lvchange)
+		log_error("Cannot change VDO setting \"vdo_%s\" in existing VDO pool.",
+			  option);
+	else
+		log_error("Invalid argument for VDO setting \"vdo_%s\".",
+			  option);
+
 out:
 	if (result)
 		dm_config_destroy(result);
