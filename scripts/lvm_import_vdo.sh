@@ -324,7 +324,7 @@ allocation {
 	vdo_check_point_frequency = $vdo_indexCfreq
 	vdo_use_sparse_index = $(get_enabled_value_ "$vdo_indexSparse")
 	vdo_index_memory_size_mb = $(awk "BEGIN {print $vdo_indexMemory * 1024}")
-	vdo_slab_size_mb = $(( $(get_kb_size_with_unit_ "$vdo_blockMapCacheSize") / 1024 ))
+	vdo_slab_size_mb = $(( $(get_kb_size_with_unit_ "$vdo_slabSize") / 1024 ))
 	vdo_ack_threads = $vdo_ackThreads
 	vdo_bio_threads = $vdo_bioThreads
 	vdo_bio_rotation = $vdo_bioRotationInterval
