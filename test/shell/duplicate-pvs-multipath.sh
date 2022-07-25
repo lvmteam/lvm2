@@ -24,9 +24,13 @@ modprobe --dry-run scsi_debug || skip
 multipath -l || skip
 multipath -l | grep scsi_debug && skip
 
-# Turn off multipath_component_detection so that the duplicate
-# resolution of mpath components is used.
-aux lvmconf 'devices/multipath_component_detection = 0'
+# FIXME: setting multipath_component_detection=0 now also disables
+# the wwid-based mpath component detection, so this test will need
+# to find another way to disable only the filter-mpath code (using
+# sysfs and multipath/wwids) while keeping the code enabled that
+# eliminates duplicates based on their matching wwids which this
+# tries to test.
+
 # Prevent wwids from being used for filtering.
 aux lvmconf 'devices/multipath_wwids_file = "/dev/null"'
 # Need to use /dev/mapper/mpath
