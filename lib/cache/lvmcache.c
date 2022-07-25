@@ -640,6 +640,9 @@ static int _all_multipath_components(struct cmd_context *cmd, struct lvmcache_in
 
 	*dev_mpath = NULL;
 
+	if (!find_config_tree_bool(cmd, devices_multipath_component_detection_CFG, NULL))
+		return 0;
+
 	/* This function only makes sense with more than one dev. */
 	if ((info && dm_list_empty(altdevs)) || (!info && (dm_list_size(altdevs) == 1))) {
 		log_debug("Skip multipath component checks with single device for PVID %s", pvid);
