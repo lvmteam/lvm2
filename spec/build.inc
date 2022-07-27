@@ -28,6 +28,8 @@
 %enableif %{enable_dbusd} dbus-service
 %enableif %{enable_dbusd} notify-dbus
 %enableif %{enable_dmfilemapd} dmfilemapd
+%enableif %{enable_readline} readline
+%enableif %{enable_editline} editline
 
 %build
 

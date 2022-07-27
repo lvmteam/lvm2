@@ -47,6 +47,14 @@
 %global req_udev udev >= 181-1
 
 
+%if %{fedora} >= 35 || %{rhel} >= 9
+  %global enable_readline 0
+  %global enable_editline 1
+%else
+  %global enable_readline 1
+  %global enable_editline 0
+%endif
+
 %if %{fedora} >= 24 || %{rhel} >= 7
  %service lvmlockd 1
  %global sanlock_version 3.3.0-1
@@ -154,7 +162,12 @@ Source94: macros.inc
 
 BuildRequires: libselinux-devel >= 1.30.19-4, libsepol-devel
 BuildRequires: ncurses-devel
+%if %{enable_readline}
 BuildRequires: readline-devel
+%endif
+%if %{enable_editline}
+BuildRequires: libedit-devel
+%endif
 BuildRequires: module-init-tools
 BuildRequires: pkgconfig
 
