@@ -677,7 +677,9 @@ arg(reportformat_ARG, '\0', "reportformat", reportformat_VAL, 0, 0,
     "\\fBbasic\\fP is the original format with columns and rows.\n"
     "If there is more than one report per command, each report is prefixed\n"
     "with the report name for identification. \\fBjson\\fP produces report\n"
-    "output in JSON format. See \\fBlvmreport\\fP(7) for more information.\n")
+    "output in JSON format. \\fBjson_std\\fP produces report output in\n"
+    "JSON format which is more compliant with JSON standard.\n"
+    "See \\fBlvmreport\\fP(7) for more information.\n")
 
 arg(restorefile_ARG, '\0', "restorefile", string_VAL, 0, 0,
     "In conjunction with --uuid, this reads the file (produced by\n"

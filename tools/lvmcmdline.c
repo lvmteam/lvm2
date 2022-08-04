@@ -1058,7 +1058,8 @@ int syncaction_arg(struct cmd_context *cmd, struct arg_values *av)
 int reportformat_arg(struct cmd_context *cmd, struct arg_values *av)
 {
 	if (!strcmp(av->value, "basic") ||
-	    !strcmp(av->value, "json"))
+	    !strcmp(av->value, "json") ||
+	    !strcmp(av->value, "json_std"))
 		return 1;
 	return 0;
 }
