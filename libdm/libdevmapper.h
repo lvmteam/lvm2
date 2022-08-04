@@ -3170,7 +3170,8 @@ struct dm_report_group;
 typedef enum dm_report_group_type_e {
 	DM_REPORT_GROUP_SINGLE,
 	DM_REPORT_GROUP_BASIC,
-	DM_REPORT_GROUP_JSON
+	DM_REPORT_GROUP_JSON,
+	DM_REPORT_GROUP_JSON_STD
 } dm_report_group_type_t;
 
 struct dm_report_group *dm_report_group_create(dm_report_group_type_t type, void *data);

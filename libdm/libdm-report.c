@@ -4368,10 +4368,17 @@ static int _is_basic_report(struct dm_report *rh)
 	       (rh->group_item->group->type == DM_REPORT_GROUP_BASIC);
 }
 
+static int _is_json_std_report(struct dm_report *rh)
+{
+	return rh->group_item &&
+	       rh->group_item->group->type == DM_REPORT_GROUP_JSON_STD;
+}
+
 static int _is_json_report(struct dm_report *rh)
 {
 	return rh->group_item &&
-	       (rh->group_item->group->type == DM_REPORT_GROUP_JSON);
+	       (rh->group_item->group->type == DM_REPORT_GROUP_JSON ||
+		rh->group_item->group->type == DM_REPORT_GROUP_JSON_STD);
 }
 
 /*
@@ -4982,6 +4989,7 @@ int dm_report_group_push(struct dm_report_group *group, struct dm_report *report
 				goto_bad;
 			break;
 		case DM_REPORT_GROUP_JSON:
+		case DM_REPORT_GROUP_JSON_STD:
 			if (!_report_group_push_json(item, data))
 				goto_bad;
 			break;
@@ -5045,6 +5053,7 @@ int dm_report_group_pop(struct dm_report_group *group)
 				return_0;
 			break;
 		case DM_REPORT_GROUP_JSON:
+		case DM_REPORT_GROUP_JSON_STD:
 			if (!_report_group_pop_json(item))
 				return_0;
 			break;
@@ -5081,7 +5090,7 @@ int dm_report_group_output_and_pop_all(struct dm_report_group *group)
 			return_0;
 	}
 
-	if (group->type == DM_REPORT_GROUP_JSON) {
+	if (group->type == DM_REPORT_GROUP_JSON || group->type == DM_REPORT_GROUP_JSON_STD) {
 		_json_output_start(group);
 		log_print(JSON_OBJECT_END);
 		group->indent -= JSON_INDENT_UNIT;
