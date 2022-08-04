@@ -1455,6 +1455,7 @@ int devtypes(struct cmd_context *cmd, int argc, char **argv)
 
 #define REPORT_FORMAT_NAME_BASIC "basic"
 #define REPORT_FORMAT_NAME_JSON "json"
+#define REPORT_FORMAT_NAME_JSON_STD "json_std"
 
 int report_format_init(struct cmd_context *cmd)
 {
@@ -1475,11 +1476,14 @@ int report_format_init(struct cmd_context *cmd)
 										: DM_REPORT_GROUP_SINGLE;
 	} else if (!strcmp(format_str, REPORT_FORMAT_NAME_JSON)) {
 		args.report_group_type = DM_REPORT_GROUP_JSON;
+	} else if (!strcmp(format_str, REPORT_FORMAT_NAME_JSON_STD)) {
+		args.report_group_type = DM_REPORT_GROUP_JSON_STD;
 	} else {
 		log_error("%s: unknown report format.", format_str);
-		log_error("Supported report formats: %s, %s.",
+		log_error("Supported report formats: %s, %s, %s.",
 			  REPORT_FORMAT_NAME_BASIC,
-			  REPORT_FORMAT_NAME_JSON);
+			  REPORT_FORMAT_NAME_JSON,
+			  REPORT_FORMAT_NAME_JSON_STD);
 		return 0;
 	}
 

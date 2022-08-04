@@ -1806,7 +1806,14 @@ cfg(report_output_format_CFG, "output_format", report_CFG_SECTION, CFG_PROFILABL
 	"    one report per command, each report is prefixed with report's\n"
 	"    name for identification.\n"
 	"  json\n"
-	"    JSON format.\n")
+	"    JSON format.\n"
+	"  json_std\n"
+	"    JSON format that is more compliant with JSON standard.\n"
+        "    Compared to original \"json\" format:\n"
+        "      - it does not use double quotes around numeric values,\n"
+        "      - it uses 'null' for undefined numeric values,\n"
+        "      - it prints string list as proper JSON array of strings instead of a single string."
+	"\n")
 
 cfg(report_compact_output_CFG, "compact_output", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_REP_COMPACT_OUTPUT, vsn(2, 2, 115), NULL, 0, NULL,
 	"Do not print empty values for all report fields.\n"
