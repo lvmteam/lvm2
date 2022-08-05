@@ -191,7 +191,7 @@ FIELD(LABEL, label, NUM, "PExtVsn", type, 0, pvextvsn, pv_ext_vsn, "PV header ex
 /*
  * PVS type fields
  */
-FIELD(PVS, pv, NUM, "1st PE", pe_start, 7, size64, pe_start, "Offset to the start of data on the underlying device.", 0)
+FIELD(PVS, pv, SIZ, "1st PE", pe_start, 7, size64, pe_start, "Offset to the start of data on the underlying device.", 0)
 FIELD(PVS, pv, SIZ, "PSize", id, 0, pvsize, pv_size, "Size of PV in current units.", 0)
 FIELD(PVS, pv, SIZ, "PFree", id, 0, pvfree, pv_free, "Total amount of unallocated space in current units.", 0)
 FIELD(PVS, pv, SIZ, "Used", id, 0, pvused, pv_used, "Total amount of allocated space in current units.", 0)
