@@ -1951,6 +1951,12 @@ activation {
 	#     name for identification.
 	#   json
 	#     JSON format.
+	#   json_std
+	#     JSON format that is more compliant with JSON standard.
+	#     Compared to original "json" format:
+	#       - it does not use double quotes around numeric values,
+	#       - it uses 'null' for undefined numeric values,
+	#       - it prints string list as proper JSON array of strings instead of a single string.
 	# This configuration option has an automatic default value.
 	# output_format = "basic"
 

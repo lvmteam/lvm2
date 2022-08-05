@@ -50,7 +50,7 @@ vgreduce \(em Remove physical volume(s) from a volume group
 .br
     \fB--removemissing\fP
 .br
-    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
+    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP
 .br
  \fB-t\fP|\fB--test\fP
 .br
@@ -116,7 +116,7 @@ Common options for command:
 .br
 [ \fB-f\fP|\fB--force\fP ]
 .br
-[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP ]
 .ad b
 .RE
 .P
@@ -296,14 +296,16 @@ If LVs spanned several disks, including ones that are lost, salvaging
 some data first may be possible by activating LVs in partial mode.
 .
 .HP
-\fB--reportformat\fP \fBbasic\fP|\fBjson\fP
+\fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP
 .br
 Overrides current output format for reports which is defined globally by
 the report/output_format setting in \fBlvm.conf\fP(5).
 \fBbasic\fP is the original format with columns and rows.
 If there is more than one report per command, each report is prefixed
 with the report name for identification. \fBjson\fP produces report
-output in JSON format. See \fBlvmreport\fP(7) for more information.
+output in JSON format. \fBjson_std\fP produces report output in
+JSON format which is more compliant with JSON standard.
+See \fBlvmreport\fP(7) for more information.
 .
 .HP
 \fB-t\fP|\fB--test\fP
