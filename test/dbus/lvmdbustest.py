@@ -1414,7 +1414,10 @@ class TestDbusService(unittest.TestCase):
 	@staticmethod
 	def _get_devices():
 		context = pyudev.Context()
-		return context.list_devices(subsystem='block', MAJOR='8')
+		bd = context.list_devices(subsystem='block')
+		# Handle block extended major too (259)
+		return [b for b in bd if b.properties.get('MAJOR') == '8' or
+				b.properties.get('MAJOR') == '259']
 
 	def _pv_scan(self, activate, cache, device_paths, major_minors):
 		mgr = self._manager().Manager
