@@ -234,6 +234,16 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_CMD);
 
 	while (1) {
+		/*
+		 * Note: If we need to output the log report before we get to the dm_report_group_output_and_pop_all
+		 * at the end of this loop, like hitting a failure situation before we execute the command itself,
+		 * don't forget to directly call dm_report_group_output_and_pop_all, otherwise no log meesage will
+		 * appear on output (for output formats other than 'basic').
+		 *
+		 * Obviously, you can't output the 'log report' if the error is in initializing or setting
+		 * the report itself. In this case, we can only return an error code, but no message.
+		 */
+
 		report_reset_cmdlog_seqnum();
 		if (cmd->cmd_report.log_rh) {
 			/*
@@ -275,6 +285,7 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 		if (lvm_split(input, &argc, argv, MAX_ARGS) == MAX_ARGS) {
 			_discard_log_report_content(cmd);
 			log_error("Too many arguments, sorry.");
+			dm_report_group_output_and_pop_all(cmd->cmd_report.report_group);
 			continue;
 		}
 
