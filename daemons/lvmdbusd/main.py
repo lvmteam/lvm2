@@ -132,19 +132,11 @@ def main():
 	# cmdhandler is for when we are running other code with a different main.
 	cfg.blackbox = LvmFlightRecorder(cfg.args.bb_size)
 
-	if cfg.args.use_lvm_shell and not cfg.args.use_json:
-		log_error("You cannot specify --lvmshell and --nojson")
-		sys.exit(1)
-
 	log_debug("Using lvm binary: %s" % cfg.LVM_CMD)
 
 	# We will dynamically add interfaces which support vdo if it
 	# exists.
 	cfg.vdo_support = supports_vdo()
-
-	if cfg.vdo_support and not cfg.args.use_json:
-		log_error("You cannot specify --nojson when lvm has VDO support")
-		sys.exit(1)
 
 	# List of threads that we start up
 	thread_list = []
