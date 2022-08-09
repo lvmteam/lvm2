@@ -38,7 +38,7 @@ cmd_lock = threading.RLock()
 
 class LvmExecutionMeta(object):
 
-	def __init__(self, start, ended, cmd, ec, stdout_txt, stderr_txt):
+	def __init__(self, start, ended, cmd, ec=-1000, stdout_txt=None, stderr_txt=None):
 		self.lock = threading.RLock()
 		self.start = start
 		self.ended = ended
@@ -49,26 +49,42 @@ class LvmExecutionMeta(object):
 
 	def __str__(self):
 		with self.lock:
-			return "EC= %d for %s\n" \
-				"STARTED: %f, ENDED: %f\n" \
+			if self.ended == 0:
+				ended_txt = "still running"
+				self.ended = time.time()
+			else:
+				ended_txt = str(time.ctime(self.ended))
+
+			return 'EC= %d for "%s"\n' \
+				"STARTED: %s, ENDED: %s, DURATION: %f\n" \
 				"STDOUT=%s\n" \
 				"STDERR=%s\n" % \
-				(self.ec, str(self.cmd), self.start, self.ended, self.stdout_txt,
-				self.stderr_txt)
+				(self.ec, " ".join(self.cmd), time.ctime(self.start), ended_txt, float(self.ended) - self.start,
+					self.stdout_txt,
+					self.stderr_txt)
+
+	def completed(self, end_time, ec, stdout_txt, stderr_txt):
+		with self.lock:
+			self.ended = end_time
+			self.ec = ec
+			self.stdout_txt = stdout_txt
+			self.stderr_txt = stderr_txt
 
 
 class LvmFlightRecorder(object):
 
 	def __init__(self, size=16):
 		self.queue = collections.deque(maxlen=size)
+		self.lock = threading.RLock()
 
 	def add(self, lvm_exec_meta):
-		self.queue.append(lvm_exec_meta)
+		with self.lock:
+			self.queue.append(lvm_exec_meta)
 
 	def dump(self):
-		with cmd_lock:
+		with self.lock:
 			if len(self.queue):
-				log_error("LVM dbus flight recorder START")
+				log_error("LVM dbus flight recorder START (in order of newest to oldest)")
 				for c in reversed(self.queue):
 					log_error(str(c))
 				log_error("LVM dbus flight recorder END")
@@ -200,11 +216,15 @@ def time_wrapper(command, debug=False):
 
 	with cmd_lock:
 		start = time.time()
+		meta = LvmExecutionMeta(start, 0, command)
+		# Add the partial metadata to black box, so if the command hangs
+		# we will see what it was in the block box dump.
+		cfg.blackbox.add(meta)
 		results = _t_call(command, debug)
 		ended = time.time()
 		total_time += (ended - start)
 		total_count += 1
-		cfg.blackbox.add(LvmExecutionMeta(start, ended, command, *results))
+		meta.completed(ended, *results)
 	return results
 
 

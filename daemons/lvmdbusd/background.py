@@ -67,16 +67,13 @@ def _move_merge(interface_name, command, job_state):
 	# the command always as we will be getting periodic output from them on
 	# the status of the long running operation.
 
-	meta = LvmExecutionMeta(time.time(), 0, command, -1000, None, None)
+	meta = LvmExecutionMeta(time.time(), 0, command)
 	cfg.blackbox.add(meta)
 
 	ec, stdout, stderr = call_lvm(command, line_cb=_move_callback,
 									cb_data=job_state)
-
-	with meta.lock:
-		meta.ended = time.time()
-		meta.ec = ec
-		meta.stderr_txt = stderr
+	ended = time.time()
+	meta.completed(ended, ec, stdout, stderr)
 
 	if ec == 0:
 		job_state.Percent = 100
