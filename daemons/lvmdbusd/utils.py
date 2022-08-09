@@ -11,10 +11,12 @@ import xml.etree.ElementTree as Et
 import sys
 import inspect
 import ctypes
+import errno
+import fcntl
 import os
+import stat
 import string
 import datetime
-from fcntl import fcntl, F_GETFL, F_SETFL
 
 import dbus
 from lvmdbusd import cfg
@@ -690,8 +692,8 @@ def mt_remove_dbus_objects(objs):
 
 # Make stream non-blocking
 def make_non_block(stream):
-	flags = fcntl(stream, F_GETFL)
-	fcntl(stream, F_SETFL, flags | os.O_NONBLOCK)
+	flags = fcntl.fcntl(stream, fcntl.F_GETFL)
+	fcntl.fcntl(stream, fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
 
 def read_decoded(stream):
@@ -699,3 +701,32 @@ def read_decoded(stream):
 	if tmp:
 		return tmp.decode("utf-8")
 	return ''
+
+
+class LockFile(object):
+	"""
+	Simple lock file class
+	Based on Pg.1144 "The Linux Programming Interface" by Michael Kerrisk
+	"""
+	def __init__(self, lock_file):
+		self.fd = 0
+		self.lock_file = lock_file
+
+	def __enter__(self):
+		try:
+			self.fd = os.open(self.lock_file, os.O_CREAT | os.O_RDWR, stat.S_IRUSR | stat.S_IWUSR)
+
+			# Get and set the close on exec and lock the file
+			flags = fcntl.fcntl(self.fd, fcntl.F_GETFD)
+			flags |= fcntl.FD_CLOEXEC
+			fcntl.fcntl(self.fd, fcntl.F_SETFL, flags)
+			fcntl.lockf(self.fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+		except OSError as e:
+			if e.errno == errno.EAGAIN:
+				log_error("Daemon already running, exiting!")
+			else:
+				log_error("Error during creation of lock file(%s): errno(%d), exiting!" % (self.lock_file, e.errno))
+			sys.exit(114)
+
+	def __exit__(self, _type, _value, _traceback):
+		os.close(self.fd)

@@ -154,61 +154,62 @@ def main():
 
 	install_signal_handlers()
 
-	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-	dbus.mainloop.glib.threads_init()
+	with utils.LockFile(cfg.LOCK_FILE):
+		dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+		dbus.mainloop.glib.threads_init()
 
-	cmdhandler.set_execution(cfg.args.use_lvm_shell)
+		cmdhandler.set_execution(cfg.args.use_lvm_shell)
 
-	if use_session:
-		cfg.bus = dbus.SessionBus()
-	else:
-		cfg.bus = dbus.SystemBus()
-	# The base name variable needs to exist for things to work.
-	# noinspection PyUnusedLocal
-	base_name = dbus.service.BusName(BUS_NAME, cfg.bus)
-	cfg.om = Lvm(BASE_OBJ_PATH)
-	cfg.om.register_object(Manager(MANAGER_OBJ_PATH))
+		if use_session:
+			cfg.bus = dbus.SessionBus()
+		else:
+			cfg.bus = dbus.SystemBus()
+		# The base name variable needs to exist for things to work.
+		# noinspection PyUnusedLocal
+		base_name = dbus.service.BusName(BUS_NAME, cfg.bus)
+		cfg.om = Lvm(BASE_OBJ_PATH)
+		cfg.om.register_object(Manager(MANAGER_OBJ_PATH))
 
-	cfg.db = lvmdb.DataStore(vdo_support=cfg.vdo_support)
+		cfg.db = lvmdb.DataStore(vdo_support=cfg.vdo_support)
 
-	# Using a thread to process requests, we cannot hang the dbus library
-	# thread that is handling the dbus interface
-	thread_list.append(
-		threading.Thread(target=process_request, name='process_request'))
+		# Using a thread to process requests, we cannot hang the dbus library
+		# thread that is handling the dbus interface
+		thread_list.append(
+			threading.Thread(target=process_request, name='process_request'))
 
-	# Have a single thread handling updating lvm and the dbus model so we
-	# don't have multiple threads doing this as the same time
-	updater = StateUpdate()
-	thread_list.append(updater.thread)
+		# Have a single thread handling updating lvm and the dbus model so we
+		# don't have multiple threads doing this as the same time
+		updater = StateUpdate()
+		thread_list.append(updater.thread)
 
-	cfg.load = updater.load
+		cfg.load = updater.load
 
-	cfg.loop = GLib.MainLoop()
+		cfg.loop = GLib.MainLoop()
 
-	for thread in thread_list:
-		thread.damon = True
-		thread.start()
+		for thread in thread_list:
+			thread.damon = True
+			thread.start()
 
-	# In all cases we are going to monitor for udev until we get an
-	# ExternalEvent.  In the case where we get an external event and the user
-	# didn't specify --udev we will stop monitoring udev
-	udevwatch.add()
+		# In all cases we are going to monitor for udev until we get an
+		# ExternalEvent.  In the case where we get an external event and the user
+		# didn't specify --udev we will stop monitoring udev
+		udevwatch.add()
 
-	end = time.time()
-	log_debug(
-		'Service ready! total time= %.4f, lvm time= %.4f count= %d' %
-		(end - start, cmdhandler.total_time, cmdhandler.total_count),
-		'bg_black', 'fg_light_green')
+		end = time.time()
+		log_debug(
+			'Service ready! total time= %.4f, lvm time= %.4f count= %d' %
+			(end - start, cmdhandler.total_time, cmdhandler.total_count),
+			'bg_black', 'fg_light_green')
 
-	try:
-		if cfg.run.value != 0:
-			cfg.loop.run()
-			udevwatch.remove()
+		try:
+			if cfg.run.value != 0:
+				cfg.loop.run()
+				udevwatch.remove()
 
-			for thread in thread_list:
-				thread.join()
-	except KeyboardInterrupt:
-		# If we are unable to register signal handler, we will end up here when
-		# the service gets a ^C or a kill -2 <parent pid>
-		utils.handler(signal.SIGINT)
+				for thread in thread_list:
+					thread.join()
+		except KeyboardInterrupt:
+			# If we are unable to register signal handler, we will end up here when
+			# the service gets a ^C or a kill -2 <parent pid>
+			utils.handler(signal.SIGINT)
 	return 0

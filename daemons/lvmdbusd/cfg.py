@@ -16,6 +16,8 @@ from lvmdbusd import path
 
 LVM_CMD = os.getenv('LVM_BINARY', path.LVM_BINARY)
 
+LOCK_FILE = os.getenv("LVM_DBUSD_LOCKFILE", "/var/lock/lvm/lvmdbusd")
+
 # This is the global object manager
 om = None
 
