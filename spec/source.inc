@@ -121,6 +121,10 @@
 %with thin_dump
 %endif
 
+%if %{rhel} >= 9
+%with default-use-devices-file 1
+%endif
+
 ##############################################################
 
 %if %{fedora} == 17
