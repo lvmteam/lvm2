@@ -77,6 +77,7 @@ def install_signal_handlers():
 		signal_add(GLib.PRIORITY_HIGH, signal.SIGHUP, utils.handler, signal.SIGHUP)
 		signal_add(GLib.PRIORITY_HIGH, signal.SIGINT, utils.handler, signal.SIGINT)
 		signal_add(GLib.PRIORITY_HIGH, signal.SIGUSR1, utils.handler, signal.SIGUSR1)
+		signal_add(GLib.PRIORITY_HIGH, signal.SIGUSR2, utils.handler, signal.SIGUSR2)
 	else:
 		log_error("GLib.unix_signal_[add|add_full] are NOT available!")
 

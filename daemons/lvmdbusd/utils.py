@@ -346,8 +346,12 @@ def dump_threads_stackframe():
 # noinspection PyUnusedLocal
 def handler(signum):
 	try:
+		# signal 10
 		if signum == signal.SIGUSR1:
 			dump_threads_stackframe()
+		# signal 12
+		elif signum == signal.SIGUSR2:
+			cfg.blackbox.dump()
 		else:
 			cfg.run.value = 0
 			log_debug('Exiting daemon with signal %d' % signum)
