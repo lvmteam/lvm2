@@ -277,7 +277,7 @@ cfg_array(devices_preferred_names_CFG, "preferred_names", devices_CFG_SECTION, C
 	"preferred_names = [ \"^/dev/mpath/\", \"^/dev/mapper/mpath\", \"^/dev/[hs]d\" ]\n"
 	"#\n")
 
-cfg(devices_use_devicesfile_CFG, "use_devicesfile", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_USE_DEVICES_FILE, vsn(2, 3, 12), NULL, 0, NULL,
+cfg(devices_use_devicesfile_CFG, "use_devicesfile", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_USE_DEVICES_FILE, vsn(2, 3, 12), "@DEFAULT_USE_DEVICES_FILE@", 0, NULL,
 	"Enable or disable the use of a devices file.\n"
 	"When enabled, lvm will only use devices that\n"
 	"are lised in the devices file. A devices file will\n"
