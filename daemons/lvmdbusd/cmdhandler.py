@@ -234,8 +234,7 @@ call = time_wrapper
 # Default cmd
 # Place default arguments for every command here.
 def _dc(cmd, args):
-	c = [cmd, '--noheading', '--separator', '%s' % SEP, '--nosuffix',
-		'--unbuffered', '--units', 'b']
+	c = [cmd, '--nosuffix', '--unbuffered', '--units', 'b']
 	c.extend(args)
 	return c
 
