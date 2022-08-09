@@ -293,7 +293,7 @@ case "$DEFAULT_USE_DEVICES_FILE" in
 esac
 AC_MSG_RESULT($DEFAULT_USE_DEVICES_FILE)
 AC_DEFINE_UNQUOTED(DEFAULT_USE_DEVICES_FILE, [$DEFAULT_USE_DEVICES_FILE],
-		   [Default for lvm.conf use_devicefile.])
+		   [Default for lvm.conf use_devicesfile.])
 
 AC_MSG_CHECKING(default name mangling)
 AC_ARG_WITH(default-name-mangling,
