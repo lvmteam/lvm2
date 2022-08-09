@@ -183,7 +183,7 @@ class StateUpdate(object):
 			except Exception as e:
 				st = traceback.format_exc()
 				log_error("update_thread exception: \n%s" % st)
-				cfg.blackbox.dump()
+				cfg.flightrecorder.dump()
 				exception_count += 1
 				if exception_count >= 5:
 					for i in queued_requests:

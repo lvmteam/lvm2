@@ -351,7 +351,7 @@ def handler(signum):
 			dump_threads_stackframe()
 		# signal 12
 		elif signum == signal.SIGUSR2:
-			cfg.blackbox.dump()
+			cfg.flightrecorder.dump()
 		else:
 			cfg.run.value = 0
 			log_debug('Exiting daemon with signal %d' % signum)

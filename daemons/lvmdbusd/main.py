@@ -55,7 +55,7 @@ def process_request():
 			utils.log_error("process_request exception: \n%s" % st)
 
 
-def check_bb_size(value):
+def check_fr_size(value):
 	v = int(value)
 	if v < 0:
 		raise argparse.ArgumentTypeError(
@@ -103,11 +103,11 @@ def process_args():
 		default=False,
 		dest='use_lvm_shell')
 	parser.add_argument(
-		"--blackboxsize",
-		help="Size of the black box flight recorder, 0 to disable",
+		"--frsize",
+		help="Size of the flight recorder (num. entries), 0 to disable (signal 12 to dump)",
 		default=10,
-		type=check_bb_size,
-		dest='bb_size')
+		type=check_fr_size,
+		dest='fr_size')
 
 	args = parser.parse_args()
 
@@ -142,7 +142,7 @@ def main():
 	# We create a flight recorder in cmdhandler too, but we replace it here
 	# as the user may be specifying a different size.  The default one in
 	# cmdhandler is for when we are running other code with a different main.
-	cfg.blackbox = LvmFlightRecorder(cfg.args.bb_size)
+	cfg.flightrecorder = LvmFlightRecorder(cfg.args.fr_size)
 
 	log_debug("Using lvm binary: %s" % cfg.LVM_CMD)
 

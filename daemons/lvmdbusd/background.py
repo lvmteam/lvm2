@@ -68,7 +68,7 @@ def _move_merge(interface_name, command, job_state):
 	# the status of the long running operation.
 
 	meta = LvmExecutionMeta(time.time(), 0, command)
-	cfg.blackbox.add(meta)
+	cfg.flightrecorder.add(meta)
 
 	ec, stdout, stderr = call_lvm(command, line_cb=_move_callback,
 									cb_data=job_state)

@@ -90,7 +90,7 @@ class LvmFlightRecorder(object):
 				log_error("LVM dbus flight recorder END")
 
 
-cfg.blackbox = LvmFlightRecorder()
+cfg.flightrecorder = LvmFlightRecorder()
 
 
 def _debug_c(cmd, exit_code, out):
@@ -217,9 +217,9 @@ def time_wrapper(command, debug=False):
 	with cmd_lock:
 		start = time.time()
 		meta = LvmExecutionMeta(start, 0, command)
-		# Add the partial metadata to black box, so if the command hangs
-		# we will see what it was in the block box dump.
-		cfg.blackbox.add(meta)
+		# Add the partial metadata to flight recorder, so if the command hangs
+		# we will see what it was.
+		cfg.flightrecorder.add(meta)
 		results = _t_call(command, debug)
 		ended = time.time()
 		total_time += (ended - start)

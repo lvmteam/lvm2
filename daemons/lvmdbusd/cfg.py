@@ -92,7 +92,7 @@ vdo_support = False
 db = None
 
 # lvm flight recorder
-blackbox = None
+flightrecorder = None
 
 # RequestEntry ctor
 create_request_entry = None
