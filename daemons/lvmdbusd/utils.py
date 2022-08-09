@@ -313,6 +313,10 @@ def log_error(msg, *attributes):
 	_common_log(msg, *attributes)
 
 
+def log_msg(msg, *attributes):
+	_common_log(msg, *attributes)
+
+
 def dump_threads_stackframe():
 	ident_to_name = {}
 

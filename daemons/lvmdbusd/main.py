@@ -25,7 +25,7 @@ from .manager import Manager
 import traceback
 import queue
 from . import udevwatch
-from .utils import log_debug, log_error
+from .utils import log_debug, log_error, log_msg
 import argparse
 import os
 import sys
@@ -81,9 +81,7 @@ def install_signal_handlers():
 		log_error("GLib.unix_signal_[add|add_full] are NOT available!")
 
 
-def main():
-	start = time.time()
-	# Add simple command line handling
+def process_args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument(
 		"--udev", action='store_true',
@@ -110,20 +108,33 @@ def main():
 		type=check_bb_size,
 		dest='bb_size')
 
-	use_session = os.getenv('LVMDBUSD_USE_SESSION', False)
+	args = parser.parse_args()
 
-	# Ensure that we get consistent output for parsing stdout/stderr
-	os.environ["LC_ALL"] = "C"
-
-	cfg.args = parser.parse_args()
-
-	if not cfg.args.use_json:
+	if not args.use_json:
 		log_error("Daemon no longer supports lvm without JSON support, exiting!")
 		sys.exit(1)
 	else:
 		if not supports_json():
 			log_error("Un-supported version of LVM, daemon requires JSON output, exiting!")
 			sys.exit(1)
+
+	# Add udev watching
+	if args.use_udev:
+		# Make sure this msg ends up in the journal, so we know
+		log_msg('Utilizing udev to trigger updates')
+
+	return args
+
+
+def main():
+	start = time.time()
+	use_session = os.getenv('LVMDBUSD_USE_SESSION', False)
+
+	# Ensure that we get consistent output for parsing stdout/stderr
+	os.environ["LC_ALL"] = "C"
+
+	# Add simple command line handling
+	cfg.args = process_args()
 
 	cfg.create_request_entry = RequestEntry
 
@@ -177,10 +188,6 @@ def main():
 	for thread in thread_list:
 		thread.damon = True
 		thread.start()
-
-	# Add udev watching
-	if cfg.args.use_udev:
-		log_debug('Utilizing udev to trigger updates')
 
 	# In all cases we are going to monitor for udev until we get an
 	# ExternalEvent.  In the case where we get an external event and the user
