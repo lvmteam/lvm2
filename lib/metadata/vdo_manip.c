@@ -148,7 +148,7 @@ static int _sysfs_get_kvdo_value(const char *dm_name, const struct dm_info *dmin
 	char temp[64];
 	int fd, size, r = 0;
 
-	if (dm_snprintf(path, sizeof(path), "%s/block/dm-%d/vdo/%s",
+	if (dm_snprintf(path, sizeof(path), "%sblock/dm-%d/vdo/%s",
 			dm_sysfs_dir(), dminfo->minor, vdo_param) < 0) {
 		log_debug("Failed to build kvdo path.");
 		return 0;

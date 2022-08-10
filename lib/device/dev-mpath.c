@@ -815,7 +815,7 @@ const char *dev_mpath_component_wwid(struct cmd_context *cmd, struct device *dev
 
 	/* /sys/dev/block/253:7/slaves/sda/device/wwid */
 
-	if (dm_snprintf(slaves_path, sizeof(slaves_path), "%s/dev/block/%d:%d/slaves",
+	if (dm_snprintf(slaves_path, sizeof(slaves_path), "%sdev/block/%d:%d/slaves",
 			dm_sysfs_dir(), (int)MAJOR(dev->dev), (int)MINOR(dev->dev)) < 0) {
 		log_warn("Sysfs path to check mpath components is too long.");
 		return NULL;
@@ -845,7 +845,7 @@ const char *dev_mpath_component_wwid(struct cmd_context *cmd, struct device *dev
 
 		/* read /sys/block/sda/device/wwid */
 
-		if (dm_snprintf(wwid_path, sizeof(wwid_path), "%s/block/%s/device/wwid",
+		if (dm_snprintf(wwid_path, sizeof(wwid_path), "%sblock/%s/device/wwid",
        				dm_sysfs_dir(), slave_name) < 0) {
 			log_warn("Failed to create sysfs wwid path for %s", slave_name);
 			continue;

@@ -548,7 +548,7 @@ static int _has_sys_partition(struct device *dev)
 	int minor = (int) MINOR(dev->dev);
 
 	/* check if dev is a partition */
-	if (dm_snprintf(path, sizeof(path), "%s/dev/block/%d:%d/partition",
+	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/partition",
 			dm_sysfs_dir(), major, minor) < 0) {
 		log_warn("WARNING: %s: partition path is too long.", dev_name(dev));
 		return 0;
@@ -775,7 +775,7 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 	 * - basename ../../block/md0/md0  = md0
 	 * Parent's 'dev' sysfs attribute  = /sys/block/md0/dev
 	 */
-	if (dm_snprintf(path, sizeof(path), "%s/dev/block/%d:%d",
+	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d",
 			dm_sysfs_dir(), major, minor) < 0) {
 		log_warn("WARNING: %s: major:minor sysfs path is too long.", dev_name(dev));
 		return 0;
@@ -787,7 +787,7 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 
 	temp_path[size] = '\0';
 
-	if (dm_snprintf(path, sizeof(path), "%s/block/%s/dev",
+	if (dm_snprintf(path, sizeof(path), "%sblock/%s/dev",
 			dm_sysfs_dir(), basename(dirname(temp_path))) < 0) {
 		log_warn("WARNING: sysfs path for %s is too long.",
 			 basename(dirname(temp_path)));
@@ -1095,7 +1095,7 @@ int wipe_known_signatures(struct cmd_context *cmd, struct device *dev,
 static int _snprintf_attr(char *buf, size_t buf_size, const char *sysfs_dir,
 			 const char *attribute, dev_t dev)
 {
-	if (dm_snprintf(buf, buf_size, "%s/dev/block/%d:%d/%s", sysfs_dir,
+	if (dm_snprintf(buf, buf_size, "%sdev/block/%d:%d/%s", sysfs_dir,
 			(int)MAJOR(dev), (int)MINOR(dev),
 			attribute) < 0) {
 		log_warn("WARNING: sysfs path for %s attribute is too long.", attribute);
