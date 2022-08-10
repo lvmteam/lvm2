@@ -1827,8 +1827,8 @@ class TestDbusService(unittest.TestCase):
 		cmd = ['pvcreate', target.Pv.Name]
 		self._verify_existence(cmd, cmd[0], target.Pv.Name)
 
-	def _create_nested(self, pv_object_path):
-		vg = self._vg_create([pv_object_path])
+	def _create_nested(self, pv_object_path, vg_suffix):
+		vg = self._vg_create([pv_object_path], vg_suffix)
 		pv = ClientProxy(self.bus, pv_object_path, interfaces=(PV_INT,))
 
 		self.assertEqual(pv.Pv.Vg, vg.object_path)
@@ -1838,8 +1838,12 @@ class TestDbusService(unittest.TestCase):
 		lv = self._create_lv(
 			vg=vg.Vg, size=vg.Vg.FreeBytes, suffix="_pv0")
 		device_path = '/dev/%s/%s' % (vg.Vg.Name, lv.LvCommon.Name)
+		dev_info = os.stat(device_path)
+		major = os.major(dev_info.st_rdev)
+		minor = os.minor(dev_info.st_rdev)
+		sysfs = "/sys/dev/block/%d:%d" % (major, minor)
+		self.assertTrue(os.path.exists(sysfs))
 		new_pv_object_path = self._pv_create(device_path)
-
 		vg.update()
 
 		self.assertEqual(lv.LvCommon.Vg, vg.object_path)
@@ -1870,7 +1874,7 @@ class TestDbusService(unittest.TestCase):
 			raise unittest.SkipTest('test not running in /dev')
 
 		for i in range(0, 5):
-			pv_object_path = self._create_nested(pv_object_path)
+			pv_object_path = self._create_nested(pv_object_path, "nest_%d_" % i)
 
 	def test_pv_symlinks(self):
 		# Let's take one of our test PVs, pvremove it, find a symlink to it
