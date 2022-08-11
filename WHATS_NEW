@@ -1,6 +1,7 @@
 Version 2.03.17 - 
 ===============================
- Fix vdo_slab_size_mb value for converted VDO volume.
+  Add json_std output format for more JSON standard compliant version of output.
+  Fix vdo_slab_size_mb value for converted VDO volume.
 
 Version 2.03.16 - 18th May 2022
 ===============================
