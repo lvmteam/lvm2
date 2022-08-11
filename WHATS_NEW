@@ -1,5 +1,6 @@
 Version 2.03.17 - 
 ===============================
+  Fix lvconvert --test --type vdo-pool execution.
   Add json_std output format for more JSON standard compliant version of output.
   Fix vdo_slab_size_mb value for converted VDO volume.
 
