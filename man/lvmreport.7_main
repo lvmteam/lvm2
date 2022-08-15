@@ -1335,6 +1335,10 @@ compared to the original \fBjson\fP format:
 .RS
 - it does not use double quotes around numeric values,
 .br
+- numeric values are always expressed as numbers, not reserved strings
+  representing them (this also means that report/binary_values_as_numeric=1
+  setting is forced)
+.br
 - it uses 'null' for undefined numeric values,
 .br
 - it prints string list as proper JSON array of strings instead of a single string.

@@ -144,6 +144,7 @@ struct cmd_context {
 	unsigned degraded_activation:1;
 	unsigned auto_set_activation_skip:1;
 	unsigned si_unit_consistency:1;
+	unsigned report_strict_type_mode:1;
 	unsigned report_binary_values_as_numeric:1;
 	unsigned report_mark_hidden_devices:1;
 	unsigned metadata_read_only:1;

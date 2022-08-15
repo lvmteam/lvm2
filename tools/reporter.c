@@ -1495,6 +1495,16 @@ int report_format_init(struct cmd_context *cmd)
 		return 0;
 	}
 
+	/*
+	 * JSON_STD requires strict type mode. That means all NUM and BIN
+	 * fields are always reported as numeric values and not strings which
+	 * are synonyms to these numeric values.
+	 */
+	if (args.report_group_type == DM_REPORT_GROUP_JSON_STD)
+		cmd->report_strict_type_mode = 1;
+	else
+		cmd->report_strict_type_mode = 0;
+
 	if (report_command_log) {
 		single_args = &args.single_args[REPORT_IDX_LOG];
 		single_args->report_type = CMDLOG;
