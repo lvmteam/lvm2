@@ -249,6 +249,7 @@ static int _format_vdo_pool_data_lv(struct logical_volume *data_lv,
 	FILE *f;
 	uint64_t lb;
 	unsigned slabbits;
+	unsigned reformating = 0;
 	int args = 1;
 	char buf_args[5][128];
 	char buf[256]; /* buffer for short disk header (64B) */
@@ -351,8 +352,12 @@ reformat:
 			}
 		if ((c = strchr(buf, '\n')))
 			*c = 0; /* cut last '\n' away */
-		if (buf[0])
-			log_print("  %s", buf); /* Print vdo_format messages */
+		if (buf[0]) {
+			if (reformating)
+				log_verbose("  %s", buf); /* Print vdo_format messages */
+			else
+				log_print_unless_silent("  %s", buf); /* Print vdo_format messages */
+		}
 	}
 
 	if (!pipe_close(&pdata)) {
@@ -372,6 +377,7 @@ reformat:
 			*logical_size = logical_size_aligned;
 			argv[1] = (char*) "--force";
 			args = 2;
+			reformating = 1;
 			log_verbose("Reformating VDO to align virtual size %s by extent size.",
 				    display_size(data_lv->vg->cmd, *logical_size));
 			goto reformat;
