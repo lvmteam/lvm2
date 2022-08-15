@@ -1198,12 +1198,10 @@ out:
  */
 static int _compare_vdo_option(const char *b1, const char *b2)
 {
+	int use_skipped = 0;
+
 	if (strncasecmp(b1, "vdo", 3) == 0) // skip vdo prefix
 		b1 += 3;
-
-	if ((tolower(*b1) != tolower(*b2)) &&
-	    (strncmp(b2, "use_", 4) == 0))
-		b2 += 4;  // try again with skipped prefix 'use_'
 
 	while (*b1 && *b2) {
 		if (tolower(*b1) == tolower(*b2)) {
@@ -1216,8 +1214,14 @@ static int _compare_vdo_option(const char *b1, const char *b2)
 			++b1;           // skip to next char
 		else if (*b2 == '_')
 			++b2;           // skip to next char
-		else
+		else {
+			if (!use_skipped++ && (strncmp(b2, "use_", 4) == 0)) {
+				b2 += 4;  // try again with skipped prefix 'use_'
+				continue;
+			}
+
 			break;          // mismatch
+		}
 	}
 
 	return (*b1 || *b2) ? 0 : 1;
