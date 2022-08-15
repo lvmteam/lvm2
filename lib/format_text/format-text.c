@@ -428,7 +428,7 @@ static struct volume_group *_vg_read_raw_area(struct cmd_context *cmd,
 				rlocn->checksum,
 				&when, &desc);
 
-	if (!vg && !*use_previous_vg) {
+	if (!vg && (!use_previous_vg || !*use_previous_vg)) {
 		log_warn("WARNING: Failed to read metadata text at %llu off %llu size %llu VG %s on %s",
 			 (unsigned long long)(area->start + rlocn->offset),
 			 (unsigned long long)rlocn->offset,
