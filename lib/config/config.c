@@ -1830,8 +1830,10 @@ static int _out_line_fn(const struct dm_config_node *cn, const char *line, void 
 	char summary[MAX_COMMENT_LINE+1];
 	char version[9];
 	int pos = 0;
-	size_t len;
+	int space_prefix_len;
 	char *space_prefix;
+	const char *p;
+	size_t len;
 
 	if ((out->tree_spec->type == CFG_DEF_TREE_DIFF) &&
 	    (!(out->tree_spec->check_status[cn->id] & CFG_DIFF)))
@@ -1865,9 +1867,24 @@ static int _out_line_fn(const struct dm_config_node *cn, const char *line, void 
 
 	/* Usual tree view with nodes and their values. */
 
+	if (out->tree_spec->valuesonly && !(cfg_def->type & CFG_TYPE_SECTION)) {
+		if ((space_prefix_len = strspn(line, "\t "))) {
+			len = strlen(line);
+			p = line + space_prefix_len;
+
+			/* copy space_prefix, skip key and '=', copy value */
+			dm_pool_begin_object(out->mem, len);
+			dm_pool_grow_object(out->mem, line, space_prefix_len);
+			dm_pool_grow_object(out->mem, p + strcspn(p, "=") + 1, len + 1);
+			line = dm_pool_end_object(out->mem);
+		} else
+			line = strchr(line, '=') + 1;
+	}
+
 	if ((out->tree_spec->type != CFG_DEF_TREE_CURRENT) &&
 	    (out->tree_spec->type != CFG_DEF_TREE_DIFF) &&
 	    (out->tree_spec->type != CFG_DEF_TREE_FULL) &&
+	    !out->tree_spec->valuesonly &&
 	    (cfg_def->flags & (CFG_DEFAULT_UNDEFINED | CFG_DEFAULT_COMMENTED))) {
 		/* print with # at the front to comment out the line */
 		if (_should_print_cfg_with_undef_def_val(out, cfg_def, cn)) {
@@ -1882,6 +1899,9 @@ static int _out_line_fn(const struct dm_config_node *cn, const char *line, void 
 	/* print the line as it is */
 	if (_should_print_cfg_with_undef_def_val(out, cfg_def, cn))
 		fprintf(out->fp, "%s\n", line);
+
+	if (out->tree_spec->valuesonly && !(cfg_def->type & CFG_TYPE_SECTION) && space_prefix_len)
+		dm_pool_free(out->mem, (char *) line);
 
 	return 1;
 }

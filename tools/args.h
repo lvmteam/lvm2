@@ -905,6 +905,9 @@ arg(validate_ARG, '\0', "validate", 0, 0, 0,
     "merged configuration tree, also use --mergedconfig.\n"
     "The validation is done even if \\fBlvm.conf\\fP(5) \\fBconfig/checks\\fP is disabled.\n")
 
+arg(valuesonly_ARG, '\0', "valuesonly", 0, 0, 0,
+    "When printing config settings, print only values without keys.\n")
+
 arg(vdo_ARG, '\0', "vdo", 0, 0, 0,
     "Specifies the command is handling VDO LV.\n"
     "See --type vdo.\n"

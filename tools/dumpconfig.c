@@ -242,6 +242,10 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 			log_error("--withgeneralpreamble has no effect with --type list");
 			return EINVALID_CMD_LINE;
 		}
+		if (arg_is_set(cmd, valuesonly_ARG)) {
+			log_err("--valuesonly has no effect with --type list");
+			return EINVALID_CMD_LINE;
+		}
 		/* list type does not require status check */
 	} else if (!strcmp(type, "full")) {
 		tree_spec.type = CFG_DEF_TREE_FULL;
@@ -319,6 +323,9 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_is_set(cmd, withspaces_ARG))
 		tree_spec.withspaces = 1;
+
+	if (arg_is_set(cmd, valuesonly_ARG))
+		tree_spec.valuesonly = 1;
 
 	if (cft_check_handle)
 		tree_spec.check_status = cft_check_handle->status;

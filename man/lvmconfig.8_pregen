@@ -56,6 +56,8 @@ line settings from --config.
 .br
 [    \fB--validate\fP ]
 .br
+[    \fB--valuesonly\fP ]
+.br
 [    \fB--withsummary\fP ]
 .br
 [    \fB--withcomments\fP ]
@@ -367,6 +369,11 @@ return code. The validation is done only for the configuration
 at the front of the "config cascade". To validate the whole
 merged configuration tree, also use --mergedconfig.
 The validation is done even if \fBlvm.conf\fP(5) \fBconfig/checks\fP is disabled.
+.
+.HP
+\fB--valuesonly\fP
+.br
+When printing config settings, print only values without keys.
 .
 .HP
 \fB-v\fP|\fB--verbose\fP ...
