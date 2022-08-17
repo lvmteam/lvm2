@@ -88,6 +88,7 @@ class LvmFlightRecorder(object):
 				for c in reversed(self.queue):
 					log_error(str(c))
 				log_error("LVM dbus flight recorder END")
+				self.queue.clear()
 
 
 cfg.flightrecorder = LvmFlightRecorder()
@@ -174,6 +175,7 @@ def call_lvm(command, debug=False, line_cb=None,
 		# We can bail out before the lvm command finished when we get a signal
 		# which is requesting we exit
 		return -errno.EINTR, "", "operation interrupted"
+
 
 
 # The actual method which gets called to invoke the lvm command, can vary

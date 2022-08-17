@@ -137,6 +137,7 @@ class Manager(AutomatedProperties):
 		"""
 		Dump the flight recorder to syslog
 		"""
+		cfg.debug.dump()
 		cfg.flightrecorder.dump()
 
 	@staticmethod

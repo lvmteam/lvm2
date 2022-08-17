@@ -97,6 +97,9 @@ flightrecorder = None
 # RequestEntry ctor
 create_request_entry = None
 
+# Circular debug log
+debug = None
+
 
 def exit_daemon():
     """

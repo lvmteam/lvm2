@@ -25,7 +25,7 @@ from .manager import Manager
 import traceback
 import queue
 from . import udevwatch
-from .utils import log_debug, log_error, log_msg
+from .utils import log_debug, log_error, log_msg, DebugMessages
 import argparse
 import os
 import sys
@@ -146,6 +146,9 @@ def main():
 	# as the user may be specifying a different size.  The default one in
 	# cmdhandler is for when we are running other code with a different main.
 	cfg.flightrecorder = LvmFlightRecorder(cfg.args.fr_size)
+
+	# Create a circular buffer for debug logs
+	cfg.debug = DebugMessages()
 
 	log_debug("Using lvm binary: %s" % cfg.LVM_CMD)
 

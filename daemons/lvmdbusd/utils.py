@@ -10,6 +10,7 @@
 import xml.etree.ElementTree as Et
 import sys
 import inspect
+import collections
 import ctypes
 import errno
 import fcntl
@@ -282,8 +283,28 @@ def parse_tags(tags):
 	return dbus.Array([], signature='s')
 
 
-def _common_log(msg, *attributes):
-	cfg.stdout_lock.acquire()
+class DebugMessages(object):
+
+	def __init__(self, size=5000):
+		self.queue = collections.deque(maxlen=size)
+		self.lock = threading.RLock()
+
+	def add(self, message):
+		with self.lock:
+			self.queue.append(message)
+
+	def dump(self):
+		if cfg.args and not cfg.args.debug:
+			with self.lock:
+				if len(self.queue):
+					log_error("LVM dbus debug messages START last (%d max) messages" % self.queue.maxlen)
+					for m in self.queue:
+						print(m)
+					log_error("LVM dbus debug messages END")
+					self.queue.clear()
+
+
+def _format_log_entry(msg):
 	tid = ctypes.CDLL('libc.so.6').syscall(186)
 
 	if STDOUT_TTY:
@@ -293,6 +314,12 @@ def _common_log(msg, *attributes):
 
 	else:
 		msg = "%d:%d - %s" % (os.getpid(), tid, msg)
+	return msg
+
+
+def _common_log(msg, *attributes):
+	cfg.stdout_lock.acquire()
+	msg = _format_log_entry(msg)
 
 	if STDOUT_TTY and attributes:
 		print(color(msg, *attributes))
@@ -309,6 +336,9 @@ def _common_log(msg, *attributes):
 def log_debug(msg, *attributes):
 	if cfg.args and cfg.args.debug:
 		_common_log(msg, *attributes)
+	else:
+		if cfg.debug:
+			cfg.debug.add(_format_log_entry(msg))
 
 
 def log_error(msg, *attributes):
@@ -348,13 +378,15 @@ def handler(signum):
 	try:
 		# signal 10
 		if signum == signal.SIGUSR1:
+			cfg.debug.dump()
 			dump_threads_stackframe()
 		# signal 12
 		elif signum == signal.SIGUSR2:
+			cfg.debug.dump()
 			cfg.flightrecorder.dump()
 		else:
 			cfg.run.value = 0
-			log_debug('Exiting daemon with signal %d' % signum)
+			log_error('Exiting daemon with signal %d' % signum)
 			if cfg.loop is not None:
 				cfg.loop.quit()
 	except:
