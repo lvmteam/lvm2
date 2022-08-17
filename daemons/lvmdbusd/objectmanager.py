@@ -53,15 +53,6 @@ class ObjectManager(AutomatedProperties):
 									(self, ), cb, cbe, False)
 		cfg.worker_q.put(r)
 
-	def locked(self):
-		"""
-		If some external code need to run across a number of different
-		calls into ObjectManager while blocking others they can use this method
-		to lock others out.
-		:return:
-		"""
-		return ObjectManagerLock(self.rlock)
-
 	@dbus.service.signal(
 		dbus_interface="org.freedesktop.DBus.ObjectManager",
 		signature='oa{sa{sv}}')
@@ -337,29 +328,3 @@ class ObjectManager(AutomatedProperties):
 			#	(uuid, lvm_id, str(path_create), path))
 
 			return path
-
-
-class ObjectManagerLock(object):
-	"""
-	The sole purpose of this class is to allow other code the ability to
-	lock the object manager using a `with` statement, eg.
-
-	with cfg.om.locked():
-		# Do stuff with object manager
-
-	This will ensure that the lock is always released (assuming this is done
-	correctly)
-	"""
-
-	def __init__(self, recursive_lock):
-		self._lock = recursive_lock
-
-	def __enter__(self):
-		# Acquire lock
-		self._lock.acquire()
-
-	# noinspection PyUnusedLocal
-	def __exit__(self, e_type, e_value, e_traceback):
-		# Release lock
-		self._lock.release()
-		self._lock = None
