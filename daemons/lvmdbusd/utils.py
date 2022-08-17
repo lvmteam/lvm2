@@ -593,7 +593,7 @@ def add_no_notify(cmdline):
 	:rtype: list
 	"""
 
-	# Only after we have seen an external event will be disable lvm from sending
+	# Only after we have seen an external event will we disable lvm from sending
 	# us one when we call lvm
 	if cfg.got_external_event:
 		if 'help' in cmdline:
@@ -612,8 +612,8 @@ def add_no_notify(cmdline):
 
 
 # The methods below which start with mt_* are used to execute the desired code
-# on the the main thread of execution to alleviate any issues the dbus-python
-# library with regards to multi-threaded access.  Essentially, we are trying to
+# on the main thread of execution to alleviate any issues the dbus-python
+# library with regard to multithreaded access.  Essentially, we are trying to
 # ensure all dbus library interaction is done from the same thread!
 
 
