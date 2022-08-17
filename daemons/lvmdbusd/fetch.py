@@ -120,8 +120,26 @@ class StateUpdate(object):
 	@staticmethod
 	def update_thread(obj):
 		exception_count = 0
-
 		queued_requests = []
+
+		def set_results(val):
+			nonlocal queued_requests
+			for idx in queued_requests:
+				idx.set_result(val)
+				# Only clear out the requests after we have given them a result
+				# otherwise we can orphan the waiting threads, and they never
+				# wake up if we get an exception
+				queued_requests = []
+
+		def bailing(rv):
+			set_results(rv)
+			try:
+				while True:
+					item = obj.queue.get(False)
+					item.set_result(rv)
+			except queue.Empty:
+				pass
+
 		while cfg.run.value != 0:
 			# noinspection PyBroadException
 			try:
@@ -167,13 +185,7 @@ class StateUpdate(object):
 				num_changes = load(refresh, emit_signal, cache_refresh, log,
 									need_main_thread)
 				# Update is done, let everyone know!
-				for i in queued_requests:
-					i.set_result(num_changes)
-
-				# Only clear out the requests after we have given them a result
-				# otherwise we can orphan the waiting threads and they never
-				# wake up if we get an exception
-				queued_requests = []
+				set_results(num_changes)
 
 				# We retrieved OK, clear exception count
 				exception_count = 0
@@ -186,15 +198,18 @@ class StateUpdate(object):
 				cfg.flightrecorder.dump()
 				exception_count += 1
 				if exception_count >= 5:
-					for i in queued_requests:
-						i.set_result(e)
-
+					bailing(e)
 					log_error("Too many errors in update_thread, exiting daemon")
 					cfg.exit_daemon()
 
 				else:
 					# Slow things down when encountering errors
 					time.sleep(1)
+
+		# Make sure to unblock any that may be waiting before we exit this thread
+		# otherwise they hang forever ...
+		bailing(Exception("update thread exiting"))
+		log_debug("update thread exiting!")
 
 	def __init__(self):
 		self.lock = threading.RLock()

@@ -6,7 +6,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-
+import errno
 from subprocess import Popen, PIPE
 import select
 import time
@@ -131,7 +131,7 @@ def call_lvm(command, debug=False, line_cb=None,
 	make_non_block(process.stdout)
 	make_non_block(process.stderr)
 
-	while True:
+	while True and cfg.run.value != 0:
 		try:
 			rd_fd = [process.stdout.fileno(), process.stderr.fileno()]
 			ready = select.select(rd_fd, [], [], 2)
@@ -161,12 +161,20 @@ def call_lvm(command, debug=False, line_cb=None,
 				break
 		except IOError as ioe:
 			log_debug("call_lvm:" + str(ioe))
-			pass
+			break
 
-	if debug or process.returncode != 0:
-		_debug_c(command, process.returncode, (stdout_text, stderr_text))
+	if process.returncode is not None:
+		if debug or process.returncode != 0:
+			_debug_c(command, process.returncode, (stdout_text, stderr_text))
 
-	return process.returncode, stdout_text, stderr_text
+		return process.returncode, stdout_text, stderr_text
+	else:
+		if cfg.run.value == 0:
+			raise Exception("Daemon is exiting!")
+		# We can bail out before the lvm command finished when we get a signal
+		# which is requesting we exit
+		return -errno.EINTR, "", "operation interrupted"
+
 
 # The actual method which gets called to invoke the lvm command, can vary
 # from forking a new process to using lvm shell

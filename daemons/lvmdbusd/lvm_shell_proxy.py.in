@@ -26,7 +26,7 @@ except ImportError:
 	import json
 
 
-from lvmdbusd.cfg import LVM_CMD
+from lvmdbusd.cfg import LVM_CMD, run
 from lvmdbusd.utils import log_debug, log_error, add_no_notify, make_non_block,\
 							read_decoded
 
@@ -57,7 +57,7 @@ class LVMShellProxy(object):
 		# a hang.  Keep reading until we get the prompt back and the report
 		# FD does not contain valid JSON
 
-		while keep_reading:
+		while keep_reading and run.value != 0:
 			try:
 				rd_fd = [
 					self.lvm_shell.stdout.fileno(),
@@ -229,6 +229,12 @@ class LVMShellProxy(object):
 			log_error(('CMD: %s' % cmd))
 			log_error(("EC = %d" % rc))
 			log_error(("ERROR_MSG=\n %s\n" % error_msg))
+
+			if run.value == 0:
+				# Try to clean up lvm shelll process
+				log_debug("exiting lvm shell as we are shutting down")
+				self.exit_shell()
+				raise Exception("Daemon is exiting!")
 
 		return rc, report_json, error_msg
 

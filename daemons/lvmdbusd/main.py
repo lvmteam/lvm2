@@ -53,6 +53,7 @@ def process_request():
 		except Exception:
 			st = traceback.format_exc()
 			utils.log_error("process_request exception: \n%s" % st)
+	log_debug("process_request thread exiting!")
 
 
 def check_fr_size(value):
