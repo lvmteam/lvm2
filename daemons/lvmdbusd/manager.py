@@ -194,6 +194,7 @@ class Manager(AutomatedProperties):
 	def _external_event(command):
 		utils.log_debug("Processing _external_event= %s" % command,
 							'bg_black', 'fg_orange')
+		cfg.got_external_event = True
 		cfg.load()
 
 	@dbus.service.method(
@@ -204,11 +205,9 @@ class Manager(AutomatedProperties):
 		# If a user didn't explicitly specify udev, we will turn it off now.
 		if not cfg.args.use_udev:
 			if udevwatch.remove():
-				utils.log_debug("ExternalEvent received, disabling "
+				utils.log_msg("ExternalEvent received, disabling "
 								"udev monitoring")
 				# We are dependent on external events now to stay current!
-				cfg.got_external_event = True
-
 		r = RequestEntry(
 			-1, Manager._external_event, (command,), None, None, False)
 		cfg.worker_q.put(r)
