@@ -1872,9 +1872,15 @@ static int _out_line_fn(const struct dm_config_node *cn, const char *line, void 
 			p = line + space_prefix_len;
 
 			/* copy space_prefix, skip key and '=', copy value */
-			dm_pool_begin_object(out->mem, len);
-			dm_pool_grow_object(out->mem, line, space_prefix_len);
-			dm_pool_grow_object(out->mem, p + strcspn(p, "=") + 1, len + 1);
+			if (!dm_pool_begin_object(out->mem, len))
+				return_0;
+
+			if (!dm_pool_grow_object(out->mem, line, space_prefix_len) ||
+			    !dm_pool_grow_object(out->mem, p + strcspn(p, "=") + 1, len + 1)) {
+				dm_pool_abandon_object(out->mem);
+				return_0;
+			}
+
 			line = dm_pool_end_object(out->mem);
 		} else
 			line = strchr(line, '=') + 1;
