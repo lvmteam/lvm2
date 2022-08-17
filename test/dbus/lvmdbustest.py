@@ -2095,6 +2095,16 @@ class TestDbusService(unittest.TestCase):
 	def test_log_file_option(self):
 		self._log_file_option()
 
+	def test_external_event(self):
+		# Call into the service to register an external event, so that we can test sending the path
+		# where we don't send notifications on the command line in addition to the logging
+		lvm_manager = dbus.Interface(bus.get_object(
+			BUS_NAME, "/com/redhat/lvmdbus1/Manager", introspect=False),
+			"com.redhat.lvmdbus1.Manager")
+		rc = lvm_manager.ExternalEvent("unit_test")
+		self.assertTrue(rc == 0)
+		self._log_file_option()
+
 class AggregateResults(object):
 
 	def __init__(self):
