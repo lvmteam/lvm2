@@ -1115,13 +1115,7 @@ class TestDbusService(unittest.TestCase):
 		vg_path = self._wait_for_job(vg_job)
 		self._validate_lookup(vg_name, vg_path)
 
-	def _test_expired_timer(self, num_lvs):
-		rc = False
-
-		# In small configurations lvm is pretty snappy, so let's create a VG
-		# add a number of LVs and then remove the VG and all the contained
-		# LVs which appears to consistently run a little slow.
-
+	def _create_num_lvs(self, num_lvs):
 		vg_proxy = self._vg_create(self._all_pv_object_paths())
 
 		for i in range(0, num_lvs):
@@ -1140,8 +1134,18 @@ class TestDbusService(unittest.TestCase):
 					"%s/%s" % (vg_proxy.Vg.Name, lv_name), lv_path)
 
 			else:
-				# We ran out of space, test will probably fail
+				# We ran out of space, test(s) may fail
 				break
+		return vg_proxy
+
+	def _test_expired_timer(self, num_lvs):
+		rc = False
+
+		# In small configurations lvm is pretty snappy, so let's create a VG
+		# add a number of LVs and then remove the VG and all the contained
+		# LVs which appears to consistently run a little slow.
+
+		vg_proxy = self._create_num_lvs(num_lvs)
 
 		# Make sure that we are honoring the timeout
 		start = time.time()
@@ -2104,6 +2108,24 @@ class TestDbusService(unittest.TestCase):
 		rc = lvm_manager.ExternalEvent("unit_test")
 		self.assertTrue(rc == 0)
 		self._log_file_option()
+
+	def test_delete_non_complete_job(self):
+		# Let's create a vg with a number of lvs and then delete it all
+		# to hopefully create a long-running job.
+		vg_proxy = self._create_num_lvs(64)
+		job_path = vg_proxy.Vg.Remove(dbus.Int32(0), EOD)
+		self.assertNotEqual(job_path, "/")
+
+		# Try to delete the job expecting an exception
+		job_proxy = ClientProxy(self.bus, job_path, interfaces=(JOB_INT,)).Job
+		with self.assertRaises(dbus.exceptions.DBusException):
+			try:
+				job_proxy.Remove()
+			except dbus.exceptions.DBusException as e:
+				# Verify we got the expected text in exception
+				self.assertTrue('Job is not complete!' in str(e))
+				raise e
+
 
 class AggregateResults(object):
 
