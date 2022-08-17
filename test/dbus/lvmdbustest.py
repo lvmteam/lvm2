@@ -340,10 +340,13 @@ class TestDbusService(unittest.TestCase):
 		self.assertTrue(rc is not None and len(rc) > 0)
 		self._check_consistency()
 
-	def _vg_create(self, pv_paths=None, vg_prefix=None):
+	def _vg_create(self, pv_paths=None, vg_prefix=None, options=None):
 
 		if not pv_paths:
 			pv_paths = self._all_pv_object_paths()
+
+		if options is None:
+			options = EOD
 
 		vg_name = vg_n(prefix=vg_prefix)
 
@@ -352,7 +355,7 @@ class TestDbusService(unittest.TestCase):
 				dbus.String(vg_name),
 				dbus.Array(pv_paths, signature=dbus.Signature('o')),
 				dbus.Int32(g_tmo),
-				EOD))
+				options))
 
 		self._validate_lookup(vg_name, vg_path)
 		self.assertTrue(vg_path is not None and len(vg_path) > 0)
@@ -2077,6 +2080,20 @@ class TestDbusService(unittest.TestCase):
 		self._test_lv_method_interface_sequence(
 			self._vdo_pool_lv(), test_ss=False)
 
+	def _log_file_option(self):
+		fn = "/tmp/%s" % rs(8, "_lvm.log")
+		try:
+			options = dbus.Dictionary({}, signature=dbus.Signature('sv'))
+			option_str = "log { level=7 file=%s syslog=0 }" % fn
+			options["config"] = dbus.String(option_str)
+			self._vg_create(None, None, options)
+			self.assertTrue(os.path.exists(fn))
+		finally:
+			if os.path.exists(fn):
+				os.unlink(fn)
+
+	def test_log_file_option(self):
+		self._log_file_option()
 
 class AggregateResults(object):
 
