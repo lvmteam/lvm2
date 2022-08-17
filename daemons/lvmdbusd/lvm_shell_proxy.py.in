@@ -164,12 +164,14 @@ class LVMShellProxy(object):
 			os.unlink(tmp_file)
 			os.rmdir(tmp_dir)
 
-	def get_error_msg(self):
-		# We got an error, lets go fetch the error message
+	def get_last_log(self):
 		self._write_cmd('lastlog\n')
+		report_json= self._read_response()[1]
+		return LVMShellProxy.get_error_msg(report_json)
 
-		# read everything from the STDOUT to the next prompt
-		stdout, report_json, stderr = self._read_response()
+	@staticmethod
+	def get_error_msg(report_json):
+		# Get the error message from the returned JSON
 		if 'log' in report_json:
 			error_msg = ""
 			# Walk the entire log array and build an error string
@@ -182,7 +184,7 @@ class LVMShellProxy(object):
 
 			return error_msg
 
-		return 'No error reason provided! (missing "log" section)'
+		return None
 
 	def call_lvm(self, argv, debug=False):
 		rc = 1
@@ -210,10 +212,18 @@ class LVMShellProxy(object):
 			ret_code = int(report_json['log'][-1:][0]['log_ret_code'])
 			# If we have an exported vg we get a log_ret_code == 5 when
 			# we do a 'fullreport'
+			# Note: 0 == error
 			if (ret_code == 1) or (ret_code == 5 and argv[0] == 'fullreport'):
 				rc = 0
 			else:
-				error_msg = self.get_error_msg()
+				# Depending on where lvm fails the command, it may not have anything
+				# to report for "lastlog", so we need to check for a message in the
+				# report json too.
+				error_msg = self.get_last_log()
+				if error_msg is None:
+					error_msg = LVMShellProxy.get_error_msg(report_json)
+					if error_msg is None:
+						error_msg = 'No error reason provided! (missing "log" section)'
 
 		if debug or rc != 0:
 			log_error(('CMD: %s' % cmd))
