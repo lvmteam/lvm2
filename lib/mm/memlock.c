@@ -105,7 +105,6 @@ static const char * const _blacklist_maps[] = {
 	"/LC_MESSAGES/",
 	"gconv/gconv-modules.cache",
 	"/ld-2.",		/* not using dlopen,dlsym during mlock */
-	"/libaio.so.",		/* not using aio during mlock */
 	"/libattr.so.",		/* not using during mlock (udev) */
 	"/libblkid.so.",	/* not using blkid during mlock (udev) */
 	"/libbz2.so.",		/* not using during mlock (udev) */
