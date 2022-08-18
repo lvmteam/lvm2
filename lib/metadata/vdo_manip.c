@@ -618,6 +618,7 @@ static int _get_memory_info(uint64_t *total_mb, uint64_t *available_mb)
 		if (!found)
 			continue; // not interesting
 
+		errno = 0;
 		*(found->value) = (uint64_t) strtoull(e, &tail, 10);
 
 		if ((e == tail) || errno)
