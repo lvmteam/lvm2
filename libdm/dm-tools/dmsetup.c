@@ -5106,8 +5106,9 @@ static int _size_from_string(char *argptr, uint64_t *size, const char *name)
 	if (!argptr)
 		return_0;
 
+	errno = 0;
 	*size = strtoull(argptr, &endptr, 10);
-	if (endptr == argptr) {
+	if (errno || endptr == argptr) {
 		*size = 0;
 		log_error("Invalid %s argument: \"%s\"",
 			  name, (*argptr) ? argptr : "");
