@@ -550,6 +550,19 @@ vgchange -an $vg2
 vgremove -ff $vg1
 vgremove -ff $vg2
 
+# bz 2119473
+
+aux lvmconf "devices/search_for_devnames = \"none\""
+sed -e "s|DEVNAME=$dev1|DEVNAME=.|" "$ORIG" > tmp1.devices
+sed -e "s|IDNAME=$dev1|IDNAME=.|" tmp1.devices > "$DF"
+pvs
+lvmdevices
+pvcreate -ff --yes --uuid "$PVID1" --norestorefile $dev1
+grep "$PVID1" "$DF" |tee out
+grep "DEVNAME=$dev1" out
+grep "IDNAME=$dev1" out
+aux lvmconf "devices/search_for_devnames = \"auto\""
+
 # devnames change so the new devname now refers to a filtered device,
 # e.g. an mpath or md component, which is not scanned
 

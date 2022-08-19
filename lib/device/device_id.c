@@ -1142,8 +1142,9 @@ id_done:
 			  du_devname->devname);
 
 	if (du_pvid && (du_pvid->dev != dev))
-		log_warn("WARNING: adding device %s with PVID %s which is already used for %s.",
-			 dev_name(dev), pvid, du_pvid->dev ? dev_name(du_pvid->dev) : "missing device");
+		log_warn("WARNING: adding device %s with PVID %s which is already used for %s device_id %s.",
+			 dev_name(dev), pvid, du_pvid->dev ? dev_name(du_pvid->dev) : "missing device",
+			 du_pvid->idname ?: "none");
 
 	if (du_devid && (du_devid->dev != dev)) {
 		if (!du_devid->dev) {
@@ -1189,7 +1190,7 @@ id_done:
 		else
 			check_idname = device_id_system_read(cmd, dev, du_pvid->idtype);
 
-		if (check_idname && !strcmp(check_idname, du_pvid->idname)) {
+		if (!du_pvid->idname || (check_idname && !strcmp(check_idname, du_pvid->idname))) {
 			update_du = du_pvid;
 			dm_list_del(&update_du->list);
 			update_matching_kind = "PVID";
