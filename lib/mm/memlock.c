@@ -159,7 +159,12 @@ static void _touch_memory(void *mem, size_t size)
 
 static void _allocate_memory(void)
 {
-#ifndef VALGRIND_POOL
+#if defined(__GLIBC__) && !defined(VALGRIND_POOL)
+	/* Memory allocation is currently only tested with glibc
+	 * for different C libraries, some other mechanisms might be needed
+	 * meanwhile let users use lvm2 code without memory preallocation.
+	 * Compilation for VALGRIND tracing also goes without preallocation.
+	 */
 	void *stack_mem;
 	struct rlimit limit;
 	int i, area = 0, missing = _size_malloc_tmp, max_areas = 32, hblks;
