@@ -1,5 +1,6 @@
 Version 2.03.17 - 
 ===============================
+ Extend VDO and VDOPOOL without flushing and locking fs.
  Fix lvconvert --test --type vdo-pool execution.
  Fix vdo_slab_size_mb value for converted VDO volume.
 
