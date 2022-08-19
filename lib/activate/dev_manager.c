@@ -3908,6 +3908,8 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 		 * non 'thin pool/volume' and  size increase */
 		else if (!lv_is_thin_volume(lv) &&
 			 !lv_is_thin_pool(lv) &&
+			 !lv_is_vdo(lv) &&
+			 !lv_is_vdo_pool(lv) &&
 			 dm_tree_node_size_changed(root))
 			dm->flush_required = 1;
 

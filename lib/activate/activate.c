@@ -2141,7 +2141,11 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	 * TODO: Relax this limiting condition further */
 	if (!flush_required &&
 	    (lv_is_pvmove(lv) || pvmove_lv ||
-	     (!lv_is_mirror(lv) && !lv_is_thin_pool(lv) && !lv_is_thin_volume(lv)))) {
+	     (!lv_is_mirror(lv) &&
+	      !lv_is_thin_volume(lv) &&
+	      !lv_is_thin_pool(lv) &&
+	      !lv_is_vdo(lv) &&
+	      !lv_is_vdo_pool(lv)))) {
 		log_debug("Requiring flush for LV %s.", display_lvname(lv));
 		flush_required = 1;
 	}
