@@ -446,6 +446,7 @@ const char *log_get_report_context_name(log_report_context_t context)
 const char *log_get_report_object_type_name(log_report_object_type_t object_type)
 {
 	static const char *log_object_type_names[LOG_REPORT_OBJECT_TYPE_COUNT] = {[LOG_REPORT_OBJECT_TYPE_NULL] = "",
+										  [LOG_REPORT_OBJECT_TYPE_PRE_CMD] = "pre-cmd",
 										  [LOG_REPORT_OBJECT_TYPE_CMD] = "cmd",
 										  [LOG_REPORT_OBJECT_TYPE_ORPHAN] = "orphan",
 										  [LOG_REPORT_OBJECT_TYPE_PV] = "pv",
