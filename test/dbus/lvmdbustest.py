@@ -419,9 +419,7 @@ class TestDbusService(unittest.TestCase):
 			rc = self._pv_remove(pv_proxy)
 			self.assertTrue(rc == '/')
 
-	def tearDown(self):
-		# If we get here it means we passed setUp, so lets remove anything
-		# and everything that remains, besides the PVs themselves
+	def clean_up(self):
 		self.objs, self.bus = get_objects()
 
 		# The self.objs[PV_INT] list only contains those which we should be
@@ -447,7 +445,7 @@ class TestDbusService(unittest.TestCase):
 			# the properties are current and correct.
 			p.update()
 			if p.Pv.Vg != '/':
-				v = ClientProxy(self.bus, p.Pv.Vg, interfaces=(VG_INT, ))
+				v = ClientProxy(self.bus, p.Pv.Vg, interfaces=(VG_INT,))
 				self._recurse_vg_delete(v, p, nested_pvs)
 
 		# Check to make sure the PVs we had to start exist, else re-create
@@ -464,6 +462,11 @@ class TestDbusService(unittest.TestCase):
 				if not found:
 					# print('Re-creating PV=', p)
 					self._pv_create(p)
+
+	def tearDown(self):
+		# If we get here it means we passed setUp, so lets remove anything
+		# and everything that remains, besides the PVs themselves
+		self.clean_up()
 
 	def _check_consistency(self):
 		# Only do consistency checks if we aren't running the unit tests
