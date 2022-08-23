@@ -2303,6 +2303,41 @@ class TestDbusService(unittest.TestCase):
 				self.assertTrue('Job is not complete!' in str(e))
 				raise e
 
+	def test_sigint(self):
+		# Issue SIGINT while daemon is processing work to ensure we shut down.
+		di = DaemonInfo.get()
+		self.assertTrue(di is not None)
+		if di:
+			# Find out how long it takes to create a VG and a number of LVs
+			# we will then issue the creation of the LVs async., wait, then issue a signal
+			# and repeat stepping through the entire time range.
+			start = time.time()
+			vg_proxy = self._create_num_lvs(20)
+			end = time.time()
+
+			self.handle_return(vg_proxy.Vg.Remove(dbus.Int32(g_tmo), EOD))
+			total = end - start
+
+			for i in range(5):
+				sleep_amt = i * (total/5.0)
+				self._create_num_lvs(20, True)
+				time.sleep(sleep_amt)
+
+				exited = False
+				try:
+					di.term_signal(signal.SIGINT)
+					exited = True
+				except Exception:
+					std_err_print("Failed to exit on SIGINT, sending SIGKILL...")
+					di.term_signal(signal.SIGKILL)
+				finally:
+					di.start()
+					self.clean_up()
+
+				self.assertTrue(exited,
+								"Failed to exit after sending signal %f seconds after "
+								"queuing up work for signal %d" % (sleep_amt, signal.SIGINT))
+
 
 class AggregateResults(object):
 
