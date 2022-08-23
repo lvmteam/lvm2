@@ -278,7 +278,7 @@ class DaemonInfo(object):
 
 	def start(self, expect_fail=False):
 		if self.systemd:
-			pass
+			subprocess.run(["/usr/bin/systemctl", "start", "lvm2-lvmdbusd"], check=True)
 		else:
 			stdin_stream = None
 			stdout_stream = None
