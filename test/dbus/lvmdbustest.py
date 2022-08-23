@@ -215,7 +215,7 @@ class TestDbusService(unittest.TestCase):
 	def setUp(self):
 		# Because of the sensitive nature of running LVM tests we will only
 		# run if we have PVs and nothing else, so that we can be confident that
-		# we are not mucking with someones data on their system
+		# we are not mucking with someone's data on their system
 		self.objs, self.bus = get_objects()
 		if len(self.objs[PV_INT]) == 0:
 			std_err_print('No PVs present exiting!')

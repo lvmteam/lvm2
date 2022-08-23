@@ -161,7 +161,7 @@ class DataStore(object):
 		c_lvs = OrderedDict()
 		c_lv_full_lookup = {}
 
-		# Each item item in the report is a collection of information pertaining
+		# Each item in the report is a collection of information pertaining
 		# to the vg
 		for r in _all['report']:
 			# Get the lv data for this VG.
