@@ -2338,6 +2338,14 @@ class TestDbusService(unittest.TestCase):
 								"Failed to exit after sending signal %f seconds after "
 								"queuing up work for signal %d" % (sleep_amt, signal.SIGINT))
 
+	def test_singleton_daemon(self):
+		# Ensure we can only have 1 daemon running at a time, daemon should exit with 114 if already running
+		di = DaemonInfo.get()
+		self.assertTrue(di is not None)
+		if di:
+			ec = di.start(True)
+			self.assertEqual(ec, 114)
+
 
 class AggregateResults(object):
 
