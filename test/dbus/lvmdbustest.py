@@ -1288,24 +1288,28 @@ class TestDbusService(unittest.TestCase):
 		vg_path = self._wait_for_job(vg_job)
 		self._validate_lookup(vg_name, vg_path)
 
-	def _create_num_lvs(self, num_lvs):
+	def _create_num_lvs(self, num_lvs, no_wait=False):
 		vg_proxy = self._vg_create(self._all_pv_object_paths())
+		if no_wait:
+			tmo = 0
+		else:
+			tmo = g_tmo
 
 		for i in range(0, num_lvs):
 			lv_name = lv_n()
 			vg_proxy.update()
 			if vg_proxy.Vg.FreeCount > 0:
-				lv_path = self.handle_return(
-					vg_proxy.Vg.LvCreateLinear(
+				create_result = vg_proxy.Vg.LvCreateLinear(
 						dbus.String(lv_name),
 						dbus.UInt64(mib(4)),
 						dbus.Boolean(False),
-						dbus.Int32(g_tmo),
-						EOD))
-				self.assertTrue(lv_path != '/')
-				self._validate_lookup(
-					"%s/%s" % (vg_proxy.Vg.Name, lv_name), lv_path)
+						dbus.Int32(tmo),
+						EOD)
 
+				if not no_wait:
+					lv_path = self.handle_return(create_result)
+					self.assertTrue(lv_path != '/')
+					self._validate_lookup("%s/%s" % (vg_proxy.Vg.Name, lv_name), lv_path)
 			else:
 				# We ran out of space, test(s) may fail
 				break
