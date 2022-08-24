@@ -2342,6 +2342,8 @@ class TestDbusService(unittest.TestCase):
 		# Ensure we can only have 1 daemon running at a time, daemon should exit with 114 if already running
 		di = DaemonInfo.get()
 		self.assertTrue(di is not None)
+		if di.systemd:
+			raise unittest.SkipTest('existing dameon running via systemd')
 		if di:
 			ec = di.start(True)
 			self.assertEqual(ec, 114)
