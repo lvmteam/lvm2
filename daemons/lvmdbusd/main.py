@@ -132,8 +132,10 @@ def main():
 	start = time.time()
 	use_session = os.getenv('LVMDBUSD_USE_SESSION', False)
 
-	# Ensure that we get consistent output for parsing stdout/stderr
+	# Ensure that we get consistent output for parsing stdout/stderr and that we
+	# are using the lvmdbusd profile.
 	os.environ["LC_ALL"] = "C"
+	os.environ["LVM_COMMAND_PROFILE"] = "lvmdbusd"
 
 	# Add simple command line handling
 	cfg.args = process_args()
