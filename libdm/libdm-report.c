@@ -4571,17 +4571,12 @@ bad:
 static int _safe_repstr_output(struct dm_report *rh, const char *repstr, size_t len)
 {
 	const char *p_repstr;
-	const char *repstr_end = repstr + len;
+	const char *repstr_end = len ? repstr + len : repstr + strlen(repstr);
 
 	/* Escape any JSON_QUOTE that may appear in reported string. */
 	while (1) {
-		if (len) {
-			if (!(p_repstr = memchr(repstr, JSON_QUOTE[0], repstr_end - repstr)))
-				break;
-		} else {
-			if (!(p_repstr = strstr(repstr, JSON_QUOTE)))
-				break;
-		}
+		if (!(p_repstr = memchr(repstr, JSON_QUOTE[0], repstr_end - repstr)))
+			break;
 
 		if (p_repstr > repstr) {
 			if (!dm_pool_grow_object(rh->mem, repstr, p_repstr - repstr)) {
