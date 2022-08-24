@@ -880,15 +880,16 @@ uint32_t extents_from_percent_size(struct volume_group *vg, const struct dm_list
 				   percent_type_t percent, uint64_t size);
 
 struct logical_volume *find_pool_lv(const struct logical_volume *lv);
-int pool_is_active(const struct logical_volume *lv);
-int pool_supports_external_origin(const struct lv_segment *pool_seg, const struct logical_volume *external_lv);
+int thin_pool_is_active(const struct logical_volume *lv);
+int thin_pool_supports_external_origin(const struct lv_segment *pool_seg, const struct logical_volume *external_lv);
 int thin_pool_feature_supported(const struct logical_volume *lv, int feature);
+int update_thin_pool_lv(struct logical_volume *lv, int activate);
+
 int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
 					       int chunk_size_calc_policy);
 int validate_cache_chunk_size(struct cmd_context *cmd, uint32_t chunk_size);
 int validate_thin_pool_chunk_size(struct cmd_context *cmd, uint32_t chunk_size);
 int validate_pool_chunk_size(struct cmd_context *cmd, const struct segment_type *segtype, uint32_t chunk_size);
-int update_pool_lv(struct logical_volume *lv, int activate);
 int get_default_allocation_thin_pool_chunk_size(struct cmd_context *cmd, struct profile *profile,
 						uint32_t *chunk_size, int *chunk_size_calc_method);
 int update_thin_pool_params(struct cmd_context *cmd,

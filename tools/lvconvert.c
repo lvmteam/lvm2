@@ -2414,7 +2414,7 @@ static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
 	argv[++args] = pms_path;
 	argv[++args] = NULL;
 
-	if (pool_is_active(pool_lv)) {
+	if (thin_pool_is_active(pool_lv)) {
 		log_error("Active pools cannot be repaired.  Use lvchange -an first.");
 		return 0;
 	}
@@ -2781,7 +2781,7 @@ static int _lvconvert_to_thin_with_external(struct cmd_context *cmd,
 
 	dm_list_init(&lvc.tags);
 
-	if (!pool_supports_external_origin(first_seg(thinpool_lv), lv))
+	if (!thin_pool_supports_external_origin(first_seg(thinpool_lv), lv))
 		return_0;
 
 	if (!(lvc.segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_THIN)))
@@ -2906,7 +2906,7 @@ static int _lvconvert_swap_pool_metadata(struct cmd_context *cmd,
 	}
 
 	/* FIXME cache pool */
-	if (is_thinpool && pool_is_active(lv)) {
+	if (is_thinpool && thin_pool_is_active(lv)) {
 		/* If any volume referencing pool active - abort here */
 		log_error("Cannot convert pool %s with active volumes.",
 			  display_lvname(lv));

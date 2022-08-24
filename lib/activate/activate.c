@@ -2764,7 +2764,7 @@ static int _component_cb(struct logical_volume *lv, void *data)
 
 	if (lv_is_locked(lv) || lv_is_pvmove(lv) ||/* ignoring */
 	    /* thin-pool is special and it's using layered device */
-	    (lv_is_thin_pool(lv) && pool_is_active(lv)))
+	    (lv_is_thin_pool(lv) && thin_pool_is_active(lv)))
 		return -1;
 
 	/* External origin is activated through thinLV and uses -real suffix.

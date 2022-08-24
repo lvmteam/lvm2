@@ -72,7 +72,7 @@ static int _thin_pool_add_message(struct lv_segment *seg,
 	else
 		return SEG_LOG_ERROR("Unknown message in");
 
-	if (!attach_pool_message(seg, type, lv, delete_id, 1))
+	if (!attach_thin_pool_message(seg, type, lv, delete_id, 1))
 		return_0;
 
 	return 1;
@@ -585,7 +585,7 @@ static int _thin_add_target_line(struct dev_manager *dm,
 
 	/* Add external origin LV */
 	if (seg->external_lv) {
-		if (!pool_supports_external_origin(first_seg(seg->pool_lv), seg->external_lv))
+		if (!thin_pool_supports_external_origin(first_seg(seg->pool_lv), seg->external_lv))
 			return_0;
 		if (seg->external_lv->size < seg->lv->size) {
 			/* Validate target supports smaller external origin */

@@ -5125,7 +5125,7 @@ static int _lvresize_adjust_policy(const struct logical_volume *lv,
 			goto_bad;
 
 		/* Resize below the minimal usable value */
-		min_threshold = pool_metadata_min_threshold(first_seg(lv)) / DM_PERCENT_1;
+		min_threshold = thin_pool_metadata_min_threshold(first_seg(lv)) / DM_PERCENT_1;
 		*meta_amount = _adjust_amount(thin_pool_status->metadata_usage,
 					      (min_threshold < policy_threshold) ?
 					      min_threshold : policy_threshold, policy_amount);
@@ -6179,13 +6179,13 @@ int lv_resize(struct logical_volume *lv,
 
 	if (lv_is_thin_pool(lock_lv)) {
 		/* Update lvm pool metadata (drop messages). */
-		if (!update_pool_lv(lock_lv, 1))
+		if (!update_thin_pool_lv(lock_lv, 1))
 			goto_bad;
 	}
 
 	/* Check for over provisioning when extended */
 	if ((lp->resize == LV_EXTEND) && lv_is_thin_type(lv))
-		pool_check_overprovisioning(lv);
+		thin_pool_check_overprovisioning(lv);
 
 out:
 	log_print_unless_silent("Logical volume %s successfully resized.",
@@ -6742,8 +6742,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* Clear thin pool stacked messages */
-	if (pool_lv && pool_has_message(first_seg(pool_lv), lv, 0) &&
-	    !update_pool_lv(pool_lv, 1)) {
+	if (pool_lv && thin_pool_has_message(first_seg(pool_lv), lv, 0) &&
+	    !update_thin_pool_lv(pool_lv, 1)) {
 		if (force < DONT_PROMPT_OVERRIDE) {
 			log_error("Failed to update pool %s.", display_lvname(pool_lv));
 			return 0;
@@ -6820,9 +6820,9 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	/* Release unneeded blocks in thin pool */
 	/* TODO: defer when multiple LVs relased at once */
-	if (pool_lv && !update_pool_lv(pool_lv, 1)) {
+	if (pool_lv && !update_thin_pool_lv(pool_lv, 1)) {
 		if (force < DONT_PROMPT_OVERRIDE) {
-			log_error("Failed to update pool %s.", display_lvname(pool_lv));
+			log_error("Failed to update thin pool %s.", display_lvname(pool_lv));
 			return 0;
 		}
 		log_print_unless_silent("Ignoring update failure of pool %s.",
@@ -8299,7 +8299,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 						  display_lvname(pool_lv));
 					return NULL;
 				}
-				if (!pool_below_threshold(first_seg(pool_lv))) {
+				if (!thin_pool_below_threshold(first_seg(pool_lv))) {
 					log_error("Cannot create new thin volume, free space in "
 						  "thin pool %s reached threshold.",
 						  display_lvname(pool_lv));
@@ -8386,7 +8386,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			 * within the same thin pool
 			 */
 			if (first_seg(origin_lv)->pool_lv != pool_lv) {
-				if (!pool_supports_external_origin(first_seg(pool_lv), origin_lv))
+				if (!thin_pool_supports_external_origin(first_seg(pool_lv), origin_lv))
 					return_NULL;
 				if (origin_lv->status & LVM_WRITE) {
 					log_error("Cannot use writable LV as the external origin.");
@@ -8448,8 +8448,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	if (pool_lv && segtype_is_thin_volume(create_segtype)) {
 		/* Ensure all stacked messages are submitted */
-		if ((pool_is_active(pool_lv) || is_change_activating(lp->activate)) &&
-		    !update_pool_lv(pool_lv, 1))
+		if ((thin_pool_is_active(pool_lv) || is_change_activating(lp->activate)) &&
+		    !update_thin_pool_lv(pool_lv, 1))
 			return_NULL;
 	}
 
@@ -8536,7 +8536,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		   (seg = first_seg(lv)) &&
 		   seg_is_thin(seg)) { /* going to be a thin volume */
 		pool_seg = first_seg(pool_lv);
-		if (!(seg->device_id = get_free_pool_device_id(pool_seg)))
+		if (!(seg->device_id = get_free_thin_pool_device_id(pool_seg)))
 			return_NULL;
 		seg->transaction_id = pool_seg->transaction_id;
 		if (origin_lv && lv_is_thin_volume(origin_lv) &&
@@ -8555,11 +8555,11 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				return_NULL;
 		}
 
-		if (!attach_pool_message(pool_seg, DM_THIN_MESSAGE_CREATE_THIN, lv, 0, 0))
+		if (!attach_thin_pool_message(pool_seg, DM_THIN_MESSAGE_CREATE_THIN, lv, 0, 0))
 			return_NULL;
 	}
 
-	if (!pool_check_overprovisioning(lv))
+	if (!thin_pool_check_overprovisioning(lv))
 		return_NULL;
 
 	/* FIXME Log allocation and attachment should have happened inside lv_extend. */
@@ -8677,7 +8677,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				goto revert_new_lv;
 			}
 			/* At this point remove pool messages, snapshot is active */
-			if (!update_pool_lv(pool_lv, 0)) {
+			if (!update_thin_pool_lv(pool_lv, 0)) {
 				stack;
 				goto revert_new_lv;
 			}
@@ -8699,7 +8699,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				}
 			}
 			/* Keep thin pool active until thin volume is activated */
-			if (!update_pool_lv(pool_lv, 1)) {
+			if (!update_thin_pool_lv(pool_lv, 1)) {
 				stack;
 				goto revert_new_lv;
 			}

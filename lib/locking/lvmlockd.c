@@ -2555,7 +2555,7 @@ static int _lockd_lv_thin(struct cmd_context *cmd, struct logical_volume *lv,
 	 * Unlock when the pool is no longer active.
 	 */
 
-	if (def_mode && !strcmp(def_mode, "un") && pool_is_active(pool_lv))
+	if (def_mode && !strcmp(def_mode, "un") && thin_pool_is_active(pool_lv))
 		return 1;
 
 	flags |= LDLV_MODE_NO_SH;
