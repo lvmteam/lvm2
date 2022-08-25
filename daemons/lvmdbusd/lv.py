@@ -274,15 +274,15 @@ class LvStateVdo(LvState):
 					MetaDataPercent, CopyPercent, SyncPercent,
 					MetaDataSizeBytes, move_pv, move_pv_uuid,
 					vdo_operating_mode, vdo_compression_state, vdo_index_state,
-					vdo_used_size,vdo_saving_percent,vdo_compression,
-					vdo_deduplication,vdo_use_metadata_hints,
-					vdo_minimum_io_size,vdo_block_map_cache_size,
-					vdo_block_map_era_length,vdo_use_sparse_index,
-					vdo_index_memory_size,vdo_slab_size,vdo_ack_threads,
-					vdo_bio_threads,vdo_bio_rotation,vdo_cpu_threads,
-					vdo_hash_zone_threads,vdo_logical_threads,
-					vdo_physical_threads,vdo_max_discard,
-					vdo_write_policy,vdo_header_size):
+					vdo_used_size, vdo_saving_percent, vdo_compression,
+					vdo_deduplication, vdo_use_metadata_hints,
+					vdo_minimum_io_size, vdo_block_map_cache_size,
+					vdo_block_map_era_length, vdo_use_sparse_index,
+					vdo_index_memory_size, vdo_slab_size, vdo_ack_threads,
+					vdo_bio_threads, vdo_bio_rotation, vdo_cpu_threads,
+					vdo_hash_zone_threads, vdo_logical_threads,
+					vdo_physical_threads, vdo_max_discard,
+					vdo_write_policy, vdo_header_size):
 		super(LvStateVdo, self).__init__(Uuid, Name, Path, SizeBytes,
 					vg_name, vg_uuid, pool_lv_uuid, PoolLv,
 					origin_uuid, OriginLv, DataPercent, Attr, Tags, active,
@@ -595,7 +595,7 @@ class Lv(LvCommon):
 				optional_size = space + 512 - remainder
 
 		LvCommon.handle_execute(*cmdhandler.vg_lv_snapshot(
-			lv_name, snapshot_options,name, optional_size))
+			lv_name, snapshot_options, name, optional_size))
 		full_name = "%s/%s" % (dbo.vg_name_lookup(), name)
 		return cfg.om.get_object_path_by_lvm_id(full_name)
 
@@ -635,7 +635,7 @@ class Lv(LvCommon):
 
 		size_change = new_size_bytes - dbo.SizeBytes
 		LvCommon.handle_execute(*cmdhandler.lv_resize(
-			dbo.lvm_id, size_change,pv_dests, resize_options))
+			dbo.lvm_id, size_change, pv_dests, resize_options))
 		return "/"
 
 	@dbus.service.method(
@@ -845,10 +845,10 @@ class LvVdoPool(Lv):
 		cfg.worker_q.put(r)
 
 	@dbus.service.method(
-	dbus_interface=VDO_POOL_INTERFACE,
-	in_signature='ia{sv}',
-	out_signature='o',
-	async_callbacks=('cb', 'cbe'))
+		dbus_interface=VDO_POOL_INTERFACE,
+		in_signature='ia{sv}',
+		out_signature='o',
+		async_callbacks=('cb', 'cbe'))
 	def DisableCompression(self, tmo, comp_options, cb, cbe):
 		r = RequestEntry(
 			tmo, LvVdoPool._enable_disable_compression,
@@ -878,10 +878,10 @@ class LvVdoPool(Lv):
 		cfg.worker_q.put(r)
 
 	@dbus.service.method(
-	dbus_interface=VDO_POOL_INTERFACE,
-	in_signature='ia{sv}',
-	out_signature='o',
-	async_callbacks=('cb', 'cbe'))
+		dbus_interface=VDO_POOL_INTERFACE,
+		in_signature='ia{sv}',
+		out_signature='o',
+		async_callbacks=('cb', 'cbe'))
 	def DisableDeduplication(self, tmo, dedup_options, cb, cbe):
 		r = RequestEntry(
 			tmo, LvVdoPool._enable_disable_deduplication,

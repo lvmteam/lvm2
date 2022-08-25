@@ -26,7 +26,6 @@ try:
 except ImportError:
 	import json
 
-SEP = '{|}'
 
 total_time = 0.0
 total_count = 0
@@ -175,7 +174,6 @@ def call_lvm(command, debug=False, line_cb=None,
 		# We can bail out before the lvm command finished when we get a signal
 		# which is requesting we exit
 		return -errno.EINTR, "", "operation interrupted"
-
 
 
 # The actual method which gets called to invoke the lvm command, can vary

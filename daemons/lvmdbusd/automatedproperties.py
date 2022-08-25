@@ -88,7 +88,6 @@ class AutomatedProperties(dbus.service.Object):
 			cb, cbe, False)
 		cfg.worker_q.put(r)
 
-
 	@staticmethod
 	def _get_all_prop(obj, interface_name):
 		if interface_name in obj.interface(True):

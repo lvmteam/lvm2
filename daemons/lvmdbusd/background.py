@@ -7,16 +7,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import subprocess
 from . import cfg
 from .cmdhandler import options_to_cli_args, LvmExecutionMeta, call_lvm
 import dbus
-from .utils import pv_range_append, pv_dest_ranges, log_error, log_debug,\
-					mt_async_call
+from .utils import pv_range_append, pv_dest_ranges, log_error, log_debug
 from .request import RequestEntry
 import threading
 import time
-import traceback
 
 
 def pv_move_lv_cmd(move_options, lv_full_name,

@@ -166,7 +166,7 @@ class LVMShellProxy(object):
 
 	def get_last_log(self):
 		self._write_cmd('lastlog\n')
-		report_json= self._read_response()[1]
+		report_json = self._read_response()[1]
 		return LVMShellProxy.get_error_msg(report_json)
 
 	@staticmethod
