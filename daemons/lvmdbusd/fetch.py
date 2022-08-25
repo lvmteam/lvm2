@@ -193,16 +193,14 @@ class StateUpdate(object):
 			except queue.Empty:
 				pass
 			except Exception as e:
-				st = traceback.format_exc()
-				log_error("update_thread exception: \n%s" % st)
-				cfg.debug.dump()
-				cfg.flightrecorder.dump()
 				exception_count += 1
 				if exception_count >= 5:
+					st = traceback.format_exc()
+					log_error("Too many errors in update_thread, exiting daemon (last exception reported): \n %s" % st)
+					cfg.debug.dump()
+					cfg.flightrecorder.dump()
 					bailing(e)
-					log_error("Too many errors in update_thread, exiting daemon")
 					cfg.exit_daemon()
-
 				else:
 					# Slow things down when encountering errors
 					time.sleep(1)

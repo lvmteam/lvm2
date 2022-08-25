@@ -711,9 +711,6 @@ class MThreadRunner(object):
 				self.rc = self.f()
 		except BaseException as be:
 			self.exception = be
-			st = traceback.format_exc()
-			log_error("MThreadRunner: exception \n %s" % st)
-			log_error("Exception will be raised in calling thread!")
 
 
 def _remove_objects(dbus_objects_rm):
