@@ -671,7 +671,7 @@ arg(replace_ARG, '\0', "replace", pv_VAL, ARG_GROUPABLE, 0,
     "Multiple PVs can be replaced by repeating this option.\n"
     "See \\fBlvmraid\\fP(7) for more information.\n")
 
-arg(reportformat_ARG, '\0', "reportformat", reportformat_VAL, 0, 0,
+arg(reportformat_ARG, '\0', "reportformat", reportformat_VAL, ARG_NONINTERACTIVE, 0,
     "Overrides current output format for reports which is defined globally by\n"
     "the report/output_format setting in \\fBlvm.conf\\fP(5).\n"
     "\\fBbasic\\fP is the original format with columns and rows.\n"

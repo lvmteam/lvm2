@@ -78,6 +78,7 @@ static void *dm_pool_alloc(void *p, size_t size)
 /* needed to include args.h */
 #define ARG_COUNTABLE 0x00000001
 #define ARG_GROUPABLE 0x00000002
+#define ARG_NONINTERACTIVE 0x00000004
 struct cmd_context;
 struct arg_values;
 

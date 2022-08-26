@@ -2261,6 +2261,15 @@ static int _process_command_line(struct cmd_context *cmd, int *argc, char ***arg
 
 		av = &cmd->opt_arg_values[arg_enum];
 
+		if (a->flags & ARG_NONINTERACTIVE && cmd->is_interactive) {
+			log_error("Argument%s%c%s%s cannot be used in interactive mode.",
+				  a->short_opt ? " -" : "",
+				  a->short_opt ? : ' ',
+				  (a->short_opt && a->long_opt) ?
+				  "/" : "", a->long_opt ? : "");
+			return 0;
+		}
+
 		if (a->flags & ARG_GROUPABLE) {
 			/*
 			 * Start a new group of arguments:
