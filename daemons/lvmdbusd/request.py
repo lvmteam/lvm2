@@ -71,6 +71,9 @@ class RequestEntry(object):
 		try:
 			result = self.method(*self.arguments)
 			self.register_result(result)
+		except SystemExit as se:
+			self.register_error(-1, str(se), se)
+			raise se
 		except Exception as e:
 			# Use the request entry to return the result as the client may
 			# have gotten a job by the time we hit an error

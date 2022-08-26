@@ -109,6 +109,13 @@ class LVMShellProxy(object):
 				log_debug(str(ioe))
 				pass
 
+		if keep_reading and run.value == 0:
+			# We didn't complete as we are shutting down
+			# Try to clean up lvm shell process
+			log_debug("exiting lvm shell as we are shutting down")
+			self.exit_shell()
+			raise SystemExit
+
 		return stdout, report_json, stderr
 
 	def _write_cmd(self, cmd):
@@ -226,15 +233,9 @@ class LVMShellProxy(object):
 						error_msg = 'No error reason provided! (missing "log" section)'
 
 		if debug or rc != 0:
-			log_error(('CMD: %s' % cmd))
-			log_error(("EC = %d" % rc))
+			log_error(("CMD= %s" % cmd))
+			log_error(("EC= %d" % rc))
 			log_error(("ERROR_MSG=\n %s\n" % error_msg))
-
-			if run.value == 0:
-				# Try to clean up lvm shelll process
-				log_debug("exiting lvm shell as we are shutting down")
-				self.exit_shell()
-				raise Exception("Daemon is exiting!")
 
 		return rc, report_json, error_msg
 

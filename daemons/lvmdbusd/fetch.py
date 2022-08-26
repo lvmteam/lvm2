@@ -154,6 +154,8 @@ class StateUpdate(object):
 					obj.deferred = False
 
 				if len(queued_requests) == 0 and wait:
+					# Note: If we don't have anything for 2 seconds we will
+					# get a queue.Empty exception raised here
 					queued_requests.append(obj.queue.get(True, 2))
 
 				# Ok we have one or the deferred queue has some,
@@ -192,6 +194,8 @@ class StateUpdate(object):
 
 			except queue.Empty:
 				pass
+			except SystemExit:
+				break
 			except Exception as e:
 				exception_count += 1
 				if exception_count >= 5:

@@ -170,7 +170,7 @@ def call_lvm(command, debug=False, line_cb=None,
 		return process.returncode, stdout_text, stderr_text
 	else:
 		if cfg.run.value == 0:
-			raise Exception("Daemon is exiting!")
+			raise SystemExit
 		# We can bail out before the lvm command finished when we get a signal
 		# which is requesting we exit
 		return -errno.EINTR, "", "operation interrupted"

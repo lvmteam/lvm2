@@ -50,6 +50,8 @@ def process_request():
 			log_debug("Method complete: %s" % str(req.method))
 		except queue.Empty:
 			pass
+		except SystemExit:
+			break
 		except Exception:
 			st = traceback.format_exc()
 			utils.log_error("process_request exception: \n%s" % st)
