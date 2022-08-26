@@ -7,6 +7,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import dbus
 import threading
 # noinspection PyUnresolvedReferences
 from gi.repository import GLib
@@ -74,14 +75,20 @@ class RequestEntry(object):
 		except SystemExit as se:
 			self.register_error(-1, str(se), se)
 			raise se
+		except dbus.exceptions.DBusException as dbe:
+			# This is an expected error path when something goes awry that
+			# we handled
+			self.register_error(-1, str(dbe), dbe)
 		except Exception as e:
 			# Use the request entry to return the result as the client may
 			# have gotten a job by the time we hit an error
-			# Lets get the stacktrace and set that to the error message
-			st = traceback.format_exc()
+			# Lets set the exception text as the error message and log the
+			# exception in the journal for figuring out what went wrong.
 			cfg.debug.dump()
 			cfg.flightrecorder.dump()
-			log_error("Exception returned to client: \n%s" % st)
+			tb = ''.join(traceback.format_tb(e.__traceback__))
+			log_error("While processing %s: we encountered\n%s" % (str(self.method), tb))
+			log_error("Error returned to client: %s" % str(e))
 			self.register_error(-1, str(e), e)
 
 	def is_done(self):
