@@ -45,6 +45,33 @@
 
 /* *INDENT-OFF* */
 
+/*
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * IMPORTANT NOTE ABOUT ADDING A NEW VALUE FOR REPORTING
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *
+ * When adding a new string value to report, try to keep it
+ * self-descriptive so when it's printed even without the header,
+ * we can still deduce what it is actually reporting.
+ *
+ * If you need more than one descriptive string to mean the same value,
+ * please define them as reserved values in values.h.
+ *
+ * The first reserved value is the one that is printed in reports (unless
+ * it's a binary value and we have report/binary_values_as_numeric=1 config
+ * option used OR --binary command line option is used OR we're using an
+ * output format which must always print binary values in numeric way,
+ * like json_std output format.
+ *
+ * All the other (2nd and further) listed reserved names are synonyms which
+ * may be also used in selection (-S|--select).
+ *
+ * Also, always use proper *_disp functions to display each type of value
+ * properly. For example, in case of binary values, you should use
+ * _binary_disp so that we can always switch between numerical (0/1/-1) and
+ * string representation while reporting the value.
+ */
+
 /* Per-type reserved values usable for all fields of certain type. */
 TYPE_RESERVED_VALUE(NUM, NOFLAG, num_undef_64, "Reserved value for undefined numeric value.", UINT64_C(-1), "-1", "unknown", "undefined", "undef")
 
