@@ -36,9 +36,9 @@ static int _vgimportdevices_single(struct cmd_context *cmd,
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (is_missing_pv(pvl->pv) || !pvl->pv->dev) {
 			memcpy(pvid, &pvl->pv->id.uuid, ID_LEN);
-			log_error("Not importing devices for VG %s with missing PV %s.",
-				 vg->name, pvid);
-			goto bad;
+			log_print("Not importing devices for VG %s with missing PV %s.",
+				  vg->name, pvid);
+			return ECMD_PROCESSED;
 		}
 	}
 
@@ -71,14 +71,17 @@ static int _vgimportdevices_single(struct cmd_context *cmd,
 		updated_pvs++;
 	}
 
+	/*
+	 * Writes the device_id of each PV into the vg metadata.
+	 * This is not a critial step and should not influence
+	 * the result of the command.
+	 */
 	if (updated_pvs) {
 		if (!vg_write(vg) || !vg_commit(vg))
-			goto_bad;
+			log_print("Failed to write device ids in VG metadata.");
 	}
 
 	return ECMD_PROCESSED;
-bad:
-	return ECMD_FAILED;
 }
 
 /*
@@ -114,6 +117,7 @@ int vgimportdevices(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct vgimportdevices_params vp = { 0 };
 	struct processing_handle *handle;
+	int created_file = 0;
 	int ret = ECMD_FAILED;
 
 	if (arg_is_set(cmd, foreign_ARG))
@@ -139,9 +143,12 @@ int vgimportdevices(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Devices file not enabled.");
 		return ECMD_FAILED;
 	}
-	if (!devices_file_exists(cmd) && !devices_file_touch(cmd)) {
-		log_error("Failed to create devices file.");
-		return ECMD_FAILED;
+	if (!devices_file_exists(cmd)) {
+	       	if (!devices_file_touch(cmd)) {
+			log_error("Failed to create devices file.");
+			return ECMD_FAILED;
+		}
+		created_file = 1;
 	}
 
 	/*
@@ -195,22 +202,30 @@ int vgimportdevices(struct cmd_context *cmd, int argc, char **argv)
 	 */
 	ret = process_each_vg(cmd, argc, argv, NULL, NULL, READ_FOR_UPDATE,
 			      0, handle, _vgimportdevices_single);
-	if (ret == ECMD_FAILED)
-		goto out;
+	if (ret == ECMD_FAILED) {
+		/*
+		 * Error from setting up devices file or label_scan,
+		 * _vgimportdevices_single does not return an error.
+		 */
+		goto_out;
+	}
 
 	if (!vp.added_devices) {
-		log_print("No devices to add.");
+		log_error("No devices to add.");
+		ret = ECMD_FAILED;
 		goto out;
 	}
 
 	if (!device_ids_write(cmd)) {
-		log_print("Failed to update devices file.");
+		log_error("Failed to write the devices file.");
 		ret = ECMD_FAILED;
 		goto out;
 	}
 
 	log_print("Added %u devices to devices file.", vp.added_devices);
 out:
+	if ((ret == ECMD_FAILED) && created_file)
+		unlink(cmd->devices_file_path);
 	destroy_processing_handle(cmd, handle);
 	return ret;
 }
