@@ -167,7 +167,8 @@ static void _allocate_memory(void)
 	 */
 	void *stack_mem;
 	struct rlimit limit;
-	int i, area = 0, missing = _size_malloc_tmp, max_areas = 32, hblks;
+	int i, area = 0, missing = _size_malloc_tmp, max_areas = 32;
+	size_t hblks;
 	char *areas[max_areas];
 
 	/* Check if we could preallocate requested stack */
@@ -180,6 +181,12 @@ static void _allocate_memory(void)
 	}
 	/* FIXME else warn user setting got ignored */
 
+#ifdef HAVE_MALLINFO2
+        /* Prefer mallinfo2 call when avaialble with newer glibc */
+#define MALLINFO mallinfo2
+#else
+#define MALLINFO mallinfo
+#endif
         /*
          *  When a brk() fails due to fragmented address space (which sometimes
          *  happens when we try to grab 8M or so), glibc will make a new
@@ -191,13 +198,13 @@ static void _allocate_memory(void)
          *  memory on free(), this is good enough for our purposes.
          */
 	while (missing > 0) {
-		struct mallinfo inf = mallinfo();
+		struct MALLINFO inf = MALLINFO();
 		hblks = inf.hblks;
 
 		if ((areas[area] = malloc(_size_malloc_tmp)))
 			_touch_memory(areas[area], _size_malloc_tmp);
 
-		inf = mallinfo();
+		inf = MALLINFO();
 
 		if (hblks < inf.hblks) {
 			/* malloc cheated and used mmap, even though we told it
