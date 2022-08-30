@@ -642,9 +642,6 @@
 /* Define to 1 to include the LVM readline shell. */
 #undef READLINE_SUPPORT
 
-/* Define as the return type of signal handlers (`int' or `void'). */
-#undef RETSIGTYPE
-
 /* Define to 1 to include built-in support for snapshots. */
 #undef SNAPSHOT_INTERNAL
 
@@ -688,10 +685,6 @@
 
 /* The path to 'thin_restore', if available. */
 #undef THIN_RESTORE_CMD
-
-/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. This
-   macro is obsolete. */
-#undef TIME_WITH_SYS_TIME
 
 /* Define to 1 if your <sys/time.h> declares `struct tm'. */
 #undef TM_IN_SYS_TIME

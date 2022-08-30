@@ -95,9 +95,6 @@ dnl -- Check for header files.
 AC_HEADER_DIRENT
 AC_HEADER_MAJOR
 AC_HEADER_STDBOOL
-AC_HEADER_STDC
-AC_HEADER_SYS_WAIT
-AC_HEADER_TIME
 
 AC_CHECK_HEADERS([assert.h ctype.h dirent.h errno.h fcntl.h float.h \
   getopt.h inttypes.h langinfo.h libgen.h limits.h locale.h paths.h \
@@ -125,7 +122,6 @@ AC_STRUCT_ST_BLOCKS
 AC_STRUCT_TM
 AC_TYPE_OFF_T
 AC_TYPE_PID_T
-AC_TYPE_SIGNAL
 AC_TYPE_SIZE_T
 AC_TYPE_MODE_T
 AC_TYPE_INT8_T
@@ -1139,7 +1135,7 @@ AC_CHECK_HEADER([systemd/sd-id128.h],
 		[APP_MACHINEID_SUPPORT=no])
 AC_MSG_CHECKING(whether to support systemd appmachineid)
 AC_ARG_ENABLE(app-machineid,
-	      AC_HELP_STRING([--disable-app-machineid],
+	      AS_HELP_STRING([--disable-app-machineid],
 			     [disable LVM system ID using app-specific machine-id]),
 	      AS_IF([test "$enableval" = yes && test "$APP_MACHINEID_SUPPORT" = no],
 		    AC_MSG_ERROR([Enabling app machineid requires systemd/sd-id128.h and systemd >= 234.]))
@@ -1323,8 +1319,8 @@ if test "$BUILD_LVMDBUSD" = yes; then
 	test "$PYTHON3_BINDINGS" = yes && PYTHON_BINDINGS=yes
 
 	# To get this macro, install autoconf-archive package then run autoreconf
-	AC_PYTHON_MODULE([pyudev], [Required], python3)
-	AC_PYTHON_MODULE([dbus], [Required], python3)
+	AX_PYTHON_MODULE([pyudev], [Required], python3)
+	AX_PYTHON_MODULE([dbus], [Required], python3)
 fi
 
 ################################################################################
