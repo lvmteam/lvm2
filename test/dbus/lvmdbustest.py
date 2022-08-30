@@ -2040,6 +2040,17 @@ class TestDbusService(unittest.TestCase):
 
 		return new_pv_object_path
 
+	@staticmethod
+	def _scan_lvs_enabled():
+		cmd = ['lvmconfig',  '--typeconfig', 'full', 'devices/scan_lvs']
+		config = Popen(cmd, stdout=PIPE, stderr=PIPE, close_fds=True, env=os.environ)
+		out = config.communicate()
+		if config.returncode != 0:
+			return False
+		if "scan_lvs=1" == out[0].decode("utf-8").strip():
+			return True
+		return False
+
 	def test_nesting(self):
 		# check to see if we handle an LV becoming a PV which has it's own
 		# LV
@@ -2053,6 +2064,8 @@ class TestDbusService(unittest.TestCase):
 
 		if dm_dev_dir != '/dev':
 			raise unittest.SkipTest('test not running in real /dev')
+		if not TestDbusService._scan_lvs_enabled():
+			raise unittest.SkipTest('scan_lvs=0 in config, unit test requires scan_lvs=1')
 		pv_object_path = self.objs[PV_INT][0].object_path
 		if not self.objs[PV_INT][0].Pv.Name.startswith("/dev"):
 			raise unittest.SkipTest('test not running in /dev')
