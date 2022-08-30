@@ -132,8 +132,10 @@ int vgimportdevices(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 
 	/*
-	 * Prepare devices file preemptively because the error path for this
-	 * case from process_each is not as clean.
+	 * Prepare/create devices file preemptively because the error path for
+	 * this case from process_each/setup_devices is not as clean.
+	 * This means that when setup_devices is called, it the devices
+	 * file steps will be redundant, and need to handle being repeated.
 	 */
 	if (!setup_devices_file(cmd)) {
 		log_error("Failed to set up devices file.");
@@ -141,6 +143,10 @@ int vgimportdevices(struct cmd_context *cmd, int argc, char **argv)
 	}
 	if (!cmd->enable_devices_file) {
 		log_error("Devices file not enabled.");
+		return ECMD_FAILED;
+	}
+	if (!lock_devices_file(cmd, LOCK_EX)) {
+		log_error("Failed to lock the devices file.");
 		return ECMD_FAILED;
 	}
 	if (!devices_file_exists(cmd)) {
