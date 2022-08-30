@@ -1937,10 +1937,9 @@ int setup_devices(struct cmd_context *cmd)
 
 	if (!file_exists) {
 		/*
-		 * pvcreate/vgcreate/vgimportdevices/lvmdevices-add create
-		 * a new devices file here if it doesn't exist.
-		 * They have the create_edit_devices_file flag set.
-		 * First they create/lock-ex the devices file lockfile.
+		 * pvcreate/vgcreate create a new devices file here if it
+		 * doesn't exist.  They have create_edit_devices_file=1.
+		 * First create/lock-ex the devices file lockfile.
 		 * Other commands will not use a devices file if none exists.
 		 */
 		lock_mode = LOCK_EX;

@@ -2468,6 +2468,7 @@ static int _lock_devices_file(struct cmd_context *cmd, int mode, int nonblock, i
 
 	if (_devices_file_locked == mode) {
 		/* can happen when a command holds an ex lock and does an update in device_ids_validate */
+		/* can happen when vgimportdevices calls this directly, followed later by setup_devices */
 		if (held)
 			*held = 1;
 		return 1;
