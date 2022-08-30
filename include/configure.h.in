@@ -267,6 +267,9 @@
 /* Define to 1 if you have the <machine/endian.h> header file. */
 #undef HAVE_MACHINE_ENDIAN_H
 
+/* Define to 1 if you have the `mallinfo2' function. */
+#undef HAVE_MALLINFO2
+
 /* Define to 1 if your system has a GNU libc compatible `malloc' function, and
    to 0 otherwise. */
 #undef HAVE_MALLOC
