@@ -32,8 +32,8 @@
 #define DEV_NOT_O_NOATIME	0x00000400	/* Don't use O_NOATIME */
 #define DEV_IN_BCACHE		0x00000800      /* dev fd is open and used in bcache */
 #define DEV_BCACHE_EXCL		0x00001000      /* bcache_fd should be open EXCL */
-/* unused                       0x00002000      */
-/* unused			0x00004000	*/
+#define DEV_ADDED_SYS_WWID	0x00002000      /* wwid has been added from sysfs wwid file */
+#define DEV_ADDED_VPD_WWIDS	0x00004000	/* wwids have been added from vpd_pg83 */
 #define DEV_BCACHE_WRITE	0x00008000      /* bcache_fd is open with RDWR */
 #define DEV_SCAN_FOUND_LABEL	0x00010000      /* label scan read dev and found label */
 #define DEV_IS_MD_COMPONENT	0x00020000	/* device is an md component */
@@ -59,22 +59,29 @@ struct dev_ext {
 	void *handle;
 };
 
+#define DEV_ID_TYPE_SYS_WWID   1
+#define DEV_ID_TYPE_SYS_SERIAL 2
+#define DEV_ID_TYPE_MPATH_UUID 3
+#define DEV_ID_TYPE_MD_UUID    4
+#define DEV_ID_TYPE_LOOP_FILE  5
+#define DEV_ID_TYPE_CRYPT_UUID 6
+#define DEV_ID_TYPE_LVMLV_UUID 7
+#define DEV_ID_TYPE_DEVNAME    8
+
 #define DEV_WWID_SIZE 128
 
-struct dev_wwid {
-	struct dm_list list;
-	int type;
-	char id[DEV_WWID_SIZE];
-};
+/*
+ * A wwid read from:
+ * /sys/dev/block/%d:%d/device/wwid
+ * /sys/dev/block/%d:%d/wwid
+ * /sys/dev/block/%d:%d/device/vpd_pg83
+ */
 
-#define DEV_ID_TYPE_SYS_WWID   0x0001
-#define DEV_ID_TYPE_SYS_SERIAL 0x0002
-#define DEV_ID_TYPE_MPATH_UUID 0x0003
-#define DEV_ID_TYPE_MD_UUID    0x0004
-#define DEV_ID_TYPE_LOOP_FILE  0x0005
-#define DEV_ID_TYPE_CRYPT_UUID 0x0006
-#define DEV_ID_TYPE_LVMLV_UUID 0x0007
-#define DEV_ID_TYPE_DEVNAME    0x0008
+struct dev_wwid {
+	struct dm_list list;     /* dev->wwids */
+	int type;                /* 1,2,3 for NAA,EUI,T10 */
+	char id[DEV_WWID_SIZE];  /* includes prefix naa.,eui.,t10. */
+};
 
 /*
  * A device ID of a certain type for a device.
@@ -83,7 +90,7 @@ struct dev_wwid {
  */
 
 struct dev_id {
-	struct dm_list list;
+	struct dm_list list;    /* dev->ids */
 	struct device *dev;
 	uint16_t idtype;	/* DEV_ID_TYPE_ */
 	char *idname;		/* id string determined by idtype */
@@ -215,8 +222,6 @@ void dev_destroy_file(struct device *dev);
 
 int dev_mpath_init(const char *config_wwids_file);
 void dev_mpath_exit(void);
-struct dev_wwid *add_wwid(char *id, int id_type, struct dm_list *ids);
-void free_wwids(struct dm_list *ids);
 int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list *ids);
 int format_t10_id(const unsigned char *in, int in_bytes, unsigned char *out, int out_bytes);
 

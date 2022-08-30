@@ -168,7 +168,8 @@ void free_dus(struct dm_list *dus)
 
 void free_did(struct dev_id *id)
 {
-	free(id->idname);
+	if (strlen(id->idname))
+		free(id->idname); /* idname = "" when id type doesn't exist */
 	free(id);
 }
 
@@ -321,6 +322,106 @@ static int _dev_has_lvmlv_uuid(struct cmd_context *cmd, struct device *dev, cons
 	return 1;
 }
 
+/*
+ * The numbers 1,2,3 for NAA,EUI,T10 are part of the standard
+ * and are used in the vpd data.
+ */
+static int _wwid_type_num(char *id)
+{
+	if (!strncmp(id, "naa.", 4))
+		return 3;
+	else if (!strncmp(id, "eui.", 4))
+		return 2;
+	else if (!strncmp(id, "t10.", 4))
+		return 1;
+	else
+		return -1;
+}
+
+void free_wwids(struct dm_list *ids)
+{
+	struct dev_wwid *dw, *safe;
+
+	dm_list_iterate_items_safe(dw, safe, ids) {
+		dm_list_del(&dw->list);
+		free(dw);
+	}
+}
+
+/*
+ * wwid type 8 "scsi name string" (which includes "iqn" names) is
+ * included in vpd_pg83, but we currently do not use these for
+ * device ids (maybe in the future.)
+ * They can still be checked by dev-mpath when looking for a device
+ * in /etc/multipath/wwids.
+ */
+
+struct dev_wwid *dev_add_wwid(char *id, int id_type, struct dm_list *ids)
+{
+	struct dev_wwid *dw;
+	int len;
+
+	if (!id_type) {
+		id_type = _wwid_type_num(id);
+		if (id_type == -1)
+			log_debug("unknown wwid type %s", id);
+	}
+
+	if (!(dw = zalloc(sizeof(struct dev_wwid))))
+		return NULL;
+	len = strlen(id);
+	if (len >= DEV_WWID_SIZE)
+		len = DEV_WWID_SIZE - 1;
+	memcpy(dw->id, id, len);
+	dw->type = id_type;
+	dm_list_add(ids, &dw->list);
+	return dw;
+}
+
+#define VPD_SIZE 4096
+
+int dev_read_vpd_wwids(struct cmd_context *cmd, struct device *dev)
+{
+	unsigned char vpd_data[VPD_SIZE] = { 0 };
+	int vpd_datalen = 0;
+
+	dev->flags |= DEV_ADDED_VPD_WWIDS;
+
+	if (!read_sys_block_binary(cmd, dev, "device/vpd_pg83", (char *)vpd_data, VPD_SIZE, &vpd_datalen))
+		return 0;
+	if (!vpd_datalen)
+		return 0;
+
+	/* adds dev_wwid entry to dev->wwids for each id in vpd data */
+	parse_vpd_ids(vpd_data, vpd_datalen, &dev->wwids);
+	return 1;
+}
+
+int dev_read_sys_wwid(struct cmd_context *cmd, struct device *dev,
+		      char *buf, int bufsize, struct dev_wwid **dw_out)
+{
+	struct dev_wwid *dw;
+	int ret;
+
+	dev->flags |= DEV_ADDED_SYS_WWID;
+
+	ret = read_sys_block(cmd, dev, "device/wwid", buf, bufsize);
+	if (!ret || !buf[0]) {
+		/* the wwid file is not under device for nvme devs */
+		ret = read_sys_block(cmd, dev, "wwid", buf, bufsize);
+	}
+	if (!ret || !buf[0])
+		return 0;
+
+	/* Note, if wwids are also read from vpd, this same wwid will be added again. */
+
+	if (!(dw = dev_add_wwid(buf, 0, &dev->wwids)))
+		return_0;
+	if (dw_out)
+		*dw_out = dw;
+	return 1;
+}
+
 const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, uint16_t idtype)
 {
 	char sysbuf[PATH_MAX] = { 0 };
@@ -328,10 +429,9 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 	int i;
 
 	if (idtype == DEV_ID_TYPE_SYS_WWID) {
-		read_sys_block(cmd, dev, "device/wwid", sysbuf, sizeof(sysbuf));
+		dev_read_sys_wwid(cmd, dev, sysbuf, sizeof(sysbuf), NULL);
 
-		if (!sysbuf[0])
-			read_sys_block(cmd, dev, "wwid", sysbuf, sizeof(sysbuf));
+		/* FIXME: enable these QEMU t10 wwids */
 
 		/* qemu wwid begins "t10.ATA     QEMU HARDDISK ..." */
 		if (strstr(sysbuf, "QEMU HARDDISK"))
@@ -448,6 +548,11 @@ static int _dev_has_stable_id(struct cmd_context *cmd, struct device *dev)
 
 	if ((MAJOR(dev->dev) == cmd->dev_types->md_major) &&
 	    read_sys_block(cmd, dev, "md/uuid", sysbuf, sizeof(sysbuf)))
+		return 1;
+
+	if (!(dev->flags & DEV_ADDED_VPD_WWIDS))
+		dev_read_vpd_wwids(cmd, dev);
+	if (!dm_list_empty(&dev->wwids))
 		return 1;
 
  out:
@@ -1012,14 +1117,18 @@ int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid_
 
 	/*
 	 * Choose the device_id type for the device being added.
-	 *
-	 * 0. use an idtype specified by the user
-	 * 1. use an idtype specific to a special/virtual device type
-	 *    e.g. loop, mpath, crypt, lvmlv, md, etc.
-	 * 2. use an idtype specified by user option.
-	 * 3. use sys_wwid, if it exists.
-	 * 4. use sys_serial, if it exists.
-	 * 5. use devname as the last resort.
+	 * possible breakage:
+	 * . if the kernel changes what it prints from sys/wwid (e.g. from
+	 *   the t10 value to the naa value for the dev), this would break
+	 *   matching du to dev unless lvm tries to match all of the dev's
+	 *   different wwids from vpd_pg83 against sys_wwid entries.
+	 * . adding a new device_id type into the devices file breaks prior
+	 *   lvm versions that attempt to use the devices file from the new
+	 *   lvm version.
+	 * . using a value for sys_wwid that comes from vpd_pg83 and not
+	 *   sys/wwid (e.g. taking a naa wwid from vpd_pg83 when sys/wwid
+	 *   is printing the t10 wwid) would break prior lvm versions that
+	 *   only match a du against the sys/wwid values.
 	 */
 
 	if (idtype_arg) {
@@ -1060,36 +1169,44 @@ int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid_
 	/* TODO: kpartx partitions on loop devs. */
 	if (MAJOR(dev->dev) == cmd->dev_types->loop_major) {
 		idtype = DEV_ID_TYPE_LOOP_FILE;
-		goto id_name;
+		if ((idname = device_id_system_read(cmd, dev, idtype)))
+			goto id_done;
+		goto id_last;
 	}
 
 	if (MAJOR(dev->dev) == cmd->dev_types->md_major) {
 		idtype = DEV_ID_TYPE_MD_UUID;
-		goto id_name;
+		if ((idname = device_id_system_read(cmd, dev, idtype)))
+			goto id_done;
+		goto id_last;
 	}
 
 	if (MAJOR(dev->dev) == cmd->dev_types->drbd_major) {
 		/* TODO */
 		log_warn("Missing support for DRBD idtype");
+		goto id_last;
 	}
 
 	/*
 	 * No device-specific, existing, or user-specified idtypes,
 	 * so use first available of sys_wwid / sys_serial / devname.
 	 */
-	idtype = DEV_ID_TYPE_SYS_WWID;
 
-id_name:
-	if (!(idname = device_id_system_read(cmd, dev, idtype))) {
-		if (idtype == DEV_ID_TYPE_SYS_WWID) {
-			idtype = DEV_ID_TYPE_SYS_SERIAL;
-			goto id_name;
-		}
-		idtype = DEV_ID_TYPE_DEVNAME;
-		goto id_name;
-	}
+	idtype = DEV_ID_TYPE_SYS_WWID;
+	if ((idname = device_id_system_read(cmd, dev, idtype)))
+		goto id_done;
+
+	idtype = DEV_ID_TYPE_SYS_SERIAL;
+	if ((idname = device_id_system_read(cmd, dev, idtype)))
+		goto id_done;
+id_last:
+	idtype = DEV_ID_TYPE_DEVNAME;
+	if ((idname = device_id_system_read(cmd, dev, idtype)))
+		goto id_done;
 
 id_done:
+	if (!idname)
+		return_0;
 
 	/*
 	 * Create a dev_id struct for the new idtype on dev->ids.
@@ -1101,7 +1218,9 @@ id_done:
 		}
 	}
 
-	if (found_id && idname && strcmp(id->idname, idname)) {
+	if (found_id && idname && (!id->idname || strcmp(id->idname, idname))) {
+		log_debug("Replacing device id %s old %s new %s",
+			  idtype_to_str(id->idtype), id->idname ?: ".", idname);
 		dm_list_del(&id->list);
 		free_did(id);
 		found_id = 0;
@@ -1433,8 +1552,13 @@ static int _match_dm_devnames(struct cmd_context *cmd, struct device *dev,
 }
 
 /*
- * check for dev->ids entry with du->idtype, if found compare it,
- * if not, system_read of this type and add entry to dev->ids, compare it.
+ * du is a devices file entry.  dev is any device on the system.
+ * check if du is for dev by comparing the device's ids to du->idname.
+ *
+ * check for a dev->ids entry with du->idtype, if found compare it,
+ * if not, system_read idtype for the dev, add entry to dev->ids,
+ * compare it to du to check if it matches.
+ *
  * When a match is found, set up links among du/id/dev.
  */
 
@@ -1489,6 +1613,10 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 		return 0;
 	}
 
+	/*
+	 * Try to match du with ids that have already been read for the dev
+	 * (and saved on dev->ids to avoid rereading.)
+	 */
 	dm_list_iterate_items(id, &dev->ids) {
 		if (id->idtype == du->idtype) {
 			if ((id->idtype == DEV_ID_TYPE_DEVNAME) && _match_dm_devnames(cmd, dev, id, du)) {
@@ -1521,32 +1649,20 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 	if (!(id = zalloc(sizeof(struct dev_id))))
 		return_0;
 
-	if (!(idname = device_id_system_read(cmd, dev, du->idtype))) {
-		/*
-		 * Save a new id in dev->ids for this type to indicate no match
-		 * to avoid repeated system_read, since this called many times.
-		 * Setting idtype and NULL idname means no id of this type.
-		 */
-		id->idtype = du->idtype;
-		id->dev = dev;
-		dm_list_add(&dev->ids, &id->list);
-		/*
-		log_debug("Mismatch device_id %s %s to %s: no idtype",
-			  idtype_to_str(du->idtype), du->idname ?: ".", dev_name(dev));
-		*/
-		return 0;
-	}
+	idname = device_id_system_read(cmd, dev, du->idtype);
 
 	/*
-	 * Save this id for the device (so it can be quickly checked again), even
-	 * if it's not the idtype used to identify the dev in device_id_file.
+	 * Save this id for the dev, even if it doesn't exist (NULL)
+	 * or doesn't match du.  This avoids system_read of this idtype
+	 * repeatedly, and the saved id will be found in the loop
+	 * over dev->ids above.
 	 */
 	id->idtype = du->idtype;
-	id->idname = (char *)idname;
+	id->idname = (char *)idname ?: (char *)"";
 	id->dev = dev;
 	dm_list_add(&dev->ids, &id->list);
 
-	if (!strcmp(idname, du->idname)) {
+	if (idname && !strcmp(idname, du->idname)) {
 		du->dev = dev;
 		dev->id = id;
 		dev->flags |= DEV_MATCHED_USE_ID;
@@ -1557,8 +1673,9 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 
 	/*
 	log_debug("Mismatch device_id %s %s to %s: idname %s",
-		  idtype_to_str(du->idtype), du->idname ?: ".", dev_name(dev), idname);
+		  idtype_to_str(du->idtype), du->idname ?: ".", dev_name(dev), idname ?: ".");
 	*/
+
 	return 0;
 }
 

@@ -14,7 +14,9 @@
 
 #include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
+#include "lib/commands/toolcontext.h"
 #include "lib/device/device.h"
+#include "lib/device/device_id.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -98,6 +100,7 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 	const unsigned char *d, *cur_id_str;
 	size_t id_len = ID_BUFSIZE;
 	int id_size = -1;
+	int type;
 	uint8_t cur_id_size = 0;
 
 	memset(id, 0, ID_BUFSIZE);
@@ -119,7 +122,7 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 				break;
 			if (id_size >= ID_BUFSIZE)
 				id_size = ID_BUFSIZE - 1;
-			add_wwid(id, 1, ids);
+			dev_add_wwid(id, 1, ids);
 			break;
 		case 0x2:
 			/* EUI-64 */
@@ -145,7 +148,7 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 				break;
 			if (id_size >= ID_BUFSIZE)
 				id_size = ID_BUFSIZE - 1;
-			add_wwid(id, 2, ids);
+			dev_add_wwid(id, 2, ids);
 			break;
 		case 0x3:
 			/* NAA */
@@ -167,7 +170,7 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 				break;
 			if (id_size >= ID_BUFSIZE)
 				id_size = ID_BUFSIZE - 1;
-			add_wwid(id, 3, ids);
+			dev_add_wwid(id, 3, ids);
 			break;
 		case 0x8:
 			/* SCSI name string */
@@ -179,16 +182,27 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 			id_size = cur_id_size;
 
 			/*
+			 * if naa or eui ids are provided as scsi names,
+			 * consider them to be naa/eui types.
+			 */
+			if (!memcmp(id, "eui.", 4))
+				type = 2;
+			else if (!memcmp(id, "naa.", 4))
+				type = 3;
+			else
+				type = 8;
+
+			/*
 			 * Not in the kernel version, copying multipath code,
 			 * which checks if this string begins with naa or eui
 			 * and if so does tolower() on the chars.
 			 */
-			if (!strncmp(id, "naa.", 4) || !strncmp(id, "eui.", 4)) {
+			if ((type == 2) || (type == 3)) {
 				int i;
-				for (i = 0; i < id_size; i++)
+				for (i = 0; i < strlen(id); i++)
 					id[i] = tolower(id[i]);
 			}
-			add_wwid(id, 8, ids);
+			dev_add_wwid(id, type, ids);
 			break;
 		default:
 			break;
