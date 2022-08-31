@@ -383,6 +383,9 @@ class DaemonInfo(object):
 # noinspection PyUnresolvedReferences
 class TestDbusService(unittest.TestCase):
 	def setUp(self):
+
+		self.addCleanup(self.clean_up)
+
 		# Because of the sensitive nature of running LVM tests we will only
 		# run if we have PVs and nothing else, so that we can be confident that
 		# we are not mucking with someone's data on their system
@@ -462,11 +465,6 @@ class TestDbusService(unittest.TestCase):
 				if not found:
 					# print('Re-creating PV=', p)
 					self._pv_create(p)
-
-	def tearDown(self):
-		# If we get here it means we passed setUp, so lets remove anything
-		# and everything that remains, besides the PVs themselves
-		self.clean_up()
 
 	def _check_consistency(self):
 		# Only do consistency checks if we aren't running the unit tests
