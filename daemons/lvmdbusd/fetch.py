@@ -11,11 +11,10 @@ from .pv import load_pvs
 from .vg import load_vgs
 from .lv import load_lvs
 from . import cfg
-from .utils import MThreadRunner, log_debug, log_error
+from .utils import MThreadRunner, log_debug, log_error, LvmBug, extract_stack_trace
 import threading
 import queue
 import time
-import traceback
 
 
 def _main_thread_load(refresh=True, emit_signal=True):
@@ -160,6 +159,20 @@ class StateUpdate(object):
 			except queue.Empty:
 				pass
 
+		def _handle_error():
+			nonlocal exception_count
+			exception_count += 1
+
+			if exception_count >= 5:
+				log_error("Too many errors in update_thread, exiting daemon")
+				cfg.debug.dump()
+				cfg.flightrecorder.dump()
+				bailing(e)
+				cfg.exit_daemon()
+			else:
+				# Slow things down when encountering errors
+				time.sleep(1)
+
 		while cfg.run.value != 0:
 			# noinspection PyBroadException
 			try:
@@ -191,18 +204,12 @@ class StateUpdate(object):
 				pass
 			except SystemExit:
 				break
+			except LvmBug as bug:
+				log_error(str(bug))
+				_handle_error()
 			except Exception as e:
-				exception_count += 1
-				if exception_count >= 5:
-					st = traceback.format_exc()
-					log_error("Too many errors in update_thread, exiting daemon (last exception reported): \n %s" % st)
-					cfg.debug.dump()
-					cfg.flightrecorder.dump()
-					bailing(e)
-					cfg.exit_daemon()
-				else:
-					# Slow things down when encountering errors
-					time.sleep(1)
+				log_error("update_thread: \n%s" % extract_stack_trace(e))
+				_handle_error()
 
 		# Make sure to unblock any that may be waiting before we exit this thread
 		# otherwise they hang forever ...

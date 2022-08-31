@@ -17,7 +17,7 @@ import os
 
 from lvmdbusd import cfg
 from lvmdbusd.utils import pv_dest_ranges, log_debug, log_error, add_no_notify,\
-			make_non_block, read_decoded, extract_stack_trace
+			make_non_block, read_decoded, extract_stack_trace, LvmBug
 from lvmdbusd.lvm_shell_proxy import LVMShellProxy
 
 try:
@@ -628,7 +628,7 @@ def lvm_full_report_json():
 							(str(joe), out))
 				raise joe
 
-	return None
+	raise LvmBug("'fullreport' exited with code '%d'" % rc)
 
 
 def pv_resize(device, size_bytes, create_options):

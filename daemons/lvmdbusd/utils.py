@@ -768,3 +768,12 @@ def extract_stack_trace(exception):
 	return ''.join(traceback.format_exception(None, exception, exception.__traceback__))
 
 
+class LvmBug(RuntimeError):
+	"""
+	Things that are clearly a bug with lvm itself.
+	"""
+	def __init__(self, msg):
+		super().__init__(msg)
+
+	def __str__(self):
+		return "lvm bug encountered: %s" % ' '.join(self.args)

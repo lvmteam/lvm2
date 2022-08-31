@@ -18,7 +18,7 @@ from .utils import vg_obj_path_generate, n, pv_obj_path_generate, \
 from .loader import common
 from .request import RequestEntry
 from .state import State
-from .utils import round_size
+from .utils import round_size, LvmBug
 
 
 # noinspection PyUnusedLocal
@@ -28,16 +28,23 @@ def pvs_state_retrieve(selection, cache_refresh=True):
 	if cache_refresh:
 		cfg.db.refresh()
 
-	for p in cfg.db.fetch_pvs(selection):
-		rc.append(
-			PvState(
-				p["pv_name"], p["pv_uuid"], p["pv_name"],
-				p["pv_fmt"], n(p["pv_size"]), n(p["pv_free"]),
-				n(p["pv_used"]), n(p["dev_size"]), n(p["pv_mda_size"]),
-				n(p["pv_mda_free"]), int(p["pv_ba_start"]),
-				n(p["pv_ba_size"]), n(p["pe_start"]),
-				int(p["pv_pe_count"]), int(p["pv_pe_alloc_count"]),
-				p["pv_attr"], p["pv_tags"], p["vg_name"], p["vg_uuid"]))
+	try:
+		for p in cfg.db.fetch_pvs(selection):
+			rc.append(
+				PvState(
+					p["pv_name"], p["pv_uuid"], p["pv_name"],
+					p["pv_fmt"], n(p["pv_size"]), n(p["pv_free"]),
+					n(p["pv_used"]), n(p["dev_size"]), n(p["pv_mda_size"]),
+					n(p["pv_mda_free"]), int(p["pv_ba_start"]),
+					n(p["pv_ba_size"]), n(p["pe_start"]),
+					int(p["pv_pe_count"]), int(p["pv_pe_alloc_count"]),
+					p["pv_attr"], p["pv_tags"], p["vg_name"], p["vg_uuid"]))
+	except KeyError as ke:
+		# Sometimes lvm omits returning one of the keys we requested.
+		key = ke.args[0]
+		if key.startswith("pv") or key.startswith("vg") or (key in ['dev_size', 'pe_start']):
+			raise LvmBug("missing JSON key: '%s'" % key)
+		raise ke
 	return rc
 
 

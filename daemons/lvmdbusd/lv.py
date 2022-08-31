@@ -10,7 +10,7 @@
 from .automatedproperties import AutomatedProperties
 
 from . import utils
-from .utils import vg_obj_path_generate, log_error, _handle_execute
+from .utils import vg_obj_path_generate, log_error, _handle_execute, LvmBug
 import dbus
 from . import cmdhandler
 from . import cfg
@@ -71,67 +71,76 @@ def lvs_state_retrieve(selection, cache_refresh=True):
 	# don't have information available yet.
 	lvs = sorted(cfg.db.fetch_lvs(selection), key=get_key)
 
-	for l in lvs:
-		if cfg.vdo_support:
-			rc.append(LvStateVdo(
-				l['lv_uuid'], l['lv_name'],
-				l['lv_path'], n(l['lv_size']),
-				l['vg_name'],
-				l['vg_uuid'], l['pool_lv_uuid'],
-				l['pool_lv'], l['origin_uuid'], l['origin'],
-				n32(l['data_percent']), l['lv_attr'],
-				l['lv_tags'], l['lv_active'], l['data_lv'],
-				l['metadata_lv'], l['segtype'], l['lv_role'],
-				l['lv_layout'],
-				n32(l['snap_percent']),
-				n32(l['metadata_percent']),
-				n32(l['copy_percent']),
-				n32(l['sync_percent']),
-				n(l['lv_metadata_size']),
-				l['move_pv'],
-				l['move_pv_uuid'],
-				l['vdo_operating_mode'],
-				l['vdo_compression_state'],
-				l['vdo_index_state'],
-				n(l['vdo_used_size']),
-				d(l['vdo_saving_percent']),
-				l['vdo_compression'],
-				l['vdo_deduplication'],
-				l['vdo_use_metadata_hints'],
-				n32(l['vdo_minimum_io_size']),
-				n(l['vdo_block_map_cache_size']),
-				n32(l['vdo_block_map_era_length']),
-				l['vdo_use_sparse_index'],
-				n(l['vdo_index_memory_size']),
-				n(l['vdo_slab_size']),
-				n32(l['vdo_ack_threads']),
-				n32(l['vdo_bio_threads']),
-				n32(l['vdo_bio_rotation']),
-				n32(l['vdo_cpu_threads']),
-				n32(l['vdo_hash_zone_threads']),
-				n32(l['vdo_logical_threads']),
-				n32(l['vdo_physical_threads']),
-				n32(l['vdo_max_discard']),
-				l['vdo_write_policy'],
-				n32(l['vdo_header_size'])))
-		else:
-			rc.append(LvState(
-				l['lv_uuid'], l['lv_name'],
-				l['lv_path'], n(l['lv_size']),
-				l['vg_name'],
-				l['vg_uuid'], l['pool_lv_uuid'],
-				l['pool_lv'], l['origin_uuid'], l['origin'],
-				n32(l['data_percent']), l['lv_attr'],
-				l['lv_tags'], l['lv_active'], l['data_lv'],
-				l['metadata_lv'], l['segtype'], l['lv_role'],
-				l['lv_layout'],
-				n32(l['snap_percent']),
-				n32(l['metadata_percent']),
-				n32(l['copy_percent']),
-				n32(l['sync_percent']),
-				n(l['lv_metadata_size']),
-				l['move_pv'],
-				l['move_pv_uuid']))
+	try:
+		for l in lvs:
+			if cfg.vdo_support:
+				rc.append(LvStateVdo(
+					l['lv_uuid'], l['lv_name'],
+					l['lv_path'], n(l['lv_size']),
+					l['vg_name'],
+					l['vg_uuid'], l['pool_lv_uuid'],
+					l['pool_lv'], l['origin_uuid'], l['origin'],
+					n32(l['data_percent']), l['lv_attr'],
+					l['lv_tags'], l['lv_active'], l['data_lv'],
+					l['metadata_lv'], l['segtype'], l['lv_role'],
+					l['lv_layout'],
+					n32(l['snap_percent']),
+					n32(l['metadata_percent']),
+					n32(l['copy_percent']),
+					n32(l['sync_percent']),
+					n(l['lv_metadata_size']),
+					l['move_pv'],
+					l['move_pv_uuid'],
+					l['vdo_operating_mode'],
+					l['vdo_compression_state'],
+					l['vdo_index_state'],
+					n(l['vdo_used_size']),
+					d(l['vdo_saving_percent']),
+					l['vdo_compression'],
+					l['vdo_deduplication'],
+					l['vdo_use_metadata_hints'],
+					n32(l['vdo_minimum_io_size']),
+					n(l['vdo_block_map_cache_size']),
+					n32(l['vdo_block_map_era_length']),
+					l['vdo_use_sparse_index'],
+					n(l['vdo_index_memory_size']),
+					n(l['vdo_slab_size']),
+					n32(l['vdo_ack_threads']),
+					n32(l['vdo_bio_threads']),
+					n32(l['vdo_bio_rotation']),
+					n32(l['vdo_cpu_threads']),
+					n32(l['vdo_hash_zone_threads']),
+					n32(l['vdo_logical_threads']),
+					n32(l['vdo_physical_threads']),
+					n32(l['vdo_max_discard']),
+					l['vdo_write_policy'],
+					n32(l['vdo_header_size'])))
+			else:
+				rc.append(LvState(
+					l['lv_uuid'], l['lv_name'],
+					l['lv_path'], n(l['lv_size']),
+					l['vg_name'],
+					l['vg_uuid'], l['pool_lv_uuid'],
+					l['pool_lv'], l['origin_uuid'], l['origin'],
+					n32(l['data_percent']), l['lv_attr'],
+					l['lv_tags'], l['lv_active'], l['data_lv'],
+					l['metadata_lv'], l['segtype'], l['lv_role'],
+					l['lv_layout'],
+					n32(l['snap_percent']),
+					n32(l['metadata_percent']),
+					n32(l['copy_percent']),
+					n32(l['sync_percent']),
+					n(l['lv_metadata_size']),
+					l['move_pv'],
+					l['move_pv_uuid']))
+	except KeyError as ke:
+		# Sometimes lvm omits returning one of the keys we requested.
+		key = ke.args[0]
+		if key.startswith("lv_") or key.startswith("vg_") or key.startswith("pool_") or \
+			key.endswith("_percent") or key.startswith("move_") or key.startswith("vdo_") or \
+			key in ["origin_uuid", "segtype", "origin", "data_lv", "metadata_lv"]:
+			raise LvmBug("missing JSON key: '%s'" % key)
+		raise ke
 	return rc
 
 

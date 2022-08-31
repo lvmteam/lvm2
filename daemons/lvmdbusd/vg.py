@@ -20,7 +20,7 @@ from .request import RequestEntry
 from .loader import common
 from .state import State
 from . import background
-from .utils import round_size, mt_remove_dbus_objects
+from .utils import round_size, mt_remove_dbus_objects, LvmBug
 from .job import JobState
 
 
@@ -31,17 +31,25 @@ def vgs_state_retrieve(selection, cache_refresh=True):
 	if cache_refresh:
 		cfg.db.refresh()
 
-	for v in cfg.db.fetch_vgs(selection):
-		rc.append(
-			VgState(
-				v['vg_uuid'], v['vg_name'], v['vg_fmt'], n(v['vg_size']),
-				n(v['vg_free']), v['vg_sysid'], n(v['vg_extent_size']),
-				n(v['vg_extent_count']), n(v['vg_free_count']),
-				v['vg_profile'], n(v['max_lv']), n(v['max_pv']),
-				n(v['pv_count']), n(v['lv_count']), n(v['snap_count']),
-				n(v['vg_seqno']), n(v['vg_mda_count']),
-				n(v['vg_mda_free']), n(v['vg_mda_size']),
-				n(v['vg_mda_used_count']), v['vg_attr'], v['vg_tags']))
+	try:
+		for v in cfg.db.fetch_vgs(selection):
+			rc.append(
+				VgState(
+					v['vg_uuid'], v['vg_name'], v['vg_fmt'], n(v['vg_size']),
+					n(v['vg_free']), v['vg_sysid'], n(v['vg_extent_size']),
+					n(v['vg_extent_count']), n(v['vg_free_count']),
+					v['vg_profile'], n(v['max_lv']), n(v['max_pv']),
+					n(v['pv_count']), n(v['lv_count']), n(v['snap_count']),
+					n(v['vg_seqno']), n(v['vg_mda_count']),
+					n(v['vg_mda_free']), n(v['vg_mda_size']),
+					n(v['vg_mda_used_count']), v['vg_attr'], v['vg_tags']))
+	except KeyError as ke:
+		# Sometimes lvm omits returning one of the keys we requested.
+		key = ke.args[0]
+		if key.startswith("vg_") or key.startswith("lv_") or key.startswith("pv_") or \
+			key in ["max_lv", "max_pv", "snap_count"]:
+			raise LvmBug("missing JSON key: '%s'" % key)
+		raise ke
 	return rc
 
 
