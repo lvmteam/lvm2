@@ -164,7 +164,7 @@ def call_lvm(command, debug=False, line_cb=None,
 			break
 
 	if process.returncode is not None:
-		if debug or process.returncode != 0:
+		if debug or (process.returncode != 0 and (process.returncode != 5 and "fullreport" in command)):
 			_debug_c(command, process.returncode, (stdout_text, stderr_text))
 
 		return process.returncode, stdout_text, stderr_text
