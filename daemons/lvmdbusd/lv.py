@@ -24,8 +24,6 @@ from . import background
 from .utils import round_size, mt_remove_dbus_objects
 from .job import JobState
 
-import traceback
-
 
 # Try and build a key for a LV, so that we sort the LVs with least dependencies
 # first.  This may be error prone because of the flexibility LVM
@@ -371,8 +369,8 @@ class LvCommon(AutomatedProperties):
 			return dbus.Struct((self.state.Attr[index],
 				type_map.get(self.state.Attr[index], default)),
 								signature="(ss)")
-		except BaseException:
-			st = traceback.format_exc()
+		except BaseException as b:
+			st = utils.extract_stack_trace(b)
 			log_error("attr_struct: \n%s" % st)
 			return dbus.Struct(('?', 'Unavailable'), signature="(ss)")
 

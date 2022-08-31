@@ -9,12 +9,11 @@
 
 import sys
 import threading
-import traceback
 import dbus
 import os
 import copy
 from . import cfg
-from .utils import log_debug, pv_obj_path_generate, log_error
+from .utils import log_debug, pv_obj_path_generate, log_error, extract_stack_trace
 from .automatedproperties import AutomatedProperties
 
 
@@ -40,8 +39,8 @@ class ObjectManager(AutomatedProperties):
 				for k, v in list(obj._objects.items()):
 					path, props = v[0].emit_data()
 					rc[path] = props
-			except Exception:
-				traceback.print_exc(file=sys.stdout)
+			except Exception as e:
+				log_error("_get_managed_objects exception, bailing: \n%s" % extract_stack_trace(e))
 				sys.exit(1)
 			return rc
 

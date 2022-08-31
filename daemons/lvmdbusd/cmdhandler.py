@@ -13,12 +13,11 @@ import time
 import threading
 from itertools import chain
 import collections
-import traceback
 import os
 
 from lvmdbusd import cfg
 from lvmdbusd.utils import pv_dest_ranges, log_debug, log_error, add_no_notify,\
-							make_non_block, read_decoded
+			make_non_block, read_decoded, extract_stack_trace
 from lvmdbusd.lvm_shell_proxy import LVMShellProxy
 
 try:
@@ -149,8 +148,8 @@ def call_lvm(command, debug=False, line_cb=None,
 					if i != -1:
 						try:
 							line_cb(cb_data, stdout_text[stdout_index:i])
-						except:
-							st = traceback.format_exc()
+						except BaseException as be:
+							st = extract_stack_trace(be)
 							log_error("call_lvm: line_cb exception: \n %s" % st)
 						stdout_index = i + 1
 					else:
@@ -189,11 +188,11 @@ def _shell_cfg():
 		_t_call = lvm_shell.call_lvm
 		cfg.SHELL_IN_USE = lvm_shell
 		return True
-	except Exception:
+	except Exception as e:
 		_t_call = call_lvm
 		cfg.SHELL_IN_USE = None
-		log_error(traceback.format_exc())
-		log_error("Unable to utilize lvm shell, dropping back to fork & exec")
+		log_error("Unable to utilize lvm shell, dropping "
+				  "back to fork & exec\n%s" % extract_stack_trace(e))
 		return False
 
 

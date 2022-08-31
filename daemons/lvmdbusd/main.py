@@ -22,7 +22,6 @@ from . import lvmdb
 from gi.repository import GLib
 from .fetch import StateUpdate
 from .manager import Manager
-import traceback
 import queue
 from . import udevwatch
 from .utils import log_debug, log_error, log_msg, DebugMessages
@@ -52,8 +51,8 @@ def process_request():
 			pass
 		except SystemExit:
 			break
-		except Exception:
-			st = traceback.format_exc()
+		except Exception as e:
+			st = utils.extract_stack_trace(e)
 			utils.log_error("process_request exception: \n%s" % st)
 	log_debug("process_request thread exiting!")
 

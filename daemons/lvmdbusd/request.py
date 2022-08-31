@@ -13,8 +13,7 @@ import threading
 from gi.repository import GLib
 from .job import Job
 from . import cfg
-import traceback
-from .utils import log_error, mt_async_call
+from .utils import log_error, mt_async_call, extract_stack_trace
 
 
 class RequestEntry(object):
@@ -86,7 +85,7 @@ class RequestEntry(object):
 			# exception in the journal for figuring out what went wrong.
 			cfg.debug.dump()
 			cfg.flightrecorder.dump()
-			tb = ''.join(traceback.format_tb(e.__traceback__))
+			tb = extract_stack_trace(e)
 			log_error("While processing %s: we encountered\n%s" % (str(self.method), tb))
 			log_error("Error returned to client: %s" % str(e))
 			self.register_error(-1, str(e), e)

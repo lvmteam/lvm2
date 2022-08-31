@@ -14,11 +14,11 @@
 import subprocess
 import shlex
 import os
-import traceback
 import sys
 import tempfile
 import time
 import select
+from .utils import extract_stack_trace
 
 try:
 	import simplejson as json
@@ -279,8 +279,8 @@ if __name__ == "__main__":
 				pass
 			except EOFError:
 				pass
-	except Exception:
-		traceback.print_exc(file=sys.stdout)
+	except Exception as e:
+		log_error("main process exiting on exception!\n%s", extract_stack_trace(e))
 		sys.exit(1)
 
 	sys.exit(0)

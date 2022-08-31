@@ -389,8 +389,8 @@ def handler(signum):
 			log_error('Exiting daemon with signal %d' % signum)
 			if cfg.loop is not None:
 				cfg.loop.quit()
-	except:
-		st = traceback.format_exc()
+	except BaseException as be:
+		st = extract_stack_trace(be)
 		log_error("signal handler: exception (logged, not reported!) \n %s" % st)
 
 	# It's important we report that we handled the exception for the exception
@@ -659,9 +659,8 @@ def _async_handler(call_back, parameters):
 			call_back(*parameters)
 		else:
 			call_back()
-	except:
-		st = traceback.format_exc()
-		log_error("mt_async_call: exception (logged, not reported!) \n %s" % st)
+	except BaseException as be:
+		log_error("mt_async_call: exception (logged, not reported!) \n %s" % extract_stack_trace(be))
 
 
 # Execute the function on the main thread with the provided parameters, do
@@ -763,3 +762,9 @@ class LockFile(object):
 
 	def __exit__(self, _type, _value, _traceback):
 		os.close(self.fd)
+
+
+def extract_stack_trace(exception):
+	return ''.join(traceback.format_exception(None, exception, exception.__traceback__))
+
+
