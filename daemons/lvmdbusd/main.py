@@ -138,6 +138,10 @@ def main():
 	os.environ["LC_ALL"] = "C"
 	os.environ["LVM_COMMAND_PROFILE"] = "lvmdbusd"
 
+	# Save off the debug data needed for lvm team to debug issues
+	# only used for 'fullreport' at this time.
+	cfg.lvmdebug = utils.LvmDebugData()
+
 	# Add simple command line handling
 	cfg.args = process_args()
 

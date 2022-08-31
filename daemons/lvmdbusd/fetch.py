@@ -171,6 +171,7 @@ class StateUpdate(object):
 				cfg.exit_daemon()
 			else:
 				# Slow things down when encountering errors
+				cfg.lvmdebug.complete()
 				time.sleep(1)
 
 		while cfg.run.value != 0:
@@ -205,11 +206,16 @@ class StateUpdate(object):
 			except SystemExit:
 				break
 			except LvmBug as bug:
+				# If a lvm bug occurred, we will dump the lvm debug data if
+				# we have it.
+				cfg.lvmdebug.dump()
 				log_error(str(bug))
 				_handle_error()
 			except Exception as e:
 				log_error("update_thread: \n%s" % extract_stack_trace(e))
 				_handle_error()
+			finally:
+				cfg.lvmdebug.complete()
 
 		# Make sure to unblock any that may be waiting before we exit this thread
 		# otherwise they hang forever ...

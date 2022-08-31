@@ -17,7 +17,7 @@ import os
 
 from lvmdbusd import cfg
 from lvmdbusd.utils import pv_dest_ranges, log_debug, log_error, add_no_notify,\
-			make_non_block, read_decoded, extract_stack_trace, LvmBug
+			make_non_block, read_decoded, extract_stack_trace, LvmBug, add_config_option
 from lvmdbusd.lvm_shell_proxy import LVMShellProxy
 
 try:
@@ -121,6 +121,12 @@ def call_lvm(command, debug=False, line_cb=None,
 	command.insert(0, cfg.LVM_CMD)
 	command = add_no_notify(command)
 
+	# If we are running the fullreport command, we will ask lvm to output the debug
+	# data, so we can have the required information for lvm to debug the fullreport failures.
+	if "fullreport" in command:
+		fn = cfg.lvmdebug.setup()
+		add_config_option(command, "--config", "log {level=7 file=%s syslog=0}" % fn)
+
 	process = Popen(command, stdout=PIPE, stderr=PIPE, close_fds=True,
 					env=os.environ)
 
@@ -163,6 +169,7 @@ def call_lvm(command, debug=False, line_cb=None,
 			break
 
 	if process.returncode is not None:
+		cfg.lvmdebug.lvm_complete()
 		if debug or (process.returncode != 0 and (process.returncode != 5 and "fullreport" in command)):
 			_debug_c(command, process.returncode, (stdout_text, stderr_text))
 

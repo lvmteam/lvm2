@@ -18,6 +18,7 @@ import os
 import stat
 import string
 import datetime
+import tempfile
 
 import dbus
 from lvmdbusd import cfg
@@ -614,6 +615,23 @@ def validate_tag(interface, tag):
 			% (tag, _ALLOWABLE_TAG_CH))
 
 
+def add_config_option(cmdline, key, value):
+	if 'help' in cmdline:
+		return cmdline
+
+	if key in cmdline:
+		for i, arg in enumerate(cmdline):
+			if arg == key:
+				if len(cmdline) <= i + 1:
+					raise dbus.exceptions.DBusException("Missing value for --config option.")
+				cmdline[i + 1] += " %s" % value
+				break
+	else:
+		cmdline.extend([key, value])
+
+	return cmdline
+
+
 def add_no_notify(cmdline):
 	"""
 	Given a command line to execute we will see if `--config` is present, if it
@@ -627,20 +645,11 @@ def add_no_notify(cmdline):
 
 	# Only after we have seen an external event will we disable lvm from sending
 	# us one when we call lvm
+	rv = cmdline
 	if cfg.got_external_event:
-		if 'help' in cmdline:
-			return cmdline
+		rv = add_config_option(rv, "--config", "global/notify_dbus=0")
 
-		if '--config' in cmdline:
-			for i, arg in enumerate(cmdline):
-				if arg == '--config':
-					if len(cmdline) <= i+1:
-						raise dbus.exceptions.DBusException("Missing value for --config option.")
-					cmdline[i+1] += " global/notify_dbus=0"
-					break
-		else:
-			cmdline.extend(['--config', 'global/notify_dbus=0'])
-	return cmdline
+	return rv
 
 
 # The methods below which start with mt_* are used to execute the desired code
@@ -777,3 +786,46 @@ class LvmBug(RuntimeError):
 
 	def __str__(self):
 		return "lvm bug encountered: %s" % ' '.join(self.args)
+
+
+class LvmDebugData:
+	def __init__(self):
+		self.fd = -1
+		self.fn = None
+
+	def _remove_file(self):
+		if self.fn is not None:
+			os.unlink(self.fn)
+			self.fn = None
+
+	def _close_fd(self):
+		if self.fd != -1:
+			os.close(self.fd)
+			self.fd = -1
+
+	def setup(self):
+		# Create a secure filename
+		self.fd, self.fn = tempfile.mkstemp(suffix=".log", prefix="lvmdbusd.lvm.debug.")
+		return self.fn
+
+	def lvm_complete(self):
+		# Remove the file ASAP, so we decrease our odds of leaving it
+		# around if the daemon gets killed by a signal -9
+		self._remove_file()
+
+	def dump(self):
+		# Read the file and log it to log_err
+		if self.fd != -1:
+			# How big could the verbose debug get?
+			debug = os.read(self.fd, 1024*1024*5)
+			debug_txt = debug.decode("utf-8")
+			for line in debug_txt.split("\n"):
+				log_error("lvm debug >>> %s" % line)
+			self._close_fd()
+		# In case lvm_complete doesn't get called.
+		self._remove_file()
+
+	def complete(self):
+		self._close_fd()
+		# In case lvm_complete doesn't get called.
+		self._remove_file()

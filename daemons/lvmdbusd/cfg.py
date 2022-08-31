@@ -109,3 +109,7 @@ def exit_daemon():
     if run and loop:
         run.value = 0
         loop.quit()
+
+
+# Debug data for lvm
+lvmdebug = None
