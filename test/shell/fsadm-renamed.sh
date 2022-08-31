@@ -16,7 +16,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-aux prepare_vg 1 80
+aux prepare_vg 1 700
 
 vg_lv=$vg/$lv1
 vg_lv_ren=${vg_lv}_renamed
@@ -63,11 +63,11 @@ if not which "$i" ; then
 	continue
 fi
 
-lvcreate -n $lv1 -L20M $vg
+lvcreate -n $lv1 -L300M $vg
 
 case "$i" in
 *ext3)		MKFS_ARGS="-b1024 -j" ;;
-*xfs)		MKFS_ARGS="-l internal,size=1700b -f" ;;
+*xfs)		MKFS_ARGS="-l internal,size=64m -f" ;;
 *reiserfs)	MKFS_ARGS="-s 513 -f" ;;
 esac
 
@@ -97,7 +97,7 @@ fail lvresize -y -L+10M -r $vg_lv_ren
 # fails on unknown mountpoint  (FIXME: umount)
 not umount "$dev_vg_lv"
 
-lvcreate -L20 -n $lv1 $vg
+lvcreate -L300 -n $lv1 $vg
 "$i" $MKFS_ARGS "$dev_vg_lv"
 
 aux udev_wait

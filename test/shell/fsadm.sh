@@ -16,7 +16,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-aux prepare_vg 1 100
+aux prepare_vg 1 400
 
 # set to "skip" to avoid testing given fs and test warning result
 # i.e. check_reiserfs=skip
@@ -179,10 +179,10 @@ if check_missing ext3; then
 fi
 
 if check_missing xfs; then
-	mkfs.xfs -l internal,size=2000b -f "$dev_vg_lv"
+	lvresize -L 300M $vg_lv
+	mkfs.xfs -l internal -f "$dev_vg_lv"
 
-	fsadm --lvresize resize $vg_lv 30M
-	# Fails - not enough space for 4M fs
+	fsadm --lvresize resize $vg_lv 320M
 	lvresize -L+10M -r $vg_lv
 	not lvreduce -L10M -r $vg_lv
 
