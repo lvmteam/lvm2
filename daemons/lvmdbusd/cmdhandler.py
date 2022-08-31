@@ -621,9 +621,9 @@ def lvm_full_report_json():
 	rc, out, err = call(cmd)
 	# When we have an exported vg the exit code of lvs or fullreport will be 5
 	if rc == 0 or rc == 5:
-		# With the current implementation, if we are using the shell then we
-		# are using JSON and JSON is returned back to us as it was parsed to
-		# figure out if we completed OK or not
+		# If the 'call' implementation is lvmshell, the out is a dictionary as lvmshell has to
+		# parse the output to get the exit value.  When doing fork & exec, out is a string
+		# representing the JSON.  TODO: Make this consistent between implementations.
 		if cfg.SHELL_IN_USE:
 			assert(type(out) == dict)
 			return out
@@ -633,7 +633,7 @@ def lvm_full_report_json():
 			except json.decoder.JSONDecodeError as joe:
 				log_error("JSONDecodeError %s, \n JSON=\n%s\n" %
 							(str(joe), out))
-				raise joe
+				raise LvmBug("'fullreport' returned invalid JSON")
 
 	raise LvmBug("'fullreport' exited with code '%d'" % rc)
 
