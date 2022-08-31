@@ -142,7 +142,7 @@ esac
 
 test -n "${vdo_device-}" || vdo_die_ "VDO device is missing"
 
-blkid -s UUID -o value "${vdo_device}" || true
+blkid -c /dev/null -s UUID -o value "${vdo_device}" || true
 
 devsize=$(blockdev --getsize64 "$vdo_device")
 devsize=$(( devsize / 4096 )) # convert to 4KiB units
