@@ -67,7 +67,11 @@ struct dev_ext {
 #define DEV_ID_TYPE_CRYPT_UUID 6
 #define DEV_ID_TYPE_LVMLV_UUID 7
 #define DEV_ID_TYPE_DEVNAME    8
+#define DEV_ID_TYPE_WWID_NAA   9
+#define DEV_ID_TYPE_WWID_EUI  10
+#define DEV_ID_TYPE_WWID_T10  11
 
+/* Max length of WWID_NAA, WWID_EUI, WWID_T10 */
 #define DEV_WWID_SIZE 128
 
 /*

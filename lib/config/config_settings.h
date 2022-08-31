@@ -224,6 +224,9 @@ cfg(devices_dir_CFG, "dir", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED | CFG_ADV
 	"Directory in which to create volume group device nodes.\n"
 	"Commands also accept this as a prefix on volume group names.\n")
 
+cfg(devices_device_id_sysfs_dir_CFG, "device_id_sysfs_dir", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED | CFG_UNSUPPORTED, CFG_TYPE_STRING, DEFAULT_DEVICE_ID_SYSFS_DIR, vsn(2, 3, 17), NULL, 0, NULL,
+	"Location of sysfs for finding device ids (for testing.)\n")
+
 cfg_array(devices_scan_CFG, "scan", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED | CFG_ADVANCED, CFG_TYPE_STRING, "#S/dev", vsn(1, 0, 0), NULL, 0, NULL,
 	"Directories containing device nodes to use with LVM.\n")
 

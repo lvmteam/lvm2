@@ -332,4 +332,6 @@
 #define VGS_ONLINE_DIR DEFAULT_RUN_DIR "/vgs_online"
 #define PVS_LOOKUP_DIR DEFAULT_RUN_DIR "/pvs_lookup"
 
+#define DEFAULT_DEVICE_ID_SYSFS_DIR "/sys/"  /* trailing / to match dm_sysfs_dir() */
+
 #endif				/* _LVM_DEFAULTS_H */

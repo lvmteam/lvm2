@@ -63,6 +63,8 @@ int read_sys_block_binary(struct cmd_context *cmd, struct device *dev,
 
 int dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, const char **idname_out);
 
+int wwid_type_to_idtype(int wwid_type);
+int idtype_to_wwid_type(int idtype);
 void free_wwids(struct dm_list *ids);
 struct dev_wwid *dev_add_wwid(char *id, int id_type, struct dm_list *ids);
 int dev_read_vpd_wwids(struct cmd_context *cmd, struct device *dev);

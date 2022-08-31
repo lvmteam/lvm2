@@ -188,13 +188,17 @@ static int _read_sys_block(struct cmd_context *cmd, struct device *dev,
 			   int binary, int *retlen)
 {
 	char path[PATH_MAX];
+	const char *sysfs_dir;
 	dev_t devt = dev->dev;
 	dev_t prim = 0;
 	int ret;
 
+	if (!(sysfs_dir = find_config_tree_str(cmd, devices_device_id_sysfs_dir_CFG, NULL)))
+		sysfs_dir = dm_sysfs_dir();
+
  retry:
 	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/%s",
-			dm_sysfs_dir(), (int)MAJOR(devt), (int)MINOR(devt), suffix) < 0) {
+			sysfs_dir, (int)MAJOR(devt), (int)MINOR(devt), suffix) < 0) {
 		log_error("Failed to create sysfs path for %s", dev_name(dev));
 		return 0;
 	}
@@ -338,6 +342,26 @@ static int _wwid_type_num(char *id)
 		return -1;
 }
 
+int wwid_type_to_idtype(int wwid_type)
+{
+	switch (wwid_type) {
+	case 3: return DEV_ID_TYPE_WWID_NAA;
+	case 2: return DEV_ID_TYPE_WWID_EUI;
+	case 1: return DEV_ID_TYPE_WWID_T10;
+	default: return -1;
+	}
+}
+
+int idtype_to_wwid_type(int idtype)
+{
+	switch (idtype) {
+	case DEV_ID_TYPE_WWID_NAA: return 3;
+	case DEV_ID_TYPE_WWID_EUI: return 2;
+	case DEV_ID_TYPE_WWID_T10: return 1;
+	default: return -1;
+	}
+}
+
 void free_wwids(struct dm_list *ids)
 {
 	struct dev_wwid *dw, *safe;
@@ -436,6 +460,7 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 {
 	char sysbuf[PATH_MAX] = { 0 };
 	const char *idname = NULL;
+	struct dev_wwid *dw;
 	int i;
 
 	if (idtype == DEV_ID_TYPE_SYS_WWID) {
@@ -483,6 +508,18 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 		if (!(idname = strdup(dev_name(dev))))
 			goto_bad;
 		return idname;
+	}
+
+	else if (idtype == DEV_ID_TYPE_WWID_NAA ||
+		 idtype == DEV_ID_TYPE_WWID_EUI ||
+		 idtype == DEV_ID_TYPE_WWID_T10) {
+		if (!(dev->flags & DEV_ADDED_VPD_WWIDS))
+			dev_read_vpd_wwids(cmd, dev);
+		dm_list_iterate_items(dw, &dev->wwids) {
+			if (idtype_to_wwid_type(idtype) == dw->type)
+				return strdup(dw->id);
+		}
+		return NULL;
 	}
 
 	/* wwids are already munged if needed */
@@ -591,6 +628,12 @@ const char *idtype_to_str(uint16_t idtype)
 		return "md_uuid";
 	if (idtype == DEV_ID_TYPE_LOOP_FILE)
 		return "loop_file";
+	if (idtype == DEV_ID_TYPE_WWID_NAA)
+		return "wwid_naa";
+	if (idtype == DEV_ID_TYPE_WWID_EUI)
+		return "wwid_eui";
+	if (idtype == DEV_ID_TYPE_WWID_T10)
+		return "wwid_t10";
 	return "unknown";
 }
 
@@ -612,6 +655,12 @@ uint16_t idtype_from_str(const char *str)
 		return DEV_ID_TYPE_MD_UUID;
 	if (!strcmp(str, "loop_file"))
 		return DEV_ID_TYPE_LOOP_FILE;
+	if (!strcmp(str, "wwid_naa"))
+		return DEV_ID_TYPE_WWID_NAA;
+	if (!strcmp(str, "wwid_eui"))
+		return DEV_ID_TYPE_WWID_EUI;
+	if (!strcmp(str, "wwid_t10"))
+		return DEV_ID_TYPE_WWID_T10;
 	return 0;
 }
 
@@ -1202,10 +1251,23 @@ int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid_
 
 	/*
 	 * No device-specific, existing, or user-specified idtypes,
-	 * so use first available of sys_wwid / sys_serial / devname.
+	 * so use first available of sys_wwid, wwid_naa, wwid_eui,
+	 * wwid_t10, sys_serial, devname.
 	 */
 
 	idtype = DEV_ID_TYPE_SYS_WWID;
+	if ((idname = device_id_system_read(cmd, dev, idtype)))
+		goto id_done;
+
+	idtype = DEV_ID_TYPE_WWID_NAA;
+	if ((idname = device_id_system_read(cmd, dev, idtype)))
+		goto id_done;
+
+	idtype = DEV_ID_TYPE_WWID_EUI;
+	if ((idname = device_id_system_read(cmd, dev, idtype)))
+		goto id_done;
+
+	idtype = DEV_ID_TYPE_WWID_T10;
 	if ((idname = device_id_system_read(cmd, dev, idtype)))
 		goto id_done;
 
@@ -1730,6 +1792,43 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 	log_debug("Mismatch device_id %s %s to %s: idname %s",
 		  idtype_to_str(du->idtype), du->idname ?: ".", dev_name(dev), idname ?: ".");
 	*/
+
+	/*
+	 * Make the du match this device if the dev has a vpd_pg83 wwid
+	 * that matches du->idname, even if the sysfs wwid for dev did
+	 * not match the du->idname.  This could happen if sysfs changes
+	 * which wwid it reports (there are often multiple), or if lvm in
+	 * the future selects a sys_wwid value from vpd_pg83 data rather
+	 * than from the sysfs wwid.
+	 *
+	 * TODO: update the df entry IDTYPE somewhere?
+	 */
+	if (du->idtype == DEV_ID_TYPE_SYS_WWID) {
+		struct dev_wwid *dw;
+
+	       	if (!(dev->flags & DEV_ADDED_VPD_WWIDS))
+			dev_read_vpd_wwids(cmd, dev);
+
+		dm_list_iterate_items(dw, &dev->wwids) {
+			if (!strcmp(dw->id, du->idname)) {
+				if (!(id = zalloc(sizeof(struct dev_id))))
+					return_0;
+				/* wwid types are 1,2,3 and idtypes are DEV_ID_TYPE_ */
+				id->idtype = wwid_type_to_idtype(dw->type);
+				id->idname = strdup(dw->id);
+				id->dev = dev;
+				dm_list_add(&dev->ids, &id->list);
+				du->dev = dev;
+				dev->id = id;
+				dev->flags |= DEV_MATCHED_USE_ID;
+				log_print("Match device_id %s %s to vpd_pg83 %s %s",
+					  idtype_to_str(du->idtype), du->idname,
+					  idtype_to_str(id->idtype), dev_name(dev));
+				du->idtype = id->idtype;
+				return 1;
+			}
+		}
+	}
 
 	return 0;
 }
