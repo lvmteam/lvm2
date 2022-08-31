@@ -116,11 +116,11 @@ which mkfs.xfs || skip
 mount_dir="mnt"
 mkdir -p "$mount_dir"
 
-aux prepare_devs 6 70 # want 64M of usable space from each dev
+aux prepare_devs 6 400 # want 400M of usable space from each dev
 
 # Tests with fs block sizes require a libblkid version that shows BLOCK_SIZE
 vgcreate $vg "$dev1"
-lvcreate -n $lv1 -L50 $vg
+lvcreate -n $lv1 -L300 $vg
 mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
 blkid -c /dev/null "$DM_DEV_DIR/$vg/$lv1" | grep BLOCK_SIZE || skip
 lvchange -an $vg
@@ -141,7 +141,7 @@ vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6"
 # lv3 is thin LV:       1G
 
 # attach writecache to thinpool data
-lvcreate --type thin-pool -n $lv1 -L128M --poolmetadataspare n $vg "$dev1" "$dev2"
+lvcreate --type thin-pool -n $lv1 -L228M --poolmetadataspare n $vg "$dev1" "$dev2"
 lvcreate --type thin -n $lv3 -V1G --thinpool $lv1 $vg
 lvcreate -n $lv2 -L64M -an $vg "$dev3"
 lvconvert -y --type writecache --cachevol $lv2 $vg/$lv1
@@ -149,7 +149,7 @@ lvs -a $vg -o+devices
 do_test $lv1 $lv3
 
 # attach cache/writeback (cachevol) to thinpool data
-lvcreate --type thin-pool -n $lv1 -L128M --poolmetadataspare n $vg "$dev1" "$dev2"
+lvcreate --type thin-pool -n $lv1 -L228M --poolmetadataspare n $vg "$dev1" "$dev2"
 lvcreate --type thin -n $lv3 -V1G --thinpool $lv1 $vg
 lvcreate -n $lv2 -L64M -an $vg "$dev3"
 lvconvert -y --type cache --cachevol $lv2 --cachemode writeback $vg/$lv1
@@ -157,7 +157,7 @@ lvs -a $vg -o+devices
 do_test $lv1 $lv3
 
 # attach cache/writethrough (cachevol) to thinpool data
-lvcreate --type thin-pool -n $lv1 -L128M --poolmetadataspare n $vg "$dev1" "$dev2"
+lvcreate --type thin-pool -n $lv1 -L228M --poolmetadataspare n $vg "$dev1" "$dev2"
 lvcreate --type thin -n $lv3 -V1G --thinpool $lv1 $vg
 lvcreate -n $lv2 -L64M -an $vg "$dev3"
 lvconvert -y --type cache --cachevol $lv2 --cachemode writethrough $vg/$lv1
@@ -165,7 +165,7 @@ lvs -a $vg -o+devices
 do_test $lv1 $lv3
 
 # attach cache (cachepool) to thinpool data
-lvcreate --type thin-pool -n $lv1 -L128M --poolmetadataspare n $vg "$dev1" "$dev2"
+lvcreate --type thin-pool -n $lv1 -L228M --poolmetadataspare n $vg "$dev1" "$dev2"
 lvcreate --type thin -n $lv3 -V1G --thinpool $lv1 $vg
 lvcreate -y --type cache-pool -n $lv2 -L64M --poolmetadataspare n $vg "$dev3" "$dev6"
 lvconvert -y --type cache --cachepool $lv2 --poolmetadataspare n $vg/$lv1
