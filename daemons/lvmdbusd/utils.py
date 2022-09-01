@@ -308,13 +308,17 @@ class DebugMessages(object):
 def _format_log_entry(msg):
 	tid = ctypes.CDLL('libc.so.6').syscall(186)
 
-	if STDOUT_TTY:
+	if not cfg.systemd and STDOUT_TTY:
 		msg = "%s: %d:%d - %s" % \
 			(datetime.datetime.now().strftime("%b %d %H:%M:%S.%f"),
 			os.getpid(), tid, msg)
 
 	else:
-		msg = "%d:%d - %s" % (os.getpid(), tid, msg)
+		if cfg.systemd:
+			# Systemd already puts the daemon pid in the log, we'll just add the tid
+			msg = "[%d]: %s" % (tid, msg)
+		else:
+			msg = "[%d:%d]: %s" % (os.getpid(), tid, msg)
 	return msg
 
 

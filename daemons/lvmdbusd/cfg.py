@@ -113,3 +113,5 @@ def exit_daemon():
 
 # Debug data for lvm
 lvmdebug = None
+
+systemd = False

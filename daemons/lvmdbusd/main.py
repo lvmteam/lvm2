@@ -129,6 +129,20 @@ def process_args():
 	return args
 
 
+def running_under_systemd():
+	""""
+	Checks to see if we are running under systemd, by checking damon fd 0, 1
+	systemd sets stdin to /dev/null and 1 & 2 are a socket
+	"""
+	base = "/proc/self/fd"
+	stdout = os.readlink("%s/0" % base)
+	if stdout == "/dev/null":
+		stdout = os.readlink("%s/1" % base)
+		if "socket" in stdout:
+			return True
+	return False
+
+
 def main():
 	start = time.time()
 	use_session = os.getenv('LVMDBUSD_USE_SESSION', False)
@@ -141,6 +155,9 @@ def main():
 	# Save off the debug data needed for lvm team to debug issues
 	# only used for 'fullreport' at this time.
 	cfg.lvmdebug = utils.LvmDebugData()
+
+	# Indicator if we are running under systemd
+	cfg.systemd = running_under_systemd()
 
 	# Add simple command line handling
 	cfg.args = process_args()
