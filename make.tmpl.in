@@ -13,15 +13,10 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-ifneq ("@SILENT_RULES@","yes")
-	V ?= 1
-endif
 
-ifeq ($(V),1)
-	Q=
-else
-	Q=@
-endif
+V ?= $(if ("@SILENT_RULES@","yes"),,1)
+Q := $(if $(V),,@)
+SHOW := $(if $(V),@true,@echo)
 
 SHELL = @SHELL@
 
@@ -134,6 +129,18 @@ PYTHON_PREFIX = $(prefix)
 python2dir = @PYTHON2DIR@
 python3dir = @PYTHON3DIR@
 
+# Define macro NewLine for use in $(foreach) with 2 blank lines
+ifeq (1, $(firstword $(V)))
+define newline
+
+
+endef
+else
+define newline
+;
+endef
+endif
+
 USRLIB_RELPATH = $(shell echo $(abspath $(usrlibdir) $(libdir)) | \
   $(AWK) -f $(top_srcdir)/scripts/relpath.awk)
 
@@ -147,6 +154,17 @@ DEFAULT_LOCK_DIR = @DEFAULT_LOCK_DIR@
 DEFAULT_RUN_DIR = @DEFAULT_RUN_DIR@
 DEFAULT_PID_DIR = @DEFAULT_PID_DIR@
 DEFAULT_MANGLING = @MANGLING@
+
+#----------------------------------------------------------------------
+# From http://blog.melski.net/tag/debugging-makefiles/
+#
+# Usage: make print-CC print-CXX print-LD
+#----------------------------------------------------------------------
+print-%:
+	@echo '$*=$($*)'
+	@echo '  origin = $(origin $*)'
+	@echo '  flavor = $(flavor $*)'
+	@echo '   value = $(value  $*)'
 
 # Setup vpath search paths for some suffixes
 vpath %.c $(srcdir)
@@ -162,6 +180,10 @@ rpmbuilddir = $(abs_top_builddir)/build
 # The number of jobs to run, if blank, defaults to the make standard
 ifndef MAKEFLAGS
 MAKEFLAGS = @JOBS@
+endif
+
+ifneq (1, $(firstword $(V)))
+MAKEFLAGS += --no-print-directory
 endif
 
 # Handle installation of files
@@ -582,6 +604,7 @@ endif
 ifeq ("$(USE_TRACKING)","yes")
 ifeq (,$(findstring $(MAKECMDGOALS),cscope.out cflow clean distclean lcov lcov-reset \
  help check check_local check_cluster check_lvmpolld run-unit-test tags))
+.SECONDARY:
 # Note: no tabs before -include
     -include $(SOURCES:.c=.d) $(SOURCES2:.c=.d) $(CXXSOURCES:.cpp=.d)
 endif
