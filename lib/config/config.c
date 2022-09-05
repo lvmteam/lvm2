@@ -1830,7 +1830,7 @@ static int _out_line_fn(const struct dm_config_node *cn, const char *line, void 
 	char summary[MAX_COMMENT_LINE+1];
 	char version[9];
 	int pos = 0;
-	int space_prefix_len;
+	int space_prefix_len = 0;
 	const char *p;
 	size_t len;
 
