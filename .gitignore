@@ -16,6 +16,10 @@
 *.sw*
 *~
 
+# gcov files:
+*.gcda
+*.gcno
+
 .export.sym
 .exported_symbols_generated
 .gdb_history
@@ -39,9 +43,11 @@ make.tmpl
 
 coverity/coverity_model.xml
 
-# gcov files:
-*.gcda
-*.gcno
+/libdm/.symver_check
+
+daemons/clvmd
+daemons/dmfilemapd
+daemons/lvmetad/
 
 tools/man-generator
 tools/man-generator.c
@@ -102,6 +108,8 @@ test/api/thin_percent.t
 test/api/vglist.t
 test/api/vgtest.t
 test/lib/aux
+test/lib/cache-mq.profile
+test/lib/cache-smq.profile
 test/lib/check
 test/lib/clvmd
 test/lib/dm-version-expected
@@ -111,6 +119,7 @@ test/lib/dmstats
 test/lib/fail
 test/lib/flavour-ndev-cluster
 test/lib/flavour-ndev-cluster-lvmpolld
+test/lib/flavour-ndev-devicesfile
 test/lib/flavour-ndev-lvmetad
 test/lib/flavour-ndev-lvmetad-lvmpolld
 test/lib/flavour-ndev-lvmpolld
@@ -120,6 +129,7 @@ test/lib/flavour-udev-cluster-lvmpolld
 test/lib/flavour-udev-lvmetad
 test/lib/flavour-udev-lvmetad-lvmpolld
 test/lib/flavour-udev-lvmlockd-dlm
+test/lib/flavour-udev-lvmlockd-idm
 test/lib/flavour-udev-lvmlockd-sanlock
 test/lib/flavour-udev-lvmlockd-test
 test/lib/flavour-udev-lvmpolld
@@ -132,8 +142,11 @@ test/lib/lvm
 test/lib/lvm-wrapper
 test/lib/lvmchange
 test/lib/lvmdbusd.profile
+test/lib/lvmdevices
 test/lib/lvmetad
 test/lib/lvmpolld
+test/lib/lvm_import_vdo
+test/lib/lvm_vdo_wrapper
 test/lib/not
 test/lib/paths
 test/lib/paths-common
@@ -143,5 +156,7 @@ test/lib/test
 test/lib/thin-performance.profile
 test/lib/utils
 test/lib/version-expected
+test/lib/vgimportdevices
+
 test/unit/dmraid_t.c
 test/unit/unit-test
