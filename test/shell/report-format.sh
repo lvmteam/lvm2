@@ -15,6 +15,8 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+aux have_thin 1 0 0 || skip
+
 aux prepare_vg 1
 
 OUT_LOG_FILE="out"
