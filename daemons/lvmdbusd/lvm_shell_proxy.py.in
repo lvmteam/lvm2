@@ -280,6 +280,9 @@ if __name__ == "__main__":
 				while in_line:
 					in_line = input("lvm> ")
 					if in_line:
+						if in_line == "exit":
+							shell.exit_shell()
+							sys.exit(0)
 						start = time.time()
 						ret, out, err = shell.call_lvm(in_line.split())
 						end = time.time()
