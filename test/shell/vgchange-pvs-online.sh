@@ -22,24 +22,19 @@ aux prepare_devs 4
 # skip rhel5 which doesn't seem to have /dev/mapper/LVMTESTpv1
 aux driver_at_least 4 15 || skip
 
+test "$DM_DEV_DIR" = "/dev" || skip "Only works with /dev access -> make check LVM_TEST_DEVDIR=/dev"
+
 DFDIR="$LVM_SYSTEM_DIR/devices"
 mkdir -p "$DFDIR" || true
 DF="$DFDIR/system.devices"
 
 # Because mapping devno to devname gets dm name from sysfs
 aux lvmconf 'devices/scan = "/dev"'
-base1=$(basename $dev1)
-base2=$(basename $dev2)
-base3=$(basename $dev3)
-base4=$(basename $dev4)
-bd1=/dev/mapper/$base1
-bd2=/dev/mapper/$base2
-bd3=/dev/mapper/$base3
-bd4=/dev/mapper/$base4
-aux extend_filter "a|/dev/mapper/$base1|"
-aux extend_filter "a|/dev/mapper/$base2|"
-aux extend_filter "a|/dev/mapper/$base3|"
-aux extend_filter "a|/dev/mapper/$base4|"
+bd1="/dev/mapper/$(basename $dev1)"
+bd2="/dev/mapper/$(basename $dev2)"
+bd3="/dev/mapper/$(basename $dev3)"
+bd4="/dev/mapper/$(basename $dev4)"
+aux extend_filter "a|$bd1|" "a|$bd2|" "a|$bd3|" "a|$bd4|"
 
 # Changing names will confuse df based on devname
 if lvmdevices; then
