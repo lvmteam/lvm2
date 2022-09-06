@@ -3808,14 +3808,15 @@ static int _lvactive_disp(struct dm_report *rh, struct dm_pool *mem,
 			     struct dm_report_field *field,
 			     const void *data, void *private)
 {
-	char *repstr;
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	int active;
 
-	if (!(repstr = lv_active_dup(mem, (const struct logical_volume *) data))) {
-		log_error("Failed to allocate buffer for active.");
-		return 0;
-	}
+	if (!activation())
+		return _binary_undef_disp(rh, mem, field, private);
 
-	return _field_set_value(field, repstr, NULL);
+	active = lv_is_active(lv);
+
+	return _binary_disp(rh, mem, field, active, GET_FIRST_RESERVED_NAME(lv_active_y), private);
 }
 
 static int _lvactivelocally_disp(struct dm_report *rh, struct dm_pool *mem,

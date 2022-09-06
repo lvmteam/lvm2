@@ -1,5 +1,6 @@
 Version 2.03.17 - 
 ===============================
+  Fix lv_active field type to binary so --select and --binary applies properly.
   Switch to use mallinfo2 and use it only with glibc.
   Error out in lvm shell if using a cmd argument not supported in the shell.
   Fix lvm shell's lastlog command to report previous pre-command failures.
