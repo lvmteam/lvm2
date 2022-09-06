@@ -53,10 +53,10 @@ trap 'cleanup_mounted_and_teardown' EXIT
 #truncate -s 64M loopc
 #truncate -s 64M loopd
 
-dd if=/dev/zero of=loopa bs=1M count=64 oflag=sync
-dd if=/dev/zero of=loopb bs=1M count=64 oflag=sync
-dd if=/dev/zero of=loopc bs=1M count=64 oflag=sync
-dd if=/dev/zero of=loopd bs=1M count=64 oflag=sync
+dd if=/dev/zero of=loopa bs=1M count=64 conv=fdatasync
+dd if=/dev/zero of=loopb bs=1M count=64 conv=fdatasync
+dd if=/dev/zero of=loopc bs=1M count=64 conv=fdatasync
+dd if=/dev/zero of=loopd bs=1M count=64 conv=fdatasync
 
 LOOP1=$(losetup -f loopa --show) || skip "Cannot find free loop device"
 LOOP2=$(losetup -f loopb --show) || skip "Cannot find free loop device"

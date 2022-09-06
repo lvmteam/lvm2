@@ -130,10 +130,10 @@ _add_new_data_to_mnt
 _add_more_data_to_mnt
 _verify_data_on_mnt
 
-dd if=/dev/zero of=$mnt/big1 bs=1M count=100 oflag=sync
-dd if=/dev/zero of=$mnt/big2 bs=1M count=100 oflag=sync
-dd if=/dev/zero of=$mnt/big3 bs=1M count=100 oflag=sync
-dd if=/dev/zero of=$mnt/big4 bs=1M count=100 oflag=sync
+dd if=/dev/zero of=$mnt/big1 bs=1M count=100 conv=fdatasync
+dd if=/dev/zero of=$mnt/big2 bs=1M count=100 conv=fdatasync
+dd if=/dev/zero of=$mnt/big3 bs=1M count=100 conv=fdatasync
+dd if=/dev/zero of=$mnt/big4 bs=1M count=100 conv=fdatasync
 
 lvconvert --splitcache $vg/$lv1
 check lv_field $vg/$lv1 segtype linear
@@ -159,7 +159,7 @@ lvconvert --yes --type writecache --cachevol $lv2 $vg/$lv1
 
 _add_new_data_to_mnt
 _add_more_data_to_mnt
-dd if=/dev/zero of=$mnt/big1 bs=1M count=100 oflag=sync
+dd if=/dev/zero of=$mnt/big1 bs=1M count=100 conv=fdatasync
 
 umount $mnt
 lvchange -an $vg/$lv1
