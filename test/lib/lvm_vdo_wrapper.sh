@@ -344,7 +344,7 @@ vdo_dry_ vdo_remove_ -f "$vdo_confFile" -n "$vdo_name" || true
 #
 # MAIN
 #
-case "$1" in
+case "${1-}" in
   "create") shift; vdo_create_ "$@" ;;
   "remove") shift; vdo_remove_ "$@" ;;
   "stop") shift; vdo_stop_ "$@" ;;
