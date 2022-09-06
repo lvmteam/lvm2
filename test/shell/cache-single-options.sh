@@ -25,11 +25,11 @@ mkdir -p "$mount_dir"
 # generate random data
 dd if=/dev/urandom of=pattern1 bs=512K count=1
 
-aux prepare_devs 5 64
+aux prepare_devs 5 310
 
 vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 
-lvcreate -n $lv1 -l 8 -an $vg "$dev1"
+lvcreate -n $lv1 -L 300 -an $vg "$dev1"
 lvcreate -n $lv2 -l 4 -an $vg "$dev2"
 lvcreate -n $lv3 -l 4 -an $vg "$dev3"
 lvcreate -n $lv4 -l 4 -an $vg "$dev4"

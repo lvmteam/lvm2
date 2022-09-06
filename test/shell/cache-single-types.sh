@@ -26,11 +26,11 @@ mkdir -p "$mount_dir"
 # generate random data
 dd if=/dev/urandom of=pattern1 bs=512K count=1
 
-aux prepare_devs 4 64
+aux prepare_devs 4 310
 
 vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4"
 
-lvcreate --type raid1 -m 1 -n $lv1 -l 8 $vg "$dev1" "$dev2"
+lvcreate --type raid1 -m 1 -n $lv1 -L 300 --nosync $vg "$dev1" "$dev2"
 
 lvcreate --type raid1 -m 1 -n $lv2 -l 4 $vg "$dev3" "$dev4"
 
@@ -69,7 +69,7 @@ lvchange -an $vg/$lv1
 lvconvert --splitcache $vg/$lv1
 
 check lv_field $vg/$lv1 segtype raid1
-check lv_field $vg/$lv2 segtype raid1 
+check lv_field $vg/$lv2 segtype raid1
 
 lvchange -ay $vg/$lv1
 lvchange -ay $vg/$lv2
