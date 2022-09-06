@@ -46,11 +46,11 @@ mkdir -p "$mount_dir"
 # generate random data
 dd if=/dev/urandom of=pattern1 bs=512K count=1
 
-aux prepare_devs 4
+aux prepare_devs 4 301
 
 vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4"
 
-lvcreate -n $lv1 -l 16 -an $vg "$dev1" "$dev4"
+lvcreate -n $lv1 -L 300 -an $vg "$dev1" "$dev4"
 lvcreate -n $lv2 -l 4 -an $vg "$dev2"
 
 #
@@ -123,7 +123,7 @@ vgextend --restoremissing $vg "$dev2"
 #
 
 lvremove $vg/$lv2
-lvcreate -n $lv2 -l 14 -an $vg "$dev2" "$dev3"
+lvcreate -n $lv2 -l 14 -an $vg "$dev2:0-10" "$dev3"
 
 lvconvert -y --type writecache --cachevol $lv2 $vg/$lv1
 
@@ -159,7 +159,7 @@ vgremove -ff $vg
 
 vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4"
 
-lvcreate -n $lv1 -l 16 -an $vg "$dev1" "$dev4"
+lvcreate -n $lv1 -L 300 -an $vg "$dev1" "$dev4"
 lvcreate -n $lv2 -l 4 -an $vg "$dev2"
 
 lvchange -ay $vg/$lv1
@@ -224,7 +224,7 @@ vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4"
 
 # while inactive
 
-lvcreate -n $lv1 -l 16 -an $vg "$dev1" "$dev4"
+lvcreate -n $lv1 -L 300 -an $vg "$dev1" "$dev4"
 lvcreate -n $lv2 -l 4 -an $vg "$dev2"
 
 lvconvert -y --type writecache --cachevol $lv2 $vg/$lv1
@@ -244,7 +244,7 @@ lvremove -y $vg/$lv1
 
 # while active
 
-lvcreate -n $lv1 -l 16 -an $vg "$dev1" "$dev4"
+lvcreate -n $lv1 -L 300 -an $vg "$dev1" "$dev4"
 lvcreate -n $lv2 -l 4 -an $vg "$dev2"
 
 lvconvert -y --type writecache --cachevol $lv2 $vg/$lv1

@@ -20,14 +20,14 @@ aux have_writecache 1 0 0 || skip
 which mkfs.xfs || skip
 
 # scsi_debug devices with 512 LBS 512 PBS
-aux prepare_scsi_debug_dev 256
+aux prepare_scsi_debug_dev 602
 check sysfs "$(< SCSI_DEBUG_DEV)" queue/logical_block_size "512"
 check sysfs "$(< SCSI_DEBUG_DEV)" queue/physical_block_size "512"
-aux prepare_devs 2 64
+aux prepare_devs 2 301
 
 # Tests with fs block sizes require a libblkid version that shows BLOCK_SIZE
 vgcreate $vg "$dev1"
-lvcreate -n $lv1 -L50 $vg
+lvcreate -n $lv1 -L 300 $vg
 mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
 blkid -c /dev/null "$DM_DEV_DIR/$vg/$lv1" | grep BLOCK_SIZE || skip
 lvchange -an $vg
@@ -159,7 +159,7 @@ blockdev --getpbsz "$dev2"
 # Test attach while inactive, detach while inactive
 # create fs on LV before writecache is attached
 
-lvcreate -n $lv1 -l 8 -an $vg "$dev1"
+lvcreate -n $lv1 -L 300 -an $vg "$dev1"
 lvcreate -n $lv2 -l 4 -an $vg "$dev2"
 lvchange -ay $vg/$lv1
 _add_new_data_to_mnt
@@ -193,7 +193,7 @@ lvremove $vg/$lv2
 # Test attach while inactive, detach while inactive
 # create fs on LV after writecache is attached
 
-lvcreate -n $lv1 -l 8 -an $vg "$dev1"
+lvcreate -n $lv1 -L 300 -an $vg "$dev1"
 lvcreate -n $lv2 -l 4 -an $vg "$dev2"
 lvconvert --yes --type writecache --cachevol $lv2 $vg/$lv1
 check lv_field $vg/$lv1 segtype writecache
@@ -221,7 +221,7 @@ lvremove $vg/$lv2
 
 # Test attach while active, detach while active
 
-lvcreate -n $lv1 -l 8 -an $vg "$dev1"
+lvcreate -n $lv1 -L 300 -an $vg "$dev1"
 lvcreate -n $lv2 -l 4 -an $vg "$dev2"
 lvchange -ay $vg/$lv1
 _add_new_data_to_mnt
@@ -246,7 +246,7 @@ lvremove $vg/$lv2
 
 # Test attach while active, detach while active,
 # skip cleaner so flush message is used instead
-lvcreate -n $lv1 -l 8 -an $vg "$dev1"
+lvcreate -n $lv1 -L 300 -an $vg "$dev1"
 lvcreate -n $lv2 -l 4 -an $vg "$dev2"
 lvchange -ay $vg/$lv1
 _add_new_data_to_mnt
@@ -268,6 +268,5 @@ lvchange -an $vg/$lv2
 _verify_data_on_lv
 lvremove $vg/$lv1
 lvremove $vg/$lv2
- 
+
 vgremove -ff $vg
- 

@@ -118,13 +118,13 @@ lvcreate -n $lv1 -L 560M -an $vg "$dev1"
 lvcreate -n $lv2 -L 500M -an $vg "$dev2"
 
 lvchange -ay $vg/$lv1
-blockdev --getss "$DM_DEV_DIR/$vg/$lv1" 
-blockdev --getpbsz "$DM_DEV_DIR/$vg/$lv1" 
+blockdev --getss "$DM_DEV_DIR/$vg/$lv1"
+blockdev --getpbsz "$DM_DEV_DIR/$vg/$lv1"
 
 lvconvert --yes --type writecache --cachevol $lv2 $vg/$lv1
 dmsetup table $vg-$lv1
-blockdev --getss "$DM_DEV_DIR/$vg/$lv1" 
-blockdev --getpbsz "$DM_DEV_DIR/$vg/$lv1" 
+blockdev --getss "$DM_DEV_DIR/$vg/$lv1"
+blockdev --getpbsz "$DM_DEV_DIR/$vg/$lv1"
 
 _add_new_data_to_mnt
 _add_more_data_to_mnt
@@ -179,4 +179,3 @@ umount $mnt
 lvchange -an $vg/$lv1
 
 vgremove -ff $vg
-

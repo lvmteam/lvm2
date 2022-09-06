@@ -119,7 +119,7 @@ _check_env() {
 _run_test() {
 	vgcreate $SHARED $vg "$dev1"
 	vgextend $vg "$dev2"
-	lvcreate -n $lv1 -l 8 -an $vg "$dev1"
+	lvcreate -n $lv1 -L 300 -an $vg "$dev1"
 	lvcreate -n $lv2 -l 4 -an $vg "$dev2"
 	lvchange -ay $vg/$lv1
 	mkfs.xfs -f $5 "$DM_DEV_DIR/$vg/$lv1" |tee out
@@ -147,12 +147,12 @@ _run_test() {
 }
 
 # Setup: LBS 512, PBS 512
-aux prepare_scsi_debug_dev 256 || skip
-aux prepare_devs 2 64
+aux prepare_scsi_debug_dev 602 || skip
+aux prepare_devs 2 301
 
 # Tests with fs block sizes require a libblkid version that shows BLOCK_SIZE
 vgcreate $vg "$dev1"
-lvcreate -n $lv1 -L50 $vg
+lvcreate -n $lv1 -L300 $vg
 mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
 blkid -c /dev/null "$DM_DEV_DIR/$vg/$lv1" | grep BLOCK_SIZE || skip
 lvchange -an $vg
@@ -176,8 +176,8 @@ aux cleanup_scsi_debug_dev
 
 
 # Setup: LBS 512, PBS 4096
-aux prepare_scsi_debug_dev 256 sector_size=512 physblk_exp=3
-aux prepare_devs 2 64
+aux prepare_scsi_debug_dev 602 sector_size=512 physblk_exp=3
+aux prepare_devs 2 301
 
 _check_env "512" "4096"
 
@@ -195,10 +195,10 @@ _run_test 512 512 "cache" "--cachepool" "-s size=512"
 
 aux cleanup_scsi_debug_dev
 
-
 # Setup: LBS 4096, PBS 4096
-aux prepare_scsi_debug_dev 256 sector_size=4096
-aux prepare_devs 2 64
+# NOTE: Here we actually need PV of size 304M to get 300M ??
+aux prepare_scsi_debug_dev 608 sector_size=4096 || skip
+aux prepare_devs 2 304
 
 _check_env "4096" "4096"
 
@@ -212,14 +212,14 @@ aux cleanup_scsi_debug_dev
 
 
 # Setup: LBS 512, PBS 512
-aux prepare_scsi_debug_dev 256 || skip
-aux prepare_devs 2 64
+aux prepare_scsi_debug_dev 602 || skip
+aux prepare_devs 2 301
 
 _check_env "512" "512"
 
 vgcreate $SHARED $vg "$dev1"
 vgextend $vg "$dev2"
-lvcreate -n $lv1 -l 8 -an $vg "$dev1"
+lvcreate -n $lv1 -L 300 -an $vg "$dev1"
 lvcreate -n $lv2 -l 4 -an $vg "$dev2"
 lvconvert --yes --type writecache --cachevol $lv2 --cachesettings "block_size=4096" $vg/$lv1
 lvs -o writecacheblocksize $vg/$lv1 |tee out
@@ -249,4 +249,3 @@ lvremove $vg/$lv2
 vgremove $vg
 
 aux cleanup_scsi_debug_dev
-

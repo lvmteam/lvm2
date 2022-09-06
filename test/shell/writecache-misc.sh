@@ -47,13 +47,13 @@ mkdir -p "$mount_dir"
 # generate random data
 dd if=/dev/urandom of=pattern1 bs=512K count=1
 
-aux prepare_devs 4
+aux prepare_devs 4 301
 
 vgcreate $vg "$dev1" "$dev2" "$dev3" "$dev4"
 
 
 # Create writecache without a specified name so it gets automatic name
-lvcreate -n $lv1 -l 4 -an $vg "$dev1"
+lvcreate -n $lv1 -L 300 -an $vg "$dev1"
 lvcreate -y --type writecache -l 4 --cachevol $lv1 $vg "$dev2"
 check lv_exists $vg lvol0
 lvremove -y $vg
@@ -62,7 +62,7 @@ lvremove -y $vg
 # Test pvmove with writecache
 #
 
-lvcreate -n $lv1 -l 16 -an $vg "$dev1" "$dev4"
+lvcreate -n $lv1 -L 300 -an $vg "$dev1" "$dev4"
 lvcreate -n $lv2 -l 4 -an $vg "$dev2"
 
 lvconvert -y --type writecache --cachevol $lv2 $vg/$lv1

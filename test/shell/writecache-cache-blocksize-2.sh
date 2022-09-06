@@ -119,7 +119,7 @@ _check_env() {
 _run_test() {
 	vgcreate $SHARED $vg "$1"
 	vgextend $vg "$2"
-	lvcreate -n $lv1 -l 8 -an $vg "$1"
+	lvcreate -n $lv1 -L 300 -an $vg "$1"
 	lvcreate -n $lv2 -l 4 -an $vg "$2"
 	lvchange -ay $vg/$lv1
 	mkfs.xfs -f $5 "$DM_DEV_DIR/$vg/$lv1" |tee out
@@ -156,12 +156,13 @@ _run_test() {
 #        dev4 LBS 512, PBS 512   (using loop)
 #
 
-aux prepare_scsi_debug_dev 256 sector_size=512 physblk_exp=3
-aux prepare_devs 2 64
+# On scsi debug   2 PVs has to fit!
+aux prepare_scsi_debug_dev 602 sector_size=512 physblk_exp=3 || skip
+aux prepare_devs 2 301
 
 # Tests with fs block sizes require a libblkid version that shows BLOCK_SIZE
 vgcreate $vg "$dev1"
-lvcreate -n $lv1 -L50 $vg
+lvcreate -n $lv1 -L300 $vg
 mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
 blkid -c /dev/null "$DM_DEV_DIR/$vg/$lv1" | grep BLOCK_SIZE || skip
 lvchange -an $vg
@@ -169,8 +170,8 @@ vgremove -ff $vg
 
 # loopa/loopb have LBS 512 PBS 512
 which fallocate || skip
-fallocate -l 64M loopa
-fallocate -l 64M loopb
+fallocate -l 301M loopa
+fallocate -l 301M loopb
 
 for i in {1..5}; do
 	LOOP1=$(losetup -f loopa --show || true)
