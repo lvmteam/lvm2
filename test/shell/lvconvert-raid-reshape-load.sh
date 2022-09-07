@@ -15,6 +15,10 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+case "$(uname -r)" in
+5.19*) skip "Skippen test that kills this kernel" ;;
+esac
+
 # Test reshaping under io load
 
 which mkfs.ext4 || skip
