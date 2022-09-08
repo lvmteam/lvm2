@@ -6,6 +6,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+import errno
 
 from .pv import load_pvs
 from .vg import load_vgs
@@ -167,7 +168,7 @@ class StateUpdate(object):
 				log_error("Too many errors in update_thread, exiting daemon")
 				cfg.debug.dump()
 				cfg.flightrecorder.dump()
-				bailing(e)
+				bailing(errno.EFAULT)
 				cfg.exit_daemon()
 			else:
 				# Slow things down when encountering errors
