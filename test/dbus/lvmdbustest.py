@@ -454,7 +454,7 @@ class TestDbusService(unittest.TestCase):
 		# Check to make sure the PVs we had to start exist, else re-create
 		# them
 		self.objs, self.bus = get_objects()
-		if len(self.pvs) != len(self.objs[PV_INT]):
+		if hasattr(self, "pvs") and len(self.pvs) != len(self.objs[PV_INT]):
 			for p in self.pvs:
 				found = False
 				for pc in self.objs[PV_INT]:
