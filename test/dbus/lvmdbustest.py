@@ -2314,7 +2314,7 @@ class TestDbusService(unittest.TestCase):
 				self.assertTrue('Job is not complete!' in str(e))
 				raise e
 
-	def test_sigint(self):
+	def test_z_sigint(self):
 		# Issue SIGINT while daemon is processing work to ensure we shut down.
 		di = DaemonInfo.get()
 		self.assertTrue(di is not None)
@@ -2349,7 +2349,7 @@ class TestDbusService(unittest.TestCase):
 								"Failed to exit after sending signal %f seconds after "
 								"queuing up work for signal %d" % (sleep_amt, signal.SIGINT))
 
-	def test_singleton_daemon(self):
+	def test_z_singleton_daemon(self):
 		# Ensure we can only have 1 daemon running at a time, daemon should exit with 114 if already running
 		di = DaemonInfo.get()
 		self.assertTrue(di is not None)
