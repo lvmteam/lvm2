@@ -69,11 +69,13 @@ class LVMShellProxy(object):
 
 				for r in ready[0]:
 					if r == self.parent_stdout_fd:
-						stdout += self.parent_stdout.readline()
+						for line in self.parent_stdout.readlines():
+							stdout += line
 					elif r == self.report_stream.fileno():
 						report += read_decoded(self.report_stream)
 					elif r == self.parent_stderr_fd:
-						stderr += self.parent_stderr.readline()
+						for line in self.parent_stderr.readlines():
+							stderr += line
 
 				# Check to see if the lvm process died on us
 				if self.lvm_shell.poll() is not None:
