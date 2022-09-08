@@ -20,7 +20,7 @@ from .request import RequestEntry
 from .loader import common
 from .state import State
 from . import background
-from .utils import round_size, mt_remove_dbus_objects, LvmBug
+from .utils import round_size, mt_remove_dbus_objects, LvmBug, lvm_column_key
 from .job import JobState
 
 
@@ -46,8 +46,7 @@ def vgs_state_retrieve(selection, cache_refresh=True):
 	except KeyError as ke:
 		# Sometimes lvm omits returning one of the keys we requested.
 		key = ke.args[0]
-		if key.startswith("vg_") or key.startswith("lv_") or key.startswith("pv_") or \
-			key in ["max_lv", "max_pv", "snap_count"]:
+		if lvm_column_key(key):
 			raise LvmBug("missing JSON key: '%s'" % key)
 		raise ke
 	return rc

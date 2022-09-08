@@ -21,7 +21,7 @@ from .utils import n, n32, d
 from .loader import common
 from .state import State
 from . import background
-from .utils import round_size, mt_remove_dbus_objects
+from .utils import round_size, mt_remove_dbus_objects, lvm_column_key
 from .job import JobState
 
 
@@ -136,9 +136,7 @@ def lvs_state_retrieve(selection, cache_refresh=True):
 	except KeyError as ke:
 		# Sometimes lvm omits returning one of the keys we requested.
 		key = ke.args[0]
-		if key.startswith("lv_") or key.startswith("vg_") or key.startswith("pool_") or \
-			key.endswith("_percent") or key.startswith("move_") or key.startswith("vdo_") or \
-			key in ["origin_uuid", "segtype", "origin", "data_lv", "metadata_lv"]:
+		if lvm_column_key(key):
 			raise LvmBug("missing JSON key: '%s'" % key)
 		raise ke
 	return rc

@@ -14,7 +14,7 @@ import dbus
 from .cfg import PV_INTERFACE
 from . import cmdhandler
 from .utils import vg_obj_path_generate, n, pv_obj_path_generate, \
-	lv_object_path_method, _handle_execute
+	lv_object_path_method, _handle_execute, lvm_column_key
 from .loader import common
 from .request import RequestEntry
 from .state import State
@@ -42,7 +42,7 @@ def pvs_state_retrieve(selection, cache_refresh=True):
 	except KeyError as ke:
 		# Sometimes lvm omits returning one of the keys we requested.
 		key = ke.args[0]
-		if key.startswith("pv") or key.startswith("vg") or (key in ['dev_size', 'pe_start']):
+		if lvm_column_key(key):
 			raise LvmBug("missing JSON key: '%s'" % key)
 		raise ke
 	return rc

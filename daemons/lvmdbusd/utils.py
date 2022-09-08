@@ -781,6 +781,21 @@ def extract_stack_trace(exception):
 	return ''.join(traceback.format_exception(None, exception, exception.__traceback__))
 
 
+def lvm_column_key(key):
+	# Check LV
+	if key.startswith("lv_") or key.startswith("vg_") or key.startswith("pool_") or \
+			key.endswith("_percent") or key.startswith("move_") or key.startswith("vdo_") or \
+			key in ["origin_uuid", "segtype", "origin", "data_lv", "metadata_lv"]:
+		return True
+	# Check VG
+	if key.startswith("vg_") or key.startswith("lv_") or key.startswith("pv_") or \
+			key in ["max_lv", "max_pv", "snap_count"]:
+		return True
+	# Check PV
+	if key.startswith("pv") or key.startswith("vg") or (key in ['dev_size', 'pe_start']):
+		return True
+	return False
+
 class LvmBug(RuntimeError):
 	"""
 	Things that are clearly a bug with lvm itself.
