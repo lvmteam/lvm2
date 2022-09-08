@@ -297,7 +297,7 @@ if __name__ == "__main__":
 			except EOFError:
 				pass
 	except Exception as e:
-		log_error("main process exiting on exception!\n%s", extract_stack_trace(e))
+		log_error("main process exiting on exception!\n%s" % extract_stack_trace(e))
 		sys.exit(1)
 
 	sys.exit(0)
