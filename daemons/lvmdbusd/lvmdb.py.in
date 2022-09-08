@@ -15,7 +15,7 @@ import pprint as prettyprint
 import os
 
 from lvmdbusd import cmdhandler
-from lvmdbusd.utils import log_debug, log_error
+from lvmdbusd.utils import log_debug, log_error, lvm_column_key, LvmBug
 
 
 class DataStore(object):
@@ -309,32 +309,38 @@ class DataStore(object):
 		:param log  Add debug log entry/exit messages
 		:return: None
 		"""
-		self.num_refreshes += 1
-		if log:
-			log_debug("lvmdb - refresh entry")
+		try:
+			self.num_refreshes += 1
+			if log:
+				log_debug("lvmdb - refresh entry")
 
-		# Grab everything first then parse it
-		# Do a single lvm retrieve for everything in json
-		a = cmdhandler.lvm_full_report_json()
+			# Grab everything first then parse it
+			# Do a single lvm retrieve for everything in json
+			a = cmdhandler.lvm_full_report_json()
 
-		_pvs, _pvs_lookup, _pvs_in_vgs = self._parse_pvs_json(a)
-		_vgs, _vgs_lookup = self._parse_vgs_json(a)
-		_lvs, _lvs_in_vgs, _lvs_hidden, _lvs_lookup = self._parse_lvs_json(a)
+			_pvs, _pvs_lookup, _pvs_in_vgs = self._parse_pvs_json(a)
+			_vgs, _vgs_lookup = self._parse_vgs_json(a)
+			_lvs, _lvs_in_vgs, _lvs_hidden, _lvs_lookup = self._parse_lvs_json(a)
 
-		# Set all
-		self.pvs = _pvs
-		self.pv_path_to_uuid = _pvs_lookup
-		self.vg_name_to_uuid = _vgs_lookup
-		self.lv_full_name_to_uuid = _lvs_lookup
+			# Set all
+			self.pvs = _pvs
+			self.pv_path_to_uuid = _pvs_lookup
+			self.vg_name_to_uuid = _vgs_lookup
+			self.lv_full_name_to_uuid = _lvs_lookup
 
-		self.vgs = _vgs
-		self.lvs = _lvs
-		self.lvs_in_vgs = _lvs_in_vgs
-		self.pvs_in_vgs = _pvs_in_vgs
-		self.lvs_hidden = _lvs_hidden
+			self.vgs = _vgs
+			self.lvs = _lvs
+			self.lvs_in_vgs = _lvs_in_vgs
+			self.pvs_in_vgs = _pvs_in_vgs
+			self.lvs_hidden = _lvs_hidden
 
-		# Create lookup table for which LV and segments are on each PV
-		self.pv_lvs, self.lv_pvs = self._parse_pv_in_lvs()
+			# Create lookup table for which LV and segments are on each PV
+			self.pv_lvs, self.lv_pvs = self._parse_pv_in_lvs()
+		except KeyError as ke:
+			key = ke.args[0]
+			if lvm_column_key(key):
+				raise LvmBug("missing JSON key: '%s'" % key)
+			raise ke
 
 		if log:
 			log_debug("lvmdb - refresh exit")
