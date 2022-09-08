@@ -108,7 +108,8 @@ class LVMShellProxy(object):
 
 			except IOError as ioe:
 				log_debug(str(ioe))
-				pass
+				self.exit_shell()
+				raise ioe
 
 		if keep_reading and run.value == 0:
 			# We didn't complete as we are shutting down
