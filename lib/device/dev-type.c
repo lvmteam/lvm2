@@ -842,7 +842,7 @@ int fs_block_size_and_type(const char *pathname, uint32_t *fs_block_size_bytes, 
 			BLKID_SUBLKS_UUID | BLKID_SUBLKS_UUIDRAW |
 			BLKID_SUBLKS_TYPE | BLKID_SUBLKS_SECTYPE |
 			BLKID_SUBLKS_USAGE | BLKID_SUBLKS_VERSION |
-			BLKID_SUBLKS_MAGIC | BLKID_SUBLKS_FSINFO);
+			BLKID_SUBLKS_MAGIC);
 	rc = blkid_do_safeprobe(probe);
 	if (rc < 0) {
 		log_debug("Failed libblkid probe for %s", pathname);
