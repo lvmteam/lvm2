@@ -577,8 +577,9 @@ static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, 
 		  (uint32_t)(new_size_sectors * SECTOR_SIZE));
 
 	lp.size = new_size_sectors;
+	lp.pvh = &vg->pvs;
 
-	if (!lv_resize(lv, &lp, &vg->pvs)) {
+	if (!lv_resize(cmd, lv, &lp)) {
 		log_error("Extend sanlock LV %s to size %s failed.",
 			  display_lvname(lv), display_size(cmd, lp.size));
 		return 0;
@@ -2732,6 +2733,9 @@ int lockd_lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (!_lvmlockd_connected)
 		return 0;
+
+	if (lv_is_lockd_sanlock_lv(lv))
+		return 1;
 
 	/*
 	 * A special case for gfs2 where we want to allow lvextend

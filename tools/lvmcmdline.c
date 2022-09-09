@@ -165,6 +165,16 @@ static const struct command_function _command_functions[CMD_COUNT] = {
 
 	{ pvscan_display_CMD, pvscan_display_cmd },
 	{ pvscan_cache_CMD, pvscan_cache_cmd },
+
+	/* lvextend/lvreduce/lvresize */
+	{ lvextend_policy_CMD,		lvextend_policy_cmd },
+	{ lvextend_pool_metadata_CMD,	lvresize_cmd },
+	{ lvresize_pool_metadata_CMD,	lvresize_cmd },
+	{ lvextend_pv_CMD,		lvresize_cmd },
+	{ lvresize_pv_CMD,		lvresize_cmd },
+	{ lvextend_size_CMD,		lvresize_cmd },
+	{ lvreduce_size_CMD,		lvresize_cmd },
+	{ lvresize_size_CMD,		lvresize_cmd },
 };
 
 
@@ -3152,6 +3162,9 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!(cmd->command = _find_command(cmd, cmd->name, &argc, argv)))
 		return EINVALID_CMD_LINE;
+
+	/* avoid this by letting lib code use cmd->command */
+	cmd->command_enum = cmd->command->command_enum;
 
 	/*
 	 * If option --foo is set which is listed in IO (ignore option) in

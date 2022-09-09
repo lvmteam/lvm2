@@ -737,6 +737,7 @@ int handle_pool_metadata_spare(struct volume_group *vg, uint32_t extents,
 		extents = MAX_SIZE;
 
 	if (!lv) {
+		log_debug("Adding new pool metadata spare %u extents.", extents);
 		if (!_alloc_pool_metadata_spare(vg, extents, pvh))
 			return_0;
 
@@ -746,6 +747,8 @@ int handle_pool_metadata_spare(struct volume_group *vg, uint32_t extents,
 	seg = last_seg(lv);
 	seg_mirrors = lv_mirror_count(lv);
 
+	log_debug("Extending pool metadata spare from %u to %u extents.",
+		  lv->le_count, extents);
 	/* Check spare LV is big enough and preserve segtype */
 	if ((lv->le_count < extents) && seg &&
 	    !lv_extend(lv, seg->segtype,

@@ -18,6 +18,7 @@
 
 #include "lib/device/dev-cache.h"
 #include "lib/device/dev-type.h"
+#include "lib/commands/cmd_enum.h"
 
 #include <limits.h>
 
@@ -94,6 +95,7 @@ struct cmd_context {
 	const char *name; /* needed before cmd->command is set */
 	struct command_name *cname;
 	struct command *command;
+	int command_enum; /* duplicate from command->command_enum for lib code */
 	char **argv;
 	struct arg_values *opt_arg_values;
 	struct dm_list arg_value_groups;

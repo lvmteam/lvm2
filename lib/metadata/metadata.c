@@ -5302,3 +5302,15 @@ int get_visible_lvs_using_pv(struct cmd_context *cmd, struct volume_group *vg, s
 	return 1;
 }
 
+int lv_is_linear(struct logical_volume *lv)
+{
+	struct lv_segment *seg = first_seg(lv);
+	return segtype_is_linear(seg->segtype);
+}
+
+int lv_is_striped(struct logical_volume *lv)
+{
+	struct lv_segment *seg = first_seg(lv);
+	return segtype_is_striped(seg->segtype);
+}
+

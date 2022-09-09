@@ -45,18 +45,17 @@
 #include "lib/notify/lvmnotify.h"
 #include "lib/label/hints.h"
 
+/*
+ * cmd_enum.h uses the generated cmds.h to create the enum with an ID
+ * for each command definition in command-lines.in.
+ */
+#include "lib/commands/cmd_enum.h"
+
 #include <ctype.h>
 #include <sys/types.h>
 
 #define CMD_LEN 256
 #define MAX_ARGS 64
-
-/* define the enums for each unique ID in command defs in command-lines.in */
-enum {
-#define cmd(a, b) a ,
-#include "cmds.h"
-#undef cmd
-};
 
 /* define the enums for the values accepted by command line --options, foo_VAL */
 enum {
@@ -295,5 +294,8 @@ int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 int lvconvert_cachevol_attach_single(struct cmd_context *cmd,
                                      struct logical_volume *lv,
                                      struct processing_handle *handle);
+
+int lvresize_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvextend_policy_cmd(struct cmd_context *cmd, int argc, char **argv);
 
 #endif

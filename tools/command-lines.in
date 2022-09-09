@@ -1382,7 +1382,7 @@ OO: --alloc Alloc, --autobackup Bool, --force, --mirrors Number,
 --stripes Number, --stripesize SizeKB, --poolmetadatasize PSizeMB,
 --type SegType
 OP: PV ...
-ID: lvextend_by_size
+ID: lvextend_size
 DESC: Extend an LV by a specified size.
 
 lvextend LV PV ...
@@ -1390,25 +1390,25 @@ OO: --alloc Alloc, --autobackup Bool, --force, --mirrors Number,
 --nofsck, --nosync, --noudevsync,
 --reportformat ReportFmt, --resizefs, --stripes Number, --stripesize SizeKB,
 --type SegType
-ID: lvextend_by_pv
+ID: lvextend_pv
 DESC: Extend an LV by specified PV extents.
 
-lvextend --poolmetadatasize PSizeMB LV_thinpool
+lvextend --poolmetadatasize PSizeMB LV_thinpool_linear
 OO: --alloc Alloc, --autobackup Bool, --force, --mirrors Number,
 --nofsck, --nosync, --noudevsync,
 --reportformat ReportFmt, --stripes Number, --stripesize SizeKB,
 --type SegType
 OP: PV ...
-ID: lvextend_pool_metadata_by_size
+ID: lvextend_pool_metadata
 DESC: Extend a pool metadata SubLV by a specified size.
 
-lvextend --usepolicies LV_thinpool_snapshot
+lvextend --usepolicies LV_snapshot_thinpool_vdopool
 OO: --alloc Alloc, --autobackup Bool, --force, --mirrors Number,
 --nofsck, --nosync, --noudevsync,
 --reportformat ReportFmt, --resizefs,
 --type SegType
 OP: PV ...
-ID: lvextend_by_policy
+ID: lvextend_policy
 DESC: Extend an LV according to a predefined policy.
 
 ---
@@ -1456,7 +1456,7 @@ DESC: Remove the devices file entry for the given PVID.
 lvreduce --size NSizeMB LV
 OO: --autobackup Bool, --force, --nofsck, --noudevsync,
 --reportformat ReportFmt, --resizefs
-ID: lvreduce_general
+ID: lvreduce_size
 
 ---
 
@@ -1487,7 +1487,7 @@ OO: --alloc Alloc, --autobackup Bool, --force,
 --stripes Number, --stripesize SizeKB, --poolmetadatasize PSizeMB,
 --type SegType
 OP: PV ...
-ID: lvresize_by_size
+ID: lvresize_size
 DESC: Resize an LV by a specified size.
 
 lvresize LV PV ...
@@ -1495,7 +1495,7 @@ OO: --alloc Alloc, --autobackup Bool, --force,
 --nofsck, --nosync, --noudevsync,
 --reportformat ReportFmt, --resizefs, --stripes Number, --stripesize SizeKB,
 --type SegType
-ID: lvresize_by_pv
+ID: lvresize_pv
 DESC: Resize an LV by specified PV extents.
 
 lvresize --poolmetadatasize PSizeMB LV_thinpool
@@ -1504,7 +1504,7 @@ OO: --alloc Alloc, --autobackup Bool, --force,
 --reportformat ReportFmt, --stripes Number, --stripesize SizeKB,
 --type SegType
 OP: PV ...
-ID: lvresize_pool_metadata_by_size
+ID: lvresize_pool_metadata
 DESC: Resize a pool metadata SubLV by a specified size.
 
 ---

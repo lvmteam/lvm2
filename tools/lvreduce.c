@@ -17,5 +17,5 @@
 
 int lvreduce(struct cmd_context *cmd, int argc, char **argv)
 {
-	return lvresize(cmd, argc, argv);
+	return lvresize_cmd(cmd, argc, argv);
 }

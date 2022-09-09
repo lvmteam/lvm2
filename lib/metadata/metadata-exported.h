@@ -297,6 +297,9 @@
 int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 		       struct dm_list **layout, struct dm_list **role);
 
+int lv_is_linear(struct logical_volume *lv);
+int lv_is_striped(struct logical_volume *lv);
+
 /* Ordered list - see lv_manip.c */
 typedef enum {
 	AREA_UNASSIGNED,
@@ -661,42 +664,33 @@ struct pvcreate_params {
 };
 
 struct lvresize_params {
-	int argc;
-	char **argv;
-
-	const char *vg_name; /* only-used when VG is not yet opened (in /tools) */
-	const char *lv_name;
-
-	const struct segment_type *segtype;
-
-	uint64_t poolmetadata_size;
-	sign_t poolmetadata_sign;
-
-	/* Per LV applied parameters */
-
 	enum {
 		LV_ANY = 0,
 		LV_REDUCE = 1,
 		LV_EXTEND = 2
 	} resize;
-
-	int use_policies;
-
 	alloc_policy_t alloc;
 	int yes;
 	int force;
 	int nosync;
 	int nofsck;
 	int resizefs;
+	int use_policies;
 
+	const struct segment_type *segtype;
 	unsigned mirrors;
 	uint32_t stripes;
 	uint64_t stripe_size;
 
-	uint32_t extents;
 	uint64_t size;
+	uint32_t extents;
 	sign_t sign;
-	percent_type_t percent;
+	percent_type_t percent; /* the type of percentage, not a value */
+	uint32_t percent_value; /* 0 - 100 */
+	uint64_t poolmetadata_size;
+	sign_t poolmetadata_sign;
+	uint32_t policy_percent_main;
+	uint32_t policy_percent_meta;
 
 	int approx_alloc;
 	int extents_are_pes;	/* Is 'extents' counting PEs or LEs? */
@@ -705,6 +699,8 @@ struct lvresize_params {
 	const char *lockopt;
 	char *lockd_lv_refresh_path; /* set during resize to use for refresh at the end */
 	char *lockd_lv_refresh_uuid; /* set during resize to use for refresh at the end */
+
+	struct dm_list *pvh;	/* list of pvs to use */
 };
 
 void pvcreate_params_set_defaults(struct pvcreate_params *pp);
@@ -745,9 +741,10 @@ int vgs_are_compatible(struct cmd_context *cmd,
 		       struct volume_group *vg_to);
 uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname);
 
-int lv_resize(struct logical_volume *lv,
-	      struct lvresize_params *lp,
-	      struct dm_list *pvh);
+int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
+	      struct lvresize_params *lp);
+int lv_extend_policy_calculate_percent(struct logical_volume *lv,
+                                       uint32_t *amount, uint32_t *meta_amount);
 
 struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const char *vgid,
 			     uint32_t read_flags, uint32_t lockd_state,
