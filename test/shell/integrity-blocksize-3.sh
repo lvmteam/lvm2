@@ -66,7 +66,7 @@ blockdev --getpbsz "$dev2"
 lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
-mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 echo "hello world" > $mnt/hello
 umount $mnt
@@ -86,7 +86,7 @@ lvremove $vg/$lv1
 lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
-mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 echo "hello world" > $mnt/hello
 umount $mnt
@@ -106,7 +106,7 @@ lvremove $vg/$lv1
 lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
-mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 echo "hello world" > $mnt/hello
 lvconvert --raidintegrity y $vg/$lv1
@@ -143,7 +143,7 @@ blockdev --getpbsz "$dev2"
 lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
-mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 echo "hello world" > $mnt/hello
 umount $mnt
@@ -163,7 +163,7 @@ lvremove $vg/$lv1
 lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
-mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 echo "hello world" > $mnt/hello
 umount $mnt
@@ -183,7 +183,7 @@ lvremove $vg/$lv1
 lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
-mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 echo "hello world" > $mnt/hello
 lvconvert --raidintegrity y $vg/$lv1
@@ -220,7 +220,7 @@ blockdev --getpbsz "$dev2"
 lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
-mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 echo "hello world" > $mnt/hello
 umount $mnt
@@ -241,7 +241,7 @@ lvremove $vg/$lv1
 lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
-mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 echo "hello world" > $mnt/hello
 umount $mnt
@@ -262,7 +262,7 @@ lvremove $vg/$lv1
 lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
-mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 echo "hello world" > $mnt/hello
 lvconvert --raidintegrity y $vg/$lv1
@@ -281,5 +281,3 @@ lvremove $vg/$lv1
 
 vgremove -ff $vg
 aux cleanup_scsi_debug_dev
-sleep 1
-
