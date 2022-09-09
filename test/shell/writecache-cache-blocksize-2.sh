@@ -164,7 +164,7 @@ aux prepare_devs 2 301
 vgcreate $vg "$dev1"
 lvcreate -n $lv1 -L300 $vg
 mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
-blkid -c /dev/null "$DM_DEV_DIR/$vg/$lv1" | grep BLOCK_SIZE || skip
+blkid -p "$DM_DEV_DIR/$vg/$lv1" | grep BLOCK_SIZE || skip
 lvchange -an $vg
 vgremove -ff $vg
 

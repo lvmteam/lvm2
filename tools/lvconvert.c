@@ -5996,7 +5996,7 @@ static int _set_writecache_block_size(struct cmd_context *cmd,
 	}
 
 	/*
-	 * get_fs_block_size() returns the libblkid BLOCK_SIZE value,
+	 * fs_block_size_and_type() returns the libblkid BLOCK_SIZE value,
 	 * where libblkid has fs-specific code to set BLOCK_SIZE to the
 	 * value we need here.
 	 *
@@ -6008,7 +6008,7 @@ static int _set_writecache_block_size(struct cmd_context *cmd,
 	 *
 	 * With 512 LBS and 4K PBS, mkfs.xfs will use xfs sector size 4K.
 	 */
-	rv = get_fs_block_size(pathname, &fs_block_size);
+	rv = fs_block_size_and_type(pathname, &fs_block_size, NULL, NULL);
 skip_fs:
 	if (!rv || !fs_block_size) {
 		if (block_size_setting)

@@ -823,26 +823,67 @@ out:
 }
 
 #ifdef BLKID_WIPING_SUPPORT
-int get_fs_block_size(const char *pathname, uint32_t *fs_block_size)
+int fs_block_size_and_type(const char *pathname, uint32_t *fs_block_size_bytes, char *fstype, int *nofs)
 {
-	char *block_size_str = NULL;
+	blkid_probe probe = NULL;
+	const char *type_str = NULL, *size_str = NULL;
+	size_t len;
+	int ret = 1;
+	int rc;
 
-	if ((block_size_str = blkid_get_tag_value(NULL, "BLOCK_SIZE", pathname))) {
-		*fs_block_size = (uint32_t)atoi(block_size_str);
-		free(block_size_str);
-		log_debug("Found blkid BLOCK_SIZE %u for fs on %s", *fs_block_size, pathname);
-		return 1;
-	} else {
-		log_debug("No blkid BLOCK_SIZE for fs on %s", pathname);
-		*fs_block_size = 0;
+	if (!(probe = blkid_new_probe_from_filename(pathname))) {
+		log_error("Failed libblkid probe setup for %s", pathname);
 		return 0;
 	}
+
+	blkid_probe_enable_superblocks(probe, 1);
+	blkid_probe_set_superblocks_flags(probe,
+			BLKID_SUBLKS_LABEL | BLKID_SUBLKS_LABELRAW |
+			BLKID_SUBLKS_UUID | BLKID_SUBLKS_UUIDRAW |
+			BLKID_SUBLKS_TYPE | BLKID_SUBLKS_SECTYPE |
+			BLKID_SUBLKS_USAGE | BLKID_SUBLKS_VERSION |
+			BLKID_SUBLKS_MAGIC | BLKID_SUBLKS_FSINFO);
+	rc = blkid_do_safeprobe(probe);
+	if (rc < 0) {
+		log_debug("Failed libblkid probe for %s", pathname);
+		ret = 0;
+		goto out;
+	} else if (rc == 1) {
+		/* no file system on the device */
+		log_debug("No file system found on %s.", pathname);
+		if (nofs)
+			*nofs = 1;
+		goto out;
+	}
+
+	if (!blkid_probe_lookup_value(probe, "TYPE", &type_str, &len) && len && type_str) {
+		if (fstype)
+			strncpy(fstype, type_str, FSTYPE_MAX);
+	} else {
+		/* any difference from blkid_do_safeprobe rc=1? */
+		log_debug("No file system type on %s.", pathname);
+		if (nofs)
+			*nofs = 1;
+		goto out;
+	}
+
+	if (fs_block_size_bytes) {
+		if (!blkid_probe_lookup_value(probe, "BLOCK_SIZE", &size_str, &len) && len && size_str)
+			*fs_block_size_bytes = atoi(size_str);
+		else
+			*fs_block_size_bytes = 0;
+	}
+
+	log_debug("Found blkid fstype %s fsblocksize %s on %s",
+		  type_str ?: "none", size_str ?: "unused", pathname);
+out:
+	blkid_free_probe(probe);
+	return ret;
 }
 #else
-int get_fs_block_size(const char *pathname, uint32_t *fs_block_size)
+int fs_block_size_and_type(const char *pathname, uint32_t *fs_block_size_bytes, char *fstype, int *nofs)
 {
 	log_debug("Disabled blkid BLOCK_SIZE for fs.");
-	*fs_block_size = 0;
 	return 0;
 }
 #endif

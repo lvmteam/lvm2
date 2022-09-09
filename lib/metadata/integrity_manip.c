@@ -372,7 +372,7 @@ static int _set_integrity_block_size(struct cmd_context *cmd, struct logical_vol
 		}
 
 		/*
-		 * get_fs_block_size() returns the libblkid BLOCK_SIZE value,
+		 * fs_block_size_and_type() returns the libblkid BLOCK_SIZE value,
 		 * where libblkid has fs-specific code to set BLOCK_SIZE to the
 		 * value we need here.
 		 *
@@ -382,7 +382,7 @@ static int _set_integrity_block_size(struct cmd_context *cmd, struct logical_vol
 		 * value the block size, but it's possible values are not the same
 		 * as xfs's, and do not seem to relate directly to the device LBS.
 		 */
-		rv = get_fs_block_size(pathname, &fs_block_size);
+		rv = fs_block_size_and_type(pathname, &fs_block_size, NULL, NULL);
 		if (!rv || !fs_block_size) {
 			int use_bs;
 
