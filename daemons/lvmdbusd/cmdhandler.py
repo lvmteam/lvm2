@@ -121,12 +121,6 @@ def call_lvm(command, debug=False, line_cb=None,
 	command.insert(0, cfg.LVM_CMD)
 	command = add_no_notify(command)
 
-	# If we are running the fullreport command, we will ask lvm to output the debug
-	# data, so we can have the required information for lvm to debug the fullreport failures.
-	if "fullreport" in command:
-		fn = cfg.lvmdebug.setup()
-		add_config_option(command, "--config", "log {level=7 file=%s syslog=0}" % fn)
-
 	process = Popen(command, stdout=PIPE, stderr=PIPE, close_fds=True,
 					env=os.environ)
 
@@ -617,6 +611,11 @@ def lvm_full_report_json():
 		'--configreport', 'pvseg', '-o', ','.join(pv_seg_columns),
 		'--reportformat', 'json'
 	])
+
+	# We are running the fullreport command, we will ask lvm to output the debug
+	# data, so we can have the required information for lvm to debug the fullreport failures.
+	fn = cfg.lvmdebug.setup()
+	add_config_option(cmd, "--config", "log {level=7 file=%s syslog=0}" % fn)
 
 	rc, out, err = call(cmd)
 	# When we have an exported vg the exit code of lvs or fullreport will be 5
