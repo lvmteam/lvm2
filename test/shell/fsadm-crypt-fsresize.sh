@@ -22,6 +22,13 @@ export LVM_TEST_PREFER_BRD=0
 
 aux prepare_vg 1 300
 
+# Tests require a libblkid version that shows FSLASTBLOCK
+lvcreate -n $lv1 -L 100 $vg
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
+blkid -p "$DM_DEV_DIR/$vg/$lv1" | grep FSLASTBLOCK || skip
+lvchange -an $vg
+lvremove $vg/$lv1
+
 # set to "skip" to avoid testing given fs and test warning result
 # i.e. check_reiserfs=skip
 check_ext2=

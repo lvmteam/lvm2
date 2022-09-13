@@ -28,6 +28,12 @@ aux prepare_vg 3 256
 mount_dir="mnt_lvresize_fs"
 mkdir -p "$mount_dir"
 
+# Tests require a libblkid version that shows FSLASTBLOCK
+lvcreate -n $lv1 -L 300 $vg
+mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+blkid -p "$DM_DEV_DIR/$vg/$lv1" | grep FSLASTBLOCK || skip
+lvchange -an $vg
+lvremove $vg/$lv1
 
 #
 # lvextend, no fs
