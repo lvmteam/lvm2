@@ -608,8 +608,7 @@ def lvm_full_report_json():
 		'--configreport', 'vg', '-o', ','.join(vg_columns),
 		'--configreport', 'lv', '-o', ','.join(lv_columns),
 		'--configreport', 'seg', '-o', ','.join(lv_seg_columns),
-		'--configreport', 'pvseg', '-o', ','.join(pv_seg_columns),
-		'--reportformat', 'json'
+		'--configreport', 'pvseg', '-o', ','.join(pv_seg_columns)
 	])
 
 	# We are running the fullreport command, we will ask lvm to output the debug
