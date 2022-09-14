@@ -192,6 +192,41 @@ check lv_field $vg2/$lv1 lv_active "active"
 vgchange -an $vg1
 vgchange -an $vg2
 
-vgremove -f $vg1
-vgremove -f $vg2
+# vgremove clears online files
+
+PVID1=$(pvs "$bd1" --noheading -o uuid | tr -d - | awk '{print $1}')
+PVID2=$(pvs "$bd2" --noheading -o uuid | tr -d - | awk '{print $1}')
+PVID3=$(pvs "$bd3" --noheading -o uuid | tr -d - | awk '{print $1}')
+
+_clear_online_files
+
+pvscan --cache --listvg --checkcomplete --vgonline --autoactivation event --udevoutput --journal=output "$bd1"
+pvscan --cache --listvg --checkcomplete --vgonline --autoactivation event --udevoutput --journal=output "$bd2"
+vgchange -aay --autoactivation event $vg1
+check lv_field $vg1/$lv1 lv_active "active"
+check lv_field $vg1/$lv2 lv_active "active"
+check lv_field $vg2/$lv1 lv_active ""
+
+pvscan --cache --listvg --checkcomplete --vgonline --autoactivation event --udevoutput --journal=output "$bd3"
+vgchange -aay --autoactivation event $vg2
+check lv_field $vg2/$lv1 lv_active "active"
+
+ls "$RUNDIR/lvm/pvs_online/$PVID1"
+ls "$RUNDIR/lvm/pvs_online/$PVID2"
+ls "$RUNDIR/lvm/pvs_online/$PVID3"
+ls "$RUNDIR/lvm/pvs_lookup/$vg1"
+ls "$RUNDIR/lvm/vgs_online/$vg1"
+ls "$RUNDIR/lvm/vgs_online/$vg2"
+
+vgremove -y $vg1
+
+not ls "$RUNDIR/lvm/pvs_online/$PVID1"
+not ls "$RUNDIR/lvm/pvs_online/$PVID2"
+not ls "$RUNDIR/lvm/pvs_lookup/$vg1"
+not ls "$RUNDIR/lvm/vgs_online/$vg1"
+
+vgremove -y $vg2
+
+not ls "$RUNDIR/lvm/pvs_online/$PVID3"
+not ls "$RUNDIR/lvm/vgs_online/$vg2"
 

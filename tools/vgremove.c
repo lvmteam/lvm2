@@ -14,6 +14,7 @@
  */
 
 #include "tools.h"
+#include "lib/device/online.h"
 
 static int _vgremove_single(struct cmd_context *cmd, const char *vg_name,
 			    struct volume_group *vg,
@@ -74,6 +75,8 @@ static int _vgremove_single(struct cmd_context *cmd, const char *vg_name,
 
 	if (!force && !vg_remove_check(vg))
 		return_ECMD_FAILED;
+
+	online_vgremove(vg);
 
 	vg_remove_pvs(vg);
 

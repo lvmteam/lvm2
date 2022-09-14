@@ -177,21 +177,6 @@ out:
 	return ret;
 }
 
-static void _lookup_file_remove(char *vgname)
-{
-	char path[PATH_MAX];
-
-	if (dm_snprintf(path, sizeof(path), "%s/%s", PVS_LOOKUP_DIR, vgname) < 0) {
-		log_error("Path %s/%s is too long.", PVS_LOOKUP_DIR, vgname);
-		return;
-	}
-
-	log_debug("Unlink pvs_lookup: %s", path);
-
-	if (unlink(path) && (errno != ENOENT))
-		log_sys_debug("unlink", path);
-}
-
 /*
  * When a device goes offline we only know its major:minor, not its PVID.
  * Since the dev isn't around, we can't read it to get its PVID, so we have to
@@ -233,7 +218,7 @@ static void _online_pvid_file_remove_devno(int major, int minor)
 
 			if (file_vgname[0]) {
 				online_vg_file_remove(file_vgname);
-				_lookup_file_remove(file_vgname);
+				online_lookup_file_remove(file_vgname);
 			}
 		}
 	}
