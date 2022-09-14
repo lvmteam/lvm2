@@ -735,6 +735,7 @@ HAVE_VALGRIND
 HAVE_REALTIME
 HAVE_LIBDL
 BLKDEACTIVATE
+LVRESIZE_FS_HELPER_PATH
 FSADM_PATH
 FSADM
 ELDFLAGS
@@ -1012,6 +1013,7 @@ with_confdir
 with_staticdir
 with_usrlibdir
 with_usrsbindir
+with_libexecdir
 with_udev_prefix
 with_udevdir
 with_systemdsystemunitdir
@@ -1813,6 +1815,7 @@ Optional Packages:
   --with-staticdir=DIR    static binaries in DIR [EPREFIX/sbin]
   --with-usrlibdir=DIR    usrlib in DIR [PREFIX/lib]
   --with-usrsbindir=DIR   usrsbin executables in DIR [PREFIX/sbin]
+  --with-libexecdir=DIR   libexec executables in DIR [PREFIX/libexec]
   --with-udev-prefix=UPREFIX
                           install udev rule files in UPREFIX [EPREFIX]
   --with-udevdir=DIR      udev rules in DIR [UPREFIX/lib/udev/rules.d]
@@ -14652,6 +14655,16 @@ else $as_nop
 fi
 
 
+
+# Check whether --with-libexecdir was given.
+if test ${with_libexecdir+y}
+then :
+  withval=$with_libexecdir; libexecdir=$withval
+else $as_nop
+  libexecdir='${prefix}/libexec'
+fi
+
+
 ################################################################################
 
 # Check whether --with-udev_prefix was given.
@@ -15155,6 +15168,13 @@ LVMIMPORTVDO_PATH="$SBINDIR/lvm_import_vdo"
 printf "%s\n" "#define LVMIMPORTVDO_PATH \"$LVMIMPORTVDO_PATH\"" >>confdefs.h
 
 
+LIBEXECDIR="$(eval echo $(eval echo $libexecdir))"
+
+LVRESIZE_FS_HELPER_PATH="$LIBEXECDIR/lvresize_fs_helper"
+
+printf "%s\n" "#define LVRESIZE_FS_HELPER_PATH \"$LVRESIZE_FS_HELPER_PATH\"" >>confdefs.h
+
+
 ################################################################################
 if test "$BUILD_DMEVENTD" = yes; then
 
@@ -15328,6 +15348,8 @@ printf "%s\n" "#define LVM_CONFIGURE_LINE \"$CONFIGURE_LINE\"" >>confdefs.h
 
 
 ################################################################################
+
+
 
 
 
