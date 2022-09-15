@@ -264,7 +264,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 				if (update_set) {
 					log_print("Adding multipath device %s for multipath component %s.",
 						  dev_name(mpath_dev), dev_name(du->dev));
-					if (!device_id_add(cmd, mpath_dev, dev->pvid, NULL, NULL))
+					if (!device_id_add(cmd, mpath_dev, dev->pvid, NULL, NULL, 0))
 						stack;
 				} else {
 					log_print("Missing multipath device %s for multipath component %s.",
@@ -360,7 +360,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		/* also allow deviceid_ARG ? */
 		deviceidtype = arg_str_value(cmd, deviceidtype_ARG, NULL);
 
-		if (!device_id_add(cmd, dev, dev->pvid, deviceidtype, NULL))
+		if (!device_id_add(cmd, dev, dev->pvid, deviceidtype, NULL, 1))
 			goto_bad;
 		if (!device_ids_write(cmd))
 			goto_bad;
@@ -408,7 +408,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		}
 		dm_list_iterate_items(devl, &found_devs) {
 			deviceidtype = arg_str_value(cmd, deviceidtype_ARG, NULL);
-			if (!device_id_add(cmd, devl->dev, devl->dev->pvid, deviceidtype, NULL))
+			if (!device_id_add(cmd, devl->dev, devl->dev->pvid, deviceidtype, NULL, 1))
 				goto_bad;
 		}
 		if (!device_ids_write(cmd))

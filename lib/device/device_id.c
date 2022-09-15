@@ -1140,7 +1140,7 @@ struct dev_use *get_du_for_device_id(struct cmd_context *cmd, uint16_t idtype, c
  * . add or update entry in cmd->use_devices
  */
 int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid_arg,
-		  const char *idtype_arg, const char *id_arg)
+		  const char *idtype_arg, const char *id_arg, int use_idtype_only)
 {
 	char pvid[ID_LEN+1] = { 0 };
 	uint16_t idtype = 0;
@@ -1194,9 +1194,13 @@ int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid_
 	 */
 
 	if (idtype_arg) {
-		if (!(idtype = idtype_from_str(idtype_arg)))
+		if (!(idtype = idtype_from_str(idtype_arg))) {
+			if (use_idtype_only) {
+				log_error("The specified --deviceidtype %s is unknown.", idtype_arg);
+				return 0;
+			}
 			log_warn("WARNING: ignoring unknown device_id type %s.", idtype_arg);
-		else {
+		} else {
 			if (id_arg) {
 				if ((idname = strdup(id_arg)))
 					goto id_done;
@@ -1205,6 +1209,11 @@ int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid_
 
 			if ((idname = device_id_system_read(cmd, dev, idtype)))
 				goto id_done;
+
+			if (use_idtype_only) {
+				log_error("The specified --deviceidtype %s is not available for %s.", idtype_arg, dev_name(dev));
+				return 0;
+			}
 
 			log_warn("WARNING: ignoring deviceidtype %s which is not available for device.", idtype_arg);
 			idtype = 0;

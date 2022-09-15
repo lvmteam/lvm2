@@ -60,7 +60,7 @@ static int _vgimportdevices_single(struct cmd_context *cmd,
 		idtypestr = pv->device_id_type;
 
 		memcpy(pvid, &pvl->pv->id.uuid, ID_LEN);
-		device_id_add(cmd, pv->dev, pvid, idtypestr, NULL);
+		device_id_add(cmd, pv->dev, pvid, idtypestr, NULL, 0);
 		vp->added_devices++;
 
 		/* We could skip update if the device_id has not changed. */

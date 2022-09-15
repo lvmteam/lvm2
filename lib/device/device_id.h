@@ -28,7 +28,7 @@ int device_ids_use_devname(struct cmd_context *cmd);
 int device_ids_read(struct cmd_context *cmd);
 int device_ids_write(struct cmd_context *cmd);
 int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid,
-                  const char *idtype_arg, const char *id_arg);
+                  const char *idtype_arg, const char *id_arg, int use_idtype_only);
 void device_id_pvremove(struct cmd_context *cmd, struct device *dev);
 void device_ids_match(struct cmd_context *cmd);
 int device_ids_match_dev(struct cmd_context *cmd, struct device *dev);

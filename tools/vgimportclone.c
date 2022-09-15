@@ -162,7 +162,7 @@ static int _update_vg(struct cmd_context *cmd, struct volume_group *vg,
 	 */
 	if (vp->import_devices || cmd->enable_devices_file) {
 		dm_list_iterate_items(devl, &vp->new_devs) {
-			if (!device_id_add(cmd, devl->dev, devl->dev->pvid, NULL, NULL)) {
+			if (!device_id_add(cmd, devl->dev, devl->dev->pvid, NULL, NULL, 0)) {
 				log_error("Failed to add device id for %s.", dev_name(devl->dev));
 				goto bad;
 			}
