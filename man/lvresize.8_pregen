@@ -37,6 +37,10 @@ lvresize \(em Resize a logical volume
 .br
  \fB-f\fP|\fB--force\fP
 .br
+    \fB--fs\fP \fIString\fP
+.br
+    \fB--fsmode\fP \fIString\fP
+.br
  \fB-h\fP|\fB--help\fP
 .br
     \fB--journal\fP \fIString\fP
@@ -109,6 +113,10 @@ Resize an LV by a specified size.
 .br
 [    \fB--poolmetadatasize\fP [\fB+\fP]\fISize\fP[m|UNIT] ]
 .br
+[    \fB--fs\fP \fIString\fP ]
+.br
+[    \fB--fsmode\fP \fIString\fP ]
+.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
@@ -126,6 +134,10 @@ Resize an LV by specified PV extents.
 .RS 4
 .ad l
 [ \fB-r\fP|\fB--resizefs\fP ]
+.br
+[    \fB--fs\fP \fIString\fP ]
+.br
+[    \fB--fsmode\fP \fIString\fP ]
 .br
 [ COMMON_OPTIONS ]
 .ad b
@@ -335,6 +347,36 @@ Override various checks, confirmations and protections.
 Use with extreme caution.
 .
 .HP
+\fB--fs\fP \fIString\fP
+.br
+Control file system resizing when resizing an LV.
+\fBchecksize\fP: Check the fs size and reduce the LV if the fs is not
+using the reduced space (fs reduce is not needed.) If the reduced space
+is used by the fs, then do not resize the fs or LV, and return an error.
+(checksize only applies when reducing, and does nothing for extend.)
+\fBresize\fP: Resize the fs by calling the fs-specific resize command.
+This may also include mounting, unmounting, or running fsck. See --fsmode to
+control mounting behavior, and --nofsck to disable fsck.
+\fBresize_fsadm\fP: Use the old method of calling fsadm to handle the fs
+(deprecated.) Warning: this option does not prevent lvreduce from destroying
+file systems that are unmounted (or mounted if prompts are skipped.)
+\fBignore\fP: Resize the LV without checking for or handling a file system.
+Warning: using ignore when reducing the LV size may destroy the file system.
+.
+.HP
+\fB--fsmode\fP \fIString\fP
+.br
+Control file system mounting behavior for fs resize.
+\fBmanage\fP: Mount or unmount the fs as needed to resize the fs,
+and attempt to restore the original mount state at the end.
+\fBnochange\fP: Do not mount or unmount the fs. If mounting or unmounting
+is required to resize the fs, then do not resize the fs or the LV and fail
+the command.
+\fBoffline\fP: Unmount the fs if it is mounted, and resize the fs while it
+is unmounted. If mounting is required to resize the fs, then do not resize
+the fs or the LV and fail the command.
+.
+.HP
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
@@ -363,9 +405,7 @@ Display long help text.
 .HP
 \fB-n\fP|\fB--nofsck\fP
 .br
-Do not perform fsck before resizing filesystem when filesystem
-requires it. You may need to use --force to proceed with
-this option.
+Do not perform fsck when resizing the file system with --resizefs.
 .
 .HP
 \fB--nohints\fP
@@ -438,7 +478,10 @@ See \fBlvmreport\fP(7) for more information.
 .HP
 \fB-r\fP|\fB--resizefs\fP
 .br
-Resize underlying filesystem together with the LV using \fBfsadm\fP(8).
+Resize the fs using the fs-specific resize command.
+May include mounting, unmounting, or running fsck. See --fsmode to control
+mounting behavior, and --nofsck to disable fsck. See --fs for more options
+(--resizefs is equivalent to --fs resize.)
 .
 .HP
 \fB-L\fP|\fB--size\fP [\fB+\fP|\fB-\fP]\fISize\fP[m|UNIT]
