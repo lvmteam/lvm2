@@ -30,8 +30,12 @@ lvcreate -L10M -T $vg/pool
 # tests for checking thin-pool discard passdown are skipped
 pvmajor=$(get pv_field "$dev1" major)
 pvminor=$(get pv_field "$dev1" minor)
-test "$(< "/sys/dev/block/$pvmajor:$pvminor/queue/discard_granularity")" -ne 0 || \
-        no_discard=1
+
+if test "$(< "/sys/dev/block/$pvmajor:$pvminor/queue/discard_granularity")" -eq 0 ; then
+	no_discard=1
+else
+	no_discard=
+fi
 
 #
 # Check change operations on a thin-pool without any thin LV
