@@ -300,10 +300,9 @@ class ObjectManager(AutomatedProperties):
 
 				# If a PV is missing its device path is '[unknown]' or some
 				# other text derivation of unknown.  When we find that a PV is
-				# missing we will clear out the lvm_id as it's likely not unique
-				# and thus not useful and potentially harmful for lookups.
-				if path_create == pv_obj_path_generate and \
-						cfg.db.pv_missing(uuid):
+				# missing we will clear out the lvm_id as it's not unique
+				# and thus not useful and harmful for lookups.
+				if cfg.db.pv_missing(uuid):
 					lvm_id = None
 
 				# Lets check for the uuid first

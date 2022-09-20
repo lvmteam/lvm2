@@ -360,10 +360,13 @@ class DataStore(object):
 			return rc
 
 	def pv_missing(self, pv_uuid):
+		# The uuid might not be a PV, default to false
 		if pv_uuid in self.pvs:
 			if self.pvs[pv_uuid]['pv_missing'] == '':
 				return False
-		return True
+			else:
+				return True
+		return False
 
 	def fetch_vgs(self, vg_name):
 		if not vg_name:
