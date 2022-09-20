@@ -33,7 +33,8 @@
 
 %build
 
-%configure %{configure_flags}
+# FIXME: Remove --enable-dependency-tracking once problem with generated file from tools/ is used in lib/
+%configure %{configure_flags} --enable-dependency-tracking
 
 make %{?_smp_mflags}
 %{?extra_build_commands}
