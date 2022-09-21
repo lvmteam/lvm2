@@ -26,7 +26,7 @@ except ImportError:
 	import json
 
 
-from lvmdbusd.cfg import LVM_CMD, run
+import lvmdbusd.cfg as cfg
 from lvmdbusd.utils import log_debug, log_error, add_no_notify, make_non_block,\
 			read_decoded, extract_stack_trace, LvmBug
 
@@ -59,7 +59,7 @@ class LVMShellProxy(object):
 		# a hang.  Keep reading until we get the prompt back and the report
 		# FD does not contain valid JSON
 
-		while keep_reading and run.value != 0:
+		while keep_reading and cfg.run.value != 0:
 			try:
 				rd_fd = [
 					self.parent_stdout_fd,
@@ -113,7 +113,7 @@ class LVMShellProxy(object):
 				self.exit_shell()
 				raise ioe
 
-		if keep_reading and run.value == 0:
+		if keep_reading and cfg.run.value == 0:
 			# We didn't complete as we are shutting down
 			# Try to clean up lvm shell process
 			log_debug("exiting lvm shell as we are shutting down")
@@ -158,7 +158,7 @@ class LVMShellProxy(object):
 
 		# run the lvm shell
 		self.lvm_shell = subprocess.Popen(
-			[LVM_CMD],
+			[cfg.LVM_CMD],
 			stdin=child_stdin_fd,
 			stdout=child_stdout_fd, env=local_env,
 			stderr=child_stderr_fd, close_fds=True,
@@ -259,18 +259,28 @@ class LVMShellProxy(object):
 	def exit_shell(self):
 		try:
 			self._write_cmd('exit\n')
-		except Exception as e:
-			log_error(str(e))
+			self.lvm_shell.wait(1)
+			self.lvm_shell = None
+		except Exception as _e:
+			log_error(str(_e))
 
 	def __del__(self):
-		try:
-			self.lvm_shell.terminate()
-		except:
-			pass
+		# Note: When we are shutting down the daemon and the main process has already exited
+		# and this gets called we have a limited set of things we can do, like we cannot call
+		# log_error as _common_log is None!!!
+		if self.lvm_shell is not None:
+			try:
+				self.lvm_shell.wait(1)
+			except subprocess.TimeoutExpired:
+				print("lvm shell child process did not exit as instructed, sending SIGTERM")
+				cfg.ignore_sigterm = True
+				self.lvm_shell.terminate()
+				child_exit_code = self.lvm_shell.wait(1)
+				print("lvm shell process exited with %d" % child_exit_code)
 
 
 if __name__ == "__main__":
-	print("USING LVM BINARY: %s " % LVM_CMD)
+	print("USING LVM BINARY: %s " % cfg.LVM_CMD)
 
 	try:
 		if len(sys.argv) > 1 and sys.argv[1] == "bisect":
