@@ -1206,6 +1206,16 @@ remove_dm_devs() {
 # Throttle down performance of kcopyd when mirroring i.e. disk image
 throttle_sys="/sys/module/dm_mirror/parameters/raid1_resync_throttle"
 throttle_dm_mirror() {
+	# if the kernel config file is present, validate whether the kernel uses HZ_1000
+	# and return failure for this 'throttling' when it does NOT as without this setting
+	# whole throttling is pointless on modern hardware
+	local kconfig="/boot/config-$(uname -r)"
+	if test -e "$kconfig" ; then
+		grep -q "CONFIG_HZ_1000=y" "$kconfig" 2>/dev/null || {
+			echo "WARNING: CONFIG_HZ_1000=y is NOT set in $kconfig -> throttling is unusable"
+			return 1
+		}
+	fi
 	test -e "$throttle_sys" || return
 	test -f THROTTLE || cat "$throttle_sys" > THROTTLE
 	echo ${1-1} > "$throttle_sys"
