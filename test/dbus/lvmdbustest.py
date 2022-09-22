@@ -385,8 +385,7 @@ class DaemonInfo(object):
 # noinspection PyUnresolvedReferences
 class TestDbusService(unittest.TestCase):
 	def setUp(self):
-
-		self.addCleanup(self.clean_up)
+		self.pvs = []
 
 		# Because of the sensitive nature of running LVM tests we will only
 		# run if we have PVs and nothing else, so that we can be confident that
@@ -395,6 +394,10 @@ class TestDbusService(unittest.TestCase):
 		if len(self.objs[PV_INT]) == 0:
 			std_err_print('No PVs present exiting!')
 			sys.exit(1)
+
+		for p in self.objs[PV_INT]:
+			self.pvs.append(p.Pv.Name)
+
 		if len(self.objs[MANAGER_INT]) != 1:
 			std_err_print('Expecting a manager object!')
 			sys.exit(1)
@@ -403,9 +406,7 @@ class TestDbusService(unittest.TestCase):
 			std_err_print('Expecting no VGs to exist!')
 			sys.exit(1)
 
-		self.pvs = []
-		for p in self.objs[PV_INT]:
-			self.pvs.append(p.Pv.Name)
+		self.addCleanup(self.clean_up)
 
 		self.vdo = supports_vdo()
 
@@ -460,7 +461,7 @@ class TestDbusService(unittest.TestCase):
 		# Check to make sure the PVs we had to start exist, else re-create
 		# them
 		self.objs, self.bus = get_objects()
-		if hasattr(self, "pvs") and len(self.pvs) != len(self.objs[PV_INT]):
+		if len(self.pvs) != len(self.objs[PV_INT]):
 			for p in self.pvs:
 				found = False
 				for pc in self.objs[PV_INT]:
