@@ -410,9 +410,13 @@ class TestDbusService(unittest.TestCase):
 		self.vdo = supports_vdo()
 
 	def _recurse_vg_delete(self, vg_proxy, pv_proxy, nested_pv_hash):
+		vg_name = str(vg_proxy.Vg.Name)
+
+		if not vg_name.endswith(VG_TEST_SUFFIX):
+			std_err_print("Refusing to remove VG: %s" % vg_name)
+			return
 
 		for pv_device_name, t in nested_pv_hash.items():
-			vg_name = str(vg_proxy.Vg.Name)
 			if vg_name in pv_device_name:
 				self._recurse_vg_delete(t[0], t[1], nested_pv_hash)
 				break
