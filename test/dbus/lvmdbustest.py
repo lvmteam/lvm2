@@ -29,6 +29,8 @@ g_tmo = 0
 # Approx. min size
 VDO_MIN_SIZE = mib(8192)
 
+VG_TEST_SUFFIX = "_vg_LvMdBuS_TEST"
+
 EXE_NAME="/lvmdbusd"
 
 # Prefix on created objects to enable easier clean-up
@@ -71,7 +73,7 @@ if pv_device_list:
 
 
 def vg_n(prefix=None):
-	name = rs(8, '_vg')
+	name = rs(8, VG_TEST_SUFFIX)
 	if prefix:
 		name = prefix + name
 	return g_prefix + name
