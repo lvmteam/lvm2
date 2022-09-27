@@ -893,7 +893,6 @@ int fs_get_blkid(const char *pathname, struct fs_info *fsi)
 	size_t len;
 	uint64_t fslastblock = 0;
 	unsigned int fsblocksize = 0;
-	int no_block_size = 0, no_fslastblock = 0, no_fsblocksize = 0;
 	int rc;
 
 	if (!(probe = blkid_new_probe_from_filename(pathname))) {
@@ -933,18 +932,12 @@ int fs_get_blkid(const char *pathname, struct fs_info *fsi)
 
 	if (!blkid_probe_lookup_value(probe, "BLOCK_SIZE", &str, &len) && len)
 		fsi->fs_block_size_bytes = atoi(str);
-	else
-		no_block_size = 1;
 
 	if (!blkid_probe_lookup_value(probe, "FSLASTBLOCK", &str, &len) && len)
 		fslastblock = strtoull(str, NULL, 0);
-	else
-		no_fslastblock = 1;
 
 	if (!blkid_probe_lookup_value(probe, "FSBLOCKSIZE", &str, &len) && len)
 		fsblocksize = (unsigned int)atoi(str);
-	else
-		no_fsblocksize = 1;
 
 	blkid_free_probe(probe);
 
