@@ -948,15 +948,6 @@ int fs_get_blkid(const char *pathname, struct fs_info *fsi)
 
 	blkid_free_probe(probe);
 
-	/* We don't expect to get this info for luks */
-	if (strcmp(fsi->fstype, "crypto_LUKS") && (no_block_size || no_fslastblock || no_fsblocksize)) {
-		log_print("Missing libblkid %s%s%sfor %s",
-			  no_block_size ? "BLOCK_SIZE " : "",
-			  no_fslastblock ? "FSLASTBLOCK " : "",
-			  no_fsblocksize ? "FSBLOCKSIZE " : "",
-			  pathname);
-	}
-
 	if (fslastblock && fsblocksize)
 		fsi->fs_last_byte = fslastblock * fsblocksize;
 

@@ -6024,7 +6024,7 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 			  display_lvname(lv), fsi->mount_dir);
 
 	if (!fsi->fs_last_byte) {
-		log_error("File system size unknown: update libblkid for FSLASTBLOCK, or see --fs resize_fsadm.");
+		log_error("File system device usage not available from libblkid, see --fs resize_fsadm.");
 		return 0;
 	}
 
