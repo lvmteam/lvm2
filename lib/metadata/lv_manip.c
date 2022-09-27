@@ -6856,10 +6856,12 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	is_active = lv_is_active(lv_top);
 
 	if (is_reduce && !is_active && !strcmp(lp->fsopt, "checksize")) {
+		lv_top->status |= LV_TEMPORARY;
 		if (!activate_lv(cmd, lv_top)) {
 			log_error("Failed to activate %s to check for fs.", display_lvname(lv_top));
 			goto out;
 		}
+		lv_top->status &= ~LV_TEMPORARY;
 		if (!sync_local_dev_names(cmd))
 			stack;
 		activated_checksize = 1;
