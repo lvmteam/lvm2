@@ -149,7 +149,7 @@ static inline int dumptype_arg(struct cmd_context *cmd __attribute__((unused)), 
 
 enum {
 #define cmd(a, b) a ,
-#include "cmds.h"
+#include "../include/cmds.h"
 #undef cmd
 };
 
@@ -238,7 +238,7 @@ struct lv_type lv_types[LVT_COUNT + 1] = {
 
 struct cmd_name cmd_names[CMD_COUNT + 1] = {
 #define cmd(a, b) { # a, a, # b },
-#include "cmds.h"
+#include "../include/cmds.h"
 #undef cmd
 };
 

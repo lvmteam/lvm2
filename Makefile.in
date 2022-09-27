@@ -47,7 +47,7 @@ include $(top_srcdir)/base/Makefile
 include $(top_srcdir)/device_mapper/Makefile
 include $(top_srcdir)/test/unit/Makefile
 
-lib: libdaemon $(BASE_TARGET) $(DEVICE_MAPPER_TARGET)
+lib: include libdaemon $(BASE_TARGET) $(DEVICE_MAPPER_TARGET)
 daemons: lib libdaemon tools
 scripts: lib
 tools: lib libdaemon
