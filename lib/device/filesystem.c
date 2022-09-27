@@ -24,6 +24,19 @@
 #include <mntent.h>
 #include <sys/ioctl.h>
 
+static const char *_lvresize_fs_helper_path;
+
+static const char *_get_lvresize_fs_helper_path(void)
+{
+	if (!_lvresize_fs_helper_path)
+		_lvresize_fs_helper_path = getenv("LVRESIZE_FS_HELPER_PATH");
+
+	if (!_lvresize_fs_helper_path)
+		_lvresize_fs_helper_path = LVRESIZE_FS_HELPER_PATH; /* from configure, usually in /usr/libexec */
+
+	return _lvresize_fs_helper_path;
+}
+
 /*
  * Set the path of the dm-crypt device, i.e. /dev/dm-N, that is using the LV.
  */
@@ -206,7 +219,7 @@ int crypt_resize_script(struct cmd_context *cmd, struct logical_volume *lv, stru
 	if (dm_snprintf(crypt_path, sizeof(crypt_path), "/dev/dm-%d", (int)MINOR(fsi->crypt_devt)) < 0)
 		return_0;
 
-	argv[0] = LVRESIZE_FS_HELPER_PATH; /* from configure, usually in /usr/libexec */
+	argv[0] = _get_lvresize_fs_helper_path();
 	argv[++args] = "--cryptresize";
 	argv[++args] = "--cryptpath";
 	argv[++args] = crypt_path;
@@ -257,7 +270,7 @@ int fs_reduce_script(struct cmd_context *cmd, struct logical_volume *lv, struct 
 	if (dm_snprintf(lv_path, PATH_MAX, "%s%s/%s", lv->vg->cmd->dev_dir, lv->vg->name, lv->name) < 0)
 		return_0;
 
-	argv[0] = LVRESIZE_FS_HELPER_PATH; /* from configure, usually in /usr/libexec */
+	argv[0] = _get_lvresize_fs_helper_path();
 	argv[++args] = "--fsreduce";
 	argv[++args] = "--fstype";
 	argv[++args] = fsi->fstype;
@@ -346,7 +359,7 @@ int fs_extend_script(struct cmd_context *cmd, struct logical_volume *lv, struct 
 	if (dm_snprintf(lv_path, PATH_MAX, "%s%s/%s", lv->vg->cmd->dev_dir, lv->vg->name, lv->name) < 0)
 		return_0;
 
-	argv[0] = LVRESIZE_FS_HELPER_PATH; /* from configure, usually in /usr/libexec */
+	argv[0] = _get_lvresize_fs_helper_path();
 	argv[++args] = "--fsextend";
 	argv[++args] = "--fstype";
 	argv[++args] = fsi->fstype;
