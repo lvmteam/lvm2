@@ -15,6 +15,8 @@
 
 #include "tools.h"
 
+#include <blkid/blkid.h>
+
 static int _lvresize_params(struct cmd_context *cmd, struct lvresize_params *lp)
 {
 	const char *type_str = arg_str_value(cmd, type_ARG, NULL);
@@ -96,6 +98,12 @@ static int _lvresize_params(struct cmd_context *cmd, struct lvresize_params *lp)
 			return 0;
 		}
 
+#ifdef BLKID_SUBLKS_FSINFO
+		/*
+		 * When the libblkid fs info feature is available, use the
+		 * the newer fs resizing capabability unless the older
+		 * fsadm-based resizing is requested with --fs resize_fsadm.
+		 */
 		if ((str = arg_str_value(cmd, fs_ARG, NULL))) {
 			if (!strcmp(str, "checksize") ||
 			    !strcmp(str, "resize") ||
@@ -123,7 +131,29 @@ static int _lvresize_params(struct cmd_context *cmd, struct lvresize_params *lp)
 			 */
 			strncpy(lp->fsopt, "checksize", sizeof(lp->fsopt)-1);
 		}
-
+#else
+		/*
+		 * When the libblkid fs info feature is not available we can only
+		 * use fsadm, so --resizefs, --fs resize, --fs resize_fsadm
+		 * all translate to resize_fsadm.
+		 */
+		if ((str = arg_str_value(cmd, fs_ARG, NULL))) {
+			if (!strcmp(str, "resize")) {
+				log_warn("Using fsadm for file system handling (resize_fsadm).");
+				strcpy(lp->fsopt, "resize_fsadm");
+			} else if (!strcmp(str, "resize_fsadm")) {
+				strcpy(lp->fsopt, "resize_fsadm");
+			} else if (!strcmp(str, "ignore")) {
+				log_warn("Ignoring unsupported --fs ignore with fsadm resizing.");
+			} else {
+				log_error("Unknown --fs value.");
+				return 0;
+			}
+		} else if (arg_is_set(cmd, resizefs_ARG)) {
+			/* --resizefs alone equates to --fs resize_fsadm */
+			strcpy(lp->fsopt, "resize_fsadm");
+		}
+#endif
 		if (lp->fsopt[0])
 			lp->nofsck = arg_is_set(cmd, nofsck_ARG);
 
