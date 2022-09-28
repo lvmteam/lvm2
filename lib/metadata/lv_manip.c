@@ -6024,7 +6024,11 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 			  display_lvname(lv), fsi->mount_dir);
 
 	if (!fsi->fs_last_byte) {
-		log_error("File system device usage not available from libblkid, see --fs resize_fsadm.");
+		if (!strcmp(fsi->fstype, "reiserfs")) {
+			log_error("File system reduce for reiserfs requires --fs resize_fsadm.");
+			return 0;
+		}
+		log_error("File system device usage is not available from libblkid.");
 		return 0;
 	}
 
@@ -6064,6 +6068,9 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 	 */
 	if (is_ext_fstype) {
 		log_print("File system reduce is required using resize2fs.");
+	} else if (!strcmp(fsi->fstype, "reiserfs")) {
+		log_error("File system reduce for reiserfs requires --fs resize_fsadm.");
+		return 0;
 	} else {
 		log_error("File system reduce is required and not supported (%s).", fsi->fstype);
 		return 0;
@@ -6181,6 +6188,9 @@ static int _fs_extend_allow(struct cmd_context *cmd, struct logical_volume *lv,
 			  fsi->fstype, (unsigned long long)fsi->fs_last_byte);
 		if (!strncmp(fsi->fstype, "ext", 3))
 			is_ext_fstype = 1;
+	} else if (!strcmp(fsi->fstype, "reiserfs")) {
+		log_error("File system extend for reiserfs requires --fs resize_fsadm.");
+		return 0;
 	} else {
 		log_error("File system extend is not supported (%s).", fsi->fstype);
 		return 0;
