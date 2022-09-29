@@ -25,12 +25,7 @@
 #include "device_mapper/misc/dm-ioctl.h"
 
 #ifdef BLKID_WIPING_SUPPORT
-#include <blkid.h>
-/*
- * FIXME: recent addition to blkid.h copied here.
- * Remove this and require a recent libblkid version from configure.
- */
-#define BLKID_SUBLKS_FSINFO     (1 << 11) /* read and define fs properties from superblock */
+#include <blkid/blkid.h>
 #endif
 
 #ifdef UDEV_SYNC_SUPPORT
@@ -847,6 +842,9 @@ int fs_block_size_and_type(const char *pathname, uint32_t *fs_block_size_bytes, 
 			BLKID_SUBLKS_UUID | BLKID_SUBLKS_UUIDRAW |
 			BLKID_SUBLKS_TYPE | BLKID_SUBLKS_SECTYPE |
 			BLKID_SUBLKS_USAGE | BLKID_SUBLKS_VERSION |
+#ifdef BLKID_SUBLKS_FSINFO
+			BLKID_SUBLKS_FSINFO |
+#endif
 			BLKID_SUBLKS_MAGIC);
 	rc = blkid_do_safeprobe(probe);
 	if (rc < 0) {
@@ -906,7 +904,10 @@ int fs_get_blkid(const char *pathname, struct fs_info *fsi)
 			BLKID_SUBLKS_UUID | BLKID_SUBLKS_UUIDRAW |
 			BLKID_SUBLKS_TYPE | BLKID_SUBLKS_SECTYPE |
 			BLKID_SUBLKS_USAGE | BLKID_SUBLKS_VERSION |
-			BLKID_SUBLKS_MAGIC | BLKID_SUBLKS_FSINFO);
+#ifdef BLKID_SUBLKS_FSINFO
+			BLKID_SUBLKS_FSINFO |
+#endif
+			BLKID_SUBLKS_MAGIC);
 	rc = blkid_do_safeprobe(probe);
 	if (rc < 0) {
 		log_error("Failed libblkid probe for %s", pathname);
