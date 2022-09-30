@@ -146,7 +146,7 @@ def running_under_systemd():
 
 def main():
 	start = time.time()
-	use_session = os.getenv('LVMDBUSD_USE_SESSION', False)
+	use_session = os.getenv('LVM_DBUSD_USE_SESSION', False)
 
 	# Ensure that we get consistent output for parsing stdout/stderr and that we
 	# are using the lvmdbusd profile.

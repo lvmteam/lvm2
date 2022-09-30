@@ -21,7 +21,7 @@ import os
 
 if __name__ == "__main__":
 
-	use_session = os.getenv('LVMDBUSD_USE_SESSION', False)
+	use_session = os.getenv('LVMD_BUSD_USE_SESSION', False)
 
 	if use_session:
 		bus = dbus.SessionBus(mainloop=DBusGMainLoop())
