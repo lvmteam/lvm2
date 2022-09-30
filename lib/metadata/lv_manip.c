@@ -6815,6 +6815,13 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/*
+	 * If the LV is locked due to being active, this lock call is a no-op.
+	 * Otherwise, this acquires a transient lock on the lv (not PERSISTENT)
+	 */
+	if (!lockd_lv_resize(cmd, lv_top, "ex", 0, lp))
+		return_0;
+
+	/*
 	 * Active 'hidden' -tpool can be waiting for resize, but the pool LV
 	 * itself might be inactive.  Here plain suspend/resume would not work.
 	 * So active temporarily pool LV (with on disk metadata) then use
@@ -6907,13 +6914,6 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	 * Warn and confirm if checksize has been disabled for reduce.
 	 */
 	if (is_reduce && !lp->fsopt[0] && !_lv_reduce_confirmation(lv_top, lp))
-		goto_out;
-
-	/*
-	 * If the LV is locked due to being active, this lock call is a no-op.
-	 * Otherwise, this acquires a transient lock on the lv (not PERSISTENT)
-	 */
-	if (!lockd_lv_resize(cmd, lv_top, "ex", 0, lp))
 		goto_out;
 
 	/* Part of old approach to fs handling using fsadm.  */
