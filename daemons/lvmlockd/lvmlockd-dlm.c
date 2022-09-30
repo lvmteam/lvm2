@@ -220,6 +220,85 @@ int lm_prepare_lockspace_dlm(struct lockspace *ls)
 	return 0;
 }
 
+#define DLM_COMMS_PATH "/sys/kernel/config/dlm/cluster/comms"
+#define LOCK_LINE_MAX 1024
+static int get_local_nodeid()
+{
+	struct dirent *de;
+	DIR *ls_dir;
+	char ls_comms_path[PATH_MAX];
+	FILE *file = NULL;
+	char line[LOCK_LINE_MAX];
+	int rv = -1, val;
+
+	memset(ls_comms_path, 0, sizeof(ls_comms_path));
+	snprintf(ls_comms_path, PATH_MAX, "%s",DLM_COMMS_PATH);
+
+	if (!(ls_dir = opendir(ls_comms_path)))
+		return -ECONNREFUSED;
+
+	while ((de = readdir(ls_dir))) {
+		if (de->d_name[0] == '.')
+			continue;
+		memset(ls_comms_path, 0, sizeof(ls_comms_path));
+		snprintf(ls_comms_path, PATH_MAX, "%s/%s/local",
+		     DLM_COMMS_PATH, de->d_name);
+		file = fopen(ls_comms_path, "r");
+		if (!file)
+			continue;
+		if (fgets(line, LOCK_LINE_MAX, file)) {
+			fclose(file);
+			rv = sscanf(line, "%d", &val);
+			if ((rv == 1) && (val == 1 )) {
+				memset(ls_comms_path, 0, sizeof(ls_comms_path));
+				snprintf(ls_comms_path, PATH_MAX, "%s/%s/nodeid",
+				    DLM_COMMS_PATH, de->d_name);
+				file = fopen(ls_comms_path, "r");
+				if (!file)
+					continue;
+				if (fgets(line, LOCK_LINE_MAX, file)) {
+					rv = sscanf(line, "%d", &val);
+					if (rv == 1) {
+						fclose(file);
+						return val;
+					}
+				}
+			}
+		}
+		fclose(file);
+	}
+
+	if (closedir(ls_dir))
+		log_error("get_local_nodeid closedir error");
+    return rv;
+}
+
+int lm_purge_locks_dlm(struct lockspace *ls)
+{
+	struct lm_dlm *lmd = (struct lm_dlm *)ls->lm_data;
+	int nodeid;
+	int rv = -1;
+
+	if (!lmd || !lmd->dh) {
+		log_error("purge_locks_dlm %s no dlm_handle_t error", ls->name);
+		goto fail;
+	}
+
+	nodeid = get_local_nodeid();
+	if (nodeid < 0) {
+		log_error("failed to get local nodeid");
+		goto fail;
+	}
+	if (dlm_ls_purge(lmd->dh, nodeid, 0)) {
+		log_error("purge_locks_dlm %s error", ls->name);
+		goto fail;
+	}
+
+	rv = 0;
+fail:
+	return rv;
+}
+
 int lm_add_lockspace_dlm(struct lockspace *ls, int adopt)
 {
 	struct lm_dlm *lmd = (struct lm_dlm *)ls->lm_data;

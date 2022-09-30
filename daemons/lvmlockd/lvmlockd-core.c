@@ -5954,7 +5954,18 @@ static void adopt_locks(void)
 	}
 
 
-	/* FIXME: purge any remaining orphan locks in each rejoined ls? */
+	/* Try to purge the orphan locks when lock manager is dlm */
+	if (lm_support_dlm() && lm_is_running_dlm()) {
+		list_for_each_entry(ls, &ls_found, list) {
+			pthread_mutex_lock(&lockspaces_mutex);
+			ls1 = find_lockspace_name(ls->name);
+			if (ls1) {
+				log_debug("ls: %s purge locks", ls->name);
+				lm_purge_locks_dlm(ls1);
+			}
+			pthread_mutex_unlock(&lockspaces_mutex);
+		}
+	}
 
 	if (count_start_fail || count_adopt_fail)
 		goto fail;

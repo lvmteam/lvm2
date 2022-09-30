@@ -392,6 +392,7 @@ static inline const char *mode_str(int x)
 int lm_init_vg_dlm(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
 int lm_prepare_lockspace_dlm(struct lockspace *ls);
 int lm_add_lockspace_dlm(struct lockspace *ls, int adopt);
+int lm_purge_locks_dlm(struct lockspace *ls);
 int lm_rem_lockspace_dlm(struct lockspace *ls, int free_vg);
 int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 		struct val_blk *vb_out, int adopt);
@@ -425,6 +426,11 @@ static inline int lm_prepare_lockspace_dlm(struct lockspace *ls)
 }
 
 static inline int lm_add_lockspace_dlm(struct lockspace *ls, int adopt)
+{
+	return -1;
+}
+
+static inline int lm_purge_locks_dlm(struct lockspace *ls)
 {
 	return -1;
 }
