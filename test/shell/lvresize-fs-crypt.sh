@@ -17,6 +17,8 @@ SKIP_WITH_LVMPOLLD=1
 
 aux prepare_vg 3 256
 
+which mkfs.xfs || skip
+
 # Tests require a libblkid version that shows FSLASTBLOCK
 lvcreate -n $lv1 -L 300 $vg
 mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"

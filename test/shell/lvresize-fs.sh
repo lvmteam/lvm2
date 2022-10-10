@@ -17,6 +17,8 @@ SKIP_WITH_LVMPOLLD=1
 
 aux prepare_vg 3 256
 
+which mkfs.xfs || skip
+
 # Test combinations of the following:
 # lvreduce / lvextend
 # no fs / ext4 / xfs
