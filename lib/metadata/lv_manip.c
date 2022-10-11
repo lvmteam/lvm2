@@ -6873,6 +6873,10 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	is_active = lv_is_active(lv_top);
 
 	if (is_reduce && !is_active && !strcmp(lp->fsopt, "checksize")) {
+		if (!lp->user_set_fs) {
+			log_error("The LV must be active to safely reduce, or use --fs checksize.");
+			goto out;
+		}
 		lv_top->status |= LV_TEMPORARY;
 		if (!activate_lv(cmd, lv_top)) {
 			log_error("Failed to activate %s to check for fs.", display_lvname(lv_top));

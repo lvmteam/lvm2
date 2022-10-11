@@ -473,7 +473,8 @@ lvremove $vg/$lv
 lvcreate -n $lv -L 456M $vg
 aux wipefs_a "$DM_DEV_DIR/$vg/$lv"
 lvchange -an $vg/$lv
-lvreduce -L-200M $vg/$lv
+not lvreduce -L-200M $vg/$lv
+lvreduce --fs checksize -L-200M $vg/$lv
 check lv_field $vg/$lv lv_size "256.00m"
 lvremove $vg/$lv
 
@@ -1145,7 +1146,7 @@ df --output=size "$mount_dir" |tee df1
 umount "$mount_dir"
 lvchange -an $vg/$lv
 # no fs reduce is needed
-lvreduce -L200M $vg/$lv
+lvreduce --fs checksize -L200M $vg/$lv
 check lv_field $vg/$lv lv_size "200.00m"
 lvchange -ay $vg/$lv
 mount "$DM_DEV_DIR/$vg/$lv" "$mount_dir"
@@ -1167,7 +1168,7 @@ df --output=size "$mount_dir" |tee df1
 umount "$mount_dir"
 lvchange -an $vg/$lv
 # fs is 200M, reduced size is 216M, so no fs reduce is needed
-lvreduce -L216M $vg/$lv
+lvreduce --fs checksize -L216M $vg/$lv
 check lv_field $vg/$lv lv_size "216.00m"
 lvchange -ay $vg/$lv
 mount "$DM_DEV_DIR/$vg/$lv" "$mount_dir"
