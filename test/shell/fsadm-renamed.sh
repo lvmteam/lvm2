@@ -83,29 +83,44 @@ echo "$i"
 #   https://github.com/systemd/systemd/pull/2017
 aux udev_wait
 
+# mount /dev/test/lv1 on /mnt
 mount "$dev_vg_lv" "$mount_dir"
 
 aux udev_wait
 
+# rename lv1 to lv1_renamed, now /dev/test/lv1_renamed is mounted on /mnt,
+# but "df" and "mount" commands will still show /dev/test/lv1 mounted on /mnt.
 lvrename $vg_lv $vg_lv_ren
 
 check_mounted
 
 # fails on renamed LV
+# lvextend -r test/lv1_renamed succeeds in extending the LV (as lv1_renamed),
+# but xfs_growfs /dev/test/lv1_renamed fails because it doesn't recognize
+# that device is mounted, because the old lv name reported as being mounted.
 fail lvresize -y -L+10M -r $vg_lv_ren
 
 # fails on unknown mountpoint  (FIXME: umount)
 not umount "$dev_vg_lv"
 
+# create a new LV with the previous name of the renamed lv
 lvcreate -L300 -n $lv1 $vg
 "$i" $MKFS_ARGS "$dev_vg_lv"
 
 aux udev_wait
 
+# mount the new lv on a dir with a similar name as the other
+# now df will show
+# /dev/mapper/test-lv1 ... /mnt
+# /dev/mapper/test-lv1 ... /mnt $SPACE dir
 mount "$dev_vg_lv" "$mount_dolar_dir"
 
 check_mounted
 
+# try to resize the LV that was renamed:  lvextend -r test/lv1_renamed
+# this succeeds in extending the LV (lv1_renamed), but xfs_growfs fails
+# for the same reason as above, i.e. mount doesn't show the lv1_renamed
+# device is mounted anywhere.
 not lvresize -L+10M -r $vg_lv_ren
 
 umount "$mount_dir"
