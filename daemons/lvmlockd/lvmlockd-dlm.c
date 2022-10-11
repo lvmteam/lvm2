@@ -222,7 +222,7 @@ int lm_prepare_lockspace_dlm(struct lockspace *ls)
 
 #define DLM_COMMS_PATH "/sys/kernel/config/dlm/cluster/comms"
 #define LOCK_LINE_MAX 1024
-static int get_local_nodeid()
+static int get_local_nodeid(void)
 {
 	struct dirent *de;
 	DIR *ls_dir;
