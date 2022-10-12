@@ -6874,7 +6874,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (is_reduce && !is_active && !strcmp(lp->fsopt, "checksize")) {
 		if (!lp->user_set_fs) {
-			log_error("The LV must be active to safely reduce, or use --fs checksize.");
+			log_error("The LV must be active to safely reduce (see --fs options.)");
 			goto out;
 		}
 		lv_top->status |= LV_TEMPORARY;
