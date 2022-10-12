@@ -93,6 +93,7 @@ struct historical_logical_volume {
 	struct dm_list indirect_glvs; /* list of struct generic_logical_volume */
 	unsigned checked:1; /* set if this historical LV has been checked for validity */
 	unsigned valid:1;   /* historical LV is valid if there's at least one live LV among ancestors */
+	unsigned fresh:1;   /* historical LV has just been created (the original LV just removed) */
 };
 
 struct generic_logical_volume {

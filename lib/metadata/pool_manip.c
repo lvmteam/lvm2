@@ -169,6 +169,7 @@ static struct glv_list *_init_historical_glvl(struct dm_pool *mem, struct lv_seg
 	hlv->name = seg->lv->name;
 	hlv->vg = seg->lv->vg;
 	hlv->timestamp = seg->lv->timestamp;
+	hlv->fresh = 1;
 	dm_list_init(&hlv->indirect_glvs);
 
 	glvl->glv->is_historical = 1;

@@ -3450,6 +3450,9 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 				goto_out;
 			}
 
+			if (glvl->glv->historical->fresh)
+				continue;
+
 			process_lv = process_all;
 
 			if (lvargs_supplied &&
