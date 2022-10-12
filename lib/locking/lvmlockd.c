@@ -513,9 +513,11 @@ static int _create_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg,
 
 	lv_size_bytes = num_mb * ONE_MB_IN_BYTES;  /* size of sanlock LV in bytes */
 	extent_bytes = vg->extent_size * SECTOR_SIZE; /* size of one extent in bytes */
-	total_extents = lv_size_bytes / extent_bytes; /* number of extents in sanlock LV */
+	total_extents = dm_div_up(lv_size_bytes, extent_bytes); /* number of extents in sanlock LV */
 	lp.extents = total_extents;
 
+	lv_size_bytes = total_extents * extent_bytes;
+	num_mb = lv_size_bytes / ONE_MB_IN_BYTES;
 	log_debug("Creating lvmlock LV for sanlock with size %um %ub %u extents", num_mb, lv_size_bytes, lp.extents);
 
 	dm_list_init(&lp.tags);
