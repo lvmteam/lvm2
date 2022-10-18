@@ -125,7 +125,8 @@ def process_args():
 	# Add udev watching
 	if args.use_udev:
 		# Make sure this msg ends up in the journal, so we know
-		log_msg('Utilizing udev to trigger updates')
+		log_msg('The --udev option is no longer supported,'
+				'the daemon always uses a combination of dbus notify from lvm tools and udev')
 
 	return args
 

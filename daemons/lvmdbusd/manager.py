@@ -203,12 +203,6 @@ class Manager(AutomatedProperties):
 		in_signature='s', out_signature='i')
 	def ExternalEvent(self, command):
 		utils.log_debug("ExternalEvent %s" % command)
-		# If a user didn't explicitly specify udev, we will turn it off now.
-		if not cfg.args.use_udev:
-			if udevwatch.remove():
-				utils.log_msg("ExternalEvent received, disabling "
-								"udev monitoring")
-				# We are dependent on external events now to stay current!
 		r = RequestEntry(
 			-1, Manager._external_event, (command,), None, None, False)
 		cfg.worker_q.put(r)
