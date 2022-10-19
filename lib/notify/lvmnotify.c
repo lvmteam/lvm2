@@ -15,16 +15,78 @@
 #define LVM_DBUS_DESTINATION "com.redhat.lvmdbus1"
 #define LVM_DBUS_PATH        "/com/redhat/lvmdbus1/Manager"
 #define LVM_DBUS_INTERFACE   "com.redhat.lvmdbus1.Manager"
+#define LVM_DBUS_LOCK_FILE   "/var/lock/lvm/lvmdbusd"
+#define LVM_DBUS_LOCK_FILE_ENV_KEY        "LVM_DBUSD_LOCKFILE"
 #define SD_BUS_SYSTEMD_NO_SUCH_UNIT_ERROR "org.freedesktop.systemd1.NoSuchUnit"
 #define SD_BUS_DBUS_SERVICE_UNKNOWN_ERROR "org.freedesktop.DBus.Error.ServiceUnknown"
 
 #ifdef NOTIFYDBUS_SUPPORT
 #include <systemd/sd-bus.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
 
 int lvmnotify_is_supported(void)
 {
 	return 1;
 }
+
+static int lvmdbusd_running(void)
+{
+	int fd = 0;
+	int rc = 0;
+	int errno_cpy = 0;
+	int running = 0;
+	const char *lockfile = NULL;
+
+	/*
+	 * lvm dbusd uses a lock file with a lock on it, thus to determine if the daemon is running
+	 * requires that you attempt to lock the file as well.  Thus the existence of the file does
+	 * not mean it's running, but the absence of the file does indicate it's not running.
+	 *
+	 * See lvmdbusd for more details.
+	 */
+
+	lockfile = getenv(LVM_DBUS_LOCK_FILE_ENV_KEY);
+	if (!lockfile) {
+		lockfile = LVM_DBUS_LOCK_FILE;
+	}
+
+	errno = 0;
+	fd = open(lockfile, O_RDWR);
+	if (-1 == fd) {
+		errno_cpy = errno;
+		if (errno_cpy == ENOENT) {
+			return 0;
+		} else {
+			/* Safest option is to return running when we encounter unexpected errors */
+			log_debug_dbus("Unexpected errno: %d on lockfile open, returning running", errno_cpy);
+			return 1;
+		}
+	}
+
+	/* Need to ensure we close lock FD now */
+	errno = 0;
+	rc = lockf(fd, F_TLOCK|F_TEST, 0);
+	if (-1 != rc) {
+		/* Not locked, thus not running */
+		running = 0;
+	} else {
+		errno_cpy = errno;
+		if (errno_cpy == EACCES || errno_cpy == EAGAIN) {
+			/* Locked, so daemon is running */
+			running = 1;
+		} else {
+			log_debug_dbus("Unexpected errno: %d on lockf, returning running", errno_cpy);
+			running = 1 ;
+		}
+	}
+
+	close(fd);
+	return running;
+}
+
 
 void lvmnotify_send(struct cmd_context *cmd)
 {
@@ -42,6 +104,12 @@ void lvmnotify_send(struct cmd_context *cmd)
 	cmd->vg_notify = 0;
 	cmd->lv_notify = 0;
 	cmd->pv_notify = 0;
+
+	/* If lvmdbusd isn't running, don't notify as you will start it as it will auto activate */
+	if (!lvmdbusd_running()) {
+		log_debug_dbus("dbus damon not running, not notifying");
+		return;
+	}
 
 	cmd_name = get_cmd_name();
 
