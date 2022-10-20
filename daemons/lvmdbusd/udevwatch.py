@@ -59,9 +59,13 @@ def filter_event(action, device):
 	if 'ID_FS_TYPE' in device:
 		fs_type_new = device['ID_FS_TYPE']
 		if 'LVM' in fs_type_new:
-			# Let's skip udev events for LVM devices as we should be handling them
-			# with the dbus notifications.
-			pass
+			# If we get a lvm related udev event for a block device
+			# we don't know about, it's either a pvcreate which we
+			# would handle with the dbus notification or something
+			# copied a pv signature onto a block device, this is
+			# required to catch the latter.
+			if not cfg.om.get_object_by_lvm_id(device['DEVNAME']):
+				refresh = True
 		elif fs_type_new == '':
 			# Check to see if the device was one we knew about
 			if 'DEVNAME' in device:
