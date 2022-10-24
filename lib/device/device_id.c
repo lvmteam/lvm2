@@ -529,7 +529,7 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 	}
 
 	if (!sysbuf[0])
-		goto_bad;
+		goto bad;
 
 	if (!(idname = strdup(sysbuf)))
 		goto_bad;
