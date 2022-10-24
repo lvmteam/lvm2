@@ -747,6 +747,7 @@ DLM_CFLAGS
 DEVMAPPER
 DEFAULT_USE_LVMLOCKD
 DEFAULT_USE_LVMPOLLD
+DEFAULT_USE_DEVICES_FILE
 DEFAULT_USE_BLKID_WIPING
 DEFAULT_SYS_LOCK_DIR
 DEFAULT_SYS_DIR
@@ -15348,6 +15349,7 @@ printf "%s\n" "#define LVM_CONFIGURE_LINE \"$CONFIGURE_LINE\"" >>confdefs.h
 
 
 ################################################################################
+
 
 
 
