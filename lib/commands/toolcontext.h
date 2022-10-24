@@ -247,6 +247,7 @@ struct cmd_context {
 	 * Paths.
 	 */
 	const char *lib_dir;			/* cache value global/library_dir */
+	const char *device_id_sysfs_dir;
 	char system_dir[PATH_MAX];
 	char dev_dir[PATH_MAX];
 	char proc_dir[PATH_MAX];

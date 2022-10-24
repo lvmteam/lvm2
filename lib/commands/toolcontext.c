@@ -643,6 +643,7 @@ static int _process_config(struct cmd_context *cmd)
 	if (!dm_set_uuid_prefix(UUID_PREFIX))
 		return_0;
 #endif
+	cmd->device_id_sysfs_dir = find_config_tree_str(cmd, devices_device_id_sysfs_dir_CFG, NULL);
 
 	dev_ext_info_src = find_config_tree_str(cmd, devices_external_device_info_source_CFG, NULL);
 

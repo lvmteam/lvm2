@@ -193,9 +193,7 @@ static int _read_sys_block(struct cmd_context *cmd, struct device *dev,
 	dev_t prim = 0;
 	int ret;
 
-	if (!(sysfs_dir = find_config_tree_str(cmd, devices_device_id_sysfs_dir_CFG, NULL)))
-		sysfs_dir = dm_sysfs_dir();
-
+	sysfs_dir = cmd->device_id_sysfs_dir ?: dm_sysfs_dir();
  retry:
 	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/%s",
 			sysfs_dir, (int)MAJOR(devt), (int)MINOR(devt), suffix) < 0) {
