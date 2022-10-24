@@ -454,6 +454,67 @@ int dev_read_sys_wwid(struct cmd_context *cmd, struct device *dev,
 	return 1;
 }
 
+static int _dev_read_sys_serial(struct cmd_context *cmd, struct device *dev,
+				char *buf, int bufsize)
+{
+	unsigned char vpd_data[VPD_SIZE] = { 0 };
+	const char *devname;
+	int vpd_datalen = 0;
+
+	/*
+	 * Look in
+	 * /sys/dev/block/major:minor/device/serial
+	 * /sys/dev/block/major:minor/device/vpd_pg80
+	 * /sys/class/block/vda/serial
+	 * (Only virtio disks /dev/vdx are known to use /sys/class/block/vdx/serial.)
+	 */
+
+	read_sys_block(cmd, dev, "device/serial", buf, bufsize);
+	if (buf[0])
+		return 1;
+
+	if (read_sys_block_binary(cmd, dev, "device/vpd_pg80", (char *)vpd_data, VPD_SIZE, &vpd_datalen) && vpd_datalen) {
+		parse_vpd_serial(vpd_data, buf, bufsize);
+		if (buf[0])
+			return 1;
+	}
+	
+	devname = dev_name(dev);
+	if (!strncmp(devname, "/dev/vd", 7)) {
+		char path[PATH_MAX];
+		char vdx[8] = { 0 };
+		const char *sysfs_dir;
+		const char *base;
+		int i, j = 0, ret;
+
+		/* /dev/vda to vda */
+		base = basename(devname);
+
+		/* vda1 to vda */
+		for (i = 0; i < strlen(base); i++) {
+			if (isdigit(base[i]))
+				break;
+			vdx[j] = base[i];
+			j++;
+		}
+
+		sysfs_dir = cmd->device_id_sysfs_dir ?: dm_sysfs_dir();
+
+		if (dm_snprintf(path, sizeof(path), "%s/class/block/%s/serial", sysfs_dir, vdx) < 0)
+			return 0;
+
+		ret = get_sysfs_value(path, buf, bufsize, 0);
+		if (ret && !buf[0])
+			ret = 0;
+		if (ret) {
+			buf[bufsize - 1] = '\0';
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, uint16_t idtype)
 {
 	char sysbuf[PATH_MAX] = { 0 };
@@ -471,8 +532,9 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 			sysbuf[0] = '\0';
 	}
 
-	else if (idtype == DEV_ID_TYPE_SYS_SERIAL)
-		read_sys_block(cmd, dev, "device/serial", sysbuf, sizeof(sysbuf));
+	else if (idtype == DEV_ID_TYPE_SYS_SERIAL) {
+		_dev_read_sys_serial(cmd, dev, sysbuf, sizeof(sysbuf));
+	}
 
 	else if (idtype == DEV_ID_TYPE_MPATH_UUID) {
 		read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf));

@@ -211,3 +211,43 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 
 	return id_size;
 }
+
+int parse_vpd_serial(const unsigned char *in, char *out, int outsize)
+{
+	uint8_t len_buf[2] __attribute__((aligned(8))) = { 0 };;
+	size_t len;
+
+	/* parsing code from multipath tools */
+	/* ignore in[0] and in[1] */
+	/* len is in[2] and in[3] */
+	/* serial begins at in[4] */
+
+	len_buf[0] = in[2];
+	len_buf[1] = in[3];
+	len = len_buf[0] << 8 | len_buf[1];
+
+	if (outsize == 0)
+		return 0;
+
+	if (len > DEV_WWID_SIZE)
+		len = DEV_WWID_SIZE;
+	/*
+	 * Strip leading and trailing whitespace
+	 */
+	while (len > 0 && in[len + 3] == ' ')
+		--len;
+	while (len > 0 && in[4] == ' ') {
+		++in;
+		--len;
+	}
+
+	if (len >= outsize)
+                len = outsize - 1;
+
+	if (len > 0) {
+		memcpy(out, in + 4, len);
+		out[len] = '\0';
+	}
+	return len;
+}
+
