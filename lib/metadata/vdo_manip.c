@@ -263,7 +263,6 @@ static int _format_vdo_pool_data_lv(struct logical_volume *data_lv,
 		return 0;
 	}
 
-reformat:
 	if (*logical_size) {
 		logical_size_aligned = 0;
 		if (dm_snprintf(buf_args[args], sizeof(buf_args[0]), "--logical-size=" FMTu64 "K",
@@ -374,13 +373,8 @@ reformat:
 		// align obtained size to extent size
 		logical_size_aligned = *logical_size / data_lv->vg->extent_size * data_lv->vg->extent_size;
 		if (*logical_size != logical_size_aligned) {
-			*logical_size = logical_size_aligned;
-			argv[1] = (char*) "--force";
-			args = 2;
-			reformating = 1;
-			log_verbose("Reformating VDO to align virtual size %s by extent size.",
-				    display_size(data_lv->vg->cmd, *logical_size));
-			goto reformat;
+			log_debug("Using bigger VDO virtual size unaligned on extent size by %s.",
+				  display_size(data_lv->vg->cmd, *logical_size - logical_size_aligned));
 		}
 	}
 
