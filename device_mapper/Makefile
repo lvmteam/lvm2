@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2018 - 2022 Red Hat, Inc. All rights reserved.
 #
 # This file is part of the device-mapper userspace tools.
 #
@@ -29,6 +29,7 @@ DEVICE_MAPPER_SOURCE=\
 	device_mapper/regex/parse_rx.c \
 	device_mapper/regex/ttree.c \
 	device_mapper/vdo/status.c \
+	device_mapper/vdo/vdo_reader.c \
 	device_mapper/vdo/vdo_target.c
 
 DEVICE_MAPPER_TARGET = device_mapper/libdevice-mapper.a

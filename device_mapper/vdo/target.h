@@ -108,6 +108,8 @@ struct dm_vdo_target_params {
 bool dm_vdo_validate_target_params(const struct dm_vdo_target_params *vtp,
 				   uint64_t vdo_size);
 
+bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks);
+
 //----------------------------------------------------------------
 
 #endif
