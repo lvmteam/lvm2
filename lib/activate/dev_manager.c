@@ -263,7 +263,7 @@ static int _info_run(const char *dlid, struct dm_info *dminfo,
 	int dmtask;
 	int with_flush; /* TODO: arg for _info_run */
 	void *target = NULL;
-	uint64_t target_start, target_length, start, length, length_crop = 0;
+	uint64_t target_start, target_length, start, extent_size, length, length_crop = 0;
 	char *target_name, *target_params;
 	const char *devname;
 
@@ -292,8 +292,8 @@ static int _info_run(const char *dlid, struct dm_info *dminfo,
 
 	/* Query status only for active device */
 	if (seg_status && dminfo->exists) {
-		start = length = seg_status->seg->lv->vg->extent_size;
-		start *= seg_status->seg->le;
+		extent_size = length = seg_status->seg->lv->vg->extent_size;
+		start = extent_size * seg_status->seg->le;
 		length *= _seg_len(seg_status->seg);
 
 		/* Uses max DM_THIN_MAX_METADATA_SIZE sectors for metadata device */
@@ -314,6 +314,8 @@ static int _info_run(const char *dlid, struct dm_info *dminfo,
 
 			if ((start == target_start) &&
 			    ((length == target_length) ||
+			     ((lv_is_vdo_pool(seg_status->seg->lv)) && /* should fit within extent size */
+			      (length < target_length) && ((length + extent_size) > target_length)) ||
 			     (length_crop && (length_crop == target_length))))
 				break; /* Keep target_params when matching segment is found */
 
