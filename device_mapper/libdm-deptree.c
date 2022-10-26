@@ -2857,6 +2857,7 @@ static int _vdo_emit_segment_line(struct dm_task *dmt,
 	int pos = 0;
 	char data[DM_FORMAT_DEV_BUFSIZE];
 	char data_dev[128]; // for /dev/dm-XXXX
+	uint64_t logical_blocks;
 
 	if (!_build_dev_string(data, sizeof(data), seg->vdo_data))
 		return_0;
@@ -2864,6 +2865,20 @@ static int _vdo_emit_segment_line(struct dm_task *dmt,
 	if (dm_snprintf(data_dev, sizeof(data_dev), "/dev/dm-%u", seg->vdo_data->info.minor) < 0) {
 		log_error("Can create VDO data volume path for %s.", data);
 		return 0;
+	}
+
+	if (dm_vdo_parse_logical_size(data_dev, &logical_blocks)) {
+		logical_blocks *= 8;
+		if (seg->size != logical_blocks) {
+			if (seg->size > logical_blocks) {
+				log_error("Virtual size of VDO volume is smaller then expected (" FMTu64  " > " FMTu64 ").",
+					  seg->size, logical_blocks);
+				return 1;
+			}
+			log_debug_activation("Increasing VDO virtual volume size from " FMTu64  " to " FMTu64 ".",
+					     seg->size, logical_blocks);
+			seg->size = logical_blocks;
+		}
 	}
 
 	if (seg->vdo_version < 4) {
