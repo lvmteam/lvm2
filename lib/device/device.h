@@ -118,6 +118,11 @@ struct dev_use {
 	char *pvid;
 };
 
+struct dev_use_list {
+	struct dm_list list;
+	struct dev_use *du;
+};
+
 /*
  * All devices in LVM will be represented by one of these.
  * pointer comparisons are valid.

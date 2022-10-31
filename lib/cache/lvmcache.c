@@ -1635,6 +1635,22 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 		return_0;
 
 	/*
+	 * device_ids_validate() found devices using a sys_serial device id
+	 * which had a PVID on disk that did not match the PVID in the devices
+	 * file.  Serial numbers may not always be unique, so any device with
+	 * the same serial number is found and searched for the correct PVID.
+	 * If the PVID is found on a device that has not been scanned, then
+	 * it needs to be scanned so it can be used.
+	 */
+	if (!dm_list_empty(&cmd->device_ids_check_serial)) {
+		struct dm_list scan_devs;
+		dm_list_init(&scan_devs);
+		device_ids_check_serial(cmd, &scan_devs, NULL, 0);
+		if (!dm_list_empty(&scan_devs))
+			label_scan_devs(cmd, cmd->filter, &scan_devs);
+	}
+
+	/*
 	 * When devnames are used as device ids (which is dispreferred),
 	 * changing/unstable devnames can lead to entries in the devices file
 	 * not being matched to a dev even if the PV is present on the system.

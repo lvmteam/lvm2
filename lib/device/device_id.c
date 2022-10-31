@@ -22,6 +22,8 @@
 #include "lib/metadata/metadata.h"
 #include "lib/format_text/layout.h"
 #include "lib/cache/lvmcache.h"
+#include "lib/datastruct/str_list.h"
+#include "lib/metadata/metadata-exported.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -750,6 +752,35 @@ const char *dev_idname_for_metadata(struct cmd_context *cmd, struct device *dev)
 		return NULL;
 
 	return dev->id->idname;
+}
+
+static const char *_dev_idname(struct device *dev, uint16_t idtype)
+{
+	struct dev_id *id;
+
+	dm_list_iterate_items(id, &dev->ids) {
+		if (id->idtype != idtype)
+			continue;
+		if (!id->idname)
+			continue;
+		return id->idname;
+	}
+	return NULL;
+}
+
+static int _dev_has_id(struct device *dev, uint16_t idtype, const char *idname)
+{
+	struct dev_id *id;
+
+	dm_list_iterate_items(id, &dev->ids) {
+		if (id->idtype != idtype)
+			continue;
+		if (!id->idname)
+			continue;
+		if (!strcmp(idname, id->idname))
+			return 1;
+	}
+	return 0;
 }
 
 static void _copy_idline_str(char *src, char *dst, int len)
@@ -2077,6 +2108,62 @@ void device_ids_match(struct cmd_context *cmd)
 	}
 }
 
+static void _get_devs_with_serial_numbers(struct cmd_context *cmd, struct dm_list *serial_str_list, struct dm_list *devs)
+{
+	struct dev_iter *iter;
+	struct device *dev;
+	struct device_list *devl;
+	struct dev_id *id;
+	const char *idname;
+
+	if (!(iter = dev_iter_create(NULL, 0)))
+		return;
+	while ((dev = dev_iter_get(cmd, iter))) {
+		/* if serial has already been read for this dev then use it */
+		dm_list_iterate_items(id, &dev->ids) {
+			if (id->idtype == DEV_ID_TYPE_SYS_SERIAL) {
+				if (str_list_match_item(serial_str_list, id->idname)) {
+					if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
+						goto next_dev;
+					devl->dev = dev;
+					dm_list_add(devs, &devl->list);
+				}
+				goto next_dev;
+			}
+		}
+
+		/* just copying the no-data filters in similar device_ids_find_renamed_devs */
+		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "sysfs"))
+			continue;
+		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "type"))
+			continue;
+		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "usable"))
+			continue;
+		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "mpath"))
+			continue;
+
+		if ((idname = device_id_system_read(cmd, dev, DEV_ID_TYPE_SYS_SERIAL))) {
+			if (str_list_match_item(serial_str_list, idname)) {
+				if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
+					goto next_dev;
+				if (!(id = zalloc(sizeof(struct dev_id))))
+					goto next_dev;
+				id->idtype = DEV_ID_TYPE_SYS_SERIAL;
+				id->idname = (char *)idname;
+				id->dev = dev;
+				dm_list_add(&dev->ids, &id->list);
+				devl->dev = dev;
+				dm_list_add(devs, &devl->list);
+			} else {
+				free((char *)idname);
+			}
+		}
+ next_dev:
+		continue;
+	}
+	dev_iter_destroy(iter);
+}
+
 /*
  * This is called after devices are scanned to compare what was found on disks
  * vs what's in the devices file.  The devices file could be outdated and need
@@ -2144,6 +2231,19 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 		}
 
 		checked++;
+
+		/*
+		 * If the PVID doesn't match, don't assume that the serial
+		 * number is correct, since serial numbers may not be unique.
+		 * Search for the PVID on other devs in device_ids_check_serial.
+		 */
+		if ((du->idtype == DEV_ID_TYPE_SYS_SERIAL) &&
+		    (!du->pvid || memcmp(dev->pvid, du->pvid, ID_LEN))) {
+			log_debug("suspect device id serial %s for %s", du->idname, dev_name(dev));
+			str_list_add(cmd->mem, &cmd->device_ids_check_serial, dm_pool_strdup(cmd->mem, du->idname));
+			*device_ids_invalid = 1;
+			continue;
+		}
 
 		/*
 		 * If the du pvid from the devices file does not match the
@@ -2360,6 +2460,282 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 	} else {
 		log_debug("device ids validate checked %d found no update is needed.", checked);
 	}
+}
+
+static struct device_id_list *_device_id_list_find_dev(struct dm_list *list, struct device *dev)
+{
+	struct device_id_list *dil;
+
+	dm_list_iterate_items(dil, list) {
+		if (dil->dev == dev)
+			return dil;
+	}
+	return NULL;
+}
+
+/*
+ * Validate entries with suspect sys_serial values.  A sys_serial du (devices
+ * file entry) matched a device with the same serial number, but the PVID did
+ * not match.  Check if multiple devices have the same serial number, and if so
+ * pair the devs to the du's based on PVID.  This requires searching all devs
+ * for the given serial number, and then reading the PVID from all those devs.
+ * This may involve reading labels from devs outside the devices file.
+ * (This could also be done for duplicate wwids if needed.)
+ */
+void device_ids_check_serial(struct cmd_context *cmd, struct dm_list *scan_devs,
+			     int *update_needed, int noupdate)
+{
+	struct dm_list dus_check; /* dev_use_list */
+	struct dm_list devs_check; /* device_list */
+	struct dm_list prev_devs; /* device_id_list */
+	struct dev_use_list *dul;
+	struct device_list *devl, *devl2;
+	struct device_id_list *dil;
+	struct device *dev;
+	struct dev_use *du;
+	char *tmpdup;
+	int update_file = 0;
+	int has_pvid;
+	int found;
+	int count;
+
+	dm_list_init(&dus_check);
+	dm_list_init(&devs_check);
+	dm_list_init(&prev_devs);
+
+	/*
+	 * Create list of du's with a suspect serial number.  These du's will
+	 * be rematched to a device using pvid.  The device_ids_check_serial
+	 * list was created by device_ids_validate() when it found that the
+	 * PVID on the dev did not match the PVID in the du that was paired
+	 * with the dev.
+	 */
+	dm_list_iterate_items(du, &cmd->use_devices) {
+		if (du->dev && (du->idtype == DEV_ID_TYPE_SYS_SERIAL) &&
+		    str_list_match_item(&cmd->device_ids_check_serial, du->idname)) {
+			if (!(dul = dm_pool_zalloc(cmd->mem, sizeof(*dul))))
+				continue;
+			dul->du = du;
+			dm_list_add(&dus_check, &dul->list);
+		}
+	}
+
+	/*
+	 * Create list of devs on the system with suspect serial numbers.
+	 * Read the serial number of each dev in dev cache, and return
+	 * devs that match the suspect serial numbers.
+	 */
+	log_debug("Finding all devs with suspect serial numbers.");
+	_get_devs_with_serial_numbers(cmd, &cmd->device_ids_check_serial, &devs_check);
+
+	/*
+	 * Read the PVID from any devs_check entries that have not been scanned
+	 * yet (this is where some devs outside the devices file may be read.)
+	 * If the dev has no PVID or is excluded by filters, then there's no
+	 * point in trying to match it to one of the dus_check entries.
+	 */
+	log_debug("Reading and filtering %d devs with suspect serial numbers.", dm_list_size(&devs_check));
+	dm_list_iterate_items_safe(devl, devl2, &devs_check) {
+		const char *idname;
+		if (!(idname = _dev_idname(devl->dev, DEV_ID_TYPE_SYS_SERIAL))) {
+			log_debug("serial missing for %s", dev_name(devl->dev));
+			continue;
+		}
+		if (devl->dev->flags & DEV_SCAN_FOUND_LABEL) {
+			log_debug("serial %s pvid %s %s", idname, devl->dev->pvid, dev_name(devl->dev));
+			continue;
+		}
+		if (devl->dev->flags & DEV_SCAN_FOUND_NOLABEL) {
+			log_debug("serial %s nolabel %s", idname, dev_name(devl->dev));
+			continue;
+		}
+
+		dev = devl->dev;
+		has_pvid = 0;
+
+		label_read_pvid(dev, &has_pvid);
+		if (!has_pvid) {
+			log_debug("serial %s no pvid %s", idname, dev_name(devl->dev));
+			dm_list_del(&devl->list);
+			continue;
+		}
+
+		/* data-based filters use data read by label_read_pvid */
+		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "partitioned") ||
+		    !cmd->filter->passes_filter(cmd, cmd->filter, dev, "signature") ||
+		    !cmd->filter->passes_filter(cmd, cmd->filter, dev, "md") ||
+		    !cmd->filter->passes_filter(cmd, cmd->filter, dev, "fwraid")) {
+			log_debug("serial %s pvid %s filtered %s", idname, devl->dev->pvid, dev_name(devl->dev));
+			dm_list_del(&devl->list);
+		}
+	}
+
+	log_debug("Checking %d PVs with suspect serial numbers.", dm_list_size(&devs_check));
+
+	/*
+	 * Unpair du's and dev's that were matched using suspect serial numbers
+	 * so that things can be matched again using PVID.  If current pairings
+	 * are correct they will just be matched again.  Save the previous
+	 * pairings so that we can detect when a wrong pairing was corrected.
+	 */
+	dm_list_iterate_items(dul, &dus_check) {
+		if (!dul->du->dev)
+			continue;
+		/* save previously matched devs so they can be dropped from
+		   lvmcache at the end if they are no longer used */
+		if (!(dil = dm_pool_zalloc(cmd->mem, sizeof(*dil))))
+			continue;
+		du = dul->du;
+		dil->dev = du->dev;
+		memcpy(dil->pvid, du->pvid, ID_LEN);
+		dm_list_add(&prev_devs, &dil->list);
+		du->dev->flags &= ~DEV_MATCHED_USE_ID;
+		du->dev = NULL;
+	}
+
+	/*
+	 * Match du to a dev based on PVID.
+	 */
+	dm_list_iterate_items(dul, &dus_check) {
+		log_debug("Matching suspect serial device id %s PVID %s prev %s",
+			  dul->du->idname, dul->du->pvid, dul->du->devname);
+		found = 0;
+		dm_list_iterate_items(devl, &devs_check) {
+			if (!memcmp(dul->du->pvid, devl->dev->pvid, ID_LEN)) {
+				/* pair dev and du */
+				du = dul->du;
+				dev = devl->dev;
+				du->dev = dev;
+				dev->flags |= DEV_MATCHED_USE_ID;
+
+				log_debug("Match suspect serial device id %s PVID %s to %s",
+					  du->idname, du->pvid, dev_name(dev));
+
+				/* update file if this dev pairing is new or different */
+				if (!(dil = _device_id_list_find_dev(&prev_devs, dev)))
+					update_file = 1;
+				else if (memcmp(dil->pvid, du->pvid, ID_LEN))
+					update_file = 1;
+				found = 1;
+				break;
+			}
+		}
+		if (!found)
+			log_debug("Match PVID failed in %d devs checked.", dm_list_size(&devs_check));
+	}
+
+	/*
+	 * Handle du's with suspect serial numbers that did not have a match
+	 * based on PVID in the previous loop.  If the du matches a device
+	 * based on the serial number, and there is only one instance of that
+	 * serial number on the system, then assume that the PVID in the
+	 * devices file is outdated and pair the du and dev, and update the
+	 * PVID in the devices file.  (This is what's done for du and dev with
+	 * matching wwid but unmatching PVID.)
+	 */
+	dm_list_iterate_items(dul, &dus_check) {
+		du = dul->du;
+
+		/* matched in previous loop using pvid */
+		if (du->dev)
+			continue;
+
+		log_debug("Matching suspect serial device id %s unmatched PVID %s prev %s",
+			  du->idname, du->pvid, du->devname);
+		dev = NULL;
+		count = 0;
+		/* count the number of devs using this serial number */
+		dm_list_iterate_items(devl, &devs_check) {
+			if (_dev_has_id(devl->dev, DEV_ID_TYPE_SYS_SERIAL, du->idname)) {
+				dev = devl->dev;
+				count++;
+			}
+			if (count > 1)
+				break;
+		}
+		if (count != 1) {
+			log_warn("No device matches devices file PVID %s with duplicate serial number %s previously %s.",
+				 du->pvid, du->idname, du->devname);
+			continue;
+		}
+
+		log_warn("Device %s with serial number %s has PVID %s (devices file %s)",
+			 dev_name(dev), du->idname, dev->pvid, du->pvid ?: "none");
+		if (!(tmpdup = strdup(dev->pvid)))
+			continue;
+		free(du->pvid);
+		du->pvid = tmpdup;
+		du->dev = dev;
+		dev->flags |= DEV_MATCHED_USE_ID;
+		update_file = 1;
+	}
+
+	/*
+	 * label_scan() was done based on the original du/dev matches, so if
+	 * there were some changes made to the du/dev matches above, then we
+	 * may need to correct the results of the label_scan:
+	 *
+	 * . if some devices were scanned in label_scan, but those devs are no
+	 * longer matched to any du, then we need to clear the scanned info
+	 * from those devs from lvmcache.
+	 *
+	 * . if some devices were not scanned in label_scan, but those devs are
+	 * now matched to a du, then we need to run label_scan on those devs to
+	 * populate lvmcache with info from them (the caller does this.)
+	 */
+
+	/*
+	 * Find devs that were previously matched to a du but now are not.
+	 * Clear the filter state and lvmcache info for them.
+	 */
+	dm_list_iterate_items(dil, &prev_devs) {
+		if (!get_du_for_dev(cmd, dil->dev)) {
+			log_debug("Drop incorrectly matched serial %s", dev_name(dil->dev));
+			cmd->filter->wipe(cmd, cmd->filter, dil->dev, NULL);
+       			lvmcache_del_dev(dil->dev);
+		}
+	}
+
+	/*
+	 * Find devs that are now matched to a du but were not previously
+	 * scanned by label_scan (DEV_SCAN_FOUND_LABEL).  The caller will
+	 * call label_scan on the devs returned in the list.
+	 */
+	dm_list_iterate_items(dul, &dus_check) {
+		if (!(dev = dul->du->dev))
+			continue;
+		if (!(dev->flags & DEV_SCAN_FOUND_LABEL)) {
+			if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
+				continue;
+			devl->dev = dev;
+			dm_list_add(scan_devs, &devl->list);
+		}
+	}
+
+	/*
+	 * Look for dus_check entries that were originally matched to a dev
+	 * but now are not.  Warn about these like device_ids_match() would.
+	 */
+	dm_list_iterate_items(dul, &dus_check) {
+		if (!dul->du->dev) {
+			du = dul->du;
+			log_warn("Devices file %s %s PVID %s not found.",
+				 idtype_to_str(du->idtype),
+				 du->idname ?: "none",
+				 du->pvid ?: "none");
+			if (du->devname) {
+				free(du->devname);
+				du->devname = NULL;
+				update_file = 1;
+			}
+		}
+	}
+
+	if (update_file && update_needed)
+		*update_needed = 1;
+
+	if (update_file && !noupdate)
+		_device_ids_update_try(cmd);
 }
 
 /*
@@ -2903,6 +3279,7 @@ void unlock_devices_file(struct cmd_context *cmd)
 void devices_file_init(struct cmd_context *cmd)
 {
 	dm_list_init(&cmd->use_devices);
+	dm_list_init(&cmd->device_ids_check_serial);
 }
 
 void devices_file_exit(struct cmd_context *cmd)
