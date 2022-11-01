@@ -878,6 +878,10 @@ If lvmlockd fails or is killed while in use, locks it held remain but are
 orphaned in the lock manager.  lvmlockd can be restarted with an option to
 adopt the orphan locks from the previous instance of lvmlockd.
 .
+.IP \[bu]
+The 'lvs' command does not report any remote state, because lvmlockd is
+unable to passively check the remote active or lock state of an LV.
+.
 .SH SEE ALSO
 .
 .BR lvm (8),

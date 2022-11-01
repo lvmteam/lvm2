@@ -3838,9 +3838,10 @@ static int _lvactiveremotely_disp(struct dm_report *rh, struct dm_pool *mem,
 				  struct dm_report_field *field,
 				  const void *data, void *private)
 {
+	const struct logical_volume *lv = (const struct logical_volume *) data;
 	int active_remotely;
 
-	if (!activation())
+	if (!activation() || vg_is_shared(lv->vg))
 		return _binary_undef_disp(rh, mem, field, private);
 
 	active_remotely = 0;
