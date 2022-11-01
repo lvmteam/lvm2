@@ -2298,15 +2298,21 @@ int lockd_vg_update(struct volume_group *vg)
 	return ret;
 }
 
-static int _query_lock_lv(struct cmd_context *cmd, struct volume_group *vg,
-			  const char *lv_name, char *lv_uuid,
-			  const char *lock_args, int *ex, int *sh)
+int lockd_query_lv(struct volume_group *vg, const char *lv_name, char *lv_uuid,
+		   const char *lock_args, int *ex, int *sh)
 {
 	daemon_reply reply;
 	const char *opts = NULL;
 	const char *reply_str;
 	int result;
 	int ret;
+
+	if (!vg_is_shared(vg))
+		return 1;
+	if (!_use_lvmlockd)
+		return 0;
+	if (!_lvmlockd_connected)
+		return 0;
 
 	log_debug("lockd query LV %s/%s", vg->name, lv_name);
 
@@ -2386,7 +2392,7 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 		    !strcmp(cmd->name, "lvchange") || !strcmp(cmd->name, "lvconvert")) {
 			int ex = 0, sh = 0;
 
-			if (!_query_lock_lv(cmd, vg, lv_name, lv_uuid, lock_args, &ex, &sh))
+			if (!lockd_query_lv(vg, lv_name, lv_uuid, lock_args, &ex, &sh))
 				return 1;
 			if (sh) {
 				log_warn("WARNING: shared LV may require refresh on other hosts where it is active.");
