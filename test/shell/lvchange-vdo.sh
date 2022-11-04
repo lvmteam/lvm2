@@ -40,13 +40,14 @@ check grep_dmsetup status $vg-vdopool-vpool " online online "
 
 # dedulication_ARG
 lvchange --deduplication n $vg/vdopool
-check grep_dmsetup status $vg-vdopool-vpool " offline online "
+check grep_dmsetup status $vg-vdopool-vpool -E " offline|closed online "
+
 lvchange --deduplication y $vg/vdopool
-check grep_dmsetup status $vg-vdopool-vpool " online online "
+check grep_dmsetup status $vg-vdopool-vpool -E " online|opening online "
 
 
 lvchange --compression n --deduplication n $vg/vdopool
-check grep_dmsetup status $vg-vdopool-vpool " offline offline "
+check grep_dmsetup status $vg-vdopool-vpool -E " offline|closed offline "
 
 # --vdosettings needs inactive LV
 not lvchange --vdosettings 'ack_threads=8' $vg/vdopool
