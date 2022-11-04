@@ -188,19 +188,19 @@ bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks)
 
 	*logical_blocks = 0;
 	if ((fh = open(vdo_path, O_RDONLY)) == -1) {
-		log_sys_error("Failed to open VDO backend %s", vdo_path);
+		log_sys_debug("Failed to open VDO backend %s.", vdo_path);
 		goto err;
 	}
 
 	if (ioctl(fh, BLKGETSIZE64, &size) == -1) {
 		if (errno != ENOTTY) {
-			log_sys_error("ioctl", vdo_path);
+			log_sys_debug("ioctl", vdo_path);
 			goto err;
 		}
 
 		/* lets retry for file sizes */
 		if (fstat(fh, &st) < 0) {
-			log_sys_error("fstat", vdo_path);
+			log_sys_debug("fstat", vdo_path);
 			goto err;
 		}
 
@@ -208,12 +208,12 @@ bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks)
 	}
 
 	if ((n = read(fh, buffer, sizeof(buffer))) < 0) {
-		log_sys_error("read", vdo_path);
+		log_sys_debug("read", vdo_path);
 		goto err;
 	}
 
 	if (strncmp(buffer, _MAGIC_NUMBER, MAGIC_NUMBER_SIZE)) {
-		log_sys_error("mismatch header", vdo_path);
+		log_debug_activation("Found mismatching VDO magic header in %s.", vdo_path);
 		goto err;
 	}
 
@@ -221,7 +221,7 @@ bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks)
 	_vdo_decode_header(&h);
 
 	if  (h.version.major_version != 5) {
-		log_error("Unsupported VDO version %u.%u.", h.version.major_version, h.version.minor_version);
+		log_debug_activation("Unsupported VDO version %u.%u.", h.version.major_version, h.version.minor_version);
 		goto err;
 	}
 
@@ -231,17 +231,17 @@ bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks)
 	regpos = vg.regions[VDO_DATA_REGION].start_block * 4096;
 
 	if ((regpos + sizeof(buffer)) > size) {
-		log_error("File/Device is shorter and can't provide requested VDO volume region at " FMTu64 " > " FMTu64 ".", regpos, size);
+		log_debug_activation("File/Device is shorter and can't provide requested VDO volume region at " FMTu64 " > " FMTu64 ".", regpos, size);
 		goto err;
 	}
 
 	if ((l = lseek(fh, regpos, SEEK_SET)) < 0) {
-		log_sys_error("lseek", vdo_path);
+		log_sys_debug("lseek", vdo_path);
 		goto err;
 	}
 
 	if ((n = read(fh, buffer, sizeof(buffer))) < 0) {
-		log_sys_error("read error", vdo_path);
+		log_sys_debug("read", vdo_path);
 		goto err;
 	}
 
@@ -250,7 +250,7 @@ bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks)
 	_vdo_decode_version(&vn);
 
 	if (vn.major_version > 41) {
-		log_error("Unknown VDO component version %u.", vn.major_version); // should be 41!
+		log_debug_activation("Unknown VDO component version %u.", vn.major_version); // should be 41!
 		goto err;
 	}
 
@@ -258,16 +258,16 @@ bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks)
 	_vdo_decode_pvc(&pvc);
 
 	if (pvc.nonce != vg.nonce) {
-		log_error("Mismatching VDO nonce " FMTu64 " != " FMTu64 ".", pvc.nonce, vg.nonce);
+		log_debug_activation("VDO metadata has mismatching VDO nonces " FMTu64 " != " FMTu64 ".", pvc.nonce, vg.nonce);
 		goto err;
 	}
 
 #if 0
-	log_debug("LogBlocks    " FMTu64 ".", pvc.config.logical_blocks);
-	log_debug("PhyBlocks    " FMTu64 ".", pvc.config.physical_blocks);
-	log_debug("SlabSize     " FMTu64 ".", pvc.config.slab_size);
-	log_debug("RecJourSize  " FMTu64 ".", pvc.config.recovery_journal_size);
-	log_debug("SlabJouSize  " FMTu64 ".", pvc.config.slab_journal_blocks);
+	log_debug_activation("LogBlocks    " FMTu64 ".", pvc.config.logical_blocks);
+	log_debug_activation("PhyBlocks    " FMTu64 ".", pvc.config.physical_blocks);
+	log_debug_activation("SlabSize     " FMTu64 ".", pvc.config.slab_size);
+	log_debug_activation("RecJourSize  " FMTu64 ".", pvc.config.recovery_journal_size);
+	log_debug_activation("SlabJouSize  " FMTu64 ".", pvc.config.slab_journal_blocks);
 #endif
 
 	*logical_blocks = pvc.config.logical_blocks;
