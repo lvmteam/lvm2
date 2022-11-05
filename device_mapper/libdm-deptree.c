@@ -2850,7 +2850,7 @@ static int _thin_pool_emit_segment_line(struct dm_task *dmt,
 	return 1;
 }
 
-static int _vdo_emit_segment_line(struct dm_task *dmt,
+static int _vdo_emit_segment_line(struct dm_task *dmt, uint32_t major, uint32_t minor,
 				  struct load_segment *seg,
 				  char *params, size_t paramsize)
 {
@@ -2858,6 +2858,10 @@ static int _vdo_emit_segment_line(struct dm_task *dmt,
 	char data[DM_FORMAT_DEV_BUFSIZE];
 	char data_dev[128]; // for /dev/dm-XXXX
 	uint64_t logical_blocks;
+	struct dm_task *vdo_dmt;
+	uint64_t start, length = 0;
+	char *type = NULL;
+	char *vdo_params = NULL;
 
 	if (!_build_dev_string(data, sizeof(data), seg->vdo_data))
 		return_0;
@@ -2867,18 +2871,32 @@ static int _vdo_emit_segment_line(struct dm_task *dmt,
 		return 0;
 	}
 
-	if (dm_vdo_parse_logical_size(data_dev, &logical_blocks)) {
-		logical_blocks *= 8;
-		if (seg->size != logical_blocks) {
-			if (seg->size > logical_blocks) {
-				log_error("Virtual size of VDO volume is smaller then expected (" FMTu64  " > " FMTu64 ").",
-					  seg->size, logical_blocks);
-				return 1;
-			}
-			log_debug_activation("Increasing VDO virtual volume size from " FMTu64  " to " FMTu64 ".",
-					     seg->size, logical_blocks);
-			seg->size = logical_blocks;
+	/*
+	 * If there is already running VDO target, read 'existing' virtual size out of table line
+	 * and avoid reading it them from VDO metadata device
+	 *
+	 * NOTE: ATM VDO virtual size can be ONLY extended thus it's simple to recongnize 'right' size.
+	 * However if there would be supported also reduction, this check would need to check range.
+	 */
+	if ((vdo_dmt = dm_task_create(DM_DEVICE_TABLE))) {
+		if (dm_task_set_major(vdo_dmt, major) &&
+		    dm_task_set_minor(vdo_dmt, minor) &&
+		    dm_task_run(vdo_dmt)) {
+			(void) dm_get_next_target(vdo_dmt, NULL, &start, &length, &type, &vdo_params);
+			if (!type || strcmp(type, "vdo"))
+				length = 0;
 		}
+
+		dm_task_destroy(vdo_dmt);
+	}
+
+	if (!length && dm_vdo_parse_logical_size(data_dev, &logical_blocks))
+		length = logical_blocks * 8;
+
+	if (seg->size < length) {
+		log_debug_activation("Correcting VDO virtual volume size from " FMTu64  " to " FMTu64 ".",
+				     seg->size, length);
+		seg->size = length;
 	}
 
 	if (seg->vdo_version < 4) {
@@ -2980,7 +2998,7 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 		EMIT_PARAMS(pos, "%u %u ", seg->area_count, seg->stripe_size);
 		break;
 	case SEG_VDO:
-		if (!_vdo_emit_segment_line(dmt, seg, params, paramsize))
+		if (!_vdo_emit_segment_line(dmt, major, minor, seg, params, paramsize))
 		      return_0;
 		break;
 	case SEG_CRYPT:
