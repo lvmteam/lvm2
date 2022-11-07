@@ -186,8 +186,6 @@ int lvmcache_vginfo_has_pvid(struct lvmcache_vginfo *vginfo, const char *pvid_ar
 uint64_t lvmcache_max_metadata_size(void);
 void lvmcache_save_metadata_size(uint64_t val);
 
-int dev_in_device_list(struct device *dev, struct dm_list *head);
-
 bool lvmcache_has_bad_metadata(struct device *dev);
 
 bool lvmcache_has_old_metadata(struct cmd_context *cmd, const char *vgname, const char *vgid, struct device *dev);

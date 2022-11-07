@@ -2208,7 +2208,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 		 * scanned_devs are the devices that have been scanned,
 		 * so they are the only devs we can verify PVID for.
 		 */
-		if (scanned_devs && !dev_in_device_list(dev, scanned_devs))
+		if (scanned_devs && !device_list_find_dev(scanned_devs, dev))
 			continue;
 
 		/*
@@ -2310,7 +2310,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 		 * scanned_devs are the devices that have been scanned,
 		 * so they are the only devs we can verify PVID for.
 		 */
-		if (scanned_devs && !dev_in_device_list(dev, scanned_devs))
+		if (scanned_devs && !device_list_find_dev(scanned_devs, dev))
 			continue;
 
 		/*
@@ -2462,17 +2462,6 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 	}
 }
 
-static struct device_id_list *_device_id_list_find_dev(struct dm_list *list, struct device *dev)
-{
-	struct device_id_list *dil;
-
-	dm_list_iterate_items(dil, list) {
-		if (dil->dev == dev)
-			return dil;
-	}
-	return NULL;
-}
-
 /*
  * Validate entries with suspect sys_serial values.  A sys_serial du (devices
  * file entry) matched a device with the same serial number, but the PVID did
@@ -2612,7 +2601,7 @@ void device_ids_check_serial(struct cmd_context *cmd, struct dm_list *scan_devs,
 					  du->idname, du->pvid, dev_name(dev));
 
 				/* update file if this dev pairing is new or different */
-				if (!(dil = _device_id_list_find_dev(&prev_devs, dev)))
+				if (!(dil = device_id_list_find_dev(&prev_devs, dev)))
 					update_file = 1;
 				else if (memcmp(dil->pvid, du->pvid, ID_LEN))
 					update_file = 1;

@@ -590,12 +590,6 @@ struct vgnameid_list {
 	const char *vgid;
 };
 
-struct device_id_list {
-	struct dm_list list;
-	struct device *dev;
-	char pvid[ID_LEN + 1];
-};
-
 #define PV_PE_START_CALC ((uint64_t) -1) /* Calculate pe_start value */
 
 /*

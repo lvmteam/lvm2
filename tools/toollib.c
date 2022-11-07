@@ -4133,32 +4133,6 @@ static int _get_arg_devices(struct cmd_context *cmd,
 	return ret_max;
 }
 
-static int _device_list_remove(struct dm_list *devices, struct device *dev)
-{
-	struct device_id_list *dil;
-
-	dm_list_iterate_items(dil, devices) {
-		if (dil->dev == dev) {
-			dm_list_del(&dil->list);
-			return 1;
-		}
-	}
-
-	return 0;
-}
-
-static struct device_id_list *_device_list_find_dev(struct dm_list *devices, struct device *dev)
-{
-	struct device_id_list *dil;
-
-	dm_list_iterate_items(dil, devices) {
-		if (dil->dev == dev)
-			return dil;
-	}
-
-	return NULL;
-}
-
 /* Process devices that are not PVs. */
 
 static int _process_other_devices(struct cmd_context *cmd,
@@ -4263,8 +4237,8 @@ static int _process_duplicate_pvs(struct cmd_context *cmd,
 	dm_list_iterate_items(devl, &unused_duplicate_devs) {
 		/* Duplicates are displayed if -a is used or the dev is named as an arg. */
 
-		if ((dil = _device_list_find_dev(arg_devices, devl->dev)))
-			_device_list_remove(arg_devices, devl->dev);
+		if ((dil = device_id_list_find_dev(arg_devices, devl->dev)))
+			device_id_list_remove(arg_devices, devl->dev);
 
 		if (!process_other_devices && !dil)
 			continue;
@@ -4384,8 +4358,8 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 		/* Remove each arg_devices entry as it is processed. */
 
 		if (arg_devices && !dm_list_empty(arg_devices)) {
-			if ((dil = _device_list_find_dev(arg_devices, pv->dev)))
-				_device_list_remove(arg_devices, dil->dev);
+			if ((dil = device_id_list_find_dev(arg_devices, pv->dev)))
+				device_id_list_remove(arg_devices, dil->dev);
 		}
 
 		if (!process_pv && dil)

@@ -144,28 +144,6 @@ int lvmcache_found_duplicate_vgnames(void)
 	return _found_duplicate_vgnames;
 }
 
-static struct device_list *_get_devl_in_device_list(struct device *dev, struct dm_list *head)
-{
-	struct device_list *devl;
-
-	dm_list_iterate_items(devl, head) {
-		if (devl->dev == dev)
-			return devl;
-	}
-	return NULL;
-}
-
-int dev_in_device_list(struct device *dev, struct dm_list *head)
-{
-	struct device_list *devl;
-
-	dm_list_iterate_items(devl, head) {
-		if (devl->dev == dev)
-			return 1;
-	}
-	return 0;
-}
-
 bool lvmcache_has_duplicate_devs(void)
 {
 	if (dm_list_empty(&_unused_duplicates) && dm_list_empty(&_initial_duplicates))
@@ -192,11 +170,11 @@ void lvmcache_del_dev_from_duplicates(struct device *dev)
 {
 	struct device_list *devl;
 
-	if ((devl = _get_devl_in_device_list(dev, &_initial_duplicates))) {
+	if ((devl = device_list_find_dev(&_initial_duplicates, dev))) {
 		log_debug_cache("delete dev from initial duplicates %s", dev_name(dev));
 		dm_list_del(&devl->list);
 	}
-	if ((devl = _get_devl_in_device_list(dev, &_unused_duplicates))) {
+	if ((devl = device_list_find_dev(&_unused_duplicates, dev))) {
 		log_debug_cache("delete dev from unused duplicates %s", dev_name(dev));
 		dm_list_del(&devl->list);
 	}
@@ -605,7 +583,7 @@ int vg_has_duplicate_pvs(struct volume_group *vg)
 
 bool lvmcache_dev_is_unused_duplicate(struct device *dev)
 {
-	return dev_in_device_list(dev, &_unused_duplicates) ? true : false;
+	return device_list_find_dev(&_unused_duplicates, dev) ? true : false;
 }
 
 static void _warn_unused_duplicates(struct cmd_context *cmd)
@@ -934,7 +912,7 @@ next:
 			}
 
 			/* Remove dev_mpath from altdevs. */
-			if ((devl = _get_devl_in_device_list(dev_mpath, &altdevs)))
+			if ((devl = device_list_find_dev(&altdevs, dev_mpath)))
 				dm_list_del(&devl->list);
 
 			/* Remove info from lvmcache that came from the component dev. */
@@ -1001,7 +979,7 @@ next:
 			}
 
 			/* Remove dev_md from altdevs. */
-			if ((devl = _get_devl_in_device_list(dev_md, &altdevs)))
+			if ((devl = device_list_find_dev(&altdevs, dev_md)))
 				dm_list_del(&devl->list);
 
 			/* Remove info from lvmcache that came from the component dev. */
@@ -1029,7 +1007,7 @@ next:
 			}
 
 			/* Remove dev_md from altdevs. */
-			if ((devl = _get_devl_in_device_list(dev_md, &altdevs)))
+			if ((devl = device_list_find_dev(&altdevs, dev_md)))
 				dm_list_del(&devl->list);
 		}
 
@@ -1107,8 +1085,8 @@ next:
 		if (dev1 == dev2)
 			continue;
 
-		prev_unchosen1 = dev_in_device_list(dev1, &_unused_duplicates);
-		prev_unchosen2 = dev_in_device_list(dev2, &_unused_duplicates);
+		prev_unchosen1 = device_list_find_dev(&_unused_duplicates, dev1) ? 1 :0;
+		prev_unchosen2 = device_list_find_dev(&_unused_duplicates, dev2) ? 1 :0;
 
 		if (!prev_unchosen1 && !prev_unchosen2) {
 			/*
@@ -1118,8 +1096,8 @@ next:
 			 * want the same duplicate preference to be preserved
 			 * in each instance of lvmcache for a single command.
 			 */
-			prev_unchosen1 = dev_in_device_list(dev1, &_prev_unused_duplicate_devs);
-			prev_unchosen2 = dev_in_device_list(dev2, &_prev_unused_duplicate_devs);
+			prev_unchosen1 = device_list_find_dev(&_prev_unused_duplicate_devs, dev1) ? 1 :0;
+			prev_unchosen2 = device_list_find_dev(&_prev_unused_duplicate_devs, dev2) ? 1 : 0;
 		}
 
 		dev1_major = MAJOR(dev1->dev);
@@ -1296,7 +1274,7 @@ next:
 	if (!info) {
 		log_debug_cache("PV %s with duplicates will use %s.", pvid, dev_name(dev1));
 
-		if (!(devl_add = _get_devl_in_device_list(dev1, &altdevs))) {
+		if (!(devl_add = device_list_find_dev(&altdevs, dev1))) {
 			/* shouldn't happen */
 			log_error(INTERNAL_ERROR "PV %s with duplicates no alternate list entry for %s", pvid, dev_name(dev1));
 			dm_list_splice(&new_unused, &altdevs);
@@ -1315,7 +1293,7 @@ next:
 		 * for the current lvmcache device to drop.
 		 */
 
-		if (!(devl_add = _get_devl_in_device_list(dev1, &altdevs))) {
+		if (!(devl_add = device_list_find_dev(&altdevs, dev1))) {
 			/* shouldn't happen */
 			log_error(INTERNAL_ERROR "PV %s with duplicates no alternate list entry for %s", pvid, dev_name(dev1));
 			dm_list_splice(&new_unused, &altdevs);
@@ -2530,7 +2508,7 @@ struct lvmcache_info *lvmcache_add(struct cmd_context *cmd, struct labeller *lab
 			memcpy(dev->pvid, pvid, ID_LEN);
 
 			/* shouldn't happen */
-			if (dev_in_device_list(dev, &_initial_duplicates))
+			if (device_list_find_dev(&_initial_duplicates, dev))
 				log_debug_cache("Initial duplicate already in list %s", dev_name(dev));
 			else {
 				/*

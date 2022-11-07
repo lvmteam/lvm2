@@ -703,7 +703,7 @@ static int _pvscan_aa_quick(struct cmd_context *cmd, struct pvscan_aa_params *pp
 	 * devices used by the VG we read.
 	 */
 	dm_list_iterate_items(pvl, &vg->pvs) {
-		if (dev_in_device_list(pvl->pv->dev, &devs))
+		if (device_list_find_dev(&devs, pvl->pv->dev))
 			continue;
 		log_error_pvscan(cmd, "activation for VG %s found different devices.", vgname);
 		ret = ECMD_FAILED;

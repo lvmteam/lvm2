@@ -25,17 +25,6 @@ struct vgimportclone_params {
 	unsigned import_vg:1;
 };
 
-static struct device_list *_get_device_list(struct dm_list *list, struct device *dev)
-{
-	struct device_list *devl;
-
-	dm_list_iterate_items(devl, list) {
-		if (devl->dev == dev)
-			return devl;
-	}
-	return NULL;
-}
-
 static int _update_vg(struct cmd_context *cmd, struct volume_group *vg,
 		      struct vgimportclone_params *vp)
 {
@@ -82,7 +71,7 @@ static int _update_vg(struct cmd_context *cmd, struct volume_group *vg,
 	 */
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
-		if ((devl = _get_device_list(&vp->new_devs, pvl->pv->dev))) {
+		if ((devl = device_list_find_dev(&vp->new_devs, pvl->pv->dev))) {
 			dm_list_del(&devl->list);
 			dm_list_add(&tmp_devs, &devl->list);
 		} else {
@@ -192,7 +181,7 @@ static int _get_other_devs(struct cmd_context *cmd, struct dm_list *new_devs, st
 		return_0;
 
 	while ((dev = dev_iter_get(cmd, iter))) {
-		if (_get_device_list(new_devs, dev))
+		if (device_list_find_dev(new_devs, dev))
 			continue;
 		if (!(devl = zalloc(sizeof(*devl)))) {
 			r = 0;

@@ -179,6 +179,12 @@ struct device_list {
 	struct device *dev;
 };
 
+struct device_id_list {
+	struct dm_list list;
+	struct device *dev;
+	char pvid[ID_LEN + 1];
+};
+
 struct device_area {
 	struct device *dev;
 	uint64_t start;		/* Bytes */
@@ -234,5 +240,11 @@ void dev_mpath_exit(void);
 int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list *ids);
 int format_t10_id(const unsigned char *in, int in_bytes, unsigned char *out, int out_bytes);
 int parse_vpd_serial(const unsigned char *in, char *out, int outsize);
+
+/* dev_util */
+int device_id_list_remove(struct dm_list *devices, struct device *dev);
+struct device_id_list *device_id_list_find_dev(struct dm_list *devices, struct device *dev);
+int device_list_remove(struct dm_list *devices, struct device *dev);
+struct device_list *device_list_find_dev(struct dm_list *devices, struct device *dev);
 
 #endif
