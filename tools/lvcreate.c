@@ -1750,21 +1750,21 @@ static int _lvcreate_single(struct cmd_context *cmd, const char *vg_name,
 		goto_out;
 
 	if (seg_is_vdo(lp) && !_check_vdo_parameters(vg, lp, lcp))
-		return_0;
+		goto_out;
 
 	if (!_check_pool_parameters(cmd, vg, lp, lcp))
 		goto_out;
 
 	/* All types are checked */
 	if (!_check_zero_parameters(cmd, lp))
-		return_0;
+		goto_out;
 
 	if (!_update_extents_params(vg, lp, lcp))
 		goto_out;
 
 	if (seg_is_vdo(lp) && !check_vdo_constrains(cmd, (uint64_t)lp->extents * vg->extent_size,
 						    lcp->virtual_size, &lp->vdo_params))
-		return_0;
+		goto_out;
 
 	if (seg_is_thin(lp) && !_validate_internal_thin_processing(lp))
 		goto_out;
