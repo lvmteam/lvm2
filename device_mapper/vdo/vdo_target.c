@@ -156,9 +156,9 @@ bool dm_vdo_validate_target_params(const struct dm_vdo_target_params *vtp,
 	}
 
 	if (vdo_size > DM_VDO_LOGICAL_SIZE_MAXIMUM) {
-		log_error("VDO logical size is by " FMTu64 "KiB bigger then limit " FMTu64 "TiB.",
-			  (vdo_size - DM_VDO_LOGICAL_SIZE_MAXIMUM) / 2,
-			  DM_VDO_LOGICAL_SIZE_MAXIMUM / (UINT64_C(1024) * 1024 * 1024 * 1024 >> SECTOR_SHIFT));
+		log_error("VDO logical size is larger than limit " FMTu64 " TiB by " FMTu64 " KiB.",
+			  DM_VDO_LOGICAL_SIZE_MAXIMUM / (UINT64_C(1024) * 1024 * 1024 * 1024 >> SECTOR_SHIFT),
+			  (vdo_size - DM_VDO_LOGICAL_SIZE_MAXIMUM) / 2);
 		valid = false;
 	}
 
