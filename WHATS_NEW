@@ -1,5 +1,6 @@
-Version 2.03.17 - 
-===============================
+Version 2.03.17 - 10th November 2022
+====================================
+  Add new options (--fs, --fsmode) for FS handling when resizing LVs.
   Fix 'lvremove -S|--select LV' to not also remove its historical LV right away.
   Fix lv_active field type to binary so --select and --binary applies properly.
   Switch to use mallinfo2 and use it only with glibc.
@@ -11,6 +12,8 @@ Version 2.03.17 -
   Fix lvconvert --test --type vdo-pool execution.
   Add json_std output format for more JSON standard compliant version of output.
   Fix vdo_slab_size_mb value for converted VDO volume.
+  Fix many corner cases in device_id, including handling of S/N duplicates.
+  Fix various issues in lvmdbusd.
 
 Version 2.03.16 - 18th May 2022
 ===============================
