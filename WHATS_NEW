@@ -1,3 +1,6 @@
+Version 2.03.18 - 
+====================================
+
 Version 2.03.17 - 10th November 2022
 ====================================
   Add new options (--fs, --fsmode) for FS handling when resizing LVs.
