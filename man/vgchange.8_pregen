@@ -342,10 +342,12 @@ Reactivate LVs using the latest metadata.
 Change the system ID of a VG.
 .br
 .P
-\fBvgchange\fP \fB--systemid\fP \fIString\fP \fIVG\fP
+\fBvgchange\fP \fB--systemid\fP \fIString\fP \fIVG\fP|\fITag\fP|\fISelect\fP
 .br
 .RS 4
 .ad l
+[ \fB-S\fP|\fB--select\fP \fIString\fP ]
+.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
