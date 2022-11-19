@@ -71,8 +71,8 @@ libdevmapper.$(LIB_SUFFIX) libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION): $(LIB_SHAR
 # also the older symbol is built-in
 .symver_check: $(LIB_SHARED)
 	@echo "    [CHECK] $<"
-	$(Q) if readelf -Ws $< | grep -q dm_stats_create_region@@; then \
-	SYM=$$(readelf -Ws $< | grep dm_stats_create_region@DM_1_02_106); \
+	$(Q) if $(READELF) -Ws $< | grep -q dm_stats_create_region@@; then \
+	SYM=$$($(READELF) -Ws $< | grep dm_stats_create_region@DM_1_02_106); \
 	if test -n "$$SYM"; then touch $@; \
 	else echo >&2 "Missing versioned symbols in $<"; false; fi; \
 	else touch $@; fi
