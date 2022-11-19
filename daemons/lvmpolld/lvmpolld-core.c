@@ -52,7 +52,7 @@ static pthread_key_t key;
 
 static const char *_strerror_r(int errnum, struct lvmpolld_thread_data *data)
 {
-#ifdef _GNU_SOURCE
+#if defined(_GNU_SOURCE) && defined(STRERROR_R_CHAR_P)
 	return strerror_r(errnum, data->buf, sizeof(data->buf)); /* never returns NULL */
 #elif (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600)
 	return strerror_r(errnum, data->buf, sizeof(data->buf)) ? "" : data->buf;
