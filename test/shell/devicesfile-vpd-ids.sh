@@ -62,8 +62,8 @@ setup_sysfs() {
 cleanup_sysfs() {
 	rm -f $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid
 	rm -f $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/vpd_pg83
-	rmdir $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device
-	rmdir $SYS_DIR/dev/block/$MAJOR1:$MINOR1
+	rmdir $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device || true
+	rmdir $SYS_DIR/dev/block/$MAJOR1:$MINOR1 || true
 }
 
 
@@ -193,9 +193,34 @@ rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid
 pvs "$DEV1"
 cleanup_sysfs
 
+# Test nvme wwid that starts with "nvme" instead of naa/eui/t10
+rm $DF
+aux wipefs_a "$DEV1"
+mkdir -p $SYS_DIR/dev/block/$MAJOR1:$MINOR1/
+echo "nvme.111111111111111111122222222222333333333333333-44444444444444444445555555555556666666666666666662-00000001" > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+lvmdevices --adddev "$DEV1"
+cat $DF
+vgcreate $vg "$DEV1"
+lvcreate -l1 -an $vg
+cat $DF
+pvs -o+deviceidtype,deviceid "$DEV1" |tee out
+grep sys_wwid out
+grep nvme.111 out
+grep sys_wwid $DF
+grep nvme.111 $DF
+lvmdevices --deldev "$DEV1"
+not lvmdevices --adddev "$DEV1" --deviceidtype wwid_eui
+lvmdevices --adddev "$DEV1" --deviceidtype sys_wwid
+lvmdevices | grep nvme.111
+lvremove -y $vg
+sleep 1
+lvs $vg
+vgremove $vg
+rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+cleanup_sysfs
 
 # TODO: lvmdevices --adddev <dev> --deviceidtype <type> --deviceid <val>
 # This would let the user specify the second naa wwid.
 
 remove_base
-rmmod scsi_debug
+rmmod scsi_debug || true
