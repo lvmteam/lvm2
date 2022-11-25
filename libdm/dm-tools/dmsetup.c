@@ -274,6 +274,7 @@ static char _disp_units = 's';
 const char *_program_id = DM_STATS_PROGRAM_ID; /* program_id used for reports. */
 static uint64_t _statstype = 0; /* stats objects to report */
 static int _concise_output_produced = 0; /* Was any concise output already printed? */
+static int _added_target = 0;		/* Count added target (no target -> no event) */
 struct command;
 static const struct command *_selection_cmd = NULL; /* Command to run against each device select with -S */
 
@@ -356,6 +357,8 @@ static int _parse_line(struct dm_task *dmt, char *buffer, const char *file,
 
 	if (!dm_task_add_target(dmt, start, size, ttype, ptr))
 		return_0;
+
+	_added_target++;
 
 	return 1;
 }
@@ -1175,9 +1178,6 @@ static int _create_one_device(const char *name, const char *file)
 				    _read_ahead_flags))
 		goto_out;
 
-	if (_switches[NOTABLE_ARG])
-		dm_udev_set_sync_support(0);
-
 	if (_switches[NOUDEVRULES_ARG])
 		udev_flags |= DM_UDEV_DISABLE_DM_RULES_FLAG |
 			      DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG;
@@ -1194,8 +1194,12 @@ static int _create_one_device(const char *name, const char *file)
 	if (_udev_only)
 		udev_flags |= DM_UDEV_DISABLE_LIBRARY_FALLBACK;
 
-	if (!dm_task_set_cookie(dmt, &cookie, udev_flags) ||
-	    !_task_run(dmt))
+	if (_switches[NOTABLE_ARG] || !_added_target)
+		cookie = 0; // ADD event -> no udev event handling
+	else if (!dm_task_set_cookie(dmt, &cookie, udev_flags))
+		goto_out;
+
+	if (!_task_run(dmt))
 		goto_out;
 
 	r = 1;
