@@ -1020,7 +1020,7 @@ A concise representation of one of more devices.
 The representation of a device takes the form:
 .ad l
 .nh
-<name>,<uuid>,\:<minor>,<flags>,\:<table>\:[,<table>+]\:[;<dev_name>,<uuid>,\:<minor>,<flags>,<table>\:[,<table>+]]
+<name>,<uuid>,\:<minor>,<flags>,\:<table>\:[,<table>+]\:[;<name>,<uuid>,\:<minor>,<flags>,<table>\:[,<table>+]]
 .hy
 .ad b
 .TP
