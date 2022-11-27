@@ -206,7 +206,7 @@ AC_PREFIX_DEFAULT(/usr)
 
 ################################################################################
 dnl -- Clear default exec_prefix - install into /sbin rather than /usr/sbin
-test "$exec_prefix" = NONE -a "$prefix" = NONE && exec_prefix=""
+test "$exec_prefix" = "NONE" && test "$prefix" = "NONE" && exec_prefix=""
 
 test "x$prefix" = xNONE && prefix=$ac_default_prefix
 # Let make expand exec_prefix.
@@ -428,11 +428,11 @@ case "$THIN" in
 		THIN_CHECK_VSN_MAJOR=`echo "$THIN_CHECK_VSN" | $AWK -F '.' '{print $1}'`
 		THIN_CHECK_VSN_MINOR=`echo "$THIN_CHECK_VSN" | $AWK -F '.' '{print $2}'`
 
-		if test -z "$THIN_CHECK_VSN_MAJOR" -o -z "$THIN_CHECK_VSN_MINOR"; then
+		if test -z "$THIN_CHECK_VSN_MAJOR" || test -z "$THIN_CHECK_VSN_MINOR"; then
 			AC_MSG_WARN([$THIN_CHECK_CMD: Bad version "$THIN_CHECK_VSN" found])
 			THIN_CHECK_VERSION_WARN=y
 			THIN_CHECK_NEEDS_CHECK=no
-		elif test "$THIN_CHECK_VSN_MAJOR" -eq 0 -a "$THIN_CHECK_VSN_MINOR" -lt 3; then
+		elif test "$THIN_CHECK_VSN_MAJOR" -eq 0 && test "$THIN_CHECK_VSN_MINOR" -lt 3; then
 			AC_MSG_WARN([$THIN_CHECK_CMD: Old version "$THIN_CHECK_VSN" found])
 			THIN_CHECK_VERSION_WARN=y
 			THIN_CHECK_NEEDS_CHECK=no
@@ -551,7 +551,7 @@ case "$CACHE" in
 			CACHE_CHECK_NEEDS_CHECK=no
 		elif test "$CACHE_CHECK_VSN_MAJOR" -eq 0 ; then
 			if test "$CACHE_CHECK_VSN_MINOR" -lt 5 \
-				|| test "$CACHE_CHECK_VSN_MINOR" -eq 5 -a "$CACHE_CHECK_VSN_PATCH" -lt 4; then
+				|| ( test "$CACHE_CHECK_VSN_MINOR" -eq 5 && test "$CACHE_CHECK_VSN_PATCH" -lt 4 ); then
 				AC_MSG_WARN([$CACHE_CHECK_CMD: Old version "$CACHE_CHECK_VSN" found])
 				CACHE_CHECK_VERSION_WARN=y
 				CACHE_CHECK_NEEDS_CHECK=no
@@ -803,7 +803,7 @@ fi
 
 ################################################################################
 dnl -- Look for corosync libraries if required.
-if [[ "$BUILD_CMIRRORD" = yes ]]; then
+if test "$BUILD_CMIRRORD" = yes; then
 	pkg_config_init
 
 	if test "$HAVE_CPG" != yes; then
@@ -1403,8 +1403,7 @@ AC_CHECK_LIB(dl, dlopen,
 
 ################################################################################
 dnl -- Check for shared/static conflicts
-if [[ \( "$LVM1" = shared -o "$POOL" = shared \
-      \) -a "$STATIC_LINK" = yes ]]; then
+if ( test "$LVM1" = shared || test "$POOL" = shared ) && test "$STATIC_LINK" = yes; then
 	AC_MSG_ERROR([Features cannot be 'shared' when building statically])
 fi
 
@@ -1506,7 +1505,7 @@ AC_CHECK_HEADERS(getopt.h, AC_DEFINE([HAVE_GETOPTLONG], 1, [Define to 1 if getop
 
 ################################################################################
 dnl -- Check for editline
-if test "$EDITLINE" == yes; then
+if test "$EDITLINE" = yes; then
 	PKG_CHECK_MODULES([EDITLINE], [libedit], [
 		AC_DEFINE([EDITLINE_SUPPORT], 1,
 			[Define to 1 to include the LVM editline shell.])], AC_MSG_ERROR(
