@@ -2468,6 +2468,27 @@ class TestDbusService(unittest.TestCase):
 			if rc == "/":
 				self._pv_create(pv_device_path)
 
+	def test_stderr_collection(self):
+		lv_name = lv_n()
+		vg = self._vg_create().Vg
+		(object_path, job_path) = vg.LvCreate(
+			dbus.String(lv_name), dbus.UInt64(vg.SizeBytes * 2),
+			dbus.Array([], signature='(ott)'), dbus.Int32(0),
+			EOD)
+
+		self.assertTrue(object_path == '/')
+		self.assertTrue(job_path != '/')
+
+		j = ClientProxy(self.bus, job_path, interfaces=(JOB_INT,)).Job
+		while True:
+			j.update()
+			if j.Complete:
+				(ec, error_msg) = j.GetError
+				self.assertTrue("insufficient free space" in error_msg, error_msg)
+				break
+			else:
+				time.sleep(0.1)
+
 
 class AggregateResults(object):
 
