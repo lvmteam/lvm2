@@ -859,3 +859,20 @@ class LvmDebugData:
 		self._close_fd()
 		# In case lvm_complete doesn't get called.
 		self._remove_file()
+
+
+def get_error_msg(report_json):
+	# Get the error message from the returned JSON
+	if 'log' in report_json:
+		error_msg = ""
+		# Walk the entire log array and build an error string
+		for log_entry in report_json['log']:
+			if log_entry['log_type'] == "error":
+				if error_msg:
+					error_msg += ', ' + log_entry['log_message']
+				else:
+					error_msg = log_entry['log_message']
+
+		return error_msg
+
+	return None
