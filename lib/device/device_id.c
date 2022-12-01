@@ -2489,6 +2489,7 @@ void device_ids_check_serial(struct cmd_context *cmd, struct dm_list *scan_devs,
 	int has_pvid;
 	int found;
 	int count;
+	int err;
 
 	dm_list_init(&dus_check);
 	dm_list_init(&devs_check);
@@ -2544,8 +2545,8 @@ void device_ids_check_serial(struct cmd_context *cmd, struct dm_list *scan_devs,
 		dev = devl->dev;
 		has_pvid = 0;
 
-		label_read_pvid(dev, &has_pvid);
-		if (!has_pvid) {
+		err = label_read_pvid(dev, &has_pvid);
+		if (!err || !has_pvid) {
 			log_debug("serial %s no pvid %s", idname, dev_name(devl->dev));
 			dm_list_del(&devl->list);
 			continue;
