@@ -1844,8 +1844,8 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 					  idtype_to_str(du->idtype), du->idname, dev_name(dev));
 				return 1;
 
-			} else if ((id->idtype == DEV_ID_TYPE_SYS_WWID) && !strncmp(id->idname, "t10", 3) &&
-				    du_t10[0] && !strcmp(id->idname, du_t10)) {
+			} else if ((id->idtype == DEV_ID_TYPE_SYS_WWID) && id->idname &&
+				   !strncmp(id->idname, "t10", 3) && du_t10[0] && !strcmp(id->idname, du_t10)) {
 				/* Compare the shorter form du t10 wwid to the dev t10 wwid. */
 				du->dev = dev;
 				dev->id = id;
