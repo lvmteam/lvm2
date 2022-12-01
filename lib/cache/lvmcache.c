@@ -654,13 +654,13 @@ static int _all_multipath_components(struct cmd_context *cmd, struct lvmcache_in
 
 		if (dev_is_mp) {
 			if ((wwid1 = dev_mpath_component_wwid(cmd, dev))) {
-				strncpy(wwid1_buf, wwid1, DEV_WWID_SIZE);
+				strncpy(wwid1_buf, wwid1, DEV_WWID_SIZE-1);
 				dev_mp = dev;
 				dev1 = dev;
 			}
 		} else {
 			if ((wwid1 = device_id_system_read(cmd, dev, DEV_ID_TYPE_SYS_WWID))) {
-				strncpy(wwid1_buf, wwid1, DEV_WWID_SIZE);
+				strncpy(wwid1_buf, wwid1, DEV_WWID_SIZE-1);
 				free((char *)wwid1);
 				dev1 = dev;
 			}
@@ -673,10 +673,10 @@ static int _all_multipath_components(struct cmd_context *cmd, struct lvmcache_in
 
 		if (dev_is_mp) {
 			if ((wwid = dev_mpath_component_wwid(cmd, dev)))
-				strncpy(wwid_buf, wwid, DEV_WWID_SIZE);
+				strncpy(wwid_buf, wwid, DEV_WWID_SIZE-1);
 		} else {
 			if ((wwid = device_id_system_read(cmd, dev, DEV_ID_TYPE_SYS_WWID))) {
-				strncpy(wwid_buf, wwid, DEV_WWID_SIZE);
+				strncpy(wwid_buf, wwid, DEV_WWID_SIZE-1);
 				free((char *)wwid);
 			}
 		}
@@ -692,7 +692,7 @@ static int _all_multipath_components(struct cmd_context *cmd, struct lvmcache_in
 			continue;
 
 		if (!wwid1_buf[0]) {
-			memcpy(wwid1_buf, wwid_buf, DEV_WWID_SIZE);
+			memcpy(wwid1_buf, wwid_buf, DEV_WWID_SIZE-1);
 			dev1 = dev;
 			continue;
 		}
