@@ -260,6 +260,7 @@ static int get_local_nodeid(void)
 					rv = sscanf(line, "%d", &val);
 					if (rv == 1) {
 						fclose(file);
+						closedir(ls_dir);
 						return val;
 					}
 				}
@@ -270,7 +271,7 @@ static int get_local_nodeid(void)
 
 	if (closedir(ls_dir))
 		log_error("get_local_nodeid closedir error");
-    return rv;
+	return rv;
 }
 
 int lm_purge_locks_dlm(struct lockspace *ls)
