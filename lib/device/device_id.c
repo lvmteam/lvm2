@@ -2237,8 +2237,8 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 		 * number is correct, since serial numbers may not be unique.
 		 * Search for the PVID on other devs in device_ids_check_serial.
 		 */
-		if ((du->idtype == DEV_ID_TYPE_SYS_SERIAL) &&
-		    (!du->pvid || memcmp(dev->pvid, du->pvid, ID_LEN))) {
+		if ((du->idtype == DEV_ID_TYPE_SYS_SERIAL) && du->pvid &&
+		    memcmp(dev->pvid, du->pvid, ID_LEN)) {
 			log_debug("suspect device id serial %s for %s", du->idname, dev_name(dev));
 			str_list_add(cmd->mem, &cmd->device_ids_check_serial, dm_pool_strdup(cmd->mem, du->idname));
 			*device_ids_invalid = 1;
@@ -2569,6 +2569,8 @@ void device_ids_check_serial(struct cmd_context *cmd, struct dm_list *scan_devs,
 	 */
 	dm_list_iterate_items(dul, &dus_check) {
 		if (!dul->du->dev)
+			continue;
+		if (!dul->du->pvid)
 			continue;
 		/* save previously matched devs so they can be dropped from
 		   lvmcache at the end if they are no longer used */

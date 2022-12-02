@@ -772,6 +772,85 @@ grep $SERIAL1 out2
 grep $dev3 out3
 grep $SERIAL3 out3
 
+# non-PV devices
+
+aux wipefs_a $dev1
+aux wipefs_a $dev2
+aux wipefs_a $dev3
+aux wipefs_a $dev4
+
+echo $SERIAL1 > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/serial
+echo $SERIAL2 > $SYS_DIR/dev/block/$MAJOR2:$MINOR2/device/serial
+echo $SERIAL2 > $SYS_DIR/dev/block/$MAJOR3:$MINOR3/device/serial
+echo $SERIAL4 > $SYS_DIR/dev/block/$MAJOR4:$MINOR4/device/serial
+
+rm $DF
+touch $DF
+vgcreate $vg4 $dev4
+lvmdevices --adddev "$dev1"
+lvmdevices --adddev "$dev2"
+lvmdevices --adddev "$dev3"
+cat $DF
+
+grep $dev1 $DF |tee out1
+grep $dev2 $DF |tee out2
+grep $dev3 $DF |tee out3
+grep $dev4 $DF |tee out4
+
+grep $SERIAL1 out1
+grep $SERIAL2 out2
+grep $SERIAL2 out3
+grep $SERIAL4 out4
+
+pvs |tee out
+grep $dev4 out
+not grep $dev1 out
+not grep $dev2 out
+not grep $dev3 out
+
+pvcreate $dev1
+pvs |tee out
+grep $dev1 out
+grep $dev4 out
+not grep $dev2 out
+not grep $dev3 out
+
+pvcreate $dev2
+pvs |tee out
+grep $dev1 out
+grep $dev4 out
+grep $dev2 out
+not grep $dev3 out
+
+pvcreate $dev3
+pvs |tee out
+grep $dev1 out
+grep $dev4 out
+grep $dev2 out
+grep $dev3 out
+
+PVID1=`pvs "$dev1" --noheading -o uuid | tr -d - | awk '{print $1}'`
+PVID2=`pvs "$dev2" --noheading -o uuid | tr -d - | awk '{print $1}'`
+PVID3=`pvs "$dev3" --noheading -o uuid | tr -d - | awk '{print $1}'`
+PVID4=`pvs "$dev4" --noheading -o uuid | tr -d - | awk '{print $1}'`
+OPVID1=`pvs "$dev1" --noheading -o uuid | awk '{print $1}'`
+OPVID2=`pvs "$dev2" --noheading -o uuid | awk '{print $1}'`
+OPVID3=`pvs "$dev3" --noheading -o uuid | awk '{print $1}'`
+OPVID4=`pvs "$dev4" --noheading -o uuid | awk '{print $1}'`
+
+grep $dev1 $DF |tee out1
+grep $dev2 $DF |tee out2
+grep $dev3 $DF |tee out3
+grep $dev4 $DF |tee out4
+
+grep $PVID1 out1
+grep $PVID2 out2
+grep $PVID3 out3
+grep $PVID4 out4
+
+vgcreate $vg2 $dev2 $dev3
+vgs | grep $vg2
+
 remove_base
 rmmod brd
 
