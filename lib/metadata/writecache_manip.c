@@ -518,6 +518,14 @@ int writecache_settings_to_str_list(struct writecache_settings *settings, struct
 		if (!_writecache_setting_str_list_add("max_age", (uint64_t)settings->max_age, NULL, result, mem))
 			errors++;
 
+	if (settings->metadata_only_set)
+		if (!_writecache_setting_str_list_add("metadata_only", (uint64_t)settings->metadata_only, NULL, result, mem))
+			errors++;
+
+	if (settings->pause_writeback_set)
+		if (!_writecache_setting_str_list_add("pause_writeback", (uint64_t)settings->pause_writeback, NULL, result, mem))
+			errors++;
+
 	if (settings->new_key && settings->new_val)
 		if (!_writecache_setting_str_list_add(settings->new_key, 0, settings->new_val, result, mem))
 			errors++;

@@ -1473,6 +1473,20 @@ static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecach
 		return 1;
 	}
 
+	if (!strncmp(key, "metadata_only", strlen("metadata_only"))) {
+		if (sscanf(val, "%u", &settings->metadata_only) != 1)
+			goto_bad;
+		settings->metadata_only_set = 1;
+		return 1;
+	}
+
+	if (!strncmp(key, "pause_writeback", strlen("pause_writeback"))) {
+		if (sscanf(val, "%u", &settings->pause_writeback) != 1)
+			goto_bad;
+		settings->pause_writeback_set = 1;
+		return 1;
+	}
+
 	if (settings->new_key) {
 		log_error("Setting %s is not recognized. Only one unrecognized setting is allowed.", key);
 		return 0;

@@ -340,6 +340,21 @@ perform.  If not done beforehand, the splitcache command enables the
 cleaner mode and waits for flushing to complete before detaching the
 writecache.  Adding cleaner=0 to the splitcache command will skip the
 cleaner mode, and any required flushing is performed in device suspend.
+.
+.TP
+max_age = <milliseconds>
+Specifies the maximum age of a block in milliseconds. If a block is stored in
+the cache for too long, it will be written to the underlying device and cleaned up.
+.
+.TP
+metadata_only = 0|1
+Only metadata is promoted to the cache. This option improves performance for
+heavier REQ_META workloads.
+.
+.TP
+pause_writeback = <milliseconds>
+Pause writeback if there was some write I/O redirected to the origin volume in
+the last number of milliseconds.
 
 .SS dm-writecache using metadata profiles
 .

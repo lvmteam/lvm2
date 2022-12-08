@@ -2679,6 +2679,10 @@ static int _writecache_emit_segment_line(struct dm_task *dmt,
 		count += 1;
 	if (seg->writecache_settings.max_age_set)
 		count += 2;
+	if (seg->writecache_settings.metadata_only_set)
+		count += 1;
+	if (seg->writecache_settings.pause_writeback_set)
+		count += 2;
 	if (seg->writecache_settings.new_key)
 		count += 2;
 
@@ -2728,6 +2732,14 @@ static int _writecache_emit_segment_line(struct dm_task *dmt,
 
 	if (seg->writecache_settings.max_age_set) {
 		EMIT_PARAMS(pos, " max_age %u", seg->writecache_settings.max_age);
+	}
+
+	if (seg->writecache_settings.metadata_only_set) {
+		EMIT_PARAMS(pos, " metadata_only");
+	}
+
+	if (seg->writecache_settings.pause_writeback_set) {
+		EMIT_PARAMS(pos, " pause_writeback %u", seg->writecache_settings.pause_writeback);
 	}
 
 	if (seg->writecache_settings.new_key) {
