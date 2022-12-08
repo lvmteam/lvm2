@@ -158,6 +158,8 @@ lvcreate \(em Create a logical volume
 .br
     \fB--vdopool\fP \fILV\fP
 .br
+    \fB--vdosettings\fP \fIString\fP
+.br
  \fB-v\fP|\fB--verbose\fP
 .br
     \fB--version\fP
@@ -536,6 +538,8 @@ Create a LV that returns VDO when used.
 [    \fB--compression\fP \fBy\fP|\fBn\fP ]
 .br
 [    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--vdosettings\fP \fIString\fP ]
 .br
 [ COMMON_OPTIONS ]
 .ad b
@@ -1003,8 +1007,9 @@ See \fBlvmvdo\fP(7) for more information about VDO usage.
 .HP
 \fB--devices\fP \fIPV\fP
 .br
-Devices that the command can use. This option can be repeated
-or accepts a comma separated list of devices. This overrides
+Restricts the devices that are visible and accessible to the command.
+Devices not listed will appear to be missing. This option can be
+repeated, or accepts a comma separated list of devices. This overrides
 the devices file.
 .
 .HP
@@ -1436,6 +1441,17 @@ See \fBlvmvdo\fP(7) for more information about VDO usage.
 .br
 The name of a VDO pool LV.
 See \fBlvmvdo\fP(7) for more information about VDO usage.
+.
+.HP
+\fB--vdosettings\fP \fIString\fP
+.br
+Specifies tunable VDO options for VDO LVs.
+Use the form 'option=value' or 'option1=value option2=value', or
+repeat --vdosettings for each option being set.
+These settings override the default VDO behaviors.
+To remove vdosettings and revert to the default
+VDO behaviors, use --vdosettings 'default'.
+See \fBlvmvdo\fP(7) for more information.
 .
 .HP
 \fB-v\fP|\fB--verbose\fP ...
@@ -1966,6 +1982,8 @@ Create a VDO LV with VDO pool.
 .br
 [    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
 .br
+[    \fB--vdosettings\fP \fIString\fP ]
+.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
@@ -1995,6 +2013,8 @@ Create a VDO LV with VDO pool.
 [    \fB--compression\fP \fBy\fP|\fBn\fP ]
 .br
 [    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--vdosettings\fP \fIString\fP ]
 .br
 [ COMMON_OPTIONS ]
 .ad b

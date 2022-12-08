@@ -127,6 +127,8 @@ lvchange \(em Change the attributes of logical volume(s)
 .br
  \fB-t\fP|\fB--test\fP
 .br
+    \fB--vdosettings\fP \fIString\fP
+.br
  \fB-v\fP|\fB--verbose\fP
 .br
     \fB--version\fP
@@ -202,6 +204,8 @@ required, after which the others are optional.
      \fB--\fP[\fBraid\fP]\fBminrecoveryrate\fP \fISize\fP[k|UNIT]
 .br
      \fB--\fP[\fBraid\fP]\fBmaxrecoveryrate\fP \fISize\fP[k|UNIT]
+.br
+     \fB--vdosettings\fP \fIString\fP
 .br
      \fB--\fP[\fBraid\fP]\fBwritebehind\fP \fINumber\fP
 .br
@@ -609,8 +613,9 @@ See \fBlvm.conf\fP(5) for more information about profiles.
 .HP
 \fB--devices\fP \fIPV\fP
 .br
-Devices that the command can use. This option can be repeated
-or accepts a comma separated list of devices. This overrides
+Restricts the devices that are visible and accessible to the command.
+Devices not listed will appear to be missing. This option can be
+repeated, or accepts a comma separated list of devices. This overrides
 the devices file.
 .
 .HP
@@ -925,6 +930,17 @@ This is implemented by disabling all metadata writing but nevertheless
 returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
+.
+.HP
+\fB--vdosettings\fP \fIString\fP
+.br
+Specifies tunable VDO options for VDO LVs.
+Use the form 'option=value' or 'option1=value option2=value', or
+repeat --vdosettings for each option being set.
+These settings override the default VDO behaviors.
+To remove vdosettings and revert to the default
+VDO behaviors, use --vdosettings 'default'.
+See \fBlvmvdo\fP(7) for more information.
 .
 .HP
 \fB-v\fP|\fB--verbose\fP ...
