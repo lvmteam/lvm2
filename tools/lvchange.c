@@ -665,6 +665,11 @@ static int _lvchange_writecache(struct cmd_context *cmd,
 		seg->writecache_settings.max_age = settings.max_age;
 		set_count++;
 	}
+	if (settings.new_key && settings.new_val) {
+		seg->writecache_settings.new_key = settings.new_key;
+		seg->writecache_settings.new_val = settings.new_val;
+		set_count++;
+	}
 
 	if (!set_count) {
 		/*
