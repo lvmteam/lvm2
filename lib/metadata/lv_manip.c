@@ -7007,9 +7007,10 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	if (lv_is_thin_pool(lv_top)) {
 		if (!update_thin_pool_lv(lv_top, 1))
 			goto_out;
-		if (is_extend)
-			thin_pool_check_overprovisioning(lv_top);
 	}
+	if (lv_is_thin_type(lv_top) && is_extend)
+		thin_pool_check_overprovisioning(lv_top);
+
 	if (lv_main && lv_is_cow_covering_origin(lv_main)) {
 		if (!monitor_dev_for_events(cmd, lv_main, 0, 0))
 			stack;
