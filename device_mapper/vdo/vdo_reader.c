@@ -189,7 +189,7 @@ bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks)
 	*logical_blocks = 0;
 	if ((fh = open(vdo_path, O_RDONLY)) == -1) {
 		log_sys_debug("Failed to open VDO backend %s.", vdo_path);
-		goto err;
+		return false;
 	}
 
 	if (ioctl(fh, BLKGETSIZE64, &size) == -1) {
