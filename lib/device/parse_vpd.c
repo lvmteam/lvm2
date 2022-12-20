@@ -26,7 +26,6 @@
 #include <string.h>
 #include <inttypes.h>
 #include <sys/types.h>
-#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <ctype.h>

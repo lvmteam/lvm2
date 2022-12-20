@@ -22,7 +22,6 @@
 
 #include <dirent.h>
 #include <mntent.h>
-#include <sys/ioctl.h>
 
 static const char *_lvresize_fs_helper_path;
 

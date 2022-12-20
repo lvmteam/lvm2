@@ -17,7 +17,6 @@
 #include "lib/commands/toolcontext.h"
 #include "lib/device/device.h"
 #include "lib/device/online.h"
-#include "lib/metadata/metadata.h"
 
 #include <dirent.h>
 
