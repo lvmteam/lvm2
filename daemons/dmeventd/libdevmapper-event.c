@@ -928,8 +928,8 @@ void dm_event_log(const char *subsys, int level, const char *file,
 			start = now;
 		now -= start;
 		if (_debug_level)
-			fprintf(stream, "[%2d:%02d] %8x:%-6s%s",
-				(int)now / 60, (int)now % 60,
+			fprintf(stream, "[%2ld:%02ld] %8x:%-6s%s",
+				(long)now / 60, (long)now % 60,
 				// TODO: Maybe use shorter ID
 				// ((int)(pthread_self()) >> 6) & 0xffff,
 				(int)pthread_self(), subsys,
