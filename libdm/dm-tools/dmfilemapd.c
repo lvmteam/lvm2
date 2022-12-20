@@ -172,7 +172,7 @@ static int _is_open_in_pid(pid_t pid, const char *path)
 		if (pid_dp->d_name[0] == '.')
 			continue;
 		if ((len = readlinkat(dirfd(pid_d), pid_dp->d_name, link_buf,
-				      sizeof(link_buf))) < 0) {
+				      (sizeof(link_buf) - 1))) < 0) {
 			log_error("readlink failed for " DEFAULT_PROC_DIR
 				  "/%d/fd/.", pid);
 			goto bad;
