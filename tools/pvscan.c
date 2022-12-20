@@ -1441,6 +1441,8 @@ static void _warn_excluded_root(struct cmd_context *cmd, struct device *dev)
 
 	log_warn("WARNING: no autoactivation for %s: system.devices %s current %s.",
 		 dev_name(dev), du->idname, cur_idname ?: "missing device id");
+
+	free((void*) cur_idname);
 }
 
 static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
