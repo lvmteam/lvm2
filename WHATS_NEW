@@ -1,4 +1,4 @@
-Version 2.03.18 - 
+Version 2.03.18 - 22nd December 2022
 ====================================
   Fix issues reported by coverity scan.
   Fix warning for thin pool overprovisioning on lvextend (2.03.17).
