@@ -1,5 +1,9 @@
 Version 2.03.18 - 
 ====================================
+  Fix issues reported by coverity scan.
+  Fix warning for thin pool overprovisioning on lvextend (2.03.17).
+  Add support for writecache metadata_only and pause_writeback settings.
+  Fix missing error messages in lvmdbusd.
 
 Version 2.03.17 - 10th November 2022
 ====================================
