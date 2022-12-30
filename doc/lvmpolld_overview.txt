@@ -63,7 +63,7 @@ classical snapshot merge, thin snapshot merge.
 
 The second store is suited only for pvmove --abort operations in-progress. Both
 stores are independent and identical LVs (pvmove /dev/sda3 and pvmove --abort /dev/sda3)
-can be run concurently from lvmpolld point of view (on lvm2 side the consistency is
+can be run concurrently from lvmpolld point of view (on lvm2 side the consistency is
 guaranteed by lvm2 locking mechanism).
 
 Locking order

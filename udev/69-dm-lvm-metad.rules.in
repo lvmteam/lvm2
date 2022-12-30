@@ -87,7 +87,7 @@ LABEL="systemd_background"
 #
 # In this case, we simply set up the dependency between the device and the pvscan
 # job using SYSTEMD_ALIAS (which sets up a simplified device identifier that
-# allows using "BindsTo" in the sytemd unit file) and SYSTEMD_WANTS (which tells
+# allows using "BindsTo" in the systemd unit file) and SYSTEMD_WANTS (which tells
 # systemd to start the pvscan job once the device is ready).
 # We need to set these variables for both "add" and "change" events, otherwise
 # systemd may loose information about the device/unit dependencies.

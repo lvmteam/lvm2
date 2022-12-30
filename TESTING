@@ -24,7 +24,7 @@ You MUST disable (or mask) any LVM daemons:
 For running cluster tests, we are using singlenode locking. Pass
 `--with-clvmd=singlenode` to configure.
 
-NOTE: This is useful only for testing, and should not be used in produciton
+NOTE: This is useful only for testing, and should not be used in production
 code.
 
 To run D-Bus daemon tests, existing D-Bus session is required.

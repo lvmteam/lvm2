@@ -37,7 +37,7 @@ segment type.  The available RAID types are:
 	"raid6_nr" - RAID6 Rotating parity N with data restart
 	"raid6_nc" - RAID6 Rotating parity N with data continuation
 The exception to 'no shorthand options' will be where the RAID implementations
-can displace traditional tagets.  This is the case with 'mirror' and 'raid1'.
+can displace traditional targets.  This is the case with 'mirror' and 'raid1'.
 In this case, "mirror_segtype_default" - found under the "global" section in
 lvm.conf - can be set to "mirror" or "raid1".  The segment type inferred when
 the '-m' option is used will be taken from this setting.  The default segment
@@ -104,7 +104,7 @@ and 4 devices for RAID 6/10.
 
 lvconvert should work exactly as it does now when dealing with mirrors -
 even if(when) we switch to MD RAID1.  Of course, there are no plans to
-allow the presense of the metadata area to be configurable (e.g. --corelog).
+allow the presence of the metadata area to be configurable (e.g. --corelog).
 It will be simple enough to detect if the LV being up/down-converted is
 new or old-style mirroring.
 
@@ -120,7 +120,7 @@ RAID4 to RAID5 or RAID5 to RAID6.
 Line 02/03/04:
 These are familiar options - all of which would now be available as options
 for change.  (However, it'd be nice if we didn't have regionsize in there.
-It's simple on the kernel side, but is just an extra - often unecessary -
+It's simple on the kernel side, but is just an extra - often unnecessary -
 parameter to many functions in the LVM codebase.)
 
 Line 05:
@@ -375,8 +375,8 @@ the slot.  Even the names of the images will be renamed to properly reflect
 their index in the array.  Unlike the "mirror" segment type, you will never have
 an image named "*_rimage_1" occupying the index position 0.
 
-As with adding images, removing images holds off on commiting LVM metadata
-until all possible changes have been made.  This reduces the likelyhood of bad
+As with adding images, removing images holds off on committing LVM metadata
+until all possible changes have been made.  This reduces the likelihood of bad
 intermediate stages being left due to a failure of operation or machine crash.
 
 RAID1 '--splitmirrors', '--trackchanges', and '--merge' operations

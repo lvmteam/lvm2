@@ -684,7 +684,7 @@ See \fBlvm.conf\fP(5) for more information about profiles.
 .br
 Start (yes) or stop (no) monitoring an LV with dmeventd.
 dmeventd monitors kernel events for an LV, and performs
-automated maintenance for the LV in reponse to specific events.
+automated maintenance for the LV in response to specific events.
 See \fBdmeventd\fP(8) for more information.
 .
 .HP

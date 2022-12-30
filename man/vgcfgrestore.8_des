@@ -1,6 +1,6 @@
 vgcfgrestore restores the metadata of a VG from a text back up file
 produced by \fBvgcfgbackup\fP. This writes VG metadata onto the devices
-specifed in back up file.
+specified in back up file.
 .P
 A back up file can be specified with \fB--file\fP.  If no backup file is
 specified, the most recent one is used. Use \fB--list\fP for a list of

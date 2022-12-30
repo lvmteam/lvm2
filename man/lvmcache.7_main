@@ -73,7 +73,7 @@ using dm-writecache (with cachevol):
 .P
 # lvconvert --type writecache --cachevol fast vg/main
 .P
-For more alteratives see:
+For more alternatives see:
 .br
 dm-cache command shortcut
 .br
@@ -252,7 +252,7 @@ when selecting the writecache cachevol size and the writecache block size.
 .P
 .IP \[bu] 2
 writecache block size 4096: each 100 GiB of writecache cachevol uses
-slighly over 2 GiB of system memory.
+slightly over 2 GiB of system memory.
 .IP \[bu] 2
 writecache block size 512: each 100 GiB of writecache cachevol uses
 a little over 16 GiB of system memory.
@@ -311,11 +311,11 @@ read requests.
 .TP
 autocommit_blocks = <count>
 When the application writes this amount of blocks without issuing the
-FLUSH request, the blocks are automatically commited.
+FLUSH request, the blocks are automatically committed.
 .
 .TP 
 autocommit_time = <milliseconds>
-The data is automatically commited if this time passes and no FLUSH
+The data is automatically committed if this time passes and no FLUSH
 request is received.
 .
 .TP
@@ -463,7 +463,7 @@ cache, in which small reads and writes cause large sections of an LV to be
 stored in the cache. It can also require increasing migration threshold
 which defaults to 2048 sectors (1 MiB). Lvm2 ensures migration threshold is
 at least 8 chunks in size. This may in some cases result in very
-high bandwidth load of transfering data between the cache LV and its
+high bandwidth load of transferring data between the cache LV and its
 cache origin LV. However, choosing a chunk size that is too small
 can result in more overhead trying to manage the numerous chunks that
 become mapped into the cache.  Overhead can include both excessive CPU

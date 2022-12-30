@@ -126,7 +126,7 @@ Usage Examples
   followed by 'vgchange -ay vg2'
   
   
-  Option (ii) - localised admin & configuation
+  Option (ii) - localised admin & configuration
   (i.e. each host holds *locally* which classes of volumes to activate)
     # Add @database tag to vg1's metadata
     vgchange --addtag @database vg1

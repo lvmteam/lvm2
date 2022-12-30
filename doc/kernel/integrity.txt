@@ -120,7 +120,7 @@ journal_crypt:algorithm(:key)	(the key is optional)
 	"salsa20", "ctr(aes)" or "ecb(arc4)").
 
 	The journal contains history of last writes to the block device,
-	an attacker reading the journal could see the last sector nubmers
+	an attacker reading the journal could see the last sector numbers
 	that were written. From the sector numbers, the attacker can infer
 	the size of files that were written. To protect against this
 	situation, you can encrypt the journal.

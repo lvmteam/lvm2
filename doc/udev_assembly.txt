@@ -35,7 +35,7 @@ VGs from PVs as they appear, and at the same time collect information on what is
 already available. A command, pvscan --cache is expected to be used to
 implement udev rules. It is relatively easy to make this command print out a
 list of VGs (and possibly LVs) that have been made available by adding any
-particular device to the set of visible devices. In othe words, udev says "hey,
+particular device to the set of visible devices. In other words, udev says "hey,
 /dev/sdb just appeared", calls pvscan --cache, which talks to lvmetad, which
 says "cool, that makes vg0 complete". Pvscan takes this info and prints it out,
 and the udev rule can then somehow decide whether anything needs to be done
