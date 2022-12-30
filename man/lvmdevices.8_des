@@ -96,7 +96,7 @@ is used for loop devices, the backing file name repored by sysfs.
 the device name is used if no other type applies.
 .P
 
-The default choice for device ID type can be overriden using lvmdevices
+The default choice for device ID type can be overridden using lvmdevices
 --addev --deviceidtype <type>.  If the specified type is available for the
 device it will be used, otherwise the device will be added using the type
 that would otherwise be chosen.

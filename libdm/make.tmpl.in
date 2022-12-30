@@ -262,7 +262,7 @@ endif
 # end of fPIC protection
 endif
 
-# Combination of DEBUG_POOL and DEBUG_ENFORCE_POOL_LOCKING is not suppored.
+# Combination of DEBUG_POOL and DEBUG_ENFORCE_POOL_LOCKING is not supported.
 #DEFS += -DDEBUG_POOL
 # Default pool locking is using the crc checksum. With mprotect memory
 # enforcing compilation faulty memory write could be easily found.

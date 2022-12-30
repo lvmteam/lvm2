@@ -572,7 +572,7 @@ See below for more information on the table format.
 .B --udevcookie \fIcookie
 Use cookie for udev synchronisation.
 Note: Same cookie should be used for same type of operations i.e. creation of
-multiple different devices. It's not adviced to combine different
+multiple different devices. It's not advised to combine different
 operations on the single device.
 .
 .TP

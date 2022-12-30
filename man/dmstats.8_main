@@ -292,7 +292,7 @@ region identifier.
 .
 .TP
 .B --area
-When peforming a list or report, include objects of type area in the
+When performing a list or report, include objects of type area in the
 results.
 .
 .TP
@@ -317,7 +317,7 @@ argument is zero reports will continue to repeat until interrupted.
 .
 .TP
 .B --group
-When peforming a list or report, include objects of type group in the
+When performing a list or report, include objects of type group in the
 results.
 .
 .TP
@@ -389,7 +389,7 @@ region as a comma separated list of latency values. Latency values are
 given in nanoseconds. An optional unit suffix of
 .BR ns , us , ms ,
 or \fBs\fP may be given after each value to specify units of
-nanoseconds, microseconds, miliseconds or seconds respectively.
+nanoseconds, microseconds, milliseconds or seconds respectively.
 .
 .TP
 .B --histogram
@@ -456,7 +456,7 @@ default program ID for dmstats-managed regions is "dmstats".
 .
 .TP
 .B --region
-When peforming a list or report, include objects of type region in the
+When performing a list or report, include objects of type region in the
 results.
 .
 .TP
@@ -530,7 +530,7 @@ Produce additional output.
 .HP
 .CMD_CLEAR
 .br
-Instructs the kernel to clear statistics counters for the speficied
+Instructs the kernel to clear statistics counters for the specified
 regions (with the exception of in-flight IO counters).
 .
 .HP
@@ -556,10 +556,10 @@ configured interval duration) on the final bin.
 .sp
 Latencies are given in nanoseconds. An optional unit suffix of ns, us,
 ms, or s may be given after each value to specify units of nanoseconds,
-microseconds, miliseconds or seconds respectively, so for example, 10ms
+microseconds, milliseconds or seconds respectively, so for example, 10ms
 is equivalent to 10000000. Latency values with a precision of less than
-one milisecond can only be used when precise timestamps are enabled: if
-\fB--precise\fP is not given and values less than one milisecond are
+one millisecond can only be used when precise timestamps are enabled: if
+\fB--precise\fP is not given and values less than one millisecond are
 used it will be enabled automatically.
 .sp
 An optional \fBprogram_id\fP or \fBuser_data\fP string may be associated
@@ -627,7 +627,7 @@ group.
 The list of regions to be grouped is specified with \fB--regions\fP
 and an optional alias may be assigned with \fB--alias\fP. The set of
 regions is given as a comma-separated list of region identifiers. A
-continuous range of identifers spanning from \fBR1\fP to \fBR2\fP may
+continuous range of identifiers spanning from \fBR1\fP to \fBR2\fP may
 be expressed as '\fBR1\fP-\fBR2\fP'.
 .sp
 Regions that have a histogram configured can be grouped: in this case
@@ -711,7 +711,7 @@ that were previously created with \fB--filemap\fP, either directly,
 or by starting the monitoring daemon, \fBdmfilemapd\fP.
 .sp
 This will add and remove regions to reflect changes in the allocated
-extents of the file on-disk, since the time that it was crated or last
+extents of the file on-disk, since the time that it was created or last
 updated.
 .sp
 Use of this command is not normally needed since the \fBdmfilemapd\fP
@@ -1090,13 +1090,13 @@ bounds.
 .B hist_bounds
 A list of the histogram boundary values for the current statistics area
 in order of ascending latency value.  The values are expressed in whole
-units of seconds, miliseconds, microseconds or nanoseconds with a suffix
+units of seconds, milliseconds, microseconds or nanoseconds with a suffix
 indicating the unit.
 .TP
 .B hist_ranges
 A list of the histogram bin ranges for the current statistics area in
 order of ascending latency value.  The values are expressed as
-"LOWER-UPPER" in whole units of seconds, miliseconds, microseconds or
+"LOWER-UPPER" in whole units of seconds, milliseconds, microseconds or
 nanoseconds with a suffix indicating the unit.
 .TP
 .B hist_bins

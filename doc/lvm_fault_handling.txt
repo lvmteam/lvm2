@@ -87,7 +87,7 @@ are as follows:
   /etc/lvm/lvm.conf.  Once this operation is complete, the logical volumes
   will be consistent.  However, the volume group will still be inconsistent -
   due to the refernced-but-missing device/PV - and operations will still be
-  restricted to the aformentioned actions until either the device is
+  restricted to the aforementioned actions until either the device is
   restored or 'vgreduce --removemissing' is run.
 
 Device Revival (transient failures):
@@ -135,9 +135,9 @@ If a mirror is not 'in-sync', a read failure will produce an I/O error.
 This error will propagate all the way up to the applications above the
 logical volume (e.g. the file system).  No automatic intervention will
 take place in this case either.  It is up to the user to decide what
-can be done/salvaged in this senario.  If the user is confident that the
+can be done/salvaged in this scenario.  If the user is confident that the
 images of the mirror are the same (or they are willing to simply attempt
-to retreive whatever data they can), 'lvconvert' can be used to eliminate
+to retrieve whatever data they can), 'lvconvert' can be used to eliminate
 the failed image and proceed.
 
 Mirror resynchronization errors:
@@ -191,11 +191,11 @@ command are set in the LVM configuration file.  They are:
   3-way mirror fails, the mirror will be converted to a 2-way mirror.
   The "allocate" policy takes the further action of trying to replace
   the failed image using space that is available in the volume group.
-  Replacing a failed mirror image will incure the cost of
+  Replacing a failed mirror image will incur the cost of
   resynchronizing - degrading the performance of the mirror.  The
   default policy for handling an image failure is "remove".  This
   allows the mirror to still function, but gives the administrator the
-  choice of when to incure the extra performance costs of replacing
+  choice of when to incur the extra performance costs of replacing
   the failed image.
 
 RAID logical volume device failures are handled differently from the "mirror"

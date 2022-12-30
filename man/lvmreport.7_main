@@ -1197,7 +1197,7 @@ But let's still use the original "," character for list_item_separator
 for subsequent examples.
 .P
 Format for any of time values displayed in reports can be configured with
-\fBreport/time_format\fP configuretion setting. By default complete date
+\fBreport/time_format\fP configuration setting. By default complete date
 and time is displayed, including timezone.
 .P
 .nf
@@ -1302,11 +1302,11 @@ binary_values_as_numeric=1
 .SS Changing output format
 .
 LVM can output reports in different formats - use \fBreport/output_format\fP
-configuration setting (or \fB--reportformat\fP command line option) to swith
+configuration setting (or \fB--reportformat\fP command line option) to switch
 the report output format.
 
 .P
-Currently, LVM supports these outpout formats:
+Currently, LVM supports these output formats:
 .RS
 - \fB"basic"\fP (all the examples we used above used this format),
 .br

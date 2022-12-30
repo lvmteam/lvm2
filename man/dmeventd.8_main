@@ -103,7 +103,7 @@ when it's been filled above configured threshold
 \fBactivation/thin_pool_autoextend_threshold\fP.
 If the command fails, dmeventd thin plugin will keep
 retrying execution with increasing time delay between
-retries upto 42 minutes.
+retries up to 42 minutes.
 User may also configure external command to support more advanced
 maintenance operations of a thin pool.
 Such external command can e.g. remove some unneeded snapshots,
@@ -133,7 +133,7 @@ when it's been filled above the configured threshold
 \fBactivation/vdo_pool_autoextend_threshold\fP.
 If the command fails, dmeventd vdo plugin will keep
 retrying execution with increasing time delay between
-retries upto 42 minutes.
+retries up to 42 minutes.
 User may also configure external command to support more advanced
 maintenance operations of a VDO pool.
 Such external command can e.g. remove some unneeded space
@@ -166,7 +166,7 @@ actual usage of VDO pool data volume. Variable is not set when error event
 is processed.
 .TP
 .B LVM_RUN_BY_DMEVENTD
-Variable is set by thin and vdo plugin to prohibit recursive interation
+Variable is set by thin and vdo plugin to prohibit recursive interaction
 with dmeventd by any executed lvm2 command from
 a thin_command, vdo_command environment.
 .

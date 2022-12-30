@@ -23,7 +23,7 @@ The
 type is equivalent to the
 .B striped
 type when one stripe exists.
-In that case, the types can sometimes be used interchangably.
+In that case, the types can sometimes be used interchangeably.
 .P
 In most cases, the
 .B mirror
