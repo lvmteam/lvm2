@@ -224,7 +224,7 @@ fsreduce() {
 cryptresize() {
 	NEWSIZESECTORS=$(($NEWSIZEBYTES/512))
 	logmsg "cryptsetup resize ${NEWSIZESECTORS} sectors ${DEVPATH}"
-	cryptresize resize --size "$NEWSIZESECTORS" "$DEVPATH"
+	cryptsetup resize --size "$NEWSIZESECTORS" "$DEVPATH"
 	if [ $? -eq 0 ]; then
 		logmsg "cryptsetup done"
 	else
