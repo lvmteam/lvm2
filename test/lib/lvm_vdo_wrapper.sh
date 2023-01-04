@@ -6,7 +6,7 @@
 
 set -euE -o pipefail
 
-# tool for formating 'old' VDO metadata format
+# tool for formatting 'old' VDO metadata format
 LVM_VDO_FORMAT=${LVM_VDO_FORMAT-"oldvdoformat"}
 # tool for shifting VDO metadata header by 2MiB
 LVM_VDO_PREPARE=${LVM_VDO_PREPARE-"oldvdoprepareforlvm"}

@@ -196,7 +196,7 @@ Version 2.03.10 - 09th August 2020
 
 Version 2.03.09 - 26th March 2020
 =================================
-  Fix formating of vdopool (vdo_slab_size_mb was smaller by 2 bits).
+  Fix formatting of vdopool (vdo_slab_size_mb was smaller by 2 bits).
   Fix showing of a dm kernel error when uncaching a volume with cachevol.
 
 Version 2.03.08 - 11th February 2020
