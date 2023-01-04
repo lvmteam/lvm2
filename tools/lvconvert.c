@@ -5464,7 +5464,7 @@ static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 
 	vdo_pool_zero = arg_int_value(cmd, zero_ARG, 1);
 
-	log_warn("WARNING: Converting logical volume %s to VDO pool volume %s formating.",
+	log_warn("WARNING: Converting logical volume %s to VDO pool volume %s formatting.",
 		 display_lvname(lv), vdo_pool_zero ? "with" : "WITHOUT");
 
 	if (vdo_pool_zero)

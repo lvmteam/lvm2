@@ -258,7 +258,7 @@ static int _format_vdo_pool_data_lv(struct logical_volume *data_lv,
 	};
 
 	if (!(dpath = lv_path_dup(data_lv->vg->cmd->mem, data_lv))) {
-		log_error("Failed to build device path for VDO formating of data volume %s.",
+		log_error("Failed to build device path for VDO formatting of data volume %s.",
 			  display_lvname(data_lv));
 		return 0;
 	}
@@ -425,13 +425,13 @@ struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 	/* Format data LV as VDO volume */
 	if (format) {
 		if (test_mode()) {
-			log_verbose("Test mode: Skipping formating of VDO pool volume.");
+			log_verbose("Test mode: Skipping formatting of VDO pool volume.");
 		} else if (!_format_vdo_pool_data_lv(data_lv, vtp, &vdo_logical_size)) {
 			log_error("Cannot format VDO pool volume %s.", display_lvname(data_lv));
 			return NULL;
 		}
 	} else {
-		log_verbose("Skiping VDO formating %s.", display_lvname(data_lv));
+		log_verbose("Skiping VDO formatting %s.", display_lvname(data_lv));
 		/* TODO: parse existing VDO data and retrieve vdo_logical_size */
 		if (!*virtual_extents)
 			vdo_logical_size = data_lv->size;
