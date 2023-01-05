@@ -14,7 +14,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-aux prepare_devs 2
+aux prepare_devs 3
 
 vgcreate $SHARED --metadatasize 128k $vg1 "$dev1"
 lvcreate -l100%FREE -n $lv1 $vg1
@@ -84,6 +84,25 @@ lvchange -ay $vg1/$lv1 $vg2/$lv1
 vgchange -an $vg1 $vg2
 
 vgremove -ff $vg1 $vg2
+
+pvremove "$dev1"
+pvremove "$dev2"
+
+# Test vgimportclone with incomplete list of devs, and with nomda PV.
+vgcreate $SHARED --vgmetadatacopies 2 $vg1 "$dev1" "$dev2" "$dev3"
+lvcreate -l1 -an $vg1
+not vgimportclone -n newvgname "$dev1"
+not vgimportclone -n newvgname "$dev2"
+not vgimportclone -n newvgname "$dev3"
+not vgimportclone -n newvgname "$dev1" "$dev2"
+not vgimportclone -n newvgname "$dev1" "$dev3"
+not vgimportclone -n newvgname "$dev2" "$dev3"
+vgimportclone -n ${vg1}new "$dev1" "$dev2" "$dev3"
+lvs ${vg1}new
+vgremove -y ${vg1}new
+pvremove "$dev1"
+pvremove "$dev2"
+pvremove "$dev3"
 
 # Verify that if we provide the -n|--basevgname,
 # the number suffix is not added unnecessarily.
