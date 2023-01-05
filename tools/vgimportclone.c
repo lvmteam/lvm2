@@ -203,7 +203,7 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 	struct device *dev;
 	struct device_list *devl;
 	struct dm_list other_devs;
-	struct volume_group *vg, *error_vg;
+	struct volume_group *vg, *error_vg = NULL;
 	const char *vgname;
 	char base_vgname[NAME_LEN] = { 0 };
 	char tmp_vgname[NAME_LEN] = { 0 };
@@ -322,7 +322,7 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 			goto out;
 		}
 
-		if (!(vgname = lvmcache_vgname_from_info(info))) {
+		if (!(vgname = lvmcache_vgname_from_info(info)) || is_orphan_vg(vgname)) {
 			/* The PV may not have metadata, this will be resolved in
 			   the process_each_vg/vg_read at the end. */
 			continue;
@@ -503,6 +503,8 @@ retry_name:
 	}
 	ret = ECMD_PROCESSED;
 out:
+	if (error_vg)
+		release_vg(error_vg);
 	unlock_devices_file(cmd);
 	return ret;
 }
