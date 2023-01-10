@@ -23,6 +23,7 @@
 #include "lib/metadata/metadata.h"
 #include "lib/metadata/lv_alloc.h"
 #include "lib/metadata/segtype.h"
+#include "lib/mm/memlock.h"
 #include "base/memory/zalloc.h"
 
 static const char _vdo_module[] = MODULE_NAME_VDO;
@@ -374,7 +375,8 @@ static int _vdo_pool_add_target_line(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (!check_vdo_constrains(cmd, seg->lv->size, seg_lv(seg, 0)->size, &seg->vdo_params))
+	if (!critical_section() &&
+	    !check_vdo_constrains(cmd, seg->lv->size, get_vdo_pool_virtual_size(seg), &seg->vdo_params))
 		return_0;
 
 	if (!(vdo_pool_name = dm_build_dm_name(mem, seg->lv->vg->name, seg->lv->name, lv_layer(seg->lv))))
