@@ -3855,21 +3855,20 @@ static int _lvactiveexclusively_disp(struct dm_report *rh, struct dm_pool *mem,
 				     const void *data, void *private)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	int active_exclusively, _sh = 0;
+	int ex = 0, sh = 0;
 
 	if (!activation())
 		return _binary_undef_disp(rh, mem, field, private);
 
-	active_exclusively = lv_is_active(lv);
+	ex = lv_is_active(lv);
 
-	if (active_exclusively && vg_is_shared(lv->vg)) {
-		active_exclusively = 0;
-		if (!lockd_query_lv(lv->vg, lv->name, lv_uuid_dup(NULL, lv),
-				    lv->lock_args, &active_exclusively, &_sh))
+	if (ex && vg_is_shared(lv->vg)) {
+		ex = 0;
+		if (!lockd_query_lv(lv->vg->cmd, (struct logical_volume *)lv, &ex, &sh))
 			return _binary_undef_disp(rh, mem, field, private);
 	}
 
-	return _binary_disp(rh, mem, field, active_exclusively, GET_FIRST_RESERVED_NAME(lv_active_exclusively_y), private);
+	return _binary_disp(rh, mem, field, ex, GET_FIRST_RESERVED_NAME(lv_active_exclusively_y), private);
 }
 
 static int _lvmergefailed_disp(struct dm_report *rh, struct dm_pool *mem,

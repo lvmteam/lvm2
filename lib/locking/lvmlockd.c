@@ -2298,27 +2298,20 @@ int lockd_vg_update(struct volume_group *vg)
 	return ret;
 }
 
-int lockd_query_lv(struct volume_group *vg, const char *lv_name, char *lv_uuid,
-		   const char *lock_args, int *ex, int *sh)
+static int _query_lv(struct cmd_context *cmd, struct volume_group *vg,
+		     const char *lv_name, char *lv_uuid, const char *lock_args,
+		     int *ex, int *sh)
 {
 	daemon_reply reply;
-	const char *opts = NULL;
 	const char *reply_str;
 	int result;
 	int ret;
-
-	if (!vg_is_shared(vg))
-		return 1;
-	if (!_use_lvmlockd)
-		return 0;
-	if (!_lvmlockd_connected)
-		return 0;
 
 	log_debug("lockd query LV %s/%s", vg->name, lv_name);
 
 	reply = _lockd_send("query_lock_lv",
 				"pid = " FMTd64, (int64_t) getpid(),
-				"opts = %s", opts ?: "none",
+				"opts = %s", "none",
 				"vg_name = %s", vg->name,
 				"lv_name = %s", lv_name,
 				"lv_uuid = %s", lv_uuid,
@@ -2352,6 +2345,37 @@ int lockd_query_lv(struct volume_group *vg, const char *lv_name, char *lv_uuid,
 	daemon_reply_destroy(reply);
 
 	return ret;
+}
+
+int lockd_query_lv(struct cmd_context *cmd, struct logical_volume *lv, int *ex, int *sh)
+{
+	struct volume_group *vg = lv->vg;
+	char lv_uuid[64] __attribute__((aligned(8)));
+
+	if (cmd->lockd_lv_disable)
+		return 1;
+	if (!vg_is_shared(vg))
+		return 1;
+	if (!_use_lvmlockd)
+		return 0;
+	if (!_lvmlockd_connected)
+		return 0;
+
+	/* types that cannot be active concurrently will always be ex. */
+	if (lv_is_external_origin(lv) ||
+	    lv_is_thin_type(lv) ||
+	    lv_is_mirror_type(lv) ||
+	    lv_is_raid_type(lv) ||
+	    lv_is_vdo_type(lv) ||
+	    lv_is_cache_type(lv)) {
+		*ex = 1;
+		return 1;
+	}
+
+	if (!id_write_format(&lv->lvid.id[1], lv_uuid, sizeof(lv_uuid)))
+		return_0;
+
+	return _query_lv(cmd, vg, lv->name, lv_uuid, lv->lock_args, ex, sh);
 }
 
 /*
@@ -2392,7 +2416,7 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 		    !strcmp(cmd->name, "lvchange") || !strcmp(cmd->name, "lvconvert")) {
 			int ex = 0, sh = 0;
 
-			if (!lockd_query_lv(vg, lv_name, lv_uuid, lock_args, &ex, &sh))
+			if (!_query_lv(cmd, vg, lv_name, lv_uuid, lock_args, &ex, &sh))
 				return 1;
 			if (sh) {
 				log_warn("WARNING: shared LV may require refresh on other hosts where it is active.");

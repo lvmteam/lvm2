@@ -103,8 +103,7 @@ int lockd_lv_uses_lock(struct logical_volume *lv);
 
 int lockd_lv_refresh(struct cmd_context *cmd, struct lvresize_params *lp);
 
-int lockd_query_lv(struct volume_group *vg, const char *lv_name, char *lv_uuid,
-		   const char *lock_args, int *ex, int *sh);
+int lockd_query_lv(struct cmd_context *cmd, struct logical_volume *lv, int *ex, int *sh);
 
 #else /* LVMLOCKD_SUPPORT */
 
@@ -261,8 +260,7 @@ static inline int lockd_lv_refresh(struct cmd_context *cmd, struct lvresize_para
 	return 0;
 }
 
-static inline int lockd_query_lv(struct volume_group *vg, const char *lv_name,
-		  char *lv_uuid, const char *lock_args, int *ex, int *sh)
+static inline int lockd_query_lv(struct cmd_context *cmd, struct logical_volume *lv, int *ex, int *sh);
 {
 	return 0;
 }
