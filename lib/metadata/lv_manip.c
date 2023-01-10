@@ -5197,7 +5197,8 @@ static int _lvresize_adjust_size(struct volume_group *vg,
 					display_size(vg->cmd, size));
 	}
 
-	*extents = size / extent_size;
+	if (!(*extents = extents_from_size(vg->cmd, size, extent_size)))
+		return_0;
 
 	return 1;
 }
