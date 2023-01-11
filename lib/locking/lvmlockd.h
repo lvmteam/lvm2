@@ -260,7 +260,7 @@ static inline int lockd_lv_refresh(struct cmd_context *cmd, struct lvresize_para
 	return 0;
 }
 
-static inline int lockd_query_lv(struct cmd_context *cmd, struct logical_volume *lv, int *ex, int *sh);
+static inline int lockd_query_lv(struct cmd_context *cmd, struct logical_volume *lv, int *ex, int *sh)
 {
 	return 0;
 }
