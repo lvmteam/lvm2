@@ -182,9 +182,10 @@ ifndef MAKEFLAGS
 MAKEFLAGS = @JOBS@
 endif
 
-ifneq (1, $(firstword $(V)))
-MAKEFLAGS += --no-print-directory
-endif
+# Hiding dir entering makes hard for editors to look for files
+#ifneq (1, $(firstword $(V)))
+#MAKEFLAGS += --no-print-directory
+#endif
 
 # Handle installation of files
 ifeq ("@WRITE_INSTALL@", "yes")
