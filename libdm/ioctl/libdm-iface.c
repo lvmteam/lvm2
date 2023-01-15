@@ -138,7 +138,6 @@ static char *_align(char *ptr, unsigned int a)
 	return (char *) (((unsigned long) ptr + agn) & ~agn);
 }
 
-#ifdef DM_IOCTLS
 static unsigned _kernel_major = 0;
 static unsigned _kernel_minor = 0;
 static unsigned _kernel_release = 0;
@@ -181,6 +180,9 @@ int get_uname_version(unsigned *major, unsigned *minor, unsigned *release)
 
 	return 1;
 }
+
+#ifdef DM_IOCTLS
+
 /*
  * Set number to NULL to populate _dm_bitset - otherwise first
  * match is returned.
