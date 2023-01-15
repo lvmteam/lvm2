@@ -83,6 +83,9 @@ int dev_manager_thin_pool_status(struct dev_manager *dm,
 int dev_manager_vdo_pool_status(struct dev_manager *dm,
 				const struct logical_volume *lv, int flush,
 				struct lv_status_vdo **status, int *exists);
+int dev_manager_vdo_pool_size_config(struct dev_manager *dm,
+				     const struct logical_volume *lv,
+				     struct vdo_pool_size_config *cfg);
 int dev_manager_suspend(struct dev_manager *dm, const struct logical_volume *lv,
 			struct lv_activate_opts *laopts, int lockfs, int flush_required);
 int dev_manager_activate(struct dev_manager *dm, const struct logical_volume *lv,
