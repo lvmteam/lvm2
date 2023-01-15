@@ -24,6 +24,7 @@
 #include "lib/misc/lvm-exec.h"
 
 #include <sys/sysinfo.h> // sysinfo
+#include <stdarg.h>
 
 const char *get_vdo_compression_state_name(enum dm_vdo_compression_state state)
 {
@@ -647,39 +648,76 @@ static uint64_t _round_sectors_to_tib(uint64_t s)
 	return  (s + ((UINT64_C(1) << (40 - SECTOR_SHIFT)) - 1)) >> (40 - SECTOR_SHIFT);
 }
 
-int check_vdo_constrains(struct cmd_context *cmd, uint64_t physical_size,
-			 uint64_t virtual_size, struct dm_vdo_target_params *vtp)
+__attribute__ ((format(printf, 3, 4)))
+static int _vdo_snprintf(char **buf, size_t *bufsize, const char *format, ...)
 {
-	uint64_t req_mb, total_mb, available_mb;
-	uint64_t phy_mb = _round_sectors_to_tib(UINT64_C(268) * physical_size); // 268 MiB per 1 TiB of physical size
-	uint64_t virt_mb = _round_1024(UINT64_C(1638) * _round_sectors_to_tib(virtual_size)); // 1.6 MiB per 1 TiB
-	uint64_t cache_mb = _round_1024(UINT64_C(1177) * vtp->block_map_cache_size_mb); // 1.15 MiB per 1 MiB cache size
-	char msg[512];
+	int n;
+	va_list ap;
 
-	if (cache_mb < 150)
+	va_start(ap, format);
+	n = vsnprintf(*buf, *bufsize, format, ap);
+	va_end(ap);
+
+	if (n < 0 || ((unsigned) n >= *bufsize))
+		return -1;
+
+	*buf += n;
+	*bufsize -= n;
+
+	return n;
+}
+
+int check_vdo_constrains(struct cmd_context *cmd, const struct vdo_pool_size_config *cfg)
+{
+	static const char *_split[] = { "", " and", ",", "," };
+	uint64_t req_mb, total_mb, available_mb;
+	uint64_t phy_mb = _round_sectors_to_tib(UINT64_C(268) * cfg->physical_size); // 268 MiB per 1 TiB of physical size
+	uint64_t virt_mb = _round_1024(UINT64_C(1638) * _round_sectors_to_tib(cfg->virtual_size)); // 1.6 MiB per 1 TiB
+	uint64_t cache_mb = _round_1024(UINT64_C(1177) * cfg->block_map_cache_size_mb); // 1.15 MiB per 1 MiB cache size
+	char msg[512];
+	size_t mlen = sizeof(msg);
+	char *pmsg = msg;
+	int cnt, has_cnt;
+
+	if (cfg->block_map_cache_size_mb && (cache_mb < 150))
 		cache_mb = 150; // always at least 150 MiB for block map
 
 	// total required memory for VDO target
-	req_mb = 38 + vtp->index_memory_size_mb + virt_mb + phy_mb + cache_mb;
+	req_mb = 38 + cfg->index_memory_size_mb + virt_mb + phy_mb + cache_mb;
 
 	_get_memory_info(&total_mb, &available_mb);
 
-	(void)snprintf(msg, sizeof(msg), "VDO configuration needs %s RAM for physical volume size %s, "
-		       "%s RAM for virtual volume size %s, %s RAM for block map cache size %s and "
-		       "%s RAM for index memory.",
-		       display_size(cmd, phy_mb << (20 - SECTOR_SHIFT)),
-		       display_size(cmd, physical_size),
-		       display_size(cmd, virt_mb << (20 - SECTOR_SHIFT)),
-		       display_size(cmd, virtual_size),
-		       display_size(cmd, cache_mb << (20 - SECTOR_SHIFT)),
-		       display_size(cmd, ((uint64_t)vtp->block_map_cache_size_mb) << (20 - SECTOR_SHIFT)),
-		       display_size(cmd, ((uint64_t)vtp->index_memory_size_mb) << (20 - SECTOR_SHIFT)));
+	has_cnt = cnt = (phy_mb ? 1 : 0) +
+			 (virt_mb ? 1 : 0) +
+			 (cfg->block_map_cache_size_mb ? 1 : 0) +
+			 (cfg->index_memory_size_mb ? 1 : 0);
+
+	if (phy_mb)
+		(void)_vdo_snprintf(&pmsg, &mlen, " %s RAM for physical volume size %s%s",
+				    display_size(cmd, phy_mb << (20 - SECTOR_SHIFT)),
+				    display_size(cmd, cfg->physical_size), _split[--cnt]);
+
+	if (virt_mb)
+		(void)_vdo_snprintf(&pmsg, &mlen, " %s RAM for virtual volume size %s%s",
+				    display_size(cmd, virt_mb << (20 - SECTOR_SHIFT)),
+				    display_size(cmd, cfg->virtual_size), _split[--cnt]);
+
+	if (cfg->block_map_cache_size_mb)
+		(void)_vdo_snprintf(&pmsg, &mlen, " %s RAM for block map cache size %s%s",
+				    display_size(cmd, cache_mb << (20 - SECTOR_SHIFT)),
+				    display_size(cmd, ((uint64_t)cfg->block_map_cache_size_mb) << (20 - SECTOR_SHIFT)),
+				    _split[--cnt]);
+
+	if (cfg->index_memory_size_mb)
+		(void)_vdo_snprintf(&pmsg, &mlen, " %s RAM for index memory",
+				    display_size(cmd, ((uint64_t)cfg->index_memory_size_mb) << (20 - SECTOR_SHIFT)));
 
 	if (req_mb > available_mb) {
 		log_error("Not enough free memory for VDO target. %s RAM is required, but only %s RAM is available.",
 			  display_size(cmd, req_mb << (20 - SECTOR_SHIFT)),
 			  display_size(cmd, available_mb << (20 - SECTOR_SHIFT)));
-		log_print_unless_silent("%s", msg);
+		if (has_cnt)
+			log_print_unless_silent("VDO configuration needs%s.", msg);
 		return 0;
 	}
 
@@ -687,7 +725,8 @@ int check_vdo_constrains(struct cmd_context *cmd, uint64_t physical_size,
 		  display_size(cmd, req_mb << (20 - SECTOR_SHIFT)),
 		  display_size(cmd, available_mb << (20 - SECTOR_SHIFT)));
 
-	log_verbose("%s", msg);
+	if (has_cnt)
+		log_verbose("VDO configuration needs%s.", msg);
 
 	return 1;
 }

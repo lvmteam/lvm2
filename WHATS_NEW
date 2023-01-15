@@ -1,5 +1,6 @@
 version 2.03.19 - 
 ====================================
+  Fix and improve runtime memory size detection for VDO volumes.
 
 version 2.03.18 - 22nd december 2022
 ====================================
