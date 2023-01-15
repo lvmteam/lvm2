@@ -322,6 +322,11 @@ int lv_vdo_pool_percent(const struct logical_volume *lv, dm_percent_t *percent)
 {
 	return 0;
 }
+int lv_vdo_pool_size_config(const struct logical_volume *lv,
+			    struct vdo_pool_size_config *cfg)
+{
+	return 0;
+}
 int lvs_in_vg_activated(const struct volume_group *vg)
 {
 	return 0;
@@ -1344,6 +1349,32 @@ int lv_vdo_pool_percent(const struct logical_volume *lv, dm_percent_t *percent)
 	dm_pool_destroy(vdo_status->mem);
 
 	return 1;
+}
+
+/*
+ * lv_vdo_pool_size_config obtains size configuration from active VDO table line
+ *
+ * If the 'params' string has been already retrieved, use it.
+ * If the mempool already exists, use it.
+ *
+ */
+int lv_vdo_pool_size_config(const struct logical_volume *lv,
+			    struct vdo_pool_size_config *cfg)
+{
+	struct dev_manager *dm;
+	int r;
+
+	if (!lv_info(lv->vg->cmd, lv, 1, NULL, 0, 0))
+		return 1;  /* Inactive VDO pool -> no runtime config */
+
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, !lv_is_pvmove(lv))))
+		return_0;
+
+	r = dev_manager_vdo_pool_size_config(dm, lv, cfg);
+
+	dev_manager_destroy(dm);
+
+	return r;
 }
 
 static int _lv_active(struct cmd_context *cmd, const struct logical_volume *lv)

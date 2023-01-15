@@ -1901,6 +1901,71 @@ out:
 	return r;
 }
 
+int dev_manager_vdo_pool_size_config(struct dev_manager *dm,
+				     const struct logical_volume *lv,
+				     struct vdo_pool_size_config *cfg)
+{
+	const char *dlid;
+	struct dm_info info;
+	uint64_t start, length;
+	struct dm_task *dmt = NULL;
+	char *type = NULL;
+	char *params = NULL;
+	int r = 0;
+	unsigned version = 0;
+
+	memset(cfg, 0, sizeof(*cfg));
+
+	if (!(dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
+		return_0;
+
+	if (!(dmt = _setup_task_run(DM_DEVICE_TABLE, &info, NULL, dlid, 0, 0, 0, 0, 0, 0)))
+		return_0;
+
+	if (!info.exists)
+		goto inactive; /* VDO device is not active, should not happen here... */
+
+	log_debug_activation("Checking VDO pool table line for LV %s.",
+			     display_lvname(lv));
+
+	if (dm_get_next_target(dmt, NULL, &start, &length, &type, &params)) {
+		log_error("More then one table line found for %s.",
+			  display_lvname(lv));
+		goto out;
+	}
+
+	if (!type || strcmp(type, TARGET_NAME_VDO)) {
+		log_error("Expected %s segment type but got %s instead.",
+			  TARGET_NAME_VDO, type ? type : "NULL");
+		goto out;
+	}
+
+	if (sscanf(params, "V%u %*s " FMTu64 " %*u " FMTu32,
+		   &version, &cfg->physical_size, &cfg->block_map_cache_size_mb) != 3) {
+		log_error("Failed to parse VDO parameters %s for LV %s.",
+			  params, display_lvname(lv));
+		goto out;
+	}
+
+	switch (version) {
+	case 2: break;
+	case 4: break;
+	default: log_warn("WARNING: Unknown VDO table line version %u.", version);
+	}
+
+	cfg->virtual_size = length;
+	cfg->physical_size *= 8; // From 4K unit to 512B
+	cfg->block_map_cache_size_mb /= 256; // From 4K unit to MiB
+	cfg->index_memory_size_mb = first_seg(lv)->vdo_params.index_memory_size_mb; // Preserved
+
+inactive:
+	r = 1;
+out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
 
 /*************************/
 /*  NEW CODE STARTS HERE */
