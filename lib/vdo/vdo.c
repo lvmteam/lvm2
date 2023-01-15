@@ -355,6 +355,27 @@ static int _vdo_pool_target_status_compatible(const char *type)
 	return (strcmp(type, TARGET_NAME_VDO) == 0);
 }
 
+static int _vdo_check(struct cmd_context *cmd, const struct lv_segment *seg)
+{
+
+	struct vdo_pool_size_config cfg = { 0 };
+
+	if (!lv_vdo_pool_size_config(seg->lv, &cfg))
+		return_0;
+
+	/* Check if we are just adding more size to the already running vdo pool */
+	if (seg->lv->size >= cfg.physical_size)
+		cfg.physical_size = seg->lv->size - cfg.physical_size;
+	if (get_vdo_pool_virtual_size(seg) >= cfg.virtual_size)
+		cfg.virtual_size = get_vdo_pool_virtual_size(seg) - cfg.virtual_size;
+	if (seg->vdo_params.block_map_cache_size_mb >= cfg.block_map_cache_size_mb)
+		cfg.block_map_cache_size_mb = seg->vdo_params.block_map_cache_size_mb - cfg.block_map_cache_size_mb;
+	if (seg->vdo_params.index_memory_size_mb >= cfg.index_memory_size_mb)
+		cfg.index_memory_size_mb = seg->vdo_params.index_memory_size_mb - cfg.index_memory_size_mb;
+
+	return check_vdo_constrains(cmd, &cfg);
+}
+
 static int _vdo_pool_add_target_line(struct dev_manager *dm,
 				     struct dm_pool *mem,
 				     struct cmd_context *cmd,
@@ -375,8 +396,7 @@ static int _vdo_pool_add_target_line(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (!critical_section() &&
-	    !check_vdo_constrains(cmd, seg->lv->size, get_vdo_pool_virtual_size(seg), &seg->vdo_params))
+	if (!critical_section() && !_vdo_check(cmd, seg))
 		return_0;
 
 	if (!(vdo_pool_name = dm_build_dm_name(mem, seg->lv->vg->name, seg->lv->name, lv_layer(seg->lv))))

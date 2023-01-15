@@ -1761,8 +1761,12 @@ static int _lvcreate_single(struct cmd_context *cmd, const char *vg_name,
 	if (!_update_extents_params(vg, lp, lcp))
 		goto_out;
 
-	if (seg_is_vdo(lp) && !check_vdo_constrains(cmd, (uint64_t)lp->extents * vg->extent_size,
-						    lcp->virtual_size, &lp->vdo_params))
+	if (seg_is_vdo(lp) &&
+	    !check_vdo_constrains(cmd, &(struct vdo_pool_size_config) {
+				  .physical_size = (uint64_t)lp->extents * vg->extent_size,
+				  .virtual_size = lcp->virtual_size,
+				  .block_map_cache_size_mb = lp->vdo_params.block_map_cache_size_mb,
+				  .index_memory_size_mb = lp->vdo_params.index_memory_size_mb }))
 		goto_out;
 
 	if (seg_is_thin(lp) && !_validate_internal_thin_processing(lp))
