@@ -32,4 +32,19 @@ check lv_field $vg/${lv2}_vdata size "6.00g"
 lvresize -L6G $vg/$lv1
 check lv_field $vg/$lv1 size "6.00g"
 
+# Check too large size
+not lvresize -L4P $vg/$lv1 2>err
+grep "Volume too large" err
+
+# Can't resize inactive VDO
+lvchange -an $vg
+not lvresize -L10G $vg/$lv1  2>err
+grep "Cannot resize inactive" err
+
+not lvresize -L10G $vg/$lv2 2>err
+grep "Cannot resize inactive" err
+
+not lvresize -L10G $vg/${lv2}_vdata 2>err
+grep "Cannot resize inactive" err
+
 vgremove -ff $vg
