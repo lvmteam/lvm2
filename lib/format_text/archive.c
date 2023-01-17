@@ -219,7 +219,7 @@ static void _remove_expired(const char *dir, const char *vgname,
 
 	sum /= 1024 * 1024;
 	if (sum > 128 || archives_size > 8192)
-		log_print_unless_silent("Consider pruning %s VG archive with more then %u MiB in %u files (check archiving is needed in lvm.conf).",
+		log_print_unless_silent("Consider pruning %s VG archive with more then %u MiB in %u files (see archiving settings in lvm.conf).",
 					vgname, (unsigned)sum, archives_size);
 }
 
