@@ -106,6 +106,7 @@ int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
 	struct fs_info info;
 	FILE *fme = NULL;
 	struct mntent *me;
+	int fd;
 	int ret;
 
 	if (dm_snprintf(lv_path, PATH_MAX, "%s%s/%s", lv->vg->cmd->dev_dir,
@@ -150,6 +151,17 @@ int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
 
 		log_print("File system found on crypt device %s on LV %s.",
 			  crypt_path, display_lvname(lv));
+
+		if ((fd = open(crypt_path, O_RDONLY)) < 0) {
+			log_error("Failed to open crypt path %s", crypt_path);
+			return 0;
+		}
+		if (ioctl(fd, BLKGETSIZE64, &info.crypt_dev_size_bytes) < 0) {
+			log_error("Failed to get crypt device size %s", crypt_path);
+			close(fd);
+			return 0;
+		}
+		close(fd);
 
 		if (!fs_get_blkid(crypt_path, &info)) {
 			log_error("No file system info from blkid for dm-crypt device %s on LV %s.",

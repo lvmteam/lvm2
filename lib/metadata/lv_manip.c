@@ -6397,7 +6397,23 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 	 * but the crypt dev over the LV should be shrunk to correspond with
 	 * the LV size, so that the FS does not see an incorrect device size.
 	 */
-	if (!fsinfo.needs_reduce && fsinfo.needs_crypt && !test_mode()) {
+	if (!fsinfo.needs_reduce && fsinfo.needs_crypt) {
+		/* Check if the crypt device is already sufficiently reduced. */
+		if (fsinfo.crypt_dev_size_bytes <= newsize_bytes_fs) {
+			log_print("crypt device is already reduced to %llu bytes.",
+				  (unsigned long long)fsinfo.crypt_dev_size_bytes);
+			ret = 1;
+			goto out;
+		}
+		if (!strcmp(lp->fsopt, "checksize")) {
+			log_error("crypt reduce is required (see --resizefs or cryptsetup resize.)");
+			ret = 0;
+			goto out;
+		}
+		if (test_mode()) {
+			ret = 1;
+			goto_out;
+		}
 		ret = crypt_resize_script(cmd, lv, &fsinfo, newsize_bytes_fs);
 		goto out;
 	}

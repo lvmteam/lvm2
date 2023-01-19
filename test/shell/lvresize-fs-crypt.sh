@@ -151,7 +151,12 @@ mount /dev/mapper/$cr "$mount_dir"
 # this lvresize will not resize the fs (which is already reduced
 # to smaller than the requested LV size), but lvresize will use
 # the helper to resize the crypt dev before resizing the LV.
-lvresize -L-100M $vg/$lv
+# Using --fs resize is required to allow lvresize to look above
+# the lv at crypt&fs layers for potential resizing.  Without
+# --fs resize, lvresize fails because it sees that crypt resize
+# is needed and --fs resize is needed to enable that.
+not lvresize -L-100 $vg/$lv
+lvresize -L-100M --fs resize $vg/$lv
 check lv_field $vg/$lv lv_size "356.00m"
 df --output=size "$mount_dir" |tee df2
 not diff df1 df2
