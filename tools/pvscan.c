@@ -910,30 +910,6 @@ static int _get_args_devs(struct cmd_context *cmd, struct dm_list *pvscan_args,
 	struct pvscan_arg *arg;
 	struct device_list *devl;
 
-	/*
-	 * If no devices file is used, and lvm.conf filter is set to
-	 * accept /dev/disk/by-id/lvm-pv-uuid-xyz or another symlink,
-	 * but pvscan --cache is passed devname or major:minor, so
-	 * pvscan needs to match its arg device to the filter symlink.
-	 * setup_dev_in_dev_cache() adds /dev/sda2 to dev-cache which
-	 * does not match a symlink to /dev/sda2, so we need a full
-	 * dev_cache_scan that will associate all symlinks to sda2,
-	 * which allows filter-regex to work.  This case could be
-	 * optimized if needed by adding dev-cache entries for each
-	 * filter "a" entry (filter symlink patterns would still need
-	 * a full dev_cache_scan.)
-	 * (When no devices file is used and 69-dm-lvm.rules is
-	 * used which calls pvscan directly, symlinks may not
-	 * have been created by other rules when pvscan runs, so
-	 * the full dev_cache_scan may still not find them.)
-	 */
-	if (!cmd->enable_devices_file && !cmd->enable_devices_list &&
-	    (_filter_uses_symlinks(cmd, devices_filter_CFG) ||
-	     _filter_uses_symlinks(cmd, devices_global_filter_CFG))) {
-		log_print_pvscan(cmd, "finding all devices for filter symlinks.");
-		dev_cache_scan(cmd);
-	}
-
 	/* pass NULL filter when getting devs from dev-cache, filtering is done separately */
 
 	/* in common usage, no dev will be found for a devno */
@@ -1549,6 +1525,42 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 	}
 
 	cmd->filter_nodata_only = 1;
+
+	/*
+	 * Hack to handle regex filter that contains a symlink name for dev arg.
+	 * pvscan --cache <dev> is called by our udev rule at a time when the
+	 * symlinks for <dev> may not all be created yet (by other udev rules.)
+	 * The regex filter in lvm.conf may refer to <dev> using a symlink name,
+	 * so we need to know all the symlinks for <dev> in order for the filter
+	 * to work correctly. Scanning /dev with dev_cache_scan() would usually
+	 * find all the symlink names for <dev>, adding them to dev->aliases,
+	 * which would let the filter work, but all symlinks aren't created yet.
+	 * But, the DEVLINKS env var, set by udev, contains all the symlink
+	 * names for <dev> that have been or *will be* created. So, we add all
+	 * these symlink names to dev->aliases, as if we had found them in /dev.
+	 * This allows <dev> to be recognized by a regex filter containing a
+	 * symlink for <dev>. We have to tell filter-regex to not set the
+	 * preferred name for <dev> to a symlink name since the <dev> may not
+	 * be usable by that symlink name yet.
+	 */
+	if ((dm_list_size(&pvscan_devs) == 1) &&
+	    !cmd->enable_devices_file && !cmd->enable_devices_list &&
+	    (_filter_uses_symlinks(cmd, devices_filter_CFG) ||
+	     _filter_uses_symlinks(cmd, devices_global_filter_CFG))) {
+		char *env_str;
+		struct dm_list *env_aliases;
+		devl = dm_list_item(dm_list_first(&pvscan_devs), struct device_list);
+		if ((env_str = getenv("DEVLINKS"))) {
+			log_debug("Finding symlink names from DEVLINKS for filter regex.");
+			log_debug("DEVLINKS %s", env_str);
+			env_aliases = str_to_str_list(cmd->mem, env_str, " ", 0);
+			dm_list_splice(&devl->dev->aliases, env_aliases);
+		} else {
+			log_debug("Finding symlink names from /dev for filter regex.");
+			dev_cache_scan(cmd);
+		}
+		cmd->filter_regex_set_preferred_name_disable = 1;
+	}
 
 	dm_list_iterate_items_safe(devl, devl2, &pvscan_devs) {
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, devl->dev, NULL)) {

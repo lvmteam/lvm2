@@ -207,6 +207,7 @@ struct cmd_context {
 	unsigned udevoutput:1;
 	unsigned online_vg_file_removed:1;
 	unsigned disable_dm_devs:1;		/* temporarily disable use of dm devs cache */
+	unsigned filter_regex_set_preferred_name_disable:1; /* prevent dev_set_preferred_name */
 
 	/*
 	 * Devices and filtering.

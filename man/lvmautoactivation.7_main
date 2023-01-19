@@ -184,6 +184,19 @@ system from booting.  A custom systemd service could be written to run
 autoactivation during system startup, in which case disabling event
 autoactivation may be useful.
 .
+.SS lvm.conf filter
+.P
+Device symlinks from /dev/disk/ can be used in the lvm.conf filter to
+guard against changes in kernel device names. The /dev/disk/by-path/ or
+/dev/disk/by-id/ prefixes should be included in the filter names; these
+prefixes help lvm detect that symlink names are used. Filters containing
+symlinks require special matching by commands run in the lvm udev rule.
+.P
+Common symlinks, e.g. beginning with wwn-, scsi-, pci-, or lvm-pv-uuid-,
+are recommended.  Uncommon or custom symlinks created by custom udev rules
+may be less reliable. If a custom udev rule creates symlinks used in the
+lvm filter, then the udev rule should be started prior to the lvm rule.
+.
 .SH EXAMPLES
 .P
 VG "vg" contains two PVs:
