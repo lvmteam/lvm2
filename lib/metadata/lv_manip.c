@@ -6417,13 +6417,9 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 			goto out;
 		}
 		if (!strcmp(lp->fsopt, "checksize")) {
-			if (!lp->force) {
-				log_error("crypt reduce is required (see --resizefs or cryptsetup resize.)");
-				ret = 0;
-				goto out;
-			}
-			/* This is only because it has been allowed in the past. */
-			log_print("Forcing cryptsetup resize (--resizefs preferred.)");
+			log_error("crypt reduce is required (see --resizefs or cryptsetup resize.)");
+			ret = 0;
+			goto out;
 		}
 		if (test_mode()) {
 			ret = 1;
