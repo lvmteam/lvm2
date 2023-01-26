@@ -262,6 +262,17 @@ umount "$mount_dir"
 lvchange -an $vg/$lv
 lvremove $vg/$lv
 
+# lvextend|lvreduce, ext4, active, mounted, --fs resize, renamed LV
+lvcreate -n $lv -L 256M $vg
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv"
+mount "$DM_DEV_DIR/$vg/$lv" "$mount_dir"
+lvrename $vg/$lv $vg/$lv2
+not lvextend --fs resize -L+32M $vg/$lv2
+not lvreduce --fs resize -L-32M $vg/$lv2
+umount "$mount_dir"
+lvchange -an $vg/$lv2
+lvremove $vg/$lv2
+
 
 #
 # lvextend, xfs

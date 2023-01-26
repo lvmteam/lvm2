@@ -214,6 +214,116 @@ int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
 	return ret;
 }
 
+int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *lv, char *lv_path, char *fstype)
+{
+	FILE *fp;
+	char proc_line[PATH_MAX];
+	char proc_fstype[FSTYPE_MAX];
+	char proc_devpath[1024];
+	char proc_mntpath[1024];
+	char lv_mapper_path[1024];
+	char mntent_mount_dir[1024];
+	char *dm_name;
+	struct stat st_lv;
+	struct stat stme;
+	FILE *fme = NULL;
+	struct mntent *me;
+	int renamed = 0;
+	int found_dir = 0;
+	int found_dev = 0;
+	int dev_match, dir_match;
+
+	if (stat(lv_path, &st_lv) < 0) {
+		log_error("Failed to get LV path %s", lv_path);
+		return 0;
+	}
+
+	/*
+	 * If LVs have been renamed while their file systems were mounted, then
+	 * inconsistencies appear in the device path and mount point info
+	 * provided by getmntent and /proc/mounts.  If there's any
+	 * inconsistency or duplication of info for the LV name or the mount
+	 * point, then give up and don't try fs resize which is likely to fail
+	 * due to kernel problems where mounts reference old device names
+	 * causing fs resizing tools to fail.
+	 */
+
+	if (!(fme = setmntent("/etc/mtab", "r")))
+		return_0;
+
+	while ((me = getmntent(fme))) {
+		if (strcmp(me->mnt_type, fstype))
+			continue;
+		if (me->mnt_dir[0] != '/')
+			continue;
+		if (me->mnt_fsname[0] != '/')
+			continue;
+		if (stat(me->mnt_dir, &stme) < 0)
+			continue;
+		if (stme.st_dev != st_lv.st_rdev)
+			continue;
+		strncpy(mntent_mount_dir, me->mnt_dir, PATH_MAX-1);
+	}
+	endmntent(fme);
+
+	if (!(dm_name = dm_build_dm_name(cmd->mem, lv->vg->name, lv->name, NULL)))
+		return_0;
+
+	if ((dm_snprintf(lv_mapper_path, 1024, "%s/%s", dm_dir(), dm_name) < 0))
+		return_0;
+
+	if (!(fp = fopen("/proc/mounts", "r")))
+		return_0;
+
+	while (fgets(proc_line, sizeof(proc_line), fp)) {
+		if (proc_line[0] != '/')
+			continue;
+		if (sscanf(proc_line, "%s %s %s", proc_devpath, proc_mntpath, proc_fstype) != 3)
+			continue;
+		if (strcmp(fstype, proc_fstype))
+			continue;
+
+		dir_match = !strcmp(mntent_mount_dir, proc_mntpath);
+		dev_match = !strcmp(lv_mapper_path, proc_devpath);
+
+		if (dir_match)
+			found_dir++;
+		if (dev_match)
+			found_dev++;
+
+		if (dir_match != dev_match) {
+			log_error("LV %s mounted at %s may have been renamed (from %s).",
+				  lv_mapper_path, proc_mntpath, proc_devpath);
+			renamed = 1;
+		}
+	}
+
+	if (fclose(fp))
+		stack;
+
+	/*
+	 * Don't try resizing if:
+	 * - different device names apppear for the mount point
+	 *   (LVs probably renamed while mounted), or
+	 * - the mount point for the LV appears multiple times, or
+	 * - the LV device is listed for multiple mounts. 
+	 */
+	if (renamed) {
+		log_error("File system resizing not supported: fs utilities do not support renamed devices.");
+		return 1;
+	}
+	/* These two are likely detected as renamed, but include checks in case. */
+	if (found_dir > 1) {
+		log_error("File system resizing not supported: %s appears more than once in /proc/mounts.", mntent_mount_dir);
+		return 1;
+	}
+	if (found_dev > 1) {
+		log_error("File system resizing not supported: %s appears more than once in /proc/mounts.", lv_mapper_path);
+		return 1;
+	}
+	return 0;
+}
+
 #define FS_CMD_MAX_ARGS 16
 
 int crypt_resize_script(struct cmd_context *cmd, struct logical_volume *lv, struct fs_info *fsi,
