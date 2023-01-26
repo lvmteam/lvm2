@@ -48,4 +48,6 @@ int fs_reduce_script(struct cmd_context *cmd, struct logical_volume *lv, struct 
 		uint64_t newsize_bytes, char *fsmode);
 int crypt_resize_script(struct cmd_context *cmd, struct logical_volume *lv, struct fs_info *fsi,
 		uint64_t newsize_bytes_fs);
+
+int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *lv, char *lv_path, char *fstype);
 #endif
