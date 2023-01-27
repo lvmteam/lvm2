@@ -284,6 +284,8 @@ static int _filter_contains_symlink(struct cmd_context *cmd, int filter_cfg)
 				return 1;
 			if (strstr(fname, "wwn-"))
 				return 1;
+			if (strstr(fname, "pci-"))
+				return 1;
 		}
 	}
 
