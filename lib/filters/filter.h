@@ -64,4 +64,6 @@ struct dev_filter *usable_filter_create(struct cmd_context *cmd, struct dev_type
 #define DEV_FILTERED_DEVICES_LIST	0x00001000
 #define DEV_FILTERED_IS_LV		0x00002000
 
+int regex_filter_contains_symlink(struct cmd_context *cmd);
+
 #endif 	/* _LVM_FILTER_H */

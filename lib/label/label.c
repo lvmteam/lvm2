@@ -27,6 +27,7 @@
 #include "lib/format_text/layout.h"
 #include "lib/device/device_id.h"
 #include "lib/device/online.h"
+#include "lib/filters/filter.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -1099,6 +1100,20 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 		log_debug("Skipping device_id filtering due to devname ids.");
 	}
 
+	/*
+	 * See corresponding code in pvscan.  This function is used during
+	 * startup autoactivation when udev has not created all symlinks, so
+	 * regex filter containing symlinks doesn't work.  pvscan has code
+	 * to properly check devs against the filter using DEVLINKS.  The
+	 * pvscan will only create pvs_online files for devs that pass the
+	 * filter.  We get devs from the pvs_online files, so we inherit the
+	 * regex filtering from pvscan and don't have to do it ourself.
+	 */
+	if (!cmd->enable_devices_file &&
+	    !cmd->enable_devices_list &&
+	    regex_filter_contains_symlink(cmd))
+		cmd->filter_regex_skip = 1;
+
 	cmd->filter_nodata_only = 1;
 
 	dm_list_iterate_items_safe(devl, devl2, &devs) {
@@ -1178,6 +1193,8 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 
 	if (relax_deviceid_filter)
 		cmd->filter_deviceid_skip = 0;
+
+	cmd->filter_regex_skip = 0;
 
 	free_po_list(&pvs_online);
 

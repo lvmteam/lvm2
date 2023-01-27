@@ -161,6 +161,9 @@ static int _accept_p(struct cmd_context *cmd, struct dev_filter *f, struct devic
 	if (cmd->enable_devices_list)
 		return 1;
 
+	if (cmd->filter_regex_skip)
+		return 1;
+
 	if (cmd->enable_devices_file && !cmd->filter_regex_with_devices_file) {
 		/* can't warn in create_filter because enable_devices_file is set later */
 		if (rf->config_filter && !rf->warned_filter) {
@@ -250,3 +253,46 @@ struct dev_filter *regex_filter_create(const struct dm_config_value *patterns, i
 	dm_pool_destroy(mem);
 	return NULL;
 }
+
+static int _filter_contains_symlink(struct cmd_context *cmd, int filter_cfg)
+{
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
+	const char *fname;
+		
+	if ((cn = find_config_tree_array(cmd, filter_cfg, NULL))) {
+		for (cv = cn->v; cv; cv = cv->next) {
+			if (cv->type != DM_CFG_STRING)
+				continue;
+			if (!cv->v.str)
+				continue;
+			
+			fname = cv->v.str;
+		
+			if (fname[0] != 'a')
+				continue;
+	
+			if (strstr(fname, "/dev/disk/"))
+				return 1;
+			if (strstr(fname, "/dev/mapper/"))
+				return 1;
+		
+			/* In case /dev/disk/by was omitted */
+			if (strstr(fname, "lvm-pv-uuid"))
+				return 1;
+			if (strstr(fname, "dm-uuid"))
+				return 1;
+			if (strstr(fname, "wwn-"))
+				return 1;
+		}
+	}
+
+	return 0;
+}
+
+int regex_filter_contains_symlink(struct cmd_context *cmd)
+{
+	return _filter_contains_symlink(cmd, devices_filter_CFG) ||
+	       _filter_contains_symlink(cmd, devices_global_filter_CFG);
+}
+

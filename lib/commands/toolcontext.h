@@ -194,6 +194,7 @@ struct cmd_context {
 	unsigned create_edit_devices_file:1;	/* command expects to create and/or edit devices file */
 	unsigned edit_devices_file:1;		/* command expects to edit devices file */
 	unsigned filter_deviceid_skip:1;	/* don't use filter-deviceid */
+	unsigned filter_regex_skip:1;		/* don't use filter-regex */
 	unsigned filter_regex_with_devices_file:1; /* use filter-regex even when devices file is enabled */
 	unsigned filter_nodata_only:1;          /* only use filters that do not require data from the dev */
 	unsigned run_by_dmeventd:1;		/* command is being run by dmeventd */

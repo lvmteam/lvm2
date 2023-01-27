@@ -16,6 +16,7 @@
 #include "tools.h"
 #include "lib/device/device_id.h"
 #include "lib/label/hints.h"
+#include "lib/filters/filter.h"
 
 struct vgchange_params {
 	int lock_start_count;

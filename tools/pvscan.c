@@ -803,49 +803,6 @@ out:
 	return ret;
 }
 
-/*
- * The optimization in which only the pvscan arg devname is added to dev-cache
- * does not work if there's an lvm.conf filter containing symlinks to the dev
- * like /dev/disk/by-id/lvm-pv-uuid-xyz entries.  A full dev_cache_scan will
- * associate the symlinks with the system dev name passed to pvscan, which lets
- * filter-regex match the devname with the symlink name in the filter.
- */
-static int _filter_uses_symlinks(struct cmd_context *cmd, int filter_cfg)
-{
-	const struct dm_config_node *cn;
-	const struct dm_config_value *cv;
-	const char *fname;
-
-	if ((cn = find_config_tree_array(cmd, filter_cfg, NULL))) {
-        	for (cv = cn->v; cv; cv = cv->next) {
-			if (cv->type != DM_CFG_STRING)
-				continue;
-			if (!cv->v.str)
-				continue;
-
-			fname = cv->v.str;
-
-			if (fname[0] != 'a')
-				continue;
-
-			if (strstr(fname, "/dev/disk/"))
-				return 1;
-			if (strstr(fname, "/dev/mapper/"))
-				return 1;
-
-			/* In case /dev/disk/by was omitted */
-			if (strstr(fname, "lvm-pv-uuid"))
-				return 1;
-			if (strstr(fname, "dm-uuid"))
-				return 1;
-			if (strstr(fname, "wwn-"))
-				return 1;
-		}
-	}
-
-	return 0;
-}
-
 struct pvscan_arg {
 	struct dm_list list;
 	const char *devname;
@@ -1544,9 +1501,9 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 	 * be usable by that symlink name yet.
 	 */
 	if ((dm_list_size(&pvscan_devs) == 1) &&
-	    !cmd->enable_devices_file && !cmd->enable_devices_list &&
-	    (_filter_uses_symlinks(cmd, devices_filter_CFG) ||
-	     _filter_uses_symlinks(cmd, devices_global_filter_CFG))) {
+	    !cmd->enable_devices_file &&
+	    !cmd->enable_devices_list &&
+	    regex_filter_contains_symlink(cmd)) {
 		char *env_str;
 		struct dm_list *env_aliases;
 		devl = dm_list_item(dm_list_first(&pvscan_devs), struct device_list);
