@@ -2040,7 +2040,7 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 	struct dm_tree_node *child = dnode;
 	const char *name;
 	const char *uuid;
-	int priority;
+	int priority, next_priority;
 
 	/* Activate children first */
 	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
@@ -2058,12 +2058,16 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 	}
 
 	handle = NULL;
-
 	for (priority = 0; priority < 3; priority++) {
 		awaiting_peer_rename = 0;
+		next_priority = 0;
 		while ((child = dm_tree_next_child(&handle, dnode, 0))) {
-			if (priority != child->activation_priority)
+			if (priority != child->activation_priority) {
+				if ((next_priority < child->activation_priority) &&
+				    (child->activation_priority > priority))
+					next_priority = child->activation_priority;
 				continue;
+			}
 
 			if (!(uuid = dm_tree_node_get_uuid(child))) {
 				stack;
@@ -2121,6 +2125,8 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 		}
 		if (awaiting_peer_rename)
 			priority--; /* redo priority level */
+		else if (!next_priority)
+			break;  /* no more work, higher priority was not found in the chain */
 	}
 
 	return r;
