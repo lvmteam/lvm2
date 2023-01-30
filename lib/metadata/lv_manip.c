@@ -6939,6 +6939,10 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 			log_error("File system not found for --resizefs or --fs options.");
 			goto out;
 		}
+		if (!strcmp(fstype, "crypto_LUKS") && !lv_crypt_is_active(cmd, lv_path)) {
+			log_error("LUKS dm-crypt device must be active for fs resize.");
+			goto out;
+		}
 		/* FS utils will fail if LVs were renamed while mounted. */
 		if (fs_mount_state_is_misnamed(cmd, lv_top, lv_path, fstype))
 			goto_out;

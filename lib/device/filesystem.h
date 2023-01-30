@@ -50,4 +50,6 @@ int crypt_resize_script(struct cmd_context *cmd, struct logical_volume *lv, stru
 		uint64_t newsize_bytes_fs);
 
 int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *lv, char *lv_path, char *fstype);
+int lv_crypt_is_active(struct cmd_context *cmd, char *lv_path);
+
 #endif

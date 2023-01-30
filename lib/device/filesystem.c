@@ -94,6 +94,19 @@ static int _get_crypt_path(dev_t lv_devt, char *lv_path, char *crypt_path)
 	return ret;
 }
 
+int lv_crypt_is_active(struct cmd_context *cmd, char *lv_path)
+{
+	char crypt_path[PATH_MAX];
+	struct stat st_lv;
+
+	if (stat(lv_path, &st_lv) < 0) {
+		log_error("Failed to get LV path %s", lv_path);
+		return 0;
+	}
+
+	return _get_crypt_path(st_lv.st_rdev, lv_path, crypt_path);
+}
+
 int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
 		struct fs_info *fsi, int include_mount)
 {
@@ -149,7 +162,7 @@ int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
 
 		memset(&info, 0, sizeof(info));
 
-		log_print("File system found on crypt device %s on LV %s.",
+		log_print("Checking crypt device %s on LV %s.",
 			  crypt_path, display_lvname(lv));
 
 		if ((fd = open(crypt_path, O_RDONLY)) < 0) {
