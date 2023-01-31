@@ -883,7 +883,9 @@ int vg_refresh_visible(struct cmd_context *cmd, struct volume_group *vg)
 			break;
 		}
 
-		if (lv_is_visible(lvl->lv) && !lv_refresh(cmd, lvl->lv)) {
+		if (lv_is_visible(lvl->lv) &&
+		    !(lv_is_cow(lvl->lv) && !lv_is_virtual_origin(origin_from_cow(lvl->lv))) &&
+		    !lv_refresh(cmd, lvl->lv)) {
 			r = 0;
 			stack;
 		}
@@ -3292,7 +3294,9 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 		/* Skip availability change for non-virt snaps when processing all LVs */
 		/* FIXME: pass process_all to process_single_lv() */
-		if (process_all && arg_is_set(cmd, activate_ARG) &&
+		if (process_all &&
+		    (arg_is_set(cmd, activate_ARG) ||
+		     arg_is_set(cmd, refresh_ARG)) &&
 		    lv_is_cow(lvl->lv) && !lv_is_virtual_origin(origin_from_cow(lvl->lv)))
 			continue;
 
