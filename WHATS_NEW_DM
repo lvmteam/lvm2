@@ -1,5 +1,6 @@
 Version 1.02.191 - 
 =====================================
+  Import previous ID_FS_* udev records in 13-dm-disk.rules for suspended DM dev.
   Remove NAME="mapper/control" rule from 10-dm.rules to avoid udev warnings.
 
 Version 1.02.189 - 22nd December 2022
