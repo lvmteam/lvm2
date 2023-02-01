@@ -1,3 +1,7 @@
+Version 1.02.191 - 
+=====================================
+  Import previous ID_FS_* udev records in 13-dm-disk.rules for suspended DM dev.
+
 Version 1.02.187 - 10th November 2022
 =====================================
   Add DM_REPORT_GROUP_JSON_STD for more JSON standard compliant output format.
