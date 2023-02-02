@@ -4643,11 +4643,9 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct volume_group *vg, *vg_ret = NULL;
 	struct metadata_area *mda, *mda2;
 	unsigned use_precommitted = precommitted;
-	struct device *mda_dev, *dev_ret = NULL, *dev;
+	struct device *mda_dev, *dev_ret = NULL;
 	struct cached_vg_fmtdata *vg_fmtdata = NULL;	/* Additional format-specific data about the vg */
-	struct pv_list *pvl;
 	int found_old_metadata = 0;
-	int found_md_component = 0;
 	unsigned use_previous_vg;
 
 	log_debug_metadata("Reading VG %s %s", vgname ?: "<no name>", vgid ?: "<no vgid>");
@@ -4864,46 +4862,6 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	if (!vg_ret) {
 		_destroy_fid(&fid);
 		goto_out;
-	}
-
-	/*
-	 * Usually md components are eliminated during label scan, or duplicate
-	 * resolution, but sometimes an md component can get through and be
-	 * detected in set_pv_device() (which will do an md component check if
-	 * the device/PV sizes don't match.)  In this case we need to fix up
-	 * lvmcache to drop the component dev and fix up metadata_areas_in_use
-	 * to drop it also.
-	 */
-	if (found_md_component) {
-		dm_list_iterate_items(pvl, &vg_ret->pvs) {
-			if (!(dev = lvmcache_device_from_pv_id(cmd, &pvl->pv->id, NULL)))
-				continue;
-
-			/* dev_is_md_component set this flag if it was found */
-			if (!(dev->flags & DEV_IS_MD_COMPONENT))
-				continue;
-
-			log_debug_metadata("Drop dev for MD component from cache %s.", dev_name(dev));
-			lvmcache_del_dev(dev);
-
-			dm_list_iterate_items(mda, &fid->metadata_areas_in_use)
-				if (mda_get_device(mda) == dev) {
-					log_debug_metadata("Drop mda from MD component from mda list %s.", dev_name(dev));
-					dm_list_del(&mda->list);
-					break;
-				}
-		}
-	}
-
-	/*
-	 * After dropping MD components there may be no remaining legitimate
-	 * devices for this VG.
-	 */
-	if (!lvmcache_vginfo_from_vgid(vgid)) {
-		log_debug_metadata("VG %s not found on any remaining devices.", vgname);
-		release_vg(vg_ret);
-		vg_ret = NULL;
-		goto out;
 	}
 
 	/*
