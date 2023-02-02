@@ -1,5 +1,6 @@
 Version 1.02.191 - 
 =====================================
+  Remove NAME="mapper/control" rule from 10-dm.rules to avoid udev warnings.
 
 Version 1.02.189 - 22nd December 2022
 =====================================
