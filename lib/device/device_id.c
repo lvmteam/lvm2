@@ -438,8 +438,8 @@ int dev_read_sys_wwid(struct cmd_context *cmd, struct device *dev,
 	if (!ret || !buf[0])
 		return 0;
 
-	/* in t10 id, replace series of spaces with one _ */
-	if (!strncmp(buf, "t10.", 4) && strchr(buf, ' ')) {
+	/* in t10 id, replace characters like space and quote */
+	if (!strncmp(buf, "t10.", 4)) {
 		if (bufsize < DEV_WWID_SIZE)
 			return 0;
 		memcpy(tmpbuf, buf, DEV_WWID_SIZE);
@@ -587,6 +587,8 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 	/* wwids are already munged if needed */
 	if (idtype != DEV_ID_TYPE_SYS_WWID) {
 		for (i = 0; i < strlen(sysbuf); i++) {
+			if (sysbuf[i] == '"')
+				continue;
 			if (isblank(sysbuf[i]) || isspace(sysbuf[i]) || iscntrl(sysbuf[i]))
 				sysbuf[i] = '_';
 		}

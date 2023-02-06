@@ -53,6 +53,12 @@ int format_t10_id(const unsigned char *in, int in_bytes, unsigned char *out, int
 		/* skip leading spaces */
 		if (!retlen && (in[i] == ' '))
 			continue;
+		/* skip non-ascii non-printable characters */
+		if (!isascii(in[i]) || !isprint(in[i]))
+			continue;
+		/* skip quote */
+		if (in[i] == '"')
+			continue;
 		/* replace one or more spaces with _ */
 		if (in[i] == ' ') {
 			in_space = 1;

@@ -219,6 +219,30 @@ vgremove $vg
 rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
 cleanup_sysfs
 
+# Test t10 wwid containing quote
+rm $DF
+aux wipefs_a "$DEV1"
+mkdir -p $SYS_DIR/dev/block/$MAJOR1:$MINOR1/
+echo "t10.ATA_2.5\"_SATA_SSD_1112-A___111111111111" > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+lvmdevices --adddev "$DEV1"
+cat $DF
+vgcreate $vg "$DEV1"
+lvcreate -l1 -an $vg
+cat $DF
+# check wwid string in metadata output
+pvs -o+deviceidtype,deviceid "$DEV1" |tee out
+grep sys_wwid out
+# the quote is removed after the 5
+grep 2.5_SATA_SSD out
+# check wwid string in system.devices
+grep sys_wwid $DF
+# the quote is removed after the 5
+grep 2.5_SATA_SSD $DF
+lvremove -y $vg
+vgremove $vg
+rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+cleanup_sysfs
+
 # TODO: lvmdevices --adddev <dev> --deviceidtype <type> --deviceid <val>
 # This would let the user specify the second naa wwid.
 
