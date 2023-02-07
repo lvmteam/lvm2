@@ -15,6 +15,8 @@
 #include "tools.h"
 #include "lib/cache/lvmcache.h"
 #include "lib/device/device_id.h"
+/* coverity[unnecessary_header] needed for MuslC */
+#include <sys/file.h>
 
 struct vgimportdevices_params {
 	uint32_t added_devices;
