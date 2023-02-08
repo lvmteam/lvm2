@@ -3571,12 +3571,6 @@ static void _set_pv_device(struct format_instance *fid,
 	if (!pv->dev)
 		pv->status |= MISSING_PV;
 
-	/* is this correct? */
-	if ((pv->status & MISSING_PV) && pv->dev && (pv_mda_used_count(pv) == 0)) {
-		pv->status &= ~MISSING_PV;
-		log_info("Found a previously MISSING PV %s with no MDAs.", pv_dev_name(pv));
-	}
-
 	/* Fix up pv size if missing or impossibly large */
 	if ((!pv->size || pv->size > (1ULL << 62)) && pv->dev) {
 		if (!dev_get_size(pv->dev, &pv->size)) {
