@@ -1109,9 +1109,30 @@ AC_ARG_ENABLE(blkid_wiping,
 			     [disable libblkid detection of signatures when wiping and use native code instead]),
 	      BLKID_WIPING=$enableval, BLKID_WIPING=maybe)
 
+# TODO: possibly detect right version of blkid with BLKID_SUBLKS_FSINFO support
+#       so lvresize can check detected flag here
+#
 DEFAULT_USE_BLKID_WIPING=0
+AS_IF([test "$BLKID_WIPING" != "no"], [blkdir_version=">= 2.24"], [blkid_version=""])
+
+PKG_CHECK_MODULES([BLKID], [blkid $blkid_version ], [
+	HAVE_BLKID=1
+
+	AC_CACHE_CHECK([for blkdid.h supports SUBLKS_FSINFO.],
+		[ac_cv_have_blkid_sublks_fsinfo],
+		[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <blkid/blkid.h>
+#ifndef BLKID_SUBLKS_FSINFO
+#error BLKID_SUBLKS_FSINFO is missing
+#endif])],
+		[ac_cv_have_blkid_sublks_fsinfo="yes"], [ac_cv_have_blkid_sublks_fsinfo="no"])])
+
+		AC_IF_YES(ac_cv_have_blkid_sublks_fsinfo,
+			  AC_DEFINE(HAVE_BLKID_SUBLKS_FSINFO, 1,
+				    [Define if blkid.h has BLKID_SUBLKS_FSINFO]))
+])
+
 AS_IF([test "$BLKID_WIPING" != "no"], [
-	PKG_CHECK_MODULES([BLKID], [blkid >= 2.24], [
+	AS_IF([test "$HAVE_BLKID" = 1], [
 		BLKID_WIPING=yes
 		BLKID_PC="blkid"
 		DEFAULT_USE_BLKID_WIPING=1
@@ -1858,6 +1879,8 @@ AC_SUBST(FSADM)
 AC_SUBST(FSADM_PATH)
 AC_SUBST(LVRESIZE_FS_HELPER_PATH)
 AC_SUBST(BLKDEACTIVATE)
+AC_SUBST(HAVE_BLKID)
+AC_SUBST(HAVE_BLKID_SUBLKS_FSINFO)
 AC_SUBST(HAVE_LIBDL)
 AC_SUBST(HAVE_REALTIME)
 AC_SUBST(HAVE_VALGRIND)

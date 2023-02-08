@@ -154,6 +154,9 @@
 /* Define to 1 if you have the `atexit' function. */
 #undef HAVE_ATEXIT
 
+/* Define if blkid.h has BLKID_SUBLKS_FSINFO */
+#undef HAVE_BLKID_SUBLKS_FSINFO
+
 /* Define if ioctl BLKZEROOUT can be used for device zeroing. */
 #undef HAVE_BLKZEROOUT
 

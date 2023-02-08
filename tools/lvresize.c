@@ -15,8 +15,6 @@
 
 #include "tools.h"
 
-#include <blkid/blkid.h>
-
 static int _lvresize_params(struct cmd_context *cmd, struct lvresize_params *lp)
 {
 	const char *type_str = arg_str_value(cmd, type_ARG, NULL);
@@ -98,7 +96,7 @@ static int _lvresize_params(struct cmd_context *cmd, struct lvresize_params *lp)
 			return 0;
 		}
 
-#ifdef BLKID_SUBLKS_FSINFO
+#ifdef HAVE_BLKID_SUBLKS_FSINFO
 		/*
 		 * When the libblkid fs info feature is available, use the
 		 * the newer fs resizing capabability unless the older
