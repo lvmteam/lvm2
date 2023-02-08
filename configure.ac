@@ -1151,30 +1151,6 @@ AC_DEFINE_UNQUOTED(DEFAULT_USE_BLKID_WIPING, [$DEFAULT_USE_BLKID_WIPING],
 		   [Use blkid wiping by default.])
 
 ################################################################################
-dnl -- Enable udev-systemd protocol to instantiate a service for background jobs
-dnl -- Requires systemd version 205 at least (including support for systemd-run)
-AC_ARG_ENABLE(udev-systemd-background-jobs,
-	      AS_HELP_STRING([--disable-udev-systemd-background-jobs],
-			     [disable udev-systemd protocol to instantiate a service for background job]),
-	      UDEV_SYSTEMD_BACKGROUND_JOBS=$enableval,
-	      UDEV_SYSTEMD_BACKGROUND_JOBS=maybe)
-
-AS_IF([test "$UDEV_SYSTEMD_BACKGROUND_JOBS" != "no"], [
-	AS_IF([test "$SYSTEMD_MIN_VERSION" -ge 205], [
-		UDEV_SYSTEMD_BACKGROUND_JOBS=yes
-	], [
-		AS_IF([test "$UDEV_SYSTEMD_BACKGROUND_JOBS" = "maybe"], [
-			UDEV_SYSTEMD_BACKGROUND_JOBS=no
-		], [
-			AC_MSG_ERROR([bailing out... systemd >= 205 is required])
-		])
-	])
-])
-
-AC_MSG_CHECKING(whether to use udev-systemd protocol for jobs in background)
-AC_MSG_RESULT($UDEV_SYSTEMD_BACKGROUND_JOBS)
-
-################################################################################
 dnl -- Enable udev synchronisation
 AC_MSG_CHECKING(whether to enable synchronisation with udev processing)
 AC_ARG_ENABLE(udev_sync,
