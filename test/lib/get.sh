@@ -23,8 +23,8 @@ test -z "$BASH" || set -e -o pipefail
 # trims only leading prefix and suffix
 trim_() {
 	rm -f debug.log             # drop log, command was ok
-	local var=${1%${1##*[! ]}}  # remove trailing space characters
-	echo "${var#${var%%[! ]*}}" # remove leading space characters
+	local var=${1%"${1##*[! ]}"}  # remove trailing space characters
+	echo "${var#"${var%%[! ]*}"}" # remove leading space characters
 }
 
 pv_field() {
@@ -68,7 +68,7 @@ lv_devices() {
 }
 
 lv_field_lv_() {
-	lv_field "$1" "$2" -a --unbuffered | tr -d []
+	lv_field "$1" "$2" -a --unbuffered | tr -d '[]'
 }
 
 lv_tree_devices_() {

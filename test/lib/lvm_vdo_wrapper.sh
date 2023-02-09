@@ -87,8 +87,10 @@ local vdo_maxDiscardSize=${vdo_maxDiscardSize-4K}
 local vdo_name=${vdo_name-VDONAME}
 local vdo_physicalThreads=${vdo_physicalThreads-1}
 local vdo_slabSize=${vdo_slabSize-2G}
-local vdo_uuid="VDO-$(uuidgen || echo \"f7a3ecdc-40a0-4e43-814c-4a7039a75de4\")"
 local vdo_writePolicy=${vdo_writePolicy-auto}
+local vdo_uuid
+
+vdo_uuid="VDO-$(uuidgen || echo \"f7a3ecdc-40a0-4e43-814c-4a7039a75de4\")"
 
 while [ "$#" -ne 0 ]
 do
