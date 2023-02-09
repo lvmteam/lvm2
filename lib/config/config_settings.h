@@ -824,7 +824,7 @@ cfg(allocation_vdo_max_discard_CFG, "vdo_max_discard", allocation_CFG_SECTION, C
 	"The default and minimum is 1. The maximum is UINT_MAX / 4096.\n")
 
 cfg(allocation_vdo_pool_header_size_CFG, "vdo_pool_header_size", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_POOL_HEADER_SIZE_KB, vsn(2, 3, 12), NULL, 0, NULL,
-	"Specified the emptry header size in KiB at the front and end of vdo pool device.\n")
+	"Specified the empty header size in KiB at the front and end of vdo pool device.\n")
 
 cfg(log_report_command_log_CFG, "report_command_log", log_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED | CFG_DISALLOW_INTERACTIVE, CFG_TYPE_BOOL, DEFAULT_COMMAND_LOG_REPORT, vsn(2, 2, 158), NULL, 0, NULL,
 	"Enable or disable LVM log reporting.\n"
@@ -947,7 +947,7 @@ cfg(backup_archive_CFG, "archive", backup_CFG_SECTION, CFG_DEFAULT_COMMENTED, CF
 	"Think very hard before turning this off.\n")
 
 cfg_runtime(backup_archive_dir_CFG, "archive_dir", backup_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, vsn(1, 0, 0), 0, NULL,
-	"Location of the metdata archive files.\n"
+	"Location of the metadata archive files.\n"
 	"Remember to back up this directory regularly!\n")
 
 cfg(backup_retain_min_CFG, "retain_min", backup_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_ARCHIVE_NUMBER, vsn(1, 0, 0), NULL, 0, NULL,
@@ -1382,11 +1382,11 @@ cfg(activation_use_linear_target_CFG, "use_linear_target", activation_CFG_SECTIO
 
 cfg(activation_reserved_stack_CFG, "reserved_stack", activation_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_RESERVED_STACK, vsn(1, 0, 0), NULL, 0, NULL,
 	"Stack size in KiB to reserve for use while devices are suspended.\n"
-	"Insufficent reserve risks I/O deadlock during device suspension.\n")
+	"Insufficient reserve risks I/O deadlock during device suspension.\n")
 
 cfg(activation_reserved_memory_CFG, "reserved_memory", activation_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_RESERVED_MEMORY, vsn(1, 0, 0), NULL, 0, NULL,
 	"Memory size in KiB to reserve for use while devices are suspended.\n"
-	"Insufficent reserve risks I/O deadlock during device suspension.\n")
+	"Insufficient reserve risks I/O deadlock during device suspension.\n")
 
 cfg(activation_process_priority_CFG, "process_priority", activation_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_PROCESS_PRIORITY, vsn(1, 0, 0), NULL, 0, NULL,
 	"Nice value used while devices are suspended.\n"
@@ -1512,7 +1512,7 @@ cfg(activation_raid_fault_policy_CFG, "raid_fault_policy", activation_CFG_SECTIO
 	"This includes LVs that have the following segment types:\n"
 	"raid1, raid4, raid5*, and raid6*.\n"
 	"If a device in the LV fails, the policy determines the steps\n"
-	"performed by dmeventd automatically, and the steps perfomed by the\n"
+	"performed by dmeventd automatically, and the steps performed by the\n"
 	"manual command lvconvert --repair --use-policies.\n"
 	"Automatic handling requires dmeventd to be monitoring the LV.\n"
 	"#\n"
@@ -1534,7 +1534,7 @@ cfg_runtime(activation_mirror_image_fault_policy_CFG, "mirror_image_fault_policy
 	"(copies) and a mirror log. A disk log ensures that a mirror LV does\n"
 	"not need to be re-synced (all copies made the same) every time a\n"
 	"machine reboots or crashes. If a device in the LV fails, this policy\n"
-	"determines the steps perfomed by dmeventd automatically, and the steps\n"
+	"determines the steps performed by dmeventd automatically, and the steps\n"
 	"performed by the manual command lvconvert --repair --use-policies.\n"
 	"Automatic handling requires dmeventd to be monitoring the LV.\n"
 	"#\n"

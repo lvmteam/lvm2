@@ -2271,7 +2271,7 @@ int lvmcache_update_vgname_and_id(struct cmd_context *cmd, struct lvmcache_info 
  * vginfo/info.  PVs that don't hold VG metadata weren't attached to the vginfo
  * during label scan, and PVs with outdated metadata (claiming to be in the VG,
  * but not listed in the latest metadata) were attached to the vginfo, but
- * shouldn't be.  After vg_read() gets the full metdata in the form of a 'vg',
+ * shouldn't be.  After vg_read() gets the full metadata in the form of a 'vg',
  * this function is called to fix up the lvmcache representation of the VG
  * using the 'vg'.
  */

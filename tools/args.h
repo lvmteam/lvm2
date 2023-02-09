@@ -507,7 +507,7 @@ arg(mknodes_ARG, '\0', "mknodes", 0, 0, 0,
 arg(monitor_ARG, '\0', "monitor", bool_VAL, 0, 0,
     "Start (yes) or stop (no) monitoring an LV with dmeventd.\n"
     "dmeventd monitors kernel events for an LV, and performs\n"
-    "automated maintenance for the LV in reponse to specific events.\n"
+    "automated maintenance for the LV in response to specific events.\n"
     "See \\fBdmeventd\\fP(8) for more information.\n")
 
 arg(nameprefixes_ARG, '\0', "nameprefixes", 0, 0, 0,

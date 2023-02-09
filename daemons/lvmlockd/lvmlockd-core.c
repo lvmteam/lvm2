@@ -1279,7 +1279,7 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 	 * be invalidated.  When we need to invalidate the lvmetad
 	 * cache, but don't have a usable r_version from the lvb,
 	 * send lvmetad new_version 0 which causes it to invalidate
-	 * the VG metdata without comparing against the currently
+	 * the VG metadata without comparing against the currently
 	 * cached VG seqno.
 	 */
 
