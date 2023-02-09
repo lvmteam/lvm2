@@ -407,8 +407,19 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 			log_error("Base vg name %s is too long.", vgname);
 			goto out;
 		}
-		(void) dm_strncpy(tmp_vgname, base_vgname, NAME_LEN);
-		vgname_count = 0;
+		if (strcmp(vgname, vp.old_vgname)) {
+			(void) dm_strncpy(tmp_vgname, base_vgname, NAME_LEN);
+			vgname_count = 0;
+		} else {
+			/* Needed when basename matches old name, and PV is not a duplicate
+			   which means old name is not found on other devs, and is not seen
+			   in the vgnames search below, causing old and new names to match. */
+			if (dm_snprintf(tmp_vgname, sizeof(tmp_vgname), "%s1", vp.old_vgname) < 0) {
+				log_error("Temporary vg name %s1 is too long.", vp.old_vgname);
+				goto out;
+			}
+			vgname_count = 1;
+		}
 	} else {
 		if (dm_snprintf(base_vgname, sizeof(base_vgname), "%s", vp.old_vgname) < 0) {
 			log_error(INTERNAL_ERROR "Old vg name %s is too long.", vp.old_vgname);
