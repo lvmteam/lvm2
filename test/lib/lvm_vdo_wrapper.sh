@@ -113,7 +113,7 @@ do
 	  "--vdoLogicalSize") shift; vdo_logicalSize=$1 ;;
 	  "--vdoLogicalThreads") shift; vdo_logicalThreads=$1 ;;
 	  "--vdoLogLevel") shift ;;	# ignored
-	  "--vdoPhysicalThreads") shift; vdo_physicalSize=$1 ;;
+	  "--vdoPhysicalThreads") shift; vdo_physicalThreads=$1 ;;
 	  "--vdoSlabSize") shift; vdo_slabSize=$1 ;;
 	  "--verbose"|"-d"|"--debug") vdo_verbose="-v" ;;
 	  "--writePolicy") shift; vdo_writePolicy=$1 ;;
