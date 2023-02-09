@@ -87,7 +87,7 @@ mkdtemp() {
 	base_template=$(echo "$template" | sed 's/XX*$//')
 
 	# Calculate how many X's we've just removed.
-	nx=$(expr length "$template" - length "$base_template")
+	nx=$(( ${#template} - ${#base_template} ))
 
 	err=
 	i=1
