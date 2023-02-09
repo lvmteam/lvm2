@@ -39,14 +39,14 @@ for d in "${BLKDEVS[@]}"; do
 	dd if=/dev/zero of="$d" bs=32k count=1
 	wipefs -a "$d" 2>/dev/null || true
 
-	sg_dev=`sg_map26 ${d}`
+	sg_dev=$(sg_map26 "$d")
 	if [ -n "$LVM_TEST_LOCK_TYPE_IDM" ]; then
 		echo "Cleanup IDM context for drive ${d} ($sg_dev)"
-		sg_raw -v -r 512 -o /tmp/idm_tmp_data.bin $sg_dev \
+		sg_raw -v -r 512 -o idm_tmp_data.bin "$sg_dev" \
 			88 00 01 00 00 00 00 20 FF 01 00 00 00 01 00 00
-		sg_raw -v -s 512 -i /tmp/idm_tmp_data.bin $sg_dev \
+		sg_raw -v -s 512 -i idm_tmp_data.bin "$sg_dev" \
 			8E 00 FF 00 00 00 00 00 00 00 00 00 00 01 00 00
-		rm /tmp/idm_tmp_data.bin
+		rm idm_tmp_data.bin
 	fi
 done
 
@@ -57,14 +57,14 @@ for i in $(seq 1 ${#BLKDEVS[@]}); do
 done
 
 for d in "${BLKDEVS[@]}"; do
-	drive_wwn=`udevadm info $d | awk -F= '/E: ID_WWN=/ {print $2}'`
+	drive_wwn=$(udevadm info "$d" | awk -F= '/E: ID_WWN=/ {print $2}')
 	for dev in /dev/*; do
 		if [ -b "$dev" ] && [[ ! "$dev" =~ [0-9] ]]; then
-			wwn=`udevadm info "${dev}" | awk -F= '/E: ID_WWN=/ {print $2}'`
+			wwn=$(udevadm info "$dev" | awk -F= '/E: ID_WWN=/ {print $2}')
 			if [ "$wwn" = "$drive_wwn" ]; then
 				base_name="$(basename -- ${dev})"
 				drive_list+=("$base_name")
-				host_list+=(`readlink /sys/block/$base_name | awk -F'/' '{print $6}'`)
+				host_list+=( $(readlink "/sys/block/$base_name" | awk -F'/' '{print $6}') )
 			fi
 		fi
 	done

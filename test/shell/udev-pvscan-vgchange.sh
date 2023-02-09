@@ -336,7 +336,7 @@ ls "$RUNDIR/lvm/vgs_online/$vg8"
 journalctl -u lvm-activate-$vg8 | tee out || true
 grep "now active" out
 
-num_active=$(lvs $vg8 --noheading -o active | grep active | wc -l)
+num_active=$(lvs $vg8 --noheading -o active | grep -c active)
 
 test $num_active -eq $TEST_DEVS
 
@@ -375,7 +375,7 @@ wait_md_create "$mddev"
 vgcreate $vg9 "$mddev"
 lvmdevices --adddev "$mddev" || true
 
-PVIDMD=`pvs $mddev --noheading -o uuid | tr -d - | awk '{print $1}'`
+PVIDMD=$(pvs "$mddev" --noheading -o uuid | tr -d - | awk '{print $1}')
 BDEVMD=$(basename "$mddev")
 
 lvcreate -l1 -an -n $lv1 $vg9
@@ -419,7 +419,7 @@ lvcreate -l1 -an -n $lv1 $vg10 "$dev1"
 
 PVID1=$(pvs "$dev1" --noheading -o uuid | tr -d - | awk '{print $1}')
 # PVID with dashes
-OPVID1=`pvs "$dev1" --noheading -o uuid | awk '{print $1}'`
+OPVID1=$(pvs "$dev1" --noheading -o uuid | awk '{print $1}')
 
 udevadm trigger --settle -c add /sys/block/$BDEV1
 

@@ -404,8 +404,8 @@ lvcreate -l1 -an $vg
 _clear_devs "$dev1" "$dev2"
 vgcreate $vg "$dev1"
 pvck --dump headers "$dev1" || true
-UUID1=`pvck --dump headers "$dev1" | grep pv_header.pv_uuid | awk '{print $2}'`
-echo $UUID1
+UUID1=$(pvck --dump headers "$dev1" | grep pv_header.pv_uuid | awk '{print $2}')
+echo "$UUID1"
 dd if=/dev/zero of="$dev1" bs=512 count=2
 pvck --dump headers "$dev1" || true
 pvck --dump metadata_search --settings seqno=1 -f meta "$dev1" || true

@@ -28,7 +28,7 @@ pvcreate --pvmetadatacopies 2 "$dev1"
 
 vgcreate $SHARED "$vg" "$dev1"
 
-for i in `seq 1 50`; do lvcreate -l1 -an $vg; done
+for i in $(seq 1 50); do lvcreate -l1 -an $vg; done
 
 # Check metadata copies are separated by zeroes in the first mda
 
@@ -53,8 +53,6 @@ cat meta.zeros
 
 grep '0000 0000 0000 0000 0000 0000 0000 0000' meta.zeros > meta.count
 
-cat meta.count | wc -l
-
 # wc will often equal 51, but some natural variability in
 # metadata locations/content mean that some lines do not
 # require a full line of zero padding, and will not match
@@ -63,7 +61,7 @@ cat meta.count | wc -l
 # random choice, and this isn't a perfect way to test for
 # zero padding.)
 
-test "$(cat meta.count | wc -l)" -gt 20
+test "$(wc -l < meta.count)" -gt 20
 
 rm meta.raw meta.txt meta.vg meta.zeros meta.count
 
@@ -85,8 +83,6 @@ cat meta.zeros
 
 grep '0000 0000 0000 0000 0000 0000 0000 0000' meta.zeros > meta.count
 
-cat meta.count | wc -l
-
-test "$(cat meta.count | wc -l)" -gt 20
+test "$(wc -l < meta.count)" -gt 20
 
 vgremove -ff $vg

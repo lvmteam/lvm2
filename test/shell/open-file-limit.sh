@@ -27,7 +27,7 @@ for i in $(seq 1 200); do
 done
 
 pvs > out
-test "$(grep pv out | wc -l)" -eq 200
+test "$(grep -c pv out)" -eq 200
 
 # Set the soft limit to 100 fd's when 200 PVs need to be open.
 # This requires lvm to increase its soft limit in order to
@@ -38,11 +38,11 @@ aux lvmconf 'devices/obtain_device_list_from_udev = 0'
 
 prlimit --nofile=100: pvs > out
 
-test "$(grep pv out | wc -l)" -eq 200
+test "$(grep -c pv out)" -eq 200
 
 aux lvmconf 'devices/obtain_device_list_from_udev = 1'
 
 prlimit --nofile=100: pvs > out
 
-test "$(grep pv out | wc -l)" -eq 200
+test "$(grep -c pv out)" -eq 200
 

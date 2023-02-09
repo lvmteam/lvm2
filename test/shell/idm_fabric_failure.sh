@@ -24,13 +24,13 @@ vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3"
 # Create new logic volume
 lvcreate -a ey --zero n -l 50%FREE -n $lv1 $vg
 
-DRIVE1=`dmsetup deps -o devname $dev1 | awk '{gsub(/[()]/,""); print $4;}' | sed 's/[0-9]*$//'`
-DRIVE2=`dmsetup deps -o devname $dev2 | awk '{gsub(/[()]/,""); print $4;}' | sed 's/[0-9]*$//'`
-DRIVE3=`dmsetup deps -o devname $dev3 | awk '{gsub(/[()]/,""); print $4;}' | sed 's/[0-9]*$//'`
+DRIVE1=$(dmsetup deps -o devname "$dev1" | awk '{gsub(/[()]/,""); print $4;}' | sed 's/[0-9]*$//')
+DRIVE2=$(dmsetup deps -o devname "$dev2" | awk '{gsub(/[()]/,""); print $4;}' | sed 's/[0-9]*$//')
+DRIVE3=$(dmsetup deps -o devname "$dev3" | awk '{gsub(/[()]/,""); print $4;}' | sed 's/[0-9]*$//')
 
-HOST1=`readlink /sys/block/$DRIVE1 | awk -F'/' '{print $6}'`
-HOST2=`readlink /sys/block/$DRIVE2 | awk -F'/' '{print $6}'`
-HOST3=`readlink /sys/block/$DRIVE3 | awk -F'/' '{print $6}'`
+HOST1=$(readlink "/sys/block/$DRIVE1" | awk -F'/' '{print $6}')
+HOST2=$(readlink "/sys/block/$DRIVE2" | awk -F'/' '{print $6}')
+HOST3=$(readlink "/sys/block/$DRIVE3" | awk -F'/' '{print $6}')
 
 # Emulate fabric failure
 echo 1 > "/sys/block/$DRIVE1/device/delete"

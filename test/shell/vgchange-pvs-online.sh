@@ -86,15 +86,15 @@ _clear_online_files
 pvscan --cache "$bd1"
 pvscan --cache "$bd2"
 strace -e io_submit vgchange -aay --autoactivation event $vg1 2>&1|tee trace.out
-test "$(grep io_submit trace.out | wc -l)" -eq 3
+test "$(grep -c io_submit trace.out)" -eq 3
 rm trace.out
 
 strace -e io_submit pvscan --cache "$bd3" 2>&1|tee trace.out
-test "$(grep io_submit trace.out | wc -l)" -eq 1
+test "$(grep -c io_submit trace.out)" -eq 1
 rm trace.out
 
 strace -e io_submit vgchange -aay --autoactivation event $vg2 2>&1|tee trace.out
-test "$(grep io_submit trace.out | wc -l)" -eq 2
+test "$(grep -c io_submit trace.out)" -eq 2
 rm trace.out
 fi
 

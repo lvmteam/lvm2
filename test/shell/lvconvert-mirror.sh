@@ -316,8 +316,8 @@ fi
 # Test pulling primary image before mirror in-sync (should fail)
 # Test pulling primary image after mirror in-sync (should work)
 #
-aux zero_dev "$dev2" $(get first_extent_sector "$dev2"):
-aux zero_dev "$dev4" $(get first_extent_sector "$dev4"):
+aux zero_dev "$dev2" "$(get first_extent_sector "$dev2"):"
+aux zero_dev "$dev4" "$(get first_extent_sector "$dev4"):"
 
 SHOULD=
 aux throttle_dm_mirror || SHOULD=should

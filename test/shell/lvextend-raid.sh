@@ -21,16 +21,16 @@ aux have_raid 1 15 0 && PROGRESS=1
 
 # Use smallest regionsize to save VG space
 regionsize=$(getconf PAGESIZE) # in bytes
-let pageregions=regionsize*8  # number of regions per MD bitmap page
+pageregions=$(( regionsize * 8 )) # number of regions per MD bitmap page
 
 # in KiB
-let regionsize=regionsize/1024
+regionsize=$(( regionsize / 1024 ))
 
 # in MiB
-let lvsz=pageregions*regionsize/1024
-let lvext=lvsz/8
+lvsz=$(( pageregions * regionsize / 1024 ))
+lvext=$(( lvsz / 8 ))
 
-aux prepare_pvs 2 $(($lvsz + 3 * $lvext))
+aux prepare_pvs 2 $(( lvsz + 3 *  lvext ))
 get_devs
 vgcreate -s 4k $vg ${DEVICES[@]}
 
@@ -45,12 +45,12 @@ aux zero_dev "$dev1" "${sector}:"
 aux delayzero_dev "$dev2"  0 10 "${sector}:"
 
 # Create raid1 LV consuming 1 MD bitmap page
-lvcreate --yes --type raid1 --regionsize ${regionsize}K -L$(($lvsz-$lvext))M -n $lv1 $vg
+lvcreate --yes --type raid1 --regionsize ${regionsize}K -L$(( lvsz - lvext ))M -n $lv1 $vg
 
 lvs -a $vg
 
 not check lv_field $vg/$lv1 sync_percent "100.00"
-check lv_field $vg/$lv1 size "$(($lvsz-$lvext)).00m" $vg/$lv1
+check lv_field $vg/$lv1 size "$(( lvsz - lvext )).00m" $vg/$lv1
 aux wait_for_sync $vg $lv1
 check lv_field $vg/$lv1 sync_percent "100.00"
 check lv_field $vg/$lv1 region_size "4.00k"
@@ -65,7 +65,7 @@ if [ $PROGRESS -eq 1 ]
 then
 # Even with delayed devices wre are catching races here.
 should not check lv_field $vg/$lv1 sync_percent "100.00"
-check lv_field $vg/$lv1 size "$(($lvsz)).00m" $vg/$lv1
+check lv_field $vg/$lv1 size "$lvsz.00m" $vg/$lv1
 fi
 aux wait_for_sync $vg $lv1
 check lv_field $vg/$lv1 sync_percent "100.00"
@@ -85,6 +85,6 @@ aux enable_dev "$dev2"
 
 aux wait_for_sync $vg $lv1
 check lv_field $vg/$lv1 sync_percent "100.00"
-check lv_field $vg/$lv1 size "$(($lvsz+$lvext)).00m" $vg/$lv1
+check lv_field $vg/$lv1 size "$(( lvsz + lvext )).00m" $vg/$lv1
 
 vgremove -ff $vg

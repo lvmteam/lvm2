@@ -110,12 +110,12 @@ not grep scan: tmptest
 
 if which strace; then
 strace -e io_submit pvs 2>&1|tee tmptest
-test "$(grep io_submit tmptest | wc -l)" -eq 3
+test "$(grep -c io_submit tmptest)" -eq 3
 
 # test that 'pvs -a' submits seven reads, one for each device,
 # and one more in vg_read rescan check
 strace -e io_submit pvs -a 2>&1|tee tmptest
-test "$(grep io_submit tmptest | wc -l)" -eq 7
+test "$(grep -c io_submit tmptest)" -eq 7
 fi
 
 #

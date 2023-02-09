@@ -29,7 +29,7 @@ lvcreate -L1 -n cow $vg
 
 # Thin and snapshot conversion
 lvcreate -T -L1 -V10 -n th $vg/pool
-eval $(lvs -S 'name=~_pmspare' -a -o name --config 'report/mark_hidden_devices=0' --noheading --nameprefixes $vg)
+eval "$(lvs -S 'name=~_pmspare' -a -o name --config 'report/mark_hidden_devices=0' --noheading --nameprefixes $vg)"
 
 # Cannot create snapshot of pool's meta
 not lvcreate -s -L1 $vg/pool_tmeta 2>&1 | tee err

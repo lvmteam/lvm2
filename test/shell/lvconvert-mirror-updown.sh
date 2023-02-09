@@ -22,8 +22,8 @@ get_devs
 vgcreate $SHARED -s 64k "$vg" "${DEVICES[@]}"
 
 # Use zero devices for big mirror legs
-aux zero_dev "$dev2" $(get first_extent_sector "$dev2"):
-aux zero_dev "$dev3" $(get first_extent_sector "$dev3"):
+aux zero_dev "$dev2" "$(get first_extent_sector "$dev2"):"
+aux zero_dev "$dev3" "$(get first_extent_sector "$dev3"):"
 
 lvcreate -aey -L90 --type mirror --corelog --regionsize 16k -m1 -n $lv1 $vg "$dev1" "$dev2"
 

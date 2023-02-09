@@ -21,9 +21,9 @@ SKIP_WITH_LVMPOLLD=1
 aux prepare_devs 3
 aux extend_filter_LVMTEST
 
-DRIVE1=`dmsetup deps -o devname $dev1 | awk '{gsub(/[()]/,""); print $4;}' | sed 's/[0-9]*$//'`
-DRIVE2=`dmsetup deps -o devname $dev2 | awk '{gsub(/[()]/,""); print $4;}' | sed 's/[0-9]*$//'`
-DRIVE3=`dmsetup deps -o devname $dev3 | awk '{gsub(/[()]/,""); print $4;}' | sed 's/[0-9]*$//'`
+DRIVE1=$(dmsetup deps -o devname "$dev1" | awk '{gsub(/[()]/,""); print $4;}' | sed 's/[0-9]*$//')
+DRIVE2=$(dmsetup deps -o devname "$dev2" | awk '{gsub(/[()]/,""); print $4;}' | sed 's/[0-9]*$//')
+DRIVE3=$(dmsetup deps -o devname "$dev3" | awk '{gsub(/[()]/,""); print $4;}' | sed 's/[0-9]*$//')
 
 if [ "$DRIVE1" = "$DRIVE2" ] || [ "$DRIVE1" = "$DRIVE3" ] || [ "$DRIVE2" = "$DRIVE3" ]; then
 	die "Need to pass three different drives!?"

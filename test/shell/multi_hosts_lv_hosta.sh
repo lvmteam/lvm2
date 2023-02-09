@@ -42,14 +42,14 @@ for d in "${BLKDEVS[@]}"; do
 	dd if=/dev/zero of="$d" bs=32k count=1
 	wipefs -a "$d" 2>/dev/null || true
 
-	sg_dev=`sg_map26 ${d}`
+	sg_dev=$(sg_map26 "$d")
 	if [ -n "$LVM_TEST_LOCK_TYPE_IDM" ]; then
 		echo "Cleanup IDM context for drive ${d} ($sg_dev)"
-		sg_raw -v -r 512 -o /tmp/idm_tmp_data.bin $sg_dev \
+		sg_raw -v -r 512 -o idm_tmp_data.bin "$sg_dev" \
 			88 00 01 00 00 00 00 20 FF 01 00 00 00 01 00 00
-		sg_raw -v -s 512 -i /tmp/idm_tmp_data.bin $sg_dev \
+		sg_raw -v -s 512 -i idm_tmp_data.bin "$sg_dev" \
 			8E 00 FF 00 00 00 00 00 00 00 00 00 00 01 00 00
-		rm /tmp/idm_tmp_data.bin
+		rm idm_tmp_data.bin
 	fi
 done
 

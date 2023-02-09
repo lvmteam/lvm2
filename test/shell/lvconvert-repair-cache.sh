@@ -69,7 +69,7 @@ lvconvert --repair $vg/$lv1
 lvs -a $vg
 check lv_exists $vg ${lv1}_meta0
 
-eval $(lvs -S 'name=~_pmspare' -a --config 'report/mark_hidden_devices=0' -o name --noheading --nameprefixes $vg)
+eval "$(lvs -S 'name=~_pmspare' -a --config 'report/mark_hidden_devices=0' -o name --noheading --nameprefixes $vg)"
 lvremove -f --yes "$vg/$LVM2_LV_NAME"
 
 # check --repair without creation of _pmspare device
@@ -77,7 +77,7 @@ lvconvert --repair --poolmetadataspare n $vg/$lv1
 check lv_exists $vg ${lv1}_meta1
 
 # check no _pmspare has been created in previous --repair
-test "0" = $(lvs -S 'name=~_pmspare' -a -o name --noheading --nameprefixes $vg | wc -l)
+test "0" = "$(lvs -S 'name=~_pmspare' -a -o name --noheading --nameprefixes $vg | wc -l)"
 
 
 aux disable_dev "$dev2"

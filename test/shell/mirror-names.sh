@@ -44,11 +44,11 @@ lv_devices_() {
 }
 
 lv_mirror_log_() {
-	get lv_field "$1" mirror_log | tr -d []
+	get lv_field "$1" mirror_log | tr -d '[]'
 }
 
 lv_convert_lv_() {
-	get lv_field "$1" convert_lv | tr -d []
+	get lv_field "$1" convert_lv | tr -d '[]'
 }
 
 # ---------------------------------------------------------------------

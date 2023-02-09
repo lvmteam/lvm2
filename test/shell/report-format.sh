@@ -34,9 +34,9 @@ lvs -o name,kernel_major,data_percent,tags | tee "$OUT_LOG_FILE"
 #  lvol2   -1        lv_tag1
 #  lvol3  253        lv_tag1,lv_tag2,lv_tag3
 #
-grep -E "^[[:space:]]*$lv1[[:space:]]*[[:digit:]]+[[:space:]]*[[:digit:]]+.[[:digit:]]+[[:space:]]*\$" out
-grep -E "^[[:space:]]*$lv2[[:space:]]*-1[[:space:]]*lv_tag1[[:space:]]*\$" out
-grep -E "^[[:space:]]*$lv3[[:space:]]*[[:digit:]]+[[:space:]]*lv_tag1,lv_tag2,lv_tag3\$" out
+grep -E "^[[:space:]]*${lv1}[[:space:]]*[[:digit:]]+[[:space:]]*[[:digit:]]+.[[:digit:]]+[[:space:]]*\$" out
+grep -E "^[[:space:]]*${lv2}[[:space:]]*-1[[:space:]]*lv_tag1[[:space:]]*\$" out
+grep -E "^[[:space:]]*${lv3}[[:space:]]*[[:digit:]]+[[:space:]]*lv_tag1,lv_tag2,lv_tag3\$" out
 
 
 aux lvmconf "report/output_format = json"

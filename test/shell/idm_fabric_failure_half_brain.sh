@@ -21,8 +21,8 @@ SKIP_WITH_LVMPOLLD=1
 aux prepare_devs 2
 aux extend_filter_LVMTEST
 
-DRIVE1=`dmsetup deps -o devname $dev1 | awk '{gsub(/[()]/,""); print $4;}' | sed 's/[0-9]*$//'`
-DRIVE2=`dmsetup deps -o devname $dev2 | awk '{gsub(/[()]/,""); print $4;}' | sed 's/[0-9]*$//'`
+DRIVE1=$(dmsetup deps -o devname "$dev1" | awk '{gsub(/[()]/,""); print $4;}' | sed 's/[0-9]*$//')
+DRIVE2=$(dmsetup deps -o devname "$dev2" | awk '{gsub(/[()]/,""); print $4;}' | sed 's/[0-9]*$//')
 
 [ "$(basename -- $DRIVE1)" = "$(basename -- $DRIVE2)" ] && die "Need to pass two different drives!?"
 
@@ -42,14 +42,14 @@ drive_list=($DRIVE1)
 # Find all drives with the same WWN and delete them from system,
 # so that we can emulate the same drive with multiple paths are
 # disconnected with system.
-drive_wwn=`udevadm info /dev/${DRIVE1} | awk -F= '/E: ID_WWN=/ {print $2}'`
+drive_wwn=$(udevadm info /dev/${DRIVE1} | awk -F= '/E: ID_WWN=/ {print $2}')
 for dev in /dev/*; do
 	if [ -b "$dev" ] && [[ ! "$dev" =~ [0-9] ]]; then
-		wwn=`udevadm info "${dev}" | awk -F= '/E: ID_WWN=/ {print $2}'`
+		wwn=$(udevadm info "${dev}" | awk -F= '/E: ID_WWN=/ {print $2}')
 		if [ "$wwn" = "$drive_wwn" ]; then
 			base_name="$(basename -- ${dev})"
 			drive_list+=("$base_name")
-			host_list+=(`readlink /sys/block/$base_name | awk -F'/' '{print $6}'`)
+			host_list+=( $(readlink "/sys/block/$base_name" | awk -F'/' '{print $6}') )
 		fi
 	fi
 done

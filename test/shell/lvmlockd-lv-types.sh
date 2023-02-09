@@ -52,7 +52,7 @@ vgcreate --shared $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 RUNDIR="/run"
 test -d "$RUNDIR" || RUNDIR="/var/run"
 
-PVID1=`pvs $dev1 --noheading -o uuid | tr -d - | awk '{print $1}'`
+PVID1=$(pvs "$dev1" --noheading -o uuid | tr -d - | awk '{print $1}')
 pvscan --cache -aay "$dev1"
 not ls "$RUNDIR/lvm/pvs_online/$PVID1"
 pvscan --cache -aay

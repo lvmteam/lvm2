@@ -32,7 +32,7 @@ get_devs
 
 vgcreate $SHARED $vg "$dev1"
 
-for i in `seq 1 40`; do lvcreate -an -l1 $vg; done;
+for i in $(seq 1 40); do lvcreate -an -l1 $vg; done;
 
 lvs $vg
 
