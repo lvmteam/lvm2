@@ -1,5 +1,7 @@
 version 2.03.19 - 
 ====================================
+  Configure supports --with-systemd-run executed from udev rules.
+  Enhancement for build with MuslC systemd and non-bash system shells (dash).
   Do not reset SYSTEMD_READY variable in udev for PVs on MD and loop devices.
   Ensure udev is processing origin LV before its thick snapshots LVs.
   Fix and improve runtime memory size detection for VDO volumes.
