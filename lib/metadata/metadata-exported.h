@@ -896,7 +896,7 @@ int update_thin_pool_params(struct cmd_context *cmd,
 			    uint32_t pool_data_extents,
 			    uint32_t *pool_metadata_extents,
 			    struct logical_volume *metadata_lv,
-			    unsigned *crop_metadata,
+			    thin_crop_metadata_t *crop_metadata,
 			    int *chunk_size_calc_method, uint32_t *chunk_size,
 			    thin_discards_t *discards, thin_zero_t *zero_new_blocks);
 
