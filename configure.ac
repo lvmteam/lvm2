@@ -1102,6 +1102,19 @@ AS_IF([test "$NOTIFYDBUS_SUPPORT" = "yes" || test "$SYSTEMD_JOURNAL_SUPPORT" = "
 ])
 
 ################################################################################
+dnl -- Support override for systemd-run path if they need to (NixOS builds)
+AC_ARG_WITH(systemd-run,
+	    AS_HELP_STRING([--with-systemd-run=PATH],
+			   [systemd-run tool: [autodetect]]),
+			   SYSTEMD_RUN_CMD=$withval, SYSTEMD_RUN_CMD="autodetect")
+
+AS_IF([test "$SYSTEMD_RUN_CMD" = "autodetect"],
+      [AC_PATH_TOOL(SYSTEMD_RUN_CMD, systemd-run)
+       AS_IF([test -z "$SYSTEMD_RUN_CMD"], [SYSTEMD_RUN_CMD="/usr/bin/systemd-run"])],
+      [AC_MSG_CHECKING([for defined systemd-run])
+       AC_MSG_RESULT([$SYSTEMD_RUN_CMD])])
+
+################################################################################
 
 dnl -- Enable blkid wiping functionality
 AC_ARG_ENABLE(blkid_wiping,
@@ -1908,6 +1921,7 @@ AC_SUBST(SBINDIR)
 AC_SUBST(SELINUX_LIBS)
 AC_SUBST(SELINUX_PC)
 AC_SUBST(SYSCONFDIR)
+AC_SUBST(SYSTEMD_RUN_CMD)
 AC_SUBST(SNAPSHOTS)
 AC_SUBST(STATICDIR)
 AC_SUBST(STATIC_LINK)
