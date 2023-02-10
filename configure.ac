@@ -1113,12 +1113,11 @@ AC_ARG_ENABLE(blkid_wiping,
 #       so lvresize can check detected flag here
 #
 DEFAULT_USE_BLKID_WIPING=0
-AS_IF([test "$BLKID_WIPING" != "no"], [blkdir_version=">= 2.24"], [blkid_version=""])
 
-PKG_CHECK_MODULES([BLKID], [blkid $blkid_version ], [
+PKG_CHECK_MODULES([BLKID], [blkid >= 2.24], [
 	HAVE_BLKID=1
 
-	AC_CACHE_CHECK([for blkdid.h supports SUBLKS_FSINFO.],
+	AC_CACHE_CHECK([for blkdid.h defines BLKID_SUBLKS_FSINFO.],
 		[ac_cv_have_blkid_sublks_fsinfo],
 		[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <blkid/blkid.h>
 #ifndef BLKID_SUBLKS_FSINFO
