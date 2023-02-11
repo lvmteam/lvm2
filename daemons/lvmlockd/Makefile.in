@@ -52,8 +52,8 @@ LDFLAGS += -L$(top_builddir)/libdaemon/server $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS)
 LIBS += $(DAEMON_LIBS) $(PTHREAD_LIBS)
 
 ifeq ($(USE_SD_NOTIFY),yes)
-	CFLAGS += $(shell pkg-config --cflags libsystemd) -DUSE_SD_NOTIFY
-	LIBS += $(shell pkg-config --libs libsystemd)
+	CFLAGS += $(SYSTEMD_CFLAGS) -DUSE_SD_NOTIFY
+	LIBS += $(SYSTEMD_LIBS)
 endif
 
 lvmlockd: $(OBJECTS) $(top_builddir)/libdaemon/server/libdaemonserver.a $(INTERNAL_LIBS)
