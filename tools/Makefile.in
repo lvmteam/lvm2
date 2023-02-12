@@ -133,7 +133,7 @@ man-generator.c: $(srcdir)/command.c
 
 man-generator: man-generator.o
 	@echo "    [CC] $@"
-	$(Q) $(CC) $(CFLAGS) -o $@ $(<F)
+	$(Q) $(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $(<F)
 
 lvm.static: $(OBJECTS) lvm-static.o $(LVMINTERNAL_LIBS)
 	@echo "    [CC] $@"
