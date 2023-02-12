@@ -312,8 +312,13 @@ static int _create_control(const char *control, uint32_t major, uint32_t minor)
 	old_umask = umask(DM_CONTROL_NODE_UMASK);
 	if (mknod(control, S_IFCHR | S_IRUSR | S_IWUSR,
 		  MKDEV(major, minor)) < 0)  {
-		log_sys_error("mknod", control);
-		ret = 0;
+		if (errno != EEXIST) {
+			log_sys_error("mknod", control);
+			ret = 0;
+		} else if (_control_exists(control, major, minor) != 1) {
+			stack; /* Invalid control node created by parallel command ? */
+			ret = 0;
+		}
 	}
 	umask(old_umask);
 	(void) dm_prepare_selinux_context(NULL, 0);
