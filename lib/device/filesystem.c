@@ -219,10 +219,10 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 	FILE *fp;
 	char proc_line[PATH_MAX];
 	char proc_fstype[FSTYPE_MAX];
-	char proc_devpath[1024];
-	char proc_mntpath[1024];
-	char lv_mapper_path[1024];
-	char mntent_mount_dir[1024];
+	char proc_devpath[PATH_MAX];
+	char proc_mntpath[PATH_MAX];
+	char lv_mapper_path[PATH_MAX];
+	char mntent_mount_dir[PATH_MAX];
 	char *dm_name;
 	struct stat st_lv;
 	struct stat stme;
@@ -262,14 +262,14 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 			continue;
 		if (stme.st_dev != st_lv.st_rdev)
 			continue;
-		strncpy(mntent_mount_dir, me->mnt_dir, PATH_MAX-1);
+		dm_strncpy(mntent_mount_dir, me->mnt_dir, sizeof(mntent_mount_dir));
 	}
 	endmntent(fme);
 
 	if (!(dm_name = dm_build_dm_name(cmd->mem, lv->vg->name, lv->name, NULL)))
 		return_0;
 
-	if ((dm_snprintf(lv_mapper_path, 1024, "%s/%s", dm_dir(), dm_name) < 0))
+	if ((dm_snprintf(lv_mapper_path, sizeof(lv_mapper_path), "%s/%s", dm_dir(), dm_name) < 0))
 		return_0;
 
 	if (!(fp = fopen("/proc/mounts", "r")))
