@@ -31,6 +31,8 @@ aux extend_filter_LVMTEST
 # output
 aux prepare_profiles "lvmdbusd"
 
+# Keep generating test file within test dir
+export TMPDIR=$PWD
 aux prepare_lvmdbusd
 
 # Example for testing individual test:
