@@ -1389,7 +1389,7 @@ static int _vg_commit_file(struct format_instance *fid, struct volume_group *vg,
 	struct text_context *tc = (struct text_context *) mda->metadata_locn;
 	const char *slash;
 	char new_name[PATH_MAX];
-	size_t len;
+	size_t len, vglen;
 
 	if (!_vg_commit_file_backup(fid, vg, mda))
 		return 0;
@@ -1401,14 +1401,15 @@ static int _vg_commit_file(struct format_instance *fid, struct volume_group *vg,
 		slash = tc->path_live;
 
 	if (strcmp(slash, vg->name)) {
+		vglen = strlen(vg->name) + 1;
 		len = slash - tc->path_live;
-		if ((len + strlen(vg->name)) > (sizeof(new_name) - 1)) {
+		if ((len + vglen) > (sizeof(new_name) - 1)) {
 			log_error("Renaming path %s is too long for VG %s.",
 				  tc->path_live, vg->name);
 			return 0;
 		}
 		strncpy(new_name, tc->path_live, len);
-		strcpy(new_name + len, vg->name);
+		memcpy(new_name + len, vg->name, vglen);
 		log_debug_metadata("Renaming %s to %s", tc->path_live, new_name);
 		if (test_mode())
 			log_verbose("Test mode: Skipping rename");

@@ -1581,7 +1581,7 @@ struct cmd_context *create_config_context(void)
 	if (!(cmd = zalloc(sizeof(*cmd))))
 		goto_out;
 
-	strcpy(cmd->system_dir, DEFAULT_SYS_DIR);
+	strncpy(cmd->system_dir, DEFAULT_SYS_DIR, sizeof(cmd->system_dir) - 1);
 
 	if (!_get_env_vars(cmd))
 		goto_out;
@@ -1713,10 +1713,8 @@ struct cmd_context *create_toolcontext(unsigned is_clvmd,
 	/*
 	 * Environment variable LVM_SYSTEM_DIR overrides this below.
 	 */
-        if (system_dir)
-		strncpy(cmd->system_dir, system_dir, sizeof(cmd->system_dir) - 1);
-	else
-		strcpy(cmd->system_dir, DEFAULT_SYS_DIR);
+	strncpy(cmd->system_dir, (system_dir) ? system_dir : DEFAULT_SYS_DIR,
+		sizeof(cmd->system_dir) - 1);
 
 	if (!_get_env_vars(cmd))
 		goto_out;

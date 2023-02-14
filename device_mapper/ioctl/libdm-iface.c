@@ -843,8 +843,8 @@ int dm_task_get_device_list(struct dm_task *dmt, struct dm_list **devs_list,
 		dm_dev->event_nr = 0;
 		dm_dev->uuid = NULL;
 
-		strcpy(dm_dev->name, names->name);
 		len = strlen(names->name) + 1;
+		memcpy(dm_dev->name, names->name, len);
 
 		dm_new_dev = _align_ptr((char*)(dm_dev + 1) + len);
 		if (_check_has_event_nr()) {
@@ -862,8 +862,9 @@ int dm_task_get_device_list(struct dm_task *dmt, struct dm_list **devs_list,
 				*devs_features |= DM_DEVICE_LIST_HAS_UUID;
 				uuid_ptr = _align_ptr(event_nr + 2);
 				dm_dev->uuid = (char*) dm_new_dev;
-				dm_new_dev = _align_ptr((char*)dm_new_dev + strlen(uuid_ptr) + 1);
-				strcpy(dm_dev->uuid, uuid_ptr);
+				len = strlen(uuid_ptr) + 1;
+				dm_new_dev = _align_ptr((char*)dm_new_dev + len);
+				memcpy(dm_dev->uuid, uuid_ptr, len);
 				if (!dm_hash_insert(devs->uuids, dm_dev->uuid, dm_dev))
 					return_0; // FIXME
 #if 0
@@ -1201,9 +1202,10 @@ static char *_add_target(struct target *t, char *out, char *end)
 	while (*pt)
 		if (*pt++ == '\\')
 			backslash_count++;
-	len = strlen(t->params) + backslash_count;
 
-	if ((out >= end) || (out + len + 1) >= end) {
+	len = strlen(t->params) + 1;
+
+	if ((out >= end) || (out + len + backslash_count) >= end) {
 		log_error("Ran out of memory building ioctl parameter");
 		return NULL;
 	}
@@ -1219,8 +1221,8 @@ static char *_add_target(struct target *t, char *out, char *end)
 		*out++ = '\0';
 	}
 	else {
-		strcpy(out, t->params);
-		out += len + 1;
+		memcpy(out, t->params, len);
+		out += len + backslash_count;
 	}
 
 	/* align next block */
@@ -1291,6 +1293,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	struct target *t;
 	struct dm_target_msg *tmsg;
 	size_t len = sizeof(struct dm_ioctl);
+	size_t message_len = 0, newname_len = 0, geometry_len = 0;
 	char *b, *e;
 	int count = 0;
 
@@ -1351,14 +1354,20 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 		return NULL;
 	}
 
-	if (dmt->newname)
-		len += strlen(dmt->newname) + 1;
+	if (dmt->newname) {
+		newname_len = strlen(dmt->newname) + 1;
+		len += newname_len;
+	}
 
-	if (dmt->message)
-		len += sizeof(struct dm_target_msg) + strlen(dmt->message) + 1;
+	if (dmt->message) {
+		message_len = strlen(dmt->message) + 1;
+		len += sizeof(struct dm_target_msg) + message_len;
+	}
 
-	if (dmt->geometry)
-		len += strlen(dmt->geometry) + 1;
+	if (dmt->geometry) {
+		geometry_len = strlen(dmt->geometry) + 1;
+		len += geometry_len;
+	}
 
 	/*
 	 * Give len a minimum size so that we have space to store
@@ -1480,16 +1489,16 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 				goto_bad;
 
 	if (dmt->newname)
-		strcpy(b, dmt->newname);
+		memcpy(b, dmt->newname, newname_len);
 
 	if (dmt->message) {
 		tmsg = (struct dm_target_msg *) b;
 		tmsg->sector = dmt->sector;
-		strcpy(tmsg->message, dmt->message);
+		memcpy(tmsg->message, dmt->message, message_len);
 	}
 
 	if (dmt->geometry)
-		strcpy(b, dmt->geometry);
+		memcpy(b, dmt->geometry, geometry_len);
 
 	return dmi;
 
