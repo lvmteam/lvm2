@@ -1502,8 +1502,7 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 	 */
 	if ((dm_list_size(&pvscan_devs) == 1) &&
 	    !cmd->enable_devices_file &&
-	    !cmd->enable_devices_list &&
-	    regex_filter_contains_symlink(cmd)) {
+	    !cmd->enable_devices_list) {
 		char *env_str;
 		struct dm_list *env_aliases;
 		devl = dm_list_item(dm_list_first(&pvscan_devs), struct device_list);

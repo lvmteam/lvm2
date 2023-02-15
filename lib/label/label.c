@@ -1109,10 +1109,7 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 	 * filter.  We get devs from the pvs_online files, so we inherit the
 	 * regex filtering from pvscan and don't have to do it ourself.
 	 */
-	if (!cmd->enable_devices_file &&
-	    !cmd->enable_devices_list &&
-	    regex_filter_contains_symlink(cmd))
-		cmd->filter_regex_skip = 1;
+	cmd->filter_regex_skip = 1;
 
 	cmd->filter_nodata_only = 1;
 
