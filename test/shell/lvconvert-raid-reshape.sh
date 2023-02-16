@@ -17,6 +17,10 @@ LVM_SKIP_LARGE_TESTS=0
 
 . lib/inittest
 
+case "$(uname -r)" in
+5.19*) skip "Skippen test that kills this kernel" ;;
+esac
+
 which mkfs.ext4 || skip
 aux have_raid 1 14 0 || skip
 
