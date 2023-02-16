@@ -1090,7 +1090,7 @@ AS_IF([test "$APP_MACHINEID_SUPPORT" = "yes"],
 
 dnl -- Look for libsystemd libraries if needed
 AS_IF([test "$NOTIFYDBUS_SUPPORT" = "yes" || test "$SYSTEMD_JOURNAL_SUPPORT" = "yes" || test "$APP_MACHINEID_SUPPORT" = "yes"], [
-	PKG_CHECK_MODULES(SYSTEMD, [systemd], [SYSTEMD_LIBS="-lsystemd"], $bailout)
+	PKG_CHECK_MODULES(LIBSYSTEMD, [libsystemd], [], $bailout)
 ])
 
 ################################################################################

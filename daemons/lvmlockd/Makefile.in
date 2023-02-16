@@ -15,8 +15,6 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
-USE_SD_NOTIFY=yes
-
 SOURCES = lvmlockd-core.c
 
 ifeq ("@BUILD_LOCKDSANLOCK@", "yes")
@@ -51,9 +49,9 @@ INCLUDES += -I$(top_srcdir)/libdaemon/server
 LDFLAGS += -L$(top_builddir)/libdaemon/server $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS)
 LIBS += $(DAEMON_LIBS) $(PTHREAD_LIBS)
 
-ifeq ($(USE_SD_NOTIFY),yes)
-	CFLAGS += $(SYSTEMD_CFLAGS) -DUSE_SD_NOTIFY
-	LIBS += $(SYSTEMD_LIBS)
+ifneq (,$(firstword $(LIBSYSTEMD_LIBS)))
+	CFLAGS += $(LIBSYSTEMD_CFLAGS) -DUSE_SD_NOTIFY
+	LIBS += $(LIBSYSTEMD_LIBS)
 endif
 
 lvmlockd: $(OBJECTS) $(top_builddir)/libdaemon/server/libdaemonserver.a $(INTERNAL_LIBS)
