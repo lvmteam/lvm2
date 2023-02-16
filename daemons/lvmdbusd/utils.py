@@ -819,9 +819,12 @@ class LvmBug(RuntimeError):
 
 
 class LvmDebugData:
-	def __init__(self):
+	def __init__(self, do_collection):
 		self.fd = -1
 		self.fn = None
+		self.collect = do_collection
+		if self.collect:
+			log_msg("Collecting lvm debug data!")
 
 	def _remove_file(self):
 		if self.fn is not None:
@@ -835,8 +838,10 @@ class LvmDebugData:
 
 	def setup(self):
 		# Create a secure filename
-		self.fd, self.fn = tempfile.mkstemp(suffix=".log", prefix="lvmdbusd.lvm.debug.")
-		return self.fn
+		if self.collect:
+			self.fd, self.fn = tempfile.mkstemp(suffix=".log", prefix="lvmdbusd.lvm.debug.")
+			return self.fn
+		return None
 
 	def lvm_complete(self):
 		# Remove the file ASAP, so we decrease our odds of leaving it

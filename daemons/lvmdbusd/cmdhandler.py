@@ -626,8 +626,11 @@ def lvm_full_report_json():
 
 	# We are running the fullreport command, we will ask lvm to output the debug
 	# data, so we can have the required information for lvm to debug the fullreport failures.
+	# Note: this is disabled by default and can be enabled with env. var.
+	# LVM_DBUSD_COLLECT_LVM_DEBUG=True
 	fn = cfg.lvmdebug.setup()
-	add_config_option(cmd, "--config", "log {level=7 file=%s syslog=0}" % fn)
+	if fn is not None:
+		add_config_option(cmd, "--config", "log {level=7 file=%s syslog=0}" % fn)
 
 	rc, out, err = call(cmd)
 	# When we have an exported vg the exit code of lvs or fullreport will be 5
