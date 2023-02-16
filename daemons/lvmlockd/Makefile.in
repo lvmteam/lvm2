@@ -16,6 +16,11 @@ top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
 SOURCES = lvmlockd-core.c
+SOURCES2 = lvmlockctl.c
+
+TARGETS = lvmlockd lvmlockctl
+
+include $(top_builddir)/make.tmpl
 
 ifeq ("@BUILD_LOCKDSANLOCK@", "yes")
   SOURCES += lvmlockd-sanlock.c
@@ -36,16 +41,10 @@ ifeq ("@BUILD_LOCKDIDM@", "yes")
   LOCK_LIBS += -lseagate_ilm $(BLKID_LIBS)
 endif
 
-SOURCES2 = lvmlockctl.c
-
-TARGETS = lvmlockd lvmlockctl
-
 CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))
 CFLOW_TARGET = lvmlockd
 
 .PHONY: install_lvmlockd install_lvmlockctl
-
-include $(top_builddir)/make.tmpl
 
 CFLAGS += $(EXTRA_EXEC_CFLAGS)
 INCLUDES += -I$(top_srcdir)/libdaemon/server
