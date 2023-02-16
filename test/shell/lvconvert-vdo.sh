@@ -18,12 +18,18 @@ SKIP_WITH_LVMPOLLD=1
 #
 # Main
 #
-aux have_vdo 6 2 0 || skip
-
 aux prepare_vg 2 6400
 
 # Conversion to vdo-pool
 lvcreate -L5G -n $lv1 $vg
+
+if not aux have_vdo 6 2 0 ; then
+# For unsupported VDO let's check lvconvert fails
+	not lvconvert --yes --type vdo-pool $vg/$lv1 |& tee out
+	vgremove -ff $vg
+	exit
+fi
+
 # Check there is big prompting warning
 not lvconvert --type vdo-pool $vg/$lv1 |& tee out
 grep "WARNING" out
