@@ -281,6 +281,7 @@ lvmpolld_dump() {
 }
 
 prepare_lvmdbusd() {
+	local lvmdbusdebug=
 	local daemon
 	rm -f debug.log_LVMDBUSD_out
 
@@ -324,7 +325,8 @@ prepare_lvmdbusd() {
 	echo "## preparing lvmdbusd..."
 	lvmconf "global/notify_dbus = 1"
 
-	"$daemon" --debug  > debug.log_LVMDBUSD_out 2>&1 &
+	test "${LVM_DEBUG_LVMDBUS:-0}" != "0" && lvmdbusdebug="--debug"
+	"$daemon" $lvmdbusdebug > debug.log_LVMDBUSD_out 2>&1 &
 	local pid=$!
 
 	sleep 1
