@@ -1251,7 +1251,7 @@ AC_ARG_ENABLE(dbus-service,
 	      AS_HELP_STRING([--enable-dbus-service], [install D-Bus support]),
 	      BUILD_LVMDBUSD=$enableval, BUILD_LVMDBUSD="no")
 AC_MSG_RESULT([$BUILD_LVMDBUSD])
-AS_IF([test "$NOTIFYDBUS_SUPPORT" = "yes" && test "BUILD_LVMDBUSD" = "yes"],
+AS_IF([test "$NOTIFYDBUS_SUPPORT" = "no" && test "$BUILD_LVMDBUSD" = "yes"],
       [AC_MSG_WARN([Building D-Bus support without D-Bus notifications.])])
 
 ################################################################################
