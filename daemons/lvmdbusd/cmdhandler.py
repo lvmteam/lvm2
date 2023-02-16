@@ -109,7 +109,7 @@ def call_lvm(command, debug=False, line_cb=None,
 					stdin, CALL MUST EXECUTE QUICKLY and not *block*
 					otherwise call_lvm function will fail to read
 					stdin/stdout.  Return value of call back is ignored
-	:param cb_data: Supplied to callback to allow caller access to
+	:param cb_data: Supplied to call back to allow caller access to
 								its own data
 
 	# Callback signature
@@ -213,7 +213,7 @@ def _shell_cfg():
 def set_execution(shell):
 	global _t_call
 	with cmd_lock:
-		# If the user requested lvm shell and we are currently setup that
+		# If the user requested lvm shell, and we are currently setup that
 		# way, just return
 		if cfg.SHELL_IN_USE and shell:
 			return True

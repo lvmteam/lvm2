@@ -159,7 +159,7 @@ class ObjectManager(AutomatedProperties):
 			# print('Registering object path %s for %s' %
 			# (path, dbus_object.lvm_id))
 
-			# We want fast access to the object by a number of different ways
+			# We want fast access to the object by a number of different ways,
 			# so we use multiple hashs with different keys
 			self._lookup_add(dbus_object, path, dbus_object.lvm_id,
 				dbus_object.Uuid)
@@ -209,7 +209,7 @@ class ObjectManager(AutomatedProperties):
 
 	def get_object_by_lvm_id(self, lvm_id):
 		"""
-		Given an lvm identifier, return the object registered for it
+		Given a lvm identifier, return the object registered for it
 		:param lvm_id: The lvm identifier
 		"""
 		with self.rlock:
@@ -220,7 +220,7 @@ class ObjectManager(AutomatedProperties):
 
 	def get_object_path_by_lvm_id(self, lvm_id):
 		"""
-		Given an lvm identifier, return the object path for it
+		Given a lvm identifier, return the object path for it
 		:param lvm_id: The lvm identifier
 		:return: Object path or '/' if not found
 		"""
@@ -295,7 +295,7 @@ class ObjectManager(AutomatedProperties):
 			if uuid == lvm_id:
 				path = self._id_lookup(lvm_id)
 			else:
-				# We have a uuid and a lvm_id we can do sanity checks to ensure
+				# We have an uuid and a lvm_id we can do sanity checks to ensure
 				# that they are consistent
 
 				# If a PV is missing its device path is '[unknown]' or some
@@ -305,7 +305,7 @@ class ObjectManager(AutomatedProperties):
 				if cfg.db.pv_missing(uuid):
 					lvm_id = None
 
-				# Lets check for the uuid first
+				# Let's check for the uuid first
 				path = self._id_lookup(uuid)
 				if path:
 					# Ensure table lookups are correct

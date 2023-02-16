@@ -27,13 +27,13 @@ bus = None
 # Command line args
 args = None
 
-# Set to true if we are depending on external events for updates
+# Set to true if we depend on external events for updates
 got_external_event = False
 
 # Shared state variable across all processes
 run = multiprocessing.Value('i', 1)
 
-# If this is set to true, the current setup support lvm shell and we are
+# If this is set to true, the current setup support lvm shell, and we are
 # running in that mode of operation
 SHELL_IN_USE = None
 

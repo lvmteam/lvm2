@@ -90,7 +90,7 @@ def init_class_from_arguments(
 			nt = k
 
 			# If the current attribute has a value, but the incoming does
-			# not, don't overwrite it.  Otherwise the default values on the
+			# not, don't overwrite it.  Otherwise, the default values on the
 			# property decorator don't work as expected.
 			cur = getattr(obj_instance, nt, v)
 
@@ -110,7 +110,7 @@ def init_class_from_arguments(
 
 def get_properties(f):
 	"""
-	Walks through an object instance or it's parent class(es) and determines
+	Walks through an object instance, or it's parent class(es) and determines
 	which attributes are properties and if they were created to be used for
 	dbus.
 	:param f:   Object to inspect
@@ -194,7 +194,7 @@ def add_properties(xml, interface, props):
 				interface_element = c
 				break
 
-		# Interface is not present, lets create it so we have something to
+		# Interface is not present, lets create it, so we have something to
 		# attach the properties too
 		if interface_element is None:
 			interface_element = Et.Element("interface", name=interface)

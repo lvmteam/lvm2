@@ -62,7 +62,7 @@ def _move_callback(job_state, line_str):
 def _move_merge(interface_name, command, job_state):
 	# We need to execute these command stand alone by forking & exec'ing
 	# the command always as we will be getting periodic output from them on
-	# the status of the long running operation.
+	# the status of the long-running operation.
 
 	meta = LvmExecutionMeta(time.time(), 0, command)
 	cfg.flightrecorder.add(meta)

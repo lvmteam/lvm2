@@ -44,10 +44,10 @@ class AutomatedProperties(dbus.service.Object):
 
 	def set_interface(self, interface):
 		"""
-		With inheritance we can't easily tell what interfaces a class provides
+		With inheritance, we can't easily tell what interfaces a class provides,
 		so we will have each class that implements an interface tell the
 		base AutomatedProperties what it is they do provide.  This is kind of
-		clunky and perhaps we can figure out a better way to do this later.
+		clunky, and perhaps we can figure out a better way to do this later.
 		:param interface:       An interface the object supports
 		:return:
 		"""

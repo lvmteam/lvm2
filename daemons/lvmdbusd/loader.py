@@ -42,7 +42,7 @@ def common(retrieve, o_type, search_keys,
 		existing_paths = cfg.om.object_paths_by_type(o_type)
 
 	for o in objects:
-		# Assume we need to add this one to dbus, unless we are refreshing
+		# Assume we need to add this one to dbus, unless we are refreshing,
 		# and it's already present
 		return_object = True
 

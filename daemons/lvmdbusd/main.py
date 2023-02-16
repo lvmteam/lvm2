@@ -67,7 +67,7 @@ def check_fr_size(value):
 
 def install_signal_handlers():
 	# Because of the glib main loop stuff the python signal handler code is
-	# apparently not usable and we need to use the glib calls instead
+	# apparently not usable, and we need to use the glib calls instead
 	signal_add = None
 
 	if hasattr(GLib, 'unix_signal_add'):
@@ -208,7 +208,7 @@ def main():
 		thread_list.append(
 			threading.Thread(target=process_request, name='process_request'))
 
-		# Have a single thread handling updating lvm and the dbus model so we
+		# Have a single thread handling updating lvm and the dbus model, so we
 		# don't have multiple threads doing this as the same time
 		updater = StateUpdate()
 		thread_list.append(updater.thread)

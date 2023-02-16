@@ -25,8 +25,8 @@ from .utils import round_size, mt_remove_dbus_objects, lvm_column_key
 from .job import JobState
 
 
-# Try and build a key for a LV, so that we sort the LVs with least dependencies
-# first.  This may be error prone because of the flexibility LVM
+# Try and build a key for a LV, so that we sort the LVs with the least dependencies
+# first.  This may be error-prone because of the flexibility LVM
 # provides and what you can stack.
 def get_key(i):
 
