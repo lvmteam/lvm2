@@ -19,18 +19,21 @@ SOURCES = lvmlockd-core.c
 
 ifeq ("@BUILD_LOCKDSANLOCK@", "yes")
   SOURCES += lvmlockd-sanlock.c
-  LOCK_LIBS += -lsanlock_client
+  CFLAGS += $(LIBSANLOCKCLIENT_CFLAGS)
+  LOCK_LIBS += $(LIBSANLOCKCLIENT_LIBS)
 endif
 
 ifeq ("@BUILD_LOCKDDLM@", "yes")
   SOURCES += lvmlockd-dlm.c
-  LOCK_LIBS += -ldlm_lt
-  LOCK_LIBS += -ldlmcontrol
+  CFLAGS += $(LIBDLM) $(LIBDLMCONTROL_CFLAGS)
+#  LOCK_LIBS += $(LIBDLM_LIBS) $(LIBDLMCONTROL_LIBS)
+  LOCK_LIBS += -ldlm_lt $(LIBDLMCONTROL_LIBS)
 endif
 
 ifeq ("@BUILD_LOCKDIDM@", "yes")
   SOURCES += lvmlockd-idm.c
-  LOCK_LIBS += -lseagate_ilm -lblkid
+#  LOCK_LIBS += $(LIBSEAGATEILM_LIBS) $(BLKID_LIBS)
+  LOCK_LIBS += -lseagate_ilm $(BLKID_LIBS)
 endif
 
 SOURCES2 = lvmlockctl.c
