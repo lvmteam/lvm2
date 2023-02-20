@@ -37,8 +37,7 @@ endif
 
 ifeq ("@BUILD_LOCKDIDM@", "yes")
   SOURCES += lvmlockd-idm.c
-#  LOCK_LIBS += $(LIBSEAGATEILM_LIBS) $(BLKID_LIBS)
-  LOCK_LIBS += -lseagate_ilm $(BLKID_LIBS)
+  LOCK_LIBS += $(LIBSEAGATEILM_LIBS) $(BLKID_LIBS)
 endif
 
 CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))

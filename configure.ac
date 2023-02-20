@@ -928,8 +928,13 @@ AC_MSG_RESULT([$BUILD_LOCKDDLM])
 
 dnl -- Look for dlm libraries
 AS_IF([test "$BUILD_LOCKDDLM" = "yes"], [
-	PKG_CHECK_MODULES(LIBDLM, libdlm, [BUILD_LVMLOCKD="yes"], $bailout)
+	PKG_CHECK_MODULES(LIBDLM, libdlm_lt, [BUILD_LVMLOCKD="yes"], $bailout)
 	AC_DEFINE([LOCKDDLM_SUPPORT], 1, [Define to 1 to include code that uses lvmlockd dlm option.])
+	AS_CASE(["$LIBDLM_LIBS"],
+		[*lpthread*], [
+			dnl -- pkg-congig for libdlm_lt may give us libdlm with libpthread
+			AC_MSG_RESULT([replacing pkg-config --libs libdlm_lt "$LIBDLM_LIBS" with... -ldlm_lt])
+			LIBDLM_LIBS="${LIBDLM_LIBS%%ldlm*}ldlm_lt"])
 ])
 
 ################################################################################
@@ -961,6 +966,7 @@ AS_IF([test "$BUILD_LOCKDIDM" = "yes"], [
 	PKG_CHECK_EXISTS(blkid >= 2.24, [
 		PKG_CHECK_MODULES(LIBSEAGATEILM, [libseagate_ilm >= 0.1.0], [BUILD_LVMLOCKD="yes"], $bailout)
 		AC_DEFINE([LOCKDIDM_SUPPORT], 1, [Define to 1 to include code that uses lvmlockd IDM option.])
+		AS_IF([test -z "$LIBSEAGATEILM_LIBS"], [LIBSEAGATEILM_LIBS="-lseagate_ilm"])
 	], $bailout)
 ])
 
