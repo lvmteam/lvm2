@@ -13,6 +13,7 @@ import signal
 # noinspection PyUnresolvedReferences
 import subprocess
 import unittest
+import tempfile
 from glob import glob
 from subprocess import Popen, PIPE
 
@@ -253,6 +254,15 @@ def read_file_build_hash(fn):
 	return rc
 
 
+def remove_lvm_debug():
+	# If we are running the lvmdbusd daemon and collecting lvm debug data, check and
+	# clean-up after the tests.
+	tmpdir = tempfile.gettempdir()
+	for f in glob("lvmdbusd.lvm.debug.*.log", root_dir=tmpdir):
+		fn = os.path.join(tmpdir, f)
+		os.unlink(fn)
+
+
 class DaemonInfo(object):
 	def __init__(self, pid):
 		# The daemon is running, we have a pid, lets see how it's being run.
@@ -417,6 +427,7 @@ class TestDbusService(unittest.TestCase):
 		self.addCleanup(self.clean_up)
 
 		self.vdo = supports_vdo()
+		remove_lvm_debug()
 
 	def _recurse_vg_delete(self, vg_proxy, pv_proxy, nested_pv_hash):
 		vg_name = str(vg_proxy.Vg.Name)
@@ -480,6 +491,8 @@ class TestDbusService(unittest.TestCase):
 				if not found:
 					# print('Re-creating PV=', p)
 					self._pv_create(p)
+
+		remove_lvm_debug()
 
 	def _check_consistency(self):
 		# Only do consistency checks if we aren't running the unit tests
