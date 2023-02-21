@@ -1,4 +1,4 @@
-Version 1.02.191 - 
+Version 1.02.191 - 21st February 2023
 =====================================
   Improve parallel creation of /dev/mapper/control device node.
   Import previous ID_FS_* udev records in 13-dm-disk.rules for suspended DM dev.

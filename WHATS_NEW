@@ -1,4 +1,4 @@
-version 2.03.19 - 
+version 2.03.19 - 21st February 2023
 ====================================
   Configure supports --with-systemd-run executed from udev rules.
   Enhancement for build with MuslC systemd and non-bash system shells (dash).
@@ -6,7 +6,7 @@ version 2.03.19 -
   Ensure udev is processing origin LV before its thick snapshots LVs.
   Fix and improve runtime memory size detection for VDO volumes.
 
-version 2.03.18 - 22nd december 2022
+version 2.03.18 - 22nd December 2022
 ====================================
   Fix issues reported by coverity scan.
   Fix warning for thin pool overprovisioning on lvextend (2.03.17).
