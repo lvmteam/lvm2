@@ -247,12 +247,12 @@ static int get_local_nodeid(void)
 		if (!file)
 			continue;
 		if (fgets(line, LOCK_LINE_MAX, file)) {
-			fclose(file);
 			rv = sscanf(line, "%d", &val);
 			if ((rv == 1) && (val == 1 )) {
 				memset(ls_comms_path, 0, sizeof(ls_comms_path));
 				snprintf(ls_comms_path, PATH_MAX, "%s/%s/nodeid",
 				    DLM_COMMS_PATH, de->d_name);
+				fclose(file);
 				file = fopen(ls_comms_path, "r");
 				if (!file)
 					continue;
