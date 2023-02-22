@@ -14,6 +14,7 @@
  */
 
 #include "tools.h"
+#include "lib/label/hints.h"
 
 static int _vgimport_single(struct cmd_context *cmd,
 			    const char *vg_name,
@@ -47,6 +48,13 @@ static int _vgimport_single(struct cmd_context *cmd,
 		goto_bad;
 
 	log_print_unless_silent("Volume group \"%s\" successfully imported", vg->name);
+
+	/*
+	 * This is not necessary for any normal, known cases, but it could be
+	 * associated with some unconventional method of sharing disks.  Hints
+	 * should be disabled when sharing disks, but this might help.
+	 */
+	invalidate_hints(cmd);
 
 	return ECMD_PROCESSED;
 
