@@ -63,7 +63,7 @@ dmsetup: dmsetup.o $(LIBDM_SHARED)
 
 dmsetup.static: dmsetup.o $(LIBDM_STATIC)
 	@echo "    [CC] $@"
-	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -static \
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(STATIC_LDFLAGS) -static \
 	      -o $@ $< $(LIBDM_LIBS) $(LIBS) $(STATIC_LIBS)
 
 install_dmsetup_dynamic: dmsetup
@@ -84,7 +84,7 @@ dmfilemapd: dmfilemapd.o $(LIBDM_SHARED)
 
 dmfilemapd.static: dmfilemapd.o $(LIBDM_STATIC)
 	@echo "    [CC] $@"
-	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -static \
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(STATIC_LDFLAGS) -static \
 	      -o $@ $< $(LIBDM_LIBS) $(LIBS) $(STATIC_LIBS)
 
 install_dmfilemapd_dynamic: dmfilemapd

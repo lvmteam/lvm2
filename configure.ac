@@ -32,6 +32,7 @@ AS_CASE(["$host_os"],
 	[linux*], [
 		# equivalent to -rdynamic
 		ELDFLAGS="-Wl,--export-dynamic"
+		STATIC_LDFLAGS="-Wl,--no-export-dynamic"
 		# FIXME Generate list and use --dynamic-list=.dlopen.sym
 		CLDWHOLEARCHIVE="-Wl,-whole-archive"
 		CLDNOWHOLEARCHIVE="-Wl,-no-whole-archive"
@@ -1884,6 +1885,7 @@ AC_SUBST(SELINUX_PC)
 AC_SUBST(SILENT_RULES)
 AC_SUBST(SNAPSHOTS)
 AC_SUBST(STATICDIR)
+AC_SUBST(STATIC_LDFLAGS)
 AC_SUBST(STATIC_LINK)
 AC_SUBST(SYSCONFDIR)
 AC_SUBST(SYSTEMD_RUN_CMD)

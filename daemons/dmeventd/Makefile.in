@@ -76,7 +76,7 @@ dmeventd: $(LIB_SHARED) dmeventd.o
 
 dmeventd.static: $(LIB_STATIC) dmeventd.o
 	@echo "    [CC] $@"
-	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -static dmeventd.o \
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(STATIC_LDFLAGS) -static dmeventd.o \
 		-o $@ $(DL_LIBS) $(DMEVENT_LIBS) $(LIBS) $(STATIC_LIBS)
 
 ifeq ("@PKGCONFIG@", "yes")
