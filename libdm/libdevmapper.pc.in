@@ -9,4 +9,4 @@ Version: @DM_LIB_PATCHLEVEL@
 Cflags: -I${includedir} 
 Libs: -L${libdir} -ldevmapper
 Requires.private: @SELINUX_PC@ @UDEV_PC@
-Libs.private: -lm @RT_LIBS@
+Libs.private: -lm @RT_LIBS@ @PTHREAD_LIBS@
