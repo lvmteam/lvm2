@@ -16,6 +16,10 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+case "$(uname -r)" in
+6.2*) skip "Skippen test that kills this kernel" ;;
+esac
+
 mkfs_mount_umount()
 {
         lvt=$1
