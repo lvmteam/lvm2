@@ -258,9 +258,9 @@ def remove_lvm_debug():
 	# If we are running the lvmdbusd daemon and collecting lvm debug data, check and
 	# clean-up after the tests.
 	tmpdir = tempfile.gettempdir()
-	for f in glob("lvmdbusd.lvm.debug.*.log", root_dir=tmpdir):
-		fn = os.path.join(tmpdir, f)
-		os.unlink(fn)
+	fp = os.path.join(tmpdir, "lvmdbusd.lvm.debug.*.log")
+	for f in glob(fp):
+		os.unlink(f)
 
 
 class DaemonInfo(object):
