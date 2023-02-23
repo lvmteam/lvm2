@@ -53,8 +53,12 @@ for level in 1 0 ; do
 #
 # When a raid0 md array is stopped, the components will not look like
 # duplicate PVs as they do with raid1.
-
-aux mdadm_create --metadata=1.0 --level=$level --chunk=64 --raid-devices=2 "$dev1" "$dev2"
+# mdadm does not seem to like --chunk=64 with raid1
+case "$level" in
+0) CHUNK="--chunk=64" ;;
+*) CHUNK="" ;;
+esac
+aux mdadm_create --metadata=1.0 --level=$level $CHUNK --raid-devices=2 "$dev1" "$dev2"
 mddev=$(< MD_DEV)
 
 vgcreate $vg "$mddev"
