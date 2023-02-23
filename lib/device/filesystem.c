@@ -234,8 +234,9 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 	char proc_fstype[FSTYPE_MAX];
 	char proc_devpath[PATH_MAX];
 	char proc_mntpath[PATH_MAX];
-	char lv_mapper_path[PATH_MAX];
-	char mntent_mount_dir[PATH_MAX];
+	char mtab_mntpath[PATH_MAX];
+	char dm_devpath[PATH_MAX];
+	char tmp_path[PATH_MAX];
 	char *dm_name;
 	struct stat st_lv;
 	struct stat stme;
@@ -275,14 +276,36 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 			continue;
 		if (stme.st_dev != st_lv.st_rdev)
 			continue;
-		dm_strncpy(mntent_mount_dir, me->mnt_dir, sizeof(mntent_mount_dir));
+		dm_strncpy(mtab_mntpath, me->mnt_dir, sizeof(mtab_mntpath));
+		break;
 	}
 	endmntent(fme);
+
+	/*
+	 * In mtab dir path, replace each ascii space character with the
+	 * four characters \040 which is how /proc/mounts represents spaces.
+	 * The mnt dir from /etc/mtab and /proc/mounts are compared below.
+	 */
+	if (strchr(mtab_mntpath, ' ')) {
+		int i, j = 0;
+		memcpy(tmp_path, mtab_mntpath, sizeof(tmp_path));
+		memset(mtab_mntpath, 0, sizeof(mtab_mntpath));
+		for (i = 0; i < sizeof(tmp_path); i++) {
+			if (tmp_path[i] == ' ') {
+				mtab_mntpath[j++] = '\\';
+				mtab_mntpath[j++] = '0';
+				mtab_mntpath[j++] = '4';
+				mtab_mntpath[j++] = '0';
+				continue;
+			}
+			mtab_mntpath[j++] = tmp_path[i];
+		}
+	}
 
 	if (!(dm_name = dm_build_dm_name(cmd->mem, lv->vg->name, lv->name, NULL)))
 		return_0;
 
-	if ((dm_snprintf(lv_mapper_path, sizeof(lv_mapper_path), "%s/%s", dm_dir(), dm_name) < 0))
+	if ((dm_snprintf(dm_devpath, sizeof(dm_devpath), "%s/%s", dm_dir(), dm_name) < 0))
 		return_0;
 
 	if (!(fp = fopen("/proc/mounts", "r")))
@@ -296,8 +319,8 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 		if (strcmp(fstype, proc_fstype))
 			continue;
 
-		dir_match = !strcmp(mntent_mount_dir, proc_mntpath);
-		dev_match = !strcmp(lv_mapper_path, proc_devpath);
+		dir_match = !strcmp(mtab_mntpath, proc_mntpath);
+		dev_match = !strcmp(dm_devpath, proc_devpath);
 
 		if (dir_match)
 			found_dir++;
@@ -306,7 +329,7 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 
 		if (dir_match != dev_match) {
 			log_error("LV %s mounted at %s may have been renamed (from %s).",
-				  lv_mapper_path, proc_mntpath, proc_devpath);
+				  dm_devpath, proc_mntpath, proc_devpath);
 			renamed = 1;
 		}
 	}
@@ -327,11 +350,11 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 	}
 	/* These two are likely detected as renamed, but include checks in case. */
 	if (found_dir > 1) {
-		log_error("File system resizing not supported: %s appears more than once in /proc/mounts.", mntent_mount_dir);
+		log_error("File system resizing not supported: %s appears more than once in /proc/mounts.", mtab_mntpath);
 		return 1;
 	}
 	if (found_dev > 1) {
-		log_error("File system resizing not supported: %s appears more than once in /proc/mounts.", lv_mapper_path);
+		log_error("File system resizing not supported: %s appears more than once in /proc/mounts.", dm_devpath);
 		return 1;
 	}
 	return 0;
