@@ -315,6 +315,7 @@ prepare_lvmdbusd() {
 	which python3 >/dev/null || skip "Missing python3"
 
 	python3 -c "import pyudev, dbus, gi.repository" || skip "Missing python modules"
+	python3 -c "from json.decoder import JSONDecodeError" || skip "Python json module is missing JSONDecodeError"
 
 	# Copy the needed file to run on the system bus if it doesn't
 	# already exist
