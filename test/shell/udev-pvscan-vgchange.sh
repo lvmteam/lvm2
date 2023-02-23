@@ -363,14 +363,13 @@ wait_md_create() {
 test -f /proc/mdstat && grep -q raid1 /proc/mdstat || \
        modprobe raid1 || skip
 
-mddev="/dev/md33"
-not grep $mddev /proc/mdstat || skip
-
 wipe_all
 rm $DF
 touch $DF
 
-mdadm --create --metadata=1.0 "$mddev" --level 1 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
+aux mdadm_create --metadata=1.0 --level 1 --chunk=64 --raid-devices=2 "$dev1" "$dev2"
+mddev=$(< MD_DEV)
+
 wait_md_create "$mddev"
 vgcreate $vg9 "$mddev"
 lvmdevices --adddev "$mddev" || true
@@ -383,7 +382,7 @@ lvcreate -l1 -an -n $lv2 $vg9
 
 mdadm --stop "$mddev"
 _clear_online_files
-mdadm --assemble "$mddev" "$dev1" "$dev2"
+aux mdadm_assemble "$mddev" "$dev1" "$dev2"
 
 # this trigger might be redundant because the mdadm --assemble
 # probably triggers an add uevent

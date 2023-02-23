@@ -586,9 +586,6 @@ aux wipefs_a "$dev2"
 aux wipefs_a "$dev3"
 aux wipefs_a "$dev4"
 
-mddev="/dev/md33"
-not grep $mddev /proc/mdstat || skip
-
 rm "$DF"
 touch "$DF"
 vgcreate $vg1 "$dev1" "$dev2"
@@ -603,7 +600,9 @@ OPVID2=`pvs "$dev2" --noheading -o uuid | awk '{print $1}'`
 PVID1=`pvs "$dev1" --noheading -o uuid | tr -d - | awk '{print $1}'`
 PVID2=`pvs "$dev2" --noheading -o uuid | tr -d - | awk '{print $1}'`
 
-mdadm --create --metadata=1.0 "$mddev" --level 1 --raid-devices=2 "$dev3" "$dev4"
+aux mdadm_create --metadata=1.0 --level 1 --raid-devices=2 "$dev3" "$dev4"
+mddev=$(< MD_DEV)
+
 wait_md_create "$mddev"
 
 sed -e "s|DEVNAME=$dev1|DEVNAME=$dev3|" "$ORIG" > tmp1.devices
