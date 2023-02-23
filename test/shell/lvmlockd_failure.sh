@@ -14,13 +14,14 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-[ -z "$LVM_TEST_FAILURE" ] && skip;
+[ -z "$LVM_TEST_FAILURE" ] && skip
 
 aux prepare_vg 3
 
 # Create new logic volume
 lvcreate -a ey --zero n -l 1 -n $lv1 $vg
 
+# FIXME - test shall NOT kill random processes in the system!
 # Emulate lvmlockd abnormally exiting
 killall -9 lvmlockd
 
