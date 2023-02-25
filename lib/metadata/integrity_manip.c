@@ -99,6 +99,7 @@ static int _lv_create_integrity_metadata(struct cmd_context *cmd,
 		.read_ahead = DM_READ_AHEAD_NONE,
 		.stripes = 1,
 		.vg_name = vg->name,
+		.temporary = 1,
 		.zero = 0,
 		.wipe_signatures = 0,
 		.suppress_zero_warn = 1,
@@ -118,8 +119,8 @@ static int _lv_create_integrity_metadata(struct cmd_context *cmd,
 	meta_sectors = meta_bytes / 512;
 	lp_meta.extents = meta_sectors / vg->extent_size;
 
-	log_print_unless_silent("Creating integrity metadata LV %s with size %s.",
-		  metaname, display_size(cmd, meta_sectors));
+	log_verbose("Creating integrity metadata LV %s with size %s.",
+		    metaname, display_size(cmd, meta_sectors));
 
 	dm_list_init(&lp_meta.tags);
 
