@@ -13,7 +13,7 @@ import dbus
 import os
 import copy
 from . import cfg
-from .utils import log_debug, pv_obj_path_generate, log_error, extract_stack_trace
+from .utils import log_debug, log_error, extract_stack_trace
 from .automatedproperties import AutomatedProperties
 
 
