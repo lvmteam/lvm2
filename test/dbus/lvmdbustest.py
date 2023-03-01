@@ -2301,7 +2301,7 @@ class TestDbusService(unittest.TestCase):
 			self._vdo_pool_lv(), test_ss=False)
 
 	def _log_file_option(self):
-		fn = "/tmp/%s" % rs(8, "_lvm.log")
+		fn = os.path.join(tempfile.gettempdir(), rs(8, "_lvm.log"))
 		try:
 			options = dbus.Dictionary({}, signature=dbus.Signature('sv'))
 			option_str = "log { level=7 file=%s syslog=0 }" % fn
