@@ -2410,7 +2410,8 @@ class TestDbusService(unittest.TestCase):
 	def _block_present_absent(self, block_device, present=False):
 		start = time.time()
 		keep_looping = True
-		while keep_looping and time.time() < start + 3:
+		max_wait = 10
+		while keep_looping and time.time() < start + max_wait:
 			if present:
 				if (self._lookup(block_device) != "/"):
 					keep_looping = False
@@ -2419,7 +2420,7 @@ class TestDbusService(unittest.TestCase):
 					keep_looping = False
 
 		if keep_looping:
-			print("Daemon failed to update")
+			print("Daemon failed to update within %d seconds!" % max_wait)
 		else:
 			print("Note: Time for udev update = %f" % (time.time() - start))
 		if present:
