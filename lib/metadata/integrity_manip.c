@@ -936,16 +936,15 @@ int lv_integrity_mismatches(struct cmd_context *cmd,
 			    const struct logical_volume *lv,
 			    uint64_t *mismatches)
 {
-	struct lv_with_info_and_seg_status status;
+	struct lv_with_info_and_seg_status status = {
+		.seg_status.type = SEG_STATUS_NONE,
+	};
 
 	if (lv_is_raid(lv) && lv_raid_has_integrity((struct logical_volume *)lv))
 		return lv_raid_integrity_total_mismatches(cmd, lv, mismatches);
 
 	if (!lv_is_integrity(lv))
 		return_0;
-
-	memset(&status, 0, sizeof(status));
-	status.seg_status.type = SEG_STATUS_NONE;
 
 	status.seg_status.seg = first_seg(lv);
 
