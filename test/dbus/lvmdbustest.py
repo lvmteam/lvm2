@@ -2307,7 +2307,9 @@ class TestDbusService(unittest.TestCase):
 			option_str = "log { level=7 file=%s syslog=0 }" % fn
 			options["config"] = dbus.String(option_str)
 			self._vg_create(None, None, options)
-			self.assertTrue(os.path.exists(fn))
+			self.assertTrue(os.path.exists(fn),
+							"We passed the following options %s to lvm while creating a VG and the "
+							"log file we expected to exist (%s) was not found" % (option_str, fn))
 		finally:
 			if os.path.exists(fn):
 				os.unlink(fn)
