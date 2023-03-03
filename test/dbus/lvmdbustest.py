@@ -2507,6 +2507,49 @@ class TestDbusService(unittest.TestCase):
 			else:
 				time.sleep(0.1)
 
+	@staticmethod
+	def _is_vg_devices_supported():
+		rc, stdout_txt, stderr_txt = call_lvm(["vgcreate", "--help"])
+		if rc == 0:
+			for line in stdout_txt.split("\n"):
+				if "--devices " in line:
+					return True
+		return False
+
+	@staticmethod
+	def _vg_create_specify_devices(name, device):
+		cmd = [LVM_EXECUTABLE, "vgcreate", "--devices", device, name, device]
+		outcome = Popen(cmd, stdout=PIPE, stderr=PIPE, close_fds=True, env=os.environ)
+		outcome.communicate()
+		if outcome.returncode == 0:
+			return True
+		else:
+			print("Failed to create vg %s, stdout= %s, stderr= %s" % (name, outcome.stdout, outcome.stderr))
+			return False
+
+	def test_duplicate_vg_name(self):
+		# LVM allows duplicate VG names, test handling renames for now
+		if not TestDbusService._is_vg_devices_supported():
+			raise unittest.SkipTest("lvm does not support vgcreate with --device syntax")
+
+		if len(self.objs[PV_INT]) < 2:
+			raise unittest.SkipTest("we need at least 2 PVs to run test")
+
+		vg_name = vg_n()
+		if TestDbusService._vg_create_specify_devices(vg_name, self.objs[PV_INT][0].Pv.Name) and \
+				TestDbusService._vg_create_specify_devices(vg_name, self.objs[PV_INT][1].Pv.Name):
+			objects, _ = get_objects()
+			self.assertEqual(len(objects[VG_INT]), 2)
+
+			if len(objects[VG_INT]) == 2:
+				for vg in objects[VG_INT]:
+					new_name = vg_n()
+					vg.Vg.Rename(dbus.String(new_name), dbus.Int32(g_tmo), EOD)
+					# Ensure we find the renamed VG
+					self.assertNotEqual("/", self._lookup(new_name), "Expecting to find VG='%s'" % new_name)
+		else:
+			self.assertFalse(True, "We failed to create 2 VGs with same name!")
+
 
 class AggregateResults(object):
 

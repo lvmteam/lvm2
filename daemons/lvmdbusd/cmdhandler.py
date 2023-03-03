@@ -324,10 +324,12 @@ def vg_rename(vg_uuid, new_name, rename_options):
 	return call(cmd)
 
 
-def vg_remove(vg_name, remove_options):
+def vg_remove(vg_id, remove_options):
 	cmd = ['vgremove']
 	cmd.extend(options_to_cli_args(remove_options))
-	cmd.extend(['-f', vg_name])
+	cmd.extend(['-f', vg_id])
+	# https://bugzilla.redhat.com/show_bug.cgi?id=2175220 is preventing us from doing the following
+	# cmd.extend(['-f', "--select", "vg_uuid=%s" % vg_id])
 	return call(cmd)
 
 
