@@ -1070,7 +1070,7 @@ bad:
 	return r;
 }
 
-static int _thin_lv_has_device_id(struct dm_pool *mem, const struct logical_volume *lv,
+static int _lv_has_thin_device_id(struct dm_pool *mem, const struct logical_volume *lv,
 				  const char *layer, unsigned device_id)
 {
 	char *dlid;
@@ -3529,7 +3529,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		 */
 		if ((dinfo = _cached_dm_info(dm->mem, dtree, lv, NULL))) {
 			/* Merging origin LV is present, check if mergins is already running. */
-			if ((seg_is_thin_volume(seg) && _thin_lv_has_device_id(dm->mem, lv, NULL, seg->device_id)) ||
+			if ((seg_is_thin_volume(seg) && _lv_has_thin_device_id(dm->mem, lv, NULL, seg->device_id)) ||
 			    (!seg_is_thin_volume(seg) && lv_has_target_type(dm->mem, lv, NULL, TARGET_NAME_SNAPSHOT_MERGE))) {
 				log_debug_activation("Merging of snapshot volume %s to origin %s is in progress.",
 						     display_lvname(seg->lv), display_lvname(seg->lv));
