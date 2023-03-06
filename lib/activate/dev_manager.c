@@ -3115,7 +3115,7 @@ static int _add_layer_target_to_dtree(struct dev_manager *dm,
 
 	/* Add linear mapping over layered LV */
 	/* From VDO layer expose ONLY vdo pool header, we would need to use virtual size otherwise */
-	if (!add_linear_area_to_dtree(dnode, lv_is_vdo_pool(lv) ? first_seg(lv)->vdo_pool_header_size : lv->size,
+	if (!add_linear_area_to_dtree(dnode, lv_is_vdo_pool(lv) ? 8 : lv->size,
 				      lv->vg->extent_size,
 				      lv->vg->cmd->use_linear_target,
 				      lv->vg->name, lv->name) ||
