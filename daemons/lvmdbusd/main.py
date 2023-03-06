@@ -148,16 +148,11 @@ def running_under_systemd():
 def main():
 	start = time.time()
 	use_session = os.getenv('LVM_DBUSD_USE_SESSION', False)
-	collect_lvm_debug = os.getenv('LVM_DBUSD_COLLECT_LVM_DEBUG', False)
 
 	# Ensure that we get consistent output for parsing stdout/stderr and that we
 	# are using the lvmdbusd profile.
 	os.environ["LC_ALL"] = "C"
 	os.environ["LVM_COMMAND_PROFILE"] = "lvmdbusd"
-
-	# Save off the debug data needed for lvm team to debug issues
-	# only used for 'fullreport' at this time.
-	cfg.lvmdebug = utils.LvmDebugData(collect_lvm_debug)
 
 	# Indicator if we are running under systemd
 	cfg.systemd = running_under_systemd()

@@ -11,12 +11,17 @@ import os
 import multiprocessing
 import queue
 import itertools
+from utils import LvmDebugData
 
 from lvmdbusd import path
 
 LVM_CMD = os.getenv('LVM_BINARY', path.LVM_BINARY)
 
 LOCK_FILE = os.getenv("LVM_DBUSD_LOCKFILE", "/var/lock/lvm/lvmdbusd")
+
+# Save off the debug data needed for lvm team to debug issues
+# only used for 'fullreport' at this time.
+lvmdebug = LvmDebugData(os.getenv('LVM_DBUSD_COLLECT_LVM_DEBUG', False))
 
 # This is the global object manager
 om = None
@@ -113,8 +118,5 @@ def exit_daemon():
         run.value = 0
         loop.quit()
 
-
-# Debug data for lvm
-lvmdebug = None
 
 systemd = False
