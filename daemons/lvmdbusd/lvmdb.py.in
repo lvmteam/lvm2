@@ -437,6 +437,8 @@ class DataStore(object):
 
 
 if __name__ == "__main__":
+	os.environ["LC_ALL"] = "C"
+	os.environ["LVM_COMMAND_PROFILE"] = "lvmdbusd"
 	pp = prettyprint.PrettyPrinter(indent=4)
 
 	ds = DataStore()
