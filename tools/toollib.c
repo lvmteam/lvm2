@@ -2050,7 +2050,20 @@ void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle
 
 		log_restore_report_state(cmd->cmd_report.saved_log_report_state);
 
-		if (!cmd->is_interactive) {
+		/*
+		 * Do not destroy current cmd->report_group and cmd->log_rh
+		 * (the log report) yet if we're running interactively
+		 * (== running in lvm shell) or if there's a parent handle
+		 * (== we're executing nested processing, like it is when
+		 * doing selection for parent's process_each_* processing).
+		 *
+		 * In both cases, there's still possible further processing
+		 * to do outside the processing covered by the handle we are
+		 * destroying here and for which we may still need to access
+		 * the log report to cover the rest of the processing.
+		 *
+		 */
+		if (!cmd->is_interactive && !handle->parent) {
 			if (!dm_report_group_destroy(cmd->cmd_report.report_group))
 				stack;
 			cmd->cmd_report.report_group = NULL;
