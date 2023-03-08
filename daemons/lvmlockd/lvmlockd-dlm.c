@@ -227,8 +227,9 @@ static int get_local_nodeid(void)
 	struct dirent *de;
 	DIR *ls_dir;
 	char ls_comms_path[PATH_MAX];
-	FILE *file = NULL;
+	FILE *file;
 	char line[LOCK_LINE_MAX];
+	char *str1, *str2;
 	int rv = -1, val;
 
 	memset(ls_comms_path, 0, sizeof(ls_comms_path));
@@ -243,30 +244,33 @@ static int get_local_nodeid(void)
 		memset(ls_comms_path, 0, sizeof(ls_comms_path));
 		snprintf(ls_comms_path, PATH_MAX, "%s/%s/local",
 		     DLM_COMMS_PATH, de->d_name);
-		file = fopen(ls_comms_path, "r");
-		if (!file)
+
+		if (!(file = fopen(ls_comms_path, "r")))
 			continue;
-		if (fgets(line, LOCK_LINE_MAX, file)) {
-			fclose(file);
+		str1 = fgets(line, LOCK_LINE_MAX, file);
+		fclose(file);
+
+		if (str1) {
 			rv = sscanf(line, "%d", &val);
 			if ((rv == 1) && (val == 1 )) {
 				memset(ls_comms_path, 0, sizeof(ls_comms_path));
 				snprintf(ls_comms_path, PATH_MAX, "%s/%s/nodeid",
 				    DLM_COMMS_PATH, de->d_name);
-				file = fopen(ls_comms_path, "r");
-				if (!file)
+
+				if (!(file = fopen(ls_comms_path, "r")))
 					continue;
-				if (fgets(line, LOCK_LINE_MAX, file)) {
+				str2 = fgets(line, LOCK_LINE_MAX, file);
+				fclose(file);
+
+				if (str2) {
 					rv = sscanf(line, "%d", &val);
 					if (rv == 1) {
-						fclose(file);
 						closedir(ls_dir);
 						return val;
 					}
 				}
 			}
 		}
-		fclose(file);
 	}
 
 	if (closedir(ls_dir))
