@@ -65,13 +65,13 @@ def lvs_state_retrieve(selection, cache_refresh=True):
 	if cache_refresh:
 		cfg.db.refresh()
 
-	# When building up the model, it's best to process LVs with the least
-	# dependencies to those that are dependant upon other LVs.  Otherwise, when
-	# we are trying to gather information we could be in a position where we
-	# don't have information available yet.
-	lvs = sorted(cfg.db.fetch_lvs(selection), key=get_key)
-
 	try:
+		# When building up the model, it's best to process LVs with the least
+		# dependencies to those that are dependant upon other LVs.  Otherwise, when
+		# we are trying to gather information we could be in a position where we
+		# don't have information available yet.
+		lvs = sorted(cfg.db.fetch_lvs(selection), key=get_key)
+
 		for l in lvs:
 			if cfg.vdo_support:
 				rc.append(LvStateVdo(
