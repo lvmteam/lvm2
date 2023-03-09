@@ -79,6 +79,7 @@ def write_some(q, stream, remaining=False, binary=False):
 def del_random_key(src_dict):
     keys = list(src_dict.keys())
     pick = random.randint(0, len(keys) - 1)
+    debug("%s will be deleted" % keys[pick])
     del src_dict[keys[pick]]
 
 
@@ -87,16 +88,19 @@ def inject_key_error(output_json):
     for r in output_json['report']:
         if 'lv' in r:
             for i in r['lv']:
+                debug("deleting a lv key")
                 del_random_key(i)
-                break
+                return
         if 'vg' in r:
             for i in r["vg"]:
+                debug("deleting a vg key")
                 del_random_key(i)
-                break
+                return
         elif 'pv' in r:
             for i in r["pv"]:
+                debug("deleting a pv key")
                 del_random_key(i)
-                break
+                return
 
 
 def inject_exit_error(output_json, val):
