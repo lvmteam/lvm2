@@ -637,7 +637,9 @@ def lvm_full_report_json():
 	rc, out, err = call(cmd)
 	# When we have an exported vg the exit code of lvs or fullreport will be 5
 	if rc == 0 or rc == 5:
-		assert(type(out) == dict)
+		if type(out) != dict:
+			raise LvmBug("lvm likely returned invalid JSON, lvm exit code = %d, output = %s, err= %s" %
+						 (rc, str(out), str(err)))
 		return out
 	raise LvmBug("'fullreport' exited with code '%d'" % rc)
 
