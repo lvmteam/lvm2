@@ -36,7 +36,7 @@ def rs(length, character_set=CS):
 
 RS = rs(512)
 
-d_out = open("/tmp/mitm_lvm.txt", "w+")
+d_out = open("/tmp/mitm_lvm.txt", "a")
 
 
 def debug(msg):
