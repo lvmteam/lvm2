@@ -183,6 +183,8 @@ class LvmShellHandler:
 
         env = copy.deepcopy(os.environ)
         env["LVM_REPORT_FD"] = "%s" % str(passed_report_fd)
+        env["LC_ALL"] = "C"
+        env["LVM_COMMAND_PROFILE"] = "lvmdbusd"
 
         self.parent_stdin_fd, child_stdin_fd = pty.openpty()
         self.parent_stdout_fd, child_stdout_fd = pty.openpty()
