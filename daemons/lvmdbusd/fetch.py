@@ -228,8 +228,17 @@ class StateUpdate(object):
 		self.queue = queue.Queue()
 		self.deferred = False
 
-		# Do initial load
-		load(refresh=False, emit_signal=False, need_main_thread=False)
+		# Do initial load, with retries.  During error injection testing we can and do fail here.
+		count = 0
+		need_refresh = False  # First attempt we are building from new, any subsequent will be true
+		while count < 5:
+			try:
+				load(refresh=need_refresh, emit_signal=False, need_main_thread=False)
+				break
+			except LvmBug as bug:
+				count += 1
+				need_refresh = True
+				log_error("We encountered an lvm bug on initial load, trying again %s" % str(bug))
 
 		self.thread = threading.Thread(target=StateUpdate.update_thread,
 										args=(self,),
