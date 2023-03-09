@@ -13,10 +13,12 @@
 # systemctl restart lvm2-lvmdbusd
 import copy
 import json
+import multiprocessing
 import os
 import pty
 import random
 import select
+import signal
 import string
 import subprocess
 import sys
@@ -28,6 +30,10 @@ from subprocess import Popen
 
 
 CS = string.ascii_letters + "\n\t " + string.digits
+
+run = multiprocessing.Value('i', 1)
+
+SH = None
 
 
 def rs(length, character_set=CS):
@@ -253,10 +259,16 @@ class LvmShellHandler:
             self.report_text_in_progress = ""
 
     def _handle_command(self):
+        global run
         stdin_text = sys.stdin.readline()
         self.last_request = stdin_text
 
         debug("stdin: %s..." % stdin_text[:min(10, len(stdin_text) - 1)])
+
+        if "exit\n" in stdin_text:
+            debug("asking to exit ...")
+            run.value = 0
+
         self.parent_stdin.writelines(stdin_text)
         self.parent_stdin.flush()
 
@@ -267,8 +279,9 @@ class LvmShellHandler:
             queue.extend(line)
 
     def run(self):
+        global run
         select_tmo = 0.2
-        while True:
+        while run.value == 1:
             try:
                 rd_fd = [sys.stdin.fileno(), self.parent_stdout_fd, self.parent_stderr_fd, self.child_report_fd]
                 ready = select.select(rd_fd, [], [], select_tmo)
@@ -305,9 +318,11 @@ class LvmShellHandler:
                     break
             except IOError as ioe:
                 debug("run_cmd:" + str(ioe))
-                pass
 
-        debug("exiting %d " % self.process.returncode)
+        if self.process.poll() is not None:
+            debug("exiting %d " % self.process.returncode)
+        else:
+            debug("lvm process still running, be we are exiting ...")
         return self.process.returncode
 
 
@@ -321,8 +336,8 @@ if __name__ == "__main__":
             cmdline.extend(args)
             ec = run_one(cmdline)
         else:
-            sh = LvmShellHandler(cmdline)
-            ec = sh.run()
+            SH = LvmShellHandler(cmdline)
+            ec = SH.run()
         sys.exit(ec)
     except Exception:
         traceback.print_exc(file=d_out)
