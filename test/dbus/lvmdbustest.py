@@ -2577,6 +2577,12 @@ if __name__ == '__main__':
 	r = AggregateResults()
 	mode = int(test_shell)
 
+	# To test with error injection, simply set the env. variable LVM_BINARY to the error inject script
+	# and the LVM_MAN_IN_MIDDLE variable to the lvm binary to test which defaults to "/usr/sbin/lvm"
+	# An example
+	# export LVM_BINARY=/home/tasleson/projects/lvm2/test/dbus/lvm_error_inject.py
+	# export LVM_MAN_IN_MIDDLE=/home/tasleson/projects/lvm2/tools/lvm
+
 	if mode == 0:
 		std_err_print('\n*** Testing only lvm fork & exec test mode ***\n')
 	elif mode == 1:
