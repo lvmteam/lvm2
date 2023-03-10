@@ -336,8 +336,12 @@ if __name__ == "__main__":
             cmdline.extend(args)
             ec = run_one(cmdline)
         else:
-            SH = LvmShellHandler(cmdline)
-            ec = SH.run()
+            if "LVM_REPORT_FD" in os.environ:
+                SH = LvmShellHandler(cmdline)
+                ec = SH.run()
+            else:
+                debug('running as lvm shell requires: LVM_REPORT_FD to be set')
+                ec = 1
         sys.exit(ec)
     except Exception:
         traceback.print_exc(file=d_out)
