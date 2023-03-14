@@ -2347,8 +2347,8 @@ class TestDbusService(unittest.TestCase):
 
 	def test_z_sigint(self):
 		# Issue SIGINT while daemon is processing work to ensure we shut down.
-		if not bool(int(os.getenv("LVM_DBUSD_TEST_SKIP_SIGNAL", "0"))):
-			raise unittest.SkipTest("Skipping as env. LVM_DBUSD_TEST_SKIP_SIGNAL is '0'")
+		if bool(int(os.getenv("LVM_DBUSD_TEST_SKIP_SIGNAL", "0"))):
+			raise unittest.SkipTest("Skipping as env. LVM_DBUSD_TEST_SKIP_SIGNAL is '1'")
 
 		di = DaemonInfo.get()
 		self.assertTrue(di is not None)
