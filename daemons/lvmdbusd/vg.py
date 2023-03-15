@@ -151,6 +151,7 @@ class Vg(AutomatedProperties):
 	_AllocNormal_meta = ('b', VG_INTERFACE)
 	_AllocAnywhere_meta = ('b', VG_INTERFACE)
 	_Clustered_meta = ('b', VG_INTERFACE)
+	_Shared_meta = ('b', VG_INTERFACE)
 	_Name_meta = ('s', VG_INTERFACE)
 
 	# noinspection PyUnusedLocal,PyPep8Naming
@@ -784,6 +785,10 @@ class Vg(AutomatedProperties):
 	@property
 	def Clustered(self):
 		return self._attribute(5, 'c')
+
+	@property
+	def Shared(self):
+		return self._attribute(5, 's')
 
 
 class VgVdo(Vg):
