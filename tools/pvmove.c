@@ -645,6 +645,14 @@ static int _pvmove_setup_single(struct cmd_context *cmd,
 			log_error("pvmove not allowed on raid LV with integrity.");
 			return ECMD_FAILED;
 		}
+
+		if (lv_is_cache(lv) || lv_is_writecache(lv)) {
+			struct logical_volume *lv_orig = seg_lv(first_seg(lv), 0);
+			if (lv_is_raid(lv_orig) && lv_raid_has_integrity(lv_orig)) {
+				log_error("pvmove not allowed on raid LV with integrity.");
+				return ECMD_FAILED;
+			}
+		}
 	}
 
 	/*

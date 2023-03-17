@@ -391,6 +391,14 @@ int validate_snapshot_origin(const struct logical_volume *origin_lv)
 {
 	const char *err = NULL; /* For error string */
 
+	if (lv_is_cache(origin_lv) || lv_is_writecache(origin_lv)) {
+		struct logical_volume *lv = seg_lv(first_seg(origin_lv), 0);
+		if (lv_is_raid(lv) && lv_raid_has_integrity(lv)) {
+			err = "raid with integrity";
+			goto out;
+		}
+	}
+
 	if (lv_is_cow(origin_lv))
 		err = "snapshots";
 	else if (lv_is_locked(origin_lv))
@@ -419,6 +427,7 @@ int validate_snapshot_origin(const struct logical_volume *origin_lv)
 		err = "raid with integrity";
 	}
 
+ out:
 	if (err) {
 		log_error("Snapshots of %s are not supported.", err);
 		return 0;
