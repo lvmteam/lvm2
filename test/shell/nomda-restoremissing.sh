@@ -31,7 +31,18 @@ not vgck $vg 2>&1 | tee log
 grep "missing 1 physical volume" log
 not lvcreate -aey --type mirror -m 1 -l 1 -n mirror $vg # write operations fail
 aux enable_dev "$dev1"
-lvcreate -aey --type mirror -m 1 -l 1 -n mirror $vg # no MDA => automatically restored
+# Old versions would automatically clear MISSING_PV on a PV that had no mda,
+# but this made no sense; the existence of an mda means nothing for the
+# validity of the data on the device.  I suspect that at some point in the
+# past, the MISSING_PV flag was used to decide if metadata could be used
+# from the device, so the flag could be cleared on a PV with no mda.
+# These days lvm knows when to ignore outdated metadata.
+# MISSING_PV probably has little to no value for determining valid data either,
+# so it's likely that we'll begin to automatically clear MISSING_PV in the
+# future (but it will have nothing to do with having mdas.)
+not lvcreate -aey --type mirror -m 1 -l 1 -n mirror $vg 
+vgextend --restoremissing $vg "$dev1"
+lvcreate -aey --type mirror -m 1 -l 1 -n mirror $vg 
 vgck $vg
 
 vgremove -ff $vg
