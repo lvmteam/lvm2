@@ -1,3 +1,6 @@
+version 2.03.21 - 
+=================================
+
 version 2.03.20 - 21st March 2023
 =================================
   Fix segfault if using -S|--select with log/report_command_log=1 setting.
