@@ -69,6 +69,8 @@ vgchange \(em Change volume group attributes
 .br
     \fB--longhelp\fP
 .br
+    \fB--majoritypvs\fP
+.br
  \fB-p\fP|\fB--maxphysicalvolumes\fP \fINumber\fP
 .br
     \fB--metadataprofile\fP \fIString\fP
@@ -347,6 +349,8 @@ Change the system ID of a VG.
 .RS 4
 .ad l
 [ \fB-S\fP|\fB--select\fP \fIString\fP ]
+.br
+[    \fB--majoritypvs\fP ]
 .br
 [ COMMON_OPTIONS ]
 .ad b
@@ -664,6 +668,12 @@ Sets the maximum number of LVs allowed in a VG.
 \fB--longhelp\fP
 .br
 Display long help text.
+.
+.HP
+\fB--majoritypvs\fP
+.br
+Change the VG system ID if the majority of PVs in the VG
+are present (one more than half).
 .
 .HP
 \fB-p\fP|\fB--maxphysicalvolumes\fP \fINumber\fP
