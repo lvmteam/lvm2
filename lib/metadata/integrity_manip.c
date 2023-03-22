@@ -508,11 +508,6 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 		return 0;
 	}
 
-	if (lv_is_origin(lv)) {
-		log_error("Integrity cannot be added to snapshot origins.");
-		return 0;
-	}
-
 	seg_top = first_seg(lv);
 	area_count = seg_top->area_count;
 

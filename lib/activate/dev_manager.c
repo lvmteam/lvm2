@@ -3039,7 +3039,11 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 		if (((seg_type(seg, s) == AREA_PV) && _bad_pv_area(seg, s)) ||
 		    ((seg_type(seg, s) == AREA_LV) && !seg_lv(seg, s))) {
 			if (!cmd->partial_activation) {
-				if (!cmd->degraded_activation || !lv_is_raid_type(seg->lv)) {
+				if (!cmd->degraded_activation ||
+				    (!lv_is_raid_type(seg->lv) &&
+				     !lv_is_integrity(seg->lv) &&
+				     !lv_is_integrity_metadata(seg->lv) &&
+				     !lv_is_integrity_origin(seg->lv))) {
 					log_error("Aborting.  LV %s is incomplete and --activationmode partial was not specified.",
 						  display_lvname(seg->lv));
 					return 0;
