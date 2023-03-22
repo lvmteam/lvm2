@@ -11,7 +11,7 @@ import os
 import multiprocessing
 import queue
 import itertools
-from utils import LvmDebugData
+from lvmdbusd.utils import LvmDebugData
 
 from lvmdbusd import path
 
