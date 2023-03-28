@@ -218,6 +218,52 @@ void init_log_fn(lvm2_log_fn_t log_fn)
 }
 
 /*
+ * Read /proc/self/stat to extract pid and starttime. Returns 0 for success, 1
+ * for error.
+ */
+int get_pid_starttime(int *pid, unsigned long long *starttime)
+{
+	static const char statfile[] = "/proc/self/stat";
+	int fd;
+	char buf[1024];
+	int e;
+	char *p;
+
+	if ((fd = open(statfile, O_RDONLY)) == -1) {
+		log_sys_error("open", statfile);
+		return 1;
+	}
+	if (e = read(fd, buf, sizeof(buf)-1) <= 0) {
+		log_sys_error("read", statfile);
+		close(fd);
+		return 1;
+	}
+
+	close(fd);
+	buf[e] = '\0';
+	sscanf(buf, "%d ", &pid);
+
+	/* Jump past COMM, don't use scanf with '%s' since COMM may contain a space. */
+	p = strrchr(buf, ')');
+	if (!p) {
+		log_warn("WARNING: Cannot parse content of %s.", statfile);
+		return 1;
+	}
+
+	p++;
+	if (scanf(p, " %*c %*d %*d %*d %*d " /* tty_nr */
+		  "%*d %*u %*u %*u %*u " /* mjflt */
+		  "%*u %*u %*u %*d %*d " /* cstim */
+		  "%*d %*d %*d %*d " /* itrealvalue */
+		  "%llu", &starttime) != 1) {
+		log_warn("WARNING: Cannot parse content of %s.", statfile);
+		return 1;
+	}
+
+	return 0;
+}
+
+/*
  * Support envvar LVM_LOG_FILE_EPOCH and allow to attach
  * extra keyword (consist of upto 32 alpha chars) to
  * opened log file. After this 'epoch' word pid and starttime
@@ -228,11 +274,9 @@ void init_log_fn(lvm2_log_fn_t log_fn)
  */
 void init_log_file(const char *log_file, int append)
 {
-	static const char statfile[] = "/proc/self/stat";
 	const char *env;
 	int pid;
 	unsigned long long starttime;
-	FILE *st;
 	int i = 0;
 
 	_log_file_path[0] = '\0';
@@ -245,15 +289,9 @@ void init_log_file(const char *log_file, int append)
 			goto no_epoch;
 		}
 
-		if (!(st = fopen(statfile, "r")))
-			log_sys_error("fopen", statfile);
-		else if (fscanf(st, "%d %*s %*c %*d %*d %*d %*d " /* tty_nr */
-			   "%*d %*u %*u %*u %*u " /* mjflt */
-			   "%*u %*u %*u %*d %*d " /* cstim */
-			   "%*d %*d %*d %*d " /* itrealvalue */
-			   "%llu", &pid, &starttime) != 2) {
-			log_warn("WARNING: Cannot parse content of %s.", statfile);
-		} else {
+		if (get_pid_starttime(&pid, &starttime))
+			log_warn("WARNING: Failed to obtain pid and starttime");
+		else {
 			if (dm_snprintf(_log_file_path, sizeof(_log_file_path),
 					"%s_%s_%d_%llu", log_file, env, pid, starttime) < 0) {
 				log_warn("WARNING: Debug log file path is too long for epoch.");
@@ -263,9 +301,6 @@ void init_log_file(const char *log_file, int append)
 				append = 1; /* force */
 			}
 		}
-
-		if (st && fclose(st))
-			log_sys_debug("fclose", statfile);
 
 		if ((env = getenv("LVM_LOG_FILE_MAX_LINES"))) {
 			if (sscanf(env, FMTu64, &_log_file_max_lines) != 1) {
@@ -896,4 +931,3 @@ uint32_t log_journal_str_to_val(const char *str)
 	log_warn("Ignoring unrecognized journal value.");
 	return 0;
 }
-
