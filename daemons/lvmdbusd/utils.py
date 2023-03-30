@@ -323,16 +323,17 @@ def _format_log_entry(msg):
 
 
 def _common_log(msg, *attributes):
-	cfg.stdout_lock.acquire()
 	msg = _format_log_entry(msg)
+
+	cfg.stdout_lock.acquire()
 
 	if STDOUT_TTY and attributes:
 		print(color(msg, *attributes))
 	else:
 		print(msg)
 
-	cfg.stdout_lock.release()
 	sys.stdout.flush()
+	cfg.stdout_lock.release()
 
 
 # Serializes access to stdout to prevent interleaved output
