@@ -11,7 +11,6 @@ import xml.etree.ElementTree as Et
 import sys
 import inspect
 import collections
-import ctypes
 import errno
 import fcntl
 import os
@@ -305,8 +304,16 @@ class DebugMessages(object):
 					self.queue.clear()
 
 
+def _get_tid():
+	try:
+		# Only 3.8 and later have this
+		return threading.get_native_id()
+	except:
+		return -1
+
+
 def _format_log_entry(msg):
-	tid = ctypes.CDLL('libc.so.6').syscall(186)
+	tid = _get_tid()
 
 	if not cfg.systemd and STDOUT_TTY:
 		msg = "%s: %d:%d - %s" % \
