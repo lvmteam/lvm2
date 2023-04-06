@@ -1,5 +1,7 @@
 version 2.03.21 - 
 =================================
+  Fix activation of vdo-pool for with 0 length headers (converted pools).
+  Avoid printing internal init messages when creation integration devices.
 
 version 2.03.20 - 21st March 2023
 =================================
