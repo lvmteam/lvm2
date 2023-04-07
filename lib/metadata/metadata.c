@@ -119,6 +119,7 @@ int get_default_pvmetadatasize_sectors(void)
 	 * pagesizes:
 	 * 4096 = 8 sectors.
 	 * 8192 = 16 sectors.
+	 * 16384 = 32 sectors.
 	 * 65536 = 128 sectors.
 	 */
 
@@ -127,6 +128,8 @@ int get_default_pvmetadatasize_sectors(void)
 		return 2040;
 	case 8192:
 		return 2032;
+	case 16384:
+		return 2016;
 	case 65536:
 		return 1920;
 	}

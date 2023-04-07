@@ -1146,7 +1146,10 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 			 * mda1 offset is page size from machine that created it,
 			 * warn if it's not one of the expected page sizes.
 			 */
-			if ((*mda1_offset != 4096) && (*mda1_offset != 8192) && (*mda1_offset != 65536)) {
+			if ((*mda1_offset != 4096) && 
+			    (*mda1_offset != 8192) &&
+			    (*mda1_offset != 16384) &&
+			    (*mda1_offset != 65536)) {
 				log_print("WARNING: pv_header.disk_locn[%d].offset %llu is unexpected # for first mda",
 					  di, (unsigned long long)*mda1_offset);
 			}
@@ -1273,7 +1276,7 @@ static int _dump_mda_header(struct cmd_context *cmd, struct settings *set,
 	uint64_t meta_offset = 0; /* bytes */
 	uint64_t meta_size = 0;   /* bytes */
 	uint32_t meta_checksum = 0;
-	int mda_num = (mda_offset == 4096) ? 1 : 2;
+	int mda_num = (mda_offset <= 65536) ? 1 : 2;
 	int bad = 0;
 
 	*checksum0_ret = 0; /* checksum from raw_locn[0] */

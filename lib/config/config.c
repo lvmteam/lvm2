@@ -540,6 +540,9 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 				log_sys_error("read", dev_name(dev));
 				goto out;
 			}
+
+			if (!sz)
+				goto out;
 		}
 	} else {
 		if (!dev_read_bytes(dev, offset, size, buf))
