@@ -3694,6 +3694,8 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (lv_is_cache(lv) && lv_is_cache_vol(first_seg(lv)->pool_lv) &&
 	    /* Register callback only for layer activation or non-layered cache LV */
 	    (layer || !lv_layer(lv)) &&
+	    /* Register callback when cachevol LV is NOT already active */
+	    !_cached_dm_info(dm->mem, dtree, first_seg(lv)->pool_lv, NULL) &&
 	    !_pool_register_callback(dm, dnode, lv))
 		return_0;
 
