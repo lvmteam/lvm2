@@ -952,6 +952,25 @@ clear_devs() {
 	done
 }
 
+#
+# corrupt device content
+# $1  file_path
+# $2  string/pattern search for curruption
+# $3  string/pattern replacing/corruptiong
+corrupt_dev() {
+	local a
+
+	# search for string on a file
+	# Note: returned string may possibly start with other ASCII chars
+	# a[0] is position in file,  a[1] is the actual string
+	a=( $(strings -t d -n 64 "$1" | grep -m 1 "$2") ) || true
+
+	test -n "${a[0]-}" || return 0
+
+	# Seek for the sequence and replace it with corruption pattern
+	echo -n "${a[1]/$2/$3}" | dd of="$1" bs=1 oseek="${a[0]}" conv=fdatasync
+}
+
 prepare_backing_dev() {
 	local size=${1=32}
 	shift
