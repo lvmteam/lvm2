@@ -787,6 +787,10 @@ def activate_deactivate(op, name, activate, control_flags, options):
 		if (1 << 5) & control_flags:
 			cmd.append('--ignoreactivationskip')
 
+		# Shared locking (Cluster)
+		if (1 << 6) & control_flags:
+			op += 's'
+
 	if activate:
 		op += 'y'
 	else:

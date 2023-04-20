@@ -1243,7 +1243,7 @@ class TestDbusService(unittest.TestCase):
 			self._check_consistency()
 
 		# Try control flags
-		for i in range(0, 5):
+		for i in range(0, 6):
 
 			self.handle_return(lv_p.Lv.Activate(
 				dbus.UInt64(1 << i),
