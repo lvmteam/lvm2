@@ -916,6 +916,42 @@ cleanup_idm_context() {
 	fi
 }
 
+
+#
+# clear device either with blkdiscard -z or fallback to 'dd'
+# $1  device_path
+# TODO: add support for parametrized [OPTION] usage (Not usable ATM)
+# TODO: -bs  blocksize  (defaults 512K)
+# TODO: -count  count/length  (defaults to whole device, otherwise in BS units)
+# TODO: -seek  offset/oseek  (defaults 0, begining of zeroing area in BS unit)
+clear_devs() {
+	local bs=
+	local count=
+	local seek=
+
+	while [ "$#" -ne 0 ] ; do
+		case "$1" in
+		"") ;;
+		"--bs") bs=$2; shift ;;
+		"--count") count=$2; shift ;;
+		"--seek") seek=$2; shift ;;
+		*TEST*) # Protection: only test devices with TEST in its path name can be zeroed
+			test -e NO_BLKDISCARD_Z || {
+				if blkdiscard -f -z "$1" ; then
+					shift
+					continue
+				fi
+				echo "Info: can't use 'blkdiscard -z' switch to 'dd'."
+				touch NO_BLKDISCARD_Z
+			}
+
+			dd if=/dev/zero of="$1" bs=512K oflag=direct $seek $count || true
+			;;
+		esac
+		shift
+	done
+}
+
 prepare_backing_dev() {
 	local size=${1=32}
 	shift
