@@ -126,47 +126,15 @@ _verify_data_on_lv() {
 	lvchange -an $vg/$lv1
 }
 
-_sync_percent() {
-	local checklv=$1
-	get lv_field "$checklv" sync_percent | cut -d. -f1
-}
-
-_wait_recalc() {
-	local checklv=$1
-
-	for i in $(seq 1 10) ; do
-		sync=$(_sync_percent "$checklv")
-		echo "sync_percent is $sync"
-
-		if test "$sync" = "100"; then
-			return
-		fi
-
-		sleep 1
-	done
-
-	# TODO: There is some strange bug, first leg of RAID with integrity
-	# enabled never gets in sync. I saw this in BB, but not when executing
-	# the commands manually
-#	if test -z "$sync"; then
-#		echo "TEST\ WARNING: Resync of dm-integrity device '$checklv' failed"
-#                dmsetup status "$DM_DEV_DIR/mapper/${checklv/\//-}"
-#		exit
-#	fi
-	echo "timeout waiting for recalc"
-	dmsetup status "$DM_DEV_DIR/mapper/${checklv/\//-}"
-	return 1
-}
-
 # Test corrupting data on an image and verifying that
 # it is detected by integrity and corrected by raid.
 
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg "$dev1" "$dev2"
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/$lv1
 _test_fs_with_read_repair "$dev1"
 lvs -o integritymismatches $vg/${lv1}_rimage_0 |tee mismatch
 not grep 0 mismatch
@@ -180,10 +148,10 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid1 -m2 --raidintegrity y -n $lv1 -l 8 $vg "$dev1" "$dev2" "$dev3"
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/$lv1
 _test_fs_with_read_repair "$dev1" "$dev2"
 lvs -o integritymismatches $vg/${lv1}_rimage_0 |tee mismatch
 not grep 0 mismatch
@@ -197,10 +165,10 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid4 --raidintegrity y -n $lv1 -I 4K -l 8 $vg "$dev1" "$dev2" "$dev3"
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/$lv1
 _test_fs_with_read_repair "$dev1" "$dev2" "$dev3"
 lvs -o integritymismatches $vg/${lv1}_rimage_0
 lvs -o integritymismatches $vg/${lv1}_rimage_1
@@ -215,10 +183,10 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid5 --raidintegrity y -n $lv1 -I 4K -l 8 $vg "$dev1" "$dev2" "$dev3"
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/$lv1
 _test_fs_with_read_repair "$dev1" "$dev2" "$dev3"
 lvs -o integritymismatches $vg/${lv1}_rimage_0
 lvs -o integritymismatches $vg/${lv1}_rimage_1
@@ -233,12 +201,12 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid6 --raidintegrity y -n $lv1 -I 4K -l 8 $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
-_wait_recalc $vg/${lv1}_rimage_3
-_wait_recalc $vg/${lv1}_rimage_4
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/${lv1}_rimage_3
+aux wait_recalc $vg/${lv1}_rimage_4
+aux wait_recalc $vg/$lv1
 _test_fs_with_read_repair "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 lvs -o integritymismatches $vg/${lv1}_rimage_0
 lvs -o integritymismatches $vg/${lv1}_rimage_1
@@ -255,11 +223,11 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid10 --raidintegrity y -n $lv1 -l 8 $vg "$dev1" "$dev2" "$dev3" "$dev4"
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
-_wait_recalc $vg/${lv1}_rimage_3
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/${lv1}_rimage_3
+aux wait_recalc $vg/$lv1
 _test_fs_with_read_repair "$dev1" "$dev3"
 lvs -o integritymismatches $vg/${lv1}_rimage_0
 lvs -o integritymismatches $vg/${lv1}_rimage_1
@@ -277,9 +245,9 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/$lv1
 _add_new_data_to_mnt
 lvconvert --raidintegrity n $vg/$lv1
 _add_more_data_to_mnt
@@ -293,10 +261,10 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid4 --raidintegrity y -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/$lv1
 _add_new_data_to_mnt
 lvconvert --raidintegrity n $vg/$lv1
 _add_more_data_to_mnt
@@ -310,10 +278,10 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid5 --raidintegrity y -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/$lv1
 _add_new_data_to_mnt
 lvconvert --raidintegrity n $vg/$lv1
 _add_more_data_to_mnt
@@ -327,12 +295,12 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid6 --raidintegrity y -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
-_wait_recalc $vg/${lv1}_rimage_3
-_wait_recalc $vg/${lv1}_rimage_4
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/${lv1}_rimage_3
+aux wait_recalc $vg/${lv1}_rimage_4
+aux wait_recalc $vg/$lv1
 _add_new_data_to_mnt
 lvconvert --raidintegrity n $vg/$lv1
 _add_more_data_to_mnt
@@ -346,9 +314,9 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid10 --raidintegrity y -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/$lv1
 _add_new_data_to_mnt
 lvconvert --raidintegrity n $vg/$lv1
 _add_more_data_to_mnt
@@ -364,11 +332,11 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/$lv1
 _add_new_data_to_mnt
 lvconvert --raidintegrity y $vg/$lv1
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 _add_more_data_to_mnt
 _verify_data_on_mnt
 umount $mnt
@@ -380,11 +348,11 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid4 -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/$lv1
 _add_new_data_to_mnt
 lvconvert --raidintegrity y $vg/$lv1
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 _add_more_data_to_mnt
 _verify_data_on_mnt
 umount $mnt
@@ -396,11 +364,11 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid5 -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/$lv1
 _add_new_data_to_mnt
 lvconvert --raidintegrity y $vg/$lv1
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 _add_more_data_to_mnt
 _verify_data_on_mnt
 umount $mnt
@@ -412,11 +380,11 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid6 -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/$lv1
 _add_new_data_to_mnt
 lvconvert --raidintegrity y $vg/$lv1
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 _add_more_data_to_mnt
 _verify_data_on_mnt
 umount $mnt
@@ -428,11 +396,11 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid10 -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/$lv1
 _add_new_data_to_mnt
 lvconvert --raidintegrity y $vg/$lv1
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 _add_more_data_to_mnt
 _verify_data_on_mnt
 umount $mnt
@@ -446,9 +414,9 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/$lv1
 _add_new_data_to_mnt
 umount $mnt
 lvchange -an $vg/$lv1
@@ -456,8 +424,8 @@ lvextend -l 16 $vg/$lv1
 lvchange -ay $vg/$lv1
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 resize2fs "$DM_DEV_DIR/$vg/$lv1"
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o name,segtype,devices,sync_percent $vg
 _add_more_data_to_mnt
 _verify_data_on_mnt
@@ -470,12 +438,12 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid6 --raidintegrity y -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,sync_percent,devices $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
-_wait_recalc $vg/${lv1}_rimage_3
-_wait_recalc $vg/${lv1}_rimage_4
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/${lv1}_rimage_3
+aux wait_recalc $vg/${lv1}_rimage_4
+aux wait_recalc $vg/$lv1
 _add_new_data_to_mnt
 umount $mnt
 lvchange -an $vg/$lv1
@@ -483,8 +451,8 @@ lvextend -l 16 $vg/$lv1
 lvchange -ay $vg/$lv1
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 resize2fs "$DM_DEV_DIR/$vg/$lv1"
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o name,segtype,devices,sync_percent $vg
 _add_more_data_to_mnt
 _verify_data_on_mnt
@@ -499,15 +467,15 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/$lv1
 lvs -a -o+devices $vg
 _add_new_data_to_mnt
 lvextend -l 16 $vg/$lv1
 resize2fs "$DM_DEV_DIR/$vg/$lv1"
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
 _add_more_data_to_mnt
 _verify_data_on_mnt
@@ -520,16 +488,16 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid5 --raidintegrity y -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/$lv1
 lvs -a -o+devices $vg
 _add_new_data_to_mnt
 lvextend -l 16 $vg/$lv1
 resize2fs "$DM_DEV_DIR/$vg/$lv1"
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
 _add_more_data_to_mnt
 _verify_data_on_mnt
@@ -542,15 +510,15 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid10 --raidintegrity y -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/$lv1
 lvs -a -o+devices $vg
 _add_new_data_to_mnt
 lvextend -l 16 $vg/$lv1
 resize2fs "$DM_DEV_DIR/$vg/$lv1"
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
 _add_more_data_to_mnt
 _verify_data_on_mnt
@@ -565,15 +533,15 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/$lv1
 lvs -a -o+devices $vg
 _add_new_data_to_mnt
 lvconvert -y -m+1 $vg/$lv1
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
 lvs -a -o+devices $vg
 _add_more_data_to_mnt
 _verify_data_on_mnt
@@ -588,10 +556,10 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid1 -m2 --raidintegrity y -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/$lv1
 _add_new_data_to_mnt
 lvconvert -y -m-1 $vg/$lv1
 lvs -a -o+devices $vg
@@ -608,9 +576,9 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/$lv1
 _add_new_data_to_mnt
 not lvconvert -y -m-1 $vg/$lv1
 not lvconvert --splitmirrors 1 -n tmp -y $vg/$lv1
@@ -632,9 +600,9 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y --raidintegritymode bitmap -n $lv1 -l 8 $vg "$dev1" "$dev2"
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/$lv1
 _test_fs_with_read_repair "$dev1"
 lvs -o integritymismatches $vg/${lv1}_rimage_0 |tee mismatch
 not grep 0 mismatch
@@ -648,12 +616,12 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid6 --raidintegrity y --raidintegritymode bitmap -n $lv1 -I 4K -l 8 $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
-_wait_recalc $vg/${lv1}_rimage_3
-_wait_recalc $vg/${lv1}_rimage_4
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/${lv1}_rimage_3
+aux wait_recalc $vg/${lv1}_rimage_4
+aux wait_recalc $vg/$lv1
 _test_fs_with_read_repair "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 lvs -o integritymismatches $vg/${lv1}_rimage_0
 lvs -o integritymismatches $vg/${lv1}_rimage_1
@@ -671,8 +639,8 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y --raidintegritymode bitmap -n $lv1 -l 8 $vg "$dev1" "$dev2"
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 _add_new_data_to_mnt
 lvconvert --raidintegrity n $vg/$lv1
 _add_more_data_to_mnt
@@ -688,8 +656,8 @@ _prepare_vg
 lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 _add_new_data_to_mnt
 lvconvert --raidintegrity y --raidintegritymode bitmap $vg/$lv1
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 _add_more_data_to_mnt
 _verify_data_on_mnt
 umount $mnt
@@ -702,12 +670,12 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid1 --raidintegrity y --raidintegritymode bitmap -m1 -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 _add_new_data_to_mnt
 lvextend -l 16 $vg/$lv1
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 resize2fs "$DM_DEV_DIR/$vg/$lv1"
 _add_more_data_to_mnt
 _verify_data_on_mnt
@@ -721,13 +689,13 @@ vgremove -ff $vg
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y --raidintegritymode bitmap -n $lv1 -l 8 $vg
 lvs -a -o name,segtype,devices,sync_percent $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 _add_new_data_to_mnt
 lvconvert -y -m+1 $vg/$lv1
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
 _add_more_data_to_mnt
 _verify_data_on_mnt
 umount $mnt

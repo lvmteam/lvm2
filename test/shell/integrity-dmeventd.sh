@@ -94,37 +94,6 @@ _verify_data_on_lv() {
         lvchange -an $vg/$lv1
 }
 
-_sync_percent() {
-	local checklv=$1
-	get lv_field "$checklv" sync_percent | cut -d. -f1
-}
-
-_wait_recalc() {
-	local checklv=$1
-
-	for i in $(seq 1 10) ; do
-		sync=$(_sync_percent "$checklv")
-		echo "sync_percent is $sync"
-
-		if test "$sync" = "100"; then
-			return
-		fi
-
-		sleep 1
-	done
-
-	# TODO: There is some strange bug, first leg of RAID with integrity
-	# enabled never gets in sync. I saw this in BB, but not when executing
-	# the commands manually
-	if test -z "$sync"; then
-		echo "TEST\ WARNING: Resync of dm-integrity device '$checklv' failed"
-                dmsetup status "$DM_DEV_DIR/mapper/${checklv/\//-}"
-		exit
-	fi
-	echo "timeout waiting for recalc"
-	return 1
-}
-
 aux lvmconf \
         'activation/raid_fault_policy = "allocate"'
 
@@ -136,9 +105,9 @@ vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4"
 lvcreate --type raid1 -m 2 --raidintegrity y --ignoremonitoring -l 8 -n $lv1 $vg "$dev1" "$dev2" "$dev3"
 lvchange --monitor y $vg/$lv1
 lvs -a -o+devices $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
 aux wait_for_sync $vg $lv1
 _add_new_data_to_mnt
 
@@ -176,9 +145,9 @@ vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 lvcreate --type raid1 -m 2 --raidintegrity y --ignoremonitoring -l 8 -n $lv1 $vg "$dev1" "$dev2" "$dev3"
 lvchange --monitor y $vg/$lv1
 lvs -a -o+devices $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
 aux wait_for_sync $vg $lv1
 _add_new_data_to_mnt
 
@@ -222,11 +191,11 @@ vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6"
 lvcreate --type raid6 --raidintegrity y --ignoremonitoring -l 8 -n $lv1 $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 lvchange --monitor y $vg/$lv1
 lvs -a -o+devices $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
-_wait_recalc $vg/${lv1}_rimage_3
-_wait_recalc $vg/${lv1}_rimage_4
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/${lv1}_rimage_3
+aux wait_recalc $vg/${lv1}_rimage_4
 aux wait_for_sync $vg $lv1
 _add_new_data_to_mnt
 
@@ -262,10 +231,10 @@ vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 lvcreate --type raid10 --raidintegrity y --ignoremonitoring -l 8 -n $lv1 $vg "$dev1" "$dev2" "$dev3" "$dev4"
 lvchange --monitor y $vg/$lv1
 lvs -a -o+devices $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
-_wait_recalc $vg/${lv1}_rimage_3
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/${lv1}_rimage_3
 aux wait_for_sync $vg $lv1
 _add_new_data_to_mnt
 

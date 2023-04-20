@@ -1757,6 +1757,31 @@ wait_for_sync() {
 	return 1
 }
 
+wait_recalc() {
+	local checklv=$1
+
+	for i in {1..100} ; do
+		sync=$(get lv_field "$checklv" sync_percent | cut -d. -f1)
+		echo "sync_percent is $sync"
+
+		test "$sync" = "100" && return
+
+		sleep .1
+	done
+
+	# TODO: There is some strange bug, first leg of RAID with integrity
+	# enabled never gets in sync. I saw this in BB, but not when executing
+	# the commands manually
+#	if test -z "$sync"; then
+#		echo "TEST\ WARNING: Resync of dm-integrity device '$checklv' failed"
+#                dmsetup status "$DM_DEV_DIR/mapper/${checklv/\//-}"
+#		exit
+#	fi
+	echo "Timeout waiting for recalc"
+	dmsetup status "$DM_DEV_DIR/mapper/${checklv/\//-}"
+	return 1
+}
+
 # Check if tests are running on 64bit architecture
 can_use_16T() {
 	test "$(getconf LONG_BIT)" -eq 64

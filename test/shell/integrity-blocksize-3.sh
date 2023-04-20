@@ -19,37 +19,6 @@ aux have_integrity 1 5 0 || skip
 mnt="mnt"
 mkdir -p $mnt
 
-_sync_percent() {
-        local checklv=$1
-        get lv_field "$checklv" sync_percent | cut -d. -f1
-}
-
-_wait_recalc() {
-        local checklv=$1
-
-        for i in $(seq 1 10) ; do
-                sync=$(_sync_percent "$checklv")
-                echo "sync_percent is $sync"
-
-                if test "$sync" = "100"; then
-                        return
-                fi
-
-                sleep 1
-        done
-
-        # TODO: There is some strange bug, first leg of RAID with integrity
-        # enabled never gets in sync. I saw this in BB, but not when executing
-        # the commands manually
-        if test -z "$sync"; then
-                echo "TEST\ WARNING: Resync of dm-integrity device '$checklv' failed"
-                dmsetup status "$DM_DEV_DIR/mapper/${checklv/\//-}"
-                exit
-        fi
-        echo "timeout waiting for recalc"
-        return 1
-}
-
 # scsi_debug devices with 512 LBS 512 PBS
 aux prepare_scsi_debug_dev 256
 check sysfs "$(< SCSI_DEBUG_DEV)" queue/logical_block_size "512"
@@ -73,8 +42,8 @@ umount $mnt
 lvchange -an $vg
 lvconvert --raidintegrity y $vg/$lv1
 lvchange -ay $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 cat $mnt/hello
@@ -93,8 +62,8 @@ umount $mnt
 lvchange -an $vg
 lvchange -ay $vg
 lvconvert --raidintegrity y $vg/$lv1
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 cat $mnt/hello | grep "hello world"
@@ -110,8 +79,8 @@ mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 echo "hello world" > $mnt/hello
 lvconvert --raidintegrity y $vg/$lv1
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
 cat $mnt/hello | grep "hello world"
 umount $mnt
@@ -150,8 +119,8 @@ umount $mnt
 lvchange -an $vg
 lvconvert --raidintegrity y $vg/$lv1
 lvchange -ay $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 cat $mnt/hello
@@ -170,8 +139,8 @@ umount $mnt
 lvchange -an $vg
 lvchange -ay $vg
 lvconvert --raidintegrity y $vg/$lv1
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 cat $mnt/hello | grep "hello world"
@@ -187,8 +156,8 @@ mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 echo "hello world" > $mnt/hello
 lvconvert --raidintegrity y $vg/$lv1
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
 cat $mnt/hello | grep "hello world"
 umount $mnt
@@ -227,8 +196,8 @@ umount $mnt
 lvchange -an $vg
 lvconvert --raidintegrity y $vg/$lv1
 lvchange -ay $vg
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 cat $mnt/hello
@@ -248,8 +217,8 @@ umount $mnt
 lvchange -an $vg
 lvchange -ay $vg
 lvconvert --raidintegrity y $vg/$lv1
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 cat $mnt/hello | grep "hello world"
@@ -266,8 +235,8 @@ mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 echo "hello world" > $mnt/hello
 lvconvert --raidintegrity y $vg/$lv1
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
 cat $mnt/hello | grep "hello world"
 umount $mnt

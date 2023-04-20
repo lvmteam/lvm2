@@ -65,7 +65,7 @@ _test1() {
 
 	lvchange --syncaction check $vg/$lv1
 
-	_wait_recalc $vg/$lv1
+	aux wait_recalc $vg/$lv1
 
 	lvs -o integritymismatches $vg/${lv1}_rimage_0 |tee mismatch
 	not grep 0 mismatch
@@ -111,7 +111,7 @@ _test2() {
 
 	lvchange --syncaction check $vg/$lv1
 
-	_wait_recalc $vg/$lv1
+	aux wait_recalc $vg/$lv1
 
 	lvs -o integritymismatches $vg/${lv1}_rimage_0 |tee mismatch
 	not grep 0 mismatch
@@ -125,42 +125,11 @@ _test2() {
 	umount $mnt
 }
 
-_sync_percent() {
-	local checklv=$1
-	get lv_field "$checklv" sync_percent | cut -d. -f1
-}
-
-_wait_recalc() {
-	local checklv=$1
-
-	for i in $(seq 1 10) ; do
-		sync=$(_sync_percent "$checklv")
-		echo "sync_percent is $sync"
-
-		if test "$sync" = "100"; then
-			return
-		fi
-
-		sleep 1
-	done
-
-	# TODO: There is some strange bug, first leg of RAID with integrity
-	# enabled never gets in sync. I saw this in BB, but not when executing
-	# the commands manually
-	if test -z "$sync"; then
-		echo "TEST\ WARNING: Resync of dm-integrity device '$checklv' failed"
-                dmsetup status "$DM_DEV_DIR/mapper/${checklv/\//-}"
-		exit
-	fi
-	echo "timeout waiting for recalc"
-	return 1
-}
-
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 6 $vg "$dev1" "$dev2"
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/$lv1
 _test1
 lvs -o integritymismatches $vg/$lv1 |tee mismatch
 not grep 0 mismatch
@@ -171,9 +140,9 @@ vgremove -ff $vg
 
 _prepare_vg
 lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 6 $vg "$dev1" "$dev2"
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/$lv1
 _test2
 lvs -o integritymismatches $vg/$lv1 |tee mismatch
 not grep 0 mismatch
@@ -184,10 +153,10 @@ vgremove -ff $vg
 
 _prepare_vg
 lvcreate --type raid5 --raidintegrity y -n $lv1 -I 4K -l 6 $vg "$dev1" "$dev2" "$dev3"
-_wait_recalc $vg/${lv1}_rimage_0
-_wait_recalc $vg/${lv1}_rimage_1
-_wait_recalc $vg/${lv1}_rimage_2
-_wait_recalc $vg/$lv1
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/$lv1
 _test1
 lvs -o integritymismatches $vg/$lv1 |tee mismatch
 not grep 0 mismatch
