@@ -70,6 +70,8 @@ mkdir "$MOUNT_DIR"
 # This mkfs should fill 2MB pool over 95%
 # no autoresize is configured
 mkfs.ext4 "$DM_DEV_DIR/mapper/$THIN"
+# ensure all data from mkfs are written to disk
+sync
 test "$(percent_)" -gt 95
 mount "$DM_DEV_DIR/mapper/$THIN" "$MOUNT_DIR"
 
