@@ -14,8 +14,8 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-which mkfs.xfs || skip
-which xfs_growfs || skip
+which mkfs.ext4 || skip
+which resize2fs || skip
 aux have_integrity 1 5 0 || skip
 # Avoid 4K ramdisk devices on older kernels
 aux kernel_at_least  5 10 || export LVM_TEST_PREFER_BRD=0
@@ -28,7 +28,7 @@ aux prepare_devs 6 80
 # Use awk instead of anoyingly long log out from printf
 #printf "%0.sA" {1..16384} >> fileA
 awk 'BEGIN { while (z++ < 16384) printf "A" }' > fileA
-awk 'BEGIN { while (z++ < 16384) printf "B" }' > fileB
+awk 'BEGIN { while (z++ < 4096) printf "B" }' > fileB
 awk 'BEGIN { while (z++ < 16384) printf "C" }' > fileC
 
 # generate random data
@@ -78,18 +78,11 @@ _test_fs_with_read_repair() {
 
 	umount $mnt
 	lvchange -an $vg/$lv1
-
 	for dev in "$@"; do
-		xxd "$dev" > dev.txt
-		# corrupt fileB
-		sed -e 's/4242 4242 4242 4242 4242 4242 4242 4242/4242 4242 4242 4242 4242 4242 4242 4243/' dev.txt > dev.bad
-		rm -f dev.txt
-		xxd -r dev.bad > "$dev"
-		rm -f dev.bad
+		aux corrupt_dev "$dev" BBBBBBBBBBBBBBBBB BBBBBBBBCBBBBBBBB
 	done
 
 	lvchange -ay $vg/$lv1
-
 	mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 
 	cmp -b $mnt/fileA fileA
@@ -250,7 +243,7 @@ lvremove $vg/$lv1
 vgremove -ff $vg
 
 _prepare_vg
-lvcreate --type raid5 --raidintegrity y -n $lv1 -l 8 $vg "$dev1" "$dev2" "$dev3"
+lvcreate --type raid5 --raidintegrity y -n $lv1 -I4 -l 8 $vg "$dev1" "$dev2" "$dev3"
 lvcreate --type $create_type -n fast -l 4 -an $vg "$dev6"
 lvconvert -y --type $convert_type $convert_option fast $vg/$lv1
 lvs -a -o name,size,segtype,devices,sync_percent $vg
@@ -328,7 +321,7 @@ lvchange -an $vg/$lv1
 lvextend -l 16 $vg/$lv1
 lvchange -ay $vg/$lv1
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-xfs_growfs $mnt
+resize2fs "$DM_DEV_DIR/$vg/$lv1"
 _wait_recalc $vg/${lv1}_${suffix}_rimage_0
 _wait_recalc $vg/${lv1}_${suffix}_rimage_1
 _add_more_data_to_mnt
@@ -351,7 +344,7 @@ lvconvert -y --type $convert_type $convert_option fast $vg/$lv1
 lvs -a -o name,size,segtype,devices,sync_percent $vg
 _add_new_data_to_mnt
 lvextend -l 16 $vg/$lv1
-xfs_growfs $mnt
+resize2fs "$DM_DEV_DIR/$vg/$lv1"
 _wait_recalc $vg/${lv1}_${suffix}_rimage_0
 _wait_recalc $vg/${lv1}_${suffix}_rimage_1
 _add_more_data_to_mnt
@@ -363,7 +356,7 @@ lvremove $vg/$lv1
 vgremove -ff $vg
 
 _prepare_vg
-lvcreate --type raid5 --raidintegrity y -n $lv1 -l 8 $vg
+lvcreate --type raid5 --raidintegrity y -n $lv1 -I4 -l 8 $vg
 _wait_recalc $vg/${lv1}_rimage_0
 _wait_recalc $vg/${lv1}_rimage_1
 _wait_recalc $vg/${lv1}_rimage_2
@@ -373,7 +366,7 @@ lvconvert -y --type $convert_type $convert_option fast $vg/$lv1
 lvs -a -o name,size,segtype,devices,sync_percent $vg
 _add_new_data_to_mnt
 lvextend -l 16 $vg/$lv1
-xfs_growfs $mnt
+resize2fs "$DM_DEV_DIR/$vg/$lv1"
 _wait_recalc $vg/${lv1}_${suffix}_rimage_0
 _wait_recalc $vg/${lv1}_${suffix}_rimage_1
 _add_more_data_to_mnt
@@ -487,7 +480,7 @@ lvremove $vg/$lv1
 vgremove -ff $vg
 
 _prepare_vg
-lvcreate --type raid6 --raidintegrity y --raidintegritymode bitmap -n $lv1 -l 8 $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
+lvcreate --type raid6 --raidintegrity y --raidintegritymode bitmap -n $lv1 -I4 -l 8 $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 lvcreate --type $create_type -n fast -l 4 -an $vg "$dev6"
 lvconvert -y --type $convert_type $convert_option fast $vg/$lv1
 lvs -a -o name,size,segtype,devices,sync_percent $vg

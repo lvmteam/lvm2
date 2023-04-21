@@ -14,8 +14,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-which mkfs.xfs || skip
-which xfs_growfs || skip
+which mkfs.ext4 || skip
 aux have_integrity 1 5 0 || skip
 # Avoid 4K ramdisk devices on older kernels
 aux kernel_at_least  5 10 || export LVM_TEST_PREFER_BRD=0
@@ -28,7 +27,7 @@ aux prepare_devs 3 40
 # Use awk instead of anoyingly long log out from printf
 #printf "%0.sA" {1..16384} >> fileA
 awk 'BEGIN { while (z++ < 16384) printf "A" }' > fileA
-awk 'BEGIN { while (z++ < 16384) printf "B" }' > fileB
+awk 'BEGIN { while (z++ < 4096) printf "B" }' > fileB
 awk 'BEGIN { while (z++ < 16384) printf "C" }' > fileC
 
 _prepare_vg() {
@@ -40,7 +39,7 @@ _prepare_vg() {
 }
 
 _test1() {
-	mkfs.xfs -f -s size=4096 "$DM_DEV_DIR/$vg/$lv1"
+	mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 
 	mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 
@@ -57,12 +56,7 @@ _test1() {
 	umount $mnt
 	lvchange -an $vg/$lv1
 
-	xxd "$dev1" > dev1.txt
-	# corrupt fileB
-	sed -e 's/4242 4242 4242 4242 4242 4242 4242 4242/4242 4242 4242 4242 4242 4242 4242 4243/' dev1.txt > dev1.bad
-	rm -f dev1.txt
-	xxd -r dev1.bad > "$dev1"
-	rm -f dev1.bad
+	aux corrupt_dev "$dev1" BBBBBBBBBBBBBBBBB BBBBBBBBCBBBBBBBB
 
 	lvchange -ay $vg/$lv1
 
@@ -84,7 +78,7 @@ _test1() {
 }
 
 _test2() {
-	mkfs.xfs -f -s size=4096 "$DM_DEV_DIR/$vg/$lv1"
+	mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 
 	mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 
@@ -102,19 +96,11 @@ _test2() {
 	lvchange -an $vg/$lv1
 
 	# corrupt fileB and fileC on dev1
-	xxd "$dev1" > dev1.txt
-	sed -e 's/4242 4242 4242 4242 4242 4242 4242 4242/4242 4242 4242 4242 4242 4242 4242 4243/' dev1.txt > dev1.bad
-	sed -e 's/4343 4343 4343 4343 4343 4343 4343 4343/4444 4444 4444 4444 4444 4444 4444 4444/' dev1.txt > dev1.bad
-	rm -f dev1.txt
-	xxd -r dev1.bad > "$dev1"
-	rm -f dev1.bad
+	aux corrupt_dev "$dev1" BBBBBBBBBBBBBBBBB BBBBBBBBCBBBBBBBB
+	aux corrupt_dev "$dev1" CCCCCCCCCCCCCCCCC DDDDDDDDDDDDDDDDD
 
 	# corrupt fileA on dev2
-	xxd "$dev2" > dev2.txt
-	sed -e 's/4141 4141 4141 4141 4141 4141 4141 4141/4141 4141 4141 4141 4141 4141 4145 4141/' dev2.txt > dev2.bad
-	rm -f dev2.txt
-	xxd -r dev2.bad > "$dev2"
-	rm -f dev2.bad
+	aux corrupt_dev "$dev2" AAAAAAAAAAAAAAAAA AAAAAAAAAAAAAAEAA
 
 	lvchange -ay $vg/$lv1
 
@@ -197,7 +183,7 @@ lvremove $vg/$lv1
 vgremove -ff $vg
 
 _prepare_vg
-lvcreate --type raid5 --raidintegrity y -n $lv1 -l 6 $vg "$dev1" "$dev2" "$dev3"
+lvcreate --type raid5 --raidintegrity y -n $lv1 -I 4K -l 6 $vg "$dev1" "$dev2" "$dev3"
 _wait_recalc $vg/${lv1}_rimage_0
 _wait_recalc $vg/${lv1}_rimage_1
 _wait_recalc $vg/${lv1}_rimage_2
