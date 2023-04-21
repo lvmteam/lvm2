@@ -923,7 +923,7 @@ cleanup_idm_context() {
 # TODO: add support for parametrized [OPTION] usage (Not usable ATM)
 # TODO: -bs  blocksize  (defaults 512K)
 # TODO: -count  count/length  (defaults to whole device, otherwise in BS units)
-# TODO: -seek  offset/oseek  (defaults 0, begining of zeroing area in BS unit)
+# TODO: -seek  offset/seek  (defaults 0, begining of zeroing area in BS unit)
 clear_devs() {
 	local bs=
 	local count=
@@ -968,7 +968,7 @@ corrupt_dev() {
 	test -n "${a[0]-}" || return 0
 
 	# Seek for the sequence and replace it with corruption pattern
-	echo -n "${a[1]/$2/$3}" | dd of="$1" bs=1 oseek="${a[0]}" conv=fdatasync
+	echo -n "${a[1]/$2/$3}" | dd of="$1" bs=1 seek="${a[0]}" conv=fdatasync
 }
 
 prepare_backing_dev() {
