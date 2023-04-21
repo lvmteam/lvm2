@@ -29,9 +29,7 @@ _clear_online_files() {
 aux prepare_devs 3
 get_devs
 
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
-dd if=/dev/zero of="$dev3" || true
+aux clear_devs "$dev1" "$dev2" "$dev3"
 
 vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3"
 
@@ -74,9 +72,7 @@ vgremove -ff $vg
 # copy of the metadata.
 #
 
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
-dd if=/dev/zero of="$dev3" || true
+aux clear_devs "$dev1" "$dev2" "$dev3"
 
 vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3"
 
@@ -125,9 +121,7 @@ vgremove -ff $vg
 # makes the VG usable.
 #
 
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
-dd if=/dev/zero of="$dev3" || true
+aux clear_devs "$dev1" "$dev2" "$dev3"
 
 pvcreate "$dev1"
 pvcreate "$dev2"
@@ -182,9 +176,7 @@ vgremove -ff $vg
 # devices.
 #
 
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
-dd if=/dev/zero of="$dev3" || true
+aux clear_devs "$dev1" "$dev2" "$dev3"
 
 pvcreate "$dev1"
 pvcreate "$dev2"
@@ -258,9 +250,7 @@ if test -n "$LVM_TEST_LVMLOCKD"; then
 exit 0
 fi
 
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
-dd if=/dev/zero of="$dev3" || true
+aux clear_devs "$dev1" "$dev2" "$dev3"
 
 vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3"
 
@@ -328,4 +318,3 @@ pvs "$dev3"
 
 vgchange -an $vg
 vgremove -ff $vg
-

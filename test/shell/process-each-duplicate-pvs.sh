@@ -383,8 +383,7 @@ check pv_field "$dev4" dev_size "$SIZE4"
 # Verify that devs being used by an active LV are
 # preferred over duplicates that are not used by an LV.
 
-dd if=/dev/zero of="$dev3" bs=1M oflag=direct,sync || true
-dd if=/dev/zero of="$dev4" bs=1M oflag=direct,sync || true
+aux clear_devs "$dev3" "$dev4"
 #pvscan --cache
 
 # The previous steps prevent us from nicely cleaning up

@@ -118,9 +118,7 @@ vgremove -ff $vg
 # metadata, and the second mda has current metadata.
 #
 
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
-dd if=/dev/zero of="$dev3" || true
+aux clear_devs "$dev1" "$dev2" "$dev3"
 
 pvcreate "$dev1"
 pvcreate "$dev2"
@@ -181,8 +179,7 @@ vgremove -ff $vg
 # Test when the metadata on two PVs have the same seqno
 # but different checksums.
 
-dd if=/dev/zero of="$dev1" || true
-dd if=/dev/zero of="$dev2" || true
+aux clear_devs "$dev1" "$dev2"
 
 pvcreate "$dev1"
 pvcreate "$dev2"

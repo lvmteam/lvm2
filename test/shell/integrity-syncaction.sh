@@ -34,9 +34,7 @@ awk 'BEGIN { while (z++ < 16384) printf "C" }' > fileC
 _prepare_vg() {
 	# zero devs so we are sure to find the correct file data
 	# on the underlying devs when corrupting it
-	dd if=/dev/zero of="$dev1" bs=1M oflag=direct || true
-	dd if=/dev/zero of="$dev2" bs=1M oflag=direct || true
-	dd if=/dev/zero of="$dev3" bs=1M oflag=direct || true
+	aux clear_devs "$dev1" "$dev2" "$dev3"
 	vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3"
 	pvs
 }
