@@ -14,7 +14,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-which mkfs.xfs || skip
+which mkfs.ext4 || skip
 aux have_integrity 1 5 0 || skip
 # Avoid 4K ramdisk devices on older kernels
 aux kernel_at_least  5 10 || export LVM_TEST_PREFER_BRD=0
@@ -41,7 +41,7 @@ _prepare_vg() {
 }
 
 _add_new_data_to_mnt() {
-        mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+        mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 
         mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 
