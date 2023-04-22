@@ -669,6 +669,7 @@ prepare_loop() {
 		done
 	fi
 	test -n "$LOOP" # confirm or fail
+	touch NO_BLKDISCARD_Z    # loop devices do not support WRITE_ZEROS
 	BACKING_DEV=$LOOP
 	echo "$LOOP" > LOOP
 	echo "$LOOP" > BACKING_DEV
