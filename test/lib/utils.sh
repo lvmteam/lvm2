@@ -190,7 +190,8 @@ STACKTRACE() {
 			dmsetup ls --tree | sed -e "s,^,## DMTREE:   ,"
 			echo "<======== Recursive list of $DM_DEV_DIR ========>"
 			ls -Rl --hide=shm --hide=bus --hide=snd --hide=input --hide=dri \
-			       --hide=net --hide=hugepages --hide=mqueue --hide=pts \
+				--hide=net --hide=hugepages --hide=mqueue --hide=pts \
+				--hide=tty?*  --hide=vcs?* --hide=usb --hide=char \
 			       "$DM_DEV_DIR" | sed -e "s,^,## LSLR:	,"
 			echo "<======== Udev DB content ========>"
 			for i in /sys/block/dm-* /sys/block/loop* ; do
