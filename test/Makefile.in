@@ -234,7 +234,7 @@ install: .tests-stamp lib/paths-installed
 	$(Q)- $(INSTALL_PROGRAM) dbus/*.py $(DATADIR)/dbus/
 	$(Q) $(INSTALL_DATA) lib/paths-installed $(DATADIR)/lib/paths
 	$(Q) cd lib &&\
-		$(INSTALL_DATA) $(LIB_DATA) $(DATADIR)/lib
+		$(INSTALL_DATA) $(LIB_DATA) $(LIB_CONF) $(DATADIR)/lib
 	$(Q) cd lib &&\
 		$(INSTALL_SCRIPT) $(LIB_SHARED) $(DATADIR)/lib
 	$(Q) cd lib &&\
