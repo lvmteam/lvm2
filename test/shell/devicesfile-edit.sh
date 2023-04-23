@@ -12,6 +12,8 @@
 
 test_description='devices file editing with lvmdevices'
 
+SKIP_WITH_LVMPOLLD=1
+
 . lib/inittest
 
 aux lvmconf 'devices/scan = "/dev"'

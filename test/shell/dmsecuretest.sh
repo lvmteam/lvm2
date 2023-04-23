@@ -13,6 +13,7 @@
 # Test secure table is not leaking data in user land
 
 SKIP_WITH_LVMPOLLD=1
+SKIP_WITH_LVMLOCKD=1
 
 # AES key matching rot13 string from dmsecuretest.c */
 SECURE="434e0cbab02ca68ffba9268222c3789d703fe62427b78b308518b3228f6a2122"

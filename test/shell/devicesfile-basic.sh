@@ -12,6 +12,8 @@
 
 test_description='devices file'
 
+SKIP_WITH_LVMPOLLD=1
+
 . lib/inittest
 
 aux prepare_devs 7

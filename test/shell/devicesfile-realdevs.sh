@@ -12,6 +12,8 @@
 
 test_description='devices file with real devs'
 
+SKIP_WITH_LVMPOLLD=1
+
 . lib/inittest
 
 #
