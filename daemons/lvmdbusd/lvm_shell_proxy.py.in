@@ -154,6 +154,8 @@ class LVMShellProxy(object):
 
 		# If any env variables contain LVM we will propagate them too
 		for k, v in os.environ.items():
+			if "PATH" in k:
+				local_env[k] = v
 			if "LVM" in k:
 				local_env[k] = v
 
