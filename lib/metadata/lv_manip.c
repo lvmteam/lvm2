@@ -8718,7 +8718,7 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 			    display_lvname(lv), wp.zero_value);
 
 #ifdef HAVE_BLKZEROOUT
-		if (!test_mode() && !wp.zero_value) {
+		if (!test_mode() && !wp.zero_value && (zero_sectors > 16)) {
 			/* TODO: maybe integrate with bcache_zero_set() */
 			const uint64_t end = zero_sectors << SECTOR_SHIFT;
 			uint64_t range[2] = { 0, 1024 * 1024 }; /* zeroing with 1M steps (for better ^C support) */
