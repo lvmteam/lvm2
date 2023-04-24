@@ -675,6 +675,9 @@ prepare_loop() {
 prepare_ramdisk() {
 	local size=$1
 
+	# if brd is unused, remove and use for test
+	modprobe -r brd || return 0
+
 	echo -n "## preparing ramdisk device..."
 	modprobe brd rd_size=$((size * 1024)) || return
 
