@@ -1994,37 +1994,36 @@ check_lvmpolld_init_rq_count() {
 
 wait_pvmove_lv_ready() {
 	# given sleep .1 this is about 20 secs of waiting
-	local retries=${2-100}
+	local lvid=()
+	local all
 
-	if [ -e LOCAL_LVMPOLLD ]; then
-		local lvid=""
-		while : ; do
-			test "$retries" -le 0 && die "Waiting for lvmpolld timed out"
-			test -n "$lvid" || {
-				# wait till wanted LV really appears
-				lvid=$(dmsetup info --noheadings -c -o uuid "$1" 2>/dev/null || true)
-				lvid=${lvid##LVM-}
-			}
-			test -z "$lvid" || {
+	for i in {100..0}; do
+		if [ -e LOCAL_LVMPOLLD ]; then
+			if test "${#lvid[@]}" -eq "$#" ; then
 				lvmpolld_dump > lvmpolld_dump.txt
-				check_lvmpolld_init_rq_count 1 "$lvid" lvid && break;
-			}
-			sleep .1
-			retries=$((retries-1))
-		done
-	else
-		while : ; do
-			test "$retries" -le 0 && die "Waiting for pvmove LV to get activated has timed out"
-			dmsetup info -c -o tables_loaded "$1" >out 2>/dev/null|| true;
-			not grep Live out >/dev/null || break
-			sleep .1
-			retries=$((retries-1))
-		done
-	fi
+				all=1
+				for l in "${lvid[@]}" ; do
+					check_lvmpolld_init_rq_count 1 "${l##LVM-}" lvid || all=0
+				done
+				test "$all" = 1 && return
+			else
+				# wait till wanted LV really appears
+				lvid=( $(dmsetup info --noheadings -c -o uuid "$@" 2>/dev/null) ) || true
+			fi
+		else
+			dmsetup info -c --noheadings -o tables_loaded "$@" >out 2>/dev/null || true
+			test "$(grep -c Live out)" = "$#" && return
+		fi
+		sleep .1
+	done
 
+	test -e LOCAL_LVMPOLLD && die "Waiting for lvmpolld timed out"
+	die "Waiting for pvmove LV to get activated has timed out"
+
+	# TODO: remove, uneedeed ??
 	# Adding settle here, to avoid remove, before processing of 'add' is finished
 	# (masking systemd-udevd issue)
-	udevadm settle --timeout=2 || true
+	#udev_wait 2 || true
 }
 
 # Holds device open with sleep which automatically expires after given timeout
