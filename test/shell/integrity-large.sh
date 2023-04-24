@@ -96,7 +96,7 @@ _verify_data_on_lv() {
 # be extended from 4MB to 8MB.
 
 _prepare_vg
-lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
+lvcreate --type raid1 -m1 -n $lv1 -L 300 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
 _add_data_to_lv
