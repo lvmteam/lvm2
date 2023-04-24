@@ -457,7 +457,12 @@ teardown_devs() {
 	# prepare_scsi_debug_dev() also sets LOOP to short-circuit prepare_loop()
 	if test -f SCSI_DEBUG_DEV; then
 		udev_wait
-		test "${LVM_TEST_PARALLEL:-0}" -eq 1 || modprobe -r scsi_debug
+		test "${LVM_TEST_PARALLEL:-0}" -eq 1 || {
+			if ! modprobe -r scsi_debug ; then
+				sleep 1
+				modprobe -r scsi_debug || true
+			fi
+		}
 	else
 		test ! -f LOOP || losetup -d "$(< LOOP)" || true
 		test ! -f LOOPFILE || rm -f "$(< LOOPFILE)"
