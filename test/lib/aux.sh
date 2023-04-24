@@ -175,7 +175,7 @@ prepare_lvmlockd() {
 	fi
 
 	sleep 1
-	if ! pgrep lvmlockd; then
+	if ! pgrep lvmlockd >LOCAL_LVMLOCKD; then
 		echo "Failed to start lvmlockd"
 		exit 1
 	fi
@@ -552,11 +552,7 @@ teardown() {
 	if test -n "$LVM_TEST_LVMLOCKD_TEST" ; then
 		echo ""
 		echo "## stopping lvmlockd in teardown"
-		killall lvmlockd
-		sleep 1
-		killall lvmlockd || true
-		sleep 1
-		killall -9 lvmlockd || true
+		kill_sleep_kill_ LOCAL_LVMLOCKD 0
 	fi
 
 	dm_table | not grep -E -q "$vg|$vg1|$vg2|$vg3|$vg4" || {
