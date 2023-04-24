@@ -3000,34 +3000,47 @@ static int _add_error_area(struct dev_manager *dm, struct dm_tree_node *node,
 	return 1;
 }
 
+static int _bad_pv_area(struct lv_segment *seg, uint32_t s)
+{
+	struct stat info;
+	const char *name;
+	struct device *dev;
+
+	if (!seg_pvseg(seg, s))
+		return 1;
+	if (!seg_pv(seg, s))
+		return 1;
+	if (!(dev = seg_dev(seg, s)))
+		return 1;
+	if (dm_list_empty(&dev->aliases))
+		return 1;
+	/* FIXME Avoid repeating identical stat in dm_tree_node_add_target_area */
+	name = dev_name(dev);
+	if (stat(name, &info) < 0)
+		return 1;
+	if (!S_ISBLK(info.st_mode))
+		return 1;
+	return 0;
+}
+
 int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 		   struct dm_tree_node *node, uint32_t start_area,
 		   uint32_t areas)
 {
+	struct cmd_context *cmd = seg->lv->vg->cmd;
 	uint64_t extent_size = seg->lv->vg->extent_size;
 	uint32_t s;
 	char *dlid;
-	struct stat info;
 	const char *name;
 	unsigned num_error_areas = 0;
 	unsigned num_existing_areas = 0;
 
-	/* FIXME Avoid repeating identical stat in dm_tree_node_add_target_area */
 	for (s = start_area; s < areas; s++) {
-
-		/* FIXME: dev_name() does not return NULL!  It needs to check if dm_list_empty(&dev->aliases)
-		   but this knot of logic is too complex to pull apart without careful deconstruction. */
-
-		if ((seg_type(seg, s) == AREA_PV &&
-		     (!seg_pvseg(seg, s) || !seg_pv(seg, s) || !seg_dev(seg, s) ||
-		       !(name = dev_name(seg_dev(seg, s))) || !*name ||
-		       stat(name, &info) < 0 || !S_ISBLK(info.st_mode))) ||
-		    (seg_type(seg, s) == AREA_LV && !seg_lv(seg, s))) {
-			if (!seg->lv->vg->cmd->partial_activation) {
-				if (!seg->lv->vg->cmd->degraded_activation ||
-				    !lv_is_raid_type(seg->lv)) {
-					log_error("Aborting.  LV %s is now incomplete "
-						  "and '--activationmode partial' was not specified.",
+		if (((seg_type(seg, s) == AREA_PV) && _bad_pv_area(seg, s)) ||
+		    ((seg_type(seg, s) == AREA_LV) && !seg_lv(seg, s))) {
+			if (!cmd->partial_activation) {
+				if (!cmd->degraded_activation || !lv_is_raid_type(seg->lv)) {
+					log_error("Aborting.  LV %s is incomplete and --activationmode partial was not specified.",
 						  display_lvname(seg->lv));
 					return 0;
 				}
