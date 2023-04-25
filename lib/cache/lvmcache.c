@@ -1503,6 +1503,9 @@ void lvmcache_extra_md_component_checks(struct cmd_context *cmd)
 	 */
 
 	dm_list_iterate_items_safe(vginfo, vginfo2, &_vginfos) {
+		char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
+		memcpy(vgid, vginfo->vgid, ID_LEN);
+
 		dm_list_iterate_items_safe(info, info2, &vginfo->infos) {
 			dev = info->dev;
 			device_hint = _get_pvsummary_device_hint(dev->pvid);
@@ -1557,6 +1560,10 @@ void lvmcache_extra_md_component_checks(struct cmd_context *cmd)
 				/* lvmcache_del will also delete vginfo if info was last one */
 				lvmcache_del(info);
 				cmd->filter->wipe(cmd, cmd->filter, dev, NULL);
+
+				/* If vginfo was deleted don't continue using vginfo->infos */
+				if (!_search_vginfos_list(NULL, vgid))
+					break;
 			}
 		}
 	}
