@@ -189,15 +189,19 @@ STACKTRACE() {
 			echo "<======== Tree ========>"
 			dmsetup ls --tree | sed -e "s,^,## DMTREE:   ,"
 			echo "<======== Recursive list of $DM_DEV_DIR ========>"
-			ls -Rl --hide=shm --hide=bus --hide=snd --hide=input --hide=dri \
-				--hide=net --hide=hugepages --hide=mqueue --hide=pts \
-				--hide=tty?*  --hide=vcs?* --hide=usb --hide=char \
-			       "$DM_DEV_DIR" | sed -e "s,^,## LSLR:	,"
+			ls -lR -I bsg -I bus -I char -Idma_heap -I dri \
+			   -I hugepages -I input -I mqueue \
+			   -I net -I pts -I shm -I snd \
+			   -I tty?* -I usb -I vfio -I vcs?* \
+			   -I virtio-ports \
+			   "$DM_DEV_DIR" | sed -e "s,^,## LS_LR:	,"
 			echo "<======== Udev DB content ========>"
 			for i in /sys/block/dm-* /sys/block/loop* ; do
 				udevadm info --query=all --path "$i" 2>/dev/null || true
 			done | sed -e "s,^,## UDEV:	,"
 		fi
+		echo "<======== Free space ========>"
+		df -h | sed -e "s,^,## DF_H:	,"
 		echo "<======== Script file \"$(< TESTNAME)\" ========>"
 		local script=$0
 		test -f "$script" || script="$TESTOLDPWD/$0"
