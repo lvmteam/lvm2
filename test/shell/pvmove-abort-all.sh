@@ -53,10 +53,10 @@ cmd3=(pvmove -i1 $backgroundarg $mode -n $vg1/$lv1 "$dev4" "$dev6")
 
 if test -z "$backgroundarg" ; then
 	"${cmd1[@]}" &
+	aux wait_pvmove_lv_ready "$vg-pvmove0"
 	"${cmd2[@]}" &
 	"${cmd3[@]}" &
-	aux wait_pvmove_lv_ready "$vg-pvmove0" "$vg-pvmove1" "$vg1-pvmove0"
-        lvs -a $vg $vg1
+	aux wait_pvmove_lv_ready "$vg-pvmove1" "$vg1-pvmove0"
 else
 	LVM_TEST_TAG="kill_me_$PREFIX" "${cmd1[@]}"
 	LVM_TEST_TAG="kill_me_$PREFIX" "${cmd2[@]}"

@@ -2025,11 +2025,6 @@ wait_pvmove_lv_ready() {
 
 	test -e LOCAL_LVMPOLLD && die "Waiting for lvmpolld timed out"
 	die "Waiting for pvmove LV to get activated has timed out"
-
-	# TODO: remove, uneedeed ??
-	# Adding settle here, to avoid remove, before processing of 'add' is finished
-	# (masking systemd-udevd issue)
-	#udev_wait 2 || true
 }
 
 # Holds device open with sleep which automatically expires after given timeout
