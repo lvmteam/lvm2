@@ -448,6 +448,7 @@ teardown_devs_prefixed() {
 teardown_devs() {
 	# Delete any remaining dm/udev semaphores
 	teardown_udev_cookies
+	restore_dm_mirror
 
 	test ! -f MD_DEV || cleanup_md_dev
 	test ! -f DEVICES || teardown_devs_prefixed "$PREFIX"
@@ -483,7 +484,6 @@ teardown_devs() {
 			udev_wait
 		}
 	}
-	restore_dm_mirror
 }
 
 kill_sleep_kill_() {
@@ -1394,7 +1394,8 @@ backup_dev() {
 	local dev
 
 	for dev in "$@"; do
-		dd if="$dev" of="${dev}.backup" bs=1024
+		dd if="$dev" of="${dev##*/}.backup" bs=16K conv=fdatasync || \
+			die "Cannot backup device: \"$dev\"  with size $(blockdev --getsize64 "$dev" || true) bytes."
 	done
 }
 
@@ -1402,9 +1403,9 @@ restore_dev() {
 	local dev
 
 	for dev in "$@"; do
-		test -e "${dev}.backup" || \
+		test -e "${dev##*/}.backup" || \
 			die "Internal error: $dev not backed up, can't restore!"
-		dd of="$dev" if="${dev}.backup" bs=1024
+		dd of="$dev" if="${dev##*/}.backup" bs=16K
 	done
 }
 
@@ -1743,9 +1744,9 @@ udev_wait() {
 	pgrep udev >/dev/null || return 0
 	which udevadm &>/dev/null || return 0
 	if test -n "${1-}" ; then
-		udevadm settle --exit-if-exists="$1" || true
+		udevadm settle --exit-if-exists="$1" 2>/dev/null || true
 	else
-		udevadm settle --timeout=15 || true
+		udevadm settle --timeout=15 2>/dev/null || true
 	fi
 }
 
