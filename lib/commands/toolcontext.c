@@ -1506,7 +1506,7 @@ static void _init_rand(struct cmd_context *cmd)
 		return;
 	}
 
-	cmd->rand_seed = (unsigned) time(NULL) + (unsigned) getpid();
+	cmd->rand_seed = (unsigned) ((time(NULL) + getpid()) & 0xffffffff);
 	reset_lvm_errno(1);
 }
 
