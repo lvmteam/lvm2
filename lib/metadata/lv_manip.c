@@ -4370,13 +4370,12 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 		for (s = 0; s < seg->area_count; s++) {
 			struct logical_volume *lv_image;
 			struct logical_volume *lv_iorig;
-			struct logical_volume *lv_imeta;
 			struct lv_segment *seg_image;
 
 			lv_image = seg_lv(seg, s);
 			seg_image = first_seg(lv_image);
 
-			if (!(lv_imeta = seg_image->integrity_meta_dev)) {
+			if (!seg_image->integrity_meta_dev) {
 				log_error("1");
 				return 0;
 			}

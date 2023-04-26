@@ -50,7 +50,7 @@ static void _read_blacklist_file(const char *path)
 	FILE *fp;
 	char line[MAX_WWID_LINE];
 	char wwid[MAX_WWID_LINE];
-	char *word, *p;
+	char *word;
 	int section_black = 0;
 	int section_exceptions = 0;
 	int found_quote;
@@ -100,7 +100,7 @@ static void _read_blacklist_file(const char *path)
 		 * section, and skips those (should the entire mp
 		 * config filtering be disabled if non-wwids are seen?
 		 */
-		if (!(p = strstr(word, "wwid")))
+		if (!strstr(word, "wwid"))
 			continue;
 
 		i += 4; /* skip "wwid" */

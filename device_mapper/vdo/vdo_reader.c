@@ -174,9 +174,8 @@ static void _vdo_decode_pvc(struct vdo_component_41_0 *pvc)
 bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks)
 {
 	char buffer[4096];
-	int fh, n;
+	int fh;
 	bool r = false;
-	off_t l;
 	struct stat st;
 	uint64_t size;
 	uint64_t regpos;
@@ -207,7 +206,7 @@ bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks)
 		size = st.st_size;
 	}
 
-	if ((n = read(fh, buffer, sizeof(buffer))) < 0) {
+	if (read(fh, buffer, sizeof(buffer)) < 0) {
 		log_sys_debug("read", vdo_path);
 		goto err;
 	}
@@ -235,12 +234,12 @@ bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks)
 		goto err;
 	}
 
-	if ((l = lseek(fh, regpos, SEEK_SET)) < 0) {
+	if (lseek(fh, regpos, SEEK_SET) < 0) {
 		log_sys_debug("lseek", vdo_path);
 		goto err;
 	}
 
-	if ((n = read(fh, buffer, sizeof(buffer))) < 0) {
+	if (read(fh, buffer, sizeof(buffer)) < 0) {
 		log_sys_debug("read", vdo_path);
 		goto err;
 	}

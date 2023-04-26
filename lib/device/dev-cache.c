@@ -2231,7 +2231,6 @@ try_partition:
 int setup_devname_in_dev_cache(struct cmd_context *cmd, const char *devname)
 {
 	struct stat buf;
-	struct device *dev;
 
 	if (stat(devname, &buf) < 0) {
 		log_error("Cannot access device %s.", devname);
@@ -2246,7 +2245,7 @@ int setup_devname_in_dev_cache(struct cmd_context *cmd, const char *devname)
 	if (!_insert_dev(devname, buf.st_rdev))
 		return_0;
 
-	if (!(dev = (struct device *) dm_hash_lookup(_cache.names, devname)))
+	if (!dm_hash_lookup(_cache.names, devname))
 		return_0;
 
 	return 1;

@@ -484,7 +484,7 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 	struct logical_volume *imeta_lvs[DEFAULT_RAID_MAX_IMAGES];
 	struct cmd_context *cmd = lv->vg->cmd;
 	struct volume_group *vg = lv->vg;
-	struct logical_volume *lv_image, *lv_imeta, *lv_iorig;
+	struct logical_volume *lv_image, *lv_imeta;
 	struct lv_segment *seg_top, *seg_image;
 	struct pv_list *pvl;
 	const struct segment_type *segtype;
@@ -682,7 +682,7 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 		 * but gets a new integrity segment, in place of the segments
 		 * that were moved to lv_iorig.
 		 */
-		if (!(lv_iorig = insert_layer_for_lv(cmd, lv_image, INTEGRITY, "_iorig")))
+		if (!insert_layer_for_lv(cmd, lv_image, INTEGRITY, "_iorig"))
 			goto_bad;
 
 		lv_image->status |= INTEGRITY;

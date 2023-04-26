@@ -1028,7 +1028,6 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 	uint64_t pvh_offset;    /* bytes */
 	uint64_t pvhe_offset;   /* bytes */
 	uint64_t dlocn_offset;  /* bytes */
-	uint64_t tmp;
 	int mda_count = 0;
 	int bad = 0;
 	int di;
@@ -1095,7 +1094,7 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 	if ((void *)dlocn != (void *)(buf + dlocn_offset - lh_offset))
 		log_print("CHECK: problem with pv_header.disk_locn[%d] offset calculation", di);
 
-	while ((tmp = xlate64(dlocn->offset))) {
+	while (xlate64(dlocn->offset)) {
 		if (print_fields) {
 			log_print("pv_header.disk_locn[%d] at %llu # location of data area", di,
 				  (unsigned long long)dlocn_offset);
@@ -1128,7 +1127,7 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 	if ((void *)dlocn != (void *)(buf + dlocn_offset - lh_offset))
 		log_print("CHECK: problem with pv_header.disk_locn[%d] offset calculation", di);
 
-	while ((tmp = xlate64(dlocn->offset))) {
+	while (xlate64(dlocn->offset)) {
 		if (print_fields) {
 			log_print("pv_header.disk_locn[%d] at %llu # location of metadata area", di,
 				  (unsigned long long)dlocn_offset);
@@ -1214,7 +1213,7 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 	dlocn = pvhe->bootloader_areas_xl;
 	dlocn_offset = pvhe_offset + 8;
 
-	while ((tmp = xlate64(dlocn->offset))) {
+	while (xlate64(dlocn->offset)) {
 		if (print_fields) {
 			log_print("pv_header_extension.disk_locn[%d] at %llu # bootloader area", di,
 				  (unsigned long long)dlocn_offset);
