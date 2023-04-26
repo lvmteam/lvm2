@@ -4525,7 +4525,8 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 		error_flags = 0;
 
 		vg = vg_read(cmd, vg_name, vg_uuid, read_flags, lockd_state, &error_flags, &error_vg);
-		if (_ignore_vg(cmd, error_flags, error_vg, vg_name, NULL, read_flags, &skip, &notfound)) {
+		if (_ignore_vg(cmd, error_flags, error_vg, vg_name, NULL, read_flags, &skip, &notfound) ||
+		    (!vg && !error_vg)) {
 			stack;
 			ret_max = ECMD_FAILED;
 			report_log_ret_code(ret_max);
@@ -4535,7 +4536,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 		}
 		if (notfound)
 			goto endvg;
-		
+
 		/*
 		 * Don't call "continue" when skip is set, because we need to remove
 		 * error_vg->pvs entries from devices list.
