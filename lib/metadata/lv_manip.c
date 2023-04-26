@@ -5951,6 +5951,11 @@ static void _setup_params_for_extend_metadata(struct logical_volume *lv,
 
 static int _lv_resize_check_used(struct logical_volume *lv)
 {
+	if (!lv) {
+		log_error(INTERNAL_ERROR "LV is not specified.");
+		return 0;
+	}
+
 	if (lv_is_locked(lv)) {
 		log_error("Can't resize locked logical volume %s.", display_lvname(lv));
 		return 0;
