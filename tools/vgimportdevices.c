@@ -233,7 +233,8 @@ int vgimportdevices(struct cmd_context *cmd, int argc, char **argv)
 	log_print("Added %u devices to devices file.", vp.added_devices);
 out:
 	if ((ret == ECMD_FAILED) && created_file)
-		unlink(cmd->devices_file_path);
+		if (unlink(cmd->devices_file_path) < 0)
+			log_sys_debug("unlink", cmd->devices_file_path);
 	destroy_processing_handle(cmd, handle);
 	return ret;
 }
