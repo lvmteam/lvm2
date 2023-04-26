@@ -96,7 +96,7 @@ static int _get_crypt_path(dev_t lv_devt, char *lv_path, char *crypt_path)
 
 int lv_crypt_is_active(struct cmd_context *cmd, char *lv_path)
 {
-	char crypt_path[PATH_MAX];
+	char crypt_path[PATH_MAX] = { 0 };
 	struct stat st_lv;
 
 	if (stat(lv_path, &st_lv) < 0) {
@@ -111,7 +111,7 @@ int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
 		struct fs_info *fsi, int include_mount)
 {
 	char lv_path[PATH_MAX];
-	char crypt_path[PATH_MAX];
+	char crypt_path[PATH_MAX] = { 0 };
 	struct stat st_lv;
 	struct stat st_crypt;
 	struct stat st_top;
@@ -234,7 +234,7 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 	char proc_fstype[FSTYPE_MAX];
 	char proc_devpath[PATH_MAX];
 	char proc_mntpath[PATH_MAX];
-	char mtab_mntpath[PATH_MAX];
+	char mtab_mntpath[PATH_MAX] = { 0 };
 	char dm_devpath[PATH_MAX];
 	char tmp_path[PATH_MAX];
 	char *dm_name;

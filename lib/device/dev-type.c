@@ -827,7 +827,7 @@ int fs_block_size_and_type(const char *pathname, uint32_t *fs_block_size_bytes, 
 {
 	blkid_probe probe = NULL;
 	const char *type_str = NULL, *size_str = NULL;
-	size_t len;
+	size_t len = 0;
 	int ret = 1;
 	int rc;
 
@@ -887,8 +887,8 @@ out:
 int fs_get_blkid(const char *pathname, struct fs_info *fsi)
 {
 	blkid_probe probe = NULL;
-	const char *str;
-	size_t len;
+	const char *str = "";
+	size_t len = 0;
 	uint64_t fslastblock = 0;
 	unsigned int fsblocksize = 0;
 	int rc;
