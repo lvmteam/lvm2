@@ -162,8 +162,8 @@ int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
 
 		memset(&info, 0, sizeof(info));
 
-		log_print("Checking crypt device %s on LV %s.",
-			  crypt_path, display_lvname(lv));
+		log_print_unless_silent("Checking crypt device %s on LV %s.",
+					crypt_path, display_lvname(lv));
 
 		if ((fd = open(crypt_path, O_RDONLY)) < 0) {
 			log_error("Failed to open crypt path %s", crypt_path);
@@ -470,16 +470,16 @@ int fs_reduce_script(struct cmd_context *cmd, struct logical_volume *lv, struct 
 
 	devpath = fsi->needs_crypt ? crypt_path : (char *)display_lvname(lv);
 
-	log_print("Reducing file system %s to %s (%llu bytes) on %s...",
-		  fsi->fstype, display_size(cmd, newsize_bytes_fs/512),
-		  (unsigned long long)newsize_bytes_fs, devpath);
+	log_print_unless_silent("Reducing file system %s to %s (%llu bytes) on %s...",
+				fsi->fstype, display_size(cmd, newsize_bytes_fs/512),
+				(unsigned long long)newsize_bytes_fs, devpath);
 
 	if (!exec_cmd(cmd, argv, &status, 1)) {
 		log_error("Failed to reduce file system with lvresize_fs_helper.");
 		return 0;
 	}
 
-	log_print("Reduced file system %s on %s.", fsi->fstype, devpath);
+	log_print_unless_silent("Reduced file system %s on %s.", fsi->fstype, devpath);
 
 	return 1;
 }

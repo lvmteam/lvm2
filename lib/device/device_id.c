@@ -1085,7 +1085,7 @@ static void _device_ids_update_try(struct cmd_context *cmd)
 	int held = 0;
 
 	if (cmd->expect_missing_vg_device) {
-		log_print("Devices file update skipped."); 
+		log_print_unless_silent("Devices file update skipped.");
 		return;
 	}
 
@@ -1520,7 +1520,7 @@ id_done:
 		} else {
 			if (!cmd->current_settings.yes &&
 			    yes_no_prompt("Add device with duplicate PV to devices file?") == 'n') {
-				log_print("Device not added.");
+				log_print_unless_silent("Device not added.");
 				free((void *)check_idname);
 				return 1;
 			}
@@ -1923,9 +1923,9 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 				du->dev = dev;
 				dev->id = id;
 				dev->flags |= DEV_MATCHED_USE_ID;
-				log_print("Match device_id %s %s to vpd_pg83 %s %s",
-					  idtype_to_str(du->idtype), du->idname,
-					  idtype_to_str(id->idtype), dev_name(dev));
+				log_print_unless_silent("Match device_id %s %s to vpd_pg83 %s %s.",
+							idtype_to_str(du->idtype), du->idname,
+							idtype_to_str(id->idtype), dev_name(dev));
 				du->idtype = id->idtype;
 				return 1;
 			}

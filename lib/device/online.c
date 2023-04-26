@@ -276,7 +276,7 @@ int online_pvid_file_create(struct cmd_context *cmd, struct device *dev, const c
 
 	if (vgname) {
 		if ((len2 = dm_snprintf(buf + len1, sizeof(buf) - len1, "vg:%s\n", vgname)) < 0) {
-			log_print("Incomplete online file for %s %d:%d vg %s.", dev_name(dev), major, minor, vgname);
+			log_print_unless_silent("Incomplete online file for %s %d:%d vg %s.", dev_name(dev), major, minor, vgname);
 			/* can still continue without vgname */
 			len2 = 0;
 		}
@@ -285,7 +285,7 @@ int online_pvid_file_create(struct cmd_context *cmd, struct device *dev, const c
 	devnamelen = dm_snprintf(devname, sizeof(devname), "%s", dev_name(dev));
 	if ((devnamelen > 5) && (devnamelen < NAME_LEN-1)) {
 		if ((len3 = dm_snprintf(buf + len1 + len2, sizeof(buf) - len1 - len2, "dev:%s\n", devname)) < 0) {
-			log_print("Incomplete devname in online file for %s.", dev_name(dev));
+			log_print_unless_silent("Incomplete devname in online file for %s.", dev_name(dev));
 			/* can continue without devname */
 			len3 = 0;
 		}

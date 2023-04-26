@@ -5634,8 +5634,8 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 	}
 
 	if ((lp->extents == existing_logical_extents) && !lp->use_policies) {
-		log_print("New size (%d extents) matches existing size (%d extents).",
-			  lp->extents, existing_logical_extents);
+		log_print_unless_silent("New size (%d extents) matches existing size (%d extents).",
+					lp->extents, existing_logical_extents);
 		if (lp->resize == LV_ANY)
 			lp->resize = LV_EXTEND; /* lets pretend zero size extension */
 		*matches_existing = 1;
@@ -5694,8 +5694,8 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 		}
 		lp->resize = LV_EXTEND;
 	} else if ((lp->extents == existing_logical_extents) && !lp->use_policies) {
-		log_print("New size (%d extents) matches existing size (%d extents)",
-			  lp->extents, existing_logical_extents);
+		log_print_unless_silent("New size (%d extents) matches existing size (%d extents)",
+					lp->extents, existing_logical_extents);
 		if (lp->resize == LV_ANY)
 			lp->resize = LV_EXTEND;
 		*matches_existing = 1;
@@ -6048,13 +6048,13 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (!fsi->mounted)
-		log_print("File system %s%s found on %s.",
-			  fsi->fstype, fsi->needs_crypt ? "+crypto_LUKS" : "",
-			  display_lvname(lv));
+		log_print_unless_silent("File system %s%s found on %s.",
+					fsi->fstype, fsi->needs_crypt ? "+crypto_LUKS" : "",
+					display_lvname(lv));
 	else
-		log_print("File system %s%s found on %s mounted at %s.",
-			  fsi->fstype, fsi->needs_crypt ? "+crypto_LUKS" : "",
-			  display_lvname(lv), fsi->mount_dir);
+		log_print_unless_silent("File system %s%s found on %s mounted at %s.",
+					fsi->fstype, fsi->needs_crypt ? "+crypto_LUKS" : "",
+					display_lvname(lv), fsi->mount_dir);
 
 	if (!fsi->fs_last_byte) {
 		if (!strcmp(fsi->fstype, "reiserfs")) {
@@ -6072,15 +6072,15 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 	else if ((larger = (fsi->fs_last_byte > newsize_bytes_fs)))
 		cmp_desc = "larger than";
 
-	log_print("File system size (%s) is %s the requested size (%s).",
-		  display_size(cmd, fsi->fs_last_byte/512), cmp_desc,
-		  display_size(cmd, newsize_bytes_fs/512));
+	log_print_unless_silent("File system size (%s) is %s the requested size (%s).",
+				display_size(cmd, fsi->fs_last_byte/512), cmp_desc,
+				display_size(cmd, newsize_bytes_fs/512));
 
 	/*
 	 * FS reduce is not needed, it's not using the affected space.
 	 */
 	if (smaller || equal) {
-		log_print("File system reduce is not needed, skipping.");
+		log_print_unless_silent("File system reduce is not needed, skipping.");
 		fsi->needs_reduce = 0;
 		return 1;
 	}
@@ -6100,7 +6100,7 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 	 * FS reduce required, ext* supports it, xfs does not.
 	 */
 	if (is_ext_fstype) {
-		log_print("File system reduce is required using resize2fs.");
+		log_print_unless_silent("File system reduce is required using resize2fs.");
 	} else if (!strcmp(fsi->fstype, "reiserfs")) {
 		log_error("File system reduce for reiserfs requires --fs resize_fsadm.");
 		return 0;
@@ -6177,13 +6177,13 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 	 */
 
 	if (fsi->needs_unmount)
-		log_print("File system unmount is needed for reduce.");
+		log_print_unless_silent("File system unmount is needed for reduce.");
 	if (fsi->needs_fsck)
-		log_print("File system fsck will be run before reduce.");
+		log_print_unless_silent("File system fsck will be run before reduce.");
 	if (fsi->needs_mount)
-		log_print("File system mount is needed for reduce.");
+		log_print_unless_silent("File system mount is needed for reduce.");
 	if (fsi->needs_crypt)
-		log_print("cryptsetup resize is needed for reduce.");
+		log_print_unless_silent("cryptsetup resize is needed for reduce.");
 
 	/*
 	 * Use a confirmation prompt because mount|unmount is needed, and
@@ -6230,13 +6230,13 @@ static int _fs_extend_allow(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (!fsi->mounted)
-		log_print("File system %s%s found on %s.",
-			  fsi->fstype, fsi->needs_crypt ? "+crypto_LUKS" : "",
-			  display_lvname(lv));
+		log_print_unless_silent("File system %s%s found on %s.",
+					fsi->fstype, fsi->needs_crypt ? "+crypto_LUKS" : "",
+					display_lvname(lv));
 	else
-		log_print("File system %s%s found on %s mounted at %s.",
-			  fsi->fstype, fsi->needs_crypt ? "+crypto_LUKS" : "",
-			  display_lvname(lv), fsi->mount_dir);
+		log_print_unless_silent("File system %s%s found on %s mounted at %s.",
+					fsi->fstype, fsi->needs_crypt ? "+crypto_LUKS" : "",
+					display_lvname(lv), fsi->mount_dir);
 
 	/*
 	 * FS extend may require mounting or unmounting, check the fsopt value
@@ -6342,18 +6342,18 @@ static int _fs_extend_allow(struct cmd_context *cmd, struct logical_volume *lv,
 	 * it's mounted.
 	 */
 	if (fsi->mounted && !fsi->needs_unmount && fsi->needs_fsck) {
-		log_print("File system fsck skipped for extending mounted fs.");
+		log_print_unless_silent("File system fsck skipped for extending mounted fs.");
 		fsi->needs_fsck = 0;
 	}
 
 	if (fsi->needs_unmount)
-		log_print("File system unmount is needed for extend.");
+		log_print_unless_silent("File system unmount is needed for extend.");
 	if (fsi->needs_fsck)
-		log_print("File system fsck will be run before extend.");
+		log_print_unless_silent("File system fsck will be run before extend.");
 	if (fsi->needs_mount)
-		log_print("File system mount is needed for extend.");
+		log_print_unless_silent("File system mount is needed for extend.");
 	if (fsi->needs_crypt)
-		log_print("cryptsetup resize is needed for extend.");
+		log_print_unless_silent("cryptsetup resize is needed for extend.");
 
 	/*
 	 * Use a confirmation prompt when mount|unmount is needed if
@@ -6412,8 +6412,8 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 	 */
 	if (fsinfo.needs_crypt) {
 		newsize_bytes_fs -= fsinfo.crypt_offset_bytes;
-		log_print("File system size %llub is adjusted for crypt data offset %ub.",
-			  (unsigned long long)newsize_bytes_fs, fsinfo.crypt_offset_bytes);
+		log_print_unless_silent("File system size %llub is adjusted for crypt data offset %ub.",
+					(unsigned long long)newsize_bytes_fs, fsinfo.crypt_offset_bytes);
 	}
 
 	/*
@@ -6433,8 +6433,8 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!fsinfo.needs_reduce && fsinfo.needs_crypt) {
 		/* Check if the crypt device is already sufficiently reduced. */
 		if (fsinfo.crypt_dev_size_bytes <= newsize_bytes_fs) {
-			log_print("crypt device is already reduced to %llu bytes.",
-				  (unsigned long long)fsinfo.crypt_dev_size_bytes);
+			log_print_unless_silent("crypt device is already reduced to %llu bytes.",
+						(unsigned long long)fsinfo.crypt_dev_size_bytes);
 			ret = 1;
 			goto out;
 		}
@@ -6461,14 +6461,14 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (test_mode()) {
 		if (fsinfo.needs_unmount)
-			log_print("Skip unmount in test mode.");
+			log_print_unless_silent("Skip unmount in test mode.");
 		if (fsinfo.needs_fsck)
-			log_print("Skip fsck in test mode.");
+			log_print_unless_silent("Skip fsck in test mode.");
 		if (fsinfo.needs_mount)
-			log_print("Skip mount in test mode.");
+			log_print_unless_silent("Skip mount in test mode.");
 		if (fsinfo.needs_crypt)
-			log_print("Skip cryptsetup in test mode.");
-		log_print("Skip fs reduce in test mode.");
+			log_print_unless_silent("Skip cryptsetup in test mode.");
+		log_print_unless_silent("Skip fs reduce in test mode.");
 		ret = 1;
 		goto out;
 	}
@@ -6496,7 +6496,7 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 	 */
 	cmd->can_use_one_scan = 1;
 	if (scan_text_mismatch(cmd, lv->vg->name, NULL)) {
-		log_print("VG was changed during fs operations, restarting.");
+		log_print_unless_silent("VG was changed during fs operations, restarting.");
 		lp->vg_changed_error = 1;
 		ret = 0;
 		goto out;
@@ -6551,8 +6551,8 @@ static int _fs_extend(struct cmd_context *cmd, struct logical_volume *lv,
 	newsize_bytes_fs = newsize_bytes_lv;
 	if (fsinfo.needs_crypt) {
 		newsize_bytes_fs -= fsinfo.crypt_offset_bytes;
-		log_print("File system size %llub is adjusted for crypt data offset %ub.",
-			  (unsigned long long)newsize_bytes_fs, fsinfo.crypt_offset_bytes);
+		log_print_unless_silent("File system size %llub is adjusted for crypt data offset %ub.",
+					(unsigned long long)newsize_bytes_fs, fsinfo.crypt_offset_bytes);
 	}
 
 	/*
@@ -6572,14 +6572,14 @@ static int _fs_extend(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (test_mode()) {
 		if (fsinfo.needs_unmount)
-			log_print("Skip unmount in test mode.");
+			log_print_unless_silent("Skip unmount in test mode.");
 		if (fsinfo.needs_fsck)
-			log_print("Skip fsck in test mode.");
+			log_print_unless_silent("Skip fsck in test mode.");
 		if (fsinfo.needs_mount)
-			log_print("Skip mount in test mode.");
+			log_print_unless_silent("Skip mount in test mode.");
 		if (fsinfo.needs_crypt)
-			log_print("Skip cryptsetup in test mode.");
-		log_print("Skip fs extend in test mode.");
+			log_print_unless_silent("Skip cryptsetup in test mode.");
+		log_print_unless_silent("Skip fs extend in test mode.");
 		ret = 1;
 		goto out;
 	}

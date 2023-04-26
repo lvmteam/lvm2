@@ -915,7 +915,7 @@ int fs_get_blkid(const char *pathname, struct fs_info *fsi)
 		return 0;
 	} else if (rc == 1) {
 		/* no file system on the device */
-		log_print("No file system found on %s.", pathname);
+		log_print_unless_silent("No file system found on %s.", pathname);
 		fsi->nofs = 1;
 		blkid_free_probe(probe);
 		return 1;
@@ -925,7 +925,7 @@ int fs_get_blkid(const char *pathname, struct fs_info *fsi)
 		strncpy(fsi->fstype, str, sizeof(fsi->fstype)-1);
 	else {
 		/* any difference from blkid_do_safeprobe rc=1? */
-		log_print("No file system type on %s.", pathname);
+		log_print_unless_silent("No file system type on %s.", pathname);
 		fsi->nofs = 1;
 		blkid_free_probe(probe);
 		return 1;

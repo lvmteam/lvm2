@@ -359,8 +359,8 @@ static int _set_integrity_block_size(struct cmd_context *cmd, struct logical_vol
 		} else if (!lbs_4k && !lbs_512) {
 			if (!settings->block_size)
 				settings->block_size = 512;
-			log_print("Using integrity block size %u with unknown device logical block size.",
-				  settings->block_size);
+			log_print_unless_silent("Using integrity block size %u with unknown device logical block size.",
+						settings->block_size);
 		} else {
 			goto_bad;
 		}
@@ -408,8 +408,8 @@ static int _set_integrity_block_size(struct cmd_context *cmd, struct logical_vol
 
 			settings->block_size = use_bs;
 
-			log_print("Using integrity block size %u for unknown file system block size, logical block size %u, physical block size %u.",
-				  settings->block_size, lbs_4k ? 4096 : 512, pbs_4k ? 4096 : 512);
+			log_print_unless_silent("Using integrity block size %u for unknown file system block size, logical block size %u, physical block size %u.",
+						settings->block_size, lbs_4k ? 4096 : 512, pbs_4k ? 4096 : 512);
 			goto out;
 		}
 
@@ -419,13 +419,13 @@ static int _set_integrity_block_size(struct cmd_context *cmd, struct logical_vol
 				   for an application that expects a given io size/alignment is possible. */
 				settings->block_size = 512;
 				if (fs_block_size > 512)
-					log_print("Limiting integrity block size to 512 because the LV is active.");
+					log_print_unless_silent("Limiting integrity block size to 512 because the LV is active.");
 			} else if (fs_block_size <= 4096)
 				settings->block_size = fs_block_size;
 			else
 				settings->block_size = 4096; /* dm-integrity max is 4096 */
-			log_print("Using integrity block size %u for file system block size %u.",
-				  settings->block_size, fs_block_size);
+			log_print_unless_silent("Using integrity block size %u for file system block size %u.",
+						settings->block_size, fs_block_size);
 		} else {
 			/* let user specify integrity block size that is less than fs block size */
 			if (settings->block_size > fs_block_size) {
@@ -433,8 +433,8 @@ static int _set_integrity_block_size(struct cmd_context *cmd, struct logical_vol
 					  settings->block_size, fs_block_size);
 				goto bad;
 			}
-			log_print("Using integrity block size %u for file system block size %u.",
-				  settings->block_size, fs_block_size);
+			log_print_unless_silent("Using integrity block size %u for file system block size %u.",
+						settings->block_size, fs_block_size);
 		}
 	}
 out:

@@ -383,7 +383,7 @@ static int _read_mda_header_and_metadata(const struct format_type *fmt,
 		 * somehow between the two reads.)
 		 */
 		if (!retries) {
-			log_print("Retrying metadata scan.");
+			log_print_unless_silent("Retrying metadata scan.");
 			retries++;
 			dev_invalidate(mdac->area.dev);
 			goto retry;

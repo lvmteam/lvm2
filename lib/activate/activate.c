@@ -2555,7 +2555,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	    lv_is_partial(lv) && lv_is_raid(lv) && lv_raid_has_integrity((struct logical_volume *)lv)) {
 		cmd->partial_activation = 0;
 		cmd->degraded_activation = 0;
-		log_print("No degraded or partial activation for raid with integrity.");
+		log_print_unless_silent("No degraded or partial activation for raid with integrity.");
 	}
 
 	if ((!lv->vg->cmd->partial_activation) && lv_is_partial(lv)) {

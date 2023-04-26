@@ -209,7 +209,7 @@ static void _read_wwid_file(const char *config_wwids_file, int *entries)
 	int count = 0;
 
 	if (config_wwids_file[0] != '/') {
-		log_print("Ignoring unknown multipath_wwids_file.");
+		log_print_unless_silent("Ignoring unknown multipath_wwids_file.");
 		return;
 	}
 

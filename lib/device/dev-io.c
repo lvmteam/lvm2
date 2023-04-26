@@ -310,7 +310,7 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 
 	if (dm_list_empty(&dev->aliases)) {
 		/* shouldn't happen */
-		log_print("Cannot open device %d:%d with no valid paths.", (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
+		log_print_unless_silent("Cannot open device %d:%d with no valid paths.", (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
 		return 0;
 	}
 	name = dev_name(dev);

@@ -707,8 +707,8 @@ static int _all_multipath_components(struct cmd_context *cmd, struct lvmcache_in
 
 		/* Different mpath devs with the same wwid shouldn't happen. */
 		if (dev_is_mp && dev_mp) {
-			log_print("Found multiple multipath devices for PVID %s WWID %s: %s %s",
-				   pvid, wwid1_buf, dev_name(dev_mp), dev_name(dev));
+			log_print_unless_silent("Found multiple multipath devices for PVID %s WWID %s: %s %s.",
+						pvid, wwid1_buf, dev_name(dev_mp), dev_name(dev));
 			continue;
 		}
 

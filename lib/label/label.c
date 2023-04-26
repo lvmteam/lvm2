@@ -373,7 +373,7 @@ static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
 			 * that now.  It's unlikely this is actually needed.
 			 */
 			if (dev->pvid[0]) {
-				log_print("Clear pvid and info for filtered dev %s", dev_name(dev));
+				log_print_unless_silent("Clear pvid and info for filtered dev %s.", dev_name(dev));
 				lvmcache_del_dev(dev);
 				memset(dev->pvid, 0, sizeof(dev->pvid));
 			}
@@ -400,7 +400,7 @@ static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
 
 		/* See comment above */
 		if (dev->pvid[0]) {
-			log_print("Clear pvid and info for no lvm header %s", dev_name(dev));
+			log_print_unless_silent("Clear pvid and info for no lvm header %s", dev_name(dev));
 			lvmcache_del_dev(dev);
 			memset(dev->pvid, 0, sizeof(dev->pvid));
 		}
@@ -1115,8 +1115,8 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 
 	dm_list_iterate_items_safe(devl, devl2, &devs) {
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, devl->dev, NULL)) {
-			log_print("%s excluded: %s.",
-				  dev_name(devl->dev), dev_filtered_reason(devl->dev));
+			log_print_unless_silent("%s excluded: %s.",
+						dev_name(devl->dev), dev_filtered_reason(devl->dev));
 			dm_list_del(&devl->list);
 			dm_list_add(&devs_drop, &devl->list);
 		}
@@ -1147,7 +1147,7 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 		int has_pvid;
 
 		if (!label_read_pvid(devl->dev, &has_pvid)) {
-			log_print("%s cannot read label.", dev_name(devl->dev));
+			log_print_unless_silent("%s cannot read label.", dev_name(devl->dev));
 			dm_list_del(&devl->list);
 			dm_list_add(&devs_drop, &devl->list);
 			continue;
@@ -1155,7 +1155,7 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 
 		if (!has_pvid) {
 			/* Not an lvm device */
-			log_print("%s not an lvm device.", dev_name(devl->dev));
+			log_print_unless_silent("%s not an lvm device.", dev_name(devl->dev));
 			dm_list_del(&devl->list);
 			dm_list_add(&devs_drop, &devl->list);
 			continue;
@@ -1167,8 +1167,8 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 		 */
 		if (relax_deviceid_filter) {
 			if (!(du = get_du_for_pvid(cmd, devl->dev->pvid))) {
-				log_print("%s excluded by devices file (checking PVID).",
-					  dev_name(devl->dev));
+				log_print_unless_silent("%s excluded by devices file (checking PVID).",
+							dev_name(devl->dev));
 				dm_list_del(&devl->list);
 				dm_list_add(&devs_drop, &devl->list);
 				continue;
@@ -1181,8 +1181,8 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 
 		/* Applies all filters, including those that need data from dev. */
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, devl->dev, NULL)) {
-			log_print("%s excluded: %s.",
-				  dev_name(devl->dev), dev_filtered_reason(devl->dev));
+			log_print_unless_silent("%s excluded: %s.",
+						dev_name(devl->dev), dev_filtered_reason(devl->dev));
 			dm_list_del(&devl->list);
 			dm_list_add(&devs_drop, &devl->list);
 		}
@@ -1346,7 +1346,8 @@ int label_scan(struct cmd_context *cmd)
 			dm_list_add(&filtered_devs, &devl->list);
 
 			if (dev->pvid[0]) {
-				log_print("Clear pvid and info for filtered dev %s", dev_name(dev));
+				log_print_unless_silent("Clear pvid and info for filtered dev %s.",
+							dev_name(dev));
 				lvmcache_del_dev(dev);
 				memset(dev->pvid, 0, sizeof(dev->pvid));
 			}

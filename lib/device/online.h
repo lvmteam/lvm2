@@ -32,9 +32,9 @@ struct pv_online {
 #define log_print_pvscan(cmd, fmt, args...) \
 do \
 	if (cmd->udevoutput) \
-		log_print(fmt, ##args); \
+		log_print_unless_silent(fmt, ##args); \
 	else \
-		log_print("pvscan[%d] " fmt, getpid(), ##args); \
+		log_print_unless_silent("pvscan[%d] " fmt, getpid(), ##args); \
 while (0)
 
 #define log_error_pvscan(cmd, fmt, args...) \
