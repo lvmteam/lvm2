@@ -20,7 +20,7 @@
 static int _is_pvmove_image_removable(struct logical_volume *mimage_lv,
 				      void *baton)
 {
-	uint32_t mimage_to_remove = *((uint32_t *)baton);
+	uint32_t mimage_to_remove = baton ? *((uint32_t *)baton) : UINT32_MAX;
 	struct lv_segment *mirror_seg;
 
 	if (!(mirror_seg = get_only_segment_using_this_lv(mimage_lv))) {
