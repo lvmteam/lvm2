@@ -1263,10 +1263,10 @@ cfg_array(global_vdo_format_options_CFG, "vdo_format_options", global_CFG_SECTIO
 cfg_array(global_vdo_disabled_features_CFG, "vdo_disabled_features", global_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, NULL, vsn(2, 3, 11), NULL, 0, NULL,
 	"Features to not use in the vdo driver.\n"
 	"This can be helpful for testing, or to avoid using a feature that is\n"
-	"causing problems. Features include: online_rename\n"
+	"causing problems. Features include: online_rename, version4\n"
 	"#\n"
 	"Example\n"
-	"vdo_disabled_features = [ \"online_rename\" ]\n"
+	"vdo_disabled_features = [ \"online_rename\", \"version4\" ]\n"
 	"#\n")
 
 cfg(global_fsadm_executable_CFG, "fsadm_executable", global_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_FSADM_PATH, vsn(2, 2, 170), "@FSADM_PATH@", 0, NULL,

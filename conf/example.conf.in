@@ -1313,10 +1313,10 @@ global {
 	# Configuration option global/vdo_disabled_features.
 	# Features to not use in the vdo driver.
 	# This can be helpful for testing, or to avoid using a feature that is
-	# causing problems. Features include: online_rename
+	# causing problems. Features include: online_rename, version4
 	#
 	# Example
-	# vdo_disabled_features = [ "online_rename" ]
+	# vdo_disabled_features = [ "online_rename", "version4" ]
 	#
 	# This configuration option does not have a default value defined.
 
