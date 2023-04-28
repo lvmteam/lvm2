@@ -1444,8 +1444,13 @@ static int _dump_metadata(struct cmd_context *cmd, const char *dump, struct sett
 	int bad = 0;
 
 	if (arg_is_set(cmd, file_ARG)) {
+		struct stat sb;
 		if (!(tofile = arg_str_value(cmd, file_ARG, NULL)))
 			return 0;
+		if (!stat(tofile, &sb)) {
+			log_error("File already exists.");
+			return 0;
+		}
 	}
 
 	if (set->mda_num)
