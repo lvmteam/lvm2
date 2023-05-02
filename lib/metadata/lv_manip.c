@@ -5144,22 +5144,39 @@ int lv_extend_policy_calculate_percent(struct logical_volume *lv,
 
 static uint32_t _lvseg_get_stripes(struct lv_segment *seg, uint32_t *stripesize)
 {
-	uint32_t s;
-	struct lv_segment *seg_mirr;
+	uint32_t s, a;
+	struct lv_segment *seg_get, *seg_image, *seg_iorig;
+	struct logical_volume *lv_image, *lv_iorig;
 
 	/* If segment mirrored, check if images are striped */
-	if (seg_is_mirrored(seg))
+	if (seg_is_mirrored(seg)) {
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) != AREA_LV)
 				continue;
-			seg_mirr = first_seg(seg_lv(seg, s));
 
-			if (seg_is_striped(seg_mirr)) {
-				seg = seg_mirr;
+			lv_image = seg_lv(seg, s);
+			seg_image = first_seg(lv_image);
+			seg_get = NULL;
+
+			if (seg_is_integrity(seg_image)) {
+				/* Get stripe values from the iorig layer. */
+				for (a = 0; a < seg_image->area_count; a++) {
+					lv_iorig = seg_lv(seg_image, a);
+					seg_iorig = first_seg(lv_iorig);
+					seg_get = seg_iorig;
+					break;
+				}
+			} else {
+				/* Get stripe values from the image layer. */
+				seg_get = seg_image;
+			}
+
+			if (seg_get && seg_is_striped(seg_get)) {
+				seg = seg_get;
 				break;
 			}
 		}
-
+	}
 
 	if (seg_is_striped(seg)) {
 		*stripesize = seg->stripe_size;
@@ -5168,7 +5185,7 @@ static uint32_t _lvseg_get_stripes(struct lv_segment *seg, uint32_t *stripesize)
 
 	if (seg_is_raid(seg)) {
 		*stripesize = seg->stripe_size;
-		return _raid_stripes_count(seg);
+		return _raid_stripes_count(seg); 
 	}
 
 	*stripesize = 0;
@@ -5593,7 +5610,7 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 						seg_size /= seg_mirrors;
 					lp->extents = logical_extents_used + seg_size;
 					break;
-			}
+				}
 			} else if (new_extents <= logical_extents_used + seg_logical_extents) {
 				seg_size = new_extents - logical_extents_used;
 				lp->extents = new_extents;
