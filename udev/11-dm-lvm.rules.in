@@ -18,7 +18,7 @@ ENV{DM_UDEV_RULES_VSN}!="?*", GOTO="lvm_end"
 ENV{DM_UUID}!="LVM-?*", GOTO="lvm_end"
 
 # Use DM name and split it up into its VG/LV/layer constituents.
-IMPORT{program}="(DM_EXEC)/dmsetup splitname --nameprefixes --noheadings --rows $env{DM_NAME}"
+IMPORT{program}!="(DM_EXEC)/dmsetup splitname --nameprefixes --noheadings --rows $env{DM_NAME}", GOTO="lvm_disable"
 
 # DM_SUBSYSTEM_UDEV_FLAG0 is the 'NOSCAN' flag for LVM subsystem.
 # This flag is used to temporarily disable selected rules to prevent any

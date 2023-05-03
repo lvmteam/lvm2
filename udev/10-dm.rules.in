@@ -45,10 +45,7 @@ KERNEL!="dm-[0-9]*", GOTO="dm_end"
 ACTION!="add|change", GOTO="dm_end"
 
 # Decode udev control flags and set environment variables appropriately.
-# These flags are encoded in DM_COOKIE variable that was introduced in
-# kernel version 2.6.31. Therefore, we can use this feature with
-# kernels >= 2.6.31 only. Cookie is not decoded for remove event.
-ENV{DM_COOKIE}=="?*", IMPORT{program}="(DM_EXEC)/dmsetup udevflags $env{DM_COOKIE}"
+ENV{DM_COOKIE}=="?*", IMPORT{program}!="(DM_EXEC)/dmsetup udevflags $env{DM_COOKIE}", GOTO="dm_disable"
 
 # Rule out easy-to-detect inappropriate events first.
 ENV{DISK_RO}=="1", GOTO="dm_disable"
@@ -102,16 +99,10 @@ LABEL="dm_no_coldplug"
 #   |_ dev still not active            0                        0
 #   \_ dev already active              1                        0
 
-# "dm" sysfs subdirectory is available in newer versions of DM
-# only (kernels >= 2.6.29). We have to check for its existence
-# and use dmsetup tool instead to get the DM name, uuid and 
-# suspended state if the "dm" subdirectory is not present.
-# The "suspended" item was added even later (kernels >= 2.6.31),
-# so we also have to call dmsetup if the kernel version used
-# is in between these releases.
-TEST=="dm", ENV{DM_NAME}="$attr{dm/name}", ENV{DM_UUID}="$attr{dm/uuid}", ENV{DM_SUSPENDED}="$attr{dm/suspended}"
-TEST!="dm", IMPORT{program}="(DM_EXEC)/dmsetup info -j %M -m %m -c --nameprefixes --noheadings --rows -o name,uuid,suspended"
-ENV{DM_SUSPENDED}!="?*", IMPORT{program}="(DM_EXEC)/dmsetup info -j %M -m %m -c --nameprefixes --noheadings --rows -o suspended"
+# Kernels older than 2.6.31 do not have dm/suspended sysfs attribute and are not
+# supported
+ENV{DM_NAME}="$attr{dm/name}", ENV{DM_UUID}="$attr{dm/uuid}", ENV{DM_SUSPENDED}="$attr{dm/suspended}"
+ENV{DM_SUSPENDED}!="?*", GOTO="dm_disable"
 
 # dmsetup tool provides suspended state information in textual
 # form with values "Suspended"/"Active". We translate it to
