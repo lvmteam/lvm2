@@ -3112,13 +3112,22 @@ static int _raid_remove_images(struct logical_volume *lv, int yes,
 {
 	struct dm_list removed_lvs;
 
-	if (!archive(lv->vg))
-		return_0;
+	if (new_count == 1) {
+		struct lv_segment *seg = first_seg(lv);
+
+		if (seg_is_raid1(seg) && !lv_raid_image_in_sync(seg_lv(seg, 0))) {
+			log_error("%s is out-of-sync!  Please try refreshing first.", display_lvname(lv));
+			return 0;
+		}
+	}
 
 	if (!removal_lvs) {
 		dm_list_init(&removed_lvs);
 		removal_lvs = &removed_lvs;
 	}
+
+	if (!archive(lv->vg))
+		return_0;
 
 	if (!_raid_extract_images(lv, 0, new_count, allocate_pvs, 1,
 				 removal_lvs, removal_lvs)) {
