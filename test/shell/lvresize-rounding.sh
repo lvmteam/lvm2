@@ -36,7 +36,7 @@ lvresize -l+64 -i3 -I128 $vg/$lv1
 vgremove -f $vg
 
 # 15 extents
-LVM_TEST_AUX_TRACE=yes
+export LVM_TEST_AUX_TRACE=yes
 aux prepare_vg 3 22
 unset LVM_TEST_AUX_TRACE
 
