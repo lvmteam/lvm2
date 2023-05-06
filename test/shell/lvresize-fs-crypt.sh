@@ -23,8 +23,7 @@ which mkfs.xfs || skip
 lvcreate -n $lv1 -L 300 $vg
 mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
 blkid -p "$DM_DEV_DIR/$vg/$lv1" | grep FSLASTBLOCK || skip
-lvchange -an $vg
-lvremove $vg/$lv1
+lvremove -f $vg/$lv1
 
 mount_dir="mnt_lvresize_cr"
 mkdir -p "$mount_dir"
@@ -38,7 +37,7 @@ echo 93R4P4pIqAH8 | cryptsetup luksFormat -i1 --type luks1 "$DM_DEV_DIR/$vg/$lv"
 echo 93R4P4pIqAH8 | cryptsetup luksOpen "$DM_DEV_DIR/$vg/$lv" $cr
 mkfs.ext4 /dev/mapper/$cr
 mount /dev/mapper/$cr "$mount_dir"
-dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=200 conv=fdatasync
+dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=20 oflag=direct
 df --output=size "$mount_dir" |tee df1
 lvextend -L+200M --fs resize $vg/$lv
 check lv_field $vg/$lv lv_size "456.00m"
@@ -46,8 +45,7 @@ df --output=size "$mount_dir" |tee df2
 not diff df1 df2
 umount "$mount_dir"
 cryptsetup close $cr
-lvchange -an $vg/$lv
-lvremove $vg/$lv
+lvremove -f $vg/$lv
 
 # lvreduce ext4 on LUKS1
 lvcreate -n $lv -L 456M $vg
@@ -55,7 +53,7 @@ echo 93R4P4pIqAH8 | cryptsetup luksFormat -i1 --type luks1 "$DM_DEV_DIR/$vg/$lv"
 echo 93R4P4pIqAH8 | cryptsetup luksOpen "$DM_DEV_DIR/$vg/$lv" $cr
 mkfs.ext4 /dev/mapper/$cr
 mount /dev/mapper/$cr "$mount_dir"
-dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=200 conv=fdatasync
+dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=20 oflag=direct
 df --output=size "$mount_dir" |tee df1
 lvresize -L-100M --yes --fs resize $vg/$lv
 check lv_field $vg/$lv lv_size "356.00m"
@@ -63,25 +61,23 @@ df --output=size "$mount_dir" |tee df2
 not diff df1 df2
 umount "$mount_dir"
 cryptsetup close $cr
-lvchange -an $vg/$lv
-lvremove $vg/$lv
+lvremove -f $vg/$lv
 
 # lvextend xfs on LUKS1
-lvcreate -n $lv -L 256M $vg
+lvcreate -n $lv -L 320M $vg
 echo 93R4P4pIqAH8 | cryptsetup luksFormat -i1 --type luks1 "$DM_DEV_DIR/$vg/$lv"
 echo 93R4P4pIqAH8 | cryptsetup luksOpen "$DM_DEV_DIR/$vg/$lv" $cr
 mkfs.xfs /dev/mapper/$cr
 mount /dev/mapper/$cr "$mount_dir"
-dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=200 conv=fdatasync
+dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=20 oflag=direct
 df --output=size "$mount_dir" |tee df1
-lvextend -L+200M --fs resize $vg/$lv
+lvextend -L+136M --fs resize $vg/$lv
 check lv_field $vg/$lv lv_size "456.00m"
 df --output=size "$mount_dir" |tee df2
 not diff df1 df2
 umount "$mount_dir"
 cryptsetup close $cr
-lvchange -an $vg/$lv
-lvremove $vg/$lv
+lvremove -f $vg/$lv
 
 # lvreduce xfs on LUKS1
 lvcreate -n $lv -L 456M $vg
@@ -89,7 +85,7 @@ echo 93R4P4pIqAH8 | cryptsetup luksFormat -i1 --type luks1 "$DM_DEV_DIR/$vg/$lv"
 echo 93R4P4pIqAH8 | cryptsetup luksOpen "$DM_DEV_DIR/$vg/$lv" $cr
 mkfs.xfs /dev/mapper/$cr
 mount /dev/mapper/$cr "$mount_dir"
-dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=200 conv=fdatasync
+dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=20 oflag=direct
 df --output=size "$mount_dir" |tee df1
 # xfs cannot be reduced
 not lvresize -L-100M --yes --fs resize $vg/$lv
@@ -98,15 +94,14 @@ df --output=size "$mount_dir" |tee df2
 diff df1 df2
 umount "$mount_dir"
 cryptsetup close $cr
-lvchange -an $vg/$lv
-lvremove $vg/$lv
+lvremove -f $vg/$lv
 
 # lvextend ext4 on plain crypt (no header)
 lvcreate -n $lv -L 256M $vg
 echo 93R4P4pIqAH8 | cryptsetup create $cr "$DM_DEV_DIR/$vg/$lv"
 mkfs.ext4 /dev/mapper/$cr
 mount /dev/mapper/$cr "$mount_dir"
-dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=200 conv=fdatasync
+dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=20 oflag=direct
 df --output=size "$mount_dir" |tee df1
 # fails when no fs is found for --fs resize
 not lvextend -L+200M --yes --fs resize $vg/$lv
@@ -115,15 +110,14 @@ df --output=size "$mount_dir" |tee df2
 diff df1 df2
 umount "$mount_dir"
 cryptsetup close $cr
-lvchange -an $vg/$lv
-lvremove $vg/$lv
+lvremove -f $vg/$lv
 
 # lvreduce ext4 on plain crypt (no header)
 lvcreate -n $lv -L 456M $vg
 echo 93R4P4pIqAH8 | cryptsetup create $cr "$DM_DEV_DIR/$vg/$lv"
 mkfs.ext4 /dev/mapper/$cr
 mount /dev/mapper/$cr "$mount_dir"
-dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=200 conv=fdatasync
+dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=20 oflag=direct
 df --output=size "$mount_dir" |tee df1
 # fails when no fs is found for --fs resize
 not lvresize -L-100M --yes --fs resize $vg/$lv
@@ -132,8 +126,7 @@ df --output=size "$mount_dir" |tee df2
 diff df1 df2
 umount "$mount_dir"
 cryptsetup close $cr
-lvchange -an $vg/$lv
-lvremove $vg/$lv
+lvremove -f $vg/$lv
 
 # lvresize uses helper only for crypt dev resize
 # because the fs was resized separately beforehand
@@ -142,7 +135,7 @@ echo 93R4P4pIqAH8 | cryptsetup luksFormat -i1 --type luks1 "$DM_DEV_DIR/$vg/$lv"
 echo 93R4P4pIqAH8 | cryptsetup luksOpen "$DM_DEV_DIR/$vg/$lv" $cr
 mkfs.ext4 /dev/mapper/$cr
 mount /dev/mapper/$cr "$mount_dir"
-dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=100 conv=fdatasync
+dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=10 oflag=direct
 df --output=size "$mount_dir" |tee df1
 # resize only the fs (to 256M), not the crypt dev or LV
 umount "$mount_dir"
@@ -162,8 +155,7 @@ df --output=size "$mount_dir" |tee df2
 not diff df1 df2
 umount "$mount_dir"
 cryptsetup close $cr
-lvchange -an $vg/$lv
-lvremove $vg/$lv
+lvremove -f $vg/$lv
 
 # test with LUKS2?
 

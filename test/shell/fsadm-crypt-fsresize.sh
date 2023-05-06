@@ -20,7 +20,7 @@ export LVM_TEST_PREFER_BRD=0
 
 . lib/inittest
 
-aux prepare_vg 1 300
+aux prepare_vg 1 400
 
 # Tests require a libblkid version that shows FSLASTBLOCK
 which mkfs.ext4 || skip
@@ -209,8 +209,8 @@ check_missing cryptsetup || skip
 
 vgchange -s 128k
 lvcreate -n $lv1 -L25M $vg
-lvcreate -n ${lv1}bar -L35M $vg
-lvcreate -n ${lv1}plain -L35M $vg
+lvcreate -n ${lv1}bar -L335M $vg
+lvcreate -n ${lv1}plain -L335M $vg
 create_crypt_device
 trap 'cleanup_mounted_and_teardown' EXIT
 
@@ -275,9 +275,9 @@ test_ext3_small_shrink() {
 }
 
 test_xfs_resize() {
-	mkfs.xfs -l internal,size=1536b -f "$3"
+	mkfs.xfs -f "$3"
 
-	fsadm --lvresize resize $1 30M
+	fsadm --lvresize resize $1 330M
 	# Fails - not enough space for 4M fs
 	lvresize -L+10M -y --fs resize $1
 	not lvreduce -L10M --fs resize $1
@@ -290,7 +290,7 @@ test_xfs_resize() {
 }
 
 test_xfs_small_shrink() {
-	mkfs.xfs -l internal,size=1536b -f "$3"
+	mkfs.xfs -f "$3"
 
 	not lvresize -L-1 --fs resize $1
 	fscheck_xfs "$3"
@@ -354,7 +354,7 @@ test_ext3_inactive() {
 
 test_xfs_inactive() {
 	crypt_open "$2" $PWD2 "$4"
-	mkfs.xfs -l internal,size=1536b -f "$3"
+	mkfs.xfs -f "$3"
 	crypt_close "$4"
 
 	not fsadm --lvresize resize $1 30M
@@ -435,7 +435,7 @@ test_ext3_plain() {
 }
 
 test_xfs_plain() {
-	mkfs.xfs -l internal,size=1536b -f "$3"
+	mkfs.xfs -f "$3"
 
 	not fsadm --lvresize resize $1 30M
 	not lvresize -L+10M --fs resize $1
@@ -443,7 +443,7 @@ test_xfs_plain() {
 	fscheck_xfs "$3"
 
 	lvresize -f -L+10M $1
-	fsadm --cryptresize resize $3 40M
+	fsadm --cryptresize resize $3 345M
 	# no shrink support in xfs
 	not fsadm --cryptresize resize $3 35M
 	fscheck_xfs "$3"
@@ -455,7 +455,7 @@ test_xfs_plain() {
 	crypt_open_plain "$2" $PWD3 "$4"
 	fscheck_xfs "$3"
 
-	lvresize -f -L35M $1
+	lvresize -f -L320M $1
 }
 
 test_reiserfs_plain() {
@@ -501,7 +501,7 @@ test_ext3_detached() {
 }
 
 test_xfs_detached() {
-	mkfs.xfs -l internal,size=1536b -f "$3"
+	mkfs.xfs -f "$3"
 
 	not fsadm --lvresize resize $1 30M
 	not lvresize -L+10M --fs resize $1
@@ -569,8 +569,11 @@ if check_missing ext3; then
 fi
 
 if check_missing xfs; then
+	lvresize -r -y -L310M $vg_lv
+	cryptsetup resize $CRYPT_NAME
+
 	test_xfs_resize "$vg_lv" "$dev_vg_lv" "$CRYPT_DEV"
-	lvresize --fs ignore -y -L25M $vg_lv
+	lvresize --fs ignore -y -L325M $vg_lv
 	cryptsetup resize $CRYPT_NAME
 
 	test_xfs_inactive "$vg_lv2" "$dev_vg_lv2" "$CRYPT_DEV2" "$CRYPT_NAME2"
@@ -579,10 +582,10 @@ if check_missing xfs; then
 	test_xfs_plain "$vg_lv3" "$dev_vg_lv3" "$CRYPT_DEV_PLAIN" "$CRYPT_NAME_PLAIN"
 	crypt_close "$CRYPT_NAME_PLAIN"
 
-	lvresize --fs ignore -y -L100M $vg_lv
+	lvresize --fs ignore -y -L310M $vg_lv
 	cryptsetup resize $CRYPT_NAME
 	test_xfs_small_shrink "$vg_lv" "$dev_vg_lv" "$CRYPT_DEV"
-	lvresize --fs ignore -y -L25M $vg_lv
+	lvresize --fs ignore -y -L325M $vg_lv
 	cryptsetup resize $CRYPT_NAME
 
 	if [ -z "$SKIP_DETACHED" ]; then
