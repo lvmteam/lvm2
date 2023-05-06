@@ -872,37 +872,37 @@ cleanup_md_dev() {
 }
 
 wipefs_a() {
-	local dev=$1
-	local have_wipefs=1
-	shift
+	local have_wipefs=
 
-	if test -n "$LVM_TEST_DEVICES_FILE"; then
-		lvmdevices --deldev "$dev" || true
-	fi
-
-	if test -f HAVE_WIPEFS ; then
+	if test -e HAVE_WIPEFS; then
 		have_wipefs=$(< HAVE_WIPEFS)
 	else
-		wipefs -V >/dev/null 2>&1 || have_wipefs=0
-		echo "$have_wipefs" > HAVE_WIPEFS
+		wipefs -V >HAVE_WIPEFS 2>/dev/null && have_wipefs=yes
 	fi
 
 	udev_wait
-	if [ "$have_wipefs" = "1" ] ; then
-		wipefs -a "$dev" || {
-			echo "$dev: device in-use, retrying wipe again."
-			sleep 1
-			udev_wait
-			wipefs -a "$dev"
-		}
-	else
-		dd if=/dev/zero of="$dev" bs=4096 count=8 oflag=direct >/dev/null || true
-		mdadm --zero-superblock "$dev" 2>/dev/null || true
-	fi
 
-	if test -n "$LVM_TEST_DEVICES_FILE"; then
-		lvmdevices --adddev "$dev" || true
-	fi
+	for dev in "$@"; do
+		if test -n "$LVM_TEST_DEVICES_FILE"; then
+			lvmdevices --deldev "$dev" || true
+		fi
+
+		if test -n "$have_wipefs"; then
+			wipefs -a "$dev" || {
+				echo "$dev: device in-use, retrying wipe again."
+				sleep .1
+				udev_wait
+				wipefs -a "$dev"
+			}
+		else
+			dd if=/dev/zero of="$dev" bs=4096 count=8 oflag=direct >/dev/null || true
+			mdadm --zero-superblock "$dev" 2>/dev/null || true
+		fi
+
+		if test -n "$LVM_TEST_DEVICES_FILE"; then
+			lvmdevices --adddev "$dev" || true
+		fi
+	done
 
 	udev_wait
 }
