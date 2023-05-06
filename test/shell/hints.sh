@@ -17,6 +17,11 @@ SKIP_WITH_LVMLOCKD=1
 
 . lib/inittest
 
+# Since this test is currenly using 'system's' hints,
+# it cannot be running, while lvmdbusd operates in the system.
+# FIXME: sometimes test suite itself 'leaks' lvmdbusd process.
+pgrep lvmdbusd && skip "Can't run this test, while lvmdbusd is running"
+
 RUNDIR="/run"
 test -d "$RUNDIR" || RUNDIR="/var/run"
 HINTS="$RUNDIR/lvm/hints"
