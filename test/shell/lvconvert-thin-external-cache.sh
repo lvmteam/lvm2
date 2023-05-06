@@ -51,7 +51,7 @@ not lvconvert --thin --thinpool $vg/tpool $vg/$lv1
 lvchange --cachemode writethrough $vg/$lv1
 
 # Check $lv1 remains mounted (so it's not been unmounted by systemd)
-not mount "$DM_DEV_DIR/$vg/$lv1" mnt
+mountpoint "$PWD/mnt"
 
 lvconvert --thin $vg/$lv1 --originname extorg --thinpool $vg/tpool
 
