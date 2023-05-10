@@ -688,7 +688,8 @@ int dev_is_mpath_component(struct cmd_context *cmd, struct device *dev, dev_t *h
 	 * primary_result 2: dev is a partition, primary_dev is the whole device
 	 * primary_result 1: dev is a whole device
 	 */
-	primary_result = dev_get_primary_dev(dt, dev, &primary_dev);
+	if (!(primary_result = dev_get_primary_dev(dt, dev, &primary_dev)))
+		return_0;
 
 	if (_dev_is_mpath_component_sysfs(cmd, dev, primary_result, primary_dev, holder_devno) == 1)
 		goto found;
