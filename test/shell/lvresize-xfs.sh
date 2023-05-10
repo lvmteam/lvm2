@@ -45,6 +45,11 @@ mkdir -p "$mount_dir_space"
 lvcreate -n $lv -L 300M $vg
 mkfs.xfs "$DM_DEV_DIR/$vg/$lv"
 mount "$DM_DEV_DIR/$vg/$lv" "$mount_dir"
+
+# --fs tests require a libblkid version that shows FSLASTBLOCK
+# so exit 0 test here, if the feature is not present
+blkid -p "$DM_DEV_DIR/$vg/$lv" | grep FSLASTBLOCK || skip
+
 df --output=size "$mount_dir" |tee df1
 dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=10 oflag=direct
 lvextend -L+20M $vg/$lv
