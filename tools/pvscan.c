@@ -19,7 +19,6 @@
 #include "lib/metadata/metadata.h"
 #include "lib/label/hints.h"
 #include "lib/device/online.h"
-#include "lib/filters/filter.h"
 
 #include <dirent.h>
 

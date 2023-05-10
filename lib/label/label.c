@@ -27,7 +27,6 @@
 #include "lib/format_text/layout.h"
 #include "lib/device/device_id.h"
 #include "lib/device/online.h"
-#include "lib/filters/filter.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
