@@ -88,6 +88,7 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 		_exit(ECMD_FAILED);
 	}
 
+	/* coverity[leaked_handle] don't care */
 	if ((dup2(null_fd, STDIN_FILENO) < 0)  || /* reopen stdin */
 	    (dup2(null_fd, STDOUT_FILENO) < 0) || /* reopen stdout */
 	    (dup2(null_fd, STDERR_FILENO) < 0)) { /* reopen stderr */
@@ -113,7 +114,6 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 	}
 
 	/* coverity[leaked_handle] null_fd does not leak here */
-
 	return 1;
 }
 

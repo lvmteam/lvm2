@@ -899,6 +899,7 @@ static int _display_info_cols(struct dm_task *dmt, struct dm_info *info)
 			goto_out;
 		if (_selection_cmd && selected) {
 			device_name = (char*) dm_task_get_name(dmt);
+			/* coverity[overrun-buffer-val] _setgeometry never called from this place */
 			if (!_selection_cmd->fn(_selection_cmd, NULL, 1, &device_name, NULL, 1))
 				goto_out;
 		}

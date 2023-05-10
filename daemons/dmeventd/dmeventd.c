@@ -987,6 +987,7 @@ static void _monitor_unregister(void *arg)
 	DEBUGLOG("Unregistering monitor for %s.", thread->device.name);
 	_unregister_for_timeout(thread);
 
+	/* coverity[missing_lock] no missing lock here */
 	if ((thread->status != DM_THREAD_REGISTERING) &&
 	    !_do_unregister_device(thread))
 		log_error("%s: %s unregister failed.", __func__,
@@ -1969,6 +1970,7 @@ static void _daemonize(void)
 		(void) close(fd);
 	}
 
+	/* coverity[leaked_handle] dont't care */
 	if ((open("/dev/null", O_RDONLY) < 0) ||
 	    (open("/dev/null", O_WRONLY) < 0) ||
 	    (open("/dev/null", O_WRONLY) < 0))
