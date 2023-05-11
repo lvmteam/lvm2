@@ -45,18 +45,18 @@ struct lvmpolld_lv {
 	 * accessing following vars doesn't
 	 * require struct lvmpolld_lv lock
 	 */
-	struct lvmpolld_state *const ls;
+	struct lvmpolld_state *ls;
 	const enum poll_type type;
-	const char *const lvid;
-	const char *const lvmpolld_id;
-	const char *const devicesfile;
-	const char *const lvname; /* full vg/lv name */
+	const char *lvid;
+	const char *lvmpolld_id;
+	const char *devicesfile;
+	const char *lvname; /* full vg/lv name */
 	const unsigned pdtimeout; /* in seconds */
-	const char *const sinterval;
-	const char *const lvm_system_dir_env;
-	struct lvmpolld_store *const pdst;
-	const char *const *cmdargv;
-	const char *const *cmdenvp;
+	const char *sinterval;
+	const char *lvm_system_dir_env;
+	struct lvmpolld_store *pdst;
+	const char **cmdargv;
+	const char **cmdenvp;
 
 	/* only used by write */
 	pid_t cmd_pid;
