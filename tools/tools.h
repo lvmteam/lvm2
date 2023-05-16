@@ -193,6 +193,7 @@ int repairtype_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_v
 int dumptype_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av);
 
 /* we use the enums to access the switches */
+int arg_is_valid_for_command(const struct cmd_context *cmd, int a);
 unsigned arg_count(const struct cmd_context *cmd, int a);
 unsigned arg_is_set(const struct cmd_context *cmd, int a);
 int arg_from_list_is_set(const struct cmd_context *cmd, const char *err_found, ...);
