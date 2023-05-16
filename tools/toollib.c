@@ -2313,7 +2313,12 @@ static int _resolve_duplicate_vgnames(struct cmd_context *cmd,
 		 * is unknown.
 		 */
 		log_error("Multiple VGs found with the same name: skipping %s", sl->str);
-		log_error("Use --select vg_uuid=<uuid> in place of the VG name.");
+
+		if (arg_is_valid_for_command(cmd, select_ARG))
+			log_error("Use --select vg_uuid=<uuid> in place of the VG name.");
+		else
+			log_error("Use VG uuid in place of the VG name.");
+
 		dm_list_del(&sl->list);
 		ret = ECMD_FAILED;
 	}

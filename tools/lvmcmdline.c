@@ -179,6 +179,18 @@ static const struct command_function _command_functions[CMD_COUNT] = {
 
 
 /* Command line args */
+int arg_is_valid_for_command(const struct cmd_context *cmd, int a)
+{
+	int i;
+
+	for (i = 0; i < cmd->cname->num_args; i++) {
+		if (cmd->cname->valid_args[i] == a)
+			return 1;
+	}
+
+	return 0;
+}
+
 unsigned arg_count(const struct cmd_context *cmd, int a)
 {
 	return cmd->opt_arg_values ? cmd->opt_arg_values[a].count : 0;
