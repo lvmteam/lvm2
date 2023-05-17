@@ -23,7 +23,7 @@ aux kernel_at_least  5 10 || export LVM_TEST_PREFER_BRD=0
 mnt="mnt"
 mkdir -p $mnt
 
-aux prepare_devs 6 80
+aux prepare_devs 9 80
 
 # Use awk instead of anoyingly long log out from printf
 #printf "%0.sA" {1..16384} >> fileA
@@ -276,7 +276,7 @@ vgremove -ff $vg
 # Test lvextend while inactive
 
 _prepare_vg
-lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg
+lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg "$dev1" "$dev2"
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 aux wait_recalc $vg/$lv1
@@ -286,7 +286,11 @@ lvs -a -o name,size,segtype,devices,sync_percent $vg
 _add_new_data_to_mnt
 umount $mnt
 lvchange -an $vg/$lv1
-lvextend -l 16 $vg/$lv1
+# use two new devs for raid extend to ensure redundancy
+vgextend $vg "$dev7" "$dev8"
+lvs -a -o name,segtype,devices $vg
+lvextend -l 16 $vg/$lv1 "$dev7" "$dev8"
+lvs -a -o name,segtype,devices $vg
 lvchange -ay $vg/$lv1
 mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 resize2fs "$DM_DEV_DIR/$vg/$lv1"
@@ -303,15 +307,18 @@ vgremove -ff $vg
 # Test lvextend while active
 
 _prepare_vg
-lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg
+lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 8 $vg "$dev1" "$dev2"
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 aux wait_recalc $vg/$lv1
 lvcreate --type $create_type -n fast -l 4 -an $vg "$dev6"
 lvconvert -y --type $convert_type $convert_option fast $vg/$lv1
+# use two new devs for raid extend to ensure redundancy
+vgextend $vg "$dev7" "$dev8"
 lvs -a -o name,size,segtype,devices,sync_percent $vg
 _add_new_data_to_mnt
-lvextend -l 16 $vg/$lv1
+lvextend -l 16 $vg/$lv1 "$dev7" "$dev8"
+lvs -a -o name,size,segtype,devices,sync_percent $vg
 resize2fs "$DM_DEV_DIR/$vg/$lv1"
 aux wait_recalc $vg/${lv1}_${suffix}_rimage_0
 aux wait_recalc $vg/${lv1}_${suffix}_rimage_1
@@ -324,16 +331,18 @@ lvremove $vg/$lv1
 vgremove -ff $vg
 
 _prepare_vg
-lvcreate --type raid5 --raidintegrity y -n $lv1 -I4 -l 8 $vg
+lvcreate --type raid5 --raidintegrity y -n $lv1 -I4 -l 8 $vg "$dev1" "$dev2" "$dev3"
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 aux wait_recalc $vg/${lv1}_rimage_2
 aux wait_recalc $vg/$lv1
 lvcreate --type $create_type -n fast -l 4 -an $vg "$dev6"
 lvconvert -y --type $convert_type $convert_option fast $vg/$lv1
+vgextend $vg "$dev7" "$dev8" "$dev9"
 lvs -a -o name,size,segtype,devices,sync_percent $vg
 _add_new_data_to_mnt
-lvextend -l 16 $vg/$lv1
+lvextend -l 16 $vg/$lv1 "$dev7" "$dev8" "$dev9"
+lvs -a -o name,size,segtype,devices,sync_percent $vg
 resize2fs "$DM_DEV_DIR/$vg/$lv1"
 aux wait_recalc $vg/${lv1}_${suffix}_rimage_0
 aux wait_recalc $vg/${lv1}_${suffix}_rimage_1
