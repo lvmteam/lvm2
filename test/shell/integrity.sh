@@ -585,7 +585,6 @@ not lvconvert --splitmirrors 1 -n tmp -y $vg/$lv1
 not lvconvert --splitmirrors 1 --trackchanges -y $vg/$lv1
 not lvchange --syncaction repair $vg/$lv1
 not lvreduce -L4M $vg/$lv1
-not lvcreate -s -n snap -L4M $vg/$lv1
 not pvmove -n $vg/$lv1 "$dev1"
 not pvmove "$dev1"
 _verify_data_on_mnt
@@ -767,13 +766,6 @@ lvconvert -y --type cache --cachepool $lv2 $vg/$lv1
 not lvconvert --raidintegrity y $vg/${lv1}_corig
 not lvconvert --raidintegrity y $vg/${lv2}_cpool_cdata
 not lvconvert --raidintegrity y $vg/${lv2}_cpool_cmeta
-lvremove -y $vg/$lv1
-
-# cannot add integrity to raid that has a snapshot
-
-lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
-lvcreate -s -n $lv2 -l 8 $vg/$lv1
-not lvconvert --raidintegrity y $vg/$lv1
 lvremove -y $vg/$lv1
 
 vgremove -ff $vg
