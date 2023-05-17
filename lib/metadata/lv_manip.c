@@ -4472,8 +4472,11 @@ static int _lv_raid_redundant(struct logical_volume *lv,
 		for (s = 0; s < seg->area_count; s++) {
 			struct logical_volume *slv = meta ? seg_metalv(seg, s) : seg_lv(seg, s);
 
-			if (slv && lv_is_on_pv(slv, pvl->pv) && nlvs++)
+			if (slv && lv_is_on_pv(slv, pvl->pv) && nlvs++) {
+				log_error("LV %s using PV %s is not redundant.",
+					  display_lvname(slv), dev_name(pvl->pv->dev));
 				return 0;
+			}
 		}
 	}
 
