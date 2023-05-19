@@ -1728,7 +1728,8 @@ static int _match_dm_devnames(struct cmd_context *cmd, struct device *dev,
 	return 0;
 }
 
-static void _reduce_underscores(char *in, int in_len, char *out, int out_size)
+/* More than one _ in a row is replaced with one _ */
+static void _reduce_repeating_underscores(char *in, int in_len, char *out, int out_size)
 {
 	int us = 0, i, j = 0;
 
@@ -1750,6 +1751,17 @@ static void _reduce_underscores(char *in, int in_len, char *out, int out_size)
 	}
 }
 
+/* Remove any _ at the end of the string. */
+static void _remove_trailing_underscores(char *buf)
+{
+	char *end;
+
+	end = buf + strlen(buf) - 1;
+	while ((end > buf) && (*end == '_'))
+		end--;
+	end[1] = '\0';
+}
+
 /*
  * du is a devices file entry.  dev is any device on the system.
  * check if du is for dev by comparing the device's ids to du->idname.
@@ -1764,6 +1776,7 @@ static void _reduce_underscores(char *in, int in_len, char *out, int out_size)
 static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct device *dev)
 {
 	char du_t10[DEV_WWID_SIZE] = { 0 };
+	char id_t10[DEV_WWID_SIZE];
 	struct dev_id *id;
 	const char *idname;
 	int part;
@@ -1818,10 +1831,17 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 	 * for IDNAME were saved in the past with each space replaced
 	 * by one _.  Now we convert multiple spaces to a single _.
 	 * So, convert a df entry with the old style to the new shorter
-	 * style to compare.
+	 * style to compare.  Also, in past versions, trailing spaces
+	 * in the wwid would be replaced by _, but now trailing spaces
+	 * are ignored.  This means devices file entries created by
+	 * past versions may have _ at the end of the IDNAME string.
+	 * So, exclude trailing underscores when comparing a t10 wwid
+	 * from a device with a t10 wwid in the devices file.
 	 */
-	if (du->idtype == DEV_ID_TYPE_SYS_WWID && !strncmp(du->idname, "t10", 3) && strstr(du->idname, "__"))
-		_reduce_underscores(du->idname, strlen(du->idname), du_t10, sizeof(du_t10) - 1);
+	if (du->idtype == DEV_ID_TYPE_SYS_WWID && !strncmp(du->idname, "t10", 3) && strchr(du->idname, '_')) {
+		_reduce_repeating_underscores(du->idname, strlen(du->idname), du_t10, sizeof(du_t10) - 1);
+		_remove_trailing_underscores(du_t10);
+	}
 
 	/*
 	 * Try to match du with ids that have already been read for the dev
@@ -1829,6 +1849,20 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 	 */
 	dm_list_iterate_items(id, &dev->ids) {
 		if (id->idtype == du->idtype) {
+
+			/*
+			 * For t10 wwids, remove actual trailing underscores from the dev wwid
+			 * (in id->idname), because all trailing underscores were removed from
+			 * the du->idname read from the devices file. i.e. no trailing _ are
+			 * used in t10 wwid comparisons.
+			 */
+			if ((id->idtype == DEV_ID_TYPE_SYS_WWID) &&
+			    id->idname && !strncmp(id->idname, "t10", 3) && du_t10[0]) {
+				memset(id_t10, 0, sizeof(id_t10));
+				strncpy(id_t10, id->idname, DEV_WWID_SIZE-1);
+				_remove_trailing_underscores(id_t10);
+			}
+
 			if ((id->idtype == DEV_ID_TYPE_DEVNAME) && _match_dm_devnames(cmd, dev, id, du)) {
 				/* dm devs can have differing names that we know still match */
 				du->dev = dev;
@@ -1846,9 +1880,7 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 					  idtype_to_str(du->idtype), du->idname, dev_name(dev));
 				return 1;
 
-			} else if ((id->idtype == DEV_ID_TYPE_SYS_WWID) && id->idname &&
-				   !strncmp(id->idname, "t10", 3) && du_t10[0] && !strcmp(id->idname, du_t10)) {
-				/* Compare the shorter form du t10 wwid to the dev t10 wwid. */
+			} else if ((id->idtype == DEV_ID_TYPE_SYS_WWID) && du_t10[0] && id_t10[0] && !strcmp(id_t10, du_t10)) {
 				du->dev = dev;
 				dev->id = id;
 				dev->flags |= DEV_MATCHED_USE_ID;
