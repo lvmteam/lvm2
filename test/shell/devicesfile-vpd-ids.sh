@@ -80,6 +80,7 @@ echo $DEV1
 DFDIR="$LVM_SYSTEM_DIR/devices"
 mkdir -p "$DFDIR" || true
 DF="$DFDIR/system.devices"
+DFTMP="$DFDIR/system.devices_tmp"
 touch $DF
 
 pvcreate "$DEV1"
@@ -242,6 +243,118 @@ lvremove -y $vg
 vgremove $vg
 rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
 cleanup_sysfs
+
+# Test t10 wwid with trailing space and line feed at the end
+rm $DF
+aux wipefs_a "$DEV1"
+mkdir -p $SYS_DIR/dev/block/$MAJOR1:$MINOR1/
+echo -n "7431 302e 4154 4120 2020 2020 5642 4f58 \
+2048 4152 4444 4953 4b20 2020 2020 2020 \
+2020 2020 2020 2020 2020 2020 2020 2020 \
+2020 2020 5642 3963 3130 6433 3138 2d31 \
+3838 6439 6562 6320 0a" | xxd -r -p > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+cat $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+lvmdevices --adddev "$DEV1"
+cat $DF
+vgcreate $vg "$DEV1"
+lvcreate -l1 -an $vg
+cat $DF
+# check wwid string in metadata output
+pvs -o+deviceidtype,deviceid "$DEV1" |tee out
+grep sys_wwid out
+# check wwid string in system.devices
+grep sys_wwid $DF
+lvremove -y $vg
+vgremove $vg
+rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+cleanup_sysfs
+
+# Test t10 wwid with trailing space at the end that was created by 9.0/9.1
+rm $DF
+aux wipefs_a "$DEV1"
+mkdir -p $SYS_DIR/dev/block/$MAJOR1:$MINOR1/
+echo -n "7431 302e 4154 4120 2020 2020 5642 4f58 \
+2048 4152 4444 4953 4b20 2020 2020 2020 \
+2020 2020 2020 2020 2020 2020 2020 2020 \
+2020 2020 5642 3963 3130 6433 3138 2d31 \
+3838 6439 6562 6320 0a" | xxd -r -p > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+cat $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+lvmdevices --adddev "$DEV1"
+cat $DF
+vgcreate $vg "$DEV1"
+PVID1=`pvs "$DEV1" --noheading -o uuid | tr -d - | awk '{print $1}'`
+T10_WWID_RHEL91="t10.ATA_____VBOX_HARDDISK___________________________VB9c10d318-188d9ebc_"
+lvcreate -l1 -an $vg
+cat $DF
+# check wwid string in metadata output
+pvs -o+deviceidtype,deviceid "$DEV1" |tee out
+grep sys_wwid out
+# check wwid string in system.devices
+grep sys_wwid $DF
+# Replace IDNAME with the IDNAME that 9.0/9.1 created from this wwid
+cat $DF | grep -v IDNAME > $DFTMP
+cat $DFTMP
+echo "IDTYPE=sys_wwid IDNAME=t10.ATA_____VBOX_HARDDISK___________________________VB9c10d318-188d9ebc_ DEVNAME=${DEV1} PVID=${PVID1}" >> $DFTMP
+cp $DFTMP $DF
+cat $DF
+vgs
+pvs
+pvs -o+deviceidtype,deviceid "$DEV1"
+# Removing the trailing _ which should then work
+cat $DF | grep -v IDNAME > $DFTMP
+cat $DFTMP
+echo "IDTYPE=sys_wwid IDNAME=t10.ATA_____VBOX_HARDDISK___________________________VB9c10d318-188d9ebc DEVNAME=${DEV1} PVID=${PVID1}" >> $DFTMP
+cp $DFTMP $DF
+cat $DF
+vgs
+pvs
+pvs -o+deviceidtype,deviceid "$DEV1"
+lvremove -y $vg
+vgremove $vg
+rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+cleanup_sysfs
+
+# test a t10 wwid that has actual trailing underscore which
+# is followed by a trailing space.
+rm $DF
+aux wipefs_a "$DEV1"
+mkdir -p $SYS_DIR/dev/block/$MAJOR1:$MINOR1/
+echo -n "7431 302e 4154 4120 2020 2020 5642 4f58 \
+2048 4152 4444 4953 4b20 2020 2020 2020 \
+2020 2020 2020 2020 2020 2020 2020 2020 \
+2020 2020 5642 3963 3130 6433 3138 2d31 \
+3838 6439 6562 5f20 0a" | xxd -r -p > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+cat $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+# The wwid has an actual underscore char (5f) followed by a space char (20)
+# 9.1 converts the trailing space to an underscore
+T10_WWID_RHEL91="t10.ATA_____VBOX_HARDDISK___________________________VB9c10d318-188d9eb__"
+# 9.2 ignores the trailing space
+T10_WWID_RHEL92="t10.ATA_____VBOX_HARDDISK___________________________VB9c10d318-188d9eb_"
+lvmdevices --adddev "$DEV1"
+cat $DF
+vgcreate $vg "$DEV1"
+PVID1=`pvs "$DEV1" --noheading -o uuid | tr -d - | awk '{print $1}'`
+lvcreate -l1 -an $vg
+cat $DF
+# check wwid string in metadata output
+pvs -o+deviceidtype,deviceid "$DEV1" |tee out
+grep sys_wwid out
+# check wwid string in system.devices
+grep sys_wwid $DF
+# Replace IDNAME with the IDNAME that 9.0/9.1 created from this wwid
+cat $DF | grep -v IDNAME > $DFTMP
+cat $DFTMP
+echo "IDTYPE=sys_wwid IDNAME=${T10_WWID_RHEL91} DEVNAME=${DEV1} PVID=${PVID1}" >> $DFTMP
+cp $DFTMP $DF
+cat $DF
+vgs
+pvs
+pvs -o+deviceidtype,deviceid "$DEV1"
+lvremove -y $vg
+vgremove $vg
+rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+cleanup_sysfs
+
 
 # TODO: lvmdevices --adddev <dev> --deviceidtype <type> --deviceid <val>
 # This would let the user specify the second naa wwid.
