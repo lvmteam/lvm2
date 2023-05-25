@@ -5187,7 +5187,7 @@ int lv_extend_policy_calculate_percent(struct logical_volume *lv,
 
 static uint32_t _lvseg_get_stripes(struct lv_segment *seg, uint32_t *stripesize)
 {
-	uint32_t s, a;
+	uint32_t s;
 	struct lv_segment *seg_get, *seg_image, *seg_iorig;
 	struct logical_volume *lv_image, *lv_iorig;
 
@@ -5203,12 +5203,9 @@ static uint32_t _lvseg_get_stripes(struct lv_segment *seg, uint32_t *stripesize)
 
 			if (seg_is_integrity(seg_image)) {
 				/* Get stripe values from the iorig layer. */
-				for (a = 0; a < seg_image->area_count; a++) {
-					lv_iorig = seg_lv(seg_image, a);
-					seg_iorig = first_seg(lv_iorig);
-					seg_get = seg_iorig;
-					break;
-				}
+				lv_iorig = seg_lv(seg_image, 0);
+				seg_iorig = first_seg(lv_iorig);
+				seg_get = seg_iorig;
 			} else {
 				/* Get stripe values from the image layer. */
 				seg_get = seg_image;
