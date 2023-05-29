@@ -106,7 +106,7 @@ else
 fi
 
 cd "$TESTDIR"
-mkdir lib
+mkdir lib tmp
 
 # Setting up symlink from $i to $TESTDIR/lib
 test -n "${abs_top_builddir+varset}" && \
@@ -118,6 +118,7 @@ find "$TESTOLDPWD/lib" ! \( -name '*.sh' -o -name '*.[cdo]' \
 DM_DEFAULT_NAME_MANGLING_MODE=none
 DM_DEV_DIR="$TESTDIR/dev"
 LVM_SYSTEM_DIR="$TESTDIR/etc"
+TMPDIR="$TESTDIR/tmp"
 # abort on the internal dm errors in the tests (allowing test user override)
 DM_ABORT_ON_INTERNAL_ERRORS=${DM_ABORT_ON_INTERNAL_ERRORS:-1}
 DM_DEBUG_WITH_LINE_NUMBERS=${DM_DEBUG_WITH_LINE_NUMBERS:-1}
