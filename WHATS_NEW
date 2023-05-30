@@ -1,5 +1,6 @@
 version 2.03.22 - 
 =================================
+  Fix failing -S|--select for non-reporting cmds if using LV info/status fields.
 
 version 2.03.21 - 21st April 2023
 =================================

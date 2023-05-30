@@ -633,6 +633,7 @@ int report_for_selection(struct cmd_context *cmd,
 			 struct logical_volume *lv)
 {
 	struct selection_handle *sh = parent_handle->selection_handle;
+	report_type_t initial_report_type = sh->report_type;
 	struct report_args args = {0};
 	struct single_report_args *single_args = &args.single_args[REPORT_IDX_SINGLE];
 	int do_lv_info, do_lv_seg_status;
@@ -648,8 +649,10 @@ int report_for_selection(struct cmd_context *cmd,
 				    &sh->report_type))
 		return_0;
 
-	if (!(handle = init_processing_handle(cmd, parent_handle)))
+	if (!(handle = init_processing_handle(cmd, parent_handle))) {
+		sh->report_type = initial_report_type;
 		return_0;
+	}
 
 	/*
 	 * We're already reporting for select so override
@@ -694,6 +697,8 @@ int report_for_selection(struct cmd_context *cmd,
 			log_error(INTERNAL_ERROR "report_for_selection: incorrect report type");
 			break;
 	}
+
+	sh->report_type = initial_report_type;
 
 	/*
 	 * Keep the selection handle provided from the caller -
