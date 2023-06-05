@@ -839,7 +839,7 @@ to do this.)
 RAID LVs with integrity cannot yet be used as sub LVs with other LV types.
 .P
 The following are not yet permitted on RAID LVs with integrity: lvreduce,
-pvmove, snapshots, splitmirror, raid syncaction commands, raid rebuild.
+pvmove, lvconvert --splitmirrors, lvchange --syncaction, lvchange --rebuild.
 .
 .SH RAID1 TUNING
 .
