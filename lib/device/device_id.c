@@ -2625,6 +2625,8 @@ void device_ids_check_serial(struct cmd_context *cmd, struct dm_list *scan_devs,
 	 * Match du to a dev based on PVID.
 	 */
 	dm_list_iterate_items(dul, &dus_check) {
+		if (!dul->du->pvid)
+			continue;
 		log_debug("Matching suspect serial device id %s PVID %s prev %s",
 			  dul->du->idname, dul->du->pvid, dul->du->devname);
 		found = 0;

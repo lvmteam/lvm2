@@ -853,6 +853,44 @@ grep $PVID4 out4
 vgcreate $vg2 $dev2 $dev3
 vgs | grep $vg2
 
+# 3 devs with duplicate serial, 2 pvs with stale devnames, 1 non-pv device
+
+aux wipefs_a $dev1
+aux wipefs_a $dev2
+aux wipefs_a $dev3
+
+echo $SERIAL1 > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/serial
+echo $SERIAL1 > $SYS_DIR/dev/block/$MAJOR2:$MINOR2/device/serial
+echo $SERIAL1 > $SYS_DIR/dev/block/$MAJOR3:$MINOR3/device/serial
+
+rm $DF
+touch $DF
+vgcreate $vg1 $dev1 $dev2
+lvmdevices --adddev $dev3
+cat $DF
+cp $DF $ORIG
+
+PVID1=`pvs "$dev1" --noheading -o uuid | tr -d - | awk '{print $1}'`
+PVID2=`pvs "$dev2" --noheading -o uuid | tr -d - | awk '{print $1}'`
+OPVID1=`pvs "$dev1" --noheading -o uuid | awk '{print $1}'`
+OPVID2=`pvs "$dev2" --noheading -o uuid | awk '{print $1}'`
+
+pvs -o+uuid,deviceid
+
+sed -e "s|DEVNAME=$dev1|DEVNAME=tmp|" $ORIG > tmp1
+sed -e "s|DEVNAME=$dev2|DEVNAME=$dev1|" tmp1 > tmp2
+sed -e "s|DEVNAME=tmp|DEVNAME=$dev2|" tmp2 > $DF
+cat $DF
+
+# pvs should report the correct info and fix the DF
+pvs -o+uuid,deviceid |tee out
+grep $dev1 out |tee out1
+grep $dev2 out |tee out2
+grep $OPVID1 out1
+grep $OPVID2 out2
+grep $SERIAL1 out1
+grep $SERIAL1 out2
+
 remove_base
 rmmod brd
 
