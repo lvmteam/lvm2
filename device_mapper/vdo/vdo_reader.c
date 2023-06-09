@@ -146,13 +146,14 @@ static void _vdo_decode_header(struct vdo_header *h)
 static void _vdo_decode_geometry_region(struct vdo_volume_region *vr)
 {
 	vr->id = le32_to_cpu(vr->id);
-	vr->start_block = le32_to_cpu(vr->start_block);
+	vr->start_block = le64_to_cpu(vr->start_block);
 }
 
 static void _vdo_decode_volume_geometry(struct vdo_volume_geometry *vg)
 {
-	vg->release_version = le64_to_cpu(vg->release_version);
+	vg->release_version = le32_to_cpu(vg->release_version);
 	vg->nonce = le64_to_cpu(vg->nonce);
+	vg->bio_offset = le64_to_cpu(vg->bio_offset);
 	_vdo_decode_geometry_region(&vg->regions[VDO_DATA_REGION]);
 }
 
@@ -224,10 +225,14 @@ bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks)
 		goto err;
 	}
 
+	if (h.id != 5) {
+		log_debug_activation("Expected geometry VDO block instead of block %u.", h.id);
+		goto err;
+	}
 	memcpy(&vg, buffer + MAGIC_NUMBER_SIZE + sizeof(h), sizeof(vg));
 	_vdo_decode_volume_geometry(&vg);
 
-	regpos = vg.regions[VDO_DATA_REGION].start_block * 4096;
+	regpos = (vg.regions[VDO_DATA_REGION].start_block - vg.bio_offset) * 4096;
 
 	if ((regpos + sizeof(buffer)) > size) {
 		log_debug_activation("File/Device is shorter and can't provide requested VDO volume region at " FMTu64 " > " FMTu64 ".", regpos, size);
@@ -243,7 +248,6 @@ bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks)
 		log_sys_debug("read", vdo_path);
 		goto err;
 	}
-
 
 	memcpy(&vn, buffer + sizeof(struct vdo_geometry_block), sizeof(vn));
 	_vdo_decode_version(&vn);
