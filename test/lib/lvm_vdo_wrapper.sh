@@ -11,7 +11,7 @@ LVM_VDO_FORMAT=${LVM_VDO_FORMAT-"oldvdoformat"}
 # tool for shifting VDO metadata header by 2MiB
 LVM_VDO_PREPARE=${LVM_VDO_PREPARE-"oldvdoprepareforlvm"}
 # default vdo conf file
-LVM_VDO_DEFAULT_CONF=${LVM_VDO_DEFAULT_CONF-"/tmp/vdoconf.yml"}
+LVM_VDO_DEFAULT_CONF=${LVM_VDO_DEFAULT_CONF-"${TMPDIR:-/tmp}/vdoconf.yml"}
 
 vdo_die_() {
 	echo -e "$@" >&2
@@ -39,6 +39,7 @@ vdo_get_kb_size_with_unit_() {
 	esac
 
 	case "$1" in
+	  *[kK]) sz=1 ;;
 	  *[mM]) sz=1024 ;;
 	  *[gG]) sz=$(( 1024 * 1024 )) ;;
 	  *[tT]) sz=$(( 1024 * 1024 * 1024 )) ;;
@@ -318,6 +319,10 @@ local vdo_force=
 local vdo_name=
 local vdo_verbose=
 local vdo_device=
+local vdo_dry_run=
+local vdo_check=
+local vdo_version=
+local vdo_help=
 
 while [ "$#" -ne 0 ]
 do
@@ -326,6 +331,10 @@ do
 	  "--name"|"-n") shift; vdo_name=$1 ;;
 	  "--verbose"|"-d"|"--debug") vdo_verbose="-v" ;;
 	  "--force") vdo_force="--force" ;;
+	  "--dry-run") vdo_dry_run="--dry-run" ;;
+	  "--check") vdo_check="--check" ;;
+	  "--version") vdo_version="--version" ;;
+	  "--help") vdo_help="--help" ;;
 	esac
 	shift
 done
@@ -337,7 +346,7 @@ vdo_device=$(awk -v vdovolname="$vdo_name" 'BEGIN { have=0 }
      "$vdo_confFile")
 
 #dmsetup status --target vdo "$vdo_name" || true
-vdo_dry_ "$LVM_VDO_PREPARE" "$vdo_device"
+vdo_dry_ "$LVM_VDO_PREPARE" $vdo_dry_run $vdo_check $vdo_version $vdo_help "$vdo_device"
 vdo_dry_ vdo_remove_ -f "$vdo_confFile" -n "$vdo_name" || true
 }
 
