@@ -61,6 +61,20 @@ Answer "yes" at any prompts.
 .BR --dry-run
 Print verbosely commands without running them.
 .
+.TP
+.BR --no-snapshot
+With this option conversion tool will not use snapshot (COW storage) for conversion
+in your $TMPDIR filesystem and it will directly manipulate with VDO device in-place.
+Warning: the snapshot usage makes the whole conversion transactional and 
+the snapshot can be just simply merged once the whole conversion
+has successfully proceeded. In the case of error the snapshot is just removed.
+Without the use of snapshot there is higher risk of problems with recoverability in
+case some unexpected error occurs.
+.
+.TP
+.BR --vdo-config
+Configuration file for VDO manager. Can be used to specify configuration for vdo manager.
+.
 .
 .SH DIAGNOSTICS
 .
@@ -83,6 +97,15 @@ The temporary directory name for mount points. Defaults to "\fI/tmp\fP".
 .B DM_DEV_DIR
 The device directory name.
 Defaults to "\fI/dev\fP" and must be an absolute path.
+.TP
+.B DM_UUID_PREFIX
+Specify uuid prefix for snapshot volume used during vdo conversion.
+.TP
+.B LVM_BINARY
+Allow to overide command called from lvm. Defaults to "\fIlvm\fP".
+.TP
+.B VDO_BINARY
+Allow to overide command called from vdo. Defaults to "\fIvdo\fP".
 .
 .SH SEE ALSO
 .
