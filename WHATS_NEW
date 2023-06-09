@@ -1,5 +1,7 @@
 version 2.03.22 - 
 =================================
+  Enhance lvm_import_vdo and use snapshot when converting VDO volume.
+  Fix parsed of VDO metadata.
   Fix failing -S|--select for non-reporting cmds if using LV info/status fields.
 
 version 2.03.21 - 21st April 2023
