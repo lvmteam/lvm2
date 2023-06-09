@@ -1,5 +1,9 @@
+version 2.03.22 - 
+=================================
+  Enhance lvm_import_vdo and use snapshot when converting VDO volume.
+  Fix parsing of VDO metadata.
+
 version 2.03.19 - 
-====================================
   Fix and improve runtime memory size detection for VDO volumes.
 
 Version 2.03.17 - 
