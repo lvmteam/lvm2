@@ -348,6 +348,9 @@ test_extend_snap
 test_fill_snap
 lvremove -y $vg/$lv1
 
+# INTEGRITY TESTS FOLLOWING:
+if aux have_integrity 1 5 0; then
+
 lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -L128M $vg "$dev1" "$dev2"
 _wait_sync $vg/${lv1}_rimage_0
 _wait_sync $vg/${lv1}_rimage_1
@@ -436,6 +439,8 @@ umount "$snap_dir"
 umount "$mount_dir"
 lvremove -y $vg/snap
 lvremove -y $vg/$lv1
+
+fi # INTEGRITY TESTS SKIPPED
 
 vgremove -ff $vg
 
