@@ -100,8 +100,8 @@ grep "zero metadata copies" m4
 diff m1 m2
 diff m1 m3
 
-not diff m1 m3b > tmp
-grep "metadata text at" tmp
+not diff m1 m3b > out
+grep "metadata text at" out
 
 lvcreate -an -l1 $vg
 

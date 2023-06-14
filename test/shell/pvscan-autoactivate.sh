@@ -169,9 +169,9 @@ _clear_online_files
 
 pvscan --cache -aay "$dev3"
 not ls "$RUNDIR/lvm/pvs_online/$PVID3"
-lvs --foreign $vg2 > tmp
-cat tmp
-grep $lv2 tmp
+lvs --foreign $vg2 > out
+cat out
+grep $lv2 out
 check lv_field $vg2/$lv2 lv_active "" --foreign
 
 fi
