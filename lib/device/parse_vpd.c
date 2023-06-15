@@ -36,7 +36,57 @@
 #include <assert.h>
 
 /*
+ * Remove leading spaces.
+ * Remove trailing spaces.
+ * Replace each space with underscore.
+ * Skip quotes, non-ascii, non-printable.
+ */
+int format_general_id(const char *in, int in_bytes, unsigned char *out, int out_bytes)
+{
+	const char *end;
+	int end_bytes = strlen(in);
+	int retlen = 0;
+	int j = 0;
+	int i;
+
+	if (!end_bytes)
+		return 0;
+
+	end = in + end_bytes - 1;
+	while ((end > in) && (*end == ' ')) {
+		end--;
+		end_bytes--;
+	}
+
+	for (i = 0; i < end_bytes; i++) {
+		if (!in[i])
+			break;
+		if (j >= (out_bytes - 2))
+			break;
+		/* skip leading spaces */
+		if (!retlen && (in[i] == ' '))
+			continue;
+		/* skip non-ascii non-printable characters */
+		if (!isascii(in[i]) || !isprint(in[i]))
+			continue;
+		/* skip quote */
+		if (in[i] == '"')
+			continue;
+		/* replace each space with _ */
+		if (in[i] == ' ')
+			out[j++] = '_';
+		else
+			out[j++] = in[i];
+		retlen++;
+	}
+	return retlen;
+}
+
+/*
+ * Remove leading spaces.
+ * Remove trailing spaces.
  * Replace series of spaces with a single _.
+ * Skip quotes, non-ascii, non-printable.
  */
 int format_t10_id(const unsigned char *in, int in_bytes, unsigned char *out, int out_bytes)
 {

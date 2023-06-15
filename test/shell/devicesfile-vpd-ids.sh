@@ -223,8 +223,8 @@ cleanup_sysfs
 # Test t10 wwid containing quote
 rm $DF
 aux wipefs_a "$DEV1"
-mkdir -p $SYS_DIR/dev/block/$MAJOR1:$MINOR1/
-echo "t10.ATA_2.5\"_SATA_SSD_1112-A___111111111111" > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+mkdir -p $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device
+echo "t10.ATA_2.5\"_SATA_SSD_1112-A___111111111111" > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid
 lvmdevices --adddev "$DEV1"
 cat $DF
 vgcreate $vg "$DEV1"
@@ -241,19 +241,19 @@ grep sys_wwid $DF
 grep 2.5_SATA_SSD $DF
 lvremove -y $vg
 vgremove $vg
-rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid
 cleanup_sysfs
 
 # Test t10 wwid with trailing space and line feed at the end
 rm $DF
 aux wipefs_a "$DEV1"
-mkdir -p $SYS_DIR/dev/block/$MAJOR1:$MINOR1/
+mkdir -p $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device
 echo -n "7431 302e 4154 4120 2020 2020 5642 4f58 \
 2048 4152 4444 4953 4b20 2020 2020 2020 \
 2020 2020 2020 2020 2020 2020 2020 2020 \
 2020 2020 5642 3963 3130 6433 3138 2d31 \
-3838 6439 6562 6320 0a" | xxd -r -p > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
-cat $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+3838 6439 6562 6320 0a" | xxd -r -p > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid
+cat $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid
 lvmdevices --adddev "$DEV1"
 cat $DF
 vgcreate $vg "$DEV1"
@@ -266,19 +266,19 @@ grep sys_wwid out
 grep sys_wwid $DF
 lvremove -y $vg
 vgremove $vg
-rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid
 cleanup_sysfs
 
 # Test t10 wwid with trailing space at the end that was created by 9.0/9.1
 rm $DF
 aux wipefs_a "$DEV1"
-mkdir -p $SYS_DIR/dev/block/$MAJOR1:$MINOR1/
+mkdir -p $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device
 echo -n "7431 302e 4154 4120 2020 2020 5642 4f58 \
 2048 4152 4444 4953 4b20 2020 2020 2020 \
 2020 2020 2020 2020 2020 2020 2020 2020 \
 2020 2020 5642 3963 3130 6433 3138 2d31 \
-3838 6439 6562 6320 0a" | xxd -r -p > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
-cat $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+3838 6439 6562 6320 0a" | xxd -r -p > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid
+cat $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid
 lvmdevices --adddev "$DEV1"
 cat $DF
 vgcreate $vg "$DEV1"
@@ -311,20 +311,20 @@ pvs
 pvs -o+deviceidtype,deviceid "$DEV1"
 lvremove -y $vg
 vgremove $vg
-rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid
 cleanup_sysfs
 
 # test a t10 wwid that has actual trailing underscore which
 # is followed by a trailing space.
 rm $DF
 aux wipefs_a "$DEV1"
-mkdir -p $SYS_DIR/dev/block/$MAJOR1:$MINOR1/
+mkdir -p $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device
 echo -n "7431 302e 4154 4120 2020 2020 5642 4f58 \
 2048 4152 4444 4953 4b20 2020 2020 2020 \
 2020 2020 2020 2020 2020 2020 2020 2020 \
 2020 2020 5642 3963 3130 6433 3138 2d31 \
-3838 6439 6562 5f20 0a" | xxd -r -p > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
-cat $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+3838 6439 6562 5f20 0a" | xxd -r -p > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid
+cat $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid
 # The wwid has an actual underscore char (5f) followed by a space char (20)
 # 9.1 converts the trailing space to an underscore
 T10_WWID_RHEL91="t10.ATA_____VBOX_HARDDISK___________________________VB9c10d318-188d9eb__"
@@ -352,8 +352,79 @@ pvs
 pvs -o+deviceidtype,deviceid "$DEV1"
 lvremove -y $vg
 vgremove $vg
-rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/wwid
+rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid
 cleanup_sysfs
+
+#
+# Test trailing/leading/center spaces in sys_wwid and sys_serial device
+# ids, and that old system.devices files that have trailing/leading
+# underscores are understood.
+#
+
+rm $DF
+aux wipefs_a "$DEV1"
+mkdir -p $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device
+echo -n "  s123  456  " > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/serial
+lvmdevices --adddev "$DEV1"
+cat $DF
+grep "IDNAME=s123__456 DEVNAME" $DF
+vgcreate $vg "$DEV1"
+PVID1=`pvs "$DEV1" --noheading -o uuid | tr -d - | awk '{print $1}'`
+cat $DF | grep -v IDNAME > $DFTMP
+cat $DFTMP
+echo "IDTYPE=sys_serial IDNAME=__s123__456__ DEVNAME=${DEV1} PVID=${PVID1}" >> $DFTMP
+cp $DFTMP $DF
+cat $DF
+vgs
+pvs -o+deviceidtype,deviceid "$DEV1"
+lvremove -y $vg
+vgremove $vg
+rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/serial
+cleanup_sysfs
+
+rm $DF
+aux wipefs_a "$DEV1"
+mkdir -p $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device
+echo -n "  t10.123  456  " > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid
+lvmdevices --adddev "$DEV1"
+cat $DF
+grep "IDNAME=t10.123_456 DEVNAME" $DF
+vgcreate $vg "$DEV1"
+PVID1=`pvs "$DEV1" --noheading -o uuid | tr -d - | awk '{print $1}'`
+cat $DF | grep -v IDNAME > $DFTMP
+cat $DFTMP
+echo "IDTYPE=sys_wwid IDNAME=__t10.123__456__ DEVNAME=${DEV1} PVID=${PVID1}" >> $DFTMP
+cp $DFTMP $DF
+cat $DF
+vgs
+pvs -o+deviceidtype,deviceid "$DEV1"
+lvremove -y $vg
+vgremove $vg
+rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid
+cleanup_sysfs
+
+rm $DF
+aux wipefs_a "$DEV1"
+mkdir -p $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device
+echo -n "  naa.123  456  " > $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid
+lvmdevices --adddev "$DEV1"
+cat $DF
+grep "IDNAME=naa.123__456 DEVNAME" $DF
+vgcreate $vg "$DEV1"
+PVID1=`pvs "$DEV1" --noheading -o uuid | tr -d - | awk '{print $1}'`
+cat $DF | grep -v IDNAME > $DFTMP
+cat $DFTMP
+echo "IDTYPE=sys_wwid IDNAME=__naa.123__456__ DEVNAME=${DEV1} PVID=${PVID1}" >> $DFTMP
+cp $DFTMP $DF
+cat $DF
+vgs
+pvs -o+deviceidtype,deviceid "$DEV1"
+lvremove -y $vg
+vgremove $vg
+rm $SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid
+cleanup_sysfs
+
+
 
 
 # TODO: lvmdevices --adddev <dev> --deviceidtype <type> --deviceid <val>
