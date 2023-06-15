@@ -239,6 +239,7 @@ int dev_mpath_init(const char *config_wwids_file);
 void dev_mpath_exit(void);
 int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list *ids);
 int format_t10_id(const unsigned char *in, int in_bytes, unsigned char *out, int out_bytes);
+int format_general_id(const char *in, int in_bytes, unsigned char *out, int out_bytes);
 int parse_vpd_serial(const unsigned char *in, char *out, int outsize);
 
 /* dev_util */
