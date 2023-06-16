@@ -243,8 +243,6 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 	FILE *fme = NULL;
 	struct mntent *me;
 	int renamed = 0;
-	int found_dir = 0;
-	int found_dev = 0;
 	int dev_match, dir_match;
 
 	if (stat(lv_path, &st_lv) < 0) {
@@ -280,6 +278,9 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 		break;
 	}
 	endmntent(fme);
+
+	if (mtab_mntpath[0])
+		log_debug("%s mtab mntpath %s", display_lvname(lv), mtab_mntpath);
 
 	/*
 	 * In mtab dir path, replace each ascii space character with the
@@ -319,15 +320,31 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 		if (strcmp(fstype, proc_fstype))
 			continue;
 
+		/*
+		 * When an LV is mounted on two dirs, it appears in /proc/mounts twice as
+		 * /dev/mapper/vg-lvol0 on /foo type xfs ...
+		 * /dev/mapper/vg-lvol0 on /bar type xfs ...
+		 * All entries match dm_devpath, one entry matches mntpath,
+		 * and other entries don't match mntpath.
+		 *
+		 * When an LV is mounted on one dir, and is renamed from lvol0 to lvol1,
+		 * it appears in /proc/mounts once as
+		 * /dev/mapper/vg-lvol0 on /foo type xfs ...
+		 */
+
 		dir_match = !strcmp(mtab_mntpath, proc_mntpath);
 		dev_match = !strcmp(dm_devpath, proc_devpath);
 
-		if (dir_match)
-			found_dir++;
-		if (dev_match)
-			found_dev++;
+		if (!dir_match && !dev_match)
+			continue;
 
-		if (dir_match != dev_match) {
+		if (dev_match && !dir_match) {
+			log_debug("LV %s mounted at %s also mounted at %s.",
+				  dm_devpath, mtab_mntpath, proc_mntpath);
+			continue;
+		}
+
+		if (!dev_match && dir_match) {
 			log_error("LV %s mounted at %s may have been renamed (from %s).",
 				  dm_devpath, proc_mntpath, proc_devpath);
 			renamed = 1;
@@ -337,24 +354,8 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 	if (fclose(fp))
 		stack;
 
-	/*
-	 * Don't try resizing if:
-	 * - different device names apppear for the mount point
-	 *   (LVs probably renamed while mounted), or
-	 * - the mount point for the LV appears multiple times, or
-	 * - the LV device is listed for multiple mounts. 
-	 */
 	if (renamed) {
 		log_error("File system resizing not supported: fs utilities do not support renamed devices.");
-		return 1;
-	}
-	/* These two are likely detected as renamed, but include checks in case. */
-	if (found_dir > 1) {
-		log_error("File system resizing not supported: %s appears more than once in /proc/mounts.", mtab_mntpath);
-		return 1;
-	}
-	if (found_dev > 1) {
-		log_error("File system resizing not supported: %s appears more than once in /proc/mounts.", dm_devpath);
 		return 1;
 	}
 	return 0;
