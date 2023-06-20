@@ -38,6 +38,8 @@ mkdir -p "$mount_dir"
 mount_dir_space="other mnt dir"
 mkdir -p "$mount_dir_space"
 
+mount_dir_2="mnt_lvresize_fs_2"
+mkdir -p "$mount_dir_2"
 
 # Test combinations of the following:
 # lvreduce / lvextend
@@ -206,6 +208,47 @@ umount "$mount_dir_space"
 
 lvremove -f $vg/$lv3
 
+
+#################################
+#
+# lvextend, ext4, multiple mounts
+#
+#################################
+
+# Use one instance of ext4 for series of lvextend tests:
+lvcreate -n $lv -L 32M $vg
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv"
+mount "$DM_DEV_DIR/$vg/$lv" "$mount_dir"
+mount "$DM_DEV_DIR/$vg/$lv" "$mount_dir_2"
+
+# lvextend, ext4, active, mounted twice, -r
+lvextend -r -L+8M $vg/$lv
+check lv_field $vg/$lv lv_size "40.00m"
+
+workaround_
+
+lvrename $vg/$lv $vg/$lv2
+not lvextend -r -L+8M $vg/$lv2
+not lvreduce -r -L-8M $vg/$lv2
+umount "$mount_dir"
+umount "$mount_dir_2"
+lvextend -r -L+8M $vg/$lv2
+
+mount "$DM_DEV_DIR/$vg/$lv2" "$mount_dir"
+mount --bind "$mount_dir" "$mount_dir_2"
+lvextend -r -L+8M $vg/$lv2
+check lv_field $vg/$lv2 lv_size "56.00m"
+lvrename $vg/$lv2 $vg/$lv3
+not lvextend -r -L+8M $vg/$lv3
+not lvreduce -r -L-8M $vg/$lv3
+umount "$mount_dir"
+umount "$mount_dir_2"
+mount "$DM_DEV_DIR/$vg/$lv3" "$mount_dir"
+lvextend -r -L+8M $vg/$lv3
+lvreduce -r -y -L-8M $vg/$lv3
+umount "$mount_dir"
+
+lvremove -f $vg/$lv3
 
 #####################################
 #
