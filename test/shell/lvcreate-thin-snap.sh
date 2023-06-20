@@ -74,5 +74,25 @@ lvcreate -L10M --zero n -T $vg/pool -V10M --name $lv1
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 lvcreate -K -s $vg/$lv1 --name snap
 fsck -n "$DM_DEV_DIR/$vg/snap"
+vgchange -an $vg
+lvremove -y $vg
+
+# One thin pool and one thin LV
+lvcreate --type thin-pool -L 10M -n tp $vg
+lvcreate --type thin -n thin1 -V 20M --thinpool tp $vg
+# Different syntaxes for creating a thin snapshot
+lvcreate --type thin -n snap1 $vg/thin1
+lvcreate --type thin --snapshot -n snap2 $vg/thin1
+lvcreate --type thin --thin -n snap3 $vg/thin1
+lvcreate --type thin --snapshot --thin -n snap4 $vg/thin1
+lvcreate --snapshot -n snap5 $vg/thin1
+lvcreate --thin -n snap6 $vg/thin1
+# The command defs allow --snapshot --thin, but the internal
+# lvcreate option checks disallow it.  It doesn't seem to make
+# sense to disallow this from a syntax point of view, but it's
+# possible that the lvcreate implementation would do the wrong
+# thing (that should probably be fixed.)
+not lvcreate --thin --snapshot -n snap7 $vg/thin1
+vgchange -an $vg
 
 vgremove -ff $vg
