@@ -30,10 +30,10 @@ DF="$DFDIR/system.devices"
 
 # Because mapping devno to devname gets dm name from sysfs
 aux lvmconf 'devices/scan = "/dev"'
-bd1="/dev/mapper/$(basename $dev1)"
-bd2="/dev/mapper/$(basename $dev2)"
-bd3="/dev/mapper/$(basename $dev3)"
-bd4="/dev/mapper/$(basename $dev4)"
+bd1="$DM_DEV_DIR/mapper/$(basename $dev1)"
+bd2="$DM_DEV_DIR/mapper/$(basename $dev2)"
+bd3="$DM_DEV_DIR/mapper/$(basename $dev3)"
+bd4="$DM_DEV_DIR/mapper/$(basename $dev4)"
 aux extend_filter "a|$bd1|" "a|$bd2|" "a|$bd3|" "a|$bd4|"
 
 # Changing names will confuse df based on devname
