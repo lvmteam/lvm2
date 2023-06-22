@@ -255,11 +255,11 @@ convert2lvm_() {
 				# Find largest matching VG name to our 'default' vgname
 				LASTVGNAME=$(LC_ALL=C "$LVM" vgs -oname -O-name --noheadings -S name=~${VGNAME} | grep -E "${VGNAME}[0-9]? ?" | head -1 || true)
 				if test -n "$LASTVGNAME" ; then
-					LASTVGNAME=${LASTVGNAME#*${VGNAME}}
+					LASTVGNAME=${LASTVGNAME#*"${VGNAME}"}
 					# If the number is becoming too high, try some random number
 					test "$LASTVGNAME" -gt 99999999 2>/dev/null && LASTVGNAME=$RANDOM
 					# Generate new unused VG name
-					VGNAME="${VGNAME}$(( ${LASTVGNAME} + 1 ))"
+					VGNAME="${VGNAME}$(( LASTVGNAME + 1 ))"
 					verbose "Selected unused volume group name $VGNAME."
 				fi
 			fi
