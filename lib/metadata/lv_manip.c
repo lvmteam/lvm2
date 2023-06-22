@@ -5190,6 +5190,16 @@ static int _lvresize_check(struct logical_volume *lv,
 	struct volume_group *vg = lv->vg;
 	struct lv_segment *seg = first_seg(lv);
 
+	if (lv_is_vdo(lv) && !lv_is_active(lv)) {
+		log_error("Cannot resize inactive VDO logical volume %s.", display_lvname(lv));
+		return 0;
+	}
+
+	if (lv_is_vdo_pool(lv) && !lv_is_active(lv_lock_holder(lv))) {
+		log_error("Cannot resize inactive VDO POOL volume %s.", display_lvname(lv));
+		return 0;
+	}
+
 	if (lv_is_external_origin(lv)) {
 		/*
 		 * Since external-origin can be activated read-only,
