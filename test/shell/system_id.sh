@@ -24,10 +24,13 @@ print_lvmlocal() {
 
 aux prepare_devs 5
 
-SIDFILE="etc/lvm_test.conf"
-LVMLOCAL="etc/lvmlocal.conf"
+# get lvm.conf location in a form of: etc=path
+eval "$(lvmconfig global/etc)"
 
-DFDIR="$LVM_SYSTEM_DIR/devices"
+SIDFILE="$etc/lvm_test.conf"
+LVMLOCAL="$etc/lvmlocal.conf"
+
+DFDIR="$etc/devices"
 DF="$DFDIR/system.devices"
 
 # Avoid system id validation in the devices file
@@ -49,10 +52,6 @@ aux lvmconf "global/system_id_source = none"
 vgcreate $vg1 "$dev1"
 check vg_field $vg1 systemid "$SID"
 vgremove $vg1
-
-# FIXME - print 'life' config data
-#eval "$(lvmconfig global/etc 2>/dev/null || lvmconfig --type default global/etc)"
-etc="/etc"
 
 ## machineid
 if [ -e "$etc/machine-id" ]; then
@@ -708,4 +707,3 @@ vgs -o+systemid $vg1
 check vg_field $vg1 systemid "$SID"
 grep "No system ID found from system_id_source" err
 vgremove $vg1
-
