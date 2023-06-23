@@ -1201,7 +1201,7 @@ global {
 
 	# Configuration option global/thin_check_executable.
 	# The full path to the thin_check command.
-	# LVM uses this command to check that a thin metadata device is in a
+	# LVM uses this command to check that a thin pool metadata device is in a
 	# usable state. When a thin pool is activated and after it is
 	# deactivated, this command is run. Activation will only proceed if
 	# the command has an exit status of 0. Set to "" to skip this check.
@@ -1225,6 +1225,14 @@ global {
 	# This configuration option has an automatic default value.
 	# thin_repair_executable = "@THIN_REPAIR_CMD@"
 
+	# Configuration option global/thin_restore_executable.
+	# The full path to the thin_restore command.
+	# LVM uses this command to restore generated data for a thin pool metadata device.
+	# Also see thin_restore_options.
+	# (See package device-mapper-persistent-data or thin-provisioning-tools)
+	# This configuration option has an automatic default value.
+	# thin_restore_executable = "@THIN_RESTORE_CMD@"
+
 	# Configuration option global/thin_check_options.
 	# List of options passed to the thin_check command.
 	# With thin_check version 2.1 or newer you can add the option
@@ -1238,6 +1246,11 @@ global {
 	# List of options passed to the thin_repair command.
 	# This configuration option has an automatic default value.
 	# thin_repair_options = [ "" ]
+
+	# Configuration option global/thin_restore_options.
+	# List of options passed to the thin_restore command.
+	# This configuration option has an automatic default value.
+	# thin_restore_options = [ "" ]
 
 	# Configuration option global/thin_disabled_features.
 	# Features to not use in the thin driver.
@@ -1287,6 +1300,14 @@ global {
 	# This configuration option has an automatic default value.
 	# cache_repair_executable = "@CACHE_REPAIR_CMD@"
 
+	# Configuration option global/cache_restore_executable.
+	# The full path to the cache_restore command.
+	# LVM uses this command to restore generated data for a cache metadata device.
+	# Also see cache_restore_options.
+	# (See package device-mapper-persistent-data or thin-provisioning-tools)
+	# This configuration option has an automatic default value.
+	# cache_restore_executable = "@CACHE_RESTORE_CMD@"
+
 	# Configuration option global/cache_check_options.
 	# List of options passed to the cache_check command.
 	# With cache_check version 5.0 or newer you should include the option
@@ -1298,6 +1319,11 @@ global {
 	# List of options passed to the cache_repair command.
 	# This configuration option has an automatic default value.
 	# cache_repair_options = [ "" ]
+
+	# Configuration option global/cache_restore_options.
+	# List of options passed to the cache_restore command.
+	# This configuration option has an automatic default value.
+	# cache_restore_options = [ "" ]
 
 	# Configuration option global/vdo_format_executable.
 	# The full path to the vdoformat command.

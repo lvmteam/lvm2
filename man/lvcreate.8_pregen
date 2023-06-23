@@ -491,6 +491,8 @@ Create a thin LV that is a snapshot of an existing thin LV.
 [ \fB--type thin\fP ] (implied)
 .br
 .br
+[ \fB-T\fP|\fB--thin\fP ]
+.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
@@ -1917,6 +1919,8 @@ Create a thin LV that is a snapshot of an existing thin LV.
 .ad l
 [ \fB-T\fP|\fB--thin\fP ]
 .br
+[ \fB-s\fP|\fB--snapshot\fP ]
+.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
@@ -1936,6 +1940,8 @@ Create a thin LV that is a snapshot of an existing thin LV.
 .ad l
 [ \fB--type thin\fP ] (implied)
 .br
+.br
+[ \fB-s\fP|\fB--snapshot\fP ]
 .br
 [ COMMON_OPTIONS ]
 .ad b
