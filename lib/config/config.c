@@ -741,13 +741,13 @@ static struct dm_config_value *_get_def_array_values(struct cmd_context *cmd,
 	}
 	/* Proper value always starts with '#'. */
 	if (token[0] != '#')
-		goto bad;
+		goto_bad;
 
 	while (token) {
 		/* Move to type identifier. Error on no char. */
 		token++;
 		if (!token[0])
-			goto bad;
+			goto_bad;
 
 		/* Move to the actual value and decode any "##" into "#". */
 		p = token + 1;
