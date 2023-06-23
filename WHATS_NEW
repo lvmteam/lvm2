@@ -1,5 +1,6 @@
 version 2.03.22 - 
 =================================
+  Add lvm.conf thin_restore and cache_restore settings.
   Enhance lvm_import_vdo and use snapshot when converting VDO volume.
   Fix parsed of VDO metadata.
   Fix failing -S|--select for non-reporting cmds if using LV info/status fields.
