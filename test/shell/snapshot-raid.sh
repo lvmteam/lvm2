@@ -16,6 +16,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+aux have_raid 1 3 0 || skip
 which mkfs.ext4 || skip
 
 mount_dir="mnt"
