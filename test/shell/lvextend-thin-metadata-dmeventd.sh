@@ -48,7 +48,7 @@ fake_metadata_() {
 	for i in $(seq 10 $1)
 	do
 		echo ' <device dev_id="'$i'" mapped_blocks="30" transaction="0" creation_time="0" snap_time="0">'
-		echo '  <range_mapping origin_begin="0" data_begin="0" length="29" time="0"/>'
+		echo '  <range_mapping origin_begin="0" data_begin="0" length="30" time="0"/>'
 		echo ' </device>'
 		set +x
 	done
@@ -98,6 +98,10 @@ DATA=7200  # Newer version of thin-pool have hidden reserve, so use lower value
 test -z "$BIG_DATA" || DATA=7400
 fake_metadata_ "$DATA" 2 >data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv2"
+
+# Check tha restored metadata are OK for thin_check
+"$LVM_TEST_THIN_CHECK_CMD" "$DM_DEV_DIR/mapper/$vg-$lv2"
+
 # Swap volume with restored fake metadata
 lvconvert -y --chunksize 64k --thinpool $vg/pool --poolmetadata $vg/$lv2
 lvchange -ay $vg/pool
