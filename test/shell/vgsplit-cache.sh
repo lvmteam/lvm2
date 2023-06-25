@@ -20,6 +20,7 @@ SKIP_WITH_LVMPOLLD=1
 aux have_cache 1 3 0 || skip
 
 aux prepare_vg 7
+vgcfgbackup -f vgb $vg
 
 lvcreate -L5 -n $lv2 $vg "$dev2"
 lvcreate -L5 -n $lv3 $vg "$dev3"
@@ -78,7 +79,7 @@ vgremove -ff $vg1
 #
 # Check we handle pmspare for splitted VGs
 #
-aux prepare_vg 7
+vgcfgrestore -f vgb $vg
 
 # Create cache-pool and pmspare on single PV1
 lvcreate -L10 --type cache-pool $vg/cpool "$dev1"
@@ -100,7 +101,7 @@ vgremove $vg
 vgremove -f $vg1
 
 
-aux prepare_vg 7
+vgcfgrestore -f vgb $vg
 
 # Again - now with handling _pmspare by vgsplit
 lvcreate -L10 --type cache-pool $vg/cpool "$dev1"
