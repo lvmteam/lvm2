@@ -43,12 +43,6 @@ _test1() {
 
 	mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 
-	# we don't want fileA to be located too early in the fs,
-	# otherwise activating the LV will trigger the corruption
-	# to be found and corrected, leaving nothing for syncaction
-	# to find and correct.
-	dd if=/dev/urandom of=$mnt/rand16M bs=1M count=16
-
 	cp fileA $mnt
 	cp fileB $mnt
 	cp fileC $mnt
@@ -56,19 +50,30 @@ _test1() {
 	umount $mnt
 	lvchange -an $vg/$lv1
 
-	aux corrupt_dev "$dev1" BBBBBBBBBBBBBBBBB BBBBBBBBCBBBBBBBB
+	# Corrupting raid1 is simple - 1 leg needs to be modifed
+	# For raid5 corrupted block can be places on any of its leg.
+	for i in "$@" ; do
+		aux corrupt_dev "$i" BBBBBBBBBBBBBBBBB BBBBBBBBCBBBBBBBB
+	done
 
 	lvchange -ay $vg/$lv1
 
-	lvs -o integritymismatches $vg/${lv1}_rimage_0 |tee mismatch
-	grep 0 mismatch
+	# so without synchecking the array - integrity doesn't know yet about failure
+	check lv_field $vg/${lv1}_rimage_0 integritymismatches "0"
+	check lv_field $vg/${lv1}_rimage_1 integritymismatches "0"
+	[ $# -gt 2 ] && check lv_field $vg/${lv1}_rimage_2 integritymismatches "0"
 
 	lvchange --syncaction check $vg/$lv1
 
 	aux wait_recalc $vg/$lv1
 
-	lvs -o integritymismatches $vg/${lv1}_rimage_0 |tee mismatch
-	not grep 0 mismatch
+	# after synaction check - integrity should recognize faulty devices
+	baddev=0
+	for i in 0 1 2 ; do
+		[ "$i" -gt 1 ] && [ $# -lt 3 ] && continue  # only  raid5 has rimage_2
+		[ "$(get lv_field $vg/${lv1}_rimage_${i} integritymismatches)" = "0" ] || baddev=$(( baddev + 1 ))
+	done
+	[ "$baddev" -eq 1 ] || die "Unexpected number of integritymismatched devices ($baddev)!"
 
 	mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 	cmp -b $mnt/fileA fileA
@@ -81,12 +86,6 @@ _test2() {
 	mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 
 	mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-
-	# we don't want fileA to be located too early in the fs,
-	# otherwise activating the LV will trigger the corruption
-	# to be found and corrected, leaving nothing for syncaction
-	# to find and correct.
-	dd if=/dev/urandom of=$mnt/rand16M bs=1M count=16
 
 	cp fileA $mnt
 	cp fileB $mnt
@@ -104,19 +103,15 @@ _test2() {
 
 	lvchange -ay $vg/$lv1
 
-	lvs -o integritymismatches $vg/${lv1}_rimage_0 |tee mismatch
-	grep 0 mismatch
-	lvs -o integritymismatches $vg/${lv1}_rimage_1 |tee mismatch
-	grep 0 mismatch
+	check lv_field $vg/${lv1}_rimage_0 integritymismatches "0"
+	check lv_field $vg/${lv1}_rimage_1 integritymismatches "0"
 
 	lvchange --syncaction check $vg/$lv1
 
 	aux wait_recalc $vg/$lv1
 
-	lvs -o integritymismatches $vg/${lv1}_rimage_0 |tee mismatch
-	not grep 0 mismatch
-	lvs -o integritymismatches $vg/${lv1}_rimage_1 |tee mismatch
-	not grep 0 mismatch
+	not check lv_field $vg/${lv1}_rimage_0 integritymismatches "0"
+	not check lv_field $vg/${lv1}_rimage_1 integritymismatches "0"
 
 	mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 	cmp -b $mnt/fileA fileA
@@ -130,9 +125,8 @@ lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -l 6 $vg "$dev1" "$dev2"
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 aux wait_recalc $vg/$lv1
-_test1
-lvs -o integritymismatches $vg/$lv1 |tee mismatch
-not grep 0 mismatch
+_test1 "$dev1"
+not check $vg/$lv1 integritymismatches "0"
 lvchange -an $vg/$lv1
 lvconvert --raidintegrity n $vg/$lv1
 lvremove $vg/$lv1
@@ -144,8 +138,7 @@ aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 aux wait_recalc $vg/$lv1
 _test2
-lvs -o integritymismatches $vg/$lv1 |tee mismatch
-not grep 0 mismatch
+not check $vg/$lv1 integritymismatches "0"
 lvchange -an $vg/$lv1
 lvconvert --raidintegrity n $vg/$lv1
 lvremove $vg/$lv1
@@ -157,11 +150,9 @@ aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 aux wait_recalc $vg/${lv1}_rimage_2
 aux wait_recalc $vg/$lv1
-_test1
-lvs -o integritymismatches $vg/$lv1 |tee mismatch
-not grep 0 mismatch
+_test1 "$dev1" "$dev2" "$dev3"
+not check $vg/$lv1 integritymismatches "0"
 lvchange -an $vg/$lv1
 lvconvert --raidintegrity n $vg/$lv1
 lvremove $vg/$lv1
 vgremove -ff $vg
-
