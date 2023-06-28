@@ -283,14 +283,6 @@ static int _format_vdo_pool_data_lv(struct logical_volume *data_lv,
 	argv[args] = buf_args[args];
 	args++;
 
-	if (vtp->check_point_frequency) {
-		if (dm_snprintf(buf_args[args], sizeof(buf_args[0]), "--uds-checkpoint-frequency=%u",
-				vtp->check_point_frequency) < 0)
-			return_0;
-		argv[args] = buf_args[args];
-		args++;
-	}
-
 	/* Convert size to GiB units or one of these strings: 0.25, 0.50, 0.75 */
 	if (vtp->index_memory_size_mb >= 1024) {
 		if (dm_snprintf(buf_args[args], sizeof(buf_args[0]), "--uds-memory-size=%u",
@@ -516,8 +508,6 @@ int fill_vdo_target_params(struct cmd_context *cmd,
 		find_config_tree_int64(cmd, allocation_vdo_block_map_cache_size_mb_CFG, profile);
 	vtp->block_map_era_length =
 		find_config_tree_int(cmd, allocation_vdo_block_map_era_length_CFG, profile);
-	vtp->check_point_frequency =
-		find_config_tree_int(cmd, allocation_vdo_check_point_frequency_CFG, profile);
 	vtp->use_sparse_index =
 		find_config_tree_int(cmd, allocation_vdo_use_sparse_index_CFG, profile);
 	vtp->index_memory_size_mb =

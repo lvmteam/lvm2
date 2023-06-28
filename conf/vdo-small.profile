@@ -8,7 +8,6 @@ allocation {
 	vdo_minimum_io_size=4096
 	vdo_block_map_cache_size_mb=128
 	vdo_block_map_period=16380
-	vdo_check_point_frequency=0
 	vdo_use_sparse_index=0
 	vdo_index_memory_size_mb=256
 	vdo_slab_size_mb=2048

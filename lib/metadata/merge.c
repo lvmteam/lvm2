@@ -555,7 +555,6 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 		if (seg->vdo_params.minimum_io_size |
 		    seg->vdo_params.block_map_cache_size_mb |
 		    seg->vdo_params.block_map_era_length |
-		    seg->vdo_params.check_point_frequency |
 		    seg->vdo_params.index_memory_size_mb |
 		    seg->vdo_params.slab_size_mb |
 		    seg->vdo_params.max_discard |
