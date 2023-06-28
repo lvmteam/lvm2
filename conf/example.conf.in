@@ -650,11 +650,6 @@ allocation {
 	# This configuration option has an automatic default value.
 	# vdo_block_map_period = 16380
 
-	# Configuration option allocation/vdo_check_point_frequency.
-	# The default check point frequency for VDO volume.
-	# This configuration option has an automatic default value.
-	# vdo_check_point_frequency = 0
-
 	# Configuration option allocation/vdo_use_sparse_index.
 	# Enables sparse indexing for VDO volume.
 	# This configuration option has an automatic default value.

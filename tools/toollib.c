@@ -1319,7 +1319,6 @@ int get_vdo_settings(struct cmd_context *cmd,
 			// Settings bellow cannot be changed with lvchange command
 			is_lvchange = checked_lvchange;
 
-			DO_OFFLINE(check_point_frequency);
 			DO_OFFLINE(index_memory_size_mb);
 			DO_OFFLINE(minimum_io_size);
 			DO_OFFLINE(slab_size_mb);
@@ -1334,6 +1333,11 @@ int get_vdo_settings(struct cmd_context *cmd,
 					goto_out;
 				u |= VDO_CHANGE_OFFLINE;
 				continue;
+			}
+
+			if (_compare_vdo_option(cn->key, "check_point_frequency")) {
+				log_verbose("Ignoring deprecated --vdosettings option \"%s\" and its value.", cn->key);
+				continue; /* Accept & ignore deprecated option */
 			}
 
 			log_error("Unknown VDO setting \"%s\".", cn->key);
