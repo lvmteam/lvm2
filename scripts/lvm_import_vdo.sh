@@ -370,7 +370,7 @@ convert_non_lv_() {
 	fi
 
 	verbose "Moving VDO header."
-	output=$(dry "$VDO" convert $VDOCONF --force --name "$VDONAME")
+	output=$(dry "$VDO" convert $VDOCONF $VERB --force --name "$VDONAME")
 
 	if [ "$ABORT_AFTER_VDO_CONVERT" != "0" ] ; then
 		verbose "Aborting VDO coversion after moving VDO, volume is useless!"
@@ -384,7 +384,8 @@ convert_non_lv_() {
 	local vdo_offset=0
 	local vdo_non_converted=0
 	while IFS=  read -r line ; do
-		case "$line" in
+		# trim leading spaces
+		case "$(echo $line)" in
 		"Non converted"*) vdo_non_converted=1 ;;
 		"Length"*) vdo_length=${line##* = } ;;
 		"Conversion completed"*)
@@ -579,7 +580,7 @@ EOF
 	verbose "VDO conversion parameters: $VDO_ALLOCATION_PARAMS"
 
 	verbose "Stopping VDO volume."
-	dry "$VDO" stop $VDOCONF --name "$VDONAME"
+	dry "$VDO" stop $VDOCONF --name "$VDONAME" $VERB
 
 	# If user has not provided '--yes', prompt before conversion
 	if [ -z "$YES" ] && [ "$USE_VDO_DM_SNAPSHOT" != "1" ]; then
