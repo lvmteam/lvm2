@@ -3269,7 +3269,6 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		meta_alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
 
 		if (!(metadata_lv = alloc_pool_metadata(lv,
-							meta_name,
 							meta_readahead,
 							meta_stripes,
 							meta_stripe_size,
@@ -3426,7 +3425,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	 * Rename deactivated metadata LV to have _tmeta suffix.
 	 * Implicit checks if metadata_lv is visible.
 	 */
-	if (pool_metadata_name &&
+	if ((strcmp(metadata_lv->name, meta_name) != 0) &&
 	    !lv_rename_update(cmd, metadata_lv, meta_name, 0))
 		goto_bad;
 

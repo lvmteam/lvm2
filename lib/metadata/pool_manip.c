@@ -607,7 +607,7 @@ bad:
 }
 
 struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
-					   const char *name, uint32_t read_ahead,
+					   uint32_t read_ahead,
 					   uint32_t stripes, uint32_t stripe_size,
 					   uint32_t extents, alloc_policy_t alloc,
 					   struct dm_list *pvh)
@@ -637,9 +637,6 @@ struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 	/* FIXME: allocate properly space for metadata_lv */
 
 	if (!(metadata_lv = lv_create_single(pool_lv->vg, &lvc)))
-		return_0;
-
-	if (!lv_rename_update(pool_lv->vg->cmd, metadata_lv, name, 0))
 		return_0;
 
 	return metadata_lv;
