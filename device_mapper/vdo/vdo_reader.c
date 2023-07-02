@@ -128,6 +128,14 @@ struct vdo_volume_geometry {
 	struct vdo_index_config index_config;
 } __packed;
 
+struct vdo_volume_geometry_4 {
+	uint32_t release_version;
+	uint64_t nonce;
+	uuid_t uuid;
+	struct vdo_volume_region regions[VDO_VOLUME_REGION_COUNT];
+	struct vdo_index_config index_config;
+} __packed;
+
 /* Decoding mostly only some used stucture members */
 
 static void _vdo_decode_version(struct vdo_version_number *v)
@@ -154,6 +162,16 @@ static void _vdo_decode_volume_geometry(struct vdo_volume_geometry *vg)
 	vg->release_version = le32_to_cpu(vg->release_version);
 	vg->nonce = le64_to_cpu(vg->nonce);
 	vg->bio_offset = le64_to_cpu(vg->bio_offset);
+	_vdo_decode_geometry_region(&vg->regions[VDO_DATA_REGION]);
+}
+
+static void _vdo_decode_volume_geometry_4(struct vdo_volume_geometry *vg,
+					  struct vdo_volume_geometry_4 *vg_4)
+{
+	vg->release_version = le32_to_cpu(vg_4->release_version);
+	vg->nonce = le64_to_cpu(vg_4->nonce);
+	vg->bio_offset = 0;
+	vg->regions[VDO_DATA_REGION] = vg_4->regions[VDO_DATA_REGION];
 	_vdo_decode_geometry_region(&vg->regions[VDO_DATA_REGION]);
 }
 
@@ -185,6 +203,7 @@ bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks)
 	struct vdo_header h;
 	struct vdo_version_number vn;
 	struct vdo_volume_geometry vg;
+	struct vdo_volume_geometry_4 vg_4;
 	struct vdo_component_41_0 pvc;
 
 	*logical_blocks = 0;
@@ -221,17 +240,24 @@ bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks)
 	memcpy(&h, buffer + MAGIC_NUMBER_SIZE, sizeof(h));
 	_vdo_decode_header(&h);
 
-	if  (h.version.major_version != 5) {
-		log_debug_activation("Unsupported VDO version %u.%u.", h.version.major_version, h.version.minor_version);
-		goto err;
-	}
-
 	if (h.id != 5) {
 		log_debug_activation("Expected geometry VDO block instead of block %u.", h.id);
 		goto err;
 	}
-	memcpy(&vg, buffer + MAGIC_NUMBER_SIZE + sizeof(h), sizeof(vg));
-	_vdo_decode_volume_geometry(&vg);
+
+	switch (h.version.major_version) {
+	case 4:
+		memcpy(&vg_4, buffer + MAGIC_NUMBER_SIZE + sizeof(h), sizeof(vg_4));
+		_vdo_decode_volume_geometry_4(&vg, &vg_4);
+		break;
+	case 5:
+		memcpy(&vg, buffer + MAGIC_NUMBER_SIZE + sizeof(h), sizeof(vg));
+		_vdo_decode_volume_geometry(&vg);
+		break;
+	default:
+		log_debug_activation("Unsupported VDO version %u.%u.", h.version.major_version, h.version.minor_version);
+		goto err;
+	}
 
 	regpos = (vg.regions[VDO_DATA_REGION].start_block - vg.bio_offset) * 4096;
 
