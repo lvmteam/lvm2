@@ -147,7 +147,7 @@ Version 2.03.12 - 07th May 2021
   Fix IMSM MD RAID detection on 4k devices.
   Check for presence of VDO target before starting any conversion.
   Support metatadata profiles with volume VDO pool conversions.
-  Support -Zn for conversion of already formated VDO pools.
+  Support -Zn for conversion of already formatted VDO pools.
   Avoid removing LVs on error path of lvconvert during creation volumes.
   Fix crashing lvdisplay when thin volume was waiting for merge.
   Support option --errorwhenfull when converting volume to thin-pool.

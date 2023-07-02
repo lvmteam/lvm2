@@ -7,19 +7,19 @@ The LV name is chosen by lvcreate.
 .br
 .B lvcreate -i 3 -I 8 -L 100m vg00
 .P
-Create a raid1 LV with two images, and a useable size of 500 MiB. This
+Create a raid1 LV with two images, and a usable size of 500 MiB. This
 operation requires two devices, one for each mirror image. RAID metadata
 (superblock and bitmap) is also included on the two devices.
 .br
 .B lvcreate --type raid1 -m1 -L 500m -n mylv vg00
 .P
-Create a mirror LV with two images, and a useable size of 500 MiB.
+Create a mirror LV with two images, and a usable size of 500 MiB.
 This operation requires three devices: two for mirror images and
 one for a disk log.
 .br
 .B lvcreate --type mirror -m1 -L 500m -n mylv vg00
 .P
-Create a mirror LV with 2 images, and a useable size of 500 MiB.
+Create a mirror LV with 2 images, and a usable size of 500 MiB.
 This operation requires 2 devices because the log is in memory.
 .br
 .B lvcreate --type mirror -m1 --mirrorlog core -L 500m -n mylv vg00

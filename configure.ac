@@ -625,7 +625,7 @@ AC_DEFINE_UNQUOTED([VDO_FORMAT_CMD], ["$VDO_FORMAT_CMD"],
 		   [The path to 'vdoformat', if available.])
 #
 # Do we need to use the API??
-# Do we want to link lvm2 with a big library for vdoformating ?
+# Do we want to link lvm2 with a big library for vdoformatting ?
 #
 #AC_ARG_WITH(vdo-include,
 #	    AS_HELP_STRING([--with-vdo-include=PATH],

@@ -250,7 +250,7 @@ static int _format_vdo_pool_data_lv(struct logical_volume *data_lv,
 	FILE *f;
 	uint64_t lb;
 	unsigned slabbits;
-	unsigned reformating = 0;
+	unsigned reformatting = 0;
 	int args = 1;
 	char buf_args[5][128];
 	char buf[256]; /* buffer for short disk header (64B) */
@@ -345,7 +345,7 @@ static int _format_vdo_pool_data_lv(struct logical_volume *data_lv,
 		if ((c = strchr(buf, '\n')))
 			*c = 0; /* cut last '\n' away */
 		if (buf[0]) {
-			if (reformating)
+			if (reformatting)
 				log_verbose("  %s", buf); /* Print vdo_format messages */
 			else
 				log_print_unless_silent("  %s", buf); /* Print vdo_format messages */
@@ -424,14 +424,14 @@ struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 			return NULL;
 		}
 	} else {
-		log_verbose("Skiping VDO formatting %s.", display_lvname(data_lv));
+		log_verbose("Skipping VDO formatting %s.", display_lvname(data_lv));
 		/* TODO: parse existing VDO data and retrieve vdo_logical_size */
 		if (!*virtual_extents)
 			vdo_logical_size = data_lv->size;
 	}
 
 	if (!deactivate_lv(data_lv->vg->cmd, data_lv)) {
-		log_error("Cannot deactivate formated VDO pool volume %s.",
+		log_error("Cannot deactivate formatted VDO pool volume %s.",
 			  display_lvname(data_lv));
 		return NULL;
 	}
