@@ -1229,6 +1229,7 @@ int cache_set_params(struct lv_segment *seg,
 		if (!pool_seg->chunk_size &&
 		    /* TODO: some calc_policy solution for cache ? */
 		    !recalculate_pool_chunk_size_with_dev_hints(pool_seg->lv,
+								seg_lv(pool_seg, 0),
 								THIN_CHUNK_SIZE_CALC_METHOD_GENERIC))
 			return_0;
 	}

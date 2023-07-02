@@ -3409,7 +3409,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		seg->zero_new_blocks = zero_new_blocks;
 		if (crop_metadata == THIN_CROP_METADATA_NO)
 			pool_lv->status |= LV_CROP_METADATA;
-		if (!recalculate_pool_chunk_size_with_dev_hints(pool_lv, chunk_calc))
+		if (!recalculate_pool_chunk_size_with_dev_hints(pool_lv, data_lv, chunk_calc))
 			goto_bad;
 
 		/* Error when full */

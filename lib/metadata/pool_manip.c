@@ -416,9 +416,9 @@ int validate_pool_chunk_size(struct cmd_context *cmd,
 }
 
 int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
+					       struct logical_volume *pool_data_lv,
 					       int chunk_size_calc_policy)
 {
-	struct logical_volume *pool_data_lv;
 	struct lv_segment *seg;
 	struct physical_volume *pv;
 	struct cmd_context *cmd = pool_lv->vg->cmd;
@@ -439,7 +439,6 @@ int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
 		return 0;
 	}
 
-	pool_data_lv = seg_lv(first_seg(pool_lv), 0);
 	dm_list_iterate_items(seg, &pool_data_lv->segments) {
 		switch (seg_type(seg, 0)) {
 		case AREA_PV:

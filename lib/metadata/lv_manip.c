@@ -9457,7 +9457,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		first_seg(lv)->discards = lp->discards;
 		if ((first_seg(lv)->crop_metadata = lp->crop_metadata) == THIN_CROP_METADATA_NO)
 			lv->status |= LV_CROP_METADATA;
-		if (!recalculate_pool_chunk_size_with_dev_hints(lv, lp->thin_chunk_size_calc_policy)) {
+		if (!recalculate_pool_chunk_size_with_dev_hints(lv, seg_lv(first_seg(lv), 0),
+								lp->thin_chunk_size_calc_policy)) {
 			stack;
 			goto revert_new_lv;
 		}
