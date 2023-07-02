@@ -1133,18 +1133,18 @@ AC_DEFINE_UNQUOTED(DEFAULT_USE_BLKID_WIPING, [$DEFAULT_USE_BLKID_WIPING],
 		   [Use blkid wiping by default.])
 
 ################################################################################
-dnl -- Enable udev synchronisation
-AC_MSG_CHECKING([whether to enable synchronisation with udev processing])
+dnl -- Enable udev synchronization
+AC_MSG_CHECKING([whether to enable synchronization with udev processing])
 AC_ARG_ENABLE(udev_sync,
 	      AS_HELP_STRING([--enable-udev_sync],
-			     [enable synchronisation with udev processing]),
+			     [enable synchronization with udev processing]),
 	      UDEV_SYNC=$enableval, UDEV_SYNC="no")
 AC_MSG_RESULT([$UDEV_SYNC])
 
 AS_IF([test "$UDEV_SYNC" = "yes"], [
 	PKG_CHECK_MODULES(UDEV, libudev >= 143, [UDEV_PC="libudev"])
 	UDEV_STATIC_LIBS=$("$PKG_CONFIG" --static --libs libudev)
-	AC_DEFINE([UDEV_SYNC_SUPPORT], 1, [Define to 1 to enable synchronisation with udev processing.])
+	AC_DEFINE([UDEV_SYNC_SUPPORT], 1, [Define to 1 to enable synchronization with udev processing.])
 
 	AC_CHECK_LIB(udev, udev_device_get_is_initialized, AC_DEFINE([HAVE_LIBUDEV_UDEV_DEVICE_GET_IS_INITIALIZED], 1,
 	  [Define to 1 if udev_device_get_is_initialized is available.]))
@@ -1152,10 +1152,10 @@ AS_IF([test "$UDEV_SYNC" = "yes"], [
 ])
 
 dnl -- Enable udev rules
-AC_MSG_CHECKING([whether to enable installation of udev rules required for synchronisation])
+AC_MSG_CHECKING([whether to enable installation of udev rules required for synchronization])
 AC_ARG_ENABLE(udev_rules,
 	      AS_HELP_STRING([--enable-udev_rules],
-			     [install rule files needed for udev synchronisation]),
+			     [install rule files needed for udev synchronization]),
 	      UDEV_RULES=$enableval, UDEV_RULES=$UDEV_SYNC)
 AC_MSG_RESULT([$UDEV_RULES])
 

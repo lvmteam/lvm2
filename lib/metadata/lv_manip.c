@@ -9302,7 +9302,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		init_mirror_in_sync(lp->nosync);
 
 		if (lp->nosync) {
-			log_warn("WARNING: New %s won't be synchronised. "
+			log_warn("WARNING: New %s won't be synchronized. "
 				 "Don't read what you didn't write!",
 				 lp->segtype->name);
 			status |= LV_NOTSYNCED;

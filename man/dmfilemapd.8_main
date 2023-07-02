@@ -138,7 +138,7 @@ and placing a new file at the same path.
 .
 .SH LIMITATIONS
 .
-The daemon attempts to maintain good synchronisation between the file
+The daemon attempts to maintain good synchronization between the file
 extents and the regions contained in the group, however, since the
 daemon can only react to new allocations once they have been written,
 there are inevitably some IO events that cannot be counted when a

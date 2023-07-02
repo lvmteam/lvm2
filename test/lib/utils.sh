@@ -210,7 +210,7 @@ STACKTRACE() {
 }
 
 init_udev_transaction() {
-	if test "$DM_UDEV_SYNCHRONISATION" = 1; then
+	if test "$DM_UDEV_SYNCHRONIZATION" = 1; then
 		local cookie
 		cookie=$(dmsetup udevcreatecookie)
 		# Cookie is not generated if udev is not running!
@@ -219,14 +219,14 @@ init_udev_transaction() {
 }
 
 finish_udev_transaction() {
-	if test "$DM_UDEV_SYNCHRONISATION" = 1 && test -n "${DM_UDEV_COOKIE-}" ; then
+	if test "$DM_UDEV_SYNCHRONIZATION" = 1 && test -n "${DM_UDEV_COOKIE-}" ; then
 		dmsetup udevreleasecookie || true
 		unset DM_UDEV_COOKIE
 	fi
 }
 
 teardown_udev_cookies() {
-	if test "$DM_UDEV_SYNCHRONISATION" = 1; then
+	if test "$DM_UDEV_SYNCHRONIZATION" = 1; then
 		# Delete any cookies created more than 10 minutes ago
 		# and not used in the last 10 minutes.
 		# Log only non-zero semaphores count

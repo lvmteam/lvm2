@@ -2310,7 +2310,7 @@ static int _check_semaphore_is_supported(void)
 
 	if (maxid < 0) {
 		log_warn("Kernel not configured for semaphores (System V IPC). "
-			 "Not using udev synchronisation code.");
+			 "Not using udev synchronization code.");
 		return 0;
 	}
 
@@ -2333,7 +2333,7 @@ static int _check_udev_is_running(void)
 
 	if (!(r = udev_queue_get_udev_is_active(udev_queue)))
 		log_debug_activation("Udev is not running. "
-				     "Not using udev synchronisation code.");
+				     "Not using udev synchronization code.");
 
 	udev_queue_unref(udev_queue);
 	udev_unref(udev);

@@ -533,7 +533,7 @@ Do not allow udev to manage nodes for devices in device-mapper directory.
 .
 .TP
 .B --noudevsync
-Do not synchronise with udev when creating, renaming or removing devices.
+Do not synchronize with udev when creating, renaming or removing devices.
 .
 .TP
 .BR -o | --options " " \fIoptions
@@ -570,7 +570,7 @@ See below for more information on the table format.
 .
 .TP
 .B --udevcookie \fIcookie
-Use cookie for udev synchronisation.
+Use cookie for udev synchronization.
 Note: Same cookie should be used for same type of operations i.e. creation of
 multiple different devices. It's not advised to combine different
 operations on the single device.
@@ -589,7 +589,7 @@ Produce additional output.
 .
 .TP
 .B --verifyudev
-If udev synchronisation is enabled, verify that udev operations get performed
+If udev synchronization is enabled, verify that udev operations get performed
 correctly and try to fix up the device nodes afterwards if not.
 .
 .TP

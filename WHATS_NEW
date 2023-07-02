@@ -3233,7 +3233,7 @@ Version 2.02.68 - 23rd June 2010
   Add device name and offset to raw_read_mda_header error messages.
   Honour log argument when down-converting stacked mirror.
   Sleep to workaround clvmd -S race: socket closed early and server drops cmd.
-  Use early udev synchronisation and update of dev nodes for clustered mirrors.
+  Use early udev synchronization and update of dev nodes for clustered mirrors.
   Remove incorrect inclusion of kdev_t.h from cmirrord/functions.h.
   Add man pages for lvmconf and non-existent lvmsadc and lvmsar tools.
   Exit successfully when using -o help (but not -o +help) with LVM reports.

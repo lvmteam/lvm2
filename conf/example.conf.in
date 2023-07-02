@@ -1811,7 +1811,7 @@ activation {
 	# Configuration option activation/polling_interval.
 	# Check pvmove or lvconvert progress at this interval (seconds).
 	# When pvmove or lvconvert must wait for the kernel to finish
-	# synchronising or merging data, they check and report progress at
+	# synchronizing or merging data, they check and report progress at
 	# intervals of this number of seconds. If this is set to 0 and there
 	# is only one thing to wait for, there are no progress reports, but
 	# the process is awoken immediately once the operation is complete.

@@ -1904,7 +1904,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		/*
 		 * Prevent udev vs. libdevmapper race when processing nodes
 		 * and symlinks. This can happen when the udev rules are
-		 * installed and udev synchronisation code is enabled in
+		 * installed and udev synchronization code is enabled in
 		 * libdevmapper but the software using libdevmapper does not
 		 * make use of it (by not calling dm_task_set_cookie before).
 		 * We need to instruct the udev rules not to be applied at
@@ -1914,7 +1914,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		if (!dmt->cookie_set && dm_udev_get_sync_support()) {
 			log_debug_activation("Cookie value is not set while trying to call %s "
 					     "ioctl. Please, consider using libdevmapper's udev "
-					     "synchronisation interface or disable it explicitly "
+					     "synchronization interface or disable it explicitly "
 					     "by calling dm_udev_set_sync_support(0).",
 					     dmt->type == DM_DEVICE_RESUME ? "DM_DEVICE_RESUME" :
 					     dmt->type == DM_DEVICE_REMOVE ? "DM_DEVICE_REMOVE" :

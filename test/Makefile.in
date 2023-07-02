@@ -68,7 +68,7 @@ endif
 SHELL_PATH_SQ := $(subst ','\'',$(SHELL_PATH))
 
 ifeq ("@UDEV_SYNC@", "yes")
-dm_udev_synchronisation = 1
+dm_udev_synchronization = 1
 endif
 
 all: .tests-stamp
@@ -287,7 +287,7 @@ lib/flavour-%: $(srcdir)/lib/flavour-%.sh .lib-dir-stamp
 
 lib/paths-common: $(srcdir)/Makefile.in Makefile .lib-dir-stamp
 	$(SHOW) "    [PATHS] $@"
-	$(Q) echo 'DM_UDEV_SYNCHRONISATION=$(dm_udev_synchronisation)' >> $@-t
+	$(Q) echo 'DM_UDEV_SYNCHRONIZATION=$(dm_udev_synchronization)' >> $@-t
 	$(Q) echo 'LVMPOLLD_PIDFILE="@LVMPOLLD_PIDFILE@"' >> $@-t
 	$(Q) echo 'DMEVENTD_PIDFILE="@DMEVENTD_PIDFILE@"' >> $@-t
 	$(Q) echo 'LVM_TEST_THIN_CHECK_CMD=$${LVM_TEST_THIN_CHECK_CMD-@THIN_CHECK_CMD@}' >> $@-t
@@ -298,7 +298,7 @@ lib/paths-common: $(srcdir)/Makefile.in Makefile .lib-dir-stamp
 	$(Q) echo 'LVM_TEST_CACHE_DUMP_CMD=$${LVM_TEST_CACHE_DUMP_CMD-@CACHE_DUMP_CMD@}' >> $@-t
 	$(Q) echo 'LVM_TEST_CACHE_REPAIR_CMD=$${LVM_TEST_CACHE_REPAIR_CMD-@CACHE_REPAIR_CMD@}' >> $@-t
 	$(Q) echo 'LVM_TEST_CACHE_RESTORE_CMD=$${LVM_TEST_CACHE_RESTORE_CMD-@CACHE_RESTORE_CMD@}' >> $@-t
-	$(Q) echo 'export DM_UDEV_SYNCHRONISATION THIN RAID CACHE\' >> $@-t
+	$(Q) echo 'export DM_UDEV_SYNCHRONIZATION THIN RAID CACHE\' >> $@-t
 	$(Q) echo ' LVM_TEST_THIN_CHECK_CMD LVM_TEST_THIN_DUMP_CMD LVM_TEST_THIN_REPAIR_CMD LVM_TEST_THIN_RESTORE_CMD\' >> $@-t
 	$(Q) echo ' LVM_TEST_CACHE_CHECK_CMD LVM_TEST_CACHE_DUMP_CMD LVM_TEST_CACHE_REPAIR_CMD LVM_TEST_CACHE_RESTORE_CMD' >> $@-t
 	$(Q) mv $@-t $@

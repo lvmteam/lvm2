@@ -565,7 +565,7 @@ arg(notifydbus_ARG, '\0', "notifydbus", 0, 0, 0,
     "notify_dbus config setting is disabled.\n")
 
 arg(noudevsync_ARG, '\0', "noudevsync", 0, 0, 0,
-    "Disables udev synchronisation. The process will not wait for notification\n"
+    "Disables udev synchronization. The process will not wait for notification\n"
     "from udev. It will continue irrespective of any possible udev processing\n"
     "in the background. Only use this if udev is not running or has rules that\n"
     "ignore the devices LVM creates.\n")

@@ -1122,7 +1122,7 @@ Version 1.02.37 - 15th September 2009
 Version 1.02.36 - 6th August 2009
 =================================
   Add udevcookies, udevcomplete, udevcomplete_all and --noudevwait to dmsetup.
-  Add libdevmapper functions to support synchronisation with udev.
+  Add libdevmapper functions to support synchronization with udev.
 
 Version 1.02.35 - 28th July 2009
 ================================

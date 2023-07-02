@@ -1779,7 +1779,7 @@ static int _set_up_udev_support(const char *dev_dir)
 	 * has not done its job correctly, e.g. the nodes were not created.
 	 * If using udev transactions by specifying existing cookie value,
 	 * we need to disable node creation by libdevmapper completely,
-	 * disabling any fallback actions, since any synchronisation happens
+	 * disabling any fallback actions, since any synchronization happens
 	 * at the end of the transaction only. We need to do this to prevent
 	 * races between udev and libdevmapper but only in case udev "dev path"
 	 * is the same as "dev path" used by libdevmapper.

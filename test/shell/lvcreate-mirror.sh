@@ -26,7 +26,7 @@ check mirror_images_redundant $vg $lv1
 # 2-way mirror with disklog, 3 PVs
 # lvcreate --nosync is in 100% sync after creation (bz429342)
 lvcreate -aey -l2 --type mirror -m1 --nosync -n $lv2 $vg "$dev1" "$dev2" "$dev3":0-1 2>&1 | tee out
-grep "New mirror won't be synchronised." out
+grep "New mirror won't be synchronized." out
 check lv_field $vg/$lv2 copy_percent "100.00"
 check mirror_images_redundant $vg $lv2
 check mirror_log_on $vg $lv2 "$dev3"

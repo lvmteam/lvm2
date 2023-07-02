@@ -3740,7 +3740,7 @@ struct dm_pool *dm_config_memory(struct dm_config_tree *cft);
 int dm_cookie_supported(void);
 
 /*
- * Udev synchronisation functions.
+ * Udev synchronization functions.
  */
 void dm_udev_set_sync_support(int sync_with_udev);
 int dm_udev_get_sync_support(void);

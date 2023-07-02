@@ -1712,8 +1712,8 @@ Optional Features:
   --disable-app-machineid disable LVM system ID using app-specific machine-id
   --disable-blkid_wiping  disable libblkid detection of signatures when wiping
                           and use native code instead
-  --enable-udev_sync      enable synchronisation with udev processing
-  --enable-udev_rules     install rule files needed for udev synchronisation
+  --enable-udev_sync      enable synchronization with udev processing
+  --enable-udev_rules     install rule files needed for udev synchronization
   --enable-udev-rule-exec-detection
                           enable executable path detection in udev rules
   --enable-units-compat   enable output compatibility with old versions that
@@ -13156,8 +13156,8 @@ printf "%s\n" "#define DEFAULT_USE_BLKID_WIPING $DEFAULT_USE_BLKID_WIPING" >>con
 
 
 ################################################################################
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to enable synchronisation with udev processing" >&5
-printf %s "checking whether to enable synchronisation with udev processing... " >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to enable synchronization with udev processing" >&5
+printf %s "checking whether to enable synchronization with udev processing... " >&6; }
 # Check whether --enable-udev_sync was given.
 if test ${enable_udev_sync+y}
 then :
@@ -13314,8 +13314,8 @@ fi
 
 fi
 
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to enable installation of udev rules required for synchronisation" >&5
-printf %s "checking whether to enable installation of udev rules required for synchronisation... " >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to enable installation of udev rules required for synchronization" >&5
+printf %s "checking whether to enable installation of udev rules required for synchronization... " >&6; }
 # Check whether --enable-udev_rules was given.
 if test ${enable_udev_rules+y}
 then :

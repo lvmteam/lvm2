@@ -1696,7 +1696,7 @@ cfg(activation_monitoring_CFG, "monitoring", activation_CFG_SECTION, CFG_DEFAULT
 cfg(activation_polling_interval_CFG, "polling_interval", activation_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_INTERVAL, vsn(2, 2, 63), NULL, 0, NULL,
 	"Check pvmove or lvconvert progress at this interval (seconds).\n"
 	"When pvmove or lvconvert must wait for the kernel to finish\n"
-	"synchronising or merging data, they check and report progress at\n"
+	"synchronizing or merging data, they check and report progress at\n"
 	"intervals of this number of seconds. If this is set to 0 and there\n"
 	"is only one thing to wait for, there are no progress reports, but\n"
 	"the process is awoken immediately once the operation is complete.\n")

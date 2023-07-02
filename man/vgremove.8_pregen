@@ -177,7 +177,7 @@ incorrect results.
 .HP
 \fB--noudevsync\fP
 .br
-Disables udev synchronisation. The process will not wait for notification
+Disables udev synchronization. The process will not wait for notification
 from udev. It will continue irrespective of any possible udev processing
 in the background. Only use this if udev is not running or has rules that
 ignore the devices LVM creates.
