@@ -45,7 +45,7 @@ pvcreate "$DM_DEV_DIR/$vg1/$lv"
 vgcreate $vg -s 64K "$dev4" "$DM_DEV_DIR/$vg1/$lv"
 
 lvcreate -L1T -n $lv1 $vg
-invalid lvconvert --yes -c 8M --type thin --poolmetadatasize 1G $vg/$lv1
+lvconvert --yes -c 8M --type thin --poolmetadatasize 1G $vg/$lv1
 
 # needs some --cachepool or --thinpool
 invalid lvconvert --yes --poolmetadatasize 1G $vg/$lv1
