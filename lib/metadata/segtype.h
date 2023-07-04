@@ -221,6 +221,8 @@ struct dev_manager;
 #define seg_is_vdo(seg)		segtype_is_vdo((seg)->segtype)
 #define seg_is_vdo_pool(seg)	segtype_is_vdo_pool((seg)->segtype)
 #define seg_is_virtual(seg)	segtype_is_virtual((seg)->segtype)
+#define seg_is_error(seg)	segtype_is_error((seg)->segtype)
+#define seg_is_zero(seg)	segtype_is_zero((seg)->segtype)
 #define seg_unknown(seg)	segtype_is_unknown((seg)->segtype)
 #define seg_can_split(seg)	segtype_can_split((seg)->segtype)
 #define seg_cannot_be_zeroed(seg)	segtype_cannot_be_zeroed((seg)->segtype)

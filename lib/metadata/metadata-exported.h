@@ -277,6 +277,9 @@
 
 #define lv_is_removed(lv)	(((lv)->status & LV_REMOVED) ? 1 : 0)
 
+#define lv_is_zero(lv) 		((dm_list_size(&lv->segments) == 1) && seg_is_zero(first_seg(lv)))
+#define lv_is_error(lv)		((dm_list_size(&lv->segments) == 1) && seg_is_error(first_seg(lv)))
+
 /* Recognize component LV (matching lib/misc/lvm-string.c _lvname_has_reserved_component_string()) */
 #define lv_is_component(lv) (lv_is_cache_origin(lv) || \
 			     lv_is_writecache_origin(lv) || \
