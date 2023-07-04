@@ -502,6 +502,39 @@ LV1 types: linear striped thin cache raid error zero
 .P
 \(em
 .P
+Convert LV to a thin LV, using LV as thin-pool data volume.
+.br
+.P
+\fBlvconvert\fP \fB--type\fP \fBthin\fP \fILV1\fP
+.br
+.RS 4
+.ad l
+[ \fB-T\fP|\fB--thin\fP ]
+.br
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.br
+[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.br
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--poolmetadata\fP \fILV\fP ]
+.br
+[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+.br
+[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--metadataprofile\fP \fIString\fP ]
+.br
+[ COMMON_OPTIONS ]
+.ad b
+.RE
+.P
+.RS 4
+LV1 types: linear striped cache vdo raid error zero writecache
+.RE
+.P
+\(em
+.P
 Attach a cache pool to an LV, converts the LV to type cache.
 .br
 .P
@@ -1725,6 +1758,40 @@ Convert LV to a thin LV, using the original LV as an external origin.
 .P
 .RS 4
 LV1 types: linear striped thin cache raid error zero
+.RE
+.P
+\(em
+.P
+Convert LV to a thin LV, using LV as thin-pool data volume.
+.br
+.P
+\fBlvconvert\fP \fB-T\fP|\fB--thin\fP \fILV1\fP
+.br
+.RS 4
+.ad l
+[ \fB--type thin\fP ] (implied)
+.br
+.br
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+.br
+[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.br
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--poolmetadata\fP \fILV\fP ]
+.br
+[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+.br
+[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--metadataprofile\fP \fIString\fP ]
+.br
+[ COMMON_OPTIONS ]
+.ad b
+.RE
+.P
+.RS 4
+LV1 types: linear striped cache vdo raid error zero writecache
 .RE
 .P
 \(em

@@ -300,7 +300,20 @@ be activated. You have to deactivate the VDODataLV first to continue to use the 
 .SS \n[step]. Stacking VDO
 .
 You can convert or stack a VDOPooLV with these currently supported
-volume types: linear, stripe, raid, and cache with cachepool.
+volume types: linear, stripe, raid and cache with cachepool.
+.
+.SS \n[step]. Using multiple volumes using same VDOPoolLV
+.
+You can convert existing VDO LV into a thin volume. After this conversion
+you can create a thin snapshot or you can add more thin volumes
+with thin-pool named after orignal LV name LV_tpool0.
+.P
+.I Example
+.nf
+# lvcreate --type vdo -L 5G -V 10G -n vdo1 vg/vdopool
+# lvconvert --type thin vg/vdo1
+# lvcreate -V20 vg/vdo1_tpool0
+.fi
 .
 .SS \n+[step]. VDOPoolLV on top of raid
 .

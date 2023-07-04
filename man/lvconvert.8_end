@@ -84,6 +84,11 @@ Replace the maximum of 2 PVs /dev/sd[bc]1 with PVs /dev/sd[gh]1 in a raid6 LV.
 .br
 .B lvconvert --replace /dev/sdb1 --replace /dev/sdc1 vg/lvol1 /dev/sd[gh]1
 .P
+Convert a thick LV into a thin-pool data volume and continue using this LV
+through thinLV and for the conversion set the pool metadata size to 1GiB.
+.br
+.B lvconvert --type thin --poolmetadatasize 1G vg/lvol1
+.P
 Convert an LV into a thin LV in the specified thin pool.  The existing LV
 is used as an external read-only origin for the new thin LV.
 .br

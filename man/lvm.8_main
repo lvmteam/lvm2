@@ -518,6 +518,7 @@ Prepends source file name and code line number with libdm debugging.
 .BR lvm (8),
 .BR lvm.conf (5),
 .BR lvmconfig (8),
+.BR lvmdevices (8),
 .P
 .BR pvchange (8),
 .BR pvck (8),
@@ -540,6 +541,7 @@ Prepends source file name and code line number with libdm debugging.
 .BR vgextend (8),
 .BR vgimport (8),
 .BR vgimportclone (8),
+.BR vgimportdevices (8),
 .BR vgmerge (8),
 .BR vgmknodes (8),
 .BR vgreduce (8),
@@ -572,12 +574,14 @@ Prepends source file name and code line number with libdm debugging.
 .BR lvmlockctl (8),
 .BR cmirrord (8),
 .BR lvmdbusd (8),
+.BR fsadm (8),
 .P
 .BR lvmsystemid (7),
 .BR lvmreport (7),
+.BR lvmcache (7),
 .BR lvmraid (7),
 .BR lvmthin (7),
-.BR lvmcache (7),
+.BR lvmvdo (7),
 .BR lvmautoactivation (7),
 .P
 .BR dmsetup (8),

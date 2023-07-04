@@ -207,11 +207,35 @@ Create a snapshot of the first snapshot:
   thin1s2   vg Vwi---tz-k 1.00t pool0 thin1
   thin1s1s1 vg Vwi---tz-k 1.00t pool0 thin1s1
 .
+.SS \n+[step]. Create ThinLV with ThinPoolLV
+.
+Create a new thin LV together with thin pool LV and let lvm2
+to allocate data and metadata volume.
+.P
+.B lvcreate -T -n ThinLV -V VirtualSize -L PoolSize VG/ThinPoolLV
+.P
+.I Example
+.br
+Create a 50MiB thin LV and 10MiB thin pool:
+.br
+# lvcreate -T -n thin -V 52M -L 12M vg/pool
+.P
+# lvs -a vg
+  LV              VG Attr       LSize  Pool Origin Data% Meta%
+  [lvol0_pmspare] vg ewi-------  4,00m
+  pool            vg twi-aotz-- 12,00m             0,00  10,94
+  [pool_tdata]    vg Twi-ao---- 12,00m
+  [pool_tmeta]    vg ewi-ao----  4,00m
+  thin            vg Vwi-a-tz-- 52,00m pool        0,00
+.
 .SS \n+[step]. Activate SnapLV
 .
 Thin snapshots are created with the persistent "activation skip"
 flag, indicated by the "k" attribute.  Use -K with lvchange
 or vgchange to activate thin snapshots with the "k" attribute.
+User can preset default behavior with
+.BR lvm.conf (5)
+.BR auto_set_activation_skip .
 .P
 .B lvchange -ay -K VG/SnapLV
 .P
@@ -222,6 +246,31 @@ or vgchange to activate thin snapshots with the "k" attribute.
 # lvs vg/thin1s1
   LV      VG Attr       LSize Pool  Origin
   thin1s1 vg Vwi-a-tz-k 1.00t pool0 thin1
+.
+.SS \n+[step]. Convert thick LV to thin LV
+.
+Convert existing thick LV (linear, stripe,...) to thin LV with move of
+existing data to thin pool and using thin LV from such thin pool.
+Once the volume is converted, user is using it like ordinary thin-pool.
+Note: Conversion cannot be reverted and thin volume cannot be reverted
+back to thick LV type.
+.P
+.B lvconvert --type thin VG/ThickLV
+.P
+.I Example
+.br
+Create thick 12MiB LV.
+.br
+# lvcreate -L 12M -n thick vg
+.P
+Convert LV to a thin pool with chunk size 256KiB.
+.br
+# lvconvert --thin --chunksize 256K vg/thick
+.P
+# lvs -o+chunksize vg
+  LV           VG Attr       LSize  Pool         Origin Data%  Meta% Chunk
+  thick        vg Vwi-a-tz-- 12,00m thick_tpool0        100,00            0
+  thick_tpool0 vg twi---tz-- 12,00m                     100,00 10,94 256,00k
 .
 .SH THIN TOPICS
 .
@@ -304,7 +353,7 @@ to use fast devices for the metadata LV.
 .P
 .B lvcreate -n ThinDataLV -L LargeSize VG LargePV
 .br
-.B lvcreate -n ThinMetaLV -L SmallSize VG SmallPV
+.B lvcreate -n ThinMetaLV -L SmallSize VG FastPV
 .br
 .B lvconvert --type thin-pool --poolmetadata VG/ThinMetaLV VG/ThinDataLV
 .P
@@ -376,21 +425,27 @@ If thin pool metadata is damaged, it may be repairable.
 Checking and repairing thin pool metadata is analogous to
 running fsck/repair on a file system.
 .P
-When a thin pool LV is activated, lvm runs the thin_check command
-to check the correctness of the metadata on the pool metadata LV.
+When a thin pool LV is activated, lvm runs the
+.BR thin_check (8)
+command to check the correctness of the metadata on the pool metadata LV.
 .P
 .BR lvm.conf (5)
 .B thin_check_executable
 .br
-can be set to an empty string ("") to disable the thin_check step.
-This is not recommended.
+can be set to an empty string ("") to disable the
+.BR thin_check (8)
+step. This is not recommended.
 .P
 .BR lvm.conf (5)
 .B thin_check_options
 .br
-controls the command options used for the thin_check command.
+controls the command options used for the
+.BR thin_check (8)
+command.
 .P
-If the thin_check command finds a problem with the metadata,
+If the
+.BR thin_check (8)
+command finds a problem with the metadata,
 the thin pool LV is not activated, and the thin pool metadata needs
 to be repaired.
 .P
@@ -409,7 +464,9 @@ Repair performs the following steps:
 .IP \n[step] 3
 Creates a new, repaired copy of the metadata.
 .br
-lvconvert runs the thin_repair command to read damaged metadata
+lvconvert runs the
+.BR thin_repair (8)
+command to read damaged metadata
 from the existing pool metadata LV, and writes a new repaired
 copy to the VG's pmspare LV.
 .IP \n+[step] 3
@@ -437,8 +494,9 @@ from a backup.  In such case the content of unmodified original damaged
 ThinPoolLV_metaN volume can be used by your support for more
 advanced recovery methods.
 .P
-If metadata is manually restored with thin_repair directly,
-the pool metadata LV can be manually swapped with another LV
+If metadata is manually restored with
+.BR thin_repair (8)
+directly, the pool metadata LV can be manually swapped with another LV
 containing new metadata:
 .P
 .B lvconvert --thinpool VG/ThinPoolLV --poolmetadata VG/NewThinMetaLV
@@ -1069,7 +1127,8 @@ Configurable setting
 .BR allocation / thin_pool_crop_metadata
 gives control over cropping to 15.81GiB to stay backward compatible with older
 versions of lvm2. With enabled cropping there can be observed some problems when
-using volumes above this size with thin tools (i.e. thin_repair).
+using volumes above this size with thin tools (i.e.
+.BR thin_repair (8)).
 Cropping should be enabled only when compatibility is required.
 .
 .SS Create a thin snapshot of an external, read only LV
@@ -1275,12 +1334,12 @@ After the first mount with the above approach, the UUID can subsequently be
 changed using:
 .P
 # xfs_admin -U generate /dev/VG/SnapLV
-.P
+.br
 # mount /dev/VG/SnapLV /mnt
 .P
 Once the UUID has been changed, the mount command will no longer require
 the nouuid option.
-.P
+.br
 If the snapshot LV is readonly, the log recovery and uuid check need to be
 skipped while mounting readonly:
 .P
@@ -1300,6 +1359,7 @@ skipped while mounting readonly:
 .BR lvremove (8),
 .BR lvs (8),
 .P
+.BR thin_check (8),
 .BR thin_dump (8),
 .BR thin_repair (8),
 .BR thin_restore (8)
