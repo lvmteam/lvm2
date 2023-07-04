@@ -4799,6 +4799,7 @@ static int _lvconvert_to_pool_or_swap_metadata_single(struct cmd_context *cmd,
 	case linear_LVT:
 	case raid_LVT:
 	case striped_LVT:
+	case error_LVT:
 	case zero_LVT:
 		break;
 	default:
