@@ -538,7 +538,7 @@ Attach a cache pool to an LV, converts the LV to type cache.
 .RE
 .P
 .RS 4
-LV1 types: linear striped thinpool vdo vdopool vdopooldata raid
+LV1 types: linear striped thin thinpool vdo vdopool vdopooldata raid error zero
 .RE
 .P
 \(em
@@ -718,7 +718,7 @@ Convert LV to type cache-pool.
 .RE
 .P
 .RS 4
-LV1 types: linear striped raid
+LV1 types: linear striped raid error zero
 .RE
 .P
 \(em
@@ -1766,7 +1766,7 @@ Attach a cache pool to an LV.
 .RE
 .P
 .RS 4
-LV1 types: linear striped thinpool vdo vdopool vdopooldata raid
+LV1 types: linear striped thin thinpool vdo vdopool vdopooldata raid error zero
 .RE
 .P
 \(em
