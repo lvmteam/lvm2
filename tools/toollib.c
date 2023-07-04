@@ -2752,6 +2752,10 @@ static int _lv_is_prop(struct cmd_context *cmd, struct logical_volume *lv, int l
 		return lv_is_cow_covering_origin(lv);
 	case is_visible_LVP:
 		return lv_is_visible(lv);
+	case is_error_LVP:
+		return lv_is_error(lv);
+	case is_zero_LVP:
+		return lv_is_zero(lv);
 	case is_historical_LVP:
 		return lv_is_historical(lv);
 	case is_raid_with_tracking_LVP:
@@ -2815,9 +2819,9 @@ static int _lv_is_type(struct cmd_context *cmd, struct logical_volume *lv, int l
 	case integrity_LVT:
 		return seg_is_integrity(seg);
 	case error_LVT:
-		return !strcmp(seg->segtype->name, SEG_TYPE_NAME_ERROR);
+		return seg_is_error(seg);
 	case zero_LVT:
-		return !strcmp(seg->segtype->name, SEG_TYPE_NAME_ZERO);
+		return seg_is_zero(seg);
 	default:
 		log_error(INTERNAL_ERROR "unknown lv type value lvt_enum %d", lvt_enum);
 	}
@@ -2875,9 +2879,9 @@ int get_lvt_enum(struct logical_volume *lv)
 	if (seg_is_integrity(seg))
 		return integrity_LVT;
 
-	if (!strcmp(seg->segtype->name, SEG_TYPE_NAME_ERROR))
+	if (seg_is_error(seg))
 		return error_LVT;
-	if (!strcmp(seg->segtype->name, SEG_TYPE_NAME_ZERO))
+	if (seg_is_zero(seg))
 		return zero_LVT;
 
 	return 0;

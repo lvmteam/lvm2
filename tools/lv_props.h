@@ -46,6 +46,9 @@ lvp(is_thick_snapshot_LVP, "lv_is_thick_snapshot", NULL)
 lvp(is_thin_origin_LVP, "lv_is_thin_origin", NULL)
 lvp(is_thin_snapshot_LVP, "lv_is_thin_snapshot", NULL)
 
+lvp(is_error_LVP, "lv_is_error", NULL)
+lvp(is_zero_LVP, "lv_is_zero", NULL)
+
 lvp(is_cache_origin_LVP, "lv_is_cache_origin", NULL)
 lvp(is_cow_LVP, "lv_is_cow", NULL)
 lvp(is_merging_cow_LVP, "lv_is_merging_cow", NULL)
