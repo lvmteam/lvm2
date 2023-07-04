@@ -47,6 +47,7 @@ lvp(is_thin_origin_LVP, "lv_is_thin_origin", NULL)
 lvp(is_thin_snapshot_LVP, "lv_is_thin_snapshot", NULL)
 
 lvp(is_cache_origin_LVP, "lv_is_cache_origin", NULL)
+lvp(is_cow_LVP, "lv_is_cow", NULL)
 lvp(is_merging_cow_LVP, "lv_is_merging_cow", NULL)
 lvp(is_cow_covering_origin_LVP, "lv_is_cow_covering_origin", NULL)
 lvp(is_visible_LVP, "lv_is_visible", NULL)

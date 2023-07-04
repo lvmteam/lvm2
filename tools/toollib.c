@@ -2746,6 +2746,8 @@ static int _lv_is_prop(struct cmd_context *cmd, struct logical_volume *lv, int l
 		return lv_is_cache_origin(lv);
 	case is_merging_cow_LVP:
 		return lv_is_merging_cow(lv);
+	case is_cow_LVP:
+		return lv_is_cow(lv);
 	case is_cow_covering_origin_LVP:
 		return lv_is_cow_covering_origin(lv);
 	case is_visible_LVP:
