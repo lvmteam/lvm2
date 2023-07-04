@@ -380,7 +380,8 @@ static int _opt_str_to_num(struct command *cmd, char *str)
 	int i;
 	int first = 0, last = ARG_COUNT - 1, middle;
 
-	(void) dm_strncpy(long_name, str, sizeof(long_name));
+	if (!dm_strncpy(long_name, str, sizeof(long_name)))
+		goto err;
 
 	if ((p = strstr(long_name, "_long")))
 		/*
@@ -424,7 +425,7 @@ static int _opt_str_to_num(struct command *cmd, char *str)
 			break; /* Nothing... */
 		}
 	}
-
+err:
 	log_error("Parsing command defs: unknown opt str: \"%s\"%s%s.",
 		  str, p ? " ": "", p ? long_name : "");
 	cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
@@ -501,7 +502,7 @@ static int _lv_to_enum(struct command *cmd, char *name)
  * lvt_bits |= lvt_enum_to_bit(lvt_enum)
  */
 
-#define LVTYPE_LEN 64
+#define LVTYPE_LEN 128
 
 static uint64_t _lv_to_bits(struct command *cmd, char *name)
 {
@@ -849,7 +850,7 @@ static void _append_oo_definition_line(const char *new_line)
 
 /* Find a saved OO_FOO definition. */
 
-#define OO_NAME_LEN 64
+#define OO_NAME_LEN 128
 
 static char *_get_oo_line(const char *str)
 {
@@ -1648,8 +1649,10 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 			continue;
 		}
 
-		if (!skip)
+		if (!skip) {
 			log_error("Parsing command defs: can't process input line %s.", line_orig);
+			return 0;
+		}
 	}
 
 	for (i = 0; i < COMMAND_COUNT; i++) {
@@ -4009,7 +4012,8 @@ int main(int argc, char *argv[])
 	if (optind < argc)
 		desfile = argv[optind++];
 
-	define_commands(&cmdtool, NULL);
+	if (!define_commands(&cmdtool, NULL))
+		goto out_free;
 
 	if (!check)
 		configure_command_option_values(cmdname);
