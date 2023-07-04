@@ -25,30 +25,6 @@ mkdir -p "$mount_dir"
 snap_dir="mnt_snap"
 mkdir -p "$snap_dir"
 
-_sync_percent() {
-        local checklv=$1
-        get lv_field "$checklv" sync_percent | cut -d. -f1
-}
-
-_wait_sync() {
-        local checklv=$1
-
-        for i in $(seq 1 10) ; do
-                sync=$(_sync_percent "$checklv")
-                echo "sync_percent is $sync"
-
-                if test "$sync" = "100"; then
-                        return
-                fi
-
-                sleep 1
-        done
-        echo "timeout waiting for recalc"
-        dmsetup status "$DM_DEV_DIR/mapper/${checklv/\//-}"
-        return 1
-}
-
-
 # add and remove a snapshot
 
 test_add_del_snap() {
@@ -86,7 +62,7 @@ test_snap_with_missing_image() {
 	not lvcreate -s -n snap -L12M $vg/$lv1 "$dev3"
 
 	aux enable_dev "$dev1"
-	_wait_sync $vg/$lv1
+	aux wait_for_sync $vg $lv1
 
 	lvcreate -s -n snap -L12M $vg/$lv1 "$dev3"
 
@@ -98,7 +74,7 @@ test_snap_with_missing_image() {
 	aux enable_dev "$dev1"
 	vgextend --restoremissing $vg "$dev1"
 	lvs -a -o+devices $vg
-	_wait_sync $vg/$lv1
+	aux wait_for_sync $vg $lv1
 
 	umount "$mount_dir"
 }
@@ -125,7 +101,7 @@ test_missing_image_with_snap() {
 	ls "$snap_dir/A"
 
 	aux enable_dev "$dev1"
-	_wait_sync $vg/$lv1
+	aux wait_for_sync $vg $lv1
 
 	ls "$mount_dir/B"
 	ls "$snap_dir/C"
@@ -150,7 +126,7 @@ test_add_del_image_with_snap() {
 	touch "$snap_dir/C"
 
 	lvconvert -y -m+1 $vg/$lv1 "$dev4"
-	_wait_sync $vg/$lv1
+	aux wait_for_sync $vg $lv1
 
 	ls "$mount_dir/B"
 	ls "$snap_dir/C"
@@ -177,7 +153,7 @@ test_add_del_image_with_snap() {
 test_replace_image_with_snap() {
 	# add an image to replace
 	lvconvert -y -m+1 $vg/$lv1 "$dev4"
-	_wait_sync $vg/$lv1
+	aux wait_for_sync $vg $lv1
 
 	mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 
@@ -191,7 +167,7 @@ test_replace_image_with_snap() {
 	touch "$snap_dir/C"
 
 	lvconvert -y --replace "$dev4" $vg/$lv1 "$dev5"
-	_wait_sync $vg/$lv1
+	aux wait_for_sync $vg $lv1
 
 	ls "$mount_dir/B"
 	ls "$snap_dir/C"
@@ -213,7 +189,7 @@ test_replace_image_with_snap() {
 test_repair_image_with_snap() {
 	# add an image to repair
 	lvconvert -y -m+1 $vg/$lv1 "$dev4"
-	_wait_sync $vg/$lv1
+	aux wait_for_sync $vg $lv1
 
 	mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 
@@ -230,7 +206,7 @@ test_repair_image_with_snap() {
 	lvs -a -o+devices $vg
 
 	lvconvert -y --repair $vg/$lv1 "$dev5"
-	_wait_sync $vg/$lv1
+	aux wait_for_sync $vg $lv1
 
 	ls "$mount_dir/B"
 	ls "$snap_dir/C"
@@ -318,11 +294,11 @@ test_fill_snap()
 	lvs -a $vg
 	get lv_field $vg/snap lv_attr | grep "swi-a-s---"
 
-	dd if=/dev/zero of="$mount_dir/1" bs=1M count=1 oflag=sync
-	dd if=/dev/zero of="$mount_dir/2" bs=1M count=1 oflag=sync
-	dd if=/dev/zero of="$mount_dir/3" bs=1M count=1 oflag=sync
-	dd if=/dev/zero of="$mount_dir/4" bs=1M count=1 oflag=sync
-	dd if=/dev/zero of="$mount_dir/5" bs=1M count=1 oflag=sync
+	dd if=/dev/zero of="$mount_dir/1" bs=1M count=1 oflag=direct
+	dd if=/dev/zero of="$mount_dir/2" bs=1M count=1 oflag=direct
+	dd if=/dev/zero of="$mount_dir/3" bs=1M count=1 oflag=direct
+	dd if=/dev/zero of="$mount_dir/4" bs=1M count=1 oflag=direct
+	dd if=/dev/zero of="$mount_dir/5" bs=1M count=1 oflag=direct
 
 	lvs -a $vg
 	get lv_field $vg/snap lv_attr | grep "swi-I-s---"
@@ -336,8 +312,9 @@ aux prepare_devs 5 200
 
 vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 
-lvcreate --type raid1 -m1 -n $lv1 -L128M $vg "$dev1" "$dev2"
-_wait_sync $vg/$lv1
+lvcreate --type raid1 -m1 -n $lv1 -L32M $vg "$dev1" "$dev2"
+dmsetup table
+aux wait_for_sync $vg $lv1
 test_add_del_snap
 test_snap_with_missing_image
 test_missing_image_with_snap
@@ -352,10 +329,10 @@ lvremove -y $vg/$lv1
 # INTEGRITY TESTS FOLLOWING:
 if aux have_integrity 1 5 0; then
 
-lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -L128M $vg "$dev1" "$dev2"
-_wait_sync $vg/${lv1}_rimage_0
-_wait_sync $vg/${lv1}_rimage_1
-_wait_sync $vg/$lv1
+lvcreate --type raid1 -m1 --raidintegrity y -n $lv1 -L32M $vg "$dev1" "$dev2"
+aux wait_recalc $vg ${lv1}_rimage_0
+aux wait_recalc $vg ${lv1}_rimage_1
+aux wait_for_sync $vg $lv1
 test_add_del_snap
 test_snap_with_missing_image
 test_missing_image_with_snap
@@ -373,8 +350,8 @@ lvremove -y $vg/$lv1
 # Add/remove integrity while a snapshot exists
 #
 
-lvcreate --type raid1 -m1 -n $lv1 -L128M $vg "$dev1" "$dev2"
-_wait_sync $vg/$lv1
+lvcreate --type raid1 -m1 -n $lv1 -L32M $vg "$dev1" "$dev2"
+aux wait_for_sync $vg $lv1
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 
 mount "$DM_DEV_DIR/$vg/$lv1" "$mount_dir"
@@ -387,8 +364,8 @@ touch "$mount_dir/B"
 touch "$snap_dir/C"
 
 lvconvert --raidintegrity y $vg/$lv1
-_wait_sync $vg/${lv1}_rimage_0
-_wait_sync $vg/${lv1}_rimage_1
+aux wait_recalc $vg ${lv1}_rimage_0
+aux wait_recalc $vg ${lv1}_rimage_1
 
 ls "$mount_dir/B"
 ls "$snap_dir/C"
@@ -415,8 +392,8 @@ lvremove -y $vg/$lv1
 # Add integrity not allowed with missing image and snapshot exists
 #
 
-lvcreate --type raid1 -m1 -n $lv1 -L128M $vg "$dev1" "$dev2"
-_wait_sync $vg/$lv1
+lvcreate --type raid1 -m1 -n $lv1 -L32M $vg "$dev1" "$dev2"
+aux wait_for_sync $vg $lv1
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 
 mount "$DM_DEV_DIR/$vg/$lv1" "$mount_dir"
@@ -444,4 +421,3 @@ lvremove -y $vg/$lv1
 fi # INTEGRITY TESTS SKIPPED
 
 vgremove -ff $vg
-
