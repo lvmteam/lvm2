@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2014 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2014-2023 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -22,13 +22,15 @@ aux have_thin 1 0 0 || skip
 
 aux prepare_vg 5 80
 
+#
+# Check caching of whole thin-pool
+#
 lvcreate -L10 -n cpool $vg
 lvcreate -L10 -n tpool $vg
 lvcreate -L10 -n $lv1 $vg
 
 lvconvert --yes --cache --cachepool cpool $vg/tpool
 
-# Currently the only allowed stacking is cache thin data volume
 lvconvert --yes --type thin-pool $vg/tpool
 
 lvcreate -V10 -T -n $lv2 $vg/tpool
@@ -53,7 +55,38 @@ lvs -a $vg
 
 lvremove -f $vg
 
+
+#
+# Check caching of single individual thin LV
+#
+lvcreate --type cache-pool -L10 -n cpool $vg
+lvcreate -T -L10 -V10 -n $lv1 $vg/tpool
+
+lvconvert --yes -H --cachepool $vg/cpool $vg/$lv1
+check lv_field $vg/${lv1}_corig segtype "thin" -a
+check lv_field $vg/$lv1 segtype "cache"
+
+# Other thins from the thin-pool can be created
+lvcreate -V10 $vg/tpool
+
+# ATM there is no support to take snapshot of cache thin LV
+not lvcreate -s $vg/$lv1
+
+# Use can take thick snapshot
+lvcreate -s -L10 -n $lv2 $vg/$lv1
+check lv_field $vg/$lv2 segtype "linear"
+
+lvchange -an $vg
+lvchange -ay $vg
+
+lvconvert --uncache $vg/$lv1
+
+lvremove -f $vg
+
+
+#
 # Check conversion of cached LV works as thin-pool
+#
 lvcreate -L10 -n $lv $vg
 lvcreate -L10 -n $lv1 $vg
 lvcreate -H -L10 $vg/$lv
