@@ -882,6 +882,11 @@ struct logical_volume *find_pool_lv(const struct logical_volume *lv);
 int thin_pool_is_active(const struct logical_volume *lv);
 int thin_pool_supports_external_origin(const struct lv_segment *pool_seg, const struct logical_volume *external_lv);
 int thin_pool_feature_supported(const struct logical_volume *lv, int feature);
+int thin_pool_prepare_metadata(struct logical_volume *metadata_lv,
+			       uint32_t chunk_size,
+			       uint64_t data_blocks,
+			       uint64_t data_begin,
+			       uint64_t data_length);
 int update_thin_pool_lv(struct logical_volume *lv, int activate);
 
 int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,

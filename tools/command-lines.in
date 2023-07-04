@@ -473,6 +473,26 @@ RULE: all and lv_is_visible
 RULE: all not lv_is_locked lv_is_raid_with_integrity
 RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
+# Convert to thin volume
+lvconvert --type thin LV_linear_striped_raid_cache_writecache_vdo_error_zero
+OO: --thin, OO_LVCONVERT_POOL, OO_LVCONVERT
+ID: lvconvert_to_thin_with_data
+DESC: Convert LV to a thin LV, using LV as thin-pool data volume.
+RULE: all and lv_is_visible
+RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_raid_with_integrity
+RULE: --poolmetadata not --readahead --stripesize --stripes_long
+
+# Convert to thin volume
+lvconvert --thin LV_linear_striped_raid_cache_writecache_vdo_error_zero
+OO: OO_LVCONVERT_POOL, OO_LVCONVERT
+ID: lvconvert_to_thin_with_data
+DESC: Convert LV to a thin LV, using LV as thin-pool data volume.
+FLAGS: SECONDARY_SYNTAX
+AUTOTYPE: thin
+RULE: all and lv_is_visible
+RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_raid_with_integrity
+RULE: --poolmetadata not --readahead --stripesize --stripes_long
+
 ---
 
 lvconvert --type cache --cachepool LV LV_linear_striped_raid_thinpool_vdo_vdopool_vdopooldata_thin_error_zero
@@ -539,7 +559,7 @@ OP: PV ...
 ID: lvconvert_to_thinpool
 DESC: Convert LV to type thin-pool.
 RULE: all and lv_is_visible
-RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_virtual lv_is_raid_with_integrity
+RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_raid_with_integrity
 RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 # This command syntax has two different meanings depending on
@@ -564,7 +584,7 @@ RULE: --poolmetadata not --readahead --stripesize --stripes_long
 # This command syntax is deprecated, and the primary forms
 # of creating a pool or swapping metadata should be used.
 
-lvconvert --thinpool LV_linear_striped_raid_cache_writecache_thinpool
+lvconvert --thinpool LV_linear_striped_raid_cache_writecache_error_zero_thinpool
 OO: --stripes_long Number, --stripesize SizeKB,
 OO_LVCONVERT_THINPOOL, OO_LVCONVERT_POOL, OO_LVCONVERT
 OP: PV ...

@@ -20,6 +20,8 @@
 #include "lib/metadata/segtype.h"
 #include "lib/config/defaults.h"
 #include "lib/display/display.h"
+#include "lib/commands/toolcontext.h"
+#include "lib/misc/lvm-exec.h"
 
 struct logical_volume *data_lv_from_thin_pool(struct logical_volume *pool_lv)
 {
@@ -448,6 +450,86 @@ int thin_pool_supports_external_origin(const struct lv_segment *pool_seg, const 
 	}
 
 	return 1;
+}
+
+int thin_pool_prepare_metadata(struct logical_volume *metadata_lv,
+			       uint32_t chunk_size,
+			       uint64_t data_blocks,
+			       uint64_t data_begin,
+			       uint64_t data_length)
+{
+	struct cmd_context *cmd = metadata_lv->vg->cmd;
+	char lv_path[PATH_MAX], md_path[64], buffer[512];
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
+	const char *argv[19] = { /* Max supported 15 option args */
+		find_config_tree_str_allow_empty(cmd, global_thin_restore_executable_CFG, NULL)
+	};
+	int args = 0;
+	int r = 0;
+	int status;
+	FILE *f;
+
+	if (dm_snprintf(lv_path, sizeof(lv_path), "%s%s/%s", cmd->dev_dir,
+			metadata_lv->vg->name, metadata_lv->name) < 0) {
+		log_error("Failed to create path %s%s/%s", cmd->dev_dir,
+			  metadata_lv->vg->name, metadata_lv->name);
+		return 0;
+	}
+
+	if (!(cn = find_config_tree_array(cmd, global_thin_restore_options_CFG, NULL))) {
+		log_error(INTERNAL_ERROR "Unable to find configuration for pool check options.");
+		return 0;
+	}
+
+	for (cv = cn->v; cv && args < 16; cv = cv->next) {
+		if (cv->type != DM_CFG_STRING) {
+			log_error("Invalid string in config file: "
+				  "global/thin_restore_options.");
+			return 0;
+		}
+		if (cv->v.str[0])
+			argv[++args] = cv->v.str;
+	}
+
+	if (args == 16) {
+		log_error("Too many options for %s command.", argv[0]);
+		return 0;
+	}
+
+	if (!(f = tmpfile())) {
+		log_error("Cannot create temporary file to prepare metadata.");
+		return 0;
+	}
+
+	/* Build path for 'thin_restore' app with this 'hidden/deleted' tmpfile */
+	(void) dm_snprintf(md_path, sizeof(md_path), "/proc/%u/fd/%u", getpid(), fileno(f));
+
+	argv[++args] = "-i";
+	argv[++args] = md_path;
+
+	argv[++args] = "-o";
+	argv[++args] = lv_path;
+
+	(void) dm_snprintf(buffer, sizeof(buffer),
+			   "<superblock uuid=\"\" time=\"0\" transaction=\"1\" version=\"2\" data_block_size=\"%u\" nr_data_blocks=\"" FMTu64 "\">\n"
+			   " <device dev_id=\"1\" mapped_blocks=\"" FMTu64 "\" transaction=\"0\" creation_time=\"0\" snap_time=\"0\">\n"
+			   "  <range_mapping origin_begin=\"0\" data_begin=\"" FMTu64 "\" length=\"" FMTu64 "\" time=\"0\"/>\n"
+			   " </device>\n</superblock>", chunk_size, data_length, data_blocks, data_begin, data_length);
+
+	log_debug("Preparing thin-pool metadata with thin volume mapping:\n%s", buffer);
+
+	if (fputs(buffer, f) < 0)
+		log_sys_error("fputs", md_path);
+	else if (fflush(f))
+		log_sys_error("fflush", md_path);
+	else if (!(r = exec_cmd(cmd, argv, &status, 1)))
+		stack;
+
+	if (fclose(f))
+		log_sys_debug("fclose", md_path);
+
+	return r;
 }
 
 struct logical_volume *find_pool_lv(const struct logical_volume *lv)

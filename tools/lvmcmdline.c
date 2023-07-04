@@ -126,6 +126,7 @@ static const struct command_function _command_functions[CMD_COUNT] = {
 	{ lvconvert_to_thinpool_CMD,			lvconvert_to_pool_cmd },
 	{ lvconvert_to_cachepool_CMD,			lvconvert_to_pool_cmd },
 	{ lvconvert_to_thin_with_external_CMD,		lvconvert_to_thin_with_external_cmd },
+	{ lvconvert_to_thin_with_data_CMD,		lvconvert_to_thin_with_data_cmd },
 	{ lvconvert_to_cache_with_cachevol_CMD,		lvconvert_to_cache_with_cachevol_cmd },
 	{ lvconvert_to_cache_with_device_CMD,		lvconvert_to_cache_with_cachevol_cmd },
 	{ lvconvert_to_cache_with_cachepool_CMD,	lvconvert_to_cache_with_cachepool_cmd },

@@ -2994,6 +2994,63 @@ static int _lvconvert_swap_pool_metadata(struct cmd_context *cmd,
 	return 1;
 }
 
+static struct logical_volume *_lvconvert_insert_thin_layer(struct logical_volume *lv)
+{
+	struct volume_group *vg = lv->vg;
+	struct segment_type *thin_segtype;
+	struct logical_volume *pool_lv;
+	struct lv_segment *seg;
+
+	if (!(thin_segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_THIN)))
+		return_NULL;
+
+	if (!(pool_lv = insert_layer_for_lv(vg->cmd, lv, 0, "_tpool%d")))
+		return_NULL;
+
+	lv->status |= THIN_VOLUME | VIRTUAL;
+	lv_set_visible(pool_lv);
+
+	seg = first_seg(lv);
+	seg->area_count = 0;
+
+	seg->segtype = thin_segtype;
+	seg->pool_lv = pool_lv;
+	seg->device_id = 1;
+	seg->transaction_id = 0;
+
+	return pool_lv;
+}
+
+static int _lvconvert_attach_metadata_to_pool(struct lv_segment *pool_seg,
+					      struct logical_volume *metadata_lv)
+{
+        struct cmd_context *cmd = metadata_lv->vg->cmd;
+	char name[NAME_LEN];                   /* generated sub lv name */
+
+	if (!deactivate_lv(cmd, metadata_lv)) {
+		log_error("Aborting. Failed to deactivate metadata lv. "
+			  "Manual intervention required.");
+		return 0;
+	}
+
+	if ((dm_snprintf(name, sizeof(name), "%s%s", pool_seg->lv->name,
+			 seg_is_thin_pool(pool_seg) ? "_tmeta" : "_cmeta") < 0)) {
+		log_error("Failed to create internal lv names, %s name is too long.",
+			  pool_seg->lv->name);
+		return 0;
+	}
+
+	/* Rename LVs to the pool _[ct]meta LV naming scheme. */
+	if ((strcmp(metadata_lv->name, name) != 0) &&
+	    !lv_rename_update(cmd, metadata_lv, name, 0))
+		return_0;
+
+	if (!attach_pool_metadata_lv(pool_seg, metadata_lv))
+		return_0;
+
+	return 1;
+}
+
 /*
  * Create a new pool LV, using the lv arg as the data sub LV.
  * The metadata sub LV is either a new LV created here, or an
@@ -3009,6 +3066,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 			      struct logical_volume *process_single_lv,
 			      int to_thinpool,
 			      int to_cachepool,
+			      int to_thin,
 			      struct dm_list *use_pvh)
 {
 	struct volume_group *vg = lv->vg;
@@ -3016,9 +3074,6 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	struct logical_volume *data_lv;             /* lv arg renamed */
 	struct logical_volume *pool_lv;             /* new lv created here */
 	const char *pool_metadata_name;             /* user-specified lv name */
-	const char *pool_name;                      /* name of original lv arg */
-	char meta_name[NAME_LEN];                   /* generated sub lv name */
-	char data_name[NAME_LEN];                   /* generated sub lv name */
 	char converted_names[3*NAME_LEN];	    /* preserve names of converted lv */
 	struct segment_type *pool_segtype;          /* thinpool or cachepool */
 	struct lv_segment *seg;
@@ -3077,16 +3132,6 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		lockd_data_args = dm_pool_strdup(cmd->mem, lv->lock_args);
 		lockd_data_name = dm_pool_strdup(cmd->mem, lv->name);
 		memcpy(&lockd_data_id, &lv->lvid.id[1], sizeof(struct id));
-	}
-
-	/*
-	 * The internal LV names for pool data/meta LVs.
-	 */
-
-	if ((dm_snprintf(meta_name, sizeof(meta_name), "%s%s", lv->name, to_cachepool ? "_cmeta" : "_tmeta") < 0) ||
-	    (dm_snprintf(data_name, sizeof(data_name), "%s%s", lv->name, to_cachepool ? "_cdata" : "_tdata") < 0)) {
-		log_error("Failed to create internal lv names, pool name is too long.");
-		return 0;
 	}
 
 	/* If LV is inactive here, ensure it's not active elsewhere. */
@@ -3222,16 +3267,18 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 			   metadata_lv ? " and " : "",
 			   metadata_lv ? display_lvname(metadata_lv) : "");
 
-	/*
-	 * Verify that user wants to use these LVs.
-	 */
-	log_warn("WARNING: Converting %s to %s pool's data%s %s metadata wiping.",
-		 converted_names,
-		 to_cachepool ? "cache" : "thin",
-		 metadata_lv ? " and metadata volumes" : " volume",
-		 zero_metadata ? "with" : "WITHOUT");
+	/* Verify user really wants to convert these LVs. */
+	if (!to_thin)
+		log_warn("WARNING: Converting %s to %s pool's data%s %s metadata wiping.",
+			 converted_names,
+			 to_cachepool ? "cache" : "thin",
+			 metadata_lv ? " and metadata volumes" : " volume",
+			 zero_metadata ? "with" : "WITHOUT");
 
-	if (zero_metadata)
+	if (to_thin)
+		log_warn("WARNING: Converting %s to fully provisioned thin volume.",
+			 converted_names);
+	else if (zero_metadata)
 		log_warn("THIS WILL DESTROY CONTENT OF LOGICAL VOLUME (filesystem etc.)");
 	else if (to_cachepool)
 		log_warn("WARNING: Using mismatched cache pool metadata MAY DESTROY YOUR DATA!");
@@ -3283,7 +3330,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 			goto bad;
 		}
 
-		if (zero_metadata) {
+		if (zero_metadata || to_thin) {
 			metadata_lv->status |= LV_ACTIVATION_SKIP;
 			if (!activate_lv(cmd, metadata_lv)) {
 				log_error("Aborting. Failed to activate metadata lv.");
@@ -3303,25 +3350,8 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	}
 
 	/*
-	 * Deactivate the data LV and metadata LV.
-	 * We are changing target type, so deactivate first.
-	 */
-
-	if (!deactivate_lv(cmd, metadata_lv)) {
-		log_error("Aborting. Failed to deactivate metadata lv. "
-			  "Manual intervention required.");
-		goto bad;
-	}
-
-	if (!deactivate_lv(cmd, lv)) {
-		log_error("Aborting. Failed to deactivate logical volume %s.",
-			  display_lvname(lv));
-		goto bad;
-	}
-
-	/*
 	 * When the LV referenced by the original function arg "lv"
-	 * is renamed, it is then referenced as "data_lv".
+	 * is layered
 	 *
 	 * pool_name    pool name taken from lv arg
 	 * data_name    sub lv name, generated
@@ -3332,47 +3362,31 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	 * metadata_lv  sub lv, existing or created here
 	 */
 
-	data_lv = lv;
-	pool_name = lv->name; /* Use original LV name for pool name */
+	if (to_thin) {
+		if (!(pool_lv = _lvconvert_insert_thin_layer(lv)))
+			goto_bad;
+	} else {
+		/* Deactivate the data LV  (changing target type) */
+		if (!deactivate_lv(cmd, lv)) {
+			log_error("Aborting. Failed to deactivate logical volume %s.",
+				  display_lvname(lv));
+			goto bad;
+		}
 
-	/*
-	 * Rename the original LV arg to the internal data LV naming scheme.
-	 *
-	 * Since we wish to have underlaying devs to match _[ct]data
-	 * rename data LV to match pool LV subtree first,
-	 * also checks for visible LV.
-	 *
-	 * FIXME: any more types prohibited here?
-	 */
-
-	if (!lv_rename_update(cmd, data_lv, data_name, 0))
-		goto_bad;
-
-	/*
-	 * Create LV structures for the new pool LV object,
-	 * and connect it to the data/meta LVs.
-	 */
-
-	if (!(pool_lv = lv_create_empty(pool_name, NULL,
-					(to_cachepool ? CACHE_POOL : THIN_POOL) | VISIBLE_LV | LVM_READ | LVM_WRITE,
-					ALLOC_INHERIT, vg))) {
-		log_error("Creation of pool LV failed.");
-		goto bad;
+		pool_lv = lv;
 	}
 
-	/* Allocate a new pool segment */
-	if (!(seg = alloc_lv_segment(pool_segtype, pool_lv, 0, data_lv->le_count, 0,
-				     pool_lv->status, 0, NULL, 1,
-				     data_lv->le_count, 0, 0, 0, 0, NULL)))
+	if (!(data_lv = insert_layer_for_lv(cmd, pool_lv, 0,
+					    (to_cachepool ? "_cdata" : "_tdata"))))
 		goto_bad;
 
-	/* Add the new segment to the layer LV */
-	dm_list_add(&pool_lv->segments, &seg->list);
-	pool_lv->le_count = data_lv->le_count;
-	pool_lv->size = data_lv->size;
+	data_lv->status |= (to_cachepool) ? CACHE_POOL_DATA : THIN_POOL_DATA;
+	data_lv->status |= LVM_WRITE;  /* Pool data LV is writable */
 
-	if (!attach_pool_data_lv(seg, data_lv))
-		goto_bad;
+	pool_lv->status |= (to_cachepool) ? CACHE_POOL : THIN_POOL;
+
+	seg = first_seg(pool_lv);
+	seg->segtype = pool_segtype;
 
 	/*
 	 * Create a new lock for a thin pool LV.  A cache pool LV has no lock.
@@ -3419,17 +3433,18 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 			error_when_full = find_config_tree_bool(cmd, activation_error_when_full_CFG, vg->profile);
 		if (error_when_full)
 			pool_lv->status |= LV_ERROR_WHEN_FULL;
+
+		if (to_thin) {
+			if (!thin_pool_prepare_metadata(metadata_lv, seg->chunk_size,
+							pool_lv->size / seg->chunk_size,
+							0,
+							pool_lv->size / seg->chunk_size))
+				goto_bad;
+			seg->transaction_id = 1;
+		}
 	}
 
-	/*
-	 * Rename deactivated metadata LV to have _tmeta suffix.
-	 * Implicit checks if metadata_lv is visible.
-	 */
-	if ((strcmp(metadata_lv->name, meta_name) != 0) &&
-	    !lv_rename_update(cmd, metadata_lv, meta_name, 0))
-		goto_bad;
-
-	if (!attach_pool_metadata_lv(seg, metadata_lv))
+	if (!_lvconvert_attach_metadata_to_pool(seg, metadata_lv))
 		goto_bad;
 
 	if (!handle_pool_metadata_spare(vg,
@@ -3437,34 +3452,42 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 					use_pvh, pool_metadata_spare))
 		goto_bad;
 
-	if (!vg_write(vg) || !vg_commit(vg))
-		goto_bad;
+	if (to_thin) {
+		if (!lv_update_and_reload(lv))
+			goto_bad;
+	} else {
+		if (!vg_write(vg) || !vg_commit(vg))
+			goto_bad;
 
-	if (activate_pool && !lockd_lv(cmd, pool_lv, "ex", LDLV_PERSISTENT)) {
-		log_error("Failed to lock pool LV %s.", display_lvname(pool_lv));
-		goto out;
-	}
+		if (activate_pool) {
+			if (!lockd_lv(cmd, pool_lv, "ex", LDLV_PERSISTENT)) {
+				log_error("Failed to lock pool LV %s.", display_lvname(pool_lv));
+				goto out;
+			}
 
-	if (activate_pool &&
-	    !activate_lv(cmd, pool_lv)) {
-		log_error("Failed to activate pool logical volume %s.",
-			  display_lvname(pool_lv));
-		/* Deactivate subvolumes */
-		if (!deactivate_lv(cmd, seg_lv(seg, 0)))
-			log_error("Failed to deactivate pool data logical volume %s.",
-				  display_lvname(seg_lv(seg, 0)));
-		if (!deactivate_lv(cmd, seg->metadata_lv))
-			log_error("Failed to deactivate pool metadata logical volume %s.",
-				  display_lvname(seg->metadata_lv));
-		goto out;
+			if (!activate_lv(cmd, pool_lv)) {
+				log_error("Failed to activate pool logical volume %s.",
+					  display_lvname(pool_lv));
+
+				/* Deactivate subvolumes */
+				if (!deactivate_lv(cmd, seg_lv(seg, 0)))
+					log_error("Failed to deactivate pool data logical volume %s.",
+						  display_lvname(seg_lv(seg, 0)));
+				if (!deactivate_lv(cmd, seg->metadata_lv))
+					log_error("Failed to deactivate pool metadata logical volume %s.",
+						  display_lvname(seg->metadata_lv));
+				goto out;
+			}
+		}
 	}
 
 	r = 1;
 
 out:
 	if (r)
-		log_print_unless_silent("Converted %s to %s pool.",
-					converted_names, to_cachepool ? "cache" : "thin");
+		log_print_unless_silent("Converted %s to %s %s.",
+					converted_names, (to_cachepool) ? "cache" : "thin",
+					(to_thin) ? "volume" : "pool");
 
 	/*
 	 * Unlock and free the locks from existing LVs that became pool data
@@ -4258,7 +4281,7 @@ static int _lvconvert_to_pool_single(struct cmd_context *cmd,
 	} else
 		use_pvh = &lv->vg->pvs;
 
-	if (!_lvconvert_to_pool(cmd, lv, lv, to_thinpool, to_cachepool, use_pvh))
+	if (!_lvconvert_to_pool(cmd, lv, lv, to_thinpool, to_cachepool, 0, use_pvh))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
@@ -4500,7 +4523,6 @@ static int _lvconvert_cachepool_attach_single(struct cmd_context *cmd,
 					  struct logical_volume *lv,
 					  struct processing_handle *handle)
 {
-	struct lv_segment *seg;
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *cachepool_lv;
 	const char *cachepool_name;
@@ -4549,20 +4571,11 @@ static int _lvconvert_cachepool_attach_single(struct cmd_context *cmd,
 			goto out;
 		}
 
-		if (!_lvconvert_to_pool(cmd, cachepool_lv, lv, 0, 1, &vg->pvs)) {
+		if (!_lvconvert_to_pool(cmd, cachepool_lv, lv, 0, 1, 0, &vg->pvs)) {
 			log_error("LV %s could not be converted to a cache pool.",
 				  display_lvname(cachepool_lv));
 			goto out;
 		}
-
-		/* cachepool_lv is converted into cache-pool data LV */
-		if (!(seg = get_only_segment_using_this_lv(cachepool_lv))) {
-			log_error(INTERNAL_ERROR "LV %s is not a cache pool data volume.",
-				  display_lvname(cachepool_lv));
-			goto out;
-		}
-
-		cachepool_lv = seg->lv;
 	} else {
 		if (!dm_list_empty(&cachepool_lv->segs_using_this_lv)) {
 			log_error("Cache pool %s is already in use.", cachepool_name);
@@ -4659,7 +4672,7 @@ static int _lvconvert_to_thin_with_external_single(struct cmd_context *cmd,
 			goto out;
 		}
 
-		if (!_lvconvert_to_pool(cmd, thinpool_lv, lv, 1, 0, &vg->pvs)) {
+		if (!_lvconvert_to_pool(cmd, thinpool_lv, lv, 1, 0, 0, &vg->pvs)) {
 			log_error("LV %s could not be converted to a thin pool.",
 				  display_lvname(thinpool_lv));
 			goto out;
@@ -4715,6 +4728,36 @@ int lvconvert_to_thin_with_external_cmd(struct cmd_context *cmd, int argc, char 
 {
 	return process_each_lv(cmd, 1, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
 			       NULL, NULL, &_lvconvert_to_thin_with_external_single);
+}
+
+static int _lvconvert_to_thin_with_data(struct cmd_context *cmd,
+					struct logical_volume *lv,
+					struct processing_handle *handle)
+{
+	struct volume_group *vg = lv->vg;
+	struct dm_list *use_pvh = NULL;
+
+	if (cmd->position_argc > 1) {
+		/* First pos arg is required LV, remaining are optional PVs. */
+		if (!(use_pvh = create_pv_list(cmd->mem, lv->vg, cmd->position_argc - 1,
+					       cmd->position_argv + 1, 0)))
+			return_ECMD_FAILED;
+	} else
+		use_pvh = &lv->vg->pvs;
+
+	if (!_lvconvert_to_pool(cmd, lv, lv, 1, 0, 1, &vg->pvs)) {
+		log_error("LV %s could not be converted to a thin volume.",
+			  display_lvname(lv));
+		return ECMD_FAILED;
+	}
+
+	return ECMD_PROCESSED;
+}
+
+int lvconvert_to_thin_with_data_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	return process_each_lv(cmd, 1, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
+			       NULL, NULL, &_lvconvert_to_thin_with_data);
 }
 
 static int _lvconvert_swap_pool_metadata_single(struct cmd_context *cmd,
@@ -4861,7 +4904,7 @@ bad:
 		return _lvconvert_swap_pool_metadata_single(cmd, lv, handle);
 	}
 
-	if (!_lvconvert_to_pool(cmd, lv, lv, to_thinpool, to_cachepool, use_pvh))
+	if (!_lvconvert_to_pool(cmd, lv, lv, to_thinpool, to_cachepool, 0, use_pvh))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;

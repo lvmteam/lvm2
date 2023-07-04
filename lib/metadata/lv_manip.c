@@ -8370,7 +8370,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 					   uint64_t status,
 					   const char *layer_suffix)
 {
-	static const char _suffixes[][8] = { "_tdata", "_cdata", "_corig", "_wcorig", "_vdata" };
+	static const char _suffixes[][10] = { "_tdata", "_cdata", "_corig", "_wcorig", "_vdata", "_tpool%d" };
 	int r;
 	char name[NAME_LEN];
 	struct dm_str_list *sl;
