@@ -479,7 +479,7 @@ lvconvert --type cache --cachepool LV LV_linear_striped_raid_thinpool_vdo_vdopoo
 OO: --cache, OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_cache_with_cachepool
 DESC: Attach a cache pool to an LV, converts the LV to type cache.
-RULE: all and lv_is_visible
+RULE: all not lv_is_locked lv_is_merging_origin lv_is_merging_cow lv_is_cow
 RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 # alternate form of lvconvert --type cache
@@ -487,7 +487,7 @@ lvconvert --cache --cachepool LV LV_linear_striped_raid_thinpool_vdo_vdopool_vdo
 OO: OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_cache_with_cachepool
 DESC: Attach a cache pool to an LV.
-RULE: all and lv_is_visible
+RULE: all not lv_is_locked lv_is_merging_origin lv_is_merging_cow lv_is_cow
 RULE: --poolmetadata not --readahead --stripesize --stripes_long
 FLAGS: SECONDARY_SYNTAX
 AUTOTYPE: cache

@@ -356,17 +356,10 @@ int validate_lv_cache_create_origin(const struct logical_volume *origin_lv)
 		return 0;
 	}
 
-	/*
-	 * Only linear, striped or raid supported.
-	 * FIXME Tidy up all these type restrictions.
-	 */
 	if (lv_is_cache_type(origin_lv) ||
 	    lv_is_mirror_type(origin_lv) ||
-	    lv_is_thin_volume(origin_lv) || lv_is_thin_pool_metadata(origin_lv) ||
 	    lv_is_merging_origin(origin_lv) ||
-	    lv_is_cow(origin_lv) || lv_is_merging_cow(origin_lv) ||
-	    /* TODO: think about enabling caching of a single thin volume */
-	    (lv_is_virtual(origin_lv) && !lv_is_vdo(origin_lv))) {
+	    lv_is_cow(origin_lv) || lv_is_merging_cow(origin_lv)) {
 		log_error("Cache is not supported with %s segment type of the original logical volume %s.",
 			  lvseg_name(first_seg(origin_lv)), display_lvname(origin_lv));
 		return 0;

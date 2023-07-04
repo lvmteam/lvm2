@@ -4516,6 +4516,9 @@ static int _lvconvert_cachepool_attach_single(struct cmd_context *cmd,
 		goto out;
 	}
 
+	if (!validate_lv_cache_create_origin(lv))
+		goto_out;
+
 	/* Ensure the LV is not active elsewhere. */
 	if (!lockd_lv(cmd, lv, "ex", 0))
 		goto_out;
