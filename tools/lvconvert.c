@@ -3278,9 +3278,13 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	if (to_thin)
 		log_warn("WARNING: Converting %s to fully provisioned thin volume.",
 			 converted_names);
-	else if (zero_metadata)
-		log_warn("THIS WILL DESTROY CONTENT OF LOGICAL VOLUME (filesystem etc.)");
-	else if (to_cachepool)
+	else if (zero_metadata) {
+		if (lv_is_error(lv) || lv_is_zero(lv))
+			log_warn("WARNING: Volume of \"%s\" segtype cannot store ANY real data!",
+				 first_seg(lv)->segtype->name);
+		else
+			log_warn("THIS WILL DESTROY CONTENT OF LOGICAL VOLUME (filesystem etc.)");
+	} else if (to_cachepool)
 		log_warn("WARNING: Using mismatched cache pool metadata MAY DESTROY YOUR DATA!");
 
 	if (!arg_count(cmd, yes_ARG) &&
