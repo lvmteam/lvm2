@@ -1249,12 +1249,23 @@ int cache_set_params(struct lv_segment *seg,
 int wipe_cache_pool(struct logical_volume *cache_pool_lv)
 {
 	int r;
+	struct logical_volume *cache_data_lv;
 
 	/* Only unused cache-pool could be activated and wiped */
 	if (lv_is_used_cache_pool(cache_pool_lv) || lv_is_cache_vol(cache_pool_lv)) {
 		log_error(INTERNAL_ERROR "Failed to wipe cache pool for volume %s.",
 			  display_lvname(cache_pool_lv));
 		return 0;
+	}
+
+	cache_data_lv = (lv_is_cache_pool(cache_pool_lv)) ?
+		seg_lv(first_seg(cache_pool_lv), 0) : cache_pool_lv;
+
+	if (cache_data_lv && seg_cannot_be_zeroed(first_seg(cache_data_lv))) {
+		log_debug("Skipping wipe of %s volume with %s segtype.",
+			  display_lvname(cache_data_lv),
+			  first_seg(cache_data_lv)->segtype->name);
+		return 1;
 	}
 
 	cache_pool_lv->status |= LV_TEMPORARY;
