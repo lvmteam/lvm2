@@ -168,6 +168,19 @@ fail lvconvert --repair $vg/cpool 2>&1 | tee out
 
 lvremove -f $vg
 
+#########################
+# Some testing variants #
+#########################
+
+for i in error zero
+do
+	lvcreate --type "$i" -L50G -n $lv1 $vg
+	lvcreate --type "$i" -L10G -n cpool $vg
+	lvconvert -y --cachepool $vg/cpool
+	lvconvert -y -H --cachepool $vg/cpool $vg/$lv1
+	lvremove -f $vg
+done
+
 ##########################
 # Prohibited conversions #
 ##########################
