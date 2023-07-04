@@ -2529,7 +2529,8 @@ static int _pool_callback(struct dm_tree_node *node,
 				  data->global);
 			return 0;
 		}
-		argv[++args] = cv->v.str;
+		if (cv->v.str[0])
+			argv[++args] = cv->v.str;
 	}
 
 	if (args == 16) {
