@@ -1,5 +1,11 @@
 version 2.03.22 - 
 =================================
+  Support conversion from thick to fully provisioned thin LV.
+  Cache/Thin-pool can use error and zero volumes for testing.
+  Individual thin volume can be cached, but cannot take snapshot.
+  Better internal support for handling error and zero target (for testing).
+  Resize COW above trimmed maximal size is does not return error.
+  Support parsing of vdo geometry format version 4.
   Add lvm.conf thin_restore and cache_restore settings.
   Enhance lvm_import_vdo and use snapshot when converting VDO volume.
   Fix parsed of VDO metadata.
