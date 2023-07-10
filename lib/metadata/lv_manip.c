@@ -8213,7 +8213,17 @@ int move_lv_segments(struct logical_volume *lv_to,
 		     struct logical_volume *lv_from,
 		     uint64_t set_status, uint64_t reset_status)
 {
-	const uint64_t MOVE_BITS = (RAID | MIRROR | THIN_VOLUME | CACHE | LV_VDO);
+	const uint64_t MOVE_BITS = (CACHE |
+				    CACHE_POOL |
+				    INTEGRITY |
+				    LV_CACHE_VOL |
+				    LV_VDO |
+				    LV_VDO_POOL |
+				    MIRROR |
+				    RAID |
+				    THIN_POOL |
+				    THIN_VOLUME |
+				    WRITECACHE);
 	struct lv_segment *seg;
 
 	dm_list_iterate_items(seg, &lv_to->segments)

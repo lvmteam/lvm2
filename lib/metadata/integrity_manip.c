@@ -677,7 +677,7 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 		 * but gets a new integrity segment, in place of the segments
 		 * that were moved to lv_iorig.
 		 */
-		if (!insert_layer_for_lv(cmd, lv_image, INTEGRITY, "_iorig"))
+		if (!insert_layer_for_lv(cmd, lv_image, 0, "_iorig"))
 			goto_bad;
 
 		lv_image->status |= INTEGRITY;

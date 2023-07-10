@@ -5876,23 +5876,21 @@ static struct logical_volume *_lv_writecache_create(struct cmd_context *cmd,
 	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_WRITECACHE)))
 		return_NULL;
 
-	lv->status |= WRITECACHE;
-
 	/*
 	 * "lv_wcorig" is a new LV with new id, but with the segments from "lv".
 	 * "lv" keeps the existing name and id, but gets a new writecache segment,
 	 * in place of the segments that were moved to lv_wcorig.
 	 */
 
-	if (!(lv_wcorig = insert_layer_for_lv(cmd, lv, WRITECACHE, "_wcorig")))
+	if (!(lv_wcorig = insert_layer_for_lv(cmd, lv, 0, "_wcorig")))
 		return_NULL;
 
-	lv_set_hidden(lv_fast);
-
+	lv->status |= WRITECACHE;
 	seg = first_seg(lv);
 	seg->segtype = segtype;
 
 	seg->writecache = lv_fast;
+	lv_set_hidden(lv_fast);
 
 	/* writecache_block_size is in bytes */
 	seg->writecache_block_size = block_size_sectors * 512;
