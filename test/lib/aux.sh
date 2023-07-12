@@ -56,7 +56,7 @@ create_dlm_conf() {
 			mv "$DLM_CONF" "$DLM_CONF.prelvmtest"
 		fi
 	fi
-
+	mkdir -p "$(dirname "$DLM_CONF")"
 	cp lib/test-dlm-conf "$DLM_CONF"
 	echo "created new $DLM_CONF"
 }
