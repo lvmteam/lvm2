@@ -1091,6 +1091,7 @@ static void cpg_message_callback(cpg_handle_t handle, const struct cpg_name *gna
 	    (rq->u_rq.request_type != DM_ULOG_RESUME) &&
 	    (rq->u_rq.request_type != DM_ULOG_CLEAR_REGION) &&
 	    (rq->u_rq.request_type != DM_ULOG_CHECKPOINT_READY)) {
+		/* coverity[suspicious_sizeof] allocation is using varargs data @end */
 		tmp_rq = malloc(DM_ULOG_REQUEST_SIZE);
 		if (!tmp_rq) {
 			/*
@@ -1340,6 +1341,7 @@ static void cpg_join_callback(struct clog_cpg *match,
 		goto out;
 	}
 
+	/* coverity[suspicious_sizeof] allocation is using varargs data @end */
 	rq = malloc(DM_ULOG_REQUEST_SIZE);
 	if (!rq) {
 		LOG_ERROR("cpg_config_callback: "
