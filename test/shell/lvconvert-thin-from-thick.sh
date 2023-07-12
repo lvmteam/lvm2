@@ -68,7 +68,7 @@ if aux have_cache 1 3 0 ; then
 fi
 
 # writecache -> thin
-if aux have_cache 1 3 0 ; then
+if aux have_writecache 1 0 0 ; then
 	lvcreate -L10 -n $lv1 $vg
 	lvcreate -an -L10 -n $lv2 $vg
 	lvconvert --yes --type writecache --cachevol $lv2 $vg/$lv1
