@@ -462,7 +462,7 @@ int thin_pool_prepare_metadata(struct logical_volume *metadata_lv,
 	char lv_path[PATH_MAX], md_path[64], buffer[512];
 	const struct dm_config_node *cn;
 	const struct dm_config_value *cv;
-	const char *argv[19] = { /* Max supported 15 option args */
+	const char *argv[20] = { /* Max supported 15 option args */
 		find_config_tree_str_allow_empty(cmd, global_thin_restore_executable_CFG, NULL)
 	};
 	int args = 0;

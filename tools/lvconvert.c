@@ -3398,13 +3398,11 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	 * data and meta LVs (they are unlocked and deleted below.)
 	 */
 	if (vg_is_shared(vg)) {
-		if (to_cachepool) {
-			data_lv->lock_args = NULL;
-			metadata_lv->lock_args = NULL;
-		} else {
-			data_lv->lock_args = NULL;
-			metadata_lv->lock_args = NULL;
+		pool_lv->lock_args = NULL;
+		data_lv->lock_args = NULL;
+		metadata_lv->lock_args = NULL;
 
+		if (!to_cachepool) {
 			if (!strcmp(vg->lock_type, "sanlock"))
 				pool_lv->lock_args = "pending";
 			else if (!strcmp(vg->lock_type, "dlm"))
