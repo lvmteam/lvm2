@@ -17,10 +17,13 @@ Clone:
   git clone git@gitlab.com:lvmteam/lvm2.git
 Anonymous access:
   git clone https://gitlab.com/lvmteam/lvm2.git
-[occasionally] mirrored to:
-  https://github.com/lvmteam/lvm2
+Mirrored to:
+* https://github.com/lvmteam/lvm2
   git clone https://github.com/lvmteam/lvm2.git
   git clone git@github.com:lvmteam/lvm2.git
+* https://sourceware.org/git/?p=lvm2.git
+  git clone https://sourceware.org/git/lvm2.git
+  git clone git://sourceware.org/git/lvm2.git
 
 Mailing list for general discussion related to LVM2:
   linux-lvm@redhat.com
