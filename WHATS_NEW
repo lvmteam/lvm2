@@ -1,5 +1,7 @@
 version 2.03.22 - 
 =================================
+  Fix memleak in vgchange autoactivation setup.
+  Update py-compile building script.
   Support conversion from thick to fully provisioned thin LV.
   Cache/Thin-pool can use error and zero volumes for testing.
   Individual thin volume can be cached, but cannot take snapshot.
