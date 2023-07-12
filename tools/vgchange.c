@@ -863,6 +863,9 @@ static int _vgchange_autoactivation_setup(struct cmd_context *cmd,
 		*flags &= ~READ_WITHOUT_LOCK;
 		cmd->can_use_one_scan = 0;
 	}
+
+	free(vgname);
+
 	return 1;
 
 }
