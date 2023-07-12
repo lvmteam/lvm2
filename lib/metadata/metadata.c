@@ -2642,8 +2642,8 @@ int vg_validate(struct volume_group *vg)
 
 				if (!strcmp(vg->lock_type, "sanlock")) {
 					if (dm_hash_lookup(vhash.lv_lock_args, lvl->lv->lock_args)) {
-						log_error(INTERNAL_ERROR "LV %s/%s has duplicate lock_args %s.",
-							  vg->name, lvl->lv->name, lvl->lv->lock_args);
+						log_error(INTERNAL_ERROR "LV %s has duplicate lock_args %s.",
+							  display_lvname(lvl->lv), lvl->lv->lock_args);
 						r = 0;
 					}
 
@@ -2657,15 +2657,15 @@ int vg_validate(struct volume_group *vg)
 				if (lv_is_cache_vol(lvl->lv)) {
 					log_debug("lock_args will be ignored on cache vol");
 				} else if (lvl->lv->lock_args) {
-					log_error(INTERNAL_ERROR "LV %s/%s shouldn't have lock_args",
-						  vg->name, lvl->lv->name);
+					log_error(INTERNAL_ERROR "LV %s shouldn't have lock_args %s.",
+						  display_lvname(lvl->lv), lvl->lv->lock_args);
 					r = 0;
 				}
 			}
 		} else {
 			if (lvl->lv->lock_args) {
-				log_error(INTERNAL_ERROR "LV %s/%s with no lock_type has lock_args %s",
-					  vg->name, lvl->lv->name, lvl->lv->lock_args);
+				log_error(INTERNAL_ERROR "LV %s with no lock_type has lock_args %s.",
+					  display_lvname(lvl->lv), lvl->lv->lock_args);
 				r = 0;
 			}
 		}
