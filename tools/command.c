@@ -376,7 +376,7 @@ static int _val_str_to_num(char *str)
 static int _opt_str_to_num(struct command *cmd, char *str)
 {
 	char long_name[MAX_LONG_OPT_NAME_LEN];
-	char *p;
+	char *p = NULL;
 	int i;
 	int first = 0, last = ARG_COUNT - 1, middle;
 
