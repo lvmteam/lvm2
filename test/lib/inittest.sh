@@ -109,11 +109,13 @@ cd "$TESTDIR"
 mkdir lib tmp
 
 # Setting up symlink from $i to $TESTDIR/lib
+# library libdevmapper-event-lvm2.so.2.03 is needed with name
 test -n "${abs_top_builddir+varset}" && \
-    find "$abs_top_builddir/daemons/dmeventd/plugins/" -name '*.so' \
+    find "$abs_top_builddir/daemons/dmeventd/plugins/" -name '*.so*' \
     -exec ln -s -t lib "{}" +
 find "$TESTOLDPWD/lib" ! \( -name '*.sh' -o -name '*.[cdo]' \
     -o -name '*~' \)  -exec ln -s -t lib "{}" +
+LD_LIBRARY_PATH="$TESTDIR/lib:$LD_LIBRARY_PATH"
 
 DM_DEFAULT_NAME_MANGLING_MODE=none
 DM_DEV_DIR="$TESTDIR/dev"
