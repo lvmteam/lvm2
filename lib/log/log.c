@@ -244,11 +244,11 @@ static int _get_pid_starttime(int *pid, unsigned long long *starttime)
 	if ((sscanf(buf, "%d ", pid) == 1) &&
 	    /* Jump past COMM, don't use scanf with '%s' since COMM may contain a space. */
 	    (p = strrchr(buf, ')')) &&
-	    (scanf(++p, " %*c %*d %*d %*d %*d " /* tty_nr */
-		   "%*d %*u %*u %*u %*u " /* mjflt */
-		   "%*u %*u %*u %*d %*d " /* cstim */
-		   "%*d %*d %*d %*d " /* itrealvalue */
-		   "%llu", &starttime) == 1))
+	    (sscanf(++p, " %*c %*d %*d %*d %*d " /* tty_nr */
+		    "%*d %*u %*u %*u %*u " /* mjflt */
+		    "%*u %*u %*u %*d %*d " /* cstim */
+		    "%*d %*d %*d %*d " /* itrealvalue */
+		    "%llu", &starttime) == 1))
 		return 1;
 
 	log_debug("Cannot parse content of %s.", statfile);
