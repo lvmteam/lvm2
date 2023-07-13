@@ -156,8 +156,11 @@ static int _lvchange_monitoring(struct cmd_context *cmd,
 			log_verbose("Monitoring LV %s", display_lvname(lv));
 		else
 			log_verbose("Unmonitoring LV %s", display_lvname(lv));
-		if (!monitor_dev_for_events(cmd, lv, 0, dmeventd_monitor_mode()))
-			return_0;
+		if (!monitor_dev_for_events(cmd, lv, 0, dmeventd_monitor_mode())) {
+			log_error("Failed to change monitoring for %s volume.",
+				  display_lvname(lv));
+			return 0;
+		}
 	}
 
 	return 1;
