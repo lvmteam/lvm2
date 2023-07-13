@@ -51,18 +51,14 @@ include $(top_builddir)/make.tmpl
 
 .PHONY: install_lvmdbusd
 
-all:
-	$(Q) test -x $(LVMDBUSD) || chmod 755 $(LVMDBUSD)
-
 install_lvmdbusd: $(LVMDBUSD)
 	@echo "    [INSTALL] $<"
 	$(Q) $(INSTALL_DIR) $(sbindir)
 	$(Q) $(INSTALL_SCRIPT) $(LVMDBUSD) $(sbindir)
-	$(Q) $(INSTALL_DIR) $(lvmdbusdir)
+	$(Q) $(INSTALL_DIR) $(lvmdbusdir) $(lvmdbusdir)/__pycache__
 	$(Q) (cd $(srcdir); $(INSTALL_DATA) $(LVMDBUS_SRCDIR_FILES) $(lvmdbusdir))
 	$(Q) $(INSTALL_DATA) $(LVMDBUS_BUILDDIR_FILES) $(lvmdbusdir)
 	$(Q) PYTHON=$(PYTHON3) $(PYCOMPILE) --destdir "$(DESTDIR)" --basedir "$(lvmdbuspydir)" $(LVMDBUS_SRCDIR_FILES) $(LVMDBUS_BUILDDIR_FILES)
-	$(Q) $(CHMOD) 755 $(lvmdbusdir)/__pycache__
 	$(Q) $(CHMOD) 444 $(lvmdbusdir)/__pycache__/*.py[co]
 
 install_lvm2: install_lvmdbusd

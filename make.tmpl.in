@@ -203,7 +203,7 @@ endif
 # Handle installation of files
 ifeq ("@WRITE_INSTALL@", "yes")
 # leaving defaults
-M_INSTALL_SCRIPT =
+M_INSTALL_SCRIPT = -m 755
 M_INSTALL_DATA = -m 644
 else
 M_INSTALL_PROGRAM = -m 555
