@@ -148,12 +148,16 @@ pvcreate --pvmetadatacopies 2 --metadatasize 32M "$dev1"
 
 vgcreate $SHARED -s 64K --metadatasize 32M $vg "$dev1" "$dev2" "$dev3" "$dev4"
 
-for i in $(seq 1 500); do echo "lvcreate -an -n lv$i -l1 $vg"; done | lvm
+for i in $(seq 1 500); do echo "lvcreate -an -Zn -n lv$i -l1 $vg"; done | lvm
+rm -f debug.log*
 
 pvck --dump headers "$dev1" > h1
 
 pvck --dump metadata_search "$dev1" > m1
-grep "seqno 500" m1
+grep "seqno 500" m1 || {
+        cat m1
+        die "Missing seqno 500"
+}
 
 # When metadatasize is 32M, headers/rounding can mean that
 # we need more than the first 32M of the dev to get all the
