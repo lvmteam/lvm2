@@ -248,7 +248,7 @@ static int _get_pid_starttime(int *pid, unsigned long long *starttime)
 		    "%*d %*u %*u %*u %*u " /* mjflt */
 		    "%*u %*u %*u %*d %*d " /* cstim */
 		    "%*d %*d %*d %*d " /* itrealvalue */
-		    "%llu", &starttime) == 1))
+		    "%llu", starttime) == 1))
 		return 1;
 
 	log_debug("Cannot parse content of %s.", statfile);
