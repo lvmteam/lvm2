@@ -38,7 +38,7 @@ ifeq ($(MAKECMDGOALS),distclean)
     udev po
 tools.distclean: test.distclean
 endif
-DISTCLEAN_DIRS += lcov_reports*
+DISTCLEAN_DIRS += lcov_reports* autom4te.cache
 DISTCLEAN_TARGETS += config.cache config.log config.status make.tmpl
 
 include make.tmpl
