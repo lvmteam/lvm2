@@ -62,15 +62,8 @@ create_dlm_conf() {
 }
 
 prepare_dlm() {
-	if pgrep dlm_controld ; then
-		echo "Cannot run while existing dlm_controld process exists."
-		exit 1
-	fi
-
-	if pgrep corosync; then
-		echo "Cannot run while existing corosync process exists."
-		exit 1
-	fi
+	pgrep dlm_controld && skip "Cannot run while existing dlm_controld process exists."
+	pgrep corosync && skip "Cannot run while existing corosync process exists."
 
 	create_corosync_conf
 	create_dlm_conf
@@ -100,15 +93,13 @@ create_sanlock_conf() {
 		fi
 	fi
 
+	mkdir -p "$(dirname "$SANLOCK_CONF")"
 	cp lib/test-sanlock-conf "$SANLOCK_CONF"
 	echo "created new $SANLOCK_CONF"
 }
 
 prepare_sanlock() {
-	if pgrep sanlock ; then
-		echo "Cannot run while existing sanlock process exists"
-		exit 1
-	fi
+	pgrep sanlock && skip "Cannot run while existing sanlock process exists"
 
 	create_sanlock_conf
 
@@ -120,10 +111,7 @@ prepare_sanlock() {
 }
 
 prepare_idm() {
-	if pgrep seagate_ilm; then
-		echo "Cannot run while existing seagate_ilm process exists"
-		exit 1
-	fi
+	pgrep seagate_ilm && skip "Cannot run while existing seagate_ilm process exists"
 
 	seagate_ilm -D 0 -l 0 -L 7 -E 7 -S 7
 
@@ -134,10 +122,7 @@ prepare_idm() {
 }
 
 prepare_lvmlockd() {
-	if pgrep lvmlockd ; then
-		echo "Cannot run while existing lvmlockd process exists"
-		exit 1
-	fi
+	pgrep lvmlockd && skip "Cannot run while existing lvmlockd process exists"
 
 	if test -n "$LVM_TEST_LOCK_TYPE_SANLOCK"; then
 		# make check_lvmlockd_sanlock
