@@ -383,13 +383,13 @@ static bool _read_bytes(struct device *dev, struct devicefile *def, uint64_t sta
 		return false;
 
 	off = lseek(def->fd, start, SEEK_SET);
-	if (off != start)
+	if (off != (off_t)start)
 		return false;
 
 	rv = read(def->fd, data, len);
 	if (rv < 0)
 		return false;
-	if (rv != len)
+	if ((size_t)rv != len)
 		return false;
 	return true;
 }
@@ -418,7 +418,7 @@ static int _dump_all_text(struct cmd_context *cmd, struct settings *set, const c
 	int multiple_vgs = 0;
 	int bad_end;
 	int vgnamelen;
-	int count;
+	unsigned count;
 	int len;
 
 	if (tofile) {
@@ -1859,8 +1859,8 @@ static int _get_settings(struct cmd_context *cmd, struct settings *set)
 	const char *str;
 	char key[64];
 	char val[64];
-	int num;
-	int pos;
+	unsigned num;
+	unsigned pos;
 
 	/*
 	 * "grouped" means that multiple --settings options can be used.
@@ -2119,7 +2119,7 @@ static int _check_for_mda2(struct cmd_context *cmd, struct device *dev,
 	char buf2[256];
 	char *buf;
 	uint64_t mda_offset, mda_size, extra_bytes; /* bytes */
-	int i, found = 0;
+	unsigned i, found = 0;
 
 	if (device_size < (2 * ONE_MB_IN_BYTES))
 		return_0;
@@ -2833,7 +2833,7 @@ static int _dump_backup_to_raw(struct cmd_context *cmd, struct settings *set)
 		goto fail_close;
 
 	rv = read(fd, back_buf, back_size);
-	if (rv != back_size) {
+	if (rv != (int)back_size) {
 		log_error("Cannot read file: %s", input);
 		free(back_buf);
 		goto fail_close;
@@ -2970,7 +2970,7 @@ static int _read_metadata_file(struct cmd_context *cmd, struct metadata_file *mf
 		goto_out;
 
 	rv = read(fd, text_buf, text_size);
-	if (rv != text_size) {
+	if (rv != (int)text_size) {
 		log_error("Cannot read file: %s", mf->filename);
 		free(text_buf);
 		goto out;

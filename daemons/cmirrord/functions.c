@@ -67,7 +67,7 @@ struct log_c {
 	uint32_t recoverer;
 	uint64_t recovering_region; /* -1 means not recovering */
 	uint64_t skip_bit_warning; /* used to warn if region skipped */
-	int sync_search;
+	unsigned sync_search;
 
 	int resume_override;
 
@@ -220,7 +220,7 @@ static int rw_log(struct log_c *lc, int do_write)
 	if (r < 0)
 		LOG_ERROR("[%s] rw_log:  read failure: %s",
 			  SHORT_UUID(lc->uuid), strerror(errno));
-	if (r != lc->disk_size)
+	if ((unsigned) r != lc->disk_size)
 		return -EIO; /* Failed disk read */
 	return 0;
 }
@@ -298,7 +298,7 @@ static int find_disk_path(char *major_minor_str, char *path_rtn, int *unlink_pat
 	DIR *dp;
 	struct dirent *dep;
 	struct stat statbuf;
-	int major, minor;
+	unsigned major, minor;
 
 	if (!strstr(major_minor_str, ":")) {
 		r = stat(major_minor_str, &statbuf);

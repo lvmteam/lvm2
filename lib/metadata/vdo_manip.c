@@ -593,7 +593,7 @@ static int _get_memory_info(uint64_t *total_mb, uint64_t *available_mb)
 		if (!(e = strchr(line, ':')))
 			break;
 
-		if ((++e - line) > sizeof(namebuf))
+		if ((unsigned)(++e - line) > sizeof(namebuf))
 			continue; // something too long
 
 		(void)dm_strncpy((char*)findme.name, line, e - line);

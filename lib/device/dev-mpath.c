@@ -466,8 +466,8 @@ static int _dev_is_mpath_component_sysfs(struct cmd_context *cmd, struct device 
 	struct dirent *de;
 	int dev_major = MAJOR(dev->dev);
 	int dev_minor = MINOR(dev->dev);
-	int dm_dev_major;
-	int dm_dev_minor;
+	unsigned dm_dev_major;
+	unsigned dm_dev_minor;
 	struct stat info;
 	int is_mpath_component = 0;
 
@@ -539,8 +539,8 @@ static int _dev_is_mpath_component_sysfs(struct cmd_context *cmd, struct device 
 					dev_name(dev), dm_dev_path, errno);
 			continue;
 		}
-		dm_dev_major = (int)MAJOR(info.st_rdev);
-		dm_dev_minor = (int)MINOR(info.st_rdev);
+		dm_dev_major = MAJOR(info.st_rdev);
+		dm_dev_minor = MINOR(info.st_rdev);
 	
 		if (dm_dev_major != dt->device_mapper_major) {
 			log_debug_devs("dev_is_mpath_component %s holder %s %d:%d does not have dm major",
@@ -767,7 +767,7 @@ const char *dev_mpath_component_wwid(struct cmd_context *cmd, struct device *dev
 			continue;
 
 		if (strstr(sysbuf, "scsi_debug")) {
-			int i;
+			unsigned i;
 			for (i = 0; i < strlen(sysbuf); i++) {
 				if (sysbuf[i] == ' ')
 					sysbuf[i] = '_';

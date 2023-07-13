@@ -547,7 +547,7 @@ static int _remove_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg)
 	return 1;
 }
 
-static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, int extend_mb)
+static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, unsigned extend_mb)
 {
 	struct device *dev;
 	char path[PATH_MAX];
@@ -654,7 +654,7 @@ static int _refresh_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg)
 int handle_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg)
 {
 	daemon_reply reply;
-	int extend_mb;
+	unsigned extend_mb;
 	int result;
 	int ret;
 
@@ -663,7 +663,7 @@ int handle_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg)
 	if (!_lvmlockd_connected)
 		return 0;
 
-	extend_mb = find_config_tree_int(cmd, global_sanlock_lv_extend_CFG, NULL);
+	extend_mb = (unsigned) find_config_tree_int(cmd, global_sanlock_lv_extend_CFG, NULL);
 
 	/*
 	 * User can choose to not automatically extend the lvmlock LV

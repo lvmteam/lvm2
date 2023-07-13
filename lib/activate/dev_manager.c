@@ -4132,7 +4132,7 @@ int get_crypt_table_offset(dev_t crypt_devt, uint32_t *offset_bytes)
 	char offset_str[32] = { 0 };
 	int copy_offset = 0;
 	int spaces = 0;
-	int i, i_off = 0;
+	unsigned i, i_off = 0;
 
 	if (!dmt)
 		return_0;

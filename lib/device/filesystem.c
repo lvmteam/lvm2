@@ -288,7 +288,7 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 	 * The mnt dir from /etc/mtab and /proc/mounts are compared below.
 	 */
 	if (strchr(mtab_mntpath, ' ')) {
-		int i, j = 0;
+		unsigned i, j = 0;
 		memcpy(tmp_path, mtab_mntpath, sizeof(tmp_path));
 		memset(mtab_mntpath, 0, sizeof(mtab_mntpath));
 		for (i = 0; i < sizeof(tmp_path); i++) {

@@ -385,7 +385,7 @@ static int _set_integrity_block_size(struct cmd_context *cmd, struct logical_vol
 		 */
 		rv = fs_block_size_and_type(pathname, &fs_block_size, NULL, NULL);
 		if (!rv || !fs_block_size) {
-			int use_bs;
+			unsigned use_bs;
 
 			if (lbs_4k && pbs_4k) {
 				use_bs = 4096;

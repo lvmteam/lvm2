@@ -186,10 +186,10 @@ void free_dids(struct dm_list *ids)
 }
 
 /* More than one _ in a row is replaced with one _ */
-static void _reduce_repeating_underscores(char *buf, int bufsize)
+static void _reduce_repeating_underscores(char *buf, size_t bufsize)
 {
 	char *tmpbuf;
-	int us = 0, i, j = 0;
+	unsigned us = 0, i, j = 0;
 
 	if (!(tmpbuf = strndup(buf, bufsize-1)))
 		return;
@@ -216,10 +216,10 @@ static void _reduce_repeating_underscores(char *buf, int bufsize)
 	free(tmpbuf);
 }
 
-static void _remove_leading_underscores(char *buf, int bufsize)
+static void _remove_leading_underscores(char *buf, size_t bufsize)
 {
 	char *tmpbuf;
-	int i, j = 0;
+	unsigned i, j = 0;
 
 	if (buf[0] != '_')
 		return;
@@ -492,7 +492,8 @@ int dev_read_sys_wwid(struct cmd_context *cmd, struct device *dev,
 	char buf[DEV_WWID_SIZE] = { 0 };
 	struct dev_wwid *dw;
 	int is_t10 = 0;
-	int i, ret;
+	int ret;
+	unsigned i;
 
 	dev->flags |= DEV_ADDED_SYS_WWID;
 
@@ -566,7 +567,8 @@ static int _dev_read_sys_serial(struct cmd_context *cmd, struct device *dev,
 		char vdx[8] = { 0 };
 		const char *sysfs_dir;
 		const char *base;
-		int i, j = 0, ret;
+		unsigned i, j = 0;
+		int ret;
 
 		/* /dev/vda to vda */
 		base = basename(devname);
@@ -603,7 +605,7 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 	char sysbuf2[PATH_MAX] = { 0 };
 	const char *idname = NULL;
 	struct dev_wwid *dw;
-	int i;
+	unsigned i;
 
 	if (idtype == DEV_ID_TYPE_SYS_WWID) {
 		dev_read_sys_wwid(cmd, dev, sysbuf, sizeof(sysbuf), NULL);
@@ -1767,7 +1769,7 @@ void device_id_update_vg_uuid(struct cmd_context *cmd, struct volume_group *vg, 
 	unlock_devices_file(cmd);
 }
 
-static int _idtype_compatible_with_major_number(struct cmd_context *cmd, int idtype, int major)
+static int _idtype_compatible_with_major_number(struct cmd_context *cmd, int idtype, unsigned major)
 {
 	/* devname can be used with any kind of device */
 	if (idtype == DEV_ID_TYPE_DEVNAME)
@@ -2983,8 +2985,8 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 	 * filter values.
 	 */
 	dm_list_iterate_items(devl, &search_devs) {
-		dev = devl->dev;
 		int has_pvid;
+		dev = devl->dev;
 
 		/*
 		 * We only need to check devs that would use ID_TYPE_DEVNAME

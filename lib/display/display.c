@@ -936,7 +936,8 @@ char yes_no_prompt(const char *prompt, ...)
 	static const char _no[] = "no";
 	const char *answer = NULL;
 	int c = silent_mode() ? EOF : 0;
-	int i = 0, ret = 0, sig = 0;
+	int ret = 0, sig = 0;
+	unsigned i = 0;
 	char buf[12];
 	va_list ap;
 

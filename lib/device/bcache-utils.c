@@ -58,6 +58,7 @@ bool bcache_read_bytes(struct bcache *cache, int di, uint64_t start, size_t len,
 	block_address bb, be;
 	uint64_t block_size = bcache_block_sectors(cache) << SECTOR_SHIFT;
 	uint64_t block_offset = start % block_size;
+	size_t blen;
 
 	bcache_prefetch_bytes(cache, di, start, len);
 
@@ -67,7 +68,7 @@ bool bcache_read_bytes(struct bcache *cache, int di, uint64_t start, size_t len,
         	if (!bcache_get(cache, di, bb, 0, &b))
 			return false;
 
-		size_t blen = _min(block_size - block_offset, len);
+		blen = _min(block_size - block_offset, len);
 		memcpy(data, ((unsigned char *) b->data) + block_offset, blen);
 		bcache_put(b);
 

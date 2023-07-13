@@ -41,13 +41,13 @@
  * Replace each space with underscore.
  * Skip quotes, non-ascii, non-printable.
  */
-int format_general_id(const char *in, int in_bytes, unsigned char *out, int out_bytes)
+int format_general_id(const char *in, size_t in_bytes, unsigned char *out, size_t out_bytes)
 {
 	const char *end;
-	int end_bytes = strlen(in);
+	size_t end_bytes = strlen(in);
 	int retlen = 0;
-	int j = 0;
-	int i;
+	unsigned j = 0;
+	unsigned i;
 
 	if (!end_bytes)
 		return 0;
@@ -88,12 +88,12 @@ int format_general_id(const char *in, int in_bytes, unsigned char *out, int out_
  * Replace series of spaces with a single _.
  * Skip quotes, non-ascii, non-printable.
  */
-int format_t10_id(const unsigned char *in, int in_bytes, unsigned char *out, int out_bytes)
+int format_t10_id(const unsigned char *in, size_t in_bytes, unsigned char *out, size_t out_bytes)
 {
 	int in_space = 0;
 	int retlen = 0;
-	int j = 0;
-	int i;
+	unsigned j = 0;
+	unsigned i;
 
 	for (i = 0; i < in_bytes; i++) {
 		if (!in[i])
@@ -168,7 +168,7 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 		case 0x1:
 			/* T10 Vendor ID */
 			cur_id_size = d[3];
-			if (cur_id_size + 4 > id_len)
+			if ((size_t)(cur_id_size + 4) > id_len)
 				cur_id_size = id_len - 4;
 			cur_id_str = d + 4;
 			format_t10_id(cur_id_str, cur_id_size, tmp_str, sizeof(tmp_str));
@@ -253,7 +253,7 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 			 * and if so does tolower() on the chars.
 			 */
 			if ((type == 2) || (type == 3)) {
-				int i;
+				unsigned i;
 				for (i = 0; i < strlen(id); i++)
 					id[i] = tolower(id[i]);
 			}
@@ -267,9 +267,9 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 	return id_size;
 }
 
-int parse_vpd_serial(const unsigned char *in, char *out, int outsize)
+int parse_vpd_serial(const unsigned char *in, char *out, size_t outsize)
 {
-	uint8_t len_buf[2] __attribute__((aligned(8))) = { 0 };;
+	uint8_t len_buf[2] __attribute__((aligned(8))) = { 0 };
 	size_t len;
 
 	/* parsing code from multipath tools */

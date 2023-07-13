@@ -2326,13 +2326,12 @@ static void _print_val_man(struct command_name *cname, int opt_enum, int val_enu
 	char *line_argv[MAX_LINE_ARGC];
 	int line_argc;
 	int i;
-
-	_was_hyphen = 0;
 	int is_relative_opt = (opt_enum == size_ARG) ||
 			      (opt_enum == extents_ARG) ||
 			      (opt_enum == poolmetadatasize_ARG) ||
 			      (opt_enum == mirrors_ARG);
 
+	_was_hyphen = 0;
 	/*
 	 * Suppress the [+] prefix for lvcreate which we have to
 	 * accept for backwards compat, but don't want to advertise.
@@ -2515,7 +2514,7 @@ static const char *_man_long_opt_name(const char *cmdname, int opt_enum)
 {
 	static char long_opt_name[LONG_OPT_NAME_LEN];
 	const char *long_opt;
-	int i;
+	unsigned i;
 
 	memset(&long_opt_name, 0, sizeof(long_opt_name));
 

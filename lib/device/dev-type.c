@@ -89,7 +89,7 @@ int dev_is_used_by_active_lv(struct cmd_context *cmd, struct device *dev, int *u
 	DIR *d;
 	struct dirent *dirent;
 	char *holder_name;
-	int dm_dev_major, dm_dev_minor;
+	unsigned dm_dev_major, dm_dev_minor;
 	size_t lvm_prefix_len = sizeof(UUID_PREFIX) - 1;
 	size_t lvm_uuid_len = sizeof(UUID_PREFIX) - 1 + 2 * ID_LEN;
 	size_t uuid_len;

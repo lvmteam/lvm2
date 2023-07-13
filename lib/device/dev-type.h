@@ -38,15 +38,15 @@ struct dev_type_def {
 };
 
 struct dev_types {
-	int md_major;
-	int blkext_major;
-	int drbd_major;
-	int device_mapper_major;
-	int emcpower_major;
-	int vxdmp_major;
-	int power2_major;
-	int dasd_major;
-	int loop_major;
+	unsigned md_major;
+	unsigned blkext_major;
+	unsigned drbd_major;
+	unsigned device_mapper_major;
+	unsigned emcpower_major;
+	unsigned vxdmp_major;
+	unsigned power2_major;
+	unsigned dasd_major;
+	unsigned loop_major;
 	struct dev_type_def dev_type_array[NUMBER_OF_MAJORS];
 };
 

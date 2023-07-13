@@ -931,7 +931,7 @@ int validate_major_minor(const struct cmd_context *cmd,
 	} else {
 		/* 12 bits for major number */
 		if ((major != -1) &&
-		    (major != cmd->dev_types->device_mapper_major)) {
+		    (major != (int)cmd->dev_types->device_mapper_major)) {
 			/* User supplied some major number */
 			if (major < 0 || major > 4095) {
 				log_error("Major number %d outside range 0-4095.", major);

@@ -53,7 +53,7 @@ static struct {
 	const char *dev_dir;
 
 	int has_scanned;
-	long st_dev;
+	dev_t st_dev;
 	struct dm_list dirs;
 	struct dm_list files;
 
@@ -2123,10 +2123,10 @@ static char *_get_devname_from_devno(struct cmd_context *cmd, dev_t devno)
 	char devname[PATH_MAX] = { 0 };
 	char namebuf[NAME_LEN];
 	char line[1024];
-	int major = MAJOR(devno);
-	int minor = MINOR(devno);
-	int line_major;
-	int line_minor;
+	unsigned major = MAJOR(devno);
+	unsigned minor = MINOR(devno);
+	unsigned line_major;
+	unsigned line_minor;
 	uint64_t line_blocks;
 	DIR *dir;
 	struct dirent *dirent;

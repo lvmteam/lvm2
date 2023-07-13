@@ -2036,7 +2036,7 @@ static int _find_ancestors(struct _str_list_append_baton *ancestors,
 	struct lv_segment *seg;
 	void *orig_p = glv.live;
 	const char *ancestor_str;
-	char buf[NAME_LEN + strlen(HISTORICAL_LV_PREFIX) + 1];
+	char buf[NAME_LEN + sizeof(HISTORICAL_LV_PREFIX)];
 
 	if (glv.is_historical) {
 		if (full && glv.historical->indirect_origin)

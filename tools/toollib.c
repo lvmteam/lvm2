@@ -1524,7 +1524,7 @@ int get_writecache_settings(struct cmd_context *cmd, struct writecache_settings 
 	char key[64];
 	char val[64];
 	int num;
-	int pos;
+	unsigned pos;
 	int rn;
 	int found = 0;
 
@@ -1854,7 +1854,7 @@ int get_and_validate_major_minor(const struct cmd_context *cmd,
 				 *major, cmd->dev_types->device_mapper_major);
 		}
 		/* Stay with dynamic major:minor if minor is not specified. */
-		*major = (*minor == -1) ? -1 : cmd->dev_types->device_mapper_major;
+		*major = (*minor == -1) ? -1 : (int)cmd->dev_types->device_mapper_major;
 	}
 
 	if ((*minor != -1) && !validate_major_minor(cmd, fmt, *major, *minor))

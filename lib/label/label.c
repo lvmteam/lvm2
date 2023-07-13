@@ -266,7 +266,7 @@ static bool _in_bcache(struct device *dev)
 
 static struct labeller *_find_lvm_header(struct device *dev,
 				   char *headers_buf,
-				   int headers_buf_size,
+				   size_t headers_buf_size,
 				   uint64_t *label_sector,
 				   uint64_t block_sector,
 				   uint64_t start_sector)
@@ -341,7 +341,7 @@ static struct labeller *_find_lvm_header(struct device *dev,
  * are performed in the processing functions to get that data.
  */
 static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
-			  struct device *dev, char *headers_buf, int headers_buf_size,
+			  struct device *dev, char *headers_buf, size_t headers_buf_size,
 			  uint64_t block_sector, uint64_t start_sector,
 			  int *is_lvm_device)
 {
@@ -993,7 +993,7 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 	struct pv_online *po;
 	struct device_list *devl, *devl2;
 	int relax_deviceid_filter = 0;
-	int metadata_pv_count;
+	unsigned metadata_pv_count;
 	int try_dev_scan = 0;
 
 	dm_list_init(&pvs_online);

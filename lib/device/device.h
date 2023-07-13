@@ -238,9 +238,9 @@ void dev_destroy_file(struct device *dev);
 int dev_mpath_init(const char *config_wwids_file);
 void dev_mpath_exit(void);
 int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list *ids);
-int format_t10_id(const unsigned char *in, int in_bytes, unsigned char *out, int out_bytes);
-int format_general_id(const char *in, int in_bytes, unsigned char *out, int out_bytes);
-int parse_vpd_serial(const unsigned char *in, char *out, int outsize);
+int format_t10_id(const unsigned char *in, size_t in_bytes, unsigned char *out, size_t out_bytes);
+int format_general_id(const char *in, size_t in_bytes, unsigned char *out, size_t out_bytes);
+int parse_vpd_serial(const unsigned char *in, char *out, size_t outsize);
 
 /* dev_util */
 int device_id_list_remove(struct dm_list *devices, struct device *dev);
