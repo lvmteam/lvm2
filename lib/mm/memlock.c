@@ -111,6 +111,7 @@ static const char * const _blacklist_maps[] = {
 	"/libcap.so.",		/* not using during mlock (systemd) */
 	"/libdl-",		/* not using dlopen,dlsym during mlock */
 	"/libdw-",		/* not using during mlock (udev) */
+	"/libedit.so.",		/* not using editline during mlock */
 	"/libelf-",		/* not using during mlock (udev) */
 	"/libgcrypt.so.",	/* not using during mlock (systemd) */
 	"/libgpg-error.so.",	/* not using gpg-error during mlock (systemd) */
@@ -121,7 +122,6 @@ static const char * const _blacklist_maps[] = {
 	"/libpcre.so.",		/* not using pcre during mlock (selinux) */
 	"/libpcre2-",		/* not using pcre during mlock (selinux) */
 	"/libreadline.so.",	/* not using readline during mlock */
-	"/libedit.so.",		/* not using editline during mlock */
 	"/libresolv-",		/* not using during mlock (udev) */
 	"/libselinux.so.",	/* not using selinux during mlock */
 	"/libsepol.so.",	/* not using sepol during mlock */
@@ -130,6 +130,7 @@ static const char * const _blacklist_maps[] = {
 	"/libudev.so.",		/* not using udev during mlock */
 	"/libuuid.so.",		/* not using uuid during mlock (blkid) */
 	"/libz.so.",		/* not using during mlock (udev) */
+	"/libzstd.so.",		/* not using zstd during mlock (systemd) */
 	"/etc/selinux",		/* not using selinux during mlock */
 	/* "/libdevmapper-event.so" */
 };
