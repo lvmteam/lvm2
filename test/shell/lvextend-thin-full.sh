@@ -14,7 +14,6 @@
 # play with thin-pool resize in corner cases
 #
 
-SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
@@ -34,9 +33,10 @@ aux lvmconf 'activation/thin_pool_autoextend_percent = 30' \
 	    'activation/thin_pool_autoextend_threshold = 70'
 
 aux prepare_thin_metadata 400 0 | tee data
-lvcreate -L200 -T $vg/pool
+lvcreate -L200 -V10 -n $lv2 -T $vg/pool
 lvchange -an $vg
 
+# Prepare full metadata volume
 lvcreate -L2M -n $lv1 $vg
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 lvconvert -y --thinpool $vg/pool --poolmetadata $vg/$lv1
@@ -44,7 +44,7 @@ lvconvert -y --thinpool $vg/pool --poolmetadata $vg/$lv1
 # active thin pool is needed to use policy
 not lvextend --use-policies $vg/pool 2>&1 | tee err
 
-lvchange -ay $vg
+lvchange -ay $vg/$lv2
 
 # Cannot resize if set to 0%
 not lvextend --use-policies --config 'activation{thin_pool_autoextend_percent = 0}' $vg/pool 2>&1 | tee err
