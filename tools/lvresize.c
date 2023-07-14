@@ -259,29 +259,22 @@ out:
 static int _lv_extend_policy(struct cmd_context *cmd, struct logical_volume *lv,
 			     struct lvresize_params *lp, int *skipped)
 {
-	struct lvresize_params lp_meta;
 	uint32_t percent_main = 0;
 	uint32_t percent_meta = 0;
 	int is_active;
 
-	memset(&lp_meta, 0, sizeof(lp_meta));
-
-	if (!lv_is_cow(lv) && !lv_is_thin_pool(lv) && !lv_is_vdo_pool(lv)) {
+	if (lv_is_cow(lv))
+		is_active = lv_is_active(lv);
+	else if (lv_is_thin_pool(lv) || lv_is_vdo_pool(lv))
+		/* check for -layer active LV */
+		is_active = lv_info(lv->vg->cmd, lv, 1, NULL, 0, 0);
+	else {
 		log_error("lvextend policy is supported only for snapshot, thin pool and vdo pool volumes.");
-		*skipped = 1;
 		return 0;
 	}
 
-	is_active = lv_is_active(lv);
-
-	if (vg_is_shared(lv->vg) && !is_active) {
-		log_debug("lvextend policy requires LV to be active in a shared VG.");
-		*skipped = 1;
-		return 1;
-	}
-
-	if (lv_is_thin_pool(lv) && !is_active) {
-		log_error("lvextend using policy requires the thin pool to be active.");
+	if (!is_active) {
+		log_error("lvextend using policy requires the volume to be active.");
 		return 0;
 	}
 
