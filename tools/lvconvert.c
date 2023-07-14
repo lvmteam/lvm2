@@ -3398,6 +3398,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	 * data and meta LVs (they are unlocked and deleted below.)
 	 */
 	if (vg_is_shared(vg)) {
+		lv->lock_args = NULL;
 		pool_lv->lock_args = NULL;
 		data_lv->lock_args = NULL;
 		metadata_lv->lock_args = NULL;
@@ -3455,6 +3456,10 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		goto_bad;
 
 	if (to_thin) {
+		if (!lockd_lv(cmd, pool_lv, "ex", LDLV_PERSISTENT)) {
+			log_error("Failed to lock pool LV %s.", display_lvname(pool_lv));
+			goto out;
+		}
 		if (!lv_update_and_reload(lv))
 			goto_bad;
 	} else {
