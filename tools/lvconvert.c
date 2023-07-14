@@ -2918,6 +2918,24 @@ static int _lvconvert_swap_pool_metadata(struct cmd_context *cmd,
                 return 0;
         }
 
+	/* If LV is inactive here, ensure it's not active elsewhere. */
+	if (!lockd_lv(cmd, lv, "ex", 0))
+		return 0;
+
+	if (!deactivate_lv(cmd, metadata_lv)) {
+		log_error("Aborting. Failed to deactivate %s.",
+			  display_lvname(metadata_lv));
+		return 0;
+	}
+
+	if (!lockd_lv(cmd, metadata_lv, "un", 0)) {
+		log_error("Failed to unlock LV %s.", display_lvname(metadata_lv));
+		return 0;
+	}
+
+        metadata_lv->lock_args = NULL;
+
+
 	seg = first_seg(lv);
 
 	/* Normally do NOT change chunk size when swapping */
@@ -2956,12 +2974,6 @@ static int _lvconvert_swap_pool_metadata(struct cmd_context *cmd,
 			  display_lvname(lv),
 			  display_lvname(metadata_lv)) == 'n') {
 		log_error("Conversion aborted.");
-		return 0;
-	}
-
-	if (!deactivate_lv(cmd, metadata_lv)) {
-		log_error("Aborting. Failed to deactivate %s.",
-			  display_lvname(metadata_lv));
 		return 0;
 	}
 
@@ -4768,18 +4780,12 @@ int lvconvert_to_thin_with_data_cmd(struct cmd_context *cmd, int argc, char **ar
 }
 
 static int _lvconvert_swap_pool_metadata_single(struct cmd_context *cmd,
-					 struct logical_volume *lv,
-					 struct processing_handle *handle)
+						struct logical_volume *lv,
+						struct processing_handle *handle)
 {
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *metadata_lv;
 	const char *metadata_name;
-
-	if (vg_is_shared(lv->vg)) {
-		/* FIXME: need to swap locks betwen LVs? */
-		log_error("Unable to swap pool metadata in VG with lock_type %s", lv->vg->lock_type);
-		goto out;
-	}
 
 	if (!(metadata_name = arg_str_value(cmd, poolmetadata_ARG, NULL)))
 		goto_out;
