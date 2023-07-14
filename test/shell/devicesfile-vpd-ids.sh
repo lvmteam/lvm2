@@ -12,6 +12,8 @@
 
 test_description='device id wwid from vpd_pg83'
 
+SKIP_WITH_LVMPOLLD=1
+
 . lib/inittest
 
 test "$DM_DEV_DIR" = "/dev" || skip "Only works with /dev access -> make check LVM_TEST_DEVDIR=/dev"
