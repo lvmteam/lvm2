@@ -12,7 +12,6 @@
 
 # Test conversion to thin volume from thick LVs
 
-SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
@@ -49,6 +48,16 @@ lvremove -f $vg
 lvcreate --type zero -L2T -n $lv1 $vg
 lvconvert --yes --type thin  $vg/$lv1
 lvremove -f $vg
+
+# zero -> thin --test
+if [ ! -e LOCAL_LVMLOCKD ] ; then
+# FIXME: missing support with lvmlockd
+lvcreate --type zero -L2T -n $lv1 $vg
+lvconvert --yes --type thin --test $vg/$lv1
+check lv_field $vg/$lv1 segtype zero
+check vg_field $vg lv_count 1
+lvremove -f $vg
+fi
 
 # linear -> thin
 lvcreate -L10 -n $lv1 $vg
