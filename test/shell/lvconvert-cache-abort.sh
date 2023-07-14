@@ -31,11 +31,9 @@ lvcreate -H -L $SIZE_MB -n $lv1 --chunksize 32k --cachemode writeback --cachepoo
 #
 # Ensure cache gets promoted blocks
 #
-for i in $(seq 1 3) ; do
-echo 3 >/proc/sys/vm/drop_caches
-dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=1M count=$SIZE_MB conv=fdatasync || true
-echo 3 >/proc/sys/vm/drop_caches
-dd if="$DM_DEV_DIR/$vg/$lv1" of=/dev/null bs=1M count=$SIZE_MB || true
+for i in $(seq 1 2) ; do
+dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=1M count=$SIZE_MB oflag=direct || true
+dd if="$DM_DEV_DIR/$vg/$lv1" of=/dev/null bs=1M count=$SIZE_MB iflag=direct || true
 done
 
 aux delay_dev "$dev2" 0 300 "$(get first_extent_sector "$dev2"):"
@@ -53,20 +51,21 @@ test "$(get lv_field $vg/$lv1 cache_dirty_blocks)" -gt 0 || {
 LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -vvvv --splitcache $vg/$lv1 >logconvert 2>&1 &
 PID_CONVERT=$!
 for i in {1..50}; do
-	dmsetup table "$vg-$lv1" |& tee out
-	grep cleaner out && break
+	out=$(dmsetup status --noflush "$vg-$lv1")
+	case "$out" in
+	  *cleaner*) break;;
+	esac
 	echo "$i: Waiting for cleaner policy on $vg/$lv1"
-	sleep .05
+	sleep .01
 done
 test "$i" -ge 49 && die "Waited for cleaner policy on $vg/$lv1 too long!"
 
-# While lvconvert updated table to 'cleaner' policy now it 
+# While lvconvert updated table to 'cleaner' policy now it
 # should be running in 'Flushing' loop and just 1 KILL should
 # cause abortion of flushing
 kill -INT $PID_CONVERT
 aux enable_dev "$dev2"
 wait
-
 #cat logconvert || true
 
 # Problem of this test is, in older kernels, even the initial change to cleaner
