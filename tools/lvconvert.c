@@ -3024,7 +3024,7 @@ static struct logical_volume *_lvconvert_insert_thin_layer(struct logical_volume
 static int _lvconvert_attach_metadata_to_pool(struct lv_segment *pool_seg,
 					      struct logical_volume *metadata_lv)
 {
-        struct cmd_context *cmd = metadata_lv->vg->cmd;
+	struct cmd_context *cmd = metadata_lv->vg->cmd;
 	char name[NAME_LEN];                   /* generated sub lv name */
 
 	if (!deactivate_lv(cmd, metadata_lv)) {
