@@ -497,6 +497,11 @@ int thin_pool_prepare_metadata(struct logical_volume *metadata_lv,
 		return 0;
 	}
 
+	if (test_mode()) {
+		log_verbose("Test mode: Skipping creation of provisioned thin pool metadata.");
+		return 1;
+	}
+
 	/* coverity[secure_temp] until better solution */
 	if (!(f = tmpfile())) {
 		log_error("Cannot create temporary file to prepare metadata.");
