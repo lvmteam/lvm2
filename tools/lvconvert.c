@@ -5499,16 +5499,14 @@ static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 		}
 	}
 
-	if (vg_is_shared(vg)) {
-		/* FIXME: need to swap locks betwen LVs? */
-		log_error("Unable to convert VDO pool in VG with lock_type %s", vg->lock_type);
-		goto out;
-	}
-
 	if (!fill_vdo_target_params(cmd, &vdo_params, &vdo_pool_header_size, vg->profile))
 		goto_out;
 
 	if (!get_vdo_settings(cmd, &vdo_params, NULL))
+		goto_out;
+
+	/* If LV is inactive here, ensure it's not active elsewhere. */
+	if (!lockd_lv(cmd, lv, "ex", 0))
 		goto_out;
 
 	if (!activate_lv(cmd, lv)) {
