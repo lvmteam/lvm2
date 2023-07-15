@@ -59,7 +59,7 @@ static int _lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 int lvscan(struct cmd_context *cmd, int argc, char **argv)
 {
 	if (arg_is_set(cmd, cache_long_ARG)) {
-		log_warn("Ignoring lvscan --cache because lvmetad is no longer used.");
+		log_warn("WARNING: Ignoring lvscan --cache because lvmetad is no longer used.");
 		return ECMD_PROCESSED;
 	}
 

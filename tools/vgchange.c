@@ -386,7 +386,7 @@ static int _vgchange_pesize(struct cmd_context *cmd, struct volume_group *vg)
 	uint32_t extent_size;
 
 	if (arg_uint64_value(cmd, physicalextentsize_ARG, 0) > MAX_EXTENT_SIZE) {
-		log_warn("Physical extent size cannot be larger than %s.",
+		log_warn("WARNING: Physical extent size cannot be larger than %s.",
 			 display_size(cmd, (uint64_t) MAX_EXTENT_SIZE));
 		return 1;
 	}
@@ -394,7 +394,7 @@ static int _vgchange_pesize(struct cmd_context *cmd, struct volume_group *vg)
 	extent_size = arg_uint_value(cmd, physicalextentsize_ARG, 0);
 	/* FIXME: remove check - redundant with vg_change_pesize */
 	if (extent_size == vg->extent_size) {
-		log_warn("Physical extent size of VG %s is already %s.",
+		log_warn("WARNING: Physical extent size of VG %s is already %s.",
 			 vg->name, display_size(cmd, (uint64_t) extent_size));
 		return 1;
 	}
@@ -463,10 +463,10 @@ static int _vgchange_metadata_copies(struct cmd_context *cmd,
 
 	if (mda_copies == vg_mda_copies(vg)) {
 		if (vg_mda_copies(vg) == VGMETADATACOPIES_UNMANAGED)
-			log_warn("Number of metadata copies for VG %s is already unmanaged.",
+			log_warn("WARNING: Number of metadata copies for VG %s is already unmanaged.",
 				 vg->name);
 		else
-			log_warn("Number of metadata copies for VG %s is already %u.",
+			log_warn("WARNING: Number of metadata copies for VG %s is already %u.",
 				 vg->name, mda_copies);
 		return 1;
 	}
@@ -1052,7 +1052,7 @@ static int _vgchange_locktype(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	if (lock_type && !strcmp(vg->lock_type, lock_type)) {
-		log_warn("New lock type %s matches the current lock type %s.",
+		log_warn("WARNING: New lock type %s matches the current lock type %s.",
 			 lock_type, vg->lock_type);
 		return 1;
 	}

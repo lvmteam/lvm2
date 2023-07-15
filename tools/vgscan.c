@@ -48,7 +48,7 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (arg_is_set(cmd, cache_long_ARG)) {
-		log_warn("Ignoring vgscan --cache command because lvmetad is no longer used.");
+		log_warn("WARNING: Ignoring vgscan --cache command because lvmetad is no longer used.");
 		return ECMD_PROCESSED;
 	}
 
