@@ -20,11 +20,9 @@ SKIP_WITH_LVMPOLLD=1
 aux have_raid 1 12 0 || skip
 
 # 8 PVs needed for RAID10 testing (4-stripes/2-mirror)
-aux prepare_pvs 8 64
-get_devs
-vgcreate $SHARED -s 256k "$vg" "${DEVICES[@]}"
+aux prepare_vg 8 64
 
-lvcreate -y --ty raid0 -R32.00k -i 4 -n $lv1 -L 64M $vg
+lvcreate -y --type raid0 -R32k -i 4 -n $lv1 -L 64M $vg
 lvcreate -y -i4 -l4 -n $lv2 $vg
 lvextend -y -l +4 $vg/$lv1
 lvconvert -y -R512K --ty raid10 $vg/$lv1

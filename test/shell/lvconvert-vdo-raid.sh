@@ -46,8 +46,7 @@ check lv_field $vg/vpool_vdata segtype raid1 -a
 
 lvremove -f $vg
 
-aux enable_dev "$dev1"
-aux enable_dev "$dev2"
+aux enable_dev "$dev1" "$dev2"
 
 
 lvcreate --type raid1 -L4G --nosync -n vpool1 $vg

@@ -160,9 +160,7 @@ vgchange -an $vg
 vgremove -f $vg
 
 aux cleanup_md_dev
-aux wipefs_a "$dev1"
-aux wipefs_a "$dev2"
-aux udev_wait
+aux wipefs_a "$dev1" "$dev2"
 
 done
 

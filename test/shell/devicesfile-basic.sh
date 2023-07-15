@@ -33,13 +33,7 @@ _clear_online_files() {
 }
 
 wipe_all() {
-	aux wipefs_a "$dev1"
-	aux wipefs_a "$dev2"
-	aux wipefs_a "$dev3"
-	aux wipefs_a "$dev4"
-	aux wipefs_a "$dev5"
-	aux wipefs_a "$dev6"
-	aux wipefs_a "$dev7"
+	aux wipefs_a "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6" "$dev7"
 }
 
 # The tests run with system dir of "/etc" but lvm when running

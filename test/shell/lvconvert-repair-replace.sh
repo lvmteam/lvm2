@@ -14,10 +14,10 @@
 
 . lib/inittest
 
-aux lvmconf "global/support_mirrored_mirror_log=1"
-
 aux prepare_vg 6
-aux lvmconf 'allocation/maximise_cling = 0' \
+
+aux lvmconf 'global/support_mirrored_mirror_log = 1' \
+	    'allocation/maximise_cling = 0' \
 	    'allocation/mirror_logs_require_separate_pvs = 1'
 
 # 3-way, disk log

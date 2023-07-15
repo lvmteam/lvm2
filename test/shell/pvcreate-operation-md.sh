@@ -107,8 +107,7 @@ EOF
 fi
 
 aux cleanup_md_dev
-aux wipefs_a "$dev1"
-aux wipefs_a "$dev2"
+aux wipefs_a "$dev1" "$dev2"
 
 # Test newer topology-aware alignment detection w/ --dataalignment override
 if aux kernel_at_least 2 6 33 ; then
@@ -133,6 +132,5 @@ if aux kernel_at_least 2 6 33 ; then
     check pv_field "$pvdev" pe_start "192.00k"
 
     aux cleanup_md_dev
-    aux wipefs_a "$dev1"
-    aux wipefs_a "$dev2"
+    aux wipefs_a "$dev1" "$dev2"
 fi

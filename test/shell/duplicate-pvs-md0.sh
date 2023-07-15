@@ -178,9 +178,7 @@ test ! -f "$RUNDIR/lvm/vgs_online/$vg"
 #lvs -o active $vg |tee out || true
 #not grep "active" out
 
-aux wipefs_a "$dev1"
-aux wipefs_a "$dev2"
-aux udev_wait
+aux wipefs_a "$dev1" "$dev2"
 
 ##########################################
 # PV on an md raidX device
@@ -242,9 +240,7 @@ aux enable_dev "$dev2"
 lvmdevices --deldev $mddev || true
 aux cleanup_md_dev
 
-aux wipefs_a "$dev1"
-aux wipefs_a "$dev2"
-aux udev_wait
+aux wipefs_a "$dev1" "$dev2"
 
 if [ "$MD_LEVEL" = "1" ] ; then
 ##########################################
@@ -303,10 +299,7 @@ pvscan --cache -aay "$dev4"
 test ! -f "$RUNDIR/lvm/pvs_online/$PVIDMD"
 test ! -f "$RUNDIR/lvm/vgs_online/$vg"
 
-aux wipefs_a "$dev1"
-aux wipefs_a "$dev2"
-aux wipefs_a "$dev4"
-aux udev_wait
+aux wipefs_a "$dev1" "$dev2" "$dev4"
 fi   # MD_LEVEL == 1
 
 # next loop with 'start'

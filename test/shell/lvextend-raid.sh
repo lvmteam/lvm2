@@ -80,8 +80,7 @@ else
 	check lv_field $vg/$lv1 sync_percent "100.00"
 fi
 
-aux enable_dev "$dev1"
-aux enable_dev "$dev2"
+aux enable_dev "$dev1" "$dev2"
 
 aux wait_for_sync $vg $lv1
 check lv_field $vg/$lv1 sync_percent "100.00"

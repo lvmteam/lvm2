@@ -161,8 +161,7 @@ pvmove_fg() {
 
 	# disable delay device
 	# fg pvmove would take ages to complete otherwise
-	aux enable_dev "$dev3"
-	aux enable_dev "$dev4"
+	aux enable_dev "$dev3" "$dev4"
 
 	pvmove
 }
@@ -206,8 +205,7 @@ pvmove_fg_single() {
 
 	# disable delay device
 	# fg pvmove would take ages to complete otherwise
-	aux enable_dev "$dev3"
-	aux enable_dev "$dev4"
+	aux enable_dev "$dev3" "$dev4"
 
 	pvmove "$dev1"
 	pvmove "$dev2"

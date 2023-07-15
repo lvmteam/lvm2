@@ -140,8 +140,7 @@ pvmove_fg() {
 
 	# disable delay device
 	# fg pvmove would take ages to complete otherwise
-	aux enable_dev "$dev4"
-	aux enable_dev "$dev5"
+	aux enable_dev "$dev4" "$dev5"
 
 	LVM_TEST_TAG="kill_me_$PREFIX" pvmove
 }
@@ -185,8 +184,7 @@ pvmove_fg_single() {
 
 	# disable delay device
 	# fg pvmove would take ages to complete otherwise
-	aux enable_dev "$dev4"
-	aux enable_dev "$dev5"
+	aux enable_dev "$dev4" "$dev5"
 
 	LVM_TEST_TAG="kill_me_$PREFIX" pvmove "$dev1"
 	LVM_TEST_TAG="kill_me_$PREFIX" pvmove "$dev3"

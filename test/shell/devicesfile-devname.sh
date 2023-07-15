@@ -583,10 +583,7 @@ wait_md_create() {
         echo "$md" > WAIT_MD_DEV
 }
 
-aux wipefs_a "$dev1"
-aux wipefs_a "$dev2"
-aux wipefs_a "$dev3"
-aux wipefs_a "$dev4"
+aux wipefs_a "$dev1" "$dev2" "$dev3" "$dev4"
 
 rm "$DF"
 touch "$DF"

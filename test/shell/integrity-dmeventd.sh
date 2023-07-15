@@ -151,8 +151,7 @@ aux wait_recalc $vg/${lv1}_rimage_2
 aux wait_for_sync $vg $lv1
 _add_new_data_to_mnt
 
-aux disable_dev "$dev2"
-aux disable_dev "$dev1"
+aux disable_dev "$dev1" "$dev2"
 
 # wait for dmeventd to call lvconvert --repair which should
 # replace dev1 and dev2 with dev4 and dev5
@@ -169,8 +168,7 @@ grep "$dev3" out
 _add_more_data_to_mnt
 _verify_data_on_mnt
 
-aux enable_dev "$dev1"
-aux enable_dev "$dev2"
+aux enable_dev "$dev1" "$dev2"
 
 lvs -a -o+devices $vg | tee out
 not grep "$dev1" out

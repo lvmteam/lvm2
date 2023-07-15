@@ -116,8 +116,7 @@ vgremove -y -S vg_uuid=$UUID1
 vgs --foreign -o+uuid |tee out
 grep $UUID1 out
 
-aux wipefs_a "$dev1"
-aux wipefs_a "$dev2"
+aux wipefs_a "$dev1" "$dev2"
 
 # b. 0 local, 2 foreign
 # setup
@@ -163,9 +162,7 @@ not vgremove $vg1
 vgs --foreign -o+uuid |tee out
 grep $UUID1 out
 
-aux wipefs_a "$dev1"
-aux wipefs_a "$dev2"
-aux wipefs_a "$dev3"
+aux wipefs_a "$dev1" "$dev2" "$dev3"
 
 # c. 1 local, 1 foreign
 # setup
@@ -221,9 +218,7 @@ not grep $UUID1 out
 vgs --foreign -o+uuid |tee out
 grep $UUID2 out
 
-aux wipefs_a "$dev1"
-aux wipefs_a "$dev2"
-aux wipefs_a "$dev3"
+aux wipefs_a "$dev1" "$dev2" "$dev3"
 
 # d. 1 local, 2 foreign
 # setup
@@ -240,8 +235,7 @@ vgcreate $vg1 "$dev3"
 lvcreate -n $lv1 -l1 -an $vg1
 UUID3=$(vgs --noheading -o vg_uuid $vg1 | xargs)
 vgchange -y --systemid "other2" $vg1
-aux enable_dev "$dev1"
-aux enable_dev "$dev2"
+aux enable_dev "$dev1" "$dev2"
 
 vgs -o+uuid |tee out
 grep $vg1 out
@@ -292,10 +286,7 @@ vgs --foreign -o+uuid |tee out
 grep $UUID2 out
 grep $UUID3 out
 
-aux wipefs_a "$dev1"
-aux wipefs_a "$dev2"
-aux wipefs_a "$dev3"
-aux wipefs_a "$dev4"
+aux wipefs_a "$dev1" "$dev2" "$dev3" "$dev4"
 
 # e. 2 local, 0 foreign
 # setup
@@ -354,9 +345,7 @@ vgs -o+uuid |tee out
 not grep $UUID1 out
 not grep $UUID2 out
 
-aux wipefs_a "$dev1"
-aux wipefs_a "$dev2"
-aux wipefs_a "$dev3"
+aux wipefs_a "$dev1" "$dev2" "$dev3"
 
 # f. 2 local, 1 foreign
 # setup
@@ -373,8 +362,7 @@ vgcreate $vg1 "$dev3"
 lvcreate -n $lv1 -l1 -an $vg1
 UUID3=$(vgs --noheading -o vg_uuid $vg1 | xargs)
 vgchange -y --systemid "other" $vg1
-aux enable_dev "$dev1"
-aux enable_dev "$dev2"
+aux enable_dev "$dev1" "$dev2"
 
 vgs -o+uuid |tee out
 grep $vg1 out
@@ -399,7 +387,7 @@ grep $UUID2 out | grep active
 grep $UUID3 out | not grep active
 vgchange -an
 
-not vgchange -ay -vvvv $vg1
+not vgchange -ay $vg1
 lvs --foreign -o vguuid,active |tee out
 grep $UUID1 out | not grep active
 grep $UUID2 out | not grep active
@@ -429,10 +417,7 @@ not grep $UUID1 out
 not grep $UUID2 out
 grep $UUID3 out
 
-aux wipefs_a "$dev1"
-aux wipefs_a "$dev2"
-aux wipefs_a "$dev3"
-aux wipefs_a "$dev4"
+aux wipefs_a "$dev1" "$dev2" "$dev3" "$dev4"
 
 # g. 2 local, 2 foreign
 # setup
@@ -454,9 +439,7 @@ vgcreate $vg1 "$dev4"
 lvcreate -n $lv1 -l1 -an $vg1
 UUID4=$(vgs --noheading -o vg_uuid $vg1 | xargs)
 vgchange -y --systemid "other2" $vg1
-aux enable_dev "$dev1"
-aux enable_dev "$dev2"
-aux enable_dev "$dev3"
+aux enable_dev "$dev1" "$dev2" "$dev3"
 
 vgs -o+uuid |tee out
 grep $vg1 out
@@ -507,11 +490,7 @@ grep $UUID2 out
 grep $UUID3 out
 grep $UUID4 out
 
-aux wipefs_a "$dev1"
-aux wipefs_a "$dev2"
-aux wipefs_a "$dev3"
-aux wipefs_a "$dev4"
-aux wipefs_a "$dev5"
+aux wipefs_a "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 
 # h. 3 local, 3 foreign
 # setup
@@ -543,11 +522,7 @@ vgcreate $vg1 "$dev6"
 lvcreate -n $lv1 -l1 -an $vg1
 UUID6=$(vgs --noheading -o vg_uuid $vg1 | xargs)
 vgchange -y --systemid "other3" $vg1
-aux enable_dev "$dev1"
-aux enable_dev "$dev2"
-aux enable_dev "$dev3"
-aux enable_dev "$dev4"
-aux enable_dev "$dev5"
+aux enable_dev "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 
 vgs -o+uuid |tee out
 grep $vg1 out
@@ -610,12 +585,7 @@ grep $UUID4 out
 grep $UUID5 out
 grep $UUID6 out
 
-aux wipefs_a "$dev1"
-aux wipefs_a "$dev2"
-aux wipefs_a "$dev3"
-aux wipefs_a "$dev4"
-aux wipefs_a "$dev5"
-aux wipefs_a "$dev6"
+aux wipefs_a "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6"
 
 # vgreduce test with 1 local and 1 foreign vg.
 # setup
@@ -624,15 +594,13 @@ lvcreate -n $lv1 -l1 -an $vg1 "$dev1"
 UUID1=$(vgs --noheading -o vg_uuid $vg1 | xargs)
 PV1UUID=$(pvs --noheading -o uuid "$dev1")
 PV7UUID=$(pvs --noheading -o uuid "$dev7")
-aux disable_dev "$dev1"
-aux disable_dev "$dev7"
+aux disable_dev "$dev1" "$dev7"
 vgcreate $vg1 "$dev2"
 PV2UUID=$(pvs --noheading -o uuid "$dev2")
 lvcreate -n $lv1 -l1 -an $vg1
 UUID2=$(vgs --noheading -o vg_uuid $vg1 | xargs)
 vgchange -y --systemid "other" $vg1
-aux enable_dev "$dev1"
-aux enable_dev "$dev7"
+aux enable_dev "$dev1" "$dev7"
 
 vgs --foreign -o+uuid |tee out
 grep $vg1 out
@@ -654,7 +622,3 @@ grep $PV7UUID out >out2
 not grep $vg1 out2
 
 vgremove -ff $vg1
-
-aux wipefs_a "$dev1"
-aux wipefs_a "$dev2"
-aux wipefs_a "$dev7"

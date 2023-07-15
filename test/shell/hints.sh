@@ -89,9 +89,7 @@ grep "$dev1" $HINTS
 grep "$dev2" $HINTS
 grep "$dev3" $HINTS
 
-aux wipefs_a "$dev1"
-aux wipefs_a "$dev2"
-aux wipefs_a "$dev3"
+aux wipefs_a "$dev1" "$dev2" "$dev3"
 
 #
 # vg1 uses dev1,dev2

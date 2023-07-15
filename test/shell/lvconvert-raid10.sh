@@ -31,10 +31,7 @@ get_image_pvs() {
 aux have_raid 1 3 1 || skip
 
 # 9 PVs needed for RAID10 testing (3-stripes/2-mirror - replacing 3 devs)
-aux prepare_pvs 9 80
-get_devs
-
-vgcreate $SHARED -s 256k "$vg" "${DEVICES[@]}"
+aux prepare_vg 9 80
 
 lvcreate --type raid10 -m 1 -i 3 -l 3 -n $lv1 $vg
 aux wait_for_sync $vg $lv1
