@@ -53,7 +53,8 @@ _test1() {
 	# Corrupting raid1 is simple - 1 leg needs to be modifed
 	# For raid5 corrupted block can be places on any of its leg.
 	for i in "$@" ; do
-		aux corrupt_dev "$i" BBBBBBBBBBBBBBBBB BBBBBBBBCBBBBBBBB
+		aux corrupt_dev "$i" BBBBBBBBBBBBBBBBB BBBBBBBBCBBBBBBBB |tee out
+		grep -q "copied" && break  # leg found and corrupted
 	done
 
 	lvchange -ay $vg/$lv1
