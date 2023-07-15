@@ -1,5 +1,7 @@
 version 2.03.22 - 
 =================================
+  Improve VDO and Thin support with lvmlockd.
+  Handle 'lvextend --usepolicies' for pools for all activation variants.
   Fix memleak in vgchange autoactivation setup.
   Update py-compile building script.
   Support conversion from thick to fully provisioned thin LV.
