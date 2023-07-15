@@ -20,7 +20,7 @@ export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
 which mkfs.ext4 || skip
 which fsck || skip
-which thin_restore || skip
+aux have_tool_at_least "$LVM_TEST_THIN_RESTORE_CMD" 0 3 1 || skip
 aux have_thin 1 5 0 || skip
 
 _convert_to_thin() {

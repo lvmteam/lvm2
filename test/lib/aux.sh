@@ -32,8 +32,8 @@ check_daemon_in_builddir() {
 }
 
 create_corosync_conf() {
-	COROSYNC_CONF="/etc/corosync/corosync.conf"
-	COROSYNC_NODE=$(hostname)
+	local COROSYNC_CONF="/etc/corosync/corosync.conf"
+	local COROSYNC_NODE=$(hostname)
 
 	if test -a "$COROSYNC_CONF"; then
 		if ! grep "created by lvm test suite" "$COROSYNC_CONF"; then
@@ -47,8 +47,9 @@ create_corosync_conf() {
 	echo "created new $COROSYNC_CONF"
 }
 
-DLM_CONF="/etc/dlm/dlm.conf"
 create_dlm_conf() {
+	local DLM_CONF="/etc/dlm/dlm.conf"
+
 	if test -a "$DLM_CONF"; then
 		if ! grep "created by lvm test suite" "$DLM_CONF"; then
 			rm "$DLM_CONF"
@@ -83,8 +84,9 @@ prepare_dlm() {
 	fi
 }
 
-SANLOCK_CONF="/etc/sanlock/sanlock.conf"
 create_sanlock_conf() {
+	local SANLOCK_CONF="/etc/sanlock/sanlock.conf"
+
 	if test -a "$SANLOCK_CONF"; then
 		if ! grep "created by lvm test suite" "$SANLOCK_CONF"; then
 			rm "$SANLOCK_CONF"
@@ -1949,6 +1951,7 @@ have_tool_at_least() {
 	local version
 	version=$("$1" -V 2>/dev/null)
 	version=${version%%-*}
+	version=${version##* }
 	shift
 
 	version_at_least "$version" "$@"
