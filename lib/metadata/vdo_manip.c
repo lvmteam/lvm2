@@ -243,20 +243,21 @@ static int _format_vdo_pool_data_lv(struct logical_volume *data_lv,
 				    uint64_t *logical_size)
 {
 	char *dpath, *c;
-	const struct dm_config_node *cn;
-	const struct dm_config_value *cv;
 	struct pipe_data pdata;
 	uint64_t logical_size_aligned = 1;
 	FILE *f;
 	uint64_t lb;
 	unsigned slabbits;
 	unsigned reformatting = 0;
-	int args = 1;
-	char buf_args[5][128];
+	int args = 0;
 	char buf[256]; /* buffer for short disk header (64B) */
-	const char *argv[19] = { /* Max supported args */
+	char *buf_pos = buf;
+	const char *argv[DEFAULT_MAX_EXEC_ARGS + 9] = { /* Max supported args */
 		find_config_tree_str_allow_empty(data_lv->vg->cmd, global_vdo_format_executable_CFG, NULL)
 	};
+
+	if (!prepare_exec_args(data_lv->vg->cmd, argv, &args, global_vdo_format_options_CFG))
+		return_0;
 
 	if (!(dpath = lv_path_dup(data_lv->vg->cmd->mem, data_lv))) {
 		log_error("Failed to build device path for VDO formatting of data volume %s.",
@@ -266,59 +267,31 @@ static int _format_vdo_pool_data_lv(struct logical_volume *data_lv,
 
 	if (*logical_size) {
 		logical_size_aligned = 0;
-		if (dm_snprintf(buf_args[args], sizeof(buf_args[0]), "--logical-size=" FMTu64 "K",
-			       (*logical_size / 2)) < 0)
-			return_0;
 
-		argv[args] = buf_args[args];
-		args++;
+		argv[++args] = buf_pos;
+		buf_pos += 1 + dm_snprintf(buf_pos, 30, "--logical-size=" FMTu64 "K",
+					   (*logical_size / 2));
 	}
 
 	slabbits = 31 - clz(vtp->slab_size_mb / DM_VDO_BLOCK_SIZE * 2 * 1024);  /* to KiB / block_size */
 	log_debug("Slab size %s converted to %u bits.",
 		  display_size(data_lv->vg->cmd, vtp->slab_size_mb * UINT64_C(2 * 1024)), slabbits);
-	if (dm_snprintf(buf_args[args], sizeof(buf_args[0]), "--slab-bits=%u", slabbits) < 0)
-		return_0;
 
-	argv[args] = buf_args[args];
-	args++;
+	argv[++args] = buf_pos;
+	buf_pos += 1 + dm_snprintf(buf_pos, 30, "--slab-bits=%u", slabbits);
 
 	/* Convert size to GiB units or one of these strings: 0.25, 0.50, 0.75 */
-	if (vtp->index_memory_size_mb >= 1024) {
-		if (dm_snprintf(buf_args[args], sizeof(buf_args[0]), "--uds-memory-size=%u",
-				vtp->index_memory_size_mb / 1024) < 0)
-			return_0;
-	} else if (dm_snprintf(buf_args[args], sizeof(buf_args[0]), "--uds-memory-size=0.%u",
-			       (vtp->index_memory_size_mb < 512) ? 25 :
-			       (vtp->index_memory_size_mb < 768) ? 50 : 75) < 0)
-		   return_0;
+	argv[++args] = buf_pos;
+	if (vtp->index_memory_size_mb >= 1024)
+		buf_pos += 1 + dm_snprintf(buf_pos, 30, "--uds-memory-size=%u",
+					   vtp->index_memory_size_mb / 1024);
+	else
+		buf_pos += 1 + dm_snprintf(buf_pos, 30, "--uds-memory-size=0.%2u",
+					   (vtp->index_memory_size_mb < 512) ? 25 :
+					   (vtp->index_memory_size_mb < 768) ? 50 : 75);
 
-	argv[args] = buf_args[args];
-	args++;
-
-	if (vtp->use_sparse_index)  {
-		if (dm_snprintf(buf_args[args], sizeof(buf_args[0]), "--uds-sparse") < 0)
-			return_0;
-
-		argv[args] = buf_args[args];
-		args++;
-	}
-
-	/* Any other user opts add here */
-	if (!(cn = find_config_tree_array(data_lv->vg->cmd, global_vdo_format_options_CFG, NULL))) {
-		log_error(INTERNAL_ERROR "Unable to find configuration for vdoformat command options.");
-		return 0;
-	}
-
-	for (cv = cn->v; cv && args < 16; cv = cv->next) {
-		if (cv->type != DM_CFG_STRING) {
-			log_error("Invalid string in config file: "
-				  "global/vdoformat_options.");
-			return 0;
-		}
-		if (cv->v.str[0])
-			argv[++args] = cv->v.str;
-	}
+	if (vtp->use_sparse_index)
+		argv[++args] = "--uds-sparse";
 
 	/* Only unused VDO data LV could be activated and wiped */
 	if (!dm_list_empty(&data_lv->segs_using_this_lv)) {
