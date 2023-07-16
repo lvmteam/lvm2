@@ -3586,9 +3586,6 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	    dm_tree_node_get_context(dnode))
 		return 1;
 
-	lvlayer->lv = lv;
-	lvlayer->visible_component = (laopts->component_lv == lv) ? 1 : 0;
-
 	/*
 	 * Add LV to dtree.
 	 * If we're working with precommitted metadata, clear any
