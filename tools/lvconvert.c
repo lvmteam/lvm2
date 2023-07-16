@@ -5989,8 +5989,8 @@ static int _set_writecache_block_size(struct cmd_context *cmd,
 		goto out;
 	}
 
-	if (dm_snprintf(pathname, sizeof(pathname), "%s/%s/%s", cmd->dev_dir,
-			lv->vg->name, lv->name) < 0) {
+	if (dm_snprintf(pathname, sizeof(pathname), "%s%s/%s",
+			cmd->dev_dir, lv->vg->name, lv->name) < 0) {
 		log_error("Path name too long to get LV block size %s", display_lvname(lv));
 		goto bad;
 	}
