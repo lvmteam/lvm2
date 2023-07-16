@@ -217,3 +217,34 @@ int pipe_close(struct pipe_data *pdata)
 
 	return (status == 0) ? 1 : 0;
 }
+
+int prepare_exec_args(struct cmd_context *cmd,
+		      const char *argv[], int *argc, int options_id)
+{
+	const struct dm_config_value *cv;
+	const struct dm_config_node *cn;
+
+	if (!(cn = find_config_tree_array(cmd, options_id, NULL))) {
+		log_error(INTERNAL_ERROR "Unable to find configuration for %s options.",
+			  argv[0]);
+		return 0;
+	}
+
+	for (cv = cn->v; cv; cv = cv->next) {
+		if (*argc >= DEFAULT_MAX_EXEC_ARGS) {
+			log_error("Too many options for %s command.", argv[0]);
+			return 0;
+		}
+
+		if (cv->type != DM_CFG_STRING) {
+			log_error("Invalid string in config file: "
+				  "global/%s_options.", argv[0]);
+			return 0;
+		}
+
+		if (cv->v.str[0])
+			argv[++(*argc)] = cv->v.str;
+	}
+
+	return 1;
+}

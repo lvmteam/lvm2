@@ -67,4 +67,8 @@ FILE *pipe_open(struct cmd_context *cmd, const char *const argv[],
 
 int pipe_close(struct pipe_data *pdata);
 
+/* Prepare argv options list */
+int prepare_exec_args(struct cmd_context *cmd,
+		      const char *argv[], int *argc, int options_id);
+
 #endif

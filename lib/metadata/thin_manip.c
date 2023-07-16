@@ -460,9 +460,7 @@ int thin_pool_prepare_metadata(struct logical_volume *metadata_lv,
 {
 	struct cmd_context *cmd = metadata_lv->vg->cmd;
 	char lv_path[PATH_MAX], md_path[64], buffer[512];
-	const struct dm_config_node *cn;
-	const struct dm_config_value *cv;
-	const char *argv[20] = { /* Max supported 15 option args */
+	const char *argv[DEFAULT_MAX_EXEC_ARGS + 7] = {
 		find_config_tree_str_allow_empty(cmd, global_thin_restore_executable_CFG, NULL)
 	};
 	int args = 0;
@@ -477,25 +475,8 @@ int thin_pool_prepare_metadata(struct logical_volume *metadata_lv,
 		return 0;
 	}
 
-	if (!(cn = find_config_tree_array(cmd, global_thin_restore_options_CFG, NULL))) {
-		log_error(INTERNAL_ERROR "Unable to find configuration for pool check options.");
-		return 0;
-	}
-
-	for (cv = cn->v; cv && args < 16; cv = cv->next) {
-		if (cv->type != DM_CFG_STRING) {
-			log_error("Invalid string in config file: "
-				  "global/thin_restore_options.");
-			return 0;
-		}
-		if (cv->v.str[0])
-			argv[++args] = cv->v.str;
-	}
-
-	if (args == 16) {
-		log_error("Too many options for %s command.", argv[0]);
-		return 0;
-	}
+	if (!prepare_exec_args(cmd, argv, &args, global_thin_restore_options_CFG))
+		return_0;
 
 	if (test_mode()) {
 		log_verbose("Test mode: Skipping creation of provisioned thin pool metadata.");

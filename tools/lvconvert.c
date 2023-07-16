@@ -19,8 +19,6 @@
 #include "lib/metadata/metadata.h"
 #include "lvconvert_poll.h"
 
-#define MAX_PDATA_ARGS	10	/* Max number of accepted args for d-m-p-d tools */
-
 typedef enum {
 	/* Split:
 	 *   For a mirrored or raid LV, split mirror into two mirrors, optionally tracking
@@ -2341,13 +2339,11 @@ static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
 	const char *dmdir = dm_dir();
 	const char *thin_dump =
 		find_config_tree_str_allow_empty(cmd, global_thin_dump_executable_CFG, NULL);
-	const char *thin_repair =
-		find_config_tree_str_allow_empty(cmd, global_thin_repair_executable_CFG, NULL);
-	const struct dm_config_node *cn;
-	const struct dm_config_value *cv;
 	int ret = 0, status;
 	int args = 0;
-	const char *argv[MAX_PDATA_ARGS + 7]; /* Max supported args */
+	const char *argv[DEFAULT_MAX_EXEC_ARGS + 7] = { /* Max supported args */
+		find_config_tree_str_allow_empty(cmd, global_thin_repair_executable_CFG, NULL)
+	};
 	char *dm_name, *trans_id_str;
 	char meta_path[PATH_MAX];
 	char pms_path[PATH_MAX];
@@ -2357,9 +2353,15 @@ static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
 	struct pipe_data pdata;
 	FILE *f;
 
-	if (!thin_repair || !thin_repair[0]) {
-		log_error("Thin repair commnand is not configured. Repair is disabled.");
-		return 0; /* Checking disabled */
+	if (!argv[0] || !*argv[0]) {
+		log_error("Thin repair command is not configured. Repair is disabled.");
+		return 0;
+	}
+
+	if (thin_pool_is_active(pool_lv)) {
+		log_error("Cannot repair active pool %s.  Use lvchange -an first.",
+			  display_lvname(pool_lv));
+		return 0;
 	}
 
 	pmslv = pool_lv->vg->pool_metadata_spare_lv;
@@ -2388,36 +2390,13 @@ static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!(cn = find_config_tree_array(cmd, global_thin_repair_options_CFG, NULL))) {
-		log_error(INTERNAL_ERROR "Unable to find configuration for global/thin_repair_options");
-		return 0;
-	}
+	if (!prepare_exec_args(cmd, argv, &args, global_thin_repair_options_CFG))
+		return_0;
 
-	for (cv = cn->v; cv && args < MAX_PDATA_ARGS; cv = cv->next) {
-		if (cv->type != DM_CFG_STRING) {
-			log_error("Invalid string in config file: "
-				  "global/thin_repair_options");
-			return 0;
-		}
-		argv[++args] = cv->v.str;
-	}
-
-	if (args >= MAX_PDATA_ARGS) {
-		log_error("Too many options for thin repair command.");
-		return 0;
-	}
-
-	argv[0] = thin_repair;
 	argv[++args] = "-i";
 	argv[++args] = meta_path;
 	argv[++args] = "-o";
 	argv[++args] = pms_path;
-	argv[++args] = NULL;
-
-	if (thin_pool_is_active(pool_lv)) {
-		log_error("Active pools cannot be repaired.  Use lvchange -an first.");
-		return 0;
-	}
 
 	if (!activate_lv(cmd, pmslv)) {
 		log_error("Cannot activate pool metadata spare volume %s.",
@@ -2439,7 +2418,7 @@ static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
 	}
 
 	/* Check matching transactionId when thin-pool is used by lvm2 (transactionId != 0) */
-	if (first_seg(pool_lv)->transaction_id && thin_dump[0]) {
+	if (first_seg(pool_lv)->transaction_id && thin_dump && thin_dump[0]) {
 		argv[0] = thin_dump;
 		argv[1] = pms_path;
 		argv[2] = NULL;
@@ -2455,13 +2434,15 @@ static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
 			    (trans_id_str = strstr(meta_path, "transaction=\"")) &&
 			    (sscanf(trans_id_str + 13, FMTu64, &trans_id) == 1) &&
 			    (trans_id != first_seg(pool_lv)->transaction_id) &&
-			    ((trans_id - 1) != first_seg(pool_lv)->transaction_id))
+			    ((trans_id - 1) != first_seg(pool_lv)->transaction_id)) {
 				log_error("Transaction id " FMTu64 " from pool \"%s/%s\" "
 					  "does not match repaired transaction id "
 					  FMTu64 " from %s.",
 					  first_seg(pool_lv)->transaction_id,
 					  pool_lv->vg->name, pool_lv->name, trans_id,
 					  pms_path);
+				ret = 0;
+			}
 
 			(void) pipe_close(&pdata); /* killing pipe */
 		}
@@ -2539,13 +2520,11 @@ static int _lvconvert_cache_repair(struct cmd_context *cmd,
 				   struct dm_list *pvh, int poolmetadataspare)
 {
 	const char *dmdir = dm_dir();
-	const char *cache_repair =
-		find_config_tree_str_allow_empty(cmd, global_cache_repair_executable_CFG, NULL);
-	const struct dm_config_node *cn;
-	const struct dm_config_value *cv;
 	int ret = 0, status;
 	int args = 0;
-	const char *argv[MAX_PDATA_ARGS + 7]; /* Max supported args */
+	const char *argv[DEFAULT_MAX_EXEC_ARGS + 7] = { /* Max supported args */
+		find_config_tree_str_allow_empty(cmd, global_cache_repair_executable_CFG, NULL)
+	};
 	char *dm_name;
 	char meta_path[PATH_MAX];
 	char pms_path[PATH_MAX];
@@ -2561,8 +2540,8 @@ static int _lvconvert_cache_repair(struct cmd_context *cmd,
 	pool_lv = lv_is_cache_pool(cache_lv) ? cache_lv : first_seg(cache_lv)->pool_lv;
 	mlv = first_seg(pool_lv)->metadata_lv;
 
-	if (!cache_repair || !cache_repair[0]) {
-		log_error("Cache repair commnand is not configured. Repair is disabled.");
+	if (!argv[0] || !*argv[0]) {
+		log_error("Cache repair command is not configured. Repair is disabled.");
 		return 0; /* Checking disabled */
 	}
 
@@ -2592,31 +2571,13 @@ static int _lvconvert_cache_repair(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!(cn = find_config_tree_array(cmd, global_cache_repair_options_CFG, NULL))) {
-		log_error(INTERNAL_ERROR "Unable to find configuration for global/cache_repair_options");
-		return 0;
-	}
+	if (!prepare_exec_args(cmd, argv, &args, global_cache_repair_options_CFG))
+		return_0;
 
-	for (cv = cn->v; cv && args < MAX_PDATA_ARGS; cv = cv->next) {
-		if (cv->type != DM_CFG_STRING) {
-			log_error("Invalid string in config file: "
-				  "global/cache_repair_options");
-			return 0;
-		}
-		argv[++args] = cv->v.str;
-	}
-
-	if (args >= MAX_PDATA_ARGS) {
-		log_error("Too many options for cache repair command.");
-		return 0;
-	}
-
-	argv[0] = cache_repair;
 	argv[++args] = "-i";
 	argv[++args] = meta_path;
 	argv[++args] = "-o";
 	argv[++args] = pms_path;
-	argv[++args] = NULL;
 
 	if (lv_is_active(cache_lv)) {
 		log_error("Only inactive cache can be repaired.");

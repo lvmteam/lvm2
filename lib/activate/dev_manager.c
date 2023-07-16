@@ -2457,8 +2457,6 @@ static int _pool_callback(struct dm_tree_node *node,
 			  dm_node_callback_t type, void *cb_data)
 {
 	int ret, status = 0, fd;
-	const struct dm_config_node *cn;
-	const struct dm_config_value *cv;
 	const struct pool_cb_data *data = cb_data;
 	const struct logical_volume *pool_lv = data->pool_lv;
 	const struct logical_volume *mlv = first_seg(pool_lv)->metadata_lv;
@@ -2466,11 +2464,11 @@ static int _pool_callback(struct dm_tree_node *node,
 	long buf[64 / sizeof(long)]; /* buffer for short disk header (64B) */
 	int args = 0;
 	char *mpath;
-	const char *argv[19] = { /* Max supported 15 args */
+	const char *argv[DEFAULT_MAX_EXEC_ARGS + 7] = { /* Max supported 15 args */
 		find_config_tree_str_allow_empty(cmd, data->exec, NULL)
 	};
 
-	if (!*argv[0]) /* *_check tool is unconfigured/disabled with "" setting */
+	if (!argv[0] || !*argv[0]) /* *_check tool is unconfigured/disabled with "" setting */
 		return 1;
 
 	if (lv_is_cache_vol(pool_lv)) {
@@ -2517,26 +2515,8 @@ static int _pool_callback(struct dm_tree_node *node,
 		}
 	}
 
-	if (!(cn = find_config_tree_array(cmd, data->opts, NULL))) {
-		log_error(INTERNAL_ERROR "Unable to find configuration for pool check options.");
-		return 0;
-	}
-
-	for (cv = cn->v; cv && args < 16; cv = cv->next) {
-		if (cv->type != DM_CFG_STRING) {
-			log_error("Invalid string in config file: "
-				  "global/%s_check_options.",
-				  data->global);
-			return 0;
-		}
-		if (cv->v.str[0])
-			argv[++args] = cv->v.str;
-	}
-
-	if (args == 16) {
-		log_error("Too many options for %s command.", argv[0]);
-		return 0;
-	}
+	if (!prepare_exec_args(cmd, argv, &args, data->opts))
+		return_0;
 
 	argv[++args] = mpath;
 

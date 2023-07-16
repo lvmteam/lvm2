@@ -105,6 +105,8 @@
 #  define DEFAULT_DMEVENTD_PATH DMEVENTD_PATH
 #endif
 
+#define DEFAULT_MAX_EXEC_ARGS	15	/* Max number of accepted options args */
+
 #ifdef THIN_CHECK_NEEDS_CHECK
 #  define DEFAULT_THIN_CHECK_OPTION1 "-q"
 #  define DEFAULT_THIN_CHECK_OPTION2 "--clear-needs-check-flag"
