@@ -2336,7 +2336,6 @@ static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
 				       struct logical_volume *pool_lv,
 				       struct dm_list *pvh, int poolmetadataspare)
 {
-	const char *dmdir = dm_dir();
 	const char *thin_dump =
 		find_config_tree_str_allow_empty(cmd, global_thin_dump_executable_CFG, NULL);
 	int ret = 0, status;
@@ -2344,7 +2343,7 @@ static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
 	const char *argv[DEFAULT_MAX_EXEC_ARGS + 7] = { /* Max supported args */
 		find_config_tree_str_allow_empty(cmd, global_thin_repair_executable_CFG, NULL)
 	};
-	char *dm_name, *trans_id_str;
+	char *trans_id_str;
 	char meta_path[PATH_MAX];
 	char pms_path[PATH_MAX];
 	uint64_t trans_id;
@@ -2376,16 +2375,14 @@ static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
 		pmslv = pool_lv->vg->pool_metadata_spare_lv;
 	}
 
-	if (!(dm_name = dm_build_dm_name(cmd->mem, mlv->vg->name,
-					 mlv->name, NULL)) ||
-	    (dm_snprintf(meta_path, sizeof(meta_path), "%s/%s", dmdir, dm_name) < 0)) {
+	if (dm_snprintf(meta_path, sizeof(meta_path), "%s%s/%s",
+			cmd->dev_dir, mlv->vg->name, mlv->name) < 0) {
 		log_error("Failed to build thin metadata path.");
 		return 0;
 	}
 
-	if (!(dm_name = dm_build_dm_name(cmd->mem, pmslv->vg->name,
-					 pmslv->name, NULL)) ||
-	    (dm_snprintf(pms_path, sizeof(pms_path), "%s/%s", dmdir, dm_name) < 0)) {
+	if (dm_snprintf(pms_path, sizeof(pms_path), "%s%s/%s",
+			cmd->dev_dir, pmslv->vg->name, pmslv->name) < 0) {
 		log_error("Failed to build pool metadata spare path.");
 		return 0;
 	}
@@ -2519,13 +2516,11 @@ static int _lvconvert_cache_repair(struct cmd_context *cmd,
 				   struct logical_volume *cache_lv,
 				   struct dm_list *pvh, int poolmetadataspare)
 {
-	const char *dmdir = dm_dir();
 	int ret = 0, status;
 	int args = 0;
 	const char *argv[DEFAULT_MAX_EXEC_ARGS + 7] = { /* Max supported args */
 		find_config_tree_str_allow_empty(cmd, global_cache_repair_executable_CFG, NULL)
 	};
-	char *dm_name;
 	char meta_path[PATH_MAX];
 	char pms_path[PATH_MAX];
 	struct logical_volume *pool_lv;
@@ -2557,16 +2552,14 @@ static int _lvconvert_cache_repair(struct cmd_context *cmd,
 		pmslv = cache_lv->vg->pool_metadata_spare_lv;
 	}
 
-	if (!(dm_name = dm_build_dm_name(cmd->mem, mlv->vg->name,
-					 mlv->name, NULL)) ||
-	    (dm_snprintf(meta_path, sizeof(meta_path), "%s/%s", dmdir, dm_name) < 0)) {
+	if (dm_snprintf(meta_path, sizeof(meta_path), "%s%s/%s",
+			cmd->dev_dir, mlv->vg->name, mlv->name) < 0) {
 		log_error("Failed to build cache metadata path.");
 		return 0;
 	}
 
-	if (!(dm_name = dm_build_dm_name(cmd->mem, pmslv->vg->name,
-					 pmslv->name, NULL)) ||
-	    (dm_snprintf(pms_path, sizeof(pms_path), "%s/%s", dmdir, dm_name) < 0)) {
+	if (dm_snprintf(pms_path, sizeof(pms_path), "%s%s/%s",
+			cmd->dev_dir, pmslv->vg->name, pmslv->name) < 0) {
 		log_error("Failed to build pool metadata spare path.");
 		return 0;
 	}
