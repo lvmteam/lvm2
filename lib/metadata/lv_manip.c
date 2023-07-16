@@ -5013,7 +5013,7 @@ static int _lv_reduce_confirmation(struct logical_volume *lv,
 
 enum fsadm_cmd_e { FSADM_CMD_CHECK, FSADM_CMD_RESIZE };
 
-#define FSADM_CMD_MAX_ARGS 6
+#define FSADM_CMD_MAX_ARGS 10
 #define FSADM_CHECK_FAILS_FOR_MOUNTED 3 /* shell exist status code */
 
 /*
@@ -5031,10 +5031,15 @@ static int _fsadm_cmd(enum fsadm_cmd_e fcmd,
 	struct cmd_context *cmd = vg->cmd;
 	char lv_path[PATH_MAX];
 	char size_buf[SIZE_BUF];
-	const char *argv[FSADM_CMD_MAX_ARGS + 4];
-	unsigned i = 0;
+	unsigned i = 1;
+	const char *argv[FSADM_CMD_MAX_ARGS] = {
+		find_config_tree_str(cmd, global_fsadm_executable_CFG, NULL)
+	};
 
-	argv[i++] = find_config_tree_str(cmd, global_fsadm_executable_CFG, NULL);
+	if (!argv[0] || !*argv[0]) {
+		log_error("Cannot use misconfigured fsadm executable to resize %s.", display_lvname(lv));
+		return 0;
+	}
 
 	if (test_mode())
 		argv[i++] = "--dry-run";
@@ -5070,8 +5075,6 @@ static int _fsadm_cmd(enum fsadm_cmd_e fcmd,
 
 		argv[i++] = size_buf;
 	}
-
-	argv[i] = NULL;
 
 	return exec_cmd(cmd, argv, status, 1);
 }
