@@ -2732,7 +2732,7 @@ static int _lv_remove_any_missing_subdevs(struct logical_volume *lv)
 			if (dm_snprintf(name, sizeof(name), "%s-%s-missing_%u_0", seg->lv->vg->name, seg->lv->name, seg_no) < 0)
 				return_0;
 			if (!_remove_dm_dev_by_name(name))
-				return 0;
+				return_0;
 
 			seg_no++;
 		}
@@ -2750,10 +2750,10 @@ int lv_deactivate_any_missing_subdevs(const struct logical_volume *lv)
 	for (s = 0; s < seg->area_count; s++) {
 		if (seg_type(seg, s) == AREA_LV &&
 		    !_lv_remove_any_missing_subdevs(seg_lv(seg, s)))
-			return 0;
+			return_0;
 		if (seg->meta_areas && seg_metatype(seg, s) == AREA_LV &&
 		    !_lv_remove_any_missing_subdevs(seg_metalv(seg, s)))
-			return 0;
+			return_0;
 	}
 
 	return 1;
