@@ -2462,16 +2462,6 @@ deactivate_pmslv:
 	if (!ret)
 		return 0;
 
-	if (pmslv == pool_lv->vg->pool_metadata_spare_lv) {
-		pool_lv->vg->pool_metadata_spare_lv = NULL;
-		pmslv->status &= ~POOL_METADATA_SPARE;
-		lv_set_visible(pmslv);
-	}
-
-	/* Try to allocate new pool metadata spare LV */
-	if (!handle_pool_metadata_spare(pool_lv->vg, 0, pvh, poolmetadataspare))
-		stack;
-
 	if (dm_snprintf(meta_path, sizeof(meta_path), "%s_meta%%d", pool_lv->name) < 0) {
 		log_error("Can't prepare new metadata name for %s.", pool_lv->name);
 		return 0;
@@ -2481,6 +2471,16 @@ deactivate_pmslv:
 		log_error("Can't generate new name for %s.", meta_path);
 		return 0;
 	}
+
+	if (pmslv == pool_lv->vg->pool_metadata_spare_lv) {
+		pool_lv->vg->pool_metadata_spare_lv = NULL;
+		pmslv->status &= ~POOL_METADATA_SPARE;
+		lv_set_visible(pmslv);
+	}
+
+	/* Try to allocate new pool metadata spare LV */
+	if (!handle_pool_metadata_spare(pool_lv->vg, 0, pvh, poolmetadataspare))
+		stack;
 
 	if (!detach_pool_metadata_lv(first_seg(pool_lv), &mlv))
 		return_0;
@@ -2536,6 +2536,11 @@ static int _lvconvert_cache_repair(struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (lv_is_active(cache_lv)) {
+		log_error("Only inactive cache can be repaired.");
+		return 0;
+	}
+
 	pool_lv = lv_is_cache_pool(cache_lv) ? cache_lv : first_seg(cache_lv)->pool_lv;
 	mlv = first_seg(pool_lv)->metadata_lv;
 
@@ -2576,11 +2581,6 @@ static int _lvconvert_cache_repair(struct cmd_context *cmd,
 	argv[++args] = "-o";
 	argv[++args] = pms_path;
 
-	if (lv_is_active(cache_lv)) {
-		log_error("Only inactive cache can be repaired.");
-		return 0;
-	}
-
 	if (!activate_lv(cmd, pmslv)) {
 		log_error("Cannot activate pool metadata spare volume %s.",
 			  pmslv->name);
@@ -2603,12 +2603,6 @@ static int _lvconvert_cache_repair(struct cmd_context *cmd,
 	/* TODO: any active validation of cache-pool metadata? */
 
 deactivate_mlv:
-	if (!sync_local_dev_names(cmd)) {
-		log_error("Failed to sync local devices before deactivating LV %s.",
-			  display_lvname(mlv));
-		return 0;
-	}
-
 	if (!deactivate_lv(cmd, mlv)) {
 		log_error("Cannot deactivate pool metadata volume %s.",
 			  display_lvname(mlv));
@@ -2616,12 +2610,6 @@ deactivate_mlv:
 	}
 
 deactivate_pmslv:
-	if (!sync_local_dev_names(cmd)) {
-		log_error("Failed to sync local devices before deactivating LV %s.",
-			  display_lvname(pmslv));
-		return 0;
-	}
-
 	if (!deactivate_lv(cmd, pmslv)) {
 		log_error("Cannot deactivate pool metadata spare volume %s.",
 			  display_lvname(pmslv));
@@ -2630,6 +2618,16 @@ deactivate_pmslv:
 
 	if (!ret)
 		return 0;
+
+	if (dm_snprintf(meta_path, sizeof(meta_path), "%s_meta%%d", pool_lv->name) < 0) {
+		log_error("Can't prepare new metadata name for %s.", display_lvname(pool_lv));
+		return 0;
+	}
+
+	if (!generate_lv_name(cache_lv->vg, meta_path, pms_path, sizeof(pms_path))) {
+		log_error("Can't generate new name for %s.", meta_path);
+		return 0;
+	}
 
 	if (pmslv == cache_lv->vg->pool_metadata_spare_lv) {
 		cache_lv->vg->pool_metadata_spare_lv = NULL;
@@ -2640,16 +2638,6 @@ deactivate_pmslv:
 	/* Try to allocate new pool metadata spare LV */
 	if (!handle_pool_metadata_spare(cache_lv->vg, 0, pvh, poolmetadataspare))
 		stack;
-
-	if (dm_snprintf(meta_path, sizeof(meta_path), "%s_meta%%d", cache_lv->name) < 0) {
-		log_error("Can't prepare new metadata name for %s.", cache_lv->name);
-		return 0;
-	}
-
-	if (!generate_lv_name(cache_lv->vg, meta_path, pms_path, sizeof(pms_path))) {
-		log_error("Can't generate new name for %s.", meta_path);
-		return 0;
-	}
 
 	if (!detach_pool_metadata_lv(first_seg(pool_lv), &mlv))
 		return_0;
