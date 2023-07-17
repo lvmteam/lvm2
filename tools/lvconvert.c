@@ -2485,6 +2485,10 @@ deactivate_pmslv:
 	if (!detach_pool_metadata_lv(first_seg(pool_lv), &mlv))
 		return_0;
 
+	/* TODO: change default to skip */
+	lv_set_activation_skip(mlv, 1, arg_int_value(cmd, setactivationskip_ARG, 0));
+	mlv->status &= ~LVM_WRITE; /* read-only metadata backup */
+
 	/* Swap _pmspare and _tmeta name */
 	if (!swap_lv_identifiers(cmd, mlv, pmslv))
 		return_0;
@@ -2649,6 +2653,10 @@ deactivate_pmslv:
 
 	if (!detach_pool_metadata_lv(first_seg(pool_lv), &mlv))
 		return_0;
+
+	/* TODO: change default to skip */
+	lv_set_activation_skip(mlv, 1, arg_int_value(cmd, setactivationskip_ARG, 0));
+	mlv->status &= ~LVM_WRITE; /* read-only metadata backup */
 
 	/* Swap _pmspare and _cmeta name */
 	if (!swap_lv_identifiers(cmd, mlv, pmslv))

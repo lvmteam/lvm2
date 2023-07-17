@@ -121,6 +121,8 @@ lvconvert \(em Change logical volume layout
 .br
     \fB--replace\fP \fIPV\fP
 .br
+ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP
+.br
  \fB-s\fP|\fB--snapshot\fP
 .br
     \fB--splitcache\fP
@@ -882,6 +884,8 @@ Repair a cache pool.
 .ad l
 [ \fB-i\fP|\fB--interval\fP \fINumber\fP ]
 .br
+[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+.br
 [    \fB--usepolicies\fP ]
 .br
 [    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
@@ -1444,6 +1448,16 @@ Replace a specific PV in a raid LV with another PV.
 The new PV to use can be optionally specified after the LV.
 Multiple PVs can be replaced by repeating this option.
 See \fBlvmraid\fP(7) for more information.
+.
+.HP
+\fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP
+.br
+Persistently sets (yes) or clears (no) the "activation skip" flag on an LV.
+An LV with this flag set is not activated unless the
+--ignoreactivationskip option is used by the activation command.
+This flag is set by default on new thin snapshot LVs.
+The flag is not applied to deactivation.
+The current value of the flag is indicated in the lvs lv_attr bits.
 .
 .HP
 \fB-s\fP|\fB--snapshot\fP
