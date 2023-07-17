@@ -965,7 +965,7 @@ corrupt_dev() {
 	test -n "${a[0]-}" || return 0
 
 	# Seek for the sequence and replace it with corruption pattern
-	echo -n "${a[1]/$2/$3}" | dd of="$1" bs=1 seek="${a[0]}" conv=fdatasync
+	echo -n "${a[1]/$2/$3}" | LANG=C dd of="$1" bs=1 seek="${a[0]}" conv=fdatasync
 }
 
 prepare_backing_dev() {
