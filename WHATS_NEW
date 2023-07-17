@@ -1,5 +1,7 @@
 version 2.03.22 - 
 =================================
+  Always use cachepool name for metadata backup LV for lvconvert --repair.
+  Make metadata backup LVs read-only after pool's lvconvert --repair.
   Improve VDO and Thin support with lvmlockd.
   Handle 'lvextend --usepolicies' for pools for all activation variants.
   Fix memleak in vgchange autoactivation setup.
