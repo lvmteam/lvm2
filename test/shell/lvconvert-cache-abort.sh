@@ -19,14 +19,15 @@ SKIP_WITH_LVMPOLLD=1
 
 aux have_cache 1 3 0 || skip
 
-aux prepare_vg 2
+aux prepare_vg
 
-SIZE_MB=4
+SIZE_MB=200
 
-# Data device on later delayed dev1
-lvcreate -L4 -n cpool $vg "$dev1"
-lvconvert -y --type cache-pool $vg/cpool "$dev2"
-lvcreate -H -L $SIZE_MB -n $lv1 --chunksize 32k --cachemode writeback --cachepool $vg/cpool $vg "$dev2"
+# Use large zero device and later delayed metadata dev1
+lvcreate -L$((SIZE_MB * 2))M --type zero -n cpool $vg
+lvconvert -y --type cache-pool --chunksize 32k $vg/cpool "$dev1"
+lvcreate -L$((SIZE_MB * 2))M --type zero -n $lv1 $vg
+lvconvert -y -H --chunksize 32k --cachemode writeback --cachepool $vg/cpool $vg/$lv1
 
 #
 # Ensure cache gets promoted blocks
@@ -36,7 +37,7 @@ dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=1M count=$SIZE_MB oflag=direct || t
 dd if="$DM_DEV_DIR/$vg/$lv1" of=/dev/null bs=1M count=$SIZE_MB iflag=direct || true
 done
 
-aux delay_dev "$dev2" 0 300 "$(get first_extent_sector "$dev2"):"
+aux delay_dev "$dev1" 0 200 "$(get first_extent_sector "$dev1"):"
 dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=1M count=$SIZE_MB
 
 lvdisplay --maps $vg
@@ -83,5 +84,6 @@ grep -E "Flushing.*aborted" logconvert || {
 
 # check the table got restored
 check grep_dmsetup table $vg-$lv1 "writeback"
+lvdisplay --maps $vg
 
 vgremove -f $vg
