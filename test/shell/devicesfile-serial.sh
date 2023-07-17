@@ -16,6 +16,8 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+test -d /sys/block/ram0 && skip "Ramdisk already loaded"
+
 test "$DM_DEV_DIR" = "/dev" || skip "Only works with /dev access -> make check LVM_TEST_DEVDIR=/dev"
 
 # requires trailing / to match dm
