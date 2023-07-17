@@ -619,7 +619,7 @@ do
 	  "-f"|"--force"  ) FORCE="-f" ;;
 	  "-h"|"--help"   ) tool_usage ;;
 	  "-n"|"--name"   ) shift; NAME=$1 ;;
-	  "-v"|"--verbose") VERB="-v" ;;
+	  "-v"|"--verbose") VERB="--verbose" ;;
 	  "-y"|"--yes"    ) YES="-y" ;;
 	  "--abort-after-vdo-convert" ) ABORT_AFTER_VDO_CONVERT=1; USE_VDO_DM_SNAPSHOT=0 ;; # For testing only
 	  "--dry-run"     ) DRY="1" ; VERB="-v" ;;
