@@ -293,6 +293,18 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 				label_scan_invalidate(du->dev);
 		}
 
+		if (arg_is_set(cmd, delnotfound_ARG)) {
+			dm_list_iterate_items_safe(du, du2, &cmd->use_devices) {
+				if (!du->dev) {
+					log_print("Deleting IDTYPE=%s IDNAME=%s PVID=%s",
+						  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".");
+					dm_list_del(&du->list);
+					free_du(du);
+					update_needed++;
+				}
+			}
+		}
+
 		if (arg_is_set(cmd, update_ARG)) {
 			if (update_needed || serial_update_needed || !dm_list_empty(&found_devs)) {
 				if (!device_ids_write(cmd))

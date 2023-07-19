@@ -241,6 +241,16 @@ not grep "$PVID2" $DF
 setup_loop_devs
 rm $DF
 
+# test delnotfound
+lvmdevices --addpvid "$PVID1"
+echo "IDTYPE=sys_wwid IDNAME=naa.123 DEVNAME=/dev/sdx1 PVID=aaa PART=1" >> $DF
+echo "IDTYPE=devname IDNAME=/dev/sdy DEVNAME=/dev/sdy PVID=bbb" >> $DF
+lvmdevices
+lvmdevices --update --delnotfound
+not grep PVID=aaa $DF
+not grep PVID=bbb $DF
+
+
 # TODO: add/rem of partitions of same device
 
 losetup -D

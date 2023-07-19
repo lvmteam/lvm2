@@ -52,6 +52,9 @@ arg(deldev_ARG, '\0', "deldev", string_VAL, 0, 0,
     "When used alone, --deldev specifies a device name.\n"
     "When used with --deviceidtype, --deldev specifies a device id.\n")
 
+arg(delnotfound_ARG, '\0', "delnotfound", 0, 0, 0,
+    "Remove devices file entries with no matching device.\n")
+
 arg(addpvid_ARG, '\0', "addpvid", string_VAL, 0, 0,
     "Find a device with the PVID and add the device to the devices file.\n")
 arg(delpvid_ARG, '\0', "delpvid", string_VAL, 0, 0,
