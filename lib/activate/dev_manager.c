@@ -2066,6 +2066,8 @@ int dev_manager_mknodes(const struct logical_volume *lv)
 		/* read-only component LV is also made visible */
 		if (_lv_has_mknode(lv) || (dminfo.read_only && lv_is_component(lv)))
 			r = _dev_manager_lv_mknodes(lv);
+		else
+			r = 1;
 	} else
 		r = _dev_manager_lv_rmnodes(lv);
 
