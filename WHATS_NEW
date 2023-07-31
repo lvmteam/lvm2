@@ -1,5 +1,6 @@
 version 2.03.22 - 
 =================================
+  Fix pv_major/pv_minor report field types so they are integers, not strings.
   Always use cachepool name for metadata backup LV for lvconvert --repair.
   Make metadata backup LVs read-only after pool's lvconvert --repair.
   Improve VDO and Thin support with lvmlockd.
