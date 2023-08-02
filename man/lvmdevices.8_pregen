@@ -26,6 +26,8 @@ lvmdevices \(em Manage the devices file
 .br
     \fB--deldev\fP \fIString\fP
 .br
+    \fB--delnotfound\fP
+.br
     \fB--delpvid\fP \fIString\fP
 .br
     \fB--deviceidtype\fP \fIString\fP
@@ -203,6 +205,8 @@ Update the devices file to fix incorrect values.
 .br
 .RS 4
 .ad l
+[    \fB--delnotfound\fP ]
+.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
@@ -354,6 +358,11 @@ messages sent to the log file and/or syslog (if configured).
 Remove a device from the devices file.
 When used alone, --deldev specifies a device name.
 When used with --deviceidtype, --deldev specifies a device id.
+.
+.HP
+\fB--delnotfound\fP
+.br
+Remove devices file entries with no matching device.
 .
 .HP
 \fB--delpvid\fP \fIString\fP
