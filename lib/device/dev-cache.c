@@ -1652,6 +1652,23 @@ struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t devt)
 	return NULL;
 }
 
+struct device *dev_cache_get_by_pvid(struct cmd_context *cmd, const char *pvid)
+{
+	struct btree_iter *iter = btree_first(_cache.devices);
+	struct device *dev;
+
+	while (iter) {
+		dev = btree_get_data(iter);
+
+		if (!memcmp(dev->pvid, pvid, ID_LEN))
+			return dev;
+
+		iter = btree_next(iter);
+	}
+
+	return NULL;
+}
+
 struct dev_iter *dev_iter_create(struct dev_filter *f, int unused)
 {
 	struct dev_iter *di = malloc(sizeof(*di));

@@ -55,6 +55,7 @@ int dev_cache_add_dir(const char *path);
 struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct dev_filter *f);
 struct device *dev_cache_get_existing(struct cmd_context *cmd, const char *name, struct dev_filter *f);
 struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t devt);
+struct device *dev_cache_get_by_pvid(struct cmd_context *cmd, const char *pvid);
 void dev_cache_verify_aliases(struct device *dev);
 
 struct device *dev_hash_get(const char *name);

@@ -552,6 +552,53 @@ vgchange -an $vg2
 vgremove -ff $vg1
 vgremove -ff $vg2
 
+# bz 2225419
+
+touch "$DF"
+vgcreate $vg1 "$dev1"
+vgcreate $vg2 "$dev2"
+
+# PVID with dashes for matching pvs -o+uuid output
+OPVID1=`pvs "$dev1" --noheading -o uuid | awk '{print $1}'`
+OPVID2=`pvs "$dev2" --noheading -o uuid | awk '{print $1}'`
+# PVID without dashes for matching devices file fields
+PVID1=`pvs "$dev1" --noheading -o uuid | tr -d - | awk '{print $1}'`
+PVID2=`pvs "$dev2" --noheading -o uuid | tr -d - | awk '{print $1}'`
+
+NODEV=${dev1}12345
+
+lvmdevices --deldev "$dev1"
+lvmdevices --deldev "$dev2"
+
+# dev1 is correct
+echo "IDTYPE=devname IDNAME=$dev1 DEVNAME=$dev1 PVID=$PVID1" >> "$DF"
+# dev2 has no PVID
+echo "IDTYPE=devname IDNAME=$dev2 DEVNAME=$dev2 PVID=." >> "$DF"
+# Non-existant device has PVID for dev2
+echo "IDTYPE=devname IDNAME=$NODEV DEVNAME=$NODEV PVID=$PVID2" >> "$DF"
+
+cat "$DF"
+
+pvs -o name,uuid |tee out
+
+grep "$dev1" out | tee out1
+grep "$dev2" out | tee out2
+grep "$OPVID1" out1
+grep "$OPVID2" out2
+not grep "$NODEV" out
+
+not grep "$NODEV" "$DF"
+grep "IDNAME=$dev1" "$DF" | tee out1
+grep "IDNAME=$dev2" "$DF" | tee out2
+grep "$PVID1" out1
+grep "$PVID2" out2
+grep "DEVNAME=$dev1" out1
+grep "DEVNAME=$dev2" out2
+
+rm "$DF"
+aux wipefs_a "$dev1" "$dev2"
+
+
 # bz 2119473
 
 aux lvmconf "devices/search_for_devnames = \"none\""
