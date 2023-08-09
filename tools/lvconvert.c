@@ -6302,7 +6302,7 @@ int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 
 	if (!_writecache_zero(cmd, lv_fast)) {
 		log_error("LV %s could not be zeroed.", display_lvname(lv_fast));
-		return ECMD_FAILED;
+		goto bad;
 	}
 
 	/*
@@ -6312,10 +6312,10 @@ int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 	 */
 	if (dm_snprintf(cvol_name, sizeof(cvol_name), "%s_cvol", lv_fast->name) < 0) {
 		log_error("Can't prepare new metadata name for %s.", display_lvname(lv_fast));
-		return ECMD_FAILED;
+		goto bad;
 	}
 	if (!lv_rename_update(cmd, lv_fast, cvol_name, 0))
-		return_ECMD_FAILED;
+		goto_bad;
 
 	lv_fast->status |= LV_CACHE_VOL;
 
