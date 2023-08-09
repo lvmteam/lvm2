@@ -6415,24 +6415,26 @@ int lvconvert_to_cache_with_cachevol_cmd(struct cmd_context *cmd, int argc, char
 
 static int _lvconvert_integrity_remove(struct cmd_context *cmd, struct logical_volume *lv)
 {
-	int ret = 0;
-
-	if (!lv_is_integrity(lv) && !lv_is_raid(lv)) {
+	if (!lv_is_integrity(lv)) {
 		log_error("LV does not have integrity.");
-		return ECMD_FAILED;
+		return 0;
+	}
+
+	if (!lv_is_raid(lv)) {
+		log_error("Cannot remove integrity from non raid type LV %s.",
+			  display_lvname(lv));
+		return 0;
 	}
 
 	/* ensure it's not active elsewhere. */
 	if (!lockd_lv(cmd, lv, "ex", 0))
-		return_ECMD_FAILED;
+		return_0;
 
-	if (lv_is_raid(lv))
-		ret = lv_remove_integrity_from_raid(lv);
-	if (!ret)
-		return_ECMD_FAILED;
+	if (!lv_remove_integrity_from_raid(lv))
+		return_0;
 
 	log_print_unless_silent("Logical volume %s has removed integrity.", display_lvname(lv));
-	return ECMD_PROCESSED;
+	return 1;
 }
 
 static int _lvconvert_integrity_add(struct cmd_context *cmd, struct logical_volume *lv,
@@ -6440,7 +6442,6 @@ static int _lvconvert_integrity_add(struct cmd_context *cmd, struct logical_volu
 {
 	struct volume_group *vg = lv->vg;
 	struct dm_list *use_pvh;
-	int ret = 0;
 
 	/* ensure it's not active elsewhere. */
 	if (!lockd_lv(cmd, lv, "ex", 0))
@@ -6458,9 +6459,13 @@ static int _lvconvert_integrity_add(struct cmd_context *cmd, struct logical_volu
 		return 0;
 	}
 
-	if (lv_is_raid(lv))
-		ret = lv_add_integrity_to_raid(lv, set, use_pvh, NULL);
-	if (!ret)
+	if (!lv_is_raid(lv)) {
+		log_error("Cannot add integrity to non raid type LV %s.",
+			  display_lvname(lv));
+		return 0;
+	}
+
+	if (!lv_add_integrity_to_raid(lv, set, use_pvh, NULL))
 		return_0;
 
 	log_print_unless_silent("Logical volume %s has added integrity.", display_lvname(lv));
@@ -6471,10 +6476,8 @@ static int _lvconvert_integrity_single(struct cmd_context *cmd,
 					struct logical_volume *lv,
 					struct processing_handle *handle)
 {
-	struct integrity_settings settings;
-	int ret = 0;
-
-	memset(&settings, 0, sizeof(settings));
+	struct integrity_settings settings = { 0 };
+	int ret;
 
 	if (!integrity_mode_set(arg_str_value(cmd, raidintegritymode_ARG, NULL), &settings))
 		return_ECMD_FAILED;
@@ -6488,7 +6491,8 @@ static int _lvconvert_integrity_single(struct cmd_context *cmd,
 		ret = _lvconvert_integrity_remove(cmd, lv);
 
 	if (!ret)
-		return ECMD_FAILED;
+		return_ECMD_FAILED;
+
 	return ECMD_PROCESSED;
 }
 
