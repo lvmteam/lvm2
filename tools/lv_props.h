@@ -25,6 +25,7 @@ lvp(is_error_when_full_LVP, "lv_is_error_when_full", NULL)
 lvp(is_pvmove_LVP, "lv_is_pvmove", NULL)
 lvp(is_removed_LVP, "lv_is_removed", NULL)
 lvp(is_vg_writable_LVP, "lv_is_vg_writable", NULL)
+lvp(is_writable_LVP, "lv_is_writable", NULL)
 
 /* kinds of sub LV */
 lvp(is_thinpool_data_LVP, "lv_is_thinpool_data", NULL)

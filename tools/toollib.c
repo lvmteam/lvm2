@@ -2714,6 +2714,8 @@ static int _lv_is_prop(struct cmd_context *cmd, struct logical_volume *lv, int l
 		return lv_is_pvmove(lv);
 	case is_removed_LVP:
 		return lv_is_removed(lv);
+	case is_writable_LVP:
+		return lv_is_writable(lv);
 	case is_vg_writable_LVP:
 		return (lv->vg->status & LVM_WRITE) ? 1 : 0;
 	case is_thinpool_data_LVP:
