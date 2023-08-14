@@ -2955,20 +2955,8 @@ static int _lvconvert_swap_pool_metadata(struct cmd_context *cmd,
 	if (!detach_pool_metadata_lv(seg, &prev_metadata_lv))
 		return_0;
 
-	swap_name = metadata_lv->name;
-
-	if (!lv_rename_update(cmd, metadata_lv, "pvmove_tmeta", 0))
-		return_0;
-
-	/* Give the previous metadata LV the name of the LV replacing it. */
-
-	if (!lv_rename_update(cmd, prev_metadata_lv, swap_name, 0))
-		return_0;
-
-	/* Rename deactivated metadata LV to have _tmeta suffix */
-
-	if (!lv_rename_update(cmd, metadata_lv, meta_name, 0))
-		return_0;
+	if (!swap_lv_identifiers(cmd, metadata_lv, prev_metadata_lv))
+                return_0;
 
 	if (!attach_pool_metadata_lv(seg, metadata_lv))
 		return_0;
