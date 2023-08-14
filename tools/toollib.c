@@ -5706,13 +5706,13 @@ int pvcreate_each_device(struct cmd_context *cmd,
 		}
 
 		if (!dm_list_empty(&pp->arg_fail) && must_use_all)
-			goto_out;
+			goto_bad;
 
 		if (sigint_caught())
-			goto_out;
+			goto_bad;
 
 		if (prompt->abort_command)
-			goto_out;
+			goto_bad;
 	}
 
 	/*
@@ -5725,7 +5725,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 
 	if (!lockf_global_nonblock(cmd, "ex")) {
 		log_error("Failed to reacquire global lock after prompt.");
-		goto_out;
+		goto bad;
 	}
 
 do_command:
@@ -5985,10 +5985,9 @@ do_command:
 			  cmd->command->name, pd->name);
 
 	if (!dm_list_empty(&pp->arg_fail))
-		goto_out;
+		goto_bad;
 
 	return 1;
 bad:
-out:
 	return 0;
 }
