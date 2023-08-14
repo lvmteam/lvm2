@@ -1030,10 +1030,14 @@ static int _busy_vg(struct cmd_context *cmd, struct volume_group *vg)
 	int result;
 	int ret;
 
-	if (!_use_lvmlockd)
+	if (!_use_lvmlockd) {
+		log_error("Lvmlockd is not in use.");
 		return 0;
-	if (!_lvmlockd_connected)
+	}
+	if (!_lvmlockd_connected) {
+		log_error("Lvmlockd is not connected.");
 		return 0;
+	}
 
 	/*
 	 * Check that other hosts do not have the VG lockspace started.
@@ -1085,10 +1089,14 @@ static int _free_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg)
 	int result;
 	int ret;
 
-	if (!_use_lvmlockd)
+	if (!_use_lvmlockd) {
+		log_error("Cannot free VG sanlock, lvmlockd is not in use.");
 		return 0;
-	if (!_lvmlockd_connected)
+	}
+	if (!_lvmlockd_connected) {
+		log_error("Cannot free VG sanlock, lvmlockd is not connected.");
 		return 0;
+	}
 
 	/*
 	 * vgremove originally held the global lock, but lost it because the
