@@ -1,5 +1,9 @@
 version 2.03.23 - 
 ==================================
+  Require writable LV for convertion to vdo pool.
+  Fix return value from lvconvert integrity remove.
+  Preserve UUID for pool metadata spare.
+  Preserve UUID for swapped pool metadata.
 
 version 2.03.22 - 02nd August 2023
 ==================================
