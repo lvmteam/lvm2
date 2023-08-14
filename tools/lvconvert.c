@@ -2332,6 +2332,17 @@ static int _lvconvert_merge_thin_snapshot(struct cmd_context *cmd,
 	return 1;
 }
 
+static void _swap_lv_uuid(struct logical_volume *lv1, struct logical_volume *lv2)
+{
+	union lvid lvid;
+
+	if (lv1 && lv2) {
+		lvid = lv1->lvid;
+		lv1->lvid = lv2->lvid;
+		lv2->lvid = lvid;
+	}
+}
+
 static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
 				       struct logical_volume *pool_lv,
 				       struct dm_list *pvh, int poolmetadataspare)
@@ -2500,6 +2511,9 @@ deactivate_pmslv:
 	if (!lv_rename_update(cmd, mlv, pms_path, 0))
 		return_0;
 
+	/* Preserve UUID for _pmspare if possible */
+	_swap_lv_uuid(mlv, mlv->vg->pool_metadata_spare_lv);
+
 	if (!vg_write(pool_lv->vg) || !vg_commit(pool_lv->vg))
 		return_0;
 
@@ -2656,6 +2670,9 @@ deactivate_pmslv:
 	/* Used _cmeta (now _pmspare) becomes _meta%d */
 	if (!lv_rename_update(cmd, mlv, pms_path, 0))
 		return_0;
+
+	/* Preserve UUID for _pmspare if possible */
+	_swap_lv_uuid(mlv, mlv->vg->pool_metadata_spare_lv);
 
 	if (!vg_write(cache_lv->vg) || !vg_commit(cache_lv->vg))
 		return_0;
