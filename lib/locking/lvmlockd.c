@@ -2916,6 +2916,8 @@ static int _free_lv(struct cmd_context *cmd, struct volume_group *vg,
 	if (!id_write_format(lv_id, lv_uuid, sizeof(lv_uuid)))
 		return_0;
 
+	log_debug("lockd free LV %s/%s %s lock_args %s", vg->name, lv_name, lv_uuid, lock_args ?: "none");
+
 	reply = _lockd_send("free_lv",
 				"pid = " FMTd64, (int64_t) getpid(),
 				"vg_name = %s", vg->name,

@@ -2924,6 +2924,8 @@ int vg_write(struct volume_group *vg)
 	vgid[ID_LEN] = 0;
 	memcpy(vgid, &vg->id.uuid, ID_LEN);
 
+	log_debug("Writing metadata for VG %s.", vg->name);
+
 	if (vg_is_shared(vg)) {
 		dm_list_iterate_items(lvl, &vg->lvs) {
 			if (lvl->lv->lock_args && !strcmp(lvl->lv->lock_args, "pending")) {
