@@ -6393,8 +6393,8 @@ int lvconvert_to_cache_with_cachevol_cmd(struct cmd_context *cmd, int argc, char
 
 static int _lvconvert_integrity_remove(struct cmd_context *cmd, struct logical_volume *lv)
 {
-	if (!lv_is_integrity(lv)) {
-		log_error("LV does not have integrity.");
+	if (!lv_is_integrity(lv) && !lv_is_raid(lv)) {
+		log_error("LV %s does not have integrity.", display_lvname(lv));
 		return 0;
 	}
 
