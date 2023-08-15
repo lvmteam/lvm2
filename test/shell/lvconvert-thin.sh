@@ -82,7 +82,7 @@ lvcreate -L32 -n $lv2 $vg
 lvconvert --yes -c 8M --type thin-pool $vg/$lv1 2>&1 | tee err
 # Check there is a warning for large chunk size and zeroing enabled
 grep "WARNING: Pool zeroing and" err
-UUID=$(get lv_field $vg/$lv2 uuid)
+UUID=$(get lv_field $vg/${lv1}_tmeta uuid)
 # Fail is pool is active
 # TODO  maybe detect inactive pool and deactivate
 fail lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $lv2
@@ -92,7 +92,7 @@ check lv_field $vg/${lv1}_tmeta uuid "$UUID"
 
 # and swap again with new command --swapmetadata
 lvconvert --yes --swapmetadata $vg/$lv1 --poolmetadata $lv2
-check lv_field $vg/$lv2 uuid "$UUID"
+check lv_field $vg/${lv1}_tmeta uuid "$UUID"
 lvremove -f $vg
 
 

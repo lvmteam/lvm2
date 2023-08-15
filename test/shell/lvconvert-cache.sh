@@ -60,14 +60,14 @@ check lv_field $vg/$lv2 cache_settings "random_threshold=56,sequential_threshold
 
 # Check swap of cache pool metadata
 lvconvert --yes --type cache-pool --poolmetadata $lv4 $vg/$lv3
-UUID=$(get lv_field $vg/$lv5 uuid)
+UUID=$(get lv_field $vg/${lv3}_cmeta uuid)
 lvconvert --yes --cachepool $vg/$lv3 --poolmetadata $lv5
 check lv_field $vg/${lv3}_cmeta uuid "$UUID"
 
 # Check swap of cache pool metadata with --swapmetadata
 # (should swap back to lv5)
 lvconvert --yes --swapmetadata $vg/$lv3 --poolmetadata $lv5
-check lv_field $vg/$lv5 uuid "$UUID"
+check lv_field $vg/${lv3}_cmeta uuid "$UUID"
 
 #fail lvconvert --cachepool $vg/$lv1 --poolmetadata $vg/$lv2
 #lvconvert --yes --type cache-pool --poolmetadata $vg/$lv2 $vg/$lv1
