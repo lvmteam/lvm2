@@ -2834,7 +2834,6 @@ static int _lvconvert_swap_pool_metadata(struct cmd_context *cmd,
 	struct lv_segment *seg;
 	struct lv_type *lvtype;
 	char meta_name[NAME_LEN];
-	const char *swap_name;
 	const char *swap_lock_args;
 	uint32_t chunk_size;
 	int is_thinpool;
