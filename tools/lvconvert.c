@@ -2835,9 +2835,7 @@ static int _lvconvert_swap_pool_metadata(struct cmd_context *cmd,
 	struct lv_type *lvtype;
 	char meta_name[NAME_LEN];
 	const char *swap_name;
-	char *lockd_meta_args = NULL;
-	char *lockd_meta_name = NULL;
-	struct id lockd_meta_id;
+	const char *swap_lock_args;
 	uint32_t chunk_size;
 	int is_thinpool;
 	int is_cachepool;
@@ -2904,25 +2902,15 @@ static int _lvconvert_swap_pool_metadata(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!lockd_lv(cmd, metadata_lv, "un", 0)) {
-		log_error("Failed to unlock LV %s.", display_lvname(metadata_lv));
-		return 0;
-	}
-
 	/*
 	 * metadata_lv is currently an independent LV with its own lockd lock allocated.
 	 * A pool metadata LV does not have its own lockd lock (only the pool LV does.)
-	 * So, when metadata_lv is added to the thin pool, it's lock needs to be freed.
-	 * Save info about the metadata_lv here that will be used to free the lock.
-	 * The current pool metadata LV does not currently have its own lockd lock
-	 * allocated, and once it becomes an independent LV it will need its own lock.
-	 * (see setting prev_metadata_lv->lock_args below.)
+	 * Since the LV name and uuid are exchanged between the old and new metadata LVs,
+	 * the lvmlockd lock can just be moved between the two LVs, so the new indepdent
+	 * LV (former metadata LV) gets the lock that was used for old independent LV.
 	 */
 	if (vg_is_shared(vg) && metadata_lv->lock_args) {
-		lockd_meta_args = dm_pool_strdup(cmd->mem, metadata_lv->lock_args);
-		lockd_meta_name = dm_pool_strdup(cmd->mem, metadata_lv->name);
-		memcpy(&lockd_meta_id, &metadata_lv->lvid.id[1], sizeof(struct id));
-		/* Without lock_args, a lock will no longer be acquired for this LV. */
+		swap_lock_args = metadata_lv->lock_args;
 		metadata_lv->lock_args = NULL;
 	}
 
@@ -2980,24 +2968,14 @@ static int _lvconvert_swap_pool_metadata(struct cmd_context *cmd,
 
 	/*
 	 * The previous metadata LV will now be an independent LV so it now
-	 * requires a lockd lock.  We could call lockd_init_lv_args() directly
-	 * here, but reuse the existing code in vg_write() to be consistent
-	 * with the way lvcreate allocates locks.
+	 * requires a lockd lock, and gets the lock from the LV that's becoming
+	 * the new metadata LV.
 	 */
-	if (is_lockd_type(vg->lock_type)) {
-		if (!strcmp(vg->lock_type, "sanlock"))
-			prev_metadata_lv->lock_args = "pending";
-		else if (!strcmp(vg->lock_type, "dlm"))
-			prev_metadata_lv->lock_args = "dlm";
-		else if (!strcmp(vg->lock_type, "idm"))
-			prev_metadata_lv->lock_args = "idm";
-	}
+	if (is_lockd_type(vg->lock_type))
+		prev_metadata_lv->lock_args = swap_lock_args;
 
 	if (!vg_write(vg) || !vg_commit(vg))
 		return_0;
-
-	if (lockd_meta_name)
-		lockd_free_lv(cmd, vg, lockd_meta_name, &lockd_meta_id, lockd_meta_args);
 
 	return 1;
 }
