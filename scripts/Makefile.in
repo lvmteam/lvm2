@@ -51,7 +51,7 @@ vpath %.ocf $(srcdir)
 	$(Q) $(INSTALL_DIR) $(ocf_scriptdir)
 	$(Q) $(INSTALL_SCRIPT) $< $(ocf_scriptdir)/$(basename $(<F))
 
-install_lvm2: $(LVM_SCRIPTS:.sh=_install)
+install_lvm2: install_libexec $(LVM_SCRIPTS:.sh=_install)
 install_device-mapper: $(DM_SCRIPTS:.sh=_install)
 
 install_ocf: $(OCF_SCRIPTS:.ocf=_install)
@@ -60,7 +60,7 @@ install_libexec:
 	$(Q) $(INSTALL_DIR) $(libexecdir)
 	$(Q) $(INSTALL_SCRIPT) lvresize_fs_helper.sh $(libexecdir)/lvresize_fs_helper
 
-install: install_lvm2 install_ocf install_device-mapper install_libexec
+install: install_lvm2 install_ocf install_device-mapper
 
 
 # FIXME Customise for other distributions
