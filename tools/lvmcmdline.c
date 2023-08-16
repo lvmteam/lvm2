@@ -1456,7 +1456,7 @@ static int _command_optional_opt_matches(struct cmd_context *cmd, int ci, int oo
 	}
 
 	if (val_bit_is_set(commands[ci].optional_opt_args[oo].def.val_bits, constnum_VAL)) {
-		if (commands[ci].optional_opt_args[oo].def.num == arg_int_value(cmd, opt_enum, 0))
+		if (commands[ci].optional_opt_args[oo].def.num == arg_uint64_value(cmd, opt_enum, 0))
 			return 1;
 		return 0;
 	}
@@ -1475,7 +1475,7 @@ static int _command_ignore_opt_matches(struct cmd_context *cmd, int ci, int io)
 	}
 
 	if (val_bit_is_set(commands[ci].ignore_opt_args[io].def.val_bits, constnum_VAL)) {
-		if (commands[ci].ignore_opt_args[io].def.num == arg_int_value(cmd, opt_enum, 0))
+		if (commands[ci].ignore_opt_args[io].def.num == arg_uint64_value(cmd, opt_enum, 0))
 			return 1;
 		return 0;
 	}
@@ -1519,7 +1519,7 @@ check_val:
 	}
 
 	if (val_bit_is_set(commands[ci].required_opt_args[ro].def.val_bits, constnum_VAL)) {
-		if (commands[ci].required_opt_args[ro].def.num == arg_int_value(cmd, opt_enum, 0))
+		if (commands[ci].required_opt_args[ro].def.num == arg_uint64_value(cmd, opt_enum, 0))
 			return 1;
 		return 0;
 	}

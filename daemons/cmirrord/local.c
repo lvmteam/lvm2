@@ -266,7 +266,7 @@ static int do_local_work(void *data __attribute__((unused)))
 					  RQ_TYPE(u_rq->request_type));
 			break;
 		}
-		/* ELSE, fall through */
+		/* ELSE */ /* fall through */
 	case DM_ULOG_IS_CLEAN:
 	case DM_ULOG_FLUSH:
 	case DM_ULOG_MARK_REGION:

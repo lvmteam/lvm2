@@ -1352,7 +1352,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		else
 			image_count = lp->mirrors + 1;
 
-		images_reduced = (image_count < lv_raid_image_count(lv));
+		images_reduced = (image_count < (int) lv_raid_image_count(lv));
 
 		if (image_count < 1) {
 			log_error("Unable to %s images by specified amount.",

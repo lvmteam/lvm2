@@ -1133,7 +1133,7 @@ uint32_t extents_from_percent_size(struct volume_group *vg, const struct dm_list
 			}
 			break;
 		}
-		/* fall through to use all PVs in VG like %FREE */
+		/* fall through */ /* to use all PVs in VG like %FREE */
 	case PERCENT_FREE:
 		if (!(extents = vg->free_count)) {
 			log_error("No free extents in Volume group %s.", vg->name);
