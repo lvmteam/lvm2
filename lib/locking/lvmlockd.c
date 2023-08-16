@@ -2946,8 +2946,13 @@ int lockd_init_lv_args(struct cmd_context *cmd, struct volume_group *vg,
 		       struct logical_volume *lv,
 		       const char *lock_type, const char **lock_args)
 {
-	/* sanlock is the only lock type that sets per-LV lock_args. */
-	if (!strcmp(lock_type, "sanlock"))
+	if (!lock_type)
+		return 1;
+	if (!strcmp(lock_type, "dlm"))
+		*lock_args = "dlm";
+	else if (!strcmp(lock_type, "idm"))
+		*lock_args = "idm";
+	else if (!strcmp(lock_type, "sanlock"))
 		return _init_lv_sanlock(cmd, vg, lv->name, &lv->lvid.id[1], lock_args);
 	return 1;
 }

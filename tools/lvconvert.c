@@ -3454,19 +3454,10 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		metadata_lv->lock_args = NULL;
 
 		if (!to_cachepool) {
-			if (!strcmp(vg->lock_type, "sanlock")) {
-				if (!lockd_init_lv_args(cmd, vg, pool_lv,
-							vg->lock_type, &pool_lv->lock_args)) {
-					log_error("Cannot allocate lock for new pool LV.");
-					goto_bad;
-				}
-				pool_lv->new_lock_args = 1; /* tells vg_revert to lockd_free_lv */
-			} else if (!strcmp(vg->lock_type, "dlm")) {
-				pool_lv->lock_args = "dlm";
-			} else if (!strcmp(vg->lock_type, "idm")) {
-				pool_lv->lock_args = "idm";
+			if (!lockd_init_lv_args(cmd, vg, pool_lv, vg->lock_type, &pool_lv->lock_args)) {
+				log_error("Cannot allocate lock for new pool LV.");
+				goto_bad;
 			}
-
 			if (lock_active_pool) {
 			       	if (!lockd_lv(cmd, pool_lv, "ex", LDLV_PERSISTENT)) {
 					log_error("Failed to lock new pool LV %s.", display_lvname(pool_lv));
