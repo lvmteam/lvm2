@@ -3077,7 +3077,6 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	struct lv_segment *seg;
 	unsigned int target_attr = ~0;
 	unsigned int activate_pool;
-	unsigned int lock_active_pool;
 	unsigned int lock_active_pool_done = 0;
 	unsigned int zero_metadata;
 	uint64_t meta_size;
@@ -3126,12 +3125,10 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	is_active = lv_is_active(lv);
 
 	activate_pool = to_thinpool && is_active;
-	lock_active_pool = (to_thinpool || to_thin) && is_active;
 
 	/* Wipe metadata_lv by default, but allow skipping this for cache pools. */
 	zero_metadata = (to_cachepool) ? arg_int_value(cmd, zero_ARG, 1) : 1;
 
-	/* An existing LV needs to have its lock freed once it becomes a data LV. */
 	if (vg_is_shared(vg) && lv->lock_args) {
 		lockd_data_args = dm_pool_strdup(vg->vgmem, lv->lock_args);
 		lockd_data_name = dm_pool_strdup(vg->vgmem, lv->name);
@@ -3441,11 +3438,11 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		goto_bad;
 
 	/*
-	 * Create a new lock for a thin pool LV.  A cache pool LV has no lock.
-	 * Locks are removed from existing LVs that are being converted to
-	 * data and meta LVs (they are unlocked and deleted below.)
-	 * Acquire the new thin pool lock if the pool will remain active at
-	 * the end of the command.
+	 * If the input LV is being converted to a thin pool, the input LV lock
+	 * is used for the thin pool LV.  If the input LV is being converted to
+	 * a thin LV, a new lock is created for the thin pool and the lock from
+	 * the input LV is freed.  A cache pool LV has no lock, so the lock for
+	 * the input LV is freed.
 	 */
 	if (vg_is_shared(vg)) {
 		lv->lock_args = NULL;
@@ -3453,18 +3450,25 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		data_lv->lock_args = NULL;
 		metadata_lv->lock_args = NULL;
 
-		if (!to_cachepool) {
+		if (to_thin) {
 			if (!lockd_init_lv_args(cmd, vg, pool_lv, vg->lock_type, &pool_lv->lock_args)) {
 				log_error("Cannot allocate lock for new pool LV.");
 				goto_bad;
 			}
-			if (lock_active_pool) {
-			       	if (!lockd_lv(cmd, pool_lv, "ex", LDLV_PERSISTENT)) {
-					log_error("Failed to lock new pool LV %s.", display_lvname(pool_lv));
-					goto_bad;
-				}
-				lock_active_pool_done = 1;
+		} else if (to_thinpool) {
+			pool_lv->lock_args = lockd_data_args;
+			/* Don't free this lock below. */
+			lockd_data_args = NULL;
+			lockd_data_name = NULL;
+		}
+
+		/* Acquire the thin pool lock if the pool will remain active. */
+		if ((to_thin || to_thinpool) && is_active) {
+			if (!lockd_lv(cmd, pool_lv, "ex", LDLV_PERSISTENT)) {
+				log_error("Failed to lock new pool LV %s.", display_lvname(pool_lv));
+				goto_bad;
 			}
+			lock_active_pool_done = 1;
 		}
 	}
 
@@ -3506,8 +3510,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	}
 
 	/*
-	 * Unlock and free the locks from existing LVs that became pool data
-	 * and meta LVs.
+	 * Unlock and free locks that are no longer used.
 	 */
 	if (lockd_data_name) {
 		if (!lockd_lv_name(cmd, vg, lockd_data_name, &lockd_data_id, lockd_data_args, "un", lockd_data_flags)) {
