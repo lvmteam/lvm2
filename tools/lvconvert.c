@@ -3115,9 +3115,9 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 
 	/* An existing LV needs to have its lock freed once it becomes a data LV. */
 	if (vg_is_shared(vg) && lv->lock_args) {
-		lockd_data_args = dm_pool_strdup(cmd->mem, lv->lock_args);
-		lockd_data_name = dm_pool_strdup(cmd->mem, lv->name);
-		memcpy(&lockd_data_id, &lv->lvid.id[1], sizeof(struct id));
+		lockd_data_args = dm_pool_strdup(lv->vg->vgmem, lv->lock_args);
+		lockd_data_name = dm_pool_strdup(lv->vg->vgmem, lv->name);
+		lockd_data_id = lv->lvid.id[1];
 	}
 
 	/* If LV is inactive here, ensure it's not active elsewhere. */
@@ -3144,9 +3144,9 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 
 		/* An existing LV needs to have its lock freed once it becomes a meta LV. */
 		if (vg_is_shared(vg) && metadata_lv->lock_args) {
-			lockd_meta_args = dm_pool_strdup(cmd->mem, metadata_lv->lock_args);
-			lockd_meta_name = dm_pool_strdup(cmd->mem, metadata_lv->name);
-			memcpy(&lockd_meta_id, &metadata_lv->lvid.id[1], sizeof(struct id));
+			lockd_meta_args = dm_pool_strdup(metadata_lv->vg->vgmem, metadata_lv->lock_args);
+			lockd_meta_name = dm_pool_strdup(metadata_lv->vg->vgmem, metadata_lv->name);
+			lockd_meta_id = metadata_lv->lvid.id[1];
 		}
 
 		if (metadata_lv == lv) {
@@ -3550,9 +3550,9 @@ static int _cache_vol_attach(struct cmd_context *cmd,
 	 * lock does not need to be created for it again.)
 	 */
 	if (vg_is_shared(vg) && lv_fast->lock_args) {
-		lockd_fast_args = dm_pool_strdup(cmd->mem, lv_fast->lock_args);
-		lockd_fast_name = dm_pool_strdup(cmd->mem, lv_fast->name);
-		memcpy(&lockd_fast_id, &lv_fast->lvid.id[1], sizeof(struct id));
+		lockd_fast_args = dm_pool_strdup(lv_fast->vg->vgmem, lv_fast->lock_args);
+		lockd_fast_name = dm_pool_strdup(lv_fast->vg->vgmem, lv_fast->name);
+		lockd_fast_id = lv_fast->lvid.id[1];
 	}
 
 	/*
@@ -6273,9 +6273,9 @@ int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 	 * lv_wcorig gets no lock.
 	 */
 	if (vg_is_shared(vg) && lv_fast->lock_args) {
-		lockd_fast_args = dm_pool_strdup(cmd->mem, lv_fast->lock_args);
-		lockd_fast_name = dm_pool_strdup(cmd->mem, lv_fast->name);
-		memcpy(&lockd_fast_id, &lv_fast->lvid.id[1], sizeof(struct id));
+		lockd_fast_args = dm_pool_strdup(lv_fast->vg->vgmem, lv_fast->lock_args);
+		lockd_fast_name = dm_pool_strdup(lv_fast->vg->vgmem, lv_fast->name);
+		lockd_fast_id = lv_fast->lvid.id[1];
 	}
 
 	if (!_writecache_zero(cmd, lv_fast)) {
