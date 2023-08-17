@@ -3554,10 +3554,12 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	 * committed should not exit here.  There is some cleanup missing here.
 	 */
 bad:
-	if (lock_active_pool_done)
-		lockd_lv(cmd, pool_lv, "un", LDLV_PERSISTENT);
-	if (pool_lv && pool_lv->lock_args && pool_lv->new_lock_args)
-		lockd_free_lv(cmd, vg, pool_lv->name, &pool_lv->lvid.id[1], pool_lv->lock_args);
+	if (vg_is_shared(vg)) {
+		if (lock_active_pool_done)
+			lockd_lv(cmd, pool_lv, "un", LDLV_PERSISTENT);
+		if (pool_lv && pool_lv->lock_args && pool_lv->new_lock_args)
+			lockd_free_lv(cmd, vg, pool_lv->name, &pool_lv->lvid.id[1], pool_lv->lock_args);
+	}
 
 	if (policy_settings)
 		dm_config_destroy(policy_settings);
