@@ -3122,23 +3122,16 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		return 0;
 	}
 
+	/* If LV is inactive here, ensure it's not active elsewhere. */
+	if (!lockd_lv(cmd, lv, "ex", 0))
+		return 0;
+
 	is_active = lv_is_active(lv);
 
 	activate_pool = to_thinpool && is_active;
 
 	/* Wipe metadata_lv by default, but allow skipping this for cache pools. */
 	zero_metadata = (to_cachepool) ? arg_int_value(cmd, zero_ARG, 1) : 1;
-
-	if (vg_is_shared(vg) && lv->lock_args) {
-		lockd_data_args = dm_pool_strdup(vg->vgmem, lv->lock_args);
-		lockd_data_name = dm_pool_strdup(vg->vgmem, lv->name);
-		lockd_data_flags = is_active ? LDLV_PERSISTENT : 0;
-		lockd_data_id = lv->lvid.id[1];
-	}
-
-	/* If LV is inactive here, ensure it's not active elsewhere. */
-	if (!lockd_lv(cmd, lv, "ex", 0))
-		return 0;
 
 	/*
 	 * If an existing LV is to be used as the metadata LV,
@@ -3156,14 +3149,6 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		if (!(metadata_lv = find_lv(vg, pool_metadata_name))) {
 			log_error("Unknown pool metadata LV %s.", pool_metadata_name);
 			return 0;
-		}
-
-		/* An existing LV needs to have its lock freed once it becomes a meta LV. */
-		if (vg_is_shared(vg) && metadata_lv->lock_args) {
-			lockd_meta_args = dm_pool_strdup(vg->vgmem, metadata_lv->lock_args);
-			lockd_meta_name = dm_pool_strdup(vg->vgmem, metadata_lv->name);
-			lockd_meta_flags = lv_is_active(metadata_lv) ? LDLV_PERSISTENT : 0;
-			lockd_meta_id = metadata_lv->lvid.id[1];
 		}
 
 		if (metadata_lv == lv) {
@@ -3212,6 +3197,21 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		/* If LV is inactive here, ensure it's not active elsewhere. */
 		if (!lockd_lv(cmd, metadata_lv, "ex", 0))
 			return 0;
+
+		/* An existing LV needs to have its lock freed once it becomes a meta LV. */
+		if (vg_is_shared(vg) && metadata_lv->lock_args) {
+			lockd_meta_args = dm_pool_strdup(vg->vgmem, metadata_lv->lock_args);
+			lockd_meta_name = dm_pool_strdup(vg->vgmem, metadata_lv->name);
+			lockd_meta_flags = lv_is_active(metadata_lv) ? LDLV_PERSISTENT : 0;
+			lockd_meta_id = metadata_lv->lvid.id[1];
+		}
+	}
+
+	if (vg_is_shared(vg) && lv->lock_args) {
+		lockd_data_args = dm_pool_strdup(vg->vgmem, lv->lock_args);
+		lockd_data_name = dm_pool_strdup(vg->vgmem, lv->name);
+		lockd_data_flags = is_active ? LDLV_PERSISTENT : 0;
+		lockd_data_id = lv->lvid.id[1];
 	}
 
 	if (!get_pool_params(cmd, pool_segtype,
