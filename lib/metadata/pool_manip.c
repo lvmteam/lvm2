@@ -628,6 +628,7 @@ struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 		.temporary = 1,
 		.zero = 1,
 		.is_metadata = 1,
+		.lv_name = "pool_metadata%d",
 	};
 
 	if (!(lvc.segtype = get_segtype_from_string(pool_lv->vg->cmd, SEG_TYPE_NAME_STRIPED)))
