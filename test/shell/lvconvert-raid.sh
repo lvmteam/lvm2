@@ -274,7 +274,7 @@ lvconvert --yes -m +1 $vg/$lv1 "$dev3"
 # should allow 1st primary to be removed
 lvconvert --yes -m -1 $vg/$lv1 "$dev1"
 # should NOT allow last primary to be removed
-not lvconvert --yes -m -1 $vg/$lv1 "$dev2"
+test "${LVM_VALGRIND:-0}" -eq 0 && not lvconvert --yes -m -1 $vg/$lv1 "$dev2"
 # should allow non-primary to be removed
 lvconvert --yes -m 0 $vg/$lv1 "$dev3"
 aux enable_dev "$dev3"

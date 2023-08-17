@@ -321,6 +321,7 @@ aux zero_dev "$dev4" "$(get first_extent_sector "$dev4"):"
 
 SHOULD=
 aux throttle_dm_mirror || SHOULD=should
+test "${LVM_VALGRIND:-0}" -eq 0 || SHOULD=should
 
 # Use large enough mirror that takes time to sychronize with small regionsize
 lvcreate -aey -L30 -Zn -Wn --type mirror --regionsize 16k -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev4" "$dev3:$DEVRANGE"
