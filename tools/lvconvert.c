@@ -3356,6 +3356,23 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		}
 	}
 
+	/*
+	 * Before starting a real conversion, prepare  _pmspare volume.
+	 * If there is already one presend in a VG, make sure the size is right
+	 */
+	if (!handle_pool_metadata_spare(vg, metadata_lv->le_count, use_pvh, pool_metadata_spare)) {
+		log_error("Failed to set up spare metadata LV for pool.");
+		goto bad;
+	}
+	/*
+	 * After _pmspare handling is finished there are unwritten VG metadata
+	 * that will get written with the next mda update.
+	 * If there is any failure and such new metadata would not be written,
+	 * a user is then left with 'regular' volume he can normally  'lvremove'.
+	 * If there was _pmspare already existing, the size of such LV is already changed
+	 * and is committed to disk. A user may only remove such volume and create a new one.
+	 */
+
 	if (to_thin) {
 		/*
 		 * pool_lv is not yet a pool, when returned, pool_lv contains
@@ -3491,18 +3508,6 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	log_print_unless_silent("Converted %s to %s %s.", converted_names,
 				 (to_cachepool) ? "cache" : "thin",
 				 (to_thin) ? "volume" : "pool");
-
-	/*
-	 * FIXME handle_pool_metadata_spare() calls vg_write() vg_commit()
-	 * after creating a new lvolN, but then lvolN is renamed and hidden as
-	 * [lvolN_pmspare] without any further vg_write(). So, there's an extra
-	 * vg_write and vg_commit required here to cover the renaming/hiding.
-	 */
-	if (!handle_pool_metadata_spare(vg, metadata_lv->le_count, use_pvh, pool_metadata_spare) ||
-	    !vg_write(vg) || !vg_commit(vg)) {
-		log_error("Failed to set up spare metadata LV for thin pool.");
-		end_error = 1;
-	}
 
 	if (activate_pool && !activate_lv(cmd, pool_lv)) {
 		log_error("Failed to activate pool logical volume %s.", display_lvname(pool_lv));
