@@ -3092,8 +3092,8 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	thin_discards_t discards;
 	thin_zero_t zero_new_blocks;
 	int error_when_full;
-	int end_error = 0;
 	int is_active;
+	int ret = 1;
 
 	/* for handling lvmlockd cases */
 	char *lockd_data_args = NULL;
@@ -3470,7 +3470,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		if (to_thin) {
 			if (!lockd_init_lv_args(cmd, vg, pool_lv, vg->lock_type, &pool_lv->lock_args)) {
 				log_error("Cannot allocate lock for new pool LV.");
-				goto_bad;
+				goto bad;
 			}
 		} else if (to_thinpool) {
 			pool_lv->lock_args = lockd_data_args;
@@ -3483,7 +3483,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		if ((to_thin || to_thinpool) && is_active) {
 			if (!lockd_lv(cmd, pool_lv, "ex", LDLV_PERSISTENT)) {
 				log_error("Failed to lock new pool LV %s.", display_lvname(pool_lv));
-				goto_bad;
+				goto bad;
 			}
 			lock_active_pool_done = 1;
 		}
@@ -3511,7 +3511,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 
 	if (activate_pool && !activate_lv(cmd, pool_lv)) {
 		log_error("Failed to activate pool logical volume %s.", display_lvname(pool_lv));
-		end_error = 1;
+		ret = 0;
 	}
 
 	/*
@@ -3520,33 +3520,31 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	if (lockd_data_name) {
 		if (!lockd_lv_name(cmd, vg, lockd_data_name, &lockd_data_id, lockd_data_args, "un", lockd_data_flags)) {
 			log_error("Failed to unlock pool data LV %s/%s", vg->name, lockd_data_name);
-			end_error = 1;
+			ret = 0;
 		}
 		if (!lockd_free_lv(cmd, vg, lockd_data_name, &lockd_data_id, lockd_data_args)) {
 			log_error("Failed to free lock for pool data LV %s/%s", vg->name, lockd_data_name);
-			end_error = 1;
+			ret = 0;
 		}
 	}
 	if (lockd_meta_name) {
 		if (!lockd_lv_name(cmd, vg, lockd_meta_name, &lockd_meta_id, lockd_meta_args, "un", lockd_meta_flags)) {
 			log_error("Failed to unlock pool metadata LV %s/%s", vg->name, lockd_meta_name);
-			end_error = 1;
+			ret = 0;
 		}
 		if (!lockd_free_lv(cmd, vg, lockd_meta_name, &lockd_meta_id, lockd_meta_args)) {
 			log_error("Failed to free lock for pool metadata LV %s/%s", vg->name, lockd_meta_name);
-			end_error = 1;
+			ret = 0;
 		}
 	}
 
 	if (policy_settings)
 		dm_config_destroy(policy_settings);
 
-	if (end_error) {
+	if (!ret)
 		log_error("Manual intervention may be required to handle reported errors.");
-		return 0;
-	}
 
-	return 1;
+	return ret;
 
 	/*
 	 * Error exit path for failures that occur before the main conversion
