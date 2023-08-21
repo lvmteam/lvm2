@@ -140,17 +140,21 @@ static int _remove_sibling_pvs_from_trim_list(struct logical_volume *lv,
 {
 	char *idx, *suffix;
 	const char *sibling;
-	char sublv_name[NAME_LEN];
+	char sublv_name[NAME_LEN], idx_buf[NAME_LEN];
 	struct logical_volume *sublv;
 	struct dm_list untrim_list, *pvh1, *pvh2;
 	struct pv_list *pvl1, *pvl2;
 
 	/* Give up with success unless @lv_name _and_ valid raid segment type */
-	if (!lv_name || !*lv_name ||
-	    !seg_is_raid(first_seg(lv)) ||
-	    seg_is_raid0(first_seg(lv)) ||
-	    !strcmp(lv->name, lv_name))
+	if (!seg_is_raid(first_seg(lv)) || seg_is_raid0(first_seg(lv)))
 		return 1;
+	if (!lv_name || !*lv_name || !strcmp(lv->name, lv_name)) {
+		log_warn("WARNING: Sub LV name not passed. Will exclude all PVs"
+		         " containing LV %s.", lv->name);
+		log_warn("(If you are trying to colocate different parts of the same"
+		         " mirror, try moving sub LVs one-by-one, by name)");
+		return 1;
+	}
 
 	dm_list_init(&untrim_list);
 
@@ -173,10 +177,14 @@ static int _remove_sibling_pvs_from_trim_list(struct logical_volume *lv,
 		return 0;
 	}
 	idx++;
+	if (!dm_strncpy(idx_buf, idx, sizeof(idx_buf))) {
+		log_error(INTERNAL_ERROR "Sub LV index %s is too long.", idx);
+		return 0;
+	}
 
 	/* Create the siblings name (e.g. "raidlv_rmeta_N" -> "raidlv_rimage_N" */
 	if (dm_snprintf(suffix + 2, sizeof(sublv_name) - 2 - (suffix - sublv_name),
-			"%s_%s", sibling, idx) < 0) {
+			"%s_%s", sibling, idx_buf) < 0) {
 		log_error("Raid sublv for name %s too long.", lv_name);
 		return 0;
 	}
