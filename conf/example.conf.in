@@ -2017,7 +2017,11 @@ activation {
 	# buffered = 1
 
 	# Configuration option report/headings.
-	# Show headings for columns on report.
+	# Format of LVM command's report output headings.
+	# Accepted values:
+	#   0 no headings,
+	#   1 headings with column abbreviations,
+	#   2 headings with full column names.
 	# This configuration option has an automatic default value.
 	# headings = 1
 

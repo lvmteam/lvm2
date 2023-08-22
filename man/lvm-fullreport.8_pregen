@@ -43,6 +43,8 @@ if information changes between commands.
 .br
 [    \fB--foreign\fP ]
 .br
+[    \fB--headings\fP \fBnone\fP|\fBabbrev\fP|\fBfull\fP|\fB0\fP|\fB1\fP|\fB2\fP ]
+.br
 [    \fB--ignorelockingfailure\fP ]
 .br
 [    \fB--logonly\fP ]
@@ -194,6 +196,14 @@ For testing and debugging.
 .br
 Report/display foreign VGs that would otherwise be skipped.
 See \fBlvmsystemid\fP(7) for more information about foreign VGs.
+.
+.HP
+\fB--headings\fP \fBnone\fP|\fBabbrev\fP|\fBfull\fP|\fB0\fP|\fB1\fP|\fB2\fP
+.br
+Type of headings to use in report output.
+\fBnone\fP or \fB0\fP: No headings.
+\fBabbrev\fP or \fB1\fP: Column name abbreviations.
+\fBfull\fP or \fB2\fP: Full column names.
 .
 .HP
 \fB-h\fP|\fB--help\fP
