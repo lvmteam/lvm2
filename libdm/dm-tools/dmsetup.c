@@ -178,6 +178,7 @@ enum {
 	GID_ARG,
 	GROUP_ARG,
 	GROUP_ID_ARG,
+	HEADINGS_ARG,
 	HELP_ARG,
 	HISTOGRAM_ARG,
 	INACTIVE_ARG,
@@ -4775,12 +4776,20 @@ static int _report_init(const struct command *cmd, const char *subcommand)
 		_report_type |= DR_STATS_META;
 	}
 
+	if (_switches[NOHEADINGS_ARG] && _switches[HEADINGS_ARG]) {
+		log_error("Only one of --headings and --noheadings permitted.");
+		return 0;
+	}
+
 	/* emulate old dmsetup behaviour */
 	if (_switches[NOHEADINGS_ARG]) {
 		separator = ":";
 		aligned = 0;
 		headings = 0;
 	}
+
+	if (_switches[HEADINGS_ARG])
+		headings = _int_args[HEADINGS_ARG];
 
 	if (_switches[UNBUFFERED_ARG])
 		buffered = 0;
@@ -4848,8 +4857,11 @@ static int _report_init(const struct command *cmd, const char *subcommand)
 	if (buffered)
 		flags |= DM_REPORT_OUTPUT_BUFFERED;
 
-	if (headings)
+	if (headings) {
 		flags |= DM_REPORT_OUTPUT_HEADINGS;
+		if (headings == 2)
+			flags |= DM_REPORT_OUTPUT_FIELD_IDS_IN_HEADINGS;
+	}
 
 	if (field_prefixes)
 		flags |= DM_REPORT_OUTPUT_FIELD_NAME_PREFIX;
@@ -6166,7 +6178,8 @@ static int _stats_help(CMD_ARGS);
  *       [--units <u>] [--programid <id>] [--regionid <id>]
  *       [-o <fields>] [-O|--sort <sort_fields>]
  *       [-S|--select <selection>] [--nameprefixes]
- *       [--noheadings] [--separator <separator>]
+ *       [--noheadings|--headings none|abbrev|full|0|1|2]
+ *       [--separator <separator>]
  *       [--allprograms|--programid id] [<device>...]
  *   ungroup --groupid <id> [--allprograms|--programid id]
  *       [--alldevices|<device>...]
@@ -6336,7 +6349,8 @@ static void _dmsetup_usage(FILE *out)
 		"        [--udevcookie <cookie>] [--noudevrules] [--noudevsync] [--verifyudev]\n"
 		"        [-y|--yes] [--readahead {[+]<sectors>|auto|none}] [--retry]\n"
 		"        [-c|-C|--columns] [-o <fields>] [-O|--sort <sort_fields>]\n"
-		"        [-S|--select <selection>] [--nameprefixes] [--noheadings]\n"
+		"        [-S|--select <selection>] [--nameprefixes]\n"
+		"        [--noheadings|--headings none|abbrev|full|0|1|2]\n"
 		"        [--separator <separator>]\n\n",
 		_base_commands[_base_command].name);
 
@@ -6866,6 +6880,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		{"gid", 1, &ind, GID_ARG},
 		{"group", 0, &ind, GROUP_ARG},
 		{"groupid", 1, &ind, GROUP_ID_ARG},
+		{"headings", 1, &ind, HEADINGS_ARG},
 		{"help", 0, &ind, HELP_ARG},
 		{"histogram", 0, &ind, HISTOGRAM_ARG},
 		{"inactive", 0, &ind, INACTIVE_ARG},
@@ -7169,6 +7184,19 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		if (ind == EXEC_ARG) {
 			_switches[EXEC_ARG]++;
 			_command_to_exec = optarg;
+		}
+		if (ind == HEADINGS_ARG) {
+			_switches[HEADINGS_ARG]++;
+			if (!strcasecmp(optarg, "none") || !strcmp(optarg, "0"))
+				_int_args[HEADINGS_ARG] = 0;
+			else if (!strcasecmp(optarg, "abbrev") || !strcmp(optarg, "1"))
+				_int_args[HEADINGS_ARG] = 1;
+			else if (!strcasecmp(optarg, "full") || !strcmp(optarg, "2"))
+				_int_args[HEADINGS_ARG] = 2;
+			else {
+				log_error("Unknown headings type.");
+				return 0;
+			}
 		}
 		if (ind == TARGET_ARG) {
 			_switches[TARGET_ARG]++;

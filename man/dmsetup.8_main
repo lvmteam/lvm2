@@ -91,6 +91,7 @@ dmsetup \(em low level logical volume management
 .  IR fields ]
 .  RB [ -O | --sort
 .  IR sort_fields ]
+.  RB [ --idsinheadings ]
 .  RB [ --nameprefixes ]
 .  RB [ --separator
 .  IR separator ]
@@ -500,6 +501,10 @@ Specify the minor number.
 .TP
 .BR -n | --notable
 When creating a device, don't load any table.
+.
+.TP
+.B --idsinheadings
+Show column identifiers instead of names in report output headings.
 .
 .TP
 .B --nameprefixes
