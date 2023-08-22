@@ -181,12 +181,15 @@ Overrides report/aligned configuration setting.
 .TP
 .B --binary
 Overrides report/binary_values_as_numeric configuration setting.
+TP
+.B --headings
+Overrides report/headings congiguration settings.
 .TP
 .B --nameprefixes
 Overrides report/prefixes configuration setting.
 .TP
 .B --noheadings
-Overrides report/noheadings configuration setting.
+Overrides report/headings configuration setting.
 .TP
 .B --nosuffix
 Overrides global/suffix configuration setting.
@@ -1297,6 +1300,26 @@ binary_values_as_numeric=1
   LV    LSize Cpy%Sync ActLocal
   lvol1 4.00m 100.00            1
   lvol0 4.00m                   1
+.fi
+.P
+In certain cases, you may find it more useful to report full column names
+instead of abbreviated column names in report headings. To do this, use
+\fBreport/headings=2\fP configuration setting (or \fB--headings full\fP
+or \fB--headings 2\fP command line option). The full column names are
+the exact names that you also use in \fIFieldSet\fP for \fB-o|--options\fP.
+These names are unambiguous, without spaces (one word only) and they also
+make it easier to match the output with requested \fIFieldSet\fP:
+.P
+.nf
+# lvs -o+seg_start,seg_start_pe
+  LV    VG LSize Cpy%Sync Start Start
+  lvol0 vg 4.00m             0      0
+  lvol1 vg 4.00m 100.00      0      0
+
+# lvs --headings full -o+seg_start,seg_start_pe
+  lv_name vg_name lv_size copy_percent seg_start seg_start_pe
+  lvol0   vg        4.00m                     0             0
+  lvol1   vg        4.00m 100.00              0             0
 .fi
 .
 .SS Changing output format
