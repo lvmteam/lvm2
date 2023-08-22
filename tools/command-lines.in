@@ -210,7 +210,7 @@ OO_ALL: --commandprofile String, --config String, --debug,
 # options for pvs, lvs, vgs, fullreport
 #
 OO_REPORT: --aligned, --all, --binary, --configreport ConfigReport, --foreign,
---ignorelockingfailure, --logonly,
+--headings HeadingsType --ignorelockingfailure, --logonly,
 --nameprefixes, --noheadings, --nosuffix,
 --options String, --readonly, --reportformat ReportFmt, --rows,
 --select String, --separator String, --shared, --sort String,
@@ -1531,6 +1531,7 @@ OO: --history, --segments, OO_REPORT
 OP: VG|LV|Tag ...
 IO: --partial, --ignoreskippedcluster, --trustcache
 ID: lvs_general
+RULE: --noheadings not --headings
 
 ---
 
@@ -1644,6 +1645,7 @@ OO: --segments, OO_REPORT
 OP: PV|Tag ...
 IO: --partial, --ignoreskippedcluster, --trustcache
 ID: pvs_general
+RULE: --noheadings not --headings
 
 ---
 
@@ -1952,6 +1954,7 @@ OO: OO_REPORT
 OP: VG|Tag ...
 IO: --partial, --ignoreskippedcluster, --trustcache
 ID: vgs_general
+RULE: --noheadings not --headings
 
 ---
 
@@ -2007,6 +2010,7 @@ OO: OO_REPORT
 OP: VG ...
 IO: --partial, --ignoreskippedcluster, --trustcache
 ID: fullreport_general
+RULE: --noheadings not --headings
 
 lastlog
 OO: --reportformat ReportFmt, --select String

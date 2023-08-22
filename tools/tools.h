@@ -191,6 +191,7 @@ int configreport_arg(struct cmd_context *cmd __attribute__((unused)), struct arg
 int configtype_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av);
 int repairtype_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av);
 int dumptype_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av);
+int headings_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av);
 
 /* we use the enums to access the switches */
 int arg_is_valid_for_command(const struct cmd_context *cmd, int a);

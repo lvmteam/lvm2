@@ -334,6 +334,12 @@ arg(handlemissingpvs_ARG, '\0', "handlemissingpvs", 0, 0, 0,
     "Allows a polling operation to continue when PVs are missing,\n"
     "e.g. for repairs due to faulty devices.\n")
 
+arg(headings_ARG, '\0', "headings", headings_VAL, 0, 0,
+    "Type of headings to use in report output.\n"
+    "\\fBnone\\fP or \\fB0\\fP: No headings.\n"
+    "\\fBabbrev\\fP or \\fB1\\fP: Column name abbreviations.\n"
+    "\\fBfull\\fP or \\fB2\\fP: Full column names.\n")
+
 arg(ignoreadvanced_ARG, '\0', "ignoreadvanced", 0, 0, 0,
     "Exclude advanced configuration settings from the output.\n")
 

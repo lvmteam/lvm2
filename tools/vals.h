@@ -143,6 +143,7 @@ val(configreport_VAL, configreport_arg, "ConfigReport", "log|vg|lv|pv|pvseg|seg"
 val(configtype_VAL, configtype_arg, "ConfigType", "current|default|diff|full|list|missing|new|profilable|profilable-command|profilable-metadata")
 val(repairtype_VAL, repairtype_arg, "RepairType", "pv_header|metadata|label_header")
 val(dumptype_VAL, dumptype_arg, "DumpType", "headers|metadata|metadata_all|metadata_search")
+val(headings_VAL, headings_arg, "HeadingsType", "none|abbrev|full|0|1|2")
 
 /* this should always be last */
 val(VAL_COUNT, NULL, NULL, NULL)

@@ -1,5 +1,7 @@
 version 2.03.23 - 
 ==================================
+  Recognize lvm.conf report/headings=2 for full column names in report headings.
+  Add --headings none|abbrev|full cmd line option to set report headings type.
   Require writable LV for convertion to vdo pool.
   Fix return value from lvconvert integrity remove.
   Preserve UUID for pool metadata spare.

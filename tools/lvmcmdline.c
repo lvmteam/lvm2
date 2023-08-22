@@ -1136,6 +1136,11 @@ int dumptype_arg(struct cmd_context *cmd, struct arg_values *av)
 	return 0;
 }
 
+int headings_arg(struct cmd_context *cmd, struct arg_values *av)
+{
+	return report_headings_str_to_type(av->value) != REPORT_HEADINGS_UNKNOWN;
+}
+
 /*
  * FIXME: there's been a confusing mixup among:
  * resizeable, resizable, allocatable, allocation.

@@ -48,9 +48,9 @@ struct report_args {
 	char **argv;
 	dm_report_group_type_t report_group_type;
 	report_type_t report_type;
+	report_headings_t headings;
 	int aligned;
 	int buffered;
-	int headings;
 	int field_prefixes;
 	int quoted;
 	int columns_as_rows;
@@ -1247,9 +1247,11 @@ out:
 
 static int _config_report(struct cmd_context *cmd, struct report_args *args, struct single_report_args *single_args)
 {
+	const char *str;
+
 	args->aligned = find_config_tree_bool(cmd, report_aligned_CFG, NULL);
 	args->buffered = find_config_tree_bool(cmd, report_buffered_CFG, NULL);
-	args->headings = find_config_tree_bool(cmd, report_headings_CFG, NULL);
+	args->headings = find_config_tree_int(cmd, report_headings_CFG, NULL);
 	args->separator = find_config_tree_str(cmd, report_separator_CFG, NULL);
 	args->field_prefixes = find_config_tree_bool(cmd, report_prefixes_CFG, NULL);
 	args->quoted = find_config_tree_bool(cmd, report_quoted_CFG, NULL);
@@ -1344,7 +1346,13 @@ static int _config_report(struct cmd_context *cmd, struct report_args *args, str
 	if (arg_is_set(cmd, unbuffered_ARG) && !arg_is_set(cmd, sort_ARG))
 		args->buffered = 0;
 	if (arg_is_set(cmd, noheadings_ARG))
-		args->headings = 0;
+		args->headings = REPORT_HEADINGS_NONE;
+	if ((str = arg_str_value(cmd, headings_ARG, NULL))) {
+		if ((args->headings = report_headings_str_to_type(str)) == REPORT_HEADINGS_UNKNOWN) {
+			log_error("Unknown --headings value.");
+			return 0;
+		}
+	}
 	if (arg_is_set(cmd, nameprefixes_ARG)) {
 		args->aligned = 0;
 		args->field_prefixes = 1;

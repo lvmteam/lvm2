@@ -1863,8 +1863,12 @@ cfg(report_buffered_CFG, "buffered", report_CFG_SECTION, CFG_PROFILABLE | CFG_DE
 	"execution. Otherwise, if buffering is not used, each object is\n"
 	"reported as soon as its processing is finished.\n")
 
-cfg(report_headings_CFG, "headings", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_REP_HEADINGS, vsn(1, 0, 0), NULL, 0, NULL,
-	"Show headings for columns on report.\n")
+cfg(report_headings_CFG, "headings", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_REP_HEADINGS, vsn(1, 0, 0), NULL, 0, NULL,
+	"Format of LVM command's report output headings.\n"
+	"Accepted values:\n"
+	"  0 no headings,\n"
+	"  1 headings with column abbreviations,\n"
+	"  2 headings with full column names.\n")
 
 cfg(report_separator_CFG, "separator", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_REP_SEPARATOR, vsn(1, 0, 0), NULL, 0, NULL,
 	"A separator to use on report after each field.\n")

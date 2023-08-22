@@ -35,6 +35,13 @@ typedef enum {
 	DEVTYPES	= 2048
 } report_type_t;
 
+typedef enum {
+	REPORT_HEADINGS_UNKNOWN  = -1,
+	REPORT_HEADINGS_NONE     =  0,
+	REPORT_HEADINGS_ABBREV   =  1,
+	REPORT_HEADINGS_FULL     =  2
+} report_headings_t;
+
 /*
  * The "struct selection_handle" is used only for selection
  * of items that should be processed further (not for display!).
@@ -81,13 +88,15 @@ struct processing_handle;
 typedef int (*field_report_fn) (struct report_handle * dh, struct field * field,
 				const void *data);
 
+report_headings_t report_headings_str_to_type(const char *str);
+
 int report_format_init(struct cmd_context *cmd);
 
 void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 		  report_type_t *report_type, const char *separator,
-		  int aligned, int buffered, int headings, int field_prefixes,
-		  int quoted, int columns_as_rows, const char *selection,
-		  int multiple_output);
+		  int aligned, int buffered, report_headings_t headings,
+		  int field_prefixes, int quoted, int columns_as_rows,
+		  const char *selection, int multiple_output);
 int report_get_single_selection(struct cmd_context *cmd, report_type_t report_type, const char **selection);
 void *report_init_for_selection(struct cmd_context *cmd, report_type_t *report_type,
 				const char *selection);
