@@ -4263,7 +4263,9 @@ static int _report_headings(struct dm_report *rh)
 
 		fields = fp->implicit ? _implicit_report_fields : rh->fields;
 
-		heading = fields[fp->field_num].heading;
+		heading = rh->flags & DM_REPORT_OUTPUT_FIELD_IDS_IN_HEADINGS ?
+				fields[fp->field_num].id : fields[fp->field_num].heading;
+
 		if (rh->flags & DM_REPORT_OUTPUT_ALIGNED) {
 			if (dm_snprintf(buf, buf_size, "%-*.*s",
 					 fp->width, fp->width, heading) < 0) {
@@ -4315,6 +4317,7 @@ static void _recalculate_fields(struct dm_report *rh)
 	struct row *row;
 	struct dm_report_field *field;
 	int len;
+	size_t id_len;
 
 	dm_list_iterate_items(row, &rh->rows) {
 		dm_list_iterate_items(field, &row->fields) {
@@ -4328,6 +4331,12 @@ static void _recalculate_fields(struct dm_report *rh)
 				if ((len > field->props->width))
 					field->props->width = len;
 
+			}
+
+			if (rh->flags & DM_REPORT_OUTPUT_FIELD_IDS_IN_HEADINGS) {
+				id_len = strlen(rh->fields[field->props->field_num].id);
+				if (field->props->width < id_len)
+					field->props->width = id_len;
 			}
 		}
 	}
@@ -4740,6 +4749,7 @@ static int _output_as_rows(struct dm_report *rh)
 	struct field_properties *fp;
 	struct dm_report_field *field;
 	struct row *row;
+	const char *heading;
 
 	dm_list_iterate_items(fp, &rh->field_props) {
 		if (fp->flags & FLD_HIDDEN) {
@@ -4758,7 +4768,10 @@ static int _output_as_rows(struct dm_report *rh)
 		}
 
 		if ((rh->flags & DM_REPORT_OUTPUT_HEADINGS)) {
-			if (!dm_pool_grow_object(rh->mem, fields[fp->field_num].heading, 0)) {
+			heading = rh->flags & DM_REPORT_OUTPUT_FIELD_IDS_IN_HEADINGS ?
+				fields[fp->field_num].id : fields[fp->field_num].heading;
+
+			if (!dm_pool_grow_object(rh->mem, heading, 0)) {
 				log_error("dm_report: Failed to extend row for field name");
 				goto bad;
 			}
