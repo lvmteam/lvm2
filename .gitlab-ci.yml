@@ -42,6 +42,7 @@ test-job:
     expire_in: 1 week
   tags:
       - ${TAG}
+  timeout: 2h
   script:
     # Common options go here, diffs to the above matrix
     - >
