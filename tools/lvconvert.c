@@ -3069,7 +3069,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *metadata_lv = NULL;  /* existing or created */
 	struct logical_volume *data_lv;             /* lv arg renamed */
-	struct logical_volume *pool_lv;             /* new lv created here */
+	struct logical_volume *pool_lv = NULL;             /* new lv created here */
 	const char *pool_metadata_name;             /* user-specified lv name */
 	char converted_names[3*NAME_LEN];	    /* preserve names of converted lv */
 	struct segment_type *pool_segtype;          /* thinpool or cachepool */

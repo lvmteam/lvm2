@@ -2286,7 +2286,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 			 int *device_ids_invalid, int noupdate)
 {
 	struct dm_list wrong_devs;
-	struct device *dev;
+	struct device *dev = NULL;
 	struct device_list *devl;
 	struct dev_use *du, *du2;
 	struct dev_id *id;
