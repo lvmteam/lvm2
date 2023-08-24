@@ -543,7 +543,7 @@ static int _compare_mem_table_s(const void *a, const void *b){
 
 static int _get_memory_info(uint64_t *total_mb, uint64_t *available_mb)
 {
-	uint64_t anon_pages, mem_available, mem_free, mem_total, shmem, swap_free;
+	uint64_t anon_pages = 0, mem_available = 0, mem_free = 0, mem_total = 0, shmem = 0, swap_free = 0;
 	uint64_t can_swap;
 	mem_table_t mt[] = {
 		{ "AnonPages",    &anon_pages },
