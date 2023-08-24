@@ -5451,7 +5451,7 @@ static int _stats_create_file(CMD_ARGS)
 	if (!strlen(program_id) && !_switches[FORCE_ARG])
 		program_id = DM_STATS_PROGRAM_ID;
 
-	precise = _int_args[PRECISE_ARG];
+	precise = _switches[PRECISE_ARG];
 	group = !_switches[NOGROUP_ARG];
 
 	mode = _stats_get_filemapd_mode();
