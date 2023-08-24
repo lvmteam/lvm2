@@ -5036,6 +5036,9 @@ static int _fsadm_cmd(enum fsadm_cmd_e fcmd,
 		find_config_tree_str(cmd, global_fsadm_executable_CFG, NULL)
 	};
 
+	if (status)
+		*status = -1;
+
 	if (!argv[0] || !*argv[0]) {
 		log_error("Cannot use misconfigured fsadm executable to resize %s.", display_lvname(lv));
 		return 0;
@@ -5054,9 +5057,6 @@ static int _fsadm_cmd(enum fsadm_cmd_e fcmd,
 		argv[i++] = "--force";
 
 	argv[i++] = (fcmd == FSADM_CMD_RESIZE) ? "resize" : "check";
-
-	if (status)
-		*status = -1;
 
 	if (dm_snprintf(lv_path, sizeof(lv_path), "%s%s/%s", cmd->dev_dir,
 			vg->name, lv->name) < 0) {
