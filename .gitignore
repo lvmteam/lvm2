@@ -144,6 +144,8 @@ test/lib/lvmchange
 test/lib/lvmdbusd.profile
 test/lib/lvmdevices
 test/lib/lvmetad
+test/lib/lvmlockctl
+test/lib/lvmlockd
 test/lib/lvmpolld
 test/lib/lvm_import_vdo
 test/lib/lvm_vdo_wrapper
