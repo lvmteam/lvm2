@@ -1008,7 +1008,8 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 
 	if (update)
 		flags |= READ_FOR_UPDATE;
-	else if (arg_is_set(cmd, activate_ARG))
+	else if (arg_is_set(cmd, activate_ARG) ||
+		 arg_is_set(cmd, refresh_ARG))
 		flags |= READ_FOR_ACTIVATE;
 
 	if (!(handle = init_processing_handle(cmd, NULL))) {
