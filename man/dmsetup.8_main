@@ -86,12 +86,11 @@ dmsetup \(em low level logical volume management
 .  IR count ]
 .  RB [ --interval
 .  IR seconds ]
-.  RB [ --noheadings ]
+.  RB [ --noheadings | --headings ]
 .  RB [ -o
 .  IR fields ]
 .  RB [ -O | --sort
 .  IR sort_fields ]
-.  RB [ --idsinheadings ]
 .  RB [ --nameprefixes ]
 .  RB [ --separator
 .  IR separator ]
@@ -503,10 +502,6 @@ Specify the minor number.
 When creating a device, don't load any table.
 .
 .TP
-.B --idsinheadings
-Show column identifiers instead of names in report output headings.
-.
-.TP
 .B --nameprefixes
 Add a "DM_" prefix plus the field name to the output.  Useful with
 \fB--noheadings\fP to produce a list of
@@ -518,6 +513,13 @@ rules).
 .TP
 .B --noheadings
 Suppress the headings line when using columnar output.
+.
+.TP
+.BR --headings " " none | abbrev | full | 0 | 1 | 2
+Type of headings line to use for columnar output.
+\fBnone\fP or \fB0\fP: No headings.
+\fBabbrev\fP or \fB1\fP: Column name abbreviations.
+\fBfull\fP or \fB2\fP: Full column names.
 .
 .TP
 .B --noflush
