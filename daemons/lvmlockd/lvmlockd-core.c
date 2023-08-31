@@ -4690,9 +4690,12 @@ static int dump_info(int *dump_len)
 
 	/*
 	 * clients
+	 * Proper lock order is client_mutex then cl->mutex,
+	 * but cl->mutex is already held so skip client info
+	 * if it would block.
 	 */
-
-	pthread_mutex_lock(&client_mutex);
+	if (pthread_mutex_trylock(&client_mutex))
+		goto print_ls;
 	list_for_each_entry(cl, &client_list, list) {
 		ret = print_client(cl, "client", pos, len);
 		if (ret >= len - pos) {
@@ -4706,6 +4709,7 @@ static int dump_info(int *dump_len)
 	if (rv < 0)
 		return rv;
 
+ print_ls:
 	/*
 	 * lockspaces with their action/resource/lock info
 	 */
