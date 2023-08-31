@@ -2352,7 +2352,8 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 		if ((du->idtype == DEV_ID_TYPE_SYS_SERIAL) && du->pvid &&
 		    memcmp(dev->pvid, du->pvid, ID_LEN)) {
 			log_debug("suspect device id serial %s for %s", du->idname, dev_name(dev));
-			str_list_add(cmd->mem, &cmd->device_ids_check_serial, dm_pool_strdup(cmd->mem, du->idname));
+			if (!str_list_add(cmd->mem, &cmd->device_ids_check_serial, dm_pool_strdup(cmd->mem, du->idname)))
+				stack;
 			*device_ids_invalid = 1;
 			continue;
 		}
