@@ -1044,9 +1044,9 @@ static void *_monitor_thread(void *arg)
 			_unlock_mutex();
 
 			_do_process_event(thread);
-			thread->current_events = 0; /* Current events processed */
 
 			_lock_mutex();
+			thread->current_events = 0; /* Current events processed */
 			thread->processing = 0;
 
 			/*
