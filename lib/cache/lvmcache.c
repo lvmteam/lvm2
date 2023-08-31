@@ -401,10 +401,10 @@ const char *lvmcache_vgid_from_vgname(struct cmd_context *cmd, const char *vgnam
 
 	if (_found_duplicate_vgnames) {
 		if (!(vginfo = _search_vginfos_list(vgname, NULL)))
-			return_NULL;
+			return NULL;
 	} else {
 		if (!(vginfo = dm_hash_lookup(_vgname_hash, vgname)))
-			return_NULL;
+			return NULL;
 	}
 
 	if (vginfo->has_duplicate_local_vgname) {
