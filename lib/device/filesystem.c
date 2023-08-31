@@ -155,26 +155,26 @@ int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
 			return 0;
 		}
 
-		if (stat(crypt_path, &st_crypt) < 0) {
-			log_error("Failed to get crypt path %s", crypt_path);
-			return 0;
-		}
-
 		memset(&info, 0, sizeof(info));
 
 		log_print_unless_silent("Checking crypt device %s on LV %s.",
 					crypt_path, display_lvname(lv));
 
 		if ((fd = open(crypt_path, O_RDONLY)) < 0) {
-			log_error("Failed to open crypt path %s", crypt_path);
+			log_error("Failed to open crypt path %s.", crypt_path);
 			return 0;
 		}
-		if (ioctl(fd, BLKGETSIZE64, &info.crypt_dev_size_bytes) < 0) {
-			log_error("Failed to get crypt device size %s", crypt_path);
-			close(fd);
+
+		if ((ret = fstat(fd, &st_crypt)) < 0)
+			log_sys_error("fstat", crypt_path);
+		else if ((ret = ioctl(fd, BLKGETSIZE64, &info.crypt_dev_size_bytes)) < 0)
+			log_error("Failed to get crypt device size %s.", crypt_path);
+
+		if (close(fd))
+			log_sys_debug("close", crypt_path);
+
+		if (ret < 0)
 			return 0;
-		}
-		close(fd);
 
 		if (!fs_get_blkid(crypt_path, &info)) {
 			log_error("No file system info from blkid for dm-crypt device %s on LV %s.",
