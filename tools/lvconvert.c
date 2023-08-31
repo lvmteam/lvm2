@@ -4773,8 +4773,7 @@ static int _lvconvert_to_thin_with_data(struct cmd_context *cmd,
 					struct logical_volume *lv,
 					struct processing_handle *handle)
 {
-	struct volume_group *vg = lv->vg;
-	struct dm_list *use_pvh = NULL;
+	struct dm_list *use_pvh;
 
 	if (cmd->position_argc > 1) {
 		/* First pos arg is required LV, remaining are optional PVs. */
@@ -4784,7 +4783,7 @@ static int _lvconvert_to_thin_with_data(struct cmd_context *cmd,
 	} else
 		use_pvh = &lv->vg->pvs;
 
-	if (!_lvconvert_to_pool(cmd, lv, lv, 1, 0, 1, &vg->pvs)) {
+	if (!_lvconvert_to_pool(cmd, lv, lv, 1, 0, 1, use_pvh)) {
 		log_error("LV %s could not be converted to a thin volume.",
 			  display_lvname(lv));
 		return ECMD_FAILED;

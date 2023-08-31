@@ -456,6 +456,7 @@ FLAGS: SECONDARY_SYNTAX
 
 lvconvert --type thin --thinpool LV LV_linear_striped_raid_cache_thin_error_zero
 OO: --thin, --originname LV_new, OO_LVCONVERT_POOL, OO_LVCONVERT
+OP: PV ...
 ID: lvconvert_to_thin_with_external
 DESC: Convert LV to a thin LV, using the original LV as an external origin.
 RULE: all and lv_is_visible
@@ -465,6 +466,7 @@ RULE: --poolmetadata not --readahead --stripesize --stripes_long
 # alternate form of lvconvert --type thin
 lvconvert --thin --thinpool LV LV_linear_striped_raid_cache_thin_error_zero
 OO: --originname LV_new, OO_LVCONVERT_POOL, OO_LVCONVERT
+OP: PV ...
 ID: lvconvert_to_thin_with_external
 DESC: Convert LV to a thin LV, using the original LV as an external origin.
 FLAGS: SECONDARY_SYNTAX
@@ -476,6 +478,7 @@ RULE: --poolmetadata not --readahead --stripesize --stripes_long
 # Convert to thin volume
 lvconvert --type thin LV_linear_striped_raid_cache_writecache_vdo_error_zero
 OO: --thin, OO_LVCONVERT_POOL, OO_LVCONVERT
+OP: PV ...
 ID: lvconvert_to_thin_with_data
 DESC: Convert LV to a thin LV, using LV as thin-pool data volume.
 RULE: all and lv_is_visible
@@ -485,6 +488,7 @@ RULE: --poolmetadata not --readahead --stripesize --stripes_long
 # Convert to thin volume
 lvconvert --thin LV_linear_striped_raid_cache_writecache_vdo_error_zero
 OO: OO_LVCONVERT_POOL, OO_LVCONVERT
+OP: PV ...
 ID: lvconvert_to_thin_with_data
 DESC: Convert LV to a thin LV, using LV as thin-pool data volume.
 FLAGS: SECONDARY_SYNTAX
@@ -497,6 +501,7 @@ RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 lvconvert --type cache --cachepool LV LV_linear_striped_raid_thinpool_vdo_vdopool_vdopooldata_thin_error_zero
 OO: --cache, OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
+OP: PV ...
 ID: lvconvert_to_cache_with_cachepool
 DESC: Attach a cache pool to an LV, converts the LV to type cache.
 RULE: all not lv_is_locked lv_is_merging_origin lv_is_merging_cow lv_is_cow
@@ -505,6 +510,7 @@ RULE: --poolmetadata not --readahead --stripesize --stripes_long
 # alternate form of lvconvert --type cache
 lvconvert --cache --cachepool LV LV_linear_striped_raid_thinpool_vdo_vdopool_vdopooldata_thin_error_zero
 OO: OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
+OP: PV ...
 ID: lvconvert_to_cache_with_cachepool
 DESC: Attach a cache pool to an LV.
 RULE: all not lv_is_locked lv_is_merging_origin lv_is_merging_cow lv_is_cow
