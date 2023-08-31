@@ -363,6 +363,8 @@ void log_level(int level, const char *fmt, ...)  __attribute__((format(printf, 2
 #define log_debug(fmt, args...) log_level(LOG_DEBUG, fmt, ##args)
 #define log_error(fmt, args...) log_level(LOG_ERR, fmt, ##args)
 #define log_warn(fmt, args...) log_level(LOG_WARNING, fmt, ##args)
+#define log_sys_debug(x, y) \
+		log_debug("%s: %s failed: %s", y, x, strerror(errno))
 
 struct lockspace *alloc_lockspace(void);
 int lockspaces_empty(void);

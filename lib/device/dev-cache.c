@@ -393,7 +393,10 @@ int get_sysfs_binary(const char *path, char *buf, size_t buf_size, int *retlen)
 	if (fd < 0)
 		return 0;
 	ret = read(fd, buf, buf_size);
-	close(fd);
+
+	if (close(fd))
+		log_sys_debug("close", path);
+
 	if (ret <= 0)
 		return 0;
 	*retlen = ret;
@@ -2136,6 +2139,7 @@ int setup_devices_for_online_autoactivation(struct cmd_context *cmd)
 
 static char *_get_devname_from_devno(struct cmd_context *cmd, dev_t devno)
 {
+	static const char _partitions[] = "/proc/partitions";
 	char path[PATH_MAX];
 	char devname[PATH_MAX] = { 0 };
 	char namebuf[NAME_LEN];
@@ -2174,7 +2178,8 @@ static char *_get_devname_from_devno(struct cmd_context *cmd, dev_t devno)
 			}
 			break;
 		}
-		closedir(dir);
+		if (closedir(dir))
+			log_sys_debug("closedir", path);
 
 		if (devname[0]) {
 			log_debug("Found %s for %d:%d from sys", devname, major, minor);
@@ -2214,7 +2219,7 @@ static char *_get_devname_from_devno(struct cmd_context *cmd, dev_t devno)
 	 */
 
 try_partition:
-	if (!(fp = fopen("/proc/partitions", "r")))
+	if (!(fp = fopen(_partitions, "r")))
 		return NULL;
 
 	while (fgets(line, sizeof(line), fp)) {
@@ -2231,10 +2236,12 @@ try_partition:
 		}
 		break;
 	}
-	fclose(fp);
+
+	if (fclose(fp))
+		log_sys_debug("fclose", _partitions);
 
 	if (devname[0]) {
-		log_debug("Found %s for %d:%d from proc", devname, major, minor);
+		log_debug("Found %s for %d:%d from %s", devname, major, minor, _partitions);
 		return _strdup(devname);
 	}
 

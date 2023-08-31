@@ -83,7 +83,9 @@ static int lvmdbusd_running(void)
 		}
 	}
 
-	close(fd);
+	if (close(fd))
+		log_sys_debug("close", lockfile);
+
 	return running;
 }
 

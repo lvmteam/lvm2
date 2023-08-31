@@ -226,14 +226,14 @@ static int get_local_nodeid(void)
 {
 	struct dirent *de;
 	DIR *ls_dir;
-	char ls_comms_path[PATH_MAX];
+	char ls_comms_path[PATH_MAX] = { 0 };
+	char path[PATH_MAX] = { 0 };
 	FILE *file;
 	char line[LOCK_LINE_MAX];
 	char *str1, *str2;
 	int rv = -1, val;
 
-	memset(ls_comms_path, 0, sizeof(ls_comms_path));
-	snprintf(ls_comms_path, PATH_MAX, "%s",DLM_COMMS_PATH);
+	snprintf(ls_comms_path, sizeof(ls_comms_path), "%s", DLM_COMMS_PATH);
 
 	if (!(ls_dir = opendir(ls_comms_path)))
 		return -ECONNREFUSED;
@@ -241,31 +241,31 @@ static int get_local_nodeid(void)
 	while ((de = readdir(ls_dir))) {
 		if (de->d_name[0] == '.')
 			continue;
-		memset(ls_comms_path, 0, sizeof(ls_comms_path));
-		snprintf(ls_comms_path, PATH_MAX, "%s/%s/local",
-		     DLM_COMMS_PATH, de->d_name);
+
+		snprintf(path, sizeof(path), "%s/%s/local",
+			 DLM_COMMS_PATH, de->d_name);
 
 		if (!(file = fopen(ls_comms_path, "r")))
 			continue;
-		str1 = fgets(line, LOCK_LINE_MAX, file);
-		fclose(file);
-
+		str1 = fgets(line, sizeof(line), file);
+		if (fclose(file))
+			log_sys_debug("fclose", path);
 		if (str1) {
 			rv = sscanf(line, "%d", &val);
 			if ((rv == 1) && (val == 1 )) {
-				memset(ls_comms_path, 0, sizeof(ls_comms_path));
-				snprintf(ls_comms_path, PATH_MAX, "%s/%s/nodeid",
-				    DLM_COMMS_PATH, de->d_name);
+				snprintf(path, sizeof(path), "%s/%s/nodeid",
+					 DLM_COMMS_PATH, de->d_name);
 
-				if (!(file = fopen(ls_comms_path, "r")))
+				if (!(file = fopen(path, "r")))
 					continue;
-				str2 = fgets(line, LOCK_LINE_MAX, file);
-				fclose(file);
-
+				str2 = fgets(line, sizeof(line), file);
+				if (fclose(file))
+					log_sys_debug("fclose", path);
 				if (str2) {
 					rv = sscanf(line, "%d", &val);
 					if (rv == 1) {
-						closedir(ls_dir);
+						if (closedir(ls_dir))
+							log_sys_debug("closedir", ls_comms_path);
 						return val;
 					}
 				}
@@ -274,7 +274,8 @@ static int get_local_nodeid(void)
 	}
 
 	if (closedir(ls_dir))
-		log_error("get_local_nodeid closedir error");
+		log_sys_debug("closedir", ls_comms_path);
+
 	return rv;
 }
 

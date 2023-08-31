@@ -392,7 +392,7 @@ int get_pvs_lookup(struct dm_list *pvs_online, const char *vgname)
 	int file_major = 0, file_minor = 0;
 	FILE *fp;
 
-	if (dm_snprintf(lookup_path, sizeof(path), "%s/%s", PVS_LOOKUP_DIR, vgname) < 0)
+	if (dm_snprintf(lookup_path, sizeof(lookup_path), "%s/%s", PVS_LOOKUP_DIR, vgname) < 0)
 		return_0;
 
 	if (!(fp = fopen(lookup_path, "r")))
@@ -403,7 +403,6 @@ int get_pvs_lookup(struct dm_list *pvs_online, const char *vgname)
 		if (strlen(pvid) != ID_LEN)
 			goto_bad;
 
-		memset(path, 0, sizeof(path));
 		snprintf(path, sizeof(path), "%s/%s", PVS_ONLINE_DIR, pvid);
 
 		file_major = 0;
@@ -443,12 +442,16 @@ int get_pvs_lookup(struct dm_list *pvs_online, const char *vgname)
 
 	log_debug("Found PVs online lookup %d for %s", dm_list_size(pvs_online), vgname);
 
-	fclose(fp);
+	if (fclose(fp))
+		log_sys_debug("fclose", lookup_path);
+
 	return 1;
 
 bad:
 	free_po_list(pvs_online);
-	fclose(fp);
+	if (fclose(fp))
+		log_sys_debug("fclose", lookup_path);
+
 	return 0;
 }
 

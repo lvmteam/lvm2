@@ -164,6 +164,7 @@ static void _read_blacklist_file(const char *path)
 
 static void _read_wwid_exclusions(void)
 {
+	static const char _mpath_conf[] = "/etc/multipath/conf.d";
 	char path[PATH_MAX] = { 0 };
 	DIR *dir;
 	struct dirent *de;
@@ -172,14 +173,15 @@ static void _read_wwid_exclusions(void)
 
 	_read_blacklist_file("/etc/multipath.conf");
 
-	if ((dir = opendir("/etc/multipath/conf.d"))) {
+	if ((dir = opendir(_mpath_conf))) {
 		while ((de = readdir(dir))) {
 			if (de->d_name[0] == '.')
 				continue;
-			snprintf(path, PATH_MAX-1, "/etc/multipath/conf.d/%s", de->d_name);
+			snprintf(path, sizeof(path), "%s/%s", _mpath_conf, de->d_name);
 			_read_blacklist_file(path);
 		}
-		closedir(dir);
+		if (closedir(dir))
+                        log_sys_debug("closedir", _mpath_conf);
 	}
 
 	/* for each wwid in ignored_exceptions, remove it from ignored */
@@ -594,7 +596,7 @@ static int _dev_is_mpath_component_sysfs(struct cmd_context *cmd, struct device 
 
  out:
 	if (closedir(dr))
-		stack;
+		log_sys_debug("closedir", holders_path);
 
 	if (is_mpath_component)
 		*mpath_devno = MKDEV(dm_dev_major, dm_dev_minor);
@@ -778,7 +780,7 @@ const char *dev_mpath_component_wwid(struct cmd_context *cmd, struct device *dev
 			break;
 	}
 	if (closedir(dr))
-		stack;
+		log_sys_debug("closedir", slaves_path);
 
 	return wwid;
 }
