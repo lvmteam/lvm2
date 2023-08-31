@@ -3908,9 +3908,14 @@ static int _stats_create_group(struct dm_stats *dms, dm_bitset_t regions,
 
 	/* force an update of the group tag stored in aux_data */
 	if (!_stats_set_aux(dms, *group_id, dms->regions[*group_id].aux_data))
-		return 0;
+		goto bad;
 
 	return 1;
+bad:
+	group->group_id = DM_STATS_GROUP_NOT_PRESENT;
+	group->regions = NULL;
+	dm_free((char *) group->alias);
+	return 0;
 }
 
 static int _stats_group_check_overlap(const struct dm_stats *dms,
