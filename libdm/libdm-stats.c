@@ -5116,7 +5116,7 @@ int dm_stats_start_filemapd(int fd, uint64_t group_id, const char *path,
 	/* terminate args[argc] */
 	args[argc] = NULL;
 
-	log_very_verbose("Spawning daemon as '%s %d " FMTu64 " %s %s %u %u'",
+	log_very_verbose("Spawning daemon as '%s %d " FMTu64 " \"%s\" %s %u %u'",
 			 *args, fd, group_id, path, mode_str,
 			 foreground, verbose);
 

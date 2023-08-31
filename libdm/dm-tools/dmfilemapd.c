@@ -826,7 +826,7 @@ int main(int argc, char **argv)
 	_setup_logging();
 
 	log_info("Starting dmfilemapd with fd=%d, group_id=" FMTu64 " "
-		 "mode=%s, path=%s", fm.fd, fm.group_id,
+		 "mode=%s, path=\"%s\"", fm.fd, fm.group_id,
 		 _mode_names[fm.mode], fm.path);
 
 	if (!_foreground && !_daemonise(&fm)) {
