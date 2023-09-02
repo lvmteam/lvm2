@@ -44,7 +44,8 @@ fi
 which mkfs.ext4 || skip
 export MKE2FS_CONFIG="$TESTDIR/lib/mke2fs.conf"
 
-aux have_vdo 6 2 0 || skip
+# Conversion can be made with this version of vdo driver
+aux have_vdo 6 2 3 || skip
 
 aux prepare_devs 2 20000
 
@@ -52,9 +53,6 @@ aux extend_filter_LVMTEST
 
 export TMPDIR=$PWD
 
-
-# Conversion can be made with this version of vdo driver
-aux have_vdo 6 2 5 || skip
 
 #
 #  Check conversion of VDO volume made on some LV
@@ -139,6 +137,15 @@ fsck -n "$DM_DEV_DIR/$vg1/$lv2"
 
 vgremove -f $vg1
 
+
+
+########################################################################
+#
+# Preparation of already moved header works only with fake vdo wrapper
+#
+########################################################################
+test "${VDO_BINARY-}" != "lvm_vdo_wrapper" && exit
+
 aux wipefs_a "$dev1"
 
 # let's assume users with VDO target have 'new' enough version of stat too
@@ -188,8 +195,9 @@ dmsetup table
 dmsetup table "$VDONAME" | tr " " "\n" | sed -e '5,6d' -e '12d' | tee vdo-orig
 
 mkfs.ext4 -E nodiscard "$DM_DEV_DIR/mapper/$VDONAME"
+rm -f debug.log*
 
-# For conversion we
+# For the easy table validation of conversion we use old version4 format
 aux lvmconf 'global/vdo_disabled_features = [ "version4" ]'
 
 #
@@ -200,11 +208,13 @@ if which "$LVM_VDO_PREPARE" ; then
 # Use old vdoprepareforlvm tool, that always moves header to 2M offset
 cp "$VDO_CONFIG" "$VDO_CONFIG.backup"
 lvm_import_vdo --abort-after-vdo-convert --vdo-config "$VDO_CONFIG" -v -y --name $vg/$lv "$TEST"
+rm -f debug.log*
 # Restore VDO configuration (as it's been removed with succeful vdo conversion
 cp "$VDO_CONFIG.backup" "$VDO_CONFIG"
 # Check VDO header is seen at 2M offset
-blkid -c /dev/null --probe --offset 2M "$TEST"
+blkid -c /dev/null --probe --offset 2M "$TEST" || die "VDO header at unknown offset, expected 2M!"
 fi
+
 unset LVM_VDO_PREPARE
 
 #lvm_import_vdo --no-snapshot --vdo-config "$VDO_CONFIG" -v -y --name $vg/$lv "$TEST"
@@ -226,5 +236,5 @@ tail -n+3 new-vdo-lv >new-vdo-lv-3
 diff -u vdo-orig-3 new-vdo-lv-3 || die "Found mismatching VDO table lines!"
 
 check lv_field $vg/$lv size "23.00g"
-unset LVM_VDO_PREPARE
 
+vgremove -f $vg
