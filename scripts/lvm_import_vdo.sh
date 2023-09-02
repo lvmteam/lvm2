@@ -121,8 +121,13 @@ dry() {
 
 cleanup() {
 	trap '' 2
-
-	test -n "$VDO_DM_SNAPSHOT_NAME" && { "$DMSETUP" remove "$VDO_DM_SNAPSHOT_NAME" || true ; }
+	test -n "$VDO_DM_SNAPSHOT_NAME" && {
+		for i in {1..20} ; do
+			test "$("$DMSETUP" info --noheading -co open "$VDO_DM_SNAPSHOT_NAME")" = "0" && break
+			sleep .1
+		done
+		"$DMSETUP" remove "$VDO_DM_SNAPSHOT_NAME" || true
+	}
 	test -n "$VDO_SNAPSHOT_LOOP" && { "$LOSETUP" -d "$VDO_SNAPSHOT_LOOP" || true ; }
 
 	test -z "$PROMPTING" || echo "No"
@@ -370,7 +375,13 @@ convert_non_lv_() {
 	fi
 
 	verbose "Moving VDO header."
-	output=$(dry "$VDO" convert $VDOCONF $VERB --force --name "$VDONAME")
+
+	output=$(dry "$VDO" convert $VDOCONF $VERB --force --name "$VDONAME" 2>&1) || {
+		echo "$output"
+		error "Failed to convert VDO volume \"$DEVICE\" (exit code $?)."
+	}
+
+	echo "$output"
 
 	if [ "$ABORT_AFTER_VDO_CONVERT" != "0" ] ; then
 		verbose "Aborting VDO conversion after moving VDO header, volume is useless!"
@@ -456,11 +467,18 @@ convert_non_lv_() {
 		dry snapshot_merge_ "$DEVICE"
 		if [ -e "$TEMPDIR/vdo_snap.yml" ]; then
 			dry cp "$TEMPDIR/vdo_snap.yml" "$VDO_CONFIG"
-		else
+		elif [ -e "$VDO_CONFIG" ]; then
 			dry rm -f "$VDO_CONFIG"
 		fi
 		verbose "Merging of VDO device finished."
 	fi
+
+	output=$(dry "$LVM" pvs "$DEVICE" 2>&1) || {
+		if echo "$output" | grep -q "not in devices file" ; then
+			verbose "Adding \"$DEVICE\" to devices file."
+			dry "$LVM" lvmdevices --adddev "$DEVICE"
+		fi
+	}
 
 	dry "$LVM" lvchange -ay $VERB $FORCE "$VGNAME/$LVNAME"
 }
