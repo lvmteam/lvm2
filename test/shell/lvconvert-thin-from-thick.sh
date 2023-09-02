@@ -40,13 +40,17 @@ aux prepare_vg 2 6000
 
 # error -> thin
 lvcreate --type error -Zn -L10 -n $lv1 $vg
-lvconvert --yes --type thin  $vg/$lv1
+lvconvert --yes --type thin  $vg/$lv1 "$dev2"
+check lv_on $vg ${lv1}_tpool0_tmeta "$dev2"
+check lv_on $vg lvol0_pmspare "$dev2"
 not dd if="$DM_DEV_DIR/$vg/$lv1" of=/dev/null bs=512 count=1
 lvremove -f $vg
 
 # zero -> thin
 lvcreate --type zero -L2T -n $lv1 $vg
-lvconvert --yes --type thin  $vg/$lv1
+lvconvert --yes --type thin  $vg/$lv1 "$dev1"
+check lv_on $vg ${lv1}_tpool0_tmeta "$dev1"
+check lv_on $vg lvol0_pmspare "$dev1"
 lvremove -f $vg
 
 # zero -> thin --test
