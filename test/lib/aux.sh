@@ -403,7 +403,7 @@ teardown_devs_prefixed() {
 			# HACK: sort also by minors - so we try to close 'possibly later' created device first
 			test "$i" = 0 || sortby="-minor"
 
-			for dm in $(dm_info name,open --separator ';'  --nameprefixes --unquoted --sort open,"$sortby" -S "name=~$prefix" --mangle none || true) ; do
+			for dm in $(dm_info name,open --separator ';'  --nameprefixes --unquoted --sort open,"$sortby" -S "name=~$prefix || uuid=~$prefix" --mangle none || true) ; do
 				test "$dm" != "No devices found" || break 2
 				eval "$dm"
 				local force="-f"
@@ -436,10 +436,14 @@ teardown_devs() {
 	restore_dm_mirror
 
 	test ! -f MD_DEV || cleanup_md_dev
-	test ! -f DEVICES || teardown_devs_prefixed "$PREFIX"
+
+	if [ -f DEVICES ] || [ -f RAMDISK ] || [ -f SCSI_DEBUG_DEV ];  then
+		teardown_devs_prefixed "$PREFIX"
+	fi
+
 	if test -f RAMDISK ; then
 		for i in 1 2 ; do
-			modprobe -r brd && break
+			modprobe -r brd && { rm -f RAMDISK ;  break ; }
 			sleep .1
 			udev_wait
 		done
@@ -451,7 +455,7 @@ teardown_devs() {
 		udev_wait
 		test "${LVM_TEST_PARALLEL:-0}" -eq 1 || {
 			for i in 1 2 ; do
-				modprobe -r scsi_debug && break
+				modprobe -r scsi_debug && { rm -f SCSI_DEBUG_DEV ; break ; }
 				sleep .1
 				udev_wait
 			done
@@ -741,7 +745,7 @@ prepare_scsi_debug_dev() {
 
 cleanup_scsi_debug_dev() {
 	teardown_devs
-	rm -f SCSI_DEBUG_DEV LOOP
+	rm -f LOOP
 }
 
 mdadm_create() {
