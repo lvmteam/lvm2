@@ -598,6 +598,7 @@ EOF
 	# Make a backup of the existing VDO yaml configuration file
 	test -e "$VDO_CONFIG" && dry cp -a "$VDO_CONFIG" "${VDO_CONFIG}.backup"
 
+	DEVICE=$FOUND
 	case "$DM_UUID" in
 		LVM-*) convert_lv_ "$vdo_logicalSize" ;;
 		*)     convert_non_lv_ "$vdo_logicalSize" ;;
