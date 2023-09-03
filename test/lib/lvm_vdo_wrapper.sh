@@ -159,6 +159,14 @@ cachesize=$(( cachesize / 4 ))		# 4KiB units
 maxdiscardsize=$(vdo_get_kb_size_with_unit_ "$vdo_maxDiscardSize" M)
 maxdiscardsize=$(( maxdiscardsize / 4 )) # 4KiB units
 
+vdo_link=$(udevadm info --no-pager --query=symlink --name="$vdo_device" 2>/dev/null)
+vdo_link=${vdo_link%% *}
+if test -n "$vdo_link" ; then
+	vdo_link="/dev/$vdo_link"
+else
+	vdo_link=$vdo_device
+fi
+
 test -e "$vdo_confFile" || {
 	cat > "$vdo_confFile" <<EOF
 ####################################################################
@@ -181,7 +189,7 @@ cat >> "$vdo_confFile" <<EOF
       compression: $vdo_compression
       cpuThreads: $vdo_cpuThreads
       deduplication: $vdo_deduplication
-      device: $vdo_device
+      device: $vdo_link
       hashZoneThreads: $vdo_hashZoneThreads
       indexCfreq: $vdo_indexCfreq
       indexMemory: $vdo_indexMemory
@@ -259,7 +267,7 @@ do
 	shift
 done
 
-vdo_dry_ dmsetup status --target vdo "$vdo_name" 2>/dev/null || return 0
+test -z "$vdo_verbose" || vdo_dry_ dmsetup status --target vdo "$vdo_name" 2>/dev/null || return 0
 vdo_dry_ dmsetup remove $vdo_force "$vdo_name" || true
 }
 
