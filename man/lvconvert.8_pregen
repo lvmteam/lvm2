@@ -497,6 +497,9 @@ Convert LV to a thin LV, using the original LV as an external origin.
 [ COMMON_OPTIONS ]
 .ad b
 .RE
+.RS 4
+[ \fIPV\fP ... ]
+.RE
 .P
 .RS 4
 LV1 types: linear striped thin cache raid error zero
@@ -529,6 +532,9 @@ Convert LV to a thin LV, using LV as thin-pool data volume.
 .br
 [ COMMON_OPTIONS ]
 .ad b
+.RE
+.RS 4
+[ \fIPV\fP ... ]
 .RE
 .P
 .RS 4
@@ -570,6 +576,9 @@ Attach a cache pool to an LV, converts the LV to type cache.
 .br
 [ COMMON_OPTIONS ]
 .ad b
+.RE
+.RS 4
+[ \fIPV\fP ... ]
 .RE
 .P
 .RS 4
@@ -1769,6 +1778,9 @@ Convert LV to a thin LV, using the original LV as an external origin.
 [ COMMON_OPTIONS ]
 .ad b
 .RE
+.RS 4
+[ \fIPV\fP ... ]
+.RE
 .P
 .RS 4
 LV1 types: linear striped thin cache raid error zero
@@ -1802,6 +1814,9 @@ Convert LV to a thin LV, using LV as thin-pool data volume.
 .br
 [ COMMON_OPTIONS ]
 .ad b
+.RE
+.RS 4
+[ \fIPV\fP ... ]
 .RE
 .P
 .RS 4
@@ -1844,6 +1859,9 @@ Attach a cache pool to an LV.
 .br
 [ COMMON_OPTIONS ]
 .ad b
+.RE
+.RS 4
+[ \fIPV\fP ... ]
 .RE
 .P
 .RS 4
