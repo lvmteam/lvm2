@@ -22,6 +22,9 @@ lvm segtypes 2>/dev/null | grep writecache$ >/dev/null || {
 aux have_cache 1 10 0 || skip
 which mkfs.ext4 || skip
 
+HAVE_WRITECACHE=1
+aux have_writecache 1 0 0 || HAVE_WRITECACHE=0
+
 mount_dir="mnt"
 mkdir -p "$mount_dir"
 
@@ -105,7 +108,10 @@ test_snap_remove() {
 
 test_snap_remove cache --cachepool
 test_snap_remove cache --cachevol
+
+if [ "$HAVE_WRITECACHE" = "1" ]; then
 test_snap_remove writecache --cachevol
+fi
 
 # adding cache|writecache to an LV that has a snapshot
 
@@ -143,7 +149,10 @@ test_caching_with_snap() {
 
 test_caching_with_snap cache --cachepool
 test_caching_with_snap cache --cachevol
+
+if [ "$HAVE_WRITECACHE" = "1" ]; then
 test_caching_with_snap writecache --cachevol
+fi
 
 # adding cache|writecache to a snapshot is not allowed
 
