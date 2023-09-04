@@ -12,7 +12,7 @@
 
 # Test conversion of VDO volumes made by vdo manager into VDO LV.
 
-
+SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
@@ -30,6 +30,8 @@ aux have_vdo 6 2 3 || skip
 
 if not which vdo ; then
 	which lvm_vdo_wrapper || skip "Missing 'lvm_vdo_wrapper'."
+	which oldvdoformat || skip "Emulation of vdo manager 'oldvdoformat' missing."
+	which oldvdoprepareforlvm || skip "Emulation of vdo manager 'oldvdoprepareforlvm' missing."
 	# enable expansion of aliasis within script itself
 	shopt -s expand_aliases
 	alias vdo='lvm_vdo_wrapper'
