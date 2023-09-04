@@ -274,7 +274,7 @@ prepare_lvmdbusd() {
 
 	kill_sleep_kill_ LOCAL_LVMDBUSD 0
 
-        # FIXME: This is not correct! Daemon is auto started.
+	# FIXME: This is not correct! Daemon is auto started.
 	echo -n "## checking lvmdbusd is NOT running..."
 	if pgrep -f -l lvmdbusd | grep python3 || pgrep -x -l lvmdbusd ; then
 		skip "Cannot run lvmdbusd while existing lvmdbusd process exists"
@@ -314,6 +314,12 @@ prepare_lvmdbusd() {
 	lvmconf "global/notify_dbus = 1"
 
 	test "${LVM_DEBUG_LVMDBUS:-0}" != "0" && lvmdbusdebug="--debug"
+
+	# Currently do not interfere with lvmdbusd testing of the file logging
+	unset LVM_LOG_FILE_EPOCH
+	unset LVM_LOG_FILE_MAX_LINES
+	unset LVM_EXPECTED_EXIT_STATUS
+
 	"$daemon" $lvmdbusdebug > debug.log_LVMDBUSD_out 2>&1 &
 	local pid=$!
 
