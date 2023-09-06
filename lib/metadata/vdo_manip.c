@@ -522,9 +522,9 @@ static int _get_sysinfo_memory(uint64_t *total_mb, uint64_t *available_mb)
 	if (sysinfo(&si) != 0)
 		return 0;
 
-	log_debug("Sysinfo free:%lu  bufferram:%lu  sharedram:%lu  freehigh:%lu  unit:%u.",
-		  si.freeram >> 20, si.bufferram >> 20, si.sharedram >> 20,
-		  si.freehigh >> 20, si.mem_unit);
+	log_debug("Sysinfo free:%llu  bufferram:%llu  sharedram:%llu  freehigh:%llu  unit:%u.",
+		  (unsigned long long)si.freeram >> 20, (unsigned long long)si.bufferram >> 20, (unsigned long long)si.sharedram >> 20,
+		  (unsigned long long)si.freehigh >> 20, si.mem_unit);
 
 	*available_mb = ((uint64_t)(si.freeram + si.bufferram) * si.mem_unit) >> 30;
 	*total_mb = si.totalram >> 30;
