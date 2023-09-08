@@ -428,7 +428,7 @@ static int _vgchange_uuid(struct cmd_context *cmd __attribute__((unused)),
 	struct id old_vg_id;
 
 	if (lvs_in_vg_activated(vg)) {
-		log_error("Volume group has active logical volumes");
+		log_error("Volume group has active logical volumes.");
 		return 0;
 	}
 
@@ -588,12 +588,12 @@ static int _passes_lock_start_filter(struct cmd_context *cmd,
 		if (cv->type == DM_CFG_EMPTY_ARRAY)
 			break;
 		if (cv->type != DM_CFG_STRING) {
-			log_error("Ignoring invalid string in lock_start list");
+			log_error("Ignoring invalid string in lock_start list.");
 			continue;
 		}
 		str = cv->v.str;
 		if (!*str) {
-			log_error("Ignoring empty string in config file");
+			log_error("Ignoring empty string in config file.");
 			continue;
 		}
 
@@ -709,7 +709,7 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		if (!vg_write(vg) || !vg_commit(vg))
 			return_ECMD_FAILED;
 
-		log_print_unless_silent("Volume group \"%s\" successfully changed", vg->name);
+		log_print_unless_silent("Volume group \"%s\" successfully changed.", vg->name);
 	}
 
 	if (arg_is_set(cmd, activate_ARG)) {
@@ -921,7 +921,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 
 	if ((arg_is_set(cmd, ignorelockingfailure_ARG) ||
 	     arg_is_set(cmd, sysinit_ARG)) && update) {
-		log_error("Only -a permitted with --ignorelockingfailure and --sysinit");
+		log_error("Only -a permitted with --ignorelockingfailure and --sysinit.");
 		return EINVALID_CMD_LINE;
 	}
 
@@ -940,13 +940,13 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_is_set(cmd, maxphysicalvolumes_ARG) &&
 	    arg_sign_value(cmd, maxphysicalvolumes_ARG, SIGN_NONE) == SIGN_MINUS) {
-		log_error("MaxPhysicalVolumes may not be negative");
+		log_error("MaxPhysicalVolumes may not be negative.");
 		return EINVALID_CMD_LINE;
 	}
 
 	if (arg_is_set(cmd, physicalextentsize_ARG) &&
 	    arg_sign_value(cmd, physicalextentsize_ARG, SIGN_NONE) == SIGN_MINUS) {
-		log_error("Physical extent size may not be negative");
+		log_error("Physical extent size may not be negative.");
 		return EINVALID_CMD_LINE;
 	}
 
@@ -1216,7 +1216,7 @@ static int _vgchange_locktype_single(struct cmd_context *cmd, const char *vg_nam
 		}
 	}
 
-	log_print_unless_silent("Volume group \"%s\" successfully changed", vg->name);
+	log_print_unless_silent("Volume group \"%s\" successfully changed.", vg->name);
 
 	return ECMD_PROCESSED;
 }
@@ -1347,7 +1347,7 @@ int vgchange_lock_start_stop_cmd(struct cmd_context *cmd, int argc, char **argv)
 		cmd->lockd_vg_disable = 1;
 
 		if (!lockd_global(cmd, "sh"))
-			log_debug("No global lock for lock start");
+			log_debug("No global lock for lock start.");
 
 		/* Disable the lockd_gl in process_each_vg. */
 		cmd->lockd_gl_disable = 1;
@@ -1399,7 +1399,7 @@ static int _vgchange_systemid_single(struct cmd_context *cmd, const char *vg_nam
 				found_pvs++;
 		}
 		if (found_pvs <= missing_pvs) {
-			log_error("Cannot change system ID without the majority of PVs (found %d of %d)",
+			log_error("Cannot change system ID without the majority of PVs (found %d of %d).",
 				  found_pvs, found_pvs+missing_pvs);
 			return ECMD_FAILED;
 		}
@@ -1411,7 +1411,7 @@ static int _vgchange_systemid_single(struct cmd_context *cmd, const char *vg_nam
 	if (!vg_write(vg) || !vg_commit(vg))
 		return_ECMD_FAILED;
 
-	log_print_unless_silent("Volume group \"%s\" successfully changed", vg->name);
+	log_print_unless_silent("Volume group \"%s\" successfully changed.", vg->name);
 
 	return ECMD_PROCESSED;
 }
