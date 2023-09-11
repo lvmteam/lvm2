@@ -6445,7 +6445,7 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* extent_size units is SECTOR_SIZE (512) */
-	newsize_bytes_lv = lp->extents * lv->vg->extent_size * SECTOR_SIZE;
+	newsize_bytes_lv = (uint64_t) lp->extents * lv->vg->extent_size * SECTOR_SIZE;
 	newsize_bytes_fs = newsize_bytes_lv;
 
 	/*
@@ -6591,7 +6591,7 @@ static int _fs_extend(struct cmd_context *cmd, struct logical_volume *lv,
 	 */
 
 	/* extent_size units is SECTOR_SIZE (512) */
-	newsize_bytes_lv = lp->extents * lv->vg->extent_size * SECTOR_SIZE;
+	newsize_bytes_lv = (uint64_t) lp->extents * lv->vg->extent_size * SECTOR_SIZE;
 	newsize_bytes_fs = newsize_bytes_lv;
 	if (fsinfo.needs_crypt) {
 		newsize_bytes_fs -= fsinfo.crypt_offset_bytes;
