@@ -6499,7 +6499,7 @@ static int _lvconvert_integrity_single(struct cmd_context *cmd,
 					struct logical_volume *lv,
 					struct processing_handle *handle)
 {
-	struct integrity_settings settings = { 0 };
+	struct integrity_settings settings = { .tag_size = 0 };
 	int ret;
 
 	if (!integrity_mode_set(arg_str_value(cmd, raidintegritymode_ARG, NULL), &settings))
