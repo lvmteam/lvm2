@@ -239,8 +239,8 @@ prepare_lvmpolld() {
 	echo $! > LOCAL_LVMPOLLD
 	for i in {200..0} ; do
 		test -e "$TESTDIR/lvmpolld.socket" && break
-		echo -n .;
-		sleep .1;
+		echo -n .
+		sleep .1
 	done # wait for the socket
 	test "$i" -gt 0 || die "Startup of lvmpolld is too slow."
 	echo ok
@@ -401,10 +401,10 @@ teardown_devs_prefixed() {
 	# 2nd. loop is trying --force removal which can possibly 'unstuck' some bloked operations
 	for i in 0 1; do
 		test "$i" = 1 && test "$stray" = 0 && break  # no stray device removal
+		local progress=1
 
 		while :; do
 			local sortby="name"
-			local progress=0
 
 			# HACK: sort also by minors - so we try to close 'possibly later' created device first
 			test "$i" = 0 || sortby="-minor"
@@ -432,6 +432,7 @@ teardown_devs_prefixed() {
 
 			udev_wait
 			wait
+			progress=0
 		done # looping till there are some removed devices
 	done
 }
