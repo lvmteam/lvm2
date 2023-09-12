@@ -1,7 +1,8 @@
 version 2.03.23 - 
 ==================================
+  Enhance error detection for lvm_import_vdo.
   Support PV lists with thin lvconvert.
-  Fix support for lvm_import_vdo and SCSI VDO volumes.
+  Fix support for lvm_import_vdo with SCSI VDO volumes.
   Recognize lvm.conf report/headings=2 for full column names in report headings.
   Add --headings none|abbrev|full cmd line option to set report headings type.
   Require writable LV for convertion to vdo pool.
