@@ -27,6 +27,9 @@ _clear_online_files() {
 
 . lib/inittest
 
+# Running lvmdbusd with its fullreport scannnig changes $RUNDIR results
+pgrep lvmdbusd && skip "Test cannot work, while there is running lvmdbusd."
+
 MD_LEVEL=${MD_LEVEL-0}
 
 aux prepare_devs 4 10
