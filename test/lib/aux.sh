@@ -430,6 +430,7 @@ teardown_devs_prefixed() {
 
 			test "$progress" = 1 || break
 
+			sleep .1
 			udev_wait
 			wait
 			progress=0
