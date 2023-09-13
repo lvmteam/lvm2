@@ -72,7 +72,8 @@ test_snap_create() {
 
 test_snap_create cache --cachepool
 test_snap_create cache --cachevol
-test_snap_create writecache --cachevol
+
+[ "$HAVE_WRITECACHE" = "1" ] && test_snap_create writecache --cachevol
 
 # removing cache|writecache while snapshot exists
 
@@ -109,9 +110,7 @@ test_snap_remove() {
 test_snap_remove cache --cachepool
 test_snap_remove cache --cachevol
 
-if [ "$HAVE_WRITECACHE" = "1" ]; then
-test_snap_remove writecache --cachevol
-fi
+[ "$HAVE_WRITECACHE" = "1" ] && test_snap_remove writecache --cachevol
 
 # adding cache|writecache to an LV that has a snapshot
 
@@ -150,9 +149,7 @@ test_caching_with_snap() {
 test_caching_with_snap cache --cachepool
 test_caching_with_snap cache --cachevol
 
-if [ "$HAVE_WRITECACHE" = "1" ]; then
-test_caching_with_snap writecache --cachevol
-fi
+[ "$HAVE_WRITECACHE" = "1" ] && test_caching_with_snap writecache --cachevol
 
 # adding cache|writecache to a snapshot is not allowed
 
