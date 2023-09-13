@@ -1454,8 +1454,7 @@ extend_filter_md() {
 	for rx in "$@"; do
 		filter=$(echo "$filter" | sed -e "s:\\[:[ \"$rx\", :")
 	done
-	lvmconf "$filter"
-	lvmconf "devices/scan = [ \"$DM_DEV_DIR\", \"/dev\" ]"
+	lvmconf "$filter" "devices/scan = [ \"$DM_DEV_DIR\", \"/dev\" ]"
 }
 
 extend_filter_LVMTEST() {
