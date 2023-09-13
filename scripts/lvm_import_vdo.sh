@@ -531,9 +531,9 @@ convert_non_lv_() {
 	dry snapshot_merge_ "$DEVICE"
 
 	# For systems using devicesfile add 'merged' PV into system.devices.
-	if [ "$("$LVM" lvmconfig --valuesonly devices/use_devicesfile --typeconfig full)" = "1" ]; then
-		dry "$LVM" lvmdevices --adddev "$DEVICE"
-	fi
+	# Bypassing use of --valuesonly to keep compatibility with older lvm.
+	local usedev=$("$LVM" lvmconfig --typeconfig full devices/use_devicesfile || true)
+	[ "${usedev#*=" = "1" ] && dry "$LVM" lvmdevices --adddev "$DEVICE"
 
 	# Restore auto activation for a VG
 	dry "$LVM" vgchange --setautoactivation y $VERB $FORCE "$VGNAME"
