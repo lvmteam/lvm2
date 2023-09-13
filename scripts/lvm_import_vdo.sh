@@ -203,7 +203,7 @@ snapshot_merge_() {
 		error "ABORTING: Failed to initialize snapshot merge! Origin volume is unchanged."
 	}
 
-	verbose "Merging converted VDO volume..."
+	verbose "Merging converted VDO volume \"$VDO_DM_SNAPSHOT_NAME\"."
 	VDO_INCONSISTENT=1
 
 	# Running merging
@@ -235,12 +235,15 @@ snapshot_merge_() {
 	VDO_INCONSISTENT=
 	VDO_CONFIG_RESTORE=
 
+	verbose "Converted VDO volume is merged to \"$1\"."
+
 	"$DMSETUP" remove "$VDO_DM_SNAPSHOT_NAME" || {
 		sleep 1 # sleep and retry once more
 		"$DMSETUP" remove "$VDO_DM_SNAPSHOT_NAME" || {
 			error "ABORTING: Cannot remove snapshot $VDO_DM_SNAPSHOT_NAME! (check volume autoactivation...)"
 		}
 	}
+
 	VDO_DM_SNAPSHOT_NAME=
 	"$LOSETUP" -d "$VDO_SNAPSHOT_LOOP"
 	VDO_SNAPSHOT_LOOP=
@@ -500,44 +503,40 @@ convert_non_lv_() {
 	if [ "$vdo_logicalSizeRounded" -lt "$vdo_logicalSize" ]; then
 		# need to extend virtual size to be covering all the converted area
 		# let lvm2 to round to the proper virtual size of VDO LV
-		dry "$LVM" lvextend $YES $VERB --fs ignore --devices "$device" -L "$vdo_logicalSize"k "$VGNAME/$LVNAME"
+		dry "$LVM" lvextend $YES $VERB --devices "$device" -L "$vdo_logicalSize"k "$VGNAME/$LVNAME"
 	fi
 
 	VDO_INCONSISTENT=
 
-	if [ -n "$USE_VDO_DM_SNAPSHOT" ]; then
-		dry "$LVM" vgchange -an $VERB $FORCE --devices "$device" "$VGNAME"
+	[ -z "$USE_VDO_DM_SNAPSHOT" ] && return # no-snapshot case finished
 
-		# Prevent unwanted auto activation when VG is merged
-		dry "$LVM" vgchange --setautoactivation n $VERB $FORCE --devices "$device" "$VGNAME"
+	dry "$LVM" vgchange -an $VERB $FORCE --devices "$device" "$VGNAME"
 
-		if [ -z "$YES" ]; then
-			PROMPTING=yes
-			warn "Do not interrupt merging process once it starts (VDO data may become irrecoverable)!"
-			echo -n "$TOOL: Do you want to merge converted VDO device \"$DEVICE\" to VDO LV \"$VGNAME/$LVNAME\"? [y|N]: "
-			read -r -n 1 -s ANSWER
-			case "${ANSWER:0:1}" in
-			  y|Y )  echo "Yes" ;;
-			    * )  echo "No" ; PROMPTING=""; return 1 ;;
-			esac
-			PROMPTING=""
-			YES="-y" # From now, now prompting
-		fi
+	# Prevent unwanted auto activation when VG is merged
+	dry "$LVM" vgchange --setautoactivation n $VERB $FORCE --devices "$device" "$VGNAME"
 
-		dry snapshot_merge_ "$DEVICE"
-
-		verbose "Merging of VDO device finished."
+	if [ -z "$YES" ]; then
+		PROMPTING=yes
+		warn "Do not interrupt merging process once it starts (VDO data may become irrecoverable)!"
+		echo -n "$TOOL: Do you want to merge converted VDO device \"$DEVICE\" to VDO LV \"$VGNAME/$LVNAME\"? [y|N]: "
+		read -r -n 1 -s ANSWER
+		case "${ANSWER:0:1}" in
+		  y|Y )  echo "Yes" ;;
+		    * )  echo "No" ; PROMPTING=""; return 1 ;;
+		esac
+		PROMPTING=""
+		YES="-y" # From now, now prompting
 	fi
 
-	output=$("$LVM" pvs "$DEVICE" 2>&1) || {
-		if echo "$output" | grep -q "not in devices file" ; then
-			verbose "Adding \"$DEVICE\" to devices file."
-			dry "$LVM" lvmdevices --adddev "$DEVICE"
-		fi
-	}
+	dry snapshot_merge_ "$DEVICE"
+
+	# For systems using devicesfile add 'merged' PV into system.devices.
+	if [ "$("$LVM" lvmconfig --valuesonly devices/use_devicesfile --typeconfig full)" = "1" ]; then
+		dry "$LVM" lvmdevices --adddev "$DEVICE"
+	fi
 
 	# Restore auto activation for a VG
-	[ -n "$USE_VDO_DM_SNAPSHOT" ] && dry "$LVM" vgchange --setautoactivation y $VERB $FORCE "$VGNAME"
+	dry "$LVM" vgchange --setautoactivation y $VERB $FORCE "$VGNAME"
 
 	dry "$LVM" lvchange -ay $VERB $FORCE "$VGNAME/$LVNAME"
 }
