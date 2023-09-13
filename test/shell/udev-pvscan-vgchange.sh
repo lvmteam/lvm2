@@ -81,11 +81,16 @@ wipe_all() {
 wait_lvm_activate() {
 	local vgw=$1
 	local wait=0
+	rm status || true
 
-	while systemctl status lvm-activate-$vgw > /dev/null && test "$wait" -le 30; do
-		sleep .2
-		wait=$(( wait + 1 ))
+	# time for service to be started
+	sleep 1
+
+ 	while systemctl status lvm-activate-$vgw |tee status && test "$wait" -le 30; do
+ 		sleep .2
+ 		wait=$(( wait + 1 ))
 	done
+	cat status || true
 }
 
 # Test requires 3 devs
@@ -179,10 +184,12 @@ udevadm trigger -c add "/sys/block/$BDEV3"
 aux udev_wait
 wait_lvm_activate $vg3
 
+find "$RUNDIR/lvm"
 ls "$RUNDIR/lvm/pvs_online/$PVID1"
 ls "$RUNDIR/lvm/pvs_online/$PVID2"
 ls "$RUNDIR/lvm/pvs_online/$PVID3"
 ls "$RUNDIR/lvm/vgs_online/$vg3"
+
 journalctl -u lvm-activate-$vg3 | tee out || true
 grep "now active" out
 check lv_field $vg3/$lv1 lv_active "active"
@@ -455,3 +462,80 @@ check lv_field $vg10/$lv1 lv_active "active"
 vgchange -an $vg10
 vgremove -y $vg10
 wipe_all
+
+aux lvmconf 'devices/filter = [ "a|.*|" ]'
+aux lvmconf 'devices/global_filter = [ "a|.*|" ]'
+
+#
+# system.devices contains different product_uuid and incorrect device IDs
+#
+
+SYS_DIR="$PWD/test/sys"
+
+aux lvmconf "devices/use_devicesfile = 1" \
+	"devices/device_id_sysfs_dir = \"$SYS_DIR/\""
+
+WWID1="naa.111"
+WWID2="naa.222"
+PRODUCT_UUID1="11111111-2222-3333-4444-555555555555"
+PRODUCT_UUID2="11111111-2222-3333-4444-666666666666"
+
+vgcreate $vg11 "$dev1"
+lvcreate -l1 -an -n $lv1 $vg11 "$dev1"
+
+eval "$(pvs --noheading --nameprefixes -o major,minor,uuid "$dev1")"
+MAJOR1=$LVM2_PV_MAJOR
+MINOR1=$LVM2_PV_MINOR
+OPVID1=$LVM2_PV_UUID
+PVID1=${OPVID1//-/}
+
+mkdir -p "$SYS_DIR/dev/block/$MAJOR1:$MINOR1/device"
+echo "$WWID1" > "$SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid"
+mkdir -p "$SYS_DIR/devices/virtual/dmi/id/"
+echo "$PRODUCT_UUID1" > "$SYS_DIR/devices/virtual/dmi/id/product_uuid"
+
+vgimportdevices $vg11
+
+grep $PRODUCT_UUID1 "$DF"
+grep $PVID1 "$DF"
+grep $WWID1 "$DF"
+grep "$dev1" "$DF"
+
+# change wwid for dev1 and product_uuid for host
+
+echo "$WWID2" > "$SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid"
+echo "$PRODUCT_UUID2" > "$SYS_DIR/devices/virtual/dmi/id/product_uuid"
+
+_clear_online_files
+
+udevadm trigger --settle -c add "/sys/block/$BDEV1"
+
+wait_lvm_activate $vg11
+
+ls "$RUNDIR/lvm/vgs_online/$vg11"
+journalctl -u lvm-activate-$vg11 | tee out || true
+grep "now active" out
+
+# Run ordinary command that will refresh device ID in system.devices
+pvs -o+uuid | tee out
+grep "$dev1" out
+grep "$OPVID1" out
+
+# check new wwid for dev1 and new product_uuid for host
+cat "$DF"
+grep $PRODUCT_UUID2 "$DF"
+not grep $PRODUCT_UUID1 "$DF"
+grep $PVID1 "$DF"
+grep $WWID2 "$DF"
+not grep $WWID1 "$DF"
+grep "$dev1" "$DF"
+
+check lv_field $vg11/$lv1 lv_active "active"
+
+vgchange -an $vg11
+vgremove -y $vg11
+
+rm -rf "$SYS_DIR"
+
+wipe_all
+

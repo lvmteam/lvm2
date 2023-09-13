@@ -306,6 +306,22 @@ cfg(devices_search_for_devnames_CFG, "search_for_devnames", devices_CFG_SECTION,
 	"at other devices, but only those that are likely to have the PV.\n"
 	"If \"all\", lvm will look at all devices on the system.\n")
 
+cfg(devices_device_ids_refresh_CFG, "device_ids_refresh", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, 1, vsn(2, 3, 23), NULL, 0, NULL,
+	"Find PVs on new devices and update the device IDs in the devices file.\n"
+	"If PVs are restored or moved to a new system with new devices, but\n"
+	"an old system.devices remains with old device IDs, then search for\n"
+	"the PVIDs on new devices and update the device IDs in system.devices.\n"
+	"The original device IDs must also not be found on the new system.\n"
+	"See device_ids_refresh_check for conditions that trigger the refresh.\n")
+
+cfg_array(devices_device_ids_refresh_checks_CFG, "device_ids_refresh_checks", devices_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, "#Sproduct_uuid#Shostname", vsn(2, 3, 23), NULL, 0, NULL,
+	"Conditions that trigger device_ids_refresh to locate PVIDs on new devices.\n"
+	"product_uuid: refresh if /sys/devices/virtual/dmi/id/product_uuid does not\n"
+	"match the value saved in system.devices.\n"
+	"hostname: refresh if hostname does not match the value saved in system.devices.\n"
+	"(hostname is used if product_uuid is not available.)\n"
+	"Remove values from this list to prevent lvm from using them.\n")
+
 cfg_array(devices_filter_CFG, "filter", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, "#Sa|.*|", vsn(1, 0, 0), NULL, 0, NULL,
 	"Limit the block devices that are used by LVM commands.\n"
 	"This is a list of regular expressions used to accept or reject block\n"

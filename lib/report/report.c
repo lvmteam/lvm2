@@ -23,6 +23,7 @@
 #include "lib/metadata/segtype.h"
 #include "lib/cache/lvmcache.h"
 #include "lib/device/device-types.h"
+#include "lib/device/device_id.h"
 #include "lib/datastruct/str_list.h"
 #include "lib/locking/lvmlockd.h"
 
@@ -3571,6 +3572,9 @@ static int _pvdeviceid_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (!pv->device_id)
 		return _field_set_value(field, "", NULL);
 
+	if (pv->dev && pv_device_id_is_stale(pv))
+		return _field_set_value(field, "invalid", NULL);
+
 	if (!(repstr = pv_deviceid_dup(mem, pv))) {
 		log_error("Failed to allocate buffer.");
 		return 0;
@@ -3588,6 +3592,9 @@ static int _pvdeviceidtype_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	if (!pv->device_id_type)
 		return _field_set_value(field, "", NULL);
+
+	if (pv->dev && pv_device_id_is_stale(pv))
+		return _field_set_value(field, "invalid", NULL);
 
 	if (!(repstr = pv_deviceidtype_dup(mem, pv))) {
 		log_error("Failed to allocate buffer.");

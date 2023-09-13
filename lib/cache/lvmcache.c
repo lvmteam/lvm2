@@ -1646,7 +1646,7 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	 * devices file.  We then need to run label scan on these correct
 	 * devices.
 	 */
-	device_ids_find_renamed_devs(cmd, &renamed_devs, NULL, 0);
+	device_ids_refresh(cmd, &renamed_devs, NULL, 0);
 	if (!dm_list_empty(&renamed_devs))
 		label_scan_devs(cmd, cmd->filter, &renamed_devs);
 

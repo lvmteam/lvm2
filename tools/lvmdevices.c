@@ -283,7 +283,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		 * Find and fix any devname entries that have moved to a
 		 * renamed device.
 		 */
-		device_ids_find_renamed_devs(cmd, &found_devs, &search_count, 1);
+		device_ids_refresh(cmd, &found_devs, &search_count, 1);
 
 		if (search_count && !strcmp(cmd->search_for_devnames, "none"))
 			log_print("Not searching for missing devnames, search_for_devnames=\"none\".");

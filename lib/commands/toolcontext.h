@@ -120,6 +120,7 @@ struct cmd_context {
 	 * Machine and system identification.
 	 */
 	const char *system_id;
+	const char *product_uuid;
 	const char *hostname;
 	const char *kernel_vsn;
 
@@ -209,6 +210,9 @@ struct cmd_context {
 	unsigned online_vg_file_removed:1;
 	unsigned disable_dm_devs:1;		/* temporarily disable use of dm devs cache */
 	unsigned filter_regex_set_preferred_name_disable:1; /* prevent dev_set_preferred_name */
+	unsigned device_ids_check_product_uuid:1;
+	unsigned device_ids_check_hostname:1;
+	unsigned device_ids_refresh_trigger:1;
 
 	/*
 	 * Devices and filtering.

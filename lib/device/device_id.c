@@ -41,7 +41,6 @@ static int _devices_fd = -1;
 static int _using_devices_file;
 static int _devices_file_locked;
 static char _devices_lockfile[PATH_MAX];
-static char _devices_file_systemid[PATH_MAX];
 static char _devices_file_version[VERSION_LINE_MAX];
 static const char *_searched_file = DEFAULT_RUN_DIR "/searched_devnames";
 
@@ -93,6 +92,30 @@ static int _searched_devnames_exists(struct cmd_context *cmd)
 	if (errno != ENOENT)
 		log_debug("stat %s errno %d", _searched_file, errno);
 
+	return 0;
+}
+
+/*
+ * Check if the device_id saved in the VG metadata matches the actual device_id
+ * on the device used for the PV.
+ */
+int pv_device_id_is_stale(const struct physical_volume *pv)
+{
+	struct dev_use *du;
+
+	if (!pv->vg || !pv->vg->cmd)
+		return 0;
+	if (!pv->device_id || !pv->device_id_type)
+		return 0;
+	if (!(du = get_du_for_dev(pv->vg->cmd, pv->dev)))
+		return 0;
+	if (!du->idname)
+		return 0;
+
+	if (du->idtype != idtype_from_str(pv->device_id_type))
+		return 1;
+	if (strcmp(du->idname, pv->device_id))
+		return 1;
 	return 0;
 }
 
@@ -717,6 +740,82 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 	return NULL;
 }
 
+static int device_id_system_read_preferred(struct cmd_context *cmd, struct device *dev,
+					   uint16_t *new_idtype, const char **new_idname)
+{
+	const char *idname = NULL;
+	uint16_t idtype;
+
+	if (MAJOR(dev->dev) == cmd->dev_types->device_mapper_major) {
+		if (dev_has_mpath_uuid(cmd, dev, &idname)) {
+			idtype = DEV_ID_TYPE_MPATH_UUID;
+			goto id_done;
+		}
+
+		if (_dev_has_crypt_uuid(cmd, dev, &idname)) {
+			idtype = DEV_ID_TYPE_CRYPT_UUID;
+			goto id_done;
+		}
+
+		if (_dev_has_lvmlv_uuid(cmd, dev, &idname)) {
+			idtype = DEV_ID_TYPE_LVMLV_UUID;
+			goto id_done;
+		}
+	}
+
+	/* TODO: kpartx partitions on loop devs. */
+	if (MAJOR(dev->dev) == cmd->dev_types->loop_major) {
+		idtype = DEV_ID_TYPE_LOOP_FILE;
+		if ((idname = device_id_system_read(cmd, dev, idtype)))
+			goto id_done;
+		goto id_last;
+	}
+
+	if (MAJOR(dev->dev) == cmd->dev_types->md_major) {
+		idtype = DEV_ID_TYPE_MD_UUID;
+		if ((idname = device_id_system_read(cmd, dev, idtype)))
+			goto id_done;
+		goto id_last;
+	}
+
+	if (MAJOR(dev->dev) == cmd->dev_types->drbd_major) {
+		/* TODO */
+		log_warn("Missing support for DRBD idtype");
+		goto id_last;
+	}
+
+	idtype = DEV_ID_TYPE_SYS_WWID;
+	if ((idname = device_id_system_read(cmd, dev, idtype)))
+		goto id_done;
+
+	idtype = DEV_ID_TYPE_WWID_NAA;
+	if ((idname = device_id_system_read(cmd, dev, idtype)))
+		goto id_done;
+
+	idtype = DEV_ID_TYPE_WWID_EUI;
+	if ((idname = device_id_system_read(cmd, dev, idtype)))
+		goto id_done;
+
+	idtype = DEV_ID_TYPE_WWID_T10;
+	if ((idname = device_id_system_read(cmd, dev, idtype)))
+		goto id_done;
+
+	idtype = DEV_ID_TYPE_SYS_SERIAL;
+	if ((idname = device_id_system_read(cmd, dev, idtype)))
+		goto id_done;
+id_last:
+	idtype = DEV_ID_TYPE_DEVNAME;
+	if ((idname = device_id_system_read(cmd, dev, idtype)))
+		goto id_done;
+
+	return 0;
+
+id_done:
+	*new_idtype = idtype;
+	*new_idname = idname;
+	return 1;
+}
+
 /*
  * Check if this dev would use a stable idtype or if it
  * would use DEV_ID_TYPE_DEVNAME.
@@ -921,10 +1020,13 @@ int device_ids_read(struct cmd_context *cmd)
 {
 	char line[PATH_MAX];
 	char buf[PATH_MAX];
+	char check_id[PATH_MAX]; 
 	char *idtype, *idname, *devname, *pvid, *part;
 	struct dev_use *du;
 	FILE *fp;
 	int line_error;
+	int product_uuid_found = 0;
+	int hostname_found = 0;
 	int ret = 1;
 
 	if (!cmd->enable_devices_file)
@@ -953,16 +1055,39 @@ int device_ids_read(struct cmd_context *cmd)
 		if (line[0] == '#')
 			continue;
 
-		if (!strncmp(line, "SYSTEMID", 8)) {
-			_copy_idline_str(line, _devices_file_systemid, sizeof(_devices_file_systemid));
-			log_debug("read devices file systemid %s", _devices_file_systemid);
-			if ((!cmd->system_id && _devices_file_systemid[0]) ||
-			    (cmd->system_id && strcmp(cmd->system_id, _devices_file_systemid))) {
-				log_warn("WARNING: devices file has unmatching system id %s vs local %s.",
-					  _devices_file_systemid[0] ? _devices_file_systemid : "none", cmd->system_id ?: "none");
+		/* Old version wrote this but it's not used. */
+		if (!strncmp(line, "SYSTEMID", 8))
+			continue;
+
+		if (!strncmp(line, "HOSTNAME", 8)) {
+			if (!cmd->device_ids_check_hostname)
+				continue;
+			hostname_found = 1;
+			_copy_idline_str(line, check_id, sizeof(check_id));
+			log_debug("read devices file hostname %s", check_id);
+			if (cmd->hostname && strcmp(cmd->hostname, check_id)) {
+				log_debug("Devices file hostname %s vs local %s.",
+					  check_id[0] ? check_id : "none", cmd->hostname ?: "none");
+				cmd->device_ids_refresh_trigger = 1;
 			}
 			continue;
 		}
+
+		if (!strncmp(line, "PRODUCT_UUID", 12)) {
+			if (!cmd->device_ids_check_product_uuid)
+				continue;
+			product_uuid_found = 1;
+			_copy_idline_str(line, check_id, sizeof(check_id));
+			log_debug("read devices file product_uuid %s", check_id);
+			if ((!cmd->product_uuid && check_id[0]) ||
+			    (cmd->product_uuid && strcmp(cmd->product_uuid, check_id))) {
+				log_debug("Devices file product_uuid %s vs local %s.",
+					  check_id[0] ? check_id : "none", cmd->product_uuid ?: "none");
+				cmd->device_ids_refresh_trigger = 1;
+			}
+			continue;
+		}
+
 		if (!strncmp(line, "VERSION", 7)) {
 			_copy_idline_str(line, _devices_file_version, sizeof(_devices_file_version));
 			log_debug("read devices file version %s", _devices_file_version);
@@ -1027,6 +1152,12 @@ int device_ids_read(struct cmd_context *cmd)
 	}
 	if (fclose(fp))
 		stack;
+	
+	if (!product_uuid_found && !hostname_found &&
+	    (cmd->device_ids_check_product_uuid || cmd->device_ids_check_hostname)) {
+		cmd->device_ids_refresh_trigger = 1;
+		log_debug("Devices file refresh due to no product_uuid or hostname.");
+	}
 
 	return ret;
 }
@@ -1078,11 +1209,11 @@ int device_ids_write(struct cmd_context *cmd)
 	    (!strncmp(cmd->name, "pvcreate", 8) || !strncmp(cmd->name, "vgcreate", 8))) {
 		/* If any PVs were seen during scan then don't create a new devices file. */
 		if (lvmcache_vg_info_count()) {
-			log_warn("Not creating system devices file due to existing VGs.");
+			log_print_unless_silent("Not creating system devices file due to existing VGs.");
 			free_dus(&cmd->use_devices);
 			return 1;
 		}
-		log_warn("Creating devices file %s", cmd->devices_file_path);
+		log_print_unless_silent("Creating devices file %s", cmd->devices_file_path);
 		cmd->enable_devices_file = 1;
 	}
 
@@ -1132,15 +1263,10 @@ int device_ids_write(struct cmd_context *cmd)
 	fprintf(fp, "# LVM uses devices listed in this file.\n");
 	fprintf(fp, "# Created by LVM command %s pid %d at %s", cmd->name, getpid(), ctime(&t));
 
-	/*
-	 * It's useful to ensure that this devices file is associated to a
-	 * single system because this file can be used to control access to
-	 * shared devices.  If this file is copied/cloned to another system,
-	 * that new system should not automatically gain access to the devices
-	 * that the original system is using.
-	 */
-	if (cmd->system_id)
-		fprintf(fp, "SYSTEMID=%s\n", cmd->system_id);
+	if (cmd->product_uuid && cmd->device_ids_check_product_uuid)
+		fprintf(fp, "PRODUCT_UUID=%s\n", cmd->product_uuid);
+	if (cmd->hostname && cmd->device_ids_check_hostname)
+		fprintf(fp, "HOSTNAME=%s\n", cmd->hostname);
 
 	if (dm_snprintf(version_buf, VERSION_LINE_MAX, "VERSION=%u.%u.%u", DEVICES_FILE_MAJOR, DEVICES_FILE_MINOR, df_counter+1) < 0)
 		stack;
@@ -1425,77 +1551,11 @@ int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid_
 		}
 	}
 
-	if (MAJOR(dev->dev) == cmd->dev_types->device_mapper_major) {
-		if (dev_has_mpath_uuid(cmd, dev, &idname)) {
-			idtype = DEV_ID_TYPE_MPATH_UUID;
-			goto id_done;
-		}
-
-		if (_dev_has_crypt_uuid(cmd, dev, &idname)) {
-			idtype = DEV_ID_TYPE_CRYPT_UUID;
-			goto id_done;
-		}
-
-		if (_dev_has_lvmlv_uuid(cmd, dev, &idname)) {
-			idtype = DEV_ID_TYPE_LVMLV_UUID;
-			goto id_done;
-		}
-	}
-
-	/* TODO: kpartx partitions on loop devs. */
-	if (MAJOR(dev->dev) == cmd->dev_types->loop_major) {
-		idtype = DEV_ID_TYPE_LOOP_FILE;
-		if ((idname = device_id_system_read(cmd, dev, idtype)))
-			goto id_done;
-		goto id_last;
-	}
-
-	if (MAJOR(dev->dev) == cmd->dev_types->md_major) {
-		idtype = DEV_ID_TYPE_MD_UUID;
-		if ((idname = device_id_system_read(cmd, dev, idtype)))
-			goto id_done;
-		goto id_last;
-	}
-
-	if (MAJOR(dev->dev) == cmd->dev_types->drbd_major) {
-		/* TODO */
-		log_warn("Missing support for DRBD idtype");
-		goto id_last;
-	}
-
-	/*
-	 * No device-specific, existing, or user-specified idtypes,
-	 * so use first available of sys_wwid, wwid_naa, wwid_eui,
-	 * wwid_t10, sys_serial, devname.
-	 */
-
-	idtype = DEV_ID_TYPE_SYS_WWID;
-	if ((idname = device_id_system_read(cmd, dev, idtype)))
-		goto id_done;
-
-	idtype = DEV_ID_TYPE_WWID_NAA;
-	if ((idname = device_id_system_read(cmd, dev, idtype)))
-		goto id_done;
-
-	idtype = DEV_ID_TYPE_WWID_EUI;
-	if ((idname = device_id_system_read(cmd, dev, idtype)))
-		goto id_done;
-
-	idtype = DEV_ID_TYPE_WWID_T10;
-	if ((idname = device_id_system_read(cmd, dev, idtype)))
-		goto id_done;
-
-	idtype = DEV_ID_TYPE_SYS_SERIAL;
-	if ((idname = device_id_system_read(cmd, dev, idtype)))
-		goto id_done;
-id_last:
-	idtype = DEV_ID_TYPE_DEVNAME;
-	if ((idname = device_id_system_read(cmd, dev, idtype)))
-		goto id_done;
-
-id_done:
+	if (!device_id_system_read_preferred(cmd, dev, &idtype, &idname))
+		return_0;
 	if (!idname)
 		return_0;
+id_done:
 
 	/*
 	 * Create a dev_id struct for the new idtype on dev->ids.
@@ -2240,7 +2300,7 @@ static void _get_devs_with_serial_numbers(struct cmd_context *cmd, struct dm_lis
 			}
 		}
 
-		/* just copying the no-data filters in similar device_ids_find_renamed_devs */
+		/* just copying the no-data filters in similar device_ids_refresh */
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "sysfs"))
 			continue;
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "type"))
@@ -2300,7 +2360,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 	if (!cmd->enable_devices_file)
 		return;
 
-	log_debug("validating devices file entries");
+	log_debug("Validating devices file entries");
 
 	/*
 	 * Validate entries with proper device id types.
@@ -2320,15 +2380,21 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 		 * scanned_devs are the devices that have been scanned,
 		 * so they are the only devs we can verify PVID for.
 		 */
-		if (scanned_devs && !device_list_find_dev(scanned_devs, dev))
+		if (scanned_devs && !device_list_find_dev(scanned_devs, dev)) {
+			log_debug("Validate %s %s PVID %s on %s: not scanned",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".", dev_name(dev));
 			continue;
+		}
 
 		/*
 		 * The matched device could not be read so we do not have
 		 * the PVID from disk and cannot verify the devices file entry.
 		 */
-		if (dev->flags & DEV_SCAN_NOT_READ)
+		if (dev->flags & DEV_SCAN_NOT_READ) {
+			log_debug("Validate %s %s PVID %s on %s: not read",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".", dev_name(dev));
 			continue;
+		}
 
 		/*
 		 * du and dev may have been matched, but the dev could still
@@ -2337,6 +2403,8 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 		 * probably wants to do something about it.
 		 */
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "persistent")) {
+			log_debug("Validate %s %s PVID %s on %s: filtered",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".", dev_name(dev));
 			log_warn("Devices file %s is excluded: %s.",
 				 dev_name(dev), dev_filtered_reason(dev));
 			continue;
@@ -2351,6 +2419,9 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 		 */
 		if ((du->idtype == DEV_ID_TYPE_SYS_SERIAL) && du->pvid &&
 		    memcmp(dev->pvid, du->pvid, ID_LEN)) {
+			log_debug("Validate %s %s PVID %s on %s: wrong PVID %s",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".",
+				  dev_name(dev), dev->pvid);
 			log_debug("suspect device id serial %s for %s", du->idname, dev_name(dev));
 			if (!str_list_add(cmd->mem, &cmd->device_ids_check_serial, dm_pool_strdup(cmd->mem, du->idname)))
 				stack;
@@ -2365,6 +2436,9 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 		 */
 		if (dev->pvid[0]) {
 			if (!du->pvid || memcmp(dev->pvid, du->pvid, ID_LEN)) {
+				log_debug("Validate %s %s PVID %s on %s: wrong PVID %s",
+					  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".",
+					  dev_name(dev), dev->pvid);
 				log_warn("Device %s has PVID %s (devices file %s)",
 					 dev_name(dev), dev->pvid, du->pvid ?: "none");
 				if (!(tmpdup = strdup(dev->pvid)))
@@ -2376,6 +2450,9 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 			}
 		} else {
 			if (du->pvid && (du->pvid[0] != '.')) {
+				log_debug("Validate %s %s PVID %s on %s: wrong PVID %s",
+					  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".",
+					  dev_name(dev), dev->pvid);
 				log_warn("Device %s has no PVID (devices file %s)",
 					 dev_name(dev), du->pvid);
 				free(du->pvid);
@@ -2384,6 +2461,10 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 				*device_ids_invalid = 1;
 			}
 		}
+
+		log_debug("Validate %s %s PVID %s on %s: correct",
+			  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".",
+			  dev_name(dev));
 
 		/*
 		 * Avoid thrashing changes to the devices file during
@@ -2482,7 +2563,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 
 			devname = dev_name(dev);
 
-			log_print("Devices file PVID %s is now on %s.", du->pvid, devname);
+			log_debug("Devices file PVID %s is now on %s.", du->pvid, devname);
 
 			dup_devname1 = strdup(devname);
 			dup_devname2 = strdup(devname);
@@ -2518,17 +2599,23 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 
 	/*
 	 * Each remaining du that's not matched to a dev (no du->dev set) is
-	 * subject to device_ids_find_renamed_devs which will look for
-	 * unmatched pvids on devs that have not been scanned yet.
+	 * subject to device_ids_refresh which will look for unmatched pvids on
+	 * devs that have not been scanned yet.
 	 */
 	dm_list_iterate_items(du, &cmd->use_devices) {
-		if (du->idtype != DEV_ID_TYPE_DEVNAME)
+		/* 
+		 * Only search for devname type entries unless the refresh
+		 * trigger is set due to a machine change, in which case
+		 * we look for missing PVIDs on new devs with real idtypes.
+		 */
+		if ((du->idtype != DEV_ID_TYPE_DEVNAME) && !cmd->device_ids_refresh_trigger)
 			continue;
 		if (!du->pvid)
 			continue;
 		if (du->dev)
 			continue;
-		log_debug("Search needed to find device with PVID %s.", du->pvid);
+		log_debug("Search needed to locate PVID %s %s %s.",
+			  du->pvid, idtype_to_str(du->idtype), du->idname ?: ".");
 	}
 
 	/*
@@ -2624,7 +2711,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 	/*
 	 * Check for other problems for which we want to set *device_ids_invalid,
 	 * even if we don't have a way to fix them right here.  In particular,
-	 * issues that may be fixed shortly by device_ids_find_renamed_devs.
+	 * issues that may be fixed shortly by device_ids_refresh.
 	 *
 	 * The device_ids_invalid flag is only used to tell the caller not
 	 * to write hints, which could be based on invalid device info.
@@ -2650,7 +2737,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 	if (update_file)
 		unlink_searched_devnames(cmd);
 
-	/* FIXME: for wrong devname cases, wait to write new until device_ids_find_renamed_devs? */
+	/* FIXME: for wrong devname cases, wait to write new until device_ids_refresh? */
 
 	/*
 	 * try lock and device_ids_write(), the update is not required and will
@@ -2957,8 +3044,8 @@ void device_ids_check_serial(struct cmd_context *cmd, struct dm_list *scan_devs,
  * is using a non-system devices file?
  */
 
-void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_list,
-				  int *search_count, int noupdate)
+void device_ids_refresh(struct cmd_context *cmd, struct dm_list *dev_list,
+		        int *search_count, int noupdate)
 {
 	struct device *dev;
 	struct dev_use *du;
@@ -2966,8 +3053,8 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 	struct dev_iter *iter;
 	struct device_list *devl;           /* holds struct device */
 	struct device_id_list *dil, *dil2;  /* holds struct device + pvid */
-	struct dm_list search_pvids;        /* list of device_id_list */
-	struct dm_list search_devs ;        /* list of device_list */
+	struct dm_list search_list_pvids;        /* list of device_id_list */
+	struct dm_list search_list_devs ;        /* list of device_list */
 	const char *devname;
 	int update_file = 0;
 	int other_idtype = 0;
@@ -2975,40 +3062,73 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 	int no_pvid = 0;
 	int found = 0;
 	int not_found = 0;
-	int search_none;
-	int search_auto;
+	int search_mode_none;
+	int search_mode_auto;
+	int search_mode_all;
 
-	dm_list_init(&search_pvids);
-	dm_list_init(&search_devs);
+	dm_list_init(&search_list_pvids);
+	dm_list_init(&search_list_devs);
 
 	if (!cmd->enable_devices_file)
 		return;
 
-	search_none = !strcmp(cmd->search_for_devnames, "none");
-	search_auto = !strcmp(cmd->search_for_devnames, "auto");
+	if (cmd->device_ids_refresh_trigger) {
+		search_mode_all = 1;
+		search_mode_none = 0;
+		search_mode_auto = 0;
+	} else {
+		search_mode_all = !strcmp(cmd->search_for_devnames, "all");
+		search_mode_none = !strcmp(cmd->search_for_devnames, "none");
+		search_mode_auto = !strcmp(cmd->search_for_devnames, "auto");
+	}
 
+	/*
+	 * Create search_list_pvids which is a list of PVIDs that
+	 * we want to locate on some device.
+	 */
 	dm_list_iterate_items(du, &cmd->use_devices) {
-		if (du->idtype != DEV_ID_TYPE_DEVNAME)
-			continue;
 		if (!du->pvid)
 			continue;
 		if (du->dev)
 			continue;
 
-		if (!(dil = dm_pool_zalloc(cmd->mem, sizeof(*dil))))
+		/*
+		 * When device_ids_refresh_trigger is set, it means
+		 * that a PVID may be shifted to a new device even when
+		 * the entry uses a stable id type, like wwid.
+		 * Otherwise, we assume that only entries using the
+		 * devname id type can move to new devices.
+		 */
+		if (!cmd->device_ids_refresh_trigger &&
+		    (du->idtype != DEV_ID_TYPE_DEVNAME))
 			continue;
 
-		if (!search_none) {
-			memcpy(dil->pvid, du->pvid, ID_LEN);
-			dm_list_add(&search_pvids, &dil->list);
-		}
 		log_debug("Search for PVID %s.", du->pvid);
+
 		if (search_count)
 			(*search_count)++;
+
+		if (search_mode_none)
+			continue;
+
+		if (!(dil = dm_pool_zalloc(cmd->mem, sizeof(*dil))))
+			continue;
+		memcpy(dil->pvid, du->pvid, ID_LEN);
+		dm_list_add(&search_list_pvids, &dil->list);
 	}
 
-	if (dm_list_empty(&search_pvids))
+	/* No unmatched PVIDs to search for, and no system id to update. */
+	if (dm_list_empty(&search_list_pvids) && !cmd->device_ids_refresh_trigger)
 		return;
+
+	log_debug("device ids refresh search_pvids %d trigger %d search all %d auto %d none %d",
+		  dm_list_size(&search_list_pvids), cmd->device_ids_refresh_trigger,
+		  search_mode_all, search_mode_auto, search_mode_none);
+
+	if (dm_list_empty(&search_list_pvids) && cmd->device_ids_refresh_trigger) {
+		update_file = 1;
+		goto out;
+	}
 
 	/*
 	 * A previous command searched for devnames and found nothing, so it
@@ -3025,7 +3145,7 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 	 * If hints are enabled, the hints invalidation could also remove the
 	 * searched file.
 	 */
-	if (_searched_devnames_exists(cmd)) {
+	if (!cmd->device_ids_refresh_trigger && _searched_devnames_exists(cmd)) {
 		log_debug("Search for PVIDs skipped for %s", _searched_file);
 		return;
 	}
@@ -3060,11 +3180,11 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 		if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
 			continue;
 		devl->dev = dev;
-		dm_list_add(&search_devs, &devl->list);
+		dm_list_add(&search_list_devs, &devl->list);
 	}
 	dev_iter_destroy(iter);
 
-	log_debug("Search for PVIDs reading labels on %d devs.", dm_list_size(&search_devs));
+	log_debug("Search for PVIDs reading labels on %d devs.", dm_list_size(&search_list_devs));
 
 	/*
 	 * Read the dev to get the pvid, and run the filters that will use the
@@ -3072,7 +3192,7 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 	 * to modify the command's existing filter chain or the persistent
 	 * filter values.
 	 */
-	dm_list_iterate_items(devl, &search_devs) {
+	dm_list_iterate_items(devl, &search_list_devs) {
 		int has_pvid;
 		dev = devl->dev;
 
@@ -3081,7 +3201,7 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 		 * themselves as alternatives to the missing ID_TYPE_DEVNAME
 		 * entry. i.e. a ID_TYPE_DEVNAME entry would not appear on a
 		 * device that has a wwid and would use ID_TYPE_SYS_WWID.  So,
-		 * if a dev in the search_devs list has a proper/stable device
+		 * if a dev in the search_list_devs list has a proper/stable device
 		 * id (e.g. wwid, serial, loop, mpath), then we don't need to
 		 * read it to check for missing PVIDs.
 		 * 
@@ -3097,7 +3217,7 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 		 * user forces a devname id, then they should probably also
 		 * set search_for_devnames=all.
 		 */
-		if (search_auto && _dev_has_stable_id(cmd, dev)) {
+		if (search_mode_auto && _dev_has_stable_id(cmd, dev)) {
 			other_idtype++;
 			continue;
 		}
@@ -3134,12 +3254,12 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 			goto next;
 
 		/*
-		 * Check if the the PVID is one we are searching for.
-		 * Loop below looks at search_pvid entries that have dil->dev set.
-		 * This continues checking after all search_pvids entries have been
+		 * Check if the the PVID returned from label_read is one we are looking for.
+		 * The loop below looks at search_list_pvids entries that have dil->dev set.
+		 * This loop continues checking after all search_list_pvids entries have been
 		 * matched in order to check if the PVID is on duplicate devs.
 		 */
-		dm_list_iterate_items_safe(dil, dil2, &search_pvids) {
+		dm_list_iterate_items_safe(dil, dil2, &search_list_pvids) {
 			if (!memcmp(dil->pvid, dev->pvid, ID_LEN)) {
 				if (dil->dev) {
 					log_warn("WARNING: found PVID %s on multiple devices %s %s.",
@@ -3164,15 +3284,16 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 	/*
 	 * The use_devices entries (repesenting the devices file) are
 	 * updated for the new devices on which the PVs reside.  The new
-	 * correct devs are set as dil->dev on search_pvids entries.
+	 * correct devs are set as dil->dev on search_list_pvids entries.
 	 *
 	 * The du/dev/id are set up and linked for the new devs.
 	 *
 	 * The command's full filter chain is updated for the new devs now that
 	 * filter-deviceid will pass.
 	 */
-	dm_list_iterate_items(dil, &search_pvids) {
-		char *dup_devname1, *dup_devname2, *dup_devname3;
+	dm_list_iterate_items(dil, &search_list_pvids) {
+		char *new_idname, *new_idname2, *new_devname;
+		uint16_t new_idtype;
 
 		if (!dil->dev || dm_list_empty(&dil->dev->aliases)) {
 			not_found++;
@@ -3187,37 +3308,50 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 			/* shouldn't happen */
 			continue;
 		}
-		if (du->idtype != DEV_ID_TYPE_DEVNAME) {
-			/* shouldn't happen */
-			continue;
+
+		new_idtype = 0;
+		new_idname = NULL;
+		new_idname2 = NULL;
+		new_devname = NULL;
+
+		if (cmd->device_ids_refresh_trigger) {
+			if (!device_id_system_read_preferred(cmd, dev, &new_idtype, (const char **)&new_idname))
+				continue;
+			new_idname2 = strdup(new_idname);
+			new_devname = strdup(devname);
+			log_print_unless_silent("Devices file PVID %s has new device ID %s %s from %s.",
+				  du->pvid ?: "", idtype_to_str(new_idtype), new_idname ?: "", devname);
+		} else {
+			/* Use the new device name as the new idname. */
+			new_idtype = DEV_ID_TYPE_DEVNAME;
+			new_idname = strdup(devname);
+			new_idname2 = strdup(devname);
+			new_devname = strdup(devname);
+			log_print_unless_silent("Found new device name %s for PVID %s.", devname, du->pvid ?: "");
 		}
 
-		dup_devname1 = strdup(devname);
-		dup_devname2 = strdup(devname);
-		dup_devname3 = strdup(devname);
 		id = zalloc(sizeof(struct dev_id));
-		if (!dup_devname1 || !dup_devname2 || !dup_devname3 || !id) {
-			free(dup_devname1);
-			free(dup_devname2);
-			free(dup_devname3);
+
+		if (!id || !new_devname || !new_idname || !new_idname2) {
 			free(id);
+			free(new_idname);
+			free(new_idname2);
+			free(new_devname);
 			stack;
 			continue;
 		}
-
-		if (!noupdate)
-			log_warn("Devices file PVID %s updating IDNAME to %s.", dev->pvid, devname);
 
 		free(du->idname);
 		free(du->devname);
 		free_dids(&dev->ids);
 
-		du->idname = dup_devname1;
-		du->devname = dup_devname2;
-		id->idtype = DEV_ID_TYPE_DEVNAME;
-		id->idname = dup_devname3;
-		id->dev = dev;
+		du->idtype = new_idtype;
+		du->idname = new_idname;
+		du->devname = new_devname;
 		du->dev = dev;
+		id->idtype = new_idtype;
+		id->idname = new_idname2;
+		id->dev = dev;
 		dev->id = id;
 		dev->flags |= DEV_MATCHED_USE_ID;
 		dm_list_add(&dev->ids, &id->list);
@@ -3225,7 +3359,7 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 		update_file = 1;
 	}
 
-	dm_list_iterate_items(dil, &search_pvids) {
+	dm_list_iterate_items(dil, &search_list_pvids) {
 		if (!dil->dev)
 			continue;
 		dev = dil->dev;
@@ -3242,6 +3376,7 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 		}
 	}
 
+ out:
 	/*
 	 * try lock and device_ids_write(), the update is not required and will
 	 * be done by a subsequent command if it's not done here.
@@ -3259,11 +3394,11 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 	}
 
 	/*
-	 * The entries in search_pvids with a dev set are the new devs found
+	 * The entries in search_list_pvids with a dev set are the new devs found
 	 * for the PVIDs that we want to return to the caller in a device_list
 	 * format.
 	 */
-	dm_list_iterate_items(dil, &search_pvids) {
+	dm_list_iterate_items(dil, &search_list_pvids) {
 		if (!dil->dev)
 			continue;
 		dev = dil->dev;
@@ -3279,7 +3414,7 @@ void device_ids_find_renamed_devs(struct cmd_context *cmd, struct dm_list *dev_l
 	 * pvids not found were from devices that are permanently detached.
 	 * If a new PV appears, pvscan will run and do unlink_searched_file.
 	 */
-	if (not_found && !found)
+	if (!cmd->device_ids_refresh_trigger && not_found && !found)
 		_touch_searched_devnames(cmd);
 }
 

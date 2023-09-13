@@ -481,7 +481,7 @@ not grep "$dev1" "$DF"
 ls "$RUNDIR/lvm/pvs_online/$PVID1"
 ls "$RUNDIR/lvm/pvs_online/$PVID2"
 not ls "$RUNDIR/lvm/pvs_online/$PVID3"
-check lv_field $vg1/$lv1 lv_active "active"
+lvs -qq -o active $vg1/$lv1 | grep active
 # pvs updates the DF
 pvs |tee out
 grep "$dev1" out

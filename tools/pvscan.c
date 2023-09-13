@@ -1441,18 +1441,20 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 	 * If a match fails here do not exclude it, that will be done below by
 	 * passes_filter() which runs filter-deviceid. The
 	 * relax_deviceid_filter case needs to be able to work around
-	 * unmatching devs.
+	 * unmatching devs, or unmatching product_uuid/hostname which means
+	 * we can ignore the device ID and use any device with a PVID listed
+	 * in system.devices.
 	 */
 
 	if (cmd->enable_devices_file) {
 		dm_list_iterate_items(devl, &pvscan_devs)
 			device_ids_match_dev(cmd, devl->dev);
-
 	}
 	if (cmd->enable_devices_list)
 		device_ids_match_device_list(cmd);
 
-	if (cmd->enable_devices_file && device_ids_use_devname(cmd)) {
+	if (cmd->enable_devices_file &&
+	    (device_ids_use_devname(cmd) || cmd->device_ids_refresh_trigger)) {
 		relax_deviceid_filter = 1;
 		cmd->filter_deviceid_skip = 1;
 	}

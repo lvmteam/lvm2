@@ -608,6 +608,50 @@ static int _init_system_id(struct cmd_context *cmd)
 	return 1;
 }
 
+static void _init_device_ids_refresh(struct cmd_context *cmd)
+{
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
+	int check_product_uuid = 0;
+	int check_hostname = 0;
+	char path[PATH_MAX];
+	char uuid[128] = { 0 };
+
+	cmd->device_ids_check_product_uuid = 0;
+	cmd->device_ids_check_hostname = 0;
+
+	if (!find_config_tree_bool(cmd, devices_device_ids_refresh_CFG, NULL))
+		return;
+	if (!(cn = find_config_tree_array(cmd, devices_device_ids_refresh_checks_CFG, NULL)))
+		return;
+
+	for (cv = cn->v; cv; cv = cv->next) {
+		if (cv->type != DM_CFG_STRING)
+			continue;
+		if (!strcmp(cv->v.str, "product_uuid"))
+			check_product_uuid = 1;
+		if (!strcmp(cv->v.str, "hostname"))
+			check_hostname = 1;
+	}
+
+	/* product_uuid is preferred */
+
+	if (check_product_uuid) {
+		const char *sysfs_dir = cmd->device_id_sysfs_dir ?: dm_sysfs_dir();
+		if (dm_snprintf(path, sizeof(path), "%sdevices/virtual/dmi/id/product_uuid", sysfs_dir) < 0)
+			return;
+		if (get_sysfs_value(path, uuid, sizeof(uuid), 0) && uuid[0])
+			cmd->product_uuid = dm_pool_strdup(cmd->libmem, uuid);;
+		if (cmd->product_uuid) {
+			cmd->device_ids_check_product_uuid = 1;
+			return;
+		}
+	}
+
+	if (check_hostname && cmd->hostname)
+		cmd->device_ids_check_hostname = 1;
+}
+
 static int _process_config(struct cmd_context *cmd)
 {
 	mode_t old_umask;
@@ -778,6 +822,8 @@ static int _process_config(struct cmd_context *cmd)
 
 	if (!_init_system_id(cmd))
 		return_0;
+
+	_init_device_ids_refresh(cmd);
 
 	init_io_memory_size(find_config_tree_int(cmd, global_io_memory_size_CFG, NULL));
 

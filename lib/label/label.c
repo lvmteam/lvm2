@@ -1092,11 +1092,12 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 	if (cmd->enable_devices_list)
 		device_ids_match_device_list(cmd);
 
-	if (cmd->enable_devices_file && device_ids_use_devname(cmd)) {
+	if (cmd->enable_devices_file &&
+	    (device_ids_use_devname(cmd) || cmd->device_ids_refresh_trigger)) {
 		relax_deviceid_filter = 1;
 		cmd->filter_deviceid_skip = 1;
 		/* PVIDs read from devs matched to devices file below instead. */
-		log_debug("Skipping device_id filtering due to devname ids.");
+		log_debug("Skipping device_id filtering");
 	}
 
 	/*
