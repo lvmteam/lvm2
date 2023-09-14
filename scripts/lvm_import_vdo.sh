@@ -533,7 +533,7 @@ convert_non_lv_() {
 	# For systems using devicesfile add 'merged' PV into system.devices.
 	# Bypassing use of --valuesonly to keep compatibility with older lvm.
 	local usedev=$("$LVM" lvmconfig --typeconfig full devices/use_devicesfile || true)
-	[ "${usedev#*=" = "1" ] && dry "$LVM" lvmdevices --adddev "$DEVICE"
+	[ "${usedev#*=}" = "1" ] && dry "$LVM" lvmdevices --adddev "$DEVICE"
 
 	# Restore auto activation for a VG
 	dry "$LVM" vgchange --setautoactivation y $VERB $FORCE "$VGNAME"
