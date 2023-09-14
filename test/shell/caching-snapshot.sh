@@ -94,6 +94,7 @@ test_snap_remove() {
 	lvcreate -s -L 32 -n snap $vg/$lv1
 	cp pattern1 "$mount_dir/pattern1b"
 	lvconvert --splitcache $vg/$lv1
+	fsck -n "$DM_DEV_DIR/$vg/snap"
 	mount "$DM_DEV_DIR/$vg/snap" "$mount_dir_snap"
 	not ls "$mount_dir_snap/pattern1b"
 	rm "$mount_dir/pattern1a"
