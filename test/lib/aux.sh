@@ -24,7 +24,7 @@ expect_failure() {
 }
 
 check_daemon_in_builddir() {
-	# skip if we don't have our own deamon...
+	# skip if we don't have our own daemon...
 	if test -z "${installed_testsuite+varset}"; then
 		(which "$1" 2>/dev/null | grep "$abs_builddir" >/dev/null ) || skip "$1 is not in executed path."
 	fi

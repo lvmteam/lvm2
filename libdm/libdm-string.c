@@ -192,7 +192,7 @@ int dm_asprintf(char **result, const char *format, ...)
 }
 
 /*
- * Count occurences of 'c' in 'str' until we reach a null char.
+ * Count occurrences of 'c' in 'str' until we reach a null char.
  *
  * Returns:
  *  len - incremented for each char we encounter.
