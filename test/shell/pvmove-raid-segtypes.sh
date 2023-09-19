@@ -46,6 +46,20 @@ pvmove $mode -n $lv1 "$dev5" "$dev4"
 check lv_tree_on $vg $lv1 "$dev2" "$dev4"
 check lv_tree_on $vg ${lv1}_foo "$dev5"
 check dev_md5sum $vg $lv1
+
+# Check moving raid component LVs
+pvmove $mode -n ${lv1}_rimage_0 "$dev4" "$dev1"
+check lv_tree_on $vg $lv1 "$dev1" "$dev2"
+check lv_on $vg ${lv1}_rimage_0 "$dev1"
+check lv_on $vg ${lv1}_rmeta_0 "$dev4"
+check dev_md5sum $vg $lv1
+lvs -ao+devices  $vg
+
+pvmove $mode -n ${lv1}_rmeta_0 "$dev4" "$dev1"
+check lv_tree_on $vg $lv1 "$dev1" "$dev2"
+check lv_on $vg ${lv1}_rimage_0 "$dev1"
+check lv_on $vg ${lv1}_rmeta_0 "$dev1"
+check dev_md5sum $vg $lv1
 lvremove -ff $vg
 
 # Testing pvmove of RAID10 LV
