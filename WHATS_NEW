@@ -1,5 +1,6 @@
 version 2.03.23 - 
 ==================================
+  Fix pvmove when specifying raid components as moved LVs.
   Enhance error detection for lvm_import_vdo.
   Support PV lists with thin lvconvert.
   Fix support for lvm_import_vdo with SCSI VDO volumes.
