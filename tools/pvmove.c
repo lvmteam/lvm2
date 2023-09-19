@@ -141,6 +141,7 @@ static int _remove_sibling_pvs_from_trim_list(struct logical_volume *lv,
 	char *idx, *suffix;
 	const char *sibling;
 	char sublv_name[NAME_LEN];
+	char idx_buf[16];
 	struct logical_volume *sublv;
 	struct dm_list untrim_list, *pvh1, *pvh2;
 	struct pv_list *pvl1, *pvl2;
@@ -174,9 +175,15 @@ static int _remove_sibling_pvs_from_trim_list(struct logical_volume *lv,
 	}
 	idx++;
 
+        /* Copy idx to local buffer */
+	if (!dm_strncpy(idx_buf, idx, sizeof(idx_buf))) {
+		log_error(INTERNAL_ERROR "Unexpected LV index %s.", idx);
+		return 0;
+	}
+
 	/* Create the siblings name (e.g. "raidlv_rmeta_N" -> "raidlv_rimage_N" */
 	if (dm_snprintf(suffix + 2, sizeof(sublv_name) - 2 - (suffix - sublv_name),
-			"%s_%s", sibling, idx) < 0) {
+			"%s_%s", sibling, idx_buf) < 0) {
 		log_error("Raid sublv for name %s too long.", lv_name);
 		return 0;
 	}
