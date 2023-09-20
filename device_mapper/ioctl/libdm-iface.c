@@ -404,7 +404,7 @@ static void _close_control_fd(void)
 {
 	if (_control_fd != -1) {
 		if (close(_control_fd) < 0)
-			log_sys_error("close", "_control_fd");
+			log_sys_debug("close", "_control_fd");
 		_control_fd = -1;
 	}
 }

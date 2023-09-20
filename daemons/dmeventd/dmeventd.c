@@ -1766,7 +1766,7 @@ static void _cleanup_unused_threads(void)
 		DEBUGLOG("Destroying Thr %x.", (int)thread->thread);
 
 		if (pthread_join(thread->thread, NULL))
-			log_sys_error("pthread_join", "");
+			log_sys_debug("pthread_join", "");
 
 		_free_thread_status(thread);
 		_lock_mutex();
@@ -1797,7 +1797,7 @@ static void _init_thread_signals(void)
 	sigdelset(&my_sigset, SIGQUIT);
 
 	if (pthread_sigmask(SIG_BLOCK, &my_sigset, NULL))
-		log_sys_error("pthread_sigmask", "SIG_BLOCK");
+		log_sys_debug("pthread_sigmask", "SIG_BLOCK");
 }
 
 /*
@@ -1826,7 +1826,7 @@ static int _set_oom_adj(const char *oom_adj_path, int val)
 	fprintf(fp, "%i", val);
 
 	if (dm_fclose(fp))
-		log_sys_error("fclose", oom_adj_path);
+		log_sys_debug("fclose", oom_adj_path);
 
 	return 1;
 }
@@ -1840,11 +1840,11 @@ static int _protect_against_oom_killer(void)
 
 	if (stat(OOM_ADJ_FILE, &st) == -1) {
 		if (errno != ENOENT)
-			log_sys_error("stat", OOM_ADJ_FILE);
+			log_sys_debug("stat", OOM_ADJ_FILE);
 
 		/* Try old oom_adj interface as a fallback */
 		if (stat(OOM_ADJ_FILE_OLD, &st) == -1) {
-			log_sys_error("stat", OOM_ADJ_FILE_OLD);
+			log_sys_debug("stat", OOM_ADJ_FILE_OLD);
 			return 1;
 		}
 
@@ -1933,14 +1933,14 @@ out:
 static void _remove_files_on_exit(void)
 {
 	if (unlink(DMEVENTD_PIDFILE))
-		log_sys_error("unlink", DMEVENTD_PIDFILE);
+		log_sys_debug("unlink", DMEVENTD_PIDFILE);
 
 	if (!_systemd_activation) {
 		if (unlink(DM_EVENT_FIFO_CLIENT))
-			log_sys_error("unlink", DM_EVENT_FIFO_CLIENT);
+			log_sys_debug("unlink", DM_EVENT_FIFO_CLIENT);
 
 		if (unlink(DM_EVENT_FIFO_SERVER))
-			log_sys_error("unlink", DM_EVENT_FIFO_SERVER);
+			log_sys_debug("unlink", DM_EVENT_FIFO_SERVER);
 	}
 }
 
@@ -2430,9 +2430,9 @@ int main(int argc, char *argv[])
 	log_notice("dmeventd shutting down.");
 
 	if (fifos.client >= 0 && close(fifos.client))
-		log_sys_error("client close", fifos.client_path);
+		log_sys_debug("client close", fifos.client_path);
 	if (fifos.server >= 0 && close(fifos.server))
-		log_sys_error("server close", fifos.server_path);
+		log_sys_debug("server close", fifos.server_path);
 
 	if (_use_syslog)
 		closelog();
