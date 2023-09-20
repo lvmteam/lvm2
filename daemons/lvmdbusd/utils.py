@@ -543,7 +543,7 @@ def round_size(size_bytes):
 	return size_bytes + bs - remainder
 
 
-_ALLOWABLE_CH = string.ascii_letters + string.digits + '#+-.:=@_\/%'
+_ALLOWABLE_CH = string.ascii_letters + string.digits + '#+-.:=@_/%'
 _ALLOWABLE_CH_SET = set(_ALLOWABLE_CH)
 
 _ALLOWABLE_VG_LV_CH = string.ascii_letters + string.digits + '.-_+'
