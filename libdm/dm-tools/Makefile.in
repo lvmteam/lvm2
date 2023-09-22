@@ -19,13 +19,15 @@ top_builddir = @top_builddir@
 all: device-mapper
 
 SOURCES2 = dmsetup.c
-TARGETS_DM = dmsetup
 
 CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES2))
 CFLOW_TARGET := $(TARGETS_DM)
 -include $(top_builddir)/libdm/libdevmapper.cflow
 
-install_device-mapper: install_dmsetup_dynamic
+ifeq ("@SHARED_LINK@", "yes")
+  TARGETS_DM += dmsetup
+  install_device-mapper: install_dmsetup_dynamic
+endif
 
 ifeq ("@STATIC_LINK@", "yes")
   TARGETS_DM += dmsetup.static
@@ -35,8 +37,11 @@ endif
 # dmfilemapd support
 ifeq ("@BUILD_DMFILEMAPD@", "yes")
   SOURCES2 += dmfilemapd.c
-  TARGETS_DM += dmfilemapd
-  install_dmfilemapd: install_dmfilemapd_dynamic
+
+  ifeq ("@SHARED_LINK@", "yes")
+     TARGETS_DM += dmfilemapd
+     install_dmfilemapd: install_dmfilemapd_dynamic
+  endif
 
   ifeq ("@STATIC_LINK@", "yes")
     TARGETS_DM += dmfilemapd.static

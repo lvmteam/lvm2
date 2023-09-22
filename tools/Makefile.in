@@ -100,9 +100,11 @@ CLEAN_TARGETS = liblvm2cmd.$(LIB_SUFFIX) $(TARGETS_DM) \
 	$(LDDEPS) .exported_symbols_generated cmds.h \
 	command-lines-input.h command-count.h man-generator.c
 
+ifeq ("@SHARED_LINK@", "yes")
 ifeq ("@CMDLIB@", "yes")
 	TARGETS += liblvm2cmd.$(LIB_SUFFIX).$(LIB_VERSION)
 	INSTALL_LVM_TARGETS += $(INSTALL_CMDLIB_TARGETS)
+endif
 endif
 
 EXPORTED_HEADER = $(srcdir)/lvm2cmd.h

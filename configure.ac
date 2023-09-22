@@ -186,6 +186,14 @@ AC_ARG_ENABLE(static_link,
 AC_MSG_RESULT([$STATIC_LINK])
 
 ################################################################################
+dnl -- Disables shared linking
+AC_MSG_CHECKING([whether to use dynamic linking])
+AC_ARG_ENABLE(shared,
+	      AS_HELP_STRING([--disable-shared], [disable dynamic linking]),
+	      SHARED_LINK=$enableval, SHARED_LINK="yes")
+AC_MSG_RESULT([$SHARED_LINK])
+
+################################################################################
 dnl -- Check if compiler/linker supports PIE and RELRO
 AC_TRY_CCFLAG([-pie], [HAVE_PIE], [], [])
 AC_SUBST(HAVE_PIE)
@@ -1218,7 +1226,10 @@ AC_ARG_ENABLE(cmdlib,
 	      CMDLIB=$enableval, CMDLIB="no")
 AC_MSG_RESULT([$CMDLIB])
 AC_SUBST([LVM2CMD_LIB])
-AS_IF([test "$CMDLIB" = "yes"], [LVM2CMD_LIB="-llvm2cmd"], [LVM2CMD_LIB=])
+AS_IF([test "$CMDLIB" = "yes"],
+      [AS_IF([test "$SHARED_LINK" = "no"],
+	     [AC_MSG_ERROR([--enable-cmdlib requires dynamic linking.])])
+       LVM2CMD_LIB="-llvm2cmd"], [LVM2CMD_LIB=])
 
 ################################################################################
 dnl -- Enable D-Bus service
@@ -1892,6 +1903,7 @@ AC_SUBST(SBINDIR)
 AC_SUBST(SELINUX_LIBS)
 AC_SUBST(SELINUX_PC)
 AC_SUBST(SELINUX_STATIC_LIBS)
+AC_SUBST(SHARED_LINK)
 AC_SUBST(SILENT_RULES)
 AC_SUBST(SNAPSHOTS)
 AC_SUBST(STATICDIR)

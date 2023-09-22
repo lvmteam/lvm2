@@ -47,7 +47,9 @@ endif
 
 LIB_SHARED = $(interface)/libdevmapper.$(LIB_SUFFIX)
 LIB_VERSION = $(LIB_VERSION_DM)
+ifeq ("@SHARED_LINK@", "yes")
 TARGETS = libdevmapper.$(LIB_SUFFIX) libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION) .symver_check
+endif
 
 CFLOW_LIST = $(SOURCES)
 CFLOW_LIST_TARGET = libdevmapper.cflow
@@ -103,7 +105,12 @@ install_dynamic: install_@interface@
 
 install_static: install_@interface@_static
 
+ifeq ("@SHARED_LINK@", "yes")
 install_ioctl: install_lib_shared
+endif
+ifeq ("@STATIC_LINK@", "yes")
+install_ioctl: install_ioctl_static
+endif
 
 install_pkgconfig: libdevmapper.pc
 	@echo "    [INSTALL] $<"
