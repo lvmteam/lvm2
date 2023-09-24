@@ -872,11 +872,11 @@ void dm_event_log(const char *subsys, int level, const char *file,
 {
 	static int _abort_on_internal_errors = -1;
 	static pthread_mutex_t _log_mutex = PTHREAD_MUTEX_INITIALIZER;
-	static time_t start = 0;
+	static long long _start = 0;
 	const char *indent = "";
 	FILE *stream = log_stderr(level) ? stderr : stdout;
 	int prio;
-	time_t now;
+	long long now, now_nsec;
 	int log_with_debug = 0;
 
 	if (subsys[0] == '#') {
@@ -923,17 +923,28 @@ void dm_event_log(const char *subsys, int level, const char *file,
 	if (_use_syslog) {
 		vsyslog(prio, format, ap);
 	} else {
-		now = time(NULL);
-		if (!start)
-			start = now;
-		now -= start;
-		if (_debug_level)
-			fprintf(stream, "[%2lld:%02lld] %8x:%-6s%s",
-				(long long)now / 60, (long long)now % 60,
+		if (_debug_level) {
+#define _NSEC_PER_SEC (1000000000LL)
+#ifdef HAVE_REALTIME
+			struct timespec mono_time = { 0 };
+			if (clock_gettime(CLOCK_MONOTONIC, &mono_time) == 0)
+				now = mono_time.tv_sec * _NSEC_PER_SEC + mono_time.tv_nsec;
+			else
+#endif
+				now = time(NULL) * _NSEC_PER_SEC;
+
+			if (!_start)
+				_start = now;
+			now -= _start;
+			now_nsec = now %_NSEC_PER_SEC;
+			now /= _NSEC_PER_SEC;
+			fprintf(stream, "[%2lld:%02lld.%06lld] %8x:%-6s%s",
+				now / 60, now % 60, now_nsec / 1000,
 				// TODO: Maybe use shorter ID
 				// ((int)(pthread_self()) >> 6) & 0xffff,
 				(int)pthread_self(), subsys,
 				(_debug_level > 3) ? "" : indent);
+		}
 		if (_debug_level > 3)
 			fprintf(stream, "%28s:%4d %s", file, line, indent);
 		vfprintf(stream, _(format), ap);
