@@ -1882,7 +1882,7 @@ bad:
  * generated from the current group table and included in the message.
  */
 static int _stats_set_aux(struct dm_stats *dms,
-			  uint64_t region_id, const char *aux_data)
+			  uint64_t region_id, const char *user_data)
 {
 	const char *group_tag = NULL;
 	struct dm_task *dmt = NULL;
@@ -1897,11 +1897,10 @@ static int _stats_set_aux(struct dm_stats *dms,
 			goto bad;
 		}
 	}
-
 	if (dm_snprintf(msg, sizeof(msg), "@stats_set_aux " FMTu64 " %s%s%s ",
 			region_id, (group_tag) ? group_tag : "",
 			(group_tag) ? DMS_AUX_SEP : "",
-			(strlen(aux_data)) ? aux_data : "-") < 0) {
+			(strlen(user_data)) ? user_data : "-") < 0) {
 		log_error("Could not prepare @stats_set_aux message");
 		goto bad;
 	}
