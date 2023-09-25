@@ -901,12 +901,56 @@ bad:
 	return 0;
 }
 
+static int _stats_parse_string_data(char *string_data, char **program_id,
+				    char **aux_data, char **stats_args)
+{
+	char *p, *next_space, *empty_string = (char *)"";
+	size_t len;
+
+	/*
+	 * String data format:
+	 * <program_id> <aux_data> [precise_timestamps] [histogram:n1,n2,n3,..]
+	 */
+
+	/* Remove trailing whitespace */
+	len = strlen(string_data);
+	if (len > 0 && (string_data)[len - 1] == '\n') {
+		(string_data)[len - 1] = '\0';
+	}
+	p = strchr(string_data, ' ');
+	if (!p) {
+		*aux_data = *stats_args = empty_string;
+		return 1;
+	}
+
+	*p = '\0';
+	*program_id = string_data;
+
+	p++;
+	next_space = strchr(p, ' ');
+	if (next_space) {
+		*next_space = '\0';
+		*aux_data = p;
+		*stats_args = next_space + 1;
+	} else {
+		*aux_data = p;
+		*stats_args = empty_string;
+	}
+
+	if (!strncmp(*program_id, "-", 1))
+		*program_id = empty_string;
+
+	if (!strncmp(*aux_data, "-", 1))
+		*aux_data = empty_string;
+
+	return 1;
+}
+
 static int _stats_parse_list_region(struct dm_stats *dms,
 				    struct dm_stats_region *region, char *line)
 {
-	char *p = NULL, string_data[STATS_ROW_BUF_LEN];
-	char *program_id, *aux_data, *stats_args;
-	char *empty_string = (char *) "";
+	char string_data[STATS_ROW_BUF_LEN];
+	char *p, *program_id, *aux_data, *stats_args;
 	int r;
 
 	memset(string_data, 0, sizeof(string_data));
@@ -922,56 +966,32 @@ static int _stats_parse_list_region(struct dm_stats *dms,
 		   &region->region_id, &region->start, &region->len,
 		   &region->step, string_data);
 
-	if (r != 5)
+	if (r != 5) {
+		return 0;
+	}
+
+	if (!_stats_parse_string_data(string_data, &program_id, &aux_data, &stats_args)) {
 		return_0;
+	}
 
-	/* program_id is guaranteed to be first. */
-	program_id = string_data;
+	region->timescale = strstr(stats_args, PRECISE_ARG) ? 1 : NSEC_PER_MSEC;
 
-	/*
-	 * FIXME: support embedded '\ ' in string data:
-	 *   s/strchr/_find_unescaped_space()/
-	 */
-	if ((p = strchr(string_data, ' '))) {
-		/* terminate program_id string. */
-		*p = '\0';
-		if (!strncmp(program_id, "-", 1))
-			program_id = empty_string;
-		aux_data = p + 1;
-		if ((p = strchr(aux_data, ' '))) {
-			/* terminate aux_data string. */
-			*p = '\0';
-			stats_args = p + 1;
-		} else
-			stats_args = empty_string;
-
-		/* no aux_data? */
-		if (!strncmp(aux_data, "-", 1))
-			aux_data = empty_string;
-		else
-			/* remove trailing newline */
-			aux_data[strlen(aux_data) - 1] = '\0';
-	} else
-		aux_data = stats_args = empty_string;
-
-	if (strstr(stats_args, PRECISE_ARG))
-		region->timescale = 1;
-	else
-		region->timescale = NSEC_PER_MSEC;
-
-	if ((p = strstr(stats_args, HISTOGRAM_ARG))) {
-		if (!_stats_parse_histogram_spec(dms, region, p))
+	p = strstr(stats_args, HISTOGRAM_ARG);
+	if (p) {
+		if (!_stats_parse_histogram_spec(dms, region, p)) {
 			return_0;
-	} else
+		}
+	} else {
 		region->bounds = NULL;
+	}
 
-	/* clear aggregate cache */
 	region->histogram = NULL;
-
 	region->group_id = DM_STATS_GROUP_NOT_PRESENT;
 
-	if (!(region->program_id = dm_strdup(program_id)))
+	if (!(region->program_id = dm_strdup(program_id))) {
 		return_0;
+	}
+
 	if (!(region->aux_data = dm_strdup(aux_data))) {
 		dm_free(region->program_id);
 		return_0;
