@@ -46,8 +46,8 @@ rm LOCAL_DMEVENTD debug.log*
 dmeventd -R -f &
 echo $! >LOCAL_DMEVENTD
 
-# wait longer as tries to communicate with killed daemon
-sleep 9
+# wait longer as tries 5s to communicate with killed daemon
+sleep 7
 # now dmeventd should not be running
 not pgrep dmeventd
 rm LOCAL_DMEVENTD
@@ -63,4 +63,24 @@ test -e LOCAL_CLVMD || not grep 'already monitored' lvchange.out
 lvchange --monitor y --verbose $vg/$lv2 2>&1 | tee lvchange.out
 test -e LOCAL_CLVMD || not grep 'already monitored' lvchange.out
 
-vgremove -ff $vg
+rm -f debug.log*
+dmeventd -R -f -e "$PWD/test_nologin" -ldddd > debug.log_DMEVENTD_$RANDOM 2>&1 &
+echo $! >LOCAL_DMEVENTD
+
+pgrep -o dmeventd
+kill -INT "$(< LOCAL_DMEVENTD)"
+sleep 1
+
+# dmeventd should be still present (although in 'exit-mode')
+pgrep -o dmeventd
+
+# Create a file simulating 'shutdown in progress'
+touch test_nologin
+sleep 1.1
+
+# Should be now dead (within 1 second)
+not pgrep -o dmeventd
+rm -f LOCAL_DMEVENTD
+
+# Do not run dmeventd here again
+vgremove -ff --config 'activation/monitoring = 0' $vg
