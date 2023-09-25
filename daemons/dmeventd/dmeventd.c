@@ -2171,17 +2171,17 @@ int main(int argc, char *argv[])
 		.server_path = DM_EVENT_FIFO_SERVER
 	};
 	time_t now, idle_exit_timeout = DMEVENTD_IDLE_EXIT_TIMEOUT;
-	opterr = 0;
-	optind = 0;
 
+	optopt = optind = opterr = 0;
+	optarg = (char*) "";
 	while ((opt = getopt(argc, argv, "?fhVdlR")) != EOF) {
 		switch (opt) {
 		case 'h':
 			_usage(argv[0], stdout);
-			exit(EXIT_SUCCESS);
+			return EXIT_SUCCESS;
 		case '?':
 			_usage(argv[0], stderr);
-			exit(EXIT_SUCCESS);
+			return EXIT_SUCCESS;
 		case 'R':
 			_restart++;
 			break;
@@ -2196,7 +2196,7 @@ int main(int argc, char *argv[])
 			break;
 		case 'V':
 			printf("dmeventd version: %s\n", DM_LIB_VERSION);
-			exit(EXIT_SUCCESS);
+			return EXIT_SUCCESS;
 		}
 	}
 
