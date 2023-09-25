@@ -98,6 +98,7 @@ static int _systemd_activation = 0;
 static int _foreground = 0;
 static int _restart = 0;
 static time_t _idle_since = 0;
+static const char *_exit_on = DEFAULT_DMEVENTD_EXIT_ON_PATH;
 static char **_initial_registrations = 0;
 
 /* FIXME Make configurable at runtime */
@@ -723,12 +724,18 @@ static int _get_status(struct message_data *message_data)
 static int _get_parameters(struct message_data *message_data) {
 	struct dm_event_daemon_message *msg = message_data->msg;
 	int size;
+	char idle_buf[32] = "";
+
+	if (_idle_since)
+		(void)dm_snprintf(idle_buf, sizeof(idle_buf), " idle=%lu", (long unsigned) (time(NULL) - _idle_since));
 
 	free(msg->data);
-	if ((size = dm_asprintf(&msg->data, "%s pid=%d daemon=%s exec_method=%s",
+	if ((size = dm_asprintf(&msg->data, "%s pid=%d daemon=%s exec_method=%s exit_on=\"%s\"%s",
 				message_data->id, getpid(),
 				_foreground ? "no" : "yes",
-				_systemd_activation ? "systemd" : "direct")) < 0) {
+				_systemd_activation ? "systemd" : "direct",
+				_exit_on,
+				idle_buf)) < 0) {
 		stack;
 		return -ENOMEM;
 	}
@@ -2242,8 +2249,9 @@ bad:
 static void _usage(char *prog, FILE *file)
 {
 	fprintf(file, "Usage:\n"
-		"%s [-d [-d [-d]]] [-f] [-h] [i] [-l] [-R] [-V] [-?]\n\n"
+		"%s [-d [-d [-d]]] [-e path] [-f] [-h] [i] [-l] [-R] [-V] [-?]\n\n"
 		"   -d       Log debug messages to syslog (-d, -dd, -ddd)\n"
+		"   -e       Select a file path checked on exit\n"
 		"   -f       Don't fork, run in the foreground\n"
 		"   -h       Show this help information\n"
 		"   -i       Query running instance of dmeventd for info\n"
@@ -2266,7 +2274,7 @@ int main(int argc, char *argv[])
 
 	optopt = optind = opterr = 0;
 	optarg = (char*) "";
-	while ((opt = getopt(argc, argv, "?fhiVdlR")) != EOF) {
+	while ((opt = getopt(argc, argv, ":?e:fhiVdlR")) != EOF) {
 		switch (opt) {
 		case 'h':
 			_usage(argv[0], stdout);
@@ -2278,6 +2286,13 @@ int main(int argc, char *argv[])
 			return _info_dmeventd(argv[0], &fifos) ? EXIT_SUCCESS : EXIT_FAILURE;
 		case 'R':
 			_restart++;
+			break;
+		case 'e':
+			if (strchr(optarg, '"')) {
+				fprintf(stderr, "dmeventd: option -e does not accept path \"%s\" with '\"' character.\n", optarg);
+				return EXIT_FAILURE;
+			}
+			_exit_on=optarg;
 			break;
 		case 'f':
 			_foreground++;
@@ -2291,6 +2306,9 @@ int main(int argc, char *argv[])
 		case 'V':
 			printf("dmeventd version: %s\n", DM_LIB_VERSION);
 			return EXIT_SUCCESS;
+		case ':':
+			fprintf(stderr, "dmeventd: option -%c requires an argument.\n", optopt);
+			return EXIT_FAILURE;
 		}
 	}
 
@@ -2381,15 +2399,28 @@ int main(int argc, char *argv[])
 					break;
 				}
 			}
-		} else if (_exit_now == DM_SIGNALED_EXIT) {
-			_exit_now = DM_SCHEDULED_EXIT;
-			/*
-			 * When '_exit_now' is set, signal has been received,
-			 * but can not simply exit unless all
-			 * threads are done processing.
-			 */
-			log_info("dmeventd received break, scheduling exit.");
-		}
+		} else
+			switch (_exit_now) {
+			case DM_SIGNALED_EXIT:
+				_exit_now = DM_SCHEDULED_EXIT;
+				/*
+				 * When '_exit_now' is set, signal has been received,
+				 * but can not simply exit unless all
+				 * threads are done processing.
+				 */
+				log_info("dmeventd received break, scheduling exit.");
+				/* fall through */
+			case DM_SCHEDULED_EXIT:
+				/* While exit is scheduled, check for exit_on file */
+				DEBUGLOG("Checking exit on file \"%s\".", _exit_on);
+				if (_exit_on[0] && (access(_exit_on, F_OK) == 0)) {
+					log_info("dmeventd detected exit on file %s, unregistering all monitored devices.",
+						 _exit_on);
+					_unregister_all_threads();
+				}
+				break;
+			}
+
 		_process_request(&fifos);
 		_cleanup_unused_threads();
 	}

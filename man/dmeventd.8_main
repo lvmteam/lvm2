@@ -10,6 +10,8 @@ dmeventd \(em Device-mapper event daemon
 .RB [ -d
 .RB [ -d
 .RB [ -d ]]]
+.RB [ -e
+.BR exit_on_path ]
 .RB [ -f ]
 .RB [ -h ]
 .RB [ -i ]
@@ -35,6 +37,16 @@ Repeat from 1 to 3 times
 to increase the detail of
 debug messages sent to syslog.
 Each extra d adds more debugging information.
+.
+.TP
+.B -e exit_on_path
+Specifies the file path whose presence is checked by the daemon when it
+receives a signal (SIGINT, SIGTERM) and allows to exit even if there are still
+monitored devices.
+This can help with system shutdown where devices
+have not been unmonitored properly.
+To disable this behavior set this to the empty string "".
+Default value is "\fI#DEFAULT_DMEVENTD_EXIT_ON_PATH#\fP".
 .
 .TP
 .B -f
