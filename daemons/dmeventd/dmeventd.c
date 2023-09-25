@@ -2065,6 +2065,68 @@ static int _reinstate_registrations(struct dm_event_fifos *fifos)
 	return 1;
 }
 
+static int _info_dmeventd(const char *name, struct dm_event_fifos *fifos)
+{
+	struct dm_event_daemon_message msg = { 0 };
+	int i, count = 0;
+	char *line;
+	int version;
+	int ret = 0;
+
+	/* Get the list of registrations from the running daemon. */
+	if (!init_fifos(fifos)) {
+		fprintf(stderr, "Could not initiate communication with existing dmeventd.\n");
+		return 0;
+	}
+
+	if (!dm_event_get_version(fifos, &version)) {
+		fprintf(stderr, "Could not communicate with existing dmeventd.\n");
+		goto out;
+	}
+
+	if (version < 1) {
+		fprintf(stderr, "The running dmeventd instance is too old.\n"
+			"Protocol version %d (required: 1). Action cancelled.\n", version);
+		goto out;
+	}
+
+	if (daemon_talk(fifos, &msg, DM_EVENT_CMD_GET_STATUS, "-", "-", 0, 0)) {
+		fprintf(stderr, "Failed to acquire status from existing dmeventd.\n");
+		goto out;
+	}
+
+	line = strchr(msg.data, ' ') + 1;
+	for (i = 0; msg.data[i]; ++i)
+		if (msg.data[i] == ';') {
+			msg.data[i] = 0;
+			if (!count)
+				printf("%s is monitoring:\n", name);
+			printf("%s\n", line);
+			line = msg.data + i + 1;
+			++count;
+		}
+
+	free(msg.data);
+
+	if (!count)
+		printf("%s does not monitor any device.\n", name);
+
+	if (version >= 2) {
+		if (daemon_talk(fifos, &msg, DM_EVENT_CMD_GET_PARAMETERS, "-", "-", 0, 0)) {
+			fprintf(stderr, "Failed to acquire parameters from existing dmeventd.\n");
+			goto out;
+		}
+		printf("%s internal status: %s\n", name, msg.data);
+		free(msg.data);
+	}
+
+	ret = 1;
+out:
+	fini_fifos(fifos);
+
+	return ret;
+}
+
 static void _restart_dmeventd(void)
 {
 	struct dm_event_fifos fifos = {
@@ -2180,10 +2242,11 @@ bad:
 static void _usage(char *prog, FILE *file)
 {
 	fprintf(file, "Usage:\n"
-		"%s [-d [-d [-d]]] [-f] [-h] [-l] [-R] [-V] [-?]\n\n"
+		"%s [-d [-d [-d]]] [-f] [-h] [i] [-l] [-R] [-V] [-?]\n\n"
 		"   -d       Log debug messages to syslog (-d, -dd, -ddd)\n"
 		"   -f       Don't fork, run in the foreground\n"
 		"   -h       Show this help information\n"
+		"   -i       Query running instance of dmeventd for info\n"
 		"   -l       Log to stdout,stderr instead of syslog\n"
 		"   -?       Show this help information on stderr\n"
 		"   -R       Restart dmeventd\n"
@@ -2203,7 +2266,7 @@ int main(int argc, char *argv[])
 
 	optopt = optind = opterr = 0;
 	optarg = (char*) "";
-	while ((opt = getopt(argc, argv, "?fhVdlR")) != EOF) {
+	while ((opt = getopt(argc, argv, "?fhiVdlR")) != EOF) {
 		switch (opt) {
 		case 'h':
 			_usage(argv[0], stdout);
@@ -2211,6 +2274,8 @@ int main(int argc, char *argv[])
 		case '?':
 			_usage(argv[0], stderr);
 			return EXIT_SUCCESS;
+		case 'i':
+			return _info_dmeventd(argv[0], &fifos) ? EXIT_SUCCESS : EXIT_FAILURE;
 		case 'R':
 			_restart++;
 			break;

@@ -12,6 +12,7 @@ dmeventd \(em Device-mapper event daemon
 .RB [ -d ]]]
 .RB [ -f ]
 .RB [ -h ]
+.RB [ -i ]
 .RB [ -l ]
 .RB [ -R ]
 .RB [ -V ]
@@ -42,6 +43,12 @@ Don't fork, run in the foreground.
 .TP
 .B -h
 Show help information.
+.
+.TP
+.B -i
+Query the running daemon instance for the status informations. The format is
+internal and unstable and it is targeted for developers.
+Format may change between versions.
 .
 .TP
 .B -l
