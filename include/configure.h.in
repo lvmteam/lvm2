@@ -43,6 +43,9 @@
 /* Name of default metadata cache subdirectory. */
 #undef DEFAULT_CACHE_SUBDIR
 
+/* Path to exit-on dmeventd file. */
+#undef DEFAULT_DMEVENTD_EXIT_ON_PATH
+
 /* Define default node creation behavior with dmsetup create */
 #undef DEFAULT_DM_ADD_NODE
 

@@ -736,6 +736,7 @@ DEFAULT_PROFILE_SUBDIR
 DEFAULT_PID_DIR
 DEFAULT_MIRROR_SEGTYPE
 DEFAULT_LOCK_DIR
+DEFAULT_DMEVENTD_EXIT_ON_PATH
 DEFAULT_DM_RUN_DIR
 DEFAULT_CACHE_SUBDIR
 DEFAULT_BACKUP_SUBDIR
@@ -1005,6 +1006,7 @@ with_systemdsystemunitdir
 with_tmpfilesdir
 with_dmeventd_pidfile
 with_dmeventd_path
+with_dmeventd_exit_on_path
 with_default_system_dir
 with_default_profile_subdir
 with_default_archive_subdir
@@ -1813,6 +1815,9 @@ Optional Packages:
                           dmeventd pidfile [PID_DIR/dmeventd.pid]
   --with-dmeventd-path=PATH
                           dmeventd path [EPREFIX/sbin/dmeventd]
+  --with-dmeventd-exit-on-path=PATH
+                          Default path to exit-on file in dmeventd
+                          [/run/nologin]
   --with-default-system-dir=DIR
                           default LVM system directory [/etc/lvm]
   --with-default-profile-subdir=SUBDIR
@@ -15938,6 +15943,15 @@ else $as_nop
 fi
 
 
+# Check whether --with-dmeventd-exit-on-path was given.
+if test ${with_dmeventd_exit_on_path+y}
+then :
+  withval=$with_dmeventd_exit_on_path; DEFAULT_DMEVENTD_EXIT_ON_PATH=$withval
+else $as_nop
+  DEFAULT_DMEVENTD_EXIT_ON_PATH="/run/nologin"
+fi
+
+
 if test "$BUILD_DMEVENTD" = "yes"
 then :
 
@@ -15946,6 +15960,9 @@ printf "%s\n" "#define DMEVENTD_PIDFILE \"$DMEVENTD_PIDFILE\"" >>confdefs.h
 
 
 printf "%s\n" "#define DMEVENTD_PATH \"$DMEVENTD_PATH\"" >>confdefs.h
+
+
+printf "%s\n" "#define DEFAULT_DMEVENTD_EXIT_ON_PATH \"$DEFAULT_DMEVENTD_EXIT_ON_PATH\"" >>confdefs.h
 
 
 fi
@@ -16093,6 +16110,7 @@ AIO_LIBS=${AIO_LIBS:--laio}
 
 
 ################################################################################
+
 
 
 
