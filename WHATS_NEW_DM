@@ -1,5 +1,7 @@
 Version 1.02.197 - 
 ===================================
+  Add support for exit-on file for dmevent to reduce shutdown delays.
+  Add configure option --with-dmeventd-exit-on-path to specify default path.
   Add dmsetup --headings none|abbrev|full to set report headings type.
   Add DM_REPORT_OUTPUT_FIELD_IDS_IN_HEADINGS to provide alternative headings.
 
