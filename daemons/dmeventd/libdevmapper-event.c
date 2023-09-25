@@ -844,6 +844,7 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 int dm_event_get_version(struct dm_event_fifos *fifos, int *version) {
 	char *p;
 	struct dm_event_daemon_message msg = { 0 };
+	int ret = 0;
 
 	if (daemon_talk(fifos, &msg, DM_EVENT_CMD_HELLO, NULL, NULL, 0, 0))
 		return 0;
@@ -851,13 +852,17 @@ int dm_event_get_version(struct dm_event_fifos *fifos, int *version) {
 	*version = 0;
 
 	if (!p || !(p = strchr(p, ' '))) /* Message ID */
-		return 0;
+		goto out;
 	if (!(p = strchr(p + 1, ' '))) /* HELLO */
-		return 0;
+		goto out;
 	if ((p = strchr(p + 1, ' '))) /* HELLO, once more */
 		*version = atoi(p);
 
-	return 1;
+	ret = 1;
+out:
+	free(msg.data);
+
+	return ret;
 }
 
 void dm_event_log_set(int debug_log_level, int use_syslog)
