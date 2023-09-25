@@ -136,6 +136,36 @@ struct dm_stats {
 	uint64_t cur_area;
 };
 
+static char *_stats_escape_aux_data(const char *aux_data)
+{
+	size_t aux_data_len = strlen(aux_data);
+	char *escaped = dm_malloc((3 * aux_data_len + 1) * sizeof(char));
+	size_t index = 0;
+
+	if (!escaped) {
+		log_error("Could not allocate memory for escaped "
+			  "aux_data string.");
+		return NULL;
+	}
+
+	for (size_t i = 0; i < aux_data_len; i++) {
+		if (aux_data[i] == ' ') {
+			escaped[index++] = '\\';
+			escaped[index++] = ' ';
+		} else if (aux_data[i] == '\\') {
+			escaped[index++] = '\\';
+			escaped[index++] = '\\';
+		} else if (aux_data[i] == '\t') {
+			escaped[index++] = '\\';
+			escaped[index++] = '\t';
+		} else {
+			escaped[index++] = aux_data[i];
+		}
+	}
+	escaped[index] = '\0';
+	return escaped;
+}
+
 #define PROC_SELF_COMM "/proc/self/comm"
 static char *_program_id_from_proc(void)
 {
@@ -697,6 +727,8 @@ static void _check_group_regions_present(struct dm_stats *dms,
 #define DMS_GROUP_TAG_LEN (sizeof(DMS_GROUP_TAG) - 1)
 #define DMS_GROUP_SEP ':'
 #define DMS_AUX_SEP "#"
+#define DMS_AUX_SEP_CHAR '#'
+#define DMS_GROUP_QUOTE '"'
 
 static int _parse_aux_data_group(struct dm_stats *dms,
 				 struct dm_stats_region *region,
@@ -713,7 +745,8 @@ static int _parse_aux_data_group(struct dm_stats *dms,
 	if (!c)
 		return 1; /* no group is not an error */
 
-	alias = c + strlen(DMS_GROUP_TAG);
+	/* extract alias from quotes */
+	alias = c + strlen(DMS_GROUP_TAG) + 1;
 
 	c = strchr(c, DMS_GROUP_SEP);
 
@@ -722,8 +755,9 @@ static int _parse_aux_data_group(struct dm_stats *dms,
 		return 0;
 	}
 
-	/* terminate alias and advance to members */
-	*(c++) = '\0';
+	/* terminate alias and advance to members accounting for closing quote */
+	*(c - 1) = '\0';
+	c++;
 
 	log_debug("Read alias '%s' from aux_data", alias);
 
@@ -904,7 +938,7 @@ bad:
 static int _stats_parse_string_data(char *string_data, char **program_id,
 				    char **aux_data, char **stats_args)
 {
-	char *p, *next_space, *empty_string = (char *)"";
+	char *p, *next_gap, *empty_string = (char *)"";
 	size_t len;
 
 	/*
@@ -927,14 +961,26 @@ static int _stats_parse_string_data(char *string_data, char **program_id,
 	*program_id = string_data;
 
 	p++;
-	next_space = strchr(p, ' ');
-	if (next_space) {
-		*next_space = '\0';
+	if (strstr(p, DMS_GROUP_TAG)) {
 		*aux_data = p;
-		*stats_args = next_space + 1;
+		/* Skip over the group tag */
+		next_gap = strchr(p, DMS_AUX_SEP_CHAR);
+		next_gap = strchr(next_gap, ' ');
+		if (next_gap) {
+			*(next_gap++) = '\0';
+			*stats_args = next_gap++;
+		} else
+			*stats_args = empty_string;
 	} else {
-		*aux_data = p;
-		*stats_args = empty_string;
+		next_gap = strchr(p, ' ');
+		if (next_gap) {
+			*next_gap = '\0';
+			*aux_data = p;
+			*stats_args = next_gap + 1;
+		} else {
+			*aux_data = p;
+			*stats_args = empty_string;
+		}
 	}
 
 	if (!strncmp(*program_id, "-", 1))
@@ -1864,7 +1910,7 @@ static char *_build_group_tag(struct dm_stats *dms, uint64_t group_id)
 		return_0;
 
 	buflen += DMS_GROUP_TAG_LEN;
-	buflen += 1 + (alias ? strlen(alias) : 0); /* 'alias:' */
+	buflen += 1 + (alias ? strlen(alias) + 2 : 0); /* 'alias:' */
 
 	buf = aux_string = dm_malloc(buflen);
 	if (!buf) {
@@ -1878,7 +1924,11 @@ static char *_build_group_tag(struct dm_stats *dms, uint64_t group_id)
 	buf += DMS_GROUP_TAG_LEN;
 	buflen -= DMS_GROUP_TAG_LEN;
 
-	r = dm_snprintf(buf, buflen, "%s%c", alias ? alias : "", DMS_GROUP_SEP);
+	if (alias)
+		r = dm_snprintf(buf, buflen, "\"%s\"%c", alias, DMS_GROUP_SEP);
+	else
+		r = dm_snprintf(buf, buflen, "%c", DMS_GROUP_SEP);
+
 	if (r < 0)
 		goto_bad;
 
@@ -1907,6 +1957,7 @@ static int _stats_set_aux(struct dm_stats *dms,
 	const char *group_tag = NULL;
 	struct dm_task *dmt = NULL;
 	char msg[STATS_MSG_BUF_LEN];
+	char *group_tag_escaped = NULL;
 
 	/* group data required? */
 	if (_stats_group_id_present(dms, region_id)) {
@@ -1916,10 +1967,15 @@ static int _stats_set_aux(struct dm_stats *dms,
 				  "region ID " FMTu64, region_id);
 			goto bad;
 		}
-	}
+		group_tag_escaped = _stats_escape_aux_data(group_tag);
+		if (!group_tag_escaped)
+			goto bad;
+	} else
+		group_tag_escaped = dm_strdup("");
+
 	if (dm_snprintf(msg, sizeof(msg), "@stats_set_aux " FMTu64 " %s%s%s ",
-			region_id, (group_tag) ? group_tag : "",
-			(group_tag) ? DMS_AUX_SEP : "",
+			region_id, (group_tag_escaped) ? group_tag_escaped : "",
+			(group_tag_escaped) ? DMS_AUX_SEP : "",
 			(strlen(user_data)) ? user_data : "-") < 0) {
 		log_error("Could not prepare @stats_set_aux message");
 		goto bad;
@@ -1929,6 +1985,7 @@ static int _stats_set_aux(struct dm_stats *dms,
 		goto_bad;
 
 	dm_free((char *) group_tag);
+	dm_free(group_tag_escaped);
 
 	/* no response to a @stats_set_aux message */
 	dm_task_destroy(dmt);
@@ -1953,6 +2010,7 @@ static int _stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 	const char *err_fmt = "Could not prepare @stats_create %s.";
 	const char *precise_str = PRECISE_ARG;
 	const char *resp, *opt_args = NULL;
+	char *aux_data_escaped = NULL;
 	struct dm_task *dmt = NULL;
 	int r = 0, nr_opt = 0;
 
@@ -1982,6 +2040,10 @@ static int _stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 		nr_opt++;
 	else
 		hist_arg = "";
+
+	aux_data_escaped = _stats_escape_aux_data(aux_data);
+	if (!aux_data_escaped)
+		return_0;
 
 	if (nr_opt) {
 		if ((dm_asprintf((char **)&opt_args, "%d %s %s%s", nr_opt,
@@ -2026,6 +2088,7 @@ out:
 	if (dmt)
 		dm_task_destroy(dmt);
 	dm_free((void *) opt_args);
+	dm_free(aux_data_escaped);
 
 	return r;
 }
