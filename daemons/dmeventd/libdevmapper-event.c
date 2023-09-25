@@ -552,6 +552,8 @@ void fini_fifos(struct dm_event_fifos *fifos)
 		if (close(fifos->server))
 			log_sys_debug("close", fifos->server_path);
 	}
+
+	fifos->client = fifos->server = -1;
 }
 
 /* Get uuid of a device */
