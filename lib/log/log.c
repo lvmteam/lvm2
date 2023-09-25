@@ -234,7 +234,7 @@ static int _get_pid_starttime(int *pid, unsigned long long *starttime)
 	if ((e = read(fd, buf, sizeof(buf) - 1)) <= 0)
 		log_sys_debug("read", statfile);
 
-	if (!close(fd))
+	if (close(fd))
 		log_sys_debug("close", statfile);
 
 	if (e <= 0)
