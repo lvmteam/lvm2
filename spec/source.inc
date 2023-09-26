@@ -12,8 +12,8 @@
 %global enable_lvmlockd 1
 %global enable_lvmpolld 1
 %global enable_dmfilemapd 0
-#%global enable_lvmlockd_dlm 0
-#%global enable_lvmlockd_sanlock 0
+#%%global enable_lvmlockd_dlm 0
+#%%global enable_lvmlockd_sanlock 0
 
 %if %{enable_udev}
 %service lvmpolld 1
@@ -43,7 +43,8 @@
 %with writecache internal
 %with integrity internal
 
-%global buildreq_udev systemd-devel
+# NOTE: Required by fedora 38+, maybe older
+%global buildreq_udev systemd-devel, systemd-units
 %global req_udev udev >= 181-1
 
 
@@ -60,15 +61,12 @@
  %global sanlock_version 3.3.0-1
  %global enable_lvmlockd_dlm 1
  %global enable_lvmlockd_sanlock 1
+ # FIXME: Check these conditions against RHEL builds!
  %if %{rhel}
-  %ifarch i686 x86_64 s390x
-   %global buildreq_lvmlockd_dlm dlm-devel >= %{dlm_version}
-  %else
+  %ifnarch i686 x86_64 s390x
    %global enable_lvmlockd_dlm 0
   %endif
-  %ifarch x86_64 ppc64le ppc64 aarch64
-   %global buildreq_lvmlockd_sanlock sanlock-devel >= %{sanlock_version}
-  %else
+  %ifnarch x86_64 ppc64le ppc64 aarch64
    %global enable_lvmlockd_sanlock 0
   %endif
  %endif
@@ -77,6 +75,12 @@
   %service lvmlockd 1
   %global enable_lvmlockd_dlm 1
  %endif
+%endif
+%if 0%{enable_lvmlockd_dlm}
+ %global buildreq_lvmlockd_dlm dlm-devel >= %{dlm_version}
+%endif
+%if 0%{enable_lvmlockd_sanlock}
+ %global buildreq_lvmlockd_sanlock sanlock-devel >= %{sanlock_version}
 %endif
 
 ##############################################################
@@ -164,6 +168,11 @@ Source92: build.inc
 Source93: packages.inc
 Source94: macros.inc
 
+BuildRequires: make
+BuildRequires: gcc
+%if %{enable_testsuite}
+BuildRequires: gcc-c++
+%endif
 BuildRequires: libselinux-devel >= 1.30.19-4, libsepol-devel
 BuildRequires: ncurses-devel
 %if %{enable_readline}
@@ -174,6 +183,9 @@ BuildRequires: libedit-devel
 %endif
 BuildRequires: module-init-tools
 BuildRequires: pkgconfig
+# TODO: Should these be conditional?
+BuildRequires: libaio-devel
+BuildRequires: libblkid-devel
 
 # Expands to nothing unless at least 2 arguments are given
 %define maybe() \
@@ -189,6 +201,8 @@ BuildRequires: pkgconfig
 %maybe BuildRequires: %{?buildreq_lvmlockd_sanlock}
 %maybe BuildRequires: %{?buildreq_python3_devel}
 %maybe BuildRequires: %{?buildreq_python3_setuptools}
+%maybe BuildRequires: %{?buildreq_python3_dbus}
+%maybe BuildRequires: %{?buildreq_python3_pyudev}
 
 %description
 LVM2 includes all of the support for handling read/write operations on
