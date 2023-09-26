@@ -141,7 +141,8 @@ static int _sleep_and_rescan_devices(struct cmd_context *cmd, struct daemon_parm
 		_nanosleep(parms->interval, 0);
 		if (sigint_caught())
 			return_0;
-		lvmcache_label_scan(cmd);
+		if (!lvmcache_label_scan(cmd))
+			stack;
 	}
 
 	return 1;
@@ -159,7 +160,8 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 	unsigned wait_before_testing = parms->wait_before_testing;
 
 	if (!wait_before_testing)
-		lvmcache_label_scan(cmd);
+		if (!lvmcache_label_scan(cmd))
+			stack;
 
 	/* Poll for completion */
 	while (!finished) {
