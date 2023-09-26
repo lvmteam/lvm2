@@ -6007,7 +6007,7 @@ static void process_listener(int poll_fd)
 		return;
 
 	if (!(cl = alloc_client())) {
-		if (!close(fd))
+		if (close(fd))
 			log_error("failed to close lockd poll fd");
 		return;
 	}
