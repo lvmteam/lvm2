@@ -1954,10 +1954,9 @@ bad:
 static int _stats_set_aux(struct dm_stats *dms,
 			  uint64_t region_id, const char *user_data)
 {
-	const char *group_tag = NULL;
+	char *group_tag = NULL, *group_tag_escaped = NULL;
 	struct dm_task *dmt = NULL;
 	char msg[STATS_MSG_BUF_LEN];
-	char *group_tag_escaped = NULL;
 
 	/* group data required? */
 	if (_stats_group_id_present(dms, region_id)) {
@@ -1970,8 +1969,7 @@ static int _stats_set_aux(struct dm_stats *dms,
 		group_tag_escaped = _stats_escape_aux_data(group_tag);
 		if (!group_tag_escaped)
 			goto bad;
-	} else
-		group_tag_escaped = dm_strdup("");
+	}
 
 	if (dm_snprintf(msg, sizeof(msg), "@stats_set_aux " FMTu64 " %s%s%s ",
 			region_id, (group_tag_escaped) ? group_tag_escaped : "",
@@ -1984,7 +1982,7 @@ static int _stats_set_aux(struct dm_stats *dms,
 	if (!(dmt = _stats_send_message(dms, msg)))
 		goto_bad;
 
-	dm_free((char *) group_tag);
+	dm_free(group_tag);
 	dm_free(group_tag_escaped);
 
 	/* no response to a @stats_set_aux message */
