@@ -202,9 +202,7 @@ prepare_clvmd() {
 }
 
 prepare_dmeventd() {
-	if pgrep dmeventd ; then
-		skip "Cannot test dmeventd with real dmeventd ($(pgrep dmeventd)) running."
-	fi
+	test -n "$RUNNING_DMEVENTD" && skip "Cannot test dmeventd with real dmeventd ($RUNNING_DMEVENTD) running."
 
 	check_daemon_in_builddir dmeventd
 	lvmconf "activation/monitoring = 1"
