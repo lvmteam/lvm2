@@ -21,11 +21,11 @@ SKIP_WITH_LVMPOLLD=1
 aux have_raid 1 9 0 || skip
 aux prepare_devs ${PREPARE_DEVS-3}
 
-SIDFILE="etc/lvm_test.conf"
-LVMLOCAL="etc/lvmlocal.conf"
+eval "$(lvmconfig global/etc)"
 
-DFDIR="$LVM_SYSTEM_DIR/devices"
-DF="$DFDIR/system.devices"
+SIDFILE="$etc/lvm_test.conf"
+LVMLOCAL="$etc/lvmlocal.conf"
+DF="$etc/devices/system.devices"
 
 print_lvmlocal() {
 	{ echo "local {"; printf "%s\n" "$@"; echo "}"; } >"$LVMLOCAL"
@@ -35,9 +35,9 @@ print_lvmlocal() {
 # which gets in the way of the test switching the
 # local system id.
 clear_df_systemid() {
-	if [[ -f $DF ]]; then
+	if [[ -f "$DF" ]]; then
 		sed -e "s|SYSTEMID=.||" "$DF" > tmpdf
-		cp tmpdf $DF
+		cp tmpdf "$DF"
 	fi
 }
 

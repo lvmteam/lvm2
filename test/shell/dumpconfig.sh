@@ -28,10 +28,11 @@ flatten() {
 #  or even better do not initialize
 #  locking for commands like 'dumpconfig'
 #aux lvmconf "global/locking_type=0"
+eval "$(lvmconfig global/etc)"
 
 lvm dumpconfig -f lvmdumpconfig
 flatten < lvmdumpconfig | sort > config.dump
-flatten < etc/lvm.conf | sort > config.input
+flatten < "$etc/lvm.conf" | sort > config.input
 # check that dumpconfig output corresponds to the lvm.conf input
 diff -wu config.input config.dump
 
@@ -42,8 +43,9 @@ lvm dumpconfig -f lvmdumpconfig
 flatten < lvmdumpconfig | grep 'log/indent=1'
 
 aux lvmconf 'tags/@foo {}'
-echo 'log { verbose = 1 }' > etc/lvm_foo.conf
+echo 'log { verbose = 1 }' > "$etc/lvm_foo.conf"
 lvm dumpconfig -f lvmdumpconfig
 flatten < lvmdumpconfig | grep 'log/verbose=1'
 lvm dumpconfig -f lvmdumpconfig
 flatten < lvmdumpconfig | grep 'log/indent=1'
+rm -f "$etc/lvm_foo.conf"

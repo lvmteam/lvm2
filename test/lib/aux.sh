@@ -1088,9 +1088,9 @@ prepare_devs() {
 	done
 
 	if test -n "$LVM_TEST_DEVICES_FILE"; then
-		mkdir -p "$TESTDIR/etc/lvm/devices" || true
-		rm "$TESTDIR/etc/lvm/devices/system.devices" || true
-		touch "$TESTDIR/etc/lvm/devices/system.devices"
+		mkdir -p "$LVM_SYSTEM_DIR/devices" || true
+		rm -f "$LVM_SYSTEM_DIR/devices/system.devices"
+		touch "$LVM_SYSTEM_DIR/devices/system.devices"
 		for d in "${DEVICES[@]}"; do
 			lvmdevices --adddev "$d" || true
 		done
