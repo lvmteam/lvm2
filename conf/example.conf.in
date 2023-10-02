@@ -151,6 +151,26 @@ devices {
 	# This configuration option has an automatic default value.
 	# search_for_devnames = "auto"
 
+	# Configuration option devices/device_ids_refresh.
+	# Find PVs on new devices and update the device IDs in the devices file.
+	# If PVs are restored or moved to a new system with new devices, but
+	# an old system.devices remains with old device IDs, then search for
+	# the PVIDs on new devices and update the device IDs in system.devices.
+	# The original device IDs must also not be found on the new system.
+	# See device_ids_refresh_check for conditions that trigger the refresh.
+	# This configuration option has an automatic default value.
+	# device_ids_refresh = 1
+
+	# Configuration option devices/device_ids_refresh_checks.
+	# Conditions that trigger device_ids_refresh to locate PVIDs on new devices.
+	# product_uuid: refresh if /sys/devices/virtual/dmi/id/product_uuid does not
+	# match the value saved in system.devices.
+	# hostname: refresh if hostname does not match the value saved in system.devices.
+	# (hostname is used if product_uuid is not available.)
+	# Remove values from this list to prevent lvm from using them.
+	# This configuration option has an automatic default value.
+	# device_ids_refresh_checks = [ "product_uuid", "hostname" ]
+
 	# Configuration option devices/filter.
 	# Limit the block devices that are used by LVM commands.
 	# This is a list of regular expressions used to accept or reject block
