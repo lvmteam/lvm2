@@ -1037,29 +1037,25 @@ prepare_devs() {
 	echo -n "## preparing $n devices..."
 
 	local size=$(( devsize * 2048 )) # sectors
-	local count=0
-	rm -f CREATE_FAILED
-	init_udev_transaction
-	for i in $(seq 1 "$n"); do
-		local name="${PREFIX}$pvname$i"
+	local table=()
+	local concise=()
+	for i in $(seq 0 $(( n - 1 )) ); do
+		local name="${PREFIX}$pvname$(( i + 1 ))"
 		local dev="$DM_DEV_DIR/mapper/$name"
-		DEVICES[count]=$dev
-		count=$((  count + 1 ))
+		DEVICES[i]=$dev
 		# If the backing device number can meet the requirement for PV devices,
 		# then allocate a dedicated backing device for PV; otherwise, rollback
 		# to use single backing device for device-mapper.
 		if [ -n "$LVM_TEST_BACKING_DEVICE" ] && [ "$n" -le ${#BACKING_DEVICE_ARRAY[@]} ]; then
-			echo 0 $size linear "${BACKING_DEVICE_ARRAY[$(( count - 1 ))]}" $(( header_shift * 2048 )) > "$name.table"
+			table[i]="0 $size linear "${BACKING_DEVICE_ARRAY[i]}" $(( header_shift * 2048 ))"
 		else
-			echo 0 $size linear "$BACKING_DEV" $(( ( i - 1 ) * size + ( header_shift * 2048 ) )) > "$name.table"
+			table[i]="0 $size linear "$BACKING_DEV" $(( i * size + ( header_shift * 2048 ) ))"
 		fi
-		dmsetup create -u "TEST-$name" "$name" "$name.table" || touch CREATE_FAILED &
-		test -f CREATE_FAILED && break;
+		concise[i]="$name,TEST-$name,,,${table[i]}"
+		echo "${table[i]}" > "$name.table"
 	done
-	wait
-	finish_udev_transaction
 
-	if test -f CREATE_FAILED ; then
+	dmsetup create --concise "$(printf '%s;' "${concise[@]}")" || {
 		if test -z "$LVM_TEST_BACKING_DEVICE"; then
 			echo "failed"
 			return 1
@@ -1068,7 +1064,7 @@ prepare_devs() {
 		rm -f BACKING_DEV CREATE_FAILED
 		prepare_devs "$@"
 		return $?
-	fi
+	}
 
 	if [ -n "$LVM_TEST_BACKING_DEVICE" ]; then
 		for d in "${BACKING_DEVICE_ARRAY[@]}"; do
