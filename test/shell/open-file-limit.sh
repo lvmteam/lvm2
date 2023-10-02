@@ -20,11 +20,7 @@ prlimit -h || skip
 
 aux lvmconf 'devices/pv_min_size = 1024'
 
-aux prepare_devs 200 1
-
-for i in $(seq 1 200); do
-	pvcreate "$DM_DEV_DIR/mapper/${PREFIX}pv$i"
-done
+aux prepare_pvs 200 1
 
 pvs > out
 test "$(grep -c pv out)" -eq 200
