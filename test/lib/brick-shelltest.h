@@ -103,8 +103,8 @@ class Timespec {
     struct timespec ts;
     static const long _NSEC_PER_SEC = 1000000000;
 public:
-    Timespec( time_t sec = 0, long nsec = 0 ) : ts{ sec, nsec } {}
-    Timespec( const struct timeval &tv ) : ts{ tv.tv_sec, tv.tv_usec * 1000 } {}
+    Timespec( time_t _sec = 0, long _nsec = 0 ) { ts = { _sec, _nsec }; }
+    Timespec( const struct timeval &tv ) { ts = { tv.tv_sec, tv.tv_usec * 1000 }; }
     long sec() const { return (long)ts.tv_sec; }
     long nsec() const { return (long)ts.tv_nsec; }
     void gettime() {
@@ -169,8 +169,9 @@ Listing listdir( std::string p, bool recurse = false, std::string prefix = "" )
 {
     Listing r;
 
-    if ( p.back() == '/' )
-        p.pop_back();
+    if ( ( p.size() > 0 ) && ( p[ p.size() - 1 ] == '/' ) )
+        p.resize( p.size() - 1 ); // works with older g++
+
     dir d( p );
 #if !defined(__GLIBC__) || (__GLIBC__ < 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ < 23))
     /* readdir_r is deprecated with newer GLIBC */
@@ -277,8 +278,23 @@ struct Journal {
         Status::iterator writ;
         for ( Status::const_iterator i = status.begin(); i != status.end(); ++i ) {
             writ = written.find( i->first );
-            if ( writ == written.end() || writ->second != i->second )
-                of << i->first << " " << i->second << std::endl;
+            if ( writ == written.end() || writ->second != i->second ) {
+                RUsage::const_iterator ru = rusage.find( i->first );
+                of << size_max << std::left << std::setw( (int)size_max ) << std::setfill( ' ' )
+                   << i->first << " " << std::setw( 12 ) << i->second;
+                if (ru != rusage.end())
+                    of << ru->second;
+                else {
+                    struct tm time_info;
+                    char buf[64];
+                    time_t t = time( 0 );
+                    if (localtime_r(&t, &time_info)) {
+                        strftime(buf, sizeof(buf), "%F %T", &time_info);
+                        of << "--- " << buf << " ---";
+                    }
+                }
+                of << std::endl;
+            }
         }
         written = status;
         of.flush();
@@ -287,16 +303,8 @@ struct Journal {
 
     void write( const std::string &path ) {
         std::ofstream of( path.c_str() );
-        for ( Status::const_iterator i = status.begin(); i != status.end(); ++i ) {
-            if ( i->first.size() > size_max )
-                size_max = i->first.size();
-            RUsage::const_iterator ru = rusage.find( i->first );
-            of << std::left << std::setw( (int)size_max ) << std::setfill( ' ' )
-                << i->first << " " << std::setw( 14 ) << i->second;
-            if (ru != rusage.end())
-                of << ru->second;
-            of << std::endl;
-        }
+        for ( Status::const_iterator i = status.begin(); i != status.end(); ++i )
+            of << i->first << " "  << i->second << std::endl;
         of.flush();
         of.close();
     }
@@ -361,6 +369,8 @@ struct Journal {
     }
 
     void read() { read( location ); }
+
+    void check_name_size( const std::string &n ) { if ( n.size() > size_max ) size_max = n.size(); }
 
     Journal( const std::string &dir );
     ~Journal();
@@ -919,7 +929,7 @@ struct TestCase {
                 return false;
             }
 
-        struct timeval wait = { .tv_usec = 500000 /* timeout 0.5s */ };
+        struct timeval wait = { 0, 500000 /* timeout 0.5s */ };
         fd_set set;
 
         FD_ZERO( &set );
@@ -1152,6 +1162,7 @@ struct Main {
                         continue;
                 }
 
+                journal.check_name_size( options.testdir + *i );
                 cases.push_back( TestCase( journal, options, options.testdir + *i, *i, *flav ) );
                 cases.back().options = options;
             }
