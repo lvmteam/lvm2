@@ -1777,39 +1777,38 @@ static int _setup_devices_list(struct cmd_context *cmd)
 	return 1;
 }
 
+/*
+ * LVs that use dmeventd need to be accessible using system.devices.
+ *
+ * dmeventd will use dmeventd.devices if it exists, otherwise will use
+ * system.devices.  If a VG is covered by dmeventd.devices it should also
+ * be covered by system.devices.  The automated vgchange --monitor and
+ * vgchange -aay commands do not currently consider dmeventd.devices.
+ * dmeventd.devices can be useful to prevent commands run by dmeventd
+ * from reading VGs that do not need the service.
+ *
+ * dmeventd gets events for any applicable dm device in the kernel,
+ * and will attempt to run lvm commands for it.  These commands
+ * will only use dmeventd.devices or system.devices, so if an LV
+ * that dmeventd is watching is not covered by either of these
+ * devices files, the dmeventd-generated command will fail when
+ * it doesn't find the VG.
+ */
+ 
 static int _setup_devices_file_dmeventd(struct cmd_context *cmd)
 {
 	char path[PATH_MAX];
 	struct stat st;
 
-	/*
-	 * When command is run by dmeventd there is no --devicesfile
-	 * option that can enable/disable the use of a devices file.
-	 */
 	if (!find_config_tree_bool(cmd, devices_use_devicesfile_CFG, NULL)) {
 		cmd->enable_devices_file = 0;
 		return 1;
 	}
 
-	/*
-	 * If /etc/lvm/devices/dmeventd.devices exists, then use that.
-	 * The optional dmeventd.devices allows the user to control
-	 * which devices dmeventd will look at and use.
-	 * Otherwise, disable the devices file because dmeventd should
-	 * be able to manage LVs in any VG (i.e. LVs in a non-system
-	 * devices file.)
-	 */
-	if (dm_snprintf(path, sizeof(path), "%s/devices/dmeventd.devices", cmd->system_dir) < 0) {
-		log_warn("Failed to copy devices path");
-		cmd->enable_devices_file = 0;
-		return 1;
-	}
-
-	if (stat(path, &st)) {
-		/* No dmeventd.devices, so do not use a devices file. */
-		cmd->enable_devices_file = 0;
-		return 1;
-	}
+	if (dm_snprintf(path, sizeof(path), "%s/devices/dmeventd.devices", cmd->system_dir) < 0)
+		return_0;
+	if (stat(path, &st))
+		return 0;
 
 	cmd->enable_devices_file = 1;
 	(void) dm_strncpy(cmd->devices_file_path, path, sizeof(cmd->devices_file_path));
@@ -1823,8 +1822,9 @@ int setup_devices_file(struct cmd_context *cmd)
 	struct stat st;
 	int rv;
 
-	if (cmd->run_by_dmeventd)
-		return _setup_devices_file_dmeventd(cmd);
+	/* Use dmeventd.devices if it exists. */
+	if (cmd->run_by_dmeventd && _setup_devices_file_dmeventd(cmd))
+		return 1;
 
 	if (cmd->devicesfile) {
 		/* --devicesfile <filename> or "" has been set which overrides
