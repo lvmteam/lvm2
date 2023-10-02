@@ -153,6 +153,16 @@ public:
     }
 };
 
+int get_fd(std::filebuf& filebuf)
+{
+    class my_filebuf : public std::filebuf {
+    public:
+        int handle() { return _M_file.fd(); }
+    };
+
+    return static_cast<my_filebuf&>(filebuf).handle();
+}
+
 struct dir {
     DIR *d;
     dir( const std::string &p ) {
@@ -298,6 +308,7 @@ struct Journal {
         }
         written = status;
         of.flush();
+        fsync( get_fd( *of.rdbuf() ) );
         of.close();
     }
 
@@ -306,7 +317,8 @@ struct Journal {
         for ( Status::const_iterator i = status.begin(); i != status.end(); ++i )
             of << i->first << " "  << i->second << std::endl;
         of.flush();
-        of.close();
+        fsync( get_fd( *of.rdbuf() ) );
+         of.close();
     }
 
     void sync() {
@@ -898,6 +910,7 @@ struct TestCase {
             std::ofstream hb( options.heartbeat.c_str(), std::fstream::app );
             hb << ".";
             hb.flush();
+            fsync( get_fd( *hb.rdbuf() ) );
             hb.close();
             last_heartbeat.gettime();
         }
