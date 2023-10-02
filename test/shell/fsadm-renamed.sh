@@ -125,7 +125,12 @@ not lvresize -L+10M -r $vg_lv_ren
 
 umount "$mount_dir"
 
-lvresize -y -L+10M -r $vg_lv
+# ATM  fsadm is required instead of '-r' option with reiserfs
+case "$i" in
+*reiserfs) USE_NOT="not" ;;
+*)	   USE_NOT="" ;;
+esac
+$USE_NOT lvresize -y -L+10M -r $vg_lv
 
 aux udev_wait
 
