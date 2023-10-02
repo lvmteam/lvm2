@@ -43,6 +43,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE. */
 
+#include "configure.h"
+
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
@@ -59,10 +61,12 @@
 #include <iomanip>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 #include <cassert>
 #include <iterator>
 #include <algorithm>
 #include <stdexcept>
+#include <ctime>
 
 #include <dirent.h>
 
@@ -80,8 +84,8 @@
 #include <unistd.h>
 #endif
 
-/*  Timeout for the whole test suite in hours */
-static const time_t TEST_SUITE_TIMEOUT = 4;
+static const long TEST_SUITE_TIMEOUT = 4; // Timeout for the whole test suite in hours (4 hours)
+static const long TEST_TIMEOUT = 10 * 60; // Timeout for a single test in seconds (10 minutes)
 
 #ifndef BRICK_SHELLTEST_H
 #define BRICK_SHELLTEST_H
@@ -91,13 +95,67 @@ namespace shelltest {
 
 /* TODO: remove this section in favour of brick-filesystem.h */
 
-inline std::runtime_error syserr( std::string msg, std::string ctx = "" ) {
+std::runtime_error syserr( const std::string &msg, std::string ctx = "" ) {
     return std::runtime_error( std::string( strerror( errno ) ) + " " + msg + " " + ctx );
 }
 
+class Timespec {
+    struct timespec ts;
+    static const long _NSEC_PER_SEC = 1000000000;
+public:
+    Timespec( time_t sec = 0, long nsec = 0 ) : ts{ sec, nsec } {}
+    Timespec( const struct timeval &tv ) : ts{ tv.tv_sec, tv.tv_usec * 1000 } {}
+    long sec() const { return (long)ts.tv_sec; }
+    long nsec() const { return (long)ts.tv_nsec; }
+    void gettime() {
+#ifdef HAVE_REALTIME
+        if ( !clock_gettime( CLOCK_MONOTONIC, &ts ) )
+            return;
+#endif
+        ts.tv_sec = time(0);
+        ts.tv_nsec = 0;
+    }
+    bool is_zero() const { return !ts.tv_sec && !ts.tv_nsec; }
+    Timespec elapsed() const {
+        Timespec now;
+        now.gettime();
+        now = now - *this;
+        return now;
+    }
+    Timespec operator+( const Timespec& t ) const {
+        Timespec r(ts.tv_sec + t.ts.tv_sec, ts.tv_nsec + t.ts.tv_nsec);
+        if (r.ts.tv_nsec >= _NSEC_PER_SEC) {
+            r.ts.tv_nsec -= _NSEC_PER_SEC;
+            ++r.ts.tv_sec;
+        }
+        return r;
+    }
+    Timespec operator-( const Timespec& t ) const {
+        Timespec r(ts.tv_sec - t.ts.tv_sec, ts.tv_nsec - t.ts.tv_nsec);
+        if (r.ts.tv_nsec < 0) {
+            r.ts.tv_nsec += _NSEC_PER_SEC;
+            r.ts.tv_sec--;
+        }
+        return r;
+    }
+    friend bool operator==( const Timespec& a, const Timespec& b ) {
+        return ( a.ts.tv_sec == b.ts.tv_sec ) && ( a.ts.tv_nsec == b.ts.tv_nsec );
+    }
+    friend bool operator>=( const Timespec& a, const Timespec& b ) {
+        return ( a.ts.tv_sec > b.ts.tv_sec ) ||
+            ( ( a.ts.tv_sec == b.ts.tv_sec ) && ( a.ts.tv_nsec >= b.ts.tv_nsec ) );
+    }
+    friend std::ostream& operator<<(std::ostream& os, const Timespec& t) {
+        os << std::right << std::setw( 2 ) << std::setfill( ' ' ) << t.ts.tv_sec / 60 << ":"
+            << std::setw( 2 ) << std::setfill( '0' ) << t.ts.tv_sec % 60 << "."
+            << std::setw( 3 ) << t.ts.tv_nsec / 1000000; // use miliseconds ATM
+        return os;
+    }
+};
+
 struct dir {
     DIR *d;
-    dir( std::string p ) {
+    dir( const std::string &p ) {
         d = opendir( p.c_str() );
         if ( !d )
             throw syserr( "error opening directory", p );
@@ -107,19 +165,12 @@ struct dir {
 
 typedef std::vector< std::string > Listing;
 
-inline void fsync_name( std::string n )
-{
-    int fd = open( n.c_str(), O_WRONLY );
-    if ( fd >= 0 ) {
-        (void) fsync( fd );
-        (void) close( fd );
-    }
-}
-
-inline Listing listdir( std::string p, bool recurse = false, std::string prefix = "" )
+Listing listdir( std::string p, bool recurse = false, std::string prefix = "" )
 {
     Listing r;
 
+    if ( p.back() == '/' )
+        p.pop_back();
     dir d( p );
 #if !defined(__GLIBC__) || (__GLIBC__ < 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ < 23))
     /* readdir_r is deprecated with newer GLIBC */
@@ -176,32 +227,34 @@ struct Journal {
     };
 
     friend std::ostream &operator<<( std::ostream &o, R r ) {
+        const char *t;
         switch ( r ) {
-            case STARTED: return o << "started";
-            case RETRIED: return o << "retried";
-            case FAILED: return o << "failed";
-            case INTERRUPTED: return o << "interrupted";
-            case PASSED: return o << "passed";
-            case SKIPPED: return o << "skipped";
-            case TIMEOUT: return o << "timeout";
-            case WARNED: return o << "warnings";
-            default: return o << "unknown";
+            case STARTED: t = "started"; break;
+            case RETRIED: t = "retried"; break;
+            case FAILED: t = "failed"; break;
+            case INTERRUPTED: t = "interrupted"; break;
+            case PASSED: t = "passed"; break;
+            case SKIPPED: t = "skipped"; break;
+            case TIMEOUT: t = "timeout"; break;
+            case WARNED: t = "warnings"; break;
+            default: t = "unknown";
         }
+        return o << t;
     }
 
     friend std::istream &operator>>( std::istream &i, R &r ) {
         std::string x;
         i >> x;
 
-        r = UNKNOWN;
         if ( x == "started" ) r = STARTED;
-        if ( x == "retried" ) r = RETRIED;
-        if ( x == "failed" ) r = FAILED;
-        if ( x == "interrupted" ) r = INTERRUPTED;
-        if ( x == "passed" ) r = PASSED;
-        if ( x == "skipped" ) r = SKIPPED;
-        if ( x == "timeout" ) r = TIMEOUT;
-        if ( x == "warnings" ) r = WARNED;
+        else if ( x == "retried" ) r = RETRIED;
+        else if ( x == "failed" ) r = FAILED;
+        else if ( x == "interrupted" ) r = INTERRUPTED;
+        else if ( x == "passed" ) r = PASSED;
+        else if ( x == "skipped" ) r = SKIPPED;
+        else if ( x == "timeout" ) r = TIMEOUT;
+        else if ( x == "warnings" ) r = WARNED;
+        else r = UNKNOWN;
         return i;
     }
 
@@ -212,37 +265,48 @@ struct Journal {
 
     typedef std::map< std::string, R > Status;
     Status status, written;
+    typedef std::map< std::string, std::string > RUsage;
+    RUsage rusage;
 
     std::string location, list;
     int timeouts;
+    size_t size_max;
 
-    void append( std::string path ) {
+    void append( const std::string &path ) {
         std::ofstream of( path.c_str(), std::fstream::app );
         Status::iterator writ;
-        for ( Status::iterator i = status.begin(); i != status.end(); ++i ) {
+        for ( Status::const_iterator i = status.begin(); i != status.end(); ++i ) {
             writ = written.find( i->first );
             if ( writ == written.end() || writ->second != i->second )
                 of << i->first << " " << i->second << std::endl;
         }
         written = status;
+        of.flush();
         of.close();
     }
 
-    void write( std::string path ) {
+    void write( const std::string &path ) {
         std::ofstream of( path.c_str() );
-        for ( Status::iterator i = status.begin(); i != status.end(); ++i )
-            of << i->first << " " << i->second << std::endl;
+        for ( Status::const_iterator i = status.begin(); i != status.end(); ++i ) {
+            if ( i->first.size() > size_max )
+                size_max = i->first.size();
+            RUsage::const_iterator ru = rusage.find( i->first );
+            of << std::left << std::setw( (int)size_max ) << std::setfill( ' ' )
+                << i->first << " " << std::setw( 14 ) << i->second;
+            if (ru != rusage.end())
+                of << ru->second;
+            of << std::endl;
+        }
+        of.flush();
         of.close();
     }
 
     void sync() {
         append( location );
-        fsync_name( location );
         write ( list );
-        fsync_name( list );
     }
 
-    void started( std::string n ) {
+    void started( const std::string &n ) {
         if ( status.count( n ) && status[ n ] == STARTED )
             status[ n ] = RETRIED;
         else
@@ -250,8 +314,9 @@ struct Journal {
         sync();
     }
 
-    void done( std::string n, R r ) {
+    void done( const std::string &n, R r, const std::string &ru ) {
         status[ n ] = r;
+        rusage[ n ] = ru;
         if ( r == TIMEOUT )
             ++ timeouts;
         else
@@ -259,35 +324,36 @@ struct Journal {
         sync();
     }
 
-    bool done( std::string n ) {
+    bool done( const std::string &n ) {
         if ( !status.count( n ) )
             return false;
         return status[ n ] != STARTED && status[ n ] != INTERRUPTED;
     }
 
-    int count( R r ) {
-        int c = 0;
-        for ( Status::iterator i = status.begin(); i != status.end(); ++i )
+    unsigned count( R r ) const {
+        unsigned c = 0;
+        for ( Status::const_iterator i = status.begin(); i != status.end(); ++i )
             if ( i->second == r )
                 ++ c;
         return c;
     }
 
-    void banner() {
+    void banner( const Timespec &start ) const {
         std::cout << std::endl << "### " << status.size() << " tests: "
                   << count( PASSED ) << " passed, "
                   << count( SKIPPED ) << " skipped, "
                   << count( TIMEOUT ) << " timed out, " << count( WARNED ) << " warned, "
-                  << count( FAILED ) << " failed" << std::endl;
+                  << count( FAILED ) << " failed   in "
+                  << start.elapsed() << std::endl;
     }
 
-    void details() {
-        for ( Status::iterator i = status.begin(); i != status.end(); ++i )
+    void details() const {
+        for ( Status::const_iterator i = status.begin(); i != status.end(); ++i )
             if ( i->second != PASSED )
                 std::cout << i->second << ": " << i->first << std::endl;
     }
 
-    void read( std::string n ) {
+    void read( const std::string &n ) {
         std::ifstream ifs( n.c_str() );
         typedef std::istream_iterator< std::pair< std::string, R > > It;
         for ( It i( ifs ); i != It(); ++i )
@@ -296,15 +362,23 @@ struct Journal {
 
     void read() { read( location ); }
 
-    Journal( std::string dir )
-        : location( dir + "/journal" ),
-          list( dir + "/list" ),
-          timeouts( 0 )
-    {}
+    Journal( const std::string &dir );
+    ~Journal();
 };
 
+Journal::Journal( const std::string &dir ) :
+    location( dir + "/journal" ),
+    list( dir + "/list" ),
+    timeouts( 0 ), size_max( 0 )
+{
+}
+
+Journal::~Journal()
+{
+}
+
 struct TimedBuffer {
-    typedef std::pair< time_t, std::string > Line;
+    typedef std::pair< Timespec, std::string > Line;
 
     std::deque< Line > data;
     Line incomplete;
@@ -321,16 +395,18 @@ struct TimedBuffer {
         return result;
     }
 
-    void push( std::string buf ) {
-        time_t now = stamp ? time( 0 ) : 0;
-        std::string::iterator b = buf.begin(), e = buf.begin();
+    void push( const std::string &buf ) {
+        Timespec now;
+        if ( stamp )
+            now.gettime();
+        std::string::const_iterator b = buf.begin(), e = buf.begin();
 
         while ( e != buf.end() )
         {
             e = std::find( b, buf.end(), '\n' );
             incomplete.second += std::string( b, e );
 
-            if ( !incomplete.first )
+            if ( incomplete.first.is_zero() )
                 incomplete.first = now;
 
             if ( e != buf.end() ) {
@@ -345,7 +421,7 @@ struct TimedBuffer {
                     } else if (incomplete.second.find("# teardown", 1) != std::string::npos ||
                                incomplete.second.find("# timing on", 1) != std::string::npos) {
                         stamp = true;
-                        now = time( 0 );
+                        now.gettime();
                     }
                 }
                 incomplete = std::make_pair( now, "" );
@@ -365,7 +441,7 @@ struct TimedBuffer {
 
 struct Sink {
     virtual void outline( bool ) {}
-    virtual void push( std::string x ) = 0;
+    virtual void push( const std::string &x ) = 0;
     virtual void sync( bool ) {}
     virtual ~Sink() {}
 };
@@ -381,28 +457,27 @@ struct Substitute {
 };
 
 struct Format {
-    time_t start;
+    Timespec start;
     Substitute subst;
 
     std::string format( TimedBuffer::Line l ) {
         std::stringstream result;
         if ( l.first >= start ) {
-            time_t rel = l.first - start;
-            result << "[" << std::setw( 2 ) << std::setfill( ' ' ) << rel / 60
-                   << ":" << std::setw( 2 ) << std::setfill( '0' ) << rel % 60 << "] ";
+            Timespec rel = l.first - start;
+            result << "[" << rel << "] ";
         }
         result << subst.map( l.second );
         return result.str();
     }
 
-    Format() : start( time( 0 ) ) {}
+    Format() { start.gettime(); }
 };
 
 struct BufSink : Sink {
     TimedBuffer data;
     Format fmt;
 
-    virtual void push( std::string x ) {
+    virtual void push( const std::string &x ) {
         data.push( x );
     }
 
@@ -435,17 +510,22 @@ struct FdSink : Sink {
             outline( force );
     }
 
-    virtual void push( std::string x ) {
+    virtual void push( const std::string &x ) {
         if ( !killed )
             stream.push( x );
     }
 
     FdSink( int _fd ) : fd( _fd ), killed( false ) {}
+    ~FdSink();
 };
+
+FdSink::~FdSink()
+{ // no inline
+}
 
 struct FileSink : FdSink {
     std::string file;
-    FileSink( std::string n ) : FdSink( -1 ), file( n ) {}
+    FileSink( const std::string &n ) : FdSink( -1 ), file( n ) {}
 
     void sync( bool force ) {
         if ( fd < 0 && !killed ) {
@@ -522,7 +602,7 @@ struct Source {
 
 struct FileSource : Source {
     std::string file;
-    FileSource( std::string n ) : Source( -1 ), file( n ) {}
+    FileSource( const std::string &n ) : Source( -1 ), file( n ) {}
 
     int fd_set_( ::fd_set * ) { return -1; } /* reading a file is always non-blocking */
     void sync( Sink *s ) {
@@ -606,7 +686,7 @@ struct Observer : Sink {
     bool warnings;
     Observer() : warnings( false ) {}
 
-    void push( std::string s ) {
+    void push( const std::string &s ) {
         stream.push( s );
     }
 
@@ -628,7 +708,7 @@ struct IO : Sink {
 
     Observer *_observer;
 
-    virtual void push( std::string x ) {
+    virtual void push( const std::string &x ) {
         for ( Sinks::iterator i = sinks.begin(); i != sinks.end(); ++i )
             (*i)->push( x );
     }
@@ -697,10 +777,31 @@ struct Options {
     std::vector< std::string > flavours, filter, skip, watch;
     std::string flavour_envvar;
     int timeout;
-    Options() : verbose( false ), batch( false ), interactive( false ),
-                cont( false ), fatal_timeouts( false ), kmsg( true ),
-                timeout( 180 ) {}
+    Options();
+    Options(const Options &o); // copy
+    ~Options();
 };
+
+Options::Options() :
+    verbose( false ), batch( false ), interactive( false ),
+    cont( false ), fatal_timeouts( false ), kmsg( true ),
+    timeout( TEST_TIMEOUT )
+{ // no inline
+}
+
+Options::Options(const Options &o) :
+    verbose( o.verbose ), batch( o.batch ), interactive( o.interactive ),
+    cont( o.cont ), fatal_timeouts( o.fatal_timeouts ), kmsg( o.kmsg ),
+    testdir( o.testdir ), outdir( o.outdir ), workdir( o.workdir ), heartbeat( o.heartbeat ),
+    flavours( o.flavours ), filter( o.filter ), skip( o.skip ), watch( o.watch ),
+    flavour_envvar( o.flavour_envvar ),
+    timeout( o.timeout )
+{ // no inline
+}
+
+Options::~Options()
+{ // no inline
+}
 
 struct TestProcess
 {
@@ -729,9 +830,10 @@ struct TestProcess
         _exit( 202 );
     }
 
-    TestProcess( std::string file )
-        : filename( file ), interactive( false ), fd( -1 )
-    {}
+    TestProcess( std::string file ) :
+        filename( file ), interactive( false ), fd( -1 )
+    {
+    }
 };
 
 struct TestCase {
@@ -745,7 +847,7 @@ struct TestCase {
     bool timeout;
     pid_t pid;
 
-    time_t start, end, silent_start, last_update, last_heartbeat;
+    Timespec start, silent_start, last_update, last_heartbeat;
     Options options;
 
     Journal *journal;
@@ -781,15 +883,13 @@ struct TestCase {
     }
 
     bool monitor() {
-        end = time( 0 );
-
         /* heartbeat */
-        if ( end - last_heartbeat >= 20 && !options.heartbeat.empty() ) {
+        if ( last_heartbeat.elapsed().sec() >= 20 && !options.heartbeat.empty() ) {
             std::ofstream hb( options.heartbeat.c_str(), std::fstream::app );
             hb << ".";
+            hb.flush();
             hb.close();
-            fsync_name( options.heartbeat );
-            last_heartbeat = end;
+            last_heartbeat.gettime();
         }
 
         if ( wait4(pid, &status, WNOHANG, &usage) != 0 ) {
@@ -799,11 +899,18 @@ struct TestCase {
 
         /* kill off tests after a timeout silence */
         if ( !options.interactive )
-            if ( end - silent_start > options.timeout ) {
-                kill( pid, SIGINT );
-                sleep( 5 ); /* wait a bit for a reaction */
-                if ( waitpid( pid, &status, WNOHANG ) == 0 ) {
-                    system( "echo t > /proc/sysrq-trigger 2> /dev/null" );
+            if ( silent_start.elapsed().sec() > options.timeout ) {
+                pid_t p;
+                for ( int i = 0; i < 5; ++i ) {
+                    kill( pid, (i > 2) ? SIGTERM : SIGINT );
+                    if ( (p = waitpid( pid, &status, WNOHANG ) ) != 0 )
+                        break;
+                    sleep( 1 ); /* wait a bit for a reaction */
+                }
+                if ( !p ) {
+                    std::ofstream tr( "/proc/sysrq-trigger" );
+                    tr << "t";
+                    tr.close();
                     kill( -pid, SIGKILL );
                     (void) waitpid( pid, &status, 0 );
                 }
@@ -812,55 +919,44 @@ struct TestCase {
                 return false;
             }
 
-        struct timeval wait;
+        struct timeval wait = { .tv_usec = 500000 /* timeout 0.5s */ };
         fd_set set;
 
         FD_ZERO( &set );
         int nfds = io.fd_set_( &set );
-        wait.tv_sec = 0;
-        wait.tv_usec = 500000; /* timeout 0.5s */
 
         if ( !options.verbose && !options.interactive && !options.batch ) {
-            if ( end - last_update >= 1 ) {
-                progress( Update ) << tag( "running" ) << pretty() << " "
-                                   << end - start << std::flush;
-                last_update = end;
+            if ( last_update.elapsed().sec() >= 1 ) {
+                progress( Update ) << tag( "running" )
+                    << pretty() << " " << start.elapsed() << std::flush;
+                last_update.gettime();
             }
         }
         if ( select( nfds, &set, NULL, NULL, &wait ) > 0 ) {
-            silent_start = end; /* something happened */
             io.sync( false );
+            silent_start.gettime(); /* something happened */
         }
 
         return true;
     }
 
-    std::string timefmt( time_t t ) {
-        std::stringstream ss;
-        ss << t / 60 << ":" << std::setw( 2 ) << std::setfill( '0' ) << t % 60;
-        return ss.str();
-    }
-
     std::string rusage()
     {
         std::stringstream ss;
-        time_t wall = end - start, user = usage.ru_utime.tv_sec,
-             system = usage.ru_stime.tv_sec;
-        size_t rss = usage.ru_maxrss / 1024,
-               inb = usage.ru_inblock / 100,
-              outb = usage.ru_oublock / 100;
+        Timespec wall(start.elapsed()), user(usage.ru_utime), system(usage.ru_stime);
+        size_t rss = (usage.ru_maxrss + 512) / 1024,
+            inb = (usage.ru_inblock + 1024) / 2048,  // to MiB
+            outb = (usage.ru_oublock + 1024) / 2048; // to MiB
 
-        size_t inb_10 = inb % 10, outb_10 = outb % 10;
-        inb /= 10; outb /= 10;
+        ss << wall << " wall " << user << " user " << system << " sys "
+            << std::setw( 4 ) << std::setfill( ' ' ) << rss << " M RSS | IOPS: "
+            << std::setw( 5 ) << inb << " M in "
+            << std::setw( 5 ) << outb << " M out";
 
-        ss << timefmt( wall ) << " wall " << timefmt( user ) << " user "
-           << timefmt( system ) << " sys   " << std::setw( 3 ) << rss << "M RSS | "
-           << "IOPS: " << std::setw( 5 ) << inb << "." << inb_10 << "K in "
-           << std::setw( 5 ) << outb << "." << outb_10 << "K out";
         return ss.str();
     }
 
-    std::string tag( std::string n ) {
+    std::string tag( const std::string &n ) {
         if ( options.batch )
             return "## ";
         size_t pad = n.length();
@@ -902,7 +998,8 @@ struct TestCase {
         setupIO();
 
         journal->started( id() );
-        silent_start = start = time( 0 );
+        start.gettime();
+        silent_start = start;
 
         progress( First ) << tag( "running" ) << pretty() << std::flush;
         if ( options.verbose || options.interactive )
@@ -935,14 +1032,15 @@ struct TestCase {
         if ( iobuf && ( r == Journal::FAILED || r == Journal::TIMEOUT ) )
             iobuf->dump( std::cout );
 
-        journal->done( id(), r );
+        std::string ru = rusage();
+        journal->done( id(), r, ru );
 
         if ( options.batch ) {
             int spaces = std::max( 64 - int(pretty().length()), 0 );
             progress( Last ) << " " << std::string( spaces, '.' ) << " "
                 << std::left << std::setw( 9 ) << std::setfill( ' ' ) << r;
             if ( r != Journal::SKIPPED )
-                progress( First ) << "   " << rusage();
+                progress( First ) << "   " << ru;
             progress( Last ) << std::endl;
         } else
             progress( Last ) << tag( r ) << pretty() << std::endl;
@@ -958,7 +1056,9 @@ struct TestCase {
             exit(201);
         } else if (pid == 0) {
             io.close();
-            (void) chdir( options.workdir.c_str() );
+            if ( chdir( options.workdir.c_str() ) )
+                perror( "chdir failed." );
+
             if ( !options.flavour_envvar.empty() )
                 (void) setenv( options.flavour_envvar.c_str(), flavour.c_str(), 1 );
             child.exec();
@@ -986,18 +1086,24 @@ struct TestCase {
             io.sources.push_back( new KMsg );
     }
 
-    TestCase( Journal &j, Options opt, std::string path, std::string _name, std::string _flavour )
-        : child( path ), name( _name ), flavour( _flavour ),
-          iobuf( NULL ), usage( (struct rusage) { { 0 } } ), status( 0 ), timeout( false ),
-          pid( 0 ), start( 0 ), end( 0 ), silent_start( 0 ),
-          last_update( 0 ), last_heartbeat( 0 ), options( opt ), journal( &j )
-    {
-    }
+    TestCase( Journal &j, const Options &opt, const std::string &path, const std::string &_name, const std::string &_flavour );
+    ~TestCase();
 };
+
+TestCase::TestCase( Journal &j, const Options &opt, const std::string &path, const std::string &_name, const std::string &_flavour ) :
+    child( path ), name( _name ), flavour( _flavour ),
+    iobuf( NULL ), usage( ( struct rusage ) { { 0 } } ), status( 0 ), timeout( false ),
+    pid( 0 ), options( opt ), journal( &j )
+{ // no inline
+}
+
+TestCase::~TestCase()
+{ // no inline
+}
 
 struct Main {
     bool die;
-    time_t start;
+    Timespec start;
 
     typedef std::vector< TestCase > Cases;
     typedef std::vector< std::string > Flavours;
@@ -1059,7 +1165,7 @@ struct Main {
 
     int run() {
         setup();
-        start = time( 0 );
+
         std::cerr << "running " << cases.size() << " tests" << std::endl;
 
         for ( Cases::iterator i = cases.begin(); i != cases.end(); ++i ) {
@@ -1077,7 +1183,7 @@ struct Main {
                 die = 1;
             }
 
-            if ( time(0) - start > (TEST_SUITE_TIMEOUT * 3600) ) {
+            if ( start.elapsed().sec() > ( TEST_SUITE_TIMEOUT * 3600 ) ) {
                 std::cerr << TEST_SUITE_TIMEOUT << " hours passed, giving up..." << std::endl;
                 die = 1;
             }
@@ -1086,15 +1192,26 @@ struct Main {
                 break;
         }
 
-        journal.banner();
+        journal.banner( start );
         if ( die || fatal_signal )
             return 1;
 
         return journal.count( Journal::FAILED ) || journal.count( Journal::TIMEOUT ) ? 1 : 0;
     }
 
-    Main( Options o ) : die( false ), start( 0 ), journal( o.outdir ), options( o ) {}
+    Main( const Options &o );
+    ~Main();
 };
+
+Main::Main( const Options &o ) :
+    die( false ), journal( o.outdir ), options( o )
+{
+    start.gettime();
+}
+
+Main::~Main()
+{ // no inline
+}
 
 namespace {
 
