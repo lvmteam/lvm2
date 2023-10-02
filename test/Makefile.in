@@ -264,7 +264,7 @@ lib/should lib/invalid lib/fail: lib/not
 
 lib/runner: lib/runner.o .lib-dir-stamp
 	$(SHOW) "    [LD] $@"
-	$(Q) $(CXX) $(CXXFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $<
+	$(Q) $(CXX) $(CXXFLAGS) $(LDFLAGS) $(RT_LIBS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $<
 
 lib/securetest: lib/dmsecuretest.o .lib-dir-stamp
 	$(SHOW) "    [LD] $@"
