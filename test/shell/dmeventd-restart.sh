@@ -67,7 +67,11 @@ rm -f debug.log*
 dmeventd -R -f -e "$PWD/test_nologin" -ldddd > debug.log_DMEVENTD_$RANDOM 2>&1 &
 echo $! >LOCAL_DMEVENTD
 
-pgrep -o dmeventd
+for i in $(seq 1 10); do
+  test "$(pgrep -o dmeventd)" = "$(< LOCAL_DMEVENTD)" && break
+  sleep .1
+done
+
 kill -INT "$(< LOCAL_DMEVENTD)"
 sleep 1
 
