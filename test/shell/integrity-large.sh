@@ -146,7 +146,7 @@ lvremove $vg/$lv1
 
 # As the test doesn't wait for full resync
 # delay legs so not all data need to be written.
-aux delay_dev "$dev1" 1000 0 "$(( $(get first_extent_sector "$dev1") + 16000 )):1200000"
+aux delay_dev "$dev1" 400 0 "$(( $(get first_extent_sector "$dev1") + 16000 )):1200000"
 aux delay_dev "$dev2" 0 10 "$(( $(get first_extent_sector "$dev2") + 16000 )):1200000"
 
 
