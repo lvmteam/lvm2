@@ -16,6 +16,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+test "${LVM_VALGRIND:-0}" -eq 0 || skip # too slow test for valgrind
 get_image_pvs() {
 	local d
 	local images=()

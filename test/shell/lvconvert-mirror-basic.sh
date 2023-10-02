@@ -14,6 +14,7 @@
 
 . lib/inittest
 
+test "${LVM_VALGRIND:-0}" -eq 0 || skip # too slow test for valgrind
 aux lvmconf "global/support_mirrored_mirror_log=1"
 
 log_name_to_count() {
