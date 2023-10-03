@@ -289,7 +289,7 @@ struct Journal {
             writ = written.find( i->first );
             if ( writ == written.end() || writ->second != i->second ) {
                 RUsage::const_iterator ru = rusage.find( i->first );
-                of << size_max << std::left << std::setw( (int)size_max ) << std::setfill( ' ' )
+                of << std::left << std::setw( (int)size_max ) << std::setfill( ' ' )
                    << i->first << " " << std::setw( 12 ) << i->second;
                 if (ru != rusage.end())
                     of << ru->second;
@@ -314,8 +314,8 @@ struct Journal {
         std::ofstream of( path.c_str() );
         for ( Status::const_iterator i = status.begin(); i != status.end(); ++i )
             of << i->first << " "  << i->second << std::endl;
-         of.flush();
-         of.close();
+        of.flush();
+        of.close();
     }
 
     void sync() {
@@ -375,13 +375,17 @@ struct Journal {
     void read( const std::string &n ) {
         std::ifstream ifs( n.c_str() );
         typedef std::istream_iterator< std::pair< std::string, R > > It;
-        for ( It i( ifs ); i != It(); ++i )
+        for ( std::string line; std::getline( ifs, line ); ) {
+            std::istringstream iss( line );
+            It i( iss );
             status[ i->first ] = i->second;
+        }
     }
 
     void read() { read( location ); }
 
     void check_name_size( const std::string &n ) { if ( n.size() > size_max ) size_max = n.size(); }
+    size_t name_size_max() const { return size_max; }
 
     Journal( const std::string &dir );
     ~Journal();
@@ -851,7 +855,7 @@ struct TestProcess
         _exit( 202 );
     }
 
-    TestProcess( std::string file ) :
+    TestProcess( const std::string &file ) :
         filename( file ), interactive( false ), fd( -1 )
     {
     }
@@ -948,7 +952,7 @@ struct TestCase {
         int nfds = io.fd_set_( &set );
 
         if ( !options.verbose && !options.interactive && !options.batch ) {
-            if ( last_update.elapsed().sec() >= 1 ) {
+            if ( last_update.elapsed().sec() ) {
                 progress( Update ) << tag( "running" )
                     << pretty() << " " << start.elapsed() << std::flush;
                 last_update.gettime();
@@ -1058,7 +1062,8 @@ struct TestCase {
         journal->done( id(), r, ru );
 
         if ( options.batch ) {
-            int spaces = std::max( 64 - int(pretty().length()), 0 );
+            int spaces = std::max( int(journal->name_size_max()) - int(pretty().length()), 0 );
+
             progress( Last ) << " " << std::string( spaces, '.' ) << " "
                 << std::left << std::setw( 9 ) << std::setfill( ' ' ) << r;
             if ( r != Journal::SKIPPED )
