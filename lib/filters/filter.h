@@ -28,7 +28,7 @@ struct dev_filter *fwraid_filter_create(struct dev_types *dt);
 struct dev_filter *mpath_filter_create(struct dev_types *dt);
 struct dev_filter *partitioned_filter_create(struct dev_types *dt);
 struct dev_filter *persistent_filter_create(struct dev_types *dt, struct dev_filter *f);
-struct dev_filter *sysfs_filter_create(void);
+struct dev_filter *sysfs_filter_create(const char *sysfs_dir);
 struct dev_filter *signature_filter_create(struct dev_types *dt);
 struct dev_filter *deviceid_filter_create(struct cmd_context *cmd);
 
