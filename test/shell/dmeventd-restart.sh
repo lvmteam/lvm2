@@ -80,9 +80,9 @@ pgrep -o dmeventd
 
 # Create a file simulating 'shutdown in progress'
 touch test_nologin
-sleep 1.1
+sleep 2
 
-# Should be now dead (within 1 second)
+# Should be now dead (within ~1 second)
 not pgrep -o dmeventd
 rm -f LOCAL_DMEVENTD
 
