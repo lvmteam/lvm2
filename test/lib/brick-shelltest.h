@@ -103,8 +103,8 @@ class Timespec {
     struct timespec ts;
     static const long _NSEC_PER_SEC = 1000000000;
 public:
-    Timespec( time_t _sec = 0, long _nsec = 0 ) { ts = { _sec, _nsec }; }
-    Timespec( const struct timeval &tv ) { ts = { tv.tv_sec, tv.tv_usec * 1000 }; }
+    Timespec( time_t _sec = 0, long _nsec = 0 ) { ts = (struct timespec) { _sec, _nsec }; }
+    Timespec( const struct timeval &tv ) { ts = (struct timespec) { tv.tv_sec, tv.tv_usec * 1000 }; }
     long sec() const { return (long)ts.tv_sec; }
     long nsec() const { return (long)ts.tv_nsec; }
     void gettime() {
@@ -941,7 +941,7 @@ struct TestCase {
                 return false;
             }
 
-        struct timeval wait = { 0, 500000 /* timeout 0.5s */ };
+        struct timeval wait = (struct timeval) { 0, 500000 /* timeout 0.5s */ };
         fd_set set;
 
         FD_ZERO( &set );
