@@ -153,14 +153,13 @@ public:
     }
 };
 
-int get_fd(std::filebuf& filebuf)
+static void _fsync_name( std::string n )
 {
-    class my_filebuf : public std::filebuf {
-    public:
-        int handle() { return _M_file.fd(); }
-    };
-
-    return static_cast<my_filebuf&>(filebuf).handle();
+    int fd = open( n.c_str(), O_WRONLY );
+    if ( fd >= 0 ) {
+        (void) fsync( fd );
+        (void) close( fd );
+    }
 }
 
 struct dir {
@@ -308,7 +307,6 @@ struct Journal {
         }
         written = status;
         of.flush();
-        fsync( get_fd( *of.rdbuf() ) );
         of.close();
     }
 
@@ -316,14 +314,15 @@ struct Journal {
         std::ofstream of( path.c_str() );
         for ( Status::const_iterator i = status.begin(); i != status.end(); ++i )
             of << i->first << " "  << i->second << std::endl;
-        of.flush();
-        fsync( get_fd( *of.rdbuf() ) );
+         of.flush();
          of.close();
     }
 
     void sync() {
         append( location );
+        _fsync_name( location );
         write ( list );
+        _fsync_name( list );
     }
 
     void started( const std::string &n ) {
@@ -910,8 +909,8 @@ struct TestCase {
             std::ofstream hb( options.heartbeat.c_str(), std::fstream::app );
             hb << ".";
             hb.flush();
-            fsync( get_fd( *hb.rdbuf() ) );
             hb.close();
+            _fsync_name( options.heartbeat );
             last_heartbeat.gettime();
         }
 
