@@ -77,8 +77,8 @@ echo "$i"
 # Adding couple udev wait ops as some older systemd
 # might get confused and was 'randomly/racy' umounting
 # devices  just mounted.
-# 
-# See for explanation: 
+#
+# See for explanation:
 #   https://github.com/systemd/systemd/commit/628c89cc68ab96fce2de7ebba5933725d147aecc
 #   https://github.com/systemd/systemd/pull/2017
 aux udev_wait
@@ -125,11 +125,19 @@ not lvresize -L+10M -r $vg_lv_ren
 
 umount "$mount_dir"
 
-# ATM  fsadm is required instead of '-r' option with reiserfs
+
+USE_NOT=
+# TODO: this is somewhat suprising for users
+# Detect if the 'lvresize' was compiled with HAVE_BLKID_SUBLKS_FSINFO
+# In such case --fs checksize is a supported parameter
+# otherwise command automatically fallbacks to fsadm and resize reiserfs
+not lvresize --fs checksize -L+1 $vg/XXX 2>err
+if not grep "Unknown --fs value" err ; then
 case "$i" in
+# ATM  fsadm is required instead of '-r' option with reiserfs
 *reiserfs) USE_NOT="not" ;;
-*)	   USE_NOT="" ;;
 esac
+fi
 $USE_NOT lvresize -y -L+10M -r $vg_lv
 
 aux udev_wait
