@@ -285,7 +285,7 @@ prepare_test_vars() {
 
 	if test -n "$LVM_TEST_DEVICE_LIST"; then
 		local count=0
-		while read path; do
+		while read -r path; do
 			count=$((  count + 1 ))
 			eval "dev$count=\"$path\""
 		done < "$LVM_TEST_DEVICE_LIST"
