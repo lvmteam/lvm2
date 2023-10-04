@@ -22,7 +22,10 @@ MOUNT_DIR=mnt
 cleanup_mounted_and_teardown()
 {
 	umount "$MOUNT_DIR" || true
-	dmsetup remove $THIN
+	dmsetup remove $THIN || {
+		sleep 1 # retry once more after sleep (udev race)
+		dmsetup remove $THIN
+	}
 	vgremove -ff $vg
 	aux teardown
 }
