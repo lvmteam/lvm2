@@ -1229,7 +1229,7 @@ static struct dev_filter *_init_filter_chain(struct cmd_context *cmd)
 	 * (currently not used for devs match to device id using syfs)
 	 */
 	if (find_config_tree_bool(cmd, devices_sysfs_scan_CFG, NULL)) {
-		if ((filters[nr_filt] = sysfs_filter_create(cmd->device_id_sysfs_dir ?: dm_sysfs_dir())))
+		if ((filters[nr_filt] = sysfs_filter_create(dm_sysfs_dir())))
 			nr_filt++;
 	}
 
