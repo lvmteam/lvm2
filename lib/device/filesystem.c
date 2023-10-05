@@ -50,8 +50,10 @@ static int _get_crypt_path(dev_t lv_devt, char *lv_path, char *crypt_path)
 	int ret = 0;
 
 	if (dm_snprintf(holders_path, sizeof(holders_path), "%sdev/block/%d:%d/holders",
-			dm_sysfs_dir(), (int)MAJOR(lv_devt), (int)MINOR(lv_devt)) < 0)
-		return_0;
+			dm_sysfs_dir(), (int)MAJOR(lv_devt), (int)MINOR(lv_devt)) < 0) {
+		log_error("Couldn't create holder path for %s.", lv_path);
+		return 0;
+	}
 
 	/* If the crypt dev is not active, there will be no LV holder. */
 	if (stat(holders_path, &st)) {
@@ -557,17 +559,16 @@ int fs_extend_script(struct cmd_context *cmd, struct logical_volume *lv, struct 
 
 	devpath = fsi->needs_crypt ? crypt_path : (char *)display_lvname(lv);
 
-	log_print("Extending file system %s to %s (%llu bytes) on %s...",
-		  fsi->fstype, display_size(cmd, newsize_bytes_fs/512),
-		  (unsigned long long)newsize_bytes_fs, devpath);
+	log_print_unless_silent("Extending file system %s to %s (%llu bytes) on %s...",
+				fsi->fstype, display_size(cmd, newsize_bytes_fs/512),
+				(unsigned long long)newsize_bytes_fs, devpath);
 
 	if (!exec_cmd(cmd, argv, &status, 1)) {
 		log_error("Failed to extend file system with lvresize_fs_helper.");
 		return 0;
 	}
 
-	log_print("Extended file system %s on %s.", fsi->fstype, devpath);
+	log_print_unless_silent("Extended file system %s on %s.", fsi->fstype, devpath);
 
 	return 1;
 }
-

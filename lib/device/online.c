@@ -68,7 +68,7 @@ int online_pvid_file_read(char *path, int *major, int *minor, char *vgname, char
 
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
-		log_warn("Failed to open %s", path);
+		log_warn("WARNING: Failed to open %s.", path);
 		return 0;
 	}
 
@@ -76,13 +76,13 @@ int online_pvid_file_read(char *path, int *major, int *minor, char *vgname, char
 	if (close(fd))
 		log_sys_debug("close", path);
 	if (!rv || rv < 0) {
-		log_warn("No info in %s", path);
+		log_warn("WARNING: No info in %s.", path);
 		return 0;
 	}
 	buf[rv] = 0; /* \0 terminated buffer */
 
 	if (sscanf(buf, "%d:%d", major, minor) != 2) {
-		log_warn("No device numbers in %s", path);
+		log_warn("WARNING: No device numbers in %s.", path);
 		return 0;
 	}
 
@@ -94,13 +94,13 @@ int online_pvid_file_read(char *path, int *major, int *minor, char *vgname, char
 		}
 
 		if (!_copy_pvid_file_field("vg:", buf, MAX_PVID_FILE_SIZE, vgname, NAME_LEN)) {
-			log_warn("Ignoring invalid vg field in %s", path);
+			log_warn("WARNING: Ignoring invalid vg field in %s.", path);
 			vgname[0] = '\0';
 			goto copy_dev;
 		}
 
 		if (!validate_name(vgname)) {
-			log_warn("Ignoring invalid vgname in %s (%s)", path, vgname);
+			log_warn("WARNING: Ignoring invalid vgname in %s (%s).", path, vgname);
 			vgname[0] = '\0';
 			goto copy_dev;
 		}
@@ -115,13 +115,13 @@ int online_pvid_file_read(char *path, int *major, int *minor, char *vgname, char
 		}
 
 		if (!_copy_pvid_file_field("dev:", buf, MAX_PVID_FILE_SIZE, devname, NAME_LEN)) {
-			log_warn("Ignoring invalid devname field in %s", path);
+			log_warn("WARNING: Ignoring invalid devname field in %s.", path);
 			devname[0] = '\0';
 			goto out;
 		}
 
 		if (strncmp(devname, "/dev/", 5)) {
-			log_warn("Ignoring invalid devname in %s (%s)", path, devname);
+			log_warn("WARNING: Ignoring invalid devname in %s (%s).", path, devname);
 			devname[0] = '\0';
 			goto out;
 		}
@@ -208,7 +208,7 @@ void online_vg_file_remove(const char *vgname)
 	char path[PATH_MAX];
 
 	if (dm_snprintf(path, sizeof(path), "%s/%s", VGS_ONLINE_DIR, vgname) < 0) {
-		log_error("Path %s/%s is too long.", VGS_ONLINE_DIR, vgname);
+		log_debug("Path %s/%s is too long.", VGS_ONLINE_DIR, vgname);
 		return;
 	}
 
@@ -422,7 +422,7 @@ int get_pvs_lookup(struct dm_list *pvs_online, const char *vgname)
 		if (vgname && file_vgname[0] && strcmp(file_vgname, vgname)) {
 			/* Should never happen */
 			log_error("Incorrect VG lookup file %s PVID %s %s.", vgname, pvid, file_vgname);
-			goto_bad;
+			goto bad;
 		}
 
 		if (!(po = zalloc(sizeof(*po))))
@@ -436,11 +436,11 @@ int get_pvs_lookup(struct dm_list *pvs_online, const char *vgname)
 		if (file_devname[0])
 			strncpy(po->devname, file_devname, NAME_LEN-1);
 
-		log_debug("Found PV online lookup %s for VG %s on %s", path, vgname, file_devname);
+		log_debug("Found PV online lookup %s for VG %s on %s.", path, vgname, file_devname);
 		dm_list_add(pvs_online, &po->list);
 	}
 
-	log_debug("Found PVs online lookup %d for %s", dm_list_size(pvs_online), vgname);
+	log_debug("Found PVs online lookup %d for %s.", dm_list_size(pvs_online), vgname);
 
 	if (fclose(fp))
 		log_sys_debug("fclose", lookup_path);
@@ -513,7 +513,7 @@ void online_lookup_file_remove(const char *vgname)
 	char path[PATH_MAX];
 
 	if (dm_snprintf(path, sizeof(path), "%s/%s", PVS_LOOKUP_DIR, vgname) < 0) {
-		log_error("Path %s/%s is too long.", PVS_LOOKUP_DIR, vgname);
+		log_debug("Path %s/%s is too long.", PVS_LOOKUP_DIR, vgname);
 		return;
 	}
 
