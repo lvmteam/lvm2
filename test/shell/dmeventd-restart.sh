@@ -72,6 +72,7 @@ for i in $(seq 1 10); do
   sleep .1
 done
 
+sleep 1 # wait a bit, so we talk to the new dmeventd later
 kill -INT "$(< LOCAL_DMEVENTD)"
 sleep 1
 
