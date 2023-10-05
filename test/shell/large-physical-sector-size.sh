@@ -26,7 +26,8 @@ aux prepare_scsi_debug_dev 256 sector_size=$LOGICAL_BLOCK_SIZE physblk_exp=$PHYS
 
 check sysfs "$(< SCSI_DEBUG_DEV)" queue/logical_block_size "$LOGICAL_BLOCK_SIZE"
 
-aux prepare_pvs 1 256
+# Eventually we may fail here on 'page allocation failure' if kernel is low on sequential memory
+aux prepare_pvs 1 256 || skip "Cannot handle large logical block size"
 
 get_devs
 
