@@ -22,11 +22,16 @@ export DM_ABORT_ON_INTERNAL_ERRORS=0
 
 aux lvmconf 'activation/raid_region_size = 16'
 
-aux target_at_least dm-mirror 1 10 0 || skip
-# Throttle mirroring
-aux throttle_dm_mirror || skip
+aux target_at_least dm-mirror 1 2 0 || skip
 
 aux prepare_pvs 6 90
+
+for i in "$dev3" "$dev6" ; do
+	aux delay_dev "$i" 0 1 "$(get first_extent_sector "$i"):"
+done
+# fallback to mirror throttling
+# this does not work too well with fast CPUs
+test -f HAVE_DM_DELAY || { aux throttle_dm_mirror || skip ; }
 
 vgcreate -s 512k $vg "$dev1" "$dev2"
 pvcreate --metadatacopies 0 "$dev3"
