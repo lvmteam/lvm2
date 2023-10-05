@@ -1597,11 +1597,8 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 {
 	struct dm_list del_cache_devs;
 	struct dm_list add_cache_devs;
-	struct dm_list renamed_devs;
 	struct lvmcache_info *info;
 	struct device_list *devl;
-
-	dm_list_init(&renamed_devs);
 
 	log_debug_cache("lvmcache label scan begin");
 
@@ -1636,19 +1633,37 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	}
 
 	/*
-	 * When devnames are used as device ids (which is dispreferred),
-	 * changing/unstable devnames can lead to entries in the devices file
-	 * not being matched to a dev even if the PV is present on the system.
-	 * Or, a devices file entry may have been matched to the wrong device
-	 * (with the previous name) that does not have the PVID specified in
-	 * the entry.  This function detects that problem, scans labels on all
-	 * devs on the system to find the missing PVIDs, and corrects the
-	 * devices file.  We then need to run label scan on these correct
-	 * devices.
+	 * device_ids_invalid is set by device_ids_validate() when there
+	 * are entries in the devices file that need to be corrected,
+	 * i.e. device IDs read from the system and/or PVIDs read from
+	 * disk do not match info in the devices file.  This is usually
+	 * related to incorrect device names which routinely change on
+	 * reboot.  When device names change for entries that use
+	 * IDTYPE=devname, it often means that all devs on the system
+	 * need to be scanned to find the new device for the PVIDs.
+	 * device_ids_validate() will update the devices file to correct
+	 * some info, but to locate new devices for PVIDs, it defers
+	 * to device_ids_refresh() which involves label scanning.
+	 *
+	 * device_ids_refresh_trigger is set by device_ids_read() when
+	 * it sees that the local machine doesn't match the machine
+	 * that wrote the devices file, and device IDs of all types
+	 * may need to be replaced for the PVIDs in the devices file.
+	 * This also means that all devs on the system need to be
+	 * scanned to find the new devices for the PVIDs.
+	 *
+	 * When device_ids_refresh() locates the correct devices
+	 * for the PVs in the devices file, it returns those new
+	 * devices in the refresh_devs list.  Those devs need to
+	 * be passed to label_scan to populate lvmcache info.
 	 */
-	device_ids_refresh(cmd, &renamed_devs, NULL, 0);
-	if (!dm_list_empty(&renamed_devs))
-		label_scan_devs(cmd, cmd->filter, &renamed_devs);
+	if (cmd->device_ids_invalid || cmd->device_ids_refresh_trigger) {
+		struct dm_list refresh_devs;
+		dm_list_init(&refresh_devs);
+		device_ids_refresh(cmd, &refresh_devs, NULL, 0);
+		if (!dm_list_empty(&refresh_devs))
+			label_scan_devs(cmd, cmd->filter, &refresh_devs);
+	}
 
 	/*
 	 * _choose_duplicates() returns:

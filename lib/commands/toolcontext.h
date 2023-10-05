@@ -213,6 +213,7 @@ struct cmd_context {
 	unsigned device_ids_check_product_uuid:1;
 	unsigned device_ids_check_hostname:1;
 	unsigned device_ids_refresh_trigger:1;
+	unsigned device_ids_invalid:1;
 
 	/*
 	 * Devices and filtering.

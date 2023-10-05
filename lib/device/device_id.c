@@ -2177,7 +2177,7 @@ void device_ids_match(struct cmd_context *cmd)
 	if (!cmd->enable_devices_file)
 		return;
 
-	log_debug("compare devices file entries to devices");
+	log_debug("Matching devices file entries to devices");
 
 	/*
 	 * We would set cmd->filter_deviceid_skip but we are disabling
@@ -2342,8 +2342,7 @@ static void _get_devs_with_serial_numbers(struct cmd_context *cmd, struct dm_lis
  * use_devices entries from the devices file.
  */
 
-void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
-			 int *device_ids_invalid, int noupdate)
+void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, int noupdate)
 {
 	struct dm_list wrong_devs;
 	struct device *dev = NULL;
@@ -2352,10 +2351,11 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 	struct dev_id *id;
 	const char *devname;
 	char *tmpdup;
-	int checked = 0;
 	int update_file = 0;
 
 	dm_list_init(&wrong_devs);
+
+	cmd->device_ids_invalid = 0;
 
 	if (!cmd->enable_devices_file)
 		return;
@@ -2410,8 +2410,6 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 			continue;
 		}
 
-		checked++;
-
 		/*
 		 * If the PVID doesn't match, don't assume that the serial
 		 * number is correct, since serial numbers may not be unique.
@@ -2425,7 +2423,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 			log_debug("suspect device id serial %s for %s", du->idname, dev_name(dev));
 			if (!str_list_add(cmd->mem, &cmd->device_ids_check_serial, dm_pool_strdup(cmd->mem, du->idname)))
 				stack;
-			*device_ids_invalid = 1;
+			cmd->device_ids_invalid = 1;
 			continue;
 		}
 
@@ -2446,7 +2444,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 				free(du->pvid);
 				du->pvid = tmpdup;
 				update_file = 1;
-				*device_ids_invalid = 1;
+				cmd->device_ids_invalid = 1;
 			}
 		} else {
 			if (du->pvid && (du->pvid[0] != '.')) {
@@ -2458,7 +2456,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 				free(du->pvid);
 				du->pvid = NULL;
 				update_file = 1;
-				*device_ids_invalid = 1;
+				cmd->device_ids_invalid = 1;
 			}
 		}
 
@@ -2476,14 +2474,15 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 			continue;
 
 		if (!du->devname || strcmp(dev_name(du->dev), du->devname)) {
-			log_warn("Device %s has updated name (devices file %s)",
-				 dev_name(du->dev), du->devname ?: "none");
+			log_debug("Validate %s %s PVID %s on %s: outdated DEVNAME %s",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".",
+				  dev_name(dev), du->devname ?: "none");
 			if (!(tmpdup = strdup(dev_name(du->dev))))
 				continue;
 			free(du->devname);
 			du->devname = tmpdup;
 			update_file = 1;
-			*device_ids_invalid = 1;
+			cmd->device_ids_invalid = 1;
 		}
 	}
 
@@ -2498,14 +2497,16 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 		if (!du->pvid)
 			continue;
 
-		checked++;
-
 		/* 
 		 * Correctly matched du and dev.
 		 * The DEVNAME hint could still need an update.
 		 */
 		if (du->dev && !memcmp(du->dev->pvid, du->pvid, ID_LEN)) {
+			dev = du->dev;
 			devname = dev_name(du->dev);
+
+			log_debug("Validate %s %s PVID %s on %s: correct",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".", devname);
 
 			/* This shouldn't happen since idname was used to match du and dev */
 			if (!du->idname || strcmp(devname, du->idname)) {
@@ -2516,7 +2517,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 				free(du->idname);
 				du->idname = tmpdup;
 				update_file = 1;
-				*device_ids_invalid = 1;
+				cmd->device_ids_invalid = 1;
 			}
 
 			/* Fix the DEVNAME field if it's outdated, not generally expected */
@@ -2528,24 +2529,35 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 				free(du->devname);
 				du->devname = tmpdup;
 				update_file = 1;
-				*device_ids_invalid = 1;
+				cmd->device_ids_invalid = 1;
 			}
 			continue;
 		}
 
 		/*
-		 * Incorrectly matched du and dev (or unable to confirm the
-		 * match).  Disassociate the dev from the du.  If wrong_devs
-		 * are not paired to any du at the end, then those devs are
-		 * cleared from lvmcache, since we don't want the command to
-		 * see or use devs not included in the devices file.
+		 * Incorrectly matched du and dev, or unconfirmed match due to
+		 * the dev not being scanned/read (so we don't know the PVID the dev.)
+		 * Disassociate the dev from the du.  If wrong_devs are not paired to
+		 * any du at the end, then those devs are cleared from lvmcache,
+		 * since we don't want the command to see or use devs not included
+		 * in the devices file.
 		 */
 		if (du->dev) {
-			if ((devl = dm_pool_zalloc(cmd->mem, sizeof(*devl)))) {
-				devl->dev = du->dev;
-				dm_list_add(&wrong_devs, &devl->list);
+			dev = du->dev;
+			devname = dev_name(du->dev);
+
+			if (!device_list_find_dev(scanned_devs, du->dev) || (du->dev->flags & DEV_SCAN_NOT_READ)) {
+				log_debug("Validate %s %s PVID %s on %s: not scanned",
+					  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".", devname);
+			} else {
+				log_debug("Validate %s %s PVID %s on %s: wrong PVID %s.",
+					idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".", devname, dev->pvid);
+				if ((devl = dm_pool_zalloc(cmd->mem, sizeof(*devl)))) {
+					devl->dev = du->dev;
+					dm_list_add(&wrong_devs, &devl->list);
+				}
+				cmd->device_ids_invalid = 1;
 			}
-			log_debug("Drop match for %s and %s.", dev_name(du->dev), du->pvid);
 			du->dev->flags &= ~DEV_MATCHED_USE_ID;
 			du->dev->id = NULL;
 			du->dev = NULL;
@@ -2563,7 +2575,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 
 			devname = dev_name(dev);
 
-			log_debug("Devices file PVID %s is now on %s.", du->pvid, devname);
+			log_debug("New match for devices file PVID %s now on %s.", du->pvid, devname);
 
 			dup_devname1 = strdup(devname);
 			dup_devname2 = strdup(devname);
@@ -2592,7 +2604,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 			dm_list_add(&dev->ids, &id->list);
 			dev_get_partition_number(dev, &du->part);
 			update_file = 1;
-			*device_ids_invalid = 1;
+			cmd->device_ids_invalid = 1;
 			continue;
 		}
 	}
@@ -2614,7 +2626,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 			continue;
 		if (du->dev)
 			continue;
-		log_debug("Search needed to locate PVID %s %s %s.",
+		log_debug("No device matched to PVID %s %s %s.",
 			  du->pvid, idtype_to_str(du->idtype), du->idname ?: ".");
 	}
 
@@ -2654,7 +2666,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 			du->pvid = NULL;
 			du->devname = NULL;
 			update_file = 1;
-			*device_ids_invalid = 1;
+			cmd->device_ids_invalid = 1;
 			break;
 		}
 	}
@@ -2702,31 +2714,10 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 				dm_list_del(&du2->list);
 				free_du(du2);
 				update_file = 1;
-				*device_ids_invalid = 1;
+				cmd->device_ids_invalid = 1;
 			}
 			break;
 		}
-	}
-
-	/*
-	 * Check for other problems for which we want to set *device_ids_invalid,
-	 * even if we don't have a way to fix them right here.  In particular,
-	 * issues that may be fixed shortly by device_ids_refresh.
-	 *
-	 * The device_ids_invalid flag is only used to tell the caller not
-	 * to write hints, which could be based on invalid device info.
-	 * (There may be a better way to deal with that then returning
-	 * this flag.)
-	 */
-	dm_list_iterate_items(du, &cmd->use_devices) {
-		if (*device_ids_invalid)
-			break;
-
-		if (!du->idname || (du->idname[0] == '.'))
-			*device_ids_invalid = 1;
-
-		if ((du->idtype == DEV_ID_TYPE_DEVNAME) && !du->dev && du->pvid)
-			*device_ids_invalid = 1;
 	}
 
 	/*
@@ -2734,7 +2725,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 	 * pvid should be permitted (searched_devnames may exist to suppress
 	 * searching for other pvids.)
 	 */
-	if (update_file)
+	if (update_file || cmd->device_ids_invalid)
 		unlink_searched_devnames(cmd);
 
 	/* FIXME: for wrong devname cases, wait to write new until device_ids_refresh? */
@@ -2744,12 +2735,12 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs,
 	 * be done by a subsequent command if it's not done here.
 	 */
 	if (update_file && noupdate) {
-		log_debug("device ids validate checked %d update disabled.", checked);
+		log_debug("Validated device ids: invalid=%d, update disabled.", cmd->device_ids_invalid);
 	} else if (update_file) {
-		log_debug("device ids validate checked %d trying to update devices file.", checked);
+		log_debug("Validated device ids: invalid=%d, trying to update devices file.", cmd->device_ids_invalid);
 		_device_ids_update_try(cmd);
 	} else {
-		log_debug("device ids validate checked %d found no update is needed.", checked);
+		log_debug("Validated device ids: invalid=%d, no update needed.", cmd->device_ids_invalid);
 	}
 }
 
