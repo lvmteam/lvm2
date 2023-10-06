@@ -2546,7 +2546,8 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 			dev = du->dev;
 			devname = dev_name(du->dev);
 
-			if (!device_list_find_dev(scanned_devs, du->dev) || (du->dev->flags & DEV_SCAN_NOT_READ)) {
+			if ((scanned_devs && !device_list_find_dev(scanned_devs, du->dev)) ||
+			    (du->dev->flags & DEV_SCAN_NOT_READ)) {
 				log_debug("Validate %s %s PVID %s on %s: not scanned",
 					  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".", devname);
 			} else {
