@@ -15,6 +15,21 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+_restart_dmeventd() {
+	#rm -f debug.log*
+
+	dmeventd -R -fldddd -e "$PWD/test_nologin" > debug.log_DMEVENTD_$RANDOM 2>&1 &
+	echo $! >LOCAL_DMEVENTD
+
+	for i in $(seq 1 10); do
+		test "$(pgrep -o dmeventd)" = "$(< LOCAL_DMEVENTD)" && break
+		sleep .1
+	done
+	# wait a bit, so we talk to the new dmeventd later
+	# On some systems init of selinux contex may take a while...
+	sleep .5
+}
+
 aux prepare_dmeventd
 
 aux prepare_vg 5
@@ -27,9 +42,7 @@ lvchange --monitor y $vg/3way
 lvcreate -aey -l1 -n $lv1 $vg
 lvcreate -s -l1 -n $lv2 $vg/$lv1
 
-dmeventd -R -f &
-echo $! >LOCAL_DMEVENTD
-sleep 2 # wait a bit, so we talk to the new dmeventd later
+_restart_dmeventd
 
 check lv_field $vg/3way seg_monitor "monitored"
 check lv_field $vg/4way seg_monitor "monitored"
@@ -43,11 +56,10 @@ test -e LOCAL_CLVMD || grep 'already monitored' lvchange.out
 kill -9 "$(< LOCAL_DMEVENTD)"
 rm LOCAL_DMEVENTD debug.log*
 
-dmeventd -R -f &
-echo $! >LOCAL_DMEVENTD
+_restart_dmeventd
 
 # wait longer as tries 5s to communicate with killed daemon
-sleep 7
+sleep 6
 # now dmeventd should not be running
 not pgrep dmeventd
 rm LOCAL_DMEVENTD
@@ -63,16 +75,8 @@ test -e LOCAL_CLVMD || not grep 'already monitored' lvchange.out
 lvchange --monitor y --verbose $vg/$lv2 2>&1 | tee lvchange.out
 test -e LOCAL_CLVMD || not grep 'already monitored' lvchange.out
 
-rm -f debug.log*
-dmeventd -R -f -e "$PWD/test_nologin" -ldddd > debug.log_DMEVENTD_$RANDOM 2>&1 &
-echo $! >LOCAL_DMEVENTD
+_restart_dmeventd
 
-for i in $(seq 1 10); do
-  test "$(pgrep -o dmeventd)" = "$(< LOCAL_DMEVENTD)" && break
-  sleep .1
-done
-
-sleep 1 # wait a bit, so we talk to the new dmeventd later
 kill -INT "$(< LOCAL_DMEVENTD)"
 sleep 1
 
