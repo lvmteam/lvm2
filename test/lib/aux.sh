@@ -1741,13 +1741,15 @@ thin_restore_needs_more_volumes() {
 }
 
 udev_wait() {
-	pgrep udev >/dev/null || return 0
-	which udevadm &>/dev/null || return 0
-	if test -n "${1-}" ; then
-		udevadm settle --exit-if-exists="$1" 2>/dev/null || true
-	else
-		udevadm settle --timeout=15 2>/dev/null || true
-	fi
+	local arg="--timeout=15"
+	test -n "${1-}" && arg="--exit-if-exists=$1"
+
+	test -f UDEV_PID || {
+		pgrep udev >UDEV_PID 2>/dev/null || return 0
+		which udevadm &>/dev/null || { echo "" >UDEV_PID ; return 0 ; }
+	}
+
+	test ! -s UDEV_PID || { udevadm settle "$arg" 2>/dev/null || true ; }
 }
 
 # wait_for_sync <VG/LV>
