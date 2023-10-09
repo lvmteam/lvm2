@@ -2342,7 +2342,7 @@ static void _get_devs_with_serial_numbers(struct cmd_context *cmd, struct dm_lis
  * use_devices entries from the devices file.
  */
 
-void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, int noupdate)
+void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, int noupdate, int using_hints)
 {
 	struct dm_list wrong_devs;
 	struct device *dev = NULL;
@@ -2767,6 +2767,28 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 		_device_ids_update_try(cmd);
 	} else {
 		log_debug("Validated device ids: invalid=%d, no update needed.", cmd->device_ids_invalid);
+	}
+
+	/*
+	 * label_scan can use hints to scan only the devs for a specific
+	 * VG as an optimization.  If that limited subset of devs were
+	 * all matched properly in the devices file, then override
+	 * device_ids_invalid which may be set due to other entries
+	 * not being matched, which this command doesn't care about.
+	 */
+	if (using_hints && scanned_devs) {
+		int found_scanned = 1;
+		dm_list_iterate_items(devl, scanned_devs) {
+			du = get_du_for_dev(cmd, devl->dev);
+			if (du && !memcmp(du->pvid, devl->dev->pvid, ID_LEN))
+				continue;
+			found_scanned = 0;
+			break;
+		}
+		if (found_scanned && cmd->device_ids_invalid) {
+			log_debug("Override device_ids_invalid for complete hints.");
+			cmd->device_ids_invalid = 0;
+		}
 	}
 }
 

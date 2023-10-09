@@ -1457,7 +1457,7 @@ int label_scan(struct cmd_context *cmd)
 	 * Check if the devices_file content is up to date and
 	 * if not update it.
 	 */
-	device_ids_validate(cmd, &scan_devs, 0);
+	device_ids_validate(cmd, &scan_devs, 0, using_hints);
 
 	dm_list_iterate_items_safe(devl, devl2, &all_devs) {
 		dm_list_del(&devl->list);

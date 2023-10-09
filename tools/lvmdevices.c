@@ -230,7 +230,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		 * from use_devices does not pass the filters that have been
 		 * run just above.
 		 */
-		device_ids_validate(cmd, NULL, 1);
+		device_ids_validate(cmd, NULL, 1, 0);
 		if (cmd->device_ids_invalid)
 			update_needed = 1;
 

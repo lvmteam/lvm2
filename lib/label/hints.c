@@ -468,6 +468,7 @@ int validate_hints(struct cmd_context *cmd, struct dm_list *hints)
 	struct hint *hint;
 	struct dev_iter *iter;
 	struct device *dev;
+	int valid_hints = 0;
 	int ret = 1;
 
 	/* No commands are using hints. */
@@ -477,6 +478,8 @@ int validate_hints(struct cmd_context *cmd, struct dm_list *hints)
 	/* This command does not use hints. */
 	if (!cmd->use_hints && !cmd->pvscan_recreate_hints)
 		return 0;
+
+	log_debug("Validating hints");
 
 	if (lvmcache_has_duplicate_devs()) {
 		log_debug("Hints not used with duplicate pvs");
@@ -504,6 +507,17 @@ int validate_hints(struct cmd_context *cmd, struct dm_list *hints)
 		if (!(hint = _find_hint_name(hints, dev_name(dev))))
 			continue;
 
+		/*
+		 * If this dev is excluded by any filter then hints invalid.
+		 * use cmd->filter->passes_filter(cmd, cmd->filter, dev, "persistent") ?
+		 */
+		if (dev->filtered_flags) {
+			log_debug("Hints invalid for filtered %s: %s",
+				  dev_name(dev), dev_filtered_reason(dev));
+			ret = 0;
+			break;
+		}
+
 		/* The cmd hasn't needed this hint's dev so it's not been scanned. */
 		if (!hint->chosen)
 			continue;
@@ -527,6 +541,8 @@ int validate_hints(struct cmd_context *cmd, struct dm_list *hints)
 				  dev->pvid, hint->pvid);
 			ret = 0;
 		}
+
+		valid_hints++;
 	}
 	dev_iter_destroy(iter);
 
@@ -574,6 +590,14 @@ int validate_hints(struct cmd_context *cmd, struct dm_list *hints)
 			ret = 0;
 			continue;
 		}
+	}
+
+	/*
+	 * hints considered invalid if none are used.
+	 */
+	if (!valid_hints) {
+		log_debug("Invalid hints: none used.");
+		ret = 0;
 	}
 
 out:
