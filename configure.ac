@@ -426,6 +426,7 @@ AS_CASE(["$THIN"],
 	])
 	AS_IF([test "$THIN_CHECK_NEEDS_CHECK" = "yes" && test "$THIN_CONFIGURE_WARN" != "y"], [
 		THIN_CHECK_VSN=$("$THIN_CHECK_CMD" -V 2>/dev/null)
+		THIN_CHECK_VSN=${THIN_CHECK_VSN##* }  # trim away all before the first space
 		THIN_CHECK_VSN_MAJOR=$(echo "$THIN_CHECK_VSN" | $AWK -F '.' '{print $1}')
 		THIN_CHECK_VSN_MINOR=$(echo "$THIN_CHECK_VSN" | $AWK -F '.' '{print $2}')
 
@@ -467,7 +468,7 @@ AS_CASE(["$THIN"],
 		])
 	])
 
-	AC_MSG_CHECKING([whether thin_check supports the needs-check flag])
+	AC_MSG_CHECKING([whether $THIN_CHECK_CMD ($THIN_CHECK_VSN_MAJOR.$THIN_CHECK_VSN_MINOR) supports the needs-check flag])
 	AC_MSG_RESULT([$THIN_CHECK_NEEDS_CHECK])
 	AS_IF([test "$THIN_CHECK_NEEDS_CHECK" = "yes"], [
 		AC_DEFINE([THIN_CHECK_NEEDS_CHECK], 1, [Define to 1 if the external 'thin_check' tool requires the --clear-needs-check-flag option])
@@ -537,12 +538,13 @@ AS_CASE(["$CACHE"],
 		])
 	])
 	AS_IF([test "$CACHE_CHECK_NEEDS_CHECK" = "yes" && test "$CACHE_CONFIGURE_WARN" != "y"], [
-		$CACHE_CHECK_CMD -V 2>/dev/null >conftest.tmp
+		"$CACHE_CHECK_CMD" -V 2>/dev/null >conftest.tmp
 		read -r CACHE_CHECK_VSN < conftest.tmp
 		IFS=.- read -r CACHE_CHECK_VSN_MAJOR CACHE_CHECK_VSN_MINOR CACHE_CHECK_VSN_PATCH LEFTOVER < conftest.tmp
 		rm -f conftest.tmp
 
 		# Require version >= 0.5.4 for --clear-needs-check-flag
+		CACHE_CHECK_VSN_MAJOR=${CACHE_CHECK_VSN_MAJOR##* }
 		AS_IF([test -z "$CACHE_CHECK_VSN_MAJOR" \
 			|| test -z "$CACHE_CHECK_VSN_MINOR" \
 			|| test -z "$CACHE_CHECK_VSN_PATCH"], [
@@ -590,7 +592,7 @@ AS_CASE(["$CACHE"],
 		])
 	])
 
-	AC_MSG_CHECKING([whether cache_check supports the needs-check flag])
+	AC_MSG_CHECKING([whether $CACHE_CHECK_CMD ($CACHE_CHECK_VSN_MAJOR.$CACHE_CHECK_VSN_MINOR.$CACHE_CHECK_VSN_PATCH) supports the needs-check flag])
 	AC_MSG_RESULT([$CACHE_CHECK_NEEDS_CHECK])
 	AS_IF([test "$CACHE_CHECK_NEEDS_CHECK" = "yes"], [
 		AC_DEFINE([CACHE_CHECK_NEEDS_CHECK], 1, [Define to 1 if the external 'cache_check' tool requires the --clear-needs-check-flag option])
