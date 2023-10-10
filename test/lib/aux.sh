@@ -1732,6 +1732,7 @@ thin_pool_error_works_32() {
 }
 
 thin_restore_needs_more_volumes() {
+	# Note: new version prints thin_restore first
 	case $("$LVM_TEST_THIN_RESTORE_CMD" -V) in
 		# With older version of thin-tool we got slightly more compact metadata
 		0.[0-6]*|0.7.0*) return 0 ;;
