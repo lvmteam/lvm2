@@ -2722,6 +2722,31 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 	}
 
 	/*
+	 * Set invalid if an entry using IDNAME=devname has not
+	 * been matched to a device.  It's possible that the device
+	 * with the PVID has a new name, different from the IDNAME
+	 * value.  device_ids_refresh needs to search system devs
+	 * for the PVID.  The same applies when the IDNAME field
+	 * has no value.
+	 */
+	dm_list_iterate_items(du, &cmd->use_devices) {
+		if (cmd->device_ids_invalid)
+			break;
+
+		if (!du->idname || (du->idname[0] == '.')) {
+			log_debug("Validate %s %s PVID %s: no idname is invalid.",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".");
+			cmd->device_ids_invalid = 1;
+		}
+
+		if ((du->idtype == DEV_ID_TYPE_DEVNAME) && !du->dev && du->pvid) {
+			log_debug("Validate %s %s PVID %s: no device for idtype devname is invalid.",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".");
+			cmd->device_ids_invalid = 1;
+		}
+	}
+
+	/*
 	 * When a new devname/pvid mismatch is discovered, a new search for the
 	 * pvid should be permitted (searched_devnames may exist to suppress
 	 * searching for other pvids.)

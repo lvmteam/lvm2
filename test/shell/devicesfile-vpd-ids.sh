@@ -435,7 +435,69 @@ vgremove $vg
 rm "$SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid"
 cleanup_sysfs
 
+#
+# Simply rename a device using IDNAME=devname
+# use a new device name where a device exists
+# on the system with that name so that there
+# will be an initial, incorrect match of the
+# devices file entry with IDNAME=/dev/sdb to
+# the /dev/sdb that exists on the system.
+#
+# FIXME: this assumes that /dev/sdb exists on the system
+# and is not the same as DEV1.  To do this correctly
+# we need to find the name of some device on the
+# system other than DEV1.
+#
 
+rm "$DF"
+aux wipefs_a "$DEV1"
+touch "$DF"
+pvcreate "$DEV1"
+vgcreate $vg1 "$DEV1"
+cat "$DF"
+grep "IDTYPE=devname" "$DF" | tee out
+grep "IDNAME=$DEV1" out
+mkdir -p "$SYS_DIR/dev/block/$MAJOR1:$MINOR1/device"
+pvs -o+uuid,deviceidtype,deviceid "$DEV1"
+# Rename device, simulating reboot
+sed -e "s|IDNAME=$DEV1|IDNAME=/dev/sdb|" "$DF" > tmpdf
+sed -e "s|DEVNAME=$DEV1|DEVNAME=/dev/sdb|" tmpdf > "$DF"
+cat "$DF"
+# pvs will find PV on DEV1 and fix IDNAME
+pvs -o+uuid,deviceidtype,deviceid | tee out
+grep "$DEV1" out
+grep "IDTYPE=devname" "$DF" | tee out
+grep "IDNAME=$DEV1" out
+cleanup_sysfs
+
+#
+# Simply rename a device using IDNAME=devname
+# use a new device name where a device does not
+# exist on the system with that name
+#
+# This assumes that /dev/sdxx does not exist on the system.
+#
+
+rm "$DF"
+aux wipefs_a "$DEV1"
+touch "$DF"
+pvcreate "$DEV1"
+vgcreate $vg1 "$DEV1"
+cat "$DF"
+grep "IDTYPE=devname" "$DF" | tee out
+grep "IDNAME=$DEV1" out
+mkdir -p "$SYS_DIR/dev/block/$MAJOR1:$MINOR1/device"
+pvs -o+uuid,deviceidtype,deviceid "$DEV1"
+# Rename device, simulating reboot
+sed -e "s|IDNAME=$DEV1|IDNAME=/dev/sdxx|" "$DF" > tmpdf
+sed -e "s|DEVNAME=$DEV1|DEVNAME=/dev/sdxx|" tmpdf > "$DF"
+cat "$DF"
+# pvs will find PV on DEV1 and fix IDNAME
+pvs -o+uuid,deviceidtype,deviceid | tee out
+grep "$DEV1" out
+grep "IDTYPE=devname" "$DF" | tee out
+grep "IDNAME=$DEV1" out
+cleanup_sysfs
 
 
 # TODO: lvmdevices --adddev <dev> --deviceidtype <type> --deviceid <val>
