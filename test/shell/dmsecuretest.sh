@@ -40,8 +40,9 @@ for j in empty existing ; do
 
 "$i" "$dev1" "$DMTEST" >cmdout 2>&1 &
 PID=$!
-sleep .5
+sleep .6
 
+# 0 8192 crypt aes-xts-plain64 434e0cbab02ca68ffba9268222c3789d703fe62427b78b308518b3228f6a2122 0 253:0 8192
 # crypt device should be loaded
 dmsetup status "$DMTEST"
 
