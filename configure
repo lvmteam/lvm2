@@ -681,6 +681,7 @@ STATIC_LDFLAGS
 STATICDIR
 SNAPSHOTS
 SILENT_RULES
+SHARED_LINK
 SELINUX_STATIC_LIBS
 SELINUX_PC
 SBINDIR
@@ -914,6 +915,10 @@ enable_option_checking
 enable_dependency_tracking
 enable_silent_rules
 enable_static_link
+enable_shared
+with_blkid
+with_systemd
+with_udev
 with_user
 with_group
 with_device_uid
@@ -1685,6 +1690,7 @@ Optional Features:
   --disable-silent-rules  disable silent building
   --enable-static_link    use this to link the tools to their libraries
                           statically (default is dynamic linking
+  --disable-shared        disable dynamic linking
   --disable-thin_check_needs_check
                           required if thin_check version is < 0.3.0
   --disable-cache_check_needs_check
@@ -1738,6 +1744,9 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --without-blkid         do not build with blkid library
+  --without-systemd       do not build with systemd library
+  --without-udev          do not build with udev library
   --with-user=USER        set the owner of installed files [USER=]
   --with-group=GROUP      set the group owner of installed files [GROUP=]
   --with-device-uid=UID   set the owner used for new device nodes [UID=0]
@@ -9059,6 +9068,20 @@ fi
 printf "%s\n" "$STATIC_LINK" >&6; }
 
 ################################################################################
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to use dynamic linking" >&5
+printf %s "checking whether to use dynamic linking... " >&6; }
+# Check whether --enable-shared was given.
+if test ${enable_shared+y}
+then :
+  enableval=$enable_shared; SHARED_LINK=$enableval
+else $as_nop
+  SHARED_LINK="yes"
+fi
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $SHARED_LINK" >&5
+printf "%s\n" "$SHARED_LINK" >&6; }
+
+################################################################################
 
 
     ac_save_CFLAGS=$CFLAGS
@@ -9150,6 +9173,35 @@ test "$exec_prefix" = "NONE" && test "$prefix" = "NONE" && exec_prefix=""
 test "$prefix" = "NONE" && prefix=$ac_default_prefix
 # Let make expand exec_prefix.
 test "$exec_prefix" = "NONE" && exec_prefix='${prefix}'
+
+
+
+# Check whether --with-blkid was given.
+if test ${with_blkid+y}
+then :
+  withval=$with_blkid;
+else $as_nop
+  with_blkid="yes"
+fi
+
+
+# Check whether --with-systemd was given.
+if test ${with_systemd+y}
+then :
+  withval=$with_systemd;
+else $as_nop
+  with_systemd="yes"
+fi
+
+
+# Check whether --with-udev was given.
+if test ${with_udev+y}
+then :
+  withval=$with_udev;
+else $as_nop
+  with_udev="yes"
+fi
+
 
 ################################################################################
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking file owner" >&5
@@ -9627,6 +9679,7 @@ fi
 then :
 
 		THIN_CHECK_VSN=$("$THIN_CHECK_CMD" -V 2>/dev/null)
+		THIN_CHECK_VSN=${THIN_CHECK_VSN##* }  # trim away all before the first space
 		THIN_CHECK_VSN_MAJOR=$(echo "$THIN_CHECK_VSN" | $AWK -F '.' '{print $1}')
 		THIN_CHECK_VSN_MINOR=$(echo "$THIN_CHECK_VSN" | $AWK -F '.' '{print $2}')
 
@@ -10019,8 +10072,8 @@ fi
 
 fi
 
-	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether thin_check supports the needs-check flag" >&5
-printf %s "checking whether thin_check supports the needs-check flag... " >&6; }
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether $THIN_CHECK_CMD ($THIN_CHECK_VSN_MAJOR.$THIN_CHECK_VSN_MINOR) supports the needs-check flag" >&5
+printf %s "checking whether $THIN_CHECK_CMD ($THIN_CHECK_VSN_MAJOR.$THIN_CHECK_VSN_MINOR) supports the needs-check flag... " >&6; }
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $THIN_CHECK_NEEDS_CHECK" >&5
 printf "%s\n" "$THIN_CHECK_NEEDS_CHECK" >&6; }
 	if test "$THIN_CHECK_NEEDS_CHECK" = "yes"
@@ -10255,12 +10308,13 @@ fi
 	if test "$CACHE_CHECK_NEEDS_CHECK" = "yes" && test "$CACHE_CONFIGURE_WARN" != "y"
 then :
 
-		$CACHE_CHECK_CMD -V 2>/dev/null >conftest.tmp
+		"$CACHE_CHECK_CMD" -V 2>/dev/null >conftest.tmp
 		read -r CACHE_CHECK_VSN < conftest.tmp
 		IFS=.- read -r CACHE_CHECK_VSN_MAJOR CACHE_CHECK_VSN_MINOR CACHE_CHECK_VSN_PATCH LEFTOVER < conftest.tmp
 		rm -f conftest.tmp
 
 		# Require version >= 0.5.4 for --clear-needs-check-flag
+		CACHE_CHECK_VSN_MAJOR=${CACHE_CHECK_VSN_MAJOR##* }
 		if test -z "$CACHE_CHECK_VSN_MAJOR" \
 			|| test -z "$CACHE_CHECK_VSN_MINOR" \
 			|| test -z "$CACHE_CHECK_VSN_PATCH"
@@ -10666,8 +10720,8 @@ fi
 
 fi
 
-	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether cache_check supports the needs-check flag" >&5
-printf %s "checking whether cache_check supports the needs-check flag... " >&6; }
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether $CACHE_CHECK_CMD ($CACHE_CHECK_VSN_MAJOR.$CACHE_CHECK_VSN_MINOR.$CACHE_CHECK_VSN_PATCH) supports the needs-check flag" >&5
+printf %s "checking whether $CACHE_CHECK_CMD ($CACHE_CHECK_VSN_MAJOR.$CACHE_CHECK_VSN_MINOR.$CACHE_CHECK_VSN_PATCH) supports the needs-check flag... " >&6; }
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CACHE_CHECK_NEEDS_CHECK" >&5
 printf "%s\n" "$CACHE_CHECK_NEEDS_CHECK" >&6; }
 	if test "$CACHE_CHECK_NEEDS_CHECK" = "yes"
@@ -12611,21 +12665,27 @@ printf "%s\n" "#define DEFAULT_USE_LVMPOLLD $DEFAULT_USE_LVMPOLLD" >>confdefs.h
 
 
 SYSTEMD_MIN_VERSION=0
-if test -n "$PKG_CONFIG" && \
+SYSTEMD_JOURNAL_SUPPORT="no"
+APP_MACHINEID_SUPPORT="no"
+
+if test "$with_systemd" = "yes"
+then :
+  if test -n "$PKG_CONFIG" && \
     { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"systemd >= 221\""; } >&5
   ($PKG_CONFIG --exists --print-errors "systemd >= 221") 2>&5
   ac_status=$?
   printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  SYSTEMD_MIN_VERSION=221
+  SYSTEMD_MIN_VERSION=221 SYSTEMD_JOURNAL_SUPPORT="maybe"
 fi
-if test -n "$PKG_CONFIG" && \
+      if test -n "$PKG_CONFIG" && \
     { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"systemd >= 234\""; } >&5
   ($PKG_CONFIG --exists --print-errors "systemd >= 234") 2>&5
   ac_status=$?
   printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  SYSTEMD_MIN_VERSION=234
+  SYSTEMD_MIN_VERSION=234 APP_MACHINEID_SUPPORT="maybe"
+fi
 fi
 
 ################################################################################
@@ -12639,50 +12699,44 @@ else $as_nop
   NOTIFYDBUS_SUPPORT="no"
 fi
 
-if test "$NOTIFYDBUS_SUPPORT" = "yes" && test "$SYSTEMD_MIN_VERSION" -lt 221
-then :
-  as_fn_error $? "Enabling notify-dbus requires systemd >= 221" "$LINENO" 5
-fi
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $NOTIFYDBUS_SUPPORT" >&5
 printf "%s\n" "$NOTIFYDBUS_SUPPORT" >&6; }
 
 if test "$NOTIFYDBUS_SUPPORT" = "yes"
 then :
+  if test "$SYSTEMD_MIN_VERSION" -lt 221
+then :
+  as_fn_error $? "--enable-notify-dbus requires systemd >= 221. (--with-systemd=$with_systemd)" "$LINENO" 5
+fi
 
 printf "%s\n" "#define NOTIFYDBUS_SUPPORT 1" >>confdefs.h
 
 fi
 
 ################################################################################
-if test "$SYSTEMD_MIN_VERSION" -ge 221
+if test "$SYSTEMD_JOURNAL_SUPPORT" != "no"
 then :
-  SYSTEMD_JOURNAL_SUPPORT="maybe"
-else $as_nop
-  SYSTEMD_JOURNAL_SUPPORT="no"
-fi
-ac_fn_c_check_header_compile "$LINENO" "systemd/sd-journal.h" "ac_cv_header_systemd_sd_journal_h" "$ac_includes_default"
+  ac_fn_c_check_header_compile "$LINENO" "systemd/sd-journal.h" "ac_cv_header_systemd_sd_journal_h" "$ac_includes_default"
 if test "x$ac_cv_header_systemd_sd_journal_h" = xyes
 then :
-  if test "$SYSTEMD_JOURNAL_SUPPORT" != "no"
-then :
   SYSTEMD_JOURNAL_SUPPORT="yes"
-fi
 else $as_nop
   SYSTEMD_JOURNAL_SUPPORT="no"
 fi
 
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to log to systemd journal" >&5
-printf %s "checking whether to log to systemd journal... " >&6; }
+fi
 # Check whether --enable-systemd-journal was given.
 if test ${enable_systemd_journal+y}
 then :
   enableval=$enable_systemd_journal; if test "$enableval" = "yes" && test "$SYSTEMD_JOURNAL_SUPPORT" = "no"
 then :
-  as_fn_error $? "Enabling systemd journal requires systemd/sd-journal.h and systemd >= 221." "$LINENO" 5
+  as_fn_error $? "--enable-systemd-journal requires systemd/sd-journal.h and systemd >= 221. (--with-systemd=$with_systemd)" "$LINENO" 5
 fi
 	      SYSTEMD_JOURNAL_SUPPORT=$enableval
 fi
 
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to log to systemd journal" >&5
+printf %s "checking whether to log to systemd journal... " >&6; }
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $SYSTEMD_JOURNAL_SUPPORT" >&5
 printf "%s\n" "$SYSTEMD_JOURNAL_SUPPORT" >&6; }
 
@@ -12694,35 +12748,29 @@ printf "%s\n" "#define SYSTEMD_JOURNAL_SUPPORT 1" >>confdefs.h
 fi
 
 ################################################################################
-if test "$SYSTEMD_MIN_VERSION" -ge 234
+if test "$APP_MACHINEID_SUPPORT" != "no"
 then :
-  APP_MACHINEID_SUPPORT="maybe"
-else $as_nop
-  APP_MACHINEID_SUPPORT="no"
-fi
-ac_fn_c_check_header_compile "$LINENO" "systemd/sd-id128.h" "ac_cv_header_systemd_sd_id128_h" "$ac_includes_default"
+  ac_fn_c_check_header_compile "$LINENO" "systemd/sd-id128.h" "ac_cv_header_systemd_sd_id128_h" "$ac_includes_default"
 if test "x$ac_cv_header_systemd_sd_id128_h" = xyes
 then :
-  if test "$APP_MACHINEID_SUPPORT" != "no"
-then :
   APP_MACHINEID_SUPPORT="yes"
-fi
 else $as_nop
   APP_MACHINEID_SUPPORT="no"
 fi
 
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to support systemd appmachineid" >&5
-printf %s "checking whether to support systemd appmachineid... " >&6; }
+fi
 # Check whether --enable-app-machineid was given.
 if test ${enable_app_machineid+y}
 then :
   enableval=$enable_app_machineid; if test "$enableval" = "yes" && test "$APP_MACHINEID_SUPPORT" = "no"
 then :
-  as_fn_error $? "Enabling app machineid requires systemd/sd-id128.h and systemd >= 234." "$LINENO" 5
+  as_fn_error $? "--enable-app-machineid requires systemd/sd-id128.h and systemd >= 234. (--with-systemd=$with_systemd)" "$LINENO" 5
 fi
 	      APP_MACHINEID_SUPPORT=$enableval
 fi
 
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to support systemd appmachineid" >&5
+printf %s "checking whether to support systemd appmachineid... " >&6; }
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $APP_MACHINEID_SUPPORT" >&5
 printf "%s\n" "$APP_MACHINEID_SUPPORT" >&6; }
 
@@ -12962,31 +13010,25 @@ printf "%s\n" "$SYSTEMD_RUN_CMD" >&6; }
 
 ################################################################################
 
+# TODO: possibly detect right version of blkid with BLKID_SUBLKS_FSINFO support
+#       so lvresize can check detected flag here
+#
+DEFAULT_USE_BLKID_WIPING=0
 # Check whether --enable-blkid_wiping was given.
 if test ${enable_blkid_wiping+y}
 then :
   enableval=$enable_blkid_wiping; BLKID_WIPING=$enableval
 else $as_nop
+  if test "$with_blkid" = "yes"
+then :
   BLKID_WIPING="maybe"
+else $as_nop
+  BLKID_WIPING="no"
+fi
 fi
 
 
-# TODO: possibly detect right version of blkid with BLKID_SUBLKS_FSINFO support
-#       so lvresize can check detected flag here
-#
-DEFAULT_USE_BLKID_WIPING=0
-if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"blkid >= 2.24\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "blkid >= 2.24") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  HAVE_BLKID="yes"
-else
-  HAVE_BLKID="no"
-fi
-
-if test "$HAVE_BLKID" = "yes"
+if test "$BLKID_WIPING" != "no"
 then :
 
 
@@ -13048,39 +13090,28 @@ fi
         # Put the nasty error message in config.log where it belongs
         echo "$BLKID_PKG_ERRORS" >&5
 
-        as_fn_error $? "Package requirements (blkid >= 2.24) were not met:
-
-$BLKID_PKG_ERRORS
-
-Consider adjusting the PKG_CONFIG_PATH environment variable if you
-installed software in a non-standard prefix.
-
-Alternatively, you may set the environment variables BLKID_CFLAGS
-and BLKID_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details." "$LINENO" 5
+        if test "$BLKID_WIPING" = "yes"
+then :
+  BLKID_WIPING="error"
+else $as_nop
+  BLKID_WIPING="no"
+fi
 elif test $pkg_failed = untried; then
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-        { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
-printf "%s\n" "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
-is in your PATH or set the PKG_CONFIG environment variable to the full
-path to pkg-config.
-
-Alternatively, you may set the environment variables BLKID_CFLAGS
-and BLKID_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-
-To get pkg-config, see <http://pkg-config.freedesktop.org/>.
-See \`config.log' for more details" "$LINENO" 5; }
+        if test "$BLKID_WIPING" = "yes"
+then :
+  BLKID_WIPING="error"
+else $as_nop
+  BLKID_WIPING="no"
+fi
 else
         BLKID_CFLAGS=$pkg_cv_BLKID_CFLAGS
         BLKID_LIBS=$pkg_cv_BLKID_LIBS
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
 
-
-	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for blkid.h defines BLKID_SUBLKS_FSINFO." >&5
+		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for blkid.h defines BLKID_SUBLKS_FSINFO." >&5
 printf %s "checking for blkid.h defines BLKID_SUBLKS_FSINFO.... " >&6; }
 if test ${ac_cv_have_blkid_sublks_fsinfo+y}
 then :
@@ -13092,6 +13123,7 @@ else $as_nop
 #ifndef BLKID_SUBLKS_FSINFO
 #error BLKID_SUBLKS_FSINFO is missing
 #endif
+
 int
 main (void)
 {
@@ -13111,47 +13143,38 @@ fi
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_have_blkid_sublks_fsinfo" >&5
 printf "%s\n" "$ac_cv_have_blkid_sublks_fsinfo" >&6; }
 
-	if test $ac_cv_have_blkid_sublks_fsinfo = yes
+		if test $ac_cv_have_blkid_sublks_fsinfo = yes
 then :
 
 printf "%s\n" "#define HAVE_BLKID_SUBLKS_FSINFO 1" >>confdefs.h
 
 fi
 
-fi
-
-fi
-
-if test "$BLKID_WIPING" != "no"
+		if test "$with_blkid" = "no"
 then :
+  BLKID_WIPING="error"
+else $as_nop
 
-	if test "$HAVE_BLKID" = "yes"
-then :
-
-		BLKID_WIPING="yes"
-		BLKID_PC="blkid"
-		DEFAULT_USE_BLKID_WIPING=1
-		BLKID_STATIC_LIBS=$("$PKG_CONFIG" --static --libs blkid)
+			BLKID_WIPING="yes"
+			BLKID_PC="blkid"
+			DEFAULT_USE_BLKID_WIPING=1
+			# pkg_config --static  does not really work ATM...
+			BLKID_STATIC_LIBS=$("$PKG_CONFIG" --static --libs blkid)
 
 printf "%s\n" "#define BLKID_WIPING_SUPPORT 1" >>confdefs.h
 
 
-else $as_nop
+fi
 
-		if test "$BLKID_WIPING" = "maybe"
+fi
+
+fi
+
+if test "$BLKID_WIPING" = "error"
 then :
-
-			BLKID_WIPING=no
-
-else $as_nop
-
-			as_fn_error $? "bailing out... blkid library >= 2.24 is required" "$LINENO" 5
-
+  as_fn_error $? "--enable-blkid_wiping requires blkid library >= 2.24. (--with-blkid=$with_blkid)" "$LINENO" 5
 fi
 
-fi
-
-fi
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to enable libblkid detection of signatures when wiping" >&5
 printf %s "checking whether to enable libblkid detection of signatures when wiping... " >&6; }
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $BLKID_WIPING" >&5
@@ -13173,6 +13196,10 @@ fi
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $UDEV_SYNC" >&5
 printf "%s\n" "$UDEV_SYNC" >&6; }
+if test "$UDEV_SYNC" = "yes" && test "$with_udev" = "no"
+then :
+  as_fn_error $? "--enable-udev_sync requires udev >= 143. (--with-udev=$with_udev)" "$LINENO" 5
+fi
 
 if test "$UDEV_SYNC" = "yes"
 then :
@@ -13439,7 +13466,11 @@ printf "%s\n" "$CMDLIB" >&6; }
 
 if test "$CMDLIB" = "yes"
 then :
-  LVM2CMD_LIB="-llvm2cmd"
+  if test "$SHARED_LINK" = "no"
+then :
+  as_fn_error $? "--enable-cmdlib requires dynamic linking." "$LINENO" 5
+fi
+       LVM2CMD_LIB="-llvm2cmd"
 else $as_nop
   LVM2CMD_LIB=
 fi
@@ -16110,6 +16141,7 @@ AIO_LIBS=${AIO_LIBS:--laio}
 
 
 ################################################################################
+
 
 
 
