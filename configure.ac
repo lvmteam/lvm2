@@ -212,6 +212,14 @@ test "$prefix" = "NONE" && prefix=$ac_default_prefix
 # Let make expand exec_prefix.
 test "$exec_prefix" = "NONE" && exec_prefix='${prefix}'
 
+
+AC_ARG_WITH(blkid, [AS_HELP_STRING([--without-blkid], [do not build with blkid library])],
+	    [], with_blkid="yes")
+AC_ARG_WITH(systemd, [AS_HELP_STRING([--without-systemd], [do not build with systemd library])],
+	    [], with_systemd="yes")
+AC_ARG_WITH(udev, [AS_HELP_STRING([--without-udev], [do not build with udev library])],
+	    [], with_udev="yes")
+
 ################################################################################
 dnl -- Setup the ownership of the files
 AC_MSG_CHECKING([file owner])
@@ -1020,8 +1028,12 @@ AC_DEFINE_UNQUOTED(DEFAULT_USE_LVMPOLLD, [$DEFAULT_USE_LVMPOLLD],
 
 
 SYSTEMD_MIN_VERSION=0
-PKG_CHECK_EXISTS(systemd >= 221, [SYSTEMD_MIN_VERSION=221])
-PKG_CHECK_EXISTS(systemd >= 234, [SYSTEMD_MIN_VERSION=234])
+SYSTEMD_JOURNAL_SUPPORT="no"
+APP_MACHINEID_SUPPORT="no"
+
+AS_IF([test "$with_systemd" = "yes"],
+      PKG_CHECK_EXISTS(systemd >= 221, [SYSTEMD_MIN_VERSION=221 SYSTEMD_JOURNAL_SUPPORT="maybe"])
+      PKG_CHECK_EXISTS(systemd >= 234, [SYSTEMD_MIN_VERSION=234 APP_MACHINEID_SUPPORT="maybe"]))
 
 ################################################################################
 dnl -- Build notifydbus
@@ -1030,26 +1042,24 @@ AC_ARG_ENABLE(notify-dbus,
 	      AS_HELP_STRING([--enable-notify-dbus],
 			     [enable LVM notification using dbus]),
 	      NOTIFYDBUS_SUPPORT=$enableval, NOTIFYDBUS_SUPPORT="no")
-AS_IF([test "$NOTIFYDBUS_SUPPORT" = "yes" && test "$SYSTEMD_MIN_VERSION" -lt 221],
-      [AC_MSG_ERROR([Enabling notify-dbus requires systemd >= 221])])
 AC_MSG_RESULT([$NOTIFYDBUS_SUPPORT])
 
 AS_IF([test "$NOTIFYDBUS_SUPPORT" = "yes"],
+      AS_IF([test "$SYSTEMD_MIN_VERSION" -lt 221],
+            [AC_MSG_ERROR([--enable-notify-dbus requires systemd >= 221. (--with-systemd=$with_systemd)])])
       AC_DEFINE([NOTIFYDBUS_SUPPORT], 1, [Define to 1 to include code that uses dbus notification.]))
 
 ################################################################################
 dnl -- Build with systemd journaling when the header file is present
-AS_IF([test "$SYSTEMD_MIN_VERSION" -ge 221], [SYSTEMD_JOURNAL_SUPPORT="maybe"], [SYSTEMD_JOURNAL_SUPPORT="no"])
-AC_CHECK_HEADER([systemd/sd-journal.h],
-		[AS_IF([test "$SYSTEMD_JOURNAL_SUPPORT" != "no"], [SYSTEMD_JOURNAL_SUPPORT="yes"])],
-                [SYSTEMD_JOURNAL_SUPPORT="no"])
-AC_MSG_CHECKING([whether to log to systemd journal])
+AS_IF([test "$SYSTEMD_JOURNAL_SUPPORT" != "no"],
+      AC_CHECK_HEADER([systemd/sd-journal.h], [SYSTEMD_JOURNAL_SUPPORT="yes"], [SYSTEMD_JOURNAL_SUPPORT="no"]))
 AC_ARG_ENABLE(systemd-journal,
 	      AS_HELP_STRING([--disable-systemd-journal],
 			     [disable LVM systemd journaling]),
 	      AS_IF([test "$enableval" = "yes" && test "$SYSTEMD_JOURNAL_SUPPORT" = "no"],
-		    AC_MSG_ERROR([Enabling systemd journal requires systemd/sd-journal.h and systemd >= 221.]))
+		    AC_MSG_ERROR([--enable-systemd-journal requires systemd/sd-journal.h and systemd >= 221. (--with-systemd=$with_systemd)]))
 	      SYSTEMD_JOURNAL_SUPPORT=$enableval, [])
+AC_MSG_CHECKING([whether to log to systemd journal])
 AC_MSG_RESULT([$SYSTEMD_JOURNAL_SUPPORT])
 
 AS_IF([test "$SYSTEMD_JOURNAL_SUPPORT" = "yes"],
@@ -1057,17 +1067,15 @@ AS_IF([test "$SYSTEMD_JOURNAL_SUPPORT" = "yes"],
 
 ################################################################################
 dnl -- Build appmachineid when header file sd-id128.h is present
-AS_IF([test "$SYSTEMD_MIN_VERSION" -ge 234], [APP_MACHINEID_SUPPORT="maybe"], [APP_MACHINEID_SUPPORT="no"])
-AC_CHECK_HEADER([systemd/sd-id128.h],
-		[AS_IF([test "$APP_MACHINEID_SUPPORT" != "no"], [APP_MACHINEID_SUPPORT="yes"])],
-		[APP_MACHINEID_SUPPORT="no"])
-AC_MSG_CHECKING([whether to support systemd appmachineid])
+AS_IF([test "$APP_MACHINEID_SUPPORT" != "no"],
+      [AC_CHECK_HEADER([systemd/sd-id128.h], [APP_MACHINEID_SUPPORT="yes"], [APP_MACHINEID_SUPPORT="no"])])
 AC_ARG_ENABLE(app-machineid,
 	      AS_HELP_STRING([--disable-app-machineid],
 			     [disable LVM system ID using app-specific machine-id]),
 	      AS_IF([test "$enableval" = "yes" && test "$APP_MACHINEID_SUPPORT" = "no"],
-		    AC_MSG_ERROR([Enabling app machineid requires systemd/sd-id128.h and systemd >= 234.]))
+		    AC_MSG_ERROR([--enable-app-machineid requires systemd/sd-id128.h and systemd >= 234. (--with-systemd=$with_systemd)]))
 	      APP_MACHINEID_SUPPORT=$enableval, [])
+AC_MSG_CHECKING([whether to support systemd appmachineid])
 AC_MSG_RESULT([$APP_MACHINEID_SUPPORT])
 
 AS_IF([test "$APP_MACHINEID_SUPPORT" = "yes"],
@@ -1092,49 +1100,44 @@ AC_MSG_RESULT([$SYSTEMD_RUN_CMD])
 ################################################################################
 
 dnl -- Enable blkid wiping functionality
-AC_ARG_ENABLE(blkid_wiping,
-	      AS_HELP_STRING([--disable-blkid_wiping],
-			     [disable libblkid detection of signatures when wiping and use native code instead]),
-	      BLKID_WIPING=$enableval, BLKID_WIPING="maybe")
-
 # TODO: possibly detect right version of blkid with BLKID_SUBLKS_FSINFO support
 #       so lvresize can check detected flag here
 #
 DEFAULT_USE_BLKID_WIPING=0
-PKG_CHECK_EXISTS([blkid >= 2.24], [HAVE_BLKID="yes"], [HAVE_BLKID="no"])
-
-AS_IF([test "$HAVE_BLKID" = "yes"], [
-	PKG_CHECK_MODULES([BLKID], [blkid >= 2.24], [
-
-	AC_CACHE_CHECK([for blkid.h defines BLKID_SUBLKS_FSINFO.],
-		[ac_cv_have_blkid_sublks_fsinfo],
-		[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <blkid/blkid.h>
-#ifndef BLKID_SUBLKS_FSINFO
-#error BLKID_SUBLKS_FSINFO is missing
-#endif])],
-		[ac_cv_have_blkid_sublks_fsinfo="yes"], [ac_cv_have_blkid_sublks_fsinfo="no"])])
-
-	AC_IF_YES(ac_cv_have_blkid_sublks_fsinfo,
-		  AC_DEFINE(HAVE_BLKID_SUBLKS_FSINFO, 1,
-			    [Define if blkid.h has BLKID_SUBLKS_FSINFO]))
-	])
-])
+AC_ARG_ENABLE(blkid_wiping,
+	      AS_HELP_STRING([--disable-blkid_wiping],
+			     [disable libblkid detection of signatures when wiping and use native code instead]),
+	      BLKID_WIPING=$enableval,
+	      [AS_IF([test "$with_blkid" = "yes"], [BLKID_WIPING="maybe"], [BLKID_WIPING="no"])])
 
 AS_IF([test "$BLKID_WIPING" != "no"], [
-	AS_IF([test "$HAVE_BLKID" = "yes"], [
-		BLKID_WIPING="yes"
-		BLKID_PC="blkid"
-		DEFAULT_USE_BLKID_WIPING=1
-		BLKID_STATIC_LIBS=$("$PKG_CONFIG" --static --libs blkid)
-		AC_DEFINE([BLKID_WIPING_SUPPORT], 1, [Define to 1 to use libblkid detection of signatures when wiping.])
-	], [
-		AS_IF([test "$BLKID_WIPING" = "maybe"], [
-			BLKID_WIPING=no
-		], [
-			AC_MSG_ERROR([bailing out... blkid library >= 2.24 is required])
-		])
-	])
+	PKG_CHECK_MODULES([BLKID], [blkid >= 2.24], [
+		AC_CACHE_CHECK([for blkid.h defines BLKID_SUBLKS_FSINFO.],
+			[ac_cv_have_blkid_sublks_fsinfo],
+			[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <blkid/blkid.h>
+#ifndef BLKID_SUBLKS_FSINFO
+#error BLKID_SUBLKS_FSINFO is missing
+#endif
+			])], [ac_cv_have_blkid_sublks_fsinfo="yes"], [ac_cv_have_blkid_sublks_fsinfo="no"])])
+
+		AC_IF_YES(ac_cv_have_blkid_sublks_fsinfo,
+			  AC_DEFINE(HAVE_BLKID_SUBLKS_FSINFO, 1,
+				    [Define if blkid.h has BLKID_SUBLKS_FSINFO]))
+
+		AS_IF([test "$with_blkid" = "no"], [BLKID_WIPING="error"], [
+			BLKID_WIPING="yes"
+			BLKID_PC="blkid"
+			DEFAULT_USE_BLKID_WIPING=1
+			# pkg_config --static  does not really work ATM...
+			BLKID_STATIC_LIBS=$("$PKG_CONFIG" --static --libs blkid)
+			AC_DEFINE([BLKID_WIPING_SUPPORT], 1, [Define to 1 to use libblkid detection of signatures when wiping.])
+		      ])
+      ], [AS_IF([test "$BLKID_WIPING" = "yes"], [BLKID_WIPING="error"], [BLKID_WIPING="no"])])
 ])
+
+AS_IF([test "$BLKID_WIPING" = "error"],
+	[AC_MSG_ERROR([--enable-blkid_wiping requires blkid library >= 2.24. (--with-blkid=$with_blkid)])])
+
 AC_MSG_CHECKING([whether to enable libblkid detection of signatures when wiping])
 AC_MSG_RESULT([$BLKID_WIPING])
 AC_DEFINE_UNQUOTED(DEFAULT_USE_BLKID_WIPING, [$DEFAULT_USE_BLKID_WIPING],
@@ -1148,6 +1151,8 @@ AC_ARG_ENABLE(udev_sync,
 			     [enable synchronization with udev processing]),
 	      UDEV_SYNC=$enableval, UDEV_SYNC="no")
 AC_MSG_RESULT([$UDEV_SYNC])
+AS_IF([test "$UDEV_SYNC" = "yes" && test "$with_udev" = "no"],
+	[AC_MSG_ERROR([--enable-udev_sync requires udev >= 143. (--with-udev=$with_udev)])])
 
 AS_IF([test "$UDEV_SYNC" = "yes"], [
 	PKG_CHECK_MODULES(UDEV, libudev >= 143, [UDEV_PC="libudev"])
@@ -1333,7 +1338,7 @@ AC_MSG_RESULT([$BUILD_DMFILEMAPD])
 
 dnl -- dmfilemapd requires FIEMAP
 AS_IF([test "$BUILD_DMFILEMAPD" = "yes"],
-      [AC_CHECK_HEADER([linux/fiemap.h], [],    
+      [AC_CHECK_HEADER([linux/fiemap.h], [],
 		      ,[AC_MSG_ERROR(--enable-dmfilemapd requires fiemap.h)])
        AC_DEFINE([DMFILEMAPD], 1, [Define to 1 to enable the device-mapper filemap daemon.])])
 
