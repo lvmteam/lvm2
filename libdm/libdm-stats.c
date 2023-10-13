@@ -140,7 +140,7 @@ static char *_stats_escape_aux_data(const char *aux_data)
 {
 	size_t aux_data_len = strlen(aux_data);
 	char *escaped = dm_malloc((3 * aux_data_len + 1) * sizeof(char));
-	size_t index = 0;
+	size_t index = 0, i;
 
 	if (!escaped) {
 		log_error("Could not allocate memory for escaped "
@@ -148,7 +148,7 @@ static char *_stats_escape_aux_data(const char *aux_data)
 		return NULL;
 	}
 
-	for (size_t i = 0; i < aux_data_len; i++) {
+	for (i = 0; i < aux_data_len; i++) {
 		if (aux_data[i] == ' ') {
 			escaped[index++] = '\\';
 			escaped[index++] = ' ';
@@ -952,13 +952,13 @@ static int _stats_parse_string_data(char *string_data, char **program_id,
 		(string_data)[len - 1] = '\0';
 	}
 	p = strchr(string_data, ' ');
+	*program_id = string_data;
 	if (!p) {
 		*aux_data = *stats_args = empty_string;
 		return 1;
 	}
 
 	*p = '\0';
-	*program_id = string_data;
 
 	p++;
 	if (strstr(p, DMS_GROUP_TAG)) {
@@ -995,11 +995,9 @@ static int _stats_parse_string_data(char *string_data, char **program_id,
 static int _stats_parse_list_region(struct dm_stats *dms,
 				    struct dm_stats_region *region, char *line)
 {
-	char string_data[STATS_ROW_BUF_LEN];
+	char string_data[STATS_ROW_BUF_LEN] = { 0 };
 	char *p, *program_id, *aux_data, *stats_args;
 	int r;
-
-	memset(string_data, 0, sizeof(string_data));
 
 	/*
 	 * Parse fixed fields, line format:
