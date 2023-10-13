@@ -82,9 +82,11 @@ PREFIX="${COMMON_PREFIX}$$"
 # Check we are not conflickting with some exiting setup
 if test -z "$SKIP_ROOT_DM_CHECK" ; then
 	d=$(dmsetup info -c -o name --noheadings --rows -S "suspended=Suspended||name=~${PREFIX}[^0-9]")
-	test "$d" = "No devices found" || {
-		die "DM table already has either suspended or $PREFIX prefixed devices: $d"
-	}
+	case "$d" in
+	"No devices found") ;;
+	"") ;;
+	*) die "DM table already has either suspended or $PREFIX prefixed devices: $d" ;;
+	esac
 fi
 
 test -n "$LVM_TEST_DIR" || LVM_TEST_DIR=${TMPDIR:-/tmp}
