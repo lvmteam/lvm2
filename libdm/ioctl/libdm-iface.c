@@ -2055,7 +2055,21 @@ int dm_task_get_errno(struct dm_task *dmt)
 	return dmt->ioctl_errno;
 }
 
-int dm_task_run(struct dm_task *dmt)
+#if defined(GNU_SYMVER)
+/*
+ * Enforce new version 1_02_197 of dm_task_run() that propagates
+ * ioctl() errno is being linked to app.
+ */
+DM_EXPORT_SYMBOL_BASE(dm_task_run)
+int dm_task_run_base(struct dm_task *dmt);
+int dm_task_run_base(struct dm_task *dmt)
+{
+	return dm_task_run(dmt);
+}
+#endif
+
+DM_EXPORT_NEW_SYMBOL(int, dm_task_run, 1_02_197)
+	(struct dm_task *dmt)
 {
 	struct dm_ioctl *dmi;
 	unsigned command;
