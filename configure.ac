@@ -1030,26 +1030,12 @@ AC_DEFINE_UNQUOTED(DEFAULT_USE_LVMPOLLD, [$DEFAULT_USE_LVMPOLLD],
 
 
 SYSTEMD_MIN_VERSION=0
+NOTIFYDBUS_SUPPORT="no"
 SYSTEMD_JOURNAL_SUPPORT="no"
 APP_MACHINEID_SUPPORT="no"
-
 AS_IF([test "$with_systemd" = "yes"],
-      PKG_CHECK_EXISTS(systemd >= 221, [SYSTEMD_MIN_VERSION=221 SYSTEMD_JOURNAL_SUPPORT="maybe"])
+      PKG_CHECK_EXISTS(systemd >= 221, [SYSTEMD_MIN_VERSION=221 NOTIFYDBUS_SUPPORT="maybe" SYSTEMD_JOURNAL_SUPPORT="maybe"])
       PKG_CHECK_EXISTS(systemd >= 234, [SYSTEMD_MIN_VERSION=234 APP_MACHINEID_SUPPORT="maybe"]))
-
-################################################################################
-dnl -- Build notifydbus
-AC_MSG_CHECKING([whether to build notifydbus])
-AC_ARG_ENABLE(notify-dbus,
-	      AS_HELP_STRING([--enable-notify-dbus],
-			     [enable LVM notification using dbus]),
-	      NOTIFYDBUS_SUPPORT=$enableval, NOTIFYDBUS_SUPPORT="no")
-AC_MSG_RESULT([$NOTIFYDBUS_SUPPORT])
-
-AS_IF([test "$NOTIFYDBUS_SUPPORT" = "yes"],
-      AS_IF([test "$SYSTEMD_MIN_VERSION" -lt 221],
-            [AC_MSG_ERROR([--enable-notify-dbus requires systemd >= 221. (--with-systemd=$with_systemd)])])
-      AC_DEFINE([NOTIFYDBUS_SUPPORT], 1, [Define to 1 to include code that uses dbus notification.]))
 
 ################################################################################
 dnl -- Build with systemd journaling when the header file is present
@@ -1082,11 +1068,6 @@ AC_MSG_RESULT([$APP_MACHINEID_SUPPORT])
 
 AS_IF([test "$APP_MACHINEID_SUPPORT" = "yes"],
       AC_DEFINE([APP_MACHINEID_SUPPORT], 1, [Define to 1 to include code that uses libsystemd machine-id apis.]))
-
-dnl -- Look for libsystemd libraries if needed
-AS_IF([test "$NOTIFYDBUS_SUPPORT" = "yes" || test "$SYSTEMD_JOURNAL_SUPPORT" = "yes" || test "$APP_MACHINEID_SUPPORT" = "yes"], [
-	PKG_CHECK_MODULES(LIBSYSTEMD, [libsystemd])
-])
 
 ################################################################################
 dnl -- Support override for systemd-run path if they need to (NixOS builds)
@@ -1226,27 +1207,35 @@ AS_IF([test "$ODIRECT" = "yes"], [
 ])
 
 ################################################################################
-dnl -- Enable cmdlib
-AC_MSG_CHECKING([whether to compile liblvm2cmd.so])
-AC_ARG_ENABLE(cmdlib,
-	      AS_HELP_STRING([--enable-cmdlib], [build shared command library]),
-	      CMDLIB=$enableval, CMDLIB="no")
-AC_MSG_RESULT([$CMDLIB])
-AC_SUBST([LVM2CMD_LIB])
-AS_IF([test "$CMDLIB" = "yes"],
-      [AS_IF([test "$SHARED_LINK" = "no"],
-	     [AC_MSG_ERROR([--enable-cmdlib requires dynamic linking.])])
-       LVM2CMD_LIB="-llvm2cmd"], [LVM2CMD_LIB=])
-
-################################################################################
 dnl -- Enable D-Bus service
 AC_MSG_CHECKING([whether to include Python D-Bus support])
 AC_ARG_ENABLE(dbus-service,
 	      AS_HELP_STRING([--enable-dbus-service], [install D-Bus support]),
 	      BUILD_LVMDBUSD=$enableval, BUILD_LVMDBUSD="no")
 AC_MSG_RESULT([$BUILD_LVMDBUSD])
-AS_IF([test "$NOTIFYDBUS_SUPPORT" = "no" && test "$BUILD_LVMDBUSD" = "yes"],
-      [AC_MSG_WARN([Building D-Bus support without D-Bus notifications.])])
+
+################################################################################
+dnl -- Build notifydbus
+AC_ARG_ENABLE(notify-dbus,
+	      [AS_HELP_STRING([--enable-notify-dbus], [enable LVM notification using dbus])],
+	      [NOTIFYDBUS_SUPPORT=$enableval])
+
+AS_IF([test "$NOTIFYDBUS_SUPPORT" = "maybe"],
+      [AS_IF([test "$BUILD_LVMDBUSD" = "yes"], [NOTIFYDBUS_SUPPORT="yes"], [NOTIFYDBUS_SUPPORT="no"])])
+
+AS_IF([test "$NOTIFYDBUS_SUPPORT" = "yes"],
+      [AS_IF([test "$SYSTEMD_MIN_VERSION" -lt 221],
+	    [AC_MSG_ERROR([--enable-notify-dbus requires systemd >= 221. (--with-systemd=$with_systemd)])])
+       AC_DEFINE([NOTIFYDBUS_SUPPORT], 1, [Define to 1 to include code that uses dbus notification.])])
+
+AC_MSG_CHECKING([whether to build notifydbus])
+AC_MSG_RESULT([$NOTIFYDBUS_SUPPORT])
+
+################################################################################
+dnl -- Look for libsystemd libraries if needed
+AS_IF([test "$NOTIFYDBUS_SUPPORT" = "yes" || test "$SYSTEMD_JOURNAL_SUPPORT" = "yes" || test "$APP_MACHINEID_SUPPORT" = "yes"], [
+	PKG_CHECK_MODULES(LIBSYSTEMD, [libsystemd])
+])
 
 ################################################################################
 dnl -- Enable Python dbus library
@@ -1320,15 +1309,28 @@ AC_MSG_RESULT([$BUILD_DMEVENTD])
 
 dnl -- dmeventd currently requires internal mirror support
 AS_IF([test "$BUILD_DMEVENTD" = "yes"], [
-   AS_IF([test "$MIRRORS" != "internal"], [
-      AC_MSG_ERROR([--enable-dmeventd currently requires --with-mirrors=internal])
-   ])
-   AS_IF([test "$CMDLIB" = "no"], [
-      AC_MSG_ERROR([--enable-dmeventd requires --enable-cmdlib to be used as well])
-   ])
+      AS_IF([test "$MIRRORS" != "internal"],
+	    [AC_MSG_ERROR([--enable-dmeventd currently requires --with-mirrors=internal])])
+      AC_DEFINE([DMEVENTD], 1, [Define to 1 to enable the device-mapper event daemon.])])
 
-   AC_DEFINE([DMEVENTD], 1, [Define to 1 to enable the device-mapper event daemon.])
-])
+################################################################################
+dnl -- Enable cmdlib
+AC_ARG_ENABLE(cmdlib, [AS_HELP_STRING([--enable-cmdlib], [build shared command library])],
+	      CMDLIB=$enableval, CMDLIB="maybe")
+
+AS_IF([test "$BUILD_DMEVENTD" = "yes"],
+      [AS_IF([test "$CMDLIB" = "no"],
+             [AC_MSG_ERROR([--enable-dmeventd requires --enable-cmdlib to be used as well])],
+             [CMDLIB="yes"])])
+
+AS_IF([test "$CMDLIB" != "yes"], [CMDLIB="no" LVM2CMD_LIB=], [LVM2CMD_LIB="-llvm2cmd"])
+
+AC_MSG_CHECKING([whether to compile liblvm2cmd.so])
+AC_MSG_RESULT([$CMDLIB])
+
+AS_IF([test "$CMDLIB" == "yes" && test "$SHARED_LINK" = "no"],
+      [AC_MSG_ERROR([--enable-cmdlib requires dynamic linking.])])
+
 
 ################################################################################
 dnl -- Check dmfilemapd
@@ -1340,8 +1342,7 @@ AC_MSG_RESULT([$BUILD_DMFILEMAPD])
 
 dnl -- dmfilemapd requires FIEMAP
 AS_IF([test "$BUILD_DMFILEMAPD" = "yes"],
-      [AC_CHECK_HEADER([linux/fiemap.h], [],
-		      ,[AC_MSG_ERROR(--enable-dmfilemapd requires fiemap.h)])
+      [AC_CHECK_HEADER([linux/fiemap.h], [], [AC_MSG_ERROR(--enable-dmfilemapd requires fiemap.h)])
        AC_DEFINE([DMFILEMAPD], 1, [Define to 1 to enable the device-mapper filemap daemon.])])
 
 ################################################################################
@@ -1879,6 +1880,7 @@ AC_SUBST(LDDEPS)
 AC_SUBST(LIBS)
 AC_SUBST(LIB_SUFFIX)
 AC_SUBST(localedir)
+AC_SUBST(LVM2CMD_LIB)
 AC_SUBST(LVMIMPORTVDO)
 AC_SUBST(LVMIMPORTVDO_PATH)
 AC_SUBST(LVMLOCKD_PIDFILE)
@@ -2040,3 +2042,6 @@ AS_IF([test -n "$LVM_NEEDS_LIBAIO_WARN"],
 
 AS_IF([test "$ODIRECT" != "yes"],
       [AC_MSG_WARN([O_DIRECT disabled: low-memory pvmove may lock up])])
+
+AS_IF([test "$BUILD_LVMDBUSD" = "yes" && test "$NOTIFYDBUS_SUPPORT" = "no"],
+      [AC_MSG_WARN([Building D-Bus support without D-Bus notifications!])])
