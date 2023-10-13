@@ -3071,7 +3071,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	struct logical_volume *data_lv;             /* lv arg renamed */
 	struct logical_volume *pool_lv = NULL;             /* new lv created here */
 	const char *pool_metadata_name;             /* user-specified lv name */
-	char converted_names[3*NAME_LEN];	    /* preserve names of converted lv */
+	char converted_names[3*NAME_LEN] = { 0 };   /* preserve names of converted lv */
 	struct segment_type *pool_segtype;          /* thinpool or cachepool */
 	const char *str_seg_type = to_cachepool ? SEG_TYPE_NAME_CACHE_POOL : SEG_TYPE_NAME_THIN_POOL;
 	struct lv_segment *seg;
