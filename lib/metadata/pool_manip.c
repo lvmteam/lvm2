@@ -440,7 +440,7 @@ int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
 	}
 
 	dm_list_iterate_items(seg, &pool_data_lv->segments) {
-		switch (seg_type(seg, 0)) {
+		switch (seg->area_count ? seg_type(seg, 0) : AREA_UNASSIGNED) {
 		case AREA_PV:
 			pv = seg_pv(seg, 0);
 			if (chunk_size_calc_policy == THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE)
