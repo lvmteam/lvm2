@@ -373,11 +373,9 @@ SUBDIRS.cflow := $(SUBDIRS:=.cflow)
 SUBDIRS.clean := $(SUBDIRS:=.clean)
 SUBDIRS.distclean := $(SUBDIRS:=.distclean)
 
+TARGETS += $(LIB_STATIC)
 ifeq ("@SHARED_LINK@", "yes")
   TARGETS += $(LIB_SHARED)
-endif
-ifeq ("@STATIC_LINK@", "yes")
-  TARGETS += $(LIB_STATIC)
 endif
 
 INTERNAL_LIBS = \
