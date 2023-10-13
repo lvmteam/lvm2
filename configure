@@ -711,6 +711,7 @@ LVMPOLLD_PIDFILE
 LVMLOCKD_PIDFILE
 LVMIMPORTVDO_PATH
 LVMIMPORTVDO
+LVM2CMD_LIB
 LIB_SUFFIX
 LDDEPS
 JOBS
@@ -786,14 +787,13 @@ PYTHON_PREFIX
 PYTHON_PLATFORM
 PYTHON_VERSION
 PYTHON
-LVM2CMD_LIB
+LIBSYSTEMD_LIBS
+LIBSYSTEMD_CFLAGS
 UDEV_LIBS
 UDEV_CFLAGS
 BLKID_LIBS
 BLKID_CFLAGS
 SYSTEMD_RUN_CMD
-LIBSYSTEMD_LIBS
-LIBSYSTEMD_CFLAGS
 LIBSEAGATEILM_LIBS
 LIBSEAGATEILM_CFLAGS
 LIBDLMCONTROL_LIBS
@@ -973,7 +973,6 @@ enable_use_lvmlockd
 with_lvmlockd_pidfile
 enable_use_lvmpolld
 with_lvmpolld_pidfile
-enable_notify_dbus
 enable_systemd_journal
 enable_app_machineid
 with_systemd_run
@@ -984,8 +983,8 @@ enable_udev_rule_exec_detection
 enable_units_compat
 enable_ioctl
 enable_o_direct
-enable_cmdlib
 enable_dbus_service
+enable_notify_dbus
 with_python_sys_prefix
 with_python_prefix
 with_python_exec_prefix
@@ -995,6 +994,7 @@ enable_fsadm
 enable_lvmimportvdo
 enable_blkdeactivate
 enable_dmeventd
+enable_cmdlib
 enable_dmfilemapd
 enable_selinux
 enable_blkzeroout
@@ -1047,12 +1047,12 @@ LIBDLMCONTROL_CFLAGS
 LIBDLMCONTROL_LIBS
 LIBSEAGATEILM_CFLAGS
 LIBSEAGATEILM_LIBS
-LIBSYSTEMD_CFLAGS
-LIBSYSTEMD_LIBS
 BLKID_CFLAGS
 BLKID_LIBS
 UDEV_CFLAGS
 UDEV_LIBS
+LIBSYSTEMD_CFLAGS
+LIBSYSTEMD_LIBS
 PYTHON
 SELINUX_CFLAGS
 SELINUX_LIBS
@@ -1714,7 +1714,6 @@ Optional Features:
   --enable-lvmlockd-idm   enable the LVM lock daemon using idm
   --disable-use-lvmlockd  disable usage of LVM lock daemon
   --disable-use-lvmpolld  disable usage of LVM Poll Daemon
-  --enable-notify-dbus    enable LVM notification using dbus
   --disable-systemd-journal
                           disable LVM systemd journaling
   --disable-app-machineid disable LVM system ID using app-specific machine-id
@@ -1728,14 +1727,15 @@ Optional Features:
                           that do not use KiB-style unit suffixes
   --disable-ioctl         disable ioctl calls to device-mapper in the kernel
   --disable-o_direct      disable O_DIRECT
-  --enable-cmdlib         build shared command library
   --enable-dbus-service   install D-Bus support
+  --enable-notify-dbus    enable LVM notification using dbus
   --enable-pkgconfig      install pkgconfig support
   --enable-write_install  install user writable files
   --disable-fsadm         disable fsadm
   --disable-lvmimportvdo  disable lvm_import_vdo
   --disable-blkdeactivate disable blkdeactivate
   --enable-dmeventd       enable the device-mapper event daemon
+  --enable-cmdlib         build shared command library
   --enable-dmfilemapd     enable the dmstats filemap daemon
   --disable-selinux       disable selinux support
   --disable-blkzeroout    do not use BLKZEROOUT for device zeroing
@@ -1878,15 +1878,15 @@ Some influential environment variables:
               C compiler flags for LIBSEAGATEILM, overriding pkg-config
   LIBSEAGATEILM_LIBS
               linker flags for LIBSEAGATEILM, overriding pkg-config
-  LIBSYSTEMD_CFLAGS
-              C compiler flags for LIBSYSTEMD, overriding pkg-config
-  LIBSYSTEMD_LIBS
-              linker flags for LIBSYSTEMD, overriding pkg-config
   BLKID_CFLAGS
               C compiler flags for BLKID, overriding pkg-config
   BLKID_LIBS  linker flags for BLKID, overriding pkg-config
   UDEV_CFLAGS C compiler flags for UDEV, overriding pkg-config
   UDEV_LIBS   linker flags for UDEV, overriding pkg-config
+  LIBSYSTEMD_CFLAGS
+              C compiler flags for LIBSYSTEMD, overriding pkg-config
+  LIBSYSTEMD_LIBS
+              linker flags for LIBSYSTEMD, overriding pkg-config
   PYTHON      the Python interpreter
   SELINUX_CFLAGS
               C compiler flags for SELINUX, overriding pkg-config
@@ -12665,9 +12665,9 @@ printf "%s\n" "#define DEFAULT_USE_LVMPOLLD $DEFAULT_USE_LVMPOLLD" >>confdefs.h
 
 
 SYSTEMD_MIN_VERSION=0
+NOTIFYDBUS_SUPPORT="no"
 SYSTEMD_JOURNAL_SUPPORT="no"
 APP_MACHINEID_SUPPORT="no"
-
 if test "$with_systemd" = "yes"
 then :
   if test -n "$PKG_CONFIG" && \
@@ -12676,7 +12676,7 @@ then :
   ac_status=$?
   printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  SYSTEMD_MIN_VERSION=221 SYSTEMD_JOURNAL_SUPPORT="maybe"
+  SYSTEMD_MIN_VERSION=221 NOTIFYDBUS_SUPPORT="maybe" SYSTEMD_JOURNAL_SUPPORT="maybe"
 fi
       if test -n "$PKG_CONFIG" && \
     { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"systemd >= 234\""; } >&5
@@ -12686,31 +12686,6 @@ fi
   test $ac_status = 0; }; then
   SYSTEMD_MIN_VERSION=234 APP_MACHINEID_SUPPORT="maybe"
 fi
-fi
-
-################################################################################
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to build notifydbus" >&5
-printf %s "checking whether to build notifydbus... " >&6; }
-# Check whether --enable-notify-dbus was given.
-if test ${enable_notify_dbus+y}
-then :
-  enableval=$enable_notify_dbus; NOTIFYDBUS_SUPPORT=$enableval
-else $as_nop
-  NOTIFYDBUS_SUPPORT="no"
-fi
-
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $NOTIFYDBUS_SUPPORT" >&5
-printf "%s\n" "$NOTIFYDBUS_SUPPORT" >&6; }
-
-if test "$NOTIFYDBUS_SUPPORT" = "yes"
-then :
-  if test "$SYSTEMD_MIN_VERSION" -lt 221
-then :
-  as_fn_error $? "--enable-notify-dbus requires systemd >= 221. (--with-systemd=$with_systemd)" "$LINENO" 5
-fi
-
-printf "%s\n" "#define NOTIFYDBUS_SUPPORT 1" >>confdefs.h
-
 fi
 
 ################################################################################
@@ -12778,103 +12753,6 @@ if test "$APP_MACHINEID_SUPPORT" = "yes"
 then :
 
 printf "%s\n" "#define APP_MACHINEID_SUPPORT 1" >>confdefs.h
-
-fi
-
-if test "$NOTIFYDBUS_SUPPORT" = "yes" || test "$SYSTEMD_JOURNAL_SUPPORT" = "yes" || test "$APP_MACHINEID_SUPPORT" = "yes"
-then :
-
-
-pkg_failed=no
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libsystemd" >&5
-printf %s "checking for libsystemd... " >&6; }
-
-if test -n "$LIBSYSTEMD_CFLAGS"; then
-    pkg_cv_LIBSYSTEMD_CFLAGS="$LIBSYSTEMD_CFLAGS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libsystemd\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "libsystemd") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_LIBSYSTEMD_CFLAGS=`$PKG_CONFIG --cflags "libsystemd" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-if test -n "$LIBSYSTEMD_LIBS"; then
-    pkg_cv_LIBSYSTEMD_LIBS="$LIBSYSTEMD_LIBS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libsystemd\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "libsystemd") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_LIBSYSTEMD_LIBS=`$PKG_CONFIG --libs "libsystemd" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-
-
-
-if test $pkg_failed = yes; then
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-                LIBSYSTEMD_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libsystemd" 2>&1`
-        else
-                LIBSYSTEMD_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libsystemd" 2>&1`
-        fi
-        # Put the nasty error message in config.log where it belongs
-        echo "$LIBSYSTEMD_PKG_ERRORS" >&5
-
-        as_fn_error $? "Package requirements (libsystemd) were not met:
-
-$LIBSYSTEMD_PKG_ERRORS
-
-Consider adjusting the PKG_CONFIG_PATH environment variable if you
-installed software in a non-standard prefix.
-
-Alternatively, you may set the environment variables LIBSYSTEMD_CFLAGS
-and LIBSYSTEMD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details." "$LINENO" 5
-elif test $pkg_failed = untried; then
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-        { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
-printf "%s\n" "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
-is in your PATH or set the PKG_CONFIG environment variable to the full
-path to pkg-config.
-
-Alternatively, you may set the environment variables LIBSYSTEMD_CFLAGS
-and LIBSYSTEMD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-
-To get pkg-config, see <http://pkg-config.freedesktop.org/>.
-See \`config.log' for more details" "$LINENO" 5; }
-else
-        LIBSYSTEMD_CFLAGS=$pkg_cv_LIBSYSTEMD_CFLAGS
-        LIBSYSTEMD_LIBS=$pkg_cv_LIBSYSTEMD_LIBS
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-
-fi
 
 fi
 
@@ -13451,31 +13329,6 @@ printf "%s\n" "#define O_DIRECT_SUPPORT 1" >>confdefs.h
 fi
 
 ################################################################################
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to compile liblvm2cmd.so" >&5
-printf %s "checking whether to compile liblvm2cmd.so... " >&6; }
-# Check whether --enable-cmdlib was given.
-if test ${enable_cmdlib+y}
-then :
-  enableval=$enable_cmdlib; CMDLIB=$enableval
-else $as_nop
-  CMDLIB="no"
-fi
-
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CMDLIB" >&5
-printf "%s\n" "$CMDLIB" >&6; }
-
-if test "$CMDLIB" = "yes"
-then :
-  if test "$SHARED_LINK" = "no"
-then :
-  as_fn_error $? "--enable-cmdlib requires dynamic linking." "$LINENO" 5
-fi
-       LVM2CMD_LIB="-llvm2cmd"
-else $as_nop
-  LVM2CMD_LIB=
-fi
-
-################################################################################
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to include Python D-Bus support" >&5
 printf %s "checking whether to include Python D-Bus support... " >&6; }
 # Check whether --enable-dbus-service was given.
@@ -13488,10 +13341,137 @@ fi
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $BUILD_LVMDBUSD" >&5
 printf "%s\n" "$BUILD_LVMDBUSD" >&6; }
-if test "$NOTIFYDBUS_SUPPORT" = "no" && test "$BUILD_LVMDBUSD" = "yes"
+
+################################################################################
+# Check whether --enable-notify-dbus was given.
+if test ${enable_notify_dbus+y}
 then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Building D-Bus support without D-Bus notifications." >&5
-printf "%s\n" "$as_me: WARNING: Building D-Bus support without D-Bus notifications." >&2;}
+  enableval=$enable_notify_dbus; NOTIFYDBUS_SUPPORT=$enableval
+fi
+
+
+if test "$NOTIFYDBUS_SUPPORT" = "maybe"
+then :
+  if test "$BUILD_LVMDBUSD" = "yes"
+then :
+  NOTIFYDBUS_SUPPORT="yes"
+else $as_nop
+  NOTIFYDBUS_SUPPORT="no"
+fi
+fi
+
+if test "$NOTIFYDBUS_SUPPORT" = "yes"
+then :
+  if test "$SYSTEMD_MIN_VERSION" -lt 221
+then :
+  as_fn_error $? "--enable-notify-dbus requires systemd >= 221. (--with-systemd=$with_systemd)" "$LINENO" 5
+fi
+
+printf "%s\n" "#define NOTIFYDBUS_SUPPORT 1" >>confdefs.h
+
+fi
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to build notifydbus" >&5
+printf %s "checking whether to build notifydbus... " >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $NOTIFYDBUS_SUPPORT" >&5
+printf "%s\n" "$NOTIFYDBUS_SUPPORT" >&6; }
+
+################################################################################
+if test "$NOTIFYDBUS_SUPPORT" = "yes" || test "$SYSTEMD_JOURNAL_SUPPORT" = "yes" || test "$APP_MACHINEID_SUPPORT" = "yes"
+then :
+
+
+pkg_failed=no
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libsystemd" >&5
+printf %s "checking for libsystemd... " >&6; }
+
+if test -n "$LIBSYSTEMD_CFLAGS"; then
+    pkg_cv_LIBSYSTEMD_CFLAGS="$LIBSYSTEMD_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libsystemd\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libsystemd") 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LIBSYSTEMD_CFLAGS=`$PKG_CONFIG --cflags "libsystemd" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$LIBSYSTEMD_LIBS"; then
+    pkg_cv_LIBSYSTEMD_LIBS="$LIBSYSTEMD_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libsystemd\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libsystemd") 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LIBSYSTEMD_LIBS=`$PKG_CONFIG --libs "libsystemd" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+                LIBSYSTEMD_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libsystemd" 2>&1`
+        else
+                LIBSYSTEMD_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libsystemd" 2>&1`
+        fi
+        # Put the nasty error message in config.log where it belongs
+        echo "$LIBSYSTEMD_PKG_ERRORS" >&5
+
+        as_fn_error $? "Package requirements (libsystemd) were not met:
+
+$LIBSYSTEMD_PKG_ERRORS
+
+Consider adjusting the PKG_CONFIG_PATH environment variable if you
+installed software in a non-standard prefix.
+
+Alternatively, you may set the environment variables LIBSYSTEMD_CFLAGS
+and LIBSYSTEMD_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details." "$LINENO" 5
+elif test $pkg_failed = untried; then
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+        { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+printf "%s\n" "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
+is in your PATH or set the PKG_CONFIG environment variable to the full
+path to pkg-config.
+
+Alternatively, you may set the environment variables LIBSYSTEMD_CFLAGS
+and LIBSYSTEMD_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+
+To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+See \`config.log' for more details" "$LINENO" 5; }
+else
+        LIBSYSTEMD_CFLAGS=$pkg_cv_LIBSYSTEMD_CFLAGS
+        LIBSYSTEMD_LIBS=$pkg_cv_LIBSYSTEMD_LIBS
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+
+fi
+
 fi
 
 ################################################################################
@@ -14166,24 +14146,52 @@ printf "%s\n" "$BUILD_DMEVENTD" >&6; }
 if test "$BUILD_DMEVENTD" = "yes"
 then :
 
-   if test "$MIRRORS" != "internal"
+      if test "$MIRRORS" != "internal"
 then :
-
-      as_fn_error $? "--enable-dmeventd currently requires --with-mirrors=internal" "$LINENO" 5
-
+  as_fn_error $? "--enable-dmeventd currently requires --with-mirrors=internal" "$LINENO" 5
 fi
-   if test "$CMDLIB" = "no"
-then :
-
-      as_fn_error $? "--enable-dmeventd requires --enable-cmdlib to be used as well" "$LINENO" 5
-
-fi
-
 
 printf "%s\n" "#define DMEVENTD 1" >>confdefs.h
 
-
 fi
+
+################################################################################
+# Check whether --enable-cmdlib was given.
+if test ${enable_cmdlib+y}
+then :
+  enableval=$enable_cmdlib; CMDLIB=$enableval
+else $as_nop
+  CMDLIB="maybe"
+fi
+
+
+if test "$BUILD_DMEVENTD" = "yes"
+then :
+  if test "$CMDLIB" = "no"
+then :
+  as_fn_error $? "--enable-dmeventd requires --enable-cmdlib to be used as well" "$LINENO" 5
+else $as_nop
+  CMDLIB="yes"
+fi
+fi
+
+if test "$CMDLIB" != "yes"
+then :
+  CMDLIB="no" LVM2CMD_LIB=
+else $as_nop
+  LVM2CMD_LIB="-llvm2cmd"
+fi
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to compile liblvm2cmd.so" >&5
+printf %s "checking whether to compile liblvm2cmd.so... " >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CMDLIB" >&5
+printf "%s\n" "$CMDLIB" >&6; }
+
+if test "$CMDLIB" == "yes" && test "$SHARED_LINK" = "no"
+then :
+  as_fn_error $? "--enable-cmdlib requires dynamic linking." "$LINENO" 5
+fi
+
 
 ################################################################################
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to build dmfilemapd" >&5
@@ -14201,11 +14209,12 @@ printf "%s\n" "$BUILD_DMFILEMAPD" >&6; }
 
 if test "$BUILD_DMFILEMAPD" = "yes"
 then :
-  ac_fn_c_check_header_compile "$LINENO" "linux/fiemap.h" "ac_cv_header_linux_fiemap_h" "as_fn_error $? "--enable-dmfilemapd requires fiemap.h" "$LINENO" 5
-"
+  ac_fn_c_check_header_compile "$LINENO" "linux/fiemap.h" "ac_cv_header_linux_fiemap_h" "$ac_includes_default"
 if test "x$ac_cv_header_linux_fiemap_h" = xyes
 then :
 
+else $as_nop
+  as_fn_error $? "--enable-dmfilemapd requires fiemap.h" "$LINENO" 5
 fi
 
 
@@ -16280,6 +16289,7 @@ AIO_LIBS=${AIO_LIBS:--laio}
 
 
 
+
 ################################################################################
 ac_config_files="$ac_config_files Makefile make.tmpl libdm/make.tmpl daemons/Makefile daemons/cmirrord/Makefile daemons/dmeventd/Makefile daemons/dmeventd/libdevmapper-event.pc daemons/dmeventd/plugins/Makefile daemons/dmeventd/plugins/lvm2/Makefile daemons/dmeventd/plugins/raid/Makefile daemons/dmeventd/plugins/mirror/Makefile daemons/dmeventd/plugins/snapshot/Makefile daemons/dmeventd/plugins/thin/Makefile daemons/dmeventd/plugins/vdo/Makefile daemons/lvmdbusd/Makefile daemons/lvmdbusd/lvmdbusd daemons/lvmdbusd/lvmdb.py daemons/lvmdbusd/lvm_shell_proxy.py daemons/lvmdbusd/path.py daemons/lvmpolld/Makefile daemons/lvmlockd/Makefile conf/Makefile conf/example.conf conf/lvmlocal.conf conf/command_profile_template.profile conf/metadata_profile_template.profile include/Makefile lib/Makefile include/lvm-version.h libdaemon/Makefile libdaemon/client/Makefile libdaemon/server/Makefile libdm/Makefile libdm/dm-tools/Makefile libdm/libdevmapper.pc man/Makefile po/Makefile scripts/lvm2-pvscan.service scripts/blkdeactivate.sh scripts/blk_availability_init_red_hat scripts/blk_availability_systemd_red_hat.service scripts/cmirrord_init_red_hat scripts/com.redhat.lvmdbus1.service scripts/dm_event_systemd_red_hat.service scripts/dm_event_systemd_red_hat.socket scripts/lvm2_cmirrord_systemd_red_hat.service scripts/lvm2_lvmdbusd_systemd_red_hat.service scripts/lvm2_lvmpolld_init_red_hat scripts/lvm2_lvmpolld_systemd_red_hat.service scripts/lvm2_lvmpolld_systemd_red_hat.socket scripts/lvmlockd.service scripts/lvmlocks.service scripts/lvm2_monitoring_init_red_hat scripts/lvm2_monitoring_systemd_red_hat.service scripts/lvm2_tmpfiles_red_hat.conf scripts/lvmdump.sh scripts/Makefile test/Makefile tools/Makefile udev/Makefile"
 
@@ -17664,5 +17674,11 @@ if test "$ODIRECT" != "yes"
 then :
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: O_DIRECT disabled: low-memory pvmove may lock up" >&5
 printf "%s\n" "$as_me: WARNING: O_DIRECT disabled: low-memory pvmove may lock up" >&2;}
+fi
+
+if test "$BUILD_LVMDBUSD" = "yes" && test "$NOTIFYDBUS_SUPPORT" = "no"
+then :
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Building D-Bus support without D-Bus notifications!" >&5
+printf "%s\n" "$as_me: WARNING: Building D-Bus support without D-Bus notifications!" >&2;}
 fi
 
