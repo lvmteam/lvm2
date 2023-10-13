@@ -15,6 +15,8 @@ SKIP_WITH_LVMLOCKD=1
 
 . lib/inittest
 
+which mkfs.xfs || skip
+
 # Don't attempt to test stats with driver < 4.33.00
 aux driver_at_least 4 33 || skip
 
