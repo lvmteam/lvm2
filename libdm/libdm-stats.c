@@ -964,8 +964,8 @@ static int _stats_parse_string_data(char *string_data, char **program_id,
 	if (strstr(p, DMS_GROUP_TAG)) {
 		*aux_data = p;
 		/* Skip over the group tag */
-		next_gap = strchr(p, DMS_AUX_SEP_CHAR);
-		next_gap = strchr(next_gap, ' ');
+		if ((next_gap = strchr(p, DMS_AUX_SEP_CHAR)))
+			next_gap = strchr(next_gap, ' ');
 		if (next_gap) {
 			*(next_gap++) = '\0';
 			*stats_args = next_gap++;
