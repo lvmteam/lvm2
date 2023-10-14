@@ -110,10 +110,13 @@ public:
         ios.flags(f);
     }
 
-    IosFlagSaver(const IosFlagSaver &rhs) = delete;
-    IosFlagSaver& operator= (const IosFlagSaver& rhs) = delete;
+    //IosFlagSaver(const IosFlagSaver &rhs) = delete;
+    //IosFlagSaver& operator= (const IosFlagSaver& rhs) = delete;
 
 private:
+    IosFlagSaver(const IosFlagSaver &rhs); // disable copy contructore
+    IosFlagSaver& operator= (const IosFlagSaver& rhs); // old way
+
     std::ostream& ios;
     std::ios::fmtflags f;
 };
