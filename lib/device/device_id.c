@@ -2415,7 +2415,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 		 * number is correct, since serial numbers may not be unique.
 		 * Search for the PVID on other devs in device_ids_check_serial.
 		 */
-		if ((du->idtype == DEV_ID_TYPE_SYS_SERIAL) && du->pvid &&
+		if ((du->idtype == DEV_ID_TYPE_SYS_SERIAL) && du->pvid && du->idname &&
 		    memcmp(dev->pvid, du->pvid, ID_LEN)) {
 			log_debug("Validate %s %s PVID %s on %s: wrong PVID %s",
 				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".",
