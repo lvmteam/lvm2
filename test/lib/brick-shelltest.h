@@ -99,6 +99,25 @@ std::runtime_error syserr( const std::string &msg, std::string ctx = "" ) {
     return std::runtime_error( std::string( strerror( errno ) ) + " " + msg + " " + ctx );
 }
 
+// class to restore UI state
+class IosFlagSaver {
+public:
+    explicit IosFlagSaver(std::ostream& _ios):
+        ios(_ios),
+        f(_ios.flags()) {
+    }
+    ~IosFlagSaver() {
+        ios.flags(f);
+    }
+
+    IosFlagSaver(const IosFlagSaver &rhs) = delete;
+    IosFlagSaver& operator= (const IosFlagSaver& rhs) = delete;
+
+private:
+    std::ostream& ios;
+    std::ios::fmtflags f;
+};
+
 class Timespec {
     struct timespec ts;
     static const long _NSEC_PER_SEC = 1000000000;
@@ -146,6 +165,8 @@ public:
             ( ( a.ts.tv_sec == b.ts.tv_sec ) && ( a.ts.tv_nsec >= b.ts.tv_nsec ) );
     }
     friend std::ostream& operator<<(std::ostream& os, const Timespec& t) {
+        IosFlagSaver iosfs(os);
+
         os << std::right << std::setw( 2 ) << std::setfill( ' ' ) << t.ts.tv_sec / 60 << ":"
             << std::setw( 2 ) << std::setfill( '0' ) << t.ts.tv_sec % 60 << "."
             << std::setw( 3 ) << t.ts.tv_nsec / 1000000; // use miliseconds ATM
@@ -1289,13 +1310,13 @@ struct Args {
 
 namespace {
 
-bool hasenv( const char *name ) {
+const char* hasenv( const char *name ) {
     const char *v = getenv( name );
     if ( !v )
-        return false;
+        return NULL;
     if ( strlen( v ) == 0 || !strcmp( v, "0" ) )
-        return false;
-    return true;
+        return NULL;
+    return v;
 }
 
 template< typename C >
@@ -1324,6 +1345,7 @@ static int run( int argc, const char **argv, std::string fl_envvar = "TEST_FLAVO
 {
     Args args( argc, argv );
     Options opt;
+    const char *env;
 
     if ( args.has( "--help" ) ) {
         std::cout <<
@@ -1397,13 +1419,13 @@ static int run( int argc, const char **argv, std::string fl_envvar = "TEST_FLAVO
 
     if ( args.has( "--only" ) )
         split( args.opt( "--only" ), opt.filter );
-    else if ( hasenv( "T" ) )
-        split( getenv( "T" ), opt.filter );
+    else if ( ( env = hasenv( "T" ) ) )
+        split( env, opt.filter );
 
     if ( args.has( "--skip" ) )
         split( args.opt( "--skip" ), opt.skip );
-    else if ( hasenv( "S" ) )
-        split( getenv( "S" ), opt.skip );
+    else if ( ( env = hasenv( "S" ) ) )
+        split( env, opt.skip );
 
     if ( args.has( "--fatal-timeouts" ) )
         opt.fatal_timeouts = true;
