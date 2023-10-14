@@ -7017,8 +7017,29 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	/*
 	 * Warn and confirm if checksize has been disabled for reduce.
 	 */
-	if (is_reduce && !lp->fsopt[0] && !_lv_reduce_confirmation(lv_top, lp))
-		goto_out;
+	if (!lp->fsopt[0] && is_reduce) {
+		int nofs = 0;
+
+		if (is_active) {
+			/* When active, prompt only for confirmation when FS is detected */
+			char lv_path[PATH_MAX];
+			char fstype[FSTYPE_MAX];
+
+			if (dm_snprintf(lv_path, sizeof(lv_path), "%s%s/%s", cmd->dev_dir,
+					lv_top->vg->name, lv_top->name) < 0) {
+				log_error("Couldn't create LV path for %s.", display_lvname(lv_top));
+				goto out;
+			}
+
+			if (!fs_block_size_and_type(lv_path, NULL, fstype, &nofs)) {
+				stack; /* Continue as if FS would have been detected */
+				nofs = 0;
+			}
+		}
+
+		if (!nofs && !_lv_reduce_confirmation(lv_top, lp))
+			goto_out;
+	}
 
 	/* Part of old approach to fs handling using fsadm.  */
 	if (!strcmp(lp->fsopt, "resize_fsadm") && !lp->nofsck &&
