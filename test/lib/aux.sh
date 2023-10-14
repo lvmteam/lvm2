@@ -1955,6 +1955,17 @@ have_cache() {
 	fi
 }
 
+# detect if lvm2 was compiled with FSINFO support by checking for '--fs checksize'
+# if passed 'skip' keyword - print
+have_fsinfo() {
+	local r
+	r=$(not lvresize --fs checksize -L+1 $vg/unknownlvname 2>&1) || die "lvresize must fail!"
+
+	case "$r" in
+	*"Unknown --fs value"*) return 1 ;;
+	esac
+}
+
 have_tool_at_least() {
 	local version
 	version=$("$1" -V 2>/dev/null)
