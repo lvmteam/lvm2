@@ -21,14 +21,18 @@ which mkfs.ext4 || skip
 which resize2fs || skip
 
 #
-# Workaroudn for kernel bug fixed with:
+# Blkid is not able to detected 'running' filesystem after resize
+# freeeing and unfreezing stores fs metadata on disk
+#
+# Workaround for kernel bug fixed with:
 #    a408f33e895e455f16cf964cb5cd4979b658db7b
 # refreshing DM device - using fsfreeze with suspend
 #
 workaround_() {
-	blkid -p "$DM_DEV_DIR/$vg/$lv" >/dev/null || {
-		dmsetup suspend $vg-$lv
-		dmsetup resume $vg-$lv
+	local vol=${1-$lv}
+	blkid -p "$DM_DEV_DIR/$vg/$vol" >/dev/null || {
+		dmsetup suspend $vg-$vol
+		dmsetup resume $vg-$vol
 	}
 }
 
@@ -90,6 +94,11 @@ lvreduce -L-10M $vg/$lv
 check lv_field $vg/$lv lv_size "40.00m"
 lvchange -an $vg/$lv
 
+HAVE_FSINFO=1
+aux have_fsinfo || HAVE_FSINFO=
+
+if [ -n "$HAVE_FSINFO" ]; then
+
 # lvreduce, no fs, inactive, no --fs setting is same as --fs checksize
 not lvreduce -L-10M $vg/$lv
 lvreduce --fs checksize -L-10M $vg/$lv
@@ -103,6 +112,8 @@ check lv_field $vg/$lv lv_size "20.00m"
 lvchange -ay $vg/$lv
 not lvreduce -L-10M --fs resize $vg/$lv
 check lv_field $vg/$lv lv_size "20.00m"
+
+fi # HAVE_FSINFO
 
 lvremove -f $vg/$lv
 
@@ -146,6 +157,8 @@ diff df1 df2
 # keep mounted fs
 
 # lvextend, ext4, active, mounted, --fs resize
+workaround_
+
 lvextend --fs resize -L+10M $vg/$lv
 check lv_field $vg/$lv lv_size "50.00m"
 df --output=size "$mount_dir" |tee df2
@@ -161,6 +174,8 @@ check lv_field $vg/$lv lv_size "60.00m"
 df --output=size "$mount_dir" |tee df2
 not diff df1 df2
 # keep mounted fs
+
+if [ -n "$HAVE_FSINFO" ]; then
 
 workaround_
 
@@ -192,6 +207,8 @@ check lv_field $vg/$lv lv_size "90.00m"
 df --output=size "$mount_dir" |tee df2
 not diff df1 df2
 # keep mounted fs
+
+fi # HAVE_FSINFO
 
 # lvextend|lvreduce, ext4, active, mounted, --fs resize, renamed LV
 lvrename $vg/$lv $vg/$lv2
@@ -245,10 +262,16 @@ umount "$mount_dir"
 umount "$mount_dir_2"
 mount "$DM_DEV_DIR/$vg/$lv3" "$mount_dir"
 lvextend -r -L+8M $vg/$lv3
+
+workaround_ $lv3
+
 lvreduce -r -y -L-8M $vg/$lv3
 umount "$mount_dir"
 
 lvremove -f $vg/$lv3
+
+# Following test require --fs checksize being compiled in
+test -z "$HAVE_FSINFO" && exit 0
 
 #####################################
 #

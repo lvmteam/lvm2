@@ -15,10 +15,12 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-aux prepare_vg 1 500
-
 which mkfs.xfs || skip
 which xfs_growfs || skip
+
+aux have_fsinfo || skip "Test needs --fs checksize support"
+
+aux prepare_vg 1 500
 
 mount_dir="mnt_lvresize_fs"
 mkdir -p "$mount_dir"

@@ -15,9 +15,11 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-aux prepare_vg 3 256
-
 which mkfs.xfs || skip
+
+aux have_fsinfo || skip "Test needs --fs checksize support"
+
+aux prepare_vg 3 256
 
 # Tests require a libblkid version that shows FSLASTBLOCK
 lvcreate -n $lv1 -L 300 $vg
