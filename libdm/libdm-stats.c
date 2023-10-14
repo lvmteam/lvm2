@@ -1955,6 +1955,7 @@ static int _stats_set_aux(struct dm_stats *dms,
 	char *group_tag = NULL, *group_tag_escaped = NULL;
 	struct dm_task *dmt = NULL;
 	char msg[STATS_MSG_BUF_LEN];
+	int r = 0;
 
 	/* group data required? */
 	if (_stats_group_id_present(dms, region_id)) {
@@ -1980,16 +1981,15 @@ static int _stats_set_aux(struct dm_stats *dms,
 	if (!(dmt = _stats_send_message(dms, msg)))
 		goto_bad;
 
-	dm_free(group_tag);
-	dm_free(group_tag_escaped);
-
 	/* no response to a @stats_set_aux message */
 	dm_task_destroy(dmt);
 
-	return 1;
+	r = 1;
 bad:
-	dm_free((char *) group_tag);
-	return 0;
+	dm_free(group_tag_escaped);
+	dm_free(group_tag);
+
+	return r;
 }
 
 /*
@@ -2058,8 +2058,7 @@ static int _stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 			(uint64_t)llabs(step),
 			opt_args, program_id, aux_data) < 0) {
 		log_error(err_fmt, "message");
-		dm_free((void *) opt_args);
-		return 0;
+		goto out;
 	}
 
 	if (!(dmt = _stats_send_message(dms, msg)))
