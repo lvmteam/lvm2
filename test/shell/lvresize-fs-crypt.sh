@@ -141,7 +141,7 @@ dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=10 oflag=direct
 df --output=size "$mount_dir" |tee df1
 # resize only the fs (to 256M), not the crypt dev or LV
 umount "$mount_dir"
-fsck -fn /dev/mapper/$cr
+fsck -fy /dev/mapper/$cr
 resize2fs /dev/mapper/$cr 262144k
 mount /dev/mapper/$cr "$mount_dir"
 # this lvresize will not resize the fs (which is already reduced
