@@ -34,7 +34,7 @@ if [ -z ${LVM_TEST_DEVICE_LIST+x} ]; then echo "LVM_TEST_DEVICE_LIST is unset" &
 
 test -e "$LVM_TEST_DEVICE_LIST" || skip
 
-num_devs=$(cat $LVM_TEST_DEVICE_LIST | wc -l)
+num_devs=$(wc -l < "$LVM_TEST_DEVICE_LIST")
 
 RUNDIR="/run"
 test -d "$RUNDIR" || RUNDIR="/var/run"

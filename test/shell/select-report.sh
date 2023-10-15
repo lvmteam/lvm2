@@ -59,7 +59,7 @@ sel() {
 		return 1
 	}
 
-	items_found=$(wc -l "$OUT_LOG_FILE" | cut -f 1 -d ' ')
+	items_found=$(wc -l < "$OUT_LOG_FILE")
 
 	# the number of lines on output must match
 	test "$items_found" -eq $# || {
