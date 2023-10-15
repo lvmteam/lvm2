@@ -15,10 +15,10 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-aux prepare_vg 2 100
-
 which mkfs.ext4 || skip
 which resize2fs || skip
+
+aux prepare_vg 2 100
 
 #
 # Blkid is not able to detected 'running' filesystem after resize
@@ -80,6 +80,9 @@ lvextend -L+30M $vg/$lv
 check lv_field $vg/$lv lv_size "60.00m"
 
 lvremove -f $vg
+
+# Without blkid being linked - no more tests
+test "1" = "$(lvm lvmconfig --typeconfig default --valuesonly allocation/use_blkid_wiping)" || exit 0
 
 
 ###################
