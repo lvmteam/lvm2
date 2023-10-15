@@ -73,8 +73,10 @@ int main (int argc, char *argv[])
 		(void) dm_task_run(dmt);
 		(void) dm_task_destroy(dmt);
 		(void) dm_udev_wait(cookie); /* Finish udev processing */
+		printf("Created device: %s\n", devname);
 	}
 
+	fflush(stdout);
 	/* At this point there should be no memory trace from a secure table line */
 
 #ifdef SLEEP
