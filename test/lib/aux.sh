@@ -829,7 +829,7 @@ mdadm_assemble() {
 		STRACE="strace -f -o /dev/null"
 	}
 
-	$STRACE mdadm --assemble "$@"
+	$STRACE mdadm --assemble "$@" || { test -n "$STRACE" && skip "Timing failure" ; false ; }
 	udev_wait
 }
 
