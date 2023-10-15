@@ -999,7 +999,7 @@ struct TestCase {
             outb = (usage.ru_oublock + 1024) / 2048; // to MiB
 
         ss << wall << " wall " << user << " user " << system << " sys "
-            << std::setw( 4 ) << std::setfill( ' ' ) << rss << " M RSS | IOPS: "
+            << std::setw( 4 ) << std::setfill( ' ' ) << rss << " M mem "
             << std::setw( 5 ) << inb << " M in "
             << std::setw( 5 ) << outb << " M out";
 
@@ -1086,10 +1086,15 @@ struct TestCase {
         journal->done( id(), r, ru );
 
         if ( options.batch ) {
-            int spaces = std::max( int(journal->name_size_max()) - int(pretty().length()), 0 );
-
-            progress( Last ) << " " << std::string( spaces, '.' ) << " "
-                << std::left << std::setw( 9 ) << std::setfill( ' ' ) << r;
+            int spaces = std::max( 4 + int(journal->name_size_max()) - int(pretty().length()), 0 );
+            std::string sp;
+            sp.reserve( spaces );
+            if ( spaces % 2 )
+                sp += " ";
+            for ( int i = 0; i < spaces / 2; ++i )
+                sp += " .";
+            progress( Last ) << sp << " "
+                << std::left << std::setw( 8 ) << std::setfill( ' ' ) << r;
             if ( r != Journal::SKIPPED )
                 progress( First ) << "   " << ru;
             progress( Last ) << std::endl;
@@ -1203,9 +1208,9 @@ struct Main {
                         continue;
                 }
 
-                journal.check_name_size( options.testdir + *i );
                 cases.push_back( TestCase( journal, options, options.testdir + *i, *i, *flav ) );
                 cases.back().options = options;
+                journal.check_name_size( cases.back().id() );
             }
         }
 
