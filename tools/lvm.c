@@ -154,7 +154,7 @@ static int _hist_file(char *buffer, size_t size)
 {
 	char *e = getenv("HOME");
 
-	if (dm_snprintf(buffer, size, "%s/.lvm_history", e) < 0) {
+	if (dm_snprintf(buffer, size, "%s%s.lvm_history", e ? :"", e ? "/" : "") < 0) {
 		log_error("$HOME/.lvm_history: path too long");
 		return 0;
 	}
