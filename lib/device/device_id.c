@@ -427,7 +427,7 @@ static int _wwid_type_num(char *id)
 	else if (!strncmp(id, "t10.", 4))
 		return 1;
 	else
-		return -1;
+		return 0; /* any unrecognized, non-standard prefix */
 }
 
 int wwid_type_to_idtype(int wwid_type)
@@ -436,6 +436,7 @@ int wwid_type_to_idtype(int wwid_type)
 	case 3: return DEV_ID_TYPE_WWID_NAA;
 	case 2: return DEV_ID_TYPE_WWID_EUI;
 	case 1: return DEV_ID_TYPE_WWID_T10;
+	case 0: return DEV_ID_TYPE_SYS_WWID;
 	default: return -1;
 	}
 }
@@ -446,6 +447,7 @@ int idtype_to_wwid_type(int idtype)
 	case DEV_ID_TYPE_WWID_NAA: return 3;
 	case DEV_ID_TYPE_WWID_EUI: return 2;
 	case DEV_ID_TYPE_WWID_T10: return 1;
+	case DEV_ID_TYPE_SYS_WWID: return 0;
 	default: return -1;
 	}
 }
@@ -473,11 +475,8 @@ struct dev_wwid *dev_add_wwid(char *id, int id_type, struct dm_list *ids)
 	struct dev_wwid *dw;
 	int len;
 
-	if (!id_type) {
+	if (!id_type)
 		id_type = _wwid_type_num(id);
-		if (id_type == -1)
-			log_debug("unknown wwid type %s", id);
-	}
 
 	if (!(dw = zalloc(sizeof(struct dev_wwid))))
 		return NULL;
