@@ -16,6 +16,10 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+aux lvmconf 'devices/global_filter = [ "a|.*|" ]' \
+            'devices/filter = [ "a|.*|" ]'
+
+
 SYS_DIR="sys"
 # requires trailing / to match dm
 aux lvmconf "devices/device_id_sysfs_dir = \"$PWD/$SYS_DIR/\"" \
@@ -498,6 +502,75 @@ grep "$DEV1" out
 grep "IDTYPE=devname" "$DF" | tee out
 grep "IDNAME=$DEV1" out
 cleanup_sysfs
+
+#
+# Test wwid containing "QEMU HARDDISK".
+# These wwids were once ignored.  When the qemu wwid
+# was ignored, the dev would likely have used IDTYPE=devname.
+# When that dev is renamed on reboot, it needs to be found
+# on the device with the qemu wwid.
+# The original logic behind search_for_devnames="auto" would
+# have ignored any device with a wwid when searching for the
+# renamed device (since devs with wwids would not use the
+# devname idtype.)  However, in this case, a device with the
+# qemu wwid does use the devname idtype and needs to be checked,
+# so it's a special case in the code to look at devs with
+# any qemu wwid.
+#
+aux lvmconf "devices/search_for_devnames = \"auto\""
+
+rm "$DF"
+aux wipefs_a "$DEV1"
+touch "$DF"
+pvcreate "$DEV1"
+vgcreate $vg1 "$DEV1"
+cat "$DF"
+grep "IDTYPE=devname" "$DF" | tee out
+grep "IDNAME=$DEV1" out
+mkdir -p "$SYS_DIR/dev/block/$MAJOR1:$MINOR1/device"
+echo -n "0QEMU QEMU  HARDDISK  1" > "$SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid"
+pvs -o+uuid,deviceidtype,deviceid "$DEV1"
+# Rename device, simulating reboot
+sed -e "s|IDNAME=$DEV1|IDNAME=/dev/sdx|" "$DF" > tmpdf
+sed -e "s|DEVNAME=$DEV1|DEVNAME=/dev/sdx|" tmpdf > "$DF"
+cat "$DF"
+# pvs will find PV on DEV1 and fix IDNAME
+pvs -o+uuid,deviceidtype,deviceid | tee out
+grep "$DEV1" out
+grep "IDTYPE=devname" "$DF" | tee out
+grep "IDNAME=$DEV1" out
+rm "$SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid"
+cleanup_sysfs
+
+# set search_for_devnames="auto"
+# set wwid with QEMU HARDDISK for the disk
+# add disk to system.devices, should use the wwid
+# pvs should find the disk by wwid
+# rename the DEVNAME field
+# pvs should fix DEVNAME field
+
+rm "$DF"
+aux wipefs_a "$DEV1"
+mkdir -p "$SYS_DIR/dev/block/$MAJOR1:$MINOR1/device"
+echo -n "t10.ATA     QEMU HARDDISK                           QM00002            " > "$SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid"
+touch "$DF"
+pvcreate "$DEV1"
+vgcreate $vg1 "$DEV1"
+cat "$DF"
+grep 'IDTYPE=sys_wwid' "$DF" | tee out
+grep "QEMU_HARDDISK" out
+pvs -o+uuid,deviceidtype,deviceid | tee out
+grep "$DEV1" out
+grep sys_wwid out
+grep "QEMU_HARDDISK" out
+sed -e "s|DEVNAME=$DEV1|DEVNAME=/dev/sdx|" "$DF" > tmpdf
+cp tmpdf "$DF"
+cat "$DF"
+pvs -o+uuid,deviceidtype,deviceid "$DEV1"
+grep "DEVNAME=$DEV1" "$DF"
+rm "$SYS_DIR/dev/block/$MAJOR1:$MINOR1/device/wwid"
+cleanup_sysfs
+
 
 
 # TODO: lvmdevices --adddev <dev> --deviceidtype <type> --deviceid <val>

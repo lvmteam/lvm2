@@ -629,19 +629,11 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 	struct dev_wwid *dw;
 	unsigned i;
 
-	if (idtype == DEV_ID_TYPE_SYS_WWID) {
+	if (idtype == DEV_ID_TYPE_SYS_WWID)
 		dev_read_sys_wwid(cmd, dev, sysbuf, sizeof(sysbuf), NULL);
 
-		/* FIXME: enable these QEMU t10 wwids */
-
-		/* qemu wwid begins "t10.ATA     QEMU HARDDISK ..." */
-		if (strstr(sysbuf, "QEMU HARDDISK"))
-			sysbuf[0] = '\0';
-	}
-
-	else if (idtype == DEV_ID_TYPE_SYS_SERIAL) {
+	else if (idtype == DEV_ID_TYPE_SYS_SERIAL)
 		_dev_read_sys_serial(cmd, dev, sysbuf, sizeof(sysbuf));
-	}
 
 	else if (idtype == DEV_ID_TYPE_MPATH_UUID) {
 		read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf));
@@ -833,6 +825,22 @@ static int _dev_has_stable_id(struct cmd_context *cmd, struct device *dev)
 	 * system_read.)
 	 */
 	dm_list_iterate_items(id, &dev->ids) {
+		/*
+		 * An unfortunate special case to work around a previous lvm version
+		 * where wwid's containing "QEMU HARDDISK" were ignored, which would
+		 * generally cause the device to have IDTYPE=devname.  On reboot,
+		 * when the dev name changes, the search for a new device may use
+		 * the search_for_devnames="auto" setting which uses this function
+		 * to decide if a dev should be checked as the renamed device or not.
+		 * It's not if it has a wwid, since the renamed dev we're looking for
+		 * would be using sys_wwid if it had a wwid.  Now that QEMU wwids
+		 * are used, we still have to check devs with a QEMU wwid to see if
+		 * it's the renamed dev.
+		 */
+		if (((id->idtype == DEV_ID_TYPE_SYS_WWID) || (id->idtype == DEV_ID_TYPE_WWID_T10)) &&
+		     id->idname && strstr(id->idname, "QEMU"))
+			continue;
+
 		if ((id->idtype != DEV_ID_TYPE_DEVNAME) && id->idname)
 			return 1;
 	}
@@ -843,8 +851,13 @@ static int _dev_has_stable_id(struct cmd_context *cmd, struct device *dev)
 	 */
 
 	if ((idname = device_id_system_read(cmd, dev, DEV_ID_TYPE_SYS_WWID))) {
+		/* see comment above */
+		if (!strstr(idname, "QEMU")) {
+			free((void*)idname);
+			return 1;
+		}
 		free((void*)idname);
-		return 1;
+		return 0;
 	}
 
 	if ((idname = device_id_system_read(cmd, dev, DEV_ID_TYPE_SYS_SERIAL))) {
