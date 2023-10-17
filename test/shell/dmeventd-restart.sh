@@ -27,7 +27,7 @@ _restart_dmeventd() {
 	done
 	# wait a bit, so we talk to the new dmeventd later
 	# On some systems init of selinux contex may take a while...
-	sleep .5
+	sleep 1.5
 }
 
 aux prepare_dmeventd
