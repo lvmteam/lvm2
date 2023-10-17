@@ -260,6 +260,12 @@ test_merge_snap()
 	not ls "$mount_dir/B"
 
 	umount "$mount_dir"
+
+	for i in $(seq 1 10); do
+		# Wait tiil snapshot is surely merged
+		dmsetup info $vg-snap || break
+		sleep 0.1
+	done
 }
 
 test_extend_snap()
