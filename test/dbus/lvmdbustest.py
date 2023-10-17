@@ -2416,8 +2416,9 @@ class TestDbusService(unittest.TestCase):
 	def _block_present_absent(self, block_device, present=False):
 		start = time.time()
 		keep_looping = True
-		max_wait = 10
+		max_wait = 5
 		while keep_looping and time.time() < start + max_wait:
+			time.sleep(0.2)
 			if present:
 				if (self._lookup(block_device) != "/"):
 					keep_looping = False
