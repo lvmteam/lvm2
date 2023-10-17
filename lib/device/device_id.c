@@ -193,8 +193,8 @@ void free_dus(struct dm_list *dus)
 
 void free_did(struct dev_id *id)
 {
-	if (strlen(id->idname))
-		free(id->idname); /* idname = "" when id type doesn't exist */
+	if (id->idname && strlen(id->idname))
+		free(id->idname);
 	free(id);
 }
 
@@ -2055,7 +2055,7 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 	 * over dev->ids above.
 	 */
 	id->idtype = du->idtype;
-	id->idname = (char *)idname ?: (char *)"";
+	id->idname = (char *)idname;
 	id->dev = dev;
 	dm_list_add(&dev->ids, &id->list);
 
@@ -2372,7 +2372,7 @@ static void _get_devs_with_serial_numbers(struct cmd_context *cmd, struct dm_lis
 	while ((dev = dev_iter_get(cmd, iter))) {
 		/* if serial has already been read for this dev then use it */
 		dm_list_iterate_items(id, &dev->ids) {
-			if (id->idtype == DEV_ID_TYPE_SYS_SERIAL) {
+			if (id->idtype == DEV_ID_TYPE_SYS_SERIAL && id->idname) {
 				if (str_list_match_item(serial_str_list, id->idname)) {
 					if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
 						goto next_continue;
@@ -2822,6 +2822,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 		if (cmd->device_ids_invalid)
 			break;
 
+		/* FIXME: we shouldn't be setting idname to '.' so that check should be unnecessary */
 		if (!du->idname || (du->idname[0] == '.')) {
 			log_debug("Validate %s %s PVID %s: no idname, set invalid.",
 				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".");
@@ -2920,7 +2921,7 @@ void device_ids_check_serial(struct cmd_context *cmd, struct dm_list *scan_devs,
 	 * with the dev.
 	 */
 	dm_list_iterate_items(du, &cmd->use_devices) {
-		if (du->dev && (du->idtype == DEV_ID_TYPE_SYS_SERIAL) &&
+		if (du->dev && du->idname && (du->idtype == DEV_ID_TYPE_SYS_SERIAL) &&
 		    str_list_match_item(&cmd->device_ids_check_serial, du->idname)) {
 			if (!(dul = dm_pool_zalloc(cmd->mem, sizeof(*dul))))
 				continue;
