@@ -177,6 +177,12 @@ The default choice for device ID type can be overridden using lvmdevices
 device it will be used, otherwise the device will be added using the type
 that would otherwise be chosen.
 
+LVM commands run by dmeventd will use the devices file
+\fI#DEFAULT_SYS_DIR#/devices/dmeventd.devices\fP if it exists,
+otherwise system.devices is used.  VGs that require the dmeventd
+service should be included in system.devices, even if they are
+included in dmeventd.devices.
+
 .SS Device ID refresh
 .P
 A machine identifier is saved in the devices file, and is used to detect
