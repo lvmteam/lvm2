@@ -38,6 +38,7 @@ for i in securetest dmsecuretest ; do
 # 2nd. retry with already exiting DM node - exercize error path also wipes
 for j in empty existing ; do
 
+rm -f cmdout
 "$i" "$dev1" "$DMTEST" >cmdout 2>&1 &
 PID=$!
 for k in $(seq 1 10); do
