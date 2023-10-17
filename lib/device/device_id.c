@@ -1887,7 +1887,7 @@ static int _match_dm_devnames(struct cmd_context *cmd, struct device *dev,
 		return 1;
 
 	if (du->idname && !strcmp(du->idname, dev_name(dev))) {
-		log_debug("Match device_id %s %s to %s: ignoring idname %s",
+		log_debug("Match %s %s to %s: ignoring idname %s",
 			  idtype_to_str(du->idtype), du->idname, dev_name(dev), id->idname ?: ".");
 		return 1;
 	}
@@ -1903,7 +1903,7 @@ static int _match_dm_devnames(struct cmd_context *cmd, struct device *dev,
 
 		if ((MAJOR(buf.st_rdev) == cmd->dev_types->device_mapper_major) &&
 		    (MINOR(buf.st_rdev) == MINOR(dev->dev))) {
-			log_debug("Match device_id %s %s to %s: using other dm name, ignoring %s",
+			log_debug("Match %s %s to %s: using other dm name, ignoring %s",
 				  idtype_to_str(du->idtype), du->idname, dev_name(dev), id->idname ?: ".");
 			return 1;
 		}
@@ -2020,7 +2020,7 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 				du->dev = dev;
 				dev->id = id;
 				dev->flags |= DEV_MATCHED_USE_ID;
-				log_debug("Match device_id %s %s to %s: dm names",
+				log_debug("Match %s %s to %s: dm names",
 					  idtype_to_str(du->idtype), du->idname, dev_name(dev));
 				return 1;
 			}
@@ -2029,7 +2029,7 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 				du->dev = dev;
 				dev->id = id;
 				dev->flags |= DEV_MATCHED_USE_ID;
-				log_debug("Match device_id %s %s to %s",
+				log_debug("Match %s %s to %s",
 					  idtype_to_str(du->idtype), du_idname, dev_name(dev));
 				return 1;
 
@@ -2063,7 +2063,7 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 		du->dev = dev;
 		dev->id = id;
 		dev->flags |= DEV_MATCHED_USE_ID;
-		log_debug("Match device_id %s %s to %s",
+		log_debug("Match %s %s to %s",
 			  idtype_to_str(du->idtype), idname, dev_name(dev));
 		return 1;
 	}
@@ -2101,9 +2101,9 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 				du->dev = dev;
 				dev->id = id;
 				dev->flags |= DEV_MATCHED_USE_ID;
-				log_print_unless_silent("Match device_id %s %s to vpd_pg83 %s %s.",
-							idtype_to_str(du->idtype), du_idname,
-							idtype_to_str(id->idtype), dev_name(dev));
+				log_debug("Match %s %s to %s: using vpd_pg83 %s %s",
+					  idtype_to_str(du->idtype), du_idname, dev_name(dev),
+					  idtype_to_str(id->idtype), id->idname ?: ".");
 				du->idtype = id->idtype;
 				return 1;
 			}
@@ -2180,6 +2180,7 @@ void device_ids_match(struct cmd_context *cmd)
 	struct dev_iter *iter;
 	struct dev_use *du;
 	struct device *dev;
+	int found;
 
 	if (cmd->enable_devices_list) {
 		device_ids_match_device_list(cmd);
@@ -2196,11 +2197,21 @@ void device_ids_match(struct cmd_context *cmd)
 	 * all filters (dev_cache_get NULL arg) so it's not necessary.
 	 */
 
+	/*
+	 * First try matching entries with IDTYPE other than devname.
+	 * We don't want a false idtype=devname match to interfere
+	 * with matching a proper idtype.
+	 */
 	dm_list_iterate_items(du, &cmd->use_devices) {
+		if (du->idtype == DEV_ID_TYPE_DEVNAME)
+			continue;
+
+		/* TODO: when does this happen? */
 		/* already matched */
 		if (du->dev) {
-			log_debug("devices idname %s previously matched %s",
-				  du->idname, dev_name(du->dev));
+			log_debug("Match %s %s PVID %s: done previously %s",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".",
+				  dev_name(du->dev));
 			continue;
 		}
 
@@ -2216,15 +2227,15 @@ void device_ids_match(struct cmd_context *cmd)
 		if (du->devname &&
 		    (dev = dev_cache_get_existing(cmd, du->devname, NULL))) {
 			/* On successful match, du, dev, and id are linked. */
-			if (_match_du_to_dev(cmd, du, dev))
+			if (_match_du_to_dev(cmd, du, dev)) {
+				log_debug("Match %s %s PVID %s: done %s (immediate)",
+					  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".",
+					  dev_name(du->dev));
 				continue;
-			else {
-				/*
-				 * The device node may exist but the device is disconnected / zero size,
-				 * and likely has no sysfs entry to check for wwid.  Continue to look
-				 * for the device id on other devs.
-				 */
-				log_debug("devices entry %s %s devname found but not matched", du->devname, du->pvid ?: ".");
+			} else {
+				log_debug("Match %s %s PVID %s: wrong devname %s",
+					  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".",
+					  du->devname);
 			}
 		}
 
@@ -2232,20 +2243,80 @@ void device_ids_match(struct cmd_context *cmd)
 		 * Iterate through all devs and try to match du.
 		 *
 		 * If a match is made here it means the du->devname is wrong,
-		 * so the device_id file should be updated with a new devname.
+		 * so the devices file should be updated with a new devname.
 		 *
 		 * NULL filter is used because we are just setting up the
 		 * the du/dev pairs in preparation for using the filters.
 		 */
+		found = 0;
+
 		if (!(iter = dev_iter_create(NULL, 0)))
 			continue;
 		while ((dev = dev_iter_get(cmd, iter))) {
+			/* skip a dev that's already matched to another entry */
 			if (dev->flags & DEV_MATCHED_USE_ID)
 				continue;
-			if (_match_du_to_dev(cmd, du, dev))
+			if (_match_du_to_dev(cmd, du, dev)) {
+				log_debug("Match %s %s PVID %s: done %s",
+					  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".",
+					  dev_name(du->dev));
+				found = 1;
 				break;
+			}
 		}
 		dev_iter_destroy(iter);
+
+		if (!found)
+			log_debug("Match %s %s PVID %s: no device matches",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".");
+	}
+
+	/*
+	 * Next match entries with IDTYPE=devname, which is only
+	 * based on matching devname, so somewhat likely to be wrong
+	 * and need correcting in device_ids_validate/device_ids_refresh.
+	 */
+
+	dm_list_iterate_items(du, &cmd->use_devices) {
+		if (du->idtype != DEV_ID_TYPE_DEVNAME)
+			continue;
+
+		if (!du->idname) {
+			log_debug("Match %s %s PVID %s: no idname",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".");
+			continue;
+		}
+
+		/* TODO: when does this happen? */
+		/* already matched */
+		if (du->dev) {
+			log_debug("Match %s %s PVID %s: done previously %s",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".",
+				  dev_name(du->dev));
+			continue;
+		}
+
+		if (!(dev = dev_cache_get_existing(cmd, du->idname, NULL))) {
+			log_debug("Match %s %s PVID %s: idname not found",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".");
+			continue;
+		}
+
+		if (dev->flags & DEV_MATCHED_USE_ID) {
+			log_debug("Match %s %s PVID %s: dev %s already matched to an entry",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".", dev_name(dev));
+			continue;
+		}
+
+		if (_match_du_to_dev(cmd, du, dev)) {
+			log_debug("Match %s %s PVID %s: done %s",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".",
+				  dev_name(du->dev));
+			continue;
+		}
+
+		log_debug("Match %s %s PVID %s: no device matches",
+			  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".");
 	}
 
 	if (!cmd->print_device_id_not_found)
@@ -2373,6 +2444,12 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 		return;
 
 	log_debug("Validating devices file entries");
+
+	dm_list_iterate_items(du, &cmd->use_devices) {
+		log_debug("Validating %s %s PVID %s: initial match %s",
+			  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".",
+			  du->dev ? dev_name(du->dev) : "not set");
+	}
 
 	/*
 	 * Validate entries with proper device id types.
@@ -2639,8 +2716,8 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 			continue;
 		if (du->dev)
 			continue;
-		log_debug("No device matched to PVID %s %s %s.",
-			  du->pvid, idtype_to_str(du->idtype), du->idname ?: ".");
+		log_debug("Validate %s %s PVID %s: no device match",
+			  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".");
 	}
 
 	/*
@@ -2746,13 +2823,13 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 			break;
 
 		if (!du->idname || (du->idname[0] == '.')) {
-			log_debug("Validate %s %s PVID %s: no idname is invalid.",
+			log_debug("Validate %s %s PVID %s: no idname, set invalid.",
 				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".");
 			cmd->device_ids_invalid = 1;
 		}
 
 		if ((du->idtype == DEV_ID_TYPE_DEVNAME) && !du->dev && du->pvid) {
-			log_debug("Validate %s %s PVID %s: no device for idtype devname is invalid.",
+			log_debug("Validate %s %s PVID %s: no device for idtype devname, set invalid.",
 				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".");
 			cmd->device_ids_invalid = 1;
 		}
@@ -3269,9 +3346,12 @@ void device_ids_refresh(struct cmd_context *cmd, struct dm_list *dev_list,
 		 * set search_for_devnames=all.
 		 */
 		if (search_mode_auto && _dev_has_stable_id(cmd, dev)) {
+			log_debug("Search for PVIDs skip %s (stable id)", dev_name(dev));
 			other_idtype++;
 			continue;
 		}
+
+		log_debug("Search for PVIDs on %s", dev_name(dev));
 
 		/*
 		 * Reads 4K from the start of the disk.
