@@ -317,6 +317,7 @@ prepare_lvmdbusd() {
 	unset LVM_LOG_FILE_EPOCH
 	unset LVM_LOG_FILE_MAX_LINES
 	unset LVM_EXPECTED_EXIT_STATUS
+	export LVM_DBUSD_TEST_SKIP_SIGNAL=1
 
 	"$daemon" $lvmdbusdebug > debug.log_LVMDBUSD_out 2>&1 &
 	local pid=$!
@@ -495,6 +496,7 @@ kill_sleep_kill_() {
 	if test -s "$pidfile" ; then
 		pid=$(< "$pidfile")
 		rm -f "$pidfile"
+		test "$pidfile" = "LOCAL_LVMDBUSD" && killall -9 lvmdbusd || true
 		kill -TERM "$pid" 2>/dev/null || return 0
 		for i in {0..10} ; do
 			ps "$pid" >/dev/null || return 0
