@@ -14,6 +14,10 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+case "$(uname -r)" in
+4.13.16*) skip "Skipping test that occasionally invokes 'oom-killer'" ;;
+esac
+
 LOGICAL_BLOCK_SIZE=4096
 
 # PHYSICAL_BLOCK_SIZE is set with physblk_exp which
