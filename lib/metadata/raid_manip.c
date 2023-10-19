@@ -2922,7 +2922,7 @@ static int _raid_allow_extraction(struct logical_volume *lv,
 	char *sync_action;
 	struct lv_segment *seg = first_seg(lv);
 
-	/* If in-sync or hanlding repairs, allow to proceed. */
+	/* If in-sync or handling repairs, allow to proceed. */
 	if (_raid_in_sync(lv) || lv->vg->cmd->handles_missing_pvs)
 		return 1;
 
