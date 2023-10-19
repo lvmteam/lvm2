@@ -80,7 +80,7 @@ do
 	dmsetup table $vg-$lv1|dmsetup load $vg-$lv1
 	dmsetup suspend --noflush $vg-$lv1
 	dmsetup resume $vg-$lv1
-	sleep 0.3
+	sleep .5
 done
 
 esac
