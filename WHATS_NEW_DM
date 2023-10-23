@@ -1,5 +1,6 @@
 Version 1.02.197 - 
 ===================================
+  Fix invalid JSON report if using DM_REPORT_OUTPUT_MULTIPLE_TIMES and selection.
   Propagate ioctl errno from dm_task_run when creating new table line.
   Add support for group aliases in dmstats.
   Add support for exit-on file for dmeventd to reduce shutdown delays.

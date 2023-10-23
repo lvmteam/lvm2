@@ -4810,12 +4810,36 @@ static int _output_as_rows(struct dm_report *rh)
 	return 0;
 }
 
+static struct dm_list *_get_last_displayed_rowh(struct dm_report *rh)
+{
+	struct dm_list *rowh;
+	struct row *row;
+
+	/*
+	 * We need to find 'last displayed row', not just 'last row'.
+	 *
+	 * This is because the report may be marked with
+	 * DM_REPORT_OUTPUT_MULTIPLE_TIMES flag. In that case, the report
+	 * may be used more than once and with different selection
+	 * criteria each time. Therefore, such report may also contain
+	 * rows which we do not display on output with current selection
+	 * criteria.
+	 */
+	for (rowh = dm_list_last(&rh->rows); rowh; rowh = dm_list_prev(&rh->rows, rowh)) {
+		row = dm_list_item(rowh, struct row);
+		if (_should_display_row(row))
+			return rowh;
+	}
+
+	return NULL;
+}
+
 static int _output_as_columns(struct dm_report *rh)
 {
 	struct dm_list *fh, *rowh, *ftmp, *rtmp;
 	struct row *row = NULL;
 	struct dm_report_field *field;
-	struct dm_list *last_row;
+	struct dm_list *last_rowh;
 	int do_field_delim;
 	char *line;
 
@@ -4824,7 +4848,7 @@ static int _output_as_columns(struct dm_report *rh)
 		_report_headings(rh);
 
 	/* Print and clear buffer */
-	last_row = dm_list_last(&rh->rows);
+	last_rowh = _get_last_displayed_rowh(rh);
 	dm_list_iterate_safe(rowh, rtmp, &rh->rows) {
 		row = dm_list_item(rowh, struct row);
 
@@ -4878,7 +4902,7 @@ static int _output_as_columns(struct dm_report *rh)
 				log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
 				goto bad;
 			}
-			if (rowh != last_row &&
+			if (rowh != last_rowh &&
 			    !dm_pool_grow_object(rh->mem, JSON_SEPARATOR, 0)) {
 				log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
 				goto bad;
