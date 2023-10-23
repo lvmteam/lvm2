@@ -1875,36 +1875,39 @@ static int _idtype_compatible_with_major_number(struct cmd_context *cmd, int idt
 	return 1;
 }
 
-static int _match_dm_devnames(struct cmd_context *cmd, struct device *dev,
-			      struct dev_id *id, struct dev_use *du)
+static int _match_dm_names(struct cmd_context *cmd, char *idname, struct device *dev)
 {
+	struct device *dev2;
 	struct stat buf;
 
-	if (MAJOR(dev->dev) != cmd->dev_types->device_mapper_major)
-		return 0;
+	/*
+	 * An alternate dm name may already be in dev-cache from dev_cache_scan(),
+	 * in which case both names point to the same struct device.
+	 */
+	dev2 = dev_cache_get_existing(cmd, idname, NULL);
 
-	if (id->idname && du->idname && !strcmp(id->idname, du->idname))
-		return 1;
-
-	if (du->idname && !strcmp(du->idname, dev_name(dev))) {
-		log_debug("Match %s %s to %s: ignoring idname %s",
-			  idtype_to_str(du->idtype), du->idname, dev_name(dev), id->idname ?: ".");
+	if (dev2 && (dev == dev2)) {
+		log_debug("Match dm names %s %s for %d:%d (from cache)",
+			  dev_name(dev), idname, (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
 		return 1;
 	}
 
-	if (!du->idname)
+	if (dev2)
 		return 0;
 
-	/* detect that a du entry is for a dm device */
-
-	if (!strncmp(du->idname, "/dev/dm-", 8) || !strncmp(du->idname, "/dev/mapper/", 12)) {
-		if (stat(du->idname, &buf))
+	/*
+	 * Optimized commands (like pvscan) can avoid a full dev_cache_scan(),
+	 * in which case all the dev aliases will not already exist in dev-cache,
+	 * so check if the system has a device with the given name.
+	 */
+	if (!strncmp(idname, "/dev/dm-", 8) || !strncmp(idname, "/dev/mapper/", 12)) {
+		if (stat(idname, &buf))
 			return 0;
 
 		if ((MAJOR(buf.st_rdev) == cmd->dev_types->device_mapper_major) &&
 		    (MINOR(buf.st_rdev) == MINOR(dev->dev))) {
-			log_debug("Match %s %s to %s: using other dm name, ignoring %s",
-				  idtype_to_str(du->idtype), du->idname, dev_name(dev), id->idname ?: ".");
+			log_debug("Match dm names %s %s for %d:%d (from stat)",
+				  dev_name(dev), idname, (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
 			return 1;
 		}
 	}
@@ -1975,6 +1978,27 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 		return 0;
 	}
 
+	if (du->idtype == DEV_ID_TYPE_DEVNAME) {
+		int is_dm = (MAJOR(dev->dev) == cmd->dev_types->device_mapper_major);
+		idname = dev_name(dev);
+
+		if (!strcmp(du->idname, idname) || (is_dm && _match_dm_names(cmd, du->idname, dev))) {
+			if (!(id = zalloc(sizeof(struct dev_id))))
+				return_0;
+			id->idtype = DEV_ID_TYPE_DEVNAME;
+			id->idname = strdup(du->idname);
+			id->dev = dev;
+			dm_list_add(&dev->ids, &id->list);
+			du->dev = dev;
+			dev->id = id;
+			dev->flags |= DEV_MATCHED_USE_ID;
+			log_debug("Match %s %s to %s",
+				  idtype_to_str(du->idtype), du->idname, dev_name(dev));
+			return 1;
+		}
+		return 0;
+	}
+
 	/*
 	 * sys_wwid and sys_serial were saved in the past with leading and
 	 * trailing spaces replaced with underscores, and t10 wwids also had
@@ -2011,20 +2035,6 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 			continue;
 
 		if (id->idtype == du->idtype) {
-			/*
-			 * dm names can have different forms, so matching names
-			 * is not always a direct comparison.
-			 */
-			if ((id->idtype == DEV_ID_TYPE_DEVNAME) && _match_dm_devnames(cmd, dev, id, du)) {
-				/* dm devs can have differing names that we know still match */
-				du->dev = dev;
-				dev->id = id;
-				dev->flags |= DEV_MATCHED_USE_ID;
-				log_debug("Match %s %s to %s: dm names",
-					  idtype_to_str(du->idtype), du->idname, dev_name(dev));
-				return 1;
-			}
-
 			if (!strcmp(id->idname, du_idname)) {
 				du->dev = dev;
 				dev->id = id;
@@ -2032,14 +2042,8 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 				log_debug("Match %s %s to %s",
 					  idtype_to_str(du->idtype), du_idname, dev_name(dev));
 				return 1;
-
-			} else {
-				/*
-				log_debug("Mismatch device_id %s %s to %s: idname %s",
-			  		  idtype_to_str(du->idtype), du->idname ?: ".", dev_name(dev), id->idname ?: ":");
-				*/
-				return 0;
 			}
+			return 0;
 		}
 	}
 
