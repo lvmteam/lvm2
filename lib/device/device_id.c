@@ -771,7 +771,6 @@ static int device_id_system_read_preferred(struct cmd_context *cmd, struct devic
 
 	if (MAJOR(dev->dev) == cmd->dev_types->drbd_major) {
 		/* TODO */
-		log_warn("Missing support for DRBD idtype");
 		goto id_last;
 	}
 
@@ -2343,20 +2342,20 @@ void device_ids_match(struct cmd_context *cmd)
 		/* A detached device would get here which isn't uncommon. */
 
 		if ((du->idtype == DEV_ID_TYPE_DEVNAME) && du->devname)
-			log_warn("Devices file PVID %s last seen on %s not found.",
+			log_debug("Devices file PVID %s last seen on %s not found.",
 				 du->pvid ?: "none",
 				 du->devname ?: "none");
 		else if (du->idtype == DEV_ID_TYPE_DEVNAME)
-			log_warn("Devices file PVID %s not found.",
+			log_debug("Devices file PVID %s not found.",
 				 du->pvid ?: "none");
 		else if (du->devname)
-			log_warn("Devices file %s %s PVID %s last seen on %s not found.",
+			log_debug("Devices file %s %s PVID %s last seen on %s not found.",
 				 idtype_to_str(du->idtype),
 				 du->idname ?: "none",
 				 du->pvid ?: "none",
 				 du->devname);
 		else
-			log_warn("Devices file %s %s PVID %s not found.",
+			log_debug("Devices file %s %s PVID %s not found.",
 				 idtype_to_str(du->idtype),
 				 du->idname ?: "none",
 				 du->pvid ?: "none");
@@ -3072,13 +3071,13 @@ void device_ids_check_serial(struct cmd_context *cmd, struct dm_list *scan_devs,
 				break;
 		}
 		if (count != 1) {
-			log_warn("No device matches devices file PVID %s with duplicate serial number %s previously %s.",
-				 du->pvid, du->idname, du->devname);
+			log_debug("No device matches devices file PVID %s with duplicate serial number %s previously %s.",
+				  du->pvid, du->idname, du->devname);
 			continue;
 		}
 
-		log_warn("Device %s with serial number %s has PVID %s (devices file %s)",
-			 dev_name(dev), du->idname, dev->pvid, du->pvid ?: "none");
+		log_debug("Device %s with serial number %s has PVID %s (devices file %s)",
+			  dev_name(dev), du->idname, dev->pvid, du->pvid ?: "none");
 		if (!(tmpdup = strdup(dev->pvid)))
 			continue;
 		free(du->pvid);
@@ -3137,10 +3136,10 @@ void device_ids_check_serial(struct cmd_context *cmd, struct dm_list *scan_devs,
 	dm_list_iterate_items(dul, &dus_check) {
 		if (!dul->du->dev) {
 			du = dul->du;
-			log_warn("Devices file %s %s PVID %s not found.",
-				 idtype_to_str(du->idtype),
-				 du->idname ?: "none",
-				 du->pvid ?: "none");
+			log_debug("Devices file %s %s PVID %s not found.",
+				  idtype_to_str(du->idtype),
+				  du->idname ?: "none",
+				  du->pvid ?: "none");
 			if (du->devname) {
 				free(du->devname);
 				du->devname = NULL;
@@ -3404,7 +3403,7 @@ void device_ids_refresh(struct cmd_context *cmd, struct dm_list *dev_list,
 					log_warn("WARNING: use lvmdevices to select a device for PVID %s.", dil->pvid);
 					dm_list_del(&dil->list);
 				} else {
-					log_warn("Devices file PVID %s found on %s.", dil->pvid, dev_name(dev));
+					log_debug("Devices file PVID %s found on %s.", dil->pvid, dev_name(dev));
 					dil->dev = dev;
 				}
 			} else {
@@ -3463,7 +3462,7 @@ void device_ids_refresh(struct cmd_context *cmd, struct dm_list *dev_list,
 			new_idname = strdup(devname);
 			new_idname2 = strdup(devname);
 			new_devname = strdup(devname);
-			log_print_unless_silent("Found new device name %s for PVID %s.", devname, du->pvid ?: "");
+			log_debug("Found new device name %s for PVID %s.", devname, du->pvid ?: "");
 		}
 
 		id = zalloc(sizeof(struct dev_id));
