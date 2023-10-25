@@ -1144,10 +1144,12 @@ class TestDbusService(unittest.TestCase):
 			delta = 16384
 
 		for size in [start_size + delta, start_size - delta]:
-
-			pv_in_use = [i[0] for i in lv.LvCommon.Devices]
 			# Select a PV in the VG that isn't in use
-			pv_empty = [p for p in vg.Pvs if p not in pv_in_use]
+			pv_empty = []
+			for p in vg.Pvs:
+				pobj = ClientProxy(self.bus, p, interfaces=(PV_INT,))
+				if len(pobj.Pv.Lv) == 0:
+					pv_empty.append(p)
 
 			prev = lv.LvCommon.SizeBytes
 
