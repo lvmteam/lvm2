@@ -41,10 +41,10 @@ for j in empty existing ; do
 rm -f cmdout
 "$i" "$dev1" "$DMTEST" >cmdout 2>&1 &
 PID=$!
-for k in $(seq 1 10); do
+for k in $(seq 1 20); do
+	sleep .1
 	lines=$(wc -l < cmdout 2>/dev/null || true)
 	test "${lines:-0}" = "0" || break
-	sleep .1
 done
 
 # 0 8192 crypt aes-xts-plain64 434e0cbab02ca68ffba9268222c3789d703fe62427b78b308518b3228f6a2122 0 253:0 8192
@@ -64,7 +64,6 @@ cat cmdout
 # $SECURE string must NOT be present in core file
 not grep "$SECURE" "core.$PID" || {
 	## cp "core.$PID" /dev/shm/core
-	rm -f "core.$PID"
 	should dmsetup remove "$DMTEST" # go around weird bugs
 	die "!!! Secure string $SECURE found present in core.$PID !!!"
 }
