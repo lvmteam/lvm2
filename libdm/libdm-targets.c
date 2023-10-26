@@ -106,26 +106,22 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 
 	/* Second field holds the device count */
 	msg_fields = "<#devs> ";
-	if (!(p = _skip_fields(params, 1)) || (sscanf(p, "%d", &i) != 1))
+	if (!(pp = _skip_fields(params, 1)) || (sscanf(pp, "%d", &i) != 1) || !(p = _skip_fields(pp, 1)))
 		goto_bad;
 
 	msg_fields = "";
 	if (!(s = dm_pool_zalloc(mem, sizeof(struct dm_status_raid))))
 		goto_bad;
 
-	if (!(s->raid_type = dm_pool_zalloc(mem, p - params)))
+	msg_fields = "<raid_type> <#devices> <health_chars> and <sync_ratio> ";
+	if (!(s->raid_type = dm_pool_strndup(mem, params, pp - params - 1)))
 		goto_bad; /* memory is freed when pool is destroyed */
 
-	if (!(s->dev_health = dm_pool_zalloc(mem, i + 1))) /* Space for health chars */
+	if (!(s->dev_health = dm_pool_strndup(mem, p, i)) || !(p = _skip_fields(p, 1))) /* health chars */
 		goto_bad;
 
-	msg_fields = "<raid_type> <#devices> <health_chars> and <sync_ratio> ";
-	if (sscanf(params, "%s %u %s " FMTu64 "/" FMTu64,
-		   s->raid_type,
-		   &s->dev_count,
-		   s->dev_health,
-		   &s->insync_regions,
-		   &s->total_regions) != 5)
+	s->dev_count = i;
+	if (sscanf(p, FMTu64 "/" FMTu64, &s->insync_regions, &s->total_regions) != 2)
 		goto_bad;
 
 	/*
@@ -141,13 +137,13 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 	msg_fields = "<sync_action> and <mismatch_cnt> ";
 
 	/* Skip pre-1.5.0 params */
-	if (!(p = _skip_fields(params, 4)) || !(pp = _skip_fields(p, 1)))
+	if (!(pp = _skip_fields(params, 4)) || !(p = _skip_fields(pp, 1)))
 		goto_bad;
 
-	if (!(s->sync_action = dm_pool_zalloc(mem, pp - p)))
+	if (!(s->sync_action = dm_pool_strndup(mem, pp, p - pp - 1)))
 		goto_bad;
 
-	if (sscanf(p, "%s " FMTu64, s->sync_action, &s->mismatch_count) != 2)
+	if (sscanf(p, FMTu64, &s->mismatch_count) != 1)
 		goto_bad;
 
 	if (num_fields < 7)
@@ -166,23 +162,35 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 	if (sscanf(p, FMTu64, &s->data_offset) != 1)
 		goto bad;
 
+	/* <journal_char>  - 'A' - active write-through journal device.
+	 *                 - 'a' - active write-back journal device.
+	 *                 - 'D' - dead journal device.
+	 *                 - '-' - no journal device.
+	 */
+
 out:
 	*status = s;
 
-	if (s->insync_regions == s->total_regions) {
-		/* FIXME: kernel gives misleading info here
-		 * Trying to recognize a true state */
-		while (i-- > 0)
-			if (s->dev_health[i] == 'a')
-				a++; /* Count number of 'a' */
+	while (i-- > 0)
+		if (s->dev_health[i] == 'a')
+			a++; /* Count number of 'a' */
 
-		if (a && a < s->dev_count) {
-			/* SOME legs are in 'a' */
-			if (!strcasecmp(s->sync_action, "recover")
-			    || !strcasecmp(s->sync_action, "idle"))
-				/* Kernel may possibly start some action
-				 * in near-by future, do not report 100% */
-				s->insync_regions--;
+	if (a) {
+		if ((a < s->dev_count) &&  /* SOME legs are in 'a' */
+		    /* FIXME: kernel gives misleading info here
+		     * Trying to recognize a true state */
+		    (s->insync_regions == s->total_regions) &&
+		    (!strcasecmp(s->sync_action, "recover") ||
+		     !strcasecmp(s->sync_action, "idle"))) {
+			/* Kernel may possibly start some action
+			 * in near-by future, do not report 100% */
+			s->insync_regions--;
+		}
+		if ((a == s->dev_count) && /* all legs are in 'a' */
+		    (!strcasecmp(s->sync_action, "resync") ||
+		     !strcasecmp(s->sync_action, "idle"))) {
+			/* Mark 1st. leg in sync */
+			s->dev_health[0] = 'A';
 		}
 	}
 
