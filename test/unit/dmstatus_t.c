@@ -70,6 +70,40 @@ static void _test_mirror_status(void *fixture)
 	}
 }
 
+static void _test_raid_status(void *fixture)
+{
+	struct dm_pool *mem = fixture;
+	struct dm_status_raid *s = NULL;
+
+	T_ASSERT(dm_get_status_raid(mem,
+				    "raid6_zr 5 AAAAA 48/68 idle 10 20 -",
+				    &s));
+	if (s) {
+		T_ASSERT_EQUAL(s->total_regions, 68);
+		T_ASSERT_EQUAL(s->insync_regions, 48);
+		T_ASSERT_EQUAL(s->dev_count, 5);
+		T_ASSERT(!strcmp(s->raid_type, "raid6_zr"));
+		T_ASSERT(!strcmp(s->dev_health, "AAAAA"));
+		T_ASSERT(!strcmp(s->sync_action, "idle"));
+		T_ASSERT_EQUAL(s->mismatch_count, 10);
+		T_ASSERT_EQUAL(s->data_offset, 20);
+	}
+
+	/* remap aa  to Aa */
+	T_ASSERT(dm_get_status_raid(mem,
+				    "raid1 2 aa 10/20 resync 0 0 -",
+				    &s));
+	if (s) {
+		T_ASSERT_EQUAL(s->total_regions, 20);
+		T_ASSERT_EQUAL(s->insync_regions, 10);
+		T_ASSERT_EQUAL(s->dev_count, 2);
+		T_ASSERT(!strcmp(s->raid_type, "raid1"));
+		T_ASSERT(!strcmp(s->dev_health, "Aa"));
+		T_ASSERT(!strcmp(s->sync_action, "resync"));
+	}
+
+}
+
 void dm_status_tests(struct dm_list *all_tests)
 {
 	struct test_suite *ts = test_suite_create(_mem_init, _mem_exit);
@@ -79,6 +113,7 @@ void dm_status_tests(struct dm_list *all_tests)
 	}
 
 	register_test(ts, "/device-mapper/mirror/status", "parsing mirror status", _test_mirror_status);
+	register_test(ts, "/device-mapper/raid/status", "parsing raid status", _test_raid_status);
 	dm_list_add(all_tests, &ts->list);
 }
 
