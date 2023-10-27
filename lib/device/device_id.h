@@ -37,8 +37,8 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 			int noupdate, int *update_needed);
 void device_ids_check_serial(struct cmd_context *cmd, struct dm_list *scan_devs,
 			int noupdate, int *update_needed);
-void device_ids_refresh(struct cmd_context *cmd, struct dm_list *dev_list, int *search_count,
-			int noupdate, int *update_needed);
+void device_ids_search(struct cmd_context *cmd, struct dm_list *new_devs,
+		       int all_ids, int noupdate, int *update_needed);
 const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, uint16_t idtype);
 void device_id_update_vg_uuid(struct cmd_context *cmd, struct volume_group *vg, struct id *old_vg_id);
 int device_ids_version_unchanged(struct cmd_context *cmd);

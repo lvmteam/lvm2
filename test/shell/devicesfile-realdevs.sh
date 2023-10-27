@@ -466,11 +466,10 @@ grep $did1 $DF
 rm $DF
 sed "s/$did1/baddid/" "$DF.orig" |tee $DF
 
-# FIXME: lvmdevices --check needs fixed output
-#lvmdevices --check 2>&1|tee out
-#grep $dev1 out
-#grep baddid out
-#not grep $dev2 out
+lvmdevices --check 2>&1|tee out
+grep $dev1 out
+grep baddid out
+not grep $dev2 out
 
 lvmdevices 2>&1|tee out
 grep $pvid1 out
@@ -499,8 +498,7 @@ d1=$(basename $dev1)
 d3=$(basename $dev3)
 sed "s/$d1/$d3/" "$DF.orig" |tee $DF
 not lvmdevices --check 2>&1 |tee out
-# FIXME: define fixed check output
-#grep $dev1 out
+grep $dev1 out
 
 lvmdevices --update
 
@@ -522,9 +520,8 @@ sed "s/$d2/$d1/" "${DF}_1" |tee ${DF}_2
 sed "s/tmp/$d2/" "${DF}_2" |tee $DF
 rm ${DF}_1 ${DF}_2
 not lvmdevices --check 2>&1 |tee out
-# FIXME: define fixed check output
-#grep $dev1 out
-#grep $dev2 out
+grep $dev1 out
+grep $dev2 out
 
 lvmdevices --update
 
@@ -544,8 +541,7 @@ d1=$(basename $dev1)
 d3=$(basename $dev3)
 sed "s/$d1/$d3/" "$DF.orig" |tee $DF
 not lvmdevices --check 2>&1 |tee out
-# FIXME: define fixed check output
-#grep $dev1 out
+grep $dev1 out
 
 pvs -o+uuid,deviceid | grep $vg |tee out
 grep $dev1 out |tee out1

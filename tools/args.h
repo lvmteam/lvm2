@@ -668,6 +668,19 @@ arg(readonly_ARG, '\0', "readonly", 0, 0, 0,
     "or not LVs are actually in use.\n")
 
 arg(refresh_ARG, '\0', "refresh", 0, 0, 0,
+    "#lvmdevices\n"
+    "Search for missing PVs on new devices, and update the devices file\n"
+    "with new device IDs for the PVs if they are found on new devices.\n"
+    "This is useful if PVs have been moved to new devices with new WWIDs,\n"
+    "for example. The device ID type and name may both change for a PV.\n"
+    "WARNING: if a PV is detached from the system, but a device containing a\n"
+    "clone or snapshot of that PV is present, then refresh would replace the\n"
+    "correct device ID with the clone/snapshot device ID, and lvm would begin\n"
+    "using the wrong device for the PV. Use deldev/adddev to safely change\n"
+    "a PV device ID in this scenario.\n"
+    "#vgchange\n"
+    "#lvchange\n"
+    "#vgmknodes\n"
     "If the LV is active, reload its metadata.\n"
     "This is not necessary in normal operation, but may be useful\n"
     "if something has gone wrong, or if some form of manual LV\n"

@@ -1448,10 +1448,11 @@ DESC: Print devices in the devices file.
 
 lvmdevices --check
 ID: lvmdevices_check
+OO: --refresh
 DESC: Check the devices file and report incorrect values.
 
 lvmdevices --update
-OO: --delnotfound
+OO: --delnotfound, --refresh
 ID: lvmdevices_update
 DESC: Update the devices file to fix incorrect values.
 

@@ -1643,7 +1643,7 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	 * need to be scanned to find the new device for the PVIDs.
 	 * device_ids_validate() will update the devices file to correct
 	 * some info, but to locate new devices for PVIDs, it defers
-	 * to device_ids_refresh() which involves label scanning.
+	 * to device_ids_search() which involves label scanning.
 	 *
 	 * device_ids_refresh_trigger is set by device_ids_read() when
 	 * it sees that the local machine doesn't match the machine
@@ -1652,17 +1652,17 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	 * This also means that all devs on the system need to be
 	 * scanned to find the new devices for the PVIDs.
 	 *
-	 * When device_ids_refresh() locates the correct devices
+	 * When device_ids_search() locates the correct devices
 	 * for the PVs in the devices file, it returns those new
 	 * devices in the refresh_devs list.  Those devs need to
 	 * be passed to label_scan to populate lvmcache info.
 	 */
 	if (cmd->device_ids_invalid || cmd->device_ids_refresh_trigger) {
-		struct dm_list refresh_devs;
-		dm_list_init(&refresh_devs);
-		device_ids_refresh(cmd, &refresh_devs, NULL, 0, NULL);
-		if (!dm_list_empty(&refresh_devs))
-			label_scan_devs(cmd, cmd->filter, &refresh_devs);
+		struct dm_list new_devs;
+		dm_list_init(&new_devs);
+		device_ids_search(cmd, &new_devs, 0, 0, NULL);
+		if (!dm_list_empty(&new_devs))
+			label_scan_devs(cmd, cmd->filter, &new_devs);
 	}
 
 	/*
