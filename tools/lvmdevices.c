@@ -188,7 +188,6 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		int update_set = arg_is_set(cmd, update_ARG);
 		int search_count = 0;
 		int update_needed = 0;
-		int serial_update_needed = 0;
 
 		unlink_searched_devnames(cmd);
 
@@ -226,13 +225,9 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 
 		/*
 		 * Check that the pvid read from the lvm label matches the pvid
-		 * for this devices file entry.  Also print a warning if a dev
-		 * from use_devices does not pass the filters that have been
-		 * run just above.
+		 * for this devices file entry.
 		 */
-		device_ids_validate(cmd, NULL, 1, 0);
-		if (cmd->device_ids_invalid)
-			update_needed = 1;
+		device_ids_validate(cmd, NULL, 0, 1, &update_needed);
 
 		/*
 		 * Remove multipath components.
@@ -275,17 +270,16 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 			}
 		}
 
-		if (!dm_list_empty(&cmd->device_ids_check_serial))
-			device_ids_check_serial(cmd, &scan_devs, &serial_update_needed, 1);
+		if (!dm_list_empty(&cmd->device_ids_check_serial)) {
+			device_ids_check_serial(cmd, &scan_devs, 1, &update_needed);
+			/* device_ids_check_serial has done label_read_pvid on the scan_devs. */
+		}
 
 		/*
 		 * Find and fix any devname entries that have moved to a
 		 * renamed device.
 		 */
-		device_ids_refresh(cmd, &found_devs, &search_count, 1);
-
-		if (search_count && !strcmp(cmd->search_for_devnames, "none"))
-			log_print("Not searching for missing devnames, search_for_devnames=\"none\".");
+		device_ids_refresh(cmd, &found_devs, &search_count, 1, &update_needed);
 
 		dm_list_iterate_items(du, &cmd->use_devices) {
 			if (du->dev)
@@ -305,7 +299,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		}
 
 		if (arg_is_set(cmd, update_ARG)) {
-			if (update_needed || serial_update_needed || !dm_list_empty(&found_devs)) {
+			if (update_needed || !dm_list_empty(&found_devs)) {
 				if (!device_ids_write(cmd))
 					goto_bad;
 				log_print("Updated devices file to version %s", devices_file_version());
@@ -318,7 +312,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 			 * needs updates, i.e. running --update would make
 			 * changes.
 			 */
-			if (update_needed || serial_update_needed) {
+			if (update_needed) {
 				log_error("Updates needed for devices file.");
 				goto bad;
 			}

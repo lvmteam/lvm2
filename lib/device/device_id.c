@@ -2428,7 +2428,7 @@ static void _get_devs_with_serial_numbers(struct cmd_context *cmd, struct dm_lis
  * use_devices entries from the devices file.
  */
 
-void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, int noupdate, int using_hints)
+void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, int using_hints, int noupdate, int *update_needed)
 {
 	struct dm_list wrong_devs;
 	struct device *dev = NULL;
@@ -2495,10 +2495,9 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 		 * probably wants to do something about it.
 		 */
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "persistent")) {
-			log_debug("Validate %s %s PVID %s on %s: filtered",
-				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".", dev_name(dev));
-			log_warn("Devices file %s is excluded: %s.",
-				 dev_name(dev), dev_filtered_reason(dev));
+			log_debug("Validate %s %s PVID %s on %s: filtered (%s)",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".",
+				  dev_name(dev), dev_filtered_reason(dev));
 			continue;
 		}
 
@@ -2612,10 +2611,11 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 				cmd->device_ids_invalid = 1;
 			}
 
-			/* Fix the DEVNAME field if it's outdated, not generally expected */
+			/* Fix the DEVNAME field if it's outdated. */
 			if (!du->devname || strcmp(devname, du->devname)) {
-				log_debug("Updating outdated DEVNAME from %s to %s for PVID %s",
-					  du->devname ?: ".", devname, du->pvid);
+				log_debug("Validate %s %s PVID %s on %s: outdated DEVNAME %s",
+					  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".", devname,
+					  du->devname ?: ".");
 				if (!(tmpdup = strdup(devname)))
 					continue;
 				free(du->devname);
@@ -2644,7 +2644,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 					  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".", devname);
 			} else {
 				log_debug("Validate %s %s PVID %s on %s: wrong PVID %s.",
-					idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".", devname, dev->pvid);
+					  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".", devname, dev->pvid);
 				if ((devl = dm_pool_zalloc(cmd->mem, sizeof(*devl)))) {
 					devl->dev = du->dev;
 					dm_list_add(&wrong_devs, &devl->list);
@@ -2668,7 +2668,8 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 
 			devname = dev_name(dev);
 
-			log_debug("New match for devices file PVID %s now on %s.", du->pvid, devname);
+			log_debug("Validate %s %s PVID %s: found on %s",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".", devname);
 
 			dup_devname1 = strdup(devname);
 			dup_devname2 = strdup(devname);
@@ -2719,7 +2720,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 			continue;
 		if (du->dev)
 			continue;
-		log_debug("Validate %s %s PVID %s: no device match",
+		log_debug("Validate %s %s PVID %s: no device found",
 			  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".");
 	}
 
@@ -2750,10 +2751,11 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 			/*
 			 * du2 is correctly matched to a dev using this pvid,
 			 * so drop the pvid from du.
-			 * TOOD: it would make sense to clear IDNAME, but
+			 * TODO: it would make sense to clear IDNAME, but
 			 * can we handle entries with no IDNAME?
 			 */
-			log_debug("Device %s no longer has PVID %s.", dev_name(du->dev), du->pvid);
+			log_debug("Validate %s %s PVID %s: no device found, remove incorrect PVID",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".");
 			free(du->pvid);
 			free(du->devname);
 			du->pvid = NULL;
@@ -2800,10 +2802,9 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 			if (strcmp(du->idname, du2->idname))
 				continue;
 
-			log_debug("Repeated idname %s pvids %s %s",
-				  du->idname, du->pvid ?: ".", du2->pvid ?: ".");
-
 			if (!du2->pvid) {
+				log_debug("Validate %s %s PVID none: remove entry with repeated devname",
+					  idtype_to_str(du2->idtype), du2->idname ?: ".");
 				dm_list_del(&du2->list);
 				free_du(du2);
 				update_file = 1;
@@ -2846,6 +2847,9 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 	 */
 	if (update_file || cmd->device_ids_invalid)
 		unlink_searched_devnames(cmd);
+
+	if (update_file && update_needed)
+		*update_needed = 1;
 
 	/* FIXME: for wrong devname cases, wait to write new until device_ids_refresh? */
 
@@ -2895,7 +2899,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
  * (This could also be done for duplicate wwids if needed.)
  */
 void device_ids_check_serial(struct cmd_context *cmd, struct dm_list *scan_devs,
-			     int *update_needed, int noupdate)
+			     int noupdate, int *update_needed)
 {
 	struct dm_list dus_check; /* dev_use_list */
 	struct dm_list devs_check; /* device_list */
@@ -3176,8 +3180,8 @@ void device_ids_check_serial(struct cmd_context *cmd, struct dm_list *scan_devs,
  * is using a non-system devices file?
  */
 
-void device_ids_refresh(struct cmd_context *cmd, struct dm_list *dev_list,
-		        int *search_count, int noupdate)
+void device_ids_refresh(struct cmd_context *cmd, struct dm_list *refresh_devs,
+		        int *search_count, int noupdate, int *update_needed)
 {
 	struct device *dev;
 	struct dev_use *du;
@@ -3528,6 +3532,9 @@ void device_ids_refresh(struct cmd_context *cmd, struct dm_list *dev_list,
 		log_debug("Search for PVIDs found no updates");
 	}
 
+	if (update_file && update_needed)
+		*update_needed = 1;
+
 	/*
 	 * The entries in search_list_pvids with a dev set are the new devs found
 	 * for the PVIDs that we want to return to the caller in a device_list
@@ -3541,7 +3548,7 @@ void device_ids_refresh(struct cmd_context *cmd, struct dm_list *dev_list,
 		if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
 			continue;
 		devl->dev = dev;
-		dm_list_add(dev_list, &devl->list);
+		dm_list_add(refresh_devs, &devl->list);
 	}
 
 	/*

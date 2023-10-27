@@ -33,12 +33,15 @@ void device_id_pvremove(struct cmd_context *cmd, struct device *dev);
 void device_ids_match(struct cmd_context *cmd);
 int device_ids_match_dev(struct cmd_context *cmd, struct device *dev);
 void device_ids_match_device_list(struct cmd_context *cmd);
-void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, int noupdate, int using_hints);
-int device_ids_version_unchanged(struct cmd_context *cmd);
-void device_ids_check_serial(struct cmd_context *cmd, struct dm_list *scan_devs, int *update_needed, int noupdate);
-void device_ids_refresh(struct cmd_context *cmd, struct dm_list *dev_list, int *search_count, int noupdate);
+void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, int using_hints,
+			int noupdate, int *update_needed);
+void device_ids_check_serial(struct cmd_context *cmd, struct dm_list *scan_devs,
+			int noupdate, int *update_needed);
+void device_ids_refresh(struct cmd_context *cmd, struct dm_list *dev_list, int *search_count,
+			int noupdate, int *update_needed);
 const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, uint16_t idtype);
 void device_id_update_vg_uuid(struct cmd_context *cmd, struct volume_group *vg, struct id *old_vg_id);
+int device_ids_version_unchanged(struct cmd_context *cmd);
 
 struct dev_use *get_du_for_devno(struct cmd_context *cmd, dev_t devno);
 struct dev_use *get_du_for_dev(struct cmd_context *cmd, struct device *dev);

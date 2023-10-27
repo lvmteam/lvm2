@@ -1627,7 +1627,7 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	if (!dm_list_empty(&cmd->device_ids_check_serial)) {
 		struct dm_list scan_devs;
 		dm_list_init(&scan_devs);
-		device_ids_check_serial(cmd, &scan_devs, NULL, 0);
+		device_ids_check_serial(cmd, &scan_devs, 0, NULL);
 		if (!dm_list_empty(&scan_devs))
 			label_scan_devs(cmd, cmd->filter, &scan_devs);
 	}
@@ -1660,7 +1660,7 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	if (cmd->device_ids_invalid || cmd->device_ids_refresh_trigger) {
 		struct dm_list refresh_devs;
 		dm_list_init(&refresh_devs);
-		device_ids_refresh(cmd, &refresh_devs, NULL, 0);
+		device_ids_refresh(cmd, &refresh_devs, NULL, 0, NULL);
 		if (!dm_list_empty(&refresh_devs))
 			label_scan_devs(cmd, cmd->filter, &refresh_devs);
 	}
