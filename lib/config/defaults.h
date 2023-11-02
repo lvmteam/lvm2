@@ -330,7 +330,7 @@
 
 #define DEFAULT_DEVICES_FILE "system.devices"
 
-#define DEFAULT_SEARCH_FOR_DEVNAMES "auto"
+#define DEFAULT_SEARCH_FOR_DEVNAMES "all"
 
 #define DEFAULT_WWIDS_FILE "/etc/multipath/wwids"
 
