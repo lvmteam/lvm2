@@ -143,6 +143,7 @@ static void _print_check(struct cmd_context *cmd)
 	int idname_same;
 	int idtype_same;
 	int devname_same;
+	int part_same;
 	char *part;
 
 	dm_list_init(&use_old);
@@ -198,8 +199,8 @@ restart1:
 					goto next1;
 				}
 
-				pvid_same = (du_old->pvid && du_new->pvid && !strcmp(du_old->pvid, du_new->pvid));
-				devname_same = (du_old->devname && du_new->devname && !strcmp(du_old->devname, du_new->devname));
+				pvid_same = (du_old->pvid && du_new->pvid && !strcmp(du_old->pvid, du_new->pvid)) || (!du_old->pvid && !du_new->pvid);
+				devname_same = (du_old->devname && du_new->devname && !strcmp(du_old->devname, du_new->devname)) || (!du_old->devname && !du_new->devname);
 
 				if (pvid_same && devname_same) {
 					log_verbose("IDTYPE=%s IDNAME=%s DEVNAME=%s PVID=%s%s: no change",
@@ -283,8 +284,8 @@ restart2:
 					goto next2;
 				}
 
-				idname_same = (du_old->idname && du_new->idname && !strcmp(du_old->idname, du_new->idname));
-				devname_same = (du_old->devname && du_new->devname && !strcmp(du_old->devname, du_new->devname));
+				idname_same = (du_old->idname && du_new->idname && !strcmp(du_old->idname, du_new->idname)) || (!du_old->idname && !du_new->idname);
+				devname_same = (du_old->devname && du_new->devname && !strcmp(du_old->devname, du_new->devname)) || (!du_old->devname && !du_new->devname);
 
 				if (idname_same && devname_same) {
 					log_verbose("IDTYPE=%s IDNAME=%s DEVNAME=%s PVID=%s%s: no change",
@@ -369,8 +370,8 @@ restart3:
 				}
 
 				idtype_same = (du_old->idtype == du_new->idtype);
-				idname_same = (du_old->idname && du_new->idname && !strcmp(du_old->idname, du_new->idname));
-				devname_same = (du_old->devname && du_new->devname && !strcmp(du_old->devname, du_new->devname));
+				idname_same = (du_old->idname && du_new->idname && !strcmp(du_old->idname, du_new->idname)) || (!du_old->idname && !du_new->idname);
+				devname_same = (du_old->devname && du_new->devname && !strcmp(du_old->devname, du_new->devname)) || (!du_old->devname && !du_new->devname);
 
 				if (idtype_same && idname_same && devname_same) {
 					/* this case will probably be caught earlier */
@@ -441,10 +442,46 @@ restart3:
 	}
 
 	/*
+	 * Handle old and new entries that remain and are identical.
+	 * This covers entries that do not have enough valid fields
+	 * set to definitively identify a PV.
+	 */
+restart4:
+	dm_list_iterate_items(du_old, &use_old) {
+		dm_list_iterate_items(du_new, &use_new) {
+			idtype_same = (du_old->idtype == du_new->idtype);
+			idname_same = (du_old->idname && du_new->idname && !strcmp(du_old->idname, du_new->idname)) || (!du_old->idname && !du_new->idname);
+			devname_same = (du_old->devname && du_new->devname && !strcmp(du_old->devname, du_new->devname)) || (!du_old->devname && !du_new->devname);
+			pvid_same = (du_old->pvid && du_new->pvid && !strcmp(du_old->pvid, du_new->pvid)) || (!du_old->pvid && !du_new->pvid);
+			part_same = (du_old->part == du_new->part);
+
+			if (idtype_same && idname_same && devname_same && pvid_same && part_same) {
+				part = _part_str(du_old);
+
+				log_print_unless_silent("IDTYPE=%s IDNAME=%s DEVNAME=%s PVID=%s%s: indeterminate",
+					idtype_to_str(du_new->idtype),
+					du_new->idname ?: "none",
+					du_new->devname ?: "none",
+					du_new->pvid ?: "none",
+					part);
+
+				dm_list_del(&du_old->list);
+				dm_list_del(&du_new->list);
+				dm_list_add(&done_old, &du_old->list);
+				dm_list_add(&done_new, &du_new->list);
+				goto restart4;
+			}
+		}
+	}
+
+	/*
 	 * Entries remaining on old/new lists can't be directly
-	 * correlated by loops above, to print field-specific
-	 * changes.  So, just print remaining old entries as
-	 * being removed and remaing new entries as being added.
+	 * correlated by loops above.
+	 * Just print remaining old entries as being removed and
+	 * remaing new entries as being added.
+	 * If we find specific cases that reach here, we may
+	 * want to add loops above to detect and print them
+	 * more specifically.
 	 */
 
 	dm_list_iterate_items(du_old, &use_old) {
@@ -454,7 +491,7 @@ restart3:
 			idtype_to_str(du_old->idtype),
 			du_old->idname ?: "none",
 			du_old->devname ?: "none",
-			du_old->pvid,
+			du_old->pvid ?: "none",
 			part);
 	}
 
@@ -465,7 +502,7 @@ restart3:
 			idtype_to_str(du_new->idtype),
 			du_new->idname ?: "none",
 			du_new->devname ?: "none",
-			du_new->pvid,
+			du_new->pvid ?: "none",
 			part);
 	}
 
