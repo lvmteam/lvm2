@@ -4103,7 +4103,7 @@ out:
  */
 int get_crypt_table_offset(dev_t crypt_devt, uint32_t *offset_bytes)
 {
-	struct dm_task *dmt = dm_task_create(DM_DEVICE_TABLE);
+	struct dm_task *dmt;
 	uint64_t start, length;
 	char *target_type = NULL;
 	void *next = NULL;
@@ -4113,22 +4113,9 @@ int get_crypt_table_offset(dev_t crypt_devt, uint32_t *offset_bytes)
 	int spaces = 0;
 	unsigned i, i_off = 0;
 
-	if (!dmt)
+	if (!(dmt = _setup_task_run(DM_DEVICE_TABLE, NULL, NULL, NULL, NULL,
+				    MAJOR(crypt_devt), MINOR(crypt_devt), 0, 0, 0)))
 		return_0;
-
-	if (!dm_task_set_major_minor(dmt, (int)MAJOR(crypt_devt), (int)MINOR(crypt_devt), 0)) {
-		dm_task_destroy(dmt);
-		return_0;
-	}
-
-	/* Non-blocking status read */
-	if (!dm_task_no_flush(dmt))
-		log_warn("WARNING: Can't set no_flush for dm status.");
-
-	if (!dm_task_run(dmt)) {
-		dm_task_destroy(dmt);
-		return_0;
-	}
 
 	next = dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
 
