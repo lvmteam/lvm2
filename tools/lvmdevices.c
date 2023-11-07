@@ -21,6 +21,9 @@
 /* coverity[unnecessary_header] needed for MuslC */
 #include <sys/file.h>
 
+extern char devices_file_hostname_orig[PATH_MAX];
+extern char devices_file_product_uuid_orig[PATH_MAX];
+
 static void _search_devs_for_pvids(struct cmd_context *cmd, struct dm_list *search_pvids, struct dm_list *found_devs)
 {
 	struct dev_iter *iter;
@@ -151,10 +154,50 @@ static void _print_check(struct cmd_context *cmd)
 	dm_list_init(&done_old);
 	dm_list_init(&done_new);
 
+	/*
+	 * Move the entries that have been processed out of the way so
+	 * original entries can be added to use_devices by device_ids_read().
+	 * The processed entries are moved back to cmd->use_devices at the
+	 * end of this function.
+	 */
 	dm_list_splice(&use_new, &cmd->use_devices);
 	device_ids_read(cmd);
 	dm_list_splice(&use_old, &cmd->use_devices);
 	dm_list_init(&cmd->use_devices);
+
+	/*
+	 * Check if system identifier is changed.
+	 */
+
+	if (cmd->device_ids_refresh_trigger) {
+		int include_product_uuid = 0;
+		int include_hostname = 0;
+
+		if (cmd->product_uuid && cmd->device_ids_check_product_uuid) {
+			include_product_uuid = 1;
+			if (devices_file_product_uuid_orig[0] &&
+			    strcmp(cmd->product_uuid, devices_file_product_uuid_orig))
+				log_print_unless_silent("PRODUCT_UUID=%s (old %s): update",
+					cmd->product_uuid, devices_file_product_uuid_orig);
+			else if (!devices_file_product_uuid_orig[0])
+				log_print_unless_silent("PRODUCT_UUID=%s: add", cmd->product_uuid);
+		}
+		if (!include_product_uuid && devices_file_product_uuid_orig[0])
+			log_print_unless_silent("PRODUCT_UUID=%s: remove", devices_file_product_uuid_orig);
+
+		/* hostname is only updated or added if product_uuid is not included */
+		if (cmd->hostname && cmd->device_ids_check_hostname && !include_product_uuid) {
+			include_hostname = 1;
+			if (devices_file_hostname_orig[0] &&
+			    strcmp(cmd->hostname, devices_file_hostname_orig))
+				log_print_unless_silent("HOSTNAME=%s (old %s): update",
+					cmd->hostname, devices_file_hostname_orig);
+			else if (!devices_file_hostname_orig[0])
+				log_print_unless_silent("HOSTNAME=%s: add", cmd->hostname);
+		}
+		if (!include_hostname && devices_file_hostname_orig[0])
+			log_print_unless_silent("HOSTNAME=%s: remove", devices_file_hostname_orig);
+	}
 
 	/*
 	 * Check entries with proper id types.

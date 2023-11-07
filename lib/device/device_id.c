@@ -44,6 +44,10 @@ static char _devices_lockfile[PATH_MAX];
 static char _devices_file_version[VERSION_LINE_MAX];
 static const char *_searched_file = DEFAULT_RUN_DIR "/searched_devnames";
 
+/* Only for displaying in lvmdevices command output. */
+char devices_file_hostname_orig[PATH_MAX]; 
+char devices_file_product_uuid_orig[PATH_MAX]; 
+
 char *devices_file_version(void)
 {
 	return _devices_file_version;
@@ -1044,13 +1048,15 @@ int device_ids_read(struct cmd_context *cmd)
 		return 1;
 
 	/*
-	 * The use_devices list should rarely if ever be non-empty at this
-	 * point, it means device_ids_read has been called twice.
-	 * If we wanted to redo reading the file, we'd need to
-	 * free_dus(&cmd->use_devices) and clear the MATCHED_USE_ID flag in all
-	 * dev->flags.
+	 * Note: lvmdevices calls device_ids_read() a second
+	 * time to get the original entries to compare with
+	 * updated entries.  Prior to calling it again, it
+	 * moves the cmd->use_devices entries out of the way.
+	 * Otherwise, device_ids_read() should only be called
+	 * once at the start of a command.
 	 */
 	if (!dm_list_empty(&cmd->use_devices)) {
+		/* shouldn't happen */
 		log_debug("device_ids_read already done");
 		return 1;
 	}
@@ -1071,11 +1077,17 @@ int device_ids_read(struct cmd_context *cmd)
 			continue;
 
 		if (!strncmp(line, "HOSTNAME", 8)) {
-			if (!cmd->device_ids_check_hostname)
-				continue;
-			hostname_found = 1;
 			_copy_idline_str(line, check_id, sizeof(check_id));
 			log_debug("read devices file hostname %s", check_id);
+
+			/* Save original for lvmdevices output. */
+			if (!strcmp(cmd->name, "lvmdevices"))
+				strncpy(devices_file_hostname_orig, check_id, PATH_MAX-1);
+
+			if (!cmd->device_ids_check_hostname)
+				continue;
+
+			hostname_found = 1;
 			if (cmd->hostname && strcmp(cmd->hostname, check_id)) {
 				log_debug("Devices file hostname %s vs local %s.",
 					  check_id[0] ? check_id : "none", cmd->hostname ?: "none");
@@ -1085,11 +1097,17 @@ int device_ids_read(struct cmd_context *cmd)
 		}
 
 		if (!strncmp(line, "PRODUCT_UUID", 12)) {
-			if (!cmd->device_ids_check_product_uuid)
-				continue;
-			product_uuid_found = 1;
 			_copy_idline_str(line, check_id, sizeof(check_id));
 			log_debug("read devices file product_uuid %s", check_id);
+
+			/* Save original for lvmdevices output. */
+			if (!strcmp(cmd->name, "lvmdevices"))
+				strncpy(devices_file_product_uuid_orig, check_id, PATH_MAX-1);
+
+			if (!cmd->device_ids_check_product_uuid)
+				continue;
+
+			product_uuid_found = 1;
 			if ((!cmd->product_uuid && check_id[0]) ||
 			    (cmd->product_uuid && strcmp(cmd->product_uuid, check_id))) {
 				log_debug("Devices file product_uuid %s vs local %s.",
@@ -1163,13 +1181,16 @@ int device_ids_read(struct cmd_context *cmd)
 	}
 	if (fclose(fp))
 		stack;
-	
-	if (!product_uuid_found && !hostname_found &&
-	    (cmd->device_ids_check_product_uuid || cmd->device_ids_check_hostname)) {
-		cmd->device_ids_refresh_trigger = 1;
-		log_debug("Devices file refresh due to no product_uuid or hostname.");
-	}
 
+	if (!product_uuid_found && cmd->device_ids_check_product_uuid) {
+		cmd->device_ids_refresh_trigger = 1;
+		log_debug("Devices file refresh: missing product_uuid");
+	} else if ((!product_uuid_found && !hostname_found) &&
+		   (cmd->device_ids_check_product_uuid || cmd->device_ids_check_hostname)) {
+		cmd->device_ids_refresh_trigger = 1;
+		log_debug("Devices file refresh: missing product_uuid and hostname");
+	}
+	
 	return ret;
 }
 
@@ -1274,9 +1295,10 @@ int device_ids_write(struct cmd_context *cmd)
 	fprintf(fp, "# LVM uses devices listed in this file.\n");
 	fprintf(fp, "# Created by LVM command %s pid %d at %s", cmd->name, getpid(), ctime(&t));
 
+	/* if product_uuid is included, then hostname is unnecessary */
 	if (cmd->product_uuid && cmd->device_ids_check_product_uuid)
 		fprintf(fp, "PRODUCT_UUID=%s\n", cmd->product_uuid);
-	if (cmd->hostname && cmd->device_ids_check_hostname)
+	else if (cmd->hostname && cmd->device_ids_check_hostname)
 		fprintf(fp, "HOSTNAME=%s\n", cmd->hostname);
 
 	if (dm_snprintf(version_buf, VERSION_LINE_MAX, "VERSION=%u.%u.%u", DEVICES_FILE_MAJOR, DEVICES_FILE_MINOR, df_counter+1) < 0)

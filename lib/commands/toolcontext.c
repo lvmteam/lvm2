@@ -634,18 +634,14 @@ static void _init_device_ids_refresh(struct cmd_context *cmd)
 			check_hostname = 1;
 	}
 
-	/* product_uuid is preferred */
-
 	if (check_product_uuid) {
 		const char *sysfs_dir = cmd->device_id_sysfs_dir ?: dm_sysfs_dir();
 		if (dm_snprintf(path, sizeof(path), "%sdevices/virtual/dmi/id/product_uuid", sysfs_dir) < 0)
 			return;
 		if (get_sysfs_value(path, uuid, sizeof(uuid), 0) && uuid[0])
 			cmd->product_uuid = dm_pool_strdup(cmd->libmem, uuid);;
-		if (cmd->product_uuid) {
+		if (cmd->product_uuid)
 			cmd->device_ids_check_product_uuid = 1;
-			return;
-		}
 	}
 
 	if (check_hostname && cmd->hostname)
