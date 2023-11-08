@@ -51,6 +51,25 @@ static const char *_searched_file_dir = DEFAULT_RUN_DIR;
 char devices_file_hostname_orig[PATH_MAX]; 
 char devices_file_product_uuid_orig[PATH_MAX]; 
 
+/*
+ * The input string pvid may be of any length, it's often
+ * read from system.devices, which can be edited.
+ * These pvid strings are often compared to pvids in the
+ * form char pvid[ID_LEN+1] using memcmp with ID_LEN.
+ *
+ * . ignore any pvid characters over ID_LEN
+ * . return a buffer is ID_LEN+1 in size, even
+ *   if the pvid string is shorter.
+ */
+char *strdup_pvid(char *pvid)
+{
+	char *buf;
+	if (!(buf = zalloc(ID_LEN + 1)))
+		return NULL;
+	strncpy(buf, pvid, ID_LEN);
+	return buf;
+}
+
 char *devices_file_version(void)
 {
 	return _devices_file_version;
@@ -1267,7 +1286,15 @@ int device_ids_read(struct cmd_context *cmd)
 		if (pvid) {
 			_copy_idline_str(pvid, buf, PATH_MAX);
 			if (buf[0] && (buf[0] != '.')) {
-				if (!(du->pvid = strdup(buf)))
+				/*
+				 * Caution: pvids are usually stored as
+				 * char pvid[ID_LEN+1], and use memcmp/memcpy
+				 * with ID_LEN.  So, strdup_pvid is used to
+				 * ensure the buffer for du->pvid is ID_LEN+1.
+				 * Then, memcmp/memcpy with ID_LEN will work,
+				 * and printing du->pvid with %s will work.
+				 */
+				if (!(du->pvid = strdup_pvid(buf)))
 					line_error = 1;
 			}
 		}
@@ -1881,7 +1908,7 @@ id_done:
 	du->idname = strdup(id->idname);
 	du->devname = strdup(dev_name(dev));
 	du->dev = dev;
-	du->pvid = strdup(pvid);
+	du->pvid = strdup_pvid(pvid);
 
 	dev_get_partition_number(dev, &du->part);
 
@@ -2659,7 +2686,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 					  dev_name(dev), dev->pvid);
 				log_warn("Device %s has PVID %s (devices file %s)",
 					 dev_name(dev), dev->pvid, du->pvid ?: "none");
-				if (!(tmpdup = strdup(dev->pvid)))
+				if (!(tmpdup = strdup_pvid(dev->pvid)))
 					continue;
 				free(du->pvid);
 				du->pvid = tmpdup;
@@ -3210,7 +3237,7 @@ void device_ids_check_serial(struct cmd_context *cmd, struct dm_list *scan_devs,
 
 		log_debug("Device %s with serial number %s has PVID %s (devices file %s)",
 			  dev_name(dev), du->idname, dev->pvid, du->pvid ?: "none");
-		if (!(tmpdup = strdup(dev->pvid)))
+		if (!(tmpdup = strdup_pvid(dev->pvid)))
 			continue;
 		free(du->pvid);
 		du->pvid = tmpdup;
@@ -3395,7 +3422,7 @@ void device_ids_search(struct cmd_context *cmd, struct dm_list *new_devs,
 		memcpy(dil->pvid, du->pvid, ID_LEN);
 		dm_list_add(&search_pvids, &dil->list);
 		search_pvids_count++;
-		search_pvids_hash = calc_crc(search_pvids_hash, (const uint8_t *)du->pvid, strlen(du->pvid));
+		search_pvids_hash = calc_crc(search_pvids_hash, (const uint8_t *)du->pvid, ID_LEN);
 	}
 
 	/* No unmatched PVIDs to search for, and no system id to update. */

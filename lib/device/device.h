@@ -248,4 +248,6 @@ struct device_id_list *device_id_list_find_dev(struct dm_list *devices, struct d
 int device_list_remove(struct dm_list *devices, struct device *dev);
 struct device_list *device_list_find_dev(struct dm_list *devices, struct device *dev);
 
+char *strdup_pvid(char *pvid);
+
 #endif
