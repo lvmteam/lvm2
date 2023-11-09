@@ -1606,18 +1606,7 @@ char *get_monitor_dso_path(struct cmd_context *cmd, int id)
 
 static char *_build_target_uuid(struct cmd_context *cmd, const struct logical_volume *lv)
 {
-	const char *layer;
-
-	if (lv_is_thin_pool(lv))
-		layer = "tpool"; /* Monitor "tpool" for the "thin pool". */
-	else if (lv_is_vdo_pool(lv))
-		layer = "vpool"; /* Monitor "vpool" for the "VDO pool". */
-	else if (lv_is_origin(lv) || lv_is_external_origin(lv))
-		layer = "real"; /* Monitor "real" for "snapshot-origin". */
-	else
-		layer = NULL;
-
-	return build_dm_uuid(cmd->mem, lv, layer);
+	return build_dm_uuid(cmd->mem, lv, lv_layer(lv));
 }
 
 static int _device_registered_with_dmeventd(struct cmd_context *cmd,
