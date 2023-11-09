@@ -358,10 +358,8 @@ static int _add_alias(struct device *dev, const char *path, enum add_hash hash)
 		return 0;
 	}
 
-	if (!strncmp(path, "/dev/nvme", 9)) {
-		log_debug("Found nvme device %s", dev_name(dev));
+	if (!strncmp(path, "/dev/nvme", 9))
 		dev->flags |= DEV_IS_NVME;
-	}
 
 	sl->str = path;
 
