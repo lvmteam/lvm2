@@ -1748,7 +1748,6 @@ id_done:
 		}
 		id->idtype = idtype;
 		id->idname = (char *)idname;
-		id->dev = dev;
 		dm_list_add(&dev->ids, &id->list);
 	} else
 		free((char*)idname);
@@ -2142,7 +2141,6 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 				return_0;
 			id->idtype = DEV_ID_TYPE_DEVNAME;
 			id->idname = strdup(du->idname);
-			id->dev = dev;
 			dm_list_add(&dev->ids, &id->list);
 			du->dev = dev;
 			dev->id = id;
@@ -2215,7 +2213,6 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 	 */
 	id->idtype = du->idtype;
 	id->idname = (char *)idname;
-	id->dev = dev;
 	dm_list_add(&dev->ids, &id->list);
 
 	if (idname && !strcmp(idname, du_idname)) {
@@ -2255,7 +2252,6 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 				/* wwid types are 1,2,3 and idtypes are DEV_ID_TYPE_ */
 				id->idtype = wwid_type_to_idtype(dw->type);
 				id->idname = strdup(dw->id);
-				id->dev = dev;
 				dm_list_add(&dev->ids, &id->list);
 				du->dev = dev;
 				dev->id = id;
@@ -2560,7 +2556,6 @@ static void _get_devs_with_serial_numbers(struct cmd_context *cmd, struct dm_lis
 					goto next_free;
 				id->idtype = DEV_ID_TYPE_SYS_SERIAL;
 				id->idname = (char *)idname;
-				id->dev = dev;
 				dm_list_add(&dev->ids, &id->list);
 				devl->dev = dev;
 				dm_list_add(devs, &devl->list);
@@ -2847,7 +2842,6 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 			du->idname = dup_devname1;
 			du->devname = dup_devname2;
 			id->idname = dup_devname3;
-			id->dev = dev;
 			du->dev = dev;
 			dev->id = id;
 			dev->flags |= DEV_MATCHED_USE_ID;
@@ -3652,7 +3646,6 @@ void device_ids_search(struct cmd_context *cmd, struct dm_list *new_devs,
 		du->dev = dev;
 		id->idtype = new_idtype;
 		id->idname = new_idname2;
-		id->dev = dev;
 		dev->id = id;
 		dev->flags |= DEV_MATCHED_USE_ID;
 		dm_list_add(&dev->ids, &id->list);

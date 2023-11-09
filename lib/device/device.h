@@ -95,7 +95,6 @@ struct dev_wwid {
 
 struct dev_id {
 	struct dm_list list;    /* dev->ids */
-	struct device *dev;
 	uint16_t idtype;	/* DEV_ID_TYPE_ */
 	char *idname;		/* id string determined by idtype */
 };
