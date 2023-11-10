@@ -3026,9 +3026,11 @@ void lvmcache_get_max_name_lengths(struct cmd_context *cmd,
 	*pv_max_name_len = 0;
 
 	dm_list_iterate_items(vginfo, &_vginfos) {
-		len = strlen(vginfo->vgname);
-		if (*vg_max_name_len < len)
-			*vg_max_name_len = len;
+		if (!is_orphan_vg(vginfo->vgname)) {
+			len = strlen(vginfo->vgname);
+			if (*vg_max_name_len < len)
+				*vg_max_name_len = len;
+		}
 
 		dm_list_iterate_items(info, &vginfo->infos) {
 			len = strlen(dev_name(info->dev));

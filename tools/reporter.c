@@ -1448,6 +1448,11 @@ int pvs(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_is_set(cmd, all_ARG))
 		cmd->use_hints = 0;
 
+	if (arg_is_set(cmd, allpvs_ARG)) {
+		cmd->filter_deviceid_skip = 1;
+		cmd->use_hints = 0;
+	}
+
 	if (arg_is_set(cmd, segments_ARG))
 		type = PVSEGS;
 	else

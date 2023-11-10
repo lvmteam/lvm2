@@ -1648,7 +1648,7 @@ ID: pvremove_general
 ---
 
 pvs
-OO: --segments, OO_REPORT
+OO: --segments, --allpvs, OO_REPORT
 OP: PV|Tag ...
 IO: --partial, --ignoreskippedcluster, --trustcache
 ID: pvs_general
@@ -1658,7 +1658,7 @@ RULE: --noheadings not --headings
 
 pvscan
 OO: --ignorelockingfailure, --reportformat ReportFmt, --exported, --novolumegroup,
---short, --uuid
+--short, --uuid, --allpvs
 ID: pvscan_display
 DESC: Display PV information.
 

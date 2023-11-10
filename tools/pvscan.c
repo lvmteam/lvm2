@@ -18,6 +18,7 @@
 #include "lib/cache/lvmcache.h"
 #include "lib/metadata/metadata.h"
 #include "lib/label/hints.h"
+#include "lib/filters/filter.h"
 #include "lib/device/online.h"
 
 #include <dirent.h>
@@ -88,7 +89,46 @@ static int _pvscan_display_pv(struct cmd_context *cmd,
 		pv_len += suffix_len;
 	}
 
-	if (is_orphan(pv))
+	if (arg_is_set(cmd, allpvs_ARG)) {
+		struct device *dev = pv->dev;
+		if (!cmd->enable_devices_file) {
+			if (is_orphan(pv)) {
+				log_print_unless_silent("PV %-*s    %-*s",
+						pv_len, pvdevname,
+						params->vg_max_name_len, " ");
+			} else {
+				log_print_unless_silent("PV %-*s VG %-*s",
+						pv_len, pvdevname,
+						params->vg_max_name_len, pv_vg_name(pv));
+			}
+		} else if (!(dev->flags & DEV_MATCHED_USE_ID)) {
+			if (is_orphan(pv)) {
+				log_print_unless_silent("PV %-*s    %-*s %-10s %s",
+						pv_len, pvdevname,
+						params->vg_max_name_len, " ",
+						"-", "-");
+			} else {
+				log_print_unless_silent("PV %-*s VG %-*s %-10s %s",
+						pv_len, pvdevname,
+						params->vg_max_name_len, pv_vg_name(pv),
+						"-", "-");
+			}
+		} else {
+			if (is_orphan(pv)) {
+				log_print_unless_silent("PV %-*s    %-*s %-10s %s",
+						pv_len, pvdevname,
+						params->vg_max_name_len, " ",
+						idtype_to_str(dev->id->idtype),
+						dev->id->idname ?: "none");
+			} else {
+				log_print_unless_silent("PV %-*s VG %-*s %-10s %s",
+						pv_len, pvdevname,
+						params->vg_max_name_len, pv_vg_name(pv),
+						idtype_to_str(dev->id->idtype),
+						dev->id->idname ?: "none");
+			}
+		}
+	} else if (is_orphan(pv))
 		log_print_unless_silent("PV %-*s    %-*s %s [%s]",
 					pv_len, pvdevname,
 					params->vg_max_name_len, " ",
@@ -149,6 +189,11 @@ int pvscan_display_cmd(struct cmd_context *cmd, int argc, char **argv)
 		log_warn("WARNING: only considering physical volumes %s",
 			  arg_is_set(cmd, exported_ARG) ?
 			  "of exported volume group(s)" : "in no volume group");
+
+	if (arg_is_set(cmd, allpvs_ARG)) {
+		cmd->filter_deviceid_skip = 1;
+		cmd->use_hints = 0;
+	}
 
 	if (!(handle = init_processing_handle(cmd, NULL))) {
 		log_error("Failed to initialize processing handle.");

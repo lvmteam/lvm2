@@ -1143,6 +1143,14 @@ arg(activevolumegroups_ARG, 'A', "activevolumegroups", 0, 0, 0,
     "Only select active VGs. The VG is considered active\n"
     "if at least one of its LVs is active.\n")
 
+arg(allpvs_ARG, 'A', "allpvs", 0, 0, 0,
+    "#pvs\n"
+    "Show information about PVs outside the devices file.\n"
+    "Combine with with -a|--all to include devices that are not PVs.\n"
+    "#pvscan\n"
+    "Show information about PVs outside the devices file.\n"
+    "Displays the device ID for PVs included in the devices file.\n")
+
 arg(background_ARG, 'b', "background", 0, 0, 0,
     "If the operation requires polling, this option causes the command to\n"
     "return before the operation is complete, and polling is done in the\n"
