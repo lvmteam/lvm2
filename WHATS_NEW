@@ -1,19 +1,34 @@
 version 2.03.23 - 
 ==================================
+  Improve searched_devnames temp file usage to prevent redundant scanning.
+  Change default search_for_devnames from auto to all.
+  Add lvmdevices --refresh to search for missing PVIDs on all devices.
+  Add comparison between old and new entries in lvmdevices --check.
+  Fix device_id matching order - match non-devname first.
+  lvcreate --config 'log { report_command_log=1 }' --reportformat json
+  Fix "lvconvert -m 0" when there is other than first in-sync leg.
+  Use system.devices as default for dmeventd when dmeventd.devices is undefined.
+  Accept WWIDs containing QEMU HARDDISK for device_id.
+  Improve handling of non-standard WWID prefixes used for device_id.
   Configure automatically enables cmdlib for dmeventd and notify-dbus for dbus.
   Fix hint calculation for pools with zero or error segment.
   Configure supports --disable-shared to build only static binaries.
-  Configure supports --without-{blkid|systemd|udev} for easierstatic build.
+  Configure supports --without-{blkid|systemd|udev} for easier static build.
+  Refresh device ids if the system changes.
   Fix pvmove when specifying raid components as moved LVs.
   Enhance error detection for lvm_import_vdo.
   Support PV lists with thin lvconvert.
   Fix support for lvm_import_vdo with SCSI VDO volumes.
+  Fix locking issue leading to hanging concurrent vgchange --refresh.
   Recognize lvm.conf report/headings=2 for full column names in report headings.
   Add --headings none|abbrev|full cmd line option to set report headings type.
+  Fix conversion to thin pool using lvmlockd.
+  Fix conversion from thick into thin volume using lvmlockd.
   Require writable LV for convertion to vdo pool.
   Fix return value from lvconvert integrity remove.
   Preserve UUID for pool metadata spare.
   Preserve UUID for swapped pool metadata.
+  Rewrite validation of device name entries used as device_id.
 
 version 2.03.22 - 02nd August 2023
 ==================================
