@@ -5,7 +5,6 @@ version 2.03.23 -
   Add lvmdevices --refresh to search for missing PVIDs on all devices.
   Add comparison between old and new entries in lvmdevices --check.
   Fix device_id matching order - match non-devname first.
-  lvcreate --config 'log { report_command_log=1 }' --reportformat json
   Fix "lvconvert -m 0" when there is other than first in-sync leg.
   Use system.devices as default for dmeventd when dmeventd.devices is undefined.
   Accept WWIDs containing QEMU HARDDISK for device_id.
