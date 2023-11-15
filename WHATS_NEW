@@ -25,7 +25,7 @@ version 2.03.23 -
   Add --headings none|abbrev|full cmd line option to set report headings type.
   Fix conversion to thin pool using lvmlockd.
   Fix conversion from thick into thin volume using lvmlockd.
-  Require writable LV for convertion to vdo pool.
+  Require writable LV for conversion to vdo pool.
   Fix return value from lvconvert integrity remove.
   Preserve UUID for pool metadata spare.
   Preserve UUID for swapped pool metadata.
@@ -49,7 +49,7 @@ version 2.03.22 - 02nd August 2023
   Support parsing of vdo geometry format version 4.
   Add lvm.conf thin_restore and cache_restore settings.
   Handle multiple mounts while resizing volume with a FS.
-  Handle leading/trailing spaces in sys_wwid and sys_serial used by deivce_id.
+  Handle leading/trailing spaces in sys_wwid and sys_serial used by device_id.
   Enhance lvm_import_vdo and use snapshot when converting VDO volume.
   Fix parsing of VDO metadata.
   Fix failing -S|--select for non-reporting cmds if using LV info/status fields.
