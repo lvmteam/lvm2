@@ -54,6 +54,8 @@ lvmdevices \(em Manage the devices file
 .br
  \fB-q\fP|\fB--quiet\fP
 .br
+    \fB--refresh\fP
+.br
  \fB-t\fP|\fB--test\fP
 .br
     \fB--update\fP
@@ -222,6 +224,8 @@ Check the devices file and report incorrect values.
 .br
 .RS 4
 .ad l
+[    \fB--refresh\fP ]
+.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
@@ -236,6 +240,8 @@ Update the devices file to fix incorrect values.
 .RS 4
 .ad l
 [    \fB--delnotfound\fP ]
+.br
+[    \fB--refresh\fP ]
 .br
 [ COMMON_OPTIONS ]
 .ad b
@@ -479,6 +485,19 @@ on the command.
 .br
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer 'no'.
+.
+.HP
+\fB--refresh\fP
+.br
+Search for missing PVs on new devices, and update the devices file
+with new device IDs for the PVs if they are found on new devices.
+This is useful if PVs have been moved to new devices with new WWIDs,
+for example. The device ID type and name may both change for a PV.
+WARNING: if a PV is detached from the system, but a device containing a
+clone or snapshot of that PV is present, then refresh would replace the
+correct device ID with the clone/snapshot device ID, and lvm would begin
+using the wrong device for the PV. Use deldev/adddev to safely change
+a PV device ID in this scenario.
 .
 .HP
 \fB-t\fP|\fB--test\fP
