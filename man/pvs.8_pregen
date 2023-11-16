@@ -23,6 +23,8 @@ pvs produces formatted output about PVs.
 .br
 .RS 4
 .ad l
+[ \fB-A\fP|\fB--allpvs\fP ]
+.br
 [ \fB-a\fP|\fB--all\fP ]
 .br
 [ \fB-o\fP|\fB--options\fP \fIString\fP ]
@@ -135,6 +137,12 @@ Use with --separator to align the output columns
 .br
 Show information about devices that have not been initialized
 by LVM, i.e. they are not PVs.
+.
+.HP
+\fB-A\fP|\fB--allpvs\fP
+.br
+Show information about PVs outside the devices file.
+Combine with with -a|--all to include devices that are not PVs.
 .
 .HP
 \fB--binary\fP

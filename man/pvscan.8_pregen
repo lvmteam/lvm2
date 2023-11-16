@@ -16,6 +16,8 @@ pvscan \(em List all physical volumes
 .ad l
  \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP
 .br
+ \fB-A\fP|\fB--allpvs\fP
+.br
     \fB--autoactivation\fP \fIString\fP
 .br
     \fB--cache\fP
@@ -154,6 +156,8 @@ Display PV information.
 [ \fB-s\fP|\fB--short\fP ]
 .br
 [ \fB-u\fP|\fB--uuid\fP ]
+.br
+[ \fB-A\fP|\fB--allpvs\fP ]
 .br
 [    \fB--ignorelockingfailure\fP ]
 .br
@@ -337,6 +341,12 @@ Common options for lvm:
 .br
 Auto-activate LVs in a VG when the PVs scanned have completed the VG.
 (Only \fBay\fP is applicable.)
+.
+.HP
+\fB-A\fP|\fB--allpvs\fP
+.br
+Show information about PVs outside the devices file.
+Displays the device ID for PVs included in the devices file.
 .
 .HP
 \fB--autoactivation\fP \fIString\fP
