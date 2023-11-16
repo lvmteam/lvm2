@@ -1,5 +1,6 @@
 version 2.03.23 - 
 ==================================
+  Add -A option for pvs and pvscan to show PVs outside devices file.
   Improve searched_devnames temp file usage to prevent redundant scanning.
   Change default search_for_devnames from auto to all.
   Add lvmdevices --refresh to search for missing PVIDs on all devices.
