@@ -174,7 +174,7 @@ cfg_section(activation_CFG_SECTION, "activation", root_CFG_SECTION, CFG_PROFILAB
 
 cfg_section(metadata_CFG_SECTION, "metadata", root_CFG_SECTION, CFG_DEFAULT_COMMENTED, vsn(1, 0, 0), 0, NULL, NULL)
 
-cfg_section(report_CFG_SECTION, "report", root_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, vsn(1, 0, 0), 0, NULL,
+cfg_section(report_CFG_SECTION, "report", root_CFG_SECTION, CFG_PROFILABLE, vsn(1, 0, 0), 0, NULL,
 	"LVM report command output formatting.\n")
 
 cfg_section(dmeventd_CFG_SECTION, "dmeventd", root_CFG_SECTION, 0, vsn(1, 2, 3), 0, NULL,
