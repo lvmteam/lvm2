@@ -672,6 +672,7 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 		log_debug("Adding integrity to raid image %s", lv_image->name);
 
 		/*
+		 * lv_iorig returned by insert_layer_for_lv() (but unused here)
 		 * "lv_iorig" is a new LV with new id, but with the segments
 		 * from "lv_image". "lv_image" keeps the existing name and id,
 		 * but gets a new integrity segment, in place of the segments
