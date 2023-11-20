@@ -1013,8 +1013,8 @@ static int _lvchange_recovery_rate(struct logical_volume *lv,
 
 	if (raid_seg->max_recovery_rate &&
 	    (raid_seg->max_recovery_rate < raid_seg->min_recovery_rate)) {
-		log_error("Minimum recovery rate cannot be higher than maximum.");
-		return 0;
+		log_print_unless_silent("Minimum recovery rate cannot be higher than maximum, adjusting.");
+		raid_seg->max_recovery_rate = raid_seg->min_recovery_rate;
 	}
 
 	/* Request caller to commit and reload metadata */
