@@ -1,5 +1,5 @@
-version 2.03.23 - 
-==================================
+Version 2.03.23 - 21st November 2023
+====================================
   Set the first lv_attr flag for raid integrity images to i or I.
   Add -A option for pvs and pvscan to show PVs outside devices file.
   Improve searched_devnames temp file usage to prevent redundant scanning.

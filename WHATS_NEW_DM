@@ -1,5 +1,5 @@
-Version 1.02.197 - 
-===================================
+Version 1.02.197 - 21st November 2023
+=====================================
   Fix invalid JSON report if using DM_REPORT_OUTPUT_MULTIPLE_TIMES and selection.
   Propagate ioctl errno from dm_task_run when creating new table line.
   Add support for group aliases in dmstats.
