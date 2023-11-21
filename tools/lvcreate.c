@@ -596,7 +596,7 @@ static int _read_raid_params(struct cmd_context *cmd,
 
 		if (lp->min_recovery_rate > lp->max_recovery_rate) {
 			log_print_unless_silent("Minimum recovery rate cannot be higher than maximum, adjusting.");
-			lp->max_recovery_rate > lp->min_recovery_rate;
+			lp->max_recovery_rate = lp->min_recovery_rate;
 		}
 
 		if (lp->region_size < lp->stripe_size) {
