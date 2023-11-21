@@ -1,3 +1,6 @@
+Version 2.03.24 - 
+==================
+
 Version 2.03.23 - 21st November 2023
 ====================================
   Set the first lv_attr flag for raid integrity images to i or I.
@@ -5418,3 +5421,4 @@ Display output.  Some metadata information cannot yet be displayed.
 
 Recovery tools to salvage "lost" metadata directly from the disks:
 but we hope the new format will mean such tools are hardly ever needed!
+
