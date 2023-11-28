@@ -357,11 +357,11 @@ static int _format_vdo_pool_data_lv(struct logical_volume *data_lv,
  *
  * Returns: old data LV on success (passed data LV becomes VDO LV), NULL on failure
  */
-struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
-					   const struct dm_vdo_target_params *vtp,
-					   uint32_t *virtual_extents,
-					   int format,
-					   uint64_t vdo_pool_header_size)
+int convert_vdo_pool_lv(struct logical_volume *data_lv,
+			const struct dm_vdo_target_params *vtp,
+			uint32_t *virtual_extents,
+			int format,
+			uint64_t vdo_pool_header_size)
 {
 	const uint32_t extent_size = data_lv->vg->extent_size;
 	struct cmd_context *cmd = data_lv->vg->cmd;
@@ -372,7 +372,7 @@ struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 	uint64_t adjust;
 
 	if (!(vdo_pool_segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_VDO_POOL)))
-		return_NULL;
+		return_0;
 
 	adjust = (*virtual_extents * (uint64_t) extent_size) % DM_VDO_BLOCK_SIZE;
 	if (adjust) {
@@ -394,7 +394,7 @@ struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 			log_verbose("Test mode: Skipping formatting of VDO pool volume.");
 		} else if (!_format_vdo_pool_data_lv(data_lv, vtp, &vdo_logical_size)) {
 			log_error("Cannot format VDO pool volume %s.", display_lvname(data_lv));
-			return NULL;
+			return 0;
 		}
 	} else {
 		log_verbose("Skipping VDO formatting %s.", display_lvname(data_lv));
@@ -406,7 +406,7 @@ struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 	if (!deactivate_lv(data_lv->vg->cmd, data_lv)) {
 		log_error("Cannot deactivate formatted VDO pool volume %s.",
 			  display_lvname(data_lv));
-		return NULL;
+		return 0;
 	}
 
 	vdo_logical_size -= 2 * vdo_pool_header_size;
@@ -420,14 +420,14 @@ struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 		log_error("Size %s for VDO volume cannot be smaller then extent size %s.",
 			  display_size(data_lv->vg->cmd, vdo_logical_size),
 			  display_size(data_lv->vg->cmd, extent_size));
-		return NULL;
+		return 0;
 	}
 
 	*virtual_extents = vdo_logical_size / extent_size;
 
 	/* Move segments from existing data_lv into LV_vdata */
 	if (!(data_lv = insert_layer_for_lv(cmd, vdo_pool_lv, 0, "_vdata")))
-		return_NULL;
+		return_0;
 
 	vdo_pool_seg = first_seg(vdo_pool_lv);
 	vdo_pool_seg->segtype = vdo_pool_segtype;
@@ -438,7 +438,7 @@ struct logical_volume *convert_vdo_pool_lv(struct logical_volume *data_lv,
 	vdo_pool_lv->status |= LV_VDO_POOL;
 	data_lv->status |= LV_VDO_POOL_DATA;
 
-	return data_lv;
+	return 1;
 }
 
 int set_vdo_write_policy(enum dm_vdo_write_policy *vwp, const char *policy)
