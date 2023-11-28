@@ -2047,7 +2047,7 @@ static int _stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 				 (strlen(hist_arg)) ? HISTOGRAM_ARG : "",
 				 hist_arg)) < 0) {
 			log_error(err_fmt, PRECISE_ARG " option.");
-			return 0;
+			goto out;
 		}
 	} else
 		opt_args = dm_strdup("");
