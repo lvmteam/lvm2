@@ -12,8 +12,8 @@
 %global enable_lvmlockd 1
 %global enable_lvmpolld 1
 %global enable_dmfilemapd 0
-#%%global enable_lvmlockd_dlm 0
-#%%global enable_lvmlockd_sanlock 0
+%global enable_lvmlockd_dlm 0
+%global enable_lvmlockd_sanlock 0
 
 %if %{enable_udev}
 %service lvmpolld 1
