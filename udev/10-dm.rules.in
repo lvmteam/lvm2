@@ -51,6 +51,11 @@ KERNEL!="dm-[0-9]*", GOTO="dm_end"
 # is not recommended.
 ACTION=="remove", GOTO="dm_end"
 
+# Persist device state on transition from the initrd. This means all udev device
+# properties are kept in the udev database even when it is cleaned up on
+# switch-root.
+OPTIONS+="db_persist"
+
 # Decode udev control flags and set environment variables appropriately.
 # These flags are encoded in DM_COOKIE variable that was introduced in
 # kernel version 2.6.31. Therefore, we can use this feature with
