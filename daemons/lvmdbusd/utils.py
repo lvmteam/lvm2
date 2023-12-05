@@ -778,6 +778,7 @@ class LockFile(object):
 
 	def __enter__(self):
 		try:
+			os.makedirs(os.path.dirname(self.lock_file))
 			self.fd = os.open(self.lock_file, os.O_CREAT | os.O_RDWR, stat.S_IRUSR | stat.S_IWUSR)
 
 			# Get and set the close on exec and lock the file
