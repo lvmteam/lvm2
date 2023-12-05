@@ -4,7 +4,7 @@
 The lv_attr bits are:
 .IP 1 3
 Volume type: (\fBC\fP)ache, (\fBm\fP)irrored, (\fBM\fP)irrored without initial sync, (\fBo\fP)rigin,
-(\fBO\fP)rigin with merging snapshot, (\fBr\fP)aid, (\fBR\fP)aid without initial sync,
+(\fBO\fP)rigin with merging snapshot, inte(\fBg\fP)rity, (\fBr\fP)aid, (\fBR\fP)aid without initial sync,
 (\fBs\fP)napshot, merging (\fBS\fP)napshot, (\fBp\fP)vmove, (\fBv\fP)irtual,
 mirror or raid (\fBi\fP)mage, mirror or raid (\fBI\fP)mage out-of-sync, mirror (\fBl\fP)og device,
 under (\fBc\fP)onversion, thin (\fBV\fP)olume, (\fBt\fP)hin pool, (\fBT\fP)hin pool data,
