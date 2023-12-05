@@ -660,12 +660,8 @@ arg(raidintegritymode_ARG, '\0', "raidintegritymode", string_VAL, 0, 0,
     "but would not benefit from the potential scattered write optimization.\n")
 
 arg(readonly_ARG, '\0', "readonly", 0, 0, 0,
-    "Run the command in a special read-only mode which will read on-disk\n"
-    "metadata without needing to take any locks. This can be used to peek\n"
-    "inside metadata used by a virtual machine image while the virtual\n"
-    "machine is running. No attempt will be made to communicate with the\n"
-    "device-mapper kernel driver, so this option is unable to report whether\n"
-    "or not LVs are actually in use.\n")
+    "Prevent the command from making changes, including activation and\n"
+    "metadata updates.\n")
 
 arg(refresh_ARG, '\0', "refresh", 0, 0, 0,
     "#lvmdevices\n"
