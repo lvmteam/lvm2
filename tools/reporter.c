@@ -150,6 +150,13 @@ static int _check_merging_origin(const struct logical_volume *lv,
 	return 1;
 }
 
+static void _cond_warn_raid_volume_health(struct cmd_context *cmd, const struct logical_volume *lv)
+{
+	if (lv_is_raid(lv) && !lv_raid_healthy(lv) && !lv_is_partial(lv))
+		log_warn("WARNING: RaidLV %s needs to be refreshed!  See character 'r' at position 9 in the RaidLV's attributes%s.", display_lvname(lv),
+			 arg_is_set(cmd, all_ARG) ? " and its SubLV(s)" : " and also its SubLV(s) with option '-a'");
+}
+
 static int _do_lvs_with_info_and_status_single(struct cmd_context *cmd,
 					       const struct logical_volume *lv,
 					       int do_info, int do_status,
@@ -175,6 +182,8 @@ static int _do_lvs_with_info_and_status_single(struct cmd_context *cmd,
 		if (merged && lv_is_thin_volume(lv->snapshot->lv))
 			lv = lv->snapshot->lv;
 	}
+
+	_cond_warn_raid_volume_health(cmd, lv);
 
 	if (!report_object(sh ? : handle->custom_handle, sh != NULL,
 			   lv->vg, lv, NULL, NULL, NULL, &status, NULL))
@@ -237,6 +246,8 @@ static int _do_segs_with_info_and_status_single(struct cmd_context *cmd,
 		if (merged && lv_is_thin_volume(seg->lv->snapshot->lv))
 			seg = seg->lv->snapshot;
 	}
+
+	_cond_warn_raid_volume_health(cmd, seg->lv);
 
 	if (!report_object(sh ? : handle->custom_handle, sh != NULL,
 			   seg->lv->vg, seg->lv, NULL, seg, NULL, &status, NULL))
