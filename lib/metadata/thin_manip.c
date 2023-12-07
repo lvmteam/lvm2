@@ -775,6 +775,32 @@ thin_crop_metadata_t get_thin_pool_crop_metadata(struct cmd_context *cmd,
 	return crop;
 }
 
+int thin_pool_set_params(struct lv_segment *seg,
+			 int error_when_full,
+			 thin_crop_metadata_t crop_metadata,
+			 int thin_chunk_size_calc_policy,
+			 uint32_t chunk_size,
+			 thin_discards_t discards,
+			 thin_zero_t zero_new_blocks)
+{
+	if (!recalculate_pool_chunk_size_with_dev_hints(seg->lv, seg_lv(seg, 0),
+							thin_chunk_size_calc_policy))
+		return_0;
+
+	if (error_when_full)
+		seg->lv->status |= LV_ERROR_WHEN_FULL;
+
+	if ((seg->crop_metadata = crop_metadata) == THIN_CROP_METADATA_NO)
+		seg->lv->status |= LV_CROP_METADATA;
+
+	seg->chunk_size = chunk_size;
+	seg->discards = discards;
+	seg->zero_new_blocks = zero_new_blocks;
+	seg->transaction_id = 0;
+
+	return 1;
+}
+
 int update_thin_pool_params(struct cmd_context *cmd,
 			    struct profile *profile,
 			    uint32_t extent_size,

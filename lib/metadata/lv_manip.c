@@ -9486,18 +9486,16 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		first_seg(lv)->min_recovery_rate = lp->min_recovery_rate;
 		first_seg(lv)->max_recovery_rate = lp->max_recovery_rate;
 	} else if (lv_is_thin_pool(lv)) {
-		first_seg(lv)->chunk_size = lp->chunk_size;
-		first_seg(lv)->zero_new_blocks = lp->zero_new_blocks;
-		first_seg(lv)->discards = lp->discards;
-		if ((first_seg(lv)->crop_metadata = lp->crop_metadata) == THIN_CROP_METADATA_NO)
-			lv->status |= LV_CROP_METADATA;
-		if (!recalculate_pool_chunk_size_with_dev_hints(lv, seg_lv(first_seg(lv), 0),
-								lp->thin_chunk_size_calc_policy)) {
+		if (!thin_pool_set_params(first_seg(lv),
+					  lp->error_when_full,
+					  lp->crop_metadata,
+					  lp->thin_chunk_size_calc_policy,
+					  lp->chunk_size,
+					  lp->discards,
+					  lp->zero_new_blocks)) {
 			stack;
 			goto revert_new_lv;
 		}
-		if (lp->error_when_full)
-			lv->status |= LV_ERROR_WHEN_FULL;
 	} else if (pool_lv && lv_is_virtual(lv) && /* not yet thin LV */
 		   (seg = first_seg(lv)) &&
 		   seg_is_thin(seg)) { /* going to be a thin volume */

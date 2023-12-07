@@ -3423,23 +3423,20 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		if (!cache_set_params(seg, chunk_size, cache_metadata_format, cache_mode, policy_name, policy_settings))
 			goto_bad;
 	} else {
-		seg->transaction_id = 0;
-		seg->crop_metadata = crop_metadata;
-		seg->chunk_size = chunk_size;
-		seg->discards = discards;
-		seg->zero_new_blocks = zero_new_blocks;
-		if (crop_metadata == THIN_CROP_METADATA_NO)
-			pool_lv->status |= LV_CROP_METADATA;
-		if (!recalculate_pool_chunk_size_with_dev_hints(pool_lv, data_lv, chunk_calc))
-			goto_bad;
-
 		/* Error when full */
 		if (arg_is_set(cmd, errorwhenfull_ARG))
-			error_when_full = arg_uint_value(cmd, errorwhenfull_ARG, 0);
+			error_when_full = arg_int_value(cmd, errorwhenfull_ARG, 0);
 		else
 			error_when_full = find_config_tree_bool(cmd, activation_error_when_full_CFG, vg->profile);
-		if (error_when_full)
-			pool_lv->status |= LV_ERROR_WHEN_FULL;
+
+		if (!thin_pool_set_params(seg,
+					  error_when_full,
+					  crop_metadata,
+					  chunk_calc,
+					  chunk_size,
+					  discards,
+					  zero_new_blocks))
+			goto_bad;
 
 		if (to_thin) {
 			if (!thin_pool_prepare_metadata(metadata_lv, seg->chunk_size,

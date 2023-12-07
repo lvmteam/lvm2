@@ -909,6 +909,13 @@ int update_thin_pool_params(struct cmd_context *cmd,
 			    thin_crop_metadata_t *crop_metadata,
 			    int *chunk_size_calc_method, uint32_t *chunk_size,
 			    thin_discards_t *discards, thin_zero_t *zero_new_blocks);
+int thin_pool_set_params(struct lv_segment *seg,
+			 int error_when_full,
+			 thin_crop_metadata_t crop_metadata,
+			 int thin_chunk_size_calc_policy,
+			 uint32_t chunk_size,
+			 thin_discards_t discards,
+			 thin_zero_t zero_new_blocks);
 
 struct lv_status_thin_pool {
 	struct dm_pool *mem;
