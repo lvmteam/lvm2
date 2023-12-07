@@ -926,6 +926,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 
 #define THIN_POOL_ARGS \
 	discards_ARG,\
+	pooldatavdo_ARG,\
 	thinpool_ARG
 
 #define VDO_POOL_ARGS \
@@ -1225,7 +1226,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	    !_read_size_params(cmd, lp, lcp) ||
 	    !get_stripe_params(cmd, lp->segtype, &lp->stripes, &lp->stripe_size, &lp->stripes_supplied, &lp->stripe_size_supplied) ||
 	    (lp->create_pool &&
-	     !get_pool_params(cmd, lp->segtype,
+	     !get_pool_params(cmd, lp->segtype, &lp->pool_data_vdo,
 			      &lp->pool_metadata_size, &lp->pool_metadata_spare,
 			      &lp->chunk_size, &lp->discards, &lp->zero_new_blocks)) ||
 	    !_read_cache_params(cmd, lp) ||

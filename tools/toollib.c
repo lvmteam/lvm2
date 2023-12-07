@@ -953,13 +953,27 @@ int get_activation_monitoring_mode(struct cmd_context *cmd,
  */
 int get_pool_params(struct cmd_context *cmd,
 		    const struct segment_type *segtype,
+		    int *pool_data_vdo,
 		    uint64_t *pool_metadata_size,
 		    int *pool_metadata_spare,
 		    uint32_t *chunk_size,
 		    thin_discards_t *discards,
 		    thin_zero_t *zero_new_blocks)
 {
-	if (segtype_is_thin_pool(segtype) || segtype_is_thin(segtype)) {
+	if ((*pool_data_vdo = arg_int_value(cmd, pooldatavdo_ARG, 0))) {
+		if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_VDO)))
+			return_0;
+
+		if (activation() && segtype->ops->target_present) {
+			if (!segtype->ops->target_present(cmd, NULL, NULL)) {
+				log_error("%s: Required device-mapper target(s) not detected in your kernel.",
+					  segtype->name);
+				return_0;
+			}
+		}
+	}
+
+	if (segtype_is_thin_pool(segtype) || segtype_is_thin(segtype) || *pool_data_vdo) {
 		if (arg_is_set(cmd, zero_ARG)) {
 			*zero_new_blocks = arg_int_value(cmd, zero_ARG, 0) ? THIN_ZERO_YES : THIN_ZERO_NO;
 			log_very_verbose("%s pool zeroing.",
@@ -1010,7 +1024,6 @@ int get_pool_params(struct cmd_context *cmd,
 						       UINT64_C(0));
 	} else
 		*pool_metadata_size = 0;
-
 
 	/* TODO: default in lvm.conf and metadata profile ? */
 	*pool_metadata_spare = arg_int_value(cmd, poolmetadataspare_ARG,

@@ -1040,6 +1040,7 @@ struct lvcreate_params {
 	uint64_t pool_metadata_size; /* pools */
 	uint32_t pool_data_extents; /* pools */
 	uint64_t pool_data_size; /* pools */
+	int pool_data_vdo; /* pools */
 	uint32_t virtual_extents; /* snapshots, thins */
 	struct dm_list *pvh; /* all */
 

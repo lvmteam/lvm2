@@ -608,6 +608,9 @@ arg(polloperation_ARG, '\0', "polloperation", polloperation_VAL, 0, 0,
 /* Not used. */
 arg(pooldatasize_ARG, '\0', "pooldatasize", sizemb_VAL, 0, 0, NULL)
 
+arg(pooldatavdo_ARG, '\0', "pooldatavdo", bool_VAL, 0, 0,
+    "Use VDO type volume for pool data volume.\n")
+
 arg(poolmetadata_ARG, '\0', "poolmetadata", lv_VAL, 0, 0,
     "The name of a an LV to use for storing pool metadata.\n")
 

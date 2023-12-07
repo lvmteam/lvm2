@@ -3062,6 +3062,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	thin_discards_t discards;
 	thin_zero_t zero_new_blocks;
 	int error_when_full;
+	int data_vdo;
 	int is_active;
 	int ret = 1;
 
@@ -3185,7 +3186,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	}
 
 	if (!get_pool_params(cmd, pool_segtype,
-			     &meta_size, &pool_metadata_spare,
+			     &data_vdo, &meta_size, &pool_metadata_spare,
 			     &chunk_size, &discards, &zero_new_blocks))
 		goto_bad;
 
