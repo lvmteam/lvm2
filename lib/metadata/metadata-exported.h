@@ -937,6 +937,8 @@ struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 					   uint32_t stripes, uint32_t stripe_size,
 					   uint32_t extents, alloc_policy_t alloc,
 					   struct dm_list *pvh);
+int add_metadata_to_pool(struct lv_segment *pool_seg,
+			 struct logical_volume *metadata_lv);
 int handle_pool_metadata_spare(struct volume_group *vg, uint32_t extents,
 			       struct dm_list *pvh, int poolmetadataspare);
 int vg_set_pool_metadata_spare(struct logical_volume *lv);

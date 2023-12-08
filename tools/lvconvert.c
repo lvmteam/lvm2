@@ -3018,36 +3018,6 @@ static struct logical_volume *_lvconvert_insert_thin_layer(struct logical_volume
 	return pool_lv;
 }
 
-static int _lvconvert_attach_metadata_to_pool(struct lv_segment *pool_seg,
-					      struct logical_volume *metadata_lv)
-{
-	struct cmd_context *cmd = metadata_lv->vg->cmd;
-	char name[NAME_LEN];                   /* generated sub lv name */
-
-	if (!deactivate_lv(cmd, metadata_lv)) {
-		log_error("Aborting. Failed to deactivate metadata lv. "
-			  "Manual intervention required.");
-		return 0;
-	}
-
-	if ((dm_snprintf(name, sizeof(name), "%s%s", pool_seg->lv->name,
-			 seg_is_thin_pool(pool_seg) ? "_tmeta" : "_cmeta") < 0)) {
-		log_error("Failed to create internal lv names, %s name is too long.",
-			  pool_seg->lv->name);
-		return 0;
-	}
-
-	/* Rename LVs to the pool _[ct]meta LV naming scheme. */
-	if ((strcmp(metadata_lv->name, name) != 0) &&
-	    !lv_rename_update(cmd, metadata_lv, name, 0))
-		return_0;
-
-	if (!attach_pool_metadata_lv(pool_seg, metadata_lv))
-		return_0;
-
-	return 1;
-}
-
 /*
  * Create a new pool LV, using the lv arg as the data sub LV.
  * The metadata sub LV is either a new LV created here, or an
@@ -3448,7 +3418,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		}
 	}
 
-	if (!_lvconvert_attach_metadata_to_pool(seg, metadata_lv))
+	if (!add_metadata_to_pool(seg, metadata_lv))
 		goto_bad;
 
 	/*
