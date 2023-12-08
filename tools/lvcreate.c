@@ -756,7 +756,7 @@ static int _read_activation_params(struct cmd_context *cmd,
 	} else
 		lp->error_when_full =
 			seg_can_error_when_full(lp) &&
-			find_config_tree_bool(cmd, activation_error_when_full_CFG, NULL);
+			find_config_tree_bool(cmd, activation_error_when_full_CFG, vg->profile);
 
 	/* Read ahead */
 	lp->read_ahead = arg_uint_value(cmd, readahead_ARG,
