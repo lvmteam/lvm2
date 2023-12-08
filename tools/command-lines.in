@@ -336,7 +336,7 @@ OO_LVCONVERT_POOL: --poolmetadata LV, --poolmetadatasize SizeMB,
 --poolmetadataspare Bool, --readahead Readahead, --chunksize SizeKB,
 --zero Bool, --metadataprofile String
 
-OO_LVCONVERT_THINPOOL: --discards Discards, --errorwhenfull Bool
+OO_LVCONVERT_THINPOOL: --discards Discards, --errorwhenfull Bool, --pooldatavdo Bool
 
 OO_LVCONVERT_CACHE: --cachemetadataformat CacheMetadataFormat,
 --cachemode CacheMode, --cachepolicy String,
@@ -558,7 +558,7 @@ RULE: all and lv_is_visible
 
 ---
 
-lvconvert --type thin-pool LV_linear_striped_raid_cache_writecache_error_zero
+lvconvert --type thin-pool LV_linear_striped_raid_cache_writecache_vdo_error_zero
 OO: --stripes_long Number, --stripesize SizeKB,
 OO_LVCONVERT_THINPOOL, OO_LVCONVERT_POOL, OO_LVCONVERT
 OP: PV ...
@@ -590,7 +590,7 @@ RULE: --poolmetadata not --readahead --stripesize --stripes_long
 # This command syntax is deprecated, and the primary forms
 # of creating a pool or swapping metadata should be used.
 
-lvconvert --thinpool LV_linear_striped_raid_cache_writecache_error_zero_thinpool
+lvconvert --thinpool LV_linear_striped_raid_cache_writecache_vdo_error_zero_thinpool
 OO: --stripes_long Number, --stripesize SizeKB,
 OO_LVCONVERT_THINPOOL, OO_LVCONVERT_POOL, OO_LVCONVERT
 OP: PV ...
@@ -862,9 +862,10 @@ OO_LVCREATE_CACHE: --cachemode CacheMode, --cachepolicy String, --cachesettings 
 
 OO_LVCREATE_POOL: --poolmetadatasize SizeMB, --poolmetadataspare Bool, --chunksize SizeKB
 
-OO_LVCREATE_THINPOOL: --discards Discards, --errorwhenfull Bool
-
 OO_LVCREATE_VDO: --compression Bool, --deduplication Bool, --vdosettings String
+
+OO_LVCREATE_THINPOOL: --discards Discards, --errorwhenfull Bool, --pooldatavdo Bool, OO_LVCREATE_VDO
+
 ---
 
 lvcreate --type error --size SizeMB VG
