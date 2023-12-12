@@ -1976,8 +1976,7 @@ activation {
 
 # Configuration section report.
 # LVM report command output formatting.
-# This configuration section has an automatic default value.
-# report {
+report {
 
 	# Configuration option report/output_format.
 	# Format of LVM command's report output.
@@ -2391,7 +2390,7 @@ activation {
 	# This is displayed when the device for a PV is not known.
 	# This configuration option has an automatic default value.
 	# two_word_unknown_device = 0
-# }
+}
 
 # Configuration section dmeventd.
 # Settings for the LVM event daemon.

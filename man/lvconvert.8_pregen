@@ -97,6 +97,8 @@ lvconvert \(em Change logical volume layout
 .br
     \fB--originname\fP \fILV\fP
 .br
+    \fB--pooldatavdo\fP \fBy\fP|\fBn\fP
+.br
     \fB--poolmetadata\fP \fILV\fP
 .br
     \fB--poolmetadatasize\fP \fISize\fP[m|UNIT]
@@ -704,6 +706,8 @@ Convert LV to type thin-pool.
 .br
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .br
+[    \fB--pooldatavdo\fP \fBy\fP|\fBn\fP ]
+.br
 [    \fB--poolmetadata\fP \fILV\fP ]
 .br
 [    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
@@ -720,7 +724,7 @@ Convert LV to type thin-pool.
 .RE
 .P
 .RS 4
-LV1 types: linear striped cache raid error zero writecache
+LV1 types: linear striped cache vdo raid error zero writecache
 .RE
 .P
 \(em
@@ -1372,6 +1376,11 @@ ignore the devices LVM creates.
 Specifies the name to use for the external origin LV when converting an LV
 to a thin LV. The LV being converted becomes a read-only external origin
 with this name.
+.
+.HP
+\fB--pooldatavdo\fP \fBy\fP|\fBn\fP
+.br
+Use VDO type volume for pool data volume.
 .
 .HP
 \fB--poolmetadata\fP \fILV\fP

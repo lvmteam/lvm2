@@ -111,6 +111,8 @@ lvcreate \(em Create a logical volume
 .br
  \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP
 .br
+    \fB--pooldatavdo\fP \fBy\fP|\fBn\fP
+.br
     \fB--poolmetadatasize\fP \fISize\fP[m|UNIT]
 .br
     \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP
@@ -411,6 +413,14 @@ Create a thin pool.
 [    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .br
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--pooldatavdo\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--compression\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--vdosettings\fP \fIString\fP ]
 .br
 [    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .br
@@ -1236,6 +1246,11 @@ Set access permission to read only \fBr\fP or read and write \fBrw\fP.
 When yes, makes the specified minor number persistent.
 .
 .HP
+\fB--pooldatavdo\fP \fBy\fP|\fBn\fP
+.br
+Use VDO type volume for pool data volume.
+.
+.HP
 \fB--poolmetadatasize\fP \fISize\fP[m|UNIT]
 .br
 Specifies the size of the new pool metadata LV.
@@ -1755,6 +1770,14 @@ Create a thin pool.
 .br
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .br
+[    \fB--pooldatavdo\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--compression\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--vdosettings\fP \fIString\fP ]
+.br
 [    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .br
 [    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
@@ -1790,6 +1813,14 @@ Create a thin pool named in --thinpool.
 [    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .br
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--pooldatavdo\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--compression\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--vdosettings\fP \fIString\fP ]
 .br
 [    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .br
@@ -2061,6 +2092,14 @@ where the new thin pool is named by the --thinpool arg.
 .br
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .br
+[    \fB--pooldatavdo\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--compression\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--vdosettings\fP \fIString\fP ]
+.br
 [    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .br
 [    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
@@ -2101,6 +2140,14 @@ where the new thin pool is named by --thinpool.
 [    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .br
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--pooldatavdo\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--compression\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--vdosettings\fP \fIString\fP ]
 .br
 [    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .br
@@ -2145,6 +2192,14 @@ arg is a VG name.
 .br
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .br
+[    \fB--pooldatavdo\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--compression\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--vdosettings\fP \fIString\fP ]
+.br
 [    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .br
 [    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
@@ -2187,6 +2242,14 @@ arg is a VG name.
 [    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .br
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--pooldatavdo\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--compression\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--vdosettings\fP \fIString\fP ]
 .br
 [    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .br
@@ -2231,6 +2294,14 @@ config setting sparse_segtype_default.
 [    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .br
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--pooldatavdo\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--compression\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--vdosettings\fP \fIString\fP ]
 .br
 [    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .br
