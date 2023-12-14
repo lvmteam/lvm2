@@ -441,7 +441,6 @@ a dense UDS index uses 17 GiB of storage and a sparse UDS index will use
 .BR lvremove (8),
 .BR lvs (8),
 .P
-.BR vdo (8),
 .BR vdoformat (8),
 .BR vdostats (8),
 .P

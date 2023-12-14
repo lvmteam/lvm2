@@ -89,6 +89,11 @@ through thinLV and for the conversion set the pool metadata size to 1GiB.
 .br
 .B lvconvert --type thin --poolmetadatasize 1G vg/lvol1
 .P
+Convert an LV into a thin-pool with VDO deduplication and compression
+for storing its data.
+.br
+.B lvconvert --type thin-pool --pooldatavdo y vg/lvol1 
+.P
 Convert an LV into a thin LV in the specified thin pool.  The existing LV
 is used as an external read-only origin for the new thin LV.
 .br

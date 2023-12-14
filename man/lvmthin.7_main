@@ -272,6 +272,36 @@ Convert LV to a thin pool with chunk size 256KiB.
   thick        vg Vwi-a-tz-- 12,00m thick_tpool0        100,00            0
   thick_tpool0 vg twi---tz-- 12,00m                     100,00 10,94 256,00k
 .
+.SS \n+[step]. Create thin-pool with compression and deduplication
+.
+Create a new thin-pool with the use of VDO layer for compression and
+deduplication of stored data.
+.P
+.B lvcreate --type thin-pool --pooldatavdo y VG/PoolLV
+.P
+.I Example
+.br
+Create a 10G CompressedPool thin-pool with VDO data volume whose
+VDO slab size is 4096 MiB.
+.br
+.nf
+# lvcreate --type thin-pool -L10G --pooldatavdo y \\
+    --vdosettings 'slab_size_mb=4096' VG/CompressedPool
+.fi
+.
+.SS \n+[step]. Convert an LV into a compressed deduplicated thin-pool
+.
+Convert an existing LV (linear, stripe,...) to the thinpool whose
+data volume is using VDO layer for compression and deduplication.
+.P
+.B lvconvert --type thin-pool --pooldatavdo y VG/LV
+.P
+.I Example
+.br
+Convert existing BigVolume LV into a compressed thin-pool.
+.br
+# lvconvert --type thin-pool --pooldatavdo y VG/BigVolume
+.
 .SH THIN TOPICS
 .
 .B Automatic pool metadata LV
@@ -1362,4 +1392,7 @@ skipped while mounting readonly:
 .BR thin_check (8),
 .BR thin_dump (8),
 .BR thin_repair (8),
-.BR thin_restore (8)
+.BR thin_restore (8),
+.P
+.BR vdoformat (8),
+.BR vdostats (8)
