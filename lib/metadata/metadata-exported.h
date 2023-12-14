@@ -976,6 +976,17 @@ static inline int is_change_activating(activation_change_t change)
         return ((change != CHANGE_AN) && (change != CHANGE_ALN));
 }
 
+struct vdo_convert_params {
+	struct dm_vdo_target_params vdo_params; /* VDO parameters for vdoformat */
+	const char *lv_name;
+	uint32_t virtual_extents;
+	activation_change_t activate;
+	int do_zero;
+	int do_wipe_signatures; /* Used for wiping VDO backend volume */
+	force_t force;
+	int yes;
+};
+
 /* FIXME: refactor and reduce the size of this struct! */
 struct lvcreate_params {
 	/* flags */
@@ -1050,7 +1061,7 @@ struct lvcreate_params {
 	uint32_t read_ahead; /* all */
 	int approx_alloc;     /* all */
 	alloc_policy_t alloc; /* all */
-	struct dm_vdo_target_params vdo_params; /* vdo */
+	struct vdo_convert_params vcp;
 	uint64_t vdo_pool_header_size; /* VDO */
 
 	int raidintegrity;

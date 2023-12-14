@@ -324,19 +324,19 @@ static int _update_extents_params(struct volume_group *vg,
 	}
 
 	if (seg_is_vdo(lp)) {
-		vdo_pool_max_extents = get_vdo_pool_max_extents(&lp->vdo_params, vg->extent_size);
+		vdo_pool_max_extents = get_vdo_pool_max_extents(&lp->vcp.vdo_params, vg->extent_size);
 		if (extents > vdo_pool_max_extents) {
 			if (lcp->percent == PERCENT_NONE) {
 				log_error("Can't use %s size. Maximal supported VDO POOL volume size with slab size %s is %s.",
 					  display_size(vg->cmd, (uint64_t)vg->extent_size * extents),
-					  display_size(vg->cmd, (uint64_t)lp->vdo_params.slab_size_mb << (20 - SECTOR_SHIFT)),
+					  display_size(vg->cmd, (uint64_t)lp->vcp.vdo_params.slab_size_mb << (20 - SECTOR_SHIFT)),
 					  display_size(vg->cmd, (uint64_t)vg->extent_size * vdo_pool_max_extents));
 				return 0;
 			}
 			extents = vdo_pool_max_extents;
 			log_verbose("Using maximal supported VDO POOL volume size %s (with slab size %s).",
 				    display_size(vg->cmd, (uint64_t)vg->extent_size * extents),
-				    display_size(vg->cmd, (uint64_t)lp->vdo_params.slab_size_mb << (20 - SECTOR_SHIFT)));
+				    display_size(vg->cmd, (uint64_t)lp->vcp.vdo_params.slab_size_mb << (20 - SECTOR_SHIFT)));
 		}
 	}
 
@@ -724,7 +724,7 @@ static int _read_vdo_params(struct cmd_context *cmd,
 		return 1;
 
 	// prefiling settings here
-	if (!fill_vdo_target_params(cmd, &lp->vdo_params, &lp->vdo_pool_header_size, NULL))
+	if (!fill_vdo_target_params(cmd, &lp->vcp.vdo_params, &lp->vdo_pool_header_size, NULL))
 		return_0;
 
 	if ((lcp->virtual_size <= DM_VDO_LOGICAL_SIZE_MAXIMUM) &&
@@ -735,7 +735,7 @@ static int _read_vdo_params(struct cmd_context *cmd,
 	}
 
 	// override with optional vdo settings
-	if (!get_vdo_settings(cmd, &lp->vdo_params, NULL))
+	if (!get_vdo_settings(cmd, &lp->vcp.vdo_params, NULL))
 		return_0;
 
 	return 1;
@@ -1767,8 +1767,8 @@ static int _lvcreate_single(struct cmd_context *cmd, const char *vg_name,
 	    !check_vdo_constrains(cmd, &(struct vdo_pool_size_config) {
 				  .physical_size = (uint64_t)lp->extents * vg->extent_size,
 				  .virtual_size = lcp->virtual_size,
-				  .block_map_cache_size_mb = lp->vdo_params.block_map_cache_size_mb,
-				  .index_memory_size_mb = lp->vdo_params.index_memory_size_mb }))
+				  .block_map_cache_size_mb = lp->vcp.vdo_params.block_map_cache_size_mb,
+				  .index_memory_size_mb = lp->vcp.vdo_params.index_memory_size_mb }))
 		goto_out;
 
 	if (seg_is_thin(lp) && !_validate_internal_thin_processing(lp))
