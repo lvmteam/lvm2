@@ -1402,6 +1402,8 @@ int convert_vdo_pool_lv(struct logical_volume *data_lv,
 			uint32_t *virtual_extents,
 			int format,
 			uint64_t vdo_pool_header_size);
+struct logical_volume *convert_vdo_lv(struct logical_volume *lv,
+				      const struct vdo_convert_params *vcp);
 int set_vdo_write_policy(enum dm_vdo_write_policy *vwp, const char *policy);
 int fill_vdo_target_params(struct cmd_context *cmd,
 			   struct dm_vdo_target_params *vtp,

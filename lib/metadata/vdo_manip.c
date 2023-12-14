@@ -22,6 +22,7 @@
 #include "lib/activate/activate.h"
 #include "lib/config/defaults.h"
 #include "lib/misc/lvm-exec.h"
+#include "lib/metadata/lv_alloc.h"
 
 #include <sys/sysinfo.h> // sysinfo
 #include <stdarg.h>
@@ -439,6 +440,115 @@ int convert_vdo_pool_lv(struct logical_volume *data_lv,
 	data_lv->status |= LV_VDO_POOL_DATA;
 
 	return 1;
+}
+
+/*
+ * Convert LV into vdopool data LV and build virtual VDO LV on top of it.
+ * After this it swaps these two LVs so the returned LV is VDO LV!
+ */
+struct logical_volume *convert_vdo_lv(struct logical_volume *lv,
+				      const struct vdo_convert_params *vcp)
+{
+	struct cmd_context *cmd = lv->vg->cmd;
+	char vdopool_name[NAME_LEN], vdopool_tmpl[NAME_LEN];
+	struct lvcreate_params lvc = {
+		.activate = vcp->activate,
+		.alloc = ALLOC_INHERIT,
+		.lv_name = vcp->lv_name ? : lv->name, /* preserve the name */
+		.major = -1,
+		.minor = -1,
+		.permission = LVM_READ | LVM_WRITE,
+		.pool_name = vdopool_name,
+		.pvh = &lv->vg->pvs,
+		.read_ahead = DM_READ_AHEAD_AUTO,
+		.stripes = 1,
+		.suppress_zero_warn = 1, /* suppress warning for this VDO */
+		.tags = DM_LIST_HEAD_INIT(lvc.tags),
+		.virtual_extents = vcp->virtual_extents ? : lv->le_count, /* same size for Pool and Virtual LV */
+	};
+	struct logical_volume *vdo_lv, tmp_lv = {
+		.segments = DM_LIST_HEAD_INIT(tmp_lv.segments)
+	};
+
+	if (!(lvc.segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_VDO)))
+		return_NULL;
+
+	if (activation() &&
+	    lvc.segtype->ops->target_present &&
+	    !lvc.segtype->ops->target_present(cmd, NULL, &lvc.target_attr)) {
+		log_error("%s: Required device-mapper target(s) not detected in your kernel.",
+			  lvc.segtype->name);
+		return NULL;
+	}
+
+	if (!vcp->lv_name) {
+		/* TODO: maybe  _vpool would be sufficient */
+		if (dm_snprintf(vdopool_tmpl, sizeof(vdopool_tmpl), "%s_vpool%%d", lv->name) < 0) {
+			log_error("Can't prepare vdo pool name for %s.", display_lvname(lv));
+			return NULL;
+		}
+
+		if (!generate_lv_name(lv->vg, vdopool_tmpl, vdopool_name, sizeof(vdopool_name))) {
+			log_error("Can't generate new name for %s.", vdopool_tmpl);
+			return NULL;
+		}
+
+		/* Rename to use _vpool name and release the passed-in name here */
+		if (!lv_rename_update(cmd, lv, vdopool_name, 1))
+			return_NULL;
+	} else
+		lvc.pool_name = lv->name;
+
+	if (!activate_lv(cmd, lv)) {
+		log_error("Aborting. Failed to activate pool metadata %s.",
+			  display_lvname(lv));
+		return NULL;
+	}
+
+	if (vcp->do_zero) {
+		if (test_mode()) {
+			log_verbose("Test mode: Skipping activation, zeroing and signature wiping.");
+		} else if (!(wipe_lv(lv, (struct wipe_params)
+				     {
+					     .do_zero = 1,
+					     .do_wipe_signatures = vcp->do_wipe_signatures,
+					     .yes = vcp->yes,
+					     .force = vcp->force
+				     }))) {
+			log_error("Aborting. Failed to wipe VDO data store %s.",
+				  display_lvname(lv));
+			return NULL;
+		}
+	}
+
+	if (!convert_vdo_pool_lv(lv, &vcp->vdo_params, &lv->le_count, 1, 0))
+		return_NULL;
+
+        /* Create VDO LV with the name, we just release above */
+	if (!(vdo_lv = lv_create_single(lv->vg, &lvc)))
+		return_NULL;
+
+	if (vcp->lv_name)
+		return vdo_lv;
+
+	/* Swap vdo_lv and lv segment, so passed-in LV appears as virtual VDO_LV */
+	if (!move_lv_segments(&tmp_lv, lv, 0, 0) ||
+	    !move_lv_segments(lv, vdo_lv, 0, 0) ||
+	    !move_lv_segments(vdo_lv, &tmp_lv, 0, 0))
+		return_NULL;
+
+	/* Also swap naming, so the passed in LV keeps the passed-in name */
+	vdo_lv->name = lv->name;
+	lv->name = lvc.lv_name;
+
+	/* Swap segment referencing */
+	if (!remove_seg_from_segs_using_this_lv(lv, first_seg(lv)))
+		return_NULL;
+
+	if (!set_lv_segment_area_lv(first_seg(lv), 0, vdo_lv, 0, 0))
+		return_NULL;
+
+	return lv;
 }
 
 int set_vdo_write_policy(enum dm_vdo_write_policy *vwp, const char *policy)

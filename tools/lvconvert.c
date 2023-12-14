@@ -5453,96 +5453,55 @@ static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 					struct logical_volume *lv,
 					struct processing_handle *handle)
 {
-	const char *vg_name = NULL;
-	unsigned int vdo_pool_zero;
-	uint64_t vdo_pool_header_size;
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *vdo_lv;
-	struct dm_vdo_target_params vdo_params; /* vdo */
-	struct lvcreate_params lvc = {
+	const char *vg_name = NULL;
+	uint64_t vdo_pool_header_size;
+	struct vdo_convert_params vcp = {
 		.activate = CHANGE_AEY,
-		.alloc = ALLOC_INHERIT,
-		.major = -1,
-		.minor = -1,
-		.suppress_zero_warn = 1, /* Suppress warning for this VDO */
-		.permission = LVM_READ | LVM_WRITE,
-		.pool_name = lv->name,
-		.pvh = &vg->pvs,
-		.read_ahead = arg_uint_value(cmd, readahead_ARG, DM_READ_AHEAD_AUTO),
-		.stripes = 1,
 		.lv_name = arg_str_value(cmd, name_ARG, NULL),
+		.virtual_extents = extents_from_size(cmd,
+						     arg_uint64_value(cmd, virtualsize_ARG, UINT64_C(0)),
+						     vg->extent_size),
+		.do_zero = arg_int_value(cmd, zero_ARG, 1),
+		.do_wipe_signatures = 1,
+		.yes = arg_count(cmd, yes_ARG),
+		.force = arg_count(cmd, force_ARG)
 	};
 
-	if (lvc.lv_name &&
-	    !validate_restricted_lvname_param(cmd, &vg_name, &lvc.lv_name))
+	if (vcp.lv_name) {
+		if (!validate_restricted_lvname_param(cmd, &vg_name, &vcp.lv_name))
+			goto_out;
+	} else
+		vcp.lv_name = "lvol%d";
+
+	if (!fill_vdo_target_params(cmd, &vcp.vdo_params, &vdo_pool_header_size, vg->profile))
 		goto_out;
 
-	lvc.virtual_extents = extents_from_size(cmd,
-						arg_uint64_value(cmd, virtualsize_ARG, UINT64_C(0)),
-						vg->extent_size);
-
-	if (!(lvc.segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_VDO)))
-		goto_out;
-
-	if (activation() && lvc.segtype->ops->target_present) {
-		if (!lvc.segtype->ops->target_present(cmd, NULL, &lvc.target_attr)) {
-			log_error("%s: Required device-mapper target(s) not detected in your kernel.",
-				  lvc.segtype->name);
-			goto out;
-		}
-	}
-
-	if (!fill_vdo_target_params(cmd, &vdo_params, &vdo_pool_header_size, vg->profile))
-		goto_out;
-
-	if (!get_vdo_settings(cmd, &vdo_params, NULL))
+	if (!get_vdo_settings(cmd, &vcp.vdo_params, NULL))
 		goto_out;
 
 	/* If LV is inactive here, ensure it's not active elsewhere. */
 	if (!lockd_lv(cmd, lv, "ex", 0))
 		goto_out;
 
-	if (!activate_lv(cmd, lv)) {
-		log_error("Cannot activate %s.", display_lvname(lv));
-		goto out;
-	}
-
-	vdo_pool_zero = arg_int_value(cmd, zero_ARG, 1);
-
 	log_warn("WARNING: Converting logical volume %s to VDO pool volume %s formatting.",
-		 display_lvname(lv), vdo_pool_zero ? "with" : "WITHOUT");
+		 display_lvname(lv), vcp.do_zero ? "with" : "WITHOUT");
 
-	if (vdo_pool_zero)
+	if (vcp.do_zero)
 		log_warn("THIS WILL DESTROY CONTENT OF LOGICAL VOLUME (filesystem etc.)");
 	else
 		log_warn("WARNING: Using invalid VDO pool data MAY DESTROY YOUR DATA!");
 
-	if (!arg_count(cmd, yes_ARG) &&
+	if (!vcp.yes &&
 	    yes_no_prompt("Do you really want to convert %s? [y/n]: ",
 			  display_lvname(lv)) == 'n') {
 		log_error("Conversion aborted.");
 		goto out;
 	}
 
-	if (vdo_pool_zero) {
-		if (test_mode()) {
-			log_verbose("Test mode: Skipping activation, zeroing and signature wiping.");
-		} else if (!wipe_lv(lv, (struct wipe_params) { .do_zero = 1, .do_wipe_signatures = 1,
-			     .yes = arg_count(cmd, yes_ARG),
-			     .force = arg_count(cmd, force_ARG)})) {
-			log_error("Aborting. Failed to wipe VDO data store.");
-			goto out;
-		}
-	}
-
-	if (!convert_vdo_pool_lv(lv, &vdo_params, &lvc.virtual_extents,
-				 vdo_pool_zero, vdo_pool_header_size))
+	if (!(vdo_lv = convert_vdo_lv(lv, &vcp)))
 		goto_out;
-
-	dm_list_init(&lvc.tags);
-
-	if (!(vdo_lv = lv_create_single(vg, &lvc)))
-		goto_out; /* FIXME: hmmm what to do now */
 
 	log_print_unless_silent("Converted %s to VDO pool volume and created virtual %s VDO volume.",
 				display_lvname(lv), display_lvname(vdo_lv));
