@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2016 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2023 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -3063,6 +3063,14 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	thin_zero_t zero_new_blocks;
 	int error_when_full;
 	int data_vdo;
+	uint64_t vdo_pool_header_size;
+	struct vdo_convert_params vcp = {
+		.activate = CHANGE_AN,
+		.do_zero = 1,
+		.do_wipe_signatures = 1,
+		.force = arg_count(cmd, force_ARG),
+		.yes = arg_count(cmd, yes_ARG),
+	};
 	int is_active;
 	int ret = 1;
 
@@ -3357,6 +3365,20 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 			log_error("Aborting. Failed to deactivate logical volume %s.",
 				  display_lvname(lv));
 			goto bad;
+		}
+
+		if (data_vdo) {
+			if (!fill_vdo_target_params(cmd, &vcp.vdo_params, &vdo_pool_header_size, vg->profile))
+				goto_bad;
+
+			if (!get_vdo_settings(cmd, &vcp.vdo_params, NULL))
+				goto_bad;
+
+			if (data_vdo && lv_is_vdo(lv))
+				log_print_unless_silent("Volume %s is already VDO volume, skipping VDO conversion.",
+							display_lvname(lv));
+			else if (!convert_vdo_lv(lv, &vcp))
+				goto_bad;
 		}
 
 		pool_lv = lv;
@@ -4847,6 +4869,7 @@ static int _lvconvert_to_pool_or_swap_metadata_single(struct cmd_context *cmd,
 	case striped_LVT:
 	case error_LVT:
 	case zero_LVT:
+	case vdo_LVT:
 		break;
 	default:
 bad:

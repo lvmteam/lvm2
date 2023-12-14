@@ -281,6 +281,7 @@ struct cmd_context {
 	unsigned rand_seed;
 	struct dm_list pending_delete;		/* list of LVs for removal */
 	struct dm_pool *pending_delete_mem;	/* memory pool for pending deletes */
+	struct vdo_convert_params *lvcreate_vcp;/* params for LV to VDO conversion */
 };
 
 /*

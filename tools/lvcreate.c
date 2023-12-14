@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2023 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -720,12 +720,22 @@ static int _read_vdo_params(struct cmd_context *cmd,
 			    struct lvcreate_params *lp,
 			    struct lvcreate_cmdline_params *lcp)
 {
-	if (!seg_is_vdo(lp))
+	if (!seg_is_vdo(lp) &&
+	    !lp->pool_data_vdo)
 		return 1;
 
 	// prefiling settings here
 	if (!fill_vdo_target_params(cmd, &lp->vcp.vdo_params, &lp->vdo_pool_header_size, NULL))
 		return_0;
+
+	if (lp->pool_data_vdo) {
+		lp->vcp.activate = CHANGE_AN;
+		lp->vcp.do_zero = 1;
+		lp->vcp.do_wipe_signatures = lp->wipe_signatures;
+		lp->vcp.force = lp->force;
+		lp->vcp.yes = lp->force;
+		cmd->lvcreate_vcp = &lp->vcp;
+	}
 
 	if ((lcp->virtual_size <= DM_VDO_LOGICAL_SIZE_MAXIMUM) &&
 	    ((lcp->virtual_size + lp->vdo_pool_header_size) > DM_VDO_LOGICAL_SIZE_MAXIMUM)) {
@@ -1056,6 +1066,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 					    POOL_ARGS,
 					    SIZE_ARGS,
 					    THIN_POOL_ARGS,
+					    VDO_POOL_ARGS,
 					    chunksize_ARG,
 					    errorwhenfull_ARG,
 					    snapshot_ARG,

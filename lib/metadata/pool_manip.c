@@ -572,6 +572,9 @@ int create_pool(struct logical_volume *pool_lv,
 	if (!lv_add_segment(ah, 0, stripes, pool_lv, striped, stripe_size, 0, 0))
 		goto_bad;
 
+	if (pool_lv->vg->cmd->lvcreate_vcp && !convert_vdo_lv(pool_lv, pool_lv->vg->cmd->lvcreate_vcp))
+		goto_bad;
+
 	if (!(data_lv = insert_layer_for_lv(pool_lv->vg->cmd, pool_lv,
 					    pool_lv->status,
 					    (segtype_is_cache_pool(segtype)) ?
