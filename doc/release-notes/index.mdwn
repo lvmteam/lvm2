@@ -1,0 +1,9 @@
+# LVM Releases
+
+This list is incomplete, only releases with a release-note are included.
+
+For releases of legacy branch *2.02* see [[legacy]].
+
+Too see what's cooking see [[pending]].
+
+[[!inline pages="release-notes/2.03.* and !*/template and !*/Discussion and !tagged(draft) and !tagged(pending)" rootpage="release-notes"]]

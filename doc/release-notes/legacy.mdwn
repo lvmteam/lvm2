@@ -1,0 +1,8 @@
+# Legacy 2.02 Releases
+
+This list is incomplete, only releases with a release-note are included.
+
+For releases of stable branch 2.03 see [[index]].
+
+[[!inline pages="release-notes/2.02.* and !*/template and !*/Discussion and !tagged(draft) and !tagged(pending)" limit=2 rootpage="release-notes"]]
+

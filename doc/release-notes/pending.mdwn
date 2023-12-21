@@ -1,0 +1,3 @@
+# Pending Release
+
+[[!inline pages="release-notes/* and !*/template and !*/Discussion and tagged(pending)" rootpage="release-notes"]]

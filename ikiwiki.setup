@@ -1,0 +1,420 @@
+# IkiWiki::Setup::Yaml - YAML formatted setup file
+#
+# Setup file for ikiwiki.
+# 
+# Passing this to ikiwiki --setup will make ikiwiki generate
+# wrappers and build the wiki.
+# 
+# Remember to re-run ikiwiki --setup any time you edit this file.
+#
+# name of the wiki
+wikiname: LVM
+# contact email for wiki
+#adminemail: me@example.com
+# users who are wiki admins
+adminuser: []
+# users who are banned from the wiki
+banned_users: []
+# where the source of the wiki is located
+srcdir: ./doc
+# where to build the wiki
+destdir: ./public
+# base url to the wiki
+url: https://sourceware.org/lvm2/
+# url to the ikiwiki.cgi
+cgiurl: ''
+# do not adjust cgiurl if CGI is accessed via different URL
+reverse_proxy: 0
+# filename of cgi wrapper to generate
+cgi_wrapper: ''
+# mode for cgi_wrapper (can safely be made suid)
+cgi_wrappermode: 06755
+# number of seconds to delay CGI requests when overloaded
+cgi_overload_delay: ''
+# message to display when overloaded (may contain html)
+cgi_overload_message: ''
+# enable optimization of only refreshing committed changes?
+only_committed_changes: 0
+# rcs backend to use
+rcs: ''
+# plugins to add to the default configuration
+add_plugins:
+  - sidebar
+  - tag
+  - toggle
+# plugins to disable
+disable_plugins: []
+# additional directory to search for template files
+templatedir: /usr/share/ikiwiki/templates
+# base wiki source location
+underlaydir: /usr/share/ikiwiki/basewiki
+# display verbose messages?
+#verbose: 1
+# log to syslog?
+#syslog: 1
+# create output files named page/index.html?
+usedirs: 1
+# use '!'-prefixed preprocessor directives?
+prefix_directives: 1
+# use page/index.mdwn source files
+indexpages: 0
+# enable Discussion pages?
+discussion: 1
+# name of Discussion pages
+discussionpage: Discussion
+# use elements new in HTML5 like <section>?
+html5: 0
+# only send cookies over SSL connections?
+sslcookie: 0
+# extension to use for new pages
+default_pageext: mdwn
+# extension to use for html files
+htmlext: html
+# strftime format string to display date
+timeformat: '%c'
+# UTF-8 locale to use
+#locale: en_US.UTF-8
+# put user pages below specified page
+userdir: ''
+# how many backlinks to show before hiding excess (0 to show all)
+numbacklinks: 10
+# attempt to hardlink source files? (optimisation for large files)
+hardlink: 0
+# force ikiwiki to use a particular umask (keywords public, group or private, or a number)
+#umask: public
+# group for wrappers to run in
+#wrappergroup: ikiwiki
+# extra library and plugin directories
+libdirs: []
+# extra library and plugin directory (searched after libdirs)
+libdir: ''
+# environment variables
+ENV: {}
+# time zone name
+timezone: :/etc/localtime
+# regexp of normally excluded files to include
+#include: ^\.htaccess$
+# regexp of files that should be skipped
+#exclude: ^(*\.private|Makefile)$
+# specifies the characters that are allowed in source filenames
+wiki_file_chars: -[:alnum:]+/.:_
+# allow symlinks in the path leading to the srcdir (potentially insecure)
+allow_symlinks_before_srcdir: 0
+# cookie control
+cookiejar:
+  file: /home/mcsontos/.ikiwiki/cookies
+# set custom user agent string for outbound HTTP requests e.g. when fetching aggregated RSS feeds
+useragent: ikiwiki/3.20200202.3
+# theme has a responsive layout? (mobile-optimized)
+responsive_layout: 1
+# try harder to produce deterministic output
+deterministic: 0
+
+######################################################################
+# core plugins
+#   (editpage, htmlscrubber, inline, link, meta, parentlinks, templatebody)
+######################################################################
+
+# htmlscrubber plugin
+# PageSpec specifying pages not to scrub
+#htmlscrubber_skip: '!*/Discussion'
+
+# inline plugin
+# enable rss feeds by default?
+#rss: 0
+# enable atom feeds by default?
+#atom: 0
+# allow rss feeds to be used?
+#allowrss: 0
+# allow atom feeds to be used?
+#allowatom: 0
+# urls to ping (using XML-RPC) on feed update
+pingurl: []
+
+######################################################################
+# auth plugins
+#   (anonok, blogspam, emailauth, httpauth, lockedit, moderatedcomments,
+#    opendiscussion, openid, passwordauth, signinedit)
+######################################################################
+
+# anonok plugin
+# PageSpec to limit which pages anonymous users can edit
+#anonok_pagespec: '*/discussion'
+
+# blogspam plugin
+# PageSpec of pages to check for spam
+#blogspam_pagespec: postcomment(*)
+# options to send to blogspam server
+#blogspam_options: blacklist=1.2.3.4,blacklist=8.7.6.5,max-links=10
+# blogspam server JSON url
+#blogspam_server: ''
+
+# emailauth plugin
+# email address to send emailauth mails as (default: adminemail)
+#emailauth_sender: ''
+
+# httpauth plugin
+# url to redirect to when authentication is needed
+#cgiauthurl: http://example.com/wiki/auth/ikiwiki.cgi
+# PageSpec of pages where only httpauth will be used for authentication
+#httpauth_pagespec: '!*/Discussion'
+
+# lockedit plugin
+# PageSpec controlling which pages are locked
+#locked_pages: '!*/Discussion'
+
+# moderatedcomments plugin
+# PageSpec matching users or comment locations to moderate
+#moderate_pagespec: '*'
+
+# openid plugin
+# url pattern of openid realm (default is cgiurl)
+#openid_realm: ''
+# url to ikiwiki cgi to use for openid authentication (default is cgiurl)
+#openid_cgiurl: ''
+
+# passwordauth plugin
+# a password that must be entered when signing up for an account
+#account_creation_password: s3cr1t
+# cost of generating a password using Authen::Passphrase::BlowfishCrypt
+#password_cost: 8
+
+######################################################################
+# format plugins
+#   (creole, highlight, hnb, html, mdwn, otl, po, rawhtml, textile, txt)
+######################################################################
+
+# highlight plugin
+# types of source files to syntax highlight
+#tohighlight: .c .h .cpp .pl .py Makefile:make
+# location of highlight's filetypes.conf
+#filetypes_conf: /etc/highlight/filetypes.conf
+# location of highlight's langDefs directory
+#langdefdir: /usr/share/highlight/langDefs
+
+# mdwn plugin
+# enable multimarkdown features?
+#multimarkdown: 0
+# disable use of markdown discount?
+#nodiscount: 0
+# enable footnotes in Markdown (where supported)?
+mdwn_footnotes: 1
+# interpret line like 'A. First item' as ordered list when using Discount?
+mdwn_alpha_lists: 0
+
+# po plugin
+# master language (non-PO files)
+#po_master_language: en|English
+# slave languages (translated via PO files) format: ll|Langname
+#po_slave_languages:
+#- fr|FranÃ§ais
+#- es|EspaÃ±ol
+#- de|Deutsch
+# PageSpec controlling which pages are translatable
+#po_translatable_pages: '* and !*/Discussion'
+# internal linking behavior (default/current/negotiated)
+#po_link_to: current
+
+######################################################################
+# special-purpose plugins
+#   (osm, underlay)
+######################################################################
+
+# osm plugin
+# the default zoom when you click on the map link
+#osm_default_zoom: 15
+# the icon shown on links and on the main map
+#osm_default_icon: ikiwiki/images/osm.png
+# the alt tag of links, defaults to empty
+#osm_alt: ''
+# the output format for waypoints, can be KML, GeoJSON or CSV (one or many, comma-separated)
+#osm_format: KML
+# the icon attached to a tag, displayed on the map for tagged pages
+#osm_tag_default_icon: icon.png
+# Url for the OpenLayers.js file
+#osm_openlayers_url: http://www.openlayers.org/api/OpenLayers.js
+# Layers to use in the map. Can be either the 'OSM' string or a type option for Google maps (GoogleNormal, GoogleSatellite, GoogleHybrid or GooglePhysical). It can also be an arbitrary URL in a syntax acceptable for OpenLayers.Layer.OSM.url parameter.
+#osm_layers:
+#  OSM: GoogleSatellite
+# Google maps API key, Google layer not used if missing, see https://code.google.com/apis/console/ to get an API key
+#osm_google_apikey: ''
+
+# underlay plugin
+# extra underlay directories to add
+#add_underlays:
+#- /home/mcsontos/wiki.underlay
+
+######################################################################
+# web plugins
+#   (404, attachment, comments, editdiff, edittemplate, getsource, google,
+#    goto, mirrorlist, remove, rename, repolist, search, theme, userlist,
+#    websetup, wmd)
+######################################################################
+
+# attachment plugin
+# enhanced PageSpec specifying what attachments are allowed
+#allowed_attachments: virusfree() and mimetype(image/*) and maxsize(50kb)
+# virus checker program (reads STDIN, returns nonzero if virus found)
+#virus_checker: clamdscan -
+
+# comments plugin
+# PageSpec of pages where comments are allowed
+#comments_pagespec: blog/* and !*/Discussion
+# PageSpec of pages where posting new comments is not allowed
+#comments_closed_pagespec: blog/controversial or blog/flamewar
+# Base name for comments, e.g. "comment_" for pages like "sandbox/comment_12"
+#comments_pagename: ''
+# Interpret directives in comments?
+#comments_allowdirectives: 0
+# Allow anonymous commenters to set an author name?
+#comments_allowauthor: 0
+# commit comments to the VCS
+#comments_commit: 1
+# Restrict formats for comments to (no restriction if empty)
+#comments_allowformats: mdwn txt
+
+# getsource plugin
+# Mime type for returned source.
+#getsource_mimetype: text/plain; charset=utf-8
+
+# mirrorlist plugin
+# list of mirrors
+#mirrorlist: {}
+# generate links that point to the mirrors' ikiwiki CGI
+#mirrorlist_use_cgi: 1
+
+# repolist plugin
+# URIs of repositories containing the wiki's source
+#repositories:
+#- svn://svn.example.org/wiki/trunk
+
+# search plugin
+# path to the omega cgi program
+#omega_cgi: /usr/lib/cgi-bin/omega/omega
+# use google site search rather than internal xapian index?
+#google_search: 1
+
+# theme plugin
+# name of theme to enable
+#theme: actiontabs
+
+# websetup plugin
+# list of plugins that cannot be enabled/disabled via the web interface
+#websetup_force_plugins: []
+# list of additional setup field keys to treat as unsafe
+#websetup_unsafe: []
+# show unsafe settings, read-only, in web interface?
+#websetup_show_unsafe: 1
+
+######################################################################
+# widget plugins
+#   (calendar, color, conditional, cutpaste, date, format, fortune,
+#    graphviz, haiku, headinganchors, img, linkmap, listdirectives, map,
+#    more, orphans, pagecount, pagestats, poll, polygen, postsparkline,
+#    progress, shortcut, sparkline, table, template, teximg, toc, toggle,
+#    version)
+######################################################################
+
+# calendar plugin
+# base of the archives hierarchy
+#archivebase: archives
+# PageSpec of pages to include in the archives, if option `calendar_autocreate` is true.
+#archive_pagespec: page(posts/*) and !*/Discussion
+# autocreate new calendar pages?
+#calendar_autocreate: 1
+# if set, when building calendar pages, also build pages of year and month when no pages were published (building empty calendars).
+#calendar_fill_gaps: 1
+
+# img plugin
+# Image formats to process (jpeg, png, gif, svg, pdf or 'everything' to accept all)
+#img_allowed_formats: ''
+
+# listdirectives plugin
+# directory in srcdir that contains directive descriptions
+#directive_description_dir: ikiwiki/directive
+
+# teximg plugin
+# Should teximg use dvipng to render, or dvips and convert?
+#teximg_dvipng: ''
+# LaTeX prefix for teximg plugin
+#teximg_prefix: |
+#  \documentclass{article}
+#  \usepackage[utf8]{inputenc}
+#  \usepackage{amsmath}
+#  \usepackage{amsfonts}
+#  \usepackage{amssymb}
+#  \pagestyle{empty}
+#  \begin{document}
+# LaTeX postfix for teximg plugin
+#teximg_postfix: \end{document}
+
+######################################################################
+# other plugins
+#   (aggregate, amazon_s3, autoindex, brokenlinks, camelcase, ddate, embed,
+#    favicon, filecheck, flattr, goodstuff, htmlbalance, localstyle,
+#    loginselector, notifyemail, pagetemplate, pingee, pinger, prettydate,
+#    recentchanges, recentchangesdiff, relativedate, rsync, sidebar,
+#    smiley, sortnaturally, tag, testpagespec, trail, transient)
+######################################################################
+
+# aggregate plugin
+# enable aggregation to internal pages?
+#aggregateinternal: 1
+# allow aggregation to be triggered via the web?
+#aggregate_webtrigger: 0
+
+# amazon_s3 plugin
+# public access key id
+#amazon_s3_key_id: XXXXXXXXXXXXXXXXXXXX
+# file holding secret key (must not be readable by others!)
+#amazon_s3_key_id: /home/mcsontos/.s3_key
+# globally unique name of bucket to store wiki in
+#amazon_s3_bucket: mywiki
+# a prefix to prepend to each page name
+#amazon_s3_prefix: wiki/
+# which S3 datacenter to use (leave blank for default)
+#amazon_s3_location: EU
+# store each index file twice? (allows urls ending in "/index.html" and "/")
+#amazon_s3_dupindex: 0
+
+# autoindex plugin
+# commit autocreated index pages
+#autoindex_commit: 1
+
+# camelcase plugin
+# list of words to not turn into links
+#camelcase_ignore: []
+
+# flattr plugin
+# userid or user name to use by default for Flattr buttons
+#flattr_userid: joeyh
+
+# pinger plugin
+# how many seconds to try pinging before timing out
+#pinger_timeout: 15
+
+# prettydate plugin
+# format to use to display date
+#prettydateformat: '%X, %B %o, %Y'
+
+# recentchanges plugin
+# name of the recentchanges page
+recentchangespage: recentchanges
+# number of changes to track
+recentchangesnum: 100
+
+# rsync plugin
+# command to run to sync updated pages
+#rsync_command: rsync -qa --delete . user@host:/path/to/docroot/
+
+# sidebar plugin
+# show sidebar page on all pages?
+#global_sidebars: 1
+
+# tag plugin
+# parent page tags are located under
+#tagbase: tag
+# autocreate new tag pages?
+#tag_autocreate: 1
+# commit autocreated tag pages
+#tag_autocreate_commit: 1

@@ -1,0 +1,24 @@
+# Common problems
+
+## Duplicate PVs in the system
+
+LVM tries to detect the common sources of duplicates, mdadm RAID and multipath,
+there are cases where duplicate PV appears on the system.
+
+There are two solutions to this problem:
+
+* Setting a *global_filter* configuration option.
+* Using of *devices_file* (See [lvmdevices(8)](https://man7.org/linux/man-pages/man8/lvmdevices.8.html))
+
+## Device Filtering
+
+*filter* and *global_filter* are meant to be used in two ways:
+
+* as an allow list, listing patterns for devices which will be accepted
+* `a|/dev/sdX|`, and rejecting the rest `r|.*|`,
+* as a reject list, listing only patterns for devices which will be rejected
+* `r|/dev/sdX|`,
+
+Even though there are situations where it works, mixing reject and accept
+patterns is not recommended.
+

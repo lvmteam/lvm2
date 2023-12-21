@@ -1,0 +1,80 @@
+<!-- Page title -->
+[[!meta title="Version 2.03.24 - Feature and Bug Fix Release"]]
+
+Version 2.03.24
+===============
+
+* **Changes in udev rules, new version of systemd is recommended (256).**
+* **When using LVs as PVs these are no longer auto activated!**
+* Allow creating VDO device for thin data when creating thin pool.
+* More devices can be used as external origin for thin snapshot.
+* And [[!toggle text="more"]]
+
+[[!toggleable text="""
+Features
+-----------------------
+
+* Swap properties like hostname, date and time when swapping LVs.
+* Allow thin snapshot taken of thin volume from another pool as external origin.
+* Allow chaining of external origins.
+
+### Changes to device handling
+
+* **IMPORTANT:** When `devices/scan_lvs` is enabled found LVs are no longer auto
+  activated, must enable `LVM_PVSCAN_ON_LVS` in udev rules (*69-dm-lvm.rules*.)
+    * NOTE: It is not recomended to use LVs for PVs. If you have an use case for
+      this talk to us, please.
+* Changes to devices file are now backed up in */etc/lvm/devices/backup/*.
+  Controlled by `devices/devicesfile_backup_limit` configuration option.
+* When `devices/use_devicesfile` is set to `0` existing file is renamed to
+  *system.devices-unused.YYYYMMDD.HHMMSS* to prevent outdated file to be used
+  on reenabling.
+
+### Use VDO device for thin pool's data
+
+New option `--pooldatavdo` during lvcreate or lvconvert allows using VDO as backing device.
+
+More options (`--compression {y|n}`, `--deduplication {y|n}`,
+  `--vdosettings STRING`) to control the options are supported by these commands.
+
+Example of converting a *lvol1* to a thin pool with enabled compression and deduplication:
+
+    lvconvert --type thin-pool --pooldatavdo y vg/lvol1 
+
+Changes in command line
+-----------------------
+
+* Add *--wipesignature* option controlling signature wiping when converting volume to thin-pool.
+* Allow *lvcreate --snapshot* without *{-T|--thin}* option when creating snapshot of a thin volume.
+* Allow *--raidintegrity{,mode,blocksize}* options with implicit RAID1 (i.e. when *-m1* is used on command line)
+
+./configure options
+-------------------
+
+These changes are for packagers:
+
+* Add `--with-default-event-activation` option controlling default for
+  `global/event_activation`. Default value is unchanged. Useful when creating
+  builds for testing.
+* Add `--with-modulesdir` option.
+
+Changes in udev rules
+---------------------
+
+**IMPORTANT:** Rework of udev rules in cooperation with systemd is included in this release.
+
+* `DM_SUSPENDED` and `DM_NOSCAN` are now entirely internal for DM and cannot be used outside of DM rules.
+* Upper level rules should consume `DM_UDEV_DISABLE_OTHER_RULES_FLAG` rather than `DM_NOSCAN` and `DM_SUSPENDED`.
+
+Also few more minor improvements:
+
+* Better handling of `DISK_RO` events and suspended devices
+
+"""]]
+
+<!-- remove the pending tag on release, remove draft tag once editing is complete -->
+[[!tag draft pending]]
+<!--
+For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
+\[[!meta date="Tue Nov 21 14:26:07 2023 +0100"]]
+-->

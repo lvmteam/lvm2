@@ -16,6 +16,23 @@ approve1:
     - when: on_success
   allow_failure: false
 
+
+pages:
+  image: elecnix/ikiwiki
+  stage: test
+  script:
+    - ikiwiki --setup ikiwiki.setup --libdir themes/ikistrap/lib
+  artifacts:
+    paths:
+      - public
+  only:
+    refs:
+      - main
+    changes:
+      - doc/**/*
+      - ikiwiki.setup
+
+
 # TODO:
 # - check results of autoreconf and make generate - may need additional commit
 #     - we need a particular setup (rawhide OR latest supported fedora?)

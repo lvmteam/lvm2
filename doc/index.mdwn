@@ -1,0 +1,152 @@
+# LVM - Logical Volume Manager for Linux
+
+<!--
+* TODO: Add banner for Important News: Critical Bugs, Important Announcements,...
+-->
+
+<!--
+* TODO: Add a feed for latest articles/release-notes on the right
+-->
+
+<!--
+## About LVM2
+-->
+LVM aka LVM2 refers to the userspace toolset that provide logical volume
+management facilities on linux.
+<!--
+It is reasonably backwards-compatible with the
+original LVM1 toolset.
+* TODO: Add information about LVM1 metadata format conversion!
+-->
+
+LVM offers more flexibility than using partitions, allowing one to
+
+* grow and, where supported by filesystem, shrink volumes,
+* create snapshots of existing volumes,
+* mirror data on multiple disks including RAID levels 5 or 6,
+* striping data on multiple disks,
+* create a read or write cache.
+
+To use LVM2 you need 3 things:
+
+* [device-mapper](https://sourceware.org/dm/) in your kernel (upstream since long ago)
+* the userspace device-mapper support library (*libdevmapper*) (part of lvm2)
+* and the userspace LVM2 tools.
+
+## Getting LVM
+
+Most of linux ditribution offer packaged LVM tools.
+Depending on your distribution use
+
+    # RPM based distributions (Fedora):
+    yum install lvm2
+    # DEB based distributions (Debian, Ubuntu):
+    apt-get install lvm2
+
+Tarballs of the userspace LVM2 source code releases are available from [sourceware.org](https://sourceware.org/pub/lvm2/) [ftp](ftp://sourceware.org/pub/lvm2/).
+
+List of official [mirror sites](https://sourceware.org/mirrors.html) (including http and rsync protocols).
+
+### LVM Releases
+
+[[!inline pages="release-notes/2.03.* and !*/template and !*/Discussion and !tagged(draft) and !tagged(pending)" limit=2 rootpage="release-notes"]]
+
+[[More releases|release-notes/index]]
+
+## Getting Started
+
+<!--
+TODO: We are missing a lvm(7) man page explaining this, I think it would be a nic addition!
+And perhaps so would be a lvmtroubleshooting(7) guide.
+-->
+Word of warning first! Even though LVM errs on the side of data safety it is a
+tool with low level access and one may seriously harm their data when used
+incorrectly!
+
+
+* Physical Volume (PV) is underlaying disk, local or remote, encrypted or even
+  a mdadm RAID volume. PV is divided into so called Physical Extents (PE) which
+  are a basic allocation unit.
+  List PVs using [pvs(8)](https://man7.org/linux/man-pages/man8/pvs.8.html) or
+  [pvdisplay(8)](https://man7.org/linux/man-pages/man8/pvdisplay.8.html).
+
+  Make one by running `pvcreate /dev/sdX`.
+  See [pvcreate(8)](https://man7.org/linux/man-pages/man8/pvcreate.8.html). This step is optional.
+* Volume Group (VG) consisting for one or more PVs is used as a pool from which LVs are allocated.
+  List VGs using [vgs(8)](https://man7.org/linux/man-pages/man8/vgs.8.html) or
+  [vgdisplay(8)](https://man7.org/linux/man-pages/man8/vgdisplay.8.html).
+
+  Make one by running `vgcreate VGNAME /dev/sdX...`, add PVs to existing one by `vgextend VGNAME /dev/sdX`.
+  To use LVM at least one Volume Group must be present on the system.
+  See [vgcreate(8)](https://man7.org/linux/man-pages/man8/vgcreate.8.html), and
+  [vgextend(8)](https://man7.org/linux/man-pages/man8/vgextend.8.html).
+* Logical Volume (LV) is the block device usually visible to user to be used for file system.
+  List PVs using [lvs(8)](https://man7.org/linux/man-pages/man8/lvs.8.html) or
+  [lvdisplay(8)](https://man7.org/linux/man-pages/man8/lvdisplay.8.html).
+
+  Make one by running `lvcreate [-n LVNAME] -L SIZE VGNAME`, and you are done!
+  See [vgcreate(8)](https://man7.org/linux/man-pages/man8/vgcreate.8.html).
+
+## Avoiding Problems
+
+Good start is to avoid using `{--force|-f}` and `{--yes|-y}` options which are
+often seen on internet discussions.
+there is a possibility of data loss, LVM tools usually ask, so read the prompts
+carefully!  Using `--yes` removes these safety.
+Also in some cases where it is too dangerous to proceed, e.g. device is used,
+LVM refuses to do so, which can be overridden by `--force`.
+
+Second, when resizing and especially when shrinking LVs it is always a good
+idea to use `--resizefs` option which ensures the devices are resized in
+correct order.
+
+Third, if you still make a mess, never ever run fsck on damaged LV/FS, this is
+usually the final blow to your data. It is always better to ask first!
+
+
+## Documentation
+
+## Resolving Problems
+
+* Backup if possible!
+* Search the problem first, check the list of [[common problems|Problems]]
+* Never run `fsck` on damaged LV, LV must be recovered first!
+* When asking for help describe exactly how the system got corrupted. It really
+  does not help trying to cover one's mistakes in such situation, it takes
+  longer to get help and also you are likely to get wrong answer making repair
+  impossible.
+
+## Reporting Bugs
+
+* When you find a problem there is often something specific about your system.
+  If the problem is reproducible run the failing command(s) with verbose flag
+  `-vvvv` which gives developers clue where the problem might be.
+  There is a [lvmdump(8)](https://man7.org/linux/man-pages/man8/lvmdump.8.html)
+  tool to help collect data about your system, block devices and LVM setup.
+* Please report upstream bugs or request features in [Red Hat Bugzilla](https://bugzilla.redhat.com/enter_bug.cgi?product=LVM%20and%20device-mapper)
+
+<!--
+TODO:
+* Add links to other documentation
+* Add links to git
+* Add links to mailing lists
+
+* Resolving problems
+  * Backup if possible!
+  * Newer run fsck! Do the research first!
+  * List of Common issues
+    * Resizing in wrong order
+    * Thin pool running out of space
+    * Configuration - duplicates
+  * Mailing list
+  * IRC?
+
+* Reporting Bugs
+  * sosreport/lvmdump
+  * BZ
+
+* Contributing
+  * gitlab MR
+
+* Add latest articles
+-->

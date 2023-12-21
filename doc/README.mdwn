@@ -1,0 +1,34 @@
+LVM2 Wiki Documentation
+=======================
+
+If you are looking for information about LVM2 visit the [[Index]] page,
+
+There are only some notes about writing stuff under *./doc* here:
+
+* If possible use [[MarkDown]] for formatting, use *.md* (or *.mdwn*) suffix.
+* For linking between files, use [[IkiWiki]] syntax `[[FileName]]` or
+  `[[FileName#Anchor]]`, or `[[link text|FileName]]`
+
+Markdown 
+--------
+
+* Use `<!-- comment -->` to keep notes, which will not be rendered.
+* Use `[[TODO]]` for anything what needs attention. This will be accessible
+  through the linked [[TODO]] page.
+
+IkiWiki
+-------
+
+* Install ikiwiki:
+
+      yum install ikiwiki
+
+* To generate the content, run following in the LVM2 top directory:
+
+      ikiwiki --setup ikiwiki.setup
+
+Internal Stuff:
+---------------
+
+* [[TODO]] Can we have a section which is hidden by default? Like this one?
+* [[TODO]] Add basic IkiWiki and MarkDown How To.

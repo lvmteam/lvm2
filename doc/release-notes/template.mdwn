@@ -1,0 +1,52 @@
+<!-- Page title -->
+[[!meta title="Version 2.03. - Feature and Bug Fix Release"]]
+
+Version 2.03.
+===============
+
+* List of important/interesting changes
+* And [[!toggle text="more"]]
+
+[[!toggleable text="""
+Features
+-----------------------
+
+* List new features worth mentioning here in one line.
+
+### New Feature Worth a Paragraph or Two
+
+Write a paragraph or two covering feature where some examples of usage are expected.
+
+<!--
+TODO: It would be nice if we could use a real session output, so we could test the examples
+- During tests, save some outputs
+-->
+
+Changes in command line
+-----------------------
+
+Describe important changes in command line tools, especially any chnages of behavior, which user must be aware of:
+
+* New options
+* Removed options
+* Use a separate page in *./doc* for larger features worth separate article, or a man page
+
+Changes in lvm.conf
+-------------------
+
+* New options.
+* Change of defaults.
+
+./configure options
+-------------------
+
+* New options and features the enable.
+
+"""]]
+
+<!-- remove the pending tag on release, remove draft tag once editing is complete -->
+[[!tag draft pending]]
+<!--
+For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
+\[[!meta date="Tue Nov 21 14:26:07 2023 +0100"]]
+-->
