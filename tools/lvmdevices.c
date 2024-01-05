@@ -161,7 +161,8 @@ static void _print_check(struct cmd_context *cmd)
 	 * end of this function.
 	 */
 	dm_list_splice(&use_new, &cmd->use_devices);
-	device_ids_read(cmd);
+	if (!device_ids_read(cmd))
+		log_debug("Failed to read the devices file.");
 	dm_list_splice(&use_old, &cmd->use_devices);
 	dm_list_init(&cmd->use_devices);
 
