@@ -759,12 +759,14 @@ const char *dev_mpath_component_wwid(struct cmd_context *cmd, struct device *dev
 		/* read /sys/block/sda/device/wwid */
 
 		if (dm_snprintf(wwid_path, sizeof(wwid_path), "%sblock/%s/device/wwid",
-       				dm_sysfs_dir(), slave_name) < 0) {
+				dm_sysfs_dir(), slave_name) < 0) {
 			log_warn("Failed to create sysfs wwid path for %s", slave_name);
 			continue;
 		}
 
-		get_sysfs_value(wwid_path, sysbuf, sizeof(sysbuf), 0);
+		if (!get_sysfs_value(wwid_path, sysbuf, sizeof(sysbuf), 0))
+			stack;
+
 		if (!sysbuf[0])
 			continue;
 
@@ -784,5 +786,3 @@ const char *dev_mpath_component_wwid(struct cmd_context *cmd, struct device *dev
 
 	return wwid;
 }
-
-

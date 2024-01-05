@@ -409,13 +409,13 @@ int get_sysfs_value(const char *path, char *buf, size_t buf_size, int error_if_n
 
 	if (!(fp = fopen(path, "r"))) {
 		if (error_if_no_value)
-			log_sys_error("fopen", path);
+			log_sys_debug("fopen", path);
 		return 0;
 	}
 
 	if (!fgets(buf, buf_size, fp)) {
 		if (error_if_no_value)
-			log_sys_error("fgets", path);
+			log_sys_debug("fgets", path);
 		goto out;
 	}
 

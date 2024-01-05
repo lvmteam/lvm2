@@ -215,7 +215,9 @@ static int _searched_devnames_exists(struct cmd_context *cmd,
 	if (pvids_ok && devs_ok)
 		ret = 1;
 out:
-	fclose(fp);
+	if (fclose(fp))
+		log_sys_debug("fclose", _searched_file);
+
 	log_debug("searched_devnames %s file pvids %d %u devs %d %u search pvids %d %u devs %d %u",
 		  ret ? "match" : "differ",
 		  pvids_count_file, pvids_hash_file, devs_count_file, devs_hash_file,
