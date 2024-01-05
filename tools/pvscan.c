@@ -18,7 +18,6 @@
 #include "lib/cache/lvmcache.h"
 #include "lib/metadata/metadata.h"
 #include "lib/label/hints.h"
-#include "lib/filters/filter.h"
 #include "lib/device/online.h"
 
 #include <dirent.h>
