@@ -1,5 +1,6 @@
 Version 2.03.24 - 
 ==================
+  Support creation of thin-pool with VDO use for its data volume.
 
 Version 2.03.23 - 21st November 2023
 ====================================
