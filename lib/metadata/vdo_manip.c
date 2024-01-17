@@ -521,7 +521,7 @@ struct logical_volume *convert_vdo_lv(struct logical_volume *lv,
 		}
 	}
 
-	if (!convert_vdo_pool_lv(lv, &vcp->vdo_params, &lv->le_count, 1, 0))
+	if (!convert_vdo_pool_lv(lv, &vcp->vdo_params, &lvc.virtual_extents, vcp->do_zero, vcp->header_size))
 		return_NULL;
 
         /* Create VDO LV with the name, we just release above */

@@ -5479,7 +5479,6 @@ static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *vdo_lv;
 	const char *vg_name = NULL;
-	uint64_t vdo_pool_header_size;
 	struct vdo_convert_params vcp = {
 		.activate = CHANGE_AEY,
 		.lv_name = arg_str_value(cmd, name_ARG, NULL),
@@ -5498,7 +5497,7 @@ static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 	} else
 		vcp.lv_name = "lvol%d";
 
-	if (!fill_vdo_target_params(cmd, &vcp.vdo_params, &vdo_pool_header_size, vg->profile))
+	if (!fill_vdo_target_params(cmd, &vcp.vdo_params, &vcp.header_size, vg->profile))
 		goto_out;
 
 	if (!get_vdo_settings(cmd, &vcp.vdo_params, NULL))

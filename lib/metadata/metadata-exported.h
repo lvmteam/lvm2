@@ -980,6 +980,7 @@ struct vdo_convert_params {
 	struct dm_vdo_target_params vdo_params; /* VDO parameters for vdoformat */
 	const char *lv_name;
 	uint32_t virtual_extents;
+	uint64_t header_size;
 	activation_change_t activate;
 	int do_zero;
 	int do_wipe_signatures; /* Used for wiping VDO backend volume */
