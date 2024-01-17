@@ -783,6 +783,7 @@ int thin_pool_set_params(struct lv_segment *seg,
 			 thin_discards_t discards,
 			 thin_zero_t zero_new_blocks)
 {
+	seg->chunk_size = chunk_size;
 	if (!recalculate_pool_chunk_size_with_dev_hints(seg->lv, seg_lv(seg, 0),
 							thin_chunk_size_calc_policy))
 		return_0;
@@ -793,7 +794,6 @@ int thin_pool_set_params(struct lv_segment *seg,
 	if ((seg->crop_metadata = crop_metadata) == THIN_CROP_METADATA_NO)
 		seg->lv->status |= LV_CROP_METADATA;
 
-	seg->chunk_size = chunk_size;
 	seg->discards = discards;
 	seg->zero_new_blocks = zero_new_blocks;
 	seg->transaction_id = 0;
