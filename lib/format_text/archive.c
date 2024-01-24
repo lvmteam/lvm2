@@ -313,7 +313,7 @@ static void _display_archive(struct cmd_context *cmd, const char *dir, struct ar
 	}
 
 	log_print(" ");
-	log_print("File:\t\t%s/%s", path, af->name);
+	log_print("File:\t\t%s", path);
 	tc.path_live = path;
 
 	fic.type = FMT_INSTANCE_PRIVATE_MDAS;
