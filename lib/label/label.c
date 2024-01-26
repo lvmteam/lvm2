@@ -769,12 +769,15 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 #define MIN_BCACHE_BLOCKS 32    /* 4MB (32 * 128KB) */
 #define MAX_BCACHE_BLOCKS 4096  /* 512MB (4096 * 128KB) */
 
-static int _setup_bcache(void)
+int label_scan_setup_bcache(void)
 {
 	struct io_engine *ioe = NULL;
 	int iomem_kb = io_memory_size();
 	int block_size_kb = (BCACHE_BLOCK_SIZE_IN_SECTORS * 512) / 1024;
 	int cache_blocks;
+
+	if (scan_bcache)
+		return 1;
 
 	cache_blocks = iomem_kb / block_size_kb;
 
@@ -909,10 +912,8 @@ int label_scan_for_pvid(struct cmd_context *cmd, char *pvid, struct device **dev
 	};
 	dev_iter_destroy(iter);
 
-	if (!scan_bcache) {
-		if (!_setup_bcache())
-			goto_out;
-	}
+	if (!label_scan_setup_bcache())
+		goto_out;
 
 	log_debug_devs("Reading labels for pvid");
 
@@ -1266,10 +1267,8 @@ int label_scan(struct cmd_context *cmd)
 	dm_list_init(&scan_devs);
 	dm_list_init(&hints_list);
 
-	if (!scan_bcache) {
-		if (!_setup_bcache())
-			return_0;
-	}
+	if (!label_scan_setup_bcache())
+		return_0;
 
 	/*
 	 * Creates a list of available devices, does not open or read any,
@@ -1505,11 +1504,9 @@ int label_scan(struct cmd_context *cmd)
  */
 int label_read_pvid(struct device *dev, int *has_pvid)
 {
-	char buf[4096] __attribute__((aligned(8)));
+	char buf[4096] __attribute__((aligned(8))) = { 0 };
 	struct label_header *lh;
 	struct pv_header *pvh;
-
-	memset(buf, 0, sizeof(buf));
 
 	if (!label_scan_open(dev))
 		return_0;
@@ -1580,10 +1577,8 @@ int label_scan_devs(struct cmd_context *cmd, struct dev_filter *f, struct dm_lis
 {
 	struct device_list *devl;
 
-	if (!scan_bcache) {
-		if (!_setup_bcache())
-			return 0;
-	}
+	if (!label_scan_setup_bcache())
+		return_0;
 
 	dm_list_iterate_items(devl, devs) {
 		if (_in_bcache(devl->dev))
@@ -1599,10 +1594,8 @@ int label_scan_devs_rw(struct cmd_context *cmd, struct dev_filter *f, struct dm_
 {
 	struct device_list *devl;
 
-	if (!scan_bcache) {
-		if (!_setup_bcache())
-			return 0;
-	}
+	if (!label_scan_setup_bcache())
+		return_0;
 
 	dm_list_iterate_items(devl, devs) {
 		if (_in_bcache(devl->dev))
@@ -1773,16 +1766,6 @@ int label_scan_dev(struct cmd_context *cmd, struct device *dev)
 
 	if (failed)
 		return 0;
-	return 1;
-}
-
-int label_scan_setup_bcache(void)
-{
-	if (!scan_bcache) {
-		if (!_setup_bcache())
-			return 0;
-	}
-
 	return 1;
 }
 
