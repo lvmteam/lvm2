@@ -189,6 +189,8 @@ struct cmd_context {
 	unsigned pvscan_recreate_hints:1;	/* enable special case hint handling for pvscan --cache */
 	unsigned scan_lvs:1;
 	unsigned wipe_outdated_pvs:1;
+	unsigned devices_file_hash_mismatch:1;
+	unsigned devices_file_hash_ignore:1;
 	unsigned enable_devices_list:1;		/* command is using --devices option */
 	unsigned enable_devices_file:1;		/* command is using devices file */
 	unsigned pending_devices_file:1;	/* command may create and enable devices file */

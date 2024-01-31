@@ -340,4 +340,6 @@
 
 #define DEFAULT_DEVICE_ID_SYSFS_DIR "/sys/"  /* trailing / to match dm_sysfs_dir() */
 
+#define DEFAULT_DEVICESFILE_BACKUP_LIMIT 50
+
 #endif				/* _LVM_DEFAULTS_H */

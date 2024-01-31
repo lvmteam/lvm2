@@ -30,6 +30,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
+#include <dirent.h>
+#include <locale.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #include <sys/sysmacros.h>
@@ -1167,6 +1169,9 @@ int device_ids_read(struct cmd_context *cmd)
 	char *idtype, *idname, *devname, *pvid, *part;
 	struct dev_use *du;
 	FILE *fp;
+	uint32_t comment_hash = 0;
+	uint32_t hash = INITIAL_CRC;
+	int ignore_hash = 0;
 	int line_error;
 	int product_uuid_found = 0;
 	int hostname_found = 0;
@@ -1197,12 +1202,32 @@ int device_ids_read(struct cmd_context *cmd)
 	}
 
 	while (fgets(line, sizeof(line), fp)) {
+
+		/* Special value for testing */
+		if (!strncmp(line, "# HASH=0", 8)) {
+			ignore_hash = 1;
+			continue;
+		}
+
+		if (!strncmp(line, "# HASH", 6)) {
+			_copy_idline_str(line, buf, sizeof(buf));
+			errno = 0;
+			comment_hash = (uint32_t)strtoul(buf, NULL, 10);
+			if (errno) {
+				log_debug("Devices file invalid hash value errno %d", errno);
+				comment_hash = 0;
+			}
+			continue;
+		}
+
 		if (line[0] == '#')
 			continue;
 
 		/* Old version wrote this but it's not used. */
 		if (!strncmp(line, "SYSTEMID", 8))
 			continue;
+
+		hash = calc_crc(hash, (uint8_t *)line, strlen(line));
 
 		if (!strncmp(line, "HOSTNAME", 8)) {
 			_copy_idline_str(line, check_id, sizeof(check_id));
@@ -1318,6 +1343,13 @@ int device_ids_read(struct cmd_context *cmd)
 	if (fclose(fp))
 		stack;
 
+	log_debug("Devices file comment hash %u calc hash %u", comment_hash, hash);
+
+	if (ignore_hash)
+		cmd->devices_file_hash_ignore = 1;
+	else if (hash != comment_hash)
+		cmd->devices_file_hash_mismatch = 1;
+
 	if (!product_uuid_found && cmd->device_ids_check_product_uuid) {
 		cmd->device_ids_refresh_trigger = 1;
 		log_debug("Devices file refresh: missing product_uuid");
@@ -1326,8 +1358,175 @@ int device_ids_read(struct cmd_context *cmd)
 		cmd->device_ids_refresh_trigger = 1;
 		log_debug("Devices file refresh: missing product_uuid and hostname");
 	}
-	
+
 	return ret;
+}
+
+#define BACKUP_NAME_LEN 35
+#define BACKUP_NAME_SIZE BACKUP_NAME_LEN+1 /* +1 null byte */
+
+static int _filter_backup_files(const struct dirent *de)
+{
+	if (strlen(de->d_name) != BACKUP_NAME_LEN)
+		return 0;
+	if (strncmp(de->d_name, "system.devices-", 15))
+		return 0;
+	return 1;
+}
+
+static void devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, time_t *tp, uint32_t df_counter)
+{
+	struct dirent *de;
+	struct dirent **namelist;
+	DIR *dir;
+	FILE *fp;
+	struct tm *tm;
+	char dirpath[PATH_MAX];
+	char path[PATH_MAX];
+	char datetime_str[48];
+	char de_date_str[16];
+	char de_time_str[16];
+	char de_count_str[16];
+	char low_name[BACKUP_NAME_SIZE];
+	uint32_t low_date, low_time, low_count;
+	uint32_t de_date, de_time, de_count;
+	unsigned int backup_limit, backup_count, remove_count;
+	int sort_count;
+	int dir_fd;
+	int i;
+
+	/* Skip backup with --devicesfile <name>, only back up default system.devices. */
+	if (cmd->devicesfile)
+		return;
+	if (!(backup_limit = (unsigned int)find_config_tree_int(cmd, devices_devicesfile_backup_limit_CFG, NULL)))
+		return;
+	if (dm_snprintf(dirpath, sizeof(dirpath), "%s/devices/backup/", cmd->system_dir) < 0)
+		return;
+	if (!dm_create_dir(dirpath))
+		return;
+	if ((dir = opendir(dirpath)) < 0)
+		return;
+
+	tm = localtime(tp);
+	strftime(datetime_str, sizeof(datetime_str), "%Y%m%d.%H%M%S", tm);
+
+	/* system.devices-YYYYMMDD.HHMMSS.000N (fixed length 35) */
+	if (dm_snprintf(path, sizeof(path), "%s/devices/backup/system.devices-%s.%04u",
+			cmd->system_dir, datetime_str, df_counter) < 0)
+		return;
+
+	if (!(fp = fopen(path, "w+"))) {
+		log_error("Failed to create backup file %s", path);
+		return;
+	}
+	if (fputs(fc, fp) < 0) {
+		log_error("Failed to write backup file %s", path);
+		fclose(fp);
+		goto out;
+	}
+	if (fputs(fb, fp) < 0) {
+		log_error("Failed to write backup file %s", path);
+		fclose(fp);
+		goto out;
+	}
+	if (fflush(fp) < 0) {
+		log_error("Failed to write backup file %s", path);
+		fclose(fp);
+		goto out;
+	}
+	if (fsync(fileno(fp)) < 0) {
+		log_error("Failed to sync backup file %s", path);
+		fclose(fp);
+		goto out;
+	}
+	if (fclose(fp))
+		stack;
+
+	log_debug("Wrote backup %s", path);
+
+	/* Possibly remove old backup files per configurable limit on backup files. */
+
+	backup_count = 0;
+	low_date = 0;
+	low_time = 0;
+	low_count = 0;
+	memset(low_name, 0, sizeof(low_name)); /* oldest backup file name */
+
+	while ((de = readdir(dir))) {
+		if (de->d_name[0] == '.')
+			continue;
+		if (strlen(de->d_name) != BACKUP_NAME_LEN)
+			continue;
+
+		memset(de_date_str, 0, sizeof(de_date_str));
+		memset(de_time_str, 0, sizeof(de_time_str));
+		memset(de_count_str, 0, sizeof(de_count_str));
+
+		/*
+		 * Save the oldest backup file name.
+ 		 * system.devices-YYYYMMDD.HHMMSS.NNNN
+		 * 12345678901234567890123456789012345 (len 35)
+		 * date YYYYMMDD is 8 chars 16-23
+		 * time HHMMSS is 6 chars 25-30
+		 * count NNNN is 4 chars 32-35
+		 */
+		memcpy(de_date_str, de->d_name+15, 8);
+		memcpy(de_time_str, de->d_name+24, 6);
+		memcpy(de_count_str, de->d_name+31, 4);
+
+		de_date = (uint32_t)strtoul(de_date_str, NULL, 10);
+		de_time = (uint32_t)strtoul(de_time_str, NULL, 10);
+		de_count = (uint32_t)strtoul(de_count_str, NULL, 10);
+
+		if (!low_date ||
+		    (de_date < low_date) ||
+		    (de_date == low_date && de_time < low_time) ||
+		    (de_date == low_date && de_time == low_time && de_count < low_count)) {
+			strncpy(low_name, de->d_name, sizeof(low_name));
+			low_date = de_date;
+			low_time = de_time;
+			low_count = de_count;
+		}
+		backup_count++;
+	}
+
+	if (backup_count <= backup_limit)
+		goto out;
+
+	remove_count = backup_count - backup_limit;
+
+	dir_fd = dirfd(dir);
+
+	/* The common case removes the oldest file and can avoid sorting. */
+	if (remove_count == 1 && low_name[0]) {
+		log_debug("Remove backup %s", low_name);
+		unlinkat(dir_fd, low_name, 0);
+		goto out;
+	}
+
+	/* Remove the n oldest files by sorting system.devices-*. */
+	setlocale(LC_COLLATE, "C"); /* Avoid sorting by locales */
+	sort_count = scandir(dirpath, &namelist, _filter_backup_files, alphasort);
+	setlocale(LC_COLLATE, "");
+	if (sort_count < 0) {
+		log_error("Failed to sort backup devices files.");
+		goto out;
+	}
+
+	log_debug("Limit backup %u found %u sorted %d removing %u.",
+		  backup_limit, backup_count, sort_count, remove_count);
+
+	for (i = 0; i < sort_count; i++) {
+		if (remove_count) {
+			log_debug("Remove backup %s", namelist[i]->d_name);
+			unlinkat(dir_fd, namelist[i]->d_name, 0);
+			remove_count--;
+		}
+		free(namelist[i]);
+	}
+	free(namelist);
+out:
+	closedir(dir);
 }
 
 int device_ids_write(struct cmd_context *cmd)
@@ -1335,15 +1534,21 @@ int device_ids_write(struct cmd_context *cmd)
 	char dirpath[PATH_MAX];
 	char tmppath[PATH_MAX];
 	char version_buf[VERSION_LINE_MAX] = {0};
-	FILE *fp;
-	int dir_fd;
+	char fc[1024];		/* devices file comments (buf of commented lines) */
+	char *fb = NULL;	/* devices file contents (buf of uncommented lines) */
+	FILE *fp = NULL;
+	int dir_fd = -1;
 	time_t t;
 	struct dev_use *du;
 	const char *devname;
 	const char *pvid;
 	uint32_t df_major = 0, df_minor = 0, df_counter = 0;
+	uint32_t hash = 0;
+	int names_len = 0;
+	int len, num, pos;
+	int fb_size, fb_bytes, fc_bytes;
 	int file_exists;
-	int ret = 1;
+	int ret = 0;
 
 	if (!cmd->enable_devices_file && !cmd->pending_devices_file)
 		return 1;
@@ -1385,6 +1590,14 @@ int device_ids_write(struct cmd_context *cmd)
 		cmd->enable_devices_file = 1;
 	}
 
+	/* Total length of all devnames and idnames, used to estimate file size. */
+	dm_list_iterate_items(du, &cmd->use_devices) {
+		if (du->devname)
+			names_len += strlen(du->devname);
+		if (du->idname)
+			names_len += strlen(du->idname);
+	}
+
 	if (test_mode())
 		return 1;
 
@@ -1401,46 +1614,59 @@ int device_ids_write(struct cmd_context *cmd)
 		}
 	}
 
-	if (dm_snprintf(dirpath, sizeof(dirpath), "%s/devices", cmd->system_dir) < 0) {
-		ret = 0;
-		goto out;
-	}
+	if (dm_snprintf(dirpath, sizeof(dirpath), "%s/devices", cmd->system_dir) < 0)
+		goto_out;
 
-	if (dm_snprintf(tmppath, sizeof(tmppath), "%s_new", cmd->devices_file_path) < 0) {
-		ret = 0;
-		goto out;
-	}
+	if (dm_snprintf(tmppath, sizeof(tmppath), "%s_new", cmd->devices_file_path) < 0)
+		goto_out;
 
 	(void) unlink(tmppath); /* in case a previous file was left */
 
 	if (!(fp = fopen(tmppath, "w+"))) {
-		log_warn("Cannot open tmp devices_file to write.");
-		ret = 0;
+		log_warn("Cannot open to write %s.", tmppath);
 		goto out;
 	}
 
-	if ((dir_fd = open(dirpath, O_RDONLY)) < 0) {
-		if (fclose(fp))
-                        log_sys_debug("fclose", tmppath);
-		ret = 0;
+	if ((dir_fd = open(dirpath, O_RDONLY)) < 0)
+		goto_out;
+
+	/*
+	 * Estimate the size of the new system.devices:
+	 * names_len is the length of all devnames and idnames,
+	 * 256 bytes for PRODUCT_UUID/HOSTNAME and VERSION lines,
+	 * 128 bytes per device entry for other fields.
+	 */
+	fb_size = names_len + 256 + (128 * dm_list_size(&cmd->use_devices));
+
+	if (!(fb = malloc(fb_size))) {
+		log_error("Failed to allocate buffer size %d for devices file.", fb_size);
 		goto out;
 	}
 
-	t = time(NULL);
-
-	fprintf(fp, "# LVM uses devices listed in this file.\n");
-	fprintf(fp, "# Created by LVM command %s pid %d at %s", cmd->name, getpid(), ctime(&t));
+	len = fb_size;
+	pos = 0;
 
 	/* if product_uuid is included, then hostname is unnecessary */
 	if (cmd->product_uuid && cmd->device_ids_check_product_uuid)
-		fprintf(fp, "PRODUCT_UUID=%s\n", cmd->product_uuid);
+		num = snprintf(fb + pos, len - pos, "PRODUCT_UUID=%s\n", cmd->product_uuid);
 	else if (cmd->hostname && cmd->device_ids_check_hostname)
-		fprintf(fp, "HOSTNAME=%s\n", cmd->hostname);
+		num = snprintf(fb + pos, len - pos, "HOSTNAME=%s\n", cmd->hostname);
+
+	if (num >= len - pos) {
+		log_error("Failed to write buffer for devices file content.");
+		goto out;
+	}
+	pos += num;
 
 	if (dm_snprintf(version_buf, VERSION_LINE_MAX, "VERSION=%u.%u.%u", DEVICES_FILE_MAJOR, DEVICES_FILE_MINOR, df_counter+1) < 0)
-		stack;
-	else
-		fprintf(fp, "%s\n", version_buf);
+		goto_out;
+
+	num = snprintf(fb + pos, len - pos, "%s\n", version_buf);
+	if (num >= len - pos) {
+		log_error("Failed to write buffer for devices file content.");
+		goto out;
+	}
+	pos += num;
 
 	/* as if we had read this version in case we want to write again */
 	memset(_devices_file_version, 0, sizeof(_devices_file_version));
@@ -1457,33 +1683,83 @@ int device_ids_write(struct cmd_context *cmd)
 			pvid = du->pvid;
 
 		if (du->part) {
-			fprintf(fp, "IDTYPE=%s IDNAME=%s DEVNAME=%s PVID=%s PART=%d\n",
-				idtype_to_str(du->idtype) ?: ".",
-				du->idname ?: ".", devname, pvid, du->part);
+			num = snprintf(fb + pos, len - pos, "IDTYPE=%s IDNAME=%s DEVNAME=%s PVID=%s PART=%d\n",
+					idtype_to_str(du->idtype) ?: ".",
+					du->idname ?: ".", devname, pvid, du->part);
 		} else {
-			fprintf(fp, "IDTYPE=%s IDNAME=%s DEVNAME=%s PVID=%s\n",
-				idtype_to_str(du->idtype) ?: ".",
-				du->idname ?: ".", devname, pvid);
+			num = snprintf(fb + pos, len - pos, "IDTYPE=%s IDNAME=%s DEVNAME=%s PVID=%s\n",
+					idtype_to_str(du->idtype) ?: ".",
+					du->idname ?: ".", devname, pvid);
 		}
+		if (num >= len - pos) {
+			log_error("Failed to write buffer for devices file content.");
+			goto out;
+		}
+		pos += num;
 	}
+	fb_bytes = pos;
+	fb[fb_bytes] = '\0';
 
-	if (fflush(fp))
-		stack;
-	if (fclose(fp))
-		stack;
+	if (!cmd->devices_file_hash_ignore)
+		hash = calc_crc(INITIAL_CRC, (const uint8_t *)fb, fb_bytes);
+
+	t = time(NULL);
+
+	num = snprintf(fc, sizeof(fc),
+			"# LVM uses devices listed in this file.\n" \
+			"# Created by LVM command %s pid %d at %s" \
+			"# HASH=%u\n",
+			cmd->name, getpid(), ctime(&t), hash);
+
+	if (num >= sizeof(fc)) {
+		log_error("Failed to write buffer for devices file content.");
+		goto out;
+	}
+	fc_bytes = num;
+	fc[fc_bytes] = '\0';
+
+	if (fputs(fc, fp) < 0) {
+		log_error("Failed to write devices file header.");
+		goto out;
+	}
+	if (fputs(fb, fp) < 0) {
+		log_error("Failed to write devices file.");
+		goto out;
+	}
+	if (fflush(fp) < 0)
+		goto_out;
+	if (fsync(fileno(fp)) < 0)
+		goto_out;
+	if (fclose(fp) < 0)
+		goto_out;
+
+	fp = NULL;
 
 	if (rename(tmppath, cmd->devices_file_path) < 0) {
-		log_error("Failed to replace devices file errno %d", errno);
-		ret = 0;
+		log_error("Failed to replace devices file.");
+		goto out;
 	}
 
 	if (fsync(dir_fd) < 0)
 		stack;
 	if (close(dir_fd) < 0)
 		stack;
+	dir_fd = -1;
 
-	log_debug("Wrote devices file %s", version_buf);
+	ret = 1;
+
+	log_debug("Wrote devices file %s hash %u hashed size %u total size %u",
+		  version_buf, hash, fb_bytes, fb_bytes + fc_bytes);
+
+	devices_file_backup(cmd, fc, fb, &t, df_counter+1);
+
 out:
+	if (fb)
+		free(fb);
+	if (fp)
+		fclose(fp);
+	if (dir_fd > 0)
+		close(dir_fd);
 	return ret;
 }
 
@@ -3005,14 +3281,29 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 	/* FIXME: for wrong devname cases, wait to write new until device_ids_search? */
 
 	/*
-	 * try lock and device_ids_write(), the update is not required and will
-	 * be done by a subsequent command if it's not done here.
+	 * If an update is needed and allowed, then try lock and
+	 * device_ids_write(). The update is not required and will be done by a
+	 * subsequent command if it's not done here.
 	 */
-	if (update_file && noupdate) {
-		log_debug("Validated device ids: invalid=%d, update disabled.", cmd->device_ids_invalid);
-	} else if (update_file) {
-		log_debug("Validated device ids: invalid=%d, trying to update devices file.", cmd->device_ids_invalid);
-		_device_ids_update_try(cmd);
+
+	if (update_file) {
+		if (noupdate)
+			log_debug("Validated device ids: invalid=%d, update disabled.", cmd->device_ids_invalid);
+		else {
+			log_debug("Validated device ids: invalid=%d, trying to update devices file.", cmd->device_ids_invalid);
+			_device_ids_update_try(cmd);
+		}
+	} else if (cmd->devices_file_hash_mismatch) {
+		/*
+		 * The file was edited externally since lvm last wrote it, so the hash should be
+		 * updated and the file backed up.
+		 */
+		if (noupdate)
+			log_debug("Validated device ids: hash mismatch, update disabled.");
+		else {
+			log_debug("Validated device ids: hash mismatch, trying to update devices file.");
+			_device_ids_update_try(cmd);
+		}
 	} else {
 		log_debug("Validated device ids: invalid=%d, no update needed.", cmd->device_ids_invalid);
 	}

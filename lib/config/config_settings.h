@@ -292,6 +292,14 @@ cfg(devices_devicesfile_CFG, "devicesfile", devices_CFG_SECTION, CFG_DEFAULT_COM
 	"This should not be used to select a non-system devices file.\n"
 	"The --devicesfile option is intended for alternative devices files.\n")
 
+cfg(devices_devicesfile_backup_limit_CFG, "devicesfile_backup_limit", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_DEVICESFILE_BACKUP_LIMIT, vsn(2, 3, 23), NULL, 0, NULL,
+	"The max number of backup files to keep in /etc/lvm/devices/backup.\n"
+	"LVM creates a backup of the devices file each time a new\n"
+	"version is created, or each time a modification is detected.\n"
+	"When the max number of backups is reached, the oldest are\n"
+	"removed to remain at the limit. Set to 0 to disable backups.\n"
+	"Only the system devices file is backed up.\n")
+
 cfg(devices_search_for_devnames_CFG, "search_for_devnames", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_SEARCH_FOR_DEVNAMES, vsn(2, 3, 12), NULL, 0, NULL,
 	"Look outside of the devices file for missing devname entries.\n"
 	"A devname entry is used for a device that does not have a stable\n"

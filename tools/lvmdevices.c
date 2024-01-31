@@ -749,7 +749,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		}
 
 		if (arg_is_set(cmd, update_ARG)) {
-			if (update_needed || !dm_list_empty(&found_devs)) {
+			if (update_needed || !dm_list_empty(&found_devs) || cmd->devices_file_hash_mismatch) {
 				if (!device_ids_write(cmd))
 					goto_bad;
 				log_print("Updated devices file to version %s", devices_file_version());
@@ -760,12 +760,22 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 			/*
 			 * --check exits with an error if the devices file
 			 * needs updates, i.e. running --update would make
-			 * changes.
+			 * changes to the devices entries.
 			 */
 			if (update_needed) {
 				log_error("Updates needed for devices file.");
 				goto bad;
 			}
+
+			/*
+			 * If only the hash comment would be updated, it isn't
+			 * considered a "real" update for purposes of the
+			 * --check exit code, since no device entries would be
+			 * changed (although --update would lead to a new
+			 * file version with the updated hash comment.)
+			 */
+			if (cmd->devices_file_hash_mismatch)
+				log_print("Hash update needed for devices file.");
 		}
 		goto out;
 	}
