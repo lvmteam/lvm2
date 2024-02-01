@@ -457,55 +457,12 @@ bad:
 
 void online_dir_setup(struct cmd_context *cmd)
 {
-	struct stat st;
-	int rv;
-
-	if (!stat(DEFAULT_RUN_DIR, &st))
-		goto do_pvs;
-
-	log_debug("Creating run_dir.");
-	dm_prepare_selinux_context(DEFAULT_RUN_DIR, S_IFDIR);
-	rv = mkdir(DEFAULT_RUN_DIR, 0755);
-	dm_prepare_selinux_context(NULL, 0);
-
-	if ((rv < 0) && stat(DEFAULT_RUN_DIR, &st))
-		log_error_pvscan(cmd, "Failed to create %s %d", DEFAULT_RUN_DIR, errno);
-
-do_pvs:
-	if (!stat(PVS_ONLINE_DIR, &st))
-		goto do_vgs;
-
-	log_debug("Creating pvs_online_dir.");
-	dm_prepare_selinux_context(PVS_ONLINE_DIR, S_IFDIR);
-	rv = mkdir(PVS_ONLINE_DIR, 0755);
-	dm_prepare_selinux_context(NULL, 0);
-
-	if ((rv < 0) && stat(PVS_ONLINE_DIR, &st))
-		log_error_pvscan(cmd, "Failed to create %s %d", PVS_ONLINE_DIR, errno);
-
-do_vgs:
-	if (!stat(VGS_ONLINE_DIR, &st))
-		goto do_lookup;
-
-	log_debug("Creating vgs_online_dir.");
-	dm_prepare_selinux_context(VGS_ONLINE_DIR, S_IFDIR);
-	rv = mkdir(VGS_ONLINE_DIR, 0755);
-	dm_prepare_selinux_context(NULL, 0);
-
-	if ((rv < 0) && stat(VGS_ONLINE_DIR, &st))
-		log_error_pvscan(cmd, "Failed to create %s %d", VGS_ONLINE_DIR, errno);
-
-do_lookup:
-	if (!stat(PVS_LOOKUP_DIR, &st))
-		return;
-
-	log_debug("Creating pvs_lookup_dir.");
-	dm_prepare_selinux_context(PVS_LOOKUP_DIR, S_IFDIR);
-	rv = mkdir(PVS_LOOKUP_DIR, 0755);
-	dm_prepare_selinux_context(NULL, 0);
-
-	if ((rv < 0) && stat(PVS_LOOKUP_DIR, &st))
-		log_error_pvscan(cmd, "Failed to create %s %d", PVS_LOOKUP_DIR, errno);
+	if (!dir_create_recursive(PVS_ONLINE_DIR, 0755))
+		stack;
+	if (!dir_create_recursive(VGS_ONLINE_DIR, 0755))
+		stack;
+	if (!dir_create_recursive(PVS_LOOKUP_DIR, 0755))
+		stack;
 }
 
 void online_lookup_file_remove(const char *vgname)

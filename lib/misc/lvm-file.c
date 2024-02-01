@@ -141,6 +141,57 @@ int dir_exists(const char *path)
 	return 1;
 }
 
+int dir_create(const char *path, int mode)
+{
+	int r;
+
+	log_debug("Creating directory %s.", path);
+
+	dm_prepare_selinux_context(path, S_IFDIR);
+	r = mkdir(path, mode);
+	dm_prepare_selinux_context(NULL, 0);
+
+	if (r == 0)
+		return 1;
+
+	if (errno == EEXIST) {
+		if (dir_exists(path))
+			return 1;
+
+		log_error("Path %s is not a directory.", path);
+	} else
+		log_sys_error("mkdir", path);
+
+	return 0;
+}
+
+int dir_create_recursive(const char *path, int mode)
+{
+	int r = 0;
+	char *orig, *s;
+
+	orig = s = strdup(path);
+	if (!s) {
+		log_error("Failed to duplicate directory path %s.", path);
+		return 0;
+	}
+
+	while ((s = strchr(s, '/')) != NULL) {
+		*s = '\0';
+		if (*orig && !dir_exists(orig) && !dir_create(orig, mode))
+			goto_out;
+		*s++ = '/';
+	}
+
+	if (!dir_exists(path) && !dir_create(path, mode))
+		goto_out;
+	r = 1;
+out:
+	free(orig);
+
+	return r;
+}
+
 void sync_dir(const char *file)
 {
 	int fd;
