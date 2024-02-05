@@ -1145,7 +1145,7 @@ arg(activevolumegroups_ARG, 'A', "activevolumegroups", 0, 0, 0,
 arg(allpvs_ARG, 'A', "allpvs", 0, 0, 0,
     "#pvs\n"
     "Show information about PVs outside the devices file.\n"
-    "Combine with with -a|--all to include devices that are not PVs.\n"
+    "Combine with -a|--all to include devices that are not PVs.\n"
     "#pvscan\n"
     "Show information about PVs outside the devices file.\n"
     "Displays the device ID for PVs included in the devices file.\n")
