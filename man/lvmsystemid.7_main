@@ -197,7 +197,9 @@ See
 and
 .BR systemd-machine-id-setup (1)
 to check if machine-id is available on the host.
-(appmachineid is recommended in place of machineid.)
+(appmachineid is recommended in place of machineid in order to prevent
+the machineid from leaking outside the machine, since it is considered
+private.)
 .sp
 .I lvm.conf
 .nf
