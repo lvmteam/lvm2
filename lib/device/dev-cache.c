@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <locale.h>
+#include <time.h>
 /* coverity[unnecessary_header] needed for MuslC */
 #include <sys/file.h>
 
@@ -1812,7 +1813,51 @@ static int _setup_devices_file_dmeventd(struct cmd_context *cmd)
 	(void) dm_strncpy(cmd->devices_file_path, path, sizeof(cmd->devices_file_path));
 	return 1;
 }
-	
+
+/*
+ * When lvm.conf use_devicesfile=0, then an existing system.devices
+ * is renamed to system.devices-unused.<date>.<time>.  Because,
+ * if lvm.conf is later changed to use_devicesfile=1, then the
+ * old system.devices file would immediately be used again, and
+ * the old file may not longer be correct due to changes to the
+ * system while it was disabled.
+ */
+static void devices_file_rename_unused(struct cmd_context *cmd)
+{
+	char path[PATH_MAX];
+	char path2[PATH_MAX];
+	char datetime_str[48] = {0};
+	const char *filename;
+	time_t t;
+	struct tm *tm;
+	struct stat st;
+
+	filename = find_config_tree_str(cmd, devices_devicesfile_CFG, NULL);
+
+	if (!filename || !strlen(filename))
+		return;
+
+	if (dm_snprintf(path, sizeof(path), "%s/devices/%s", cmd->system_dir, filename) < 0)
+		return;
+
+	if (stat(path, &st))
+		return;
+
+	t = time(NULL);
+	if (!(tm = localtime(&t)))
+		return;
+	strftime(datetime_str, sizeof(datetime_str), "%Y%m%d.%H%M%S", tm);
+
+	if (dm_snprintf(path2, sizeof(path2), "%s/devices/%s-unused.%s", cmd->system_dir, filename, datetime_str) < 0)
+		return;
+
+	if (rename(path, path2) < 0) {
+		stack;
+		return;
+	}
+	log_debug("Devices file moved to %s", path2);
+}
+
 int setup_devices_file(struct cmd_context *cmd)
 {
 	char dirpath[PATH_MAX];
@@ -1848,8 +1893,15 @@ int setup_devices_file(struct cmd_context *cmd)
 		}
 	}
 
-	if (!cmd->enable_devices_file)
+	if (!cmd->enable_devices_file) {
+		struct dm_config_tree *cft;
+		/* rename unused system.devices to system.devices.unused.<date>.<time> */
+		if (!cmd->devicesfile &&
+		    (cft = get_config_tree_by_source(cmd, CONFIG_MERGED_FILES)) &&
+		    !find_config_bool(cmd, cft, devices_use_devicesfile_CFG))
+			devices_file_rename_unused(cmd);
 		return 1;
+	}
 
 	if (dm_snprintf(dirpath, sizeof(dirpath), "%s/devices", cmd->system_dir) < 0) {
 		log_error("Failed to copy devices dir path");
@@ -1873,6 +1925,7 @@ int setup_devices_file(struct cmd_context *cmd)
 		log_error("Failed to copy devices file path");
 		return 0;
 	}
+
 	return 1;
 }
 
