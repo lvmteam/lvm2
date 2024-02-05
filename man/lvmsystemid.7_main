@@ -192,12 +192,8 @@ global {
 .B machineid
 .br
 The content of /etc/machine-id is used as the system ID if available.
-See
-.BR machine-id (5)
-and
-.BR systemd-machine-id-setup (1)
-to check if machine-id is available on the host.
-(appmachineid is recommended in place of machineid.)
+(appmachineid is recommended to avoid exposing the confidential
+machine-id.)
 .sp
 .I lvm.conf
 .nf
