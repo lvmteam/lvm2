@@ -621,6 +621,9 @@
 /* The path to 'modprobe', if available. */
 #undef MODPROBE_CMD
 
+/* The path to kernel modules. */
+#undef MODULES_PATH
+
 /* Define to 1 to include code that uses dbus notification. */
 #undef NOTIFYDBUS_SUPPORT
 

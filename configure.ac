@@ -1615,6 +1615,17 @@ AC_ARG_WITH(tmpfilesdir,
 	    AS_HELP_STRING([--with-tmpfilesdir=DIR],
 			   [install configuration files for management of volatile files and directories in DIR [PREFIX/lib/tmpfiles.d]]),
 			   tmpfilesdir=$withval, tmpfilesdir='${prefix}/lib/tmpfiles.d')
+
+################################################################################
+dnl - Where to look for modules.builtin file for a kernel - most typically in /lib/modules/
+AC_MSG_CHECKING([for kernel modules directory])
+AC_ARG_WITH(modulesdir,
+	    AS_HELP_STRING([--with-modulesdir=DIR],
+			   [Dir to look for file `uname -r`/modules.builtin [/lib/modules]]),
+			   [modulesdir=$withval], [modulesdir="/lib/modules"])
+AC_DEFINE_UNQUOTED(MODULES_PATH, ["$modulesdir"], [The path to kernel modules.])
+AC_MSG_RESULT([$modulesdir])
+
 ################################################################################
 dnl -- Ensure additional headers required
 AS_IF([test "$READLINE" = "yes"], [
@@ -1946,6 +1957,7 @@ AC_SUBST(kerneldir)
 AC_SUBST(kernelvsn)
 AC_SUBST(libexecdir)
 AC_SUBST(missingkernel)
+AC_SUBST(modulesdir)
 AC_SUBST(systemdsystemunitdir)
 AC_SUBST(systemdutildir)
 AC_SUBST(tmpdir)

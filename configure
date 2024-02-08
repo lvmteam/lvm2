@@ -655,6 +655,7 @@ udev_prefix
 udevdir
 tmpfilesdir
 tmpdir
+modulesdir
 missingkernel
 kernelvsn
 kerneldir
@@ -1009,6 +1010,7 @@ with_udev_prefix
 with_udevdir
 with_systemdsystemunitdir
 with_tmpfilesdir
+with_modulesdir
 with_dmeventd_pidfile
 with_dmeventd_path
 with_dmeventd_exit_on_path
@@ -1820,6 +1822,8 @@ Optional Packages:
   --with-tmpfilesdir=DIR  install configuration files for management of
                           volatile files and directories in DIR
                           [PREFIX/lib/tmpfiles.d]
+  --with-modulesdir=DIR   Dir to look for file `uname -r`/modules.builtin
+                          [/lib/modules]
   --with-dmeventd-pidfile=PATH
                           dmeventd pidfile [PID_DIR/dmeventd.pid]
   --with-dmeventd-path=PATH
@@ -15468,6 +15472,25 @@ else $as_nop
   tmpfilesdir='${prefix}/lib/tmpfiles.d'
 fi
 
+
+################################################################################
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for kernel modules directory" >&5
+printf %s "checking for kernel modules directory... " >&6; }
+
+# Check whether --with-modulesdir was given.
+if test ${with_modulesdir+y}
+then :
+  withval=$with_modulesdir; modulesdir=$withval
+else $as_nop
+  modulesdir="/lib/modules"
+fi
+
+
+printf "%s\n" "#define MODULES_PATH \"$modulesdir\"" >>confdefs.h
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $modulesdir" >&5
+printf "%s\n" "$modulesdir" >&6; }
+
 ################################################################################
 if test "$READLINE" = "yes"
 then :
@@ -16150,6 +16173,7 @@ AIO_LIBS=${AIO_LIBS:--laio}
 
 
 ################################################################################
+
 
 
 

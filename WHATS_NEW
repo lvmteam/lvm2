@@ -1,5 +1,6 @@
 Version 2.03.24 - 
 ==================
+  Add configure --with-modulesdir to select kernel modules directory.
   Support creation of thin-pool with VDO use for its data volume.
 
 Version 2.03.23 - 21st November 2023
