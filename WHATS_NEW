@@ -1,5 +1,6 @@
 Version 2.03.24 - 
 ==================
+  Check for cache policy module presence in kernel's builtin modules file.
   Add configure --with-modulesdir to select kernel modules directory.
   Support creation of thin-pool with VDO use for its data volume.
 

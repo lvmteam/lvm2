@@ -563,6 +563,43 @@ int lvm_dm_prefix_check(int major, int minor, const char *prefix)
 	return dev_manager_check_prefix_dm_major_minor(major, minor, prefix);
 }
 
+/* Search modules.builtin file for built-in kernel module */
+static int _check_modules_builtin(struct cmd_context *cmd, const char *target)
+{
+	FILE *fp;
+	char *line = NULL;
+	size_t len;
+	int r = 0;
+	char path[PATH_MAX];
+
+	if (dm_snprintf(path, sizeof(path), "%s/%s/modules.builtin",
+			MODULES_PATH, cmd->kernel_vsn) < 0) {
+		log_debug("Modules path %s/%s/modules.builtin is too long.",
+			  MODULES_PATH, cmd->kernel_vsn);
+		return 0;
+	}
+
+	if (!(fp = fopen(path, "r"))) {
+		if (errno != ENOENT)
+			log_sys_debug("fopen", path);
+		return 0;
+	}
+
+	while (getline(&line, &len, fp) > 0)
+		if (strstr(line, target)) {
+			log_debug("Found %s as built-in kernel module.", target);
+			r = 1;
+			break;
+		}
+
+	free(line);
+
+	if (fclose(fp))
+		log_sys_debug("fclose", path);
+
+	return r;
+}
+
 int module_present(struct cmd_context *cmd, const char *target_name)
 {
 	int ret = 0;
@@ -584,6 +621,9 @@ int module_present(struct cmd_context *cmd, const char *target_name)
 			log_debug_activation("Module directory %s exists.", path);
 			return 1;
 		}
+
+		if (path[i] == '/' && _check_modules_builtin(cmd, path + i + 1))
+			return 1;
 	}
 
 #ifdef MODPROBE_CMD
