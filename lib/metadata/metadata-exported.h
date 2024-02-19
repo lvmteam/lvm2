@@ -1380,8 +1380,9 @@ int wipe_cache_pool(struct logical_volume *cache_pool_lv);
 struct lv_status_vdo {
 	struct dm_pool *mem;
 	struct dm_vdo_status *vdo;
-	uint64_t data_blocks_used;	/* grabbed from /sys/kvdo */
-	uint64_t logical_blocks_used;	/* grabbed from /sys/kvdo */
+	/* grabbed from DM stats message, /sys/block/dm-/vdo or /sys/kvdo */
+	uint64_t data_blocks_used;
+	uint64_t logical_blocks_used;
 	dm_percent_t usage;
 	dm_percent_t saving;
 	dm_percent_t data_usage;

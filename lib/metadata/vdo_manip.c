@@ -217,10 +217,12 @@ int parse_vdo_pool_status(struct dm_pool *mem, const struct logical_volume *vdo_
 	status->vdo = result.status;
 
 	if ((result.status->operating_mode == DM_VDO_MODE_NORMAL) &&
-	    _sysfs_get_kvdo_value(dm_name, dminfo, "statistics/data_blocks_used",
-				  &status->data_blocks_used) &&
-	    _sysfs_get_kvdo_value(dm_name, dminfo, "statistics/logical_blocks_used",
-				  &status->logical_blocks_used)) {
+            (status->data_blocks_used ||
+	     _sysfs_get_kvdo_value(dm_name, dminfo, "statistics/data_blocks_used",
+				   &status->data_blocks_used)) &&
+	    (status->logical_blocks_used ||
+	     _sysfs_get_kvdo_value(dm_name, dminfo, "statistics/logical_blocks_used",
+				   &status->logical_blocks_used))) {
 		status->usage = dm_make_percent(result.status->used_blocks,
 						result.status->total_blocks);
 		status->saving = dm_make_percent(status->logical_blocks_used - status->data_blocks_used,
