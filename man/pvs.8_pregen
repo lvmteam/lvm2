@@ -142,7 +142,7 @@ by LVM, i.e. they are not PVs.
 \fB-A\fP|\fB--allpvs\fP
 .br
 Show information about PVs outside the devices file.
-Combine with with -a|--all to include devices that are not PVs.
+Combine with -a|--all to include devices that are not PVs.
 .
 .HP
 \fB--binary\fP

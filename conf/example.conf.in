@@ -135,6 +135,16 @@ devices {
 	# This configuration option has an automatic default value.
 	# devicesfile = "system.devices"
 
+	# Configuration option devices/devicesfile_backup_limit.
+	# The max number of backup files to keep in /etc/lvm/devices/backup.
+	# LVM creates a backup of the devices file each time a new
+	# version is created, or each time a modification is detected.
+	# When the max number of backups is reached, the oldest are
+	# removed to remain at the limit. Set to 0 to disable backups.
+	# Only the system devices file is backed up.
+	# This configuration option has an automatic default value.
+	# devicesfile_backup_limit = 50
+
 	# Configuration option devices/search_for_devnames.
 	# Look outside of the devices file for missing devname entries.
 	# A devname entry is used for a device that does not have a stable
@@ -1387,8 +1397,9 @@ global {
 	#     Use an LVM-specific derivation of the local machine-id as the
 	#     system ID. See 'man machine-id'.
 	#   machineid
-	#     Use the contents of the machine-id file to set the system ID
-	#     (appmachineid is recommended.)
+	#     Use the contents of the machine-id file to set the system ID.
+	#     (appmachineid is recommended to avoid exposing the confidential
+	#     machine-id.)
 	#   file
 	#     Use the contents of another file (system_id_file) to set the
 	#     system ID.
