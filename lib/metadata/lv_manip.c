@@ -9587,8 +9587,11 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		/* Cache pool cannot be actived and zeroed */
 		log_very_verbose("Cache pool is prepared.");
 	} else if (lv_is_thin_volume(lv)) {
-		/* For snapshot, suspend active thin origin first */
-		if (origin_lv && lv_is_thin_volume(origin_lv) && lv_is_active(origin_lv)) {
+		/* Optimize the case when taking a snapshot within same pool and thin origin
+		 * is an active LV, so we can pass thin message with suspend/resume of this LV. */
+		if (origin_lv && lv_is_thin_volume(origin_lv) &&
+		    (first_seg(origin_lv)->pool_lv == pool_lv) &&
+		    lv_is_active(origin_lv)) {
 			if (!(ret = suspend_lv_origin(cmd, origin_lv))) {
 				log_error("Failed to suspend thin snapshot origin %s.",
 					  display_lvname(origin_lv));
