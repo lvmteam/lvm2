@@ -1867,8 +1867,10 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 	 * each of its respective snapshots.  The origin itself may
 	 * also need to be monitored if it is a mirror, for example,
 	 * so fall through to process it afterwards.
+	 * Before monitoring snapshots verify origin is active as with
+	 * external origin only read-only -real device can be active.
 	 */
-	if (!laopts->origin_only && lv_is_origin(lv))
+	if (!laopts->origin_only && lv_is_origin(lv) && lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
 		dm_list_iterate_safe(snh, snht, &lv->snapshot_segs)
 			if (!monitor_dev_for_events(cmd, dm_list_struct_base(snh,
 				struct lv_segment, origin_list)->cow, NULL, monitor)) {
