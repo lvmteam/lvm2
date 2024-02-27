@@ -88,6 +88,13 @@ snapshot LV
 created from ThinPoolLV
 .br
 appears as a snapshot of another LV after creation
+.TP
+ExternalOriginLV
+.br
+external origin LV
+.br
+read-only LV used for unprovisioned blocks of a thin LV
+.br
 .
 .SH THIN USAGE
 .
@@ -252,8 +259,8 @@ User can preset default behavior with
 Convert existing thick LV (linear, stripe,...) to thin LV with move of
 existing data to thin pool and using thin LV from such thin pool.
 Once the volume is converted, user is using it like ordinary thin-pool.
-Note: Conversion cannot be reverted and thin volume cannot be reverted
-back to thick LV type.
+Note: Conversion cannot be reverted and the thin volume cannot be reverted
+back to the thick LV type.
 .P
 .B lvconvert --type thin VG/ThickLV
 .P
@@ -272,16 +279,16 @@ Convert LV to a thin pool with chunk size 256KiB.
   thick        vg Vwi-a-tz-- 12,00m thick_tpool0        100,00            0
   thick_tpool0 vg twi---tz-- 12,00m                     100,00 10,94 256,00k
 .
-.SS \n+[step]. Create thin-pool with compression and deduplication
+.SS \n+[step]. Create thin pool with compression and deduplication
 .
-Create a new thin-pool with the use of VDO layer for compression and
+Create a new thin pool with the use of VDO layer for compression and
 deduplication of stored data.
 .P
 .B lvcreate --type thin-pool --pooldatavdo y VG/PoolLV
 .P
 .I Example
 .br
-Create a 10G CompressedPool thin-pool with VDO data volume whose
+Create a 10G CompressedPool thin pool with VDO data volume whose
 VDO slab size is 4096 MiB.
 .br
 .nf
@@ -289,16 +296,16 @@ VDO slab size is 4096 MiB.
     --vdosettings 'slab_size_mb=4096' VG/CompressedPool
 .fi
 .
-.SS \n+[step]. Convert an LV into a compressed deduplicated thin-pool
+.SS \n+[step]. Convert an LV into a compressed deduplicated thin pool
 .
-Convert an existing LV (linear, stripe,...) to the thinpool whose
+Convert an existing LV (linear, stripe,...) to the thin pool whose
 data volume is using VDO layer for compression and deduplication.
 .P
 .B lvconvert --type thin-pool --pooldatavdo y VG/LV
 .P
 .I Example
 .br
-Convert existing BigVolume LV into a compressed thin-pool.
+Convert existing BigVolume LV into a compressed thin pool.
 .br
 # lvconvert --type thin-pool --pooldatavdo y VG/BigVolume
 .
@@ -1163,13 +1170,20 @@ Cropping should be enabled only when compatibility is required.
 .
 .SS Create a thin snapshot of an external, read only LV
 .
-Thin snapshots are typically taken of other thin LVs or other
-thin snapshot LVs within the same thin pool.  It is also possible
-to take thin snapshots of external, read only LVs.  Writes to the
-snapshot are stored in the thin pool, and the external LV is used
-to read unwritten parts of the thin snapshot.
+Thin snapshots are typically taken of other thin LVs within the same thin pool.
+But it is also possible to create thin snapshot of an external LV
+(linear, stripe, thin in different thin pool, ...).
+Only read only inactive volumes can be used as an external origin.
+Writes to such thin volumes are then stored in its thin pool,
+and unwritten parts are served from the external origin volume.
+External origins can be actived in read only mode afterwards
+and used for many thin volumes.
 .P
 .B lvcreate -n SnapLV -s VG/ExternalOriginLV --thinpool VG/ThinPoolLV
+.P
+Alternative syntax:
+.P
+.B lvcreate --type thin -n NewThinLV --thinpool VG/NewThinPoolLV VG/ThinEOriginLV
 .P
 .I Example
 .nf
@@ -1185,15 +1199,15 @@ to read unwritten parts of the thin snapshot.
 .
 .SS Convert a standard LV to a thin LV with an external origin
 .
-A new thin LV can be created and given the name of an existing
-standard LV.  At the same time, the existing LV is converted to a
-read only external LV with a new name.  Unwritten portions of the
-thin LV are read from the external LV.
-The new name given to the existing LV can be specified with
---originname, otherwise the existing LV will be given a default
-name, e.g. lvol#.
+A new thin LV replaces existing LV and at the same time,
+the existing LV is converted to a new created read only
+external origin LV whose name can be given with --originname.
+When not specified a default name is in form lvol#.
+Unwritten portions for this thin LV are read from the external origin LV.
+When thin LV is removed, external origin LV can be again use read write
+mode, thus such conversion can be seen as a snapshot of such volume.
 .P
-Convert ExampleLV into a read only external LV with the new name
+Convert ExampleLV into a read only external origin LV with the new name
 NewExternalOriginLV, and create a new thin LV that is given the previous
 name of ExampleLV.
 .P
@@ -1216,6 +1230,27 @@ name of ExampleLV.
   LV              VG          Attr       LSize   Pool  Origin
   lv_example      vg          Vwi-a-tz--  10.00g pool0 lv_external
   lv_external     vg          ori-------  10.00g
+.P
+.fi
+Remove thin LV and restore back the original volume lv_example.
+.P
+.I Example
+.nf
+# lvremove -f vg/lv_example
+.P
+# lvs
+  LV              VG          Attr       LSize   Pool  Origin
+  lv_external     vg          -ri------- 10,00g
+.P
+# lvchange --permission rw vg/lv_external
+.P
+# lvrename vg/lv_external vg/lv_example
+.P
+# lvchange -ay vg/lv_example
+.P
+# lvs
+  LV              VG          Attr       LSize   Pool  Origin
+  lv_external     vg          -wi-a----- 10,00g
 .fi
 .
 .SS Single step thin pool LV creation
