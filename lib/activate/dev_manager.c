@@ -65,7 +65,6 @@ struct dev_manager {
 	int flush_required;
 	int activation;                 /* building activation tree */
 	int suspend;			/* building suspend tree */
-	unsigned track_external_lv_deps;
 	unsigned track_pending_delete;
 	unsigned track_pvmove_deps;
 
@@ -2775,16 +2774,11 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 #endif
 	}
 
-	if (origin_only && dm->activation && dm->track_external_lv_deps &&
-	    lv_is_external_origin(lv)) {
+	if (dm->activation && lv_is_external_origin(lv)) {
 		/* Find possible users of external origin lv */
-		dm->track_external_lv_deps = 0; /* avoid recursion */
 		dm_list_iterate_items(sl, &lv->segs_using_this_lv)
-			/* Match only external_lv users */
-			if ((sl->seg->external_lv == lv) &&
-			    !_add_lv_to_dtree(dm, dtree, sl->seg->lv, 1))
+			if (!_add_dev_to_dtree(dm, dtree, sl->seg->lv, lv_layer(sl->seg->lv)))
 				return_0;
-		dm->track_external_lv_deps = 1;
 	}
 
 	if (lv_is_thin_pool(lv)) {
@@ -2891,8 +2885,10 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 
 	/* Add any LVs used by segments in this LV */
 	dm_list_iterate_items(seg, &lv->segments) {
-		if (seg->external_lv && dm->track_external_lv_deps &&
-		    !_add_lv_to_dtree(dm, dtree, seg->external_lv, 1)) /* stack */
+		if (seg->external_lv &&
+		    !_add_lv_to_dtree(dm, dtree, seg->external_lv,
+				      /* For origin LV check for complete device tree */
+				      lv_is_origin(seg->external_lv) ? 0 : 1)) /* stack */
 			return_0;
 		if (seg->log_lv &&
 		    !_add_lv_to_dtree(dm, dtree, seg->log_lv, 0))
@@ -2909,7 +2905,6 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 				return_0;
 		}
 		if (seg->pool_lv &&
-		    (lv_is_cache_pool(seg->pool_lv) || lv_is_cache_vol(seg->pool_lv) || dm->track_external_lv_deps) &&
 		    /* When activating and not origin_only detect linear 'overlay' over pool */
 		    !_add_lv_to_dtree(dm, dtree, seg->pool_lv, dm->activation ? origin_only : 1))
 			return_0;
@@ -3289,23 +3284,28 @@ static int _add_new_external_lv_to_dtree(struct dev_manager *dm,
 					 struct lv_activate_opts *laopts)
 {
 	struct seg_list *sl;
+	char *dlid;
+	struct dm_tree_node *dnode;
 
-	/* Do not want to recursively add externals again */
-	if (!dm->track_external_lv_deps)
+	if (!(dlid = build_dm_uuid(dm->mem, external_lv, lv_layer(external_lv))))
+		return_0;
+
+	/* We've already processed this node if it already has a context ptr */
+	if ((dnode = dm_tree_find_node_by_uuid(dtree, dlid)) &&
+	    dm_tree_node_get_context(dnode)) {
+		/* Skip repeated invocation of external lv processing */
+		log_debug_activation("Skipping users for already added external origin LV %s.",
+				     display_lvname(external_lv));
 		return 1;
-
-	/*
-	 * Any LV can have only 1 external origin, so we will
-	 * process all LVs related to this LV, and we want to
-	 * skip repeated invocation of external lv processing
-	 */
-	dm->track_external_lv_deps = 0;
+	}
 
 	log_debug_activation("Adding external origin LV %s and all active users.",
 			     display_lvname(external_lv));
-
+	/* If there is active origin LV, add whole origin device, otherwise only -layer */
 	if (!_add_new_lv_to_dtree(dm, dtree, external_lv, laopts,
-				  lv_layer(external_lv)))
+				  (lv_is_origin(external_lv) &&
+				   _cached_dm_info(dm->mem, dtree, external_lv, NULL))
+				  ? NULL : lv_layer(external_lv)))
 		return_0;
 
 	/*
@@ -3314,9 +3314,8 @@ static int _add_new_external_lv_to_dtree(struct dev_manager *dm,
 	 * also an old-snapshot to external origin.
 	 */
 	dm_list_iterate_items(sl, &external_lv->segs_using_this_lv)
-		if ((sl->seg->external_lv == external_lv) &&
-		    /* Add only active layered devices (also avoids loop) */
-		    _cached_dm_info(dm->mem, dtree, sl->seg->lv,
+		/* Add only active layered devices (also avoids loop) */
+		if (_cached_dm_info(dm->mem, dtree, sl->seg->lv,
 				    lv_layer(sl->seg->lv)) &&
 		    !_add_new_lv_to_dtree(dm, dtree, sl->seg->lv,
 					  laopts, lv_layer(sl->seg->lv)))
@@ -3324,8 +3323,6 @@ static int _add_new_external_lv_to_dtree(struct dev_manager *dm,
 
 	log_debug_activation("Finished adding external origin LV %s and all active users.",
 			     display_lvname(external_lv));
-
-	dm->track_external_lv_deps = 1;
 
 	return 1;
 }
@@ -3957,7 +3954,6 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 	/* Some targets may build bigger tree for activation */
 	dm->activation = ((action == PRELOAD) || (action == ACTIVATE));
 	dm->suspend = (action == SUSPEND_WITH_LOCKFS) || (action == SUSPEND);
-	dm->track_external_lv_deps = 1;
 
 	/* ATM do not use caching for anything else then striped target.
 	 * And also skip for CLEAN action */
