@@ -2039,7 +2039,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 }
 
 struct detached_lv_data {
-	const struct logical_volume *lv_pre;
+	const struct volume_group *vg_pre;
 	struct lv_activate_opts *laopts;
 	int *flush_required;
 };
@@ -2049,37 +2049,14 @@ static int _preload_detached_lv(struct logical_volume *lv, void *data)
 	struct detached_lv_data *detached = data;
 	struct logical_volume *lv_pre;
 
-	/* Check and preload removed raid image leg or metadata */
-	if (lv_is_raid_image(lv)) {
-		if ((lv_pre = find_lv_in_vg_by_lvid(detached->lv_pre->vg, &lv->lvid)) &&
-		    !lv_is_raid_image(lv_pre) && lv_is_active(lv) &&
-		    !_lv_preload(lv_pre, detached->laopts, detached->flush_required))
-			return_0;
-	} else if (lv_is_raid_metadata(lv)) {
-		if ((lv_pre = find_lv_in_vg_by_lvid(detached->lv_pre->vg, &lv->lvid)) &&
-		    !lv_is_raid_metadata(lv_pre) && lv_is_active(lv) &&
-		    !_lv_preload(lv_pre, detached->laopts, detached->flush_required))
-			return_0;
-	} else if (lv_is_mirror_image(lv)) {
-		if ((lv_pre = find_lv_in_vg_by_lvid(detached->lv_pre->vg, &lv->lvid)) &&
-		    !lv_is_mirror_image(lv_pre) && lv_is_active(lv) &&
-		    !_lv_preload(lv_pre, detached->laopts, detached->flush_required))
-			return_0;
-	}
-
-	if (!lv_is_visible(lv) && (lv_pre = find_lv(detached->lv_pre->vg, lv->name)) &&
+	/* Check if the LV was 'hidden' (non-toplevel) in committed metadata
+	 * and becomes 'visible' (toplevel) in precommitted metadata */
+	if (!lv_is_visible(lv) &&
+	    (lv_pre = find_lv_in_vg_by_lvid(detached->vg_pre, &lv->lvid)) &&
 	    lv_is_visible(lv_pre)) {
+		log_debug_activation("Preloading detached hidden volume %s as visible volume %s.",
+				     display_lvname(lv), display_lvname(lv_pre));
 		if (!_lv_preload(lv_pre, detached->laopts, detached->flush_required))
-			return_0;
-	}
-
-	/* FIXME: condition here should be far more limiting to really
-	 *        detect detached LVs */
-	if ((lv_pre = find_lv(detached->lv_pre->vg, lv->name))) {
-		if (lv_is_visible(lv_pre) && lv_is_active(lv) &&
-		    !lv_is_pool(lv) &&
-		    (!lv_is_cow(lv) || !lv_is_cow(lv_pre)) &&
-		    !_lv_preload(lv_pre, detached->laopts, detached->flush_required))
 			return_0;
 	}
 
@@ -2173,7 +2150,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		/*
 		 * Search for existing LVs that have become detached and preload them.
 		 */
-		detached.lv_pre = lv_pre;
+		detached.vg_pre = lv_pre->vg;
 		detached.laopts = laopts;
 		detached.flush_required = &flush_required;
 
