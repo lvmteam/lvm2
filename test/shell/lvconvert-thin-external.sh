@@ -32,8 +32,6 @@ get_devs
 
 vgcreate "$vg" --metadatasize 128K -s 64K "${DEVICES[@]}"
 
-if test 0 -eq 1 ; then
-# FIXME: needs patch to allow inactive old-snap creation
 lvcreate -l10 -T $vg/pool
 lvcreate -an -pr --zero n -l10 --name $lv1 $vg
 lvcreate -s $vg/$lv1 --name $lv2 --thinpool $vg/pool
@@ -41,11 +39,14 @@ vgchange -an $vg
 # oldstyle read-only inactive snapshot
 lvcreate -an -s $vg/$lv2 -l10 -p r --name $lv3
 
-lvcreate -s $vg/$lv3 --name $lv4 --thinpool $vg/pool
+# cannot use snapshot as external origin
+not lvcreate -s $vg/$lv3 --name $lv4 --thinpool $vg/pool
+# using origin of snapshot is OK
+lvcreate -s $vg/$lv2 --name $lv4 --thinpool $vg/pool
 lvremove -ff $vg/$lv3
 
 lvremove -ff $vg
-fi
+
 
 #lvcreate -L20M --name orig $vg
 #lvconvert -T  --thinpool $vg/pool $vg/orig
