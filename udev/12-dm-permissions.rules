@@ -14,7 +14,6 @@
 #   DM_UDEV_RULES_VSN - DM udev rules version
 #   DM_NAME - actual DM device's name
 #   DM_UUID - UUID set for DM device (blank if not specified)
-#   DM_SUSPENDED - suspended state of DM device (0 or 1)
 #   DM_LV_NAME - logical volume name (not set if LVM device not present)
 #   DM_VG_NAME - volume group name (not set if LVM device not present)
 #   DM_LV_LAYER - logical volume layer (not set if LVM device not present)
