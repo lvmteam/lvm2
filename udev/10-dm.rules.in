@@ -48,7 +48,14 @@ ACTION!="add|change", GOTO="dm_end"
 # These flags are encoded in DM_COOKIE variable that was introduced in
 # kernel version 2.6.31. Therefore, we can use this feature with
 # kernels >= 2.6.31 only. Cookie is not decoded for remove event.
-ENV{DM_COOKIE}=="?*", IMPORT{program}="(DM_EXEC)/dmsetup udevflags $env{DM_COOKIE}"
+ENV{DM_COOKIE}!="?*", GOTO="dm_no_cookie"
+IMPORT{program}="(DM_EXEC)/dmsetup udevflags $env{DM_COOKIE}"
+
+# Store the original flag from the cookie as DM_COOKIE_DISABLE_OTHER_RULES_FLAG
+# in the udev db. DM_UDEV_DISABLE_OTHER_RULES_FLAG will be or'd with other
+# conditions for use by upper, non-dm layers.
+ENV{DM_COOKIE_DISABLE_OTHER_RULES_FLAG}="$env{DM_UDEV_DISABLE_OTHER_RULES_FLAG}"
+LABEL="dm_no_cookie"
 
 # There is no cookie set nor any flags encoded in events not originating
 # in libdevmapper so we need to detect this and try to behave correctly.
@@ -58,12 +65,13 @@ ENV{DM_UDEV_PRIMARY_SOURCE_FLAG}=="1", ENV{DM_ACTIVATION}="1", GOTO="dm_flags_do
 IMPORT{db}="DM_UDEV_DISABLE_DM_RULES_FLAG"
 IMPORT{db}="DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG"
 IMPORT{db}="DM_UDEV_DISABLE_DISK_RULES_FLAG"
-IMPORT{db}="DM_UDEV_DISABLE_OTHER_RULES_FLAG"
+IMPORT{db}="DM_COOKIE_DISABLE_OTHER_RULES_FLAG"
 IMPORT{db}="DM_UDEV_LOW_PRIORITY_FLAG"
 IMPORT{db}="DM_UDEV_DISABLE_LIBRARY_FALLBACK_FLAG"
 IMPORT{db}="DM_UDEV_PRIMARY_SOURCE_FLAG"
 IMPORT{db}="DM_UDEV_FLAG7"
 IMPORT{db}="DM_UDEV_RULES_VSN"
+ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}="$env{DM_COOKIE_DISABLE_OTHER_RULES_FLAG}"
 LABEL="dm_flags_done"
 
 # If DISK_RO is set, it's an uevent that changes the ro attribute of the device.
