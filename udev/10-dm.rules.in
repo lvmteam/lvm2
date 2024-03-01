@@ -12,6 +12,9 @@
 #   DM_NAME - actual DM device's name
 #   DM_UUID - UUID set for DM device (blank if not specified)
 #   DM_UDEV_RULES_VSN - DM udev rules version
+#   DM_UDEV_DISABLE_OTHER_RULES_FLAG - a flag that indicates that
+#      stacked layers shouldn't attempt to probe the device, and
+#      should try to import relevant properties from the udev db.
 #
 # These rules cover only basic device-mapper functionality in udev.
 #
@@ -21,6 +24,11 @@
 # For example:
 #   11-dm-lvm.rules for LVM subsystem
 #   11-dm-mpath.rules for multipath subsystem (since version 0.6.0, recommended!)
+#
+# 11-dm<subsystem_name>.rules may use other DM related properties besides
+# those listed above, like .DM_SUSPENDED. These properties are considered
+# internal to device mapper, and subject to change without notice.
+# Rules that are executed after 13-dm-disk.rules shouldn't use them.
 #
 # Even more specific rules may be required by subsystems so always
 # check subsystem's upstream repository for recent set of rules.
@@ -139,7 +147,9 @@ LABEL="dm_suspended_set"
 # possible future changes.
 # VSN 1 - original rules
 # VSN 2 - add support for synthesized events
-ENV{DM_UDEV_RULES_VSN}="2"
+# VSN 3 - use DM_UDEV_DISABLE_OTHER_RULES_FLAG as the only "API"
+#         to be consumed by non-dm rules.
+ENV{DM_UDEV_RULES_VSN}="3"
 
 ENV{DM_UDEV_DISABLE_DM_RULES_FLAG}!="1", ENV{DM_NAME}=="?*", SYMLINK+="(DM_DIR)/$env{DM_NAME}"
 
