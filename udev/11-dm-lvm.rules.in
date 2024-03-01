@@ -26,14 +26,11 @@ IMPORT{program}="(DM_EXEC)/dmsetup splitname --nameprefixes --noheadings --rows 
 # to zero any stale metadata found within the LV data area. Such stale
 # metadata could cause false claim of the LV device, keeping it open etc.
 #
-# If the NOSCAN flag is present, backup selected existing flags used to
-# disable rules, then set them firmly so those selected rules are surely skipped.
-# Restore these flags once the NOSCAN flag is dropped (which is normally any
-# uevent that follows for this LV, even an artificially generated one).
-ENV{DM_SUBSYSTEM_UDEV_FLAG0}=="1", ENV{DM_NOSCAN}="1", ENV{DM_DISABLE_OTHER_RULES_FLAG_OLD}="$env{DM_UDEV_DISABLE_OTHER_RULES_FLAG}", ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}="1"
-ENV{DM_SUBSYSTEM_UDEV_FLAG0}!="1", IMPORT{db}="DM_NOSCAN", IMPORT{db}="DM_DISABLE_OTHER_RULES_FLAG_OLD"
-ENV{DM_SUBSYSTEM_UDEV_FLAG0}!="1", ENV{DM_NOSCAN}=="1", ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}="$env{DM_DISABLE_OTHER_RULES_FLAG_OLD}", \
-				   ENV{DM_DISABLE_OTHER_RULES_FLAG_OLD}="", ENV{DM_NOSCAN}=""
+# If the NOSCAN flag is present, set DM_UDEV_DISABLE_OTHER_RULES_FLAG
+# so those selected rules are surely skipped.
+# We don't need to save and restore the previous of DM_UDEV_DISABLE_OTHER_RULES_FLAG,
+# that's taken care of in 10-dm.rules.
+ENV{DM_SUBSYSTEM_UDEV_FLAG0}=="1", ENV{DM_NOSCAN}="1", ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}="1"
 
 ENV{DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG}=="1", GOTO="lvm_end"
 
