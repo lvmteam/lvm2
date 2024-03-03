@@ -1427,6 +1427,9 @@ static int _determine_snapshot_type(struct volume_group *vg,
 				  display_lvname(pool_lv));
 			return 0;
 		}
+
+		if (!validate_thin_external_origin(origin_lv, pool_lv))
+			return_0;
 	} else {
 		if (!lv_is_thin_volume(origin_lv)) {
 			if (!seg_is_thin(lp))

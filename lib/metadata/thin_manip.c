@@ -1100,3 +1100,42 @@ uint64_t estimate_thin_pool_metadata_size(uint32_t data_extents, uint32_t extent
 {
 	return _estimate_metadata_size(data_extents, extent_size, chunk_size);
 }
+
+/* Validates whtether the LV can be used as external origin */
+int validate_thin_external_origin(const struct logical_volume *lv,
+				  const struct logical_volume *pool_lv)
+{
+	const char *type = NULL;
+
+	/*
+	 * Check if using 'external origin' or the 'normal' snapshot
+	 * within the same thin pool
+	 */
+	if (first_seg(lv)->pool_lv == pool_lv)
+		return 1;
+
+	if (!lv_is_visible(lv))
+		type = "internal";
+	else if (lv_is_cow(lv))
+		type = "snapshot";
+	else if (lv_is_pool(lv) || lv_is_vdo_pool(lv))
+		type = "pool";
+	else if (lv->status & LVM_WRITE)
+		type = "writable"; /* TODO: maybe support conversion for inactive */
+
+	if (type) {
+		log_error("Cannot use %s volume %s as external origin.",
+			  type, display_lvname(lv));
+		return 0;
+	}
+
+	if (!thin_pool_supports_external_origin(first_seg(pool_lv), lv))
+		return_0;
+
+	if (!lv_is_external_origin(lv) && lv_is_active(lv)) {
+		log_error("Cannot use active LV for the external origin.");
+		return 0; /* We can't be sure device is read-only */
+	}
+
+	return 1;
+}
