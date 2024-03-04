@@ -4363,6 +4363,12 @@ int dm_tree_node_set_thin_external_origin(struct dm_tree_node *node,
 
 	seg->external = external;
 
+	if (!external->info.minor) {
+		log_debug_activation("Delaying resume for new external origin %s.",
+				     external->name);
+		external->props.delay_resume_if_new = 1;
+	}
+
 	return 1;
 }
 
