@@ -7932,9 +7932,18 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 		return 1;
 	}
 
-	if (lv_is_external_origin(lv) &&
-	    !_lv_remove_segs_using_this_lv(cmd, lv, force, level, "external origin"))
-		return_0;
+	if (lv_is_external_origin(lv)) {
+		if (!_lv_remove_check_in_use(lv, force))
+			return_0;
+
+		if (!deactivate_lv(cmd, lv))
+			goto no_remove;
+
+		log_verbose("Removing external origin logical volume %s.", display_lvname(lv));
+
+		if (!_lv_remove_segs_using_this_lv(cmd, lv, force, level, "external origin"))
+			return_0;
+	}
 
 	if (lv_is_used_thin_pool(lv) &&
 	    !_lv_remove_segs_using_this_lv(cmd, lv, force, level, "pool"))
