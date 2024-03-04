@@ -2105,9 +2105,13 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 
 	/* Ignore origin_only unless LV is origin in both old and new metadata */
 	/* or LV is thin or thin pool volume */
-	if (!lv_is_thin_volume(lv) && !lv_is_thin_pool(lv) &&
-	    !(lv_is_origin(lv) && lv_is_origin(lv_pre)))
+	if (laopts->origin_only &&
+	    !lv_is_thin_volume(lv) && !lv_is_thin_pool(lv) &&
+	    !(lv_is_origin(lv) && lv_is_origin(lv_pre))) {
+		log_debug_activation("Not using origin only for suspend of %s.",
+				     display_lvname(lv));
 		laopts->origin_only = 0;
+	}
 
 	/*
 	 * Preload devices for the LV.
