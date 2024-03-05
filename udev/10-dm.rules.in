@@ -50,9 +50,6 @@ ACTION!="add|change", GOTO="dm_end"
 # kernels >= 2.6.31 only. Cookie is not decoded for remove event.
 ENV{DM_COOKIE}=="?*", IMPORT{program}="(DM_EXEC)/dmsetup udevflags $env{DM_COOKIE}"
 
-# Rule out easy-to-detect inappropriate events first.
-ENV{DISK_RO}=="1", GOTO="dm_disable"
-
 # There is no cookie set nor any flags encoded in events not originating
 # in libdevmapper so we need to detect this and try to behave correctly.
 # For such spurious events, regenerate all flags from current udev database content
@@ -68,6 +65,10 @@ IMPORT{db}="DM_UDEV_PRIMARY_SOURCE_FLAG"
 IMPORT{db}="DM_UDEV_FLAG7"
 IMPORT{db}="DM_UDEV_RULES_VSN"
 LABEL="dm_flags_done"
+
+# If DISK_RO is set, it's an uevent that changes the ro attribute of the device.
+# The event should be ignored as far as dm is concerned.
+ENV{DISK_RO}=="0|1", GOTO="dm_disable"
 
 # Normally, we operate on "change" events. But when coldplugging, there's an
 # "add" event present. We have to recognize this and do our actions in this
