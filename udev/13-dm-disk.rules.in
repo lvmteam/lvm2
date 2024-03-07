@@ -10,7 +10,7 @@
 # suspended.
 
 # "add" event is processed on coldplug only!
-ACTION!="add|change", GOTO="dm_end"
+ACTION=="remove", GOTO="dm_end"
 ENV{DM_UDEV_RULES_VSN}!="?*", GOTO="dm_end"
 ENV{DM_UDEV_DISABLE_DISK_RULES_FLAG}=="1", GOTO="dm_end"
 

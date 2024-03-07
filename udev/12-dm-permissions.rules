@@ -19,7 +19,7 @@
 #   DM_LV_LAYER - logical volume layer (not set if LVM device not present)
 
 # "add" event is processed on coldplug only!
-ACTION!="add|change", GOTO="dm_end"
+ACTION=="remove", GOTO="dm_end"
 ENV{DM_UDEV_RULES_VSN}!="?*", GOTO="dm_end"
 
 # A few demonstrational examples...

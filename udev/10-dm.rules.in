@@ -49,7 +49,7 @@ KERNEL!="dm-[0-9]*", GOTO="dm_end"
 # (e.g. /dev/mapper) are created in right time after a device has its table
 # loaded and is properly resumed. For this reason, direct use of dm-X nodes
 # is not recommended.
-ACTION!="add|change", GOTO="dm_end"
+ACTION=="remove", GOTO="dm_end"
 
 # Decode udev control flags and set environment variables appropriately.
 # These flags are encoded in DM_COOKIE variable that was introduced in
