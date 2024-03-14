@@ -590,6 +590,7 @@ void dm_tree_set_optional_uuid_suffixes(struct dm_tree *dtree, const char **opti
 	dtree->optional_uuid_suffixes = optional_uuid_suffixes;
 }
 
+static const char *_node_name(struct dm_tree_node *dnode);
 static struct dm_tree_node *_find_dm_tree_node_by_uuid(struct dm_tree *dtree,
 						       const char *uuid)
 {
@@ -602,12 +603,9 @@ static struct dm_tree_node *_find_dm_tree_node_by_uuid(struct dm_tree *dtree,
 	const char **suffix_list = dtree->optional_uuid_suffixes;
 
 	if ((node = dm_hash_lookup(dtree->uuids, uuid))) {
-		log_debug("Matched uuid %s in deptree.", uuid);
+		log_debug_activation("Matched uuid %s %s in deptree.", uuid, _node_name(node));
 		return node;
 	}
-
-	default_uuid_prefix = dm_uuid_prefix();
-	default_uuid_prefix_len = strlen(default_uuid_prefix);
 
 	if (suffix_list && (suffix_position = strrchr(uuid, '-'))) {
 		while ((suffix = suffix_list[i++])) {
@@ -618,7 +616,8 @@ static struct dm_tree_node *_find_dm_tree_node_by_uuid(struct dm_tree *dtree,
 			uuid_without_suffix[suffix_position - uuid] = '\0';
 
 			if ((node = dm_hash_lookup(dtree->uuids, uuid_without_suffix))) {
-				log_debug("Matched uuid %s (missing suffix -%s) in deptree.", uuid_without_suffix, suffix);
+				log_debug_activation("Matched uuid %s %s (missing suffix -%s) in deptree.",
+						     uuid_without_suffix, _node_name(node), suffix);
 				return node;
 			}
 
@@ -626,15 +625,17 @@ static struct dm_tree_node *_find_dm_tree_node_by_uuid(struct dm_tree *dtree,
 		};
 	}
 	
-	if (strncmp(uuid, default_uuid_prefix, default_uuid_prefix_len))
-		return NULL;
+	default_uuid_prefix = dm_uuid_prefix();
+	default_uuid_prefix_len = strlen(default_uuid_prefix);
 
-	if ((node = dm_hash_lookup(dtree->uuids, uuid + default_uuid_prefix_len))) {
-		log_debug("Matched uuid %s (missing prefix) in deptree.", uuid + default_uuid_prefix_len);
+	if ((strncmp(uuid, default_uuid_prefix, default_uuid_prefix_len) == 0) &&
+	    (node = dm_hash_lookup(dtree->uuids, uuid + default_uuid_prefix_len))) {
+		log_debug_activation("Matched uuid %s %s (missing prefix) in deptree.",
+				     uuid + default_uuid_prefix_len, _node_name(node));
 		return node;
 	}
 
-	log_debug("Not matched uuid %s in deptree.", uuid);
+	log_debug_activation("Not matched uuid %s in deptree.", uuid);
 	return NULL;
 }
 
