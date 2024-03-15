@@ -2696,7 +2696,7 @@ static int _lvconvert_to_thin_with_external(struct cmd_context *cmd,
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *thin_lv;
 	const char *origin_name;
-
+	int lv_was_active;
 	struct lvcreate_params lvc = {
 		.activate = CHANGE_AEY,
 		.alloc = ALLOC_INHERIT,
@@ -2709,6 +2709,7 @@ static int _lvconvert_to_thin_with_external(struct cmd_context *cmd,
 		.read_ahead = DM_READ_AHEAD_AUTO,
 		.stripes = 1,
 		.virtual_extents = lv->le_count,
+		.tags = DM_LIST_HEAD_INIT(lvc.tags),
 	};
 
 	if (!_raid_split_image_conversion(lv))
@@ -2746,13 +2747,22 @@ static int _lvconvert_to_thin_with_external(struct cmd_context *cmd,
 		return 0;
 	}
 
-	dm_list_init(&lvc.tags);
-
 	if (!thin_pool_supports_external_origin(first_seg(thinpool_lv), lv))
 		return_0;
 
 	if (!(lvc.segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_THIN)))
 		return_0;
+
+	lv_was_active = lv_is_active(lv);
+
+	/* When converted LV is not holding lock, but some other LV keeps it
+	 * 'active' i.e. being an external origin for such LV, activate this LV
+	 * so the reload of table can properly update device tree.  */
+	if (!lv_was_active && (lv != lv_lock_holder(lv)) && !activate_lv(cmd, lv)) {
+		log_error("Failed to activate %s. Conversion cannot proceed.",
+			  display_lvname(lv));
+		return 0;
+	}
 
 	/*
 	 * New thin LV needs to be created (all messages sent to pool) In this
@@ -2769,28 +2779,42 @@ static int _lvconvert_to_thin_with_external(struct cmd_context *cmd,
 	if (!(thin_lv = lv_create_single(vg, &lvc)))
 		return_0;
 
-	if (!deactivate_lv(cmd, thin_lv)) {
-		log_error("Aborting. Unable to deactivate new LV. "
-			  "Manual intervention required.");
-		return 0;
+	/*
+	 * Only for converted active thick snapshot origin leave
+	 * created thin LV active (locked) so it can be converted to new
+	 * read-only 'snapshot-origin' with the consequent update and reload.
+	 *
+	 * Note: New thin LV is read-only so it can't be written.
+	 */
+	if (!lv_is_origin(lv) || !lv_was_active) {
+		if (!deactivate_lv(cmd, thin_lv)) {
+			log_error("Aborting. Failed to deactivate new thin LV. "
+				  "Manual intervention required.");
+			return 0;
+		}
+		if (!sync_local_dev_names(cmd)) {
+			log_error("Failed to sync local devices before conversion.");
+			goto revert_new_lv;
+		}
 	}
 
 	/*
 	 * Crashing till this point will leave plain thin volume
 	 * which could be easily removed by the user after i.e. power-off
 	 */
-
 	if (!swap_lv_identifiers(cmd, thin_lv, lv)) {
-		stack;
-		goto revert_new_lv;
+		log_error("Aborting. Failed to swap identifiers. "
+			  "Manual intervention required.");
+		return 0; /* runtime corruption */
 	}
 
 	/* Preserve read-write status of original LV here */
 	thin_lv->status |= (lv->status & LVM_WRITE);
 
 	if (!attach_thin_external_origin(first_seg(thin_lv), lv)) {
-		stack;
-		goto revert_new_lv;
+		log_error("Aborting. Failed to attach external origin. "
+			  "Manual intervention required.");
+		return 0; /* runtime corruption */
 	}
 
 	if (!lv_update_and_reload(thin_lv)) {
@@ -2801,20 +2825,26 @@ static int _lvconvert_to_thin_with_external(struct cmd_context *cmd,
 	log_print_unless_silent("Converted %s to thin volume with external origin %s.",
 				display_lvname(thin_lv), display_lvname(lv));
 
-	return 1;
-
-deactivate_and_revert_new_lv:
-	if (!swap_lv_identifiers(cmd, thin_lv, lv))
-		stack;
-
-	if (!deactivate_lv(cmd, thin_lv)) {
-		log_error("Unable to deactivate failed new LV. "
-			  "Manual intervention required.");
+	/* Restore previous state */
+	if (!lv_was_active && !deactivate_lv(cmd, thin_lv)) {
+		log_error("Failed to deactivate thin LV %s.", display_lvname(thin_lv));
 		return 0;
 	}
 
+	return 1;
+
+deactivate_and_revert_new_lv:
 	if (!detach_thin_external_origin(first_seg(thin_lv)))
 		return_0;
+
+	if (!swap_lv_identifiers(cmd, thin_lv, lv))
+		return_0;
+
+	if (!deactivate_lv(cmd, thin_lv)) {
+		log_error("Failed to deactivate thin LV. "
+			  "Manual intervention required.");
+		return 0;
+	}
 
 revert_new_lv:
 	/* FIXME Better to revert to backup of metadata? */
