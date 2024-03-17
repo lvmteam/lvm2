@@ -1,5 +1,13 @@
 Version 2.03.24 - 
 ==================
+  Enhance lvconvert support for external origins stacking.
+  When swapping LV names also swap properties like hostname, time and data.
+  Fix removal of stacked external origins.
+  Lock filesystem when converting volume to read-only external origin.
+  Support external origin between different thin-pool.
+  Improve validation of acceptable volumes for external origins.
+  Reduce amount of preloaded devices for complex device trees.
+  Avoid logging problems from monitoring snapshots with inactive origins.
   Check for cache policy module presence in kernel's builtin modules file.
   Add configure --with-modulesdir to select kernel modules directory.
   Support creation of thin-pool with VDO use for its data volume.
