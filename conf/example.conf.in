@@ -241,17 +241,12 @@ devices {
 	# sysfs_scan = 1
 
 	# Configuration option devices/scan_lvs.
-	# Scan LVM LVs for layered PVs, allowing LVs to be used as PVs.
-	# When 1, LVM will detect PVs layered on LVs, and caution must be
-	# taken to avoid a host accessing a layered VG that may not belong
-	# to it, e.g. from a guest image. This generally requires excluding
-	# the LVs with device filters. Also, when this setting is enabled,
-	# every LVM command will scan every active LV on the system (unless
-	# filtered), which can cause performance problems on systems with
-	# many active LVs. When this setting is 0, LVM will not detect or
-	# use PVs that exist on LVs, and will not allow a PV to be created on
-	# an LV. The LVs are ignored using a built in device filter that
-	# identifies and excludes LVs.
+	# Allow LVM LVs to be used as PVs. When enabled, LVM commands will
+	# scan active LVs to look for other PVs. Caution is required to
+	# avoid using PVs that belong to guest images stored on LVs.
+	# When enabled, the LVs scanned should be restricted using the
+	# devices file or the filter. This option does not enable autoactivation
+	# of layered VGs, which requires editing LVM udev rules (see LVM_PVSCAN_ON_LVS.)
 	# This configuration option has an automatic default value.
 	# scan_lvs = 0
 
