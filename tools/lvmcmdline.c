@@ -1356,6 +1356,8 @@ static int _command_name_compare(const void *on1, const void *on2)
 int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
 {
 	int i;
+	const char *last_name = NULL;
+	struct command_name *cname = NULL;
 
 	/* already initialized */
 	if (_cmdline.commands)
@@ -1392,7 +1394,10 @@ int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
 
 		/* old style */
 		if (!commands[i].functions) {
-			struct command_name *cname = find_command_name(commands[i].name);
+			if (!last_name || strcmp(last_name, commands[i].name)) {
+				last_name = commands[i].name;
+				cname = find_command_name(last_name);
+			}
 			if (cname)
 				commands[i].fn = cname->fn;
 		}

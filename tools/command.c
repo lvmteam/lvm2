@@ -319,29 +319,22 @@ static void printf_hyphen(char c)
  * argv pointers point to positions in buf
  */
 
-static char *_split_line(char *buf, int *argc, char **argv, char sep)
+static void _split_line(char *buf, int *argc, char **argv, char sep)
 {
-	char *p = buf, *rp = NULL;
+	char *p = buf;
 	int i;
 
 	argv[0] = p;
 
 	for (i = 1; i < MAX_LINE_ARGC; i++) {
-		p = strchr(buf, sep);
+		p = strchr(p, sep);
 		if (!p)
 			break;
-		*p = '\0';
+		*p++ = '\0';
 
-		argv[i] = p + 1;
-		buf = p + 1;
+		argv[i] = p;
 	}
 	*argc = i;
-
-	/* we ended by hitting \0, return the point following that */
-	if (!rp)
-		rp = strchr(buf, '\0') + 1;
-
-	return rp;
 }
 
 /* convert value string, e.g. Number, to foo_VAL enum */
@@ -1440,22 +1433,18 @@ static int _copy_line(char *line, int max_line, int *position)
 	int p = *position;
 	int i = 0;
 
-	memset(line, 0, max_line);
-
-	while (1) {
-		line[i] = _command_input[p];
-		i++;
-		p++;
-
+	max_line--;
+	while (i < max_line) {
 		if (_command_input[p] == '\n') {
 			p++;
 			break;
 		}
 
-		if (i == (max_line - 1))
-			break;
+		line[i++] = _command_input[p++];
 	}
 	*position = p;
+	line[i] = 0;
+
 	return 1;
 }
 
@@ -1466,7 +1455,6 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 	char line_orig[MAX_LINE];
 	char *line_argv[MAX_LINE_ARGC];
 	const char *name;
-	char *n;
 	int line_argc;
 	int cmd_count = 0;
 	int prev_was_oo_def = 0;
@@ -1484,16 +1472,14 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 	/* Process each line of command-lines-input.h (from command-lines.in) */
 
 	while (_copy_line(line, MAX_LINE, &copy_pos)) {
-		if (line[0] == '\n')
+		if (!line[0])
 			break;
 
-		if (!strcmp(line, "---") || !strcmp(line, "--"))
-			continue;
+		if (line[0] == '-' && line[1] == '-' &&
+		    (!line[2] || (line[2] == '-' && !line[3])))
+			continue; /* "---"  or "--" */
 
-		if ((n = strchr(line, '\n')))
-			*n = '\0';
-
-		memcpy(line_orig, line, sizeof(line));
+		dm_strncpy(line_orig, line, sizeof(line_orig));
 		_split_line(line, &line_argc, line_argv, ' ');
 
 		if (!line_argc)
@@ -1544,7 +1530,7 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 		 * context of the existing command[].
 		 */
 
-		if (_is_desc_line(line_argv[0]) && !skip && cmd) {
+		if (cmd && !skip && _is_desc_line(line_argv[0])) {
 			if (cmd->desc) {
 				size_t newlen = strlen(cmd->desc) + strlen(line_orig) + 2;
 				char *newdesc = dm_pool_alloc(cmdtool->libmem, newlen);
@@ -1569,22 +1555,22 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 			continue;
 		}
 
-		if (_is_autotype_line(line_argv[0]) && !skip && cmd) {
+		if (cmd && !skip && _is_autotype_line(line_argv[0])) {
 			_add_autotype(cmdtool, cmd, line_orig);
 			continue;
 		}
 
-		if (_is_flags_line(line_argv[0]) && !skip && cmd) {
+		if (cmd && !skip && _is_flags_line(line_argv[0])) {
 			_add_flags(cmd, line_orig);
 			continue;
 		}
 
-		if (_is_rule_line(line_argv[0]) && !skip && cmd) {
+		if (cmd && !skip && _is_rule_line(line_argv[0])) {
 			_add_rule(cmdtool, cmd, line_orig);
 			continue;
 		}
 
-		if (_is_id_line(line_argv[0]) && cmd) {
+		if (cmd && _is_id_line(line_argv[0])) {
 #ifdef MAN_PAGE_GENERATOR
 			free((void*)cmd->command_id);
 #endif
@@ -1608,7 +1594,7 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 		}
 
 		/* OO: ... */
-		if (_is_oo_line(line_argv[0]) && !skip && cmd) {
+		if (cmd && !skip && _is_oo_line(line_argv[0])) {
 			__add_optional_opt_line(cmdtool, cmd, line_argc, line_argv);
 			prev_was_oo_def = 0;
 			prev_was_oo = 1;
@@ -1617,7 +1603,7 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 		}
 
 		/* OP: ... */
-		if (_is_op_line(line_argv[0]) && !skip && cmd) {
+		if (cmd && !skip && _is_op_line(line_argv[0])) {
 			_add_optional_pos_line(cmd, line_argc, line_argv);
 			prev_was_oo_def = 0;
 			prev_was_oo = 0;
@@ -1626,7 +1612,7 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 		}
 
 		/* IO: ... */
-		if (_is_io_line(line_argv[0]) && !skip && cmd) {
+		if (cmd && !skip && _is_io_line(line_argv[0])) {
 			_add_ignore_opt_line(cmdtool, cmd, line_argc, line_argv);
 			prev_was_oo = 0;
 			prev_was_op = 0;
