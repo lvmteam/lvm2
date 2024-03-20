@@ -57,7 +57,7 @@ for i in {1..50}; do
 	  *cleaner*) break;;
 	esac
 	echo "$i: Waiting for cleaner policy on $vg/$lv1"
-	sleep .01
+	sleep .03
 done
 test "$i" -ge 49 && die "Waited for cleaner policy on $vg/$lv1 too long!"
 
