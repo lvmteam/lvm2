@@ -1487,9 +1487,8 @@ int devtypes(struct cmd_context *cmd, int argc, char **argv)
 
 int report_format_init(struct cmd_context *cmd)
 {
-	int config_set = find_config_tree_node(cmd, report_output_format_CFG, NULL) != NULL;
 	const char *config_format_str = find_config_tree_str(cmd, report_output_format_CFG, NULL);
-	const char *format_str = arg_str_value(cmd, reportformat_ARG, config_set ? config_format_str : NULL);
+	const char *format_str = arg_str_value(cmd, reportformat_ARG, config_format_str);
 	int report_command_log_config_set = find_config_tree_node(cmd, log_report_command_log_CFG, NULL) != NULL;
 	int report_command_log;
 	struct report_args args = {0};
