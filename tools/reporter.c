@@ -1490,6 +1490,7 @@ int report_format_init(struct cmd_context *cmd)
 	int config_set = find_config_tree_node(cmd, report_output_format_CFG, NULL) != NULL;
 	const char *config_format_str = find_config_tree_str(cmd, report_output_format_CFG, NULL);
 	const char *format_str = arg_str_value(cmd, reportformat_ARG, config_set ? config_format_str : NULL);
+	int report_command_log_config_set = find_config_tree_node(cmd, log_report_command_log_CFG, NULL) != NULL;
 	int report_command_log;
 	struct report_args args = {0};
 	struct single_report_args *single_args;
@@ -1504,8 +1505,12 @@ int report_format_init(struct cmd_context *cmd)
 										: DM_REPORT_GROUP_SINGLE;
 	} else if (!strcmp(format_str, REPORT_FORMAT_NAME_JSON)) {
 		args.report_group_type = DM_REPORT_GROUP_JSON;
+		if (!report_command_log_config_set)
+			report_command_log = 1;
 	} else if (!strcmp(format_str, REPORT_FORMAT_NAME_JSON_STD)) {
 		args.report_group_type = DM_REPORT_GROUP_JSON_STD;
+		if (!report_command_log_config_set)
+			report_command_log = 1;
 	} else {
 		log_error("%s: unknown report format.", format_str);
 		log_error("Supported report formats: %s, %s, %s.",

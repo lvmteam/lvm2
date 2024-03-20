@@ -859,7 +859,10 @@ cfg(log_report_command_log_CFG, "report_command_log", log_CFG_SECTION, CFG_PROFI
 	"option. Use log/command_log_cols and log/command_log_sort settings\n"
 	"to define fields to display and sort fields for the log report.\n"
 	"You can also use log/command_log_selection to define selection\n"
-	"criteria used each time the log is reported.\n")
+	"criteria used each time the log is reported.\n"
+	"Note that if report/output_format (or --reporformat command line\n"
+    	"option) is set to json or json_std, then log/report_command_log=1\n"
+	"is default.\n")
 
 cfg(log_command_log_sort_CFG, "command_log_sort", log_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED | CFG_DISALLOW_INTERACTIVE, CFG_TYPE_STRING, DEFAULT_COMMAND_LOG_SORT, vsn(2, 2, 158), NULL, 0, NULL,
 	"List of columns to sort by when reporting command log.\n"
@@ -1853,8 +1856,8 @@ cfg(report_output_format_CFG, "output_format", report_CFG_SECTION, CFG_PROFILABL
         "    Compared to original \"json\" format:\n"
         "      - it does not use double quotes around numeric values,\n"
         "      - it uses 'null' for undefined numeric values,\n"
-        "      - it prints string list as proper JSON array of strings instead of a single string."
-	"\n")
+        "      - it prints string list as proper JSON array of strings instead of a single string.\n"
+	"Note that if json or json_std output format is used, then log/command_log_report=1 is default.\n")
 
 cfg(report_compact_output_CFG, "compact_output", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_REP_COMPACT_OUTPUT, vsn(2, 2, 115), NULL, 0, NULL,
 	"Do not print empty values for all report fields.\n"
