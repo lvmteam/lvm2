@@ -2046,9 +2046,12 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 			       const char *origin_name)
 {
 	struct logical_volume *org;
-	const char *snap_name = display_lvname(lv);
+	const char *snap_name;
 	uint32_t chunk_size;
 	int zero;
+
+	if (!(snap_name = dm_pool_strdup(lv->vg->vgmem, display_lvname(lv))))
+		return_0;
 
 	if (strcmp(lv->name, origin_name) == 0) {
 		log_error("Unable to use %s as both snapshot and origin.", snap_name);
