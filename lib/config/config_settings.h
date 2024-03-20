@@ -1843,7 +1843,7 @@ cfg(report_output_format_CFG, "output_format", report_CFG_SECTION, CFG_PROFILABL
 	"If there is more than one report per command, then the format\n"
 	"is applied for all reports. You can also change output format\n"
 	"directly on command line using --reportformat option which\n"
-	"has precedence over log/output_format setting.\n"
+	"has precedence over report/output_format setting.\n"
 	"Accepted values:\n"
 	"  basic\n"
 	"    Original format with columns and rows. If there is more than\n"
