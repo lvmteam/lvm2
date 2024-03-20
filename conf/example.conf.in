@@ -801,6 +801,9 @@ log {
 	# to define fields to display and sort fields for the log report.
 	# You can also use log/command_log_selection to define selection
 	# criteria used each time the log is reported.
+	# Note that if report/output_format (or --reporformat command line
+	# option) is set to json or json_std, then log/report_command_log=1
+	# is default.
 	# This configuration option has an automatic default value.
 	# report_command_log = 0
 
@@ -1989,7 +1992,7 @@ report {
 	# If there is more than one report per command, then the format
 	# is applied for all reports. You can also change output format
 	# directly on command line using --reportformat option which
-	# has precedence over log/output_format setting.
+	# has precedence over report/output_format setting.
 	# Accepted values:
 	#   basic
 	#     Original format with columns and rows. If there is more than
@@ -2003,6 +2006,7 @@ report {
 	#       - it does not use double quotes around numeric values,
 	#       - it uses 'null' for undefined numeric values,
 	#       - it prints string list as proper JSON array of strings instead of a single string.
+	# Note that if json or json_std output format is used, then log/command_log_report=1 is default.
 	# This configuration option has an automatic default value.
 	# output_format = "basic"
 
