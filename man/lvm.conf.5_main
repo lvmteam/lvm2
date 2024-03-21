@@ -156,6 +156,9 @@ Inhomogeneous arrays are supported.
 Elements must be separated by commas.
 .br
 An empty array is acceptable.
+.br
+An array with one element will be correctly interpreted if the array brackets
+are missing.
 .TP
 .BR type " = " integer | float | string
 .BR integer " = [" 0 - 9 "]*"
