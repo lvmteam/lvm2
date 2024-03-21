@@ -991,31 +991,43 @@ out:
 	return r;
 }
 
+static struct dm_tree_node *_cached_dm_tree_node(struct dm_pool *mem,
+						       struct dm_tree *dtree,
+						       const struct logical_volume *lv,
+						       const char *layer)
+{
+	struct dm_tree_node *dnode;
+	char *dlid;
+
+	if (!(dlid = build_dm_uuid(mem, lv, layer)))
+		return_NULL;
+
+	dnode = dm_tree_find_node_by_uuid(dtree, dlid);
+
+	dm_pool_free(mem, dlid);
+
+	return dnode;
+}
+
 static const struct dm_info *_cached_dm_info(struct dm_pool *mem,
 					     struct dm_tree *dtree,
 					     const struct logical_volume *lv,
 					     const char *layer)
 {
-	char *dlid;
 	const struct dm_tree_node *dnode;
 	const struct dm_info *dinfo = NULL;
 
-	if (!(dlid = build_dm_uuid(mem, lv, layer)))
-		return_NULL;
-
-	if (!(dnode = dm_tree_find_node_by_uuid(dtree, dlid)))
-		goto out;
+	if (!(dnode = _cached_dm_tree_node(mem, dtree, lv, layer)))
+		return NULL;
 
 	if (!(dinfo = dm_tree_node_get_info(dnode))) {
 		log_warn("WARNING: Cannot get info from tree node for %s.",
 			 display_lvname(lv));
-		goto out;
+		return NULL;
 	}
 
 	if (!dinfo->exists)
 		dinfo = NULL;
-out:
-	dm_pool_free(mem, dlid);
 
 	return dinfo;
 }
@@ -2726,7 +2738,6 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	struct dm_list *snh;
 	struct lv_segment *seg;
 	struct dm_tree_node *node;
-	const char *uuid;
 	const struct logical_volume *plv;
 
 	if (lv_is_pvmove(lv) && (dm->track_pvmove_deps == 2))
@@ -2789,9 +2800,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		 * and base this according to info.exists ?
 		 */
 		if (!dm->activation) {
-			if (!(uuid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
-				return_0;
-			if ((node = dm_tree_find_node_by_uuid(dtree, uuid))) {
+			if ((node = _cached_dm_tree_node(dm->mem, dtree, lv, lv_layer(lv)))) {
 				if (origin_only) {
 					struct lv_activate_opts laopts = {
 						.origin_only = 1,
@@ -2835,10 +2844,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		if (!origin_only && !dm->activation && !dm->track_pending_delete) {
 			/* Setup callback for non-activation partial tree */
 			/* Activation gets own callback when needed */
-			/* TODO: extend _cached_dm_info() to return dnode */
-			if (!(uuid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
-				return_0;
-			if ((node = dm_tree_find_node_by_uuid(dtree, uuid)) &&
+			if ((node = _cached_dm_tree_node(dm->mem, dtree, lv, lv_layer(lv))) &&
 			    !_pool_register_callback(dm, node, lv))
 				return_0;
 		}
@@ -3287,14 +3293,10 @@ static int _add_new_external_lv_to_dtree(struct dev_manager *dm,
 					 struct lv_activate_opts *laopts)
 {
 	struct seg_list *sl;
-	char *dlid;
 	struct dm_tree_node *dnode;
 
-	if (!(dlid = build_dm_uuid(dm->mem, external_lv, lv_layer(external_lv))))
-		return_0;
-
 	/* We've already processed this node if it already has a context ptr */
-	if ((dnode = dm_tree_find_node_by_uuid(dtree, dlid)) &&
+	if ((dnode = _cached_dm_tree_node(dm->mem, dtree, external_lv, lv_layer(external_lv))) &&
 	    dm_tree_node_get_context(dnode)) {
 		/* Skip repeated invocation of external lv processing */
 		log_debug_activation("Skipping users for already added external origin LV %s.",
