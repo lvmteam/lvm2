@@ -55,6 +55,13 @@ test_snap_create() {
 	mount "$DM_DEV_DIR/$vg/$lv1" "$mount_dir"
 	cp pattern1 "$mount_dir/pattern1a"
 	lvcreate -s -L 32 -n snap $vg/$lv1
+	if [ "$2" = "--cachevol" ] && [ "$1" = "cache" ]; then
+		# For cachevol ensure -cmeta will have 1 line
+		dm_table $vg-fast_cvol-cmeta | tee out
+		test "$(wc -l < out)" = 1 || {
+			die "More then 1 table line for -cmeta device"
+		}
+	fi
 	cp pattern1 "$mount_dir/pattern1b"
 	mount "$DM_DEV_DIR/$vg/snap" "$mount_dir_snap"
 	not ls "$mount_dir_snap/pattern1b"
