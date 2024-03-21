@@ -2436,8 +2436,8 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	}
 
 	if (info.exists && dm->track_pending_delete) {
-		log_debug_activation("Tracking pending delete for %s (%s).",
-				     display_lvname(lv), dlid);
+		log_debug_activation("Tracking pending delete for %s%s%s (%s).",
+				     display_lvname(lv), layer ? "-" : "", layer ? : "", dlid);
 		if (!str_list_add(dm->cmd->pending_delete_mem, &dm->cmd->pending_delete, dlid))
 			return_0;
 	}
@@ -2699,8 +2699,8 @@ static int _add_cvol_subdev_to_dtree(struct dev_manager *dm, struct dm_tree *dtr
 			return 0;
 		}
 		if (dm->track_pending_delete) {
-			log_debug_activation("Tracking pending delete for %s %s (%s).",
-					     layer, display_lvname(lv), dlid);
+			log_debug_activation("Tracking pending delete for %s-%s (%s).",
+					     display_lvname(pool_lv), layer, dlid);
 			if (!str_list_add(mem, &dm->cmd->pending_delete, dlid))
 				return_0;
 		}
