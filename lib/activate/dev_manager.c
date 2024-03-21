@@ -2886,7 +2886,8 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			if (lv_is_pending_delete(sl->seg->lv)) {
 				/* LV is referenced by 'cache pending delete LV */
 				dm->track_pending_delete = 1;
-				if (!_add_lv_to_dtree(dm, dtree, sl->seg->lv, origin_only))
+				if (!_cached_dm_tree_node(dm->mem, dtree, sl->seg->lv, lv_layer(sl->seg->lv)) &&
+				    !_add_lv_to_dtree(dm, dtree, sl->seg->lv, 0))
 					return_0;
 				dm->track_pending_delete = 0;
 			}
