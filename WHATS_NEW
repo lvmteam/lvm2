@@ -1,5 +1,6 @@
 Version 2.03.24 - 
 ==================
+  Fix table line generation for cache snapshots using cachevol.
   Enhance lvconvert support for external origins stacking.
   When swapping LV names also swap properties like hostname, time and data.
   Fix removal of stacked external origins.
