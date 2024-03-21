@@ -2702,7 +2702,7 @@ static int _add_cvol_subdev_to_dtree(struct dev_manager *dm, struct dm_tree *dtr
 	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, pool_lv->name, layer)))
 		return_0;
 
-	if (!_info(dm->cmd, name, dlid, 1, 0, 0, &info, NULL, NULL))
+	if (!_info(dm->cmd, name, dlid, 0, 0, 0, &info, NULL, NULL))
 		return_0;
 
 	if (info.exists) {
@@ -2994,7 +2994,7 @@ static char *_add_error_or_zero_device(struct dev_manager *dm, struct dm_tree *d
 				      seg->lv->name, errid)))
 		return_NULL;
 
-	if (!_info(dm->cmd, name, dlid, 1, 0, 0, &info, NULL, NULL))
+	if (!_info(dm->cmd, name, dlid, 0, 0, 0, &info, NULL, NULL))
 		return_NULL;
 
 	if (!info.exists) {
