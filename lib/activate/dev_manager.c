@@ -2744,13 +2744,6 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		/* Unused cache pool is activated as metadata */
 	}
 
-	if (lv_is_cache(lv) && (plv = (first_seg(lv)->pool_lv)) && lv_is_cache_vol(plv)) {
-		if (!_add_cvol_subdev_to_dtree(dm, dtree, lv, 0) ||
-		    !_add_cvol_subdev_to_dtree(dm, dtree, lv, 1) ||
-		    !_add_dev_to_dtree(dm, dtree, plv, lv_layer(plv)))
-			return_0;
-	}
-
 	if (!origin_only && !_add_dev_to_dtree(dm, dtree, lv, NULL))
 		return_0;
 
@@ -2850,6 +2843,15 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 				return_0;
 		}
 	}
+
+	if (lv_is_cache_vol(lv))
+		/* Cachevol with cache LV spans some extra layers -cdata, -cmeta */
+		dm_list_iterate_items(sl, &lv->segs_using_this_lv)
+			if (lv_is_cache(sl->seg->lv) &&
+			    (!_add_cvol_subdev_to_dtree(dm, dtree, sl->seg->lv, 0) ||
+			     !_add_cvol_subdev_to_dtree(dm, dtree, sl->seg->lv, 1) ||
+			     !_add_dev_to_dtree(dm, dtree, lv, lv_layer(lv))))
+				return_0;
 
 	/* Add any snapshots of this LV */
 	if (!origin_only && lv_is_origin(lv))
