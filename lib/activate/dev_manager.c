@@ -2674,13 +2674,14 @@ static int _add_cvol_subdev_to_dtree(struct dev_manager *dm, struct dm_tree *dtr
 	struct lv_segment *lvseg = first_seg(lv);
 	struct dm_info info;
 	char *name ,*dlid;
-	union lvid lvid = { { { "" } } };
-
-	memcpy(&lvid.id[0], &lv->vg->id, sizeof(struct id));
-	/* When ID is provided in form of metadata_id or data_id, otherwise use CVOL ID */
-	memcpy(&lvid.id[1],
-	       (meta_or_data && lvseg->metadata_id) ? lvseg->metadata_id :
-	       (lvseg->data_id) ? lvseg->data_id : &pool_lv->lvid.id[1], sizeof(struct id));
+	union lvid lvid = {
+		{
+			lv->vg->id,
+			/* When ID is provided in form of metadata_id or data_id, otherwise use CVOL ID */
+			(meta_or_data && lvseg->metadata_id) ? *lvseg->metadata_id :
+			(lvseg->data_id) ? *lvseg->data_id : pool_lv->lvid.id[1]
+		}
+	};
 
 	if (!(dlid = dm_build_dm_uuid(mem, UUID_PREFIX, (const char *)&lvid.s, layer)))
 		return_0;
