@@ -367,7 +367,7 @@ static int _val_str_to_num(char *str)
 
 #define MAX_LONG_OPT_NAME_LEN 32
 
-static int _opt_str_to_num(struct command *cmd, char *str)
+static int _opt_str_to_num(struct command *cmd, const char *str)
 {
 	char long_name[MAX_LONG_OPT_NAME_LEN];
 	char *p = NULL;
@@ -450,7 +450,7 @@ int command_id_to_enum(const char *str)
 
 /* "lv_is_prop" to is_prop_LVP */
 
-static int _lvp_name_to_enum(struct command *cmd, char *str)
+static int _lvp_name_to_enum(struct command *cmd, const char *str)
 {
 	int i;
 
@@ -466,7 +466,7 @@ static int _lvp_name_to_enum(struct command *cmd, char *str)
 
 /* "type" to type_LVT */
 
-static int _lvt_name_to_enum(struct command *cmd, char *str)
+static int _lvt_name_to_enum(struct command *cmd, const char *str)
 {
 	int i;
 
@@ -482,7 +482,7 @@ static int _lvt_name_to_enum(struct command *cmd, char *str)
 
 /* LV_<type> to <type>_LVT */
 
-static int _lv_to_enum(struct command *cmd, char *name)
+static int _lv_to_enum(struct command *cmd, const char *name)
 {
 	return _lvt_name_to_enum(cmd, name + 3);
 }
@@ -1208,7 +1208,7 @@ static void _add_required_line(struct cmd_context *cmdtool, struct command *cmd,
 	}
 }
 
-static void _add_flags(struct command *cmd, char *line)
+static void _add_flags(struct command *cmd, const char *line)
 {
 	if (strstr(line, "SECONDARY_SYNTAX"))
 		cmd->cmd_flags |= CMD_FLAG_SECONDARY_SYNTAX;
@@ -1216,13 +1216,9 @@ static void _add_flags(struct command *cmd, char *line)
 		cmd->cmd_flags |= CMD_FLAG_PREVIOUS_SYNTAX;
 }
 
-static void _add_autotype(struct cmd_context *cmdtool, struct command *cmd, char *line)
+static void _add_autotype(struct cmd_context *cmdtool, struct command *cmd,
+			  int line_argc, char *line_argv[])
 {
-	int line_argc;
-	char *line_argv[MAX_LINE_ARGC];
-
-	_split_line(line, &line_argc, line_argv, ' ');
-
 	if (cmd->autotype)
 		cmd->autotype2 = dm_pool_strdup(cmdtool->libmem, line_argv[1]);
 	else
@@ -1231,12 +1227,11 @@ static void _add_autotype(struct cmd_context *cmdtool, struct command *cmd, char
 
 #define MAX_RULE_OPTS 64
 
-static void _add_rule(struct cmd_context *cmdtool, struct command *cmd, char *line)
+static void _add_rule(struct cmd_context *cmdtool, struct command *cmd,
+		      int line_argc, char *line_argv[])
 {
 	struct cmd_rule *rule;
-	char *line_argv[MAX_LINE_ARGC];
-	char *arg;
-	int line_argc;
+	const char *arg;
 	int i, lvt_enum, lvp_enum;
 	int check = 0;
 
@@ -1247,8 +1242,6 @@ static void _add_rule(struct cmd_context *cmdtool, struct command *cmd, char *li
 	}
 
 	rule = &cmd->rules[cmd->rule_count++];
-
-	_split_line(line, &line_argc, line_argv, ' ');
 
 	for (i = 0; i < line_argc; i++) {
 		arg = line_argv[i];
@@ -1428,33 +1421,27 @@ static void _create_opt_names_alpha(void)
 	qsort(opt_names_alpha, ARG_COUNT, sizeof(long), _long_name_compare);
 }
 
-static int _copy_line(char *line, int max_line, int *position)
+static int _copy_line(const char **line, int max_line, int *position)
 {
-	int p = *position;
-	int i = 0;
+	size_t len;
 
-	max_line--;
-	while (i < max_line) {
-		if (_command_input[p] == '\n') {
-			p++;
-			break;
-		}
+	*line = _command_input + *position;
+	len = strlen(*line);
+	*position += len + 1;
+	if (len >= max_line)
+		return 0;
 
-		line[i++] = _command_input[p++];
-	}
-	*position = p;
-	line[i] = 0;
-
-	return 1;
+	return len;
 }
 
 int define_commands(struct cmd_context *cmdtool, const char *run_name)
 {
 	struct command *cmd = NULL;
+	const char *line_orig;
 	char line[MAX_LINE];
-	char line_orig[MAX_LINE];
 	char *line_argv[MAX_LINE_ARGC];
 	const char *name;
+	size_t line_orig_len;
 	int line_argc;
 	int cmd_count = 0;
 	int prev_was_oo_def = 0;
@@ -1471,15 +1458,12 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 
 	/* Process each line of command-lines-input.h (from command-lines.in) */
 
-	while (_copy_line(line, MAX_LINE, &copy_pos)) {
-		if (!line[0])
-			break;
-
-		if (line[0] == '-' && line[1] == '-' &&
-		    (!line[2] || (line[2] == '-' && !line[3])))
+	while ((line_orig_len = _copy_line(&line_orig, MAX_LINE, &copy_pos)) > 0) {
+		if (line_orig[0] == '-' && line_orig[1] == '-' &&
+		    (!line_orig[2] || (line_orig[2] == '-' && !line_orig[3])))
 			continue; /* "---"  or "--" */
 
-		dm_strncpy(line_orig, line, sizeof(line_orig));
+		memcpy(line, line_orig, line_orig_len + 1);
 		_split_line(line, &line_argc, line_argv, ' ');
 
 		if (!line_argc)
@@ -1532,7 +1516,7 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 
 		if (cmd && !skip && _is_desc_line(line_argv[0])) {
 			if (cmd->desc) {
-				size_t newlen = strlen(cmd->desc) + strlen(line_orig) + 2;
+				size_t newlen = strlen(cmd->desc) + line_orig_len + 2;
 				char *newdesc = dm_pool_alloc(cmdtool->libmem, newlen);
 
 				if (!newdesc) {
@@ -1556,7 +1540,7 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 		}
 
 		if (cmd && !skip && _is_autotype_line(line_argv[0])) {
-			_add_autotype(cmdtool, cmd, line_orig);
+			_add_autotype(cmdtool, cmd, line_argc, line_argv);
 			continue;
 		}
 
@@ -1566,7 +1550,7 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 		}
 
 		if (cmd && !skip && _is_rule_line(line_argv[0])) {
-			_add_rule(cmdtool, cmd, line_orig);
+			_add_rule(cmdtool, cmd, line_argc, line_argv);
 			continue;
 		}
 
