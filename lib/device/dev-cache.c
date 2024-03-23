@@ -870,7 +870,6 @@ static int _insert_dir(const char *dir)
 	if (len && path[len - 1] != '/')
 		path[len++] = '/';
 
-	setlocale(LC_COLLATE, "C"); /* Avoid sorting by locales */
 	dirent_count = scandir(dir, &dirent, NULL, alphasort);
 	if (dirent_count > 0) {
 		for (n = 0; n < dirent_count; n++) {
@@ -890,7 +889,6 @@ static int _insert_dir(const char *dir)
 			free(dirent[n]);
 		free(dirent);
 	}
-	setlocale(LC_COLLATE, "");
 
 	return r;
 }
@@ -1198,7 +1196,9 @@ void dev_cache_scan(struct cmd_context *cmd)
 
 	_cache.has_scanned = 1;
 
+	setlocale(LC_COLLATE, "C"); /* Avoid sorting by locales */
 	_insert_dirs(&_cache.dirs);
+	setlocale(LC_COLLATE, "");
 
 	if (cmd->check_devs_used)
 		(void) dev_cache_index_devs();
