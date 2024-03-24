@@ -117,8 +117,17 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 	if (!(s->raid_type = dm_pool_strndup(mem, params, pp - params - 1)))
 		goto_bad; /* memory is freed when pool is destroyed */
 
-	if (!(s->dev_health = dm_pool_strndup(mem, p, i)) || !(p = _skip_fields(p, 1))) /* health chars */
+	if (!(pp = _skip_fields(p, 1)))
 		goto_bad;
+
+	/* Raid target can actually report more then real number of legs in a case
+	 * raid legs have been removed during initial raid array resynchronization */
+	if (i > (pp - p - 1))
+		i = pp - p - 1;
+
+	if (!(s->dev_health = dm_pool_strndup(mem, p, i))) /* health chars */
+		goto_bad;
+	p = pp;
 
 	s->dev_count = i;
 	if (sscanf(p, FMTu64 "/" FMTu64, &s->insync_regions, &s->total_regions) != 2)
