@@ -66,9 +66,9 @@ char devices_file_product_uuid_orig[PATH_MAX];
 char *strdup_pvid(char *pvid)
 {
 	char *buf;
-	if (!(buf = zalloc(ID_LEN + 1)))
+	if (!(buf = malloc(ID_LEN + 1)))
 		return NULL;
-	strncpy(buf, pvid, ID_LEN);
+	(void)dm_strncpy(buf, pvid, ID_LEN + 1);
 	return buf;
 }
 
@@ -1235,7 +1235,7 @@ int device_ids_read(struct cmd_context *cmd)
 
 			/* Save original for lvmdevices output. */
 			if (!strcmp(cmd->name, "lvmdevices"))
-				strncpy(devices_file_hostname_orig, check_id, PATH_MAX-1);
+				(void)dm_strncpy(devices_file_hostname_orig, check_id, PATH_MAX);
 
 			if (!cmd->device_ids_check_hostname)
 				continue;
@@ -1255,7 +1255,7 @@ int device_ids_read(struct cmd_context *cmd)
 
 			/* Save original for lvmdevices output. */
 			if (!strcmp(cmd->name, "lvmdevices"))
-				strncpy(devices_file_product_uuid_orig, check_id, PATH_MAX-1);
+				(void)dm_strncpy(devices_file_product_uuid_orig, check_id, PATH_MAX);
 
 			if (!cmd->device_ids_check_product_uuid)
 				continue;
@@ -1482,7 +1482,7 @@ static void devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, tim
 		    (de_date < low_date) ||
 		    (de_date == low_date && de_time < low_time) ||
 		    (de_date == low_date && de_time == low_time && de_count < low_count)) {
-			strncpy(low_name, de->d_name, sizeof(low_name));
+			(void)dm_strncpy(low_name, de->d_name, sizeof(low_name));
 			low_date = de_date;
 			low_time = de_time;
 			low_count = de_count;
