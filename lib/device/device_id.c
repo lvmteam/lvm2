@@ -1404,7 +1404,7 @@ static void devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, tim
 		return;
 	if (!dm_create_dir(dirpath))
 		return;
-	if ((dir = opendir(dirpath)) < 0)
+	if (!(dir = opendir(dirpath)))
 		return;
 
 	tm = localtime(tp);
@@ -1413,11 +1413,11 @@ static void devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, tim
 	/* system.devices-YYYYMMDD.HHMMSS.000N (fixed length 35) */
 	if (dm_snprintf(path, sizeof(path), "%s/devices/backup/system.devices-%s.%04u",
 			cmd->system_dir, datetime_str, df_counter) < 0)
-		return;
+		goto_out;
 
 	if (!(fp = fopen(path, "w+"))) {
 		log_error("Failed to create backup file %s", path);
-		return;
+		goto out;
 	}
 	if (fputs(fc, fp) < 0) {
 		log_error("Failed to write backup file %s", path);
@@ -1758,7 +1758,7 @@ out:
 		free(fb);
 	if (fp)
 		fclose(fp);
-	if (dir_fd > 0)
+	if (dir_fd != -1)
 		close(dir_fd);
 	return ret;
 }
