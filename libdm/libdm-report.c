@@ -795,11 +795,11 @@ static const char *_get_field_type_name(unsigned field_type)
 static size_t _get_longest_field_id_len(const struct dm_report_field_type *fields)
 {
 	uint32_t f;
-	size_t id_len = 0;
+	size_t l, id_len = 0;
 
 	for (f = 0; fields[f].report_fn; f++)
-		if (strlen(fields[f].id) > id_len)
-			id_len = strlen(fields[f].id);
+		if ((l = strlen(fields[f].id)) > id_len)
+			id_len = l;
 
 	return id_len;
 }
@@ -810,16 +810,17 @@ static void _display_fields_more(struct dm_report *rh,
 				 int display_field_types)
 {
 	uint32_t f;
+	size_t l;
 	const struct dm_report_object_type *type;
 	const char *desc, *last_desc = "";
 
 	for (f = 0; fields[f].report_fn; f++)
-		if (strlen(fields[f].id) > id_len)
-			id_len = strlen(fields[f].id);
+		if ((l = strlen(fields[f].id)) > id_len)
+			id_len = l;
 
 	for (type = rh->types; type->data_fn; type++)
-		if (strlen(type->prefix) + 3 > id_len)
-			id_len = strlen(type->prefix) + 3;
+		if ((l = strlen(type->prefix) + 3) > id_len)
+			id_len = l;
 
 	for (f = 0; fields[f].report_fn; f++) {
 		if (!(type = _find_type(rh, fields[f].type))) {
@@ -963,16 +964,13 @@ static int _get_canonical_field_name(const char *field,
  * Both names are always null-terminated.
  */
 static int _is_same_field(const char *canonical_name1, const char *canonical_name2,
-			  const char *prefix)
+			  const char *prefix, size_t prefix_len)
 {
-	size_t prefix_len;
-
 	/* Exact match? */
 	if (!strcasecmp(canonical_name1, canonical_name2))
 		return 1;
 
 	/* Match including prefix? */
-	prefix_len = strlen(prefix) - 1;
 	if (!strncasecmp(prefix, canonical_name1, prefix_len) &&
 	    !strcasecmp(canonical_name1 + prefix_len, canonical_name2))
 		return 1;
@@ -1048,6 +1046,7 @@ static int _get_field(struct dm_report *rh, const char *field, size_t flen,
 {
 	char field_canon[DM_REPORT_FIELD_TYPE_ID_LEN];
 	uint32_t f;
+	size_t prefix_len;
 
 	if (!flen)
 		return 0;
@@ -1055,8 +1054,9 @@ static int _get_field(struct dm_report *rh, const char *field, size_t flen,
 	if (!_get_canonical_field_name(field, flen, field_canon, sizeof(field_canon), NULL))
 		return_0;
 
+	prefix_len = strlen(rh->field_prefix) - 1;
 	for (f = 0; _implicit_report_fields[f].report_fn; f++) {
-		if (_is_same_field(_implicit_report_fields[f].id, field_canon, rh->field_prefix)) {
+		if (_is_same_field(_implicit_report_fields[f].id, field_canon, rh->field_prefix, prefix_len)) {
 			*f_ret = f;
 			*implicit = 1;
 			return 1;
@@ -1064,7 +1064,7 @@ static int _get_field(struct dm_report *rh, const char *field, size_t flen,
 	}
 
 	for (f = 0; rh->fields[f].report_fn; f++) {
-		if (_is_same_field(rh->canonical_field_ids[f], field_canon, rh->field_prefix)) {
+		if (_is_same_field(rh->canonical_field_ids[f], field_canon, rh->field_prefix, prefix_len)) {
 			*f_ret = f;
 			*implicit = 0;
 			return 1;
@@ -1145,7 +1145,7 @@ static int _add_sort_key(struct dm_report *rh, uint32_t field_num, int implicit,
 static int _key_match(struct dm_report *rh, const char *key, size_t len,
 		      unsigned report_type_only)
 {
-	char key_canon[DM_REPORT_FIELD_TYPE_ID_LEN];
+	int implicit;
 	uint32_t f;
 	uint32_t flags;
 
@@ -1168,16 +1168,8 @@ static int _key_match(struct dm_report *rh, const char *key, size_t len,
 		return 0;
 	}
 
-	if (!_get_canonical_field_name(key, len, key_canon, sizeof(key_canon), NULL))
-		return_0;
-
-	for (f = 0; _implicit_report_fields[f].report_fn; f++)
-		if (_is_same_field(_implicit_report_fields[f].id, key_canon, rh->field_prefix))
-			return _add_sort_key(rh, f, 1, flags, report_type_only);
-
-	for (f = 0; rh->fields[f].report_fn; f++)
-		if (_is_same_field(rh->canonical_field_ids[f], key_canon, rh->field_prefix))
-			return _add_sort_key(rh, f, 0, flags, report_type_only);
+	if (_get_field(rh, key, len, &f, &implicit))
+		return _add_sort_key(rh, f, implicit, flags, report_type_only);
 
 	return 0;
 }
