@@ -1035,7 +1035,7 @@ prepare_devs() {
 
 	touch DEVICES
 	prepare_backing_dev $(( n * devsize + 2 * header_shift ))
-	blkdiscard "$BACKING_DEV" 2>/dev/null || true
+	test -e NO_BLKDISCARD_Z || { blkdiscard "$BACKING_DEV" 2>/dev/null || true; }
 	echo -n "## preparing $n devices..."
 
 	local size=$(( devsize * 2048 )) # sectors
