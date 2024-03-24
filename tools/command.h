@@ -37,12 +37,12 @@ struct command_name {
 	command_fn fn; /* old style */
 
 	/* union of {required,optional}_opt_args for all commands with this name */
-	int valid_args[ARG_COUNT]; /* used for getopt */
+	uint16_t valid_args[ARG_COUNT]; /* used for getopt */
 	int num_args;
 
 	/* the following are for generating help and man page output */
-	int common_options[ARG_COUNT]; /* options common to all defs */
-	int all_options[ARG_COUNT];    /* union of options from all defs */
+	uint8_t common_options[ARG_COUNT]; /* options common to all defs */
+	uint8_t all_options[ARG_COUNT];    /* union of options from all defs */
 	int variants;        /* number of command defs with this command name */
 	int variant_has_ro;  /* do variants use required_opt_args ? */
 	int variant_has_rp;  /* do variants use required_pos_args ? */
@@ -153,7 +153,7 @@ struct cmd_rule {
  * optional.
  */
 #define CMD_RO_ARGS 64          /* required opt args */
-#define CMD_OO_ARGS 150         /* optional opt args */
+#define CMD_OO_ARGS 100         /* optional opt args */
 #define CMD_RP_ARGS 8           /* required positional args */
 #define CMD_OP_ARGS 8           /* optional positional args */
 #define CMD_IO_ARGS 8           /* ignore opt args */
@@ -228,13 +228,13 @@ struct command {
 
 struct opt_name {
 	const char *name;       /* "foo_ARG" */
-	int opt_enum;           /* foo_ARG */
+	short opt_enum;           /* foo_ARG */
 	const char short_opt;   /* -f */
-	char _padding[7];
+	char _padding[1];
 	const char *long_opt;   /* --foo */
-	int val_enum;           /* xyz_VAL when --foo takes a val like "--foo xyz" */
+	short val_enum;           /* xyz_VAL when --foo takes a val like "--foo xyz" */
 	uint32_t flags;
-	uint32_t prio;
+	short prio;
 	const char *desc;
 };
 
@@ -242,7 +242,7 @@ struct opt_name {
 
 struct val_name {
 	const char *enum_name;  /* "foo_VAL" */
-	int val_enum;           /* foo_VAL */
+	short val_enum;           /* foo_VAL */
 	int (*fn) (struct cmd_context *cmd, struct arg_values *av); /* foo_arg() */
 	const char *name;       /* FooVal */
 	const char *usage;
@@ -252,7 +252,7 @@ struct val_name {
 
 struct lv_prop {
 	const char *enum_name; /* "is_foo_LVP" */
-	int lvp_enum;          /* is_foo_LVP */
+	short lvp_enum;          /* is_foo_LVP */
 	const char *name;      /* "lv_is_foo" */
 	int (*fn) (struct cmd_context *cmd, struct logical_volume *lv); /* lv_is_foo() */
 };
@@ -261,7 +261,7 @@ struct lv_prop {
 
 struct lv_type {
 	const char *enum_name; /* "foo_LVT" */
-	int lvt_enum;          /* foo_LVT */
+	short lvt_enum;          /* foo_LVT */
 	const char *name;      /* "foo" */
 	int (*fn) (struct cmd_context *cmd, struct logical_volume *lv); /* lv_is_foo() */
 };
