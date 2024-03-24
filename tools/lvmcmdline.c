@@ -1342,7 +1342,6 @@ static void _unregister_commands(void)
 	_cmdline.num_commands = 0;
 	_cmdline.command_names = NULL;
 	_cmdline.num_command_names = 0;
-	memset(&commands, 0, sizeof(commands));
 }
 
 static int _command_name_compare(const void *on1, const void *on2)
@@ -1362,8 +1361,6 @@ int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
 	/* already initialized */
 	if (_cmdline.commands)
 		return 1;
-
-	memset(&commands, 0, sizeof(commands));
 
 	/*
 	 * populate commands[] array with command definitions

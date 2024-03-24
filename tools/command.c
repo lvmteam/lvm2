@@ -1451,6 +1451,8 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 	int skip = 0;
 	int i;
 
+	memset(&commands, 0, sizeof(commands));
+
 	if (run_name && !strcmp(run_name, "help"))
 		run_name = NULL;
 
@@ -3933,8 +3935,6 @@ int main(int argc, char *argv[])
 		{"check", no_argument, 0, 'c' },
 		{0, 0, 0, 0 }
 	};
-
-	memset(&commands, 0, sizeof(commands));
 
 	if (!(stdout_buf = malloc(sz)))
 		log_error("Failed to allocate stdout buffer; carrying on with default buffering.");
