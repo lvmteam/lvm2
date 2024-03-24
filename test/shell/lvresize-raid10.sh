@@ -31,7 +31,7 @@ for deactivate in true false; do
 
 # Reduce RAID10 (2-stripes, 2-mirror)
 
-	should lvresize -y -l -2 $vg/$lv1
+	lvresize --fs ignore -y -l -2 $vg/$lv1
 
 	#check raid_images_contiguous $vg $lv1
 

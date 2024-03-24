@@ -38,8 +38,7 @@ for deactivate in true false; do
 
 	lvresize -l +2 $vg/$lv1
 
-	should lvresize -y -l -2 $vg/$lv1
-
+	lvresize --fs ignore -y -l -2 $vg/$lv1
 	#check raid_images_contiguous $vg $lv1
 
 # Extend and reduce 3-striped RAID 4/5/6/10
@@ -57,8 +56,8 @@ for deactivate in true false; do
 
 		#check raid_images_contiguous $vg $lv1
 
-		should lvresize -y -l -3 $vg/$lv2
-		should check lv_field $vg/$lv2 "seg_size" "768.00k"
+		lvresize --fs ignore -y -l -3 $vg/$lv2
+		check lv_field $vg/$lv2 "seg_size" "768.00k"
 
 		#check raid_images_contiguous $vg $lv1
 
