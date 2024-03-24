@@ -439,9 +439,11 @@ raid_leg_status() {
 
 	# Ignore inconsisten raid status 0/xxxxx idle
 	for i in {100..0} ; do
-		st=( $(dmsetup status "$1-$2") ) || die "Unable to get status of $vg/$lv1"
-		b=( $(echo "${st[6]}" | sed s:/:' ':) )
-		[ "${b[0]}" = "0" ] || {
+		st=( $(dmsetup status --noflush "$1-$2") ) || die "Unable to get status of $vg/$lv1"
+		case "${st[7]}" in
+			"resync"|"recover") [ "${st[5]}" = "$3" ] && return 0 ;;
+		esac
+		[ "${st[6]%%/*}" = "0" ] || {
 			test "${st[5]}" = "$3" || break
 			return 0
 		}
