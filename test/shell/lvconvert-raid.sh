@@ -252,13 +252,14 @@ echo "Skippen test that kills this kernel"
 *)
 lvconvert --yes -m 1 $vg/$lv1 "$dev3"
 
-# FIXME: it is unclear what should happen - older kernel
-# do use 'resync' for initial array building so then
-# we are not able to recognize difference
-# Should we check version target as react differentely ??
-# Otherwise we have problem with the above test case.
-should lvconvert --yes -m 0 $vg/$lv1 "$dev1"
+# Cannot remove origin 1st. leg while synchronizing
+not lvconvert --yes -m 0 $vg/$lv1 "$dev1"
+
 aux enable_dev "$dev2"
+aux wait_for_sync $vg $lv1
+
+# When raid1 is synchronized, 1st. leg can be removed
+lvconvert --yes -m 0 $vg/$lv1 "$dev1"
 ;;
 esac
 lvremove -ff $vg
