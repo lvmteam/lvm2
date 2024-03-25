@@ -1,5 +1,11 @@
 Version 1.02.198 - 
 ===================
+  Increase DM_UDEV_RULES_VSN to 3 to indicate changed udev rules.
+  Rename DM_NOSCAN to .DM_NOSCAN so it's not stored in udev db.
+  Rename DM_SUSPENDED to .DM_SUSPENDED so it's not stored in udev db.
+  Do not import DM_UDEV_DISABLE_OTHER_RULES_FLAG from db in 10-dm-disk.rules.
+  Test DISK_RO after importing properties from db in 10-dm.rules.
+  Also import ID_FS_TYPE in 13-dm-disk.rules from db if needed.
 
 Version 1.02.197 - 21st November 2023
 =====================================

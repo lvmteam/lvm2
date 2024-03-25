@@ -1,5 +1,6 @@
 Version 2.03.24 - 
 ==================
+  Don't import DM_UDEV_DISABLE_OTHER_RULES_FLAG in LVM rules, DM rules cover it.
   Fix table line generation for cache snapshots using cachevol.
   Enhance lvconvert support for external origins stacking.
   When swapping LV names also swap properties like hostname, time and data.
