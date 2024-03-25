@@ -178,11 +178,11 @@ static int _lvresize_params(struct cmd_context *cmd, struct lvresize_params *lp)
 
 	if (set_extents_and_size) {
 		if ((lp->extents = arg_uint_value(cmd, extents_ARG, 0))) {
-			lp->sign = arg_sign_value(cmd, extents_ARG, 0);
+			lp->sign = arg_sign_value(cmd, extents_ARG, SIGN_NONE);
 			lp->percent = arg_percent_value(cmd, extents_ARG, PERCENT_NONE);
 		}
 		if ((lp->size = arg_uint64_value(cmd, size_ARG, 0))) {
-			lp->sign = arg_sign_value(cmd, size_ARG, 0);
+			lp->sign = arg_sign_value(cmd, size_ARG, SIGN_NONE);
 			lp->percent = PERCENT_NONE;
 		}
 		if (lp->size && lp->extents) {
