@@ -194,10 +194,10 @@ ifneq ("$(GENHTML)", "")
 lcov:
 	$(RM) -rf $(LCOV_REPORTS_DIR)
 	$(MKDIR_P) $(LCOV_REPORTS_DIR)
-	$(LCOV) --capture --directory $(top_builddir) --ignore-errors source \
+	$(LCOV) --capture --directory $(top_builddir) --ignore-errors source,negative \
 		--output-file $(LCOV_REPORTS_DIR)/out.info
 	-test ! -s $(LCOV_REPORTS_DIR)/out.info || \
-		$(GENHTML) -o $(LCOV_REPORTS_DIR) --ignore-errors source \
+		$(GENHTML) -o $(LCOV_REPORTS_DIR) --ignore-errors source,negative \
 		$(LCOV_REPORTS_DIR)/out.info
 endif
 
