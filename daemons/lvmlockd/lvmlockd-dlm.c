@@ -637,7 +637,7 @@ int lm_convert_dlm(struct lockspace *ls, struct resource *r,
 	struct lm_dlm *lmd = (struct lm_dlm *)ls->lm_data;
 	struct rd_dlm *rdd = (struct rd_dlm *)r->lm_data;
 	struct dlm_lksb *lksb = &rdd->lksb;
-	uint32_t mode;
+	int mode;
 	uint32_t flags = 0;
 	int rv;
 
@@ -661,8 +661,10 @@ int lm_convert_dlm(struct lockspace *ls, struct resource *r,
 		flags |= LKF_VALBLK;
 	}
 
-	mode = to_dlm_mode(ld_mode);
-
+	if ((mode = to_dlm_mode(ld_mode)) < 0) {
+		log_error("lm_convert_dlm invalid mode %d", ld_mode);
+		return -EINVAL;
+	}
 	if (daemon_test)
 		return 0;
 
