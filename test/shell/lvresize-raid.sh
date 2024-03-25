@@ -55,9 +55,10 @@ for deactivate in true false; do
 		check lv_field $vg/$lv2 "seg_size" "1.50m"
 
 		#check raid_images_contiguous $vg $lv1
-
-		lvresize --fs ignore -y -l -3 $vg/$lv2
-		check lv_field $vg/$lv2 "seg_size" "768.00k"
+		if aux have_raid 1 9 0 ; then
+			lvresize --fs ignore -y -l -3 $vg/$lv2
+			check lv_field $vg/$lv2 "seg_size" "768.00k"
+		fi
 
 		#check raid_images_contiguous $vg $lv1
 

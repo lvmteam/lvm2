@@ -29,9 +29,10 @@ for deactivate in true false; do
 
 	#check raid_images_contiguous $vg $lv1
 
-# Reduce RAID10 (2-stripes, 2-mirror)
-
-	lvresize --fs ignore -y -l -2 $vg/$lv1
+	# Reduce RAID10 (2-stripes, 2-mirror)
+	NOT_RESIZE=
+	have_raid 1 9 0 || NOT_RESIZE=not  # missing shrink support
+	$NOT lvresize --fs ignore -y -l -2 $vg/$lv1
 
 	#check raid_images_contiguous $vg $lv1
 
