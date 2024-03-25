@@ -88,7 +88,9 @@ static int _get_crypt_path(dev_t lv_devt, char *lv_path, char *crypt_path)
 		ret = 1;
 		break;
 	}
-	closedir(dr);
+	if (closedir(dr))
+		log_sys_debug("closedir", holders_path);
+
 	if (ret)
 		log_debug("Found holder %s of %s.", crypt_path, lv_path);
 	else
