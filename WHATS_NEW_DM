@@ -1,5 +1,7 @@
 Version 1.02.198 - 
 ===================
+  Persist udev db for DM devs on cleanup used in initrd to rootfs transition.
+  Process synthetic udev events other than 'add/change' as 'change' events.
   Increase DM_UDEV_RULES_VSN to 3 to indicate changed udev rules.
   Rename DM_NOSCAN to .DM_NOSCAN so it's not stored in udev db.
   Rename DM_SUSPENDED to .DM_SUSPENDED so it's not stored in udev db.
