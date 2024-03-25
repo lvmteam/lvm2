@@ -152,85 +152,86 @@ static const int _num_base_commands = DM_ARRAY_SIZE(_base_commands);
  * We have only very simple switches ATM.
  */
 enum {
-	READ_ONLY = 0,
-	ADD_NODE_ON_CREATE_ARG,
+	GID_ARG = 'G',
+	MODE_ARG = 'M',
+	SORT_ARG = 'O',
+	SELECT_ARG = 'S',
+	UID_ARG = 'U',
+	COLS_ARG = 'c',
+	FORCE_ARG = 'f',
+	HELP_ARG = 'h',
+	MAJOR_ARG = 'j',
+	MINOR_ARG = 'm',
+	NOTABLE_ARG = 'n',
+	OPTIONS_ARG = 'o',
+	READ_ONLY = 'r',
+	UUID_ARG = 'u',
+	VERBOSE_ARG = 'v',
+	YES_ARG = 'y',
+
+	ADD_NODE_ON_CREATE_ARG = 128,
 	ADD_NODE_ON_RESUME_ARG,
 	ALIAS_ARG,
 	ALL_DEVICES_ARG,
 	ALL_PROGRAMS_ARG,
 	ALL_REGIONS_ARG,
-	AREA_ARG,
 	AREAS_ARG,
+	AREA_ARG,
 	AREA_SIZE_ARG,
-	CONCISE_ARG,
 	BOUNDS_ARG,
 	CHECKS_ARG,
 	CLEAR_ARG,
-	COLS_ARG,
+	CONCISE_ARG,
 	COUNT_ARG,
 	DEFERRED_ARG,
-	SELECT_ARG,
 	EXEC_ARG,
 	FILEMAP_ARG,
 	FOLLOW_ARG,
-	FORCE_ARG,
 	FOREGROUND_ARG,
-	GID_ARG,
 	GROUP_ARG,
 	GROUP_ID_ARG,
 	HEADINGS_ARG,
-	HELP_ARG,
 	HISTOGRAM_ARG,
 	INACTIVE_ARG,
 	INTERVAL_ARG,
 	LENGTH_ARG,
 	MANGLENAME_ARG,
-	MAJOR_ARG,
-	REGIONS_ARG,
-	MINOR_ARG,
-	MODE_ARG,
 	NAMEPREFIXES_ARG,
 	NOFLUSH_ARG,
 	NOGROUP_ARG,
 	NOHEADINGS_ARG,
 	NOLOCKFS_ARG,
+	NOMONITOR_ARG,
 	NOOPENCOUNT_ARG,
 	NOSUFFIX_ARG,
-	NOTABLE_ARG,
 	NOTIMESUFFIX_ARG,
-	UDEVCOOKIE_ARG,
-	NOMONITOR_ARG,
 	NOUDEVRULES_ARG,
 	NOUDEVSYNC_ARG,
-	OPTIONS_ARG,
 	PRECISE_ARG,
 	PROGRAM_ID_ARG,
 	RAW_ARG,
 	READAHEAD_ARG,
+	REGIONS_ARG,
 	REGION_ARG,
 	REGION_ID_ARG,
 	RELATIVE_ARG,
 	RETRY_ARG,
 	ROWS_ARG,
+	SEGMENTS_ARG,
 	SEPARATOR_ARG,
 	SETUUID_ARG,
 	SHOWKEYS_ARG,
-	SORT_ARG,
 	START_ARG,
 	TABLE_ARG,
 	TARGET_ARG,
-	SEGMENTS_ARG,
 	TREE_ARG,
-	UID_ARG,
+	UDEVCOOKIE_ARG,
 	UNBUFFERED_ARG,
 	UNITS_ARG,
 	UNQUOTED_ARG,
 	USER_DATA_ARG,
-	UUID_ARG,
-	VERBOSE_ARG,
 	VERIFYUDEV_ARG,
 	VERSION_ARG,
-	YES_ARG,
 	NUM_SWITCHES
 };
 
@@ -6851,90 +6852,89 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 {
 	const char *base;
 	char *namebase, *s;
-	static int ind;
 	int c, r, i;
 
 #ifdef HAVE_GETOPTLONG
 	static struct option long_options[] = {
-		{"readonly", 0, &ind, READ_ONLY},
-		{"alias", 1, &ind, ALIAS_ARG},
-		{"alldevices", 0, &ind, ALL_DEVICES_ARG},
-		{"allprograms", 0, &ind, ALL_PROGRAMS_ARG},
-		{"allregions", 0, &ind, ALL_REGIONS_ARG},
-		{"area", 0, &ind, AREA_ARG},
-		{"areas", 1, &ind, AREAS_ARG},
-		{"areasize", 1, &ind, AREA_SIZE_ARG},
-		{"bounds", 1, &ind, BOUNDS_ARG},
-		{"checks", 0, &ind, CHECKS_ARG},
-		{"clear", 0, &ind, CLEAR_ARG},
-		{"columns", 0, &ind, COLS_ARG},
-		{"concise", 0, &ind, CONCISE_ARG},
-		{"count", 1, &ind, COUNT_ARG},
-		{"deferred", 0, &ind, DEFERRED_ARG},
-		{"select", 1, &ind, SELECT_ARG},
-		{"exec", 1, &ind, EXEC_ARG},
-		{"filemap", 0, &ind, FILEMAP_ARG},
-		{"follow", 1, &ind, FOLLOW_ARG},
-		{"force", 0, &ind, FORCE_ARG},
-		{"foreground", 0, &ind, FOREGROUND_ARG},
-		{"gid", 1, &ind, GID_ARG},
-		{"group", 0, &ind, GROUP_ARG},
-		{"groupid", 1, &ind, GROUP_ID_ARG},
-		{"headings", 1, &ind, HEADINGS_ARG},
-		{"help", 0, &ind, HELP_ARG},
-		{"histogram", 0, &ind, HISTOGRAM_ARG},
-		{"inactive", 0, &ind, INACTIVE_ARG},
-		{"interval", 1, &ind, INTERVAL_ARG},
-		{"length", 1, &ind, LENGTH_ARG},
-		{"manglename", 1, &ind, MANGLENAME_ARG},
-		{"major", 1, &ind, MAJOR_ARG},
-		{"minor", 1, &ind, MINOR_ARG},
-		{"mode", 1, &ind, MODE_ARG},
-		{"nameprefixes", 0, &ind, NAMEPREFIXES_ARG},
-		{"nogroup", 0, &ind, NOGROUP_ARG},
-		{"noflush", 0, &ind, NOFLUSH_ARG},
-		{"noheadings", 0, &ind, NOHEADINGS_ARG},
-		{"nolockfs", 0, &ind, NOLOCKFS_ARG},
-		{"noopencount", 0, &ind, NOOPENCOUNT_ARG},
-		{"nosuffix", 0, &ind, NOSUFFIX_ARG},
-		{"notable", 0, &ind, NOTABLE_ARG},
-		{"notimesuffix", 0, &ind, NOTIMESUFFIX_ARG},
-		{"udevcookie", 1, &ind, UDEVCOOKIE_ARG},
-		{"nomonitor", 0, &ind, NOMONITOR_ARG},
-		{"noudevrules", 0, &ind, NOUDEVRULES_ARG},
-		{"noudevsync", 0, &ind, NOUDEVSYNC_ARG},
-		{"options", 1, &ind, OPTIONS_ARG},
-		{"precise", 0, &ind, PRECISE_ARG},
-		{"programid", 1, &ind, PROGRAM_ID_ARG},
-		{"raw", 0, &ind, RAW_ARG},
-		{"readahead", 1, &ind, READAHEAD_ARG},
-		{"region", 0, &ind, REGION_ARG},
-		{"regions", 1, &ind, REGIONS_ARG},
-		{"regionid", 1, &ind, REGION_ID_ARG},
-		{"relative", 0, &ind, RELATIVE_ARG},
-		{"retry", 0, &ind, RETRY_ARG},
-		{"rows", 0, &ind, ROWS_ARG},
-		{"segments", 0, &ind, SEGMENTS_ARG},
-		{"separator", 1, &ind, SEPARATOR_ARG},
-		{"setuuid", 0, &ind, SETUUID_ARG},
-		{"showkeys", 0, &ind, SHOWKEYS_ARG},
-		{"sort", 1, &ind, SORT_ARG},
-		{"start", 1, &ind, START_ARG},
-		{"table", 1, &ind, TABLE_ARG},
-		{"target", 1, &ind, TARGET_ARG},
-		{"tree", 0, &ind, TREE_ARG},
-		{"uid", 1, &ind, UID_ARG},
-		{"units", 1, &ind, UNITS_ARG},
-		{"uuid", 1, &ind, UUID_ARG},
-		{"unbuffered", 0, &ind, UNBUFFERED_ARG},
-		{"unquoted", 0, &ind, UNQUOTED_ARG},
-		{"userdata", 1, &ind, USER_DATA_ARG},
-		{"verbose", 1, &ind, VERBOSE_ARG},
-		{"verifyudev", 0, &ind, VERIFYUDEV_ARG},
-		{"version", 0, &ind, VERSION_ARG},
-		{"yes", 0, &ind, YES_ARG},
-		{"addnodeonresume", 0, &ind, ADD_NODE_ON_RESUME_ARG},
-		{"addnodeoncreate", 0, &ind, ADD_NODE_ON_CREATE_ARG},
+		{"addnodeoncreate", 0, 0, ADD_NODE_ON_CREATE_ARG},
+		{"addnodeonresume", 0, 0, ADD_NODE_ON_RESUME_ARG},
+		{"alias", 1, 0, ALIAS_ARG},
+		{"alldevices", 0, 0, ALL_DEVICES_ARG},
+		{"allprograms", 0, 0, ALL_PROGRAMS_ARG},
+		{"allregions", 0, 0, ALL_REGIONS_ARG},
+		{"area", 0, 0, AREA_ARG},
+		{"areas", 1, 0, AREAS_ARG},
+		{"areasize", 1, 0, AREA_SIZE_ARG},
+		{"bounds", 1, 0, BOUNDS_ARG},
+		{"checks", 0, 0, CHECKS_ARG},
+		{"clear", 0, 0, CLEAR_ARG},
+		{"columns", 0, 0, COLS_ARG},
+		{"concise", 0, 0, CONCISE_ARG},
+		{"count", 1, 0, COUNT_ARG},
+		{"deferred", 0, 0, DEFERRED_ARG},
+		{"exec", 1, 0, EXEC_ARG},
+		{"filemap", 0, 0, FILEMAP_ARG},
+		{"follow", 1, 0, FOLLOW_ARG},
+		{"force", 0, 0, FORCE_ARG},
+		{"foreground", 0, 0, FOREGROUND_ARG},
+		{"gid", 1, 0, GID_ARG},
+		{"group", 0, 0, GROUP_ARG},
+		{"groupid", 1, 0, GROUP_ID_ARG},
+		{"headings", 1, 0, HEADINGS_ARG},
+		{"help", 0, 0, HELP_ARG},
+		{"histogram", 0, 0, HISTOGRAM_ARG},
+		{"inactive", 0, 0, INACTIVE_ARG},
+		{"interval", 1, 0, INTERVAL_ARG},
+		{"length", 1, 0, LENGTH_ARG},
+		{"major", 1, 0, MAJOR_ARG},
+		{"manglename", 1, 0, MANGLENAME_ARG},
+		{"minor", 1, 0, MINOR_ARG},
+		{"mode", 1, 0, MODE_ARG},
+		{"nameprefixes", 0, 0, NAMEPREFIXES_ARG},
+		{"noflush", 0, 0, NOFLUSH_ARG},
+		{"nogroup", 0, 0, NOGROUP_ARG},
+		{"noheadings", 0, 0, NOHEADINGS_ARG},
+		{"nolockfs", 0, 0, NOLOCKFS_ARG},
+		{"nomonitor", 0, 0, NOMONITOR_ARG},
+		{"noopencount", 0, 0, NOOPENCOUNT_ARG},
+		{"nosuffix", 0, 0, NOSUFFIX_ARG},
+		{"notable", 0, 0, NOTABLE_ARG},
+		{"notimesuffix", 0, 0, NOTIMESUFFIX_ARG},
+		{"noudevrules", 0, 0, NOUDEVRULES_ARG},
+		{"noudevsync", 0, 0, NOUDEVSYNC_ARG},
+		{"options", 1, 0, OPTIONS_ARG},
+		{"precise", 0, 0, PRECISE_ARG},
+		{"programid", 1, 0, PROGRAM_ID_ARG},
+		{"raw", 0, 0, RAW_ARG},
+		{"readahead", 1, 0, READAHEAD_ARG},
+		{"readonly", 0, 0, READ_ONLY},
+		{"region", 0, 0, REGION_ARG},
+		{"regionid", 1, 0, REGION_ID_ARG},
+		{"regions", 1, 0, REGIONS_ARG},
+		{"relative", 0, 0, RELATIVE_ARG},
+		{"retry", 0, 0, RETRY_ARG},
+		{"rows", 0, 0, ROWS_ARG},
+		{"segments", 0, 0, SEGMENTS_ARG},
+		{"select", 1, 0, SELECT_ARG},
+		{"separator", 1, 0, SEPARATOR_ARG},
+		{"setuuid", 0, 0, SETUUID_ARG},
+		{"showkeys", 0, 0, SHOWKEYS_ARG},
+		{"sort", 1, 0, SORT_ARG},
+		{"start", 1, 0, START_ARG},
+		{"table", 1, 0, TABLE_ARG},
+		{"target", 1, 0, TARGET_ARG},
+		{"tree", 0, 0, TREE_ARG},
+		{"udevcookie", 1, 0, UDEVCOOKIE_ARG},
+		{"uid", 1, 0, UID_ARG},
+		{"unbuffered", 0, 0, UNBUFFERED_ARG},
+		{"units", 1, 0, UNITS_ARG},
+		{"unquoted", 0, 0, UNQUOTED_ARG},
+		{"userdata", 1, 0, USER_DATA_ARG},
+		{"uuid", 1, 0, UUID_ARG},
+		{"verbose", 1, 0, VERBOSE_ARG},
+		{"verifyudev", 0, 0, VERIFYUDEV_ARG},
+		{"version", 0, 0, VERSION_ARG},
+		{"yes", 0, 0, YES_ARG},
 		{0, 0, 0, 0}
 	};
 #else
@@ -7004,171 +7004,204 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 
 	optarg = (char*) "";
 	optind = OPTIND_INIT;
-	while ((ind = -1, c = GETOPTLONG_FN(*argcp, *argvp, "cCfG:hj:m:M:no:O:rS:u:U:vy",
+	while ((c = GETOPTLONG_FN(*argcp, *argvp, "cCfG:hj:m:M:no:O:rS:u:U:vy",
 					    long_options, NULL)) != -1) {
-		if (ind == ALIAS_ARG) {
+		switch (c) {
+		case ALIAS_ARG:
 			_switches[ALIAS_ARG]++;
 			_string_args[ALIAS_ARG] = optarg;
-		}
-		if (ind == ALL_DEVICES_ARG)
+			break;
+		case ALL_DEVICES_ARG:
 			_switches[ALL_DEVICES_ARG]++;
-		if (ind == ALL_PROGRAMS_ARG)
+			break;
+		case ALL_PROGRAMS_ARG:
 			_switches[ALL_PROGRAMS_ARG]++;
-		if (ind == ALL_REGIONS_ARG)
+			break;
+		case ALL_REGIONS_ARG:
 			_switches[ALL_REGIONS_ARG]++;
-		if (ind == AREA_ARG)
+			break;
+		case AREA_ARG:
 			_switches[AREA_ARG]++;
-		if (ind == AREAS_ARG) {
+			break;
+		case AREAS_ARG:
 			_switches[AREAS_ARG]++;
 			_int_args[AREAS_ARG] = atoi(optarg);
-		}
-		if (ind == AREA_SIZE_ARG) {
+			break;
+		case AREA_SIZE_ARG:
 			_switches[AREA_SIZE_ARG]++;
 			_string_args[AREA_SIZE_ARG] = optarg;
-		}
-		if (ind == USER_DATA_ARG) {
+			break;
+		case USER_DATA_ARG:
 			_switches[USER_DATA_ARG]++;
 			_string_args[USER_DATA_ARG] = optarg;
-		}
-		if (c == ':' || c == '?')
+			break;
+		case ':':
+		case '?':
 			return_0;
-		if (c == 'h' || ind == HELP_ARG)
+		case HELP_ARG:
 			_switches[HELP_ARG]++;
-		if (ind == CONCISE_ARG)
+			break;
+		case CONCISE_ARG:
 			_switches[CONCISE_ARG]++;
-		if (ind == BOUNDS_ARG) {
+			break;
+		case BOUNDS_ARG:
 			_switches[BOUNDS_ARG]++;
 			_string_args[BOUNDS_ARG] = optarg;
-		}
-		if (ind == CLEAR_ARG)
+			break;
+		case CLEAR_ARG:
 			_switches[CLEAR_ARG]++;
-		if (c == 'c' || c == 'C' || ind == COLS_ARG)
+			break;
+		case 'C':
+		case COLS_ARG:
 			_switches[COLS_ARG]++;
-		if (ind == FILEMAP_ARG)
+			break;
+		case FILEMAP_ARG:
 			_switches[FILEMAP_ARG]++;
-		if (ind == FOLLOW_ARG) {
+			break;
+		case FOLLOW_ARG:
 			_switches[FOLLOW_ARG]++;
 			_string_args[FOLLOW_ARG] = optarg;
-		}
-		if (c == 'f' || ind == FORCE_ARG)
+			break;
+		case FORCE_ARG:
 			_switches[FORCE_ARG]++;
-		if (ind == FOREGROUND_ARG)
+			break;
+		case FOREGROUND_ARG:
 			_switches[FOREGROUND_ARG]++;
-		if (c == 'r' || ind == READ_ONLY)
+			break;
+		case READ_ONLY:
 			_switches[READ_ONLY]++;
-		if (ind == HISTOGRAM_ARG)
+			break;
+		case HISTOGRAM_ARG:
 			_switches[HISTOGRAM_ARG]++;
-		if (ind == LENGTH_ARG) {
+			break;
+		case LENGTH_ARG:
 			_switches[LENGTH_ARG]++;
 			_string_args[LENGTH_ARG] = optarg;
-		}
-		if (c == 'j' || ind == MAJOR_ARG) {
+			break;
+		case MAJOR_ARG:
 			_switches[MAJOR_ARG]++;
 			_int_args[MAJOR_ARG] = atoi(optarg);
-		}
-		if (ind == REGIONS_ARG) {
+			break;
+		case REGIONS_ARG:
 			_switches[REGIONS_ARG]++;
 			_string_args[REGIONS_ARG] = optarg;
-		}
-		if (c == 'm' || ind == MINOR_ARG) {
+			break;
+		case MINOR_ARG:
 			_switches[MINOR_ARG]++;
 			_int_args[MINOR_ARG] = atoi(optarg);
-		}
-		if (ind == NOSUFFIX_ARG)
+			break;
+		case NOSUFFIX_ARG:
 			_switches[NOSUFFIX_ARG]++;
-		if (c == 'n' || ind == NOTABLE_ARG)
+			break;
+		case NOTABLE_ARG:
 			_switches[NOTABLE_ARG]++;
-		if (ind == NOTIMESUFFIX_ARG)
+			break;
+		case NOTIMESUFFIX_ARG:
 			_switches[NOTIMESUFFIX_ARG]++;
-		if (c == 'o' || ind == OPTIONS_ARG) {
+			break;
+		case OPTIONS_ARG:
 			_switches[OPTIONS_ARG]++;
 			_string_args[OPTIONS_ARG] = optarg;
-		}
-		if (ind == PROGRAM_ID_ARG) {
+			break;
+		case PROGRAM_ID_ARG:
 			_switches[PROGRAM_ID_ARG]++;
 			_string_args[PROGRAM_ID_ARG] = optarg;
-		}
-		if (ind == PRECISE_ARG)
+			break;
+		case PRECISE_ARG:
 			_switches[PRECISE_ARG]++;
-		if (ind == RAW_ARG)
+			break;
+		case RAW_ARG:
 			_switches[RAW_ARG]++;
-		if (ind == REGION_ARG)
+			break;
+		case REGION_ARG:
 			_switches[REGION_ARG]++;
-		if (ind == REGION_ID_ARG) {
+			break;
+		case REGION_ID_ARG:
 			_switches[REGION_ID_ARG]++;
 			_int_args[REGION_ID_ARG] = atoi(optarg);
-		}
-		if (ind == RELATIVE_ARG)
+			break;
+		case RELATIVE_ARG:
 			_switches[RELATIVE_ARG]++;
-		if (ind == SEPARATOR_ARG) {
+			break;
+		case SEPARATOR_ARG:
 			_switches[SEPARATOR_ARG]++;
 			_string_args[SEPARATOR_ARG] = optarg;
-		}
-		if (ind == UNITS_ARG) {
+			break;
+		case UNITS_ARG:
 			_switches[UNITS_ARG]++;
 			_string_args[UNITS_ARG] = optarg;
-		}
-		if (c == 'O' || ind == SORT_ARG) {
+			break;
+		case SORT_ARG:
 			_switches[SORT_ARG]++;
 			_string_args[SORT_ARG] = optarg;
-		}
-		if (c == 'S' || ind == SELECT_ARG) {
+			break;
+		case SELECT_ARG:
 			_switches[SELECT_ARG]++;
 			_string_args[SELECT_ARG] = optarg;
-		}
-		if (ind == START_ARG) {
+			break;
+		case START_ARG:
 			_switches[START_ARG]++;
 			_string_args[START_ARG] = optarg;
-		}
-		if (c == 'v' || ind == VERBOSE_ARG)
+			break;
+		case VERBOSE_ARG:
 			_switches[VERBOSE_ARG]++;
-		if (c == 'u' || ind == UUID_ARG) {
+			break;
+		case UUID_ARG:
 			_switches[UUID_ARG]++;
 			_uuid = optarg;
-		}
-		if (c == 'y' || ind == YES_ARG)
+			break;
+		case YES_ARG:
 			_switches[YES_ARG]++;
-		if (ind == ADD_NODE_ON_RESUME_ARG)
+			break;
+		case ADD_NODE_ON_RESUME_ARG:
 			_switches[ADD_NODE_ON_RESUME_ARG]++;
-		if (ind == ADD_NODE_ON_CREATE_ARG)
+			break;
+		case ADD_NODE_ON_CREATE_ARG:
 			_switches[ADD_NODE_ON_CREATE_ARG]++;
-		if (ind == CHECKS_ARG)
+			break;
+		case CHECKS_ARG:
 			_switches[CHECKS_ARG]++;
-		if (ind == COUNT_ARG) {
+			break;
+		case COUNT_ARG:
 			_switches[COUNT_ARG]++;
 			_int_args[COUNT_ARG] = atoi(optarg);
 			if (_int_args[COUNT_ARG] < 0) {
 				log_error("Count must be zero or greater.");
 				return 0;
 			}
-		}
-		if (ind == UDEVCOOKIE_ARG) {
+			break;
+		case UDEVCOOKIE_ARG:
 			_switches[UDEVCOOKIE_ARG]++;
 			_udev_cookie = _get_cookie_value(optarg);
-		}
-		if (ind == NOMONITOR_ARG)
+			break;
+		case NOMONITOR_ARG:
 			_switches[NOMONITOR_ARG]++;
-		if (ind == NOUDEVRULES_ARG)
+			break;
+		case NOUDEVRULES_ARG:
 			_switches[NOUDEVRULES_ARG]++;
-		if (ind == NOUDEVSYNC_ARG)
+			break;
+		case NOUDEVSYNC_ARG:
 			_switches[NOUDEVSYNC_ARG]++;
-		if (ind == VERIFYUDEV_ARG)
+			break;
+		case VERIFYUDEV_ARG:
 			_switches[VERIFYUDEV_ARG]++;
-		if (c == 'G' || ind == GID_ARG) {
+			break;
+		case GID_ARG:
 			_switches[GID_ARG]++;
 			_int_args[GID_ARG] = atoi(optarg);
-		}
-		if (ind == GROUP_ARG)
+			break;
+		case GROUP_ARG:
 			_switches[GROUP_ARG]++;
-		if (ind == GROUP_ID_ARG) {
+			break;
+		case GROUP_ID_ARG:
 			_switches[GROUP_ID_ARG]++;
 			_int_args[GROUP_ID_ARG] = atoi(optarg);
-		}
-		if (c == 'U' || ind == UID_ARG) {
+			break;
+		case UID_ARG:
 			_switches[UID_ARG]++;
 			_int_args[UID_ARG] = atoi(optarg);
-		}
-		if (c == 'M' || ind == MODE_ARG) {
+			break;
+		case MODE_ARG:
 			_switches[MODE_ARG]++;
 			/* FIXME Accept modes as per chmod */
 			errno = 0;
@@ -7178,14 +7211,15 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 					  optarg, errno ? strerror(errno) : "");
 				return 0;
 			}
-		}
-		if (ind == DEFERRED_ARG)
+			break;
+		case DEFERRED_ARG:
 			_switches[DEFERRED_ARG]++;
-		if (ind == EXEC_ARG) {
+			break;
+		case EXEC_ARG:
 			_switches[EXEC_ARG]++;
 			_command_to_exec = optarg;
-		}
-		if (ind == HEADINGS_ARG) {
+			break;
+		case HEADINGS_ARG:
 			_switches[HEADINGS_ARG]++;
 			if (!strcasecmp(optarg, "none") || !strcmp(optarg, "0"))
 				_int_args[HEADINGS_ARG] = 0;
@@ -7197,24 +7231,26 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 				log_error("Unknown headings type.");
 				return 0;
 			}
-		}
-		if (ind == TARGET_ARG) {
+			break;
+		case TARGET_ARG:
 			_switches[TARGET_ARG]++;
 			_target = optarg;
-		}
-		if (ind == SEGMENTS_ARG)
+			break;
+		case SEGMENTS_ARG:
 			_switches[SEGMENTS_ARG]++;
-		if (ind == INACTIVE_ARG)
-		       _switches[INACTIVE_ARG]++;
-		if (ind == INTERVAL_ARG) {
+			break;
+		case INACTIVE_ARG:
+			_switches[INACTIVE_ARG]++;
+			break;
+		case INTERVAL_ARG:
 			_switches[INTERVAL_ARG]++;
 			_int_args[INTERVAL_ARG] = atoi(optarg);
 			if (_int_args[INTERVAL_ARG] <= 0) {
 				log_error("Interval must be a positive integer.");
 				return 0;
 			}
-		}
-		if (ind == MANGLENAME_ARG) {
+			break;
+		case MANGLENAME_ARG:
 			_switches[MANGLENAME_ARG]++;
 			if (!strcasecmp(optarg, "none"))
 				_int_args[MANGLENAME_ARG] = DM_STRING_MANGLING_NONE;
@@ -7227,20 +7263,26 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 				return 0;
 			}
 			dm_set_name_mangling_mode((dm_string_mangling_t) _int_args[MANGLENAME_ARG]);
-		}
-		if (ind == NAMEPREFIXES_ARG)
+			break;
+		case NAMEPREFIXES_ARG:
 			_switches[NAMEPREFIXES_ARG]++;
-		if (ind == NOFLUSH_ARG)
+			break;
+		case NOFLUSH_ARG:
 			_switches[NOFLUSH_ARG]++;
-		if (ind == NOGROUP_ARG)
+			break;
+		case NOGROUP_ARG:
 			_switches[NOGROUP_ARG]++;
-		if (ind == NOHEADINGS_ARG)
+			break;
+		case NOHEADINGS_ARG:
 			_switches[NOHEADINGS_ARG]++;
-		if (ind == NOLOCKFS_ARG)
+			break;
+		case NOLOCKFS_ARG:
 			_switches[NOLOCKFS_ARG]++;
-		if (ind == NOOPENCOUNT_ARG)
+			break;
+		case NOOPENCOUNT_ARG:
 			_switches[NOOPENCOUNT_ARG]++;
-		if (ind == READAHEAD_ARG) {
+			break;
+		case READAHEAD_ARG:
 			_switches[READAHEAD_ARG]++;
 			if (!strcasecmp(optarg, "auto"))
 				_int_args[READAHEAD_ARG] = DM_READ_AHEAD_AUTO;
@@ -7259,28 +7301,36 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 					return 0;
 				}
 			}
-		}
-		if (ind == RETRY_ARG)
+			break;
+		case RETRY_ARG:
 			_switches[RETRY_ARG]++;
-		if (ind == ROWS_ARG)
+			break;
+		case ROWS_ARG:
 			_switches[ROWS_ARG]++;
-		if (ind == SETUUID_ARG)
+			break;
+		case SETUUID_ARG:
 			_switches[SETUUID_ARG]++;
-		if (ind == SHOWKEYS_ARG)
+			break;
+		case SHOWKEYS_ARG:
 			_switches[SHOWKEYS_ARG]++;
-		if (ind == TABLE_ARG) {
+			break;
+		case TABLE_ARG:
 			_switches[TABLE_ARG]++;
 			if (!(_table = strdup(optarg))) {
 				log_error("Could not allocate memory for table string.");
 				return 0;
 			}
-		}
-		if (ind == TREE_ARG)
+			break;
+		case TREE_ARG:
 			_switches[TREE_ARG]++;
-		if (ind == UNQUOTED_ARG)
+			break;
+		case UNQUOTED_ARG:
 			_switches[UNQUOTED_ARG]++;
-		if (ind == VERSION_ARG)
+			break;
+		case VERSION_ARG:
 			_switches[VERSION_ARG]++;
+			break;
+		}
 	}
 
 	if (_switches[VERBOSE_ARG] > 1) {
