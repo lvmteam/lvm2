@@ -1650,14 +1650,10 @@ int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
 			if (merge_type == CONFIG_MERGE_TYPE_TAGS) {
 				/* Remove any "tags" nodes */
 				for (cn2 = cn->child; cn2; cn2 = cn2->sib) {
-					if (!strcmp(cn2->key, "tags")) {
+					if (!strcmp(cn2->key, "tags"))
 						cn->child = cn2->sib;
-						continue;
-					}
-					if (cn2->sib && !strcmp(cn2->sib->key, "tags")) {
+					else if (cn2->sib && !strcmp(cn2->sib->key, "tags"))
 						cn2->sib = cn2->sib->sib;
-						continue;
-					}
 				}
 			}
 			continue;
