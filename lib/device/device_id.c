@@ -1545,7 +1545,7 @@ int device_ids_write(struct cmd_context *cmd)
 	uint32_t df_major = 0, df_minor = 0, df_counter = 0;
 	uint32_t hash = 0;
 	int names_len = 0;
-	int len, num, pos;
+	int len, pos, num = 0;
 	int fb_size, fb_bytes, fc_bytes;
 	int file_exists;
 	int ret = 0;
