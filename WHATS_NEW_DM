@@ -1,5 +1,6 @@
 Version 1.02.198 - 
 ===================
+  Create /dev/disk/by-label symlinks for DM devs that have crypto as next layer.
   Persist udev db for DM devs on cleanup used in initrd to rootfs transition.
   Process synthetic udev events other than 'add/change' as 'change' events.
   Increase DM_UDEV_RULES_VSN to 3 to indicate changed udev rules.
