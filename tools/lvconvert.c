@@ -2050,7 +2050,7 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 	uint32_t chunk_size;
 	int zero;
 
-	if (!(snap_name = dm_pool_strdup(lv->vg->vgmem, display_lvname(lv))))
+	if (!(snap_name = dm_pool_strdup(lv->vg->vgmem, (display_lvname(lv) ? : ""))))
 		return_0;
 
 	if (strcmp(lv->name, origin_name) == 0) {
