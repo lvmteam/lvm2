@@ -1390,7 +1390,7 @@ static int _filter_backup_files(const struct dirent *de)
 static void devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, time_t *tp, uint32_t df_counter)
 {
 	struct dirent *de;
-	struct dirent **namelist;
+	struct dirent **namelist = NULL;
 	DIR *dir;
 	FILE *fp = NULL;
 	struct tm *tm;
@@ -1529,7 +1529,7 @@ static void devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, tim
 	log_debug("Limit backup %u found %u sorted %d removing %u.",
 		  backup_limit, backup_count, sort_count, remove_count);
 
-	for (i = 0; i < sort_count; i++) {
+	for (i = 0; namelist && i < sort_count; i++) {
 		if (remove_count) {
 			log_debug("Remove backup %s", namelist[i]->d_name);
 			if (unlinkat(dir_fd, namelist[i]->d_name, 0) < 0 && errno != ENOENT)
