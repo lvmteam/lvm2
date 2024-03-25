@@ -2151,7 +2151,11 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 	if (!snap_seg)
 		return_0;
 
-	origin = origin_from_cow(lv);
+	if (!(origin = origin_from_cow(lv))) {
+		log_error(INTERNAL_ERROR "Cannot get origin from %s COW.",
+			  display_lvname(lv));
+		return 0;
+	}
 
 	/* Check if merge is possible */
 	if (lv_is_merging_origin(origin)) {
