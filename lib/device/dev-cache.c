@@ -1846,7 +1846,9 @@ static void devices_file_rename_unused(struct cmd_context *cmd)
 	t = time(NULL);
 	if (!(tm = localtime(&t)))
 		return;
-	strftime(datetime_str, sizeof(datetime_str), "%Y%m%d.%H%M%S", tm);
+
+	if (!strftime(datetime_str, sizeof(datetime_str), "%Y%m%d.%H%M%S", tm))
+		return;
 
 	if (dm_snprintf(path2, sizeof(path2), "%s/devices/%s-unused.%s", cmd->system_dir, filename, datetime_str) < 0)
 		return;
