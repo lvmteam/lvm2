@@ -1934,7 +1934,7 @@ static int _text_pv_initialise(const struct format_type *fmt,
 		return 0;
 	}
 
-	if (pva->label_sector != -1)
+	if (pva->label_sector != UINT64_C(-1))
                 pv->label_sector = pva->label_sector;
 
 	return 1;

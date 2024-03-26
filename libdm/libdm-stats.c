@@ -4638,7 +4638,7 @@ static int _stats_unmap_regions(struct dm_stats *dms, uint64_t group_id,
 			log_very_verbose("Kept region " FMTu64, i);
 		} else {
 
-			if (i == group_id)
+			if (i == (int64_t)group_id)
 				*regroup = 1;
 
 			if (!_stats_delete_region(dms, i)) {

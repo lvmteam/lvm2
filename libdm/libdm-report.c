@@ -4308,7 +4308,7 @@ static void _recalculate_fields(struct dm_report *rh)
 	struct row *row;
 	struct dm_report_field *field;
 	int len;
-	size_t id_len;
+	int id_len;
 
 	dm_list_iterate_items(row, &rh->rows) {
 		dm_list_iterate_items(field, &row->fields) {
@@ -4325,7 +4325,7 @@ static void _recalculate_fields(struct dm_report *rh)
 			}
 
 			if (rh->flags & DM_REPORT_OUTPUT_FIELD_IDS_IN_HEADINGS) {
-				id_len = strlen(rh->fields[field->props->field_num].id);
+				id_len = (int) strlen(rh->fields[field->props->field_num].id);
 				if (field->props->width < id_len)
 					field->props->width = id_len;
 			}

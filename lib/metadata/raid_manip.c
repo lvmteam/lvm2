@@ -2470,7 +2470,7 @@ static int _raid_reshape(struct logical_volume *lv,
  * FIXME Use alternative mechanism - separate parameter or enum.
  */
 static int _reshape_requested(const struct logical_volume *lv, const struct segment_type *segtype,
-			      const int data_copies, const uint32_t region_size,
+			      const uint32_t data_copies, const uint32_t region_size,
 			      const uint32_t stripes, const uint32_t stripe_size)
 {
 	struct lv_segment *seg = first_seg(lv);
@@ -2917,7 +2917,8 @@ static int _raid_allow_extraction(struct logical_volume *lv,
 				  int extract_count,
 				  struct dm_list *target_pvs)
 {
-	int s, redundancy = 0;
+	int redundancy = 0;
+	unsigned s;
 	char *dev_health;
 	char *sync_action;
 	struct lv_segment *seg = first_seg(lv);
@@ -6370,7 +6371,7 @@ static int _conversion_options_allowed(const struct lv_segment *seg_from,
 				       const struct segment_type **segtype_to,
 				       int yes,
 				       uint32_t new_image_count,
-				       int new_data_copies, int new_region_size,
+				       int new_data_copies, uint32_t new_region_size,
 				       uint32_t *stripes, unsigned new_stripe_size_supplied)
 {
 	int r = 1;

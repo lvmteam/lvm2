@@ -1421,7 +1421,7 @@ static void _create_opt_names_alpha(void)
 	qsort(opt_names_alpha, ARG_COUNT, sizeof(long), _long_name_compare);
 }
 
-static int _copy_line(const char **line, int max_line, int *position)
+static int _copy_line(const char **line, size_t max_line, int *position)
 {
 	size_t len;
 
