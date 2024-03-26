@@ -839,7 +839,7 @@ AC_ARG_ENABLE(profiling,
 AC_MSG_RESULT([$PROFILING])
 
 AS_IF([test "$PROFILING" = "yes"], [
-  COPTIMISE_FLAG="$COPTIMISE_FLAG -fprofile-arcs -ftest-coverage"
+  COPTIMISE_FLAG="$COPTIMISE_FLAG -fprofile-arcs -fprofile-update=atomic -ftest-coverage"
   AC_PATH_TOOL(LCOV, lcov)
   AC_PATH_TOOL(GENHTML, genhtml)
   AS_IF([test -z "$LCOV" || test -z "$GENHTML"], [

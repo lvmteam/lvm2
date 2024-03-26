@@ -11574,7 +11574,7 @@ printf "%s\n" "$PROFILING" >&6; }
 if test "$PROFILING" = "yes"
 then :
 
-  COPTIMISE_FLAG="$COPTIMISE_FLAG -fprofile-arcs -ftest-coverage"
+  COPTIMISE_FLAG="$COPTIMISE_FLAG -fprofile-arcs -fprofile-update=atomic -ftest-coverage"
   if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}lcov", so it can be a program name with args.
 set dummy ${ac_tool_prefix}lcov; ac_word=$2
