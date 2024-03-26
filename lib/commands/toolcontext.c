@@ -1675,7 +1675,6 @@ struct cmd_context *create_toolcontext(unsigned is_clvmd,
 				       unsigned set_filters)
 {
 	struct cmd_context *cmd;
-	int flags;
 
 #ifdef M_MMAP_MAX
 	mallopt(M_MMAP_MAX, 0);
@@ -1718,6 +1717,8 @@ struct cmd_context *create_toolcontext(unsigned is_clvmd,
 	    && (syscall(SYS_gettid) == getpid())
 #endif
 	   ) {
+		int flags;
+
 		/* Allocate 2 buffers */
 		if (!(cmd->linebuffer = malloc(2 * _linebuffer_size))) {
 			log_error("Failed to allocate line buffer.");
@@ -2065,7 +2066,6 @@ int refresh_toolcontext(struct cmd_context *cmd)
 void destroy_toolcontext(struct cmd_context *cmd)
 {
 	struct dm_config_tree *cft_cmdline;
-	int flags;
 
 	archive_exit(cmd);
 	backup_exit(cmd);
@@ -2089,6 +2089,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	dm_device_list_destroy(&cmd->cache_dm_devs);
 #ifndef VALGRIND_POOL
 	if (cmd->linebuffer) {
+		int flags;
 		/* Reset stream buffering to defaults */
 		if (is_valid_fd(STDIN_FILENO) &&
 		    ((flags = fcntl(STDIN_FILENO, F_GETFL)) > 0) &&
