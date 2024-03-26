@@ -740,7 +740,7 @@ static int _dev_read_sys_serial(struct cmd_context *cmd, struct device *dev,
 		int ret;
 
 		/* /dev/vda to vda */
-		base = basename(devname);
+		base = dm_basename(devname);
 
 		/* vda1 to vda */
 		for (i = 0; i < strlen(base); i++) {
