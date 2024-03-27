@@ -44,38 +44,6 @@ void uuid_from_num(char *uuid, uint32_t num)
 	}
 }
 
-int lvid_from_lvnum(union lvid *lvid, struct id *vgid, uint32_t lv_num)
-{
-	int i;
-
-	memcpy(lvid->id, vgid, sizeof(*lvid->id));
-
-	for (i = ID_LEN; i; i--) {
-		lvid->id[1].uuid[i - 1] = _c[lv_num % (sizeof(_c) - 1)];
-		lv_num /= sizeof(_c) - 1;
-	}
-
-	lvid->s[sizeof(lvid->s) - 1] = '\0';
-
-	return 1;
-}
-
-int lvnum_from_lvid(union lvid *lvid)
-{
-	int i, lv_num = 0;
-	char *c;
-
-	for (i = 0; i < ID_LEN; i++) {
-		lv_num *= sizeof(_c) - 1;
-		if ((c = strchr(_c, lvid->id[1].uuid[i])))
-			lv_num += (int) (c - _c);
-		if (lv_num < 0)
-			lv_num = 0;
-	}
-
-	return lv_num;
-}
-
 int lvid_in_restricted_range(union lvid *lvid)
 {
 	int i;

@@ -32,7 +32,6 @@
 //#define STRIPE_SIZE_MIN ( (unsigned) lvm_getpagesize() >> SECTOR_SHIFT)	/* PAGESIZE in sectors */
 //#define STRIPE_SIZE_MAX ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
 //#define STRIPE_SIZE_LIMIT ((UINT_MAX >> 2) + 1)
-//#define MAX_RESTRICTED_LVS 255	/* Used by FMT_RESTRICTED_LVIDS */
 #define MIN_PE_SIZE     (8192L >> SECTOR_SHIFT) /* 8 KB in sectors - format1 only */
 #define MAX_PE_SIZE     (16L * 1024L * (1024L >> SECTOR_SHIFT) * 1024L) /* format1 only */
 #define MIRROR_LOG_OFFSET	2	/* sectors */

@@ -967,30 +967,6 @@ static struct seg_pvs *_find_seg_pvs_by_le(struct dm_list *list, uint32_t le)
 	return NULL;
 }
 
-/*
- * Find first unused LV number.
- */
-uint32_t find_free_lvnum(struct logical_volume *lv)
-{
-	int lvnum_used[MAX_RESTRICTED_LVS + 1] = { 0 };
-	uint32_t i = 0;
-	struct lv_list *lvl;
-	int lvnum;
-
-	dm_list_iterate_items(lvl, &lv->vg->lvs) {
-		lvnum = lvnum_from_lvid(&lvl->lv->lvid);
-		if (lvnum <= MAX_RESTRICTED_LVS)
-			lvnum_used[lvnum] = 1;
-	}
-
-	while (lvnum_used[i])
-		i++;
-
-	/* FIXME What if none are free? */
-
-	return i;
-}
-
 dm_percent_t copy_percent(const struct logical_volume *lv)
 {
 	uint32_t numerator = 0u, denominator = 0u;

@@ -34,7 +34,6 @@
 #define STRIPE_SIZE_MIN ( (unsigned) lvm_getpagesize() >> SECTOR_SHIFT)	/* PAGESIZE in sectors */
 #define STRIPE_SIZE_MAX ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
 #define STRIPE_SIZE_LIMIT ((UINT_MAX >> 2) + 1)
-#define MAX_RESTRICTED_LVS 255	/* Used by FMT_RESTRICTED_LVIDS */
 #define MAX_EXTENT_SIZE ((uint32_t) -1)
 #define MIN_NON_POWER2_EXTENT_SIZE (128U * 2U)	/* 128KB in sectors */
 
@@ -1431,7 +1430,6 @@ const char *get_pvmove_pvname_from_lv_mirr(const struct logical_volume *lv_mirr)
 struct dm_list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 			  struct logical_volume *lv);
 
-uint32_t find_free_lvnum(struct logical_volume *lv);
 dm_percent_t copy_percent(const struct logical_volume *lv);
 char *generate_lv_name(struct volume_group *vg, const char *format,
 		       char *buffer, size_t len);
