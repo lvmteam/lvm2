@@ -347,7 +347,7 @@ class DaemonInfo(object):
 		start = time.time()
 		pid = process_exists(EXE_NAME)
 		while pid is not None and (time.time() - start) <= 20:
-			time.sleep(0.3)
+			time.sleep(0.1)
 			pid = process_exists(EXE_NAME)
 
 		if pid:
@@ -364,7 +364,7 @@ class DaemonInfo(object):
 				running = True
 				break
 			except dbus.exceptions.DBusException:
-				time.sleep(0.2)
+				time.sleep(0.1)
 				pass
 		if not running:
 			raise RuntimeError(msg)
@@ -2348,6 +2348,10 @@ class TestDbusService(unittest.TestCase):
 				raise e
 
 	def test_z_sigint(self):
+
+		number_of_intervals = 3
+		number_of_lvs = 10
+
 		# Issue SIGINT while daemon is processing work to ensure we shut down.
 		if bool(int(os.getenv("LVM_DBUSD_TEST_SKIP_SIGNAL", "0"))):
 			raise unittest.SkipTest("Skipping as env. LVM_DBUSD_TEST_SKIP_SIGNAL is '1'")
@@ -2362,15 +2366,15 @@ class TestDbusService(unittest.TestCase):
 			# we will then issue the creation of the LVs async., wait, then issue a signal
 			# and repeat stepping through the entire time range.
 			start = time.time()
-			vg_proxy = self._create_num_lvs(20)
+			vg_proxy = self._create_num_lvs(number_of_lvs)
 			end = time.time()
 
 			self.handle_return(vg_proxy.Vg.Remove(dbus.Int32(g_tmo), EOD))
 			total = end - start
 
-			for i in range(5):
-				sleep_amt = i * (total/5.0)
-				self._create_num_lvs(20, True)
+			for i in range(number_of_intervals):
+				sleep_amt = i * (total/float(number_of_intervals))
+				self._create_num_lvs(number_of_lvs, True)
 				time.sleep(sleep_amt)
 
 				exited = False
