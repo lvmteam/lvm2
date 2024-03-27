@@ -136,7 +136,7 @@ def call_lvm(command, debug=False, line_cb=None,
 	while True and cfg.run.value != 0:
 		try:
 			rd_fd = [process.stdout.fileno(), process.stderr.fileno()]
-			ready = select.select(rd_fd, [], [], 2)
+			ready = select.select(rd_fd, [], [], cfg.G_LOOP_TMO)
 
 			for r in ready[0]:
 				if r == process.stdout.fileno():

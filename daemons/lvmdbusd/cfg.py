@@ -50,6 +50,8 @@ worker_q = queue.Queue()
 # Main event loop
 loop = None
 
+G_LOOP_TMO = 0.5
+
 # Used to instruct the daemon if we should ignore SIGTERM
 ignore_sigterm = False
 

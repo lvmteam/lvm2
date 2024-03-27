@@ -41,7 +41,7 @@ def process_request():
 	while cfg.run.value != 0:
 		# noinspection PyBroadException
 		try:
-			req = cfg.worker_q.get(True, 5)
+			req = cfg.worker_q.get(True, cfg.G_LOOP_TMO)
 			log_debug(
 				"Method start: %s with args %s (callback = %s)" %
 				(str(req.method), str(req.arguments), str(req.cb)))

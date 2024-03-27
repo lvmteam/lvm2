@@ -183,9 +183,9 @@ class StateUpdate(object):
 					obj.deferred = False
 
 				if len(queued_requests) == 0 and wait:
-					# Note: If we don't have anything for 2 seconds we will
+					# Note: If we don't have anything for N seconds we will
 					# get a queue.Empty exception raised here
-					queued_requests.append(obj.queue.get(block=True, timeout=2))
+					queued_requests.append(obj.queue.get(block=True, timeout=cfg.G_LOOP_TMO))
 
 				# Ok we have one or the deferred queue has some,
 				# check if any others and grab them too

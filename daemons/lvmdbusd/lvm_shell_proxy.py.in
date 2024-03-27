@@ -66,7 +66,7 @@ class LVMShellProxy(object):
 					self.parent_stdout_fd,
 					self.report_stream.fileno(),
 					self.parent_stderr_fd]
-				ready = select.select(rd_fd, [], [], 2)
+				ready = select.select(rd_fd, [], [], cfg.G_LOOP_TMO)
 
 				for r in ready[0]:
 					if r == self.parent_stdout_fd:
