@@ -2352,6 +2352,9 @@ class TestDbusService(unittest.TestCase):
 		if bool(int(os.getenv("LVM_DBUSD_TEST_SKIP_SIGNAL", "0"))):
 			raise unittest.SkipTest("Skipping as env. LVM_DBUSD_TEST_SKIP_SIGNAL is '1'")
 
+		if g_tmo != 0:
+			raise unittest.SkipTest("Skipping for g_tmo != 0")
+
 		di = DaemonInfo.get()
 		self.assertTrue(di is not None)
 		if di:
