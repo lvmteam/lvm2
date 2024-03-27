@@ -110,7 +110,7 @@ struct arg_values {
 
 struct arg_value_group_list {
         struct dm_list list;
-	uint32_t prio;
+	uint16_t prio;
 	struct arg_values arg_values[];
 };
 

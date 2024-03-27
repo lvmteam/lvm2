@@ -228,13 +228,13 @@ struct command {
 
 struct opt_name {
 	const char *name;       /* "foo_ARG" */
-	short opt_enum;           /* foo_ARG */
+	uint16_t opt_enum;      /* foo_ARG */
 	const char short_opt;   /* -f */
 	char _padding[1];
 	const char *long_opt;   /* --foo */
-	short val_enum;           /* xyz_VAL when --foo takes a val like "--foo xyz" */
+	uint16_t val_enum;           /* xyz_VAL when --foo takes a val like "--foo xyz" */
 	uint32_t flags;
-	short prio;
+	uint16_t prio;
 	const char *desc;
 };
 
@@ -242,7 +242,7 @@ struct opt_name {
 
 struct val_name {
 	const char *enum_name;  /* "foo_VAL" */
-	short val_enum;           /* foo_VAL */
+	uint16_t val_enum;      /* foo_VAL */
 	int (*fn) (struct cmd_context *cmd, struct arg_values *av); /* foo_arg() */
 	const char *name;       /* FooVal */
 	const char *usage;
@@ -252,7 +252,7 @@ struct val_name {
 
 struct lv_prop {
 	const char *enum_name; /* "is_foo_LVP" */
-	short lvp_enum;          /* is_foo_LVP */
+	uint16_t lvp_enum;     /* is_foo_LVP */
 	const char *name;      /* "lv_is_foo" */
 	int (*fn) (struct cmd_context *cmd, struct logical_volume *lv); /* lv_is_foo() */
 };
@@ -261,7 +261,7 @@ struct lv_prop {
 
 struct lv_type {
 	const char *enum_name; /* "foo_LVT" */
-	short lvt_enum;          /* foo_LVT */
+	uint16_t lvt_enum;     /* foo_LVT */
 	const char *name;      /* "foo" */
 	int (*fn) (struct cmd_context *cmd, struct logical_volume *lv); /* lv_is_foo() */
 };
