@@ -1749,8 +1749,10 @@ int device_ids_write(struct cmd_context *cmd)
 		goto_out;
 	if (fsync(fileno(fp)) < 0)
 		goto_out;
-	if (fclose(fp) < 0)
+	if (fclose(fp) < 0) {
+		fp = NULL;
 		goto_out;
+	}
 
 	fp = NULL;
 
