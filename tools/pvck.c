@@ -852,7 +852,7 @@ static int _dump_meta_area(struct device *dev, struct devicefile *def, const cha
 	if (!tofile)
 		return_0;
 
-	if (!(meta_buf = zalloc(mda_size)))
+	if (!(meta_buf = zalloc(mda_size + 1)))
 		return_0;
 
 	if (!_read_bytes(dev, def, mda_offset, mda_size, meta_buf)) {
@@ -901,7 +901,7 @@ static int _dump_current_text(struct device *dev, struct devicefile *def,
 	int ri = rlocn_index; /* 0 or 1 */
 	int bad = 0;
 
-	if (!(meta_buf = malloc(meta_size + 1))) {
+	if (!(meta_buf = zalloc(meta_size + 1))) {
 		log_print("CHECK: mda_header_%d.raw_locn[%d] no mem for metadata text size %llu", mn, ri,
 			  (unsigned long long)meta_size);
 		return 0;
@@ -1018,7 +1018,7 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 				     uint64_t *mda2_offset, uint64_t *mda2_size,
 				     int *mda_count_out)
 {
-	char buf[512];
+	char buf[512 + 1] = { 0 };
 	char str[256];
 	struct label_header *lh;
 	struct pv_header *pvh;
@@ -1266,7 +1266,7 @@ static int _dump_mda_header(struct cmd_context *cmd, struct settings *set,
 			    uint32_t *checksum0_ret,
 			    int *found_header)
 {
-	char buf[512];
+	char buf[512 + 1] = { 0 };
 	char str[256];
 	char *mda_buf;
 	struct mda_header *mh;
@@ -1365,7 +1365,7 @@ static int _dump_mda_header(struct cmd_context *cmd, struct settings *set,
 	 * looking at all copies of the metadata in the area
 	 */
 	if (print_metadata == PRINT_ALL) {
-		if (!(mda_buf = zalloc(mda_size)))
+		if (!(mda_buf = zalloc(mda_size + 1)))
 			goto_out;
 
 		if (!_read_bytes(dev, def, mda_offset, mda_size, mda_buf)) {
@@ -1747,7 +1747,7 @@ static int _dump_search(struct cmd_context *cmd, const char *dump, struct settin
 	log_print("Searching for metadata at offset %llu size %llu",
 		  (unsigned long long)mda_offset, (unsigned long long)mda_size);
 
-	if (!(buf = zalloc(mda_size)))
+	if (!(buf = zalloc(mda_size + 1)))
 		return_0;
 
 	if (!_read_bytes(dev, def, mda_offset, mda_size, buf)) {
