@@ -4416,8 +4416,9 @@ static int _sort_rows(struct dm_report *rh)
 	qsort(rows, count, sizeof(**rows), _row_compare);
 
 	dm_list_init(&rh->rows);
-	while (count--)
-		dm_list_add_h(&rh->rows, &(*rows)[count]->list);
+
+	while (count > 0)
+		dm_list_add_h(&rh->rows, &(*rows)[--count]->list);
 
 	return 1;
 }
