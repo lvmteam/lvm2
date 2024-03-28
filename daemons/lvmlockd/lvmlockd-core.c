@@ -2367,13 +2367,13 @@ static struct resource *find_resource_act(struct lockspace *ls,
 	r->mode = LD_LK_UN;
 
 	if (r->type == LD_RT_GL) {
-		strncpy(r->name, R_NAME_GL, MAX_NAME);
+		(void)dm_strncpy(r->name, R_NAME_GL, MAX_NAME);
 		r->use_vb = 1;
 	} else if (r->type == LD_RT_VG) {
-		strncpy(r->name, R_NAME_VG, MAX_NAME);
+		(void)dm_strncpy(r->name, R_NAME_VG, MAX_NAME);
 		r->use_vb = 1;
 	} else if (r->type == LD_RT_LV) {
-		strncpy(r->name, act->lv_uuid, MAX_NAME);
+		(void)dm_strncpy(r->name, act->lv_uuid, MAX_NAME);
 		r->use_vb = 0;
 	}
 
@@ -3529,7 +3529,7 @@ static void work_test_gl(void)
 			is_enabled = lm_gl_is_enabled(ls);
 			if (is_enabled) {
 				log_debug("S %s worker found gl_is_enabled", ls->name);
-				strncpy(gl_lsname_sanlock, ls->name, MAX_NAME);
+				(void)dm_strncpy(gl_lsname_sanlock, ls->name, MAX_NAME);
 			}
 		}
 		pthread_mutex_unlock(&ls->mutex);

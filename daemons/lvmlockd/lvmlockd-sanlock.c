@@ -227,17 +227,6 @@ int lm_data_size_sanlock(void)
 
 static uint64_t daemon_test_lv_count;
 
-/*
- * Copy a null-terminated string "str" into a fixed
- * size (SANLK_NAME_LEN) struct field "buf" which is
- * not null terminated.
- */
-static void strcpy_name_len(char *buf, char *str, int len)
-{
-	/* coverity[buffer_size_warning] */
-	strncpy(buf, str, SANLK_NAME_LEN);
-}
-
 static int lock_lv_name_from_args(char *vg_args, char *lock_lv_name)
 {
 	return last_string_from_args(vg_args, lock_lv_name);
@@ -531,7 +520,6 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	memset(&ss, 0, sizeof(ss));
 	memset(&rd, 0, sizeof(rd));
 	memset(&disk, 0, sizeof(disk));
-	memset(lock_lv_name, 0, sizeof(lock_lv_name));
 	memset(lock_args_version, 0, sizeof(lock_args_version));
 
 	if (!vg_args || !vg_args[0] || !strcmp(vg_args, "none")) {
@@ -543,7 +531,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 		 VG_LOCK_ARGS_MAJOR, VG_LOCK_ARGS_MINOR, VG_LOCK_ARGS_PATCH);
 
 	/* see comment above about input vg_args being only lock_lv_name */
-	snprintf(lock_lv_name, MAX_ARGS, "%s", vg_args);
+	(void)dm_strncpy(lock_lv_name, vg_args, sizeof(lock_lv_name));
 
 	if (strlen(lock_lv_name) + strlen(lock_args_version) + 2 > MAX_ARGS)
 		return -EARGS;
@@ -585,7 +573,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 		}
 	}
 
-	strcpy_name_len(ss.name, ls_name, SANLK_NAME_LEN);
+	(void)dm_strncpy(ss.name, ls_name, SANLK_NAME_LEN);
 	memcpy(ss.host_id_disk.path, disk.path, SANLK_PATH_LEN);
 	ss.host_id_disk.offset = 0;
 	ss.flags = (sector_size == 4096) ? (SANLK_LSF_SECTOR4K | SANLK_LSF_ALIGN8M) :
@@ -618,7 +606,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 		gl_name = R_NAME_GL;
 
 	memcpy(rd.rs.lockspace_name, ss.name, SANLK_NAME_LEN);
-	strcpy_name_len(rd.rs.name, (char *)gl_name, SANLK_NAME_LEN);
+	(void)dm_strncpy(rd.rs.name, gl_name, SANLK_NAME_LEN);
 	memcpy(rd.rs.disks[0].path, disk.path, SANLK_PATH_LEN);
 	rd.rs.disks[0].offset = align_size * GL_LOCK_BEGIN;
 	rd.rs.num_disks = 1;
@@ -633,7 +621,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	}
 
 	memcpy(rd.rs.lockspace_name, ss.name, SANLK_NAME_LEN);
-	strcpy_name_len(rd.rs.name, (char *)R_NAME_VG, SANLK_NAME_LEN);
+	(void)dm_strncpy(rd.rs.name, R_NAME_VG, SANLK_NAME_LEN);
 	memcpy(rd.rs.disks[0].path, disk.path, SANLK_PATH_LEN);
 	rd.rs.disks[0].offset = align_size * VG_LOCK_BEGIN;
 	rd.rs.num_disks = 1;
@@ -648,7 +636,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	}
 
 	if (!strcmp(gl_name, R_NAME_GL))
-		strncpy(gl_lsname_sanlock, ls_name, MAX_NAME);
+		(void)dm_strncpy(gl_lsname_sanlock, ls_name, MAX_NAME);
  
 	rv = snprintf(vg_args, MAX_ARGS, "%s:%s", lock_args_version, lock_lv_name);
 	if (rv >= MAX_ARGS)
@@ -667,8 +655,8 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	rd.rs.flags = (sector_size == 4096) ? (SANLK_RES_SECTOR4K | SANLK_RES_ALIGN8M) :
 					      (SANLK_RES_SECTOR512 | SANLK_RES_ALIGN1M);
 	memcpy(rd.rs.disks[0].path, disk.path, SANLK_PATH_LEN);
-	strcpy_name_len(rd.rs.lockspace_name, ls_name, SANLK_NAME_LEN);
-	strcpy_name_len(rd.rs.name, (char *)"#unused", SANLK_NAME_LEN);
+	(void)dm_strncpy(rd.rs.lockspace_name, ls_name, SANLK_NAME_LEN);
+	(void)dm_strncpy(rd.rs.name, "#unused", SANLK_NAME_LEN);
 
 	offset = align_size * LV_LOCK_BEGIN;
 
@@ -736,7 +724,7 @@ int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name,
 		return 0;
 	}
 
-	strcpy_name_len(rd.rs.lockspace_name, ls_name, SANLK_NAME_LEN);
+	(void)dm_strncpy(rd.rs.lockspace_name, ls_name, SANLK_NAME_LEN);
 	rd.rs.num_disks = 1;
 	if ((rv = build_dm_path(rd.rs.disks[0].path, SANLK_PATH_LEN, vg_name, lock_lv_name)))
 		return rv;
@@ -811,7 +799,7 @@ int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name,
 			log_debug("S %s init_lv_san %s found unused area at %llu",
 				  ls_name, lv_name, (unsigned long long)offset);
 
-			strcpy_name_len(rd.rs.name, lv_name, SANLK_NAME_LEN);
+			(void)dm_strncpy(rd.rs.name, lv_name, SANLK_NAME_LEN);
 			rd.rs.flags = (sector_size == 4096) ? (SANLK_RES_SECTOR4K | SANLK_RES_ALIGN8M) :
 							      (SANLK_RES_SECTOR512 | SANLK_RES_ALIGN1M);
 
@@ -910,7 +898,7 @@ int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_
 	if (!sector_size || !align_size)
 		return -1;
 
-	strcpy_name_len(ss.name, ls_name, SANLK_NAME_LEN);
+	(void)dm_strncpy(ss.name, ls_name, SANLK_NAME_LEN);
 
 	rv = sanlock_write_lockspace(&ss, 0, 0, sanlock_io_timeout);
 	if (rv < 0) {
@@ -1020,7 +1008,7 @@ int lm_free_lv_sanlock(struct lockspace *ls, struct resource *r)
 	if (daemon_test)
 		return 0;
 
-	strcpy_name_len(rs->name, (char *)"#unused", SANLK_NAME_LEN);
+	(void)dm_strncpy(rs->name, "#unused", SANLK_NAME_LEN);
 
 	rv = sanlock_write_resource(rs, 0, 0, 0);
 	if (rv < 0) {
@@ -1054,11 +1042,11 @@ int lm_ex_disable_gl_sanlock(struct lockspace *ls)
 	memset(&rd1, 0, sizeof(rd1));
 	memset(&rd2, 0, sizeof(rd2));
 
-	strcpy_name_len(rd1.rs.lockspace_name, ls->name, SANLK_NAME_LEN);
-	strcpy_name_len(rd1.rs.name, (char *)R_NAME_GL, SANLK_NAME_LEN);
+	(void)dm_strncpy(rd1.rs.lockspace_name, ls->name, SANLK_NAME_LEN);
+	(void)dm_strncpy(rd1.rs.name, R_NAME_GL, SANLK_NAME_LEN);
 
-	strcpy_name_len(rd2.rs.lockspace_name, ls->name, SANLK_NAME_LEN);
-	strcpy_name_len(rd2.rs.name, (char *)R_NAME_GL_DISABLED, SANLK_NAME_LEN);
+	(void)dm_strncpy(rd2.rs.lockspace_name, ls->name, SANLK_NAME_LEN);
+	(void)dm_strncpy(rd2.rs.name, R_NAME_GL_DISABLED, SANLK_NAME_LEN);
 
 	rd1.rs.num_disks = 1;
 	memcpy(rd1.rs.disks[0].path, lms->ss.host_id_disk.path, SANLK_PATH_LEN-1);
@@ -1123,8 +1111,8 @@ int lm_able_gl_sanlock(struct lockspace *ls, int enable)
 
 	memset(&rd, 0, sizeof(rd));
 
-	strcpy_name_len(rd.rs.lockspace_name, ls->name, SANLK_NAME_LEN);
-	strcpy_name_len(rd.rs.name, (char *)gl_name, SANLK_NAME_LEN);
+	(void)dm_strncpy(rd.rs.lockspace_name, ls->name, SANLK_NAME_LEN);
+	(void)dm_strncpy(rd.rs.name, gl_name, SANLK_NAME_LEN);
 
 	rd.rs.num_disks = 1;
 	memcpy(rd.rs.disks[0].path, lms->ss.host_id_disk.path, SANLK_PATH_LEN-1);
@@ -1144,7 +1132,7 @@ out:
 	ls->sanlock_gl_enabled = enable;
 
 	if (enable)
-		strncpy(gl_lsname_sanlock, ls->name, MAX_NAME);
+		(void)dm_strncpy(gl_lsname_sanlock, ls->name, MAX_NAME);
 
 	if (!enable && !strcmp(gl_lsname_sanlock, ls->name))
 		memset(gl_lsname_sanlock, 0, sizeof(gl_lsname_sanlock));
@@ -1164,7 +1152,7 @@ static int gl_is_enabled(struct lockspace *ls, struct lm_sanlock *lms)
 
 	memset(&rd, 0, sizeof(rd));
 
-	strcpy_name_len(rd.rs.lockspace_name, ls->name, SANLK_NAME_LEN);
+	(void)dm_strncpy(rd.rs.lockspace_name, ls->name, SANLK_NAME_LEN);
 
 	/* leave rs.name empty, it is what we're checking */
 
@@ -1235,7 +1223,7 @@ int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t *free_offset, int *
 
 	memset(&rd, 0, sizeof(rd));
 
-	strcpy_name_len(rd.rs.lockspace_name, ls->name, SANLK_NAME_LEN);
+	(void)dm_strncpy(rd.rs.lockspace_name, ls->name, SANLK_NAME_LEN);
 	rd.rs.num_disks = 1;
 	memcpy(rd.rs.disks[0].path, lms->ss.host_id_disk.path, SANLK_PATH_LEN-1);
 	rd.rs.flags = (lms->sector_size == 4096) ? (SANLK_RES_SECTOR4K | SANLK_RES_ALIGN8M) :
@@ -1586,7 +1574,7 @@ int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg)
 		 * This shouldn't be generally necessary, but there may some races
 		 * between nodes starting and removing a vg which this could help.
 		 */
-		strcpy_name_len(lms->ss.name, (char *)"#unused", SANLK_NAME_LEN);
+		(void)dm_strncpy(lms->ss.name, "#unused", SANLK_NAME_LEN);
 
 		rv = sanlock_write_lockspace(&lms->ss, 0, 0, sanlock_io_timeout);
 		if (rv < 0) {
@@ -1614,8 +1602,8 @@ static int lm_add_resource_sanlock(struct lockspace *ls, struct resource *r)
 	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
 	struct rd_sanlock *rds = (struct rd_sanlock *)r->lm_data;
 
-	strcpy_name_len(rds->rs.lockspace_name, ls->name, SANLK_NAME_LEN);
-	strcpy_name_len(rds->rs.name, r->name, SANLK_NAME_LEN);
+	(void)dm_strncpy(rds->rs.lockspace_name, ls->name, SANLK_NAME_LEN);
+	(void)dm_strncpy(rds->rs.name, r->name, SANLK_NAME_LEN);
 	rds->rs.num_disks = 1;
 	memcpy(rds->rs.disks[0].path, lms->ss.host_id_disk.path, SANLK_PATH_LEN);
 	rds->rs.flags = (lms->sector_size == 4096) ? (SANLK_RES_SECTOR4K | SANLK_RES_ALIGN8M) : (SANLK_RES_SECTOR512 | SANLK_RES_ALIGN1M);
@@ -2044,7 +2032,7 @@ static int release_rename(struct lockspace *ls, struct resource *r)
 	res1 = (struct sanlk_resource *)&rd1;
 	res2 = (struct sanlk_resource *)&rd2;
 
-	strcpy_name_len(res2->name, (char *)"invalid_removed", SANLK_NAME_LEN);
+	(void)dm_strncpy(res2->name, "invalid_removed", SANLK_NAME_LEN);
 
 	res_args[0] = res1;
 	res_args[1] = res2;
