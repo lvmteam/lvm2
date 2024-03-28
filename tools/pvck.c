@@ -1068,10 +1068,6 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 	pvh = (struct pv_header *)(buf + 32);
 	pvh_offset = lh_offset + 32; /* from start of disk */
 
-	/* sanity check */
-	if ((void *)pvh != (void *)(buf + pvh_offset - lh_offset))
-		log_print("CHECK: problem with pv_header offset calculation");
-
 	if (print_fields) {
 		log_print("pv_header at %llu", (unsigned long long)pvh_offset);
 		log_print("pv_header.pv_uuid %s", _chars_to_str(pvh->pv_uuid, str, ID_LEN, 256, "pv_header.pv_uuid"));
@@ -1089,10 +1085,6 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 	di = 0;
 	dlocn = pvh->disk_areas_xl;
 	dlocn_offset = pvh_offset + 40; /* from start of disk */
-
-	/* sanity check */
-	if ((void *)dlocn != (void *)(buf + dlocn_offset - lh_offset))
-		log_print("CHECK: problem with pv_header.disk_locn[%d] offset calculation", di);
 
 	while (xlate64(dlocn->offset)) {
 		if (print_fields) {
