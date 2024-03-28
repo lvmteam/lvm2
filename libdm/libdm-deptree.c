@@ -162,7 +162,7 @@ struct load_segment {
 	uint32_t region_size;		/* Mirror + raid */
 	unsigned clustered;		/* Mirror */
 	unsigned mirror_area_count;	/* Mirror */
-	uint32_t flags;			/* Mirror + raid + Cache */
+	uint64_t flags;			/* Mirror + Raid + Cache */
 	char *uuid;			/* Clustered mirror log */
 
 	const char *policy_name;	/* Cache */
