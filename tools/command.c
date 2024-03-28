@@ -941,12 +941,28 @@ static void _add_opt_arg(struct command *cmd, char *str,
 	}
 
 skip:
-	if (required > 0)
+	if (required > 0) {
+		if (cmd->ro_count >= CMD_RO_ARGS) {
+			log_error("Too many args, increase CMD_RO_ARGS.");
+			cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
+			return;
+		}
 		cmd->required_opt_args[cmd->ro_count++].opt = opt;
-	else if (!required)
+	} else if (!required) {
+		if (cmd->oo_count >= CMD_OO_ARGS) {
+			log_error("Too many args, increase CMD_OO_ARGS.");
+			cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
+			return;
+		}
 		cmd->optional_opt_args[cmd->oo_count++].opt = opt;
-	else if (required < 0)
+	} else if (required < 0) {
+		if (cmd->io_count >= CMD_IO_ARGS) {
+			log_error("Too many args, increase CMD_IO_ARGS.");
+			cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
+			return;
+		}
 		cmd->ignore_opt_args[cmd->io_count++].opt = opt;
+	}
 
 	*takes_arg = opt_names[opt].val_enum ? 1 : 0;
 }

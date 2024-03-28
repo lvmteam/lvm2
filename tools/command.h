@@ -152,12 +152,12 @@ struct cmd_rule {
  * of which one is required after which the rest are
  * optional.
  */
-#define CMD_RO_ARGS 64          /* required opt args */
-#define CMD_OO_ARGS 100         /* optional opt args */
+#define CMD_RO_ARGS 32          /* required opt args */
+#define CMD_OO_ARGS 64          /* optional opt args */
 #define CMD_RP_ARGS 8           /* required positional args */
 #define CMD_OP_ARGS 8           /* optional positional args */
 #define CMD_IO_ARGS 8           /* ignore opt args */
-#define CMD_MAX_RULES 32        /* max number of rules per command def */
+#define CMD_MAX_RULES 16        /* max number of rules per command def */
 
 /*
  * one or more from required_opt_args is required,
