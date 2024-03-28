@@ -880,6 +880,11 @@ static int _get_args(struct cmd_context *cmd, int argc, char **argv,
 			continue;
 		}
 
+		if ((major < 0) || (minor < 0)) {
+			log_warn("WARNING: Invalid major:minor %d:%d, skipping.", major, minor);
+			continue;
+		}
+
 		if (!(arg = dm_pool_zalloc(cmd->mem, sizeof(*arg))))
 			return_0;
 		arg->devno = MKDEV(major, minor);
