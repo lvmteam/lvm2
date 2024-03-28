@@ -509,7 +509,7 @@ struct Format {
     Timespec start;
     Substitute subst;
 
-    std::string format( TimedBuffer::Line l ) {
+    std::string format( const TimedBuffer::Line &l ) {
         std::stringstream result;
         if ( l.first >= start ) {
             Timespec rel = l.first - start;
