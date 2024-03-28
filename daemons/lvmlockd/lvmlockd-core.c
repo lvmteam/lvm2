@@ -5747,7 +5747,7 @@ static void adopt_locks(void)
 		act->flags = LD_AF_ADOPT;
 		act->client_id = INTERNAL_CLIENT_ID;
 		act->lm_type = ls->lm_type;
-		strncpy(act->vg_name, ls->vg_name, MAX_NAME);
+		(void)dm_strncpy(act->vg_name, ls->vg_name, MAX_NAME);
 
 		log_debug("adopt lock for vg %s", act->vg_name);
 
