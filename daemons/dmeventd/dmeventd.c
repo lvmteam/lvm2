@@ -1680,7 +1680,7 @@ static int _do_process_request(struct dm_event_daemon_message *msg)
 	} else
 		ret = _handle_request(msg, &message_data);
 
-	msg->cmd = ret;
+	msg->cmd = (uint32_t)ret;
 	if (!msg->data)
 		msg->size = dm_asprintf(&(msg->data), "%s %s", message_data.id, strerror(-ret));
 
