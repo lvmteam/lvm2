@@ -46,12 +46,12 @@ struct lvmpolld_lv {
 	 * require struct lvmpolld_lv lock
 	 */
 	struct lvmpolld_state *ls;
-	const enum poll_type type;
+	enum poll_type type;
 	const char *lvid;
 	const char *lvmpolld_id;
 	const char *devicesfile;
 	const char *lvname; /* full vg/lv name */
-	const unsigned pdtimeout; /* in seconds */
+	unsigned pdtimeout; /* in seconds */
 	const char *sinterval;
 	const char *lvm_system_dir_env;
 	struct lvmpolld_store *pdst;
