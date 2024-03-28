@@ -999,7 +999,8 @@ char yes_no_prompt(const char *prompt, ...)
 			answer = _no + 1;	/* Expecting 'No' */
 		} else if (!ret && isspace(c)) {
 			/* Ignore any whitespace before */
-			--i;
+			if (i > 0)
+				i--;
 			goto nextchar;
 		} else if ((ret > 0) && answer && isspace(c)) {
 			/* Ignore any whitespace after */
