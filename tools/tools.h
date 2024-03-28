@@ -98,7 +98,6 @@ enum {
 #define ARG_NONINTERACTIVE 0x00000004	/* only for use in noninteractive mode  */
 
 struct arg_values {
-	unsigned count;
 	char *value;
 	int32_t i_value;
 	uint32_t ui_value;
@@ -106,6 +105,7 @@ struct arg_values {
 	uint64_t ui64_value;
 	sign_t sign;
 	percent_type_t percent;
+	uint16_t count;
 };
 
 struct arg_value_group_list {

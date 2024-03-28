@@ -101,9 +101,9 @@ static inline uint64_t lvt_enum_to_bit(int lvt_enum)
 struct arg_def {
 	uint64_t val_bits;   /* bits of x_VAL, can be multiple for pos_arg */
 	uint64_t lvt_bits;   /* lvt_enum_to_bit(x_LVT) for lv_VAL, can be multiple */
-	uint64_t num;        /* a literal number for conststr_VAL */
 	const char *str;     /* a literal string for constnum_VAL */
 	uint32_t flags;      /* ARG_DEF_FLAG_ */
+	uint16_t num;        /* a literal number for conststr_VAL */
 };
 
 /* Description of an option and the value that follows it. */
@@ -140,9 +140,9 @@ struct cmd_rule {
 	uint64_t check_lvt_bits;	/* LV must [not] have one of these type */
 	uint64_t check_lvp_bits;	/* LV must [not] have all of these properties */
 
-	uint32_t rule;			/* RULE_INVALID, RULE_REQUIRE: check values must [not] be true */
-	int opts_count;			/* entries in opts[] */
-	int check_opts_count;		/* entries in check_opts[] */
+	uint16_t rule;			/* RULE_INVALID, RULE_REQUIRE: check values must [not] be true */
+	uint16_t opts_count;		/* entries in opts[] */
+	uint16_t check_opts_count;	/* entries in check_opts[] */
 };
 
 /*
@@ -212,16 +212,16 @@ struct command {
 	char *autotype;
 	char *autotype2;
 
-	int any_ro_count;
+	uint16_t any_ro_count;
 
-	int ro_count;
-	int oo_count;
-	int rp_count;
-	int op_count;
-	int io_count;
-	int rule_count;
+	uint16_t ro_count;
+	uint16_t oo_count;
+	uint16_t rp_count;
+	uint16_t op_count;
+	uint16_t io_count;
+	uint16_t rule_count;
 
-	int pos_count; /* temp counter used by create-command */
+	uint16_t pos_count; /* temp counter used by create-command */
 };
 
 /* see global opt_names[] */
@@ -230,10 +230,10 @@ struct opt_name {
 	const char *name;       /* "foo_ARG" */
 	uint16_t opt_enum;      /* foo_ARG */
 	const char short_opt;   /* -f */
-	char _padding[1];
+	char _padding[5];
 	const char *long_opt;   /* --foo */
-	uint16_t val_enum;           /* xyz_VAL when --foo takes a val like "--foo xyz" */
-	uint32_t flags;
+	uint16_t val_enum;	/* xyz_VAL when --foo takes a val like "--foo xyz" */
+	uint16_t flags;
 	uint16_t prio;
 	const char *desc;
 };
