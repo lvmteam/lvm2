@@ -66,8 +66,8 @@ char devices_file_product_uuid_orig[PATH_MAX];
 char *strdup_pvid(char *pvid)
 {
 	char *buf;
-	if (!(buf = malloc(ID_LEN + 1)))
-		return NULL;
+	if (!(buf = zalloc(ID_LEN + 1)))
+		return_NULL;
 	(void)dm_strncpy(buf, pvid, ID_LEN + 1);
 	return buf;
 }
