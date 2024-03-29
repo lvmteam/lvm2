@@ -37,8 +37,6 @@ union lvid {
 
 int lvid_in_restricted_range(union lvid *lvid);
 
-void uuid_from_num(char *uuid, uint32_t num);
-
 int lvid_create(union lvid *lvid, struct id *vgid);
 int id_create(struct id *id);
 int id_valid(struct id *id);

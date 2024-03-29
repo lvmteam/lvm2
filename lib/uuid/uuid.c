@@ -34,16 +34,6 @@ int lvid_create(union lvid *lvid, struct id *vgid)
 	return id_create(&lvid->id[1]);
 }
 
-void uuid_from_num(char *uuid, uint32_t num)
-{
-	unsigned i;
-
-	for (i = ID_LEN; i; i--) {
-		uuid[i - 1] = _c[num % (sizeof(_c) - 1)];
-		num /= sizeof(_c) - 1;
-	}
-}
-
 int lvid_in_restricted_range(union lvid *lvid)
 {
 	int i;
