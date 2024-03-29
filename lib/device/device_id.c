@@ -620,17 +620,13 @@ void free_wwids(struct dm_list *ids)
 struct dev_wwid *dev_add_wwid(char *id, int id_type, struct dm_list *ids)
 {
 	struct dev_wwid *dw;
-	int len;
 
 	if (!id_type)
 		id_type = _wwid_type_num(id);
 
-	if (!(dw = zalloc(sizeof(struct dev_wwid))))
-		return NULL;
-	len = strlen(id);
-	if (len >= DEV_WWID_SIZE)
-		len = DEV_WWID_SIZE - 1;
-	memcpy(dw->id, id, len);
+	if (!(dw = zalloc(sizeof(*dw))))
+		return_NULL;
+	(void)dm_strncpy(dw->id, id, sizeof(dw->id));
 	dw->type = id_type;
 	dm_list_add(ids, &dw->list);
 	return dw;
