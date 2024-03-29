@@ -366,7 +366,7 @@ static void _reduce_repeating_underscores(char *buf, size_t bufsize)
 
 	memset(buf, 0, bufsize);
 
-	for (i = 0; i < strlen(tmpbuf); i++) {
+	for (i = 0; tmpbuf[i]; ++i) {
 		if (tmpbuf[i] == '_')
 			us++;
 		else
@@ -739,7 +739,7 @@ static int _dev_read_sys_serial(struct cmd_context *cmd, struct device *dev,
 		base = dm_basename(devname);
 
 		/* vda1 to vda */
-		for (i = 0; i < strlen(base); i++) {
+		for (i = 0; base[i]; ++i) {
 			if (isdigit(base[i]))
 				break;
 			vdx[j] = base[i];
@@ -835,7 +835,7 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 	    (idtype != DEV_ID_TYPE_WWID_NAA) &&
 	    (idtype != DEV_ID_TYPE_WWID_EUI) &&
 	    (idtype != DEV_ID_TYPE_WWID_T10)) {
-		for (i = 0; i < strlen(sysbuf); i++) {
+		for (i = 0; sysbuf[i]; ++i) {
 			if ((sysbuf[i] == '"') ||
 			    isblank(sysbuf[i]) ||
 			    isspace(sysbuf[i]) ||
