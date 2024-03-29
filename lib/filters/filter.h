@@ -42,12 +42,7 @@ struct dev_filter *deviceid_filter_create(struct cmd_context *cmd);
 
 struct dev_filter *regex_filter_create(const struct dm_config_value *patterns, int config_filter, int config_global_filter);
 
-typedef enum {
-	FILTER_MODE_NO_LVMETAD,
-	FILTER_MODE_PRE_LVMETAD,
-	FILTER_MODE_POST_LVMETAD
-} filter_mode_t;
-struct dev_filter *usable_filter_create(struct cmd_context *cmd, struct dev_types *dt, filter_mode_t mode);
+struct dev_filter *usable_filter_create(struct cmd_context *cmd, struct dev_types *dt);
 
 #define DEV_FILTERED_FWRAID		0x00000001
 #define DEV_FILTERED_INTERNAL		0x00000002
