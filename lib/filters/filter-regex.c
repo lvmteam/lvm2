@@ -225,7 +225,7 @@ struct dev_filter *regex_filter_create(const struct dm_config_value *patterns, i
 	if (!mem)
 		return_NULL;
 
-	if (!(rf = dm_pool_alloc(mem, sizeof(*rf))))
+	if (!(rf = dm_pool_zalloc(mem, sizeof(*rf))))
 		goto_bad;
 
 	rf->mem = mem;
