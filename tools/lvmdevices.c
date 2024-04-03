@@ -554,6 +554,7 @@ restart4:
 
 	dm_list_splice(&cmd->use_devices, &use_new);
 	dm_list_splice(&cmd->use_devices, &done_new);
+	free_dus(&use_old);
 	free_dus(&done_old);
 }
 
