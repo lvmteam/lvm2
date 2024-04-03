@@ -1687,6 +1687,8 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 			label_scan_dev(cmd, devl->dev);
 		}
 
+		_destroy_device_list(&add_cache_devs);
+
 		dm_list_splice(&_unused_duplicates, &del_cache_devs);
 
 		/* Warn about unused duplicates that the user might want to resolve. */
