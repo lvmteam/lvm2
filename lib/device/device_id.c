@@ -626,7 +626,8 @@ struct dev_wwid *dev_add_wwid(char *id, int id_type, struct dm_list *ids)
 
 	if (!(dw = zalloc(sizeof(*dw))))
 		return_NULL;
-	(void)dm_strncpy(dw->id, id, sizeof(dw->id));
+	/* Copy id string with upto DEV_WWID_SIZE characters */
+	dm_strncpy(dw->id, id, sizeof(dw->id));
 	dw->type = id_type;
 	dm_list_add(ids, &dw->list);
 	return dw;
