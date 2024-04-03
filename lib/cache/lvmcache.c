@@ -897,8 +897,10 @@ next:
 			}
 
 			/* Remove dev_mpath from altdevs. */
-			if ((devl = device_list_find_dev(&altdevs, dev_mpath)))
+			if ((devl = device_list_find_dev(&altdevs, dev_mpath))) {
 				dm_list_del(&devl->list);
+				free(devl);
+			}
 
 			/* Remove info from lvmcache that came from the component dev. */
 			log_debug("Ignoring multipath component %s with PVID %s (dropping info)", dev_name(dev_drop), pvid);
@@ -935,6 +937,7 @@ next:
 
 			log_debug("Ignoring multipath component %s with PVID %s (dropping duplicate)", dev_name(dev_drop), pvid);
 			dm_list_del(&devl->list);
+			free(devl);
 
 			cmd->filter->wipe(cmd, cmd->filter, dev_drop, NULL);
 			dev_drop->flags &= ~DEV_SCAN_FOUND_LABEL;
@@ -964,8 +967,10 @@ next:
 			}
 
 			/* Remove dev_md from altdevs. */
-			if ((devl = device_list_find_dev(&altdevs, dev_md)))
+			if ((devl = device_list_find_dev(&altdevs, dev_md))) {
 				dm_list_del(&devl->list);
+				free(devl);
+			}
 
 			/* Remove info from lvmcache that came from the component dev. */
 			log_debug("Ignoring md component %s with PVID %s (dropping info)", dev_name(dev_drop), pvid);
@@ -992,8 +997,10 @@ next:
 			}
 
 			/* Remove dev_md from altdevs. */
-			if ((devl = device_list_find_dev(&altdevs, dev_md)))
+			if ((devl = device_list_find_dev(&altdevs, dev_md))) {
 				dm_list_del(&devl->list);
+				free(devl);
+			}
 		}
 
 		if (info && !dev_md) {
@@ -1021,6 +1028,7 @@ next:
 
 			log_debug("Ignoring md component %s with PVID %s (dropping duplicate)", dev_name(dev_drop), pvid);
 			dm_list_del(&devl->list);
+			free(devl);
 
 			cmd->filter->wipe(cmd, cmd->filter, dev_drop, NULL);
 			dev_drop->flags &= ~DEV_SCAN_FOUND_LABEL;
