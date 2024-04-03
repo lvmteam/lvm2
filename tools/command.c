@@ -1171,7 +1171,7 @@ static void _include_required_opt_args(struct cmd_context *cmdtool, struct comma
 static void _add_required_line(struct cmd_context *cmdtool, struct command *cmd, int argc, char *argv[])
 {
 	int i;
-	int takes_arg;
+	int takes_arg = 0;
 	int prev_was_opt = 0, prev_was_pos = 0;
 	int orig_ro_count = 0;
 
