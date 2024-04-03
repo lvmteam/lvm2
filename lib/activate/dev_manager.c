@@ -2676,24 +2676,29 @@ static int _pool_register_callback(struct dev_manager *dm,
 	return 1;
 }
 
+static struct id _get_id_for_meta_or_data(const struct lv_segment *lvseg, int meta_or_data)
+{
+	/* When ID is provided in form of metadata_id or data_id, otherwise use CVOL ID */
+	if (meta_or_data && lvseg->metadata_id)
+		return *lvseg->metadata_id;
+
+	if (!meta_or_data && lvseg->data_id)
+		return *lvseg->data_id;
+
+	return lvseg->pool_lv->lvid.id[1];
+}
+
 /* Add special devices _cmeta & _cdata on top of CacheVol to dm tree */
 static int _add_cvol_subdev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 				     const struct logical_volume *lv, int meta_or_data)
 {
 	const char *layer = meta_or_data ? "cmeta" : "cdata";
 	struct dm_pool *mem = dm->track_pending_delete ? dm->cmd->pending_delete_mem : dm->mem;
-	const struct logical_volume *pool_lv = first_seg(lv)->pool_lv;
 	struct lv_segment *lvseg = first_seg(lv);
+	const struct logical_volume *pool_lv = lvseg->pool_lv;
 	struct dm_info info;
 	char *name ,*dlid;
-	union lvid lvid = {
-		{
-			lv->vg->id,
-			/* When ID is provided in form of metadata_id or data_id, otherwise use CVOL ID */
-			(meta_or_data && lvseg->metadata_id) ? *lvseg->metadata_id :
-			(lvseg->data_id) ? *lvseg->data_id : pool_lv->lvid.id[1]
-		}
-	};
+	union lvid lvid = { { lv->vg->id, _get_id_for_meta_or_data(lvseg, meta_or_data) } };
 
 	if (!(dlid = dm_build_dm_uuid(mem, UUID_PREFIX, (const char *)&lvid.s, layer)))
 		return_0;
@@ -3346,14 +3351,7 @@ static int _add_new_cvol_subdev_to_dtree(struct dev_manager *dm,
 	const struct logical_volume *pool_lv = lvseg->pool_lv;
 	struct dm_tree_node *dnode;
 	char *dlid, *dlid_pool, *name;
-	union lvid lvid = {
-		{
-			lv->vg->id,
-			/* When ID is provided in form of metadata_id or data_id, otherwise use CVOL ID */
-			(meta_or_data && lvseg->metadata_id) ? *lvseg->metadata_id :
-			(lvseg->data_id) ? *lvseg->data_id : pool_lv->lvid.id[1]
-		}
-	};
+	union lvid lvid = { { lv->vg->id, _get_id_for_meta_or_data(lvseg, meta_or_data) } };
 
 	if (!(dlid = dm_build_dm_uuid(dm->mem, UUID_PREFIX, (const char *)&lvid.s, layer)))
 		return_0;
