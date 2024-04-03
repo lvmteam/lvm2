@@ -2367,13 +2367,13 @@ static struct resource *find_resource_act(struct lockspace *ls,
 	r->mode = LD_LK_UN;
 
 	if (r->type == LD_RT_GL) {
-		(void)dm_strncpy(r->name, R_NAME_GL, MAX_NAME);
+		dm_strncpy(r->name, R_NAME_GL, sizeof(r->name));
 		r->use_vb = 1;
 	} else if (r->type == LD_RT_VG) {
-		(void)dm_strncpy(r->name, R_NAME_VG, MAX_NAME);
+		dm_strncpy(r->name, R_NAME_VG, sizeof(r->name));
 		r->use_vb = 1;
 	} else if (r->type == LD_RT_LV) {
-		(void)dm_strncpy(r->name, act->lv_uuid, MAX_NAME);
+		dm_strncpy(r->name, act->lv_uuid, sizeof(r->name));
 		r->use_vb = 0;
 	}
 
@@ -3529,7 +3529,7 @@ static void work_test_gl(void)
 			is_enabled = lm_gl_is_enabled(ls);
 			if (is_enabled) {
 				log_debug("S %s worker found gl_is_enabled", ls->name);
-				(void)dm_strncpy(gl_lsname_sanlock, ls->name, MAX_NAME);
+				dm_strncpy(gl_lsname_sanlock, ls->name, sizeof(gl_lsname_sanlock));
 			}
 		}
 		pthread_mutex_unlock(&ls->mutex);
@@ -5719,9 +5719,9 @@ static void adopt_locks(void)
 			act->flags = (LD_AF_ADOPT | LD_AF_PERSISTENT);
 			act->client_id = INTERNAL_CLIENT_ID;
 			act->lm_type = ls->lm_type;
-			(void)dm_strncpy(act->vg_name, ls->vg_name, MAX_NAME);
-			(void)dm_strncpy(act->lv_uuid, r->name, MAX_NAME);
-			(void)dm_strncpy(act->lv_args, r->lv_args, MAX_ARGS);
+			dm_strncpy(act->vg_name, ls->vg_name, sizeof(act->vg_name));
+			dm_strncpy(act->lv_uuid, r->name, sizeof(act->lv_uuid));
+			dm_strncpy(act->lv_args, r->lv_args, sizeof(act->lv_args));
 
 			log_debug("adopt lock for lv %s %s", act->vg_name, act->lv_uuid);
 
@@ -5747,7 +5747,7 @@ static void adopt_locks(void)
 		act->flags = LD_AF_ADOPT;
 		act->client_id = INTERNAL_CLIENT_ID;
 		act->lm_type = ls->lm_type;
-		(void)dm_strncpy(act->vg_name, ls->vg_name, MAX_NAME);
+		dm_strncpy(act->vg_name, ls->vg_name, sizeof(act->vg_name));
 
 		log_debug("adopt lock for vg %s", act->vg_name);
 

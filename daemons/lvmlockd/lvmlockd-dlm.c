@@ -848,8 +848,8 @@ int lm_get_lockspaces_dlm(struct list_head *ls_rejoin)
 		}
 
 		ls->lm_type = LD_LM_DLM;
-		(void)dm_strncpy(ls->name, de->d_name, MAX_NAME);
-		(void)dm_strncpy(ls->vg_name, ls->name + strlen(LVM_LS_PREFIX), MAX_NAME);
+		dm_strncpy(ls->name, de->d_name, sizeof(ls->name));
+		dm_strncpy(ls->vg_name, ls->name + strlen(LVM_LS_PREFIX), sizeof(ls->vg_name));
 		list_add_tail(&ls->list, ls_rejoin);
 	}
 
@@ -885,7 +885,7 @@ int lm_refresh_lv_start_dlm(struct action *act)
 	int rv;
 
 	/* split /dev/vgname/lvname into vgname and lvname strings */
-	(void)dm_strncpy(path, act->path, PATH_MAX);
+	dm_strncpy(path, act->path, sizeof(path));
 
 	/* skip past dev */
 	if (!(p = strchr(path + 1, '/')))
