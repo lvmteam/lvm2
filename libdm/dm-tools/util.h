@@ -17,6 +17,13 @@
 
 #include <inttypes.h>
 
+/* Use wrapper for checked results */
+static inline __attribute__((warn_unused_result))
+	int _dm_strncpy(char *dest, const char *src, size_t n)
+{
+	return dm_strncpy(dest, src, n);
+}
+
 #define min(a, b) ({ typeof(a) _a = (a); \
 		     typeof(b) _b = (b); \
 		     (void) (&_a == &_b); \
