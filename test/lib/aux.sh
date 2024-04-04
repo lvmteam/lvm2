@@ -1828,9 +1828,9 @@ version_at_least() {
 # i.e.   dm_target_at_least  dm-thin-pool  1 0
 target_at_least() {
 	rm -f debug.log strace.log
+	modprobe "$1" || true
 	case "$1" in
 	  dm-vdo) modprobe "kvdo" || true ;;
-	  dm-*) modprobe "$1" || true ;;
 	esac
 
 	if test "$1" = dm-raid; then
