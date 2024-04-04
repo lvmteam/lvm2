@@ -13,6 +13,7 @@
 #define _LVM_CLOG_FUNCTIONS_H
 
 #include "libdm/libdevmapper.h"
+#include "libdm/dm-tools/util.h"
 #include "libdm/misc/dm-log-userspace.h"
 #include "cluster.h"
 

@@ -14,8 +14,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "util.h"
 #include "libdm/misc/dm-logging.h"
+#include "util.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
