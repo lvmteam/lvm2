@@ -507,7 +507,7 @@ static uint64_t _lv_to_bits(struct command *cmd, char *name)
 	int argc;
 	int i;
 
-	(void) dm_strncpy(buf, name, LVTYPE_LEN);
+	dm_strncpy(buf, name, sizeof(buf));
 
 	_split_line(buf, &argc, argv, '_');
 
@@ -853,7 +853,7 @@ static char *_get_oo_line(const char *str)
 	char str2[OO_NAME_LEN];
 	int i;
 
-	(void) dm_strncpy(str2, str, sizeof(str2));
+	dm_strncpy(str2, str, sizeof(str2));
 	if ((end = strchr(str2, ':')))
 		*end = '\0';
 	if ((end = strchr(str2, ',')))

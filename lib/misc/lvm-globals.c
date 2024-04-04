@@ -164,7 +164,7 @@ void init_log_command(int log_name, int log_pid)
 		return;
 
 	else if (log_name && !log_pid)
-		(void) dm_strncpy(_log_command_info, _cmd_name, sizeof(_log_command_info));
+		dm_strncpy(_log_command_info, _cmd_name, sizeof(_log_command_info));
 
 	else if (!log_name && log_pid)
 		(void) dm_snprintf(_log_command_info, sizeof(_log_command_info), "%d", getpid());
@@ -212,7 +212,7 @@ void init_pv_min_size(uint64_t sectors)
 
 void set_cmd_name(const char *cmd)
 {
-	(void) dm_strncpy(_cmd_name, cmd, sizeof(_cmd_name));
+	dm_strncpy(_cmd_name, cmd, sizeof(_cmd_name));
 }
 
 const char *get_cmd_name(void)
@@ -222,7 +222,7 @@ const char *get_cmd_name(void)
 
 void set_sysfs_dir_path(const char *path)
 {
-	(void) dm_strncpy(_sysfs_dir_path, path, sizeof(_sysfs_dir_path));
+	dm_strncpy(_sysfs_dir_path, path, sizeof(_sysfs_dir_path));
 }
 
 const char *log_command_info(void)

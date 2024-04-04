@@ -181,9 +181,9 @@ int get_pvs_online(struct dm_list *pvs_online, const char *vgname)
 		if (file_major || file_minor)
 			po->devno = MKDEV(file_major, file_minor);
 		if (file_vgname[0])
-			(void)dm_strncpy(po->vgname, file_vgname, sizeof(po->vgname));
+			dm_strncpy(po->vgname, file_vgname, sizeof(po->vgname));
 		if (file_devname[0])
-			(void)dm_strncpy(po->devname, file_devname, sizeof(po->devname));
+			dm_strncpy(po->devname, file_devname, sizeof(po->devname));
 
 		log_debug("Found PV online %s for VG %s %s", path, vgname, file_devname);
 		dm_list_add(pvs_online, &po->list);

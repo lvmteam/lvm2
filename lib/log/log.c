@@ -391,7 +391,7 @@ void init_msg_prefix(const char *prefix)
 {
 	if (prefix)
 		/* Cut away too long prefix */
-		(void) dm_strncpy(_msg_prefix, prefix, sizeof(_msg_prefix));
+		dm_strncpy(_msg_prefix, prefix, sizeof(_msg_prefix));
 }
 
 void init_indent(int indent)

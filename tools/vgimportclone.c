@@ -408,7 +408,7 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 			goto out;
 		}
 		if (strcmp(vgname, vp.old_vgname)) {
-			(void) dm_strncpy(tmp_vgname, base_vgname, NAME_LEN);
+			dm_strncpy(tmp_vgname, base_vgname, sizeof(tmp_vgname));
 			vgname_count = 0;
 		} else {
 			/* Needed when basename matches old name, and PV is not a duplicate

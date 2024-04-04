@@ -1170,7 +1170,7 @@ static int _raid_split_image_conversion(struct logical_volume *lv)
 
 	if (lv_is_raid_image(lv) &&
 	    (s = strstr(lv->name, "_rimage_"))) {
-		(void) dm_strncpy(raidlv_name, lv->name, s - lv->name);
+		dm_strncpy(raidlv_name, lv->name, s - lv->name);
 
 		if (!(tmp_lv = find_lv(lv->vg, raidlv_name))) {
 			log_error("Failed to find RaidLV of RAID subvolume %s.",

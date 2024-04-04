@@ -283,8 +283,8 @@ static int _compare_paths(const char *path0, const char *path1)
 	if (slash1 < slash0)
 		return 1;
 
-	(void) dm_strncpy(p0, path0, sizeof(p0));
-	(void) dm_strncpy(p1, path1, sizeof(p1));
+	dm_strncpy(p0, path0, sizeof(p0));
+	dm_strncpy(p1, path1, sizeof(p1));
 	s0 = p0 + 1;
 	s1 = p1 + 1;
 
@@ -1810,7 +1810,7 @@ static int _setup_devices_file_dmeventd(struct cmd_context *cmd)
 		return 0;
 
 	cmd->enable_devices_file = 1;
-	(void) dm_strncpy(cmd->devices_file_path, path, sizeof(cmd->devices_file_path));
+	dm_strncpy(cmd->devices_file_path, path, sizeof(cmd->devices_file_path));
 	return 1;
 }
 

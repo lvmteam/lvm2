@@ -681,7 +681,7 @@ static int _get_memory_info(uint64_t *total_mb, uint64_t *available_mb)
 		if ((unsigned)(++e - line) > sizeof(namebuf))
 			continue; // something too long
 
-		(void)dm_strncpy((char*)findme.name, line, e - line);
+		dm_strncpy((char*)findme.name, line, e - line);
 
 		found = bsearch(&findme, mt, DM_ARRAY_SIZE(mt), sizeof(mem_table_t),
 				_compare_mem_table_s);

@@ -871,7 +871,7 @@ static int _info(struct cmd_context *cmd,
 			if (strcmp(suffix_position + 1, suffix))
 				continue;
 
-			(void) dm_strncpy(old_style_dlid, dlid, sizeof(old_style_dlid));
+			dm_strncpy(old_style_dlid, dlid, sizeof(old_style_dlid));
 			if (!_info_run(old_style_dlid, dminfo, read_ahead, seg_status,
 				       name_check, with_open_count, with_read_ahead,
 				       0, 0))
@@ -2315,7 +2315,7 @@ static int _check_holder(struct dev_manager *dm, struct dm_tree *dtree,
 		if (!memcmp(uuid, &lv->vg->id, ID_LEN) &&
 		    !dm_tree_find_node_by_uuid(dtree, uuid)) {
 			/* trims any UUID suffix (i.e. -cow) */
-			(void) dm_strncpy((char*)&id, uuid, 2 * sizeof(struct id) + 1);
+			dm_strncpy((char*)&id, uuid, 2 * sizeof(struct id) + 1);
 
 			/* If UUID is not yet in dtree, look for matching LV */
 			if (!(lv_det = find_lv_in_vg_by_lvid(lv->vg, &id))) {

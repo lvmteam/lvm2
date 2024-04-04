@@ -886,7 +886,7 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 		if (!_dev_in_hint_hash(cmd, dev))
 			continue;
 
-		(void) dm_strncpy(devpath, dev_name(dev), sizeof(devpath));
+		dm_strncpy(devpath, dev_name(dev), sizeof(devpath));
 		calc_hash = calc_crc(calc_hash, (const uint8_t *)devpath, strlen(devpath));
 		calc_count++;
 	}
@@ -1077,7 +1077,7 @@ int write_hint_file(struct cmd_context *cmd, int newhints)
 		 * detect when the devices on the system change, which
 		 * invalidates the existing hints.
 		 */
-		(void) dm_strncpy(devpath, dev_name(dev), sizeof(devpath));
+		dm_strncpy(devpath, dev_name(dev), sizeof(devpath));
 		hash = calc_crc(hash, (const uint8_t *)devpath, strlen(devpath));
 		count++;
 

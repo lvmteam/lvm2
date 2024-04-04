@@ -127,7 +127,7 @@ int id_write_format(const struct id *id, char *buffer, size_t size)
 	assert(ID_LEN == 32);
 
 	if (id->uuid[0] == '#') {
-		(void) dm_strncpy(buffer, (char*)id->uuid, size);
+		dm_strncpy(buffer, (char*)id->uuid, size);
 		return 1;
 	}
 

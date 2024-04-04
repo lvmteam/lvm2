@@ -79,7 +79,7 @@ static int _split_vg(const char *filename, char *vgname, size_t vgsize,
 	if (vg_len + 1 > vgsize)
 		return 0;
 
-	(void) dm_strncpy(vgname, filename, vg_len + 1);
+	dm_strncpy(vgname, filename, vg_len + 1);
 
 	return 1;
 }
