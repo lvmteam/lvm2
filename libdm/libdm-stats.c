@@ -1916,7 +1916,7 @@ static char *_build_group_tag(struct dm_stats *dms, uint64_t group_id)
 		return NULL;
 	}
 
-	if (!dm_strncpy(buf, DMS_GROUP_TAG, DMS_GROUP_TAG_LEN + 1))
+	if (!_dm_strncpy(buf, DMS_GROUP_TAG, DMS_GROUP_TAG_LEN + 1))
 		goto_bad;
 
 	buf += DMS_GROUP_TAG_LEN;

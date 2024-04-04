@@ -155,7 +155,7 @@ static int _remove_sibling_pvs_from_trim_list(struct logical_volume *lv,
 
 	dm_list_init(&untrim_list);
 
-	if (!dm_strncpy(sublv_name, lv_name, sizeof(sublv_name))) {
+	if (!_dm_strncpy(sublv_name, lv_name, sizeof(sublv_name))) {
 		log_error(INTERNAL_ERROR "LV name %s is too long.", lv_name);
 		return 0;
 	}
@@ -176,7 +176,7 @@ static int _remove_sibling_pvs_from_trim_list(struct logical_volume *lv,
 	idx++;
 
         /* Copy idx to local buffer */
-	if (!dm_strncpy(idx_buf, idx, sizeof(idx_buf))) {
+	if (!_dm_strncpy(idx_buf, idx, sizeof(idx_buf))) {
 		log_error(INTERNAL_ERROR "Unexpected LV index %s.", idx);
 		return 0;
 	}

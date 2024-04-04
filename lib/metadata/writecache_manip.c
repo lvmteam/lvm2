@@ -146,7 +146,7 @@ static void _rename_detached_cvol(struct cmd_context *cmd, struct logical_volume
 	 * Failing to rename is not really a problem, so we intentionally
 	 * do not consider some things here as errors.
 	 */
-	if (!dm_strncpy(cvol_name, lv_fast->name, sizeof(cvol_name)) ||
+	if (!_dm_strncpy(cvol_name, lv_fast->name, sizeof(cvol_name)) ||
 	    !(suffix  = strstr(cvol_name, "_cvol"))) {
 		log_debug("LV %s has no suffix for cachevol (skipping rename).",
 			display_lvname(lv_fast));

@@ -206,7 +206,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 	if (!_blocking_supported)
 		flags |= LCK_NONBLOCK;
 
-	if (!dm_strncpy(resource, vol, sizeof(resource))) {
+	if (!_dm_strncpy(resource, vol, sizeof(resource))) {
 		log_error(INTERNAL_ERROR "Resource name %s is too long.", vol);
 		return 0;
 	}

@@ -1059,7 +1059,7 @@ static int _set_report_prefix_and_name(struct report_args *args,
 		return 0;
 	}
 
-	if (!dm_strncpy(single_args->report_prefix, report_prefix, sizeof(single_args->report_prefix))) {
+	if (!_dm_strncpy(single_args->report_prefix, report_prefix, sizeof(single_args->report_prefix))) {
 		log_error("_set_report_prefix_and_name: dm_strncpy failed");
 		return 0;
 	}

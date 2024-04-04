@@ -641,7 +641,7 @@ static int _is_usable_uuid(const struct device *dev, const char *name, const cha
 
 			/* Recognize some older reserved LVs just from the LV name (snapshot, pvmove...) */
 			vgname = vg_name;
-			if (!dm_strncpy(vg_name, name, sizeof(vg_name)) ||
+			if (!_dm_strncpy(vg_name, name, sizeof(vg_name)) ||
 			    !dm_split_lvm_name(NULL, NULL, &vgname, &lvname, &layer))
 				return_0;
 

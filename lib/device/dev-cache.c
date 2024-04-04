@@ -861,7 +861,7 @@ static int _insert_dir(const char *dir)
 	char path[PATH_MAX];
 	size_t len;
 
-	if (!dm_strncpy(path, dir, sizeof(path) - 1)) {
+	if (!_dm_strncpy(path, dir, sizeof(path))) {
 		log_debug_devs("Dir path %s is too long", path);
 		return 0;
 	}
@@ -876,7 +876,7 @@ static int _insert_dir(const char *dir)
 			if (dirent[n]->d_name[0] == '.')
 				continue;
 
-			if (!dm_strncpy(path + len, dirent[n]->d_name, sizeof(path) - len)) {
+			if (!_dm_strncpy(path + len, dirent[n]->d_name, sizeof(path) - len)) {
 				log_debug_devs("Path %s/%s is too long.", dir, dirent[n]->d_name);
 				r = 0;
 				continue;

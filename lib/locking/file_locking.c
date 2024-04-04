@@ -77,7 +77,7 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd,
 
 	/* Get lockfile directory from config file */
 	locking_dir = find_config_tree_str(cmd, global_locking_dir_CFG, NULL);
-	if (!dm_strncpy(_lock_dir, locking_dir, sizeof(_lock_dir))) {
+	if (!_dm_strncpy(_lock_dir, locking_dir, sizeof(_lock_dir))) {
 		log_error("Path for locking_dir %s is invalid.", locking_dir);
 		return 0;
 	}

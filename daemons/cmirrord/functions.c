@@ -452,7 +452,7 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 	lc->skip_bit_warning = region_count;
 	lc->disk_fd = -1;
 	lc->log_dev_failed = 0;
-	if (!dm_strncpy(lc->uuid, uuid, DM_UUID_LEN)) {
+	if (!_dm_strncpy(lc->uuid, uuid, DM_UUID_LEN)) {
 		LOG_ERROR("Cannot use too long UUID %s.", uuid);
 		r = -EINVAL;
 		goto fail;

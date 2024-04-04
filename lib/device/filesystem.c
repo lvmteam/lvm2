@@ -278,7 +278,7 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 			continue;
 		if (stme.st_dev != st_lv.st_rdev)
 			continue;
-		if (!dm_strncpy(mtab_mntpath, me->mnt_dir, sizeof(mtab_mntpath)))
+		if (!_dm_strncpy(mtab_mntpath, me->mnt_dir, sizeof(mtab_mntpath)))
 			continue; /* Ignore too long unsupported paths */
 		break;
 	}

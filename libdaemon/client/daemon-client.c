@@ -36,7 +36,7 @@ daemon_handle daemon_open(daemon_info i)
 		goto error;
 	}
 
-	if (!dm_strncpy(sockaddr.sun_path, i.socket, sizeof(sockaddr.sun_path))) {
+	if (!_dm_strncpy(sockaddr.sun_path, i.socket, sizeof(sockaddr.sun_path))) {
 		log_error("%s: Daemon socket path too long.", i.socket);
 		goto error;
 	}

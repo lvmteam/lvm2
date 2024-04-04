@@ -64,6 +64,9 @@ static int dm_strncpy(char *dest, const char *src, size_t n)
 
 	return 0;
 }
+static inline int _dm_strncpy(char *dest, const char *src, size_t n) {
+	return dm_strncpy(dest, src, n);
+}
 
 static char *dm_pool_strdup(void *p, const char *str)
 {
@@ -347,7 +350,7 @@ static int _val_str_to_num(char *str)
 
 	/* compare the name before any suffix like _new or _<lvtype> */
 
-	if (!dm_strncpy(name, str, sizeof(name)))
+	if (!_dm_strncpy(name, str, sizeof(name)))
 		return 0; /* Buffer is too short */
 
 	if ((new = strchr(name, '_')))
@@ -374,7 +377,7 @@ static int _opt_str_to_num(struct command *cmd, const char *str)
 	int i;
 	int first = 0, last = ARG_COUNT - 1, middle;
 
-	if (!dm_strncpy(long_name, str, sizeof(long_name)))
+	if (!_dm_strncpy(long_name, str, sizeof(long_name)))
 		goto err;
 
 	if ((p = strstr(long_name, "_long")))

@@ -302,7 +302,7 @@ int drop_lvname_suffix(char *new_name, const char *name, const char *suffix)
 {
 	char *c;
 
-	if (!dm_strncpy(new_name, name, NAME_LEN)) {
+	if (!_dm_strncpy(new_name, name, NAME_LEN)) {
 		log_debug(INTERNAL_ERROR "Name is too long.");
 		return 0;
 	}

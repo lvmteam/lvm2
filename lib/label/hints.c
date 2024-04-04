@@ -837,18 +837,18 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 		vgname = split[3];
 
 		if (name && !strncmp(name, "scan:", 5))
-			if (!dm_strncpy(hint.name, name + 5, sizeof(hint.name)))
+			if (!_dm_strncpy(hint.name, name + 5, sizeof(hint.name)))
 				continue;
 
 		if (pvid && !strncmp(pvid, "pvid:", 5))
-			if (!dm_strncpy(hint.pvid, pvid + 5, sizeof(hint.pvid)))
+			if (!_dm_strncpy(hint.pvid, pvid + 5, sizeof(hint.pvid)))
 				continue;
 
 		if (devn && sscanf(devn, "devn:%d:%d", &major, &minor) == 2)
 			hint.devt = makedev(major, minor);
 
 		if (vgname && (strlen(vgname) > 3) && (vgname[4] != '-'))
-			if (!dm_strncpy(hint.vgname, vgname + 3, sizeof(hint.vgname)))
+			if (!_dm_strncpy(hint.vgname, vgname + 3, sizeof(hint.vgname)))
 				continue;
 
 		if (!(alloc_hint = zalloc(sizeof(struct hint)))) {

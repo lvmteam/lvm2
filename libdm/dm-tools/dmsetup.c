@@ -6608,7 +6608,7 @@ static char *_parse_loop_device_name(const char *dev, const char *dev_dir)
 		    device[strlen(dev_dir)] != '/')
 			goto_bad;
 
-		if (!dm_strncpy(buf, strrchr(device, '/') + 1, PATH_MAX))
+		if (!_dm_strncpy(buf, strrchr(device, '/') + 1, PATH_MAX))
 			goto_bad;
 		free(device);
 	} else {
@@ -6616,7 +6616,7 @@ static char *_parse_loop_device_name(const char *dev, const char *dev_dir)
 		if (strncmp(dev, "loop", sizeof("loop") - 1))
 			goto_bad;
 
-		if (!dm_strncpy(buf, dev, PATH_MAX))
+		if (!_dm_strncpy(buf, dev, PATH_MAX))
 			goto_bad;
 	}
 
