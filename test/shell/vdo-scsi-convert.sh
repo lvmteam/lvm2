@@ -28,6 +28,9 @@ export DM_UUID_PREFIX=$PREFIX
 # Conversion can be made with this version of vdo driver
 aux have_vdo 6 2 3 || skip
 
+# With new upstream VDO conversion is not supported
+aux have_vdo 9 0 0 && skip
+
 if not which vdo ; then
 	which lvm_vdo_wrapper || skip "Missing 'lvm_vdo_wrapper'."
 	which oldvdoformat || skip "Emulation of vdo manager 'oldvdoformat' missing."

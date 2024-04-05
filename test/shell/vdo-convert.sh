@@ -47,6 +47,9 @@ export MKE2FS_CONFIG="$TESTDIR/lib/mke2fs.conf"
 # Conversion can be made with this version of vdo driver
 aux have_vdo 6 2 3 || skip
 
+# With new upstream VDO conversion is not supported
+aux have_vdo 9 0 0 && skip
+
 aux prepare_devs 2 20000
 
 aux extend_filter_LVMTEST
