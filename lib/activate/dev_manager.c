@@ -168,6 +168,65 @@ out:
 	return NULL;
 }
 
+/* Read info from DM VDO 'stats' message */
+static int _vdo_pool_message_stats(struct dm_pool *mem,
+				   const struct logical_volume *lv,
+				   struct lv_status_vdo *status)
+{
+	const char *response;
+	const char *dlid;
+	struct dm_task *dmt = NULL;
+	int r = 0;
+	unsigned i;
+	const char *p;
+	struct vdo_msg_elem {
+		const char *name;
+		uint64_t *val;
+	} const vme[] = { /* list of properties lvm2 wants to parse */
+		{ "dataBlocksUsed", &status->data_blocks_used },
+		{ "logicalBlocksUsed", &status->logical_blocks_used }
+	};
+
+	for (i = 0; i < DM_ARRAY_SIZE(vme); ++i)
+		*vme[i].val = ULLONG_MAX;
+
+	if (!(dlid = build_dm_uuid(mem, lv, lv_layer(lv))))
+		return_0;
+
+	if (!(dmt = _setup_task_run(DM_DEVICE_TARGET_MSG, NULL, NULL, dlid, 0, 0, 0, 0, 0, 0)))
+		return_0;
+
+	if (!dm_task_set_message(dmt, "stats"))
+		goto_out;
+
+	if (!dm_task_run(dmt))
+		goto_out;
+
+	log_debug_activation("Checking VDO pool stats message for LV %s.",
+			     display_lvname(lv));
+
+	if ((response = dm_task_get_message_response(dmt))) {
+		for (i = 0; i < DM_ARRAY_SIZE(vme); ++i) {
+			errno = 0;
+			if (!(p = strstr(response,  vme[i].name)) ||
+			    !(p = strchr(p, ':')) ||
+			    ((*vme[i].val = strtoul(p + 1, NULL, 10)) == ULLONG_MAX) || errno) {
+				log_debug("Cannot parse %s in VDO DM stats message.", vme[i].name);
+				*vme[i].val = ULLONG_MAX;
+				goto out;
+			}
+			if (*vme[i].val != ULLONG_MAX)
+				log_debug("VDO property %s = " FMTu64, vme[i].name, *vme[i].val);
+		}
+	}
+
+	r = 1;
+out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
 static int _get_segment_status_from_target_params(const char *target_name,
 						  const char *params,
 						  const struct dm_info *dminfo,
@@ -230,6 +289,8 @@ static int _get_segment_status_from_target_params(const char *target_name,
 			return_0;
 		seg_status->type = SEG_STATUS_SNAPSHOT;
 	} else if (segtype_is_vdo_pool(segtype)) {
+		if (!_vdo_pool_message_stats(seg_status->mem, seg->lv, &seg_status->vdo_pool))
+			stack;
 		if (!parse_vdo_pool_status(seg_status->mem, seg->lv, params, dminfo, &seg_status->vdo_pool))
 			return_0;
 		seg_status->type = SEG_STATUS_VDO_POOL;
@@ -1916,65 +1977,6 @@ out:
 	return r;
 }
 
-/* Read info from DM VDO 'stats' message */
-static int _dev_manager_vdo_pool_message_stats(struct dev_manager *dm,
-					       const struct logical_volume *lv,
-					       struct lv_status_vdo *status)
-{
-	const char *response;
-	const char *dlid;
-	struct dm_task *dmt = NULL;
-	int r = 0;
-	unsigned i;
-	const char *p;
-	struct vdo_msg_elem {
-		const char *name;
-		uint64_t *val;
-	} const vme[] = {
-		{ "dataBlocksUsed", &status->data_blocks_used },
-		{ "logicalBlocksUsed", &status->logical_blocks_used }
-	};
-
-	for (i = 0; i < DM_ARRAY_SIZE(vme); ++i)
-		*vme[i].val = ULLONG_MAX;
-
-	if (!(dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
-		return_0;
-
-	if (!(dmt = _setup_task_run(DM_DEVICE_TARGET_MSG, NULL, NULL, dlid, 0, 0, 0, 0, 0, 0)))
-		return_0;
-
-	if (!dm_task_set_message(dmt, "stats"))
-		goto_out;
-
-	if (!dm_task_run(dmt))
-		goto_out;
-
-	log_debug_activation("Checking VDO pool stats message for LV %s.",
-			     display_lvname(lv));
-
-	if ((response = dm_task_get_message_response(dmt))) {
-		for (i = 0; i < DM_ARRAY_SIZE(vme); ++i) {
-			errno = 0;
-			if (!(p = strstr(response,  vme[i].name)) ||
-			    !(p = strchr(p, ':')) ||
-			    ((*vme[i].val = strtoul(p + 1, NULL, 10)) == ULLONG_MAX) || errno) {
-				log_debug("Cannot parse %s in VDO DM stats message.", vme[i].name);
-				*vme[i].val = ULLONG_MAX;
-				goto out;
-			}
-			if (*vme[i].val != ULLONG_MAX)
-				log_debug("VDO property %s = " FMTu64, vme[i].name, *vme[i].val);
-		}
-	}
-
-	r = 1;
-out:
-	dm_task_destroy(dmt);
-
-	return r;
-}
-
 int dev_manager_vdo_pool_status(struct dev_manager *dm,
 				const struct logical_volume *lv, int flush,
 				struct lv_status_vdo **status, int *exists)
@@ -2015,7 +2017,7 @@ int dev_manager_vdo_pool_status(struct dev_manager *dm,
 		goto out;
 	}
 
-	if (!_dev_manager_vdo_pool_message_stats(dm, lv, *status))
+	if (!_vdo_pool_message_stats(dm->mem, lv, *status))
 		stack;
 
 	if (!parse_vdo_pool_status(dm->mem, lv, params, &info, *status))
