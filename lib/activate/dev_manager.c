@@ -1935,6 +1935,9 @@ static int _dev_manager_vdo_pool_message_stats(struct dev_manager *dm,
 		{ "logicalBlocksUsed", &status->logical_blocks_used }
 	};
 
+	for (i = 0; i < DM_ARRAY_SIZE(vme); ++i)
+		*vme[i].val = ULLONG_MAX;
+
 	if (!(dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
 		return_0;
 
@@ -1957,9 +1960,11 @@ static int _dev_manager_vdo_pool_message_stats(struct dev_manager *dm,
 			    !(p = strchr(p, ':')) ||
 			    ((*vme[i].val = strtoul(p + 1, NULL, 10)) == ULLONG_MAX) || errno) {
 				log_debug("Cannot parse %s in VDO DM stats message.", vme[i].name);
-				*vme[i].val = 0;
+				*vme[i].val = ULLONG_MAX;
 				goto out;
 			}
+			if (*vme[i].val != ULLONG_MAX)
+				log_debug("VDO property %s = " FMTu64, vme[i].name, *vme[i].val);
 		}
 	}
 
