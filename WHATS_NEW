@@ -1,5 +1,6 @@
 Version 2.03.24 - 
 ==================
+  Fix lvs reporting for VDO volumes with new upstream kernel driver.
   Don't import DM_UDEV_DISABLE_OTHER_RULES_FLAG in LVM rules, DM rules cover it.
   Fix table line generation for cache snapshots using cachevol.
   Enhance lvconvert support for external origins stacking.
