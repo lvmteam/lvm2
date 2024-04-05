@@ -59,6 +59,9 @@ test -f "lib/flavour-$LVM_TEST_FLAVOUR" || { echo "NOTE: Flavour '$LVM_TEST_FLAV
 test -n "$SKIP_WITHOUT_CLVMD" && test "$LVM_TEST_LOCKING" -ne 3 && initskip
 test -n "$SKIP_WITH_CLVMD" && test "$LVM_TEST_LOCKING" = 3 && initskip
 
+# When requested testing LVMLOCKD & LVMPOLLD - ignore skipping of marked test for lvmpolld
+test -n "$LVM_TEST_LVMLOCKD" && test -n "$LVM_TEST_LVMPOLLD" && SKIP_WITH_LVMPOLLD=
+
 test -n "$SKIP_WITH_LVMPOLLD" && test -n "$LVM_TEST_LVMPOLLD" && initskip
 
 test -n "$SKIP_WITH_LVMLOCKD" && test -n "$LVM_TEST_LVMLOCKD" && initskip
