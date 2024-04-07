@@ -606,6 +606,7 @@ int module_present(struct cmd_context *cmd, const char *target_name)
 #ifdef MODPROBE_CMD
 	char module[128];
 	const char *argv[] = { MODPROBE_CMD, module, NULL };
+	unsigned maj, min;
 #endif
 	struct stat st;
 	char path[PATH_MAX];
@@ -627,8 +628,10 @@ int module_present(struct cmd_context *cmd, const char *target_name)
 	}
 
 #ifdef MODPROBE_CMD
-	if (strcmp(target_name, TARGET_NAME_VDO) == 0)
-		argv[1] = MODULE_NAME_VDO; /* ATM kvdo is without dm- prefix */
+	if ((strcmp(target_name, TARGET_NAME_VDO) == 0) &&
+	    (sscanf(cmd->kernel_vsn, "%u.%u", &maj, &min) == 2) &&
+	    ((maj < 6) || ((maj == 6) && (min < 9))))
+		argv[1] = MODULE_NAME_VDO; /* Kernels < 6.9 -> "kvdo" without dm- prefix */
 	else if (dm_snprintf(module, sizeof(module), "dm-%s", target_name) < 0) {
 		log_error("module_present module name too long: %s",
 			  target_name);
