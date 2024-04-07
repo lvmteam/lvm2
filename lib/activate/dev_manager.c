@@ -2649,6 +2649,14 @@ static int _pool_register_callback(struct dev_manager *dm,
 	      pool_has_message(first_seg(lv), NULL, 0))))
 		return 1;
 #endif
+	/* Skip validation of metadata for lvremove and vgremove */
+	if (!dm->activation &&
+	    (!strcmp(dm->cmd->name, "lvremove") ||
+	     !strcmp(dm->cmd->name, "vgremove"))) {
+		log_debug("Skipping %s callback registration for command %s.",
+			  display_lvname(lv), dm->cmd->name);
+		return 1;
+	}
 
 	if (!(data = dm_pool_zalloc(dm->mem, sizeof(*data)))) {
 		log_error("Failed to allocated path for callback.");
