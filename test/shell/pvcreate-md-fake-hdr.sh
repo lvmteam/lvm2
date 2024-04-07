@@ -83,6 +83,7 @@ dmsetup info -c
 # if for any reason array went up - stop it again
 if mdadm --detail "$mddev" ; then
 	mdadm --stop "$mddev" || true
+	sleep 1
 	aux udev_wait
 	should not mdadm --detail "$mddev"
 fi
