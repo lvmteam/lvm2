@@ -1,5 +1,7 @@
 Version 2.03.24 - 
 ==================
+  Skip checking of pools for lvremove and vgremove commands.
+  VDO modprobes dm-vdo for 6.9 kernel and kvdo for older kernel version.
   Fix lvs reporting for VDO volumes with new upstream kernel driver.
   Don't import DM_UDEV_DISABLE_OTHER_RULES_FLAG in LVM rules, DM rules cover it.
   Fix table line generation for cache snapshots using cachevol.
