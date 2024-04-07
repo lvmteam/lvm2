@@ -9238,8 +9238,14 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				}
 			}
 
-			thin_pool_was_active = lv_is_active(pool_lv);
-			if (lv_is_new_thin_pool(pool_lv)) {
+			thin_pool_was_active = (lp->create_pool || lv_is_active(pool_lv));
+			if  (lp->create_pool) {
+				/* When we just created new thin-pool we know it's not active
+				 * and we can skip check for pool being empty.
+				 * When command is finished we will make sure thin-pool will
+				 * be actually left active */
+				;
+			} else if (lv_is_new_thin_pool(pool_lv)) {
 				if (!check_new_thin_pool(pool_lv))
 					return_NULL;
 				/* New pool is now inactive */
@@ -9855,6 +9861,7 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 {
 	const struct segment_type *segtype;
 	struct logical_volume *lv;
+	activation_change_t tmp;
 
 	/* Create pool first if necessary */
 	if (lp->create_pool && !seg_is_pool(lp)) {
@@ -9865,10 +9872,13 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 
 			/* We want a lockd lock for the new thin pool, but not the thin lv. */
 			lp->needs_lockd_init = 1;
-
+			/* When creating thin volume with new thin-pool avoid activating
+			 * new empty pool so it's not necessary to reactivate is as used thin-pool */
+			tmp = lp->activate;
+			lp->activate = CHANGE_ALN;
 			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name)))
 				return_NULL;
-
+			lp->activate = tmp; /* restore activation */
 			lp->needs_lockd_init = 0;
 
 		} else if (seg_is_cache(lp)) {
