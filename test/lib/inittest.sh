@@ -172,6 +172,12 @@ test -n "$BASH" && set -euE -o pipefail
 echo "@TESTDIR=$TESTDIR"
 echo "@PREFIX=$PREFIX"
 
+# Date of executed test
+echo "## DATE: $(date || true)"
+
+# Hostname IP address
+echo "## HOST: $(hostname -I || true)"
+
 if test -z "$SKIP_ROOT_DM_CHECK" ; then
 	aux lvmconf
 fi
