@@ -901,6 +901,8 @@ struct TestCase {
 
     Journal *journal;
 
+    TestCase(const TestCase &t); // copy
+
     std::string pretty() {
         if ( options.batch )
             return flavour + ": " + name;
@@ -1150,6 +1152,15 @@ TestCase::TestCase( Journal &j, const Options &opt, const std::string &path, con
     child( path ), name( _name ), flavour( _flavour ),
     iobuf( NULL ), usage( ( struct rusage ) { { 0 } } ), status( 0 ), timeout( false ),
     pid( 0 ), options( opt ), journal( &j )
+{ // no inline
+}
+
+TestCase::TestCase( const TestCase &t ) :
+    child( t.child ), name( t.name ), flavour( t.flavour),
+    io( t.io ), iobuf( t.iobuf ), usage( t.usage ), status( t.status ), timeout( t.timeout ),
+    pid( t.pid ), start( t.start), silent_start( t.silent_start ),
+    last_update( t.last_update ), last_heartbeat( t.last_heartbeat ),
+    options( t.options ), journal( t.journal )
 { // no inline
 }
 
