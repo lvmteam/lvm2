@@ -55,7 +55,7 @@ po: tools daemons
 man: tools
 all_man: tools
 test: tools daemons
-unit-test  run-unit-test: test
+unit-test  run-unit-test: test libdm
 
 daemons.device-mapper: libdm.device-mapper
 tools.device-mapper: libdm.device-mapper
