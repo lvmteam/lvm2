@@ -1256,7 +1256,7 @@ static int _lookup_dev_name(uint64_t dev, char *buf, size_t len)
 	do {
 		names = (struct dm_names *)((char *) names + next);
 		if (names->dev == dev) {
-			strncpy(buf, names->name, len);
+			memccpy(buf, names->name, 0, len);
 			r = 1;
 			break;
 		}
@@ -1425,12 +1425,10 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	/* FIXME Until resume ioctl supplies name, use dev_name for readahead */
 	if (DEV_NAME(dmt) && (dmt->type != DM_DEVICE_RESUME || dmt->minor < 0 ||
 			      dmt->major < 0))
-		/* coverity[buffer_size_warning] */
-		strncpy(dmi->name, DEV_NAME(dmt), sizeof(dmi->name));
+		memccpy(dmi->name, DEV_NAME(dmt), 0, sizeof(dmi->name));
 
 	if (DEV_UUID(dmt))
-		/* coverity[buffer_size_warning] */
-		strncpy(dmi->uuid, DEV_UUID(dmt), sizeof(dmi->uuid));
+		memccpy(dmi->uuid, DEV_UUID(dmt), 0, sizeof(dmi->uuid));
 
 	if (dmt->type == DM_DEVICE_SUSPEND)
 		dmi->flags |= DM_SUSPEND_FLAG;

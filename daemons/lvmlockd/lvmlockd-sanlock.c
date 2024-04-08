@@ -231,16 +231,11 @@ static uint64_t daemon_test_lv_count;
  * Copy a null-terminated string "str" into a fixed
  * size struct field "buf" which is not null terminated.
  * (ATM SANLK_NAME_LEN is only 48 bytes.
- * Avoid strncpy() for coverity issues.
+ * Use memccpy() instead of strncpy().
  */
 static void strcpy_name_len(char *buf, const char *str, size_t len)
 {
-	size_t l;
-
-	/* copy at most len sized length of str */
-	for (l = 0; l < len; ++l)
-		if (!(buf[l] = str[l]))
-			break;
+	memccpy(buf, str, 0, len);
 }
 
 static int lock_lv_name_from_args(char *vg_args, char *lock_lv_name)

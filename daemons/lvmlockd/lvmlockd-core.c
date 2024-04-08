@@ -2981,7 +2981,7 @@ static int add_lockspace_thread(const char *ls_name,
 
 	if (vg_uuid)
 		/* coverity[buffer_size_warning] */
-		strncpy(ls->vg_uuid, vg_uuid, 64);
+		memccpy(ls->vg_uuid, vg_uuid, 0, 64);
 
 	if (vg_name)
 		dm_strncpy(ls->vg_name, vg_name, sizeof(ls->vg_name));
@@ -4909,7 +4909,7 @@ static void client_recv_action(struct client *cl)
 		dm_strncpy(act->vg_name, vg_name, sizeof(act->vg_name));
 
 	if (vg_uuid && strcmp(vg_uuid, "none"))
-		strncpy(act->vg_uuid, vg_uuid, 64);
+		memccpy(act->vg_uuid, vg_uuid, 0, 64);
 
 	if (vg_sysid && strcmp(vg_sysid, "none"))
 		dm_strncpy(act->vg_sysid, vg_sysid, sizeof(act->vg_sysid));
