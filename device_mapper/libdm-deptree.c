@@ -598,7 +598,7 @@ static struct dm_tree_node *_find_dm_tree_node_by_uuid(struct dm_tree *dtree,
 	const char *default_uuid_prefix;
 	size_t default_uuid_prefix_len;
 	const char *suffix, *suffix_position;
-	char uuid_without_suffix[DM_UUID_LEN];
+	char uuid_without_suffix[DM_UUID_LEN + 1];
 	unsigned i = 0;
 	const char **suffix_list = dtree->optional_uuid_suffixes;
 
@@ -612,7 +612,7 @@ static struct dm_tree_node *_find_dm_tree_node_by_uuid(struct dm_tree *dtree,
 			if (strcmp(suffix_position + 1, suffix))
 				continue;
 
-			(void) strncpy(uuid_without_suffix, uuid, sizeof(uuid_without_suffix));
+			dm_strncpy(uuid_without_suffix, uuid, sizeof(uuid_without_suffix));
 			uuid_without_suffix[suffix_position - uuid] = '\0';
 
 			if ((node = dm_hash_lookup(dtree->uuids, uuid_without_suffix))) {

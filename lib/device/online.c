@@ -432,9 +432,9 @@ int get_pvs_lookup(struct dm_list *pvs_online, const char *vgname)
 		if (file_major || file_minor)
 			po->devno = MKDEV(file_major, file_minor);
 		if (file_vgname[0])
-			strncpy(po->vgname, file_vgname, NAME_LEN-1);
+			dm_strncpy(po->vgname, file_vgname, sizeof(po->vgname));
 		if (file_devname[0])
-			strncpy(po->devname, file_devname, NAME_LEN-1);
+			dm_strncpy(po->devname, file_devname, sizeof(po->devname));
 
 		log_debug("Found PV online lookup %s for VG %s on %s.", path, vgname, file_devname);
 		dm_list_add(pvs_online, &po->list);
