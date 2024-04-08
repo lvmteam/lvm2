@@ -710,14 +710,35 @@ struct KMsg : Source {
         return fd >= 0;
     }
 
+    void transform( char *buf, ssize_t *sz ) {
+        char newbuf[ buffer_size ];
+        struct tm time_info;
+        unsigned level, num, pos;
+        unsigned long t;
+        time_t tt;
+        size_t len;
+
+        if (sscanf( buf, "%u,%u,%lu,-;%n", &level, &num, &t, &pos ) == 3) {
+            memcpy( newbuf, buf, *sz );
+            tt = time( 0 );
+            len = snprintf( buf, 64, "[%lu.%06lu] <%u> ", t / 1000000, t % 1000000, level );
+            if ( localtime_r( &tt, &time_info ) )
+                len += strftime( buf + len, 64, "%F %T  ", &time_info );
+            memcpy( buf + len, newbuf + pos, *sz - pos );
+            *sz = *sz - pos + len;
+        }
+    }
+
     void sync( Sink *s ) {
 #ifdef __unix
         ssize_t sz;
         char buf[ buffer_size ];
 
         if ( dev_kmsg() ) {
-            while ( (sz = ::read(fd, buf, buffer_size)) > 0 )
+            while ( (sz = ::read( fd, buf, buffer_size ) ) > 0 ) {
+                transform( buf, &sz );
                 s->push( std::string( buf, sz ) );
+            }
         } else if ( can_clear ) {
             while ( ( sz = klogctl( BRICK_SYSLOG_ACTION_READ_CLEAR, buf,
                                    ( int) buffer_size ) ) > 0 )
