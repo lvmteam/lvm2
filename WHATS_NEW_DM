@@ -1,5 +1,6 @@
 Version 1.02.198 - 
 ===================
+  Query with dmeventd -i quickly ends when there is no running dmeventd.
   Enhance dm_get_status_raid to handle mismatching status or reported legs.
   Create /dev/disk/by-label symlinks for DM devs that have crypto as next layer.
   Persist udev db for DM devs on cleanup used in initrd to rootfs transition.

@@ -2080,6 +2080,11 @@ static int _info_dmeventd(const char *name, struct dm_event_fifos *fifos)
 	int version;
 	int ret = 0;
 
+	if (!dm_daemon_is_running(DMEVENTD_PIDFILE)) {
+		fprintf(stderr, "No running dmeventd instance for status query.\n");
+		return 0;
+	}
+
 	/* Get the list of registrations from the running daemon. */
 	if (!init_fifos(fifos)) {
 		fprintf(stderr, "Could not initiate communication with existing dmeventd.\n");
