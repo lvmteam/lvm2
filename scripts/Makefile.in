@@ -45,11 +45,11 @@ vpath %.sh $(srcdir)
 vpath %.ocf $(srcdir)
 
 %_install: %.sh
-	@echo "    [INSTALL] $^"
+	$(SHOW) "    [INSTALL] $^"
 	$(Q) $(INSTALL_PROGRAM) -D $< $(sbindir)/$(basename $(<F))
 
 %_install: %.ocf
-	@echo "    [INSTALL] $^"
+	$(SHOW) "    [INSTALL] $^"
 	$(Q) $(INSTALL_DIR) $(ocf_scriptdir)
 	$(Q) $(INSTALL_SCRIPT) $< $(ocf_scriptdir)/$(basename $(<F))
 
@@ -59,7 +59,7 @@ install_device-mapper: $(DM_SCRIPTS:.sh=_install)
 install_ocf: $(OCF_SCRIPTS:.ocf=_install)
 
 install_libexec: lvresize_fs_helper.sh
-	@echo "    [INSTALL] $^"
+	$(SHOW) "    [INSTALL] $^"
 	$(Q) $(INSTALL_DIR) $(libexecdir)
 	$(Q) $(INSTALL_SCRIPT) $< $(libexecdir)/$(basename $(<F))
 
@@ -68,7 +68,7 @@ install: install_lvm2 install_ocf install_device-mapper
 
 # FIXME Customise for other distributions
 install_initscripts:
-	@echo "    [INSTALL] initscripts"
+	$(SHOW) "    [INSTALL] initscripts"
 	$(Q) $(INSTALL_DIR) $(initdir)
 ifeq ("@BUILD_DMEVENTD@", "yes")
 	$(Q) $(INSTALL_SCRIPT) lvm2_monitoring_init_red_hat $(initdir)/lvm2-monitor
@@ -84,7 +84,7 @@ ifeq ("@BLKDEACTIVATE@", "yes")
 endif
 
 install_systemd_units:	install_dbus_service
-	@echo "    [INSTALL] systemd_units"
+	$(SHOW) "    [INSTALL] systemd_units"
 	$(Q) $(INSTALL_DIR) $(systemd_unit_dir)
 ifeq ("@BUILD_DMEVENTD@", "yes")
 	$(Q) $(INSTALL_DATA) dm_event_systemd_red_hat.socket $(systemd_unit_dir)/dm-event.socket
@@ -111,7 +111,7 @@ endif
 
 ifeq ("@BUILD_LVMDBUSD@", "yes")
 install_dbus_service:
-	@echo "    [INSTALL] dbus_service"
+	$(SHOW) "    [INSTALL] dbus_service"
 	$(Q) $(INSTALL_DIR) $(dbusconfdir)
 	$(Q) $(INSTALL_DIR) $(dbusservicedir)
 	$(Q) $(INSTALL_DATA) $(top_srcdir)/scripts/com.redhat.lvmdbus1.conf $(dbusconfdir)
@@ -121,7 +121,7 @@ install_systemd_units:	install_dbus_service
 endif
 
 install_tmpfiles_configuration:
-	@echo "    [INSTALL] configuration"
+	$(SHOW) "    [INSTALL] configuration"
 	$(Q) $(INSTALL_DIR) $(tmpfiles_dir)
 	$(Q) $(INSTALL_DATA) lvm2_tmpfiles_red_hat.conf $(tmpfiles_dir)/lvm2.conf
 

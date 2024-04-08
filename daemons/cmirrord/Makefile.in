@@ -32,12 +32,12 @@ CFLAGS += $(CPG_CFLAGS) $(EXTRA_EXEC_CFLAGS)
 LDFLAGS += $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS)
 
 cmirrord: $(OBJECTS)
-	@echo "    [CC] $@"
+	$(SHOW) "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) \
 		$(LMLIBS) -L$(top_builddir)/libdm -ldevmapper $(LIBS)
 
 install_cluster: $(TARGETS)
-	@echo "    [INSTALL] $<"
+	$(SHOW) "    [INSTALL] $<"
 	$(Q) $(INSTALL_PROGRAM) -D $< $(usrsbindir)/$(<F)
 
 install: install_cluster

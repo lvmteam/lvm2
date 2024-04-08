@@ -52,7 +52,7 @@ include $(top_builddir)/make.tmpl
 .PHONY: install_lvmdbusd
 
 install_lvmdbusd: $(LVMDBUSD)
-	@echo "    [INSTALL] $<"
+	$(SHOW) "    [INSTALL] $<"
 	$(Q) $(INSTALL_DIR) $(sbindir)
 	$(Q) $(INSTALL_SCRIPT) $(LVMDBUSD) $(sbindir)
 	$(Q) $(INSTALL_DIR) $(lvmdbusdir) $(lvmdbusdir)/__pycache__

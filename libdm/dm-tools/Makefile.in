@@ -62,42 +62,42 @@ LIBDM_SHARED = $(interfacebuilddir)/libdevmapper.so
 LIBDM_STATIC = $(interfacebuilddir)/libdevmapper.a
 
 dmsetup: dmsetup.o $(LIBDM_SHARED)
-	@echo "    [CC] $@"
+	$(SHOW) "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) \
 	      -o $@ $< $(LIBDM_LIBS) $(LIBS)
 
 dmsetup.static: dmsetup.o $(LIBDM_STATIC)
-	@echo "    [CC] $@"
+	$(SHOW) "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(STATIC_LDFLAGS) -static \
 	      -o $@ $< $(LIBDM_LIBS) $(LIBS) $(STATIC_LIBS)
 
 install_dmsetup_dynamic: dmsetup
-	@echo "    [INSTALL] $<"
+	$(SHOW) "    [INSTALL] $<"
 	$(Q) $(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
 	$(Q) $(LN_S) -f $(<F) $(sbindir)/dmstats
 
 install_dmsetup_static: dmsetup.static
-	@echo "    [INSTALL] $<"
+	$(SHOW) "    [INSTALL] $<"
 	$(Q) $(INSTALL_PROGRAM) -D $< $(staticdir)/$(<F)
 	$(Q) $(LN_S) -f $(<F) $(staticdir)/dmstats.static
 
 
 dmfilemapd: dmfilemapd.o $(LIBDM_SHARED)
-	@echo "    [CC] $@"
+	$(SHOW) "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) \
 	      -o $@ $< $(LIBDM_LIBS) $(LIBS)
 
 dmfilemapd.static: dmfilemapd.o $(LIBDM_STATIC)
-	@echo "    [CC] $@"
+	$(SHOW) "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(STATIC_LDFLAGS) -static \
 	      -o $@ $< $(LIBDM_LIBS) $(LIBS) $(STATIC_LIBS)
 
 install_dmfilemapd_dynamic: dmfilemapd
-	@echo "    [INSTALL] $<"
+	$(SHOW) "    [INSTALL] $<"
 	$(Q) $(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
 
 install_dmfilemapd_static: dmfilemapd.static
-	@echo "    [INSTALL] $<"
+	$(SHOW) "    [INSTALL] $<"
 	$(Q) $(INSTALL_PROGRAM) -D $< $(staticdir)/$(<F)
 
 

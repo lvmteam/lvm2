@@ -66,13 +66,13 @@ device-mapper: $(TARGETS)
 dm-tools.device-mapper: device-mapper
 
 libdevmapper.$(LIB_SUFFIX) libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION): $(LIB_SHARED)
-	@echo "    [LN] $<"
+	$(SHOW) "    [LN] $<"
 	$(Q) $(LN_S) -f $< $@
 
 # Check versioned build when default versioned symbol is present @@
 # also the older symbol is built-in
 .symver_check: $(LIB_SHARED)
-	@echo "    [CHECK] $<"
+	$(SHOW) "    [CHECK] $<"
 	$(Q) if $(READELF) -Ws $< | grep -q dm_stats_create_region@@; then \
 	SYM=$$($(READELF) -Ws $< | grep dm_stats_create_region@DM_1_02_106); \
 	if test -n "$$SYM"; then touch $@; \
@@ -98,7 +98,7 @@ install: $(INSTALL_TYPE) install_include
 install_device-mapper: install
 
 install_include: $(srcdir)/libdevmapper.h
-	@echo "    [INSTALL] $<"
+	$(SHOW) "    [INSTALL] $<"
 	$(Q) $(INSTALL_DATA) -D $< $(includedir)/$(<F)
 
 install_dynamic: install_@interface@
@@ -113,11 +113,11 @@ install_ioctl: install_ioctl_static
 endif
 
 install_pkgconfig: libdevmapper.pc
-	@echo "    [INSTALL] $<"
+	$(SHOW) "    [INSTALL] $<"
 	$(Q) $(INSTALL_DATA) -D $< $(pkgconfigdir)/devmapper.pc
 
 install_ioctl_static: $(LIB_STATIC)
-	@echo "    [INSTALL] $<"
+	$(SHOW) "    [INSTALL] $<"
 	$(Q) $(INSTALL_DATA) -D $< $(usrlibdir)/$(<F)
 
 CLEAN_TARGETS += ioctl/libdevmapper.a

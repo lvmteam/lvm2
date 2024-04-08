@@ -45,7 +45,7 @@ lib/liblvm-internal.a: lib
 libdaemon/client/libdaemonclient.a: libdaemon
 
 $(UNIT_TARGET): $(UNIT_OBJECTS) $(LVMINTERNAL_LIBS)
-	@echo "    [LD] $@"
+	$(SHOW) "    [LD] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) \
 	      -o $@ $+ $(LVMLIBS)
 

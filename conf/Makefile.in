@@ -49,7 +49,7 @@ install_localconf: $(CONFLOCAL)
 	fi
 
 install_profiles: $(PROFILES)
-	@echo "    [INSTALL] $<"
+	$(SHOW) "    [INSTALL] $<"
 	$(Q) $(INSTALL_DIR) $(profiledir)
 	$(Q) $(INSTALL_DATA) $(PROFILES) $(profiledir)/
 

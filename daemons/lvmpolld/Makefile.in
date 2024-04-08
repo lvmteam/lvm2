@@ -32,11 +32,11 @@ LDFLAGS += $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS)
 LIBS += $(DAEMON_LIBS) $(PTHREAD_LIBS)
 
 lvmpolld: $(OBJECTS) $(top_builddir)/libdaemon/server/libdaemonserver.a $(INTERNAL_LIBS)
-	@echo "    [CC] $@"
+	$(SHOW) "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $+ $(LIBS)
 
 install_lvmpolld: lvmpolld
-	@echo "    [INSTALL] $<"
+	$(SHOW) "    [INSTALL] $<"
 	$(Q) $(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
 
 install_lvm2: install_lvmpolld

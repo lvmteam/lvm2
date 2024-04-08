@@ -47,7 +47,7 @@ endif
 	$(Q) $(SED) -e "s+(DM_DIR)+$(DM_DIR)+;s+(SYSTEMDRUN)+$(SYSTEMDRUN)+;s+(BLKID_RULE)+$(BLKID_RULE)+;s+(DM_EXEC_RULE)+$(DM_EXEC_RULE)+;s+(DM_EXEC)+$(DM_EXEC)+;s+(LVM_EXEC_RULE)+$(LVM_EXEC_RULE)+;s+(LVM_EXEC)+$(LVM_EXEC)+;" $< >$@
 
 %_install: %.rules
-	@echo "    [INSTALL] $<"
+	$(SHOW) "    [INSTALL] $<"
 	$(Q) $(INSTALL_DATA) -D $< $(udevdir)/$(<F)
 
 all: $(DM_RULES) $(LVM_RULES)
