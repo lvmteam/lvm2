@@ -322,12 +322,23 @@ prepare_lvmdbusd() {
 	"$daemon" $lvmdbusdebug > debug.log_LVMDBUSD_out 2>&1 &
 	local pid=$!
 
-	sleep 1
 	echo -n "## checking lvmdbusd IS running..."
+	for i in {50..0}; do
+		dbus-send --system --dest=org.freedesktop.DBus --type=method_call --print-reply /org/freedesktop/DBus org.freedesktop.DBus.ListNames > dbus_services
+		grep -q com.redhat.lvmdbus1 dbus_services && break
+		sleep .1
+	done
+
+	if [ "$i" -eq 0 ] ; then
+		printf "\nFailed to serve lvm dBus service in 5 seconds.\n"
+		sed -e "s,^,## DBUS_SERVICES: ," dbus_services
+		return 1
+	fi
+
 	comm=
 	# TODO: Is there a better check than wait 1 second and check pid?
 	if ! comm=$(ps -p $pid -o comm=) >/dev/null || [[ $comm != lvmdbusd ]]; then
-		echo "Failed to start lvmdbusd daemon"
+		printf "\nFailed to start lvmdbusd daemon\n"
 		return 1
 	fi
 	echo "$pid" > LOCAL_LVMDBUSD
