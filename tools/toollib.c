@@ -4560,7 +4560,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 			stack;
 			ret_max = ECMD_FAILED;
 			report_log_ret_code(ret_max);
-			if (!skip)
+			if (!skip || (!vg && !error_vg))
 				goto endvg;
 			/* Drop through to eliminate unmpermitted PVs from the devices list */
 		}
