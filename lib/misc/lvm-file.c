@@ -41,7 +41,7 @@ int create_temp_name(const char *dir, char *buffer, size_t len, int *fd,
 	pid = getpid();
 	if (gethostname(hostname, sizeof(hostname)) < 0) {
 		log_sys_error("gethostname", "");
-		strcpy(hostname, "nohostname");
+		dm_strncpy(hostname, "nohostname", sizeof(hostname));
 	} else {
 		/* Replace any '/' with '?' found in the hostname. */
 		p = hostname;
