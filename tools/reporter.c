@@ -549,7 +549,7 @@ static int _report_all_in_vg(struct cmd_context *cmd, struct processing_handle *
 			     struct volume_group *vg, report_type_t type,
 			     int do_lv_info, int do_lv_seg_status)
 {
-	int r = 0;
+	int r = ECMD_FAILED;
 
 	switch (type) {
 		case VGS:
@@ -591,7 +591,7 @@ static int _report_all_in_lv(struct cmd_context *cmd, struct processing_handle *
 			     struct logical_volume *lv, report_type_t type,
 			     int do_lv_info, int do_lv_seg_status)
 {
-	int r = 0;
+	int r = ECMD_FAILED;
 
 	switch (type) {
 		case LVS:
@@ -616,7 +616,7 @@ static int _report_all_in_pv(struct cmd_context *cmd, struct processing_handle *
 			     struct physical_volume *pv, report_type_t type,
 			     int do_lv_info, int do_lv_seg_status)
 {
-	int r = 0;
+	int r = ECMD_FAILED;
 
 	switch (type) {
 		case PVS:
