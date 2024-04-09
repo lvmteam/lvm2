@@ -383,7 +383,7 @@ int buffer_append(struct buffer *buf, const char *string)
 	    !buffer_realloc(buf, len + 1))
 		return 0;
 
-	strcpy(buf->mem + buf->used, string);
+	memcpy(buf->mem + buf->used, string, len + 1);
 	buf->used += len;
 	return 1;
 }

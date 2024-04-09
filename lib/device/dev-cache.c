@@ -1380,6 +1380,7 @@ int dev_cache_add_dir(const char *path)
 {
 	struct dir_list *dl;
 	struct stat st;
+	size_t len;
 
 	if (stat(path, &st)) {
 		log_warn("Ignoring %s: %s.", path, strerror(errno));
@@ -1392,12 +1393,13 @@ int dev_cache_add_dir(const char *path)
 		return 1;
 	}
 
-	if (!(dl = _zalloc(sizeof(*dl) + strlen(path) + 1))) {
+	len = strlen(path);
+	if (!(dl = _zalloc(sizeof(*dl) + len + 1))) {
 		log_error("dir_list allocation failed");
 		return 0;
 	}
 
-	strcpy(dl->dir, path);
+	memcpy(dl->dir, path, len + 1);
 	dm_list_add(&_cache.dirs, &dl->list);
 	return 1;
 }

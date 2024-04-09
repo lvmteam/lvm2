@@ -55,15 +55,15 @@ static struct labeller_i *_alloc_li(const char *name, struct labeller *l)
 	struct labeller_i *li;
 	size_t len;
 
-	len = sizeof(*li) + strlen(name) + 1;
+	len = strlen(name);
 
-	if (!(li = malloc(len))) {
+	if (!(li = malloc(sizeof(*li) + len + 1))) {
 		log_error("Couldn't allocate memory for labeller list object.");
 		return NULL;
 	}
 
 	li->l = l;
-	strcpy(li->name, name);
+	memcpy(li->name, name, len + 1);
 
 	return li;
 }
