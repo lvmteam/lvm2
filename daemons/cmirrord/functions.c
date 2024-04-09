@@ -292,7 +292,7 @@ static int write_log(struct log_c *lc)
 }
 
 /* FIXME Rewrite this function taking advantage of the udev changes (where in use) to improve its efficiency! */
-static int find_disk_path(char *major_minor_str, char *path_rtn, int *unlink_path __attribute__((unused)))
+static int find_disk_path(char *major_minor_str, char *path_rtn, size_t sz, int *unlink_path __attribute__((unused)))
 {
 	int r;
 	DIR *dp;
@@ -306,7 +306,7 @@ static int find_disk_path(char *major_minor_str, char *path_rtn, int *unlink_pat
 			return -errno;
 		if (!S_ISBLK(statbuf.st_mode))
 			return -EINVAL;
-		sprintf(path_rtn, "%s", major_minor_str);
+		dm_strncpy(path_rtn, major_minor_str, sz);
 		return 0;
 	}
 
@@ -329,7 +329,7 @@ static int find_disk_path(char *major_minor_str, char *path_rtn, int *unlink_pat
 		 * wanted.
 		 */
 
-		sprintf(path_rtn, "/dev/mapper/%s", dep->d_name);
+		snprintf(path_rtn, sz, "/dev/mapper/%s", dep->d_name);
 		if (stat(path_rtn, &statbuf) < 0) {
 			LOG_DBG("Unable to stat %s", path_rtn);
 			continue;
@@ -394,7 +394,7 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 			goto fail;
 		}
 
-		r = find_disk_path(argv[0], disk_path, &unlink_path);
+		r = find_disk_path(argv[0], disk_path, sizeof(disk_path), &unlink_path);
 		if (r) {
 			LOG_ERROR("Unable to find path to device %s", argv[0]);
 			goto fail;
