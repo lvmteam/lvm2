@@ -206,7 +206,7 @@ int reopen_standard_stream(FILE **stream, const char *mode)
 		return 0;
 	}
 
-	_check_and_replace_standard_log_streams(old_stream, new_stream);
+	_check_and_replace_standard_log_streams(*stream, new_stream);
 
 	*stream = new_stream;
 	return 1;
