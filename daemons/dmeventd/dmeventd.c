@@ -2154,6 +2154,11 @@ static void _restart_dmeventd(void)
 	int version;
 	const char *e;
 
+	if (!dm_daemon_is_running(DMEVENTD_PIDFILE)) {
+		fprintf(stderr, "WARNING: Coult not find running dmeventd associated with pid file %s.\n", DMEVENTD_PIDFILE);
+		exit(EXIT_FAILURE);
+	}
+
 	/* Get the list of registrations from the running daemon. */
 	if (!init_fifos(&fifos)) {
 		fprintf(stderr, "WARNING: Could not initiate communication with existing dmeventd.\n");
