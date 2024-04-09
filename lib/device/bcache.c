@@ -34,8 +34,8 @@
 #define SECTOR_SHIFT 9L
 
 #define FD_TABLE_INC 1024
-static int _fd_table_size;
-static int *_fd_table;
+static int _fd_table_size = 0;
+static int *_fd_table = NULL;
 
 
 //----------------------------------------------------------------

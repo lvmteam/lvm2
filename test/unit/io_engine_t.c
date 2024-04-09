@@ -107,7 +107,6 @@ static void _fix_exit(void *fixture)
 
 	if (f) {
 		(void) close(f->fd);
-		bcache_clear_fd(f->di);
 		(void) unlink(f->fname);
 		free(f->data);
 		if (f->e)
@@ -157,6 +156,9 @@ static void _test_read(void *fixture)
 	T_ASSERT(!io.error);
 
 	_check_buffer(f->data, 123, SECTOR_SIZE * BLOCK_SIZE_SECTORS);
+
+	bcache_destroy(cache);
+	f->e = NULL;   // already destroyed
 }
 
 static void _test_write(void *fixture)
@@ -175,6 +177,9 @@ static void _test_write(void *fixture)
 	T_ASSERT(f->e->wait(f->e, _complete_io));
 	T_ASSERT(io.completed);
 	T_ASSERT(!io.error);
+
+	bcache_destroy(cache);
+	f->e = NULL;   // already destroyed
 }
 
 static void _test_write_bytes(void *fixture)
