@@ -16,17 +16,26 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 _restart_dmeventd() {
+	local pid=
 	#rm -f debug.log*
 
 	dmeventd -R -fldddd -e "$PWD/test_nologin" > debug.log_DMEVENTD_$RANDOM 2>&1 &
 	echo $! >LOCAL_DMEVENTD
 
-	for i in $(seq 1 10); do
-		test "$(pgrep -o dmeventd)" = "$(< LOCAL_DMEVENTD)" && break
-		sleep .1
+	for i in {1..10}; do
+		pid=$(pgrep -o dmeventd || true)
+		test -n "$pid" || break; # no dmeventd running
+		test "$pid" = "$(< LOCAL_DMEVENTD)" && break
+		sleep .2
 	done
+
 	# wait a bit, so we talk to the new dmeventd later
-	dmeventd  -i || true
+	if test -n "$pid" ; then
+		for i in {1..10}; do
+			dmeventd  -i && break;
+			sleep .1
+		done
+	fi
 }
 
 aux prepare_dmeventd
@@ -57,8 +66,6 @@ rm LOCAL_DMEVENTD debug.log*
 
 _restart_dmeventd
 
-# wait longer as tries 5s to communicate with killed daemon
-sleep 6
 # now dmeventd should not be running
 not pgrep dmeventd
 rm LOCAL_DMEVENTD
