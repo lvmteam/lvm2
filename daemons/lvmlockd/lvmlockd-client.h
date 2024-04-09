@@ -18,7 +18,8 @@
 
 /* Wrappers to open/close connection */
 
-static inline daemon_handle lvmlockd_open(const char *sock)
+static inline __attribute__((always_inline))
+	daemon_handle lvmlockd_open(const char *sock)
 {
 	daemon_info lvmlockd_info = {
 		.path = "lvmlockd",
