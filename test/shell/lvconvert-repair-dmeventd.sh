@@ -27,6 +27,12 @@ aux disable_dev "$dev2" "$dev4"
 mkfs.ext2 "$DM_DEV_DIR/$vg/4way"
 sleep 10 # FIXME: need a "poll" utility, akin to "check"
 aux enable_dev "$dev2" "$dev4"
+
+# Required to repair metadata
+vgck --updatemetadata $vg
+# Show the work dmeventd
+# cat debug.log_DMEVENTD_*
+
 check mirror $vg 4way
 check mirror_legs $vg 4way 2
 
