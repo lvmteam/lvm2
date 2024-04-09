@@ -385,7 +385,7 @@ char *dm_build_dm_uuid(struct dm_pool *mem, const char *uuid_prefix, const char 
 		return NULL;
 	}
 
-	sprintf(dmuuid, "%s%s%s%s", uuid_prefix, lvid, (*layer) ? "-" : "", layer);
+	snprintf(dmuuid, len, "%s%s%s%s", uuid_prefix, lvid, (*layer) ? "-" : "", layer);
 
 	return dmuuid;
 }
@@ -552,7 +552,7 @@ const char *dm_size_to_string(struct dm_pool *mem, uint64_t size,
 	if (size == UINT64_C(0)) {
 		if (base == BASE_UNKNOWN)
 			s = 0;
-		sprintf(size_buf, "0%s", include_suffix ? size_str[base + s][suffix_type] : "");
+		snprintf(size_buf, SIZE_BUF, "0%s", include_suffix ? size_str[base + s][suffix_type] : "");
 		return size_buf;
 	}
 

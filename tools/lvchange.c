@@ -938,9 +938,9 @@ static int _lvchange_writemostly(struct logical_volume *lv,
 			if ((tmp_str_len < 3) ||
 			    (tmp_str[tmp_str_len - 2] != ':'))
 				/* Default to 'y' if no mode specified */
-				sprintf(pv_names[i], "%s:y", tmp_str);
+				snprintf(pv_names[i], tmp_str_len + 3, "%s:y", tmp_str);
 			else
-				sprintf(pv_names[i], "%s", tmp_str);
+				dm_strncpy(pv_names[i], tmp_str, tmp_str_len + 3);
 			i++;
 		}
 
