@@ -187,7 +187,7 @@ static void _run_test(struct test_details *t, bool use_colour, unsigned *passed,
 	if (setjmp(test_k))
 		fprintf(stderr, "%s[   FAIL]%s %s\n", red(use_colour), normal(use_colour), t->path);
 	else {
-		if (ts->fixture_init)
+		if (ts->fixture_init && ts->fixture_exit)
 			fixture = ts->fixture_init();
 		else
 			fixture = NULL;
@@ -199,7 +199,6 @@ static void _run_test(struct test_details *t, bool use_colour, unsigned *passed,
 
 		(*passed)++;
 		fprintf(stderr, "%s[     OK]%s\n", green(use_colour), normal(use_colour));
-		/* coverity[leaked_storage]  fixture released by fixture_exit */
 	}
 }
 
