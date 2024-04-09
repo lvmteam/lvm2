@@ -1451,10 +1451,14 @@ static void *_report_get_field_data(struct dm_report *rh,
 {
 	const struct dm_report_field_type *fields = fp->implicit ? _implicit_report_fields
 								 : rh->fields;
+	char *ret;
 
-	char *ret = fp->type->data_fn(object);
+	if (!object) {
+		log_error(INTERNAL_ERROR "_report_get_field_data: missing object.");
+		return NULL;
+	}
 
-	if (!ret)
+	if (!(ret = fp->type->data_fn(object)))
 		return NULL;
 
 	return (void *)(ret + fields[fp->field_num].offset);

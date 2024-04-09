@@ -3742,6 +3742,11 @@ uint32_t vg_bad_status_bits(const struct volume_group *vg, uint64_t status)
 {
 	uint32_t failure = 0;
 
+	if (!vg) {
+		log_error(INTERNAL_ERROR "Missing volume group.");
+		return FAILED_NOTFOUND;
+	}
+
 	if ((status & CLUSTERED) && !_access_vg_clustered(vg->cmd, vg))
 		/* Return because other flags are considered undefined. */
 		return FAILED_CLUSTERED;

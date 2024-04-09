@@ -765,6 +765,11 @@ uint32_t dm_task_get_read_ahead(const struct dm_task *dmt, uint32_t *read_ahead)
 
 struct dm_deps *dm_task_get_deps(struct dm_task *dmt)
 {
+	if (!dmt) {
+		log_error(INTERNAL_ERROR "Missing dm_task.");
+		return NULL;
+	}
+
 	return (struct dm_deps *) (((char *) dmt->dmi.v4) +
 				   dmt->dmi.v4->data_start);
 }

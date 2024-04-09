@@ -618,6 +618,11 @@ static int _report_all_in_pv(struct cmd_context *cmd, struct processing_handle *
 {
 	int r = ECMD_FAILED;
 
+	if (!pv) {
+		log_error(INTERNAL_ERROR "_report_all_in_pv: missing pv.");
+		return r;
+	}
+
 	switch (type) {
 		case PVS:
 			r = _pvs_single(cmd, pv->vg, pv, handle);
