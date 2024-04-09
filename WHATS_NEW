@@ -1,5 +1,7 @@
 Version 2.03.24 - 
 ==================
+  Add configure --with-default-event-activation=ON setting.
+  Fix return value from reporter function when hitting internal error.
   Skip checking of pools for lvremove and vgremove commands.
   VDO modprobes dm-vdo for 6.9 kernel and kvdo for older kernel version.
   Fix lvs reporting for VDO volumes with new upstream kernel driver.
