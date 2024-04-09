@@ -2918,12 +2918,11 @@ static struct lockspace *find_lockspace_name(char *ls_name)
 
 static int vg_ls_name(const char *vg_name, char *ls_name)
 {
-	if (strlen(vg_name) + 4 > MAX_NAME) {
+	if (snprintf(ls_name, MAX_NAME, "%s%s", LVM_LS_PREFIX, vg_name) >= MAX_NAME) {
 		log_error("vg name too long %s", vg_name);
 		return -1;
 	}
 
-	snprintf(ls_name, MAX_NAME, "%s%s", LVM_LS_PREFIX, vg_name);
 	return 0;
 }
 
