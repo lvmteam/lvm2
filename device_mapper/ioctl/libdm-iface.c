@@ -1697,6 +1697,7 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	dmt->uuid = NULL;
 	free(dmt->mangled_uuid);
 	dmt->mangled_uuid = NULL;
+	/* coverity[double_free] recursive function call */
 	_dm_task_free_targets(dmt);
 
 	if (dm_task_run(dmt))
@@ -1708,6 +1709,7 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	dmt->uuid = NULL;
 	free(dmt->mangled_uuid);
 	dmt->mangled_uuid = NULL;
+	/* coverity[double_free] recursive function call */
 	_dm_task_free_targets(dmt);
 
 	/*
