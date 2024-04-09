@@ -291,7 +291,7 @@ AC_DEFINE_UNQUOTED([DEFAULT_DM_ADD_NODE], $add_on, [Define default node creation
 dnl -- Default settings for lvm.conf { devices/use_devicesfile }
 AC_MSG_CHECKING([default for use_devicesfile])
 AC_ARG_WITH(default-use-devices-file,
-	      AS_HELP_STRING([--with-default-use-devices-file], [default for lvm.conf devices/use_devicesfile = [0]]),
+	      AS_HELP_STRING([--with-default-use-devices-file=ON], [default lvm.conf devices/use_devicesfile = [ON=0]]),
 	      DEFAULT_USE_DEVICES_FILE=$withval, DEFAULT_USE_DEVICES_FILE=0)
 AS_CASE(["$DEFAULT_USE_DEVICES_FILE"],
 	[0|1], [],
@@ -312,6 +312,17 @@ AS_CASE(["$MANGLING"],
 	[AC_MSG_ERROR([--with-default-name-mangling parameter invalid])])
 AC_MSG_RESULT([$MANGLING])
 AC_DEFINE_UNQUOTED([DEFAULT_DM_NAME_MANGLING], $mangling, [Define default name mangling behaviour])
+
+AC_MSG_CHECKING([default for event_activation])
+AC_ARG_WITH(default-event-activation,
+	      AS_HELP_STRING([--with-default-event-activation=ON], [default lvm.conf global/event_activation = [ON=1]]),
+	      DEFAULT_EVENT_ACTIVATION=$withval, DEFAULT_EVENT_ACTIVATION=1)
+AS_CASE(["$DEFAULT_EVENT_ACTIVATION"],
+	[0|1], [],
+	[AC_MSG_ERROR([--with-default-event-activation parameter invalid])])
+AC_MSG_RESULT([$DEFAULT_EVENT_ACTIVATION])
+AC_DEFINE_UNQUOTED(DEFAULT_EVENT_ACTIVATION, [$DEFAULT_EVENT_ACTIVATION],
+		   [Default for lvm.conf event_activation.])
 
 ################################################################################
 dnl -- snapshots inclusion type
@@ -1865,6 +1876,7 @@ AC_SUBST(DEFAULT_BACKUP_SUBDIR)
 AC_SUBST(DEFAULT_CACHE_SUBDIR)
 AC_SUBST(DEFAULT_DM_RUN_DIR)
 AC_SUBST(DEFAULT_DMEVENTD_EXIT_ON_PATH)
+AC_SUBST(DEFAULT_EVENT_ACTIVATION)
 AC_SUBST(DEFAULT_LOCK_DIR)
 AC_SUBST(DEFAULT_MIRROR_SEGTYPE)
 AC_SUBST(DEFAULT_PID_DIR)

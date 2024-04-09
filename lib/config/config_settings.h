@@ -1150,7 +1150,7 @@ cfg(global_lvdisplay_shows_full_device_path_CFG, "lvdisplay_shows_full_device_pa
 	"Previously this was always shown as /dev/vgname/lvname even when that\n"
 	"was never a valid path in the /dev filesystem.\n")
 
-cfg(global_event_activation_CFG, "event_activation", global_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, 1, vsn(2, 3, 1), 0, 0, NULL,
+cfg(global_event_activation_CFG, "event_activation", global_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_EVENT_ACTIVATION, vsn(2, 3, 1), "@DEFAULT_EVENT_ACTIVATION@", 0, NULL,
 	"Disable event based autoactivation commands.\n"
 	"WARNING: setting this to zero may cause machine startup to fail.\n"
 	"Previously, setting this to zero would enable static autoactivation\n"

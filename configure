@@ -732,6 +732,7 @@ DEFAULT_PROFILE_SUBDIR
 DEFAULT_PID_DIR
 DEFAULT_MIRROR_SEGTYPE
 DEFAULT_LOCK_DIR
+DEFAULT_EVENT_ACTIVATION
 DEFAULT_DMEVENTD_EXIT_ON_PATH
 DEFAULT_DM_RUN_DIR
 DEFAULT_CACHE_SUBDIR
@@ -920,6 +921,7 @@ with_device_mode
 with_device_nodes_on
 with_default_use_devices_file
 with_default_name_mangling
+with_default_event_activation
 with_snapshots
 with_mirrors
 with_default_mirror_segtype
@@ -1747,10 +1749,12 @@ Optional Packages:
   --with-device-mode=MODE set the mode used for new device nodes [MODE=0600]
   --with-device-nodes-on=ON
                           create nodes on resume or create [ON=resume]
-  --with-default-use-devices-file
-                          default for lvm.conf devices/use_devicesfile = [0]
+  --with-default-use-devices-file=ON
+                          default lvm.conf devices/use_devicesfile = [ON=0]
   --with-default-name-mangling=MANGLING
                           default name mangling: auto/none/hex [auto]
+  --with-default-event-activation=ON
+                          default lvm.conf global/event_activation = [ON=1]
   --with-snapshots=TYPE   snapshot support: internal/none [internal]
   --with-mirrors=TYPE     mirror support: internal/none [internal]
   --with-default-mirror-segtype=TYPE
@@ -9310,6 +9314,30 @@ printf "%s\n" "$MANGLING" >&6; }
 printf "%s\n" "#define DEFAULT_DM_NAME_MANGLING $mangling" >>confdefs.h
 
 
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking default for event_activation" >&5
+printf %s "checking default for event_activation... " >&6; }
+
+# Check whether --with-default-event-activation was given.
+if test ${with_default_event_activation+y}
+then :
+  withval=$with_default_event_activation; DEFAULT_EVENT_ACTIVATION=$withval
+else case e in #(
+  e) DEFAULT_EVENT_ACTIVATION=1 ;;
+esac
+fi
+
+case "$DEFAULT_EVENT_ACTIVATION" in #(
+  0|1) :
+     ;; #(
+  *) :
+    as_fn_error $? "--with-default-event-activation parameter invalid" "$LINENO" 5 ;;
+esac
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $DEFAULT_EVENT_ACTIVATION" >&5
+printf "%s\n" "$DEFAULT_EVENT_ACTIVATION" >&6; }
+
+printf "%s\n" "#define DEFAULT_EVENT_ACTIVATION $DEFAULT_EVENT_ACTIVATION" >>confdefs.h
+
+
 ################################################################################
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to include snapshots" >&5
 printf %s "checking whether to include snapshots... " >&6; }
@@ -16386,6 +16414,7 @@ AIO_LIBS=${AIO_LIBS:--laio}
 
 
 ################################################################################
+
 
 
 

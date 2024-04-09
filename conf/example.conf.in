@@ -1176,7 +1176,7 @@ global {
 	# services (via the lvm2-activation-generator), but the autoactivation
 	# services and generator have been removed.
 	# This configuration option has an automatic default value.
-	# event_activation = 1
+	# event_activation = @DEFAULT_EVENT_ACTIVATION@
 
 	# Configuration option global/use_aio.
 	# Use async I/O when reading and writing devices.

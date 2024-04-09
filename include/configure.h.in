@@ -58,6 +58,9 @@
 /* Default system configuration directory. */
 #undef DEFAULT_ETC_DIR
 
+/* Default for lvm.conf event_activation. */
+#undef DEFAULT_EVENT_ACTIVATION
+
 /* Name of default locking directory. */
 #undef DEFAULT_LOCK_DIR
 
