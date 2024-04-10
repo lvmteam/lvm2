@@ -106,8 +106,8 @@ not grep active out
 vgchange -an
 
 not lvcreate -l1 -an -n $lv2 $vg1
-lvs --foreign -o vguuid,name |tee out
-grep $UUID1 out | not grep $lv2
+lvs --foreign -o name,vguuid |tee out
+grep $UUID1 out | not grep "$lv2 "
 
 not vgremove $vg1
 vgs --foreign -o+uuid |tee out
@@ -154,9 +154,9 @@ not grep active out
 vgchange -an
 
 not lvcreate -l1 -an -n $lv2 $vg1
-lvs --foreign -o vguuid,name |tee out
-grep $UUID1 out | not grep $lv2
-grep $UUID2 out | not grep $lv2
+lvs --foreign -o name,vguuid |tee out
+grep $UUID1 out | not grep "$lv2 "
+grep $UUID2 out | not grep "$lv2 "
 
 not vgremove $vg1
 vgs --foreign -o+uuid |tee out
@@ -208,9 +208,9 @@ grep $UUID2 out | not grep active
 vgchange -an
 
 lvcreate -l1 -an -n $lv2 $vg1
-lvs --foreign -o vguuid,name |tee out
-grep $UUID1 out | grep $lv2
-grep $UUID2 out | not grep $lv2
+lvs --foreign -o name,vguuid |tee out
+grep $UUID1 out | grep "$lv2 "
+grep $UUID2 out | not grep "$lv2 "
 
 vgremove -y $vg1
 vgs -o+uuid |tee out
@@ -274,10 +274,10 @@ grep $UUID3 out | not grep active
 vgchange -an
 
 lvcreate -l1 -an -n $lv2 $vg1
-lvs --foreign -o vguuid,name |tee out
-grep $UUID1 out | grep $lv2
-grep $UUID2 out | not grep $lv2
-grep $UUID3 out | not grep $lv2
+lvs --foreign -o name,vguuid |tee out
+grep $UUID1 out | grep "$lv2 "
+grep $UUID2 out | not grep "$lv2 "
+grep $UUID3 out | not grep "$lv2 "
 
 vgremove -y $vg1
 vgs -o+uuid |tee out
@@ -327,9 +327,9 @@ grep $UUID2 out | not grep active
 vgchange -an
 
 not lvcreate -l1 -an -n $lv2 $vg1
-lvs --foreign -o vguuid,name |tee out
-grep $UUID1 out | not grep $lv2
-grep $UUID2 out | not grep $lv2
+lvs --foreign -o name,vguuid |tee out
+grep $UUID1 out | not grep "$lv2 "
+grep $UUID2 out | not grep "$lv2 "
 
 not vgremove $vg1
 vgs -o+uuid |tee out
@@ -395,10 +395,10 @@ grep $UUID3 out | not grep active
 vgchange -an
 
 not lvcreate -l1 -an -n $lv2 $vg1
-lvs --foreign -o vguuid,name |tee out
-grep $UUID1 out | not grep $lv2
-grep $UUID2 out | not grep $lv2
-grep $UUID3 out | not grep $lv2
+lvs --foreign -o name,vguuid |tee out
+grep $UUID1 out | not grep "$lv2 "
+grep $UUID2 out | not grep "$lv2 "
+grep $UUID3 out | not grep "$lv2 "
 
 not vgremove $vg1
 vgs --foreign -o+uuid |tee out
@@ -476,11 +476,11 @@ grep $UUID4 out | not grep active
 vgchange -an
 
 not lvcreate -l1 -an -n $lv2 $vg1
-lvs --foreign -o vguuid,name |tee out
-grep $UUID1 out | not grep $lv2
-grep $UUID2 out | not grep $lv2
-grep $UUID3 out | not grep $lv2
-grep $UUID4 out | not grep $lv2
+lvs --foreign -o name,vguuid |tee out
+grep $UUID1 out | not grep "$lv2 "
+grep $UUID2 out | not grep "$lv2 "
+grep $UUID3 out | not grep "$lv2 "
+grep $UUID4 out | not grep "$lv2 "
 
 not vgremove $vg1
 vgs --foreign -o+uuid |tee out
@@ -567,13 +567,13 @@ grep $UUID6 out | not grep active
 vgchange -an
 
 not lvcreate -l1 -an -n $lv2 $vg1
-lvs --foreign -o vguuid,name |tee out
-grep $UUID1 out | not grep $lv2
-grep $UUID2 out | not grep $lv2
-grep $UUID3 out | not grep $lv2
-grep $UUID4 out | not grep $lv2
-grep $UUID5 out | not grep $lv2
-grep $UUID6 out | not grep $lv2
+lvs --foreign -o name,vguuid |tee out
+grep $UUID1 out | not grep "$lv2 "
+grep $UUID2 out | not grep "$lv2 "
+grep $UUID3 out | not grep "$lv2 "
+grep $UUID4 out | not grep "$lv2 "
+grep $UUID5 out | not grep "$lv2 "
+grep $UUID6 out | not grep "$lv2 "
 
 not vgremove $vg1
 vgs --foreign -o+uuid |tee out
