@@ -5,13 +5,13 @@
 
 %global enable_profiling 0
 %global enable_testsuite 1
-%global enable_dbusd 0
+%global enable_dbusd 1
 %global enable_udev 1
 %global enable_systemd 1
 %global enable_cmirror 1
 %global enable_lvmlockd 1
 %global enable_lvmpolld 1
-%global enable_dmfilemapd 0
+%global enable_dmfilemapd 1
 %global enable_lvmlockd_dlm 0
 %global enable_lvmlockd_sanlock 0
 
@@ -28,10 +28,12 @@
 #service cmirrord 1
 %endif
 
-%global buildreq_cluster corosync-devel >= 1.99.9-1, dlm-devel >= 3.99.1-1
-%global req_cluster corosync >= 1.99.9-1, dlm >= 3.99.2-1
+%global dlm_version 3.99.1-1
+%global corosync_version 1.99.9-1
 
-# TODO %global req_dm_persistent device-mapper-persistent-data >= 0.1.4
+%global buildreq_cluster corosync-devel >= %{corosync_version}, dlm-devel >= %{dlm_version}
+%global req_cluster corosync >= %{corosync_version}, dlm >= %{dlm_version}
+
 %with cache internal
 %with thin internal
 %with thin_check %{_sbindir}/thin_check
@@ -76,23 +78,23 @@
   %global enable_lvmlockd_dlm 1
  %endif
 %endif
-%if 0%{enable_lvmlockd_dlm}
+%if %{enable_lvmlockd_dlm}
  %global buildreq_lvmlockd_dlm dlm-devel >= %{dlm_version}
 %endif
-%if 0%{enable_lvmlockd_sanlock}
+%if %{enable_lvmlockd_sanlock}
  %global buildreq_lvmlockd_sanlock sanlock-devel >= %{sanlock_version}
 %endif
 
 ##############################################################
 
-%if %{rhel} >= 7 || %{fedora} >= 25
-  %global enable_dmfilemapd 1
+%if %{rhel} < 7 || %{fedora} < 25
+  %global enable_dmfilemapd 0
 %endif
 
 ##############################################################
 
-%if %{rhel} >= 8 || %{fedora} >= 23
-  %global enable_dbusd 1
+%if %{rhel} < 8 || %{fedora} < 23
+  %global enable_dbusd 0
 %endif
 
 %if %{enable_dbusd}
