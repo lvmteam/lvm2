@@ -15,6 +15,20 @@
 %global enable_lvmlockd_dlm 0
 %global enable_lvmlockd_sanlock 0
 
+#############################################################
+#
+# Disable event_activation when creating packages for system
+# with installed lvm2-testsuite
+#
+# This is used for internal package testing to avoid
+# updating lvm.conf after test suite installation.
+#
+%if %{exists:/usr/share/lvm2-testsuite/lib/lvm}
+  %with default-event-activation 0
+%else
+  %with default-event-activation 1
+%endif
+
 %if %{enable_udev}
 %service lvmpolld 1
 %endif
