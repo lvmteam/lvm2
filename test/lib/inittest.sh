@@ -176,7 +176,7 @@ echo "@PREFIX=$PREFIX"
 echo "## DATE: $(date || true)"
 
 # Hostname IP address
-echo "## HOST: $(hostname -I || true)"
+echo "## HOST: $(hostname -I 2>/dev/null || hostname 2>/dev/null || true)"
 
 if test -z "$SKIP_ROOT_DM_CHECK" ; then
 	aux lvmconf
