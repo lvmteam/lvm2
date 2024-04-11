@@ -92,11 +92,8 @@ static const size_t THREAD_STACK_SIZE = 300 * 1024;
 /* Default idle exit timeout 1 hour (in seconds) */
 static const time_t DMEVENTD_IDLE_EXIT_TIMEOUT = 60 * 60;
 
-static int _debug_level = 0;
-static int _use_syslog = 1;
 static int _systemd_activation = 0;
 static int _foreground = 0;
-static int _restart = 0;
 static time_t _idle_since = 0;
 static const char *_exit_on = DEFAULT_DMEVENTD_EXIT_ON_PATH;
 static char **_initial_registrations = 0;
@@ -2268,6 +2265,10 @@ static void _usage(char *prog, FILE *file)
 int main(int argc, char *argv[])
 {
 	signed char opt;
+	int debug_level = 0;
+	int info = 0;
+	int restart = 0;
+	int use_syslog = 1;
 	struct dm_event_fifos fifos = {
 		.client = -1,
 		.server = -1,
@@ -2287,9 +2288,10 @@ int main(int argc, char *argv[])
 			_usage(argv[0], stderr);
 			return EXIT_SUCCESS;
 		case 'i':
-			return _info_dmeventd(argv[0], &fifos) ? EXIT_SUCCESS : EXIT_FAILURE;
+			info++;
+			break;
 		case 'R':
-			_restart++;
+			restart++;
 			break;
 		case 'e':
 			if (strchr(optarg, '"')) {
@@ -2302,10 +2304,10 @@ int main(int argc, char *argv[])
 			_foreground++;
 			break;
 		case 'd':
-			_debug_level++;
+			debug_level++;
 			break;
 		case 'l':
-			_use_syslog = 0;
+			use_syslog = 0;
 			break;
 		case 'V':
 			printf("dmeventd version: %s\n", DM_LIB_VERSION);
@@ -2316,10 +2318,16 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (!_foreground && !_use_syslog) {
-		printf("WARNING: Ignoring logging to stdout, needs options -f\n");
-		_use_syslog = 1;
+	if (info) {
+		_foreground = 1;
+		use_syslog = 0;
 	}
+
+	if (!_foreground && !use_syslog) {
+		printf("WARNING: Ignoring logging to stdout, needs options -f\n");
+		use_syslog = 1;
+	}
+
 	/*
 	 * Switch to C locale to avoid reading large locale-archive file
 	 * used by some glibc (on some distributions it takes over 100MB).
@@ -2328,23 +2336,29 @@ int main(int argc, char *argv[])
 	if (setenv("LC_ALL", "C", 1))
 		perror("Cannot set LC_ALL to C");
 
+	if (info)
+		return _info_dmeventd(argv[0], &fifos) ? EXIT_SUCCESS : EXIT_FAILURE;
+
 #ifdef __linux__
 	_systemd_activation = _systemd_handover(&fifos);
 #endif
 
-	if (_restart) {
-		if ((_restart = _restart_dmeventd(&fifos)) < 2)
+	dm_log_with_errno_init(_libdm_log);
+
+	if (restart) {
+		dm_event_log_set(debug_level, 0);
+
+		if ((restart = _restart_dmeventd(&fifos)) < 2)
 			return restart ? EXIT_SUCCESS : EXIT_FAILURE;
 	}
 
 	if (!_foreground)
 		_daemonize();
 
-	if (_use_syslog)
+	if (use_syslog)
 		openlog("dmeventd", LOG_PID, LOG_DAEMON);
 
-	dm_event_log_set(_debug_level, _use_syslog);
-	dm_log_with_errno_init(_libdm_log);
+	dm_event_log_set(debug_level, use_syslog);
 
 	(void) dm_prepare_selinux_context(DMEVENTD_PIDFILE, S_IFREG);
 	if (dm_create_lockfile(DMEVENTD_PIDFILE) == 0)
@@ -2440,7 +2454,7 @@ int main(int argc, char *argv[])
 	if (fifos.server >= 0 && close(fifos.server))
 		log_sys_debug("server close", fifos.server_path);
 
-	if (_use_syslog)
+	if (use_syslog)
 		closelog();
 
 	_exit_dm_lib();
