@@ -2139,15 +2139,9 @@ out:
 	return ret;
 }
 
-static void _restart_dmeventd(void)
+/* Return   0 - fail, 1 - success, 2 - continue */
+static int _restart_dmeventd(struct dm_event_fifos *fifos)
 {
-	struct dm_event_fifos fifos = {
-		.client = -1,
-		.server = -1,
-		/* FIXME Make these either configurable or depend directly on dmeventd_path */
-		.client_path = DM_EVENT_FIFO_CLIENT,
-		.server_path = DM_EVENT_FIFO_SERVER
-	};
 	struct dm_event_daemon_message msg = { 0 };
 	int i, count = 0;
 	char *message;
@@ -2156,16 +2150,16 @@ static void _restart_dmeventd(void)
 
 	if (!dm_daemon_is_running(DMEVENTD_PIDFILE)) {
 		fprintf(stderr, "WARNING: Coult not find running dmeventd associated with pid file %s.\n", DMEVENTD_PIDFILE);
-		exit(EXIT_FAILURE);
+		return 0;
 	}
 
 	/* Get the list of registrations from the running daemon. */
-	if (!init_fifos(&fifos)) {
+	if (!init_fifos(fifos)) {
 		fprintf(stderr, "WARNING: Could not initiate communication with existing dmeventd.\n");
-		exit(EXIT_FAILURE);
+		return 0;
 	}
 
-	if (!dm_event_get_version(&fifos, &version)) {
+	if (!dm_event_get_version(fifos, &version)) {
 		fprintf(stderr, "WARNING: Could not communicate with existing dmeventd.\n");
 		goto bad;
 	}
@@ -2177,7 +2171,7 @@ static void _restart_dmeventd(void)
 		goto bad;
 	}
 
-	if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_GET_STATUS, "-", "-", 0, 0))
+	if (daemon_talk(fifos, &msg, DM_EVENT_CMD_GET_STATUS, "-", "-", 0, 0))
 		goto bad;
 
 	message = strchr(msg.data, ' ') + 1;
@@ -2201,7 +2195,7 @@ static void _restart_dmeventd(void)
 	}
 
 	if (version >= 2) {
-		if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_GET_PARAMETERS, "-", "-", 0, 0)) {
+		if (daemon_talk(fifos, &msg, DM_EVENT_CMD_GET_PARAMETERS, "-", "-", 0, 0)) {
 			fprintf(stderr, "Failed to acquire parameters from old dmeventd.\n");
 			goto bad;
 		}
@@ -2221,7 +2215,7 @@ static void _restart_dmeventd(void)
 	}
 #endif
 
-	if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_DIE, "-", "-", 0, 0)) {
+	if (daemon_talk(fifos, &msg, DM_EVENT_CMD_DIE, "-", "-", 0, 0)) {
 		fprintf(stderr, "Old dmeventd refused to die.\n");
 		goto bad;
 	}
@@ -2230,30 +2224,30 @@ static void _restart_dmeventd(void)
 	    ((e = getenv(SD_ACTIVATION_ENV_VAR_NAME)) && strcmp(e, "1")))
 		_systemd_activation = 1;
 
-	fini_fifos(&fifos);
+	fini_fifos(fifos);
 
 	/* Give a few seconds dmeventd to finish */
 	_wait_for_new_pid();
 
 	if (!_systemd_activation)
-		return;
+		return 2; // continue with dmeventd start up
 
 	/* Reopen fifos. */
-	if (!init_fifos(&fifos)) {
+	if (!init_fifos(fifos)) {
 		fprintf(stderr, "Could not initiate communication with new instance of dmeventd.\n");
-		exit(EXIT_FAILURE);
+		return 0;
 	}
 
-	if (!_reinstate_registrations(&fifos)) {
+	if (!_reinstate_registrations(fifos)) {
 		fprintf(stderr, "Failed to reinstate monitoring with new instance of dmeventd.\n");
 		goto bad;
 	}
 
-	fini_fifos(&fifos);
-	exit(EXIT_SUCCESS);
+	fini_fifos(fifos);
+	return 1;
 bad:
-	fini_fifos(&fifos);
-	exit(EXIT_FAILURE);
+	fini_fifos(fifos);
+	return 0;
 }
 
 static void _usage(char *prog, FILE *file)
@@ -2334,12 +2328,14 @@ int main(int argc, char *argv[])
 	if (setenv("LC_ALL", "C", 1))
 		perror("Cannot set LC_ALL to C");
 
-	if (_restart)
-		_restart_dmeventd();
-
 #ifdef __linux__
 	_systemd_activation = _systemd_handover(&fifos);
 #endif
+
+	if (_restart) {
+		if ((_restart = _restart_dmeventd(&fifos)) < 2)
+			return restart ? EXIT_SUCCESS : EXIT_FAILURE;
+	}
 
 	if (!_foreground)
 		_daemonize();

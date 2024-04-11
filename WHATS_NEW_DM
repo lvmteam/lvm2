@@ -1,5 +1,6 @@
 Version 1.02.198 - 
 ===================
+  Correct dmeventd -R for systemd environment.
   Restart of dmeventd -R checks pid file to detect running dmeventd first.
   Query with dmeventd -i quickly ends when there is no running dmeventd.
   Enhance dm_get_status_raid to handle mismatching status or reported legs.
