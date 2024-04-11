@@ -20,21 +20,22 @@ _restart_dmeventd() {
 	#rm -f debug.log*
 
 	dmeventd -R -fldddd -e "$PWD/test_nologin" > debug.log_DMEVENTD_$RANDOM 2>&1 &
-	echo $! >LOCAL_DMEVENTD
+	local local=$!
+	echo "$local" >LOCAL_DMEVENTD
 
-	for i in {1..10}; do
-		pid=$(pgrep -o dmeventd || true)
-		test -n "$pid" || break; # no dmeventd running
-		test "$pid" = "$(< LOCAL_DMEVENTD)" && break
+	for i in {1..50}; do
+		pid=$(pgrep -o dmeventd) || break
+		# Check pid and dmeventd readiness to communicate
+		test "$pid" = "$local" && dmeventd -i && break
 		sleep .2
 	done
 
-	# wait a bit, so we talk to the new dmeventd later
-	if test -n "$pid" ; then
-		for i in {1..10}; do
-			dmeventd  -i && break;
-			sleep .1
-		done
+	if [ "$i" -eq 50 ]; then
+		# Unexpected - we waited over 10 seconds and
+		# dmeventd has not managed to restart
+		cat /run/dmeventd.pid || true
+		pgrep dmeventd || true
+		die "dmeventd restart is too slow"
 	fi
 }
 
@@ -61,7 +62,20 @@ lvchange --monitor y --verbose $vg/4way 2>&1 | tee lvchange.out
 test -e LOCAL_CLVMD || grep 'already monitored' lvchange.out
 
 # now try what happens if no dmeventd is running
-kill -9 "$(< LOCAL_DMEVENTD)"
+pid=$(< LOCAL_DMEVENTD)
+kill -9 "$pid"
+# TODO/FIXME: it would be surely better, if the wait loop bellow would
+# not be need however ATM the API for communication is not welldetecting
+# this highly unusual race case - and things will simply timeout on
+# reading failure within 4 seconds.
+# Fixing would require to add some handling for losing FIFO connection
+for i in {1..10}; do
+	# wait here for a while until dmeventd dies....
+	# suprisingly it's not instant and we can actually
+	# obtain list of monitored devices...
+	test -z $(ps -p "$pid" -o comm=) && break
+	sleep .1
+done
 rm LOCAL_DMEVENTD debug.log*
 
 _restart_dmeventd
