@@ -37,13 +37,14 @@ _clear_online_files() {
         rm -f "$PVS_LOOKUP_DIR"/*
 }
 
-aux lvmconf 'devices/global_filter = [ "a|.*|" ]' \
-            'devices/filter = [ "a|.*|" ]'
-
 # requires trailing / to match dm
 SYS_DIR="$PWD/test/sys"
 aux lvmconf "devices/use_devicesfile = 1" \
-	"devices/device_id_sysfs_dir = \"$SYS_DIR/\""
+	"devices/device_id_sysfs_dir = \"$SYS_DIR/\"" \
+	'devices/global_filter = [ "a|.*|" ]' \
+	'devices/filter = [ "a|.*|" ]' \
+	"global/event_activation = 1"
+
 
 WWID1="naa.123456"
 WWID2="nvme.123-456"

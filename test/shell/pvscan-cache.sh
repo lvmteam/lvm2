@@ -46,6 +46,8 @@ vgimport $vg1
 check lv_exists $vg1
 check lv_field $vg1/$lv1 lv_active ""
 
+aux lvmconf "global/event_activation = 1"
+
 # Check that an LV cannot be activated by pvscan while VG is exported
 vgchange -an $vg1
 _clear_online_files

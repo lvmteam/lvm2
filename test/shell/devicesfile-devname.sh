@@ -37,7 +37,9 @@ mkdir "$DFDIR" || true
 DF="$DFDIR/system.devices"
 ORIG="$DFDIR/orig.devices"
 
-aux lvmconf 'devices/use_devicesfile = 1'
+aux lvmconf "devices/use_devicesfile = 1" \
+	"global/event_activation = 1"
+
 
 pvcreate "$dev1"
 ls "$DF"

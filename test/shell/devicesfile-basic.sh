@@ -63,7 +63,8 @@ rm -f "$DF-unused.*"
 # Test with use_devicesfile=0 (no devices file is being applied by default)
 #
 
-aux lvmconf 'devices/use_devicesfile = 0'
+aux lvmconf "devices/use_devicesfile = 0" \
+        "global/event_activation = 1"
 
 wipe_all
 rm -f "$DF"

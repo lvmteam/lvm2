@@ -49,6 +49,8 @@ setup_merge_() {
 
 aux prepare_pvs 1 50
 
+aux lvmconf "global/event_activation = 1"
+
 vgcreate $vg1 "$dev1"
 mkdir test_mnt
 

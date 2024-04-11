@@ -40,7 +40,8 @@ _clear_online_files() {
 aux lvmconf "devices/md_component_detection = 1" \
 	"devices/hints = \"none\"" \
 	"devices/obtain_device_list_from_udev = 0" \
-	"devices/search_for_devnames = \"none\""
+	"devices/search_for_devnames = \"none\"" \
+	"global/event_activation = 1"
 
 aux extend_filter_md "a|/dev/md|"
 

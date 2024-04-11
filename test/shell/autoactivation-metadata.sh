@@ -18,6 +18,8 @@ _clear_online_files() {
 
 . lib/inittest
 
+aux lvmconf "global/event_activation = 1"
+
 aux prepare_devs 1
 
 #

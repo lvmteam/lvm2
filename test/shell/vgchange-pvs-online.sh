@@ -29,7 +29,9 @@ mkdir -p "$DFDIR" || true
 DF="$DFDIR/system.devices"
 
 # Because mapping devno to devname gets dm name from sysfs
-aux lvmconf 'devices/scan = "/dev"'
+aux lvmconf 'devices/scan = "/dev"' \
+	"global/event_activation = 1"
+
 bd1="$DM_DEV_DIR/mapper/$(basename $dev1)"
 bd2="$DM_DEV_DIR/mapper/$(basename $dev2)"
 bd3="$DM_DEV_DIR/mapper/$(basename $dev3)"

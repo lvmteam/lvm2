@@ -289,6 +289,8 @@ vgchange -an $vg
 
 _clear_online_files
 
+aux lvmconf "global/event_activation = 1"
+
 # pvscan of one dev with bad metadata will result
 # in the pvid online file being created but the 
 # VG will not be known.
