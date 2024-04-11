@@ -24,21 +24,6 @@
 #include "sanlock_admin.h"
 #include "sanlock_resource.h"
 
-/* FIXME: these are copied from sanlock.h only until
-   an updated version of sanlock is available with them. */
-#define SANLK_RES_ALIGN1M       0x00000010
-#define SANLK_RES_ALIGN2M       0x00000020
-#define SANLK_RES_ALIGN4M       0x00000040
-#define SANLK_RES_ALIGN8M       0x00000080
-#define SANLK_RES_SECTOR512     0x00000100
-#define SANLK_RES_SECTOR4K      0x00000200
-#define SANLK_LSF_ALIGN1M       0x00000010
-#define SANLK_LSF_ALIGN2M       0x00000020
-#define SANLK_LSF_ALIGN4M       0x00000040
-#define SANLK_LSF_ALIGN8M       0x00000080
-#define SANLK_LSF_SECTOR512     0x00000100
-#define SANLK_LSF_SECTOR4K      0x00000200
-
 #include <stddef.h>
 #include <poll.h>
 #include <errno.h>
