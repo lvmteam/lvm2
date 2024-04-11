@@ -81,3 +81,13 @@ fi \
 %%endif \
 : \
 %%{nil}
+
+#############################################################
+#
+# Disable event_activation when creating packages for system
+# with installed lvm2-testsuite
+#
+# This is used for internal package testing to avoid
+# updating lvm.conf after test suite installation.
+#
+%define lvm2_testsuite_build %( test -d /usr/share/lvm2-testsuite && echo 0 || echo 1 )
