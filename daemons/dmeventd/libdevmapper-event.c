@@ -513,7 +513,7 @@ int init_fifos(struct dm_event_fifos *fifos)
 	/* Lock out anyone else trying to do communication with the daemon. */
 	if (flock(fifos->server, LOCK_EX) < 0) {
 		log_sys_error("flock", fifos->server_path);
-		goto bad;
+		goto bad_no_unlock;
 	}
 
 /*	if ((fifos->client = open(fifos->client_path, O_WRONLY | O_NONBLOCK)) < 0) {*/
@@ -524,6 +524,9 @@ int init_fifos(struct dm_event_fifos *fifos)
 
 	return 1;
 bad:
+	if (flock(fifos->server, LOCK_UN))
+		log_sys_debug("flock unlock", fifos->server_path);
+bad_no_unlock:
 	if (close(fifos->server))
 		log_sys_debug("close", fifos->server_path);
 	fifos->server = -1;
