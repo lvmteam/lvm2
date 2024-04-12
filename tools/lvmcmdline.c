@@ -21,6 +21,7 @@
 #include "lvm-version.h"
 #include "lib/locking/lvmlockd.h"
 #include "lib/datastruct/str_list.h"
+#include "libdaemon/server/daemon-stray.h"
 
 /* coverity[unnecessary_header] */
 #include "stub.h"
@@ -33,10 +34,6 @@
 #include <paths.h>
 #include <locale.h>
 #include <langinfo.h>
-
-#ifdef HAVE_VALGRIND
-#include <valgrind.h>
-#endif
 
 #ifdef HAVE_GETOPTLONG
 #  include <getopt.h>
@@ -3502,137 +3499,6 @@ static int _get_custom_fds(struct custom_fds *custom_fds)
 	       _do_get_custom_fd(LVM_REPORT_FD_ENV_VAR_NAME, &custom_fds->report);
 }
 
-static const char *_get_cmdline(pid_t pid)
-{
-	static char _proc_cmdline[32];
-	char buf[256];
-	int fd, n = 0;
-
-	snprintf(buf, sizeof(buf), DEFAULT_PROC_DIR "/%u/cmdline", pid);
-	/* FIXME Use generic read code. */
-	if ((fd = open(buf, O_RDONLY)) >= 0) {
-		if ((n = read(fd, _proc_cmdline, sizeof(_proc_cmdline) - 1)) < 0) {
-			log_sys_error("read", buf);
-			n = 0;
-		}
-		if (close(fd))
-			log_sys_error("close", buf);
-	}
-	_proc_cmdline[n] = '\0';
-
-	return _proc_cmdline;
-}
-
-static const char *_get_filename(int fd)
-{
-	static char filename[PATH_MAX];
-	char buf[32];	/* Assumes short DEFAULT_PROC_DIR */
-	int size;
-
-	snprintf(buf, sizeof(buf), DEFAULT_PROC_DIR "/self/fd/%u", fd);
-
-	if ((size = readlink(buf, filename, sizeof(filename) - 1)) == -1)
-		filename[0] = '\0';
-	else
-		filename[size] = '\0';
-
-	return filename;
-}
-
-static void _close_descriptor(int fd, unsigned suppress_warnings,
-			      const char *command, pid_t ppid,
-			      const char *parent_cmdline)
-{
-	int r;
-	const char *filename;
-
-	/* Ignore bad file descriptors */
-	if (!is_valid_fd(fd))
-		return;
-
-	if (!suppress_warnings)
-		filename = _get_filename(fd);
-
-	r = close(fd);
-	if (suppress_warnings)
-		return;
-
-	if (!r)
-		fprintf(stderr, "File descriptor %d (%s) leaked on "
-			"%s invocation.", fd, filename, command);
-	else if (errno == EBADF)
-		return;
-	else
-		fprintf(stderr, "Close failed on stray file descriptor "
-			"%d (%s): %s", fd, filename, strerror(errno));
-
-	fprintf(stderr, " Parent PID %" PRIpid_t ": %s\n", ppid, parent_cmdline);
-}
-
-static int _close_stray_fds(const char *command, struct custom_fds *custom_fds)
-{
-#ifndef VALGRIND_POOL
-	struct rlimit rlim;
-	int fd;
-	unsigned suppress_warnings = 0;
-	pid_t ppid = getppid();
-	const char *parent_cmdline = _get_cmdline(ppid);
-	static const char _fd_dir[] = DEFAULT_PROC_DIR "/self/fd";
-	struct dirent *dirent;
-	DIR *d;
-
-#ifdef HAVE_VALGRIND
-	if (RUNNING_ON_VALGRIND) {
-		log_debug("Skipping close of descriptors within valgrind execution.");
-		return 1;
-	}
-#endif
-
-	if (getenv("LVM_SUPPRESS_FD_WARNINGS"))
-		suppress_warnings = 1;
-
-	if (!(d = opendir(_fd_dir))) {
-		if (errno != ENOENT) {
-			log_sys_error("opendir", _fd_dir);
-			return 0; /* broken system */
-		}
-
-		/* Path does not exist, use the old way */
-		if (getrlimit(RLIMIT_NOFILE, &rlim) < 0) {
-			log_sys_error("getrlimit", "RLIMIT_NOFILE");
-			return 1;
-		}
-
-		for (fd = 3; fd < (int)rlim.rlim_cur; fd++) {
-			if ((fd != custom_fds->out) &&
-			    (fd != custom_fds->err) &&
-			    (fd != custom_fds->report)) {
-				_close_descriptor(fd, suppress_warnings, command, ppid,
-						  parent_cmdline);
-			}
-		}
-		return 1;
-	}
-
-	while ((dirent = readdir(d))) {
-		fd = atoi(dirent->d_name);
-		if ((fd > 2) &&
-		    (fd != dirfd(d)) &&
-		    (fd != custom_fds->out) &&
-		    (fd != custom_fds->err) &&
-		    (fd != custom_fds->report)) {
-			_close_descriptor(fd, suppress_warnings,
-					  command, ppid, parent_cmdline);
-		}
-	}
-
-	if (closedir(d))
-		log_sys_debug("closedir", _fd_dir);
-#endif
-
-	return 1;
-}
-
 struct cmd_context *init_lvm(unsigned set_connections,
 			     unsigned set_filters,
 			     unsigned threaded)
@@ -3761,7 +3627,8 @@ int lvm2_main(int argc, char **argv)
 	if (!_get_custom_fds(&custom_fds))
 		return EINIT_FAILED;
 
-	if (!_close_stray_fds(base, &custom_fds))
+	if (!daemon_close_stray_fds(base, getenv("LVM_SUPPRESS_FD_WARNINGS") ? 1 : 0,
+				    STDERR_FILENO, &custom_fds))
 		return EINIT_FAILED;
 
 	if (!init_custom_log_streams(&custom_fds))

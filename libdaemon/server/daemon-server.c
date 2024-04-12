@@ -14,6 +14,7 @@
 
 #include "daemon-server.h"
 #include "daemon-log.h"
+#include "daemon-stray.h"
 #include "libdaemon/client/daemon-io.h"
 
 #include <dlfcn.h>
@@ -326,11 +327,14 @@ static void _remove_lockfile(const char *file)
 static void _daemonise(daemon_state s)
 {
 	int child_status;
-	int fd, ffd;
+	int fd;
 	pid_t pid;
-	struct rlimit rlim;
 	struct timeval tval;
 	sigset_t my_sigset;
+	struct custom_fds custom_fds = {
+		/* Do not close fds preloaded by systemd! */
+		.out = (_systemd_activation) ? SD_FD_SOCKET_SERVER : -1
+	};
 
 	if ((fd = open("/dev/null", O_RDWR)) == -1) {
 		fprintf(stderr, "Unable to open /dev/null.\n");
@@ -392,20 +396,7 @@ static void _daemonise(daemon_state s)
 		exit(3);
 	}
 
-	/* Switch to sysconf(_SC_OPEN_MAX) ?? */
-	if (getrlimit(RLIMIT_NOFILE, &rlim) < 0)
-		ffd = 256; /* just have to guess */
-	else
-		ffd = rlim.rlim_cur;
-
-	for (--ffd; ffd > STDERR_FILENO; ffd--) {
-#ifdef __linux__
-		/* Do not close fds preloaded by systemd! */
-		if (_systemd_activation && ffd == SD_FD_SOCKET_SERVER)
-			continue;
-#endif
-		(void) close(ffd);
-	}
+	daemon_close_stray_fds(s.name, 0, STDERR_FILENO, &custom_fds);
 
 	setsid();
 
