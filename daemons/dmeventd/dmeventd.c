@@ -201,8 +201,8 @@ struct message_data {
 	char *device_uuid;	/* Mapped device path. */
 	char *events_str;	/* Events string as fetched from message. */
 	enum dm_event_mask events_field;	/* Events bitfield. */
-	char *timeout_str;
 	uint32_t timeout_secs;
+	char *timeout_str;
 	struct dm_event_daemon_message *msg;	/* Pointer to message buffer. */
 };
 
@@ -2146,7 +2146,7 @@ static int _restart_dmeventd(struct dm_event_fifos *fifos)
 	const char *e;
 
 	if (!dm_daemon_is_running(DMEVENTD_PIDFILE)) {
-		fprintf(stderr, "WARNING: Coult not find running dmeventd associated with pid file %s.\n", DMEVENTD_PIDFILE);
+		fprintf(stderr, "WARNING: Could not find running dmeventd associated with pid file %s.\n", DMEVENTD_PIDFILE);
 		return 0;
 	}
 
