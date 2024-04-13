@@ -23,6 +23,8 @@
 #include "libdm/misc/dm-logging.h"
 #include "base/memory/zalloc.h"
 
+#include "libdaemon/server/daemon-stray.h"
+
 #include <dlfcn.h>
 #include <pthread.h>
 #include <sys/file.h>
@@ -1944,11 +1946,15 @@ static void _remove_files_on_exit(void)
 static void _daemonize(void)
 {
 	int child_status;
-	int fd;
 	pid_t pid;
-	struct rlimit rlim;
 	struct timeval tval;
 	sigset_t my_sigset;
+	struct custom_fds custom_fds = {
+		/* Do not close fds preloaded by systemd! */
+		.out = (_systemd_activation) ? SD_FD_FIFO_SERVER : -1,
+		.err = -1,
+		.report = (_systemd_activation) ? SD_FD_FIFO_CLIENT : -1,
+	};
 
 	sigemptyset(&my_sigset);
 	if (sigprocmask(SIG_SETMASK, &my_sigset, NULL) < 0) {
@@ -1992,20 +1998,7 @@ static void _daemonize(void)
 	if (chdir("/"))
 		exit(EXIT_CHDIR_FAILURE);
 
-	if (getrlimit(RLIMIT_NOFILE, &rlim) < 0)
-		fd = 256;	/* just have to guess */
-	else
-		fd = rlim.rlim_cur;
-
-	for (--fd; fd >= 0; fd--) {
-#ifdef __linux__
-		/* Do not close fds preloaded by systemd! */
-		if (_systemd_activation &&
-		    (fd == SD_FD_FIFO_SERVER || fd == SD_FD_FIFO_CLIENT))
-			continue;
-#endif
-		(void) close(fd);
-	}
+	daemon_close_stray_fds("dmeventd", 0, -1, &custom_fds);
 
 	/* coverity[leaked_handle] dont't care */
 	if ((open("/dev/null", O_RDONLY) < 0) ||
