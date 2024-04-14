@@ -6139,8 +6139,18 @@ static int _check_writecache_memory(struct cmd_context *cmd, struct logical_volu
 	uint64_t need_mem_gb;
 	uint64_t proc_mem_gb;
 	unsigned long long proc_mem_kb = 0;
+	char proc_meminfo[PATH_MAX];
 
-	if (!(fp = fopen("/proc/meminfo", "r")))
+	if (*cmd->proc_dir)
+		goto skip_proc;
+
+	if (dm_snprintf(proc_meminfo, sizeof(proc_meminfo),
+			"%s/meminfo", cmd->proc_dir) < 0) {
+		stack;
+		goto skip_proc;
+	}
+
+	if (!(fp = fopen(proc_meminfo, "r")))
 		goto skip_proc;
 
 	while (fgets(line, sizeof(line), fp)) {

@@ -653,7 +653,7 @@ static int _compare_mem_table_s(const void *a, const void *b){
 	return strcmp(((const mem_table_t*)a)->name, ((const mem_table_t*)b)->name);
 }
 
-static int _get_memory_info(uint64_t *total_mb, uint64_t *available_mb)
+static int _get_memory_info(struct cmd_context *cmd, uint64_t *total_mb, uint64_t *available_mb)
 {
 	uint64_t anon_pages = 0, mem_available = 0, mem_free = 0, mem_total = 0, shmem = 0, swap_free = 0;
 	uint64_t can_swap;
@@ -667,11 +667,14 @@ static int _get_memory_info(uint64_t *total_mb, uint64_t *available_mb)
 	};
 
 	char line[128], namebuf[32], *e, *tail;
+	char proc_meminfo[PATH_MAX];
 	FILE *fp;
 	mem_table_t findme = { namebuf, NULL };
 	mem_table_t *found;
 
-	if (!(fp = fopen("/proc/meminfo", "r")))
+	if ((dm_snprintf(proc_meminfo, sizeof(proc_meminfo),
+			 "%s/meminfo", cmd->proc_dir) < 0) ||
+	    !(fp = fopen(proc_meminfo, "r")))
 		return _get_sysinfo_memory(total_mb, available_mb);
 
 	while (fgets(line, sizeof(line), fp)) {
@@ -760,7 +763,7 @@ int check_vdo_constrains(struct cmd_context *cmd, const struct vdo_pool_size_con
 	// total required memory for VDO target
 	req_mb = 38 + cfg->index_memory_size_mb + virt_mb + phy_mb + cache_mb;
 
-	_get_memory_info(&total_mb, &available_mb);
+	_get_memory_info(cmd, &total_mb, &available_mb);
 
 	has_cnt = cnt = (phy_mb ? 1 : 0) +
 			 (virt_mb ? 1 : 0) +

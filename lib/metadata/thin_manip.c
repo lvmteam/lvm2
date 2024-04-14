@@ -459,7 +459,7 @@ int thin_pool_prepare_metadata(struct logical_volume *metadata_lv,
 			       uint64_t data_length)
 {
 	struct cmd_context *cmd = metadata_lv->vg->cmd;
-	char lv_path[PATH_MAX], md_path[64], buffer[512];
+	char lv_path[PATH_MAX], md_path[PATH_MAX], buffer[512];
 	const char *argv[DEFAULT_MAX_EXEC_ARGS + 7] = {
 		find_config_tree_str_allow_empty(cmd, global_thin_restore_executable_CFG, NULL)
 	};
@@ -490,7 +490,8 @@ int thin_pool_prepare_metadata(struct logical_volume *metadata_lv,
 	}
 
 	/* Build path for 'thin_restore' app with this 'hidden/deleted' tmpfile */
-	(void) dm_snprintf(md_path, sizeof(md_path), "/proc/%u/fd/%u", getpid(), fileno(f));
+	(void) dm_snprintf(md_path, sizeof(md_path), "%s/%u/fd/%u",
+			   cmd->proc_dir, getpid(), fileno(f));
 
 	argv[++args] = "-i";
 	argv[++args] = md_path;
