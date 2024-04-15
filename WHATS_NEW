@@ -1,5 +1,8 @@
 Version 2.03.24 - 
 ==================
+  Require 3.7 as minimal version for sanlock.
+  Share code for closing opened desriptors on program startup.
+  Fix memleak in lvmcache.
   Add configure --with-default-event-activation=ON setting.
   Fix return value from reporter function when hitting internal error.
   Skip checking of pools for lvremove and vgremove commands.
