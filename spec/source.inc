@@ -62,7 +62,7 @@
 
 %if %{fedora} >= 24 || %{rhel} >= 7
  %service lvmlockd 1
- %global sanlock_version 3.3.0-1
+ %global sanlock_version 3.7.0-1
  %global enable_lvmlockd_dlm 1
  %global enable_lvmlockd_sanlock 1
  # FIXME: Check these conditions against RHEL builds!

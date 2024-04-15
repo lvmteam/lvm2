@@ -933,7 +933,7 @@ AC_MSG_RESULT([$BUILD_LOCKDSANLOCK])
 
 dnl -- Look for sanlock libraries
 AS_IF([test "$BUILD_LOCKDSANLOCK" = "yes"], [
-	PKG_CHECK_MODULES(LIBSANLOCKCLIENT, libsanlock_client >= 3.3.0, [BUILD_LVMLOCKD="yes"])
+	PKG_CHECK_MODULES(LIBSANLOCKCLIENT, libsanlock_client >= 3.7.0, [BUILD_LVMLOCKD="yes"])
 	AC_DEFINE([LOCKDSANLOCK_SUPPORT], 1, [Define to 1 to include code that uses lvmlockd sanlock option.])
 ])
 
