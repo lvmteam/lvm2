@@ -70,6 +70,9 @@
 /* Default directory to keep PID files in. */
 #undef DEFAULT_PID_DIR
 
+/* Path to /proc. */
+#undef DEFAULT_PROC_DIR
+
 /* Name of default configuration profile subdirectory. */
 #undef DEFAULT_PROFILE_SUBDIR
 

@@ -447,7 +447,7 @@ static void run(int i, char *f) {
 						 * any output, in other case it should be
 						 * user space problem
 						 */
-						system("echo t > /proc/sysrq-trigger");
+						system("echo t > " DEFAULT_PROC_DIR "/sysrq-trigger");
 					collect_debug = 1;
 					kill(-pid, SIGKILL);
 					w = pid; // waitpid(pid, &st, NULL);

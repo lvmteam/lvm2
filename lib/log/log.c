@@ -220,7 +220,7 @@ void init_log_fn(lvm2_log_fn_t log_fn)
 /* Read /proc/self/stat to extract pid and starttime */
 static int _get_pid_starttime(int *pid, unsigned long long *starttime)
 {
-	static const char statfile[] = "/proc/self/stat";
+	static const char statfile[] = DEFAULT_PROC_DIR "/self/stat";
 	char buf[1024];
 	char *p;
 	int fd;

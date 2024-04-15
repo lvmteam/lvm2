@@ -981,7 +981,7 @@ struct TestCase {
                     sleep( 1 ); /* wait a bit for a reaction */
                 }
                 if ( !p ) {
-                    std::ofstream tr( "/proc/sysrq-trigger" );
+                    std::ofstream tr( DEFAULT_PROC_DIR "/sysrq-trigger" );
                     tr << "t";
                     tr.close();
                     kill( -pid, SIGKILL );

@@ -1032,7 +1032,7 @@ global {
 	# Location of proc filesystem.
 	# This configuration option is advanced.
 	# This configuration option has an automatic default value.
-	# proc = "/proc"
+	# proc = "@DEFAULT_PROC_DIR@"
 
 	# Configuration option global/etc.
 	# Location of /etc system configuration directory.

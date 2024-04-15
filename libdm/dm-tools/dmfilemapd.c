@@ -33,8 +33,6 @@
 #  define MKDEV(x,y) makedev((x),(y))
 #endif
 
-#define DEFAULT_PROC_DIR "/proc"
-
 /* limit to two updates/sec */
 #define FILEMAPD_WAIT_USECS 500000
 

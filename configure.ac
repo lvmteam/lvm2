@@ -1796,6 +1796,9 @@ AC_MSG_RESULT([$DEFAULT_LOCK_DIR])
 AC_DEFINE_UNQUOTED(DEFAULT_LOCK_DIR, ["$DEFAULT_LOCK_DIR"],
 		   [Name of default locking directory.])
 
+# No --with configure setting, but store in the main configure.h
+AC_DEFINE_UNQUOTED(DEFAULT_PROC_DIR, ["/proc"], [Path to /proc.])
+
 ################################################################################
 dnl -- which kernel interface to use (ioctl only)
 AC_MSG_CHECKING([for kernel interface choice])
@@ -1880,6 +1883,7 @@ AC_SUBST(DEFAULT_EVENT_ACTIVATION)
 AC_SUBST(DEFAULT_LOCK_DIR)
 AC_SUBST(DEFAULT_MIRROR_SEGTYPE)
 AC_SUBST(DEFAULT_PID_DIR)
+AC_SUBST(DEFAULT_PROC_DIR)
 AC_SUBST(DEFAULT_PROFILE_SUBDIR)
 AC_SUBST(DEFAULT_RAID10_SEGTYPE)
 AC_SUBST(DEFAULT_RUN_DIR)
