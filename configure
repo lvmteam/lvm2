@@ -729,6 +729,7 @@ DEFAULT_SPARSE_SEGTYPE
 DEFAULT_RUN_DIR
 DEFAULT_RAID10_SEGTYPE
 DEFAULT_PROFILE_SUBDIR
+DEFAULT_PROC_DIR
 DEFAULT_PID_DIR
 DEFAULT_MIRROR_SEGTYPE
 DEFAULT_LOCK_DIR
@@ -12147,19 +12148,19 @@ then :
 
 
 pkg_failed=no
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libsanlock_client >= 3.3.0" >&5
-printf %s "checking for libsanlock_client >= 3.3.0... " >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libsanlock_client >= 3.7.0" >&5
+printf %s "checking for libsanlock_client >= 3.7.0... " >&6; }
 
 if test -n "$LIBSANLOCKCLIENT_CFLAGS"; then
     pkg_cv_LIBSANLOCKCLIENT_CFLAGS="$LIBSANLOCKCLIENT_CFLAGS"
  elif test -n "$PKG_CONFIG"; then
     if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libsanlock_client >= 3.3.0\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "libsanlock_client >= 3.3.0") 2>&5
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libsanlock_client >= 3.7.0\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libsanlock_client >= 3.7.0") 2>&5
   ac_status=$?
   printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  pkg_cv_LIBSANLOCKCLIENT_CFLAGS=`$PKG_CONFIG --cflags "libsanlock_client >= 3.3.0" 2>/dev/null`
+  pkg_cv_LIBSANLOCKCLIENT_CFLAGS=`$PKG_CONFIG --cflags "libsanlock_client >= 3.7.0" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
@@ -12171,12 +12172,12 @@ if test -n "$LIBSANLOCKCLIENT_LIBS"; then
     pkg_cv_LIBSANLOCKCLIENT_LIBS="$LIBSANLOCKCLIENT_LIBS"
  elif test -n "$PKG_CONFIG"; then
     if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libsanlock_client >= 3.3.0\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "libsanlock_client >= 3.3.0") 2>&5
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libsanlock_client >= 3.7.0\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libsanlock_client >= 3.7.0") 2>&5
   ac_status=$?
   printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  pkg_cv_LIBSANLOCKCLIENT_LIBS=`$PKG_CONFIG --libs "libsanlock_client >= 3.3.0" 2>/dev/null`
+  pkg_cv_LIBSANLOCKCLIENT_LIBS=`$PKG_CONFIG --libs "libsanlock_client >= 3.7.0" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
@@ -12197,14 +12198,14 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-                LIBSANLOCKCLIENT_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libsanlock_client >= 3.3.0" 2>&1`
+                LIBSANLOCKCLIENT_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libsanlock_client >= 3.7.0" 2>&1`
         else
-                LIBSANLOCKCLIENT_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libsanlock_client >= 3.3.0" 2>&1`
+                LIBSANLOCKCLIENT_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libsanlock_client >= 3.7.0" 2>&1`
         fi
         # Put the nasty error message in config.log where it belongs
         echo "$LIBSANLOCKCLIENT_PKG_ERRORS" >&5
 
-        as_fn_error $? "Package requirements (libsanlock_client >= 3.3.0) were not met:
+        as_fn_error $? "Package requirements (libsanlock_client >= 3.7.0) were not met:
 
 $LIBSANLOCKCLIENT_PKG_ERRORS
 
@@ -16358,6 +16359,11 @@ printf "%s\n" "$DEFAULT_LOCK_DIR" >&6; }
 printf "%s\n" "#define DEFAULT_LOCK_DIR \"$DEFAULT_LOCK_DIR\"" >>confdefs.h
 
 
+# No --with configure setting, but store in the main configure.h
+
+printf "%s\n" "#define DEFAULT_PROC_DIR \"/proc\"" >>confdefs.h
+
+
 ################################################################################
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for kernel interface choice" >&5
 printf %s "checking for kernel interface choice... " >&6; }
@@ -16414,6 +16420,7 @@ AIO_LIBS=${AIO_LIBS:--laio}
 
 
 ################################################################################
+
 
 
 
