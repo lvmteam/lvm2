@@ -60,11 +60,14 @@
   %global enable_editline 0
 %endif
 
-%if %{fedora} >= 24 || %{rhel} >= 7
+%if %{fedora} >= 27 || %{rhel} >= 7
  %service lvmlockd 1
+# For RH7 require 7.4 for sanlock
+ %if %{rhel} != 7 || 0%{?rhel_minor_version} > 4
+   %global enable_lvmlockd_sanlock 1
+ %endif
  %global sanlock_version 3.7.0-1
  %global enable_lvmlockd_dlm 1
- %global enable_lvmlockd_sanlock 1
  # FIXME: Check these conditions against RHEL builds!
  %if %{rhel}
   %ifnarch i686 x86_64 s390x
