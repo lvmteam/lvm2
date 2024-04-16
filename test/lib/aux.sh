@@ -712,7 +712,7 @@ prepare_ramdisk() {
 }
 
 prepare_real_devs() {
-	aux lvmconf 'devices/scan = "/dev"'
+	lvmconf 'devices/scan = "/dev"'
 
 	touch REAL_DEVICES
 
@@ -721,7 +721,7 @@ prepare_real_devs() {
 		while read path; do
 			REAL_DEVICES[count]=$path
 			count=$((  count + 1 ))
-			aux extend_filter "a|$path|"
+			extend_filter "a|$path|"
 			dd if=/dev/zero of="$path" bs=32k count=1
 			wipefs -a "$path" 2>/dev/null || true
 		done < "$LVM_TEST_DEVICE_LIST"
@@ -754,6 +754,7 @@ prepare_scsi_debug_dev() {
 
 	for i in {1..20} ; do
 		sleep .1 # allow for async Linux SCSI device registration
+		ls /sys/block/sd*/device/model >/dev/null 2>&1 || continue
 		DEBUG_DEV="/dev/$(grep -H scsi_debug /sys/block/sd*/device/model | cut -f4 -d /)"
 		test -b "$DEBUG_DEV" && break
 	done
@@ -1845,10 +1846,11 @@ version_at_least() {
 # i.e.   dm_target_at_least  dm-thin-pool  1 0
 target_at_least() {
 	rm -f debug.log strace.log
-	modprobe "$1" || true
-	case "$1" in
-	  dm-vdo) modprobe "kvdo" || true ;;
-	esac
+	modprobe "$1" || {
+		case "$1" in
+		  dm-vdo) modprobe "kvdo" || true ;;
+		esac
+	}
 
 	if test "$1" = dm-raid; then
 		case "$(uname -r)" in
@@ -1912,6 +1914,12 @@ have_vdo() {
 		return 1
 	}
 	target_at_least dm-vdo "$@"
+
+	vdoformat=$(lvm lvmconfig --typeconfig full --valuesonly global/vdo_format_executable || true)
+	# Remove surrouding "" around string
+	# TODO: lvmconfig should have an option to give this output directly
+	vdoformat=${vdoformat//\"}
+	test -x "$vdoformat" || { echo "No executable to format VDO \"$vdoformat\"..."; return 1; }
 }
 
 have_writecache() {
