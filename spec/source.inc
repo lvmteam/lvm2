@@ -92,13 +92,13 @@
 
 ##############################################################
 
-%if %{rhel} < 7 || %{fedora} < 25
+%if %{rhel} < 7 && %{fedora} < 25
   %global enable_dmfilemapd 0
 %endif
 
 ##############################################################
 
-%if %{rhel} < 8 || %{fedora} < 23
+%if %{rhel} < 8 && %{fedora} < 23
   %global enable_dbusd 0
 %endif
 
