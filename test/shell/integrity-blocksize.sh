@@ -202,6 +202,8 @@ umount $mnt
 pvck --dump metadata "$LOOP3" | grep 'block_size = 4096'
 lvremove -y $vg2/$lv1
 
+dm_table | grep ${PREFIX}
+
 # lvconvert --bs 512 on dev512, ext4 4096, result 512
 lvcreate --type raid1 -m1 -l 8 -n $lv1 $vg1
 aux wipefs_a "$DM_DEV_DIR//$vg1/$lv1"
