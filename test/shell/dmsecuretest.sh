@@ -17,6 +17,10 @@ SKIP_WITH_LVMLOCKD=1
 
 # AES key matching rot13 string from dmsecuretest.c */
 SECURE="434e0cbab02ca68ffba9268222c3789d703fe62427b78b308518b3228f6a2122"
+SECURE1=${SECURE:0:16}
+SECURE2=${SECURE:16:16}
+SECURE3=${SECURE:32:16}
+SECURE4=${SECURE:48:16}
 
 . lib/inittest
 
@@ -62,10 +66,12 @@ wait
 cat cmdout
 
 # $SECURE string must NOT be present in core file
-not grep "$SECURE" "core.$PID" || {
+for str in "$SECURE" "$SECURE1" "$SECURE2" "$SECURE3" "$SECURE4"; do
+	not grep "$str" "core.$PID"
+done || {
 	## cp "core.$PID" /dev/shm/core
 	should dmsetup remove "$DMTEST" # go around weird bugs
-	die "!!! Secure string $SECURE found present in core.$PID !!!"
+	die "!!! Secure string $str found present in core.$PID !!!"
 }
 rm -f "core.$PID"
 
