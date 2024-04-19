@@ -4154,12 +4154,26 @@ static int add_lock_action(struct action *act)
 			vg_ls_name(act->vg_name, ls_name);
 		} else {
 			if (!gl_use_dlm && !gl_use_sanlock && !gl_use_idm) {
-				if (lm_is_running_dlm())
-					gl_use_dlm = 1;
-				else if (lm_is_running_sanlock())
-					gl_use_sanlock = 1;
-				else if (lm_is_running_idm())
-					gl_use_idm = 1;
+				int run_sanlock = lm_is_running_sanlock();
+				int run_dlm = lm_is_running_dlm();
+				int run_idm = lm_is_running_idm();
+
+				if (run_sanlock + run_dlm + run_idm >= 2) {
+					log_error("global lock op %s mode %s: multiple lock managers running sanlock=%d dlm=%d idm=%d",
+						  op_str(act->op), mode_str(act->mode), run_sanlock, run_dlm, run_idm);
+				} else if (!run_sanlock && !run_dlm && !run_idm) {
+					log_debug("global lock op %s mode %s: no lock manager running",
+						  op_str(act->op), mode_str(act->mode));
+				} else {
+					if (run_dlm)
+						gl_use_dlm = 1;
+					else if (run_sanlock)
+						gl_use_sanlock = 1;
+					else if (run_idm)
+						gl_use_idm = 1;
+					log_debug("global lock op %s mode %s: gl_use_sanlock %d gl_use_dlm %d gl_use_idm %d",
+						  op_str(act->op), mode_str(act->mode), gl_use_sanlock, gl_use_dlm, gl_use_idm);
+				}
 			}
 			gl_ls_name(ls_name);
 		}
