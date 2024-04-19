@@ -83,9 +83,11 @@ fi \
 %%{nil}
 
 # Resolve RHEL minor version from redhat-release
+%if 0%{?rhel} > 0
 %define rhel_minor_version %(rhel_version_file="/etc/redhat-release";
-if [ -f $rhel_version_file ]; then cat $rhel_version_file |
+if  [ -f "$rhel_version_file" ]; then cat "$rhel_version_file" |
 cut -f2 -d. | cut -f1 -d' '; else echo 0; fi)
+%endif
 
 #############################################################
 #
