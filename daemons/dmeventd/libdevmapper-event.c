@@ -400,25 +400,16 @@ int daemon_talk(struct dm_event_fifos *fifos,
 	return (int32_t) msg->cmd;
 }
 
+
 /*
- * start_daemon
+ * Check for usable client fifo file
  *
- * This function forks off a process (dmeventd) that will handle
- * the events.  I am currently test opening one of the fifos to
- * ensure that the daemon is running and listening...  I thought
- * this would be less expensive than fork/exec'ing every time.
- * Perhaps there is an even quicker/better way (no, checking the
- * lock file is _not_ a better way).
- *
- * Returns: 1 on success, 0 otherwise
+ * Returns: 2 cliant path does not exists, dmeventd should be restarted
+ *          1 on success, 0 otherwise
  */
-static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
+static int _check_for_usable_fifos(char *dmeventd_path, struct dm_event_fifos *fifos)
 {
-	int pid, ret = 0;
-	int status;
 	struct stat statbuf;
-	char default_dmeventd_path[] = DMEVENTD_PATH;
-	char *args[] = { dmeventd_path ? : default_dmeventd_path, NULL };
 
 	/*
 	 * FIXME Explicitly verify the code's requirement that client_path is secure:
@@ -429,7 +420,7 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 	if ((lstat(fifos->client_path, &statbuf) < 0)) {
 		if (errno == ENOENT)
 			/* Jump ahead if fifo does not already exist. */
-			goto start_server;
+			return 2;
 		else {
 			log_sys_error("stat", fifos->client_path);
 			return 0;
@@ -461,6 +452,7 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 		/* server is running and listening */
 		if (close(fifos->client))
 			log_sys_debug("close", fifos->client_path);
+		fifos->client = -1;
 		return 1;
 	}
 	if (errno != ENXIO && errno != ENOENT)  {
@@ -469,9 +461,36 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 		return 0;
 	}
 
-start_server:
-	/* server is not running */
+	return 2;
+}
 
+
+/*
+ * start_daemon
+ *
+ * This function forks off a process (dmeventd) that will handle
+ * the events.  I am currently test opening one of the fifos to
+ * ensure that the daemon is running and listening...  I thought
+ * this would be less expensive than fork/exec'ing every time.
+ * Perhaps there is an even quicker/better way (no, checking the
+ * lock file is _not_ a better way).
+ *
+ * Returns: 1 on success, 0 otherwise
+ */
+static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
+{
+	struct stat statbuf;
+	char default_dmeventd_path[] = DMEVENTD_PATH;
+	char *args[] = { dmeventd_path ? : default_dmeventd_path, NULL };
+	int pid, ret = 0;
+	int status;
+
+	switch (_check_for_usable_fifos(dmeventd_path, fifos)) {
+	case 0: return_0;
+	case 1: return 1; /* Already running dmeventd */
+	}
+
+	/* server is not running */
 	if ((args[0][0] == '/') && stat(args[0], &statbuf)) {
 		log_sys_error("stat", args[0]);
 		return 0;
@@ -492,8 +511,17 @@ start_server:
 				  strerror(errno));
 		else if (WEXITSTATUS(status))
 			log_error("Unable to start dmeventd.");
-		else
-			ret = 1;
+		else {
+			/* Loop here till forked dmeventd is serving fifos */
+			for (ret = 100; ret > 0; --ret)
+				switch (_check_for_usable_fifos(dmeventd_path, fifos)) {
+				case 0: return_0;
+				case 1: return 1;
+				case 2: usleep(1000); continue;
+				}
+			/* ret == 0 */
+			log_error("Dmeventd is not serving fifos.");
+		}
 	}
 
 	return ret;
