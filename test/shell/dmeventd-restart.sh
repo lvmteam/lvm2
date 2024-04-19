@@ -85,6 +85,14 @@ not pgrep dmeventd
 rm LOCAL_DMEVENTD
 
 # First lvs restarts 'dmeventd' (initiate a socket connection to a daemon)
+# used explicit 'lvs' avoid using forked 'check' function here as that
+# would furher for 'get' and actualy would be waint till whole process group
+# exits - which is not what we want here
+#
+# FIXME/TODO: lvs should probably not be the way to 'fork dmeventd'
+#
+lvs --noheadings -o seg_monitor $vg/3way
+
 check lv_field $vg/3way seg_monitor "not monitored"
 pgrep -o dmeventd >LOCAL_DMEVENTD
 check lv_field $vg/4way seg_monitor "not monitored"
