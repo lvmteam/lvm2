@@ -289,6 +289,12 @@ Create a raid1 or mirror LV.
 .br
 [    \fB--\fP[\fBraid\fP]\fBmaxrecoveryrate\fP \fISize\fP[k|UNIT] ]
 .br
+[    \fB--raidintegrity\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--raidintegritymode\fP \fIString\fP ]
+.br
+[    \fB--raidintegrityblocksize\fP \fINumber\fP ]
+.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
@@ -355,6 +361,12 @@ Create a raid10 LV.
 [    \fB--\fP[\fBraid\fP]\fBminrecoveryrate\fP \fISize\fP[k|UNIT] ]
 .br
 [    \fB--\fP[\fBraid\fP]\fBmaxrecoveryrate\fP \fISize\fP[k|UNIT] ]
+.br
+[    \fB--raidintegrity\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--raidintegritymode\fP \fIString\fP ]
+.br
+[    \fB--raidintegrityblocksize\fP \fINumber\fP ]
 .br
 [ COMMON_OPTIONS ]
 .ad b
