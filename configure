@@ -3761,7 +3761,7 @@ case "$host_os" in #(
 		LVMIMPORTVDO="no"
 		BLKDEACTIVATE="no" ;; #(
   *) :
-    CLDFLAGS="${CLDFLAGS-"$LDFLAGS"}" ;;
+     ;;
 esac
 
 ################################################################################
@@ -9065,9 +9065,9 @@ printf "%s\n" "$ac_cv_flag_HAVE_PIE" >&6; }
 
 
     ac_save_LDFLAGS=$LDFLAGS
-    LDFLAGS=-Wl,-z,relro,-z,now
-	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether $CC accepts -Wl,-z,relro,-z,now ld flags" >&5
-printf %s "checking whether $CC accepts -Wl,-z,relro,-z,now ld flags... " >&6; }
+    LDFLAGS=-Wl,-z,relro,-z,now,-z,pack-relative-relocs,--as-needed
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether $CC accepts -Wl,-z,relro,-z,now,-z,pack-relative-relocs,--as-needed ld flags" >&5
+printf %s "checking whether $CC accepts -Wl,-z,relro,-z,now,-z,pack-relative-relocs,--as-needed ld flags... " >&6; }
 if test ${ac_cv_flag_HAVE_FULL_RELRO+y}
 then :
   printf %s "(cached) " >&6
@@ -11577,7 +11577,7 @@ printf "%s\n" "#define GNU_SYMVER 1" >>confdefs.h
 	case "$host_os" in #(
   linux*) :
 
-			CLDFLAGS="${CLDFLAGS-"$LDFLAGS"} -Wl,--version-script,.export.sym"
+			CLDFLAGS="-Wl,--version-script,.export.sym"
 			LDDEPS="$LDDEPS .export.sym" ;; #(
   *) :
      ;;
