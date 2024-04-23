@@ -57,7 +57,7 @@ AS_CASE(["$host_os"],
 		FSADM="no"
 		LVMIMPORTVDO="no"
 		BLKDEACTIVATE="no"],
-	[CLDFLAGS="${CLDFLAGS-"$LDFLAGS"}"])
+	[])
 
 ################################################################################
 dnl -- Checks for programs.
@@ -836,7 +836,7 @@ AS_IF([test "$GCC" = "yes" && test "$symvers" = "gnu"], [
 		  [Define to use GNU versioning in the shared library.])
 	AS_CASE(["$host_os"],
 		[linux*], [
-			CLDFLAGS="${CLDFLAGS-"$LDFLAGS"} -Wl,--version-script,.export.sym"
+			CLDFLAGS="-Wl,--version-script,.export.sym"
 			LDDEPS="$LDDEPS .export.sym"])
 ])
 

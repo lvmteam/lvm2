@@ -508,7 +508,7 @@ DEFS+=-D_FILE_OFFSET_BITS=64
 
 %.so: %.o
 	$(SHOW) "    [CC] $(<F)"
-	$(Q) $(CC) -c $(CFLAGS) $(CLDFLAGS) $< $(LIBS) -o $@
+	$(Q) $(CC) -c $(CFLAGS) $(LDFLAGS) $(CLDFLAGS) $< $(LIBS) -o $@
 
 ifneq (,$(LIB_SHARED))
 
@@ -517,11 +517,11 @@ $(LIB_SHARED).$(LIB_VERSION): $(OBJECTS) $(LDDEPS)
 	$(SHOW) "    [CC] $@"
 ifeq ("@LIB_SUFFIX@","so")
 	$(Q) $(CC) -shared -Wl,-soname,$(notdir $@) \
-		$(CFLAGS) $(CLDFLAGS) $(OBJECTS) $(LIBS) -o $@
+		$(CFLAGS) $(LDFLAGS) $(CLDFLAGS) $(OBJECTS) $(LIBS) -o $@
 endif
 ifeq ("@LIB_SUFFIX@","dylib")
 	$(Q) $(CC) -dynamiclib -dylib_current_version,$(LIB_VERSION) \
-		$(CFLAGS) $(CLDFLAGS) $(OBJECTS) $(LIBS) -o $@
+		$(CFLAGS) $(LDFLAGS) $(CLDFLAGS) $(OBJECTS) $(LIBS) -o $@
 endif
 
 $(LIB_SHARED): $(LIB_SHARED).$(LIB_VERSION)
