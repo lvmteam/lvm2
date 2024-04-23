@@ -17,14 +17,13 @@ SKIP_WITH_LVMLOCKD=1
 
 # AES key matching rot13 string from dmsecuretest.c */
 SECURE="434e0cbab02ca68ffba9268222c3789d703fe62427b78b308518b3228f6a2122"
-SECURE1=${SECURE:0:16}
-SECURE2=${SECURE:16:16}
-SECURE3=${SECURE:32:16}
-SECURE4=${SECURE:48:16}
 
 . lib/inittest
 
 DMTEST="${PREFIX}-test-secure"
+
+# Masking following glibc features fixes probles for AVX CPUs.
+#export GLIBC_TUNABLES=glibc.cpu.hwcaps=-AVX512F,-AVX2,-AVX512VL,-ERMS,-AVX_Fast_Unaligned_Load,-SSSE3
 
 # Test needs installed gdb package with gcore app
 which gcore || skip
@@ -55,6 +54,8 @@ done
 # crypt device should be loaded
 dmsetup status "$DMTEST"
 
+# Do not try to get debuginfo on newer gcore
+unset DEBUGINFOD_URLS
 # generate core file for running&sleeping binary
 gcore "$PID" | tee out || skip
 
@@ -66,13 +67,26 @@ wait
 cat cmdout
 
 # $SECURE string must NOT be present in core file
-for str in "$SECURE" "$SECURE1" "$SECURE2" "$SECURE3" "$SECURE4"; do
-	not grep "$str" "core.$PID"
-done || {
+fail_test=0
+for k in 1 2 4 8; do
+	a=0
+	b=$(( 64 / k ))
+	fail_str=
+	while [ "$a" -lt 64 ] ; do
+		str=${SECURE:a:b}
+		not grep -c "$str" "core.$PID" || fail_str="$fail_str $str"
+		a=$(( a + b ))
+	done
+	if [ -n "$fail_str" ]; then
+		echo "!!! Found $fail_str present in core.$PID !!!"
+		fail_test=$(( fail_test + 1 ))
+	fi
+done
+if [ "$fail_test" -gt 0 ]; then
 	## cp "core.$PID" /dev/shm/core
 	should dmsetup remove "$DMTEST" # go around weird bugs
-	die "!!! Secure string $str found present in core.$PID !!!"
-}
+	die "!!! Secure string $SECURE or its parts found present in core.$PID !!!"
+fi
 rm -f "core.$PID"
 
 if test "$j" = empty ; then
