@@ -199,7 +199,7 @@ AC_MSG_RESULT([$SHARED_LINK])
 dnl -- Check if compiler/linker supports PIE and RELRO
 AC_TRY_CCFLAG([-pie], [HAVE_PIE], [], [])
 AC_SUBST(HAVE_PIE)
-AC_TRY_LDFLAGS([-Wl,-z,relro,-z,now], [HAVE_FULL_RELRO], [], [])
+AC_TRY_LDFLAGS([-Wl,-z,relro,-z,now,-z,pack-relative-relocs,--as-needed], [HAVE_FULL_RELRO], [], [])
 AC_SUBST(HAVE_FULL_RELRO)
 
 ################################################################################

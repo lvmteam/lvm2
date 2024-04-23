@@ -233,11 +233,16 @@ endif
 endif
 
 ifneq ("@STATIC_LINK@", "yes")
+ifeq (,$(findstring relro,$(LDFLAGS)))
+ifeq ("@HAVE_FULL_RELRO@", "yes")
+  LDFLAGS += -Wl,-z,relro,-z,now,-z,pack-relative-relocs,--as-needed
+endif
+endif
+
 ifeq ("@HAVE_PIE@", "yes")
 ifeq ("@HAVE_FULL_RELRO@", "yes")
   EXTRA_EXEC_CFLAGS += -fPIE
-  EXTRA_EXEC_LDFLAGS += -Wl,-z,relro,-z,now -pie -fPIE
-  CLDFLAGS += -Wl,-z,relro
+  EXTRA_EXEC_LDFLAGS += -pie -fPIE
 endif
 endif
 endif
