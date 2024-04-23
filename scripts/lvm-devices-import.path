@@ -1,0 +1,12 @@
+[Unit]
+Description=lvm-devices-import to create system.devices
+
+# /run/lvm/lvm-devices-import created by vgchange -aay <rootvg>
+
+[Path]
+PathExists=/run/lvm/lvm-devices-import
+Unit=lvm-devices-import.service
+ConditionPathExists=!/etc/lvm/devices/system.devices
+
+[Install]
+WantedBy=multi-user.target

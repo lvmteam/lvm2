@@ -1726,9 +1726,10 @@ int device_ids_write(struct cmd_context *cmd)
 
 	if ((fc_bytes = snprintf(fc, sizeof(fc),
 			    "# LVM uses devices listed in this file.\n" \
-			    "# Created by LVM command %s pid %d at %s" \
+			    "# Created by LVM command %s%s pid %d at %s" \
 			    "# HASH=%u\n",
-			    cmd->name, getpid(), ctime(&t), hash)) < 0) {
+			    cmd->name, cmd->device_ids_auto_import ? " (auto)" : "",
+			    getpid(), ctime(&t), hash)) < 0) {
 		log_error("Failed to write buffer for devices file content.");
 		goto out;
 	}

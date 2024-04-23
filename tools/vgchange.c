@@ -16,11 +16,14 @@
 #include "tools.h"
 #include "lib/device/device_id.h"
 #include "lib/label/hints.h"
+#include "device_mapper/misc/dm-ioctl.h"
+#include <mntent.h>
 
 struct vgchange_params {
 	int lock_start_count;
 	unsigned int lock_start_sanlock : 1;
 	unsigned int vg_complete_to_activate : 1;
+	char *root_dm_uuid; /* dm uuid of LV under root fs */
 };
 
 /*
@@ -197,7 +200,7 @@ int vgchange_background_polling(struct cmd_context *cmd, struct volume_group *vg
 }
 
 int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
-		      activation_change_t activate, int vg_complete_to_activate)
+		      activation_change_t activate, int vg_complete_to_activate, char *root_dm_uuid)
 {
 	int lv_open, active, monitored = 0, r = 1;
 	const struct lv_list *lvl;
@@ -279,6 +282,43 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 		r = 0;
 	}
 
+	/*
+	 * Possibly trigger auto-generation of system.devices:
+	 * - if root_dm_uuid contains vg->id, and
+	 * - /etc/lvm/devices/auto-import-rootvg exists, and
+	 * - /etc/lvm/devices/system.devices does not exist, then
+	 * - create /run/lvm/lvm-devices-import to
+	 *   trigger lvm-devices-import.path and .service
+	 * - lvm-devices-import will run vgimportdevices --rootvg
+	 *   to create system.devices
+	 */
+	if (root_dm_uuid) {
+		char path[PATH_MAX];
+		struct stat info;
+		FILE *fp;
+
+		if (memcmp(root_dm_uuid + 4, &vg->id, ID_LEN))
+			goto out;
+
+		if (cmd->enable_devices_file || devices_file_exists(cmd))
+			goto out;
+
+		if (dm_snprintf(path, sizeof(path), "%s/devices/auto-import-rootvg", cmd->system_dir) < 0)
+			goto out;
+
+		if (stat(path, &info) < 0)
+			goto out;
+
+		log_debug("Found %s creating %s", path, DEVICES_IMPORT_PATH);
+
+		if (!(fp = fopen(DEVICES_IMPORT_PATH, "w"))) {
+			log_debug("failed to create %s", DEVICES_IMPORT_PATH);
+			goto out;
+		}
+		if (fclose(fp))
+			stack;
+	}
+out:
 	/* Print message only if there was not found a missing VG */
 	log_print_unless_silent("%d logical volume(s) in volume group \"%s\" now active",
 				lvs_in_vg_activated(vg), vg->name);
@@ -714,7 +754,7 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 
 	if (arg_is_set(cmd, activate_ARG)) {
 		activate = (activation_change_t) arg_uint_value(cmd, activate_ARG, 0);
-		if (!vgchange_activate(cmd, vg, activate, vp->vg_complete_to_activate))
+		if (!vgchange_activate(cmd, vg, activate, vp->vg_complete_to_activate, vp->root_dm_uuid))
 			return_ECMD_FAILED;
 	} else if (arg_is_set(cmd, refresh_ARG)) {
 		/* refreshes the visible LVs (which starts polling) */
@@ -733,6 +773,115 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	return ret;
+}
+
+/*
+ * Automatic creation of system.devices for root VG on first boot
+ * is useful for OS images where the OS installer is not used to
+ * customize the OS for system.
+ *
+ * - OS image prep:
+ *   . rm /etc/lvm/devices/system.devices (if it exists)
+ *   . touch /etc/lvm/devices/auto-import-rootvg
+ *   . enable lvm-devices-import.path
+ *   . enable lvm-devices-import.service
+ *
+ * - lvchange -ay <rootvg>/<rootlv>
+ *   . run by initrd so root fs can be mounted
+ *   . does not use system.devices
+ *   . named <rootvg>/<rootlv> comes from kernel command line rd.lvm
+ *   . uses first device that appears containing the named root LV
+ *
+ * - vgchange -aay <rootvg>
+ *   . triggered by udev when all PVs from root VG are online
+ *   . activate LVs in root VG (in addition to the already active root LV)
+ *   . check for /etc/lvm/devices/auto-import-rootvg (found)
+ *   . check for /etc/lvm/devices/system.devices (not found)
+ *   . create /run/lvm/lvm-devices-import because
+ *     auto-import-rootvg was found and system.devices was not found
+ *
+ * - lvm-devices-import.path
+ *   . triggered by /run/lvm/lvm-devices-import
+ *   . start lvm-devices-import.service
+ *
+ * - lvm-devices-import.service
+ *   . check for /etc/lvm/devices/system.devices, do nothing if found
+ *   . run vgimportdevices --rootvg --auto
+ *
+ * - vgimportdevices --rootvg --auto
+ *   . check for /etc/lvm/devices/auto-import-rootvg (found)
+ *   . check for /etc/lvm/devices/system.devices (not found)
+ *   . creates /etc/lvm/devices/system.devices for PVs in root VG
+ *   . removes /etc/lvm/devices/auto-import-rootvg
+ *   . removes /run/lvm/lvm-devices-import
+ *
+ * On future startup, /etc/lvm/devices/system.devices will exist,
+ * and /etc/lvm/devices/auto-import-rootvg will not exist, so
+ * vgchange -aay <rootvg> will not create /run/lvm/lvm-devices-import,
+ * and lvm-devices-import.path and lvm-device-import.service will not run.
+ *
+ * lvm-devices-import.path:
+ * [Path]
+ * PathExists=/run/lvm/lvm-devices-import
+ * Unit=lvm-devices-import.service
+ * ConditionPathExists=!/etc/lvm/devices/system.devices
+ *
+ * lvm-devices-import.service:
+ * [Service]
+ * Type=oneshot
+ * RemainAfterExit=no
+ * ExecStart=/usr/sbin/vgimportdevices --rootvg --auto
+ * ConditionPathExists=!/etc/lvm/devices/system.devices
+ */
+
+static void _get_rootvg_dev(struct cmd_context *cmd, char **dm_uuid_out)
+{
+	char path[PATH_MAX];
+	char dm_uuid[DM_UUID_LEN];
+	struct stat info;
+	FILE *fme = NULL;
+	struct mntent *me;
+	int found = 0;
+
+	if (cmd->enable_devices_file || devices_file_exists(cmd))
+		return;
+
+	if (dm_snprintf(path, sizeof(path), "%s/devices/auto-import-rootvg", cmd->system_dir) < 0)
+		return;
+
+	if (stat(path, &info) < 0)
+		return;
+
+	if (!(fme = setmntent("/etc/mtab", "r")))
+		return;
+
+	while ((me = getmntent(fme))) {
+		if ((me->mnt_dir[0] == '/') && (me->mnt_dir[1] == '\0')) {
+			found = 1;
+			break;
+		}
+	}
+	endmntent(fme);
+
+	if (!found)
+		return;
+
+	if (stat(me->mnt_dir, &info) < 0)
+		return;
+
+	if (!get_dm_uuid_from_sysfs(dm_uuid, sizeof(dm_uuid), (int)MAJOR(info.st_dev), (int)MINOR(info.st_dev)))
+		return;
+
+	log_debug("Found root dm_uuid %s", dm_uuid);
+
+	/* UUID_PREFIX = "LVM-" */
+	if (strncmp(dm_uuid, UUID_PREFIX, 4))
+		return;
+
+	if (strlen(dm_uuid) < 4 + ID_LEN)
+		return;
+
+	*dm_uuid_out = dm_pool_strdup(cmd->mem, dm_uuid);
 }
 
 static int _vgchange_autoactivation_setup(struct cmd_context *cmd,
@@ -777,6 +926,8 @@ static int _vgchange_autoactivation_setup(struct cmd_context *cmd,
 		return_0;
 
 	get_single_vgname_cmd_arg(cmd, NULL, &vgname);
+
+	_get_rootvg_dev(cmd, &vp->root_dm_uuid);
 
 	/*
 	 * Lock the VG before scanning the PVs so _vg_read can avoid the normal

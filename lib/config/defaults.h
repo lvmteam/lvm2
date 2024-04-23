@@ -337,6 +337,8 @@
 #define VGS_ONLINE_DIR DEFAULT_RUN_DIR "/vgs_online"
 #define PVS_LOOKUP_DIR DEFAULT_RUN_DIR "/pvs_lookup"
 
+#define DEVICES_IMPORT_PATH DEFAULT_RUN_DIR "/lvm-devices-import"
+
 #define DEFAULT_DEVICE_ID_SYSFS_DIR "/sys/"  /* trailing / to match dm_sysfs_dir() */
 
 #define DEFAULT_DEVICESFILE_BACKUP_LIMIT 50

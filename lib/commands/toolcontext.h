@@ -217,6 +217,7 @@ struct cmd_context {
 	unsigned device_ids_check_hostname:1;
 	unsigned device_ids_refresh_trigger:1;
 	unsigned device_ids_invalid:1;
+	unsigned device_ids_auto_import:1;
 	unsigned get_vgname_from_options:1;     /* used by lvconvert */
 
 	/*

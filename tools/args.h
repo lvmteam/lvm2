@@ -94,6 +94,14 @@ arg(atversion_ARG, '\0', "atversion", string_VAL, 0, 0,
     "which does not contain any newer settings for which LVM would\n"
     "issue a warning message when checking the configuration.\n")
 
+arg(auto_ARG, '\0', "auto", 0, 0, 0,
+    "This option is used when automatically importing devices for the root VG.\n"
+    "The auto import is intended to be done once, on first boot, to create an\n"
+    "initial system.devices file for the root VG.\n"
+    "When this option is used, the vgimportdevices --rootvg command does nothing\n"
+    "if system.devices exists, or the file auto-import-rootvg does not exist\n"
+    "(both in the /etc/lvm/devices/ directory.)\n")
+
 arg(autoactivation_ARG, '\0', "autoactivation", string_VAL, 0, 0,
     "Specify if autoactivation is being used from an event.\n"
     "This allows the command to apply settings that are specific\n"
@@ -753,6 +761,9 @@ arg(resync_ARG, '\0', "resync", 0, 0, 0,
     "and copied to the others. This can take considerable time, during\n"
     "which the LV is without a complete redundant copy of the data.\n"
     "See \\fBlvmraid\\fP(7) for more information.\n")
+
+arg(rootvg_ARG, '\0', "rootvg", 0, 0, 0,
+    "Import devices used for the root VG.\n")
 
 arg(rows_ARG, '\0', "rows", 0, 0, 0,
     "Output columns as rows.\n")

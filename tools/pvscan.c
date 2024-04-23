@@ -495,7 +495,7 @@ static int _pvscan_aa_single(struct cmd_context *cmd, const char *vg_name,
 
 	log_debug("pvscan autoactivating VG %s.", vg_name);
 
-	if (!vgchange_activate(cmd, vg, CHANGE_AAY, 1)) {
+	if (!vgchange_activate(cmd, vg, CHANGE_AAY, 1, NULL)) {
 		log_error_pvscan(cmd, "%s: autoactivation failed.", vg->name);
 		pp->activate_errors++;
 	}
@@ -755,7 +755,7 @@ static int _pvscan_aa_quick(struct cmd_context *cmd, struct pvscan_aa_params *pp
 
 	log_debug("pvscan autoactivating VG %s.", vgname);
 
-	if (!vgchange_activate(cmd, vg, CHANGE_AAY, 1)) {
+	if (!vgchange_activate(cmd, vg, CHANGE_AAY, 1, NULL)) {
 		log_error_pvscan(cmd, "%s: autoactivation failed.", vg->name);
 		pp->activate_errors++;
 	}
