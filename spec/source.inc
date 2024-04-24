@@ -181,8 +181,8 @@ BuildRequires: gcc
 BuildRequires: gcc-c++
 %endif
 BuildRequires: libselinux-devel >= 1.30.19-4, libsepol-devel
-BuildRequires: ncurses-devel
 %if %{enable_readline}
+BuildRequires: ncurses-devel
 BuildRequires: readline-devel
 %endif
 %if %{enable_editline}
