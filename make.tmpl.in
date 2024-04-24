@@ -278,12 +278,14 @@ endif
 ifeq (,$(findstring -z$(comma)now,$(LDFLAGS)))
   LDFLAGS += -Wl,-z,now
 endif
-ifeq (,$(findstring -z$(comma)pack-relative-relocs,$(LDFLAGS)))
-  LDFLAGS += -Wl,-z,pack-relative-relocs
-endif
+# TODO: think about configure option for this flag
+# for now leave decision on distro maitainer
+#ifeq (,$(findstring -z$(comma)pack-relative-relocs,$(LDFLAGS)))
+#  LDFLAGS += -Wl,-z,pack-relative-relocs
+#endif
 # For systems with old readline library that requires extra libs to link with
 # we stick to default --no-as-needed and we avoid adding --as-needed flag
-ifneq (2,$(words $(findstring -l%,$(READLINE_LIBS))))
+ifneq (-l,$(findstring -l,$(filter-out %readline,$(READLINE_LIBS))))
 ifeq (,$(findstring --as-needed,$(LDFLAGS)))
   LDFLAGS += -Wl,--as-needed
 endif
