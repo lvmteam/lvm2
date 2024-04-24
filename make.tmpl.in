@@ -270,19 +270,20 @@ endif
 endif
 
 ifeq ("@HAVE_FULL_RELRO@", "yes")
+comma := ,
 ifneq ("@STATIC_LINK@", "yes")
-ifeq (,$(findstring -z\,relro,$(LDFLAGS)))
+ifeq (,$(findstring -z$(comma)relro,$(LDFLAGS)))
   LDFLAGS += -Wl,-z,relro
 endif
-ifeq (,$(findstring -z\,now,$(LDFLAGS)))
+ifeq (,$(findstring -z$(comma)now,$(LDFLAGS)))
   LDFLAGS += -Wl,-z,now
 endif
-ifeq (,$(findstring -z\,pack-relative-relocs,$(LDFLAGS)))
+ifeq (,$(findstring -z$(comma)pack-relative-relocs,$(LDFLAGS)))
   LDFLAGS += -Wl,-z,pack-relative-relocs
 endif
 # For systems with old readline library that requires extra libs to link with
 # we stick to default --no-as-needed and we avoid adding --as-needed flag
-ifneq (2,$(words $(findstring -l,$(READLINE_LIBS))))
+ifneq (2,$(words $(findstring -l%,$(READLINE_LIBS))))
 ifeq (,$(findstring --as-needed,$(LDFLAGS)))
   LDFLAGS += -Wl,--as-needed
 endif
