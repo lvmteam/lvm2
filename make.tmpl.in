@@ -269,16 +269,29 @@ WFLAGS += -Wsync-nand
 endif
 endif
 
-ifneq ("@STATIC_LINK@", "yes")
-ifeq (,$(findstring relro,$(LDFLAGS)))
 ifeq ("@HAVE_FULL_RELRO@", "yes")
-  LDFLAGS += -Wl,-z,relro,-z,now,-z,pack-relative-relocs,--as-needed
+ifneq ("@STATIC_LINK@", "yes")
+ifeq (,$(findstring -z\,relro,$(LDFLAGS)))
+  LDFLAGS += -Wl,-z,relro
+endif
+ifeq (,$(findstring -z\,now,$(LDFLAGS)))
+  LDFLAGS += -Wl,-z,now
+endif
+ifeq (,$(findstring -z\,pack-relative-relocs,$(LDFLAGS)))
+  LDFLAGS += -Wl,-z,pack-relative-relocs
+endif
+# For systems with old readline library that requires extra libs to link with
+# we stick to default --no-as-needed and we avoid adding --as-needed flag
+ifneq (2,$(words $(findstring -l,$(READLINE_LIBS))))
+ifeq (,$(findstring --as-needed,$(LDFLAGS)))
+  LDFLAGS += -Wl,--as-needed
 endif
 endif
 
 ifeq ("@HAVE_PIE@", "yes")
   EXTRA_EXEC_CFLAGS += -fPIE
   EXTRA_EXEC_LDFLAGS += -pie -fPIE
+endif
 endif
 endif
 
