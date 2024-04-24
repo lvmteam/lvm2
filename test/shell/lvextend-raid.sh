@@ -75,6 +75,7 @@ if [ $PROGRESS -eq 1 ]
 then
 	not check lv_field $vg/$lv1 sync_percent "100.00"
 else
+	aux wait_for_sync $vg $lv1
 	check lv_field $vg/$lv1 sync_percent "100.00"
 fi
 
