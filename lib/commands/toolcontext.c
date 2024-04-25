@@ -45,6 +45,10 @@
 #include <systemd/sd-id128.h>
 #endif
 
+#ifdef HAVE_VALGRIND
+#include <valgrind.h>
+#endif
+
 #ifdef __linux__
 #  include <malloc.h>
 #endif
@@ -1708,9 +1712,11 @@ struct cmd_context *create_toolcontext(unsigned is_clvmd,
 	/* FIXME Make this configurable? */
 	reset_lvm_errno(1);
 
-#ifndef VALGRIND_POOL
 	/* Set in/out stream buffering before glibc */
 	if (set_buffering
+#ifdef HAVE_VALGRIND
+	    && !RUNNING_ON_VALGRIND /* Skipping within valgrind execution. */
+#endif
 #ifdef SYS_gettid
 	    /* For threaded programs no changes of streams */
             /* On linux gettid() is implemented only via syscall */
@@ -1752,7 +1758,7 @@ struct cmd_context *create_toolcontext(unsigned is_clvmd,
 	} else if (!set_buffering)
 		/* Without buffering, must not use stdin/stdout */
 		init_silent(1);
-#endif
+
 	/*
 	 * Environment variable LVM_SYSTEM_DIR overrides this below.
 	 */
@@ -2087,7 +2093,10 @@ void destroy_toolcontext(struct cmd_context *cmd)
 		dm_hash_destroy(cmd->cft_def_hash);
 
 	dm_device_list_destroy(&cmd->cache_dm_devs);
-#ifndef VALGRIND_POOL
+
+#ifdef HAVE_VALGRIND
+	if (!RUNNING_ON_VALGRIND) /* Skipping within valgrind execution. */
+#endif
 	if (cmd->linebuffer) {
 		int flags;
 		/* Reset stream buffering to defaults */
@@ -2111,7 +2120,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 
 		free(cmd->linebuffer);
 	}
-#endif
+
 	destroy_config_context(cmd);
 
 	lvmpolld_disconnect();
