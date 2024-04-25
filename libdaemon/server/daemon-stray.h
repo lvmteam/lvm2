@@ -25,8 +25,6 @@
  * When compiling with valgrind pool support, skip closing descriptors
  * as there is couple more of them being held by valgrind itself.
  */
-#ifndef VALGRIND_POOL
-
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -102,8 +100,6 @@ static void _daemon_close_descriptor(int fd, unsigned suppress_warnings,
 	fprintf(stderr, " Parent PID %d: %s\n", (int)ppid, parent_cmdline);
 }
 
-#endif /* VALGRIND_POOL */
-
 /* Close all stray descriptor except custom fds.
  * Note: when 'from_fd' is set to -1,  unused 'custom_fds' must use same value!
  *
@@ -115,7 +111,6 @@ static void _daemon_close_descriptor(int fd, unsigned suppress_warnings,
 static int daemon_close_stray_fds(const char *command, int suppress_warning,
 				  int from_fd, const struct custom_fds *custom_fds)
 {
-#ifndef VALGRIND_POOL
 	struct rlimit rlim;
 	int fd;
 	unsigned suppress_warnings = 0;
@@ -162,7 +157,7 @@ static int daemon_close_stray_fds(const char *command, int suppress_warning,
 		}
 	} else
 		return 0; /* broken system */
-#endif /* VALGRIND_POOL */
+
 	return 1;
 }
 
