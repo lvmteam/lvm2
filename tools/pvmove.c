@@ -627,6 +627,11 @@ static int _pvmove_setup_single(struct cmd_context *cmd,
 	unsigned exclusive;
 	int r = ECMD_FAILED;
 
+	if (!vg) {
+		log_error(INTERNAL_ERROR "Missing volume group.");
+		return r;
+	}
+
 	pp->found_pv = 1;
 	pp->setup_result = ECMD_FAILED;
 
@@ -760,6 +765,11 @@ static int _pvmove_read_single(struct cmd_context *cmd,
 	struct pvmove_params *pp = (struct pvmove_params *) handle->custom_handle;
 	struct logical_volume *lv;
 	int ret = ECMD_FAILED;
+
+	if (!vg) {
+		log_error(INTERNAL_ERROR "Missing volume group.");
+		return ret;
+	}
 
 	pp->found_pv = 1;
 
