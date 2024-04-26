@@ -45,9 +45,9 @@ ifeq ("@STATIC_LINK@", "yes")
 LIB_STATIC = $(interface)/libdevmapper.a
 endif
 
+ifeq ("@SHARED_LINK@", "yes")
 LIB_SHARED = $(interface)/libdevmapper.$(LIB_SUFFIX)
 LIB_VERSION = $(LIB_VERSION_DM)
-ifeq ("@SHARED_LINK@", "yes")
 TARGETS = libdevmapper.$(LIB_SUFFIX) libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION) .symver_check
 endif
 

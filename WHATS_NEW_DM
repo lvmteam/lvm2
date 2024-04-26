@@ -1,5 +1,6 @@
 Version 1.02.198 - 
 ===================
+  Fix static only compilation of libdevmapper.a and dmsetup tool.
   Use better code for closing opened descriptors when starting dmeventd.
   Correct dmeventd -R for systemd environment.
   Restart of dmeventd -R checks pid file to detect running dmeventd first.
