@@ -313,11 +313,11 @@ Create a raid LV (a specific raid level must be used, e.g. raid1).
 .ad l
 [ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
 .br
+[ \fB-m\fP|\fB--mirrors\fP \fINumber\fP ]
+.br
 [ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
 .br
 [ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
-.br
-[ \fB-m\fP|\fB--mirrors\fP \fINumber\fP ]
 .br
 [ \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT] ]
 .br
