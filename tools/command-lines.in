@@ -866,6 +866,9 @@ OO_LVCREATE_VDO: --compression Bool, --deduplication Bool, --vdosettings String
 
 OO_LVCREATE_THINPOOL: --discards Discards, --errorwhenfull Bool, --pooldatavdo Bool, OO_LVCREATE_VDO, OO_LVCREATE_POOL
 
+OO_LVCREATE_RAID: --regionsize RegionSize, --minrecoveryrate SizeKB, --maxrecoveryrate SizeKB,
+--raidintegrity Bool, --raidintegritymode String, --raidintegrityblocksize Number
+
 ---
 
 lvcreate --type error --size SizeMB VG
@@ -956,8 +959,7 @@ FLAGS: SECONDARY_SYNTAX
 # R14 (just --mirrors)
 # alternate form of lvcreate --type raid1|mirror
 lvcreate --mirrors PNumber --size SizeMB VG
-OO: --stripesize SizeKB, --mirrorlog MirrorLog, --regionsize RegionSize, --minrecoveryrate SizeKB, --maxrecoveryrate SizeKB,
---raidintegrity Bool, --raidintegritymode String, --raidintegrityblocksize Number, OO_LVCREATE
+OO: --stripesize SizeKB, --mirrorlog MirrorLog, OO_LVCREATE_RAID, OO_LVCREATE
 OP: PV ...
 IO: --stripes 1
 ID: lvcreate_mirror_or_raid1
@@ -967,9 +969,8 @@ AUTOTYPE: mirror
 
 # R9,R10,R11,R12 (--type raid with any use of --stripes/--mirrors)
 lvcreate --type raid --size SizeMB VG
-OO: --stripes Number, --stripesize SizeKB,
---mirrors PNumber, --regionsize RegionSize, --minrecoveryrate SizeKB, --maxrecoveryrate SizeKB,
---raidintegrity Bool, --raidintegritymode String, --raidintegrityblocksize Number, OO_LVCREATE
+OO: --mirrors PNumber, --stripes Number, --stripesize SizeKB,
+OO_LVCREATE_RAID, OO_LVCREATE
 OP: PV ...
 ID: lvcreate_raid_any
 DESC: Create a raid LV (a specific raid level must be used, e.g. raid1).
@@ -978,8 +979,7 @@ DESC: Create a raid LV (a specific raid level must be used, e.g. raid1).
 # FIXME: --mirrors N --stripes 1 is raid1|mirror and should only
 # match the cmd def above for raid1|mirror with IO: --stripes 1
 lvcreate --mirrors PNumber --stripes Number --size SizeMB VG
-OO: --stripesize SizeKB, --regionsize RegionSize, --minrecoveryrate SizeKB, --maxrecoveryrate SizeKB,
---raidintegrity Bool, --raidintegritymode String, --raidintegrityblocksize Number, OO_LVCREATE
+OO: --stripesize SizeKB, OO_LVCREATE_RAID, OO_LVCREATE
 OP: PV ...
 ID: lvcreate_raid_any
 DESC: Create a raid10 LV.
