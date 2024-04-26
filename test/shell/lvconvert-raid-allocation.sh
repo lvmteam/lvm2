@@ -28,6 +28,7 @@ lvcreate -aey -l 4 -n $lv1 $vg "$dev1:0-1" "$dev2:0-1"
 not lvconvert -y --type raid1 -m 1 $vg/$lv1 "$dev1" "$dev2"
 not lvconvert -y --type raid1 -m 1 $vg/$lv1 "$dev1" "$dev3:0-2"
 lvconvert -y --type raid1 -m 1 $vg/$lv1 "$dev3"
+aux wait_for_sync $vg $lv1
 not lvconvert -m 0 $vg/$lv1
 lvconvert -y -m 0 $vg/$lv1
 # RAID conversions are not honoring allocation policy!
