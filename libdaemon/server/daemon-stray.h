@@ -64,7 +64,7 @@ static void _daemon_get_filename(int fd, char *filename, size_t size)
 
 	snprintf(buf, sizeof(buf), DEFAULT_PROC_DIR "/self/fd/%u", fd);
 
-	if ((lsize = readlink(buf, filename, sizeof(filename) - 1)) == -1)
+	if ((lsize = readlink(buf, filename, size - 1)) == -1)
 		filename[0] = '\0';
 	else
 		filename[lsize] = '\0';
