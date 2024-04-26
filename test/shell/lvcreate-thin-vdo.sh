@@ -18,19 +18,13 @@ export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
 . lib/inittest
 
+aux have_thin 1 0 0 || skip
+aux have_vdo 6 2 0 || skip
 
 #
 # Main
 #
-aux have_thin 1 0 0 || skip
-aux have_vdo 6 2 0 || skip
-which mkfs.ext4 || skip
-
-aux prepare_pvs 2 6400
-get_devs
-
-vgcreate $SHARED -s 64K "$vg" "${DEVICES[@]}"
-
+aux prepare_vg 2 6400
 
 # convert to thin-pool with VDO backend from existing VDO VG/LV
 lvcreate --type thin-pool -L5G --pooldatavdo y --name $lv1 $vg
@@ -42,7 +36,7 @@ lvremove -f $vg
 
 
 # cannot create thin as thin-pool tupe
-invalid lvcreate --type-pool thin -L5G --pooldatavdo y -V20 $vg/pool
+invalid lvcreate --type thin-pool -L5G --pooldatavdo y -V20 $vg/pool
 
 
 # try to create VDO _tdata without deduplication
