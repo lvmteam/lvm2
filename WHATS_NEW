@@ -1,5 +1,7 @@
 Version 2.03.24 - 
 ==================
+  Fix resize of VDO volume used for thin pool data volume.
+  Use -Wl,-z,now and -Wl,--as-needed for compilation by default.
   Require 3.7 as minimal version for sanlock.
   Share code for closing opened desriptors on program startup.
   Fix memleak in lvmcache.
