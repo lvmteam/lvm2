@@ -83,7 +83,6 @@ static struct dm_hash_table *_vgname_hash = NULL;
 static DM_LIST_INIT(_vginfos);
 static DM_LIST_INIT(_initial_duplicates);
 static DM_LIST_INIT(_unused_duplicates);
-static DM_LIST_INIT(_prev_unused_duplicate_devs);
 static int _vgs_locked = 0;
 static int _found_duplicate_vgnames = 0;
 static int _outdated_warning = 0;
@@ -99,7 +98,6 @@ int lvmcache_init(struct cmd_context *cmd)
 	dm_list_init(&_vginfos);
 	dm_list_init(&_initial_duplicates);
 	dm_list_init(&_unused_duplicates);
-	dm_list_init(&_prev_unused_duplicate_devs);
 
 	if (!(_vgname_hash = dm_hash_create(127)))
 		return 0;
@@ -829,7 +827,6 @@ static void _choose_duplicates(struct cmd_context *cmd,
 	int same_size1, same_size2;
 	int same_name1 = 0, same_name2 = 0;
 	int same_id1 = 0, same_id2 = 0;
-	int prev_unchosen1, prev_unchosen2;
 	int change;
 
 	dm_list_init(&new_unused);
@@ -1078,21 +1075,6 @@ next:
 		if (dev1 == dev2)
 			continue;
 
-		prev_unchosen1 = device_list_find_dev(&_unused_duplicates, dev1) ? 1 :0;
-		prev_unchosen2 = device_list_find_dev(&_unused_duplicates, dev2) ? 1 :0;
-
-		if (!prev_unchosen1 && !prev_unchosen2) {
-			/*
-			 * The prev list saves the unchosen preference across
-			 * lvmcache_destroy.  Sometimes a single command will
-			 * fill lvmcache, destroy it, and refill it, and we
-			 * want the same duplicate preference to be preserved
-			 * in each instance of lvmcache for a single command.
-			 */
-			prev_unchosen1 = device_list_find_dev(&_prev_unused_duplicate_devs, dev1) ? 1 :0;
-			prev_unchosen2 = device_list_find_dev(&_prev_unused_duplicate_devs, dev2) ? 1 : 0;
-		}
-
 		dev1_major = MAJOR(dev1->dev);
 		dev1_minor = MINOR(dev1->dev);
 		dev2_major = MAJOR(dev2->dev);
@@ -1155,11 +1137,6 @@ next:
 				dev_name(dev1), (unsigned long long)dev1_size,
 				dev_name(dev2), (unsigned long long)dev2_size);
 
-		log_debug_cache("PV %s: %s was prev %s. %s was prev %s.",
-				devl->dev->pvid,
-				dev_name(dev1), prev_unchosen1 ? "not chosen" : "<none>",
-				dev_name(dev2), prev_unchosen2 ? "not chosen" : "<none>");
-
 		log_debug_cache("PV %s: %s %s subsystem. %s %s subsystem.",
 				devl->dev->pvid,
 				dev_name(dev1), in_subsys1 ? "is in" : "is not in",
@@ -1187,14 +1164,7 @@ next:
 
 		change = 0;
 
-		if (prev_unchosen1 && !prev_unchosen2) {
-			/* change to 2 (NB when unchosen is set we unprefer) */
-			change = 1;
-			reason = "of previous preference";
-		} else if (prev_unchosen2 && !prev_unchosen1) {
-			/* keep 1 (NB when unchosen is set we unprefer) */
-			reason = "of previous preference";
-		} else if (same_id1 && !same_id2) {
+		if (same_id1 && !same_id2) {
 			/* keep 1 */
 			reason = "device id";
 		} else if (same_id2 && !same_id1) {
@@ -2645,20 +2615,6 @@ void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 
 	dm_list_init(&_vginfos);
 
-	/*
-	 * Move the current _unused_duplicates to _prev_unused_duplicate_devs
-	 * before destroying _unused_duplicates.
-	 *
-	 * One command can init/populate/destroy lvmcache multiple times.  Each
-	 * time it will encounter duplicates and choose the preferrred devs.
-	 * We want the same preferred devices to be chosen each time, so save
-	 * the unpreferred devs here so that _choose_preferred_devs can use
-	 * this to make the same choice each time.
-	 *
-	 * FIXME: I don't think is is needed any more.
-	 */
-	_destroy_device_list(&_prev_unused_duplicate_devs);
-	dm_list_splice(&_prev_unused_duplicate_devs, &_unused_duplicates);
 	_destroy_device_list(&_unused_duplicates);
 	_destroy_device_list(&_initial_duplicates); /* should be empty anyway */
 
