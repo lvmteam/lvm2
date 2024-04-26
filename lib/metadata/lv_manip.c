@@ -3516,8 +3516,8 @@ static int _lv_add_vdo_segment(struct logical_volume *lv, uint64_t status,
 		dm_list_add(&lv->segments, &seg->list);
 	}
 
-	lv->le_count += extents;
-	lv->size += (uint64_t) extents * lv->vg->extent_size;
+	if (!_setup_lv_size(lv, lv->le_count + extents))
+		return_0;
 
 	if (seg_lv(seg, 0) &&
 	    !update_vdo_pool_virtual_size(first_seg(seg_lv(seg, 0))))
