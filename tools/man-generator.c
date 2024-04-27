@@ -191,24 +191,10 @@ static void _print_val_man(struct command_name *cname, int opt_enum, int val_enu
 	char *line_argv[MAX_LINE_ARGC];
 	int line_argc;
 	int i;
-	int is_relative_opt = (opt_enum == size_ARG) ||
-			      (opt_enum == extents_ARG) ||
-			      (opt_enum == poolmetadatasize_ARG) ||
-			      (opt_enum == mirrors_ARG);
 
 	_was_hyphen = 0;
-	/*
-	 * Suppress the [+] prefix for lvcreate which we have to
-	 * accept for backwards compat, but don't want to advertise.
-	 */
-	if (!strcmp(cname->name, "lvcreate") && is_relative_opt) {
-		if (val_enum == psizemb_VAL)
-			val_enum = sizemb_VAL;
-		else if (val_enum == pextents_VAL)
-			val_enum = extents_VAL;
-		else if ((val_enum == pnumber_VAL) && (opt_enum == mirrors_ARG))
-			val_enum = number_VAL;
-	}
+
+	_update_relative_opt(cname->name, opt_enum, &val_enum);
 
 	switch (val_enum) {
 	case sizemb_VAL:

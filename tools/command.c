@@ -1625,25 +1625,38 @@ static void _print_usage_description(struct command *cmd)
 	}
 }
 
+static void _update_relative_opt(const char *name, int opt_enum, int *val_enum)
+{
+	/* check for relative sign */
+	switch (opt_enum) {
+	case extents_ARG:
+	case mirrors_ARG:
+	case poolmetadatasize_ARG:
+	case size_ARG:
+		/*
+		 * Suppress the [+] prefix for lvcreate which we have to
+		 * accept for backwards compat, but don't want to advertise.
+		 */
+		if (!strcmp(name, "lvcreate")) {
+			switch (*val_enum) {
+			case psizemb_VAL:
+				*val_enum = sizemb_VAL;
+				break;
+			case pextents_VAL:
+				*val_enum = extents_VAL;
+				break;
+			case pnumber_VAL:
+				if (opt_enum == mirrors_ARG)
+					*val_enum = number_VAL;
+				break;
+			}
+		}
+	}
+}
+
 static void _print_val_usage(struct command *cmd, int opt_enum, int val_enum)
 {
-	int is_relative_opt = (opt_enum == size_ARG) ||
-			      (opt_enum == extents_ARG) ||
-			      (opt_enum == poolmetadatasize_ARG) ||
-			      (opt_enum == mirrors_ARG);
-
-	/*
-	 * Suppress the [+] prefix for lvcreate which we have to
-	 * accept for backwards compat, but don't want to advertise.
-	 */
-	if (!strcmp(cmd->name, "lvcreate") && is_relative_opt) {
-		if (val_enum == psizemb_VAL)
-			val_enum = sizemb_VAL;
-		else if (val_enum == pextents_VAL)
-			val_enum = extents_VAL;
-		else if ((val_enum == pnumber_VAL) && (opt_enum == mirrors_ARG))
-			val_enum = number_VAL;
-	}
+	_update_relative_opt(cmd->name, opt_enum, &val_enum);
 
 	if (!val_names[val_enum].usage)
 		printf("%s", val_names[val_enum].name);
