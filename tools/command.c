@@ -2071,62 +2071,60 @@ void print_usage_common_cmd(struct command_name *cname, struct command *cmd)
 
 void print_usage_notes(struct command_name *cname)
 {
-	if (cname && command_has_alternate_extents(cname->name)) {
-		printf("  Special options for command:\n");
-		printf("        [ --extents Number[PERCENT] ]\n"
-		       "        The --extents option can be used in place of --size.\n"
-		       "        The number allows an optional percent suffix.\n");
-		printf("\n");
-	}
+	if (cname && command_has_alternate_extents(cname->name))
+		printf("  Special options for command:\n"
+		       "\t[ --extents Number[PERCENT] ]\n"
+		       "\tThe --extents option can be used in place of --size.\n"
+		       "\tThe number allows an optional percent suffix.\n"
+		       "\n");
 
-	if (cname && !strcmp(cname->name, "lvcreate")) {
-		printf("        [ --name String ]\n"
-		       "        The --name option is not required but is typically used.\n"
-		       "        When a name is not specified, a new LV name is generated\n"
-		       "        with the \"lvol\" prefix and a unique numeric suffix.\n");
-		printf("\n");
-	}
+	if (cname && !strcmp(cname->name, "lvcreate"))
+		printf("\t[ --name String ]\n"
+		       "\tThe --name option is not required but is typically used.\n"
+		       "\tWhen a name is not specified, a new LV name is generated\n"
+		       "\twith the \"lvol\" prefix and a unique numeric suffix.\n"
+		       "\n");
 
 	printf("  Common variables for lvm:\n"
-	       "        Variables in option or position args are capitalized,\n"
-	       "        e.g. PV, VG, LV, Size, Number, String, Tag.\n");
-	printf("\n");
+	       "\tVariables in option or position args are capitalized,\n"
+	       "\te.g. PV, VG, LV, Size, Number, String, Tag.\n"
+	       "\n"
 
-	printf("        PV\n"
-	       "        Physical Volume name, a device path under /dev.\n"
-	       "        For commands managing physical extents, a PV positional arg\n"
-	       "        generally accepts a suffix indicating a range (or multiple ranges)\n"
-	       "        of PEs. When the first PE is omitted, it defaults to the start of\n"
-	       "        the device, and when the last PE is omitted it defaults to the end.\n"
-	       "        PV[:PE-PE]... is start and end range (inclusive),\n"
-	       "        PV[:PE+PE]... is start and length range (counting from 0).\n");
-	printf("\n");
+	       "\tPV\n"
+	       "\tPhysical Volume name, a device path under /dev.\n"
+	       "\tFor commands managing physical extents, a PV positional arg\n"
+	       "\tgenerally accepts a suffix indicating a range (or multiple ranges)\n"
+	       "\tof PEs. When the first PE is omitted, it defaults to the start of\n"
+	       "\tthe device, and when the last PE is omitted it defaults to the end.\n"
+	       "\tPV[:PE-PE]... is start and end range (inclusive),\n"
+	       "\tPV[:PE+PE]... is start and length range (counting from 0).\n"
+	       "\n"
 
-	printf("        LV\n"
-	       "        Logical Volume name. See lvm(8) for valid names. An LV positional\n"
-	       "        arg generally includes the VG name and LV name, e.g. VG/LV.\n"
-	       "        LV followed by _<type> indicates that an LV of the given type is\n"
-	       "        required. (raid represents raid<N> type).\n"
-	       "        The _new suffix indicates that the LV name is new.\n");
-	printf("\n");
+	       "\tLV\n"
+	       "\tLogical Volume name. See lvm(8) for valid names. An LV positional\n"
+	       "\targ generally includes the VG name and LV name, e.g. VG/LV.\n"
+	       "\tLV followed by _<type> indicates that an LV of the given type is\n"
+	       "\trequired. (raid represents raid<N> type).\n"
+	       "\tThe _new suffix indicates that the LV name is new.\n"
+	       "\n"
 
-	printf("        Tag\n"
-	       "        Tag name. See lvm(8) for information about tag names and using\n"
-	       "        tags in place of a VG, LV or PV.\n");
-	printf("\n");
+	       "\tTag\n"
+	       "\tTag name. See lvm(8) for information about tag names and using\n"
+	       "\ttags in place of a VG, LV or PV.\n"
+	       "\n"
 
-	printf("        Select\n"
-	       "        Select indicates that a required positional arg can be omitted\n"
-	       "        if the --select option is used. No arg appears in this position.\n");
-	printf("\n");
+	       "\tSelect\n"
+	       "\tSelect indicates that a required positional arg can be omitted\n"
+	       "\tif the --select option is used. No arg appears in this position.\n"
+	       "\n"
 
-	printf("        Size[UNIT]\n"
-	       "        Size is an input number that accepts an optional unit.\n"
-               "        Input units are always treated as base two values, regardless of\n"
-               "        capitalization, e.g. 'k' and 'K' both refer to 1024.\n"
-               "        The default input unit is specified by letter, followed by |UNIT.\n"
-               "        UNIT represents other possible input units: BbBsSkKmMgGtTpPeE.\n"
-               "        (This should not be confused with the output control --units, where\n"
-               "        capital letters mean multiple of 1000.)\n");
-	printf("\n");
+	       "\tSize[UNIT]\n"
+	       "\tSize is an input number that accepts an optional unit.\n"
+	       "\tInput units are always treated as base two values, regardless of\n"
+	       "\tcapitalization, e.g. 'k' and 'K' both refer to 1024.\n"
+	       "\tThe default input unit is specified by letter, followed by |UNIT.\n"
+	       "\tUNIT represents other possible input units: BbBsSkKmMgGtTpPeE.\n"
+	       "\t(This should not be confused with the output control --units, where\n"
+	       "\tcapital letters mean multiple of 1000.)\n"
+	       "\n");
 }
