@@ -1947,9 +1947,7 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 		}
 
 		printf_hyphen(')');
-	}
-
-	if (!any_req && cmd->ro_count) {
+	} else  /* !any_req */
 		for (ro = 0; ro < cmd->ro_count; ro++) {
 			opt_enum = cmd->required_opt_args[ro].opt;
 
@@ -1966,7 +1964,6 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 				_print_usage_def(cmd, opt_enum, &cmd->required_opt_args[ro].def);
 			}
 		}
-	}
 
 	if (cmd->rp_count) {
 		if (any_req)
@@ -1981,9 +1978,6 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 
 	if (!longhelp)
 		goto done;
-
-	if (!cmd->oo_count)
-		goto op_count;
 
 	if (cmd->oo_count) {
 		if (cmd->autotype) {
@@ -2083,22 +2077,17 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 		printf("\n\t[ COMMON_OPTIONS ]");
 	}
 
- op_count:
-	if (!cmd->op_count)
-		goto done;
-
-	printf("\n\t[");
-
 	if (cmd->op_count) {
-		for (op = 0; op < cmd->op_count; op++) {
+		printf("\n\t[");
+
+		for (op = 0; op < cmd->op_count; op++)
 			if (cmd->optional_pos_args[op].def.val_bits) {
 				printf(" ");
 				_print_usage_def(cmd, 0, &cmd->optional_pos_args[op].def);
 			}
-		}
-	}
 
-	printf(" ]");
+		printf(" ]");
+	}
  done:
 	printf("\n");
 
