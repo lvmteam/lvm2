@@ -210,67 +210,44 @@ static void _print_val_man(struct command_name *cname, int opt_enum, int val_enu
 			val_enum = number_VAL;
 	}
 
-	if (val_enum == sizemb_VAL) {
+	switch (val_enum) {
+	case sizemb_VAL:
 		printf("\\fISize\\fP[m|UNIT]");
 		return;
-	}
-
-	if (val_enum == ssizemb_VAL) {
+	case ssizemb_VAL:
 		printf("[\\fB+\\fP|\\fB-\\fP]\\fISize\\fP[m|UNIT]");
 		return;
-	}
-
-	if (val_enum == psizemb_VAL) {
+	case psizemb_VAL:
 		printf("[\\fB+\\fP]\\fISize\\fP[m|UNIT]");
 		return;
-	}
-
-	if (val_enum == nsizemb_VAL) {
+	case nsizemb_VAL:
 		printf("[\\fB-\\fP]\\fISize\\fP[m|UNIT]");
 		return;
-	}
-
-	if (val_enum == extents_VAL) {
+	case extents_VAL:
 		printf("\\fINumber\\fP[PERCENT]");
 		return;
-	}
-
-	if (val_enum == sextents_VAL) {
+	case sextents_VAL:
 		printf("[\\fB+\\fP|\\fB-\\fP]\\fINumber\\fP[PERCENT]");
 		return;
-	}
-
-	if (val_enum == pextents_VAL) {
+	case pextents_VAL:
 		printf("[\\fB+\\fP]\\fINumber\\fP[PERCENT]");
 		return;
-	}
-
-	if (val_enum == nextents_VAL) {
+	case nextents_VAL:
 		printf("[\\fB-\\fP]\\fINumber\\fP[PERCENT]");
 		return;
-	}
-
-	if (val_enum == sizekb_VAL) {
+	case sizekb_VAL:
 		printf("\\fISize\\fP[k|UNIT]");
 		return;
-	}
-
-	if (val_enum == ssizekb_VAL) {
+	case ssizekb_VAL:
 		printf("[\\fB+\\fP|\\fB-\\fP]\\fISize\\fP[k|UNIT]");
 		return;
-	}
-
-	if (val_enum == regionsizemb_VAL) {
+	case regionsizemb_VAL:
 		printf("\\fISize\\fP[m|UNIT]");
 		return;
-	}
-
-	if (val_enum == snumber_VAL) {
+	case snumber_VAL:
 		printf("[\\fB+\\fP|\\fB-\\fP]\\fINumber\\fP");
 		return;
-	}
-
-	if (val_enum == pnumber_VAL) {
+	case pnumber_VAL:
 		printf("[\\fB+\\fP]\\fINumber\\fP");
 		return;
 	}
