@@ -98,7 +98,7 @@ CLEAN_TARGETS = liblvm2cmd.$(LIB_SUFFIX) $(TARGETS_DM) \
 	liblvm2cmd.$(LIB_SUFFIX).$(LIB_VERSION) lvm-static.o \
 	liblvm2cmd-static.a lvm.static lvm-static.d \
 	$(LDDEPS) .exported_symbols_generated cmds.h \
-	command-lines-input.h command-count.h man-generator.c
+	command-lines-input.h command-count.h
 
 ifeq ("@SHARED_LINK@", "yes")
 ifeq ("@CMDLIB@", "yes")
@@ -126,12 +126,6 @@ lvm: $(OBJECTS) lvm.o $(LVMINTERNAL_LIBS)
 	$(SHOW) "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) \
 		-o $@ $+ $(LVMLIBS)
-
-DEFS_man-generator.o += -DMAN_PAGE_GENERATOR
-
-man-generator.c: $(srcdir)/command.c
-	$(SHOW) "    [LN] $@"
-	$(Q) $(LN_S) -f $< $(@F)
 
 man-generator: man-generator.o
 	$(SHOW) "    [CC] $@"

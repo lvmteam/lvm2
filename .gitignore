@@ -52,7 +52,6 @@ daemons/dmfilemapd
 daemons/lvmetad/
 
 tools/man-generator
-tools/man-generator.c
 
 test/.lib-dir-stamp
 test/.tests-stamp
