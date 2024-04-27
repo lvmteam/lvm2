@@ -993,7 +993,7 @@ static void _print_man_option_desc(struct command_name *cname, int opt_enum)
 		return;
 	}
 
-	for (di = 0; di < strlen(desc); di++) {
+	for (di = 0; desc[di]; di++) {
 		buf[bi++] = desc[di];
 
 		if (bi == DESC_LINE) {
@@ -1318,9 +1318,7 @@ static void _print_desc_man(const char *desc)
 	unsigned di;
 	int bi = 0;
 
-	for (di = 0; di < strlen(desc); di++) {
-		if (desc[di] == '\0')
-			break;
+	for (di = 0; desc[di]; di++) {
 		if (desc[di] == '\n')
 			continue;
 

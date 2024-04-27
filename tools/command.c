@@ -1596,7 +1596,7 @@ static void _print_usage_description(struct command *cmd)
 	unsigned di = 0;
 	int bi = 0;
 
-	for (di = 0; di < strlen(desc); di++) {
+	for (di = 0; desc[di]; di++) {
 		if (!strncmp(&desc[di], "DESC:", 5)) {
 			if (bi) {
 				buf[bi] = '\0';
