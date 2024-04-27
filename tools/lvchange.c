@@ -1161,7 +1161,7 @@ static int _commit_reload(struct logical_volume *lv, uint32_t mr)
 }
 
 /* Helper: check @opt_num is listed in @opts array */
-static int _is_option_listed(int opt_enum, int *options)
+static int _is_option_listed(int opt_enum, const int *options)
 {
 	int i;
 
@@ -1174,7 +1174,7 @@ static int _is_option_listed(int opt_enum, int *options)
 /* Check @opt_enum is an option allowing group commit/reload */
 static int _option_allows_group_commit(int opt_enum)
 {
-	int options[] = {
+	static const int _options[] = {
 		permission_ARG,
 		alloc_ARG,
 		contiguous_ARG,
@@ -1197,13 +1197,13 @@ static int _option_allows_group_commit(int opt_enum)
 		-1
 	};
 
-	return _is_option_listed(opt_enum, options);
+	return _is_option_listed(opt_enum, _options);
 }
 
 /* Check @opt_enum requires direct commit/reload */
 static int _option_requires_direct_commit(int opt_enum)
 {
-	int options[] = {
+	static const int _options[] = {
 		discards_ARG,
 		zero_ARG,
 		cachemode_ARG,
@@ -1213,7 +1213,7 @@ static int _option_requires_direct_commit(int opt_enum)
 		-1
 	};
 
-	return _is_option_listed(opt_enum, options);
+	return _is_option_listed(opt_enum, _options);
 }
 
 /*
