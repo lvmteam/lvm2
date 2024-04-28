@@ -2653,7 +2653,7 @@ void opt_array_to_str(struct cmd_context *cmd, int *opts, int count,
 
 static void _lvp_bits_to_str(uint64_t bits, char *buf, int len)
 {
-	struct lv_prop *prop;
+	const struct lv_prop *prop;
 	int lvp_enum;
 	int pos = 0;
 	int ret;
@@ -2674,7 +2674,7 @@ static void _lvp_bits_to_str(uint64_t bits, char *buf, int len)
 
 static void _lvt_bits_to_str(uint64_t bits, char *buf, int len)
 {
-	struct lv_type *type;
+	const struct lv_type *type;
 	int lvt_enum;
 	int pos = 0;
 	int ret;
@@ -2910,7 +2910,7 @@ int get_lvt_enum(struct logical_volume *lv)
 static int _lv_types_match(struct cmd_context *cmd, struct logical_volume *lv, uint64_t lvt_bits,
 			   uint64_t *match_bits, uint64_t *unmatch_bits)
 {
-	struct lv_type *type;
+	const struct lv_type *type;
 	int lvt_enum;
 	int found_a_match = 0;
 	int match;
@@ -2959,7 +2959,7 @@ static int _lv_types_match(struct cmd_context *cmd, struct logical_volume *lv, u
 static int _lv_props_match(struct cmd_context *cmd, struct logical_volume *lv, uint64_t lvp_bits,
 			   uint64_t *match_bits, uint64_t *unmatch_bits)
 {
-	struct lv_prop *prop;
+	const struct lv_prop *prop;
 	int lvp_enum;
 	int found_a_mismatch = 0;
 	int match;
@@ -3014,7 +3014,7 @@ static int _check_lv_types(struct cmd_context *cmd, struct logical_volume *lv, i
 	ret = _lv_types_match(cmd, lv, cmd->command->required_pos_args[pos-1].def.lvt_bits, NULL, NULL);
 	if (!ret) {
 		int lvt_enum = get_lvt_enum(lv);
-		struct lv_type *type = get_lv_type(lvt_enum);
+		const struct lv_type *type = get_lv_type(lvt_enum);
 		if (!type) {
 			log_warn("WARNING: Command on LV %s does not accept LV type unknown (%d).",
 				 display_lvname(lv), lvt_enum);
@@ -3032,8 +3032,8 @@ static int _check_lv_types(struct cmd_context *cmd, struct logical_volume *lv, i
 static int _check_lv_rules(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	char buf[64];
-	struct cmd_rule *rule;
-	struct lv_type *lvtype = NULL;
+	const struct cmd_rule *rule;
+	const struct lv_type *lvtype = NULL;
 	uint64_t lv_props_match_bits = 0, lv_props_unmatch_bits = 0;
 	uint64_t lv_types_match_bits = 0, lv_types_unmatch_bits = 0;
 	int opts_match_count = 0, opts_unmatch_count = 0;

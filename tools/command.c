@@ -39,7 +39,7 @@ struct cmd_name {
 
 /* create table of value names, e.g. String, and corresponding enum from vals.h */
 
-const struct val_name val_names[VAL_COUNT + 1] = {
+static const struct val_name val_names[VAL_COUNT + 1] = {
 #define val(a, b, c, d) { # a, a, b, c, d },
 #include "vals.h"
 #undef val
@@ -47,7 +47,7 @@ const struct val_name val_names[VAL_COUNT + 1] = {
 
 /* create table of option names, e.g. --foo, and corresponding enum from args.h */
 
-struct opt_name opt_names[ARG_COUNT + 1] = {
+static struct opt_name opt_names[ARG_COUNT + 1] = {
 #define arg(a, b, c, d, e, f, g) { # a, a, b, "", "--" c, d, e, f, g },
 #include "args.h"
 #undef arg
@@ -55,7 +55,7 @@ struct opt_name opt_names[ARG_COUNT + 1] = {
 
 /* create table of lv property names, e.g. lv_is_foo, and corresponding enum from lv_props.h */
 
-const struct lv_prop lv_props[LVP_COUNT + 1] = {
+static const struct lv_prop lv_props[LVP_COUNT + 1] = {
 #define lvp(a, b, c) { # a, a, b, c },
 #include "lv_props.h"
 #undef lvp
@@ -63,7 +63,7 @@ const struct lv_prop lv_props[LVP_COUNT + 1] = {
 
 /* create table of lv type names, e.g. linear and corresponding enum from lv_types.h */
 
-const struct lv_type lv_types[LVT_COUNT + 1] = {
+static const struct lv_type lv_types[LVT_COUNT + 1] = {
 #define lvt(a, b, c) { # a, a, b, c },
 #include "lv_types.h"
 #undef lvt
@@ -71,7 +71,7 @@ const struct lv_type lv_types[LVT_COUNT + 1] = {
 
 /* create table of command IDs */
 
-const struct cmd_name cmd_names[CMD_COUNT + 1] = {
+static const struct cmd_name cmd_names[CMD_COUNT + 1] = {
 #define cmd(a, b) { # a, a, # b },
 #include "../include/cmds.h"
 #undef cmd
@@ -101,6 +101,30 @@ struct command_name command_names[] = {
 	{ .name = NULL }
 };
 extern struct command commands[COMMAND_COUNT]; /* defined in lvmcmdline.c */
+
+const struct opt_name *get_opt_name(int opt)
+{
+	return &opt_names[opt];
+}
+
+const struct val_name *get_val_name(int val)
+{
+	return &val_names[val];
+}
+
+const struct lv_prop *get_lv_prop(int lvp_enum)
+{
+	if (!lvp_enum)
+		return NULL;
+	return &lv_props[lvp_enum];
+}
+
+const struct lv_type *get_lv_type(int lvt_enum)
+{
+	if (!lvt_enum)
+		return NULL;
+	return &lv_types[lvt_enum];
+}
 
 #endif /* MAN_PAGE_GENERATOR */
 

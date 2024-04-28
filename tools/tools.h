@@ -172,8 +172,10 @@ int vgchange_locktype_cmd(struct cmd_context *cmd, int argc, char **argv);
 int vgchange_lock_start_stop_cmd(struct cmd_context *cmd, int argc, char **argv);
 int vgchange_systemid_cmd(struct cmd_context *cmd, int argc, char **argv);
 
-struct lv_prop *get_lv_prop(int lvp_enum);
-struct lv_type *get_lv_type(int lvt_enum);
+const struct opt_name *get_opt_name(int opt);
+const struct val_name *get_val_name(int val);
+const struct lv_prop *get_lv_prop(int lvp_enum);
+const struct lv_type *get_lv_type(int lvt_enum);
 struct command *get_command(int cmd_enum);
 
 int lvchange_properties_cmd(struct cmd_context *cmd, int argc, char **argv);

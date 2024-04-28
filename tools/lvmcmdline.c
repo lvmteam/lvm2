@@ -50,26 +50,6 @@ extern char *optarg;
 
 
 /*
- * Table of valid --option values.
- */
-extern struct val_name val_names[VAL_COUNT + 1];
-
-/*
- * Table of valid --option's
- */
-extern struct opt_name opt_names[ARG_COUNT + 1];
-
-/*
- * Table of LV properties
- */
-extern struct lv_prop lv_props[LVP_COUNT + 1];
-
-/*
- * Table of LV types
- */
-extern struct lv_type lv_types[LVT_COUNT + 1];
-
-/*
  * Table of command names
  */
 extern struct command_name command_names[];
@@ -1409,20 +1389,6 @@ int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
 	return 1;
 }
 
-struct lv_prop *get_lv_prop(int lvp_enum)
-{
-	if (!lvp_enum)
-		return NULL;
-	return &lv_props[lvp_enum];
-}
-
-struct lv_type *get_lv_type(int lvt_enum)
-{
-	if (!lvt_enum)
-		return NULL;
-	return &lv_types[lvt_enum];
-}
-
 struct command *get_command(int cmd_enum)
 {
 	int i;
@@ -2159,7 +2125,7 @@ static void _usage_all(void)
 
 static void _add_getopt_arg(int opt_enum, char **optstrp, struct option **longoptsp)
 {
-	struct opt_name *a = _cmdline.opt_names + opt_enum;
+	const struct opt_name *a = _cmdline.opt_names + opt_enum;
 
 	if (a->short_opt) {
 		*(*optstrp)++ = a->short_opt;
@@ -2242,7 +2208,7 @@ static int _process_command_line(struct cmd_context *cmd, int *argc, char ***arg
 {
 	char str[((ARG_COUNT + 1) * 2) + 1], *ptr = str;
 	struct option opts[ARG_COUNT + 1], *o = opts;
-	struct opt_name *a;
+	const struct opt_name *a;
 	struct arg_values *av;
 	struct arg_value_group_list *current_group = NULL;
 	int arg_enum; /* e.g. foo_ARG */
@@ -2338,7 +2304,7 @@ static int _process_command_line(struct cmd_context *cmd, int *argc, char ***arg
 
 			av->value = optarg;
 
-			if (!val_names[a->val_enum].fn(cmd, av)) {
+			if (!get_val_name(a->val_enum)->fn(cmd, av)) {
 				log_error("Invalid argument for %s: %s", a->long_opt, optarg);
 				return 0;
 			}
@@ -3518,7 +3484,7 @@ struct cmd_context *init_lvm(unsigned set_connections,
 		return_NULL;
 	}
 
-	_cmdline.opt_names = &opt_names[0];
+	_cmdline.opt_names = get_opt_name(0);
 
 	if (stored_errno()) {
 		destroy_toolcontext(cmd);
