@@ -3161,6 +3161,8 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (!(cmd->cname = find_command_name(cmd->name)))
 		return ENO_SUCH_CMD;
 
+	cmd->get_vgname_from_options = (cmd->cname->flags & GET_VGNAME_FROM_OPTIONS) ? 1 : 0;
+
 	if (!_process_command_line(cmd, &argc, &argv)) {
 		log_error("Error during parsing of command line.");
 		return EINVALID_CMD_LINE;

@@ -5449,7 +5449,7 @@ static int _lvconvert_merge_mirror_images_single(struct cmd_context *cmd,
 int lvconvert_merge_mirror_images_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
 	/* arg can be a VG name, which is the standard option usage */
-	cmd->cname->flags &= ~GET_VGNAME_FROM_OPTIONS;
+	cmd->get_vgname_from_options = 0;
 
 	return process_each_lv(cmd, cmd->position_argc, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
 			       NULL, &_lvconvert_visible_check, &_lvconvert_merge_mirror_images_single);
@@ -5489,7 +5489,7 @@ int lvconvert_merge_cmd(struct cmd_context *cmd, int argc, char **argv)
 
 	handle->custom_handle = &lr;
 
-	cmd->cname->flags &= ~GET_VGNAME_FROM_OPTIONS;
+	cmd->get_vgname_from_options = 0;
 
 	ret = process_each_lv(cmd, cmd->position_argc, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
 			      handle, NULL, &_lvconvert_merge_generic_single);
@@ -6399,7 +6399,7 @@ int lvconvert_to_writecache_cmd(struct cmd_context *cmd, int argc, char **argv)
 
 	handle->custom_handle = &lr;
 
-	cmd->cname->flags &= ~GET_VGNAME_FROM_OPTIONS;
+	cmd->get_vgname_from_options = 0;
 
 	ret = process_each_lv(cmd, cmd->position_argc, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE, handle, NULL,
 			      &lvconvert_writecache_attach_single);
@@ -6422,7 +6422,7 @@ int lvconvert_to_cache_with_cachevol_cmd(struct cmd_context *cmd, int argc, char
 
 	handle->custom_handle = &lr;
 
-	cmd->cname->flags &= ~GET_VGNAME_FROM_OPTIONS;
+	cmd->get_vgname_from_options = 0;
 
 	ret = process_each_lv(cmd, cmd->position_argc, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE, handle, NULL,
 			      &lvconvert_cachevol_attach_single);
@@ -6528,7 +6528,7 @@ int lvconvert_integrity_cmd(struct cmd_context *cmd, int argc, char **argv)
 	/* Want to be able to remove integrity from partial LV */
 	cmd->handles_missing_pvs = 1;
 
-	cmd->cname->flags &= ~GET_VGNAME_FROM_OPTIONS;
+	cmd->get_vgname_from_options = 0;
 
 	ret = process_each_lv(cmd, cmd->position_argc, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE, handle, NULL,
 			      &_lvconvert_integrity_single);
