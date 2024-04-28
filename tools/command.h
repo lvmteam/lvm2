@@ -270,12 +270,12 @@ struct lv_type {
 int define_commands(struct cmd_context *cmdtool, const char *run_name);
 int command_id_to_enum(const char *str);
 void print_usage(struct command *cmd, int longhelp, int desc_first);
-void print_usage_common_cmd(struct command_name *cname, struct command *cmd);
-void print_usage_common_lvm(struct command_name *cname, struct command *cmd);
-void print_usage_notes(struct command_name *cname);
+void print_usage_common_cmd(const struct command_name *cname, struct command *cmd);
+void print_usage_common_lvm(const struct command_name *cname, struct command *cmd);
+void print_usage_notes(const struct command_name *cname);
 void factor_common_options(void);
 int command_has_alternate_extents(const char *name);
 void configure_command_option_values(const char *name);
-struct command_name *find_command_name(const char *name);
+const struct command_name *find_command_name(const char *name);
 
 #endif

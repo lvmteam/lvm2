@@ -127,7 +127,7 @@ static const char *_lvt_enum_to_name(int lvt_enum)
  * Otherwise, this function has to be updated in
  * sync with any string changes in vals.h
  */
-static void _print_val_man(struct command_name *cname, int opt_enum, int val_enum)
+static void _print_val_man(const struct command_name *cname, int opt_enum, int val_enum)
 {
 	const char *str;
 	char *line;
@@ -230,7 +230,7 @@ static void _print_val_man(struct command_name *cname, int opt_enum, int val_enu
 	printf("\\fB%s\\fP", str);
 }
 
-static void _print_def_man(struct command_name *cname, int opt_enum, struct arg_def *def, int usage, uint64_t *lv_type_bits)
+static void _print_def_man(const struct command_name *cname, int opt_enum, struct arg_def *def, int usage, uint64_t *lv_type_bits)
 {
 	int val_enum;
 	int sep = 0;
@@ -346,7 +346,7 @@ static const char *_man_long_opt_name(const char *cmdname, int opt_enum)
 
 static void _print_man_usage(char *lvmname, struct command *cmd)
 {
-	struct command_name *cname;
+	const struct command_name *cname;
 	int any_req = (cmd->cmd_flags & CMD_FLAG_ANY_REQUIRED_OPT) ? 1 : 0;
 	int sep, ro, rp, oo, op, opt_enum;
 	int need_ro_indent_end = 0;
@@ -709,7 +709,7 @@ out:
 
 static void _print_man_usage_common_lvm(struct command *cmd)
 {
-	struct command_name *cname;
+	const struct command_name *cname;
 	int i, sep, oo, opt_enum;
 
 	if (!(cname = _find_command_name(cmd->name)))
@@ -793,7 +793,7 @@ static void _print_man_usage_common_lvm(struct command *cmd)
 
 static void _print_man_usage_common_cmd(struct command *cmd)
 {
-	struct command_name *cname;
+	const struct command_name *cname;
 	int i, sep, oo, opt_enum;
 	int found_common_command = 0;
 
@@ -922,7 +922,7 @@ static void _print_man_usage_common_cmd(struct command *cmd)
  * "another line of text."
  */
 
-static void _print_man_option_desc(struct command_name *cname, int opt_enum)
+static void _print_man_option_desc(const struct command_name *cname, int opt_enum)
 {
 	const char *desc = opt_names[opt_enum].desc;
 	char buf[DESC_LINE];
@@ -990,7 +990,7 @@ static void _print_man_option_desc(struct command_name *cname, int opt_enum)
  * Print a list of all options names for a given command name.
  */
 
-static void _print_man_all_options_list(struct command_name *cname)
+static void _print_man_all_options_list(const struct command_name *cname)
 {
 	int opt_enum, val_enum;
 	int sep = 0;
@@ -1047,7 +1047,7 @@ static void _print_man_all_options_list(struct command_name *cname)
  * All options used for a given command name, along with descriptions.
  */
 
-static void _print_man_all_options_desc(struct command_name *cname)
+static void _print_man_all_options_desc(const struct command_name *cname)
 {
 	int opt_enum, val_enum;
 	int i;
@@ -1112,7 +1112,7 @@ static void _print_man_all_options_desc(struct command_name *cname)
 	}
 }
 
-static void _print_man_all_positions_desc(struct command_name *cname)
+static void _print_man_all_positions_desc(const struct command_name *cname)
 {
 	struct command *cmd;
 	int ci, rp, op;
@@ -1352,7 +1352,7 @@ out_close:
 
 static int _print_man(char *name, char *des_file, int secondary)
 {
-	struct command_name *cname;
+	const struct command_name *cname;
 	struct command *cmd, *prev_cmd = NULL;
 	char *lvmname = name;
 	int i;

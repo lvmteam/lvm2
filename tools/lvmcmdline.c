@@ -1353,7 +1353,7 @@ int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
 {
 	int i;
 	const char *last_name = NULL;
-	struct command_name *cname = NULL;
+	const struct command_name *cname = NULL;
 
 	/* already initialized */
 	if (_cmdline.commands)
@@ -2057,7 +2057,7 @@ static void _short_usage(const char *name)
 
 static int _usage(const char *name, int longhelp, int skip_notes)
 {
-	struct command_name *cname = find_command_name(name);
+	const struct command_name *cname = find_command_name(name);
 	struct command *cmd = NULL;
 	int show_full = longhelp;
 	int i;
@@ -2214,7 +2214,7 @@ static void _add_getopt_arg(int opt_enum, char **optstrp, struct option **longop
 
 static int _find_arg(const char *cmd_name, int goval)
 {
-	struct command_name *cname;
+	const struct command_name *cname;
 	int arg_enum;
 	int i;
 

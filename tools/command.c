@@ -39,7 +39,7 @@ struct cmd_name {
 
 /* create table of value names, e.g. String, and corresponding enum from vals.h */
 
-struct val_name val_names[VAL_COUNT + 1] = {
+const struct val_name val_names[VAL_COUNT + 1] = {
 #define val(a, b, c, d) { # a, a, b, c, d },
 #include "vals.h"
 #undef val
@@ -55,7 +55,7 @@ struct opt_name opt_names[ARG_COUNT + 1] = {
 
 /* create table of lv property names, e.g. lv_is_foo, and corresponding enum from lv_props.h */
 
-struct lv_prop lv_props[LVP_COUNT + 1] = {
+const struct lv_prop lv_props[LVP_COUNT + 1] = {
 #define lvp(a, b, c) { # a, a, b, c },
 #include "lv_props.h"
 #undef lvp
@@ -63,7 +63,7 @@ struct lv_prop lv_props[LVP_COUNT + 1] = {
 
 /* create table of lv type names, e.g. linear and corresponding enum from lv_types.h */
 
-struct lv_type lv_types[LVT_COUNT + 1] = {
+const struct lv_type lv_types[LVT_COUNT + 1] = {
 #define lvt(a, b, c) { # a, a, b, c },
 #include "lv_types.h"
 #undef lvt
@@ -71,7 +71,7 @@ struct lv_type lv_types[LVT_COUNT + 1] = {
 
 /* create table of command IDs */
 
-struct cmd_name cmd_names[CMD_COUNT + 1] = {
+const struct cmd_name cmd_names[CMD_COUNT + 1] = {
 #define cmd(a, b) { # a, a, # b },
 #include "../include/cmds.h"
 #undef cmd
@@ -356,7 +356,7 @@ static uint64_t _lv_to_bits(struct command *cmd, char *name)
 	return lvt_bits;
 }
 
-struct command_name *find_command_name(const char *name)
+const struct command_name *find_command_name(const char *name)
 {
 	static int _command_names_count = -1;
 	int first = 0, last, middle;
@@ -393,7 +393,7 @@ struct command_name *find_command_name(const char *name)
 	return NULL;
 }
 
-static struct command_name *_find_command_name(const char *name)
+static const struct command_name *_find_command_name(const char *name)
 {
 	if (!islower(name[0]))
 		return NULL; /* Commands starts with lower-case */
@@ -1706,7 +1706,7 @@ static void _print_usage_def(struct command *cmd, int opt_enum, struct arg_def *
 
 void print_usage(struct command *cmd, int longhelp, int desc_first)
 {
-	struct command_name *cname = _find_command_name(cmd->name);
+	const struct command_name *cname = _find_command_name(cmd->name);
 	int any_req = (cmd->cmd_flags & CMD_FLAG_ANY_REQUIRED_OPT) ? 1 : 0;
 	int include_extents = 0;
 	int ro, rp, oo, op, opt_enum, first;
@@ -1936,7 +1936,7 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 	printf("\n");
 }
 
-void print_usage_common_lvm(struct command_name *cname, struct command *cmd)
+void print_usage_common_lvm(const struct command_name *cname, struct command *cmd)
 {
 	int oo, opt_enum;
 
@@ -1981,7 +1981,7 @@ void print_usage_common_lvm(struct command_name *cname, struct command *cmd)
 	printf("\n\n");
 }
 
-void print_usage_common_cmd(struct command_name *cname, struct command *cmd)
+void print_usage_common_cmd(const struct command_name *cname, struct command *cmd)
 {
 	int oo, opt_enum;
 	int found_common_command = 0;
@@ -2067,7 +2067,7 @@ void print_usage_common_cmd(struct command_name *cname, struct command *cmd)
 	printf("\n\n");
 }
 
-void print_usage_notes(struct command_name *cname)
+void print_usage_notes(const struct command_name *cname)
 {
 	if (cname && command_has_alternate_extents(cname->name))
 		printf("  Special options for command:\n"

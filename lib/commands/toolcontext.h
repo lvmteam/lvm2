@@ -93,7 +93,7 @@ struct cmd_context {
 	 */
 	const char *cmd_line;
 	const char *name; /* needed before cmd->command is set */
-	struct command_name *cname;
+	const struct command_name *cname;
 	struct command *command;
 	int command_enum; /* duplicate from command->command_enum for lib code */
 	char **argv;
