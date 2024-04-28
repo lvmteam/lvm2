@@ -28,8 +28,6 @@
 #include "tools.h"
 #endif /* MAN_PAGE_GENERATOR */
 
-#include "command.h"       /* defines struct command */
-#include "command-count.h" /* defines COMMAND_COUNT */
 
 /* see cmd_names[] below, one for each unique "ID" in command-lines.in */
 

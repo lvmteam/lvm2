@@ -108,65 +108,8 @@ static inline int repairtype_arg(struct cmd_context *cmd __attribute__((unused))
 static inline int dumptype_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av) { return 0; }
 static inline int headings_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av) { return 0; }
 
-/* needed to include commands.h when building man page generator */
-#define CACHE_VGMETADATA        0x00000001
-#define PERMITTED_READ_ONLY     0x00000002
-#define ALL_VGS_IS_DEFAULT      0x00000004
-#define ENABLE_ALL_DEVS         0x00000008
-#define ALLOW_UUID_AS_NAME      0x00000010
-#define LOCKD_VG_SH             0x00000020
-#define NO_METADATA_PROCESSING  0x00000040
-#define MUST_USE_ALL_ARGS        0x00000100
-#define ENABLE_DUPLICATE_DEVS    0x00000400
-#define DISALLOW_TAG_ARGS        0x00000800
-#define GET_VGNAME_FROM_OPTIONS  0x00001000
-#define CAN_USE_ONE_SCAN	 0x00002000
-#define ALLOW_HINTS              0x00004000
-#define ALLOW_EXPORTED           0x00008000
-#define CHECK_DEVS_USED          0x00010000
-#define DEVICE_ID_NOT_FOUND      0x00020000
-
-/* create foo_CMD enums for command def ID's in command-lines.in */
-
-enum {
-#define cmd(a, b) a ,
-#include "../include/cmds.h"
-#undef cmd
-};
-
-/* create foo_VAL enums for option and position values */
-
-enum {
-#define val(a, b, c, d) a ,
-#include "vals.h"
-#undef val
-};
-
-/* create foo_ARG enums for --option's */
-
-enum {
-#define arg(a, b, c, d, e, f, g) a ,
-#include "args.h"
-#undef arg
-};
-
-/* create foo_LVP enums for LV properties */
-
-enum {
-#define lvp(a, b, c) a,
-#include "lv_props.h"
-#undef lvp
-};
-
-/* create foo_LVT enums for LV types */
-
-enum {
-#define lvt(a, b, c) a,
-#include "lv_types.h"
-#undef lvt
-};
-
 #define MAN_PAGE_GENERATOR
+#include "command_enums.h"
 #include "command.c"
 
 static const size_t _LONG_LINE = 42; /* length of line that neededs .nh .. .hy */

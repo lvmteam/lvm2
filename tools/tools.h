@@ -45,53 +45,18 @@
 #include "lib/notify/lvmnotify.h"
 #include "lib/label/hints.h"
 
-/*
- * cmd_enum.h uses the generated cmds.h to create the enum with an ID
- * for each command definition in command-lines.in.
- */
-#include "lib/commands/cmd_enum.h"
-
 #include <ctype.h>
 #include <sys/types.h>
 
 #define CMD_LEN 256
 #define MAX_ARGS 64
 
-/* define the enums for the values accepted by command line --options, foo_VAL */
-enum {
-#define val(a, b, c, d) a ,
-#include "vals.h"
-#undef val
-};
-
-/* define the enums for the command line --options, foo_ARG */
-enum {
-#define arg(a, b, c, d, e, f, g) a ,
-#include "args.h"
-#undef arg
-};
+#include "command_enums.h"
 
 /* command functions */
 #define xx(a, b...) int a(struct cmd_context *cmd, int argc, char **argv);
 #include "commands.h"
 #undef xx
-
-/* define enums for LV properties, foo_LVP */
-enum {
-#define lvp(a, b, c) a ,
-#include "lv_props.h"
-#undef lvp
-};
-
-/* define enums for LV types, foo_LVT */
-enum {
-#define lvt(a, b, c) a ,
-#include "lv_types.h"
-#undef lvt
-};
-
-#include "command.h"
-#include "command-count.h"
 
 #define ARG_COUNTABLE 0x00000001	/* E.g. -vvvv */
 #define ARG_GROUPABLE 0x00000002	/* E.g. --addtag */
@@ -113,37 +78,6 @@ struct arg_value_group_list {
 	uint16_t prio;
 	struct arg_values arg_values[];
 };
-
-#define PERMITTED_READ_ONLY 	0x00000002
-/* Process all VGs if none specified on the command line. */
-#define ALL_VGS_IS_DEFAULT	0x00000004
-/* Process all devices with --all if none are specified on the command line. */
-#define ENABLE_ALL_DEVS		0x00000008	
-/* Command may try to interpret a vgname arg as a uuid. */
-#define ALLOW_UUID_AS_NAME	0x00000010
-/* Command needs a shared lock on a VG; it only reads the VG. */
-#define LOCKD_VG_SH		0x00000020
-/* Command does not process any metadata. */
-#define NO_METADATA_PROCESSING	0x00000040
-/* Command must use all specified arg names and fail if all cannot be used. */
-#define MUST_USE_ALL_ARGS        0x00000100
-/* Command should process unused duplicate devices. */
-#define ENABLE_DUPLICATE_DEVS    0x00000400
-/* Command does not accept tags as args. */
-#define DISALLOW_TAG_ARGS        0x00000800
-/* Command may need to find VG name in an option value. */
-#define GET_VGNAME_FROM_OPTIONS  0x00001000
-/* The data read from disk by label scan can be used for vg_read. */
-#define CAN_USE_ONE_SCAN	 0x00002000
-/* Command can use hints file */
-#define ALLOW_HINTS		 0x00004000
-/* Command can access exported vg. */
-#define ALLOW_EXPORTED           0x00008000
-/* Command checks and reports warning if devs used by LV are incorrect. */
-#define CHECK_DEVS_USED		 0x00010000
-/* Command prints devices file entries that were not found. */
-#define DEVICE_ID_NOT_FOUND      0x00020000
-
 
 void usage(const char *name);
 
