@@ -84,13 +84,13 @@ static const struct cmd_name cmd_names[CMD_COUNT + 1] = {
 
 #ifdef MAN_PAGE_GENERATOR
 
-struct command_name command_names[] = {
+static struct command_name command_names[] = {
 #define xx(a, b, c...) { # a, b, c },
 #include "commands.h"
 #undef xx
 	{ .name = NULL }
 };
-struct command commands[COMMAND_COUNT];
+static struct command commands[COMMAND_COUNT];
 
 #else /* MAN_PAGE_GENERATOR */
 
@@ -130,11 +130,11 @@ const struct lv_type *get_lv_type(int lvt_enum)
 
 /* array of pointers into opt_names[] that is sorted alphabetically (by long opt name) */
 
-struct opt_name *opt_names_alpha[ARG_COUNT + 1];
+static struct opt_name *opt_names_alpha[ARG_COUNT + 1];
 
 /* lvm_all is for recording options that are common for all lvm commands */
 
-struct command lvm_all;
+static struct command lvm_all;
 
 /* saves OO_FOO lines (groups of optional options) to include in multiple defs */
 

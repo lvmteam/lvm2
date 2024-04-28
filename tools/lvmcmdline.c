@@ -58,7 +58,7 @@ extern struct command_name command_names[];
  * Table of commands (as defined in command-lines.in)
  */
 struct command commands[COMMAND_COUNT];
-struct command *commands_idx[COMMAND_COUNT];
+static struct command *commands_idx[COMMAND_COUNT];
 
 static struct cmdline_context _cmdline;
 
