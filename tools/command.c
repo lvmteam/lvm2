@@ -162,7 +162,7 @@ static struct oo_line _oo_lines[MAX_OO_LINES];
  */
 #include "command-lines-input.h"
 
-static void __add_optional_opt_line(struct cmd_context *cmdtool, struct command *cmd, int argc, char *argv[]);
+static void _add_optional_opt_line(struct cmd_context *cmdtool, struct command *cmd, int argc, char *argv[]);
 
 static unsigned _was_hyphen = 0;
 static void printf_hyphen(char c)
@@ -749,7 +749,7 @@ static void _include_optional_opt_args(struct cmd_context *cmdtool, struct comma
 	}
 
 	_split_line(line, &line_argc, line_argv, ' ');
-	__add_optional_opt_line(cmdtool, cmd, line_argc, line_argv);
+	_add_optional_opt_line(cmdtool, cmd, line_argc, line_argv);
 	free(line);
 }
 
@@ -905,7 +905,7 @@ static void _update_prev_pos_arg(struct command *cmd, char *str, int required)
 
 /* Process what follows OO:, which are the optional opt args for the cmd def. */
 
-static void __add_optional_opt_line(struct cmd_context *cmdtool, struct command *cmd, int argc, char *argv[])
+static void _add_optional_opt_line(struct cmd_context *cmdtool, struct command *cmd, int argc, char *argv[])
 {
 	int takes_arg = 0;
 	int already;
@@ -1455,7 +1455,7 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 
 		/* OO: ... */
 		if (cmd && !skip && _is_oo_line(line_argv[0])) {
-			__add_optional_opt_line(cmdtool, cmd, line_argc, line_argv);
+			_add_optional_opt_line(cmdtool, cmd, line_argc, line_argv);
 			prev_was_oo_def = 0;
 			prev_was_oo = 1;
 			prev_was_op = 0;
@@ -1487,7 +1487,7 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 		}
 
 		if (prev_was_oo && cmd) {
-			__add_optional_opt_line(cmdtool, cmd, line_argc, line_argv);
+			_add_optional_opt_line(cmdtool, cmd, line_argc, line_argv);
 			continue;
 		}
 
