@@ -656,7 +656,7 @@ static void _add_oo_definition_line(const char *name, const char *line)
 	oo = &_oo_lines[_oo_line_count++];
 
 	if (!(oo->name = strdup(name))) {
-		log_error("Failer to duplicate name %s.", name);
+		log_error("Failed to duplicate name %s.", name);
 		return; /* FIXME: return code */
 	}
 
@@ -669,7 +669,7 @@ static void _add_oo_definition_line(const char *name, const char *line)
 
 	start = strchr(line, ':') + 2;
 	if (!(oo->line = strdup(start))) {
-		log_error("Failer to duplicate line %s.", start);
+		log_error("Filler to duplicate line %s.", start);
 		return;
 	}
 }

@@ -184,16 +184,16 @@ static void _allocate_memory(void)
 #else
 #define MALLINFO mallinfo
 #endif
-        /*
-         *  When a brk() fails due to fragmented address space (which sometimes
-         *  happens when we try to grab 8M or so), glibc will make a new
-         *  arena. In this arena, the rules for using “direct” mmap are relaxed,
-         *  circumventing the MAX_MMAPs and MMAP_THRESHOLD settings. We can,
-         *  however, detect when this happens with mallinfo() and try to co-opt
-         *  malloc into using MMAP as a MORECORE substitute instead of returning
-         *  MMAP'd memory directly. Since MMAP-as-MORECORE does not munmap the
-         *  memory on free(), this is good enough for our purposes.
-         */
+	/*
+	 *  When a brk() fails due to fragmented address space (which sometimes
+	 *  happens when we try to grab 8M or so), glibc will make a new
+	 *  arena. In this arena, the rules for using "direct" mmap are relaxed,
+	 *  circumventing the MAX_MMAPs and MMAP_THRESHOLD settings. We can,
+	 *  however, detect when this happens with mallinfo() and try to co-opt
+	 *  malloc into using MMAP as a MORECORE substitute instead of returning
+	 *  MMAP'd memory directly. Since MMAP-as-MORECORE does not munmap the
+	 *  memory on free(), this is good enough for our purposes.
+	 */
 	while (missing > 0) {
 		struct MALLINFO inf = MALLINFO();
 		hblks = inf.hblks;
