@@ -104,7 +104,7 @@ int lvm_rename(const char *old, const char *new)
 		return 0;
 	}
 
-	if (unlink(old)) {
+	if (unlink(old) && (errno != ENOENT)) {
 		log_sys_error("unlink", old);
 		return 0;
 	}

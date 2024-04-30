@@ -209,7 +209,7 @@ static void _remove_expired(const char *dir, const char *vgname,
 			continue;
 
 		log_very_verbose("Expiring archive %s", path);
-		if (unlink(path))
+		if (unlink(path) && (errno != ENOENT))
 			log_sys_debug("unlink", path);
 
 		/* Don't delete any more if we've reached the minimum */

@@ -49,7 +49,7 @@ static void _undo_flock(const char *file, int fd)
 	    !stat(file, &buf1) &&
 	    !fstat(fd, &buf2) &&
 	    is_same_inode(buf1, buf2))
-		if (unlink(file))
+		if (unlink(file) && (errno != ENOENT))
 			log_sys_debug("unlink", file);
 
 	if (close(fd) < 0)

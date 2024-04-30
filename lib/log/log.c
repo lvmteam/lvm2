@@ -331,8 +331,8 @@ void unlink_log_file(int ret)
 	    (env = getenv("LVM_EXPECTED_EXIT_STATUS")) &&
 	    ((env[0] == '>' && ret > atoi(env + 1)) ||
 	     (atoi(env) == ret))) {
-		if (unlink(_log_file_path))
-			log_sys_error("unlink", _log_file_path);
+		if (unlink(_log_file_path) && (errno != ENOENT))
+			log_sys_debug("unlink", _log_file_path);
 		_log_file_path[0] = '\0';
 	}
 }
