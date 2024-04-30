@@ -47,6 +47,8 @@
 
 #ifdef HAVE_VALGRIND
 #include <valgrind.h>
+#else
+#define RUNNING_ON_VALGRIND 0
 #endif
 
 #ifdef __linux__
@@ -1702,6 +1704,8 @@ struct cmd_context *create_toolcontext(unsigned is_clvmd,
 	cmd->handles_unknown_segments = 0;
 	cmd->hosttags = 0;
 	cmd->check_devs_used = 1;
+	cmd->running_on_valgrind = RUNNING_ON_VALGRIND;
+
 	dm_list_init(&cmd->arg_value_groups);
 	dm_list_init(&cmd->formats);
 	dm_list_init(&cmd->segtypes);
@@ -1714,9 +1718,7 @@ struct cmd_context *create_toolcontext(unsigned is_clvmd,
 
 	/* Set in/out stream buffering before glibc */
 	if (set_buffering
-#ifdef HAVE_VALGRIND
-	    && !RUNNING_ON_VALGRIND /* Skipping within valgrind execution. */
-#endif
+	    && !cmd->running_on_valgrind /* Skipping within valgrind execution. */
 #ifdef SYS_gettid
 	    /* For threaded programs no changes of streams */
             /* On linux gettid() is implemented only via syscall */
@@ -2094,10 +2096,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 
 	dm_device_list_destroy(&cmd->cache_dm_devs);
 
-#ifdef HAVE_VALGRIND
-	if (!RUNNING_ON_VALGRIND) /* Skipping within valgrind execution. */
-#endif
-	if (cmd->linebuffer) {
+	if (!cmd->running_on_valgrind && cmd->linebuffer) {
 		int flags;
 		/* Reset stream buffering to defaults */
 		if (is_valid_fd(STDIN_FILENO) &&
