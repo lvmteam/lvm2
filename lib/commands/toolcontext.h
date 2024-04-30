@@ -313,7 +313,6 @@ int init_run_by_dmeventd(struct cmd_context *cmd);
  * is only used for reading config settings from lvm.conf,
  * which are at cmd->cft.
  */
-struct cmd_context *create_config_context(void);
 void destroy_config_context(struct cmd_context *cmd);
 
 struct format_type *get_format_by_name(struct cmd_context *cmd, const char *format);

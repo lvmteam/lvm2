@@ -1616,62 +1616,6 @@ void destroy_config_context(struct cmd_context *cmd)
 	free(cmd);
 }
 
-/*
- * A "config context" is a very light weight toolcontext that
- * is only used for reading config settings from lvm.conf.
- *
- * FIXME: this needs to go back to parametrized create_toolcontext()
- */
-struct cmd_context *create_config_context(void)
-{
-	struct cmd_context *cmd;
-
-	if (!(cmd = zalloc(sizeof(*cmd))))
-		goto_out;
-
-	strncpy(cmd->system_dir, DEFAULT_SYS_DIR, sizeof(cmd->system_dir) - 1);
-
-	if (!_get_env_vars(cmd))
-		goto_out;
-
-	if (!(cmd->libmem = dm_pool_create("library", 4 * 1024)))
-		goto_out;
-
-	if (!(cmd->mem = dm_pool_create("command", 4 * 1024)))
-		goto out;
-
-	if (!(cmd->pending_delete_mem = dm_pool_create("pending_delete", 1024)))
-		goto_out;
-
-	dm_list_init(&cmd->config_files);
-	dm_list_init(&cmd->tags);
-
-	if (!_init_lvm_conf(cmd))
-		goto_out;
-
-	if (!_init_hostname(cmd))
-		goto_out;
-
-	if (!_init_tags(cmd, cmd->cft))
-		goto_out;
-
-	/* Load lvmlocal.conf */
-	if (*cmd->system_dir && !_load_config_file(cmd, "", 1))
-		goto_out;
-
-	if (!_init_tag_configs(cmd))
-		goto_out;
-
-	if (!(cmd->cft = _merge_config_files(cmd, cmd->cft)))
-		goto_out;
-
-	return cmd;
-out:
-	if (cmd)
-		destroy_config_context(cmd);
-	return NULL;
-}
-
 /* Entry point */
 struct cmd_context *create_toolcontext(unsigned is_clvmd,
 				       const char *system_dir,
