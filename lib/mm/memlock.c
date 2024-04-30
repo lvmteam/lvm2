@@ -257,7 +257,7 @@ static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 
 	if (sscanf(line, "%lx-%lx %c%c%c%c%n",
 		   &from, &to, &fr, &fw, &fx, &fp, &pos) != 6) {
-		log_error("Failed to parse maps line: %s", line);
+		log_debug_mem("Failed to parse maps line: %s", line);
 		return 0;
 	}
 
@@ -338,12 +338,12 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 #ifdef MCL_CURRENT
 		if (lock == LVM_MLOCK) {
 			if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
-				log_sys_error("mlockall", "");
+				log_sys_debug("mlockall", "");
 				return 0;
 			}
 		} else {
 			if (munlockall()) {
-				log_sys_error("munlockall", "");
+				log_sys_debug("munlockall", "");
 				return 0;
 			}
 		}
@@ -363,7 +363,7 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 			if (_maps_buffer)
 				_maps_len *= 2;
 			if (!(line = realloc(_maps_buffer, _maps_len))) {
-				log_error("Allocation of maps buffer failed.");
+				log_debug_mem("Allocation of maps buffer failed.");
 				return 0;
 			}
 			_maps_buffer = line;
@@ -374,7 +374,7 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 			if (!(n = read(_maps_fd, _maps_buffer + len, _maps_len - len)))
 				break; /* EOF */
 			if (n == -1) {
-				log_sys_error("read", _procselfmaps);
+				log_sys_debug("read", _procselfmaps);
 				return 0;
 			}
 		}
@@ -544,12 +544,12 @@ static void _lock_mem(struct cmd_context *cmd)
 		if (!*_procselfmaps &&
 		    dm_snprintf(_procselfmaps, sizeof(_procselfmaps),
 				"%s" SELF_MAPS, cmd->proc_dir) < 0) {
-			log_error("proc_dir too long");
+			log_debug_mem("proc_dir too long");
 			return;
 		}
 
 		if (!(_maps_fd = open(_procselfmaps, O_RDONLY))) {
-			log_sys_error("open", _procselfmaps);
+			log_sys_debug("open", _procselfmaps);
 			return;
 		}
 
@@ -578,9 +578,9 @@ static void _unlock_mem(struct cmd_context *cmd)
 		_maps_buffer = NULL;
 		if (_mstats < unlock_mstats) {
 			if ((_mstats + lvm_getpagesize()) < unlock_mstats)
-				log_error(INTERNAL_ERROR
-					  "Reserved memory (%ld) not enough: used %ld. Increase activation/reserved_memory?",
-					  (long)_mstats, (long)unlock_mstats);
+				log_warn(INTERNAL_ERROR
+					 "Reserved memory (%ld) not enough: used %ld. Increase activation/reserved_memory?",
+					 (long)_mstats, (long)unlock_mstats);
 			else
 				/* FIXME Believed due to incorrect use of yes_no_prompt while locks held */
 				log_debug_mem("Suppressed internal error: Maps lock %ld < unlock %ld, a one-page difference.",
@@ -677,7 +677,7 @@ void memlock_inc_daemon(struct cmd_context *cmd)
 {
 	++_memlock_count_daemon;
 	if (_memlock_count_daemon == 1 && _critical_section > 0)
-		log_error(INTERNAL_ERROR "_memlock_inc_daemon used in critical section.");
+		log_debug_mem(INTERNAL_ERROR "_memlock_inc_daemon used in critical section.");
 	log_debug_mem("memlock_count_daemon inc to %d", _memlock_count_daemon);
 	_lock_mem_if_needed(cmd);
 	_raise_priority(cmd);
@@ -686,7 +686,7 @@ void memlock_inc_daemon(struct cmd_context *cmd)
 void memlock_dec_daemon(struct cmd_context *cmd)
 {
 	if (!_memlock_count_daemon)
-		log_error(INTERNAL_ERROR "_memlock_count_daemon has dropped below 0.");
+		log_debug_mem(INTERNAL_ERROR "_memlock_count_daemon has dropped below 0.");
 	--_memlock_count_daemon;
 	log_debug_mem("memlock_count_daemon dec to %d", _memlock_count_daemon);
 	_unlock_mem_if_possible(cmd);
