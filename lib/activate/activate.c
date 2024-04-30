@@ -1813,6 +1813,9 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 	if (monitor && !dmeventd_monitor_mode())
 		return 1;
 
+	if (sigint_caught())
+		return_0;
+
 	/*
 	 * Activation of unused cache-pool activates metadata device as
 	 * a public LV  for clearing purpose.
@@ -1894,6 +1897,12 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 		}
 
 	dm_list_iterate_items(seg, &lv->segments) {
+		if (sigint_caught()) {
+			stack;
+			r = 0;
+			break;
+		}
+
 		/* Recurse for AREA_LV */
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) != AREA_LV)
@@ -2025,7 +2034,11 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 				break;
 			log_very_verbose("%s %smonitoring still pending: waiting...",
 					 display_lvname(lv), monitor ? "" : "un");
-			usleep(10000 * i);
+			if (interruptible_usleep(10000 * i)) {
+				stack;
+				r = 0;
+				break;
+			}
 		}
 
 		if (r)
