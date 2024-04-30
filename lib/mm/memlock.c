@@ -27,10 +27,6 @@
 #include <sys/resource.h>
 #include <malloc.h>
 
-#ifdef HAVE_VALGRIND
-#include <valgrind.h>
-#endif
-
 #ifndef DEVMAPPER_SUPPORT
 
 void memlock_inc_daemon(struct cmd_context *cmd)
@@ -160,7 +156,7 @@ static void _touch_memory(void *mem, size_t size)
 
 static void _allocate_memory(void)
 {
-#if defined(__GLIBC__) && !defined(VALGRIND_POOL)
+#if defined(__GLIBC__)
 	/* Memory allocation is currently only tested with glibc
 	 * for different C libraries, some other mechanisms might be needed
 	 * meanwhile let users use lvm2 code without memory preallocation.
@@ -296,17 +292,6 @@ static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 		}
 	}
 
-#ifdef HAVE_VALGRIND
-	/*
-	 * Valgrind is continually eating memory while executing code
-	 * so we need to deactivate check of locked memory size
-	 */
-#ifndef VALGRIND_POOL
-	if (RUNNING_ON_VALGRIND)
-#endif
-		sz -= sz; /* = 0, but avoids getting warning about dead assigment */
-
-#endif
 	*mstats += sz;
 	log_debug_mem("%s %10ldKiB %12lx - %12lx %c%c%c%c%s", lock_str,
 		      ((long)sz + 1023) / 1024, from, to, fr, fw, fx, fp, line + pos);
@@ -333,6 +318,12 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 	size_t len;
 	ssize_t n;
 	int ret = 1;
+
+	if (cmd->running_on_valgrind) {
+		log_debug_mem("Skipping %slocking of memory maps (running in VALGRIND).",
+			      (lock == LVM_MLOCK) ? "" : "un") ;
+		return 1;
+	}
 
 	if (_use_mlockall) {
 #ifdef MCL_CURRENT
@@ -526,7 +517,8 @@ static void _restore_priority_if_possible(struct cmd_context *cmd)
 /* Stop memory getting swapped out */
 static void _lock_mem(struct cmd_context *cmd)
 {
-	_allocate_memory();
+	if (!cmd->running_on_valgrind)
+		 _allocate_memory();
 	(void)strerror(0);		/* Force libc.mo load */
 	(void)dm_udev_get_sync_support(); /* udev is initialized */
 	log_very_verbose("Locking memory");
