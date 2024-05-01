@@ -88,7 +88,6 @@ static struct command_name command_names[] = {
 #define xx(a, b, c...) { # a, b, c, NULL, a ## _COMMAND },
 #include "commands.h"
 #undef xx
-	{ .name = NULL }
 };
 static struct command commands[COMMAND_COUNT];
 
@@ -98,7 +97,6 @@ struct command_name command_names[] = {
 #define xx(a, b, c...) { # a, b, c, a, a ## _COMMAND },
 #include "commands.h"
 #undef xx
-	{ .name = NULL }
 };
 extern struct command commands[COMMAND_COUNT]; /* defined in lvmcmdline.c */
 
@@ -391,7 +389,7 @@ const struct command_name *find_command_name(const char *name)
 					  cmd_names[i].name);
 				return 0;
 			}
-		for (i = 1; command_names[i].name; i++) /* assume > 1 */
+		for (i = 1; i < LVM_COMMAND_COUNT; ++i) /* assume > 1 */
 			if (strcmp(command_names[i - 1].name, command_names[i].name) > 0) {
 				log_error("File commands.h has unsorted name entry %s.",
 					  command_names[i].name);
@@ -1197,7 +1195,7 @@ void factor_common_options(void)
 	int cn, opt_enum, ci, oo, ro, found;
 	struct command *cmd;
 
-	for (cn = 0; command_names[cn].name; cn++) {
+	for (cn = 0; cn < LVM_COMMAND_COUNT; ++cn) {
 		/* already factored */
 		if (command_names[cn].variants)
 			continue;
