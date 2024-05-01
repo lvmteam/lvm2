@@ -146,5 +146,5 @@ val(dumptype_VAL, dumptype_arg, "DumpType", "headers|metadata|metadata_all|metad
 val(headings_VAL, headings_arg, "HeadingsType", "none|abbrev|full|0|1|2")
 
 /* this should always be last */
-val(VAL_COUNT, NULL, NULL, NULL)
+val(VAL_COUNT, NULL, "", NULL)
 

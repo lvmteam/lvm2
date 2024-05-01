@@ -48,7 +48,7 @@ static const struct val_name val_names[VAL_COUNT + 1] = {
 /* create table of option names, e.g. --foo, and corresponding enum from args.h */
 
 static struct opt_name opt_names[ARG_COUNT + 1] = {
-#define arg(a, b, c, d, e, f, g) { # a, a, b, "", "--" c, d, e, f, g },
+#define arg(a, b, c, d, e, f, g) { # a, b, a, "--" c, d, e, f, g },
 #include "args.h"
 #undef arg
 };
@@ -211,12 +211,9 @@ static int _val_str_to_num(char *str)
 	if ((new = strchr(name, '_')))
 		*new = '\0';
 
-	for (i = 0; i < VAL_COUNT; i++) {
-		if (!val_names[i].name)
-			break;
+	for (i = 0; i < VAL_COUNT; ++i)
 		if (!strncmp(name, val_names[i].name, strlen(val_names[i].name)))
 			return val_names[i].val_enum;
-	}
 
 	return 0;
 }
