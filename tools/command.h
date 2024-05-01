@@ -35,6 +35,7 @@ struct command_name {
 	const char *desc; /* general command description from commands.h */
 	unsigned int flags;
 	command_fn fn; /* old style */
+	uint16_t lvm_command_enum; /* as declared in commands.h with _COMMAND */
 
 	/* union of {required,optional}_opt_args for all commands with this name */
 	uint16_t valid_args[ARG_COUNT]; /* used for getopt */
@@ -274,7 +275,7 @@ void print_usage_common_lvm(const struct command_name *cname, struct command *cm
 void print_usage_notes(const struct command_name *cname);
 void factor_common_options(void);
 int command_has_alternate_extents(const char *name);
-void configure_command_option_values(const char *name);
+int configure_command_option_values(const struct command_name *cname, int arg_enum, int val_enum);
 const struct command_name *find_command_name(const char *name);
 
 #endif

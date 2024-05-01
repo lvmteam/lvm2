@@ -119,6 +119,10 @@ static const char *_lvt_enum_to_name(int lvt_enum)
 	return lv_types[lvt_enum].name;
 }
 
+static int _get_val_enum(const struct command_name *cname, int opt_enum)
+{
+	return _update_relative_opt(cname->name, opt_enum, opt_names[opt_enum].val_enum);
+}
 /*
  * FIXME: this just replicates the val usage strings
  * that officially lives in vals.h.  Should there
@@ -136,8 +140,6 @@ static void _print_val_man(const struct command_name *cname, int opt_enum, int v
 	int i;
 
 	_was_hyphen = 0;
-
-	_update_relative_opt(cname->name, opt_enum, &val_enum);
 
 	switch (val_enum) {
 	case sizemb_VAL:
@@ -232,7 +234,7 @@ static void _print_val_man(const struct command_name *cname, int opt_enum, int v
 
 static void _print_def_man(const struct command_name *cname, int opt_enum, struct arg_def *def, int usage, uint64_t *lv_type_bits)
 {
-	int val_enum;
+	int val_enum, tmp_val;
 	int sep = 0;
 
 	if (lv_type_bits)
@@ -264,7 +266,8 @@ static void _print_def_man(const struct command_name *cname, int opt_enum, struc
 						printf("\\fI%s\\fP", val_names[val_enum].name);
 					}
 				} else {
-					_print_val_man(cname, opt_enum, val_enum);
+					tmp_val = _update_relative_opt(cname->name, opt_enum, val_enum);
+					_print_val_man(cname, opt_enum, tmp_val);
 				}
 
 				sep = 1;
@@ -577,7 +580,7 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 			 * in opt_names[] according to the command name.
 			 */
 			printf("[ \\fB-l\\fP|\\fB--extents\\fP ");
-			_print_val_man(cname, extents_ARG, opt_names[extents_ARG].val_enum);
+			_print_val_man(cname, extents_ARG, _get_val_enum(cname, extents_ARG));
 
 			printf_hyphen(']');
 			sep = 1;
@@ -1020,7 +1023,7 @@ static void _print_man_all_options_list(const struct command_name *cname)
 			printf("    \\fB%s\\fP", _man_long_opt_name(cname->name, opt_enum));
 		}
 
-		val_enum = opt_names[opt_enum].val_enum;
+		val_enum = _get_val_enum(cname, opt_enum);
 
 		if (!val_names[val_enum].fn) {
 			/* takes no arg */
@@ -1059,7 +1062,7 @@ static void _print_man_all_options_desc(const struct command_name *cname)
 		if (!cname->all_options[opt_enum])
 			continue;
 
-		val_enum = opt_names[opt_enum].val_enum;
+		val_enum = _get_val_enum(cname, opt_enum);
 
 		if (val_names[val_enum].usage &&
 		    (strlen(val_names[val_enum].usage) > _LONG_LINE)) {
@@ -1780,9 +1783,6 @@ int main(int argc, char *argv[])
 
 	if (!define_commands(&cmdtool, NULL))
 		goto out_free;
-
-	if (!check)
-		configure_command_option_values(cmdname);
 
 	factor_common_options();
 

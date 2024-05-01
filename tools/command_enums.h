@@ -49,6 +49,13 @@ enum {
 #undef lvt
 };
 
+enum {
+#define xx(a, b...) a ## _COMMAND,
+#include "commands.h"
+#undef xx
+        LVM_COMMAND_COUNT
+};
+
 #define PERMITTED_READ_ONLY 	0x00000002
 /* Process all VGs if none specified on the command line. */
 #define ALL_VGS_IS_DEFAULT	0x00000004

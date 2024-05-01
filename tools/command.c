@@ -47,7 +47,7 @@ static const struct val_name val_names[VAL_COUNT + 1] = {
 
 /* create table of option names, e.g. --foo, and corresponding enum from args.h */
 
-static struct opt_name opt_names[ARG_COUNT + 1] = {
+static const struct opt_name opt_names[ARG_COUNT + 1] = {
 #define arg(a, b, c, d, e, f, g) { # a, b, a, "--" c, d, e, f, g },
 #include "args.h"
 #undef arg
@@ -85,7 +85,7 @@ static const struct cmd_name cmd_names[CMD_COUNT + 1] = {
 #ifdef MAN_PAGE_GENERATOR
 
 static struct command_name command_names[] = {
-#define xx(a, b, c...) { # a, b, c },
+#define xx(a, b, c...) { # a, b, c, NULL, a ## _COMMAND },
 #include "commands.h"
 #undef xx
 	{ .name = NULL }
@@ -95,7 +95,7 @@ static struct command commands[COMMAND_COUNT];
 #else /* MAN_PAGE_GENERATOR */
 
 struct command_name command_names[] = {
-#define xx(a, b, c...) { # a, b, c, a},
+#define xx(a, b, c...) { # a, b, c, a, a ## _COMMAND },
 #include "commands.h"
 #undef xx
 	{ .name = NULL }
@@ -130,7 +130,7 @@ const struct lv_type *get_lv_type(int lvt_enum)
 
 /* array of pointers into opt_names[] that is sorted alphabetically (by long opt name) */
 
-static struct opt_name *opt_names_alpha[ARG_COUNT + 1];
+static const struct opt_name *opt_names_alpha[ARG_COUNT + 1];
 
 /* lvm_all is for recording options that are common for all lvm commands */
 
@@ -1517,6 +1517,7 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 	return 1;
 }
 
+#ifndef MAN_PAGE_GENERATOR
 /*
  * The opt_names[] table describes each option.  It is indexed by the
  * option typedef, e.g. size_ARG.  The size_ARG entry specifies the
@@ -1533,8 +1534,10 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
  * (they are created at build time), but different commands accept different
  * types of values for the same option, e.g. one command will accept
  * signed size values (ssizemb_VAL), while another does not accept a signed
- * number, (sizemb_VAL).  This function deals with this problem by tweaking
- * the opt_names[] table at run time according to the specific command being run.
+ * number, (sizemb_VAL).
+ *
+ * To resolve the issue, at run time command 'reconfigures' its opt_names[]
+ * values by querying particular arg_enum for particular command.
  * i.e. it changes size_ARG to accept sizemb_VAL or ssizemb_VAL depending
  * on the command.
  *
@@ -1558,53 +1561,57 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
  * so the commands[] entry for the cmd def already references the
  * correct ssizemb_VAL.
  */
-void configure_command_option_values(const char *name)
+int configure_command_option_values(const struct command_name *cname, int arg_enum, int val_enum)
 {
-	if (!strcmp(name, "lvresize")) {
-		/* relative +|- allowed for LV, + allowed for metadata */
-		opt_names[size_ARG].val_enum = ssizemb_VAL;
-		opt_names[extents_ARG].val_enum = sextents_VAL;
-		opt_names[poolmetadatasize_ARG].val_enum = psizemb_VAL;
-		return;
-	}
-
-	if (!strcmp(name, "lvextend")) {
-		/* relative + allowed */
-		opt_names[size_ARG].val_enum = psizemb_VAL;
-		opt_names[extents_ARG].val_enum = pextents_VAL;
-		opt_names[poolmetadatasize_ARG].val_enum = psizemb_VAL;
-		return;
-	}
-
-	if (!strcmp(name, "lvreduce")) {
-		/* relative - allowed */
-		opt_names[size_ARG].val_enum = nsizemb_VAL;
-		opt_names[extents_ARG].val_enum = nextents_VAL;
-		return;
-	}
-
-	if (!strcmp(name, "lvconvert")) {
-		opt_names[mirrors_ARG].val_enum = snumber_VAL;
-		return;
-	}
-
-	if (!strcmp(name, "lvcreate")) {
+	switch (cname->lvm_command_enum) {
+	case lvconvert_COMMAND:
+		switch (arg_enum) {
+		case mirrors_ARG:		return snumber_VAL;
+		}
+		break;
+	case lvcreate_COMMAND:
 		/*
-		 * lvcreate is a bit of a mess because it has previously
-		 * accepted + but used it as an absolute value, so we
-		 * have to recognize it.  (We don't want to show the +
-		 * option in man/help, though, since it's confusing,
+		 * lvcreate is accepts also sizes with + (positive) value,
+		 * so we have to recognize it.  But we don't want to show
+		 * the + option in man/help as it can be seen confusing,
 		 * so there's a special case when printing man/help
 		 * output to show sizemb_VAL/extents_VAL rather than
 		 * psizemb_VAL/pextents_VAL.)
 		 */
-		opt_names[size_ARG].val_enum = psizemb_VAL;
-		opt_names[extents_ARG].val_enum = pextents_VAL;
-		opt_names[poolmetadatasize_ARG].val_enum = psizemb_VAL;
-		opt_names[mirrors_ARG].val_enum = pnumber_VAL;
-		return;
+		switch (arg_enum) {
+		case size_ARG:			return psizemb_VAL;
+		case extents_ARG:		return pextents_VAL;
+		case poolmetadatasize_ARG:	return psizemb_VAL;
+		case mirrors_ARG:		return pnumber_VAL;
+		}
+		break;
+	case lvextend_COMMAND:
+		/* relative + allowed */
+		switch (arg_enum) {
+		case size_ARG:			return psizemb_VAL;
+		case extents_ARG:		return pextents_VAL;
+		case poolmetadatasize_ARG:	return psizemb_VAL;
+		}
+		break;
+	case lvreduce_COMMAND:
+		/* relative - allowed */
+		switch (arg_enum) {
+		case size_ARG:			return nsizemb_VAL;
+		case extents_ARG:		return nextents_VAL;
+		}
+		break;
+	case lvresize_COMMAND:
+		switch (arg_enum) {
+		case size_ARG:			return ssizemb_VAL;
+		case extents_ARG:		return sextents_VAL;
+		case poolmetadatasize_ARG:	return psizemb_VAL;
+		}
+		break;
 	}
+
+	return val_enum;
 }
+#endif
 
 /* type_LVT to "type" */
 
@@ -1644,38 +1651,49 @@ static void _print_usage_description(struct command *cmd)
 	}
 }
 
-static void _update_relative_opt(const char *name, int opt_enum, int *val_enum)
+/* Function remappas existing command definitions val_enums for printing
+ * within man pages or command's help lines */
+static int _update_relative_opt(const char *name, int opt_enum, int val_enum)
 {
 	/* check for relative sign */
-	switch (opt_enum) {
-	case extents_ARG:
-	case mirrors_ARG:
-	case poolmetadatasize_ARG:
-	case size_ARG:
+	if (!strcmp(name, "lvconvert"))
+		switch (opt_enum) {
+		case mirrors_ARG:	return snumber_VAL;
+		}
+	else if (!strcmp(name, "lvcreate"))
 		/*
 		 * Suppress the [+] prefix for lvcreate which we have to
 		 * accept for backwards compat, but don't want to advertise.
+		 * 'command-lines.in' currently uses PNumber in definition
 		 */
-		if (!strcmp(name, "lvcreate")) {
-			switch (*val_enum) {
-			case psizemb_VAL:
-				*val_enum = sizemb_VAL;
-				break;
-			case pextents_VAL:
-				*val_enum = extents_VAL;
-				break;
-			case pnumber_VAL:
-				if (opt_enum == mirrors_ARG)
-					*val_enum = number_VAL;
-				break;
-			}
+		switch (opt_enum) {
+		case mirrors_ARG:	return number_VAL;
 		}
-	}
+	else if (!strcmp(name, "lvextend"))
+		switch (opt_enum) {
+		case extents_ARG:	return pextents_VAL;
+		case poolmetadatasize_ARG:
+		case size_ARG:		return psizemb_VAL;
+		}
+	else if (!strcmp(name, "lvreduce"))
+		switch (opt_enum) {
+		case extents_ARG:	return nextents_VAL;
+		case poolmetadatasize_ARG:
+		case size_ARG:		return nsizemb_VAL;
+		}
+	else if (!strcmp(name, "lvresize"))
+		switch (opt_enum) {
+		case extents_ARG:	return sextents_VAL;
+		case poolmetadatasize_ARG:
+		case size_ARG:		return ssizemb_VAL;
+		}
+
+	return val_enum;
 }
 
 static void _print_val_usage(struct command *cmd, int opt_enum, int val_enum)
 {
-	_update_relative_opt(cmd->name, opt_enum, &val_enum);
+	val_enum = _update_relative_opt(cmd->name, opt_enum, val_enum);
 
 	if (!val_names[val_enum].usage)
 		printf("%s", val_names[val_enum].name);

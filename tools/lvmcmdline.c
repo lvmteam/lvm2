@@ -2021,8 +2021,6 @@ static int _usage(const char *name, int longhelp, int skip_notes)
 		return 0;
 	}
 
-	configure_command_option_values(name);
-
 	/*
 	 * Looks at all variants of each command name and figures out
 	 * which options are common to all variants (for compact output)
@@ -2200,6 +2198,7 @@ static int _process_command_line(struct cmd_context *cmd, int *argc, char ***arg
 	struct arg_values *av;
 	struct arg_value_group_list *current_group = NULL;
 	int arg_enum; /* e.g. foo_ARG */
+	int val_enum;
 	int goval;    /* the number returned from getopt_long identifying what it found */
 	int i;
 
@@ -2291,8 +2290,8 @@ static int _process_command_line(struct cmd_context *cmd, int *argc, char ***arg
 			}
 
 			av->value = optarg;
-
-			if (!get_val_name(a->val_enum)->fn(cmd, av)) {
+			val_enum = configure_command_option_values(cmd->cname, arg_enum, a->val_enum);
+			if (!get_val_name(val_enum)->fn(cmd, av)) {
 				log_error("Invalid argument for %s: %s", a->long_opt, optarg);
 				return 0;
 			}
@@ -3071,8 +3070,6 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	set_cmd_name(cmd->name);
 
 	init_log_command(find_config_tree_bool(cmd, log_command_names_CFG, NULL), 0);
-
-	configure_command_option_values(cmd->name);
 
 	/* eliminate '-' from all options starting with -- */
 	for (i = 1; i < argc; i++) {
