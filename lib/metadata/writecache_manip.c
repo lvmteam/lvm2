@@ -37,8 +37,7 @@ int lv_is_writecache_origin(const struct logical_volume *lv)
 		return 1;
 
 	/* Make sure there's exactly one segment in segs_using_this_lv! */
-	if (dm_list_empty(&lv->segs_using_this_lv) ||
-	    (dm_list_size(&lv->segs_using_this_lv) > 1))
+	if (dm_list_size(&lv->segs_using_this_lv) != 1)
 		return 0;
 
 	seg = get_only_segment_using_this_lv(lv);
@@ -62,10 +61,9 @@ static int _get_writecache_kernel_status(struct cmd_context *cmd,
 					 struct logical_volume *lv,
 					 struct dm_status_writecache *status_out)
 {
-	struct lv_with_info_and_seg_status status;
-
-	memset(&status, 0, sizeof(status));
-	status.seg_status.type = SEG_STATUS_NONE;
+	struct lv_with_info_and_seg_status status = {
+		.seg_status.type = SEG_STATUS_NONE,
+	};
 
 	status.seg_status.seg = first_seg(lv);
 
@@ -455,7 +453,6 @@ static int _writecache_setting_str_list_add(const char *field, uint64_t val, cha
 {
 	char buf[128];
 	char *list_item;
-	int len;
 
 	if (val_str) {
 		if (dm_snprintf(buf, sizeof(buf), "%s=%s", field, val_str) < 0)
@@ -465,12 +462,8 @@ static int _writecache_setting_str_list_add(const char *field, uint64_t val, cha
 			return_0;
 	}
 
-	len = strlen(buf) + 1;
-
-	if (!(list_item = dm_pool_zalloc(mem, len)))
+	if (!(list_item = dm_pool_strdup(mem, buf)))
 		return_0;
-
-	memcpy(list_item, buf, len);
 
 	if (!str_list_add_no_dup_check(mem, result, list_item))
 		return_0;
