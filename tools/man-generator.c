@@ -1028,10 +1028,7 @@ static void _print_man_all_options_list(const struct command_name *cname)
 		if (!val_names[val_enum].fn) {
 			/* takes no arg */
 		} else if (!val_names[val_enum].usage) {
-			printf(" ");
-			printf("\\fI");
-			printf("%s", val_names[val_enum].name);
-			printf("\\fP");
+			printf(" \\fI%s\\fP", val_names[val_enum].name);
 		} else {
 			printf(" ");
 			_print_val_man(cname, opt_enum, val_enum);
@@ -1091,10 +1088,7 @@ static void _print_man_all_options_desc(const struct command_name *cname)
 		if (!val_names[val_enum].fn) {
 			/* takes no arg */
 		} else if (!val_names[val_enum].usage) {
-			printf(" ");
-			printf("\\fI");
-			printf("%s", val_names[val_enum].name);
-			printf("\\fP");
+			printf(" \\fI%s\\fP", val_names[val_enum].name);
 		} else {
 			printf(" ");
 			_print_val_man(cname, opt_enum, val_enum);
