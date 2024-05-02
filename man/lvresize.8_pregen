@@ -59,7 +59,7 @@ lvresize \(em Resize a logical volume
 .br
     \fB--noudevsync\fP
 .br
-    \fB--poolmetadatasize\fP [\fB+\fP|\fB-\fP]\fISize\fP[m|UNIT]
+    \fB--poolmetadatasize\fP [\fB+\fP]\fISize\fP[m|UNIT]
 .br
     \fB--profile\fP \fIString\fP
 .br
@@ -111,7 +111,7 @@ Resize an LV by a specified size.
 .br
 [ \fB-r\fP|\fB--resizefs\fP ]
 .br
-[    \fB--poolmetadatasize\fP [\fB+\fP|\fB-\fP]\fISize\fP[m|UNIT] ]
+[    \fB--poolmetadatasize\fP [\fB+\fP]\fISize\fP[m|UNIT] ]
 .br
 [    \fB--fs\fP \fIString\fP ]
 .br
@@ -148,7 +148,7 @@ Resize an LV by specified PV extents.
 Resize a pool metadata SubLV by a specified size.
 .br
 .P
-\fBlvresize\fP \fB--poolmetadatasize\fP [\fB+\fP|\fB-\fP]\fISize\fP[m|UNIT] \fILV1\fP
+\fBlvresize\fP \fB--poolmetadatasize\fP [\fB+\fP]\fISize\fP[m|UNIT] \fILV1\fP
 .br
 .RS 4
 .ad l
@@ -445,7 +445,7 @@ in the background. Only use this if udev is not running or has rules that
 ignore the devices LVM creates.
 .
 .HP
-\fB--poolmetadatasize\fP [\fB+\fP|\fB-\fP]\fISize\fP[m|UNIT]
+\fB--poolmetadatasize\fP [\fB+\fP]\fISize\fP[m|UNIT]
 .br
 Specifies the new size of the pool metadata LV.
 The plus prefix \fB+\fP can be used, in which case

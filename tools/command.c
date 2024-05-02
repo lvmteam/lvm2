@@ -1676,13 +1676,13 @@ static int _update_relative_opt(const char *name, int opt_enum, int val_enum)
 	else if (!strcmp(name, "lvreduce"))
 		switch (opt_enum) {
 		case extents_ARG:	return nextents_VAL;
-		case poolmetadatasize_ARG:
 		case size_ARG:		return nsizemb_VAL;
 		}
 	else if (!strcmp(name, "lvresize"))
 		switch (opt_enum) {
 		case extents_ARG:	return sextents_VAL;
 		case poolmetadatasize_ARG:
+					return psizemb_VAL;
 		case size_ARG:		return ssizemb_VAL;
 		}
 
