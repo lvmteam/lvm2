@@ -73,7 +73,6 @@ struct cached_vg_fmtdata;
 
 /* Per-format per-metadata area operations */
 struct metadata_area_ops {
-	struct dm_list list;
 	struct volume_group *(*vg_read) (struct cmd_context *cmd,
 					 struct format_instance * fi,
 					 const char *vg_name,
@@ -183,7 +182,7 @@ struct metadata_area_ops {
 
 struct metadata_area {
 	struct dm_list list;
-	struct metadata_area_ops *ops;
+	const struct metadata_area_ops *ops;
 	void *metadata_locn;
 	uint32_t status;
 	uint64_t header_start; /* mda_header.start */

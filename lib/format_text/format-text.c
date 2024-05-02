@@ -1958,7 +1958,7 @@ static void _text_destroy(struct format_type *fmt)
 	free(fmt);
 }
 
-static struct metadata_area_ops _metadata_text_file_ops = {
+static const struct metadata_area_ops _metadata_text_file_ops = {
 	.vg_read = _vg_read_file,
 	.vg_read_precommit = _vg_read_precommit_file,
 	.vg_write = _vg_write_file,
@@ -1966,14 +1966,14 @@ static struct metadata_area_ops _metadata_text_file_ops = {
 	.vg_commit = _vg_commit_file
 };
 
-static struct metadata_area_ops _metadata_text_file_backup_ops = {
+static const struct metadata_area_ops _metadata_text_file_backup_ops = {
 	.vg_read = _vg_read_file,
 	.vg_write = _vg_write_file,
 	.vg_remove = _vg_remove_file,
 	.vg_commit = _vg_commit_file_backup
 };
 
-static struct metadata_area_ops _metadata_text_raw_ops = {
+static const struct metadata_area_ops _metadata_text_raw_ops = {
 	.vg_read = _vg_read_raw,
 	.vg_read_precommit = _vg_read_precommit_raw,
 	.vg_write = _vg_write_raw,
@@ -2571,7 +2571,7 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 	return fid;
 }
 
-static struct format_handler _text_handler = {
+static const struct format_handler _text_handler = {
 	.pv_initialise = _text_pv_initialise,
 	.pv_setup = _text_pv_setup,
 	.pv_add_metadata_area = _text_pv_add_metadata_area,
@@ -2617,9 +2617,6 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 	mda_lists->file_ops = &_metadata_text_file_ops;
 	mda_lists->raw_ops = &_metadata_text_raw_ops;
 	fmt->private = (void *) mda_lists;
-
-	dm_list_init(&fmt->mda_ops);
-	dm_list_add(&fmt->mda_ops, &_metadata_text_raw_ops.list);
 
 	if (!(fmt->labeller = text_labeller_create(fmt))) {
 		log_error("Couldn't create text label handler.");

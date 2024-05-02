@@ -372,8 +372,7 @@ struct labeller;
 struct format_type {
 	struct dm_list list;
 	struct cmd_context *cmd;
-	struct format_handler *ops;
-	struct dm_list mda_ops; /* List of permissible mda ops. */
+	const struct format_handler *ops;
 	struct labeller *labeller;
 	const char *name;
 	const char *alias;
