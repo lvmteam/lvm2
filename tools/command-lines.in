@@ -1135,7 +1135,9 @@ AUTOTYPE: thin
 
 # alternate form of lvcreate --type thin
 lvcreate --snapshot LV_thin
-OO: --thin, OO_LVCREATE
+# not providing implied --thin option with this OO
+# so we have 2 different command variant
+OO: OO_LVCREATE
 IO: --mirrors 0
 ID: lvcreate_thin_snapshot
 DESC: Create a thin LV that is a snapshot of an existing thin LV.
