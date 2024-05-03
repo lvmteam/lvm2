@@ -6354,7 +6354,7 @@ static void _dmsetup_usage(FILE *out)
 		"        [--separator <separator>]\n\n",
 		_base_commands[_base_command].name);
 
-	for (i = 0; DM_ARRAY_SIZE(_dmsetup_commands); i++)
+	for (i = 0; i < DM_ARRAY_SIZE(_dmsetup_commands); ++i)
 		fprintf(out, "\t%s %s\n", _dmsetup_commands[i].name, _dmsetup_commands[i].help);
 
 	fprintf(out, "\n<device> may be device name or (if only one) -u <uuid> or "
