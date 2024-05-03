@@ -786,7 +786,7 @@ static int _pvmove_read_single(struct cmd_context *cmd,
 	return ret;
 }
 
-static struct poll_functions _pvmove_fns = {
+static const struct poll_functions _pvmove_fns = {
 	.get_copy_name_from_lv = get_pvmove_pvname_from_lv_mirr,
 	.poll_progress = poll_mirror_progress,
 	.update_metadata = pvmove_update_metadata,

@@ -19,23 +19,23 @@
 #include "lvconvert_poll.h"
 #include "daemons/lvmpolld/polling_ops.h"
 
-static struct poll_functions _pvmove_fns = {
+static const struct poll_functions _pvmove_fns = {
 	.poll_progress = poll_mirror_progress,
 	.update_metadata = pvmove_update_metadata,
 	.finish_copy = pvmove_finish
 };
 
-static struct poll_functions _convert_fns = {
+static const struct poll_functions _convert_fns = {
 	.poll_progress = poll_mirror_progress,
 	.finish_copy = lvconvert_mirror_finish
 };
 
-static struct poll_functions _merge_fns = {
+static const struct poll_functions _merge_fns = {
 	.poll_progress = poll_merge_progress,
 	.finish_copy = lvconvert_merge_finish
 };
 
-static struct poll_functions _thin_merge_fns = {
+static const struct poll_functions _thin_merge_fns = {
 	.poll_progress = poll_thin_merge_progress,
 	.finish_copy = lvconvert_merge_finish
 };

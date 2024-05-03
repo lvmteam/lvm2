@@ -59,12 +59,12 @@ struct daemon_parms {
 	unsigned progress_display;
 	const char *progress_title;
 	uint64_t lv_type;
-	struct poll_functions *poll_fns;
+	const struct poll_functions *poll_fns;
 	char devicesfile[128];
 };
 
 int poll_daemon(struct cmd_context *cmd, unsigned background,
-		uint64_t lv_type, struct poll_functions *poll_fns,
+		uint64_t lv_type, const struct poll_functions *poll_fns,
 		const char *progress_title, struct poll_operation_id *id);
 
 progress_t poll_mirror_progress(struct cmd_context *cmd,

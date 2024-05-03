@@ -277,17 +277,17 @@ static int _read_params(struct cmd_context *cmd, struct lvconvert_params *lp)
 }
 
 
-static struct poll_functions _lvconvert_mirror_fns = {
+static const struct poll_functions _lvconvert_mirror_fns = {
 	.poll_progress = poll_mirror_progress,
 	.finish_copy = lvconvert_mirror_finish,
 };
 
-static struct poll_functions _lvconvert_merge_fns = {
+static const struct poll_functions _lvconvert_merge_fns = {
 	.poll_progress = poll_merge_progress,
 	.finish_copy = lvconvert_merge_finish,
 };
 
-static struct poll_functions _lvconvert_thin_merge_fns = {
+static const struct poll_functions _lvconvert_thin_merge_fns = {
 	.poll_progress = poll_thin_merge_progress,
 	.finish_copy = lvconvert_merge_finish,
 };

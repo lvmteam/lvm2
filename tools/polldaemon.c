@@ -648,7 +648,7 @@ static int _poll_daemon(struct cmd_context *cmd, struct poll_operation_id *id,
 }
 
 static int _daemon_parms_init(struct cmd_context *cmd, struct daemon_parms *parms,
-			      unsigned background, struct poll_functions *poll_fns,
+			      unsigned background, const struct poll_functions *poll_fns,
 			      const char *progress_title, uint64_t lv_type)
 {
 	sign_t interval_sign;
@@ -687,7 +687,7 @@ static int _daemon_parms_init(struct cmd_context *cmd, struct daemon_parms *parm
 }
 
 int poll_daemon(struct cmd_context *cmd, unsigned background,
-		uint64_t lv_type, struct poll_functions *poll_fns,
+		uint64_t lv_type, const struct poll_functions *poll_fns,
 		const char *progress_title, struct poll_operation_id *id)
 {
 	struct daemon_parms parms;
