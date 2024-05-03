@@ -1183,11 +1183,11 @@ static int _lv_time_handler(struct dm_report *rh, struct dm_pool *mem,
 #define DYNAMIC DM_REPORT_FIELD_RESERVED_VALUE_DYNAMIC_VALUE
 
 #define TYPE_RESERVED_VALUE(type, flags, id, desc, value, ...) \
-	static const char *_reserved_ ## id ## _names[] = { __VA_ARGS__, NULL}; \
+	static const char * const _reserved_ ## id ## _names[] = { __VA_ARGS__, NULL}; \
 	static const type _reserved_ ## id = value;
 
 #define FIELD_RESERVED_VALUE(flags, field_id, id, desc, value, ...) \
-	static const char *_reserved_ ## id ## _names[] = { __VA_ARGS__ , NULL}; \
+	static const char * const _reserved_ ## id ## _names[] = { __VA_ARGS__ , NULL}; \
 	static const struct dm_report_field_reserved_value _reserved_ ## id = {field_ ## field_id, value};
 
 #define FIELD_RESERVED_BINARY_VALUE(field_id, id, desc, ...) \
@@ -1224,9 +1224,10 @@ static int _lv_time_handler(struct dm_report *rh, struct dm_pool *mem,
 #define FUZZY DM_REPORT_FIELD_RESERVED_VALUE_FUZZY_NAMES
 #define DYNAMIC DM_REPORT_FIELD_RESERVED_VALUE_DYNAMIC_VALUE
 
-#define TYPE_RESERVED_VALUE(type, flags, id, desc, value, ...) {type | flags, &_reserved_ ## id, _reserved_ ## id ## _names, desc},
+/* Declaration of dm_report_reserved_value should actually be using  const char * const * names */
+#define TYPE_RESERVED_VALUE(type, flags, id, desc, value, ...) {type | flags, &_reserved_ ## id, (const char**) _reserved_ ## id ## _names, desc},
 
-#define FIELD_RESERVED_VALUE(flags, field_id, id, desc, value, ...) {DM_REPORT_FIELD_TYPE_NONE | flags, &_reserved_ ## id, _reserved_ ## id ## _names, desc},
+#define FIELD_RESERVED_VALUE(flags, field_id, id, desc, value, ...) {DM_REPORT_FIELD_TYPE_NONE | flags, &_reserved_ ## id, (const char**)  _reserved_ ## id ## _names, desc},
 
 #define FIELD_RESERVED_BINARY_VALUE(field_id, id, desc, ...) \
 	FIELD_RESERVED_VALUE(NAMED, field_id, id ## _y, desc, &_one64, __VA_ARGS__) \
