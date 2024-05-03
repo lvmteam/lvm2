@@ -566,7 +566,7 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)),
 {
 	char *ptr;
 	int i;
-	static const char *suffixes = "kmgtpebs";
+	static const char _suffixes[] = "kmgtpebs";
 	char *val;
 	double v;
 	uint64_t v_tmp, adjustment;
@@ -626,8 +626,8 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)),
 			return 0;
 		}
 	} else if (*ptr) {
-		for (i = strlen(suffixes) - 1; i >= 0; i--)
-			if (suffixes[i] == tolower((int) *ptr))
+		for (i = sizeof(_suffixes) - 1; i >= 0; --i)
+			if (_suffixes[i] == tolower((int) *ptr))
 				break;
 
 		if (i < 0) {
