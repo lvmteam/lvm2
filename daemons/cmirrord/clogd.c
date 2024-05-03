@@ -43,14 +43,14 @@ static void usage (FILE *dest)
 int main(int argc, char *argv[])
 {
 	int foreground_mode = 0;
-	struct option longopts[] = {
+	static const struct option _long_options[] = {
 		{ "foreground", no_argument, NULL, 'f' },
 		{ "help"      , no_argument, NULL, 'h' },
 		{ 0, 0, 0, 0 }
 	};
 	int opt;
 
-	while ((opt = getopt_long (argc, argv, "fh", longopts, NULL)) != -1) {
+	while ((opt = getopt_long (argc, argv, "fh", _long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'f':
 			foreground_mode = 1;

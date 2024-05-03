@@ -11,7 +11,7 @@
  */
 #include "logging.h"
 
-const char *__rq_types_off_by_one[] = {
+const char * const __rq_types_off_by_one[] = {
 	"DM_ULOG_CTR",
 	"DM_ULOG_DTR",
 	"DM_ULOG_PRESUSPEND",
