@@ -940,7 +940,7 @@ static int read_options(int argc, char *argv[])
 	int option_index = 0;
 	int c;
 
-	static struct option long_options[] = {
+	static const struct option _long_options[] = {
 		{"help",            no_argument,       0,  'h' },
 		{"quit",            no_argument,       0,  'q' },
 		{"info",            no_argument,       0,  'i' },
@@ -962,7 +962,7 @@ static int read_options(int argc, char *argv[])
 	}
 
 	while (1) {
-		c = getopt_long(argc, argv, "hqidE:D:w:k:r:Se", long_options, &option_index);
+		c = getopt_long(argc, argv, "hqidE:D:w:k:r:Se", _long_options, &option_index);
 		if (c == -1)
 			break;
 
