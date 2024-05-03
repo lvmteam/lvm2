@@ -79,7 +79,7 @@ struct dm_task {
 };
 
 struct cmd_data {
-	const char *name;
+	const char name[16];
 	const unsigned cmd;
 	const int version[3];
 };

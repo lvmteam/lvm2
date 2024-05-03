@@ -90,7 +90,7 @@ static unsigned _ioctl_buffer_double_factor = 0;
 const int _dm_compat = 0;
 
 /* *INDENT-OFF* */
-static struct cmd_data _cmd_data_v4[] = {
+static const struct cmd_data _cmd_data_v4[] = {
 	{"create",	DM_DEV_CREATE,		{4, 0, 0}},
 	{"reload",	DM_TABLE_LOAD,		{4, 0, 0}},
 	{"remove",	DM_DEV_REMOVE,		{4, 0, 0}},
