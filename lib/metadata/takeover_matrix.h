@@ -79,7 +79,7 @@
 #define str_r45  _takeover_from_striped_to_raid45
 #define str_r6   _takeover_from_striped_to_raid6
 
-static uint64_t _segtype_index[] = {
+static const uint64_t _segtype_index[] = {
 	1, /* linear */
 	1, /* striped */
 	SEG_MIRROR,
@@ -100,7 +100,7 @@ static uint64_t _segtype_index[] = {
  * N represents a combination that has no effect (no-op).
  * X represents a combination that is unsupported.
  */
-static takeover_fn_t _takeover_fns[][11] = {
+static const takeover_fn_t _takeover_fns[][11] = {
         /* from, to ->    linear     striped   mirror    raid0    raid0_meta raid1   raid4/5   raid6    raid10    raid01   other*/
         /*   | */
         /*   v */

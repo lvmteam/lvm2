@@ -4517,7 +4517,7 @@ struct possible_type {
 	const uint32_t options;
 };
 
-static struct possible_takeover_reshape_type _possible_takeover_reshape_types[] = {
+static const struct possible_takeover_reshape_type _possible_takeover_reshape_types[] = {
 	/* striped -> raid1 */
 	{ .current_types  = SEG_STRIPED_TARGET, /* linear, i.e. seg->area_count = 1 */
 	  .possible_types = SEG_RAID1,
@@ -4629,12 +4629,12 @@ static struct possible_takeover_reshape_type _possible_takeover_reshape_types[] 
 /*
  * Return possible_type struct for current segment type.
  */
-static struct possible_takeover_reshape_type *_get_possible_takeover_reshape_type(const struct lv_segment *seg_from,
-										   const struct segment_type *segtype_to,
-										   struct possible_type *last_pt)
+static const struct possible_takeover_reshape_type *_get_possible_takeover_reshape_type(const struct lv_segment *seg_from,
+											const struct segment_type *segtype_to,
+											const struct possible_type *last_pt)
 {
-	struct possible_takeover_reshape_type *lpt = (struct possible_takeover_reshape_type *) last_pt;
-	struct possible_takeover_reshape_type *pt = lpt ? lpt + 1 : _possible_takeover_reshape_types;
+	const struct possible_takeover_reshape_type *lpt = (const struct possible_takeover_reshape_type *) last_pt;
+	const struct possible_takeover_reshape_type *pt = lpt ? lpt + 1 : _possible_takeover_reshape_types;
 
 	for ( ; pt->current_types; pt++)
 		if ((seg_from->segtype->flags & pt->current_types) &&
@@ -6066,7 +6066,7 @@ static int _log_prohibited_option(const struct lv_segment *seg_from,
  * Find takeover raid flag for segment type flag of @seg
  */
 /* Segment type flag correspondence for raid5 <-> raid6 conversions */
-static uint64_t _r5_to_r6[][2] = {
+static const uint64_t _r5_to_r6[][2] = {
 	{ SEG_RAID5_LS, SEG_RAID6_LS_6 },
 	{ SEG_RAID5_LA, SEG_RAID6_LA_6 },
 	{ SEG_RAID5_RS, SEG_RAID6_RS_6 },
