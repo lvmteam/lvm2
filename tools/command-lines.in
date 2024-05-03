@@ -334,7 +334,7 @@ RULE: all not LV_thinpool LV_cachepool LV_vdopool
 
 OO_LVCONVERT_POOL: --poolmetadata LV, --poolmetadatasize SizeMB,
 --poolmetadataspare Bool, --readahead Readahead, --chunksize SizeKB,
---zero Bool, --metadataprofile String
+--zero Bool, --metadataprofile String, --wipesignatures Bool
 
 OO_LVCONVERT_THINPOOL: --discards Discards, --errorwhenfull Bool, --pooldatavdo Bool, OO_LVCONVERT_POOL
 
