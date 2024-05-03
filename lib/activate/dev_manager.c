@@ -47,7 +47,7 @@ typedef enum {
 } action_t;
 
 /* This list must match lib/misc/lvm-string.c:build_dm_uuid(). */
-const char *uuid_suffix_list[] = { "pool", "cdata", "cmeta", "cvol", "tdata", "tmeta", "vdata", "vpool", "imeta", NULL};
+static const char * const _uuid_suffix_list[] = { "pool", "cdata", "cmeta", "cvol", "tdata", "tmeta", "vdata", "vpool", "imeta", NULL};
 
 struct dlid_list {
 	struct dm_list list;
@@ -928,7 +928,7 @@ static int _info(struct cmd_context *cmd,
 
 	/* Check for original version of dlid before the suffixes got added in 2.02.106 */
 	if ((suffix_position = strrchr(dlid, '-'))) {
-		while ((suffix = uuid_suffix_list[i++])) {
+		while ((suffix = _uuid_suffix_list[i++])) {
 			if (strcmp(suffix_position + 1, suffix))
 				continue;
 
@@ -2970,7 +2970,7 @@ static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, const struc
 		return NULL;
 	}
 
-	dm_tree_set_optional_uuid_suffixes(dtree, &uuid_suffix_list[0]);
+	dm_tree_set_optional_uuid_suffixes(dtree, (const char**)_uuid_suffix_list);
 
 	if (!_add_lv_to_dtree(dm, dtree, lv, (lv_is_origin(lv) || lv_is_thin_volume(lv) || lv_is_thin_pool(lv)) ? origin_only : 0))
 		goto_bad;
@@ -4100,7 +4100,7 @@ int dev_manager_device_uses_vg(struct device *dev,
 		return r;
 	}
 
-	dm_tree_set_optional_uuid_suffixes(dtree, &uuid_suffix_list[0]);
+	dm_tree_set_optional_uuid_suffixes(dtree, (const char**)_uuid_suffix_list);
 
 	if (!dm_tree_add_dev(dtree, (uint32_t) MAJOR(dev->dev), (uint32_t) MINOR(dev->dev))) {
 		log_error("Failed to add device %s (%" PRIu32 ":%" PRIu32") to dtree.",
