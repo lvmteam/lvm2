@@ -59,8 +59,8 @@ struct filemap_monitor {
 static int _foreground;
 static int _verbose;
 
-const char *const _usage = "dmfilemapd <fd> <group_id> <abs_path> <mode> "
-			   "[<foreground>[<log_level>]]";
+const char _usage[] = "dmfilemapd <fd> <group_id> <abs_path> <mode> "
+	"[<foreground>[<log_level>]]";
 
 /*
  * Daemon logging. By default, all messages are thrown away: messages
@@ -802,7 +802,7 @@ bad:
 	return 1;
 }
 
-static const char * const _mode_names[] = {
+static const char _mode_names[][8] = {
 	"inode",
 	"path"
 };
