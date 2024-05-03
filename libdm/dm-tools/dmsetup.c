@@ -316,7 +316,7 @@ static uint64_t _last_interval = 0; /* approx. measured interval in nsecs */
 typedef int (*command_fn) (CMD_ARGS);
 
 struct command {
-	const char *name;
+	const char name[24];
 	const char *help;
 	int min_args;
 	int max_args;
@@ -1662,14 +1662,15 @@ static int _udevflags(CMD_ARGS)
 	uint32_t cookie;
 	uint16_t flags;
 	int i;
-	static const char *dm_flag_names[] = {"DISABLE_DM_RULES",
-					      "DISABLE_SUBSYSTEM_RULES",
-					      "DISABLE_DISK_RULES",
-					      "DISABLE_OTHER_RULES",
-					      "LOW_PRIORITY",
-					      "DISABLE_LIBRARY_FALLBACK",
-					      "PRIMARY_SOURCE",
-					       0};
+	static const char _dm_flag_names[][32] = {
+		"DISABLE_DM_RULES",
+		"DISABLE_SUBSYSTEM_RULES",
+		"DISABLE_DISK_RULES",
+		"DISABLE_OTHER_RULES",
+		"LOW_PRIORITY",
+		"DISABLE_LIBRARY_FALLBACK",
+		"PRIMARY_SOURCE",
+	};
 
 	if (!(cookie = _get_cookie_value(argv[0])))
 		return_0;
@@ -1678,8 +1679,8 @@ static int _udevflags(CMD_ARGS)
 
 	for (i = 0; i < DM_UDEV_FLAGS_SHIFT; i++)
 		if (1 << i & flags) {
-			if (i < DM_UDEV_FLAGS_SHIFT / 2 && dm_flag_names[i])
-				printf("DM_UDEV_%s_FLAG='1'\n", dm_flag_names[i]);
+			if (i < DM_UDEV_FLAGS_SHIFT / 2 && i < DM_ARRAY_SIZE(_dm_flag_names))
+				printf("DM_UDEV_%s_FLAG='1'\n", _dm_flag_names[i]);
 			else if (i < DM_UDEV_FLAGS_SHIFT / 2)
 				/*
 				 * This is just a fallback. Each new DM flag
@@ -2820,13 +2821,13 @@ static int _tree_switches[NUM_TREEMODE];
 #define VT_UR	"m"
 #define VT_HD	"w"
 
-static struct {
-	const char *empty_2;	/*    */
-	const char *branch_2;	/* |- */
-	const char *vert_2;	/* |  */
-	const char *last_2;	/* `- */
-	const char *single_3;	/* --- */
-	const char *first_3;	/* -+- */
+static const struct {
+	const char empty_2[16];	/*    */
+	const char branch_2[16];	/* |- */
+	const char vert_2[16];	/* |  */
+	const char last_2[16];	/* `- */
+	const char single_3[16];	/* --- */
+	const char first_3[16];	/* -+- */
 }
 _tsym_ascii = {
 	"  ",
@@ -6221,7 +6222,7 @@ static int _stats_help(CMD_ARGS);
  * the fact that 'create' and 'create --filemap' have largely disjoint
  * sets of options.
  */
-static struct command _stats_subcommands[] = {
+static const struct command _stats_subcommands[] = {
 	{"help", "", 0, 0, 0, 0, _stats_help},
 	{"clear", ALL_REGIONS_OPT ALL_DEVICES_OPT, 0, -1, 1, 0, _stats_clear},
 	{"create", CREATE_OPTS ALL_DEVICES_OPT, 0, -1, 1, 0, _stats_create},
@@ -6234,7 +6235,6 @@ static struct command _stats_subcommands[] = {
 	{"ungroup", UNGROUP_OPTS, 1, -1, 1, 0, _stats_ungroup},
 	{"update_filemap", UPDATE_OPTS, 1, 1, 0, 0, _stats_update_file},
 	{"version", "", 0, -1, 1, 0, _version},
-	{NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
 #undef AREA_OPTS
@@ -6259,7 +6259,7 @@ static struct command _stats_subcommands[] = {
 
 static int _dmsetup_help(CMD_ARGS);
 
-static struct command _dmsetup_commands[] = {
+static const struct command _dmsetup_commands[] = {
 	{"help", "[-c|-C|--columns]", 0, 0, 0, 0, _dmsetup_help},
 	{"create", "<dev_name>\n"
 	  "\t    [-j|--major <major> -m|--minor <minor>]\n"
@@ -6301,7 +6301,6 @@ static struct command _dmsetup_commands[] = {
 	{"version", "", 0, 0, 0, 0, _version},
 	{"setgeometry", "<device> <cyl> <head> <sect> <start>", 5, 5, 0, 0, _setgeometry},
 	{"splitname", "<device> [<subsystem>]", 1, 2, 0, 0, _splitname},
-	{NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
 /*
@@ -6330,7 +6329,7 @@ static void _stats_usage(FILE *out)
 		"        [--segments] [--units <units>]\n\n",
 		_base_commands[_base_command].name);
 
-	for (i = 0; _stats_subcommands[i].name; i++)
+	for (i = 0; i < DM_ARRAY_SIZE(_stats_subcommands); i++)
 		fprintf(out, "\t%s %s\n", _stats_subcommands[i].name, _stats_subcommands[i].help);
 
 	fprintf(out, "\n<device> may be device name or (if only one) -u <uuid> or -j <major> -m <minor>\n"
@@ -6355,7 +6354,7 @@ static void _dmsetup_usage(FILE *out)
 		"        [--separator <separator>]\n\n",
 		_base_commands[_base_command].name);
 
-	for (i = 0; _dmsetup_commands[i].name; i++)
+	for (i = 0; DM_ARRAY_SIZE(_dmsetup_commands); i++)
 		fprintf(out, "\t%s %s\n", _dmsetup_commands[i].name, _dmsetup_commands[i].help);
 
 	fprintf(out, "\n<device> may be device name or (if only one) -u <uuid> or "
@@ -6448,12 +6447,12 @@ static int _dmsetup_help(CMD_ARGS)
 }
 
 static const struct command *_find_command(const struct command *commands,
-					   const char *name)
+					   size_t cmd_cnt, const char *name)
 {
 	int i;
 
 	if (name)
-		for (i = 0; commands[i].name; i++)
+		for (i = 0; i < cmd_cnt; i++)
 			if (!strcmp(commands[i].name, name))
 				return commands + i;
 
@@ -6462,12 +6461,16 @@ static const struct command *_find_command(const struct command *commands,
 
 static const struct command *_find_dmsetup_command(const char *name)
 {
-	return _find_command(_dmsetup_commands, name);
+	return _find_command(_dmsetup_commands,
+			     DM_ARRAY_SIZE(_dmsetup_commands),
+			     name);
 }
 
 static const struct command *_find_stats_subcommand(const char *name)
 {
-	return _find_command(_stats_subcommands, name);
+	return _find_command(_stats_subcommands,
+			     DM_ARRAY_SIZE(_stats_subcommands),
+			     name);
 }
 
 static int _stats(CMD_ARGS)
