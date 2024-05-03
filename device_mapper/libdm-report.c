@@ -2867,7 +2867,7 @@ static const char *_out_of_range_msg = "Field selection value %s out of supporte
 #define DELIM_DATE '-'
 #define DELIM_TIME ':'
 
-static int _days_in_month[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+static const int _days_in_month[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 static int _is_leap_year(long year)
 {
