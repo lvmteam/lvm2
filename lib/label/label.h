@@ -84,7 +84,7 @@ struct label_ops {
 };
 
 struct labeller {
-	struct label_ops *ops;
+	const struct label_ops *ops;
 	const struct format_type *fmt;
 };
 
