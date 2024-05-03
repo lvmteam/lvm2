@@ -743,7 +743,7 @@ static int _read_vdo_params(struct cmd_context *cmd,
 		lp->vcp.do_zero = 1;
 		lp->vcp.do_wipe_signatures = lp->wipe_signatures;
 		lp->vcp.force = lp->force;
-		lp->vcp.yes = lp->force;
+		lp->vcp.yes = lp->yes;
 		cmd->lvcreate_vcp = &lp->vcp;
 	}
 
