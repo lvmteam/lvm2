@@ -550,8 +550,8 @@ static struct device *_get_device_for_sysfs_dev_name_using_devno(const char *dev
 
 static int _get_vgid_and_lvid_for_dev(struct device *dev)
 {
-	static size_t lvm_prefix_len = sizeof(UUID_PREFIX) - 1;
-	static size_t lvm_uuid_len = sizeof(UUID_PREFIX) - 1 + 2 * ID_LEN;
+	const size_t lvm_prefix_len = sizeof(UUID_PREFIX) - 1;
+	const size_t lvm_uuid_len = sizeof(UUID_PREFIX) - 1 + 2 * ID_LEN;
 	char uuid[DM_UUID_LEN];
 	size_t uuid_len;
 

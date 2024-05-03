@@ -2566,12 +2566,12 @@ static int _check_reserved_values_supported(const struct dm_report_field_type fi
 	const struct dm_report_reserved_value *iter;
 	const struct dm_report_field_reserved_value *field_res;
 	const struct dm_report_field_type *field;
-	static uint32_t supported_reserved_types = DM_REPORT_FIELD_TYPE_NUMBER |
+	const uint32_t supported_reserved_types =  DM_REPORT_FIELD_TYPE_NUMBER |
 						   DM_REPORT_FIELD_TYPE_SIZE |
 						   DM_REPORT_FIELD_TYPE_PERCENT |
 						   DM_REPORT_FIELD_TYPE_STRING |
 						   DM_REPORT_FIELD_TYPE_TIME;
-	static uint32_t supported_reserved_types_with_range = DM_REPORT_FIELD_RESERVED_VALUE_RANGE |
+	const uint32_t supported_reserved_types_with_range =  DM_REPORT_FIELD_RESERVED_VALUE_RANGE |
 							      DM_REPORT_FIELD_TYPE_NUMBER |
 							      DM_REPORT_FIELD_TYPE_SIZE |
 							      DM_REPORT_FIELD_TYPE_PERCENT |
