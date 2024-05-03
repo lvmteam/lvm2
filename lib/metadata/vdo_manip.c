@@ -747,7 +747,7 @@ static int _vdo_snprintf(char **buf, size_t *bufsize, const char *format, ...)
 
 int check_vdo_constrains(struct cmd_context *cmd, const struct vdo_pool_size_config *cfg)
 {
-	static const char *_split[] = { "", " and", ",", "," };
+	static const char _vdo_split[][4] = { "", " and", ",", "," };
 	uint64_t req_mb, total_mb, available_mb;
 	uint64_t phy_mb = _round_sectors_to_tib(UINT64_C(268) * cfg->physical_size); // 268 MiB per 1 TiB of physical size
 	uint64_t virt_mb = _round_1024(UINT64_C(1638) * _round_sectors_to_tib(cfg->virtual_size)); // 1.6 MiB per 1 TiB
@@ -773,18 +773,18 @@ int check_vdo_constrains(struct cmd_context *cmd, const struct vdo_pool_size_con
 	if (phy_mb)
 		(void)_vdo_snprintf(&pmsg, &mlen, " %s RAM for physical volume size %s%s",
 				    display_size(cmd, phy_mb << (20 - SECTOR_SHIFT)),
-				    display_size(cmd, cfg->physical_size), _split[--cnt]);
+				    display_size(cmd, cfg->physical_size), _vdo_split[--cnt]);
 
 	if (virt_mb)
 		(void)_vdo_snprintf(&pmsg, &mlen, " %s RAM for virtual volume size %s%s",
 				    display_size(cmd, virt_mb << (20 - SECTOR_SHIFT)),
-				    display_size(cmd, cfg->virtual_size), _split[--cnt]);
+				    display_size(cmd, cfg->virtual_size), _vdo_split[--cnt]);
 
 	if (cfg->block_map_cache_size_mb)
 		(void)_vdo_snprintf(&pmsg, &mlen, " %s RAM for block map cache size %s%s",
 				    display_size(cmd, cache_mb << (20 - SECTOR_SHIFT)),
 				    display_size(cmd, ((uint64_t)cfg->block_map_cache_size_mb) << (20 - SECTOR_SHIFT)),
-				    _split[--cnt]);
+				    _vdo_split[--cnt]);
 
 	if (cfg->index_memory_size_mb)
 		(void)_vdo_snprintf(&pmsg, &mlen, " %s RAM for index memory",
