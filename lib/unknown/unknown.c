@@ -54,7 +54,7 @@ static void _unknown_destroy(struct segment_type *segtype)
 	free(segtype);
 }
 
-static struct segtype_handler _unknown_ops = {
+static const struct segtype_handler _unknown_ops = {
 	.text_import = _unknown_text_import,
 	.text_export = _unknown_text_export,
 	.destroy = _unknown_destroy,

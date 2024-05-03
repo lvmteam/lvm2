@@ -216,7 +216,7 @@ static void _striped_destroy(struct segment_type *segtype)
 	free(segtype);
 }
 
-static struct segtype_handler _striped_ops = {
+static const struct segtype_handler _striped_ops = {
 	.name = _striped_name,
 	.display = _striped_display,
 	.text_import_area_count = _striped_text_import_area_count,

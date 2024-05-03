@@ -491,7 +491,7 @@ static void _mirrored_destroy(struct segment_type *segtype)
 	free(segtype);
 }
 
-static struct segtype_handler _mirrored_ops = {
+static const struct segtype_handler _mirrored_ops = {
 	.display = _mirrored_display,
 	.text_import_area_count = _mirrored_text_import_area_count,
 	.text_import = _mirrored_text_import,

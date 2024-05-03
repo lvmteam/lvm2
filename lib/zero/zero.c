@@ -75,7 +75,7 @@ static void _zero_destroy(struct segment_type *segtype)
 	free(segtype);
 }
 
-static struct segtype_handler _zero_ops = {
+static const struct segtype_handler _zero_ops = {
 	.merge_segments = _zero_merge_segments,
 #ifdef DEVMAPPER_SUPPORT
 	.add_target_line = _zero_add_target_line,

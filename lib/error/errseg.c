@@ -81,7 +81,7 @@ static void _errseg_destroy(struct segment_type *segtype)
 	free(segtype);
 }
 
-static struct segtype_handler _error_ops = {
+static const struct segtype_handler _error_ops = {
 	.merge_segments = _errseg_merge_segments,
 #ifdef DEVMAPPER_SUPPORT
 	.add_target_line = _errseg_add_target_line,

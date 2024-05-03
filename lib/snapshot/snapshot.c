@@ -229,7 +229,7 @@ static void _snap_destroy(struct segment_type *segtype)
 	free(segtype);
 }
 
-static struct segtype_handler _snapshot_ops = {
+static const struct segtype_handler _snapshot_ops = {
 	.target_name = _snap_target_name,
 	.text_import = _snap_text_import,
 	.text_export = _snap_text_export,

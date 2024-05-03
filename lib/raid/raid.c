@@ -616,7 +616,7 @@ static int _raid_target_unmonitor_events(struct lv_segment *seg, int events)
 #  endif /* DMEVENTD */
 #endif /* DEVMAPPER_SUPPORT */
 
-static struct segtype_handler _raid_ops = {
+static const struct segtype_handler _raid_ops = {
 	.display = _raid_display,
 	.text_import_area_count = _raid_text_import_area_count,
 	.text_import = _raid_text_import,

@@ -423,7 +423,7 @@ static int _modules_needed(struct dm_pool *mem,
 }
 #endif /* DEVMAPPER_SUPPORT */
 
-static struct segtype_handler _cache_pool_ops = {
+static const struct segtype_handler _cache_pool_ops = {
 	.display = _cache_display,
 	.text_import = _cache_pool_text_import,
 	.text_import_area_count = _cache_pool_text_import_area_count,
@@ -762,7 +762,7 @@ static int _cache_add_target_line(struct dev_manager *dm,
 }
 #endif /* DEVMAPPER_SUPPORT */
 
-static struct segtype_handler _cache_ops = {
+static const struct segtype_handler _cache_ops = {
 	.display = _cache_display,
 	.text_import = _cache_text_import,
 	.text_import_area_count = _cache_text_import_area_count,

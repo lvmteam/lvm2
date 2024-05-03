@@ -743,7 +743,7 @@ static void _thin_destroy(struct segment_type *segtype)
 	free(segtype);
 }
 
-static struct segtype_handler _thin_pool_ops = {
+static const struct segtype_handler _thin_pool_ops = {
 	.display = _thin_pool_display,
 	.text_import = _thin_pool_text_import,
 	.text_import_area_count = _thin_pool_text_import_area_count,
@@ -762,7 +762,7 @@ static struct segtype_handler _thin_pool_ops = {
 	.destroy = _thin_destroy,
 };
 
-static struct segtype_handler _thin_ops = {
+static const struct segtype_handler _thin_ops = {
 	.display = _thin_display,
 	.text_import = _thin_text_import,
 	.text_export = _thin_text_export,
@@ -783,7 +783,7 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 #endif
 {
 	static const struct {
-		struct segtype_handler *ops;
+		const struct segtype_handler *ops;
 		const char name[16];
 		uint32_t flags;
 	} reg_segtypes[] = {

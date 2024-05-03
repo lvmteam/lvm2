@@ -307,7 +307,7 @@ static int _integrity_add_target_line(struct dev_manager *dm,
 }
 #endif /* DEVMAPPER_SUPPORT */
 
-static struct segtype_handler _integrity_ops = {
+static const struct segtype_handler _integrity_ops = {
 	.display = _integrity_display,
 	.text_import = _integrity_text_import,
 	.text_import_area_count = _integrity_text_import_area_count,

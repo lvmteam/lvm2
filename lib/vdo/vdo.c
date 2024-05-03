@@ -562,7 +562,7 @@ static void _vdo_pool_destroy(struct segment_type *segtype)
 	free((void *)segtype);
 }
 
-static struct segtype_handler _vdo_ops = {
+static const struct segtype_handler _vdo_ops = {
 	.name = _vdo_name,
 	.display = _vdo_display,
 	.text_import = _vdo_text_import,
@@ -578,7 +578,7 @@ static struct segtype_handler _vdo_ops = {
 	.destroy = _vdo_pool_destroy,
 };
 
-static struct segtype_handler _vdo_pool_ops = {
+static const struct segtype_handler _vdo_pool_ops = {
 	.name = _vdo_pool_name,
 	.display = _vdo_pool_display,
 	.text_import = _vdo_pool_text_import,

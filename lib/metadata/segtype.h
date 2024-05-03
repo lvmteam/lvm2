@@ -236,7 +236,7 @@ struct segment_type {
 	uint64_t flags;
 	uint32_t parity_devs;		/* Parity drives required by segtype */
 
-	struct segtype_handler *ops;
+	const struct segtype_handler *ops;
 	const char *name;
 	const char *dso;
 
