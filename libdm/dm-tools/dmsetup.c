@@ -281,7 +281,7 @@ struct command;
 static const struct command *_selection_cmd = NULL; /* Command to run against each device select with -S */
 
 /* string names for stats object types */
-const char *_stats_types[] = {
+const char * const _stats_types[] = {
 	"all",
 	"area",
 	"region",
@@ -3914,7 +3914,7 @@ static int _dm_stats_object_type_disp(struct dm_report *rh,
 	const struct dm_stats *dms = (const struct dm_stats *) data;
 	int type = dm_stats_current_object_type(dms);
 
-	return dm_report_field_string(rh, field, (const char * const *) &_stats_types[type]);
+	return dm_report_field_string(rh, field, &_stats_types[type]);
 }
 
 static int _dm_stats_precise_disp(struct dm_report *rh,
@@ -6704,7 +6704,7 @@ static int _process_losetup_switches(const char *base, int *argcp, char ***argvp
 	off_t offset = 0;
 
 #ifdef HAVE_GETOPTLONG
-	static struct option long_options[] = {
+	static const struct option _long_options[] = {
 		{0, 0, 0, 0}
 	};
 #endif
@@ -6712,7 +6712,7 @@ static int _process_losetup_switches(const char *base, int *argcp, char ***argvp
 	optarg = (char*) "";
 	optind = OPTIND_INIT;
 	while ((c = GETOPTLONG_FN(*argcp, *argvp, "ade:fo:v",
-				  long_options, NULL)) != -1 ) {
+				  _long_options, NULL)) != -1 ) {
 		if (c == ':' || c == '?')
 			return_0;
 		if (c == 'a')
@@ -6858,7 +6858,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 	int c, r, i;
 
 #ifdef HAVE_GETOPTLONG
-	static struct option long_options[] = {
+	static const struct option _long_options[] = {
 		{"addnodeoncreate", 0, 0, ADD_NODE_ON_CREATE_ARG},
 		{"addnodeonresume", 0, 0, ADD_NODE_ON_RESUME_ARG},
 		{"alias", 1, 0, ALIAS_ARG},
@@ -6941,7 +6941,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		{0, 0, 0, 0}
 	};
 #else
-	struct option long_options;
+	struct option _long_options;
 #endif
 
 	/*
@@ -7008,7 +7008,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 	optarg = (char*) "";
 	optind = OPTIND_INIT;
 	while ((c = GETOPTLONG_FN(*argcp, *argvp, "cCfG:hj:m:M:no:O:rS:u:U:vy",
-					    long_options, NULL)) != -1) {
+				  _long_options, NULL)) != -1) {
 		switch (c) {
 		case ALIAS_ARG:
 			_switches[ALIAS_ARG]++;
