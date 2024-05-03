@@ -3514,7 +3514,6 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 						       struct reserved_value_wrapper *rvw,
 						       void *custom)
 {
-	static const char *_field_selection_value_alloc_failed_msg = "dm_report: struct field_selection_value allocation failed for selection field %s";
 	const struct dm_report_field_type *fields = implicit ? _implicit_report_fields
 							     : rh->fields;
 	struct field_properties *fp, *found = NULL;
@@ -3562,8 +3561,8 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 	}
 
 	if (!(fs->value = dm_pool_zalloc(rh->selection->mem, sizeof(struct field_selection_value)))) {
-		log_error(_field_selection_value_alloc_failed_msg, field_id);
-		goto error;
+		stack;
+		goto error_field_id;
 	}
 
 	if (((rvw->reserved && (rvw->reserved->type & DM_REPORT_FIELD_RESERVED_VALUE_RANGE)) ||
@@ -3571,8 +3570,8 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 	      custom && ((struct time_value *) custom)->range))
 		 &&
 	    !(fs->value->next = dm_pool_zalloc(rh->selection->mem, sizeof(struct field_selection_value)))) {
-		log_error(_field_selection_value_alloc_failed_msg, field_id);
-		goto error;
+		stack;
+		goto error_field_id;
 	}
 
 	fs->fp = found;
@@ -3721,6 +3720,10 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 	}
 
 	return fs;
+error_field_id:
+	log_error("dm_report: struct field_selection_value allocation failed for selection field %s",
+		  field_id);
+	goto error;
 bad:
 	log_error(INTERNAL_ERROR "Forbiden NULL custom detected.");
 error:
