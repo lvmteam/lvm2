@@ -572,8 +572,20 @@ int create_pool(struct logical_volume *pool_lv,
 	if (!lv_add_segment(ah, 0, stripes, pool_lv, striped, stripe_size, 0, 0))
 		goto_bad;
 
-	if (pool_lv->vg->cmd->lvcreate_vcp && !convert_vdo_lv(pool_lv, pool_lv->vg->cmd->lvcreate_vcp))
+	if (pool_lv->vg->cmd->lvcreate_vcp && !convert_vdo_lv(pool_lv, pool_lv->vg->cmd->lvcreate_vcp)) {
+		/* Conversion to VDO commits metadata,
+		 * try to deactivate pool LV, and remove metadata LV */
+		if (!deactivate_lv(pool_lv->vg->cmd, pool_lv))
+			log_error("Failedto deactivate pool volume %s.",
+				  display_lvname(pool_lv));
+
+		if (!lv_remove(meta_lv) ||
+		    !vg_write(meta_lv->vg) || !vg_commit(meta_lv->vg))
+			log_error("Manual intervention may be required to "
+				  "remove abandoned LV(s) before retrying.");
+
 		goto_bad;
+	}
 
 	if (!(data_lv = insert_layer_for_lv(pool_lv->vg->cmd, pool_lv,
 					    pool_lv->status,
