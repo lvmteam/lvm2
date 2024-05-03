@@ -446,41 +446,49 @@ void reset_log_duplicated(void) {
 
 static const char *_get_log_level_name(int use_stderr, int level)
 {
-	static const char *log_level_names[] = {"",      /* unassigned */
-						"",      /* unassigned */
-						"fatal", /* _LOG_FATAL */
-						"error", /* _LOG_ERROR */
-						"warn",  /* _LOG_WARN */
-						"notice",/* _LOG_NOTICE */
-						"info",  /* _LOG_INFO */
-						"debug"  /* _LOG_DEBUG */
-						};
+	static const char _log_level_names[][8] = {
+		"",      /* unassigned */
+		"",      /* unassigned */
+		"fatal", /* _LOG_FATAL */
+		"error", /* _LOG_ERROR */
+		"warn",  /* _LOG_WARN */
+		"notice",/* _LOG_NOTICE */
+		"info",  /* _LOG_INFO */
+		"debug"  /* _LOG_DEBUG */
+	};
+
 	if (level == _LOG_WARN && !use_stderr)
 		return "print";
 
-	return log_level_names[level];
+	return _log_level_names[level];
 }
 
 const char *log_get_report_context_name(log_report_context_t context)
 {
-	static const char *log_context_names[LOG_REPORT_CONTEXT_COUNT] = {[LOG_REPORT_CONTEXT_NULL] = "",
-									  [LOG_REPORT_CONTEXT_SHELL] = "shell",
-									  [LOG_REPORT_CONTEXT_PROCESSING] = "processing"};
-	return log_context_names[context];
+	static const char _log_context_names[LOG_REPORT_CONTEXT_COUNT][16] = {
+		[LOG_REPORT_CONTEXT_NULL] = "",
+		[LOG_REPORT_CONTEXT_SHELL] = "shell",
+		[LOG_REPORT_CONTEXT_PROCESSING] = "processing"
+	};
+
+	return _log_context_names[context];
 }
 
 
 const char *log_get_report_object_type_name(log_report_object_type_t object_type)
 {
-	static const char *log_object_type_names[LOG_REPORT_OBJECT_TYPE_COUNT] = {[LOG_REPORT_OBJECT_TYPE_NULL] = "",
-										  [LOG_REPORT_OBJECT_TYPE_PRE_CMD] = "pre-cmd",
-										  [LOG_REPORT_OBJECT_TYPE_CMD] = "cmd",
-										  [LOG_REPORT_OBJECT_TYPE_ORPHAN] = "orphan",
-										  [LOG_REPORT_OBJECT_TYPE_PV] = "pv",
-										  [LOG_REPORT_OBJECT_TYPE_LABEL] = "label",
-										  [LOG_REPORT_OBJECT_TYPE_VG] = "vg",
-										  [LOG_REPORT_OBJECT_TYPE_LV] = "lv"};
-	return log_object_type_names[object_type];
+	static const char _log_object_type_names[LOG_REPORT_OBJECT_TYPE_COUNT][8] = {
+		[LOG_REPORT_OBJECT_TYPE_NULL] = "",
+		[LOG_REPORT_OBJECT_TYPE_PRE_CMD] = "pre-cmd",
+		[LOG_REPORT_OBJECT_TYPE_CMD] = "cmd",
+		[LOG_REPORT_OBJECT_TYPE_ORPHAN] = "orphan",
+		[LOG_REPORT_OBJECT_TYPE_PV] = "pv",
+		[LOG_REPORT_OBJECT_TYPE_LABEL] = "label",
+		[LOG_REPORT_OBJECT_TYPE_VG] = "vg",
+		[LOG_REPORT_OBJECT_TYPE_LV] = "lv"
+	};
+
+	return _log_object_type_names[object_type];
 }
 
 void init_debug_file_fields(uint32_t debug_fields)
