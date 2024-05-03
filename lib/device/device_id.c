@@ -45,9 +45,9 @@ static int _using_devices_file;
 static int _devices_file_locked;
 static char _devices_lockfile[PATH_MAX];
 static char _devices_file_version[VERSION_LINE_MAX];
-static const char *_searched_file = DEFAULT_RUN_DIR "/searched_devnames";
-static const char *_searched_file_new = DEFAULT_RUN_DIR "/searched_devnames_new";
-static const char *_searched_file_dir = DEFAULT_RUN_DIR;
+static const char _searched_file[] = DEFAULT_RUN_DIR "/searched_devnames";
+static const char _searched_file_new[] = DEFAULT_RUN_DIR "/searched_devnames_new";
+static const char _searched_file_dir[] = DEFAULT_RUN_DIR;
 
 /* Only for displaying in lvmdevices command output. */
 char devices_file_hostname_orig[PATH_MAX]; 

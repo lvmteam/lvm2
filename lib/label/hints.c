@@ -156,9 +156,9 @@
 #include <sys/file.h>
 #include <sys/sysmacros.h>
 
-static const char *_hints_file = DEFAULT_RUN_DIR "/hints";
-static const char *_nohints_file = DEFAULT_RUN_DIR "/nohints";
-static const char *_newhints_file = DEFAULT_RUN_DIR "/newhints";
+static const char _hints_file[] = DEFAULT_RUN_DIR "/hints";
+static const char _nohints_file[] = DEFAULT_RUN_DIR "/nohints";
+static const char _newhints_file[] = DEFAULT_RUN_DIR "/newhints";
 
 /*
  * Format of hints file.  Increase the major number when

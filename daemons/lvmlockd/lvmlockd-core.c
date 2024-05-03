@@ -140,7 +140,7 @@ static int str_to_mode(const char *str);
  * the act is passed back to the client_thread to be returned to the client.
  */
 
-static const char *lvmlockd_protocol = "lvmlockd";
+static const char lvmlockd_protocol[] = "lvmlockd";
 static const int lvmlockd_protocol_version = 1;
 static int daemon_quit;
 static int adopt_opt;

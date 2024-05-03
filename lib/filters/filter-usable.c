@@ -17,7 +17,7 @@
 #include "lib/filters/filter.h"
 #include "lib/activate/activate.h"
 
-static const char *_too_small_to_hold_pv_msg = "Too small to hold a PV";
+static const char _too_small_to_hold_pv_msg[] = "Too small to hold a PV";
 
 static int _check_pv_min_size(struct device *dev)
 {

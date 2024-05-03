@@ -506,10 +506,10 @@ static int _check_config(struct cmd_context *cmd)
 static const char *_set_time_format(struct cmd_context *cmd)
 {
 	/* Compared to strftime, we do not allow "newline" character - the %n in format. */
-	static const char *allowed_format_chars = "aAbBcCdDeFGghHIjklmMpPrRsStTuUVwWxXyYzZ%";
-	static const char *allowed_alternative_format_chars_e = "cCxXyY";
-	static const char *allowed_alternative_format_chars_o = "deHImMSuUVwWy";
-	static const char *chars_to_check;
+	static const char _allowed_format_chars[] = "aAbBcCdDeFGghHIjklmMpPrRsStTuUVwWxXyYzZ%";
+	static const char _allowed_alternative_format_chars_e[] = "cCxXyY";
+	static const char _allowed_alternative_format_chars_o[] = "deHImMSuUVwWy";
+	const char *chars_to_check;
 	const char *tf = find_config_tree_str(cmd, report_time_format_CFG, NULL);
 	const char *p_fmt;
 	size_t i;
@@ -525,12 +525,12 @@ static const char *_set_time_format(struct cmd_context *cmd)
 				c = *++p_fmt;
 				if (c == 'E') {
 					c = *++p_fmt;
-					chars_to_check = allowed_alternative_format_chars_e;
+					chars_to_check = _allowed_alternative_format_chars_e;
 				} else if (c == 'O') {
 					c = *++p_fmt;
-					chars_to_check = allowed_alternative_format_chars_o;
+					chars_to_check = _allowed_alternative_format_chars_o;
 				} else
-					chars_to_check = allowed_format_chars;
+					chars_to_check = _allowed_format_chars;
 
 				for (i = 0; chars_to_check[i]; i++) {
 					if (c == chars_to_check[i])

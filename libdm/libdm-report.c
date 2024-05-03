@@ -2840,7 +2840,7 @@ struct time_value {
 	time_t t2;
 };
 
-static const char *_out_of_range_msg = "Field selection value %s out of supported range for field %s.";
+static const char _out_of_range_msg[] = "Field selection value %s out of supported range for field %s.";
 
 /*
  * Standard formatted date and time - ISO8601.

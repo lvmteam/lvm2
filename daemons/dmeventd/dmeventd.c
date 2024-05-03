@@ -2017,7 +2017,7 @@ static void _daemonize(void)
 static int _reinstate_registrations(struct dm_event_fifos *fifos)
 {
 	static const char _failed_parsing_msg[] = "Failed to parse existing event registration.\n";
-	static const char *_delim = " ";
+	static const char _delim[] = " ";
 	struct dm_event_daemon_message msg = { 0 };
 	char *endp, *dso_name, *dev_name, *mask, *timeout;
 	unsigned long mask_value, timeout_value;
