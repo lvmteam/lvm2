@@ -61,7 +61,7 @@ struct text_vg_version_ops {
 			       struct lvmcache_vgsummary *vgsummary);
 };
 
-struct text_vg_version_ops *text_vg_vsn1_init(void);
+const struct text_vg_version_ops *text_vg_vsn1_init(void);
 
 int print_flags(char *buffer, size_t size, enum pv_vg_lv_e type, int mask, uint64_t status);
 int read_flags(uint64_t *status, enum pv_vg_lv_e type, int mask, const struct dm_config_value *cv);

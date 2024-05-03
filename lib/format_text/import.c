@@ -19,7 +19,7 @@
 #include "import-export.h"
 
 /* FIXME Use tidier inclusion method */
-static struct text_vg_version_ops *(_text_vsn_list[2]);
+static const struct text_vg_version_ops *(_text_vsn_list[2]);
 
 static int _text_import_initialised = 0;
 
@@ -45,7 +45,7 @@ int text_read_metadata_summary(const struct format_type *fmt,
 		       struct lvmcache_vgsummary *vgsummary)
 {
 	struct dm_config_tree *cft;
-	struct text_vg_version_ops **vsn;
+	const struct text_vg_version_ops **vsn;
 	int r = 0;
 
 	_init_text_import();
@@ -117,7 +117,7 @@ struct volume_group *text_read_metadata(struct format_instance *fid,
 {
 	struct volume_group *vg = NULL;
 	struct dm_config_tree *cft;
-	struct text_vg_version_ops **vsn;
+	const struct text_vg_version_ops **vsn;
 	int skip_parse;
 
 	/*
@@ -219,7 +219,7 @@ static struct volume_group *_import_vg_from_config_tree(struct cmd_context *cmd,
 							const struct dm_config_tree *cft)
 {
 	struct volume_group *vg = NULL;
-	struct text_vg_version_ops **vsn;
+	const struct text_vg_version_ops **vsn;
 	int vg_missing;
 
 	_init_text_import();
@@ -256,7 +256,7 @@ struct volume_group *import_vg_from_config_tree(struct cmd_context *cmd,
 
 struct volume_group *vg_from_config_tree(struct cmd_context *cmd, const struct dm_config_tree *cft)
 {
-	static struct text_vg_version_ops *ops;
+	const struct text_vg_version_ops *ops;
 
 	_init_text_import();
 

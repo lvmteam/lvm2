@@ -1359,14 +1359,14 @@ static int _read_vgsummary(const struct format_type *fmt, const struct dm_config
 	return 1;
 }
 
-static struct text_vg_version_ops _vsn1_ops = {
+static const struct text_vg_version_ops _vsn1_ops = {
 	.check_version = _vsn1_check_version,
 	.read_vg = _read_vg,
 	.read_desc = _read_desc,
 	.read_vgsummary = _read_vgsummary
 };
 
-struct text_vg_version_ops *text_vg_vsn1_init(void)
+const struct text_vg_version_ops *text_vg_vsn1_init(void)
 {
 	return &_vsn1_ops;
 }
