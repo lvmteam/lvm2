@@ -20,7 +20,7 @@
 #endif
 
 struct ext_registry_item {
-	const char *name;
+	const char name[16];
 	struct dev_ext *(* dev_ext_get) (struct device *dev);
 	int (*dev_ext_release) (struct device *dev);
 };
@@ -90,7 +90,7 @@ static int _dev_ext_release_udev(struct device *dev)
 #endif
 }
 
-static struct ext_registry_item _ext_registry[DEV_EXT_NUM] = {
+static const struct ext_registry_item _ext_registry[DEV_EXT_NUM] = {
 	EXT_REGISTER(DEV_EXT_NONE, none),
 	EXT_REGISTER(DEV_EXT_UDEV, udev)
 };

@@ -145,7 +145,7 @@ enum {
 	LV_TYPE_INTEGRITYORIGIN
 };
 
-static const char *_lv_type_names[] = {
+static const char _lv_type_names[][24] = {
 	[LV_TYPE_UNKNOWN] =				"unknown",
 	[LV_TYPE_NONE] =				"none",
 	[LV_TYPE_PUBLIC] =				"public",

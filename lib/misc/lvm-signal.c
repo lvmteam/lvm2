@@ -29,7 +29,7 @@ static volatile sig_atomic_t _handler_installed = 0;
 
 struct ar_sigs {
 	int sig;
-	const char *name;
+	const char name[8];
 	int oldmasked[MAX_SIGINTS];
 	struct sigaction oldhandler[MAX_SIGINTS];
 };

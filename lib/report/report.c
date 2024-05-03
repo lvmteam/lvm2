@@ -252,7 +252,7 @@ static const struct time_prop _time_props[] = {
 #define TIME_REG_PLURAL_S  0x00000001 /* also recognize plural form with "s" suffix */
 
 struct time_reg {
-	const char *name;
+	const char name[16];
 	const struct time_prop *prop;
 	uint32_t reg_flags;
 };
@@ -355,7 +355,6 @@ static const struct time_reg _time_reg[] = {
 	{"Nov",       TIME_PROP(TIME_MONTH_NOVEMBER),       0},
 	{"December",  TIME_PROP(TIME_MONTH_DECEMBER),       0},
 	{"Dec",       TIME_PROP(TIME_MONTH_DECEMBER),       0},
-	{NULL,        TIME_PROP(TIME_NULL),                 0},
 };
 
 struct time_item {
@@ -588,7 +587,7 @@ static int _match_time_str(struct dm_list *ti_list, struct time_item *ti)
 
 	ti->prop = TIME_PROP(TIME_NULL);
 
-	for (i = 0; _time_reg[i].name; i++) {
+	for (i = 0; i < DM_ARRAY_SIZE(_time_reg); ++i) {
 		reg_len = strlen(_time_reg[i].name);
 		if ((ti->len != reg_len) &&
 		    !((_time_reg[i].reg_flags & TIME_REG_PLURAL_S) &&

@@ -118,10 +118,10 @@ lock_type_t get_lock_type_from_string(const char *str)
 	return LOCK_TYPE_INVALID;
 }
 
-static const char *_percent_types[7] = { "NONE", "VG", "FREE", "LV", "PVS", "ORIGIN" };
-
 const char *get_percent_string(percent_type_t def)
 {
+	static const char _percent_types[][8] = { "NONE", "VG", "FREE", "LV", "PVS", "ORIGIN" };
+
 	return _percent_types[def];
 }
 

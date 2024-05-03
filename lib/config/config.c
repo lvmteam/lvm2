@@ -35,7 +35,7 @@
 #include <math.h>
 #include <float.h>
 
-static const char *_config_source_names[] = {
+static const char _config_source_names[][24] = {
 	[CONFIG_UNDEFINED] = "undefined",
 	[CONFIG_FILE] = "file",
 	[CONFIG_MERGED_FILES] = "merged files",
