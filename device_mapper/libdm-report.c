@@ -153,7 +153,7 @@ struct op_def {
  * shorter one if one is a prefix of another!
  * (e.g. =~ comes before =)
 */
-static struct op_def _op_cmp[] = {
+static const struct op_def _op_cmp[] = {
 	{ "=~", FLD_CMP_REGEX, "Matching regular expression. [regex]" },
 	{ "!~", FLD_CMP_REGEX|FLD_CMP_NOT, "Not matching regular expression. [regex]" },
 	{ "=", FLD_CMP_EQUAL, "Equal to. [number, size, percent, string, string list, time]" },
@@ -187,7 +187,7 @@ static struct op_def _op_cmp[] = {
 #define SEL_LIST_SUBSET_LS	0x00040000
 #define SEL_LIST_SUBSET_LE	0x00080000
 
-static struct op_def _op_log[] = {
+static const struct op_def _op_log[] = {
 	{ "&&", SEL_AND, "All fields must match" },
 	{ ",", SEL_AND, "All fields must match" },
 	{ "||", SEL_OR, "At least one field must match" },
@@ -2261,7 +2261,7 @@ static const char * _skip_space(const char *s)
 	return s;
 }
 
-static int _tok_op(struct op_def *t, const char *s, const char **end,
+static int _tok_op(const struct op_def *t, const char *s, const char **end,
 		   uint32_t expect)
 {
 	size_t len;
@@ -3751,7 +3751,7 @@ static struct selection_node *_alloc_selection_node(struct dm_pool *mem, uint32_
 static void _display_selection_help(struct dm_report *rh)
 {
 	static const char _grow_object_failed_msg[] = "_display_selection_help: dm_pool_grow_object failed";
-	struct op_def *t;
+	const struct op_def *t;
 	const struct dm_report_reserved_value *rv;
 	size_t len_all, len_final = 0;
 	const char **rvs;
