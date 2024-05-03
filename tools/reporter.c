@@ -1385,7 +1385,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv, report_type_t
 {
 	struct report_args args = {0};
 	struct single_report_args *single_args = &args.single_args[REPORT_IDX_SINGLE];
-	static char report_name[] = "report";
+	static const char _report_name[] = "report";
 	struct processing_handle *handle;
 	int r;
 
@@ -1415,7 +1415,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv, report_type_t
 		return_ECMD_FAILED;
 	}
 
-	if (!args.log_only && !dm_report_group_push(cmd->cmd_report.report_group, NULL, report_name)) {
+	if (!args.log_only && !dm_report_group_push(cmd->cmd_report.report_group, NULL, (void*)_report_name)) {
 		log_error("Failed to add main report section to report group.");
 		destroy_processing_handle(cmd, handle);
 		return ECMD_FAILED;
