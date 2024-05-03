@@ -168,6 +168,8 @@ lvconvert \(em Change logical volume layout
 .br
  \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
 .br
+ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP
+.br
  \fB-y\fP|\fB--yes\fP
 .br
  \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP
@@ -486,6 +488,8 @@ Convert LV to a thin LV, using the original LV as an external origin.
 .br
 [ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
 .br
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.br
 [    \fB--originname\fP \fILV\fP\fI_new\fP ]
 .br
 [    \fB--poolmetadata\fP \fILV\fP ]
@@ -524,6 +528,8 @@ Convert LV to a thin LV, using LV as thin-pool data volume.
 .br
 [ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
 .br
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.br
 [    \fB--poolmetadata\fP \fILV\fP ]
 .br
 [    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
@@ -559,6 +565,8 @@ Attach a cache pool to an LV, converts the LV to type cache.
 [ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.br
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
 .br
 [    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
 .br
@@ -700,6 +708,8 @@ Convert LV to type thin-pool.
 .br
 [ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
 .br
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.br
 [    \fB--stripes\fP \fINumber\fP ]
 .br
 [    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
@@ -741,6 +751,8 @@ Convert LV to type cache-pool.
 [ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.br
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
 .br
 [    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
 .br
@@ -1645,6 +1657,23 @@ Snapshots are less efficient than thin provisioning when creating
 large sparse LVs (GiB).
 .
 .HP
+\fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP
+.br
+Controls detection and subsequent wiping of signatures on new LVs.
+There is a prompt for each signature detected to confirm its wiping
+(unless --yes is used to override confirmations.)
+When not specified, signatures are wiped whenever zeroing is done
+(see --zero). This behaviour can be configured with
+\fBlvm.conf\fP(5) \fBallocation/wipe_signatures_when_zeroing_new_lvs\fP.
+If blkid wiping is used (\fBlvm.conf\fP(5) \fBallocation/use_blkid_wiping\fP)
+and LVM is compiled with blkid wiping support, then the blkid(8)
+library is used to detect the signatures (use blkid -k to list the
+signatures that are recognized).
+Otherwise, native LVM code is used to detect signatures
+(only MD RAID, swap and LUKS signatures are detected in this case.)
+The LV is not wiped if the read only flag is set.
+.
+.HP
 \fB-y\fP|\fB--yes\fP
 .br
 Do not prompt for confirmation interactively but always assume the
@@ -1774,6 +1803,8 @@ Convert LV to a thin LV, using the original LV as an external origin.
 .br
 [ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
 .br
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.br
 [    \fB--originname\fP \fILV\fP\fI_new\fP ]
 .br
 [    \fB--poolmetadata\fP \fILV\fP ]
@@ -1813,6 +1844,8 @@ Convert LV to a thin LV, using LV as thin-pool data volume.
 .br
 [ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
 .br
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.br
 [    \fB--poolmetadata\fP \fILV\fP ]
 .br
 [    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
@@ -1849,6 +1882,8 @@ Attach a cache pool to an LV.
 [ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.br
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
 .br
 [    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
 .br
