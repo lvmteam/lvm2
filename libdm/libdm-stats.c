@@ -2003,7 +2003,7 @@ static int _stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 				const char *program_id,	const char *aux_data)
 {
 	char msg[STATS_MSG_BUF_LEN], range[RANGE_LEN], *endptr = NULL;
-	const char *err_fmt = "Could not prepare @stats_create %s.";
+	const char *err = NULL;
 	const char *precise_str = PRECISE_ARG;
 	const char *resp, *opt_args = NULL;
 	char *aux_data_escaped = NULL;
@@ -2019,8 +2019,8 @@ static int _stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 	if (start || len) {
 		if (dm_snprintf(range, sizeof(range), FMTu64 "+" FMTu64,
 				start, len) < 0) {
-			log_error(err_fmt, "range");
-			return 0;
+			err ="range";
+			goto_bad;
 		}
 	}
 
@@ -2046,8 +2046,8 @@ static int _stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 				 precise_str,
 				 (strlen(hist_arg)) ? HISTOGRAM_ARG : "",
 				 hist_arg)) < 0) {
-			log_error(err_fmt, PRECISE_ARG " option.");
-			goto out;
+			err = PRECISE_ARG " option.";
+			goto_bad;
 		}
 	} else
 		opt_args = dm_strdup("");
@@ -2057,8 +2057,8 @@ static int _stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 			(step < 0) ? "/" : "",
 			(uint64_t)llabs(step),
 			opt_args, program_id, aux_data) < 0) {
-		log_error(err_fmt, "message");
-		goto out;
+		err = "message";
+		goto_bad;
 	}
 
 	if (!(dmt = _stats_send_message(dms, msg)))
@@ -2078,7 +2078,9 @@ static int _stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 	}
 
 	r = 1;
-
+	goto out;
+bad:
+	log_error("Could not prepare @stats_create %s.", err);
 out:
 	if (dmt)
 		dm_task_destroy(dmt);
@@ -2266,28 +2268,32 @@ static struct dm_task *_stats_print_region(struct dm_stats *dms,
 				    unsigned num_lines, unsigned clear)
 {
 	/* @stats_print[_clear] <region_id> [<start_line> <num_lines>] */
-	const char *err_fmt = "Could not prepare @stats_print %s.";
 	char msg[STATS_MSG_BUF_LEN], lines[RANGE_LEN];
 	struct dm_task *dmt = NULL;
+	const char *err = NULL;
 
 	if (start_line || num_lines)
 		if (dm_snprintf(lines, sizeof(lines),
 				"%u %u", start_line, num_lines) < 0) {
-			log_error(err_fmt, "row specification");
-			return NULL;
+			err = "row specification";
+			goto_bad;
 		}
 
 	if (dm_snprintf(msg, sizeof(msg), "@stats_print%s " FMTu64 " %s",
 			(clear) ? "_clear" : "",
 			region_id, (start_line || num_lines) ? lines : "") < 0) {
-		log_error(err_fmt, "message");
-		return NULL;
+		err = "message";
+		goto_bad;
 	}
 
 	if (!(dmt = _stats_send_message(dms, msg)))
 		return_NULL;
 
 	return dmt;
+bad:
+	log_error("Could not prepare @stats_print %s.", err);
+
+	return NULL;
 }
 
 char *dm_stats_print_region(struct dm_stats *dms, uint64_t region_id,
