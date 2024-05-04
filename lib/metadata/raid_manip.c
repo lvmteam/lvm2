@@ -4409,6 +4409,7 @@ static struct lv_segment *_convert_striped_to_raid0(struct logical_volume *lv,
 	struct lv_segment *seg, *raid0_seg;
 	struct segment_type *segtype;
 	struct dm_list data_lvs;
+	struct lv_list *l;
 
 	dm_list_iterate_items(seg, &lv->segments)
 		area_len += seg->area_len;
@@ -4452,7 +4453,12 @@ static struct lv_segment *_convert_striped_to_raid0(struct logical_volume *lv,
 	 * areas based on the first data LVs properties derived
 	 * from the first new raid0 LVs first segment
 	 */
-	seg = first_seg(dm_list_item(dm_list_first(&data_lvs), struct lv_list)->lv);
+	if (!(l = dm_list_item(dm_list_first(&data_lvs), struct lv_list))) {
+		log_error(INTERNAL_ERROR "Invalid data lvs for raid0 LV %s.",
+			  display_lvname(lv));
+		return NULL;
+	}
+	seg = first_seg(l->lv);
 	if (!(raid0_seg = alloc_lv_segment(segtype, lv,
 					   0 /* le */, lv->le_count /* len */,
 					   0, 0,
