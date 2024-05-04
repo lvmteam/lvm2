@@ -5001,31 +5001,28 @@ uint64_t *dm_stats_update_regions_from_fd(struct dm_stats *dms, int fd,
 #endif /* HAVE_LINUX_FIEMAP */
 
 #ifdef DMFILEMAPD
-static const char *_filemapd_mode_names[] = {
+static const char _filemapd_mode_names[][8] = {
 	"inode",
 	"path",
-	NULL
 };
 
 dm_filemapd_mode_t dm_filemapd_mode_from_string(const char *mode_str)
 {
-	dm_filemapd_mode_t mode = DM_FILEMAPD_FOLLOW_INODE;
-	const char **mode_name;
+	static const dm_filemapd_mode_t _mode[] = {
+		DM_FILEMAPD_FOLLOW_INODE,
+		DM_FILEMAPD_FOLLOW_PATH
+	};
+	unsigned i;
 
-	if (mode_str) {
-		for (mode_name = _filemapd_mode_names; *mode_name; mode_name++)
-			if (!strcmp(*mode_name, mode_str))
-				break;
-		if (*mode_name)
-			mode = DM_FILEMAPD_FOLLOW_INODE
-				+ (mode_name - _filemapd_mode_names);
-		else {
-			log_error("Could not parse dmfilemapd mode: %s",
-				  mode_str);
-			return DM_FILEMAPD_FOLLOW_NONE;
-		}
-	}
-	return mode;
+	if (mode_str)
+		for (i = 0; i < DM_ARRAY_SIZE(_filemapd_mode_names); ++i)
+			if (!strcmp(_filemapd_mode_names[i], mode_str))
+				return _mode[i];
+
+	log_error("Could not parse dmfilemapd mode: %s",
+		  (mode_str) ? mode_str : "");
+
+	return DM_FILEMAPD_FOLLOW_NONE;
 }
 
 #define DM_FILEMAPD "dmfilemapd"
