@@ -286,11 +286,11 @@ static void _print_def_man(const struct command_name *cname, int opt_enum, struc
 #define	LONG_OPT_NAME_LEN	64
 static const char *_man_long_opt_name(const char *cmdname, int opt_enum)
 {
-	static char long_opt_name[LONG_OPT_NAME_LEN];
+	static char _long_opt_name[LONG_OPT_NAME_LEN];
 	const char *long_opt;
 	unsigned i;
 
-	memset(&long_opt_name, 0, sizeof(long_opt_name));
+	memset(&_long_opt_name, 0, sizeof(_long_opt_name));
 
 	switch (opt_enum) {
 	case syncaction_ARG:
@@ -326,22 +326,22 @@ static const char *_man_long_opt_name(const char *cmdname, int opt_enum)
 	}
 
 	if (strchr(long_opt, '[')) {
-		for (i = 0; *long_opt && i < sizeof(long_opt_name) - 1; ++long_opt, ++i) {
-			if (i < (sizeof(long_opt_name) - 8))
+		for (i = 0; *long_opt && i < sizeof(_long_opt_name) - 1; ++long_opt, ++i) {
+			if (i < (sizeof(_long_opt_name) - 8))
 				switch(*long_opt) {
 				case '[':
-					strcpy(long_opt_name + i, "\\fP[\\fB");
-					i += 6;
+					memcpy(_long_opt_name + i, "\\fP[\\fB", 7);
+					i += 6; // 6 + 1
 					continue;
 				case ']':
-					strcpy(long_opt_name + i, "\\fP]\\fB");
-					i += 6;
+					memcpy(_long_opt_name + i, "\\fP]\\fB", 7);
+					i += 6; // 6 + 1
 					continue;
 				}
-			long_opt_name[i] = *long_opt;
+			_long_opt_name[i] = *long_opt;
 		}
-		long_opt_name[i] = 0;
-		return long_opt_name;
+		_long_opt_name[i] = 0;
+		return _long_opt_name;
 	}
 
 	return long_opt;
