@@ -2278,7 +2278,8 @@ try_partition:
 		return NULL;
 
 	while (fgets(line, sizeof(line), fp)) {
-		if (sscanf(line, "%u %u %llu %s", &line_major, &line_minor, (unsigned long long *)&line_blocks, namebuf) != 4)
+		if (sscanf(line, "%u %u %llu %" DM_TO_STRING(NAME_LEN) "s",
+			   &line_major, &line_minor, (unsigned long long *)&line_blocks, namebuf) != 4)
 			continue;
 		if (line_major != major)
 			continue;

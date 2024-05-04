@@ -320,7 +320,10 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 	while (fgets(proc_line, sizeof(proc_line), fp)) {
 		if (proc_line[0] != '/')
 			continue;
-		if (sscanf(proc_line, "%s %s %s", proc_devpath, proc_mntpath, proc_fstype) != 3)
+		if (sscanf(proc_line, "%"
+			   DM_TO_STRING(PATH_MAX) "s %"
+			   DM_TO_STRING(PATH_MAX) "s %"
+			   DM_TO_STRING(PATH_MAX) "s", proc_devpath, proc_mntpath, proc_fstype) != 3)
 			continue;
 		if (strcmp(fstype, proc_fstype))
 			continue;

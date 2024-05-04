@@ -347,7 +347,7 @@ static int _parse_line(struct dm_task *dmt, char *buffer, const char *file,
 	if (!*ptr || *ptr == '#')
 		return 1;
 
-	if (sscanf(ptr, "%llu %llu %s %n",
+	if (sscanf(ptr, "%llu %llu %" DM_TO_STRING(LINE_SIZE) "s %n",
 		   &start, &size, ttype, &n) < 3) {
 		log_error("Invalid format on line %d of table %s.", line, file);
 		return 0;
