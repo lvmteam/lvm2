@@ -42,14 +42,16 @@ void dm_bounds_check_debug(void);
 char *dm_strdup_aux(const char *str, const char *file, int line)
 {
 	char *ret;
+	size_t len;
 
 	if (!str) {
 		log_error(INTERNAL_ERROR "dm_strdup called with NULL pointer");
 		return NULL;
 	}
 
-	if ((ret = dm_malloc_aux_debug(strlen(str) + 1, file, line)))
-		strcpy(ret, str);
+	len = strlen(str) + 1;
+	if ((ret = dm_malloc_aux_debug(len, file, line)))
+		memcpy(ret, str, len);
 
 	return ret;
 }

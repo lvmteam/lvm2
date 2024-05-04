@@ -1451,9 +1451,10 @@ struct node_op_parms {
 
 static void _store_str(char **pos, char **ptr, const char *str)
 {
-	strcpy(*pos, str);
+	size_t len = strlen(str);
+	memcpy(*pos, str, len + 1);
 	*ptr = *pos;
-	*pos += strlen(*ptr) + 1;
+	*pos += len;
 }
 
 static void _del_node_op(struct node_op_parms *nop)
@@ -1703,15 +1704,17 @@ const char *dm_sysfs_dir(void)
  */
 int dm_set_uuid_prefix(const char *uuid_prefix)
 {
+	size_t len;
+
 	if (!uuid_prefix)
 		return_0;
 
-	if (strlen(uuid_prefix) > DM_MAX_UUID_PREFIX_LEN) {
+	if ((len = strlen(uuid_prefix)) > DM_MAX_UUID_PREFIX_LEN) {
 		log_error("New uuid prefix %s too long.", uuid_prefix);
 		return 0;
 	}
 
-	strcpy(_default_uuid_prefix, uuid_prefix);
+	memcpy(_default_uuid_prefix, uuid_prefix, len + 1);
 
 	return 1;
 }
