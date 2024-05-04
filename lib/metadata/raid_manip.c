@@ -6426,22 +6426,13 @@ static int _conversion_options_allowed(const struct lv_segment *seg_from,
 	    !yes &&
 	    strcmp((*segtype_to)->name, SEG_TYPE_NAME_MIRROR) && /* "mirror" is prompted for later */
 	    !_is_same_level(seg_from->segtype, *segtype_to)) { /* Prompt here for takeover */
-		const char *basic_fmt = "Are you sure you want to convert %s LV %s";
-		const char *type_fmt = " to %s type";
-		const char *question_fmt = "? [y/n]: ";
-		char *fmt;
-		size_t sz = strlen(basic_fmt) + ((seg_from->segtype == *segtype_to) ? 0 : strlen(type_fmt)) + strlen(question_fmt) + 1;
+		unsigned diff_seg = (seg_from->segtype != *segtype_to);
 
-		if (!(fmt = dm_pool_alloc(seg_from->lv->vg->cmd->mem, sz)))
-			return_0;
-
-		if (dm_snprintf(fmt, sz, "%s%s%s", basic_fmt, (seg_from->segtype == *segtype_to) ? "" : type_fmt, question_fmt) < 0) {
-			log_error("dm_snprintf failed.");
-			return 0;
-		}
-
-		if (yes_no_prompt(fmt, lvseg_name(seg_from), display_lvname(seg_from->lv),
-				  (*segtype_to)->name) == 'n') {
+		if (yes_no_prompt("Are you sure you want to convert %s LV %s%s%s%s? [y/n]: ",
+				  lvseg_name(seg_from), display_lvname(seg_from->lv),
+				  (diff_seg) ? " to "  : "",
+				  (diff_seg) ? (*segtype_to)->name : "",
+				  (diff_seg) ? " type" : "") == 'n') {
 			log_error("Logical volume %s NOT converted.", display_lvname(seg_from->lv));
 			r = 0;
 		}
