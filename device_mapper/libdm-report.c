@@ -2890,7 +2890,6 @@ typedef enum {
 
 static char *_get_date(char *str, struct tm *tm, time_range_t *range)
 {
-	static const char incorrect_date_format_msg[] = "Incorrect date format.";
 	time_range_t tmp_range = RANGE_NONE;
 	long n1, n2 = -1, n3 = -1;
 	char *s = str, *end;
@@ -2936,19 +2935,15 @@ static char *_get_date(char *str, struct tm *tm, time_range_t *range)
 				n3 = n1 % 100;
 				n2 = (n1 / 100) % 100;
 				n1 = n1 / 10000;
-			} else {
-				log_error(incorrect_date_format_msg);
-				return NULL;
-			}
+			} else
+                                goto_bad;
 		} else {
 			if (len == 7) {
 				tmp_range = RANGE_MONTH;
 				/* YYYY-MM */
 				n3 = 1;
-			} else {
-				log_error(incorrect_date_format_msg);
-				return NULL;
-			}
+			} else
+				goto_bad;
 		}
 	}
 
@@ -2971,11 +2966,15 @@ static char *_get_date(char *str, struct tm *tm, time_range_t *range)
 	*range = tmp_range;
 
 	return (char *) _skip_space(end);
+
+bad:
+	log_error("Incorrect date format.");
+
+	return NULL;
 }
 
 static char *_get_time(char *str, struct tm *tm, time_range_t *range)
 {
-	static const char incorrect_time_format_msg[] = "Incorrect time format.";
 	time_range_t tmp_range = RANGE_NONE;
 	long n1, n2 = -1, n3 = -1;
 	char *s = str, *end;
@@ -3023,19 +3022,15 @@ static char *_get_time(char *str, struct tm *tm, time_range_t *range)
 				n3 = n1 % 100;
 				n2 = (n1 / 100) % 100;
 				n1 = n1 / 10000;
-			} else {
-				log_error(incorrect_time_format_msg);
-				return NULL;
-			}
+			} else
+				goto_bad;
 		} else {
 			if (len == 5) {
 				/* HH:MM */
 				tmp_range = RANGE_MINUTE;
 				n3 = 0;
-			} else {
-				log_error(incorrect_time_format_msg);
-				return NULL;
-			}
+			} else
+				goto_bad;
 		}
 	}
 
@@ -3066,6 +3061,11 @@ static char *_get_time(char *str, struct tm *tm, time_range_t *range)
 	*range = tmp_range;
 
 	return (char *) _skip_space(end);
+
+bad:
+	log_error("Incorrect time format.");
+
+	return NULL;
 }
 
 /* The offset is always an absolute offset against GMT! */
