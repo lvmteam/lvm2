@@ -2946,7 +2946,7 @@ static int _service_time(const struct dm_stats *dms, double *svctm,
 typedef int (*_metric_fn_t)(const struct dm_stats *, double *,
 			    uint64_t, uint64_t);
 
-_metric_fn_t _metrics[DM_STATS_NR_METRICS] = {
+const _metric_fn_t _metrics[DM_STATS_NR_METRICS] = {
 	_rd_merges_per_sec,
 	_wr_merges_per_sec,
 	_reads_per_sec,
