@@ -96,7 +96,6 @@ static int check_args_version(char *vg_args)
 
 static int read_cluster_name(char *clustername)
 {
-	static const char close_error_msg[] = "read_cluster_name: close_error %d";
 	char *n;
 	int fd;
 	int rv;
@@ -115,18 +114,19 @@ static int read_cluster_name(char *clustername)
 	rv = read(fd, clustername, MAX_ARGS);
 	if (rv < 0) {
 		log_error("read_cluster_name: cluster name read error %d, check dlm_controld", fd);
-		if (close(fd))
-			log_error(close_error_msg, fd);
-		return rv;
+		goto out;
 	}
 	clustername[rv] = 0;
 
 	n = strstr(clustername, "\n");
 	if (n)
 		*n = '\0';
+	rv = 0;
+out:
 	if (close(fd))
-		log_error(close_error_msg, fd);
-	return 0;
+		log_error("read_cluster_name: close_error %d", fd);
+
+	return rv;
 }
 
 #define MAX_VERSION 16
@@ -786,7 +786,6 @@ int lm_unlock_dlm(struct lockspace *ls, struct resource *r,
 
 int lm_hosts_dlm(struct lockspace *ls, int notify)
 {
-	static const char closedir_err_msg[] = "lm_hosts_dlm: closedir failed";
 	char ls_nodes_path[PATH_MAX];
 	struct dirent *de;
 	DIR *ls_dir;
@@ -809,7 +808,7 @@ int lm_hosts_dlm(struct lockspace *ls, int notify)
 	}
 
 	if (closedir(ls_dir))
-		log_error(closedir_err_msg);
+		log_error("lm_hosts_dlm: closedir failed");
 
 	if (!count) {
 		log_error("lm_hosts_dlm found no nodes in %s", ls_nodes_path);
@@ -826,10 +825,10 @@ int lm_hosts_dlm(struct lockspace *ls, int notify)
 
 int lm_get_lockspaces_dlm(struct list_head *ls_rejoin)
 {
-	static const char closedir_err_msg[] = "lm_get_lockspace_dlm: closedir failed";
 	struct lockspace *ls;
 	struct dirent *de;
 	DIR *ls_dir;
+	int ret = 0;
 
 	if (!(ls_dir = opendir(DLM_LOCKSPACES_PATH)))
 		return -ECONNREFUSED;
@@ -842,9 +841,8 @@ int lm_get_lockspaces_dlm(struct list_head *ls_rejoin)
 			continue;
 
 		if (!(ls = alloc_lockspace())) {
-			if (closedir(ls_dir))
-				log_error(closedir_err_msg);
-			return -ENOMEM;
+			ret = -ENOMEM;
+			goto out;
 		}
 
 		ls->lm_type = LD_LM_DLM;
@@ -852,10 +850,11 @@ int lm_get_lockspaces_dlm(struct list_head *ls_rejoin)
 		dm_strncpy(ls->vg_name, ls->name + strlen(LVM_LS_PREFIX), sizeof(ls->vg_name));
 		list_add_tail(&ls->list, ls_rejoin);
 	}
-
+out:
 	if (closedir(ls_dir))
-		log_error(closedir_err_msg);
-	return 0;
+		log_error("lm_get_lockspace_dlm: closedir failed");
+
+	return ret;
 }
 
 int lm_is_running_dlm(void)
