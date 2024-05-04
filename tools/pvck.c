@@ -3002,10 +3002,9 @@ out:
 	return 0;
 }
 
-int pvck(struct cmd_context *cmd, int argc, char **argv)
+static int _pvck_mf(struct metadata_file *mf, struct cmd_context *cmd, int argc, char **argv)
 {
-	struct settings set;
-	struct metadata_file mf;
+	struct settings set = { 0 };
 	struct device *dev = NULL;
 	struct devicefile *def = NULL;
 	const char *dump, *repair;
@@ -3014,9 +3013,6 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 	int bad = 0;
 	int ret = 0;
 	int i;
-
-	memset(&set, 0, sizeof(set));
-	memset(&mf, 0, sizeof(mf));
 
 	/*
 	 * By default LVM skips the first sector (sector 0), and writes
@@ -3073,10 +3069,10 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 		return_ECMD_FAILED;
 
 	if (arg_is_set(cmd, file_ARG) && (arg_is_set(cmd, repairtype_ARG) || arg_is_set(cmd, repair_ARG))) {
-		if (!(mf.filename = arg_str_value(cmd, file_ARG, NULL)))
+		if (!(mf->filename = arg_str_value(cmd, file_ARG, NULL)))
 			return_ECMD_FAILED;
 
-		if (!_read_metadata_file(cmd, &mf))
+		if (!_read_metadata_file(cmd, mf))
 			return_ECMD_FAILED;
 	}
 
@@ -3149,10 +3145,10 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 			ret = _repair_label_header(cmd, repair, &set, labelsector, dev);
 
 		else if (!strcmp(repair, "pv_header"))
-			ret = _repair_pv_header(cmd, repair, &set, &mf, labelsector, dev);
+			ret = _repair_pv_header(cmd, repair, &set, mf, labelsector, dev);
 
 		else if (!strcmp(repair, "metadata"))
-			ret = _repair_metadata(cmd, repair, &set, &mf, labelsector, dev);
+			ret = _repair_metadata(cmd, repair, &set, mf, labelsector, dev);
 		else
 			log_error("Unknown repair value.");
 
@@ -3166,10 +3162,10 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 
 		/* repair is a combination of repairtype pv_header+metadata */
 
-		if (!_repair_pv_header(cmd, "pv_header", &set, &mf, labelsector, dev))
+		if (!_repair_pv_header(cmd, "pv_header", &set, mf, labelsector, dev))
 			return_ECMD_FAILED;
 
-		if (!_repair_metadata(cmd, "metadata", &set, &mf, labelsector, dev))
+		if (!_repair_metadata(cmd, "metadata", &set, mf, labelsector, dev))
 			return_ECMD_FAILED;
 
 		return ECMD_PROCESSED;
@@ -3201,4 +3197,13 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 	if (bad)
 		return_ECMD_FAILED;
 	return ECMD_PROCESSED;
+}
+
+int pvck(struct cmd_context *cmd, int argc, char **argv)
+{
+	struct metadata_file mf = { 0 };
+	int ret = _pvck_mf(&mf, cmd, argc, argv);
+
+	free(mf.text_buf);
+	return ret;
 }
