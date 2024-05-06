@@ -3555,6 +3555,7 @@ static void _nonroot_warning(void)
 		log_warn("WARNING: Running as a non-root user. Functionality may be unavailable.");
 }
 
+/* coverity[-tainted_data_sink:arg-1] */
 int lvm2_main(int argc, char **argv)
 {
 	const char *base;

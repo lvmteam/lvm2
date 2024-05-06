@@ -7167,6 +7167,8 @@ char *generate_lv_name(struct volume_group *vg, const char *format,
 			high = i;
 	}
 
+	/* only internally passed %d are supported */
+	/* coverity[non_const_printf_format_string] */
 	if (dm_snprintf(buffer, len, format, high + 1) < 0)
 		return NULL;
 

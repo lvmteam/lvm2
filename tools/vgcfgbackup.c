@@ -33,6 +33,7 @@ static char *_expand_filename(const char *template, const char *vg_name,
 		return NULL;
 	}
 
+	/* coverity[non_const_printf_format_string] */
 	if (dm_snprintf(filename, PATH_MAX, template, vg_name) < 0) {
 		log_error("Error processing filename template %s",
 			   template);

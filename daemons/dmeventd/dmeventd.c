@@ -1441,7 +1441,8 @@ static int _open_fifo(const char *path)
 	} else if (!S_ISFIFO(st.st_mode) || st.st_uid ||
 		   (st.st_mode & (S_IEXEC | S_IRWXG | S_IRWXO))) {
 		log_warn("WARNING: %s has wrong attributes: Replacing.", path);
-		if (unlink(path)) {
+		/* coverity[toctou]  don't care, path is going to be recreated */
+		if (unlink(path) && (errno != ENOENT)) {
 			log_sys_error("unlink", path);
 			return -1;
 		}
@@ -1449,6 +1450,7 @@ static int _open_fifo(const char *path)
 
 	/* Create fifo. */
 	(void) dm_prepare_selinux_context(path, S_IFIFO);
+	/* coverity[toctou]  revalidating things again */
 	if ((mkfifo(path, 0600) == -1) && errno != EEXIST) {
 		log_sys_error("mkfifo", path);
 		(void) dm_prepare_selinux_context(NULL, 0);
