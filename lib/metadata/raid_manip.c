@@ -968,10 +968,13 @@ static char *_generate_raid_name(struct logical_volume *lv,
 {
 	char name[NAME_LEN], *lvname;
 	int historical;
+	char count_suffix[16] = { 0 };
 
-	if (dm_snprintf(name, sizeof(name), 
-			(count >= 0) ? "%s_%s_%u" : "%s_%s",
-			lv->name, suffix, count) < 0) {
+	if (count >= 0)
+		snprintf(count_suffix, sizeof(count_suffix), "_%u", (unsigned)count);
+
+	if (dm_snprintf(name, sizeof(name), "%s_%s%s",
+			lv->name, suffix, count_suffix) < 0) {
 		log_error("Failed to new raid name for %s.",
 			  display_lvname(lv));
 		return NULL;
