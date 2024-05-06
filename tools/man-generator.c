@@ -83,13 +83,10 @@ static inline int extents_arg(struct cmd_context *cmd, struct arg_values *av) { 
 static inline int sextents_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int pextents_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int nextents_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
-static inline int major_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
-static inline int minor_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int string_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int tag_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int permission_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int metadatatype_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
-static inline int units_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int segtype_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int alloc_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int locktype_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
