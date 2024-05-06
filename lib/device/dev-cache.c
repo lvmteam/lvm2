@@ -402,6 +402,24 @@ int get_sysfs_binary(const char *path, char *buf, size_t buf_size, int *retlen)
 	return 1;
 }
 
+/* coverity[+tainted_string_sanitize_content:arg-0] */
+static int _sanitize_buffer(const char *buf)
+{
+	size_t i;
+
+	if (!strcmp(buf, ".."))
+		return 0;
+
+	for (i = 0; buf[i]; ++i)
+		if ((buf[i] < ' ') ||
+		    (buf[i] == '/') ||
+		    (buf[i] == ':') ||
+		    (buf[i] == '\\'))
+			return 0;
+
+	return 1;
+}
+
 int get_sysfs_value(const char *path, char *buf, size_t buf_size, int error_if_no_value)
 {
 	FILE *fp;
@@ -423,9 +441,10 @@ int get_sysfs_value(const char *path, char *buf, size_t buf_size, int error_if_n
 	if ((len = strlen(buf)) && buf[len - 1] == '\n')
 		buf[--len] = '\0';
 
-	if (!len && error_if_no_value)
-		log_error("_get_sysfs_value: %s: no value", path);
-	else
+	if (!len) {
+		if (error_if_no_value)
+			log_error("_get_sysfs_value: %s: no value", path);
+	} else
 		r = 1;
 out:
 	if (fclose(fp))
@@ -2256,16 +2275,15 @@ static char *_get_devname_from_devno(struct cmd_context *cmd, dev_t devno)
 		if (!get_sysfs_value(path, namebuf, sizeof(namebuf), 0))
 			return NULL;
 
-		if (dm_snprintf(devname, sizeof(devname), "/dev/mapper/%s", namebuf) < 0) {
-			devname[0] = '\0';
-			stack;
-		}
+		if (!_sanitize_buffer(namebuf))
+			return NULL;
 
-		if (devname[0]) {
-			log_debug("Found %s for %d:%d from sys dm", devname, major, minor);
-			return _strdup(devname);
-		}
-		return NULL;
+		if (dm_snprintf(devname, sizeof(devname), "%s/%s", dm_dir(), namebuf) < 0)
+			return_NULL;
+
+		log_debug("Found %s for %d:%d from sys dm.", devname, major, minor);
+
+		return _strdup(devname);
 	}
 
 	/*
