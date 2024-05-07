@@ -782,7 +782,6 @@ static int _dump_raw_locn(struct device *dev, struct devicefile *def, int print_
 	uint64_t meta_offset, meta_size;
 	uint32_t meta_checksum;
 	uint32_t meta_flags;
-	int bad = 0;
 	int mn = mda_num; /* 1 or 2 */
 	int ri = rlocn_index; /* 0 or 1 */
 	int wrapped = 0;
@@ -837,8 +836,6 @@ static int _dump_raw_locn(struct device *dev, struct devicefile *def, int print_
 	if (!meta_offset)
 		return 1;
 
-	if (bad)
-		return 0;
 	return 1;
 }
 
