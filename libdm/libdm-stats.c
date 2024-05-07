@@ -1444,7 +1444,8 @@ static void _stats_walk_next_present(const struct dm_stats *dms,
 	}
 
 	/* advance to next present, non-skipped region or end */
-	while (++(*cur_r) <= dms->max_region) {
+	while ((*cur_r < UINT64_MAX) &&
+	       ++(*cur_r) <= dms->max_region) {
 		cur = &dms->regions[*cur_r];
 		if (!_stats_region_present(cur))
 			continue;

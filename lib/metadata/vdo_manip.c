@@ -196,6 +196,7 @@ int parse_vdo_pool_status(struct dm_pool *mem, const struct logical_volume *vdo_
 {
 	struct dm_vdo_status_parse_result result;
 	char *dm_name;
+	uint64_t blocks;
 
 	status->usage = DM_PERCENT_INVALID;
 	status->saving = DM_PERCENT_INVALID;
@@ -227,7 +228,9 @@ int parse_vdo_pool_status(struct dm_pool *mem, const struct logical_volume *vdo_
 						result.status->total_blocks);
 		status->saving = dm_make_percent(status->logical_blocks_used - status->data_blocks_used,
 						 status->logical_blocks_used);
-		status->data_usage = dm_make_percent(status->data_blocks_used * DM_VDO_BLOCK_SIZE,
+		/* coverity needs to use a local variable to handle check here */
+		status->data_usage = dm_make_percent(((blocks = status->data_blocks_used) < (ULLONG_MAX / DM_VDO_BLOCK_SIZE)) ?
+						     (blocks * DM_VDO_BLOCK_SIZE) : ULLONG_MAX,
 						     first_seg(vdo_pool_lv)->vdo_pool_virtual_extents *
 						     (uint64_t) vdo_pool_lv->vg->extent_size);
 	}
