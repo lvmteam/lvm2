@@ -357,7 +357,7 @@ static int _print_header(struct cmd_context *cmd, struct formatter *f,
 	return 1;
 }
 
-static int _print_flag_config(struct formatter *f, uint64_t status, int type)
+static int _print_flag_config(struct formatter *f, uint64_t status, enum pv_vg_lv_e type)
 {
 	char buffer[4096];
 
