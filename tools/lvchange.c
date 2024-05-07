@@ -95,7 +95,7 @@ static int _lvchange_pool_update(struct cmd_context *cmd,
 				 uint32_t *mr)
 {
 	int update = 0;
-	unsigned val;
+	thin_zero_t val;
 	thin_discards_t discards;
 
 	if (arg_is_set(cmd, discards_ARG)) {

@@ -6730,7 +6730,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 		lp_meta.size = lp->poolmetadata_size;
 		lp_meta.sign = lp->poolmetadata_sign;
 		lp->poolmetadata_size = 0;
-		lp->poolmetadata_sign = 0;
+		lp->poolmetadata_sign = SIGN_NONE;
 
 	} else if (lv_is_thin_pool(lv) && lp->poolmetadata_size) {
 		/* extend both thin pool data and metadata */
@@ -6742,7 +6742,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 		lp_meta.size = lp->poolmetadata_size;
 		lp_meta.sign = lp->poolmetadata_sign;
 		lp->poolmetadata_size = 0;
-		lp->poolmetadata_sign = 0;
+		lp->poolmetadata_sign = SIGN_NONE;
 
 	} else if (lv_is_thin_pool_metadata(lv)) {
 		/* extend only thin pool metadata */
@@ -6754,7 +6754,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 			lp_meta.size = lp->poolmetadata_size;
 			lp_meta.size = lp->poolmetadata_sign;
 			lp->poolmetadata_size = 0;
-			lp->poolmetadata_sign = 0;
+			lp->poolmetadata_sign = SIGN_NONE;
 		}
 		/* else lp_meta.extents|size from lp->extents|size above */
 
