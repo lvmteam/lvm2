@@ -722,7 +722,6 @@ const char *dev_mpath_component_wwid(struct cmd_context *cmd, struct device *dev
 	char sysbuf[PATH_MAX] = { 0 };
 	char *slave_name;
 	const char *wwid = NULL;
-	struct stat info;
 	DIR *dr;
 	struct dirent *de;
 
@@ -734,18 +733,13 @@ const char *dev_mpath_component_wwid(struct cmd_context *cmd, struct device *dev
 		return NULL;
 	}
 
-	if (stat(slaves_path, &info))
-		return NULL;
-
-	if (!S_ISDIR(info.st_mode)) {
-		log_warn("Path %s is not a directory.", slaves_path);
-		return NULL;
-	}
-
 	/* Get wwid from first component */
 
 	if (!(dr = opendir(slaves_path))) {
-		log_debug("Device %s has no slaves dir", dev_name(dev));
+		if (errno == ENOTDIR)
+			log_warn("WARNING: Path %s is not a directory.", slaves_path);
+		else if (errno != ENOENT)
+			log_sys_debug("opendir", slaves_path);
 		return NULL;
 	}
 
