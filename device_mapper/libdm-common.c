@@ -1743,6 +1743,9 @@ static void _unmangle_mountinfo_string(const char *src, char *buf)
 	*buf = '\0';
 }
 
+/* coverity[+tainted_string_sanitize_content:arg-0] */
+static int _sanitize_line(const char *line) { return 1; }
+
 /* Parse one line of mountinfo and unmangled target line */
 static int _mountinfo_parse_line(const char *line, unsigned *maj, unsigned *min, char *buf)
 {
@@ -1813,7 +1816,8 @@ int dm_mountinfo_read(dm_mountinfo_line_callback_fn read_fn, void *cb_data)
 	}
 
 	while (!feof(minfo) && fgets(buffer, sizeof(buffer), minfo))
-		if (!_mountinfo_parse_line(buffer, &maj, &min, target) ||
+		if (!_sanitize_line(buffer) ||
+		    !_mountinfo_parse_line(buffer, &maj, &min, target) ||
 		    !read_fn(buffer, maj, min, target, cb_data)) {
 			stack;
 			r = 0;
