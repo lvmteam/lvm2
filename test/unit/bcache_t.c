@@ -427,7 +427,7 @@ static void test_block_size_must_be_positive(void *fixture)
 
 static void test_block_size_must_be_multiple_of_page_size(void *fixture)
 {
-	static unsigned _bad_examples[] = {3, 9, 13, 1025};
+	static const unsigned _bad_examples[] = {3, 9, 13, 1025};
 
 	unsigned i;
 

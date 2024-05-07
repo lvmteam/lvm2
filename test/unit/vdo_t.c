@@ -17,7 +17,7 @@
 
 //----------------------------------------------------------------
 
-static bool _status_eq(struct dm_vdo_status *lhs, struct dm_vdo_status *rhs)
+static bool _status_eq(const struct dm_vdo_status *lhs, const struct dm_vdo_status *rhs)
 {
 	return !strcmp(lhs->device, rhs->device) &&
 		(lhs->operating_mode == rhs->operating_mode) &&
@@ -83,12 +83,12 @@ struct example_good {
 	struct dm_vdo_status status;
 };
 
-static void _check_good(struct example_good *es, unsigned count)
+static void _check_good(const struct example_good *es, unsigned count)
 {
 	unsigned i;
 
 	for (i = 0; i < count; i++) {
-		struct example_good *e = es + i;
+		const struct example_good *e = es + i;
 		struct dm_vdo_status_parse_result pr;
 
 		T_ASSERT(dm_vdo_status_parse(NULL, e->input, &pr));
@@ -109,12 +109,12 @@ struct example_bad {
 	const char *reason;
 };
 
-static void _check_bad(struct example_bad *es, unsigned count)
+static void _check_bad(const struct example_bad *es, unsigned count)
 {
 	unsigned i;
 
 	for (i = 0; i < count; i++) {
-		struct example_bad *e = es + i;
+		const struct example_bad *e = es + i;
 		struct dm_vdo_status_parse_result pr;
 
 		T_ASSERT(!dm_vdo_status_parse(NULL, e->input, &pr));
@@ -124,7 +124,7 @@ static void _check_bad(struct example_bad *es, unsigned count)
 
 static void _test_device_names_good(void *fixture)
 {
-	static struct example_good _es[] = {
+	static const struct example_good _es[] = {
 		{"foo1234 read-only - error online 0 1234",
 		{(char *) "foo1234", DM_VDO_MODE_READ_ONLY, false, DM_VDO_INDEX_ERROR, DM_VDO_COMPRESSION_ONLINE, 0, 1234}},
 		{"f read-only - error online 0 1234",
@@ -136,7 +136,7 @@ static void _test_device_names_good(void *fixture)
 
 static void _test_operating_mode_good(void *fixture)
 {
-	static struct example_good _es[] = {
+	static const struct example_good _es[] = {
 		{"device-name recovering - error online 0 1234",
 		{(char *) "device-name", DM_VDO_MODE_RECOVERING, false, DM_VDO_INDEX_ERROR, DM_VDO_COMPRESSION_ONLINE, 0, 1234}},
 		{"device-name read-only - error online 0 1234",
@@ -150,7 +150,7 @@ static void _test_operating_mode_good(void *fixture)
 
 static void _test_operating_mode_bad(void *fixture)
 {
-	static struct example_bad _es[] = {
+	static const struct example_bad _es[] = {
 		{"device-name investigating - error online 0 1234",
 		"couldn't parse 'operating mode'"}};
 
@@ -159,7 +159,7 @@ static void _test_operating_mode_bad(void *fixture)
 
 static void _test_recovering_good(void *fixture)
 {
-	static struct example_good _es[] = {
+	static const struct example_good _es[] = {
 		{"device-name recovering - error online 0 1234",
 		{(char *) "device-name", DM_VDO_MODE_RECOVERING, false, DM_VDO_INDEX_ERROR, DM_VDO_COMPRESSION_ONLINE, 0, 1234}},
 		{"device-name read-only recovering error online 0 1234",
@@ -171,7 +171,7 @@ static void _test_recovering_good(void *fixture)
 
 static void _test_recovering_bad(void *fixture)
 {
-	static struct example_bad _es[] = {
+	static const struct example_bad _es[] = {
 		{"device-name normal fish error online 0 1234",
 		"couldn't parse 'recovering'"}};
 
@@ -180,7 +180,7 @@ static void _test_recovering_bad(void *fixture)
 
 static void _test_index_state_good(void *fixture)
 {
-	static struct example_good _es[] = {
+	static const struct example_good _es[] = {
 		{"device-name recovering - error online 0 1234",
 		{(char *) "device-name", DM_VDO_MODE_RECOVERING, false, DM_VDO_INDEX_ERROR, DM_VDO_COMPRESSION_ONLINE, 0, 1234}},
 		{"device-name recovering - closed online 0 1234",
@@ -202,7 +202,7 @@ static void _test_index_state_good(void *fixture)
 
 static void _test_index_state_bad(void *fixture)
 {
-	static struct example_bad _es[] = {
+	static const struct example_bad _es[] = {
 		{"device-name normal - fish online 0 1234",
 		"couldn't parse 'index state'"}};
 
@@ -211,7 +211,7 @@ static void _test_index_state_bad(void *fixture)
 
 static void _test_compression_state_good(void *fixture)
 {
-	static struct example_good _es[] = {
+	static const struct example_good _es[] = {
 		{"device-name recovering - error online 0 1234",
 		{(char *) "device-name", DM_VDO_MODE_RECOVERING, false, DM_VDO_INDEX_ERROR, DM_VDO_COMPRESSION_ONLINE, 0, 1234}},
 		{"device-name read-only - error offline 0 1234",
@@ -223,7 +223,7 @@ static void _test_compression_state_good(void *fixture)
 
 static void _test_compression_state_bad(void *fixture)
 {
-	static struct example_bad _es[] = {
+	static const struct example_bad _es[] = {
 		{"device-name normal - error fish 0 1234",
 		"couldn't parse 'compression state'"}};
 
@@ -232,7 +232,7 @@ static void _test_compression_state_bad(void *fixture)
 
 static void _test_used_blocks_good(void *fixture)
 {
-	static struct example_good _es[] = {
+	static const struct example_good _es[] = {
 		{"device-name recovering - error online 0 1234",
 		{(char *) "device-name", DM_VDO_MODE_RECOVERING, false, DM_VDO_INDEX_ERROR, DM_VDO_COMPRESSION_ONLINE, 0, 1234}},
 		{"device-name read-only - error offline 1 1234",
@@ -248,7 +248,7 @@ static void _test_used_blocks_good(void *fixture)
 
 static void _test_used_blocks_bad(void *fixture)
 {
-	static struct example_bad _es[] = {
+	static const struct example_bad _es[] = {
 		{"device-name normal - error online fish 1234",
 		"couldn't parse 'used blocks'"}};
 
@@ -257,7 +257,7 @@ static void _test_used_blocks_bad(void *fixture)
 
 static void _test_total_blocks_good(void *fixture)
 {
-	static struct example_good _es[] = {
+	static const struct example_good _es[] = {
 		{"device-name recovering - error online 0 1234",
 		{(char *) "device-name", DM_VDO_MODE_RECOVERING, false, DM_VDO_INDEX_ERROR, DM_VDO_COMPRESSION_ONLINE, 0, 1234}},
 		{"device-name recovering - error online 0 1",
@@ -271,7 +271,7 @@ static void _test_total_blocks_good(void *fixture)
 
 static void _test_total_blocks_bad(void *fixture)
 {
-	static struct example_bad _es[] = {
+	static const struct example_bad _es[] = {
 		{"device-name normal - error online 0 fish",
 		"couldn't parse 'total blocks'"}};
 
@@ -280,7 +280,7 @@ static void _test_total_blocks_bad(void *fixture)
 
 static void _test_status_bad(void *fixture)
 {
-	struct example_bad _bad[] = {
+	static const struct example_bad _bad[] = {
 		{"", "couldn't get token for device"},
 		{"device-name read-only - error online 0 1000 lksd", "too many tokens"}
 	};

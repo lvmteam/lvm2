@@ -3,13 +3,13 @@ struct check_item {
 	int expected;
 };
 
-static const char *dev_patterns[] = {
+static const char * const dev_patterns[] = {
 	"loop/[0-9]+",
 	"hd[a-d][0-5]+",
 	NULL
 };
 
-static const char *nonprint_patterns[] = {
+static const char * const nonprint_patterns[] = {
 	"foo\x80" "bar",
 	"foo\xc2" "b",
 	"\x80",
@@ -24,7 +24,7 @@ static const struct check_item nonprint[] = {
 	{ NULL, 0 }
 };
 
-static const char *random_patterns[] = {
+static const char * const random_patterns[] = {
 	"(((a?)(([Ub]*)|z))((([qr]|X)+)([Qn]*)))+",
 	"[HZejtuw]*",
 	"((B|s)*)|(((([Fv]l)(N+))(([el]|C)(tJ)))?)",
@@ -128,7 +128,7 @@ static const char *random_patterns[] = {
 	NULL
 };
 
-struct check_item devices[] = {
+static const struct check_item devices[] = {
 	{ "/dev", 0 },
 	{ "/dev/.devfsd", 0 },
 	{ "/dev/cpu", 0 },

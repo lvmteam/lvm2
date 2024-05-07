@@ -34,7 +34,7 @@ static void _mem_exit(void *mem)
 	dm_pool_destroy(mem);
 }
 
-static struct dm_regex *make_scanner(struct dm_pool *mem, const char **rx)
+static struct dm_regex *make_scanner(struct dm_pool *mem, const char * const *rx)
 {
 	struct dm_regex *scanner;
 	int nrx = 0;
@@ -75,11 +75,11 @@ static void test_matching(void *fixture)
 static void test_kabi_query(void *fixture)
 {
         // Remember, matches regexes from last to first.
-        static const char *_patterns[] = {
+        static const char * const _patterns[] = {
                 ".*", ".*/dev/md.*", "loop"
         };
 
-        static struct {
+        static const struct {
                 const char *input;
                 int r;
         } _cases[] = {
@@ -93,7 +93,7 @@ static void test_kabi_query(void *fixture)
 	int r;
 	unsigned i;
 	struct dm_pool *mem = fixture;
-  	struct dm_regex *scanner;
+	struct dm_regex *scanner;
 
 	scanner = dm_regex_create(mem, _patterns, DM_ARRAY_SIZE(_patterns));
 	T_ASSERT(scanner != NULL);
