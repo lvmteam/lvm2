@@ -528,6 +528,21 @@ int dm_get_status_thin(struct dm_pool *mem, const char *params,
 	return 1;
 }
 
+static dm_status_mirror_health_t _get_health(char c)
+{
+	switch (c) {
+	case 'A': return DM_STATUS_MIRROR_ALIVE;
+	case 'F': return DM_STATUS_MIRROR_FLUSH_FAILED;
+	case 'D': return DM_STATUS_MIRROR_WRITE_FAILED;
+	case 'S': return DM_STATUS_MIRROR_SYNC_FAILED;
+	case 'R': return DM_STATUS_MIRROR_READ_FAILED;
+	default:
+		log_warn("WARNING: Unknown mirror health status char: %c", c);
+		/* fallback */
+	case 'U': return DM_STATUS_MIRROR_UNCLASSIFIED;
+	}
+}
+
 /*
  * dm core parms:	     0 409600 mirror
  * Mirror core parms:	     2 253:4 253:5 400/400
@@ -581,7 +596,7 @@ int dm_get_status_mirror(struct dm_pool *mem, const char *params,
 	pos += used;
 
 	for (i = 0; i < num_devs ; ++i)
-		s->devs[i].health = pos[i];
+		s->devs[i].health = _get_health(pos[i]);
 
 	if (!(pos = _skip_fields(pos, argc)))
 		goto_out;
@@ -626,7 +641,7 @@ int dm_get_status_mirror(struct dm_pool *mem, const char *params,
 					goto_out;
 
 			for (i = 0; i < s->log_count; ++i)
-				s->logs[i].health = pos[i];
+				s->logs[i].health = _get_health(pos[i]);
 		}
 	}
 
