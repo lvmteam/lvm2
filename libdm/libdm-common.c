@@ -1058,9 +1058,8 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 		if (info.st_rdev == dev)
 			return 1;
 
-		if (unlink(path) < 0) {
-			log_error("Unable to unlink device node for '%s'",
-				  dev_name);
+		if (unlink(path) && (errno != ENOENT)) {
+			log_sys_error("unlink", path);
 			return 0;
 		}
 	} else if (_warn_if_op_needed(warn_if_udev_failed))
@@ -1104,8 +1103,8 @@ static int _rm_dev_node(const char *dev_name, int warn_if_udev_failed)
 			 "Falling back to direct node removal.", path);
 
 	/* udev may already have deleted the node. Ignore ENOENT. */
-	if (unlink(path) < 0 && errno != ENOENT) {
-		log_error("Unable to unlink device node for '%s'", dev_name);
+	if (unlink(path) && (errno != ENOENT)) {
+		log_sys_error("unlink", path);
 		return 0;
 	}
 

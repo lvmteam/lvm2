@@ -247,6 +247,16 @@ static int _control_device_number(uint32_t *major, uint32_t *minor)
 	return 1;
 }
 
+static int _control_unlink(const char *control)
+{
+	if (unlink(control) && (errno != ENOENT)) {
+		log_sys_error("unlink", control);
+		return -1;
+	}
+
+	return 0;
+}
+
 /*
  * Returns 1 if it exists on returning; 0 if it doesn't; -1 if it's wrong.
  */
@@ -262,10 +272,7 @@ static int _control_exists(const char *control, uint32_t major, uint32_t minor)
 
 	if (!S_ISCHR(buf.st_mode)) {
 		log_verbose("%s: Wrong inode type", control);
-		if (!unlink(control))
-			return 0;
-		log_sys_error("unlink", control);
-		return -1;
+		return _control_unlink(control);
 	}
 
 	if (major && buf.st_rdev != MKDEV(major, minor)) {
@@ -273,10 +280,7 @@ static int _control_exists(const char *control, uint32_t major, uint32_t minor)
 			    "(%u, %u)", control,
 			    MAJOR(buf.st_mode), MINOR(buf.st_mode),
 			    major, minor);
-		if (!unlink(control))
-			return 0;
-		log_sys_error("unlink", control);
-		return -1;
+		return _control_unlink(control);
 	}
 
 	return 1;
