@@ -913,8 +913,13 @@ int cache_set_metadata_format(struct lv_segment *seg, cache_metadata_format_t fo
 			return 1; /* Format already selected in cache pool */
 
 		/* Check configurations and profiles */
-		format = find_config_tree_int(seg->lv->vg->cmd, allocation_cache_metadata_format_CFG,
-					      profile);
+		switch (find_config_tree_int(seg->lv->vg->cmd,
+					     allocation_cache_metadata_format_CFG,
+					     profile)) {
+		case 1:  format = CACHE_METADATA_FORMAT_1; break;
+		case 2:  format = CACHE_METADATA_FORMAT_2; break;
+		default: format = CACHE_METADATA_FORMAT_UNSELECTED; break;
+		}
 	}
 
 	/* See what is a 'best' available cache metadata format
