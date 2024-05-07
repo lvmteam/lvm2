@@ -2942,6 +2942,11 @@ static void _out_prefix(unsigned depth)
 	}
 }
 
+static void _out_string_delim(int attr)
+{
+	_out_string(attr ? ", " : " [");
+}
+
 /*
  * Display tree
  */
@@ -2958,22 +2963,22 @@ static void _display_tree_attributes(struct dm_tree_node *node)
 		return;
 
 	if (_tree_switches[TR_ACTIVE]) {
-		_out_string(attr++ ? ", " : " [");
+		_out_string_delim(attr++);
 		_out_string(info->suspended ? "SUSPENDED" : "ACTIVE");
 	}
 
 	if (_tree_switches[TR_RW]) {
-		_out_string(attr++ ? ", " : " [");
+		_out_string_delim(attr++);
 		_out_string(info->read_only ? "RO" : "RW");
 	}
 
 	if (_tree_switches[TR_OPENCOUNT]) {
-		_out_string(attr++ ? ", " : " [");
+		_out_string_delim(attr++);
 		(void) _out_int((unsigned) info->open_count);
 	}
 
 	if (_tree_switches[TR_UUID]) {
-		_out_string(attr++ ? ", " : " [");
+		_out_string_delim(attr++);
 		_out_string(uuid && *uuid ? uuid : "");
 	}
 
