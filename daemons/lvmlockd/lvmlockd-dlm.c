@@ -474,13 +474,13 @@ static int lm_adopt_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 	 * dlm returns 0 for success, -EAGAIN if an orphan is
 	 * found with another mode, and -ENOENT if no orphan.
 	 *
-	 * cast/bast/param are (void *)1 because the kernel
+	 * cast/bast/param are (void (*)(void*))1 because the kernel
 	 * returns errors if some are null.
 	 */
 
 	rv = dlm_ls_lockx(lmd->dh, mode, lksb, flags,
 			  r->name, strlen(r->name), 0,
-			  (void *)1, (void *)1, (void *)1,
+			  (void (*)(void*))1, (void (*)(void*))1, (void (*)(void*))1,
 			  NULL, NULL);
 
 	if (rv == -1 && (errno == EAGAIN)) {
