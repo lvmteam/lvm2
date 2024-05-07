@@ -982,7 +982,7 @@ static int _dev_cache_iterate_sysfs_for_index(const char *path)
 
 static int dev_cache_index_devs(void)
 {
-	static int sysfs_has_dev_block = -1;
+	static int _sysfs_has_dev_block = -1;
 	char path[PATH_MAX];
 
 	if (dm_snprintf(path, sizeof(path), "%sdev/block", dm_sysfs_dir()) < 0) {
@@ -991,20 +991,20 @@ static int dev_cache_index_devs(void)
 	}
 
 	/* Skip indexing if /sys/dev/block is not available.*/
-	if (sysfs_has_dev_block == -1) {
+	if (_sysfs_has_dev_block == -1) {
 		struct stat info;
 		if (stat(path, &info) == 0)
-			sysfs_has_dev_block = 1;
+			_sysfs_has_dev_block = 1;
 		else {
 			if (errno == ENOENT) {
-				sysfs_has_dev_block = 0;
+				_sysfs_has_dev_block = 0;
 				return 1;
 			}
 
 			log_sys_debug("stat", path);
 			return 0;
 		}
-	} else if (!sysfs_has_dev_block)
+	} else if (!_sysfs_has_dev_block)
 		return 1;
 
 	if (obtain_device_list_from_udev() &&
