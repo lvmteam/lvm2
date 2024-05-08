@@ -4702,8 +4702,8 @@ FIELD_F(STATS_META, STR, "ObjType", 7, dm_stats_object_type, "obj_type", "Type o
 #undef NUM
 #undef SIZ
 
-static const char *_default_report_options = "name,major,minor,attr,open,segments,events,uuid";
-static const char *_splitname_report_options = "vg_name,lv_name,lv_layer";
+static const char _default_report_options[] = "name,major,minor,attr,open,segments,events,uuid";
+static const char _splitname_report_options[] = "vg_name,lv_name,lv_layer";
 
 /* Stats counters & derived metrics. */
 #define RD_COUNTERS "read_count,reads_merged_count,read_sector_count,read_time,read_ticks"
@@ -4727,22 +4727,23 @@ static const char *_splitname_report_options = "vg_name,lv_name,lv_layer";
 #define STATS_HIST STATS_REGION_INFO ",util,await"
 
 /* Default stats report options. */
-static const char *_stats_default_report_options = STATS_DEV_INFO "," STATS_AREA_INFO "," METRICS;
-static const char *_stats_raw_report_options = STATS_DEV_INFO "," STATS_AREA_INFO "," COUNTERS;
-static const char *_stats_list_options = STATS_REGION_INFO ",program_id";
-static const char *_stats_area_list_options = STATS_AREA_INFO_FULL ",program_id";
-static const char *_stats_hist_list_options = STATS_REGION_INFO ",hist_bins,hist_bounds";
-static const char *_stats_hist_area_list_options = STATS_AREA_INFO_FULL ",hist_bins,hist_bounds";
-static const char *_stats_hist_options = STATS_HIST ",hist_count_bounds";
-static const char *_stats_hist_relative_options = STATS_HIST ",hist_percent_bounds";
+static const char _stats_default_report_options[] = STATS_DEV_INFO "," STATS_AREA_INFO "," METRICS;
+static const char _stats_raw_report_options[] = STATS_DEV_INFO "," STATS_AREA_INFO "," COUNTERS;
+static const char _stats_list_options[] = STATS_REGION_INFO ",program_id";
+static const char _stats_area_list_options[] = STATS_AREA_INFO_FULL ",program_id";
+static const char _stats_hist_list_options[] = STATS_REGION_INFO ",hist_bins,hist_bounds";
+static const char _stats_hist_area_list_options[] = STATS_AREA_INFO_FULL ",hist_bins,hist_bounds";
+static const char _stats_hist_options[] = STATS_HIST ",hist_count_bounds";
+static const char _stats_hist_relative_options[] = STATS_HIST ",hist_percent_bounds";
 
 static int _report_init(const struct command *cmd, const char *subcommand)
 {
-	char *options = (char *) _default_report_options;
+	const char *options = _default_report_options;
 	char *opt_fields = NULL; /* optional fields from command line */
 	const char *keys = "";
 	const char *separator = " ";
 	const char *selection = NULL;
+	char *tmpopts = NULL;
 	int aligned = 1, headings = 1, buffered = 1, field_prefixes = 0;
 	int quoted = 1, columns_as_rows = 0;
 	uint32_t flags = 0;
@@ -4758,20 +4759,20 @@ static int _report_init(const struct command *cmd, const char *subcommand)
 		_report_type |= DR_STATS_META;
 		if (!strcmp(subcommand, "list")) {
 			if (!_switches[HISTOGRAM_ARG])
-				options = (char *) ((_switches[VERBOSE_ARG])
+				options = ((_switches[VERBOSE_ARG])
 						    ? _stats_area_list_options
 						    : _stats_list_options);
 			else
-				options = (char *) ((_switches[VERBOSE_ARG])
+				options = ((_switches[VERBOSE_ARG])
 						    ? _stats_hist_area_list_options
 						    : _stats_hist_list_options);
 		} else {
 			if (_switches[HISTOGRAM_ARG])
-				options = (char *) ((_switches[RELATIVE_ARG])
+				options = ((_switches[RELATIVE_ARG])
 						    ? _stats_hist_relative_options
 						    : _stats_hist_options);
 			else
-				options = (char *) ((!_switches[RAW_ARG])
+				options = ((!_switches[RAW_ARG])
 						    ? _stats_default_report_options
 						    : _stats_raw_report_options);
 			_report_type |= DR_STATS;
@@ -4779,7 +4780,7 @@ static int _report_init(const struct command *cmd, const char *subcommand)
 	}
 
 	if (cmd && !strcmp(cmd->name, "list")) {
-		options = (char *) _stats_list_options;
+		options = _stats_list_options;
 		_report_type |= DR_STATS_META;
 	}
 
@@ -4825,7 +4826,6 @@ static int _report_init(const struct command *cmd, const char *subcommand)
 		if (*_string_args[OPTIONS_ARG] != '+')
 			options = _string_args[OPTIONS_ARG];
 		else {
-			char *tmpopts;
 			opt_fields = _string_args[OPTIONS_ARG] + 1;
 			len = strlen(options) + strlen(opt_fields) + 2;
 			if (!(tmpopts = malloc(len))) {
@@ -4903,8 +4903,7 @@ static int _report_init(const struct command *cmd, const char *subcommand)
 		dm_report_set_output_field_name_prefix(_report, "dm_");
 
 out:
-	if (len)
-		free(options);
+	free(tmpopts);
 
 	return r;
 }
