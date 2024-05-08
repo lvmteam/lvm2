@@ -1449,8 +1449,8 @@ struct node_op_parms {
 
 static void _store_str(char **pos, char **ptr, const char *str)
 {
-	size_t len = strlen(str);
-	memcpy(*pos, str, len + 1);
+	size_t len = strlen(str) + 1;
+	memcpy(*pos, str, len);
 	*ptr = *pos;
 	*pos += len;
 }
