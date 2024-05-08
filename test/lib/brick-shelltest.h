@@ -955,6 +955,11 @@ struct TestCase {
         child.interactive = options.interactive;
     }
 
+    void show_progress() {
+        progress( Update ) << tag( "running" )
+            << pretty() << " " << start.elapsed() << std::flush;
+    }
+
     bool monitor() {
         /* heartbeat */
         if ( last_heartbeat.elapsed().sec() >= 20 && !options.heartbeat.empty() ) {
@@ -968,6 +973,7 @@ struct TestCase {
 
         if ( wait4(pid, &status, WNOHANG, &usage) != 0 ) {
             io.sync( true );
+            show_progress();
             return false;
         }
 
@@ -1001,8 +1007,7 @@ struct TestCase {
 
         if ( !options.verbose && !options.interactive && !options.batch ) {
             if ( last_update.elapsed().sec() ) {
-                progress( Update ) << tag( "running" )
-                    << pretty() << " " << start.elapsed() << std::flush;
+                show_progress();
                 last_update.gettime();
             }
         }
