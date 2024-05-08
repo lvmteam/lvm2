@@ -837,7 +837,7 @@ static int _stats_parse_histogram_spec(struct dm_stats *dms,
 	uint64_t scale = region->timescale, this_val = 0;
 	struct dm_pool *mem = dms->hist_mem;
 	struct dm_histogram_bin cur;
-	struct dm_histogram hist;
+	struct dm_histogram hist = { 0 };
 	int nr_bins = 1;
 	const char *c, *v, *val_start;
 	char *p, *endptr = NULL;
@@ -856,8 +856,6 @@ static int _stats_parse_histogram_spec(struct dm_stats *dms,
 
 	if (!dm_pool_begin_object(mem, sizeof(cur)))
 		return_0;
-
-	memset(&hist, 0, sizeof(hist));
 
 	hist.nr_bins = 0; /* fix later */
 	hist.region = region;
