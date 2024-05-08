@@ -255,7 +255,7 @@ static cmd_name_t _base_command = DMSETUP_CMD;	/* Default command is 'dmsetup' *
 static cmd_type_t _base_command_type = DMSETUP_TYPE;
 static uint16_t _switches[NUM_SWITCHES];
 static int _int_args[NUM_SWITCHES];
-static char *_string_args[NUM_SWITCHES];
+static const char *_string_args[NUM_SWITCHES];
 static int _num_devices;
 static char *_uuid;
 static char *_table;
@@ -4739,7 +4739,7 @@ static const char _stats_hist_relative_options[] = STATS_HIST ",hist_percent_bou
 static int _report_init(const struct command *cmd, const char *subcommand)
 {
 	const char *options = _default_report_options;
-	char *opt_fields = NULL; /* optional fields from command line */
+	const char *opt_fields = NULL; /* optional fields from command line */
 	const char *keys = "";
 	const char *separator = " ";
 	const char *selection = NULL;
@@ -5113,7 +5113,7 @@ out:
 	return 0;
 }
 
-static uint64_t _factor_from_units(char *argptr, char *unit_type)
+static uint64_t _factor_from_units(const char *argptr, char *unit_type)
 {
 	return dm_units_to_factor(argptr, unit_type, 0, NULL);
 }
@@ -5122,7 +5122,7 @@ static uint64_t _factor_from_units(char *argptr, char *unit_type)
  * Parse a start, length, or area size argument in bytes from a string
  * using optional units as supported by _factor_from_units().
  */
-static int _size_from_string(char *argptr, uint64_t *size, const char *name)
+static int _size_from_string(const char *argptr, uint64_t *size, const char *name)
 {
 	uint64_t factor;
 	char *endptr = NULL, unit_type;
@@ -5915,7 +5915,7 @@ out:
 
 static int _stats_group(CMD_ARGS)
 {
-	char *name, *alias = NULL, *regions = NULL;
+	const char *name, *alias = NULL, *regions = NULL;
 	struct dm_stats *dms;
 	uint64_t group_id;
 	int r = 0;
