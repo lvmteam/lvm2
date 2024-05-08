@@ -167,18 +167,23 @@ extended, if needed, relative to the new data size.
 $ lvextend --size Size VG/ThinPool
 .fi
 .P
-A specific new metadata size can also requested when extending the thin
-pool data.
+A new metadata size can be requested when extending the thin pool data.
 .P
 .nf
 $ lvextend --size Size --poolmetadatasize MetadataSize VG/ThinPool
 .fi
 .P
-The metadata LV can also be extended individually without extending the
-data LV.
+The metadata size can be extended without extending the data size.
 .P
 .nf
 $ lvextend --poolmetadatasize MetadataSize VG/ThinPool
+.fi
+.P
+The internal data or metadata LV can be extended by name.
+.P
+.nf
+$ lvextend -L Size VG/ThinPool_tdata
+$ lvextend -L MetadataSize VG/ThinPool_tmeta
 .fi
 .
 .SS Thin Pool Automatic Extension
