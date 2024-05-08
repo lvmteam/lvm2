@@ -1444,8 +1444,9 @@ static void _stats_walk_next_present(const struct dm_stats *dms,
 	}
 
 	/* advance to next present, non-skipped region or end */
-	while ((*cur_r < UINT64_MAX) &&
-	       ++(*cur_r) <= dms->max_region) {
+	/* count can start as UINT64_MAX, probably rework to use post++ */
+	/* coverity[overflow_const]    overflow is expected here */
+	while (++(*cur_r) <= dms->max_region) {
 		cur = &dms->regions[*cur_r];
 		if (!_stats_region_present(cur))
 			continue;
