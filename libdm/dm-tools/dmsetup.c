@@ -6321,16 +6321,16 @@ static void _stats_usage(FILE *out)
 	int i;
 
 	fprintf(out, "Usage:\n\n"
-		"%s\n"
-		"        [-h|--help]\n"
-		"        [-v|--verbose [-v|--verbose ...]]\n"
-		"        [--areas <nr_areas>] [--areasize <size>]\n"
-		"        [--userdata <data>] [--clear]\n"
-		"        [--count <count>] [--interval <seconds>]\n"
-		"        [-o <fields>] [-O|--sort <sort_fields>]\n"
-		"	      [--programid <id>]\n"
-		"        [--start <start>] [--length <length>]\n"
-		"        [--segments] [--units <units>]\n\n",
+		"%s\n\t"
+		"[-h|--help]\n\t"
+		"[-v|--verbose [-v|--verbose ...]]\n\t"
+		"[--areas <nr_areas>] [--areasize <size>]\n\t"
+		"[--userdata <data>] [--clear]\n\t"
+		"[--count <count>] [--interval <seconds>]\n\t"
+		"[-o <fields>] [-O|--sort <sort_fields>]\n\t"
+		"     [--programid <id>]\n\t"
+		"[--start <start>] [--length <length>]\n\t"
+		"[--segments] [--units <units>]\n\n",
 		_base_commands[_base_command].name);
 
 	for (i = 0; i < DM_ARRAY_SIZE(_stats_subcommands); i++)
@@ -6345,17 +6345,17 @@ static void _dmsetup_usage(FILE *out)
 	int i;
 
 	fprintf(out, "Usage:\n\n"
-		"%s\n"
-		"        [--version] [-h|--help [-c|-C|--columns]]\n"
-		"        [-v|--verbose [-v|--verbose ...]] [-f|--force]\n"
-		"        [--checks] [--manglename {none|hex|auto}]\n"
-		"        [-r|--readonly] [--noopencount] [--noflush] [--nolockfs] [--inactive]\n"
-		"        [--udevcookie <cookie>] [--noudevrules] [--noudevsync] [--verifyudev]\n"
-		"        [-y|--yes] [--readahead {[+]<sectors>|auto|none}] [--retry]\n"
-		"        [-c|-C|--columns] [-o <fields>] [-O|--sort <sort_fields>]\n"
-		"        [-S|--select <selection>] [--nameprefixes]\n"
-		"        [--noheadings|--headings none|abbrev|full|0|1|2]\n"
-		"        [--separator <separator>]\n\n",
+		"%s\n\t"
+		"[--version] [-h|--help [-c|-C|--columns]]\n\t"
+		"[-v|--verbose [-v|--verbose ...]] [-f|--force]\n\t"
+		"[--checks] [--manglename {none|hex|auto}]\n\t"
+		"[-r|--readonly] [--noopencount] [--noflush] [--nolockfs] [--inactive]\n\t"
+		"[--udevcookie <cookie>] [--noudevrules] [--noudevsync] [--verifyudev]\n\t"
+		"[-y|--yes] [--readahead {[+]<sectors>|auto|none}] [--retry]\n\t"
+		"[-c|-C|--columns] [-o <fields>] [-O|--sort <sort_fields>]\n\t"
+		"[-S|--select <selection>] [--nameprefixes]\n\t"
+		"[--noheadings|--headings none|abbrev|full|0|1|2]\n\t"
+		"[--separator <separator>]\n\n",
 		_base_commands[_base_command].name);
 
 	for (i = 0; i < DM_ARRAY_SIZE(_dmsetup_commands); ++i)
