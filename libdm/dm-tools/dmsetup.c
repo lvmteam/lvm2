@@ -253,7 +253,7 @@ typedef enum {
 
 static cmd_name_t _base_command = DMSETUP_CMD;	/* Default command is 'dmsetup' */
 static cmd_type_t _base_command_type = DMSETUP_TYPE;
-static int _switches[NUM_SWITCHES];
+static uint16_t _switches[NUM_SWITCHES];
 static int _int_args[NUM_SWITCHES];
 static char *_string_args[NUM_SWITCHES];
 static int _num_devices;
@@ -7015,202 +7015,69 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 	while ((c = GETOPTLONG_FN(*argcp, *argvp, "cCfG:hj:m:M:no:O:rS:u:U:vy",
 				  _long_options, NULL)) != -1) {
 		switch (c) {
-		case ALIAS_ARG:
-			_switches[ALIAS_ARG]++;
-			_string_args[ALIAS_ARG] = optarg;
-			break;
-		case ALL_DEVICES_ARG:
-			_switches[ALL_DEVICES_ARG]++;
-			break;
-		case ALL_PROGRAMS_ARG:
-			_switches[ALL_PROGRAMS_ARG]++;
-			break;
-		case ALL_REGIONS_ARG:
-			_switches[ALL_REGIONS_ARG]++;
-			break;
-		case AREA_ARG:
-			_switches[AREA_ARG]++;
-			break;
-		case AREAS_ARG:
-			_switches[AREAS_ARG]++;
-			_int_args[AREAS_ARG] = atoi(optarg);
-			break;
-		case AREA_SIZE_ARG:
-			_switches[AREA_SIZE_ARG]++;
-			_string_args[AREA_SIZE_ARG] = optarg;
-			break;
-		case USER_DATA_ARG:
-			_switches[USER_DATA_ARG]++;
-			_string_args[USER_DATA_ARG] = optarg;
-			break;
 		case ':':
 		case '?':
 			return_0;
-		case HELP_ARG:
-			_switches[HELP_ARG]++;
-			break;
-		case CONCISE_ARG:
-			_switches[CONCISE_ARG]++;
-			break;
-		case BOUNDS_ARG:
-			_switches[BOUNDS_ARG]++;
-			_string_args[BOUNDS_ARG] = optarg;
-			break;
-		case CLEAR_ARG:
-			_switches[CLEAR_ARG]++;
-			break;
-		case 'C':
-		case COLS_ARG:
+		case 'C': /* 'C' == 'c' COLS_ARG */
 			_switches[COLS_ARG]++;
 			break;
-		case FILEMAP_ARG:
-			_switches[FILEMAP_ARG]++;
-			break;
+		default:
+			if (c >= NUM_SWITCHES) {
+				log_error("Unrecognized options %d.", c);
+				return 0;
+			}
+			/* plain switch */
+			_switches[c]++;
+		}
+
+		switch (c) {
+		case ALIAS_ARG:
+		case AREA_SIZE_ARG:
+		case BOUNDS_ARG:
 		case FOLLOW_ARG:
-			_switches[FOLLOW_ARG]++;
-			_string_args[FOLLOW_ARG] = optarg;
-			break;
-		case FORCE_ARG:
-			_switches[FORCE_ARG]++;
-			break;
-		case FOREGROUND_ARG:
-			_switches[FOREGROUND_ARG]++;
-			break;
-		case READ_ONLY:
-			_switches[READ_ONLY]++;
-			break;
-		case HISTOGRAM_ARG:
-			_switches[HISTOGRAM_ARG]++;
-			break;
 		case LENGTH_ARG:
-			_switches[LENGTH_ARG]++;
-			_string_args[LENGTH_ARG] = optarg;
-			break;
-		case MAJOR_ARG:
-			_switches[MAJOR_ARG]++;
-			_int_args[MAJOR_ARG] = atoi(optarg);
-			break;
-		case REGIONS_ARG:
-			_switches[REGIONS_ARG]++;
-			_string_args[REGIONS_ARG] = optarg;
-			break;
-		case MINOR_ARG:
-			_switches[MINOR_ARG]++;
-			_int_args[MINOR_ARG] = atoi(optarg);
-			break;
-		case NOSUFFIX_ARG:
-			_switches[NOSUFFIX_ARG]++;
-			break;
-		case NOTABLE_ARG:
-			_switches[NOTABLE_ARG]++;
-			break;
-		case NOTIMESUFFIX_ARG:
-			_switches[NOTIMESUFFIX_ARG]++;
-			break;
 		case OPTIONS_ARG:
-			_switches[OPTIONS_ARG]++;
-			_string_args[OPTIONS_ARG] = optarg;
-			break;
 		case PROGRAM_ID_ARG:
-			_switches[PROGRAM_ID_ARG]++;
-			_string_args[PROGRAM_ID_ARG] = optarg;
-			break;
-		case PRECISE_ARG:
-			_switches[PRECISE_ARG]++;
-			break;
-		case RAW_ARG:
-			_switches[RAW_ARG]++;
-			break;
-		case REGION_ARG:
-			_switches[REGION_ARG]++;
-			break;
-		case REGION_ID_ARG:
-			_switches[REGION_ID_ARG]++;
-			_int_args[REGION_ID_ARG] = atoi(optarg);
-			break;
-		case RELATIVE_ARG:
-			_switches[RELATIVE_ARG]++;
-			break;
-		case SEPARATOR_ARG:
-			_switches[SEPARATOR_ARG]++;
-			_string_args[SEPARATOR_ARG] = optarg;
-			break;
-		case UNITS_ARG:
-			_switches[UNITS_ARG]++;
-			_string_args[UNITS_ARG] = optarg;
-			break;
-		case SORT_ARG:
-			_switches[SORT_ARG]++;
-			_string_args[SORT_ARG] = optarg;
-			break;
+		case REGIONS_ARG:
 		case SELECT_ARG:
-			_switches[SELECT_ARG]++;
-			_string_args[SELECT_ARG] = optarg;
-			break;
+		case SEPARATOR_ARG:
+		case SORT_ARG:
 		case START_ARG:
-			_switches[START_ARG]++;
-			_string_args[START_ARG] = optarg;
+		case UNITS_ARG:
+		case USER_DATA_ARG:
+			/* with string arg */
+			_string_args[c] = optarg;
 			break;
-		case VERBOSE_ARG:
-			_switches[VERBOSE_ARG]++;
+		case AREAS_ARG:
+		case GID_ARG:
+		case GROUP_ID_ARG:
+		case MAJOR_ARG:
+		case MINOR_ARG:
+		case REGION_ID_ARG:
+		case UID_ARG:
+			/* with int arg */
+			_int_args[c] = atoi(optarg);
+			break;
+		case EXEC_ARG:
+			_command_to_exec = optarg;
+			break;
+		case TARGET_ARG:
+			_target = optarg;
 			break;
 		case UUID_ARG:
-			_switches[UUID_ARG]++;
 			_uuid = optarg;
 			break;
-		case YES_ARG:
-			_switches[YES_ARG]++;
-			break;
-		case ADD_NODE_ON_RESUME_ARG:
-			_switches[ADD_NODE_ON_RESUME_ARG]++;
-			break;
-		case ADD_NODE_ON_CREATE_ARG:
-			_switches[ADD_NODE_ON_CREATE_ARG]++;
-			break;
-		case CHECKS_ARG:
-			_switches[CHECKS_ARG]++;
+		case UDEVCOOKIE_ARG:
+			_udev_cookie = _get_cookie_value(optarg);
 			break;
 		case COUNT_ARG:
-			_switches[COUNT_ARG]++;
 			_int_args[COUNT_ARG] = atoi(optarg);
 			if (_int_args[COUNT_ARG] < 0) {
 				log_error("Count must be zero or greater.");
 				return 0;
 			}
 			break;
-		case UDEVCOOKIE_ARG:
-			_switches[UDEVCOOKIE_ARG]++;
-			_udev_cookie = _get_cookie_value(optarg);
-			break;
-		case NOMONITOR_ARG:
-			_switches[NOMONITOR_ARG]++;
-			break;
-		case NOUDEVRULES_ARG:
-			_switches[NOUDEVRULES_ARG]++;
-			break;
-		case NOUDEVSYNC_ARG:
-			_switches[NOUDEVSYNC_ARG]++;
-			break;
-		case VERIFYUDEV_ARG:
-			_switches[VERIFYUDEV_ARG]++;
-			break;
-		case GID_ARG:
-			_switches[GID_ARG]++;
-			_int_args[GID_ARG] = atoi(optarg);
-			break;
-		case GROUP_ARG:
-			_switches[GROUP_ARG]++;
-			break;
-		case GROUP_ID_ARG:
-			_switches[GROUP_ID_ARG]++;
-			_int_args[GROUP_ID_ARG] = atoi(optarg);
-			break;
-		case UID_ARG:
-			_switches[UID_ARG]++;
-			_int_args[UID_ARG] = atoi(optarg);
-			break;
 		case MODE_ARG:
-			_switches[MODE_ARG]++;
 			/* FIXME Accept modes as per chmod */
 			errno = 0;
 			_int_args[MODE_ARG] = (int) strtol(optarg, &s, 8);
@@ -7220,15 +7087,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 				return 0;
 			}
 			break;
-		case DEFERRED_ARG:
-			_switches[DEFERRED_ARG]++;
-			break;
-		case EXEC_ARG:
-			_switches[EXEC_ARG]++;
-			_command_to_exec = optarg;
-			break;
 		case HEADINGS_ARG:
-			_switches[HEADINGS_ARG]++;
 			if (!strcasecmp(optarg, "none") || !strcmp(optarg, "0"))
 				_int_args[HEADINGS_ARG] = 0;
 			else if (!strcasecmp(optarg, "abbrev") || !strcmp(optarg, "1"))
@@ -7240,18 +7099,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 				return 0;
 			}
 			break;
-		case TARGET_ARG:
-			_switches[TARGET_ARG]++;
-			_target = optarg;
-			break;
-		case SEGMENTS_ARG:
-			_switches[SEGMENTS_ARG]++;
-			break;
-		case INACTIVE_ARG:
-			_switches[INACTIVE_ARG]++;
-			break;
 		case INTERVAL_ARG:
-			_switches[INTERVAL_ARG]++;
 			_int_args[INTERVAL_ARG] = atoi(optarg);
 			if (_int_args[INTERVAL_ARG] <= 0) {
 				log_error("Interval must be a positive integer.");
@@ -7259,7 +7107,6 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 			}
 			break;
 		case MANGLENAME_ARG:
-			_switches[MANGLENAME_ARG]++;
 			if (!strcasecmp(optarg, "none"))
 				_int_args[MANGLENAME_ARG] = DM_STRING_MANGLING_NONE;
 			else if (!strcasecmp(optarg, "auto"))
@@ -7272,26 +7119,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 			}
 			dm_set_name_mangling_mode((dm_string_mangling_t) _int_args[MANGLENAME_ARG]);
 			break;
-		case NAMEPREFIXES_ARG:
-			_switches[NAMEPREFIXES_ARG]++;
-			break;
-		case NOFLUSH_ARG:
-			_switches[NOFLUSH_ARG]++;
-			break;
-		case NOGROUP_ARG:
-			_switches[NOGROUP_ARG]++;
-			break;
-		case NOHEADINGS_ARG:
-			_switches[NOHEADINGS_ARG]++;
-			break;
-		case NOLOCKFS_ARG:
-			_switches[NOLOCKFS_ARG]++;
-			break;
-		case NOOPENCOUNT_ARG:
-			_switches[NOOPENCOUNT_ARG]++;
-			break;
 		case READAHEAD_ARG:
-			_switches[READAHEAD_ARG]++;
 			if (!strcasecmp(optarg, "auto"))
 				_int_args[READAHEAD_ARG] = DM_READ_AHEAD_AUTO;
 			else if (!strcasecmp(optarg, "none"))
@@ -7310,33 +7138,11 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 				}
 			}
 			break;
-		case RETRY_ARG:
-			_switches[RETRY_ARG]++;
-			break;
-		case ROWS_ARG:
-			_switches[ROWS_ARG]++;
-			break;
-		case SETUUID_ARG:
-			_switches[SETUUID_ARG]++;
-			break;
-		case SHOWKEYS_ARG:
-			_switches[SHOWKEYS_ARG]++;
-			break;
 		case TABLE_ARG:
-			_switches[TABLE_ARG]++;
 			if (!(_table = strdup(optarg))) {
 				log_error("Could not allocate memory for table string.");
 				return 0;
 			}
-			break;
-		case TREE_ARG:
-			_switches[TREE_ARG]++;
-			break;
-		case UNQUOTED_ARG:
-			_switches[UNQUOTED_ARG]++;
-			break;
-		case VERSION_ARG:
-			_switches[VERSION_ARG]++;
 			break;
 		}
 	}
