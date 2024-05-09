@@ -3413,17 +3413,25 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		}
 
 		if (data_vdo) {
-			if (!fill_vdo_target_params(cmd, &vcp.vdo_params, &vdo_pool_header_size, vg->profile))
-				goto_bad;
+			if (lv_is_vdo(lv)) {
+				if ((seg = first_seg(lv)))
+					seg = first_seg(seg_lv(seg, 0)); // vdopool
+				/* Update existing VDOPOOL parameters if possible, VDOPOOL is offline */
+				if (seg && !get_vdo_settings(cmd, &seg->vdo_params, NULL))
+					goto_bad;
 
-			if (!get_vdo_settings(cmd, &vcp.vdo_params, NULL))
-				goto_bad;
-
-			if (data_vdo && lv_is_vdo(lv))
 				log_print_unless_silent("Volume %s is already VDO volume, skipping VDO conversion.",
 							display_lvname(lv));
-			else if (!convert_vdo_lv(lv, &vcp))
-				goto_bad;
+			} else {
+				if (!fill_vdo_target_params(cmd, &vcp.vdo_params, &vdo_pool_header_size, vg->profile))
+					goto_bad;
+
+				if (!get_vdo_settings(cmd, &vcp.vdo_params, NULL))
+					goto_bad;
+
+				if (!convert_vdo_lv(lv, &vcp))
+					goto_bad;
+			}
 		}
 
 		pool_lv = lv;
