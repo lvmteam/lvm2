@@ -482,13 +482,13 @@ Convert LV to a thin LV, using the original LV as an external origin.
 .ad l
 [ \fB-T\fP|\fB--thin\fP ]
 .br
-[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
-.br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
 .br
-[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .br
 [ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.br
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
 .br
 [    \fB--originname\fP \fILV\fP\fI_new\fP ]
 .br
@@ -522,13 +522,13 @@ Convert LV to a thin LV, using LV as thin-pool data volume.
 .ad l
 [ \fB-T\fP|\fB--thin\fP ]
 .br
-[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
-.br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
 .br
-[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .br
 [ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.br
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
 .br
 [    \fB--poolmetadata\fP \fILV\fP ]
 .br
@@ -562,9 +562,9 @@ Attach a cache pool to an LV, converts the LV to type cache.
 .br
 [ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
 .br
-[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
-.br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.br
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .br
 [ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
 .br
@@ -702,13 +702,13 @@ Convert LV to type thin-pool.
 .ad l
 [ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
 .br
-[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
-.br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
 .br
-[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .br
 [ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.br
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
 .br
 [    \fB--stripes\fP \fINumber\fP ]
 .br
@@ -717,6 +717,12 @@ Convert LV to type thin-pool.
 [    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .br
 [    \fB--pooldatavdo\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--compression\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
+.br
+[    \fB--vdosettings\fP \fIString\fP ]
 .br
 [    \fB--poolmetadata\fP \fILV\fP ]
 .br
@@ -748,9 +754,9 @@ Convert LV to type cache-pool.
 .ad l
 [ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
 .br
-[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
-.br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.br
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .br
 [ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
 .br
@@ -796,15 +802,17 @@ Convert LV to type vdopool.
 .br
 [ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .br
-[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
 .br
-[    \fB--metadataprofile\fP \fIString\fP ]
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
 .br
 [    \fB--compression\fP \fBy\fP|\fBn\fP ]
 .br
 [    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
 .br
 [    \fB--vdosettings\fP \fIString\fP ]
+.br
+[    \fB--metadataprofile\fP \fIString\fP ]
 .br
 [ COMMON_OPTIONS ]
 .ad b
@@ -1797,13 +1805,13 @@ Convert LV to a thin LV, using the original LV as an external origin.
 [ \fB--type thin\fP ] (implied)
 .br
 .br
-[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
-.br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
 .br
-[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .br
 [ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.br
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
 .br
 [    \fB--originname\fP \fILV\fP\fI_new\fP ]
 .br
@@ -1838,13 +1846,13 @@ Convert LV to a thin LV, using LV as thin-pool data volume.
 [ \fB--type thin\fP ] (implied)
 .br
 .br
-[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
-.br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
 .br
-[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .br
 [ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.br
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
 .br
 [    \fB--poolmetadata\fP \fILV\fP ]
 .br
@@ -1879,9 +1887,9 @@ Attach a cache pool to an LV.
 .br
 [ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
 .br
-[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
-.br
 [ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.br
+[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .br
 [ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
 .br
@@ -1957,19 +1965,21 @@ Convert LV to type vdopool.
 .br
 [ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .br
+[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+.br
 [ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
 .br
 [ \fB-n\fP|\fB--name\fP \fILV\fP\fI_new\fP ]
 .br
 [ \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] ]
 .br
-[    \fB--metadataprofile\fP \fIString\fP ]
-.br
 [    \fB--compression\fP \fBy\fP|\fBn\fP ]
 .br
 [    \fB--deduplication\fP \fBy\fP|\fBn\fP ]
 .br
 [    \fB--vdosettings\fP \fIString\fP ]
+.br
+[    \fB--metadataprofile\fP \fIString\fP ]
 .br
 [ COMMON_OPTIONS ]
 .ad b
