@@ -123,6 +123,14 @@ static int _striped_type_requested(const char *type_str)
 	return (!strcmp(type_str, SEG_TYPE_NAME_STRIPED) || _linear_type_requested(type_str));
 }
 
+static int _get_wipe_signatures(struct cmd_context *cmd)
+{
+	/* use option from cmdline and fallback to lvm.conf settings */
+	return arg_is_set(cmd, wipesignatures_ARG) ?
+		arg_int_value(cmd, wipesignatures_ARG, 0) :
+	find_config_tree_bool(cmd, allocation_wipe_signatures_when_zeroing_new_lvs_CFG, NULL);
+}
+
 static int _read_conversion_type(struct cmd_context *cmd,
 				 struct lvconvert_params *lp)
 {
@@ -3104,7 +3112,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	struct vdo_convert_params vcp = {
 		.activate = CHANGE_AN,
 		.do_zero = 1,
-		.do_wipe_signatures = 1,
+		.do_wipe_signatures = _get_wipe_signatures(cmd),
 		.force = arg_count(cmd, force_ARG),
 		.yes = arg_count(cmd, yes_ARG),
 	};
@@ -5523,7 +5531,7 @@ static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 						     arg_uint64_value(cmd, virtualsize_ARG, UINT64_C(0)),
 						     vg->extent_size),
 		.do_zero = arg_int_value(cmd, zero_ARG, 1),
-		.do_wipe_signatures = 1,
+		.do_wipe_signatures = _get_wipe_signatures(cmd),
 		.yes = arg_count(cmd, yes_ARG),
 		.force = arg_count(cmd, force_ARG)
 	};
