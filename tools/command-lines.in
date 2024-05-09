@@ -332,19 +332,21 @@ RULE: all not LV_thinpool LV_cachepool LV_vdopool
 
 ---
 
-OO_LVCONVERT_POOL: --poolmetadata LV, --poolmetadatasize SizeMB,
---poolmetadataspare Bool, --readahead Readahead, --chunksize SizeKB,
---zero Bool, --metadataprofile String, --wipesignatures Bool
-
-OO_LVCONVERT_THINPOOL: --discards Discards, --errorwhenfull Bool, --pooldatavdo Bool, OO_LVCONVERT_POOL
+OO_LVCONVERT_POOL: --chunksize SizeKB, --poolmetadata LV,
+--poolmetadatasize SizeMB, --poolmetadataspare Bool, --metadataprofile String,
+--readahead Readahead, --wipesignatures Bool, --zero Bool
 
 OO_LVCONVERT_CACHE: --cachemetadataformat CacheMetadataFormat,
 --cachemode CacheMode, --cachepolicy String,
 --cachesettings String, --zero Bool
 
-OO_LVCONVERT_VDO: --metadataprofile String, --readahead Readahead,
---compression Bool, --deduplication Bool, --vdosettings String,
---zero Bool
+OO_LVCONVERT_VDO: --compression Bool, --deduplication Bool, --vdosettings String
+
+OO_LVCONVERT_VDO_POOL: OO_LVCONVERT_VDO, --metadataprofile String,
+--readahead Readahead, --wipesignatures Bool, --zero Bool
+
+OO_LVCONVERT_THINPOOL: --discards Discards, --errorwhenfull Bool, --pooldatavdo Bool,
+OO_LVCONVERT_VDO, OO_LVCONVERT_POOL
 
 OO_LVCONVERT: --alloc Alloc, --background, --force, --noudevsync
 
@@ -660,14 +662,14 @@ RULE: --poolmetadata not --readahead --stripesize --stripes_long
 ---
 
 lvconvert --type vdo-pool LV_linear_striped_raid_cache
-OO: --name LV_new, --virtualsize SizeMB, OO_LVCONVERT_VDO, OO_LVCONVERT
+OO: --name LV_new, --virtualsize SizeMB, OO_LVCONVERT_VDO_POOL, OO_LVCONVERT
 ID: lvconvert_to_vdopool
 DESC: Convert LV to type vdopool.
 RULE: all and lv_is_visible lv_is_writable
 RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_virtual lv_is_raid_with_integrity
 
 lvconvert --vdopool LV_linear_striped_raid_cache
-OO: OO_LVCONVERT_VDO, OO_LVCONVERT, --name LV_new, --virtualsize SizeMB,
+OO: OO_LVCONVERT_VDO_POOL, OO_LVCONVERT, --name LV_new, --virtualsize SizeMB,
 ID: lvconvert_to_vdopool_param
 DESC: Convert LV to type vdopool.
 RULE: all and lv_is_visible
