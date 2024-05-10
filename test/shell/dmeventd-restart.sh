@@ -15,27 +15,34 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-_restart_dmeventd() {
+_wait_for_dmeventd() {
+	local local=${1-}
 	local pid=
+	for i in {1..50}; do
+		if test -n "$local" ; then
+			pid=$(pgrep -o dmeventd) || break;
+		fi
+		# Check pid and dmeventd readiness to communicate
+		test "$pid" = "$local" && dmeventd -i && break
+		sleep .2
+	done
+}
+
+_restart_dmeventd() {
 	#rm -f debug.log*
 
 	dmeventd -R -fldddd -e "$PWD/test_nologin" > debug.log_DMEVENTD_$RANDOM 2>&1 &
 	local local=$!
 	echo "$local" >LOCAL_DMEVENTD
 
-	for i in {1..50}; do
-		pid=$(pgrep -o dmeventd) || break
-		# Check pid and dmeventd readiness to communicate
-		test "$pid" = "$local" && dmeventd -i && break
-		sleep .2
-	done
+	_wait_for_dmeventd "$local"
 
 	if [ "$i" -eq 50 ]; then
 		# Unexpected - we waited over 10 seconds and
 		# dmeventd has not managed to restart
 		cat /run/dmeventd.pid || true
 		pgrep dmeventd || true
-		die "dmeventd restart is too slow"
+		die "dmeventd restart is too slow: $(ps aux)"
 	fi
 }
 
@@ -51,6 +58,7 @@ lvchange --monitor y $vg/3way
 lvcreate -aey -l1 -n $lv1 $vg
 lvcreate -s -l1 -n $lv2 $vg/$lv1
 
+_wait_for_dmeventd
 _restart_dmeventd
 
 check lv_field $vg/3way seg_monitor "monitored"
