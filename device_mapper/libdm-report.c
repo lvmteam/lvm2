@@ -2589,7 +2589,8 @@ static int _check_reserved_values_supported(const struct dm_report_field_type fi
 		if (iter->type & DM_REPORT_FIELD_TYPE_MASK) {
 			if (!(iter->type & supported_reserved_types) ||
 			    ((iter->type & DM_REPORT_FIELD_RESERVED_VALUE_RANGE) &&
-			     !(iter->type & supported_reserved_types_with_range))) {
+			     !(iter->type & (supported_reserved_types_with_range &
+					     ~DM_REPORT_FIELD_RESERVED_VALUE_RANGE)))) {
 				log_error(INTERNAL_ERROR "_check_reserved_values_supported: "
 					  "global reserved value for type 0x%x not supported",
 					   iter->type);
@@ -2599,8 +2600,9 @@ static int _check_reserved_values_supported(const struct dm_report_field_type fi
 			field_res = (const struct dm_report_field_reserved_value *) iter->value;
 			field = &fields[field_res->field_num];
 			if (!(field->flags & supported_reserved_types) ||
-			    ((iter->type & DM_REPORT_FIELD_RESERVED_VALUE_RANGE) &&
-			     !(iter->type & supported_reserved_types_with_range))) {
+			    ((field->type & DM_REPORT_FIELD_RESERVED_VALUE_RANGE) &&
+			     !(field->type & (supported_reserved_types_with_range &
+					     ~DM_REPORT_FIELD_RESERVED_VALUE_RANGE)))) {
 				log_error(INTERNAL_ERROR "_check_reserved_values_supported: "
 					  "field-specific reserved value of type 0x%x for "
 					  "field %s not supported",
