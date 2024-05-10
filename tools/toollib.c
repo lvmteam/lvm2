@@ -2612,7 +2612,7 @@ static struct lv_segment _historical_lv_segment = {
 	.origin_list = DM_LIST_HEAD_INIT(_historical_lv_segment.origin_list),
 };
 
-int opt_in_list_is_set(struct cmd_context *cmd, int *opts, int count,
+int opt_in_list_is_set(struct cmd_context *cmd, const uint16_t *opts, int count,
 		       int *match_count, int *unmatch_count)
 {
 	int match = 0;
@@ -2634,7 +2634,7 @@ int opt_in_list_is_set(struct cmd_context *cmd, int *opts, int count,
 	return match ? 1 : 0;
 }
       
-void opt_array_to_str(struct cmd_context *cmd, int *opts, int count,
+void opt_array_to_str(struct cmd_context *cmd, const uint16_t *opts, int count,
 		      char *buf, int len)
 {
 	int pos = 0;
@@ -3105,7 +3105,7 @@ static int _check_lv_rules(struct cmd_context *cmd, struct logical_volume *lv)
 		 * Check the options, LV types, LV properties.
 		 */
 
-		if (rule->check_opts)
+		if (rule->check_opts_count)
 			opt_in_list_is_set(cmd, rule->check_opts, rule->check_opts_count,
 					   &opts_match_count, &opts_unmatch_count);
 
@@ -3127,7 +3127,7 @@ static int _check_lv_rules(struct cmd_context *cmd, struct logical_volume *lv)
 
 		/* Fail if any invalid options are set. */
 
-		if (rule->check_opts && (rule->rule == RULE_INVALID) && opts_match_count) {
+		if (rule->check_opts_count && (rule->rule == RULE_INVALID) && opts_match_count) {
 			memset(buf, 0, sizeof(buf));
 			opt_array_to_str(cmd, rule->check_opts, rule->check_opts_count, buf, sizeof(buf));
 			log_warn("WARNING: Command on LV %s has invalid use of option %s.",
@@ -3137,7 +3137,7 @@ static int _check_lv_rules(struct cmd_context *cmd, struct logical_volume *lv)
 
 		/* Fail if any required options are not set. */
 
-		if (rule->check_opts && (rule->rule == RULE_REQUIRE) && opts_unmatch_count)  {
+		if (rule->check_opts_count && (rule->rule == RULE_REQUIRE) && opts_unmatch_count)  {
 			memset(buf, 0, sizeof(buf));
 			opt_array_to_str(cmd, rule->check_opts, rule->check_opts_count, buf, sizeof(buf));
 			log_warn("WARNING: Command on LV %s requires option %s.",

@@ -173,10 +173,10 @@ const char *extract_vgname(struct cmd_context *cmd, const char *lv_name);
 const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
 			 unsigned *dev_dir_found);
 
-int opt_in_list_is_set(struct cmd_context *cmd, int *opts, int count,
+int opt_in_list_is_set(struct cmd_context *cmd, const uint16_t *opts, int count,
 		       int *match_count, int *unmatch_count);
 
-void opt_array_to_str(struct cmd_context *cmd, int *opts, int count,
+void opt_array_to_str(struct cmd_context *cmd, const uint16_t *opts, int count,
 		      char *buf, int len);
 
 int pvcreate_params_from_args(struct cmd_context *cmd, struct pvcreate_params *pp);

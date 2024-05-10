@@ -1094,8 +1094,6 @@ static void _add_autotype(struct cmd_context *cmdtool, struct command *cmd,
 		cmd->autotype = dm_pool_strdup(cmdtool->libmem, line_argv[1]);
 }
 
-#define MAX_RULE_OPTS 64
-
 static void _add_rule(struct cmd_context *cmdtool, struct command *cmd,
 		      int line_argc, char *line_argv[])
 {
@@ -1105,7 +1103,7 @@ static void _add_rule(struct cmd_context *cmdtool, struct command *cmd,
 	int check = 0;
 
 	if (cmd->rule_count == CMD_MAX_RULES) {
-		log_error("Parsing command defs: too many rules for cmd.");
+		log_error("Parsing command defs: too many rules for cmd, increate CMD_MAX_RULES.");
 		cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
 		return;
 	}
@@ -1131,22 +1129,10 @@ static void _add_rule(struct cmd_context *cmdtool, struct command *cmd,
 		}
 
 		else if (!strncmp(arg, "--", 2)) {
-			if (!rule->opts) {
-				if (!(rule->opts = dm_pool_alloc(cmdtool->libmem, MAX_RULE_OPTS * sizeof(int)))) {
-					log_error("Parsing command defs: no mem.");
-					cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
-					return;
-				}
-				memset(rule->opts, 0, MAX_RULE_OPTS * sizeof(int));
-			}
-
-			if (!rule->check_opts) {
-				if (!(rule->check_opts = dm_pool_alloc(cmdtool->libmem, MAX_RULE_OPTS * sizeof(int)))) {
-					log_error("Parsing command defs: no mem.");
-					cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
-					return;
-				}
-				memset(rule->check_opts, 0, MAX_RULE_OPTS * sizeof(int));
+			if (rule->opts_count >= MAX_RULE_OPTS || rule->check_opts_count >= MAX_RULE_OPTS) {
+				log_error("Parsing command defs: too many cmd_rule options for cmd, increase MAX_RULE_OPTS.");
+				cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
+				return;
 			}
 
 			if (check)

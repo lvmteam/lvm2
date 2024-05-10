@@ -131,15 +131,17 @@ struct pos_arg {
 
 #define RULE_INVALID 1
 #define RULE_REQUIRE 2
+#define MAX_RULE_OPTS 8
 
 struct cmd_rule {
-	int *opts;			/* if any option in this list is set, the check may apply */
 	uint64_t lvt_bits;		/* if LV has one of these types (lvt_enum_to_bit), the check may apply */
 	uint64_t lvp_bits;		/* if LV has all of these properties (lvp_enum_to_bit), the check may apply */
 
-	int *check_opts;		/* used options must [not] be in this list */
 	uint64_t check_lvt_bits;	/* LV must [not] have one of these type */
 	uint64_t check_lvp_bits;	/* LV must [not] have all of these properties */
+
+	uint16_t opts[MAX_RULE_OPTS];	/* if any option in this list is set, the check may apply */
+	uint16_t check_opts[MAX_RULE_OPTS];/* used options must [not] be in this list */
 
 	uint16_t rule;			/* RULE_INVALID, RULE_REQUIRE: check values must [not] be true */
 	uint16_t opts_count;		/* entries in opts[] */
