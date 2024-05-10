@@ -405,10 +405,11 @@ pvlv_counts() {
 	local num_pvs=$2
 	local num_lvs=$3
 	local num_snaps=$4
-	lvs -o+devices "$local_vg"
-	vg_field "$local_vg" pv_count "$num_pvs"
-	vg_field "$local_vg" lv_count "$num_lvs"
-	vg_field "$local_vg" snap_count "$num_snaps"
+	eval "$(vgs --noheadings --nameprefixes -o pv_count,lv_count,snap_count "$local_vg")"
+	[ "$LVM2_PV_COUNT" = "$num_pvs" ] && [ "$LVM2_LV_COUNT" = "$num_lvs" ] && [ "$LVM2_SNAP_COUNT" = "$num_snaps" ] ||
+		die "vg_fields: vg=\"$local_vg\", field=\"pv_count,lv_count,snap_count\","\
+			"actual=\"$LVM2_PV_COUNT $LVM2_LV_COUNT $LVM2_SNAP_COUNT\", "\
+			"expected=\"$num_pvs $num_lvs $num_snaps\""
 }
 
 # Compare md5 check generated from get dev_md5sum
