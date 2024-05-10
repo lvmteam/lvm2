@@ -29,6 +29,8 @@ mkfs.ext3 "$DM_DEV_DIR/$vg/$lv1"
 
 # Slowdown PV for resized LV
 aux delay_dev "$dev1" 50 50 "$(get first_extent_sector "$dev1"):"
+# Test requires usable delay_dev
+test -f HAVE_DM_DELAY || skip "delay_dev is missing"
 
 lvresize -L-5 -r $vg/$lv1 &
 
