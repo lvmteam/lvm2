@@ -1380,7 +1380,7 @@ int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
 	/* Sort all commands by its name for quick binary search */
 	qsort(commands_idx, COMMAND_COUNT, sizeof(long), _command_name_compare);
 
-	for (i = 0; command_names[i].name; i++)
+	for (i = 0; i < LVM_COMMAND_COUNT; ++i)
 		_set_valid_args_for_command_name(i);
 
 	_cmdline.num_command_names = i; /* Also counted how many command entries we have */
@@ -2077,7 +2077,7 @@ static void _usage_all(void)
 {
 	int i;
 
-	for (i = 0; command_names[i].name; i++)
+	for (i = 0; i < LVM_COMMAND_COUNT; ++i)
 		_usage(command_names[i].name, 1, 1);
 
 	print_usage_notes(NULL);

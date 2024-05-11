@@ -32,9 +32,8 @@
 /* see cmd_names[] below, one for each unique "ID" in command-lines.in */
 
 struct cmd_name {
-	const char *enum_name; /* "foo_CMD" */
-	int cmd_enum;          /* foo_CMD */
-	const char *name;      /* "foo" from string after ID: */
+	const char name[68];   /* "foo" from string after ID: */
+	uint16_t cmd_enum;     /* foo_CMD */
 };
 
 /* create table of value names, e.g. String, and corresponding enum from vals.h */
@@ -72,7 +71,7 @@ static const struct lv_type lv_types[LVT_COUNT + 1] = {
 /* create table of command IDs */
 
 static const struct cmd_name cmd_names[CMD_COUNT + 1] = {
-#define cmd(a, b) { # a, a, # b },
+#define cmd(a, b) { # b, a },
 #include "../include/cmds.h"
 #undef cmd
 };
