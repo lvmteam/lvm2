@@ -1341,13 +1341,7 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 			cmd = &commands[cmd_count];
 			cmd->command_index = cmd_count;
 			cmd_count++;
-			cmd->name = dm_pool_strdup(cmdtool->libmem, name);
-
-			if (!cmd->name) {
-				/* FIXME */
-				stack;
-				return 0;
-			}
+			cmd->name = name;
 
 			if (run_name && strcmp(run_name, name)) {
 				skip = 1;
