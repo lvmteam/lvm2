@@ -23,6 +23,7 @@ struct cmdline_context {
 	struct command *commands;
 	int num_commands;
 	struct command_name *command_names;
+	struct command_name_args *command_names_args;
 	int num_command_names;
 };
 

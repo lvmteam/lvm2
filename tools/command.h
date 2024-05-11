@@ -36,7 +36,9 @@ struct command_name {
 	unsigned int flags;
 	command_fn fn; /* old style */
 	uint16_t lvm_command_enum; /* as declared in commands.h with _COMMAND */
+};
 
+struct command_name_args {
 	uint16_t num_args;
 	uint16_t variants;        /* number of command defs with this command name */
 	/* union of {required,optional}_opt_args for all commands with this name */
@@ -184,8 +186,8 @@ struct command {
 	const char *name;
 	const char *desc; /* specific command description from command-lines.in */
 	const char *command_id; /* ID string in command-lines.in */
-	int command_enum; /* <command_id>_CMD */
-	int command_index; /* position in commands[] */
+	uint16_t command_enum; /* <command_id>_CMD */
+	uint16_t command_index; /* position in commands[] */
 
 	const struct command_function *functions; /* new style */
 	command_fn fn;                      /* old style */

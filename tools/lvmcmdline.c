@@ -53,6 +53,7 @@ extern char *optarg;
  * Table of command names
  */
 extern struct command_name command_names[];
+extern struct command_name_args command_names_args[];
 
 /*
  * Table of commands (as defined in command-lines.in)
@@ -159,10 +160,11 @@ static const struct command_function _command_functions[CMD_COUNT] = {
 /* Command line args */
 int arg_is_valid_for_command(const struct cmd_context *cmd, int a)
 {
+	const struct command_name_args *cna = &command_names_args[cmd->cname->lvm_command_enum];
 	int i;
 
-	for (i = 0; i < cmd->cname->num_args; i++) {
-		if (cmd->cname->valid_args[i] == a)
+	for (i = 0; i < cna->num_args; i++) {
+		if (cna->valid_args[i] == a)
 			return 1;
 	}
 
@@ -1268,18 +1270,18 @@ static void _set_valid_args_for_command_name(int ci)
 		if (all_args[i]) {
 			opt_enum = _cmdline.opt_names[i].opt_enum;
 
-			command_names[ci].valid_args[num_args] = opt_enum;
+			command_names_args[ci].valid_args[num_args] = opt_enum;
 			num_args++;
 
 			/* Automatically recognize --extents in addition to --size. */
 			if (opt_enum == size_ARG) {
-				command_names[ci].valid_args[num_args] = extents_ARG;
+				command_names_args[ci].valid_args[num_args] = extents_ARG;
 				num_args++;
 			}
 
 			/* Recognize synonyms */
 			if ((opt_syn = _opt_standard_to_synonym(command_names[ci].name, opt_enum))) {
-				command_names[ci].valid_args[num_args] = opt_syn;
+				command_names_args[ci].valid_args[num_args] = opt_syn;
 				num_args++;
 			}
 
@@ -1290,13 +1292,13 @@ static void _set_valid_args_for_command_name(int ci)
 			 * so just add allocation whenever either is seen.
 			 */
 			if ((opt_enum == allocatable_ARG) || (opt_enum == resizeable_ARG)) {
-				command_names[ci].valid_args[num_args] = allocation_ARG;
+				command_names_args[ci].valid_args[num_args] = allocation_ARG;
 				num_args++;
 			}
 		}
 	}
 
-	command_names[ci].num_args = num_args;
+	command_names_args[ci].num_args = num_args;
 }
 
 static const struct command_function *_find_command_id_function(int command_enum)
@@ -1318,6 +1320,7 @@ static void _unregister_commands(void)
 	_cmdline.commands = NULL;
 	_cmdline.num_commands = 0;
 	_cmdline.command_names = NULL;
+	_cmdline.command_names_args = NULL;
 	_cmdline.num_command_names = 0;
 }
 
@@ -1385,6 +1388,7 @@ int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
 
 	_cmdline.num_command_names = i; /* Also counted how many command entries we have */
 	_cmdline.command_names = command_names;
+	_cmdline.command_names_args = command_names_args;
 
 	return 1;
 }
@@ -2012,6 +2016,7 @@ static void _short_usage(const char *name)
 static int _usage(const char *name, int longhelp, int skip_notes)
 {
 	const struct command_name *cname = find_command_name(name);
+	const struct command_name_args *cna = &command_names_args[cname->lvm_command_enum];
 	struct command *cmd = NULL;
 	int show_full = longhelp;
 	int i;
@@ -2031,7 +2036,7 @@ static int _usage(const char *name, int longhelp, int skip_notes)
 
 	/* Reduce the default output when there are several variants. */
 
-	if (cname->variants < 3)
+	if (cna->variants < 3)
 		show_full = 1;
 
 	for (i = 0; i < COMMAND_COUNT; i++) {
@@ -2167,14 +2172,17 @@ static void _add_getopt_arg(int opt_enum, char **optstrp, struct option **longop
 static int _find_arg(const char *cmd_name, int goval)
 {
 	const struct command_name *cname;
+	const struct command_name_args *cna;
 	int arg_enum;
 	int i;
 
 	if (!(cname = find_command_name(cmd_name)))
 		return -1;
 
-	for (i = 0; i < cname->num_args; i++) {
-		arg_enum = cname->valid_args[i];
+	cna = &command_names_args[cname->lvm_command_enum];
+
+	for (i = 0; i < cna->num_args; i++) {
+		arg_enum = cna->valid_args[i];
 
 		/* assert arg_enum == _cmdline.opt_names[arg_enum].arg_enum */
 
@@ -2212,9 +2220,11 @@ static int _process_command_line(struct cmd_context *cmd, int *argc, char ***arg
 	 * array (opts) to pass to the getopt_long() function.  IOW we generate
 	 * the arguments to pass to getopt_long() from the opt_names data.
 	 */
-	if (cmd->cname)
-		for (i = 0; i < cmd->cname->num_args; i++)
-			_add_getopt_arg(cmd->cname->valid_args[i], &ptr, &o);
+	if (cmd->cname) {
+		struct command_name_args *cna = &command_names_args[cmd->cname->lvm_command_enum];
+		for (i = 0; i < cna->num_args; i++)
+			_add_getopt_arg(cna->valid_args[i], &ptr, &o);
+	}
 
 	*ptr = '\0';
 	memset(o, 0, sizeof(*o));

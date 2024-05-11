@@ -83,7 +83,7 @@ static const struct cmd_name cmd_names[CMD_COUNT + 1] = {
 
 #ifdef MAN_PAGE_GENERATOR
 
-static struct command_name command_names[] = {
+static const struct command_name command_names[] = {
 #define xx(a, b, c...) { # a, b, c, NULL, a ## _COMMAND },
 #include "commands.h"
 #undef xx
@@ -92,11 +92,12 @@ static struct command commands[COMMAND_COUNT];
 
 #else /* MAN_PAGE_GENERATOR */
 
-struct command_name command_names[] = {
+const struct command_name command_names[] = {
 #define xx(a, b, c...) { # a, b, c, a, a ## _COMMAND },
 #include "commands.h"
 #undef xx
 };
+
 extern struct command commands[COMMAND_COUNT]; /* defined in lvmcmdline.c */
 
 const struct opt_name *get_opt_name(int opt)
@@ -124,6 +125,8 @@ const struct lv_type *get_lv_type(int lvt_enum)
 }
 
 #endif /* MAN_PAGE_GENERATOR */
+
+struct command_name_args command_names_args[LVM_COMMAND_COUNT] = { 0 };
 
 /* array of pointers into opt_names[] that is sorted alphabetically (by long opt name) */
 
@@ -1182,7 +1185,7 @@ void factor_common_options(void)
 
 	for (cn = 0; cn < LVM_COMMAND_COUNT; ++cn) {
 		/* already factored */
-		if (command_names[cn].variants)
+		if (command_names_args[cn].variants)
 			continue;
 
 		for (ci = 0; ci < COMMAND_COUNT; ci++) {
@@ -1191,7 +1194,7 @@ void factor_common_options(void)
 			if (strcmp(cmd->name, command_names[cn].name))
 				continue;
 
-			command_names[cn].variants++;
+			command_names_args[cn].variants++;
 		}
 
 		for (opt_enum = 0; opt_enum < ARG_COUNT; opt_enum++) {
@@ -1203,22 +1206,22 @@ void factor_common_options(void)
 					continue;
 
 				if (cmd->ro_count || cmd->any_ro_count)
-					command_names[cn].variant_has_ro = 1;
+					command_names_args[cn].variant_has_ro = 1;
 				if (cmd->rp_count)
-					command_names[cn].variant_has_rp = 1;
+					command_names_args[cn].variant_has_rp = 1;
 				if (cmd->oo_count)
-					command_names[cn].variant_has_oo = 1;
+					command_names_args[cn].variant_has_oo = 1;
 				if (cmd->op_count)
-					command_names[cn].variant_has_op = 1;
+					command_names_args[cn].variant_has_op = 1;
 
 				for (ro = 0; ro < cmd->ro_count + cmd->any_ro_count; ro++) {
-					command_names[cn].all_options[cmd->required_opt_args[ro].opt] = 1;
+					command_names_args[cn].all_options[cmd->required_opt_args[ro].opt] = 1;
 
 					if ((cmd->required_opt_args[ro].opt == size_ARG) && !strncmp(cmd->name, "lv", 2))
-						command_names[cn].all_options[extents_ARG] = 1;
+						command_names_args[cn].all_options[extents_ARG] = 1;
 				}
 				for (oo = 0; oo < cmd->oo_count; oo++)
-					command_names[cn].all_options[cmd->optional_opt_args[oo].opt] = 1;
+					command_names_args[cn].all_options[cmd->optional_opt_args[oo].opt] = 1;
 
 				found = 0;
 
@@ -1234,7 +1237,7 @@ void factor_common_options(void)
 			}
 
 			/* all commands starting with this name use this option */
-			command_names[cn].common_options[opt_enum] = 1;
+			command_names_args[cn].common_options[opt_enum] = 1;
  next_opt:
 			;
 		}
@@ -1723,6 +1726,7 @@ static void _print_usage_def(struct command *cmd, int opt_enum, struct arg_def *
 void print_usage(struct command *cmd, int longhelp, int desc_first)
 {
 	const struct command_name *cname = _find_command_name(cmd->name);
+	const struct command_name_args *cna = (cname) ? &command_names_args[cname->lvm_command_enum] : NULL;
 	int any_req = (cmd->cmd_flags & CMD_FLAG_ANY_REQUIRED_OPT) ? 1 : 0;
 	int include_extents = 0;
 	int ro, rp, oo, op, opt_enum, first;
@@ -1875,7 +1879,7 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 			 * see print_common_options_cmd()
 			 */
 
-			if (cname && (cname->variants > 1) && cname->common_options[opt_enum])
+			if (cna && (cna->variants > 1) && cna->common_options[opt_enum])
 				continue;
 
 			printf("\n\t[");
@@ -1915,7 +1919,7 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 			 * see print_common_options_cmd()
 			 */
 
-			if (cname && (cname->variants > 1) && cname->common_options[opt_enum])
+			if (cna && (cna->variants > 1) && cna->common_options[opt_enum])
 				continue;
 
 			printf("\n\t[");
@@ -1999,6 +2003,7 @@ void print_usage_common_lvm(const struct command_name *cname, struct command *cm
 
 void print_usage_common_cmd(const struct command_name *cname, struct command *cmd)
 {
+	const struct command_name_args *cna = &command_names_args[cname->lvm_command_enum];
 	int oo, opt_enum;
 	int found_common_command = 0;
 
@@ -2007,11 +2012,11 @@ void print_usage_common_cmd(const struct command_name *cname, struct command *cm
 	 * are common to all commands with a common name.
 	 */
 
-	if (cname->variants < 2)
+	if (cna->variants < 2)
 		return;
 
 	for (opt_enum = 0; opt_enum < ARG_COUNT; opt_enum++) {
-		if (!cname->common_options[opt_enum])
+		if (!cna->common_options[opt_enum])
 			continue;
 		if (_is_lvm_all_opt(opt_enum))
 			continue;
@@ -2027,7 +2032,7 @@ void print_usage_common_cmd(const struct command_name *cname, struct command *cm
 	/* print options with short opts */
 
 	for (opt_enum = 0; opt_enum < ARG_COUNT; opt_enum++) {
-		if (!cname->common_options[opt_enum])
+		if (!cna->common_options[opt_enum])
 			continue;
 
 		if (_is_lvm_all_opt(opt_enum))
@@ -2055,7 +2060,7 @@ void print_usage_common_cmd(const struct command_name *cname, struct command *cm
 	/* print options without short opts */
 
 	for (opt_enum = 0; opt_enum < ARG_COUNT; opt_enum++) {
-		if (!cname->common_options[opt_enum])
+		if (!cna->common_options[opt_enum])
 			continue;
 
 		if (_is_lvm_all_opt(opt_enum))
