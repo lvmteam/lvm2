@@ -37,18 +37,18 @@ struct command_name {
 	command_fn fn; /* old style */
 	uint16_t lvm_command_enum; /* as declared in commands.h with _COMMAND */
 
+	uint16_t num_args;
+	uint16_t variants;        /* number of command defs with this command name */
 	/* union of {required,optional}_opt_args for all commands with this name */
-	uint16_t valid_args[ARG_COUNT]; /* used for getopt */
-	int num_args;
+	uint16_t valid_args[ARG_COUNT]; /* used for getopt, store option */
 
 	/* the following are for generating help and man page output */
-	uint8_t common_options[ARG_COUNT]; /* options common to all defs */
-	uint8_t all_options[ARG_COUNT];    /* union of options from all defs */
-	int variants;        /* number of command defs with this command name */
-	int variant_has_ro;  /* do variants use required_opt_args ? */
-	int variant_has_rp;  /* do variants use required_pos_args ? */
-	int variant_has_oo;  /* do variants use optional_opt_args ? */
-	int variant_has_op;  /* do variants use optional_pos_args ? */
+	uint8_t common_options[ARG_COUNT]; /* options common to all defs  0/1 */
+	uint8_t all_options[ARG_COUNT];    /* union of options from all defs 0/1 */
+	uint8_t variant_has_ro;  /* do variants use required_opt_args ? */
+	uint8_t variant_has_rp;  /* do variants use required_pos_args ? */
+	uint8_t variant_has_oo;  /* do variants use optional_opt_args ? */
+	uint8_t variant_has_op;  /* do variants use optional_pos_args ? */
 };
 
 /*
@@ -156,11 +156,11 @@ struct cmd_rule {
  * optional.
  */
 #define CMD_RO_ARGS 32          /* required opt args */
-#define CMD_OO_ARGS 64          /* optional opt args */
+#define CMD_OO_ARGS 56          /* optional opt args */
 #define CMD_RP_ARGS 8           /* required positional args */
 #define CMD_OP_ARGS 8           /* optional positional args */
 #define CMD_IO_ARGS 8           /* ignore opt args */
-#define CMD_MAX_RULES 16        /* max number of rules per command def */
+#define CMD_MAX_RULES 12        /* max number of rules per command def */
 
 /*
  * one or more from required_opt_args is required,
