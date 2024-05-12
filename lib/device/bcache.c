@@ -67,7 +67,7 @@ struct cb_set {
 	struct dm_list free;
 	struct dm_list allocated;
 	struct control_block vec[];
-} control_block_set;
+};
 
 static struct cb_set *_cb_set_create(unsigned nr)
 {
