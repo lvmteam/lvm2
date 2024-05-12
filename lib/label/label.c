@@ -253,7 +253,8 @@ struct label *label_create(struct labeller *labeller)
 
 
 /* global variable for accessing the bcache populated by label scan */
-struct bcache *scan_bcache;
+/* FIXME/TODO convert to cmd_context */
+static struct bcache *scan_bcache;
 
 #define BCACHE_BLOCK_SIZE_IN_SECTORS 256 /* 256*512 = 128K */
 
