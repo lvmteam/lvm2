@@ -1184,7 +1184,7 @@ void factor_common_options(void)
 
 		for (ci = 0; ci < COMMAND_COUNT; ci++) {
 			cmd = &commands[ci];
-			if (strcmp(cmd->name, command_names[cn].name))
+			if (cmd->lvm_command_enum != command_names[cn].lvm_command_enum)
 				continue;
 
 			command_names_args[cn].variants++;
@@ -1195,7 +1195,7 @@ void factor_common_options(void)
 			for (ci = 0; ci < COMMAND_COUNT; ci++) {
 				cmd = &commands[ci];
 
-				if (strcmp(cmd->name, command_names[cn].name))
+				if (cmd->lvm_command_enum != command_names[cn].lvm_command_enum)
 					continue;
 
 				if (cmd->ro_count || cmd->any_ro_count)
