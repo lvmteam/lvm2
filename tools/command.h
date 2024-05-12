@@ -193,6 +193,7 @@ struct command {
 	command_fn fn;                      /* old style */
 
 	unsigned int cmd_flags; /* CMD_FLAG_ */
+	uint16_t lvm_command_enum; /* position in commands[] */
 
 	/* definitions of opt/pos args */
 

@@ -377,7 +377,7 @@ static uint64_t _lv_to_bits(struct command *cmd, char *name)
 	return lvt_bits;
 }
 
-const struct command_name *find_command_name(const char *name)
+static unsigned _find_lvm_command_enum(const char *name)
 {
 	static int _command_names_count = -1;
 	int first = 0, last, middle;
@@ -408,28 +408,17 @@ const struct command_name *find_command_name(const char *name)
 		else if (i > 0)
 			last = middle - 1;
 		else
-			return &command_names[middle];
+			return middle;
 	}
 
-	return NULL;
+	return -1;
 }
 
-static const struct command_name *_find_command_name(const char *name)
+const struct command_name *find_command_name(const char *name)
 {
-	if (!islower(name[0]))
-		return NULL; /* Commands starts with lower-case */
+	int r = _find_lvm_command_enum(name);
 
-	return find_command_name(name);
-}
-
-static const char *_is_command_name(char *str)
-{
-	const struct command_name *c;
-
-	if ((c = _find_command_name(str)))
-		return c->name;
-
-	return NULL;
+	return (r < LVM_COMMAND_COUNT) ? &command_names[r] : NULL;
 }
 
 static int _is_opt_name(char *str)
@@ -1306,6 +1295,7 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 	int copy_pos = 0;
 	int skip = 0;
 	int i;
+	int lvm_command_enum;
 
 	memset(&commands, 0, sizeof(commands));
 
@@ -1328,21 +1318,21 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 			continue;
 
 		/* New cmd def begins: command_name <required opt/pos args> */
-		if ((name = _is_command_name(line_argv[0]))) {
-			if (cmd_count >= COMMAND_COUNT) {
+		if (islower(line_argv[0][0]) && /* All commands are lower-case only */
+		    ((lvm_command_enum = _find_lvm_command_enum(line_argv[0])) < LVM_COMMAND_COUNT)) {
+			if (cmd_count >= COMMAND_COUNT)
 				return 0;
-			}
 
 			/*
 			 * FIXME: when running one specific command name,
 			 * we can optimize by not parsing command defs
 			 * that don't start with that command name.
 			 */
-
 			cmd = &commands[cmd_count];
 			cmd->command_index = cmd_count;
 			cmd_count++;
-			cmd->name = name;
+			cmd->lvm_command_enum = lvm_command_enum;
+			cmd->name = name = command_names[lvm_command_enum].name;
 
 			if (run_name && strcmp(run_name, name)) {
 				skip = 1;
@@ -1724,8 +1714,8 @@ static void _print_usage_def(struct command *cmd, int opt_enum, struct arg_def *
 
 void print_usage(struct command *cmd, int longhelp, int desc_first)
 {
-	const struct command_name *cname = _find_command_name(cmd->name);
-	const struct command_name_args *cna = (cname) ? &command_names_args[cname->lvm_command_enum] : NULL;
+	const struct command_name *cname = &command_names[cmd->lvm_command_enum];
+	const struct command_name_args *cna = &command_names_args[cname->lvm_command_enum];
 	int any_req = (cmd->cmd_flags & CMD_FLAG_ANY_REQUIRED_OPT) ? 1 : 0;
 	int include_extents = 0;
 	int ro, rp, oo, op, opt_enum, first;

@@ -346,8 +346,8 @@ static const char *_man_long_opt_name(const char *cmdname, int opt_enum)
 
 static void _print_man_usage(char *lvmname, struct command *cmd)
 {
-	const struct command_name *cname;
-	const struct command_name_args *cna;
+	const struct command_name *cname = &command_names[cmd->lvm_command_enum];
+	const struct command_name_args *cna = &command_names_args[cmd->lvm_command_enum];
 	int any_req = (cmd->cmd_flags & CMD_FLAG_ANY_REQUIRED_OPT) ? 1 : 0;
 	int sep, ro, rp, oo, op, opt_enum;
 	int need_ro_indent_end = 0;
@@ -356,11 +356,6 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 	uint64_t lv_type_bits = 0;
 
 	_was_hyphen = 0;
-	if (!(cname = _find_command_name(cmd->name)))
-		return;
-
-	cna = &command_names_args[cname->lvm_command_enum];
-
 	printf("\\fB%s\\fP", lvmname);
 
 	if (!any_req)
@@ -712,11 +707,8 @@ out:
 
 static void _print_man_usage_common_lvm(struct command *cmd)
 {
-	const struct command_name *cname;
+	const struct command_name *cname = &command_names[cmd->lvm_command_enum];
 	int i, sep, oo, opt_enum;
-
-	if (!(cname = _find_command_name(cmd->name)))
-		return;
 
 	printf("Common options for lvm:\n");
 	printf(".\n");
@@ -796,15 +788,10 @@ static void _print_man_usage_common_lvm(struct command *cmd)
 
 static void _print_man_usage_common_cmd(struct command *cmd)
 {
-	const struct command_name *cname;
-	const struct command_name_args *cna;
+	const struct command_name *cname = &command_names[cmd->lvm_command_enum];
+	const struct command_name_args *cna = &command_names_args[cmd->lvm_command_enum];
 	int i, sep, oo, opt_enum;
 	int found_common_command = 0;
-
-	if (!(cname = _find_command_name(cmd->name)))
-		return;
-
-	cna = &command_names_args[cname->lvm_command_enum];
 
 	if (cna->variants < 2)
 		return;
@@ -1369,7 +1356,7 @@ static int _print_man(char *name, char *des_file, int secondary)
 		name += 4;
 	}
 
-	cname = _find_command_name(name);
+	cname = find_command_name(name);
 
 	printf(".TH %s 8 \"LVM TOOLS #VERSION#\" \"Red Hat, Inc.\"\n",
 		_upper_command_name(lvmname));
@@ -1409,10 +1396,8 @@ static int _print_man(char *name, char *des_file, int secondary)
 			printf(".\n.SH SYNOPSIS\n.\n");
 			prev_cmd = cmd;
 
-			if (!(cname = _find_command_name(cmd->name)))
-				return 0;
-
-			cna = &command_names_args[cname->lvm_command_enum];
+			cname = &command_names[cmd->lvm_command_enum];
+			cna = &command_names_args[cmd->lvm_command_enum];
 
 			if (cna->variant_has_ro && cna->variant_has_rp)
 				printf("\\fB%s\\fP \\fIoption_args\\fP \\fIposition_args\\fP\n", lvmname);
