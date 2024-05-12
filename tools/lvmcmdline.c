@@ -2692,7 +2692,7 @@ static void _display_help(void)
 	log_error(" ");
 
 	for (i = 0; i < _cmdline.num_command_names; i++) {
-		struct command_name *cname = _cmdline.command_names + i;
+		const struct command_name *cname = _cmdline.command_names + i;
 
 		log_error("%-16.16s%s", cname->name, cname->desc);
 	}

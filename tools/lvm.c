@@ -50,9 +50,9 @@ static char *_list_cmds(const char *text, int state)
 		len = strlen(text);
 	}
 
-	while (i < _cmdline->num_command_names)
-		if (!strncmp(text, _cmdline->command_names[i++].name, len))
-			return strdup(_cmdline->command_names[i - 1].name);
+	for (;i < _cmdline->num_command_names;++i)
+		if (!strncmp(text, _cmdline->command_names[i].name, len))
+			return strdup(_cmdline->command_names[i].name);
 
 	return NULL;
 }
@@ -62,8 +62,8 @@ static char *_list_args(const char *text, int state)
 {
 	static int match_no = 0;
 	static size_t len = 0;
-	static struct command_name *cname;
-	static struct command_name_args *cna;
+	static const struct command_name *cname;
+	static const struct command_name_args *cna;
 
 	/* Initialise if this is a new completion attempt */
 	if (!state) {
@@ -102,16 +102,14 @@ static char *_list_args(const char *text, int state)
 
 	/* Short form arguments */
 	if (len < 3) {
-		while (match_no < cna->num_args) {
+		for (;match_no < cna->num_args; ++match_no) {
 			char s[3];
-			char c;
-			if (!(c = (_cmdline->opt_names +
-				   cna->valid_args[match_no++])->short_opt))
-				continue;
-
-			sprintf(s, "-%c", c);
-			if (!strncmp(text, s, len))
-				return strdup(s);
+			char c = (_cmdline->opt_names + cna->valid_args[match_no])->short_opt;
+			if (c) {
+				sprintf(s, "-%c", c);
+				if (!strncmp(text, s, len))
+					return strdup(s);
+			}
 		}
 	}
 
@@ -119,10 +117,8 @@ static char *_list_args(const char *text, int state)
 	if (match_no < cna->num_args)
 		match_no = cna->num_args;
 
-	while (match_no - cna->num_args < cna->num_args) {
-		const char *l;
-		l = (_cmdline->opt_names +
-		     cna->valid_args[match_no++ - cna->num_args])->long_opt;
+	for (;match_no - cna->num_args < cna->num_args; ++match_no) {
+		const char *l = (_cmdline->opt_names + cna->valid_args[match_no - cna->num_args])->long_opt;
 		if (*(l + 2) && !strncmp(text, l, len))
 			return strdup(l);
 	}

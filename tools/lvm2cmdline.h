@@ -22,8 +22,8 @@ struct cmdline_context {
 	const struct opt_name *opt_names;
 	struct command *commands;
 	int num_commands;
-	struct command_name *command_names;
-	struct command_name_args *command_names_args;
+	const struct command_name *command_names;
+	const struct command_name_args *command_names_args;
 	int num_command_names;
 };
 
