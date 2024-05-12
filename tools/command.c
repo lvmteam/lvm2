@@ -384,12 +384,14 @@ static uint64_t _lv_to_bits(struct command *cmd, char *name)
 
 static unsigned _find_lvm_command_enum(const char *name)
 {
-	static int _command_names_count = -1;
 	int first = 0, last, middle;
 	int i;
 
+#ifdef MAN_PAGE_GENERATOR
+	/* Validate cmd_names & command_names arrays are properly sorted */
+	static int _command_names_count = -1;
+
 	if (_command_names_count == -1) {
-		/* Validate cmd_names & command_names arrays are properly sorted */
 		for (i = 1; i < CMD_COUNT - 2; i++)
 			if (strcmp(cmd_names[i].name, cmd_names[i + 1].name) > 0) {
 				log_error("File cmds.h has unsorted name entry %s.",
@@ -404,7 +406,8 @@ static unsigned _find_lvm_command_enum(const char *name)
 			}
 		_command_names_count = i - 1;
 	}
-	last = _command_names_count;
+#endif
+	last = LVM_COMMAND_COUNT - 1;
 
 	while (first <= last) {
 		middle = first + (last - first) / 2;
