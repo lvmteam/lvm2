@@ -64,7 +64,8 @@ static const struct lv_prop lv_props[LVP_COUNT + 1] = {
 /* create table of lv type names, e.g. linear and corresponding enum from lv_types.h */
 
 static const struct lv_type lv_types[LVT_COUNT + 1] = {
-#define lvt(a, b, c) { # a, a, b, c },
+	{ "" },
+#define lvt(a) { # a, a ## _LVT },
 #include "lv_types.h"
 #undef lvt
 };

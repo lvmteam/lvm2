@@ -2933,10 +2933,7 @@ static int _lv_types_match(struct cmd_context *cmd, struct logical_volume *lv, u
 		 * in tools.h
 		 */
 
-		if (!type->fn)
-			match = _lv_is_type(cmd, lv, lvt_enum);
-		else
-			match = type->fn(cmd, lv);
+		match = _lv_is_type(cmd, lv, lvt_enum);
 
 		if (match)
 			found_a_match = 1;

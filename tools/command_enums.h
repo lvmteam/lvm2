@@ -46,9 +46,11 @@ enum {
 
 /* define enums for LV types, foo_LVT */
 enum {
-#define lvt(a, b, c) a ,
+	LVT_NONE,
+#define lvt(a) a ## _LVT ,
 #include "lv_types.h"
 #undef lvt
+	LVT_COUNT
 };
 
 enum {
