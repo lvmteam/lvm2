@@ -185,7 +185,6 @@ struct cmd_rule {
 struct command {
 	const char *name;
 	const char *desc; /* specific command description from command-lines.in */
-	const char *command_id; /* ID string in command-lines.in */
 	uint16_t command_enum; /* <command_id>_CMD */
 	uint16_t command_index; /* position in commands[] */
 
@@ -273,7 +272,8 @@ struct lv_type {
 
 
 int define_commands(struct cmd_context *cmdtool, const char *run_name);
-int command_id_to_enum(const char *str);
+unsigned command_id_to_enum(const char *str);
+const char *command_enum(unsigned command_enum);
 void print_usage(struct command *cmd, int longhelp, int desc_first);
 void print_usage_common_cmd(const struct command_name *cname, struct command *cmd);
 void print_usage_common_lvm(const struct command_name *cname, struct command *cmd);

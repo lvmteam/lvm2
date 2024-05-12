@@ -3006,7 +3006,7 @@ static int _check_lv_types(struct cmd_context *cmd, struct logical_volume *lv, i
 
 	if (!val_bit_is_set(cmd->command->required_pos_args[pos-1].def.val_bits, lv_VAL)) {
 		log_error(INTERNAL_ERROR "Command %d:%s arg position %d does not permit an LV (%llx)",
-			  cmd->command->command_index, cmd->command->command_id,
+			  cmd->command->command_index, command_enum(cmd->command->command_enum),
 			  pos, (unsigned long long)cmd->command->required_pos_args[pos-1].def.val_bits);
 		return 0;
 	}

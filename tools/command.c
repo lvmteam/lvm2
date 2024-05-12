@@ -284,10 +284,10 @@ err:
 
 /* "foo" string to foo_CMD int */
 
-int command_id_to_enum(const char *str)
+unsigned command_id_to_enum(const char *str)
 {
 	int i;
-	int first = 1, last = CMD_COUNT - 1, middle;
+	unsigned first = 1, last = CMD_COUNT - 1, middle;
 
 	while (first <= last) {
 		middle = first + (last - first) / 2;
@@ -301,6 +301,11 @@ int command_id_to_enum(const char *str)
 
 	log_error("Cannot find command %s.", str);
 	return CMD_NONE;
+}
+
+const char *command_enum(unsigned command_enum)
+{
+	return cmd_names[command_enum].name;
 }
 
 /* "lv_is_prop" to is_prop_LVP */
@@ -1397,14 +1402,9 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 		}
 
 		if (cmd && _is_id_line(line_argv[0])) {
-#ifdef MAN_PAGE_GENERATOR
-			free((void*)cmd->command_id);
-#endif
-			cmd->command_id = dm_pool_strdup(cmdtool->libmem, line_argv[1]);
-
-			if (!cmd->command_id) {
-				/* FIXME */
-				stack;
+			cmd->command_enum = command_id_to_enum(line_argv[1]);
+			if (cmd->command_enum == CMD_NONE) {
+				cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
 				return 0;
 			}
 			continue;

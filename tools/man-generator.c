@@ -1590,7 +1590,9 @@ static int _compare_cmds(struct command *cmd1, struct command *cmd2, int *all_re
 
 	/* compare opt_list_1 and opt_list_2 */
 	if (!_compare_opt_lists(opt_list_1, opt_count_1, opt_list_2, opt_count_2, NULL, NULL)) {
-		log_error("Repeated commands %s %s", cmd1->command_id, cmd2->command_id);
+		log_error("Repeated commands %s %s",
+			  command_enum(cmd1->command_enum),
+			  command_enum(cmd2->command_enum));
 		log_error("cmd1: %s", cmd1->desc);
 		log_error("cmd2: %s", cmd2->desc);
 		_print_opt_list("cmd1 options: ", opt_list_1, opt_count_1);
@@ -1614,7 +1616,9 @@ static int _compare_cmds(struct command *cmd1, struct command *cmd2, int *all_re
 		opt_list_2[opt_count_2] = cmd2->optional_opt_args[i].opt;
 
 		if (!_compare_opt_lists(opt_list_1, opt_count_1, opt_list_2, opt_count_2+1, NULL, NULL)) {
-			log_error("Repeated commands %s %s", cmd1->command_id, cmd2->command_id);
+			log_error("Repeated commands %s %s",
+				  command_enum(cmd1->command_enum),
+				  command_enum(cmd2->command_enum));
 			log_error("cmd1: %s", cmd1->desc);
 			log_error("cmd2: %s", cmd2->desc);
 			log_error("Included cmd2 OO: %s", opt_names[cmd2->optional_opt_args[i].opt].long_opt);
@@ -1650,7 +1654,9 @@ static int _compare_cmds(struct command *cmd1, struct command *cmd2, int *all_re
 			opt_list_2[opt_count_2] = cmd2->optional_opt_args[j].opt;
 
 			if (!_compare_opt_lists(opt_list_1, opt_count_1+1, opt_list_2, opt_count_2+1, cmd1_type_str, cmd2_type_str)) {
-				log_error("Repeated commands %s %s", cmd1->command_id, cmd2->command_id);
+				log_error("Repeated commands %s %s",
+					  command_enum(cmd1->command_enum),
+					  command_enum(cmd2->command_enum));
 				log_error("cmd1: %s", cmd1->desc);
 				log_error("cmd2: %s", cmd2->desc);
 				log_error("Included cmd1 OO: %s and cmd2 OO: %s",

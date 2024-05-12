@@ -1357,14 +1357,6 @@ int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
 	for (i = 0; i < COMMAND_COUNT; i++) {
 		commands_idx[i] = &commands[i];
 		commands[i].command_index = i;
-		commands[i].command_enum = command_id_to_enum(commands[i].command_id);
-
-		if (!commands[i].command_enum) {
-			log_error(INTERNAL_ERROR "Failed to find command id %s.", commands[i].command_id);
-			_cmdline.commands = NULL;
-			_cmdline.num_commands = 0;
-			return 0;
-		}
 
 		/* new style */
 		commands[i].functions = _find_command_id_function(commands[i].command_enum);
@@ -2001,9 +1993,9 @@ out:
 	}
 
 	log_debug("Recognised command %s (id %d / enum %d).",
-		  commands[best_i].command_id, best_i, commands[best_i].command_enum);
+		  command_enum(commands[best_i].command_enum), best_i, commands[best_i].command_enum);
 
-	log_command(cmd->cmd_line, commands[best_i].name, commands[best_i].command_id);
+	log_command(cmd->cmd_line, commands[best_i].name, command_enum(commands[best_i].command_enum));
 
 	return &commands[best_i];
 }
@@ -2052,7 +2044,7 @@ static int _usage(const char *name, int longhelp, int skip_notes)
 		log_very_verbose("Command definition index %d enum %d id %s",
 			         _cmdline.commands[i].command_index,
 			         _cmdline.commands[i].command_enum,
-			         _cmdline.commands[i].command_id);
+			         command_enum(_cmdline.commands[i].command_enum));
 
 		print_usage(&_cmdline.commands[i], 1, 1);
 		cmd = &_cmdline.commands[i];
