@@ -46,7 +46,7 @@ static void _sigchld_handler(int sig __attribute__((unused)))
  */
 int become_daemon(struct cmd_context *cmd, int skip_lvm)
 {
-	static const char devnull[] = "/dev/null";
+	static const char _devnull[] = "/dev/null";
 	int null_fd;
 	pid_t pid;
 	struct sigaction act = {
@@ -83,8 +83,8 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 // #define DEBUG_CHILD
 
 #ifndef DEBUG_CHILD
-	if ((null_fd = open(devnull, O_RDWR)) == -1) {
-		log_sys_error("open", devnull);
+	if ((null_fd = open(_devnull, O_RDWR)) == -1) {
+		log_sys_error("open", _devnull);
 		_exit(ECMD_FAILED);
 	}
 

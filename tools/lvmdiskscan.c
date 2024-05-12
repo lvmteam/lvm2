@@ -21,11 +21,11 @@
 
 #include "tools.h"
 
-int disks_found;
-int parts_found;
-int pv_disks_found;
-int pv_parts_found;
-int max_len;
+static int _disks_found;
+static int _parts_found;
+static int _pv_disks_found;
+static int _pv_parts_found;
+static int _max_len;
 
 static int _get_max_dev_name_len(struct cmd_context *cmd, struct dev_filter *filter)
 {
@@ -63,7 +63,7 @@ static void _count(struct device *dev, int *disks, int *parts)
 static void _print(struct cmd_context *cmd, const struct device *dev,
 		   uint64_t size, const char *what)
 {
-	log_print("%-*s [%15s] %s", max_len, dev_name(dev),
+	log_print("%-*s [%15s] %s", _max_len, dev_name(dev),
 		  display_size(cmd, size), what ? : "");
 }
 
@@ -76,7 +76,7 @@ static int _check_device(struct cmd_context *cmd, struct device *dev)
 		size = 0;
 	}
 	_print(cmd, dev, size, NULL);
-	_count(dev, &disks_found, &parts_found);
+	_count(dev, &_disks_found, &_parts_found);
 
 	return 1;
 }
@@ -89,10 +89,10 @@ int lvmdiskscan(struct cmd_context *cmd, int argc __attribute__((unused)),
 	struct device *dev;
 
 	/* initialise these here to avoid problems with the lvm shell */
-	disks_found = 0;
-	parts_found = 0;
-	pv_disks_found = 0;
-	pv_parts_found = 0;
+	_disks_found = 0;
+	_parts_found = 0;
+	_pv_disks_found = 0;
+	_pv_parts_found = 0;
 
 	if (arg_is_set(cmd, lvmpartition_ARG))
 		log_warn("WARNING: only considering LVM devices");
@@ -100,7 +100,7 @@ int lvmdiskscan(struct cmd_context *cmd, int argc __attribute__((unused)),
 	/* Call before using dev_iter which uses filters which want bcache data. */
 	label_scan(cmd);
 
-	max_len = _get_max_dev_name_len(cmd, cmd->filter);
+	_max_len = _get_max_dev_name_len(cmd, cmd->filter);
 
 	if (!(iter = dev_iter_create(cmd->filter, 0))) {
 		log_error("dev_iter_create failed");
@@ -115,7 +115,7 @@ int lvmdiskscan(struct cmd_context *cmd, int argc __attribute__((unused)),
 				continue;
 			}
 			_print(cmd, dev, size, "LVM physical volume");
-			_count(dev, &pv_disks_found, &pv_parts_found);
+			_count(dev, &_pv_disks_found, &_pv_parts_found);
 			continue;
 		}
 		/* If user just wants PVs we are done */
@@ -131,14 +131,14 @@ int lvmdiskscan(struct cmd_context *cmd, int argc __attribute__((unused)),
 	/* Display totals */
 	if (!arg_is_set(cmd, lvmpartition_ARG)) {
 		log_print("%d disk%s",
-			  disks_found, disks_found == 1 ? "" : "s");
+			  _disks_found, _disks_found == 1 ? "" : "s");
 		log_print("%d partition%s",
-			  parts_found, parts_found == 1 ? "" : "s");
+			  _parts_found, _parts_found == 1 ? "" : "s");
 	}
 	log_print("%d LVM physical volume whole disk%s",
-		  pv_disks_found, pv_disks_found == 1 ? "" : "s");
+		  _pv_disks_found, _pv_disks_found == 1 ? "" : "s");
 	log_print("%d LVM physical volume%s",
-		  pv_parts_found, pv_parts_found == 1 ? "" : "s");
+		  _pv_parts_found, _pv_parts_found == 1 ? "" : "s");
 
 	return ECMD_PROCESSED;
 }
