@@ -22,12 +22,9 @@ struct logical_volume;
 /* old per-command-name function */
 typedef int (*command_fn) (struct cmd_context *cmd, int argc, char **argv);
 
-/* new per-command-line-id functions */
-typedef int (*command_id_fn) (struct cmd_context *cmd, int argc, char **argv);
-
 struct command_function {
 	int command_enum;
-	command_id_fn fn;
+	command_fn fn; /* new style */
 };
 
 struct command_name {
@@ -188,11 +185,8 @@ struct command {
 	uint16_t command_enum; /* <command_id>_CMD */
 	uint16_t command_index; /* position in commands[] */
 
-	const struct command_function *functions; /* new style */
-	command_fn fn;                      /* old style */
-
-	unsigned int cmd_flags; /* CMD_FLAG_ */
-	uint16_t lvm_command_enum; /* position in commands[] */
+	uint16_t lvm_command_enum; /* position in command_names[] */
+	uint16_t cmd_flags; /* CMD_FLAG_ */
 
 	/* definitions of opt/pos args */
 

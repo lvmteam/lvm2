@@ -1301,7 +1301,7 @@ static void _set_valid_args_for_command_name(int ci)
 	command_names_args[ci].num_args = num_args;
 }
 
-static const struct command_function *_find_command_id_function(int command_enum)
+static command_fn _find_command_id_function(int command_enum)
 {
 	int i;
 
@@ -1310,7 +1310,7 @@ static const struct command_function *_find_command_id_function(int command_enum
 
 	for (i = 0; i < CMD_COUNT; i++) {
 		if (_command_functions[i].command_enum == command_enum)
-			return &_command_functions[i];
+			return _command_functions[i].fn;
 	}
 	return NULL;
 }
@@ -1335,8 +1335,6 @@ static int _command_name_compare(const void *on1, const void *on2)
 int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
 {
 	int i;
-	const char *last_name = NULL;
-	const struct command_name *cname = NULL;
 
 	/* already initialized */
 	if (_cmdline.commands)
@@ -1357,19 +1355,6 @@ int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
 	for (i = 0; i < COMMAND_COUNT; i++) {
 		commands_idx[i] = &commands[i];
 		commands[i].command_index = i;
-
-		/* new style */
-		commands[i].functions = _find_command_id_function(commands[i].command_enum);
-
-		/* old style */
-		if (!commands[i].functions) {
-			if (!last_name || strcmp(last_name, commands[i].name)) {
-				last_name = commands[i].name;
-				cname = find_command_name(last_name);
-			}
-			if (cname)
-				commands[i].fn = cname->fn;
-		}
 	}
 
 	/* Sort all commands by its name for quick binary search */
@@ -3053,6 +3038,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	int skip_hyphens;
 	int refresh_done = 0;
 	int io;
+	command_fn fn;
 
 	/* Avoid excessive access to /etc/localtime and set TZ variable for glibc
 	 * so it does not need to check /etc/localtime everytime that needs that info */
@@ -3281,12 +3267,12 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		goto_out;
 	}
 
-	if (cmd->command->functions)
-		/* A command-line-specific function is used */
-		ret = cmd->command->functions->fn(cmd, argc, argv);
-	else
+	/* A command-line-specific function is used */
+	if (!(fn = _find_command_id_function(cmd->command->command_enum)))
 		/* The old style command-name function is used */
-		ret = cmd->command->fn(cmd, argc, argv);
+		fn = command_names[cmd->command->lvm_command_enum].fn;
+
+	ret = fn(cmd, argc, argv);
 
 	lvmlockd_disconnect();
 	fin_locking(cmd);
