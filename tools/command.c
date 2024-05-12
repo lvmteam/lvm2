@@ -1184,13 +1184,12 @@ void factor_common_options(void)
 	struct command *cmd;
 
 	for (cn = 0; cn < LVM_COMMAND_COUNT; ++cn) {
-		/* already factored */
+
 		if (command_names_args[cn].variants)
-			continue;
+			return; /* already factored */
 
 		for (ci = 0; ci < COMMAND_COUNT; ci++) {
 			cmd = &commands[ci];
-
 			if (strcmp(cmd->name, command_names[cn].name))
 				continue;
 
