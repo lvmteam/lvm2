@@ -37,9 +37,11 @@ enum {
 
 /* define enums for LV properties, foo_LVP */
 enum {
-#define lvp(a, b, c) a ,
+	LVP_NONE,
+#define lvp(a) a ## _LVP ,
 #include "lv_props.h"
 #undef lvp
+	LVP_COUNT
 };
 
 /* define enums for LV types, foo_LVT */

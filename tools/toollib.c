@@ -2976,10 +2976,7 @@ static int _lv_props_match(struct cmd_context *cmd, struct logical_volume *lv, u
 		if (!(prop = get_lv_prop(lvp_enum)))
 			continue;
 
-		if (!prop->fn)
-			match = _lv_is_prop(cmd, lv, lvp_enum);
-		else
-			match = prop->fn(cmd, lv);
+		match = _lv_is_prop(cmd, lv, lvp_enum);
 
 		if (!match)
 			found_a_mismatch = 1;

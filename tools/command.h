@@ -249,10 +249,8 @@ struct val_name {
 /* see global lv_props[] */
 
 struct lv_prop {
-	const char enum_name[30]; /* "is_foo_LVP" */
+	const char name[30];   /* "lv_is_foo" */
 	uint16_t lvp_enum;     /* is_foo_LVP */
-	const char name[32];   /* "lv_is_foo" */
-	int (*fn) (struct cmd_context *cmd, struct logical_volume *lv); /* lv_is_foo() */
 };
 
 /* see global lv_types[] */

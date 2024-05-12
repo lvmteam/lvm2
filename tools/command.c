@@ -55,7 +55,8 @@ static const struct opt_name opt_names[ARG_COUNT + 1] = {
 /* create table of lv property names, e.g. lv_is_foo, and corresponding enum from lv_props.h */
 
 static const struct lv_prop lv_props[LVP_COUNT + 1] = {
-#define lvp(a, b, c) { # a, a, b, c },
+	{ "" },
+#define lvp(a) { "lv_" # a, a ## _LVP },
 #include "lv_props.h"
 #undef lvp
 };

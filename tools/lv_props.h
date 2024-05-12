@@ -1,62 +1,67 @@
-
 /*
- * NULL in the last arg can be replaced with actual
- * calls to the lv_is_prop() function when those
- * become functions (are #define now), take uniform
- * args (e.g. some take cmd others don't), and are
- * exposed in tools.h
+ * Copyright (C) 2016-2024 Red Hat, Inc. All rights reserved.
  *
- * Until then, the lv_is_prop() functions are
- * called indirectly through _lv_is_prop().
+ * This file is part of LVM2.
+ *
+ * This copyrighted material is made available to anyone wishing to use,
+ * modify, copy, or redistribute it subject to the terms and conditions
+ * of the GNU Lesser General Public License v.2.1.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-lvp(LVP_NONE, "", NULL) /* enum value 0 means none */
-lvp(is_locked_LVP, "lv_is_locked", NULL)
-lvp(is_partial_LVP, "lv_is_partial", NULL)
-lvp(is_virtual_LVP, "lv_is_virtual", NULL)
-lvp(is_merging_LVP, "lv_is_merging", NULL)
-lvp(is_merging_origin_LVP, "lv_is_merging_origin", NULL)
-lvp(is_converting_LVP, "lv_is_converting", NULL)
-lvp(is_external_origin_LVP, "lv_is_external_origin", NULL)
-lvp(is_virtual_origin_LVP, "lv_is_virtual_origin", NULL)
-lvp(is_not_synced_LVP, "lv_is_not_synced", NULL)
-lvp(is_pending_delete_LVP, "lv_is_pending_delete", NULL)
-lvp(is_error_when_full_LVP, "lv_is_error_when_full", NULL)
-lvp(is_pvmove_LVP, "lv_is_pvmove", NULL)
-lvp(is_removed_LVP, "lv_is_removed", NULL)
-lvp(is_vg_writable_LVP, "lv_is_vg_writable", NULL)
-lvp(is_writable_LVP, "lv_is_writable", NULL)
+/*
+ * Update toollib.c:_lv_is_prop() when adding
+ * new is_XXXXX_LVP test
+ */
+
+/* enum value 0 means none */
+lvp(is_locked)
+lvp(is_partial)
+lvp(is_virtual)
+lvp(is_merging)
+lvp(is_merging_origin)
+lvp(is_converting)
+lvp(is_external_origin)
+lvp(is_virtual_origin)
+lvp(is_not_synced)
+lvp(is_pending_delete)
+lvp(is_error_when_full)
+lvp(is_pvmove)
+lvp(is_removed)
+lvp(is_vg_writable)
+lvp(is_writable)
 
 /* kinds of sub LV */
-lvp(is_thinpool_data_LVP, "lv_is_thinpool_data", NULL)
-lvp(is_thinpool_metadata_LVP, "lv_is_thinpool_metadata", NULL)
-lvp(is_cachepool_data_LVP, "lv_is_cachepool_data", NULL)
-lvp(is_cachepool_metadata_LVP, "lv_is_cachepool_metadata", NULL)
-lvp(is_mirror_image_LVP, "lv_is_mirror_image", NULL)
-lvp(is_mirror_log_LVP, "lv_is_mirror_log", NULL)
-lvp(is_raid_image_LVP, "lv_is_raid_image", NULL)
-lvp(is_raid_metadata_LVP, "lv_is_raid_metadata", NULL)
+lvp(is_thinpool_data)
+lvp(is_thinpool_metadata)
+lvp(is_cachepool_data)
+lvp(is_cachepool_metadata)
+lvp(is_mirror_image)
+lvp(is_mirror_log)
+lvp(is_raid_image)
+lvp(is_raid_metadata)
 
 /*
  * is_thick_origin should be used instead of is_origin
  * is_thick_snapshot is generally used as LV_snapshot from lv_types.h
  */
-lvp(is_origin_LVP, "lv_is_origin", NULL)
-lvp(is_thick_origin_LVP, "lv_is_thick_origin", NULL)
-lvp(is_thick_snapshot_LVP, "lv_is_thick_snapshot", NULL)
-lvp(is_thin_origin_LVP, "lv_is_thin_origin", NULL)
-lvp(is_thin_snapshot_LVP, "lv_is_thin_snapshot", NULL)
+lvp(is_origin)
+lvp(is_thick_origin)
+lvp(is_thick_snapshot)
+lvp(is_thin_origin)
+lvp(is_thin_snapshot)
 
-lvp(is_error_LVP, "lv_is_error", NULL)
-lvp(is_zero_LVP, "lv_is_zero", NULL)
+lvp(is_error)
+lvp(is_zero)
 
-lvp(is_cache_origin_LVP, "lv_is_cache_origin", NULL)
-lvp(is_cow_LVP, "lv_is_cow", NULL)
-lvp(is_merging_cow_LVP, "lv_is_merging_cow", NULL)
-lvp(is_cow_covering_origin_LVP, "lv_is_cow_covering_origin", NULL)
-lvp(is_visible_LVP, "lv_is_visible", NULL)
-lvp(is_historical_LVP, "lv_is_historical", NULL)
-lvp(is_raid_with_tracking_LVP, "lv_is_raid_with_tracking", NULL)
-lvp(is_raid_with_integrity_LVP, "lv_is_raid_with_integrity", NULL)
-lvp(LVP_COUNT, "", NULL)
-
+lvp(is_cache_origin)
+lvp(is_cow)
+lvp(is_merging_cow)
+lvp(is_cow_covering_origin)
+lvp(is_visible)
+lvp(is_historical)
+lvp(is_raid_with_tracking)
+lvp(is_raid_with_integrity)
