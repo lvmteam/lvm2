@@ -1184,10 +1184,29 @@ void factor_common_options(void)
 
 		for (ci = 0; ci < COMMAND_COUNT; ci++) {
 			cmd = &commands[ci];
+
 			if (cmd->lvm_command_enum != command_names[cn].lvm_command_enum)
 				continue;
 
 			command_names_args[cn].variants++;
+
+			if (cmd->ro_count || cmd->any_ro_count)
+				command_names_args[cn].variant_has_ro = 1;
+			if (cmd->rp_count)
+				command_names_args[cn].variant_has_rp = 1;
+			if (cmd->oo_count)
+				command_names_args[cn].variant_has_oo = 1;
+			if (cmd->op_count)
+				command_names_args[cn].variant_has_op = 1;
+
+			for (ro = 0; ro < cmd->ro_count + cmd->any_ro_count; ro++) {
+				command_names_args[cn].all_options[cmd->required_opt_args[ro].opt] = 1;
+
+				if ((cmd->required_opt_args[ro].opt == size_ARG) && !strncmp(cmd->name, "lv", 2))
+					command_names_args[cn].all_options[extents_ARG] = 1;
+			}
+			for (oo = 0; oo < cmd->oo_count; oo++)
+				command_names_args[cn].all_options[cmd->optional_opt_args[oo].opt] = 1;
 		}
 
 		for (opt_enum = 0; opt_enum < ARG_COUNT; opt_enum++) {
@@ -1198,26 +1217,7 @@ void factor_common_options(void)
 				if (cmd->lvm_command_enum != command_names[cn].lvm_command_enum)
 					continue;
 
-				if (cmd->ro_count || cmd->any_ro_count)
-					command_names_args[cn].variant_has_ro = 1;
-				if (cmd->rp_count)
-					command_names_args[cn].variant_has_rp = 1;
-				if (cmd->oo_count)
-					command_names_args[cn].variant_has_oo = 1;
-				if (cmd->op_count)
-					command_names_args[cn].variant_has_op = 1;
-
-				for (ro = 0; ro < cmd->ro_count + cmd->any_ro_count; ro++) {
-					command_names_args[cn].all_options[cmd->required_opt_args[ro].opt] = 1;
-
-					if ((cmd->required_opt_args[ro].opt == size_ARG) && !strncmp(cmd->name, "lv", 2))
-						command_names_args[cn].all_options[extents_ARG] = 1;
-				}
-				for (oo = 0; oo < cmd->oo_count; oo++)
-					command_names_args[cn].all_options[cmd->optional_opt_args[oo].opt] = 1;
-
 				found = 0;
-
 				for (oo = 0; oo < cmd->oo_count; oo++) {
 					if (cmd->optional_opt_args[oo].opt == opt_enum) {
 						found = 1;
