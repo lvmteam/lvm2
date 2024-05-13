@@ -660,7 +660,7 @@ static void _fmt_text_destroy(struct labeller *l)
 	free(l);
 }
 
-const struct label_ops _text_ops = {
+static const struct label_ops _text_ops = {
 	.can_handle = _text_can_handle,
 	.write = _text_write,
 	.read = _text_read,

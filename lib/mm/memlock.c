@@ -77,7 +77,7 @@ int memlock_count_daemon(void)
 
 static size_t _size_stack;
 static size_t _size_malloc_tmp;
-const size_t _size_malloc = 2000000;
+static const size_t _size_malloc = 2000000;
 
 static void *_malloc_mem = NULL;
 static int _mem_locked = 0;
