@@ -833,7 +833,7 @@ static int _stats_parse_histogram_spec(struct dm_stats *dms,
 				       struct dm_stats_region *region,
 				       const char *histogram)
 {
-	static const char _valid_chars[] = "0123456789,";
+	const char valid_chars[] = "0123456789,";
 	uint64_t scale = region->timescale, this_val = 0;
 	struct dm_pool *mem = dms->hist_mem;
 	struct dm_histogram_bin cur;
@@ -866,7 +866,7 @@ static int _stats_parse_histogram_spec(struct dm_stats *dms,
 
 	c = histogram;
 	do {
-		for (v = _valid_chars; *v; v++)
+		for (v = valid_chars; *v; v++)
 			if (*c == *v)
 				break;
 		if (!*v) {
@@ -1202,7 +1202,7 @@ static int _stats_parse_histogram(struct dm_pool *mem, char *hist_str,
 				  struct dm_histogram **histogram,
 				  struct dm_stats_region *region)
 {
-	static const char _valid_chars[] = "0123456789:";
+	const char valid_chars[] = "0123456789:";
 	struct dm_histogram *bounds = region->bounds;
 	struct dm_histogram hist = {
 		.nr_bins = region->bounds->nr_bins
@@ -1223,7 +1223,7 @@ static int _stats_parse_histogram(struct dm_pool *mem, char *hist_str,
 
 	do {
 		memset(&cur, 0, sizeof(cur));
-		for (v = _valid_chars; *v; v++)
+		for (v = valid_chars; *v; v++)
 			if (*c == *v)
 				break;
 		if (!*v)
@@ -3596,7 +3596,7 @@ static struct dm_histogram *_alloc_dm_histogram(int nr_bins)
  */
 struct dm_histogram *dm_histogram_bounds_from_string(const char *bounds_str)
 {
-	static const char _valid_chars[] = "0123456789,muns";
+	const char valid_chars[] = "0123456789,muns";
 	uint64_t this_val = 0, mult = 1;
 	const char *c, *v, *val_start;
 	struct dm_histogram_bin *cur;
@@ -3621,7 +3621,7 @@ struct dm_histogram *dm_histogram_bounds_from_string(const char *bounds_str)
 	cur = dmh->bins;
 
 	do {
-		for (v = _valid_chars; *v; v++)
+		for (v = valid_chars; *v; v++)
 			if (*c == *v)
 				break;
 
@@ -5008,7 +5008,7 @@ static const char _filemapd_mode_names[][8] = {
 
 dm_filemapd_mode_t dm_filemapd_mode_from_string(const char *mode_str)
 {
-	static const dm_filemapd_mode_t _mode[] = {
+	const dm_filemapd_mode_t _mode[] = {
 		DM_FILEMAPD_FOLLOW_INODE,
 		DM_FILEMAPD_FOLLOW_PATH
 	};

@@ -74,8 +74,6 @@ static struct dm_config_node *_create_node(struct dm_pool *mem);
 static char *_dup_tok(struct parser *p);
 static char *_dup_token(struct dm_pool *mem, const char *b, const char *e);
 
-static const int _sep = '/';
-
 #define MAX_INDENT 32
 
 #define match(t) do {\
@@ -526,17 +524,18 @@ static struct dm_config_node *_find_or_make_node(struct dm_pool *mem,
 						 const char *path,
 						 int no_dup_node_check)
 {
+	const int sep = '/';
 	const char *e;
 	struct dm_config_node *cn = parent ? parent->child : NULL;
 	struct dm_config_node *cn_found = NULL;
 
 	while (cn || mem) {
 		/* trim any leading slashes */
-		while (*path && (*path == _sep))
+		while (*path && (*path == sep))
 			path++;
 
 		/* find the end of this segment */
-		for (e = path; *e && (*e != _sep); e++) ;
+		for (e = path; *e && (*e != sep); e++) ;
 
 		/* hunt for the node */
 		cn_found = NULL;

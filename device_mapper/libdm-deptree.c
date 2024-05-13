@@ -3864,7 +3864,7 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 {
 	struct dm_config_node *cn;
 	struct load_segment *seg;
-	static const uint64_t _modemask =
+	const uint64_t modemask =
 		DM_CACHE_FEATURE_PASSTHROUGH |
 		DM_CACHE_FEATURE_WRITETHROUGH |
 		DM_CACHE_FEATURE_WRITEBACK;
@@ -3876,12 +3876,12 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 		return 0;
 	}
 
-	switch (feature_flags & _modemask) {
+	switch (feature_flags & modemask) {
 	case DM_CACHE_FEATURE_PASSTHROUGH:
 	case DM_CACHE_FEATURE_WRITEBACK:
 		if (strcmp(policy_name, "cleaner") == 0) {
 			/* Enforce writethrough mode for cleaner policy */
-			feature_flags = ~_modemask;
+			feature_flags = ~modemask;
 			feature_flags |= DM_CACHE_FEATURE_WRITETHROUGH;
 		}
                 /* Fall through */

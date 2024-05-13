@@ -3405,7 +3405,7 @@ DM_EXPORT_NEW_SYMBOL(int, dm_tree_node_add_cache_target, 1_02_138)
 {
 	struct dm_config_node *cn;
 	struct load_segment *seg;
-	static const uint64_t _modemask =
+	const uint64_t _modemask =
 		DM_CACHE_FEATURE_PASSTHROUGH |
 		DM_CACHE_FEATURE_WRITETHROUGH |
 		DM_CACHE_FEATURE_WRITEBACK;
@@ -3977,12 +3977,12 @@ int dm_tree_node_add_cache_target_base(struct dm_tree_node *node,
 				       uint32_t data_block_size)
 {
 	/* Old version supported only these FEATURE bits, others were ignored so masked them */
-	static const uint64_t _mask =
+	const uint64_t mask =
 		DM_CACHE_FEATURE_WRITEBACK |
 		DM_CACHE_FEATURE_WRITETHROUGH |
 		DM_CACHE_FEATURE_PASSTHROUGH;
 
-	return dm_tree_node_add_cache_target(node, size, feature_flags & _mask,
+	return dm_tree_node_add_cache_target(node, size, feature_flags & mask,
 					     metadata_uuid, data_uuid, origin_uuid,
 					     policy_name, policy_settings, data_block_size);
 }

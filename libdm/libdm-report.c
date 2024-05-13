@@ -2500,7 +2500,7 @@ float dm_percent_to_float(dm_percent_t percent)
 
 float dm_percent_to_round_float(dm_percent_t percent, unsigned digits)
 {
-	static const float power10[] = {
+	const float power10[] = {
 		1.f, .1f, .01f, .001f, .0001f, .00001f, .000001f,
 		.0000001f, .00000001f, .000000001f,
 		.0000000001f

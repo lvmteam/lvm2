@@ -1792,7 +1792,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 	struct lv_segment *log_seg;
 	int (*monitor_fn) (struct lv_segment *s, int e);
 	uint32_t s;
-	static const struct lv_activate_opts zlaopts = { 0 };
+	const struct lv_activate_opts zlaopts = { 0 };
 	struct lv_activate_opts mirr_laopts = { .origin_only = 1 };
 	struct lvinfo info;
 	const char *dso = NULL;
@@ -2458,7 +2458,7 @@ static int _lv_has_open_snapshots(const struct logical_volume *lv)
 int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logical_volume *lv)
 {
 	struct lvinfo info;
-	static const struct lv_activate_opts laopts = { .skip_in_use = 1 };
+	const struct lv_activate_opts laopts = { .skip_in_use = 1 };
 	struct dm_list *snh;
 	int r = 0;
 	unsigned tmp_state;
