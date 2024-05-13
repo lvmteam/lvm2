@@ -812,7 +812,7 @@ static const char _mode_names[][8] = {
  */
 int main(int argc, char **argv)
 {
-	struct filemap_monitor fm = { 0 };
+	struct filemap_monitor fm = { .fd = 0 };
 
 	if (!_parse_args(argc, argv, &fm)) {
 		free(fm.path);
