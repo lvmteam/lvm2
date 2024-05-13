@@ -19,7 +19,7 @@
 
 #define MIN_ARGV_SIZE  8
 
-static const char *const polling_ops[] = {
+static const char *const _polling_ops[] = {
 	[PVMOVE] = LVMPD_REQ_PVMOVE,
 	[CONVERT] = LVMPD_REQ_CONVERT,
 	[MERGE] = LVMPD_REQ_MERGE,
@@ -28,7 +28,7 @@ static const char *const polling_ops[] = {
 
 const char *polling_op(enum poll_type type)
 {
-	return type < POLL_TYPE_MAX ? polling_ops[type] : "<undefined>";
+	return type < POLL_TYPE_MAX ? _polling_ops[type] : "<undefined>";
 }
 
 static int add_to_cmd_arr(const char ***cmdargv, const char *str, unsigned *ind)
@@ -81,7 +81,7 @@ const char **cmdargv_ctr(const struct lvmpolld_lv *pdlv, const char *lvm_binary,
 
 	/* one of: "convert", "pvmove", "merge", "merge_thin" */
 	if (!add_to_cmd_arr(&cmd_argv, "--polloperation", &i) ||
-	    !add_to_cmd_arr(&cmd_argv, polling_ops[pdlv->type], &i))
+	    !add_to_cmd_arr(&cmd_argv, _polling_ops[pdlv->type], &i))
 		goto err;
 
 	/* vg/lv name */
