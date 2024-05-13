@@ -1993,7 +1993,7 @@ static void _short_usage(const char *name)
 static int _usage(const char *name, int longhelp, int skip_notes)
 {
 	const struct command_name *cname = find_command_name(name);
-	const struct command_name_args *cna = &command_names_args[cname->lvm_command_enum];
+	const struct command_name_args *cna = cname ? &command_names_args[cname->lvm_command_enum] : NULL;
 	struct command *cmd = NULL;
 	int show_full = longhelp;
 	int i;
