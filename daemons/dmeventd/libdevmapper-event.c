@@ -517,7 +517,7 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 				switch (_check_for_usable_fifos(dmeventd_path, fifos)) {
 				case 0: return_0;
 				case 1: return 1;
-				case 2: usleep(1000); continue;
+				case 2: usleep(1000); break;
 				}
 			/* ret == 0 */
 			log_error("Dmeventd is not serving fifos.");
