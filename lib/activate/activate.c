@@ -574,7 +574,7 @@ static int _check_modules_builtin(struct cmd_context *cmd, const char *target)
 
 	if (dm_snprintf(path, sizeof(path), "%s/%s/modules.builtin",
 			MODULES_PATH, cmd->kernel_vsn) < 0) {
-		log_debug("Modules path %s/%s/modules.builtin is too long.",
+		log_debug_activation("Modules path %s/%s/modules.builtin is too long.",
 			  MODULES_PATH, cmd->kernel_vsn);
 		return 0;
 	}
@@ -587,7 +587,7 @@ static int _check_modules_builtin(struct cmd_context *cmd, const char *target)
 
 	while (getline(&line, &len, fp) > 0)
 		if (strstr(line, target)) {
-			log_debug("Found %s as built-in kernel module.", target);
+			log_debug_activation("Found %s as built-in kernel module.", target);
 			r = 1;
 			break;
 		}
@@ -1442,9 +1442,9 @@ static int _lv_active(struct cmd_context *cmd, const struct logical_volume *lv)
 	struct lvinfo info;
 
 	if (!lv_info(cmd, lv, 0, &info, 0, 0)) {
-		log_debug("Cannot determine activation status of %s%s.",
-			  display_lvname(lv),
-			  activation() ? "" : " (no device driver)");
+		log_debug_activation("Cannot determine activation status of %s%s.",
+				     display_lvname(lv),
+				     activation() ? "" : " (no device driver)");
 		return 0;
 	}
 
@@ -2205,7 +2205,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	      !lv_is_thin_pool(lv) &&
 	      !lv_is_vdo(lv) &&
 	      !lv_is_vdo_pool(lv)))) {
-		log_debug("Requiring flush for LV %s.", display_lvname(lv));
+		log_debug_activation("Requiring flush for LV %s.", display_lvname(lv));
 		flush_required = 1;
 	}
 
@@ -2320,12 +2320,12 @@ static int _check_suspended_lv(struct logical_volume *lv, void *data)
 	struct lvinfo info;
 
 	if (lv_info(lv->vg->cmd, lv, 0, &info, 0, 0) && info.exists && info.suspended) {
-		log_debug("Found suspended LV %s in critical section().", display_lvname(lv));
+		log_debug_activation("Found suspended LV %s in critical section().", display_lvname(lv));
 		return 0; /* There is suspended subLV in the tree */
 	}
 
 	if (lv_layer(lv) && lv_info(lv->vg->cmd, lv, 1, &info, 0, 0) && info.exists && info.suspended) {
-		log_debug("Found suspended layered LV %s in critical section().", display_lvname(lv));
+		log_debug_activation("Found suspended layered LV %s in critical section().", display_lvname(lv));
 		return 0; /* There is suspended subLV in the tree */
 	}
 
