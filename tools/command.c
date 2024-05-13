@@ -128,7 +128,7 @@ const struct lv_type *get_lv_type(int lvt_enum)
 
 #endif /* MAN_PAGE_GENERATOR */
 
-struct command_name_args command_names_args[LVM_COMMAND_COUNT] = { 0 };
+struct command_name_args command_names_args[LVM_COMMAND_COUNT] = { { 0 } };
 
 /* array of pointers into opt_names[] that is sorted alphabetically (by long opt name) */
 
