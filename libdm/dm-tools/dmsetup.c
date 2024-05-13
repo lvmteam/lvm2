@@ -7138,6 +7138,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 			}
 			break;
 		case TABLE_ARG:
+			free(_table);
 			if (!(_table = strdup(optarg))) {
 				log_error("Could not allocate memory for table string.");
 				return 0;
