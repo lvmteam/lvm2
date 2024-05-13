@@ -508,7 +508,7 @@ Convert LV to a thin LV, using the original LV as an external origin.
 .RE
 .P
 .RS 4
-LV1 types: linear striped thin cache raid error zero
+LV1 types: linear striped cache raid thin zero error
 .RE
 .P
 \(em
@@ -546,7 +546,7 @@ Convert LV to a thin LV, using LV as thin-pool data volume.
 .RE
 .P
 .RS 4
-LV1 types: linear striped cache vdo raid error zero writecache
+LV1 types: linear striped cache raid vdo writecache zero error
 .RE
 .P
 \(em
@@ -592,7 +592,7 @@ Attach a cache pool to an LV, converts the LV to type cache.
 .RE
 .P
 .RS 4
-LV1 types: linear striped thin thinpool vdo vdopool vdopooldata raid error zero
+LV1 types: linear striped raid thin thinpool vdo vdopool vdopooldata zero error
 .RE
 .P
 \(em
@@ -611,7 +611,7 @@ Attach a writecache to an LV, converts the LV to type writecache.
 .RE
 .P
 .RS 4
-LV1 types: linear striped thinpool raid
+LV1 types: linear striped raid thinpool
 .RE
 .P
 \(em
@@ -644,7 +644,7 @@ Attach a cache to an LV, converts the LV to type cache.
 .RE
 .P
 .RS 4
-LV1 types: linear striped thinpool raid
+LV1 types: linear striped raid thinpool
 .RE
 .P
 \(em
@@ -665,7 +665,7 @@ Add a writecache to an LV, using a specified cache device.
 .RE
 .P
 .RS 4
-LV1 types: linear striped thinpool raid
+LV1 types: linear striped raid thinpool
 .RE
 .P
 \(em
@@ -688,7 +688,7 @@ Add a cache to an LV, using a specified cache device.
 .RE
 .P
 .RS 4
-LV1 types: linear striped thinpool raid
+LV1 types: linear striped raid thinpool
 .RE
 .P
 \(em
@@ -740,7 +740,7 @@ Convert LV to type thin-pool.
 .RE
 .P
 .RS 4
-LV1 types: linear striped cache vdo raid error zero writecache
+LV1 types: linear striped cache raid vdo writecache zero error
 .RE
 .P
 \(em
@@ -784,7 +784,7 @@ Convert LV to type cache-pool.
 .RE
 .P
 .RS 4
-LV1 types: linear striped raid error zero
+LV1 types: linear striped raid zero error
 .RE
 .P
 \(em
@@ -838,7 +838,7 @@ Detach a cache from an LV.
 .RE
 .P
 .RS 4
-LV1 types: thinpool cache cachepool vdopool writecache
+LV1 types: cache cachepool thinpool vdopool writecache
 .RE
 .P
 \(em
@@ -931,7 +931,7 @@ Repair a cache pool.
 .RE
 .P
 .RS 4
-LV1 types: thinpool cache cachepool mirror raid
+LV1 types: cache cachepool mirror raid thinpool
 .RE
 .P
 \(em
@@ -1831,7 +1831,7 @@ Convert LV to a thin LV, using the original LV as an external origin.
 .RE
 .P
 .RS 4
-LV1 types: linear striped thin cache raid error zero
+LV1 types: linear striped cache raid thin zero error
 .RE
 .P
 \(em
@@ -1870,7 +1870,7 @@ Convert LV to a thin LV, using LV as thin-pool data volume.
 .RE
 .P
 .RS 4
-LV1 types: linear striped cache vdo raid error zero writecache
+LV1 types: linear striped cache raid vdo writecache zero error
 .RE
 .P
 \(em
@@ -1917,7 +1917,7 @@ Attach a cache pool to an LV.
 .RE
 .P
 .RS 4
-LV1 types: linear striped thin thinpool vdo vdopool vdopooldata raid error zero
+LV1 types: linear striped raid thin thinpool vdo vdopool vdopooldata zero error
 .RE
 .P
 \(em
@@ -1948,7 +1948,7 @@ Attach a cache to an LV, converts the LV to type cache.
 .RE
 .P
 .RS 4
-LV1 types: linear striped thinpool raid
+LV1 types: linear striped raid thinpool
 .RE
 .P
 \(em
@@ -2001,7 +2001,7 @@ Detach and delete a cache from an LV.
 .RE
 .P
 .RS 4
-LV1 types: thinpool cache vdopool writecache
+LV1 types: cache thinpool vdopool writecache
 .RE
 .P
 \(em
@@ -2020,7 +2020,7 @@ Swap metadata LV in a thin pool or cache pool (for repair only).
 .RE
 .P
 .RS 4
-LV1 types: thinpool cachepool
+LV1 types: cachepool thinpool
 .RE
 .P
 \(em
@@ -2043,7 +2043,7 @@ Merge COW snapshot LV into its origin (variant, use --mergesnapshot).
 .RE
 .P
 .RS 4
-LV1 types: linear striped snapshot thin raid
+LV1 types: linear striped snapshot raid thin
 .RE
 .P
 \(em
