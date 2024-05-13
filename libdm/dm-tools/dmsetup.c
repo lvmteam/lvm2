@@ -273,7 +273,7 @@ static uint64_t _count = 1; /* count of repeating reports */
 static struct dm_timestamp *_initial_timestamp = NULL;
 static uint64_t _disp_factor = 512; /* display sizes in sectors */
 static char _disp_units = 's';
-const char *_program_id = DM_STATS_PROGRAM_ID; /* program_id used for reports. */
+static const char *_program_id = DM_STATS_PROGRAM_ID; /* program_id used for reports. */
 static uint64_t _statstype = 0; /* stats objects to report */
 static int _concise_output_produced = 0; /* Was any concise output already printed? */
 static int _added_target = 0;		/* Count added target (no target -> no event) */
@@ -281,7 +281,7 @@ struct command;
 static const struct command *_selection_cmd = NULL; /* Command to run against each device select with -S */
 
 /* string names for stats object types */
-const char * const _stats_types[] = {
+static const char * const _stats_types[] = {
 	"all",
 	"area",
 	"region",

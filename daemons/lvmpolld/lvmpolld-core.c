@@ -781,7 +781,7 @@ struct log_line_baton {
 	const char *prefix;
 };
 
-daemon_handle _lvmpolld = { .error = 0 };
+static daemon_handle _lvmpolld = { .error = 0 };
 
 static daemon_handle _lvmpolld_open(const char *socket)
 {
