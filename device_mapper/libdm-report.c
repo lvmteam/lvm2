@@ -4107,7 +4107,7 @@ static int _alloc_rh_selection(struct dm_report *rh)
 static int _report_set_selection(struct dm_report *rh, const char *selection, int add_new_fields)
 {
 	struct selection_node *root = NULL;
-	const char *fin, *next;
+	const char *fin = NULL, *next;
 
 	if (rh->selection) {
 		if (rh->selection->selection_root)
@@ -4127,7 +4127,7 @@ static int _report_set_selection(struct dm_report *rh, const char *selection, in
 	if (!(root = _alloc_selection_node(rh->selection->mem, SEL_OR)))
 		return 0;
 
-	if (!_parse_or_ex(rh, selection, &fin, root))
+	if (!_parse_or_ex(rh, selection, &fin, root) || !fin)
 		goto_bad;
 
 	next = _skip_space(fin);
