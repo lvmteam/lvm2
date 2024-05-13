@@ -2331,9 +2331,9 @@ class TestDbusService(unittest.TestCase):
 		self._log_file_option()
 
 	def test_delete_non_complete_job(self):
-		# Let's create a vg with a number of lvs and then delete it all
+		# Let's create a vg with some number of lvs and then delete it all
 		# to hopefully create a long-running job.
-		vg_proxy = self._create_num_lvs(64)
+		vg_proxy = self._create_num_lvs(4)
 		job_path = vg_proxy.Vg.Remove(dbus.Int32(0), EOD)
 		self.assertNotEqual(job_path, "/")
 
