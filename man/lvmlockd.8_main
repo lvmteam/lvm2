@@ -162,7 +162,7 @@ and lvmlockd uses the chosen lock manager.
 .
 .SS 6. start VG on all hosts
 .
-vgchange --lock-start
+vgchange --lockstart
 .P
 Shared VGs must be started before they are used.  Starting the VG performs
 lock manager initialization that is necessary to begin using locks (i.e.
@@ -193,7 +193,7 @@ start lvmlockd
 start lock manager
 .br
 \[bu]
-vgchange --lock-start
+vgchange --lockstart
 .br
 \[bu]
 activate LVs in shared VGs
@@ -205,7 +205,7 @@ The shut down sequence is the reverse:
 deactivate LVs in shared VGs
 .br
 \[bu]
-vgchange --lock-stop
+vgchange --lockstop
 .br
 \[bu]
 stop lock manager
@@ -273,7 +273,7 @@ and some commands are disallowed.  Once the first sanlock VG is created,
 the global lock will be available, and LVM will be fully operational.
 .P
 When a new sanlock VG is created, its lockspace is automatically started on
-the host that creates it.  Other hosts need to run 'vgchange --lock-start'
+the host that creates it.  Other hosts need to run 'vgchange --lockstart'
 to start the new VG before they can use it.
 .P
 Creating the first sanlock VG is not protected by locking, so it requires
@@ -309,19 +309,19 @@ Shared VGs need to be "started" and "stopped", unlike other types of VGs.
 See the following section for a full description of starting and stopping.
 .P
 Removing a shared VG will fail if other hosts have the VG started.  Run
-vgchange --lock-stop <vgname> on all other hosts before vgremove.  (It may
+vgchange --lockstop <vgname> on all other hosts before vgremove.  (It may
 take several seconds before vgremove recognizes that all hosts have
 stopped a sanlock VG.)
 .
 .SS Starting and stopping VGs
 .
-Starting a shared VG (vgchange --lock-start) causes the lock manager to
+Starting a shared VG (vgchange --lockstart) causes the lock manager to
 start (join) the lockspace for the VG on the host where it is run.  This
 makes locks for the VG available to LVM commands on the host.  Before a VG
 is started, only LVM commands that read/display the VG are allowed to
 continue without locks (and with a warning).
 .P
-Stopping a shared VG (vgchange --lock-stop) causes the lock manager to
+Stopping a shared VG (vgchange --lockstop) causes the lock manager to
 stop (leave) the lockspace for the VG on the host where it is run.  This
 makes locks for the VG inaccessible to the host.  A VG cannot be stopped
 while it has active LVs.
@@ -345,19 +345,19 @@ A shared VG can be stopped if all LVs are deactivated.
 .P
 All shared VGs can be started/stopped using:
 .br
-vgchange --lock-start
+vgchange --lockstart
 .br
-vgchange --lock-stop
+vgchange --lockstop
 .P
 Individual VGs can be started/stopped using:
 .br
-vgchange --lock-start <vgname> ...
+vgchange --lockstart <vgname> ...
 .br
-vgchange --lock-stop <vgname> ...
+vgchange --lockstop <vgname> ...
 .P
 To make vgchange not wait for start to complete:
 .br
-vgchange --lock-start --lock-opt nowait ...
+vgchange --lockstart --lockopt nowait ...
 .P
 lvmlockd can be asked directly to stop all lockspaces:
 .br
@@ -524,8 +524,8 @@ uses lvmlockd to release the current lock on the LV.
 Some failure conditions may not be repairable while the VG has a shared
 lock type.  In these cases, it may be possible to repair the VG by
 forcibly changing the lock type to "none".  This is done by adding
-"--lock-opt force" to the normal command for changing the lock type:
-vgchange --lock-type none VG.  The VG lockspace should first be stopped on
+"--lockopt force" to the normal command for changing the lock type:
+vgchange --locktype none VG.  The VG lockspace should first be stopped on
 all hosts, and be certain that no hosts are using the VG before this is
 done.
 .
@@ -536,7 +536,7 @@ If the PV holding this LV is lost, a new lvmlock LV needs to be created.
 To do this, ensure no hosts are using the VG, then forcibly change the
 lock type to "none" (see above).  Then change the lock type back to
 "sanlock" with the normal command for changing the lock type:  vgchange
---lock-type sanlock VG.  This recreates the internal lvmlock LV with the
+--locktype sanlock VG.  This recreates the internal lvmlock LV with the
 necessary locks.
 .
 .SS Locking system failures
@@ -657,17 +657,17 @@ original cluster:
 .IP \[bu] 2
 Start the VG on the host changing the lock type
 .br
-vgchange --lock-start <vgname>
+vgchange --lockstart <vgname>
 .
 .IP \[bu]
 Stop the VG on all other hosts:
 .br
-vgchange --lock-stop <vgname>
+vgchange --lockstop <vgname>
 .
 .IP \[bu]
 Change the VG lock type to none on the host where the VG is started:
 .br
-vgchange --lock-type none <vgname>
+vgchange --locktype none <vgname>
 .
 .IP \[bu]
 Change the dlm cluster name on the hosts or move the VG to the new
@@ -679,12 +679,12 @@ cat /sys/kernel/config/dlm/cluster/cluster_name
 .IP \[bu]
 Change the VG lock type back to dlm which sets the new cluster name:
 .br
-vgchange --lock-type dlm <vgname>
+vgchange --locktype dlm <vgname>
 .
 .IP \[bu]
 Start the VG on hosts to use it:
 .br
-vgchange --lock-start <vgname>
+vgchange --lockstart <vgname>
 .P
 To change the dlm cluster name in the VG when the dlm cluster name has
 already been changed on the hosts, or the VG has already moved to a
@@ -702,17 +702,17 @@ cat /sys/kernel/config/dlm/cluster/cluster_name
 .IP \[bu]
 Change the VG lock type to none:
 .br
-vgchange --lock-type none --lock-opt force <vgname>
+vgchange --locktype none --lockopt force <vgname>
 .
 .IP \[bu]
 Change the VG lock type back to dlm which sets the new cluster name:
 .br
-vgchange --lock-type dlm <vgname>
+vgchange --locktype dlm <vgname>
 .
 .IP \[bu]
 Start the VG on hosts to use it:
 .br
-vgchange --lock-start <vgname>
+vgchange --lockstart <vgname>
 .
 .SS Changing a local VG to a shared VG
 .
@@ -723,12 +723,12 @@ lvmlockd must be configured and running as described in USAGE.
 .IP \[bu] 2
 Change a local VG to a shared VG with the command:
 .br
-vgchange --lock-type sanlock|dlm <vgname>
+vgchange --locktype sanlock|dlm <vgname>
 .
 .IP \[bu]
 Start the VG on hosts to use it:
 .br
-vgchange --lock-start <vgname>
+vgchange --lockstart <vgname>
 .
 .SS Changing a shared VG to a local VG
 .
@@ -737,22 +737,22 @@ All LVs must be inactive to change the lock type.
 .IP \[bu] 2
 Start the VG on the host making the change:
 .br
-vgchange --lock-start <vgname>
+vgchange --lockstart <vgname>
 .
 .IP \[bu]
 Stop the VG on all other hosts:
 .br
-vgchange --lock-stop <vgname>
+vgchange --lockstop <vgname>
 .
 .IP \[bu]
 Change the VG lock type to none on the host where the VG is started:
 .br
-vgchange --lock-type none <vgname>
+vgchange --locktype none <vgname>
 .P
 If the VG cannot be started with the previous lock type, then the lock
 type can be forcibly changed to none with:
 .br
-vgchange --lock-type none --lock-opt force <vgname>
+vgchange --locktype none --lockopt force <vgname>
 .P
 To change a VG from one lock type to another (i.e. between sanlock and
 dlm), first change it to a local VG, then to the new type.
@@ -770,7 +770,7 @@ If the clvm cluster is no longer running on any nodes, then extra options
 can be used to forcibly make the VG local.  Caution: this is only safe if
 all nodes have stopped using the VG:
 .P
-vgchange --lock-type none --lock-opt force <vgname>
+vgchange --locktype none --lockopt force <vgname>
 .P
 After the VG is local, follow the steps described in "changing a local VG
 to a shared VG".
@@ -848,13 +848,13 @@ lvmlockd saves the cluster name for a shared VG using dlm.  Only hosts in
 the matching cluster can use the VG.
 .
 .IP \[bu]
-lvmlockd requires starting/stopping shared VGs with vgchange --lock-start
-and --lock-stop.
+lvmlockd requires starting/stopping shared VGs with vgchange --lockstart
+and --lockstop.
 .
 .IP \[bu]
 vgremove of a sanlock VG may fail indicating that all hosts have not
 stopped the VG lockspace.  Stop the VG on all hosts using vgchange
---lock-stop.
+--lockstop.
 .
 .IP \[bu]
 vgreduce or pvmove of a PV in a sanlock VG will fail if it holds the
