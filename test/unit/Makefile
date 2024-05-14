@@ -61,6 +61,6 @@ run-unit-test: $(UNIT_TARGET)
 		cd $$OLDPWD ;\
 		$(RM) -r "$${TESTDIR:?}"
 
-ifeq ("$(DEPENDS)","yes")
--include $(UNIT_SOURCE:%.c=%.d)
+ifeq ("$(USE_TRACKING)","yes")
+-include $(UNIT_DEPENDS)
 endif

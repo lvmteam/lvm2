@@ -35,6 +35,6 @@ $(BASE_TARGET): $(BASE_OBJECTS)
 	$(Q) $(RM) $@
 	$(Q) $(AR) rsv $@ $(BASE_OBJECTS) > /dev/null
 
-ifeq ("$(DEPENDS)","yes")
+ifeq ("$(USE_TRACKING)","yes")
 -include $(BASE_DEPENDS)
 endif

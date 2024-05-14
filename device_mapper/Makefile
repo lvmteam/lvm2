@@ -48,6 +48,6 @@ $(DEVICE_MAPPER_TARGET): $(DEVICE_MAPPER_OBJECTS)
 	$(Q) $(RM) $@
 	$(Q) $(AR) rsv $@ $(DEVICE_MAPPER_OBJECTS) > /dev/null
 
-ifeq ("$(DEPENDS)","yes")
+ifeq ("$(USE_TRACKING)","yes")
 -include $(DEVICE_MAPPER_DEPENDS)
 endif
