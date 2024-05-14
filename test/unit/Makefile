@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2018 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2011-2024 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -20,6 +20,7 @@ UNIT_SOURCE=\
 	test/unit/bcache_utils_t.c \
 	test/unit/bitset_t.c \
 	test/unit/config_t.c \
+	test/unit/dmhash_t.c \
 	test/unit/dmlist_t.c \
 	test/unit/dmstatus_t.c \
 	test/unit/framework.c \

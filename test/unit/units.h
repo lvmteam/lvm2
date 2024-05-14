@@ -25,6 +25,7 @@ void bcache_utils_tests(struct dm_list *suites);
 void bitset_tests(struct dm_list *suites);
 void config_tests(struct dm_list *suites);
 void dm_list_tests(struct dm_list *suites);
+void dm_hash_tests(struct dm_list *suites);
 void dm_status_tests(struct dm_list *suites);
 void io_engine_tests(struct dm_list *suites);
 void percent_tests(struct dm_list *suites);
@@ -41,6 +42,7 @@ static inline void register_all_tests(struct dm_list *suites)
 	bitset_tests(suites);
 	config_tests(suites);
 	dm_list_tests(suites);
+	dm_hash_tests(suites);
 	dm_status_tests(suites);
 	io_engine_tests(suites);
 	percent_tests(suites);
