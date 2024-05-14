@@ -479,7 +479,7 @@ static dm_status_mirror_health_t _get_health(char c)
 	case 'R': return DM_STATUS_MIRROR_READ_FAILED;
 	default:
 		log_warn("WARNING: Unknown mirror health status char: %c", c);
-		/* fallback */
+		/* fall through */
 	case 'U': return DM_STATUS_MIRROR_UNCLASSIFIED;
 	}
 }
