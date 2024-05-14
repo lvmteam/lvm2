@@ -560,7 +560,8 @@ static int _dev_is_mpath_component_sysfs(struct cmd_context *cmd, struct device 
 		 */
 
 		if (_minor_hash_tab) {
-			long look = (long) dm_hash_lookup_binary(_minor_hash_tab, &dm_dev_minor, sizeof(dm_dev_minor));
+			void *d = dm_hash_lookup_binary(_minor_hash_tab, &dm_dev_minor, sizeof(dm_dev_minor));
+			long look = (long) d;
 			if (look > 0) {
 				log_debug_devs("dev_is_mpath_component %s holder %s %u:%u already checked as %sbeing mpath.",
 						dev_name(dev), holder_name, dm_dev_major, dm_dev_minor, (look > 1) ? "" : "not ");
