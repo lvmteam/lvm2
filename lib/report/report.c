@@ -583,7 +583,7 @@ static int _match_time_str(struct dm_list *ti_list, struct time_item *ti)
 {
 	struct time_item *ti_context_p = (struct time_item *) dm_list_prev(ti_list, &ti->list);
 	size_t reg_len;
-	int i;
+	unsigned i;
 
 	ti->prop = TIME_PROP(TIME_NULL);
 

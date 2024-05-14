@@ -1661,7 +1661,7 @@ static int _udevflags(CMD_ARGS)
 {
 	uint32_t cookie;
 	uint16_t flags;
-	int i;
+	unsigned i;
 	static const char _dm_flag_names[][32] = {
 		"DISABLE_DM_RULES",
 		"DISABLE_SUBSYSTEM_RULES",
@@ -6318,7 +6318,7 @@ static void _devmap_name_usage(FILE *out)
 
 static void _stats_usage(FILE *out)
 {
-	int i;
+	unsigned i;
 
 	fprintf(out, "Usage:\n\n"
 		"%s\n\t"
@@ -6342,7 +6342,7 @@ static void _stats_usage(FILE *out)
 
 static void _dmsetup_usage(FILE *out)
 {
-	int i;
+	unsigned i;
 
 	fprintf(out, "Usage:\n\n"
 		"%s\n\t"
@@ -6453,7 +6453,7 @@ static int _dmsetup_help(CMD_ARGS)
 static const struct command *_find_command(const struct command *commands,
 					   size_t cmd_cnt, const char *name)
 {
-	int i;
+	unsigned i;
 
 	if (name)
 		for (i = 0; i < cmd_cnt; i++)

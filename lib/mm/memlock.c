@@ -364,7 +364,7 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 		for (len = 0 ; len < _maps_len; len += n) {
 			if (!(n = read(_maps_fd, _maps_buffer + len, _maps_len - len)))
 				break; /* EOF */
-			if ((n < 0) || (len >= (SSIZE_MAX - n))) {
+			if ((n < 0) || (len >= (size_t)(SSIZE_MAX - n))) {
 				log_sys_debug("read", _procselfmaps);
 				return 0;
 			}

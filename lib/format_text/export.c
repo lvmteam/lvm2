@@ -233,7 +233,7 @@ static int _sectors_to_units(uint64_t sectors, char *buffer, size_t s)
 		"Exabytes",
 	};
 
-	int i;
+	unsigned i;
 	double d = (double) sectors;
 
 	/* to convert to K */
