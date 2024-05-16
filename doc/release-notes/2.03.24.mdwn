@@ -73,4 +73,4 @@ Also few more minor improvements:
 """]]
 
 [[!tag]]
-[[meta date="Thu May 16 12:12:06 2024 +0200"]]
+[[!meta date="Thu May 16 12:12:06 2024 +0200"]]
