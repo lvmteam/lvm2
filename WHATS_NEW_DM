@@ -1,3 +1,6 @@
+Version 1.02.199 - 
+===================
+
 Version 1.02.198 - 16th May 2024
 ================================
   Fix static only compilation of libdevmapper.a and dmsetup tool.
@@ -1553,4 +1556,5 @@ Version 1.00.08 - 27 Feb 2004
   Fixed DESTDIR for make install/install_static_lib.
   Updated README/INSTALL to reflect move to sources.redhat.com.
   Updated autoconf files to 2003-06-17.
+
 

@@ -72,9 +72,5 @@ Also few more minor improvements:
 
 """]]
 
-<!-- remove the pending tag on release, remove draft tag once editing is complete -->
-[[!tag draft pending]]
-<!--
-For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
-\[[!meta date="Tue Nov 21 14:26:07 2023 +0100"]]
--->
+[[!tag]]
+[[meta date="Thu May 16 12:12:06 2024 +0200"]]

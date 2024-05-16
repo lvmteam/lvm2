@@ -1,3 +1,6 @@
+Version 2.03.25 - 
+==================
+
 Version 2.03.24 - 16th May 2024
 ===============================
   Lvconvert supports VDO options for thin-pool with vdo conversion.
@@ -5449,4 +5452,5 @@ Display output.  Some metadata information cannot yet be displayed.
 
 Recovery tools to salvage "lost" metadata directly from the disks:
 but we hope the new format will mean such tools are hardly ever needed!
+
 
