@@ -1,5 +1,5 @@
-Version 1.02.198 - 
-===================
+Version 1.02.198 - 16th May 2024
+================================
   Fix static only compilation of libdevmapper.a and dmsetup tool.
   Use better code for closing opened descriptors when starting dmeventd.
   Correct dmeventd -R for systemd environment.

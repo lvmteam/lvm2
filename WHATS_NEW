@@ -1,5 +1,5 @@
-Version 2.03.24 - 
-==================
+Version 2.03.24 - 16th May 2024
+===============================
   Lvconvert supports VDO options for thin-pool with vdo conversion.
   Improve placement to .data.rel.ro and .rodata sections.
   Fix support for -y and -W when creating thinpool with vdo.
