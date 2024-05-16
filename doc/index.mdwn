@@ -35,7 +35,7 @@ To use LVM2 you need 3 things:
 
 ## Getting LVM
 
-Most of linux ditribution offer packaged LVM tools.
+Most of linux distribution offer packaged LVM tools.
 Depending on your distribution use
 
     # RPM based distributions (Fedora):
@@ -64,7 +64,7 @@ tool with low level access and one may seriously harm their data when used
 incorrectly!
 
 
-* Physical Volume (PV) is underlaying disk, local or remote, encrypted or even
+* Physical Volume (PV) is underlying disk, local or remote, encrypted or even
   a mdadm RAID volume. PV is divided into so called Physical Extents (PE) which
   are a basic allocation unit.
   List PVs using [pvs(8)](https://man7.org/linux/man-pages/man8/pvs.8.html) or
@@ -72,7 +72,7 @@ incorrectly!
 
   Make one by running `pvcreate /dev/sdX`.
   See [pvcreate(8)](https://man7.org/linux/man-pages/man8/pvcreate.8.html). This step is optional.
-* Volume Group (VG) consisting for one or more PVs is used as a pool from which LVs are allocated.
+* Volume Group (VG) consisting of one or more PVs is used as a pool from which LVs are allocated.
   List VGs using [vgs(8)](https://man7.org/linux/man-pages/man8/vgs.8.html) or
   [vgdisplay(8)](https://man7.org/linux/man-pages/man8/vgdisplay.8.html).
 

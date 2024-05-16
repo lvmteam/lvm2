@@ -22,7 +22,7 @@ Features
 
 * **IMPORTANT:** When `devices/scan_lvs` is enabled found LVs are no longer auto
   activated, must enable `LVM_PVSCAN_ON_LVS` in udev rules (*69-dm-lvm.rules*.)
-    * NOTE: It is not recomended to use LVs for PVs. If you have an use case for
+    * NOTE: It is not recommended to use LVs for PVs. If you have an use case for
       this talk to us, please.
 * Changes to devices file are now backed up in */etc/lvm/devices/backup/*.
   Controlled by `devices/devicesfile_backup_limit` configuration option.
