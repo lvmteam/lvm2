@@ -47,7 +47,7 @@ static const struct val_name val_names[VAL_COUNT + 1] = {
 /* create table of option names, e.g. --foo, and corresponding enum from args.h */
 
 static const struct opt_name opt_names[ARG_COUNT + 1] = {
-#define arg(a, b, c, d, e, f, g) { # a, b, a, "--" c, d, e, f, g },
+#define arg(a, b, c, d, e, f, g) { g, "--" c, b, a, d, e, f },
 #include "args.h"
 #undef arg
 };
@@ -256,7 +256,7 @@ static int _opt_str_to_num(struct command *cmd, const char *str)
 			 * check left & right side for possible match
 			 */
 			for (i = middle;;) {
-				if ((!p && !strstr(opt_names_alpha[i]->name, "_long_ARG")) ||
+				if ((!p && !(opt_names_alpha[i]->flags & ARG_LONG_OPT)) ||
 				    (p && !opt_names_alpha[i]->short_opt))
 					return opt_names_alpha[i]->opt_enum; /* Found */
 				/* Check if there is something on the 'left-side' */
@@ -268,7 +268,7 @@ static int _opt_str_to_num(struct command *cmd, const char *str)
 			for (i = middle + 1; i <= last; ++i) {
 				if (strcmp(opt_names_alpha[i]->long_opt, long_name))
 					break;
-				if ((!p && !strstr(opt_names_alpha[i]->name, "_long_ARG")) ||
+				if ((!p && !(opt_names_alpha[i]->flags & ARG_LONG_OPT)) ||
 				    (p && !opt_names_alpha[i]->short_opt))
 					return opt_names_alpha[i]->opt_enum; /* Found */
 			}

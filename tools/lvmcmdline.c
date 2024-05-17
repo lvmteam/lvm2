@@ -71,6 +71,7 @@ static struct cmdline_context _cmdline;
  * For now, any command id not included here uses the old command fn.
  */
 static const struct command_function _command_functions[CMD_COUNT] = {
+	{ CMD_NONE, NULL },
 	{ lvmconfig_general_CMD, lvmconfig },
 	{ lvchange_properties_CMD, lvchange_properties_cmd },
 	{ lvchange_resync_CMD, lvchange_resync_cmd },
@@ -1303,15 +1304,12 @@ static void _set_valid_args_for_command_name(int ci)
 
 static command_fn _find_command_id_function(int command_enum)
 {
-	int i;
+	unsigned i;
 
-	if (!command_enum)
-		return NULL;
-
-	for (i = 0; i < CMD_COUNT; i++) {
+	for (i = 0; i < CMD_COUNT; i++)
 		if (_command_functions[i].command_enum == command_enum)
 			return _command_functions[i].fn;
-	}
+
 	return NULL;
 }
 

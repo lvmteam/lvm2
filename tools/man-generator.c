@@ -60,6 +60,7 @@ static void *dm_pool_alloc(void *p, size_t size)
 #define ARG_COUNTABLE 0x00000001
 #define ARG_GROUPABLE 0x00000002
 #define ARG_NONINTERACTIVE 0x00000004
+#define ARG_LONG_OPT  0x00000008
 struct arg_values;
 
 /* needed to include vals.h */

@@ -61,6 +61,7 @@
 #define ARG_COUNTABLE 0x00000001	/* E.g. -vvvv */
 #define ARG_GROUPABLE 0x00000002	/* E.g. --addtag */
 #define ARG_NONINTERACTIVE 0x00000004	/* only for use in noninteractive mode  */
+#define ARG_LONG_OPT  0x00000008	/* arg has long format option  */
 
 struct arg_values {
 	char *value;

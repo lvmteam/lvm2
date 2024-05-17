@@ -226,14 +226,13 @@ struct command {
 /* see global opt_names[] */
 
 struct opt_name {
-	const char name[27];    /* "foo_ARG" */
+	const char *desc;
+	const char long_opt[27];/* --foo */
 	const char short_opt;   /* -f */
 	uint16_t opt_enum;      /* foo_ARG */
-	const char long_opt[28];   /* --foo */
 	uint16_t val_enum;	/* xyz_VAL when --foo takes a val like "--foo xyz" */
 	uint16_t flags;
 	uint16_t prio;
-	const char *desc;
 };
 
 /* see global val_names[] */

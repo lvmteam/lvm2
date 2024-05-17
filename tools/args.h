@@ -137,7 +137,7 @@ arg(bootloaderareasize_ARG, '\0', "bootloaderareasize", sizemb_VAL, 0, 0,
     "To see the bootloader area start and size of\n"
     "an existing PV use pvs -o +pv_ba_start,pv_ba_size.\n")
 
-arg(cache_long_ARG, '\0', "cache", 0, 0, 0,
+arg(cache_long_ARG, '\0', "cache", 0, ARG_LONG_OPT, 0,
     "#pvscan\n"
     "Scan one or more devices and record that they are online.\n"
     "#vgscan\n"
@@ -301,7 +301,7 @@ arg(errorwhenfull_ARG, '\0', "errorwhenfull", bool_VAL, 0, 0,
     "(Also see dm-thin-pool kernel module option no_space_timeout.)\n"
     "See \\fBlvmthin\\fP(7) for more information.\n")
 
-arg(force_long_ARG, '\0', "force", 0, ARG_COUNTABLE, 0,
+arg(force_long_ARG, '\0', "force", 0, ARG_COUNTABLE | ARG_LONG_OPT, 0,
     "Force metadata restore even with thin pool LVs.\n"
     "Use with extreme caution. Most changes to thin metadata\n"
     "cannot be reverted.\n"
@@ -837,7 +837,7 @@ arg(showunsupported_ARG, '\0', "showunsupported", 0, 0, 0,
 arg(startpoll_ARG, '\0', "startpoll", 0, 0, 0,
     "Start polling an LV to continue processing a conversion.\n")
 
-arg(stripes_long_ARG, '\0', "stripes", number_VAL, 0, 0,
+arg(stripes_long_ARG, '\0', "stripes", number_VAL, ARG_LONG_OPT, 0,
     "Specifies the number of stripes in a striped LV. This is the number of\n"
     "PVs (devices) that a striped LV is spread across. Data that\n"
     "appears sequential in the LV is spread across multiple devices in units of\n"
