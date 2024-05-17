@@ -941,7 +941,7 @@ static int _check_value_differs_from_default(struct cft_check_handle *handle,
 				diff = (v_def && (v_def->type != DM_CFG_EMPTY_ARRAY));
 				break;
 			default:
-				log_error(INTERNAL_ERROR "inconsistent state reached in _check_value_differs_from_default");
+				log_error(INTERNAL_ERROR "Inconsistent state reached in _check_value_differs_from_default.");
 				return 0;
 		}
 	}
@@ -2333,7 +2333,7 @@ int load_profile(struct cmd_context *cmd, struct profile *profile) {
 	static char profile_path[PATH_MAX];
 
 	if (critical_section()) {
-		log_error(INTERNAL_ERROR "trying to load profile %s "
+		log_error(INTERNAL_ERROR "Trying to load profile %s "
 			  "in critical section.", profile->name);
 		return 0;
 	}

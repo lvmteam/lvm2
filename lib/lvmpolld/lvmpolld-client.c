@@ -284,17 +284,17 @@ int lvmpolld_poll_init(const struct cmd_context *cmd, const struct poll_operatio
 	int r = 0;
 
 	if (!id->uuid) {
-		log_error(INTERNAL_ERROR "Use of lvmpolld requires uuid set");
+		log_error(INTERNAL_ERROR "Use of lvmpolld requires uuid set.");
 		return 0;
 	}
 
 	if (!id->vg_name) {
-		log_error(INTERNAL_ERROR "Use of lvmpolld requires vgname set");
+		log_error(INTERNAL_ERROR "Use of lvmpolld requires vgname set.");
 		return 0;
 	}
 
 	if (!id->lv_name) {
-		log_error(INTERNAL_ERROR "Use of lvmpolld requires lvname set");
+		log_error(INTERNAL_ERROR "Use of lvmpolld requires lvname set.");
 		return 0;
 	}
 
@@ -321,7 +321,7 @@ int lvmpolld_poll_init(const struct cmd_context *cmd, const struct poll_operatio
 			log_error(INTERNAL_ERROR "Unsupported poll operation.");
 		}
 	} else
-		log_error(INTERNAL_ERROR "Unsupported poll operation");
+		log_error(INTERNAL_ERROR "Unsupported poll operation.");
 
 	return r;
 }
@@ -334,7 +334,7 @@ int lvmpolld_request_info(const struct poll_operation_id *id, const struct daemo
 	*finished = 1;
 
 	if (!id->uuid) {
-		log_error(INTERNAL_ERROR "use of lvmpolld requires uuid being set");
+		log_error(INTERNAL_ERROR "Use of lvmpolld requires uuid being set.");
 		return 0;
 	}
 

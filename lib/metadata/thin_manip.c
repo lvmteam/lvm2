@@ -128,7 +128,7 @@ int detach_thin_external_origin(struct lv_segment *seg)
 {
 	if (seg->external_lv) {
 		if (!lv_is_external_origin(seg->external_lv)) {
-			log_error(INTERNAL_ERROR "Inconsitent external origin.");
+			log_error(INTERNAL_ERROR "Inconsistent external origin.");
 			return 0;
 		}
 

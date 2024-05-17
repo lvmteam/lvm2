@@ -2266,7 +2266,7 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 
 	if (fid_get_mda_indexed(fid, pvid, ID_LEN, mda_index)) {
 		if (!_text_pv_remove_metadata_area(fmt, pv, mda_index)) {
-			log_error(INTERNAL_ERROR "metadata area with index %u already "
+			log_error(INTERNAL_ERROR "Metadata area with index %u already "
 				  "exists on PV %s and removal failed.",
 				  mda_index, pv_dev_name(pv));
 			return 0;

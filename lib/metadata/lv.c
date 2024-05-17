@@ -92,13 +92,13 @@ static struct dm_list *_format_pvsegs(struct dm_pool *mem, const struct lv_segme
 			if (dm_snprintf(extent_str, sizeof(extent_str),
 					":%" PRIu32 "-%" PRIu32,
 					extent, extent + seg_len - 1) < 0) {
-				log_error("_format_pvseggs: extent range dm_snprintf failed");
+				log_error("_format_pvsegs: extent range dm_snprintf failed.");
 				goto bad;
 			}
 		} else {
 			if (dm_snprintf(extent_str, sizeof(extent_str),
 					"(%" PRIu32 ")", extent) < 0) {
-				log_error("_format_pvsegs: extent number dm_snprintf failed");
+				log_error("_format_pvsegs: extent number dm_snprintf failed.");
 				goto bad;
 			}
 		}

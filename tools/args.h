@@ -880,7 +880,7 @@ arg(systemid_ARG, '\0', "systemid", string_VAL, 0, 0,
     "the command, leaving the VG inaccessible to the host.\n"
     "See \\fBlvmsystemid\\fP(7) for more information.\n"
     "#vgchange\n"
-    "Changes the system ID of the VG.  Using this option requires caution\n"
+    "Changes the system ID of the VG. Using this option requires caution\n"
     "because the VG may become foreign to the host running the command,\n"
     "leaving the host unable to access it.\n"
     "See \\fBlvmsystemid\\fP(7) for more information.\n")
@@ -1100,7 +1100,7 @@ arg(activate_ARG, 'a', "activate", activation_VAL, 0, 0,
     "The location and name of the underlying device node may depend on\n"
     "the distribution, configuration (e.g. udev), or release version.\n"
     "\\fBay\\fP specifies autoactivation, which is used by system-generated\n"
-    "activation commands.  By default, LVs are autoactivated.\n"
+    "activation commands. By default, LVs are autoactivated.\n"
     "An autoactivation property can be set on a VG or LV to disable autoactivation,\n"
     "see --setautoactivation y|n in vgchange, lvchange, vgcreate, and lvcreate.\n"
     "Display the property with vgs or lvs \"-o autoactivation\".\n"

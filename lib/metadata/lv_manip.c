@@ -4598,7 +4598,7 @@ int lv_extend(struct logical_volume *lv,
 					  "is not locally active.", display_lvname(lv));
 				/* FIXME Support --force */
 				if (yes_no_prompt("Do full resync of extended "
-						  "portion of %s?  [y/n]: ",
+						  "portion of %s? [y/n]: ",
 						  display_lvname(lv)) == 'n') {
 					r = 0;
 					goto_out;
@@ -8418,7 +8418,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 		/* Temporary tags for activation of the transient LV */
 		dm_list_iterate_items(sl, &lv_where->tags)
 			if (!str_list_add(cmd->mem, &layer_lv->tags, sl->str)) {
-				log_error("Aborting.  Unable to tag"
+				log_error("Aborting. Unable to tag"
 					  " transient mirror layer.");
 				return NULL;
 			}

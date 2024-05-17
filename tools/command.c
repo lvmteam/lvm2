@@ -665,7 +665,7 @@ static void _add_oo_definition_line(const char *name, const char *line)
 
 	start = strchr(line, ':') + 2;
 	if (!(oo->line = strdup(start))) {
-		log_error("Filler to duplicate line %s.", start);
+		log_error("Failed to duplicate line %s.", start);
 		return;
 	}
 }
