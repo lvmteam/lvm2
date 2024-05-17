@@ -175,19 +175,18 @@ static int _do_dm_config_parse(struct dm_config_tree *cft, const char *start, co
 {
 	/* TODO? if (start == end) return 1; */
 
-	struct parser *p;
-	if (!(p = dm_pool_zalloc(cft->mem, sizeof(*p))))
-		return_0;
+	struct parser p = {
+		.mem = cft->mem,
+		.tb = start,
+		.te = start,
+		.fb = start,
+		.fe = end,
+		.line = 1,
+		.no_dup_node_check = no_dup_node_check
+	};
 
-	p->mem = cft->mem;
-	p->fb = start;
-	p->fe = end;
-	p->tb = p->te = p->fb;
-	p->line = 1;
-	p->no_dup_node_check = no_dup_node_check;
-
-	_get_token(p, TOK_SECTION_E);
-	if (!(cft->root = _file(p)))
+	_get_token(&p, TOK_SECTION_E);
+	if (!(cft->root = _file(&p)))
 		return_0;
 
 	cft->root = _config_reverse(cft->root);
