@@ -239,11 +239,10 @@ struct opt_name {
 /* see global val_names[] */
 
 struct val_name {
-	const char enum_name[30]; /* "foo_VAL" */
-	uint16_t val_enum;      /* foo_VAL */
 	int (*fn) (struct cmd_context *cmd, struct arg_values *av); /* foo_arg() */
-	const char name[32];    /* FooVal */
 	const char *usage;
+	const char name[30];    /* FooVal */
+	uint16_t val_enum;      /* foo_VAL */
 };
 
 /* see global lv_props[] */
