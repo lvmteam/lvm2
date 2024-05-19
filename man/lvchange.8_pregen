@@ -462,7 +462,7 @@ link and present this as the name of the device.
 The location and name of the underlying device node may depend on
 the distribution, configuration (e.g. udev), or release version.
 \fBay\fP specifies autoactivation, which is used by system-generated
-activation commands.  By default, LVs are autoactivated.
+activation commands. By default, LVs are autoactivated.
 An autoactivation property can be set on a VG or LV to disable autoactivation,
 see --setautoactivation y|n in vgchange, lvchange, vgcreate, and lvcreate.
 Display the property with vgs or lvs "-o autoactivation".

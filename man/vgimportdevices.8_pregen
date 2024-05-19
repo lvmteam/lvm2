@@ -10,6 +10,56 @@ vgimportdevices \(em Add devices for a VG to the devices file.
 .br
     [ \fIoption_args\fP ]
 .br
+.P
+.ad l
+ \fB-a\fP|\fB--all\fP
+.br
+    \fB--auto\fP
+.br
+    \fB--commandprofile\fP \fIString\fP
+.br
+    \fB--config\fP \fIString\fP
+.br
+ \fB-d\fP|\fB--debug\fP
+.br
+    \fB--devices\fP \fIPV\fP
+.br
+    \fB--devicesfile\fP \fIString\fP
+.br
+    \fB--driverloaded\fP \fBy\fP|\fBn\fP
+.br
+    \fB--foreign\fP
+.br
+ \fB-h\fP|\fB--help\fP
+.br
+    \fB--journal\fP \fIString\fP
+.br
+    \fB--lockopt\fP \fIString\fP
+.br
+    \fB--longhelp\fP
+.br
+    \fB--nohints\fP
+.br
+    \fB--nolocking\fP
+.br
+    \fB--profile\fP \fIString\fP
+.br
+ \fB-q\fP|\fB--quiet\fP
+.br
+    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP
+.br
+    \fB--rootvg\fP
+.br
+ \fB-S\fP|\fB--select\fP \fIString\fP
+.br
+ \fB-t\fP|\fB--test\fP
+.br
+ \fB-v\fP|\fB--verbose\fP
+.br
+    \fB--version\fP
+.br
+ \fB-y\fP|\fB--yes\fP
+.ad b
 .
 .SH DESCRIPTION
 .
@@ -35,9 +85,13 @@ Add devices from specific VGs to the devices file.
 .ad l
 [ \fB-S\fP|\fB--select\fP \fIString\fP ]
 .br
+[    \fB--foreign\fP ]
+.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
+.P
+\(em
 .P
 Add devices from all accessible VGs to the devices file.
 .br
@@ -46,16 +100,33 @@ Add devices from all accessible VGs to the devices file.
 .br
 .RS 4
 .ad l
+[    \fB--foreign\fP ]
+.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
+.P
+\(em
+.P
+Add devices from root VG to the devices file.
+.br
+.P
+\fBvgimportdevices\fP \fB--rootvg\fP
+.br
+.RS 4
+.ad l
+[    \fB--auto\fP ]
+.br
+[ COMMON_OPTIONS ]
+.ad b
+.RE
+.P
+\(em
 .P
 Common options for command:
 .
 .RS 4
 .ad l
-[    \fB--foreign\fP ]
-.br
 [    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP ]
 .ad b
 .RE
@@ -108,6 +179,16 @@ Common options for lvm:
 .HP
 \fB-a\fP|\fB--all\fP
 .br
+.
+.HP
+\fB--auto\fP
+.br
+This option is used when automatically importing devices for the root VG.
+The auto import is intended to be done once, on first boot, to create an
+initial system.devices file for the root VG.
+When this option is used, the vgimportdevices --rootvg command does nothing
+if system.devices exists, or the file auto-import-rootvg does not exist
+(both in the /etc/lvm/devices/ directory.)
 .
 .HP
 \fB--commandprofile\fP \fIString\fP
@@ -220,6 +301,11 @@ with the report name for identification. \fBjson\fP produces report
 output in JSON format. \fBjson_std\fP produces report output in
 JSON format which is more compliant with JSON standard.
 See \fBlvmreport\fP(7) for more information.
+.
+.HP
+\fB--rootvg\fP
+.br
+Import devices used for the root VG.
 .
 .HP
 \fB-S\fP|\fB--select\fP \fIString\fP
