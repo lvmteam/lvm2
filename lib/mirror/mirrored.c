@@ -423,8 +423,7 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 		 */
 		/* FIXME Move this into libdevmapper */
 
-		if (target_version(TARGET_NAME_MIRROR, &maj, &min, &patchlevel) &&
-		    maj == 1 &&
+		if (maj == 1 &&
 		    ((min >= 1) ||
 		     (min == 0 && driver_version(vsn, sizeof(vsn)) &&
 		      sscanf(vsn, "%u.%u.%u", &maj2, &min2, &patchlevel2) == 3 &&
