@@ -421,11 +421,11 @@ static int _vdo_target_present(struct cmd_context *cmd,
 {
 	/* List of features with their kernel target version */
 	static const struct feature {
-		uint32_t maj;
-		uint32_t min;
-		uint32_t patchlevel;
-		unsigned vdo_feature;
-		const char *feature;
+		uint16_t maj;
+		uint16_t min;
+		uint16_t patchlevel;
+		uint16_t vdo_feature;
+		const char feature[24];
 	} _features[] = {
 		{ 6, 2, 3, VDO_FEATURE_ONLINE_RENAME, "online_rename" },
 		{ 8, 2, 0, VDO_FEATURE_VERSION4, "version4" },

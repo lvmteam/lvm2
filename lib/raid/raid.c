@@ -508,11 +508,11 @@ out:
 
 /* Define raid feature based on the tuple(major, minor, patchlevel) of raid target */
 struct raid_feature {
-	uint32_t maj;
-	uint32_t min;
-	uint32_t patchlevel;
-	unsigned raid_feature;
-	const char *feature;
+	uint16_t maj;
+	uint16_t min;
+	uint16_t patchlevel;
+	uint16_t raid_feature;
+	const char feature[24];
 };
 
 /* Return true if tuple(@maj, @min, @patchlevel) is greater/equal to @*feature members */

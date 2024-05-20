@@ -307,13 +307,13 @@ static int _target_present(struct cmd_context *cmd,
 {
 	/* List of features with their kernel target version */
 	static const struct feature {
-		uint32_t maj;
-		uint32_t min;
-		unsigned cache_feature;
-		unsigned cache_alias;
+		uint16_t maj;
+		uint16_t min;
+		uint16_t cache_feature;
+		uint16_t cache_alias;
 		const char feature[12];
 		const char module[12]; /* check dm-%s */
-		const char *aliasing;
+		const char aliasing[24];
 	} _features[] = {
 		{ 1, 10, CACHE_FEATURE_METADATA2, 0, "metadata2" },
 		/* Assumption: cache >=1.9 always aliases MQ policy */
@@ -369,7 +369,7 @@ static int _target_present(struct cmd_context *cmd,
 			    module_present(cmd, _features[i].module)) {
 				log_debug_activation("Cache policy %s is available%s.",
 						     _features[i].module,
-						     _features[i].aliasing ? : "");
+						     _features[i].aliasing);
 				_attrs |= (_features[i].cache_feature | _features[i].cache_alias);
 			} else if (!_features[i].cache_alias)
 				log_very_verbose("Target %s does not support %s.",
