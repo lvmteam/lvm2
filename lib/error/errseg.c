@@ -56,8 +56,8 @@ static int _errseg_target_present(struct cmd_context *cmd,
 	/* Reported truncated in older kernels */
 	if (!_errseg_checked) {
 		_errseg_checked = 1;
-		_errseg_present = target_present(cmd, TARGET_NAME_ERROR, 0) ||
-			target_present(cmd, TARGET_NAME_ERROR_OLD, 0);
+		_errseg_present = target_present(cmd, TARGET_NAME_ERROR, 1) ||
+			target_present(cmd, TARGET_NAME_ERROR_OLD, 1);
 	}
 
 	return _errseg_present;
