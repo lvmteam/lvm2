@@ -1040,75 +1040,56 @@ static int _dev_has_stable_id(struct cmd_context *cmd, struct device *dev)
 	return 0;
 }
 
+static const char _dev_id_types[][16] = {
+	[0]			 = "unknown",
+	[DEV_ID_TYPE_SYS_WWID]	 = "sys_wwid",
+	[DEV_ID_TYPE_SYS_SERIAL] = "sys_serial",
+	[DEV_ID_TYPE_DEVNAME]	 = "devname",
+	[DEV_ID_TYPE_MPATH_UUID] = "mpath_uuid",
+	[DEV_ID_TYPE_CRYPT_UUID] = "crypt_uuid",
+	[DEV_ID_TYPE_LVMLV_UUID] = "lvmlv_uuid",
+	[DEV_ID_TYPE_MD_UUID]	 = "md_uuid",
+	[DEV_ID_TYPE_LOOP_FILE]	 = "loop_file",
+	[DEV_ID_TYPE_WWID_NAA]	 = "wwid_naa",
+	[DEV_ID_TYPE_WWID_EUI]	 = "wwid_eui",
+	[DEV_ID_TYPE_WWID_T10]	 = "wwid_t10",
+};
+
+static int _is_idtype(uint16_t idtype) {
+	return ((idtype > 0) && (idtype < DM_ARRAY_SIZE(_dev_id_types))) ? 1 : 0;
+}
+
 const char *idtype_to_str(uint16_t idtype)
 {
-	if (idtype == DEV_ID_TYPE_SYS_WWID)
-		return "sys_wwid";
-	if (idtype == DEV_ID_TYPE_SYS_SERIAL)
-		return "sys_serial";
-	if (idtype == DEV_ID_TYPE_DEVNAME)
-		return "devname";
-	if (idtype == DEV_ID_TYPE_MPATH_UUID)
-		return "mpath_uuid";
-	if (idtype == DEV_ID_TYPE_CRYPT_UUID)
-		return "crypt_uuid";
-	if (idtype == DEV_ID_TYPE_LVMLV_UUID)
-		return "lvmlv_uuid";
-	if (idtype == DEV_ID_TYPE_MD_UUID)
-		return "md_uuid";
-	if (idtype == DEV_ID_TYPE_LOOP_FILE)
-		return "loop_file";
-	if (idtype == DEV_ID_TYPE_WWID_NAA)
-		return "wwid_naa";
-	if (idtype == DEV_ID_TYPE_WWID_EUI)
-		return "wwid_eui";
-	if (idtype == DEV_ID_TYPE_WWID_T10)
-		return "wwid_t10";
-	return "unknown";
+	if (!_is_idtype(idtype))
+		idtype = 0;
+
+	return  _dev_id_types[idtype];
 }
 
 uint16_t idtype_from_str(const char *str)
 {
-	if (!strcmp(str, "sys_wwid"))
-		return DEV_ID_TYPE_SYS_WWID;
-	if (!strcmp(str, "sys_serial"))
-		return DEV_ID_TYPE_SYS_SERIAL;
-	if (!strcmp(str, "devname"))
-		return DEV_ID_TYPE_DEVNAME;
-	if (!strcmp(str, "mpath_uuid"))
-		return DEV_ID_TYPE_MPATH_UUID;
-	if (!strcmp(str, "crypt_uuid"))
-		return DEV_ID_TYPE_CRYPT_UUID;
-	if (!strcmp(str, "lvmlv_uuid"))
-		return DEV_ID_TYPE_LVMLV_UUID;
-	if (!strcmp(str, "md_uuid"))
-		return DEV_ID_TYPE_MD_UUID;
-	if (!strcmp(str, "loop_file"))
-		return DEV_ID_TYPE_LOOP_FILE;
-	if (!strcmp(str, "wwid_naa"))
-		return DEV_ID_TYPE_WWID_NAA;
-	if (!strcmp(str, "wwid_eui"))
-		return DEV_ID_TYPE_WWID_EUI;
-	if (!strcmp(str, "wwid_t10"))
-		return DEV_ID_TYPE_WWID_T10;
+	uint16_t i;
+
+	for (i = 1; i < DM_ARRAY_SIZE(_dev_id_types); ++i)
+		if (!strcmp(str, _dev_id_types[i]))
+			return i;
+
 	return 0;
 }
 
 const char *dev_idtype_for_metadata(struct cmd_context *cmd, struct device *dev)
 {
-	const char *str;
-
 	if (!cmd->enable_devices_file)
 		return NULL;
 
 	if (!dev || !dev->id || !dev->id->idtype || (dev->id->idtype == DEV_ID_TYPE_DEVNAME))
 		return NULL;
 
-	str = idtype_to_str(dev->id->idtype);
-	if (!strcmp(str, "unknown"))
+	if (!_is_idtype(dev->id->idtype))
 		return NULL;
 
-	return str;
+	return idtype_to_str(dev->id->idtype);
 }
 
 const char *dev_idname_for_metadata(struct cmd_context *cmd, struct device *dev)
