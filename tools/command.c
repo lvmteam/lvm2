@@ -39,7 +39,7 @@ struct cmd_name {
 /* create table of value names, e.g. String, and corresponding enum from vals.h */
 
 static const struct val_name val_names[VAL_COUNT + 1] = {
-#define val(a, b, c, d) { b, d, c, a },
+#define val(a, b, c, d) { b, d, c, sizeof(c) - 1, a },
 #include "vals.h"
 #undef val
 };
@@ -214,7 +214,7 @@ static int _val_str_to_num(char *str)
 		*new = '\0';
 
 	for (i = 0; i < VAL_COUNT; ++i)
-		if (!strncmp(name, val_names[i].name, strlen(val_names[i].name)))
+		if (!strncmp(name, val_names[i].name, val_names[i].name_len))
 			return val_names[i].val_enum;
 
 	return 0;

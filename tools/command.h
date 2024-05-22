@@ -241,6 +241,7 @@ struct val_name {
 	int (*fn) (struct cmd_context *cmd, struct arg_values *av); /* foo_arg() */
 	const char *usage;
 	const char name[30];    /* FooVal */
+	uint16_t name_len;      /* sizeof(FooVal) - 1 */
 	uint16_t val_enum;      /* foo_VAL */
 };
 
