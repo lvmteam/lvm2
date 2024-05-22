@@ -198,6 +198,7 @@ static int _get_proc_number(const char *file, const char *name,
 	char *line = NULL;
 	size_t len;
 	uint32_t num;
+	unsigned blocksection = (strcmp(file, PROC_DEVICES) == 0) ? 0 : 1;
 
 	if (!(fl = fopen(file, "r"))) {
 		log_sys_error("fopen", file);
@@ -205,7 +206,9 @@ static int _get_proc_number(const char *file, const char *name,
 	}
 
 	while (getline(&line, &len, fl) != -1) {
-		if (sscanf(line, "%u %255s\n", &num, &nm[0]) == 2) {
+		if (!blocksection && (line[0] == 'B'))
+			blocksection = 1;
+		else if (sscanf(line, "%u %255s\n", &num, &nm[0]) == 2) {
 			if (!strcmp(name, nm)) {
 				if (number) {
 					*number = num;
