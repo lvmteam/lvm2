@@ -854,8 +854,9 @@ static int _insert_dev(const char *path, dev_t d)
 /*
  * Get rid of extra slashes in the path string.
  */
-static void _collapse_slashes(char *str)
+static size_t _collapse_slashes(char *str)
 {
+	char *start = str;
 	char *ptr;
 	int was_slash = 0;
 
@@ -870,7 +871,9 @@ static void _collapse_slashes(char *str)
 		*str++ = *ptr;
 	}
 
-	*str = *ptr;
+	*str = 0;
+
+	return (str - start);
 }
 
 static int _insert_dir(const char *dir)
@@ -884,8 +887,8 @@ static int _insert_dir(const char *dir)
 		log_debug_devs("Dir path %s is too long", path);
 		return 0;
 	}
-	_collapse_slashes(path);
-	len = strlen(path);
+
+	len = _collapse_slashes(path);
 	if (len && path[len - 1] != '/')
 		path[len++] = '/';
 
