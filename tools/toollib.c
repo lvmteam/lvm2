@@ -18,6 +18,7 @@
 #include "lib/label/hints.h"
 #include "lib/device/device_id.h"
 #include "lib/device/online.h"
+#include "libdm/misc/dm-ioctl.h"
 
 #include <sys/stat.h>
 #include <signal.h>
@@ -4782,9 +4783,31 @@ out:
 	return ret_max;
 }
 
-int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
-		    struct processing_handle *handle __attribute__((unused)))
+static void _lvremove_save_uuid(struct cmd_context *cmd, struct logical_volume *lv,
+				struct lvremove_params *lp)
 {
+	char dm_uuid[DM_UUID_LEN] = { 0 };
+
+	/*
+	 * Create the dm/uuid string that would be displayed
+	 * in sysfs for this LV.
+	 *
+	 * DM_UUID_LEN is 129
+	 * ID_LEN is 32
+	 */
+	memcpy(dm_uuid, "LVM-", 4);
+	memcpy(dm_uuid+4, &lv->vg->id, ID_LEN);
+	memcpy(dm_uuid+4+ID_LEN, &lv->lvid.id[1], ID_LEN);
+
+	if (!str_list_add(cmd->mem, &lp->removed_uuids, dm_pool_strdup(cmd->mem, dm_uuid)))
+		stack;
+}
+
+int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
+		    struct processing_handle *handle)
+{
+	struct lvremove_params *lp = (struct lvremove_params *) handle->custom_handle;
+
 	/*
 	 * Single force is equivalent to single --yes
 	 * Even multiple --yes are equivalent to single --force
@@ -4795,6 +4818,9 @@ int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (!lv_remove_with_dependencies(cmd, lv, force, 0))
 		return_ECMD_FAILED;
+
+	if (cmd->scan_lvs && cmd->enable_devices_file)
+		_lvremove_save_uuid(cmd, lv, lp);
 
 	return ECMD_PROCESSED;
 }

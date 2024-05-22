@@ -1467,6 +1467,10 @@ struct vgcreate_params {
 	const char *lock_args;
 };
 
+struct lvremove_params {
+	struct dm_list removed_uuids; /* entries are str_list */
+};
+
 int validate_major_minor(const struct cmd_context *cmd,
 			 const struct format_type *fmt,
 			 int32_t major, int32_t minor);

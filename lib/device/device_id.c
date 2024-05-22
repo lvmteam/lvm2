@@ -1861,7 +1861,7 @@ int device_ids_use_devname(struct cmd_context *cmd)
 	return 0;
 }
 
-static int _device_ids_use_lvmlv(struct cmd_context *cmd)
+int device_ids_use_lvmlv(struct cmd_context *cmd)
 {
 	struct dev_use *du;
 
@@ -2243,6 +2243,69 @@ void device_id_pvremove(struct cmd_context *cmd, struct device *dev)
 	}
 }
 
+
+/*
+ * Remove LVMLV_UUID entries from system.devices for LVs that were removed.
+ * lvremove vg/lv where a PV exists on vg/lv does an automatic
+ * lvmdevices --deldev /dev/vg/lv
+ */
+void device_id_lvremove(struct cmd_context *cmd, struct dm_list *removed_uuids)
+{
+	struct dev_use *du;
+	struct dm_str_list *sl;
+	int found = 0;
+
+	if (!device_ids_use_lvmlv(cmd))
+		return;
+
+	dm_list_iterate_items(sl, removed_uuids) {
+		if (!(du = get_du_for_device_id(cmd, DEV_ID_TYPE_LVMLV_UUID, sl->str)))
+			continue;
+		found++;
+	}
+
+	if (!found)
+		return;
+
+	if (!lock_devices_file(cmd, LOCK_EX))
+		return;
+
+	/*
+	 * Clear cmd->use_devices which may no longer be an accurate
+	 * representation of system.devices, since another command may have
+	 * changed system.devices after this command read and unlocked it.
+	 */
+	free_dus(&cmd->use_devices);
+
+	/*
+	 * Reread system.devices, recreating cmd->use_devices.
+	 */
+	if (!device_ids_read(cmd)) {
+		log_debug("Failed to read devices file");
+		goto out;
+	}
+
+	found = 0;
+
+	dm_list_iterate_items(sl, removed_uuids) {
+		if (!(du = get_du_for_device_id(cmd, DEV_ID_TYPE_LVMLV_UUID, sl->str)))
+			continue;
+
+		log_debug("Removing devices file entry for device_id %s", sl->str);
+		dm_list_del(&du->list);
+		free_du(du);
+		found++;
+	}
+
+	if (!found)
+		goto out;
+
+	if (!device_ids_write(cmd))
+		log_debug("Failed to write devices file");
+out:
+	unlock_devices_file(cmd);
+}
+
 void device_id_update_vg_uuid(struct cmd_context *cmd, struct volume_group *vg, struct id *old_vg_id)
 {
 	struct dev_use *du;
@@ -2260,7 +2323,7 @@ void device_id_update_vg_uuid(struct cmd_context *cmd, struct volume_group *vg, 
 		return;
 
 	/* Check if any devices file entries are stacked on LVs. */
-	if (!_device_ids_use_lvmlv(cmd))
+	if (!device_ids_use_lvmlv(cmd))
 		return;
 
 	memcpy(old_vgid, old_vg_id, ID_LEN);

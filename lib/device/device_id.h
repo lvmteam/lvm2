@@ -25,11 +25,13 @@ uint16_t idtype_from_str(const char *str);
 const char *dev_idtype_for_metadata(struct cmd_context *cmd, struct device *dev);
 const char *dev_idname_for_metadata(struct cmd_context *cmd, struct device *dev);
 int device_ids_use_devname(struct cmd_context *cmd);
+int device_ids_use_lvmlv(struct cmd_context *cmd);
 int device_ids_read(struct cmd_context *cmd);
 int device_ids_write(struct cmd_context *cmd);
 int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid,
                   const char *idtype_arg, const char *id_arg, int use_idtype_only);
 void device_id_pvremove(struct cmd_context *cmd, struct device *dev);
+void device_id_lvremove(struct cmd_context *cmd, struct dm_list *removed_uuids);
 void device_ids_match(struct cmd_context *cmd);
 int device_ids_match_dev(struct cmd_context *cmd, struct device *dev);
 void device_ids_match_device_list(struct cmd_context *cmd);
