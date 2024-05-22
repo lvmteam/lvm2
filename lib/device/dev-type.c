@@ -344,7 +344,7 @@ struct dev_types *create_dev_types(const char *proc_dir,
 	}
 
 	if (fclose(pd))
-		log_sys_error("fclose", proc_devices);
+		log_sys_debug("fclose", proc_devices);
 
 	return dt;
 bad:
