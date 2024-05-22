@@ -95,8 +95,6 @@
  */
 
 val(none_VAL, NULL, "None", "ERR")             /* unused, for enum value 0 */
-val(conststr_VAL, NULL, "ConstString", "ERR")  /* used only for command defs */
-val(constnum_VAL, NULL, "ConstNumber", "ERR")  /* used only for command defs */
 val(bool_VAL, yes_no_arg, "Bool", "y|n")
 val(number_VAL, int_arg, "Number", NULL)
 val(snumber_VAL, int_arg_with_sign, "SNumber", "[+|-]Number")
@@ -144,6 +142,8 @@ val(configtype_VAL, configtype_arg, "ConfigType", "current|default|diff|full|lis
 val(repairtype_VAL, repairtype_arg, "RepairType", "pv_header|metadata|label_header")
 val(dumptype_VAL, dumptype_arg, "DumpType", "headers|metadata|metadata_all|metadata_search")
 val(headings_VAL, headings_arg, "HeadingsType", "none|abbrev|full|0|1|2")
+val(conststr_VAL, NULL, "ConstString", "ERR")  /* used only for command defs */
+val(constnum_VAL, NULL, "ConstNumber", "ERR")  /* used only for command defs */
 
 /* this should always be last */
 val(VAL_COUNT, NULL, "", NULL)
