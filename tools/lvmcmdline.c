@@ -1637,21 +1637,20 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 	int opt_enum, opt_i;
 	int accepted, count;
 	int variants = 0;
+	uint16_t lvm_command_enum = (cmd->cname) ? cmd->cname->lvm_command_enum : LVM_COMMAND_COUNT;
 
 	name = last_path_component(path);
 
 	/* factor_common_options() is only for usage, so cname->variants is not set. */
-	for (i = 0; i < COMMAND_COUNT; i++) {
-		if (strcmp(name, commands[i].name))
-			continue;
-		variants++;
-	}
+	for (i = 0; i < COMMAND_COUNT; i++)
+		if (lvm_command_enum == commands[i].lvm_command_enum)
+			variants++;
 
 	if (arg_is_set(cmd, type_ARG))
 		type_arg = arg_str_value(cmd, type_ARG, "");
 
 	for (i = 0; i < COMMAND_COUNT; i++) {
-		if (strcmp(name, commands[i].name))
+		if (lvm_command_enum != commands[i].lvm_command_enum)
 			continue;
 
 		if (variants == 1)
