@@ -53,6 +53,7 @@ static struct {
 	struct dm_regex *preferred_names_matcher;
 	const char *dev_dir;
 
+	size_t dev_dir_len;
 	int has_scanned;
 	dev_t st_dev;
 	struct dm_list dirs;
@@ -205,10 +206,9 @@ static int _builtin_preference(const char *path0, const char *path1,
 
 static int _apply_builtin_path_preference_rules(const char *path0, const char *path1)
 {
-	size_t devdir_len;
+	size_t devdir_len = _cache.dev_dir_len;
 	int r;
 
-	devdir_len = strlen(_cache.dev_dir);
 
 	if (!strncmp(path0, _cache.dev_dir, devdir_len) &&
 	    !strncmp(path1, _cache.dev_dir, devdir_len)) {
@@ -878,6 +878,20 @@ static size_t _collapse_slashes(char *str)
 
 static int _insert_dir(const char *dir)
 {
+	/* alphanetically! sorted list used by bsearch of
+	 * /dev subdirectories that should not contain
+	 * any block device, so no reason to scan them. */
+	static const char _no_scan[][12] = {
+		"bsg/",
+		"bus/",
+		"char/",
+		"cpu/",
+		"dma_heap/",
+		"dri/",
+		"input/",
+		"snd/",
+		"usb/",
+	};
 	int n, dirent_count, r = 1;
 	struct dirent **dirent = NULL;
 	char path[PATH_MAX];
@@ -891,6 +905,16 @@ static int _insert_dir(const char *dir)
 	len = _collapse_slashes(path);
 	if (len && path[len - 1] != '/')
 		path[len++] = '/';
+
+	if ((len < (5 + sizeof(_no_scan[0]))) && (strncmp("/dev/", path, 5) == 0) && (len > 5)) {
+		path[len] = 0;
+		if (bsearch(path + 5, _no_scan, DM_ARRAY_SIZE(_no_scan), sizeof(_no_scan[0]),
+			    (int (*)(const void*, const void*))strcmp)) {
+			/* Skip insertion of directories that can't have block devices */
+			log_debug("Skipping \"%s\" (no block devices).", path);
+			return 1;
+		}
+	}
 
 	dirent_count = scandir(dir, &dirent, NULL, alphasort);
 	if (dirent_count > 0) {
@@ -1321,6 +1345,7 @@ int dev_cache_init(struct cmd_context *cmd)
 		goto bad;
 	}
 
+	_cache.dev_dir_len = strlen(_cache.dev_dir);
 	dm_list_init(&_cache.dirs);
 
 	if (!_init_preferred_names(cmd))
