@@ -109,6 +109,8 @@ int target_version(const char *target_name, uint32_t *maj,
 
 int get_device_list(const struct volume_group *vg, struct dm_list **devs,
 		    unsigned *devs_features);
+int device_get_uuid(struct cmd_context *cmd, int major, int minor,
+		    char *uuid_buf, size_t uuid_buf_size);
 
 int raid4_is_supported(struct cmd_context *cmd, const struct segment_type *segtype);
 int lvm_dm_prefix_check(int major, int minor, const char *prefix);

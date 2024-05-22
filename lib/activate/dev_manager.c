@@ -880,6 +880,36 @@ int device_is_usable(struct cmd_context *cmd, struct device *dev, struct dev_usa
 	return r;
 }
 
+/* Read UUID from a given DM device into  buf_uuid */
+int device_get_uuid(struct cmd_context *cmd, int major, int minor,
+		    char *uuid_buf, size_t uuid_buf_size)
+{
+	struct dm_task *dmt;
+	struct dm_info info;
+	const char *uuid;
+	int r = 0;
+
+	if (cmd->cache_dm_devs) {
+		if (dm_device_list_find_by_dev(cmd->cache_dm_devs, major, minor, NULL, &uuid)) {
+			dm_strncpy(uuid_buf, uuid, uuid_buf_size);
+			return 1;
+		}
+		uuid_buf[0] = 0;
+		return 0;
+	}
+
+	if (!(dmt = _setup_task_run(DM_DEVICE_INFO, &info, NULL, NULL, NULL,
+				    major, minor, 0, 0, 0)))
+		return_0;
+
+	if (info.exists && (uuid = dm_task_get_uuid(dmt)))
+		r = dm_strncpy(uuid_buf, uuid, uuid_buf_size);
+
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
 /*
  * If active LVs were activated by a version of LVM2 before 2.02.00 we must
  * perform additional checks to find them because they do not have the LVM-
