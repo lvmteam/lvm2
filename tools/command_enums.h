@@ -89,6 +89,8 @@ enum {
 #define CHECK_DEVS_USED		 0x00010000
 /* Command prints devices file entries that were not found. */
 #define DEVICE_ID_NOT_FOUND      0x00020000
+/* Command prints devices file entries that were not found. */
+#define ALTERNATIVE_EXTENTS	 0x00040000
 
 #include "command.h"       /* defines struct command */
 #include "command-count.h" /* defines COMMAND_COUNT */

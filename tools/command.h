@@ -267,7 +267,7 @@ void print_usage_common_cmd(const struct command_name *cname, struct command *cm
 void print_usage_common_lvm(const struct command_name *cname, struct command *cmd);
 void print_usage_notes(const struct command_name *cname);
 void factor_common_options(void);
-int command_has_alternate_extents(const char *name);
+int command_has_alternate_extents(const struct command_name *cname);
 int configure_command_option_values(const struct command_name *cname, int arg_enum, int val_enum);
 const struct command_name *find_command_name(const char *name);
 

@@ -1244,16 +1244,9 @@ void factor_common_options(void)
 
 /* FIXME: use a flag in command_name struct? */
 
-int command_has_alternate_extents(const char *name)
+int command_has_alternate_extents(const struct command_name *cname)
 {
-	if (name[0] != 'l')
-		return 0;
-	if (!strcmp(name, "lvcreate") ||
-	    !strcmp(name, "lvresize") ||
-	    !strcmp(name, "lvextend") ||
-	    !strcmp(name, "lvreduce"))
-		return 1;
-	return 0;
+	return (cname->flags & ALTERNATIVE_EXTENTS) ? 1 : 0;
 }
 
 static int _long_name_compare(const void *on1, const void *on2)
@@ -1782,7 +1775,7 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 			if (opt_names[opt_enum].short_opt)
 				continue;
 
-			if ((opt_enum == size_ARG) && command_has_alternate_extents(cmd->name))
+			if ((opt_enum == size_ARG) && command_has_alternate_extents(cname))
 				include_extents = 1;
 
 			if (first)
@@ -1804,7 +1797,7 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 		for (ro = 0; ro < cmd->ro_count; ro++) {
 			opt_enum = cmd->required_opt_args[ro].opt;
 
-			if ((opt_enum == size_ARG) && command_has_alternate_extents(cmd->name))
+			if ((opt_enum == size_ARG) && command_has_alternate_extents(cname))
 				include_extents = 1;
 
 			if (opt_names[opt_enum].short_opt)
@@ -2084,7 +2077,7 @@ void print_usage_common_cmd(const struct command_name *cname, struct command *cm
 
 void print_usage_notes(const struct command_name *cname)
 {
-	if (cname && command_has_alternate_extents(cname->name))
+	if (cname && command_has_alternate_extents(cname))
 		printf("  Special options for command:\n\t"
 		       "[ --extents Number[PERCENT] ]\n\t"
 		       "The --extents option can be used in place of --size.\n\t"

@@ -51,7 +51,7 @@ xx(lvconvert,
 
 xx(lvcreate,
    "Create a logical volume",
-   ALLOW_HINTS)
+   ALLOW_HINTS | ALTERNATIVE_EXTENTS)
 
 xx(lvdisplay,
    "Display information about a logical volume",
@@ -59,7 +59,7 @@ xx(lvdisplay,
 
 xx(lvextend,
    "Add space to a logical volume",
-   ALLOW_HINTS)
+   ALLOW_HINTS | ALTERNATIVE_EXTENTS)
 
 xx(lvmchange,
    "With the device mapper, this is obsolete and does nothing.",
@@ -91,7 +91,7 @@ xx(lvpoll,
 
 xx(lvreduce,
    "Reduce the size of a logical volume",
-   ALLOW_HINTS)
+   ALLOW_HINTS | ALTERNATIVE_EXTENTS)
 
 xx(lvremove,
    "Remove logical volume(s) from the system",
@@ -103,7 +103,7 @@ xx(lvrename,
 
 xx(lvresize,
    "Resize a logical volume",
-   ALLOW_HINTS)
+   ALLOW_HINTS | ALTERNATIVE_EXTENTS)
 
 xx(lvs,
    "Display information about logical volumes",

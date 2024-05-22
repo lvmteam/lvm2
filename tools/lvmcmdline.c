@@ -1444,7 +1444,7 @@ static int _command_required_opt_matches(struct cmd_context *cmd, int ci, int ro
 	 * but command[] definitions use only --size.
 	 */
 	if ((opt_enum == size_ARG) && arg_is_set(cmd, extents_ARG) &&
-	    command_has_alternate_extents(commands[ci].name))
+	    command_has_alternate_extents(&command_names[commands[ci].lvm_command_enum]))
 		goto check_val;
 
 	return 0;
