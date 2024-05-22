@@ -270,44 +270,45 @@ struct dev_types *create_dev_types(const char *proc_dir,
 		while (line[i] == ' ')
 			i++;
 
-		/* Look for md device */
-		if (!strncmp("md", line + i, 2) && isspace(*(line + i + 2)))
-			dt->md_major = line_maj;
-
-		/* Look for blkext device */
-		if (!strncmp("blkext", line + i, 6) && isspace(*(line + i + 6)))
-			dt->blkext_major = line_maj;
-
-		/* Look for drbd device */
-		if (!strncmp("drbd", line + i, 4) && isspace(*(line + i + 4)))
-			dt->drbd_major = line_maj;
-
-		/* Look for DASD */
-		if (!strncmp("dasd", line + i, 4) && isspace(*(line + i + 4)))
-			dt->dasd_major = line_maj;
-
-		/* Look for EMC powerpath */
-		if (!strncmp("emcpower", line + i, 8) && isspace(*(line + i + 8)))
-			dt->emcpower_major = line_maj;
-
-		/* Look for Veritas Dynamic Multipathing */
-		if (!strncmp("VxDMP", line + i, 5) && isspace(*(line + i + 5)))
-			dt->vxdmp_major = line_maj;
-
-		if (!strncmp("loop", line + i, 4) && isspace(*(line + i + 4)))
-			dt->loop_major = line_maj;
-
-		if (!strncmp("power2", line + i, 6) && isspace(*(line + i + 6)))
-			dt->power2_major = line_maj;
-
-		/* Look for device-mapper device */
-		/* FIXME Cope with multiple majors */
-		if (!strncmp("device-mapper", line + i, 13) && isspace(*(line + i + 13)))
-			dt->device_mapper_major = line_maj;
-
 		/* Major is SCSI device */
 		if (!strncmp("sd", line + i, 2) && isspace(*(line + i + 2)))
 			dt->dev_type_array[line_maj].flags |= PARTITION_SCSI_DEVICE;
+
+		else if (!strncmp("loop", line + i, 4) && isspace(*(line + i + 4)))
+			dt->loop_major = line_maj;
+
+		/* Look for device-mapper device */
+		/* FIXME Cope with multiple majors */
+		else if (!strncmp("device-mapper", line + i, 13) && isspace(*(line + i + 13)))
+			dt->device_mapper_major = line_maj;
+
+		/* Look for md device */
+		else if (!strncmp("md", line + i, 2) && isspace(*(line + i + 2)))
+			dt->md_major = line_maj;
+
+		/* Look for blkext device */
+		else if (!strncmp("blkext", line + i, 6) && isspace(*(line + i + 6)))
+			dt->blkext_major = line_maj;
+
+		/* Look for drbd device */
+		else if (!strncmp("drbd", line + i, 4) && isspace(*(line + i + 4)))
+			dt->drbd_major = line_maj;
+
+		/* Look for DASD */
+		else if (!strncmp("dasd", line + i, 4) && isspace(*(line + i + 4)))
+			dt->dasd_major = line_maj;
+
+		/* Look for EMC powerpath */
+		else if (!strncmp("emcpower", line + i, 8) && isspace(*(line + i + 8)))
+			dt->emcpower_major = line_maj;
+
+		/* Look for Veritas Dynamic Multipathing */
+		else if (!strncmp("VxDMP", line + i, 5) && isspace(*(line + i + 5)))
+			dt->vxdmp_major = line_maj;
+
+		else if (!strncmp("power2", line + i, 6) && isspace(*(line + i + 6)))
+			dt->power2_major = line_maj;
+
 
 		/* Go through the valid device names and if there is a
 		   match store max number of partitions */
