@@ -445,7 +445,7 @@ static int _dev_in_hint_hash(struct cmd_context *cmd, struct device *dev)
 		return 0;
 
 	/* exclude LVs from hint accounting when scan_lvs is 0 */
-	if (!cmd->scan_lvs && dm_is_dm_major(MAJOR(dev->dev)) && dev_is_lv(dev))
+	if (!cmd->scan_lvs && dm_is_dm_major(MAJOR(dev->dev)) && dev_is_lv(cmd, dev))
 		return 0;
 
 	if (!dev_get_size(dev, &devsize) || !devsize)

@@ -50,7 +50,7 @@ int dev_is_nvme(struct dev_types *dt, struct device *dev)
 	return (dev->flags & DEV_IS_NVME) ? 1 : 0;
 }
 
-int dev_is_lv(struct device *dev)
+int dev_is_lv(struct cmd_context *cmd, struct device *dev)
 {
 	FILE *fp;
 	char path[PATH_MAX];

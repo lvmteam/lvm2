@@ -567,7 +567,7 @@ static struct device *_get_device_for_sysfs_dev_name_using_devno(const char *dev
 
 #define NOT_LVM_UUID "-"
 
-static int _get_vgid_and_lvid_for_dev(struct device *dev)
+static int _get_vgid_and_lvid_for_dev(struct cmd_context *cmd, struct device *dev)
 {
 	const size_t lvm_prefix_len = sizeof(UUID_PREFIX) - 1;
 	const size_t lvm_uuid_len = sizeof(UUID_PREFIX) - 1 + 2 * ID_LEN;
@@ -597,7 +597,7 @@ static int _get_vgid_and_lvid_for_dev(struct device *dev)
 	return 1;
 }
 
-static int _index_dev_by_vgid_and_lvid(struct device *dev)
+static int _index_dev_by_vgid_and_lvid(struct cmd_context *cmd, struct device *dev)
 {
 	const char *devname = dev_name(dev);
 	char devpath[PATH_MAX];
@@ -662,7 +662,7 @@ static int _index_dev_by_vgid_and_lvid(struct device *dev)
 		 * And if it's a DM device, we're only interested in a holder which is an LVM device.
 		 * Get the VG UUID and LV UUID if we don't have that already.
 		 */
-		if (!holder_dev->vgid && !_get_vgid_and_lvid_for_dev(holder_dev))
+		if (!holder_dev->vgid && !_get_vgid_and_lvid_for_dev(cmd, holder_dev))
 			goto_out;
 
 		if (*holder_dev->vgid == *NOT_LVM_UUID)
@@ -673,7 +673,7 @@ static int _index_dev_by_vgid_and_lvid(struct device *dev)
 		 * If a device is internal, the holder has the same VG UUID as the device.
 		 */
 		if (dm_is_dm_major(MAJOR(dev->dev))) {
-			if (!dev->vgid && !_get_vgid_and_lvid_for_dev(dev))
+			if (!dev->vgid && !_get_vgid_and_lvid_for_dev(cmd, dev))
 				goto_out;
 
 			if (*dev->vgid != *NOT_LVM_UUID && !strcmp(holder_dev->vgid, dev->vgid))
@@ -939,7 +939,7 @@ static int _insert_dir(const char *dir)
 	return r;
 }
 
-static int _dev_cache_iterate_devs_for_index(void)
+static int _dev_cache_iterate_devs_for_index(struct cmd_context *cmd)
 {
 	struct btree_iter *iter = btree_first(_cache.devices);
 	struct device *dev;
@@ -948,7 +948,7 @@ static int _dev_cache_iterate_devs_for_index(void)
 	while (iter) {
 		dev = btree_get_data(iter);
 
-		if (!_index_dev_by_vgid_and_lvid(dev))
+		if (!_index_dev_by_vgid_and_lvid(cmd, dev))
 			r = 0;
 
 		iter = btree_next(iter);
@@ -957,7 +957,7 @@ static int _dev_cache_iterate_devs_for_index(void)
 	return r;
 }
 
-static int _dev_cache_iterate_sysfs_for_index(const char *path)
+static int _dev_cache_iterate_sysfs_for_index(struct cmd_context *cmd, const char *path)
 {
 	char devname[PATH_MAX];
 	DIR *d;
@@ -995,7 +995,7 @@ static int _dev_cache_iterate_sysfs_for_index(const char *path)
 			}
 		}
 
-		if (!_index_dev_by_vgid_and_lvid(dev))
+		if (!_index_dev_by_vgid_and_lvid(cmd, dev))
 			partial_failure = 1;
 	}
 
@@ -1007,7 +1007,7 @@ static int _dev_cache_iterate_sysfs_for_index(const char *path)
 	return r;
 }
 
-static int dev_cache_index_devs(void)
+static int _dev_cache_index_devs(struct cmd_context *cmd)
 {
 	static int _sysfs_has_dev_block = -1;
 	char path[PATH_MAX];
@@ -1036,9 +1036,9 @@ static int dev_cache_index_devs(void)
 
 	if (obtain_device_list_from_udev() &&
 	    udev_get_library_context())
-		return _dev_cache_iterate_devs_for_index();  /* with udev */
+		return _dev_cache_iterate_devs_for_index(cmd);  /* with udev */
 
-	return _dev_cache_iterate_sysfs_for_index(path);
+	return _dev_cache_iterate_sysfs_for_index(cmd, path);
 }
 
 #ifdef UDEV_SYNC_SUPPORT
@@ -1247,7 +1247,7 @@ void dev_cache_scan(struct cmd_context *cmd)
 	setlocale(LC_COLLATE, "");
 
 	if (cmd->check_devs_used)
-		(void) dev_cache_index_devs();
+		(void) _dev_cache_index_devs(cmd);
 }
 
 int dev_cache_has_scanned(void)

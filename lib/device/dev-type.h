@@ -100,7 +100,7 @@ int dev_is_pmem(struct dev_types *dt, struct device *dev);
 
 int dev_is_nvme(struct dev_types *dt, struct device *dev);
 
-int dev_is_lv(struct device *dev);
+int dev_is_lv(struct cmd_context *cmd, struct device *dev);
 
 #define FSTYPE_MAX 16
 int fs_block_size_and_type(const char *pathname, uint32_t *fs_block_size_bytes, char *fstype, int *nofs);
