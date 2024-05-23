@@ -917,11 +917,11 @@ int dm_task_get_device_list(struct dm_task *dmt, struct dm_list **devs_list,
 	return 1;
 }
 
-int dm_device_list_find_by_uuid(struct dm_list *devs_list, const char *uuid,
+int dm_device_list_find_by_uuid(const struct dm_list *devs_list, const char *uuid,
 				const struct dm_active_device **dev)
 {
-	struct dm_device_list *devs = (struct dm_device_list *) devs_list;
-	struct dm_active_device *dm_dev;
+	const struct dm_device_list *devs = (const struct dm_device_list *) devs_list;
+	const struct dm_active_device *dm_dev;
 
 	if (devs->uuids &&
 	    (dm_dev = dm_hash_lookup(devs->uuids, uuid))) {
