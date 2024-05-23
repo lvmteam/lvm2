@@ -4185,7 +4185,7 @@ int get_crypt_table_offset(dev_t crypt_devt, uint32_t *offset_bytes)
 	 * <cipher> <key> <iv_offset> <device> <offset> [<#opt_params> <opt_params>]
 	 * <offset> is reported in 512 byte sectors.
 	 */
-	for (i = 0; i < strlen(params); i++) {
+	for (i = 0; params[i]; i++) {
 		if (params[i] == ' ') {
 			spaces++;
 			if (spaces == 4)
