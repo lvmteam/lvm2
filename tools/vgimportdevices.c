@@ -16,6 +16,7 @@
 #include "lib/cache/lvmcache.h"
 #include "lib/device/device_id.h"
 #include "device_mapper/misc/dm-ioctl.h"
+#include "lib/activate/activate.h"
 /* coverity[unnecessary_header] needed for MuslC */
 #include <sys/file.h>
 #include <mntent.h>
@@ -151,14 +152,14 @@ static int _get_rootvg_dev(struct cmd_context *cmd, char **dm_uuid_out, int *ski
 	if (stat(me->mnt_dir, &info) < 0)
 		return_0;
 
-	if (!get_dm_uuid_from_sysfs(dm_uuid, sizeof(dm_uuid), (int)MAJOR(info.st_dev), (int)MINOR(info.st_dev)))
+	if (!device_get_uuid(cmd, MAJOR(info.st_dev), MINOR(info.st_dev), dm_uuid, sizeof(dm_uuid)))
 		return_0;
 
 	/* UUID_PREFIX = "LVM-" */
-	if (strncmp(dm_uuid, UUID_PREFIX, 4))
+	if (strncmp(dm_uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1))
 		return_0;
 
-	if (strlen(dm_uuid) < 4 + ID_LEN)
+	if (strlen(dm_uuid) < sizeof(UUID_PREFIX) - 1 + ID_LEN)
 		return_0;
 
 	*dm_uuid_out = dm_pool_strdup(cmd->mem, dm_uuid);

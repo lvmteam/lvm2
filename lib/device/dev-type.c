@@ -22,6 +22,7 @@
 #include "lib/device/bcache.h"
 #include "lib/label/label.h"
 #include "lib/commands/toolcontext.h"
+#include "lib/activate/activate.h"
 #include "device_mapper/misc/dm-ioctl.h"
 
 #ifdef BLKID_WIPING_SUPPORT
@@ -52,31 +53,14 @@ int dev_is_nvme(struct dev_types *dt, struct device *dev)
 
 int dev_is_lv(struct cmd_context *cmd, struct device *dev)
 {
-	FILE *fp;
-	char path[PATH_MAX];
-	char buffer[64];
-	int ret = 0;
+	char buffer[128];
 
-	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/dm/uuid",
-			dm_sysfs_dir(),
-			(int) MAJOR(dev->dev),
-			(int) MINOR(dev->dev)) < 0) {
-		log_warn("Sysfs dm uuid path for %s is too long.", dev_name(dev));
-		return 0;
-	}
+	if (device_get_uuid(cmd, MAJOR(dev->dev), MINOR(dev->dev),
+			    buffer, sizeof(buffer)) &&
+	    !strncmp(buffer, UUID_PREFIX, sizeof(UUID_PREFIX) - 1))
+                return 1;
 
-	if (!(fp = fopen(path, "r")))
-		return 0;
-
-	if (!fgets(buffer, sizeof(buffer), fp))
-		log_debug("Failed to read %s.", path);
-	else if (!strncmp(buffer, "LVM-", 4))
-		ret = 1;
-
-	if (fclose(fp))
-		log_sys_debug("fclose", path);
-
-	return ret;
+	return 0;
 }
 
 int dev_is_used_by_active_lv(struct cmd_context *cmd, struct device *dev, int *used_by_lv_count,
@@ -140,14 +124,10 @@ int dev_is_used_by_active_lv(struct cmd_context *cmd, struct device *dev, int *u
 
 		/*
 		 * if "dm-1" is a dm device, then check if it's an LVM LV
-		 * by reading /sys/block/<holder_name>/dm/uuid and seeing
-		 * if the uuid begins with LVM-
-		 * UUID_PREFIX is "LVM-"
+		 * by reading DM status and seeing if the uuid begins
+		 * with UUID_PREFIX  ("LVM-")
 		 */
-
-		dm_uuid[0] = '\0';
-
-		if (!get_dm_uuid_from_sysfs(dm_uuid, sizeof(dm_uuid), dm_dev_major, dm_dev_minor))
+		if (!device_get_uuid(cmd, dm_dev_major, dm_dev_minor, dm_uuid, sizeof(dm_uuid)))
 			continue;
 
 		if (!strncmp(dm_uuid, UUID_PREFIX, 4))

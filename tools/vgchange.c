@@ -869,7 +869,7 @@ static void _get_rootvg_dev(struct cmd_context *cmd, char **dm_uuid_out)
 	if (stat(me->mnt_dir, &info) < 0)
 		return;
 
-	if (!get_dm_uuid_from_sysfs(dm_uuid, sizeof(dm_uuid), (int)MAJOR(info.st_dev), (int)MINOR(info.st_dev)))
+	if (!device_get_uuid(cmd, MAJOR(info.st_dev), MINOR(info.st_dev), dm_uuid, sizeof(dm_uuid)))
 		return;
 
 	log_debug("Found root dm_uuid %s", dm_uuid);

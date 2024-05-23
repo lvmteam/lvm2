@@ -21,6 +21,7 @@
 #include "lib/config/config.h"
 #include "lib/commands/toolcontext.h"
 #include "device_mapper/misc/dm-ioctl.h"
+#include "lib/activate/activate.h"
 #include "lib/misc/lvm-string.h"
 
 #ifdef UDEV_SYNC_SUPPORT
@@ -453,18 +454,6 @@ out:
 	return r;
 }
 
-int get_dm_uuid_from_sysfs(char *buf, size_t buf_size, int major, int minor)
-{
-	char path[PATH_MAX];
-
-	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/dm/uuid", dm_sysfs_dir(), major, minor) < 0) {
-		log_error("%d:%d: dm_snprintf failed for path to sysfs dm directory.", major, minor);
-		return 0;
-	}
-
-	return get_sysfs_value(path, buf, buf_size, 0);
-}
-
 static struct dm_list *_get_or_add_list_by_index_key(struct dm_hash_table *idx, const char *key)
 {
 	struct dm_list *list;
@@ -574,7 +563,7 @@ static int _get_vgid_and_lvid_for_dev(struct cmd_context *cmd, struct device *de
 	char uuid[DM_UUID_LEN];
 	size_t uuid_len;
 
-	if (!get_dm_uuid_from_sysfs(uuid, sizeof(uuid), (int) MAJOR(dev->dev), (int) MINOR(dev->dev)))
+	if (!device_get_uuid(cmd, MAJOR(dev->dev), MINOR(dev->dev), uuid, sizeof(uuid)))
 		return_0;
 
 	uuid_len = strlen(uuid);
