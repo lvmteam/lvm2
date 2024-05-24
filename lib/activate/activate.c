@@ -2461,7 +2461,6 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 	const struct lv_activate_opts laopts = { .skip_in_use = 1 };
 	struct dm_list *snh;
 	int r = 0;
-	unsigned tmp_state;
 
 	if (!activation())
 		return 1;
@@ -2534,9 +2533,6 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 	}
 	critical_section_dec(cmd, "deactivated");
 
-	tmp_state = cmd->disable_dm_devs;
-	cmd->disable_dm_devs = 1;
-
 	if (!lv_info(cmd, lv, 0, &info, 0, 0) || info.exists) {
 		/* Turn into log_error, but we do not log error */
 		log_debug_activation("Deactivated volume is still %s present.",
@@ -2544,7 +2540,6 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 		r = 0;
 	}
 
-	cmd->disable_dm_devs = tmp_state;
 out:
 
 	return r;

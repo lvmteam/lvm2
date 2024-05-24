@@ -1062,8 +1062,7 @@ int dev_manager_info(struct cmd_context *cmd,
 	if (!(dlid = build_dm_uuid(cmd->mem, lv, layer)))
 		goto_out;
 
-	if (!cmd->disable_dm_devs &&
-	    cmd->cache_dm_devs &&
+	if (cmd->cache_dm_devs &&
 	    !dm_device_list_find_by_uuid(cmd->cache_dm_devs, dlid, NULL)) {
 		log_debug("Cached as inactive %s.", name);
 		if (dminfo)
@@ -2436,8 +2435,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (!(dlid = build_dm_uuid(dm->track_pending_delete ? dm->cmd->pending_delete_mem : dm->mem, lv, layer)))
 		return_0;
 
-	if (!dm->cmd->disable_dm_devs &&
-	    dm->cmd->cache_dm_devs) {
+	if (dm->cmd->cache_dm_devs) {
 		if (!dm_device_list_find_by_uuid(dm->cmd->cache_dm_devs, dlid, &dev)) {
 			log_debug("Cached as not present %s.", name);
 			return 1;

@@ -211,7 +211,6 @@ struct cmd_context {
 	unsigned event_activation:1;		/* whether event_activation is set */
 	unsigned udevoutput:1;
 	unsigned online_vg_file_removed:1;
-	unsigned disable_dm_devs:1;		/* temporarily disable use of dm devs cache */
 	unsigned filter_regex_set_preferred_name_disable:1; /* prevent dev_set_preferred_name */
 	unsigned device_ids_check_product_uuid:1;
 	unsigned device_ids_check_hostname:1;
