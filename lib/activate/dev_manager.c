@@ -3945,7 +3945,6 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 	struct dm_tree_node *root;
 	char *dlid;
 	int r = 0;
-	unsigned tmp_state;
 
 	if (action < DM_ARRAY_SIZE(_action_names))
 		log_debug_activation("Creating %s%s tree for %s.",
@@ -3964,14 +3963,11 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 	dm->activation = ((action == PRELOAD) || (action == ACTIVATE));
 	dm->suspend = (action == SUSPEND_WITH_LOCKFS) || (action == SUSPEND);
 
-	/* ATM do not use caching for anything else then striped target.
-	 * And also skip for CLEAN action */
-	tmp_state = dm->cmd->disable_dm_devs;
-	if (!seg_is_striped_target(first_seg(lv)) || (action == CLEAN))
-		dm->cmd->disable_dm_devs = 1;
+	/* Drop any cache before DM table manipulation within locked section
+	 * TODO: check if it makes sense to manage cache within lock */
+	dm_device_list_destroy(&dm->cmd->cache_dm_devs);
 
 	dtree = _create_partial_dtree(dm, lv, laopts->origin_only);
-	dm->cmd->disable_dm_devs = tmp_state;
 
 	if (!dtree)
 		return_0;
