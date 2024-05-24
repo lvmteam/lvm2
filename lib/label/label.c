@@ -1260,6 +1260,7 @@ int label_scan(struct cmd_context *cmd)
 	uint64_t max_metadata_size_bytes;
 	int using_hints;
 	int create_hints = 0; /* NEWHINTS_NONE */
+	unsigned devs_features = 0;
 
 	log_debug_devs("Finding devices to scan");
 
@@ -1270,6 +1271,15 @@ int label_scan(struct cmd_context *cmd)
 
 	if (!label_scan_setup_bcache())
 		return_0;
+
+	/* Initialize device_list cache early so
+	 * 'Hints' file processing can also use it */
+	dm_device_list_destroy(&cmd->cache_dm_devs);
+	if (get_device_list(NULL, &cmd->cache_dm_devs, &devs_features))
+		if (!(devs_features & DM_DEVICE_LIST_HAS_UUID))
+			/* Using older kernels without UUIDs in LIST,
+			 * -> cannot use cache */
+			dm_device_list_destroy(&cmd->cache_dm_devs);
 
 	/*
 	 * Creates a list of available devices, does not open or read any,
@@ -1661,9 +1671,7 @@ void label_scan_invalidate_lv(struct cmd_context *cmd, struct logical_volume *lv
 
 void label_scan_invalidate_lvs(struct cmd_context *cmd, struct dm_list *lvs)
 {
-	struct dm_list *devs;
 	struct dm_active_device *dm_dev;
-	unsigned devs_features = 0;
 	struct device *dev;
 	struct lv_list *lvl;
 	dev_t devt;
@@ -1674,30 +1682,20 @@ void label_scan_invalidate_lvs(struct cmd_context *cmd, struct dm_list *lvs)
 	 */
 	if (!cmd->scan_lvs)
 		return;
-	log_debug("invalidating devs for any pvs on lvs");
 
-	if (get_device_list(NULL, &devs, &devs_features)) {
-		if (devs_features & DM_DEVICE_LIST_HAS_UUID) {
-			dm_list_iterate_items(dm_dev, devs)
-				if (dm_dev->uuid &&
-				    strncmp(dm_dev->uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1) == 0) {
-					devt = MKDEV(dm_dev->major, dm_dev->minor);
-					if ((dev = dev_cache_get_by_devt(cmd, devt)))
-						label_scan_invalidate(dev);
-				}
-			/* ATM no further caching for any lvconvert command
-			 * TODO: any other command to be skipped ??
-			 */
-			if (strcmp(cmd->name, "lvconvert")) {
-				dm_device_list_destroy(&cmd->cache_dm_devs);
-				cmd->cache_dm_devs = devs; /* cache to avoid unneeded checks */
-				devs = NULL;
+	log_debug("Invalidating devs for any PVs on LVs.");
+
+	if (cmd->cache_dm_devs) {
+		dm_list_iterate_items(dm_dev, cmd->cache_dm_devs)
+			if (dm_dev->uuid &&
+			    strncmp(dm_dev->uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1) == 0) {
+				devt = MKDEV(dm_dev->major, dm_dev->minor);
+				if ((dev = dev_cache_get_by_devt(cmd, devt)))
+					label_scan_invalidate(dev);
 			}
-		}
-		dm_device_list_destroy(&devs);
-	}
-
-	if (!(devs_features & DM_DEVICE_LIST_HAS_UUID))
+	} else
+		/* With older kernels without UUIDs we have to go the old way
+		 * and check for every LVs UUID one by one */
 		dm_list_iterate_items(lvl, lvs)
 			label_scan_invalidate_lv(cmd, lvl->lv);
 }
