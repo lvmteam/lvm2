@@ -31,6 +31,15 @@ pvcreate --metadatacopies 0 "$dev3"
 
 vgcreate $SHARED "$vg" "${DEVICES[@]}"
 
+# discovers whether lvm2 is compiled with lvm shell support
+echo "nonexisting" | lvm &>out && {
+	# shell is built-in, command should report this error
+	grep "No such command" out
+
+	# check whether lvm shell autocomplete works on \tab
+	printf "lvcr\t --si\t 10 -\tn $lv3 $vg" | lvm
+}
+
 lvcreate -l 5 -i5 -I256 -n $lv $vg
 lvcreate -aey -l 5 -n $lv1 $vg
 lvcreate -s -l 5 -n $lv2 $vg/$lv1
@@ -79,3 +88,9 @@ not lvm lvmchange
 not lvm lvmsadc
 not lvm lvmsar
 not lvm pvdata
+
+if lvm nonexistingcommand ; then
+        die "lvm must fail"
+elif [ "$?" != "2" ] ; then
+        die "lvm sould return code 2"
+fi
