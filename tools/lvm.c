@@ -52,7 +52,8 @@ static char *_list_cmds(const char *text, int state)
 
 	for (;i < _cmdline->num_command_names;++i)
 		if (!strncmp(text, _cmdline->command_names[i].name, len))
-			return strdup(_cmdline->command_names[i].name);
+			/* increase position for next iteration */
+			return strdup(_cmdline->command_names[i++].name);
 
 	return NULL;
 }
@@ -102,9 +103,10 @@ static char *_list_args(const char *text, int state)
 
 	/* Short form arguments */
 	if (len < 3) {
-		for (;match_no < cna->num_args; ++match_no) {
+		while (match_no < cna->num_args) {
 			char s[3];
-			char c = (_cmdline->opt_names + cna->valid_args[match_no])->short_opt;
+			/* increase position for next iteration */
+			char c = _cmdline->opt_names[cna->valid_args[match_no++]].short_opt;
 			if (c) {
 				sprintf(s, "-%c", c);
 				if (!strncmp(text, s, len))
@@ -117,8 +119,9 @@ static char *_list_args(const char *text, int state)
 	if (match_no < cna->num_args)
 		match_no = cna->num_args;
 
-	for (;match_no - cna->num_args < cna->num_args; ++match_no) {
-		const char *l = (_cmdline->opt_names + cna->valid_args[match_no - cna->num_args])->long_opt;
+	while ((match_no - cna->num_args) < cna->num_args) {
+		/* increase position for next iteration */
+		const char *l = _cmdline->opt_names[cna->valid_args[match_no++ - cna->num_args]].long_opt;
 		if (*(l + 2) && !strncmp(text, l, len))
 			return strdup(l);
 	}
