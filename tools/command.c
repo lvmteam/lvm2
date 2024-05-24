@@ -421,12 +421,12 @@ static unsigned _find_lvm_command_enum(const char *name)
 			return middle;
 	}
 
-	return -1;
+	return LVM_COMMAND_COUNT;
 }
 
 const struct command_name *find_command_name(const char *name)
 {
-	int r = _find_lvm_command_enum(name);
+	unsigned r = _find_lvm_command_enum(name);
 
 	return (r < LVM_COMMAND_COUNT) ? &command_names[r] : NULL;
 }
