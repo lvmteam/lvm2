@@ -116,8 +116,8 @@ int dev_is_used_by_active_lv(struct cmd_context *cmd, struct device *dev, int *u
 		if (stat(dm_dev_path, &info))
 			continue;
 
-		dm_dev_major = (int)MAJOR(info.st_rdev);
-		dm_dev_minor = (int)MINOR(info.st_rdev);
+		dm_dev_major = MAJOR(info.st_rdev);
+		dm_dev_minor = MINOR(info.st_rdev);
         
 		if (dm_dev_major != cmd->dev_types->device_mapper_major)
 			continue;

@@ -569,15 +569,15 @@ static int _ignore_suspended_snapshot_component(struct device *dev)
 
 		if (!strcmp(target_type, TARGET_NAME_SNAPSHOT)) {
 			if (!params || sscanf(params, "%d:%d %d:%d", &major1, &minor1, &major2, &minor2) != 4) {
-				log_warn("WARNING: Incorrect snapshot table found for %d:%d.",
-					 (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
+				log_warn("WARNING: Incorrect snapshot table found for %u:%u.",
+					 MAJOR(dev->dev), MINOR(dev->dev));
 				goto out;
 			}
 			r = r || _device_is_suspended(major1, minor1) || _device_is_suspended(major2, minor2);
 		} else if (!strcmp(target_type, TARGET_NAME_SNAPSHOT_ORIGIN)) {
 			if (!params || sscanf(params, "%d:%d", &major1, &minor1) != 2) {
-				log_warn("WARNING: Incorrect snapshot-origin table found for %d:%d.",
-					 (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
+				log_warn("WARNING: Incorrect snapshot-origin table found for %u:%u.",
+					 MAJOR(dev->dev), MINOR(dev->dev));
 				goto out;
 			}
 			r = r || _device_is_suspended(major1, minor1);
@@ -612,8 +612,8 @@ static int _ignore_unusable_thins(struct device *dev)
 
 	dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
 	if (!params || sscanf(params, "%d:%d", &major, &minor) != 2) {
-		log_warn("WARNING: Cannot get thin-pool major:minor for thin device %d:%d.",
-			  (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
+		log_warn("WARNING: Cannot get thin-pool major:minor for thin device %u:%u.",
+			 MAJOR(dev->dev), MINOR(dev->dev));
 		goto out;
 	}
 	dm_task_destroy(dmt);
@@ -673,8 +673,8 @@ static int _ignore_frozen_raid(struct device *dev, const char *params)
 	if (!dm_get_status_raid(mem, params, &s))
 		stack;
 	else if (s->sync_action && !strcmp(s->sync_action, "frozen")) {
-		log_warn("WARNING: %s frozen raid device (%d:%d) needs inspection.",
-			  dev_name(dev), (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
+		log_warn("WARNING: %s frozen raid device (%u:%u) needs inspection.",
+			 dev_name(dev), MAJOR(dev->dev), MINOR(dev->dev));
 		r = 1;
 	}
 
@@ -4126,9 +4126,9 @@ int dev_manager_device_uses_vg(struct device *dev,
 
 	dm_tree_set_optional_uuid_suffixes(dtree, (const char**)_uuid_suffix_list);
 
-	if (!dm_tree_add_dev(dtree, (uint32_t) MAJOR(dev->dev), (uint32_t) MINOR(dev->dev))) {
-		log_error("Failed to add device %s (%" PRIu32 ":%" PRIu32") to dtree.",
-			  dev_name(dev), (uint32_t) MAJOR(dev->dev), (uint32_t) MINOR(dev->dev));
+	if (!dm_tree_add_dev(dtree, MAJOR(dev->dev), MINOR(dev->dev))) {
+		log_error("Failed to add device %s (%u:%u) to dtree.",
+			  dev_name(dev), MAJOR(dev->dev), MINOR(dev->dev));
 		goto out;
 	}
 

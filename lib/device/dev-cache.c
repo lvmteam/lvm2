@@ -603,7 +603,8 @@ static int _index_dev_by_vgid_and_lvid(struct cmd_context *cmd, struct device *d
 		return 1;
 
 	/* Get holders for device. */
-	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/holders/", dm_sysfs_dir(), (int) MAJOR(dev->dev), (int) MINOR(dev->dev)) < 0) {
+	if (dm_snprintf(path, sizeof(path), "%sdev/block/%u:%u/holders/",
+			dm_sysfs_dir(), MAJOR(dev->dev), MINOR(dev->dev)) < 0) {
 		log_error("%s: dm_snprintf failed for path to holders directory.", devname);
 		return 0;
 	}
@@ -751,8 +752,8 @@ static int _insert_dev(const char *path, dev_t d)
 	 * Existing device, existing path points to the same device.
 	 */
 	if (dev_by_devt && dev_by_path && (dev_by_devt == dev_by_path)) {
-		log_debug_devs("Found dev %d:%d %s - exists. %.8s",
-			       (int)MAJOR(d), (int)MINOR(d), path, dev->pvid);
+		log_debug_devs("Found dev %u:%u %s - exists. %.8s",
+			       MAJOR(d), MINOR(d), path, dev->pvid);
 		return 1;
 	}
 
@@ -760,8 +761,7 @@ static int _insert_dev(const char *path, dev_t d)
 	 * No device or path found, add devt to cache.devices, add name to cache.names.
 	 */
 	if (!dev_by_devt && !dev_by_path) {
-		log_debug_devs("Found dev %d:%d %s - new.",
-			       (int)MAJOR(d), (int)MINOR(d), path);
+		log_debug_devs("Found dev %u:%u %s - new.", MAJOR(d), MINOR(d), path);
 
 		if (!(dev = (struct device *) btree_lookup(_cache.sysfs_only_devices, (uint32_t) d))) {
 			/* create new device */
@@ -785,8 +785,7 @@ static int _insert_dev(const char *path, dev_t d)
 	 * Existing device, path is new, add path as a new alias for the device.
 	 */
 	if (dev_by_devt && !dev_by_path) {
-		log_debug_devs("Found dev %d:%d %s - new alias.",
-			       (int)MAJOR(d), (int)MINOR(d), path);
+		log_debug_devs("Found dev %u:%u %s - new alias.", MAJOR(d), MINOR(d), path);
 
 		if (!_add_alias(dev, path, HASH))
 			return_0;
@@ -799,9 +798,9 @@ static int _insert_dev(const char *path, dev_t d)
 	 * to a different device.
 	 */
 	if (!dev_by_devt && dev_by_path) {
-		log_debug_devs("Found dev %d:%d %s - new device, path was previously %d:%d.",
-			       (int)MAJOR(d), (int)MINOR(d), path,
-			       (int)MAJOR(dev_by_path->dev), (int)MINOR(dev_by_path->dev));
+		log_debug_devs("Found dev %u:%u %s - new device, path was previously %u:%u.",
+			       MAJOR(d), MINOR(d), path,
+			       MAJOR(dev_by_path->dev), MINOR(dev_by_path->dev));
 
 		if (!(dev = (struct device *) btree_lookup(_cache.sysfs_only_devices, (uint32_t) d))) {
 			/* create new device */
@@ -826,9 +825,9 @@ static int _insert_dev(const char *path, dev_t d)
 	 * a different device.
 	 */
 	if (dev_by_devt && dev_by_path) {
-		log_debug_devs("Found dev %d:%d %s - existing device, path was previously %d:%d.",
-			       (int)MAJOR(d), (int)MINOR(d), path,
-			       (int)MAJOR(dev_by_path->dev), (int)MINOR(dev_by_path->dev));
+		log_debug_devs("Found dev %u:%u %s - existing device, path was previously %u:%u.",
+			       MAJOR(d), MINOR(d), path,
+			       MAJOR(dev_by_path->dev), MINOR(dev_by_path->dev));
 
 		if (!_add_alias(dev, path, REHASH))
 			return_0;
@@ -836,7 +835,7 @@ static int _insert_dev(const char *path, dev_t d)
 		return 1;
 	}
 
-	log_error("Found dev %d:%d %s - failed to use.", (int)MAJOR(d), (int)MINOR(d), path);
+	log_error("Found dev %u:%u %s - failed to use.", MAJOR(d), MINOR(d), path);
 	return 0;
 }
 
@@ -1219,7 +1218,7 @@ static void _drop_all_aliases(struct device *dev)
 	struct dm_str_list *strl, *strl2;
 
 	dm_list_iterate_items_safe(strl, strl2, &dev->aliases) {
-		log_debug("Drop alias for %d:%d %s.", (int)MAJOR(dev->dev), (int)MINOR(dev->dev), strl->str);
+		log_debug("Drop alias for %u:%u %s.", MAJOR(dev->dev), MINOR(dev->dev), strl->str);
 		dm_hash_remove(_cache.names, strl->str);
 		dm_list_del(&strl->list);
 	}
@@ -1475,9 +1474,9 @@ void dev_cache_verify_aliases(struct device *dev)
 
 	dm_list_iterate_items_safe(strl, strl2, &dev->aliases) {
 		if (stat(strl->str, &st) || (st.st_rdev != dev->dev)) {
-			log_debug("Drop alias for %d:%d invalid path %s %d:%d.",
-				  (int)MAJOR(dev->dev), (int)MINOR(dev->dev), strl->str,
-				  (int)MAJOR(st.st_rdev), (int)MINOR(st.st_rdev));
+			log_debug("Drop alias for %u:%u invalid path %s %u:%u.",
+				  MAJOR(dev->dev), MINOR(dev->dev), strl->str,
+				  MAJOR(st.st_rdev), MINOR(st.st_rdev));
 			dm_hash_remove(_cache.names, strl->str);
 			dm_list_del(&strl->list);
 		}
@@ -1509,8 +1508,8 @@ static struct device *_dev_cache_get(struct cmd_context *cmd, const char *name, 
 	 */
 	if (stat(name, &st)) {
 		if (dev) {
-			log_debug("Device path %s is invalid for %d:%d %s.",
-				  name, (int)MAJOR(dev->dev), (int)MINOR(dev->dev), dev_name(dev));
+			log_debug("Device path %s is invalid for %u:%u %s.",
+				  name, MAJOR(dev->dev), MINOR(dev->dev), dev_name(dev));
 
 			dm_hash_remove(_cache.names, name);
 
@@ -1548,16 +1547,16 @@ static struct device *_dev_cache_get(struct cmd_context *cmd, const char *name, 
 		 * approach would be not using dev-cache at all for LVs.
 		 */
 
-		log_debug("Dropping aliases for device entry %d:%d %s for new device %d:%d %s.",
-			  (int)MAJOR(dev->dev), (int)MINOR(dev->dev), dev_name(dev),
-			  (int)MAJOR(st.st_rdev), (int)MINOR(st.st_rdev), name);
+		log_debug("Dropping aliases for device entry %u:%u %s for new device %u:%u %s.",
+			  MAJOR(dev->dev), MINOR(dev->dev), dev_name(dev),
+			  MAJOR(st.st_rdev), MINOR(st.st_rdev), name);
 
 		_drop_all_aliases(dev);
 
 		if (dev_by_devt) {
-			log_debug("Dropping aliases for device entry %d:%d %s for new device %d:%d %s.",
-				   (int)MAJOR(dev_by_devt->dev), (int)MINOR(dev_by_devt->dev), dev_name(dev_by_devt),
-				   (int)MAJOR(st.st_rdev), (int)MINOR(st.st_rdev), name);
+			log_debug("Dropping aliases for device entry %u:%u %s for new device %u:%u %s.",
+				   MAJOR(dev_by_devt->dev), MINOR(dev_by_devt->dev), dev_name(dev_by_devt),
+				   MAJOR(st.st_rdev), MINOR(st.st_rdev), name);
 
 			_drop_all_aliases(dev_by_devt);
 		}
@@ -1568,8 +1567,8 @@ static struct device *_dev_cache_get(struct cmd_context *cmd, const char *name, 
 		 * a warning to look for any other unknown cases.
 		 */
 		if (MAJOR(st.st_rdev) != cmd->dev_types->device_mapper_major) {
-			log_warn("WARNING: new device appeared %d:%d %s",
-				  (int)MAJOR(st.st_rdev), (int)(MINOR(st.st_rdev)), name);
+			log_warn("WARNING: new device appeared %u:%u %s",
+				  MAJOR(st.st_rdev), (MINOR(st.st_rdev)), name);
 		}
 #endif
 
@@ -1626,8 +1625,8 @@ static struct device *_dev_cache_get(struct cmd_context *cmd, const char *name, 
 		 */
 		struct device *dev_by_devt = (struct device *) btree_lookup(_cache.devices, (uint32_t) st.st_rdev);
 		if (dev_by_devt) {
-			log_debug("Dropping aliases for %d:%d before adding new path %s.",
-				  (int)MAJOR(st.st_rdev), (int)(MINOR(st.st_rdev)), name);
+			log_debug("Dropping aliases for %u:%u before adding new path %s.",
+				  MAJOR(st.st_rdev), MINOR(st.st_rdev), name);
 			_drop_all_aliases(dev_by_devt);
 		}
 
@@ -1637,8 +1636,8 @@ static struct device *_dev_cache_get(struct cmd_context *cmd, const char *name, 
 		 * a warning to look for any other unknown cases.
 		 */
 		if (MAJOR(st.st_rdev) != cmd->dev_types->device_mapper_major) {
-			log_warn("WARNING: new device appeared %d:%d %s",
-				  (int)MAJOR(st.st_rdev), (int)(MINOR(st.st_rdev)), name);
+			log_warn("WARNING: new device appeared %u:%u %s.",
+				  MAJOR(st.st_rdev), MINOR(st.st_rdev), name);
 		}
 #endif
 
@@ -1688,7 +1687,7 @@ struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t devt)
 
 	if (dev)
 		return dev;
-	log_debug_devs("No devno %d:%d in dev cache.", (int)MAJOR(devt), (int)MINOR(devt));
+	log_debug_devs("No devno %u:%u in dev cache.", MAJOR(devt), MINOR(devt));
 	return NULL;
 }
 
@@ -2380,30 +2379,30 @@ struct device *setup_dev_in_dev_cache(struct cmd_context *cmd, dev_t devno, cons
 {
 	struct device *dev;
 	struct stat buf;
-	int major = (int)MAJOR(devno);
-	int minor = (int)MINOR(devno);
+	unsigned major = MAJOR(devno);
+	unsigned minor = MINOR(devno);
 
 	if (devname) {
 		if (stat(devname, &buf) < 0) {
-			log_error("Cannot access device %s for %d:%d.", devname, major, minor);
+			log_error("Cannot access device %s for %u:%u.", devname, major, minor);
 			if (!devno)
 				return_NULL;
 			if (!(devname = _get_devname_from_devno(cmd, devno))) {
-				log_error("No device name found from %d:%d.", major, minor);
+				log_error("No device name found from %u:%u.", major, minor);
 				return_NULL;
 			}
 			if (stat(devname, &buf) < 0) {
-				log_error("Cannot access device %s from %d:%d.", devname, major, minor);
+				log_error("Cannot access device %s from %u:%u.", devname, major, minor);
 				return_NULL;
 			}
 		}
 	} else {
 		if (!(devname = _get_devname_from_devno(cmd, devno))) {
-			log_error("No device name found from %d:%d.", major, minor);
+			log_error("No device name found from %u:%u.", major, minor);
 			return_NULL;
 		}
 		if (stat(devname, &buf) < 0) {
-			log_error("Cannot access device %s from %d:%d.", devname, major, minor);
+			log_error("Cannot access device %s from %u:%u.", devname, major, minor);
 			return_NULL;
 		}
 	}
@@ -2414,15 +2413,15 @@ struct device *setup_dev_in_dev_cache(struct cmd_context *cmd, dev_t devno, cons
 	}
 
 	if (devno && (buf.st_rdev != devno)) {
-		log_warn("Found %s devno %d:%d expected %d:%d.", devname,
-			  (int)MAJOR(buf.st_rdev), (int)MINOR(buf.st_rdev), major, minor);
+		log_warn("Found %s devno %u:%u expected %u:%u.", devname,
+			  MAJOR(buf.st_rdev), MINOR(buf.st_rdev), major, minor);
 	}
 
 	if (!_insert_dev(devname, buf.st_rdev))
 		return_NULL;
 
 	if (!(dev = (struct device *) dm_hash_lookup(_cache.names, devname))) {
-		log_error("Device lookup failed for %d:%d %s", major, minor, devname);
+		log_error("Device lookup failed for %u:%u %s", major, minor, devname);
 		return_NULL;
 	}
 
