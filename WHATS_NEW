@@ -1,5 +1,7 @@
 Version 2.03.25 - 
 ==================
+  Enhance checking for DM uuid device.
+  Fix lvm shell command completion on tab key (2.03.24).
 
 Version 2.03.24 - 16th May 2024
 ===============================
