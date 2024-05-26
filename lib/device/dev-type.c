@@ -74,8 +74,8 @@ int dev_is_used_by_active_lv(struct cmd_context *cmd, struct device *dev, int *u
 	struct dirent *dirent;
 	char *holder_name;
 	unsigned dm_dev_major, dm_dev_minor;
-	size_t lvm_prefix_len = sizeof(UUID_PREFIX) - 1;
-	size_t lvm_uuid_len = sizeof(UUID_PREFIX) - 1 + 2 * ID_LEN;
+	const size_t lvm_prefix_len = sizeof(UUID_PREFIX) - 1;
+	const size_t lvm_uuid_len = lvm_prefix_len + 2 * ID_LEN;
 	size_t uuid_len;
 	int used_count = 0;
 	char *used_name = NULL;
@@ -130,7 +130,7 @@ int dev_is_used_by_active_lv(struct cmd_context *cmd, struct device *dev, int *u
 		if (!device_get_uuid(cmd, dm_dev_major, dm_dev_minor, dm_uuid, sizeof(dm_uuid)))
 			continue;
 
-		if (!strncmp(dm_uuid, UUID_PREFIX, 4))
+		if (!strncmp(dm_uuid, UUID_PREFIX, lvm_prefix_len))
 			used_count++;
 
 		if (used_by_dm_name && !used_name)
