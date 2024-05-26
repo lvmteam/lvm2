@@ -5050,7 +5050,7 @@ static int _clear_meta_lvs(struct logical_volume *lv)
 static int _rename_area_lvs(struct logical_volume *lv, const char *suffix)
 {
 	uint32_t s;
-	size_t sz = strlen("rimage") + (suffix ? strlen(suffix) : 0) + 1;
+	size_t sz = sizeof("rimage") - 1 + (suffix ? strlen(suffix) : 0) + 1;
 	char *sfx[SLV_COUNT] = { NULL, NULL };
 	struct lv_segment *seg = first_seg(lv);
 

@@ -1756,69 +1756,69 @@ static int _dump_search(struct cmd_context *cmd, const char *dump, struct settin
 
 static int _get_one_setting(struct cmd_context *cmd, struct settings *set, char *key, char *val)
 {
-	if (!strncmp(key, "metadata_offset", strlen("metadata_offset"))) {
+	if (!strncmp(key, "metadata_offset", sizeof("metadata_offset") - 1)) {
 		if (sscanf(val, "%llu", (unsigned long long *)&set->metadata_offset) != 1)
 			goto_bad;
 		set->metadata_offset_set = 1;
 		return 1;
 	}
 
-	if (!strncmp(key, "seqno", strlen("seqno"))) {
+	if (!strncmp(key, "seqno", sizeof("seqno") - 1)) {
 		if (sscanf(val, "%u", &set->seqno) != 1)
 			goto_bad;
 		set->seqno_set = 1;
 		return 1;
 	}
 
-	if (!strncmp(key, "backup_file", strlen("backup_file"))) {
+	if (!strncmp(key, "backup_file", sizeof("backup_file") - 1)) {
 		if ((set->backup_file = dm_pool_strdup(cmd->mem, val)))
 			return 1;
 		return 0;
 	}
 
-	if (!strncmp(key, "mda_offset", strlen("mda_offset"))) {
+	if (!strncmp(key, "mda_offset", sizeof("mda_offset") - 1)) {
 		if (sscanf(val, "%llu", (unsigned long long *)&set->mda_offset) != 1)
 			goto_bad;
 		set->mda_offset_set = 1;
 		return 1;
 	}
 
-	if (!strncmp(key, "mda_size", strlen("mda_size"))) {
+	if (!strncmp(key, "mda_size", sizeof("mda_size") - 1)) {
 		if (sscanf(val, "%llu", (unsigned long long *)&set->mda_size) != 1)
 			goto_bad;
 		set->mda_size_set = 1;
 		return 1;
 	}
 
-	if (!strncmp(key, "mda2_offset", strlen("mda2_offset"))) {
+	if (!strncmp(key, "mda2_offset", sizeof("mda2_offset") - 1)) {
 		if (sscanf(val, "%llu", (unsigned long long *)&set->mda2_offset) != 1)
 			goto_bad;
 		set->mda2_offset_set = 1;
 		return 1;
 	}
 
-	if (!strncmp(key, "mda2_size", strlen("mda2_size"))) {
+	if (!strncmp(key, "mda2_size", sizeof("mda2_size") - 1)) {
 		if (sscanf(val, "%llu", (unsigned long long *)&set->mda2_size) != 1)
 			goto_bad;
 		set->mda2_size_set = 1;
 		return 1;
 	}
 
-	if (!strncmp(key, "device_size", strlen("device_size"))) {
+	if (!strncmp(key, "device_size", sizeof("device_size") - 1)) {
 		if (sscanf(val, "%llu", (unsigned long long *)&set->device_size) != 1)
 			goto_bad;
 		set->device_size_set = 1;
 		return 1;
 	}
 
-	if (!strncmp(key, "data_offset", strlen("data_offset"))) {
+	if (!strncmp(key, "data_offset", sizeof("data_offset") - 1)) {
 		if (sscanf(val, "%llu", (unsigned long long *)&set->data_offset) != 1)
 			goto_bad;
 		set->data_offset_set = 1;
 		return 1;
 	}
 
-	if (!strncmp(key, "pv_uuid", strlen("pv_uuid"))) {
+	if (!strncmp(key, "pv_uuid", sizeof("pv_uuid") - 1)) {
 		if (strchr(val, '-') && (strlen(val) == 32)) {
 			memcpy(&set->pv_id, val, 32);
 			set->pvid_set = 1;
@@ -1832,7 +1832,7 @@ static int _get_one_setting(struct cmd_context *cmd, struct settings *set, char 
 		}
 	}
 
-	if (!strncmp(key, "mda_num", strlen("mda_num"))) {
+	if (!strncmp(key, "mda_num", sizeof("mda_num") - 1)) {
 		if (sscanf(val, "%u", (int *)&set->mda_num) != 1)
 			goto_bad;
 		return 1;

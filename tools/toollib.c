@@ -1405,7 +1405,7 @@ static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecach
 				       char *key, char *val, uint32_t *block_size_sectors)
 {
 	/* special case: block_size is not a setting but is set with the --cachesettings option */
-	if (!strncmp(key, "block_size", strlen("block_size"))) {
+	if (!strncmp(key, "block_size", sizeof("block_size") - 1)) {
 		uint32_t block_size = 0;
 		if (sscanf(val, "%u", &block_size) != 1)
 			goto_bad;
@@ -1418,7 +1418,7 @@ static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecach
 		return 1;
 	}
 
-	if (!strncmp(key, "high_watermark", strlen("high_watermark"))) {
+	if (!strncmp(key, "high_watermark", sizeof("high_watermark") - 1)) {
 		if (sscanf(val, "%llu", (unsigned long long *)&settings->high_watermark) != 1)
 			goto_bad;
 		if (settings->high_watermark > 100)
@@ -1427,7 +1427,7 @@ static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecach
 		return 1;
 	}
 
-	if (!strncmp(key, "low_watermark", strlen("low_watermark"))) {
+	if (!strncmp(key, "low_watermark", sizeof("low_watermark") - 1)) {
 		if (sscanf(val, "%llu", (unsigned long long *)&settings->low_watermark) != 1)
 			goto_bad;
 		if (settings->low_watermark > 100)
@@ -1436,28 +1436,28 @@ static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecach
 		return 1;
 	}
 
-	if (!strncmp(key, "writeback_jobs", strlen("writeback_jobs"))) {
+	if (!strncmp(key, "writeback_jobs", sizeof("writeback_jobs") - 1)) {
 		if (sscanf(val, "%llu", (unsigned long long *)&settings->writeback_jobs) != 1)
 			goto_bad;
 		settings->writeback_jobs_set = 1;
 		return 1;
 	}
 
-	if (!strncmp(key, "autocommit_blocks", strlen("autocommit_blocks"))) {
+	if (!strncmp(key, "autocommit_blocks", sizeof("autocommit_blocks") - 1)) {
 		if (sscanf(val, "%llu", (unsigned long long *)&settings->autocommit_blocks) != 1)
 			goto_bad;
 		settings->autocommit_blocks_set = 1;
 		return 1;
 	}
 
-	if (!strncmp(key, "autocommit_time", strlen("autocommit_time"))) {
+	if (!strncmp(key, "autocommit_time", sizeof("autocommit_time") - 1)) {
 		if (sscanf(val, "%llu", (unsigned long long *)&settings->autocommit_time) != 1)
 			goto_bad;
 		settings->autocommit_time_set = 1;
 		return 1;
 	}
 
-	if (!strncmp(key, "fua", strlen("fua"))) {
+	if (!strncmp(key, "fua", sizeof("fua") - 1)) {
 		if (settings->nofua_set) {
 			log_error("Setting fua and nofua cannot both be set.");
 			return 0;
@@ -1468,7 +1468,7 @@ static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecach
 		return 1;
 	}
 
-	if (!strncmp(key, "nofua", strlen("nofua"))) {
+	if (!strncmp(key, "nofua", sizeof("nofua") - 1)) {
 		if (settings->fua_set) {
 			log_error("Setting fua and nofua cannot both be set.");
 			return 0;
@@ -1479,28 +1479,28 @@ static int _get_one_writecache_setting(struct cmd_context *cmd, struct writecach
 		return 1;
 	}
 
-	if (!strncmp(key, "cleaner", strlen("cleaner"))) {
+	if (!strncmp(key, "cleaner", sizeof("cleaner") - 1)) {
 		if (sscanf(val, "%u", &settings->cleaner) != 1)
 			goto_bad;
 		settings->cleaner_set = 1;
 		return 1;
 	}
 
-	if (!strncmp(key, "max_age", strlen("max_age"))) {
+	if (!strncmp(key, "max_age", sizeof("max_age") - 1)) {
 		if (sscanf(val, "%u", &settings->max_age) != 1)
 			goto_bad;
 		settings->max_age_set = 1;
 		return 1;
 	}
 
-	if (!strncmp(key, "metadata_only", strlen("metadata_only"))) {
+	if (!strncmp(key, "metadata_only", sizeof("metadata_only") - 1)) {
 		if (sscanf(val, "%u", &settings->metadata_only) != 1)
 			goto_bad;
 		settings->metadata_only_set = 1;
 		return 1;
 	}
 
-	if (!strncmp(key, "pause_writeback", strlen("pause_writeback"))) {
+	if (!strncmp(key, "pause_writeback", sizeof("pause_writeback") - 1)) {
 		if (sscanf(val, "%u", &settings->pause_writeback) != 1)
 			goto_bad;
 		settings->pause_writeback_set = 1;
