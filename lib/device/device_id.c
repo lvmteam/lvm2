@@ -2513,7 +2513,7 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 	 * string is modified to t10.123_456 so that it will match the value
 	 * returned from device_id_system_read().
 	 */
-	strncpy(du_idname, du->idname, PATH_MAX-1);
+	dm_strncpy(du_idname, du->idname, sizeof(du_idname));
 	if (((du->idtype == DEV_ID_TYPE_SYS_WWID) || (du->idtype == DEV_ID_TYPE_SYS_SERIAL)) &&
 	    strchr(du_idname, '_')) {
 		_remove_leading_underscores(du_idname, sizeof(du_idname));
