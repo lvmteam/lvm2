@@ -826,7 +826,7 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 	 * autoactivation will happen to a VG on a running system and may be
 	 * mixing with user commands, so the end result is unpredictable.
 	 *
-	 * It's possible that we might want a config setting for usersto  
+	 * It's possible that we might want a config setting for usersto
 	 * disable secondary autoactivations.  Once a system is up, the
 	 * user may want to take charge of activation changes to the VG
 	 * and not have the system autoactivation interfere.
@@ -1744,7 +1744,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 				ret_max = ECMD_FAILED;
 				goto out;
 			}
-			/* 
+			/*
 			 * remove the existing dev for this pvid from lvmcache
 			 * so that the duplicate dev can replace it.
 			 */
@@ -2404,7 +2404,7 @@ static void _choose_vgs_to_process(struct cmd_context *cmd,
 				break;
 			}
 		}
-		
+
 		/*
 		 * If the name arg was not found in the list of all VGs, then
 		 * it probably doesn't exist, but we want the "VG not found"
@@ -2635,7 +2635,7 @@ int opt_in_list_is_set(struct cmd_context *cmd, const uint16_t *opts, int count,
 
 	return match ? 1 : 0;
 }
-      
+
 void opt_array_to_str(struct cmd_context *cmd, const uint16_t *opts, int count,
 		      char *buf, int len)
 {
@@ -3112,7 +3112,7 @@ static int _check_lv_rules(struct cmd_context *cmd, struct logical_volume *lv)
 		if (rule->check_lvp_bits)
 			_lv_props_match(cmd, lv, rule->check_lvp_bits,
 					&lv_props_match_bits, &lv_props_unmatch_bits);
-		
+
 		/*
 		 * Evaluate if the check results pass based on the rule.
 		 * The options are checked again here because the previous
@@ -3308,7 +3308,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		goto_out;
 	}
 
-	/* Process all LVs in this VG if no restrictions given 
+	/* Process all LVs in this VG if no restrictions given
 	 * or if VG tags match. */
 	if ((!tags_supplied && !lvargs_supplied) ||
 	    (tags_supplied && str_list_match_list(tags_in, &vg->tags, NULL)))
@@ -3348,7 +3348,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		}
 
 		/*
-		 * Only let hidden LVs through if --all was used or the LVs 
+		 * Only let hidden LVs through if --all was used or the LVs
 		 * were specifically named on the command line.
 		 */
 		if (!lvargs_supplied && !lv_is_visible(lvl->lv) && !arg_is_set(cmd, all_ARG) &&
@@ -3462,7 +3462,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			if (lv_is_named_arg) {
 				log_error("Command not permitted on LV %s.", display_lvname(lvl->lv));
 				ret_max = ECMD_FAILED;
-			} 
+			}
 			continue;
 		}
 
@@ -3915,7 +3915,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 				dm_list_init(&lvnames);
 				break;
 			}
-			
+
 			if (lvn && !strncmp(vgn, vg_name, strlen(vg_name)) &&
 			    strlen(vg_name) == (size_t) (lvn - vgn)) {
 				if (!str_list_add(cmd->mem, &lvnames,
@@ -4567,7 +4567,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 		 * Don't call "continue" when skip is set, because we need to remove
 		 * error_vg->pvs entries from devices list.
 		 */
-		
+
 		ret = _process_pvs_in_vg(cmd, vg ? vg : error_vg, arg_devices, arg_tags,
 					 process_all_pvs, skip, error_flags,
 					 handle, process_single_pv);
@@ -5026,7 +5026,7 @@ static void _check_pvcreate_prompt(struct cmd_context *cmd,
 			}
 		}
 	}
-	
+
 	if (prompt->type & PROMPT_PVREMOVE_PV_IN_VG) {
 		if (pp->force != DONT_PROMPT_OVERRIDE) {
 			answer_no = 1;
@@ -5678,7 +5678,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	}
 
 	/*
-	 * Clear any prompts that have answers without asking the user. 
+	 * Clear any prompts that have answers without asking the user.
 	 */
 	dm_list_iterate_items_safe(prompt, prompt2, &pp->prompts) {
 		_check_pvcreate_prompt(cmd, pp, prompt, 0);
@@ -5702,7 +5702,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 
 	/*
 	 * If no remaining prompts need a user response, then keep orphans
-	 * locked and go directly to the create steps. 
+	 * locked and go directly to the create steps.
 	 */
 	if (dm_list_empty(&pp->prompts))
 		goto do_command;
