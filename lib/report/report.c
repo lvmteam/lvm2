@@ -4446,7 +4446,7 @@ report_headings_t report_headings_str_to_type(const char *str)
 }
 
 void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
-		  report_type_t *report_type, const char *separator,
+		  unsigned *report_type, const char *separator,
 		  int aligned, int buffered, report_headings_t headings,
 		  int field_prefixes, int quoted, int columns_as_rows,
 		  const char *selection, int multiple_output)
@@ -4507,7 +4507,7 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 }
 
 void *report_init_for_selection(struct cmd_context *cmd,
-				report_type_t *report_type,
+				unsigned *report_type,
 				const char *selection_criteria)
 {
 	return dm_report_init_with_selection(report_type, _report_types, _fields,
@@ -4518,7 +4518,7 @@ void *report_init_for_selection(struct cmd_context *cmd,
 					     cmd);
 }
 
-int report_get_prefix_and_desc(report_type_t report_type_id,
+int report_get_prefix_and_desc(unsigned report_type_id,
 			       const char **report_prefix,
 			       const char **report_desc)
 {

@@ -2038,7 +2038,7 @@ struct processing_handle *init_processing_handle(struct cmd_context *cmd, struct
 }
 
 int init_selection_handle(struct cmd_context *cmd, struct processing_handle *handle,
-			  report_type_t initial_report_type)
+			  unsigned initial_report_type)
 {
 	struct selection_handle *sh;
 	const char *selection;

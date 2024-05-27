@@ -159,7 +159,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 struct processing_handle *init_processing_handle(struct cmd_context *cmd, struct processing_handle *parent_handle);
 int init_selection_handle(struct cmd_context *cmd, struct processing_handle *handle,
-			  report_type_t initial_report_type);
+			  unsigned initial_report_type);
 void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle *handle);
 
 int select_match_vg(struct cmd_context *cmd, struct processing_handle *handle,

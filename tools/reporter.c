@@ -32,10 +32,10 @@ typedef enum {
 #define REPORT_IDX_FULL_START REPORT_IDX_FULL_VGS
 
 struct single_report_args {
-	report_type_t report_type;
+	unsigned report_type;
+	int args_are_pvs;
 	char report_prefix[32];
 	const char *report_name;
-	int args_are_pvs;
 	const char *keys;
 	const char *options;
 	const char *fields_to_compact;
@@ -47,7 +47,7 @@ struct report_args {
 	int argc;
 	char **argv;
 	dm_report_group_type_t report_group_type;
-	report_type_t report_type;
+	unsigned report_type;
 	report_headings_t headings;
 	int aligned;
 	int buffered;
@@ -495,10 +495,10 @@ static int _pvsegs_in_vg(struct cmd_context *cmd, const char *vg_name,
 
 static int _get_final_report_type(struct report_args *args,
 				  struct single_report_args *single_args,
-				  report_type_t report_type,
+				  unsigned report_type,
 				  int *lv_info_needed,
 				  int *lv_segment_status_needed,
-				  report_type_t *final_report_type)
+				  unsigned *final_report_type)
 {
 	/* Do we need to acquire LV device info in addition? */
 	*lv_info_needed = (report_type & (LVSINFO | LVSINFOSTATUS)) ? 1 : 0;
@@ -546,12 +546,12 @@ static int _get_final_report_type(struct report_args *args,
 }
 
 static int _report_all_in_vg(struct cmd_context *cmd, struct processing_handle *handle,
-			     struct volume_group *vg, report_type_t type,
+			     struct volume_group *vg, unsigned report_type,
 			     int do_lv_info, int do_lv_seg_status)
 {
 	int r = ECMD_FAILED;
 
-	switch (type) {
+	switch (report_type) {
 		case VGS:
 			r = _vgs_single(cmd, vg->name, vg, handle);
 			break;
@@ -580,7 +580,8 @@ static int _report_all_in_vg(struct cmd_context *cmd, struct processing_handle *
 										   &_pvsegs_single);
 			break;
 		default:
-			log_error(INTERNAL_ERROR "_report_all_in_vg: incorrect report type");
+			log_error(INTERNAL_ERROR "_report_all_in_vg: incorrect report type %u.",
+				  report_type);
 			break;
 	}
 
@@ -588,12 +589,12 @@ static int _report_all_in_vg(struct cmd_context *cmd, struct processing_handle *
 }
 
 static int _report_all_in_lv(struct cmd_context *cmd, struct processing_handle *handle,
-			     struct logical_volume *lv, report_type_t type,
+			     struct logical_volume *lv, unsigned report_type,
 			     int do_lv_info, int do_lv_seg_status)
 {
 	int r = ECMD_FAILED;
 
-	switch (type) {
+	switch (report_type) {
 		case LVS:
 			r = _do_lvs_with_info_and_status_single(cmd, lv, do_lv_info, do_lv_seg_status, handle);
 			break;
@@ -605,7 +606,8 @@ static int _report_all_in_lv(struct cmd_context *cmd, struct processing_handle *
 												&_segs_single);
 			break;
 		default:
-			log_error(INTERNAL_ERROR "_report_all_in_lv: incorrect report type");
+			log_error(INTERNAL_ERROR "_report_all_in_lv: incorrect report type %u.",
+				  report_type);
 			break;
 	}
 
@@ -613,7 +615,7 @@ static int _report_all_in_lv(struct cmd_context *cmd, struct processing_handle *
 }
 
 static int _report_all_in_pv(struct cmd_context *cmd, struct processing_handle *handle,
-			     struct physical_volume *pv, report_type_t type,
+			     struct physical_volume *pv, unsigned report_type,
 			     int do_lv_info, int do_lv_seg_status)
 {
 	int r = ECMD_FAILED;
@@ -623,7 +625,7 @@ static int _report_all_in_pv(struct cmd_context *cmd, struct processing_handle *
 		return r;
 	}
 
-	switch (type) {
+	switch (report_type) {
 		case PVS:
 			r = _pvs_single(cmd, pv->vg, pv, handle);
 			break;
@@ -635,7 +637,8 @@ static int _report_all_in_pv(struct cmd_context *cmd, struct processing_handle *
 											&_pvsegs_sub_single);
 			break;
 		default:
-			log_error(INTERNAL_ERROR "_report_all_in_pv: incorrect report type");
+			log_error(INTERNAL_ERROR "_report_all_in_pv: incorrect report type %u.",
+				  report_type);
 			break;
 	}
 
@@ -649,7 +652,7 @@ int report_for_selection(struct cmd_context *cmd,
 			 struct logical_volume *lv)
 {
 	struct selection_handle *sh = parent_handle->selection_handle;
-	report_type_t initial_report_type = sh->report_type;
+	unsigned initial_report_type = sh->report_type;
 	struct report_args args = {0};
 	struct single_report_args *single_args = &args.single_args[REPORT_IDX_SINGLE];
 	int do_lv_info, do_lv_seg_status;
@@ -710,7 +713,8 @@ int report_for_selection(struct cmd_context *cmd,
 			r = _report_all_in_pv(cmd, handle, pv, sh->report_type, do_lv_info, do_lv_seg_status);
 			break;
 		default:
-			log_error(INTERNAL_ERROR "report_for_selection: incorrect report type");
+			log_error(INTERNAL_ERROR "report_for_selection: incorrect report type %u",
+				  sh->orig_report_type);
 			break;
 	}
 
@@ -790,7 +794,7 @@ static void _del_option_from_list(struct dm_list *sll, const char *prefix,
 #define _get_report_idx(report_type,single_report_type) \
 	((((report_type) != FULL) && ((report_type) == single_report_type)) ? REPORT_IDX_SINGLE : REPORT_IDX_FULL_ ## single_report_type)
 
-static report_idx_t _get_report_idx_from_name(report_type_t report_type, const char *name)
+static report_idx_t _get_report_idx_from_name(unsigned report_type, const char *name)
 {
 	report_idx_t idx;
 
@@ -819,14 +823,14 @@ static report_idx_t _get_report_idx_from_name(report_type_t report_type, const c
 					    : _get_report_idx(report_type, LVS);
 	else {
 		idx = REPORT_IDX_NULL;
-		log_error("Unknonwn report specifier in "
-			  "report option list: %s.", name);
+		log_error("Unknown report specifier in report option list: %s.",
+			  name);
 	}
 
 	return idx;
 }
 
-static int _should_process_report_idx(report_type_t report_type, int allow_single, report_idx_t idx)
+static int _should_process_report_idx(unsigned report_type, int allow_single, report_idx_t idx)
 {
 	if (((idx == REPORT_IDX_LOG) && (report_type != CMDLOG)) ||
 	    ((idx == REPORT_IDX_SINGLE) && !allow_single) ||
@@ -992,7 +996,7 @@ out:
 }
 
 static int _do_report_get_selection(struct cmd_context *cmd,
-				    report_type_t report_type,
+				    unsigned report_type,
 				    int allow_single,
 				    struct report_args *args,
 				    const char **last_selection)
@@ -1035,7 +1039,7 @@ static int _get_report_selection(struct cmd_context *cmd,
 					args, NULL) ? ECMD_PROCESSED : ECMD_FAILED;
 }
 
-int report_get_single_selection(struct cmd_context *cmd, report_type_t report_type, const char **selection)
+int report_get_single_selection(struct cmd_context *cmd, unsigned report_type, const char **selection)
 {
 	return _do_report_get_selection(cmd, report_type, 1, NULL, selection);
 }
@@ -1082,7 +1086,7 @@ static int _do_report(struct cmd_context *cmd, struct processing_handle *handle,
 		      struct report_args *args, struct single_report_args *single_args)
 {
 	void *orig_custom_handle = handle->custom_handle;
-	report_type_t report_type = single_args->report_type;
+	unsigned report_type = single_args->report_type;
 	void *report_handle = NULL;
 	int lv_info_needed;
 	int lv_segment_status_needed;
@@ -1381,7 +1385,7 @@ static int _config_report(struct cmd_context *cmd, struct report_args *args, str
 	return 1;
 }
 
-static int _report(struct cmd_context *cmd, int argc, char **argv, report_type_t report_type)
+static int _report(struct cmd_context *cmd, int argc, char **argv, unsigned report_type)
 {
 	struct report_args args = {0};
 	struct single_report_args *single_args = &args.single_args[REPORT_IDX_SINGLE];
@@ -1438,12 +1442,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv, report_type_t
 
 int lvs(struct cmd_context *cmd, int argc, char **argv)
 {
-	report_type_t type;
-
-	if (arg_is_set(cmd, segments_ARG))
-		type = SEGS;
-	else
-		type = LVS;
+	unsigned type = (arg_is_set(cmd, segments_ARG)) ? SEGS : LVS;
 
 	return _report(cmd, argc, argv, type);
 }
@@ -1455,7 +1454,7 @@ int vgs(struct cmd_context *cmd, int argc, char **argv)
 
 int pvs(struct cmd_context *cmd, int argc, char **argv)
 {
-	report_type_t type;
+	unsigned type = (arg_is_set(cmd, segments_ARG)) ? PVSEGS : LABEL;
 
 	/*
 	 * Without -a, command only looks at PVs and can use hints,
@@ -1468,11 +1467,6 @@ int pvs(struct cmd_context *cmd, int argc, char **argv)
 		cmd->filter_deviceid_skip = 1;
 		cmd->use_hints = 0;
 	}
-
-	if (arg_is_set(cmd, segments_ARG))
-		type = PVSEGS;
-	else
-		type = LABEL;
 
 	return _report(cmd, argc, argv, type);
 }

@@ -20,7 +20,7 @@
 #include "lib/label/label.h"
 #include "lib/activate/activate.h"
 
-typedef enum {
+enum {
 	CMDLOG		= 1,
 	FULL		= 2,
 	LVS		= 4,
@@ -33,7 +33,7 @@ typedef enum {
 	PVSEGS		= 512,
 	LABEL		= 1024,
 	DEVTYPES	= 2048
-} report_type_t;
+};
 
 typedef enum {
 	REPORT_HEADINGS_UNKNOWN  = -1,
@@ -62,8 +62,8 @@ typedef enum {
  */
 struct selection_handle {
 	struct dm_report *selection_rh;
-	report_type_t orig_report_type;
-	report_type_t report_type;
+	unsigned orig_report_type;
+	unsigned report_type;
 	int selected;
 };
 
@@ -93,14 +93,14 @@ report_headings_t report_headings_str_to_type(const char *str);
 int report_format_init(struct cmd_context *cmd);
 
 void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
-		  report_type_t *report_type, const char *separator,
+		  unsigned *report_type, const char *separator,
 		  int aligned, int buffered, report_headings_t headings,
 		  int field_prefixes, int quoted, int columns_as_rows,
 		  const char *selection, int multiple_output);
-int report_get_single_selection(struct cmd_context *cmd, report_type_t report_type, const char **selection);
-void *report_init_for_selection(struct cmd_context *cmd, report_type_t *report_type,
+int report_get_single_selection(struct cmd_context *cmd, unsigned report_type, const char **selection);
+void *report_init_for_selection(struct cmd_context *cmd, unsigned *report_type,
 				const char *selection);
-int report_get_prefix_and_desc(report_type_t report_type_id,
+int report_get_prefix_and_desc(unsigned report_type_id,
 			       const char **report_prefix,
 			       const char **report_desc);
 int report_for_selection(struct cmd_context *cmd,
