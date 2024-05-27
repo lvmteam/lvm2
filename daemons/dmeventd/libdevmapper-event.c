@@ -352,7 +352,7 @@ static int _daemon_write(struct dm_event_fifos *fifos,
 int daemon_talk(struct dm_event_fifos *fifos,
 		struct dm_event_daemon_message *msg, int cmd,
 		const char *dso_name, const char *dev_name,
-		enum dm_event_mask evmask, uint32_t timeout)
+		unsigned evmask, uint32_t timeout)
 {
 	int msg_size;
 	memset(msg, 0, sizeof(*msg));
