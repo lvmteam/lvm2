@@ -839,7 +839,7 @@ int dm_task_get_device_list(struct dm_task *dmt, struct dm_list **devs_list,
 
 	/* buffer for devs +  sorted ptrs + dm_devs + aligned strings */
 	if (!(devs = malloc(sizeof(*devs) + cnt * (2 * sizeof(void*) + sizeof(*dm_dev)) +
-			    (char*)names1 - (char*)names + 256)))
+			    (!cnt ? 0 : (char*)names1 - (char*)names + 256))))
 		return_0;
 
 	dm_list_init(&devs->list);
@@ -958,7 +958,7 @@ int dm_device_list_find_by_dev(const struct dm_list *devs_list,
 	if ((dm_dev_found = bsearch(findme, devs->sorted, devs->count, sizeof(void*),
 				    _dm_dev_compare))) {
 		fname = (*dm_dev_found)->name;
-		fuuid = (*dm_dev_found)->uuid;
+		fuuid = (*dm_dev_found)->uuid ? : ""; /* Device without UUID */
 		ret = 1;
 	}
 
