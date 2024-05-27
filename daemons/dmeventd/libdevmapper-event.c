@@ -753,7 +753,7 @@ static char *_fetch_string(char **src, const int delimiter)
 
 /* Parse a device message from the daemon. */
 static int _parse_message(struct dm_event_daemon_message *msg, char **dso_name,
-			 char **uuid, enum dm_event_mask *evmask)
+			 char **uuid, unsigned *evmask)
 {
 	char *id;
 	char *p = msg->data;
@@ -778,7 +778,7 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 	int ret = 0;
 	const char *uuid = NULL;
 	char *reply_dso = NULL, *reply_uuid = NULL;
-	enum dm_event_mask reply_mask = 0;
+	unsigned reply_mask = 0;
 	struct dm_task *dmt = NULL;
 	struct dm_event_daemon_message msg = { 0 };
 	struct dm_info info;

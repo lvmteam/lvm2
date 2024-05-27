@@ -687,7 +687,7 @@ int config_def_get_path(char *buf, size_t buf_size, int id)
 	return _cfg_def_make_path(buf, buf_size, id, cfg_def_get_item_p(id), 0);
 }
 
-static void _get_type_name(char *buf, size_t buf_size, cfg_def_type_t type)
+static void _get_type_name(char *buf, size_t buf_size, unsigned type)
 {
 	(void) dm_snprintf(buf, buf_size, "%s%s%s%s%s%s",
 			   (type & CFG_TYPE_ARRAY) ?
@@ -700,8 +700,8 @@ static void _get_type_name(char *buf, size_t buf_size, cfg_def_type_t type)
 			   (type & CFG_TYPE_STRING) ? " string" : "");
 }
 
-static void _log_type_error(const char *path, cfg_def_type_t actual,
-			    cfg_def_type_t expected, int suppress_messages)
+static void _log_type_error(const char *path, unsigned actual, unsigned expected,
+			    int suppress_messages)
 {
 	static char actual_type_name[128];
 	static char expected_type_name[128];

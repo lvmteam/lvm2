@@ -200,7 +200,7 @@ struct message_data {
 	char *dso_name;		/* Name of DSO. */
 	char *device_uuid;	/* Mapped device path. */
 	char *events_str;	/* Events string as fetched from message. */
-	enum dm_event_mask events_field;	/* Events bitfield. */
+	unsigned events_field;	/* Events bitfield. */
 	uint32_t timeout_secs;
 	char *timeout_str;
 	struct dm_event_daemon_message *msg;	/* Pointer to message buffer. */
