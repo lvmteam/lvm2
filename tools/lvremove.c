@@ -18,7 +18,9 @@
 int lvremove(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct processing_handle *handle = NULL;
-	struct lvremove_params lp = { 0 };
+	struct lvremove_params lp = {
+		.removed_uuids = DM_LIST_HEAD_INIT(lp.removed_uuids),
+	};
 	int ret;
 
 	if (!argc && !arg_is_set(cmd, select_ARG)) {
@@ -34,8 +36,6 @@ int lvremove(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Failed to initialize processing handle.");
 		return ECMD_FAILED;
 	}
-
-	dm_list_init(&lp.removed_uuids);
 
 	handle->custom_handle = &lp;
 
