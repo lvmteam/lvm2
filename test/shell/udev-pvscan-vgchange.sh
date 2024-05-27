@@ -63,8 +63,8 @@ _clear_online_files
 
 aux prepare_real_devs
 
-aux lvmconf 'devices/dir = "/dev"'
-aux lvmconf 'devices/use_devicesfile = 1'
+aux lvmconf 'devices/dir = "/dev"' \
+	    'devices/use_devicesfile = 1'
 DFDIR="$LVM_SYSTEM_DIR/devices"
 DF="$DFDIR/system.devices"
 mkdir "$DFDIR" || true
@@ -442,8 +442,8 @@ ls "/dev/disk/by-id/lvm-pv-uuid-$OPVID1"
 vgchange -an $vg10
 _clear_online_files
 
-aux lvmconf "devices/filter = [ \"a|/dev/disk/by-id/lvm-pv-uuid-$OPVID1|\", \"r|.*|\" ]"
-aux lvmconf 'devices/global_filter = [ "a|.*|" ]'
+aux lvmconf "devices/filter = [ \"a|/dev/disk/by-id/lvm-pv-uuid-$OPVID1|\", \"r|.*|\" ]" \
+	    'devices/global_filter = [ "a|.*|" ]'
 
 pvscan --cache -aay "$dev1"
 
@@ -452,8 +452,8 @@ check lv_field $vg10/$lv1 lv_active "active"
 vgchange -an $vg10
 _clear_online_files
 
-aux lvmconf 'devices/filter = [ "a|lvm-pv-uuid|", "r|.*|" ]'
-aux lvmconf 'devices/global_filter = [ "a|.*|" ]'
+aux lvmconf 'devices/filter = [ "a|lvm-pv-uuid|", "r|.*|" ]' \
+	    'devices/global_filter = [ "a|.*|" ]'
 
 pvscan --cache -aay "$dev1"
 
@@ -463,8 +463,8 @@ vgchange -an $vg10
 vgremove -y $vg10
 wipe_all
 
-aux lvmconf 'devices/filter = [ "a|.*|" ]'
-aux lvmconf 'devices/global_filter = [ "a|.*|" ]'
+aux lvmconf 'devices/filter = [ "a|.*|" ]' \
+	    'devices/global_filter = [ "a|.*|" ]'
 
 #
 # system.devices contains different product_uuid and incorrect device IDs
@@ -472,8 +472,8 @@ aux lvmconf 'devices/global_filter = [ "a|.*|" ]'
 
 SYS_DIR="$PWD/test/sys"
 
-aux lvmconf "devices/use_devicesfile = 1" \
-	"devices/device_id_sysfs_dir = \"$SYS_DIR/\""
+aux lvmconf 'devices/use_devicesfile = 1' \
+	    'devices/device_id_sysfs_dir = \"$SYS_DIR/\"'
 
 WWID1="naa.111"
 WWID2="naa.222"

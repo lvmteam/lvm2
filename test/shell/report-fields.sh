@@ -21,9 +21,9 @@ aux prepare_pvs 1
 
 OPTS="--nameprefixes --noheadings --rows"
 
-aux lvmconf 'report/pvs_cols="pv_name,pv_size"'
-aux lvmconf 'report/compact_output=0'
-aux lvmconf 'report/compact_output_cols=""'
+aux lvmconf 'report/pvs_cols="pv_name,pv_size"' \
+	    'report/compact_output=0' \
+	    'report/compact_output_cols=""'
 
 pvs $OPTS > out
 grep LVM2_PV_NAME out

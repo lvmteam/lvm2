@@ -17,9 +17,9 @@ SKIP_WITH_LVMPOLLD=1
 
 aux prepare_pvs 1
 
-aux lvmconf 'log/prefix=""'
-aux lvmconf 'report/compact_output=0'
-aux lvmconf 'report/compact_output_cols=""'
+aux lvmconf 'log/prefix=""' \
+	    'report/compact_output=0' \
+	    'report/compact_output_cols=""'
 
 OPTS="ba_start,seg_start,seg_start_pe"
 

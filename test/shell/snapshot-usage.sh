@@ -78,8 +78,8 @@ lvcreate --type snapshot -s -l 100%FREE -n $lv $vg --virtualsize $TSIZE
 
 aux extend_filter_LVMTEST
 aux extend_devices "$DM_DEV_DIR/$vg/$lv"
-aux lvmconf "devices/scan_lvs = 1"
-aux lvmconf "activation/snapshot_autoextend_percent = 20" \
+aux lvmconf "devices/scan_lvs = 1" \
+	    "activation/snapshot_autoextend_percent = 20" \
             "activation/snapshot_autoextend_threshold = 50"
 
 # Check usability with smallest (1k) extent size ($lv has 15P)

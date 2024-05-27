@@ -1,4 +1,4 @@
-
+#!/usr/bin/env bash
 
 # Copyright (C) 2020 Red Hat, Inc. All rights reserved.
 #
@@ -24,8 +24,8 @@ DFDIR="$LVM_SYSTEM_DIR/devices"
 mkdir -p "$DFDIR" || true
 DF="$DFDIR/system.devices"
 
-aux lvmconf 'devices/use_devicesfile = 1'
-aux lvmconf 'devices/scan_lvs = 1'
+aux lvmconf 'devices/use_devicesfile = 1' \
+	    'devices/scan_lvs = 1'
 
 rm -f "$DF"
 touch "$DF"
@@ -59,4 +59,3 @@ not grep "IDTYPE=lvmlv_uuid" "$DF"
 not grep "IDNAME=LVM-" "$DF"
 
 vgremove -y $vg1
-
