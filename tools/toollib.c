@@ -4807,7 +4807,7 @@ static void _lvremove_save_uuid(struct cmd_context *cmd, struct logical_volume *
 int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		    struct processing_handle *handle)
 {
-	struct lvremove_params *lp = (struct lvremove_params *) handle->custom_handle;
+	struct lvremove_params *lp = (handle) ? (struct lvremove_params *) handle->custom_handle : NULL;
 
 	/*
 	 * Single force is equivalent to single --yes
