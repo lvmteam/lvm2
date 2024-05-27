@@ -17,7 +17,6 @@
 #include "lib/device/device_id.h"
 #include "lib/label/hints.h"
 #include "device_mapper/misc/dm-ioctl.h"
-#include <mntent.h>
 
 struct vgchange_params {
 	int lock_start_count;
@@ -833,15 +832,10 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
  * ExecStart=/usr/sbin/vgimportdevices --rootvg --auto
  * ConditionPathExists=!/etc/lvm/devices/system.devices
  */
-
 static void _get_rootvg_dev(struct cmd_context *cmd, char **dm_uuid_out)
 {
 	char path[PATH_MAX];
-	char dm_uuid[DM_UUID_LEN];
 	struct stat info;
-	FILE *fme = NULL;
-	struct mntent *me;
-	int found = 0;
 
 	if (cmd->enable_devices_file || devices_file_exists(cmd))
 		return;
@@ -852,36 +846,8 @@ static void _get_rootvg_dev(struct cmd_context *cmd, char **dm_uuid_out)
 	if (stat(path, &info) < 0)
 		return;
 
-	if (!(fme = setmntent("/etc/mtab", "r")))
-		return;
-
-	while ((me = getmntent(fme))) {
-		if ((me->mnt_dir[0] == '/') && (me->mnt_dir[1] == '\0')) {
-			found = 1;
-			break;
-		}
-	}
-	endmntent(fme);
-
-	if (!found)
-		return;
-
-	if (stat(me->mnt_dir, &info) < 0)
-		return;
-
-	if (!device_get_uuid(cmd, MAJOR(info.st_dev), MINOR(info.st_dev), dm_uuid, sizeof(dm_uuid)))
-		return;
-
-	log_debug("Found root dm_uuid %s", dm_uuid);
-
-	/* UUID_PREFIX = "LVM-" */
-	if (strncmp(dm_uuid, UUID_PREFIX, 4))
-		return;
-
-	if (strlen(dm_uuid) < 4 + ID_LEN)
-		return;
-
-	*dm_uuid_out = dm_pool_strdup(cmd->mem, dm_uuid);
+	if (!get_rootvg_dev_uuid(cmd, dm_uuid_out))
+		stack;
 }
 
 static int _vgchange_autoactivation_setup(struct cmd_context *cmd,

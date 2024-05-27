@@ -244,4 +244,6 @@ int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 int get_lvt_enum(struct logical_volume *lv);
 
+int get_rootvg_dev_uuid(struct cmd_context *cmd, char **dm_uuid_out);
+
 #endif

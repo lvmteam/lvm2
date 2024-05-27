@@ -24,6 +24,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/utsname.h>
+#include <mntent.h>
 
 #define report_log_ret_code(ret_code) report_current_object_cmdlog(REPORT_OBJECT_CMDLOG_NAME, \
 					((ret_code) == ECMD_PROCESSED) ? REPORT_OBJECT_CMDLOG_SUCCESS \
@@ -6023,4 +6024,46 @@ do_command:
 	return 1;
 bad:
 	return 0;
+}
+
+int get_rootvg_dev_uuid(struct cmd_context *cmd, char **dm_uuid_out)
+{
+	char dm_uuid[DM_UUID_LEN];
+	struct stat info;
+	FILE *fme = NULL;
+	struct mntent *me;
+	int found = 0;
+
+	if (!(fme = setmntent("/etc/mtab", "r")))
+		return_0;
+
+	while ((me = getmntent(fme))) {
+		if ((me->mnt_dir[0] == '/') && (me->mnt_dir[1] == '\0')) {
+			found = 1;
+			break;
+		}
+	}
+	endmntent(fme);
+
+	if (!found)
+		return_0;
+
+	if (stat(me->mnt_dir, &info) < 0)
+		return_0;
+
+	if (!device_get_uuid(cmd, MAJOR(info.st_dev), MINOR(info.st_dev), dm_uuid, sizeof(dm_uuid)))
+		return_0;
+
+	log_debug("Found root dm_uuid %s", dm_uuid);
+
+	/* UUID_PREFIX = "LVM-" */
+	if (strncmp(dm_uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1))
+		return_0;
+
+	if (strlen(dm_uuid) < sizeof(UUID_PREFIX) - 1 + ID_LEN)
+		return_0;
+
+	*dm_uuid_out = dm_pool_strdup(cmd->mem, dm_uuid);
+
+	return 1;
 }

@@ -19,7 +19,6 @@
 #include "lib/activate/activate.h"
 /* coverity[unnecessary_header] needed for MuslC */
 #include <sys/file.h>
-#include <mntent.h>
 
 struct vgimportdevices_params {
 	uint32_t added_devices;
@@ -102,11 +101,7 @@ static int _vgimportdevices_single(struct cmd_context *cmd,
 static int _get_rootvg_dev(struct cmd_context *cmd, char **dm_uuid_out, int *skip)
 {
 	char path[PATH_MAX];
-	char dm_uuid[DM_UUID_LEN];
 	struct stat info; 
-	FILE *fme = NULL;
-	struct mntent *me;
-	int found = 0;
 
 	/*
 	 * When --auto is set, the command does nothing
@@ -135,34 +130,9 @@ static int _get_rootvg_dev(struct cmd_context *cmd, char **dm_uuid_out, int *ski
 		cmd->device_ids_auto_import = 1;
 	}
 
-	if (!(fme = setmntent("/etc/mtab", "r")))
+	if (!get_rootvg_dev_uuid(cmd, dm_uuid_out))
 		return_0;
 
-	while ((me = getmntent(fme))) {
-		if ((me->mnt_dir[0] == '/') && (me->mnt_dir[1] == '\0')) {
-			found = 1;
-			break;
-		}
-	}
-	endmntent(fme);
-
-	if (!found)
-		return_0;
-
-	if (stat(me->mnt_dir, &info) < 0)
-		return_0;
-
-	if (!device_get_uuid(cmd, MAJOR(info.st_dev), MINOR(info.st_dev), dm_uuid, sizeof(dm_uuid)))
-		return_0;
-
-	/* UUID_PREFIX = "LVM-" */
-	if (strncmp(dm_uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1))
-		return_0;
-
-	if (strlen(dm_uuid) < sizeof(UUID_PREFIX) - 1 + ID_LEN)
-		return_0;
-
-	*dm_uuid_out = dm_pool_strdup(cmd->mem, dm_uuid);
 	return 1;
 }
 
