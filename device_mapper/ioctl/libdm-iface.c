@@ -787,7 +787,28 @@ struct dm_device_list {
 	unsigned count;
 	unsigned features;
 	struct dm_hash_table *uuids;
+	/* As last element (sized according to count), pointers to individual dm_devs */
+	struct dm_active_device *sorted[]; /* For bsearch() devs sorted by device node */
 };
+
+/*
+ * Comparing 2 dev nodes by its minor.
+ *
+ * TODO: enhance if DM would ever use multiple major:minor...
+ */
+static int _dm_dev_compare(const void *p1, const void *p2)
+{
+	int m1 = (*(struct dm_active_device **)p1)->minor;
+	int m2 = (*(struct dm_active_device **)p2)->minor;
+
+	if (m1 > m2)
+		return 1;
+
+	if (m1 < m2)
+		return -1;
+
+	return 0;
+}
 
 int dm_task_get_device_list(struct dm_task *dmt, struct dm_list **devs_list,
 			    unsigned *devs_features)
@@ -800,6 +821,7 @@ int dm_task_get_device_list(struct dm_task *dmt, struct dm_list **devs_list,
 	char *uuid_ptr;
 	size_t len;
 	int cnt = 0;
+	unsigned index = 0;
 
 	*devs_list = 0;
 	*devs_features = 0;
@@ -815,7 +837,9 @@ int dm_task_get_device_list(struct dm_task *dmt, struct dm_list **devs_list,
 		} while (next);
 	}
 
-	if (!(devs = malloc(sizeof(*devs) + (cnt ? cnt * sizeof(*dm_dev) + (char*)names1 - (char*)names + 256 : 0))))
+	/* buffer for devs +  sorted ptrs + dm_devs + aligned strings */
+	if (!(devs = malloc(sizeof(*devs) + cnt * (2 * sizeof(void*) + sizeof(*dm_dev)) +
+			    (char*)names1 - (char*)names + 256)))
 		return_0;
 
 	dm_list_init(&devs->list);
@@ -828,11 +852,13 @@ int dm_task_get_device_list(struct dm_task *dmt, struct dm_list **devs_list,
 		goto out; /* nothing else to do */
 	}
 
-	dm_dev = (struct dm_active_device *) (devs + 1);
+	/* Shift position where to store individual dm_devs */
+	dm_dev = (struct dm_active_device *) ((long*) (devs + 1) + cnt);
 
 	do {
 		names = (struct dm_names *)((char *) names + next);
 
+		devs->sorted[index++] = dm_dev;
 		dm_dev->major = MAJOR(names->dev);
 		dm_dev->minor = MINOR(names->dev);
 		dm_dev->name = (char*)(dm_dev + 1);
@@ -864,7 +890,7 @@ int dm_task_get_device_list(struct dm_task *dmt, struct dm_list **devs_list,
 				if (!dm_hash_insert(devs->uuids, dm_dev->uuid, dm_dev))
 					return_0; // FIXME
 #if 0
-				log_debug("Active %s (%s) %d:%d event:%u",
+				log_debug("Active %s (%s) %u:%u event:%u",
 					  dm_dev->name, dm_dev->uuid,
 					  dm_dev->major, dm_dev->minor, dm_dev->event_nr);
 #endif
@@ -878,6 +904,15 @@ int dm_task_get_device_list(struct dm_task *dmt, struct dm_list **devs_list,
 
     out:
 	*devs_list = (struct dm_list *)devs;
+
+	/* sort by minors */
+	qsort(devs->sorted, devs->count, sizeof(void*), _dm_dev_compare);
+#if 0
+	for (int i = 0; i < index; ++i) /* check order */
+	    log_debug("DM devices:  minor=%d name=%s uuid=%s",
+		      devs->sorted[i]->minor, devs->sorted[i]->name,
+		      devs->sorted[i]->uuid);
+#endif
 
 	return 1;
 }
@@ -896,6 +931,43 @@ int dm_device_list_find_by_uuid(struct dm_list *devs_list, const char *uuid,
 	}
 
 	return 0;
+}
+
+/*
+ * Find DM device in devs array for given major:minor.
+ * ATM assuming all DM devices use the single known major.
+ *
+ * NOTE:
+ * When major:minor is found, the 'name' and 'uuid' pointers
+ * are return as const string pointing to devs structure.
+ * Once the dm_device_list structure is destroyed
+ * those pointers become invalid!
+ */
+int dm_device_list_find_by_dev(const struct dm_list *devs_list,
+			       uint32_t major, uint32_t minor,
+			       const char **name, const char **uuid)
+{
+	const struct dm_device_list *devs = (const struct dm_device_list *) devs_list;
+	const struct dm_active_device search = { .major = major, .minor = minor };
+	const struct dm_active_device *findme[] = { &search };
+	const struct dm_active_device **dm_dev_found;
+	const char *fname = NULL, *fuuid = NULL;
+	int ret = 0;
+
+	/* Prefer bsearch O(logN) over linear list scanning O(N) */
+	if ((dm_dev_found = bsearch(findme, devs->sorted, devs->count, sizeof(void*),
+				    _dm_dev_compare))) {
+		fname = (*dm_dev_found)->name;
+		fuuid = (*dm_dev_found)->uuid;
+		ret = 1;
+	}
+
+	if (name)
+		*name = fname;
+	if (uuid)
+		*uuid = fuuid;
+
+	return ret;
 }
 
 void dm_device_list_destroy(struct dm_list **devs_list)
