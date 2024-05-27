@@ -420,7 +420,7 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool_lv,
 
 	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_CACHE)))
 		return_NULL;
-
+	/* coverity[format_string_injection] lv name is already validated */
 	if (!insert_layer_for_lv(cmd, cache_lv, 0, "_corig"))
 		return_NULL;
 

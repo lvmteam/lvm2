@@ -432,6 +432,7 @@ int convert_vdo_pool_lv(struct logical_volume *data_lv,
 	*virtual_extents = vdo_logical_size / extent_size;
 
 	/* Move segments from existing data_lv into LV_vdata */
+	/* coverity[format_string_injection] lv name is already validated */
 	if (!(data_lv = insert_layer_for_lv(cmd, vdo_pool_lv, 0, "_vdata")))
 		return_0;
 

@@ -3448,6 +3448,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	 * moved to pool_lv by _lvconvert_insert_thin_layer, and now is
 	 * moved to data_lv.)
 	 */
+	/* coverity[format_string_injection] lv name is already validated */
 	if (!(data_lv = insert_layer_for_lv(cmd, pool_lv, 0,
 					    (to_cachepool ? "_cdata" : "_tdata"))))
 		goto_bad;

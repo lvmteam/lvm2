@@ -794,6 +794,7 @@ int handle_pool_metadata_spare(struct volume_group *vg, uint32_t extents,
 		  lv->le_count, extents);
 	/* Check spare LV is big enough and preserve segtype */
 	if ((lv->le_count < extents) && seg &&
+	    /* coverity[format_string_injection] lv name is already validated */
 	    !lv_extend(lv, seg->segtype,
 		       seg->area_count / seg_mirrors,
 		       seg->stripe_size,

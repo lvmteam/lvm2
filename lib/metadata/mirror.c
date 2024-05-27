@@ -676,7 +676,7 @@ static int _split_mirror_images(struct logical_volume *lv,
 		 * A number of images have been split and
 		 * a new mirror layer must be formed
 		 */
-
+		/* coverity[format_string_injection] lv name is already validated */
 		if (!insert_layer_for_lv(cmd, new_lv, 0, "_mimage_%d")) {
 			log_error("Failed to build new mirror, %s.",
 				  display_lvname(new_lv));
@@ -1604,6 +1604,7 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 		suffix = "_mlog";
 	}
 
+	/* coverity[format_string_injection] lv name is already validated */
 	if (!(log_lv = _create_mirror_log(lv, ah, alloc, lv_name, suffix))) {
 		log_error("Failed to create mirror log.");
 		return NULL;
