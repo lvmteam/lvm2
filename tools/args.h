@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2016 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2024 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -100,7 +100,7 @@ arg(auto_ARG, '\0', "auto", 0, 0, 0,
     "initial system.devices file for the root VG.\n"
     "When this option is used, the vgimportdevices --rootvg command does nothing\n"
     "if system.devices exists, or the file auto-import-rootvg does not exist\n"
-    "(both in the /etc/lvm/devices/ directory.)\n")
+    "(both in the \\fI#DEFAULT_SYS_DIR#/devices/\\fP directory.)\n")
 
 arg(autoactivation_ARG, '\0', "autoactivation", string_VAL, 0, 0,
     "Specify if autoactivation is being used from an event.\n"
