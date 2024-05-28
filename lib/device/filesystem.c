@@ -48,8 +48,8 @@ static int _get_crypt_path(dev_t lv_devt, char *lv_path, char *crypt_path)
 	struct dirent *de;
 	int ret = 0;
 
-	if (dm_snprintf(holders_path, sizeof(holders_path), "%sdev/block/%d:%d/holders",
-			dm_sysfs_dir(), (int)MAJOR(lv_devt), (int)MINOR(lv_devt)) < 0) {
+	if (dm_snprintf(holders_path, sizeof(holders_path), "%sdev/block/%u:%u/holders",
+			dm_sysfs_dir(), MAJOR(lv_devt), MINOR(lv_devt)) < 0) {
 		log_error("Couldn't create holder path for %s.", lv_path);
 		return 0;
 	}
@@ -380,7 +380,7 @@ int crypt_resize_script(struct cmd_context *cmd, struct logical_volume *lv, stru
 	if (dm_snprintf(newsize_str, sizeof(newsize_str), "%llu", (unsigned long long)newsize_bytes_fs) < 0)
 		return_0;
 
-	if (dm_snprintf(crypt_path, sizeof(crypt_path), "/dev/dm-%d", (int)MINOR(fsi->crypt_devt)) < 0)
+	if (dm_snprintf(crypt_path, sizeof(crypt_path), "/dev/dm-%u", MINOR(fsi->crypt_devt)) < 0)
 		return_0;
 
 	argv[0] = _get_lvresize_fs_helper_path();
@@ -458,7 +458,7 @@ int fs_reduce_script(struct cmd_context *cmd, struct logical_volume *lv, struct 
 		argv[++args] = "--fsck";
 
 	if (fsi->needs_crypt) {
-		if (dm_snprintf(crypt_path, sizeof(crypt_path), "/dev/dm-%d", (int)MINOR(fsi->crypt_devt)) < 0)
+		if (dm_snprintf(crypt_path, sizeof(crypt_path), "/dev/dm-%u", MINOR(fsi->crypt_devt)) < 0)
 			return_0;
 		argv[++args] = "--cryptresize";
 		argv[++args] = "--cryptpath";
@@ -543,7 +543,7 @@ int fs_extend_script(struct cmd_context *cmd, struct logical_volume *lv, struct 
 		argv[++args] = "--fsck";
 
 	if (fsi->needs_crypt) {
-		if (dm_snprintf(crypt_path, sizeof(crypt_path), "/dev/dm-%d", (int)MINOR(fsi->crypt_devt)) < 0)
+		if (dm_snprintf(crypt_path, sizeof(crypt_path), "/dev/dm-%u", MINOR(fsi->crypt_devt)) < 0)
 			return_0;
 		argv[++args] = "--cryptresize";
 		argv[++args] = "--cryptpath";

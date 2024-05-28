@@ -358,8 +358,8 @@ static const char *_get_sysfs_name_by_devt(const char *sysfs_dir, dev_t devno,
 	char path[PATH_MAX];
 	int size;
 
-	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d", sysfs_dir,
-			(int) MAJOR(devno), (int) MINOR(devno)) < 0) {
+	if (dm_snprintf(path, sizeof(path), "%sdev/block/%u:%u", sysfs_dir,
+			MAJOR(devno), MINOR(devno)) < 0) {
 		log_error("Sysfs path string is too long.");
 		return NULL;
 	}
@@ -466,8 +466,8 @@ static int _dev_is_mpath_component_sysfs(struct cmd_context *cmd, struct device 
 	const char *sysfs_dir = dm_sysfs_dir();
 	DIR *dr;
 	struct dirent *de;
-	int dev_major = MAJOR(dev->dev);
-	int dev_minor = MINOR(dev->dev);
+	unsigned dev_major = MAJOR(dev->dev);
+	unsigned dev_minor = MINOR(dev->dev);
 	unsigned dm_dev_major;
 	unsigned dm_dev_minor;
 	struct stat info;
@@ -490,7 +490,7 @@ static int _dev_is_mpath_component_sysfs(struct cmd_context *cmd, struct device 
 		break;
 
 	default: /* 0, error. */
-		log_warn("Failed to get primary device for %d:%d.", dev_major, dev_minor);
+		log_warn("Failed to get primary device for %u:%u.", dev_major, dev_minor);
 		return 0;
 	}
 
@@ -728,8 +728,8 @@ const char *dev_mpath_component_wwid(struct cmd_context *cmd, struct device *dev
 
 	/* /sys/dev/block/253:7/slaves/sda/device/wwid */
 
-	if (dm_snprintf(slaves_path, sizeof(slaves_path), "%sdev/block/%d:%d/slaves",
-			dm_sysfs_dir(), (int)MAJOR(dev->dev), (int)MINOR(dev->dev)) < 0) {
+	if (dm_snprintf(slaves_path, sizeof(slaves_path), "%sdev/block/%u:%u/slaves",
+			dm_sysfs_dir(), MAJOR(dev->dev), MINOR(dev->dev)) < 0) {
 		log_warn("Sysfs path to check mpath components is too long.");
 		return NULL;
 	}

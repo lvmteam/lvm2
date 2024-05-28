@@ -228,15 +228,15 @@ out:
  * were created from.
  */
 
-static void _online_pvid_file_remove_devno(int major, int minor)
+static void _online_pvid_file_remove_devno(unsigned major, unsigned minor)
 {
 	char path[PATH_MAX];
 	char file_vgname[NAME_LEN];
 	DIR *dir;
 	struct dirent *de;
-	int file_major = 0, file_minor = 0;
+	unsigned file_major, file_minor;
 
-	log_debug("Remove pv online devno %d:%d", major, minor);
+	log_debug("Remove pv online devno %u:%u", major, minor);
 
 	if (!(dir = opendir(PVS_ONLINE_DIR)))
 		return;
@@ -547,7 +547,7 @@ static int _get_devs_from_saved_vg(struct cmd_context *cmd, const char *vgname,
 	struct volume_group *vg;
 	const char *name1, *name2;
 	dev_t devno;
-	int file_major = 0, file_minor = 0;
+	unsigned file_major = 0, file_minor = 0;
 
 	/*
 	 * We previously saved the metadata (as a struct vg) from the device
@@ -923,8 +923,8 @@ static int _get_args_devs(struct cmd_context *cmd, struct dm_list *pvscan_args,
 		if (!arg->devname && !arg->devno)
 			return_0;
 		if (!(arg->dev = setup_dev_in_dev_cache(cmd, arg->devno, arg->devname))) {
-			log_error_pvscan(cmd, "No device set up for arg %s %d:%d",
-					 arg->devname ?: "", (int)MAJOR(arg->devno), (int)MINOR(arg->devno));
+			log_error_pvscan(cmd, "No device set up for arg %s %u:%u.",
+					 arg->devname ?: "", MAJOR(arg->devno), MINOR(arg->devno));
 		}
 	}
 
@@ -949,7 +949,7 @@ static void _set_pv_devices_online(struct cmd_context *cmd, struct volume_group 
 	char pvid[ID_LEN+1] = { 0 };
 	struct pv_list *pvl;
 	struct device *dev;
-	int major, minor;
+	unsigned major, minor;
 	dev_t devno;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
@@ -1450,7 +1450,7 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 	dm_list_iterate_items(arg, &pvscan_args) {
 		if (arg->dev || !arg->devno)
 			continue;
-		_online_pvid_file_remove_devno((int)MAJOR(arg->devno), (int)MINOR(arg->devno));
+		_online_pvid_file_remove_devno(MAJOR(arg->devno), MINOR(arg->devno));
 	}
 
 	/*

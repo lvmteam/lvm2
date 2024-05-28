@@ -494,8 +494,8 @@ static int _scan_dev_open(struct device *dev)
 	 * dm_list_first() returns NULL if the list is empty.
 	 */
 	if (!(name_list = dm_list_first(&dev->aliases))) {
-		log_error("Device open %d:%d has no path names.",
-			  (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
+		log_error("Device open %u:%u has no path names.",
+			  MAJOR(dev->dev), MINOR(dev->dev));
 		return 0;
 	}
 	name_sl = dm_list_item(name_list, struct dm_str_list);
@@ -535,8 +535,8 @@ static int _scan_dev_open(struct device *dev)
 			 * drop any other invalid aliases before retrying open with
 			 * any remaining valid paths.
 			 */
-			log_debug("Drop alias for %d:%d failed open %s (%d)",
-				  (int)MAJOR(dev->dev), (int)MINOR(dev->dev), name, errno);
+			log_debug("Drop alias for %u:%u failed open %s (%d).",
+				  MAJOR(dev->dev), MINOR(dev->dev), name, errno);
 			dev_cache_failed_path(dev, name);
 			dev_cache_verify_aliases(dev);
 			goto next_name;
@@ -545,8 +545,8 @@ static int _scan_dev_open(struct device *dev)
 
 	/* Verify that major:minor from the path still match dev. */
 	if ((fstat(fd, &sbuf) < 0) || (sbuf.st_rdev != dev->dev)) {
-		log_warn("Invalid path %s for device %d:%d, trying different path.",
-			 name, (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
+		log_warn("Invalid path %s for device %u:%u, trying different path.",
+			 name, MAJOR(dev->dev), MINOR(dev->dev));
 		(void)close(fd);
 		dev_cache_failed_path(dev, name);
 		dev_cache_verify_aliases(dev);
@@ -660,8 +660,8 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 
 		if (!_in_bcache(devl->dev)) {
 			if (!_scan_dev_open(devl->dev)) {
-				log_debug_devs("Scan failed to open %d:%d %s.",
-					       (int)MAJOR(devl->dev->dev), (int)MINOR(devl->dev->dev), dev_name(devl->dev));
+				log_debug_devs("Scan failed to open %u:%u %s.",
+					       MAJOR(devl->dev->dev), MINOR(devl->dev->dev), dev_name(devl->dev));
 				dm_list_del(&devl->list);
 				devl->dev->flags |= DEV_SCAN_NOT_READ;
 				continue;
@@ -711,10 +711,9 @@ static int _scan_list(struct cmd_context *cmd, struct dev_filter *f,
 			 */
 			bcache_put(bb);
 
-			log_debug_devs("Processing data from device %s %d:%d di %d",
+			log_debug_devs("Processing data from device %s %u:%u di %d.",
 				       dev_name(devl->dev),
-				       (int)MAJOR(devl->dev->dev),
-				       (int)MINOR(devl->dev->dev),
+				       MAJOR(devl->dev->dev), MINOR(devl->dev->dev),
 				       devl->dev->bcache_di);
 
 			ret = _process_block(cmd, f, devl->dev, headers_buf, sizeof(headers_buf), 0, 0, &is_lvm_device);
@@ -1036,8 +1035,8 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 	 */
 	dm_list_iterate_items(po, &pvs_online) {
 		if (!(po->dev = setup_dev_in_dev_cache(cmd, po->devno, po->devname[0] ? po->devname : NULL))) {
-			log_debug("No device found for quick mapping of online PV %d:%d %s PVID %s",
-				  (int)MAJOR(po->devno), (int)MINOR(po->devno), po->devname, po->pvid);
+			log_debug("No device found for quick mapping of online PV %u:%u %s PVID %s.",
+				  MAJOR(po->devno), MINOR(po->devno), po->devname, po->pvid);
 			try_dev_scan = 1;
 			continue;
 		}
@@ -1061,8 +1060,8 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 			if (po->dev)
 				continue;
 			if (!(po->dev = dev_cache_get_by_devt(cmd, po->devno))) {
-				log_error("No device found for %d:%d PVID %s",
-					  (int)MAJOR(po->devno), (int)MINOR(po->devno), po->pvid);
+				log_error("No device found for %u:%u PVID %s.",
+					  MAJOR(po->devno), MINOR(po->devno), po->pvid);
 				goto bad;
 			}
 			if (!(devl = dm_pool_zalloc(cmd->mem, sizeof(*devl))))
@@ -1813,15 +1812,15 @@ int label_scan_reopen_rw(struct device *dev)
 	int fd;
 
 	if (dm_list_empty(&dev->aliases)) {
-		log_error("Cannot reopen rw device %d:%d with no valid paths di %d fd %d.",
-			  (int)MAJOR(dev->dev), (int)MINOR(dev->dev), dev->bcache_di, dev->bcache_fd);
+		log_error("Cannot reopen rw device %u:%u with no valid paths di %d fd %d.",
+			  MAJOR(dev->dev), MINOR(dev->dev), dev->bcache_di, dev->bcache_fd);
 		return 0;
 	}
 
 	name = dev_name(dev);
 	if (!name || name[0] != '/') {
-		log_error("Cannot reopen rw device %d:%d with no valid name di %d fd %d.",
-			  (int)MAJOR(dev->dev), (int)MINOR(dev->dev), dev->bcache_di, dev->bcache_fd);
+		log_error("Cannot reopen rw device %u:%u with no valid name di %d fd %d.",
+			  MAJOR(dev->dev), MINOR(dev->dev), dev->bcache_di, dev->bcache_fd);
 		return 0;
 	}
 

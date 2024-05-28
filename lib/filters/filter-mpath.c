@@ -40,9 +40,9 @@ static int _ignore_mpath_component(struct cmd_context *cmd, struct dev_filter *f
 		if ((dev->flags & DEV_MATCHED_USE_ID) && mpath_devno) {
 			if (!get_du_for_devno(cmd, mpath_devno)) {
 				struct device *mpath_dev = dev_cache_get_by_devt(cmd, mpath_devno);
-				log_warn("WARNING: devices file is missing %s (%d:%d) using multipath component %s.",
+				log_warn("WARNING: devices file is missing %s (%u:%u) using multipath component %s.",
 					 mpath_dev ? dev_name(mpath_dev) : "unknown",
-					 (int)MAJOR(mpath_devno), (int)MINOR(mpath_devno), dev_name(dev));
+					 MAJOR(mpath_devno), MINOR(mpath_devno), dev_name(dev));
 				if (!_lvmdevices_update_msg && strcmp(get_cmd_name(), "lvmdevices")) {
 					log_warn("See lvmdevices --update for devices file update.");
 					_lvmdevices_update_msg = 1;

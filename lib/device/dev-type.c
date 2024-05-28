@@ -87,7 +87,8 @@ int dev_is_used_by_active_lv(struct cmd_context *cmd, struct device *dev, int *u
 	 * sysfs "holders" dir.
 	 */
 
-	if (dm_snprintf(holders_path, sizeof(holders_path), "%sdev/block/%d:%d/holders/", dm_sysfs_dir(), (int) MAJOR(dev->dev), (int) MINOR(dev->dev)) < 0) {
+	if (dm_snprintf(holders_path, sizeof(holders_path), "%sdev/block/%u:%u/holders/",
+			dm_sysfs_dir(), MAJOR(dev->dev), MINOR(dev->dev)) < 0) {
 		log_error("%s: dm_snprintf failed for path to holders directory.", dev_name(dev));
 		return 0;
 	}
@@ -440,10 +441,8 @@ static int _loop_is_with_partscan(struct device *dev)
 	char path[PATH_MAX];
 	char buffer[64];
 
-	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/loop/partscan",
-			dm_sysfs_dir(),
-			(int) MAJOR(dev->dev),
-			(int) MINOR(dev->dev)) < 0) {
+	if (dm_snprintf(path, sizeof(path), "%sdev/block/%u:%u/loop/partscan",
+			dm_sysfs_dir(), MAJOR(dev->dev), MINOR(dev->dev)) < 0) {
 		log_warn("Sysfs path for partscan is too long.");
 		return 0;
 	}
@@ -476,8 +475,8 @@ int dev_get_partition_number(struct device *dev, int *num)
 		return 1;
 	}
 
-	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/partition",
-			dm_sysfs_dir(), (int)MAJOR(devt), (int)MINOR(devt)) < 0) {
+	if (dm_snprintf(path, sizeof(path), "%sdev/block/%u:%u/partition",
+			dm_sysfs_dir(), MAJOR(devt), MINOR(devt)) < 0) {
 		log_error("Failed to create sysfs path for %s", dev_name(dev));
 		return 0;
 	}
@@ -525,11 +524,11 @@ static int _has_sys_partition(struct device *dev)
 {
 	char path[PATH_MAX];
 	struct stat info;
-	int major = (int) MAJOR(dev->dev);
-	int minor = (int) MINOR(dev->dev);
+	unsigned major = MAJOR(dev->dev);
+	unsigned minor = MINOR(dev->dev);
 
 	/* check if dev is a partition */
-	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/partition",
+	if (dm_snprintf(path, sizeof(path), "%sdev/block/%u:%u/partition",
 			dm_sysfs_dir(), major, minor) < 0) {
 		log_warn("WARNING: %s: partition path is too long.", dev_name(dev));
 		return 0;
@@ -705,8 +704,8 @@ int dev_is_partitioned(struct cmd_context *cmd, struct device *dev)
  */
 int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 {
-	int major = (int) MAJOR(dev->dev);
-	int minor = (int) MINOR(dev->dev);
+	unsigned major = MAJOR(dev->dev);
+	unsigned minor = MINOR(dev->dev);
 	char path[PATH_MAX];
 	char temp_path[PATH_MAX];
 	char buffer[64];
@@ -756,7 +755,7 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 	 * - basename ../../block/md0/md0  = md0
 	 * Parent's 'dev' sysfs attribute  = /sys/block/md0/dev
 	 */
-	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d",
+	if (dm_snprintf(path, sizeof(path), "%sdev/block/%u:%u",
 			dm_sysfs_dir(), major, minor) < 0) {
 		log_warn("WARNING: %s: major:minor sysfs path is too long.", dev_name(dev));
 		return 0;
@@ -1193,9 +1192,8 @@ int wipe_known_signatures(struct cmd_context *cmd, struct device *dev,
 static int _snprintf_attr(char *buf, size_t buf_size, const char *sysfs_dir,
 			 const char *attribute, dev_t dev)
 {
-	if (dm_snprintf(buf, buf_size, "%sdev/block/%d:%d/%s", sysfs_dir,
-			(int)MAJOR(dev), (int)MINOR(dev),
-			attribute) < 0) {
+	if (dm_snprintf(buf, buf_size, "%sdev/block/%u:%u/%s", sysfs_dir,
+			MAJOR(dev), MINOR(dev),	attribute) < 0) {
 		log_warn("WARNING: sysfs path for %s attribute is too long.", attribute);
 		return 0;
 	}

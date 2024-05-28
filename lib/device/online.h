@@ -45,7 +45,7 @@ do \
 		log_error("pvscan[%d] " fmt, getpid(), ##args); \
 while (0)
 
-int online_pvid_file_read(char *path, int *major, int *minor, char *vgname, char *devname);
+int online_pvid_file_read(char *path, unsigned *major, unsigned *minor, char *vgname, char *devname);
 int online_vg_file_create(struct cmd_context *cmd, const char *vgname);
 void online_vg_file_remove(const char *vgname);
 int online_pvid_file_create(struct cmd_context *cmd, struct device *dev, const char *vgname);

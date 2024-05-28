@@ -432,8 +432,8 @@ static int _read_sys_block(struct cmd_context *cmd, struct device *dev,
 
 	sysfs_dir = cmd->device_id_sysfs_dir ?: dm_sysfs_dir();
  retry:
-	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/%s",
-			sysfs_dir, (int)MAJOR(devt), (int)MINOR(devt), suffix) < 0) {
+	if (dm_snprintf(path, sizeof(path), "%sdev/block/%u:%u/%s",
+			sysfs_dir, MAJOR(devt), MINOR(devt), suffix) < 0) {
 		log_error("Failed to create sysfs path for %s", dev_name(dev));
 		return 0;
 	}
@@ -2384,8 +2384,8 @@ static int _match_dm_names(struct cmd_context *cmd, char *idname, struct device 
 	dev2 = dev_cache_get_existing(cmd, idname, NULL);
 
 	if (dev2 && (dev == dev2)) {
-		log_debug("Match dm names %s %s for %d:%d (from cache)",
-			  dev_name(dev), idname, (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
+		log_debug("Match dm names %s %s for %u:%u (from cache).",
+			  dev_name(dev), idname, MAJOR(dev->dev), MINOR(dev->dev));
 		return 1;
 	}
 
@@ -2403,8 +2403,8 @@ static int _match_dm_names(struct cmd_context *cmd, char *idname, struct device 
 
 		if ((MAJOR(buf.st_rdev) == cmd->dev_types->device_mapper_major) &&
 		    (MINOR(buf.st_rdev) == MINOR(dev->dev))) {
-			log_debug("Match dm names %s %s for %d:%d (from stat)",
-				  dev_name(dev), idname, (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
+			log_debug("Match dm names %s %s for %u:%u (from stat)",
+				  dev_name(dev), idname, MAJOR(dev->dev), MINOR(dev->dev));
 			return 1;
 		}
 	}
@@ -2452,7 +2452,7 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 	 * so we can skip trying to match certain du entries based simply on
 	 * the major number of dev.
 	 */
-	if (!_idtype_compatible_with_major_number(cmd, du->idtype, (int)MAJOR(dev->dev))) {
+	if (!_idtype_compatible_with_major_number(cmd, du->idtype, MAJOR(dev->dev))) {
 		/*
 		log_debug("Mismatch device_id %s %s to %s: wrong major",
 			  idtype_to_str(du->idtype), du->idname ?: ".", dev_name(dev));

@@ -88,8 +88,8 @@ static int _lookup_p(struct cmd_context *cmd, struct dev_filter *f, struct devic
 		return pf->real->passes_filter(cmd, pf->real, dev, use_filter_name);
 
 	if (dm_list_empty(&dev->aliases)) {
-		log_debug_devs("%d:%d: filter cache skipping (no name)",
-				(int)MAJOR(dev->dev), (int)MINOR(dev->dev));
+		log_debug_devs("%u:%u: filter cache skipping (no name).",
+				MAJOR(dev->dev), MINOR(dev->dev));
 		return 0;
 	}
 

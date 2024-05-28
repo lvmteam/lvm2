@@ -917,9 +917,9 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 				return 1;
 			}
 			if (hp->devt != du->dev->dev) {
-				log_debug("ignore hints: devno %d:%d does not match %d:%d for %s",
-					  (int)MAJOR(hp->devt), (int)MINOR(hp->devt),
-					  (int)MAJOR(du->dev->dev), (int)MINOR(du->dev->dev), hp->name);
+				log_debug("ignore hints: devno %u:%u does not match %u:%u for %s",
+					  MAJOR(hp->devt), MINOR(hp->devt),
+					  MAJOR(du->dev->dev), MINOR(du->dev->dev), hp->name);
 				*needs_refresh = 1;
 				return 1;
 			}

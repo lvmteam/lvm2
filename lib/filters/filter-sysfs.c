@@ -32,8 +32,8 @@ static int _accept_p(struct cmd_context *cmd, struct dev_filter *f, struct devic
 	if (dev->id && dev->id->idtype && (dev->id->idtype != DEV_ID_TYPE_DEVNAME))
 		return 1;
 
-	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d",
-			sysfs_dir, (int)MAJOR(dev->dev), (int)MINOR(dev->dev)) < 0) {
+	if (dm_snprintf(path, sizeof(path), "%sdev/block/%u:%u",
+			sysfs_dir, MAJOR(dev->dev), MINOR(dev->dev)) < 0) {
 		log_debug("failed to create sysfs path");
 		return 1;
 	}
