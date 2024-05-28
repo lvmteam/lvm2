@@ -188,7 +188,7 @@ The auto import is intended to be done once, on first boot, to create an
 initial system.devices file for the root VG.
 When this option is used, the vgimportdevices --rootvg command does nothing
 if system.devices exists, or the file auto-import-rootvg does not exist
-(both in the /etc/lvm/devices/ directory.)
+(both in the \fI#DEFAULT_SYS_DIR#/devices/\fP directory.)
 .
 .HP
 \fB--commandprofile\fP \fIString\fP
