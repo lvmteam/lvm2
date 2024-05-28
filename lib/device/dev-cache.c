@@ -2165,7 +2165,7 @@ int setup_device(struct cmd_context *cmd, const char *devname)
 	}
 
 	if (!S_ISBLK(buf.st_mode)) {
-		log_error("Invaild device type %s.", devname);
+		log_error("Invalid device type %s.", devname);
 		return 0;
 	}
 
@@ -2408,7 +2408,7 @@ struct device *setup_dev_in_dev_cache(struct cmd_context *cmd, dev_t devno, cons
 	}
 
 	if (!S_ISBLK(buf.st_mode)) {
-		log_error("Invaild device type %s.", devname);
+		log_error("Invalid device type %s.", devname);
 		return_NULL;
 	}
 

@@ -1925,8 +1925,8 @@ int lvcreate_and_attach_writecache_cmd(struct cmd_context *cmd, int argc, char *
 	};
 	struct lvcreate_cmdline_params lcp = { 0 };
 	struct processing_params pp = {
-	    .lp = &lp,
-	    .lcp = &lcp,
+		.lp = &lp,
+		.lcp = &lcp,
 	};
 	int ret;
 	if (!_lvcreate_params(cmd, argc, argv, &lp, &lcp)) {
@@ -1997,8 +1997,8 @@ int lvcreate_and_attach_cache_cmd(struct cmd_context *cmd, int argc, char **argv
 	};
 	struct lvcreate_cmdline_params lcp = { 0 };
 	struct processing_params pp = {
-	    .lp = &lp,
-	    .lcp = &lcp,
+		.lp = &lp,
+		.lcp = &lcp,
 	};
 	int ret;
 
