@@ -25,6 +25,8 @@
 #include "lib/cache/lvmcache.h"
 #include "lib/datastruct/str_list.h"
 #include "lib/metadata/metadata-exported.h"
+#include "lib/activate/activate.h"
+#include "device_mapper/misc/dm-ioctl.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -506,18 +508,19 @@ static int _dm_uuid_has_prefix(char *sysbuf, const char *prefix)
 /* the dm uuid uses the wwid of the underlying dev */
 int dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, const char **idname_out)
 {
-	char sysbuf[PATH_MAX] = { 0 };
+
+	char uuid[DM_UUID_LEN];
 	const char *idname;
 
-	if (!read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf)))
-		return 0;
+	if (!device_get_uuid(cmd, MAJOR(dev->dev), MINOR(dev->dev), uuid, sizeof(uuid)))
+		return_0;
 
-	if (!_dm_uuid_has_prefix(sysbuf, "mpath-"))
+	if (!_dm_uuid_has_prefix(uuid, "mpath-"))
 		return 0;
 
 	if (!idname_out)
 		return 1;
-	if (!(idname = strdup(sysbuf)))
+	if (!(idname = strdup(uuid)))
 		return_0;
 	*idname_out = idname;
 	return 1;
@@ -525,18 +528,18 @@ int dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, const char *
 
 static int _dev_has_crypt_uuid(struct cmd_context *cmd, struct device *dev, const char **idname_out)
 {
-	char sysbuf[PATH_MAX] = { 0 };
+	char uuid[DM_UUID_LEN];
 	const char *idname;
 
-	if (!read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf)))
-		return 0;
+	if (!device_get_uuid(cmd, MAJOR(dev->dev), MINOR(dev->dev), uuid, sizeof(uuid)))
+		return_0;
 
-	if (!_dm_uuid_has_prefix(sysbuf, "CRYPT-"))
+	if (!_dm_uuid_has_prefix(uuid, "CRYPT-"))
 		return 0;
 
 	if (!idname_out)
 		return 1;
-	if (!(idname = strdup(sysbuf)))
+	if (!(idname = strdup(uuid)))
 		return_0;
 	*idname_out = idname;
 	return 1;
@@ -544,18 +547,18 @@ static int _dev_has_crypt_uuid(struct cmd_context *cmd, struct device *dev, cons
 
 static int _dev_has_lvmlv_uuid(struct cmd_context *cmd, struct device *dev, const char **idname_out)
 {
-	char sysbuf[PATH_MAX] = { 0 };
+	char uuid[DM_UUID_LEN];
 	const char *idname;
 
-	if (!read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf)))
-		return 0;
+	if (!device_get_uuid(cmd, MAJOR(dev->dev), MINOR(dev->dev), uuid, sizeof(uuid)))
+		return_0;
 
-	if (!_dm_uuid_has_prefix(sysbuf, "LVM-"))
+	if (!_dm_uuid_has_prefix(uuid, UUID_PREFIX))
 		return 0;
 
 	if (!idname_out)
 		return 1;
-	if (!(idname = strdup(sysbuf)))
+	if (!(idname = strdup(uuid)))
 		return_0;
 	*idname_out = idname;
 	return 1;
@@ -773,49 +776,36 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 	struct dev_wwid *dw;
 	unsigned i;
 
-	if (idtype == DEV_ID_TYPE_SYS_WWID)
+	switch (idtype) {
+	case DEV_ID_TYPE_SYS_WWID:
 		dev_read_sys_wwid(cmd, dev, sysbuf, sizeof(sysbuf), NULL);
-
-	else if (idtype == DEV_ID_TYPE_SYS_SERIAL)
+                break;
+	case DEV_ID_TYPE_SYS_SERIAL:
 		_dev_read_sys_serial(cmd, dev, sysbuf, sizeof(sysbuf));
-
-	else if (idtype == DEV_ID_TYPE_MPATH_UUID) {
-		read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf));
-		/* if (strncmp(sysbuf, "mpath", 5)) sysbuf[0] = '\0'; */
-	}
-
-	else if (idtype == DEV_ID_TYPE_CRYPT_UUID) {
-		read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf));
-		/* if (strncmp(sysbuf, "CRYPT", 5)) sysbuf[0] = '\0'; */
-	}
-
-	else if (idtype == DEV_ID_TYPE_LVMLV_UUID) {
-		read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf));
-		/* if (strncmp(sysbuf, "LVM", 3)) sysbuf[0] = '\0'; */
-	}
-
-	else if (idtype == DEV_ID_TYPE_MD_UUID) {
+                break;
+	case DEV_ID_TYPE_MPATH_UUID:
+	case DEV_ID_TYPE_CRYPT_UUID:
+	case DEV_ID_TYPE_LVMLV_UUID:
+		(void)device_get_uuid(cmd, MAJOR(dev->dev), MINOR(dev->dev), sysbuf, sizeof(sysbuf));
+                break;
+	case DEV_ID_TYPE_MD_UUID:
 		read_sys_block(cmd, dev, "md/uuid", sysbuf, sizeof(sysbuf));
-	}
-
-	else if (idtype == DEV_ID_TYPE_LOOP_FILE) {
+                break;
+	case DEV_ID_TYPE_LOOP_FILE:
 		read_sys_block(cmd, dev, "loop/backing_file", sysbuf, sizeof(sysbuf));
 		/* if backing file is deleted, fall back to devname */
 		if (strstr(sysbuf, "(deleted)"))
 			sysbuf[0] = '\0';
-	}
-
-	else if (idtype == DEV_ID_TYPE_DEVNAME) {
+                break;
+	case DEV_ID_TYPE_DEVNAME:
 		if (dm_list_empty(&dev->aliases))
 			goto_bad;
 		if (!(idname = strdup(dev_name(dev))))
 			goto_bad;
 		return idname;
-	}
-
-	else if (idtype == DEV_ID_TYPE_WWID_NAA ||
-		 idtype == DEV_ID_TYPE_WWID_EUI ||
-		 idtype == DEV_ID_TYPE_WWID_T10) {
+	case DEV_ID_TYPE_WWID_NAA:
+	case DEV_ID_TYPE_WWID_EUI:
+	case DEV_ID_TYPE_WWID_T10:
 		if (!(dev->flags & DEV_ADDED_VPD_WWIDS))
 			dev_read_vpd_wwids(cmd, dev);
 		dm_list_iterate_items(dw, &dev->wwids) {
@@ -1015,7 +1005,7 @@ static int _dev_has_stable_id(struct cmd_context *cmd, struct device *dev)
 	}
 
 	if ((MAJOR(dev->dev) == cmd->dev_types->device_mapper_major)) {
-		if (!read_sys_block(cmd, dev, "dm/uuid", sysbuf, sizeof(sysbuf)))
+		if (!device_get_uuid(cmd, MAJOR(dev->dev), MINOR(dev->dev), sysbuf, sizeof(sysbuf)))
 			goto_out;
 
 		if (_dm_uuid_has_prefix(sysbuf, "mpath-"))
