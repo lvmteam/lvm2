@@ -18,6 +18,7 @@
 #include "lib/commands/toolcontext.h"
 #include "lib/device/device_id.h"
 #include "lib/datastruct/str_list.h"
+#include "device_mapper/misc/dm-ioctl.h"
 #ifdef UDEV_SYNC_SUPPORT
 #include <libudev.h>
 #include "lib/device/dev-ext-udev-constants.h"
@@ -379,48 +380,6 @@ static const char *_get_sysfs_name_by_devt(const char *sysfs_dir, dev_t devno,
 	return name;
 }
 
-static int _get_sysfs_string(const char *path, char *buffer, int max_size)
-{
-	FILE *fp;
-	int r = 0;
-
-	if (!(fp = fopen(path, "r"))) {
-		log_sys_error("fopen", path);
-		return 0;
-	}
-
-	if (!fgets(buffer, max_size, fp))
-		log_sys_error("fgets", path);
-	else
-		r = 1;
-
-	if (fclose(fp))
-		log_sys_error("fclose", path);
-
-	return r;
-}
-
-static int _get_sysfs_dm_mpath(struct dev_types *dt, const char *sysfs_dir, const char *holder_name)
-{
-	char path[PATH_MAX];
-	char buffer[128];
-
-	if (dm_snprintf(path, sizeof(path), "%sblock/%s/dm/uuid", sysfs_dir, holder_name) < 0) {
-		log_error("Sysfs path string is too long.");
-		return 0;
-	}
-
-	buffer[0] = '\0';
-
-	if (!_get_sysfs_string(path, buffer, sizeof(buffer)))
-		return_0;
-
-	if (!strncmp(buffer, MPATH_PREFIX, 6))
-		return 1;
-
-	return 0;
-}
-
 #ifdef UDEV_SYNC_SUPPORT
 static int _dev_is_mpath_component_udev(struct device *dev)
 {
@@ -462,6 +421,7 @@ static int _dev_is_mpath_component_sysfs(struct cmd_context *cmd, struct device 
 	char link_path[PATH_MAX];       /* some obscure, unpredictable sysfs path */
 	char holders_path[PATH_MAX];    /* e.g. "/sys/block/sda/holders/" */
 	char dm_dev_path[PATH_MAX];     /* e.g. "/dev/dm-1" */
+	char uuid[DM_UUID_LEN];
 	char *holder_name;		/* e.g. "dm-1" */
 	const char *sysfs_dir = dm_sysfs_dir();
 	DIR *dr;
@@ -573,12 +533,10 @@ static int _dev_is_mpath_component_sysfs(struct cmd_context *cmd, struct device 
 			/* no saved result for dm_dev_minor, so check the uuid for it */
 		}
 
-		/*
-	 	 * Returns 1 if /sys/block/<holder_name>/dm/uuid indicates that
-		 * <holder_name> is a dm device with dm uuid prefix mpath-.
-		 * When true, <holder_name> will be something like "dm-1".
-		 */
-		if (_get_sysfs_dm_mpath(dt, sysfs_dir, holder_name)) {
+		/* Check whether holder's UUID uses MPATH prefix */
+		/* TODO: reuse/merge with dev_has_mpath_uuid() as this function also recognizes kpartx partition */
+		if (device_get_uuid(cmd, dm_dev_major, dm_dev_minor, uuid, sizeof(uuid)) &&
+		    !strncmp(uuid, MPATH_PREFIX, sizeof(MPATH_PREFIX) - 1)) {
 			log_debug_devs("dev_is_mpath_component %s holder %s %u:%u ignore mpath component",
 					dev_name(dev), holder_name, dm_dev_major, dm_dev_minor);
 
