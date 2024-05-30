@@ -506,11 +506,11 @@ static int _dm_uuid_has_prefix(char *sysbuf, const char *prefix)
 }
 
 /* the dm uuid uses the wwid of the underlying dev */
-int dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, const char **idname_out)
+int dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, char **idname_out)
 {
 
 	char uuid[DM_UUID_LEN];
-	const char *idname;
+	char *idname;
 
 	if (!device_get_uuid(cmd, MAJOR(dev->dev), MINOR(dev->dev), uuid, sizeof(uuid)))
 		return_0;
@@ -526,10 +526,10 @@ int dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, const char *
 	return 1;
 }
 
-static int _dev_has_crypt_uuid(struct cmd_context *cmd, struct device *dev, const char **idname_out)
+static int _dev_has_crypt_uuid(struct cmd_context *cmd, struct device *dev, char **idname_out)
 {
 	char uuid[DM_UUID_LEN];
-	const char *idname;
+	char *idname;
 
 	if (!device_get_uuid(cmd, MAJOR(dev->dev), MINOR(dev->dev), uuid, sizeof(uuid)))
 		return_0;
@@ -545,10 +545,10 @@ static int _dev_has_crypt_uuid(struct cmd_context *cmd, struct device *dev, cons
 	return 1;
 }
 
-static int _dev_has_lvmlv_uuid(struct cmd_context *cmd, struct device *dev, const char **idname_out)
+static int _dev_has_lvmlv_uuid(struct cmd_context *cmd, struct device *dev, char **idname_out)
 {
 	char uuid[DM_UUID_LEN];
-	const char *idname;
+	char *idname;
 
 	if (!device_get_uuid(cmd, MAJOR(dev->dev), MINOR(dev->dev), uuid, sizeof(uuid)))
 		return_0;
@@ -768,11 +768,11 @@ static int _dev_read_sys_serial(struct cmd_context *cmd, struct device *dev,
 	return 0;
 }
 
-const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, uint16_t idtype)
+char *device_id_system_read(struct cmd_context *cmd, struct device *dev, uint16_t idtype)
 {
 	char sysbuf[PATH_MAX] = { 0 };
 	char sysbuf2[PATH_MAX] = { 0 };
-	const char *idname = NULL;
+	char *idname;
 	struct dev_wwid *dw;
 	unsigned i;
 
@@ -866,9 +866,9 @@ const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, u
 }
 
 static int device_id_system_read_preferred(struct cmd_context *cmd, struct device *dev,
-					   uint16_t *new_idtype, const char **new_idname)
+					   uint16_t *new_idtype, char **new_idname)
 {
-	const char *idname = NULL;
+	char *idname = NULL;
 	uint16_t idtype;
 
 	if (MAJOR(dev->dev) == cmd->dev_types->device_mapper_major) {
@@ -948,7 +948,7 @@ static int _dev_has_stable_id(struct cmd_context *cmd, struct device *dev)
 {
 	char sysbuf[PATH_MAX] = { 0 };
 	struct dev_id *id;
-	const char *idname;
+	char *idname;
 
 	/*
 	 * An idtype other than DEVNAME is stable, i.e. it doesn't change after
@@ -986,21 +986,21 @@ static int _dev_has_stable_id(struct cmd_context *cmd, struct device *dev)
 	if ((idname = device_id_system_read(cmd, dev, DEV_ID_TYPE_SYS_WWID))) {
 		/* see comment above */
 		if (!strstr(idname, "QEMU")) {
-			free((void*)idname);
+			free(idname);
 			return 1;
 		}
-		free((void*)idname);
+		free(idname);
 		return 0;
 	}
 
 	if ((idname = device_id_system_read(cmd, dev, DEV_ID_TYPE_SYS_SERIAL))) {
-		free((void*)idname);
+		free(idname);
 		return 1;
 	}
 
 	if ((MAJOR(dev->dev) == cmd->dev_types->loop_major) &&
 	    (idname = device_id_system_read(cmd, dev, DEV_ID_TYPE_LOOP_FILE))) {
-		free((void*)idname);
+		free(idname);
 		return 1;
 	}
 
@@ -1912,8 +1912,8 @@ int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid_
 {
 	char pvid[ID_LEN+1] = { 0 };
 	uint16_t idtype = 0;
-	const char *idname = NULL;
-	const char *check_idname = NULL;
+	char *idname = NULL;
+	char *check_idname = NULL;
 	const char *update_matching_kind = NULL;
 	const char *update_matching_name = NULL;
 	struct dev_use *du, *update_du = NULL, *du_dev, *du_pvid, *du_devname, *du_devid;
@@ -2129,7 +2129,7 @@ id_done:
 			if (!cmd->current_settings.yes &&
 			    yes_no_prompt("Add device with duplicate PV to devices file?") == 'n') {
 				log_print_unless_silent("Device not added.");
-				free((void *)check_idname);
+				free(check_idname);
 				return 1;
 			}
 		}
@@ -2156,7 +2156,7 @@ id_done:
 		}
 	}
 
-	free((void *)check_idname);
+	free(check_idname);
 
 	if (!update_du) {
 		log_debug("Adding new entry to devices file for %s PVID %s %s %s.",
@@ -3958,7 +3958,7 @@ void device_ids_search(struct cmd_context *cmd, struct dm_list *new_devs,
 		new_devname = NULL;
 
 		if (cmd->device_ids_refresh_trigger || all_ids) {
-			if (!device_id_system_read_preferred(cmd, dev, &new_idtype, (const char **)&new_idname))
+			if (!device_id_system_read_preferred(cmd, dev, &new_idtype, &new_idname))
 				continue;
 			new_idname2 = strdup(new_idname);
 			new_devname = strdup(devname);

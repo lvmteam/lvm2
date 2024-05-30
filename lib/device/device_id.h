@@ -41,7 +41,7 @@ void device_ids_check_serial(struct cmd_context *cmd, struct dm_list *scan_devs,
 			int noupdate, int *update_needed);
 void device_ids_search(struct cmd_context *cmd, struct dm_list *new_devs,
 		       int all_ids, int noupdate, int *update_needed);
-const char *device_id_system_read(struct cmd_context *cmd, struct device *dev, uint16_t idtype);
+char *device_id_system_read(struct cmd_context *cmd, struct device *dev, uint16_t idtype);
 void device_id_update_vg_uuid(struct cmd_context *cmd, struct volume_group *vg, struct id *old_vg_id);
 int device_ids_version_unchanged(struct cmd_context *cmd);
 
@@ -67,7 +67,7 @@ int read_sys_block(struct cmd_context *cmd, struct device *dev, const char *suff
 int read_sys_block_binary(struct cmd_context *cmd, struct device *dev,
 			  const char *suffix, char *sysbuf, int sysbufsize, int *retlen);
 
-int dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, const char **idname_out);
+int dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, char **idname_out);
 
 int wwid_type_to_idtype(int wwid_type);
 int idtype_to_wwid_type(int idtype);
