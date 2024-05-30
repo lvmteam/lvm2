@@ -207,7 +207,7 @@ int vgimportdevices(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	if (!lock_global(cmd, "ex"))
+	if (!lockf_global(cmd, "ex"))
 		return ECMD_FAILED;
 
 	/*
