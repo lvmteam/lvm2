@@ -3529,6 +3529,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 			log_very_verbose("Processing historical LV %s in VG %s.", glvl->glv->historical->name, vg->name);
 
+			/* coverity[format_string_injection] lv name is already validated */
 			ret = process_single_lv(cmd, &_historical_lv, handle);
 			if (handle_supplied)
 				_update_selection_result(handle, &whole_selected);

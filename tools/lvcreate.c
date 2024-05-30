@@ -1895,6 +1895,7 @@ static int _lvcreate_and_attach_writecache_single(struct cmd_context *cmd,
 		return ECMD_FAILED;
 	}
 
+	/* coverity[format_string_injection] lv name is already validated */
 	ret = lvconvert_writecache_attach_single(cmd, lv, handle);
 
 	if (ret == ECMD_FAILED) {
@@ -1967,6 +1968,7 @@ static int _lvcreate_and_attach_cache_single(struct cmd_context *cmd,
 		return ECMD_FAILED;
 	}
 
+	/* coverity[format_string_injection] lv name is already validated */
 	ret = lvconvert_cachevol_attach_single(cmd, lv, handle);
 
 	if (ret == ECMD_FAILED) {
