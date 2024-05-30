@@ -220,22 +220,22 @@ void init_log_fn(lvm2_log_fn_t log_fn)
 /* Read /proc/self/stat to extract pid and starttime */
 static int _get_pid_starttime(int *pid, unsigned long long *starttime)
 {
-	static const char statfile[] = DEFAULT_PROC_DIR "/self/stat";
+	static const char _statfile[] = DEFAULT_PROC_DIR "/self/stat";
 	char buf[1024];
 	char *p;
 	int fd;
 	int e;
 
-	if ((fd = open(statfile, O_RDONLY)) == -1) {
-		log_sys_debug("open", statfile);
+	if ((fd = open(_statfile, O_RDONLY)) == -1) {
+		log_sys_debug("open", _statfile);
 		return 0;
 	}
 
 	if ((e = read(fd, buf, sizeof(buf) - 1)) <= 0)
-		log_sys_debug("read", statfile);
+		log_sys_debug("read", _statfile);
 
 	if (close(fd))
-		log_sys_debug("close", statfile);
+		log_sys_debug("close", _statfile);
 
 	if (e <= 0)
 		return 0;
@@ -251,7 +251,7 @@ static int _get_pid_starttime(int *pid, unsigned long long *starttime)
 		    "%llu", starttime) == 1))
 		return 1;
 
-	log_debug("Cannot parse content of %s.", statfile);
+	log_debug("Cannot parse content of %s.", _statfile);
 
 	return 0;
 }

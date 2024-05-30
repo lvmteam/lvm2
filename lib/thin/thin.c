@@ -784,9 +784,9 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 {
 	static const struct {
 		const struct segtype_handler *ops;
-		const char name[16];
+		const char name[12];
 		uint32_t flags;
-	} reg_segtypes[] = {
+	} _reg_segtypes[] = {
 		{ &_thin_pool_ops, "thin-pool", SEG_THIN_POOL | SEG_CANNOT_BE_ZEROED |
 		SEG_ONLY_EXCLUSIVE | SEG_CAN_ERROR_WHEN_FULL },
 		/* FIXME Maybe use SEG_THIN_VOLUME instead of SEG_VIRTUAL */
@@ -796,24 +796,24 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 	struct segment_type *segtype;
 	unsigned i;
 
-	for (i = 0; i < DM_ARRAY_SIZE(reg_segtypes); ++i) {
+	for (i = 0; i < DM_ARRAY_SIZE(_reg_segtypes); ++i) {
 		segtype = zalloc(sizeof(*segtype));
 
 		if (!segtype) {
 			log_error("Failed to allocate memory for %s segtype",
-				  reg_segtypes[i].name);
+				  _reg_segtypes[i].name);
 			return 0;
 		}
 
-		segtype->ops = reg_segtypes[i].ops;
-		segtype->name = reg_segtypes[i].name;
-		segtype->flags = reg_segtypes[i].flags;
+		segtype->ops = _reg_segtypes[i].ops;
+		segtype->name = _reg_segtypes[i].name;
+		segtype->flags = _reg_segtypes[i].flags;
 
 #ifdef DEVMAPPER_SUPPORT
 #  ifdef DMEVENTD
 		segtype->dso = get_monitor_dso_path(cmd, dmeventd_thin_library_CFG);
 
-		if ((reg_segtypes[i].flags & SEG_THIN_POOL) &&
+		if ((_reg_segtypes[i].flags & SEG_THIN_POOL) &&
 		    segtype->dso)
 			segtype->flags |= SEG_MONITORED;
 #  endif /* DMEVENTD */

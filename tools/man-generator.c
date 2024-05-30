@@ -114,7 +114,7 @@ static const size_t _LONG_LINE = 42; /* length of line that neededs .nh .. .hy *
 
 static const char *_lvt_enum_to_name(int lvt_enum)
 {
-	return lv_types[lvt_enum].name;
+	return _lv_types[lvt_enum].name;
 }
 
 static int _get_val_enum(const struct command_name *cname, int opt_enum)

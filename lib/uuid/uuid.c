@@ -122,7 +122,7 @@ int id_write_format(const struct id *id, char *buffer, size_t size)
 {
 	int i, tot;
 
-	static const unsigned group_size[] = { 6, 4, 4, 4, 4, 4, 6 };
+	static const unsigned _group_size[] = { 6, 4, 4, 4, 4, 4, 6 };
 
 	assert(ID_LEN == 32);
 
@@ -140,9 +140,9 @@ int id_write_format(const struct id *id, char *buffer, size_t size)
 	}
 
 	for (i = 0, tot = 0; i < 7; i++) {
-		memcpy(buffer, id->uuid + tot, group_size[i]);
-		buffer += group_size[i];
-		tot += group_size[i];
+		memcpy(buffer, id->uuid + tot, _group_size[i]);
+		buffer += _group_size[i];
+		tot += _group_size[i];
 		*buffer++ = '-';
 	}
 

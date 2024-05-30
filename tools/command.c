@@ -54,7 +54,7 @@ static const struct opt_name opt_names[ARG_COUNT + 1] = {
 
 /* create table of lv property names, e.g. lv_is_foo, and corresponding enum from lv_props.h */
 
-static const struct lv_prop lv_props[LVP_COUNT + 1] = {
+static const struct lv_prop _lv_props[LVP_COUNT + 1] = {
 	{ "" },
 #define lvp(a) { "lv_" # a, a ## _LVP },
 #include "lv_props.h"
@@ -63,7 +63,7 @@ static const struct lv_prop lv_props[LVP_COUNT + 1] = {
 
 /* create table of lv type names, e.g. linear and corresponding enum from lv_types.h */
 
-static const struct lv_type lv_types[LVT_COUNT + 1] = {
+static const struct lv_type _lv_types[LVT_COUNT + 1] = {
 	{ "" },
 #define lvt(a) { # a, a ## _LVT },
 #include "lv_types.h"
@@ -116,14 +116,14 @@ const struct lv_prop *get_lv_prop(int lvp_enum)
 {
 	if (!lvp_enum)
 		return NULL;
-	return &lv_props[lvp_enum];
+	return &_lv_props[lvp_enum];
 }
 
 const struct lv_type *get_lv_type(int lvt_enum)
 {
 	if (!lvt_enum)
 		return NULL;
-	return &lv_types[lvt_enum];
+	return &_lv_types[lvt_enum];
 }
 
 #endif /* MAN_PAGE_GENERATOR */
@@ -317,8 +317,8 @@ static int _lvp_name_to_enum(struct command *cmd, const char *str)
 	int i;
 
 	for (i = 1; i < LVP_COUNT; i++) {
-		if (!strcmp(str, lv_props[i].name))
-			return lv_props[i].lvp_enum;
+		if (!strcmp(str, _lv_props[i].name))
+			return _lv_props[i].lvp_enum;
 	}
 
 	log_error("Parsing command defs: unknown lv property %s.", str);
@@ -333,8 +333,8 @@ static int _lvt_name_to_enum(struct command *cmd, const char *str)
 	int i;
 
 	for (i = 1; i < LVT_COUNT; i++) {
-		if (!strcmp(str, lv_types[i].name))
-			return lv_types[i].lvt_enum;
+		if (!strcmp(str, _lv_types[i].name))
+			return _lv_types[i].lvt_enum;
 	}
 
 	log_error("Parsing command defs: unknown lv type %s.", str);

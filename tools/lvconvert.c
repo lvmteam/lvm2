@@ -6173,8 +6173,10 @@ static int _check_writecache_memory(struct cmd_context *cmd, struct logical_volu
 	while (fgets(line, sizeof(line), fp)) {
 		if (strncmp(line, "MemTotal:", 9))
 			continue;
-		if (sscanf(line, "%*s%llu%*s", &proc_mem_kb) != 1)
+		if (sscanf(line, "%*s%llu%*s", &proc_mem_kb) != 1) {
+			stack;
 			break;
+		}
 		break;
 	}
 	(void)fclose(fp);
