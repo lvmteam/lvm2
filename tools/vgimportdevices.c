@@ -15,7 +15,6 @@
 #include "tools.h"
 #include "lib/cache/lvmcache.h"
 #include "lib/device/device_id.h"
-#include "device_mapper/misc/dm-ioctl.h"
 #include "lib/activate/activate.h"
 /* coverity[unnecessary_header] needed for MuslC */
 #include <sys/file.h>

@@ -16,7 +16,6 @@
 #include "tools.h"
 #include "lib/device/device_id.h"
 #include "lib/label/hints.h"
-#include "device_mapper/misc/dm-ioctl.h"
 
 struct vgchange_params {
 	int lock_start_count;
