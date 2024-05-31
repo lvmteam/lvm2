@@ -33,14 +33,14 @@ struct radix_tree *radix_tree_create(radix_value_dtr dtr, void *dtr_context);
 void radix_tree_destroy(struct radix_tree *rt);
 
 unsigned radix_tree_size(struct radix_tree *rt);
-bool radix_tree_insert(struct radix_tree *rt, uint8_t *kb, uint8_t *ke, union radix_value v);
-bool radix_tree_remove(struct radix_tree *rt, uint8_t *kb, uint8_t *ke);
+bool radix_tree_insert(struct radix_tree *rt, const void *key, size_t keylen, union radix_value v);
+bool radix_tree_remove(struct radix_tree *rt, const void *key, size_t keylen);
 
 // Returns the number of values removed
-unsigned radix_tree_remove_prefix(struct radix_tree *rt, uint8_t *prefix_b, uint8_t *prefix_e);
+unsigned radix_tree_remove_prefix(struct radix_tree *rt, const void *prefix, size_t prefix_len);
 
-bool radix_tree_lookup(struct radix_tree *rt,
-		       uint8_t *kb, uint8_t *ke, union radix_value *result);
+bool radix_tree_lookup(struct radix_tree *rt, const void *key, size_t keylen,
+		       union radix_value *result);
 
 // The radix tree stores entries in lexicographical order.  Which means
 // we can iterate entries, in order.  Or iterate entries with a particular
@@ -48,10 +48,10 @@ bool radix_tree_lookup(struct radix_tree *rt,
 struct radix_tree_iterator {
 	// Returns false if the iteration should end.
 	bool (*visit)(struct radix_tree_iterator *it,
-                      uint8_t *kb, uint8_t *ke, union radix_value v);
+		      const void *key, size_t keylen, union radix_value v);
 };
 
-void radix_tree_iterate(struct radix_tree *rt, uint8_t *kb, uint8_t *ke,
+void radix_tree_iterate(struct radix_tree *rt, const void *key, size_t keylen,
 			struct radix_tree_iterator *it);
 
 // Checks that some constraints on the shape of the tree are

@@ -104,7 +104,7 @@ unsigned radix_tree_size(struct radix_tree *rt)
 	return _count(rt->root);
 }
 
-static struct node **_lookup(struct node **pn, uint8_t *kb, uint8_t *ke)
+static struct node **_lookup(struct node **pn, const uint8_t *kb, const uint8_t *ke)
 {
 	struct node *n = *pn;
 
@@ -121,7 +121,7 @@ static struct node **_lookup(struct node **pn, uint8_t *kb, uint8_t *ke)
 		return _lookup(&n->center, kb + 1, ke);
 }
 
-static bool _insert(struct node **pn, uint8_t *kb, uint8_t *ke, union radix_value v)
+static bool _insert(struct node **pn, const uint8_t *kb, const uint8_t *ke, union radix_value v)
 {
 	struct node *n = *pn;
 
@@ -150,14 +150,19 @@ static bool _insert(struct node **pn, uint8_t *kb, uint8_t *ke, union radix_valu
 		return _insert(&n->center, kb + 1, ke, v);
 }
 
-bool radix_tree_insert(struct radix_tree *rt, uint8_t *kb, uint8_t *ke,
+bool radix_tree_insert(struct radix_tree *rt, const void *key, size_t keylen,
 		       union radix_value v)
 {
+	const uint8_t *kb = key;
+	const uint8_t *ke = kb + keylen;
+
 	return _insert(&rt->root, kb, ke, v);
 }
 
-bool radix_tree_remove(struct radix_tree *rt, uint8_t *kb, uint8_t *ke)
+bool radix_tree_remove(struct radix_tree *rt, const void *key, size_t keylen)
 {
+	const uint8_t *kb = key;
+	const uint8_t *ke = kb + keylen;
 	struct node **pn = _lookup(&rt->root, kb, ke);
 	struct node *n = *pn;
 
@@ -180,8 +185,10 @@ bool radix_tree_remove(struct radix_tree *rt, uint8_t *kb, uint8_t *ke)
 	return true;
 }
 
-unsigned radix_tree_remove_prefix(struct radix_tree *rt, uint8_t *kb, uint8_t *ke)
+unsigned radix_tree_remove_prefix(struct radix_tree *rt, const void *key, size_t keylen)
 {
+	const uint8_t *kb = key;
+	const uint8_t *ke = kb + keylen;
 	struct node **pn;
 	unsigned count;
 
@@ -195,9 +202,11 @@ unsigned radix_tree_remove_prefix(struct radix_tree *rt, uint8_t *kb, uint8_t *k
 	return count;
 }
 
-bool radix_tree_lookup(struct radix_tree *rt, uint8_t *kb, uint8_t *ke,
+bool radix_tree_lookup(struct radix_tree *rt, const void *key, size_t keylen,
 		       union radix_value *result)
 {
+	const uint8_t *kb = key;
+	const uint8_t *ke = kb + keylen;
 	struct node **pn = _lookup(&rt->root, kb, ke);
 	struct node *n = *pn;
 
@@ -218,15 +227,18 @@ static void _iterate(struct node *n, struct radix_tree_iterator *it)
 
 	if (n->has_value)
 		// FIXME: fill out the key
-		it->visit(it, NULL, NULL, n->value);
+		it->visit(it, NULL, 0, n->value);
 
 	_iterate(n->center, it);
 	_iterate(n->right, it);
 }
 
-void radix_tree_iterate(struct radix_tree *rt, uint8_t *kb, uint8_t *ke,
+void radix_tree_iterate(struct radix_tree *rt, const void *key, size_t keylen,
                         struct radix_tree_iterator *it)
 {
+	const uint8_t *kb = key;
+	const uint8_t *ke = kb + keylen;
+
 	if (kb == ke)
 		_iterate(rt->root, it);
 
@@ -236,7 +248,7 @@ void radix_tree_iterate(struct radix_tree *rt, uint8_t *kb, uint8_t *ke,
 
 		if (n) {
 			if (n->has_value)
-				it->visit(it, NULL, NULL, n->value);
+				it->visit(it, NULL, 0, n->value);
 			_iterate(n->center, it);
 		}
 	}

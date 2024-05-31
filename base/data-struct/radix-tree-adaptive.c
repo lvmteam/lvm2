@@ -178,9 +178,9 @@ unsigned radix_tree_size(struct radix_tree *rt)
 	return rt->nr_entries;
 }
 
-static bool _insert(struct radix_tree *rt, struct value *v, uint8_t *kb, uint8_t *ke, union radix_value rv);
+static bool _insert(struct radix_tree *rt, struct value *v, const uint8_t *kb, const uint8_t *ke, union radix_value rv);
 
-static bool _insert_unset(struct radix_tree *rt, struct value *v, uint8_t *kb, uint8_t *ke, union radix_value rv)
+static bool _insert_unset(struct radix_tree *rt, struct value *v, const uint8_t *kb, const uint8_t *ke, union radix_value rv)
 {
 	unsigned len = ke - kb;
 
@@ -207,7 +207,7 @@ static bool _insert_unset(struct radix_tree *rt, struct value *v, uint8_t *kb, u
 	return true;
 }
 
-static bool _insert_value(struct radix_tree *rt, struct value *v, uint8_t *kb, uint8_t *ke, union radix_value rv)
+static bool _insert_value(struct radix_tree *rt, struct value *v, const uint8_t *kb, const uint8_t *ke, union radix_value rv)
 {
 	unsigned len = ke - kb;
 
@@ -234,7 +234,7 @@ static bool _insert_value(struct radix_tree *rt, struct value *v, uint8_t *kb, u
 	return true;
 }
 
-static bool _insert_value_chain(struct radix_tree *rt, struct value *v, uint8_t *kb, uint8_t *ke, union radix_value rv)
+static bool _insert_value_chain(struct radix_tree *rt, struct value *v, const uint8_t *kb, const uint8_t *ke, union radix_value rv)
 {
 	struct value_chain *vc = v->value.ptr;
 	return _insert(rt, &vc->child, kb, ke, rv);
@@ -248,7 +248,7 @@ static unsigned min(unsigned lhs, unsigned rhs)
 		return rhs;
 }
 
-static bool _insert_prefix_chain(struct radix_tree *rt, struct value *v, uint8_t *kb, uint8_t *ke, union radix_value rv)
+static bool _insert_prefix_chain(struct radix_tree *rt, struct value *v, const uint8_t *kb, const uint8_t *ke, union radix_value rv)
 {
 	struct prefix_chain *pc = v->value.ptr;
 
@@ -313,7 +313,7 @@ static bool _insert_prefix_chain(struct radix_tree *rt, struct value *v, uint8_t
 	return true;
 }
 
-static bool _insert_node4(struct radix_tree *rt, struct value *v, uint8_t *kb, uint8_t *ke, union radix_value rv)
+static bool _insert_node4(struct radix_tree *rt, struct value *v, const uint8_t *kb, const uint8_t *ke, union radix_value rv)
 {
 	struct node4 *n4 = v->value.ptr;
 	if (n4->nr_entries == 4) {
@@ -343,7 +343,7 @@ static bool _insert_node4(struct radix_tree *rt, struct value *v, uint8_t *kb, u
 	return true;
 }
 
-static bool _insert_node16(struct radix_tree *rt, struct value *v, uint8_t *kb, uint8_t *ke, union radix_value rv)
+static bool _insert_node16(struct radix_tree *rt, struct value *v, const uint8_t *kb, const uint8_t *ke, union radix_value rv)
 {
 	struct node16 *n16 = v->value.ptr;
 
@@ -382,7 +382,7 @@ static bool _insert_node16(struct radix_tree *rt, struct value *v, uint8_t *kb, 
 	return true;
 }
 
-static bool _insert_node48(struct radix_tree *rt, struct value *v, uint8_t *kb, uint8_t *ke, union radix_value rv)
+static bool _insert_node48(struct radix_tree *rt, struct value *v, const uint8_t *kb, const uint8_t *ke, union radix_value rv)
 {
 	struct node48 *n48 = v->value.ptr;
 	if (n48->nr_entries == 48) {
@@ -417,7 +417,7 @@ static bool _insert_node48(struct radix_tree *rt, struct value *v, uint8_t *kb, 
 	return true;
 }
 
-static bool _insert_node256(struct radix_tree *rt, struct value *v, uint8_t *kb, uint8_t *ke, union radix_value rv)
+static bool _insert_node256(struct radix_tree *rt, struct value *v, const uint8_t *kb, const uint8_t *ke, union radix_value rv)
 {
 	struct node256 *n256 = v->value.ptr;
 	bool r, was_unset = n256->values[*kb].type == UNSET;
@@ -430,7 +430,7 @@ static bool _insert_node256(struct radix_tree *rt, struct value *v, uint8_t *kb,
 }
 
 // FIXME: the tree should not be touched if insert fails (eg, OOM)
-static bool _insert(struct radix_tree *rt, struct value *v, uint8_t *kb, uint8_t *ke, union radix_value rv)
+static bool _insert(struct radix_tree *rt, struct value *v, const uint8_t *kb, const uint8_t *ke, union radix_value rv)
 {
 	if (kb == ke) {
 		if (v->type == UNSET) {
@@ -487,10 +487,10 @@ static bool _insert(struct radix_tree *rt, struct value *v, uint8_t *kb, uint8_t
 
 struct lookup_result {
 	struct value *v;
-	uint8_t *kb;
+	const uint8_t *kb;
 };
 
-static struct lookup_result _lookup_prefix(struct value *v, uint8_t *kb, uint8_t *ke)
+static struct lookup_result _lookup_prefix(struct value *v, const uint8_t *kb, const uint8_t *ke)
 {
 	unsigned i;
 	struct value_chain *vc;
@@ -555,8 +555,10 @@ static struct lookup_result _lookup_prefix(struct value *v, uint8_t *kb, uint8_t
 	return (struct lookup_result) {.v = v, .kb = kb};
 }
 
-bool radix_tree_insert(struct radix_tree *rt, uint8_t *kb, uint8_t *ke, union radix_value rv)
+bool radix_tree_insert(struct radix_tree *rt, const void *key, size_t keylen, union radix_value rv)
 {
+	const uint8_t *kb = key;
+	const uint8_t *ke = kb + keylen;
 	struct lookup_result lr = _lookup_prefix(&rt->root, kb, ke);
 	return _insert(rt, lr.v, lr.kb, ke, rv);
 }
@@ -639,7 +641,7 @@ static void _erase_elt(void *array, size_t obj_size, unsigned count, unsigned id
 	memset(((uint8_t *) array) + (count - 1) * obj_size, 0, obj_size);
 }
 
-static bool _remove(struct radix_tree *rt, struct value *root, uint8_t *kb, uint8_t *ke)
+static bool _remove(struct radix_tree *rt, struct value *root, const uint8_t *kb, const uint8_t *ke)
 {
 	bool r;
 	unsigned i, j;
@@ -775,9 +777,12 @@ static bool _remove(struct radix_tree *rt, struct value *root, uint8_t *kb, uint
 	return false;
 }
 
-bool radix_tree_remove(struct radix_tree *rt, uint8_t *key_begin, uint8_t *key_end)
+bool radix_tree_remove(struct radix_tree *rt, const void *key, size_t keylen)
 {
-	if (_remove(rt, &rt->root, key_begin, key_end)) {
+	const uint8_t *kb = key;
+	const uint8_t *ke = kb + keylen;
+
+	if (_remove(rt, &rt->root, kb, ke)) {
 		rt->nr_entries--;
 		return true;
 	}
@@ -787,13 +792,13 @@ bool radix_tree_remove(struct radix_tree *rt, uint8_t *key_begin, uint8_t *key_e
 
 //----------------------------------------------------------------
 
-static bool _prefix_chain_matches(struct lookup_result *lr, uint8_t *ke)
+static bool _prefix_chain_matches(const struct lookup_result *lr, const uint8_t *ke)
 {
 	// It's possible the top node is a prefix chain, and
 	// the remaining key matches part of it.
 	if (lr->v->type == PREFIX_CHAIN) {
 		unsigned i, rlen = ke - lr->kb;
-		struct prefix_chain *pc = lr->v->value.ptr;
+		const struct prefix_chain *pc = lr->v->value.ptr;
 		if (rlen < pc->len) {
 			for (i = 0; i < rlen; i++)
 				if (pc->prefix[i] != lr->kb[i])
@@ -805,7 +810,7 @@ static bool _prefix_chain_matches(struct lookup_result *lr, uint8_t *ke)
 	return false;
 }
 
-static bool _remove_subtree(struct radix_tree *rt, struct value *root, uint8_t *kb, uint8_t *ke, unsigned *count)
+static bool _remove_subtree(struct radix_tree *rt, struct value *root, const uint8_t *kb, const uint8_t *ke, unsigned *count)
 {
 	bool r;
 	unsigned i, j, len;
@@ -931,8 +936,10 @@ static bool _remove_subtree(struct radix_tree *rt, struct value *root, uint8_t *
 	return false;
 }
 
-unsigned radix_tree_remove_prefix(struct radix_tree *rt, uint8_t *kb, uint8_t *ke)
+unsigned radix_tree_remove_prefix(struct radix_tree *rt, const void *prefix, size_t prefix_len)
 {
+	const uint8_t *kb = prefix;
+	const uint8_t *ke = kb + prefix_len;
 	unsigned count = 0;
 
 	if (_remove_subtree(rt, &rt->root, kb, ke, &count))
@@ -943,9 +950,11 @@ unsigned radix_tree_remove_prefix(struct radix_tree *rt, uint8_t *kb, uint8_t *k
 
 //----------------------------------------------------------------
 
-bool radix_tree_lookup(struct radix_tree *rt,
-		       uint8_t *kb, uint8_t *ke, union radix_value *result)
+bool radix_tree_lookup(struct radix_tree *rt, const void *key, size_t keylen,
+		       union radix_value *result)
 {
+	const uint8_t *kb = key;
+	const uint8_t *ke = kb + keylen;
 	struct value_chain *vc;
 	struct lookup_result lr = _lookup_prefix(&rt->root, kb, ke);
 	if (lr.kb == ke) {
@@ -984,11 +993,11 @@ static bool _iterate(struct value *v, struct radix_tree_iterator *it)
 		break;
 
 	case VALUE:
-        	return it->visit(it, NULL, NULL, v->value);
+        	return it->visit(it, NULL, 0, v->value);
 
 	case VALUE_CHAIN:
 		vc = v->value.ptr;
-		return it->visit(it, NULL, NULL, vc->value) && _iterate(&vc->child, it);
+		return it->visit(it, NULL, 0, vc->value) && _iterate(&vc->child, it);
 
 	case PREFIX_CHAIN:
 		pc = v->value.ptr;
@@ -1027,9 +1036,11 @@ static bool _iterate(struct value *v, struct radix_tree_iterator *it)
 	return false;
 }
 
-void radix_tree_iterate(struct radix_tree *rt, uint8_t *kb, uint8_t *ke,
+void radix_tree_iterate(struct radix_tree *rt, const void *key, size_t keylen,
 			struct radix_tree_iterator *it)
 {
+	const uint8_t *kb = key;
+	const uint8_t *ke = kb + keylen;
 	struct lookup_result lr = _lookup_prefix(&rt->root, kb, ke);
 	if (lr.kb == ke || _prefix_chain_matches(&lr, ke))
 		(void) _iterate(lr.v, it);

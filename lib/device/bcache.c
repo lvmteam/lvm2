@@ -711,7 +711,7 @@ static struct block *_block_lookup(struct bcache *cache, int di, uint64_t i)
 	k.parts.di = di;
 	k.parts.b = i;
 
-	if (radix_tree_lookup(cache->rtree, k.bytes, k.bytes + sizeof(k.bytes), &v))
+	if (radix_tree_lookup(cache->rtree, k.bytes, sizeof(k.bytes), &v))
 		return v.ptr;
 
 	return NULL;
@@ -726,7 +726,7 @@ static bool _block_insert(struct block *b)
         k.parts.b = b->index;
         v.ptr = b;
 
-	return radix_tree_insert(b->cache->rtree, k.bytes, k.bytes + sizeof(k.bytes), v);
+	return radix_tree_insert(b->cache->rtree, k.bytes, sizeof(k.bytes), v);
 }
 
 static void _block_remove(struct block *b)
@@ -736,7 +736,7 @@ static void _block_remove(struct block *b)
         k.parts.di = b->di;
         k.parts.b = b->index;
 
-	(void) radix_tree_remove(b->cache->rtree, k.bytes, k.bytes + sizeof(k.bytes));
+	(void) radix_tree_remove(b->cache->rtree, k.bytes, sizeof(k.bytes));
 }
 
 //----------------------------------------------------------------
@@ -1353,7 +1353,7 @@ struct invalidate_iterator {
 };
 
 static bool _writeback_v(struct radix_tree_iterator *it,
-                         uint8_t *kb, uint8_t *ke, union radix_value v)
+                         const void *kb, size_t keylen, union radix_value v)
 {
 	struct block *b = v.ptr;
 
@@ -1364,7 +1364,7 @@ static bool _writeback_v(struct radix_tree_iterator *it,
 }
 
 static bool _invalidate_v(struct radix_tree_iterator *it,
-                          uint8_t *kb, uint8_t *ke, union radix_value v)
+                          const void *kb, size_t keylen, union radix_value v)
 {
 	struct block *b = v.ptr;
 	struct invalidate_iterator *iit = container_of(it, struct invalidate_iterator, it);
@@ -1399,16 +1399,16 @@ bool bcache_invalidate_di(struct bcache *cache, int di)
 	k.parts.di = di;
 
 	it.it.visit = _writeback_v;
-	radix_tree_iterate(cache->rtree, k.bytes, k.bytes + sizeof(k.parts.di), &it.it);
+	radix_tree_iterate(cache->rtree, k.bytes, sizeof(k.parts.di), &it.it);
 
 	_wait_all(cache);
 
 	it.success = true;
 	it.it.visit = _invalidate_v;
-	radix_tree_iterate(cache->rtree, k.bytes, k.bytes + sizeof(k.parts.di), &it.it);
+	radix_tree_iterate(cache->rtree, k.bytes, sizeof(k.parts.di), &it.it);
 
 	if (it.success)
-		(void) radix_tree_remove_prefix(cache->rtree, k.bytes, k.bytes + sizeof(k.parts.di));
+		(void) radix_tree_remove_prefix(cache->rtree, k.bytes, sizeof(k.parts.di));
 
 	return it.success;
 }
@@ -1416,7 +1416,7 @@ bool bcache_invalidate_di(struct bcache *cache, int di)
 //----------------------------------------------------------------
 
 static bool _abort_v(struct radix_tree_iterator *it,
-                     uint8_t *kb, uint8_t *ke, union radix_value v)
+                     const void *kb, size_t keylen, union radix_value v)
 {
 	struct block *b = v.ptr;
 
@@ -1442,8 +1442,8 @@ void bcache_abort_di(struct bcache *cache, int di)
 	k.parts.di = di;
 
 	it.visit = _abort_v;
-	radix_tree_iterate(cache->rtree, k.bytes, k.bytes + sizeof(k.parts.di), &it);
-	(void) radix_tree_remove_prefix(cache->rtree, k.bytes, k.bytes + sizeof(k.parts.di));
+	radix_tree_iterate(cache->rtree, k.bytes, sizeof(k.parts.di), &it);
+	(void) radix_tree_remove_prefix(cache->rtree, k.bytes, sizeof(k.parts.di));
 }
 
 //----------------------------------------------------------------
