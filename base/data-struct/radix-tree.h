@@ -46,13 +46,13 @@ bool radix_tree_lookup(struct radix_tree *rt,
 // we can iterate entries, in order.  Or iterate entries with a particular
 // prefix.
 struct radix_tree_iterator {
-        // Returns false if the iteration should end.
+	// Returns false if the iteration should end.
 	bool (*visit)(struct radix_tree_iterator *it,
                       uint8_t *kb, uint8_t *ke, union radix_value v);
 };
 
 void radix_tree_iterate(struct radix_tree *rt, uint8_t *kb, uint8_t *ke,
-                        struct radix_tree_iterator *it);
+			struct radix_tree_iterator *it);
 
 // Checks that some constraints on the shape of the tree are
 // being held.  For debug only.

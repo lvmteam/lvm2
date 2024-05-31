@@ -1,5 +1,5 @@
 // Copyright (C) 2018 Red Hat, Inc. All rights reserved.
-// 
+//
 // This file is part of LVM2.
 //
 // This copyrighted material is made available to anyone wishing to use,
@@ -41,8 +41,7 @@ struct radix_tree {
 	struct node *root;
 };
 
-struct radix_tree *
-radix_tree_create(radix_value_dtr dtr, void *dtr_context)
+struct radix_tree *radix_tree_create(radix_value_dtr dtr, void *dtr_context)
 {
 	struct radix_tree *rt = zalloc(sizeof(*rt));
 
@@ -151,7 +150,8 @@ static bool _insert(struct node **pn, uint8_t *kb, uint8_t *ke, union radix_valu
 		return _insert(&n->center, kb + 1, ke, v);
 }
 
-bool radix_tree_insert(struct radix_tree *rt, uint8_t *kb, uint8_t *ke, union radix_value v)
+bool radix_tree_insert(struct radix_tree *rt, uint8_t *kb, uint8_t *ke,
+		       union radix_value v)
 {
 	return _insert(&rt->root, kb, ke, v);
 }
@@ -164,22 +164,20 @@ bool radix_tree_remove(struct radix_tree *rt, uint8_t *kb, uint8_t *ke)
 	if (!n || !n->has_value)
 		return false;
 
-	else {
-		if (rt->dtr)
-			rt->dtr(rt->dtr_context, n->value);
+	if (rt->dtr)
+	    rt->dtr(rt->dtr_context, n->value);
 
-		if (n->left || n->center || n->right) {
-			n->has_value = false;
-			return true;
+	if (n->left || n->center || n->right) {
+	    n->has_value = false;
+	    return true;
 
-		} else {
-			// FIXME: delete parent if this was the last entry
-			free(n);
-			*pn = NULL;
-		}
-
-		return true;
 	}
+
+	// FIXME: delete parent if this was the last entry
+	free(n);
+	*pn = NULL;
+
+	return true;
 }
 
 unsigned radix_tree_remove_prefix(struct radix_tree *rt, uint8_t *kb, uint8_t *ke)
@@ -197,8 +195,8 @@ unsigned radix_tree_remove_prefix(struct radix_tree *rt, uint8_t *kb, uint8_t *k
 	return count;
 }
 
-bool
-radix_tree_lookup(struct radix_tree *rt, uint8_t *kb, uint8_t *ke, union radix_value *result)
+bool radix_tree_lookup(struct radix_tree *rt, uint8_t *kb, uint8_t *ke,
+		       union radix_value *result)
 {
 	struct node **pn = _lookup(&rt->root, kb, ke);
 	struct node *n = *pn;
@@ -206,8 +204,9 @@ radix_tree_lookup(struct radix_tree *rt, uint8_t *kb, uint8_t *ke, union radix_v
 	if (n && n->has_value) {
 		*result = n->value;
 		return true;
-	} else
-		return false;
+	}
+
+	return false;
 }
 
 static void _iterate(struct node *n, struct radix_tree_iterator *it)
