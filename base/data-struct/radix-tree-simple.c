@@ -18,6 +18,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 
 //----------------------------------------------------------------
 // This implementation is based around nested binary trees.  Very
@@ -37,6 +38,7 @@ struct node {
 struct radix_tree {
 	radix_value_dtr dtr;
 	void *dtr_context;
+	unsigned nr_entries;
 
 	struct node *root;
 };
@@ -156,7 +158,11 @@ bool radix_tree_insert(struct radix_tree *rt, const void *key, size_t keylen,
 	const uint8_t *kb = key;
 	const uint8_t *ke = kb + keylen;
 
-	return _insert(&rt->root, kb, ke, v);
+	if (!_insert(&rt->root, kb, ke, v))
+		return false;
+
+	rt->nr_entries++;
+	return true;
 }
 
 bool radix_tree_remove(struct radix_tree *rt, const void *key, size_t keylen)
@@ -168,6 +174,8 @@ bool radix_tree_remove(struct radix_tree *rt, const void *key, size_t keylen)
 
 	if (!n || !n->has_value)
 		return false;
+
+	rt->nr_entries--;
 
 	if (rt->dtr)
 	    rt->dtr(rt->dtr_context, n->value);
@@ -259,8 +267,32 @@ bool radix_tree_is_well_formed(struct radix_tree *rt)
 	return true;
 }
 
+static void _dump(FILE *out, struct node *n, unsigned indent)
+{
+	unsigned i;
+
+	if (!n)
+		return;
+
+	_dump(out, n->left, indent + 1);
+
+	for (i = 0; i < 2 * indent; i++)
+		fprintf(out, " ");
+
+	if (n->has_value) {
+		fprintf(out, "value: %llu\n", n->value.n);
+	} else {
+		fprintf(out, "key: '%c' [0x%02x] %u\n",
+			isprint(n->key) ? n->key : ' ', n->key, indent);
+	}
+
+	_dump(out, n->center, indent + 1);
+	_dump(out, n->right, indent + 1);
+}
+
 void radix_tree_dump(struct radix_tree *rt, FILE *out)
 {
+	_dump(out, rt->root, 0);
 }
 
 //----------------------------------------------------------------

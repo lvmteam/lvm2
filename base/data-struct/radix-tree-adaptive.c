@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 //----------------------------------------------------------------
 
@@ -500,7 +501,7 @@ static struct lookup_result _lookup_prefix(struct value *v, const uint8_t *kb, c
 	struct node48 *n48;
 	struct node256 *n256;
 
-	if (kb == ke)
+	if (kb == ke || !kb) /* extra check for !kb for coverity */
 		return (struct lookup_result) {.v = v, .kb = kb};
 
 	switch (v->type) {
@@ -1218,6 +1219,7 @@ static void _dump(FILE *out, struct value v, unsigned indent)
 	struct node16 *n16;
 	struct node48 *n48;
 	struct node256 *n256;
+	unsigned printable;
 
 	if (v.type == UNSET)
 		return;
@@ -1242,9 +1244,22 @@ static void _dump(FILE *out, struct value v, unsigned indent)
 
 	case PREFIX_CHAIN:
 		pc = v.value.ptr;
-		fprintf(out, "<prefix: ");
+		fprintf(out, "<prefix(%u): ", pc->len);
+		printable = 1;
 		for (i = 0; i < pc->len; i++)
-			fprintf(out, "%x.", (unsigned) *(pc->prefix + i));
+			if (!isprint(pc->prefix[i])) {
+				printable = 0;
+				break;
+			}
+		if (printable)
+			fputc('"', out);
+		for (i = 0; i < pc->len; i++)
+			if (printable)
+				fprintf(out, "%c", pc->prefix[i]);
+			else
+				fprintf(out, "%02x.", (unsigned) *(pc->prefix + i));
+		if (printable)
+			fputc('"', out);
 		fprintf(out, ">\n");
 		_dump(out, pc->child, indent + 1);
 		break;
@@ -1253,7 +1268,7 @@ static void _dump(FILE *out, struct value v, unsigned indent)
 		n4 = v.value.ptr;
 		fprintf(out, "<n4: ");
 		for (i = 0; i < n4->nr_entries; i++)
-			fprintf(out, "%x ", (unsigned) n4->keys[i]);
+			fprintf(out, "%02x ", (unsigned) n4->keys[i]);
 		fprintf(out, ">\n");
 
 		for (i = 0; i < n4->nr_entries; i++)
@@ -1264,7 +1279,7 @@ static void _dump(FILE *out, struct value v, unsigned indent)
 		n16 = v.value.ptr;
 		fprintf(out, "<n16: ");
 		for (i = 0; i < n16->nr_entries; i++)
-			fprintf(out, "%x ", (unsigned) n16->keys[i]);
+			fprintf(out, "%02x ", (unsigned) n16->keys[i]);
 		fprintf(out, ">\n");
 
 		for (i = 0; i < n16->nr_entries; i++)
@@ -1276,7 +1291,7 @@ static void _dump(FILE *out, struct value v, unsigned indent)
 		fprintf(out, "<n48: ");
 		for (i = 0; i < 256; i++)
 			if (n48->keys[i] < 48)
-				fprintf(out, "%x ", i);
+				fprintf(out, "%02x ", i);
 		fprintf(out, ">\n");
 
 		for (i = 0; i < n48->nr_entries; i++) {
@@ -1290,7 +1305,7 @@ static void _dump(FILE *out, struct value v, unsigned indent)
 		fprintf(out, "<n256: ");
 		for (i = 0; i < 256; i++)
 			if (n256->values[i].type != UNSET)
-				fprintf(out, "%x ", i);
+				fprintf(out, "%02x ", i);
 		fprintf(out, ">\n");
 
 		for (i = 0; i < 256; i++)
