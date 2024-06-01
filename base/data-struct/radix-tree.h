@@ -59,6 +59,19 @@ void radix_tree_iterate(struct radix_tree *rt, const void *key, size_t keylen,
 bool radix_tree_is_well_formed(struct radix_tree *rt);
 void radix_tree_dump(struct radix_tree *rt, FILE *out);
 
+// Shortcut for ptr value return
+// Note: if value would be NULL, it's same result for not/found case.
+static inline void *radix_tree_lookup_ptr(struct radix_tree *rt, const void *key, size_t keylen)
+{
+	union radix_value v;
+	return radix_tree_lookup(rt, key, keylen, &v) ? v.ptr : NULL;
+}
+
+static inline bool radix_tree_insert_ptr(struct radix_tree *rt, const void *key, size_t keylen, void *ptr)
+{
+	union radix_value v = { .ptr = ptr };
+	return radix_tree_insert(rt, key, keylen, v);
+}
 //----------------------------------------------------------------
 
 #endif
