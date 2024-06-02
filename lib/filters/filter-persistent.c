@@ -14,12 +14,13 @@
  */
 
 #include "base/memory/zalloc.h"
+#include "base/data-struct/radix-tree.h"
 #include "lib/misc/lib.h"
 #include "lib/filters/filter.h"
 #include "lib/config/config.h"
 
 struct pfilter {
-	struct dm_hash_table *devices;
+	struct radix_tree *devices;
 	struct dev_filter *real;
 	struct dev_types *dt;
 };
@@ -56,9 +57,9 @@ static int _bad_device;
 static int _init_hash(struct pfilter *pf)
 {
 	if (pf->devices)
-		dm_hash_destroy(pf->devices);
+		radix_tree_destroy(pf->devices);
 
-	if (!(pf->devices = dm_hash_create(8191)))
+	if (!(pf->devices = radix_tree_create(NULL, NULL)))
 		return_0;
 
 	return 1;
@@ -70,10 +71,10 @@ static void _persistent_filter_wipe(struct cmd_context *cmd, struct dev_filter *
 	struct dm_str_list *sl;
 
 	if (!dev) {
-		dm_hash_wipe(pf->devices);
+		_init_hash(pf);
 	} else {
 		dm_list_iterate_items(sl, &dev->aliases)
-			dm_hash_remove(pf->devices, sl->str);
+			radix_tree_remove(pf->devices, sl->str, strlen(sl->str));
 	}
 }
 
@@ -83,6 +84,7 @@ static int _lookup_p(struct cmd_context *cmd, struct dev_filter *f, struct devic
 	void *l;
 	struct dm_str_list *sl;
 	int pass = 1;
+	const char *devname = dev_name(dev);
 
 	if (use_filter_name && strcmp(f->name, use_filter_name))
 		return pf->real->passes_filter(cmd, pf->real, dev, use_filter_name);
@@ -93,17 +95,17 @@ static int _lookup_p(struct cmd_context *cmd, struct dev_filter *f, struct devic
 		return 0;
 	}
 
-	l = dm_hash_lookup(pf->devices, dev_name(dev));
+	l = radix_tree_lookup_ptr(pf->devices, devname, strlen(devname));
 
 	/* Cached bad, skip dev */
 	if (l == PF_BAD_DEVICE) {
-		log_debug_devs("%s: filter cache skipping (cached bad)", dev_name(dev));
+		log_debug_devs("%s: filter cache skipping (cached bad).", devname);
 		return 0;
 	}
 
 	/* Cached good, use dev */
 	if (l == PF_GOOD_DEVICE) {
-		log_debug_devs("%s: filter cache using (cached good)", dev_name(dev));
+		log_debug_devs("%s: filter cache using (cached good).", devname);
 		return 1;
 	}
 
@@ -121,17 +123,17 @@ static int _lookup_p(struct cmd_context *cmd, struct dev_filter *f, struct devic
 		} else if (pass == 1) {
 			l = PF_GOOD_DEVICE;
 		} else {
-			log_error("Ignore invalid filter result %d %s", pass, dev_name(dev));
+			log_error("Ignore invalid filter result %d %s.", pass, devname);
 			pass = 1;
 			/* don't cache invalid result */
 			goto out;
 		}
 
 		if (!dev->filtered_flags) /* skipping reason already logged by filter */
-			log_debug_devs("filter caching %s %s", pass ? "good" : "bad", dev_name(dev));
+			log_debug_devs("filter caching %s %s.", pass ? "good" : "bad", devname);
 
 		dm_list_iterate_items(sl, &dev->aliases)
-			if (!dm_hash_insert(pf->devices, sl->str, l)) {
+			if (!radix_tree_insert_ptr(pf->devices, sl->str, strlen(sl->str), l)) {
 				log_error("Failed to hash alias to filter.");
 				return 0;
 			}
@@ -147,7 +149,7 @@ static void _persistent_destroy(struct dev_filter *f)
 	if (f->use_count)
 		log_error(INTERNAL_ERROR "Destroying persistent filter while in use %u times.", f->use_count);
 
-	dm_hash_destroy(pf->devices);
+	radix_tree_destroy(pf->devices);
 	pf->real->destroy(pf->real);
 	free(pf);
 	free(f);
@@ -190,7 +192,7 @@ struct dev_filter *persistent_filter_create(struct dev_types *dt, struct dev_fil
 
       bad:
 	if (pf->devices)
-		dm_hash_destroy(pf->devices);
+		radix_tree_destroy(pf->devices);
 	free(pf);
 	free(f);
 	return NULL;
