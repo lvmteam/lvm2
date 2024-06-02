@@ -886,12 +886,13 @@ int device_get_uuid(struct cmd_context *cmd, int major, int minor,
 {
 	struct dm_task *dmt;
 	struct dm_info info;
+	const struct dm_active_device *dm_dev;
 	const char *uuid;
 	int r = 0;
 
 	if (cmd->cache_dm_devs) {
-		if (dm_device_list_find_by_dev(cmd->cache_dm_devs, major, minor, NULL, &uuid)) {
-			dm_strncpy(uuid_buf, uuid, uuid_buf_size);
+		if ((dm_dev = dev_cache_get_dm_dev_by_devno(cmd, MKDEV(major, minor)))) {
+			dm_strncpy(uuid_buf, dm_dev->uuid, uuid_buf_size);
 			return 1;
 		}
 		uuid_buf[0] = 0;
@@ -1066,8 +1067,8 @@ int dev_manager_info(struct cmd_context *cmd,
 	dm_strncpy(old_style_dlid, dlid, sizeof(old_style_dlid));
 
 	if (cmd->cache_dm_devs &&
-	    !dm_device_list_find_by_uuid(cmd->cache_dm_devs, dlid, NULL) &&
-	    !dm_device_list_find_by_uuid(cmd->cache_dm_devs, old_style_dlid, NULL)) {
+	    !dev_cache_get_dm_dev_by_uuid(cmd, dlid) &&
+	    !dev_cache_get_dm_dev_by_uuid(cmd, old_style_dlid)) {
 		log_debug("Cached as inactive %s.", name);
 		if (dminfo)
 			memset(dminfo, 0, sizeof(*dminfo));
@@ -2431,7 +2432,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 {
 	char *dlid, *name;
 	struct dm_info info, info2;
-	const struct dm_active_device *dev;
+	const struct dm_active_device *dm_dev;
 
 	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
@@ -2440,14 +2441,14 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		return_0;
 
 	if (dm->cmd->cache_dm_devs) {
-		if (!dm_device_list_find_by_uuid(dm->cmd->cache_dm_devs, dlid, &dev)) {
+		if (!(dm_dev = dev_cache_get_dm_dev_by_uuid(dm->cmd, dlid))) {
 			log_debug("Cached as not present %s.", name);
 			return 1;
 		}
 		info = (struct dm_info) {
 			.exists = 1,
-			.major = dev->major,
-			.minor = dev->minor,
+			.major = MAJOR(dm_dev->devno),
+			.minor = MINOR(dm_dev->devno),
 		};
 		log_debug("Cached as present %s %s (%d:%d).",
 			  name, dlid, info.major, info.minor);

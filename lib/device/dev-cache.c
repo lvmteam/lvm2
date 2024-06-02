@@ -14,6 +14,7 @@
  */
 
 #include "base/memory/zalloc.h"
+#include "base/data-struct/radix-tree.h"
 #include "lib/misc/lib.h"
 #include "lib/device/dev-type.h"
 #include "lib/device/device_id.h"
@@ -23,6 +24,7 @@
 #include "device_mapper/misc/dm-ioctl.h"
 #include "lib/activate/activate.h"
 #include "lib/misc/lvm-string.h"
+#include "lib/mm/xlate.h"
 
 #ifdef UDEV_SYNC_SUPPORT
 #include <libudev.h>
@@ -49,6 +51,8 @@ static struct {
 	struct dm_hash_table *names;
 	struct dm_hash_table *vgid_index;
 	struct dm_hash_table *lvid_index;
+	struct radix_tree *dm_uuids;
+	struct radix_tree *dm_devnos;
 	struct btree *sysfs_only_devices; /* see comments in _get_device_for_sysfs_dev_name_using_devno */
 	struct btree *devices;
 	struct dm_regex *preferred_names_matcher;
@@ -452,6 +456,15 @@ out:
 		log_sys_debug("fclose", path);
 
 	return r;
+}
+
+/* Change bit ordering for devno to generate more compact bTree */
+static inline uint32_t _shuffle_devno(dev_t d)
+{
+	return cpu_to_be32(d);
+	//return (d & 0xff) << 24 | (d & 0xff00) << 8 | (d & 0xff0000) >> 8 | (d & 0xff000000) >> 24;
+	//return (d & 0xff000000) >> 24 | (d & 0xffff00) | ((d & 0xff) << 24);
+	//return (uint32_t) d;
 }
 
 static struct dm_list *_get_or_add_list_by_index_key(struct dm_hash_table *idx, const char *key)
@@ -1303,6 +1316,77 @@ out:
 	return r;
 }
 
+int dev_cache_update_dm_devs(struct cmd_context *cmd)
+{
+	struct dm_active_device *dm_dev;
+	unsigned devs_features;
+	uint32_t d;
+
+	dm_device_list_destroy(&cmd->cache_dm_devs);
+
+	if (_cache.dm_devnos) {
+		radix_tree_destroy(_cache.dm_devnos);
+		_cache.dm_devnos = NULL;
+	}
+
+	if (_cache.dm_uuids) {
+		radix_tree_destroy(_cache.dm_uuids);
+		_cache.dm_uuids = NULL;
+	}
+
+	if (!get_device_list(NULL, &cmd->cache_dm_devs, &devs_features))
+		return 1;
+
+	if (!(devs_features & DM_DEVICE_LIST_HAS_UUID)) {
+		/* Cache unusable with older kernels without UUIDs in LIST */
+		dm_device_list_destroy(&cmd->cache_dm_devs);
+		return 1;
+	}
+
+	if (!(_cache.dm_devnos = radix_tree_create(NULL, NULL)) ||
+	    !(_cache.dm_uuids = radix_tree_create(NULL, NULL))) {
+		return_0; // FIXME
+	}
+
+	/* Insert every active DM device into radix trees */
+	dm_list_iterate_items(dm_dev, cmd->cache_dm_devs) {
+		d = _shuffle_devno(dm_dev->devno);
+
+		if (!radix_tree_insert_ptr(_cache.dm_devnos, &d, sizeof(d), dm_dev))
+			return_0;
+
+		if (!radix_tree_insert_ptr(_cache.dm_uuids, dm_dev->uuid, strlen(dm_dev->uuid), dm_dev))
+			return_0;
+	}
+
+	//radix_tree_dump(_cache.dm_devnos, stdout);
+	//radix_tree_dump(_cache.dm_uuids, stdout);
+
+	return 1;
+}
+
+/* Find active DM device in devs array for given major:minor */
+const struct dm_active_device *
+dev_cache_get_dm_dev_by_devno(struct cmd_context *cmd, dev_t devno)
+{
+	uint32_t d = _shuffle_devno(devno);
+
+	if (!_cache.dm_devnos)
+		return NULL;
+
+	return radix_tree_lookup_ptr(_cache.dm_devnos, &d, sizeof(d));
+}
+
+/* Find active DM device in devs array for given DM UUID */
+const struct dm_active_device *
+dev_cache_get_dm_dev_by_uuid(struct cmd_context *cmd, const char *dm_uuid)
+{
+	if (!_cache.dm_uuids)
+		return NULL;
+
+	return radix_tree_lookup_ptr(_cache.dm_uuids, dm_uuid, strlen(dm_uuid));
+}
+
 int dev_cache_init(struct cmd_context *cmd)
 {
 	_cache.names = NULL;
@@ -1405,6 +1489,12 @@ int dev_cache_exit(void)
 
 	if (_cache.lvid_index)
 		dm_hash_destroy(_cache.lvid_index);
+
+	if (_cache.dm_devnos)
+		radix_tree_destroy(_cache.dm_devnos);
+
+	if (_cache.dm_uuids)
+		radix_tree_destroy(_cache.dm_uuids);
 
 	memset(&_cache, 0, sizeof(_cache));
 
