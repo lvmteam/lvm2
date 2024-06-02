@@ -19,3 +19,45 @@
 #endif
 
 //----------------------------------------------------------------
+
+struct visitor {
+	struct radix_tree_iterator it;
+	unsigned pos, nr_entries;
+	union radix_value *values;
+};
+
+static bool _visitor(struct radix_tree_iterator *it,
+		     const void *key, size_t keylen,
+		     union radix_value v)
+{
+	struct visitor *vt = container_of(it, struct visitor, it);
+
+	if (vt->pos >= vt->nr_entries)
+		return false;
+
+	vt->values[vt->pos++] = v;
+
+	return true;
+}
+
+bool radix_tree_values(struct radix_tree *rt, const void *key, size_t keylen,
+		       union radix_value **values, unsigned *nr_values)
+{
+	struct visitor vt = {
+		.it.visit = _visitor,
+		.nr_entries = rt->nr_entries,
+		.values = calloc(rt->nr_entries + 1, sizeof(union radix_value)),
+	};
+
+	if (vt.values) {
+		// build set of all values in current radix tree
+		radix_tree_iterate(rt, key, keylen, &vt.it);
+		*nr_values = vt.pos;
+		*values = vt.values;
+		return true;
+	}
+
+	return false;
+}
+
+//----------------------------------------------------------------

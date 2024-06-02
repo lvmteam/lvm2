@@ -54,6 +54,12 @@ struct radix_tree_iterator {
 void radix_tree_iterate(struct radix_tree *rt, const void *key, size_t keylen,
 			struct radix_tree_iterator *it);
 
+// Alternative traversing radix_tree.
+// Builds whole set all radix_tree  nr_values values.
+// After use, free(values).
+bool radix_tree_values(struct radix_tree *rt, const void *key, size_t keylen,
+		       union radix_value **values, unsigned *nr_values);
+
 // Checks that some constraints on the shape of the tree are
 // being held.  For debug only.
 bool radix_tree_is_well_formed(struct radix_tree *rt);
