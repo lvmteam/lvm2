@@ -978,15 +978,15 @@ bool radix_tree_lookup(struct radix_tree *rt, const void *key, size_t keylen,
 }
 
 // FIXME: build up the keys too
-static bool _iterate(struct value *v, struct radix_tree_iterator *it)
+static bool _iterate(struct radix_tree_iterator *it, const struct value *v)
 {
 	unsigned i;
-	struct value_chain *vc;
-	struct prefix_chain *pc;
-	struct node4 *n4;
-	struct node16 *n16;
-	struct node48 *n48;
-	struct node256 *n256;
+	const struct value_chain *vc;
+	const struct prefix_chain *pc;
+	const struct node4 *n4;
+	const struct node16 *n16;
+	const struct node48 *n48;
+	const struct node256 *n256;
 
 	switch (v->type) {
 	case UNSET:
@@ -994,41 +994,41 @@ static bool _iterate(struct value *v, struct radix_tree_iterator *it)
 		break;
 
 	case VALUE:
-        	return it->visit(it, NULL, 0, v->value);
+		return it->visit(it, NULL, 0, v->value);
 
 	case VALUE_CHAIN:
 		vc = v->value.ptr;
-		return it->visit(it, NULL, 0, vc->value) && _iterate(&vc->child, it);
+		return it->visit(it, NULL, 0, vc->value) && _iterate(it, &vc->child);
 
 	case PREFIX_CHAIN:
 		pc = v->value.ptr;
-		return _iterate(&pc->child, it);
+		return _iterate(it, &pc->child);
 
 	case NODE4:
-		n4 = (struct node4 *) v->value.ptr;
+		n4 = (const struct node4 *) v->value.ptr;
 		for (i = 0; i < n4->nr_entries; i++)
-			if (!_iterate(n4->values + i, it))
-        			return false;
+			if (!_iterate(it, n4->values + i))
+				return false;
 		return true;
 
 	case NODE16:
-		n16 = (struct node16 *) v->value.ptr;
+		n16 = (const struct node16 *) v->value.ptr;
 		for (i = 0; i < n16->nr_entries; i++)
-        		if (!_iterate(n16->values + i, it))
+			if (!_iterate(it, n16->values + i))
 				return false;
 		return true;
 
 	case NODE48:
-		n48 = (struct node48 *) v->value.ptr;
+		n48 = (const struct node48 *) v->value.ptr;
 		for (i = 0; i < n48->nr_entries; i++)
-        		if (!_iterate(n48->values + i, it))
+			if (!_iterate(it, n48->values + i))
 				return false;
 		return true;
 
 	case NODE256:
-		n256 = (struct node256 *) v->value.ptr;
+		n256 = (const struct node256 *) v->value.ptr;
 		for (i = 0; i < 256; i++)
-        		if (n256->values[i].type != UNSET && !_iterate(n256->values + i, it))
+			if (n256->values[i].type != UNSET && !_iterate(it, n256->values + i))
 				return false;
 		return true;
 	}
@@ -1044,7 +1044,7 @@ void radix_tree_iterate(struct radix_tree *rt, const void *key, size_t keylen,
 	const uint8_t *ke = kb + keylen;
 	struct lookup_result lr = _lookup_prefix(&rt->root, kb, ke);
 	if (lr.kb == ke || _prefix_chain_matches(&lr, ke))
-		(void) _iterate(lr.v, it);
+		(void) _iterate(it, lr.v);
 }
 
 //----------------------------------------------------------------
