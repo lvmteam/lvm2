@@ -717,9 +717,17 @@ struct KMsg : Source {
         unsigned long t;
         time_t tt;
         size_t len;
+        char *delimiter;
 
         buf[ *sz ] = 0;
-        if (sscanf( buf, "%u,%u,%lu,-;%n", &level, &num, &t, &pos ) == 3) {
+
+        delimiter = strchr( buf, ';' );
+        if ( !delimiter )
+            return;
+        pos = delimiter - buf + 1;
+        delimiter = 0;
+
+        if (sscanf( buf, "%u,%u,%lu,-", &level, &num, &t) == 3) {
             memcpy( newbuf, buf, *sz );
             tt = time( 0 );
             len = snprintf( buf, 64, "[%lu.%06lu] <%u> ", t / 1000000, t % 1000000, level );
