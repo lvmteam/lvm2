@@ -758,12 +758,19 @@ int device_is_usable(struct cmd_context *cmd, struct device *dev, struct dev_usa
 	struct dm_task *dmt;
 	struct dm_info info;
 	const char *name, *uuid;
+	const struct dm_active_device *dm_dev;
 	uint64_t start, length;
 	char *target_type = NULL;
 	char *params;
 	void *next = NULL;
 	int only_error_or_zero_target = 1;
 	int r = 0;
+
+	if (cmd->cache_dm_devs &&
+	    /* With cache we can avoid status calls for unusable UUIDs */
+	    (dm_dev = dev_cache_get_dm_dev_by_devno(cmd, dev->dev)) &&
+	    !_is_usable_uuid(dev, dm_dev->name, dm_dev->uuid, check.check_reserved, check.check_lv, is_lv))
+		return 0;
 
 	if (!(dmt = _setup_task_run(DM_DEVICE_STATUS, &info, NULL, NULL, NULL,
 				    MAJOR(dev->dev), MINOR(dev->dev), 0, 0, 0)))
