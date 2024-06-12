@@ -2014,9 +2014,15 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
  * this result is passed into vg_read().  After vg_read() reads the VG,
  * it checks if the VG lock_type (sanlock or dlm) requires a lock to be
  * held, and if so, it verifies that the lock was correctly acquired by
- * looking at lockd_state.  If vg_read() sees that the VG is a local VG,
- * i.e. lock_type is not sanlock or dlm, then no lock is required, and it
- * ignores lockd_state (which would indicate no lock was found.)
+ * looking at lockd_state.
+ *
+ * If vg_read() sees that the VG is a local VG, i.e. lock_type is not
+ * sanlock or dlm, then no lock is required, and it ignores lockd_state,
+ * which would indicate no lock was found.... although a newer
+ * optimization avoids calling lockd_vg() at all for local VGs
+ * by checking the lock_type in lvmcache saved by label_scan.  In extremely
+ * rare case where the lock_type changes between label_scan and vg_read,
+ * the caller will go back and repeat lockd_vg()+vg_read().
  */
 
 int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,

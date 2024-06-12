@@ -2178,6 +2178,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 	int ret;
 	int skip;
 	int notfound;
+	int is_lockd;
 	int process_all = 0;
 	int do_report_ret_code = 1;
 
@@ -2197,6 +2198,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 		vg_uuid = vgnl->vgid;
 		skip = 0;
 		notfound = 0;
+		is_lockd = lvmcache_vg_is_lockd_type(cmd, vg_name, vg_uuid);
 
 		uuid[0] = '\0';
 		if (is_orphan_vg(vg_name)) {
@@ -2214,8 +2216,8 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 		}
 
 		log_very_verbose("Processing VG %s %s", vg_name, uuid);
-
-		if (!lockd_vg(cmd, vg_name, NULL, 0, &lockd_state)) {
+do_lockd:
+		if (is_lockd && !lockd_vg(cmd, vg_name, NULL, 0, &lockd_state)) {
 			stack;
 			ret_max = ECMD_FAILED;
 			report_log_ret_code(ret_max);
@@ -2237,6 +2239,14 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 		if (skip || notfound)
 			goto endvg;
 
+		if (!is_lockd && vg_is_shared(vg)) {
+			/* The lock_type changed since label_scan, won't really occur in practice. */
+			log_debug("Repeat lock and read for local to shared vg");
+			unlock_and_release_vg(cmd, vg, vg_name);
+			is_lockd = 1;
+			goto do_lockd;
+		}
+
 		/* Process this VG? */
 		if ((process_all ||
 		    (!dm_list_empty(arg_vgnames) && str_list_match_item(arg_vgnames, vg_name)) ||
@@ -2257,7 +2267,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 		unlock_vg(cmd, vg, vg_name);
 endvg:
 		release_vg(vg);
-		if (!lockd_vg(cmd, vg_name, "un", 0, &lockd_state))
+		if (is_lockd && !lockd_vg(cmd, vg_name, "un", 0, &lockd_state))
 			stack;
 
 		log_set_report_object_name_and_id(NULL, NULL);
@@ -3876,6 +3886,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 	int ret;
 	int skip;
 	int notfound;
+	int is_lockd;
 	int do_report_ret_code = 1;
 
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_VG);
@@ -3885,6 +3896,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 		vg_uuid = vgnl->vgid;
 		skip = 0;
 		notfound = 0;
+		is_lockd = lvmcache_vg_is_lockd_type(cmd, vg_name, vg_uuid);
 
 		uuid[0] = '\0';
 		if (vg_uuid && !id_write_format((const struct id*)vg_uuid, uuid, sizeof(uuid)))
@@ -3930,7 +3942,8 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 
 		log_very_verbose("Processing VG %s %s", vg_name, vg_uuid ? uuid : "");
 
-		if (!lockd_vg(cmd, vg_name, NULL, 0, &lockd_state)) {
+do_lockd:
+		if (is_lockd && !lockd_vg(cmd, vg_name, NULL, 0, &lockd_state)) {
 			ret_max = ECMD_FAILED;
 			report_log_ret_code(ret_max);
 			continue;
@@ -3951,6 +3964,14 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 		if (skip || notfound)
 			goto endvg;
 
+		if (!is_lockd && vg_is_shared(vg)) {
+			/* The lock_type changed since label_scan, won't really occur in practice. */
+			log_debug("Repeat lock and read for local to shared vg");
+			unlock_and_release_vg(cmd, vg, vg_name);
+			is_lockd = 1;
+			goto do_lockd;
+		}
+
 		ret = process_each_lv_in_vg(cmd, vg, &lvnames, tags_arg, 0,
 					    handle, check_single_lv, process_single_lv);
 		if (ret != ECMD_PROCESSED)
@@ -3962,7 +3983,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 		unlock_vg(cmd, vg, vg_name);
 endvg:
 		release_vg(vg);
-		if (!lockd_vg(cmd, vg_name, "un", 0, &lockd_state))
+		if (is_lockd && !lockd_vg(cmd, vg_name, "un", 0, &lockd_state))
 			stack;
 		log_set_report_object_name_and_id(NULL, NULL);
 	}
@@ -4516,6 +4537,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 	int ret;
 	int skip;
 	int notfound;
+	int is_lockd;
 	int do_report_ret_code = 1;
 
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_VG);
@@ -4525,6 +4547,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 		vg_uuid = vgnl->vgid;
 		skip = 0;
 		notfound = 0;
+		is_lockd = lvmcache_vg_is_lockd_type(cmd, vg_name, vg_uuid);
 
 		uuid[0] = '\0';
 		if (is_orphan_vg(vg_name)) {
@@ -4540,8 +4563,8 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 			ret_max = ECMD_FAILED;
 			goto_out;
 		}
-
-		if (!lockd_vg(cmd, vg_name, NULL, 0, &lockd_state)) {
+do_lockd:
+		if (is_lockd && !lockd_vg(cmd, vg_name, NULL, 0, &lockd_state)) {
 			ret_max = ECMD_FAILED;
 			report_log_ret_code(ret_max);
 			continue;
@@ -4563,6 +4586,14 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 		}
 		if (notfound)
 			goto endvg;
+
+		if (vg && !is_lockd && vg_is_shared(vg)) {
+			/* The lock_type changed since label_scan, won't really occur in practice. */
+			log_debug("Repeat lock and read for local to shared vg");
+			unlock_and_release_vg(cmd, vg, vg_name);
+			is_lockd = 1;
+			goto do_lockd;
+		}
 
 		/*
 		 * Don't call "continue" when skip is set, because we need to remove
@@ -4586,7 +4617,7 @@ endvg:
 		if (error_vg)
 			unlock_and_release_vg(cmd, error_vg, vg_name);
 		release_vg(vg);
-		if (!lockd_vg(cmd, vg_name, "un", 0, &lockd_state))
+		if (is_lockd && !lockd_vg(cmd, vg_name, "un", 0, &lockd_state))
 			stack;
 
 		/* Quit early when possible. */

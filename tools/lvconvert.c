@@ -5789,10 +5789,12 @@ static int _lvconvert_detach_writecache_when_clean(struct cmd_context *cmd,
 	struct logical_volume *lv_fast;
 	uint32_t lockd_state, error_flags;
 	uint64_t dirty;
+	int is_lockd;
 	int ret = 0;
 
 	idl = dm_list_item(dm_list_first(&lr->poll_idls), struct convert_poll_id_list);
 	id = idl->id;
+	is_lockd = lvmcache_vg_is_lockd_type(cmd, id->vg_name, NULL);
 
 	/*
 	 * TODO: we should be able to save info about the dm device for this LV
@@ -5807,7 +5809,7 @@ static int _lvconvert_detach_writecache_when_clean(struct cmd_context *cmd,
 	lockd_state = 0;
 	error_flags = 0;
 
-	if (!lockd_vg(cmd, id->vg_name, "ex", 0, &lockd_state)) {
+	if (is_lockd && !lockd_vg(cmd, id->vg_name, "ex", 0, &lockd_state)) {
 		log_error("Detaching writecache interrupted - locking VG failed.");
 		return 0;
 	}
@@ -5844,7 +5846,7 @@ static int _lvconvert_detach_writecache_when_clean(struct cmd_context *cmd,
 	if (!lv_writecache_is_clean(cmd, lv, &dirty)) {
 		unlock_and_release_vg(cmd, vg, vg->name);
 
-		if (!lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state))
+		if (is_lockd && !lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state))
 			stack;
 
 		log_print_unless_silent("Detaching writecache cleaning %llu blocks", (unsigned long long)dirty);
@@ -5897,7 +5899,7 @@ out_release:
 	unlock_and_release_vg(cmd, vg, vg->name);
 
 out_lockd:
-	if (!lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state))
+	if (is_lockd && !lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state))
 		stack;
 
 	return ret;

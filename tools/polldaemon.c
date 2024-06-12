@@ -156,6 +156,7 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 	int finished = 0;
 	uint32_t lockd_state = 0;
 	uint32_t error_flags = 0;
+	int is_lockd;
 	int ret;
 	unsigned wait_before_testing = parms->wait_before_testing;
 
@@ -171,11 +172,13 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 			return 0;
 		}
 
+		is_lockd = lvmcache_vg_is_lockd_type(cmd, id->vg_name, NULL);
+
 		/*
 		 * An ex VG lock is needed because the check can call finish_copy
 		 * which writes the VG.
 		 */
-		if (!lockd_vg(cmd, id->vg_name, "ex", 0, &lockd_state)) {
+		if (is_lockd && !lockd_vg(cmd, id->vg_name, "ex", 0, &lockd_state)) {
 			log_error("ABORTING: Can't lock VG for %s.", id->display_name);
 			return 0;
 		}
@@ -229,7 +232,7 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 
 		unlock_and_release_vg(cmd, vg, vg->name);
 
-		if (!lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state))
+		if (is_lockd && !lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state))
 			stack;
 
 		wait_before_testing = 1;
@@ -240,7 +243,7 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 out:
 	if (vg)
 		unlock_and_release_vg(cmd, vg, vg->name);
-	if (!lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state))
+	if (is_lockd && !lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state))
 		stack;
 
 	return ret;

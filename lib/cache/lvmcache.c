@@ -3002,6 +3002,16 @@ int lvmcache_vg_is_foreign(struct cmd_context *cmd, const char *vgname, const ch
 	return ret;
 }
 
+int lvmcache_vg_is_lockd_type(struct cmd_context *cmd, const char *vgname, const char *vgid)
+{
+	struct lvmcache_vginfo *vginfo;
+
+	if ((vginfo = lvmcache_vginfo_from_vgname(vgname, vgid)))
+		return is_lockd_type(vginfo->lock_type);
+
+	return 0;
+}
+
 /*
  * Example of reading four devs in sequence from the same VG:
  *
