@@ -1223,9 +1223,21 @@ static int _lockd_all_lvs(struct cmd_context *cmd, struct volume_group *vg)
 /* vgremove before the vg is removed */
 
 int lockd_free_vg_before(struct cmd_context *cmd, struct volume_group *vg,
-			 int changing)
+			 int changing, const char *lockopt, int yes)
 {
 	int lock_type_num = get_lock_type_from_string(vg->lock_type);
+
+	if (lockopt && strstr(lockopt, "force")) {
+		if (!yes && yes_no_prompt("Force unprotected removal of shared VG? [y/n]: ") == 'n') {
+			log_error("VG not removed.");
+			return 0;
+		}
+		if (vg->sanlock_lv) {
+			_deactivate_sanlock_lv(cmd, vg);
+			_remove_sanlock_lv(cmd, vg);
+		}
+		return 1;
+	}
 
 	/*
 	 * Check that no LVs are active on other hosts.

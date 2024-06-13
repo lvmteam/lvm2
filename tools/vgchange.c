@@ -1215,7 +1215,7 @@ static int _vgchange_locktype(struct cmd_context *cmd, struct volume_group *vg, 
 	 * lockd type to ..., first undo lockd type
 	 */
 	if (is_lockd_type(vg->lock_type)) {
-		if (!lockd_free_vg_before(cmd, vg, 1))
+		if (!lockd_free_vg_before(cmd, vg, 1, NULL, 0))
 			return 0;
 
 		lockd_free_vg_final(cmd, vg);
