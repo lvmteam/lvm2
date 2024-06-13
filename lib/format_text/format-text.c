@@ -2593,7 +2593,7 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 	struct format_type *fmt;
 	struct mda_lists *mda_lists;
 
-	if (!(fmt = malloc(sizeof(*fmt)))) {
+	if (!(fmt = zalloc(sizeof(*fmt)))) {
 		log_error("Failed to allocate text format type structure.");
 		return NULL;
 	}
