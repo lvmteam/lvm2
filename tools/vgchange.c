@@ -1141,7 +1141,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	return ret;
 }
 
-static int _vgchange_locktype(struct cmd_context *cmd, struct volume_group *vg)
+static int _vgchange_locktype(struct cmd_context *cmd, struct volume_group *vg, int *no_change)
 {
 	const char *lock_type = arg_str_value(cmd, locktype_ARG, NULL);
 	const char *lockopt = arg_str_value(cmd, lockopt_ARG, NULL);
@@ -1171,6 +1171,7 @@ static int _vgchange_locktype(struct cmd_context *cmd, struct volume_group *vg)
 	if (lock_type && !strcmp(vg->lock_type, lock_type)) {
 		log_warn("WARNING: New lock type %s matches the current lock type %s.",
 			 lock_type, vg->lock_type);
+		*no_change = 1;
 		return 1;
 	}
 
@@ -1309,8 +1310,13 @@ static int _vgchange_locktype_single(struct cmd_context *cmd, const char *vg_nam
 			             struct volume_group *vg,
 			             struct processing_handle *handle)
 {
-	if (!_vgchange_locktype(cmd, vg))
+	int no_change = 0;
+
+	if (!_vgchange_locktype(cmd, vg, &no_change))
 		return_ECMD_FAILED;
+
+	if (no_change)
+		return ECMD_PROCESSED;
 
 	if (!vg_write(vg) || !vg_commit(vg))
 		return_ECMD_FAILED;
@@ -1367,13 +1373,8 @@ int vgchange_locktype_cmd(struct cmd_context *cmd, int argc, char **argv)
 	 * just return success when they see the disable flag set.
 	 */
 	if (lockopt && !strcmp(lockopt, "force")) {
-		if (lock_type && strcmp(lock_type, "none")) {
-			log_error("Lock type can only be forced to \"none\" for recovery.");
-			return 0;
-		}
-
 		if (!arg_is_set(cmd, yes_ARG) &&
-		     yes_no_prompt("Forcibly change VG lock type to none? [y/n]: ") == 'n') {
+		     yes_no_prompt("Forcibly change VG lock type to %s? [y/n]: ", lock_type) == 'n') {
 			log_error("VG lock type not changed.");
 			return 0;
 		}

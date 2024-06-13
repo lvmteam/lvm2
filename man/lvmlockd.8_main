@@ -729,6 +729,11 @@ vgchange --locktype sanlock|dlm <vgname>
 Start the VG on hosts to use it:
 .br
 vgchange --lockstart <vgname>
+.P
+If lvmlockd or the cluster manager are not available, the lock type can
+be forcibly changed with:
+.br
+vgchange --locktype sanlock|dlm \-\-lockopt force <vgname>
 .
 .SS Changing a shared VG to a local VG
 .
