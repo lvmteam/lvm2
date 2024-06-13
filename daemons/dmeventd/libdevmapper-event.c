@@ -446,6 +446,7 @@ static int _check_for_usable_fifos(char *dmeventd_path, struct dm_event_fifos *f
 			log_error("%s is no longer a secure root-owned fifo with mode 0600.", fifos->client_path);
 			if (close(fifos->client))
 				log_sys_debug("close", fifos->client_path);
+			fifos->client = -1;
 			return 0;
 		}
 
