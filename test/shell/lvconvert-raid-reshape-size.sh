@@ -18,7 +18,7 @@ SKIP_RESIZE=0
 which mkfs.ext4 || skip
 [ $SKIP_RESIZE -eq 0 ] && ( which resize2fs || skip )
 
-aux kernel_at_least 6 10 0 || skip
+aux kernel_at_least 6 9 0 || skip
 
 test "$(aux total_mem)" -gt 1048576 || skip "Not enough RAM for this test"
 
@@ -44,15 +44,15 @@ function _get_pvs_stripes_and_delay
 
 		case $raid_type in
 		raid[45]*)
-			ms=50
+			ms=30
 			tst_stripes="5 4 11 9 15 13 19 18 22 21 25 23 28 30 31 29 33 31 34 33 37 45 41 50 55 60 63 30 15 10 8 3"
 			;;
 		raid6*)
-			ms=30
+			ms=20
 			tst_stripes="5 4 11 9 15 13 19 18 22 21 25 23 28 30 31 29 33 31 34 33 37 45 41 50 55 60 62 30 15 10 8 3"
 			;;
 		raid10*)
-			ms=60
+			ms=50
 			tst_stripes="5 8 9 11 13 14 15 19 20 22 23 25 27 28 29 32"
 			;;
 		esac
@@ -63,15 +63,15 @@ function _get_pvs_stripes_and_delay
 
 		case $raid_type in
 		raid[45]*)
-			ms=100
+			ms=40
 			tst_stripes="5 4 8 7 11 9 15 19 18 10"
 			;;
 		raid6*)
-			ms=60
+			ms=25
 			tst_stripes="5 4 8 7 11 9 15 18 10 5"
 			;;
 		raid10*)
-			ms=120
+			ms=40
 			tst_stripes="5 6 7 8 9 10"
 			;;
 		esac
@@ -184,7 +184,7 @@ function _add_stripes
 	fsck -fy "$DM_DEV_DIR/$vg/$lv"
 	aux delay_dev "$dev1" 0 0
 	aux wait_for_sync $vg $lv 0
-	sleep 0.5
+	sleep 1
 
 	# Now size consistency has to be fine
 	[ $(_check_size $vg $lv $data_stripes) -eq 0 ] || die "LV size should be grown"
@@ -241,7 +241,7 @@ function _remove_stripes
 	check lv_first_seg_field $vg/$lv datastripes $data_stripes
 	check lv_first_seg_field $vg/$lv stripes $(_total_stripes $raid_type $data_stripes)
 
-	sleep 0.5
+	sleep 1
 
 	# Now size consistency has to be fine
 	[ $(_check_size $vg $lv $data_stripes) -eq 0 ] || die "LV size should be completely reduced"
