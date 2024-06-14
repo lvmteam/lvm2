@@ -16,6 +16,8 @@
 #define LVMLOCKD_SOCKET DEFAULT_RUN_DIR "/lvmlockd.socket"
 #define LVMLOCKD_ADOPT_FILE DEFAULT_RUN_DIR "/lvmlockd.adopt"
 
+#define LVMLOCKD_USE_SANLOCK_LVB 0
+
 /* Wrappers to open/close connection */
 
 static inline __attribute__((always_inline))

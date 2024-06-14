@@ -1610,12 +1610,17 @@ static int lm_add_resource_sanlock(struct lockspace *ls, struct resource *r)
 
 	/* LD_RT_LV offset is set in each lm_lock call from lv_args. */
 
+	/*
+	 * Disable sanlock lvb since lock versions are not currently used for
+	 * anything, and it's nice to avoid the extra i/o used for lvb's.
+	 */
+#if LVMLOCKD_USE_SANLOCK_LVB
 	if (r->type == LD_RT_GL || r->type == LD_RT_VG) {
 		rds->vb = zalloc(sizeof(struct val_blk));
 		if (!rds->vb)
 			return -ENOMEM;
 	}
-
+#endif
 	return 0;
 }
 
@@ -1624,9 +1629,9 @@ int lm_rem_resource_sanlock(struct lockspace *ls, struct resource *r)
 	struct rd_sanlock *rds = (struct rd_sanlock *)r->lm_data;
 
 	/* FIXME: assert r->mode == UN or unlock if it's not? */
-
+#ifdef LVMLOCKD_USE_SANLOCK_LVB
 	free(rds->vb);
-
+#endif
 	memset(rds, 0, sizeof(struct rd_sanlock));
 	r->lm_init = 0;
 	return 0;

@@ -2301,12 +2301,22 @@ int lockd_vg_update(struct volume_group *vg)
 	int result;
 	int ret;
 
-	if (!vg_is_shared(vg))
-		return 1;
 	if (!_use_lvmlockd)
 		return 0;
 	if (!_lvmlockd_connected)
 		return 0;
+	if (!vg_is_shared(vg))
+		return 1;
+
+#if !LVMLOCKD_USE_SANLOCK_LVB
+	/*
+	 * lvb (for lock version) is disabled for sanlock since
+	 * lock versions are not used any more, and it's more
+	 * costly for sanlock to implement (extra i/o.)
+	 */
+	if (!strcmp(vg->lock_type, "sanlock"))
+		return 1;
+#endif
 
 	reply = _lockd_send("vg_update",
 				"pid = " FMTd64, (int64_t) getpid(),

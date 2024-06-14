@@ -1320,7 +1320,9 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 		 * once someone uses the lock and writes a new lvb value.
 		 * Do nothing.
 		 */
+		/*
 		log_debug("S %s R %s res_lock version_zero_valid still zero", ls->name, r->name);
+		*/
 
 	} else if (r->version_zero_valid && vb.r_version) {
 		/*
