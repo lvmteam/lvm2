@@ -2272,6 +2272,21 @@ static int _pre_raid0_remove_rmeta(struct logical_volume *lv, void *data)
 	return _activate_sub_lvs_excl_local_list(lv, lv_list) ? 2 : 0;
 }
 
+static int _same_layout(struct lv_segment *seg,
+			const struct segment_type *new_segtype,
+			const unsigned new_data_copies,
+			const unsigned new_region_size,
+			const unsigned old_image_count,
+			const unsigned new_image_count,
+			const unsigned new_stripe_size)
+{
+	return (seg->segtype == new_segtype &&
+		seg->data_copies == new_data_copies &&
+		seg->region_size == new_region_size &&
+		old_image_count == new_image_count &&
+		seg->stripe_size == new_stripe_size) ? 1 : 0;
+}
+
 /*
  * Reshape logical volume @lv by adding/removing stripes
  * (absolute new stripes given in @new_stripes), changing
@@ -2292,7 +2307,7 @@ static int _raid_reshape(struct logical_volume *lv,
 {
 	int force_repair = 0, r, too_few = 0;
 	unsigned devs_health, devs_in_sync;
-	uint32_t new_image_count, old_image_count;
+	uint32_t available_slvs, removed_slvs, new_image_count, old_image_count;
 	enum alloc_where where_it_was = alloc_none;
 	struct lv_segment *seg = first_seg(lv);
 	struct dm_list removal_lvs;
@@ -2310,7 +2325,7 @@ static int _raid_reshape(struct logical_volume *lv,
 		return_0;
 
 	/* FIXME Can't reshape volume in use - aka not toplevel devices */
-	if (old_image_count < new_image_count &&
+	if (old_image_count != new_image_count &&
 	    !dm_list_empty(&seg->lv->segs_using_this_lv)) {
 		log_error("Unable to convert stacked volume %s.", display_lvname(seg->lv));
 		return 0;
@@ -2328,16 +2343,26 @@ static int _raid_reshape(struct logical_volume *lv,
 		return 0;
 	}
 
+	/* Prevent any new reshape request on RaidLV with existing freed stripes resulting from a previous one. */
+	if (!_get_available_removed_sublvs(lv, &available_slvs, &removed_slvs))
+		return_0;
+
+	if (removed_slvs &&
+	    !_same_layout(seg, new_segtype, new_data_copies, new_region_size,
+			  old_image_count, new_image_count + removed_slvs, new_stripe_size)) {
+		log_error("Unable to convert %s containing sub LVs to remove after a reshape.",
+			  display_lvname(lv));
+		log_error("Run \"lvconvert --stripes %" PRIu32 " %s\" first.",
+			  seg->area_count - removed_slvs - 1, display_lvname(lv));
+		return 0;
+	}
+
 	lv->status &= ~LV_RESHAPE; /* Reset any reshaping segtype flag */
 
 	dm_list_init(&removal_lvs);
 
 	/* No change in layout requested ? */
-	if (seg->segtype == new_segtype &&
-	    seg->data_copies == new_data_copies &&
-	    seg->region_size == new_region_size &&
-	    old_image_count == new_image_count &&
-	    seg->stripe_size == new_stripe_size) {
+	if (_same_layout(seg, new_segtype, new_data_copies, new_region_size, old_image_count, new_image_count, new_stripe_size)) {
 		/*
 		 * No change in segment type, image count, region or stripe size has been requested ->
 		 * user requests this to remove any reshape space from the @lv
