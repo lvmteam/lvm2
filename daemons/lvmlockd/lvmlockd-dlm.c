@@ -386,7 +386,7 @@ static int lm_add_resource_dlm(struct lockspace *ls, struct resource *r, int wit
 			      r->name, strlen(r->name),
 			      0, NULL, NULL, NULL);
 	if (rv < 0) {
-		log_error("S %s R %s add_resource_dlm lock error %d", ls->name, r->name, rv);
+		log_error("%s:%s add_resource_dlm lock error %d", ls->name, r->name, rv);
 		return rv;
 	}
  out:
@@ -410,7 +410,7 @@ int lm_rem_resource_dlm(struct lockspace *ls, struct resource *r)
 
 	rv = dlm_ls_unlock_wait(lmd->dh, lksb->sb_lkid, 0, lksb);
 	if (rv < 0) {
-		log_error("S %s R %s rem_resource_dlm unlock error %d", ls->name, r->name, rv);
+		log_error("%s:%s rem_resource_dlm unlock error %d", ls->name, r->name, rv);
 	}
  out:
 	free(rdd->vb);
@@ -465,7 +465,7 @@ static int lm_adopt_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 		goto fail;
 	}
 
-	log_debug("S %s R %s adopt_dlm", ls->name, r->name);
+	log_debug("%s:%s adopt_dlm", ls->name, r->name);
 
 	if (daemon_test)
 		return 0;
@@ -484,19 +484,19 @@ static int lm_adopt_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 			  NULL, NULL);
 
 	if (rv == -1 && (errno == EAGAIN)) {
-		log_debug("S %s R %s adopt_dlm adopt mode %d try other mode",
+		log_debug("%s:%s adopt_dlm adopt mode %d try other mode",
 			  ls->name, r->name, ld_mode);
 		rv = -EUCLEAN;
 		goto fail;
 	}
 	if (rv == -1 && (errno == ENOENT)) {
-		log_debug("S %s R %s adopt_dlm adopt mode %d no lock",
+		log_debug("%s:%s adopt_dlm adopt mode %d no lock",
 			  ls->name, r->name, ld_mode);
 		rv = -ENOENT;
 		goto fail;
 	}
 	if (rv < 0) {
-		log_debug("S %s R %s adopt_dlm mode %d flags %x error %d errno %d",
+		log_debug("%s:%s adopt_dlm mode %d flags %x error %d errno %d",
 			  ls->name, r->name, mode, flags, rv, errno);
 		goto fail;
 	}
@@ -565,7 +565,7 @@ int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 		return -EINVAL;
 	}
 
-	log_debug("S %s R %s lock_dlm", ls->name, r->name);
+	log_debug("%s:%s lock_dlm", ls->name, r->name);
 
 	if (daemon_test) {
 		if (rdd->vb) {
@@ -585,7 +585,7 @@ int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 				      r->name, strlen(r->name),
 				      0, NULL, NULL, NULL);
 		if (rv == -1) {
-			log_debug("S %s R %s lock_dlm acquire mode PR for %d rv %d",
+			log_debug("%s:%s lock_dlm acquire mode PR for %d rv %d",
 				  ls->name, r->name, mode, rv);
 			goto lockrv;
 		}
@@ -598,17 +598,17 @@ int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 			      0, NULL, NULL, NULL);
 lockrv:
 	if (rv == -1 && errno == EAGAIN) {
-		log_debug("S %s R %s lock_dlm acquire mode %d rv EAGAIN", ls->name, r->name, mode);
+		log_debug("%s:%s lock_dlm acquire mode %d rv EAGAIN", ls->name, r->name, mode);
 		return -EAGAIN;
 	}
 	if (rv < 0) {
-		log_error("S %s R %s lock_dlm acquire error %d errno %d", ls->name, r->name, rv, errno);
+		log_error("%s:%s lock_dlm acquire error %d errno %d", ls->name, r->name, rv, errno);
 		return -ELMERR;
 	}
 
 	if (rdd->vb) {
 		if (lksb->sb_flags & DLM_SBF_VALNOTVALID) {
-			log_debug("S %s R %s lock_dlm VALNOTVALID", ls->name, r->name);
+			log_debug("%s:%s lock_dlm VALNOTVALID", ls->name, r->name);
 			memset(rdd->vb, 0, sizeof(struct val_blk));
 			memset(vb_out, 0, sizeof(struct val_blk));
 			goto out;
@@ -641,7 +641,7 @@ int lm_convert_dlm(struct lockspace *ls, struct resource *r,
 	uint32_t flags = 0;
 	int rv;
 
-	log_debug("S %s R %s convert_dlm", ls->name, r->name);
+	log_debug("%s:%s convert_dlm", ls->name, r->name);
 
 	flags |= LKF_CONVERT;
 	flags |= LKF_NOQUEUE;
@@ -655,7 +655,7 @@ int lm_convert_dlm(struct lockspace *ls, struct resource *r,
 		rdd->vb->r_version = cpu_to_le32(r_version);
 		memcpy(lksb->sb_lvbptr, rdd->vb, sizeof(struct val_blk));
 
-		log_debug("S %s R %s convert_dlm set r_version %u",
+		log_debug("%s:%s convert_dlm set r_version %u",
 			  ls->name, r->name, r_version);
 
 		flags |= LKF_VALBLK;
@@ -673,11 +673,11 @@ int lm_convert_dlm(struct lockspace *ls, struct resource *r,
 			      0, NULL, NULL, NULL);
 	if (rv == -1 && errno == EAGAIN) {
 		/* FIXME: When does this happen?  Should something different be done? */
-		log_error("S %s R %s convert_dlm mode %d rv EAGAIN", ls->name, r->name, mode);
+		log_error("%s:%s convert_dlm mode %d rv EAGAIN", ls->name, r->name, mode);
 		return -EAGAIN;
 	}
 	if (rv < 0) {
-		log_error("S %s R %s convert_dlm error %d", ls->name, r->name, rv);
+		log_error("%s:%s convert_dlm error %d", ls->name, r->name, rv);
 		rv = -ELMERR;
 	}
 	return rv;
@@ -727,7 +727,7 @@ int lm_unlock_dlm(struct lockspace *ls, struct resource *r,
 			memcpy(rdd->vb, &vb_next, sizeof(struct val_blk));
 			memcpy(lksb->sb_lvbptr, &vb_next, sizeof(struct val_blk));
 
-			log_debug("S %s R %s unlock_dlm vb old %x %x %u new %x %x %u",
+			log_debug("%s:%s unlock_dlm vb old %x %x %u new %x %x %u",
 				  ls->name, r->name,
 				  le16_to_cpu(vb_prev.version),
 				  le16_to_cpu(vb_prev.flags),
@@ -736,12 +736,12 @@ int lm_unlock_dlm(struct lockspace *ls, struct resource *r,
 				  le16_to_cpu(vb_next.flags),
 				  le32_to_cpu(vb_next.r_version));
 		} else {
-			log_debug("S %s R %s unlock_dlm vb unchanged", ls->name, r->name);
+			log_debug("%s:%s unlock_dlm vb unchanged", ls->name, r->name);
 		}
 
 		flags |= LKF_VALBLK;
 	} else {
-		log_debug("S %s R %s unlock_dlm", ls->name, r->name);
+		log_debug("%s:%s unlock_dlm", ls->name, r->name);
 	}
 
 	if (daemon_test)
@@ -751,7 +751,7 @@ int lm_unlock_dlm(struct lockspace *ls, struct resource *r,
 			      r->name, strlen(r->name),
 			      0, NULL, NULL, NULL);
 	if (rv < 0) {
-		log_error("S %s R %s unlock_dlm error %d", ls->name, r->name, rv);
+		log_error("%s:%s unlock_dlm error %d", ls->name, r->name, rv);
 		rv = -ELMERR;
 	}
 

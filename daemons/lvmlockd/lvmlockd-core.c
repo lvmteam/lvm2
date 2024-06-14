@@ -810,6 +810,27 @@ static const char *op_str(int x)
 	};
 }
 
+static const char *op_mode_str(int op, int mode)
+{
+	if (op != LD_OP_LOCK)
+		return op_str(op);
+
+	switch (mode) {
+	case LD_LK_IV:
+		return "lock_iv";
+	case LD_LK_UN: 
+		return "unlock";
+	case LD_LK_NL:
+		return "lock_nl";
+	case LD_LK_SH:
+		return "lock_sh";
+	case LD_LK_EX:
+		return "lock_ex";
+	default:
+		return "lock_bad";
+	}
+}
+
 int last_string_from_args(char *args_in, char *last)
 {
 	const char *args = args_in;
@@ -1250,9 +1271,11 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 	r->last_client_id = act->client_id;
 
 	if (r->type == LD_RT_LV)
-		log_debug("S %s R %s res_lock cl %u mode %s (%s)", ls->name, r->name, act->client_id, mode_str(act->mode), act->lv_name);
+		log_debug("%s:%s res_lock %s cl %u (%s)", ls->name, r->name,
+			  mode_str(act->mode), act->client_id, act->lv_name);
 	else
-		log_debug("S %s R %s res_lock cl %u mode %s", ls->name, r->name, act->client_id, mode_str(act->mode));
+		log_debug("%s:%s res_lock %s cl %u", ls->name, r->name,
+			  mode_str(act->mode), act->client_id);
 
 	if (r->mode == LD_LK_SH && act->mode == LD_LK_SH)
 		goto add_lk;
@@ -1262,11 +1285,11 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 
 	rv = lm_lock(ls, r, act->mode, act, &vb, retry, act->flags & LD_AF_ADOPT);
 
-	if (r->use_vb)
-		log_debug("S %s R %s res_lock rv %d read vb %x %x %u",
+	if (rv && r->use_vb)
+		log_debug("%s:%s res_lock rv %d read vb %x %x %u",
 			  ls->name, r->name, rv, vb.version, vb.flags, vb.r_version);
-	else
-		log_debug("S %s R %s res_lock rv %d", ls->name, r->name, rv);
+	else if (rv)
+		log_debug("%s:%s res_lock rv %d", ls->name, r->name, rv);
 
 	if (rv < 0)
 		return rv;
@@ -1289,7 +1312,7 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 		/* LV locks don't use an lvb. */
 
 	} else if (vb.version && ((vb.version & 0xFF00) > (VAL_BLK_VERSION & 0xFF00))) {
-		log_error("S %s R %s res_lock invalid val_blk version %x flags %x r_version %u",
+		log_error("%s:%s res_lock invalid val_blk version %x flags %x r_version %u",
 			  ls->name, r->name, vb.version, vb.flags, vb.r_version);
 		inval_meta = 1;
 		new_version = 0;
@@ -1307,7 +1330,7 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 		 * acquired it, and increased r_version so we know that our
 		 * cache is invalid.
 		 */
-		log_debug("S %s R %s res_lock got version %u our %u",
+		log_debug("%s:%s res_lock got version %u our %u",
 			  ls->name, r->name, vb.r_version, r->version);
 		r->version = vb.r_version;
 		new_version = vb.r_version;
@@ -1321,7 +1344,7 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 		 * Do nothing.
 		 */
 		/*
-		log_debug("S %s R %s res_lock version_zero_valid still zero", ls->name, r->name);
+		log_debug("%s:%s res_lock version_zero_valid still zero", ls->name, r->name);
 		*/
 
 	} else if (r->version_zero_valid && vb.r_version) {
@@ -1345,11 +1368,11 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 		 * larger version?)
 		 */
 		if (r->version && (r->version >= vb.r_version)) {
-			log_debug("S %s R %s res_lock version_zero_valid got version %u less than our %u",
+			log_debug("%s:%s res_lock version_zero_valid got version %u less than our %u",
 				  ls->name, r->name, vb.r_version, r->version);
 			new_version = 0;
 		} else {
-			log_debug("S %s R %s res_lock version_zero_valid got version %u our %u",
+			log_debug("%s:%s res_lock version_zero_valid got version %u our %u",
 				ls->name, r->name, vb.r_version, r->version);
 			new_version = vb.r_version;
 		}
@@ -1361,7 +1384,7 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 		/*
 		 * The first time we've acquired the lock and seen the lvb.
 		 */
-		log_debug("S %s R %s res_lock initial version %u", ls->name, r->name, vb.r_version);
+		log_debug("%s:%s res_lock initial version %u", ls->name, r->name, vb.r_version);
 		r->version = vb.r_version;
 		inval_meta = 1;
 		new_version = vb.r_version;
@@ -1372,7 +1395,7 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 		 * The lock may have never been used to change something.
 		 * (e.g. a new sanlock GL?)
 		 */
-		log_debug("S %s R %s res_lock all versions zero", ls->name, r->name);
+		log_debug("%s:%s res_lock all versions zero", ls->name, r->name);
 		if (!r->version_zero_valid) {
 			inval_meta = 1;
 			new_version = 0;
@@ -1396,9 +1419,9 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 		 * is unchanged and we don't need to invalidate metadata.
 		 */
 		if ((ls->lm_type == LD_LM_DLM) && !vb.version && !vb.flags)
-			log_debug("S %s R %s res_lock all lvb content is blank",
+			log_debug("%s:%s res_lock all lvb content is blank",
 				  ls->name, r->name);
-		log_debug("S %s R %s res_lock our version %u got vb %x %x %u",
+		log_debug("%s:%s res_lock our version %u got vb %x %x %u",
 			  ls->name, r->name, r->version, vb.version, vb.flags, vb.r_version);
 		r->version_zero_valid = 1;
 		inval_meta = 1;
@@ -1415,21 +1438,21 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 		 * FIXME: how does the cache validation and replacement in lvmetad
 		 * work in this case?
 		 */
-		log_debug("S %s R %s res_lock got version %u less than our version %u",
+		log_debug("%s:%s res_lock got version %u less than our version %u",
 			  ls->name, r->name, vb.r_version, r->version);
 		r->version = vb.r_version;
 		inval_meta = 1;
 		new_version = 0;
 		r->version_zero_valid = 0;
 	} else {
-		log_debug("S %s R %s res_lock undefined vb condition vzv %d our version %u vb %x %x %u",
+		log_debug("%s:%s res_lock undefined vb condition vzv %d our version %u vb %x %x %u",
 			  ls->name, r->name, r->version_zero_valid, r->version,
 			  vb.version, vb.flags, vb.r_version);
 	}
 
 	if (vb.version && vb.r_version && (vb.flags & VBF_REMOVED)) {
 		/* Should we set ls->thread_stop = 1 ? */
-		log_debug("S %s R %s res_lock vb flag REMOVED",
+		log_debug("%s:%s res_lock vb flag REMOVED",
 			  ls->name, r->name);
 		rv = -EREMOVED;
 	}
@@ -1471,12 +1494,12 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 	 */
 
 	if (inval_meta && (r->type == LD_RT_VG)) {
-		log_debug("S %s R %s res_lock invalidate vg state version %u",
+		log_debug("%s:%s res_lock invalidate vg state version %u",
 			  ls->name, r->name, new_version);
 	}
 
 	if (inval_meta && (r->type == LD_RT_GL)) {
-		log_debug("S %s R %s res_lock invalidate global state", ls->name, r->name);
+		log_debug("%s:%s res_lock invalidate global state", ls->name, r->name);
 	}
 
 	/*
@@ -1533,7 +1556,8 @@ static int res_convert(struct lockspace *ls, struct resource *r,
 
 	r->last_client_id = act->client_id;
 
-	log_debug("S %s R %s res_convert cl %u mode %s", ls->name, r->name, act->client_id, mode_str(act->mode));
+	log_debug("%s:%s res_convert %s cl %u", ls->name, r->name,
+		  mode_str(act->mode), act->client_id);
 
 	if (act->mode == LD_LK_EX && lk->mode == LD_LK_SH && r->sh_count > 1)
 		return -EAGAIN;
@@ -1549,7 +1573,7 @@ static int res_convert(struct lockspace *ls, struct resource *r,
 		r_version = r->version;
 		r->version_zero_valid = 0;
 
-		log_debug("S %s R %s res_convert r_version inc %u",
+		log_debug("%s:%s res_convert r_version inc %u",
 			  ls->name, r->name, r_version);
 
 	} else if ((r->type == LD_RT_VG) && (r->mode == LD_LK_EX) && (lk->version > r->version)) {
@@ -1557,14 +1581,14 @@ static int res_convert(struct lockspace *ls, struct resource *r,
 		r_version = r->version;
 		r->version_zero_valid = 0;
 
-		log_debug("S %s R %s res_convert r_version new %u", ls->name, r->name, r_version);
+		log_debug("%s:%s res_convert r_version new %u", ls->name, r->name, r_version);
 	} else {
 		r_version = 0;
 	}
 
 	rv = lm_convert(ls, r, act->mode, act, r_version);
 
-	log_debug("S %s R %s res_convert rv %d", ls->name, r->name, rv);
+	log_debug("%s:%s res_convert rv %d", ls->name, r->name, rv);
 
 	if (rv < 0)
 		return rv;
@@ -1575,7 +1599,7 @@ static int res_convert(struct lockspace *ls, struct resource *r,
 		r->sh_count = 0;
 	} else {
 		/* should not be possible */
-		log_error("S %s R %s res_convert invalid modes %d %d",
+		log_error("%s:%s res_convert invalid modes %d %d",
 			  ls->name, r->name, lk->mode, act->mode);
 		return -1;
 	}
@@ -1614,7 +1638,7 @@ static int res_cancel(struct lockspace *ls, struct resource *r,
 	return -ENOENT;
 
 do_cancel:
-	log_debug("S %s R %s res_cancel cl %u", ls->name, r->name, cact->client_id);
+	log_debug("%s:%s res_cancel cl %u", ls->name, r->name, cact->client_id);
 	cact->result = -ECANCELED;
 	list_del(&cact->list);
 	add_client_result(cact);
@@ -1662,12 +1686,12 @@ static int res_unlock(struct lockspace *ls, struct resource *r,
 	}
 
 	if (act->op != LD_OP_CLOSE)
-		log_debug("S %s R %s res_unlock cl %u no locks", ls->name, r->name, act->client_id);
+		log_debug("%s:%s res_unlock cl %u no locks", ls->name, r->name, act->client_id);
 	return -ENOENT;
 
 do_unlock:
 	if ((act->flags & LD_AF_LV_UNLOCK) && (r->last_client_id != act->client_id)) {
-		log_debug("S %s R %s res_unlock cl %u for failed client ignored, last client %u",
+		log_debug("%s:%s res_unlock cl %u for failed client ignored, last client %u",
 			  ls->name, r->name, act->client_id, r->last_client_id);
 		return -ENOENT;
 	}
@@ -1675,17 +1699,17 @@ do_unlock:
 	r->last_client_id = act->client_id;
 
 	if (act->op == LD_OP_CLOSE)
-		log_debug("S %s R %s res_unlock cl %u from close", ls->name, r->name, act->client_id);
+		log_debug("%s:%s res_unlock cl %u from close", ls->name, r->name, act->client_id);
 	else if (r->type == LD_RT_LV)
-		log_debug("S %s R %s res_unlock cl %u (%s)", ls->name, r->name, act->client_id, act->lv_name);
+		log_debug("%s:%s res_unlock cl %u (%s)", ls->name, r->name, act->client_id, act->lv_name);
 	else
-		log_debug("S %s R %s res_unlock cl %u", ls->name, r->name, act->client_id);
+		log_debug("%s:%s res_unlock cl %u", ls->name, r->name, act->client_id);
 
 	/* send unlock to lm when last sh lock is unlocked */
 	if (lk->mode == LD_LK_SH) {
 		r->sh_count--;
 		if (r->sh_count > 0) {
-			log_debug("S %s R %s res_unlock sh_count %u", ls->name, r->name, r->sh_count);
+			log_debug("%s:%s res_unlock sh_count %u", ls->name, r->name, r->sh_count);
 			goto rem_lk;
 		}
 	}
@@ -1696,14 +1720,14 @@ do_unlock:
 		r_version = r->version;
 		r->version_zero_valid = 0;
 
-		log_debug("S %s R %s res_unlock r_version inc %u", ls->name, r->name, r_version);
+		log_debug("%s:%s res_unlock r_version inc %u", ls->name, r->name, r_version);
 
 	} else if ((r->type == LD_RT_VG) && (r->mode == LD_LK_EX) && (lk->version > r->version)) {
 		r->version = lk->version;
 		r_version = r->version;
 		r->version_zero_valid = 0;
 
-		log_debug("S %s R %s res_unlock r_version new %u",
+		log_debug("%s:%s res_unlock r_version new %u",
 			  ls->name, r->name, r_version);
 	} else {
 		r_version = 0;
@@ -1712,11 +1736,11 @@ do_unlock:
 	rv = lm_unlock(ls, r, act, r_version, 0);
 	if (rv < 0) {
 		/* should never happen, retry? */
-		log_error("S %s R %s res_unlock lm error %d", ls->name, r->name, rv);
+		log_error("%s:%s res_unlock lm error %d", ls->name, r->name, rv);
 		return rv;
 	}
 
-	log_debug("S %s R %s res_unlock lm done", ls->name, r->name);
+	/* log_debug("%s:%s res_unlock lm done", ls->name, r->name); */
 
 rem_lk:
 	list_del(&lk->list);
@@ -1735,13 +1759,13 @@ static int res_update(struct lockspace *ls, struct resource *r,
 
 	lk = find_lock_client(r, act->client_id);
 	if (!lk) {
-		log_error("S %s R %s res_update cl %u lock not found",
+		log_error("%s:%s res_update cl %u lock not found",
 			  ls->name, r->name, act->client_id);
 		return -ENOENT;
 	}
 
 	if (r->mode != LD_LK_EX) {
-		log_error("S %s R %s res_update cl %u version on non-ex lock",
+		log_error("%s:%s res_update cl %u version on non-ex lock",
 			  ls->name, r->name, act->client_id);
 		return -EINVAL;
 	}
@@ -1762,13 +1786,13 @@ static int res_update(struct lockspace *ls, struct resource *r,
 			 * force an invalidation on other hosts.  The next change
 			 * will return to using the seqno again.
 			 */
-			log_error("S %s R %s res_update cl %u old version %u new version %u too small",
+			log_error("%s:%s res_update cl %u old version %u new version %u too small",
 			  	  ls->name, r->name, act->client_id, r->version, act->version);
 		}
 		lk->version = act->version;
 	}
 
-	log_debug("S %s R %s res_update cl %u lk version to %u", ls->name, r->name, act->client_id, lk->version);
+	log_debug("%s:%s res_update cl %u lk version to %u", ls->name, r->name, act->client_id, lk->version);
 
 	return 0;
 }
@@ -1921,7 +1945,7 @@ static void res_process(struct lockspace *ls, struct resource *r,
 
 	list_for_each_entry_safe(act, safe, &r->actions, list) {
 		if (act->op == LD_OP_FREE && act->rt == LD_RT_LV) {
-			log_debug("S %s R %s free_lv", ls->name, r->name);
+			log_debug("%s:%s free_lv", ls->name, r->name);
 			rv = free_lv(ls, r);
 			act->result = rv;
 			list_del(&act->list);
@@ -1943,7 +1967,7 @@ static void res_process(struct lockspace *ls, struct resource *r,
 			add_client_result(act);
 
 			if (!rv && act->op == LD_OP_DISABLE) {
-				log_debug("S %s R %s free disabled", ls->name, r->name);
+				log_debug("%s:%s free disabled", ls->name, r->name);
 				goto r_free;
 			}
 		}
@@ -2161,7 +2185,7 @@ static void res_process(struct lockspace *ls, struct resource *r,
 			    (act->retries <= act->max_retries) &&
 			    (lm_retry || (r->type != LD_RT_LV))) {
 				/* leave act on list */
-				log_debug("S %s R %s res_lock EAGAIN retry", ls->name, r->name);
+				log_debug("%s:%s res_lock EAGAIN retry", ls->name, r->name);
 				act->retries++;
 				*retry_out = 1;
 			} else {
@@ -2194,7 +2218,7 @@ static void res_process(struct lockspace *ls, struct resource *r,
 			    (act->retries <= act->max_retries) &&
 			    (lm_retry || (r->type != LD_RT_LV))) {
 				/* leave act on list */
-				log_debug("S %s R %s res_lock EAGAIN retry", ls->name, r->name);
+				log_debug("%s:%s res_lock EAGAIN retry", ls->name, r->name);
 				act->retries++;
 				*retry_out = 1;
 			} else {
@@ -2213,13 +2237,13 @@ static void res_process(struct lockspace *ls, struct resource *r,
 r_free:
 	/* For the EUNATCH case it may be possible there are queued actions? */
 	list_for_each_entry_safe(act, safe, &r->actions, list) {
-		log_error("S %s R %s res_process r_free cancel %s client %d",
+		log_error("%s:%s res_process r_free cancel %s client %d",
 			  ls->name, r->name, op_str(act->op), act->client_id);
 		act->result = -ECANCELED;
 		list_del(&act->list);
 		add_client_result(act);
 	}
-	log_debug("S %s R %s res_process free", ls->name, r->name);
+	log_debug("%s:%s res_process free", ls->name, r->name);
 	lm_rem_resource(ls, r);
 	list_del(&r->list);
 	free_resource(r);
@@ -2277,9 +2301,9 @@ static int clear_locks(struct lockspace *ls, int free_vg, int drop_vg)
 			 */
 
 			if (lk->flags & LD_LF_PERSISTENT && !drop_vg)
-				log_error("S %s R %s clear lock persistent", ls->name, r->name);
+				log_error("%s:%s clear lock persistent", ls->name, r->name);
 			else
-				log_debug("S %s R %s clear lock mode %s client %d", ls->name, r->name, mode_str(lk->mode), lk->client_id);
+				log_debug("%s:%s clear lock mode %s client %d", ls->name, r->name, mode_str(lk->mode), lk->client_id);
 
 			if (lk->version > lk_version)
 				lk_version = lk->version;
@@ -2294,13 +2318,13 @@ static int clear_locks(struct lockspace *ls, int free_vg, int drop_vg)
 		if ((r->type == LD_RT_GL) && (r->mode == LD_LK_EX)) {
 			r->version++;
 			r_version = r->version;
-			log_debug("S %s R %s clear_locks r_version inc %u",
+			log_debug("%s:%s clear_locks r_version inc %u",
 				  ls->name, r->name, r_version);
 
 		} else if ((r->type == LD_RT_VG) && (r->mode == LD_LK_EX) && (lk_version > r->version)) {
 			r->version = lk_version;
 			r_version = r->version;
-			log_debug("S %s R %s clear_locks r_version new %u",
+			log_debug("%s:%s clear_locks r_version new %u",
 				  ls->name, r->name, r_version);
 
 		} else {
@@ -2310,19 +2334,19 @@ static int clear_locks(struct lockspace *ls, int free_vg, int drop_vg)
 		rv = lm_unlock(ls, r, NULL, r_version, free_vg ? LMUF_FREE_VG : 0);
 		if (rv < 0) {
 			/* should never happen */
-			log_error("S %s R %s clear_locks free %d drop %d lm unlock error %d",
+			log_error("%s:%s clear_locks free %d drop %d lm unlock error %d",
 				  ls->name, r->name, free_vg, drop_vg, rv);
 		}
 
 		list_for_each_entry_safe(act, act_safe, &r->actions, list) {
-			log_error("S %s R %s clear_locks cancel %s client %d",
+			log_error("%s:%s clear_locks cancel %s client %d",
 				  ls->name, r->name, op_str(act->op), act->client_id);
 			act->result = -ECANCELED;
 			list_del(&act->list);
 			add_client_result(act);
 		}
  r_free:
-		log_debug("S %s R %s free", ls->name, r->name);
+		log_debug("%s:%s free", ls->name, r->name);
 		lm_rem_resource(ls, r);
 		list_del(&r->list);
 		free_resource(r);
@@ -2714,7 +2738,7 @@ static void *lockspace_thread_main(void *arg_in)
 
 			list_add_tail(&act->list, &r->actions);
 
-			log_debug("S %s R %s action %s %s", ls->name, r->name,
+			log_debug("%s:%s action %s %s", ls->name, r->name,
 				  op_str(act->op), mode_str(act->mode));
 		}
 		pthread_mutex_unlock(&ls->mutex);
@@ -4072,7 +4096,7 @@ static int client_send_result(struct client *cl, struct action *act)
 
 		log_debug("send %s[%d] cl %u %s %s rv %d %s %s",
 			  cl->name[0] ? cl->name : "client", cl->pid, cl->id,
-			  op_str(act->op), rt_str(act->rt),
+			  op_mode_str(act->op, act->mode), rt_str(act->rt),
 			  act->result, (act->result == -ENOLS) ? "ENOLS" : "", result_flags);
 
 		res = daemon_reply_simple("OK",
@@ -4993,9 +5017,9 @@ skip_pvs_path:
 	dm_config_destroy(req.cft);
 	buffer_destroy(&req.buffer);
 
-	log_debug("recv %s[%d] cl %u %s %s \"%s\" mode %s flags %x",
+	log_debug("recv %s[%d] cl %u %s %s \"%s\" flags %x",
 		  cl->name[0] ? cl->name : "client", cl->pid, cl->id,
-		  op_str(act->op), rt_str(act->rt), act->vg_name, mode_str(act->mode), opts);
+		  op_mode_str(act->op, act->mode), rt_str(act->rt), act->vg_name, opts);
 
 	if (lm == LD_LM_DLM && !lm_support_dlm()) {
 		log_debug("dlm not supported");

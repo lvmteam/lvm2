@@ -999,7 +999,7 @@ int lm_free_lv_sanlock(struct lockspace *ls, struct resource *r)
 	struct sanlk_resource *rs = &rds->rs;
 	int rv;
 
-	log_debug("S %s R %s free_lv_san", ls->name, r->name);
+	log_debug("%s:%s free_lv_san", ls->name, r->name);
 
 	if (daemon_test)
 		return 0;
@@ -1008,7 +1008,7 @@ int lm_free_lv_sanlock(struct lockspace *ls, struct resource *r)
 
 	rv = sanlock_write_resource(rs, 0, 0, 0);
 	if (rv < 0) {
-		log_error("S %s R %s free_lv_san write error %d",
+		log_error("%s:%s free_lv_san write error %d",
 			  ls->name, r->name, rv);
 	}
 
@@ -1678,20 +1678,20 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 
 		rv = check_args_version(r->lv_args, LV_LOCK_ARGS_MAJOR);
 		if (rv < 0) {
-			log_error("S %s R %s lock_san wrong lv_args version %s",
+			log_error("%s:%s lock_san wrong lv_args version %s",
 				  ls->name, r->name, r->lv_args);
 			return rv;
 		}
 
 		rv = lock_lv_offset_from_args(r->lv_args, &lock_lv_offset);
 		if (rv < 0) {
-			log_error("S %s R %s lock_san lv_offset_from_args error %d %s",
+			log_error("%s:%s lock_san lv_offset_from_args error %d %s",
 				  ls->name, r->name, rv, r->lv_args);
 			return rv;
 		}
 
 		if (!added && (rds->rs.disks[0].offset != lock_lv_offset)) {
-			log_debug("S %s R %s lock_san offset old %llu new %llu",
+			log_debug("%s:%s lock_san offset old %llu new %llu",
 				  ls->name, r->name,
 				  (unsigned long long)rds->rs.disks[0].offset,
 				  (unsigned long long)lock_lv_offset);
@@ -1717,7 +1717,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 
 	rs->flags |= SANLK_RES_PERSISTENT;
 
-	log_debug("S %s R %s lock_san %s at %s:%llu",
+	log_debug("%s:%s lock_san %s at %s:%llu",
 		  ls->name, r->name, mode_str(ld_mode), rs->disks[0].path,
 		  (unsigned long long)rs->disks[0].offset);
 
@@ -1759,7 +1759,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		 * a shared lock but the lock is held ex by another host.
 		 * There's no point in retrying this case, just return an error.
 		 */
-		log_debug("S %s R %s lock_san acquire mode %d rv EAGAIN", ls->name, r->name, ld_mode);
+		log_debug("%s:%s lock_san acquire mode %d rv EAGAIN", ls->name, r->name, ld_mode);
 		*retry = 0;
 		return -EAGAIN;
 	}
@@ -1773,7 +1773,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		 * The lvm command will see this error, refresh the lvmlock
 		 * lv, and try again.
 		 */
-		log_debug("S %s R %s lock_san acquire offset %llu rv EMSGSIZE",
+		log_debug("%s:%s lock_san acquire offset %llu rv EMSGSIZE",
 			  ls->name, r->name, (unsigned long long)rs->disks[0].offset);
 		*retry = 0;
 		return -EMSGSIZE;
@@ -1784,7 +1784,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		 * The orphan lock exists but in a different mode than we asked
 		 * for, so the caller should try again with the other mode.
 		 */
-		log_debug("S %s R %s lock_san adopt mode %d try other mode",
+		log_debug("%s:%s lock_san adopt mode %d try other mode",
 			  ls->name, r->name, ld_mode);
 		*retry = 0;
 		return -EUCLEAN;
@@ -1794,7 +1794,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		/*
 		 * No orphan lock exists.
 		 */
-		log_debug("S %s R %s lock_san adopt mode %d no orphan found",
+		log_debug("%s:%s lock_san adopt mode %d no orphan found",
 			  ls->name, r->name, ld_mode);
 		*retry = 0;
 		return -ENOENT;
@@ -1816,7 +1816,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		 * so if requesting a sh lock, retry a couple times,
 		 * otherwise don't.
 		 */
-		log_debug("S %s R %s lock_san acquire mode %d rv %d", ls->name, r->name, ld_mode, rv);
+		log_debug("%s:%s lock_san acquire mode %d rv %d", ls->name, r->name, ld_mode, rv);
 		*retry = (ld_mode == LD_LK_SH) ? 1 : 0;
 		return -EAGAIN;
 	}
@@ -1826,7 +1826,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		 * sanlock got an i/o timeout when trying to acquire the
 		 * lease on disk.
 		 */
-		log_debug("S %s R %s lock_san acquire mode %d rv %d", ls->name, r->name, ld_mode, rv);
+		log_debug("%s:%s lock_san acquire mode %d rv %d", ls->name, r->name, ld_mode, rv);
 		*retry = 0;
 		return -EAGAIN;
 	}
@@ -1836,7 +1836,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		 * There was contention with another host for the lease,
 		 * and we lost.
 		 */
-		log_debug("S %s R %s lock_san acquire mode %d rv %d", ls->name, r->name, ld_mode, rv);
+		log_debug("%s:%s lock_san acquire mode %d rv %d", ls->name, r->name, ld_mode, rv);
 		*retry = 0;
 		return -EAGAIN;
 	}
@@ -1855,19 +1855,19 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		 * command can print an different error indicating that the
 		 * owner of the lease is in the process of expiring?
 		 */
-		log_debug("S %s R %s lock_san acquire mode %d rv %d", ls->name, r->name, ld_mode, rv);
+		log_debug("%s:%s lock_san acquire mode %d rv %d", ls->name, r->name, ld_mode, rv);
 		*retry = 0;
 		return -EAGAIN;
 	}
 
 	if (rv < 0) {
-		log_error("S %s R %s lock_san acquire error %d",
+		log_error("%s:%s lock_san acquire error %d",
 			  ls->name, r->name, rv);
 
 		/* if the gl has been disabled, remove and free the gl resource */
 		if ((rv == SANLK_LEADER_RESOURCE) && (r->type == LD_RT_GL)) {
 			if (!lm_gl_is_enabled(ls)) {
-				log_error("S %s R %s lock_san gl has been disabled",
+				log_error("%s:%s lock_san gl has been disabled",
 					  ls->name, r->name);
 				if (!strcmp(gl_lsname_sanlock, ls->name))
 					memset(gl_lsname_sanlock, 0, sizeof(gl_lsname_sanlock));
@@ -1905,7 +1905,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 	if (rds->vb) {
 		rv = sanlock_get_lvb(0, rs, (char *)&vb, sizeof(vb));
 		if (rv < 0) {
-			log_error("S %s R %s lock_san get_lvb error %d", ls->name, r->name, rv);
+			log_error("%s:%s lock_san get_lvb error %d", ls->name, r->name, rv);
 			memset(rds->vb, 0, sizeof(struct val_blk));
 			memset(vb_out, 0, sizeof(struct val_blk));
 			/* the lock is still acquired, the vb values considered invalid */
@@ -1940,7 +1940,7 @@ int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
 	uint32_t flags = 0;
 	int rv;
 
-	log_debug("S %s R %s convert_san %s to %s",
+	log_debug("%s:%s convert_san %s to %s",
 		  ls->name, r->name, mode_str(r->mode), mode_str(ld_mode));
 
 	if (daemon_test)
@@ -1955,12 +1955,12 @@ int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
 			rds->vb->r_version = cpu_to_le32(r_version);
 		memcpy(&vb, rds->vb, sizeof(vb));
 
-		log_debug("S %s R %s convert_san set r_version %u",
+		log_debug("%s:%s convert_san set r_version %u",
 			  ls->name, r->name, r_version);
 
 		rv = sanlock_set_lvb(0, rs, (char *)&vb, sizeof(vb));
 		if (rv < 0) {
-			log_error("S %s R %s convert_san set_lvb error %d",
+			log_error("%s:%s convert_san set_lvb error %d",
 				  ls->name, r->name, rv);
 			return -ELMERR;
 		}
@@ -1999,10 +1999,10 @@ int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
 	case SANLK_DBLOCK_LVER:
 	case SANLK_DBLOCK_MBAL:
 		/* expected errors from known/normal cases like lock contention or io timeouts */
-		log_debug("S %s R %s convert_san error %d", ls->name, r->name, rv);
+		log_debug("%s:%s convert_san error %d", ls->name, r->name, rv);
 		return -EAGAIN;
 	default:
-		log_error("S %s R %s convert_san convert error %d", ls->name, r->name, rv);
+		log_error("%s:%s convert_san convert error %d", ls->name, r->name, rv);
 		rv = -ELMERR;
 	}
 
@@ -2020,7 +2020,7 @@ static int release_rename(struct lockspace *ls, struct resource *r)
 	struct rd_sanlock *rds = (struct rd_sanlock *)r->lm_data;
 	int rv;
 
-	log_debug("S %s R %s release rename", ls->name, r->name);
+	log_debug("%s:%s release rename", ls->name, r->name);
 
 	res_args = malloc(2 * sizeof(struct sanlk_resource *));
 	if (!res_args)
@@ -2039,7 +2039,7 @@ static int release_rename(struct lockspace *ls, struct resource *r)
 
 	rv = sanlock_release(lms->sock, -1, SANLK_REL_RENAME, 2, res_args);
 	if (rv < 0) {
-		log_error("S %s R %s unlock_san release rename error %d", ls->name, r->name, rv);
+		log_error("%s:%s unlock_san release rename error %d", ls->name, r->name, rv);
 		rv = -ELMERR;
 	}
 
@@ -2068,7 +2068,7 @@ int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
 	struct val_blk vb;
 	int rv;
 
-	log_debug("S %s R %s unlock_san %s r_version %u flags %x",
+	log_debug("%s:%s unlock_san %s r_version %u flags %x",
 		  ls->name, r->name, mode_str(r->mode), r_version, lmu_flags);
 
 	if (daemon_test) {
@@ -2090,12 +2090,12 @@ int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
 			rds->vb->r_version = cpu_to_le32(r_version);
 		memcpy(&vb, rds->vb, sizeof(vb));
 
-		log_debug("S %s R %s unlock_san set r_version %u",
+		log_debug("%s:%s unlock_san set r_version %u",
 			  ls->name, r->name, r_version);
 
 		rv = sanlock_set_lvb(0, rs, (char *)&vb, sizeof(vb));
 		if (rv < 0) {
-			log_error("S %s R %s unlock_san set_lvb error %d",
+			log_error("%s:%s unlock_san set_lvb error %d",
 				  ls->name, r->name, rv);
 			return -ELMERR;
 		}
@@ -2112,7 +2112,7 @@ int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
 
 	rv = sanlock_release(lms->sock, -1, 0, 1, &rs);
 	if (rv < 0)
-		log_error("S %s R %s unlock_san release error %d", ls->name, r->name, rv);
+		log_error("%s:%s unlock_san release error %d", ls->name, r->name, rv);
 
 	/*
 	 * sanlock may return an error here if it fails to release the lease on
