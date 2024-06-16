@@ -164,7 +164,11 @@ FILE *pipe_open(struct cmd_context *cmd, const char *const argv[],
 	log_verbose("Piping:%s", _verbose_args(argv, buf, sizeof(buf)));
 
 	if ((pdata->pid = fork()) == -1) {
-		log_sys_error("pipe", "");
+		log_sys_error("fork", "");
+		if (close(pipefd[0]))
+			log_sys_debug("close", "STDOUT");
+		if (close(pipefd[1]))
+			log_sys_debug("close", "STDIN");
 		return 0;
 	}
 
