@@ -4,7 +4,8 @@ Documentation=man:lvmlockd(8)
 
 [Service]
 Type=notify
-ExecStart=@SBINDIR@/lvmlockd --foreground
+EnvironmentFile=-/etc/sysconfig/lvmlockd
+ExecStart=@SBINDIR@/lvmlockd --foreground $OPTIONS
 PIDFile=@LVMLOCKD_PIDFILE@
 SendSIGKILL=no
 
