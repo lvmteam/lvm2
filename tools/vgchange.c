@@ -676,7 +676,7 @@ static int _vgchange_lock_start(struct cmd_context *cmd, struct volume_group *vg
 	}
 
 do_start:
-	r = lockd_start_vg(cmd, vg, 0, &exists);
+	r = lockd_start_vg(cmd, vg, &exists);
 
 	if (r)
 		vp->lock_start_count++;
