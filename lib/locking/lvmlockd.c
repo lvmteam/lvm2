@@ -1958,7 +1958,7 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 		}
 
 		if ((lockd_flags & LD_RF_NO_GL_LS) || (lockd_flags & LD_RF_NO_LOCKSPACES)) {
-			log_warn("Skipping global lock: lockspace not found or started");
+			log_debug("Skipping global lock: lockspace not found or started");
 			goto allow;
 		}
 

@@ -1487,7 +1487,7 @@ int vgchange_lock_start_stop_cmd(struct cmd_context *cmd, int argc, char **argv)
 
 		if (!start_opt || !strcmp(start_opt, "auto")) {
 			if (vp.lock_start_sanlock)
-				log_print_unless_silent("Starting locking.  Waiting for sanlock may take 20 sec to 3 min...");
+				log_print_unless_silent("Starting locking.  Waiting for sanlock may take a few seconds to 3 min...");
 			else
 				log_print_unless_silent("Starting locking.  Waiting until locks are ready...");
 			lockd_start_wait(cmd);
