@@ -184,7 +184,8 @@ multiple hosts.)
 .
 After initial set up, start up and shut down include the following steps.
 They can be performed directly or may be automated using systemd or a
-cluster resource manager/agents.
+cluster resource manager/agents.  When using lvmlockd.service, daemon
+options can be set in /etc/sysconfig/lvmlockd as OPTIONS='-x1 -y2'.
 .P
 \[bu]
 start lvmlockd
@@ -800,10 +801,7 @@ operation.
 .
 .SS Limitations of shared VGs
 .
-Things that do not yet work in shared VGs:
-.br
-\[bu]
-using external origins for thin LVs
+Commands that cannot be run on shared VGs:
 .br
 \[bu]
 splitting snapshots from LVs
@@ -815,7 +813,7 @@ splitting mirrors in sanlock VGs
 pvmove of entire PVs, or under LVs activated with shared locks
 .br
 \[bu]
-vgsplit and vgmerge (convert to a local VG to do this)
+vgmerge
 .
 .SS lvmlockd changes from clvmd
 .
