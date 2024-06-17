@@ -5407,7 +5407,7 @@ static int remove_inactive_lvs(struct list_head *vg_lockd)
 			goto next_dmname;
 		}
 
-		log_debug("adopt remove_inactive dm name %s dm uuid %s vgname %s lvname %s",
+		log_debug("adopt found active dm %s %s lv %s/%s",
 			  names->name, dm_uuid, vgname, lvname);
 
 		if (!vgname || !lvname) {
@@ -5428,8 +5428,7 @@ static int remove_inactive_lvs(struct list_head *vg_lockd)
 					continue;
 
 				/* Found an active LV in a lockd VG. */
-				log_debug("dm device %s adopt in vg %s lv %s",
-					  names->name, ls->vg_name, r->name);
+				log_debug("adopting %s", names->name);
 				r->adopt = 1;
 				goto next_dmname;
 			}
@@ -5701,7 +5700,6 @@ static void adopt_locks(void)
 	 */
 
 	while (count_start_done < count_start) {
-		sleep(1);
 		act = NULL;
 
 		pthread_mutex_lock(&client_mutex);
@@ -5711,8 +5709,10 @@ static void adopt_locks(void)
 		}
 		pthread_mutex_unlock(&client_mutex);
 
-		if (!act)
+		if (!act) {
+			usleep(500000);
 			continue;
+		}
 
 		if (act->result < 0) {
 			log_error("adopt add lockspace failed vg %s %d", act->vg_name, act->result);
@@ -5830,7 +5830,6 @@ static void adopt_locks(void)
 	 */
 
 	while (count_adopt_done < count_adopt) {
-		sleep(1);
 		act = NULL;
 
 		pthread_mutex_lock(&client_mutex);
@@ -5840,8 +5839,10 @@ static void adopt_locks(void)
 		}
 		pthread_mutex_unlock(&client_mutex);
 
-		if (!act)
+		if (!act) {
+			usleep(200000);
 			continue;
+		}
 
 		/*
 		 * lock adopt results 
@@ -5976,7 +5977,6 @@ static void adopt_locks(void)
 	/* Wait for the unlocks to complete. */
 
 	while (count_adopt_done < count_adopt) {
-		sleep(1);
 		act = NULL;
 
 		pthread_mutex_lock(&client_mutex);
@@ -5986,8 +5986,10 @@ static void adopt_locks(void)
 		}
 		pthread_mutex_unlock(&client_mutex);
 
-		if (!act)
+		if (!act) {
+			usleep(200000);
 			continue;
+		}
 
 		if (act->result < 0)
 			log_error("adopt unlock error %d", act->result);
