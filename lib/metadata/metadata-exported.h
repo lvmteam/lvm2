@@ -699,7 +699,6 @@ struct lvresize_params {
 	int extend_fs_error;    /* FS extend error after LV extend success */
 	int vg_changed_error;   /* VG metadata was modified during fs resize */
 
-	const char *lockopt;
 	char *lockd_lv_refresh_path; /* set during resize to use for refresh at the end */
 	char *lockd_lv_refresh_uuid; /* set during resize to use for refresh at the end */
 

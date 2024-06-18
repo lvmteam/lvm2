@@ -195,7 +195,6 @@ static int _lvresize_params(struct cmd_context *cmd, struct lvresize_params *lp)
 	lp->yes = arg_is_set(cmd, yes_ARG);
 	lp->force = arg_is_set(cmd, force_ARG),
 	lp->nosync = arg_is_set(cmd, nosync_ARG);
-	lp->lockopt = arg_str_value(cmd, lockopt_ARG, NULL);
 
 	if (type_str) {
 		if (!strcmp(type_str, "linear")) {

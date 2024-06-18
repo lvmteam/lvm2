@@ -1223,11 +1223,11 @@ static int _lockd_all_lvs(struct cmd_context *cmd, struct volume_group *vg)
 /* vgremove before the vg is removed */
 
 int lockd_free_vg_before(struct cmd_context *cmd, struct volume_group *vg,
-			 int changing, const char *lockopt, int yes)
+			 int changing, int yes)
 {
 	int lock_type_num = get_lock_type_from_string(vg->lock_type);
 
-	if (lockopt && strstr(lockopt, "force")) {
+	if (cmd->lockopt & LOCKOPT_FORCE) {
 		if (!yes && yes_no_prompt("Force unprotected removal of shared VG? [y/n]: ") == 'n') {
 			log_error("VG not removed.");
 			return 0;
@@ -2782,8 +2782,8 @@ int lockd_lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	char lv_uuid[64] __attribute__((aligned(8)));
 	char path[PATH_MAX];
-	int shupdate = (lp->lockopt && strstr(lp->lockopt, "shupdate"));
-	int norefresh = (lp->lockopt && strstr(lp->lockopt, "norefresh"));
+	int shupdate = cmd->lockopt & LOCKOPT_SHUPDATE;
+	int norefresh = cmd->lockopt & LOCKOPT_NOREFRESH;
 	int rv;
 
 	if (!vg_is_shared(lv->vg))
@@ -3453,3 +3453,60 @@ int lockd_lv_refresh(struct cmd_context *cmd, struct lvresize_params *lp)
 	return 1;
 }
 
+static void _split_line(char *buf, int *argc, char **argv, int max_args, char sep)
+{
+	char *p = buf;
+	int i;
+
+	argv[0] = p;
+
+	for (i = 1; i < max_args; i++) {
+		p = strchr(p, sep);
+		if (!p)
+			break;
+		*p++ = '\0';
+
+		argv[i] = p;
+	}
+	*argc = i;
+}
+
+#define MAX_LOCKOPT 16
+
+void lockd_lockopt_get_flags(const char *str, uint32_t *flags)
+{
+	char buf[PATH_MAX];
+	char *argv[MAX_LOCKOPT];
+	int argc;
+	int i;
+
+	if (!str)
+		return;
+
+	dm_strncpy(buf, str, sizeof(buf));
+
+	_split_line(buf, &argc, argv, MAX_LOCKOPT, ',');
+
+	for (i = 0; i < argc; i++) {
+		if (!strcmp(argv[i], "force"))
+			*flags |= LOCKOPT_FORCE;
+		else if (!strcmp(argv[i], "shupdate"))
+			*flags |= LOCKOPT_SHUPDATE;
+		else if (!strcmp(argv[i], "norefresh"))
+			*flags |= LOCKOPT_NOREFRESH;
+		else if (!strcmp(argv[i], "skipgl"))
+			*flags |= LOCKOPT_SKIPGL;
+		else if (!strcmp(argv[i], "skipvg"))
+			*flags |= LOCKOPT_SKIPVG;
+		else if (!strcmp(argv[i], "skiplv"))
+			*flags |= LOCKOPT_SKIPLV;
+		else if (!strcmp(argv[i], "auto"))
+			*flags |= LOCKOPT_AUTO;
+		else if (!strcmp(argv[i], "nowait"))
+			*flags |= LOCKOPT_NOWAIT;
+		else if (!strcmp(argv[i], "autonowait"))
+			*flags |= LOCKOPT_AUTONOWAIT;
+		else
+			log_warn("Ignoring unknown lockopt value: %s", argv[i]);
+	}
+}

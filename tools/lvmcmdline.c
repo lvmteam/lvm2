@@ -2943,16 +2943,17 @@ static int _init_lvmlockd(struct cmd_context *cmd)
 	}
 
 	if (use_lvmlockd && arg_is_set(cmd, lockopt_ARG)) {
-		const char *opts = arg_str_value(cmd, lockopt_ARG, "");
-		if (strstr(opts, "skiplv")) {
+		lockd_lockopt_get_flags(arg_str_value(cmd, lockopt_ARG, ""), &cmd->lockopt);
+
+		if (cmd->lockopt & LOCKOPT_SKIPLV) {
 			log_warn("WARNING: skipping LV lock in lvmlockd.");
 			cmd->lockd_lv_disable = 1;
 		}
-		if (strstr(opts, "skipvg")) {
+		if (cmd->lockopt & LOCKOPT_SKIPVG) {
 			log_warn("WARNING: skipping VG lock in lvmlockd.");
 			cmd->lockd_vg_disable = 1;
 		}
-		if (strstr(opts, "skipgl")) {
+		if (cmd->lockopt & LOCKOPT_SKIPGL) {
 			log_warn("WARNING: skipping global lock in lvmlockd.");
 			cmd->lockd_gl_disable = 1;
 		}
