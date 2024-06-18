@@ -305,20 +305,27 @@ fail:
 	return rv;
 }
 
-int lm_add_lockspace_dlm(struct lockspace *ls, int adopt)
+int lm_add_lockspace_dlm(struct lockspace *ls, int adopt_only, int adopt_ok)
 {
 	struct lm_dlm *lmd = (struct lm_dlm *)ls->lm_data;
 
 	if (daemon_test)
 		return 0;
 
-	if (adopt)
+	if (adopt_only || adopt_ok) {
 		lmd->dh = dlm_open_lockspace(ls->name);
-	else
+		if (!lmd->dh && adopt_ok)
+			lmd->dh = dlm_new_lockspace(ls->name, 0600, DLM_LSFL_NEWEXCL);
+		if (!lmd->dh)
+			log_error("add_lockspace_dlm adopt_only %d adopt_ok %d %s error",
+				  adopt_only, adopt_ok, ls->name);
+	} else {
 		lmd->dh = dlm_new_lockspace(ls->name, 0600, DLM_LSFL_NEWEXCL);
+		if (!lmd->dh)
+			log_error("add_lockspace_dlm %s error", ls->name);
+	}
 
 	if (!lmd->dh) {
-		log_error("add_lockspace_dlm %s adopt %d error", ls->name, adopt);
 		free(lmd);
 		ls->lm_data = NULL;
 		return -1;
@@ -486,13 +493,13 @@ static int lm_adopt_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 	if (rv == -1 && (errno == EAGAIN)) {
 		log_debug("%s:%s adopt_dlm adopt mode %d try other mode",
 			  ls->name, r->name, ld_mode);
-		rv = -EUCLEAN;
+		rv = -EADOPT_RETRY;
 		goto fail;
 	}
 	if (rv == -1 && (errno == ENOENT)) {
 		log_debug("%s:%s adopt_dlm adopt mode %d no lock",
 			  ls->name, r->name, ld_mode);
-		rv = -ENOENT;
+		rv = -EADOPT_NONE;
 		goto fail;
 	}
 	if (rv < 0) {
@@ -526,7 +533,7 @@ static int lm_adopt_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
  */
 
 int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
-		struct val_blk *vb_out, int adopt)
+		struct val_blk *vb_out, int adopt_only, int adopt_ok)
 {
 	struct lm_dlm *lmd = (struct lm_dlm *)ls->lm_data;
 	struct rd_dlm *rdd = (struct rd_dlm *)r->lm_data;
@@ -536,7 +543,13 @@ int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 	int mode;
 	int rv;
 
-	if (adopt) {
+	if (adopt_ok) {
+		log_debug("%s:%s lock_dlm adopt_ok not supported", ls->name, r->name);
+		return -1;
+	}
+
+	if (adopt_only) {
+		log_debug("%s:%s lock_dlm adopt_only", ls->name, r->name);
 		/* When adopting, we don't follow the normal method
 		   of acquiring a NL lock then converting it to the
 		   desired mode. */

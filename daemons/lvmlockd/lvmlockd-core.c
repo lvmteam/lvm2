@@ -1062,16 +1062,16 @@ static int lm_prepare_lockspace(struct lockspace *ls, struct action *act)
 	return rv;
 }
 
-static int lm_add_lockspace(struct lockspace *ls, struct action *act, int adopt)
+static int lm_add_lockspace(struct lockspace *ls, struct action *act, int adopt_only, int adopt_ok)
 {
 	int rv;
 
 	if (ls->lm_type == LD_LM_DLM)
-		rv = lm_add_lockspace_dlm(ls, adopt);
+		rv = lm_add_lockspace_dlm(ls, adopt_only, adopt_ok);
 	else if (ls->lm_type == LD_LM_SANLOCK)
-		rv = lm_add_lockspace_sanlock(ls, adopt);
+		rv = lm_add_lockspace_sanlock(ls, adopt_only, adopt_ok);
 	else if (ls->lm_type == LD_LM_IDM)
-		rv = lm_add_lockspace_idm(ls, adopt);
+		rv = lm_add_lockspace_idm(ls, adopt_only, adopt_ok);
 	else
 		return -1;
 
@@ -1099,17 +1099,17 @@ static int lm_rem_lockspace(struct lockspace *ls, struct action *act, int free_v
 }
 
 static int lm_lock(struct lockspace *ls, struct resource *r, int mode, struct action *act,
-		   struct val_blk *vb_out, int *retry, int adopt)
+		   struct val_blk *vb_out, int *retry, int adopt_only, int adopt_ok)
 {
 	int rv;
 
 	if (ls->lm_type == LD_LM_DLM)
-		rv = lm_lock_dlm(ls, r, mode, vb_out, adopt);
+		rv = lm_lock_dlm(ls, r, mode, vb_out, adopt_only, adopt_ok);
 	else if (ls->lm_type == LD_LM_SANLOCK)
-		rv = lm_lock_sanlock(ls, r, mode, vb_out, retry, adopt);
+		rv = lm_lock_sanlock(ls, r, mode, vb_out, retry, adopt_only, adopt_ok);
 	else if (ls->lm_type == LD_LM_IDM)
 		rv = lm_lock_idm(ls, r, mode, vb_out, act->lv_uuid,
-				 &act->pvs, adopt);
+				 &act->pvs, adopt_only, adopt_ok);
 	else
 		return -1;
 
@@ -1190,10 +1190,13 @@ static int lm_find_free_lock(struct lockspace *ls, uint64_t *free_offset, int *s
 
 /*
  * While adopting locks, actions originate from the adopt_locks()
- * function, not from a client.  So, these actions (flagged ADOPT),
+ * function, not from a client.  So, these actions (flagged ADOPT_ONLY),
  * should be passed back to the adopt_locks() function through the
  * adopt_results list, and not be sent back to a client via the
- * client_list/client_thread.
+ * client_list/client_thread.  INTERNAL_CLIENT_ID indicates the
+ * act was generated internally and not from a client, and
+ * distinguishes internal adopt request from those received from
+ * a client.
  */
 
 static void add_client_result(struct action *act)
@@ -1206,7 +1209,7 @@ static void add_client_result(struct action *act)
 	}
 
 	pthread_mutex_lock(&client_mutex);
-	if (act->flags & LD_AF_ADOPT)
+	if ((act->flags & LD_AF_ADOPT_ONLY) && (act->client_id == INTERNAL_CLIENT_ID))
 		list_add_tail(&act->list, &adopt_results);
 	else
 		list_add_tail(&act->list, &client_results);
@@ -1283,7 +1286,9 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 	if (r->type == LD_RT_LV && act->lv_args[0])
 		memcpy(r->lv_args, act->lv_args, MAX_ARGS);
 
-	rv = lm_lock(ls, r, act->mode, act, &vb, retry, act->flags & LD_AF_ADOPT);
+	rv = lm_lock(ls, r, act->mode, act, &vb, retry,
+		     act->flags & LD_AF_ADOPT_ONLY ? 1 : 0,
+		     act->flags & LD_AF_ADOPT ? 1 : 0);
 
 	if (rv && r->use_vb)
 		log_debug("%s:%s res_lock rv %d read vb %x %x %u",
@@ -2486,7 +2491,8 @@ static void *lockspace_thread_main(void *arg_in)
 	int free_vg = 0;
 	int drop_vg = 0;
 	int error = 0;
-	int adopt_flag = 0;
+	int adopt_only = 0;
+	int adopt_ok = 0;
 	int wait_flag = 0;
 	int retry;
 	int rv;
@@ -2505,14 +2511,16 @@ static void *lockspace_thread_main(void *arg_in)
 
 			if (add_act->flags & LD_AF_WAIT)
 				wait_flag = 1;
+			if (add_act->flags & LD_AF_ADOPT_ONLY)
+				adopt_only = 1;
 			if (add_act->flags & LD_AF_ADOPT)
-				adopt_flag = 1;
+				adopt_ok = 1;
 		}
 	}
 	pthread_mutex_unlock(&ls->mutex);
 
-	log_debug("S %s lm_add_lockspace %s wait %d adopt %d",
-		  ls->name, lm_str(ls->lm_type), wait_flag, adopt_flag);
+	log_debug("S %s lm_add_lockspace %s wait %d adopt_only %d adopt_ok %d",
+		  ls->name, lm_str(ls->lm_type), wait_flag, adopt_only, adopt_ok);
 
 	/*
 	 * The prepare step does not wait for anything and is quick;
@@ -2531,7 +2539,7 @@ static void *lockspace_thread_main(void *arg_in)
 	 * The actual lockspace join can take a while.
 	 */
 	if (!error) {
-		error = lm_add_lockspace(ls, add_act, adopt_flag);
+		error = lm_add_lockspace(ls, add_act, adopt_only, adopt_ok);
 
 		log_debug("S %s lm_add_lockspace done %d", ls->name, error);
 
@@ -4505,6 +4513,12 @@ static uint32_t str_to_opts(const char *str)
 		flags |= LD_AF_ENABLE;
 	if (strstr(str, "disable"))
 		flags |= LD_AF_DISABLE;
+
+	/* FIXME: parse the flag values properly */
+	if (strstr(str, "adopt_only"))
+		flags |= LD_AF_ADOPT_ONLY;
+	else if (strstr(str, "adopt"))
+		flags |= LD_AF_ADOPT;
 out:
 	return flags;
 }
@@ -5755,7 +5769,7 @@ static void adopt_locks(void)
 			act->op = LD_OP_LOCK;
 			act->rt = LD_RT_LV;
 			act->mode = r->adopt_mode;
-			act->flags = (LD_AF_ADOPT | LD_AF_PERSISTENT);
+			act->flags = (LD_AF_ADOPT_ONLY | LD_AF_PERSISTENT);
 			act->client_id = INTERNAL_CLIENT_ID;
 			act->lm_type = ls->lm_type;
 			dm_strncpy(act->vg_name, ls->vg_name, sizeof(act->vg_name));
@@ -5783,7 +5797,7 @@ static void adopt_locks(void)
 		act->op = LD_OP_LOCK;
 		act->rt = LD_RT_VG;
 		act->mode = LD_LK_SH;
-		act->flags = LD_AF_ADOPT;
+		act->flags = LD_AF_ADOPT_ONLY;
 		act->client_id = INTERNAL_CLIENT_ID;
 		act->lm_type = ls->lm_type;
 		dm_strncpy(act->vg_name, ls->vg_name, sizeof(act->vg_name));
@@ -5809,7 +5823,7 @@ static void adopt_locks(void)
 	act->op = LD_OP_LOCK;
 	act->rt = LD_RT_GL;
 	act->mode = LD_LK_SH;
-	act->flags = LD_AF_ADOPT;
+	act->flags = LD_AF_ADOPT_ONLY;
 	act->client_id = INTERNAL_CLIENT_ID;
 	act->lm_type = (gl_use_sanlock ? LD_LM_SANLOCK : LD_LM_DLM);
 
@@ -5848,7 +5862,7 @@ static void adopt_locks(void)
 		 * lock adopt results 
 		 */
 
-		if (act->result == -EUCLEAN) {
+		if (act->result == -EADOPT_RETRY) {
 			/*
 			 * Adopt failed because the orphan has a different mode
 			 * than initially requested.  Repeat the lock-adopt operation
@@ -5887,7 +5901,7 @@ static void adopt_locks(void)
 				free_action(act);
 			}
 
-		} else if (act->result == -ENOENT) {
+		} else if (act->result == -EADOPT_NONE) {
 			/*
 			 * No orphan lock exists.  This is common for GL/VG locks
 			 * because they may not have been held when lvmlockd exited.

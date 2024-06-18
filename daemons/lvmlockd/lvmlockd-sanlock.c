@@ -1501,7 +1501,7 @@ fail:
 	return ret;
 }
 
-int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt)
+int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok)
 {
 	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
 	int rv;
@@ -1512,10 +1512,14 @@ int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt)
 	}
 
 	rv = sanlock_add_lockspace_timeout(&lms->ss, 0, sanlock_io_timeout);
-	if (rv == -EEXIST && adopt) {
+	if (rv == -EEXIST && (adopt_ok || adopt_only)) {
 		/* We could alternatively just skip the sanlock call for adopt. */
 		log_debug("S %s add_lockspace_san adopt found ls", ls->name);
 		goto out;
+	}
+	if ((rv != -EEXIST) && adopt_only) {
+		log_error("S %s add_lockspace_san add_lockspace adopt_only not found", ls->name);
+		goto fail;
 	}
 	if (rv < 0) {
 		/* retry for some errors? */
@@ -1638,7 +1642,7 @@ int lm_rem_resource_sanlock(struct lockspace *ls, struct resource *r)
 }
 
 int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
-		    struct val_blk *vb_out, int *retry, int adopt)
+		    struct val_blk *vb_out, int *retry, int adopt_only, int adopt_ok)
 {
 	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
 	struct rd_sanlock *rds = (struct rd_sanlock *)r->lm_data;
@@ -1732,8 +1736,10 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 
 	if (rds->vb)
 		flags |= SANLK_ACQUIRE_LVB;
-	if (adopt)
+	if (adopt_only)
 		flags |= SANLK_ACQUIRE_ORPHAN_ONLY;
+	if (adopt_ok)
+		flags |= SANLK_ACQUIRE_ORPHAN;
 
 	/*
 	 * Don't block waiting for a failed lease to expire since it causes
@@ -1779,7 +1785,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		return -EMSGSIZE;
 	}
 
-	if (adopt && (rv == -EUCLEAN)) {
+	if ((adopt_only || adopt_ok) && (rv == -EUCLEAN)) {
 		/*
 		 * The orphan lock exists but in a different mode than we asked
 		 * for, so the caller should try again with the other mode.
@@ -1787,17 +1793,17 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		log_debug("%s:%s lock_san adopt mode %d try other mode",
 			  ls->name, r->name, ld_mode);
 		*retry = 0;
-		return -EUCLEAN;
+		return -EADOPT_RETRY;
 	}
 
-	if (adopt && (rv == -ENOENT)) {
+	if (adopt_only && (rv == -ENOENT)) {
 		/*
 		 * No orphan lock exists.
 		 */
-		log_debug("%s:%s lock_san adopt mode %d no orphan found",
+		log_debug("%s:%s lock_san adopt_only mode %d no orphan found",
 			  ls->name, r->name, ld_mode);
 		*retry = 0;
-		return -ENOENT;
+		return -EADOPT_NONE;
 	}
 
 	if (rv == SANLK_ACQUIRE_IDLIVE || rv == SANLK_ACQUIRE_OWNED || rv == SANLK_ACQUIRE_OTHER) {
@@ -1880,7 +1886,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 
 		/* sanlock gets i/o errors trying to read/write the leases. */
 		if (rv == -EIO)
-			rv = -ELOCKIO;
+			return -ELOCKIO;
 
 		/*
 		 * The sanlock lockspace can disappear if the lease storage fails,
@@ -1889,7 +1895,11 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		 * stop and free the lockspace.
 		 */
 		if (rv == -ENOSPC)
-			rv = -ELOCKIO;
+			return -ELOCKIO;
+
+		/* The request conflicted with an orphan lock. */
+		if (rv == -EUCLEAN)
+			return -EORPHAN;
 
 		/*
 		 * generic error number for sanlock errors that we are not

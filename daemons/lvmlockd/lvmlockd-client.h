@@ -54,5 +54,8 @@ static inline void lvmlockd_close(daemon_handle h)
 #define EREMOVED  219
 #define EDEVOPEN  220 /* sanlock failed to open lvmlock LV */
 #define ELMERR    221
+#define EORPHAN   222
+#define EADOPT_NONE  223
+#define EADOPT_RETRY 224
 
 #endif	/* _LVM_LVMLOCKD_CLIENT_H */

@@ -49,6 +49,11 @@
 #define LOCKOPT_AUTO		0x00000040
 #define LOCKOPT_NOWAIT		0x00000080
 #define LOCKOPT_AUTONOWAIT	0x00000100
+#define LOCKOPT_ADOPTLS		0x00000200
+#define LOCKOPT_ADOPTGL		0x00000400
+#define LOCKOPT_ADOPTVG		0x00000800
+#define LOCKOPT_ADOPTLV		0x00001000
+#define LOCKOPT_ADOPT		0x00002000
 
 void lockd_lockopt_get_flags(const char *str, uint32_t *flags);
 

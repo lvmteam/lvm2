@@ -107,11 +107,12 @@ struct client {
 #define LD_AF_SEARCH_LS            0x00000200
 #define LD_AF_WAIT_STARTING        0x00001000
 #define LD_AF_DUP_GL_LS            0x00002000
-#define LD_AF_ADOPT                0x00010000
+#define LD_AF_ADOPT                0x00010000 /* adopt ok but not required */
 #define LD_AF_WARN_GL_REMOVED	   0x00020000
 #define LD_AF_LV_LOCK              0x00040000
 #define LD_AF_LV_UNLOCK            0x00080000
 #define LD_AF_SH_EXISTS            0x00100000
+#define LD_AF_ADOPT_ONLY           0x00200000 /* adopt orphan or fail */
 
 /*
  * Number of times to repeat a lock request after
@@ -393,11 +394,11 @@ static inline const char *mode_str(int x)
 
 int lm_init_vg_dlm(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
 int lm_prepare_lockspace_dlm(struct lockspace *ls);
-int lm_add_lockspace_dlm(struct lockspace *ls, int adopt);
+int lm_add_lockspace_dlm(struct lockspace *ls, int adopt_only, int adopt_ok);
 int lm_purge_locks_dlm(struct lockspace *ls);
 int lm_rem_lockspace_dlm(struct lockspace *ls, int free_vg);
 int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
-		struct val_blk *vb_out, int adopt);
+		struct val_blk *vb_out, int adopt_only, int adopt_ok);
 int lm_convert_dlm(struct lockspace *ls, struct resource *r,
 		   int ld_mode, uint32_t r_version);
 int lm_unlock_dlm(struct lockspace *ls, struct resource *r,
@@ -427,7 +428,7 @@ static inline int lm_prepare_lockspace_dlm(struct lockspace *ls)
 	return -1;
 }
 
-static inline int lm_add_lockspace_dlm(struct lockspace *ls, int adopt)
+static inline int lm_add_lockspace_dlm(struct lockspace *ls, int adopt_only, int adopt_ok)
 {
 	return -1;
 }
@@ -443,7 +444,7 @@ static inline int lm_rem_lockspace_dlm(struct lockspace *ls, int free_vg)
 }
 
 static inline int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
-		struct val_blk *vb_out, int adopt)
+		struct val_blk *vb_out, int adopt_only, int adopt_ok)
 {
 	return -1;
 }
@@ -509,10 +510,11 @@ int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name, char *vg_arg
 int lm_free_lv_sanlock(struct lockspace *ls, struct resource *r);
 int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
 int lm_prepare_lockspace_sanlock(struct lockspace *ls);
-int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt);
+int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok);
 int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg);
 int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
-		    struct val_blk *vb_out, int *retry, int adopt);
+		    struct val_blk *vb_out, int *retry, 
+		    int adopt_only, int adopt_ok);
 int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
 		       int ld_mode, uint32_t r_version);
 int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
@@ -559,7 +561,7 @@ static inline int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 	return -1;
 }
 
-static inline int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt)
+static inline int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok)
 {
 	return -1;
 }
@@ -570,7 +572,8 @@ static inline int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg)
 }
 
 static inline int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
-		    struct val_blk *vb_out, int *retry, int adopt)
+		    struct val_blk *vb_out, int *retry,
+		    int adopt_only, int adopt_ok)
 {
 	return -1;
 }
@@ -644,11 +647,11 @@ static inline int lm_support_sanlock(void)
 int lm_data_size_idm(void);
 int lm_init_vg_idm(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
 int lm_prepare_lockspace_idm(struct lockspace *ls);
-int lm_add_lockspace_idm(struct lockspace *ls, int adopt);
+int lm_add_lockspace_idm(struct lockspace *ls, int adopt_only, int adopt_ok);
 int lm_rem_lockspace_idm(struct lockspace *ls, int free_vg);
 int lm_lock_idm(struct lockspace *ls, struct resource *r, int ld_mode,
 		struct val_blk *vb_out, char *lv_uuid, struct pvs *pvs,
-		int adopt);
+		int adopt_only, int adopt_ok);
 int lm_convert_idm(struct lockspace *ls, struct resource *r,
 		   int ld_mode, uint32_t r_version);
 int lm_unlock_idm(struct lockspace *ls, struct resource *r,
@@ -681,7 +684,7 @@ static inline int lm_prepare_lockspace_idm(struct lockspace *ls)
 	return -1;
 }
 
-static inline int lm_add_lockspace_idm(struct lockspace *ls, int adopt)
+static inline int lm_add_lockspace_idm(struct lockspace *ls, int adopt_only, int adopt_ok)
 {
 	return -1;
 }
@@ -693,7 +696,7 @@ static inline int lm_rem_lockspace_idm(struct lockspace *ls, int free_vg)
 
 static inline int lm_lock_idm(struct lockspace *ls, struct resource *r, int ld_mode,
 		       struct val_blk *vb_out, char *lv_uuid, struct pvs *pvs,
-		       int adopt)
+		       int adopt_only, int adopt_ok)
 {
 	return -1;
 }

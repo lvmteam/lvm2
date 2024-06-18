@@ -391,7 +391,7 @@ int lm_prepare_lockspace_idm(struct lockspace *ls)
 	return 0;
 }
 
-int lm_add_lockspace_idm(struct lockspace *ls, int adopt)
+int lm_add_lockspace_idm(struct lockspace *ls, int adopt_only, int adopt_ok)
 {
 	char killpath[IDM_FAILURE_PATH_LEN];
 	char killargs[IDM_FAILURE_ARGS_LEN];
@@ -530,7 +530,7 @@ static int to_idm_mode(int ld_mode)
 
 int lm_lock_idm(struct lockspace *ls, struct resource *r, int ld_mode,
 		struct val_blk *vb_out, char *lv_uuid, struct pvs *pvs,
-		int adopt)
+		int adopt_only, int adopt_ok)
 {
 	struct lm_idm *lmi = (struct lm_idm *)ls->lm_data;
 	struct rd_idm *rdi = (struct rd_idm *)r->lm_data;
