@@ -64,7 +64,7 @@ struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t devt);
 struct device *dev_cache_get_by_pvid(struct cmd_context *cmd, const char *pvid);
 void dev_cache_verify_aliases(struct device *dev);
 
-struct device *dev_hash_get(const char *name);
+struct device *dev_cache_get_dev_by_name(const char *name);
 
 void dev_set_preferred_name(struct dm_str_list *sl, struct device *dev);
 

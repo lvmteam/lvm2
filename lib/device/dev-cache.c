@@ -49,7 +49,7 @@ struct dir_list {
 
 static struct {
 	struct dm_pool *mem;
-	struct dm_hash_table *names;
+	struct radix_tree *names;
 	struct dm_hash_table *vgid_index;
 	struct dm_hash_table *lvid_index;
 	struct radix_tree *dm_uuids;
@@ -348,9 +348,10 @@ static int _add_alias(struct device *dev, const char *path, enum add_hash hash)
 	struct dm_str_list *strl;
 	const char *oldpath;
 	int prefer_old = 1;
+	size_t path_len = strlen(path);
 
 	if (hash == REHASH)
-		dm_hash_remove(_cache.names, path);
+		radix_tree_remove(_cache.names, path, path_len);
 
 	/* Is name already there? */
 	dm_list_iterate_items(strl, &dev->aliases)
@@ -381,7 +382,7 @@ static int _add_alias(struct device *dev, const char *path, enum add_hash hash)
 		dm_list_add_h(&dev->aliases, &sl->list);
 out:
 	if ((hash != NO_HASH) &&
-	    !dm_hash_insert(_cache.names, path, dev)) {
+	    !radix_tree_insert_ptr(_cache.names, path, path_len, dev)) {
 		log_error("Couldn't add name to hash in dev cache.");
 		return 0;
 	}
@@ -658,7 +659,7 @@ static int _index_dev_by_vgid_and_lvid(struct cmd_context *cmd, struct device *d
 			goto out;
 		}
 
-		if (!(holder_dev = (struct device *) dm_hash_lookup(_cache.names, devpath))) {
+		if (!(holder_dev = dev_cache_get_dev_by_name(devpath))) {
 			/*
 			 * Cope with situation where canonical /<dev_dir>/<dirent->d_name>
 			 * does not exist, but some other node name or symlink exists in
@@ -752,8 +753,7 @@ void dev_cache_failed_path(struct device *dev, const char *path)
 {
 	struct dm_str_list *strl;
 
-	if (dm_hash_lookup(_cache.names, path))
-		dm_hash_remove(_cache.names, path);
+	radix_tree_remove(_cache.names, path, strlen(path));
 
 	dm_list_iterate_items(strl, &dev->aliases) {
 		if (!strcmp(strl->str, path)) {
@@ -774,7 +774,7 @@ static int _insert_dev(const char *path, dev_t d)
 	struct device *dev_by_path;
 
 	dev_by_devt = _dev_cache_get_dev_by_devno(_cache.devices, d);
-	dev_by_path = (struct device *) dm_hash_lookup(_cache.names, path);
+	dev_by_path = dev_cache_get_dev_by_name(path);
 	dev = dev_by_devt;
 
 	/*
@@ -1241,7 +1241,7 @@ static void _drop_all_aliases(struct device *dev)
 
 	dm_list_iterate_items_safe(strl, strl2, &dev->aliases) {
 		log_debug("Drop alias for %u:%u %s.", MAJOR(dev->dev), MINOR(dev->dev), strl->str);
-		dm_hash_remove(_cache.names, strl->str);
+		radix_tree_remove(_cache.names, strl->str, strlen(strl->str));
 		dm_list_del(&strl->list);
 	}
 }
@@ -1403,7 +1403,7 @@ int dev_cache_init(struct cmd_context *cmd)
 	if (!(_cache.mem = dm_pool_create("dev_cache", 10 * 1024)))
 		return_0;
 
-	if (!(_cache.names = dm_hash_create(8190)) ||
+	if (!(_cache.names = radix_tree_create(NULL, NULL)) ||
 	    !(_cache.vgid_index = dm_hash_create(30)) ||
 	    !(_cache.lvid_index = dm_hash_create(29))) {
 		dm_pool_destroy(_cache.mem);
@@ -1439,27 +1439,36 @@ int dev_cache_init(struct cmd_context *cmd)
 	return 0;
 }
 
+struct dev_visitor {
+	struct radix_tree_iterator it;
+	int close_immediate;
+	int free;
+	unsigned num_open;
+};
 /*
  * Returns number of devices still open.
  */
-static int _check_for_open_devices(int close_immediate)
+static bool _visit_check_for_open_devices(struct radix_tree_iterator *it,
+					  const void *key, size_t keylen,
+					  union radix_value v)
 {
-	struct device *dev;
-	struct dm_hash_node *n;
-	int num_open = 0;
+	struct dev_visitor *vt = container_of(it, struct dev_visitor, it);
+	struct device *dev = v.ptr;
 
-	dm_hash_iterate(n, _cache.names) {
-		dev = (struct device *) dm_hash_get_data(_cache.names, n);
-		if (dev->fd >= 0) {
-			log_error("Device '%s' has been left open (%d remaining references).",
-				  dev_name(dev), dev->open_count);
-			num_open++;
-			if (close_immediate && !dev_close_immediate(dev))
-				stack;
-		}
+	if (dev->fd >= 0) {
+		log_error("Device '%s' has been left open (%d remaining references).",
+			  dev_name(dev), dev->open_count);
+		vt->num_open++;
+		if (vt->close_immediate && !dev_close_immediate(dev))
+			stack;
 	}
 
-	return num_open;
+	if (vt->free) {
+		free_dids(&dev->ids);
+		free_wwids(&dev->wwids);
+	}
+
+	return true;
 }
 
 /*
@@ -1467,31 +1476,37 @@ static int _check_for_open_devices(int close_immediate)
  */
 int dev_cache_check_for_open_devices(void)
 {
-	return _check_for_open_devices(0);
+	struct dev_visitor vt = {
+		.it.visit = _visit_check_for_open_devices,
+	};
+
+	radix_tree_iterate(_cache.names, NULL, 0, &vt.it);
+
+	return vt.num_open;
 }
 
 int dev_cache_exit(void)
 {
-	struct device *dev;
-	struct dm_hash_node *n;
-	int num_open = 0;
+	struct dev_visitor vt = {
+		.it.visit = _visit_check_for_open_devices,
+		.close_immediate = 1, /* close open devices */
+		.free = 1,            /* free dids, wwids */
+	};
 
 	if (_cache.names) {
-		if ((num_open = _check_for_open_devices(1)) > 0)
-			log_error(INTERNAL_ERROR "%d device(s) were left open and have been closed.", num_open);
+		/* check for open devices */
+		radix_tree_iterate(_cache.names, NULL, 0, &vt.it);
 
-		dm_hash_iterate(n, _cache.names) {
-			dev = (struct device *) dm_hash_get_data(_cache.names, n);
-			free_dids(&dev->ids);
-			free_wwids(&dev->wwids);
-		}
+		if (vt.num_open)
+			log_error(INTERNAL_ERROR "%d device(s) were left open and have been closed.",
+				  vt.num_open);
 	}
 
 	if (_cache.mem)
 		dm_pool_destroy(_cache.mem);
 
 	if (_cache.names)
-		dm_hash_destroy(_cache.names);
+		radix_tree_destroy(_cache.names);
 
 	if (_cache.vgid_index)
 		dm_hash_destroy(_cache.vgid_index);
@@ -1513,7 +1528,7 @@ int dev_cache_exit(void)
 
 	memset(&_cache, 0, sizeof(_cache));
 
-	return (!num_open);
+	return (!vt.num_open);
 }
 
 int dev_cache_add_dir(const char *path)
@@ -1544,9 +1559,9 @@ int dev_cache_add_dir(const char *path)
 	return 1;
 }
 
-struct device *dev_hash_get(const char *name)
+struct device *dev_cache_get_dev_by_name(const char *name)
 {
-	return (struct device *) dm_hash_lookup(_cache.names, name);
+	return radix_tree_lookup_ptr(_cache.names, name, strlen(name));
 }
 
 static void _remove_alias(struct device *dev, const char *name)
@@ -1582,7 +1597,7 @@ void dev_cache_verify_aliases(struct device *dev)
 			log_debug("Drop alias for %u:%u invalid path %s %u:%u.",
 				  MAJOR(dev->dev), MINOR(dev->dev), strl->str,
 				  MAJOR(st.st_rdev), MINOR(st.st_rdev));
-			dm_hash_remove(_cache.names, strl->str);
+			radix_tree_remove(_cache.names, strl->str, strlen(strl->str));
 			dm_list_del(&strl->list);
 		}
 	}
@@ -1590,7 +1605,7 @@ void dev_cache_verify_aliases(struct device *dev)
 
 static struct device *_dev_cache_get(struct cmd_context *cmd, const char *name, struct dev_filter *f, int existing)
 {
-	struct device *dev = (struct device *) dm_hash_lookup(_cache.names, name);
+	struct device *dev = dev_cache_get_dev_by_name(name);
 	struct stat st;
 	int ret;
 
@@ -1616,7 +1631,7 @@ static struct device *_dev_cache_get(struct cmd_context *cmd, const char *name, 
 			log_debug("Device path %s is invalid for %u:%u %s.",
 				  name, MAJOR(dev->dev), MINOR(dev->dev), dev_name(dev));
 
-			dm_hash_remove(_cache.names, name);
+			radix_tree_remove(_cache.names, name, strlen(name));
 
 			_remove_alias(dev, name);
 
@@ -1681,7 +1696,7 @@ static struct device *_dev_cache_get(struct cmd_context *cmd, const char *name, 
 			return_NULL;
 
 		/* Get the struct dev that was just added. */
-		dev = (struct device *) dm_hash_lookup(_cache.names, name);
+		dev = dev_cache_get_dev_by_name(name);
 
 		if (!dev) {
 			log_error("Failed to get device %s", name);
@@ -1751,7 +1766,7 @@ static struct device *_dev_cache_get(struct cmd_context *cmd, const char *name, 
 			return_NULL;
 
 		/* Get the struct dev that was just added. */
-		dev = (struct device *) dm_hash_lookup(_cache.names, name);
+		dev = dev_cache_get_dev_by_name(name);
 
 		if (!dev) {
 			log_error("Failed to get device %s", name);
@@ -2275,7 +2290,7 @@ int setup_device(struct cmd_context *cmd, const char *devname)
 	if (!_insert_dev(devname, buf.st_rdev))
 		return_0;
 
-	if (!(dev = (struct device *) dm_hash_lookup(_cache.names, devname)))
+	if (!(dev = dev_cache_get_dev_by_name(devname)))
 		return_0;
 
 	/* Match this device to an entry in devices_file so it will not
@@ -2462,7 +2477,7 @@ int setup_devname_in_dev_cache(struct cmd_context *cmd, const char *devname)
 	if (!_insert_dev(devname, buf.st_rdev))
 		return_0;
 
-	if (!dm_hash_lookup(_cache.names, devname))
+	if (!dev_cache_get_dev_by_name(devname))
 		return_0;
 
 	return 1;
@@ -2523,7 +2538,7 @@ struct device *setup_dev_in_dev_cache(struct cmd_context *cmd, dev_t devno, cons
 	if (!_insert_dev(devname, buf.st_rdev))
 		return_NULL;
 
-	if (!(dev = (struct device *) dm_hash_lookup(_cache.names, devname))) {
+	if (!(dev = dev_cache_get_dev_by_name(devname))) {
 		log_error("Device lookup failed for %u:%u %s", major, minor, devname);
 		return_NULL;
 	}

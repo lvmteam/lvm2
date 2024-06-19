@@ -3231,7 +3231,7 @@ const char *devname_error_reason(const char *devname)
 {
 	struct device *dev;
 
-	if ((dev = dev_hash_get(devname))) {
+	if ((dev = dev_cache_get_dev_by_name(devname))) {
 		if (dev->filtered_flags)
 			return dev_filtered_reason(dev);
 		if (lvmcache_dev_is_unused_duplicate(dev))
