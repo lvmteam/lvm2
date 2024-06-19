@@ -875,7 +875,6 @@ int label_scan_for_pvid(struct cmd_context *cmd, char *pvid, struct device **dev
 	char buf[LABEL_SIZE] __attribute__((aligned(8)));
 	struct dm_list devs;
 	struct dev_iter *iter;
-	struct device_list *devl, *devl2;
 	struct device *dev;
 	struct pv_header *pvh;
 	int ret = 0;
@@ -891,6 +890,9 @@ int label_scan_for_pvid(struct cmd_context *cmd, char *pvid, struct device **dev
 		return 0;
 	}
 
+	if (!label_scan_setup_bcache())
+		return_0;
+
 	/*
 	 * Iterating over all available devices with cmd->filter filters
 	 * devices; those returned from dev_iter_get are the devs that
@@ -902,23 +904,10 @@ int label_scan_for_pvid(struct cmd_context *cmd, char *pvid, struct device **dev
 		return 0;
 	}
 
-	log_debug_devs("Filtering devices to scan");
-
-	while ((dev = dev_iter_get(cmd, iter))) {
-		if (!(devl = zalloc(sizeof(*devl))))
-			continue;
-		devl->dev = dev;
-		dm_list_add(&devs, &devl->list);
-	};
-	dev_iter_destroy(iter);
-
-	if (!label_scan_setup_bcache())
-		goto_out;
 
 	log_debug_devs("Reading labels for pvid");
 
-	dm_list_iterate_items(devl, &devs) {
-		dev = devl->dev;
+	while ((dev = dev_iter_get(cmd, iter))) {
 
 		memset(buf, 0, sizeof(buf));
 
@@ -933,7 +922,7 @@ int label_scan_for_pvid(struct cmd_context *cmd, char *pvid, struct device **dev
 		pvh = (struct pv_header *)(buf + 32);
 
 		if (!memcmp(pvh->pv_uuid, pvid, ID_LEN)) {
-			*dev_out = devl->dev;
+			*dev_out = dev;
 			_scan_dev_close(dev);
 			break;
 		}
@@ -942,10 +931,8 @@ int label_scan_for_pvid(struct cmd_context *cmd, char *pvid, struct device **dev
 	}
 	ret = 1;
  out:
-	dm_list_iterate_items_safe(devl, devl2, &devs) {
-		dm_list_del(&devl->list);
-		free(devl);
-	}
+	dev_iter_destroy(iter);
+
 	return ret;
 }
 
