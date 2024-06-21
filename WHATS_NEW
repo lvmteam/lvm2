@@ -1,5 +1,8 @@
 Version 2.03.25 - 
 ==================
+  Utilize more radix_tree instead of dm_hash and btree.
+  Refactor DM uuid caching from device_mapper directory.
+  LVs with component activation will not use uuid -layer suffix.
   Enhance checking for DM uuid device.
   Fix lvm shell command completion on tab key (2.03.24).
 
