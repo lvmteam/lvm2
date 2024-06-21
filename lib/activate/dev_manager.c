@@ -1053,6 +1053,7 @@ int dev_manager_info(struct cmd_context *cmd,
 		     struct dm_info *dminfo, uint32_t *read_ahead,
 		     struct lv_seg_status *seg_status)
 {
+	char old_style_dlid[sizeof(UUID_PREFIX) + 2 * ID_LEN];
 	char *dlid, *name;
 	int r = 0;
 
@@ -1062,8 +1063,11 @@ int dev_manager_info(struct cmd_context *cmd,
 	if (!(dlid = build_dm_uuid(cmd->mem, lv, layer)))
 		goto_out;
 
+	dm_strncpy(old_style_dlid, dlid, sizeof(old_style_dlid));
+
 	if (cmd->cache_dm_devs &&
-	    !dm_device_list_find_by_uuid(cmd->cache_dm_devs, dlid, NULL)) {
+	    !dm_device_list_find_by_uuid(cmd->cache_dm_devs, dlid, NULL) &&
+	    !dm_device_list_find_by_uuid(cmd->cache_dm_devs, old_style_dlid, NULL)) {
 		log_debug("Cached as inactive %s.", name);
 		if (dminfo)
 			memset(dminfo, 0, sizeof(*dminfo));
@@ -3633,7 +3637,11 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (!layer && lv_is_writecache_origin(lv))
 		layer = lv_layer(lv); /* "real" */
 
-	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
+	if (lvlayer->visible_component) {
+		/* Component LV will be public, do not add any layer suffixes */
+		if (!(dlid = dm_build_dm_uuid(dm->mem, UUID_PREFIX, lv->lvid.s, NULL)))
+			return_0;
+	} else if (!(dlid = build_dm_uuid(dm->mem, lv,layer)))
 		return_0;
 
 	/* We've already processed this node if it already has a context ptr */
