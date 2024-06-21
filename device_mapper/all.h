@@ -176,10 +176,10 @@ struct dm_names {
 struct dm_active_device {
 	struct dm_list list;
 	dev_t devno;
-	char *name;	/* device name */
+	const char *name;	/* device name */
 
 	uint32_t event_nr; /* valid when DM_DEVICE_LIST_HAS_EVENT_NR is set */
-	char *uuid;	/* valid uuid when DM_DEVICE_LIST_HAS_UUID is set */
+	const char *uuid;	/* valid uuid when DM_DEVICE_LIST_HAS_UUID is set */
 };
 
 struct dm_versions {

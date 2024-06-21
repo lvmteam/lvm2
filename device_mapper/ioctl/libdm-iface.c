@@ -828,12 +828,12 @@ int dm_task_get_device_list(struct dm_task *dmt, struct dm_list **devs_list,
 		names = (struct dm_names *)((char *) names + next);
 
 		dm_dev->devno = (dev_t) names->dev;
-		dm_dev->name = (char*)(dm_dev + 1);
+		dm_dev->name = (const char *)(dm_dev + 1);
 		dm_dev->event_nr = 0;
-		dm_dev->uuid = NULL;
+		dm_dev->uuid = "";
 
 		len = strlen(names->name) + 1;
-		memcpy(dm_dev->name, names->name, len);
+		memcpy((char*)dm_dev->name, names->name, len);
 
 		dm_new_dev = _align_ptr((char*)(dm_dev + 1) + len);
 		if (_check_has_event_nr()) {
@@ -845,10 +845,10 @@ int dm_task_get_device_list(struct dm_task *dmt, struct dm_list **devs_list,
 			if ((event_nr[1] & DM_NAME_LIST_FLAG_HAS_UUID)) {
 				*devs_features |= DM_DEVICE_LIST_HAS_UUID;
 				uuid_ptr = _align_ptr(event_nr + 2);
-				dm_dev->uuid = (char*) dm_new_dev;
 				len = strlen(uuid_ptr) + 1;
+				memcpy(dm_new_dev, uuid_ptr, len);
+				dm_dev->uuid = (const char *) dm_new_dev;
 				dm_new_dev = _align_ptr((char*)dm_new_dev + len);
-				memcpy(dm_dev->uuid, uuid_ptr, len);
 			}
 		}
 

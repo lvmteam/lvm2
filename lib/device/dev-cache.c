@@ -1364,7 +1364,8 @@ int dev_cache_update_dm_devs(struct cmd_context *cmd)
 		if (!radix_tree_insert_ptr(_cache.dm_devnos, &d, sizeof(d), dm_dev))
 			return_0;
 
-		if (!radix_tree_insert_ptr(_cache.dm_uuids, dm_dev->uuid, strlen(dm_dev->uuid), dm_dev))
+		if (dm_dev->uuid[0] &&
+		    !radix_tree_insert_ptr(_cache.dm_uuids, dm_dev->uuid, strlen(dm_dev->uuid), dm_dev))
 			return_0;
 	}
 
