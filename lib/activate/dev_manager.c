@@ -3645,7 +3645,14 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (!layer && lv_is_writecache_origin(lv))
 		layer = lv_layer(lv); /* "real" */
 
-	if (lvlayer->visible_component) {
+	/*
+	 * FIXME: we would like to have -private suffixes used for device not processed by udev
+	 * however ATM we also sometimes want to provide /dev/vg/lv symlinks to such devices
+	 * and also be able to correctly report its status with lvs.
+	 *
+	 * Until problems are resolved this code path needs to be disabled.
+	 */
+	if (0 && lvlayer->visible_component) {
 		/* Component LV will be public, do not add any layer suffixes */
 		if (!(dlid = dm_build_dm_uuid(dm->mem, UUID_PREFIX, lv->lvid.s, NULL)))
 			return_0;
