@@ -193,6 +193,8 @@ fi
   %{_unitdir}/lvm2-lvmpolld.service
   %{_unitdir}/lvm2-lvmpolld.socket
  %endif
+ %{_unitdir}/lvm-devices-import.service
+ %{_unitdir}/lvm-devices-import.path
 %else
  %{_sysconfdir}/rc.d/init.d/blk-availability
  %{_sysconfdir}/rc.d/init.d/lvm2-monitor

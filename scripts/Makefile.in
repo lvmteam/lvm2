@@ -108,6 +108,8 @@ endif
 ifeq ("@BUILD_LVMDBUSD@", "yes")
 	$(Q) $(INSTALL_DATA) lvm2_lvmdbusd_systemd_red_hat.service $(systemd_unit_dir)/lvm2-lvmdbusd.service
 endif
+	$(Q) $(INSTALL_DATA) lvm-devices-import.path $(systemd_unit_dir)/lvm-devices-import.path
+	$(Q) $(INSTALL_DATA) lvm-devices-import.service $(systemd_unit_dir)/lvm-devices-import.service
 
 ifeq ("@BUILD_LVMDBUSD@", "yes")
 install_dbus_service:
