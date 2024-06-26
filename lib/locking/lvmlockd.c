@@ -2808,8 +2808,27 @@ int lockd_lv(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
+	if (!_lvmlockd_connected && !strcmp(def_mode, "un")) {
+		log_debug("Skip LV unlock: no lvmlockd");
+		return 1;
+	}
+
 	if (!_lvmlockd_connected)
 		return 0;
+
+	/*
+	 * This addresses the specific case of: vgchange -an vg
+	 * when vg is a shared VG that is not started.  Without
+	 * this check, the command will try and fail to unlock
+	 * every LV, which is wasted effort if the lockspace is
+	 * not started, especially with many LVs in the VG.
+	 * The command still attempts to deactivate the LVs,
+	 * which it should in case they are active for some reason.
+	 */
+	if (lv->vg->lockd_not_started && !strcmp(def_mode, "un")) {
+		log_debug("Skip LV unlock: no lockspace");
+		return 1;
+	}
 
 	if (lv_is_thin_type(lv))
 		return _lockd_lv_thin(cmd, lv, def_mode, flags);

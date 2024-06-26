@@ -3862,6 +3862,9 @@ static int _access_vg_lock_type(struct cmd_context *cmd, struct volume_group *vg
 			return 0;
 		}
 
+		if (lockd_state & (LDST_FAIL_NOLS | LDST_FAIL_STARTING))
+			vg->lockd_not_started = 1;
+
 		log_warn("Reading VG %s without a lock.", vg->name);
 		return 1;
 	}
