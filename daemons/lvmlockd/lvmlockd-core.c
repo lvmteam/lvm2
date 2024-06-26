@@ -2488,6 +2488,7 @@ static void *lockspace_thread_main(void *arg_in)
 	struct list_head tmp_act;
 	struct list_head act_close;
 	char tmp_name[MAX_NAME+5];
+	int fail_stop_busy;
 	int free_vg = 0;
 	int drop_vg = 0;
 	int error = 0;
@@ -2498,6 +2499,7 @@ static void *lockspace_thread_main(void *arg_in)
 	int rv;
 
 	INIT_LIST_HEAD(&act_close);
+	INIT_LIST_HEAD(&tmp_act);
 
 	/* first action may be client add */
 	pthread_mutex_lock(&ls->mutex);
@@ -2565,6 +2567,8 @@ static void *lockspace_thread_main(void *arg_in)
 
 	if (error)
 		goto out_act;
+
+ restart:
 
 	while (1) {
 		pthread_mutex_lock(&ls->mutex);
@@ -2818,17 +2822,48 @@ out_rem:
 	 * Leave the lockspace.
 	 */
 
-	rv = lm_rem_lockspace(ls, NULL, free_vg);
+	fail_stop_busy = 0;
 
-	log_debug("S %s rem_lockspace done %d", ls->name, rv);
+	rv = lm_rem_lockspace(ls, NULL, free_vg);
+	if (rv < 0) {
+		pthread_mutex_lock(&ls->mutex);
+		list_for_each_entry_safe(act, safe, &ls->actions, list) {
+			/*
+			 * If there's a stop action then there's a path to return an error,
+			 * and in the case of EBUSY presumably there's a chance to redo it.
+			 */
+			if ((act->op == LD_OP_STOP) && (rv == -EBUSY)) {
+				log_debug("S %s rem_lockspace for stop error %d", ls->name, rv);
+				act->result = -EBUSY;
+				list_del(&act->list);
+				list_add_tail(&act->list, &tmp_act);
+				ls->thread_stop = 0;
+				fail_stop_busy = 1;
+				break;
+			}
+		}
+		pthread_mutex_unlock(&ls->mutex);
+
+		if (fail_stop_busy) {
+			pthread_mutex_lock(&client_mutex);
+			list_del(&act->list);
+			list_add_tail(&act->list, &client_results);
+			pthread_cond_signal(&client_cond);
+			pthread_mutex_unlock(&client_mutex);
+			goto restart;
+		}
+	}
+
+	if (rv < 0)
+		log_debug("S %s rem_lockspace error %d", ls->name, rv);
+	else
+		log_debug("S %s rem_lockspace done", ls->name);
 
 out_act:
 	/*
 	 * Move remaining actions to results; this will usually (always?)
 	 * be only the stop action.
 	 */
-	INIT_LIST_HEAD(&tmp_act);
-
 	pthread_mutex_lock(&ls->mutex);
 	list_for_each_entry_safe(act, safe, &ls->actions, list) {
 		if (act->op == LD_OP_FREE) {

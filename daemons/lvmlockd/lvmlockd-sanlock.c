@@ -1563,8 +1563,10 @@ int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg)
 		goto out;
 
 	rv = sanlock_rem_lockspace(&lms->ss, 0);
-	if (rv < 0)
+	if (rv < 0) {
 		log_error("S %s rem_lockspace_san error %d", ls->name, rv);
+		return rv;
+	}
 
 	if (free_vg) {
 		/*
