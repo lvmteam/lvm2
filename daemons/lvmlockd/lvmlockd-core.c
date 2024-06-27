@@ -2521,6 +2521,11 @@ static void *lockspace_thread_main(void *arg_in)
 	}
 	pthread_mutex_unlock(&ls->mutex);
 
+	if (ls->lm_type == LD_LM_DLM && !strcmp(gl_lsname_dlm, ls->name)) {
+		log_debug("dlm global lockspace adopt_ok");
+		adopt_ok = 1;
+	}
+
 	log_debug("S %s lm_add_lockspace %s wait %d adopt_only %d adopt_ok %d",
 		  ls->name, lm_str(ls->lm_type), wait_flag, adopt_only, adopt_ok);
 
