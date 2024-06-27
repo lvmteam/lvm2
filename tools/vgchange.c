@@ -1533,17 +1533,6 @@ int vgchange_systemid_cmd(struct cmd_context *cmd, int argc, char **argv)
 	struct processing_handle *handle;
 	int ret;
 
-	/*
-	 * This is a special case where taking the global lock is
-	 * not needed to protect global state, because the change is
-	 * only to an existing VG.  But, taking the global lock ex is
-	 * helpful in this case to trigger a global cache validation
-	 * on other hosts, to cause them to see the new system_id or
-	 * lock_type.
-	 */
-	if (!lockd_global(cmd, "ex"))
-		return 0;
-
 	if (!(handle = init_processing_handle(cmd, NULL))) {
 		log_error("Failed to initialize processing handle.");
 		return ECMD_FAILED;
