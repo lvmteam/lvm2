@@ -593,7 +593,7 @@ static int _get_vgid_and_lvid_for_dev(struct cmd_context *cmd, struct device *de
 	char uuid[DM_UUID_LEN];
 	size_t uuid_len;
 
-	if (!device_get_uuid(cmd, MAJOR(dev->dev), MINOR(dev->dev), uuid, sizeof(uuid)))
+	if (!dev_dm_uuid(cmd, dev, uuid, sizeof(uuid)))
 		return_0;
 
 	uuid_len = strlen(uuid);
@@ -1343,7 +1343,7 @@ int dev_cache_update_dm_devs(struct cmd_context *cmd)
 		_cache.dm_uuids = NULL;
 	}
 
-	if (!get_device_list(NULL, &cmd->cache_dm_devs, &devs_features))
+	if (!get_dm_active_devices(NULL, &cmd->cache_dm_devs, &devs_features))
 		return 1;
 
 	if (!(devs_features & DM_DEVICE_LIST_HAS_UUID)) {

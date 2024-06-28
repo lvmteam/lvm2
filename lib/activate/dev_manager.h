@@ -108,7 +108,7 @@ int dev_manager_device_uses_vg(struct device *dev,
 int dev_manager_remove_dm_major_minor(uint32_t major, uint32_t minor);
 
 int dev_manager_check_prefix_dm_major_minor(uint32_t major, uint32_t minor, const char *prefix);
-int dev_manager_get_device_list(const char *prefix, struct dm_list **devs,
-				unsigned *devs_features);
+int dev_manager_get_dm_active_devices(const char *prefix, struct dm_list **devs,
+				      unsigned *devs_features);
 
 #endif

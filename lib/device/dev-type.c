@@ -55,8 +55,7 @@ int dev_is_lv(struct cmd_context *cmd, struct device *dev)
 {
 	char buffer[128];
 
-	if (device_get_uuid(cmd, MAJOR(dev->dev), MINOR(dev->dev),
-			    buffer, sizeof(buffer)) &&
+	if (dev_dm_uuid(cmd, dev, buffer, sizeof(buffer)) &&
 	    !strncmp(buffer, UUID_PREFIX, sizeof(UUID_PREFIX) - 1))
                 return 1;
 
@@ -128,7 +127,7 @@ int dev_is_used_by_active_lv(struct cmd_context *cmd, struct device *dev, int *u
 		 * by reading DM status and seeing if the uuid begins
 		 * with UUID_PREFIX  ("LVM-")
 		 */
-		if (!device_get_uuid(cmd, dm_dev_major, dm_dev_minor, dm_uuid, sizeof(dm_uuid)))
+		if (!devno_dm_uuid(cmd, dm_dev_major, dm_dev_minor, dm_uuid, sizeof(dm_uuid)))
 			continue;
 
 		if (!strncmp(dm_uuid, UUID_PREFIX, lvm_prefix_len))

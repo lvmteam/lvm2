@@ -1257,8 +1257,12 @@ int label_scan(struct cmd_context *cmd)
 	if (!label_scan_setup_bcache())
 		return_0;
 
-	/* Initialize dm device cache early so
-	 * 'Hints' file processing can also use it */
+	/*
+	 * Initialize cache of dm device uuids, which uses a special dm kernel
+	 * feature for efficiently querying many dm devs together.  (It's done
+	 * here, before processing the hints file, so that the dm uuid checks
+	 * in hint processing can benefit from the dm uuid cache.)
+	 */
 	if (!dev_cache_update_dm_devs(cmd))
 		return_0;
 

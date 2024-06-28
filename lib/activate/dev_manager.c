@@ -888,8 +888,8 @@ int device_is_usable(struct cmd_context *cmd, struct device *dev, struct dev_usa
 }
 
 /* Read UUID from a given DM device into  buf_uuid */
-int device_get_uuid(struct cmd_context *cmd, int major, int minor,
-		    char *uuid_buf, size_t uuid_buf_size)
+int devno_dm_uuid(struct cmd_context *cmd, int major, int minor,
+		  char *uuid_buf, size_t uuid_buf_size)
 {
 	struct dm_task *dmt;
 	struct dm_info info;
@@ -916,6 +916,13 @@ int device_get_uuid(struct cmd_context *cmd, int major, int minor,
 	dm_task_destroy(dmt);
 
 	return r;
+}
+
+int dev_dm_uuid(struct cmd_context *cmd, struct device *dev,
+		char *uuid_buf, size_t uuid_buf_size)
+{
+	return devno_dm_uuid(cmd, MAJOR(dev->dev), MINOR(dev->dev),
+			     uuid_buf, uuid_buf_size);
 }
 
 /*
@@ -1036,7 +1043,12 @@ int dev_manager_check_prefix_dm_major_minor(uint32_t major, uint32_t minor, cons
 	return r;
 }
 
-int dev_manager_get_device_list(const char *prefix, struct dm_list **devs, unsigned *devs_features)
+/*
+ * Get a list of active dm devices from the kernel.
+ * The 'devs' list contains a struct dm_active_device.
+ */
+
+int dev_manager_get_dm_active_devices(const char *prefix, struct dm_list **devs, unsigned *devs_features)
 {
 	struct dm_task *dmt;
 	int r = 1;
