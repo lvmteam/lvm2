@@ -2038,8 +2038,6 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	if (cmd->cft_def_hash)
 		dm_hash_destroy(cmd->cft_def_hash);
 
-	dm_device_list_destroy(&cmd->cache_dm_devs);
-
 	if (!cmd->running_on_valgrind && cmd->linebuffer) {
 		int flags;
 		/* Reset stream buffering to defaults */

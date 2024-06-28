@@ -1263,7 +1263,7 @@ int label_scan(struct cmd_context *cmd)
 	 * here, before processing the hints file, so that the dm uuid checks
 	 * in hint processing can benefit from the dm uuid cache.)
 	 */
-	if (!dev_cache_update_dm_devs(cmd))
+	if (!dev_cache_update_dm_uuids())
 		return_0;
 
 	/*
@@ -1646,6 +1646,9 @@ void label_scan_invalidate_lv(struct cmd_context *cmd, struct logical_volume *lv
 	struct device *dev;
 	dev_t devt;
 
+	/* FIXME: use dev_cache_get_existing() with the lv name,
+	   which allow us to skip the getting devno from lv_info. */
+
 	if (lv_info(cmd, lv, 0, &lvinfo, 0, 0) && lvinfo.exists) {
 		/* FIXME: Still unclear what is it supposed to find */
 		devt = MKDEV(lvinfo.major, lvinfo.minor);
@@ -1656,8 +1659,6 @@ void label_scan_invalidate_lv(struct cmd_context *cmd, struct logical_volume *lv
 
 void label_scan_invalidate_lvs(struct cmd_context *cmd, struct dm_list *lvs)
 {
-	struct dm_active_device *dm_dev;
-	struct device *dev;
 	struct lv_list *lvl;
 
 	/*
@@ -1669,18 +1670,8 @@ void label_scan_invalidate_lvs(struct cmd_context *cmd, struct dm_list *lvs)
 
 	log_debug("Invalidating devs for any PVs on LVs.");
 
-	if (cmd->cache_dm_devs) {
-		dm_list_iterate_items(dm_dev, cmd->cache_dm_devs)
-			if (dm_dev->uuid &&
-			    strncmp(dm_dev->uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1) == 0) {
-				if ((dev = dev_cache_get_by_devt(cmd, dm_dev->devno)))
-					label_scan_invalidate(dev);
-			}
-	} else
-		/* With older kernels without UUIDs we have to go the old way
-		 * and check for every LVs UUID one by one */
-		dm_list_iterate_items(lvl, lvs)
-			label_scan_invalidate_lv(cmd, lvl->lv);
+	dm_list_iterate_items(lvl, lvs)
+		label_scan_invalidate_lv(cmd, lvl->lv);
 }
 
 /*

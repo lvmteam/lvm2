@@ -230,8 +230,6 @@ struct cmd_context {
 	const char *devicesfile;                /* from --devicesfile option */
 	struct dm_list deviceslist;             /* from --devices option, struct dm_str_list */
 
-	struct dm_list *cache_dm_devs;		/* cache with UUIDs from DM_DEVICE_LIST (when available) */
-
 	/*
 	 * Configuration.
 	 */

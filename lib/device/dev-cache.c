@@ -52,12 +52,14 @@ static struct {
 	struct radix_tree *names;
 	struct dm_hash_table *vgid_index;
 	struct dm_hash_table *lvid_index;
-	struct radix_tree *dm_uuids;
-	struct radix_tree *dm_devnos;
+	struct dm_list *dm_devs; /* dm_active_device structs with dm UUIDs from DM_DEVICE_LIST (when available) */
+	struct radix_tree *dm_uuids; /* references dm_devs entries */
+	struct radix_tree *dm_devnos; /* references dm_devs entries */
 	struct radix_tree *sysfs_only_devices; /* see comments in _get_device_for_sysfs_dev_name_using_devno */
 	struct radix_tree *devices;
 	struct dm_regex *preferred_names_matcher;
 	const char *dev_dir;
+	int use_dm_uuid_cache;
 
 	size_t dev_dir_len;
 	int has_scanned;
@@ -1325,13 +1327,14 @@ out:
 	return r;
 }
 
-int dev_cache_update_dm_devs(struct cmd_context *cmd)
+int dev_cache_use_dm_uuid_cache(void)
 {
-	struct dm_active_device *dm_dev;
-	unsigned devs_features;
-	uint32_t d;
+	return _cache.use_dm_uuid_cache;
+}
 
-	dm_device_list_destroy(&cmd->cache_dm_devs);
+void dev_cache_destroy_dm_uuids(void)
+{
+	_cache.use_dm_uuid_cache = 0;
 
 	if (_cache.dm_devnos) {
 		radix_tree_destroy(_cache.dm_devnos);
@@ -1343,14 +1346,30 @@ int dev_cache_update_dm_devs(struct cmd_context *cmd)
 		_cache.dm_uuids = NULL;
 	}
 
-	if (!get_dm_active_devices(NULL, &cmd->cache_dm_devs, &devs_features))
+	dm_device_list_destroy(&_cache.dm_devs);
+}
+
+int dev_cache_update_dm_uuids(void)
+{
+	struct dm_active_device *dm_dev;
+	unsigned devs_features;
+	uint32_t d;
+
+	dev_cache_destroy_dm_uuids();
+
+	if (!get_dm_active_devices(NULL, &_cache.dm_devs, &devs_features))
 		return 1;
 
 	if (!(devs_features & DM_DEVICE_LIST_HAS_UUID)) {
 		/* Cache unusable with older kernels without UUIDs in LIST */
-		dm_device_list_destroy(&cmd->cache_dm_devs);
+		dm_device_list_destroy(&_cache.dm_devs);
 		return 1;
 	}
+
+	/* _cache.dm_devs entries are referenced by radix trees */
+
+	/* TODO: if _cache.dm_devs list is small, then skip the
+	   overhead of radix trees and just do list searches on dm_devs */
 
 	if (!(_cache.dm_devnos = radix_tree_create(NULL, NULL)) ||
 	    !(_cache.dm_uuids = radix_tree_create(NULL, NULL))) {
@@ -1358,7 +1377,7 @@ int dev_cache_update_dm_devs(struct cmd_context *cmd)
 	}
 
 	/* Insert every active DM device into radix trees */
-	dm_list_iterate_items(dm_dev, cmd->cache_dm_devs) {
+	dm_list_iterate_items(dm_dev, _cache.dm_devs) {
 		d = _shuffle_devno(dm_dev->devno);
 
 		if (!radix_tree_insert_ptr(_cache.dm_devnos, &d, sizeof(d), dm_dev))
@@ -1372,6 +1391,7 @@ int dev_cache_update_dm_devs(struct cmd_context *cmd)
 	//radix_tree_dump(_cache.dm_devnos, stdout);
 	//radix_tree_dump(_cache.dm_uuids, stdout);
 
+	_cache.use_dm_uuid_cache = 1;
 	return 1;
 }
 
@@ -1503,6 +1523,8 @@ int dev_cache_exit(void)
 				  vt.num_open);
 	}
 
+	dev_cache_destroy_dm_uuids();
+
 	if (_cache.mem)
 		dm_pool_destroy(_cache.mem);
 
@@ -1514,12 +1536,6 @@ int dev_cache_exit(void)
 
 	if (_cache.lvid_index)
 		dm_hash_destroy(_cache.lvid_index);
-
-	if (_cache.dm_devnos)
-		radix_tree_destroy(_cache.dm_devnos);
-
-	if (_cache.dm_uuids)
-		radix_tree_destroy(_cache.dm_uuids);
 
 	if (_cache.devices)
 	       radix_tree_destroy(_cache.devices);
