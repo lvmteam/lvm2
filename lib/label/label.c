@@ -1642,19 +1642,10 @@ void label_scan_invalidate(struct device *dev)
 
 void label_scan_invalidate_lv(struct cmd_context *cmd, struct logical_volume *lv)
 {
-	struct lvinfo lvinfo;
 	struct device *dev;
-	dev_t devt;
 
-	/* FIXME: use dev_cache_get_existing() with the lv name,
-	   which allow us to skip the getting devno from lv_info. */
-
-	if (lv_info(cmd, lv, 0, &lvinfo, 0, 0) && lvinfo.exists) {
-		/* FIXME: Still unclear what is it supposed to find */
-		devt = MKDEV(lvinfo.major, lvinfo.minor);
-		if ((dev = dev_cache_get_by_devt(cmd, devt)))
-			label_scan_invalidate(dev);
-	}
+	if ((dev = dev_cache_get_existing(cmd, display_lvname(lv), NULL)))
+		label_scan_invalidate(dev);
 }
 
 void label_scan_invalidate_lvs(struct cmd_context *cmd, struct dm_list *lvs)

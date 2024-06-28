@@ -1366,17 +1366,13 @@ int dev_cache_update_dm_uuids(void)
 		return 1;
 	}
 
-	/* _cache.dm_devs entries are referenced by radix trees */
-
-	/* TODO: if _cache.dm_devs list is small, then skip the
-	   overhead of radix trees and just do list searches on dm_devs */
-
 	if (!(_cache.dm_devnos = radix_tree_create(NULL, NULL)) ||
 	    !(_cache.dm_uuids = radix_tree_create(NULL, NULL))) {
 		return_0; // FIXME
 	}
 
 	/* Insert every active DM device into radix trees */
+	/* _cache.dm_devs entries are referenced by radix trees */
 	dm_list_iterate_items(dm_dev, _cache.dm_devs) {
 		d = _shuffle_devno(dm_dev->devno);
 
