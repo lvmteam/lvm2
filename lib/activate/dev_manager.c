@@ -479,12 +479,12 @@ static int _ignore_blocked_mirror_devices(struct cmd_context *cmd,
 				goto_out;
 
 			tmp_dev->dev = MKDEV(sm->logs[0].major, sm->logs[0].minor);
-			if (device_is_usable(cmd, tmp_dev, (struct dev_usable_check_params)
-					     { .check_empty = 1,
-					       .check_blocked = 1,
-					       .check_suspended = ignore_suspended_devices(),
-					       .check_error_target = 1,
-					       .check_reserved = 0 }, NULL))
+			if (dm_device_is_usable(cmd, tmp_dev, (struct dev_usable_check_params)
+					       { .check_empty = 1,
+					         .check_blocked = 1,
+					         .check_suspended = ignore_suspended_devices(),
+					         .check_error_target = 1,
+					         .check_reserved = 0 }, NULL))
 				goto out; /* safe to use */
 			stack;
 		}
@@ -738,7 +738,7 @@ static int _is_usable_uuid(const struct device *dev, const char *name, const cha
 }
 
 /*
- * device_is_usable
+ * dm_device_is_usable
  * @dev
  * @check_lv_names
  *
@@ -753,7 +753,7 @@ static int _is_usable_uuid(const struct device *dev, const char *name, const cha
  *
  * Returns: 1 if usable, 0 otherwise
  */
-int device_is_usable(struct cmd_context *cmd, struct device *dev, struct dev_usable_check_params check, int *is_lv)
+int dm_device_is_usable(struct cmd_context *cmd, struct device *dev, struct dev_usable_check_params check, int *is_lv)
 {
 	struct dm_task *dmt;
 	struct dm_info info;

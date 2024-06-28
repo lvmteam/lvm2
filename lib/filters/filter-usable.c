@@ -52,7 +52,7 @@ static int _passes_usable_filter(struct cmd_context *cmd, struct dev_filter *f, 
 
 	/* further checks are done on dm devices only */
 	if (dm_is_dm_major(MAJOR(dev->dev))) {
-		if (!(r = device_is_usable(cmd, dev, *ucp, &is_lv))) {
+		if (!(r = dm_device_is_usable(cmd, dev, *ucp, &is_lv))) {
 			if (is_lv)
 				dev->filtered_flags |= DEV_FILTERED_IS_LV;
 			else
