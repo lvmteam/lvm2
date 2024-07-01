@@ -18,6 +18,7 @@
 #include "lib/misc/lib.h"
 #include "lib/device/dev-type.h"
 #include "lib/device/device_id.h"
+#include "lib/label/label.h"
 #include "lib/config/config.h"
 #include "lib/commands/toolcontext.h"
 #include "device_mapper/misc/dm-ioctl.h"
@@ -1393,6 +1394,20 @@ int dev_cache_update_dm_devs(void)
 
 	_cache.use_dm_devs_cache = 1;
 	return 1;
+}
+
+void dev_cache_dm_devs_label_invalidate(struct cmd_context *cmd)
+{
+	struct dm_active_device *dm_dev;
+	struct device *dev;
+
+	dm_list_iterate_items(dm_dev, _cache.dm_devs) {
+		if (dm_dev->uuid &&
+		   strncmp(dm_dev->uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1) == 0) {
+			if ((dev = dev_cache_get_by_devt(cmd, dm_dev->devno)))
+				label_scan_invalidate(dev);
+		}
+	}
 }
 
 /* Find active DM device in devs array for given major:minor */

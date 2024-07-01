@@ -1670,8 +1670,12 @@ void label_scan_invalidate_lvs(struct cmd_context *cmd, struct dm_list *lvs)
 
 	log_debug("Invalidating devs for any PVs on LVs.");
 
-	dm_list_iterate_items(lvl, lvs)
-		label_scan_invalidate_lv(cmd, lvl->lv);
+	if (dev_cache_use_dm_devs_cache())
+		dev_cache_dm_devs_label_invalidate(cmd);
+	else {
+		dm_list_iterate_items(lvl, lvs)
+			label_scan_invalidate_lv(cmd, lvl->lv);
+	}
 }
 
 /*
