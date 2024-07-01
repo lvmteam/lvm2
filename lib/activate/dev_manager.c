@@ -766,9 +766,9 @@ int dm_device_is_usable(struct cmd_context *cmd, struct device *dev, struct dev_
 	int only_error_or_zero_target = 1;
 	int r = 0;
 
-	if (dev_cache_use_dm_devs_cache() &&
+	if (dm_devs_cache_use() &&
 	    /* With cache we can avoid status calls for unusable UUIDs */
-	    (dm_dev = dev_cache_get_dm_dev_by_devno(cmd, dev->dev)) &&
+	    (dm_dev = dm_devs_cache_get_by_devno(cmd, dev->dev)) &&
 	    !_is_usable_uuid(dev, dm_dev->name, dm_dev->uuid, check.check_reserved, check.check_lv, is_lv))
 		return 0;
 
@@ -897,8 +897,8 @@ int devno_dm_uuid(struct cmd_context *cmd, int major, int minor,
 	const char *uuid;
 	int r = 0;
 
-	if (dev_cache_use_dm_devs_cache()) {
-		if ((dm_dev = dev_cache_get_dm_dev_by_devno(cmd, MKDEV(major, minor)))) {
+	if (dm_devs_cache_use()) {
+		if ((dm_dev = dm_devs_cache_get_by_devno(cmd, MKDEV(major, minor)))) {
 			dm_strncpy(uuid_buf, dm_dev->uuid, uuid_buf_size);
 			return 1;
 		}
@@ -1085,9 +1085,9 @@ int dev_manager_info(struct cmd_context *cmd,
 
 	dm_strncpy(old_style_dlid, dlid, sizeof(old_style_dlid));
 
-	if (dev_cache_use_dm_devs_cache() &&
-	    !dev_cache_get_dm_dev_by_uuid(cmd, dlid) &&
-	    !dev_cache_get_dm_dev_by_uuid(cmd, old_style_dlid)) {
+	if (dm_devs_cache_use() &&
+	    !dm_devs_cache_get_by_uuid(cmd, dlid) &&
+	    !dm_devs_cache_get_by_uuid(cmd, old_style_dlid)) {
 		log_debug("Cached as inactive %s.", name);
 		if (dminfo)
 			memset(dminfo, 0, sizeof(*dminfo));
@@ -2459,8 +2459,8 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (!(dlid = build_dm_uuid(dm->track_pending_delete ? dm->cmd->pending_delete_mem : dm->mem, lv, layer)))
 		return_0;
 
-	if (dev_cache_use_dm_devs_cache()) {
-		if (!(dm_dev = dev_cache_get_dm_dev_by_uuid(dm->cmd, dlid))) {
+	if (dm_devs_cache_use()) {
+		if (!(dm_dev = dm_devs_cache_get_by_uuid(dm->cmd, dlid))) {
 			log_debug("Cached as not present %s.", name);
 			return 1;
 		}
@@ -2614,7 +2614,7 @@ static int _pool_callback(struct dm_tree_node *node,
 		}
 	}
 
-	dev_cache_destroy_dm_devs();
+	dm_devs_cache_destroy();
 
 	log_debug("Running check command on %s", mpath);
 
@@ -3998,7 +3998,7 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 
 	/* Drop any cache before DM table manipulation within locked section
 	 * TODO: check if it makes sense to manage cache within lock */
-	dev_cache_destroy_dm_devs();
+	dm_devs_cache_destroy();
 
 	dtree = _create_partial_dtree(dm, lv, laopts->origin_only);
 

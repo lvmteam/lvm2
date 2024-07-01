@@ -37,14 +37,24 @@ struct dev_filter {
 struct dm_list *dev_cache_get_dev_list_for_vgid(const char *vgid);
 struct dm_list *dev_cache_get_dev_list_for_lvid(const char *lvid);
 
-int dev_cache_use_dm_devs_cache(void);
-int dev_cache_update_dm_devs(void);
-void dev_cache_destroy_dm_devs(void);
-void dev_cache_dm_devs_label_invalidate(struct cmd_context *cmd);
+/*
+ * The cache of dm devices is enabled when the kernel
+ * supports the ability to quickly report on many dm
+ * devs together, in which case we can get all the dm
+ * info at once and store it in this dm_devs_cache.
+ * This avoids many individual dm dev ioctl calls.
+ * The callers of these dm_devs_cache functions must
+ * have an alternative for when dm_devs_cache_use()
+ * returns 0.
+ */
+int dm_devs_cache_use(void);
+int dm_devs_cache_update(void);
+void dm_devs_cache_destroy(void);
+void dm_devs_cache_label_invalidate(struct cmd_context *cmd);
 const struct dm_active_device *
-dev_cache_get_dm_dev_by_devno(struct cmd_context *cmd, dev_t devno);
+dm_devs_cache_get_by_devno(struct cmd_context *cmd, dev_t devno);
 const struct dm_active_device *
-dev_cache_get_dm_dev_by_uuid(struct cmd_context *cmd, const char *dm_uuid);
+dm_devs_cache_get_by_uuid(struct cmd_context *cmd, const char *dm_uuid);
 
 /*
  * The global device cache.

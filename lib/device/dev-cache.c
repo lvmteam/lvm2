@@ -1328,12 +1328,12 @@ out:
 	return r;
 }
 
-int dev_cache_use_dm_devs_cache(void)
+int dm_devs_cache_use(void)
 {
 	return _cache.use_dm_devs_cache;
 }
 
-void dev_cache_destroy_dm_devs(void)
+void dm_devs_cache_destroy(void)
 {
 	_cache.use_dm_devs_cache = 0;
 
@@ -1350,13 +1350,13 @@ void dev_cache_destroy_dm_devs(void)
 	dm_device_list_destroy(&_cache.dm_devs);
 }
 
-int dev_cache_update_dm_devs(void)
+int dm_devs_cache_update(void)
 {
 	struct dm_active_device *dm_dev;
 	unsigned devs_features;
 	uint32_t d;
 
-	dev_cache_destroy_dm_devs();
+	dm_devs_cache_destroy();
 
 	if (!get_dm_active_devices(NULL, &_cache.dm_devs, &devs_features))
 		return 1;
@@ -1396,7 +1396,7 @@ int dev_cache_update_dm_devs(void)
 	return 1;
 }
 
-void dev_cache_dm_devs_label_invalidate(struct cmd_context *cmd)
+void dm_devs_cache_label_invalidate(struct cmd_context *cmd)
 {
 	struct dm_active_device *dm_dev;
 	struct device *dev;
@@ -1412,7 +1412,7 @@ void dev_cache_dm_devs_label_invalidate(struct cmd_context *cmd)
 
 /* Find active DM device in devs array for given major:minor */
 const struct dm_active_device *
-dev_cache_get_dm_dev_by_devno(struct cmd_context *cmd, dev_t devno)
+dm_devs_cache_get_by_devno(struct cmd_context *cmd, dev_t devno)
 {
 	uint32_t d = _shuffle_devno(devno);
 
@@ -1424,7 +1424,7 @@ dev_cache_get_dm_dev_by_devno(struct cmd_context *cmd, dev_t devno)
 
 /* Find active DM device in devs array for given DM UUID */
 const struct dm_active_device *
-dev_cache_get_dm_dev_by_uuid(struct cmd_context *cmd, const char *dm_uuid)
+dm_devs_cache_get_by_uuid(struct cmd_context *cmd, const char *dm_uuid)
 {
 	if (!_cache.dm_uuids)
 		return NULL;
@@ -1538,7 +1538,7 @@ int dev_cache_exit(void)
 				  vt.num_open);
 	}
 
-	dev_cache_destroy_dm_devs();
+	dm_devs_cache_destroy();
 
 	if (_cache.mem)
 		dm_pool_destroy(_cache.mem);
