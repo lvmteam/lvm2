@@ -59,7 +59,7 @@ static struct {
 	struct radix_tree *devices;
 	struct dm_regex *preferred_names_matcher;
 	const char *dev_dir;
-	int use_dm_uuid_cache;
+	int use_dm_devs_cache;
 
 	size_t dev_dir_len;
 	int has_scanned;
@@ -1327,14 +1327,14 @@ out:
 	return r;
 }
 
-int dev_cache_use_dm_uuid_cache(void)
+int dev_cache_use_dm_devs_cache(void)
 {
-	return _cache.use_dm_uuid_cache;
+	return _cache.use_dm_devs_cache;
 }
 
-void dev_cache_destroy_dm_uuids(void)
+void dev_cache_destroy_dm_devs(void)
 {
-	_cache.use_dm_uuid_cache = 0;
+	_cache.use_dm_devs_cache = 0;
 
 	if (_cache.dm_devnos) {
 		radix_tree_destroy(_cache.dm_devnos);
@@ -1349,13 +1349,13 @@ void dev_cache_destroy_dm_uuids(void)
 	dm_device_list_destroy(&_cache.dm_devs);
 }
 
-int dev_cache_update_dm_uuids(void)
+int dev_cache_update_dm_devs(void)
 {
 	struct dm_active_device *dm_dev;
 	unsigned devs_features;
 	uint32_t d;
 
-	dev_cache_destroy_dm_uuids();
+	dev_cache_destroy_dm_devs();
 
 	if (!get_dm_active_devices(NULL, &_cache.dm_devs, &devs_features))
 		return 1;
@@ -1391,7 +1391,7 @@ int dev_cache_update_dm_uuids(void)
 	//radix_tree_dump(_cache.dm_devnos, stdout);
 	//radix_tree_dump(_cache.dm_uuids, stdout);
 
-	_cache.use_dm_uuid_cache = 1;
+	_cache.use_dm_devs_cache = 1;
 	return 1;
 }
 
@@ -1523,7 +1523,7 @@ int dev_cache_exit(void)
 				  vt.num_open);
 	}
 
-	dev_cache_destroy_dm_uuids();
+	dev_cache_destroy_dm_devs();
 
 	if (_cache.mem)
 		dm_pool_destroy(_cache.mem);

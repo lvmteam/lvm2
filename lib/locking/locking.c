@@ -330,7 +330,7 @@ int vg_write_lock_held(void)
 
 int sync_local_dev_names(struct cmd_context* cmd)
 {
-	dev_cache_destroy_dm_uuids();
+	dev_cache_destroy_dm_devs();
 	memlock_unlock(cmd);
 	fs_unlock();
 	return 1;

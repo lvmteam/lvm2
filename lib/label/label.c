@@ -1263,7 +1263,7 @@ int label_scan(struct cmd_context *cmd)
 	 * here, before processing the hints file, so that the dm uuid checks
 	 * in hint processing can benefit from the dm uuid cache.)
 	 */
-	if (!dev_cache_update_dm_uuids())
+	if (!dev_cache_update_dm_devs())
 		return_0;
 
 	/*
