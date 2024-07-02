@@ -265,7 +265,7 @@ struct dm_config_tree *config_file_open_and_read(const char *config_file,
 	}
 
 	log_very_verbose("Loading config file: %s", config_file);
-	if (!config_file_read(cft)) {
+	if (!config_file_read_from_file(cft)) {
 		log_error("Failed to load config file %s", config_file);
 		goto bad;
 	}
@@ -589,7 +589,7 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 	return r;
 }
 
-int config_file_read(struct dm_config_tree *cft)
+int config_file_read_from_file(struct dm_config_tree *cft)
 {
 	const char *filename = NULL;
 	struct config_source *cs = dm_config_get_custom(cft);
@@ -597,7 +597,6 @@ int config_file_read(struct dm_config_tree *cft)
 	struct stat info;
 	struct device fake_dev = { 0 };
 	struct dm_str_list *alias;
-	int free_fake = 0;
 	int fd;
 	int r;
 
@@ -610,42 +609,38 @@ int config_file_read(struct dm_config_tree *cft)
 
 	cf = cs->source.file;
 
+	if (cf->dev)
+		return_0;
+
 	/* fixme: get rid of fake dev and just
 	   add separate code paths for files */
 
-	if (!cf->dev) {
-		if (!(alias = zalloc(sizeof(*alias))))
-			return_0;
-		if (!(alias->str = strdup(filename))) {
-			free(alias);
-			return_0;
-		}
-		dev_init(&fake_dev);
-		fake_dev.flags = DEV_REGULAR;
-		dm_list_add(&fake_dev.aliases, &alias->list);
-
-		if ((fd = open(filename, O_RDONLY, 0777)) < 0) {
-			log_error("Failed to open config file %s.", filename);
-			free((void*)alias->str);
-			free((void*)alias);
-			return_0;
-		}
-		fake_dev.fd = fd;
-		free_fake = 1;
-		cf->dev = &fake_dev;
+	if (!(alias = zalloc(sizeof(*alias))))
+		return_0;
+	if (!(alias->str = strdup(filename))) {
+		free(alias);
+		return_0;
 	}
+	dev_init(&fake_dev);
+	fake_dev.flags = DEV_REGULAR;
+	dm_list_add(&fake_dev.aliases, &alias->list);
+
+	if ((fd = open(filename, O_RDONLY, 0777)) < 0) {
+		log_error("Failed to open config file %s.", filename);
+		free((void*)alias->str);
+		free((void*)alias);
+		return_0;
+	}
+	fake_dev.fd = fd;
+	cf->dev = &fake_dev;
 
 	r = config_file_read_fd(cft, cf->dev, DEV_IO_MDA_CONTENT, 0, (size_t) info.st_size, 0, 0,
 				(checksum_fn_t) NULL, 0, 0, 0);
 
-	if (free_fake) {
-		free((void*)alias->str);
-		free((void*)alias);
-		close(fd);
-	} else {
-		if (!dev_close(cf->dev))
-			stack;
-	}
+	free((void*)alias->str);
+	free((void*)alias);
+	close(fd);
+
 	cf->dev = NULL;
 
 	return r;

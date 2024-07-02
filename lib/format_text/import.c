@@ -67,7 +67,7 @@ int text_read_metadata_summary(const struct format_type *fmt,
 			goto out;
 		}
 	} else {
-		if (!config_file_read(cft)) {
+		if (!config_file_read_from_file(cft)) {
 			log_warn("WARNING: invalid metadata text from file.");
 			goto out;
 		}
@@ -161,7 +161,7 @@ struct volume_group *text_read_metadata(struct format_instance *fid,
 			goto out;
 		}
 	} else {
-		if (!config_file_read(cft)) {
+		if (!config_file_read_from_file(cft)) {
 			log_warn("WARNING: couldn't read volume group metadata from file.");
 			goto out;
 		}
