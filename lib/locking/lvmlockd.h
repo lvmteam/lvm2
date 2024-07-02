@@ -55,9 +55,9 @@
 #define LOCKOPT_ADOPTLV		0x00001000
 #define LOCKOPT_ADOPT		0x00002000
 
-void lockd_lockopt_get_flags(const char *str, uint32_t *flags);
-
 #ifdef LVMLOCKD_SUPPORT
+
+void lockd_lockopt_get_flags(const char *str, uint32_t *flags);
 
 struct lvresize_params;
 struct lvcreate_params;
@@ -126,6 +126,10 @@ int lockd_query_lv(struct cmd_context *cmd, struct logical_volume *lv, int *ex, 
 
 #else /* LVMLOCKD_SUPPORT */
 
+static inline void lockd_lockopt_get_flags(const char *str, uint32_t *flags)
+{
+}
+
 static inline void lvmlockd_set_socket(const char *sock)
 {
 }
@@ -156,7 +160,7 @@ static inline int lockd_init_vg(struct cmd_context *cmd, struct volume_group *vg
 	return 1;
 }
 
-static inline int lockd_free_vg_before(struct cmd_context *cmd, struct volume_group *vg, int changing)
+static inline int lockd_free_vg_before(struct cmd_context *cmd, struct volume_group *vg, int changing, int yes)
 {
 	return 1;
 }
