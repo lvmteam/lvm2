@@ -576,7 +576,7 @@ static int _dev_in_wwid_file(struct cmd_context *cmd, struct device *dev,
 	 * Check the primary device, not the partition.
 	 */
 	if (primary_result == 2) {
-		if (!(dev = dev_cache_get_by_devt(cmd, primary_dev))) {
+		if (!(dev = dev_cache_get_by_devno(cmd, primary_dev))) {
 			log_debug("dev_is_mpath_component %s no primary dev", dev_name(dev));
 			return 0;
 		}

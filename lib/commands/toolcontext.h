@@ -19,6 +19,7 @@
 #include "lib/device/dev-cache.h"
 #include "lib/device/dev-type.h"
 #include "lib/commands/cmd_enum.h"
+#include "base/data-struct/radix-tree.h"
 
 #include <limits.h>
 
@@ -222,6 +223,11 @@ struct cmd_context {
 	/*
 	 * Devices and filtering.
 	 */
+	struct dm_list dev_dirs;     /* paths, like /dev, to look for devnames */
+	struct radix_tree *devnames; /* path names in dev_dirs, get struct device from path name */
+	struct radix_tree *devnos;   /* devnos found in dev_dirs, get struct device from devno */
+	struct dm_regex *preferred_names_matcher; /* preferred dev names to display from lvm.conf */
+
 	struct dev_filter *filter;
 	struct dm_list use_devices;		/* struct dev_use for each entry in devices file */
 	const char *md_component_checks;
@@ -229,6 +235,22 @@ struct cmd_context {
 	struct dm_list device_ids_check_serial;
 	const char *devicesfile;                /* from --devicesfile option */
 	struct dm_list deviceslist;             /* from --devices option, struct dm_str_list */
+
+	/*
+	 * LV dev index.
+	 */
+	struct dm_hash_table *vgid_index;
+	struct dm_hash_table *lvid_index;
+	struct radix_tree *sysfs_only_devices;
+
+	/*
+	 * Cache of DM devices.
+	 * Look up struct dm_active_device from devno or dm uuid.
+	 */
+	int use_dm_devs_cache;       /* use this cache or not */
+	struct dm_list *dm_devs;     /* list of dm_active_device */
+	struct radix_tree *dm_uuids; /* dm uuids of dm devices, get entry from dm_devs */
+	struct radix_tree *dm_devnos; /* devnos of dm devices, get entry from dm_devs */
 
 	/*
 	 * Configuration.

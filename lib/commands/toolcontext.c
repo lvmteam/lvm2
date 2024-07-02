@@ -1167,7 +1167,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 			}
 		}
 
-		if (!dev_cache_add_dir(cv->v.str)) {
+		if (!dev_cache_add_dir(cmd, cv->v.str)) {
 			log_error("Failed to add %s to internal device cache",
 				  cv->v.str);
 			return 0;
@@ -1899,7 +1899,7 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	_destroy_segtypes(&cmd->segtypes);
 	_destroy_formats(cmd, &cmd->formats);
 
-	if (!dev_cache_exit())
+	if (!dev_cache_exit(cmd))
 		stack;
 	_destroy_dev_types(cmd);
 	_destroy_tags(cmd);
@@ -2028,7 +2028,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	_destroy_segtypes(&cmd->segtypes);
 	_destroy_formats(cmd, &cmd->formats);
 	_destroy_filters(cmd);
-	dev_cache_exit();
+	dev_cache_exit(cmd);
 	_destroy_dev_types(cmd);
 	_destroy_tags(cmd);
 

@@ -3353,7 +3353,7 @@ int vg_missing_pv_count(const struct volume_group *vg)
 
 #define DEV_LIST_DELIM ", "
 
-static int _check_devs_used_correspond_with_lv(struct dm_pool *mem, struct dm_list *list, struct logical_volume *lv)
+static int _check_devs_used_correspond_with_lv(struct cmd_context *cmd, struct dm_pool *mem, struct dm_list *list, struct logical_volume *lv)
 {
 	struct device_list *dl;
 	int found_inconsistent = 0;
@@ -3363,7 +3363,7 @@ static int _check_devs_used_correspond_with_lv(struct dm_pool *mem, struct dm_li
 	int warned_about_no_dev = 0;
 	char *used_devnames = NULL, *assumed_devnames = NULL;
 
-	if (!(list = dev_cache_get_dev_list_for_lvid(lv->lvid.s + ID_LEN)))
+	if (!(list = dev_cache_get_dev_list_for_lvid(cmd, lv->lvid.s + ID_LEN)))
 		return 1;
 
 	dm_list_iterate_items(dl, list) {
@@ -3429,7 +3429,7 @@ static int _check_devs_used_correspond_with_lv(struct dm_pool *mem, struct dm_li
 	return 1;
 }
 
-static int _check_devs_used_correspond_with_vg(struct volume_group *vg)
+static int _check_devs_used_correspond_with_vg(struct cmd_context *cmd, struct volume_group *vg)
 {
 	struct dm_pool *mem;
 	char vgid[ID_LEN + 1] __attribute__((aligned(8)));
@@ -3458,7 +3458,7 @@ static int _check_devs_used_correspond_with_vg(struct volume_group *vg)
 		pvl->pv->dev->flags |= DEV_ASSUMED_FOR_LV;
 	}
 
-	if (!(list = dev_cache_get_dev_list_for_vgid(vgid)))
+	if (!(list = dev_cache_get_dev_list_for_vgid(cmd, vgid)))
 		return 1;
 
 	dm_list_iterate_items(dl, list) {
@@ -3474,7 +3474,7 @@ static int _check_devs_used_correspond_with_vg(struct volume_group *vg)
 			return_0;
 
 		dm_list_iterate_items(lvl, &vg->lvs) {
-			if (!_check_devs_used_correspond_with_lv(mem, list, lvl->lv)) {
+			if (!_check_devs_used_correspond_with_lv(cmd, mem, list, lvl->lv)) {
 				dm_pool_destroy(mem);
 				return_0;
 			}
@@ -5092,7 +5092,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		log_warn("WARNING: One or more devices used as PVs in VG %s have changed sizes.", vg->name);
 
 	if (cmd->check_devs_used)
-		_check_devs_used_correspond_with_vg(vg);
+		_check_devs_used_correspond_with_vg(cmd, vg);
 
 	if (!_access_vg_lock_type(cmd, vg, lockd_state, &failure)) {
 		/* Either FAILED_LOCK_TYPE or FAILED_LOCK_MODE were set. */

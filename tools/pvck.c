@@ -3033,7 +3033,7 @@ static int _pvck_mf(struct metadata_file *mf, struct cmd_context *cmd, int argc,
 		}
 
 		if (!(dev = dev_cache_get(cmd, pv_name, NULL))) {
-			log_error("Cannot use %s: %s.", pv_name, devname_error_reason(pv_name));
+			log_error("Cannot use %s: %s.", pv_name, devname_error_reason(cmd, pv_name));
 			return ECMD_FAILED;
 		}
 	}
@@ -3057,7 +3057,7 @@ static int _pvck_mf(struct metadata_file *mf, struct cmd_context *cmd, int argc,
 			dev = dev_cache_get(cmd, pv_name, NULL);
 		}
 		if (!dev && !def) {
-			log_error("Cannot use %s: %s.", pv_name, devname_error_reason(pv_name));
+			log_error("Cannot use %s: %s.", pv_name, devname_error_reason(cmd, pv_name));
 			return ECMD_FAILED;
 		}
 	}
@@ -3183,7 +3183,7 @@ static int _pvck_mf(struct metadata_file *mf, struct cmd_context *cmd, int argc,
 		pv_name = argv[i];
 
 		if (!(dev = dev_cache_get(cmd, argv[i], cmd->filter))) {
-			log_error("Cannot use %s: %s.", pv_name, devname_error_reason(pv_name));
+			log_error("Cannot use %s: %s.", pv_name, devname_error_reason(cmd, pv_name));
 			continue;
 		}
 

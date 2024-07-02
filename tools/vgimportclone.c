@@ -177,7 +177,7 @@ static int _get_other_devs(struct cmd_context *cmd, struct dm_list *new_devs, st
 	struct device_list *devl;
 	int r = 1;
 
-	if (!(iter = dev_iter_create(cmd->filter, 0)))
+	if (!(iter = dev_iter_create(cmd, cmd->filter, 0)))
 		return_0;
 
 	while ((dev = dev_iter_get(cmd, iter))) {

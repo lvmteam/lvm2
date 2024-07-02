@@ -499,7 +499,7 @@ int validate_hints(struct cmd_context *cmd, struct dm_list *hints)
 	 * became stale somehow (e.g. manually copying devices with dd) and
 	 * need to be refreshed.
 	 */
-	if (!(iter = dev_iter_create(NULL, 0)))
+	if (!(iter = dev_iter_create(cmd, NULL, 0)))
 		return 0;
 	while ((dev = dev_iter_get(cmd, iter))) {
 		if (dm_list_empty(&dev->aliases))
@@ -877,7 +877,7 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 	/*
 	 * Calculate and compare hash of devices that may be scanned.
 	 */
-	if (!(iter = dev_iter_create(NULL, 0)))
+	if (!(iter = dev_iter_create(cmd, NULL, 0)))
 		return 0;
 	while ((dev = dev_iter_get(cmd, iter))) {
 		if (cmd->enable_devices_file && !get_du_for_dev(cmd, dev))
@@ -1049,7 +1049,7 @@ int write_hint_file(struct cmd_context *cmd, int newhints)
 	 * dev flagged DEV_SCAN_FOUND_LABEL
 	 */
 
-	if (!(iter = dev_iter_create(NULL, 0))) {
+	if (!(iter = dev_iter_create(cmd, NULL, 0))) {
 		ret = 0;
 		goto out_close;
 	}

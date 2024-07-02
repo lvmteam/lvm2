@@ -34,7 +34,7 @@ static int _get_max_dev_name_len(struct cmd_context *cmd, struct dev_filter *fil
 	struct dev_iter *iter;
 	struct device *dev;
 
-	if (!(iter = dev_iter_create(filter, 1))) {
+	if (!(iter = dev_iter_create(cmd, filter, 1))) {
 		log_error("dev_iter_create failed");
 		return 0;
 	}
@@ -102,7 +102,7 @@ int lvmdiskscan(struct cmd_context *cmd, int argc __attribute__((unused)),
 
 	_max_len = _get_max_dev_name_len(cmd, cmd->filter);
 
-	if (!(iter = dev_iter_create(cmd->filter, 0))) {
+	if (!(iter = dev_iter_create(cmd, cmd->filter, 0))) {
 		log_error("dev_iter_create failed");
 		return ECMD_FAILED;
 	}

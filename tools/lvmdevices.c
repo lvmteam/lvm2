@@ -40,7 +40,7 @@ static void _search_devs_for_pvids(struct cmd_context *cmd, struct dm_list *sear
 	 * any filters, since we do not want filters to read any of the
 	 * devices yet.
 	 */
-	if (!(iter = dev_iter_create(NULL, 0)))
+	if (!(iter = dev_iter_create(cmd, NULL, 0)))
 		return;
 	while ((dev = dev_iter_get(cmd, iter))) {
 		/* Skip devs with a valid match to a du. */
@@ -697,7 +697,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 			if (update_set)
 				dm_list_del(&du->list);
 
-			if (!(mpath_dev = dev_cache_get_by_devt(cmd, mpath_devno)))
+			if (!(mpath_dev = dev_cache_get_by_devno(cmd, mpath_devno)))
 				continue;
 
 			if (!get_du_for_dev(cmd, mpath_dev)) {

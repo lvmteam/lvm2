@@ -36,8 +36,8 @@ struct dev_filter {
 
 void dev_init(struct device *dev);
 
-struct dm_list *dev_cache_get_dev_list_for_vgid(const char *vgid);
-struct dm_list *dev_cache_get_dev_list_for_lvid(const char *lvid);
+struct dm_list *dev_cache_get_dev_list_for_vgid(struct cmd_context *cmd, const char *vgid);
+struct dm_list *dev_cache_get_dev_list_for_lvid(struct cmd_context *cmd, const char *lvid);
 
 /*
  * The cache of dm devices is enabled when the kernel
@@ -49,9 +49,9 @@ struct dm_list *dev_cache_get_dev_list_for_lvid(const char *lvid);
  * have an alternative for when dm_devs_cache_use()
  * returns 0.
  */
-int dm_devs_cache_use(void);
-int dm_devs_cache_update(void);
-void dm_devs_cache_destroy(void);
+int dm_devs_cache_use(struct cmd_context *cmd);
+int dm_devs_cache_update(struct cmd_context *cmd);
+void dm_devs_cache_destroy(struct cmd_context *cmd);
 void dm_devs_cache_label_invalidate(struct cmd_context *cmd);
 const struct dm_active_device *
 dm_devs_cache_get_by_devno(struct cmd_context *cmd, dev_t devno);
@@ -62,38 +62,32 @@ dm_devs_cache_get_by_uuid(struct cmd_context *cmd, const char *dm_uuid);
  * The global device cache.
  */
 int dev_cache_init(struct cmd_context *cmd);
-int dev_cache_exit(void);
-
-/*
- * Returns number of open devices.
- */
-int dev_cache_check_for_open_devices(void);
+int dev_cache_exit(struct cmd_context *cmd);
 
 void dev_cache_scan(struct cmd_context *cmd);
-int dev_cache_has_scanned(void);
 
-int dev_cache_add_dir(const char *path);
+int dev_cache_add_dir(struct cmd_context *cmd, const char *path);
 struct device *dev_cache_get(struct cmd_context *cmd, const char *name, struct dev_filter *f);
 struct device *dev_cache_get_existing(struct cmd_context *cmd, const char *name, struct dev_filter *f);
-struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t devt);
+void dev_cache_verify_aliases(struct cmd_context *cmd, struct device *dev);
+
+struct device *dev_cache_get_by_devno(struct cmd_context *cmd, dev_t devno);
+struct device *dev_cache_get_by_name(struct cmd_context *cmd, const char *name);
 struct device *dev_cache_get_by_pvid(struct cmd_context *cmd, const char *pvid);
-void dev_cache_verify_aliases(struct device *dev);
 
-struct device *dev_cache_get_dev_by_name(const char *name);
-
-void dev_set_preferred_name(struct dm_str_list *sl, struct device *dev);
+void dev_set_preferred_name(struct cmd_context *cmd, struct dm_str_list *sl, struct device *dev);
 
 /*
  * Object for iterating through the cache.
  */
 struct dev_iter;
-struct dev_iter *dev_iter_create(struct dev_filter *f, int unused);
+struct dev_iter *dev_iter_create(struct cmd_context *cmd, struct dev_filter *f, int unused);
 void dev_iter_destroy(struct dev_iter *iter);
 struct device *dev_iter_get(struct cmd_context *cmd, struct dev_iter *iter);
 
-void dev_cache_failed_path(struct device *dev, const char *path);
+void dev_cache_failed_path(struct cmd_context *cmd, struct device *dev, const char *path);
 
-bool dev_cache_has_md_with_end_superblock(struct dev_types *dt);
+bool dev_cache_has_md_with_end_superblock(struct cmd_context *cmd, struct dev_types *dt);
 
 int get_sysfs_value(const char *path, char *buf, size_t buf_size, int error_if_no_value);
 int get_sysfs_binary(const char *path, char *buf, size_t buf_size, int *retlen);

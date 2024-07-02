@@ -1385,7 +1385,7 @@ static int _pvscan_cache_all(struct cmd_context *cmd, int argc, char **argv,
 	 * The use of filter here will just reuse the existing
 	 * (persistent) filter info label_scan has already set up.
 	 */
-	if (!(iter = dev_iter_create(cmd->filter, 1)))
+	if (!(iter = dev_iter_create(cmd, cmd->filter, 1)))
 		return_0;
 
 	while ((dev = dev_iter_get(cmd, iter))) {
@@ -1461,7 +1461,7 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 
 	if (cmd->md_component_detection && !cmd->use_full_md_check &&
 	    !strcmp(cmd->md_component_checks, "auto") &&
-	    dev_cache_has_md_with_end_superblock(cmd->dev_types)) {
+	    dev_cache_has_md_with_end_superblock(cmd, cmd->dev_types)) {
 		log_debug("Enable full md component check.");
 		cmd->use_full_md_check = 1;
 	}

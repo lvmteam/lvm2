@@ -1777,7 +1777,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 		goto out;
 	}
 
-	if (!(iter = dev_iter_create(cmd->filter, 1))) {
+	if (!(iter = dev_iter_create(cmd, cmd->filter, 1))) {
 		log_error("dev_iter creation failed.");
 		ret_max = ECMD_FAILED;
 		goto out;
@@ -4201,7 +4201,7 @@ static int _get_arg_devices(struct cmd_context *cmd,
 		}
 
 		if (!(dil->dev = dev_cache_get_existing(cmd, sl->str, cmd->filter))) {
-			log_error("Cannot use %s: %s", sl->str, devname_error_reason(sl->str));
+			log_error("Cannot use %s: %s", sl->str, devname_error_reason(cmd, sl->str));
 			ret_max = EINIT_FAILED;
 		} else {
 			memcpy(dil->pvid, dil->dev->pvid, ID_LEN);
@@ -4235,7 +4235,7 @@ static int _process_other_devices(struct cmd_context *cmd,
 	 * was set by label_scan which did filtering.
 	 */
 
-	if (!(iter = dev_iter_create(NULL, 0)))
+	if (!(iter = dev_iter_create(cmd, NULL, 0)))
 		return_0;
 
 	while ((dev = dev_iter_get(cmd, iter))) {
@@ -5578,7 +5578,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	 */
 	dm_list_iterate_items_safe(pd, pd2, &pp->arg_devices) {
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, pd->dev, NULL)) {
-			log_error("Cannot use %s: %s", pd->name, devname_error_reason(pd->name));
+			log_error("Cannot use %s: %s", pd->name, devname_error_reason(cmd, pd->name));
 			dm_list_del(&pd->list);
 			dm_list_add(&pp->arg_fail, &pd->list);
 		}
@@ -5804,7 +5804,7 @@ do_command:
 
 	dm_list_iterate_items_safe(pd, pd2, &pp->arg_process) {
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, pd->dev, NULL)) {
-			log_error("Cannot use %s: %s", pd->name, devname_error_reason(pd->name));
+			log_error("Cannot use %s: %s", pd->name, devname_error_reason(cmd, pd->name));
 			dm_list_del(&pd->list);
 			dm_list_add(&pp->arg_fail, &pd->list);
 		}

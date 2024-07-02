@@ -183,7 +183,7 @@ static int _accept_p(struct cmd_context *cmd, struct dev_filter *f, struct devic
 		if (m >= 0) {
 			if (dm_bit(rf->accept, m)) {
 				if (!first && !cmd->filter_regex_set_preferred_name_disable)
-					dev_set_preferred_name(sl, dev);
+					dev_set_preferred_name(cmd, sl, dev);
 
 				return 1;
 			}

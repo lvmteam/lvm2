@@ -2738,7 +2738,7 @@ void device_ids_match(struct cmd_context *cmd)
 		 */
 		found = 0;
 
-		if (!(iter = dev_iter_create(NULL, 0)))
+		if (!(iter = dev_iter_create(cmd, NULL, 0)))
 			continue;
 		while ((dev = dev_iter_get(cmd, iter))) {
 			/* skip a dev that's already matched to another entry */
@@ -2855,7 +2855,7 @@ static void _get_devs_with_serial_numbers(struct cmd_context *cmd, struct dm_lis
 	struct dev_id *id;
 	const char *idname;
 
-	if (!(iter = dev_iter_create(NULL, 0)))
+	if (!(iter = dev_iter_create(cmd, NULL, 0)))
 		return;
 	while ((dev = dev_iter_get(cmd, iter))) {
 		/* if serial has already been read for this dev then use it */
@@ -3794,7 +3794,7 @@ void device_ids_search(struct cmd_context *cmd, struct dm_list *new_devs,
 	 * filter), in the process of doing this search outside the deviceid
 	 * filter.
 	 */
-	if (!(iter = dev_iter_create(NULL, 0)))
+	if (!(iter = dev_iter_create(cmd, NULL, 0)))
 		return;
 	while ((dev = dev_iter_get(cmd, iter))) {
 		if (dev->flags & DEV_MATCHED_USE_ID)

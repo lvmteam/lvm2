@@ -3237,11 +3237,11 @@ const char *dev_filtered_reason(struct device *dev)
 	return "device cannot be used";
 }
 
-const char *devname_error_reason(const char *devname)
+const char *devname_error_reason(struct cmd_context *cmd, const char *devname)
 {
 	struct device *dev;
 
-	if ((dev = dev_cache_get_dev_by_name(devname))) {
+	if ((dev = dev_cache_get_by_name(cmd, devname))) {
 		if (dev->filtered_flags)
 			return dev_filtered_reason(dev);
 		if (lvmcache_dev_is_unused_duplicate(dev))

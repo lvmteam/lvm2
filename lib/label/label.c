@@ -537,8 +537,8 @@ static int _scan_dev_open(struct device *dev)
 			 */
 			log_debug("Drop alias for %u:%u failed open %s (%d).",
 				  MAJOR(dev->dev), MINOR(dev->dev), name, errno);
-			dev_cache_failed_path(dev, name);
-			dev_cache_verify_aliases(dev);
+			dev_cache_failed_path(dev->cmd, dev, name);
+			dev_cache_verify_aliases(dev->cmd, dev);
 			goto next_name;
 		}
 	}
@@ -548,8 +548,8 @@ static int _scan_dev_open(struct device *dev)
 		log_warn("Invalid path %s for device %u:%u, trying different path.",
 			 name, MAJOR(dev->dev), MINOR(dev->dev));
 		(void)close(fd);
-		dev_cache_failed_path(dev, name);
-		dev_cache_verify_aliases(dev);
+		dev_cache_failed_path(dev->cmd, dev, name);
+		dev_cache_verify_aliases(dev->cmd, dev);
 		goto next_name;
 	}
 
@@ -899,7 +899,7 @@ int label_scan_for_pvid(struct cmd_context *cmd, char *pvid, struct device **dev
 	 * pass filters, and are those we can use.
 	 */
 
-	if (!(iter = dev_iter_create(cmd->filter, 0))) {
+	if (!(iter = dev_iter_create(cmd, cmd->filter, 0))) {
 		log_error("Scanning failed to get devices.");
 		return 0;
 	}
@@ -1046,7 +1046,7 @@ int label_scan_vg_online(struct cmd_context *cmd, const char *vgname,
 		dm_list_iterate_items(po, &pvs_online) {
 			if (po->dev)
 				continue;
-			if (!(po->dev = dev_cache_get_by_devt(cmd, po->devno))) {
+			if (!(po->dev = dev_cache_get_by_devno(cmd, po->devno))) {
 				log_error("No device found for %u:%u PVID %s.",
 					  MAJOR(po->devno), MINOR(po->devno), po->pvid);
 				goto bad;
@@ -1263,7 +1263,7 @@ int label_scan(struct cmd_context *cmd)
 	 * here, before processing the hints file, so that the dm uuid checks
 	 * in hint processing can benefit from the dm uuid cache.)
 	 */
-	if (!dm_devs_cache_update())
+	if (!dm_devs_cache_update(cmd))
 		return_0;
 
 	/*
@@ -1288,7 +1288,7 @@ int label_scan(struct cmd_context *cmd)
 	 */
 	if (cmd->md_component_detection && !cmd->use_full_md_check &&
 	    !strcmp(cmd->md_component_checks, "auto") &&
-	    dev_cache_has_md_with_end_superblock(cmd->dev_types)) {
+	    dev_cache_has_md_with_end_superblock(cmd, cmd->dev_types)) {
 		log_debug("Enable full md component check.");
 		cmd->use_full_md_check = 1;
 	}
@@ -1299,7 +1299,7 @@ int label_scan(struct cmd_context *cmd)
 	 * Invalidate bcache data for all devs (there will usually be no bcache
 	 * data to invalidate.)
 	 */
-	if (!(iter = dev_iter_create(NULL, 0))) {
+	if (!(iter = dev_iter_create(cmd, NULL, 0))) {
 		log_error("Failed to get device list.");
 		return 0;
 	}
@@ -1652,7 +1652,7 @@ void label_scan_invalidate_lv(struct cmd_context *cmd, struct logical_volume *lv
 	if (lv_info(cmd, lv, 0, &lvinfo, 0, 0) && lvinfo.exists) {
 		/* FIXME: Still unclear what is it supposed to find */
 		devt = MKDEV(lvinfo.major, lvinfo.minor);
-		if ((dev = dev_cache_get_by_devt(cmd, devt)))
+		if ((dev = dev_cache_get_by_devno(cmd, devt)))
 			label_scan_invalidate(dev);
 	}
 }
@@ -1670,7 +1670,7 @@ void label_scan_invalidate_lvs(struct cmd_context *cmd, struct dm_list *lvs)
 
 	log_debug("Invalidating devs for any PVs on LVs.");
 
-	if (dm_devs_cache_use())
+	if (dm_devs_cache_use(cmd))
 		dm_devs_cache_label_invalidate(cmd);
 	else {
 		dm_list_iterate_items(lvl, lvs)
@@ -1688,7 +1688,7 @@ void label_scan_drop(struct cmd_context *cmd)
 	struct dev_iter *iter;
 	struct device *dev;
 
-	if (!(iter = dev_iter_create(NULL, 0)))
+	if (!(iter = dev_iter_create(cmd, NULL, 0)))
 		return;
 
 	while ((dev = dev_iter_get(cmd, iter))) {
