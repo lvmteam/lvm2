@@ -448,8 +448,9 @@ static int _ignore_blocked_mirror_devices(struct cmd_context *cmd,
 	void *next = NULL;
 	struct dm_task *dmt = NULL;
 	int r = 0;
-	struct device *tmp_dev;
-	char buf[16];
+	char fake_dev_name[16];
+	struct device fake_dev = { 0 };
+	struct dm_str_list *alias;
 
 	if (!(mem = dm_pool_create("blocked_mirrors", 128)))
 		return_0;
@@ -470,16 +471,20 @@ static int _ignore_blocked_mirror_devices(struct cmd_context *cmd,
 					     dev_name(dev));
 			check_for_blocking = 1;
 		} else {
-
-			if (dm_snprintf(buf, sizeof(buf), "%u:%u",
+			dev_init(&fake_dev);
+			if (dm_snprintf(fake_dev_name, sizeof(fake_dev_name), "%u:%u",
 					sm->logs[0].major, sm->logs[0].minor) < 0)
 				goto_out;
 
-			if (!(tmp_dev = dev_create_file(buf, NULL, NULL, 0)))
+			if (!(alias = dm_pool_zalloc(mem, sizeof(*alias))))
 				goto_out;
+			if (!(alias->str = dm_pool_strdup(mem, fake_dev_name)))
+				goto_out;
+			dm_list_add(&fake_dev.aliases, &alias->list);
+			fake_dev.flags = DEV_REGULAR;
+			fake_dev.dev = MKDEV(sm->logs[0].major, sm->logs[0].minor);
 
-			tmp_dev->dev = MKDEV(sm->logs[0].major, sm->logs[0].minor);
-			if (dm_device_is_usable(cmd, tmp_dev, (struct dev_usable_check_params)
+			if (dm_device_is_usable(cmd, &fake_dev, (struct dev_usable_check_params)
 					       { .check_empty = 1,
 					         .check_blocked = 1,
 					         .check_suspended = ignore_suspended_devices(),

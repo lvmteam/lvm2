@@ -78,7 +78,7 @@ static int _insert(const char *path, const struct stat *info,
 		   int rec, int check_with_udev_db);
 
 /* Setup non-zero members of passed zeroed 'struct device' */
-static void _dev_init(struct device *dev)
+void dev_init(struct device *dev)
 {
 	dev->fd = -1;
 	dev->bcache_fd = -1;
@@ -147,7 +147,7 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 		return NULL;
 	}
 
-	_dev_init(dev);
+	dev_init(dev);
 	dev->flags = DEV_REGULAR | ((use_malloc) ? DEV_ALLOCED : 0);
 	dm_list_add(&dev->aliases, &alias->list);
 
@@ -163,7 +163,7 @@ static struct device *_dev_create(dev_t d)
 		return NULL;
 	}
 
-	_dev_init(dev);
+	dev_init(dev);
 	dev->dev = d;
 
 	return dev;
