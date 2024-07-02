@@ -94,66 +94,6 @@ void dev_init(struct device *dev)
 	dm_list_init(&dev->wwids);
 }
 
-void dev_destroy_file(struct device *dev)
-{
-	if (!(dev->flags & DEV_ALLOCED))
-		return;
-
-	free((void *) dm_list_item(dev->aliases.n, struct dm_str_list)->str);
-	free(dev->aliases.n);
-	free(dev);
-}
-
-struct device *dev_create_file(const char *filename, struct device *dev,
-			       struct dm_str_list *alias, int use_malloc)
-{
-	int allocate = !dev;
-
-	if (allocate) {
-		if (use_malloc) {
-			if (!(dev = zalloc(sizeof(*dev)))) {
-				log_error("struct device allocation failed");
-				return NULL;
-			}
-			if (!(alias = zalloc(sizeof(*alias)))) {
-				log_error("struct dm_str_list allocation failed");
-				free(dev);
-				return NULL;
-			}
-			if (!(alias->str = strdup(filename))) {
-				log_error("filename strdup failed");
-				free(dev);
-				free(alias);
-				return NULL;
-			}
-		} else {
-			if (!(dev = _zalloc(sizeof(*dev)))) {
-				log_error("struct device allocation failed");
-				return NULL;
-			}
-			if (!(alias = _zalloc(sizeof(*alias)))) {
-				log_error("struct dm_str_list allocation failed");
-				_free(dev);
-				return NULL;
-			}
-			if (!(alias->str = _strdup(filename))) {
-				log_error("filename strdup failed");
-				_free(dev);
-				return NULL;
-			}
-		}
-	} else if (!(alias->str = strdup(filename))) {
-		log_error("filename strdup failed");
-		return NULL;
-	}
-
-	dev_init(dev);
-	dev->flags = DEV_REGULAR | ((use_malloc) ? DEV_ALLOCED : 0);
-	dm_list_add(&dev->aliases, &alias->list);
-
-	return dev;
-}
-
 static struct device *_dev_create(dev_t d)
 {
 	struct device *dev;

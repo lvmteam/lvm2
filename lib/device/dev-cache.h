@@ -34,6 +34,8 @@ struct dev_filter {
 	const char *name;
 };
 
+void dev_init(struct device *dev);
+
 struct dm_list *dev_cache_get_dev_list_for_vgid(const char *vgid);
 struct dm_list *dev_cache_get_dev_list_for_lvid(const char *lvid);
 

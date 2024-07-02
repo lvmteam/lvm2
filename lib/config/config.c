@@ -49,7 +49,6 @@ struct config_file {
 	off_t st_size;
 	char *filename;
 	int exists;
-	int keep_open;
 	struct device *dev;
 };
 
@@ -104,7 +103,7 @@ static inline int _is_file_based_config_source(config_source_t source)
  */
 struct dm_config_tree *config_open(config_source_t source,
 				   const char *filename,
-				   int keep_open)
+				   int unused)
 {
 	struct dm_config_tree *cft = dm_config_create();
 	struct config_source *cs;
@@ -124,7 +123,6 @@ struct dm_config_tree *config_open(config_source_t source,
 			goto fail;
 		}
 
-		cf->keep_open = keep_open;
 		if (filename &&
 		    !(cf->filename = dm_pool_strdup(cft->mem, filename))) {
 			log_error("Failed to duplicate filename.");
@@ -241,22 +239,8 @@ int config_file_changed(struct dm_config_tree *cft)
 
 void config_destroy(struct dm_config_tree *cft)
 {
-	struct config_source *cs;
-	struct config_file *cf;
-
-	if (!cft)
-		return;
-
-	cs = dm_config_get_custom(cft);
-
-	if (_is_file_based_config_source(cs->type)) {
-		cf = cs->source.file;
-		if (cf && cf->dev)
-			if (!dev_close(cf->dev))
-				stack;
-	}
-
-	dm_config_destroy(cft);
+	if (cft)
+		dm_config_destroy(cft);
 }
 
 struct dm_config_tree *config_file_open_and_read(const char *config_file,
@@ -611,6 +595,10 @@ int config_file_read(struct dm_config_tree *cft)
 	struct config_source *cs = dm_config_get_custom(cft);
 	struct config_file *cf;
 	struct stat info;
+	struct device fake_dev = { 0 };
+	struct dm_str_list *alias;
+	int free_fake = 0;
+	int fd;
 	int r;
 
 	if (!config_file_check(cft, &filename, &info))
@@ -622,25 +610,43 @@ int config_file_read(struct dm_config_tree *cft)
 
 	cf = cs->source.file;
 
-	if (!cf->dev) {
-		if (!(cf->dev = dev_create_file(filename, NULL, NULL, 1)))
-			return_0;
+	/* fixme: get rid of fake dev and just
+	   add separate code paths for files */
 
-		if (!dev_open_readonly_buffered(cf->dev)) {
-			dev_destroy_file(cf->dev);
-			cf->dev = NULL;
+	if (!cf->dev) {
+		if (!(alias = zalloc(sizeof(*alias))))
+			return_0;
+		if (!(alias->str = strdup(filename))) {
+			free(alias);
 			return_0;
 		}
+		dev_init(&fake_dev);
+		fake_dev.flags = DEV_REGULAR;
+		dm_list_add(&fake_dev.aliases, &alias->list);
+
+		if ((fd = open(filename, O_RDONLY, 0777)) < 0) {
+			log_error("Failed to open config file %s.", filename);
+			free((void*)alias->str);
+			free((void*)alias);
+			return_0;
+		}
+		fake_dev.fd = fd;
+		free_fake = 1;
+		cf->dev = &fake_dev;
 	}
 
 	r = config_file_read_fd(cft, cf->dev, DEV_IO_MDA_CONTENT, 0, (size_t) info.st_size, 0, 0,
 				(checksum_fn_t) NULL, 0, 0, 0);
 
-	if (!cf->keep_open) {
+	if (free_fake) {
+		free((void*)alias->str);
+		free((void*)alias);
+		close(fd);
+	} else {
 		if (!dev_close(cf->dev))
 			stack;
-		cf->dev = NULL;
 	}
+	cf->dev = NULL;
 
 	return r;
 }

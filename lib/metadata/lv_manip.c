@@ -5762,7 +5762,6 @@ static int _lv_reduce_vdo_discard(struct cmd_context *cmd,
 	if (!dev_discard_max_bytes(cmd->dev_types, dev) ||
 	    !dev_discard_granularity(cmd->dev_types, dev)) {
 		log_error("%s: max bytes and granularity query fails.", name);
-		dev_destroy_file(dev);
 		return 0;
 	}
 
@@ -5773,11 +5772,9 @@ static int _lv_reduce_vdo_discard(struct cmd_context *cmd,
 	if (!dev_discard_blocks(dev, ((uint64_t)lp->extents * vg->extent_size) << SECTOR_SHIFT,
 				((uint64_t)(lv->le_count - lp->extents) * vg->extent_size) << SECTOR_SHIFT)) {
 		log_error("%s: discarding failed.", name);
-		dev_destroy_file(dev);
 		return 0;
 	}
 
-	dev_destroy_file(dev);
 	return 1;
 }
 
