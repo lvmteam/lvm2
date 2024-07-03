@@ -237,6 +237,17 @@ struct cmd_context {
 	struct dm_list deviceslist;             /* from --devices option, struct dm_str_list */
 
 	/*
+	 * Cache of blocks read from devices, generally blocks containing
+	 * headers and metadata from PVs.  (It functions more as an i/o layer
+	 * rather than a cache, the caching occurs when blocks are reused
+	 * between label_scan and vg_read.)
+	 * (FIXME: in some cases blocks from LVs are contained here, e.g. for
+	 * zeroing, but that's not the intended use of bcache, and those cases
+	 * should be changed to perform i/o to LVs separately.)
+	 */
+	struct bcache *dev_blocks;
+
+	/*
 	 * LV dev index.
 	 */
 	struct dm_hash_table *vgid_index;
