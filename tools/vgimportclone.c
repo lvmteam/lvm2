@@ -287,7 +287,7 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 	 */
 	log_debug("scan new devs");
 
-	label_scan_setup_bcache(cmd);
+	label_scan_setup_bcache();
 
 	cmd->filter_nodata_only = 0;
 

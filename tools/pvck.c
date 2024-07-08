@@ -3073,7 +3073,7 @@ static int _pvck_mf(struct metadata_file *mf, struct cmd_context *cmd, int argc,
 			return_ECMD_FAILED;
 	}
 
-	label_scan_setup_bcache(cmd);
+	label_scan_setup_bcache();
 
 	if (dev) {
 		char buf[4096];

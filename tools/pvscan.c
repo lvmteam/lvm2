@@ -1571,7 +1571,7 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 
 	log_debug("pvscan_cache_args: read and filter devs");
 
-	label_scan_setup_bcache(cmd);
+	label_scan_setup_bcache();
 
 	dm_list_iterate_items_safe(devl, devl2, &pvscan_devs) {
 		int has_pvid;
