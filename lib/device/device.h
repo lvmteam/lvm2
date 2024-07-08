@@ -149,7 +149,6 @@ struct device {
 	uint64_t end;
 	struct dev_ext ext;
 	const char *duplicate_prefer_reason;
-	struct cmd_context *cmd;
 
 	const char *vgid; /* if device is an LV */
 	const char *lvid; /* if device is an LV */
