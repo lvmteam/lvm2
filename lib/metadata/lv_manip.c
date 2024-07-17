@@ -4415,6 +4415,7 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 					log_error("Failed to remove LV");
 				else if (!vg_write(vg) || !vg_commit(vg))
 					log_error("Failed to commit VG %s", vg->name);
+				dm_pool_free(vg->vgmem, lvl);
 				return_0;
 			}
 
@@ -4571,7 +4572,7 @@ int lv_extend(struct logical_volume *lv,
 		    alloc != ALLOC_ANYWHERE &&
 		    !(r = _lv_raid_redundant_allocation(lv, allocatable_pvs))) {
 			log_error("Insufficient suitable allocatable extents for logical volume %s", display_lvname(lv));
-			if (!lv_remove(lv) || !vg_write(lv->vg) || !vg_commit(lv->vg))
+			if (!old_extents && (!lv_remove(lv) || !vg_write(lv->vg) || !vg_commit(lv->vg)))
 				return_0;
 			goto out;
 		}
