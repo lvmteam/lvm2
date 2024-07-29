@@ -1959,7 +1959,7 @@ static uint32_t _stripes_per_mimage(struct lv_segment *seg)
 
 	if (seg_is_mirrored(seg) && seg->area_count && seg_type(seg, 0) == AREA_LV) {
 		last_lvseg = dm_list_item(dm_list_last(&seg_lv(seg, 0)->segments), struct lv_segment);
-		if (seg_is_striped(last_lvseg))
+		if (last_lvseg && seg_is_striped(last_lvseg))
 			return last_lvseg->area_count;
 	}
 

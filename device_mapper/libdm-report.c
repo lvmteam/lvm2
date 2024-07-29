@@ -4757,6 +4757,8 @@ static int _output_as_rows(struct dm_report *rh)
 	dm_list_iterate_items(fp, &rh->field_props) {
 		if (fp->flags & FLD_HIDDEN) {
 			dm_list_iterate_items(row, &rh->rows) {
+				if (dm_list_empty(&row->fields))
+					continue;
 				field = dm_list_item(dm_list_first(&row->fields), struct dm_report_field);
 				dm_list_del(&field->list);
 			}

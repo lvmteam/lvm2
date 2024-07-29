@@ -5792,6 +5792,11 @@ static int _lvconvert_detach_writecache_when_clean(struct cmd_context *cmd,
 	int is_lockd;
 	int ret = 0;
 
+	if (dm_list_empty(&lr->poll_idls)) {
+		log_error(INTERNAL_ERROR "Cannot detach writecache.");
+		return 0;
+	}
+
 	idl = dm_list_item(dm_list_first(&lr->poll_idls), struct convert_poll_id_list);
 	id = idl->id;
 	is_lockd = lvmcache_vg_is_lockd_type(cmd, id->vg_name, NULL);
