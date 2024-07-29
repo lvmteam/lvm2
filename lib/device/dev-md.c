@@ -44,6 +44,7 @@ static int _dev_has_md_magic(struct device *dev, uint64_t sb_offset)
 		return_0;
 
 	if ((md_magic == MD_SB_MAGIC) ||
+	    /* coverity[result_independent_of_operands] */
 	     ((MD_SB_MAGIC != xlate32(MD_SB_MAGIC)) && (md_magic == xlate32(MD_SB_MAGIC))))
 		return 1;
 
