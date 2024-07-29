@@ -28,7 +28,6 @@
 #include <poll.h>
 #include <errno.h>
 #include <syslog.h>
-#include <blkid/blkid.h>
 #include <sys/sysmacros.h>
 
 #define ONE_MB 1048576
