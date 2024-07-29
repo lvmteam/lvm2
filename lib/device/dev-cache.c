@@ -899,9 +899,12 @@ static int _insert_dir(const char *dir)
 
 static int _dev_cache_iterate_devs_for_index(struct cmd_context *cmd)
 {
-	struct dev_iter *iter = dev_iter_create(NULL, 0);
+	struct dev_iter *iter;
 	struct device *dev = NULL;
 	int r = 1;
+
+	if (!(iter = dev_iter_create(NULL, 0)))
+		return_0;
 
 	while ((dev = dev_iter_get(NULL, iter)))
 		if (!_index_dev_by_vgid_and_lvid(cmd, dev))
@@ -1786,8 +1789,11 @@ struct device *dev_cache_get_by_devt(struct cmd_context *cmd, dev_t devt)
 
 struct device *dev_cache_get_by_pvid(struct cmd_context *cmd, const char *pvid)
 {
-	struct dev_iter *iter = dev_iter_create(NULL, 0);
+	struct dev_iter *iter;
 	struct device *dev;
+
+	if (!(iter = dev_iter_create(NULL, 0)))
+		return_NULL;
 
 	while ((dev = dev_iter_get(NULL, iter)))
 		if (!memcmp(dev->pvid, pvid, ID_LEN))
@@ -1868,8 +1874,11 @@ const char *dev_name(const struct device *dev)
 bool dev_cache_has_md_with_end_superblock(struct dev_types *dt)
 {
 	struct device *dev;
-	struct dev_iter *iter = dev_iter_create(NULL, 0);
+	struct dev_iter *iter;
 	bool ret = false;
+
+	if (!(iter = dev_iter_create(NULL, 0)))
+		return_false;
 
 	while ((dev = dev_iter_get(NULL, iter)))
 		if ((ret = dev_is_md_with_end_superblock(dt, dev)))
