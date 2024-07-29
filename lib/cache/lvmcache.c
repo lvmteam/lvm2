@@ -1052,6 +1052,8 @@ next:
 			log_debug_cache("PV %s with duplicates unselected using %s.",
 					pvid, dev_name(devl->dev));
 			goto next;
+		} else if (dm_list_empty(&altdevs)) {
+			goto next;
 		} else {
 			devl = dm_list_item(dm_list_first(&altdevs), struct device_list);
 			dev1 = devl->dev;
