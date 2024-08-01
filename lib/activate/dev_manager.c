@@ -902,6 +902,9 @@ int devno_dm_uuid(struct cmd_context *cmd, int major, int minor,
 	const char *uuid;
 	int r = 0;
 
+	if (major != cmd->dev_types->device_mapper_major)
+		return 0;
+
 	if (dm_devs_cache_use()) {
 		if ((dm_dev = dm_devs_cache_get_by_devno(cmd, MKDEV(major, minor)))) {
 			dm_strncpy(uuid_buf, dm_dev->uuid, uuid_buf_size);
