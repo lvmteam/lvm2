@@ -42,6 +42,7 @@ test "$str" = "journal_crypt:$JOURNAL_CRYPT:$HEXKEY_32"
 str=$(dmsetup table "$PREFIX-integrity" | cut -d ' ' -f 14)
 test "$str" = "internal_hash:$INTERNAL_HASH_NOCRYPT"
 
+aux udev_wait
 dmsetup remove "$PREFIX-integrity"
 dmsetup create "$PREFIX-integrity" --table "0 7856 integrity $DM_DEV_DIR/mapper/$PREFIX-zero 0 32 J 7 journal_sectors:88 interleave_sectors:32768 buffer_sectors:128 journal_watermark:50 commit_time:10000 internal_hash:$INTERNAL_HASH_CRYPT:$HEXKEY2_32 journal_crypt:$JOURNAL_CRYPT:$HEXKEY_32"
 
@@ -54,5 +55,6 @@ test "$str" = "internal_hash:$INTERNAL_HASH_CRYPT:$HIDENKEY_32"
 str=$(dmsetup table --showkeys "$PREFIX-integrity" | cut -d ' ' -f 14)
 test "$str" = "internal_hash:$INTERNAL_HASH_CRYPT:$HEXKEY2_32"
 
+aux udev_wait
 dmsetup remove "$PREFIX-integrity"
 dmsetup remove "$PREFIX-zero"

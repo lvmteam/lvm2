@@ -71,5 +71,6 @@ test "$str" = "$HIDENKEY_32"
 str=$(dmsetup table --showkeys "$PREFIX-crypt" | cut -d ' ' -f 5)
 test "$str" = "$HEXKEY_32"
 
+aux udev_wait
 dmsetup remove "$PREFIX-crypt"
 dmsetup remove "$PREFIX-zero"
