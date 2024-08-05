@@ -5279,3 +5279,24 @@ int lv_is_striped(struct logical_volume *lv)
 	return segtype_is_striped(seg->segtype);
 }
 
+int setting_str_list_add(const char *field, uint64_t val, char *val_str, struct dm_list *result, struct dm_pool *mem)
+{
+	char buf[128];
+	char *list_item;
+
+	if (val_str) {
+		if (dm_snprintf(buf, sizeof(buf), "%s=%s", field, val_str) < 0)
+			return_0;
+	} else {
+		if (dm_snprintf(buf, sizeof(buf), "%s=%llu", field, (unsigned long long)val) < 0)
+			return_0;
+	}
+
+	if (!(list_item = dm_pool_strdup(mem, buf)))
+		return_0;
+
+	if (!str_list_add_no_dup_check(mem, result, list_item))
+		return_0;
+
+	return 1;
+}

@@ -291,6 +291,7 @@ FIELD(SEGS, seg, STR_LIST, "Metadata Devs", list, 0, metadatadevices, metadata_d
 FIELD(SEGS, seg, STR, "Monitor", list, 0, segmonitor, seg_monitor, "Dmeventd monitoring status of the segment.", 0)
 FIELD(SEGS, seg, STR, "CachePolicy", list, 0, cache_policy, cache_policy, "The cache policy (cached segments only).", 0)
 FIELD(SEGS, seg, STR_LIST, "CacheSettings", list, 0, cache_settings, cache_settings, "Cache settings/parameters (cached segments only).", 0)
+FIELD(SEGS, seg, STR_LIST, "IntegSettings", list, 0, integrity_settings, integrity_settings, "Integrity settings.", 0)
 
 FIELD(SEGS, seg, BIN, "VDOCompression", list, 0, vdo_compression, vdo_compression, "Set for compressed LV (vdopool).", 0)
 FIELD(SEGS, seg, BIN, "VDODeduplication", list, 0, vdo_deduplication, vdo_deduplication, "Set for deduplicated LV (vdopool).", 0)

@@ -1392,6 +1392,10 @@ arg(ignoreactivationskip_ARG, 'K', "ignoreactivationskip", 0, 0, 0,
     "Ignore the \"activation skip\" LV flag during activation\n"
     "to allow LVs with the flag set to be activated.\n")
 
+arg(integritysettings_ARG, '\0', "integritysettings", string_VAL, ARG_GROUPABLE, 0,
+    "Specifies tunable kernel options for dm-integrity.\n"
+    "See \\fBlvmraid\\fP(7) for more information.\n")
+
 arg(maps_ARG, 'm', "maps", 0, 0, 0,
     "#lvdisplay\n"
     "Display the mapping of logical extents to PVs and physical extents.\n"

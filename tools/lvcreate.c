@@ -615,6 +615,10 @@ static int _read_raid_params(struct cmd_context *cmd,
 			if (!integrity_mode_set(arg_str_value(cmd, raidintegritymode_ARG, NULL), &lp->integrity_settings))
 				return_0;
 		}
+		if (arg_is_set(cmd, integritysettings_ARG)) {
+			if (!get_integrity_settings(cmd, &lp->integrity_settings))
+				return_0;
+		}
 	}
 
 	return 1;
@@ -936,7 +940,8 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	raidminrecoveryrate_ARG, \
 	raidintegrity_ARG, \
 	raidintegritymode_ARG, \
-	raidintegrityblocksize_ARG
+	raidintegrityblocksize_ARG, \
+	integritysettings_ARG
 
 #define SIZE_ARGS \
 	extents_ARG,\

@@ -156,6 +156,12 @@ static int _integrity_text_import(struct lv_segment *seg,
 		set->sectors_per_bit_set = 1;
 	}
 
+	if (dm_config_has_node(sn, "allow_discards")) {
+		if (!dm_config_get_uint32(sn, "allow_discards", &set->allow_discards))
+			return SEG_LOG_ERROR("Unknown integrity_setting in");
+		set->allow_discards_set = 1;
+	}
+
 	seg->origin = origin_lv;
 	seg->integrity_meta_dev = meta_lv;
 	seg->lv->status |= INTEGRITY;
@@ -216,6 +222,9 @@ static int _integrity_text_export(const struct lv_segment *seg,
 
 	if (set->sectors_per_bit)
 		outf(f, "sectors_per_bit = %llu", (unsigned long long)set->sectors_per_bit);
+
+	if (set->allow_discards_set)
+		outf(f, "allow_discards = %u", set->allow_discards);
 
 	return 1;
 }

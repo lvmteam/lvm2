@@ -1627,6 +1627,118 @@ int get_writecache_settings(struct cmd_context *cmd, struct writecache_settings 
 	return 1;
 }
 
+static int _get_one_integrity_setting(struct cmd_context *cmd, struct integrity_settings *settings,
+				      char *key, char *val)
+{
+	/*
+	 * Some settings handled by other options:
+	 * settings->mode from --raidintegritymode
+	 * settings->block_size from --raidintegrityblocksize
+	 */
+
+	/* always set in metadata and on table line */
+
+	if (!strncmp(key, "journal_sectors", sizeof("journal_sectors") - 1)) {
+		uint32_t size_mb;
+
+		if (sscanf(val, "%u", &settings->journal_sectors) != 1)
+			goto_bad;
+
+		size_mb = settings->journal_sectors / 2048;
+		if (size_mb < 4 || size_mb > 1024) {
+			log_error("Invalid raid integrity journal size %d MiB (use 4-1024 MiB).", size_mb);
+			goto_bad;
+		}
+		settings->journal_sectors_set = 1;
+		return 1;
+	}
+
+
+	/* optional, not included in metadata or table line unless set */
+
+	if (!strncmp(key, "journal_watermark", sizeof("journal_watermark") - 1)) {
+		if (sscanf(val, "%u", &settings->journal_watermark) != 1)
+			goto_bad;
+		if (settings->journal_watermark > 100)
+			goto_bad;
+		settings->journal_watermark_set = 1;
+		return 1;
+	}
+
+	if (!strncmp(key, "commit_time", sizeof("commit_time") - 1)) {
+		if (sscanf(val, "%u", &settings->commit_time) != 1)
+			goto_bad;
+		settings->commit_time_set = 1;
+		return 1;
+	}
+
+	if (!strncmp(key, "bitmap_flush_interval", sizeof("bitmap_flush_interval") - 1)) {
+		if (sscanf(val, "%u", &settings->bitmap_flush_interval) != 1)
+			goto_bad;
+		settings->bitmap_flush_interval_set = 1;
+		return 1;
+	}
+
+	if (!strncmp(key, "allow_discards", sizeof("allow_discards") - 1)) {
+		if (sscanf(val, "%u", &settings->allow_discards) != 1)
+			goto_bad;
+		if (settings->allow_discards != 0 && settings->allow_discards != 1)
+			goto_bad;
+		settings->allow_discards_set = 1;
+		return 1;
+	}
+
+	return 1;
+
+ bad:
+	log_error("Invalid setting: %s", key);
+	return 0;
+}
+
+int get_integrity_settings(struct cmd_context *cmd, struct integrity_settings *settings)
+{
+	struct arg_value_group_list *group;
+	const char *str;
+	char key[64];
+	char val[64];
+	int num;
+	unsigned pos;
+
+	/*
+	 * "grouped" means that multiple --integritysettings options can be used.
+	 * Each option is also allowed to contain multiple key = val pairs.
+	 */
+
+	dm_list_iterate_items(group, &cmd->arg_value_groups) {
+		if (!grouped_arg_is_set(group->arg_values, integritysettings_ARG))
+			continue;
+
+		if (!(str = grouped_arg_str_value(group->arg_values, integritysettings_ARG, NULL)))
+			break;
+
+		pos = 0;
+
+		while (pos < strlen(str)) {
+			/* scan for "key1=val1 key2 = val2  key3= val3" */
+
+			memset(key, 0, sizeof(key));
+			memset(val, 0, sizeof(val));
+
+			if (sscanf(str + pos, " %63[^=]=%63s %n", key, val, &num) != 2) {
+				log_error("Invalid setting at: %s", str+pos);
+				return 0;
+			}
+
+			pos += num;
+
+			if (!_get_one_integrity_setting(cmd, settings, key, val))
+				return_0;
+		}
+	}
+
+	return 1;
+}
+
 /* FIXME move to lib */
 static int _pv_change_tag(struct physical_volume *pv, const char *tag, int addtag)
 {

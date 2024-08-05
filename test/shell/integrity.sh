@@ -769,4 +769,19 @@ not lvconvert --raidintegrity y $vg/${lv2}_cpool_cdata
 not lvconvert --raidintegrity y $vg/${lv2}_cpool_cmeta
 lvremove -y $vg/$lv1
 
+lvcreate --type raid1 -m1 -n $lv1 -l 8 --raidintegrity y --integritysettings journal_watermark=10 $vg
+lvs -a -o integritysettings $vg/${lv1}_rimage_0 | grep journal_watermark=10
+not lvchange --integritysettings journal_watermark=20 $vg/$lv1
+lvchange -an $vg/$lv1
+lvchange --integritysettings journal_watermark=80 $vg/$lv1
+lvchange -ay $vg/$lv1
+lvs -a -o integritysettings $vg/${lv1}_rimage_0 | grep journal_watermark=80
+# The journal_watermark value reported in the table may be
+# slightly different from the value set due to the kernel
+# reporting it as a computed value that may include rounding.
+dmsetup table $vg-${lv1}_rimage_0 | tee out
+grep journal_watermark out
+lvchange -an $vg/$lv1
+lvremove -y $vg/$lv1
+
 vgremove -ff $vg

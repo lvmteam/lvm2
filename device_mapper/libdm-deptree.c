@@ -2868,6 +2868,8 @@ static int _integrity_emit_segment_line(struct dm_task *dmt,
 		count++;
 	if (set->sectors_per_bit_set)
 		count++;
+	if (set->allow_discards_set && set->allow_discards)
+		count++;
 
 	EMIT_PARAMS(pos, "%s 0 %u %s %d fix_padding block_size:%u internal_hash:%s",
 		    origin_dev,
@@ -2903,6 +2905,9 @@ static int _integrity_emit_segment_line(struct dm_task *dmt,
 
 	if (set->sectors_per_bit_set)
 		EMIT_PARAMS(pos, " sectors_per_bit:%llu", (unsigned long long)set->sectors_per_bit);
+
+	if (set->allow_discards_set && set->allow_discards)
+		EMIT_PARAMS(pos, " allow_discards");
 
 	if (!dm_task_secure_data(dmt))
 		stack;

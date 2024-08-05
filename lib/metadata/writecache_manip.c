@@ -449,78 +449,56 @@ int lv_writecache_set_cleaner(struct logical_volume *lv)
 	return 1;
 }
 
-static int _writecache_setting_str_list_add(const char *field, uint64_t val, char *val_str, struct dm_list *result, struct dm_pool *mem)
-{
-	char buf[128];
-	char *list_item;
-
-	if (val_str) {
-		if (dm_snprintf(buf, sizeof(buf), "%s=%s", field, val_str) < 0)
-			return_0;
-	} else {
-		if (dm_snprintf(buf, sizeof(buf), "%s=%llu", field, (unsigned long long)val) < 0)
-			return_0;
-	}
-
-	if (!(list_item = dm_pool_strdup(mem, buf)))
-		return_0;
-
-	if (!str_list_add_no_dup_check(mem, result, list_item))
-		return_0;
-
-	return 1;
-}
-
 int writecache_settings_to_str_list(struct writecache_settings *settings, struct dm_list *result, struct dm_pool *mem)
 {
 	int errors = 0;
 
 	if (settings->high_watermark_set)
-		if (!_writecache_setting_str_list_add("high_watermark", settings->high_watermark, NULL, result, mem))
+		if (!setting_str_list_add("high_watermark", settings->high_watermark, NULL, result, mem))
 			errors++;
 
 	if (settings->low_watermark_set)
-		if (!_writecache_setting_str_list_add("low_watermark", settings->low_watermark, NULL, result, mem))
+		if (!setting_str_list_add("low_watermark", settings->low_watermark, NULL, result, mem))
 			errors++;
 
 	if (settings->writeback_jobs_set)
-		if (!_writecache_setting_str_list_add("writeback_jobs", settings->writeback_jobs, NULL, result, mem))
+		if (!setting_str_list_add("writeback_jobs", settings->writeback_jobs, NULL, result, mem))
 			errors++;
 
 	if (settings->autocommit_blocks_set)
-		if (!_writecache_setting_str_list_add("autocommit_blocks", settings->autocommit_blocks, NULL, result, mem))
+		if (!setting_str_list_add("autocommit_blocks", settings->autocommit_blocks, NULL, result, mem))
 			errors++;
 
 	if (settings->autocommit_time_set)
-		if (!_writecache_setting_str_list_add("autocommit_time", settings->autocommit_time, NULL, result, mem))
+		if (!setting_str_list_add("autocommit_time", settings->autocommit_time, NULL, result, mem))
 			errors++;
 
 	if (settings->fua_set)
-		if (!_writecache_setting_str_list_add("fua", (uint64_t)settings->fua, NULL, result, mem))
+		if (!setting_str_list_add("fua", (uint64_t)settings->fua, NULL, result, mem))
 			errors++;
 
 	if (settings->nofua_set)
-		if (!_writecache_setting_str_list_add("nofua", (uint64_t)settings->nofua, NULL, result, mem))
+		if (!setting_str_list_add("nofua", (uint64_t)settings->nofua, NULL, result, mem))
 			errors++;
 
 	if (settings->cleaner_set && settings->cleaner)
-		if (!_writecache_setting_str_list_add("cleaner", (uint64_t)settings->cleaner, NULL, result, mem))
+		if (!setting_str_list_add("cleaner", (uint64_t)settings->cleaner, NULL, result, mem))
 			errors++;
 
 	if (settings->max_age_set)
-		if (!_writecache_setting_str_list_add("max_age", (uint64_t)settings->max_age, NULL, result, mem))
+		if (!setting_str_list_add("max_age", (uint64_t)settings->max_age, NULL, result, mem))
 			errors++;
 
 	if (settings->metadata_only_set)
-		if (!_writecache_setting_str_list_add("metadata_only", (uint64_t)settings->metadata_only, NULL, result, mem))
+		if (!setting_str_list_add("metadata_only", (uint64_t)settings->metadata_only, NULL, result, mem))
 			errors++;
 
 	if (settings->pause_writeback_set)
-		if (!_writecache_setting_str_list_add("pause_writeback", (uint64_t)settings->pause_writeback, NULL, result, mem))
+		if (!setting_str_list_add("pause_writeback", (uint64_t)settings->pause_writeback, NULL, result, mem))
 			errors++;
 
 	if (settings->new_key && settings->new_val)
-		if (!_writecache_setting_str_list_add(settings->new_key, 0, settings->new_val, result, mem))
+		if (!setting_str_list_add(settings->new_key, 0, settings->new_val, result, mem))
 			errors++;
 
 	if (errors)

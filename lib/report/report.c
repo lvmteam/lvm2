@@ -3376,6 +3376,31 @@ static int _integritymismatches_disp(struct dm_report *rh __attribute__((unused)
 	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
 }
 
+static int _integrity_settings_disp(struct dm_report *rh, struct dm_pool *mem,
+				    struct dm_report_field *field,
+				    const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+	struct dm_list *result;
+	struct dm_list dummy_list; /* dummy list to display "nothing" */
+
+	if (seg_is_integrity(seg)) {
+		if (!(result = str_list_create(mem)))
+			return_0;
+
+		if (!integrity_settings_to_str_list((struct integrity_settings *)&seg->integrity_settings, result, mem))
+			return_0;
+
+		return _field_set_string_list(rh, field, result, private, 0, NULL);
+	} else {
+		dm_list_init(&dummy_list);
+		return _field_set_string_list(rh, field, &dummy_list, private, 0, NULL);
+		/* TODO: once we have support for STR_LIST reserved values, replace with:
+		 * return _field_set_value(field,  GET_FIRST_RESERVED_NAME(integrity_settings_undef), GET_FIELD_RESERVED_VALUE(integrity_settings_undef));
+		 */
+	}
+}
+
 static int _writecache_block_size_disp(struct dm_report *rh __attribute__((unused)),
 				   struct dm_pool *mem,
 				   struct dm_report_field *field,

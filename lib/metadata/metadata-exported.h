@@ -1169,6 +1169,7 @@ bool lv_writecache_is_clean(struct cmd_context *cmd, struct logical_volume *lv, 
 bool writecache_cleaner_supported(struct cmd_context *cmd);
 
 int lv_is_integrity_origin(const struct logical_volume *lv);
+int integrity_settings_to_str_list(struct integrity_settings *settings, struct dm_list *result, struct dm_pool *mem);
 
 int lv_is_merging_cow(const struct logical_volume *cow);
 uint32_t cow_max_extents(const struct logical_volume *origin, uint32_t chunk_size);
@@ -1510,5 +1511,7 @@ int lv_get_raid_integrity_settings(struct logical_volume *lv, struct integrity_s
 int integrity_mode_set(const char *mode, struct integrity_settings *settings);
 int lv_integrity_mismatches(struct cmd_context *cmd, const struct logical_volume *lv, uint64_t *mismatches);
 int lv_raid_integrity_total_mismatches(struct cmd_context *cmd, const struct logical_volume *lv, uint64_t *mismatches);
+
+int setting_str_list_add(const char *field, uint64_t val, char *val_str, struct dm_list *result, struct dm_pool *mem);
 
 #endif

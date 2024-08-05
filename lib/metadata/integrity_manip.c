@@ -50,7 +50,8 @@ int lv_is_integrity_origin(const struct logical_volume *lv)
  * plus some initial space for journals.
  * (again from trial and error testing.)
  */
-static uint64_t _lv_size_bytes_to_integrity_meta_bytes(uint64_t lv_size_bytes)
+static uint64_t _lv_size_bytes_to_integrity_meta_bytes(uint64_t lv_size_bytes, uint32_t journal_sectors,
+						       uint32_t extent_size)
 {
 	uint64_t meta_bytes;
 	uint64_t initial_bytes;
@@ -58,8 +59,16 @@ static uint64_t _lv_size_bytes_to_integrity_meta_bytes(uint64_t lv_size_bytes)
 	/* Every 500M of data needs 4M of metadata. */
 	meta_bytes = ((lv_size_bytes / (500 * ONE_MB_IN_BYTES)) + 1) * (4 * ONE_MB_IN_BYTES);
 
+	if (journal_sectors) {
+		/* for calculating the metadata LV size for the specified
+		   journal size, round the specified journal size up to the
+		   nearest extent.  extent_size is in sectors. */
+		initial_bytes = dm_round_up(journal_sectors, extent_size) * 512;
+		goto out;
+	}
+
 	/*
-	 * initial space used for journals
+	 * initial space used for journals (when journal size is not specified):
 	 * lv_size <= 512M -> 4M
 	 * lv_size <= 1G   -> 8M
 	 * lv_size <= 4G   -> 32M
@@ -73,7 +82,10 @@ static uint64_t _lv_size_bytes_to_integrity_meta_bytes(uint64_t lv_size_bytes)
 		initial_bytes = 32 * ONE_MB_IN_BYTES;
 	else if (lv_size_bytes > (4ULL * ONE_GB_IN_BYTES))
 		initial_bytes = 64 * ONE_MB_IN_BYTES;
-
+ out:
+	log_debug("integrity_meta_bytes %llu from lv_size_bytes %llu meta_bytes %llu initial_bytes %llu journal_sectors %u",
+		  (unsigned long long)(meta_bytes+initial_bytes), (unsigned long long)lv_size_bytes,
+		  (unsigned long long)meta_bytes, (unsigned long long)initial_bytes, journal_sectors);
 	return meta_bytes + initial_bytes;
 }
 
@@ -84,6 +96,7 @@ static uint64_t _lv_size_bytes_to_integrity_meta_bytes(uint64_t lv_size_bytes)
 static int _lv_create_integrity_metadata(struct cmd_context *cmd,
 				struct volume_group *vg,
 				struct lvcreate_params *lp,
+				struct integrity_settings *settings,
 				struct logical_volume **meta_lv)
 {
 	char metaname[NAME_LEN] = { 0 };
@@ -115,7 +128,7 @@ static int _lv_create_integrity_metadata(struct cmd_context *cmd,
 	lp_meta.pvh = lp->pvh;
 
 	lv_size_bytes = (uint64_t)lp->extents * (uint64_t)vg->extent_size * 512;
-	meta_bytes = _lv_size_bytes_to_integrity_meta_bytes(lv_size_bytes);
+	meta_bytes = _lv_size_bytes_to_integrity_meta_bytes(lv_size_bytes, settings->journal_sectors, vg->extent_size);
 	meta_sectors = meta_bytes / 512;
 	lp_meta.extents = meta_sectors / vg->extent_size;
 
@@ -181,7 +194,7 @@ int lv_extend_integrity_in_raid(struct logical_volume *lv, struct dm_list *pvh)
 		}
 
 		lv_size_bytes = lv_iorig->size * 512;
-		meta_bytes = _lv_size_bytes_to_integrity_meta_bytes(lv_size_bytes);
+		meta_bytes = _lv_size_bytes_to_integrity_meta_bytes(lv_size_bytes, 0, 0);
 		meta_sectors = meta_bytes / 512;
 		meta_extents = meta_sectors / vg->extent_size;
 
@@ -597,7 +610,7 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 		lp.pvh = use_pvh;
 		lp.extents = lv_image->size / vg->extent_size;
 
-		if (!_lv_create_integrity_metadata(cmd, vg, &lp, &meta_lv))
+		if (!_lv_create_integrity_metadata(cmd, vg, &lp, settings, &meta_lv))
 			goto_bad;
 
 		revert_meta_lvs++;
@@ -974,4 +987,30 @@ fail:
 	dm_pool_destroy(status.seg_status.mem);
 	return 0;
 }
+
+int integrity_settings_to_str_list(struct integrity_settings *settings, struct dm_list *result, struct dm_pool *mem)
+{
+	int errors = 0;
+
+	if (settings->journal_watermark_set)
+		if (!setting_str_list_add("journal_watermark", settings->journal_watermark, NULL, result, mem))
+                        errors++;
+
+	if (settings->commit_time_set)
+		if (!setting_str_list_add("commit_time", settings->commit_time, NULL, result, mem))
+			errors++;
+
+	if (settings->bitmap_flush_interval_set)
+		if (!setting_str_list_add("bitmap_flush_interval", settings->bitmap_flush_interval, NULL, result, mem))
+			errors++;
+
+	if (settings->allow_discards_set)
+		if (!setting_str_list_add("allow_discards", settings->allow_discards, NULL, result, mem))
+			errors++;
+	if (errors)
+		log_warn("Failed to create list of integrity settings.");
+
+	return 1;
+}
+
 

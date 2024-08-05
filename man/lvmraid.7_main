@@ -809,6 +809,18 @@ system sector/block sizes.  It may be less than the file system
 sector/block size, but not less than the device logical block size.
 Possible values: 512, 1024, 2048, 4096.
 .
+.TP
+.BR --integritysettings " " key=val
+dm-integrity kernel tunable options can be specified here.
+Settings can be included with lvcreate or lvconvert when integrity is first
+enabled, or changed with lvchange on an existing, inactive LV.
+See kernel documentation for descriptions of tunable options.
+Repeat the option to set multiple values.
+Use lvs -a -o integritysettings VG/LV_rimage_N to display configured values.
+Use lvchange --integritysettings "" to clear
+all configured values (dm-integrity will use its defaults.)
+.P
+.
 .SS Integrity initialization
 .
 When integrity is added to an LV, the kernel needs to initialize the

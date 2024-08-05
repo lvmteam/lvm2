@@ -227,6 +227,8 @@ int get_vdo_settings(struct cmd_context *cmd,
 int get_writecache_settings(struct cmd_context *cmd, struct writecache_settings *settings,
                             uint32_t *block_size_sectors);
 
+int get_integrity_settings(struct cmd_context *cmd, struct integrity_settings *settings);
+
 int change_tag(struct cmd_context *cmd, struct volume_group *vg,
 	       struct logical_volume *lv, struct physical_volume *pv, int arg);
 

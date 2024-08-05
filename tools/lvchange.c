@@ -810,6 +810,109 @@ static int _lvchange_vdo(struct cmd_context *cmd,
 	return 1;
 }
 
+static int _lvchange_integrity(struct cmd_context *cmd,
+			       struct logical_volume *lv,
+			       uint32_t *mr)
+{
+	struct integrity_settings settings = { 0 };
+	struct logical_volume *lv_image;
+	struct lv_segment *seg, *seg_image;
+	uint32_t s;
+	int set_count = 0;
+
+	if (!lv_is_raid(lv)) {
+		log_error("A raid LV with integrity is required.");
+		return 0;
+	}
+
+	if (!lv_raid_has_integrity(lv)) {
+		log_error("No integrity found in specified raid LV.");
+		return 0;
+	}
+
+	/*
+	 * In the case of dm-integrity, a new dm table line does not trigger a
+	 * table reload (see skip_reload_params_compare), so new settings are
+	 * not applied to an active integrity device.  We could add a flag to
+	 * override skip_reload_params_compare through all the layers to lift
+	 * this restriction.
+	 */
+	if (lv_is_active(lv)) {
+		log_error("LV must be inactive to change integrity settings.");
+		return 0;
+	}
+
+	if (!get_integrity_settings(cmd, &settings))
+		return_0;
+
+	/*
+	 * The new specified settings modify the current settings.
+	 * A current setting is not changed if a new value is not
+	 * specified.  Only certain settings can be changed.
+	 */
+	seg = first_seg(lv);
+
+	for (s = 0; s < seg->area_count; s++) {
+		lv_image = seg_lv(seg, s);
+		seg_image = first_seg(lv_image);
+
+		if (seg_is_integrity(seg_image)) {
+			if (settings.journal_watermark_set) {
+				seg_image->integrity_settings.journal_watermark_set = 1;
+				seg_image->integrity_settings.journal_watermark = settings.journal_watermark;
+				set_count++;
+			}
+			if (settings.commit_time_set) {
+				seg_image->integrity_settings.commit_time_set = 1;
+				seg_image->integrity_settings.commit_time = settings.commit_time;
+				set_count++;
+			}
+			if (settings.bitmap_flush_interval_set) {
+				seg_image->integrity_settings.bitmap_flush_interval_set = 1;
+				seg_image->integrity_settings.bitmap_flush_interval = settings.bitmap_flush_interval;
+				set_count++;
+			}
+			if (settings.allow_discards_set) {
+				seg_image->integrity_settings.allow_discards_set = 1;
+				seg_image->integrity_settings.allow_discards = settings.allow_discards;
+				set_count++;
+			}
+		}
+	}
+
+	/*
+	 * --integritysettings "" clears all previously configured settings,
+	 * so dm-integrity kernel code will revert to using its defaults.
+	 */
+
+	if (set_count)
+		goto out;
+
+	if (!arg_count(cmd, yes_ARG) &&
+	    yes_no_prompt("Clear all integrity settings? ") == 'n') {
+		log_print("No settings changed.");
+		return 1;
+	}
+
+	for (s = 0; s < seg->area_count; s++) {
+		lv_image = seg_lv(seg, s);
+		seg_image = first_seg(lv_image);
+
+		if (seg_is_integrity(seg_image)) {
+			seg_image->integrity_settings.journal_watermark_set = 0;
+			seg_image->integrity_settings.commit_time_set = 0;
+			seg_image->integrity_settings.bitmap_flush_interval_set = 0;
+			seg_image->integrity_settings.allow_discards_set = 0;
+		}
+	}
+
+ out:
+	/* Request caller to commit and reload metadata */
+	*mr |= MR_RELOAD;
+
+	return 1;
+}
+
 static int _lvchange_tag(struct cmd_context *cmd, struct logical_volume *lv,
 			 int arg, uint32_t *mr)
 {
@@ -1210,6 +1313,7 @@ static int _option_requires_direct_commit(int opt_enum)
 		cachepolicy_ARG,
 		cachesettings_ARG,
 		vdosettings_ARG,
+		integritysettings_ARG,
 		-1
 	};
 
@@ -1413,6 +1517,10 @@ static int _lvchange_properties_single(struct cmd_context *cmd,
 		case vdosettings_ARG:
 			docmds++;
 			doit += _lvchange_vdo(cmd, lv, &mr);
+			break;
+		case integritysettings_ARG:
+			docmds++;
+			doit += _lvchange_integrity(cmd, lv, &mr);
 			break;
 		default:
 			log_error(INTERNAL_ERROR "Failed to check for option %s",

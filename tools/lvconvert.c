@@ -6519,6 +6519,11 @@ static int _lvconvert_integrity_single(struct cmd_context *cmd,
 	struct integrity_settings settings = { .tag_size = 0 };
 	int ret;
 
+	if (arg_is_set(cmd, integritysettings_ARG)) {
+		if (!get_integrity_settings(cmd, &settings))
+			return_ECMD_FAILED;
+	}
+
 	if (!integrity_mode_set(arg_str_value(cmd, raidintegritymode_ARG, NULL), &settings))
 		return_ECMD_FAILED;
 
