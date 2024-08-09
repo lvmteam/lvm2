@@ -717,9 +717,10 @@ struct KMsg : Source {
         unsigned long t;
         time_t tt;
         size_t len;
-        const char *delimiter = strchr(buf, ';');
+        const char *delimiter;
 
         buf[ *sz ] = 0;
+        delimiter = strchr(buf, ';');
 
         if ( sscanf( buf, "%u,%u,%lu,-%n", &level, &num, &t, &pos) == 3 ) {
             if ( delimiter++ && ( delimiter - buf ) > pos )
