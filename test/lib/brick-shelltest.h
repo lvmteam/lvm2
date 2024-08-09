@@ -319,9 +319,12 @@ struct Journal {
                     of << ru->second;
                 else {
                     struct tm time_info;
+                    char buf[64];
                     time_t t = time( 0 );
-                    if (localtime_r(&t, &time_info))
-                        of << "--- " << std::put_time( &time_info, "%F %T" ) << " ---";
+                    if (localtime_r(&t, &time_info)) {
+                        strftime(buf, sizeof(buf), "%F %T", &time_info);
+                        of << "--- " << buf << " ---";
+                    }
                 }
                 of << std::endl;
             }
