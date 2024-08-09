@@ -75,6 +75,8 @@ lvcreate \(em Create a logical volume
 .br
     \fB--ignoremonitoring\fP
 .br
+    \fB--integritysettings\fP \fIString\fP
+.br
     \fB--journal\fP \fIString\fP
 .br
     \fB--lockopt\fP \fIString\fP
@@ -295,6 +297,8 @@ Create a raid1 or mirror LV.
 .br
 [    \fB--raidintegrityblocksize\fP \fINumber\fP ]
 .br
+[    \fB--integritysettings\fP \fIString\fP ]
+.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
@@ -330,6 +334,8 @@ Create a raid LV (a specific raid level must be used, e.g. raid1).
 [    \fB--raidintegritymode\fP \fIString\fP ]
 .br
 [    \fB--raidintegrityblocksize\fP \fINumber\fP ]
+.br
+[    \fB--integritysettings\fP \fIString\fP ]
 .br
 [ COMMON_OPTIONS ]
 .ad b
@@ -367,6 +373,8 @@ Create a raid10 LV.
 [    \fB--raidintegritymode\fP \fIString\fP ]
 .br
 [    \fB--raidintegrityblocksize\fP \fINumber\fP ]
+.br
+[    \fB--integritysettings\fP \fIString\fP ]
 .br
 [ COMMON_OPTIONS ]
 .ad b
@@ -1109,6 +1117,12 @@ to allow LVs with the flag set to be activated.
 .br
 Do not interact with dmeventd unless --monitor is specified.
 Do not use this if dmeventd is already monitoring a device.
+.
+.HP
+\fB--integritysettings\fP \fIString\fP
+.br
+Specifies tunable kernel options for dm-integrity.
+See \fBlvmraid\fP(7) for more information.
 .
 .HP
 \fB--journal\fP \fIString\fP

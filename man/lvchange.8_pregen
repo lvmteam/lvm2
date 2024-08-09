@@ -67,6 +67,8 @@ lvchange \(em Change the attributes of logical volume(s)
 .br
     \fB--ignoremonitoring\fP
 .br
+    \fB--integritysettings\fP \fIString\fP
+.br
     \fB--journal\fP \fIString\fP
 .br
     \fB--lockopt\fP \fIString\fP
@@ -206,6 +208,8 @@ required, after which the others are optional.
      \fB--\fP[\fBraid\fP]\fBmaxrecoveryrate\fP \fISize\fP[k|UNIT]
 .br
      \fB--vdosettings\fP \fIString\fP
+.br
+     \fB--integritysettings\fP \fIString\fP
 .br
      \fB--\fP[\fBraid\fP]\fBwritebehind\fP \fINumber\fP
 .br
@@ -686,6 +690,12 @@ operations after locking failures.
 .br
 Do not interact with dmeventd unless --monitor is specified.
 Do not use this if dmeventd is already monitoring a device.
+.
+.HP
+\fB--integritysettings\fP \fIString\fP
+.br
+Specifies tunable kernel options for dm-integrity.
+See \fBlvmraid\fP(7) for more information.
 .
 .HP
 \fB--journal\fP \fIString\fP

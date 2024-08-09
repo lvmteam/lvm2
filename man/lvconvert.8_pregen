@@ -65,6 +65,8 @@ lvconvert \(em Change logical volume layout
 .br
  \fB-h\fP|\fB--help\fP
 .br
+    \fB--integritysettings\fP \fIString\fP
+.br
  \fB-i\fP|\fB--interval\fP \fINumber\fP
 .br
     \fB--journal\fP \fIString\fP
@@ -984,6 +986,8 @@ Add or remove data integrity checksums to raid images.
 .br
 [    \fB--raidintegrityblocksize\fP \fINumber\fP ]
 .br
+[    \fB--integritysettings\fP \fIString\fP ]
+.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
@@ -1260,6 +1264,12 @@ Use with extreme caution.
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
+.
+.HP
+\fB--integritysettings\fP \fIString\fP
+.br
+Specifies tunable kernel options for dm-integrity.
+See \fBlvmraid\fP(7) for more information.
 .
 .HP
 \fB-i\fP|\fB--interval\fP \fINumber\fP
