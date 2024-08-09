@@ -63,7 +63,7 @@ static uint64_t _lv_size_bytes_to_integrity_meta_bytes(uint64_t lv_size_bytes, u
 		/* for calculating the metadata LV size for the specified
 		   journal size, round the specified journal size up to the
 		   nearest extent.  extent_size is in sectors. */
-		initial_bytes = dm_round_up(journal_sectors, extent_size) * 512;
+		initial_bytes = dm_round_up(journal_sectors, (int64_t)extent_size) * 512;
 		goto out;
 	}
 
