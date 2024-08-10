@@ -1515,6 +1515,24 @@ out:
 		log_sys_debug("closedir", dirpath);
 }
 
+static int _devices_dir_create(const char *dirpath)
+{
+	int rv;
+	struct stat buf;
+
+	log_debug("Creating %s.", dirpath);
+	dm_prepare_selinux_context(dirpath, S_IFDIR);
+	rv = mkdir(dirpath, 0755);
+	dm_prepare_selinux_context(NULL, 0);
+
+	if ((rv < 0) && stat(dirpath, &buf)) {
+		log_error("Failed to create %s %d", dirpath, errno);
+		return 0;
+	}
+
+	return 1;
+}
+
 int device_ids_write(struct cmd_context *cmd)
 {
 	char dirpath[PATH_MAX];
@@ -1609,6 +1627,11 @@ int device_ids_write(struct cmd_context *cmd)
 	/* in case a previous file was left */
 	if (unlink(tmppath) < 0 && errno != ENOENT)
 		log_sys_debug("unlink", tmppath);
+
+	if (!_devices_dir_create(dirpath)) {
+		log_sys_debug("create", dirpath);
+		goto out;
+	}
 
 	if (!(fp = fopen(tmppath, "w+"))) {
 		log_warn("Cannot open to write %s.", tmppath);
@@ -4090,8 +4113,8 @@ int devices_file_touch(struct cmd_context *cmd)
 	}
 
 	if (stat(dirpath, &buf)) {
-		log_error("Cannot create devices file, missing devices directory %s.", dirpath);
-		return 0;
+		if (!_devices_dir_create(dirpath))
+			return 0;
 	}
 
 	fd = open(cmd->devices_file_path, O_CREAT, S_IRUSR | S_IWUSR);

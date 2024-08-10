@@ -2000,8 +2000,6 @@ int setup_devices_file(struct cmd_context *cmd)
 {
 	char dirpath[PATH_MAX];
 	const char *filename = NULL;
-	struct stat st;
-	int rv;
 
 	/* Use dmeventd.devices if it exists. */
 	if (cmd->run_by_dmeventd && _setup_devices_file_dmeventd(cmd))
@@ -2046,18 +2044,6 @@ int setup_devices_file(struct cmd_context *cmd)
 		return 0;
 	}
 
-	if (stat(dirpath, &st)) {
-		log_debug("Creating %s.", dirpath);
-		dm_prepare_selinux_context(dirpath, S_IFDIR);
-		rv = mkdir(dirpath, 0755);
-		dm_prepare_selinux_context(NULL, 0);
-
-		if ((rv < 0) && stat(dirpath, &st)) {
-			log_error("Failed to create %s %d", dirpath, errno);
-			return 0;
-		}
-	}
-	
 	if (dm_snprintf(cmd->devices_file_path, sizeof(cmd->devices_file_path),
 			"%s/devices/%s", cmd->system_dir, filename) < 0) {
 		log_error("Failed to copy devices file path");
