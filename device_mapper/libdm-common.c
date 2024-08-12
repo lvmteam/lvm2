@@ -2443,14 +2443,14 @@ static int _udev_notify_sem_inc(uint32_t cookie, int semid)
 	}
 
  	if ((val = semctl(semid, 0, GETVAL)) < 0) {
-		log_error("cookie inc: semid %d: sem_ctl GETVAL failed for "
+		log_warn("cookie inc: semid %d: sem_ctl GETVAL failed for "
 			  "cookie 0x%" PRIx32 ": %s",
 			  semid, cookie, strerror(errno));
-		return 0;
-	}
-
-	log_debug_activation("Udev cookie 0x%" PRIx32 " (semid %d) incremented to %d",
-		  cookie, semid, val);
+		log_debug_activation("Udev cookie 0x%" PRIx32 " (semid %d) incremented.",
+				      cookie, semid);
+	} else
+		log_debug_activation("Udev cookie 0x%" PRIx32 " (semid %d) incremented to %d",
+				     cookie, semid, val);
 
 	return 1;
 }
@@ -2460,12 +2460,10 @@ static int _udev_notify_sem_dec(uint32_t cookie, int semid)
 	struct sembuf sb = {0, -1, IPC_NOWAIT};
 	int val;
 
- 	if ((val = semctl(semid, 0, GETVAL)) < 0) {
-		log_error("cookie dec: semid %d: sem_ctl GETVAL failed for "
-			  "cookie 0x%" PRIx32 ": %s",
-			  semid, cookie, strerror(errno));
-		return 0;
-	}
+ 	if ((val = semctl(semid, 0, GETVAL)) < 0)
+		log_warn("cookie dec: semid %d: sem_ctl GETVAL failed for "
+			 "cookie 0x%" PRIx32 ": %s",
+			 semid, cookie, strerror(errno));
 
 	if (semop(semid, &sb, 1) < 0) {
 		switch (errno) {
@@ -2484,9 +2482,12 @@ static int _udev_notify_sem_dec(uint32_t cookie, int semid)
 		return 0;
 	}
 
-	log_debug_activation("Udev cookie 0x%" PRIx32 " (semid %d) decremented to %d",
-			     cookie, semid, val - 1);
-
+	if (val < 0)
+		log_debug_activation("Udev cookie 0x%" PRIx32 " (semid %d) decremented.",
+				     cookie, semid);
+	else
+		log_debug_activation("Udev cookie 0x%" PRIx32 " (semid %d) decremented to %d",
+				     cookie, semid, val - 1);
 	return 1;
 }
 
