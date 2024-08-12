@@ -2436,16 +2436,16 @@ static int _udev_notify_sem_inc(uint32_t cookie, int semid)
 	int val;
 
 	if (semop(semid, &sb, 1) < 0) {
-		log_error("semid %d: semop failed for cookie 0x%" PRIx32 ": %s",
+		log_error("cookie inc: semid %d: semop failed for cookie 0x%" PRIx32 ": %s",
 			  semid, cookie, strerror(errno));
 		return 0;
 	}
 
  	if ((val = semctl(semid, 0, GETVAL)) < 0) {
-		log_error("semid %d: sem_ctl GETVAL failed for "
+		log_error("cookie inc: semid %d: sem_ctl GETVAL failed for "
 			  "cookie 0x%" PRIx32 ": %s",
 			  semid, cookie, strerror(errno));
-		return 0;		
+		return 0;
 	}
 
 	log_debug_activation("Udev cookie 0x%" PRIx32 " (semid %d) incremented to %d",
@@ -2460,7 +2460,7 @@ static int _udev_notify_sem_dec(uint32_t cookie, int semid)
 	int val;
 
  	if ((val = semctl(semid, 0, GETVAL)) < 0) {
-		log_error("semid %d: sem_ctl GETVAL failed for "
+		log_error("cookie dec: semid %d: sem_ctl GETVAL failed for "
 			  "cookie 0x%" PRIx32 ": %s",
 			  semid, cookie, strerror(errno));
 		return 0;
@@ -2469,13 +2469,13 @@ static int _udev_notify_sem_dec(uint32_t cookie, int semid)
 	if (semop(semid, &sb, 1) < 0) {
 		switch (errno) {
 			case EAGAIN:
-				log_error("semid %d: semop failed for cookie "
+				log_error("cookie dec: semid %d: semop failed for cookie "
 					  "0x%" PRIx32 ": "
 					  "incorrect semaphore state",
 					  semid, cookie);
 				break;
 			default:
-				log_error("semid %d: semop failed for cookie "
+				log_error("cookie dec: semid %d: semop failed for cookie "
 					  "0x%" PRIx32 ": %s",
 					  semid, cookie, strerror(errno));
 				break;
@@ -2562,7 +2562,7 @@ static int _udev_notify_sem_create(uint32_t *cookie, int *semid)
 	sem_arg.val = 1;
 
 	if (semctl(gen_semid, 0, SETVAL, sem_arg) < 0) {
-		log_error("semid %d: semctl failed: %s", gen_semid, strerror(errno));
+		log_error("cookie create: semid %d: semctl failed: %s", gen_semid, strerror(errno));
 		/* We have to destroy just created semaphore
 		 * so it won't stay in the system. */
 		(void) _udev_notify_sem_destroy(gen_cookie, gen_semid);
@@ -2570,7 +2570,7 @@ static int _udev_notify_sem_create(uint32_t *cookie, int *semid)
 	}
 
  	if ((val = semctl(gen_semid, 0, GETVAL)) < 0) {
-		log_error("semid %d: sem_ctl GETVAL failed for "
+		log_error("cookie create: semid %d: sem_ctl GETVAL failed for "
 			  "cookie 0x%" PRIx32 ": %s",
 			  gen_semid, gen_cookie, strerror(errno));
 		goto bad;
