@@ -2574,6 +2574,7 @@ static int _udev_notify_sem_create(uint32_t *cookie, int *semid)
 		log_error("cookie create: semid %d: sem_ctl GETVAL failed for "
 			  "cookie 0x%" PRIx32 ": %s",
 			  gen_semid, gen_cookie, strerror(errno));
+		(void) _udev_notify_sem_destroy(gen_cookie, gen_semid);
 		goto bad;
 	}
 
