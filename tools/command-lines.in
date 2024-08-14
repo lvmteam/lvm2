@@ -1978,7 +1978,7 @@ RULE: --noheadings not --headings
 ---
 
 vgscan
-OO: --ignorelockingfailure, --mknodes, --notifydbus,
+OO: --ignorelockingfailure, --mknodes, --notifydbus, --refresh,
 --reportformat ReportFmt
 IO: --partial, --cache_long
 ID: vgscan_general
