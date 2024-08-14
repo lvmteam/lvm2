@@ -20,7 +20,7 @@ static int _vgmknodes_single(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	if (arg_is_set(cmd, refresh_ARG) && lv_is_visible(lv)) {
 		if (!lv_refresh(cmd, lv)) {
-			log_error("Refresh failed for %s/%s.", lv->vg->name, lv->name);
+			log_error("Refresh failed for %s.", display_lvname(lv));
 			return_ECMD_FAILED;
 		}
 		sync_local_dev_names(cmd);
