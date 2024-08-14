@@ -1,5 +1,6 @@
 Version 2.03.26 - 
 ==================
+  Fix vgmknodes --refresh to wait for udev before checking /dev content.
   Use log/report_command_log=1 config setting by default for JSON output format.
   lvextend fix unreleased memory pools on RAID
 
