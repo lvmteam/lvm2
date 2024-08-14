@@ -523,7 +523,8 @@ arg(mirrorsonly_ARG, '\0', "mirrorsonly", 0, 0, 0,
 
 arg(mknodes_ARG, '\0', "mknodes", 0, 0, 0,
     "Also checks the LVM special files in /dev that are needed for active\n"
-    "LVs and creates any missing ones and removes unused ones.\n")
+    "LVs and creates any missing ones and removes unused ones.\n"
+    "See also additional --refresh option for use in udev environment.\n")
 
 arg(monitor_ARG, '\0', "monitor", bool_VAL, 0, 0,
     "Start (yes) or stop (no) monitoring an LV with dmeventd.\n"
@@ -688,6 +689,7 @@ arg(refresh_ARG, '\0', "refresh", 0, 0, 0,
     "#vgchange\n"
     "#lvchange\n"
     "#vgmknodes\n"
+    "#vgscan\n"
     "If the LV is active, reload its metadata.\n"
     "In an environment where udev is used to manage the /dev content,\n"
     "usage of this option is highly recommended. This is because refresh\n"
