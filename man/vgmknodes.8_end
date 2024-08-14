@@ -1,0 +1,12 @@
+.
+.SH NOTES
+.
+When using \fBudev\fP(7) to manage the /dev content, it is also highly recommended
+to use the \fB--refresh\fP option. This way, the necessary udev events are
+generated too and associated udev rules are properly applied. If the \fB--refresh\fP
+option is not used in this case, then LVM recreates the /dev content directly and
+udev will not have proper records about affected symlinks and nodes. Also,
+any node permissions defined by udev rules are not applied. This, in turn,
+may cause problems for other system components that rely on reading the udev
+database to get the list of /dev symlinks and nodes and which rely on the
+permissions based on udev rules.

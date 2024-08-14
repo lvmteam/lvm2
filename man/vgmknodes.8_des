@@ -3,3 +3,6 @@ LVs and creates any that are missing and removes unused ones.
 .P
 This command should not usually be needed if all the system components are
 interoperating correctly.
+.P
+See also the notes at the end of this manual page for using vgmknodes
+together with udev.
