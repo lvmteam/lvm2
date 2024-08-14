@@ -689,9 +689,12 @@ arg(refresh_ARG, '\0', "refresh", 0, 0, 0,
     "#lvchange\n"
     "#vgmknodes\n"
     "If the LV is active, reload its metadata.\n"
-    "This is not necessary in normal operation, but may be useful\n"
-    "if something has gone wrong, or if some form of manual LV\n"
-    "sharing is being used.\n")
+    "In an environment where udev is used to manage the /dev content,\n"
+    "usage of this option is highly recommended. This is because refresh\n"
+    "also regenerates udev events for an LV based on which existing udev \n"
+    "rules are applied to set the /dev content and permissions.\n"
+    "Also, this operation may be useful if something has gone wrong,\n"
+    "or if some form of manual LV sharing is being used.\n")
 
 arg(removemissing_ARG, '\0', "removemissing", 0, 0, 0,
     "Removes all missing PVs from the VG, if there are no LVs allocated\n"
