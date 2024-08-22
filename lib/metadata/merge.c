@@ -744,8 +744,12 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 	}
 
 	if (!le) {
-		log_error("LV %s: has no segment.", lv->name);
-		inc_error_count;
+		if (sscanf(lv->name, "pvmove%u", &le) == 1)
+			log_debug("LV pvmove %s has no segment.", lv->name);
+		else {
+			log_error("LV %s: has no segment.", lv->name);
+			inc_error_count;
+		}
 	}
 
 	dm_list_iterate_items(sl, &lv->segs_using_this_lv) {
