@@ -785,7 +785,7 @@ metadata updates.
 If the LV is active, reload its metadata.
 In an environment where udev is used to manage the /dev content,
 usage of this option is highly recommended. This is because refresh
-also regenerates udev events for an LV based on which existing udev 
+also regenerates udev events for an LV based on which existing udev
 rules are applied to set the /dev content and permissions.
 Also, this operation may be useful if something has gone wrong,
 or if some form of manual LV sharing is being used.
