@@ -38,7 +38,7 @@ static int stop_lockspaces = 0;
 static char *arg_vg_name = NULL;
 
 #define DUMP_SOCKET_NAME "lvmlockd-dump.sock"
-#define DUMP_BUF_SIZE (1024 * 1024)
+#define DUMP_BUF_SIZE (4 * 1024 * 1024)
 static char dump_buf[DUMP_BUF_SIZE+1];
 static int dump_len;
 static struct sockaddr_un dump_addr;

@@ -155,7 +155,7 @@ static const char *adopt_file;
  * 1MB should fit all the info we need to dump.
  */
 #define DUMP_SOCKET_NAME "lvmlockd-dump.sock"
-#define DUMP_BUF_SIZE (1024 * 1024)
+#define DUMP_BUF_SIZE (4 * 1024 * 1024)
 static char dump_buf[DUMP_BUF_SIZE];
 static struct sockaddr_un dump_addr;
 static socklen_t dump_addrlen;
