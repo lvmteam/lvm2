@@ -595,7 +595,7 @@ int config_file_read_from_file(struct dm_config_tree *cft)
 	struct config_source *cs = dm_config_get_custom(cft);
 	struct config_file *cf;
 	struct stat info;
-	struct device fake_dev = { 0 };
+	struct device fake_dev = { .fd = 0 };
 	struct dm_str_list *alias;
 	int fd;
 	int r;

@@ -814,7 +814,7 @@ static int _lvchange_integrity(struct cmd_context *cmd,
 			       struct logical_volume *lv,
 			       uint32_t *mr)
 {
-	struct integrity_settings settings = { 0 };
+	struct integrity_settings settings = { .block_size = 0 };
 	struct logical_volume *lv_image;
 	struct lv_segment *seg, *seg_image;
 	uint32_t s;

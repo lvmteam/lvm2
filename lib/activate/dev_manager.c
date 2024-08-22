@@ -449,7 +449,7 @@ static int _ignore_blocked_mirror_devices(struct cmd_context *cmd,
 	struct dm_task *dmt = NULL;
 	int r = 0;
 	char fake_dev_name[16];
-	struct device fake_dev = { 0 };
+	struct device fake_dev = { .fd = 0 };
 	struct dm_str_list *alias;
 
 	if (!(mem = dm_pool_create("blocked_mirrors", 128)))
