@@ -1,3 +1,6 @@
+Version 2.03.27 - 
+==================
+
 Version 2.03.26 - 23rd August 2024
 ==================================
   Fix internal error reported by pvmove on a VG with single PV.
