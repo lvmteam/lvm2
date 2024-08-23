@@ -1,0 +1,18 @@
+<!-- Page title -->
+[[!meta title="Version 2.03.26 - Feature and Bug Fix Release"]]
+
+Version 2.03.26
+===============
+
+* Add `--integritysettings` option to manipulate dm-integrity settings.
+* Add `--refresh` with `vgscan --mknodes`.
+* Improve documentation for `--refresh` option.
+* Use `log/report_command_log=1` config setting by default for JSON output format.
+* Fix `vgmknodes --refresh` to wait for udev before checking `/dev` content.
+* Fix internal error reported by pvmove on a VG with single PV.
+* Fix unreleased memory pools on RAID lvextend.
+* And as usually some clean up, static analysis fixes, etc.
+
+<!-- remove the pending tag on release, remove draft tag once editing is complete -->
+[[!tag]]
+[[!meta date="Fri Aug 23 16:02:00 2024 +0200"]]

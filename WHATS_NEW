@@ -1,10 +1,11 @@
-Version 2.03.26 - 
-==================
+Version 2.03.26 - 23rd August 2024
+==================================
   Fix internal error reported by pvmove on a VG with single PV.
   Also accept --mknodes --refresh for vgscan.
   Fix vgmknodes --refresh to wait for udev before checking /dev content.
   Use log/report_command_log=1 config setting by default for JSON output format.
-  lvextend fix unreleased memory pools on RAID
+  Fix unreleased memory pools on RAID lvextend.
+  Add --integritysettings option to manipuilate dm-integrity settings.
 
 Version 2.03.25 - 12nd July 2024
 ================================
