@@ -25,6 +25,10 @@ else
 mdatypes='2'
 fi
 
+# pvcreate fails when the same device appears twice on input
+not pvcreate "$dev1" "$dev1" 2>err
+grep "Duplicate device name found on input" err
+
 for mdatype in $mdatypes
 do
 # pvcreate (lvm$mdatype) refuses to overwrite an mounted filesystem (bz168330)

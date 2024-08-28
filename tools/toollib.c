@@ -5614,6 +5614,11 @@ int pvcreate_each_device(struct cmd_context *cmd,
 
 		pv_name = pp->pv_names[i];
 
+		if (_pvcreate_list_find_name(&pp->arg_devices, pv_name)) {
+			log_error("Duplicate device name found on input: %s.", pv_name);
+			return 0;
+		}
+
 		if (!(pd = dm_pool_zalloc(cmd->mem, sizeof(*pd)))) {
 			log_error("alloc failed.");
 			return 0;
