@@ -77,7 +77,7 @@ int swap_lv_identifiers(struct cmd_context *cmd,
 	dm_list_splice(&b->tags, &tlv.tags);
 
 	/* rename temporarily to 'unused' name */
-	if (!lv_rename_update(cmd, a, "pmove_tmeta", 0))
+	if (!lv_rename_update(cmd, a, "pvmove_tmeta", 0))
 		return_0;
 	/* name rename 'b' to unused name of 'a' */
 	if (!lv_rename_update(cmd, b, aname, 0))
