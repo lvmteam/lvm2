@@ -47,7 +47,7 @@
  *
  * flags:                      Configuration item flags:
  *                                 CFG_NAME_VARIABLE - configuration node name is variable
- *                                 CFG_ALLOW_EMPTY - node value can be emtpy
+ *                                 CFG_ALLOW_EMPTY - node value can be empty
  *                                 CFG_ADVANCED - this node belongs to advanced config set
  *                                 CFG_UNSUPPORTED - this node is not officially supported and it's used primarily by developers
  *                                 CFG_PROFILABLE - this node is customizable by a profile
@@ -59,7 +59,7 @@
  *                                 CFG_SECTION_NO_CHECK - do not check content of the section at all - use with care!!!
  *                                 CFG_DISALLOW_INTERACTIVE - disallow configuration node for use in interactive environment (e.g. cmds run in lvm shell)
  *
- * type:		       Allowed type for the value of simple configuation setting, one of:
+ * type:		       Allowed type for the value of simple configuration setting, one of:
  *                                 CFG_TYPE_BOOL
  *                                 CFG_TYPE_INT
  *                                 CFG_TYPE_FLOAT

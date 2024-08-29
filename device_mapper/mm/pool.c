@@ -129,7 +129,7 @@ int dm_pool_locked(struct dm_pool *p)
  * Bool specifies whether to store the pool crc/hash checksum.
  *
  * \return
- * 1 (success) when the pool was preperly locked, 0 otherwise.
+ * 1 (success) when the pool was properly locked, 0 otherwise.
  */
 int dm_pool_lock(struct dm_pool *p, int crc)
 {

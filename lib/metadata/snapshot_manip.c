@@ -330,7 +330,7 @@ int vg_remove_snapshot(struct logical_volume *cow)
 		clear_snapshot_merge(origin);
 		/*
 		 * preload origin IFF "snapshot-merge" target is active
-		 * - IMPORTANT: avoids preload if inactivate merge is pending
+		 * - IMPORTANT: avoids preload if inactive merge is pending
 		 */
 	}
 

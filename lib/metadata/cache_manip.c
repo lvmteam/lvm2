@@ -223,7 +223,7 @@ int update_cache_pool_params(struct cmd_context *cmd,
 		if (*chunk_size < min_chunk_size) {
 			/*
 			 * When using more then 'standard' default,
-			 * keep user informed he might be using things in untintended direction
+			 * keep user informed he might be using things in unintended direction
 			 */
 			log_print_unless_silent("Using %s chunk size instead of default %s, "
 						"so cache pool has less than " FMTu64 " chunks.",
@@ -572,7 +572,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 		goto remove;  /* Already dropped */
 	}
 
-	/* Localy active volume is needed for writeback */
+	/* Locally active volume is needed for writeback */
 	if (!lv_info(cache_lv->vg->cmd, cache_lv, 1, NULL, 0, 0)) {
 		/* Give up any remote locks */
 		if (!deactivate_lv_with_sub_lv(cache_lv))
@@ -593,7 +593,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 				return_0;
 			return 1;
 		default:
-			/* Otherwise localy activate volume to sync dirty blocks */
+			/* Otherwise locally activate volume to sync dirty blocks */
 			cache_lv->status |= LV_TEMPORARY;
 			if (!activate_lv(cache_lv->vg->cmd, cache_lv) ||
 			    !lv_is_active(cache_lv)) {
@@ -692,7 +692,7 @@ remove:
 	if (!lv_remove(cache_lv)) /* Will use LV_PENDING_DELETE */
 		return_0;
 
-	/* CachePool or CacheVol is left inactivate for further manipulation */
+	/* CachePool or CacheVol is left inactive for further manipulation */
 
 	return 1;
 }
@@ -923,7 +923,7 @@ int cache_set_metadata_format(struct lv_segment *seg, cache_metadata_format_t fo
 	}
 
 	/* See what is a 'best' available cache metadata format
-	 * when the specifed format is other then always existing CMFormat 1 */
+	 * when the specified format is other then always existing CMFormat 1 */
 	if (format != CACHE_METADATA_FORMAT_1) {
 		best = _get_default_cache_metadata_format(seg->lv->vg->cmd);
 

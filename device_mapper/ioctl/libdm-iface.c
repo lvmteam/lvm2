@@ -659,7 +659,7 @@ void *dm_get_next_target(struct dm_task *dmt, void *next,
 	return t->next;
 }
 
-/* Unmarshall the target info returned from a status call */
+/* Unmarshal the target info returned from a status call */
 static int _unmarshal_status(struct dm_task *dmt, struct dm_ioctl *dmi)
 {
 	char *outbuf = (char *) dmi + dmi->data_start;

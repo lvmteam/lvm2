@@ -45,7 +45,7 @@
  * c:  the name used to reference this value in command defs
  * d:  what to display in usage output for this value
  *
- * command defintions will use --option NAME, where NAME
+ * command definitions will use --option NAME, where NAME
  * is shown in val() field c.  NAME will be translated to
  * foo_VAL enum in field a, which is used in commands[]
  * structs.

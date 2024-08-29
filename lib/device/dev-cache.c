@@ -836,7 +836,7 @@ static size_t _collapse_slashes(char *str)
 
 static int _insert_dir(const char *dir)
 {
-	/* alphanetically! sorted list used by bsearch of
+	/* alphabetically! sorted list used by bsearch of
 	 * /dev subdirectories that should not contain
 	 * any block device, so no reason to scan them. */
 	static const char _no_scan[][12] = {

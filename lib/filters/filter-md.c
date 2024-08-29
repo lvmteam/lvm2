@@ -36,7 +36,7 @@
  * which can trigger duplicate detection, and/or cause lvm to display
  * md components as PVs rather than ignoring them.
  *
- * If scanning md componenents causes duplicates to be seen, then
+ * If scanning md components causes duplicates to be seen, then
  * the lvm duplicate resolution will exclude the components.
  *
  * The lvm md filter has three modes:
@@ -92,7 +92,7 @@ static int _passes_md_filter(struct cmd_context *cmd, struct dev_filter *f __att
 	dev->filtered_flags &= ~DEV_FILTERED_MD_COMPONENT;
 
 	/*
-	 * When md_component_dectection=0, don't even try to skip md
+	 * When md_component_detection=0, don't even try to skip md
 	 * components.
 	 */
 	if (!md_filtering())

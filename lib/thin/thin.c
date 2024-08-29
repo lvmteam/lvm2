@@ -22,7 +22,7 @@
 #include "lib/activate/activate.h"
 #include "lib/datastruct/str_list.h"
 
-/* Dm kernel module name for thin provisiong */
+/* Dm kernel module name for thin provisioning */
 static const char _thin_pool_module[] = "thin-pool";
 static const char _thin_module[] = "thin";
 
@@ -350,7 +350,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 	/*
 	 * Add messages only for activation tree.
 	 * Otherwise avoid checking for existence of suspended origin.
-	 * Also transation_id is checked only when snapshot origin is active.
+	 * Also transaction_id is checked only when snapshot origin is active.
 	 * (This might change later)
 	 */
 	if (!laopts->send_messages)
@@ -410,7 +410,7 @@ static int _thin_pool_target_percent(void **target_state __attribute__((unused))
 
 	if (s->fail || s->error)
 		*percent = DM_PERCENT_INVALID;
-	/* With 'seg' report metadata percent, otherwice data percent */
+	/* With 'seg' report metadata percent, otherwise data percent */
 	else if (seg) {
 		*percent = dm_make_percent(s->used_metadata_blocks,
 					   s->total_metadata_blocks);

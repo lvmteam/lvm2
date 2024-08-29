@@ -1563,7 +1563,7 @@ int lockd_start_wait(struct cmd_context *cmd)
  * 4. dlm:
  *    If the lock_type from vgcreate is dlm, lvmlockd creates the
  *    dlm global lockspace, and queues the global lock request
- *    for vgcreate.  lockd_gl_create returns sucess with the gl held.
+ *    for vgcreate.  lockd_gl_create returns success with the gl held.
  *
  *    sanlock:
  *    If the lock_type from vgcreate is sanlock, lvmlockd returns -ENOLS
@@ -1647,7 +1647,7 @@ int lockd_global_create(struct cmd_context *cmd, const char *def_mode, const cha
 			return 1;
 
 		/*
-		 * This is the sanlock bootstrap condition for proceding
+		 * This is the sanlock bootstrap condition for proceeding
 		 * without the global lock: a chicken/egg case for the first
 		 * sanlock VG that is created.  When creating the first
 		 * sanlock VG, there is no global lock to acquire because
@@ -2793,7 +2793,7 @@ static int _lockd_lv_vdo(struct cmd_context *cmd, struct logical_volume *lv,
  * acquired on the thin pool LV, and a thin LV does not have a lock
  * of its own.  A cache pool LV does not have a lock of its own.
  * When the cache pool LV is linked to an origin LV, the lock of
- * the orgin LV protects the combined origin + cache pool.
+ * the origin LV protects the combined origin + cache pool.
  */
 
 int lockd_lv(struct cmd_context *cmd, struct logical_volume *lv,
@@ -2950,7 +2950,7 @@ int lockd_lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	 * the LV on remote nodes through dlm/corosync at the end
 	 * of the command.
 	 *
-	 * If lockd_lv sucessfully acquired the LV lock ex (did not
+	 * If lockd_lv successfully acquired the LV lock ex (did not
 	 * need to make use of SH_EXISTS_OK), then we know the LV
 	 * is active here only (or not active anywhere) and we
 	 * don't need to do any remote refresh.

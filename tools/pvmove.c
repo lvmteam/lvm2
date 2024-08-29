@@ -490,7 +490,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 				lv_skipped = 1;
 				log_print_unless_silent("Skipping LV %s which is not locally exclusive%s.",
 							display_lvname(lv),
-							/* Report missing cmirrord cases that matterd.
+							/* Report missing cmirrord cases that mattered.
 							 * With exclusive LV types cmirrord would not help. */
 							(*exclusive &&
 							 !lv_is_origin(holder) &&

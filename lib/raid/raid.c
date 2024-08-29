@@ -560,7 +560,7 @@ static int _raid_target_present(struct cmd_context *cmd,
 						 _features[i].feature);
 
 		/*
-		 * Seperate check for proper raid4 mapping supported
+		 * Separate check for proper raid4 mapping supported
 		 *
 		 * If we get more of these range checks, avoid them
 		 * altogether by enhancing 'struct raid_feature'

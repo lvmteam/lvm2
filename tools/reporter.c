@@ -690,7 +690,7 @@ int report_for_selection(struct cmd_context *cmd,
 	 *
 	 * The selection_handle is still reused so we can track
 	 * whether any of the items the top-level one is composed
-	 * of are still selected or not unerneath. Do not destroy
+	 * of are still selected or not underneath. Do not destroy
 	 * this selection handle - it needs to be passed to upper
 	 * layers to check the overall selection status.
 	 */

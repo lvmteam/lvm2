@@ -82,7 +82,7 @@ TESTOLDPWD=$(pwd)
 COMMON_PREFIX="LVMTEST"
 PREFIX="${COMMON_PREFIX}$$"
 
-# Check we are not conflickting with some exiting setup
+# Check we are not conflicting with some exiting setup
 if test -z "$SKIP_ROOT_DM_CHECK" ; then
 	d=$(dmsetup info -c -o name --noheadings --rows -S "suspended=Suspended||name=~${PREFIX}[^0-9]")
 	case "$d" in

@@ -180,7 +180,7 @@ scan:
 			/*
 			* whitespaces between digits are not allowed,
 			* but it's ok if whitespaces are on head or tail.
-			* when old_c is whilespace,
+			* when old_c is whitespace,
 			* if totaldigits == ndigits, whitespace is on head.
 			* if whitespace is on tail, it should not run here.
 			* as c was ',' or '\0',

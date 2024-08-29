@@ -265,7 +265,7 @@ struct load_properties {
 	/*
 	 * Preload tree normally only loads and not resume, but there is
 	 * automatic resume when target is extended, as it's believed
-	 * there can be no i/o flying to this 'new' extedend space
+	 * there can be no i/o flying to this 'new' extended space
 	 * from any device above. Reason is that preloaded target above
 	 * may actually need to see its bigger subdevice before it
 	 * gets suspended. As long as devices are simple linears
@@ -277,7 +277,7 @@ struct load_properties {
 
 	/*
 	 * When comparing table lines to decide if a reload is
-	 * needed, ignore any differences betwen the lvm device
+	 * needed, ignore any differences between the lvm device
 	 * params and the kernel-reported device params.
 	 * dm-integrity reports many internal parameters on the
 	 * table line when lvm does not explicitly set them,
@@ -288,8 +288,8 @@ struct load_properties {
 	/*
 	 * Call node_send_messages(), set to 2 if there are messages
 	 * When != 0, it validates matching transaction id, thus thin-pools
-	 * where transation_id is passed as 0 are never validated, this
-	 * allows external managment of thin-pool TID.
+	 * where transaction_id is passed as 0 are never validated, this
+	 * allows external management of thin-pool TID.
 	 */
 	unsigned send_messages;
 	/* Skip suspending node's children, used when sending messages to thin-pool */
@@ -1816,7 +1816,7 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 
 		if (info.open_count) {
 			/* Skip internal non-toplevel opened nodes */
-			/* On some old udev systems without corrrect udev rules
+			/* On some old udev systems without correct udev rules
 			 * this hack avoids 'leaking' active _mimageX legs after
 			 * deactivation of mirror LV. Other suffixes are not added
 			 * since it's expected newer systems with wider range of
@@ -2182,7 +2182,7 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 			/*
 			 * FIXME: Implement delayed error reporting
 			 * activation should be stopped only in the case,
-			 * the submission of transation_id message fails,
+			 * the submission of transaction_id message fails,
 			 * resume should continue further, just whole command
 			 * has to report failure.
 			 */
@@ -2274,7 +2274,7 @@ static int _build_dev_string(char *devbuf, size_t bufsize, struct dm_tree_node *
 	return 1;
 }
 
-/* simplify string emiting code */
+/* simplify string emitting code */
 #define EMIT_PARAMS(p, str...)\
 do {\
 	int w;\
@@ -2970,7 +2970,7 @@ static int _vdo_emit_segment_line(struct dm_task *dmt, uint32_t major, uint32_t 
 	 * If there is already running VDO target, read 'existing' virtual size out of table line
 	 * and avoid reading it them from VDO metadata device
 	 *
-	 * NOTE: ATM VDO virtual size can be ONLY extended thus it's simple to recongnize 'right' size.
+	 * NOTE: ATM VDO virtual size can be ONLY extended thus it's simple to recognize 'right' size.
 	 * However if there would be supported also reduction, this check would need to check range.
 	 */
 	if ((vdo_dmt = dm_task_create(DM_DEVICE_TABLE))) {
@@ -3382,7 +3382,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 		if (!child->info.exists && !(node_created = _create_node(child, dnode)))
 			return_0;
 
-		/* Propagate delayed resume from exteded child node */
+		/* Propagate delayed resume from extended child node */
 		if (child->props.delay_resume_if_extended)
 			dnode->props.delay_resume_if_extended = 1;
 
@@ -3818,7 +3818,7 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
  * - maximum 253 legs in a raid set (MD kernel limitation)
  * - delta_disks for disk add/remove reshaping
  * - data_offset for out-of-place reshaping
- * - data_copies to cope witth odd numbers of raid10 disks
+ * - data_copies to cope with odd numbers of raid10 disks
  */
 int dm_tree_node_add_raid_target_with_params_v2(struct dm_tree_node *node,
 					        uint64_t size,

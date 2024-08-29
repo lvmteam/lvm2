@@ -110,7 +110,7 @@ static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
  * then prepending this argument to '_disp'.  For example, if this argument
  * is 'uuid', the display function is _uuid_disp().  Adding a new field may
  * require defining a new display function (for example _myfieldname_disp()),
- * or re-use of an existing one (for example, _uint32_disp()).
+ * or reuse of an existing one (for example, _uint32_disp()).
  * 8. Unique format identifier / field id.  This name must be unique and is
  * used to select fields via '-o' in the reporting commands (pvs/vgs/lvs).
  * The string used to specify the field - the 'id' member of

@@ -55,7 +55,7 @@
 # LV_raid represents any raidN.  LV_type1_type2_type3 when the LV is
 # limited to multiple specific types.
 #
-# Note that two commands whose required paramters differ only by
+# Note that two commands whose required parameters differ only by
 # the LV types they accept are ambiguous.  That is, they cannot be
 # distinguished by just looking at the command, but require reading
 # the VG to find the LV type.  So, command definitions that differ
@@ -69,7 +69,7 @@
 # If Select is included in pos_arg, it means that the pos_arg
 # may be empty if the --select option is used.
 #
-# --size and --extents are interchangable, but only --size is used
+# --size and --extents are interchangeable, but only --size is used
 # in these definitions to keep them simpler.  --extents is
 # automatically included and recognized as an alternative to --size.
 #
@@ -99,7 +99,7 @@
 #
 # used in definitions below (equivalent but not used in definitions)
 # mirrorlog core (not corelog)
-# resizeable (resizable or allocation)
+# resizable (resizable or allocation)
 # allocatable (allocation)
 # activate (available)
 # rebuild (raidrebuild)
@@ -119,7 +119,7 @@
 # the same thing, but are alternate syntaxes can share the same ID,
 # in which case the implementation would have to sort out which
 # args to look at for the required parameters.  Or, the two commands
-# could use differnet IDs, in which case the implementation would
+# could use different IDs, in which case the implementation would
 # know where to look for each parameter.
 #
 # DESC: A description of the command.  The "DESC:" tags will be
@@ -190,7 +190,7 @@
 # To use this set of options, include it on the OO: line, e.g.
 # OO: --example, OO_NAME
 #
-# which is expaneded to
+# which is expanded to
 # OO: --example, --foo, --bar String
 #
 # Including OO_NAME after a command name on the required line
@@ -272,7 +272,7 @@ RULE: --alloc --contiguous --metadataprofile --persistent --profile --readahead 
 RULE: --alloc --discards --zero --cachemode --cachepolicy --cachesettings not lv_is_partial
 
 # It's unfortunate that activate needs to be optionally allowed here,
-# like above, it was previouly allowed in combination.
+# like above, it was previously allowed in combination.
 
 lvchange --resync VG|LV_raid_mirror|Tag|Select ...
 OO: --activate Active, OO_LVCHANGE
@@ -750,7 +750,7 @@ FLAGS: SECONDARY_SYNTAX
 
 ---
 
-# NB: an unsual use of position args here, the first pos arg
+# NB: an unusual use of position args here, the first pos arg
 # (will become origin LV) is not passed to process_each,
 # the second pos arg (will become cow LV) is given to
 # process_each.  Because the first pos LV is not handled
@@ -779,7 +779,7 @@ AUTOTYPE: snapshot
 
 ---
 
-# lvconvert repair/replace utilitiles
+# lvconvert repair/replace utilities
 # Create a new command set for these and migrate them out of lvconvert?
 
 # FIXME: use specific option names to distinguish these two

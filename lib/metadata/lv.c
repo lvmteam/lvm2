@@ -383,7 +383,7 @@ dm_percent_t lvseg_percent_with_info_and_seg_status(const struct lv_with_info_an
 	 * TODO:
 	 *   Later move to segment methods, instead of using single place.
 	 *   Also handle logic for mirror segments and it total_* summing
-	 *   Esentially rework  _target_percent API for segtype.
+	 *   Essentially rework  _target_percent API for segtype.
 	 */
 	switch (s->type) {
 	case SEG_STATUS_INTEGRITY:
@@ -1495,7 +1495,7 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 				repstr[8] = 'm';  /* RAID has 'm'ismatches */
 			else if (lv_raid_sync_action(lv, &sync_action) &&
 				 !strcmp(sync_action, "reshape"))
-				repstr[8] = 's';  /* LV is re(s)haping */
+				repstr[8] = 's';  /* LV is re's'haping */
 			else if (_sublvs_remove_after_reshape(lv))
 				repstr[8] = 'R';  /* sub-LV got freed from raid set by reshaping
 						     and has to be 'R'emoved */
@@ -1708,7 +1708,7 @@ const struct logical_volume *lv_lock_holder(const struct logical_volume *lv)
 
 	if (lv_is_thin_pool(lv) ||
 	    lv_is_external_origin(lv)) {
-		/* FIXME: Ensure cluster keeps thin-pool active exlusively.
+		/* FIXME: Ensure cluster keeps thin-pool active exclusively.
 		 * External origin can be activated on more nodes (depends on type).
 		 */
 		if (!lv_is_active(lv))
@@ -1722,7 +1722,7 @@ const struct logical_volume *lv_lock_holder(const struct logical_volume *lv)
 		return lv;
 	}
 
-	/* RAID changes visibility of splitted LVs but references them still as leg/meta */
+	/* RAID changes visibility of split LVs but references them still as leg/meta */
 	if ((lv_is_raid_image(lv) || lv_is_raid_metadata(lv)) && lv_is_visible(lv))
 		return lv;
 
@@ -1735,7 +1735,7 @@ const struct logical_volume *lv_lock_holder(const struct logical_volume *lv)
 		if (lv_is_thin_volume(lv) &&
 		    lv_is_thin_volume(sl->seg->lv) &&
 		    first_seg(lv)->pool_lv == sl->seg->pool_lv)
-			continue; /* Skip thin snaphost */
+			continue; /* Skip thin snapshot */
 		if (lv_is_pending_delete(sl->seg->lv))
 			continue; /* Skip deleted LVs */
 		if (lv_is_cache_pool(sl->seg->lv) &&

@@ -1796,7 +1796,7 @@ static int _mountinfo_parse_line(const char *line, unsigned *maj, unsigned *min,
 }
 
 /*
- * Function to operate on individal mountinfo line,
+ * Function to operate on individual mountinfo line,
  * minor, major and mount target are parsed and unmangled
  */
 int dm_mountinfo_read(dm_mountinfo_line_callback_fn read_fn, void *cb_data)

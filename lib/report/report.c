@@ -533,7 +533,7 @@ static int _preparse_fuzzy_time(const char *s, struct time_info *info)
 		 * If the string consists of -:+, digits or spaces,
 		 * it's not worth looking for fuzzy names here -
 		 * it's standard YYYY-MM-DD HH:MM:SS +-HH:MM format
-		 * and that is parseable by libdm directly.
+		 * and that is parsable by libdm directly.
 		 */
 		if (!(isdigit(c) || (c == '-') || (c == ':') || (c == '+')))
 			fuzzy = 1;
@@ -2562,7 +2562,7 @@ static int _segstartpe_disp(struct dm_report *rh,
 	return dm_report_field_uint32(rh, field, &seg->le);
 }
 
-/* Hepler: get used stripes = total stripes minux any to remove after reshape */
+/* Helper: get used stripes = total stripes minus any to remove after reshape */
 static int _get_seg_used_stripes(const struct lv_segment *seg)
 {
 	uint32_t s;
@@ -2636,7 +2636,7 @@ static struct logical_volume *_lv_for_raid_image_seg(const struct lv_segment *se
 	return NULL;
 }
 
-/* Helper: return the top-level raid LV in case it is reshapale for @seg or @seg if it is */
+/* Helper: return the top-level raid LV in case it is reshapable for @seg or @seg if it is */
 static const struct lv_segment *_get_reshapable_seg(const struct lv_segment *seg, struct dm_pool *mem)
 {
 	return _lv_for_raid_image_seg(seg, mem) ? seg : NULL;

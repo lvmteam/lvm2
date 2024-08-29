@@ -226,7 +226,7 @@ static int _lvchange_activate(struct cmd_context *cmd, struct logical_volume *lv
 	/*
 	 * FIXME: lvchange should defer background polling in a similar
 	 * 	  way as vgchange does. First activate all relevant LVs
-	 * 	  initate background polling later (for all actually
+	 * 	  initiate background polling later (for all actually
 	 * 	  activated LVs). So we can avoid duplicate background
 	 * 	  polling for pvmove (2 or more locked LVs on single pvmove
 	 * 	  LV)
@@ -993,7 +993,7 @@ static int _lvchange_writemostly(struct logical_volume *lv,
 	/*
 	 * Prohibit writebehind and writebehind during synchronization.
 	 *
-	 * FIXME: we can do better once we can distingush between
+	 * FIXME: we can do better once we can distinguish between
 	 *        an initial sync after a linear -> raid1 upconversion
 	 *        and any later additions of legs, requested resyncs
 	 *        via lvchange or leg repairs/replacements.
@@ -1321,7 +1321,7 @@ static int _option_requires_direct_commit(int opt_enum)
 }
 
 /*
- * For each lvchange command definintion:
+ * For each lvchange command definition:
  *
  * lvchange_foo_cmd(cmd, argc, argv);
  * . set cmd fields that apply to "foo"
@@ -1540,7 +1540,7 @@ static int _lvchange_properties_single(struct cmd_context *cmd,
 
 	doit_total += doit;
 
-	/* Bail out if no options wwre found or any processing of an option in the second group failed */
+	/* Bail out if no options were found or any processing of an option in the second group failed */
 	if (!docmds || docmds != doit_total)
 		return_ECMD_FAILED;
 

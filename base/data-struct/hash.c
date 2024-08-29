@@ -30,10 +30,10 @@ struct dm_hash_table {
 	unsigned num_nodes;
 	unsigned num_hint;
 	unsigned mask_slots;    /* (slots - 1) -> used as hash mask */
-	unsigned collisions;    /* Collissions of hash keys */
+	unsigned collisions;    /* Collisions of hash keys */
 	unsigned search;        /* How many keys were searched */
 	unsigned found;         /* How many nodes were found */
-	unsigned same_hash;     /* Was there a colision with same masked hash and len ? */
+	unsigned same_hash;     /* Was there a collision with same masked hash and len ? */
 	struct dm_hash_node **slots;
 };
 
@@ -348,7 +348,7 @@ int dm_hash_insert_allow_multiple(struct dm_hash_table *t, const char *key,
 
 /*
  * Look through multiple entries with the same key for one that has a
- * matching val and return that.  If none have maching val, return NULL.
+ * matching val and return that.  If none have matching val, return NULL.
  */
 void *dm_hash_lookup_with_val(struct dm_hash_table *t, const char *key,
 			      const void *val, uint32_t val_len)

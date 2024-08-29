@@ -136,7 +136,7 @@ struct vdo_volume_geometry_4 {
 	struct vdo_index_config index_config;
 } __packed;
 
-/* Decoding mostly only some used stucture members */
+/* Decoding mostly only some used structure members */
 
 static void _vdo_decode_version(struct vdo_version_number *v)
 {

@@ -3589,7 +3589,7 @@ static struct dm_histogram *_alloc_dm_histogram(int nr_bins)
  * 'us', 'ms', or 's' unit suffixes.
  *
  * The scale parameter indicates the timescale used for this region: one
- * for nanoscale resolution and NSEC_PER_MSEC for miliseconds.
+ * for nanoscale resolution and NSEC_PER_MSEC for milliseconds.
  *
  * On return bounds contains a pointer to an array of uint64_t
  * histogram bounds values expressed in units of nanoseconds.

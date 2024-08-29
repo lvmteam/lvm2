@@ -108,7 +108,7 @@ struct option {
 #define DM_STATS_PROGRAM_ID "dmstats"
 
 /*
- * Basic commands this code implments.
+ * Basic commands this code implements.
  */
 typedef enum {
 	DMSETUP_CMD = 0,
@@ -787,7 +787,7 @@ static int _update_interval_times(void)
 	}
 
 	/*
-	 * Take cycle timstamp as close as possible to ioctl return.
+	 * Take cycle timestamp as close as possible to ioctl return.
 	 *
 	 * FIXME: use per-region timestamp deltas for interval estimate.
 	 */
@@ -2034,7 +2034,7 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto_out;
 
-	/* FIXME: needs to coperate with udev */
+	/* FIXME: needs to cooperate with udev */
 	if (!_set_task_add_node(dmt))
 		goto_out;
 
@@ -2858,7 +2858,7 @@ _tsym_vt100 = {
 /*
  * Tree drawing functions.
  */
-/* FIXME Get rid of these statics - use dynamic struct */
+/* FIXME Get rid of these statistics - use dynamic struct */
 /* FIXME Explain what these vars are for */
 static int _tree_width[MAX_DEPTH], _tree_more[MAX_DEPTH];
 static int _termwidth = 80;	/* Maximum output width */

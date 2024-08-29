@@ -404,7 +404,7 @@ int daemon_talk(struct dm_event_fifos *fifos,
 /*
  * Check for usable client fifo file
  *
- * Returns: 2 cliant path does not exists, dmeventd should be restarted
+ * Returns: 2 client path does not exists, dmeventd should be restarted
  *          1 on success, 0 otherwise
  */
 static int _check_for_usable_fifos(char *dmeventd_path, struct dm_event_fifos *fifos)
@@ -1007,7 +1007,7 @@ void dm_event_log(const char *subsys, int level, const char *file,
 
 static char *_skip_string(char *src, const int delimiter)
 {
-	src = srtchr(src, delimiter);
+	src = strchr(src, delimiter);
 	if (src && *(src + 1))
 		return src + 1;
 	return NULL;

@@ -331,7 +331,7 @@ check_duplicate:
 	 * duplicate PV.
 	 *
 	 * FIXME: disable autoactivation of the VG somehow?
-	 * The VG may or may not already be activated when a dupicate appears.
+	 * The VG may or may not already be activated when a duplicate appears.
 	 * Perhaps write a new field in the pv online or vg online file?
 	 */
 

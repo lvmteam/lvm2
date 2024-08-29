@@ -855,7 +855,7 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 
 			/* Merge not yet started, still a snapshot... */
 		}
-		/* Hadle fictional lvm2 snapshot and query snapshotX volume */
+		/* Handle fictional lvm2 snapshot and query snapshotX volume */
 		lv_seg = find_snapshot(lv);
 	}
 
@@ -936,7 +936,7 @@ int lv_check_not_in_use(const struct logical_volume *lv, int error_if_used)
 		log_debug_activation("Retrying open_count check for %s.",
 				     display_lvname(lv));
 		if (!lv_info(lv->vg->cmd, lv, 0, &info, 1, 0) || !info.exists) {
-			stack; /* device dissappeared? */
+			stack; /* device disappeared? */
 			return 1;
 		} else if (!info.open_count)
 			return 1;
@@ -1006,7 +1006,7 @@ int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 	int r;
 	struct dev_manager *dm;
 
-	/* If mirrored LV is temporarily shrinked to 1 area (= linear),
+	/* If mirrored LV is temporarily shrunk to 1 area (= linear),
 	 * it should be considered in-sync. */
 	if (dm_list_size(&lv->segments) == 1 && first_seg(lv)->area_count == 1) {
 		*percent = DM_PERCENT_100;
@@ -2235,7 +2235,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	    (pvmove_lv = find_pvmove_lv_in_lv(lv_pre))) {
 		/*
 		 * When starting PVMOVE, suspend participating LVs first
-		 * with committed metadata by looking at precommited pvmove list.
+		 * with committed metadata by looking at precommitted pvmove list.
 		 * In committed metadata these LVs are not connected in any way.
 		 *
 		 * TODO: prepare list of LVs needed to be suspended and pass them
@@ -2264,7 +2264,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 				log_error("lv_list alloc failed.");
 				goto out;
 			}
-			/* Look for precommitted LV name in commmitted VG */
+			/* Look for precommitted LV name in committed VG */
 			if (!(lvl->lv = find_lv(lv->vg, lv_tmp->name))) {
 				log_error(INTERNAL_ERROR "LV %s missing from preload metadata.",
 					  display_lvname(lv_tmp));
@@ -2524,7 +2524,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 
 	/*
 	 * Remove any transiently activated error
-	 * devices which arean't used any more.
+	 * devices which aren't used any more.
 	 */
 	if (r && lv_is_raid(lv) && !lv_deactivate_any_missing_subdevs(lv)) {
 		log_error("Failed to remove temporary SubLVs from %s",
@@ -2771,7 +2771,7 @@ static int _lv_remove_any_missing_subdevs(struct logical_volume *lv)
 	return 1;
 }
 
-/* Remove any "*-missing_*" sub devices added by the activation layer for an rmate/rimage missing PV mapping */
+/* Remove any "*-missing_*" sub devices added by the activation layer for an rmeta/rimage missing PV mapping */
 int lv_deactivate_any_missing_subdevs(const struct logical_volume *lv)
 {
 	uint32_t s;
@@ -2849,7 +2849,7 @@ static int _component_cb(struct logical_volume *lv, void *data)
  * Finds out for any LV if any of its component LVs are active.
  * Function first checks if an existing LV is visible and active eventually
  * it's lock holding LV is already active. In such case sub LV cannot be
- * actived alone and no further checking is needed.
+ * activated alone and no further checking is needed.
  *
  * Returns active component LV if there is such.
  */
@@ -2912,7 +2912,7 @@ static int _deactivate_sub_lv_cb(struct logical_volume *lv, void *data)
 }
 
 /*
- * Deactivates LV toghether with explicit deactivation call made also for all its component LVs.
+ * Deactivates LV together with explicit deactivation call made also for all its component LVs.
  */
 int deactivate_lv_with_sub_lv(const struct logical_volume *lv)
 {

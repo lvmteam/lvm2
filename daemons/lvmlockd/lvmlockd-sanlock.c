@@ -106,7 +106,7 @@ which:
 1. Uses syslog to explain what is happening.
 
 2. Notifies lvmlockd that the VG is being killed, so lvmlockd can
-   immediatley return an error for this condition if any new lock
+   immediately return an error for this condition if any new lock
    requests are made.  (This step would not be strictly necessary.)
 
 3. Attempts to quit using the VG.  This is not yet implemented, but
@@ -136,7 +136,7 @@ release all the leases for the VG.
  * from each pid: signals due to a sanlock_request, and
  * acquire/release/convert/inquire.  The later can probably be
  * addressed with a flag to indicate that the pid field should be
- * interpretted as 'ci' (which the caller would need to figure
+ * interpreted as 'ci' (which the caller would need to figure
  * out somehow.)
  */
 

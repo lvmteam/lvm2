@@ -16,7 +16,7 @@
 #include "tools.h"
 
 /*
- * Intial sanity checking of recovery-related command-line arguments.
+ * Initial sanity checking of recovery-related command-line arguments.
  * These args are: --restorefile, --uuid, and --physicalvolumesize
  *
  * Output arguments:

@@ -1272,7 +1272,7 @@ static int _online_devs(struct cmd_context *cmd, int do_all, struct dm_list *pvs
 			 * device and using that to get the struct dev and dev_name.
 			 * The user could pass this list of devices to --devices
 			 * to optimize a subsequent command (activation) on the VG.
-			 * Just call set_pv_devices_online (if not done othewise)
+			 * Just call set_pv_devices_online (if not done otherwise)
 			 * since that finds the devs.
 			 */
 		}
@@ -1621,7 +1621,7 @@ static int _pvscan_cache_args(struct cmd_context *cmd, int argc, char **argv,
 	/*
 	 * Scan devs to populate lvmcache info, which includes the mda info that's
 	 * needed to read vg metadata in the next step.  The _cached variant of
-	 * label_scan is used so the exsting bcache data from label_read_pvid above
+	 * label_scan is used so the existing bcache data from label_read_pvid above
 	 * can be reused (although more data may need to be read depending on how
 	 * much of the metadata was covered by reading the pvid.)
 	 */

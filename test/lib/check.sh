@@ -438,7 +438,7 @@ raid_leg_status() {
 	local st
 	local val
 
-	# Ignore inconsisten raid status 0/xxxxx idle
+	# Ignore inconsistent raid status 0/xxxxx idle
 	for i in {100..0} ; do
 		st=( $(dmsetup status --noflush "$1-$2") ) || die "Unable to get status of $vg/$lv1"
 		case "${st[7]}" in

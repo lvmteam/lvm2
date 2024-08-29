@@ -522,7 +522,7 @@ restart4:
 	 * Entries remaining on old/new lists can't be directly
 	 * correlated by loops above.
 	 * Just print remaining old entries as being removed and
-	 * remaing new entries as being added.
+	 * remaining new entries as being added.
 	 * If we find specific cases that reach here, we may
 	 * want to add loops above to detect and print them
 	 * more specifically.
@@ -789,7 +789,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 			goto_bad;
 
 		/*
-		 * addev will add a device to devices_file even if that device
+		 * adddev will add a device to devices_file even if that device
 		 * is excluded by filters.
 		 */
 

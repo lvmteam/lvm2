@@ -2036,7 +2036,7 @@ id_done:
 	 * use_devices list will be used to update the devices file.
 	 *
 	 * The dev being added can potentially overlap existing entries
-	 * in various ways.  If one of the existing entries is truely for
+	 * in various ways.  If one of the existing entries is truly for
 	 * this device being added, then we want to update that entry.
 	 * If some other existing entries are not for the same device, but
 	 * have some overlapping values, then we want to try to update
@@ -2098,7 +2098,7 @@ id_done:
 
 	/*
 	 * If one of the existing entries (du_dev, du_pvid, du_devid, du_devname)
-	 * is truely for the same device that is being added, then set update_du to
+	 * is truly for the same device that is being added, then set update_du to
 	 * that existing entry to be updated.
 	 */
 
@@ -3925,7 +3925,7 @@ void device_ids_search(struct cmd_context *cmd, struct dm_list *new_devs,
 	}
 
 	/*
-	 * The use_devices entries (repesenting the devices file) are
+	 * The use_devices entries (representing the devices file) are
 	 * updated for the new devices on which the PVs reside.  The new
 	 * correct devs are set as dil->dev on search_pvids entries.
 	 *

@@ -245,13 +245,13 @@ static int _sectors_to_units(uint64_t sectors, char *buffer, size_t s)
 	return dm_snprintf(buffer, s, "# %g %s", d, _units[i]) > 0;
 }
 
-/* increment indention level */
+/* increment indentation level */
 void out_inc_indent(struct formatter *f)
 {
 	_inc_indent(f);
 }
 
-/* decrement indention level */
+/* decrement indentation level */
 void out_dec_indent(struct formatter *f)
 {
 	_dec_indent(f);

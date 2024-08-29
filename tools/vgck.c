@@ -29,7 +29,7 @@ static int _update_metadata_single(struct cmd_context *cmd __attribute__((unused
 
 	/*
 	 * Simply calling vg_write can correct or clean up various things:
-	 * . some mda's have old versions of metdadata 
+	 * . some mda's have old versions of metadata
 	 * . wipe outdated PVs
 	 * . fix pv_header used flag and version
 	 * . strip historical lvs

@@ -239,7 +239,7 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 		/*
 		 * Note: If we need to output the log report before we get to the dm_report_group_output_and_pop_all
 		 * at the end of this loop, like hitting a failure situation before we execute the command itself,
-		 * don't forget to directly call dm_report_group_output_and_pop_all, otherwise no log meesage will
+		 * don't forget to directly call dm_report_group_output_and_pop_all, otherwise no log message will
 		 * appear on output (for output formats other than 'basic').
 		 *
 		 * Obviously, you can't output the 'log report' if the error is in initializing or setting

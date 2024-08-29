@@ -34,7 +34,7 @@ static int _vgremove_single(struct cmd_context *cmd, const char *vg_name,
 	struct processing_handle void_handle = {0};
 
 	/*
-	 * Single force is equivalent to sinle --yes
+	 * Single force is equivalent to single --yes
 	 * Even multiple --yes are equivalent to single --force
 	 * When we require -ff it cannot be replaces with -f -y
 	 */

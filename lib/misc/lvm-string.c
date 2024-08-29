@@ -153,7 +153,7 @@ static const char *_lvname_has_reserved_prefix(const char *lvname)
 static const char *_lvname_has_reserved_component_string(const char *lvname)
 {
 	static const char _strings[][12] = {
-		/* Suffixes for compoment LVs */
+		/* Suffixes for component LVs */
 		"_cdata",
 		"_cmeta",
 		"_corig",
@@ -182,7 +182,7 @@ static const char *_lvname_has_reserved_component_string(const char *lvname)
 static const char *_lvname_has_reserved_string(const char *lvname)
 {
 	static const char _strings[][12] = {
-		/* Additional suffixes for non-compoment LVs */
+		/* Additional suffixes for non-component LVs */
 		"_pmspare",
 		"_vorigin"
 	};
@@ -220,7 +220,7 @@ int apply_lvname_restrictions(const char *name)
 }
 
 /*
- * Validates name and returns an emunerated reason for name validataion failure.
+ * Validates name and returns an enumerated reason for name validation failure.
  */
 name_error_t validate_name_detailed(const char *name)
 {
@@ -247,7 +247,7 @@ char *build_dm_uuid(struct dm_pool *mem, const struct logical_volume *lv,
 	if (!layer) {
 		/*
 		 * Mark internal LVs with layer suffix
-		 * so tools like blkid may immeditelly see it's
+		 * so tools like blkid may immediately see it's
 		 * an internal LV they should not scan.
 		 * Should also make internal detection simpler.
 		 */
@@ -295,7 +295,7 @@ char *first_substring(const char *str, ...)
 }
 
 /* Cut suffix (if present) and write the name into NAME_LEN sized new_name buffer
- * When suffix is NULL, everythin past the last '_' is removed.
+ * When suffix is NULL, everything past the last '_' is removed.
  * Returns 1 when suffix was removed, 0 otherwise.
  */
 int drop_lvname_suffix(char *new_name, const char *name, const char *suffix)

@@ -234,9 +234,9 @@ static void _read_wwid_file(const char *config_wwids_file, int *entries)
 		/*
 		 * the initial character is the id type,
 		 * 1 is t10, 2 is eui, 3 is naa, 8 is scsi name.
-		 * wwids are stored in the hash table without the type charater.
+		 * wwids are stored in the hash table without the type character.
 		 * It seems that sometimes multipath does not include
-		 * the type charater (seen with t10 scsi_debug devs).
+		 * the type character (seen with t10 scsi_debug devs).
 		 */
 		typestr[0] = *wwid;
 		if (typestr[0] == '1' || typestr[0] == '2' || typestr[0] == '3')

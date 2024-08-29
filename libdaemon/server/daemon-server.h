@@ -115,7 +115,7 @@ typedef struct daemon_state {
 	log_state *log;
 	struct thread_state *threads;
 
-	/* suport for shutdown on idle */
+	/* support for shutdown on idle */
 	daemon_idle *idle;
 
 	void *private; /* the global daemon state */

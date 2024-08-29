@@ -21,7 +21,7 @@
 struct cmd_context;
 
 /**
- * Execute command with paramaters and return status
+ * Execute command with parameters and return status
  *
  * \param rstatus
  * Returns command's exit status code.

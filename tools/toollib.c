@@ -295,7 +295,7 @@ static int _ignore_vg(struct cmd_context *cmd,
 }
 
 /*
- * This functiona updates the "selected" arg only if last item processed
+ * This function updates the "selected" arg only if last item processed
  * is selected so this implements the "whole structure is selected if
  * at least one of its items is selected".
  */
@@ -826,7 +826,7 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 	 * autoactivation will happen to a VG on a running system and may be
 	 * mixing with user commands, so the end result is unpredictable.
 	 *
-	 * It's possible that we might want a config setting for usersto
+	 * It's possible that we might want a config setting for users to
 	 * disable secondary autoactivations.  Once a system is up, the
 	 * user may want to take charge of activation changes to the VG
 	 * and not have the system autoactivation interfere.
@@ -1331,7 +1331,7 @@ int get_vdo_settings(struct cmd_context *cmd,
 			DO_ONLINE(use_compression);
 			DO_ONLINE(use_deduplication);
 
-			// Settings bellow cannot be changed with lvchange command
+			// Settings below cannot be changed with lvchange command
 			is_lvchange = checked_lvchange;
 
 			DO_OFFLINE(index_memory_size_mb);
@@ -4361,7 +4361,7 @@ static int _process_other_devices(struct cmd_context *cmd,
 
 		/*
 		 * Pretend that each device is a PV with dummy values.
-		 * FIXME Formalise this extension or find an alternative.
+		 * FIXME Formalize this extension or find an alternative.
 		 */
 
 		memset(&pv_dummy, 0, sizeof(pv_dummy));
@@ -4771,7 +4771,7 @@ int process_each_pv(struct cmd_context *cmd,
 	/*
 	 * When processing a specific VG name, warn if it's inconsistent and
 	 * print an error if it's not found.  Otherwise we're processing all
-	 * VGs, in which case the command doesn't care if the VG is inconsisent
+	 * VGs, in which case the command doesn't care if the VG is inconsistent
 	 * or not found; it just wants to skip that VG.  (It may be not found
 	 * if it was removed between creating the list of all VGs and then
 	 * processing each VG.

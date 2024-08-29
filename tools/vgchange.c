@@ -144,7 +144,7 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			    count, vg->name);
 
 	/*
-	 * After sucessfull activation we need to initialise polling
+	 * After successful activation we need to initialise polling
 	 * for all activated LVs in a VG. Possible enhancement would
 	 * be adding --poll y|n cmdline option for pvscan and call
 	 * init_background_polling routine in autoactivation handler.
@@ -762,7 +762,7 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		    !_vgchange_monitoring(cmd, vg))
 			return_ECMD_FAILED;
 
-		/* When explicitelly specified --poll */
+		/* When explicitly specified --poll */
 		if (arg_is_set(cmd, poll_ARG) &&
 		    !vgchange_background_polling(cmd, vg))
 			return_ECMD_FAILED;
@@ -1454,7 +1454,7 @@ int vgchange_lock_start_stop_cmd(struct cmd_context *cmd, int argc, char **argv)
 	 * to do, so disable VG locks.  Try to acquire the global lock sh to
 	 * validate the cache (if no gl is available, lockd_gl will force a
 	 * cache validation).  If the global lock is available, it can be
-	 * benficial to hold sh to serialize lock-start with vgremove of the
+	 * beneficial to hold sh to serialize lock-start with vgremove of the
 	 * same VG from another host.
 	 */
 	if (arg_is_set(cmd, lockstart_ARG)) {

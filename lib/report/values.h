@@ -30,7 +30,7 @@
  *   <field_name>_<reserved_value_name>
  *
  * FIELD_BINARY_RESERVED_VALUE is similar to FIELD_RESERVED_VALUE but it
- * is specifically designed for defintion of reserved names for fields
+ * is specifically designed for definition of reserved names for fields
  * with binary values where the reserved names given denote value 1.
  * The first reserved_name given is also used for reporting,
  * others are synonyms which are recognized in addition.

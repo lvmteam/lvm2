@@ -51,7 +51,7 @@ struct command_name_args {
 };
 
 /*
- * Command defintion
+ * Command definition
  *
  * A command is defined in terms of a command name,
  * required options (+args), optional options (+args),

@@ -107,7 +107,7 @@ static int _lvcreate_name_params(struct cmd_context *cmd,
 				} else {
 					/*
 					 * Gambling here, could be cache pool or cache origin,
-					 * detection is possible after openning vg,
+					 * detection is possible after opening vg,
 					 * yet we need to parse pool args
 					 */
 					lp->pool_name = lp->origin_name;
@@ -539,7 +539,7 @@ static int _read_raid_params(struct cmd_context *cmd,
 			}
 
 			/*
-			 * FIXME: _check_raid_parameters devides by 2, which
+			 * FIXME: _check_raid_parameters divides by 2, which
 			 *	  needs to change if we start supporting
 			 *	  odd numbers of stripes with raid10
 			 */
@@ -674,7 +674,7 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 		/* Default to 2 mirrored areas if '--type mirror|raid1|raid10' */
 		lp->mirrors = seg_is_mirrored(lp) ? 2 : 1;
 
-	/* FIMXE: raid10 check has to change once we support data copies and odd numbers of stripes */
+	/* FIXME: raid10 check has to change once we support data copies and odd numbers of stripes */
 	if (seg_is_raid10(lp) && lp->mirrors * lp->stripes > max_images) {
 		log_error("Only up to %u stripes in %s supported currently.",
 			  max_images / lp->mirrors, lp->segtype->name);
@@ -738,7 +738,7 @@ static int _read_vdo_params(struct cmd_context *cmd,
 	    !lp->pool_data_vdo)
 		return 1;
 
-	// prefiling settings here
+	// prefilling settings here
 	if (!fill_vdo_target_params(cmd, &lp->vcp.vdo_params, &lp->vdo_pool_header_size, NULL))
 		return_0;
 
@@ -1578,7 +1578,7 @@ static int _check_pool_parameters(struct cmd_context *cmd,
 		if (lp->pool_name) {
 			if (!seg_is_cache(lp) && !apply_lvname_restrictions(lp->pool_name))
 				return_0;
-			/* We could check existance only when we have vg */
+			/* We could check existence only when we have vg */
 			if (vg && find_lv(vg, lp->pool_name)) {
 				log_error("Logical volume %s already exists in Volume group %s.",
 					  lp->pool_name, vg->name);

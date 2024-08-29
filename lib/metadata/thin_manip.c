@@ -342,7 +342,7 @@ out:
 /*
  * Detect overprovisioning and check lvm2 is configured for auto resize.
  *
- * If passed LV is thin volume/pool, check first only this one for overprovisiong.
+ * If passed LV is thin volume/pool, check first only this one for overprovisioning.
  * Lots of test combined together.
  * Test is not detecting status of dmeventd, too complex for now...
  */
@@ -1018,10 +1018,10 @@ int lv_is_thin_snapshot(const struct logical_volume *lv)
 }
 
 /*
- * Explict check of new thin pool for usability
+ * Explicit check of new thin pool for usability
  *
  * Allow use of thin pools by external apps. When lvm2 metadata has
- * transaction_id == 0 for a new thin pool, it will explicitely validate
+ * transaction_id == 0 for a new thin pool, it will explicitly validate
  * the pool is still unused.
  *
  * To prevent lvm2 to create thin volumes in externally used thin pools
@@ -1102,7 +1102,7 @@ uint64_t estimate_thin_pool_metadata_size(uint32_t data_extents, uint32_t extent
 	return _estimate_metadata_size(data_extents, extent_size, chunk_size);
 }
 
-/* Validates whtether the LV can be used as external origin */
+/* Validates whether the LV can be used as external origin */
 int validate_thin_external_origin(const struct logical_volume *lv,
 				  const struct logical_volume *pool_lv)
 {

@@ -32,7 +32,7 @@ static const struct {
 	{
 	ALLOC_CONTIGUOUS, "contiguous", 'c'}, {
 	ALLOC_CLING, "cling", 'l'}, {
-	ALLOC_CLING_BY_TAGS, "cling_by_tags", 't'}, {	/* Only used in log mesgs */
+	ALLOC_CLING_BY_TAGS, "cling_by_tags", 't'}, {	/* Only used in log messages */
 	ALLOC_NORMAL, "normal", 'n'}, {
 	ALLOC_ANYWHERE, "anywhere", 'a'}, {
 	ALLOC_INHERIT, "inherit", 'i'}
@@ -383,7 +383,7 @@ static int _lvdisplay_historical_full(struct cmd_context *cmd,
 	log_print("--- Historical Logical volume ---");
 
 	if (lvm1compat)
-		/* /dev/vgname/lvname doen't actually exist for historical devices */
+		/* /dev/vgname/lvname doesn't actually exist for historical devices */
 		log_print("LV Name                %s%s/%s",
 			  hlv->vg->cmd->dev_dir, hlv->vg->name, hlv->name);
 	else
@@ -439,7 +439,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 	lvm1compat = find_config_tree_bool(cmd, global_lvdisplay_shows_full_device_path_CFG, NULL);
 
 	if (lvm1compat)
-		/* /dev/vgname/lvname doen't actually exist for internal devices */
+		/* /dev/vgname/lvname doesn't actually exist for internal devices */
 		log_print("LV Name                %s%s/%s",
 			  lv->vg->cmd->dev_dir, lv->vg->name, lv->name);
 	else if (lv_is_visible(lv)) {

@@ -242,7 +242,7 @@ int read_flags(uint64_t *status, enum pv_vg_lv_e type, int mask, const struct dm
  * All UNKNOWN flags will again cause the "UNKNOWN" segtype.
  *
  * Note: using these segtype status flags instead of actual
- * status flags ensures wanted incompatiblity.
+ * status flags ensures wanted incompatibility.
  */
 int read_segtype_lvflags(uint64_t *status, char *segtype_str)
 {

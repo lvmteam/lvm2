@@ -68,7 +68,7 @@ struct lvmpolld_lv {
 	struct lvmpolld_cmd_stat cmd_state;
 	unsigned init_rq_count; /* for debugging purposes only */
 	unsigned polling_finished:1; /* no more updates */
-	unsigned error:1; /* unrecoverable error occured in lvmpolld */
+	unsigned error:1; /* unrecoverable error occurred in lvmpolld */
 };
 
 typedef void (*lvmpolld_parse_output_fn_t) (struct lvmpolld_lv *pdlv, const char *line);

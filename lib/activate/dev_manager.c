@@ -840,7 +840,7 @@ int dm_device_is_usable(struct cmd_context *cmd, struct device *dev, struct dev_
 		 *
 		 * This is a quick check for now, but replace it with more
 		 * robust and better check that would check the stack
-		 * correctly, not just snapshots but any cobimnation possible
+		 * correctly, not just snapshots but any combination possible
 		 * in a stack - use proper dm tree to check this instead.
 		 */
 		if (check.check_suspended &&
@@ -2340,7 +2340,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
  * Check for device holders (ATM used only for removed pvmove targets)
  * and add them into dtree structures.
  * When 'laopts != NULL' add them as new nodes - which also corrects READ_AHEAD.
- * Note: correct table are already explicitelly PRELOADED.
+ * Note: correct table are already explicitly PRELOADED.
  */
 static int _check_holder(struct dev_manager *dm, struct dm_tree *dtree,
 			 const struct logical_volume *lv,
@@ -2887,7 +2887,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 						.send_messages = 1 /* Node with messages */
 					};
 					/*
-					 * Add some messsages if right node exist in the table only
+					 * Add some messages if right node exist in the table only
 					 * when building SUSPEND tree for origin-only thin-pool.
 					 *
 					 * TODO: Fix call of '_add_target_to_dtree()' to add message
@@ -3613,7 +3613,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		 *   so just use the tree's existing nodes' info
 		 */
 		if ((dinfo = _cached_dm_info(dm->mem, dtree, lv, NULL))) {
-			/* Merging origin LV is present, check if mergins is already running. */
+			/* Merging origin LV is present, check if merging is already running. */
 			if ((seg_is_thin_volume(seg) && _lv_has_thin_device_id(dm->mem, lv, NULL, seg->device_id)) ||
 			    (!seg_is_thin_volume(seg) && lv_has_target_type(dm->mem, lv, NULL, TARGET_NAME_SNAPSHOT_MERGE))) {
 				log_debug_activation("Merging of snapshot volume %s to origin %s is in progress.",

@@ -407,7 +407,7 @@ struct pv_segment {
 #define FMT_INSTANCE_MDAS		0x00000002U
 
 /*
- * Include any auxiliary mdas during format_instance intialisation.
+ * Include any auxiliary mdas during format_instance initialisation.
  * Currently, this includes metadata areas as defined by
  * metadata/dirs and metadata/raws setting.
  */

@@ -148,7 +148,7 @@ void bcache_abort_di(struct bcache *cache, int di);
 //----------------------------------------------------------------
 // The next four functions are utilities written in terms of the above api.
  
-// Prefetches the blocks neccessary to satisfy a byte range.
+// Prefetches the blocks necessary to satisfy a byte range.
 void bcache_prefetch_bytes(struct bcache *cache, int di, uint64_t start, size_t len);
 
 // Reads, writes and zeroes bytes.  Returns false if errors occur.

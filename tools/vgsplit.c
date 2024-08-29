@@ -44,7 +44,7 @@ static int _lv_tree_move(struct dm_list *lvh,
 	struct lv_segment *seg = first_seg(lv);
 	struct dm_list *lvh1;
 
-	/* Update the list pointer refering to the item moving to @vg_to. */
+	/* Update the list pointer referring to the item moving to @vg_to. */
 	if (lvh == *lvht)
 		*lvht = dm_list_next(lvh, lvh);
 

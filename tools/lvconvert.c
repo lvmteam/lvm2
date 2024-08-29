@@ -485,7 +485,7 @@ static struct dm_list *_failed_pv_list(struct volume_group *vg)
 		 * But we only want remove these which are output of repair,
 		 * Do not count these which are already empty here.
 		 * FIXME: code should traverse PV in LV not in whole VG.
-		 * FIXME: layer violation? should it depend on vgreduce --removemising?
+		 * FIXME: layer violation? should it depend on vgreduce --removemissing?
 		 */
 		if (pvl->pv->pe_alloc_count == 0)
 			continue;
@@ -662,7 +662,7 @@ static int _lv_update_log_type(struct cmd_context *cmd,
 }
 
 /*
- * Reomove missing and empty PVs from VG, if are also in provided list
+ * Remove missing and empty PVs from VG, if are also in provided list
  */
 static void _remove_missing_empty_pv(struct volume_group *vg, struct dm_list *remove_pvs)
 {
@@ -2214,7 +2214,7 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 	 * activation if either the origin or snapshot LV are currently
 	 * open.
 	 *
-	 * FIXME testing open_count is racey; snapshot-merge target's
+	 * FIXME testing open_count is racy; snapshot-merge target's
 	 * constructor and DM should prevent appropriate devices from
 	 * being open.
 	 */
@@ -2450,7 +2450,7 @@ static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
 			log_warn("WARNING: Cannot read output from %s %s.", thin_dump, pms_path);
 		else {
 			/*
-			 * Scan only the 1st. line for transation id.
+			 * Scan only the 1st. line for transaction id.
 			 * Watch out, if the thin_dump format changes
 			 */
 			if (fgets(meta_path, sizeof(meta_path), f) &&
@@ -2950,7 +2950,7 @@ static int _lvconvert_swap_pool_metadata(struct cmd_context *cmd,
 	 * metadata_lv is currently an independent LV with its own lockd lock allocated.
 	 * A pool metadata LV does not have its own lockd lock (only the pool LV does.)
 	 * Since the LV name and uuid are exchanged between the old and new metadata LVs,
-	 * the lvmlockd lock can just be moved between the two LVs, so the new indepdent
+	 * the lvmlockd lock can just be moved between the two LVs, so the new independent
 	 * LV (former metadata LV) gets the lock that was used for old independent LV.
 	 */
 	if (vg_is_shared(vg) && metadata_lv->lock_args) {
@@ -3382,7 +3382,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 
 	/*
 	 * Before starting a real conversion, prepare  _pmspare volume.
-	 * If there is already one presend in a VG, make sure the size is right
+	 * If there is already one present in a VG, make sure the size is right
 	 */
 	if (!handle_pool_metadata_spare(vg, metadata_lv->le_count, use_pvh, pool_metadata_spare)) {
 		log_error("Failed to set up spare metadata LV for pool.");
@@ -4241,7 +4241,7 @@ int lvconvert_combine_split_snapshot_cmd(struct cmd_context *cmd, int argc, char
 	int vglv_sz;
 
 	/*
-	 * Hack to accomodate an old parsing quirk that allowed the
+	 * Hack to accommodate an old parsing quirk that allowed the
 	 * the VG name to be attached to only the LV in arg pos 1,
 	 * i.e. lvconvert -s vgname/lvname lvname
 	 *
@@ -5673,7 +5673,7 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 		/*
 		 * --cachesettings cleaner=0 means to skip the use of the cleaner
 		 * and go directly to detach which will use a flush message.
-		 * (This is currently the only cachesetting used during detach.)
+		 * (This is currently the only cachesettings used during detach.)
 		 */
 		if (settings.cleaner_set && !settings.cleaner) {
 			log_print_unless_silent("Detaching writecache skipping cleaner...");
@@ -5720,7 +5720,7 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 
 		/*
 		 * The cache may have been nearly clean and will be empty with
-		 * a short dely.
+		 * a short delay.
 		 */
 		usleep(10000);
 		if (lv_writecache_is_clean(cmd, lv, NULL)) {

@@ -1071,7 +1071,7 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	mem = vg->vgmem;
 
 	/*
-	 * The pv hash memorises the pv section names -> pv
+	 * The pv hash memorizes the pv section names -> pv
 	 * structures.
 	 */
 	if (!(pv_hash = dm_hash_create(59))) {
@@ -1080,7 +1080,7 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	}
 
 	/*
-	 * The lv hash memorises the lv section names -> lv
+	 * The lv hash memorizes the lv section names -> lv
 	 * structures.
 	 */
 	if (!(lv_hash = dm_hash_create(1023))) {

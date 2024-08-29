@@ -36,7 +36,7 @@ done
 
 lvs -a
 
-# When component LVs are active, thin-pool cannot be actived
+# When component LVs are active, thin-pool cannot be activated
 not lvcreate -V20 $vg/pool
 
 # Rremoval of thin volumes should not need to activate thin-pool.

@@ -112,7 +112,7 @@ typedef union {
  * and whether it can be attached to VG/LV metadata at the same time
  * The CFG_PROFILABLE_METADATA flag incorporates CFG_PROFILABLE flag!!! */
 #define CFG_PROFILABLE_METADATA  0x0030
-/* whether the default value is undefned */
+/* whether the default value is undefined */
 #define CFG_DEFAULT_UNDEFINED    0x0040
 /* whether the default value is commented out on output */
 #define CFG_DEFAULT_COMMENTED    0x0080
@@ -218,7 +218,7 @@ struct cft_check_handle {
 	unsigned skip_if_checked:1;	/* skip the check if already done before - return last state */
 	unsigned suppress_messages:1;	/* suppress messages during the check if config item is found invalid */
 	unsigned check_diff:1;		/* check if the value used differs from default one */
-	unsigned ignoreadvanced:1;	/* do not include advnced configs */
+	unsigned ignoreadvanced:1;	/* do not include advanced configs */
 	unsigned ignoreunsupported:1;	/* do not include unsupported configs */
 	uint16_t disallowed_flags;	/* set of disallowed flags */
 	uint8_t status[CFG_COUNT];	/* flags for each configuration item - the result of the check */

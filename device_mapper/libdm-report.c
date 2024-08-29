@@ -459,7 +459,7 @@ static int _report_field_string_list(struct dm_report *rh,
 	 *
 	 * The very first item in the array of 'struct pos_len' is always
 	 * a pair denoting '[list_size,strlen(field->report_string)]'. The
-	 * rest of items denote start and lenght of each item in the list.
+	 * rest of items denote start and length of each item in the list.
          *
 	 *
 	 * For example, if we have a list with "abc", "xy", "defgh"
@@ -1396,7 +1396,7 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 	}
 
 	/*
-	 * Return updated types value for further compatility check by caller.
+	 * Return updated types value for further compatibility check by caller.
 	 */
 	_dm_report_init_update_types(rh, report_types);
 
@@ -4025,7 +4025,7 @@ error:
 	return NULL;
 }
 
-/* AND_EXPRESSION := EX (AND_OP AND_EXPRSSION) */
+/* AND_EXPRESSION := EX (AND_OP AND_EXPRESSION) */
 static struct selection_node *_parse_and_ex(struct dm_report *rh,
 					    const char *s,
 					    const char **next,

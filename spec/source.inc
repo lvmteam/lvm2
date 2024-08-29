@@ -214,7 +214,7 @@ BuildRequires: libblkid-devel
 %description
 LVM2 includes all of the support for handling read/write operations on
 physical volumes (hard disks, RAID-Systems, magneto optical, etc.,
-multiple devices (MD), see mdadd(8) or even loop devices, see
+multiple devices (MD), see mdadm(8) or even loop devices, see
 losetup(8)), creating volume groups (kind of virtual disks) from one
 or more physical volumes and creating one or more logical volumes
 (kind of logical partitions) in volume groups.

@@ -38,7 +38,7 @@ static void test_percent_100(void *fixture)
 	T_ASSERT_EQUAL(strcmp(buf, "100.00"), 0);
 
 	(void) dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_float(n_100));
-	T_ASSERT_NOT_EQUAL(strcmp(buf, "99.99"), 0); /* Would like to gett */
+	T_ASSERT_NOT_EQUAL(strcmp(buf, "99.99"), 0); /* Would like to get */
 
 	(void) dm_snprintf(buf, sizeof(buf), "%.2f", dm_percent_to_round_float(n_100, 2));
 	T_ASSERT_EQUAL(strcmp(buf, "99.99"), 0);

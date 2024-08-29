@@ -432,7 +432,7 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 	}
 
 	/*
-	 * Check only for modules if atttributes requested and no previous check.
+	 * Check only for modules if attributes requested and no previous check.
 	 */
 	if (attributes)
 		*attributes = _mirror_attributes;

@@ -262,7 +262,7 @@ int dm_hash_insert_allow_multiple(struct dm_hash_table *t, const char *key,
 
 /*
  * Look through multiple entries with the same key for one that has a
- * matching val and return that.  If none have maching val, return NULL.
+ * matching val and return that.  If none have matching val, return NULL.
  */
 void *dm_hash_lookup_with_val(struct dm_hash_table *t, const char *key,
 			      const void *val, uint32_t val_len)

@@ -493,7 +493,7 @@ end
 
 #
 # __lv_status_r <LV>
-# Decend tree, printing LV and seg status as we go.  This
+# Descend tree, printing LV and seg status as we go.  This
 # performs a depth first approach (but can't come up) 
 #
 # or

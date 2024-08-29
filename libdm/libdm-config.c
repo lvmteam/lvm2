@@ -755,7 +755,7 @@ static int _match_aux(struct parser *p, int t)
 }
 
 /*
- * tokeniser
+ * tokenizer
  */
 static void _get_token(struct parser *p, int tok_prev)
 {

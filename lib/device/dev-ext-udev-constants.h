@@ -13,7 +13,7 @@
  */
 
 /*************************************************************************
- * Properties saved in udev db and accesible via libudev and used by LVM *
+ * Properties saved in udev db and accessible via libudev and used by LVM *
  *************************************************************************/
 
 /*

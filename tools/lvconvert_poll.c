@@ -89,7 +89,7 @@ int swap_lv_identifiers(struct cmd_context *cmd,
 	return 1;
 }
 
-/* Finalise merging of lv into merge_lv */
+/* Finalize merging of lv into merge_lv */
 int thin_merge_finish(struct cmd_context *cmd,
 		      struct logical_volume *merge_lv,
 		      struct logical_volume *lv)
@@ -204,5 +204,5 @@ progress_t poll_thin_merge_progress(struct cmd_context *cmd,
 		return PROGRESS_CHECK_FAILED;
 	}
 
-	return PROGRESS_FINISHED_ALL; /* Merging happend */
+	return PROGRESS_FINISHED_ALL; /* Merging happened */
 }

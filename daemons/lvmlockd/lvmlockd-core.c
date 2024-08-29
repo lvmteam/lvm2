@@ -78,7 +78,7 @@ static int str_to_mode(const char *str);
  * . Other misc actions are are passed to the worker_thread:
  *   add_work_action(act).
  *
- * Onec the client_thread has passed the action off to another
+ * Once the client_thread has passed the action off to another
  * thread to process, it goes back to waiting for more client
  * handling work to do.
  *
@@ -1413,7 +1413,7 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 		 * It can be lost during dlm recovery when the master node
 		 * is removed.
 		 *
-		 * If we're the next to write the lvb, reinitialze it to the
+		 * If we're the next to write the lvb, reinitialize it to the
 		 * new VG seqno, or a new GL counter larger than was seen by
 		 * any hosts before (how to estimate that?)
 		 *
@@ -2798,7 +2798,7 @@ out_rem:
 	 * operating under the assumption that they hold the lock.
 	 * drop_vg drops all existing locks, but should only
 	 * happen when the VG access has been forcibly and
-	 * succesfully terminated.
+	 * successfully terminated.
 	 *
 	 * For vgremove of a sanlock vg, the vg lock will be held,
 	 * and possibly the gl lock if this vg holds the gl.
@@ -3042,7 +3042,7 @@ static int add_lockspace_thread(const char *ls_name,
 		ls->start_client_id = act->client_id;
 
 		/*
-		 * Copy PV list to lockspact structure, so this is
+		 * Copy PV list to lockspace structure, so this is
 		 * used for VG locking for idm scheme.
 		 */
 		if (lm_type == LD_LM_IDM &&
@@ -3287,7 +3287,7 @@ static int add_lockspace(struct action *act)
 
 /*
  * vgchange --lock-stop vgname will lock the vg ex, then send a stop,
- * so we exect to find the ex vg lock held here, and will automatically
+ * so we expect to find the ex vg lock held here, and will automatically
  * unlock it when stopping.
  *
  * Should we attempt to stop the lockspace containing the gl last?
@@ -4026,7 +4026,7 @@ static int client_send_result(struct client *cl, struct action *act)
 		 * The lockspace could not be found, in which case
 		 * the caller may want to know if any lockspaces exist
 		 * or if lockspaces exist, but not one with the global lock.
-		 * Given this detail, it may be able to procede without
+		 * Given this detail, it may be able to proceed without
 		 * the lock.
 		 */
 		pthread_mutex_lock(&lockspaces_mutex);

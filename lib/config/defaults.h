@@ -183,7 +183,7 @@
 
 #define DEFAULT_VDO_FORMAT_OPTIONS_CONFIG "#S" ""
 /*
- * VDO pool will reverve some sectors in the front and the back of pool device to avoid
+ * VDO pool will reserve some sectors in the front and the back of pool device to avoid
  * seeing same device twice in the system.
  */
 #define DEFAULT_VDO_POOL_HEADER_SIZE_KB  (512)

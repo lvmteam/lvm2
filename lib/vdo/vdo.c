@@ -459,7 +459,7 @@ static int _vdo_target_present(struct cmd_context *cmd,
 		/* If stripe target was already detected, reuse its result */
 		if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_STRIPED)) ||
 		    !segtype->ops->target_present || !segtype->ops->target_present(cmd, NULL, NULL)) {
-			/* Linear/Stripe targer is for mapping LVs on top of single VDO volume. */
+			/* Linear/Stripe target is for mapping LVs on top of single VDO volume. */
 			if (!target_present(cmd, TARGET_NAME_LINEAR, 0) ||
 			    !target_present(cmd, TARGET_NAME_STRIPED, 0))
 				return 0;

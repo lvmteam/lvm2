@@ -17,7 +17,7 @@
 #include "daemons/dmeventd/libdevmapper-event.h"
 #include "lib/config/defaults.h"
 
-/* Hold enough elements for the mximum number of RAID images */
+/* Hold enough elements for the maximum number of RAID images */
 #define	RAID_DEVS_ELEMS	((DEFAULT_RAID_MAX_IMAGES + 63) / 64)
 
 struct dso_state {

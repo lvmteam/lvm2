@@ -666,7 +666,7 @@ struct bcache {
 	struct block *raw_blocks;
 
 	/*
-	 * Lists that categorise the blocks.
+	 * Lists that categorize the blocks.
 	 */
 	unsigned nr_locked;
 	unsigned nr_dirty;
@@ -1502,7 +1502,7 @@ int bcache_set_fd(int fd)
 }
 
 /*
- * Should we check for unflushed or inprogress io on an fd
+ * Should we check for unflushed or in-progress io on an fd
  * prior to doing clear_fd or change_fd?  (To catch mistakes;
  * the caller should be smart enough to not do that.)
  */

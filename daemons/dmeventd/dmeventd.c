@@ -236,7 +236,7 @@ struct thread_status {
 	int status;		/* See DM_THREAD_{REGISTERING,RUNNING,DONE} */
 
 	int events;		/* bitfield for event filter. */
-	int current_events;	/* bitfield for occured events. */
+	int current_events;	/* bitfield for occurred events. */
 	struct dm_task *wait_task;
 	int pending;		/* Set when event filter change is pending */
 	time_t next_time;
@@ -427,7 +427,7 @@ static struct thread_status *_alloc_thread_status(const struct message_data *dat
 	if (!(thread->device.name = strdup(data->device_uuid)))
 		goto_out;
 
-	/* runs ioctl and may register lvm2 pluging */
+	/* runs ioctl and may register lvm2 plugin */
 	thread->processing = 1;
 	thread->status = DM_THREAD_REGISTERING;
 
@@ -520,7 +520,7 @@ static int _fetch_string(char **ptr, char **src, const int delimiter)
 			*p = delimiter;
 			*src = p;
 		}
-		(*src)++; /* Skip delmiter, next field */
+		(*src)++; /* Skip delimiter, next field */
 	} else if ((len = strlen(*src))) {
 		/* No delimiter, item ends with '\0' */
 		if (!(*ptr = strdup(*src))) {

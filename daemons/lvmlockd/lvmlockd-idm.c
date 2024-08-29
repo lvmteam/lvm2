@@ -364,7 +364,7 @@ static void lm_idm_update_vb_timestamp(uint64_t *vb_timestamp)
 
 	/*
 	 * It's possible that the multiple nodes have no clock
-	 * synchronization with microsecond prcision and the time
+	 * synchronization with microsecond precision and the time
 	 * is going backward.  For this case, simply increment the
 	 * existing timestamp and write out to drive.
 	 */

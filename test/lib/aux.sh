@@ -413,7 +413,7 @@ teardown_devs_prefixed() {
 	#local listdevs=( $(dm_info name,open --sort open,name | grep "$prefix.*:0") )
 	#dmsetup remove --deferred ${listdevs[@]%%:0} || touch REMOVE_FAILED
 
-	# 2nd. loop is trying --force removal which can possibly 'unstuck' some bloked operations
+	# 2nd. loop is trying --force removal which can possibly 'unstuck' some blocked operations
 	for i in 0 1; do
 		test "$i" = 1 && test "$stray" = 0 && break  # no stray device removal
 		local progress=1
@@ -437,7 +437,7 @@ teardown_devs_prefixed() {
 					force=""
 				fi
 
-				# Succesfull 'remove' signals progress
+				# Successfully 'remove' signals progress
 				dmsetup remove $force "$DM_NAME" --mangle none && progress=1
 			done
 
@@ -731,7 +731,7 @@ prepare_real_devs() {
 
 # A drop-in replacement for prepare_loop() that uses scsi_debug to create
 # a ramdisk-based SCSI device upon which all LVM devices will be created
-# - scripts must take care not to use a DEV_SIZE that will enduce OOM-killer
+# - scripts must take care not to use a DEV_SIZE that will induce OOM-killer
 prepare_scsi_debug_dev() {
 	local DEV_SIZE=$1
 	shift # rest of params directly passed to modprobe
@@ -792,7 +792,7 @@ mdadm_create() {
 	mddev=/dev/md${devid}
 
 	mdadm --create "$mddev" "$@" || {
-		# Some older 'mdadm' version managed to open and close devices internaly
+		# Some older 'mdadm' version managed to open and close devices internally
 		# and reporting non-exclusive access on such device
 		# let's just skip the test if this happens.
 		# Note: It's pretty complex to get rid of consequences
@@ -842,7 +842,7 @@ mdadm_assemble() {
 		# use this 'trick' to slow down mdadm which otherwise
 		# is racing with udev rule since mdadm internally
 		# opens and closes raid leg devices in RW mode and then
-		# tries to get exlusive access to the leg device during
+		# tries to get exclusive access to the leg device during
 		# insertion to kernel and fails during assembly
 		# There can be some other affected version of mdadm.
 		STRACE="strace -f -o /dev/null"
@@ -949,7 +949,7 @@ cleanup_idm_context() {
 # TODO: add support for parametrized [OPTION] usage (Not usable ATM)
 # TODO: -bs  blocksize  (defaults 512K)
 # TODO: -count  count/length  (defaults to whole device, otherwise in BS units)
-# TODO: -seek  offset/seek  (defaults 0, begining of zeroing area in BS unit)
+# TODO: -seek  offset/seek  (defaults 0, beginning of zeroing area in BS unit)
 clear_devs() {
 	local bs=
 	local count=
@@ -981,8 +981,8 @@ clear_devs() {
 #
 # corrupt device content
 # $1  file_path
-# $2  string/pattern search for curruption
-# $3  string/pattern replacing/corruptiong
+# $2  string/pattern search for corruption
+# $3  string/pattern replacing/corrupting
 corrupt_dev() {
 	local a
 
@@ -1193,10 +1193,10 @@ common_dev_() {
 }
 
 # Replace linear PV device with its 'delayed' version
-# Could be used to more deterministicaly hit some problems.
+# Could be used to more deterministically hit some problems.
 # Parameters: {device path} [read delay ms] [write delay ms] [offset[:[size]]]...
 # Original device is restored when both delay params are 0 (or missing).
-# If the size is missing, the remaing portion of device is taken
+# If the size is missing, the remaining portion of device is taken
 # i.e.  delay_dev "$dev1" 0 200 256:
 delay_dev() {
 	if test ! -f HAVE_DM_DELAY ; then
@@ -1708,22 +1708,22 @@ raid456_replace_works() {
 #   refcount is simply decremented.  I don't even think the sysfs aliases are
 #   ever removed...
 # 4) kmem_cache_create(name="foo-a")
-# - This FAILS because kmem_cache_sanity_check colides with the existing
+# - This FAILS because kmem_cache_sanity_check collides with the existing
 #   name ("foo-a") associated with the non-removed cache.
 #
 # This is a problem for RAID (specifically dm-raid) because the name used
 # for the kmem_cache_create is ("raid%d-%p", level, mddev).  If the cache
 # persists for long enough, the memory address of an old mddev will be
 # reused for a new mddev - causing an identical formulation of the cache
-# name.  Even though kmem_cache_destory had long ago been used to delete
+# name.  Even though kmem_cache_destroy had long ago been used to delete
 # the old cache, the merging of caches has cause the name and cache of that
-# old instance to be preserved and causes a colision (and thus failure) in
+# old instance to be preserved and causes a collision (and thus failure) in
 # kmem_cache_create().  I see this regularly in testing the following
 # kernels:
 #
-# This seems to be finaly resolved with this patch:
+# This seems to be finally resolved with this patch:
 # http://www.redhat.com/archives/dm-devel/2014-March/msg00008.html
-# so we need to put here exlusion for kernes which do trace SLUB
+# so we need to put here exclusion for kernels which do trace SLUB
 #
 	case "$(uname -r)" in
 	  3.6.*.fc18.i686*|3.6.*.fc18.x86_64) return 1 ;;
@@ -1838,7 +1838,7 @@ version_at_least() {
 	test "$revision" -ge "$3" 2>/dev/null || return 1
 }
 #
-# Check wheter kernel [dm module] target exist
+# Check whether kernel [dm module] target exist
 # at least in expected version
 #
 # [dm-]target-name major minor revision
@@ -1916,7 +1916,7 @@ have_vdo() {
 	target_at_least dm-vdo "$@"
 
 	vdoformat=$(lvm lvmconfig --typeconfig full --valuesonly global/vdo_format_executable || true)
-	# Remove surrouding "" around string
+	# Remove surrounding "" around string
 	# TODO: lvmconfig should have an option to give this output directly
 	vdoformat=${vdoformat//\"}
 	test -x "$vdoformat" || { echo "No executable to format VDO \"$vdoformat\"..."; return 1; }
@@ -2003,7 +2003,7 @@ have_tool_at_least() {
 	version_at_least "$version" "$@"
 }
 
-# check if lvm shell is build-in  (needs readline)
+# check if lvm shell is built-in  (needs readline)
 have_readline() {
 	echo version | lvm &>/dev/null
 }
@@ -2078,7 +2078,7 @@ hold_device_open() {
 
 	sleep "$sec" < "$DM_DEV_DIR/$vgname/$lvname" >/dev/null 2>&1 &
 	SLEEP_PID=$!
-	# wait till device is openned
+	# wait till device is opened
 	for i in $(seq 1 50) ; do
 		if test "$(dmsetup info --noheadings -c -o open "$vgname"-"$lvname")" -ne 0 ; then
 			echo "$SLEEP_PID"

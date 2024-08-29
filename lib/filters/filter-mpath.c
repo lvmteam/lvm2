@@ -34,7 +34,7 @@ static int _ignore_mpath_component(struct cmd_context *cmd, struct dev_filter *f
 		dev->filtered_flags |= DEV_FILTERED_MPATH_COMPONENT;
 
 		/*
-		 * Warn about misconfig where an mpath component is
+		 * Warn about misconfigure where an mpath component is
 		 * in the devices file, but its mpath device is not.
 		 */
 		if ((dev->flags & DEV_MATCHED_USE_ID) && mpath_devno) {

@@ -313,7 +313,7 @@ no_epoch:
 }
 
 /*
- * Unlink the log file depeding on command's return value
+ * Unlink the log file depending on command's return value
  *
  * When envvar LVM_EXPECTED_EXIT_STATUS is set, compare
  * resulting status with this string.
@@ -880,12 +880,12 @@ void log_set_report_object_name_and_id(const char *name, const char *id)
  *       For this we need to be able to clearly identify when a command is
  *       being run by dmeventd/lvmpolld/lvmdbusd.
  *
- * TODO: log/journal_commmand_names=["lvcreate","lvconvert"]
+ * TODO: log/journal_command_names=["lvcreate","lvconvert"]
  * This would restrict log/journal=["command"] to the listed command names.
  * Also allow "!command" to exclude a command, e.g. ["!pvs"]
  *
  * TODO: log/journal_daemon_command_names=["lvcreate","lvconvert"]
- * This would restrict log/journal=["dameon_command"] to the listed command names.
+ * This would restrict log/journal=["daemon_command"] to the listed command names.
  *
  * TODO: log/journal_daemon_names=["dmeventd"]
  * This would restrict log/journal=["daemon_command"] to commands run by

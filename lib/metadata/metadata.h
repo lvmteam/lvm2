@@ -222,7 +222,7 @@ struct format_instance *alloc_fid(const struct format_type *fmt,
 
 /*
  * Format instance must always be set using pv_set_fid or vg_set_fid
- * (NULL value as well), never asign it directly! This is essential
+ * (NULL value as well), never assign it directly! This is essential
  * for proper reference counting for the format instance.
  */
 void pv_set_fid(struct physical_volume *pv, struct format_instance *fid);
@@ -431,7 +431,7 @@ int lv_has_constant_stripes(struct logical_volume *lv);
 
 /*
  * Sometimes (eg, after an lvextend), it is possible to merge two
- * adjacent segments into a single segment.  This function trys
+ * adjacent segments into a single segment.  This function tries
  * to merge as many segments as possible.
  */
 int lv_merge_segments(struct logical_volume *lv);

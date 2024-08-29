@@ -1462,7 +1462,7 @@ void lvmcache_extra_md_component_checks(struct cmd_context *cmd)
 	 * not careful to do it only when there's a good reason to believe a
 	 * dev is an md component.
 	 *
-	 * If the pv/dev size mismatches are commonly occuring for
+	 * If the pv/dev size mismatches are commonly occurring for
 	 * non-md-components then we'll want to stop using that as a trigger
 	 * for the full md check.
 	 */
@@ -1547,7 +1547,7 @@ void lvmcache_extra_md_component_checks(struct cmd_context *cmd)
  * incorrectly placed PVs should have been moved from the orphan vginfo
  * onto their correct vginfo's, and the orphan vginfo should (in theory)
  * represent only real orphan PVs.  (Note: if lvmcache_label_scan is run
- * after vg_read udpates to lvmcache state, then the lvmcache will be
+ * after vg_read updates to lvmcache state, then the lvmcache will be
  * incorrect again, so do not run lvmcache_label_scan during the
  * processing phase.)
  *
@@ -2243,7 +2243,7 @@ int lvmcache_update_vgname_and_id(struct cmd_context *cmd, struct lvmcache_info 
 	if (!_lvmcache_update_vgstatus(info, vgsummary->vgstatus, vgsummary->creation_host,
 				       vgsummary->lock_type, vgsummary->system_id)) {
 		/*
-		 * This shouldn't happen, it's an internal errror, and we can leave
+		 * This shouldn't happen, it's an internal error, and we can leave
 		 * the info in place without saving the summary values in vginfo.
 		 */
 		log_error("Failed to update VG %s info in lvmcache.", vgname);

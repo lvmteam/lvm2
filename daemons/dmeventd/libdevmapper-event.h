@@ -41,7 +41,7 @@ enum dm_event_mask {
 
 	DM_EVENT_STATUS_MASK    = 0xFF0000,
 	DM_EVENT_SYNC_STATUS	= 0x010000, /* Mirror synchronization completed/failed. */
-	DM_EVENT_TIMEOUT	= 0x020000, /* Timeout has occured */
+	DM_EVENT_TIMEOUT	= 0x020000, /* Timeout has occurred */
 
 	DM_EVENT_REGISTRATION_PENDING = 0x1000000, /* Monitor thread is setting-up/shutting-down */
 };
@@ -109,7 +109,7 @@ int dm_event_unregister_handler(const struct dm_event_handler *dmevh);
 /* Set debug level for logging, and whether to log on stdout/stderr or syslog */
 void dm_event_log_set(int debug_log_level, int use_syslog);
 
-/* Log messages acroding to current debug level  */
+/* Log messages according to current debug level  */
 __attribute__((format(printf, 6, 0)))
 void dm_event_log(const char *subsys, int level, const char *file,
 		  int line, int dm_errno_or_class,

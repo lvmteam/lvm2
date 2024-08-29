@@ -160,7 +160,7 @@ class ObjectManager(AutomatedProperties):
 			# (path, dbus_object.lvm_id))
 
 			# We want fast access to the object by a number of different ways,
-			# so we use multiple hashs with different keys
+			# so we use multiple hashes with different keys
 			self._lookup_add(dbus_object, path, dbus_object.lvm_id,
 				dbus_object.Uuid)
 

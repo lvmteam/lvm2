@@ -701,7 +701,7 @@ int poll_daemon(struct cmd_context *cmd, unsigned background,
 	if (lvmpolld_use())
 		return _lvmpoll_daemon(cmd, id, &parms);
 
-	/* classical polling allows only PMVOVE or 0 values */
+	/* classical polling allows only PVMOVE or 0 values */
 	parms.lv_type &= PVMOVE;
 	return _poll_daemon(cmd, id, &parms);
 }

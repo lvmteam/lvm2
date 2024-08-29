@@ -304,15 +304,15 @@ int dm_task_add_target(struct dm_task *dmt,
 #define DM_FORMAT_DEV_BUFSIZE	13	/* Minimum bufsize to handle worst case. */
 int dm_format_dev(char *buf, int bufsize, uint32_t dev_major, uint32_t dev_minor);
 
-/* Use this to retrive target information returned from a STATUS call */
+/* Use this to retrieve target information returned from a STATUS call */
 void *dm_get_next_target(struct dm_task *dmt,
 			 void *next, uint64_t *start, uint64_t *length,
 			 char **target_type, char **params);
 
 /*
- * Following dm_get_status_* functions will allocate approriate status structure
+ * Following dm_get_status_* functions will allocate appropriate status structure
  * from passed mempool together with the necessary character arrays.
- * Destroying the mempool will release all asociated allocation.
+ * Destroying the mempool will release all associated allocation.
  */
 
 /* Parse params from STATUS call for mirror target */
@@ -541,7 +541,7 @@ const char *dm_sysfs_dir(void);
 
 /*
  * Configure default UUID prefix string.
- * Conventionally this is a short capitalised prefix indicating the subsystem
+ * Conventionally this is a short capitalized prefix indicating the subsystem
  * that is managing the devices, e.g. "LVM-" or "MPATH-".
  * To support stacks of devices from different subsystems, recursive functions
  * stop recursing if they reach a device with a different prefix.
@@ -584,7 +584,7 @@ int dm_device_has_mounted_fs(uint32_t major, uint32_t minor);
 
 
 /*
- * Callback is invoked for individal mountinfo lines,
+ * Callback is invoked for individual mountinfo lines,
  * minor, major and mount target are parsed and unmangled.
  */
 typedef int (*dm_mountinfo_line_callback_fn) (char *line, unsigned maj, unsigned min,
@@ -698,7 +698,7 @@ void *dm_tree_node_get_context(const struct dm_tree_node *node);
 /*
  * Returns  0 when node size and its children is unchanged.
  * Returns  1 when node or any of its children has increased size.
- * Rerurns -1 when node or any of its children has reduced size.
+ * Returns -1 when node or any of its children has reduced size.
  */
 int dm_tree_node_size_changed(const struct dm_tree_node *dnode);
 
@@ -885,7 +885,7 @@ struct dm_tree_node_raid_params {
 };
 
 /*
- * Version 2 of above node raid params struct to keeep API compatibility.
+ * Version 2 of above node raid params struct to keep API compatibility.
  *
  * Extended for more than 64 legs (max 253 in the MD kernel runtime!),
  * delta_disks for disk add/remove reshaping,
@@ -908,7 +908,7 @@ struct dm_tree_node_raid_params_v2 {
 	 * 'rebuilds' and 'writemostly' are bitfields that signify
 	 * which devices in the array are to be rebuilt or marked
 	 * writemostly.  The kernel supports up to 253 legs.
-	 * We limit ourselvs by choosing a lower value
+	 * We limit ourselves by choosing a lower value
 	 * for DEFAULT_RAID_MAX_IMAGES.
 	 */
 	uint64_t rebuilds[RAID_BITMAP_SIZE];
@@ -945,7 +945,7 @@ struct dm_config_node;
  *
  * policy_settings {
  *    migration_threshold=2048
- *    sequention_threashold=100
+ *    sequential_threshold=100
  *    ...
  * }
  *
@@ -1094,7 +1094,7 @@ int dm_tree_node_add_replicator_dev_target(struct dm_tree_node *node,
 /* End of Replicator API */
 
 /*
- * FIXME: Defines bellow are based on kernel's dm-thin.c defines
+ * FIXME: Defines below are based on kernel's dm-thin.c defines
  * DATA_DEV_BLOCK_SIZE_MIN_SECTORS (64 * 1024 >> SECTOR_SHIFT)
  * DATA_DEV_BLOCK_SIZE_MAX_SECTORS (1024 * 1024 * 1024 >> SECTOR_SHIFT)
  */
@@ -1160,7 +1160,7 @@ int dm_tree_node_set_thin_pool_error_if_no_space(struct dm_tree_node *node,
 int dm_tree_node_set_thin_pool_read_only(struct dm_tree_node *node,
 					 unsigned read_only);
 /*
- * FIXME: Defines bellow are based on kernel's dm-thin.c defines
+ * FIXME: Defines below are based on kernel's dm-thin.c defines
  * MAX_DEV_ID ((1 << 24) - 1)
  */
 #define DM_THIN_MAX_DEVICE_ID (UINT32_C((1 << 24) - 1))
@@ -2058,7 +2058,7 @@ void dm_config_destroy(struct dm_config_tree *cft);
 
 /* Simple output line by line. */
 typedef int (*dm_putline_fn)(const char *line, void *baton);
-/* More advaced output with config node reference. */
+/* More advanced output with config node reference. */
 typedef int (*dm_config_node_out_fn)(const struct dm_config_node *cn, const char *line, void *baton);
 
 /*
@@ -2121,7 +2121,7 @@ struct dm_config_node *dm_config_clone_node(struct dm_config_tree *cft, const st
  * Common formatting flags applicable to all config node types (lower 16 bits).
  */
 #define DM_CONFIG_VALUE_FMT_COMMON_ARRAY             0x00000001 /* value is array */
-#define DM_CONFIG_VALUE_FMT_COMMON_EXTRA_SPACES      0x00000002 /* add spaces in "key = value" pairs in constrast to "key=value" for better readability */
+#define DM_CONFIG_VALUE_FMT_COMMON_EXTRA_SPACES      0x00000002 /* add spaces in "key = value" pairs in contrast to "key=value" for better readability */
 
 /*
  * Type-related config node formatting flags (higher 16 bits).

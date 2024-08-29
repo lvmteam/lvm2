@@ -242,7 +242,7 @@ ifeq (,$(findstring -z$(comma)now,$(LDFLAGS)))
   LDFLAGS += -Wl,-z,now
 endif
 # TODO: think about configure option for this flag
-# for now leave decision on distro maitainer
+# for now leave decision on distro maintainer
 #ifeq (,$(findstring -z$(comma)pack-relative-relocs,$(LDFLAGS)))
 #  LDFLAGS += -Wl,-z,pack-relative-relocs
 #endif

@@ -86,7 +86,7 @@ static int _vgimportdevices_single(struct cmd_context *cmd,
 
 	/*
 	 * Writes the device_id of each PV into the vg metadata.
-	 * This is not a critial step and should not influence
+	 * This is not a critical step and should not influence
 	 * the result of the command.
 	 */
 	if (updated_pvs) {
@@ -175,7 +175,7 @@ static void _clear_rootvg_auto(struct cmd_context *cmd)
  * If there are duplicate PVIDs related to VG it will do nothing,
  * the user would need to add the PVs they want with lvmdevices --add.
  *
- * vgimportdevices -a (no vg arg) will import all accesible VGs.
+ * vgimportdevices -a (no vg arg) will import all accessible VGs.
  */
 
 int vgimportdevices(struct cmd_context *cmd, int argc, char **argv)
@@ -254,7 +254,7 @@ int vgimportdevices(struct cmd_context *cmd, int argc, char **argv)
 	 * new devs to add to it, but we do want devices file entries on
 	 * use_devices so we can update and write out that list.
 	 *
-	 * Ususally when devices file is enabled, we use filter-deviceid and
+	 * Usually when devices file is enabled, we use filter-deviceid and
 	 * skip filter-regex.  In this import case it's reversed, and we skip
 	 * filter-deviceid and use filter-regex.
 	 */

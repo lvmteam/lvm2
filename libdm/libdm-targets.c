@@ -485,8 +485,8 @@ static dm_status_mirror_health_t _get_health(char c)
 }
 
 /*
- * dm core parms:	     0 409600 mirror
- * Mirror core parms:	     2 253:4 253:5 400/400
+ * dm core params:	     0 409600 mirror
+ * Mirror core params:	     2 253:4 253:5 400/400
  * New-style failure params: 1 AA
  * New-style log params:     3 cluster 253:3 A
  *			 or  3 disk 253:3 A

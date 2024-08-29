@@ -1228,7 +1228,7 @@ static struct dev_filter *_init_filter_chain(struct cmd_context *cmd)
 	 * sysfs filter. Only available on 2.6 kernels.  Non-critical.
 	 * Eliminates unavailable devices.
 	 * TODO: this may be unnecessary now with device ids
-	 * (currently not used for devs match to device id using syfs)
+	 * (currently not used for devs match to device id using sysfs)
 	 */
 	if (find_config_tree_bool(cmd, devices_sysfs_scan_CFG, NULL)) {
 		if ((filters[nr_filt] = sysfs_filter_create(dm_sysfs_dir())))
@@ -1312,7 +1312,7 @@ int init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 	init_ignore_lvm_mirrors(find_config_tree_bool(cmd, devices_ignore_lvm_mirrors_CFG, NULL));
 
 	/*
-	 * persisent filter is a cache of the previous result real filter result.
+	 * persistent filter is a cache of the previous result real filter result.
 	 * If a dev is found in persistent filter, the pass/fail result saved by
 	 * the pfilter is used.  If a dev does not existing in the persistent
 	 * filter, the dev is passed on to the real filter, and when the result

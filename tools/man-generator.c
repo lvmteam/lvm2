@@ -110,7 +110,7 @@ static inline int headings_arg(struct cmd_context *cmd __attribute__((unused)), 
 #include "command_enums.h"
 #include "command.c"
 
-static const size_t _LONG_LINE = 42; /* length of line that neededs .nh .. .hy */
+static const size_t _LONG_LINE = 42; /* length of line that needed .nh .. .hy */
 
 static const char *_lvt_enum_to_name(int lvt_enum)
 {
@@ -124,7 +124,7 @@ static int _get_val_enum(const struct command_name *cname, int opt_enum)
 /*
  * FIXME: this just replicates the val usage strings
  * that officially lives in vals.h.  Should there
- * be some programatic way to add man markup to
+ * be some programmatic way to add man markup to
  * the strings in vals.h without replicating it?
  * Otherwise, this function has to be updated in
  * sync with any string changes in vals.h
@@ -1067,7 +1067,7 @@ static void _print_man_all_options_desc(const struct command_name *cname)
 			/* printf(".\n.TP\n");
 			 * ATM HTML rendering can't handle HP and TP mixing properly
 			 * so still keeping .HP usage for this case
-			 * untill some better workaround is found
+			 * until some better workaround is found
 			 * .TP does not need .br */
 			printf(".\n.HP\n");
 			adl = 0;
@@ -1421,7 +1421,7 @@ static int _print_man(char *name, char *des_file, int secondary)
 				printf(".br\n");
 			}
 
-			/* listing them all when there's only 1 or 2 is just repetative */
+			/* listing them all when there's only 1 or 2 is just repetitive */
 			if (cna->variants > 2) {
 				printf(".P\n");
 				_print_man_all_options_list(cname);

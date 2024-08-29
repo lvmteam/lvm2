@@ -17,7 +17,7 @@ SKIP_WITH_CLVMD=1
 
 . lib/inittest
 
-# Unsupported with valgrid testing
+# Unsupported with valgrind testing
 test "${LVM_VALGRIND:-0}" -eq 0 || skip "Unsupported with valgrind"
 
 # NOTE: Some tests, namely anything with vdo, and

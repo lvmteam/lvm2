@@ -279,7 +279,7 @@ static int handle_cluster_request(struct clog_cpg *entry __attribute__((unused))
 	 * With resumes, we only handle our own.
 	 * Resume is a special case that requires
 	 * local action (to set up CPG), followed by
-	 * a cluster action to co-ordinate reading
+	 * a cluster action to coordinate reading
 	 * the disk and checkpointing
 	 */
 	if (tmp->u_rq.request_type == DM_ULOG_RESUME) {

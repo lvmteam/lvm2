@@ -99,7 +99,7 @@ static int _lvresize_params(struct cmd_context *cmd, struct lvresize_params *lp)
 #ifdef HAVE_BLKID_SUBLKS_FSINFO
 		/*
 		 * When the libblkid fs info feature is available, use the
-		 * the newer fs resizing capabability unless the older
+		 * the newer fs resizing capability unless the older
 		 * fsadm-based resizing is requested with --fs resize_fsadm.
 		 */
 		if ((str = arg_str_value(cmd, fs_ARG, NULL))) {

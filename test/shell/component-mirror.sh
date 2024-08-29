@@ -57,7 +57,7 @@ lvcreate -aey -L10 -n $lv2 $vg
 not lvconvert -y -s $vg/$lv1 $lv2 |& tee err
 grep "Cannot use" err
 
-# Cannot be splitted
+# Cannot be split
 not lvconvert --splitmirrors 1 -n split $vg/$lv1 |& tee err
 grep "Cannot convert" err
 

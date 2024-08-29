@@ -642,7 +642,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		fidtc->write_buf_size = write_buf_size;
 		fidtc->new_metadata_size = new_size;
 
-		/* Immediatelly reuse existing buffer for parsing metadata back.
+		/* Immediately reuse existing buffer for parsing metadata back.
 		 * Such VG is then used for as precommitted VG and later committed VG.
 		 *
 		 * 'Lazy' creation of such VG might improve performance, but we

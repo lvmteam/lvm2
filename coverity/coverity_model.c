@@ -21,7 +21,7 @@
  * compile (using outdir 'cov'):
  * cov-build --dir=cov make CC=gcc
  *
- * analyze (agressively, using 'cov')
+ * analyze (aggressively, using 'cov')
  * cov-analyze --dir cov --wait-for-license --hfa --concurrency --enable-fnptr --enable-constraint-fpp --security --all --aggressiveness-level=high --field-offset-escape --user-model-file=coverity/coverity_model.xml
  *
  * generate html output (to 'html' from 'cov'):
@@ -70,7 +70,7 @@ void *memccpy(void *dest, const void *src, int c, size_t n)
 }
 
 /*
- * 2 lines bellow needs to be placed in coverity/config/user_nodefs.h
+ * 2 lines below needs to be placed in coverity/config/user_nodefs.h
  * Not sure about any other way.
  * Without them, coverity shows warning since x86 system header files
  * are using inline assembly to reset fdset

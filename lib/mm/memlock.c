@@ -88,7 +88,7 @@ static int _memlock_count_daemon = 0;
 static int _priority;
 static int _default_priority;
 
-/* list of maps, that are unconditionaly ignored */
+/* list of maps, that are unconditionally ignored */
 static const char _ignore_maps[][16] = {
 	"[vdso]",
 	"[vsyscall]",
@@ -179,7 +179,7 @@ static void _allocate_memory(void)
 	/* FIXME else warn user setting got ignored */
 
 #ifdef HAVE_MALLINFO2
-        /* Prefer mallinfo2 call when avaialble with newer glibc */
+        /* Prefer mallinfo2 call when available with newer glibc */
 #define MALLINFO mallinfo2
 #else
 #define MALLINFO mallinfo
@@ -525,7 +525,7 @@ static void _lock_mem(struct cmd_context *cmd)
 
 	/*
 	 * For daemon we need to use mlockall()
-	 * so even future adition of thread which may not even use lvm lib
+	 * so even future addition of thread which may not even use lvm lib
 	 * will not block memory locked thread
 	 * Note: assuming _memlock_count_daemon is updated before _memlock_count
 	 */
@@ -614,7 +614,7 @@ static void _unlock_mem_if_possible(struct cmd_context *cmd)
  * remains fast.
  *
  * Memory stays locked until 'memlock_unlock()' is called so when possible
- * it may stay locked across multiple crictical section entrances.
+ * it may stay locked across multiple critical section entrances.
  */
 void critical_section_inc(struct cmd_context *cmd, const char *reason)
 {

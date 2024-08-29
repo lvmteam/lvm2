@@ -128,7 +128,7 @@ static int daemon_close_stray_fds(const char *command, int suppress_warning,
 	_daemon_get_cmdline(ppid, parent_cmdline, sizeof(parent_cmdline));
 
 	if ((d = opendir(_fd_dir))) {
-		/* Discover openned descriptors from /proc/self/fd listing */
+		/* Discover opened descriptors from /proc/self/fd listing */
 		while ((dirent = readdir(d))) {
 			fd = atoi(dirent->d_name);
 			if ((fd > from_fd) &&

@@ -97,7 +97,7 @@ const char *get_vdo_write_policy_name(enum dm_vdo_write_policy policy)
 
 /*
  * Size of VDO virtual LV is adding header_size in front and back of device
- * to avoid colission with blkid checks.
+ * to avoid collision with blkid checks.
  */
 static uint64_t _get_virtual_size(uint32_t extents, uint32_t extent_size,
 				  uint32_t header_size)

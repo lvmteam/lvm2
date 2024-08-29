@@ -507,7 +507,7 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 		use_plain_read = 0;
 
 	/* Ensure there is extra '\0' after end of buffer since we pass
-	 * buffer to funtions like strtoll() */
+	 * buffer to functions like strtoll() */
 	if (!(buf = zalloc(size + size2 + 1))) {
 		log_error("Failed to allocate circular buffer.");
 		return 0;

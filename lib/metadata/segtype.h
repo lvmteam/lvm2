@@ -42,7 +42,7 @@ struct dev_manager;
 #define SEG_CACHE		(1ULL << 13)
 #define SEG_CACHE_POOL		(1ULL << 14)
 #define SEG_MIRROR		(1ULL << 15)
-#define SEG_ONLY_EXCLUSIVE	(1ULL << 16) /* In cluster only exlusive activation */
+#define SEG_ONLY_EXCLUSIVE	(1ULL << 16) /* In cluster only exclusive activation */
 #define SEG_CAN_ERROR_WHEN_FULL	(1ULL << 17)
 
 #define SEG_RAID0		(1ULL << 18)

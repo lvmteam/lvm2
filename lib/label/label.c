@@ -1403,9 +1403,9 @@ int label_scan(struct cmd_context *cmd)
 	 *
 	 * If there was an error during scan, we could recreate bcache here
 	 * with a larger size and then restart label_scan.  But, this does not
-	 * address the problem of writing new metadata that excedes the bcache
+	 * address the problem of writing new metadata that exceeds the bcache
 	 * size and failing, which would often be hit first, i.e. we'll fail
-	 * to write new metadata exceding the max size before we have a chance
+	 * to write new metadata exceeding the max size before we have a chance
 	 * to read any metadata with that size, unless we find an existing vg
 	 * that has been previously created with the larger size.
 	 *

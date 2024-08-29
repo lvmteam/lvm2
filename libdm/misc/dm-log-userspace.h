@@ -62,7 +62,7 @@
  *
  * The UUID contained in the dm_ulog_request structure is the reference that
  * will be used by all request types to a specific log.  The constructor must
- * record this assotiation with the instance created.
+ * record this association with the instance created.
  *
  * When the request has been processed, user-space must return the
  * dm_ulog_request to the kernel - setting the 'error' field, filling the

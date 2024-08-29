@@ -114,7 +114,7 @@ public:
     //IosFlagSaver& operator= (const IosFlagSaver& rhs) = delete;
 
 private:
-    IosFlagSaver(const IosFlagSaver &rhs); // disable copy contructore
+    IosFlagSaver(const IosFlagSaver &rhs); // disable copy constructor
     IosFlagSaver& operator= (const IosFlagSaver& rhs); // old way
 
     std::ostream& ios;
@@ -172,7 +172,7 @@ public:
 
         os << std::right << std::setw( 2 ) << std::setfill( ' ' ) << t.ts.tv_sec / 60 << ":"
             << std::setw( 2 ) << std::setfill( '0' ) << t.ts.tv_sec % 60 << "."
-            << std::setw( 3 ) << t.ts.tv_nsec / 1000000; // use miliseconds ATM
+            << std::setw( 3 ) << t.ts.tv_nsec / 1000000; // use milliseconds ATM
         return os;
     }
 };
@@ -620,7 +620,7 @@ struct Source {
          * On RHEL5 box this code busy-loops here, while
          * parent process no longer writes anything.
          *
-         * Unclear why 'select()' is anouncing available
+         * Unclear why 'select()' is announcing available
          * data, while we read 0 bytes with errno == 0.
          *
          * Temporarily resolved with usleep() instead of loop.

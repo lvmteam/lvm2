@@ -1450,7 +1450,7 @@ static struct logical_volume *_get_resizable_layer_lv(struct logical_volume *lv)
 
 /* Check if LV is component of resizable LV.
  * When resize changes size of LV this also changes the size whole stack upward.
- * Support syntax suggar - so user can pick any LV in stack for resize. */
+ * Support syntax sugar - so user can pick any LV in stack for resize. */
 static int _is_layered_lv(struct logical_volume *lv)
 {
 	return (lv_is_cache_origin(lv) ||
@@ -1736,7 +1736,7 @@ int lv_refresh_suspend_resume(const struct logical_volume *lv)
 
 	/*
 	 * Remove any transiently activated error
-	 * devices which arean't used any more.
+	 * devices which aren't used any more.
 	 */
 	if (lv_is_raid(lv) && !lv_deactivate_any_missing_subdevs(lv)) {
 		log_error("Failed to remove temporary SubLVs from %s", display_lvname(lv));
@@ -3059,7 +3059,7 @@ static int _find_some_parallel_space(struct alloc_handle *ah,
 								goto next_pv;
 
 				/* FIXME Split into log and non-log parallel_pvs and only check the log ones if log_iteration? */
-				/* (I've temporatily disabled the check.) */
+				/* (I've temporarily disabled the check.) */
 				/* Avoid PVs used by existing parallel areas */
 				if (!log_iteration_count && parallel_pvs && _pv_is_parallel(pvm->pv, parallel_pvs, ah->cling_tag_list_cn))
 					goto next_pv;
@@ -4111,7 +4111,7 @@ int lv_add_mirror_lvs(struct logical_volume *lv,
  * FIXME: Mirrored logs are built inefficiently.
  * A mirrored log currently uses the same layout that a mirror
  * LV uses.  The mirror layer sits on top of AREA_LVs which form the
- * legs, rather on AREA_PVs.  This is done to allow re-use of the
+ * legs, rather on AREA_PVs.  This is done to allow reuse of the
  * various mirror functions to also handle the mirrored LV that makes
  * up the log.
  *
@@ -5062,7 +5062,7 @@ static uint32_t _adjust_amount(dm_percent_t percent, int policy_threshold, int p
 	    percent <= (policy_threshold * DM_PERCENT_1))
 		return 0; /* nothing to do */
 	/*
-	 * Evaluate the minimal amount needed to get bellow threshold.
+	 * Evaluate the minimal amount needed to get below threshold.
 	 * Keep using DM_PERCENT_1 units for better precision.
 	 * Round-up to needed percentage value
 	 */
@@ -5292,7 +5292,7 @@ static int _lvresize_extents_from_percent(const struct logical_volume *lv,
 					lp->extents = percent_of_extents(lp->extents, pv_extent_count,
 								 (lp->sign != SIGN_MINUS));
 				} else if (lp->percent_value) {
-					/* lvresize has PVs args and no size of exents options */
+					/* lvresize has PVs args and no size of extents options */
 					old_extents = lp->percent_value;
 					lp->extents = percent_of_extents(lp->percent_value, pv_extent_count,
 								 (lp->sign != SIGN_MINUS));
@@ -6034,7 +6034,7 @@ static int _lv_resize_check_used(struct logical_volume *lv)
  *		fs or lv if the fs resize would require mounting or unmounting.
  *
  * --fs resize --fsmode offline: resize the fs only while it's unmounted
- *		unmounting the fs if needed.  fail the commandn without
+ *		unmounting the fs if needed.  fail the command without
  *		reducing the fs or lv if the fs resize would require having
  *		the fs mounted.
  *
@@ -7753,7 +7753,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return_0;
 
 	/* Release unneeded blocks in thin pool */
-	/* TODO: defer when multiple LVs relased at once */
+	/* TODO: defer when multiple LVs released at once */
 	if (pool_lv && !update_thin_pool_lv(pool_lv, 1)) {
 		if (force < DONT_PROMPT_OVERRIDE) {
 			log_error("Failed to update thin pool %s.", display_lvname(pool_lv));
@@ -7991,7 +7991,7 @@ static int _lv_update_and_reload(struct logical_volume *lv, int origin_only)
 				  display_lvname(lock_lv));
 		return 0;
 	} else if (!(r = vg_commit(vg)))
-		stack; /* !vg_commit() has implict vg_revert() */
+		stack; /* !vg_commit() has implicit vg_revert() */
 
 	log_very_verbose("Updating logical volume %s in kernel.",
 			 display_lvname(lock_lv));
@@ -8069,7 +8069,7 @@ static int _split_parent_area(struct lv_segment *seg, uint32_t s,
 }
 
 /*
- * Split the parent LV segments if the layer LV below it is splitted.
+ * Split the parent LV segments if the layer LV below it is split.
  */
 int split_parent_segments_for_layer(struct cmd_context *cmd,
 				    struct logical_volume *layer_lv)
@@ -8303,7 +8303,7 @@ int remove_layer_from_lv(struct logical_volume *lv,
 	 */
 	/* FIXME:
 	 *    These are all INTERNAL_ERROR, but ATM there is
-	 *    some internal API problem and this code is wrongle
+	 *    some internal API problem and this code is wrongly
 	 *    executed with certain mirror manipulations.
 	 *    So we need to fix mirror code first, then switch...
 	 */
@@ -8352,7 +8352,7 @@ int remove_layer_from_lv(struct logical_volume *lv,
 		return_0;
 
 	/*
-	 * recuresively rename sub LVs
+	 * recursively rename sub LVs
 	 *   currently supported only for thin data layer
 	 *   FIXME: without strcmp it breaks mirrors....
 	 */
@@ -8476,7 +8476,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 		lv_where->profile = lv_where->vg->cmd->profile_params->global_metadata_profile;
 
 	/*
-	 * recuresively rename sub LVs
+	 * recursively rename sub LVs
 	 *   currently supported only for thin data layer
 	 *   FIXME: without strcmp it breaks mirrors....
 	 */
@@ -9218,7 +9218,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 
 		if (seg_is_thin_volume(lp)) {
-			/* Validate volume size to to aling on chunk for small extents */
+			/* Validate volume size to to align on chunk for small extents */
 			size = first_seg(pool_lv)->chunk_size;
 			if (size > vg->extent_size) {
 				/* Align extents on chunk boundary size */
@@ -9568,7 +9568,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			goto revert_new_lv;
 		}
 	} else if (lv_is_cache_pool(lv)) {
-		/* Cache pool cannot be actived and zeroed */
+		/* Cache pool cannot be activated and zeroed */
 		log_very_verbose("Cache pool is prepared.");
 	} else if (lv_is_thin_volume(lv)) {
 		/* Optimize the case when taking a snapshot within same pool and thin origin
@@ -9893,7 +9893,7 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 				return NULL;
 			}
 
-			/* Convertion via lvcreate */
+			/* Conversion via lvcreate */
 			log_print_unless_silent("Logical volume %s is now cached.",
 						display_lvname(lv));
 			return lv;

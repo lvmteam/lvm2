@@ -254,7 +254,7 @@ static int read_log(struct log_c *lc)
 	bitset_size = lc->region_count / 8;
 	bitset_size += (lc->region_count % 8) ? 1 : 0;
 
-	/* 'lc->clean_bits + 1' becasue dm_bitset_t leads with a uint32_t */
+	/* 'lc->clean_bits + 1' because dm_bitset_t leads with a uint32_t */
 	memcpy(lc->clean_bits + 1, (char *)lc->disk_buffer + 1024, bitset_size);
 
 	return 0;
@@ -281,7 +281,7 @@ static int write_log(struct log_c *lc)
 	bitset_size = lc->region_count / 8;
 	bitset_size += (lc->region_count % 8) ? 1 : 0;
 
-	/* 'lc->clean_bits + 1' becasue dm_bitset_t leads with a uint32_t */
+	/* 'lc->clean_bits + 1' because dm_bitset_t leads with a uint32_t */
 	memcpy((char *)lc->disk_buffer + 1024, lc->clean_bits + 1, bitset_size);
 
 	if (rw_log(lc, 1)) {
@@ -927,7 +927,7 @@ int local_resume(struct dm_ulog_request *rq)
  *
  * Since this value doesn't change, the kernel
  * should not need to talk to server to get this
- * The function is here for completness
+ * The function is here for completeness
  *
  * Returns: 0 on success, -EXXX on failure
  */
@@ -1018,7 +1018,7 @@ static int clog_in_sync(struct dm_ulog_request *rq)
 	 * happen for reads is that additional read attempts may be
 	 * taken.
 	 *
-	 * Futher investigation may be required to determine if there are
+	 * Further investigation may be required to determine if there are
 	 * similar possible outcomes when the mirror is in the process of
 	 * recovering.  In that case, lc->in_sync would not have been set
 	 * yet.

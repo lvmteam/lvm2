@@ -780,7 +780,7 @@ static int _split_mirror_images(struct logical_volume *lv,
  * If collapse is non-zero, <removed> is guaranteed to be equal to num_removed.
  *
  * Return values:
- *   Failure (0) means something unexpected has happend and
+ *   Failure (0) means something unexpected has happened and
  *   the caller should abort.
  *   Even if no mirror was removed (e.g. no LV matches to 'removable_pvs'),
  *   returns success (1).

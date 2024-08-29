@@ -19,7 +19,7 @@
 %import source.inc
 
 %if %{lvm2_testsuite_build} == 0
-# Disable global optimization when building on machine with installed lvm2-testsuited
+# Disable global optimization when building on machine with installed lvm2-testsuite
 %global _lto_cflags %nil
 %endif
 

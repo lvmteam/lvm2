@@ -1440,7 +1440,7 @@ static int _command_required_opt_matches(struct cmd_context *cmd, int ci, int ro
 		goto check_val;
 
 	/*
-	 * For some commands, --size and --extents are interchangable,
+	 * For some commands, --size and --extents are interchangeable,
 	 * but command[] definitions use only --size.
 	 */
 	if ((opt_enum == size_ARG) && arg_is_set(cmd, extents_ARG) &&
@@ -1887,7 +1887,7 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 
 	/*
 	 * If the user provided a positional arg that is not accepted by
-	 * the mached command, then fail.
+	 * the matched command, then fail.
 	 *
 	 * If the last required_pos_arg or the last optional_pos_arg may repeat,
 	 * then there won't be unused positional args.
@@ -3039,7 +3039,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	command_fn fn;
 
 	/* Avoid excessive access to /etc/localtime and set TZ variable for glibc
-	 * so it does not need to check /etc/localtime everytime that needs that info */
+	 * so it does not need to check /etc/localtime every time that needs that info */
 	if (!getenv("TZ"))
 		setenv("TZ", ":/etc/localtime", 0);
 
@@ -3149,7 +3149,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		}
 
 	if (arg_is_set(cmd, config_ARG) || !cmd->initialized.config || config_files_changed(cmd)) {
-		/* Reinitialise various settings inc. logging, filters */
+		/* Reinitialize various settings inc. logging, filters */
 		if (!refresh_toolcontext(cmd)) {
 			if ((config_string_cft = remove_config_tree_by_source(cmd, CONFIG_STRING)))
 				dm_config_destroy(config_string_cft);
@@ -3609,7 +3609,7 @@ int lvm2_main(int argc, char **argv)
 	if (!(cmd = init_lvm(0, 0, 0)))
 		return EINIT_FAILED;
 
-	/* Store original argv location so we may customise it if we become a daemon */
+	/* Store original argv location so we may customize it if we become a daemon */
 	cmd->argv = argv;
 
 	/*

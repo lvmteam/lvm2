@@ -739,7 +739,7 @@ static struct logical_volume *_alloc_pool_metadata_spare(struct volume_group *vg
 int handle_pool_metadata_spare(struct volume_group *vg, uint32_t extents,
 			       struct dm_list *pvh, int poolmetadataspare)
 {
-	/* Max usable size of any spare volume is currently 16GiB rouned to extent size */
+	/* Max usable size of any spare volume is currently 16GiB rounded to extent size */
 	const uint64_t MAX_SIZE = (UINT64_C(2 * 16) * 1024 * 1024 + vg->extent_size - 1) / vg->extent_size;
 	struct logical_volume *lv = vg->pool_metadata_spare_lv;
 	uint32_t seg_mirrors;

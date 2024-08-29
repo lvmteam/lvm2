@@ -3150,7 +3150,7 @@ int vg_commit(struct volume_group *vg)
 	        dm_list_iterate_items(pvl, &vg->pvs)
 			pvl->pv->status &= ~PV_MOVED_VG;
 
-		/* This *is* the original now that it's commited. */
+		/* This *is* the original now that it's committed. */
 		_vg_move_cached_precommitted_to_committed(vg);
 
 		if (vg->needs_write_and_commit){
@@ -3259,7 +3259,7 @@ static int _vg_read_orphan_pv(struct lvmcache_info *info, void *baton)
 	 * before clearing the in-use flag.  In this case, the
 	 * in-use flag needs to be manually cleared on the PV.
 	 *
-	 * . The PV may have damanged/unrecognized VG metadata
+	 * . The PV may have damaged/unrecognized VG metadata
 	 * that lvm could not read.
 	 *
 	 * . The PV may have no mdas, and the PVs with the metadata
@@ -3592,7 +3592,7 @@ static void _set_pv_device(struct format_instance *fid,
 }
 
 /*
- * Finds the 'struct device' that correponds to each PV in the metadata,
+ * Finds the 'struct device' that corresponds to each PV in the metadata,
  * and may make some adjustments to vg fields based on the dev properties.
  */
 void set_pv_devices(struct format_instance *fid, struct volume_group *vg)
@@ -4184,10 +4184,10 @@ struct metadata_area *mda_copy(struct dm_pool *mem,
 }
 /*
  * This function provides a way to answer the question on a format specific
- * basis - does the format specfic context of these two metadata areas
+ * basis - does the format specific context of these two metadata areas
  * match?
  *
- * A metatdata_area is defined to be independent of the underlying context.
+ * A metadata_area is defined to be independent of the underlying context.
  * This has the benefit that we can use the same abstraction to read disks
  * (see _metadata_text_raw_ops) or files (see _metadata_text_file_ops).
  * However, one downside is there is no format-independent way to determine
@@ -4954,7 +4954,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		goto bad;
 	}
 
-	/* I belive this is unused, the name is always set. */
+	/* I believe this is unused, the name is always set. */
 	if (!vg_name && !(vg_name = lvmcache_vgname_from_vgid(cmd->mem, vgid))) {
 		unlock_vg(cmd, NULL, vg_name);
 		log_error("VG name not found for vgid %s", vgid);
@@ -4964,7 +4964,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 
 	/*
 	 * If the command is process all vgs, process_each will get a list of vgname+vgid
-	 * pairs, and then call vg_read() for each vgname+vigd.  In this case we know
+	 * pairs, and then call vg_read() for each vgname+vgid.  In this case we know
 	 * which VG to read even if there are duplicate names, and we don't fail.
 	 *
 	 * If the user has requested one VG by name, process_each passes only the vgname
@@ -5195,7 +5195,7 @@ bad:
 	 * there's an error.  It is here for process_each_pv() which wants to
 	 * eliminate the VG's devs from the list of devs it is processing, even
 	 * when it can't access the VG because of wrong system id or similar.
-	 * This could be done by looking at lvmcache info structs intead of 'vg'.
+	 * This could be done by looking at lvmcache info structs instead of 'vg'.
 	 * It's also used by process_each_vg/process_each_lv which want to
 	 * include error_vg values (like system_id) in error messages.
 	 * These values could also be found from lvmcache vginfo.
