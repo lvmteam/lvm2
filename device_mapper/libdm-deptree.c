@@ -2889,7 +2889,7 @@ static int _integrity_emit_segment_line(struct dm_task *dmt,
 		EMIT_PARAMS(pos, " journal_sectors:%u", set->journal_sectors);
 
 	if (set->interleave_sectors_set)
-		EMIT_PARAMS(pos, " ineterleave_sectors:%u", set->interleave_sectors);
+		EMIT_PARAMS(pos, " interleave_sectors:%u", set->interleave_sectors);
 
 	if (set->buffer_sectors_set)
 		EMIT_PARAMS(pos, " buffer_sectors:%u", set->buffer_sectors);
