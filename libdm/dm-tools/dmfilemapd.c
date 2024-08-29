@@ -624,7 +624,7 @@ check_unlinked:
 	return 1;
 }
 
-static int _daemonise(struct filemap_monitor *fm)
+static int _daemonize(struct filemap_monitor *fm)
 {
 	pid_t pid = 0;
 	int fd, ffd;
@@ -825,7 +825,7 @@ int main(int argc, char **argv)
 		 "mode=%s, path=\"%s\"", fm.fd, fm.group_id,
 		 _mode_names[fm.mode], fm.path);
 
-	if (!_foreground && !_daemonise(&fm)) {
+	if (!_foreground && !_daemonize(&fm)) {
 		free(fm.path);
 		return 1;
 	}

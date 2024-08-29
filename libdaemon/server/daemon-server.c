@@ -323,7 +323,7 @@ static void _remove_lockfile(const char *file)
 		perror("unlink failed");
 }
 
-static void _daemonise(daemon_state s)
+static void _daemonize(daemon_state s)
 {
 	int child_status;
 	int fd;
@@ -582,7 +582,7 @@ void daemon_start(daemon_state s)
 #endif
 
 	if (!s.foreground)
-		_daemonise(s);
+		_daemonize(s);
 
 	s.log = &_log;
 	s.log->name = s.name;
