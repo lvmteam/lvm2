@@ -1,5 +1,6 @@
 Version 2.03.27 - 
 ==================
+  Ignore -i|--stripes, -I|--stripesize for lvextend on raid0 LV, like raid10.
   Do not accept duplicate device names for pvcreate.
 
 Version 2.03.26 - 23rd August 2024
