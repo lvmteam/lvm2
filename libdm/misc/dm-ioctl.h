@@ -208,7 +208,7 @@ struct dm_name_list {
 };
 
 #define DM_NAME_LIST_FLAG_HAS_UUID		1
-#define DM_NAME_LIST_FLAG_DOESNT_HAVE_UUID	2
+#define DM_NAME_LIST_FLAG_DOES_NOT_HAVE_UUID	2
 
 /*
  * Used to retrieve the target versions
