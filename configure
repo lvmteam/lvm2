@@ -10929,7 +10929,7 @@ printf "%s\n" "#define VDO_FORMAT_CMD \"$VDO_FORMAT_CMD\"" >>confdefs.h
 
 #
 # Do we need to use the API??
-# Do we want to link lvm2 with a big library for vdoformatting ?
+# Do we want to link lvm2 with a big library for VDO formatting ?
 #
 #AC_ARG_WITH(vdo-include,
 #	    AS_HELP_STRING([--with-vdo-include=PATH],
@@ -11285,6 +11285,9 @@ printf "%s\n" "yes" >&6; }
 printf "%s\n" "no" >&6; }
 		PKG_CONFIG=""
 	fi
+fi
+if test -z "$PKG_CONFIG"; then
+	as_fn_error $? "pkg-config not found" "$LINENO" 5
 fi
 if test "$BUILD_CMIRRORD" = "yes" && test "$HAVE_CPG" != "yes"
 then :
