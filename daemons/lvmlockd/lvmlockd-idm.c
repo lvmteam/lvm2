@@ -136,7 +136,7 @@ static int lm_idm_scsi_directory_select(const struct dirent *s)
 	return 0;
 }
 
-static int lm_idm_scsi_find_block_dirctory(const char *block_path)
+static int lm_idm_scsi_find_block_directory(const char *block_path)
 {
 	struct stat stats;
 
@@ -252,7 +252,7 @@ static char *lm_idm_scsi_get_block_device_node(const char *scsi_path)
 		goto fail;
 	}
 
-	ret = lm_idm_scsi_find_block_dirctory(blk_path);
+	ret = lm_idm_scsi_find_block_directory(blk_path);
 	if (ret < 0) {
 		log_error("Fail to find block path %s", blk_path);
 		goto fail;
