@@ -58,7 +58,7 @@ Show help information.
 .
 .TP
 .B -i
-Query the running daemon instance for the status informations. The format is
+Query the running daemon instance for the status information. The format is
 internal and unstable and it is targeted for developers.
 Format may change between versions.
 .

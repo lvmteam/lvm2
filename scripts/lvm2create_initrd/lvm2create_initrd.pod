@@ -46,7 +46,7 @@ This option is also required. It tells the initrd image which LVM2 device the ro
 =item B<lvm2rescue>
 
 Causes the initrd image to run a shell prior to mounting the root filesystem. This is
-helpful in disaster situations where your initrd image is accessable, but there is
+helpful in disaster situations where your initrd image is accessible, but there is
 a problem with the root filesystem (corrupted image, incorrect device setup, etc.). This
 option is (of course) optional.
 
@@ -160,7 +160,7 @@ create device entries in the initrd image.
 
 Overrides the default value of $BINFILES (which is "/lib/lvm-200/lvm /bin/bash /bin/busybox /sbin/pivot_root"). The difference between using this and adding
 a file to the $EXTRAFILES list above is that libraries that these depend upon are also included. You can still use $EXTRAFILES to achieve the same effect, but
-you must resolve library dependencies youself.
+you must resolve library dependencies yourself.
 
 =item B<$INITRDSIZE>
 

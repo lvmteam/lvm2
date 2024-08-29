@@ -309,7 +309,7 @@ FIELD(SEGS, seg, NUM, "VDOCPUThreads", list, 0, vdo_cpu_threads, vdo_cpu_threads
 FIELD(SEGS, seg, NUM, "VDOHashZoneThreads", list, 0, vdo_hash_zone_threads, vdo_hash_zone_threads, "Threads for subdivide parts (vdopool).", 0)
 FIELD(SEGS, seg, NUM, "VDOLogicalThreads", list, 0, vdo_logical_threads, vdo_logical_threads, "Logical threads for subdivide parts (vdopool).", 0)
 FIELD(SEGS, seg, NUM, "VDOPhysicalThreads", list, 0, vdo_physical_threads, vdo_physical_threads, "Physical threads for subdivide parts (vdopool).", 0)
-FIELD(SEGS, seg, NUM, "VDOMaxDiscard", list, 0, vdo_max_discard, vdo_max_discard, "Maximum discard size volume can recieve (vdopool).", 0)
+FIELD(SEGS, seg, NUM, "VDOMaxDiscard", list, 0, vdo_max_discard, vdo_max_discard, "Maximum discard size volume can receive (vdopool).", 0)
 FIELD(SEGS, seg, STR, "VDOWritePolicy", list, 0, vdo_write_policy, vdo_write_policy, "Specified write policy (vdopool).", 0)
 FIELD(SEGS, seg, SIZ, "VDOHeaderSize", list, 0, vdo_header_size, vdo_header_size, "Header size at front of vdopool.", 0)
 

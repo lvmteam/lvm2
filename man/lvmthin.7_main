@@ -1047,7 +1047,7 @@ and run the command using the option: --commandprofile ProfileName.
 The "zero" property of a thin pool determines if chunks are overwritten
 with zeros when they are provisioned for a thin LV.  The current setting
 is reported with lvs -o zero (displaying "zero" or "1" when zeroing is
-enabled), or 'z' in the eigth lv_attr.  The option -Z|--zero is used to
+enabled), or 'z' in the eighth lv_attr.  The option -Z|--zero is used to
 specify the zeroing mode.
 
 Create a thin pool with zeroing mode:

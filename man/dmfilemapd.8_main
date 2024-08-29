@@ -181,7 +181,7 @@ dm info   (253:0) [ opencount flush ]   [16384] (*1)
 dm message   (253:0) [ opencount flush ]  @stats_list dmstats [16384] (*1)
 Read alias 'data' from aux_data
 Found group_id 0: alias="data"
-dm_stats_walk_init: initialised flags to 4000000000000
+dm_stats_walk_init: initialized flags to 4000000000000
 starting stats walk with   GROUP
 exiting _filemap_monitor_get_events() with deleted=0, check=0
 Waiting for check interval

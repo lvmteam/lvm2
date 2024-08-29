@@ -937,7 +937,7 @@ Conversion often requires full synchronization of the RAID LV (see
 blocks to N new images on new devices.  Converting to a parity RAID level
 requires reading all LV data blocks, calculating parity, and writing the
 new parity blocks.  Synchronization can take a long time depending on the
-throughpout of the devices used and the size of the RaidLV.  It can degrade
+throughput of the devices used and the size of the RaidLV.  It can degrade
 performance. Rate controls also apply to conversion; see
 \fB--minrecoveryrate\fP and \fB--maxrecoveryrate\fP.
 .P

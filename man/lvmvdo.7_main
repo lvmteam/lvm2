@@ -198,7 +198,7 @@ To change the option for an already existing VDOPoolLV use
 command. However not all option can be changed.
 Only compression and deduplication options can be also changed for an active VDO LV.
 Lowest priority options are specified with configuration file,
-then with --vdosettings and highest are expliction option --compression
+then with --vdosettings and highest are explicit option --compression
 and --deduplication.
 .P
 .I Example
@@ -306,7 +306,7 @@ volume types: linear, stripe, raid and cache with cachepool.
 .
 You can convert existing VDO LV into a thin volume. After this conversion
 you can create a thin snapshot or you can add more thin volumes
-with thin-pool named after orignal LV name LV_tpool0.
+with thin-pool named after original LV name LV_tpool0.
 .P
 .I Example
 .nf

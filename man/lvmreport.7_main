@@ -183,7 +183,7 @@ Overrides report/aligned configuration setting.
 Overrides report/binary_values_as_numeric configuration setting.
 TP
 .B --headings
-Overrides report/headings congiguration settings.
+Overrides report/headings configuration settings.
 .TP
 .B --nameprefixes
 Overrides report/prefixes configuration setting.

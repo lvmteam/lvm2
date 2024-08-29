@@ -168,7 +168,7 @@ This option is also required. It tells the initrd image which \s-1LVM2\s0 device
 .IP "\fBlvm2rescue\fR" 4
 .IX Item "lvm2rescue"
 Causes the initrd image to run a shell prior to mounting the root filesystem. This is
-helpful in disaster situations where your initrd image is accessable, but there is
+helpful in disaster situations where your initrd image is accessible, but there is
 a problem with the root filesystem (corrupted image, incorrect device setup, etc.). This
 option is (of course) optional.
 .SH "OPTIONS"
@@ -268,7 +268,7 @@ create device entries in the initrd image.
 .IX Item "$BINFILES"
 Overrides the default value of \f(CW$BINFILES\fR (which is \*(L"/lib/lvm\-200/lvm /bin/bash /bin/busybox /sbin/pivot_root\*(R"). The difference between using this and adding
 a file to the \f(CW$EXTRAFILES\fR list above is that libraries that these depend upon are also included. You can still use \f(CW$EXTRAFILES\fR to achieve the same effect, but
-you must resolve library dependencies youself.
+you must resolve library dependencies yourself.
 .ie n .IP "\fB\fB$INITRDSIZE\fB\fR" 4
 .el .IP "\fB\f(CB$INITRDSIZE\fB\fR" 4
 .IX Item "$INITRDSIZE"

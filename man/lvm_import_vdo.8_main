@@ -102,10 +102,10 @@ Defaults to "\fI/dev\fP" and must be an absolute path.
 Specify uuid prefix for snapshot volume used during vdo conversion.
 .TP
 .B LVM_BINARY
-Allow to overide command called from lvm. Defaults to "\fIlvm\fP".
+Allow to override command called from lvm. Defaults to "\fIlvm\fP".
 .TP
 .B VDO_BINARY
-Allow to overide command called from vdo. Defaults to "\fIvdo\fP".
+Allow to override command called from vdo. Defaults to "\fIvdo\fP".
 .
 .SH SEE ALSO
 .

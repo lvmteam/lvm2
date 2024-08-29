@@ -283,7 +283,7 @@ cfg_array(devices_preferred_names_CFG, "preferred_names", devices_CFG_SECTION, C
 cfg(devices_use_devicesfile_CFG, "use_devicesfile", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_USE_DEVICES_FILE, vsn(2, 3, 12), "@DEFAULT_USE_DEVICES_FILE@", 0, NULL,
 	"Enable or disable the use of a devices file.\n"
 	"When enabled, lvm will only use devices that\n"
-	"are lised in the devices file. A devices file will\n"
+	"are listed in the devices file. A devices file will\n"
 	"be used, regardless of this setting, when the --devicesfile\n"
 	"option is set to a specific file name.\n")
 
@@ -663,7 +663,7 @@ cfg_runtime(allocation_cache_pool_chunk_size_CFG, "cache_pool_chunk_size", alloc
 
 cfg(allocation_cache_pool_max_chunks_CFG, "cache_pool_max_chunks", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_UNDEFINED, CFG_TYPE_INT, 0, vsn(2, 2, 165), NULL, 0, NULL,
 	"The maximum number of chunks in a cache pool.\n"
-	"For cache target v1.9 the recommended maximumm is 1000000 chunks.\n"
+	"For cache target v1.9 the recommended maximum is 1000000 chunks.\n"
 	"Using cache pool with more chunks may degrade cache performance.\n")
 
 cfg(allocation_thin_pool_metadata_require_separate_pvs_CFG, "thin_pool_metadata_require_separate_pvs", allocation_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_THIN_POOL_METADATA_REQUIRE_SEPARATE_PVS, vsn(2, 2, 89), NULL, 0, NULL,
@@ -860,7 +860,7 @@ cfg(log_report_command_log_CFG, "report_command_log", log_CFG_SECTION, CFG_PROFI
 	"to define fields to display and sort fields for the log report.\n"
 	"You can also use log/command_log_selection to define selection\n"
 	"criteria used each time the log is reported.\n"
-	"Note that if report/output_format (or --reporformat command line\n"
+	"Note that if report/output_format (or --reportformat command line\n"
     	"option) is set to json or json_std, then log/report_command_log=1\n"
 	"is default.\n")
 
@@ -1744,7 +1744,7 @@ cfg(activation_mode_CFG, "activation_mode", activation_CFG_SECTION, CFG_DEFAULT_
 	"    uses are present. Other PVs in the Volume Group may be missing.\n"
 	"  degraded\n"
 	"    Like complete, but additionally RAID LVs of segment type raid1,\n"
-	"    raid4, raid5, radid6 and raid10 will be activated if there is no\n"
+	"    raid4, raid5, raid6 and raid10 will be activated if there is no\n"
 	"    data loss, i.e. they have sufficient redundancy to present the\n"
 	"    entire addressable range of the Logical Volume.\n"
 	"  partial\n"
@@ -1957,7 +1957,7 @@ cfg(report_time_format_CFG, "time_format", report_CFG_SECTION, CFG_PROFILABLE | 
 	"  %F\n"
 	"    Equivalent to %Y-%m-%d (the ISO 8601 date format).\n"
 	"  %G\n"
-	"    The ISO 8601 week-based year with century as adecimal number.\n"
+	"    The ISO 8601 week-based year with century as a decimal number.\n"
 	"    The 4-digit year corresponding to the ISO week number (see %V).\n"
 	"    This has the same format and value as %Y, except that if the\n"
 	"    ISO week number belongs to the previous or next year, that year\n"
