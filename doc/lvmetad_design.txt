@@ -108,7 +108,7 @@ really an orphan and enable its usage for creating or extending VGs. In
 practice, the decision might be governed by a timeout or assumed immediately --
 the former case is a little safer, the latter is probably more transparent. I
 am not very keen on using timeouts and we can probably assume that the admin
-won't blindly try to re-use devices in a way that would trip up LVM in this
+won't blindly try to reuse devices in a way that would trip up LVM in this
 respect. I would be in favour of just assuming that metadata-less VGs with no
 known referencing VGs are orphans -- after all, this is the same approach as we
 use today. The metadata balancing support may stress this a bit more than the
@@ -153,7 +153,7 @@ Protocol & co.
 
 I expect a simple text-based protocol executed on top of an Unix Domain Socket
 to be the communication interface for lvmetad. Ideally, the requests and
-replies will be well-formed "config file" style strings, so we can re-use
+replies will be well-formed "config file" style strings, so we can reuse
 existing parsing infrastructure.
 
 Since we already have two daemons, I would probably look into factoring some

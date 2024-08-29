@@ -25,7 +25,7 @@ TODO: It would be nice if we could use a real session output, so we could test t
 Changes in command line
 -----------------------
 
-Describe important changes in command line tools, especially any chnages of behavior, which user must be aware of:
+Describe important changes in command line tools, especially any changes of behavior, which user must be aware of:
 
 * New options
 * Removed options

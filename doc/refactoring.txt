@@ -56,7 +56,7 @@ Device mapper
 -------------
 
 As well as the low level dm-ioctl driving code we need to have all our dm 'best
-practise' stuff in here.  For instance this is the code that decides to use the
+practice' stuff in here.  For instance this is the code that decides to use the
 mirror target to move some data around; that knows to suspend a thin volume
 before taking a snapshot of it.  This module is going to have a lot more code
 in it than the current libdevmapper.
@@ -150,7 +150,7 @@ interface to get round.
 'lib' is where the bulk of our code currently is.  Dependency-wise the code is
 a bit like a ball of string.  So splitting it up is going to take time.  We can
 probably pull code pretty quickly into the 'metadata model' dir.  But factoring
-out the dm best practises stuff is going to require splitting at least
+out the dm best practices stuff is going to require splitting at least
 files, and probably functions.  Certainly not something that can be done in one
 go.  System should just be a question of cherry picking functions.
 

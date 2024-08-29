@@ -13,7 +13,7 @@ different targets were rolling their own data structures, for example:
 Maintaining these data structures takes a lot of work, so if possible
 we'd like to reduce the number.
 
-The persistent-data library is an attempt to provide a re-usable
+The persistent-data library is an attempt to provide a reusable
 framework for people who want to store metadata in device-mapper
 targets.  It's currently used by the thin-provisioning target and an
 upcoming hierarchical storage target.

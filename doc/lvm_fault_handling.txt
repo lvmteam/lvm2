@@ -86,7 +86,7 @@ are as follows:
   the policies outlined in the LVM configuration file - usually,
   /etc/lvm/lvm.conf.  Once this operation is complete, the logical volumes
   will be consistent.  However, the volume group will still be inconsistent -
-  due to the refernced-but-missing device/PV - and operations will still be
+  due to the referenced-but-missing device/PV - and operations will still be
   restricted to the aforementioned actions until either the device is
   restored or 'vgreduce --removemissing' is run.
 

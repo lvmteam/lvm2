@@ -29,7 +29,7 @@ LVM2 that is running the LV's on my development box.
    variable LVM_SYSTEM_DIR to point to your config directory
    (/etc/lvm_loops in my case).
 
-5) It's a good idea to do a vgscan to initialise the filters:
+5) It's a good idea to do a vgscan to initialize the filters:
 
    export LVM_SYSTEM_DIR=/etc/lvm_loops
    ./lvm vgscan
