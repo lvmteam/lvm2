@@ -122,7 +122,7 @@ devices {
 	# Configuration option devices/use_devicesfile.
 	# Enable or disable the use of a devices file.
 	# When enabled, lvm will only use devices that
-	# are lised in the devices file. A devices file will
+	# are listed in the devices file. A devices file will
 	# be used, regardless of this setting, when the --devicesfile
 	# option is set to a specific file name.
 	# This configuration option has an automatic default value.
@@ -562,7 +562,7 @@ allocation {
 
 	# Configuration option allocation/cache_pool_max_chunks.
 	# The maximum number of chunks in a cache pool.
-	# For cache target v1.9 the recommended maximumm is 1000000 chunks.
+	# For cache target v1.9 the recommended maximum is 1000000 chunks.
 	# Using cache pool with more chunks may degrade cache performance.
 	# This configuration option does not have a default value defined.
 
@@ -801,7 +801,7 @@ log {
 	# to define fields to display and sort fields for the log report.
 	# You can also use log/command_log_selection to define selection
 	# criteria used each time the log is reported.
-	# Note that if report/output_format (or --reporformat command line
+	# Note that if report/output_format (or --reportformat command line
 	# option) is set to json or json_std, then log/report_command_log=1
 	# is default.
 	# This configuration option has an automatic default value.
@@ -1869,7 +1869,7 @@ activation {
 	#     uses are present. Other PVs in the Volume Group may be missing.
 	#   degraded
 	#     Like complete, but additionally RAID LVs of segment type raid1,
-	#     raid4, raid5, radid6 and raid10 will be activated if there is no
+	#     raid4, raid5, raid6 and raid10 will be activated if there is no
 	#     data loss, i.e. they have sufficient redundancy to present the
 	#     entire addressable range of the Logical Volume.
 	#   partial
@@ -2130,7 +2130,7 @@ report {
 	#   %F
 	#     Equivalent to %Y-%m-%d (the ISO 8601 date format).
 	#   %G
-	#     The ISO 8601 week-based year with century as adecimal number.
+	#     The ISO 8601 week-based year with century as a decimal number.
 	#     The 4-digit year corresponding to the ISO week number (see %V).
 	#     This has the same format and value as %Y, except that if the
 	#     ISO week number belongs to the previous or next year, that year

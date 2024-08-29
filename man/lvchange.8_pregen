@@ -233,7 +233,7 @@ required, after which the others are optional.
 .P
 \(em
 .P
-Resyncronize a mirror or raid LV. 
+Resynchronize a mirror or raid LV. 
 .br
 Use to reset 'R' attribute on a not initially synchronized LV.
 .br

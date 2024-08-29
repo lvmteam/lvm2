@@ -169,7 +169,7 @@ is used for md devices, reported by sysfs.
 is used if a PV is placed on top of an lvm LV, reported by sysfs.
 .IP \[bu] 2
 .B loop_file
-is used for loop devices, the backing file name repored by sysfs.
+is used for loop devices, the backing file name reported by sysfs.
 .IP \[bu] 2
 .B devname
 the device name is used if no other type applies.
