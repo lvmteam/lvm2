@@ -141,7 +141,7 @@ typedef struct cfg_def_item {
 	uint16_t deprecated_since_version;				/* version since this item is deprecated */
 	const char *deprecation_comment;				/* comment about reasons for deprecation and settings that supersede this one */
 	const char *comment;						/* comment */
-	const char *file_premable;					/* comment text to use at the start of the file */
+	const char *file_preamble;					/* comment text to use at the start of the file */
 } cfg_def_item_t;
 
 /* configuration definition tree types */
