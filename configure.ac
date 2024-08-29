@@ -20,7 +20,7 @@ AC_CONFIG_SRCDIR([lib/device/dev-cache.h])
 AC_CONFIG_HEADERS([include/configure.h])
 
 ################################################################################
-dnl -- Setup the directory where autoconf has auxilary files
+dnl -- Setup the directory where autoconf has auxiliary files
 AC_CONFIG_AUX_DIR(autoconf)
 
 ################################################################################
@@ -656,7 +656,7 @@ AC_DEFINE_UNQUOTED([VDO_FORMAT_CMD], ["$VDO_FORMAT_CMD"],
 		   [The path to 'vdoformat', if available.])
 #
 # Do we need to use the API??
-# Do we want to link lvm2 with a big library for vdoformatting ?
+# Do we want to link lvm2 with a big library for VDO formatting ?
 #
 #AC_ARG_WITH(vdo-include,
 #	    AS_HELP_STRING([--with-vdo-include=PATH],
@@ -952,7 +952,7 @@ AS_IF([test "$BUILD_LOCKDDLM" = "yes"], [
 	AC_DEFINE([LOCKDDLM_SUPPORT], 1, [Define to 1 to include code that uses lvmlockd dlm option.])
 	AS_CASE(["$LIBDLM_LIBS"],
 		[*lpthread*], [
-			dnl -- pkg-congig for libdlm_lt may give us libdlm with libpthread
+			dnl -- pkg-config for libdlm_lt may give us libdlm with libpthread
 			AC_MSG_RESULT([replacing pkg-config --libs libdlm_lt "$LIBDLM_LIBS" with... -ldlm_lt])
 			LIBDLM_LIBS="${LIBDLM_LIBS%%ldlm*}ldlm_lt"])
 ])
