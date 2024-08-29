@@ -91,7 +91,7 @@ Version 1.02.173 - 09th August 2020
 Version 1.02.171 - 26th March 2020
 ==================================
   Try to remove all created devices on dm preload tree error path.
-  Fix dm_list interators with gcc 10 optimization (-ftree-pta).
+  Fix dm_list iterators with gcc 10 optimization (-ftree-pta).
   Dmeventd handles timer without looping on short intervals.
 
 Version 1.02.169 - 11th February 2020
@@ -122,7 +122,7 @@ Version 1.02.155 - 18th December 2018
 =====================================
   Include correct internal header inside libdm list.c.
   Enhance ioctl flattening and add parameters only when needed.
-  Add DM_DEVICE_ARM_POLL for API completness matching kernel.
+  Add DM_DEVICE_ARM_POLL for API completeness matching kernel.
   Do not add parameters for RESUME with DM_DEVICE_CREATE dm task.
   Fix dmstats report printing no output.
 
@@ -151,7 +151,7 @@ Version 1.02.147-rc1 - 24th May 2018
   Reuse uname() result for mirror target.
   Recognize also mounted btrfs through dm_device_has_mounted_fs().
   Add missing log_error() into dm_stats_populate() returning 0.
-  Avoid calling dm_stats_populat() for DM devices without any stats regions.
+  Avoid calling dm_stats_populate() for DM devices without any stats regions.
   Support DM_DEBUG_WITH_LINE_NUMBERS envvar for debug msg with source:line.
   Configured command for thin pool threshold handling gets whole environment.
   Fix tests for failing dm_snprintf() in stats code.
@@ -200,7 +200,7 @@ Version 1.02.141 - 28th June 2017
   Add dm_percent_to_round_float for adjusted percentage rounding.
   Reset array with dead rimage devices once raid gets in sync.
   Drop unneeded --config option from raid dmeventd plugin.
-  dm_get_status_raid() handle better some incosistent md statuses.
+  dm_get_status_raid() handle better some inconsistent md statuses.
   Accept truncated files in calls to dm_stats_update_regions_from_fd().
   Restore Warning by 5% increment when thin-pool is over 80% (1.02.138).
 
@@ -395,7 +395,7 @@ Version 1.02.112 - 28th November 2015
 =====================================
   Show error message when trying to create unsupported raid type.
   Improve preloading sequence of an active thin-pool target.
-  Drop extra space from cache target line to fix unneded table reloads.
+  Drop extra space from cache target line to fix unneeded table reloads.
 
 Version 1.02.111 - 23rd November 2015
 =====================================
@@ -410,7 +410,7 @@ Version 1.02.110 - 30th October 2015
   Disable thin monitoring plugin when it fails too often (>10 times).
   Fix/restore parsing of empty field '-' when processing dmeventd event.
   Enhance dm_tree_node_size_changed() to recognize size reduction.
-  Support exit on idle for dmenventd (1 hour).
+  Support exit on idle for dmeventd (1 hour).
   Add support to allow unmonitor device from plugin itself.
   New design for thread co-operation in dmeventd.
   Dmeventd read device status with 'noflush'.
@@ -583,7 +583,7 @@ Version 1.02.93 - 21st January 2015
 Version 1.02.92 - 24th November 2014
 ====================================
   Fix memory corruption with sorting empty string lists (1.02.86).
-  Fix man dmsetup.8 syntax warning of Groff
+  Fix man dmsetup.8 syntax warning of Groff.
   Accept unquoted strings and / in place of {} when parsing configs.
 
 Version 1.02.91 - 11th November 2014
@@ -602,7 +602,7 @@ Version 1.02.90 - 1st September 2014
 Version 1.02.89 - 26th August 2014
 ==================================
   Improve libdevmapper-event select() error handling.
-  Add extra check for matching transation_id after message submitting.
+  Add extra check for matching transaction_id after message submitting.
   Add dm_report_field_string_list_unsorted for str. list report without sorting.
   Support --deferred with dmsetup remove to defer removal of open devices.
   Update dm-ioctl.h to include DM_DEFERRED_REMOVE flag.
@@ -689,7 +689,7 @@ Version 1.02.82 - 4th October 2013
 
 Version 1.02.81 - 23rd September 2013
 =====================================
-  Tidy dmeventd fifo initialisation.
+  Tidy dmeventd fifo initialization.
 
 Version 1.02.80 - 20th September 2013
 =====================================
@@ -714,7 +714,7 @@ Version 1.02.78 - 24th July 2013
   Always return success on dmeventd -V command call.
   Fix parsing of 64bit snapshot status in dmeventd snapshot plugin.
   Add dm_get_status_snapshot() for parsing snapshot status.
-  Detecte mounted fs also via reading /proc/self/mountinfo.
+  Detect mounted fs also via reading /proc/self/mountinfo.
   Add dm_mountinfo_read() for parsing /proc/self/mountinfo.
   Report error for nonexisting devices in dmeventd communication.
   Prevent double free error after dmeventd call of _fill_device_data().
@@ -811,7 +811,7 @@ Version 1.02.71 - 20th February 2012
   Add "watch" rule to 13-dm-disk.rules.
   Detect failing fifo and skip 20s retry communication period.
   Add DM_DEFAULT_NAME_MANGLING_MODE environment variable as an override.
-  Add dm_lib_init to automatically initialise device-mapper library on load.
+  Add dm_lib_init to automatically initialize device-mapper library on load.
   Replace any '\' char with '\\' in dm table specification on input.
   Add mangle command to dmsetup to provide renaming to correct mangled form.
   Add 'mangled_name' and 'unmangled_name' fields to dmsetup info -c -o.
@@ -905,7 +905,7 @@ Version 1.02.66 - 12th August 2011
   Fix memory leak in dmsetup _message() memory allocation error path.
   Use new oom killer adjustment interface (oom_score_adj) when available.
   Add systemd unit files for dmeventd.
-  Fix read-only identical table reload supression.
+  Fix read-only identical table reload suppression.
 
 Version 1.02.65 - 8th July 2011
 ===============================
@@ -920,7 +920,7 @@ Version 1.02.65 - 8th July 2011
   Add dm_get_suspended_counter() for number of devs in suspended state by lib.
   Fix "all" report field prefix matching to include label fields with pv_all.
   Delay resuming new preloaded mirror devices with core logs in deptree code.
-  Accept new kernel version 3 uname formats in initialisation.
+  Accept new kernel version 3 uname formats in initialization.
 
 Version 1.02.64 - 29th April 2011
 ==================================
@@ -934,7 +934,7 @@ Version 1.02.64 - 29th April 2011
   Improve stack debug reporting in dm_task_create().
   Fallback to control node creation only if node doesn't exist yet.
   Change dm_hash binary functions to take void *key instead of char *.
-  Fix uninitialised memory use with empty params in _reload_with_suppression_v4.
+  Fix uninitialized memory use with empty params in _reload_with_suppression_v4.
   Lower severity of selabel_lookup and matchpathcon failure to log_debug.
   Add test for failed allocation from dm_task_set_uuid() in dmeventd.
   Add dm_event_get_version to dmeventd for use with -R.
@@ -1103,7 +1103,7 @@ Version 1.02.44 - 15th February 2010
 
 Version 1.02.43 - 21st January 2010
 ===================================
-  Remove bitset, hash and pool headers superceded by libdevmapper.h.
+  Remove bitset, hash and pool headers superseded by libdevmapper.h.
   Fix off-by-one error causing bad cluster mirror table construction.
 
 Version 1.02.42 - 14th January 2010
@@ -1227,7 +1227,7 @@ Version 1.02.27 - 25th June 2008
 
 Version 1.02.26 - 6th June 2008
 ===============================
-  Initialise params buffer to empty string in _emit_segment.
+  Initialize params buffer to empty string in _emit_segment.
   Skip add_dev_node when ioctls disabled.
   Make dm_hash_iter safe against deletion.
   Accept a NULL pointer to dm_free silently.
@@ -1283,7 +1283,7 @@ Version 1.02.20 - 15th June 2007
 
 Version 1.02.19 - 27th April 2007
 =================================
-  Standardise protective include file #defines.
+  Standardize protective include file #defines.
   Add regex functions to library.
   Avoid trailing separator in reports when there are hidden sort fields.
   Fix segfault in 'dmsetup status' without --showkeys against crypt target.
@@ -1314,7 +1314,7 @@ Version 1.02.16 - 25th January 2007
   Streamline dm_report_field_* interface.
   Add cmdline debug & version options to dmeventd.
   Add DM_LIB_VERSION definition to configure.h.
-  Suppress 'Unrecognised field' error if report field is 'help'.
+  Suppress 'Unrecognized field' error if report field is 'help'.
   Add --separator and --sort to dmsetup (unused).
   Make alignment flag optional when specifying report fields.
 
