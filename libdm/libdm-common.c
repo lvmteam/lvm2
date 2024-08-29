@@ -1960,7 +1960,7 @@ static int _sysfs_find_kernel_name(uint32_t major, uint32_t minor, char *buf, si
 				    !strcmp(name_dev, "holders") ||
 				    !strcmp(name_dev, "integrity") ||
 				    !strcmp(name_dev, "loop") ||
-				    !strcmp(name_dev, "queueu") ||
+				    !strcmp(name_dev, "queue") ||
 				    !strcmp(name_dev, "md") ||
 				    !strcmp(name_dev, "mq") ||
 				    !strcmp(name_dev, "power") ||
