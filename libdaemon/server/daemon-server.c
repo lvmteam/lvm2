@@ -682,7 +682,7 @@ void daemon_start(daemon_state s)
 
 		/* s.idle == NULL equals no shutdown on timeout */
 		if (_is_idle(s)) {
-			DEBUGLOG(&s, "timeout occured");
+			DEBUGLOG(&s, "timeout occurred");
 			if (++timeout_count >= _get_max_timeouts(s)) {
 				INFO(&s, "Inactive for %d seconds. Exiting.", timeout_count);
 				break;

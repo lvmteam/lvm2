@@ -867,7 +867,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				inc_error_count;
 			}
 			if (lv->status & LVM_WRITE) {
-				log_error("LV %s: external origin cant't be writable.",
+				log_error("LV %s: external origin can't be writable.",
 					  lv->name);
 				inc_error_count;
 			}

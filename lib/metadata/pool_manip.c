@@ -576,7 +576,7 @@ int create_pool(struct logical_volume *pool_lv,
 		/* Conversion to VDO commits metadata,
 		 * try to deactivate pool LV, and remove metadata LV */
 		if (!deactivate_lv(pool_lv->vg->cmd, pool_lv))
-			log_error("Failedto deactivate pool volume %s.",
+			log_error("Failed to deactivate pool volume %s.",
 				  display_lvname(pool_lv));
 
 		if (!lv_remove(meta_lv) ||

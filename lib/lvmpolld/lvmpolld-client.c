@@ -62,7 +62,7 @@ static void _lvmpolld_connect_or_warn(void)
 	if (!_lvmpolld_connected && !_lvmpolld.error) {
 		_lvmpolld = _lvmpolld_open(_lvmpolld_socket);
 		if ( _lvmpolld.socket_fd >= 0 && !_lvmpolld.error) {
-			log_debug_lvmpolld("Sucessfully connected to lvmpolld on fd %d.", _lvmpolld.socket_fd);
+			log_debug_lvmpolld("Successfully connected to lvmpolld on fd %d.", _lvmpolld.socket_fd);
 			_lvmpolld_connected = 1;
 		} else {
 			log_warn("WARNING: Failed to connect to lvmpolld. Proceeding with polling without using lvmpolld.");

@@ -586,7 +586,7 @@ resize_luks() {
 	decode_size "$1" 512
 
 	if [ $((NEWSIZE % 512)) -gt 0 ]; then
-		error "New size is not sector alligned"
+		error "New size is not sector aligned."
 	fi
 
 	if [ $((NEWBLOCKCOUNT - CRYPT_DATA_OFFSET)) -lt 1 ]; then
@@ -642,7 +642,7 @@ detect_crypt_device() {
 	NEWSIZE=$TMP
 
 	if [ $((L_NEWSIZE % 512)) -ne 0 ]; then
-		error "New size is not sector alligned"
+		error "New size is not sector aligned."
 	fi
 
 	CRYPT_RESIZE_BLOCKS=$NEWBLOCKCOUNT

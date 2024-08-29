@@ -277,7 +277,7 @@ static int _cache_pool_text_export(const struct lv_segment *seg,
 		outf(f, "metadata_format = " FMTu32, seg->cache_metadata_format);
 		break;
 	default:
-		log_error(INTERNAL_ERROR "LV %s is using unknown cache metadada format %u.",
+		log_error(INTERNAL_ERROR "LV %s is using unknown cache metadata format %u.",
 			  display_lvname(seg->lv), seg->cache_metadata_format);
 		return 0;
 	}
@@ -634,7 +634,7 @@ static int _cache_add_target_line(struct dev_manager *dm,
 			return_0;
 
 		if (!(attr & CACHE_FEATURE_METADATA2)) {
-			log_error("LV %s has metadata format %u unsuported by kernel.",
+			log_error("LV %s has metadata format %u unsupported by kernel.",
 				  display_lvname(seg->lv), setting_seg->cache_metadata_format);
 			return 0;
 		}

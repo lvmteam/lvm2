@@ -2483,7 +2483,7 @@ static int _remove_metadata_area_from_pv(struct physical_volume *pv,
 	if (mda_index >= FMT_TEXT_MAX_MDAS_PER_PV) {
 		log_error(INTERNAL_ERROR "can't remove metadata area with "
 					 "index %u from PV %s. Metadata "
-					 "layou not supported by %s format.",
+					 "layout not supported by %s format.",
 					  mda_index, dev_name(pv->dev),
 					  pv->fmt->name);
 		return 0;

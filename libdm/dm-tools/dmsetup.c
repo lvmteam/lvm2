@@ -5410,7 +5410,7 @@ static int _stats_create_file(CMD_ARGS)
 	dm_filemapd_mode_t mode;
 
 	if (names) {
-		log_error("Device names are not compatibile with --filemap.");
+		log_error("Device names are not compatible with --filemap.");
 		return 0;
 	}
 
@@ -6041,7 +6041,7 @@ static int _stats_update_file(CMD_ARGS)
 
 
 	if (names) {
-		log_error("Device names are not compatibile with update_filemap.");
+		log_error("Device names are not compatible with update_filemap.");
 		return 0;
 	}
 

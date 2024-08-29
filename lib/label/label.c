@@ -240,7 +240,7 @@ struct label *label_create(struct labeller *labeller)
 	struct label *label;
 
 	if (!(label = zalloc(sizeof(*label)))) {
-		log_error("label allocaction failed");
+		log_error("label allocation failed");
 		return NULL;
 	}
 

@@ -993,7 +993,7 @@ static struct test_suite *_small_tests(void)
 	T("zero-flag-dirties", "zeroed data counts as dirty", test_zeroed_data_counts_as_dirty);
 	T("read-multiple-files", "read from multiple files", test_multiple_files);
 	T("read-bad-issue", "read fails if io engine unable to issue", test_read_bad_issue);
-	T("read-bad-issue-intermittent", "failed issue, followed by succes", test_read_bad_issue_intermittent);
+	T("read-bad-issue-intermittent", "failed issue, followed by success", test_read_bad_issue_intermittent);
 	T("read-bad-io", "read issued ok, but io fails", test_read_bad_wait);
 	T("read-bad-io-intermittent", "failed io, followed by success", test_read_bad_wait_intermittent);
 	T("write-bad-issue-stops-flush", "flush fails temporarily if any block fails to write", test_write_bad_issue_stops_flush);

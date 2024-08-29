@@ -1443,7 +1443,7 @@ static int run( int argc, const char **argv, std::string fl_envvar = "TEST_FLAVO
             "Other:\n"
             "  --fatal-timeouts\n\t\t- exit after encountering 2 timeouts in a row.\n"
             "  --continue\t- If set append to journal. Otherwise it will be overwritten.\n"
-            "  --heartbeat HEARTBEAT\n\t\t- Name of file to update periodicaly while running.\n"
+            "  --heartbeat HEARTBEAT\n\t\t- Name of file to update periodically while running.\n"
             "  --watch WATCH\t- Comma separated list of files to watch and print.\n"
             "  --timeout TIMEOUT\n\t\t- Period of silence in seconds considered a timeout. Default: 180.\n"
             "  --nokmsg\t- Do not try to read kernel messages.\n"

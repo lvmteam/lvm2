@@ -968,7 +968,7 @@ static int _check_device_not_in_use(const char *name, struct dm_info *info)
 	} else if (dm_device_has_holders(info->major, info->minor))
 		reason = "is used by another device";
 	else if (dm_device_has_mounted_fs(info->major, info->minor))
-		reason = "constains a filesystem in use";
+		reason = "contains a filesystem in use";
 	else
 		return 1;
 
@@ -4082,7 +4082,7 @@ int dm_tree_node_add_replicator_dev_target(struct dm_tree_node *node,
 					   uint32_t slog_flags,
 					   uint32_t slog_region_size)
 {
-	log_error("Replicator targer is unsupported.");
+	log_error("Replicator target is unsupported.");
 	return 0;
 }
 

@@ -5710,7 +5710,7 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 		log_print_unless_silent("Detaching writecache setting cleaner.");
 
 		if (!lv_writecache_set_cleaner(lv)) {
-			log_error("Failed to set cleaner cachesetting to flush cache.");
+			log_error("Failed to set cleaner cachesettings to flush cache.");
 			log_error("See lvchange --cachesettings cleaner=1");
 
 			if (!active_begin && active_clean && !deactivate_lv(cmd, lv))

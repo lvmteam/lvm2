@@ -75,7 +75,7 @@ static void _usage(const char *prog, FILE *file)
 		"   -p|--pidfile     Set path to the pidfile\n"
 		"   -s|--socket      Set path to the communication socket\n"
 		"   -B|--binary      Path to lvm2 binary\n"
-		"   -t|--timeout     Time to wait in seconds before shutdown on idle (missing or 0 = inifinite)\n\n", prog, prog);
+		"   -t|--timeout     Time to wait in seconds before shutdown on idle (missing or 0 = infinite)\n\n", prog, prog);
 }
 
 static int _init(struct daemon_state *s)

@@ -782,7 +782,7 @@ static int _reorder_raid10_near_seg_areas(struct lv_segment *seg, enum raid0_rai
 
 	/* FIXME: once more data copies supported with raid10 */
 	if (seg_is_raid10_near(seg) && (stripes % data_copies)) {
-		log_error("Can't convert %s LV %s with number of stripes not divisable by number of data copies.",
+		log_error("Can't convert %s LV %s with number of stripes not divisible by number of data copies.",
 			  lvseg_name(seg), display_lvname(seg->lv));
 		return 0;
 	}

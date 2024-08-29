@@ -216,7 +216,7 @@ void set_pe_align(struct physical_volume *pv, uint64_t data_alignment_sectors)
 		temp_pe_align_sectors = dev_minimum_io_size(pv->fmt->cmd->dev_types, pv->dev);
 
 		if (temp_pe_align_sectors && (pe_align_sectors % temp_pe_align_sectors)) {
-			log_debug("Adjusting PE alignment from %llu sectors to mininum io size %llu sectors for %s",
+			log_debug("Adjusting PE alignment from %llu sectors to minimum io size %llu sectors for %s",
 				  (unsigned long long)pe_align_sectors,
 				  (unsigned long long)temp_pe_align_sectors,
 				  dev_name(pv->dev));

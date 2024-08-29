@@ -2415,7 +2415,7 @@ static int _get_cookie_sem(uint32_t cookie, int *semid)
 			break;
 		case EACCES:
 			log_error("No permission to access "
-				  "notificaton semaphore identified "
+				  "notification semaphore identified "
 				  "by cookie value %" PRIu32 " (0x%x)",
 				  cookie, cookie);
 			break;

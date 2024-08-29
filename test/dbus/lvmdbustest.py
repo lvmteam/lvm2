@@ -2398,7 +2398,7 @@ class TestDbusService(unittest.TestCase):
 		di = DaemonInfo.get()
 		self.assertTrue(di is not None)
 		if di.systemd:
-			raise unittest.SkipTest('existing dameon running via systemd')
+			raise unittest.SkipTest('existing daemon running via systemd')
 		if di:
 			ec = di.start(True)
 			self.assertEqual(ec, 114)

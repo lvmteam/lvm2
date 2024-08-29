@@ -2087,7 +2087,7 @@ hold_device_open() {
 		sleep .1
 	done
 
-	die "$vgname-$lvname expected to be openned, but it's not!"
+	die "$vgname-$lvname expected to be opened, but it's not!"
 }
 
 # return total memory size in kB units

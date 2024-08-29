@@ -117,7 +117,7 @@ static struct dm_list *_format_pvsegs(struct dm_pool *mem, const struct lv_segme
 				name,
 				(!visible && mark_hidden) ? "]" : "",
 				extent_str) < 0) {
-			log_error("_format_pvsegs: list item dmsnprintf failed");
+			log_error("_format_pvsegs: list item dm_snprintf failed");
 			goto bad;
 		}
 

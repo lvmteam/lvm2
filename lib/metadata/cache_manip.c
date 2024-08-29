@@ -479,7 +479,7 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 
 		if (status->cache->fail) {
 			dm_pool_destroy(status->mem);
-			log_warn("WARNING: Skippping flush for failed cache %s.",
+			log_warn("WARNING: Skipping flush for failed cache %s.",
 				 display_lvname(cache_lv));
 			return 1;
 		}

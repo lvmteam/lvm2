@@ -957,7 +957,7 @@ static int _vgchange_autoactivation_setup(struct cmd_context *cmd,
 	 * look for all PVs in the VG.  (No optimization used.)
 	 */
 	if (found_incomplete) {
-		log_print("PVs online incomplete for VG %s, using all devicess.", vgname);
+		log_print("PVs online incomplete for VG %s, using all devices.", vgname);
 		goto bad;
 	}
 
@@ -1329,7 +1329,7 @@ static int _vgchange_locktype_single(struct cmd_context *cmd, const char *vg_nam
 	if (vg->lock_type && !strcmp(vg->lock_type, "sanlock") &&
 	    (cmd->command->command_enum == vgchange_locktype_CMD)) {
 		if (!deactivate_lv(cmd, vg->sanlock_lv)) {
-			log_error("Failed to deativate %s.",
+			log_error("Failed to deactivate %s.",
 				  display_lvname(vg->sanlock_lv));
 			return ECMD_FAILED;
 		}

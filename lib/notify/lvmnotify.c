@@ -121,7 +121,7 @@ void lvmnotify_send(struct cmd_context *cmd)
 		return;
 	}
 
-	log_debug_dbus("Nofify dbus at %s.", LVM_DBUS_DESTINATION);
+	log_debug_dbus("Notify dbus at %s.", LVM_DBUS_DESTINATION);
 
 	ret = sd_bus_call_method(bus,
 				 LVM_DBUS_DESTINATION,

@@ -110,7 +110,7 @@ help:
 	@echo "  LVM_TEST_LOCKING	Normal (1), Cluster (3)."
 	@echo "  LVM_TEST_LVMPOLLD	Start lvmpolld"
 	@echo "  LVM_TEST_NODEBUG	Do not debug lvm commands."
-	@echo "  LVM_TEST_PARALLEL	May skip agressive wipe of LVMTEST resources."
+	@echo "  LVM_TEST_PARALLEL	May skip aggressive wipe of LVMTEST resources."
 	@echo "  LVM_TEST_RESULTS	Where to create result files [results]."
 	@echo "  LVM_TEST_THIN_CHECK_CMD   Command for thin_check   [$(LVM_TEST_THIN_CHECK_CMD)]."
 	@echo "  LVM_TEST_THIN_DUMP_CMD    Command for thin_dump    [$(LVM_TEST_THIN_DUMP_CMD)]."

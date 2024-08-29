@@ -1596,7 +1596,7 @@ static int _check_pool_parameters(struct cmd_context *cmd,
 		} else if (vg) {
 			/* FIXME: what better to do with --readahead and pools? */
 			if (arg_is_set(cmd, readahead_ARG)) {
-				log_error("Ambigous --readahead parameter specified. Please use either with pool or volume.");
+				log_error("Ambiguous --readahead parameter specified. Please use either with pool or volume.");
 				return 0;
 			}
 		}

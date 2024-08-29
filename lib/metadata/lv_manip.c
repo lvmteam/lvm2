@@ -5115,7 +5115,7 @@ int lv_extend_policy_calculate_percent(struct logical_volume *lv,
 		policy_amount =
 			find_config_tree_int(cmd, activation_snapshot_autoextend_percent_CFG, NULL);
 		if (policy_threshold < 50) {
-			log_warn("WARNING: Snapshot autoextend threshold %d%% is set bellow "
+			log_warn("WARNING: Snapshot autoextend threshold %d%% is set below "
 				 "minimal supported value 50%%.", policy_threshold);
 			policy_threshold = 50;
 		}
@@ -5535,7 +5535,7 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 
 				if (new_extents > seg_size) {
 					/* Notify user about extra increase of extension */
-					log_print_unless_silent("Increasing incremention size from %s to %s to fit new VDO slab.",
+					log_print_unless_silent("Increasing incremental size from %s to %s to fit new VDO slab.",
 								display_size(cmd, (uint64_t)seg_size * vg->extent_size),
 								display_size(cmd, (uint64_t)new_extents * vg->extent_size));
 					seg_size = new_extents;
@@ -8883,7 +8883,7 @@ int activate_and_wipe_lvlist(struct dm_list *lv_list, int commit)
 		if (!(was_active[i++] = lv_is_active(lvl->lv))) {
 			lvl->lv->status |= LV_TEMPORARY;
 			if (!activate_lv(vg->cmd, lvl->lv)) {
-				log_error("Failed to activate localy %s for wiping.",
+				log_error("Failed to activate locally %s for wiping.",
 					  display_lvname(lvl->lv));
 				r = 0;
 				goto out;
@@ -9145,7 +9145,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 		/* Does LV need to be zeroed? */
 		if (lp->zero) {
-			log_warn("WARNING: Skipping zeroing and wipping, compiled without activation support.");
+			log_warn("WARNING: Skipping zeroing and wiping, compiled without activation support.");
 			lp->zero = 0;
 			lp->wipe_signatures = 0;
 		}
@@ -9812,7 +9812,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 			/* Activate spare snapshot once it is a complete LV */
 			if (!lv_active_change(cmd, origin_lv, lp->activate)) {
-				log_error("Failed to activate sparce volume %s.",
+				log_error("Failed to activate sparse volume %s.",
 					  display_lvname(origin_lv));
 				return NULL;
 			}

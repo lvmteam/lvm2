@@ -1104,7 +1104,7 @@ static void _add_rule(struct cmd_context *cmdtool, struct command *cmd,
 	int check = 0;
 
 	if (cmd->rule_count == CMD_MAX_RULES) {
-		log_error("Parsing command defs: too many rules for cmd, increate CMD_MAX_RULES.");
+		log_error("Parsing command defs: too many rules for cmd, increase CMD_MAX_RULES.");
 		cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
 		return;
 	}

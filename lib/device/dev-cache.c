@@ -305,7 +305,7 @@ static int _add_alias(struct device *dev, const char *path, enum add_hash hash)
 
 	if (!(path = _strdup(path)) ||
 	    !(sl = _zalloc(sizeof(*sl)))) {
-		log_error("Failed to add allias to dev cache.");
+		log_error("Failed to add alias to dev cache.");
 		return 0;
 	}
 
@@ -2451,7 +2451,7 @@ int setup_devname_in_dev_cache(struct cmd_context *cmd, const char *devname)
 	}
 
 	if (!S_ISBLK(buf.st_mode)) {
-		log_error("Invaild device type %s.", devname);
+		log_error("Invalid device type %s.", devname);
 		return 0;
 	}
 
