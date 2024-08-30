@@ -400,8 +400,9 @@ to be applied for \fBlog report\fP. Default selection criteria used for
 \fBlog/command_log_selection="!(log_type=status && message=success)"\fP.
 This means that, by default, \fBlog report\fP doesn't display status messages
 about successful operation and it displays only rows with error, warning,
-print-type messages and messages about failure states (for more information,
-see \fBlog report content\fP below).
+print-type messages and messages about failure states. To see unfiltered
+command log, use \fB"all"\fP value for the selection. For more information,
+see \fBlog report content\fP below.
 .P
 .B Log report coverage
 .br
