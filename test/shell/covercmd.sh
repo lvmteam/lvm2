@@ -92,5 +92,5 @@ not lvm pvdata
 if lvm nonexistingcommand ; then
         die "lvm must fail"
 elif [ "$?" != "2" ] ; then
-        die "lvm sould return code 2"
+        die "lvm should return code 2"
 fi

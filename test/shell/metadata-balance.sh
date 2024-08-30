@@ -116,7 +116,7 @@ for mdacp in 1 2; do
 	pvunignore_ "$dev2"
 	pvunignore_ "$dev4"
 	pvunignore_ "$dev5"
-	echo vgcreate $SHARED succeds with small value of --metadatacopies, ignores mdas
+	echo vgcreate $SHARED succeeds with small value of --metadatacopies, ignores mdas
 	vgcreate $SHARED --vgmetadatacopies 1 $vg "$dev1" "$dev2" "$dev4" "$dev5"
 	check vg_field $vg vg_mda_copies 1
 	check vg_field $vg vg_mda_count $(( mdacp * 4 ))
