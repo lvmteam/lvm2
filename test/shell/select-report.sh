@@ -198,7 +198,7 @@ sel lv 'lv_minor=254' xyz
 # also test synonym for string field type
 sel lv 'seg_monitor=undefined' vol1 vol2 abc abc orig xyz
 
-# if size unit not spefied, the 'm' (MiB) unit is used by default
+# if size unit not specified, the 'm' (MiB) unit is used by default
 sel lv 'lv_size=8' vol1
 
 # no need to use quotes for the whole selection string if it does not clash with shell

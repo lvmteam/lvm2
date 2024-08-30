@@ -172,7 +172,7 @@ function check_mangle_cmd()
 	fi
 
 	if [ "$r" = 0 ] && [ "$rename_expected" = 1 ]; then
-		# successfuly renamed to expected name
+		# successfully renamed to expected name
 		remove_dm_dev none "$expected"
 	elif [ $r = 1 ]; then
 		# failed to rename to expected or renamed when it should not - find the new name
@@ -181,7 +181,7 @@ function check_mangle_cmd()
 		remove_dm_dev none "$new_name" || \
 		remove_dm_dev none "$dm_name" || remove_dm_dev none "$expected"
 	else
-		# successfuly done nothing
+		# successfully done nothing
 		remove_dm_dev none "$dm_name"
 	fi
 

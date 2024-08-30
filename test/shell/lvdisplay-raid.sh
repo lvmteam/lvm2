@@ -22,7 +22,7 @@ aux have_raid 1 7 0 || skip
 
 aux prepare_vg 6
 
-# raid0 loosing a leg
+# raid0 losing a leg
 lvcreate -aey --type raid0 -i5 -l5 -n $lv $vg
 lvdisplay $vg/$lv|grep "LV Status *available"
 aux disable_dev "$dev1"
@@ -30,7 +30,7 @@ lvdisplay $vg/$lv|grep "LV Status *NOT available (partial)"
 aux enable_dev "$dev1"
 lvremove -y $vg/$lv
 
-# raid1 loosing a leg/all legs
+# raid1 losing a leg/all legs
 lvcreate -aey --type raid1 -m1 -l5 -n $lv $vg "$dev1" "$dev2"
 lvdisplay $vg/$lv|grep "LV Status *available"
 aux disable_dev "$dev1"
@@ -40,7 +40,7 @@ lvdisplay $vg/$lv|grep "LV Status *NOT available (partial)"
 aux enable_dev "$dev1" "$dev2"
 lvremove -y $vg/$lv
 
-# raid5 loosing a leg/2 legs
+# raid5 losing a leg/2 legs
 lvcreate -aey --type raid5 -i3 -l5 -n $lv $vg
 lvdisplay $vg/$lv|grep "LV Status *available"
 aux disable_dev "$dev1"
@@ -50,7 +50,7 @@ lvdisplay $vg/$lv|grep "LV Status *NOT available (partial)"
 aux enable_dev "$dev1" "$dev2"
 lvremove -y $vg/$lv
 
-# raid6 loosing a leg/2 legs/3 legs
+# raid6 losing a leg/2 legs/3 legs
 lvcreate -aey --type raid6 -i3 -l5 -n $lv $vg
 lvdisplay $vg/$lv|grep "LV Status *available"
 aux disable_dev "$dev1"
@@ -62,7 +62,7 @@ lvdisplay $vg/$lv|grep "LV Status *NOT available (partial)"
 aux enable_dev "$dev1" "$dev2" "$dev3"
 lvremove -y $vg/$lv
 
-# raid10 loosing a leg per mirror group / a complete mirror group
+# raid10 losing a leg per mirror group / a complete mirror group
 lvcreate -aey --type raid10 -i3 -l3 -n $lv $vg
 lvdisplay $vg/$lv|grep "LV Status *available"
 aux disable_dev "$dev1"

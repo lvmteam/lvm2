@@ -43,7 +43,7 @@ aux prepare_vg 1 9000
 lvcreate --vdo -V2G -L4G -n $lv1 $vg/vpool
 
 pre=$(percent_)
-# Check out VDO pool is bellow 70%
+# Check out VDO pool is below 70%
 test "$pre" -lt 70
 
 # Fill space to be over 70%
@@ -56,8 +56,8 @@ test "$pre" -ge 70
 wait_for_change_ $pre
 
 pre=$(percent_)
-# Check out VDO pool gets again bellow 70%
-test "$pre" -lt 70 || die "Data percentage has not changed bellow 70%!"
+# Check out VDO pool gets again below 70%
+test "$pre" -lt 70 || die "Data percentage has not changed below 70%!"
 
 # 4G * 1.2   (20%) ->  4.8G
 check lv_field $vg/vpool size "4.80g"

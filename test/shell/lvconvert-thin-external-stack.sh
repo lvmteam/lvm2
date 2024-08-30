@@ -154,7 +154,7 @@ lvremove -f $vg
 
 #####################################################
 #
-# Check some prohibitted conversions
+# Check some prohibited conversions
 #
 #####################################################
 

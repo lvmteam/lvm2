@@ -147,7 +147,7 @@ lvcreate -aey -l2 --type mirror -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev5" "$dev3:$
 LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -b $vg/$lv1 "$dev4"
 # FIXME: Extra wait here for mirror upconvert synchronization
 # otherwise we may fail her on parallel upconvert and downconvert
-# lvconvert-mirror-updown.sh tests this errornous case separately
+# lvconvert-mirror-updown.sh tests this erroneous case separately
 lvconvert $vg/$lv1
 lvconvert -m-1 $vg/$lv1 "$dev2"
 lvconvert $vg/$lv1
@@ -162,7 +162,7 @@ lvcreate -aey -l2 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:$DEVRANGE
 LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -b $vg/$lv1 "$dev4"
 # FIXME: Extra wait here for mirror upconvert synchronization
 # otherwise we may fail her on parallel upconvert and downconvert
-# lvconvert-mirror-updown.sh tests this errornous case separately
+# lvconvert-mirror-updown.sh tests this erroneous case separately
 lvconvert $vg/$lv1
 lvconvert -m-1 $vg/$lv1 "$dev2"
 lvconvert $vg/$lv1
@@ -177,7 +177,7 @@ lvcreate -aey -l2 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:$DEVRANGE
 LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -b $vg/$lv1 "$dev4"
 # FIXME: Extra wait here for mirror upconvert synchronization
 # otherwise we may fail her on parallel upconvert and downconvert
-# lvconvert-mirror-updown.sh tests this errornous case separately
+# lvconvert-mirror-updown.sh tests this erroneous case separately
 lvconvert $vg/$lv1
 lvconvert -m-1 $vg/$lv1 "$dev2"
 lvconvert $vg/$lv1
@@ -311,7 +311,7 @@ fi
 # Test that the correct devices remain in the mirror
 # Make $dev2 & $dev4  zero backend device so large mirrors can be user
 # without consuming any real space. Clearly such mirrors can't be read back
-# but tests here are validating possibilies of those conversions
+# but tests here are validating possibilities of those conversions
 #
 # Test pulling primary image before mirror in-sync (should fail)
 # Test pulling primary image after mirror in-sync (should work)
@@ -323,7 +323,7 @@ SHOULD=
 aux throttle_dm_mirror || SHOULD=should
 test "${LVM_VALGRIND:-0}" -eq 0 || SHOULD=should
 
-# Use large enough mirror that takes time to sychronize with small regionsize
+# Use large enough mirror that takes time to synchronize with small regionsize
 lvcreate -aey -L20 -Zn -Wn --type mirror --regionsize 4k -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev4" "$dev3:$DEVRANGE"
 $SHOULD not lvconvert -m-1 $vg/$lv1 "$dev1" 2>&1 | tee out
 aux restore_dm_mirror
@@ -341,7 +341,7 @@ lvremove -ff $vg
 
 aux throttle_dm_mirror || :
 # No parallel lvconverts on a single LV please
-# Use big enough mirror size and small regionsize to run on all test machines succesfully
+# Use big enough mirror size and small regionsize to run on all test machines successfully
 lvcreate -aey -Zn -Wn -L20 --type mirror --regionsize 4k -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:0-8"
 check mirror $vg $lv1
 check mirror_legs $vg $lv1 2

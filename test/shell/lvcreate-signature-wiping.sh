@@ -34,7 +34,7 @@ test_msg_() {
 aux prepare_vg
 
 # lvcreate wipes signatures when found on newly created LV - test this on "swap".
-# Test all combinatios with -Z{y|n} and -W{y|n} and related lvm.conf settings.
+# Test all combinations with -Z{y|n} and -W{y|n} and related lvm.conf settings.
 
 lvcreate -l1 -n $lv1 $vg
 init_lv_

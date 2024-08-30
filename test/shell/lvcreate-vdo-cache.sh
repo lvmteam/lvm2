@@ -22,7 +22,7 @@ SKIP_WITH_LVMPOLLD=1
 #
 
 #
-# FIXME: tempororarily disable this test until fixed VDO driver is relased
+# FIXME: temporarily disable this test until fixed VDO driver is released
 #        should really be 6.2.2 - currently goes with vdo-6.2.2.18
 aux have_vdo 6 2 1 || skip
 aux have_cache 1 3 0 || skip

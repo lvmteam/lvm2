@@ -74,7 +74,7 @@ not pvcreate --labelsector -1 "$dev1"
 #COMM 'pvcreate rejects labelsector > 1000000000000'
 not pvcreate --labelsector 1000000000000 "$dev1"
 
-# other possibilites based on code inspection (not sure how hard)
+# other possibilities based on code inspection (not sure how hard)
 # x. device too small (min of 512 * 1024 KB)
 # x. device filtered out
 # x. unable to open /dev/urandom RDONLY

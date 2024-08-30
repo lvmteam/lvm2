@@ -28,7 +28,7 @@ create_vg_() {
 }
 
 aux prepare_pvs 5 10
-# FIXME: paramaterize lvm1 vs lvm2 metadata; most of these tests should run
+# FIXME: parameterize lvm1 vs lvm2 metadata; most of these tests should run
 # fine with lvm1 metadata as well; for now, just add disks 5 and 6 as lvm1
 # metadata
 

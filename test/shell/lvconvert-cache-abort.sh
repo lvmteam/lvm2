@@ -74,7 +74,7 @@ wait
 # dirty blocks - so the test can't really break the cache clearing.
 #
 # So the failure of test is reported only for recent kernels > 5.6
-# ans skipped otherwise - as those can't be fixed anyway
+# and skipped otherwise - as those can't be fixed anyway
 grep -E "Flushing.*aborted" logconvert || {
 	cat logconvert || true
 	vgremove -f $vg

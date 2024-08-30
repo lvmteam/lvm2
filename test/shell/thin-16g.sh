@@ -66,7 +66,7 @@ check lv_field $vg/lvol0_pmspare size "15.81g"
 # Size should be cropped to 33161216 sectors  ~15.81GiB
 dmsetup table ${vg}-pool_tmeta | grep 33161216
 
-# Without cropping we can grop to ~15.88GiB
+# Without cropping we can grow to ~15.88GiB
 lvresize -L+10G $vg/pool_tmeta
 check lv_field $vg/lvol0_pmspare size "<15.88g"
 lvremove -f $vg

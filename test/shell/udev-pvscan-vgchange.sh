@@ -18,7 +18,7 @@ SKIP_WITH_LVMLOCKD=1
 . lib/inittest
 
 # FIXME: currently test relies on several system properties to be
-# explcitely configure and directly modifies their state
+# explicitly configure and directly modifies their state
 
 #
 # $ cat /tmp/devs

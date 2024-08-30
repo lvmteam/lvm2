@@ -57,7 +57,7 @@ lvcreate -L4 -n pool $vg
 lvcreate --type raid1 -m1 -L2 --nosync -n meta $vg
 lvconvert --yes --thinpool $vg/pool --poolmetadata $vg/meta
 # using big enough pool so resize of pool metadata is enforced
-# (and it's using a differnt segtype)
+# (and it's using a different segtype)
 lvextend -L3G $vg/pool
 
 vgremove -ff $vg

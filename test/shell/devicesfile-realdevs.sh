@@ -461,7 +461,7 @@ grep $did1 $DF
 # file corruption.)
 # So, if the deviceid *is* corrupted, as we do here, then standard
 # commands won't correct it.  We need to use delpvid/addpvid explicitly
-# to say that we are targetting the given pvid.
+# to say that we are targeting the given pvid.
 
 rm $DF
 sed "s/$did1/baddid/" "$DF.orig" |tee $DF

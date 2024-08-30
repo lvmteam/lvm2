@@ -42,7 +42,7 @@ export MKE2FS_CONFIG="$TESTDIR/lib/mke2fs.conf"
 aux have_vdo 6 2 0 || skip
 
 # Simple implementation of umount when lvextend fails
-# Script enforces failin exit, so dmeventd tries several times
+# Script enforces failing exit, so dmeventd tries several times
 # repeatedly to invoke this for given percentage
 cat <<- EOF >testcmd.sh
 #!/bin/sh

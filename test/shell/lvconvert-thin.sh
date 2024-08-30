@@ -76,7 +76,7 @@ lvconvert --yes -c 64 --stripes 2 --thinpool $vg/$lv1 --readahead 48
 lvremove -f $vg
 
 
-# Swaping of metadata volume
+# Swapping of metadata volume
 lvcreate -L1T -n $lv1 $vg
 lvcreate -L32 -n $lv2 $vg
 lvconvert --yes -c 8M --type thin-pool $vg/$lv1 2>&1 | tee err
@@ -116,7 +116,7 @@ $INVALID lvconvert -c -256 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 # non multiple of 64KiB fails
 $INVALID lvconvert -c 88 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 
-# cannot use same LV for pool and convertion
+# cannot use same LV for pool and conversion
 $INVALID lvconvert --yes --thinpool $vg/$lv3 -T $vg/$lv3
 
 # Warning about smaller then suggested

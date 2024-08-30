@@ -576,7 +576,7 @@ lvmdevices --deldev "$dev2"
 echo "IDTYPE=devname IDNAME=$dev1 DEVNAME=$dev1 PVID=$PVID1" >> "$DF"
 # dev2 has no PVID
 echo "IDTYPE=devname IDNAME=$dev2 DEVNAME=$dev2 PVID=." >> "$DF"
-# Non-existant device has PVID for dev2
+# Non-existent device has PVID for dev2
 echo "IDTYPE=devname IDNAME=$NODEV DEVNAME=$NODEV PVID=$PVID2" >> "$DF"
 
 cat "$DF"

@@ -129,7 +129,7 @@ grep "Cwi-a-C-F-" out || {
 	# while on older unfixed we just notice needs_check
 	grep "Cwi-c-C---" out
 	sleep .1
-	# And now cache is finaly Failed
+	# And now cache is finally Failed
 	check lv_attr_bit health $vg/$lv1 "F"
 }
 check lv_field $vg/$lv1 lv_health_status "failed"
@@ -138,7 +138,7 @@ aux disable_dev "$dev1"
 
 # Check it is prompting for confirmation
 not lvconvert --uncache $vg/$lv1
-# Check --yes is not enought to drop writethrough caching
+# Check --yes is not enough to drop writethrough caching
 not lvconvert --yes --uncache $vg/$lv1
 # --force needs --yes to drop when Check its prompting
 not lvconvert --force --uncache $vg/$lv1

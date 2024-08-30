@@ -28,7 +28,7 @@ check pv_field "$dev1" ba_start "262144"
 check pv_field "$dev1" ba_size "786432"
 check pv_field "$dev1" pe_start "1048576"
 
-#COMM 'pvcreate with booloader area size - test corner cases'
+#COMM 'pvcreate with bootloader area size - test corner cases'
 dev_size=$(pvs -o pv_size --noheadings "$dev1")
 pv_size=$(( dev_size - 1048576 )) # device size - 1m pe_start = area for data
 

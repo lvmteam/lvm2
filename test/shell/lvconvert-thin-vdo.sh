@@ -37,7 +37,7 @@ aux prepare_vg 4 6400
 # convert to thin-pool with VDO backend from existing VG/LV
 lvcreate -L5G --name $lv1 $vg
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
-# Conversion catched present filesystem and should fail
+# Conversion caught present filesystem and should fail
 fail lvconvert -Wy --type thin-pool -c 256K --deduplication n --pooldatavdo y $vg/$lv1
 # With --yes it should work over prompt
 lvconvert --yes -Wy --type thin-pool -c 256K --deduplication n --pooldatavdo y $vg/$lv1

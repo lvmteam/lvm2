@@ -17,7 +17,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-# Use local for this test vdo configuratoin
+# Use local for this test vdo configuration
 VDO_CONFIG="vdotestconf.yml"
 VDOCONF="-f $VDO_CONFIG"
 #VDOCONF=""

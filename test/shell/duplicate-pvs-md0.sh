@@ -79,7 +79,7 @@ grep "$mddev" out
 not grep "$dev1" out
 not grep "$dev2" out
 # N.B. in this case hints are disabled for duplicate pvs seen by scan
-# it would be preferrable if this didn't happen as in auto mode, but it's ok.
+# it would be preferable if this didn't happen as in auto mode, but it's ok.
 test "$pass" = "auto" && grep "$mddev" "$HINTS"
 not grep "$dev1" "$HINTS"
 not grep "$dev2" "$HINTS"
@@ -150,7 +150,7 @@ not pvs "$dev1"
 not pvs "$dev2"
 pvs | tee out
 not grep "$mddev" out
-# N.B. it would be preferrable if dev1 did not appear in hints but it's ok
+# N.B. it would be preferable if dev1 did not appear in hints but it's ok
 # not grep "$dev1" $HINTS
 not grep "$dev1" out
 not grep "$dev2" out
@@ -215,7 +215,7 @@ not grep "$dev1" out
 not grep "$dev2" out
 pvscan --cache
 not grep "$mddev" "$HINTS"
-# N.B. would be preferrable for this md component to not be in hints
+# N.B. would be preferable for this md component to not be in hints
 # grep "$dev1" $HINTS
 not grep "$dev1" "$HINTS"
 not grep "$dev2" "$HINTS"

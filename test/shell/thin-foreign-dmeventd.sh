@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-# test foreing user of thin-pool
+# test foreign user of thin-pool
 
 
 SKIP_WITH_LVMPOLLD=1
@@ -53,7 +53,7 @@ lvcreate --errorwhenfull y -L2 -T $vg/pool
 POOL="$vg-pool"
 THIN="${PREFIX}_thin"
 
-# Foreing user is using own ioctl command to create thin devices
+# Foreign user is using own ioctl command to create thin devices
 dmsetup message $POOL 0 "create_thin 0"
 dmsetup message $POOL 0 "set_transaction_id 0 1"
 
@@ -94,7 +94,7 @@ test "$(percent_)" -gt 95
 
 pvchange -x y "$dev1" "$dev2"
 
-# FIXME: ATM tell dmeventd explicitely we've changed metadata
+# FIXME: ATM tell dmeventd explicitly we've changed metadata
 #        however dmeventd shall be aware of any metadata change
 #        and automagically retry resize operation after that.
 lvchange --refresh $vg/pool

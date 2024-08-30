@@ -26,7 +26,7 @@ log_name_to_count() {
 }
 
 # FIXME: For test_[up|down]convert, I'd still like to be able
-# to specifiy devices - especially if I can do partial PV
+# to specify devices - especially if I can do partial PV
 # specification for down-converts.  It may even be wise to
 # do one round through these tests without specifying the PVs
 # to use and one round where we do.
@@ -38,7 +38,7 @@ log_name_to_count() {
 #   final_log_type: core|disk|mirrored
 #   active: Whether the LV should be active when the convert happens
 #
-# Exmaple: Convert 3-way disk-log mirror to
+# Example: Convert 3-way disk-log mirror to
 #          2-way disk-log mirror while not active
 # -> test_lvconvert 2 disk 3 disk 0
 
@@ -126,7 +126,7 @@ aux prepare_vg 5 5
 get_devs
 
 MIRRORED="mirrored"
-# FIXME: Cluster is not supporting exlusive activation of mirrored log
+# FIXME: Cluster is not supporting exclusive activation of mirrored log
 test -e LOCAL_CLVMD && MIRRORED=
 
 test_many() {

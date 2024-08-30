@@ -46,7 +46,7 @@ check vg_field $vg1 vg_tags 101
 not check vg_field $vg2 vg_tags 101
 vgchange --deltag 101
 
-# select contains LVS fiels
+# select contains LVS field
 vgchange --addtag 102 -S "lv_name=lv2"
 check vg_field $vg1 vg_tags 102
 not check vg_field $vg2 vg_tags 102
@@ -119,7 +119,7 @@ not check lv_field $vg2/lv4 lv_tags 201
 not check lv_field $vg2/lv1 lv_tags 201
 lvchange --deltag 201 $vg1 $vg2
 
-# select contains LVS fiels
+# select contains LVS field
 lvchange --addtag 202 -S "lv_name=lv2"
 not check lv_field $vg1/lv1 lv_tags 202
 check lv_field $vg1/lv2 lv_tags 202

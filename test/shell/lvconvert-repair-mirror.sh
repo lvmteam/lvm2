@@ -41,7 +41,7 @@ mkdir "$MOUNT_DIR"
 aux delay_dev "$dev2" 0 500 "$(get first_extent_sector "$dev2"):"
 aux delay_dev "$dev4" 0 500 "$(get first_extent_sector "$dev4"):"
 #
-# Enforce syncronization
+# Enforce synchronization
 # ATM requires unmounted/unused LV??
 #
 lvchange --yes --resync $vg/$lv1

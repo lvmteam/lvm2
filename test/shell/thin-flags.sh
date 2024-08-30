@@ -84,7 +84,7 @@ lvconvert -y --thinpool $vg/pool --poolmetadata $vg/$lv1
 lvchange -ay $vg
 
 lvchange -ay $vg/$lv2
-# Provisiong and last free bits in metadata
+# Provisioning and last free bits in metadata
 dd if=/dev/zero of="$DM_DEV_DIR/mapper/$vg-$lv2" bs=1M count=1 oflag=direct || true
 
 check lv_attr_bit health $vg/pool "M" || {

@@ -188,7 +188,7 @@ check lv_field $vg/$lv5 lv_read_ahead "auto"
 check lv_field $vg/$lv5 lv_kernel_read_ahead "128.00k" --units k
 lvcreate -L 8 -n $lv6 -i2 --stripesize 128k --readahead auto $vg
 check lv_field $vg/$lv6 lv_read_ahead "auto"
-# For striped device we set double of strip size unrelated to underlaying dev RA size
+# For striped device we set double of strip size unrelated to underlying dev RA size
 check lv_field $vg/$lv6 lv_kernel_read_ahead "512.00k" --units k
 lvremove -ff $vg
 

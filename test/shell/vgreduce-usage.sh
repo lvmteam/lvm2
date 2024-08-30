@@ -90,7 +90,7 @@ aux disable_dev "$dev1"
 #pvcreate -ff -y "$dev1"
 # vgreduce rejects --removemissing --mirrorsonly --force when nonmirror lv lost too
 #not vgreduce -c n --removemissing --mirrorsonly --force $vg1
-# CHECKME - command above was rejected becuase of '-c n'
+# CHECKME - command above was rejected because of '-c n'
 vgreduce --removemissing --mirrorsonly --force $vg1
 
 aux enable_dev "$dev1"

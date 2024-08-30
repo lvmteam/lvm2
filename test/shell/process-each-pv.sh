@@ -848,7 +848,7 @@ not grep "$dev12" err
 not grep "$dev13" err
 grep "$dev14" err
 
-# tag refering to pv with mda and pv without mda
+# tag referring to pv with mda and pv without mda
 pvdisplay -s @V3 | tee err
 not grep "$dev10" err
 not grep "$dev2" err
@@ -864,7 +864,7 @@ not grep "$dev12" err
 not grep "$dev13" err
 not grep "$dev14" err
 
-# tag refering to one pv without mda
+# tag referring to one pv without mda
 pvdisplay -s @V3D8 | tee err
 not grep "$dev10" err
 not grep "$dev2" err
@@ -996,7 +996,7 @@ not grep "$dev12" err
 not grep "$dev13" err
 grep "$dev14" err
 
-# tag refering to pv with mda and pv without mda
+# tag referring to pv with mda and pv without mda
 pvs @V3 | tee err
 not grep "$dev10" err
 not grep "$dev2" err
@@ -1012,7 +1012,7 @@ not grep "$dev12" err
 not grep "$dev13" err
 not grep "$dev14" err
 
-# tag refering to one pv without mda
+# tag referring to one pv without mda
 pvs @V3D8 | tee err
 not grep "$dev10" err
 not grep "$dev2" err

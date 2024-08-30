@@ -341,7 +341,7 @@ grep "$PRODUCT_UUID1" "$DF"
 not grep HOSTNAME "$DF"
 
 
-# DF has PRODUCT_UUID, system product_uuid changes, lvm command upates it
+# DF has PRODUCT_UUID, system product_uuid changes, lvm command updates it
 
 rm "$DF"
 vgimportdevices $vg1

@@ -38,7 +38,7 @@ vgcreate $SHARED $vg "$dev1" "$dev2"
 not pvremove "$dev2" "$dev3"
 
 for mdacp in 0 1 2; do
-    # check pvremove truly wipes the label (pvscan wont find) (---metadatacopies $mdacp)
+    # check pvremove truly wipes the label (pvscan won't find) (---metadatacopies $mdacp)
     pvcreate --metadatacopies $mdacp "$dev3"
     pvremove "$dev3"
     # try to remove agail - should fail cleanly
@@ -64,7 +64,7 @@ for mdacp in 0 1 2; do
     not pvremove -ff "$dev1" 2>&1 | tee out
     grep "is used" out
 
-    # pvremove -ff succeds with confirmation when pv in a vg (---metadatacopies $mdacp)
+    # pvremove -ff succeeds with confirmation when pv in a vg (---metadatacopies $mdacp)
     pvremove -ffy "$dev1" 2>&1 | tee out
     grep "is used" out
     not pvs "$dev1"

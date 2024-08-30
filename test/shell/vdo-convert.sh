@@ -17,7 +17,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-# Use local for this test vdo configuratoin
+# Use local for this test vdo configuration
 VDO_CONFIG="vdotestconf.yml"
 VDOCONF="-f $VDO_CONFIG"
 #VDOCONF=""
@@ -163,7 +163,7 @@ aux extend_filter "a|$TEST|"
 aux extend_devices "$TEST"
 
 #
-# Unfortunatelly generates this in syslog:
+# Unfortunately generates this in syslog:
 #
 # vdo-start-by-dev@loop0.service: Main process exited, code=exited, status=1/FAILURE
 # vdo-start-by-dev@loop0.service: Failed with result 'exit-code'.
@@ -212,7 +212,7 @@ if which "$LVM_VDO_PREPARE" ; then
 cp "$VDO_CONFIG" "$VDO_CONFIG.backup"
 lvm_import_vdo --abort-after-vdo-convert --vdo-config "$VDO_CONFIG" -v -y --name $vg/$lv "$TEST"
 rm -f debug.log*
-# Restore VDO configuration (as it's been removed with succeful vdo conversion
+# Restore VDO configuration (as it's been removed with successful vdo conversion
 cp "$VDO_CONFIG.backup" "$VDO_CONFIG"
 # Check VDO header is seen at 2M offset
 blkid -c /dev/null --probe --offset 2M "$TEST" || die "VDO header at unknown offset, expected 2M!"

@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-# test foreing user of thin-pool
+# test foreign user of thin-pool
 
 
 SKIP_WITH_LVMPOLLD=1
@@ -48,7 +48,7 @@ lvcreate -L2 -T $vg/pool
 POOL="$vg-pool"
 THIN="${PREFIX}_thin"
 
-# Foreing user is using own ioctl command to create thin devices
+# Foreign user is using own ioctl command to create thin devices
 dmsetup message $POOL 0 "create_thin 0"
 dmsetup message $POOL 0 "set_transaction_id 0 2"
 

@@ -22,7 +22,7 @@ test "$LVM_TEST_DEVDIR" = "/dev" && skip
 aux prepare_devs 2
 aux extend_filter_LVMTEST
 
-# Setup mangling to 'none' globaly for all libdm users
+# Setup mangling to 'none' globally for all libdm users
 export DM_DEFAULT_NAME_MANGLING_MODE=none
 
 pv_ugly="__\"!@#\$%^&*,()|@||'\\\"__pv1"

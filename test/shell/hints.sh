@@ -17,7 +17,7 @@ SKIP_WITH_LVMLOCKD=1
 
 . lib/inittest
 
-# Since this test is currenly using 'system's' hints,
+# Since this test is currently using 'system's' hints,
 # it cannot be running, while lvmdbusd operates in the system.
 # FIXME: sometimes test suite itself 'leaks' lvmdbusd process.
 pgrep lvmdbusd && skip "Can't run this test, while lvmdbusd is running"
@@ -452,7 +452,7 @@ rm tmp-old tmp-new tmp-newuuid
 
 
 #
-# Test incorrent pvid-to-vgname info in hints is detected
+# Test incorrect pvid-to-vgname info in hints is detected
 #
 
 # this vgcreate invalidates current hints

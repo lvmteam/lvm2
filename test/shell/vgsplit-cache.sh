@@ -46,7 +46,7 @@ grep "must be inactive" err
 vgchange -an $vg
 
 
-# Try spliting component into separe VG
+# Try splitting component into separate VG
 fail vgsplit $vg $vg1 "$dev1" 2>&1 | tee err
 grep "Cannot split cache origin" err
 
@@ -61,7 +61,7 @@ grep "Cannot split cache origin" err
 
 fail vgsplit $vg $vg1 "$dev2" "$dev3" 2>&1 | tee err
 
-# Finaly something that should pass
+# Finally something that should pass
 vgsplit $vg $vg1 "$dev1" "$dev2" "$dev3"
 
 vgs $vg $vg1
@@ -77,7 +77,7 @@ vgremove -ff $vg
 vgremove -ff $vg1
 
 #
-# Check we handle pmspare for splitted VGs
+# Check we handle pmspare for split VGs
 #
 vgcfgrestore -f vgb $vg
 

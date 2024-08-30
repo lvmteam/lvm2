@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-# tests, write failer on PV1 is not reporting errors on PV2 or PV3...
+# tests, write failure on PV1 is not reporting errors on PV2 or PV3...
 
 SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1

@@ -165,12 +165,12 @@ then
 
 	# Convert raid5_ls back to 4 stripes checking
 	# conversion to striped/raid* gets rejected
-	# with existing LVs to be removed afer reshape
+	# with existing LVs to be removed after reshape
 	_reshape_layout raid5_ls 4 28 $vg $lv1 --stripes 4 --force
 else
 	# Convert raid5_ls back to 4 stripes checking
 	# conversion to striped/raid* gets rejected
-	# with existing LVs to be removed afer reshape
+	# with existing LVs to be removed after reshape
 	_reshape_layout raid5_ls 4 15 $vg $lv1 --stripes 4 --force
 fi
 

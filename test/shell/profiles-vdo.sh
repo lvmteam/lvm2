@@ -11,7 +11,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 # Exercise obtaining vdo parameters from various sources
-# Either commmand line or metadata profile or implicit default...
+# Either command line or metadata profile or implicit default...
 
 
 SKIP_WITH_LVMPOLLD=1

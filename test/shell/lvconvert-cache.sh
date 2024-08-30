@@ -29,7 +29,7 @@ fail lvcreate -s -L2 $vg/cpool_cdata
 fail lvcreate -s -L2 $vg/cpool_cmeta
 
 ###########################
-# Check regular converion #
+# Check regular conversion #
 ###########################
 # lvcreate origin, lvcreate cache-pool, and lvconvert to cache
 lvcreate -an -Zn -L 2 -n $lv1 $vg
@@ -49,7 +49,7 @@ check lv_field $vg/$lv1 cache_policy ""
 check lv_field $vg/$lv1 cache_settings ""
 check lv_field $vg/$lv1 chunk_size "256.00k"
 
-# but allow to set them when specified explicitely on command line
+# but allow to set them when specified explicitly on command line
 lvconvert --yes --type cache-pool --cachemode writeback --cachepolicy mq \
 	--cachesettings sequential_threshold=1234 --cachesettings random_threshold=56 \
 	--cachepool $vg/$lv2

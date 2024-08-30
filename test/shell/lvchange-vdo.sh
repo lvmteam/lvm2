@@ -24,7 +24,7 @@ lvcreate --vdo -L5G -n $lv1 $vg/vdopool
 # deduplication_ARG  (default is 'yes')
 # compression_ARG  (default is 'yes')
 
-# Wait till index gets openned
+# Wait till index gets opened
 for i in {1..10} ; do
 	sleep .1
 	check grep_dmsetup status $vg-vdopool-vpool " online online " || continue

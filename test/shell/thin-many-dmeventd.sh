@@ -42,7 +42,7 @@ vgchange -an $vg
 
 
 # Try to now activate all existing pool - this will generate in about 10sec later
-# storm of intial call of 'lvextend --use-policies'
+# storm of initial call of 'lvextend --use-policies'
 vgchange -ay $vg
 
 # Every 10sec. ATM there is DM status monitoring made by dmeventd

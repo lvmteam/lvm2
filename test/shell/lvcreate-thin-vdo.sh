@@ -43,7 +43,7 @@ check lv_field $vg/${lv1}_tdata segtype vdo -a
 lvremove -f $vg
 
 
-# cannot create thin as thin-pool tupe
+# cannot create thin as thin-pool type
 invalid lvcreate --type thin-pool -L5G --pooldatavdo y -V20 $vg/pool
 
 

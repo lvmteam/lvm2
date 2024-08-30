@@ -22,7 +22,7 @@ SECURE="434e0cbab02ca68ffba9268222c3789d703fe62427b78b308518b3228f6a2122"
 
 DMTEST="${PREFIX}-test-secure"
 
-# Masking following glibc features fixes probles for AVX CPUs.
+# Masking following glibc features fixes problems for AVX CPUs.
 #export GLIBC_TUNABLES=glibc.cpu.hwcaps=-AVX512F,-AVX2,-AVX512VL,-ERMS,-AVX_Fast_Unaligned_Load,-SSSE3
 
 # Test needs installed gdb package with gcore app
@@ -38,7 +38,7 @@ aux prepare_devs 1
 for i in securetest dmsecuretest ; do
 
 # 1st. try with empty table
-# 2nd. retry with already exiting DM node - exercize error path also wipes
+# 2nd. retry with already exiting DM node - exercise error path also wipes
 for j in empty existing ; do
 
 rm -f cmdout

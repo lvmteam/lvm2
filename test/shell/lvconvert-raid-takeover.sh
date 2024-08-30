@@ -97,7 +97,7 @@ function _invalid_raid5_conversions
 	not _lvconvert raid6 raid6_n_6 4 6 $vg $lv1
 }
 
-# Check raid6 conversion constrainst for 2 stripes
+# Check raid6 conversion constraints for 2 stripes
 for type in striped raid0 raid0_meta
 do
    _lvcreate $type 2 2 4m $vg $lv1
@@ -109,7 +109,7 @@ do
 done
 
 
-# Check raid6 conversion constrainst of minimum 3 stripes
+# Check raid6 conversion constraints of minimum 3 stripes
 _lvcreate raid0 3 3 4m $vg $lv1
 _lvconvert raid6 raid6_n_6 3 5 $vg $lv1
 lvremove -y $vg

@@ -55,7 +55,7 @@ pre="75.00"
 test_equal_ $pre || die "Data percentage has changed!"
 
 
-# Now triger allocation of 1 extra pool chunk
+# Now trigger allocation of 1 extra pool chunk
 dd if=/dev/zero of="$DM_DEV_DIR/mapper/$vg-$lv1" bs=1c count=1 seek=786433 conv=fdatasync
 
 lvs -a -o+chunksize $vg

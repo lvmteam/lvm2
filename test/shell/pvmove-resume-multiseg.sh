@@ -30,7 +30,7 @@ test_pvmove_resume() {
 	# Create multisegment LV
 	lvcreate -an -Zn -l50 -n $lv1 $vg "$dev1"
 	lvextend -l+50 $vg/$lv1 "$dev2"
-	# next LV on same VG and differetnt PV (we want to test 2 pvmoves per VG)
+	# next LV on same VG and different PV (we want to test 2 pvmoves per VG)
 	lvcreate -an -Zn -l50 -n $lv2 $vg "$dev3"
 
 	aux delay_dev "$dev4" 0 30 "$(get first_extent_sector "$dev4"):"

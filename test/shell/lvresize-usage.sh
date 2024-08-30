@@ -44,7 +44,7 @@ not lvreduce -L 32M $vg/lv
 lvremove -ff $vg
 
 lvcreate --type mirror -aey -L 4 -n $lv1 $vg
-# Incorrent name for resized LV
+# Incorrect name for resized LV
 not lvextend --type mirror -L 10 -n $lv1 $vg
 # Same size
 not lvextend --type mirror -L 4 $vg/$lv1

@@ -27,7 +27,7 @@ invalid vgimport
 # Cannot combine -a and VG name
 invalid vgexport -a $vg
 invalid vgimport -a $vg1
-# Cannot export unknonw VG
+# Cannot export unknown VG
 fail vgexport ${vg1}-non
 fail vgimport ${vg1}-non
 # Cannot export VG with active volumes

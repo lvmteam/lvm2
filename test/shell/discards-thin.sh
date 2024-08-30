@@ -62,7 +62,7 @@ lvchange -an $vg/pool $vg/pool1
 # Cannot convert, since thin volumes are still active
 not lvchange --discards passdown $vg/pool
 
-# Deactive thin volumes
+# Deactivate thin volumes
 lvchange -an $vg/origin $vg/snap
 
 lvchange --discards passdown $vg/pool

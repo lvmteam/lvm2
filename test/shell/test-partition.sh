@@ -11,8 +11,8 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 #
-# Testcase for bugzilla #621173 
-# excercises partition table scanning code path
+# Testcase for bugzilla #621173
+# exercises partition table scanning code path
 #
 
 

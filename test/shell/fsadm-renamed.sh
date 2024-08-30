@@ -127,7 +127,7 @@ umount "$mount_dir"
 
 
 USE_NOT=
-# TODO: this is somewhat suprising for users
+# TODO: this is somewhat surprising for users
 # Detect if the 'lvresize' was compiled with HAVE_BLKID_SUBLKS_FSINFO
 # In such case --fs checksize is a supported parameter
 # otherwise command automatically fallbacks to fsadm and resize reiserfs

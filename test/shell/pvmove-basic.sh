@@ -180,7 +180,7 @@ lvs_not_changed_ $lv1 $lv3
 check_and_cleanup_lvs_
 
 # ---
-# partial segment match (source segment splitted)
+# partial segment match (source segment split)
 
 #COMM "match to the start of segment:from pv2:0-0 to pv5"
 restore_lvs_
@@ -204,7 +204,7 @@ lvs_not_changed_ $lv1 $lv3
 check_and_cleanup_lvs_
 
 # ---
-# destination segment splitted
+# destination segment split
 
 #COMM "no destination split: from pv2:0-2 to pv5"
 restore_lvs_

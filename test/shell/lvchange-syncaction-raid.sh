@@ -42,7 +42,7 @@ SEEK=$((${START%\.00k} + ${METASIZE%\.00k}))
 dd if=/dev/urandom of="$dev2" bs=1K count=1 seek=$SEEK oflag=direct
 # FIXME
 # Some delay - there is currently race in upstream kernel
-# test may occasionaly fail with:
+# test may occasionally fail with:
 # device-mapper: message ioctl on  failed: Device or resource busy
 #
 # Heinz's kernel seems to fix this particular issue but
@@ -60,7 +60,7 @@ check lv_field $vg/$lv1 raid_mismatch_count "128"
 lvchange -an $vg/$lv1
 
 lvchange -ay $vg/$lv1
-# noone has it open and target is read & running
+# no one has it open and target is read & running
 dmsetup info -c | grep $vg
 
 #sleep 10 < "$DM_DEV_DIR/$vg/$lv1" &
@@ -86,7 +86,7 @@ lvchange --syncaction check $vg/$lv1
 # Wait till scrubbing is finished
 aux wait_for_sync $vg $lv1
 
-# Retest mistmatch exists
+# Retest mismatch exists
 check lv_field $vg/$lv1 raid_mismatch_count "128"
 
 vgremove -ff $vg

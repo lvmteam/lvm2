@@ -220,7 +220,7 @@ not lvcreate -L4M --chunksize 2G -T $vg/pool1
 # Cannot specify --minor with pool
 fail lvcreate -L10M --minor 100 -T $vg/pool_minor
 
-# FIXME: Currently ambigous - is it for thin, thin-pool, both ?
+# FIXME: Currently ambiguous - is it for thin, thin-pool, both ?
 fail lvcreate -L4M -Mn -m0 -T --readahead 32 -V20 -n $lv $vg/pool_normal
 
 # Check read-ahead setting will also pass with -Mn -m0

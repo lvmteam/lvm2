@@ -72,14 +72,14 @@ test -e LOCAL_CLVMD || grep 'already monitored' lvchange.out
 # now try what happens if no dmeventd is running
 pid=$(< LOCAL_DMEVENTD)
 kill -9 "$pid"
-# TODO/FIXME: it would be surely better, if the wait loop bellow would
+# TODO/FIXME: it would be surely better, if the wait loop below would
 # not be need however ATM the API for communication is not welldetecting
 # this highly unusual race case - and things will simply timeout on
 # reading failure within 4 seconds.
 # Fixing would require to add some handling for losing FIFO connection
 for i in {1..10}; do
 	# wait here for a while until dmeventd dies....
-	# suprisingly it's not instant and we can actually
+	# surprisingly it's not instant and we can actually
 	# obtain list of monitored devices...
 	test -z $(ps -p "$pid" -o comm=) && break
 	sleep .1
@@ -94,7 +94,7 @@ rm LOCAL_DMEVENTD
 
 # First lvs restarts 'dmeventd' (initiate a socket connection to a daemon)
 # used explicit 'lvs' avoid using forked 'check' function here as that
-# would furher for 'get' and actualy would be waint till whole process group
+# would further for 'get' and actually would be waint till whole process group
 # exits - which is not what we want here
 #
 # FIXME/TODO: lvs should probably not be the way to 'fork dmeventd'

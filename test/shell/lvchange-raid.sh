@@ -15,7 +15,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-# Writemostly has been in every version since the begining
+# Writemostly has been in every version since the beginning
 # Device refresh in 1.5.1 upstream and 1.3.4 < x < 1.4.0 in RHEL6
 # Sync action    in 1.5.0 upstream and 1.3.3 < x < 1.4.0 in RHEL6
 # Proper mismatch count 1.5.2 upstream,1.3.5 < x < 1.4.0 in RHEL6
@@ -109,7 +109,7 @@ run_writemostly_check() {
 	check lv_attr_bit health $vg/${lv}_rimage_0 "w"
 	check lv_attr_bit health $vg/${lv}_rimage_1 "-"
 
-	# Partial flag supercedes writemostly flag
+	# Partial flag supersedes writemostly flag
 	aux disable_dev $d0
 	check lv_attr_bit health $vg/${lv}_rimage_0 "p"
 
