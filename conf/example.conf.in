@@ -833,8 +833,9 @@ log {
 	# define selection criteria for log report on command line directly
 	# using <lvm command> --configreport log -S <selection criteria>
 	# which has precedence over log/command_log_selection setting.
-	# For more information about selection criteria in general, see
-	# lvm(8) man page.
+	# To make all the command log lines visible, use "all" value
+	# for the command log selection. For more information about selection
+	# criteria in general, see lvmreport(7) man page.
 	# This configuration option has an automatic default value.
 	# command_log_selection = "!(log_type=status && message=success)"
 
