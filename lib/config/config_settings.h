@@ -886,8 +886,9 @@ cfg(log_command_log_selection_CFG, "command_log_selection", log_CFG_SECTION, CFG
 	"define selection criteria for log report on command line directly\n"
 	"using <lvm command> --configreport log -S <selection criteria>\n"
 	"which has precedence over log/command_log_selection setting.\n"
-	"For more information about selection criteria in general, see\n"
-	"lvm(8) man page.\n")
+	"To make all the command log lines visible, use \"all\" value\n"
+	"for the command log selection. For more information about selection\n"
+        "criteria in general, see lvmreport(7) man page.\n")
 
 cfg(log_verbose_CFG, "verbose", log_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VERBOSE, vsn(1, 0, 0), NULL, 0, NULL,
 	"Controls the messages sent to stdout or stderr.\n")
