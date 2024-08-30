@@ -429,7 +429,7 @@ Version 2.03.03 - 07th June 2019
   Improve -lXXX%VG modifier which improves cache segment estimation.
   Ensure migration_threshold for cache is at least 8 chunks.
   Restore missing man info lvcreate --zero for thin-pools.
-  Drop misleadning comment for metadata minimum_io_size for VDO segment.
+  Drop misleading comment for metadata minimum_io_size for VDO segment.
   Add device hints to reduce scanning.
   Introduce LVM_SUPPRESS_SYSLOG to suppress syslog usage by generator.
   Fix generator querying lvmconfig unpresent config option.
@@ -555,7 +555,7 @@ Version 2.02.177 - 18th December 2017
   Fix lvmlockd to use pool lock when accessing _tmeta volume.
   Report expected sanlock_convert errors only when retries fail.
   Avoid blocking in sanlock_convert on SH to EX lock conversion.
-  Deactivate missing raid LV legs (_rimage_X-missing_Y_Z) on decativation.
+  Deactivate missing raid LV legs (_rimage_X-missing_Y_Z) on deactivation.
   Skip read-modify-write when entire block is replaced.
   Categorise I/O with reason annotations in debug messages.
   Allow extending of raid LVs created with --nosync after a failed repair.
@@ -577,7 +577,7 @@ Version 2.02.177 - 18th December 2017
   Check raid reshape flags in vg_validate().
   Add support for pvmove of cache and snapshot origins.
   Avoid using precommitted metadata for suspending pvmove tree.
-  Ehnance pvmove locking.
+  Enhance pvmove locking.
   Deactivate activated LVs on error path when pvmove activation fails.
   Add "io" to log/debug_classes for logging low-level I/O.
   Eliminate redundant nested VG metadata in VG struct.
@@ -1154,7 +1154,7 @@ Version 2.02.143 - 21st February 2016
   Fix error path when sending thin-pool message fails in update_pool_lv().
   Support reporting CheckNeeded and Fail state for thin-pool and thin LV.
   For failing thin-pool and thin volume correctly report percentage as INVALID.
-  Report -1, not 'unkown' for lv_{snapshot_invalid,merge_failed} with --binary.
+  Report -1, not 'unknown' for lv_{snapshot_invalid,merge_failed} with --binary.
   Add configure --enable-dbus-service for an LVM D-Bus service.
   Replace configure --enable-python_bindings with python2 and python3 versions.
   If PV belongs to some VG and metadata missing, skip it if system ID is used.
@@ -1183,7 +1183,7 @@ Version 2.02.141 - 25th January 2016
   Restore support for command breaking in process_each_lv_in_vg() (2.02.118).
   Use correct mempool when process_each_lv_in_vg() (2.02.118).
   Fix lvm.8 man to show again prohibited suffixes.
-  Fix configure to set proper use_blkid_wiping if autodetected as disabled.
+  Fix configure to set proper use_blkid_wiping if autodetection as disabled.
   Initialise udev in clvmd for use in device scanning. (2.02.116)
   Add seg_le_ranges report field for common format when displaying seg devices.
   Honour report/list_item_separator for seg_metadata_le_ranges report field.
@@ -4702,7 +4702,7 @@ Version 2.02.11 - 12th October 2006
   Capture error messages in clvmd and pass them back to the user.
   Remove unused #defines from filter-md.c.
   Make clvmd restart init script wait until clvmd has died before starting it.
-  Add -R to clvmd which tells running clvmds to reload their device cache.
+  Add -R to clvmd which tells running clvmd to reload their device cache.
   Add LV column to reports listing kernel modules needed for activation.
   Show available fields if report given invalid field. (e.g. lvs -o list)
   Add timestamp functions with --disable-realtime configure option.
