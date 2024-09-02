@@ -49,10 +49,10 @@ typedef enum {
 #define RAID_METADATA_AREA_LEN 1
 
 /* FIXME These ended up getting used differently from first intended.  Refactor. */
-/* Only one of A_CONTIGUOUS_TO_LVSEG, A_CLING_TO_LVSEG, A_CLING_TO_ALLOCED may be set */
+/* Only one of A_CONTIGUOUS_TO_LVSEG, A_CLING_TO_LVSEG, A_CLING_TO_ALLOCATED may be set */
 #define A_CONTIGUOUS_TO_LVSEG	0x01	/* Must be contiguous to an existing segment */
 #define A_CLING_TO_LVSEG	0x02	/* Must use same disks as existing LV segment */
-#define A_CLING_TO_ALLOCED	0x04	/* Must use same disks as already-allocated segment */
+#define A_CLING_TO_ALLOCATED	0x04	/* Must use same disks as already-allocated segment */
 
 #define A_CLING_BY_TAGS		0x08	/* Must match tags against existing segment */
 #define A_CAN_SPLIT		0x10
@@ -1044,7 +1044,7 @@ struct lv_segment *alloc_lv_segment(const struct segment_type *segtype,
 
 	if (segtype_is_raid_with_meta(segtype) &&
 	    !(seg->meta_areas = dm_pool_zalloc(mem, areas_sz))) {
-		dm_pool_free(mem, seg); /* frees everything alloced since seg */
+		dm_pool_free(mem, seg); /* frees everything allocated since seg */
 		return_NULL;
 	}
 
@@ -1846,7 +1846,7 @@ int lv_remove(struct logical_volume *lv)
 /*
  * A set of contiguous physical extents allocated
  */
-struct alloced_area {
+struct allocated_area {
 	struct dm_list list;
 
 	struct physical_volume *pv;
@@ -1897,7 +1897,7 @@ struct alloc_handle {
 	 * Contains area_count lists of areas allocated to data stripes
 	 * followed by log_area_count lists of areas allocated to log stripes.
 	 */
-	struct dm_list alloced_areas[];
+	struct dm_list allocated_areas[];
 };
 
 /*
@@ -2001,7 +2001,7 @@ static void _init_alloc_parms(struct alloc_handle *ah,
 		 */
 		if ((alloc_parms->alloc == ALLOC_CLING) ||
 		    (alloc_parms->alloc == ALLOC_CLING_BY_TAGS)) {
-			alloc_parms->flags |= A_CLING_TO_ALLOCED;
+			alloc_parms->flags |= A_CLING_TO_ALLOCATED;
 			alloc_parms->flags |= A_POSITIONAL_FILL;
 		}
 
@@ -2021,17 +2021,17 @@ static void _init_alloc_parms(struct alloc_handle *ah,
 	if (ah->maximise_cling &&
 	    (alloc_parms->alloc == ALLOC_NORMAL) &&
 	    (allocated != alloc_parms->extents_still_needed))
-		alloc_parms->flags |= A_CLING_TO_ALLOCED;
+		alloc_parms->flags |= A_CLING_TO_ALLOCATED;
 
 	if (can_split)
 		alloc_parms->flags |= A_CAN_SPLIT;
 }
 
-static int _setup_alloced_segment(struct logical_volume *lv, uint64_t status,
+static int _setup_allocated_segment(struct logical_volume *lv, uint64_t status,
 				  uint32_t area_count,
 				  uint32_t stripe_size,
 				  const struct segment_type *segtype,
-				  struct alloced_area *aa,
+				  struct allocated_area *aa,
 				  uint32_t region_size)
 {
 	uint32_t s, extents, area_multiple;
@@ -2062,18 +2062,18 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint64_t status,
 	return 1;
 }
 
-static int _setup_alloced_segments(struct logical_volume *lv,
-				   struct dm_list *alloced_areas,
+static int _setup_allocated_segments(struct logical_volume *lv,
+				   struct dm_list *allocated_areas,
 				   uint32_t area_count,
 				   uint64_t status,
 				   uint32_t stripe_size,
 				   const struct segment_type *segtype,
 				   uint32_t region_size)
 {
-	struct alloced_area *aa;
+	struct allocated_area *aa;
 
-	dm_list_iterate_items(aa, &alloced_areas[0]) {
-		if (!_setup_alloced_segment(lv, status, area_count,
+	dm_list_iterate_items(aa, &allocated_areas[0]) {
+		if (!_setup_allocated_segment(lv, status, area_count,
 					    stripe_size, segtype, aa,
 					    region_size))
 			return_0;
@@ -2094,7 +2094,7 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t max_to_allocat
 	uint32_t s, smeta;
 	uint32_t ix_log_skip = 0; /* How many areas to skip in middle of array to reach log areas */
 	uint32_t total_area_count;
-	struct alloced_area *aa;
+	struct allocated_area *aa;
 	struct pv_area *pva;
 
 	total_area_count = ah->area_count + ah->parity_count + alloc_state->log_area_count_still_needed;
@@ -2113,7 +2113,7 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t max_to_allocat
 	len = (ah->alloc_and_split_meta && !ah->split_metadata_is_allocated) ? total_area_count * 2 : total_area_count;
 	len *= sizeof(*aa);
 	if (!(aa = dm_pool_alloc(ah->mem, len))) {
-		log_error("alloced_area allocation failed");
+		log_error("allocated_area allocation failed");
 		return 0;
 	}
 
@@ -2156,7 +2156,7 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t max_to_allocat
 					aa[smeta].len);
 
 			consume_pv_area(pva, aa[smeta].len);
-			dm_list_add(&ah->alloced_areas[smeta], &aa[smeta].list);
+			dm_list_add(&ah->allocated_areas[smeta], &aa[smeta].list);
 		}
 		aa[s].len = (ah->alloc_and_split_meta && !ah->split_metadata_is_allocated) ? len - ah->log_len : len;
 		/* Skip empty allocations */
@@ -2172,7 +2172,7 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t max_to_allocat
 
 		consume_pv_area(pva, aa[s].len);
 
-		dm_list_add(&ah->alloced_areas[s], &aa[s].list);
+		dm_list_add(&ah->allocated_areas[s], &aa[s].list);
 	}
 
 	/* Only need to alloc metadata from the first batch */
@@ -2728,11 +2728,11 @@ static int _check_contiguous(struct alloc_handle *ah,
 /*
  * Is pva on same PV as any areas already used in this allocation attempt?
  */
-static int _check_cling_to_alloced(struct alloc_handle *ah, const struct dm_config_node *cling_tag_list_cn,
+static int _check_cling_to_allocated(struct alloc_handle *ah, const struct dm_config_node *cling_tag_list_cn,
 				   struct pv_area *pva, struct alloc_state *alloc_state)
 {
 	unsigned s;
-	struct alloced_area *aa;
+	struct allocated_area *aa;
 	int positional = alloc_state->alloc_parms->flags & A_POSITIONAL_FILL;
 
 	/*
@@ -2745,7 +2745,7 @@ static int _check_cling_to_alloced(struct alloc_handle *ah, const struct dm_conf
 	for (s = 0; s < ah->area_count; s++) {
 		if (positional && alloc_state->areas[s].pva)
 			continue;	/* Area already assigned */
-		dm_list_iterate_items(aa, &ah->alloced_areas[s]) {
+		dm_list_iterate_items(aa, &ah->allocated_areas[s]) {
 			if ((!cling_tag_list_cn && (pva->map->pv == aa[0].pv)) ||
 			    (cling_tag_list_cn && _pvs_have_matching_tag(cling_tag_list_cn, pva->map->pv, aa[0].pv, 0))) {
 				if (positional &&
@@ -2802,7 +2802,7 @@ static area_use_t _check_pva(struct alloc_handle *ah, struct pv_area *pva, uint3
 				return NEXT_AREA;
 
 	/* If maximise_cling is set, perform several checks, otherwise perform exactly one. */
-	if (!iteration_count && !log_iteration_count && alloc_parms->flags & (A_CONTIGUOUS_TO_LVSEG | A_CLING_TO_LVSEG | A_CLING_TO_ALLOCED)) {
+	if (!iteration_count && !log_iteration_count && alloc_parms->flags & (A_CONTIGUOUS_TO_LVSEG | A_CLING_TO_LVSEG | A_CLING_TO_ALLOCATED)) {
 		/* Contiguous? */
 		if (((alloc_parms->flags & A_CONTIGUOUS_TO_LVSEG) ||
 		     (ah->maximise_cling && (alloc_parms->flags & A_AREA_COUNT_MATCHES))) &&
@@ -2820,9 +2820,9 @@ static area_use_t _check_pva(struct alloc_handle *ah, struct pv_area *pva, uint3
 			/* If this PV is suitable, use this first area */
 			goto found;
 
-		/* Cling_to_alloced? */
-		if ((alloc_parms->flags & A_CLING_TO_ALLOCED) &&
-		    _check_cling_to_alloced(ah, NULL, pva, alloc_state))
+		/* Cling_to_allocated? */
+		if ((alloc_parms->flags & A_CLING_TO_ALLOCATED) &&
+		    _check_cling_to_allocated(ah, NULL, pva, alloc_state))
 			goto found;
 
 		/* Cling_by_tags? */
@@ -2832,7 +2832,7 @@ static area_use_t _check_pva(struct alloc_handle *ah, struct pv_area *pva, uint3
 		if ((alloc_parms->flags & A_AREA_COUNT_MATCHES)) {
 			if (_check_cling(ah, ah->cling_tag_list_cn, alloc_parms->prev_lvseg, pva, alloc_state))
 				goto found;
-		} else if (_check_cling_to_alloced(ah, ah->cling_tag_list_cn, pva, alloc_state))
+		} else if (_check_cling_to_allocated(ah, ah->cling_tag_list_cn, pva, alloc_state))
 			goto found;
 
 		/* All areas on this PV give same result so pointless checking more */
@@ -2993,9 +2993,9 @@ static int _find_some_parallel_space(struct alloc_handle *ah,
 	unsigned already_found_one;
 	unsigned ix_log_offset; /* Offset to start of areas to use for log */
 	unsigned too_small_for_log_count; /* How many too small for log? */
-	unsigned iteration_count = 0; /* cling_to_alloced may need 2 iterations */
+	unsigned iteration_count = 0; /* cling_to_allocated may need 2 iterations */
 	unsigned log_iteration_count = 0; /* extra iteration for logs on data devices */
-	struct alloced_area *aa;
+	struct allocated_area *aa;
 	uint32_t s;
 	uint32_t devices_needed = ah->area_count + ah->parity_count;
 	uint32_t required;
@@ -3005,17 +3005,17 @@ static int _find_some_parallel_space(struct alloc_handle *ah,
 
 	/* num_positional_areas holds the number of parallel allocations that must be contiguous/cling */
 	/* These appear first in the array, so it is also the offset to the non-preferred allocations */
-	/* At most one of A_CONTIGUOUS_TO_LVSEG, A_CLING_TO_LVSEG or A_CLING_TO_ALLOCED may be set */
+	/* At most one of A_CONTIGUOUS_TO_LVSEG, A_CLING_TO_LVSEG or A_CLING_TO_ALLOCATED may be set */
 	if (!(alloc_parms->flags & A_POSITIONAL_FILL))
 		alloc_state->num_positional_areas = 0;
 	else if (alloc_parms->flags & (A_CONTIGUOUS_TO_LVSEG | A_CLING_TO_LVSEG))
 		alloc_state->num_positional_areas = _stripes_per_mimage(alloc_parms->prev_lvseg) * alloc_parms->prev_lvseg->area_count;
-	else if (alloc_parms->flags & A_CLING_TO_ALLOCED)
+	else if (alloc_parms->flags & A_CLING_TO_ALLOCATED)
 		alloc_state->num_positional_areas = ah->area_count;
 
-	if (alloc_parms->alloc == ALLOC_NORMAL || (alloc_parms->flags & A_CLING_TO_ALLOCED))
+	if (alloc_parms->alloc == ALLOC_NORMAL || (alloc_parms->flags & A_CLING_TO_ALLOCATED))
 		log_debug_alloc("Cling_to_allocated is %sset",
-				alloc_parms->flags & A_CLING_TO_ALLOCED ? "" : "not ");
+				alloc_parms->flags & A_CLING_TO_ALLOCATED ? "" : "not ");
 
 	if (alloc_parms->flags & A_POSITIONAL_FILL)
 		log_debug_alloc("%u preferred area(s) to be filled positionally.", alloc_state->num_positional_areas);
@@ -3053,7 +3053,7 @@ static int _find_some_parallel_space(struct alloc_handle *ah,
 			if (alloc_parms->alloc != ALLOC_ANYWHERE) {
 				/* Don't allocate onto the log PVs */
 				if (ah->log_area_count)
-					dm_list_iterate_items(aa, &ah->alloced_areas[ah->area_count])
+					dm_list_iterate_items(aa, &ah->allocated_areas[ah->area_count])
 						for (s = 0; s < ah->log_area_count; s++)
 							if (!aa[s].pv)
 								goto next_pv;
@@ -3136,17 +3136,17 @@ static int _find_some_parallel_space(struct alloc_handle *ah,
 				break;
 		}
 	} while ((alloc_parms->alloc == ALLOC_ANYWHERE && last_ix != ix && ix < devices_needed + alloc_state->log_area_count_still_needed) ||
-		/* With cling_to_alloced and normal, if there were gaps in the preferred areas, have a second iteration */
+		/* With cling_to_allocated and normal, if there were gaps in the preferred areas, have a second iteration */
 		 (alloc_parms->alloc == ALLOC_NORMAL && preferred_count &&
 		  (preferred_count < alloc_state->num_positional_areas || alloc_state->log_area_count_still_needed) &&
-		  (alloc_parms->flags & A_CLING_TO_ALLOCED) && !iteration_count++) ||
+		  (alloc_parms->flags & A_CLING_TO_ALLOCATED) && !iteration_count++) ||
 		/* Extra iteration needed to fill log areas on PVs already used? */
 		 (alloc_parms->alloc == ALLOC_NORMAL && preferred_count == alloc_state->num_positional_areas && !ah->mirror_logs_separate &&
 		  (ix + preferred_count >= devices_needed) &&
 		  (ix + preferred_count < devices_needed + alloc_state->log_area_count_still_needed) && !log_iteration_count++));
 
 	/* Non-zero ix means at least one USE_AREA was returned */
-	if (preferred_count < alloc_state->num_positional_areas && !(alloc_parms->flags & A_CLING_TO_ALLOCED) && !ix)
+	if (preferred_count < alloc_state->num_positional_areas && !(alloc_parms->flags & A_CLING_TO_ALLOCATED) && !ix)
 		return 1;
 
 	if (ix + preferred_count < devices_needed + alloc_state->log_area_count_still_needed)
@@ -3313,7 +3313,7 @@ static int _find_max_parallel_space_for_one_policy(struct alloc_handle *ah, stru
 		 * set we allow two passes, first with A_POSITIONAL_FILL then without.
 		 *
 		 * If we didn't allocate anything this time with ALLOC_NORMAL and had
-		 * A_CLING_TO_ALLOCED set, try again without it.
+		 * A_CLING_TO_ALLOCATED set, try again without it.
 		 *
 		 * For ALLOC_NORMAL, if we did allocate something without the
 		 * flag set, set it and continue so that further allocations
@@ -3323,13 +3323,13 @@ static int _find_max_parallel_space_for_one_policy(struct alloc_handle *ah, stru
 			if (ah->maximise_cling && ((alloc_parms->alloc == ALLOC_CLING) || (alloc_parms->alloc == ALLOC_CLING_BY_TAGS)) &&
 			    (alloc_parms->flags & A_CLING_TO_LVSEG) && (alloc_parms->flags & A_POSITIONAL_FILL))
 				alloc_parms->flags &= ~A_POSITIONAL_FILL;
-			else if ((alloc_parms->alloc == ALLOC_NORMAL) && (alloc_parms->flags & A_CLING_TO_ALLOCED))
-				alloc_parms->flags &= ~A_CLING_TO_ALLOCED;
+			else if ((alloc_parms->alloc == ALLOC_NORMAL) && (alloc_parms->flags & A_CLING_TO_ALLOCATED))
+				alloc_parms->flags &= ~A_CLING_TO_ALLOCATED;
 			else
 				break;	/* Give up */
 		} else if (ah->maximise_cling && alloc_parms->alloc == ALLOC_NORMAL &&
-			   !(alloc_parms->flags & A_CLING_TO_ALLOCED))
-			alloc_parms->flags |= A_CLING_TO_ALLOCED;
+			   !(alloc_parms->flags & A_CLING_TO_ALLOCATED))
+			alloc_parms->flags |= A_CLING_TO_ALLOCATED;
 	} while ((alloc_parms->alloc != ALLOC_CONTIGUOUS) && alloc_state->allocated != alloc_parms->extents_still_needed && (alloc_parms->flags & A_CAN_SPLIT) && (!ah->approx_alloc || pv_maps_size(pvms)));
 
 	return 1;
@@ -3622,7 +3622,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 		/* mirrors specify their exact log count */
 		alloc_count += metadata_area_count;
 
-	size += sizeof(ah->alloced_areas[0]) * alloc_count;
+	size += sizeof(ah->allocated_areas[0]) * alloc_count;
 
 	if (!(mem = dm_pool_create("allocation", 1024))) {
 		log_error("allocation pool creation failed");
@@ -3727,7 +3727,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 	ah->new_extents = total_extents;
 
 	for (s = 0; s < alloc_count; s++)
-		dm_list_init(&ah->alloced_areas[s]);
+		dm_list_init(&ah->allocated_areas[s]);
 
 	ah->parallel_areas = parallel_areas;
 
@@ -3825,7 +3825,7 @@ int lv_add_segment(struct alloc_handle *ah,
 		return 0;
 	}
 
-	if (!_setup_alloced_segments(lv, &ah->alloced_areas[first_area],
+	if (!_setup_allocated_segments(lv, &ah->allocated_areas[first_area],
 				     num_areas, status,
 				     stripe_size, segtype,
 				     region_size))
@@ -3898,7 +3898,7 @@ int lv_add_segmented_mirror_image(struct alloc_handle *ah,
 				  uint32_t region_size)
 {
 	char *image_name;
-	struct alloced_area *aa;
+	struct allocated_area *aa;
 	struct lv_segment *seg, *new_seg;
 	uint32_t current_le = le;
 	uint32_t s;
@@ -3923,7 +3923,7 @@ int lv_add_segmented_mirror_image(struct alloc_handle *ah,
 	 * single segment of the original LV, that LV segment must be
 	 * split up to match.
 	 */
-	dm_list_iterate_items(aa, &ah->alloced_areas[0]) {
+	dm_list_iterate_items(aa, &ah->allocated_areas[0]) {
 		if (!(seg = find_seg_by_le(lv, current_le))) {
 			log_error("Failed to find segment for %s extent " FMTu32 ".",
 				  display_lvname(lv), current_le);
@@ -3965,7 +3965,7 @@ int lv_add_segmented_mirror_image(struct alloc_handle *ah,
 	if (!(segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_STRIPED)))
 		return_0;
 
-	dm_list_iterate_items(aa, &ah->alloced_areas[0]) {
+	dm_list_iterate_items(aa, &ah->allocated_areas[0]) {
 		if (!(seg = find_seg_by_le(orig_lv, current_le))) {
 			log_error("Failed to find segment for %s extent " FMTu32 ".",
 				  display_lvname(lv), current_le);
@@ -4007,12 +4007,12 @@ int lv_add_mirror_areas(struct alloc_handle *ah,
 			struct logical_volume *lv, uint32_t le,
 			uint32_t region_size)
 {
-	struct alloced_area *aa;
+	struct allocated_area *aa;
 	struct lv_segment *seg;
 	uint32_t current_le = le;
 	uint32_t s, old_area_count, new_area_count;
 
-	dm_list_iterate_items(aa, &ah->alloced_areas[0]) {
+	dm_list_iterate_items(aa, &ah->allocated_areas[0]) {
 		if (!(seg = find_seg_by_le(lv, current_le))) {
 			log_error("Failed to find segment for %s extent " FMTu32 ".",
 				  display_lvname(lv), current_le);
@@ -5889,8 +5889,8 @@ static int _lv_resize_volume(struct logical_volume *lv,
 	alloc_policy_t alloc = lp->alloc ? : lv->alloc;
 
 	old_extents = lv->le_count;
-	log_verbose("%sing logical volume %s to %s%s",
-		    (lp->resize == LV_REDUCE) ? "Reduc" : "Extend",
+	log_verbose("%s logical volume %s to %s%s",
+		    (lp->resize == LV_REDUCE) ? "Reducing" : "Extending",
 		    display_lvname(lv), lp->approx_alloc ? "up to " : "",
 		    display_size(cmd, (uint64_t) lp->extents * vg->extent_size));
 
