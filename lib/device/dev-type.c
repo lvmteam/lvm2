@@ -505,6 +505,11 @@ int dev_get_partition_number(struct device *dev, int *num)
 #define PART_MAGIC 0xAA55
 #define PART_MAGIC_OFFSET UINT64_C(0x1FE)
 #define PART_OFFSET UINT64_C(0x1BE)
+#define PART_TYPE_GPT_PMBR UINT8_C(0xEE)
+
+#define PART_GPT_HEADER_OFFSET_LBA 0x01
+#define PART_GPT_MAGIC 0x5452415020494645UL /* "EFI PART" string */
+#define PART_GPT_ENTRIES_FIELDS_OFFSET UINT64_C(0x48)
 
 struct partition {
 	uint8_t boot_ind;
@@ -570,6 +575,65 @@ static int _is_partitionable(struct dev_types *dt, struct device *dev)
 	return 1;
 }
 
+static int _has_gpt_partition_table(struct device *dev)
+{
+	unsigned int pbs, lbs;
+	uint64_t entries_start;
+	uint32_t nr_entries, sz_entry, i;
+
+	struct {
+		uint64_t magic;
+		/* skip fields we're not interested in */
+		uint8_t skip[PART_GPT_ENTRIES_FIELDS_OFFSET - sizeof(uint64_t)];
+		uint64_t part_entries_lba;
+		uint32_t nr_part_entries;
+		uint32_t sz_part_entry;
+	} __attribute__((packed)) gpt_header;
+
+	struct {
+		uint64_t part_type_guid;
+		/* not interested in any other fields */
+	} __attribute__((packed)) gpt_part_entry;
+
+	if (!dev_get_direct_block_sizes(dev, &pbs, &lbs))
+		return_0;
+
+	if (!dev_read_bytes(dev, PART_GPT_HEADER_OFFSET_LBA * lbs, sizeof(gpt_header), &gpt_header))
+		return_0;
+
+	/* the gpt table is always written using LE on disk */
+
+	if (le64_to_cpu(gpt_header.magic) != PART_GPT_MAGIC)
+		return_0;
+
+	entries_start = le64_to_cpu(gpt_header.part_entries_lba) * lbs;
+	nr_entries = le32_to_cpu(gpt_header.nr_part_entries);
+	sz_entry = le32_to_cpu(gpt_header.sz_part_entry);
+
+	for (i = 0; i < nr_entries; i++) {
+		if (!dev_read_bytes(dev, entries_start + i * sz_entry,
+				    sizeof(gpt_part_entry), &gpt_part_entry))
+			return_0;
+
+		/* just check if the guid is nonzero, no need to call le64_to_cpu here */
+		if (gpt_part_entry.part_type_guid)
+			return 1;
+	}
+
+	return 0;
+}
+
+/*
+ * Check if there's a partition table present on the device dev, either msdos or gpt.
+ * Returns:
+ *
+ *   1 - if it has a partition table with at least one real partition defined
+ *       (note: the gpt's PMBR partition alone does not count as a real partition)
+ *
+ *   0 - if it has no partition table,
+ *     - or if it does have a partition table, but without any partition defined,
+ *     - or on error
+ */
 static int _has_partition_table(struct device *dev)
 {
 	int ret = 0;
@@ -594,10 +658,20 @@ static int _has_partition_table(struct device *dev)
 				break;
 			}
 			/* Must have at least one non-empty partition */
-			if (buf.part[p].nr_sects)
-				ret = 1;
+			if (buf.part[p].nr_sects) {
+				/*
+				 * If this is GPT's PMBR, then also
+				 * check for gpt partition table.
+				 */
+				if (buf.part[p].sys_ind == PART_TYPE_GPT_PMBR)
+					ret = _has_gpt_partition_table(dev);
+				else
+					ret = 1;
+			}
 		}
-	}
+	} else
+		/* Check for gpt partition table. */
+		ret = _has_gpt_partition_table(dev);
 
 	return ret;
 }
