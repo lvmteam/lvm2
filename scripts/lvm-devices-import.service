@@ -1,11 +1,11 @@
 [Unit]
 Description=Create lvm system.devices
+ConditionPathExists=!/etc/lvm/devices/system.devices
 
 [Service]
 Type=oneshot
 RemainAfterExit=no
 ExecStart=/usr/sbin/vgimportdevices --rootvg --auto
-ConditionPathExists=!/etc/lvm/devices/system.devices
 
 [Install]
 WantedBy=multi-user.target
