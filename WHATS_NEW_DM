@@ -1,5 +1,7 @@
 Version 1.02.201 - 
 ===================
+  Cleanup udev sync semaphore if dm_{udev_create,task_set}_cookie fails.
+  Improve error messages on failed udev cookie create/inc/dec operation.
 
 Version 1.02.200 - 23rd August 2024
 ===================================
