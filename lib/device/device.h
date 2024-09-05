@@ -21,7 +21,7 @@
 #include <fcntl.h>
 
 #define DEV_REGULAR		0x00000002	/* Regular file? */
-#define DEV_ALLOCED		0x00000004	/* malloc used */
+#define DEV_ALLOCATED		0x00000004	/* malloc used */
 #define DEV_OPENED_RW		0x00000008	/* Opened RW */
 #define DEV_OPENED_EXCL		0x00000010	/* Opened EXCL */
 #define DEV_O_DIRECT		0x00000020	/* Use O_DIRECT */
