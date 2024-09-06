@@ -673,7 +673,7 @@ arg(raidintegritymode_ARG, '\0', "raidintegritymode", string_VAL, 0, 0,
 
 arg(readonly_ARG, '\0', "readonly", 0, 0, 0,
     "Prevent the command from making changes, including activation and\n"
-    "metadata updates.\n")
+    "metadata updates.  (See --permission r for read only LVs.)\n")
 
 arg(refresh_ARG, '\0', "refresh", 0, 0, 0,
     "#lvmdevices\n"
