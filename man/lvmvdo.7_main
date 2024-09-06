@@ -41,12 +41,11 @@ block addresses that are mapped to the shared physical block are not
 modified.
 .P
 To use VDO with \fBlvm\fP(8), you must install the standard VDO user-space tools
-\fBvdoformat\fP(8) and the currently non-standard kernel VDO module
-"\fIkvdo\fP".
+\fBvdoformat\fP(8) and kernel module "\fIdm_vdo\fP" (For older kernels <6.9
+the out of tree kernel VDO module "\fIkvdo\fP" is necessary).
 .P
-The "\fIkvdo\fP" module implements fine-grained storage virtualization,
-thin provisioning, block sharing, and compression.
-The "\fIuds\fP" module provides memory-efficient duplicate
+The kernel module implements fine-grained storage virtualization,
+thin provisioning, block sharing, compression and memory-efficient duplicate
 identification. The user-space tools include \fBvdostats\fP(8)
 for extracting statistics from VDO volumes.
 .
@@ -161,7 +160,6 @@ allocation {
 .RS
 vdo_use_compression=1
 vdo_use_deduplication=1
-vdo_use_metadata_hints=1
 vdo_minimum_io_size=4096
 vdo_block_map_cache_size_mb=128
 vdo_block_map_period=16380
@@ -175,7 +173,6 @@ vdo_cpu_threads=2
 vdo_hash_zone_threads=1
 vdo_logical_threads=1
 vdo_physical_threads=1
-vdo_write_policy="auto"
 vdo_max_discard=1
 .RE
 }
@@ -192,7 +189,7 @@ or repeat --vdosettings for each option being set.
 Options are listed in the Example section above, for the full description see
 .BR lvm.conf (5).
 Options can omit 'vdo_' and 'vdo_use_' prefixes and all its underscores.
-So i.e.  vdo_use_metadata_hints=1  and  metadatahints=1 are equivalent.
+So i.e. vdo_use_deduplication=1 and deduplication=1 are equivalent.
 To change the option for an already existing VDOPoolLV use
 .BR lvchange (8)
 command. However not all option can be changed.
@@ -307,6 +304,7 @@ volume types: linear, stripe, raid and cache with cachepool.
 You can convert existing VDO LV into a thin volume. After this conversion
 you can create a thin snapshot or you can add more thin volumes
 with thin-pool named after original LV name LV_tpool0.
+See \fBlvmthin\fP(7) for more details.
 .P
 .I Example
 .nf
@@ -441,6 +439,7 @@ a dense UDS index uses 17 GiB of storage and a sparse UDS index will use
 .BR lvremove (8),
 .BR lvs (8),
 .P
+.BR lvmthin (7),
 .BR vdoformat (8),
 .BR vdostats (8),
 .P

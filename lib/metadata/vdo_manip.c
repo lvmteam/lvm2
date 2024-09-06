@@ -572,6 +572,9 @@ int set_vdo_write_policy(enum dm_vdo_write_policy *vwp, const char *policy)
 		return 0;
 	}
 
+	if (*vwp != DM_VDO_WRITE_POLICY_AUTO)
+		log_info("Deprecated VDO setting write_policy specified.");
+
 	return 1;
 }
 
@@ -625,6 +628,9 @@ int fill_vdo_target_params(struct cmd_context *cmd,
 		return_0;
 
 	*vdo_pool_header_size = 2 * find_config_tree_int64(cmd, allocation_vdo_pool_header_size_CFG, profile);
+
+	if (vtp->use_metadata_hints)
+		log_info("Deprecated VDO setting use_metadata_hints specified.");
 
 	return 1;
 }

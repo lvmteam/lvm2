@@ -168,7 +168,8 @@ static void _vdo_pool_display(const struct lv_segment *seg)
 
 	_print_yes_no("Compression\t", vtp->use_compression);
 	_print_yes_no("Deduplication", vtp->use_deduplication);
-	_print_yes_no("Metadata hints", vtp->use_metadata_hints);
+	if (vtp->use_metadata_hints)
+		_print_yes_no("Metadata hints", vtp->use_metadata_hints);
 
 	log_print("  Minimum IO size\t%s",
 		  display_size(cmd, vtp->minimum_io_size));
@@ -192,7 +193,8 @@ static void _vdo_pool_display(const struct lv_segment *seg)
 	log_print("  # Logical threads\t%u", (unsigned) vtp->logical_threads);
 	log_print("  # Physical threads\t%u", (unsigned) vtp->physical_threads);
 	log_print("  Max discard\t\t%u", (unsigned) vtp->max_discard);
-	log_print("  Write policy\t%s", get_vdo_write_policy_name(vtp->write_policy));
+	if (vtp->write_policy != DM_VDO_WRITE_POLICY_AUTO)
+		log_print("  Write policy\t%s", get_vdo_write_policy_name(vtp->write_policy));
 }
 
 /* reused as _vdo_text_import_area_count */

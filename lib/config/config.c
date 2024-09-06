@@ -2558,3 +2558,18 @@ uint64_t get_default_allocation_cache_pool_max_chunks_CFG(struct cmd_context *cm
 
 	return max_chunks;
 }
+
+int get_default_allocation_vdo_use_metadata_hints_CFG(struct cmd_context *cmd, struct profile *profile)
+{
+	unsigned maj, min;
+
+	if ((sscanf(cmd->kernel_vsn, "%u.%u", &maj, &min) == 2) &&
+	    ((maj > 6) || ((maj == 6) && (min > 8)))) {
+		/* With kernels > 6.8 this feature is considered deprecated.
+		 * Return false as default setting. */
+		return false;
+	}
+
+	/* With older kernels use the configured default setting. */
+	return DEFAULT_VDO_USE_METADATA_HINTS;
+}

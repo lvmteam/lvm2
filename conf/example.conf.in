@@ -646,13 +646,6 @@ allocation {
 	# This configuration option has an automatic default value.
 	# vdo_use_deduplication = 1
 
-	# Configuration option allocation/vdo_use_metadata_hints.
-	# Enables or disables whether VDO volume should tag its latency-critical
-	# writes with the REQ_SYNC flag. Some device mapper targets such as dm-raid5
-	# process writes with this flag at a higher priority.
-	# This configuration option has an automatic default value.
-	# vdo_use_metadata_hints = 1
-
 	# Configuration option allocation/vdo_minimum_io_size.
 	# The minimum IO size for VDO volume to accept, in bytes.
 	# Valid values are 512 or 4096. The recommended value is 4096.
@@ -750,19 +743,6 @@ allocation {
 	# either all zero or all non-zero.
 	# This configuration option has an automatic default value.
 	# vdo_physical_threads = 1
-
-	# Configuration option allocation/vdo_write_policy.
-	# Specifies the write policy:
-	# auto  - VDO will check the storage device and determine whether it supports flushes.
-	#         If it does, VDO will run in async mode, otherwise it will run in sync mode.
-	# sync  - Writes are acknowledged only after data is stably written.
-	#         This policy is not supported if the underlying storage is not also synchronous.
-	# async - Writes are acknowledged after data has been cached for writing to stable storage.
-	#         Data which has not been flushed is not guaranteed to persist in this mode.
-	# async-unsafe - Writes are handled like 'async' but there is no guarantee of the atomicity async provides.
-	#         This mode should only be used for better performance when atomicity is not required.
-	# This configuration option has an automatic default value.
-	# vdo_write_policy = "auto"
 
 	# Configuration option allocation/vdo_max_discard.
 	# Specified the maximum size of discard bio accepted, in 4096 byte blocks.

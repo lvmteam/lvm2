@@ -728,8 +728,8 @@ cfg(allocation_vdo_use_deduplication_CFG, "vdo_use_deduplication", allocation_CF
 	"Deduplication may be disabled in instances where data is not expected\n"
 	"to have good deduplication rates but compression is still desired.\n")
 
-cfg(allocation_vdo_use_metadata_hints_CFG, "vdo_use_metadata_hints", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_VDO_USE_METADATA_HINTS, VDO_1ST_VSN, NULL, 0, NULL,
-	"Enables or disables whether VDO volume should tag its latency-critical\n"
+cfg_runtime(allocation_vdo_use_metadata_hints_CFG, "vdo_use_metadata_hints", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, VDO_1ST_VSN, vsn(2, 3, 27), NULL,
+	"Deprecated enablement whether VDO volume should tag its latency-critical\n"
 	"writes with the REQ_SYNC flag. Some device mapper targets such as dm-raid5\n"
 	"process writes with this flag at a higher priority.\n")
 
@@ -821,8 +821,8 @@ cfg(allocation_vdo_physical_threads_CFG, "vdo_physical_threads", allocation_CFG_
 	"vdo_hash_zone_threads, vdo_logical_threads and vdo_physical_threads must be\n"
 	"either all zero or all non-zero.\n")
 
-cfg(allocation_vdo_write_policy_CFG, "vdo_write_policy", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_VDO_WRITE_POLICY, VDO_1ST_VSN, NULL, 0, NULL,
-	"Specifies the write policy:\n"
+cfg(allocation_vdo_write_policy_CFG, "vdo_write_policy", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_VDO_WRITE_POLICY, VDO_1ST_VSN, NULL, vsn(2, 3, 27), NULL,
+	"Deprecated option to specify the write policy with these accepted values:\n"
 	"auto  - VDO will check the storage device and determine whether it supports flushes.\n"
 	"        If it does, VDO will run in async mode, otherwise it will run in sync mode.\n"
 	"sync  - Writes are acknowledged only after data is stably written.\n"

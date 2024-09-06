@@ -295,7 +295,6 @@ FIELD(SEGS, seg, STR_LIST, "IntegSettings", list, 0, integrity_settings, integri
 
 FIELD(SEGS, seg, BIN, "VDOCompression", list, 0, vdo_compression, vdo_compression, "Set for compressed LV (vdopool).", 0)
 FIELD(SEGS, seg, BIN, "VDODeduplication", list, 0, vdo_deduplication, vdo_deduplication, "Set for deduplicated LV (vdopool).", 0)
-FIELD(SEGS, seg, BIN, "VDOMetadataHints", list, 0, vdo_use_metadata_hints, vdo_use_metadata_hints, "Use REQ_SYNC for writes (vdopool).", 0)
 FIELD(SEGS, seg, NUM, "VDOMinimumIOSize", list, 0, vdo_minimum_io_size, vdo_minimum_io_size, "Minimum acceptable IO size (vdopool).", 0)
 FIELD(SEGS, seg, SIZ, "VDOBlockMapCacheSize", list, 0, vdo_block_map_cache_size, vdo_block_map_cache_size, "Allocated caching size (vdopool).", 0)
 FIELD(SEGS, seg, NUM, "VDOBlockMapEraLength", list, 0, vdo_block_map_era_length, vdo_block_map_era_length, "Speed of cache writes (vdopool).", 0)
@@ -310,8 +309,9 @@ FIELD(SEGS, seg, NUM, "VDOHashZoneThreads", list, 0, vdo_hash_zone_threads, vdo_
 FIELD(SEGS, seg, NUM, "VDOLogicalThreads", list, 0, vdo_logical_threads, vdo_logical_threads, "Logical threads for subdivide parts (vdopool).", 0)
 FIELD(SEGS, seg, NUM, "VDOPhysicalThreads", list, 0, vdo_physical_threads, vdo_physical_threads, "Physical threads for subdivide parts (vdopool).", 0)
 FIELD(SEGS, seg, NUM, "VDOMaxDiscard", list, 0, vdo_max_discard, vdo_max_discard, "Maximum discard size volume can receive (vdopool).", 0)
-FIELD(SEGS, seg, STR, "VDOWritePolicy", list, 0, vdo_write_policy, vdo_write_policy, "Specified write policy (vdopool).", 0)
 FIELD(SEGS, seg, SIZ, "VDOHeaderSize", list, 0, vdo_header_size, vdo_header_size, "Header size at front of vdopool.", 0)
+FIELD(SEGS, seg, BIN, "VDOMetadataHints", list, 0, vdo_use_metadata_hints, vdo_use_metadata_hints, "Deprecated use of REQ_SYNC for writes (vdopool).", 0)
+FIELD(SEGS, seg, STR, "VDOWritePolicy", list, 0, vdo_write_policy, vdo_write_policy, "Deprecated write policy (vdopool).", 0)
 
 /*
  * End of SEGS type fields
