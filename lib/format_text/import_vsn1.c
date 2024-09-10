@@ -376,7 +376,8 @@ static int _read_segment(struct cmd_context *cmd,
 			 struct format_instance *fid,
 			 struct dm_pool *mem,
 			 struct logical_volume *lv, const struct dm_config_node *sn,
-			 struct dm_hash_table *pv_hash)
+			 struct dm_hash_table *pv_hash,
+			 struct dm_hash_table *lv_hash)
 {
 	uint32_t area_count = 0u;
 	struct lv_segment *seg;
@@ -449,7 +450,7 @@ static int _read_segment(struct cmd_context *cmd,
 	}
 
 	if (seg->segtype->ops->text_import &&
-	    !seg->segtype->ops->text_import(seg, sn_child, pv_hash))
+	    !seg->segtype->ops->text_import(seg, sn_child, pv_hash, lv_hash))
 		return_0;
 
 	/* Optional tags */
@@ -551,7 +552,8 @@ static int _read_segments(struct cmd_context *cmd,
 			  struct format_instance *fid,
 			  struct dm_pool *mem,
 			  struct logical_volume *lv, const struct dm_config_node *lvn,
-			  struct dm_hash_table *pv_hash)
+			  struct dm_hash_table *pv_hash,
+			  struct dm_hash_table *lv_hash)
 {
 	const struct dm_config_node *sn;
 	int count = 0, seg_count;
@@ -562,7 +564,7 @@ static int _read_segments(struct cmd_context *cmd,
 		 * All sub-sections are assumed to be segments.
 		 */
 		if (!sn->v) {
-			if (!_read_segment(cmd, fmt, fid, mem, lv, sn, pv_hash))
+			if (!_read_segment(cmd, fmt, fid, mem, lv, sn, pv_hash, lv_hash))
 				return_0;
 
 			count++;
@@ -979,7 +981,7 @@ static int _read_lvsegs(struct cmd_context *cmd,
 
 	memcpy(&lv->lvid.id[0], &lv->vg->id, sizeof(lv->lvid.id[0]));
 
-	if (!_read_segments(cmd, fmt, fid, mem, lv, lvn, pv_hash))
+	if (!_read_segments(cmd, fmt, fid, mem, lv, lvn, pv_hash, lv_hash))
 		return_0;
 
 	lv->size = (uint64_t) lv->le_count * (uint64_t) vg->extent_size;

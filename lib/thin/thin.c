@@ -53,7 +53,8 @@ static void _thin_pool_display(const struct lv_segment *seg)
 
 static int _thin_pool_add_message(struct lv_segment *seg,
 				  const char *key,
-				  const struct dm_config_node *sn)
+				  const struct dm_config_node *sn,
+				  struct dm_hash_table *lv_hash)
 {
 	const char *lv_name = NULL;
 	struct logical_volume *lv = NULL;
@@ -62,7 +63,7 @@ static int _thin_pool_add_message(struct lv_segment *seg,
 
 	/* Message must have only one from: create, delete */
 	if (dm_config_get_str(sn, "create", &lv_name)) {
-		if (!(lv = find_lv(seg->lv->vg, lv_name)))
+		if (!(lv = dm_hash_lookup(lv_hash, lv_name)))
 			return SEG_LOG_ERROR("Unknown LV %s for create message in",
 					     lv_name);
 		/* FIXME: switch to _SNAP later, if the created LV has an origin */
@@ -80,7 +81,8 @@ static int _thin_pool_add_message(struct lv_segment *seg,
 
 static int _thin_pool_text_import(struct lv_segment *seg,
 				  const struct dm_config_node *sn,
-				  struct dm_hash_table *pv_hash __attribute__((unused)))
+				  struct dm_hash_table *pv_hash __attribute__((unused)),
+				  struct dm_hash_table *lv_hash)
 {
 	const char *lv_name;
 	struct logical_volume *pool_data_lv, *pool_metadata_lv;
@@ -91,13 +93,13 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 	if (!dm_config_get_str(sn, "metadata", &lv_name))
 		return SEG_LOG_ERROR("Metadata must be a string in");
 
-	if (!(pool_metadata_lv = find_lv(seg->lv->vg, lv_name)))
+	if (!(pool_metadata_lv = dm_hash_lookup(lv_hash, lv_name)))
 		return SEG_LOG_ERROR("Unknown metadata %s in", lv_name);
 
 	if (!dm_config_get_str(sn, "pool", &lv_name))
 		return SEG_LOG_ERROR("Pool must be a string in");
 
-	if (!(pool_data_lv = find_lv(seg->lv->vg, lv_name)))
+	if (!(pool_data_lv = dm_hash_lookup(lv_hash, lv_name)))
 		return SEG_LOG_ERROR("Unknown pool %s in", lv_name);
 
 	if (!attach_pool_data_lv(seg, pool_data_lv))
@@ -141,7 +143,7 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 
 	/* Read messages */
 	for (; sn; sn = sn->sib)
-		if (!(sn->v) && !_thin_pool_add_message(seg, sn->key, sn->child))
+		if (!(sn->v) && !_thin_pool_add_message(seg, sn->key, sn->child, lv_hash))
 			return_0;
 
 	return 1;
@@ -468,7 +470,8 @@ static void _thin_display(const struct lv_segment *seg)
 
 static int _thin_text_import(struct lv_segment *seg,
 			     const struct dm_config_node *sn,
-			     struct dm_hash_table *pv_hash __attribute__((unused)))
+			     struct dm_hash_table *pv_hash __attribute__((unused)),
+			     struct dm_hash_table *lv_hash)
 {
 	const char *lv_name;
 	struct logical_volume *pool_lv, *origin = NULL, *external_lv = NULL, *merge_lv = NULL;
@@ -477,7 +480,7 @@ static int _thin_text_import(struct lv_segment *seg,
 	if (!dm_config_get_str(sn, "thin_pool", &lv_name))
 		return SEG_LOG_ERROR("Thin pool must be a string in");
 
-	if (!(pool_lv = find_lv(seg->lv->vg, lv_name)))
+	if (!(pool_lv = dm_hash_lookup(lv_hash, lv_name)))
 		return SEG_LOG_ERROR("Unknown thin pool %s in", lv_name);
 
 	if (!dm_config_get_uint64(sn, "transaction_id", &seg->transaction_id))
@@ -487,14 +490,14 @@ static int _thin_text_import(struct lv_segment *seg,
 		if (!dm_config_get_str(sn, "origin", &lv_name))
 			return SEG_LOG_ERROR("Origin must be a string in");
 
-		if (!(origin = find_lv(seg->lv->vg, lv_name)))
+		if (!(origin = dm_hash_lookup(lv_hash, lv_name)))
 			return SEG_LOG_ERROR("Unknown origin %s in", lv_name);
 	}
 
 	if (dm_config_has_node(sn, "merge")) {
 		if (!dm_config_get_str(sn, "merge", &lv_name))
 			return SEG_LOG_ERROR("Merge lv must be a string in");
-		if (!(merge_lv = find_lv(seg->lv->vg, lv_name)))
+		if (!(merge_lv = dm_hash_lookup(lv_hash, lv_name)))
 			return SEG_LOG_ERROR("Unknown merge lv %s in", lv_name);
 	}
 
@@ -509,7 +512,7 @@ static int _thin_text_import(struct lv_segment *seg,
 		if (!dm_config_get_str(sn, "external_origin", &lv_name))
 			return SEG_LOG_ERROR("External origin must be a string in");
 
-		if (!(external_lv = find_lv(seg->lv->vg, lv_name)))
+		if (!(external_lv = dm_hash_lookup(lv_hash, lv_name)))
 			return SEG_LOG_ERROR("Unknown external origin %s in", lv_name);
 	}
 

@@ -203,7 +203,8 @@ static int _settings_text_export(const struct lv_segment *seg,
 
 static int _cache_pool_text_import(struct lv_segment *seg,
 				   const struct dm_config_node *sn,
-				   struct dm_hash_table *pv_hash __attribute__((unused)))
+				   struct dm_hash_table *pv_hash __attribute__((unused)),
+				   struct dm_hash_table *lv_hash)
 {
 	struct logical_volume *data_lv, *meta_lv;
 	const char *str = NULL;
@@ -212,7 +213,7 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 		return SEG_LOG_ERROR("Cache data not specified in");
 	if (!(str = dm_config_find_str(sn, "data", NULL)))
 		return SEG_LOG_ERROR("Cache data must be a string in");
-	if (!(data_lv = find_lv(seg->lv->vg, str)))
+	if (!(data_lv = dm_hash_lookup(lv_hash, str)))
 		return SEG_LOG_ERROR("Unknown logical volume %s specified for "
 				     "cache data in", str);
 
@@ -220,7 +221,7 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 		return SEG_LOG_ERROR("Cache metadata not specified in");
 	if (!(str = dm_config_find_str(sn, "metadata", NULL)))
 		return SEG_LOG_ERROR("Cache metadata must be a string in");
-	if (!(meta_lv = find_lv(seg->lv->vg, str)))
+	if (!(meta_lv = dm_hash_lookup(lv_hash, str)))
 		return SEG_LOG_ERROR("Unknown logical volume %s specified for "
 				     "cache metadata in", str);
 
@@ -439,7 +440,8 @@ static const struct segtype_handler _cache_pool_ops = {
 
 static int _cache_text_import(struct lv_segment *seg,
 			      const struct dm_config_node *sn,
-			      struct dm_hash_table *pv_hash __attribute__((unused)))
+			      struct dm_hash_table *pv_hash __attribute__((unused)),
+			      struct dm_hash_table *lv_hash)
 {
 	struct logical_volume *pool_lv, *origin_lv;
 	const char *name;
@@ -449,7 +451,7 @@ static int _cache_text_import(struct lv_segment *seg,
 		return SEG_LOG_ERROR("cache_pool not specified in");
 	if (!(name = dm_config_find_str(sn, "cache_pool", NULL)))
 		return SEG_LOG_ERROR("cache_pool must be a string in");
-	if (!(pool_lv = find_lv(seg->lv->vg, name)))
+	if (!(pool_lv = dm_hash_lookup(lv_hash, name)))
 		return SEG_LOG_ERROR("Unknown logical volume %s specified for "
 				     "cache_pool in", name);
 
@@ -457,7 +459,7 @@ static int _cache_text_import(struct lv_segment *seg,
 		return SEG_LOG_ERROR("Cache origin not specified in");
 	if (!(name = dm_config_find_str(sn, "origin", NULL)))
 		return SEG_LOG_ERROR("Cache origin must be a string in");
-	if (!(origin_lv = find_lv(seg->lv->vg, name)))
+	if (!(origin_lv = dm_hash_lookup(lv_hash, name)))
 		return SEG_LOG_ERROR("Unknown logical volume %s specified for "
 				     "cache origin in", name);
 	if (!set_lv_segment_area_lv(seg, 0, origin_lv, 0, 0))
