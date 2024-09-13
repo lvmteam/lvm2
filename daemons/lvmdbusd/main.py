@@ -214,7 +214,7 @@ def main():
 		cfg.loop = GLib.MainLoop()
 
 		for thread in thread_list:
-			thread.damon = True
+			thread.daemon = True
 			thread.start()
 
 		# In all cases we are going to monitor for udev until we get an
