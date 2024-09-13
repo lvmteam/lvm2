@@ -271,7 +271,7 @@ struct cmd_context {
 	/*
 	 * Buffers.
 	 */
-	char display_buffer[NAME_LEN * 10];	/* ring buffer for upto 10 longest vg/lv names */
+	char display_buffer[NAME_LEN * 10];	/* ring buffer for up to 10 longest vg/lv names */
 	unsigned display_lvname_idx;		/* index to ring buffer */
 	char *linebuffer;
 

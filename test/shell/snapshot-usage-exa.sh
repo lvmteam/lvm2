@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-# Check very large device size (upto 15Exa bytes)
+# Check very large device size (up to 15Exa bytes)
 # this needs 64bit arch
 
 SKIP_WITH_LVMLOCKD=1

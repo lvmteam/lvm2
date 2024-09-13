@@ -109,7 +109,7 @@ void lvmnotify_send(struct cmd_context *cmd)
 
 	/* If lvmdbusd isn't running, don't notify as you will start it as it will auto activate */
 	if (!lvmdbusd_running()) {
-		log_debug_dbus("dbus damon not running, not notifying");
+		log_debug_dbus("dbus daemon not running, not notifying");
 		return;
 	}
 

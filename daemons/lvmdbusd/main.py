@@ -133,7 +133,7 @@ def process_args():
 
 def running_under_systemd():
 	""""
-	Checks to see if we are running under systemd, by checking damon fd 0, 1
+	Checks to see if we are running under systemd, by checking daemon fd 0, 1
 	systemd sets stdin to /dev/null and 1 & 2 are a socket
 	"""
 	base = "/proc/self/fd"

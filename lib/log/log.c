@@ -258,7 +258,7 @@ static int _get_pid_starttime(int *pid, unsigned long long *starttime)
 
 /*
  * Support envvar LVM_LOG_FILE_EPOCH and allow to attach
- * extra keyword (consist of upto 32 alpha chars) to
+ * extra keyword (consist of up to 32 alpha chars) to
  * opened log file. After this 'epoch' word pid and starttime
  * (in kernel units, read from /proc/self/stat)
  * is automatically attached.
