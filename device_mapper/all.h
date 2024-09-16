@@ -2167,7 +2167,7 @@ struct dm_pool *dm_config_memory(struct dm_config_tree *cft);
  */
 #define DM_UDEV_DISABLE_DM_RULES_FLAG 0x0001
 /*
- * DM_UDEV_DISABLE_SUBSYTEM_RULES_FLAG is set in case we need to disable
+ * DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG is set in case we need to disable
  * subsystem udev rules, but still we need the general DM udev rules to
  * be applied (to create the nodes and symlinks under /dev and /dev/disk).
  */
