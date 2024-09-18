@@ -502,10 +502,10 @@ int dev_get_partition_number(struct device *dev, int *num)
 }
 
 /* See linux/genhd.h and fs/partitions/msdos */
-#define PART_MAGIC 0xAA55
-#define PART_MAGIC_OFFSET UINT64_C(0x1FE)
-#define PART_OFFSET UINT64_C(0x1BE)
-#define PART_TYPE_GPT_PMBR UINT8_C(0xEE)
+#define PART_MSDOS_MAGIC 0xAA55
+#define PART_MSDOS_MAGIC_OFFSET UINT64_C(0x1FE)
+#define PART_MSDOS_OFFSET UINT64_C(0x1BE)
+#define PART_MSDOS_TYPE_GPT_PMBR UINT8_C(0xEE)
 
 #define PART_GPT_HEADER_OFFSET_LBA 0x01
 #define PART_GPT_MAGIC 0x5452415020494645UL /* "EFI PART" string */
@@ -639,7 +639,7 @@ static int _has_partition_table(struct device *dev)
 	int ret = 0;
 	unsigned p;
 	struct {
-		uint8_t skip[PART_OFFSET];
+		uint8_t skip[PART_MSDOS_OFFSET];
 		struct partition part[4];
 		uint16_t magic;
 	} __attribute__((packed)) buf; /* sizeof() == SECTOR_SIZE */
@@ -650,7 +650,7 @@ static int _has_partition_table(struct device *dev)
 	/* FIXME Check for other types of partition table too */
 
 	/* Check for msdos partition table */
-	if (buf.magic == xlate16(PART_MAGIC)) {
+	if (buf.magic == xlate16(PART_MSDOS_MAGIC)) {
 		for (p = 0; p < 4; ++p) {
 			/* Table is invalid if boot indicator not 0 or 0x80 */
 			if (buf.part[p].boot_ind & 0x7f) {
@@ -663,7 +663,7 @@ static int _has_partition_table(struct device *dev)
 				 * If this is GPT's PMBR, then also
 				 * check for gpt partition table.
 				 */
-				if (buf.part[p].sys_ind == PART_TYPE_GPT_PMBR)
+				if (buf.part[p].sys_ind == PART_MSDOS_TYPE_GPT_PMBR)
 					ret = _has_gpt_partition_table(dev);
 				else
 					ret = 1;
