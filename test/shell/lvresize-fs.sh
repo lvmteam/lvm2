@@ -299,7 +299,7 @@ dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=8 oflag=direct
 lvextend --fs resize --fsmode offline -L+10M $vg/$lv
 check lv_field $vg/$lv lv_size "30.00m"
 # fsmode offline leaves fs unmounted
-df -a | tee dfa
+df | tee dfa
 not grep "$mount_dir" dfa
 mount "$DM_DEV_DIR/$vg/$lv" "$mount_dir"
 df --output=size "$mount_dir" |tee df2
