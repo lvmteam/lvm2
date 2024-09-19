@@ -6145,6 +6145,8 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 			fsi->needs_unmount = 1;
 
 		fsi->needs_reduce = 1;
+	} else if (!strcmp(fsi->fstype, "swap")) {
+		fsi->needs_reduce = 1;
 	} else {
 		/*
 		 * Shouldn't reach here since no other fs types get this far.
@@ -6314,6 +6316,8 @@ static int _fs_extend_allow(struct cmd_context *cmd, struct logical_volume *lv,
 		if (lp->nofsck)
 			fsi->needs_fsck = 0;
 
+	} else if (!strcmp(fsi->fstype, "swap")) {
+		fsi->needs_extend = 1;
 	} else if (!strcmp(fsi->fstype, "xfs")) {
 		fs_extend_cmd = " xfs_growfs";
 
