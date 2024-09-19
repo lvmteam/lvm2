@@ -943,6 +943,7 @@ int fs_get_blkid(const char *pathname, struct fs_info *fsi)
 	const char *str = "";
 	size_t len = 0;
 	uint64_t fslastblock = 0;
+	uint64_t fssize = 0;
 	unsigned int fsblocksize = 0;
 	int rc;
 
@@ -993,10 +994,25 @@ int fs_get_blkid(const char *pathname, struct fs_info *fsi)
 	if (!blkid_probe_lookup_value(probe, "FSBLOCKSIZE", &str, &len) && len)
 		fsblocksize = (unsigned int)atoi(str);
 
+	if (!blkid_probe_lookup_value(probe, "FSSIZE", &str, &len) && len)
+		fssize = strtoull(str, NULL, 0);
+
 	blkid_free_probe(probe);
 
 	if (fslastblock && fsblocksize)
 		fsi->fs_last_byte = fslastblock * fsblocksize;
+	else if (fssize) {
+		fsi->fs_last_byte = fssize;
+
+		/*
+		 * For swap, there's no FSLASTBLOCK reported by blkid. We do have FSSIZE reported though.
+		 * The last block is then calculated as:
+		 *    FSSIZE (== size of the usable swap area) + FSBLOCKSIZE (== size of the swap header)
+		 */
+		if (!strcmp(fsi->fstype, "swap"))
+			fsi->fs_last_byte += fsblocksize;
+
+	}
 
 	log_debug("libblkid TYPE %s BLOCK_SIZE %d FSLASTBLOCK %llu FSBLOCKSIZE %u fs_last_byte %llu",
 		  fsi->fstype, fsi->fs_block_size_bytes, (unsigned long long)fslastblock, fsblocksize,
