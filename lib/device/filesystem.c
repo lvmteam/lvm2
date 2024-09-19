@@ -201,6 +201,13 @@ int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!include_mount)
 		return 1;
 
+	/*
+	 * Note: used swap devices are not considered as mount points,
+	 * hence they're not listed in /etc/mtab, we'd need to read the
+	 * /proc/swaps instead. We don't need it at this moment though,
+	 * but if we do once, read the /proc/swaps here if fsi->fstype == "swap".
+	 */
+
 	if (!(fme = setmntent("/etc/mtab", "r")))
 		return_0;
 
