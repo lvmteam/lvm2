@@ -1558,8 +1558,6 @@ bad:
 int lv_set_creation(struct logical_volume *lv,
 		    const char *hostname, uint64_t timestamp)
 {
-	const char *hn;
-
 	if (!hostname) {
 		if (!_utsinit) {
 			if (uname(&_utsname)) {
@@ -1573,17 +1571,7 @@ int lv_set_creation(struct logical_volume *lv,
 		hostname = _utsname.nodename;
 	}
 
-	if (!(hn = dm_hash_lookup(lv->vg->hostnames, hostname))) {
-		if (!(hn = dm_pool_strdup(lv->vg->vgmem, hostname))) {
-			log_error("Failed to duplicate hostname");
-			return 0;
-		}
-
-		if (!dm_hash_insert(lv->vg->hostnames, hostname, (void*)hn))
-			return_0;
-	}
-
-	lv->hostname = hn;
+	lv->hostname = dm_pool_strdup(lv->vg->vgmem, hostname);
 	lv->timestamp = timestamp ? : (uint64_t) time(NULL);
 
 	return 1;

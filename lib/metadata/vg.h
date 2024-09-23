@@ -129,7 +129,6 @@ struct volume_group {
 
 	uint32_t mda_copies; /* target number of mdas for this VG */
 
-	struct dm_hash_table *hostnames; /* map of creation hostnames */
 	struct logical_volume *pool_metadata_spare_lv; /* one per VG */
 	struct logical_volume *sanlock_lv; /* one per VG */
 	struct dm_list msg_list;
