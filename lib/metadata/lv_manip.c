@@ -7629,7 +7629,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			if (!lockd_lv(cmd, lock_lv, "ex", LDLV_PERSISTENT))
 				return_0;
 		} else {
-			if (!lockd_lv(cmd, lock_lv, "ex", 0))
+			if (!lockd_lv(cmd, lock_lv, "ex", LDLV_PERSISTENT))
 				return_0;
 		}
 	}
@@ -7784,6 +7784,9 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (lockd_pool && !thin_pool_is_active(lockd_pool)) {
 		if (!lockd_lv_name(cmd, vg, lockd_pool->name, &lockd_pool->lvid.id[1], lockd_pool->lock_args, "un", LDLV_PERSISTENT))
 			log_warn("WARNING: Failed to unlock %s.", display_lvname(lockd_pool));
+	} else {
+		if (!lockd_lv(cmd, lv, "un", LDLV_PERSISTENT))
+			log_warn("WARNING: Failed to unlock %s.", display_lvname(lv));
 	}
 	lockd_free_lv(cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
 
