@@ -676,6 +676,10 @@ int handle_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg)
 	 * Another host may have extended the lvmlock LV already.
 	 * Refresh so that we'll find the new space they added
 	 * when we search for new space.
+	 *
+	 * FIXME: we should be able to check if the lvmlock size
+	 * in VG metadata is smaller than lvmlock size reported
+	 * by the kernel, and avoid refresh if they match.
 	 */
 	if (!_refresh_sanlock_lv(cmd, vg))
 		return 0;
@@ -2575,7 +2579,7 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
  retry:
-	log_debug("lockd LV %s/%s mode %s uuid %s", vg->name, lv_name, mode, lv_uuid);
+	log_debug("lockd LV %s/%s mode %s uuid %s %s", vg->name, lv_name, mode, lv_uuid, opts ?: "");
 
 	/* Pass PV list for IDM lock type */
 	if (!strcmp(vg->lock_type, "idm")) {
@@ -3178,7 +3182,7 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 
 	} else if (seg_is_thin(lp)) {
 		if ((seg_is_thin_volume(lp) && !lp->create_pool) ||
-		    (!seg_is_thin_volume(lp) && lp->snapshot)) {
+		    (!seg_is_thin_volume(lp) && lp->origin_name)) {
 			struct lv_list *lvl;
 
 			/*
@@ -3186,12 +3190,13 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 			 * their own lock but use the pool lock.  If an lv does not
 			 * use its own lock, its lock_args is set to NULL.
 			 */
+			log_debug("lockd_init_lv thin %s locking thin pool", display_lvname(lv));
 
 			if (!(lvl = find_lv_in_vg(vg, lp->pool_name))) {
 				log_error("Failed to find thin pool %s/%s", vg->name, lp->pool_name);
 				return 0;
 			}
-			if (!lockd_lv(cmd, lvl->lv, "ex", LDLV_PERSISTENT)) {
+			if (!lockd_lv(cmd, lvl->lv, "ex", 0)) {
 				log_error("Failed to lock thin pool %s/%s", vg->name, lp->pool_name);
 				return 0;
 			}

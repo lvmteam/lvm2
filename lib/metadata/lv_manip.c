@@ -6887,6 +6887,10 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	/*
 	 * If the LV is locked due to being active, this lock call is a no-op.
 	 * Otherwise, this acquires a transient lock on the lv (not PERSISTENT)
+	 * FIXME: should probably use a persistent lock in case the command
+	 * crashes while the lv is active, in which case we'd want the active
+	 * lv to remain locked. This means then adding lockd_lv("un") at the
+	 * end.
 	 */
 	if (!lockd_lv_resize(cmd, lv_top, "ex", 0, lp))
 		return_0;
@@ -7549,6 +7553,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	int visible, historical;
 	struct logical_volume *pool_lv = NULL;
 	struct logical_volume *lock_lv = lv;
+	struct logical_volume *lockd_pool = NULL;
 	struct lv_segment *cache_seg = NULL;
 	struct seg_list *sl;
 	struct lv_segment *seg = first_seg(lv);
@@ -7613,8 +7618,21 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!lockd_lv(cmd, lock_lv, "ex", LDLV_PERSISTENT))
-		return_0;
+	if (vg_is_shared(vg)) {
+		if (lv_is_thin_type(lv)) {
+			/* FIXME: is this also needed for other types? */
+			/* Thin is special because it needs to be active and locked to remove. */
+			if (lv_is_thin_volume(lv))
+				lockd_pool = first_seg(lv)->pool_lv;
+			else if (lv_is_thin_pool(lv))
+				lockd_pool = lv;
+			if (!lockd_lv(cmd, lock_lv, "ex", LDLV_PERSISTENT))
+				return_0;
+		} else {
+			if (!lockd_lv(cmd, lock_lv, "ex", 0))
+				return_0;
+		}
+	}
 
 	if (!lv_is_cache_vol(lv)) {
 		if (!_lv_remove_check_in_use(lv, force))
@@ -7763,8 +7781,10 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 					display_lvname(pool_lv));
 	}
 
-	if (!lockd_lv(cmd, lv, "un", LDLV_PERSISTENT))
-		log_warn("WARNING: Failed to unlock %s.", display_lvname(lv));
+	if (lockd_pool && !thin_pool_is_active(lockd_pool)) {
+		if (!lockd_lv_name(cmd, vg, lockd_pool->name, &lockd_pool->lvid.id[1], lockd_pool->lock_args, "un", LDLV_PERSISTENT))
+			log_warn("WARNING: Failed to unlock %s.", display_lvname(lockd_pool));
+	}
 	lockd_free_lv(cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
 
 	if (!suppress_remove_message && (visible || historical)) {
@@ -9243,6 +9263,11 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 					return_NULL;
 				/* New pool is now inactive */
 			} else {
+				if (!lockd_lv(cmd, pool_lv, "ex", LDLV_PERSISTENT)) {
+					log_error("Failed to lock thin pool.");
+					return NULL;
+				}
+
 				if (!activate_lv(cmd, pool_lv)) {
 					log_error("Aborting. Failed to locally activate thin pool %s.",
 						  display_lvname(pool_lv));
@@ -9624,6 +9649,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				/* Avoid multiple thin-pool activations in this case */
 				if (thin_pool_was_active < 0)
 					thin_pool_was_active = 0;
+				if (!lockd_lv(cmd, pool_lv, "ex", LDLV_PERSISTENT)) {
+					log_error("Failed to lock thin pool.");
+					return NULL;
+				}
 				if (!activate_lv(cmd, pool_lv)) {
 					log_error("Failed to activate thin pool %s.",
 						  display_lvname(pool_lv));
@@ -9648,11 +9677,15 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 
 		/* Restore inactive state if needed */
-		if (!thin_pool_was_active &&
-		    !deactivate_lv(cmd, pool_lv)) {
-			log_error("Failed to deactivate thin pool %s.",
-				  display_lvname(pool_lv));
-			return NULL;
+		if (!thin_pool_was_active) {
+			if (!deactivate_lv(cmd, pool_lv)) {
+				log_error("Failed to deactivate thin pool %s.", display_lvname(pool_lv));
+				return NULL;
+			}
+			if (!lockd_lv(cmd, pool_lv, "un", LDLV_PERSISTENT)) {
+				log_error("Failed to unlock thin pool.");
+				return NULL;
+			}
 		}
 	} else if (lp->snapshot) {
 		lv->status |= LV_TEMPORARY;
