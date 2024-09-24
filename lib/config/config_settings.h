@@ -1424,11 +1424,14 @@ cfg(activation_use_linear_target_CFG, "use_linear_target", activation_CFG_SECTIO
 
 cfg(activation_reserved_stack_CFG, "reserved_stack", activation_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_RESERVED_STACK, vsn(1, 0, 0), NULL, 0, NULL,
 	"Stack size in KiB to reserve for use while devices are suspended.\n"
-	"Insufficient reserve risks I/O deadlock during device suspension.\n")
+	"Insufficient reserve risks I/O deadlock during device suspension.\n"
+	"Value 0 disables memory locking.\n")
 
 cfg(activation_reserved_memory_CFG, "reserved_memory", activation_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_RESERVED_MEMORY, vsn(1, 0, 0), NULL, 0, NULL,
 	"Memory size in KiB to reserve for use while devices are suspended.\n"
-	"Insufficient reserve risks I/O deadlock during device suspension.\n")
+	"Insufficient reserve risks I/O deadlock during device suspension.\n"
+	"Value 0 disables memory locking.\n")
+
 
 cfg(activation_process_priority_CFG, "process_priority", activation_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_PROCESS_PRIORITY, vsn(1, 0, 0), NULL, 0, NULL,
 	"Nice value used while devices are suspended.\n"
