@@ -339,14 +339,16 @@ fail:
 	return rv;
 }
 
-static void _read_sysfs_size(dev_t devno, const char *name, unsigned int *val)
+static void _read_sysfs_size(dev_t devno, const char *name, uint64_t *val)
 {
 	char path[PATH_MAX];
 	char buf[32];
 	FILE *fp;
 	size_t len;
 
-	snprintf(path, sizeof(path), "/sys/dev/block/%d:%d/queue/%s",
+	*val = 0;
+
+	snprintf(path, sizeof(path), "/sys/dev/block/%d:%d/%s",
 		 (int)major(devno), (int)minor(devno), name);
 
 	if (!(fp = fopen(path, "r")))
@@ -359,20 +361,19 @@ static void _read_sysfs_size(dev_t devno, const char *name, unsigned int *val)
 		buf[--len] = '\0';
 
 	if (strlen(buf))
-		*val = atoi(buf);
+		*val = strtoull(buf, NULL, 0);
 out:
-	if (fclose(fp))
-		log_debug("Failed to fclose host id file %s (%s).", path, strerror(errno));
-
+	(void)fclose(fp);
 }
 
 /* Select sector/align size for a new VG based on what the device reports for
    sector size of the lvmlock LV. */
 
-static int get_sizes_device(char *path, int *sector_size, int *align_size)
+static int get_sizes_device(char *path, uint64_t *dev_size, int *sector_size, int *align_size)
 {
 	unsigned int physical_block_size = 0;
 	unsigned int logical_block_size = 0;
+	uint64_t val;
 	struct stat st;
 	int rv;
 
@@ -382,8 +383,14 @@ static int get_sizes_device(char *path, int *sector_size, int *align_size)
 		return -1;
 	}
 
-	_read_sysfs_size(st.st_rdev, "physical_block_size", &physical_block_size);
-	_read_sysfs_size(st.st_rdev, "logical_block_size", &logical_block_size);
+	_read_sysfs_size(st.st_rdev, "size", &val);
+	*dev_size = val * 512;
+
+	_read_sysfs_size(st.st_rdev, "queue/physical_block_size", &val);
+	physical_block_size = (unsigned int)val;
+
+	_read_sysfs_size(st.st_rdev, "queue/logical_block_size", &val);
+	logical_block_size = (unsigned int)val;
 
 	if ((physical_block_size == 512) && (logical_block_size == 512)) {
 		*sector_size = 512;
@@ -508,6 +515,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	uint32_t daemon_version;
 	uint32_t daemon_proto;
 	uint64_t offset;
+	uint64_t dev_size;
 	int sector_size = 0;
 	int align_size = 0;
 	int i, rv;
@@ -555,7 +563,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 		  daemon_version, daemon_proto);
 
 	/* Nothing formatted on disk yet, use what the device reports. */
-	rv = get_sizes_device(disk.path, &sector_size, &align_size);
+	rv = get_sizes_device(disk.path, &dev_size, &sector_size, &align_size);
 	if (rv < 0) {
 		if (rv == -EACCES) {
 			log_error("S %s init_vg_san sanlock error -EACCES: no permission to access %s",
@@ -567,6 +575,9 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 			return -EARGS;
 		}
 	}
+
+	log_debug("S %s init_vg_san %s dev_size %llu sector_size %u align_size %u",
+		  ls_name, disk.path, (unsigned long long)dev_size, sector_size, align_size);
 
 	strcpy_name_len(ss.name, ls_name, SANLK_NAME_LEN);
 	memcpy(ss.host_id_disk.path, disk.path, SANLK_PATH_LEN);
@@ -658,6 +669,9 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	log_debug("S %s init_vg_san clearing lv lease areas", ls_name);
 
 	for (i = 0; ; i++) {
+		if (dev_size && (offset + align_size > dev_size))
+			break;
+
 		rd.rs.disks[0].offset = offset;
 
 		rv = sanlock_write_resource(&rd.rs, 0, 0, 0);
@@ -1197,7 +1211,7 @@ int lm_gl_is_enabled(struct lockspace *ls)
  * been disabled.)
  */
 
-int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t *free_offset, int *sector_size, int *align_size)
+int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes, uint64_t *free_offset, int *sector_size, int *align_size)
 {
 	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
 	struct sanlk_resourced rd;
@@ -1244,9 +1258,31 @@ int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t *free_offset, int *
 
 		memset(rd.rs.name, 0, SANLK_NAME_LEN);
 
+		/*
+		 * End of the device. Older lvm versions didn't pass lv_size_bytes
+		 * and just relied on sanlock_read_resource returning an error when
+		 * reading beyond the device.
+		 */
+		if (lv_size_bytes && (offset + lms->align_size > lv_size_bytes)) {
+			/* end of the device */
+			log_debug("S %s find_free_lock_san read limit offset %llu lv_size_bytes %llu",
+				  ls->name, (unsigned long long)offset, (unsigned long long)lv_size_bytes);
+
+			/* remember the NO SPACE offset, if no free area left,
+			 * search from this offset after extend */
+			*free_offset = offset;
+
+			offset = lms->align_size * LV_LOCK_BEGIN;
+			round = 1;
+			continue;
+		}
+
 		rv = sanlock_read_resource(&rd.rs, 0);
 		if (rv == -EMSGSIZE || rv == -ENOSPC) {
-			/* This indicates the end of the device is reached. */
+			/*
+			 * These errors indicate the end of the device is reached.
+			 * Still check this in case lv_size_bytes is not provided.
+			 */
 			log_debug("S %s find_free_lock_san read limit offset %llu",
 				  ls->name, (unsigned long long)offset);
 

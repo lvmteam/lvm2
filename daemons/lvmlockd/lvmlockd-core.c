@@ -1177,12 +1177,12 @@ static void lm_rem_resource(struct lockspace *ls, struct resource *r)
 		lm_rem_resource_idm(ls, r);
 }
 
-static int lm_find_free_lock(struct lockspace *ls, uint64_t *free_offset, int *sector_size, int *align_size)
+static int lm_find_free_lock(struct lockspace *ls, uint64_t lv_size_bytes, uint64_t *free_offset, int *sector_size, int *align_size)
 {
 	if (ls->lm_type == LD_LM_DLM)
 		return 0;
 	else if (ls->lm_type == LD_LM_SANLOCK)
-		return lm_find_free_lock_sanlock(ls, free_offset, sector_size, align_size);
+		return lm_find_free_lock_sanlock(ls, lv_size_bytes, free_offset, sector_size, align_size);
 	else if (ls->lm_type == LD_LM_IDM)
 		return 0;
 	return -1;
@@ -2717,7 +2717,7 @@ static void *lockspace_thread_main(void *arg_in)
 				int align_size = 0;
 
 				log_debug("S %s find free lock", ls->name);
-				rv = lm_find_free_lock(ls, &free_offset, &sector_size, &align_size);
+				rv = lm_find_free_lock(ls, act->lv_size_bytes, &free_offset, &sector_size, &align_size);
 				log_debug("S %s find free lock %d offset %llu sector_size %d align_size %d",
 					  ls->name, rv, (unsigned long long)free_offset, sector_size, align_size);
 				ls->free_lock_offset = free_offset;
@@ -5031,6 +5031,8 @@ static void client_recv_action(struct client *cl)
 	val = daemon_request_int(req, "host_id", 0);
 	if (val)
 		act->host_id = val;
+
+	act->lv_size_bytes = (uint64_t)dm_config_find_int64(req.cft->root, "lv_size_bytes", 0);
 
 	/* Create PV list for idm */
 	if (lm == LD_LM_IDM) {

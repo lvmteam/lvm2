@@ -132,6 +132,7 @@ struct action {
 	uint32_t flags;			/* LD_AF_ */
 	uint32_t version;
 	uint64_t host_id;
+	uint64_t lv_size_bytes;
 	int8_t op;			/* operation type LD_OP_ */
 	int8_t rt;			/* resource type LD_RT_ */
 	int8_t mode;			/* lock mode LD_LK_ */
@@ -527,7 +528,7 @@ int lm_gl_is_enabled(struct lockspace *ls);
 int lm_get_lockspaces_sanlock(struct list_head *ls_rejoin);
 int lm_data_size_sanlock(void);
 int lm_is_running_sanlock(void);
-int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t *free_offset, int *sector_size, int *align_size);
+int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes, uint64_t *free_offset, int *sector_size, int *align_size);
 
 static inline int lm_support_sanlock(void)
 {
@@ -630,7 +631,7 @@ static inline int lm_is_running_sanlock(void)
 	return 0;
 }
 
-static inline int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t *free_offset, int *sector_size, int *align_size)
+static inline int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes, uint64_t *free_offset, int *sector_size, int *align_size)
 {
 	return -1;
 }

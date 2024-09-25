@@ -18,6 +18,7 @@
 #include "daemons/lvmlockd/lvmlockd-client.h"
 
 #include <mntent.h>
+#include <sys/ioctl.h>
 
 static daemon_handle _lvmlockd;
 static const char *_lvmlockd_socket = NULL;
@@ -493,7 +494,7 @@ static int _lockd_request(struct cmd_context *cmd,
 static int _create_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg,
 			      const char *lock_lv_name, int num_mb)
 {
-	uint32_t lv_size_bytes;
+	uint64_t lv_size_bytes;
 	uint32_t extent_bytes;
 	uint32_t total_extents;
 	struct logical_volume *lv;
@@ -511,6 +512,15 @@ static int _create_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg,
 		.zero = 1,
 	};
 
+	/*
+	 * Make the lvmlock lv a multiple of 8 MB, i.e. a multiple of any
+	 * sanlock align_size, to avoid having unused space at the end of the
+	 * lvmlock LV.
+	 */
+
+	if (num_mb % 8)
+		num_mb += (8 - (num_mb % 8));
+
 	lv_size_bytes = num_mb * ONE_MB_IN_BYTES;  /* size of sanlock LV in bytes */
 	extent_bytes = vg->extent_size * SECTOR_SIZE; /* size of one extent in bytes */
 	total_extents = dm_div_up(lv_size_bytes, extent_bytes); /* number of extents in sanlock LV */
@@ -518,7 +528,8 @@ static int _create_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg,
 
 	lv_size_bytes = total_extents * extent_bytes;
 	num_mb = lv_size_bytes / ONE_MB_IN_BYTES;
-	log_debug("Creating lvmlock LV for sanlock with size %um %ub %u extents", num_mb, lv_size_bytes, lp.extents);
+	log_debug("Creating lvmlock LV for sanlock with size %um %llub %u extents",
+		  num_mb, (unsigned long long)lv_size_bytes, lp.extents);
 
 	dm_list_init(&lp.tags);
 
@@ -547,11 +558,9 @@ static int _remove_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg)
 	return 1;
 }
 
-static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, unsigned extend_mb)
+static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, unsigned extend_mb, char *lvmlock_path)
 {
 	struct device *dev;
-	char path[PATH_MAX];
-	char *name;
 	uint64_t old_size_bytes;
 	uint64_t new_size_bytes;
 	uint32_t extend_bytes;
@@ -594,23 +603,14 @@ static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, 
 
 	new_size_bytes = lv->size * SECTOR_SIZE;
 
-	if (!(name = dm_build_dm_name(lv->vg->cmd->mem, lv->vg->name, lv->name, NULL)))
-		return_0;
-
-	if (dm_snprintf(path, sizeof(path), "%s/%s", dm_dir(), name) < 0) {
-		log_error("Extend sanlock LV %s name too long - extended size not zeroed.",
-			  display_lvname(lv));
-		return 0;
-	}
-
 	log_debug("Extend sanlock LV zeroing %u bytes from offset %llu to %llu",
 		  (uint32_t)(new_size_bytes - old_size_bytes),
 		  (unsigned long long)old_size_bytes,
 		  (unsigned long long)new_size_bytes);
 
-	log_print_unless_silent("Zeroing %u MiB on extended internal lvmlock LV...", extend_mb);
+	log_debug("Zeroing %u MiB on extended internal lvmlock LV...", extend_mb);
 
-	if (!(dev = dev_cache_get(cmd, path, NULL))) {
+	if (!(dev = dev_cache_get(cmd, lvmlock_path, NULL))) {
 		log_error("Extend sanlock LV %s cannot find device.", display_lvname(lv));
 		return 0;
 	}
@@ -653,15 +653,26 @@ static int _refresh_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg)
 
 int handle_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg)
 {
+	struct logical_volume *lv = vg->sanlock_lv;
 	daemon_reply reply;
+	char *lvmlock_name;
+	char lvmlock_path[PATH_MAX];
 	unsigned extend_mb;
+	uint64_t lv_size_bytes;
+	uint64_t dm_size_bytes;
 	int result;
 	int ret;
+	int fd;
 
 	if (!_use_lvmlockd)
 		return 1;
 	if (!_lvmlockd_connected)
 		return 0;
+
+	if (!lv) {
+		log_error("No internal lvmlock LV found.");
+		return 0;
+	}
 
 	extend_mb = (unsigned) find_config_tree_int(cmd, global_sanlock_lv_extend_CFG, NULL);
 
@@ -672,17 +683,46 @@ int handle_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg)
 	if (!extend_mb)
 		return 1;
 
-	/*
-	 * Another host may have extended the lvmlock LV already.
-	 * Refresh so that we'll find the new space they added
-	 * when we search for new space.
-	 *
-	 * FIXME: we should be able to check if the lvmlock size
-	 * in VG metadata is smaller than lvmlock size reported
-	 * by the kernel, and avoid refresh if they match.
-	 */
-	if (!_refresh_sanlock_lv(cmd, vg))
+	lv_size_bytes = lv->size * SECTOR_SIZE;
+
+	if (!(lvmlock_name = dm_build_dm_name(cmd->mem, vg->name, lv->name, NULL)))
+		return_0;
+
+	if (dm_snprintf(lvmlock_path, sizeof(lvmlock_path), "%s/%s", dm_dir(), lvmlock_name) < 0) {
+		log_error("Handle sanlock LV %s path too long.", lvmlock_name);
 		return 0;
+	}
+
+	fd = open(lvmlock_path, O_RDONLY);
+	if (fd < 0) {
+		log_error("Cannot open sanlock LV %s.", lvmlock_path);
+		return 0;
+	}
+
+	if (ioctl(fd, BLKGETSIZE64, &dm_size_bytes) < 0) {
+		log_error("Cannot get size of sanlock LV %s.", lvmlock_path);
+		if (close(fd))
+			stack;
+		return 0;
+	}
+
+	if (close(fd))
+		stack;
+
+	/*
+	 * Another host may have extended the lvmlock LV.
+	 * If so the lvmlock LV size in metadata will be
+	 * larger than our active lvmlock LV, and we need
+	 * to refresh our lvmlock LV to use the new space.
+	 */
+	if (lv_size_bytes > dm_size_bytes) {
+		log_debug("Refresh sanlock lv %llu dm %llu",
+			  (unsigned long long)lv_size_bytes,
+			  (unsigned long long)dm_size_bytes);
+
+		if (!_refresh_sanlock_lv(cmd, vg))
+			return 0;
+	}
 
 	/*
 	 * Ask lvmlockd/sanlock to look for an unused lock.
@@ -690,6 +730,7 @@ int handle_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg)
 	reply = _lockd_send("find_free_lock",
 			"pid = " FMTd64, (int64_t) getpid(),
 			"vg_name = %s", vg->name,
+			"lv_size_bytes = " FMTd64, (int64_t) lv_size_bytes,
 			NULL);
 
 	if (!_lockd_result(reply, &result, NULL)) {
@@ -700,7 +741,7 @@ int handle_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg)
 
 	/* No space on the lvmlock lv for a new lease. */
 	if (result == -EMSGSIZE)
-		ret = _extend_sanlock_lv(cmd, vg, extend_mb);
+		ret = _extend_sanlock_lv(cmd, vg, extend_mb, lvmlock_path);
 
 	daemon_reply_destroy(reply);
 
