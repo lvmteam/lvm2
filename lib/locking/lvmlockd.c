@@ -867,7 +867,9 @@ static int _init_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg, in
 	const char *opts = NULL;
 	struct pv_list *pvl;
 	uint32_t sector_size = 0;
+	uint32_t align_size = 0;
 	unsigned int physical_block_size, logical_block_size;
+	int host_id;
 	int num_mb = 0;
 	int result;
 	int ret;
@@ -894,11 +896,54 @@ static int _init_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg, in
 
 	log_debug("Using sector size %u for sanlock LV", sector_size);
 
-	/* Base starting size of sanlock LV is 256MB/1GB for 512/4K sectors */
-	switch (sector_size) {
-	case 512: num_mb = 256; break;
-	case 4096: num_mb = 1024; break;
-	default: log_error("Unknown sector size %u.", sector_size); return 0;
+	host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
+
+	/*
+	 * Starting size of lvmlock LV is 256MB/512MB/1GB depending
+	 * on sector_size/align_size, and max valid host_id depends
+	 * on sector_size/align_size.
+	 */
+
+	if (sector_size == 4096) {
+		align_size = find_config_tree_int(cmd, global_sanlock_align_size_CFG, NULL);
+
+		if (align_size == 1) {
+			num_mb = 256;
+			if (host_id < 1 || host_id > 250) {
+				log_error("Invalid host_id %d, use 1-250 (sanlock_align_size is 1MiB).", host_id);
+				return 0;
+			}
+		} else if (align_size == 2) {
+			num_mb = 512;
+			if (host_id < 1 || host_id > 500) {
+				log_error("Invalid host_id %d, use 1-500 (sanlock_align_size is 2MiB).", host_id);
+				return 0;
+			}
+		} else if (align_size == 4) {
+			num_mb = 1024;
+			if (host_id < 1 || host_id > 1000) {
+				log_error("Invalid host_id %d, use 1-1000 (sanlock_align_size is 4MiB).", host_id);
+				return 0;
+			}
+		} else if (align_size == 8) {
+			num_mb = 1024;
+			if (host_id < 1 || host_id > 2000) {
+				log_error("Invalid host_id %d, use 1-2000 (sanlock_align_size is 8MiB).", host_id);
+				return 0;
+			}
+		} else {
+			log_error("Invalid sanlock_align_size %u, use 1,2,4,8.", align_size);
+			return 0;
+		}
+	} else if (sector_size == 512) {
+		num_mb = 256;
+		if (host_id < 1 || host_id > 2000) {
+			log_error("Invalid host_id %d, use 1-2000.", host_id);
+			return 0;
+		}
+	} else {
+		log_error("Unsupported sector size %u.", sector_size);
+		return 0;
 	}
 
 	/*
@@ -936,6 +981,7 @@ static int _init_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg, in
 				"vg_name = %s", vg->name,
 				"vg_lock_type = %s", "sanlock",
 				"vg_lock_args = %s", vg->sanlock_lv->name,
+				"align_mb = " FMTd64, (int64_t) align_size,
 				"opts = %s", opts ?: "none",
 				NULL);
 

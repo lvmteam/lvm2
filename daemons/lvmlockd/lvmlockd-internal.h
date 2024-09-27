@@ -141,6 +141,7 @@ struct action {
 	int max_retries;
 	int result;
 	int lm_rv;			/* return value from lm_ function */
+	int align_mb;
 	char *path;
 	char vg_uuid[64];
 	char vg_name[MAX_NAME+1];
@@ -192,8 +193,6 @@ struct lockspace {
 	void *lm_data;
 	uint64_t host_id;
 	uint64_t free_lock_offset;	/* for sanlock, start search for free lock here */
-	int free_lock_sector_size;	/* for sanlock */
-	int free_lock_align_size;	/* for sanlock */
 	struct pvs pvs;			/* for idm: PV list */
 
 	uint32_t start_client_id;	/* client_id that started the lockspace */
@@ -506,8 +505,8 @@ static inline int lm_refresh_lv_check_dlm(struct action *act)
 
 #ifdef LOCKDSANLOCK_SUPPORT
 
-int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
-int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name, char *vg_args, char *lv_args, int sector_size, int align_size, uint64_t free_offset);
+int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args, int opt_align_mb);
+int lm_init_lv_sanlock(struct lockspace *ls, char *lv_name, char *vg_args, char *lv_args);
 int lm_free_lv_sanlock(struct lockspace *ls, struct resource *r);
 int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
 int lm_prepare_lockspace_sanlock(struct lockspace *ls);
@@ -528,7 +527,7 @@ int lm_gl_is_enabled(struct lockspace *ls);
 int lm_get_lockspaces_sanlock(struct list_head *ls_rejoin);
 int lm_data_size_sanlock(void);
 int lm_is_running_sanlock(void);
-int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes, uint64_t *free_offset, int *sector_size, int *align_size);
+int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes);
 
 static inline int lm_support_sanlock(void)
 {
@@ -537,12 +536,12 @@ static inline int lm_support_sanlock(void)
 
 #else
 
-static inline int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args)
+static inline int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args, int opt_align_mb)
 {
 	return -1;
 }
 
-static inline int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name, char *vg_args, char *lv_args, int sector_size, int align_size, uint64_t free_offset)
+static inline int lm_init_lv_sanlock(struct lockspace *ls, char *lv_name, char *vg_args, char *lv_args)
 {
 	return -1;
 }
@@ -631,7 +630,7 @@ static inline int lm_is_running_sanlock(void)
 	return 0;
 }
 
-static inline int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes, uint64_t *free_offset, int *sector_size, int *align_size)
+static inline int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes);
 {
 	return -1;
 }

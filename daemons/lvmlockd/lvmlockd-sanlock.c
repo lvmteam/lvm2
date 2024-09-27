@@ -145,6 +145,8 @@ struct lm_sanlock {
 	int sector_size;
 	int align_size;
 	int sock; /* sanlock daemon connection */
+	uint32_t ss_flags; /* sector and align flags for lockspace */
+	uint32_t rs_flags; /* sector and align flags for resource */
 };
 
 struct rd_sanlock {
@@ -369,7 +371,7 @@ out:
 /* Select sector/align size for a new VG based on what the device reports for
    sector size of the lvmlock LV. */
 
-static int get_sizes_device(char *path, uint64_t *dev_size, int *sector_size, int *align_size)
+static int get_sizes_device(char *path, uint64_t *dev_size, int *sector_size, int *align_size, int *align_mb)
 {
 	unsigned int physical_block_size = 0;
 	unsigned int logical_block_size = 0;
@@ -395,12 +397,14 @@ static int get_sizes_device(char *path, uint64_t *dev_size, int *sector_size, in
 	if ((physical_block_size == 512) && (logical_block_size == 512)) {
 		*sector_size = 512;
 		*align_size = ONE_MB;
+		*align_mb = 1;
 		return 0;
 	}
 
 	if ((physical_block_size == 4096) && (logical_block_size == 4096)) {
 		*sector_size = 4096;
 		*align_size = 8 * ONE_MB;
+		*align_mb = 8;
 		return 0;
 	}
 
@@ -435,6 +439,7 @@ static int get_sizes_device(char *path, uint64_t *dev_size, int *sector_size, in
 			 physical_block_size, logical_block_size, path);
 		*sector_size = 4096;
 		*align_size = 8 * ONE_MB;
+		*align_mb = 8;
 		return 0;
 	}
 
@@ -443,18 +448,21 @@ static int get_sizes_device(char *path, uint64_t *dev_size, int *sector_size, in
 			 physical_block_size, logical_block_size, path);
 		*sector_size = 4096;
 		*align_size = 8 * ONE_MB;
+		*align_mb = 8;
 		return 0;
 	}
 
 	if (physical_block_size == 512) {
 		*sector_size = 512;
 		*align_size = ONE_MB;
+		*align_mb = 1;
 		return 0;
 	}
 
 	if (physical_block_size == 4096) {
 		*sector_size = 4096;
 		*align_size = 8 * ONE_MB;
+		*align_mb = 8;
 		return 0;
 	}
 
@@ -466,7 +474,8 @@ static int get_sizes_device(char *path, uint64_t *dev_size, int *sector_size, in
 /* Get the sector/align sizes that were used to create an existing VG.
    sanlock encoded this in the lockspace/resource structs on disk. */
 
-static int get_sizes_lockspace(char *path, int *sector_size, int *align_size)
+static int get_sizes_lockspace(char *path, int *sector_size, int *align_size, int *align_mb,
+			       uint32_t *ss_flags, uint32_t *rs_flags)
 {
 	struct sanlk_lockspace ss;
 	uint32_t io_timeout = 0;
@@ -484,10 +493,38 @@ static int get_sizes_lockspace(char *path, int *sector_size, int *align_size)
 
 	if ((ss.flags & SANLK_LSF_SECTOR4K) && (ss.flags & SANLK_LSF_ALIGN8M)) {
 		*sector_size = 4096;
+		*align_mb = 8;
 		*align_size = 8 * ONE_MB;
+		*ss_flags = SANLK_LSF_SECTOR4K | SANLK_LSF_ALIGN8M;
+		*rs_flags = SANLK_RES_SECTOR4K | SANLK_RES_ALIGN8M;
+
+	} else if ((ss.flags & SANLK_LSF_SECTOR4K) && (ss.flags & SANLK_LSF_ALIGN4M)) {
+		*sector_size = 4096;
+		*align_mb = 4;
+		*align_size = 4 * ONE_MB;
+		*ss_flags = SANLK_LSF_SECTOR4K | SANLK_LSF_ALIGN4M;
+		*rs_flags = SANLK_RES_SECTOR4K | SANLK_RES_ALIGN4M;
+
+	} else if ((ss.flags & SANLK_LSF_SECTOR4K) && (ss.flags & SANLK_LSF_ALIGN2M)) {
+		*sector_size = 4096;
+		*align_mb = 2;
+		*align_size = 2 * ONE_MB;
+		*ss_flags = SANLK_LSF_SECTOR4K | SANLK_LSF_ALIGN2M;
+		*rs_flags = SANLK_RES_SECTOR4K | SANLK_RES_ALIGN2M;
+
+	} else if ((ss.flags & SANLK_LSF_SECTOR4K) && (ss.flags & SANLK_LSF_ALIGN1M)) {
+		*sector_size = 4096;
+		*align_mb = 1;
+		*align_size = ONE_MB;
+		*ss_flags = SANLK_LSF_SECTOR4K | SANLK_LSF_ALIGN1M;
+		*rs_flags = SANLK_RES_SECTOR4K | SANLK_RES_ALIGN1M;
+
 	} else if ((ss.flags & SANLK_LSF_SECTOR512) && (ss.flags & SANLK_LSF_ALIGN1M)) {
 		*sector_size = 512;
+		*align_mb = 1;
 		*align_size = ONE_MB;
+		*ss_flags = SANLK_LSF_SECTOR512 | SANLK_LSF_ALIGN1M;
+		*rs_flags = SANLK_RES_SECTOR512 | SANLK_RES_ALIGN1M;
 	}
 
 	log_debug("get_sizes_lockspace found %d %d", *sector_size, *align_size);
@@ -504,7 +541,7 @@ static int get_sizes_lockspace(char *path, int *sector_size, int *align_size)
 
 #define MAX_VERSION 16
 
-int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args)
+int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args, int opt_align_mb)
 {
 	struct sanlk_lockspace ss;
 	struct sanlk_resourced rd;
@@ -512,12 +549,14 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	char lock_lv_name[MAX_ARGS+1];
 	char lock_args_version[MAX_VERSION+1];
 	const char *gl_name = NULL;
+	uint32_t rs_flags;
 	uint32_t daemon_version;
 	uint32_t daemon_proto;
 	uint64_t offset;
 	uint64_t dev_size;
 	int sector_size = 0;
 	int align_size = 0;
+	int align_mb = 0;
 	int i, rv;
 
 	memset(&ss, 0, sizeof(ss));
@@ -542,7 +581,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	if ((rv = build_dm_path(disk.path, SANLK_PATH_LEN, vg_name, lock_lv_name)))
 		return rv;
 
-	log_debug("S %s init_vg_san path %s", ls_name, disk.path);
+	log_debug("S %s init_vg_san path %s align %d", ls_name, disk.path, opt_align_mb);
 
 	if (daemon_test) {
 		if (!gl_lsname_sanlock[0])
@@ -563,7 +602,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 		  daemon_version, daemon_proto);
 
 	/* Nothing formatted on disk yet, use what the device reports. */
-	rv = get_sizes_device(disk.path, &dev_size, &sector_size, &align_size);
+	rv = get_sizes_device(disk.path, &dev_size, &sector_size, &align_size, &align_mb);
 	if (rv < 0) {
 		if (rv == -EACCES) {
 			log_error("S %s init_vg_san sanlock error -EACCES: no permission to access %s",
@@ -576,14 +615,48 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 		}
 	}
 
+	/* Non-default lease size is requested. */
+	if ((sector_size == 4096) && opt_align_mb && (opt_align_mb != 8)) {
+		if (opt_align_mb != 1 && opt_align_mb != 2 && opt_align_mb != 4) {
+			log_error("S %s init_vg_sanlock invalid align input %u", ls_name, opt_align_mb);
+			return -EARGS;
+		}
+		align_mb = opt_align_mb;
+		align_size = align_mb * ONE_MB;
+	}
+
 	log_debug("S %s init_vg_san %s dev_size %llu sector_size %u align_size %u",
 		  ls_name, disk.path, (unsigned long long)dev_size, sector_size, align_size);
 
 	strcpy_name_len(ss.name, ls_name, SANLK_NAME_LEN);
 	memcpy(ss.host_id_disk.path, disk.path, SANLK_PATH_LEN);
 	ss.host_id_disk.offset = 0;
-	ss.flags = (sector_size == 4096) ? (SANLK_LSF_SECTOR4K | SANLK_LSF_ALIGN8M) :
-					   (SANLK_LSF_SECTOR512 | SANLK_LSF_ALIGN1M);
+
+	if (sector_size == 512) {
+		ss.flags = SANLK_LSF_SECTOR512 | SANLK_LSF_ALIGN1M;
+		rs_flags = SANLK_RES_SECTOR512 | SANLK_RES_ALIGN1M;
+	} else if (sector_size == 4096) {
+		if (align_mb == 8) {
+			ss.flags = SANLK_LSF_SECTOR4K | SANLK_LSF_ALIGN8M;
+			rs_flags = SANLK_RES_SECTOR4K | SANLK_RES_ALIGN8M;
+		} else if (align_mb == 4) {
+			ss.flags = SANLK_LSF_SECTOR4K | SANLK_LSF_ALIGN4M;
+			rs_flags = SANLK_RES_SECTOR4K | SANLK_RES_ALIGN4M;
+		} else if (align_mb == 2) {
+			ss.flags = SANLK_LSF_SECTOR4K | SANLK_LSF_ALIGN2M;
+			rs_flags = SANLK_RES_SECTOR4K | SANLK_RES_ALIGN2M;
+		} else if (align_mb == 1) {
+			ss.flags = SANLK_LSF_SECTOR4K | SANLK_LSF_ALIGN1M;
+			rs_flags = SANLK_RES_SECTOR4K | SANLK_RES_ALIGN1M;
+		}
+		else {
+			log_error("Invalid sanlock align_size %d %d", align_size, align_mb);
+			return -EARGS;
+		}
+	} else {
+		log_error("Invalid sanlock sector_size %d", sector_size);
+		return -EARGS;
+	}
 
 	rv = sanlock_write_lockspace(&ss, 0, 0, sanlock_io_timeout);
 	if (rv < 0) {
@@ -616,8 +689,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	memcpy(rd.rs.disks[0].path, disk.path, SANLK_PATH_LEN);
 	rd.rs.disks[0].offset = align_size * GL_LOCK_BEGIN;
 	rd.rs.num_disks = 1;
-	rd.rs.flags = (sector_size == 4096) ? (SANLK_RES_SECTOR4K | SANLK_RES_ALIGN8M) :
-					      (SANLK_RES_SECTOR512 | SANLK_RES_ALIGN1M);
+	rd.rs.flags = rs_flags;
 
 	rv = sanlock_write_resource(&rd.rs, 0, 0, 0);
 	if (rv < 0) {
@@ -631,8 +703,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	memcpy(rd.rs.disks[0].path, disk.path, SANLK_PATH_LEN);
 	rd.rs.disks[0].offset = align_size * VG_LOCK_BEGIN;
 	rd.rs.num_disks = 1;
-	rd.rs.flags = (sector_size == 4096) ? (SANLK_RES_SECTOR4K | SANLK_RES_ALIGN8M) :
-					      (SANLK_RES_SECTOR512 | SANLK_RES_ALIGN1M);
+	rd.rs.flags = rs_flags;
 
 	rv = sanlock_write_resource(&rd.rs, 0, 0, 0);
 	if (rv < 0) {
@@ -658,8 +729,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 
 	memset(&rd, 0, sizeof(rd));
 	rd.rs.num_disks = 1;
-	rd.rs.flags = (sector_size == 4096) ? (SANLK_RES_SECTOR4K | SANLK_RES_ALIGN8M) :
-					      (SANLK_RES_SECTOR512 | SANLK_RES_ALIGN1M);
+	rd.rs.flags = rs_flags;
 	memcpy(rd.rs.disks[0].path, disk.path, SANLK_PATH_LEN);
 	strcpy_name_len(rd.rs.lockspace_name, ls_name, SANLK_NAME_LEN);
 	strcpy_name_len(rd.rs.name, "#unused", SANLK_NAME_LEN);
@@ -700,14 +770,14 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
  * can be saved in the lv's lock_args in the vg metadata.
  */
 
-int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name,
-		       char *vg_args, char *lv_args,
-		       int sector_size, int align_size, uint64_t free_offset)
+int lm_init_lv_sanlock(struct lockspace *ls, char *lv_name, char *vg_args, char *lv_args)
 {
+	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
 	struct sanlk_resourced rd;
 	char lock_lv_name[MAX_ARGS+1];
 	char lock_args_version[MAX_VERSION+1];
 	uint64_t offset;
+	int align_size = lms->align_size;
 	int rv;
 
 	memset(&rd, 0, sizeof(rd));
@@ -717,7 +787,7 @@ int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name,
 	rv = lock_lv_name_from_args(vg_args, lock_lv_name);
 	if (rv < 0) {
 		log_error("S %s init_lv_san lock_lv_name_from_args error %d %s",
-			  ls_name, rv, vg_args);
+			  ls->name, rv, vg_args);
 		return rv;
 	}
 
@@ -725,7 +795,6 @@ int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name,
 		 LV_LOCK_ARGS_MAJOR, LV_LOCK_ARGS_MINOR, LV_LOCK_ARGS_PATCH);
 
 	if (daemon_test) {
-		align_size = ONE_MB;
 		snprintf(lv_args, MAX_ARGS, "%s:%llu",
 			 lock_args_version,
 			 (unsigned long long)((align_size * LV_LOCK_BEGIN) + (align_size * daemon_test_lv_count)));
@@ -733,42 +802,15 @@ int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name,
 		return 0;
 	}
 
-	strcpy_name_len(rd.rs.lockspace_name, ls_name, SANLK_NAME_LEN);
+	strcpy_name_len(rd.rs.lockspace_name, ls->name, SANLK_NAME_LEN);
 	rd.rs.num_disks = 1;
-	if ((rv = build_dm_path(rd.rs.disks[0].path, SANLK_PATH_LEN, vg_name, lock_lv_name)))
+	if ((rv = build_dm_path(rd.rs.disks[0].path, SANLK_PATH_LEN, ls->vg_name, lock_lv_name)))
 		return rv;
 
-	/*
-	 * These should not usually be zero, maybe only the first time this function is called?
-	 * We need to use the same sector/align sizes that are already being used.
-	 */
-	if (!sector_size || !align_size) {
-		rv = get_sizes_lockspace(rd.rs.disks[0].path, &sector_size, &align_size);
-		if (rv < 0) {
-			log_error("S %s init_lv_san read_lockspace error %d %s",
-				  ls_name, rv, rd.rs.disks[0].path);
-			return rv;
-		}
+	rd.rs.flags = lms->rs_flags;
 
-		if (sector_size)
-			log_debug("S %s init_lv_san found ls sector_size %d align_size %d", ls_name, sector_size, align_size);
-		else {
-			/* use the old method */
-			align_size = sanlock_align(&rd.rs.disks[0]);
-			if (align_size <= 0) {
-				log_error("S %s init_lv_san align error %d", ls_name, align_size);
-				return -EINVAL;
-			}
-			sector_size = (align_size == ONE_MB) ? 512 : 4096;
-			log_debug("S %s init_lv_san found old sector_size %d align_size %d", ls_name, sector_size, align_size);
-		}
-	}
-
-	rd.rs.flags = (sector_size == 4096) ? (SANLK_RES_SECTOR4K | SANLK_RES_ALIGN8M) :
-					      (SANLK_RES_SECTOR512 | SANLK_RES_ALIGN1M);
-
-	if (free_offset)
-		offset = free_offset;
+	if (ls->free_lock_offset)
+		offset = ls->free_lock_offset;
 	else
 		offset = align_size * LV_LOCK_BEGIN;
 	rd.rs.disks[0].offset = offset;
@@ -782,20 +824,20 @@ int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name,
 		if (rv == -EMSGSIZE || rv == -ENOSPC) {
 			/* This indicates the end of the device is reached. */
 			log_debug("S %s init_lv_san read limit offset %llu",
-				  ls_name, (unsigned long long)offset);
+				  ls->name, (unsigned long long)offset);
 			rv = -EMSGSIZE;
 			return rv;
 		}
 
 		if (rv && rv != SANLK_LEADER_MAGIC) {
 			log_error("S %s init_lv_san read error %d offset %llu",
-				  ls_name, rv, (unsigned long long)offset);
+				  ls->name, rv, (unsigned long long)offset);
 			break;
 		}
 
 		if (!strncmp(rd.rs.name, lv_name, SANLK_NAME_LEN)) {
 			log_error("S %s init_lv_san resource name %s already exists at %llu",
-				  ls_name, lv_name, (unsigned long long)offset);
+				  ls->name, lv_name, (unsigned long long)offset);
 			return -EEXIST;
 		}
 
@@ -806,11 +848,10 @@ int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name,
 		 */
 		if ((rv == SANLK_LEADER_MAGIC) || !strcmp(rd.rs.name, "#unused")) {
 			log_debug("S %s init_lv_san %s found unused area at %llu",
-				  ls_name, lv_name, (unsigned long long)offset);
+				  ls->name, lv_name, (unsigned long long)offset);
 
 			strcpy_name_len(rd.rs.name, lv_name, SANLK_NAME_LEN);
-			rd.rs.flags = (sector_size == 4096) ? (SANLK_RES_SECTOR4K | SANLK_RES_ALIGN8M) :
-							      (SANLK_RES_SECTOR512 | SANLK_RES_ALIGN1M);
+			rd.rs.flags = lms->rs_flags;
 
 			rv = sanlock_write_resource(&rd.rs, 0, 0, 0);
 			if (!rv) {
@@ -818,7 +859,7 @@ int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name,
 				         lock_args_version, (unsigned long long)offset);
 			} else {
 				log_error("S %s init_lv_san write error %d offset %llu",
-					  ls_name, rv, (unsigned long long)rv);
+					  ls->name, rv, (unsigned long long)rv);
 			}
 			break;
 		}
@@ -887,12 +928,19 @@ int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_
 		return rv;
 	}
 
-	if ((ss.flags & SANLK_LSF_SECTOR4K) && (ss.flags & SANLK_LSF_ALIGN8M)) {
-		sector_size = 4096;
-		align_size = 8 * ONE_MB;
-	} else if ((ss.flags & SANLK_LSF_SECTOR512) && (ss.flags & SANLK_LSF_ALIGN1M)) {
+	if (ss.flags & SANLK_LSF_SECTOR512) {
 		sector_size = 512;
 		align_size = ONE_MB;
+	} else if (ss.flags & SANLK_LSF_SECTOR4K) {
+		sector_size = 4096;
+		if (ss.flags & SANLK_LSF_ALIGN8M)
+			align_size = 8 * ONE_MB;
+		else if (ss.flags & SANLK_LSF_ALIGN4M)
+			align_size = 4 * ONE_MB;
+		else if (ss.flags & SANLK_LSF_ALIGN2M)
+			align_size = 2 * ONE_MB;
+		else if (ss.flags & SANLK_LSF_ALIGN1M)
+			align_size = ONE_MB;
 	} else {
 		/* use the old method */
 		align_size = sanlock_align(&ss.host_id_disk);
@@ -1061,10 +1109,8 @@ int lm_ex_disable_gl_sanlock(struct lockspace *ls)
 	memcpy(rd1.rs.disks[0].path, lms->ss.host_id_disk.path, SANLK_PATH_LEN-1);
 	rd1.rs.disks[0].offset = lms->align_size * GL_LOCK_BEGIN;
 	
-	rd1.rs.flags = (lms->sector_size == 4096) ? (SANLK_RES_SECTOR4K | SANLK_RES_ALIGN8M) :
-						    (SANLK_RES_SECTOR512 | SANLK_RES_ALIGN1M);
-	rd2.rs.flags = (lms->sector_size == 4096) ? (SANLK_RES_SECTOR4K | SANLK_RES_ALIGN8M) :
-						    (SANLK_RES_SECTOR512 | SANLK_RES_ALIGN1M);
+	rd1.rs.flags = lms->rs_flags;
+	rd2.rs.flags = lms->rs_flags;
 
 	rv = sanlock_acquire(lms->sock, -1, 0, 1, &rs1, NULL);
 	if (rv < 0) {
@@ -1126,8 +1172,7 @@ int lm_able_gl_sanlock(struct lockspace *ls, int enable)
 	rd.rs.num_disks = 1;
 	memcpy(rd.rs.disks[0].path, lms->ss.host_id_disk.path, SANLK_PATH_LEN-1);
 	rd.rs.disks[0].offset = lms->align_size * GL_LOCK_BEGIN;
-	rd.rs.flags = (lms->sector_size == 4096) ? (SANLK_RES_SECTOR4K | SANLK_RES_ALIGN8M) :
-						   (SANLK_RES_SECTOR512 | SANLK_RES_ALIGN1M);
+	rd.rs.flags = lms->rs_flags;
 
 	rv = sanlock_write_resource(&rd.rs, 0, 0, 0);
 	if (rv < 0) {
@@ -1211,7 +1256,7 @@ int lm_gl_is_enabled(struct lockspace *ls)
  * been disabled.)
  */
 
-int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes, uint64_t *free_offset, int *sector_size, int *align_size)
+int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes)
 {
 	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
 	struct sanlk_resourced rd;
@@ -1221,22 +1266,16 @@ int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes, uint
 	int round = 0;
 
 	if (daemon_test) {
-		*free_offset = (ONE_MB * LV_LOCK_BEGIN) + (ONE_MB * (daemon_test_lv_count + 1));
-		*sector_size = 512;
-		*align_size = ONE_MB;
+		ls->free_lock_offset = (ONE_MB * LV_LOCK_BEGIN) + (ONE_MB * (daemon_test_lv_count + 1));
 		return 0;
 	}
-
-	*sector_size = lms->sector_size;
-	*align_size = lms->align_size;
 
 	memset(&rd, 0, sizeof(rd));
 
 	strcpy_name_len(rd.rs.lockspace_name, ls->name, SANLK_NAME_LEN);
 	rd.rs.num_disks = 1;
 	memcpy(rd.rs.disks[0].path, lms->ss.host_id_disk.path, SANLK_PATH_LEN-1);
-	rd.rs.flags = (lms->sector_size == 4096) ? (SANLK_RES_SECTOR4K | SANLK_RES_ALIGN8M) :
-						   (SANLK_RES_SECTOR512 | SANLK_RES_ALIGN1M);
+	rd.rs.flags = lms->rs_flags;
 
 	if (ls->free_lock_offset)
 		offset = ls->free_lock_offset;
@@ -1270,7 +1309,7 @@ int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes, uint
 
 			/* remember the NO SPACE offset, if no free area left,
 			 * search from this offset after extend */
-			*free_offset = offset;
+			ls->free_lock_offset = offset;
 
 			offset = lms->align_size * LV_LOCK_BEGIN;
 			round = 1;
@@ -1288,7 +1327,7 @@ int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes, uint
 
 			/* remember the NO SPACE offset, if no free area left,
 			 * search from this offset after extend */
-			*free_offset = offset;
+			ls->free_lock_offset = offset;
 
 			offset = lms->align_size * LV_LOCK_BEGIN;
 			round = 1;
@@ -1303,7 +1342,7 @@ int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes, uint
 		if (rv == SANLK_LEADER_MAGIC) {
 			log_debug("S %s find_free_lock_san found empty area at %llu",
 				  ls->name, (unsigned long long)offset);
-			*free_offset = offset;
+			ls->free_lock_offset = offset;
 			return 0;
 		}
 
@@ -1316,7 +1355,7 @@ int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes, uint
 		if (!strcmp(rd.rs.name, "#unused")) {
 			log_debug("S %s find_free_lock_san found unused area at %llu",
 				  ls->name, (unsigned long long)offset);
-			*free_offset = offset;
+			ls->free_lock_offset = offset;
 			return 0;
 		}
 
@@ -1358,8 +1397,11 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 	char disk_path[SANLK_PATH_LEN];
 	char killpath[SANLK_PATH_LEN];
 	char killargs[SANLK_PATH_LEN];
+	uint32_t ss_flags = 0;
+	uint32_t rs_flags = 0;
 	int sector_size = 0;
 	int align_size = 0;
+	int align_mb = 0;
 	int gl_found;
 	int ret, rv;
 
@@ -1447,6 +1489,8 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 			strncpy(gl_lsname_sanlock, lsname, MAX_NAME);
 			log_debug("S %s prepare_lockspace_san use global lock", lsname);
 		}
+		lms->align_size = ONE_MB;
+		lms->sector_size = 512;
 		goto out;
 	}
 
@@ -1474,7 +1518,7 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 		goto fail;
 	}
 
-	rv = get_sizes_lockspace(disk_path, &sector_size, &align_size);
+	rv = get_sizes_lockspace(disk_path, &sector_size, &align_size, &align_mb, &ss_flags, &rs_flags);
 	if (rv < 0) {
 		log_error("S %s prepare_lockspace_san cannot get sector/align sizes %d", lsname, rv);
 		ret = -EMANAGER;
@@ -1494,13 +1538,27 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 		log_debug("S %s prepare_lockspace_san found old sector_size %d align_size %d", lsname, sector_size, align_size);
 	}
 
-	log_debug("S %s prepare_lockspace_san sizes %d %d", lsname, sector_size, align_size);
+	log_debug("S %s prepare_lockspace_san sector_size %d align_mb %d align_size %d",
+		  lsname, sector_size, align_mb, align_size);
+
+	if (sector_size == 4096) {
+		if (((align_mb == 1) && (ls->host_id > 250)) ||
+		    ((align_mb == 2) && (ls->host_id > 500)) ||
+		    ((align_mb == 4) && (ls->host_id > 1000)) ||
+		    ((align_mb == 8) && (ls->host_id > 2000))) {
+			log_error("S %s prepare_lockspace_san invalid host_id %llu for align %d MiB",
+				  lsname, (unsigned long long)ls->host_id, align_mb);
+			ret = -EHOSTID;
+			goto fail;
+		}
+	}
 
 	lms->align_size = align_size;
 	lms->sector_size = sector_size;
+	lms->ss_flags = ss_flags;
+	lms->rs_flags = rs_flags;
 
-	lms->ss.flags = (sector_size == 4096) ? (SANLK_LSF_SECTOR4K | SANLK_LSF_ALIGN8M) :
-						(SANLK_LSF_SECTOR512 | SANLK_LSF_ALIGN1M);
+	lms->ss.flags = ss_flags;
 
 	gl_found = gl_is_enabled(ls, lms);
 	if (gl_found < 0) {
@@ -1642,7 +1700,7 @@ static int lm_add_resource_sanlock(struct lockspace *ls, struct resource *r)
 	strcpy_name_len(rds->rs.name, r->name, SANLK_NAME_LEN);
 	rds->rs.num_disks = 1;
 	memcpy(rds->rs.disks[0].path, lms->ss.host_id_disk.path, SANLK_PATH_LEN);
-	rds->rs.flags = (lms->sector_size == 4096) ? (SANLK_RES_SECTOR4K | SANLK_RES_ALIGN8M) : (SANLK_RES_SECTOR512 | SANLK_RES_ALIGN1M);
+	rds->rs.flags = lms->rs_flags;
 
 	if (r->type == LD_RT_GL)
 		rds->rs.disks[0].offset = GL_LOCK_BEGIN * lms->align_size;

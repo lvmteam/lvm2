@@ -1189,6 +1189,14 @@ cfg(global_sanlock_lv_extend_CFG, "sanlock_lv_extend", global_CFG_SECTION, CFG_D
 	"and can cause lvcreate to fail. Applicable only if LVM is compiled\n"
 	"with lockd support\n")
 
+cfg(global_sanlock_align_size_CFG, "sanlock_align_size", global_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_SANLOCK_ALIGN_SIZE, vsn(2, 3, 27), NULL, 0, NULL,
+	"The sanlock lease size in MiB to use on disks with a 4K sector size.\n"
+	"Possible values are 1,2,4,8.  The default is 8, which supports up to\n"
+	"2000 hosts (and max host_id 2000.)  Smaller values support smaller\n"
+	"numbers of max hosts (and max host_ids): 250, 500, 1000, 2000 for\n"
+	"lease sizes 1,2,4,8.  Disks with 512 byte sectors always use 1MiB\n"
+	"leases and support 2000 hosts, and are not affected by this setting.\n")
+
 cfg(global_lvmlockctl_kill_command_CFG, "lvmlockctl_kill_command", global_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, "", vsn(2, 3, 12), NULL, 0, NULL,
 	"The command that lvmlockctl --kill should use to force LVs offline.\n"
 	"The lvmlockctl --kill command is run when a shared VG has lost\n"
@@ -2267,8 +2275,9 @@ cfg_array(local_extra_system_ids_CFG, "extra_system_ids", local_CFG_SECTION, CFG
 	"correct usage and possible dangers.\n")
 
 cfg(local_host_id_CFG, "host_id", local_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, 0, vsn(2, 2, 124), NULL, 0, NULL,
-	"The lvmlockd sanlock host_id.\n"
-	"This must be unique among all hosts, and must be between 1 and 2000.\n"
-	"Applicable only if LVM is compiled with lockd support\n")
+	"The sanlock host_id used by lvmlockd. This must be unique among all the hosts\n"
+	"using shared VGs with sanlock. Accepted values are 1-2000, except when sanlock_align_size\n"
+	"is configured to 1, 2 or 4, which correspond to max host_id values of 250, 500, or 1000.\n"
+	"Applicable only if LVM is compiled with support for lvmlockd+sanlock.\n")
 
 cfg(CFG_COUNT, NULL, root_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, 0, vsn(0, 0, 0), NULL, 0, NULL, NULL)

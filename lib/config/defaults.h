@@ -72,6 +72,7 @@
 #define DEFAULT_USE_AIO 1
 
 #define DEFAULT_SANLOCK_LV_EXTEND_MB 256
+#define DEFAULT_SANLOCK_ALIGN_SIZE 8 /* in MiB, applies to 4K disks only */
 
 #define DEFAULT_MIRRORLOG MIRROR_LOG_DISK
 #define DEFAULT_MIRROR_LOG_FAULT_POLICY "allocate"
