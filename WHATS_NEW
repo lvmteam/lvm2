@@ -1,5 +1,7 @@
 Version 2.03.27 - 
 ==================
+  Disable mem locking when activation/reserved_stack or reserved_memory is 0.
+  Deprecate vdo settings vdo_write_policy and vdo_write_policy.
   Lots of typo fixes across lvm2 code base (codespell).
   Corrected integrity parameter interleave_sectors for DM table line.
   Ignore -i|--stripes, -I|--stripesize for lvextend on raid0 LV, like raid10.
