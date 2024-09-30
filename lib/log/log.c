@@ -591,6 +591,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 	    (_log_report.report && !log_bypass_report && (use_stderr || (level <=_LOG_WARN))) ||
 	    log_once) {
 		va_copy(ap, orig_ap);
+		/* coverity[format_string_injection] our code expectes this behavior. */
 		n = vsnprintf(message, sizeof(message), trformat, ap);
 		va_end(ap);
 
