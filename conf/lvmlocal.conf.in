@@ -49,9 +49,10 @@ local {
 	# This configuration option does not have a default value defined.
 
 	# Configuration option local/host_id.
-	# The lvmlockd sanlock host_id.
-	# This must be unique among all hosts, and must be between 1 and 2000.
-	# Applicable only if LVM is compiled with lockd support
+	# The sanlock host_id used by lvmlockd. This must be unique among all the hosts
+	# using shared VGs with sanlock. Accepted values are 1-2000, except when sanlock_align_size
+	# is configured to 1, 2 or 4, which correspond to max host_id values of 250, 500, or 1000.
+	# Applicable only if LVM is compiled with support for lvmlockd+sanlock.
 	# This configuration option has an automatic default value.
 	# host_id = 0
 }

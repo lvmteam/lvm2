@@ -1192,6 +1192,16 @@ global {
 	# This configuration option has an automatic default value.
 	# sanlock_lv_extend = 256
 
+	# Configuration option global/sanlock_align_size.
+	# The sanlock lease size in MiB to use on disks with a 4K sector size.
+	# Possible values are 1,2,4,8.  The default is 8, which supports up to
+	# 2000 hosts (and max host_id 2000.)  Smaller values support smaller
+	# numbers of max hosts (and max host_ids): 250, 500, 1000, 2000 for
+	# lease sizes 1,2,4,8.  Disks with 512 byte sectors always use 1MiB
+	# leases and support 2000 hosts, and are not affected by this setting.
+	# This configuration option has an automatic default value.
+	# sanlock_align_size = 8
+
 	# Configuration option global/lvmlockctl_kill_command.
 	# The command that lvmlockctl --kill should use to force LVs offline.
 	# The lvmlockctl --kill command is run when a shared VG has lost
@@ -1495,12 +1505,14 @@ activation {
 	# Configuration option activation/reserved_stack.
 	# Stack size in KiB to reserve for use while devices are suspended.
 	# Insufficient reserve risks I/O deadlock during device suspension.
+	# Value 0 disables memory locking.
 	# This configuration option has an automatic default value.
 	# reserved_stack = 64
 
 	# Configuration option activation/reserved_memory.
 	# Memory size in KiB to reserve for use while devices are suspended.
 	# Insufficient reserve risks I/O deadlock during device suspension.
+	# Value 0 disables memory locking.
 	# This configuration option has an automatic default value.
 	# reserved_memory = 8192
 

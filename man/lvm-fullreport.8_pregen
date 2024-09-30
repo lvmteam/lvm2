@@ -311,7 +311,7 @@ Repeat once to also suppress any prompts with answer 'no'.
 \fB--readonly\fP
 .br
 Prevent the command from making changes, including activation and
-metadata updates.
+metadata updates.  (See --permission r for read only LVs.)
 .
 .HP
 \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP

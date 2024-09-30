@@ -832,7 +832,7 @@ a suitable value automatically.
 \fB--readonly\fP
 .br
 Prevent the command from making changes, including activation and
-metadata updates.
+metadata updates.  (See --permission r for read only LVs.)
 .
 .HP
 \fB--rebuild\fP \fIPV\fP
