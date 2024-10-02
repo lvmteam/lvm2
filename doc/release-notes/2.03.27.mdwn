@@ -18,7 +18,7 @@ Version 2.03.27
 * Improve error messages on failed udev cookie create/inc/dec operation.
 
 <!-- remove the pending tag on release, remove draft tag once editing is complete -->
-[[!tag draft pending]]
+[[!tag]]
 <!--
 For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
 \[[!meta date="Tue Nov 21 14:26:07 2023 +0100"]]
