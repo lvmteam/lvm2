@@ -1,3 +1,6 @@
+Version 2.03.28 - 
+==================
+
 Version 2.03.27 - 02nd October 2024
 ===================================
   Fix swap device size detection using blkid for lvresize/lvreduce/lvextend.
