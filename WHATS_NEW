@@ -1,5 +1,7 @@
 Version 2.03.27 - 
 ==================
+  Fix swap device size detection using blkid for lvresize/lvreduce/lvextend.
+  Detect GPT partition table and pass partition filter if no partitions defined.
   Disable mem locking when activation/reserved_stack or reserved_memory is 0.
   Deprecate vdo settings vdo_write_policy and vdo_write_policy.
   Lots of typo fixes across lvm2 code base (codespell).
