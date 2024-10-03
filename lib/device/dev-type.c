@@ -663,7 +663,7 @@ static int _has_partition_table(struct device *dev)
 				 * If this is GPT's PMBR, then also
 				 * check for gpt partition table.
 				 */
-				if (buf.part[p].sys_ind == PART_MSDOS_TYPE_GPT_PMBR)
+				if (buf.part[p].sys_ind == PART_MSDOS_TYPE_GPT_PMBR && !ret)
 					ret = _has_gpt_partition_table(dev);
 				else
 					ret = 1;
