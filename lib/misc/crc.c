@@ -58,6 +58,90 @@ static const uint32_t _crctab[] = {
 	0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94, 0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d,
 };
 
+#ifdef __x86_64__
+/*
+ * Note that the CRC-32 checksum is merely used for error detection in
+ * transmission and storage. It is not intended to guard against the malicious
+ * modification of files (i.e., it is not a cryptographic hash). !!!
+ *
+ * This code is based on zlib code from:
+ *
+ * https://github.com/vlastavesely/crc32sum
+ * https://github.com/chromium/chromium/blob/master/third_party/zlib/
+ *
+ * SPDX-License-Identifier: GPL-2.0
+ */
+
+
+/*
+ * ATM Use this code only for X86_64 arch where it was tested
+ * TODO: check if it speeds also non X86_64 arch
+ */
+
+static unsigned int _crc32_lookup[16][256] = { 0 };
+
+static void _initialise_crc32(void)
+{
+	unsigned int i, j;
+
+	if (_crc32_lookup[0][1])
+		return;
+
+	for (i = 0; i < 256; i++)
+		_crc32_lookup[0][i] = _crctab[i];
+
+	for (i = 0; i < 256; i++)
+		for (j = 1; j < 16; j++)
+			_crc32_lookup[j][i] = (_crc32_lookup[j - 1][i] >> 8) ^
+				_crc32_lookup[0][_crc32_lookup[j - 1][i] & 0xff];
+}
+
+#ifndef DEBUG_CRC32
+uint32_t calc_crc(uint32_t initial, const uint8_t *buf, uint32_t size)
+#else
+static uint32_t _calc_crc_new(uint32_t initial, const uint8_t *buf, uint32_t size)
+#endif
+{
+	const uint32_t *ptr = (const uint32_t *) buf;
+	uint32_t a, b, c, d;
+	uint32_t crc = initial;
+
+	_initialise_crc32();
+
+	for (;size >= 16; size -= 16) {
+		a = xlate32(*ptr++) ^ crc;
+		b = xlate32(*ptr++);
+		c = xlate32(*ptr++);
+		d = xlate32(*ptr++);
+
+		crc = _crc32_lookup[ 0][(d >> 24) & 0xff] ^
+		      _crc32_lookup[ 1][(d >> 16) & 0xff] ^
+		      _crc32_lookup[ 2][(d >>  8) & 0xff] ^
+		      _crc32_lookup[ 3][ d        & 0xff] ^
+		      _crc32_lookup[ 4][(c >> 24) & 0xff] ^
+		      _crc32_lookup[ 5][(c >> 16) & 0xff] ^
+		      _crc32_lookup[ 6][(c >>  8) & 0xff] ^
+		      _crc32_lookup[ 7][ c        & 0xff] ^
+		      _crc32_lookup[ 8][(b >> 24) & 0xff] ^
+		      _crc32_lookup[ 9][(b >> 16) & 0xff] ^
+		      _crc32_lookup[10][(b >>  8) & 0xff] ^
+		      _crc32_lookup[11][ b        & 0xff] ^
+		      _crc32_lookup[12][(a >> 24) & 0xff] ^
+		      _crc32_lookup[13][(a >> 16) & 0xff] ^
+		      _crc32_lookup[14][(a >>  8) & 0xff] ^
+		      _crc32_lookup[15][ a        & 0xff];
+	}
+
+	buf = (const uint8_t *) ptr;
+
+	while (size--)
+		crc = _crc32_lookup[0][((unsigned char) crc ^ *(buf++))] ^ (crc >> 8);
+
+	return crc;
+}
+
+#else  // __x86_64__
+
 /* Calculate an endian-independent CRC of supplied buffer */
 #ifndef DEBUG_CRC32
 uint32_t calc_crc(uint32_t initial, const uint8_t *buf, uint32_t size)
@@ -88,6 +172,8 @@ static uint32_t _calc_crc_new(uint32_t initial, const uint8_t *buf, uint32_t siz
 
 	return crc;
 }
+
+#endif // __x86_64__
 
 #ifdef DEBUG_CRC32
 static uint32_t _calc_crc_old(uint32_t initial, const uint8_t *buf, uint32_t size)
