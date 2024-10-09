@@ -775,60 +775,52 @@ static int _match_aux(struct parser *p, int t)
  */
 static void _get_token(struct parser *p, int tok_prev)
 {
-	int values_allowed = 0;
-
+	/* Should next token be interpreted as value instead of identifier? */
+	const int values_allowed = (tok_prev == TOK_EQ ||
+				    tok_prev == TOK_ARRAY_B ||
+				    tok_prev == TOK_COMMA);
 	const char *te;
+	char c;
 
 	p->tb = p->te;
 	_eat_space(p);
-	if (p->tb == p->fe || !*p->tb) {
+	if (p->tb == p->fe ||
+	    !((c = *p->tb))) {
 		p->t = TOK_EOF;
 		return;
 	}
 
-	/* Should next token be interpreted as value instead of identifier? */
-	if (tok_prev == TOK_EQ || tok_prev == TOK_ARRAY_B ||
-	    tok_prev == TOK_COMMA)
-		values_allowed = 1;
-
 	p->t = TOK_INT;		/* fudge so the fall through for
 				   floats works */
+	te = p->te + 1;         /* next character */
 
-	te = p->te;
-	switch (*te) {
+	switch (c) {
 	case SECTION_B_CHAR:
 		p->t = TOK_SECTION_B;
-		te++;
 		break;
 
 	case SECTION_E_CHAR:
 		p->t = TOK_SECTION_E;
-		te++;
 		break;
 
 	case '[':
 		p->t = TOK_ARRAY_B;
-		te++;
 		break;
 
 	case ']':
 		p->t = TOK_ARRAY_E;
-		te++;
 		break;
 
 	case ',':
 		p->t = TOK_COMMA;
-		te++;
 		break;
 
 	case '=':
 		p->t = TOK_EQ;
-		te++;
 		break;
 
 	case '"':
 		p->t = TOK_STRING_ESCAPED;
-		te++;
 		while ((te != p->fe) && (*te) && (*te != '"')) {
 			if ((*te == '\\') && (te + 1 != p->fe) &&
 			    *(te + 1))
@@ -842,7 +834,6 @@ static void _get_token(struct parser *p, int tok_prev)
 
 	case '\'':
 		p->t = TOK_STRING;
-		te++;
 		while ((te != p->fe) && (*te) && (*te != '\''))
 			te++;
 
@@ -866,7 +857,7 @@ static void _get_token(struct parser *p, int tok_prev)
 	case '+':
 	case '-':
 		if (values_allowed) {
-			while (++te != p->fe) {
+			for (; te != p->fe; ++te) {
 				if (!isdigit((int) *te)) {
 					if (*te == '.') {
 						if (p->t != TOK_FLOAT) {
@@ -883,10 +874,10 @@ static void _get_token(struct parser *p, int tok_prev)
 
 	default:
 		p->t = TOK_IDENTIFIER;
-		while ((te != p->fe) && (*te) && !isspace(*te) &&
-		       (*te != '#') && (*te != '=') &&
-		       (*te != SECTION_B_CHAR) &&
-		       (*te != SECTION_E_CHAR))
+		while ((te != p->fe) && ((c = *te)) && !isspace(c) &&
+		       (c != '#') && (c != '=') &&
+		       (c != SECTION_B_CHAR) &&
+		       (c != SECTION_E_CHAR))
 			te++;
 		if (values_allowed)
 			p->t = TOK_STRING_BARE;
@@ -899,16 +890,19 @@ static void _get_token(struct parser *p, int tok_prev)
 static void _eat_space(struct parser *p)
 {
 	while (p->tb != p->fe) {
-		if (*p->te == '#')
+		if (!isspace(*p->te)) {
+			if (*p->te != '#')
+				break;
+
 			while ((p->te != p->fe) && (*p->te != '\n') && (*p->te))
 				++p->te;
+		}
 
-		else if (!isspace(*p->te))
-			break;
-
-		while ((p->te != p->fe) && isspace(*p->te)) {
+		while (p->te != p->fe) {
 			if (*p->te == '\n')
 				++p->line;
+			else if (!isspace(*p->te))
+				break;
 			++p->te;
 		}
 
