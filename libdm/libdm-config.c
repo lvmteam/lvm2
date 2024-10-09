@@ -85,14 +85,18 @@ static char *_dup_token(struct dm_pool *mem, const char *b, const char *e);
    } \
 } while(0)
 
+/* match token */
 static int _tok_match(const char *str, const char *b, const char *e)
 {
-	while (*str && (b != e)) {
-		if (*str++ != *b++)
+	while (b < e) {
+		if (!*str ||
+		    (*str != *b))
 			return 0;
+		++str;
+		++b;
 	}
 
-	return !(*str || (b != e));
+	return !*str; /* token is matching for \0 end */
 }
 
 struct dm_config_tree *dm_config_create(void)
