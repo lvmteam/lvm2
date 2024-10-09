@@ -70,7 +70,8 @@ static struct dm_config_value *_value(struct parser *p);
 static struct dm_config_value *_type(struct parser *p);
 static int _match_aux(struct parser *p, int t);
 static struct dm_config_value *_create_value(struct dm_pool *mem);
-static struct dm_config_node *_create_node(struct dm_pool *mem);
+static struct dm_config_value *_create_str_value(struct dm_pool *mem, const char *str, size_t str_len);
+static struct dm_config_node *_create_node(struct dm_pool *mem, const char *key, size_t key_len);
 static char *_dup_tok(struct parser *p);
 static char *_dup_token(struct dm_pool *mem, const char *b, const char *e);
 
@@ -467,23 +468,33 @@ int dm_config_write_node_out(const struct dm_config_node *cn,
 /*
  * parser
  */
-static char *_dup_string_tok(struct parser *p)
+static const char *_string_tok(struct parser *p, size_t *len)
 {
-	char *str;
+	ptrdiff_t d = p->te - p->tb;
 
-	p->tb++, p->te--;	/* strip "'s */
-
-	if (p->te < p->tb) {
+	if (d < 2) {
 		log_error("Parse error at byte %" PRIptrdiff_t " (line %d): "
 			  "expected a string token.",
 			  p->tb - p->fb + 1, p->line);
 		return NULL;
 	}
 
-	if (!(str = _dup_tok(p)))
+	*len = (size_t)(d - 2); /* strip "'s */
+
+	return p->tb + 1;
+}
+
+static char *_dup_string_tok(struct parser *p)
+{
+	const char *tok;
+	size_t len;
+	char *str;
+
+	if (!(tok = _string_tok(p, &len)))
 		return_NULL;
 
-	p->te++;
+	if (!(str = _dup_token(p->mem, tok, tok + len)))
+		return_NULL;
 
 	return str;
 }
@@ -505,10 +516,9 @@ static struct dm_config_node *_make_node(struct dm_pool *mem,
 {
 	struct dm_config_node *n;
 
-	if (!(n = _create_node(mem)))
+	if (!(n = _create_node(mem, key_b, key_e - key_b)))
 		return_NULL;
 
-	n->key = _dup_token(mem, key_b, key_e);
 	if (parent) {
 		n->parent = parent;
 		n->sib = parent->child;
@@ -669,16 +679,14 @@ static struct dm_config_value *_value(struct parser *p)
 static struct dm_config_value *_type(struct parser *p)
 {
 	/* [+-]{0,1}[0-9]+ | [0-9]*\.[0-9]* | ".*" */
-	struct dm_config_value *v = _create_value(p->mem);
-	char *str;
-
-	if (!v) {
-		log_error("Failed to allocate type value");
-		return NULL;
-	}
+	struct dm_config_value *v;
+	const char *str;
+	size_t len;
 
 	switch (p->t) {
 	case TOK_INT:
+		if (!(v = _create_value(p->mem)))
+			break;
 		v->type = DM_CFG_INT;
 		errno = 0;
 		v->v.i = strtoll(p->tb, NULL, 0);	/* FIXME: check error */
@@ -699,6 +707,8 @@ static struct dm_config_value *_type(struct parser *p)
 		break;
 
 	case TOK_FLOAT:
+		if (!(v = _create_value(p->mem)))
+			break;
 		v->type = DM_CFG_FLOAT;
 		errno = 0;
 		v->v.f = strtod(p->tb, NULL);	/* FIXME: check error */
@@ -710,31 +720,31 @@ static struct dm_config_value *_type(struct parser *p)
 		break;
 
 	case TOK_STRING:
-		v->type = DM_CFG_STRING;
-
-		if (!(v->v.str = _dup_string_tok(p)))
+		if (!(str = _string_tok(p, &len)))
 			return_NULL;
 
-		match(TOK_STRING);
+		if ((v = _create_str_value(p->mem, str, len))) {
+			v->type = DM_CFG_STRING;
+			match(TOK_STRING);
+		}
 		break;
 
 	case TOK_STRING_BARE:
-		v->type = DM_CFG_STRING;
-
-		if (!(v->v.str = _dup_tok(p)))
-			return_NULL;
-
-		match(TOK_STRING_BARE);
+		if ((v = _create_str_value(p->mem, p->tb, p->te - p->tb))) {
+			v->type = DM_CFG_STRING;
+			match(TOK_STRING_BARE);
+		}
 		break;
 
 	case TOK_STRING_ESCAPED:
-		v->type = DM_CFG_STRING;
-
-		if (!(str = _dup_string_tok(p)))
+		if (!(str = _string_tok(p, &len)))
 			return_NULL;
-		dm_unescape_double_quotes(str);
-		v->v.str = str;
-		match(TOK_STRING_ESCAPED);
+
+		if ((v = _create_str_value(p->mem, str, len))) {
+			v->type = DM_CFG_STRING;
+			dm_unescape_double_quotes((char*)v->v.str);
+			match(TOK_STRING_ESCAPED);
+		}
 		break;
 
 	default:
@@ -742,6 +752,12 @@ static struct dm_config_value *_type(struct parser *p)
 			  p->tb - p->fb + 1, p->line);
 		return NULL;
 	}
+
+	if (!v) {
+		log_error("Failed to allocate type value.");
+		return NULL;
+	}
+
 	return v;
 }
 
@@ -908,9 +924,44 @@ static struct dm_config_value *_create_value(struct dm_pool *mem)
 	return dm_pool_zalloc(mem, sizeof(struct dm_config_value));
 }
 
-static struct dm_config_node *_create_node(struct dm_pool *mem)
+static struct dm_config_value *_create_str_value(struct dm_pool *mem, const char *str, size_t str_len)
 {
-	return dm_pool_zalloc(mem, sizeof(struct dm_config_node));
+	struct dm_config_value *cv;
+	char *str_buf;
+
+	if (!(cv = dm_pool_alloc(mem, sizeof(struct dm_config_value) + str_len + 1)))
+		return_NULL;
+
+	memset(cv, 0, sizeof(*cv));
+
+	if (str) {
+		str_buf = (char *)(cv + 1);
+		memcpy(str_buf, str, str_len);
+		str_buf[str_len] = '\0';
+		cv->v.str = str_buf;
+	}
+
+	return cv;
+}
+
+static struct dm_config_node *_create_node(struct dm_pool *mem, const char *key, size_t key_len)
+{
+	struct dm_config_node *cn;
+	char *key_buf;
+
+	if (!(cn = dm_pool_alloc(mem, sizeof(struct dm_config_node) + key_len + 1)))
+		return_NULL;
+
+	memset(cn, 0, sizeof(*cn));
+
+	if (key) {
+		key_buf = (char *)(cn + 1);
+		memcpy(key_buf, key, key_len);
+		key_buf[key_len] = '\0';
+		cn->key = key_buf;
+	}
+
+	return cn;
 }
 
 static char *_dup_token(struct dm_pool *mem, const char *b, const char *e)
@@ -1327,19 +1378,19 @@ static struct dm_config_value *_clone_config_value(struct dm_pool *mem,
 {
 	struct dm_config_value *new_cv;
 
-	if (!(new_cv = _create_value(mem))) {
-		log_error("Failed to clone config value.");
-		return NULL;
+	if (v->type == DM_CFG_STRING) {
+		if (!(new_cv = _create_str_value(mem, v->v.str, strlen(v->v.str)))) {
+
+		}
+	} else {
+		if (!(new_cv = _create_value(mem))) {
+			log_error("Failed to clone config value.");
+			return NULL;
+		}
+		new_cv->v = v->v;
 	}
 
 	new_cv->type = v->type;
-	if (v->type == DM_CFG_STRING) {
-		if (!(new_cv->v.str = dm_pool_strdup(mem, v->v.str))) {
-			log_error("Failed to clone config string value.");
-			return NULL;
-		}
-	} else
-		new_cv->v = v->v;
 
 	if (v->next && !(new_cv->next = _clone_config_value(mem, v->next)))
 		return_NULL;
@@ -1356,13 +1407,8 @@ struct dm_config_node *dm_config_clone_node_with_mem(struct dm_pool *mem, const 
 		return NULL;
 	}
 
-	if (!(new_cn = _create_node(mem))) {
+	if (!(new_cn = _create_node(mem, cn->key, cn->key ? strlen(cn->key) : 0))) {
 		log_error("Failed to clone config node.");
-		return NULL;
-	}
-
-	if ((cn->key && !(new_cn->key = dm_pool_strdup(mem, cn->key)))) {
-		log_error("Failed to clone config node key.");
 		return NULL;
 	}
 
@@ -1385,14 +1431,11 @@ struct dm_config_node *dm_config_create_node(struct dm_config_tree *cft, const c
 {
 	struct dm_config_node *cn;
 
-	if (!(cn = _create_node(cft->mem))) {
+	if (!(cn = _create_node(cft->mem, key, strlen(key)))) {
 		log_error("Failed to create config node.");
 		return NULL;
 	}
-	if (!(cn->key = dm_pool_strdup(cft->mem, key))) {
-		log_error("Failed to create config node's key.");
-		return NULL;
-	}
+
 	cn->parent = NULL;
 	cn->v = NULL;
 
