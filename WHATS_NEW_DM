@@ -1,5 +1,8 @@
 Version 1.02.202 - 
 ===================
+  Introduce dm_config_parse_only_section to stop parsing after section.
+  For shorter string use on stack buffers when generating sections.
+  Enhance dm_config tokenizer.
 
 Version 1.02.201 - 02nd October 2024
 ====================================

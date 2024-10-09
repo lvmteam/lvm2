@@ -1,5 +1,12 @@
 Version 2.03.28 - 
 ==================
+  Generate json string id only for json reporting.
+  For vgsummary use new API call dm_config_parse_only_section().
+  Use radix_tree for PV names mapping.
+  Split check_lv_segment into separate _in/complete_vg variant.
+  Use find_lv instead of find_lv_in_vg when possible.
+  Do a mirror fixup only when mirrors with logs are imported.
+  Add faster crc32 calculation from zlib code for x86_64.
   Fall back to direct zeroing if BLKZEROOUT fails during new LV initialization.
 
 Version 2.03.27 - 02nd October 2024
@@ -158,6 +165,7 @@ Version 2.03.17 - 10th November 2022
   Switch to use mallinfo2 and use it only with glibc.
   Error out in lvm shell if using a cmd argument not supported in the shell.
   Fix lvm shell's lastlog command to report previous pre-command failures.
+  Keep libaio locked in memory in critical section.
   Extend VDO and VDOPOOL without flushing and locking fs.
   Add --valuesonly option to lvmconfig to print only values without keys.
   Updates configure with recent autoconf tooling.
