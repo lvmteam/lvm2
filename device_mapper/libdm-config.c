@@ -102,7 +102,7 @@ static int _tok_match(const char *str, const char *b, const char *e)
 struct dm_config_tree *dm_config_create(void)
 {
 	struct dm_config_tree *cft;
-	struct dm_pool *mem = dm_pool_create("config", 10 * 1024);
+	struct dm_pool *mem = dm_pool_create("config", 63 * 1024);
 
 	if (!mem) {
 		log_error("Failed to allocate config pool.");

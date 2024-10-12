@@ -35,7 +35,7 @@
 #define MIN_PE_SIZE     (8192L >> SECTOR_SHIFT) /* 8 KB in sectors - format1 only */
 #define MAX_PE_SIZE     (16L * 1024L * (1024L >> SECTOR_SHIFT) * 1024L) /* format1 only */
 #define MIRROR_LOG_OFFSET	2	/* sectors */
-#define VG_MEMPOOL_CHUNK	10240	/* in bytes, hint only */
+#define VG_MEMPOOL_CHUNK	63000	/* in bytes, hint only */
 
 /*
  * Ceiling(n / sz)
