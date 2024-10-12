@@ -25,6 +25,7 @@
 #include "lib/commands/toolcontext.h"
 #include "lib/device/device_id.h"
 #include "libdaemon/client/config-util.h"
+#include "base/data-struct/radix-tree.h"
 
 #include <stdarg.h>
 #include <time.h>
@@ -53,8 +54,7 @@ typedef int (*nl_fn) (struct formatter * f);
  * exporting the vg, ie. writing it to a file.
  */
 struct formatter {
-	struct dm_pool *mem;	/* pv names allocated from here */
-	struct dm_hash_table *pv_names;	/* dev_name -> pv_name (eg, pv1) */
+	struct radix_tree *pv_idx;	/* dev_name id -> pv_name (eg, pv1) */
 
 	union {
 		FILE *fp;	/* where we're writing to */
@@ -500,29 +500,18 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 	return 1;
 }
 
-/*
- * Get the pv%d name from the formatters hash
- * table.
- */
-static const char *_get_pv_name_from_uuid(struct formatter *f, char *uuid)
+/* Get the pv index  %d name from the formatters radix tree. */
+static int _get_pv_idx(const struct formatter *f, const struct physical_volume *pv)
 {
-	const char *pv_name = dm_hash_lookup(f->pv_names, uuid);
+	union radix_value idx;
 
-	if (!pv_name)
-		log_error(INTERNAL_ERROR "PV name for uuid %s missing from text metadata export hash table.",
-			  uuid);
+	if (!pv || !radix_tree_lookup(f->pv_idx, &pv, sizeof(pv), &idx)) {
+		log_error(INTERNAL_ERROR "PV name for %s missing in metadata export radix tree.",
+			  pv_dev_name(pv));
+		return -1;
+	}
 
-	return pv_name;
-}
-
-static const char *_get_pv_name(struct formatter *f, struct physical_volume *pv)
-{
-	char uuid[64] __attribute__((aligned(8)));
-
-	if (!pv || !id_write_format(&pv->id, uuid, sizeof(uuid)))
-		return_NULL;
-
-	return _get_pv_name_from_uuid(f, uuid);
+	return (int) idx.n;
 }
 
 static int _print_pvs(struct formatter *f, struct volume_group *vg)
@@ -530,7 +519,7 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 	struct pv_list *pvl;
 	struct physical_volume *pv;
 	char buffer[PATH_MAX * 2];
-	const char *name;
+	int idx;
 	const char *idtype, *idname;
 
 	outf(f, "physical_volumes {");
@@ -542,11 +531,11 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 		if (!id_write_format(&pv->id, buffer, sizeof(buffer)))
 			return_0;
 
-		if (!(name = _get_pv_name_from_uuid(f, buffer)))
+		if ((idx = _get_pv_idx(f, pv)) < 0)
 			return_0;
 
 		outnl(f);
-		outf(f, "%s {", name);
+		outf(f, "pv%d {", idx);
 		_inc_indent(f);
 
 		outf(f, "id = \"%s\"", buffer);
@@ -630,8 +619,8 @@ static int _print_segment(struct formatter *f, struct volume_group *vg,
 int out_areas(struct formatter *f, const struct lv_segment *seg,
 	      const char *type)
 {
-	const char *name;
 	unsigned int s;
+	int idx;
 	struct physical_volume *pv;
 
 	outnl(f);
@@ -647,11 +636,11 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 					  s, type, display_lvname(seg->lv));
 				return 0;
 			}
-				
-			if (!(name = _get_pv_name(f, pv)))
+
+			if ((idx = _get_pv_idx(f, pv)) < 0)
 				return_0;
 
-			outf(f, "\"%s\", %u%s", name,
+			outf(f, "\"pv%d\", %u%s", idx,
 			     seg_pe(seg, s),
 			     (s == seg->area_count - 1) ? "" : ",");
 			break;
@@ -962,35 +951,22 @@ static int _print_historical_lvs(struct formatter *f, struct volume_group *vg)
  * 'pv2' etc.  This function builds a hash table
  * to enable a quick lookup from device -> name.
  */
-static int _build_pv_names(struct formatter *f, struct volume_group *vg)
+static int _build_pv_idx(struct formatter *f, struct volume_group *vg)
 {
-	int count = 0;
+	union radix_value count = { 0 };
 	struct pv_list *pvl;
 	struct physical_volume *pv;
-	char buffer[32], *name;
-	char uuid[64];
 
-	if (!(f->mem = dm_pool_create("text pv_names", 512)))
-		return_0;
-
-	if (!(f->pv_names = dm_hash_create(115)))
+	if (!(f->pv_idx = radix_tree_create(NULL, NULL)))
 		return_0;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		pv = pvl->pv;
 
 		/* FIXME But skip if there's already an LV called pv%d ! */
-		if (dm_snprintf(buffer, sizeof(buffer), "pv%d", count++) < 0)
+		if (!radix_tree_insert(f->pv_idx, &pv, sizeof(pv), count))
 			return_0;
-
-		if (!(name = dm_pool_strdup(f->mem, buffer)))
-			return_0;
-
-		if (!id_write_format(&pv->id, uuid, sizeof(uuid)))
-			return_0;
-
-		if (!dm_hash_insert(f->pv_names, uuid, name))
-			return_0;
+		count.n++;
 	}
 
 	return 1;
@@ -1001,7 +977,7 @@ static int _text_vg_export(struct formatter *f,
 {
 	int r = 0;
 
-	if (!_build_pv_names(f, vg))
+	if (!_build_pv_idx(f, vg))
 		goto_out;
 
 	if (f->header && !_print_header(vg->cmd, f, desc))
@@ -1037,14 +1013,9 @@ static int _text_vg_export(struct formatter *f,
 	r = 1;
 
       out:
-	if (f->mem) {
-		dm_pool_destroy(f->mem);
-		f->mem = NULL;
-	}
-
-	if (f->pv_names) {
-		dm_hash_destroy(f->pv_names);
-		f->pv_names = NULL;
+	if (f->pv_idx) {
+		radix_tree_destroy(f->pv_idx);
+		f->pv_idx = NULL;
 	}
 
 	return r;
