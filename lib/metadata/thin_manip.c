@@ -354,8 +354,9 @@ int thin_pool_check_overprovisioning(const struct logical_volume *lv)
 	struct cmd_context *cmd = lv->vg->cmd;
 	const char *txt = "";
 	uint64_t thinsum = 0, poolsum = 0, sz = ~0;
-	int threshold, max_threshold = 0;
-	int percent, min_percent = 100;
+	int threshold, def_threshold, max_threshold = 0;
+	int percent, def_percent, min_percent = 100;
+	struct profile *profile;
 	int more_pools = 0;
 
 	/* When passed thin volume, check related pool first */
@@ -373,15 +374,26 @@ int thin_pool_check_overprovisioning(const struct logical_volume *lv)
 			return 1; /* All thins fit into this thin pool */
 	}
 
+	def_threshold = find_config_tree_int(cmd, activation_thin_pool_autoextend_threshold_CFG,
+					     NULL);
+	def_percent = find_config_tree_int(cmd, activation_thin_pool_autoextend_percent_CFG,
+					   NULL);
+
 	/* Sum all thins and all thin pools in VG */
 	dm_list_iterate_items(lvl, &lv->vg->lvs) {
 		if (!lv_is_thin_pool(lvl->lv))
 			continue;
 
-		threshold = find_config_tree_int(cmd, activation_thin_pool_autoextend_threshold_CFG,
-						 lv_config_profile(lvl->lv));
-		percent = find_config_tree_int(cmd, activation_thin_pool_autoextend_percent_CFG,
-					       lv_config_profile(lvl->lv));
+		if ((profile = lv_config_profile(lvl->lv))) {
+			threshold = find_config_tree_int(cmd, activation_thin_pool_autoextend_threshold_CFG,
+							 profile);
+			percent = find_config_tree_int(cmd, activation_thin_pool_autoextend_percent_CFG,
+						       profile);
+		} else {
+			threshold = def_threshold;
+			percent = def_percent;
+		}
+
 		if (threshold > max_threshold)
 			max_threshold = threshold;
 		if (percent < min_percent)
