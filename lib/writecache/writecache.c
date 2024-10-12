@@ -40,8 +40,7 @@ static void _writecache_display(const struct lv_segment *seg)
 
 static int _writecache_text_import(struct lv_segment *seg,
 				   const struct dm_config_node *sn,
-				   struct dm_hash_table *pv_hash __attribute__((unused)),
-				   struct dm_hash_table *lv_hash)
+				   struct dm_hash_table *pv_hash __attribute__((unused)))
 {
 	struct logical_volume *origin_lv = NULL;
 	struct logical_volume *fast_lv;
@@ -54,7 +53,7 @@ static int _writecache_text_import(struct lv_segment *seg,
 	if (!dm_config_get_str(sn, "origin", &origin_name))
 		return SEG_LOG_ERROR("origin must be a string in");
 
-	if (!(origin_lv = dm_hash_lookup(lv_hash, origin_name)))
+	if (!(origin_lv = find_lv(seg->lv->vg, origin_name)))
 		return SEG_LOG_ERROR("Unknown LV specified for writecache origin %s in", origin_name);
 
 	if (!set_lv_segment_area_lv(seg, 0, origin_lv, 0, 0))
@@ -66,7 +65,7 @@ static int _writecache_text_import(struct lv_segment *seg,
 	if (!dm_config_get_str(sn, "writecache", &fast_name))
 		return SEG_LOG_ERROR("writecache must be a string in");
 
-	if (!(fast_lv = dm_hash_lookup(lv_hash, fast_name)))
+	if (!(fast_lv = find_lv(seg->lv->vg, fast_name)))
 		return SEG_LOG_ERROR("Unknown logical volume %s specified for writecache in",
 				     fast_name);
 

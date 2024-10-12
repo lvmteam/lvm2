@@ -36,8 +36,7 @@ static const char *_snap_target_name(const struct lv_segment *seg,
 }
 
 static int _snap_text_import(struct lv_segment *seg, const struct dm_config_node *sn,
-			struct dm_hash_table *pv_hash __attribute__((unused)),
-			struct dm_hash_table *lv_hash)
+			struct dm_hash_table *pv_hash __attribute__((unused)))
 {
 	uint32_t chunk_size;
 	struct logical_volume *org, *cow;
@@ -72,11 +71,11 @@ static int _snap_text_import(struct lv_segment *seg, const struct dm_config_node
 	if (!(org_name = dm_config_find_str(sn, "origin", NULL)))
 		return SEG_LOG_ERROR("Snapshot origin must be a string in");
 
-	if (!(cow = dm_hash_lookup(lv_hash, cow_name)))
+	if (!(cow = find_lv(seg->lv->vg, cow_name)))
 		return SEG_LOG_ERROR("Unknown logical volume %s specified for "
 				     "snapshot cow store in", cow_name);
 
-	if (!(org = dm_hash_lookup(lv_hash, org_name)))
+	if (!(org = find_lv(seg->lv->vg, org_name)))
 		return SEG_LOG_ERROR("Unknown logical volume %s specified for "
 			  "snapshot origin in", org_name);
 

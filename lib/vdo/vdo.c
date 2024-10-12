@@ -75,8 +75,7 @@ static void _vdo_display(const struct lv_segment *seg)
 
 static int _vdo_text_import(struct lv_segment *seg,
 			    const struct dm_config_node *n,
-			    struct dm_hash_table *pv_hash __attribute__((unused)),
-			    struct dm_hash_table *lv_hash)
+			    struct dm_hash_table *pv_hash __attribute__((unused)))
 {
 	struct logical_volume *vdo_pool_lv;
 	const char *str;
@@ -85,7 +84,7 @@ static int _vdo_text_import(struct lv_segment *seg,
 	if (!dm_config_has_node(n, "vdo_pool") ||
 	    !(str = dm_config_find_str(n, "vdo_pool", NULL)))
 		return _bad_field("vdo_pool");
-	if (!(vdo_pool_lv = dm_hash_lookup(lv_hash, str))) {
+	if (!(vdo_pool_lv = find_lv(seg->lv->vg, str))) {
 		log_error("Unknown VDO pool logical volume %s.", str);
 		return 0;
 	}
@@ -208,8 +207,7 @@ static int _vdo_pool_text_import_area_count(const struct dm_config_node *sn __at
 
 static int _vdo_pool_text_import(struct lv_segment *seg,
 				 const struct dm_config_node *n,
-				 struct dm_hash_table *pv_hash __attribute__((unused)),
-				 struct dm_hash_table *lv_hash)
+				 struct dm_hash_table *pv_hash __attribute__((unused)))
 {
 	struct dm_vdo_target_params *vtp = &seg->vdo_params;
 	struct logical_volume *data_lv;
@@ -218,7 +216,7 @@ static int _vdo_pool_text_import(struct lv_segment *seg,
 	if (!dm_config_has_node(n, "data") ||
 	    !(str = dm_config_find_str(n, "data", NULL)))
 		return _bad_field("data");
-	if (!(data_lv = dm_hash_lookup(lv_hash, str))) {
+	if (!(data_lv = find_lv(seg->lv->vg, str))) {
 		log_error("Unknown logical volume %s.", str);
 		return 0;
 	}

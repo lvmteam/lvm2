@@ -74,8 +74,7 @@ static int _mirrored_text_import_area_count(const struct dm_config_node *sn, uin
 }
 
 static int _mirrored_text_import(struct lv_segment *seg, const struct dm_config_node *sn,
-			struct dm_hash_table *pv_hash,
-			struct dm_hash_table *lv_hash)
+			struct dm_hash_table *pv_hash)
 {
 	const struct dm_config_value *cv;
 	const char *logname = NULL;
@@ -103,7 +102,7 @@ static int _mirrored_text_import(struct lv_segment *seg, const struct dm_config_
 	}
 
 	if (dm_config_get_str(sn, "mirror_log", &logname)) {
-		if (!(seg->log_lv = dm_hash_lookup(lv_hash, logname))) {
+		if (!(seg->log_lv = find_lv(seg->lv->vg, logname))) {
 			log_error("Unrecognised mirror log in "
 				  "segment %s of logical volume %s.",
 				  dm_config_parent_name(sn), seg->lv->name);
