@@ -2622,13 +2622,12 @@ static struct logical_volume *_lv_for_raid_image_seg(const struct lv_segment *se
 				p = strchr(p + 5, '_');
 
 			if (p) {
-				struct lv_list *lvl;
+				struct logical_volume *lv;
 
 				*p = '\0';
-				if ((lvl = find_lv_in_vg(seg->lv->vg, lv_name)) &&
-				    seg_is_reshapable_raid(first_seg(lvl->lv)))
-					return lvl->lv;
-
+				if ((lv = find_lv(seg->lv->vg, lv_name)) &&
+				    seg_is_reshapable_raid(first_seg(lv)))
+					return lv;
 			}
 		}
 	}

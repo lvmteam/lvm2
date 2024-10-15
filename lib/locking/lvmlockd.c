@@ -3266,7 +3266,7 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 	} else if (seg_is_thin(lp)) {
 		if ((seg_is_thin_volume(lp) && !lp->create_pool) ||
 		    (!seg_is_thin_volume(lp) && lp->origin_name)) {
-			struct lv_list *lvl;
+			struct logical_volume *thin_pool_lv;
 
 			/*
 			 * Creating a new thin lv or snapshot.  These lvs do not get
@@ -3275,11 +3275,11 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 			 */
 			log_debug("lockd_init_lv thin %s locking thin pool", display_lvname(lv));
 
-			if (!(lvl = find_lv_in_vg(vg, lp->pool_name))) {
+			if (!(thin_pool_lv = find_lv(vg, lp->pool_name))) {
 				log_error("Failed to find thin pool %s/%s", vg->name, lp->pool_name);
 				return 0;
 			}
-			if (!lockd_lv(cmd, lvl->lv, "ex", 0)) {
+			if (!lockd_lv(cmd, thin_pool_lv, "ex", 0)) {
 				log_error("Failed to lock thin pool %s/%s", vg->name, lp->pool_name);
 				return 0;
 			}
@@ -3308,7 +3308,7 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 		}
 
 	} else if (seg_is_vdo(lp)) {
-		struct lv_list *lvl;
+		struct logical_volume *vdo_pool_lv;
 
 		/*
 		 * A vdo lv is being created in a vdo pool.  The vdo lv does
@@ -3316,12 +3316,12 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 		 * the vdo pool needs to be locked to create a vdo lv in it.
 		 */
 
-		if (!(lvl = find_lv_in_vg(vg, lp->pool_name))) {
+		if (!(vdo_pool_lv = find_lv(vg, lp->pool_name))) {
 			log_error("Failed to find vdo pool %s/%s", vg->name, lp->pool_name);
 			return 0;
 		}
 
-		if (!lockd_lv(cmd, lvl->lv, "ex", LDLV_PERSISTENT)) {
+		if (!lockd_lv(cmd, vdo_pool_lv, "ex", LDLV_PERSISTENT)) {
 			log_error("Failed to lock vdo pool %s/%s", vg->name, lp->pool_name);
 			return 0;
 		}

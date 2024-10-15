@@ -3579,7 +3579,6 @@ int lv_raid_merge(struct logical_volume *image_lv)
 {
 	uint32_t s;
 	char *p, *lv_name;
-	struct lv_list *lvl;
 	struct logical_volume *lv;
 	struct logical_volume *meta_lv = NULL;
 	struct lv_segment *seg;
@@ -3601,17 +3600,16 @@ int lv_raid_merge(struct logical_volume *image_lv)
 	}
 	*p = '\0'; /* lv_name is now that of top-level RAID */
 
-	if (!(lvl = find_lv_in_vg(vg, lv_name))) {
+	if (!(lv = find_lv(vg, lv_name))) {
 		log_error("Unable to find containing RAID array for %s.",
 			  display_lvname(image_lv));
 		return 0;
 	}
 
 	/* Ensure primary LV is not active elsewhere. */
-	if (!lockd_lv(vg->cmd, lvl->lv, "ex", 0))
+	if (!lockd_lv(vg->cmd, lv, "ex", 0))
 		return_0;
 
-	lv = lvl->lv;
 	seg = first_seg(lv);
 	for (s = 0; s < seg->area_count; ++s)
 		if (seg_lv(seg, s) == image_lv)
