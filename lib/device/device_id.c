@@ -3374,7 +3374,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 		int found_scanned = 1;
 		dm_list_iterate_items(devl, scanned_devs) {
 			du = get_du_for_dev(cmd, devl->dev);
-			if (du && !memcmp(du->pvid, devl->dev->pvid, ID_LEN))
+			if (du && du->pvid && !memcmp(du->pvid, devl->dev->pvid, ID_LEN))
 				continue;
 			found_scanned = 0;
 			break;
