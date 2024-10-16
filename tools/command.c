@@ -1851,7 +1851,7 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 			/*
 			 * Skip common lvm options in lvm_all which
 			 * are printed at the end under "Common options for lvm"
-			 * see print_common_options_lvm()
+			 * see print_usage_common_lvm()
 			 */
 
 			if (_is_lvm_all_opt(opt_enum))
@@ -1863,7 +1863,7 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 			 * cname->common_options (options common
 			 * to all variants), which are printed at
 			 * the end under "Common options for command"
-			 * see print_common_options_cmd()
+			 * see print_usage_common_cmd()
 			 */
 
 			if (cna && (cna->variants > 1) && cna->common_options[opt_enum])
@@ -1891,7 +1891,7 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 			/*
 			 * Skip common lvm options in lvm_all which
 			 * are printed at the end under "Common options for lvm"
-			 * see print_common_options_lvm()
+			 * see print_usage_common_lvm()
 			 */
 
 			if (_is_lvm_all_opt(opt_enum))
@@ -1903,7 +1903,7 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 			 * cname->common_options (options common
 			 * to all variants), which are printed at
 			 * the end under "Common options for command"
-			 * see print_common_options_cmd()
+			 * see print_usage_common_cmd()
 			 */
 
 			if (cna && (cna->variants > 1) && cna->common_options[opt_enum])
