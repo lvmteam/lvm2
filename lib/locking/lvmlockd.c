@@ -3136,9 +3136,8 @@ out:
 }
 
 static int _free_lv(struct cmd_context *cmd, struct volume_group *vg,
-		    const char *lv_name, struct id *lv_id, const char *lock_args)
+		    const char *lv_name, char *lv_uuid, const char *lock_args)
 {
-	char lv_uuid[64] __attribute__((aligned(8)));
 	daemon_reply reply;
 	int result;
 	int ret;
@@ -3147,9 +3146,6 @@ static int _free_lv(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	if (!_lvmlockd_connected)
 		return 0;
-
-	if (!id_write_format(lv_id, lv_uuid, sizeof(lv_uuid)))
-		return_0;
 
 	log_debug("lockd free LV %s/%s %s lock_args %s", vg->name, lv_name, lv_uuid, lock_args ?: "none");
 
@@ -3367,9 +3363,42 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 
 /* lvremove */
 
-int lockd_free_lv(struct cmd_context *cmd, struct volume_group *vg,
+struct free_lv_info {
+	struct dm_list list;
+	char *uuid;
+	char *name;
+	char *args;
+};
+
+void lockd_free_removed_lvs(struct cmd_context *cmd, struct volume_group *vg, int remove_success)
+{
+	struct free_lv_info *fli;
+
+	/*
+	 * If lvremove has decided to remove none of the LVs, this will be 0
+	 * and we don't free any of the locks.
+	 */
+	if (remove_success) {
+		dm_list_iterate_items(fli, &vg->lockd_free_lvs)
+			_free_lv(cmd, vg, fli->name, fli->uuid, fli->args);
+	}
+	vg->needs_lockd_free_lvs = 0;
+	dm_list_init(&vg->lockd_free_lvs);
+}
+
+/*
+ * The LV lock will be freed later by lockd_free_removed_lvs() if the lvremove
+ * command decides to go ahead and remove the LV.  If lvremove finds that it
+ * cannot remove one the LVs that has been requested for removal, then it will
+ * remove none of the LVs, and lockd_free_removed_lvs() will be called with
+ * remove_success == 0, and it will not free any of the LV locks.
+ */
+int lockd_free_lv_after_update(struct cmd_context *cmd, struct volume_group *vg,
 		  const char *lv_name, struct id *lv_id, const char *lock_args)
 {
+	struct free_lv_info *fli;
+	char lv_uuid[64] __attribute__((aligned(8)));
+
 	switch (get_lock_type_from_string(vg->lock_type)) {
 	case LOCK_TYPE_NONE:
 	case LOCK_TYPE_CLVM:
@@ -3379,7 +3408,47 @@ int lockd_free_lv(struct cmd_context *cmd, struct volume_group *vg,
 	case LOCK_TYPE_IDM:
 		if (!lock_args)
 			return 1;
-		return _free_lv(cmd, vg, lv_name, lv_id, lock_args);
+		break;
+	default:
+		log_error("lockd_free_lv_after_update: unknown lock_type.");
+		return 0;
+	}
+
+	if (!id_write_format(lv_id, lv_uuid, sizeof(lv_uuid)))
+		return_0;
+
+	/* save lv info to send the free_lv messages later */
+	if (!(fli = dm_pool_zalloc(vg->vgmem, sizeof(*fli))))
+		return_0;
+	if (!(fli->uuid = dm_pool_strdup(vg->vgmem, lv_uuid)))
+		return_0;
+	if (!(fli->name = dm_pool_strdup(vg->vgmem, lv_name)))
+		return_0;
+	if (!(fli->args = dm_pool_strdup(vg->vgmem, lock_args)))
+		return_0;
+	dm_list_add(&vg->lockd_free_lvs, &fli->list);
+	vg->needs_lockd_free_lvs = 1;
+	return 1;
+}
+
+int lockd_free_lv(struct cmd_context *cmd, struct volume_group *vg,
+		  const char *lv_name, struct id *lv_id, const char *lock_args)
+{
+	char lv_uuid[64] __attribute__((aligned(8)));
+
+	if (!id_write_format(lv_id, lv_uuid, sizeof(lv_uuid)))
+		return_0;
+
+	switch (get_lock_type_from_string(vg->lock_type)) {
+	case LOCK_TYPE_NONE:
+	case LOCK_TYPE_CLVM:
+		return 1;
+	case LOCK_TYPE_DLM:
+	case LOCK_TYPE_SANLOCK:
+	case LOCK_TYPE_IDM:
+		if (!lock_args)
+			return 1;
+		return _free_lv(cmd, vg, lv_name, lv_uuid, lock_args);
 	default:
 		log_error("lockd_free_lv: unknown lock_type.");
 		return 0;

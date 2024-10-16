@@ -1213,7 +1213,7 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 		if (vg_is_shared(vg)) {
 			if (!lockd_lv_name(vg->cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args, "un", LDLV_PERSISTENT))
 				log_error("Failed to unlock vdo pool in lvmlockd.");
-			lockd_free_lv(vg->cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
+			lockd_free_lv_after_update(vg->cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
 		}
 		return 1;
 	}
@@ -7792,7 +7792,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		if (!lockd_lv(cmd, lv, "un", LDLV_PERSISTENT))
 			log_warn("WARNING: Failed to unlock %s.", display_lvname(lv));
 	}
-	lockd_free_lv(cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
+	lockd_free_lv_after_update(cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
 
 	if (!suppress_remove_message && (visible || historical)) {
 		(void) dm_snprintf(msg, sizeof(msg),

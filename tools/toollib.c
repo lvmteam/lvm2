@@ -3673,6 +3673,9 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	    (!vg_write(vg) || !vg_commit(vg)))
 		ret_max = ECMD_FAILED;
 
+	if (vg->needs_lockd_free_lvs)
+		lockd_free_removed_lvs(cmd, vg, (ret_max == ECMD_PROCESSED));
+
 	if (lvargs_supplied) {
 		/*
 		 * FIXME: lvm supports removal of LV with all its dependencies

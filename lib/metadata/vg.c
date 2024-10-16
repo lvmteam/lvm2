@@ -55,6 +55,7 @@ struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
 	dm_list_init(&vg->removed_historical_lvs);
 	dm_list_init(&vg->removed_pvs);
 	dm_list_init(&vg->msg_list);
+	dm_list_init(&vg->lockd_free_lvs);
 
 	log_debug_mem("Allocated VG %s at %p.", vg->name ? : "<no name>", (void *)vg);
 

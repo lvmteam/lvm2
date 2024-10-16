@@ -113,6 +113,9 @@ int lockd_init_lv_args(struct cmd_context *cmd, struct volume_group *vg,
 		       struct logical_volume *lv, const char *lock_type, const char **lock_args);
 int lockd_free_lv(struct cmd_context *cmd, struct volume_group *vg,
 		  const char *lv_name, struct id *lv_id, const char *lock_args);
+int lockd_free_lv_after_update(struct cmd_context *cmd, struct volume_group *vg,
+		  const char *lv_name, struct id *lv_id, const char *lock_args);
+void lockd_free_removed_lvs(struct cmd_context *cmd, struct volume_group *vg, int remove_success);
 
 const char *lockd_running_lock_type(struct cmd_context *cmd, int *found_multiple);
 
@@ -258,6 +261,17 @@ static inline int lockd_init_lv_args(struct cmd_context *cmd, struct volume_grou
 
 static inline int lockd_free_lv(struct cmd_context *cmd, struct volume_group *vg,
 		  const char *lv_name, struct id *lv_id, const char *lock_args)
+{
+	return 1;
+}
+
+static inline int lockd_free_lv_after_update(struct cmd_context *cmd, struct volume_group *vg,
+		  const char *lv_name, struct id *lv_id, const char *lock_args)
+{
+	return 1;
+}
+
+static inline void lockd_free_removed_lvs(struct cmd_context *cmd, struct volume_group *vg, int remove_success)
 {
 	return 1;
 }

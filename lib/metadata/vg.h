@@ -45,6 +45,7 @@ struct volume_group {
 	unsigned lockd_not_started : 1;
 	unsigned needs_backup : 1;
 	unsigned needs_write_and_commit : 1;
+	unsigned needs_lockd_free_lvs : 1;
 	uint32_t write_count; /* count the number of vg_write calls */
 	uint32_t buffer_size_hint; /* hint with buffer size of parsed VG */
 
@@ -132,6 +133,7 @@ struct volume_group {
 	struct logical_volume *pool_metadata_spare_lv; /* one per VG */
 	struct logical_volume *sanlock_lv; /* one per VG */
 	struct dm_list msg_list;
+	struct dm_list lockd_free_lvs;
 };
 
 struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
