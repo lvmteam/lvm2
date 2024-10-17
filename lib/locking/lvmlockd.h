@@ -273,7 +273,6 @@ static inline int lockd_free_lv_after_update(struct cmd_context *cmd, struct vol
 
 static inline void lockd_free_removed_lvs(struct cmd_context *cmd, struct volume_group *vg, int remove_success)
 {
-	return 1;
 }
 
 static inline const char *lockd_running_lock_type(struct cmd_context *cmd, int *found_multiple)
