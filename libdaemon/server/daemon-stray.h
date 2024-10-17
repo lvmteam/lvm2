@@ -105,16 +105,15 @@ static void _daemon_close_descriptor(int fd, unsigned suppress_warnings,
  * Note: when 'from_fd' is set to -1,  unused 'custom_fds' must use same value!
  *
  * command:		print command name with warning message
- * suppress_warning:	whether to print warning messages
+ * suppress_warnings:	whether to print warning messages
  * above_fd:		close all descriptors above this descriptor
  * custom_fds:		preserve descriptors from this set of descriptors
  */
-static int daemon_close_stray_fds(const char *command, int suppress_warning,
+static int daemon_close_stray_fds(const char *command, int suppress_warnings,
 				  int from_fd, const struct custom_fds *custom_fds)
 {
 	struct rlimit rlim;
 	int fd;
-	unsigned suppress_warnings = 0;
 	pid_t ppid = getppid();
 	char parent_cmdline[64];
 	static const char _fd_dir[] = DEFAULT_PROC_DIR "/self/fd";
