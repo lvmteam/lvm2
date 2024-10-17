@@ -2034,6 +2034,7 @@ struct dm_config_tree *dm_config_create(void);
 struct dm_config_tree *dm_config_from_string(const char *config_settings);
 int dm_config_parse(struct dm_config_tree *cft, const char *start, const char *end);
 int dm_config_parse_without_dup_node_check(struct dm_config_tree *cft, const char *start, const char *end);
+int dm_config_parse_only_section(struct dm_config_tree *cft, const char *start, const char *end, const char *section);
 
 void *dm_config_get_custom(struct dm_config_tree *cft);
 void dm_config_set_custom(struct dm_config_tree *cft, void *custom);

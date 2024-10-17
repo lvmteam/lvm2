@@ -53,6 +53,8 @@ struct parser {
 	int no_dup_node_check;	/* whether to disable dup node checking */
 	const char *key;        /* last obtained key */
 	unsigned ignored_creation_time;
+	unsigned section_indent;
+	const char *stop_after_section;
 };
 
 struct config_output {
@@ -176,7 +178,8 @@ static struct dm_config_node *_config_reverse(struct dm_config_node *head)
 	return middle;
 }
 
-static int _do_dm_config_parse(struct dm_config_tree *cft, const char *start, const char *end, int no_dup_node_check)
+static int _do_dm_config_parse(struct dm_config_tree *cft, const char *start, const char *end,
+			       int no_dup_node_check, const char *section)
 {
 	/* TODO? if (start == end) return 1; */
 
@@ -187,6 +190,7 @@ static int _do_dm_config_parse(struct dm_config_tree *cft, const char *start, co
 		.fb = start,
 		.fe = end,
 		.line = 1,
+		.stop_after_section = section,
 		.no_dup_node_check = no_dup_node_check
 	};
 
@@ -201,12 +205,23 @@ static int _do_dm_config_parse(struct dm_config_tree *cft, const char *start, co
 
 int dm_config_parse(struct dm_config_tree *cft, const char *start, const char *end)
 {
-	return _do_dm_config_parse(cft, start, end, 0);
+	return _do_dm_config_parse(cft, start, end, 0, NULL);
 }
 
 int dm_config_parse_without_dup_node_check(struct dm_config_tree *cft, const char *start, const char *end)
 {
-	return _do_dm_config_parse(cft, start, end, 1);
+	return _do_dm_config_parse(cft, start, end, 1, NULL);
+}
+
+/*
+ * Stop parsing more sections after given section is parsed.
+ * Only non-section config nodes are then still parsed.
+ * It can be useful, when parsing i.e. lvm2 metadata and only physical_volumes config node is needed.
+ * This function is automatically running without_dup_node_check.
+ */
+int dm_config_parse_only_section(struct dm_config_tree *cft, const char *start, const char *end, const char *section)
+{
+	return _do_dm_config_parse(cft, start, end, 1, section);
 }
 
 struct dm_config_tree *dm_config_from_string(const char *config_settings)
@@ -630,12 +645,28 @@ static struct dm_config_node *_section(struct parser *p, struct dm_config_node *
 		return_NULL;
 
 	if (p->t == TOK_SECTION_B) {
+		if (p->stop_after_section)
+			++p->section_indent;
 		match(TOK_SECTION_B);
 		while (p->t != TOK_SECTION_E) {
 			if (!(_section(p, root)))
 				return_NULL;
 		}
 		match(TOK_SECTION_E);
+		if (p->stop_after_section && (--p->section_indent == 1)) {
+			if (!strcmp(str, p->stop_after_section)) {
+				/* Found stopping section name -> parsing is finished.
+				 * Now try to find the sequence "\n}\n" from end of b
+				 * parsed buffer to continue filling remaining nodes */
+				for (p->te = p->fe - 1; p->te > p->tb; --p->te)
+					if ((p->te[-2] == '\n') &&
+					    (p->te[-1] == '}') &&
+					    (p->te[ 0] == '\n')) {
+						p->t = TOK_SECTION_E;
+						break;
+					}
+			}
+		}
 	} else {
 		match(TOK_EQ);
 		p->key = root->key;
