@@ -1,5 +1,6 @@
 Version 2.03.28 - 
 ==================
+  Fall back to direct zeroing if BLKZEROOUT fails during new LV initialization.
 
 Version 2.03.27 - 02nd October 2024
 ===================================
