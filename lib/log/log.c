@@ -862,13 +862,13 @@ void log_set_report_object_type(log_report_object_type_t object_type)
 	_log_report.object_type = object_type;
 }
 
-void log_set_report_object_group_and_group_id(const char *group, const char *id)
+void log_set_report_object_group_and_group_id(const char *group, const struct id *id)
 {
 	_log_report.object_group = group;
 	_log_report.object_group_id = id;
 }
 
-void log_set_report_object_name_and_id(const char *name, const char *id)
+void log_set_report_object_name_and_id(const char *name, const struct id *id)
 {
 	_log_report.object_name = name;
 	_log_report.object_id = id;

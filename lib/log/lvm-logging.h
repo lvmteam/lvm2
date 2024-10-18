@@ -106,9 +106,9 @@ typedef struct log_report {
 	log_report_context_t context;
 	log_report_object_type_t object_type;
 	const char *object_name;
-	const char *object_id;
+	const struct id *object_id;
 	const char *object_group;
-	const char *object_group_id;
+	const struct id *object_group_id;
 } log_report_t;
 
 #define LOG_STATUS_NAME "status"
@@ -121,8 +121,8 @@ void log_restore_report_state(log_report_t log_report);
 void log_set_report(struct dm_report *report);
 void log_set_report_context(log_report_context_t context);
 void log_set_report_object_type(log_report_object_type_t object_type);
-void log_set_report_object_group_and_group_id(const char *group, const char *group_id);
-void log_set_report_object_name_and_id(const char *name, const char *id);
+void log_set_report_object_group_and_group_id(const char *group, const struct id *group_id);
+void log_set_report_object_name_and_id(const char *name, const struct id *id);
 
 const char *log_get_report_context_name(log_report_context_t context);
 const char *log_get_report_object_type_name(log_report_object_type_t object_type);

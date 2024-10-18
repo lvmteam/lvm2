@@ -2306,6 +2306,11 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 	 * FIXME If one_vgname, only proceed if exactly one VG matches tags or selection.
 	 */
 	dm_list_iterate_items(vgnl, vgnameids_to_process) {
+		if (sigint_caught()) {
+			ret_max = ECMD_FAILED;
+			goto_out;
+		}
+
 		vg_name = vgnl->vg_name;
 		vg_uuid = vgnl->vgid;
 		skip = 0;
@@ -2315,16 +2320,11 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 		uuid[0] = '\0';
 		if (is_orphan_vg(vg_name)) {
 			log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_ORPHAN);
-			log_set_report_object_name_and_id(vg_name + sizeof(VG_ORPHANS), uuid);
+			log_set_report_object_name_and_id(vg_name + sizeof(VG_ORPHANS), NULL);
 		} else {
 			if (vg_uuid && !id_write_format((const struct id*)vg_uuid, uuid, sizeof(uuid)))
 				stack;
-			log_set_report_object_name_and_id(vg_name, uuid);
-		}
-
-		if (sigint_caught()) {
-			ret_max = ECMD_FAILED;
-			goto_out;
+			log_set_report_object_name_and_id(vg_name, (const struct id*)vg_uuid);
 		}
 
 		log_very_verbose("Processing VG %s %s", vg_name, uuid);
@@ -3382,8 +3382,6 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  process_single_lv_fn_t process_single_lv)
 {
 	log_report_t saved_log_report_state = log_get_report_state();
-	char lv_uuid[64] __attribute__((aligned(8)));
-	char vg_uuid[64] __attribute__((aligned(8)));
 	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
 	int whole_selected = 0;
@@ -3396,22 +3394,15 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	int lv_arg_pos;
 	struct lv_list *lvl;
 	struct dm_str_list *sl;
-	struct dm_list final_lvs;
+	DM_LIST_INIT(final_lvs);
 	struct lv_list *final_lvl;
-	struct dm_list found_arg_lvnames;
+	DM_LIST_INIT(found_arg_lvnames);
 	struct glv_list *glvl, *tglvl;
 	int do_report_ret_code = 1;
 
 	cmd->online_vg_file_removed = 0;
 
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_LV);
-
-	vg_uuid[0] = '\0';
-	if (!id_write_format(&vg->id, vg_uuid, sizeof(vg_uuid)))
-		stack;
-
-	dm_list_init(&final_lvs);
-	dm_list_init(&found_arg_lvnames);
 
 	if (tags_in && !dm_list_empty(tags_in))
 		tags_supplied = 1;
@@ -3436,19 +3427,15 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	    (tags_supplied && str_list_match_list(tags_in, &vg->tags, NULL)))
 		process_all = 1;
 
-	log_set_report_object_group_and_group_id(vg->name, vg_uuid);
+	log_set_report_object_group_and_group_id(vg->name, &vg->id);
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
-		lv_uuid[0] = '\0';
-		if (!id_write_format(&lvl->lv->lvid.id[1], lv_uuid, sizeof(lv_uuid)))
-			stack;
-
-		log_set_report_object_name_and_id(lvl->lv->name, lv_uuid);
-
 		if (sigint_caught()) {
 			ret_max = ECMD_FAILED;
 			goto_out;
 		}
+
+		log_set_report_object_name_and_id(lvl->lv->name, &lvl->lv->lvid.id[1]);
 
 		if (lv_is_snapshot(lvl->lv))
 			continue;
@@ -3543,16 +3530,13 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	label_scan_invalidate_lvs(cmd, &final_lvs);
 
 	dm_list_iterate_items(lvl, &final_lvs) {
-		lv_uuid[0] = '\0';
-		if (!id_write_format(&lvl->lv->lvid.id[1], lv_uuid, sizeof(lv_uuid)))
-			stack;
-
-		log_set_report_object_name_and_id(lvl->lv->name, lv_uuid);
-
 		if (sigint_caught()) {
 			ret_max = ECMD_FAILED;
 			goto_out;
 		}
+
+		log_set_report_object_name_and_id(lvl->lv->name, &lvl->lv->lvid.id[1]);
+
 		/*
 		 *  FIXME: Once we have index over vg->removed_lvs, check directly
 		 *         LV presence there and remove LV_REMOVE flag/lv_is_removed fn
@@ -3618,16 +3602,13 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		_historical_lv.vg = vg;
 
 		dm_list_iterate_items_safe(glvl, tglvl, &vg->historical_lvs) {
-			lv_uuid[0] = '\0';
-			if (!id_write_format(&glvl->glv->historical->lvid.id[1], lv_uuid, sizeof(lv_uuid)))
-				stack;
-
-			log_set_report_object_name_and_id(glvl->glv->historical->name, lv_uuid);
-
 			if (sigint_caught()) {
 				ret_max = ECMD_FAILED;
 				goto_out;
 			}
+
+			log_set_report_object_name_and_id(glvl->glv->historical->name,
+							  &glvl->glv->historical->lvid.id[1]);
 
 			if (glvl->glv->historical->fresh)
 				continue;
@@ -4007,6 +3988,11 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_VG);
 
 	dm_list_iterate_items(vgnl, vgnameids_to_process) {
+		if (sigint_caught()) {
+			ret_max = ECMD_FAILED;
+			goto_out;
+		}
+
 		vg_name = vgnl->vg_name;
 		vg_uuid = vgnl->vgid;
 		skip = 0;
@@ -4017,12 +4003,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 		if (vg_uuid && !id_write_format((const struct id*)vg_uuid, uuid, sizeof(uuid)))
 			stack;
 
-		log_set_report_object_name_and_id(vg_name, uuid);
-
-		if (sigint_caught()) {
-			ret_max = ECMD_FAILED;
-			goto_out;
-		}
+		log_set_report_object_name_and_id(vg_name, (const struct id*)vg_uuid);
 
 		/*
 		 * arg_lvnames contains some elements that are just "vgname"
@@ -4500,7 +4481,6 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 			      process_single_pv_fn_t process_single_pv)
 {
 	log_report_t saved_log_report_state = log_get_report_state();
-	char pv_uuid[64] __attribute__((aligned(8)));
 	char vg_uuid[64] __attribute__((aligned(8)));
 	int handle_supplied = handle != NULL;
 	struct physical_volume *pv;
@@ -4530,21 +4510,18 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 	}
 
 	if (!is_orphan_vg(vg->name))
-		log_set_report_object_group_and_group_id(vg->name, vg_uuid);
+		log_set_report_object_group_and_group_id(vg->name, &vg->id);
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
-		pv = pvl->pv;
-		pv_name = pv_dev_name(pv);
-		pv_uuid[0]='\0';
-		if (!id_write_format(&pv->id, pv_uuid, sizeof(pv_uuid)))
-			stack;
-
-		log_set_report_object_name_and_id(pv_name, pv_uuid);
-
 		if (sigint_caught()) {
 			ret_max = ECMD_FAILED;
 			goto_out;
 		}
+
+		pv = pvl->pv;
+		pv_name = pv_dev_name(pv);
+
+		log_set_report_object_name_and_id(pv_name, &pv->id);
 
 		process_pv = process_all_pvs;
 		dil = NULL;
@@ -4640,7 +4617,6 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 			       process_single_pv_fn_t process_single_pv)
 {
 	log_report_t saved_log_report_state = log_get_report_state();
-	char uuid[64] __attribute__((aligned(8)));
 	struct volume_group *vg;
 	struct volume_group *error_vg;
 	struct vgnameid_list *vgnl;
@@ -4658,25 +4634,22 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_VG);
 
 	dm_list_iterate_items(vgnl, all_vgnameids) {
+		if (sigint_caught()) {
+			ret_max = ECMD_FAILED;
+			goto_out;
+		}
+
 		vg_name = vgnl->vg_name;
 		vg_uuid = vgnl->vgid;
 		skip = 0;
 		notfound = 0;
 		is_lockd = lvmcache_vg_is_lockd_type(cmd, vg_name, vg_uuid);
 
-		uuid[0] = '\0';
 		if (is_orphan_vg(vg_name)) {
 			log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_ORPHAN);
-			log_set_report_object_name_and_id(vg_name + sizeof(VG_ORPHANS), uuid);
+			log_set_report_object_name_and_id(vg_name + sizeof(VG_ORPHANS), NULL);
 		} else {
-			if (vg_uuid && !id_write_format((const struct id*)vg_uuid, uuid, sizeof(uuid)))
-				stack;
-			log_set_report_object_name_and_id(vg_name, uuid);
-		}
-
-		if (sigint_caught()) {
-			ret_max = ECMD_FAILED;
-			goto_out;
+			log_set_report_object_name_and_id(vg_name, (const struct id*)vg_uuid);
 		}
 do_lockd:
 		if (is_lockd && !lockd_vg(cmd, vg_name, NULL, 0, &lockd_state)) {
@@ -4882,8 +4855,6 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  process_single_pv_fn_t process_single_pv)
 {
 	log_report_t saved_log_report_state = log_get_report_state();
-	char pv_uuid[64] __attribute__((aligned(8)));
-	char vg_uuid[64] __attribute__((aligned(8)));
 	int whole_selected = 0;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
@@ -4892,24 +4863,16 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_PV);
 
-	vg_uuid[0] = '\0';
-	if (!id_write_format(&vg->id, vg_uuid, sizeof(vg_uuid)))
-		stack;
-
 	if (!is_orphan_vg(vg->name))
-		log_set_report_object_group_and_group_id(vg->name, vg_uuid);
+		log_set_report_object_group_and_group_id(vg->name, &vg->id);
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
-		pv_uuid[0] = '\0';
-		if (!id_write_format(&pvl->pv->id, pv_uuid, sizeof(pv_uuid)))
-			stack;
-
-		log_set_report_object_name_and_id(pv_dev_name(pvl->pv), pv_uuid);
-
 		if (sigint_caught()) {
 			ret_max = ECMD_FAILED;
 			goto_out;
 		}
+
+		log_set_report_object_name_and_id(pv_dev_name(pvl->pv), &pvl->pv->id);
 
 		ret = process_single_pv(cmd, vg, pvl->pv, handle);
 		_update_selection_result(handle, &whole_selected);

@@ -117,8 +117,8 @@ int report_object(void *handle, int selection_only, const struct volume_group *v
 int report_devtypes(void *handle);
 int report_cmdlog(void *handle, const char *type, const char *context,
 		  const char *object_type_name, const char *object_name,
-		  const char *object_id, const char *object_group,
-		  const char *object_group_id, const char *msg,
+		  const struct id *object_id, const char *object_group,
+		  const struct id *object_group_id, const char *msg,
 		  int current_errno, int ret_code);
 void report_reset_cmdlog_seqnum(void);
 #define REPORT_OBJECT_CMDLOG_NAME "status"
