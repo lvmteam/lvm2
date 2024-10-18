@@ -591,7 +591,7 @@ static int _read_segments(struct cmd_context *cmd,
 	/*
 	 * Check there are no gaps or overlaps in the lv.
 	 */
-	if (!check_lv_segments(lv, 0))
+	if (!check_lv_segments_incomplete_vg(lv))
 		return_0;
 
 	/*

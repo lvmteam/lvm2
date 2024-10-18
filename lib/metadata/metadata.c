@@ -2399,7 +2399,7 @@ int vg_validate(struct volume_group *vg)
 			}
 		}
 
-		if (!check_lv_segments(lvl->lv, 0)) {
+		if (!check_lv_segments_incomplete_vg(lvl->lv)) {
 			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
 				  lvl->lv->name);
 			r = 0;
@@ -2484,7 +2484,7 @@ int vg_validate(struct volume_group *vg)
 			r = 0;
 		}
 
-		if (!check_lv_segments(lvl->lv, 1)) {
+		if (!check_lv_segments_complete_vg(lvl->lv)) {
 			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
 				  lvl->lv->name);
 			r = 0;
@@ -5072,16 +5072,8 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	}
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
-		if (!check_lv_segments(lvl->lv, 0)) {
-			log_error(INTERNAL_ERROR "LV segments corrupted in %s.", lvl->lv->name);
-			failure |= FAILED_INTERNAL_ERROR;
-			goto bad;
-		}
-	}
-
-	dm_list_iterate_items(lvl, &vg->lvs) {
 		/* Checks that cross-reference other LVs. */
-		if (!check_lv_segments(lvl->lv, 1)) {
+		if (!check_lv_segments_complete_vg(lvl->lv)) {
 			log_error(INTERNAL_ERROR "LV segments corrupted in %s.", lvl->lv->name);
 			failure |= FAILED_INTERNAL_ERROR;
 			goto bad;

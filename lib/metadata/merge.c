@@ -605,14 +605,106 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 	}
 }
 
+int check_lv_segments_complete_vg(struct logical_volume *lv)
+{
+	struct lv_segment *seg, *seg2;
+	unsigned seg_count = 0, external_lv_found = 0;
+	uint32_t s;
+	struct seg_list *sl;
+	int error_count = 0;
+
+	dm_list_iterate_items(seg, &lv->segments) {
+		seg_count++;
+
+		_check_lv_segment(lv, seg, seg_count, &error_count);
+
+		for (s = 0; s < seg->area_count; s++) {
+			if ((seg_type(seg, s) == AREA_LV) &&
+			    seg_lv(seg, s) &&
+			    lv_is_mirror_image(seg_lv(seg, s)) &&
+			    (!(seg2 = find_seg_by_le(seg_lv(seg, s),
+						     seg_le(seg, s))) ||
+			     find_mirror_seg(seg2) != seg)) {
+				log_error("LV %s: segment %u mirror "
+					  "image %u missing mirror ptr",
+					  lv->name, seg_count, s);
+				inc_error_count;
+			}
+		}
+
+		if (seg_is_mirrored(seg) && !seg_is_raid(seg) &&
+		    seg_type(seg, s) == AREA_LV &&
+		    seg_lv(seg, s)->le_count != seg->area_len) {
+			log_error("LV %s: mirrored LV segment %u has "
+				  "wrong size %u (should be %u).",
+				  lv->name, s, seg_lv(seg, s)->le_count,
+				  seg->area_len);
+			inc_error_count;
+		}
+	}
+
+	/* Check LV flags match first segment type */
+	if ((seg_count != 1) &&
+	    (lv_is_cache(lv) ||
+	     lv_is_cache_pool(lv) ||
+	     lv_is_raid(lv) ||
+	     lv_is_snapshot(lv) ||
+	     lv_is_thin_pool(lv) ||
+	     lv_is_thin_volume(lv))) {
+		log_error("LV %s must have exactly one segment.",
+			  lv->name);
+		inc_error_count;
+	}
+
+	if (lv_is_pool_data(lv) &&
+	    (!(seg2 = first_seg(lv)) || !(seg2 = find_pool_seg(seg2)) ||
+	     seg2->area_count != 1 || seg_type(seg2, 0) != AREA_LV ||
+	     seg_lv(seg2, 0) != lv)) {
+		log_error("LV %s: segment 1 pool data LV does not point back to same LV",
+			  lv->name);
+		inc_error_count;
+	}
+
+	if (lv_is_thin_pool_metadata(lv) && !strstr(lv->name, "_tmeta")) {
+		log_error("LV %s: thin pool metadata LV does not use _tmeta.",
+			  lv->name);
+		inc_error_count;
+	} else if (lv_is_cache_pool_metadata(lv) && !strstr(lv->name, "_cmeta")) {
+		log_error("LV %s: cache pool metadata LV does not use _cmeta.",
+			  lv->name);
+		inc_error_count;
+	}
+
+	if (lv_is_external_origin(lv)) {
+		/* Validation of external origin counter */
+		dm_list_iterate_items(sl, &lv->segs_using_this_lv)
+			if (sl->seg->external_lv == lv)
+				external_lv_found++;
+
+		if (lv->external_count != external_lv_found) {
+			log_error("LV %s: external origin count does not match.",
+				  lv->name);
+			inc_error_count;
+		}
+		if (lv->status & LVM_WRITE) {
+			log_error("LV %s: external origin can't be writable.",
+				  lv->name);
+			inc_error_count;
+		}
+	}
+
+out:
+	return !error_count;
+}
+
 /*
  * Verify that an LV's segments are consecutive, complete and don't overlap.
  */
-int check_lv_segments(struct logical_volume *lv, int complete_vg)
+int check_lv_segments_incomplete_vg(struct logical_volume *lv)
 {
 	struct lv_segment *seg, *seg2;
 	uint32_t le = 0;
-	unsigned seg_count = 0, seg_found, external_lv_found = 0;
+	unsigned seg_count = 0, seg_found;
 	uint32_t data_rimage_count, s;
 	struct seg_list *sl;
 	struct glv_list *glvl;
@@ -653,9 +745,6 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 			}
 		}
 
-		if (complete_vg)
-			_check_lv_segment(lv, seg, seg_count, &error_count);
-
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) == AREA_UNASSIGNED) {
 				log_error("LV %s: segment %u has unassigned "
@@ -681,16 +770,6 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 					inc_error_count;
 				}
 
-				if (complete_vg && seg_lv(seg, s) &&
-				    lv_is_mirror_image(seg_lv(seg, s)) &&
-				    (!(seg2 = find_seg_by_le(seg_lv(seg, s),
-							    seg_le(seg, s))) ||
-				     find_mirror_seg(seg2) != seg)) {
-					log_error("LV %s: segment %u mirror "
-						  "image %u missing mirror ptr",
-						  lv->name, seg_count, s);
-					inc_error_count;
-				}
 
 /* FIXME I don't think this ever holds?
 				if (seg_le(seg, s) != le) {
@@ -722,16 +801,6 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				}
 			}
 
-			if (complete_vg &&
-			    seg_is_mirrored(seg) && !seg_is_raid(seg) &&
-			    seg_type(seg, s) == AREA_LV &&
-			    seg_lv(seg, s)->le_count != seg->area_len) {
-				log_error("LV %s: mirrored LV segment %u has "
-					  "wrong size %u (should be %u).",
-					  lv->name, s, seg_lv(seg, s)->le_count,
-					  seg->area_len);
-				inc_error_count;
-			}
 		}
 
 		le += seg->len;
@@ -802,10 +871,6 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				  lv->name);
 			inc_error_count;
 		}
-
-		/* Validation of external origin counter */
-		if (seg->external_lv == lv)
-			external_lv_found++;
 	}
 
 	dm_list_iterate_items(glvl, &lv->indirect_glvs) {
@@ -822,53 +887,6 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				log_error("LV %s is indirectly used by LV %s"
 					  "but that LV does not point back to LV %s",
 					  lv->name, glvl->glv->live->name, lv->name);
-				inc_error_count;
-			}
-		}
-	}
-
-	/* Check LV flags match first segment type */
-	if (complete_vg) {
-		if ((seg_count != 1) &&
-		    (lv_is_cache(lv) ||
-		     lv_is_cache_pool(lv) ||
-		     lv_is_raid(lv) ||
-		     lv_is_snapshot(lv) ||
-		     lv_is_thin_pool(lv) ||
-		     lv_is_thin_volume(lv))) {
-			log_error("LV %s must have exactly one segment.",
-				  lv->name);
-			inc_error_count;
-		}
-
-		if (lv_is_pool_data(lv) &&
-		    (!(seg2 = first_seg(lv)) || !(seg2 = find_pool_seg(seg2)) ||
-		     seg2->area_count != 1 || seg_type(seg2, 0) != AREA_LV ||
-		     seg_lv(seg2, 0) != lv)) {
-			log_error("LV %s: segment 1 pool data LV does not point back to same LV",
-				  lv->name);
-			inc_error_count;
-		}
-
-		if (lv_is_thin_pool_metadata(lv) && !strstr(lv->name, "_tmeta")) {
-			log_error("LV %s: thin pool metadata LV does not use _tmeta.",
-				  lv->name);
-			inc_error_count;
-		} else if (lv_is_cache_pool_metadata(lv) && !strstr(lv->name, "_cmeta")) {
-			log_error("LV %s: cache pool metadata LV does not use _cmeta.",
-				  lv->name);
-			inc_error_count;
-		}
-
-		if (lv_is_external_origin(lv)) {
-			if (lv->external_count != external_lv_found) {
-				log_error("LV %s: external origin count does not match.",
-					  lv->name);
-				inc_error_count;
-			}
-			if (lv->status & LVM_WRITE) {
-				log_error("LV %s: external origin can't be writable.",
-					  lv->name);
 				inc_error_count;
 			}
 		}
