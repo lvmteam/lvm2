@@ -604,7 +604,7 @@ static int _has_gpt_partition_table(struct device *dev)
 	/* the gpt table is always written using LE on disk */
 
 	if (le64_to_cpu(gpt_header.magic) != PART_GPT_MAGIC)
-		return_0;
+		return 0;
 
 	entries_start = le64_to_cpu(gpt_header.part_entries_lba) * lbs;
 	nr_entries = le32_to_cpu(gpt_header.nr_part_entries);
