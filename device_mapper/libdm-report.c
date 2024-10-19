@@ -4371,9 +4371,10 @@ static int _row_compare(const void *a, const void *b)
 	for (cnt = 0; cnt < rowa->rh->keys_count; cnt++) {
 		sfa = (*rowa->sort_fields)[cnt];
 		sfb = (*rowb->sort_fields)[cnt];
-		if ((sfa->props->flags & DM_REPORT_FIELD_TYPE_NUMBER) ||
-		    (sfa->props->flags & DM_REPORT_FIELD_TYPE_SIZE) ||
-		    (sfa->props->flags & DM_REPORT_FIELD_TYPE_TIME)) {
+		if (sfa->props->flags &
+		    ((DM_REPORT_FIELD_TYPE_NUMBER) |
+		     (DM_REPORT_FIELD_TYPE_SIZE) |
+		     (DM_REPORT_FIELD_TYPE_TIME))) {
 			const uint64_t numa =
 			    *(const uint64_t *) sfa->sort_value;
 			const uint64_t numb =
