@@ -71,6 +71,7 @@ struct formatter {
 	int indent;		/* current level of indentation */
 	int error;
 	int header;		/* 1 => comments at start; 0 => end */
+	int with_comment;       /* 1 => prepare comment sting */
 };
 
 static struct utsname _utsname;
@@ -273,8 +274,11 @@ int out_size(struct formatter *f, uint64_t size, const char *fmt, ...)
 	va_list ap;
 	int r;
 
-	if (!_sectors_to_units(size, buffer, sizeof(buffer)))
-		return 0;
+	if (f->with_comment) {
+		if (!_sectors_to_units(size, buffer, sizeof(buffer)))
+			return 0;
+	} else
+		buffer[0] = 0;
 
 	_out_with_comment(f, buffer, fmt, ap);
 
@@ -696,10 +700,14 @@ static int _print_timestamp(struct formatter *f,
 	struct tm *local_tm;
 
 	if (ts) {
-		strncpy(buf, "# ", buf_size);
-		if (!(local_tm = localtime(&ts)) ||
-		    !strftime(buf + 2, buf_size - 2,
-			      "%Y-%m-%d %T %z", local_tm))
+		if (f->with_comment) {
+			/* generate timestamp only for commented output */
+			strncpy(buf, "# ", buf_size);
+			if (!(local_tm = localtime(&ts)) ||
+			    !strftime(buf + 2, buf_size - 2,
+				      "%Y-%m-%d %T %z", local_tm))
+				buf[0] = 0;
+		} else
 			buf[0] = 0;
 
 		outfc(f, buf, "%s = " FMTu64, name, (uint64_t) ts);
@@ -1049,6 +1057,7 @@ int text_vg_export_file(struct volume_group *vg, const char *desc, FILE *fp)
 		.indent = 0,
 		.header = 1,
 		.out_with_comment = &_out_with_comment_file,
+		.with_comment = 1,
 		.nl = &_nl_file,
 		.data.fp = fp,
 	};
