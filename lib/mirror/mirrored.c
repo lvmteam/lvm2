@@ -110,6 +110,7 @@ static int _mirrored_text_import(struct lv_segment *seg, const struct dm_config_
 			return 0;
 		}
 		seg->log_lv->status |= MIRROR_LOG;
+		seg->log_lv->vg->fixup_imported_mirrors = 1;
 	}
 
 	if (logname && !seg->region_size) {

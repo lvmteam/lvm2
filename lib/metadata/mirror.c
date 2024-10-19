@@ -1367,11 +1367,12 @@ int fixup_imported_mirrors(struct volume_group *vg)
 {
 	struct lv_list *lvl;
 	struct lv_segment *seg;
+	const struct segment_type *mirror_segtype =
+		get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_MIRROR);
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		dm_list_iterate_items(seg, &lvl->lv->segments) {
-			if (seg->segtype !=
-			    get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_MIRROR))
+			if (seg->segtype != mirror_segtype)
 				continue;
 
 			if (seg->log_lv && !add_seg_to_segs_using_this_lv(seg->log_lv, seg))

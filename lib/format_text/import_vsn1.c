@@ -1246,7 +1246,8 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 		goto bad;
 	}
 
-	if (!fixup_imported_mirrors(vg)) {
+	if (vg->fixup_imported_mirrors &&
+	    !fixup_imported_mirrors(vg)) {
 		log_error("Failed to fixup mirror pointers after import for "
 			  "volume group %s.", vg->name);
 		goto bad;
