@@ -629,7 +629,7 @@ static int _read_lvnames(struct cmd_context *cmd,
 	if (!(lv->name = dm_pool_strdup(mem, lvn->key)))
 		return_0;
 
-	log_debug_metadata("Importing logical volume %s.", display_lvname(lv));
+	log_debug_metadata("Importing logical volume %s.", lv->name);
 
 	if (!(lvn = lvn->child)) {
 		log_error("Empty logical volume section for %s.",

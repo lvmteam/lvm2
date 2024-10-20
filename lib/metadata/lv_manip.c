@@ -868,7 +868,7 @@ int add_seg_to_segs_using_this_lv(struct logical_volume *lv,
 	}
 
 	log_very_verbose("Adding %s:" FMTu32 " as an user of %s.",
-			 display_lvname(seg->lv), seg->le, display_lvname(lv));
+			 seg->lv->name, seg->le, lv->name);
 
 	if (!(sl = dm_pool_zalloc(lv->vg->vgmem, sizeof(*sl)))) {
 		log_error("Failed to allocate segment list.");
@@ -1303,8 +1303,7 @@ int set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
 			   uint64_t status)
 {
 	log_very_verbose("Stack %s:" FMTu32 "[" FMTu32 "] on LV %s:" FMTu32 ".",
-			 display_lvname(seg->lv), seg->le, area_num,
-			 display_lvname(lv), le);
+			 seg->lv->name, seg->le, area_num, lv->name, le);
 
 	if (area_num >= seg->area_count) {
 		log_error(INTERNAL_ERROR "Try to set to high area number (%u >= %u) for LV %s.",
