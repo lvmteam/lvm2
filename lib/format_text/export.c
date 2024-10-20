@@ -367,11 +367,11 @@ static int _print_flag_config(struct formatter *f, uint64_t status, enum pv_vg_l
 
 	if (!print_flags(buffer, sizeof(buffer), type, STATUS_FLAG, status))
 		return_0;
-	outf(f, "status = %s", buffer);
+	outf(f, "status = [%s]", buffer);
 
 	if (!print_flags(buffer, sizeof(buffer), type, COMPATIBLE_FLAG, status))
 		return_0;
-	outf(f, "flags = %s", buffer);
+	outf(f, "flags = [%s]", buffer);
 
 	return 1;
 }
@@ -394,22 +394,14 @@ static char *_alloc_printed_str_list(struct dm_list *list)
 		return NULL;
 	}
 
-	if (!emit_to_buffer(&buf, &size, "["))
-		goto_bad;
-
 	dm_list_iterate_items(sl, list) {
-		if (!first) {
-			if (!emit_to_buffer(&buf, &size, ", "))
-				goto_bad;
-		} else
-			first = 0;
-
-		if (!emit_to_buffer(&buf, &size, "\"%s\"", sl->str))
+		if (!emit_to_buffer(&buf, &size, "%s\"%s\"",
+				    (!first) ? ", " : "",
+				    sl->str))
 			goto_bad;
-	}
 
-	if (!emit_to_buffer(&buf, &size, "]"))
-		goto_bad;
+		first = 0;
+	}
 
 	return buffer;
 
@@ -426,7 +418,7 @@ static int _out_list(struct formatter *f, struct dm_list *list,
 	if (!dm_list_empty(list)) {
 		if (!(buffer = _alloc_printed_str_list(list)))
 			return_0;
-		if (!out_text(f, "%s = %s", list_name, buffer)) {
+		if (!out_text(f, "%s = [%s]", list_name, buffer)) {
 			free(buffer);
 			return_0;
 		}
@@ -848,24 +840,17 @@ static int _alloc_printed_indirect_descendants(struct dm_list *indirect_glvs, ch
 	}
 	buf = *buffer;
 
-	if (!emit_to_buffer(&buf, &buf_size, "["))
-		goto_bad;
-
 	dm_list_iterate_items(user_glvl, indirect_glvs) {
 		if (user_glvl->glv->is_historical)
 			continue;
-		if (!first) {
-			if (!emit_to_buffer(&buf, &buf_size, ", "))
-				goto_bad;
-		} else
-			first = 0;
 
-		if (!emit_to_buffer(&buf, &buf_size, "\"%s\"", user_glvl->glv->live->name))
+		if (!emit_to_buffer(&buf, &buf_size, "%s\"%s\"",
+				    (!first) ? ", " : "",
+				    user_glvl->glv->live->name))
 			goto_bad;
-	}
 
-	if (!emit_to_buffer(&buf, &buf_size, "]"))
-		goto_bad;
+		first = 0;
+	}
 
 	return 1;
 bad:
@@ -904,7 +889,7 @@ static int _print_historical_lv_with_descendants(struct formatter *f, struct his
 	}
 
 	if (descendants_buffer)
-		outf(f, "descendants = %s", descendants_buffer);
+		outf(f, "descendants = [%s]", descendants_buffer);
 
 	_dec_indent(f);
 	outf(f, "}");
