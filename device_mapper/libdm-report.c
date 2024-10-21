@@ -4484,6 +4484,7 @@ static const char *_get_field_id(struct dm_report *rh, struct dm_report_field *f
 
 static int _output_field_basic_fmt(struct dm_report *rh, struct dm_report_field *field)
 {
+	char buf_local[8192];
 	char *field_id;
 	int32_t width;
 	uint32_t align;
@@ -4491,24 +4492,25 @@ static int _output_field_basic_fmt(struct dm_report *rh, struct dm_report_field 
 	size_t buf_size = 0;
 
 	if (rh->flags & DM_REPORT_OUTPUT_FIELD_NAME_PREFIX) {
-		if (!(field_id = strdup(_get_field_id(rh, field)))) {
-			log_error("dm_report: Failed to copy field name");
+		buf_size = strlen(_get_field_id(rh, field)) + 1;
+		if (buf_size >= sizeof(buf_local)) {
+			/* for field names our buf_local should be enough */
+			log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
 			return 0;
 		}
 
+		field_id = buf_local;
+		memcpy(field_id, _get_field_id(rh, field), buf_size);
+
 		if (!dm_pool_grow_object(rh->mem, rh->output_field_name_prefix, 0)) {
 			log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
-			free(field_id);
 			return 0;
 		}
 
 		if (!dm_pool_grow_object(rh->mem, _toupperstr(field_id), 0)) {
 			log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
-			free(field_id);
 			return 0;
 		}
-
-		free(field_id);
 
 		if (!dm_pool_grow_object(rh->mem, STANDARD_PAIR, 1)) {
 			log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
@@ -4532,7 +4534,10 @@ static int _output_field_basic_fmt(struct dm_report *rh, struct dm_report_field 
 
 		/* Including trailing '\0'! */
 		buf_size = width + 1;
-		if (!(buf = malloc(buf_size))) {
+		if (buf_size < sizeof(buf_local))
+			/* Use local buffer on stack for smaller strings */
+			buf = buf_local;
+		else if (!(buf = malloc(buf_size))) {
 			log_error("dm_report: Could not allocate memory for output line buffer.");
 			return 0;
 		}
@@ -4574,10 +4579,12 @@ static int _output_field_basic_fmt(struct dm_report *rh, struct dm_report_field 
 		}
 	}
 
-	free(buf);
+	if (buf != buf_local)
+		free(buf);
 	return 1;
 bad:
-	free(buf);
+	if (buf != buf_local)
+		free(buf);
 	return 0;
 }
 
