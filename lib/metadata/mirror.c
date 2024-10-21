@@ -596,6 +596,7 @@ static int _split_mirror_images(struct logical_volume *lv,
 	struct lv_list *lvl;
 	struct cmd_context *cmd = lv->vg->cmd;
 	char layer_name[NAME_LEN], format[NAME_LEN];
+	const char *lv_name;
 	int act;
 
 	if (!lv_is_mirrored(lv)) {
@@ -662,8 +663,8 @@ static int _split_mirror_images(struct logical_volume *lv,
 		return 0;
 	}
 
-	new_lv->name = dm_pool_strdup(lv->vg->vgmem, split_name);
-	if (!new_lv->name) {
+	if (!(lv_name = dm_pool_strdup(lv->vg->vgmem, split_name)) ||
+	    !lv_set_name(new_lv, lv_name)) {
 		log_error("Unable to rename newly split LV.");
 		return 0;
 	}
@@ -699,7 +700,8 @@ static int _split_mirror_images(struct logical_volume *lv,
 					  display_lvname(new_lv));
 				return 0;
 			}
-			if (!(sub_lv->name = dm_pool_strdup(lv->vg->vgmem, layer_name))) {
+			if (!(lv_name = dm_pool_strdup(lv->vg->vgmem, layer_name)) ||
+			    !lv_set_name(sub_lv, lv_name)) {
 				log_error("Unable to allocate memory.");
 				return 0;
 			}

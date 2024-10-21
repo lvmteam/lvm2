@@ -913,6 +913,7 @@ static char *_generate_raid_name(struct logical_volume *lv,
 static int _shift_and_rename_image_components(struct lv_segment *seg)
 {
 	uint32_t s, missing;
+	const char *lv_name;
 
 	/*
 	 * All LVs must be properly named for their index before
@@ -943,13 +944,15 @@ static int _shift_and_rename_image_components(struct lv_segment *seg)
 				 display_lvname(seg_lv(seg, s)), missing);
 
 		/* Alter rmeta name */
-		if (!(seg_metalv(seg, s)->name = _generate_raid_name(seg->lv, "rmeta", s - missing))) {
+		if (!(lv_name = _generate_raid_name(seg->lv, "rmeta", s - missing)) ||
+		    !lv_set_name(seg_metalv(seg, s),  lv_name)) {
 			log_error("Memory allocation failed.");
 			return 0;
 		}
 
 		/* Alter rimage name */
-		if (!(seg_lv(seg, s)->name = _generate_raid_name(seg->lv, "rimage", s - missing))) {
+		if (!(lv_name = _generate_raid_name(seg->lv, "rimage", s - missing)) ||
+		    !lv_set_name(seg_lv(seg, s), lv_name)) {
 			log_error("Memory allocation failed.");
 			return 0;
 		}
@@ -2703,17 +2706,20 @@ static int _raid_add_images_without_commit(struct logical_volume *lv,
 	if (seg_is_linear(seg)) {
 		struct dm_list *l;
 		struct lv_list *lvl_tmp;
+		const char *lv_name;
 
 		dm_list_iterate(l, &data_lvs) {
 			if (l == dm_list_last(&data_lvs)) {
 				lvl = dm_list_item(l, struct lv_list);
-				if (!(lvl->lv->name = _generate_raid_name(lv, "rimage", count)))
+				if (!(lv_name = _generate_raid_name(lv, "rimage", count)) ||
+                                    !lv_set_name(lvl->lv, lv_name))
 					return_0;
 				continue;
 			}
 			lvl = dm_list_item(l, struct lv_list);
 			lvl_tmp = dm_list_item(l->n, struct lv_list);
-			lvl->lv->name = lvl_tmp->lv->name;
+			if (!lv_set_name(lvl->lv, lvl_tmp->lv->name))
+				return_0;
 		}
 	}
 
@@ -2902,6 +2908,7 @@ static int _extract_image_components(struct lv_segment *seg, uint32_t idx,
 {
 	struct logical_volume *data_lv = seg_lv(seg, idx);
 	struct logical_volume *meta_lv = seg_metalv(seg, idx);
+	const char *data_lv_name, *meta_lv_name;
 
 	log_very_verbose("Extracting image components %s and %s from %s.",
 			 display_lvname(data_lv),
@@ -2921,10 +2928,12 @@ static int _extract_image_components(struct lv_segment *seg, uint32_t idx,
 	seg_type(seg, idx) = AREA_UNASSIGNED;
 	seg_metatype(seg, idx) = AREA_UNASSIGNED;
 
-	if (!(data_lv->name = _generate_raid_name(data_lv, "extracted", -1)))
+	if (!(data_lv_name = _generate_raid_name(data_lv, "extracted", -1)) ||
+	    !(meta_lv_name = _generate_raid_name(meta_lv, "extracted", -1)))
 		return_0;
 
-	if (!(meta_lv->name = _generate_raid_name(meta_lv, "extracted", -1)))
+	if (!lv_set_name(data_lv, data_lv_name) ||
+	    !lv_set_name(meta_lv, meta_lv_name))
 		return_0;
 
 	*extracted_rmeta = meta_lv;
@@ -3413,7 +3422,8 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 	/* Get first item */
 	lvl = (struct lv_list *) dm_list_first(&data_list);
 
-	lvl->lv->name = split_name;
+	if (!lv_set_name(lvl->lv, split_name))
+		return_0;
 
 	if (lv->vg->lock_type && !strcmp(lv->vg->lock_type, "dlm"))
 		lvl->lv->lock_args = lv->lock_args;
@@ -3780,6 +3790,7 @@ static int _extract_image_component_error_seg(struct lv_segment *seg,
 					      int set_error_seg)
 {
 	struct logical_volume *lv;
+	const char *lv_name;
 
 	switch (type) {
 		case RAID_META:
@@ -3806,7 +3817,10 @@ static int _extract_image_component_error_seg(struct lv_segment *seg,
 	if (!remove_seg_from_segs_using_this_lv(lv, seg))
 		return_0;
 
-	if (!(lv->name = _generate_raid_name(lv, "extracted", -1)))
+	if (!(lv_name = _generate_raid_name(lv, "extracted", -1)))
+		return_0;
+
+	if (!lv_set_name(lv, lv_name))
 		return_0;
 
 	if (set_error_seg && !replace_lv_with_error_segment(lv))
@@ -4138,7 +4152,8 @@ static int _convert_mirror_to_raid1(struct logical_volume *lv,
 		if (!(new_name = _generate_raid_name(lv, "rimage", s)))
 			return_0;
 		log_debug_metadata("Renaming %s to %s.", seg_lv(seg, s)->name, new_name);
-		seg_lv(seg, s)->name = new_name;
+		if (!lv_set_name(seg_lv(seg, s), new_name))
+			return_0;
 		seg_lv(seg, s)->status &= ~MIRROR_IMAGE;
 		seg_lv(seg, s)->status |= RAID_IMAGE;
 	}
@@ -7111,8 +7126,9 @@ skip_alloc:
 				struct logical_volume *lv_image = seg_lv(raid_seg, s);
 				struct logical_volume *lv_rmeta = seg_metalv(raid_seg, s);
 
-				lv_rmeta->name = tmp_names[s];
-				lv_image->name = tmp_names[sd];
+				if (!lv_set_name(lv_rmeta, tmp_names[s]) ||
+				    !lv_set_name(lv_image, tmp_names[sd]))
+					return_0;
 
 				if (lv_is_integrity(lv_image)) {
 					struct logical_volume *lv_imeta;
@@ -7131,7 +7147,9 @@ skip_alloc:
 						stack;
 						continue;
 					}
-					lv_imeta->name = tmp_name_dup;
+
+					if (!lv_set_name(lv_imeta, tmp_name_dup))
+						return_0;
 
 					if (dm_snprintf(tmp_name_buf, NAME_LEN, "%s_iorig", lv_image->name) < 0) {
 						stack;
@@ -7141,7 +7159,9 @@ skip_alloc:
 						stack;
 						continue;
 					}
-					lv_iorig->name = tmp_name_dup;
+
+					if (!lv_set_name(lv_iorig, tmp_name_dup))
+						return_0;
 				}
 			}
 		}
