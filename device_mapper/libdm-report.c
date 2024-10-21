@@ -4854,6 +4854,7 @@ static int _output_as_columns(struct dm_report *rh)
 	struct dm_report_field *field;
 	struct dm_list *last_rowh;
 	int do_field_delim;
+	int is_json_report = _is_json_report(rh);
 	char *line;
 
 	/* If headings not printed yet, calculate field widths and print them */
@@ -4873,7 +4874,7 @@ static int _output_as_columns(struct dm_report *rh)
 			return 0;
 		}
 
-		if (_is_json_report(rh)) {
+		if (is_json_report) {
 			if (!dm_pool_grow_object(rh->mem, JSON_OBJECT_START, 0)) {
 				log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
 				goto bad;
@@ -4888,7 +4889,7 @@ static int _output_as_columns(struct dm_report *rh)
 				continue;
 
 			if (do_field_delim) {
-				if (_is_json_report(rh)) {
+				if (is_json_report) {
 					if (!dm_pool_grow_object(rh->mem, JSON_SEPARATOR, 0) ||
 					    !dm_pool_grow_object(rh->mem, JSON_SPACE, 0)) {
 						log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
@@ -4910,7 +4911,7 @@ static int _output_as_columns(struct dm_report *rh)
 				dm_list_del(&field->list);
 		}
 
-		if (_is_json_report(rh)) {
+		if (is_json_report) {
 			if (!dm_pool_grow_object(rh->mem, JSON_OBJECT_END, 0)) {
 				log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
 				goto bad;
