@@ -1943,8 +1943,8 @@ OO: OO_VGREDUCE
 ID: vgreduce_all
 DESC: Remove all unused PVs from a VG.
 
-vgreduce --removemissing VG
-OO: --mirrorsonly, OO_VGREDUCE
+vgreduce --removemissing VG|Select
+OO: --mirrorsonly, OO_VGREDUCE, --select String
 ID: vgreduce_missing
 DESC: Remove all missing PVs from a VG.
 
