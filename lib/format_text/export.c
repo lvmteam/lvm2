@@ -394,22 +394,19 @@ static char *_alloc_printed_str_list(struct dm_list *list)
 		return NULL;
 	}
 
-	buffer[0];
+	buffer[0] = 0;
 
 	dm_list_iterate_items(sl, list) {
 		if (!emit_to_buffer(&buf, &size, "%s\"%s\"",
 				    (!first) ? ", " : "",
-				    sl->str))
-			goto_bad;
-
+				    sl->str)) {
+			free(buffer);
+			return_NULL;
+		}
 		first = 0;
 	}
 
 	return buffer;
-
-bad:
-	free(buffer);
-	return_NULL;
 }
 
 static int _out_list(struct formatter *f, struct dm_list *list,
