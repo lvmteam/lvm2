@@ -542,6 +542,8 @@ int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
 				break;
 			}
 		}
+		if (!check_lv_segments_complete_vg(lvl->lv))
+			goto_out;
 	}
 
 	missing_pvs = vg_missing_pv_count(vg);
