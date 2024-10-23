@@ -1281,11 +1281,13 @@ void dm_devs_cache_destroy(void)
 	_cache.use_dm_devs_cache = 0;
 
 	if (_cache.dm_devnos) {
+		log_debug_cache("Destroying DM devno cache.");
 		radix_tree_destroy(_cache.dm_devnos);
 		_cache.dm_devnos = NULL;
 	}
 
 	if (_cache.dm_uuids) {
+		log_debug_cache("Destroying DM uuid cache.");
 		radix_tree_destroy(_cache.dm_uuids);
 		_cache.dm_uuids = NULL;
 	}
@@ -1293,22 +1295,63 @@ void dm_devs_cache_destroy(void)
 	dm_device_list_destroy(&_cache.dm_devs);
 }
 
+/*
+ * Updates cached trees with active DM devices.
+ *
+ * TODO:
+ * For large amount of active devices it might be useful
+ * to update existing trees - especially when there is high
+ * chance the set of active devices is nearly the same).
+ * However its not so trivial, so just make it a TODO.
+ * And do only an easy 1:1 match or full rebuild.
+ */
 int dm_devs_cache_update(void)
 {
-	struct dm_active_device *dm_dev;
+	struct dm_active_device *dm_dev, *dm_dev_new;
 	unsigned devs_features;
 	uint32_t d;
+	struct dm_list *dm_devs_new, *l;
+	int cache_changed = 0;
 
-	dm_devs_cache_destroy();
-
-	if (!get_dm_active_devices(NULL, &_cache.dm_devs, &devs_features))
+	if (!get_dm_active_devices(NULL, &dm_devs_new, &devs_features))
 		return 1;
 
 	if (!(devs_features & DM_DEVICE_LIST_HAS_UUID)) {
 		/* Cache unusable with older kernels without UUIDs in LIST */
-		dm_device_list_destroy(&_cache.dm_devs);
+		dm_device_list_destroy(&dm_devs_new);
 		return 1;
 	}
+
+	if (_cache.dm_devs) {
+		/* Compare existing cached list with a new one.
+		 * When there is any mismatch, just rebuild whole cache */
+		l = dm_list_first(dm_devs_new);
+		dm_list_iterate_items(dm_dev, _cache.dm_devs) {
+			dm_dev_new = dm_list_item(l, struct dm_active_device);
+			if ((dm_dev->devno != dm_dev_new->devno) ||
+			    strcmp(dm_dev->uuid, dm_dev_new->uuid)) {
+				log_debug_cache("Mismatching UUID or devno found  %s    %lu    %s    %lu",
+						dm_dev->uuid, dm_dev->devno,
+						dm_dev_new->uuid, dm_dev_new->devno);
+				cache_changed = 1;
+				break;
+			}
+			if (!(l = dm_list_next(dm_devs_new, l))) {
+				if (dm_list_next(_cache.dm_devs, &dm_dev->list))
+					cache_changed = 1; /* old cached list still with entries */
+				break;
+			}
+		}
+		if (!cache_changed) {
+			log_debug_cache("Preserving DM cache.");
+			dm_device_list_destroy(&dm_devs_new);
+
+			return 1;
+		}
+		dm_devs_cache_destroy();
+	}
+
+	_cache.dm_devs = dm_devs_new;
 
 	/* _cache.dm_devs entries are referenced by radix trees */
 
@@ -1320,6 +1363,7 @@ int dm_devs_cache_update(void)
 		return_0; // FIXME
 	}
 
+	log_debug_cache("Creating DM cache for devno and uuid.");
 	/* Insert every active DM device into radix trees */
 	dm_list_iterate_items(dm_dev, _cache.dm_devs) {
 		d = _shuffle_devno(dm_dev->devno);
@@ -1343,6 +1387,8 @@ void dm_devs_cache_label_invalidate(struct cmd_context *cmd)
 {
 	struct dm_active_device *dm_dev;
 	struct device *dev;
+
+	dm_devs_cache_update();
 
 	dm_list_iterate_items(dm_dev, _cache.dm_devs) {
 		if (dm_dev->uuid &&
