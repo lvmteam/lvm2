@@ -386,7 +386,6 @@ static int _read_segment(struct cmd_context *cmd,
 	uint32_t area_extents, start_extent, extent_count, reshape_count, data_copies;
 	struct segment_type *segtype;
 	const char *segtype_str;
-	char *segtype_with_flags;
 
 	if (!sn_child) {
 		log_error("Empty segment section.");
@@ -418,23 +417,11 @@ static int _read_segment(struct cmd_context *cmd,
 		return 0;
 	}
 
-        /* Locally duplicate to parse out status flag bits */
-	if (!(segtype_with_flags = dm_pool_strdup(mem, segtype_str))) {
-		log_error("Cannot duplicate segtype string.");
-		return 0;
-	}
-
-	if (!read_segtype_lvflags(&lv->status, segtype_with_flags)) {
+	if (!(segtype = read_segtype_and_lvflags(cmd, &lv->status, segtype_str))) {
 		log_error("Couldn't read segtype for logical volume %s.",
 			  display_lvname(lv));
-	       return 0;
+		return 0;
 	}
-
-	if (!(segtype = get_segtype_from_string(cmd, segtype_with_flags)))
-		return_0;
-
-	/* Can drop temporary string here as nothing has allocated from VGMEM meanwhile */
-	dm_pool_free(mem, segtype_with_flags);
 
 	if (segtype->ops->text_import_area_count &&
 	    !segtype->ops->text_import_area_count(sn_child, &area_count))

@@ -17,6 +17,7 @@
 #include "lib/metadata/metadata.h"
 #include "import-export.h"
 #include "lib/misc/lvm-string.h"
+#include "lib/metadata/segtype.h"
 
 /*
  * Bitsets held in the 'status' flags get
@@ -234,47 +235,50 @@ int read_flags(uint64_t *status, enum pv_vg_lv_e type, int mask, const struct dm
  * Note: using these segtype status flags instead of actual
  * status flags ensures wanted incompatibility.
  */
-int read_segtype_lvflags(uint64_t *status, char *segtype_str)
+struct segment_type *read_segtype_and_lvflags(struct cmd_context *cmd, uint64_t *status,
+					      const char *segtype_str)
 {
 	unsigned i;
+	size_t len;
+	struct segment_type *segtype;
 	const struct flag *flags = _lv_flags;
-	char *delim;
-	char *flag, *buffer, *str;
+	char *delim, *flag, *str, buffer[2048];
 
-	if (!(str = strchr(segtype_str, '+')))
-		return 1; /* No flags */
+	if ((str = strchr(segtype_str, '+'))) {
+		if ((len = (strlen(segtype_str) + 1)) >= sizeof(buffer)) {
+			log_error("Segment string type string is too long.");
+			return NULL;
+		}
 
-	if (!(buffer = strdup(str + 1))) {
-		log_error("Cannot duplicate segment string.");
-		return 0;
+		memcpy(buffer, segtype_str, len);
+		delim = buffer + (str - segtype_str);
+
+		do {
+			flag = delim;
+			if ((delim = strchr(delim, '+')))
+				*delim++ = '\0';
+
+			for (i = 0; flags[i].kind; i++)
+				if ((flags[i].kind & SEGTYPE_FLAG) &&
+				    !strcmp(flags[i].description, flag)) {
+					*status |= flags[i].mask;
+					break;
+				}
+
+		} while (delim && flags[i].kind); /* Till no more flags in type appear */
+
+		if (!flags[i].kind)
+			/* Unknown flag is incompatible - returns unmodified segtype_str */
+			log_warn("WARNING: Unrecognised flag %s in segment type %s.",
+				 flag, segtype_str);
+
+		segtype_str = buffer;
 	}
 
-	delim = buffer;
+	if (!(segtype = get_segtype_from_string(cmd, segtype_str)))
+		return_NULL;
 
-	do {
-		flag = delim;
-		if ((delim = strchr(delim, '+')))
-			*delim++ = '\0';
-
-		for (i = 0; flags[i].description; i++)
-			if ((flags[i].kind & SEGTYPE_FLAG) &&
-			    !strcmp(flags[i].description, flag)) {
-				*status |= flags[i].mask;
-				break;
-			}
-
-	} while (delim && flags[i].description); /* Till no more flags in type appear */
-
-	if (!flags[i].description)
-		/* Unknown flag is incompatible - returns unmodified segtype_str */
-		log_warn("WARNING: Unrecognised flag %s in segment type %s.",
-			 flag, segtype_str);
-	else
-		*str = '\0'; /* Cut away 1st. '+' */
-
-	free(buffer);
-
-	return 1;
+	return segtype;
 }
 
 int print_segtype_lvflags(char *buffer, size_t size, uint64_t status)
