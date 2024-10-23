@@ -394,6 +394,8 @@ static char *_alloc_printed_str_list(struct dm_list *list)
 		return NULL;
 	}
 
+	buffer[0];
+
 	dm_list_iterate_items(sl, list) {
 		if (!emit_to_buffer(&buf, &size, "%s\"%s\"",
 				    (!first) ? ", " : "",
@@ -839,6 +841,7 @@ static int _alloc_printed_indirect_descendants(struct dm_list *indirect_glvs, ch
 		return 0;
 	}
 	buf = *buffer;
+	buf[0] = 0;
 
 	dm_list_iterate_items(user_glvl, indirect_glvs) {
 		if (user_glvl->glv->is_historical)

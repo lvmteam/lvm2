@@ -145,6 +145,9 @@ int print_flags(char *buffer, size_t size, enum pv_vg_lv_e type, int mask, uint6
 	if (!(flags = _get_flags(type)))
 		return_0;
 
+	if (size)
+		buffer[0] = 0;
+
 	for (f = 0; flags[f].mask; f++) {
 		if (status & flags[f].mask) {
 			status &= ~flags[f].mask;
