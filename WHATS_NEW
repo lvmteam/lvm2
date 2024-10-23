@@ -1,5 +1,6 @@
 Version 2.03.28 - 
 ==================
+  Update DM cache when taking next VG lock instead of dropping it.
   Generate json string id only for json reporting.
   For vgsummary use new API call dm_config_parse_only_section().
   Use radix_tree for PV names mapping.
