@@ -371,6 +371,26 @@ static void _insert_segment(struct logical_volume *lv, struct lv_segment *seg)
 	dm_list_add(&lv->segments, &seg->list);
 }
 
+static struct segment_type *_read_segtype_and_lvflags(struct cmd_context *cmd,
+						      uint64_t *status,
+						      const char *segtype_str)
+{
+	char buffer[128]; /* just for segtype name */
+	const char *str;
+	size_t len;
+
+	if ((str = strchr(segtype_str, '+')))
+		if (read_lvflags(status, ++str)) {
+			len = str - segtype_str - 1;
+			len = min(len, sizeof(buffer) - 1);
+			memcpy(buffer, segtype_str, len);
+			buffer[len] = 0;
+			segtype_str = buffer;
+		}
+
+	return get_segtype_from_string(cmd, segtype_str);
+}
+
 static int _read_segment(struct cmd_context *cmd,
 			 struct format_type *fmt,
 			 struct format_instance *fid,
@@ -417,9 +437,9 @@ static int _read_segment(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!(segtype = read_segtype_and_lvflags(cmd, &lv->status, segtype_str))) {
-		log_error("Couldn't read segtype for logical volume %s.",
-			  display_lvname(lv));
+	if (!(segtype = _read_segtype_and_lvflags(cmd, &lv->status, segtype_str))) {
+		log_error("Couldn't read segtype %s for logical volume %s.",
+			  segtype_str, display_lvname(lv));
 		return 0;
 	}
 
