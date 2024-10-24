@@ -1601,6 +1601,22 @@ int lv_set_name(struct logical_volume *lv, const char *lv_name)
 	return 1;
 }
 
+int lv_set_vg(struct logical_volume *lv, struct volume_group *vg)
+{
+	const char *lv_name;
+
+	if (lv->vg != vg) {
+		lv_name = lv->name;
+		if (!lv_set_name(lv, NULL))
+			return_0; /* drop from existing VG radix_tree */
+		lv->vg = vg;
+		if (!lv_set_name(lv, lv_name))
+			return_0;
+	}
+
+	return 1;
+}
+
 static char *_time_dup(struct cmd_context *cmd, struct dm_pool *mem,
 		       time_t ts, int iso_mode)
 {

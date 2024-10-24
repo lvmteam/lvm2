@@ -49,7 +49,8 @@ static int _lv_tree_move(struct dm_list *lvh,
 		*lvht = dm_list_next(lvh, lvh);
 
 	dm_list_move(&vg_to->lvs, lvh);
-	lv->vg = vg_to;
+	if (!lv_set_vg(lv, vg_to))
+		return_0;
 	lv->lvid.id[0] = lv->vg->id;
 
 	if (seg)
