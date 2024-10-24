@@ -17,7 +17,6 @@
 #include "lib/metadata/metadata.h"
 #include "import-export.h"
 #include "lib/misc/lvm-string.h"
-#include "lib/metadata/segtype.h"
 
 /*
  * Bitsets held in the 'status' flags get
