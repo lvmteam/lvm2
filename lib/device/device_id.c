@@ -1359,7 +1359,7 @@ static void devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, tim
 {
 	struct dirent *de;
 	struct dirent **namelist = NULL;
-	DIR *dir;
+	DIR *dir = NULL;
 	FILE *fp = NULL;
 	struct tm *tm;
 	char dirpath[PATH_MAX];
@@ -1512,7 +1512,7 @@ out:
 	if (fp && fclose(fp))
 		stack;
 
-	if (closedir(dir))
+	if (dir && closedir(dir))
 		log_sys_debug("closedir", dirpath);
 }
 
