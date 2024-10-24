@@ -1581,7 +1581,7 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 					return_0;
 			}
 
-			if (seg_is_thin_pool(seg)) {
+			if (seg_is_thin_pool(seg) && seg_lv(seg, 0)) {
 				/* For some segtypes the size may differ between the segment size and its layered LV
 				 * i.e. thin-pool and tdata.
 				 *
