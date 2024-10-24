@@ -1418,7 +1418,8 @@ static struct dm_config_value *_clone_config_value(struct dm_pool *mem,
 
 	if (v->type == DM_CFG_STRING) {
 		if (!(new_cv = _create_str_value(mem, v->v.str, strlen(v->v.str)))) {
-
+			log_error("Failed to clone string config value.");
+			return NULL;
 		}
 	} else {
 		if (!(new_cv = _create_value(mem))) {
