@@ -5091,6 +5091,7 @@ static int _rename_area_lvs(struct logical_volume *lv, const char *suffix)
 	size_t sz = sizeof("rimage") - 1 + (suffix ? strlen(suffix) : 0) + 1;
 	char *sfx[SLV_COUNT] = { NULL, NULL };
 	struct lv_segment *seg = first_seg(lv);
+	const char *lv_name;
 
 	/* Create _generate_raid_name() suffixes w/ or w/o passed in @suffix */
 	for (s = 0; s < SLV_COUNT; s++)
@@ -5100,10 +5101,12 @@ static int _rename_area_lvs(struct logical_volume *lv, const char *suffix)
 
 	/* Change names (temporarily) to be able to shift numerical name suffixes */
 	for (s = 0; s < seg->area_count; s++) {
-		if (!(seg_lv(seg, s)->name = _generate_raid_name(lv, sfx[0], s)))
+		if (!(lv_name = _generate_raid_name(lv, sfx[0], s)) ||
+		    !lv_set_name(seg_lv(seg, s), lv_name))
 			return_0;
 		if (seg->meta_areas &&
-		    !(seg_metalv(seg, s)->name = _generate_raid_name(lv, sfx[1], s)))
+		    (!(lv_name = _generate_raid_name(lv, sfx[1], s)) ||
+		     !lv_set_name(seg_metalv(seg, s), lv_name)))
 			return_0;
 	}
 
