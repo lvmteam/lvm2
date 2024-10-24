@@ -64,6 +64,9 @@ struct volume_group {
 	struct profile *profile;
 	uint64_t status;
 
+	struct radix_tree *lv_names;    /* maintained tree for LV names within VG */
+	struct radix_tree *pv_names;    /* PV names used for metadata import */
+
 	struct id id;
 	const char *name;
 	const char *old_name;		/* Set during vgrename and vgcfgrestore */

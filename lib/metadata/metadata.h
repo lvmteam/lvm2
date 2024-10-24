@@ -395,6 +395,7 @@ struct logical_volume *find_lv_in_vg_by_lvid(const struct volume_group *vg,
 
 /* FIXME Merge these functions with ones above */
 struct physical_volume *find_pv(struct volume_group *vg, struct device *dev);
+struct physical_volume *find_pv_by_pv_name(struct volume_group *vg, const char *pv_name);
 
 struct pv_list *find_pv_in_pv_list(const struct dm_list *pl,
 				   const struct physical_volume *pv);

@@ -74,8 +74,7 @@ static void _vdo_display(const struct lv_segment *seg)
 }
 
 static int _vdo_text_import(struct lv_segment *seg,
-			    const struct dm_config_node *n,
-			    struct dm_hash_table *pv_hash __attribute__((unused)))
+			    const struct dm_config_node *n)
 {
 	struct logical_volume *vdo_pool_lv;
 	const char *str;
@@ -206,8 +205,7 @@ static int _vdo_pool_text_import_area_count(const struct dm_config_node *sn __at
 }
 
 static int _vdo_pool_text_import(struct lv_segment *seg,
-				 const struct dm_config_node *n,
-				 struct dm_hash_table *pv_hash __attribute__((unused)))
+				 const struct dm_config_node *n)
 {
 	struct dm_vdo_target_params *vtp = &seg->vdo_params;
 	struct logical_volume *data_lv;

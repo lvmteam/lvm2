@@ -23,7 +23,6 @@ struct lv_segment;
 struct dm_config_node;
 
 int text_import_areas(struct lv_segment *seg, const struct dm_config_node *sn,
-		      const struct dm_config_value *cv, struct dm_hash_table *pv_hash,
-		      uint64_t status);
+		      const struct dm_config_value *cv, uint64_t status);
 
 #endif

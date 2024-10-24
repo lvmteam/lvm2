@@ -79,8 +79,7 @@ static int _thin_pool_add_message(struct lv_segment *seg,
 }
 
 static int _thin_pool_text_import(struct lv_segment *seg,
-				  const struct dm_config_node *sn,
-				  struct dm_hash_table *pv_hash __attribute__((unused)))
+				  const struct dm_config_node *sn)
 {
 	const char *lv_name;
 	struct logical_volume *pool_data_lv, *pool_metadata_lv;
@@ -467,8 +466,7 @@ static void _thin_display(const struct lv_segment *seg)
 }
 
 static int _thin_text_import(struct lv_segment *seg,
-			     const struct dm_config_node *sn,
-			     struct dm_hash_table *pv_hash __attribute__((unused)))
+			     const struct dm_config_node *sn)
 {
 	const char *lv_name;
 	struct logical_volume *pool_lv, *origin = NULL, *external_lv = NULL, *merge_lv = NULL;

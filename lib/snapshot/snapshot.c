@@ -34,9 +34,7 @@ static const char *_snap_target_name(const struct lv_segment *seg,
 
 	return lvseg_name(seg);
 }
-
-static int _snap_text_import(struct lv_segment *seg, const struct dm_config_node *sn,
-			struct dm_hash_table *pv_hash __attribute__((unused)))
+static int _snap_text_import(struct lv_segment *seg, const struct dm_config_node *sn)
 {
 	uint32_t chunk_size;
 	struct logical_volume *org, *cow;

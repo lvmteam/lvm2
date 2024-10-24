@@ -26,6 +26,7 @@
 #include "lib/format_text/text_import.h"
 #include "lib/config/defaults.h"
 #include "lib/datastruct/str_list.h"
+#include "base/data-struct/radix-tree.h"
 
 typedef int (*section_fn) (struct cmd_context *cmd,
 			   struct format_type *fmt,
@@ -34,9 +35,7 @@ typedef int (*section_fn) (struct cmd_context *cmd,
 			   struct volume_group *vg,
 			   struct lvmcache_vgsummary *vgsummary,
 			   const struct dm_config_node *pvn,
-			   const struct dm_config_node *vgn,
-			   struct dm_hash_table *pv_hash,
-			   struct dm_hash_table *lv_hash);
+			   const struct dm_config_node *vgn);
 
 #define _read_int32(root, path, result) \
 	dm_config_get_uint32(root, path, (uint32_t *) (result))
@@ -180,9 +179,7 @@ static int _read_pv(struct cmd_context *cmd,
 		    struct volume_group *vg,
 		    struct lvmcache_vgsummary *vgsummary,
 		    const struct dm_config_node *pvn,
-		    const struct dm_config_node *vgn __attribute__((unused)),
-		    struct dm_hash_table *pv_hash,
-		    struct dm_hash_table *lv_hash __attribute__((unused)))
+		    const struct dm_config_node *vgn __attribute__((unused)))
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
@@ -200,8 +197,8 @@ static int _read_pv(struct cmd_context *cmd,
 	 * Add the pv to the pv hash for quick lookup when we read
 	 * the lv segments.
 	 */
-	if (!dm_hash_insert(pv_hash, pvn->key, pv))
-		return_0;
+	if (!radix_tree_insert_ptr(vg->pv_names, pvn->key, strlen(pvn->key), pv))
+                return_0;
 
 	if (!(pvn = pvn->child)) {
 		log_error("Empty pv section.");
@@ -310,9 +307,7 @@ static int _read_pvsummary(struct cmd_context *cmd,
 			   struct volume_group *vg,
 			   struct lvmcache_vgsummary *vgsummary,
 			   const struct dm_config_node *pvn,
-			   const struct dm_config_node *vgn __attribute__((unused)),
-			   struct dm_hash_table *pv_hash __attribute__((unused)),
-			   struct dm_hash_table *lv_hash __attribute__((unused)))
+			   const struct dm_config_node *vgn __attribute__((unused)))
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
@@ -395,8 +390,7 @@ static int _read_segment(struct cmd_context *cmd,
 			 struct format_type *fmt,
 			 struct format_instance *fid,
 			 struct dm_pool *mem,
-			 struct logical_volume *lv, const struct dm_config_node *sn,
-			 struct dm_hash_table *pv_hash)
+			 struct logical_volume *lv, const struct dm_config_node *sn)
 {
 	uint32_t area_count = 0u;
 	struct lv_segment *seg;
@@ -456,7 +450,7 @@ static int _read_segment(struct cmd_context *cmd,
 	}
 
 	if (seg->segtype->ops->text_import &&
-	    !seg->segtype->ops->text_import(seg, sn_child, pv_hash))
+	    !seg->segtype->ops->text_import(seg, sn_child))
 		return_0;
 
 	/* Optional tags */
@@ -491,7 +485,7 @@ static int _read_segment(struct cmd_context *cmd,
 }
 
 int text_import_areas(struct lv_segment *seg, const struct dm_config_node *sn,
-		      const struct dm_config_value *cv, struct dm_hash_table *pv_hash,
+		      const struct dm_config_value *cv,
 		      uint64_t status)
 {
 	unsigned int s;
@@ -523,7 +517,7 @@ int text_import_areas(struct lv_segment *seg, const struct dm_config_node *sn,
 		}
 
 		/* FIXME Cope if LV not yet read in */
-		if ((pv = dm_hash_lookup(pv_hash, cv->v.str))) {
+		if ((pv = find_pv_by_pv_name(seg->lv->vg, cv->v.str))) {
 			if (!set_lv_segment_area_pv(seg, s, pv, (uint32_t) cv->next->v.i))
 				return_0;
 		} else if ((lv1 = find_lv(seg->lv->vg, cv->v.str))) {
@@ -557,8 +551,7 @@ static int _read_segments(struct cmd_context *cmd,
 			  struct format_type *fmt,
 			  struct format_instance *fid,
 			  struct dm_pool *mem,
-			  struct logical_volume *lv, const struct dm_config_node *lvn,
-			  struct dm_hash_table *pv_hash)
+			  struct logical_volume *lv, const struct dm_config_node *lvn)
 {
 	const struct dm_config_node *sn;
 	int count = 0, seg_count;
@@ -569,7 +562,7 @@ static int _read_segments(struct cmd_context *cmd,
 		 * All sub-sections are assumed to be segments.
 		 */
 		if (!sn->v) {
-			if (!_read_segment(cmd, fmt, fid, mem, lv, sn, pv_hash))
+			if (!_read_segment(cmd, fmt, fid, mem, lv, sn))
 				return_0;
 
 			count++;
@@ -615,9 +608,7 @@ static int _read_lvnames(struct cmd_context *cmd,
 			 struct volume_group *vg,
 			 struct lvmcache_vgsummary *vgsummary,
 			 const struct dm_config_node *lvn,
-			 const struct dm_config_node *vgn __attribute__((unused)),
-			 struct dm_hash_table *pv_hash __attribute__((unused)),
-			 struct dm_hash_table *lv_hash)
+			 const struct dm_config_node *vgn __attribute__((unused)))
 {
 	struct logical_volume *lv;
 	const char *str;
@@ -740,9 +731,6 @@ static int _read_lvnames(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!dm_hash_insert(lv_hash, lv->name, lv))
-		return_0;
-
 	if (timestamp && !lv_set_creation(lv, hostname, timestamp))
 		return_0;
 
@@ -775,9 +763,7 @@ static int _read_historical_lvnames(struct cmd_context *cmd,
 				     struct volume_group *vg,
 				     struct lvmcache_vgsummary *vgsummary,
 				     const struct dm_config_node *hlvn,
-				     const struct dm_config_node *vgn __attribute__((unused)),
-				     struct dm_hash_table *pv_hash __attribute__((unused)),
-				     struct dm_hash_table *lv_hash __attribute__((unused)))
+				     const struct dm_config_node *vgn __attribute__((unused)))
 {
 	struct generic_logical_volume *glv;
 	struct glv_list *glvl;
@@ -848,9 +834,7 @@ static int _read_historical_lvnames_interconnections(struct cmd_context *cmd,
 						 struct volume_group *vg,
 			  			 struct lvmcache_vgsummary *vgsummary,
 						 const struct dm_config_node *hlvn,
-						 const struct dm_config_node *vgn __attribute__((unused)),
-						 struct dm_hash_table *pv_hash __attribute__((unused)),
-						 struct dm_hash_table *lv_hash __attribute__((unused)))
+						 const struct dm_config_node *vgn __attribute__((unused)))
 {
 	const char *historical_lv_name, *origin_name = NULL;
 	struct generic_logical_volume *glv, *origin_glv, *descendant_glv;
@@ -962,13 +946,11 @@ static int _read_lvsegs(struct cmd_context *cmd,
 			struct volume_group *vg,
 			struct lvmcache_vgsummary *vgsummary,
 			const struct dm_config_node *lvn,
-			const struct dm_config_node *vgn __attribute__((unused)),
-			struct dm_hash_table *pv_hash,
-			struct dm_hash_table *lv_hash)
+			const struct dm_config_node *vgn __attribute__((unused)))
 {
 	struct logical_volume *lv;
 
-	if (!(lv = dm_hash_lookup(lv_hash, lvn->key))) {
+	if (!(lv = find_lv(vg, lvn->key))) {
 		log_error("Lost logical volume reference %s", lvn->key);
 		return 0;
 	}
@@ -987,7 +969,7 @@ static int _read_lvsegs(struct cmd_context *cmd,
 
 	memcpy(&lv->lvid.id[0], &lv->vg->id, sizeof(lv->lvid.id[0]));
 
-	if (!_read_segments(cmd, fmt, fid, mem, lv, lvn, pv_hash))
+	if (!_read_segments(cmd, fmt, fid, mem, lv, lvn))
 		return_0;
 
 	lv->size = (uint64_t) lv->le_count * (uint64_t) vg->extent_size;
@@ -1028,8 +1010,6 @@ static int _read_sections(struct cmd_context *cmd,
 			  struct volume_group *vg,
 			  struct lvmcache_vgsummary *vgsummary,
 			  const struct dm_config_node *vgn,
-			  struct dm_hash_table *pv_hash,
-			  struct dm_hash_table *lv_hash,
 			  int optional)
 {
 	const struct dm_config_node *n;
@@ -1044,7 +1024,7 @@ static int _read_sections(struct cmd_context *cmd,
 	}
 
 	for (n = n->child; n; n = n->sib) {
-		if (!fn(cmd, (struct format_type *)fmt, fid, mem, vg, vgsummary, n, vgn, pv_hash, lv_hash))
+		if (!fn(cmd, (struct format_type *)fmt, fid, mem, vg, vgsummary, n, vgn))
 			return_0;
 	}
 
@@ -1061,7 +1041,6 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	const struct dm_config_value *cv;
 	const char *str, *format_str, *system_id;
 	struct volume_group *vg;
-	struct dm_hash_table *pv_hash = NULL, *lv_hash = NULL;
 	uint64_t vgstatus;
 
 	/* skip any top-level values */
@@ -1079,20 +1058,20 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	mem = vg->vgmem;
 
 	/*
-	 * The pv hash memorizes the pv section names -> pv
+	 * The pv_names memorizes the pv section names -> pv
 	 * structures.
 	 */
-	if (!(pv_hash = dm_hash_create(59))) {
-		log_error("Couldn't create pv hash table.");
+	if (!(vg->pv_names = radix_tree_create(NULL, NULL))) {
+		log_error("Couldn't create pv_names radix tree.");
 		goto bad;
 	}
 
 	/*
-	 * The lv hash memorizes the lv section names -> lv
+	 * The lv_names radix_tree memorizes the lv section names -> lv
 	 * structures.
 	 */
-	if (!(lv_hash = dm_hash_create(1023))) {
-		log_error("Couldn't create lv hash table.");
+	if (!(vg->lv_names = radix_tree_create(NULL, NULL))) {
+		log_error("Couldn't create lv_names radix tree.");
 		goto bad;
 	}
 
@@ -1211,7 +1190,7 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	}
 
 	if (!_read_sections(cmd, fmt, fid, mem, "physical_volumes", _read_pv, vg, NULL,
-			    vgn, pv_hash, lv_hash, 0)) {
+			    vgn, 0)) {
 		log_error("Couldn't find all physical volumes for volume "
 			  "group %s.", vg->name);
 		goto bad;
@@ -1225,28 +1204,28 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	}
 
 	if (!_read_sections(cmd, fmt, fid, mem, "logical_volumes", _read_lvnames, vg, NULL,
-			    vgn, pv_hash, lv_hash, 1)) {
+			    vgn, 1)) {
 		log_error("Couldn't read all logical volume names for volume "
 			  "group %s.", vg->name);
 		goto bad;
 	}
 
 	if (!_read_sections(cmd, fmt, fid, mem, "historical_logical_volumes", _read_historical_lvnames, vg, NULL,
-			    vgn, pv_hash, lv_hash, 1)) {
+			    vgn, 1)) {
 		log_error("Couldn't read all historical logical volumes for volume "
 			  "group %s.", vg->name);
 		goto bad;
 	}
 
 	if (!_read_sections(cmd, fmt, fid, mem, "logical_volumes", _read_lvsegs, vg, NULL,
-			    vgn, pv_hash, lv_hash, 1)) {
+			    vgn, 1)) {
 		log_error("Couldn't read all logical volumes for "
 			  "volume group %s.", vg->name);
 		goto bad;
 	}
 
 	if (!_read_sections(cmd, fmt, fid, mem, "historical_logical_volumes", _read_historical_lvnames_interconnections,
-			    vg, NULL, vgn, pv_hash, lv_hash, 1)) {
+			    vg, NULL, vgn, 1)) {
 		log_error("Couldn't read all removed logical volume interconnections "
 			  "for volume group %s.", vg->name);
 		goto bad;
@@ -1259,11 +1238,13 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 		goto bad;
 	}
 
-	dm_hash_destroy(pv_hash);
-	dm_hash_destroy(lv_hash);
-
 	if (fid)
 		vg_set_fid(vg, fid);
+
+	if (vg->pv_names) {
+		radix_tree_destroy(vg->pv_names);
+		vg->pv_names = NULL; /* PV names are no longer valid outside of _read_vg() */
+	}
 
 	/*
 	 * Finished.
@@ -1271,12 +1252,6 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	return vg;
 
       bad:
-	if (pv_hash)
-		dm_hash_destroy(pv_hash);
-
-	if (lv_hash)
-		dm_hash_destroy(lv_hash);
-
 	release_vg(vg);
 	return NULL;
 }
@@ -1360,7 +1335,7 @@ static int _read_vgsummary(const struct format_type *fmt, const struct dm_config
 	}
 
 	if (!_read_sections(fmt->cmd, NULL, NULL, mem, "physical_volumes", _read_pvsummary, NULL, vgsummary,
-			    vgn, NULL, NULL, 0)) {
+			    vgn, 0)) {
 		log_debug("Couldn't read pv summaries");
 	}
 

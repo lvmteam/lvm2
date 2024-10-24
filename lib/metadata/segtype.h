@@ -254,8 +254,7 @@ struct segtype_handler {
 	int (*text_import_area_count) (const struct dm_config_node * sn,
 				       uint32_t *area_count);
 	int (*text_import) (struct lv_segment * seg,
-			    const struct dm_config_node * sn,
-			    struct dm_hash_table * pv_hash);
+			    const struct dm_config_node * sn);
 	int (*merge_segments) (struct lv_segment * seg1,
 			       struct lv_segment * seg2);
 	int (*add_target_line) (struct dev_manager *dm, struct dm_pool *mem,

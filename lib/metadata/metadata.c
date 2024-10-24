@@ -1671,8 +1671,7 @@ struct logical_volume *find_lv_in_vg_by_lvid(const struct volume_group *vg,
 struct logical_volume *find_lv(const struct volume_group *vg,
 			       const char *lv_name)
 {
-	struct lv_list *lvl = find_lv_in_vg(vg, lv_name);
-	return lvl ? lvl->lv : NULL;
+	return radix_tree_lookup_ptr(vg->lv_names, lv_name, strlen(lv_name));
 }
 
 struct generic_logical_volume *find_historical_glv(const struct volume_group *vg,
@@ -1732,6 +1731,16 @@ struct physical_volume *find_pv(struct volume_group *vg, struct device *dev)
 			return pvl->pv;
 
 	return NULL;
+}
+
+struct physical_volume *find_pv_by_pv_name(struct volume_group *vg, const char *pv_name)
+{
+	if (!vg->pv_names) {
+		log_error(INTERNAL_ERROR "Cannot find pv name %s outside of _read_vg()", pv_name);
+		return NULL;
+	}
+
+	return radix_tree_lookup_ptr(vg->pv_names, pv_name, strlen(pv_name));
 }
 
 /* Find segment at a given logical extent in an LV */

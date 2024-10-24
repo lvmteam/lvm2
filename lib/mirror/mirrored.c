@@ -73,8 +73,7 @@ static int _mirrored_text_import_area_count(const struct dm_config_node *sn, uin
 	return 1;
 }
 
-static int _mirrored_text_import(struct lv_segment *seg, const struct dm_config_node *sn,
-			struct dm_hash_table *pv_hash)
+static int _mirrored_text_import(struct lv_segment *seg, const struct dm_config_node *sn)
 {
 	const struct dm_config_value *cv;
 	const char *logname = NULL;
@@ -126,7 +125,7 @@ static int _mirrored_text_import(struct lv_segment *seg, const struct dm_config_
 		return 0;
 	}
 
-	return text_import_areas(seg, sn, cv, pv_hash, MIRROR_IMAGE);
+	return text_import_areas(seg, sn, cv, MIRROR_IMAGE);
 }
 
 static int _mirrored_text_export(const struct lv_segment *seg, struct formatter *f)

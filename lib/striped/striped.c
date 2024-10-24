@@ -69,8 +69,7 @@ static int _striped_text_import_area_count(const struct dm_config_node *sn, uint
 	return 1;
 }
 
-static int _striped_text_import(struct lv_segment *seg, const struct dm_config_node *sn,
-			struct dm_hash_table *pv_hash)
+static int _striped_text_import(struct lv_segment *seg, const struct dm_config_node *sn)
 {
 	const struct dm_config_value *cv;
 
@@ -89,7 +88,7 @@ static int _striped_text_import(struct lv_segment *seg, const struct dm_config_n
 
 	seg->area_len /= seg->area_count;
 
-	return text_import_areas(seg, sn, cv, pv_hash, 0);
+	return text_import_areas(seg, sn, cv, 0);
 }
 
 static int _striped_text_export(const struct lv_segment *seg, struct formatter *f)

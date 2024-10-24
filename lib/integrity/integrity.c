@@ -36,8 +36,7 @@ static void _integrity_display(const struct lv_segment *seg)
 }
 
 static int _integrity_text_import(struct lv_segment *seg,
-				   const struct dm_config_node *sn,
-				   struct dm_hash_table *pv_hash __attribute__((unused)))
+				   const struct dm_config_node *sn)
 {
 	struct integrity_settings *set;
 	struct logical_volume *origin_lv = NULL;

@@ -128,8 +128,7 @@ static int _raid_text_import_areas(struct lv_segment *seg,
 }
 
 static int _raid_text_import(struct lv_segment *seg,
-			     const struct dm_config_node *sn,
-			     struct dm_hash_table *pv_hash)
+			     const struct dm_config_node *sn)
 {
 	const struct dm_config_value *cv;
 	const struct {

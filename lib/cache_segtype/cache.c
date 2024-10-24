@@ -202,8 +202,7 @@ static int _settings_text_export(const struct lv_segment *seg,
 }
 
 static int _cache_pool_text_import(struct lv_segment *seg,
-				   const struct dm_config_node *sn,
-				   struct dm_hash_table *pv_hash __attribute__((unused)))
+				   const struct dm_config_node *sn)
 {
 	struct logical_volume *data_lv, *meta_lv;
 	const char *str = NULL;
@@ -438,8 +437,7 @@ static const struct segtype_handler _cache_pool_ops = {
 };
 
 static int _cache_text_import(struct lv_segment *seg,
-			      const struct dm_config_node *sn,
-			      struct dm_hash_table *pv_hash __attribute__((unused)))
+			      const struct dm_config_node *sn)
 {
 	struct logical_volume *pool_lv, *origin_lv;
 	const char *name;
