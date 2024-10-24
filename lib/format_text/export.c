@@ -498,7 +498,7 @@ static int _get_pv_idx(const struct formatter *f, const struct physical_volume *
 
 	if (!pv || !radix_tree_lookup(f->pv_idx, &pv, sizeof(pv), &idx)) {
 		log_error(INTERNAL_ERROR "PV name for %s missing in metadata export radix tree.",
-			  pv_dev_name(pv));
+			  (pv) ? pv_dev_name(pv) : "");
 		return -1;
 	}
 
