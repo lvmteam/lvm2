@@ -1325,23 +1325,26 @@ int dm_devs_cache_update(void)
 	if (_cache.dm_devs) {
 		/* Compare existing cached list with a new one.
 		 * When there is any mismatch, just rebuild whole cache */
-		l = dm_list_first(dm_devs_new);
-		dm_list_iterate_items(dm_dev, _cache.dm_devs) {
-			dm_dev_new = dm_list_item(l, struct dm_active_device);
-			if ((dm_dev->devno != dm_dev_new->devno) ||
-			    strcmp(dm_dev->uuid, dm_dev_new->uuid)) {
-				log_debug_cache("Mismatching UUID or devno found  %s    %lu    %s    %lu",
-						dm_dev->uuid, dm_dev->devno,
-						dm_dev_new->uuid, dm_dev_new->devno);
-				cache_changed = 1;
-				break;
+		if ((l = dm_list_first(dm_devs_new))) {
+			dm_list_iterate_items(dm_dev, _cache.dm_devs) {
+				dm_dev_new = dm_list_item(l, struct dm_active_device);
+				if ((dm_dev->devno != dm_dev_new->devno) ||
+				    strcmp(dm_dev->uuid, dm_dev_new->uuid)) {
+					log_debug_cache("Mismatching UUID or devno found  %s    %lu    %s    %lu",
+							dm_dev->uuid, dm_dev->devno,
+							dm_dev_new->uuid, dm_dev_new->devno);
+					cache_changed = 1;
+					break;
+				}
+				if (!(l = dm_list_next(dm_devs_new, l))) {
+					if (dm_list_next(_cache.dm_devs, &dm_dev->list))
+						cache_changed = 1; /* old cached list still with entries */
+					break;
+				}
 			}
-			if (!(l = dm_list_next(dm_devs_new, l))) {
-				if (dm_list_next(_cache.dm_devs, &dm_dev->list))
-					cache_changed = 1; /* old cached list still with entries */
-				break;
-			}
-		}
+		} else
+			cache_changed = 1;
+
 		if (!cache_changed) {
 			log_debug_cache("Preserving DM cache.");
 			dm_device_list_destroy(&dm_devs_new);
