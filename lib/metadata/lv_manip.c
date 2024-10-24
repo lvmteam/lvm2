@@ -7309,9 +7309,6 @@ struct logical_volume *lv_create_empty(const char *name,
 	char dname[NAME_LEN];
 	int historical;
 
-	if (vg_max_lv_reached(vg))
-		stack;
-
 	if (strstr(name, "%d") &&
 	    !(name = generate_lv_name(vg, name, dname, sizeof(dname)))) {
 		log_error("Failed to generate unique name for the new "
