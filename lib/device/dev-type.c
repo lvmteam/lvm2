@@ -611,7 +611,7 @@ static int _has_gpt_partition_table(struct device *dev)
 	sz_entry = le32_to_cpu(gpt_header.sz_part_entry);
 
 	for (i = 0; i < nr_entries; i++) {
-		if (!dev_read_bytes(dev, entries_start + i * sz_entry,
+		if (!dev_read_bytes(dev, entries_start + (uint64_t)i * sz_entry,
 				    sizeof(gpt_part_entry), &gpt_part_entry))
 			return_0;
 
