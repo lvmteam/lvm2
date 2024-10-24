@@ -1577,6 +1577,13 @@ int lv_set_creation(struct logical_volume *lv,
 	return 1;
 }
 
+int lv_set_name(struct logical_volume *lv, const char *lv_name)
+{
+	lv->name = lv_name; /* NULL -> LV is removed from tree */
+
+	return 1;
+}
+
 static char *_time_dup(struct cmd_context *cmd, struct dm_pool *mem,
 		       time_t ts, int iso_mode)
 {

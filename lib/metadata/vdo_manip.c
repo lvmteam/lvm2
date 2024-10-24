@@ -544,8 +544,10 @@ struct logical_volume *convert_vdo_lv(struct logical_volume *lv,
 		return_NULL;
 
 	/* Also swap naming, so the passed in LV keeps the passed-in name */
-	vdo_lv->name = lv->name;
-	lv->name = lvc.lv_name;
+	tmp_lv.name = lv->name;
+	lv_set_name(lv, NULL);
+	lv_set_name(vdo_lv, tmp_lv.name);
+	lv_set_name(lv, lvc.lv_name);
 
 	/* Swap segment referencing */
 	if (!remove_seg_from_segs_using_this_lv(lv, first_seg(lv)))

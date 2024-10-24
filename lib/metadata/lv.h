@@ -153,6 +153,7 @@ char *lvseg_kernel_discards_dup(struct dm_pool *mem, const struct lv_segment *se
 /* LV modification functions */
 int lv_set_creation(struct logical_volume *lv,
 		    const char *hostname, uint64_t timestamp);
+int lv_set_name(struct logical_volume *lv, const char *lv_name);
 int lv_active_change(struct cmd_context *cmd, struct logical_volume *lv,
 		     enum activation_change activate);
 
