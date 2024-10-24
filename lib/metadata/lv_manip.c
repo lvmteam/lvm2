@@ -1834,6 +1834,11 @@ int historical_glv_remove(struct generic_logical_volume *glv)
  */
 int lv_remove(struct logical_volume *lv)
 {
+	if (!lv) {
+		log_error(INTERNAL_ERROR "Cannot remove undefined LV.");
+		return 0;
+	}
+
 	if (lv_is_historical(lv))
 		return historical_glv_remove(lv->this_glv);
 

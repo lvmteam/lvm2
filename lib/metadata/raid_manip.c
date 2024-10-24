@@ -6105,9 +6105,13 @@ static int _log_prohibited_option(const struct lv_segment *seg_from,
 	if (seg_from->segtype == new_segtype)
 		log_error("%s not allowed when converting %s LV %s.",
 			  opt_str, lvseg_name(seg_from), display_lvname(seg_from->lv));
-	else
+	else if (new_segtype)
 		log_error("%s not allowed for LV %s when converting from %s to %s.",
 			  opt_str, display_lvname(seg_from->lv), lvseg_name(seg_from), new_segtype->name);
+	else {
+		log_error(INTERNAL_ERROR "New segtype is not defined.");
+		return 0;
+	}
 
 	return 1;
 }
