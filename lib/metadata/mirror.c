@@ -993,7 +993,11 @@ static int _remove_mirror_images(struct logical_volume *lv,
 
 	/* Mirror with only 1 area is 'in sync'. */
 	if (new_area_count == 1 && is_temporary_mirror_layer(lv)) {
-		detached_log_lv = detach_mirror_log(mirrored_seg);
+		if (!(detached_log_lv = detach_mirror_log(mirrored_seg))) {
+			log_error("Cannot detach mirror log from %s..",
+				  display_lvname(mirrored_seg->lv));
+			return 0;
+		}
 		if (!_init_mirror_log(lv->vg->cmd,
 				      (struct logical_volume*)lv_lock_holder(mirrored_seg->lv),
 				      detached_log_lv,
