@@ -1,5 +1,6 @@
 Version 2.03.28 - 
 ==================
+  Correct off-by-one devicesfile backup counting.
   Replace use of dm_hash with radix_tree for lv names and uuids.
   Refactor vg_validate with uniq_insert and better use of CPU caches.
   Add radix_tree_uniq_insert.
