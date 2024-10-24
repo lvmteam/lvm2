@@ -1062,14 +1062,14 @@ static int lm_prepare_lockspace(struct lockspace *ls, struct action *act)
 	return rv;
 }
 
-static int lm_add_lockspace(struct lockspace *ls, struct action *act, int adopt_only, int adopt_ok)
+static int lm_add_lockspace(struct lockspace *ls, struct action *act, int adopt_only, int adopt_ok, int nodelay)
 {
 	int rv;
 
 	if (ls->lm_type == LD_LM_DLM)
 		rv = lm_add_lockspace_dlm(ls, adopt_only, adopt_ok);
 	else if (ls->lm_type == LD_LM_SANLOCK)
-		rv = lm_add_lockspace_sanlock(ls, adopt_only, adopt_ok);
+		rv = lm_add_lockspace_sanlock(ls, adopt_only, adopt_ok, nodelay);
 	else if (ls->lm_type == LD_LM_IDM)
 		rv = lm_add_lockspace_idm(ls, adopt_only, adopt_ok);
 	else
@@ -2495,6 +2495,7 @@ static void *lockspace_thread_main(void *arg_in)
 	int adopt_only = 0;
 	int adopt_ok = 0;
 	int wait_flag = 0;
+	int nodelay = 0;
 	int retry;
 	int rv;
 
@@ -2517,6 +2518,8 @@ static void *lockspace_thread_main(void *arg_in)
 				adopt_only = 1;
 			if (add_act->flags & LD_AF_ADOPT)
 				adopt_ok = 1;
+			if (add_act->flags & LD_AF_NODELAY)
+				nodelay = 1;
 		}
 	}
 	pthread_mutex_unlock(&ls->mutex);
@@ -2546,7 +2549,7 @@ static void *lockspace_thread_main(void *arg_in)
 	 * The actual lockspace join can take a while.
 	 */
 	if (!error) {
-		error = lm_add_lockspace(ls, add_act, adopt_only, adopt_ok);
+		error = lm_add_lockspace(ls, add_act, adopt_only, adopt_ok, nodelay);
 
 		log_debug("S %s lm_add_lockspace done %d", ls->name, error);
 
@@ -4545,6 +4548,8 @@ static uint32_t str_to_opts(const char *str)
 		flags |= LD_AF_ENABLE;
 	if (strstr(str, "disable"))
 		flags |= LD_AF_DISABLE;
+	if (strstr(str, "nodelay"))
+		flags |= LD_AF_NODELAY;
 
 	/* FIXME: parse the flag values properly */
 	if (strstr(str, "adopt_only"))

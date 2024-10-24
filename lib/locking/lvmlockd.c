@@ -1407,6 +1407,7 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int *exists
 {
 	char uuid[64] __attribute__((aligned(8)));
 	const char *opts = NULL;
+	char opt_buf[64] = {};
 	daemon_reply reply;
 	uint32_t lockd_flags = 0;
 	int host_id = 0;
@@ -1428,10 +1429,15 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int *exists
 		return 0;
 	}
 
-	if (cmd->lockopt & LOCKOPT_ADOPTLS)
-		opts = "adopt_only";
-	else if (cmd->lockopt & LOCKOPT_ADOPT)
-		opts = "adopt";
+	if ((cmd->lockopt & LOCKOPT_NODELAY) ||
+	    (cmd->lockopt & LOCKOPT_ADOPTLS) ||
+	    (cmd->lockopt & LOCKOPT_ADOPT)) {
+		dm_snprintf(opt_buf, sizeof(opt_buf), "%s%s%s",
+			    (cmd->lockopt & LOCKOPT_NODELAY) ? "nodelay," : "",
+			    (cmd->lockopt & LOCKOPT_ADOPTLS) ? "adopt_only" : "",
+			    (cmd->lockopt & LOCKOPT_ADOPT) ? "adopt" : "");
+		opts = opt_buf;
+	}
 
 	log_debug("lockd start VG %s lock_type %s",
 		  vg->name, vg->lock_type ? vg->lock_type : "empty");
@@ -3797,6 +3803,8 @@ void lockd_lockopt_get_flags(const char *str, uint32_t *flags)
 			*flags |= LOCKOPT_ADOPTLV;
 		else if (!strcmp(argv[i], "adopt"))
 			*flags |= LOCKOPT_ADOPT;
+		else if (!strcmp(argv[i], "nodelay"))
+			*flags |= LOCKOPT_NODELAY;
 		else
 			log_warn("Ignoring unknown lockopt value: %s", argv[i]);
 	}

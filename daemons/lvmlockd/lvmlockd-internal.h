@@ -113,6 +113,7 @@ struct client {
 #define LD_AF_LV_UNLOCK            0x00080000
 #define LD_AF_SH_EXISTS            0x00100000
 #define LD_AF_ADOPT_ONLY           0x00200000 /* adopt orphan or fail */
+#define LD_AF_NODELAY              0x00400000
 
 /*
  * Number of times to repeat a lock request after
@@ -510,7 +511,7 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *lv_name, char *vg_args, char 
 int lm_free_lv_sanlock(struct lockspace *ls, struct resource *r);
 int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
 int lm_prepare_lockspace_sanlock(struct lockspace *ls);
-int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok);
+int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok, int nodelay);
 int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg);
 int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		    struct val_blk *vb_out, int *retry, 
@@ -561,7 +562,7 @@ static inline int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 	return -1;
 }
 
-static inline int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok)
+static inline int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok, int nodelay)
 {
 	return -1;
 }

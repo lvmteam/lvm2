@@ -24,6 +24,9 @@
 #include "sanlock_admin.h"
 #include "sanlock_resource.h"
 
+/* FIXME: copied from sanlock header until the sanlock update is more widespread */
+#define SANLK_ADD_NODELAY      0x00000002
+
 #include <stddef.h>
 #include <poll.h>
 #include <errno.h>
@@ -1594,9 +1597,10 @@ fail:
 	return ret;
 }
 
-int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok)
+int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok, int nodelay)
 {
 	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
+	uint32_t flags = 0;
 	int rv;
 
 	if (daemon_test) {
@@ -1604,7 +1608,10 @@ int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok)
 		goto out;
 	}
 
-	rv = sanlock_add_lockspace_timeout(&lms->ss, 0, sanlock_io_timeout);
+	if (nodelay)
+		flags |= SANLK_ADD_NODELAY;
+
+	rv = sanlock_add_lockspace_timeout(&lms->ss, flags, sanlock_io_timeout);
 	if (rv == -EEXIST && (adopt_ok || adopt_only)) {
 		/* We could alternatively just skip the sanlock call for adopt. */
 		log_debug("S %s add_lockspace_san adopt found ls", ls->name);
