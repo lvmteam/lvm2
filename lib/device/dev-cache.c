@@ -1330,9 +1330,9 @@ int dm_devs_cache_update(void)
 				dm_dev_new = dm_list_item(l, struct dm_active_device);
 				if ((dm_dev->devno != dm_dev_new->devno) ||
 				    strcmp(dm_dev->uuid, dm_dev_new->uuid)) {
-					log_debug_cache("Mismatching UUID or devno found  %s    %lu    %s    %lu",
-							dm_dev->uuid, dm_dev->devno,
-							dm_dev_new->uuid, dm_dev_new->devno);
+					log_debug_cache("Mismatching UUID or devno found  %s %u:%u   %s %u:%u.",
+							dm_dev->uuid, MAJOR(dm_dev->devno), MINOR(dm_dev->devno),
+							dm_dev_new->uuid, MAJOR(dm_dev_new->devno), MINOR(dm_dev_new->devno));
 					cache_changed = 1;
 					break;
 				}
