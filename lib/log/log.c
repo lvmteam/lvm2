@@ -539,7 +539,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 {
 	va_list ap;
 	char buf[1024], message[4096];
-	char time_prefix[32] = "";
+	char time_prefix[32];
 	const char *command_prefix = NULL;
 	int n;
 	const char *trformat;		/* Translated format string */
@@ -690,15 +690,12 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 	}
 #endif
 
+	time_prefix[0] = '\0';
 	if (!logged_via_report && ((verbose_level() >= level) && !_log_suppress)) {
 		if (verbose_level() > _LOG_DEBUG) {
-			memset(buf, 0, sizeof(buf));
-
 			if (!_debug_output_fields || (_debug_output_fields & LOG_DEBUG_FIELD_TIME)) {
 				if (!time_prefix[0])
 					_set_time_prefix(time_prefix, sizeof(time_prefix));
-				else
-					time_prefix[0] = '\0';
 			}
 
 			if (!_debug_output_fields || (_debug_output_fields & LOG_DEBUG_FIELD_COMMAND))
@@ -713,8 +710,6 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 				(void) dm_snprintf(buf, sizeof(buf), "%s%s",
 					   	   time_prefix, command_prefix ?: "");
 		} else {
-			memset(buf, 0, sizeof(buf));
-
 			/* without -vvvv, command[pid] is controlled by config settings */
 
 			(void) dm_snprintf(buf, sizeof(buf), "%s", log_command_info());
@@ -763,8 +758,6 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 		if (!_debug_file_fields || (_debug_file_fields & LOG_DEBUG_FIELD_TIME)) {
 			if (!time_prefix[0])
 				_set_time_prefix(time_prefix, sizeof(time_prefix));
-			else
-				time_prefix[0] = '\0';
 		}
 
 		if (!_debug_file_fields || (_debug_file_fields & LOG_DEBUG_FIELD_COMMAND))
