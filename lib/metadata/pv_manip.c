@@ -398,9 +398,11 @@ int check_pv_segments(struct volume_group *vg)
 	uint32_t start_pe, alloced;
 	uint32_t pv_count = 0, free_count = 0, extent_count = 0;
 	int ret = 1;
+	const char *pv_devname;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		pv = pvl->pv;
+		pv_devname = pv_dev_name(pv);
 		segno = 0;
 		start_pe = 0;
 		alloced = 0;
@@ -411,7 +413,7 @@ int check_pv_segments(struct volume_group *vg)
 
 			/* FIXME Remove this next line eventually */
 			log_debug_alloc("%s %u: %6u %6u: %s(%u:%u)",
-					pv_dev_name(pv), segno++, peg->pe, peg->len,
+					pv_devname, segno++, peg->pe, peg->len,
 					peg->lvseg ? peg->lvseg->lv->name : "NULL",
 					peg->lvseg ? peg->lvseg->le : 0, s);
 			/* FIXME Add details here on failure instead */
