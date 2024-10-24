@@ -564,6 +564,13 @@ bool radix_tree_insert(struct radix_tree *rt, const void *key, size_t keylen, un
 	return _insert(rt, lr.v, lr.kb, ke, rv);
 }
 
+int radix_tree_uniq_insert(struct radix_tree *rt, const void *key, size_t keylen, union radix_value rv)
+{
+	unsigned entries = rt->nr_entries;
+	return radix_tree_insert(rt, key, keylen, rv) ?
+		((entries != rt->nr_entries) ? 1 : -1) : 0;
+}
+
 // Note the degrade functions also free the original node.
 static void _degrade_to_n4(struct node16 *n16, struct value *result)
 {

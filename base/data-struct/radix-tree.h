@@ -35,6 +35,10 @@ void radix_tree_destroy(struct radix_tree *rt);
 unsigned radix_tree_size(struct radix_tree *rt);
 bool radix_tree_insert(struct radix_tree *rt, const void *key, size_t keylen, union radix_value v);
 bool radix_tree_remove(struct radix_tree *rt, const void *key, size_t keylen);
+// Returns: 1 success
+//	    0 failure during insert
+//	   -1 key had already existing value (that was updated)
+int radix_tree_uniq_insert(struct radix_tree *rt, const void *key, size_t keylen, union radix_value v);
 
 // Returns the number of values removed
 unsigned radix_tree_remove_prefix(struct radix_tree *rt, const void *prefix, size_t prefix_len);
@@ -77,6 +81,12 @@ static inline bool radix_tree_insert_ptr(struct radix_tree *rt, const void *key,
 {
 	union radix_value v = { .ptr = ptr };
 	return radix_tree_insert(rt, key, keylen, v);
+}
+
+static inline int radix_tree_uniq_insert_ptr(struct radix_tree *rt, const void *key, size_t keylen, void *ptr)
+{
+	union radix_value v = { .ptr = ptr };
+	return radix_tree_uniq_insert(rt, key, keylen, v);
 }
 //----------------------------------------------------------------
 
