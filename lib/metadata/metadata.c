@@ -2253,7 +2253,7 @@ int vg_validate(struct volume_group *vg)
 	struct dm_str_list *sl;
 	char uuid[64] __attribute__((aligned(8)));
 	char uuid2[64] __attribute__((aligned(8)));
-	int r = 1;
+	int r = 1, rt;
 	unsigned hidden_lv_count = 0, lv_count = 0, lv_visible_count = 0;
 	unsigned pv_count = 0;
 	unsigned num_snapshots = 0;
@@ -2307,8 +2307,14 @@ int vg_validate(struct volume_group *vg)
 			r = 0;
 		}
 
-		if (radix_tree_lookup_ptr(vhash.pvid, &pvl->pv->id,
-					  sizeof(pvl->pv->id))) {
+		if (1 != (rt = radix_tree_uniq_insert_ptr(vhash.pvid, &pvl->pv->id,
+							  sizeof(pvl->pv->id), pvl->pv))) {
+			r = 0;
+			if (!rt) {
+				log_error("Failed to store pvid.");
+				goto out;
+			}
+
 			if (!id_write_format(&pvl->pv->id, uuid,
 					     sizeof(uuid)))
 				stack;
@@ -2316,7 +2322,6 @@ int vg_validate(struct volume_group *vg)
 				  "%s detected for %s in %s.",
 				  uuid, pv_dev_name(pvl->pv),
 				  vg->name);
-			r = 0;
 		}
 
 		dm_list_iterate_items(sl, &pvl->pv->tags)
@@ -2325,13 +2330,6 @@ int vg_validate(struct volume_group *vg)
 					  pv_dev_name(pvl->pv), sl->str);
 				r = 0;
 			}
-
-		if (!radix_tree_insert_ptr(vhash.pvid, &pvl->pv->id,
-					   sizeof(pvl->pv->id), pvl->pv)) {
-			log_error("Failed to hash pvid.");
-			r = 0;
-			break;
-		}
 	}
 
 
@@ -2466,44 +2464,42 @@ int vg_validate(struct volume_group *vg)
 		goto out;
 	}
 
-	dm_list_iterate_items(lvl, &vg->lvs) {
-		if (radix_tree_lookup_ptr(vhash.lvname, lvl->lv->name, strlen(lvl->lv->name))) {
+	/* For best CPU cache utilization do a separate pass for lvname and lvid */
+	dm_list_iterate_items(lvl, &vg->lvs)
+		if (1 != (rt = radix_tree_uniq_insert_ptr(vhash.lvname, lvl->lv->name,
+							  strlen(lvl->lv->name), lvl))) {
+			r = 0;
+			if (!rt) {
+				log_error("Failed to store lvname.");
+				goto out;
+			}
 			log_error(INTERNAL_ERROR
 				  "Duplicate LV name %s detected in %s.",
 				  lvl->lv->name, vg->name);
-			r = 0;
 		}
 
-		if (radix_tree_lookup_ptr(vhash.lvid, &lvl->lv->lvid.id[1],
-					  sizeof(lvl->lv->lvid.id[1]))) {
+	dm_list_iterate_items(lvl, &vg->lvs)
+		if (1 != (rt = radix_tree_uniq_insert_ptr(vhash.lvid, &lvl->lv->lvid.id[1],
+							  sizeof(lvl->lv->lvid.id[1]), lvl->lv))) {
+			r = 0;
+			if (!rt) {
+				log_error("Failed to store lvid.");
+				goto out;
+			}
+
 			if (!id_write_format(&lvl->lv->lvid.id[1], uuid,
 					     sizeof(uuid)))
 				stack;
-			log_error(INTERNAL_ERROR "Duplicate LV id "
-				  "%s detected for %s in %s.",
+			log_error(INTERNAL_ERROR "Duplicate LV id %s detected for %s in %s.",
 				  uuid, lvl->lv->name, vg->name);
-			r = 0;
 		}
 
+	dm_list_iterate_items(lvl, &vg->lvs)
 		if (!check_lv_segments_complete_vg(lvl->lv)) {
 			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
 				  lvl->lv->name);
 			r = 0;
 		}
-
-		if (!radix_tree_insert_ptr(vhash.lvname, lvl->lv->name, strlen(lvl->lv->name), lvl)) {
-			log_error("Failed to hash lvname.");
-			r = 0;
-			break;
-		}
-
-		if (!radix_tree_insert_ptr(vhash.lvid, &lvl->lv->lvid.id[1],
-					   sizeof(lvl->lv->lvid.id[1]), lvl->lv)) {
-			log_error("Failed to hash lvid.");
-			r = 0;
-			break;
-		}
-	}
 
 	if (!_lv_postorder_vg(vg, _lv_validate_references_single, &vhash)) {
 		stack;
@@ -2679,14 +2675,14 @@ int vg_validate(struct volume_group *vg)
 		goto_out;
 	}
 
-        if (!(vhash.historical_lvid = radix_tree_create(NULL, NULL))) {
-                r = 0;
-                goto_out;
-        }
+	if (!(vhash.historical_lvid = radix_tree_create(NULL, NULL))) {
+		r = 0;
+		goto_out;
+	}
 
 	dm_list_iterate_items(glvl, &vg->historical_lvs) {
 		if (!glvl->glv->is_historical) {
-			log_error(INTERNAL_ERROR "LV %s/%s appearing in VG's historical list is not a historical LV",
+			log_error(INTERNAL_ERROR "LV %s/%s appearing in VG's historical list is not a historical LV.",
 				  vg->name, glvl->glv->live->name);
 			r = 0;
 			continue;
@@ -2695,7 +2691,7 @@ int vg_validate(struct volume_group *vg)
 		hlv = glvl->glv->historical;
 
 		if (hlv->vg != vg) {
-			log_error(INTERNAL_ERROR "Historical LV %s points to different VG %s while it is listed in VG %s",
+			log_error(INTERNAL_ERROR "Historical LV %s points to different VG %s while it is listed in VG %s.",
 				  hlv->name, hlv->vg->name, vg->name);
 			r = 0;
 			continue;
@@ -2709,49 +2705,44 @@ int vg_validate(struct volume_group *vg)
 			log_error(INTERNAL_ERROR "Historical LV %s has VG UUID %s but its VG %s has UUID %s",
 				  hlv->name, uuid, hlv->vg->name, uuid2);
 			r = 0;
-			continue;
-                }
-
-		if (radix_tree_lookup_ptr(vhash.historical_lvid, &hlv->lvid.id[1], sizeof(hlv->lvid.id[1]))) {
-			if (!id_write_format(&hlv->lvid.id[1], uuid,sizeof(uuid)))
-				stack;
-			log_error(INTERNAL_ERROR "Duplicate historical LV id %s detected for %s in %s",
-				  uuid, hlv->name, vg->name);
-                        r = 0;
-                }
-
-		if (radix_tree_lookup_ptr(vhash.historical_lvname, hlv->name, strlen(hlv->name))) {
-			log_error(INTERNAL_ERROR "Duplicate historical LV name %s detected in %s", hlv->name, vg->name);
-			r = 0;
-			continue;
 		}
 
-                if (!radix_tree_insert_ptr(vhash.historical_lvname, hlv->name, strlen(hlv->name), hlv)) {
-                        log_error("Failed to hash historical LV name");
-                        r = 0;
-                        break;
-                }
+		if (1 != (rt = radix_tree_uniq_insert_ptr(vhash.historical_lvname, hlv->name,
+							  strlen(hlv->name), hlv))) {
+			r = 0;
+			if (!rt) {
+				log_error("Failed to store historical LV name.");
+				goto out;
+			}
+			log_error(INTERNAL_ERROR "Duplicate historical LV name %s detected in %s.",
+				  hlv->name, vg->name);
+		}
 
-                if (!radix_tree_insert_ptr(vhash.historical_lvid, &hlv->lvid.id[1], sizeof(hlv->lvid.id[1]), hlv)) {
-                        log_error("Failed to hash historical LV id");
-                        r = 0;
-                        break;
-                }
+		if (1 != (rt = radix_tree_uniq_insert_ptr(vhash.historical_lvid, &hlv->lvid.id[1],
+							  sizeof(hlv->lvid.id[1]), hlv))) {
+			r = 0;
+			if (!rt) {
+				log_error("Failed to store historical LV id.");
+				goto out;
+			}
+			if (!id_write_format(&hlv->lvid.id[1], uuid,sizeof(uuid)))
+				stack;
+			log_error(INTERNAL_ERROR "Duplicate historical LV id %s detected for %s in %s.",
+				  uuid, hlv->name, vg->name);
+		}
 
 		if (radix_tree_lookup_ptr(vhash.lvname, hlv->name, strlen(hlv->name))) {
-			log_error(INTERNAL_ERROR "Name %s appears as live and historical LV at the same time in VG %s",
+			log_error(INTERNAL_ERROR "Name %s appears as live and historical LV at the same time in VG %s.",
 				  hlv->name, vg->name);
 			r = 0;
-			continue;
 		}
 
 		if (!hlv->indirect_origin && dm_list_empty(&hlv->indirect_glvs)) {
-			log_error(INTERNAL_ERROR "Historical LV %s is not part of any LV chain in VG %s", hlv->name, vg->name);
+			log_error(INTERNAL_ERROR "Historical LV %s is not part of any LV chain in VG %s.",
+				  hlv->name, vg->name);
 			r = 0;
-			continue;
 		}
 	}
-
 out:
 	if (vhash.lvid)
 		radix_tree_destroy(vhash.lvid);
