@@ -406,7 +406,7 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 	buffer_size = LINE_SIZE;
 	if (!(buffer = malloc(buffer_size))) {
 		log_error("Failed to malloc line buffer.");
-		return 0;
+		goto out;
 	}
 
 	while (fgets(buffer, (int) buffer_size, fp))
@@ -419,12 +419,11 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 	r = 1;
 
 out:
-	memset(buffer, 0, buffer_size);
-#ifndef HAVE_GETLINE
-	free(buffer);
-#else
-	free(buffer);
-#endif
+	if (buffer) {
+		memset(buffer, 0, buffer_size);
+		free(buffer);
+	}
+
 	if (file && fclose(fp))
 		log_sys_debug("fclose", file);
 
