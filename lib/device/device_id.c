@@ -1389,11 +1389,6 @@ static void devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, tim
 		stack;
 		return;
 	}
-	if (!(dir = opendir(dirpath))) {
-		log_sys_debug("opendir", dirpath);
-		return;
-	}
-
 	tm = localtime(tp);
 	strftime(datetime_str, sizeof(datetime_str), "%Y%m%d.%H%M%S", tm);
 
@@ -1426,6 +1421,12 @@ static void devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, tim
 		stack;
 	fp = NULL;
 	log_debug("Wrote backup %s", path);
+
+	/* Open dir after backup file is written, so it can be accounted */
+	if (!(dir = opendir(dirpath))) {
+		log_sys_debug("opendir", dirpath);
+		return;
+	}
 
 	/* Possibly remove old backup files per configurable limit on backup files. */
 
