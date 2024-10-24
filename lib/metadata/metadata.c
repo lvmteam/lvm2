@@ -3028,10 +3028,13 @@ int vg_write(struct volume_group *vg)
 
 	/* Write to each copy of the metadata area */
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
-		mda_dev = mda_get_device(mda);
-
 		if (mda->status & MDA_FAILED)
 			continue;
+
+		if (!(mda_dev = mda_get_device(mda))) {
+			log_warn("WARNING: mda without device.");
+			continue;
+		}
 
 		/*
 		 * When the scan and vg_read find old metadata in an mda, they
