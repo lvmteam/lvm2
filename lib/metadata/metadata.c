@@ -1671,6 +1671,11 @@ struct logical_volume *find_lv_in_vg_by_lvid(const struct volume_group *vg,
 struct logical_volume *find_lv(const struct volume_group *vg,
 			       const char *lv_name)
 {
+	if (!vg->lv_names) {
+		struct lv_list *lvl = find_lv_in_vg(vg, lv_name);
+		return lvl ? lvl->lv : NULL;
+	}
+
 	return radix_tree_lookup_ptr(vg->lv_names, lv_name, strlen(lv_name));
 }
 
