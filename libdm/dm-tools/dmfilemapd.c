@@ -141,6 +141,7 @@ static int _is_open_in_pid(pid_t pid, const char *path)
 	char link_buf[PATH_MAX];
 	DIR *pid_d = NULL;
 	ssize_t len;
+	int df;
 
 	if (pid == getpid())
 		return 0;
@@ -169,7 +170,8 @@ static int _is_open_in_pid(pid_t pid, const char *path)
 	while ((pid_dp = readdir(pid_d)) != NULL) {
 		if (pid_dp->d_name[0] == '.')
 			continue;
-		if ((len = readlinkat(dirfd(pid_d), pid_dp->d_name, link_buf,
+		if (((df = dirfd(pid_d)) < 0) ||
+		    (len = readlinkat(df, pid_dp->d_name, link_buf,
 				      (sizeof(link_buf) - 1))) < 0) {
 			log_error("readlink failed for " DEFAULT_PROC_DIR
 				  "/%d/fd/.", pid);
