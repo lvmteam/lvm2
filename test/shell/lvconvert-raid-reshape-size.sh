@@ -85,9 +85,11 @@ function _get_size
 	local data_stripes=$3
 	local reshape_len rimagesz
 
-        # Get any reshape size in sectors
-	reshape_len=$(lvs --noheadings -aoname,reshapelen --unit s $vg/${lv}_rimage_0|head -1|cut -d ']' -f2)
-	reshape_len=$(echo ${reshape_len/S}|xargs)
+	# Get any reshape size in sectors
+	# avoid using pipes as exit codes may cause test failure
+	reshape_len="$(lvs --noheadings --nosuffix -aoreshapelen --unit s $vg/${lv}_rimage_0)"
+	# drop everything past 'S'
+	reshape_len="$(echo ${reshape_len/S*}|xargs)"
 
 	# Get rimage size - reshape length
 	rimagesz=$(($(blockdev --getsz /dev/mapper/${vg}-${lv}_rimage_0) - $reshape_len))
