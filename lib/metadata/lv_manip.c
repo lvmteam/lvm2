@@ -6650,6 +6650,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	int is_active = 0;
 	int activated = 0;
 	int activated_checksize = 0;
+	int resize_fs = !strncmp(lp->fsopt, "resize", 6);
 	int status;
 	int ret = 0;
 
@@ -6888,9 +6889,10 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	/*
 	 * No resizing is needed.
 	 */
-	if ((main_size_matches && meta_size_matches) ||
-	    (main_size_matches && !lv_meta) ||
-	    (meta_size_matches && !lv_main)) {
+	if (!resize_fs &&
+	    ((main_size_matches && meta_size_matches) ||
+	     (main_size_matches && !lv_meta) ||
+	     (meta_size_matches && !lv_main))) {
 		log_error("No size change.");
 		return 0;
 	}
@@ -7103,11 +7105,18 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 		goto end_main;
 	if (!_lv_resize_volume(lv_main, lp, lp->pvh))
 		goto_out;
-	if (!lp->size_changed)
-		goto_out;
-	if (!lv_update_and_reload(lv_top))
-		goto_out;
-	log_debug("Resized %s to %u extents.", display_lvname(lv_main), lp->extents);
+	if (!lp->size_changed) {
+		if (!resize_fs)
+			goto_out;
+		/* Even when the new volume size does NOT change, command still should resize
+		 * the filesystem, we still run filesystem resize tool to eventually
+		 * match the volume size. Return code of command then reflects the result
+		 * of such operation thus it's valid to 'lvresize -f -Lsamesize vg/lv' */
+	} else {
+		if (!lv_update_and_reload(lv_top))
+			goto_out;
+		log_debug("Resized %s to %u extents.", display_lvname(lv_main), lp->extents);
+	}
 
  end_main:
 
