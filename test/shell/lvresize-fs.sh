@@ -661,21 +661,24 @@ lvremove -f $vg
 lvcreate -n $lv -L 16M $vg
 mkswap /dev/$vg/$lv
 
-# lvreduce not allowed if LV size < swap size
-not lvreduce --fs checksize -L8m $vg/$lv
-check lv_field $vg/$lv lv_size "16.00m"
+# FSSIZE reported since util-linux/blkid v2.39 and later only
+blkid -p "$DM_DEV_DIR/$vg/$lv" | grep FSSIZE && {
+	# lvreduce not allowed if LV size < swap size
+	not lvreduce --fs checksize -L8m $vg/$lv
+	check lv_field $vg/$lv lv_size "16.00m"
 
-# lvreduce not allowed if LV size < swap size,
-# even with --fs resize, this is not supported
-not lvreduce --fs resize $vg/$lv
-check lv_field $vg/$lv lv_size "16.00m"
+	# lvreduce not allowed if LV size < swap size,
+	# even with --fs resize, this is not supported
+	not lvreduce --fs resize $vg/$lv
+	check lv_field $vg/$lv lv_size "16.00m"
 
-# lvextend allowed if LV size > swap size
-lvextend -L32m $vg/$lv
-check lv_field $vg/$lv lv_size "32.00m"
+	# lvextend allowed if LV size > swap size
+	lvextend -L32m $vg/$lv
+	check lv_field $vg/$lv lv_size "32.00m"
 
-# lvreduce allowed if LV size == swap size
-lvreduce -L16m $vg/$lv
-check lv_field $vg/$lv lv_size "16.00m"
+	# lvreduce allowed if LV size == swap size
+	lvreduce -L16m $vg/$lv
+	check lv_field $vg/$lv lv_size "16.00m"
+}
 
 vgremove -ff $vg
