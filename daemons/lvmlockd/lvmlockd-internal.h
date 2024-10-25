@@ -631,7 +631,7 @@ static inline int lm_is_running_sanlock(void)
 	return 0;
 }
 
-static inline int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes);
+static inline int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes)
 {
 	return -1;
 }
