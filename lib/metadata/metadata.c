@@ -4992,7 +4992,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		if (!(vg_read_flags & READ_OK_NOTFOUND))
 			log_error("Volume group \"%s\" not found", vg_name);
 		failure |= FAILED_NOTFOUND;
-		goto bad;
+		goto_bad;
 	}
 
 	/*
@@ -5008,7 +5008,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		if (!(vg_read_flags & READ_OK_NOTFOUND))
 			log_error("Volume group \"%s\" not found.", vg_name);
 		failure |= FAILED_NOTFOUND;
-		goto bad;
+		goto_bad;
 	}
 
 	/*
