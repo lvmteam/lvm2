@@ -864,6 +864,8 @@ arg(syncaction_ARG, '\0', "syncaction", syncaction_VAL, 0, 0,
     "(mismatches between mirrors or incorrect parity values).\n"
     "\\fBcheck\\fP will count but not correct discrepancies.\n"
     "\\fBrepair\\fP will correct discrepancies.\n"
+    "Mind that these synchronization actions are transient and have to be restarted\n"
+    "after a system failure/reboot or a configuration change to the RaidLV.\n"
     "See \\fBlvs\\fP(8) for reporting discrepancies found or repaired.\n")
     
 arg(sysinit_ARG, '\0', "sysinit", 0, 0, 0,

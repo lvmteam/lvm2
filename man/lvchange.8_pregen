@@ -922,6 +922,8 @@ blocks in the array and check for discrepancies
 (mismatches between mirrors or incorrect parity values).
 \fBcheck\fP will count but not correct discrepancies.
 \fBrepair\fP will correct discrepancies.
+Mind that these synchronization actions are transient and have to be restarted
+after a system failure/reboot or a configuration change to the RaidLV.
 See \fBlvs\fP(8) for reporting discrepancies found or repaired.
 .
 .HP
