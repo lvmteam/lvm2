@@ -137,11 +137,24 @@ mount "$DM_DEV_DIR/$vg/$lv" "$mount_dir"
 # so exit 0 test here, if the feature is not present
 blkid -p "$DM_DEV_DIR/$vg/$lv" | grep FSLASTBLOCK || exit 0
 
+# existence of FSLASTBLOCK gives assumption on having 'new enough' blkid
+FSSIZE="$(blkid -p -o udev --match-tag FSSIZE "$DM_DEV_DIR/$vg/$lv")"
+FSSIZE=${FSSIZE/*=}
+# lvextend, ext4, active, mounted,
+df --output=size "$mount_dir" |tee df1
+lvextend -L+5M $vg/$lv
+check lv_field $vg/$lv lv_size "25.00m"
+#  here the filesystem should be resize to match 25M and must not fail
+lvextend -r -L25M $vg/$lv
+NEW_FSSIZE="$(blkid -p -o udev --match-tag FSSIZE "$DM_DEV_DIR/$vg/$lv")"
+NEW_FSSIZE=${NEW_FSSIZE/*=}
+test "$NEW_FSSIZE" -gt "$FSSIZE" ||
+	die "Filesystem should be extended"
 
 # lvextend, ext4, active, mounted, no --fs setting is same as --fs ignore
 df --output=size "$mount_dir" |tee df1
 dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=8 oflag=direct
-lvextend -L+10M $vg/$lv
+lvextend -L+5M $vg/$lv
 check lv_field $vg/$lv lv_size "30.00m"
 # with no --fs used, the fs size should be the same
 df --output=size "$mount_dir" |tee df2
