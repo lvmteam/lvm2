@@ -1,5 +1,6 @@
 Version 2.03.28 - 
 ==================
+  Restore fs resize call for lvresize -r on the same size LV (2.03.17).
   Correct off-by-one devicesfile backup counting.
   Replace use of dm_hash with radix_tree for lv names and uuids.
   Refactor vg_validate with uniq_insert and better use of CPU caches.
