@@ -116,9 +116,7 @@ int link_lv_to_vg(struct volume_group *vg, struct logical_volume *lv)
 	if (vg_max_lv_reached(vg))
 		stack;
 
-	if (!(lvl = dm_pool_zalloc(vg->vgmem, sizeof(*lvl))))
-		return_0;
-
+	lvl = &lv->lvl;
 	lvl->lv = lv;
 	lv->vg = vg;
 	dm_list_add(&vg->lvs, &lvl->list);

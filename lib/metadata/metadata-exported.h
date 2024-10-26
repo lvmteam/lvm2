@@ -573,11 +573,6 @@ struct pv_list {
 	struct dm_list *pe_ranges;	/* Ranges of PEs e.g. for allocation */
 };
 
-struct lv_list {
-	struct dm_list list;
-	struct logical_volume *lv;
-};
-
 struct glv_list {
 	struct dm_list list;
 	struct generic_logical_volume *glv;

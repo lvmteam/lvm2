@@ -1637,6 +1637,7 @@ struct pv_list *find_pv_in_vg_by_uuid(const struct volume_group *vg,
 struct lv_list *find_lv_in_vg(const struct volume_group *vg,
 			      const char *lv_name)
 {
+	struct logical_volume *lv;
 	struct lv_list *lvl;
 	const char *ptr;
 
@@ -1645,6 +1646,11 @@ struct lv_list *find_lv_in_vg(const struct volume_group *vg,
 		ptr++;
 	else
 		ptr = lv_name;
+
+	if (vg->lv_names) {
+		lv = radix_tree_lookup_ptr(vg->lv_names, ptr, strlen(ptr));
+		return (lv) ? &lv->lvl : NULL;
+	}
 
 	dm_list_iterate_items(lvl, &vg->lvs)
 		if (!strcmp(lvl->lv->name, ptr))
@@ -1671,12 +1677,8 @@ struct logical_volume *find_lv_in_vg_by_lvid(const struct volume_group *vg,
 struct logical_volume *find_lv(const struct volume_group *vg,
 			       const char *lv_name)
 {
-	if (!vg->lv_names) {
-		struct lv_list *lvl = find_lv_in_vg(vg, lv_name);
-		return lvl ? lvl->lv : NULL;
-	}
-
-	return radix_tree_lookup_ptr(vg->lv_names, lv_name, strlen(lv_name));
+	struct lv_list *lvl = find_lv_in_vg(vg, lv_name);
+	return lvl ? lvl->lv : NULL;
 }
 
 struct generic_logical_volume *find_historical_glv(const struct volume_group *vg,

@@ -21,7 +21,14 @@ union lvid;
 struct lv_segment;
 enum activation_change;
 
+struct lv_list {
+	struct dm_list list;
+	struct logical_volume *lv;
+};
+
 struct logical_volume {
+	/* NOTE: lvid must be the first structure member as it's used for
+	 * offsetof()  calculation in report.c  with columns.h */
 	union lvid lvid;
 	const char *name;
 
@@ -41,6 +48,7 @@ struct logical_volume {
 	struct dm_list snapshot_segs;
 	struct lv_segment *snapshot;
 
+	struct lv_list lvl;
 	struct dm_list segments;
 	struct dm_list tags;
 	struct dm_list segs_using_this_lv;
