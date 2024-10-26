@@ -81,6 +81,9 @@ static void _free_vg(struct volume_group *vg)
 	if (vg->lv_names)
 		radix_tree_destroy(vg->lv_names);
 
+	if (vg->lv_uuids)
+		radix_tree_destroy(vg->lv_uuids);
+
 	if (vg->pv_names)
 		radix_tree_destroy(vg->pv_names);
 

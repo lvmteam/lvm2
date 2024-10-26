@@ -65,6 +65,7 @@ struct volume_group {
 	uint64_t status;
 
 	struct radix_tree *lv_names;    /* maintained tree for LV names within VG */
+	struct radix_tree *lv_uuids;    /* LV uuid (when searching committed metadata) */
 	struct radix_tree *pv_names;    /* PV names used for metadata import */
 
 	struct id id;

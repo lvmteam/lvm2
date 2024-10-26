@@ -1667,6 +1667,13 @@ struct logical_volume *find_lv_in_vg_by_lvid(const struct volume_group *vg,
 	if (memcmp(&lvid->id[0], &vg->id, ID_LEN))
 		return NULL; /* Check VG does not match */
 
+	if (vg->lv_uuids)
+		/* Used only for committed read-only VG (which happens to be
+		 * the only user of this 'find' function.
+		 * ATM we do NOT update this radix_tree when LV is added/removed! */
+		return radix_tree_lookup_ptr(vg->lv_uuids, &lvid->id[1],
+					     sizeof(lvid->id[1]));
+
 	dm_list_iterate_items(lvl, &vg->lvs)
 		if (!memcmp(&lvid->id[1], &lvl->lv->lvid.id[1], sizeof(lvid->id[1])))
 			return lvl->lv; /* LV uuid match */
@@ -4349,6 +4356,8 @@ const struct logical_volume *lv_committed(const struct logical_volume *lv)
 {
 	struct volume_group *vg;
 	const struct logical_volume *found_lv;
+	struct lv_list *lvl;
+	int r;
 
 	if (!lv)
 		return NULL;
@@ -4357,6 +4366,24 @@ const struct logical_volume *lv_committed(const struct logical_volume *lv)
 		return lv;
 
 	vg = lv->vg->vg_committed;
+
+	if (!vg->lv_uuids &&
+	    (vg->lv_uuids = radix_tree_create(NULL, NULL)))
+		/* Create radix_tree for the 'committed' VG, that should
+		 * never be modified and is only used for 'activation'
+		 * so the tree need to constructed just once. */
+		dm_list_iterate_items(lvl, &vg->lvs) {
+			if (!(r = radix_tree_uniq_insert_ptr(vg->lv_uuids,
+								 &lvl->lv->lvid.id[1],
+								 sizeof(lvl->lv->lvid.id[1]),
+								 lvl->lv))) {
+				radix_tree_destroy(vg->lv_uuids);
+				vg->lv_uuids = NULL; /* fallback to linear search */
+				break;
+			}
+			if (r != 1) /* There is duplicate ID, but continue with 'best' effort */
+				log_warn("WARNING: Duplicate id found!");
+		}
 
 	if (!(found_lv = find_lv_in_vg_by_lvid(vg, &lv->lvid))) {
 		log_error(INTERNAL_ERROR "LV %s (UUID %s) not found in committed metadata.",
