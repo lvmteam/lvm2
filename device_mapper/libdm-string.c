@@ -471,10 +471,10 @@ const char *dm_size_to_string(struct dm_pool *mem, uint64_t size,
 	double d;
 	uint64_t byte = UINT64_C(0);
 	uint64_t units = UINT64_C(1024);
-	char *size_buf = NULL;
+	char *size_buf;
 	char new_unit_type = '\0', unit_type_buf[2];
 	const char *prefix = "";
-	const char * const size_str[][3] = {
+	static const char _size_str[][3][12] = {
 		/* BASE_UNKNOWN */
 		{"         ", "   ", " "},	/* [0] */
 
@@ -519,14 +519,14 @@ const char *dm_size_to_string(struct dm_pool *mem, uint64_t size,
 		/* Case-independent match */
 		for (s = 0; s < NUM_UNIT_PREFIXES; s++)
 			if (toupper((int) unit_type) ==
-			    *size_str[BASE_SHARED + s][2]) {
+			    *_size_str[BASE_SHARED + s][2]) {
 				base = BASE_SHARED;
 				break;
 			}
 	} else {
 		/* Case-dependent match for powers of 1000 */
 		for (s = 0; s < NUM_UNIT_PREFIXES; s++)
-			if (unit_type == *size_str[BASE_1000 + s][2]) {
+			if (unit_type == *_size_str[BASE_1000 + s][2]) {
 				base = BASE_1000;
 				break;
 			}
@@ -534,7 +534,7 @@ const char *dm_size_to_string(struct dm_pool *mem, uint64_t size,
 		/* Case-dependent match for powers of 1024 */
 		if (base == BASE_UNKNOWN)
 			for (s = 0; s < NUM_UNIT_PREFIXES; s++)
-			if (unit_type == *size_str[BASE_1024 + s][2]) {
+			if (unit_type == *_size_str[BASE_1024 + s][2]) {
 				base = BASE_1024;
 				break;
 			}
@@ -544,7 +544,7 @@ const char *dm_size_to_string(struct dm_pool *mem, uint64_t size,
 		/* Check for special units - s, b or u */
 		for (s = 0; s < NUM_SPECIAL; s++)
 			if (toupper((int) unit_type) ==
-			    *size_str[BASE_SPECIAL + s][2]) {
+			    *_size_str[BASE_SPECIAL + s][2]) {
 				base = BASE_SPECIAL;
 				break;
 			}
@@ -552,7 +552,7 @@ const char *dm_size_to_string(struct dm_pool *mem, uint64_t size,
 	if (size == UINT64_C(0)) {
 		if (base == BASE_UNKNOWN)
 			s = 0;
-		snprintf(size_buf, SIZE_BUF, "0%s", include_suffix ? size_str[base + s][suffix_type] : "");
+		snprintf(size_buf, SIZE_BUF, "0%s", include_suffix ? _size_str[base + s][suffix_type] : "");
 		return size_buf;
 	}
 
@@ -602,7 +602,7 @@ const char *dm_size_to_string(struct dm_pool *mem, uint64_t size,
 	}
 
 	/* FIXME Make precision configurable */
-	switch (toupper(*size_str[base + s][DM_SIZE_UNIT])) {
+	switch (toupper(*_size_str[base + s][DM_SIZE_UNIT])) {
 	case 'B':
 	case 'S':
 		precision = 0;
@@ -612,7 +612,7 @@ const char *dm_size_to_string(struct dm_pool *mem, uint64_t size,
 	}
 
 	snprintf(size_buf, SIZE_BUF, "%s%.*f%s", prefix, precision,
-		 (double) size / byte, include_suffix ? size_str[base + s][suffix_type] : "");
+		 (double) size / byte, include_suffix ? _size_str[base + s][suffix_type] : "");
 
 	return size_buf;
 }
