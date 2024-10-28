@@ -973,8 +973,6 @@ static int _read_lvsegs(struct cmd_context *cmd,
 		return_0;
 
 	lv->size = (uint64_t) lv->le_count * (uint64_t) vg->extent_size;
-	lv->minor = -1;
-	lv->major = -1;
 
 	if (lv->status & FIXED_MINOR) {
 		if (!_read_int32(lvn, "minor", &lv->minor)) {

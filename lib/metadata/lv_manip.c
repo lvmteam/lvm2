@@ -7303,6 +7303,9 @@ struct logical_volume *alloc_lv(struct dm_pool *mem)
 		return NULL;
 	}
 
+	lv->major = -1;
+	lv->minor = -1;
+
 	dm_list_init(&lv->snapshot_segs);
 	dm_list_init(&lv->segments);
 	dm_list_init(&lv->tags);
@@ -7356,8 +7359,6 @@ struct logical_volume *lv_create_empty(const char *name,
 	lv->status = status;
 	lv->alloc = alloc;
 	lv->read_ahead = vg->cmd->default_settings.read_ahead;
-	lv->major = -1;
-	lv->minor = -1;
 	lv->size = UINT64_C(0);
 	lv->le_count = 0;
 
