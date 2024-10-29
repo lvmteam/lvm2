@@ -468,6 +468,7 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 			if (cache_seg->cleaner_policy) {
 				cache_seg->cleaner_policy = 0;
 				/* Restore normal table */
+				sigint_clear();
 				if (!lv_update_and_reload_origin(cache_lv))
 					stack;
 			}
