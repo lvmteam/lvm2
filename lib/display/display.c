@@ -65,14 +65,16 @@ const char *get_alloc_string(alloc_policy_t alloc)
 alloc_policy_t get_alloc_from_string(const char *str)
 {
 	int i;
-
-	/* cling_by_tags is part of cling */
-	if (!strcmp("cling_by_tags", str))
-		return ALLOC_CLING;
+	alloc_policy_t alloc;
 
 	for (i = 0; i < _num_policies; i++)
-		if (!strcmp(_policies[i].str, str))
-			return _policies[i].alloc;
+		if (!strcmp(_policies[i].str, str)) {
+			alloc = _policies[i].alloc;
+			/* cling_by_tags is part of cling */
+			if (alloc == ALLOC_CLING_BY_TAGS)
+				alloc = ALLOC_CLING;
+			return alloc;
+		}
 
 	/* Special case for old metadata */
 	if (!strcmp("next free", str))
