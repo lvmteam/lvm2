@@ -1584,6 +1584,8 @@ int lv_set_creation(struct logical_volume *lv,
  */
 int lv_set_name(struct logical_volume *lv, const char *lv_name)
 {
+	int r;
+
 	if (lv->vg->lv_names && lv->name &&
 	    !radix_tree_remove(lv->vg->lv_names, lv->name, strlen(lv->name))) {
 		log_error("Cannot remove from lv_names LV %s", lv->name);
@@ -1593,8 +1595,12 @@ int lv_set_name(struct logical_volume *lv, const char *lv_name)
 	lv->name = lv_name; /* NULL -> LV is removed from tree */
 
 	if (lv->vg->lv_names && lv->name &&
-	    !radix_tree_insert_ptr(lv->vg->lv_names, lv->name, strlen(lv->name), lv)) {
-		log_error("Cannot insert to lv_names LV %s", lv->name);
+	    (1 != (r = radix_tree_uniq_insert_ptr(lv->vg->lv_names, lv->name,
+						  strlen(lv->name), lv)))) {
+		if (!r)
+			log_error("Cannot insert to lv_names LV %s", lv->name);
+		else
+			log_error("Duplicate LV name %s detected.", lv->name);
 		return 0;
 	}
 
