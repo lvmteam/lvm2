@@ -27,15 +27,14 @@ struct logical_volume {
 
 	struct volume_group *vg;
 
-	uint64_t status;
-	alloc_policy_t alloc;
 	struct profile *profile;
+	uint64_t status;
+	uint64_t size;		/* Sectors visible */
+	uint32_t le_count;	/* Logical extents visible */
+	alloc_policy_t alloc;
 	uint32_t read_ahead;
 	int32_t major;
 	int32_t minor;
-
-	uint64_t size;		/* Sectors visible */
-	uint32_t le_count;	/* Logical extents visible */
 
 	uint32_t origin_count;
 	uint32_t external_count;
