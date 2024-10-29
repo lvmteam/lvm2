@@ -1428,8 +1428,8 @@ static int _init_segtypes(struct cmd_context *cmd)
 	struct segment_type *segtype;
 	struct segtype_library seglib = { .cmd = cmd, .lib = NULL };
 	struct segment_type *(*init_segtype_array[])(struct cmd_context *cmd) = {
-		init_linear_segtype,
 		init_striped_segtype,
+		init_linear_segtype,
 		init_zero_segtype,
 		init_error_segtype,
 		/* disabled until needed init_free_segtype, */
