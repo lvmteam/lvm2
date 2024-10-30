@@ -294,7 +294,8 @@ static int _add_alias(struct device *dev, const char *path, enum add_hash hash)
 	size_t path_len = strlen(path);
 
 	if (hash == REHASH)
-		radix_tree_remove(_cache.names, path, path_len);
+		if (!radix_tree_remove(_cache.names, path, path_len))
+			stack;
 
 	/* Is name already there? */
 	dm_list_iterate_items(strl, &dev->aliases)
@@ -696,7 +697,8 @@ void dev_cache_failed_path(struct device *dev, const char *path)
 {
 	struct dm_str_list *strl;
 
-	radix_tree_remove(_cache.names, path, strlen(path));
+	if (!radix_tree_remove(_cache.names, path, strlen(path)))
+		stack;
 
 	dm_list_iterate_items(strl, &dev->aliases) {
 		if (!strcmp(strl->str, path)) {
@@ -1187,7 +1189,8 @@ static void _drop_all_aliases(struct device *dev)
 
 	dm_list_iterate_items_safe(strl, strl2, &dev->aliases) {
 		log_debug("Drop alias for %u:%u %s.", MAJOR(dev->dev), MINOR(dev->dev), strl->str);
-		radix_tree_remove(_cache.names, strl->str, strlen(strl->str));
+		if (!radix_tree_remove(_cache.names, strl->str, strlen(strl->str)))
+			stack;
 		dm_list_del(&strl->list);
 	}
 }
@@ -1621,7 +1624,8 @@ void dev_cache_verify_aliases(struct device *dev)
 			log_debug("Drop alias for %u:%u invalid path %s %u:%u.",
 				  MAJOR(dev->dev), MINOR(dev->dev), strl->str,
 				  MAJOR(st.st_rdev), MINOR(st.st_rdev));
-			radix_tree_remove(_cache.names, strl->str, strlen(strl->str));
+			if (!radix_tree_remove(_cache.names, strl->str, strlen(strl->str)))
+				stack;
 			dm_list_del(&strl->list);
 		}
 	}
@@ -1655,7 +1659,8 @@ static struct device *_dev_cache_get(struct cmd_context *cmd, const char *name, 
 			log_debug("Device path %s is invalid for %u:%u %s.",
 				  name, MAJOR(dev->dev), MINOR(dev->dev), dev_name(dev));
 
-			radix_tree_remove(_cache.names, name, strlen(name));
+			if (!radix_tree_remove(_cache.names, name, strlen(name)))
+				stack;
 
 			_remove_alias(dev, name);
 
