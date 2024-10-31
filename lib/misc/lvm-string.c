@@ -172,6 +172,9 @@ static const char *_lvname_has_reserved_component_string(const char *lvname)
 	};
 	unsigned i;
 
+	if (!(lvname = strchr(lvname, '_')))
+		return NULL;
+
 	for (i = 0; i < DM_ARRAY_SIZE(_strings); ++i)
 		if (strstr(lvname, _strings[i]))
 			return _strings[i];
@@ -188,6 +191,9 @@ static const char *_lvname_has_reserved_string(const char *lvname)
 	};
 	unsigned i;
 	const char *cs;
+
+	if (!(lvname = strchr(lvname, '_')))
+		return NULL;
 
 	if ((cs = _lvname_has_reserved_component_string(lvname)))
 		return cs;
