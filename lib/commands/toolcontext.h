@@ -218,6 +218,7 @@ struct cmd_context {
 	unsigned device_ids_invalid:1;
 	unsigned device_ids_auto_import:1;
 	unsigned get_vgname_from_options:1;     /* used by lvconvert */
+	unsigned vg_write_validates_vg:1;
 
 	/*
 	 * Devices and filtering.

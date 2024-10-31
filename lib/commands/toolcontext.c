@@ -658,7 +658,7 @@ static int _process_config(struct cmd_context *cmd)
 {
 	mode_t old_umask;
 	const char *dev_ext_info_src = NULL;
-	const char *read_ahead;
+	const char *read_ahead, *validate_metadata;
 	struct stat st;
 	const struct dm_config_node *cn;
 	const struct dm_config_value *cv;
@@ -742,6 +742,15 @@ static int _process_config(struct cmd_context *cmd)
 	else {
 		log_error("Invalid readahead specification");
 		return 0;
+	}
+
+	cmd->vg_write_validates_vg = 1;
+	if ((validate_metadata = find_config_tree_str(cmd, config_validate_metadata_CFG, NULL))) {
+		if (!strcasecmp(validate_metadata, "none"))
+			cmd->vg_write_validates_vg = 0;
+		else if (strcasecmp(validate_metadata, "full"))
+			log_warn("WARNING: Ignoring unknown validate_metadata setting: %s.",
+				 validate_metadata);
 	}
 
 	/*

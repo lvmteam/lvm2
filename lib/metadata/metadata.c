@@ -2951,8 +2951,13 @@ int vg_write(struct volume_group *vg)
 		return 0;
 	}
 
-	if (!vg_validate(vg))
-		return_0;
+	if (vg->cmd->vg_write_validates_vg) {
+		log_debug_metadata("Validating volume group structure.");
+		if (!vg_validate(vg))
+			return_0;
+	} else
+		log_debug_metadata("Skipping validation of volume group structure.");
+
 
 	if (vg->status & PARTIAL_VG) {
 		log_error("Cannot update partial volume group %s.", vg->name);

@@ -33,6 +33,7 @@
 
 #define DEFAULT_ARCHIVE_ENABLED 1
 #define DEFAULT_BACKUP_ENABLED 1
+#define DEFAULT_VALIDATE_METADATA "full"    /* full | none */
 
 #define DEFAULT_CACHE_FILE_PREFIX ""
 

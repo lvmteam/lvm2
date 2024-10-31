@@ -36,6 +36,19 @@ config {
 	# This configuration option has an automatic default value.
 	# checks = 1
 
+	# Configuration option config/validate_metadata.
+	# Allows to select the level of validation after metadata transformation.
+	# Validation takes extra CPU time to verify internal consistency.
+	# Accepted values:
+	#   full
+	#     Do a full metadata validation before disk write.
+	#   none
+	#     Skip any checks (unrecommended, slightly faster).
+	#
+	# This configuration option is advanced.
+	# This configuration option has an automatic default value.
+	# validate_metadata = "full"
+
 	# Configuration option config/abort_on_errors.
 	# Abort the LVM process if a configuration mismatch is found.
 	# This configuration option has an automatic default value.
