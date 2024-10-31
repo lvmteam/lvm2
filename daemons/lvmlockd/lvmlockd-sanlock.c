@@ -773,31 +773,31 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
  * can be saved in the lv's lock_args in the vg metadata.
  */
 
-int lm_init_lv_sanlock(struct lockspace *ls, char *lv_name, char *vg_args, char *lv_args)
+int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char *lv_name, char *vg_args, char *lv_args)
 {
-	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
+	char disk_path[SANLK_PATH_LEN];
+	struct lm_sanlock *lms;
 	struct sanlk_resourced rd;
 	char lock_lv_name[MAX_ARGS+1];
 	char lock_args_version[MAX_VERSION+1];
 	uint64_t offset;
-	int align_size = lms->align_size;
+	int sector_size;
+	int align_size;
+	int align_mb;
+	uint32_t ss_flags;
+	uint32_t rs_flags;
 	int rv;
 
 	memset(&rd, 0, sizeof(rd));
 	memset(lock_lv_name, 0, sizeof(lock_lv_name));
 	memset(lock_args_version, 0, sizeof(lock_args_version));
-
-	rv = lock_lv_name_from_args(vg_args, lock_lv_name);
-	if (rv < 0) {
-		log_error("S %s init_lv_san lock_lv_name_from_args error %d %s",
-			  ls->name, rv, vg_args);
-		return rv;
-	}
+	memset(disk_path, 0, sizeof(disk_path));
 
 	snprintf(lock_args_version, MAX_VERSION, "%u.%u.%u",
 		 LV_LOCK_ARGS_MAJOR, LV_LOCK_ARGS_MINOR, LV_LOCK_ARGS_PATCH);
 
 	if (daemon_test) {
+		align_size = 1024 * 1024;
 		snprintf(lv_args, MAX_ARGS, "%s:%llu",
 			 lock_args_version,
 			 (unsigned long long)((align_size * LV_LOCK_BEGIN) + (align_size * daemon_test_lv_count)));
@@ -805,18 +805,46 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *lv_name, char *vg_args, char 
 		return 0;
 	}
 
-	strcpy_name_len(rd.rs.lockspace_name, ls->name, SANLK_NAME_LEN);
-	rd.rs.num_disks = 1;
-	if ((rv = build_dm_path(rd.rs.disks[0].path, SANLK_PATH_LEN, ls->vg_name, lock_lv_name)))
+	rv = lock_lv_name_from_args(vg_args, lock_lv_name);
+	if (rv < 0) {
+		log_error("S %s init_lv_san lock_lv_name_from_args error %d %s",
+			  ls_name, rv, vg_args);
 		return rv;
+	}
 
-	rd.rs.flags = lms->rs_flags;
+	if ((rv = build_dm_path(disk_path, SANLK_PATH_LEN, vg_name, lock_lv_name))) {
+		log_error("S %s init_lv_san lock_lv_name path error %d %s",
+			  ls_name, rv, vg_args);
+		return rv;
+	}
 
-	if (ls->free_lock_offset)
+	if (ls) {
+		lms = (struct lm_sanlock *)ls->lm_data;
+		align_size = lms->align_size;
+		rs_flags = lms->rs_flags;
 		offset = ls->free_lock_offset;
-	else
+	} else {
+		/* FIXME: optimize repeated init_lv for vgchange --locktype sanlock,
+		   to avoid finding align_size/rs_flags/free_lock_offset each time.
+		   Since the lockspace is not started, there's no ls struct to save
+		   all these in between calls.  We could have the command send back
+		   the last offset it used, what about the other two? */
+
+		rv = get_sizes_lockspace(disk_path, &sector_size, &align_size, &align_mb, &ss_flags, &rs_flags);
+		if (rv < 0) {
+			log_error("S %s init_lv_san get_sizes error %d %s",
+				  ls_name, rv, disk_path);
+			return rv;
+		}
+
+		/* Starts searching from the start for every init_lv. */
 		offset = align_size * LV_LOCK_BEGIN;
-	rd.rs.disks[0].offset = offset;
+	}
+
+	strcpy_name_len(rd.rs.lockspace_name, ls_name, SANLK_NAME_LEN);
+	rd.rs.num_disks = 1;
+	memcpy(rd.rs.disks[0].path, disk_path, SANLK_PATH_LEN-1);
+	rd.rs.flags = rs_flags;
 
 	while (1) {
 		rd.rs.disks[0].offset = offset;
@@ -827,20 +855,20 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *lv_name, char *vg_args, char 
 		if (rv == -EMSGSIZE || rv == -ENOSPC) {
 			/* This indicates the end of the device is reached. */
 			log_debug("S %s init_lv_san read limit offset %llu",
-				  ls->name, (unsigned long long)offset);
+				  ls_name, (unsigned long long)offset);
 			rv = -EMSGSIZE;
 			return rv;
 		}
 
 		if (rv && rv != SANLK_LEADER_MAGIC) {
 			log_error("S %s init_lv_san read error %d offset %llu",
-				  ls->name, rv, (unsigned long long)offset);
+				  ls_name, rv, (unsigned long long)offset);
 			break;
 		}
 
 		if (!strncmp(rd.rs.name, lv_name, SANLK_NAME_LEN)) {
 			log_error("S %s init_lv_san resource name %s already exists at %llu",
-				  ls->name, lv_name, (unsigned long long)offset);
+				  ls_name, lv_name, (unsigned long long)offset);
 			return -EEXIST;
 		}
 
@@ -851,10 +879,10 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *lv_name, char *vg_args, char 
 		 */
 		if ((rv == SANLK_LEADER_MAGIC) || !strcmp(rd.rs.name, "#unused")) {
 			log_debug("S %s init_lv_san %s found unused area at %llu",
-				  ls->name, lv_name, (unsigned long long)offset);
+				  ls_name, lv_name, (unsigned long long)offset);
 
 			strcpy_name_len(rd.rs.name, lv_name, SANLK_NAME_LEN);
-			rd.rs.flags = lms->rs_flags;
+			rd.rs.flags = rs_flags;
 
 			rv = sanlock_write_resource(&rd.rs, 0, 0, 0);
 			if (!rv) {
@@ -862,7 +890,7 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *lv_name, char *vg_args, char 
 				         lock_args_version, (unsigned long long)offset);
 			} else {
 				log_error("S %s init_lv_san write error %d offset %llu",
-					  ls->name, rv, (unsigned long long)rv);
+					  ls_name, rv, (unsigned long long)rv);
 			}
 			break;
 		}

@@ -3647,14 +3647,9 @@ static int work_init_lv(struct action *act)
 	}
 
 	if (lm_type == LD_LM_SANLOCK) {
-		/* FIXME: can init_lv ever be called without the lockspace already started? */
-		if (!ls) {
-			log_error("init_lv no lockspace found");
-			return -EINVAL;
-		}
-
-		rv = lm_init_lv_sanlock(ls, act->lv_uuid, vg_args, lv_args);
-
+		/* ls is NULL if the lockspace is not started, which happens
+		   for vgchange --locktype sanlock. */
+		rv = lm_init_lv_sanlock(ls, ls_name, act->vg_name, act->lv_uuid, vg_args, lv_args);
 		memcpy(act->lv_args, lv_args, MAX_ARGS);
 		return rv;
 
