@@ -1,5 +1,8 @@
 Version 2.03.28 - 
 ==================
+  Use radix_tree to lookup for UUID within committed metadata.
+  Use radix_tree to lookup LV list entry within VG struct.
+  Introduce setting config/validate_metadata = full | none.
   Restore fs resize call for lvresize -r on the same size LV (2.03.17).
   Correct off-by-one devicesfile backup counting.
   Replace use of dm_hash with radix_tree for lv names and uuids.
