@@ -15,7 +15,14 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-aux have_raid 1 3 0 || skip
+# raid5 target version 1.7 is crashing kernel with this test
+#
+# BUG: unable to handle kernel NULL pointer dereference at 00000000000002f0
+# raid5_free+0x15/0x30 [raid456]
+#
+# So possibly lvm2 needs to check for more things here.
+#
+aux have_raid 1 8 0 || skip
 
 aux prepare_vg 4
 get_devs
