@@ -255,7 +255,7 @@ static inline int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg
 }
 
 static inline int lockd_init_lv_args(struct cmd_context *cmd, struct volume_group *vg,
-		       struct logical_volume *lv, const char *lock_type, const char **lock_args)
+				     struct logical_volume *lv, const char *lock_type, const char *last_args, const char **lock_args)
 {
 	return 1;
 }
