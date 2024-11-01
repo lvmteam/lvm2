@@ -3512,7 +3512,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		metadata_lv->lock_args = NULL;
 
 		if (to_thin) {
-			if (!lockd_init_lv_args(cmd, vg, pool_lv, vg->lock_type, &pool_lv->lock_args)) {
+			if (!lockd_init_lv_args(cmd, vg, pool_lv, vg->lock_type, NULL, &pool_lv->lock_args)) {
 				log_error("Cannot allocate lock for new pool LV.");
 				goto bad;
 			}

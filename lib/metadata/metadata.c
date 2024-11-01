@@ -2944,12 +2944,14 @@ int vg_write(struct volume_group *vg)
 	log_debug("Writing metadata for VG %s.", vg->name);
 
 	if (vg_is_shared(vg)) {
+		const char *last_args = NULL;
 		dm_list_iterate_items(lvl, &vg->lvs) {
 			if (lvl->lv->lock_args && !strcmp(lvl->lv->lock_args, "pending")) {
-				if (!lockd_init_lv_args(vg->cmd, vg, lvl->lv, vg->lock_type, &lvl->lv->lock_args)) {
+				if (!lockd_init_lv_args(vg->cmd, vg, lvl->lv, vg->lock_type, last_args, &lvl->lv->lock_args)) {
 					log_error("Cannot allocate lock for new LV.");
 					return 0;
 				}
+				last_args = lvl->lv->lock_args;
 				lvl->lv->new_lock_args = 1;
 			}
 		}

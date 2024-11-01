@@ -150,6 +150,7 @@ struct action {
 	char lv_uuid[MAX_NAME+1];
 	char vg_args[MAX_ARGS+1];
 	char lv_args[MAX_ARGS+1];
+	char prev_lv_args[MAX_ARGS+1];
 	char vg_sysid[MAX_NAME+1];
 	struct pvs pvs;			/* PV list for idm */
 };
@@ -507,7 +508,7 @@ static inline int lm_refresh_lv_check_dlm(struct action *act)
 #ifdef LOCKDSANLOCK_SUPPORT
 
 int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args, int opt_align_mb);
-int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char *lv_name, char *vg_args, char *lv_args);
+int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char *lv_name, char *vg_args, char *lv_args, char *prev_args);
 int lm_free_lv_sanlock(struct lockspace *ls, struct resource *r);
 int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
 int lm_prepare_lockspace_sanlock(struct lockspace *ls);
@@ -542,7 +543,7 @@ static inline int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flag
 	return -1;
 }
 
-static inline int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char *lv_name, char *vg_args, char *lv_args)
+static inline int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char *lv_name, char *vg_args, char *lv_args, char *prev_args)
 {
 	return -1;
 }

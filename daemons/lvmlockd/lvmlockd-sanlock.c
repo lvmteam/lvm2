@@ -773,7 +773,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
  * can be saved in the lv's lock_args in the vg metadata.
  */
 
-int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char *lv_name, char *vg_args, char *lv_args)
+int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char *lv_name, char *vg_args, char *lv_args, char *prev_args)
 {
 	char disk_path[SANLK_PATH_LEN];
 	struct lm_sanlock *lms;
@@ -781,11 +781,13 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char 
 	char lock_lv_name[MAX_ARGS+1];
 	char lock_args_version[MAX_VERSION+1];
 	uint64_t offset;
+	uint64_t prev_offset = 0;
 	int sector_size;
 	int align_size;
 	int align_mb;
 	uint32_t ss_flags;
 	uint32_t rs_flags;
+	uint32_t tries = 1;
 	int rv;
 
 	memset(&rd, 0, sizeof(rd));
@@ -825,10 +827,7 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char 
 		offset = ls->free_lock_offset;
 	} else {
 		/* FIXME: optimize repeated init_lv for vgchange --locktype sanlock,
-		   to avoid finding align_size/rs_flags/free_lock_offset each time.
-		   Since the lockspace is not started, there's no ls struct to save
-		   all these in between calls.  We could have the command send back
-		   the last offset it used, what about the other two? */
+		   to avoid finding align_size/rs_flags each time. */
 
 		rv = get_sizes_lockspace(disk_path, &sector_size, &align_size, &align_mb, &ss_flags, &rs_flags);
 		if (rv < 0) {
@@ -837,8 +836,14 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char 
 			return rv;
 		}
 
-		/* Starts searching from the start for every init_lv. */
-		offset = align_size * LV_LOCK_BEGIN;
+		/*
+		 * With a prev offset, start search after that.
+		 * Without a prev offset, start search from the beginning. 
+		 */
+		if (prev_args && !lock_lv_offset_from_args(prev_args, &prev_offset))
+			offset = prev_offset + align_size;
+		else
+			offset = align_size * LV_LOCK_BEGIN;
 	}
 
 	strcpy_name_len(rd.rs.lockspace_name, ls_name, SANLK_NAME_LEN);
@@ -878,8 +883,8 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char 
 		 * indicating an uninitialized paxos structure on disk.
 		 */
 		if ((rv == SANLK_LEADER_MAGIC) || !strcmp(rd.rs.name, "#unused")) {
-			log_debug("S %s init_lv_san %s found unused area at %llu",
-				  ls_name, lv_name, (unsigned long long)offset);
+			log_debug("S %s init_lv_san %s found unused area at %llu try %u",
+				  ls_name, lv_name, (unsigned long long)offset, tries);
 
 			strcpy_name_len(rd.rs.name, lv_name, SANLK_NAME_LEN);
 			rd.rs.flags = rs_flags;
@@ -896,6 +901,7 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char 
 		}
 
 		offset += align_size;
+		tries++;
 	}
 
 	return rv;
@@ -1293,6 +1299,7 @@ int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes)
 	struct sanlk_resourced rd;
 	uint64_t offset;
 	uint64_t start_offset;
+	uint32_t tries = 0;
 	int rv;
 	int round = 0;
 
@@ -1371,8 +1378,8 @@ int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes)
 		 * an invalid paxos structure on disk.
 		 */
 		if (rv == SANLK_LEADER_MAGIC) {
-			log_debug("S %s find_free_lock_san found empty area at %llu",
-				  ls->name, (unsigned long long)offset);
+			log_debug("S %s find_free_lock_san found empty area at %llu try %u",
+				  ls->name, (unsigned long long)offset, tries);
 			ls->free_lock_offset = offset;
 			return 0;
 		}
@@ -1384,12 +1391,13 @@ int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes)
 		}
 
 		if (!strcmp(rd.rs.name, "#unused")) {
-			log_debug("S %s find_free_lock_san found unused area at %llu",
-				  ls->name, (unsigned long long)offset);
+			log_debug("S %s find_free_lock_san found unused area at %llu try %u",
+				  ls->name, (unsigned long long)offset, tries);
 			ls->free_lock_offset = offset;
 			return 0;
 		}
 
+		tries++;
 		offset += lms->align_size;
 	}
 

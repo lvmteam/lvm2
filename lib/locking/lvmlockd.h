@@ -111,7 +111,7 @@ int lockd_lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logical_volume *lv,
 		  struct lvcreate_params *lp);
 int lockd_init_lv_args(struct cmd_context *cmd, struct volume_group *vg,
-		       struct logical_volume *lv, const char *lock_type, const char **lock_args);
+		       struct logical_volume *lv, const char *lock_type, const char *last_args, const char **lock_args);
 int lockd_free_lv(struct cmd_context *cmd, struct volume_group *vg,
 		  const char *lv_name, struct id *lv_id, const char *lock_args);
 int lockd_free_lv_after_update(struct cmd_context *cmd, struct volume_group *vg,

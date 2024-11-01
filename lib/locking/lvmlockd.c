@@ -3073,6 +3073,7 @@ int lockd_lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 
 static int _init_lv_sanlock(struct cmd_context *cmd, struct volume_group *vg,
 			    const char *lv_name, struct id *lv_id,
+			    const char *last_args,
 			    const char **lock_args_ret)
 {
 	char lv_uuid[64] __attribute__((aligned(8)));
@@ -3095,6 +3096,7 @@ static int _init_lv_sanlock(struct cmd_context *cmd, struct volume_group *vg,
 				"vg_name = %s", vg->name,
 				"lv_name = %s", lv_name,
 				"lv_uuid = %s", lv_uuid,
+				"prev_lv_args = %s", last_args ? last_args : "none",
 				"vg_lock_type = %s", "sanlock",
 				"vg_lock_args = %s", vg->lock_args,
 				NULL);
@@ -3181,7 +3183,9 @@ static int _free_lv(struct cmd_context *cmd, struct volume_group *vg,
 
 int lockd_init_lv_args(struct cmd_context *cmd, struct volume_group *vg,
 		       struct logical_volume *lv,
-		       const char *lock_type, const char **lock_args)
+		       const char *lock_type,
+		       const char *last_args,
+		       const char **lock_args)
 {
 	if (!lock_type)
 		return 1;
@@ -3190,7 +3194,7 @@ int lockd_init_lv_args(struct cmd_context *cmd, struct volume_group *vg,
 	else if (!strcmp(lock_type, "idm"))
 		*lock_args = "idm";
 	else if (!strcmp(lock_type, "sanlock"))
-		return _init_lv_sanlock(cmd, vg, lv->name, &lv->lvid.id[1], lock_args);
+		return _init_lv_sanlock(cmd, vg, lv->name, &lv->lvid.id[1], last_args, lock_args);
 	return 1;
 }
 

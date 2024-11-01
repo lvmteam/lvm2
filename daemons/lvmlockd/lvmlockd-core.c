@@ -3649,7 +3649,7 @@ static int work_init_lv(struct action *act)
 	if (lm_type == LD_LM_SANLOCK) {
 		/* ls is NULL if the lockspace is not started, which happens
 		   for vgchange --locktype sanlock. */
-		rv = lm_init_lv_sanlock(ls, ls_name, act->vg_name, act->lv_uuid, vg_args, lv_args);
+		rv = lm_init_lv_sanlock(ls, ls_name, act->vg_name, act->lv_uuid, vg_args, lv_args, act->prev_lv_args);
 		memcpy(act->lv_args, lv_args, MAX_ARGS);
 		return rv;
 
@@ -5018,6 +5018,10 @@ static void client_recv_action(struct client *cl)
 	str = daemon_request_str(req, "lv_lock_args", NULL);
 	if (str && strcmp(str, "none"))
 		strncpy(act->lv_args, str, MAX_ARGS);
+
+	str = daemon_request_str(req, "prev_lv_args", NULL);
+	if (str && strcmp(str, "none"))
+		strncpy(act->prev_lv_args, str, MAX_ARGS);
 
 	/* start_vg will include lvmlocal.conf local/host_id here */
 	val = daemon_request_int(req, "host_id", 0);
