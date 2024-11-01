@@ -782,11 +782,11 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char 
 	char lock_args_version[MAX_VERSION+1];
 	uint64_t offset;
 	uint64_t prev_offset = 0;
-	int sector_size;
-	int align_size;
+	int sector_size = 0;
+	int align_size = 0;
 	int align_mb;
 	uint32_t ss_flags;
-	uint32_t rs_flags;
+	uint32_t rs_flags = 0;
 	uint32_t tries = 1;
 	int rv;
 
