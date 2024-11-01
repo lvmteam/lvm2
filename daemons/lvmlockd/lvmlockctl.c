@@ -126,12 +126,11 @@ static void format_info_ls(char *line)
 	char ls_name[MAX_NAME+1] = { 0 };
 	char vg_name[MAX_NAME+1] = { 0 };
 	char vg_uuid[MAX_NAME+1] = { 0 };
-	char vg_sysid[MAX_NAME+1] = { 0 };
 	char lock_args[MAX_ARGS+1] = { 0 };
 	char lock_type[MAX_NAME+1] = { 0 };
 
-	(void) sscanf(line, "info=ls ls_name=%s vg_name=%s vg_uuid=%s vg_sysid=%s vg_args=%s lm_type=%s",
-	       ls_name, vg_name, vg_uuid, vg_sysid, lock_args, lock_type);
+	(void) sscanf(line, "info=ls ls_name=%s vg_name=%s vg_uuid=%s vg_args=%s lm_type=%s",
+	       ls_name, vg_name, vg_uuid, lock_args, lock_type);
 
 	if (!first_ls)
 		printf("\n");

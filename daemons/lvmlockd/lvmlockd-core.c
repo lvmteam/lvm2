@@ -4659,7 +4659,6 @@ static int print_lockspace(struct lockspace *ls, const char *prefix, int pos, in
 			"ls_name=%s "
 			"vg_name=%s "
 			"vg_uuid=%s "
-			"vg_sysid=%s "
 			"vg_args=%s "
 			"lm_type=%s "
 			"host_id=%llu "
@@ -4675,7 +4674,6 @@ static int print_lockspace(struct lockspace *ls, const char *prefix, int pos, in
 			ls->name,
 			ls->vg_name,
 			ls->vg_uuid,
-			ls->vg_sysid[0] ? ls->vg_sysid : ".",
 			ls->vg_args,
 			lm_str(ls->lm_type),
 			(unsigned long long)ls->host_id,
@@ -4862,7 +4860,6 @@ static void client_recv_action(struct client *cl)
 	const char *cl_name;
 	const char *vg_name;
 	const char *vg_uuid;
-	const char *vg_sysid;
 	const char *path;
 	const char *str;
 	struct pvs pvs;
@@ -4945,7 +4942,6 @@ static void client_recv_action(struct client *cl)
 	cl_pid = daemon_request_int(req, "pid", 0);
 	vg_name = daemon_request_str(req, "vg_name", NULL);
 	vg_uuid = daemon_request_str(req, "vg_uuid", NULL);
-	vg_sysid = daemon_request_str(req, "vg_sysid", NULL);
 	str = daemon_request_str(req, "mode", NULL);
 	mode = str_to_mode(str);
 	str = daemon_request_str(req, "opts", NULL);
@@ -4995,9 +4991,6 @@ static void client_recv_action(struct client *cl)
 
 	if (vg_uuid && strcmp(vg_uuid, "none"))
 		memccpy(act->vg_uuid, vg_uuid, 0, 64);
-
-	if (vg_sysid && strcmp(vg_sysid, "none"))
-		dm_strncpy(act->vg_sysid, vg_sysid, sizeof(act->vg_sysid));
 
 	str = daemon_request_str(req, "lv_name", NULL);
 	if (str && strcmp(str, "none"))

@@ -151,7 +151,6 @@ struct action {
 	char vg_args[MAX_ARGS+1];
 	char lv_args[MAX_ARGS+1];
 	char prev_lv_args[MAX_ARGS+1];
-	char vg_sysid[MAX_NAME+1];
 	struct pvs pvs;			/* PV list for idm */
 };
 
@@ -190,7 +189,6 @@ struct lockspace {
 	char vg_name[MAX_NAME+1];
 	char vg_uuid[64];
 	char vg_args[MAX_ARGS+1];	/* lock manager specific args */
-	char vg_sysid[MAX_NAME+1];
 	int8_t lm_type;			/* lock manager: LM_DLM, LM_SANLOCK */
 	void *lm_data;
 	uint64_t host_id;
