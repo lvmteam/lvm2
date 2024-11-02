@@ -322,8 +322,8 @@ struct Journal {
                     char buf[64];
                     time_t t = time( 0 );
                     if (localtime_r(&t, &time_info)) {
-                        strftime(buf, sizeof(buf), "%F %T", &time_info);
-                        of << "--- " << buf << " ---";
+                        if ( strftime( buf, sizeof(buf), "%F %T", &time_info ) )
+                            of << "--- " << buf << " ---";
                     }
                 }
                 of << std::endl;
@@ -716,7 +716,7 @@ struct KMsg : Source {
         unsigned level, num, pos;
         unsigned long t;
         time_t tt;
-        size_t len;
+        size_t len, slen;
         const char *delimiter;
 
         buf[ *sz ] = 0;
@@ -728,8 +728,10 @@ struct KMsg : Source {
             memcpy( newbuf, buf, *sz );
             tt = time( 0 );
             len = snprintf( buf, 64, "[%lu.%06lu] <%u> ", t / 1000000, t % 1000000, level );
-            if ( localtime_r( &tt, &time_info ) )
-                len += strftime( buf + len, 64, "%F %T  ", &time_info );
+            if ( localtime_r( &tt, &time_info ) &&
+                ( slen = strftime( buf + len, 64, "%F %T  ", &time_info ) ) )
+                    len += slen;
+
             memcpy( buf + len, newbuf + pos, *sz - pos );
             *sz = *sz - pos + len;
         }
