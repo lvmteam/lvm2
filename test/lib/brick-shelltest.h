@@ -177,7 +177,7 @@ public:
     }
 };
 
-static void _fsync_name( std::string n )
+static void _fsync_name( const std::string &n )
 {
     int fd = open( n.c_str(), O_WRONLY );
     if ( fd >= 0 ) {
@@ -1400,7 +1400,7 @@ static int run( int argc, const char **argv, std::string fl_envvar = "TEST_FLAVO
     Options opt;
     const char *env;
 
-    if ( args.has( "--help" ) ) {
+    if ( args.has( "--help" ) || args.has( "-h" ) || args.has( "-?" ) ) {
         std::cout <<
             "  lvm2-testsuite - Run a lvm2 testsuite.\n\n"
             "lvm2-testsuite"
@@ -1537,6 +1537,11 @@ static int run( int argc, const char **argv, std::string fl_envvar = "TEST_FLAVO
     opt.testdir = resolve_path( args.opt( "--testdir" ), TESTSUITE_DATA ) + "/";
     opt.workdir = resolve_path( args.opt( "--workdir" ), opt.testdir.c_str() );
     opt.outdir = resolve_path( args.opt( "--outdir" ), "." );
+
+    if (getuid() != 0) {
+        std::cout << "Skipping tests, root is required, current UID: " << getuid() << "\n";
+        return 0;
+    }
 
     setup_handlers();
 
