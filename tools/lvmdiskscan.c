@@ -40,7 +40,7 @@ static int _get_max_dev_name_len(struct cmd_context *cmd, struct dev_filter *fil
 	}
 
 	/* Do scan */
-	for (dev = dev_iter_get(cmd, iter); dev; dev = dev_iter_get(cmd, iter)) {
+	while ((dev = dev_iter_get(cmd, iter))) {
 		len = strlen(dev_name(dev));
 		if (len > maxlen)
 			maxlen = len;
@@ -107,7 +107,7 @@ int lvmdiskscan(struct cmd_context *cmd, int argc __attribute__((unused)),
 		return ECMD_FAILED;
 	}
 
-	for (dev = dev_iter_get(cmd, iter); dev; dev = dev_iter_get(cmd, iter)) {
+	while ((dev = dev_iter_get(cmd, iter))) {
 		if (lvmcache_has_dev_info(dev)) {
 			if (!dev_get_size(dev, &size)) {
 				log_error("Couldn't get size of \"%s\"",
