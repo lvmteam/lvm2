@@ -78,7 +78,7 @@ static const uint32_t _crctab[] = {
  * TODO: check if it speeds also non X86_64 arch
  */
 
-static unsigned int _crc32_lookup[16][256] = { 0 };
+static unsigned int _crc32_lookup[16][256] = { { 0 } };
 
 static void _initialise_crc32(void)
 {
