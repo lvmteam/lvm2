@@ -1,5 +1,5 @@
-Version 2.03.28 - 
-==================
+Version 2.03.28 - 04th November 2024
+====================================
   Use radix_tree to lookup for UUID within committed metadata.
   Use radix_tree to lookup LV list entry within VG struct.
   Introduce setting config/validate_metadata = full | none.

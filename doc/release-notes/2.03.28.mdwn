@@ -1,0 +1,20 @@
+<!-- Page title -->
+[[!meta title="Version 2.03.28 - Bug Fix Release"]]
+
+Version 2.03.28
+===============
+
+Few bugfixes and a lot of speed improvements mainly for many LVs.
+
+* Introduce setting config/validate_metadata = full | none.
+* Restore fs resize call for lvresize -r on the same size LV (2.03.17).
+* Correct off-by-one devicesfile backup counting.
+* Fall back to direct zeroing if BLKZEROOUT fails during new LV initialization.
+
+<!-- remove the pending tag on release, remove draft tag once editing is complete -->
+[[!tag]]
+<!--
+For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
+\[[!meta date="Tue Nov 21 14:26:07 2023 +0100"]]
+-->
+
