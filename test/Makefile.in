@@ -36,7 +36,7 @@ CLEAN_DIRS += dbus/__pycache__ $(LVM_TEST_RESULTS)
 ifneq (.,$(firstword $(srcdir)))
 CLEAN_TARGETS += shell $(addprefix lib/,$(LIB_LVMLOCKD_CONF) $(LIB_MKE2FS_CONF))
 endif
-CLEAN_TARGETS += $(shell find -H lib -type l) \
+CLEAN_TARGETS += $(shell find -H lib -type l 2>/dev/null) \
 	$(CXXSOURCES:%.cpp=%.o) $(CXXSOURCES:%.cpp=%.d) $(CXXSOURCES:%.cpp=%.gcno) $(CXXSOURCES:%.cpp=%.gcda)
 
 CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,\
