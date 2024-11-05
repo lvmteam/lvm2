@@ -5465,9 +5465,6 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 			/* FIXME Warn if command line values are being overridden? */
 			lp->stripes = seg_last->area_count / seg_mirrors;
 			lp->stripe_size = seg_last->stripe_size;
-		} else if (seg_is_raid0(seg_last)) {
-			lp->stripes = seg_last->area_count;
-			lp->stripe_size = seg_last->stripe_size;
 		} else {
 			/* If extending, find stripes, stripesize & size of last segment */
 			/* FIXME Don't assume mirror seg will always be AREA_LV */
