@@ -226,7 +226,7 @@ bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks)
 		size = st.st_size;
 	}
 
-	if (read(fh, buffer, sizeof(buffer)) < (MAGIC_NUMBER_SIZE + sizeof(h))) {
+	if (read(fh, buffer, sizeof(buffer)) < (int)(MAGIC_NUMBER_SIZE + sizeof(h))) {
 		log_sys_debug("read", vdo_path);
 		goto err;
 	}
@@ -270,7 +270,7 @@ bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks)
 		goto err;
 	}
 
-	if (read(fh, buffer, sizeof(buffer)) < (sizeof(struct vdo_geometry_block) + sizeof(vn))) {
+	if (read(fh, buffer, sizeof(buffer)) < (int)(sizeof(struct vdo_geometry_block) + sizeof(vn))) {
 		log_sys_debug("read", vdo_path);
 		goto err;
 	}

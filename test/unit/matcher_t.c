@@ -81,7 +81,7 @@ static void test_kabi_query(void *fixture)
 
         static const struct {
                 const char *input;
-                int r;
+		unsigned r;
         } _cases[] = {
 		{"foo", 0},
 		{"/dev/mapper/vg-lvol1", 0},

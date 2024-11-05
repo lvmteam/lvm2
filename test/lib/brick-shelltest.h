@@ -713,7 +713,8 @@ struct KMsg : Source {
     void transform( char *buf, ssize_t *sz ) {
         char newbuf[ buffer_size ];
         struct tm time_info;
-        unsigned level, num, pos;
+        unsigned level, num;
+        int pos;
         unsigned long t;
         time_t tt;
         size_t len, slen;

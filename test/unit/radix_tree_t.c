@@ -530,8 +530,8 @@ static void test_remove_calls_dtr(void *fixture)
 		for (i = 0; i < DTR_COUNT; i++) {
 			bool found = false;
 			do {
-				v.n = i;
 				uint8_t *k = keys + (i * 3);
+				v.n = i;
 				_gen_key(k, k + 3);
 				if (!radix_tree_lookup(rt, k, 3, &v)) {
 					T_ASSERT(radix_tree_insert(rt, k, 3, v));
@@ -584,8 +584,8 @@ static void test_destroy_calls_dtr(void *fixture)
 		for (i = 0; i < DTR_COUNT; i++) {
 			bool found = false;
 			do {
-				v.n = i;
 				uint8_t *k = keys + (i * 3);
+				v.n = i;
 				_gen_key(k, k + 3);
 				if (!radix_tree_lookup(rt, k, 3, &v)) {
 					T_ASSERT(radix_tree_insert(rt, k, 3, v));
