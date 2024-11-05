@@ -113,7 +113,7 @@ dd if=/dev/zero of="$mount_dir_space/zeros1" bs=1M count=20 oflag=direct
 # succeeds, then the xfs extend fails because it cannot be done unmounted
 not lvextend --fs resize --fsmode offline -L+20M $vg/$lv
 check lv_field $vg/$lv lv_size "320.00m"
-df -a | tee dfa
+df | tee dfa
 grep "$mount_dir_space" dfa
 df --output=size "$mount_dir_space" |tee df2
 # fs not extended so fs size not changed
