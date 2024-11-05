@@ -19,6 +19,7 @@
 
 #include "base/data-struct/list.h"
 #include "base/data-struct/hash.h"
+#include "raid/target.h"
 #include "vdo/target.h"
 
 #include <inttypes.h>

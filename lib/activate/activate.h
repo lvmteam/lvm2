@@ -197,6 +197,8 @@ int lv_raid_mismatch_count(const struct logical_volume *lv, uint64_t *cnt);
 int lv_raid_sync_action(const struct logical_volume *lv, char **sync_action);
 int lv_raid_message(const struct logical_volume *lv, const char *msg);
 int lv_raid_status(const struct logical_volume *lv, struct lv_status_raid **status);
+int lv_raid_clear_failed_devices(const struct logical_volume *lv);
+int lv_raid_count_failed_devices(const struct logical_volume *lv, uint32_t *failed_cnt);
 int lv_writecache_message(const struct logical_volume *lv, const char *msg);
 int lv_cache_status(const struct logical_volume *cache_lv,
 		    struct lv_status_cache **status);

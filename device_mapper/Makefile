@@ -25,6 +25,7 @@ DEVICE_MAPPER_SOURCE=\
 	device_mapper/libdm-targets.c \
 	device_mapper/libdm-timestamp.c \
 	device_mapper/mm/pool.c \
+	device_mapper/raid/raid_parser.c \
 	device_mapper/regex/matcher.c \
 	device_mapper/regex/parse_rx.c \
 	device_mapper/regex/ttree.c \

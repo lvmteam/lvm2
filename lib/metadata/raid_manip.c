@@ -3242,7 +3242,7 @@ static int _raid_leg_degraded(struct lv_segment *raid_seg, uint32_t s)
 		 _sublv_is_degraded(seg_metalv(raid_seg, s))));
 }
 
-/* Return failed component SubLV count for @lv. */
+/* Return failed component SubLV pair count for @lv. */
 static uint32_t _lv_get_nr_failed_components(const struct logical_volume *lv)
 {
 	uint32_t r = 0, s;
@@ -7326,6 +7326,183 @@ int lv_raid_remove_missing(struct logical_volume *lv)
 		return_0;
 
 	return 1;
+}
+
+/*
+ * Count number of failed device bits in dm-raid superblock bit arrays -or- clear them out.
+ *
+ * If any failed devices, return != 0 maximum of failed SubLVs and parity_devs so that the
+ * caller will ask to clear and try activation of the RaidLV unless more than parity_devs
+ * component device pairs (rmeta and rimage) are still failed.  This'll allow early exit
+ * in the caller preventing MD kernel rejection to activate the RAID array with > parity_devs
+ * failed component device pairs.
+ */
+static int _count_or_clear_failed_devices_bits(struct logical_volume *meta_lv,
+					       bool clear, uint32_t *nr_failed)
+{
+	char *meta_path = lv_dmpath_dup(meta_lv->vg->cmd->mem, meta_lv);
+
+	if (!meta_path) {
+		log_error("Failed to build device path for %s.",
+			  display_lvname(meta_lv));
+		return 0;
+	}
+
+	if (!clear) /* only counting */
+		return dm_raid_count_failed_devices(meta_path, nr_failed);
+
+	return dm_raid_clear_failed_devices(meta_path, nr_failed);
+}
+
+/* Count or clear failed devices bits in RAID superblocks for
+ * recurred transiently failed component SubLV pairs. */
+static int _raid_count_or_clear_failed_devices(const struct logical_volume *lv,
+					       bool clear, uint32_t *failed_devices)
+{
+	uint32_t nr_failed = 0, nr_failed_tmp = 0, failed_sublvs = 0, s;
+	struct lv_segment *raid_seg = first_seg(lv);
+	struct logical_volume *meta_lv;
+	const char *str;
+	int r = 1, cleared_devs = 0;
+
+	/* Prevent bogus use. */
+	if (!seg_is_raid_with_meta(raid_seg)) {
+		log_error("%s is not a RaidLV with metadata.", display_lvname(lv));
+		return 0;
+	}
+
+	failed_sublvs = _lv_get_nr_failed_components(lv);
+
+	if (clear && (failed_sublvs > raid_seg->segtype->parity_devs)) {
+		log_error("Can't clear transiently failed devices on still failed %s.",
+			  display_lvname(lv));
+		return 0;
+	}
+
+	if (!raid_seg->meta_areas) {
+		log_error(INTERNAL_ERROR "Missing metadata areas on %s!", display_lvname(lv));
+		return 0;
+	}
+
+	/* Check if there isn't any meta LV already active */
+	for (s = 0; s < raid_seg->area_count; s++) {
+		if (_raid_leg_degraded(raid_seg, s))
+			continue;
+
+		meta_lv = seg_metalv(raid_seg, s);
+
+		if (lv_is_active(meta_lv)) {
+			/* DM table is in some unknown condition, aborting... */
+			log_error("Can't %s failed devices with active %s metadata volume %s.",
+				  clear ? "clear" : "count",
+				  lvseg_name(raid_seg), display_lvname(meta_lv));
+			return 0;
+		}
+	}
+
+	/* Activate all non degraded meta LVs before count or clear */
+	for (s = 0; s < raid_seg->area_count; s++) {
+		meta_lv = seg_metalv(raid_seg, s);
+
+		if (_raid_leg_degraded(raid_seg, s)) {
+			log_debug("Skipping activation of failed devices for degraded %s metadata volume %s.",
+				  lvseg_name(raid_seg), display_lvname(meta_lv));
+			continue;
+		}
+
+		if (!activate_lv(lv->vg->cmd, meta_lv)) {
+			log_error("Failed to activate %s metadata volume %s.",
+				  lvseg_name(raid_seg), display_lvname(meta_lv));
+			r = 0; /* how many can be counted... */
+		}
+	}
+
+	/* Wait for meta activation. */
+	if (!sync_local_dev_names(lv->vg->cmd))
+		stack;
+
+	for (s = 0; s < raid_seg->area_count; s++) {
+		meta_lv = seg_metalv(raid_seg, s);
+
+		if (_raid_leg_degraded(raid_seg, s)) {
+			if (clear)
+				log_debug("Skipping clear of failed devices for degraded %s metadata volume %s.",
+					  lvseg_name(raid_seg), display_lvname(meta_lv));
+			continue;
+		}
+
+		if (lv_is_active(meta_lv) &&
+		    !_count_or_clear_failed_devices_bits(meta_lv, clear,
+							 &nr_failed_tmp)) {
+			log_error("Failed to %s failed device(s) in superblock of %s metadata volume %s.",
+				  clear ? "clear" : "count",
+				  lvseg_name(raid_seg), display_lvname(meta_lv));
+			r = 0;
+			continue;
+		}
+
+		if (nr_failed_tmp) {
+			log_verbose("%s %u failed device(s) in superblock of %s metadata volume %s.",
+				    clear ? "Cleared" : "Counted", nr_failed_tmp,
+				    lvseg_name(raid_seg), display_lvname(meta_lv));
+			cleared_devs++;
+		}
+
+		if (nr_failed_tmp > nr_failed)
+			nr_failed = nr_failed_tmp;
+	}
+
+	/* Deactivate meta LVs */
+	for (s = 0; s < raid_seg->area_count; s++) {
+		if (_raid_leg_degraded(raid_seg, s))
+			continue;
+
+		if (!deactivate_lv(lv->vg->cmd, seg_metalv(raid_seg, s))) {
+			stack;
+			r = 0;
+		}
+	}
+
+	if (clear) {
+		if (!failed_sublvs)
+			str = "fully operational";
+		else if (failed_sublvs <= raid_seg->segtype->parity_devs)
+			str = "degraded";
+		else
+			str = "still failed";
+
+		log_print_unless_silent("The %s volume %s is %s with %u transiently failed device(s).",
+					lvseg_name(raid_seg), display_lvname(lv), str,
+					nr_failed - failed_sublvs);
+
+		if (r && cleared_devs &&
+		    (failed_sublvs <= raid_seg->segtype->parity_devs))
+			/* TODO: maybe we want to activate RAID volume here ? */
+			log_print_unless_silent("Volume has been restored after clearing %u superblocks(s). Once online please check its content.",
+						cleared_devs);
+	}
+
+	if (failed_devices)
+		*failed_devices = max(failed_sublvs, raid_seg->segtype->parity_devs);
+
+	return r;
+}
+
+/* Clear failed device bits in RAID superblocks for recurred
+ * transiently failed component SubLV pairs. */
+int lv_raid_clear_failed_devices(const struct logical_volume *lv)
+{
+	return _raid_count_or_clear_failed_devices(lv, true, NULL);
+}
+
+/* Count failed device bits in RAID superblocks for recurred
+ * transiently failed component SubLV pairs.
+ *
+ * On success, @failed_cnt contains the current number.
+ */
+int lv_raid_count_failed_devices(const struct logical_volume *lv, uint32_t *failed_cnt)
+{
+	return _raid_count_or_clear_failed_devices(lv, false, failed_cnt);
 }
 
 /* Return 1 if a partial raid LV can be activated redundantly */
