@@ -5468,7 +5468,7 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 		} else if (seg_is_raid0(seg_last)) {
 			lp->stripes = seg_last->area_count;
 			lp->stripe_size = seg_last->stripe_size;
-		} else if (!(lp->stripes == 1 || (lp->stripes > 1 && lp->stripe_size))) {
+		} else {
 			/* If extending, find stripes, stripesize & size of last segment */
 			/* FIXME Don't assume mirror seg will always be AREA_LV */
 			/* FIXME We will need to support resize for metadata LV as well,
