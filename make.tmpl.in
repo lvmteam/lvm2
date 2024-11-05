@@ -637,8 +637,9 @@ else
 endif
 
 ifeq ("$(USE_TRACKING)","yes")
-ifeq (,$(findstring $(MAKECMDGOALS),cscope.out cflow clean distclean lcov lcov-reset \
- help check check_local check_cluster check_lvmpolld run-unit-test tags))
+MAKE_NODEPS_GOALS := cscope.out cflow clean distclean lcov lcov-reset\
+ help check check_local check_cluster check_lvmpolld run-unit-test tags
+ifeq (,$(filter $(MAKE_NODEPS_GOALS),$(MAKECMDGOALS)))
 .SECONDARY:
 # Note: no tabs before -include
     -include $(SOURCES:.c=.d) $(SOURCES2:.c=.d) $(CXXSOURCES:.cpp=.d)
