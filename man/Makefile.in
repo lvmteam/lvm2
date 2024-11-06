@@ -49,7 +49,7 @@ MAN8DM=dmsetup.8 dmstats.8
 MAN8CLUSTER=
 
 MAN_ALL_GOALS := distclean all_man install_all_man
-ifeq (,$(filter $(MAN_ALL_GOALS),$(MAKECMDGOALS)))
+ifneq (,$(filter $(MAN_ALL_GOALS),$(MAKECMDGOALS)))
   MAN7 += lvmcache.7 lvmthin.7 lvmvdo.7
   MAN8+=$(FSADMMAN) $(LVMPOLLDMAN) $(LVMLOCKDMAN) $(LVMDBUSDMAN) $(LVMIMPORTVDOMAN)
   MAN8DM+=$(BLKDEACTIVATEMAN) $(DMEVENTDMAN) $(DMFILEMAPDMAN)
