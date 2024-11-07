@@ -69,6 +69,7 @@ static unsigned _dm_version_minor = 0;
 static unsigned _dm_version_patchlevel = 0;
 static int _log_suppress = 0;
 static struct dm_timestamp *_dm_ioctl_timestamp = NULL;
+static int _dm_warn_inactive_suppress = 0;
 
 /*
  * If the kernel dm driver only supports one major number
@@ -1307,22 +1308,23 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	}
 	if (dmt->query_inactive_table) {
 		if (!_dm_inactive_supported())
-			log_warn("WARNING: Inactive table query unsupported "
-				 "by kernel.  It will use live table.");
+			log_warn_suppress(_dm_warn_inactive_suppress++,
+					  "WARNING: Inactive table query unsupported by kernel. "
+					  "It will use live table.");
 		dmi->flags |= DM_QUERY_INACTIVE_TABLE_FLAG;
 	}
 	if (dmt->new_uuid) {
 		if (_dm_version_minor < 19) {
-			log_error("WARNING: Setting UUID unsupported by "
-				  "kernel.  Aborting operation.");
+			log_error("Setting UUID unsupported by kernel. "
+				  "Aborting operation.");
 			goto bad;
 		}
 		dmi->flags |= DM_UUID_FLAG;
 	}
 	if (dmt->ima_measurement) {
 		if (_dm_version_minor < 45) {
-			log_error("WARNING: IMA measurement unsupported by "
-				  "kernel.  Aborting operation.");
+			log_error("IMA measurement unsupported by kernel. "
+				  "Aborting operation.");
 			goto bad;
 		}
 		dmi->flags |= DM_IMA_MEASUREMENT_FLAG;
