@@ -90,7 +90,6 @@
 #define log_debug_devs(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_DEVS, x)
 #define log_debug_activation(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_ACTIVATION, x)
 #define log_debug_alloc(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_ALLOC, x)
-#define log_debug_lvmetad(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_LVMETAD, x)
 #define log_debug_metadata(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_METADATA, x)
 #define log_debug_cache(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_CACHE, x)
 #define log_debug_locking(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_LOCKING, x)
