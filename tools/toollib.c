@@ -1372,6 +1372,10 @@ int get_vdo_settings(struct cmd_context *cmd,
 			u |= VDO_CHANGE_ONLINE;
 	}
 
+	/* store size in sector units */
+	if (vtp->minimum_io_size >= 512)
+		vtp->minimum_io_size >>= SECTOR_SHIFT;
+
 	// validation of updated VDO option
 	if (!dm_vdo_validate_target_params(vtp, 0 /* vdo_size */))
 		goto_out;

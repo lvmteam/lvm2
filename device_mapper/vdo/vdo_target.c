@@ -28,7 +28,7 @@ bool dm_vdo_validate_target_params(const struct dm_vdo_target_params *vtp,
 	if ((vtp->minimum_io_size != (512 >> SECTOR_SHIFT)) &&
 	    (vtp->minimum_io_size != (4096 >> SECTOR_SHIFT))) {
 		log_error("VDO minimum io size %u is unsupported [512, 4096].",
-			  vtp->minimum_io_size);
+			  (vtp->minimum_io_size << SECTOR_SHIFT));
 		valid = false;
 	}
 
