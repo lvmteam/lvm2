@@ -632,12 +632,30 @@ teardown() {
 	}
 
 	# Remove any dangling symlink in /dev/disk (our tests can confuse udev)
-	test -d /dev/disk && {
-		find /dev/disk -type l ! -exec /usr/bin/test -e {} \; -print0 | xargs -0 rm -f || true
-	}
+	find /dev/disk -type l -exec test ! -e {} \; -print0 2>/dev/null | xargs -0 rm -f || true
 
 	# Remove any metadata archives and backups from this test on system
 	rm -f /etc/lvm/archive/"${PREFIX}"* /etc/lvm/backup/"${PREFIX}"*
+
+	# Check if this test is leaking some 'symlinks' with our name (udev)
+	LEAKED_LINKS=( $(find /dev -path "/dev/mapper/${PREFIX}*" -type l -exec test ! -e {} \; -print -o \
+		-path "/dev/${PREFIX}*/" -type l -exec test ! -e {} \; -print  2>/dev/null || true) )
+
+	if test "${LVM_TEST_PARALLEL:-0}" = 0 ; then
+		# for non parallel testing erase any dangling links prefixed with LVMTEST
+		find /dev -path "/dev/mapper/${COMMON_PREFIX}*" -type l -exec test ! -e {} \; -print0 -o \
+			-path "/dev/${COMMON_PREFIX}*" -type l -exec test ! -e {} \; -print0 2>/dev/null | xargs -0 rm -f || true
+		LEAKED_PREFIX=${COMMON_PREFIX}
+	else
+		rm -f "${LEAKED_LINKS[@]}" || true
+		LEAKED_PREFIX=${PREFIX}
+	fi
+
+	# Remove empty dirs with test prefix
+	find /dev -type d -name "${LEAKED_PREFIX}*" -empty -delete 2>/dev/null || true
+
+	# Fail test with leaked links as most likely somewhere is missing synchronization...
+	test "${#LEAKED_LINKS[@]}" -eq 0 || die "Test leaked these symlinks ${LEAKED_LINKS[@]}"
 
 	echo "ok"
 }
