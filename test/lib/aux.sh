@@ -430,8 +430,13 @@ teardown_devs_prefixed() {
 				local force="-f"
 				if test "$i" = 0; then
 					if test "$once" = 1 ; then
+						case "$DM_NAME" in
+						*pv[0-9]*) ;; # do not report removal of our own PVs
+						*)
 						once=0
 						echo "## removing stray mapped devices with names beginning with $prefix: "
+						;;
+						esac
 					fi
 					test "$DM_OPEN" = 0 || break  # stop loop with 1st. opened device
 					force=""
@@ -607,9 +612,9 @@ teardown() {
 
 	echo -n .
 
-	test -d "$DM_DEV_DIR/mapper" && teardown_devs
+	echo "ok"
 
-	echo -n .
+	test -d "$DM_DEV_DIR/mapper" && teardown_devs
 
 	fi
 
@@ -620,10 +625,9 @@ teardown() {
 	}
 
 	if test "${LVM_TEST_PARALLEL:-0}" = 0 && test -z "$RUNNING_DMEVENTD"; then
+		rm -f debug.log* # no trace of lvm2 command for this case
 		not pgrep dmeventd &>/dev/null # printed in STACKTRACE
 	fi
-
-	echo -n .
 
 	test -n "$TESTDIR" && {
 		cd "$TESTOLDPWD" || die "Failed to enter $TESTOLDPWD"
@@ -641,6 +645,8 @@ teardown() {
 	LEAKED_LINKS=( $(find /dev -path "/dev/mapper/${PREFIX}*" -type l -exec test ! -e {} \; -print -o \
 		-path "/dev/${PREFIX}*/" -type l -exec test ! -e {} \; -print  2>/dev/null || true) )
 
+	test "${#LEAKED_LINKS[@]}" -eq 0 || echo "## removing stray symlinks the names beginning with ${PREFIX}"
+
 	if test "${LVM_TEST_PARALLEL:-0}" = 0 ; then
 		# for non parallel testing erase any dangling links prefixed with LVMTEST
 		find /dev -path "/dev/mapper/${COMMON_PREFIX}*" -type l -exec test ! -e {} \; -print0 -o \
@@ -656,8 +662,6 @@ teardown() {
 
 	# Fail test with leaked links as most likely somewhere is missing synchronization...
 	test "${#LEAKED_LINKS[@]}" -eq 0 || die "Test leaked these symlinks ${LEAKED_LINKS[@]}"
-
-	echo "ok"
 }
 
 prepare_loop() {

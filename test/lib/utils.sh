@@ -128,9 +128,9 @@ STACKTRACE() {
 	stacktrace
 
 	test "${LVM_TEST_PARALLEL:-0}" -eq 0 && test -z "$RUNNING_DMEVENTD" && \
-		test ! -f LOCAL_DMEVENTD && pgrep dmeventd >DPID 2>/dev/null  && {
-			echo "## ERROR: The test started dmeventd ($(< DPID)) unexpectedly."
-			kill "$(< DPID)"
+		test ! -f LOCAL_DMEVENTD && DPID=$(pgrep -n dmeventd 2>/dev/null) && {
+			echo "## ERROR: The test started dmeventd ($DPID) unexpectedly."
+			kill "$DPID" 2>/dev/null || echo "## ERROR: Failed to kill dmeventd ($DPID)."
 		}
 
 	# Get backtraces from coredumps
