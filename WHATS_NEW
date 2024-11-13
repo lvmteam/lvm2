@@ -1,5 +1,6 @@
 Version 2.03.29 - 
 ==================
+  Fix renaming of raid sub LVs when converting a volume to raid (2.03.28).
   Fix segfault/VG write error for raid LV lvextend -i|--stripes -I|--stripesize.
   Revert ignore -i|--stripes, -I|--stripesize for lvextend on raid0 LV (2.03.27).
 
