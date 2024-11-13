@@ -58,4 +58,10 @@ lvconvert --merge $vg/${lv1}_tmeta_rimage_1
 lvconvert -y -m +1 $vg/${lv1}_tdata "$dev2"
 lvconvert -y -m +1 $vg/${lv1}_tmeta "$dev1"
 
+lvremove -f $vg
+
+lvcreate -L10M -T $vg/pool
+lvconvert -y --type raid1 -m2 $vg/pool_tdata
+lvconvert -y --type raid1 -m2 $vg/pool_tmeta
+
 vgremove -ff $vg
