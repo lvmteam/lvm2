@@ -2637,6 +2637,7 @@ static int _raid_add_images_without_commit(struct logical_volume *lv,
 	struct lv_list *lvl;
 	struct lv_segment_area *new_areas;
 	struct segment_type *segtype;
+	const char *lv_name, *lv_name_tmp;
 
 	if (lv_is_not_synced(lv)) {
 		log_error("Can't add image to out-of-sync RAID LV:"
@@ -2704,22 +2705,14 @@ static int _raid_add_images_without_commit(struct logical_volume *lv,
 	 * commits the LVM metadata before clearing the LVs.
 	 */
 	if (seg_is_linear(seg)) {
-		struct dm_list *l;
-		struct lv_list *lvl_tmp;
-		const char *lv_name;
+		if (!(lv_name = _generate_raid_name(lv, "rimage", count)))
+			return_0;
 
-		dm_list_iterate(l, &data_lvs) {
-			if (l == dm_list_last(&data_lvs)) {
-				lvl = dm_list_item(l, struct lv_list);
-				if (!(lv_name = _generate_raid_name(lv, "rimage", count)) ||
-                                    !lv_set_name(lvl->lv, lv_name))
-					return_0;
-				continue;
-			}
-			lvl = dm_list_item(l, struct lv_list);
-			lvl_tmp = dm_list_item(l->n, struct lv_list);
-			if (!lv_set_name(lvl->lv, lvl_tmp->lv->name))
+		dm_list_iterate_back_items(lvl, &data_lvs) {
+			lv_name_tmp = lvl->lv->name;
+			if (!lv_set_name(lvl->lv, lv_name))
 				return_0;
+			lv_name = lv_name_tmp; /* rotate name in list */
 		}
 	}
 
