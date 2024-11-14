@@ -1815,7 +1815,7 @@ DESC: Start or stop processing LV conversions.
 vgchange --activate Active
 OO: --activationmode ActivationMode, --ignoreactivationskip, --partial, --sysinit,
 --readonly, --ignorelockingfailure, --monitor Bool, --poll Bool,
---autoactivation String, OO_VGCHANGE
+--autoactivation String, --persist start, OO_VGCHANGE
 OP: VG|Tag|Select ...
 IO: --ignoreskippedcluster
 ID: vgchange_activate
@@ -1829,18 +1829,28 @@ ID: vgchange_refresh
 DESC: Reactivate LVs using the latest metadata.
 
 vgchange --systemid String VG|Tag|Select
-OO: --select String, --majoritypvs
+OO: --select String, --majoritypvs, --persist String, --removekey String
 ID: vgchange_systemid
 DESC: Change the system ID of a VG.
 
+vgchange --setpersist String VG|Tag|Select
+OO: --select String, --persist start
+ID: vgchange_setpersist
+DESC: Set or clear flags to control persistent reservation behavior.
+
+vgchange --persist String VG|Tag|Select
+OO: --select String, --removekey String, --majoritypvs, --force
+ID: vgchange_persist
+DESC: Perform persistent reservation commands on devices.
+
 vgchange --lockstart
-OO: --select String
+OO: --select String, --persist start
 OP: VG|Tag|Select ...
 ID: vgchange_lockstart
 DESC: Start the lockspace of a shared VG in lvmlockd.
 
 vgchange --lockstop
-OO: --select String
+OO: --select String, --persist stop
 OP: VG|Tag|Select ...
 ID: vgchange_lockstop
 DESC: Stop the lockspace of a shared VG in lvmlockd.
@@ -1900,7 +1910,7 @@ DESC: Generate colon separated output.
 OO_VGEXPORT: --reportformat ReportFmt
 
 vgexport VG|Tag|Select ...
-OO: --select String, OO_VGEXPORT
+OO: --select String, --persist stop, OO_VGEXPORT
 ID: vgexport_some
 DESC: Export specified VGs.
 
@@ -1924,7 +1934,7 @@ ID: vgextend_general
 OO_VGIMPORT: --force, --reportformat ReportFmt
 
 vgimport VG|Tag|Select ...
-OO: --select String, OO_VGIMPORT
+OO: --select String, --persist start, OO_VGIMPORT
 ID: vgimport_some
 DESC: Import specified VGs.
 

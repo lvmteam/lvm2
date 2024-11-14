@@ -542,6 +542,8 @@ GET_VG_STR_PROPERTY_FN(vg_lock_type, vg_lock_type_dup(vg))
 #define _vg_lock_type_set prop_not_implemented_set
 GET_VG_STR_PROPERTY_FN(vg_lock_args, vg_lock_args_dup(vg))
 #define _vg_lock_args_set prop_not_implemented_set
+#define _vg_persist_set prop_not_implemented_set
+#define _vg_persist_get prop_not_implemented_get
 GET_VG_NUM_PROPERTY_FN(vg_extent_size, (SECTOR_SIZE * vg->extent_size))
 #define _vg_extent_size_set prop_not_implemented_set
 GET_VG_NUM_PROPERTY_FN(vg_extent_count, vg->extent_count)

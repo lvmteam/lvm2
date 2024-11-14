@@ -88,6 +88,8 @@ static const struct command_function _command_functions[CMD_COUNT] = {
 	{ vgchange_lockstart_CMD, vgchange_lock_start_stop_cmd },
 	{ vgchange_lockstop_CMD, vgchange_lock_start_stop_cmd },
 	{ vgchange_systemid_CMD, vgchange_systemid_cmd },
+	{ vgchange_setpersist_CMD, vgchange_setpersist_cmd },
+	{ vgchange_persist_CMD, vgchange_persist_cmd },
 
 	/* lvdisplay variants */
 	{ lvdisplay_columns_CMD,	lvdisplay_columns_cmd },

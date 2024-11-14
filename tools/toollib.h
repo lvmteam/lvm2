@@ -249,4 +249,7 @@ int get_lvt_enum(struct logical_volume *lv);
 
 int get_rootvg_dev_uuid(struct cmd_context *cmd, char **dm_uuid_out);
 
+int persist_start_include(struct cmd_context *cmd, struct volume_group *vg,
+                          int autoactivate, int autolockstart, const char *remkey);
+
 #endif

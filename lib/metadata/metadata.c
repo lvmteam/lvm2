@@ -33,6 +33,7 @@
 #include "lib/format_text/import-export.h"
 #include "lib/config/defaults.h"
 #include "lib/locking/lvmlockd.h"
+#include "lib/device/persist.h"
 #include "lib/notify/lvmnotify.h"
 #include "base/data-struct/radix-tree.h"
 
@@ -4943,6 +4944,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	int original_vgid_set = vgid ? 1 : 0;
 	int writing = (vg_read_flags & READ_FOR_UPDATE);
 	int activating = (vg_read_flags & READ_FOR_ACTIVATE);
+	int persisting = (vg_read_flags & READ_FOR_PERSIST);
 	int is_duplicate_vgname;
 	int incorrect_pv_claim = 0;
 
@@ -4973,7 +4975,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	 */
 
 	if (!(vg_read_flags & READ_WITHOUT_LOCK) &&
-	    !lock_vol(cmd, vg_name, (writing || activating) ? LCK_VG_WRITE : LCK_VG_READ, NULL)) {
+	    !lock_vol(cmd, vg_name, (writing || activating || persisting) ? LCK_VG_WRITE : LCK_VG_READ, NULL)) {
 		log_error("Can't get lock for %s.", vg_name);
 		failure |= FAILED_LOCKING;
 		goto bad;
@@ -5145,6 +5147,13 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	if (!_access_vg_exported(cmd, vg)) {
 		failure |= FAILED_EXPORTED;
 		goto_bad;
+	}
+
+	if ((vg->pr & VG_PR_REQUIRE) && (writing || activating) && !cmd->disable_pr_required) {
+		if (!persist_is_started(cmd, vg, 0)) {
+			failure |= FAILED_PR_REQUIRED;
+			goto_bad;
+		}
 	}
 
 	/*

@@ -2992,6 +2992,31 @@ static int _vglockargs_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _field_string(rh, field, vg->lock_args ? : "");
 }
 
+static int _vgpersist_disp(struct dm_report *rh, struct dm_pool *mem,
+			    struct dm_report_field *field,
+			    const void *data, void *private)
+{
+	const struct volume_group *vg = (const struct volume_group *) data;
+
+	if (!vg->pr)
+		return _field_string(rh, field, "");
+	if ((vg->pr & VG_PR_REQUIRE) && (vg->pr & VG_PR_AUTOSTART) && (vg->pr & VG_PR_PTPL))
+		return _field_string(rh, field, "require,autostart,ptpl");
+	if ((vg->pr & VG_PR_REQUIRE) && (vg->pr & VG_PR_AUTOSTART))
+		return _field_string(rh, field, "require,autostart");
+	if ((vg->pr & VG_PR_REQUIRE) && (vg->pr & VG_PR_PTPL))
+		return _field_string(rh, field, "require,ptpl");
+	if ((vg->pr & VG_PR_AUTOSTART) && (vg->pr & VG_PR_PTPL))
+		return _field_string(rh, field, "autostart,ptpl");
+	if (vg->pr & VG_PR_REQUIRE)
+		return _field_string(rh, field, "require");
+	if (vg->pr & VG_PR_AUTOSTART)
+		return _field_string(rh, field, "autostart");
+	if (vg->pr & VG_PR_PTPL)
+		return _field_string(rh, field, "ptpl");
+	return _field_string(rh, field, "");
+}
+
 static int _lvuuid_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
 			struct dm_report_field *field,
 			const void *data, void *private __attribute__((unused)))

@@ -1113,6 +1113,25 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 			goto bad;
 	}
 
+	/*
+	 * In metadata text, vg->pr flags are saved as str list, e.g.
+	 * pr = [ "require", "autostart" ] for VG_PR_REQUIRE | VG_PR_AUTOSTART
+	 */
+	if (dm_config_get_list(vgn, "pr", &cv)) {
+		struct dm_list pr_list;
+		dm_list_init(&pr_list);
+		if (!_read_str_list(mem, &pr_list, cv)) {
+			log_error("Couldn't read pr for volume group %s.", vg->name);
+			return 0;
+		}
+		if (str_list_match_item(&pr_list, "require"))
+			vg->pr |= VG_PR_REQUIRE;
+		if (str_list_match_item(&pr_list, "autostart"))
+			vg->pr |= VG_PR_AUTOSTART;
+		if (str_list_match_item(&pr_list, "ptpl"))
+			vg->pr |= VG_PR_PTPL;
+	}
+
 	if (!_read_id(&vg->id, vgn, "id")) {
 		log_error("Couldn't read uuid for volume group %s.", vg->name);
 		goto bad;

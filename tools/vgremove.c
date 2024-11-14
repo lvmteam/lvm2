@@ -15,6 +15,7 @@
 
 #include "tools.h"
 #include "lib/device/online.h"
+#include "lib/device/persist.h"
 
 static int _vgremove_single(struct cmd_context *cmd, const char *vg_name,
 			    struct volume_group *vg,
@@ -77,6 +78,9 @@ static int _vgremove_single(struct cmd_context *cmd, const char *vg_name,
 		return_ECMD_FAILED;
 
 	online_vgremove(vg);
+
+	if (vg->pr & (VG_PR_REQUIRE|VG_PR_AUTOSTART))
+		persist_stop(cmd, vg);
 
 	vg_remove_pvs(vg);
 

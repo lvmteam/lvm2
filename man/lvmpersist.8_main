@@ -1,0 +1,600 @@
+.TH "LVMPERSIST" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc"
+.
+.SH NAME
+.
+lvmpersist - manage persistent reservations on a group of block devices
+.
+.SH DESCRIPTION
+.
+Persistent reservations (PRs) provide a mechanism to control access to
+shared storage devices, typically to prevent writes from hosts that should
+not be writing to the shared devices.  This is usually a concern in SAN or
+clustered environments, where multiple hosts have access to the same storage
+devices.
+.P
+If an LVM Volume Group (VG) contains PR-capable devices, then LVM commands
+can be used to manage PR at the VG level, applying PR to each Physical
+Volume (PV) in the VG.  (All PVs in the VG must support PR.)
+.P
+.B lvmpersist
+is a low level utility used to perform PR operations on
+individual block devices.  LVM also provides a higher level PR management
+interface through a standard LVM command interface:
+.br
+.B vgchange
+.BR --setpersist ,
+.B vgchange --persist
+.P
+lvmpersist is a script that does not implement the common LVM command line
+options or capabilities.  The script uses sg_persist, mpathpersist, and
+nvme commands to perform PR operations on block devices.  Higher level LVM
+commands (e.g. vgchange) run the lvmpersist script.
+.P
+.SS Device types
+.P
+SCSI or SCSI-like (e.g. iSCSI, SAS, Fibre Channel), dm-multipath, and NVME
+devices are supported.  PRs were introduced with the SCSI Primary Commands
+Version 3 standard (SPC-3).
+.P
+When multipath devices are used, multipath.conf must be configured with
+"reservation_key file".  (Run mpathconf --option reservation_key:file, and
+restart multipathd.)
+.P
+.SS Persistent reservation types
+.P
+LVM uses PR type "Write Exclusive" (WE) for devices in a local VG, and
+"Write Exclusive - all registrants" (WEAR) for devices in a shared VG.  
+One exception is dm-multipath devices, for which WEAR is used in both
+local and shared VGs (this is needed for all paths to remain usable.)
+.P
+The lvmpersist command has two options for specifying the PR type:
+.TP
+.B --access ex|sh
+.br
+Set access to "ex" (exclusive) if the devices should be accessed by only
+one host (i.e. the devices are part of a local VG.)
+Set access to "sh" (shared) if the devices are meant to be accessed
+concurrently by multiple hosts (i.e. the devices are part of a shared VG.) 
+lvmpersist will choose the appropriate PR type for each device (usually
+WE for "ex", and WEAR for "sh".)
+.TP
+.BI --prtype \ PRTYPE
+When a PRTYPE value is specified, lvmpersist will use only that type for
+all devices.
+.P
+PR types and the abbreviations used in interfaces/messages:
+.P
+.B WE
+Write Exclusive
+.br
+.B EA
+Exclusive Access
+.br
+.B WERO
+Write Exclusive – registrants only
+.br
+.B EARO
+Exclusive Access – registrants only
+.br
+.B WEAR
+Write Exclusive – all registrants
+.br
+.B EAAR
+Exclusive Access – all registrants
+.P
+(WERO and EARO types are not yet supported.)
+.P
+.SS Persistent reservation keys
+.P
+PR keys can be up to 8 bytes long, and are represented with up to 16 hex
+characters with a "0x" prefix.  Leading 0s are not permitted, e.g.
+use 0x1234abcd, not 0x000000001234abcd.  A decimal key
+value (without a 0x prefix) is accepted as input, but will appear as
+hex in output.
+.P
+Each host using shared devices must use a unique PR key.
+.P
+PR keys must be configured on each host in /etc/lvm/lvmlocal.conf (see
+Local Settings below.)
+.P
+.SH USAGE
+The basic command set and options for managing PR:
+.P
+Device-level PR utility:
+.br
+.B lvmpersist
+.BR start | stop | remove | clear | read
+.RI [ OPTIONS ]
+.I DEST
+.P
+VG PR configuration:
+.br
+.B vgchange --setpersist
+.BR y | n
+.I VG
+.P
+VG PR operations:
+.br
+.B vgchange --persist
+.BR start | stop | remove | clear | read | check
+.I VG
+.P
+.SS lvmpersist commands
+.P
+.B lvmpersist start
+.BI --ourkey \ KEY
+.I DEST
+.P
+"start" registers the local key and reserves devices.  If a different key
+from the same host is still registered, it will be replaced with the specified key.
+When --access or --prtype is not specified, access "ex" is used.
+.P
+.B lvmpersist stop
+.BI --ourkey \ KEY
+.I DEST
+.P
+"stop" unregisters the local key, which also removes a local reservation.
+.P
+.B lvmpersist remove
+.BI --ourkey \ KEY \ --removekey \ REMKEY
+.I DEST
+.P
+"remove" removes another registered host's key.
+The host with the removed key loses the ability to write to the devices.
+(This command applies to shared VGs, where multiple hosts are started
+at once.)
+.P
+.B lvmpersist start
+.BI --ourkey \ KEY \ --removekey \ REMKEY
+.I DEST
+.P
+"start" with removekey registers the local key and takes the reservation
+from another host (using preempt-abort).
+The other host loses the ability to write to the devices.
+(This command applies to local VGs, for which a single host can be
+started at once.)
+.P
+.B lvmpersist clear
+.BI --ourkey \ KEY
+.I DEST
+.P
+"clear" removes all keys and reservations from the devices.
+.P
+.B lvmpersist
+.BR devtest | read | read-keys | read-reservation
+.I DEST
+.P
+These commands are used to test if devices support PR, and display
+current PR keys and reservations.
+.P
+.B lvmpersist check-key
+.BI --key \ KEY
+.I DEST
+.P
+Check if a specified key is registered.
+.P
+OPTIONS:
+.TP
+.BI --ourkey \ KEY
+.br
+The local PR key, e.g. 0x123abc
+.TP
+.BI --removekey \ REMKEY
+.br
+Another host's PR key.
+.TP
+.BI --key \ KEY
+.br
+Any key to check.
+.TP
+.B --access ex|sh
+.br
+Use a PR type for exclusive or shared device access.
+.TP
+.BI --prtype \ PRTYPE
+.br
+Use the specified reservation type (alternative to --access.)
+.TP
+.B --ptpl
+.br
+Enable persist through power loss during start (register.)
+.P
+DEST:
+.TP
+.BI --device \ PATH \ ...
+.br
+One or more devices to operate on.
+.TP
+.BI --vg \ VGNAME
+.br
+One VG to operate on (all PVs in the VG.)
+.TP
+.BI --vg \ VGNAME \ --device \ PATH \ ...
+.br
+One or more devices to operate on, and a VG name to use as an identifier
+for the set of devices.
+.P
+lvmpersist requires either the names of specific devices, each specified
+as --device /dev/name, or the name of a VG, specified with --vg VGNAME.
+When a VG is specified, with no individual block devices, lvmpersist runs PR
+commands on each PV in the VG.  When devices are specified, and a VG is
+also provided with --vg, then the VG name is simply used in log messages
+to identify the set of devices as a whole.  When lvmpersist is run by
+higher level LVM commands, each device is specified with --device, and the
+VG name is specified with --vg.
+.P
+.SS VG metadata commands
+.P
+vgchange --setpersist is used to configure the automation and
+enforcement of PR in relation to the broader use of the VG.  The
+configuration is stored in the VG metadata.
+.P
+.B vgchange --setpersist
+.BR y | n
+.I VG
+.P
+Enable or disable default automation and enforcement of PR for the VG,
+setting or clearing both "autostart" and "require" PR settings (and
+potentially other future settings.)
+.P
+.B vgchange --setpersist
+.BR autostart | noautostart | require | norequire
+.I VG
+.P
+Individually set or clear the autostart and require settings.
+.P
+When "autostart" is set, autoactivation and auto-lockstart commands
+(vgchange -aay, vgchange --lockstart --lockopt auto) will first start PR
+on the VG.  If PR start fails, these commands stop and not attempt
+activation or lockstart.
+.P
+When "require" is set, lvm commands that write or activate a VG require PR
+to be started before attempting to write or activate.
+
+.B vgs -o persist
+.I VG
+.P
+Display the settings.
+.P
+.SS VG PR commands
+.P
+vgchange --persist is used to perfom PR operations on the VG's devices.
+.P
+.B vgchange --persist start
+.I VG
+.P
+Start PR on VG devices.  Registers the local key and acquires a reservation.
+.P
+.B vgchange --persist stop
+.I VG
+.P
+Stop PR on VG devices.  Unregisters the local key, which releases a reservation
+if one is held by the key.
+.P
+.B vgchange --persist remove --removekey
+.I remkey
+.I VG
+.P
+Remove the PR key of another host from a shared VG's devices, immediately
+disabling the ability of the other host to write to the devices.
+(This command applies to shared VGs, for which multiple hosts are started
+at once.)
+.P
+.B vgchange --persist start --removekey
+.I remkey
+.I VG
+.P
+Start PR on VG devices, while at the same time removing another host's
+key and reservation from the VG devices, disabling the ability of the
+other host to write to the devices.
+(This command applies to local VGs, for which a single host can be
+started at once.)
+.P
+.B vgchange --persist check
+.I VG
+.P
+Check if PR is started (the local key and reservation exists on all
+devices.)  The command exits with success if PR is started on all VG devices.
+.P
+.B vgchange --persist read
+.I VG
+.P
+Display the PR registrations and reservations on each of the VG's devices.
+.P
+.B vgchange --persist clear
+.I VG
+.P
+Clear all PR keys and reservations on the VG devices.
+.P
+.B vgchange --persist autostart
+.I VG
+.P
+Start PR on VG devices if the autostart is set.  This is meant to be used
+by system automation, like autoactivation and auto-lockstart.
+.P
+.SS Supplementary PR start
+.P
+The --persist start option can be added to other commands so that these
+commands will first attempt to start PR (regardless of the autostart
+setting.)
+.P
+vgchange -ay --persist start
+.br
+vgchange -aay --persist start
+.br
+vgchange --lockstart --persist start
+.br
+vgchange --setpersist y|require|autostart --persist start
+.br
+vgimport --persist start
+.br
+vgchange --systemid <local_id> --persist start
+.P
+.SS Local VG usage
+.P
+When using a local VG, only one host is started at a time, and a WE
+(Write Exclusive) reservation is typically held on the devices.
+.P
+Using PR with local VGs protects VG devices from being written to in error
+by another host with access to the same devices.  It is complementary to
+using the VG system ID to control the intended owner of a VG, but adds
+enforced device-level protection, in case another host is not using the
+LVM system ID feature.
+.P
+If one host would like to forcibly take over a local VG that is currently
+in use by another host, it can use vgchange --persist start --removekey
+remkey VG, where "remkey" is the PR key of the currently started host.
+.P
+.SS Shared VG usage
+.P
+When using a shared VG, all hosts using the VG are started, and a WEAR
+(Write Exclusive - all registrants) reservation is held on the devices.
+.P
+Currently, only the sanlock shared lock_type is compatible with PR.
+.P
+PR should be started before locking is started (vgchange --persist start
+followed by vgchange --lockstart, or a combined vgchange --persist start
+--lockstart.)
+.P
+If one host would like to forcibly stop another host from writing to the
+shared VG devices, it can use vgchange --persist remove --removekey remkey
+where "remkey" is the PR key of the other host.
+.P
+.SS Local Settings
+.P
+Each host using PR is required to have a PR key that is unique among all
+hosts using the same VG.  There are two approaches to setting a key value,
+which are set in /etc/lvm/lvmlocal.conf:
+.P
+local/pr_key
+
+The value set in pr_key will be used directly.  It is a hex string up to
+16 characters long.
+
+local/host_id
+
+If no pr_key is set, a key will be created based on the host_id.
+This is a decimal integer between 1 and 2000.
+
+For a local VG, a host_id based key will be in the form:
+
+0x100000000000XXXX where XXXX are the hex digits for the host_id value.
+
+For a shared VG, the host_id based key includes a generation number (taken
+from the sanlock lease) combined with the host_id, and follows the form:
+
+0x100000YYYYYYXXXX where XXXX are the hex digits for the host_id value,
+and YYYYYY are the hex digits for the generation number.
+
+The sanlock generation number increases in value each time the host starts
+the VG, so a host will use a new key each time it starts.  In some
+instances, PR may be started with a key that includes the incorrect
+generation number, in which case the lockstart command will update the key
+with the correct value (the generation number is officially determined
+during lockstart.)
+.P
+.SS vgextend
+.P
+For local VGs, vgextend starts PR on the new devices before adding them to
+the VG.  For shared VGs, the user must use lvmpersist to start PR on the
+new devices, from all hosts, before running vgextend.  vgextend verifies
+that the reservation and keys on the new devices match the existing devices.
+.P
+.SS vgremove
+The vgremove command stops PR on the VG's devices only if "require" or
+"autostart" settings have been set using vgchange --setpersist.  If PR
+has been started independent of any setpersist settings, then vgremove
+will not automatically stop PR on the devices.
+.P
+.SS vgexport/vgimport
+.B vgexport --persist stop 
+stops PR after exporting the VG, and
+.B vgimport --persist start
+starts PR before importing the VG.
+Writing VG metadata for export happens before stopping PR,
+and writing VG metadata for import happens after starting PR.
+.P
+.SS vgchange --systemid
+PR can be started together with taking ownership of a VG's system ID,
+or PR can be stopped together with giving up ownership of a VG's system
+ID (see
+.BR lvmsystemid (7)
+for more information.)
+.P
+.B vgchange --systemid
+.I local_system_id
+.B --persist start
+.I VG
+.P
+This command is used to take ownership of a foreign-owned VG.
+PR is started, and if successful, the system ID of the VG will be
+set to the local system ID.  (Note: the foreign system ID of the VG needs
+to be included in local extra_system_ids to gain access to a foreign VG.)
+To forcibly remove (preempt-abort) PR held by another host on the VG,
+.BI --removekey \ remkey
+can be included, where remkey is the PR key of the current PR holder.
+.P
+.B vgchange --systemid
+.I foreign_system_id
+.B --persist stop
+.I VG
+.P
+This command is used to give up ownership of a locally owned VG.
+The system ID of the VG is updated to the new value, and then PR
+is stopped.
+.P
+.SS Persist Through Power Loss
+To enable the use of "persist through power loss", in which PR state is
+retained on a device if it is power cycled, turn on the
+.B ptpl
+setting:
+.P
+.B vgchange --setpersist ptpl
+.I VG
+.P
+The PTPL setting is applied during key registration (part of PR start), so
+it will take effect for each host on the next start.  It is applied to all
+PVs in the VG, so each device must support PTPL.  The PTPL setting is not
+enabled by "--setpersist y".
+.P
+Either of the following will clear the PTPL setting:
+.P
+.B vgchange --setpersist noptpl
+.I VG
+.br
+.B vgchange --setpersist n
+.I VG
+.P
+.SH EXAMPLES
+.P
+.SS Local VG usage
+.P
+.nf
+host1:
+$ lvmconfig local/host_id
+host_id=1
+$ vgcreate vg /dev/sda /dev/sdb
+  Physical volume "/dev/sda" successfully created.
+  Physical volume "/dev/sdb" successfully created.
+  Volume group "vg" successfully created
+$ vgchange --setpersist y vg
+  Volume group "vg" successfully changed.
+$ vgchange --persist start vg
+  lvmpersist: started vg with key 0x1000000000000001.
+$ vgchange --persist check vg
+  key for local host is registered: 0x1000000000000001
+  reservation WE for local host
+  PR is started.
+$ lvcreate -l1 -n lvol0 vg
+  Logical volume "lvol0" created.
+$ vgchange -an vg
+  0 logical volume(s) in volume group "vg" now active
+$ vgchange --persist stop vg
+  lvmpersist: stopped vg with key 0x1000000000000001.
+$ vgchange -ay vg
+  persistent reservation is not started.
+  Cannot access VG vg without persistent reservation.
+$ lvcreate -l1 -n lvol1 vg
+  persistent reservation is not started.
+  Cannot access VG vg without persistent reservation.
+$ vgchange --persist start vg
+  lvmpersist: started vg with key 0x1000000000000001.
+$ vgchange -ay vg
+  1 logical volume(s) in volume group "vg" now active
+$ lvcreate -l1 -n lvol1 vg
+  Logical volume "lvol1" created.
+
+host2 foricibly takes VG from host1:
+$ lvmconfig local/host_id
+host_id=2
+$ vgchange -ay vg
+  persistent reservation is not started.
+  Cannot access VG vg without persistent reservation.
+$ vgchange --persist start vg
+  persistent reservation is started by another host
+$ vgchange --persist check vg
+  key for local host is not registered (host_id 2)
+  key for other host is registered: 0x1000000000000001
+  reservation WE for other host
+  PR is not started.
+$ dd if=/dev/zero of=/dev/sda
+dd: error writing '/dev/sda': Input/output error
+$ vgchange --persist start --removekey 0x1000000000000001 vg
+  lvmpersist: started vg with key 0x1000000000000002.
+$ vgchange -ay vg
+  2 logical volume(s) in volume group "vg" now active
+$ vgchange --persist check vg
+  key for local host is registered: 0x1000000000000002
+  reservation WE for local host
+  PR is started.
+
+host1 can no longer write:
+$ dd if=/dev/zero of=/dev/vg/lvol0
+dd: error writing '/dev/vg/lvol0': Input/output error
+$ lvcreate -l1 -n lvol1 vg
+  persistent reservation is not started.
+  Cannot access VG vg without persistent reservation.
+$ vgchange --persist check vg
+  key for local host is not registered (host_id 1)
+  key for other host is registered: 0x1000000000000002
+  reservation WE for other host
+  PR is not started.
+.fi
+.P
+.SS Shared VG usage
+.P
+.nf
+host1:
+$ lvmconfig local/host_id
+host_id=1
+$ vgcreate --shared vg /dev/sda /dev/sdb
+  Enabling sanlock global lock
+  Physical volume "/dev/sda" successfully created.
+  Physical volume "/dev/sdb" successfully created.
+  Logical volume "lvmlock" created.
+  Volume group "vg" successfully created
+  VG vg starting sanlock lockspace
+  Starting locking.  Waiting until locks are ready...
+$ vgchange --setpersist y vg
+  Volume group "vg" successfully changed.
+$ vgchange --persist start vg
+  lvmpersist: started vg with key 0x1000000000010001.
+$ vgchange --persist check vg
+  key for local host is registered: 0x1000000000010001
+  keys for all registered hosts: 0x1000000000010001
+  reservation WEAR for registered hosts
+  PR is started.
+$ lvcreate -l1 -n lvol0 vg
+  Logical volume "lvol0" created.
+
+host2:
+$ lvmconfig local/host_id
+host_id=2
+$ vgchange --persist start vg
+  lvmpersist: started vg with key 0x1000000000010002.
+$ vgchange --lockstart vg
+  VG vg starting sanlock lockspace
+  Starting locking.  Waiting for sanlock...
+$ vgchange --persist check vg
+  key for local host is registered: 0x1000000000010002
+  keys for all registered hosts: 0x1000000000010001 0x1000000000010002
+  reservation WEAR for registered hosts
+  PR is started.
+$ lvcreate -l1 -n lvol1 vg
+  Logical volume "lvol1" created.
+$ lvchange -ay vg/lvol0
+  LV locked by other host: vg/lvol0 (host_id 1)
+  Failed to lock logical volume vg/lvol0.
+$ vgchange -an vg
+  0 logical volume(s) in volume group "vg" now active
+$ vgchange --lockstop vg
+$ vgchange --persist stop vg
+  lvmpersist: stopped ee with key 0x1000000000010002.
+$ vgchange --persist check vg
+  key for local host is not registered (host_id 2)
+  keys for all registered hosts: 0x1000000000010001
+  reservation WEAR for registered hosts
+  PR is not started.
+$ dd if=/dev/zero of=/dev/sda
+dd: error writing '/dev/sda': Input/output error
+.fi

@@ -32,6 +32,10 @@ typedef enum {
 	ALLOC_INHERIT
 } alloc_policy_t;
 
+#define VG_PR_REQUIRE	0x00000001
+#define VG_PR_AUTOSTART	0x00000002
+#define VG_PR_PTPL	0x00000004
+
 #define MAX_EXTENT_COUNT  (UINT32_MAX)
 
 struct volume_group {
@@ -134,6 +138,8 @@ struct volume_group {
 	uint32_t open_mode; /* FIXME: read or write - check lock type? */
 
 	uint32_t mda_copies; /* target number of mdas for this VG */
+
+	uint32_t pr; /* VG_PR_ flags */
 
 	struct logical_volume *pool_metadata_spare_lv; /* one per VG */
 	struct logical_volume *sanlock_lv; /* one per VG */

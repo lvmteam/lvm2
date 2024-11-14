@@ -39,6 +39,9 @@ static int _vgimport_single(struct cmd_context *cmd,
 	if (!vg_is_shared(vg))
 		vg->system_id = cmd->system_id ? dm_pool_strdup(vg->vgmem, cmd->system_id) : NULL;
 
+	if (!persist_start_include(cmd, vg, 0, 0, NULL))
+		goto_bad;
+
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		pv = pvl->pv;
 		pv->status &= ~EXPORTED_VG;
@@ -89,6 +92,16 @@ int vgimport(struct cmd_context *cmd, int argc, char **argv)
 		log_warn("WARNING: Volume groups with missing PVs will be imported with --force.");
 		cmd->handles_missing_pvs = 1;
 	}
+
+	/*
+	 * The command definition for vgimport includes only "--persist start",
+	 * so if the persist arg is set, then it can only be start, so
+	 * persist_start_include() above will need to start PR before the
+	 * VG is written.  This makes it safe to use disable_pr_required=1 to
+	 * skip the persist_is_started() check in vg_read().
+	 */
+	if (arg_is_set(cmd, persist_ARG))
+		cmd->disable_pr_required = 1;
 
 	return process_each_vg(cmd, argc, argv, NULL, NULL, READ_FOR_UPDATE,
 			       0, NULL, &_vgimport_single);

@@ -18,6 +18,7 @@
 #include "lib/label/hints.h"
 #include "lib/device/device_id.h"
 #include "lib/device/online.h"
+#include "lib/device/persist.h"
 #include "libdm/misc/dm-ioctl.h"
 
 #include <sys/stat.h>
@@ -280,6 +281,17 @@ static int _ignore_vg(struct cmd_context *cmd,
 			read_error &= ~FAILED_LOCK_TYPE; /* Check for other errors */
 			read_error &= ~FAILED_LOCK_MODE;
 			log_verbose("Skipping volume group %s", vg_name);
+			*skip = 1;
+		}
+	}
+
+	if (read_error & FAILED_PR_REQUIRED) {
+		if (arg_vgnames && str_list_match_item(arg_vgnames, vg_name)) {
+			log_error("Cannot access VG %s without persistent reservation.", vg_name);
+			return 1;
+		} else {
+			read_error &= ~FAILED_PR_REQUIRED; /* Check for other errors */
+			log_verbose("Skipping volume group %s without pr", vg_name);
 			*skip = 1;
 		}
 	}
@@ -6183,3 +6195,106 @@ int get_rootvg_dev_uuid(struct cmd_context *cmd, char **dm_uuid_out)
 
 	return 1;
 }
+
+/*
+ * Starting persistent reservations
+ *
+ * Direct
+ * ------
+ * . vgchange --persist start
+ *
+ *   Calls persist start directly.
+ *   Does not use VG_PR_AUTOSTART or VG_PR_REQUIRE.
+ *
+ * Automatic
+ * ---------
+ * . vgchange --persist autostart
+ * . vgchange -aay
+ * . vgchange --lockstart --lockopt auto
+ *
+ *   Will do persist start if the "autostart" VG flag is set.
+ *   (from vgchange --setpersist y|autostart; VG_PR_AUTOSTART flag.)
+ *   Will first call persist start if the VG_PR_AUTOSTART flag is set.
+ *   Command stops/fails if persist start fails and VG_PR_REQUIRE is set,
+ *   i.e. any subsequent activation or lockstart requires persist start.
+ *
+ * Supplementary
+ * -------------
+ * . vgchange -ay --persist start
+ * . vgchange -aay --persist start
+ * . vgchange --lockstart --persist start
+ * . vgchange --setpersist y|require|autostart --persist start
+ * . vgimport --persist start
+ * . vgchange --systemid <to_self> --persist start [--removekey remkey]
+ *
+ *   Will first call persist start (VG_PR_AUTOSTART does not apply.)
+ *   Will stop/fail if persist start fails (VG_PR_REQUIRE does not apply.)
+ *
+ * Stopping persistent reservations
+ *
+ * Direct
+ * ------
+ * . vgchange --persist stop
+ *
+ *   Calls persist stop directly.
+ *   Does not use VG_PR_AUTOSTART or VG_PR_REQUIRE.
+ *
+ * Supplementary
+ * -------------
+ * . vgchange -an --persist stop
+ * . vgchange --lockstop --persist stop
+ * . vgexport --persist stop
+ * . vgchange --systemid <to_other> --persist stop
+ *
+ *   Will call persist stop at the end if
+ *   the prior action (deactivat/stop) was successful.
+ *
+ * Automatic
+ * ---------
+ * . vgremove, if either VG_PR flag is set.
+ */
+
+int persist_start_include(struct cmd_context *cmd, struct volume_group *vg,
+			  int autoactivate, int autolockstart, const char *remkey)
+{
+	const char *op = arg_str_value(cmd, persist_ARG, NULL);
+	char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
+	int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
+
+	/*
+	 * Supplementary start: --persist start was added to the command.
+	 */
+	if (op && !strcmp(op, "start")) {
+		if (!persist_start(cmd, vg, local_key, local_host_id, remkey)) {
+			log_error("Failed to start persistent reservation.");
+			return 0;
+		}
+		return 1;
+	}
+
+	/*
+	 * Automatic start: VG_PR_AUTOSTART was set (from vgchange --setpersist y|autostart).
+	 * VG_PR_AUTOSTART applies to vgchange -aay and vgchange --lockstart --lockopt auto.
+	 *
+	 * "vgchange -aay" and "vgchange --lockstart --lockopt auto" are the automatic
+	 * forms of "vgchange -ay" and "vgchange --lockstart".  The automatic
+	 * persist start goes with automatic activation/lockstart, and direct
+	 * persist start goes with the direct activation/lockstart.
+	 * i.e. we assume that "vgchange -ay" and "vgchange --lockstart" are
+	 * not automatically run, and therefore "--persist start" can be added
+	 * to those commands if it's wanted.
+	 */
+	if ((vg->pr & VG_PR_AUTOSTART) && (autoactivate || autolockstart)) {
+		if (!persist_start(cmd, vg, local_key, local_host_id, NULL)) {
+			if (vg->pr & VG_PR_REQUIRE) {
+				log_error("Failed to autostart persistent reservation.");
+				return 0;
+			} else {
+				log_warn("WARNING: Failed to autostart persistent reservation (not required.)");
+			}
+		}
+	}
+
+	return 1;
+}
+

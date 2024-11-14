@@ -21,7 +21,7 @@ ifeq ("@BUILD_DMEVENTD@", "yes")
 	LDFLAGS += -Wl,-rpath-link,$(top_builddir)/daemons/dmeventd
 endif
 
-LVM_SCRIPTS = lvmdump.sh
+LVM_SCRIPTS = lvmdump.sh lvmpersist.sh
 DM_SCRIPTS =
 
 ifeq ("@FSADM@", "yes")

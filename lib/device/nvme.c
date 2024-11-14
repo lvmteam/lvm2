@@ -17,6 +17,7 @@
 #include "lib/commands/toolcontext.h"
 #include "lib/device/device.h"
 #include "lib/device/device_id.h"
+#include "lib/device/persist.h"
 #include "lib/mm/xlate.h"
 
 #include <stdio.h>
@@ -34,6 +35,8 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <assert.h>
+
+#define NVME_PR_BUF_SIZE 8192 /* space for 127 keys */
 
 #ifdef NVME_SUPPORT
 #include <libnvme.h>
@@ -267,8 +270,248 @@ out:
 	if (close(fd))
 		log_sys_debug("close", devpath);
 }
+
+static int prtype_from_nvme(uint8_t nvme_type)
+{
+	switch (nvme_type) {
+	case 0:
+		return 0;
+	case 1:
+		return PR_TYPE_WE;
+	case 2:
+		return PR_TYPE_EA;
+	case 3:
+		return PR_TYPE_WERO;
+	case 4:
+		return PR_TYPE_EARO;
+	case 5:
+		return PR_TYPE_WEAR;
+	case 6:
+		return PR_TYPE_EAAR;
+	default:
+		return -1;
+	};
+}
+
+int dev_read_reservation_nvme(struct cmd_context *cmd, struct device *dev, uint64_t *holder_ret, int *prtype_ret)
+{
+	const char *devname;
+	struct nvme_resv_report_args args = { 0 };
+	struct nvme_resv_status *status = NULL;
+	uint64_t rkey;
+	uint32_t nsid;
+	int status_size = NVME_PR_BUF_SIZE;
+	int status_entries;
+	int regctl;
+	int err;
+	int fd;
+	int i;
+	int ret = 0;
+
+	devname = dev_name(dev);
+
+	if ((fd = open(devname, O_RDONLY)) < 0) {
+		log_error("dev_read_reservation %s open error %d", devname, errno);
+		return 0;
+	}
+
+	if (nvme_get_nsid(fd, &nsid)) {
+		log_error("dev_read_reservation %s nvme_get_nsid error %d", devname, errno);
+		goto out;
+	}
+
+	if (!(status = malloc(status_size)))
+		goto out;
+
+	args.args_size = sizeof(args);
+	args.fd = fd;
+	args.nsid = nsid;
+	args.eds = 1;
+	args.len = status_size;
+	args.report = status;
+	args.timeout = 0;
+	args.result = NULL;
+
+	if ((err = nvme_resv_report(&args))) {
+		log_error("dev_read_reservation %s error %d", devname, err);
+		goto out;
+	}
+
+	*prtype_ret = prtype_from_nvme(status->rtype);
+	ret = 1;
+
+	if (!holder_ret)
+		goto out;
+
+	*holder_ret = 0;
+
+	/* all are holders for these types so don't bother checking */
+	if (*prtype_ret == PR_TYPE_WEAR || *prtype_ret == PR_TYPE_EAAR)
+		goto out;
+
+	regctl = status->regctl[0] | (status->regctl[1] << 8);
+	status_entries = (status_size - 64) / 64;
+	if (status_entries < regctl) {
+		log_warn("dev_read_reservation %s too many entries %d limit %d", devname, regctl, status_entries);
+		regctl = status_entries;
+	}
+
+	for (i = 0; i < regctl; i++) {
+		if (status->regctl_eds[i].rcsts) {
+			rkey = le64_to_cpu(status->regctl_eds[i].rkey);
+			*holder_ret = rkey;
+			break;
+		}
+	}
+
+out:
+	free(status);
+	close(fd);
+	return ret;
+}
+
+int dev_find_key_nvme(struct cmd_context *cmd, struct device *dev, int may_fail,
+		      uint64_t find_key, int *found_key,
+		      int find_host_id, uint64_t *found_host_id_key,
+		      int find_all, int *found_count, uint64_t **found_all)
+{
+	const char *devname;
+	struct nvme_resv_report_args args = { 0 };
+	struct nvme_resv_status *status = NULL;
+	uint64_t *all_keys;
+	uint64_t key;
+	uint32_t nsid;
+	int status_size = NVME_PR_BUF_SIZE;
+	int status_entries;
+	int regctl;
+	int num_keys;
+	int err;
+	int fd;
+	int i;
+	int ret = 0;
+
+	devname = dev_name(dev);
+
+	if ((fd = open(devname, O_RDONLY)) < 0) {
+		log_error("dev_read_reservation %s open error %d", devname, errno);
+		return 0;
+	}
+
+	if (nvme_get_nsid(fd, &nsid)) {
+		if (may_fail)
+			log_debug("dev_read_reservation %s nvme_get_nsid error %d", devname, errno);
+		else
+			log_error("dev_read_reservation %s nvme_get_nsid error %d", devname, errno);
+		goto out;
+	}
+
+	if (!(status = malloc(status_size)))
+		goto out;
+
+	args.args_size = sizeof(args);
+	args.fd = fd;
+	args.nsid = nsid;
+	args.eds = 1;
+	args.len = status_size;
+	args.report = status;
+	args.timeout = 0;
+	args.result = NULL;
+
+	if ((err = nvme_resv_report(&args))) {
+		if (may_fail)
+			log_debug("dev_read_reservation %s error %d", devname, err);
+		else
+			log_error("dev_read_reservation %s error %d", devname, err);
+		goto out;
+	}
+
+	regctl = status->regctl[0] | (status->regctl[1] << 8);
+	status_entries = (status_size - 64) / 64;
+	if (status_entries < regctl) {
+		log_warn("dev_read_reservation %s too many entries %d limit %d", devname, regctl, status_entries);
+		regctl = status_entries;
+	}
+	num_keys = regctl;
+
+	log_debug("dev_find_key %s num %d", devname, num_keys);
+
+	/* caller wants just a count of all keys */
+	if (find_all && found_count && !found_all) {
+		*found_count = num_keys;
+		ret = 1;
+		goto out;
+	}
+
+	/* caller wants a count and array of all keys */
+	if (find_all && found_count && found_all) {
+		*found_count = num_keys;
+		*found_all = NULL;
+
+		if (!num_keys) {
+			ret = 1;
+			goto out;
+		}
+		if (!(all_keys = dm_pool_zalloc(cmd->mem, num_keys * sizeof(uint64_t)))) {
+			ret = 0;
+			goto out;
+		}
+		*found_all = all_keys;
+	}
+
+	if (!num_keys) {
+		ret = 1;
+		goto out;
+	}
+
+	for (i = 0; i < num_keys; i++) {
+		key = le64_to_cpu(status->regctl_eds[i].rkey);
+
+		log_debug("dev_find_key %s 0x%llx", devname, (unsigned long long)key);
+
+		if (find_all && found_count && found_all)
+			all_keys[i] = key;
+
+		if (find_key && (find_key == key)) {
+			if (found_key)
+				*found_key = 1;
+			if (!find_all)
+				break;
+		}
+
+		if (find_host_id && (find_host_id == (key & 0xFFFF))) {
+			if (found_host_id_key)
+				*found_host_id_key = key;
+			if (!find_all)
+				break;
+		}
+	}
+
+	ret = 1;
+
+out:
+	free(status);
+	close(fd);
+	return ret;
+}
+
 #else
+
 void dev_read_nvme_wwids(struct device *dev)
 {
 }
+
+int dev_read_reservation_nvme(struct cmd_context *cmd, struct device *dev, uint64_t *holder_ret, int *prtype_ret)
+{
+	return 0;
+}
+
+
+int dev_find_key_nvme(struct cmd_context *cmd, struct device *dev,
+		      uint64_t find_key, int *found_key,
+		      int find_host_id, uint64_t *found_host_id_key,
+		      int find_all, int *found_count, uint64_t **found_all)
+{
+	return 0;
+}
+
 #endif

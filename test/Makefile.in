@@ -170,7 +170,7 @@ ifeq ("@BUILD_LVMLOCKD@", "yes")
 check_lvmlockd_sanlock: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir $(LVM_TEST_RESULTS) \
-		--flavours udev-lvmlockd-sanlock --only shell/aa-lvmlockd-sanlock-prepare.sh,$(T),shell/zz-lvmlockd-sanlock-remove.sh --skip $(S)
+		--flavours udev-lvmlockd-sanlock --only $(T) --skip $(S)
 
 check_lvmlockd_dlm: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \

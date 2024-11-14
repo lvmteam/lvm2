@@ -14,6 +14,7 @@
  */
 
 #include "tools.h"
+#include "lib/device/persist.h"
 
 struct vgextend_params {
 	struct pvcreate_params pp;
@@ -95,6 +96,10 @@ static int _vgextend_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (!vg_extend_each_pv(vg, pp))
+		goto_out;
+
+	/* If the VG is using PR, then get PR on new devs. */
+	if (!persist_start_extend(cmd, vg))
 		goto_out;
 
 	if (arg_is_set(cmd, metadataignore_ARG)) {

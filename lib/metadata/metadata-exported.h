@@ -193,6 +193,7 @@
 #define PROCESS_SKIP_SCAN	0x00200000U /* skip lvmcache_label_scan in process_each_pv */
 #define READ_FOR_ACTIVATE	0x00400000U /* command tells vg_read it plans to activate the vg */
 #define READ_WITHOUT_LOCK	0x00800000U /* caller responsible for vg lock */
+#define READ_FOR_PERSIST	0x01000000U /* command intends to perform PR operation on disks */
 
 /* vg_read returns these in error_flags */
 #define FAILED_NOT_ENABLED	0x00000001U
@@ -208,7 +209,8 @@
 #define FAILED_SYSTEMID		0x00000400U
 #define FAILED_LOCK_TYPE	0x00000800U
 #define FAILED_LOCK_MODE	0x00001000U
-#define FAILED_INTERNAL_ERROR	0x00002000U
+#define FAILED_PR_REQUIRED	0x00002000U
+#define FAILED_INTERNAL_ERROR	0x00004000U
 #define SUCCESS			0x00000000U
 
 #define VGMETADATACOPIES_ALL UINT32_MAX

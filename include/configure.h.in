@@ -613,6 +613,9 @@
 /* Path to lvresize_fs_helper script. */
 #undef LVRESIZE_FS_HELPER_PATH
 
+/* Path to lvmpersist script. */
+#undef LVMPERSIST_PATH
+
 /* Define to 1 if 'major', 'minor', and 'makedev' are declared in <mkdev.h>.
    */
 #undef MAJOR_IN_MKDEV

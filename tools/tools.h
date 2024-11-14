@@ -172,6 +172,8 @@ int vgchange_background_polling(struct cmd_context *cmd, struct volume_group *vg
 int vgchange_locktype_cmd(struct cmd_context *cmd, int argc, char **argv);
 int vgchange_lock_start_stop_cmd(struct cmd_context *cmd, int argc, char **argv);
 int vgchange_systemid_cmd(struct cmd_context *cmd, int argc, char **argv);
+int vgchange_setpersist_cmd(struct cmd_context *cmd, int argc, char **argv);
+int vgchange_persist_cmd(struct cmd_context *cmd, int argc, char **argv);
 
 const struct opt_name *get_opt_name(int opt);
 const struct val_name *get_val_name(int val);

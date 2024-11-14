@@ -602,6 +602,35 @@ arg(settings_ARG, '\0', "settings", string_VAL, ARG_GROUPABLE, 0,
     "Combine multiple settings in quotes, or repeat the settings\n"
     "option for each.\n")
 
+arg(persist_ARG, '\0', "persist", string_VAL, 0, 0,
+    "Persistent Reservation operation.\n"
+    "start: register local key and acquire reservation.\n"
+    "stop: unregister local key, releasing reservation.\n"
+    "remove: preempt and abort another key.\n"
+    "clear: remove reservation and keys.\n"
+    "check: check if started.\n"
+    "autostart: start if the VG autostart flag is set.\n"
+    "lvmlocal.conf pr_key or host_id must be configured to use PR.\n"
+    "For local VGs, Write Exclusive (WE) is used, and for shared VGs\n"
+    "Write Exclusive, all registrants (WEAR) is used.\n"
+    "Use --setpersist to automate and/or require PR.\n")
+
+arg(setpersist_ARG, '\0', "setpersist", string_VAL, 0, 0,
+    "Set or clear flags to control persistent reservation behavior.\n"
+    "autostart: set flag, PR will be automatically started.\n"
+    "noautostart: clear autostart flag.\n"
+    "require: set flag, PR will be required to write or activate VG.\n"
+    "norequire: clear require flag.\n"
+    "y: set autostart and require flags.\n"
+    "n: clear autostart and require flags.\n"
+    "When autostart is enabled, autoactivation and auto-lockstart\n"
+    "commands will first start PR.\n"
+    "lvmlocal.conf pr_key or host_id must be configured to use PR.\n"
+    "For local VGs, enabling system_id is also recommended.\n")
+
+arg(removekey_ARG, '\0', "removekey", string_VAL, 0, 0,
+    "A persistent reservation key to remove.\n")
+
 arg(poll_ARG, '\0', "poll", bool_VAL, 0, 0,
     "When yes, start the background transformation of an LV.\n"
     "An incomplete transformation, e.g. pvmove or lvconvert interrupted\n"

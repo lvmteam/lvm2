@@ -1771,6 +1771,9 @@ LIBEXECDIR="$(eval echo $(eval echo $libexecdir))"
 LVRESIZE_FS_HELPER_PATH="$LIBEXECDIR/lvresize_fs_helper"
 AC_DEFINE_UNQUOTED(LVRESIZE_FS_HELPER_PATH, ["$LVRESIZE_FS_HELPER_PATH"], [Path to lvresize_fs_helper script.])
 
+LVMPERSIST_PATH="$SBINDIR/lvmpersist"
+AC_DEFINE_UNQUOTED(LVMPERSIST_PATH, ["$LVMPERSIST_PATH"], [Path to lvmpersist script.])
+
 ################################################################################
 dnl -- dmeventd pidfile and executable path
 AC_ARG_WITH(dmeventd-pidfile,

@@ -45,6 +45,7 @@ fi
 %{_sbindir}/lvmdevices
 %{_sbindir}/lvmdiskscan
 %{_sbindir}/lvmdump
+%{_sbindir}/lvmpersist
 %{_sbindir}/lvmsadc
 %{_sbindir}/lvmsar
 %{_sbindir}/lvreduce
