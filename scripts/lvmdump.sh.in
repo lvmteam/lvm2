@@ -357,7 +357,7 @@ fi
 warnings
 
 if test -z "$userdir"; then
-	cd "$HOME"
+	cd "$HOME" || return
 	"$TAR" czf "$lvm_dump" "$dirbase" 2>/dev/null
 	"$RM" -rf "$dir"
 fi
