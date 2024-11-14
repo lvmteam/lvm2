@@ -105,7 +105,7 @@ function _check_size
 	local data_stripes=$3
 
 	# Compare size of LV with calculated one
-	[ $(blockdev --getsz /dev/$vg/$lv) -eq $(_get_size $vg $lv $data_stripes) ] && echo 0 || echo 1
+	[ "$(blockdev --getsz /dev/$vg/$lv)" -eq "$(_get_size $vg $lv $data_stripes)" ] && echo 0 || echo 1
 }
 
 function _total_stripes

@@ -1089,9 +1089,9 @@ prepare_devs() {
 		# then allocate a dedicated backing device for PV; otherwise, rollback
 		# to use single backing device for device-mapper.
 		if [ -n "$LVM_TEST_BACKING_DEVICE" ] && [ "$n" -le ${#BACKING_DEVICE_ARRAY[@]} ]; then
-			table[i]="0 $size linear "${BACKING_DEVICE_ARRAY[i]}" $(( header_shift * 2048 ))"
+			table[i]="0 $size linear ${BACKING_DEVICE_ARRAY[i]} $(( header_shift * 2048 ))"
 		else
-			table[i]="0 $size linear "$BACKING_DEV" $(( i * size + ( header_shift * 2048 ) ))"
+			table[i]="0 $size linear $BACKING_DEV $(( i * size + ( header_shift * 2048 ) ))"
 		fi
 		concise[i]="$name,TEST-$name,,,${table[i]}"
 		echo "${table[i]}" > "$name.table"

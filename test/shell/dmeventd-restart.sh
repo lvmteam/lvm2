@@ -81,7 +81,7 @@ for i in {1..10}; do
 	# wait here for a while until dmeventd dies....
 	# surprisingly it's not instant and we can actually
 	# obtain list of monitored devices...
-	test -z $(ps -p "$pid" -o comm=) && break
+	test -z "$(ps -p "$pid" -o comm=)" && break
 	sleep .1
 done
 rm LOCAL_DMEVENTD debug.log*

@@ -47,7 +47,7 @@ not vgremove --config 'global { wait_for_locks = 0 }' $vg
 test -f "$TESTDIR/var/lock/lvm/P_global" # still running
 # First kill 'sleep' process forked from flock
 # Not using 'flock -F' since this flag is newer
-kill $(ps -o pid --no-headers --ppid "$flock_pid") || true
+kill "$(ps -o pid --no-headers --ppid "$flock_pid")" || true
 kill "$flock_pid" || true
 
 vgremove -ff $vg
