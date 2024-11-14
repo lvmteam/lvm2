@@ -33,7 +33,8 @@ check_daemon_in_builddir() {
 
 create_corosync_conf() {
 	local COROSYNC_CONF="/etc/corosync/corosync.conf"
-	local COROSYNC_NODE=$(hostname)
+	local COROSYNC_NODE
+	COROSYNC_NODE=$(hostname || true)
 
 	if test -a "$COROSYNC_CONF"; then
 		if ! grep "created by lvm test suite" "$COROSYNC_CONF"; then
