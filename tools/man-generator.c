@@ -791,6 +791,7 @@ static void _print_man_usage_common_cmd(struct command *cmd)
 	int i, sep, oo, opt_enum;
 	int found_common_command = 0;
 
+	/* common cmd options only used with variants */
 	if (cna->variants < 2)
 		return;
 
@@ -824,10 +825,6 @@ static void _print_man_usage_common_cmd(struct command *cmd)
 		if (!opt_names[opt_enum].short_opt)
 			continue;
 
-		/* common cmd options only used with variants */
-		if (cna->variants < 2)
-			continue;
-
 		if (_is_lvm_all_opt(opt_enum))
 			continue;
 
@@ -859,10 +856,6 @@ static void _print_man_usage_common_cmd(struct command *cmd)
 			continue;
 
 		if (opt_names[opt_enum].short_opt)
-			continue;
-
-		/* common cmd options only used with variants */
-		if (cna->variants < 2)
 			continue;
 
 		if (_is_lvm_all_opt(opt_enum))
