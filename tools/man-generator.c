@@ -345,6 +345,19 @@ static const char *_man_long_opt_name(const char *cmdname, int opt_enum)
 	return long_opt;
 }
 
+/* indent adds spaces for '-X|' when short option is missing */
+static void _print_man_option(const char *name, int opt_enum, int indent)
+{
+	int short_opt = opt_names[opt_enum].short_opt;
+
+	if (short_opt)
+		printf("\\fB-%c\\fP|", short_opt);
+	else if (indent)
+		printf("   ");
+
+	printf("\\fB%s\\fP", _man_long_opt_name(name, opt_enum));
+}
+
 static void _print_man_usage(char *lvmname, struct command *cmd)
 {
 	const struct command_name *cname = &command_names[cmd->lvm_command_enum];
@@ -381,12 +394,8 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 			if ((opt_enum == size_ARG) && command_has_alternate_extents(cname))
 				include_extents = 1;
 
-			if (opt_names[opt_enum].short_opt) {
-				printf(" \\fB-%c\\fP|\\fB%s\\fP",
-				       opt_names[opt_enum].short_opt,
-				       _man_long_opt_name(cmd->name, opt_enum));
-			} else
-				printf(" \\fB%s\\fP", opt_names[cmd->required_opt_args[ro].opt].long_opt);
+			printf(" ");
+			_print_man_option(cmd->name, opt_enum, 0);
 
 			if (cmd->required_opt_args[ro].def.val_bits) {
 				printf(" ");
@@ -427,14 +436,8 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 				printf(" ");
 			}
 
-			if (opt_names[opt_enum].short_opt) {
-				printf(" \\fB-%c\\fP|\\fB%s\\fP",
-				       opt_names[opt_enum].short_opt,
-				       _man_long_opt_name(cmd->name, opt_enum));
-			} else {
-				printf("   ");
-				printf(" \\fB%s\\fP", _man_long_opt_name(cmd->name, opt_enum));
-			}
+			printf(" ");
+			_print_man_option(cmd->name, opt_enum, 1);
 
 			if (cmd->required_opt_args[ro].def.val_bits) {
 				printf(" ");
@@ -514,12 +517,8 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 			if ((opt_enum == size_ARG) && command_has_alternate_extents(cname))
 				include_extents = 1;
 
-			if (opt_names[opt_enum].short_opt) {
-				printf(" \\fB-%c\\fP|\\fB%s\\fP",
-				       opt_names[opt_enum].short_opt,
-				       _man_long_opt_name(cmd->name, opt_enum));
-			} else
-				printf(" \\fB%s\\fP", opt_names[cmd->required_opt_args[ro].opt].long_opt);
+			printf(" ");
+			_print_man_option(cmd->name, opt_enum, 0);
 
 			if (cmd->required_opt_args[ro].def.val_bits) {
 				printf(" ");
@@ -599,9 +598,8 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 			if (sep)
 				printf(".br\n");
 
-			printf("[ \\fB-%c\\fP|\\fB%s\\fP",
-				opt_names[opt_enum].short_opt,
-				_man_long_opt_name(cmd->name, opt_enum));
+			printf("[ ");
+			_print_man_option(cmd->name, opt_enum, 0);
 
 			if (cmd->optional_opt_args[oo].def.val_bits) {
 				printf(" ");
@@ -736,9 +734,8 @@ static void _print_man_usage_common_lvm(struct command *cmd)
 			if (cmd->optional_opt_args[oo].opt != opt_enum)
 				continue;
 
-			printf("[ \\fB-%c\\fP|\\fB%s\\fP",
-				opt_names[opt_enum].short_opt,
-				_man_long_opt_name(cmd->name, opt_enum));
+			printf("[ ");
+			_print_man_option(cmd->name, opt_enum, 0);
 
 			if (cmd->optional_opt_args[oo].def.val_bits) {
 				printf(" ");
@@ -841,9 +838,8 @@ static void _print_man_usage_common_cmd(struct command *cmd)
 			if (cmd->optional_opt_args[oo].opt != opt_enum)
 				continue;
 
-			printf("[ \\fB-%c\\fP|\\fB%s\\fP",
-				opt_names[opt_enum].short_opt,
-				_man_long_opt_name(cmd->name, opt_enum));
+			printf("[ ");
+			_print_man_option(cmd->name, opt_enum, 0);
 
 			if (cmd->optional_opt_args[oo].def.val_bits) {
 				printf(" ");
@@ -993,14 +989,8 @@ static void _print_man_all_options_list(const struct command_name *cname)
 			adl = 1;
 		}
 
-		if (opt_names[opt_enum].short_opt) {
-			printf(" \\fB-%c\\fP|\\fB%s\\fP",
-				opt_names[opt_enum].short_opt,
-				_man_long_opt_name(cname->name, opt_enum));
-		} else {
-			/* spaces for alignment without short opt */
-			printf("    \\fB%s\\fP", _man_long_opt_name(cname->name, opt_enum));
-		}
+		printf(" ");
+		_print_man_option(cname->name, opt_enum, 1);
 
 		val_enum = _get_val_enum(cname, opt_enum);
 
@@ -1058,14 +1048,7 @@ static void _print_man_all_options_desc(const struct command_name *cname)
 			adl = 0;
 		}
 
-		if (opt_names[opt_enum].short_opt) {
-			printf("\\fB-%c\\fP|\\fB%s\\fP",
-			       opt_names[opt_enum].short_opt,
-			       _man_long_opt_name(cname->name, opt_enum));
-		} else {
-			printf("\\fB%s\\fP", _man_long_opt_name(cname->name, opt_enum));
-		}
-
+		_print_man_option(cname->name, opt_enum, 0);
 
 		if (!val_names[val_enum].fn) {
 			/* takes no arg */
