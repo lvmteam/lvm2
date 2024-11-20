@@ -538,11 +538,9 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 				_print_def_man(cname, 0, &cmd->required_pos_args[rp].def, 1, lv_type_bits ? NULL : &lv_type_bits);
 			}
 		}
-
-		printf("\n");
-	} else {
-		printf("\n");
 	}
+
+	printf("\n");
 
 	if (need_ro_indent_end)
 		printf(".RE\n");
