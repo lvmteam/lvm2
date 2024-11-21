@@ -552,6 +552,14 @@ def lv_vdo_deduplication(lv_path, enable, dedup_options):
 	return call(cmd)
 
 
+def lv_raid_repair(lv_path, new_pvs, repair_options):
+	cmd = ['lvconvert', '-y', '--repair']
+	cmd.append(lv_path)
+	cmd.extend(new_pvs)
+	cmd.extend(options_to_cli_args(repair_options))
+	return call(cmd)
+
+
 def supports_json():
 	cmd = ['help']
 	rc, out, err = call(cmd)

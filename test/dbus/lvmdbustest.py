@@ -577,9 +577,13 @@ class TestDbusService(unittest.TestCase):
 			vg.Remove(dbus.Int32(g_tmo), EOD))
 		self._check_consistency()
 
-	def _pv_remove(self, pv):
+	def _pv_remove(self, pv, force=False):
+		if force:
+			options = dbus.Dictionary({'--force': '--force', '--yes': ''}, 'sv')
+		else:
+			options = EOD
 		rc = self.handle_return(
-			pv.Pv.Remove(dbus.Int32(g_tmo), EOD))
+			pv.Pv.Remove(dbus.Int32(g_tmo), options))
 		return rc
 
 	def test_pv_remove_add(self):
@@ -2261,6 +2265,60 @@ class TestDbusService(unittest.TestCase):
 		self.assertEqual(pool.VdoPool.Deduplication, "enabled")
 
 		self.handle_return(vg.Vg.Remove(dbus.Int32(g_tmo), EOD))
+
+	def test_lv_raid_repair(self):
+		if len(self.objs[PV_INT]) < 3:
+			self.skipTest("we need at least 3 PVs to run LV repair test")
+
+		lv_name = lv_n()
+		vg = self._vg_create(pv_paths=[self.objs[PV_INT][0].object_path,
+				 	       self.objs[PV_INT][1].object_path]).Vg
+		lv = self._test_lv_create(
+			vg.LvCreateRaid,
+			(dbus.String(lv_name), dbus.String('raid1'), dbus.UInt64(mib(16)),
+				dbus.UInt32(0), dbus.UInt32(0), dbus.Int32(g_tmo), EOD),
+			vg, LV_BASE_INT)
+
+		# deactivate the RAID LV (can't force remove PV with active LVs)
+		self.handle_return(lv.Lv.Deactivate(
+			dbus.UInt64(0), dbus.Int32(g_tmo), EOD))
+		lv.update()
+		self.assertFalse(lv.LvCommon.Active)
+
+		# remove second PV using --force --force
+		self._pv_remove(self.objs[PV_INT][1], force=True)
+
+		# activate the RAID LV (can't repair inactive LVs)
+		self.handle_return(lv.Lv.Activate(
+			dbus.UInt64(0), dbus.Int32(g_tmo), EOD))
+		lv.update()
+		self.assertTrue(lv.LvCommon.Active)
+
+		# LV should be "broken" now
+		self.assertEqual(lv.LvCommon.Health[1], "partial")
+
+		# add the third PV to the VG
+		path = self.handle_return(vg.Extend(
+			dbus.Array([self.objs[PV_INT][2].object_path], signature="o"),
+			dbus.Int32(g_tmo), EOD))
+		self.assertTrue(path == '/')
+
+		# repair the RAID LV using the third PV
+		rc = self.handle_return(
+			lv.Lv.RepairRaidLv(
+				dbus.Array([self.objs[PV_INT][2].object_path], 'o'),
+				dbus.Int32(g_tmo), EOD))
+
+		self.assertEqual(rc, '/')
+		self._check_consistency()
+
+		lv.update()
+
+		self.assertEqual(lv.LvCommon.Health[1], "unspecified")
+
+		# cleanup: remove the wiped PV from the VG and re-create it to have a clean PV
+		call_lvm(["vgreduce", "--removemissing", vg.Name])
+		self._pv_create(self.objs[PV_INT][1].Pv.Name)
 
 	def _test_lv_method_interface(self, lv):
 		self._rename_lv_test(lv)

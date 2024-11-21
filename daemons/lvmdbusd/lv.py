@@ -795,6 +795,39 @@ class Lv(LvCommon):
 			cache_options), cb, cbe)
 		cfg.worker_q.put(r)
 
+	@staticmethod
+	def _repair_raid_lv(lv_uuid, lv_name, new_pvs, repair_options):
+		# Make sure we have a dbus object representing it
+		pv_dests = []
+		dbo = LvCommon.validate_dbus_object(lv_uuid, lv_name)
+
+		# If we have PVs, verify them
+		if len(new_pvs):
+			for pv in new_pvs:
+				pv_dbus_obj = cfg.om.get_object_by_path(pv)
+				if not pv_dbus_obj:
+					raise dbus.exceptions.DBusException(
+						LV_INTERFACE,
+						'PV Destination (%s) not found' % pv)
+
+				pv_dests.append(pv_dbus_obj.lvm_id)
+
+		LvCommon.handle_execute(*cmdhandler.lv_raid_repair(
+			dbo.lvm_id, pv_dests, repair_options))
+		return "/"
+
+	@dbus.service.method(
+		dbus_interface=LV_INTERFACE,
+		in_signature='aoia{sv}',
+		out_signature='o',
+		async_callbacks=('cb', 'cbe'))
+	def RepairRaidLv(self, new_pvs, tmo, repair_options, cb, cbe):
+		r = RequestEntry(
+			tmo, Lv._repair_raid_lv,
+			(self.Uuid, self.lvm_id, new_pvs,
+			repair_options), cb, cbe, return_tuple=False)
+		cfg.worker_q.put(r)
+
 
 # noinspection PyPep8Naming
 @utils.dbus_property(VDO_POOL_INTERFACE, 'OperatingMode', 's')
