@@ -914,70 +914,55 @@ static void _print_man_usage_common_cmd(struct command *cmd)
  *
  * "text bar goes here"
  * "another line of text."
+ *
+ * Supports also 'prefix' for all commands before the first '#cmdname'.
+ * "#\n" is restorting printing for all commands.
  */
-
 static void _print_man_option_desc(const struct command_name *cname, int opt_enum)
 {
 	const char *desc = opt_names[opt_enum].desc;
+	size_t clen = strlen(cname->name);
 	char buf[DESC_LINE];
-	int started_cname = 0;
-	int line_count = 0;
-	int bi = 0;
-	unsigned di;
+	int check_for_new_section = 1;
+	int print_section = 1; /* initial description without cmdname is printed */
+	unsigned bi = 0;
 
-	if (desc[0] != '#') {
-		printf("%s", desc);
-		return;
-	}
-
-	for (di = 0; desc[di]; di++) {
-		buf[bi++] = desc[di];
+	while (*desc) {
+		buf[bi++] = *desc;
 
 		if (bi == DESC_LINE) {
 			log_error("Parsing command defs: print_man_option_desc line too long.");
 			exit(EXIT_FAILURE);
 		}
 
-		if (buf[bi-1] != '\n')
-			continue;
+		if (*desc++ != '\n' && *desc)
+			continue;  /* read until '\n' or end of description */
 
-		if (buf[0] != '#') {
-			if (started_cname) {
-				printf("%s", buf);
-				line_count++;
+		/* Line could be either new cmdname or a regular text description
+		 * either for all commands or for the matching cmdname.
+		 * Line starting with #cmdname starts a new 'text section'.
+		 * Multiple command names can use the same text */
+		if (buf[0] == '#') {
+			if (check_for_new_section) {
+				check_for_new_section = 0;
+				print_section = 0;
 			}
-
-			memset(buf, 0, sizeof(buf));
-			bi = 0;
-			continue;
+			bi -= 2;
+			if (!bi ||  /* empty cmd resets section to all commands */
+			    ((bi == clen) && !strncmp(buf + 1, cname->name, clen))) {
+				print_section = 1;
+			}
+		} else if (print_section) {
+			/* Printable text 'splits' individual 'cmdname' section */
+			check_for_new_section = 1;
+			if (bi) {
+				buf[bi] = 0;
+				printf("%s", buf);
+			}
 		}
 
-		/* Line starting with #cmdname */
-
-		/*
-		 * Must be starting a new command name.
-		 * If no lines have been printed, multiple command names
-		 * are using the same text. If lines have been printed,
-		 * then the start of a new command name means the end
-		 * of text for the current command name.
-		 */
-		if (line_count && started_cname)
-			return;
-
-		if (!strncmp(buf + 1, cname->name, strlen(cname->name))) {
-			/* The start of our command name. */
-			started_cname = 1;
-			memset(buf, 0, sizeof(buf));
-			bi = 0;
-		} else {
-			/* The start of another command name. */
-			memset(buf, 0, sizeof(buf));
-			bi = 0;
-		}
+		bi = 0;
 	}
-
-	if (bi && started_cname)
-		printf("%s", buf);
 }
 
 /*
