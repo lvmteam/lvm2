@@ -107,3 +107,13 @@ int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
 	}
 ************/
 }
+
+int vgdisplay_columns_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	return vgdisplay(cmd, argc, argv);
+}
+
+int vgdisplay_colon_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	return vgdisplay(cmd, argc, argv);
+}

@@ -188,6 +188,13 @@ int lvchange_rebuild_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvchange_monitor_poll_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvchange_persistent_cmd(struct cmd_context *cmd, int argc, char **argv);
 
+int lvdisplay_columns_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvdisplay_colon_cmd(struct cmd_context *cmd, int argc, char **argv);
+int pvdisplay_columns_cmd(struct cmd_context *cmd, int argc, char **argv);
+int pvdisplay_colon_cmd(struct cmd_context *cmd, int argc, char **argv);
+int vgdisplay_columns_cmd(struct cmd_context *cmd, int argc, char **argv);
+int vgdisplay_colon_cmd(struct cmd_context *cmd, int argc, char **argv);
+
 int lvconvert_repair_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvconvert_replace_pv_cmd(struct cmd_context *cmd, int argc, char **argv);
 

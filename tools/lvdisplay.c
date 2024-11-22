@@ -60,3 +60,13 @@ int lvdisplay(struct cmd_context *cmd, int argc, char **argv)
 
 	return process_each_lv(cmd, argc, argv, NULL, NULL, 0, NULL, NULL, &_lvdisplay_single);
 }
+
+int lvdisplay_columns_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	return lvdisplay(cmd, argc, argv);
+}
+
+int lvdisplay_colon_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	return lvdisplay(cmd, argc, argv);
+}

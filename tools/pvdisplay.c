@@ -106,3 +106,13 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 
 	return ret;
 }
+
+int pvdisplay_columns_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	return pvdisplay(cmd, argc, argv);
+}
+
+int pvdisplay_colon_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	return pvdisplay(cmd, argc, argv);
+}

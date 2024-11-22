@@ -88,6 +88,18 @@ static const struct command_function _command_functions[CMD_COUNT] = {
 	{ vgchange_lockstop_CMD, vgchange_lock_start_stop_cmd },
 	{ vgchange_systemid_CMD, vgchange_systemid_cmd },
 
+	/* lvdisplay variants */
+	{ lvdisplay_columns_CMD,	lvdisplay_columns_cmd },
+	{ lvdisplay_colon_CMD,		lvdisplay_colon_cmd },
+
+	/* pvdisplay variants */
+	{ pvdisplay_columns_CMD,	pvdisplay_columns_cmd },
+	{ pvdisplay_colon_CMD,		pvdisplay_colon_cmd },
+
+	/* vgdisplay variants */
+	{ vgdisplay_columns_CMD,	vgdisplay_columns_cmd },
+	{ vgdisplay_colon_CMD,		vgdisplay_colon_cmd },
+
 	/* lvconvert utilities related to repair. */
 	{ lvconvert_repair_CMD,	lvconvert_repair_cmd },
 	{ lvconvert_replace_pv_CMD, lvconvert_replace_pv_cmd },
