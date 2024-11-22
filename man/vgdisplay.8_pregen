@@ -6,12 +6,105 @@ vgdisplay \(em Display volume group information
 .
 .SH SYNOPSIS
 .
-\fBvgdisplay\fP
+\fBvgdisplay\fP \fIoption_args\fP
 .br
     [ \fIoption_args\fP ]
 .br
     [ \fIposition_args\fP ]
 .br
+.P
+.ad l
+ \fB-A\fP|\fB--activevolumegroups\fP
+.br
+    \fB--aligned\fP
+.br
+ \fB-a\fP|\fB--all\fP
+.br
+    \fB--binary\fP
+.br
+ \fB-c\fP|\fB--colon\fP
+.br
+ \fB-C\fP|\fB--columns\fP
+.br
+    \fB--commandprofile\fP \fIString\fP
+.br
+    \fB--config\fP \fIString\fP
+.br
+    \fB--configreport\fP \fBlog\fP|\fBvg\fP|\fBlv\fP|\fBpv\fP|\fBpvseg\fP|\fBseg\fP
+.br
+ \fB-d\fP|\fB--debug\fP
+.br
+    \fB--devices\fP \fIPV\fP
+.br
+    \fB--devicesfile\fP \fIString\fP
+.br
+    \fB--driverloaded\fP \fBy\fP|\fBn\fP
+.br
+    \fB--foreign\fP
+.br
+    \fB--headings\fP \fBnone\fP|\fBabbrev\fP|\fBfull\fP|\fB0\fP|\fB1\fP|\fB2\fP
+.br
+ \fB-h\fP|\fB--help\fP
+.br
+    \fB--ignorelockingfailure\fP
+.br
+    \fB--journal\fP \fIString\fP
+.br
+    \fB--lockopt\fP \fIString\fP
+.br
+    \fB--logonly\fP
+.br
+    \fB--longhelp\fP
+.br
+    \fB--nameprefixes\fP
+.br
+    \fB--noheadings\fP
+.br
+    \fB--nohints\fP
+.br
+    \fB--nolocking\fP
+.br
+    \fB--nosuffix\fP
+.br
+ \fB-o\fP|\fB--options\fP \fIString\fP
+.br
+    \fB--profile\fP \fIString\fP
+.br
+ \fB-q\fP|\fB--quiet\fP
+.br
+    \fB--readonly\fP
+.br
+    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP
+.br
+    \fB--rows\fP
+.br
+ \fB-S\fP|\fB--select\fP \fIString\fP
+.br
+    \fB--separator\fP \fIString\fP
+.br
+    \fB--shared\fP
+.br
+ \fB-s\fP|\fB--short\fP
+.br
+ \fB-O\fP|\fB--sort\fP \fIString\fP
+.br
+ \fB-t\fP|\fB--test\fP
+.br
+    \fB--unbuffered\fP
+.br
+    \fB--units\fP \c
+.nh
+\%[\fINumber\fP]\fBr\fP|\:\fBR\fP|\:\fBh\fP|\:\fBH\fP|\:\fBb\fP|\:\fBB\fP|\:\fBs\fP|\:\fBS\fP|\:\fBk\fP|\:\fBK\fP|\:\fBm\fP|\:\fBM\fP|\:\fBg\fP|\:\fBG\fP|\:\fBt\fP|\:\fBT\fP|\:\fBp\fP|\:\fBP\fP|\:\fBe\fP|\:\fBE\fP
+.hy
+.br
+    \fB--unquoted\fP
+.br
+ \fB-v\fP|\fB--verbose\fP
+.br
+    \fB--version\fP
+.br
+ \fB-y\fP|\fB--yes\fP
+.ad b
 .
 .SH DESCRIPTION
 .
@@ -22,27 +115,80 @@ and more, using a more compact and configurable output format.
 .
 .SH USAGE
 .
-\fBvgdisplay\fP
+\fBvgdisplay\fP \fB-C\fP|\fB--columns\fP
 .br
 .RS 4
 .ad l
-[ \fB-A\fP|\fB--activevolumegroups\fP ]
-.br
-[ \fB-c\fP|\fB--colon\fP ]
-.br
-[ \fB-C\fP|\fB--columns\fP ]
-.br
 [ \fB-o\fP|\fB--options\fP \fIString\fP ]
-.br
-[ \fB-S\fP|\fB--select\fP \fIString\fP ]
-.br
-[ \fB-s\fP|\fB--short\fP ]
-.br
-[ \fB-O\fP|\fB--sort\fP \fIString\fP ]
 .br
 [    \fB--aligned\fP ]
 .br
 [    \fB--binary\fP ]
+.br
+[    \fB--headings\fP \fBnone\fP|\fBabbrev\fP|\fBfull\fP|\fB0\fP|\fB1\fP|\fB2\fP ]
+.br
+[    \fB--nameprefixes\fP ]
+.br
+[    \fB--noheadings\fP ]
+.br
+[    \fB--nosuffix\fP ]
+.br
+[    \fB--rows\fP ]
+.br
+[    \fB--separator\fP \fIString\fP ]
+.br
+[    \fB--unbuffered\fP ]
+.br
+[    \fB--unquoted\fP ]
+.br
+[ COMMON_OPTIONS ]
+.ad b
+.RE
+.RS 4
+[ \fIVG\fP|\fITag\fP ... ]
+.RE
+.P
+\(em
+.P
+\fBvgdisplay\fP \fB-c\fP|\fB--colon\fP
+.br
+.RS 4
+.ad l
+[ COMMON_OPTIONS ]
+.ad b
+.RE
+.RS 4
+[ \fIVG\fP|\fITag\fP ... ]
+.RE
+.P
+\(em
+.P
+\fBvgdisplay\fP
+.br
+.RS 4
+.ad l
+[ \fB-s\fP|\fB--short\fP ]
+.br
+[ COMMON_OPTIONS ]
+.ad b
+.RE
+.RS 4
+[ \fIVG\fP|\fITag\fP ... ]
+.RE
+.P
+\(em
+.P
+Common options for command:
+.
+.RS 4
+.ad l
+[ \fB-A\fP|\fB--activevolumegroups\fP ]
+.br
+[ \fB-a\fP|\fB--all\fP ]
+.br
+[ \fB-S\fP|\fB--select\fP \fIString\fP ]
+.br
+[ \fB-O\fP|\fB--sort\fP \fIString\fP ]
 .br
 [    \fB--configreport\fP \fBlog\fP|\fBvg\fP|\fBlv\fP|\fBpv\fP|\fBpvseg\fP|\fBseg\fP ]
 .br
@@ -52,29 +198,18 @@ and more, using a more compact and configurable output format.
 .br
 [    \fB--logonly\fP ]
 .br
-[    \fB--noheadings\fP ]
-.br
-[    \fB--nosuffix\fP ]
-.br
 [    \fB--readonly\fP ]
 .br
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP ]
+.br
 [    \fB--shared\fP ]
-.br
-[    \fB--separator\fP \fIString\fP ]
-.br
-[    \fB--unbuffered\fP ]
 .br
 [    \fB--units\fP \c
 .nh
 \%[\fINumber\fP]\fBr\fP|\:\fBR\fP|\:\fBh\fP|\:\fBH\fP|\:\fBb\fP|\:\fBB\fP|\:\fBs\fP|\:\fBS\fP|\:\fBk\fP|\:\fBK\fP|\:\fBm\fP|\:\fBM\fP|\:\fBg\fP|\:\fBG\fP|\:\fBt\fP|\:\fBT\fP|\:\fBp\fP|\:\fBP\fP|\:\fBe\fP|\:\fBE\fP
 .hy
 ]
-.br
-[ COMMON_OPTIONS ]
 .ad b
-.RE
-.RS 4
-[ \fIVG\fP|\fITag\fP ... ]
 .RE
 .P
 Common options for lvm:
@@ -134,6 +269,10 @@ if at least one of its LVs is active.
 Use with --separator to align the output columns
 .
 .HP
+\fB-a\fP|\fB--all\fP
+.br
+.
+.HP
 \fB--binary\fP
 .br
 Use binary values "0" or "1" instead of descriptive literal values
@@ -145,11 +284,47 @@ the "unknown" value which denotes that the value could not be determined).
 .br
 Generate colon separated output for easier parsing in scripts or programs.
 Also see \fBvgs\fP(8) which provides considerably more control over the output.
+The values are:
+.br
+  \[bu] volume group name
+.br
+  \[bu] volume group access
+.br
+  \[bu] volume group status
+.br
+  \[bu] internal volume group number
+.br
+  \[bu] maximum number of logical volumes
+.br
+  \[bu] current number of logical volumes
+.br
+  \[bu] open count of all logical volumes in this volume group
+.br
+  \[bu] maximum logical volume size
+.br
+  \[bu] maximum number of physical volumes
+.br
+  \[bu] current number of physical volumes
+.br
+  \[bu] actual number of physical volumes
+.br
+  \[bu] size of volume group in kilobytes
+.br
+  \[bu] physical extent size
+.br
+  \[bu] total number of physical extents for this volume group
+.br
+  \[bu] allocated number of physical extents for this volume group
+.br
+  \[bu] free number of physical extents for this volume group
+.br
+  \[bu] uuid of volume group
 .
 .HP
 \fB-C\fP|\fB--columns\fP
 .br
-Display output in columns, the equivalent of \fBvgs\fP(8).
+Display output in columns.
+The equivalent of \fBvgs\fP(8).
 Options listed are the same as options given in \fBvgs\fP(8).
 .
 .HP
@@ -207,6 +382,14 @@ Report/display foreign VGs that would otherwise be skipped.
 See \fBlvmsystemid\fP(7) for more information about foreign VGs.
 .
 .HP
+\fB--headings\fP \fBnone\fP|\fBabbrev\fP|\fBfull\fP|\fB0\fP|\fB1\fP|\fB2\fP
+.br
+Type of headings to use in report output.
+\fBnone\fP or \fB0\fP: No headings.
+\fBabbrev\fP or \fB1\fP: Column name abbreviations.
+\fBfull\fP or \fB2\fP: Full column names.
+.
+.HP
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
@@ -242,6 +425,13 @@ Suppress command report and display only log report.
 \fB--longhelp\fP
 .br
 Display long help text.
+.
+.HP
+\fB--nameprefixes\fP
+.br
+Add an "LVM2_" prefix plus the field name to the output. Useful
+with --noheadings to produce a list of field=value pairs that can
+be used to set environment variables (for example, in udev rules).
 .
 .HP
 \fB--noheadings\fP
@@ -308,6 +498,23 @@ Prevent the command from making changes, including activation and
 metadata updates.  (See --permission r for read only LVs.)
 .
 .HP
+\fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP
+.br
+Overrides current output format for reports which is defined globally by
+the report/output_format setting in \fBlvm.conf\fP(5).
+\fBbasic\fP is the original format with columns and rows.
+If there is more than one report per command, each report is prefixed
+with the report name for identification. \fBjson\fP produces report
+output in JSON format. \fBjson_std\fP produces report output in
+JSON format which is more compliant with JSON standard.
+See \fBlvmreport\fP(7) for more information.
+.
+.HP
+\fB--rows\fP
+.br
+Output columns as rows.
+.
+.HP
 \fB-S\fP|\fB--select\fP \fIString\fP
 .br
 Select objects for processing and reporting based on specified criteria.
@@ -370,6 +577,12 @@ human-(r)eadable with '<' rounding indicator,
 (g)igabytes, (t)erabytes, (p)etabytes, (e)xabytes.
 Capitalise to use multiples of 1000 (S.I.) instead of 1024.
 Custom units can be specified, e.g. --units 3M.
+.
+.HP
+\fB--unquoted\fP
+.br
+When used with --nameprefixes, output values in the field=value
+pairs are not quoted.
 .
 .HP
 \fB-v\fP|\fB--verbose\fP ...

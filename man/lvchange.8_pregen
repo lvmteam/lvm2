@@ -257,7 +257,7 @@ LV1 types: mirror raid
 Resynchronize or check a raid LV.
 .br
 .P
-\fBlvchange\fP \fB--syncaction\fP \fBcheck\fP|\fBrepair\fP \fIVG\fP|\fILV1\fP|\fITag\fP|\fISelect\fP ...
+\fBlvchange\fP \fB--\fP[\fBraid\fP]\fBsyncaction\fP \fBcheck\fP|\fBrepair\fP \fIVG\fP|\fILV1\fP|\fITag\fP|\fISelect\fP ...
 .br
 .RS 4
 .ad l

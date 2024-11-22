@@ -29,25 +29,37 @@ if information changes between commands.
 .ad l
 [ \fB-a\fP|\fB--all\fP ]
 .br
-[ \fB-o\fP|\fB--options\fP \fIString\fP ]
-.br
 [ \fB-S\fP|\fB--select\fP \fIString\fP ]
 .br
 [ \fB-O\fP|\fB--sort\fP \fIString\fP ]
 .br
-[    \fB--aligned\fP ]
-.br
-[    \fB--binary\fP ]
+[ \fB-o\fP|\fB--options\fP \fIString\fP ]
 .br
 [    \fB--configreport\fP \fBlog\fP|\fBvg\fP|\fBlv\fP|\fBpv\fP|\fBpvseg\fP|\fBseg\fP ]
 .br
 [    \fB--foreign\fP ]
 .br
-[    \fB--headings\fP \fBnone\fP|\fBabbrev\fP|\fBfull\fP|\fB0\fP|\fB1\fP|\fB2\fP ]
-.br
 [    \fB--ignorelockingfailure\fP ]
 .br
 [    \fB--logonly\fP ]
+.br
+[    \fB--readonly\fP ]
+.br
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP ]
+.br
+[    \fB--shared\fP ]
+.br
+[    \fB--units\fP \c
+.nh
+\%[\fINumber\fP]\fBr\fP|\:\fBR\fP|\:\fBh\fP|\:\fBH\fP|\:\fBb\fP|\:\fBB\fP|\:\fBs\fP|\:\fBS\fP|\:\fBk\fP|\:\fBK\fP|\:\fBm\fP|\:\fBM\fP|\:\fBg\fP|\:\fBG\fP|\:\fBt\fP|\:\fBT\fP|\:\fBp\fP|\:\fBP\fP|\:\fBe\fP|\:\fBE\fP
+.hy
+]
+.br
+[    \fB--aligned\fP ]
+.br
+[    \fB--binary\fP ]
+.br
+[    \fB--headings\fP \fBnone\fP|\fBabbrev\fP|\fBfull\fP|\fB0\fP|\fB1\fP|\fB2\fP ]
 .br
 [    \fB--nameprefixes\fP ]
 .br
@@ -55,23 +67,11 @@ if information changes between commands.
 .br
 [    \fB--nosuffix\fP ]
 .br
-[    \fB--readonly\fP ]
-.br
-[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP ]
-.br
 [    \fB--rows\fP ]
 .br
 [    \fB--separator\fP \fIString\fP ]
 .br
-[    \fB--shared\fP ]
-.br
 [    \fB--unbuffered\fP ]
-.br
-[    \fB--units\fP \c
-.nh
-\%[\fINumber\fP]\fBr\fP|\:\fBR\fP|\:\fBh\fP|\:\fBH\fP|\:\fBb\fP|\:\fBB\fP|\:\fBs\fP|\:\fBS\fP|\:\fBk\fP|\:\fBK\fP|\:\fBm\fP|\:\fBM\fP|\:\fBg\fP|\:\fBG\fP|\:\fBt\fP|\:\fBT\fP|\:\fBp\fP|\:\fBP\fP|\:\fBe\fP|\:\fBE\fP
-.hy
-]
 .br
 [    \fB--unquoted\fP ]
 .br
