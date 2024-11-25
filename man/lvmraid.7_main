@@ -687,6 +687,10 @@ New devices require synchronization with existing devices.
 .br
 See
 .BR Synchronization .
+.P
+If integrty is in use, it will need to be disabled before repair/replace
+commands can be used (lvconvert --raidintegrity n).  Integrity can be
+enabled again afterward (lvconvert --raidintegrity y).
 .
 .SS Refreshing an LV
 .
@@ -824,7 +828,7 @@ all configured values (dm-integrity will use its defaults.)
 .SS Integrity initialization
 .
 When integrity is added to an LV, the kernel needs to initialize the
-integrity metadata (checksums) for all blocks in the LV.  The data
+integrity metadata (crc32 checksums) for all blocks in the LV.  The data
 corruption checking performed by dm-integrity will only operate on areas
 of the LV that are already initialized.  The progress of integrity
 initialization is reported by the "syncpercent" LV reporting field (and
@@ -851,7 +855,7 @@ to do this.)
 RAID LVs with integrity cannot yet be used as sub LVs with other LV types.
 .P
 The following are not yet permitted on RAID LVs with integrity: lvreduce,
-pvmove, lvconvert --splitmirrors, lvchange --syncaction, lvchange --rebuild.
+pvmove, lvconvert --splitmirrors, lvchange --rebuild.
 .
 .SH RAID1 TUNING
 .
