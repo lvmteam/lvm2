@@ -16,7 +16,7 @@
 
 aux lvmconf "global/support_mirrored_mirror_log=1"
 
-aux prepare_pvs 5
+aux prepare_pvs 5 50
 get_devs
 
 # proper DEVRANGE needs to be set according to extent size
@@ -324,7 +324,7 @@ aux throttle_dm_mirror || SHOULD=should
 test "${LVM_VALGRIND:-0}" -eq 0 || SHOULD=should
 
 # Use large enough mirror that takes time to synchronize with small regionsize
-lvcreate -aey -L20 -Zn -Wn --type mirror --regionsize 4k -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev4" "$dev3:$DEVRANGE"
+lvcreate -aey -L40 -Zn -Wn --type mirror --regionsize 4k -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev4" "$dev3:$DEVRANGE"
 $SHOULD not lvconvert -m-1 $vg/$lv1 "$dev1" 2>&1 | tee out
 aux restore_dm_mirror
 $SHOULD grep "not in-sync" out
@@ -338,11 +338,10 @@ check linear $vg $lv1
 check lv_on $vg $lv1 "$dev4"
 lvremove -ff $vg
 
-
 aux throttle_dm_mirror || :
 # No parallel lvconverts on a single LV please
 # Use big enough mirror size and small regionsize to run on all test machines successfully
-lvcreate -aey -Zn -Wn -L20 --type mirror --regionsize 4k -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:0-8"
+lvcreate -aey -Zn -Wn -L40 --type mirror --regionsize 4k -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:0-8"
 check mirror $vg $lv1
 check mirror_legs $vg $lv1 2
 
