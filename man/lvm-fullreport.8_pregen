@@ -31,9 +31,9 @@ if information changes between commands.
 .br
 [ \fB-S\fP|\fB--select\fP \fIString\fP ]
 .br
-[ \fB-O\fP|\fB--sort\fP \fIString\fP ]
-.br
 [ \fB-o\fP|\fB--options\fP \fIString\fP ]
+.br
+[ \fB-O\fP|\fB--sort\fP \fIString\fP ]
 .br
 [    \fB--configreport\fP \fBlog\fP|\fBvg\fP|\fBlv\fP|\fBpv\fP|\fBpvseg\fP|\fBseg\fP ]
 .br

@@ -118,11 +118,16 @@ and more, using a more compact and configurable output format.
 .
 .SH USAGE
 .
+Display output in columns like lvs.
+.br
+.P
 \fBlvdisplay\fP \fB-C\fP|\fB--columns\fP
 .br
 .RS 4
 .ad l
 [ \fB-o\fP|\fB--options\fP \fIString\fP ]
+.br
+[ \fB-O\fP|\fB--sort\fP \fIString\fP ]
 .br
 [    \fB--aligned\fP ]
 .br
@@ -152,6 +157,9 @@ and more, using a more compact and configurable output format.
 .RE
 .P
 \(em
+.P
+Generate colon separated output.
+.br
 .P
 \fBlvdisplay\fP \fB-c\fP|\fB--colon\fP
 .br
@@ -190,8 +198,6 @@ Common options for command:
 [ \fB-H\fP|\fB--history\fP ]
 .br
 [ \fB-S\fP|\fB--select\fP \fIString\fP ]
-.br
-[ \fB-O\fP|\fB--sort\fP \fIString\fP ]
 .br
 [    \fB--configreport\fP \fBlog\fP|\fBvg\fP|\fBlv\fP|\fBpv\fP|\fBpvseg\fP|\fBseg\fP ]
 .br

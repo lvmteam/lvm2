@@ -211,7 +211,7 @@ OO_ALL: --commandprofile String, --config String, --debug,
 #
 OO_REPORTING: --all, --configreport ConfigReport, --foreign,
 --ignorelockingfailure, --logonly, --readonly, --reportformat ReportFmt,
---select String, --shared, --sort String, --units Units
+--select String, --shared, --units Units
 
 #
 # options for pvs, lvs, vgs, fullreport
@@ -219,7 +219,7 @@ OO_REPORTING: --all, --configreport ConfigReport, --foreign,
 OO_REPORT: OO_REPORTING, --aligned, --binary,
 --headings HeadingsType, --nameprefixes, --noheadings,
 --nosuffix, --options String, --rows, --separator String,
---unbuffered, --unquoted
+--sort String, --unbuffered, --unquoted
 
 #
 # options for config, dumpconfig, lvmconfig
@@ -1397,12 +1397,14 @@ OP: VG|LV|Tag ...
 IO: --partial, --ignoreskippedcluster
 RULE: --noheadings not --headings
 ID: lvdisplay_columns
+DESC: Display output in columns like lvs.
 
 lvdisplay --colon
 OO: OO_REPORTING, --history, --segments
 OP: VG|LV|Tag ...
 IO: --partial, --ignoreskippedcluster
 ID: lvdisplay_colon
+DESC: Generate colon separated output.
 
 lvdisplay
 OO: OO_REPORTING, --history, --segments, --maps
@@ -1641,12 +1643,14 @@ OP: PV|Tag ...
 IO: --partial, --ignoreskippedcluster
 RULE: --noheadings not --headings
 ID: pvdisplay_columns
+DESC: Display output in columns like pvs.
 
 pvdisplay --colon
 OO: OO_REPORTING, --segments
 OP: PV|Tag ...
 IO: --partial, --ignoreskippedcluster
 ID: pvdisplay_colon
+DESC: Generate colon separated output.
 
 pvdisplay
 OO: OO_REPORTING, --maps, --segments, --short
@@ -1873,12 +1877,14 @@ OP: VG|Tag ...
 IO: --partial, --ignoreskippedcluster
 RULE: --noheadings not --headings
 ID: vgdisplay_columns
+DESC: Display output in columns like vgs.
 
 vgdisplay --colon
 OO: OO_REPORTING, --activevolumegroups
 OP: VG|Tag ...
 IO: --partial, --ignoreskippedcluster
 ID: vgdisplay_colon
+DESC: Generate colon separated output.
 
 vgdisplay
 OO: OO_REPORTING, --activevolumegroups, --short
