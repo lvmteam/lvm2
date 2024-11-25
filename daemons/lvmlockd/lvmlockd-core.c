@@ -1046,7 +1046,7 @@ fail:
 
 static int lm_prepare_lockspace(struct lockspace *ls, struct action *act)
 {
-	int rv;
+	int rv = -1;
 
 	if (ls->lm_type == LD_LM_DLM)
 		rv = lm_prepare_lockspace_dlm(ls);
@@ -1054,8 +1054,6 @@ static int lm_prepare_lockspace(struct lockspace *ls, struct action *act)
 		rv = lm_prepare_lockspace_sanlock(ls);
 	else if (ls->lm_type == LD_LM_IDM)
 		rv = lm_prepare_lockspace_idm(ls);
-	else
-		return -1;
 
 	if (act)
 		act->lm_rv = rv;
@@ -1064,7 +1062,7 @@ static int lm_prepare_lockspace(struct lockspace *ls, struct action *act)
 
 static int lm_add_lockspace(struct lockspace *ls, struct action *act, int adopt_only, int adopt_ok, int nodelay)
 {
-	int rv;
+	int rv = -1;
 
 	if (ls->lm_type == LD_LM_DLM)
 		rv = lm_add_lockspace_dlm(ls, adopt_only, adopt_ok);
@@ -1072,8 +1070,6 @@ static int lm_add_lockspace(struct lockspace *ls, struct action *act, int adopt_
 		rv = lm_add_lockspace_sanlock(ls, adopt_only, adopt_ok, nodelay);
 	else if (ls->lm_type == LD_LM_IDM)
 		rv = lm_add_lockspace_idm(ls, adopt_only, adopt_ok);
-	else
-		return -1;
 
 	if (act)
 		act->lm_rv = rv;
@@ -1082,7 +1078,7 @@ static int lm_add_lockspace(struct lockspace *ls, struct action *act, int adopt_
 
 static int lm_rem_lockspace(struct lockspace *ls, struct action *act, int free_vg)
 {
-	int rv;
+	int rv = -1;
 
 	if (ls->lm_type == LD_LM_DLM)
 		rv = lm_rem_lockspace_dlm(ls, free_vg);
@@ -1090,8 +1086,6 @@ static int lm_rem_lockspace(struct lockspace *ls, struct action *act, int free_v
 		rv = lm_rem_lockspace_sanlock(ls, free_vg);
 	else if (ls->lm_type == LD_LM_IDM)
 		rv = lm_rem_lockspace_idm(ls, free_vg);
-	else
-		return -1;
 
 	if (act)
 		act->lm_rv = rv;
@@ -1101,7 +1095,7 @@ static int lm_rem_lockspace(struct lockspace *ls, struct action *act, int free_v
 static int lm_lock(struct lockspace *ls, struct resource *r, int mode, struct action *act,
 		   struct val_blk *vb_out, int *retry, int adopt_only, int adopt_ok)
 {
-	int rv;
+	int rv = -1;
 
 	if (ls->lm_type == LD_LM_DLM)
 		rv = lm_lock_dlm(ls, r, mode, vb_out, adopt_only, adopt_ok);
@@ -1110,8 +1104,6 @@ static int lm_lock(struct lockspace *ls, struct resource *r, int mode, struct ac
 	else if (ls->lm_type == LD_LM_IDM)
 		rv = lm_lock_idm(ls, r, mode, vb_out, act->lv_uuid,
 				 &act->pvs, adopt_only, adopt_ok);
-	else
-		return -1;
 
 	if (act)
 		act->lm_rv = rv;
@@ -1121,7 +1113,7 @@ static int lm_lock(struct lockspace *ls, struct resource *r, int mode, struct ac
 static int lm_convert(struct lockspace *ls, struct resource *r,
 		      int mode, struct action *act, uint32_t r_version)
 {
-	int rv;
+	int rv = -1;
 
 	if (ls->lm_type == LD_LM_DLM)
 		rv = lm_convert_dlm(ls, r, mode, r_version);
@@ -1129,8 +1121,6 @@ static int lm_convert(struct lockspace *ls, struct resource *r,
 		rv = lm_convert_sanlock(ls, r, mode, r_version);
 	else if (ls->lm_type == LD_LM_IDM)
 		rv = lm_convert_idm(ls, r, mode, r_version);
-	else
-		return -1;
 
 	if (act)
 		act->lm_rv = rv;
@@ -1140,7 +1130,7 @@ static int lm_convert(struct lockspace *ls, struct resource *r,
 static int lm_unlock(struct lockspace *ls, struct resource *r, struct action *act,
 		     uint32_t r_version, uint32_t lmu_flags)
 {
-	int rv;
+	int rv = -1;
 
 	if (ls->lm_type == LD_LM_DLM)
 		rv = lm_unlock_dlm(ls, r, r_version, lmu_flags);
@@ -1148,8 +1138,6 @@ static int lm_unlock(struct lockspace *ls, struct resource *r, struct action *ac
 		rv = lm_unlock_sanlock(ls, r, r_version, lmu_flags);
 	else if (ls->lm_type == LD_LM_IDM)
 		rv = lm_unlock_idm(ls, r, r_version, lmu_flags);
-	else
-		return -1;
 
 	if (act)
 		act->lm_rv = rv;
@@ -5523,6 +5511,9 @@ static void adopt_locks(void)
 	INIT_LIST_HEAD(&ls_found);
 	INIT_LIST_HEAD(&vg_lockd);
 	INIT_LIST_HEAD(&to_unlock);
+
+	if (daemon_test)
+		return;
 
 	/*
 	 * Get list of lockspaces from currently running lock managers.

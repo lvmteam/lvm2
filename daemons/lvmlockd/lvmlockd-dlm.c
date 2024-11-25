@@ -169,8 +169,10 @@ int lm_prepare_lockspace_dlm(struct lockspace *ls)
 	struct lm_dlm *lmd;
 	int rv;
 
-	if (daemon_test)
+	if (daemon_test) {
+		log_debug("lm_prepare_lockspace_dlm test");
 		goto skip_args;
+	}
 
 	memset(sys_clustername, 0, sizeof(sys_clustername));
 	memset(arg_clustername, 0, sizeof(arg_clustername));

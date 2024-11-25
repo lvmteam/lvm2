@@ -420,69 +420,95 @@ static inline int lm_support_dlm(void)
 
 static inline int lm_init_vg_dlm(char *ls_name, char *vg_name, uint32_t flags, char *vg_args)
 {
+	if (daemon_test)
+		return 0;
 	return -1;
 }
 
 static inline int lm_prepare_lockspace_dlm(struct lockspace *ls)
 {
+	if (daemon_test)
+		return 0;
 	return -1;
 }
 
 static inline int lm_add_lockspace_dlm(struct lockspace *ls, int adopt_only, int adopt_ok)
 {
+	if (daemon_test)
+		return 0;
 	return -1;
 }
 
 static inline int lm_purge_locks_dlm(struct lockspace *ls)
 {
+	if (daemon_test)
+		return 0;
 	return -1;
 }
 
 static inline int lm_rem_lockspace_dlm(struct lockspace *ls, int free_vg)
 {
+	if (daemon_test)
+		return 0;
 	return -1;
 }
 
 static inline int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 		struct val_blk *vb_out, int adopt_only, int adopt_ok)
 {
+	if (daemon_test)
+		return 0;
 	return -1;
 }
 
 static inline int lm_convert_dlm(struct lockspace *ls, struct resource *r,
 		   int ld_mode, uint32_t r_version)
 {
+	if (daemon_test)
+		return 0;
 	return -1;
 }
 
 static inline int lm_unlock_dlm(struct lockspace *ls, struct resource *r,
 		  uint32_t r_version, uint32_t lmu_flags)
 {
+	if (daemon_test)
+		return 0;
 	return -1;
 }
 
 static inline int lm_rem_resource_dlm(struct lockspace *ls, struct resource *r)
 {
+	if (daemon_test)
+		return 0;
 	return -1;
 }
 
 static inline int lm_get_lockspaces_dlm(struct list_head *ls_rejoin)
 {
+	if (daemon_test)
+		return 0;
 	return -1;
 }
 
 static inline int lm_data_size_dlm(void)
 {
+	if (daemon_test)
+		return 0;
 	return -1;
 }
 
 static inline int lm_is_running_dlm(void)
 {
+	if (daemon_test)
+		return 1;
 	return 0;
 }
 
 static inline int lm_support_dlm(void)
 {
+	if (daemon_test)
+		return 1;
 	return 0;
 }
 
