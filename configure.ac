@@ -1234,7 +1234,8 @@ AC_ARG_ENABLE(notify-dbus,
 	      [NOTIFYDBUS_SUPPORT=$enableval])
 
 AS_IF([test "$NOTIFYDBUS_SUPPORT" = "maybe"],
-      [AS_IF([test "$BUILD_LVMDBUSD" = "yes"], [NOTIFYDBUS_SUPPORT="yes"], [NOTIFYDBUS_SUPPORT="no"])])
+      [AS_IF([test "$BUILD_LVMDBUSD" = "yes" || test "$BUILD_LVMLOCKD" = "yes"],
+      [NOTIFYDBUS_SUPPORT="yes"], [NOTIFYDBUS_SUPPORT="no"])])
 
 AS_IF([test "$NOTIFYDBUS_SUPPORT" = "yes"],
       [AS_IF([test "$SYSTEMD_MIN_VERSION" -lt 221],
@@ -2075,3 +2076,6 @@ AS_IF([test "$ODIRECT" != "yes"],
 
 AS_IF([test "$BUILD_LVMDBUSD" = "yes" && test "$NOTIFYDBUS_SUPPORT" = "no"],
       [AC_MSG_WARN([Building D-Bus support without D-Bus notifications!])])
+
+AS_IF([test "$BUILD_LVMLOCKD" = "yes" && test "$NOTIFYDBUS_SUPPORT" = "no"],
+      [AC_MSG_WARN([Building lvmlockd without D-Bus notifications may block!])])
