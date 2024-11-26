@@ -33,9 +33,6 @@
 %global dlm_version 3.99.1-1
 %global corosync_version 1.99.9-1
 
-%global buildreq_cluster corosync-devel >= %{corosync_version}, dlm-devel >= %{dlm_version}
-%global req_cluster corosync >= %{corosync_version}, dlm >= %{dlm_version}
-
 %with cache internal
 %with thin internal
 %with thin_check %{_sbindir}/thin_check
@@ -117,10 +114,8 @@
 %global enable_systemd 0
 
 %global buildreq_udev libudev-devel
-%global buildreq_cluster openaislib-devel >= 1.1.1-1, clusterlib-devel >= 3.0.6-1, corosynclib-devel >= 1.2.0-1
 
 %global req_udev udev >= 158-1
-%global req_cluster openais >= 1.1.1-1, cman >= 3.0.6-1, corosync >= 1.2.0-1
 
 %global _udevbasedir /lib/udev
 %global _udevdir %{_udevbasedir}/rules.d
@@ -142,11 +137,9 @@
 
 %if %{fedora} == 17
 %global buildreq_udev systemd-devel
-%global buildreq_cluster corosync-devel >= 1.99.9-1, dlm-devel >= 3.99.1-1
 
 %global req_udev udev >= 181-1
 %global req_dm_persistent device-mapper-persistent-data >= 0.1.4
-%global req_cluster corosync >= 1.99.9-1, dlm >= 3.99.2-1
 %endif
 
 ##############################################################
@@ -205,7 +198,6 @@ BuildRequires: libblkid-devel
 %if %(if echo %{with_flags} | grep -q %1; then echo 1; else echo 0; fi)
 
 %maybe BuildRequires: %{?buildreq_udev}
-%maybe BuildRequires: %{?buildreq_cluster}
 %maybe BuildRequires: %{?buildreq_lvmlockd_dlm}
 %maybe BuildRequires: %{?buildreq_lvmlockd_sanlock}
 %maybe BuildRequires: %{?buildreq_python3_devel}
