@@ -13433,7 +13433,7 @@ fi
 
 if test "$NOTIFYDBUS_SUPPORT" = "maybe"
 then :
-  if test "$BUILD_LVMDBUSD" = "yes"
+  if test "$BUILD_LVMDBUSD" = "yes" || test "$BUILD_LVMLOCKD" = "yes"
 then :
   NOTIFYDBUS_SUPPORT="yes"
 else case e in #(
@@ -17959,5 +17959,11 @@ if test "$BUILD_LVMDBUSD" = "yes" && test "$NOTIFYDBUS_SUPPORT" = "no"
 then :
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Building D-Bus support without D-Bus notifications!" >&5
 printf "%s\n" "$as_me: WARNING: Building D-Bus support without D-Bus notifications!" >&2;}
+fi
+
+if test "$BUILD_LVMLOCKD" = "yes" && test "$NOTIFYDBUS_SUPPORT" = "no"
+then :
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Building lvmlockd without D-Bus notifications may block!" >&5
+printf "%s\n" "$as_me: WARNING: Building lvmlockd without D-Bus notifications may block!" >&2;}
 fi
 
