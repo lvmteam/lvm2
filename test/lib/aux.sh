@@ -330,16 +330,16 @@ prepare_lvmdbusd() {
 		grep -q com.redhat.lvmdbus1 dbus_services && break
 		sleep .1
 	done
-	else
-		sleep 2
-	fi
-
 	if [ "$i" -eq 0 ] ; then
 		printf "\nFailed to serve lvm dBus service in 10 seconds.\n"
 		sed -e "s,^,## DBUS_SERVICES: ," dbus_services
 		ps aux
 		return 1
 	fi
+	else
+		sleep 2
+	fi
+
 
 	comm=
 	# TODO: Is there a better check than wait 1 second and check pid?
