@@ -1046,6 +1046,7 @@ SYSTEMD_MIN_VERSION=0
 NOTIFYDBUS_SUPPORT="no"
 SYSTEMD_JOURNAL_SUPPORT="no"
 APP_MACHINEID_SUPPORT="no"
+SD_NOTIFY_SUPPORT="yes"
 AS_IF([test "$with_systemd" = "yes"],
       PKG_CHECK_EXISTS(systemd >= 221, [SYSTEMD_MIN_VERSION=221 NOTIFYDBUS_SUPPORT="maybe" SYSTEMD_JOURNAL_SUPPORT="maybe"])
       PKG_CHECK_EXISTS(systemd >= 234, [SYSTEMD_MIN_VERSION=234 APP_MACHINEID_SUPPORT="maybe"]))
@@ -1081,6 +1082,22 @@ AC_MSG_RESULT([$APP_MACHINEID_SUPPORT])
 
 AS_IF([test "$APP_MACHINEID_SUPPORT" = "yes"],
       AC_DEFINE([APP_MACHINEID_SUPPORT], 1, [Define to 1 to include code that uses libsystemd machine-id apis.]))
+
+################################################################################
+dnl -- Build with sd_notify when the header file is present
+AS_IF([test "$SD_NOTIFY_SUPPORT" != "no"],
+      AC_CHECK_HEADER([systemd/sd-daemon.h], [SD_NOTIFY_SUPPORT="yes"], [SD_NOTIFY_SUPPORT="no"]))
+AC_ARG_ENABLE(sd-notify,
+	      AS_HELP_STRING([--disable-sd-notify],
+			     [disable LVM sd_notify]),
+	      AS_IF([test "$enableval" = "yes" && test "$SD_NOTIFY_SUPPORT" = "no"],
+		    AC_MSG_ERROR([--enable-sd-notify requires systemd/sd-daemon.h. (--with-systemd=$with_systemd)]))
+	      SD_NOTIFY_SUPPORT=$enableval, [])
+AC_MSG_CHECKING([whether to enable to sd_notify])
+AC_MSG_RESULT([$SD_NOTIFY_SUPPORT])
+
+AS_IF([test "$SD_NOTIFY_SUPPORT" = "yes"],
+      AC_DEFINE([SD_NOTIFY_SUPPORT], 1, [Define to 1 to include code that uses sd_notify.]))
 
 ################################################################################
 dnl -- Support override for systemd-run path if they need to (NixOS builds)
@@ -1246,7 +1263,7 @@ AC_MSG_RESULT([$NOTIFYDBUS_SUPPORT])
 
 ################################################################################
 dnl -- Look for libsystemd libraries if needed
-AS_IF([test "$NOTIFYDBUS_SUPPORT" = "yes" || test "$SYSTEMD_JOURNAL_SUPPORT" = "yes" || test "$APP_MACHINEID_SUPPORT" = "yes"], [
+AS_IF([test "$NOTIFYDBUS_SUPPORT" = "yes" || test "$SYSTEMD_JOURNAL_SUPPORT" = "yes" || test "$APP_MACHINEID_SUPPORT" = "yes" || test "$SD_NOTIFY_SUPPORT" = "yes"], [
 	PKG_CHECK_MODULES(LIBSYSTEMD, [libsystemd])
 ])
 
