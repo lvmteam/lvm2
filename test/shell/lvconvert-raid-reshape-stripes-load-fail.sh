@@ -66,7 +66,7 @@ aux delay_dev "$dev2" 0 100
 # Reshape it to 15 data stripes
 lvconvert --yes --stripes 15 $vg/$lv1
 aux disable_dev $dev1
-aux delay_dev "$dev2" 0 0
+aux delay_dev "$dev2" 0 50
 check lv_first_seg_field $vg/$lv1 segtype "raid5_ls"
 check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
 check lv_first_seg_field $vg/$lv1 data_stripes 15
