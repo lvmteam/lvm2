@@ -1,5 +1,10 @@
 Version 2.03.29 - 
 ==================
+  Add default and check for D-Bus notifications when building w/ lvmlockd.
+  Allow test mode when lvmlockd is built without dlm support.
+  Add a note about RAID + integrity synchronization to lvmraid(7) man page.
+  Add a function for running lvconvert --repair on RAID LVs to lvmdbusd.
+  Improve option section of man pages for listing commands ({pv,lv,vg}{s,display}).
   Fix renaming of raid sub LVs when converting a volume to raid (2.03.28).
   Fix segfault/VG write error for raid LV lvextend -i|--stripes -I|--stripesize.
   Revert ignore -i|--stripes, -I|--stripesize for lvextend on raid0 LV (2.03.27).

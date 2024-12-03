@@ -1,0 +1,23 @@
+<!-- Page title -->
+[[!meta title="Version 2.03.29 - Bug Fix Release"]]
+
+Version 2.03.29
+===============
+
+Mostly bugfix release, few interesting changes:
+
+* **Fix renaming of raid sub LVs when converting a volume to raid (2.03.28)**.
+* **Fix segfault/VG write error for raid LV `lvextend -i|--stripes -I|--stripesize`**.
+* Add default and check for D-Bus notifications when building w/ lvmlockd.
+* Allow test mode when lvmlockd is built without dlm support.
+* Add a note about RAID + integrity synchronization to lvmraid(7) man page.
+* Add a function for running lvconvert --repair on RAID LVs to lvmdbusd.
+* Improve option section of man pages for listing commands ({pv,lv,vg}{s,display}).
+* And some cleanup mostly in test code.
+
+<!-- remove the pending tag on release, remove draft tag once editing is complete -->
+[[!tag draft pending]]
+<!--
+For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
+\[[!meta date="Tue Nov 21 14:26:07 2023 +0100"]]
+-->
