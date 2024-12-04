@@ -157,8 +157,7 @@ function _reshape_layout
 
 	stripes=$(_total_stripes $raid_type $data_stripes)
 
-	# Avoid random udev sync delays causing _check_size to be unreliable
-	lvconvert -y --noudevsync --ty $raid_type --stripes $data_stripes $opts $vg/$lv
+	lvconvert -y --ty $raid_type --stripes $data_stripes $opts $vg/$lv
 	check lv_first_seg_field $vg/$lv1 segtype "$raid_type"
 
 	if [ $wait_for_reshape -eq 1 ]
