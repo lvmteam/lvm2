@@ -2717,8 +2717,10 @@ static int _raid_add_images_without_commit(struct logical_volume *lv,
 	}
 
 	/* Metadata LVs must be cleared before being added to the array */
-	if (!_clear_lvs(&meta_lvs))
+	if (!_clear_lvs(&meta_lvs)) {
+		stack;
 		goto fail;
+	}
 
 	if (seg_is_linear(seg)) {
 		uint32_t region_size = seg->region_size;
