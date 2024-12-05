@@ -44,12 +44,10 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 		log_print_unless_silent("\"%s\" is a new physical volume of \"%s\"",
 					pv_name, display_size(cmd, size));
 
-	if (arg_is_set(cmd, colon_ARG)) {
+	if (arg_is_set(cmd, colon_ARG))
 		pvdisplay_colons(pv);
-		goto out;
-	}
-
-	pvdisplay_full(cmd, pv, NULL);
+	else
+		pvdisplay_full(cmd, pv, NULL);
 
 	if (arg_is_set(cmd, maps_ARG))
 		pvdisplay_segments(pv);
@@ -58,41 +56,13 @@ out:
 	return ret;
 }
 
-int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
+int pvdisplay_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
-	int ret;
+	return process_each_pv(cmd, argc, argv, NULL, 0, 0, NULL, _pvdisplay_single);
+}
 
-	if (arg_is_set(cmd, columns_ARG)) {
-		if (arg_is_set(cmd, colon_ARG) || arg_is_set(cmd, maps_ARG) ||
-		    arg_is_set(cmd, short_ARG)) {
-			log_error("Incompatible options selected");
-			return EINVALID_CMD_LINE;
-		}
-		return pvs(cmd, argc, argv);
-	}
-
-	if (arg_is_set(cmd, aligned_ARG) ||
-	    arg_is_set(cmd, all_ARG) ||
-	    arg_is_set(cmd, binary_ARG) ||
-	    arg_is_set(cmd, noheadings_ARG) ||
-	    arg_is_set(cmd, options_ARG) ||
-	    arg_is_set(cmd, separator_ARG) ||
-	    arg_is_set(cmd, sort_ARG) ||
-	    arg_is_set(cmd, unbuffered_ARG)) {
-		log_error("Incompatible options selected");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (arg_is_set(cmd, colon_ARG) && arg_is_set(cmd, maps_ARG)) {
-		log_error("Option -c not allowed with option -m");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (arg_is_set(cmd, colon_ARG) && arg_is_set(cmd, short_ARG)) {
-		log_error("Option -c is not allowed with option -s");
-		return EINVALID_CMD_LINE;
-	}
-
+int pvdisplay_columns_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
 	/*
 	 * Without -a, command only looks at PVs and can use hints,
 	 * with -a, the command looks at all (non-hinted) devices.
@@ -100,19 +70,12 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_is_set(cmd, all_ARG))
 		cmd->use_hints = 0;
 
-	ret = process_each_pv(cmd, argc, argv, NULL,
-			      arg_is_set(cmd, all_ARG), 0,
-			      NULL, _pvdisplay_single);
-
-	return ret;
+	return pvs(cmd, argc, argv);
 }
 
-int pvdisplay_columns_cmd(struct cmd_context *cmd, int argc, char **argv)
+int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 {
-	return pvdisplay(cmd, argc, argv);
-}
-
-int pvdisplay_colon_cmd(struct cmd_context *cmd, int argc, char **argv)
-{
-	return pvdisplay(cmd, argc, argv);
+	log_error(INTERNAL_ERROR "Missing function for command definition %d:%s.",
+		  cmd->command->command_index, command_enum(cmd->command->command_enum));
+	return ECMD_FAILED;
 }

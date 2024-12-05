@@ -209,14 +209,14 @@ OO_ALL: --commandprofile String, --config String, --debug,
 #
 # options for pvdisplay, lvdisplay, vgdisplay
 #
-OO_REPORTING: --all, --configreport ConfigReport, --foreign,
+OO_REPORTING: --configreport ConfigReport, --foreign,
 --ignorelockingfailure, --logonly, --readonly, --reportformat ReportFmt,
 --select String, --shared, --units Units
 
 #
 # options for pvs, lvs, vgs, fullreport
 #
-OO_REPORT: OO_REPORTING, --aligned, --binary,
+OO_REPORT: OO_REPORTING, --all, --aligned, --binary,
 --headings HeadingsType, --nameprefixes, --noheadings,
 --nosuffix, --options String, --rows, --separator String,
 --sort String, --unbuffered, --unquoted
@@ -1400,14 +1400,14 @@ ID: lvdisplay_columns
 DESC: Display output in columns like lvs.
 
 lvdisplay --colon
-OO: OO_REPORTING, --history, --segments
+OO: OO_REPORTING, --all, --history, --segments
 OP: VG|LV|Tag ...
 IO: --partial, --ignoreskippedcluster
 ID: lvdisplay_colon
 DESC: Generate colon separated output.
 
 lvdisplay
-OO: OO_REPORTING, --history, --segments, --maps
+OO: OO_REPORTING, --all, --history, --segments, --maps
 OP: VG|LV|Tag ...
 IO: --partial, --ignoreskippedcluster
 ID: lvdisplay_general
@@ -1658,6 +1658,7 @@ OO: OO_REPORTING, --maps, --segments, --short
 OP: PV|Tag ...
 IO: --partial, --ignoreskippedcluster
 ID: pvdisplay_general
+DESC: Display Physical Volumes.
 
 ---
 
