@@ -1391,6 +1391,12 @@ DESC: new LV to type writecache.
 
 ---
 
+lvdisplay
+OO: OO_REPORTING, --all, --history, --segments, --maps
+OP: VG|LV|Tag ...
+IO: --partial, --ignoreskippedcluster
+ID: lvdisplay_general
+
 lvdisplay --columns
 OO: OO_REPORT, --history, --segments
 OP: VG|LV|Tag ...
@@ -1405,13 +1411,6 @@ OP: VG|LV|Tag ...
 IO: --partial, --ignoreskippedcluster
 ID: lvdisplay_colon
 DESC: Generate colon separated output.
-
-lvdisplay
-OO: OO_REPORTING, --all, --history, --segments, --maps
-OP: VG|LV|Tag ...
-IO: --partial, --ignoreskippedcluster
-ID: lvdisplay_general
-DESC: Display Logical Volumes.
 
 ---
 
@@ -1638,6 +1637,12 @@ RULE: --bootloaderareasize not --restorefile
 
 ---
 
+pvdisplay
+OO: OO_REPORTING, --maps, --segments, --short
+OP: PV|Tag ...
+IO: --partial, --ignoreskippedcluster
+ID: pvdisplay_general
+
 pvdisplay --columns
 OO: OO_REPORT, --segments
 OP: PV|Tag ...
@@ -1652,13 +1657,6 @@ OP: PV|Tag ...
 IO: --partial, --ignoreskippedcluster
 ID: pvdisplay_colon
 DESC: Generate colon separated output.
-
-pvdisplay
-OO: OO_REPORTING, --maps, --segments, --short
-OP: PV|Tag ...
-IO: --partial, --ignoreskippedcluster
-ID: pvdisplay_general
-DESC: Display Physical Volumes.
 
 ---
 
@@ -1873,6 +1871,12 @@ ID: vgcreate_general
 
 ---
 
+vgdisplay
+OO: OO_REPORTING, --short
+OP: VG|Tag ...
+IO: --partial, --ignoreskippedcluster
+ID: vgdisplay_general
+
 vgdisplay --columns
 OO: OO_REPORT
 OP: VG|Tag ...
@@ -1887,13 +1891,6 @@ OP: VG|Tag ...
 IO: --partial, --ignoreskippedcluster
 ID: vgdisplay_colon
 DESC: Generate colon separated output.
-
-vgdisplay
-OO: OO_REPORTING, --short
-OP: VG|Tag ...
-IO: --partial, --ignoreskippedcluster
-ID: vgdisplay_general
-DESC: Display Volume Groups.
 
 vgdisplay --activevolumegroups
 OO: OO_REPORTING, --short, --colon
