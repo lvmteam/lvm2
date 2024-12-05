@@ -15,24 +15,31 @@
 
 #include "tools.h"
 
-static int _vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
+static int _vgdisplay_colon_single(struct cmd_context *cmd, const char *vg_name,
 			     struct volume_group *vg,
 			     struct processing_handle *handle __attribute__((unused)))
 {
 	if (arg_is_set(cmd, activevolumegroups_ARG) && !lvs_in_vg_activated(vg))
 		return ECMD_PROCESSED;
 
-	if (arg_is_set(cmd, colon_ARG)) {
-		vgdisplay_colons(vg);
+	vgdisplay_colons(vg);
+
+	return ECMD_PROCESSED;
+}
+
+static int _vgdisplay_general_single(struct cmd_context *cmd, const char *vg_name,
+			     struct volume_group *vg,
+			     struct processing_handle *handle __attribute__((unused)))
+{
+	if (arg_is_set(cmd, activevolumegroups_ARG) && !lvs_in_vg_activated(vg))
 		return ECMD_PROCESSED;
-	}
 
 	if (arg_is_set(cmd, short_ARG)) {
 		vgdisplay_short(vg);
 		return ECMD_PROCESSED;
 	}
 
-	vgdisplay_full(vg);	/* was vg_show */
+	vgdisplay_full(vg);
 
 	if (arg_is_set(cmd, verbose_ARG)) {
 		vgdisplay_extents(vg);
@@ -50,70 +57,35 @@ static int _vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
 	return ECMD_PROCESSED;
 }
 
-int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
+int vgdisplay_colon_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
-	if (arg_is_set(cmd, columns_ARG)) {
-		if (arg_is_set(cmd, colon_ARG) ||
-		    arg_is_set(cmd, activevolumegroups_ARG) ||
-		    arg_is_set(cmd, short_ARG)) {
-			log_error("Incompatible options selected");
-			return EINVALID_CMD_LINE;
-		}
-		return vgs(cmd, argc, argv);
-	}
-
-	if (arg_is_set(cmd, aligned_ARG) ||
-	    arg_is_set(cmd, binary_ARG) ||
-	    arg_is_set(cmd, noheadings_ARG) ||
-	    arg_is_set(cmd, options_ARG) ||
-	    arg_is_set(cmd, separator_ARG) ||
-	    arg_is_set(cmd, sort_ARG) ||
-	    arg_is_set(cmd, unbuffered_ARG)) {
-		log_error("Incompatible options selected.");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (arg_is_set(cmd, colon_ARG) && arg_is_set(cmd, short_ARG)) {
-		log_error("Option -c is not allowed with option -s");
-		return EINVALID_CMD_LINE;
-	}
-
 	if (argc && arg_is_set(cmd, activevolumegroups_ARG)) {
 		log_error("Option -A is not allowed with volume group names");
 		return EINVALID_CMD_LINE;
 	}
 
-/********* FIXME: Do without this - or else 2(+) passes!
-	   Figure out longest volume group name
-	for (c = opt; opt < argc; opt++) {
-		len = strlen(argv[opt]);
-		if (len > max_len)
-			max_len = len;
+	return process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0, NULL, _vgdisplay_colon_single);
+}
+
+int vgdisplay_general_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	if (argc && arg_is_set(cmd, activevolumegroups_ARG)) {
+		log_error("Option -A is not allowed with volume group names");
+		return EINVALID_CMD_LINE;
 	}
-**********/
 
-	return process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0, NULL,
-			       _vgdisplay_single);
-
-/******** FIXME Need to count number processed
-	  Add this to process_each_vg if arg_is_set(cmd,activevolumegroups_ARG) ?
-
-	if (opt == argc) {
-		log_print("no ");
-		if (arg_is_set(cmd,activevolumegroups_ARG))
-			printf("active ");
-		printf("volume groups found\n\n");
-		return LVM_E_NO_VG;
-	}
-************/
+	return process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0, NULL, _vgdisplay_general_single);
 }
 
 int vgdisplay_columns_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
-	return vgdisplay(cmd, argc, argv);
+	return vgs(cmd, argc, argv);
 }
 
-int vgdisplay_colon_cmd(struct cmd_context *cmd, int argc, char **argv)
+int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
 {
-	return vgdisplay(cmd, argc, argv);
+	log_error(INTERNAL_ERROR "Missing function for command definition %d:%s.",
+		  cmd->command->command_index, command_enum(cmd->command->command_enum));
+	return ECMD_FAILED;
 }
+

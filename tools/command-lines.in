@@ -1874,7 +1874,7 @@ ID: vgcreate_general
 ---
 
 vgdisplay --columns
-OO: OO_REPORT, --activevolumegroups
+OO: OO_REPORT
 OP: VG|Tag ...
 IO: --partial, --ignoreskippedcluster
 RULE: --noheadings not --headings

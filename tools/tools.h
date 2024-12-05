@@ -195,6 +195,7 @@ int pvdisplay_columns_cmd(struct cmd_context *cmd, int argc, char **argv);
 int pvdisplay_cmd(struct cmd_context *cmd, int argc, char **argv);
 int vgdisplay_columns_cmd(struct cmd_context *cmd, int argc, char **argv);
 int vgdisplay_colon_cmd(struct cmd_context *cmd, int argc, char **argv);
+int vgdisplay_general_cmd(struct cmd_context *cmd, int argc, char **argv);
 
 int lvconvert_repair_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvconvert_replace_pv_cmd(struct cmd_context *cmd, int argc, char **argv);
