@@ -190,6 +190,7 @@ int lvchange_persistent_cmd(struct cmd_context *cmd, int argc, char **argv);
 
 int lvdisplay_columns_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvdisplay_colon_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvdisplay_general_cmd(struct cmd_context *cmd, int argc, char **argv);
 int pvdisplay_columns_cmd(struct cmd_context *cmd, int argc, char **argv);
 int pvdisplay_colon_cmd(struct cmd_context *cmd, int argc, char **argv);
 int vgdisplay_columns_cmd(struct cmd_context *cmd, int argc, char **argv);

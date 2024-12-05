@@ -91,6 +91,7 @@ static const struct command_function _command_functions[CMD_COUNT] = {
 	/* lvdisplay variants */
 	{ lvdisplay_columns_CMD,	lvdisplay_columns_cmd },
 	{ lvdisplay_colon_CMD,		lvdisplay_colon_cmd },
+	{ lvdisplay_general_CMD,	lvdisplay_general_cmd },
 
 	/* pvdisplay variants */
 	{ pvdisplay_columns_CMD,	pvdisplay_columns_cmd },

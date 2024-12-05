@@ -1411,6 +1411,7 @@ OO: OO_REPORTING, --history, --segments, --maps
 OP: VG|LV|Tag ...
 IO: --partial, --ignoreskippedcluster
 ID: lvdisplay_general
+DESC: Display Logical Volumes.
 
 ---
 
