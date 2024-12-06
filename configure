@@ -678,6 +678,7 @@ SILENT_RULES
 SHARED_LINK
 SELINUX_STATIC_LIBS
 SELINUX_PC
+SD_NOTIFY_SUPPORT
 SBINDIR
 RT_LIBS
 PYTHON3DIR
@@ -971,6 +972,7 @@ enable_use_lvmpolld
 with_lvmpolld_pidfile
 enable_systemd_journal
 enable_app_machineid
+enable_sd_notify
 with_systemd_run
 enable_blkid_wiping
 enable_udev_sync
@@ -1713,6 +1715,7 @@ Optional Features:
   --disable-systemd-journal
                           disable LVM systemd journaling
   --disable-app-machineid disable LVM system ID using app-specific machine-id
+  --disable-sd-notify     disable LVM sd_notify
   --disable-blkid_wiping  disable libblkid detection of signatures when wiping
                           and use native code instead
   --enable-udev_sync      enable synchronization with udev processing
@@ -12724,6 +12727,7 @@ SYSTEMD_MIN_VERSION=0
 NOTIFYDBUS_SUPPORT="no"
 SYSTEMD_JOURNAL_SUPPORT="no"
 APP_MACHINEID_SUPPORT="no"
+SD_NOTIFY_SUPPORT="no"
 if test "$with_systemd" = "yes"
 then :
   if test -n "$PKG_CONFIG" && \
@@ -12732,7 +12736,7 @@ then :
   ac_status=$?
   printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  SYSTEMD_MIN_VERSION=221 NOTIFYDBUS_SUPPORT="maybe" SYSTEMD_JOURNAL_SUPPORT="maybe"
+  SYSTEMD_MIN_VERSION=221 NOTIFYDBUS_SUPPORT="maybe" SD_NOTIFY_SUPPORT="maybe" SYSTEMD_JOURNAL_SUPPORT="maybe"
 fi
       if test -n "$PKG_CONFIG" && \
     { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"systemd >= 234\""; } >&5
@@ -12811,6 +12815,41 @@ if test "$APP_MACHINEID_SUPPORT" = "yes"
 then :
 
 printf "%s\n" "#define APP_MACHINEID_SUPPORT 1" >>confdefs.h
+
+fi
+
+################################################################################
+if test "$SD_NOTIFY_SUPPORT" != "no"
+then :
+  ac_fn_c_check_header_compile "$LINENO" "systemd/sd-daemon.h" "ac_cv_header_systemd_sd_daemon_h" "$ac_includes_default"
+if test "x$ac_cv_header_systemd_sd_daemon_h" = xyes
+then :
+  SD_NOTIFY_SUPPORT="yes"
+else case e in #(
+  e) SD_NOTIFY_SUPPORT="no" ;;
+esac
+fi
+
+fi
+# Check whether --enable-sd-notify was given.
+if test ${enable_sd_notify+y}
+then :
+  enableval=$enable_sd_notify; if test "$enableval" = "yes" && test "$SD_NOTIFY_SUPPORT" = "no"
+then :
+  as_fn_error $? "--enable-sd-notify requires systemd/sd-daemon.h. (--with-systemd=$with_systemd)" "$LINENO" 5
+fi
+	      SD_NOTIFY_SUPPORT=$enableval
+fi
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to enable to sd_notify" >&5
+printf %s "checking whether to enable to sd_notify... " >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $SD_NOTIFY_SUPPORT" >&5
+printf "%s\n" "$SD_NOTIFY_SUPPORT" >&6; }
+
+if test "$SD_NOTIFY_SUPPORT" = "yes"
+then :
+
+printf "%s\n" "#define SD_NOTIFY_SUPPORT 1" >>confdefs.h
 
 fi
 
@@ -13433,7 +13472,7 @@ fi
 
 if test "$NOTIFYDBUS_SUPPORT" = "maybe"
 then :
-  if test "$BUILD_LVMDBUSD" = "yes" || test "$BUILD_LVMLOCKD" = "yes"
+  if test "$BUILD_LVMDBUSD" = "yes"
 then :
   NOTIFYDBUS_SUPPORT="yes"
 else case e in #(
@@ -13459,9 +13498,9 @@ printf %s "checking whether to build notifydbus... " >&6; }
 printf "%s\n" "$NOTIFYDBUS_SUPPORT" >&6; }
 
 ################################################################################
-if test "$NOTIFYDBUS_SUPPORT" = "yes" || test "$SYSTEMD_JOURNAL_SUPPORT" = "yes" || test "$APP_MACHINEID_SUPPORT" = "yes"
+if test "$NOTIFYDBUS_SUPPORT" = "yes" || test "$SYSTEMD_JOURNAL_SUPPORT" = "yes" ||
+       test "$APP_MACHINEID_SUPPORT" = "yes" || test "$SD_NOTIFY_SUPPORT" = "yes"
 then :
-
 
 pkg_failed=no
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libsystemd" >&5
@@ -13553,7 +13592,6 @@ else
 printf "%s\n" "yes" >&6; }
 
 fi
-
 fi
 
 ################################################################################
@@ -16566,6 +16604,7 @@ AIO_LIBS=${AIO_LIBS:--laio}
 
 
 
+
 ################################################################################
 ac_config_files="$ac_config_files Makefile make.tmpl libdm/make.tmpl daemons/Makefile daemons/cmirrord/Makefile daemons/dmeventd/Makefile daemons/dmeventd/libdevmapper-event.pc daemons/dmeventd/plugins/Makefile daemons/dmeventd/plugins/lvm2/Makefile daemons/dmeventd/plugins/raid/Makefile daemons/dmeventd/plugins/mirror/Makefile daemons/dmeventd/plugins/snapshot/Makefile daemons/dmeventd/plugins/thin/Makefile daemons/dmeventd/plugins/vdo/Makefile daemons/lvmdbusd/Makefile daemons/lvmdbusd/lvmdbusd daemons/lvmdbusd/lvmdb.py daemons/lvmdbusd/lvm_shell_proxy.py daemons/lvmdbusd/path.py daemons/lvmpolld/Makefile daemons/lvmlockd/Makefile conf/Makefile conf/example.conf conf/lvmlocal.conf conf/command_profile_template.profile conf/metadata_profile_template.profile include/Makefile lib/Makefile include/lvm-version.h libdaemon/Makefile libdaemon/client/Makefile libdaemon/server/Makefile libdm/Makefile libdm/dm-tools/Makefile libdm/libdevmapper.pc man/Makefile po/Makefile scripts/lvm2-pvscan.service scripts/blkdeactivate.sh scripts/blk_availability_init_red_hat scripts/blk_availability_systemd_red_hat.service scripts/cmirrord_init_red_hat scripts/com.redhat.lvmdbus1.service scripts/dm_event_systemd_red_hat.service scripts/dm_event_systemd_red_hat.socket scripts/lvm2_cmirrord_systemd_red_hat.service scripts/lvm2_lvmdbusd_systemd_red_hat.service scripts/lvm2_lvmpolld_init_red_hat scripts/lvm2_lvmpolld_systemd_red_hat.service scripts/lvm2_lvmpolld_systemd_red_hat.socket scripts/lvmlockd.service scripts/lvmlocks.service scripts/lvm2_monitoring_init_red_hat scripts/lvm2_monitoring_systemd_red_hat.service scripts/lvm2_tmpfiles_red_hat.conf scripts/lvmdump.sh scripts/Makefile test/Makefile tools/Makefile udev/Makefile"
 
@@ -17961,9 +18000,9 @@ then :
 printf "%s\n" "$as_me: WARNING: Building D-Bus support without D-Bus notifications!" >&2;}
 fi
 
-if test "$BUILD_LVMLOCKD" = "yes" && test "$NOTIFYDBUS_SUPPORT" = "no"
+if test "$BUILD_LVMLOCKD" = "yes" && test "$SD_NOTIFY_SUPPORT" = "no"
 then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Building lvmlockd without D-Bus notifications may block!" >&5
-printf "%s\n" "$as_me: WARNING: Building lvmlockd without D-Bus notifications may block!" >&2;}
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Building lvmlockd without sd-notify support may block!" >&5
+printf "%s\n" "$as_me: WARNING: Building lvmlockd without sd-notify support may block!" >&2;}
 fi
 
