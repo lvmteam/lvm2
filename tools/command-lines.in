@@ -1872,7 +1872,7 @@ ID: vgcreate_general
 ---
 
 vgdisplay
-OO: OO_REPORTING, --short
+OO: OO_REPORTING, --short, --activevolumegroups
 OP: VG|Tag ...
 IO: --partial, --ignoreskippedcluster
 ID: vgdisplay_general
@@ -1886,18 +1886,11 @@ ID: vgdisplay_columns
 DESC: Display output in columns like vgs.
 
 vgdisplay --colon
-OO: OO_REPORTING
+OO: OO_REPORTING, --activevolumegroups
 OP: VG|Tag ...
 IO: --partial, --ignoreskippedcluster
 ID: vgdisplay_colon
 DESC: Generate colon separated output.
-
-vgdisplay --activevolumegroups
-OO: OO_REPORTING, --short, --colon
-IO: --partial, --ignoreskippedcluster
-ID: vgdisplay_active
-RULE: --short not --colon
-DESC: Display Volume Groups with active LVs.
 
 ---
 

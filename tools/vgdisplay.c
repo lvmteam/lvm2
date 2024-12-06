@@ -59,20 +59,22 @@ static int _vgdisplay_general_single(struct cmd_context *cmd, const char *vg_nam
 
 int vgdisplay_colon_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
+	if (argc && arg_is_set(cmd, activevolumegroups_ARG)) {
+		log_error("Option -A is not allowed with volume group names");
+		return EINVALID_CMD_LINE;
+	}
+
 	return process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0, NULL, _vgdisplay_colon_single);
 }
 
 int vgdisplay_general_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
-	return process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0, NULL, _vgdisplay_general_single);
-}
+	if (argc && arg_is_set(cmd, activevolumegroups_ARG)) {
+		log_error("Option -A is not allowed with volume group names");
+		return EINVALID_CMD_LINE;
+	}
 
-int vgdisplay_active_cmd(struct cmd_context *cmd, int argc, char **argv)
-{
-	if (arg_is_set(cmd, colon_ARG))
-		return process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0, NULL, _vgdisplay_colon_single);
-	else
-		return process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0, NULL, _vgdisplay_general_single);
+	return process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0, NULL, _vgdisplay_general_single);
 }
 
 int vgdisplay_columns_cmd(struct cmd_context *cmd, int argc, char **argv)
