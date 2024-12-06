@@ -1,6 +1,6 @@
 Version 2.03.29 - 
 ==================
-  Add default and check for D-Bus notifications when building w/ lvmlockd.
+  Configure --enable/disable-sd-notify to control lvmlockd build with sd-notify.
   Allow test mode when lvmlockd is built without dlm support.
   Add a note about RAID + integrity synchronization to lvmraid(7) man page.
   Add a function for running lvconvert --repair on RAID LVs to lvmdbusd.
