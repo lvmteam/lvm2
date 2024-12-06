@@ -50,8 +50,7 @@ INCLUDES += -I$(top_srcdir)/libdaemon/server
 LDFLAGS += -L$(top_builddir)/libdaemon/server $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS)
 LIBS += $(DAEMON_LIBS) $(PTHREAD_LIBS)
 
-ifneq (,$(firstword $(LIBSYSTEMD_LIBS)))
-	DEFS += -DUSE_SD_NOTIFY
+ifeq ("@SD_NOTIFY_SUPPORT@", "yes")
 	CFLAGS += $(LIBSYSTEMD_CFLAGS)
 	LIBS += $(LIBSYSTEMD_LIBS)
 endif

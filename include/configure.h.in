@@ -660,6 +660,9 @@
 /* Define to 1 to include the LVM readline shell. */
 #undef READLINE_SUPPORT
 
+/* Define to 1 to include code that uses sd_notify. */
+#undef SD_NOTIFY_SUPPORT
+
 /* Define to 1 to include built-in support for snapshots. */
 #undef SNAPSHOT_INTERNAL
 

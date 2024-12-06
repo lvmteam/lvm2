@@ -31,7 +31,7 @@
 #include <sys/utsname.h>
 #include <sys/un.h>
 
-#ifdef USE_SD_NOTIFY
+#ifdef SD_NOTIFY_SUPPORT
 #include <systemd/sd-daemon.h>
 #endif
 
@@ -6191,7 +6191,7 @@ static int main_loop(daemon_state *ds_arg)
 	setup_worker_thread();
 	setup_restart();
 
-#ifdef USE_SD_NOTIFY
+#ifdef SD_NOTIFY_SUPPORT
 	sd_notify(0, "READY=1");
 #endif
 
