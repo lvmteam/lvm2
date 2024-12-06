@@ -118,6 +118,21 @@ and more, using a more compact and configurable output format.
 .
 .SH USAGE
 .
+\fBlvdisplay\fP
+.br
+.RS 4
+.ad l
+[ \fB-m\fP|\fB--maps\fP ]
+.br
+[ COMMON_OPTIONS ]
+.ad b
+.RE
+.RS 4
+[ \fIVG\fP|\fILV\fP|\fITag\fP ... ]
+.RE
+.P
+\(em
+.P
 Display output in columns like lvs.
 .br
 .P
@@ -165,21 +180,6 @@ Generate colon separated output.
 .br
 .RS 4
 .ad l
-[ COMMON_OPTIONS ]
-.ad b
-.RE
-.RS 4
-[ \fIVG\fP|\fILV\fP|\fITag\fP ... ]
-.RE
-.P
-\(em
-.P
-\fBlvdisplay\fP
-.br
-.RS 4
-.ad l
-[ \fB-m\fP|\fB--maps\fP ]
-.br
 [ COMMON_OPTIONS ]
 .ad b
 .RE
