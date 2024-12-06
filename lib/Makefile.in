@@ -43,6 +43,7 @@ SOURCES =\
 	device/filesystem.c \
 	device/online.c \
 	device/parse_vpd.c \
+	device/nvme.c \
 	device/dev_util.c \
 	display/display.c \
 	error/errseg.c \

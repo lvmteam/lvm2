@@ -177,7 +177,7 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 				break;
 			if (id_size >= ID_BUFSIZE)
 				id_size = ID_BUFSIZE - 1;
-			dev_add_wwid(id, 1, ids);
+			dev_add_scsi_wwid(id, 1, ids);
 			break;
 		case 0x2:
 			/* EUI-64 */
@@ -203,7 +203,7 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 				break;
 			if (id_size >= ID_BUFSIZE)
 				id_size = ID_BUFSIZE - 1;
-			dev_add_wwid(id, 2, ids);
+			dev_add_scsi_wwid(id, 2, ids);
 			break;
 		case 0x3:
 			/* NAA */
@@ -225,7 +225,7 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 				break;
 			if (id_size >= ID_BUFSIZE)
 				id_size = ID_BUFSIZE - 1;
-			dev_add_wwid(id, 3, ids);
+			dev_add_scsi_wwid(id, 3, ids);
 			break;
 		case 0x8:
 			/* SCSI name string */
@@ -257,7 +257,7 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 				for (i = 0; i < strlen(id); i++)
 					id[i] = tolower(id[i]);
 			}
-			dev_add_wwid(id, type, ids);
+			dev_add_scsi_wwid(id, type, ids);
 			break;
 		default:
 			break;

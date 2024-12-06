@@ -98,7 +98,7 @@ int dev_is_rotational(struct dev_types *dt, struct device *dev);
 
 int dev_is_pmem(struct dev_types *dt, struct device *dev);
 
-int dev_is_nvme(struct dev_types *dt, struct device *dev);
+int dev_is_nvme(struct device *dev);
 
 int dev_is_lv(struct cmd_context *cmd, struct device *dev);
 

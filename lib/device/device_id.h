@@ -69,11 +69,16 @@ int read_sys_block_binary(struct cmd_context *cmd, struct device *dev,
 
 int dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, char **idname_out);
 
-int wwid_type_to_idtype(int wwid_type);
-int idtype_to_wwid_type(int idtype);
+int scsi_type_to_idtype(int wwid_type);
+int nvme_type_to_idtype(int wwid_type);
+int idtype_to_scsi_type(int idtype);
+int idtype_to_nvme_type(int idtype);
 void free_wwids(struct dm_list *ids);
-struct dev_wwid *dev_add_wwid(char *id, int id_type, struct dm_list *ids);
+struct dev_wwid *dev_add_wwid(char *id, int dw_type, int is_nvme, struct dm_list *ids);
+struct dev_wwid *dev_add_scsi_wwid(char *id, int dw_type, struct dm_list *ids);
+struct dev_wwid *dev_add_nvme_wwid(char *id, int dw_type, struct dm_list *ids);
 int dev_read_vpd_wwids(struct cmd_context *cmd, struct device *dev);
+void dev_read_nvme_wwids(struct device *dev);
 int dev_read_sys_wwid(struct cmd_context *cmd, struct device *dev,
 		      char *buf, int bufsize, struct dev_wwid **dw_out);
 

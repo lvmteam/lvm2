@@ -46,7 +46,7 @@
  * is excessive and unnecessary compared to just comparing /dev/name*.
  */
 
-int dev_is_nvme(struct dev_types *dt, struct device *dev)
+int dev_is_nvme(struct device *dev)
 {
 	return (dev->flags & DEV_IS_NVME) ? 1 : 0;
 }
@@ -562,7 +562,7 @@ static int _is_partitionable(struct dev_types *dt, struct device *dev)
 	    _loop_is_with_partscan(dev))
 		return 1;
 
-	if (dev_is_nvme(dt, dev)) {
+	if (dev_is_nvme(dev)) {
 		/* If this dev is already a partition then it's not partitionable. */
 		if (_has_sys_partition(dev))
 			return 0;
@@ -790,7 +790,7 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 	 * block dev types that have their own major number, so
 	 * the calculation based on minor number doesn't work.
 	 */
-	if (dev_is_nvme(dt, dev))
+	if (dev_is_nvme(dev))
 		goto sys_partition;
 
 	/*

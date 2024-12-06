@@ -568,7 +568,7 @@ static int _dev_has_lvmlv_uuid(struct cmd_context *cmd, struct device *dev, char
  * The numbers 1,2,3 for NAA,EUI,T10 are part of the standard
  * and are used in the vpd data.
  */
-static int _wwid_type_num(char *id)
+static int _scsi_wwid_type_num(char *id)
 {
 	if (!strncmp(id, "naa.", 4))
 		return 3;
@@ -580,9 +580,9 @@ static int _wwid_type_num(char *id)
 		return 0; /* any unrecognized, non-standard prefix */
 }
 
-int wwid_type_to_idtype(int wwid_type)
+int scsi_type_to_idtype(int scsi_type)
 {
-	switch (wwid_type) {
+	switch (scsi_type) {
 	case 3: return DEV_ID_TYPE_WWID_NAA;
 	case 2: return DEV_ID_TYPE_WWID_EUI;
 	case 1: return DEV_ID_TYPE_WWID_T10;
@@ -591,12 +591,51 @@ int wwid_type_to_idtype(int wwid_type)
 	}
 }
 
-int idtype_to_wwid_type(int idtype)
+int idtype_to_scsi_type(int idtype)
 {
 	switch (idtype) {
 	case DEV_ID_TYPE_WWID_NAA: return 3;
 	case DEV_ID_TYPE_WWID_EUI: return 2;
 	case DEV_ID_TYPE_WWID_T10: return 1;
+	case DEV_ID_TYPE_SYS_WWID: return 0;
+	default: return -1;
+	}
+}
+
+/*
+ * libnvme only returns the standard identifiers UUID/NGUID/EUI64
+ * sysfs wwid file will return "nvme." identifier when one of the
+ * others is not available.
+ */
+static int _nvme_wwid_type_num(char *id)
+{
+	if (!strncmp(id, "uuid.", 5))
+		return 3;		/* UUID is 16 bytes */
+	else if (!strncmp(id, "eui.", 4)) {
+		if (strlen(id) > 15)
+			return 2;	/* NGUID is 16 bytes */
+		return 1;		/* EUI64 is 8 bytes */
+	}
+	return 0; /* any other prefix, including "nvme.", which must come from sysfs wwid file */
+}
+
+int nvme_type_to_idtype(int nvme_type)
+{
+	switch (nvme_type) {
+	case 3: return DEV_ID_TYPE_NVME_UUID;
+	case 2: return DEV_ID_TYPE_NVME_NGUID;
+	case 1: return DEV_ID_TYPE_NVME_EUI64;
+	case 0: return DEV_ID_TYPE_SYS_WWID;
+	default: return -1;
+	}
+}
+
+int idtype_to_nvme_type(int idtype)
+{
+	switch (idtype) {
+	case DEV_ID_TYPE_NVME_UUID: return 3;
+	case DEV_ID_TYPE_NVME_NGUID: return 2;
+	case DEV_ID_TYPE_NVME_EUI64: return 1;
 	case DEV_ID_TYPE_SYS_WWID: return 0;
 	default: return -1;
 	}
@@ -620,20 +659,39 @@ void free_wwids(struct dm_list *ids)
  * in /etc/multipath/wwids.
  */
 
-struct dev_wwid *dev_add_wwid(char *id, int id_type, struct dm_list *ids)
+struct dev_wwid *dev_add_wwid(char *id, int dw_type, int is_nvme, struct dm_list *ids)
 {
 	struct dev_wwid *dw;
+	uint16_t scsi_type = 0;
+	uint16_t nvme_type = 0;
 
-	if (!id_type)
-		id_type = _wwid_type_num(id);
+	if (is_nvme)
+		nvme_type = dw_type ?: _nvme_wwid_type_num(id);
+	else
+		scsi_type = dw_type ?: _scsi_wwid_type_num(id);
+
+	/* nvme_type/scsi_type will be 0 for any sysfs wwid string that
+	   doesn't begin with a prefix recognized by lvm, e.g. that
+	   comes from sysfs wwid. */
 
 	if (!(dw = zalloc(sizeof(*dw))))
 		return_NULL;
 	/* Copy id string with upto DEV_WWID_SIZE characters */
 	dm_strncpy(dw->id, id, sizeof(dw->id));
-	dw->type = id_type;
+	dw->scsi_type = scsi_type;
+	dw->nvme_type = nvme_type;
 	dm_list_add(ids, &dw->list);
 	return dw;
+}
+
+struct dev_wwid *dev_add_scsi_wwid(char *id, int dw_type, struct dm_list *ids)
+{
+	return dev_add_wwid(id, dw_type, 0, ids);
+}
+
+struct dev_wwid *dev_add_nvme_wwid(char *id, int dw_type, struct dm_list *ids)
+{
+	return dev_add_wwid(id, dw_type, 1, ids);
 }
 
 #define VPD_SIZE 4096
@@ -693,9 +751,13 @@ int dev_read_sys_wwid(struct cmd_context *cmd, struct device *dev,
 	else
 		format_general_id((const char *)buf, sizeof(buf), (unsigned char *)outbuf, outbufsize);
 
+	/* We don't currently add the sysfs wwid to dev->wwids for nvme, it's not needed. */
+	if (dev_is_nvme(dev))
+		return 1;
+
 	/* Note, if wwids are also read from vpd, this same wwid will be added again. */
 
-	if (!(dw = dev_add_wwid(buf, 0, &dev->wwids)))
+	if (!(dw = dev_add_wwid(buf, 0, dev_is_nvme(dev), &dev->wwids)))
 		return_0;
 	if (dw_out)
 		*dw_out = dw;
@@ -809,7 +871,17 @@ char *device_id_system_read(struct cmd_context *cmd, struct device *dev, uint16_
 		if (!(dev->flags & DEV_ADDED_VPD_WWIDS))
 			dev_read_vpd_wwids(cmd, dev);
 		dm_list_iterate_items(dw, &dev->wwids) {
-			if (idtype_to_wwid_type(idtype) == dw->type)
+			if (idtype_to_scsi_type(idtype) == dw->scsi_type)
+				return strdup(dw->id);
+		}
+		return NULL;
+	case DEV_ID_TYPE_NVME_EUI64:
+	case DEV_ID_TYPE_NVME_NGUID:
+	case DEV_ID_TYPE_NVME_UUID:
+		if (!(dev->flags & DEV_ADDED_NVME_WWIDS))
+			dev_read_nvme_wwids(dev);
+		dm_list_iterate_items(dw, &dev->wwids) {
+			if (idtype_to_nvme_type(idtype) == dw->nvme_type)
 				return strdup(dw->id);
 		}
 		return NULL;
@@ -823,6 +895,9 @@ char *device_id_system_read(struct cmd_context *cmd, struct device *dev, uint16_
 	 */
 	if ((idtype != DEV_ID_TYPE_SYS_WWID) &&
 	    (idtype != DEV_ID_TYPE_SYS_SERIAL) &&
+	    (idtype != DEV_ID_TYPE_NVME_EUI64) &&
+	    (idtype != DEV_ID_TYPE_NVME_NGUID) &&
+	    (idtype != DEV_ID_TYPE_NVME_UUID) &&
 	    (idtype != DEV_ID_TYPE_WWID_NAA) &&
 	    (idtype != DEV_ID_TYPE_WWID_EUI) &&
 	    (idtype != DEV_ID_TYPE_WWID_T10)) {
@@ -1043,6 +1118,9 @@ static const char _dev_id_types[][16] = {
 	[DEV_ID_TYPE_WWID_NAA]	 = "wwid_naa",
 	[DEV_ID_TYPE_WWID_EUI]	 = "wwid_eui",
 	[DEV_ID_TYPE_WWID_T10]	 = "wwid_t10",
+	[DEV_ID_TYPE_NVME_EUI64] = "nvme_eui64",
+	[DEV_ID_TYPE_NVME_NGUID] = "nvme_nguid",
+	[DEV_ID_TYPE_NVME_UUID]	 = "nvme_uuid",
 };
 
 static int _is_idtype(uint16_t idtype) {
@@ -1103,6 +1181,17 @@ static const char *_dev_idname(struct device *dev, uint16_t idtype)
 		if (!id->idname)
 			continue;
 		return id->idname;
+	}
+	return NULL;
+}
+
+static struct dev_id *get_dev_id(struct device *dev, uint16_t idtype)
+{
+	struct dev_id *id;
+
+	dm_list_iterate_items(id, &dev->ids) {
+		if (id->idtype == idtype)
+			return id;
 	}
 	return NULL;
 }
@@ -2564,33 +2653,63 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 	*/
 
 	/*
+	 * SCSI:
 	 * Make the du match this device if the dev has a vpd_pg83 wwid
 	 * that matches du->idname, even if the sysfs wwid for dev did
 	 * not match the du->idname.  This could happen if sysfs changes
 	 * which wwid it reports (there are often multiple), or if lvm in
 	 * the future selects a sys_wwid value from vpd_pg83 data rather
 	 * than from the sysfs wwid.
-	 *
 	 * TODO: update the df entry IDTYPE somewhere?
+	 *
+	 * NVME:
+	 * For some nvme drives (faulty hw, flagged with quirk), the sysfs wwid
+	 * file changed to reporting a new/correct wwid.  The du->idname may
+	 * still have the wwid from the old sysfs wwid, so we need to look
+	 * at the old wwids that can be found from libnvme.
+	 *
+	 * device_ids_validate updates system.devices to use the latest value
+	 * from sysfs wwid.
+	 *
+	 * In future, we could limit dev_read_nvme_wwids() to only devices
+	 * that have the quirk flag (indicating a bad wwid had been used.)
+	 * dev_has_nvme_quirk() checks a flag in a newly exposed sysfs file.
+	 * If that sysfs file doesn't exist because of an older kernel, then
+	 * the function returns -1.  When the quirk file exists and says 0,
+	 * then the device hasn't changed its reported sys_wwid value, and
+	 * we don't need to check libnvme for other wwids that the dev
+	 * might have displayed in the past.
 	 */
 	if (du->idtype == DEV_ID_TYPE_SYS_WWID) {
 		struct dev_wwid *dw;
 
-	       	if (!(dev->flags & DEV_ADDED_VPD_WWIDS))
+	       	if (!(dev->flags & DEV_ADDED_VPD_WWIDS) && !dev_is_nvme(dev))
 			dev_read_vpd_wwids(cmd, dev);
+
+		if (!(dev->flags & DEV_ADDED_NVME_WWIDS) && dev_is_nvme(dev))
+			dev_read_nvme_wwids(dev);
 
 		dm_list_iterate_items(dw, &dev->wwids) {
 			if (!strcmp(dw->id, du_idname)) {
 				if (!(id = zalloc(sizeof(struct dev_id))))
 					return_0;
-				/* wwid types are 1,2,3 and idtypes are DEV_ID_TYPE_ */
-				id->idtype = wwid_type_to_idtype(dw->type);
+				/* scsi/nvme types are 1,2,3 and idtypes are DEV_ID_TYPE_ */
+				if (dev_is_nvme(dev))
+					id->idtype = nvme_type_to_idtype(dw->nvme_type);
+				else
+					id->idtype = scsi_type_to_idtype(dw->scsi_type);
 				id->idname = strdup(dw->id);
 				dm_list_add(&dev->ids, &id->list);
 				du->dev = dev;
 				dev->id = id;
 				dev->flags |= DEV_MATCHED_USE_ID;
-				log_debug("Match %s %s to %s: using vpd_pg83 %s %s",
+
+				/* update system.devices with sysfs wwid value since IDTYPE=sys_wwid */
+				/* FIXME: also do this for scsi */
+				if (dev_is_nvme(dev))
+					dev->flags |= DEV_UPDATE_USE_ID;
+
+				log_debug("Match %s %s to %s: using extra %s %s",
 					  idtype_to_str(du->idtype), du_idname, dev_name(dev),
 					  idtype_to_str(id->idtype), id->idname ?: ".");
 				du->idtype = id->idtype;
@@ -2937,6 +3056,31 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 		log_debug("Validating %s %s PVID %s: initial match %s",
 			  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".",
 			  du->dev ? dev_name(du->dev) : "not set");
+	}
+
+	/*
+	 * Replace old wwid with new value displayed by sysfs wwid.
+	 */
+	dm_list_iterate_items(du, &cmd->use_devices) {
+		if (!du->dev)
+			continue;
+		if (!(du->dev->flags & DEV_UPDATE_USE_ID))
+			continue;
+		if ((id = get_dev_id(du->dev, DEV_ID_TYPE_SYS_WWID)) && id->idname) {
+			log_debug("Validate %s %s PVID %s on %s: replace old wwid with %s",
+				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".",
+				  dev_name(du->dev), id->idname);
+			if (!(tmpdup = strdup(id->idname)))
+				continue;
+			free(du->idname);
+			du->idtype = DEV_ID_TYPE_SYS_WWID;
+			du->idname = tmpdup;
+			du->dev->id = id;
+			update_file = 1;
+		} else {
+			log_warn("Device %s PVID %s is using only old wwid %s.",
+				  dev_name(du->dev), du->pvid ?: ".", du->idname ?: ".");
+		}
 	}
 
 	/*
