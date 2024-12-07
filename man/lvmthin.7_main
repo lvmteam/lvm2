@@ -1089,7 +1089,7 @@ newly unused chunks to be used for new data.
 .P
 .B passdown:
 Process discards in the thin pool (as with nopassdown), and
-pass the discards down the the underlying device.  This is the default
+pass the discards down the underlying device.  This is the default
 mode.
 .P
 Create a thin pool with a specific discards mode:
