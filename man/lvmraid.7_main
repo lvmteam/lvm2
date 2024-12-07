@@ -1604,7 +1604,7 @@ or the LV can be reduced in size after the reshaping conversion has finished.
   [lv_rmeta_5]    4.00m linear      1      0        /dev/sdht(0)
 .fi
 .P
-Once the conversion has finished we can can convert to striped.
+Once the conversion has finished we can convert to striped.
 .P
 .nf
 # lvconvert --type striped vg/lv

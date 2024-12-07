@@ -45,7 +45,7 @@ can be checked with:
 .B pvs -o pe_start
 .I PV
 .P
-The size of the LVM metadata area is the space between the the start of
+The size of the LVM metadata area is the space between the start of
 the metadata area and the first PE.  When metadata begins at 4 KiB and the
 first PE is at 1024 KiB, the metadata area size is 1020 KiB.  This can be
 checked with:
