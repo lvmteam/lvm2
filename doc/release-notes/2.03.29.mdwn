@@ -19,5 +19,5 @@ Mostly bugfix release, few interesting changes:
 [[!tag]]
 <!--
 For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
-\[[!meta date="Mon Dec 09 12:28:00 2024 +0100"]]
+[[!meta date="Mon Dec 09 12:57:57 2024 +0100"]]
 -->
