@@ -633,6 +633,9 @@
 /* Define to 1 to include code that uses dbus notification. */
 #undef NOTIFYDBUS_SUPPORT
 
+/* Use libnvme for WWID. */
+#undef NVME_SUPPORT
+
 /* Define to 1 to enable O_DIRECT support. */
 #undef O_DIRECT_SUPPORT
 

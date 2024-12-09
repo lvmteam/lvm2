@@ -217,6 +217,8 @@ test "$exec_prefix" = "NONE" && exec_prefix='${prefix}'
 
 AC_ARG_WITH(blkid, [AS_HELP_STRING([--without-blkid], [do not build with blkid library])],
 	    [], with_blkid="yes")
+AC_ARG_WITH(libnvme, [AS_HELP_STRING([--without-libnvme], [do not build with libnvme library])],
+	    [], with_libnvme="yes")
 AC_ARG_WITH(systemd, [AS_HELP_STRING([--without-systemd], [do not build with systemd library])],
 	    [], with_systemd="yes")
 AC_ARG_WITH(udev, [AS_HELP_STRING([--without-udev], [do not build with udev library])],
@@ -1155,6 +1157,38 @@ AC_MSG_CHECKING([whether to enable libblkid detection of signatures when wiping]
 AC_MSG_RESULT([$BLKID_WIPING])
 AC_DEFINE_UNQUOTED(DEFAULT_USE_BLKID_WIPING, [$DEFAULT_USE_BLKID_WIPING],
 		   [Use blkid wiping by default.])
+
+################################################################################
+dnl -- Enable nvme alternate WWID via libnvme
+AC_ARG_ENABLE(nvme-wwid,
+	      AS_HELP_STRING([--disable-nvme-wwid],
+			     [do not use libnvme to detect alternate WWIDs]),
+	      NVME_WWID=$enableval,
+	      [AS_IF([test "$with_libnvme" = "yes"], [NVME_WWID="maybe"], [NVME_WWID="no"])])
+
+# ATM NVME_WWID is the only user of libnvme, so skip checking for libnvme when disabled
+AS_IF([test "$NVME_WWID" = "no"], [with_libnvme="no"])
+
+AS_IF([test "$with_libnvme" = "yes"], [
+      PKG_CHECK_MODULES([LIBNVME], [libnvme >= 1.4], [
+		AC_CACHE_CHECK([for NVME_NIDT_CSI in libnvme.h],
+			[ac_cv_have_libnvme_csi],
+			[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <libnvme.h>
+const int a = NVME_NIDT_CSI;
+			])], [ac_cv_have_libnvme_csi="yes"], [ac_cv_have_libnvme_csi="no"])])
+
+		AS_IF([test "$NVME_WWID" != "no"], [
+		      AC_IF_YES(ac_cv_have_libnvme_csi, [NVME_WWID="yes"
+				AC_DEFINE(NVME_SUPPORT, 1, [Use libnvme for WWID.])],
+				[NVME_WWID="error"])])
+      ], [AS_IF([test "$NVME_WWID" = "yes"], [NVME_WWID="error"])])
+], [AS_IF([test "$NVME_WWID" = "yes"], [NVME_WWID="error"])])
+
+AS_IF([test "$NVME_WWID" = "error"],
+	[AC_MSG_ERROR([--enable-nvme-wwid requires libnvme library >= 1.1. (--with-libnvme=$with_libnvme)])])
+
+AC_MSG_CHECKING([whether to use libnvme for alternate WWIDs])
+AC_MSG_RESULT([$NVME_WWID])
 
 ################################################################################
 dnl -- Enable udev synchronization
