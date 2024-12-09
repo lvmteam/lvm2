@@ -788,6 +788,8 @@ LIBSYSTEMD_LIBS
 LIBSYSTEMD_CFLAGS
 UDEV_LIBS
 UDEV_CFLAGS
+LIBNVME_LIBS
+LIBNVME_CFLAGS
 BLKID_LIBS
 BLKID_CFLAGS
 SYSTEMD_RUN_CMD
@@ -913,6 +915,7 @@ enable_silent_rules
 enable_static_link
 enable_shared
 with_blkid
+with_libnvme
 with_systemd
 with_udev
 with_user
@@ -975,6 +978,7 @@ enable_app_machineid
 enable_sd_notify
 with_systemd_run
 enable_blkid_wiping
+enable_nvme_wwid
 enable_udev_sync
 enable_udev_rules
 enable_udev_rule_exec_detection
@@ -1047,6 +1051,8 @@ LIBSEAGATEILM_CFLAGS
 LIBSEAGATEILM_LIBS
 BLKID_CFLAGS
 BLKID_LIBS
+LIBNVME_CFLAGS
+LIBNVME_LIBS
 UDEV_CFLAGS
 UDEV_LIBS
 LIBSYSTEMD_CFLAGS
@@ -1718,6 +1724,7 @@ Optional Features:
   --disable-sd-notify     disable LVM sd_notify
   --disable-blkid_wiping  disable libblkid detection of signatures when wiping
                           and use native code instead
+  --disable-nvme-wwid     do not use libnvme to detect alternate WWIDs
   --enable-udev_sync      enable synchronization with udev processing
   --enable-udev_rules     install rule files needed for udev synchronization
   --enable-udev-rule-exec-detection
@@ -1744,6 +1751,7 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --without-blkid         do not build with blkid library
+  --without-libnvme       do not build with libnvme library
   --without-systemd       do not build with systemd library
   --without-udev          do not build with udev library
   --with-user=USER        set the owner of installed files [USER=]
@@ -1883,6 +1891,10 @@ Some influential environment variables:
   BLKID_CFLAGS
               C compiler flags for BLKID, overriding pkg-config
   BLKID_LIBS  linker flags for BLKID, overriding pkg-config
+  LIBNVME_CFLAGS
+              C compiler flags for LIBNVME, overriding pkg-config
+  LIBNVME_LIBS
+              linker flags for LIBNVME, overriding pkg-config
   UDEV_CFLAGS C compiler flags for UDEV, overriding pkg-config
   UDEV_LIBS   linker flags for UDEV, overriding pkg-config
   LIBSYSTEMD_CFLAGS
@@ -9131,6 +9143,16 @@ esac
 fi
 
 
+# Check whether --with-libnvme was given.
+if test ${with_libnvme+y}
+then :
+  withval=$with_libnvme;
+else case e in #(
+  e) with_libnvme="yes" ;;
+esac
+fi
+
+
 # Check whether --with-systemd was given.
 if test ${with_systemd+y}
 then :
@@ -13167,6 +13189,175 @@ printf "%s\n" "$BLKID_WIPING" >&6; }
 
 printf "%s\n" "#define DEFAULT_USE_BLKID_WIPING $DEFAULT_USE_BLKID_WIPING" >>confdefs.h
 
+
+################################################################################
+# Check whether --enable-nvme-wwid was given.
+if test ${enable_nvme_wwid+y}
+then :
+  enableval=$enable_nvme_wwid; NVME_WWID=$enableval
+else case e in #(
+  e) if test "$with_libnvme" = "yes"
+then :
+  NVME_WWID="maybe"
+else case e in #(
+  e) NVME_WWID="no" ;;
+esac
+fi ;;
+esac
+fi
+
+
+# ATM NVME_WWID is the only user of libnvme, so skip checking for libnvme when disabled
+if test "$NVME_WWID" = "no"
+then :
+  with_libnvme="no"
+fi
+
+if test "$with_libnvme" = "yes"
+then :
+
+
+pkg_failed=no
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libnvme >= 1.4" >&5
+printf %s "checking for libnvme >= 1.4... " >&6; }
+
+if test -n "$LIBNVME_CFLAGS"; then
+    pkg_cv_LIBNVME_CFLAGS="$LIBNVME_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libnvme >= 1.4\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libnvme >= 1.4") 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LIBNVME_CFLAGS=`$PKG_CONFIG --cflags "libnvme >= 1.4" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$LIBNVME_LIBS"; then
+    pkg_cv_LIBNVME_LIBS="$LIBNVME_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libnvme >= 1.4\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libnvme >= 1.4") 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LIBNVME_LIBS=`$PKG_CONFIG --libs "libnvme >= 1.4" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+                LIBNVME_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libnvme >= 1.4" 2>&1`
+        else
+                LIBNVME_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libnvme >= 1.4" 2>&1`
+        fi
+        # Put the nasty error message in config.log where it belongs
+        echo "$LIBNVME_PKG_ERRORS" >&5
+
+        if test "$NVME_WWID" = "yes"
+then :
+  NVME_WWID="error"
+fi
+elif test $pkg_failed = untried; then
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+        if test "$NVME_WWID" = "yes"
+then :
+  NVME_WWID="error"
+fi
+else
+        LIBNVME_CFLAGS=$pkg_cv_LIBNVME_CFLAGS
+        LIBNVME_LIBS=$pkg_cv_LIBNVME_LIBS
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+
+		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for NVME_NIDT_CSI in libnvme.h" >&5
+printf %s "checking for NVME_NIDT_CSI in libnvme.h... " >&6; }
+if test ${ac_cv_have_libnvme_csi+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <libnvme.h>
+const int a = NVME_NIDT_CSI;
+
+int
+main (void)
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+  ac_cv_have_libnvme_csi="yes"
+else case e in #(
+  e) ac_cv_have_libnvme_csi="no" ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext ;;
+esac
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_have_libnvme_csi" >&5
+printf "%s\n" "$ac_cv_have_libnvme_csi" >&6; }
+
+		if test "$NVME_WWID" != "no"
+then :
+
+		      if test $ac_cv_have_libnvme_csi = yes
+then :
+  NVME_WWID="yes"
+
+printf "%s\n" "#define NVME_SUPPORT 1" >>confdefs.h
+
+else case e in #(
+  e) NVME_WWID="error" ;;
+esac
+fi
+fi
+
+fi
+
+else case e in #(
+  e) if test "$NVME_WWID" = "yes"
+then :
+  NVME_WWID="error"
+fi ;;
+esac
+fi
+
+if test "$NVME_WWID" = "error"
+then :
+  as_fn_error $? "--enable-nvme-wwid requires libnvme library >= 1.1. (--with-libnvme=$with_libnvme)" "$LINENO" 5
+fi
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to use libnvme for alternate WWIDs" >&5
+printf %s "checking whether to use libnvme for alternate WWIDs... " >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $NVME_WWID" >&5
+printf "%s\n" "$NVME_WWID" >&6; }
 
 ################################################################################
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to enable synchronization with udev processing" >&5
