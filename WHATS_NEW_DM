@@ -1,5 +1,6 @@
 Version 1.02.204 - 
 ===================
+  Create /dev/disk/by-diskseq/<DISKSEQ> symlink for public DM devices.
 
 Version 1.02.203 - 09th December 2024
 =====================================
