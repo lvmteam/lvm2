@@ -1,3 +1,6 @@
+Version 2.03.30 - 
+==================
+
 Version 2.03.29 - 09th December 2024
 ====================================
   Configure --enable/disable-sd-notify to control lvmlockd build with sd-notify.
