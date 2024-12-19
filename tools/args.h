@@ -1146,6 +1146,7 @@ arg(all_ARG, 'a', "all", 0, 0, 0,
     "These are components of normal LVs, such as mirrors,\n"
     "which are not independently accessible, e.g. not mountable.\n"
     "#vgs\n"
+    "#vgdisplay\n"
     "List all VGs. Equivalent to not specifying any VGs.\n"
     "#pvs\n"
     "#pvdisplay\n"
