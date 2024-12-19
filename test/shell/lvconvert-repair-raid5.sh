@@ -43,7 +43,7 @@ lvs -ao+devices $vg
 aux error_dev "$dev2"
 aux error_dev "$dev3"
 
-# deactivate immediatelly
+# deactivate immediately
 lvchange -an $vg
 
 aux enable_dev "$dev2"
