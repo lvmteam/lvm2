@@ -279,6 +279,7 @@ Use with --separator to align the output columns
 .HP
 \fB-a\fP|\fB--all\fP
 .br
+List all VGs. Equivalent to not specifying any VGs.
 .
 .HP
 \fB--binary\fP
