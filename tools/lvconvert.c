@@ -3154,6 +3154,13 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 
 	activate_pool = to_thinpool && is_active;
 
+	/* Before the conversion starts, make sure the volume is unused and can be deactivated
+	 * (as it needs to change target type) */
+	if (is_active && !to_thin && !deactivate_lv(cmd, lv)) {
+		log_error("Cannot convert logical volume %s.", display_lvname(lv));
+		return 0;
+	}
+
 	/* Wipe metadata_lv by default, but allow skipping this for cache pools. */
 	zero_metadata = (to_cachepool) ? arg_int_value(cmd, zero_ARG, 1) : 1;
 
@@ -3405,13 +3412,6 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		if (!(pool_lv = _lvconvert_insert_thin_layer(lv)))
 			goto_bad;
 	} else {
-		/* Deactivate the data LV  (changing target type) */
-		if (!deactivate_lv(cmd, lv)) {
-			log_error("Aborting. Failed to deactivate logical volume %s.",
-				  display_lvname(lv));
-			goto bad;
-		}
-
 		if (data_vdo) {
 			if (lv_is_vdo(lv)) {
 				if ((seg = first_seg(lv)))
