@@ -34,11 +34,29 @@ which mkfs.ext4 || skip
 
 aux prepare_vg 4 6400
 
-# convert to thin-pool with VDO backend from existing VG/LV
+# Convert to thin-pool with VDO backend from existing VG/LV
 lvcreate -L5G --name $lv1 $vg
+
+# Keep volume in use for 6 seconds
+# - lvm retries for ~5sec to deactivate
+sleep 6 < "$DM_DEV_DIR/$vg/$lv1" &
+
+# Volume in use cannot be converted
+fail lvconvert -y --type thin-pool $vg/$lv1 --pooldatavdo y
+
+# Wait for sleep to not use LV anymore
+wait
+
+# No extra volume should appear in VG after failure
+test "$(get vg_field $vg lv_count)" -eq "1"
+
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 # Conversion caught present filesystem and should fail
 fail lvconvert -Wy --type thin-pool -c 256K --deduplication n --pooldatavdo y $vg/$lv1
+
+# No extra volume should appear in VG after failure
+test "$(get vg_field $vg lv_count)" -eq "1"
+
 # With --yes it should work over prompt
 lvconvert --yes -Wy --type thin-pool -c 256K --deduplication n --pooldatavdo y $vg/$lv1
 
