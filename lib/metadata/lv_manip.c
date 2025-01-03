@@ -6550,23 +6550,18 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 	return ret;
 }
 
-static int _fs_extend(struct cmd_context *cmd, struct logical_volume *lv,
-		      struct lvresize_params *lp)
+static int _fs_extend_check_fsinfo(struct cmd_context *cmd, struct logical_volume *lv, struct lvresize_params *lp,
+		                   struct fs_info *fsinfo, uint64_t *newsize_bytes_fs)
 {
-	struct fs_info fsinfo;
 	uint64_t newsize_bytes_lv;
-	uint64_t newsize_bytes_fs;
-	int ret = 0;
 
-	memset(&fsinfo, 0, sizeof(fsinfo));
+	memset(fsinfo, 0, sizeof(*fsinfo));
 
-	if (!fs_get_info(cmd, lv, &fsinfo, 1))
-		goto_out;
+	if (!fs_get_info(cmd, lv, fsinfo, 1))
+		return 0;
 
-	if (fsinfo.nofs) {
-		ret = 1;
-		goto_out;
-	}
+	if (fsinfo->nofs)
+		return 1;
 
 	/*
 	 * Note: here in the case of extend, newsize_bytes_lv/newsize_bytes_fs 
@@ -6577,40 +6572,43 @@ static int _fs_extend(struct cmd_context *cmd, struct logical_volume *lv,
 
 	/* extent_size units is SECTOR_SIZE (512) */
 	newsize_bytes_lv = (uint64_t) lp->extents * lv->vg->extent_size * SECTOR_SIZE;
-	newsize_bytes_fs = newsize_bytes_lv;
-	if (fsinfo.needs_crypt) {
-		newsize_bytes_fs -= fsinfo.crypt_offset_bytes;
+	*newsize_bytes_fs = newsize_bytes_lv;
+	if (fsinfo->needs_crypt) {
+		*newsize_bytes_fs -= fsinfo->crypt_offset_bytes;
 		log_print_unless_silent("File system size %llub is adjusted for crypt data offset %ub.",
-					(unsigned long long)newsize_bytes_fs, fsinfo.crypt_offset_bytes);
+					(unsigned long long)*newsize_bytes_fs, fsinfo->crypt_offset_bytes);
 	}
 
 	/*
 	 * Decide if fs should be extended based on the --fs option,
 	 * the fs type and the mount state.
 	 */
-	if (!_fs_extend_allow(cmd, lv, lp, &fsinfo))
-		goto_out;
+	if (!_fs_extend_allow(cmd, lv, lp, fsinfo))
+		return 0;
 
+	return 1;
+}
+
+static int _fs_extend(struct cmd_context *cmd, struct logical_volume *lv,
+		      struct lvresize_params *lp, struct fs_info *fsinfo, uint64_t newsize_bytes_fs)
+{
 	/*
 	 * fs extend is not needed
 	 */
-	if (!fsinfo.needs_extend) {
-		ret = 1;
-		goto_out;
-	}
+	if (!fsinfo->needs_extend)
+		return 1;
 
 	if (test_mode()) {
-		if (fsinfo.needs_unmount)
+		if (fsinfo->needs_unmount)
 			log_print_unless_silent("Skip unmount in test mode.");
-		if (fsinfo.needs_fsck)
+		if (fsinfo->needs_fsck)
 			log_print_unless_silent("Skip fsck in test mode.");
-		if (fsinfo.needs_mount)
+		if (fsinfo->needs_mount)
 			log_print_unless_silent("Skip mount in test mode.");
-		if (fsinfo.needs_crypt)
+		if (fsinfo->needs_crypt)
 			log_print_unless_silent("Skip cryptsetup in test mode.");
 		log_print_unless_silent("Skip fs extend in test mode.");
-		ret = 1;
-		goto out;
+		return 1;
 	}
 
 	/*
@@ -6621,12 +6619,7 @@ static int _fs_extend(struct cmd_context *cmd, struct logical_volume *lv,
 	 */
 	unlock_vg(cmd, lv->vg, lv->vg->name);
 
-	if (!fs_extend_script(cmd, lv, &fsinfo, newsize_bytes_fs, lp->fsmode))
-		goto_out;
-
-	ret = 1;
- out:
-	return ret;
+	return fs_extend_script(cmd, lv, fsinfo, newsize_bytes_fs, lp->fsmode);
 }
 
 int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
@@ -6640,6 +6633,8 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	struct logical_volume *lv_meta = NULL;
 	struct logical_volume *lv_main_layer = NULL;
 	struct logical_volume *lv_meta_layer = NULL;
+	struct fs_info fsinfo;
+	uint64_t newsize_bytes_fs;
 	int main_size_matches = 0;
 	int meta_size_matches = 0;
 	int is_extend = (lp->resize == LV_EXTEND);
@@ -7100,6 +7095,12 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (!lv_main)
 		goto end_main;
+
+	if (is_extend && lp->fsopt[0] && strcmp(lp->fsopt, "resize_fsadm")) {
+		if (!_fs_extend_check_fsinfo(cmd, lv_top, lp, &fsinfo, &newsize_bytes_fs))
+			goto_out;
+	}
+
 	if (!_lv_resize_volume(lv_main, lp, lp->pvh))
 		goto_out;
 	if (!lp->size_changed) {
@@ -7145,7 +7146,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 			}
 		} else {
 			/* New approach to fs handling using fs info. */
-			if (!_fs_extend(cmd, lv_top, lp)) {
+			if (!_fs_extend(cmd, lv_top, lp, &fsinfo, newsize_bytes_fs)) {
 				log_error("File system extend error.");
 				lp->extend_fs_error = 1;
 				goto out;
