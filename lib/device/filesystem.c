@@ -375,8 +375,7 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 
 #define FS_CMD_MAX_ARGS 16
 
-int crypt_resize_script(struct cmd_context *cmd, struct logical_volume *lv, struct fs_info *fsi,
-			uint64_t newsize_bytes_fs)
+int crypt_resize_script(struct cmd_context *cmd, struct logical_volume *lv, struct fs_info *fsi)
 {
 	char crypt_path[PATH_MAX];
 	char newsize_str[16] = { 0 };
@@ -384,7 +383,7 @@ int crypt_resize_script(struct cmd_context *cmd, struct logical_volume *lv, stru
 	int args = 0;
 	int status;
 
-	if (dm_snprintf(newsize_str, sizeof(newsize_str), "%llu", (unsigned long long)newsize_bytes_fs) < 0)
+	if (dm_snprintf(newsize_str, sizeof(newsize_str), "%llu", (unsigned long long)fsi->new_size_bytes) < 0)
 		return_0;
 
 	if (dm_snprintf(crypt_path, sizeof(crypt_path), "/dev/dm-%u", MINOR(fsi->crypt_devt)) < 0)
@@ -420,12 +419,11 @@ int crypt_resize_script(struct cmd_context *cmd, struct logical_volume *lv, stru
  * if needs_crypt
  * 	cryptsetup resize --size $newsize_sectors $cryptpath
  *
- * Note: when a crypt layer is included, newsize_bytes_fs is smaller
+ * Note: when a crypt layer is included, new_size_bytes is smaller
  * than newsize_bytes_lv because of the crypt header.
  */
 
-int fs_reduce_script(struct cmd_context *cmd, struct logical_volume *lv, struct fs_info *fsi,
-		     uint64_t newsize_bytes_fs, char *fsmode)
+int fs_reduce_script(struct cmd_context *cmd, struct logical_volume *lv, struct fs_info *fsi, char *fsmode)
 {
 	char lv_path[PATH_MAX];
 	char crypt_path[PATH_MAX];
@@ -435,7 +433,7 @@ int fs_reduce_script(struct cmd_context *cmd, struct logical_volume *lv, struct 
 	int args = 0;
 	int status;
 
-	if (dm_snprintf(newsize_str, sizeof(newsize_str), "%llu", (unsigned long long)newsize_bytes_fs) < 0)
+	if (dm_snprintf(newsize_str, sizeof(newsize_str), "%llu", (unsigned long long)fsi->new_size_bytes) < 0)
 		return_0;
 
 	if (dm_snprintf(lv_path, PATH_MAX, "%s%s/%s", lv->vg->cmd->dev_dir, lv->vg->name, lv->name) < 0)
@@ -448,7 +446,7 @@ int fs_reduce_script(struct cmd_context *cmd, struct logical_volume *lv, struct 
 	argv[++args] = "--lvpath";
 	argv[++args] = lv_path;
 
-	if (newsize_bytes_fs) {
+	if (fsi->new_size_bytes) {
 		argv[++args] = "--newsizebytes";
 		argv[++args] = newsize_str;
 	}
@@ -484,8 +482,8 @@ int fs_reduce_script(struct cmd_context *cmd, struct logical_volume *lv, struct 
 	devpath = fsi->needs_crypt ? crypt_path : (char *)display_lvname(lv);
 
 	log_print_unless_silent("Reducing file system %s to %s (%llu bytes) on %s...",
-				fsi->fstype, display_size(cmd, newsize_bytes_fs/512),
-				(unsigned long long)newsize_bytes_fs, devpath);
+				fsi->fstype, display_size(cmd, fsi->new_size_bytes/512),
+				(unsigned long long)fsi->new_size_bytes, devpath);
 
 	if (!exec_cmd(cmd, argv, &status, 1)) {
 		log_error("Failed to reduce file system with lvresize_fs_helper.");
@@ -513,12 +511,12 @@ int fs_reduce_script(struct cmd_context *cmd, struct logical_volume *lv, struct 
  * if $fstype == "xfs"
  * 	xfs_growfs $devpath
  *
- * Note: when a crypt layer is included, newsize_bytes_fs is smaller
+ * Note: when a crypt layer is included, new_size_bytes is smaller
  * than newsize_bytes_lv because of the crypt header.
  */
 
 int fs_extend_script(struct cmd_context *cmd, struct logical_volume *lv, struct fs_info *fsi,
-		     uint64_t newsize_bytes_fs, char *fsmode)
+		     char *fsmode)
 {
 	char lv_path[PATH_MAX];
 	char crypt_path[PATH_MAX];
@@ -569,8 +567,8 @@ int fs_extend_script(struct cmd_context *cmd, struct logical_volume *lv, struct 
 	devpath = fsi->needs_crypt ? crypt_path : (char *)display_lvname(lv);
 
 	log_print_unless_silent("Extending file system %s to %s (%llu bytes) on %s...",
-				fsi->fstype, display_size(cmd, newsize_bytes_fs/512),
-				(unsigned long long)newsize_bytes_fs, devpath);
+				fsi->fstype, display_size(cmd, fsi->new_size_bytes/512),
+				(unsigned long long)fsi->new_size_bytes, devpath);
 
 	if (!exec_cmd(cmd, argv, &status, 1)) {
 		log_error("Failed to extend file system with lvresize_fs_helper.");

@@ -6046,7 +6046,7 @@ static int _lv_resize_check_used(struct logical_volume *lv)
  */
 static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 			    struct lvresize_params *lp, uint64_t newsize_bytes_lv,
-			    uint64_t newsize_bytes_fs, struct fs_info *fsi)
+			    struct fs_info *fsi)
 {
 	const char *fs_reduce_cmd = "";
 	const char *cmp_desc = "";
@@ -6062,10 +6062,10 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 	    !strcmp(fsi->fstype, "ext3") ||
 	    !strcmp(fsi->fstype, "ext4") ||
 	    !strcmp(fsi->fstype, "xfs")) {
-		log_debug("Found fs %s last_byte %llu newsize_bytes_fs %llu",
+		log_debug("Found fs %s last_byte %llu new_size_bytes %llu",
 			  fsi->fstype,
 			  (unsigned long long)fsi->fs_last_byte,
-			  (unsigned long long)newsize_bytes_fs);
+			  (unsigned long long)fsi->new_size_bytes);
 		if (!strncmp(fsi->fstype, "ext", 3)) {
 			is_ext_fstype = 1;
 			fs_reduce_cmd = " resize2fs";
@@ -6090,16 +6090,16 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
-	if ((equal = (fsi->fs_last_byte == newsize_bytes_fs)))
+	if ((equal = (fsi->fs_last_byte == fsi->new_size_bytes)))
 		cmp_desc = "equal to";
-	else if ((smaller = (fsi->fs_last_byte < newsize_bytes_fs)))
+	else if ((smaller = (fsi->fs_last_byte < fsi->new_size_bytes)))
 		cmp_desc = "smaller than";
-	else if ((larger = (fsi->fs_last_byte > newsize_bytes_fs)))
+	else if ((larger = (fsi->fs_last_byte > fsi->new_size_bytes)))
 		cmp_desc = "larger than";
 
 	log_print_unless_silent("File system size (%s) is %s the requested size (%s).",
 				display_size(cmd, fsi->fs_last_byte/512), cmp_desc,
-				display_size(cmd, newsize_bytes_fs/512));
+				display_size(cmd, fsi->new_size_bytes/512));
 
 	/*
 	 * FS reduce is not needed, it's not using the affected space.
@@ -6415,7 +6415,6 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 	struct fs_info fsinfo;
 	struct fs_info fsinfo2;
 	uint64_t newsize_bytes_lv;
-	uint64_t newsize_bytes_fs;
 	int ret = 0;
 
 	memset(&fsinfo, 0, sizeof(fsinfo));
@@ -6431,7 +6430,7 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 
 	/* extent_size units is SECTOR_SIZE (512) */
 	newsize_bytes_lv = (uint64_t) lp->extents * lv->vg->extent_size * SECTOR_SIZE;
-	newsize_bytes_fs = newsize_bytes_lv;
+	fsinfo.new_size_bytes = newsize_bytes_lv;
 
 	/*
 	 * If needs_crypt, then newsize_bytes passed to fs_reduce_script() and
@@ -6440,9 +6439,9 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 	 * 2MB for LUKS1 and 16MB for LUKS2.)
 	 */
 	if (fsinfo.needs_crypt) {
-		newsize_bytes_fs -= fsinfo.crypt_offset_bytes;
+		fsinfo.new_size_bytes -= fsinfo.crypt_offset_bytes;
 		log_print_unless_silent("File system size %llub is adjusted for crypt data offset %ub.",
-					(unsigned long long)newsize_bytes_fs, fsinfo.crypt_offset_bytes);
+					(unsigned long long)fsinfo.new_size_bytes, fsinfo.crypt_offset_bytes);
 	}
 
 	/*
@@ -6451,7 +6450,7 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 	 * returns 0 and lvreduce should fail.  If allowed, returns 1 and sets
 	 * fsinfo.needs_* for any steps that are required to reduce the LV.
 	 */
-	if (!_fs_reduce_allow(cmd, lv, lp, newsize_bytes_lv, newsize_bytes_fs, &fsinfo))
+	if (!_fs_reduce_allow(cmd, lv, lp, newsize_bytes_lv, &fsinfo))
 		goto_out;
 
 	/*
@@ -6461,7 +6460,7 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 	 */
 	if (!fsinfo.needs_reduce && fsinfo.needs_crypt) {
 		/* Check if the crypt device is already sufficiently reduced. */
-		if (fsinfo.crypt_dev_size_bytes <= newsize_bytes_fs) {
+		if (fsinfo.crypt_dev_size_bytes <= fsinfo.new_size_bytes) {
 			log_print_unless_silent("crypt device is already reduced to %llu bytes.",
 						(unsigned long long)fsinfo.crypt_dev_size_bytes);
 			ret = 1;
@@ -6476,7 +6475,7 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 			ret = 1;
 			goto_out;
 		}
-		ret = crypt_resize_script(cmd, lv, &fsinfo, newsize_bytes_fs);
+		ret = crypt_resize_script(cmd, lv, &fsinfo);
 		goto out;
 	}
 
@@ -6510,7 +6509,7 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 	 */
 	unlock_vg(cmd, lv->vg, lv->vg->name);
 
-	if (!fs_reduce_script(cmd, lv, &fsinfo, newsize_bytes_fs, lp->fsmode))
+	if (!fs_reduce_script(cmd, lv, &fsinfo, lp->fsmode))
 		goto_out;
 
 	if (!lock_vol(cmd, lv->vg->name, LCK_VG_WRITE, NULL)) {
@@ -6538,10 +6537,10 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!fs_get_info(cmd, lv, &fsinfo2, 0))
 		goto_out;
 
-	if (fsinfo.fs_last_byte && (fsinfo2.fs_last_byte > newsize_bytes_fs)) {
+	if (fsinfo.fs_last_byte && (fsinfo2.fs_last_byte > fsinfo.new_size_bytes)) {
 		log_error("File system last byte %llu is greater than new size %llu bytes.",
 			  (unsigned long long)fsinfo2.fs_last_byte,
-			  (unsigned long long)newsize_bytes_fs);
+			  (unsigned long long)fsinfo.new_size_bytes);
 		goto_out;
 	}
 
@@ -6550,8 +6549,8 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 	return ret;
 }
 
-static int _fs_extend_check_fsinfo(struct cmd_context *cmd, struct logical_volume *lv, struct lvresize_params *lp,
-		                   struct fs_info *fsinfo, uint64_t *newsize_bytes_fs)
+static int _fs_extend_check_fsinfo(struct cmd_context *cmd, struct logical_volume *lv,
+		                   struct lvresize_params *lp, struct fs_info *fsinfo)
 {
 	uint64_t newsize_bytes_lv;
 
@@ -6564,7 +6563,7 @@ static int _fs_extend_check_fsinfo(struct cmd_context *cmd, struct logical_volum
 		return 1;
 
 	/*
-	 * Note: here in the case of extend, newsize_bytes_lv/newsize_bytes_fs 
+	 * Note: here in the case of extend, newsize_bytes_lv/new_size_bytes
 	 * are only calculated and used for log messages.  The extend commands
 	 * do not use these values, they just extend to the new LV size that
 	 * is visible to them.
@@ -6572,11 +6571,11 @@ static int _fs_extend_check_fsinfo(struct cmd_context *cmd, struct logical_volum
 
 	/* extent_size units is SECTOR_SIZE (512) */
 	newsize_bytes_lv = (uint64_t) lp->extents * lv->vg->extent_size * SECTOR_SIZE;
-	*newsize_bytes_fs = newsize_bytes_lv;
+	fsinfo->new_size_bytes = newsize_bytes_lv;
 	if (fsinfo->needs_crypt) {
-		*newsize_bytes_fs -= fsinfo->crypt_offset_bytes;
+		fsinfo->new_size_bytes -= fsinfo->crypt_offset_bytes;
 		log_print_unless_silent("File system size %llub is adjusted for crypt data offset %ub.",
-					(unsigned long long)*newsize_bytes_fs, fsinfo->crypt_offset_bytes);
+					(unsigned long long)fsinfo->new_size_bytes, fsinfo->crypt_offset_bytes);
 	}
 
 	/*
@@ -6590,7 +6589,7 @@ static int _fs_extend_check_fsinfo(struct cmd_context *cmd, struct logical_volum
 }
 
 static int _fs_extend(struct cmd_context *cmd, struct logical_volume *lv,
-		      struct lvresize_params *lp, struct fs_info *fsinfo, uint64_t newsize_bytes_fs)
+		      struct lvresize_params *lp, struct fs_info *fsinfo)
 {
 	/*
 	 * fs extend is not needed
@@ -6619,7 +6618,7 @@ static int _fs_extend(struct cmd_context *cmd, struct logical_volume *lv,
 	 */
 	unlock_vg(cmd, lv->vg, lv->vg->name);
 
-	return fs_extend_script(cmd, lv, fsinfo, newsize_bytes_fs, lp->fsmode);
+	return fs_extend_script(cmd, lv, fsinfo, lp->fsmode);
 }
 
 int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
@@ -6634,7 +6633,6 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	struct logical_volume *lv_main_layer = NULL;
 	struct logical_volume *lv_meta_layer = NULL;
 	struct fs_info fsinfo;
-	uint64_t newsize_bytes_fs;
 	int main_size_matches = 0;
 	int meta_size_matches = 0;
 	int is_extend = (lp->resize == LV_EXTEND);
@@ -7097,7 +7095,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 		goto end_main;
 
 	if (is_extend && lp->fsopt[0] && strcmp(lp->fsopt, "resize_fsadm")) {
-		if (!_fs_extend_check_fsinfo(cmd, lv_top, lp, &fsinfo, &newsize_bytes_fs))
+		if (!_fs_extend_check_fsinfo(cmd, lv_top, lp, &fsinfo))
 			goto_out;
 	}
 
@@ -7146,7 +7144,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 			}
 		} else {
 			/* New approach to fs handling using fs info. */
-			if (!_fs_extend(cmd, lv_top, lp, &fsinfo, newsize_bytes_fs)) {
+			if (!_fs_extend(cmd, lv_top, lp, &fsinfo)) {
 				log_error("File system extend error.");
 				lp->extend_fs_error = 1;
 				goto out;

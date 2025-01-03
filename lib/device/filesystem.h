@@ -26,6 +26,7 @@ struct fs_info {
 	uint32_t crypt_offset_bytes; /* offset in bytes of crypt data on LV */
 	dev_t crypt_devt; /* dm-crypt device between the LV and FS */
 	uint64_t crypt_dev_size_bytes;
+	uint64_t new_size_bytes;
 
 	unsigned nofs:1;
 	unsigned unmounted:1;
@@ -42,12 +43,9 @@ struct fs_info {
 int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
                 struct fs_info *fsi, int include_mount);
 
-int fs_extend_script(struct cmd_context *cmd, struct logical_volume *lv, struct fs_info *fsi,
-		uint64_t newsize_bytes, char *fsmode);
-int fs_reduce_script(struct cmd_context *cmd, struct logical_volume *lv, struct fs_info *fsi,
-		uint64_t newsize_bytes, char *fsmode);
-int crypt_resize_script(struct cmd_context *cmd, struct logical_volume *lv, struct fs_info *fsi,
-		uint64_t newsize_bytes_fs);
+int fs_extend_script(struct cmd_context *cmd, struct logical_volume *lv, struct fs_info *fsi, char *fsmode);
+int fs_reduce_script(struct cmd_context *cmd, struct logical_volume *lv, struct fs_info *fsi, char *fsmode);
+int crypt_resize_script(struct cmd_context *cmd, struct logical_volume *lv, struct fs_info *fsi);
 
 int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *lv, char *lv_path, char *fstype);
 int lv_crypt_is_active(struct cmd_context *cmd, char *lv_path);
