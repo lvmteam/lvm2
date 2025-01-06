@@ -1,5 +1,6 @@
 Version 2.03.30 - 
 ==================
+  Do not extend an LV if FS resize unsupported and '--fs resize' used.
   lvconvert detects early volume in use when converting it to a pool.
 
 Version 2.03.29 - 09th December 2024
