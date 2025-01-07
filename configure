@@ -12753,12 +12753,20 @@ SD_NOTIFY_SUPPORT="no"
 if test "$with_systemd" = "yes"
 then :
   if test -n "$PKG_CONFIG" && \
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"systemd >= 218\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "systemd >= 218") 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  SYSTEMD_MIN_VERSION=218 SD_NOTIFY_SUPPORT="maybe"
+fi
+      if test -n "$PKG_CONFIG" && \
     { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"systemd >= 221\""; } >&5
   ($PKG_CONFIG --exists --print-errors "systemd >= 221") 2>&5
   ac_status=$?
   printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  SYSTEMD_MIN_VERSION=221 NOTIFYDBUS_SUPPORT="maybe" SD_NOTIFY_SUPPORT="maybe" SYSTEMD_JOURNAL_SUPPORT="maybe"
+  SYSTEMD_MIN_VERSION=221 NOTIFYDBUS_SUPPORT="maybe" SYSTEMD_JOURNAL_SUPPORT="maybe"
 fi
       if test -n "$PKG_CONFIG" && \
     { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"systemd >= 234\""; } >&5
@@ -13278,6 +13286,9 @@ fi
         if test "$NVME_WWID" = "yes"
 then :
   NVME_WWID="error"
+else case e in #(
+  e) NVME_WWID="no" ;;
+esac
 fi
 elif test $pkg_failed = untried; then
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
@@ -13285,6 +13296,9 @@ printf "%s\n" "no" >&6; }
         if test "$NVME_WWID" = "yes"
 then :
   NVME_WWID="error"
+else case e in #(
+  e) NVME_WWID="no" ;;
+esac
 fi
 else
         LIBNVME_CFLAGS=$pkg_cv_LIBNVME_CFLAGS
@@ -13657,7 +13671,11 @@ printf "%s\n" "$BUILD_LVMDBUSD" >&6; }
 # Check whether --enable-notify-dbus was given.
 if test ${enable_notify_dbus+y}
 then :
-  enableval=$enable_notify_dbus; NOTIFYDBUS_SUPPORT=$enableval
+  enableval=$enable_notify_dbus; if test "enableval" = "yes" && test "$NOTIFYDBUS_SUPPORT" = "no"
+then :
+  as_fn_error $? "--enable-notify-dbus requires systemd >= 221. (--with-systemd=$with_systemd)" "$LINENO" 5
+fi
+	       NOTIFYDBUS_SUPPORT=$enableval
 fi
 
 
@@ -13674,13 +13692,9 @@ fi
 
 if test "$NOTIFYDBUS_SUPPORT" = "yes"
 then :
-  if test "$SYSTEMD_MIN_VERSION" -lt 221
-then :
-  as_fn_error $? "--enable-notify-dbus requires systemd >= 221. (--with-systemd=$with_systemd)" "$LINENO" 5
-fi
 
 printf "%s\n" "#define NOTIFYDBUS_SUPPORT 1" >>confdefs.h
-
+]
 fi
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to build notifydbus" >&5
@@ -14109,7 +14123,21 @@ try:
     if python_implementation() == 'CPython' and sys.version[:3] == '2.7':
         can_use_sysconfig = 0
 except ImportError:
-    pass"
+    pass" # end of am_python_setup_sysconfig
+
+  # More repeated code, for figuring out the installation scheme to use.
+  am_python_setup_scheme="if hasattr(sysconfig, 'get_default_scheme'):
+      scheme = sysconfig.get_default_scheme()
+    else:
+      scheme = sysconfig._get_default_scheme()
+    if scheme == 'posix_local':
+      if '$am_py_prefix' == '/usr':
+        scheme = 'deb_system' # should only happen during Debian package builds
+      else:
+        # Debian's default scheme installs to /usr/local/ but we want to
+        # follow the prefix, as we always have.
+        # See bugs#54412, #64837, et al.
+        scheme = 'posix_prefix'" # end of am_python_setup_scheme
 
 
               { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $am_display_PYTHON script directory (pythondir)" >&5
@@ -14126,7 +14154,11 @@ else case e in #(
    am_cv_python_pythondir=`$PYTHON -c "
 $am_python_setup_sysconfig
 if can_use_sysconfig:
-  sitedir = sysconfig.get_path('purelib', vars={'base':'$am_py_prefix'})
+  try:
+    $am_python_setup_scheme
+    sitedir = sysconfig.get_path('purelib', scheme, vars={'base':'$am_py_prefix'})
+  except:
+    sitedir = sysconfig.get_path('purelib', vars={'base':'$am_py_prefix'})
 else:
   from distutils import sysconfig
   sitedir = sysconfig.get_python_lib(0, 0, prefix='$am_py_prefix')
@@ -14156,7 +14188,7 @@ printf "%s\n" "$am_cv_python_pythondir" >&6; }
           pkgpythondir=\${pythondir}/$PACKAGE
 
 
-          { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $am_display_PYTHON extension module directory (pyexecdir)" >&5
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $am_display_PYTHON extension module directory (pyexecdir)" >&5
 printf %s "checking for $am_display_PYTHON extension module directory (pyexecdir)... " >&6; }
 if test ${am_cv_python_pyexecdir+y}
 then :
@@ -14170,7 +14202,11 @@ else case e in #(
    am_cv_python_pyexecdir=`$PYTHON -c "
 $am_python_setup_sysconfig
 if can_use_sysconfig:
-  sitedir = sysconfig.get_path('platlib', vars={'platbase':'$am_py_exec_prefix'})
+  try:
+    $am_python_setup_scheme
+    sitedir = sysconfig.get_path('platlib', scheme, vars={'platbase':'$am_py_exec_prefix'})
+  except:
+    sitedir = sysconfig.get_path('platlib', vars={'platbase':'$am_py_exec_prefix'})
 else:
   from distutils import sysconfig
   sitedir = sysconfig.get_python_lib(1, 0, prefix='$am_py_exec_prefix')
