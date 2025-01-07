@@ -1181,7 +1181,7 @@ const int a = NVME_NIDT_CSI;
 		      AC_IF_YES(ac_cv_have_libnvme_csi, [NVME_WWID="yes"
 				AC_DEFINE(NVME_SUPPORT, 1, [Use libnvme for WWID.])],
 				[NVME_WWID="error"])])
-      ], [AS_IF([test "$NVME_WWID" = "yes"], [NVME_WWID="error"])])
+      ], [AS_IF([test "$NVME_WWID" = "yes"], [NVME_WWID="error"], [NVME_WWID="no"])])
 ], [AS_IF([test "$NVME_WWID" = "yes"], [NVME_WWID="error"])])
 
 AS_IF([test "$NVME_WWID" = "error"],
