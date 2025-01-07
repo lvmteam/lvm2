@@ -123,7 +123,7 @@ static int _reopen_fd_to_null(int fd)
 		return 0;
 	}
 
-	if (close(fd)) {
+	if ((null_fd != fd) && close(fd)) {
 		log_sys_error("close", "");
 		goto out;
 	}
@@ -194,6 +194,8 @@ FILE *pipe_open(struct cmd_context *cmd, const char *const argv[],
 	/* Parent -> reader */
 	if (close(pipefd[1 /*write*/])) {
 		log_sys_error("close", "STDOUT");
+		if (close(pipefd[0 /*read*/]))
+			log_sys_debug("close", "pipe[0]");
 		return NULL;
 	}
 
