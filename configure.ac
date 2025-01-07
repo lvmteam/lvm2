@@ -1050,7 +1050,8 @@ SYSTEMD_JOURNAL_SUPPORT="no"
 APP_MACHINEID_SUPPORT="no"
 SD_NOTIFY_SUPPORT="no"
 AS_IF([test "$with_systemd" = "yes"],
-      PKG_CHECK_EXISTS(systemd >= 221, [SYSTEMD_MIN_VERSION=221 NOTIFYDBUS_SUPPORT="maybe" SD_NOTIFY_SUPPORT="maybe" SYSTEMD_JOURNAL_SUPPORT="maybe"])
+      PKG_CHECK_EXISTS(systemd >= 218, [SYSTEMD_MIN_VERSION=218 SD_NOTIFY_SUPPORT="maybe"])
+      PKG_CHECK_EXISTS(systemd >= 221, [SYSTEMD_MIN_VERSION=221 NOTIFYDBUS_SUPPORT="maybe" SYSTEMD_JOURNAL_SUPPORT="maybe"])
       PKG_CHECK_EXISTS(systemd >= 234, [SYSTEMD_MIN_VERSION=234 APP_MACHINEID_SUPPORT="maybe"]))
 
 ################################################################################
@@ -1282,15 +1283,15 @@ AC_MSG_RESULT([$BUILD_LVMDBUSD])
 dnl -- Build notifydbus
 AC_ARG_ENABLE(notify-dbus,
 	      [AS_HELP_STRING([--enable-notify-dbus], [enable LVM notification using dbus])],
-	      [NOTIFYDBUS_SUPPORT=$enableval])
+	      [AS_IF([test "enableval" = "yes" && test "$NOTIFYDBUS_SUPPORT" = "no"],
+		     [AC_MSG_ERROR([--enable-notify-dbus requires systemd >= 221. (--with-systemd=$with_systemd)])])
+	       NOTIFYDBUS_SUPPORT=$enableval])
 
 AS_IF([test "$NOTIFYDBUS_SUPPORT" = "maybe"],
       [AS_IF([test "$BUILD_LVMDBUSD" = "yes"],
       [NOTIFYDBUS_SUPPORT="yes"], [NOTIFYDBUS_SUPPORT="no"])])
 
 AS_IF([test "$NOTIFYDBUS_SUPPORT" = "yes"],
-      [AS_IF([test "$SYSTEMD_MIN_VERSION" -lt 221],
-	    [AC_MSG_ERROR([--enable-notify-dbus requires systemd >= 221. (--with-systemd=$with_systemd)])])
        AC_DEFINE([NOTIFYDBUS_SUPPORT], 1, [Define to 1 to include code that uses dbus notification.])])
 
 AC_MSG_CHECKING([whether to build notifydbus])
