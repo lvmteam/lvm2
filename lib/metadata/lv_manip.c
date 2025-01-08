@@ -5797,6 +5797,11 @@ static int _lv_resize_check_type(struct logical_volume *lv,
 			return 0;
 		}
 
+		if (lv_is_vdo(lv)) {
+			log_error("Resize of snapshot origin VDO volume is not supported.");
+			return 0;
+		}
+
 		if (lv_is_active(lv)) {
 			log_error("Snapshot origin volumes can be resized "
 				  "only while inactive: try lvchange -an.");
