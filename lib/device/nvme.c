@@ -165,7 +165,7 @@ void dev_read_nvme_wwids(struct device *dev)
 	unsigned char nguid[16] = {0};
 	unsigned char eui64[8] = {0};
 	unsigned char uuid[NVME_UUID_LEN] = {0};
-	uint32_t nsid;
+	uint32_t nsid = 0;
 	int fd, i, len;
 
 	dev->flags |= DEV_ADDED_NVME_WWIDS;
