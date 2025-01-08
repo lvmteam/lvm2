@@ -517,7 +517,7 @@ static void _restore_priority_if_possible(struct cmd_context *cmd)
 /* Stop memory getting swapped out */
 static void _lock_mem(struct cmd_context *cmd)
 {
-	if (!_size_stack || _size_malloc_tmp) {
+	if (!_size_stack || !_size_malloc_tmp) {
 		log_debug_mem("Skipping memory locking (reserved memory: "
 			      FMTsize_t "  stack: " FMTsize_t ").",
 			      _size_malloc_tmp, _size_stack);
@@ -564,7 +564,7 @@ static void _unlock_mem(struct cmd_context *cmd)
 {
 	size_t unlock_mstats = 0;
 
-	if (!_size_stack || _size_malloc_tmp) {
+	if (!_size_stack || !_size_malloc_tmp) {
 		log_debug_mem("Skipping memory unlocking (reserved memory: "
 			      FMTsize_t "  stack: " FMTsize_t ").",
 			      _size_malloc_tmp, _size_stack);
