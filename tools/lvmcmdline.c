@@ -21,6 +21,7 @@
 #include "lvm-version.h"
 #include "lib/locking/lvmlockd.h"
 #include "lib/datastruct/str_list.h"
+#include "lib/mm/memlock.h"
 #include "libdaemon/server/daemon-stray.h"
 
 /* coverity[unnecessary_header] */
@@ -2709,6 +2710,7 @@ static void _apply_current_settings(struct cmd_context *cmd)
 {
 	_apply_current_output_settings(cmd);
 
+	memlock_init(cmd);
 	init_test(cmd->current_settings.test);
 	init_mirror_in_sync(0);
 	init_dmeventd_monitor(DEFAULT_DMEVENTD_MONITOR);
