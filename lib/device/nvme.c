@@ -263,7 +263,9 @@ out:
 	free(ctrl_id);
 	free(ns);
 	free(data);
-	close(fd);
+
+	if (close(fd))
+		log_sys_debug("close", devpath);
 }
 #else
 void dev_read_nvme_wwids(struct device *dev)
