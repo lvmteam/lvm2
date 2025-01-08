@@ -1,5 +1,8 @@
 Version 2.03.30 - 
 ==================
+  Lvresize reports origin vdo volume cannot be resized.
+  Support setting reserved_memory|stack of --config cmdline.
+  Fix support for disabling memory locking (2.03.27).
   Do not extend an LV if FS resize unsupported and '--fs resize' used.
   lvconvert detects early volume in use when converting it to a pool.
 
