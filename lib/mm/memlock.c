@@ -127,6 +127,10 @@ static const char * const _blacklist_maps[] = {
 	"/libuuid.so.",		/* not using uuid during mlock (blkid) */
 	"/libz.so.",		/* not using during mlock (udev) */
 	"/libzstd.so.",		/* not using zstd during mlock (systemd) */
+	"/libjson-c.so.",	/* not using json during mlock (systemd) */
+	"/libkeyutils.so.",	/* not using keyutils during mlock (systemd) */
+	"/libcrypto.so.",	/* not using crypto during mlock (systemd) */
+	"/libnvme.so.",		/* not using nvme during mlock */
 	"/etc/selinux",		/* not using selinux during mlock */
 	/* "/libdevmapper-event.so" */
 };
