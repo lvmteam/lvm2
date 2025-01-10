@@ -4,7 +4,9 @@ Version 2.03.30 -
   Support setting reserved_memory|stack of --config cmdline.
   Fix support for disabling memory locking (2.03.27).
   Do not extend an LV if FS resize unsupported and '--fs resize' used.
+  Prevent leftover temporary device when converting in use volume to a pool.
   lvconvert detects early volume in use when converting it to a pool.
+  Handle NVMe with quirk changed WWID not matching WWID in devices file.
 
 Version 2.03.29 - 09th December 2024
 ====================================
