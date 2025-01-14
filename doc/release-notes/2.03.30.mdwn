@@ -6,11 +6,11 @@ Version 2.03.30
 
 Small bugfix release:
 
-* **NEW** Create /dev/disk/by-diskseq/<DISKSEQ> symlink for public DM devices.
+* **NEW** Create `/dev/disk/by-diskseq/<DISKSEQ>` symlink for public DM devices.
 * Lvresize reports origin vdo volume cannot be resized.
-* Support setting reserved_memory|stack using --config on cmdline.
+* Support setting `reserved_memory|stack` using `--config` on cmdline.
 * Fix support for disabling memory locking (2.03.27).
-* Do not extend an LV if FS resize unsupported and '--fs resize' used.
+* Do not extend an LV if FS resize unsupported and `--fs resize` used.
 * Prevent leftover temporary device when converting in use volume to a pool.
 * lvconvert detects volume in use early when converting it to a pool.
 * Handle NVMe with quirk changed WWID not matching WWID in devices file.
