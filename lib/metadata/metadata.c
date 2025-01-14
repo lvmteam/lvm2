@@ -2934,7 +2934,6 @@ int vg_write(struct volume_group *vg)
 	struct dm_list *mdah;
 	struct pv_list *pvl, *pvl_safe, *new_pvl;
 	struct metadata_area *mda;
-	struct lv_list *lvl;
 	struct device *mda_dev;
 	int revert = 0, wrote = 0;
 
@@ -2942,20 +2941,6 @@ int vg_write(struct volume_group *vg)
 	memcpy(vgid, &vg->id.uuid, ID_LEN);
 
 	log_debug("Writing metadata for VG %s.", vg->name);
-
-	if (vg_is_shared(vg)) {
-		const char *last_args = NULL;
-		dm_list_iterate_items(lvl, &vg->lvs) {
-			if (lvl->lv->lock_args && !strcmp(lvl->lv->lock_args, "pending")) {
-				if (!lockd_init_lv_args(vg->cmd, vg, lvl->lv, vg->lock_type, last_args, &lvl->lv->lock_args)) {
-					log_error("Cannot allocate lock for new LV.");
-					return 0;
-				}
-				last_args = lvl->lv->lock_args;
-				lvl->lv->new_lock_args = 1;
-			}
-		}
-	}
 
 	if (!_handle_historical_lvs(vg)) {
 		log_error("Failed to handle historical LVs in VG %s.", vg->name);
@@ -3197,14 +3182,6 @@ int vg_commit(struct volume_group *vg)
 void vg_revert(struct volume_group *vg)
 {
 	struct metadata_area *mda;
-	struct lv_list *lvl;
-
-	dm_list_iterate_items(lvl, &vg->lvs) {
-		if (lvl->lv->new_lock_args) {
-			lockd_free_lv(vg->cmd, vg, lvl->lv->name, &lvl->lv->lvid.id[1], lvl->lv->lock_args);
-			lvl->lv->new_lock_args = 0;
-		}
-	}
 
 	_vg_wipe_cached_precommitted(vg); /* VG is no longer needed */
 

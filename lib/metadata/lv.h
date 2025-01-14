@@ -65,6 +65,8 @@ struct logical_volume {
 	uint64_t timestamp;
 	unsigned new_lock_args:1;
 	unsigned to_remove:1; /* set when LV is known to be removed */
+	unsigned lockd_thin_pool_locked:1; /* set after locking thin pool in lvmlockd */
+	unsigned lockd_thin_pool_unlocked:1; /* set after unlocking thin pool in lvmlockd */
 	const char *hostname;
 	const char *lock_args;
 };

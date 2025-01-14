@@ -1803,13 +1803,6 @@ static int _lvcreate_single(struct cmd_context *cmd, const char *vg_name,
 			    lp->pool_name ? : "with generated name", lp->vg_name, lp->segtype->name);
 	}
 
-	if (vg->lock_type && !strcmp(vg->lock_type, "sanlock")) {
-		if (!handle_sanlock_lv(cmd, vg)) {
-			log_error("No space for sanlock lock, extend the internal lvmlock LV.");
-			goto out;
-		}
-	}
-
 	if (seg_is_thin_volume(lp))
 		log_verbose("Making thin LV %s in pool %s in VG %s%s%s using segtype %s.",
 			    lp->lv_name ? : "with generated name",
@@ -1817,14 +1810,8 @@ static int _lvcreate_single(struct cmd_context *cmd, const char *vg_name,
 			    lp->snapshot ? " as snapshot of " : "",
 			    lp->snapshot ? lp->origin_name : "", lp->segtype->name);
 
-	if (vg_is_shared(vg)) {
-		if (cmd->command->command_enum == lvcreate_thin_vol_with_thinpool_or_sparse_snapshot_CMD) {
-			log_error("Use lvconvert to create thin pools and cache pools in a shared VG.");
-			goto out;
-		}
-
-		lp->needs_lockd_init = 1;
-	}
+	if (!lockd_lvcreate_prepare(cmd, vg, lp))
+		goto_out;
 
 	if (!(lv = lv_create_single(vg, lp)))
 		goto_out;
@@ -1839,6 +1826,8 @@ out:
 		if (!lvremove_single(cmd, vg->pool_metadata_spare_lv, NULL))
 			log_error("Removal of created spare volume failed. "
 				  "Manual intervention required.");
+
+	lockd_lvcreate_done(cmd, vg, lp);
 
 	return ret;
 }

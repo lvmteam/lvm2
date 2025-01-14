@@ -1018,8 +1018,7 @@ struct lvcreate_params {
 	const char *lv_name; /* all */
 	const char *origin_name; /* snap */
 	const char *pool_name;   /* thin */
-
-	const char *lock_args;
+	const char *lockd_name;
 
 	uint32_t stripes; /* striped/RAID */
 	uint32_t stripe_size; /* striped/RAID */

@@ -1273,17 +1273,27 @@ static int _vgchange_locktype(struct cmd_context *cmd, struct volume_group *vg, 
 		 * then sets lock_type, sets lock_args, and clears system_id.
 		 *
 		 * Stage 2:
-		 * We get here, and can now set LV lock_args.  This uses
-		 * the standard code path for allocating LV locks in
-		 * vg_write() by setting LV lock_args to "pending",
-		 * which tells vg_write() to call lockd_init_lv()
-		 * and sets the lv->lock_args value before writing the VG.
+		 * We get here, and can now set LV lock_args.
+		 *
+		 * lockd_init_lv() uses "lp" settings for the new LV to check if
+		 * it should have a lock, and if so calls lockd_init_lv_args to
+		 * do the allocation.
+		 * Here there is no "lp", so here we use lockd_lv_uses_lock() to
+		 * check if the LV should have a lock, if if so call lockd_init_lv_args
+		 * to do the allocation.
 		 */
 		if (!strcmp(lock_type, "sanlock")) {
+			const char *last_args = NULL;
+
 			dm_list_iterate_items(lvl, &vg->lvs) {
 				lv = lvl->lv;
-				if (lockd_lv_uses_lock(lv))
-					lv->lock_args = "pending";
+
+				if (lockd_lv_uses_lock(lv) &&
+				    !lockd_init_lv_args(cmd, vg, lv, vg->lock_type, last_args, &lv->lock_args)) {
+					log_error("Failed to allocate LV lock on disk");
+					return 0;
+				}
+				last_args = lv->lock_args;
 			}
 
 			vg->skip_validate_lock_args = 0;

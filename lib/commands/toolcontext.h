@@ -163,6 +163,10 @@ struct cmd_context {
 	unsigned vg_read_print_access_error:1;	/* print access errors from vg_read */
 	unsigned allow_mixed_block_sizes:1;
 	unsigned force_access_clustered:1;
+	unsigned lockd_creating_thin_pool:1;
+	unsigned lockd_creating_thin_volume:1;
+	unsigned lockd_created_thin_pool:1;
+	unsigned lockd_created_thin_volume:1;
 	unsigned lockd_gl_disable:1;
 	unsigned lockd_vg_disable:1;
 	unsigned lockd_lv_disable:1;

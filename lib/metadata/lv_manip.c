@@ -7647,8 +7647,13 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 				lockd_pool = first_seg(lv)->pool_lv;
 			else if (lv_is_thin_pool(lv))
 				lockd_pool = lv;
-			if (!lockd_lv(cmd, lock_lv, "ex", LDLV_PERSISTENT))
-				return_0;
+			if (!lockd_pool->lockd_thin_pool_locked) {
+				if (!lockd_lv(cmd, lock_lv, "ex", LDLV_PERSISTENT))
+					return_0;
+				lockd_pool->lockd_thin_pool_locked = 1;
+			} else {
+				log_debug("lockd_thin_pool_locked skip repeat lockd_lv ex");
+			}
 		} else {
 			if (!lockd_lv(cmd, lock_lv, "ex", LDLV_PERSISTENT))
 				return_0;
@@ -7803,8 +7808,14 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (lockd_pool && !thin_pool_is_active(lockd_pool)) {
-		if (!lockd_lv_name(cmd, vg, lockd_pool->name, &lockd_pool->lvid.id[1], lockd_pool->lock_args, "un", LDLV_PERSISTENT))
-			log_warn("WARNING: Failed to unlock %s.", display_lvname(lockd_pool));
+		if (lockd_pool->lockd_thin_pool_locked && !lockd_pool->lockd_thin_pool_unlocked) {
+			if (!lockd_lv_name(cmd, vg, lockd_pool->name, &lockd_pool->lvid.id[1], lockd_pool->lock_args, "un", LDLV_PERSISTENT))
+				log_warn("WARNING: Failed to unlock %s.", display_lvname(lockd_pool));
+			else
+				lockd_pool->lockd_thin_pool_unlocked = 1;
+		} else {
+			log_debug("lockd_thin_pool_unlocked skip repeat lockd_lv un");
+		}
 	} else {
 		if (!lockd_lv(cmd, lv, "un", LDLV_PERSISTENT))
 			log_warn("WARNING: Failed to unlock %s.", display_lvname(lv));
@@ -9158,6 +9169,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	int thin_pool_was_active = -1; /* not scanned, inactive, active */
 	int historical;
 	uint64_t transaction_id;
+	uint32_t flags = 0;
+	int creating_thin_pool = 0;
+	int creating_thin_volume = 0;
 	int ret;
 
 	if (new_lv_name && lv_name_is_used_in_vg(vg, new_lv_name, &historical)) {
@@ -9239,6 +9253,21 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		return NULL;
 	}
 
+	/*
+	 * TODO: do this for each type, and use these
+	 * creating_foo variables in the code below in
+	 * place of the seg_is_ calls.
+	 */
+	if ((creating_thin_pool = seg_is_thin_pool(lp)))
+		log_debug("Creating LV: thin pool");
+	if ((creating_thin_volume = seg_is_thin_volume(lp)))
+		log_debug("Creating LV: thin volume");
+
+	if (vg_is_shared(vg) && (creating_thin_pool || creating_thin_volume)) {
+		if (!lockd_lvcreate_thin_setup(cmd, vg, lp, creating_thin_pool, creating_thin_volume))
+			return NULL;
+	}
+
 	if (seg_is_pool(lp))
 		status |= LVM_WRITE; /* Pool is always writable */
 	else if (seg_is_cache(lp) || seg_is_thin_volume(lp) || seg_is_vdo(lp)) {
@@ -9288,11 +9317,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 					return_NULL;
 				/* New pool is now inactive */
 			} else {
-				if (!lockd_lv(cmd, pool_lv, "ex", LDLV_PERSISTENT)) {
-					log_error("Failed to lock thin pool.");
-					return NULL;
-				}
-
 				if (!activate_lv(cmd, pool_lv)) {
 					log_error("Aborting. Failed to locally activate thin pool %s.",
 						  display_lvname(pool_lv));
@@ -9457,14 +9481,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				   lv->major, lv->minor);
 	}
 
-	/*
-	 * The specific LV may not use a lock.  lockd_init_lv() sets
-	 * lv->lock_args to NULL if this LV does not use its own lock.
-	 */
-
-	if (!lockd_init_lv(vg->cmd, vg, lv, lp))
-		return_NULL;
-
 	dm_list_splice(&lv->tags, &lp->tags);
 
 	if (!lv_extend(lv, create_segtype,
@@ -9574,15 +9590,46 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	if (lv_activation_skip(lv, lp->activate, lp->activation_skip & ACTIVATION_SKIP_IGNORE))
 		lp->activate = CHANGE_AN;
 
-	/* store vg on disk(s) */
-	if (!vg_write(vg) || !vg_commit(vg))
-		/* Pool created metadata LV, but better avoid recover when vg_write/commit fails */
+	/*
+	 * Allocate a lock for the LV, if it needs one.
+	 * (With sanlock this is an on disk allocation.)
+	 */
+	if (!lockd_init_lv(cmd, vg, lv, lp))
 		return_NULL;
+
+	/* store vg on disk(s) */
+	if (!vg_write(vg) || !vg_commit(vg)) {
+		/* Pool created metadata LV, but better avoid recover when vg_write/commit fails */
+
+		/* Reverse the lockd_init_lv. */
+		if (lv->lock_args)
+			lockd_free_lv(cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
+
+		return_NULL;
+	}
 
 	if (test_mode()) {
 		log_verbose("Test mode: Skipping activation, zeroing and signature wiping.");
 		goto out;
 	}
+
+	/*
+	 * The lock for the new thin pool was created during vg_write,
+	 * so we can now acquire it.
+	 */
+	if (cmd->lockd_creating_thin_pool) {
+		log_debug("lockd_creating_thin_pool lockd_lv ex for new thin pool.");
+		if (!lockd_lv(cmd, lv, "ex", LDLV_PERSISTENT | LDLV_CREATING_THIN_POOL)) {
+			log_error("Failed to lock thin pool after creating it.");
+			goto out;
+		}
+		cmd->lockd_created_thin_pool = 1;
+		/* Save pool info to use in lockd_lvcreate_done() */
+		if (!(lp->lockd_name = dm_pool_strdup(cmd->mem, lv->name)))
+			stack;
+	}
+	if (cmd->lockd_creating_thin_volume)
+		cmd->lockd_created_thin_volume = 1;
 
 	if (seg_is_raid(lp) && lp->raidintegrity) {
 		log_debug("Adding integrity to new LV");
@@ -9674,10 +9721,13 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				/* Avoid multiple thin-pool activations in this case */
 				if (thin_pool_was_active < 0)
 					thin_pool_was_active = 0;
-				if (!lockd_lv(cmd, pool_lv, "ex", LDLV_PERSISTENT)) {
-					log_error("Failed to lock thin pool.");
-					return NULL;
+
+				if (vg_is_shared(vg) && !pool_lv->lockd_thin_pool_locked) {
+					/* sanity check, shouldn't happen */
+					log_error(INTERNAL_ERROR "thin pool not locked");
+					goto revert_new_lv;
 				}
+
 				if (!activate_lv(cmd, pool_lv)) {
 					log_error("Failed to activate thin pool %s.",
 						  display_lvname(pool_lv));
@@ -9705,10 +9755,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		if (!thin_pool_was_active) {
 			if (!deactivate_lv(cmd, pool_lv)) {
 				log_error("Failed to deactivate thin pool %s.", display_lvname(pool_lv));
-				return NULL;
-			}
-			if (!lockd_lv(cmd, pool_lv, "un", LDLV_PERSISTENT)) {
-				log_error("Failed to unlock thin pool.");
 				return NULL;
 			}
 		}
@@ -9883,6 +9929,7 @@ out:
 	return lv;
 
 deactivate_and_revert_new_lv:
+	log_debug("deactivating to revert new lv");
 	if (!sync_local_dev_names(lv->vg->cmd))
 		log_error("Failed to sync local devices before reverting %s.",
 			  display_lvname(lv));
@@ -9893,7 +9940,13 @@ deactivate_and_revert_new_lv:
 	}
 
 revert_new_lv:
-	if (!lockd_lv(cmd, lv, "un", LDLV_PERSISTENT))
+	log_debug("reverting new lv");
+	flags = LDLV_PERSISTENT;
+	if (cmd->lockd_creating_thin_pool)
+		flags |= LDLV_CREATING_THIN_POOL;
+	else if (cmd->lockd_creating_thin_volume)
+		flags |= LDLV_CREATING_THIN_VOLUME;
+	if (!lockd_lv(cmd, lv, "un", flags))
 		log_warn("WARNING: Failed to unlock %s.", display_lvname(lv));
 	lockd_free_lv(vg->cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
 
@@ -9921,8 +9974,6 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 			if (!(lp->segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_THIN_POOL)))
 				return_NULL;
 
-			/* We want a lockd lock for the new thin pool, but not the thin lv. */
-			lp->needs_lockd_init = 1;
 			/* When creating thin volume with new thin-pool avoid activating
 			 * new empty pool so it's not necessary to reactivate is as used thin-pool */
 			tmp = lp->activate;
@@ -9930,6 +9981,8 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name)))
 				return_NULL;
 			lp->activate = tmp; /* restore activation */
+
+			/* The thin pool had a lock created, but thin volumes do not. */
 			lp->needs_lockd_init = 0;
 
 		} else if (seg_is_cache(lp)) {
@@ -9960,13 +10013,11 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 			if (!(lp->segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_VDO_POOL)))
 				return_NULL;
 
-			/* We want a lockd lock for the new vdo pool, but not the vdo lv. */
-			lp->needs_lockd_init = 1;
-
 			/* Use vpool names for vdo-pool */
 			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name ? : "vpool%d")))
 				return_NULL;
 
+			/* The vdo pool had a lock created, but vdo volumes do not. */
 			lp->needs_lockd_init = 0;
 		} else {
 			log_error(INTERNAL_ERROR "Creation of pool for unsupported segment type %s.",
