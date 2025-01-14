@@ -605,7 +605,7 @@ refreshed to use the device again (which will usually require
 partial synchronization).  This is also indicated by the letter "r" (refresh
 needed) in the 9th position of the lvs attr field.  See
 \fBRefreshing an LV\fP.  This could also indicate a problem with the
-device, in which case it should be be replaced, see
+device, in which case it should be replaced, see
 \fBReplacing Devices\fP.
 .
 .TP

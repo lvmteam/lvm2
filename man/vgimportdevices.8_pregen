@@ -64,7 +64,7 @@ vgimportdevices \(em Add devices for a VG to the devices file.
 .SH DESCRIPTION
 .
 vgimportdevices adds PVs from a VG to the devices file.  This is similar
-to using using lvmdevices --adddev to add each PV to the devices file
+to using lvmdevices --adddev to add each PV to the devices file
 individually.  vgimportdevices will also update the VG metadata to include
 the device IDs of each PV.  vgimportdevices will create a new devices file
 if none exists.

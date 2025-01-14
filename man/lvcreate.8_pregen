@@ -1409,7 +1409,7 @@ be extended with lvextend (shrinking is also allowed with lvreduce.)
 A small amount of the COW snapshot LV size is used to track COW block
 locations, so the full size is not available for COW data blocks.
 Use lvs to check how much space is used, and see --monitor to
-to automatically extend the size to avoid running out of space.
+automatically extend the size to avoid running out of space.
 .
 .HP
 \fB-i\fP|\fB--stripes\fP \fINumber\fP

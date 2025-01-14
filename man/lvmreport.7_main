@@ -585,7 +585,7 @@ Return code associated with current item.
 .RE
 .P
 You can also run \fBlvm --configreport log -o help\fP to
-to display complete list of fields that you may use for the \fBlog report\fP.
+display complete list of fields that you may use for the \fBlog report\fP.
 .
 .SS Selection
 .
@@ -1172,7 +1172,7 @@ properly.
   lvol0 | 4.00m |
 .fi
 .P
-Let's display one one more field in addition ("lv_tags" in this example)
+Let's display one more field in addition ("lv_tags" in this example)
 for the lvs report output.
 .P
 .nf
@@ -1391,7 +1391,7 @@ The example below contains a line from lvs -S help.
     ...
 .fi
 .P
-This line tells you you that the "lv_size" field is of "size" type. If you
+This line tells you that the "lv_size" field is of "size" type. If you
 look at the bottom of the help output, you can see section about
 "Selection operators" and its "Comparison operators".
 .P
