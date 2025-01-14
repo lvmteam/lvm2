@@ -1,5 +1,5 @@
-Version 2.03.30 - 
-==================
+Version 2.03.30 - 14th January 2025
+===================================
   Lvresize reports origin vdo volume cannot be resized.
   Support setting reserved_memory|stack of --config cmdline.
   Fix support for disabling memory locking (2.03.27).
