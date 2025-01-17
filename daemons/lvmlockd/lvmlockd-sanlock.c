@@ -846,6 +846,11 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char 
 			offset = align_size * LV_LOCK_BEGIN;
 	}
 
+	if (offset < (align_size * LV_LOCK_BEGIN)) {
+		log_error("S %s init_lv_san invalid offset %llu", ls_name, (unsigned long long)offset);
+		return -1;
+	}
+
 	strcpy_name_len(rd.rs.lockspace_name, ls_name, SANLK_NAME_LEN);
 	rd.rs.num_disks = 1;
 	memcpy(rd.rs.disks[0].path, disk_path, SANLK_PATH_LEN-1);
