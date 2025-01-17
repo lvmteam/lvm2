@@ -754,7 +754,7 @@ static const char *rt_str(int x)
 	case LD_RT_LV:
 		return "lv";
 	default:
-		return ".";
+		return "";
 	};
 }
 
@@ -2224,6 +2224,18 @@ static void res_process(struct lockspace *ls, struct resource *r,
 			break;
 		}
 	}
+
+	/* FIXME: free_lv currently requires finding an existing resource struct,
+	 * and this will prevent that.  If we free the resource struct when
+	 * unlocked, would we then need to create a new resource struct for
+	 * free_lv?  i.e. free and then immediately recreate?
+	 * Maybe do a combined unlock+free for LVs? */
+
+	/*
+	if ((r->type == LD_RT_LV) && (r->mode == LD_LK_UN) &&
+	     list_empty(&r->locks) && list_empty(&r->actions))
+		goto r_free;
+	*/
 
 	return;
 
@@ -4061,9 +4073,9 @@ static int client_send_result(struct client *cl, struct action *act)
 		if (act->lv_args[0])
 			lv_args = act->lv_args;
 
-		log_debug("send %s[%d] cl %u %s %s rv %d vg_args %s lv_args %s",
+		log_debug("send %s[%d][%u] %s%s%s result %d vg_args %s lv_args %s",
 			  cl->name[0] ? cl->name : "client", cl->pid, cl->id,
-			  op_str(act->op), rt_str(act->rt),
+			  op_str(act->op), act->rt ? "_" : "", rt_str(act->rt),
 			  act->result, vg_args ? vg_args : "", lv_args ? lv_args : "");
 
 		res = daemon_reply_simple("OK",
@@ -4077,9 +4089,9 @@ static int client_send_result(struct client *cl, struct action *act)
 
 	} else if (act->op == LD_OP_QUERY_LOCK) {
 
-		log_debug("send %s[%d] cl %u %s %s rv %d mode %d",
+		log_debug("send %s[%d][%u] %s%s%s result %d mode %d",
 			  cl->name[0] ? cl->name : "client", cl->pid, cl->id,
-			  op_str(act->op), rt_str(act->rt),
+			  op_str(act->op), act->rt ? "_" : "", rt_str(act->rt),
 			  act->result, act->mode);
 
 		res = daemon_reply_simple("OK",
@@ -4107,7 +4119,7 @@ static int client_send_result(struct client *cl, struct action *act)
 		else
 			act->result = -EINVAL;
 
-		log_debug("send %s[%d] cl %u dump result %d dump_len %d",
+		log_debug("send %s[%d][%u] dump result %d dump_len %d",
 			  cl->name[0] ? cl->name : "client", cl->pid, cl->id,
 			  act->result, dump_len);
 
@@ -4120,9 +4132,9 @@ static int client_send_result(struct client *cl, struct action *act)
 		 * A normal reply.
 		 */
 
-		log_debug("send %s[%d] cl %u %s %s rv %d %s %s",
+		log_debug("send %s[%d][%u] %s%s%s result %d %s %s",
 			  cl->name[0] ? cl->name : "client", cl->pid, cl->id,
-			  op_mode_str(act->op, act->mode), rt_str(act->rt),
+			  op_mode_str(act->op, act->mode), act->rt ? "_" : "", rt_str(act->rt),
 			  act->result, (act->result == -ENOLS) ? "ENOLS" : "", result_flags);
 
 		res = daemon_reply_simple("OK",
@@ -5054,9 +5066,16 @@ skip_pvs_path:
 	dm_config_destroy(req.cft);
 	buffer_destroy(&req.buffer);
 
-	log_debug("recv %s[%d] cl %u %s %s \"%s\" flags %x",
+	log_debug("recv %s[%d][%u] %s%s%s %s%s %s%s%s%s opts=%x",
 		  cl->name[0] ? cl->name : "client", cl->pid, cl->id,
-		  op_mode_str(act->op, act->mode), rt_str(act->rt), act->vg_name, opts);
+		  op_mode_str(act->op, act->mode), act->rt ? "_" : "", rt_str(act->rt),
+		  act->vg_name[0] ? "vg=" : "",
+		  act->vg_name,
+		  act->lv_name[0] || act->lv_uuid[0] ? "lv=" : "",
+		  act->lv_name[0] ? act->lv_name : "",
+		  act->lv_uuid[0] ? ":" : "",
+		  act->lv_uuid[0] ? act->lv_uuid : "",
+		  opts);
 
 	if (lm == LD_LM_DLM && !lm_support_dlm()) {
 		log_debug("dlm not supported");
