@@ -106,7 +106,7 @@ int dev_is_used_by_active_lv(struct cmd_context *cmd, struct device *dev, int *u
 		 * from this name, create path "/dev/dm-1" to run stat on.
 		 */
 		
-		if (dm_snprintf(dm_dev_path, sizeof(dm_dev_path), "%s/%s", cmd->dev_dir, holder_name) < 0)
+		if (dm_snprintf(dm_dev_path, sizeof(dm_dev_path), "%s%s", cmd->dev_dir, holder_name) < 0)
 			continue;
 
 		/*

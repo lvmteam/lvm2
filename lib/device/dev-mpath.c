@@ -487,7 +487,7 @@ static int _dev_is_mpath_component_sysfs(struct cmd_context *cmd, struct device 
 		 */
 		holder_name = de->d_name;
 
-		if (dm_snprintf(dm_dev_path, sizeof(dm_dev_path), "%s/%s", cmd->dev_dir, holder_name) < 0) {
+		if (dm_snprintf(dm_dev_path, sizeof(dm_dev_path), "%s%s", cmd->dev_dir, holder_name) < 0) {
 			log_warn("dm device path to check mpath is too long.");
 			continue;
 		}
