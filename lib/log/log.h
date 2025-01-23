@@ -50,7 +50,7 @@
 #define _LOG_STDERR        0x0080 /* force things to go to stderr, even if loglevel would make them go to stdout */
 #define _LOG_ONCE          0x0100 /* downgrade to NOTICE if this has been already logged */
 #define _LOG_BYPASS_REPORT 0x0200 /* do not log through report even if report available */
-#define log_level(x)  ((x) & 0x0f)			/* obtain message level */
+#define log_level(x)  ((x) & 0x07)			/* obtain message level */
 #define log_stderr(x)  ((x) & _LOG_STDERR)		/* obtain stderr bit */
 #define log_once(x)  ((x) & _LOG_ONCE)			/* obtain once bit */
 #define log_bypass_report(x)  ((x) & _LOG_BYPASS_REPORT)/* obtain bypass bit */
