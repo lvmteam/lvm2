@@ -329,7 +329,7 @@ struct command {
 static int _parse_line(struct dm_task *dmt, char *buffer, const char *file,
 		       int line)
 {
-	char ttype[LINE_SIZE], *ptr, *comment;
+	char ttype[LINE_SIZE + 1], *ptr, *comment;
 	unsigned long long start, size;
 	int n;
 

@@ -2384,7 +2384,7 @@ static char *_get_devname_from_devno(struct cmd_context *cmd, dev_t devno)
 	static const char _partitions[] = "/proc/partitions";
 	char path[PATH_MAX];
 	char devname[PATH_MAX] = { 0 };
-	char namebuf[NAME_LEN];
+	char namebuf[NAME_LEN + 1];
 	char line[1024];
 	unsigned major = MAJOR(devno);
 	unsigned minor = MINOR(devno);

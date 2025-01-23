@@ -401,7 +401,7 @@ static int _dump_all_text(struct cmd_context *cmd, struct settings *set, const c
 			  int mda_num, uint64_t mda_offset, uint64_t mda_size, char *buf)
 {
 	FILE *fp = NULL;
-	char line[MAX_LINE_CHECK];
+	char line[MAX_LINE_CHECK + 3];
 	char vgname[NAME_LEN+1];
 	char id_str[ID_STR_SIZE];
 	char id_first[ID_STR_SIZE];
