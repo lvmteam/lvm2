@@ -1000,7 +1000,7 @@ static int read_adopt_file(struct list_head *vg_lockd)
 			memset(vg_uuid, 0, sizeof(vg_uuid));
 			memset(mode, 0, sizeof(mode));
 
-			if (sscanf(adopt_line, "LV: %64s %64s %s %7s %u",
+			if (sscanf(adopt_line, "LV: %64s %64s %64s %7s %u",
 				   vg_uuid, r->name, r->lv_args, mode, &r->version) != 5) {
 				free_resource(r);
 				goto fail;

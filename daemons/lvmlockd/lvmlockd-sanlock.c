@@ -298,8 +298,8 @@ static int read_host_id_file(void)
 		*sep = '\0';
 		memset(key_str, 0, sizeof(key_str));
 		memset(val_str, 0, sizeof(val_str));
-		(void) sscanf(key, "%s", key_str);
-		(void) sscanf(val, "%s", val_str);
+		(void) sscanf(key, "%63s", key_str);
+		(void) sscanf(val, "%63s", val_str);
 
 		if (!strcmp(key_str, "host_id")) {
 			host_id = atoi(val_str);
