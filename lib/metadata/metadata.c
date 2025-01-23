@@ -4113,6 +4113,11 @@ struct metadata_area *fid_get_mda_indexed(struct format_instance *fid,
 	static char full_key[PATH_MAX];
 	struct metadata_area *mda = NULL;
 
+	if (!fid) {
+		log_error(INTERNAL_ERROR "FID is not defined!");
+		return NULL;
+	}
+
 	if (!fid->metadata_areas_index)
 		return_NULL;
 
