@@ -186,7 +186,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 			goto out;
 		}
 
-		lock_global(cmd, "un");
+		(void) lock_global(cmd, "un");
 
 		if (cmd->lockopt & LOCKOPT_NOWAIT) {
 			log_print_unless_silent("Starting locking.  VG is read-only until locks are ready.");

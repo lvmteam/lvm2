@@ -407,7 +407,7 @@ int lock_global(struct cmd_context *cmd, const char *mode)
 		return 0;
 
 	if (!lockd_global(cmd, mode)) {
-		lockf_global(cmd, "un");
+		(void) lockf_global(cmd, "un");
 		return 0;
 	}
 
