@@ -163,6 +163,7 @@ struct resource {
 	unsigned int sh_count;		/* number of sh locks on locks list */
 	uint32_t version;
 	uint32_t last_client_id;	/* last client_id to lock or unlock resource */
+	uint32_t dispose_client_id;	/* client_id disposing of resource struct */
 	unsigned int lm_init : 1;	/* lm_data is initialized */
 	unsigned int adopt : 1;		/* temp flag in remove_inactive_lvs */
 	unsigned int version_zero_valid : 1;
@@ -212,6 +213,7 @@ struct lockspace {
 
 	struct list_head actions;	/* new client actions */
 	struct list_head resources;	/* resource/lock state for gl/vg/lv */
+	struct list_head dispose;	/* resources to free */
 };
 
 /* val_blk version */

@@ -416,6 +416,7 @@ struct lockspace *alloc_lockspace(void)
 
 	INIT_LIST_HEAD(&ls->actions);
 	INIT_LIST_HEAD(&ls->resources);
+	INIT_LIST_HEAD(&ls->dispose);
 	pthread_mutex_init(&ls->mutex, NULL);
 	pthread_cond_init(&ls->cond, NULL);
 	return ls;
@@ -1876,6 +1877,7 @@ static void res_process(struct lockspace *ls, struct resource *r,
 {
 	struct action *act, *safe, *act_close;
 	struct lock *lk;
+	uint32_t unlock_by_client_id = 0;
 	int lm_retry;
 	int rv;
 
@@ -1909,6 +1911,9 @@ static void res_process(struct lockspace *ls, struct resource *r,
 			if (rv == -ENOENT && (act->flags & LD_AF_UNLOCK_CANCEL))
 				rv = res_cancel(ls, r, act);
 
+			if (!rv && r->mode == LD_LK_UN)
+				unlock_by_client_id = act->client_id;
+
 			/*
 			 * possible unlock results:
 			 * 0: unlock succeeded
@@ -1930,22 +1935,6 @@ static void res_process(struct lockspace *ls, struct resource *r,
 	list_for_each_entry(act_close, act_close_list, list) {
 		res_unlock(ls, r, act_close);
 		res_cancel(ls, r, act_close);
-	}
-
-	/*
-	 * handle freeing a lock for an lv that has been removed
-	 */
-
-	list_for_each_entry_safe(act, safe, &r->actions, list) {
-		if (act->op == LD_OP_FREE && act->rt == LD_RT_LV) {
-			log_debug("%s:%s free_lv", ls->name, r->name);
-			rv = free_lv(ls, r);
-			act->result = rv;
-			list_del(&act->list);
-			add_client_result(act);
-			goto r_free;
-
-		}
 	}
 
 	/*
@@ -2225,30 +2214,44 @@ static void res_process(struct lockspace *ls, struct resource *r,
 		}
 	}
 
-	/* FIXME: free_lv currently requires finding an existing resource struct,
-	 * and this will prevent that.  If we free the resource struct when
-	 * unlocked, would we then need to create a new resource struct for
-	 * free_lv?  i.e. free and then immediately recreate?
-	 * Maybe do a combined unlock+free for LVs? */
-
 	/*
+	 * In general, if the resource struct has no locks, no actions, and is
+	 * unlocked, then it can be freed.  (This is only needed for LV
+	 * resources since LVs can be removed.)  However, for lvremove (and
+	 * vgremove, sometimes lvconvert), the command will send a free_lv op
+	 * after unlocking.  The free_lv op also needs the resource struct.
+	 * So, rather than freeing it here, move the resource struct to the
+	 * ls->dispose list.  A free_lv op will find r on the dispose list, do
+	 * free_lv, then free_resource.  If the command closes its connection
+	 * without doing free_lv (e.g. normal deactivation), then the structs
+	 * that the client moved to the dispose list will all be freed when
+	 * processing the OP_CLOSE for the client.
+	 */
 	if ((r->type == LD_RT_LV) && (r->mode == LD_LK_UN) &&
-	     list_empty(&r->locks) && list_empty(&r->actions))
-		goto r_free;
-	*/
+	    list_empty(&r->locks) && list_empty(&r->actions)) {
+
+		/* An implicit unlock of a transient lock. */
+		if (!unlock_by_client_id)
+			goto r_free;
+
+		log_debug("%s:%s will dispose for %u", ls->name, r->name, unlock_by_client_id);
+		list_del(&r->list);
+		r->dispose_client_id = unlock_by_client_id;
+		list_add(&r->list, &ls->dispose);
+	}
 
 	return;
 
 r_free:
 	/* For the EUNATCH case it may be possible there are queued actions? */
 	list_for_each_entry_safe(act, safe, &r->actions, list) {
-		log_error("%s:%s res_process r_free cancel %s client %d",
+		log_error("%s:%s res_process r_free cancel %s client %u",
 			  ls->name, r->name, op_str(act->op), act->client_id);
 		act->result = -ECANCELED;
 		list_del(&act->list);
 		add_client_result(act);
 	}
-	log_debug("%s:%s res_process free", ls->name, r->name);
+	log_debug("%s:%s res_process free_resource", ls->name, r->name);
 	lm_rem_resource(ls, r);
 	list_del(&r->list);
 	free_resource(r);
@@ -2283,7 +2286,7 @@ static int for_each_lock(struct lockspace *ls, int locks_do)
 	return 0;
 }
 
-static int clear_locks(struct lockspace *ls, int free_vg, int drop_vg)
+static void clear_locks(struct lockspace *ls, int free_vg, int drop_vg)
 {
 	struct resource *r, *r_safe;
 	struct lock *lk, *lk_safe;
@@ -2292,6 +2295,13 @@ static int clear_locks(struct lockspace *ls, int free_vg, int drop_vg)
 	uint32_t r_version;
 	int lk_count = 0;
 	int rv;
+
+	list_for_each_entry_safe(r, r_safe, &ls->dispose, list) {
+		log_debug("%s:%s clear_locks dispose free_resource", ls->name, r->name);
+		list_del(&r->list);
+		lm_rem_resource(ls, r);
+		free_resource(r);
+	}
 
 	list_for_each_entry_safe(r, r_safe, &ls->resources, list) {
 		lk_version = 0;
@@ -2308,7 +2318,7 @@ static int clear_locks(struct lockspace *ls, int free_vg, int drop_vg)
 			if (lk->flags & LD_LF_PERSISTENT && !drop_vg)
 				log_error("%s:%s clear lock persistent", ls->name, r->name);
 			else
-				log_debug("%s:%s clear lock mode %s client %d", ls->name, r->name, mode_str(lk->mode), lk->client_id);
+				log_debug("%s:%s clear lock mode %s client %u", ls->name, r->name, mode_str(lk->mode), lk->client_id);
 
 			if (lk->version > lk_version)
 				lk_version = lk->version;
@@ -2344,20 +2354,33 @@ static int clear_locks(struct lockspace *ls, int free_vg, int drop_vg)
 		}
 
 		list_for_each_entry_safe(act, act_safe, &r->actions, list) {
-			log_error("%s:%s clear_locks cancel %s client %d",
+			log_error("%s:%s clear_locks cancel %s client %u",
 				  ls->name, r->name, op_str(act->op), act->client_id);
 			act->result = -ECANCELED;
 			list_del(&act->list);
 			add_client_result(act);
 		}
  r_free:
-		log_debug("%s:%s free", ls->name, r->name);
+		log_debug("%s:%s clear_locks free_resource", ls->name, r->name);
 		lm_rem_resource(ls, r);
 		list_del(&r->list);
 		free_resource(r);
 	}
+}
 
-	return lk_count;
+static struct resource *find_dispose_act(struct lockspace *ls, struct action *act)
+{
+	struct resource *r;
+
+	/* Only resources for unlocked LVs should exist on the dispose list. */
+
+	list_for_each_entry(r, &ls->dispose, list) {
+		if (r->type == LD_RT_LV && !strcmp(r->name, act->lv_uuid)) {
+			list_del(&r->list);
+			return r;
+		}
+	}
+	return NULL;
 }
 
 /*
@@ -2496,6 +2519,7 @@ static void *lockspace_thread_main(void *arg_in)
 	int adopt_ok = 0;
 	int wait_flag = 0;
 	int nodelay = 0;
+	int nocreate;
 	int retry;
 	int rv;
 
@@ -2725,10 +2749,50 @@ static void *lockspace_thread_main(void *arg_in)
 				continue;
 			}
 
+			if (act->op == LD_OP_FREE && act->rt == LD_RT_LV) {
+				list_del(&act->list);
+
+				r = find_dispose_act(ls, act); /* removes r from dispose list */
+				if (r) {
+					log_debug("%s:%s free_lv from dispose for %u", ls->name, r->name, act->client_id);
+					rv = free_lv(ls, r);
+					lm_rem_resource(ls, r);
+					free_resource(r);
+					act->result = rv;
+					add_client_result(act);
+				} else {
+					log_error("%s:%s free_lv not found on dispose list", ls->name, r->name);
+					act->result = -ENOENT;
+					add_client_result(act);
+				}
+				continue;
+			}
+
 			list_del(&act->list);
 
-			/* applies to all resources */
 			if (act->op == LD_OP_CLOSE) {
+				/*
+				 * free any resources the client moved to
+				 * ls->dispose after unlocking.  Between the
+				 * time the client unlocked the LV, and now,
+				 * another client could have created a new
+				 * struct resource on ls->resources for the
+				 * same LV.  This would not be a problem.
+				 */
+				list_for_each_entry_safe(r, r2, &ls->dispose, list) {
+					if (r->dispose_client_id == act->client_id) {
+						log_debug("%s:%s free_resource from dispose for %u",
+							  ls->name, r->name, act->client_id);
+						list_del(&r->list);
+						lm_rem_resource(ls, r);
+						free_resource(r);
+					}
+				}
+				
+				/*
+				 * check all resources for transient locks the client
+				 * was holding that should be automatically unlocked
+				 */
 				list_add(&act->list, &act_close);
 				continue;
 			}
@@ -2741,10 +2805,12 @@ static void *lockspace_thread_main(void *arg_in)
 			 * (This creates a new resource if the one named in
 			 * the act is not found.)
 			 */
+			nocreate = (act->op == LD_OP_FREE) ||
+				   ((act->op == LD_OP_LOCK) && (act->mode == LD_LK_UN));
 
-			r = find_resource_act(ls, act, (act->op == LD_OP_FREE) ? 1 : 0);
+			r = find_resource_act(ls, act, nocreate);
 			if (!r) {
-				act->result = (act->op == LD_OP_FREE) ? -ENOENT : -ENOMEM;
+				act->result = nocreate ? -ENOENT : -ENOMEM;
 				add_client_result(act);
 				continue;
 			}
@@ -2803,7 +2869,7 @@ out_rem:
 
 	log_debug("S %s clearing locks", ls->name);
 
-	(void) clear_locks(ls, free_vg, drop_vg);
+	clear_locks(ls, free_vg, drop_vg);
 
 	/*
 	 * Tell any other hosts in the lockspace to leave it
