@@ -401,12 +401,12 @@ int dm_get_status_integrity(struct dm_pool *mem, const char *params,
 			     struct dm_status_integrity **status)
 {
 	struct dm_status_integrity *s;
-	char recalc_str[16] = "\0";
+	char recalc_str[16] = { 0 };
 
 	if (!(s = dm_pool_zalloc(mem, sizeof(*s))))
 		return_0;
 
-	if (sscanf(params, "%llu %llu %s",
+	if (sscanf(params, "%llu %llu %15s",
 		   (unsigned long long *)&s->number_of_mismatches,
 		   (unsigned long long *)&s->provided_data_sectors,
 		   recalc_str) != 3) {
