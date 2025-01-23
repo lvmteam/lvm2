@@ -1,5 +1,8 @@
 Version 2.03.31 - 
 ==================
+  Ignore reported optimal_io_size not divisible by 4096.
+  Fix busy-loop in config reading when read returned 0.
+  Fix DM cache preserving logic (2.03.28).
 
 Version 2.03.30 - 14th January 2025
 ===================================
