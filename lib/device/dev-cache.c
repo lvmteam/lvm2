@@ -1314,7 +1314,7 @@ int dm_devs_cache_update(void)
 	unsigned devs_features;
 	uint32_t d;
 	struct dm_list *dm_devs_new, *l;
-	int cache_changed = 0;
+	int cache_changed;
 
 	if (!get_dm_active_devices(NULL, &dm_devs_new, &devs_features))
 		return 1;
@@ -1329,6 +1329,7 @@ int dm_devs_cache_update(void)
 		/* Compare existing cached list with a new one.
 		 * When there is any mismatch, just rebuild whole cache */
 		if ((l = dm_list_first(dm_devs_new))) {
+			cache_changed = dm_list_empty(_cache.dm_devs); // 1 for empty cache and new list has entries */
 			dm_list_iterate_items(dm_dev, _cache.dm_devs) {
 				dm_dev_new = dm_list_item(l, struct dm_active_device);
 				if ((dm_dev->devno != dm_dev_new->devno) ||
