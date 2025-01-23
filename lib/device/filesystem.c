@@ -239,9 +239,9 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 {
 	FILE *fp;
 	char proc_line[PATH_MAX];
-	char proc_fstype[FSTYPE_MAX];
-	char proc_devpath[PATH_MAX];
-	char proc_mntpath[PATH_MAX];
+	char proc_fstype[FSTYPE_MAX + 1];
+	char proc_devpath[PATH_MAX + 1];
+	char proc_mntpath[PATH_MAX + 1];
 	char mtab_mntpath[PATH_MAX] = { 0 };
 	char dm_devpath[PATH_MAX];
 	char tmp_path[PATH_MAX];
@@ -327,7 +327,7 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 		if (sscanf(proc_line, "%"
 			   DM_TO_STRING(PATH_MAX) "s %"
 			   DM_TO_STRING(PATH_MAX) "s %"
-			   DM_TO_STRING(PATH_MAX) "s", proc_devpath, proc_mntpath, proc_fstype) != 3)
+			   DM_TO_STRING(FSTYPE_MAX) "s", proc_devpath, proc_mntpath, proc_fstype) != 3)
 			continue;
 		if (strcmp(fstype, proc_fstype))
 			continue;
