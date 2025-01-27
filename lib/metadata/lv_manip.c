@@ -1230,7 +1230,7 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 		if (vg_is_shared(vg)) {
 			if (!lockd_lv_name(vg->cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args, "un", LDLV_PERSISTENT))
 				log_error("Failed to unlock vdo pool in lvmlockd.");
-			lockd_free_lv_after_update(vg->cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
+			lockd_free_lv_queue(vg->cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
 		}
 		return 1;
 	}

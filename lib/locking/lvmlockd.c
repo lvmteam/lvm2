@@ -1124,11 +1124,11 @@ static int _busy_vg(struct cmd_context *cmd, struct volume_group *vg)
 	int ret;
 
 	if (!_use_lvmlockd) {
-		log_error("Lvmlockd is not in use.");
+		log_error("lvmlockd is not in use.");
 		return 0;
 	}
 	if (!_lvmlockd_connected) {
-		log_error("Lvmlockd is not connected.");
+		log_error("lvmlockd is not connected.");
 		return 0;
 	}
 
@@ -1708,7 +1708,14 @@ int lockd_global_create(struct cmd_context *cmd, const char *def_mode, const cha
 		return 0;
 	}
 
-	log_debug("lockd global lock_type %s", vg_lock_type);
+	if (cmd->lockd_gl_disable) {
+		log_debug("lockd global create disabled %s", def_mode ?: "");
+		if (def_mode && !strcmp(def_mode, "ex"))
+			log_warn("WARNING: skipping global lock in lvmlockd.");
+		goto out;
+	}
+
+	log_debug("lockd global create lock_type %s", vg_lock_type);
 
 	if (!mode)
 		mode = def_mode;
@@ -1820,6 +1827,8 @@ int lockd_global_create(struct cmd_context *cmd, const char *def_mode, const cha
 		return 0;
 	}
 
+out:
+
 	/* --shared with vgcreate does not mean include_shared_vgs */
 	cmd->include_shared_vgs = 0;
 
@@ -1930,9 +1939,6 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 		return 0;
 	}
 
-	if (cmd->lockd_gl_disable)
-		return 1;
-
 	if (def_mode && !strcmp(def_mode, "un")) {
 		mode = "un";
 		goto req;
@@ -1956,6 +1962,12 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 	if (!strcmp(mode, "un") && cmd->lockd_global_ex)
 		cmd->lockd_global_ex = 0;
 
+	if (cmd->lockd_gl_disable) {
+		log_debug("lockd global disabled %s", def_mode ?: "");
+		if (def_mode && !strcmp(def_mode, "ex"))
+			log_warn("WARNING: skipping global lock in lvmlockd.");
+		goto allow;
+	}
  req:
 	log_debug("lockd global %s", mode);
 
@@ -2210,8 +2222,12 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	/*
 	 * Some special cases need to disable the vg lock.
 	 */
-	if (cmd->lockd_vg_disable)
+	if (cmd->lockd_vg_disable) {
+		log_debug("lockd VG disabled %s", def_mode ?: "");
+		if (def_mode && !strcmp(def_mode, "ex"))
+			log_warn("WARNING: skipping VG lock in lvmlockd.");
 		return 1;
+	}
 
 	/*
 	 * An unlock is simply sent or skipped without any need
@@ -2642,13 +2658,24 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 		return 1;
 	}
 
-	if (cmd->lockd_lv_disable)
+	if (cmd->lockd_lv_disable) {
+		log_debug("lockd_lv disabled %s %s/%s", def_mode ?: "", vg->name, lv_name);
+		if (def_mode && strcmp(def_mode, "un"))
+			log_warn("WARNING: skipping LV lock in lvmlockd.");
 		return 1;
+	}
 
-	if (!_use_lvmlockd)
+	if (!_use_lvmlockd || !_lvmlockd_connected) {
+		if (def_mode && !strcmp(def_mode, "un"))
+			return 1;
+		if (!_use_lvmlockd)
+			log_error("LV %s/%s lock failed: lvmlockd is required for VG lock_type %s.",
+				  vg->name, lv_name, vg->lock_type ?: "unknown");
+		if (!_lvmlockd_connected)
+			log_error("LV %s/%s lock failed: lvmlockd connection is required.",
+				  vg->name, lv_name);
 		return 0;
-	if (!_lvmlockd_connected)
-		return 0;
+	}
 
 	/*
 	 * For lvchange/vgchange activation, def_mode is "sh" or "ex"
@@ -3229,7 +3256,7 @@ void lockd_lvremove_done(struct cmd_context *cmd, struct logical_volume *lv, str
 	 * free (no lock_args), e.g. when removing a thin LV.
 	 */
 	if (lv->lock_args)
-		lockd_free_lv_after_update(cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
+		lockd_free_lv_queue(cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
 
 	return;
 bad:
@@ -3445,20 +3472,6 @@ int lockd_lv(struct cmd_context *cmd, struct logical_volume *lv,
 		return 1;
 
 	log_debug("lockd_lv %s %s", def_mode ?: "no_mode", display_lvname(lv));
-
-	if (!_use_lvmlockd) {
-		log_error("LV in VG %s with lock_type %s requires lvmlockd.",
-			  lv->vg->name, lv->vg->lock_type);
-		return 0;
-	}
-
-	if (!_lvmlockd_connected && (def_mode && !strcmp(def_mode, "un"))) {
-		log_debug("Skip LV unlock: no lvmlockd");
-		return 1;
-	}
-
-	if (!_lvmlockd_connected)
-		return 0;
 
 	/*
 	 * This addresses the specific case of: vgchange -an vg
@@ -3703,10 +3716,19 @@ static int _free_lv(struct cmd_context *cmd, struct volume_group *vg,
 	int result;
 	int ret;
 
-	if (!_use_lvmlockd)
+	if (cmd->lockd_lv_disable) {
+		log_debug("lockd free LV disabled %s/%s %s lock_args %s", vg->name, lv_name, lv_uuid, lock_args ?: "none");
+		return 1;
+	}
+
+	if (!_use_lvmlockd) {
+		log_error("LV %s/%s free lock in shared VG: lvmlockd is required.", vg->name, lv_name);
 		return 0;
-	if (!_lvmlockd_connected)
+	}
+	if (!_lvmlockd_connected) {
+		log_error("LV %s/%s free lock in shared VG: lvmlockd is not connected.", vg->name, lv_name);
 		return 0;
+	}
 
 	log_debug("lockd free LV %s/%s %s lock_args %s", vg->name, lv_name, lv_uuid, lock_args ?: "none");
 
@@ -3726,8 +3748,12 @@ static int _free_lv(struct cmd_context *cmd, struct volume_group *vg,
 		ret = (result < 0) ? 0 : 1;
 	}
 
-	if (!ret)
-		log_error("_free_lv lvmlockd result %d", result);
+	if (!ret) {
+		if (result == -ENOLS)
+			log_error("LV %s/%s free lock in shared VG: lockspace not started", vg->name, lv_name);
+		else
+			log_error("LV %s/%s free lock in shared VG: lvmlockd error %d.", vg->name, lv_name, result);
+	}
 
 	daemon_reply_destroy(reply);
 
@@ -3867,8 +3893,10 @@ void lockd_free_removed_lvs(struct cmd_context *cmd, struct volume_group *vg, in
 	 * and we don't free any of the locks.
 	 */
 	if (remove_success) {
-		dm_list_iterate_items(fli, &vg->lockd_free_lvs)
-			_free_lv(cmd, vg, fli->name, fli->uuid, fli->args);
+		dm_list_iterate_items(fli, &vg->lockd_free_lvs) {
+			if (!_free_lv(cmd, vg, fli->name, fli->uuid, fli->args))
+				log_error("Failed to free lock for LV %s/%s in lvmlockd.", vg->name, fli->name);
+		}
 	}
 	vg->needs_lockd_free_lvs = 0;
 	dm_list_init(&vg->lockd_free_lvs);
@@ -3881,8 +3909,8 @@ void lockd_free_removed_lvs(struct cmd_context *cmd, struct volume_group *vg, in
  * remove none of the LVs, and lockd_free_removed_lvs() will be called with
  * remove_success == 0, and it will not free any of the LV locks.
  */
-int lockd_free_lv_after_update(struct cmd_context *cmd, struct volume_group *vg,
-		  const char *lv_name, struct id *lv_id, const char *lock_args)
+void lockd_free_lv_queue(struct cmd_context *cmd, struct volume_group *vg,
+			 const char *lv_name, struct id *lv_id, const char *lock_args)
 {
 	struct free_lv_info *fli;
 	char lv_uuid[64] __attribute__((aligned(8)));
@@ -3890,33 +3918,32 @@ int lockd_free_lv_after_update(struct cmd_context *cmd, struct volume_group *vg,
 	switch (get_lock_type_from_string(vg->lock_type)) {
 	case LOCK_TYPE_NONE:
 	case LOCK_TYPE_CLVM:
-		return 1;
+		return;
 	case LOCK_TYPE_DLM:
 	case LOCK_TYPE_SANLOCK:
 	case LOCK_TYPE_IDM:
 		if (!lock_args)
-			return 1;
+			return;
 		break;
 	default:
-		log_error("lockd_free_lv_after_update: unknown lock_type.");
-		return 0;
+		log_error("lockd_free_lv_queue: unknown lock_type.");
+		return;
 	}
 
 	if (!id_write_format(lv_id, lv_uuid, sizeof(lv_uuid)))
-		return_0;
+		return;
 
 	/* save lv info to send the free_lv messages later */
 	if (!(fli = dm_pool_zalloc(vg->vgmem, sizeof(*fli))))
-		return_0;
+		return;
 	if (!(fli->uuid = dm_pool_strdup(vg->vgmem, lv_uuid)))
-		return_0;
+		return;
 	if (!(fli->name = dm_pool_strdup(vg->vgmem, lv_name)))
-		return_0;
+		return;
 	if (!(fli->args = dm_pool_strdup(vg->vgmem, lock_args)))
-		return_0;
+		return;
 	dm_list_add(&vg->lockd_free_lvs, &fli->list);
 	vg->needs_lockd_free_lvs = 1;
-	return 1;
 }
 
 int lockd_free_lv(struct cmd_context *cmd, struct volume_group *vg,

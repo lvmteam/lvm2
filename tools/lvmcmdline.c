@@ -2962,18 +2962,12 @@ static int _init_lvmlockd(struct cmd_context *cmd)
 	if (use_lvmlockd && arg_is_set(cmd, lockopt_ARG)) {
 		lockd_lockopt_get_flags(arg_str_value(cmd, lockopt_ARG, ""), &cmd->lockopt);
 
-		if (cmd->lockopt & LOCKOPT_SKIPLV) {
-			log_warn("WARNING: skipping LV lock in lvmlockd.");
+		if (cmd->lockopt & LOCKOPT_SKIPLV)
 			cmd->lockd_lv_disable = 1;
-		}
-		if (cmd->lockopt & LOCKOPT_SKIPVG) {
-			log_warn("WARNING: skipping VG lock in lvmlockd.");
+		if (cmd->lockopt & LOCKOPT_SKIPVG)
 			cmd->lockd_vg_disable = 1;
-		}
-		if (cmd->lockopt & LOCKOPT_SKIPGL) {
-			log_warn("WARNING: skipping global lock in lvmlockd.");
+		if (cmd->lockopt & LOCKOPT_SKIPGL)
 			cmd->lockd_gl_disable = 1;
-		}
 	}
 
 	lvmlockd_disconnect(); /* start over when tool context is refreshed */
