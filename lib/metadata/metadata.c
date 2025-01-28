@@ -5008,6 +5008,14 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		goto_bad;
 	}
 
+	/* Update DM cache after grabbing lock
+	 * TODO: do a lazy-update of this cache, only when it's really used */
+	if (dm_devs_cache_use()) {
+		log_debug_cache("Rescanning DM cache.");
+		if (!dm_devs_cache_update())
+			return_0;
+	}
+
 	/*
 	 * vgchange -ay (no vgname arg) will activate multiple local VGs with the same
 	 * name, but if the vgs have the same lv name, activating those lvs will fail.

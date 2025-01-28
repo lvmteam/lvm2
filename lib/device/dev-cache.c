@@ -1394,8 +1394,6 @@ void dm_devs_cache_label_invalidate(struct cmd_context *cmd)
 	struct dm_active_device *dm_dev;
 	struct device *dev;
 
-	dm_devs_cache_update();
-
 	dm_list_iterate_items(dm_dev, _cache.dm_devs) {
 		if (dm_dev->uuid &&
 		   strncmp(dm_dev->uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1) == 0) {
