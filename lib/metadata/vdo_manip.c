@@ -641,7 +641,7 @@ static int _get_sysinfo_memory(uint64_t *total_mb, uint64_t *available_mb)
 {
 	struct sysinfo si = { 0 };
 
-	*total_mb = *available_mb = UINT64_MAX;
+	*total_mb = *available_mb = ((UINT64_MAX) >> 20);
 
 	if (sysinfo(&si) != 0)
 		return 0;
