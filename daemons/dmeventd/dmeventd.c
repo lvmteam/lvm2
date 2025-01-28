@@ -268,7 +268,7 @@ static void _free_dso_data(struct dso_data *data)
 
 static struct dso_data *_alloc_dso_data(struct message_data *data)
 {
-	struct dso_data *ret = (typeof(ret)) zalloc(sizeof(*ret));
+	struct dso_data *ret = (__typeof__(ret)) zalloc(sizeof(*ret));
 
 	if (!ret)
 		return_NULL;

@@ -485,7 +485,7 @@ static void _dm_zfree_string(char *string)
 {
 	if (string) {
 		memset(string, 0, strlen(string));
-		asm volatile ("" ::: "memory"); /* Compiler barrier. */
+		__asm__ volatile ("" ::: "memory"); /* Compiler barrier. */
 		dm_free(string);
 	}
 }
@@ -494,7 +494,7 @@ static void _dm_zfree_dmi(struct dm_ioctl *dmi)
 {
 	if (dmi) {
 		memset(dmi, 0, dmi->data_size);
-		asm volatile ("" ::: "memory"); /* Compiler barrier. */
+		__asm__ volatile ("" ::: "memory"); /* Compiler barrier. */
 		dm_free(dmi);
 	}
 }
