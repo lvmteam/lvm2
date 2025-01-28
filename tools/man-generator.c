@@ -934,7 +934,10 @@ static void _print_man_option_desc(const struct command_name *cname, int opt_enu
 				check_for_new_section = 0;
 				print_section = 0;
 			}
-			bi -= 2;
+			if (bi > 2)
+				bi -= 2;
+			else
+				bi = 0;
 			if (!bi ||  /* empty cmd resets section to all commands */
 			    ((bi == clen) && !strncmp(buf + 1, cname->name, clen))) {
 				print_section = 1;
