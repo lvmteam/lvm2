@@ -703,6 +703,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	vg_to->status |= EXPORTED_VG;
 
 
+	/* coverity[format_string_injection] pool_metadata_spare_lv name is validated */
 	if (!handle_pool_metadata_spare(vg_to, 0, &vg_to->pvs, poolmetadataspare))
 		goto_bad;
 
