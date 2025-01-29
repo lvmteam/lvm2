@@ -122,3 +122,17 @@ check sysfs "$dev1" queue/optimal_io_size 786432 || SHOULD=should
 $SHOULD check pv_field "${DEVICES[@]}" pe_start 768.00k
 
 aux cleanup_scsi_debug_dev
+
+
+# Create device with ill reported optimal io size  (not divisible by 4KiB)
+aux prepare_scsi_debug_dev $DEV_SIZE \
+    sector_size=$LOGICAL_BLOCK_SIZE opt_blks=32767
+
+aux prepare_devs 1 $PER_DEV_SIZE
+
+pvcreate "${DEVICES[@]}"
+vgcreate $vg "${DEVICES[@]}"
+# Value ~16MiB should be ignored and standart 1MiB alignment should be here
+$SHOULD check pv_field "${DEVICES[@]}" pe_start 1.00m
+
+aux cleanup_scsi_debug_dev
