@@ -1372,6 +1372,10 @@ static unsigned long _dev_topology_attribute(struct dev_types *dt,
 			log_warn("WARNING: Device %s: %s is %lu and is unexpectedly less than sector.",
 				 dev_name(dev), attribute, value);
 			result = 1;
+		} else if ((result > 1) && (result & 0x3)) {
+			log_warn("WARNING: Ignoring %s = %lu for device %s (not divisible by 4KiB).",
+				 attribute, value, dev_name(dev));
+			result = 8;
 		}
 	}
 
