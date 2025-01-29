@@ -9191,6 +9191,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	uint32_t flags = 0;
 	int creating_thin_pool = 0;
 	int creating_thin_volume = 0;
+	int creating_cow_snapshot = 0;
+	int creating_vdo_volume = 0;
 	int ret;
 
 	if (new_lv_name && lv_name_is_used_in_vg(vg, new_lv_name, &historical)) {
@@ -9281,11 +9283,18 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		log_debug("Creating LV: thin pool");
 	if ((creating_thin_volume = seg_is_thin_volume(lp)))
 		log_debug("Creating LV: thin volume");
+	if ((creating_cow_snapshot = (!seg_is_thin_volume(lp) && lp->snapshot)))
+		log_debug("Creating LV: cow snapshot");
+	if ((creating_vdo_volume = seg_is_vdo(lp)))
+		log_debug("Creating LV: vdo volume");
 
-	if (vg_is_shared(vg) && (creating_thin_pool || creating_thin_volume)) {
-		if (!lockd_lvcreate_thin_setup(cmd, vg, lp, creating_thin_pool, creating_thin_volume))
-			return NULL;
-	}
+	/*
+	 * Another LV, related to the new LV, may need to be locked before
+	 * creating the new LV, e.g. locking the pool or origin for the new LV.
+	 */
+	if (!lockd_lvcreate_lock(cmd, vg, lp, creating_thin_pool, creating_thin_volume,
+				 creating_cow_snapshot, creating_vdo_volume))
+		return NULL;
 
 	if (seg_is_pool(lp))
 		status |= LVM_WRITE; /* Pool is always writable */

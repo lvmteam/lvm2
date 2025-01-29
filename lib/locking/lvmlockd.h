@@ -23,6 +23,7 @@
 #define LDLV_SH_EXISTS_OK         0x00000004
 #define LDLV_CREATING_THIN_VOLUME 0x00000008
 #define LDLV_CREATING_THIN_POOL   0x00000010
+#define LDLV_CREATING_COW_SNAP_ON_THIN 0x00000020
 
 /* lvmlockd result flags */
 #define LD_RF_NO_LOCKSPACES     0x00000001
@@ -128,9 +129,9 @@ int lockd_lv_refresh(struct cmd_context *cmd, struct lvresize_params *lp);
 int lockd_query_lv(struct cmd_context *cmd, struct logical_volume *lv, int *ex, int *sh);
 
 int lockd_lvcreate_prepare(struct cmd_context *cmd, struct volume_group *vg, struct lvcreate_params *lp);
+int lockd_lvcreate_lock(struct cmd_context *cmd, struct volume_group *vg, struct lvcreate_params *lp,
+			int creating_thin_pool, int creating_thin_volume, int creating_cow_snapshot, int creating_vdo_volume);
 void lockd_lvcreate_done(struct cmd_context *cmd, struct volume_group *vg, struct lvcreate_params *lp);
-int lockd_lvcreate_thin_setup(struct cmd_context *cmd, struct volume_group *vg, struct lvcreate_params *lp,
-		int creating_thin_pool, int creating_thin_volume);
 
 #else /* LVMLOCKD_SUPPORT */
 
@@ -305,14 +306,14 @@ static inline int lockd_lvcreate_prepare(struct cmd_context *cmd, struct volume_
 	return 1;
 }
 
-static inline void lockd_lvcreate_done(struct cmd_context *cmd, struct volume_group *vg, struct lvcreate_params *lp)
-{
-}
-
-static inline int lockd_lvcreate_thin_setup(struct cmd_context *cmd, struct volume_group *vg, struct lvcreate_params *lp,
-                             int creating_thin_pool, int creating_thin_volume)
+static inline int lockd_lvcreate_lock(struct cmd_context *cmd, struct volume_group *vg, struct lvcreate_params *lp,
+		int creating_thin_pool, int creating_thin_volume, int creating_cow_snapshot, int creating_vdo_volume)
 {
 	return 1;
+}
+
+static inline void lockd_lvcreate_done(struct cmd_context *cmd, struct volume_group *vg, struct lvcreate_params *lp)
+{
 }
 
 #endif	/* LVMLOCKD_SUPPORT */

@@ -2759,19 +2759,15 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 	return 1;
 }
 
-int lockd_lvcreate_thin_setup(struct cmd_context *cmd, struct volume_group *vg, struct lvcreate_params *lp,
-			      int creating_thin_pool, int creating_thin_volume)
+static int _lockd_lvcreate_lock_thin(struct cmd_context *cmd, struct volume_group *vg, struct lvcreate_params *lp,
+				     int creating_thin_pool, int creating_thin_volume)
 {
-	log_debug("lockd_lvcreate_thin_setup creating pool %d volume %d created pool %d volume %d",
-		  creating_thin_pool, creating_thin_volume,
-		  cmd->lockd_created_thin_pool, cmd->lockd_created_thin_volume);
-                         
 	if ((creating_thin_pool && cmd->lockd_created_thin_pool) ||
 	    (creating_thin_volume && cmd->lockd_created_thin_volume) ||
 	    (creating_thin_pool && cmd->lockd_creating_thin_pool) ||
 	    (creating_thin_volume && cmd->lockd_creating_thin_volume)) {
 		/* shouldn't happen */
-		log_error("lockd_lvcreate_thin_setup invalid lockd transition creating p %d v %d created p %d v %d",
+		log_error("lockd_lvcreate_lock invalid thin transition creating p %d v %d created p %d v %d",
 			  creating_thin_pool, creating_thin_volume, cmd->lockd_created_thin_pool, cmd->lockd_created_thin_volume);
 		return 0;
 	}
@@ -2792,7 +2788,7 @@ int lockd_lvcreate_thin_setup(struct cmd_context *cmd, struct volume_group *vg, 
 	if (creating_thin_volume && !cmd->lockd_created_thin_pool) {
 		struct logical_volume *pool_lv;
 
-		log_debug("lockd_lvcreate_thin_setup creating_thin_volume locking thin pool %s", lp->pool_name);
+		log_debug("lockd_lvcreate_lock creating_thin_volume locking thin pool %s", lp->pool_name);
 
 		if (!(pool_lv = find_lv(vg, lp->pool_name))) {
 			log_error("Couldn't find thin pool %s for creating thin volume.", lp->pool_name);
@@ -2800,7 +2796,7 @@ int lockd_lvcreate_thin_setup(struct cmd_context *cmd, struct volume_group *vg, 
 		}
 
 		if (!lockd_lv(cmd, pool_lv, "ex", LDLV_PERSISTENT | LDLV_CREATING_THIN_VOLUME)) {
-			log_error("Failed to lock thin pool for creating thin volume.");
+			log_error("Failed to lock thin pool %s for creating thin volume.", pool_lv->name);
 			return 0;
 		}
 
@@ -2808,6 +2804,75 @@ int lockd_lvcreate_thin_setup(struct cmd_context *cmd, struct volume_group *vg, 
 		lp->lockd_name = dm_pool_strdup(cmd->mem, pool_lv->name);
 	}
 
+	return 1;
+}
+
+/*
+ * Lock an existing LV in lvmlockd that is required to create
+ * another new LV associated with it.
+ */
+int lockd_lvcreate_lock(struct cmd_context *cmd, struct volume_group *vg, struct lvcreate_params *lp,
+			int creating_thin_pool, int creating_thin_volume, int creating_cow_snapshot,
+			int creating_vdo_volume)
+{
+	if (!vg_is_shared(vg))
+		return 1;
+
+	/*
+	 * Thin is more complicated than others because a single lvcreate may
+	 * be creating just a thin pool, just a thin volume, or both.
+	 */
+	if (creating_thin_pool || creating_thin_volume) {
+		log_debug("lockd_lvcreate_lock creating_thin_pool %d creating_thin_volume %d created pool %d volume %d",
+			  creating_thin_pool, creating_thin_volume,
+			  cmd->lockd_created_thin_pool, cmd->lockd_created_thin_volume);
+                         
+		return _lockd_lvcreate_lock_thin(cmd, vg, lp, creating_thin_pool, creating_thin_volume);
+	}
+
+	if (creating_cow_snapshot) {
+		struct logical_volume *origin_lv;
+
+		log_debug("lockd_lvcreate_lock creating_cow_snapshot locking origin %s", lp->origin_name);
+
+		if (!lp->origin_name) {
+			/* Sparse LV case. We require a lock from the origin LV. */
+			log_error("Cannot create snapshot without origin LV in shared VG.");
+			return 0;
+		}
+
+		if (!(origin_lv = find_lv(vg, lp->origin_name))) {
+			log_error("Failed to find origin LV %s/%s", vg->name, lp->origin_name);
+			return 0;
+		}
+
+		if (!lockd_lv(cmd, origin_lv, "ex", LDLV_CREATING_COW_SNAP_ON_THIN)) {
+			log_error("Failed to lock snapshot origin LV %s/%s", vg->name, lp->origin_name);
+			return 0;
+		}
+
+		return 1;
+	}
+
+	if (creating_vdo_volume) {
+		struct logical_volume *vdo_pool_lv;
+
+		log_debug("lockd_lvcreate_lock creating_vdo_volume locking vdo pool %s", lp->pool_name);
+
+		if (!(vdo_pool_lv = find_lv(vg, lp->pool_name))) {
+			log_error("Failed to find vdo pool %s/%s", vg->name, lp->pool_name);
+			return 0;
+		}
+
+		if (!lockd_lv(cmd, vdo_pool_lv, "ex", LDLV_PERSISTENT)) {
+			log_error("Failed to lock vdo pool %s/%s", vg->name, lp->pool_name);
+			return 0;
+		}
+
+		return 1;
+	}
+
+	/* Nothing to do */
 	return 1;
 }
 
@@ -2824,6 +2889,8 @@ int lockd_lvcreate_prepare(struct cmd_context *cmd, struct volume_group *vg, str
 	if (!strcmp(vg->lock_type, "sanlock")) {
 		if (segtype_is_thin_volume(lp->segtype) && !lp->create_pool)
 			log_debug("lockd_lvcreate_prepare find_free_lock skipped for thin volume");
+		else if (!segtype_is_thin_volume(lp->segtype) && lp->snapshot)
+			log_debug("lockd_lvcreate_prepare find_free_lock skipped for cow snap of thin volume");
 		else {
 			/* Ensure there is space on disk for a new sanlock lease. */
 			if (!_handle_sanlock_lv(cmd, vg)) {
@@ -2957,8 +3024,20 @@ static int _lockd_lv_thin(struct cmd_context *cmd, struct logical_volume *lv,
 		/* flags used in wrong context */
 		log_error("lockd_lv_thin invalid use of LDLV_CREATING_THIN_VOLUME");
 		return 0;
+	} else if (flags & LDLV_CREATING_COW_SNAP_ON_THIN) {
+		/* do it */
+		log_debug("lockd_lv_thin creating cow snapshot of thin volume");
 	} else {
-		/* general locking of the thin pool */
+		if (cmd->command_enum == lvcreate_new_plus_old_cachepool_or_lvconvert_old_plus_new_cachepool_CMD) {
+			/* This command def defies all normal usage. */
+			log_debug("lockd_lv_thin for lvcreate_new_plus_old_cachepool_or_lvconvert_old_plus_new_cachepool");
+		} else if (!strcmp(cmd->name, "lvcreate")) {
+			/* shouldn't happen, this is here to catch any new
+			   cases that needs to be handled. */
+			log_error("lockd_lv_thin from lvcreate undefined case.");
+			return 0;
+		}
+		/* Normal thin locking for things other than lvcreate, e.g. activation */
 		log_debug("lockd_lv_thin for %s", cmd->name);
 	}
 
@@ -3116,8 +3195,10 @@ int lockd_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	/*
 	 * An LV with NULL lock_args does not have a lock of its own.
 	 */
-	if (!lv->lock_args)
+	if (!lv->lock_args) {
+		log_debug("Skip LV lock: no lock args for %s", lv->name);
 		return 1;
+	}
 
 	/*
 	 * A cachevol LV is one exception, where the LV keeps lock_args (so
@@ -3430,28 +3511,11 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 		return 1;
 
 	} else if (!seg_is_thin_volume(lp) && lp->snapshot) {
-		struct logical_volume *origin_lv;
-
 		/*
 		 * COW snapshots are associated with their origin LV,
 		 * and only the origin LV needs its own lock, which
 		 * represents itself and all associated cow snapshots.
 		 */
-
-		if (!lp->origin_name) {
-			/* Sparse LV case. We require a lock from the origin LV. */
-			log_error("Cannot create snapshot without origin LV in shared VG.");
-			return 0;
-		}
-
-		if (!(origin_lv = find_lv(vg, lp->origin_name))) {
-			log_error("Failed to find origin LV %s/%s", vg->name, lp->origin_name);
-			return 0;
-		}
-		if (!lockd_lv(cmd, origin_lv, "ex", 0)) {
-			log_error("Failed to lock origin LV %s/%s", vg->name, lp->origin_name);
-			return 0;
-		}
 		lv->lock_args = NULL;
 		return 1;
 
@@ -3471,23 +3535,12 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 		log_debug("lockd_init_lv creating new lock for thin pool");
 
 	} else if (seg_is_vdo(lp)) {
-		struct logical_volume *vdo_pool_lv;
 
 		/*
 		 * A vdo lv is being created in a vdo pool.  The vdo lv does
 		 * not have its own lock, the lock of the vdo pool is used, and
 		 * the vdo pool needs to be locked to create a vdo lv in it.
 		 */
-
-		if (!(vdo_pool_lv = find_lv(vg, lp->pool_name))) {
-			log_error("Failed to find vdo pool %s/%s", vg->name, lp->pool_name);
-			return 0;
-		}
-
-		if (!lockd_lv(cmd, vdo_pool_lv, "ex", LDLV_PERSISTENT)) {
-			log_error("Failed to lock vdo pool %s/%s", vg->name, lp->pool_name);
-			return 0;
-		}
 		lv->lock_args = NULL;
 		return 1;
 
