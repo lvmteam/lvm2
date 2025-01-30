@@ -5017,8 +5017,11 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	 * TODO: do a lazy-update of this cache, only when it's really used */
 	if (dm_devs_cache_use()) {
 		log_debug_cache("Rescanning DM cache.");
-		if (!dm_devs_cache_update())
-			return_0;
+		if (!dm_devs_cache_update()) {
+			log_error("Can't allocate DM cache memory for VG %s.", vg_name);
+			failure |= FAILED_ALLOCATION;
+			goto bad;
+		}
 	}
 
 	/*
