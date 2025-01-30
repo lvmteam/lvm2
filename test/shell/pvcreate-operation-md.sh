@@ -86,7 +86,7 @@ EOF
 	maj=$(($(stat -L --printf=0x%t "${mddev}p1")))
 	min=$(($(stat -L --printf=0x%T "${mddev}p1")))
 
-	ls /sys/dev/block/$maj:$min/
+	grep -r "" /sys/dev/block/$maj:$min/ || true
 	ls /sys/dev/block/$maj:$min/holders/
 	cat /sys/dev/block/$maj:$min/dev
 	cat /sys/dev/block/$maj:$min/stat
@@ -96,6 +96,9 @@ EOF
 	[ -f "$sysfs_alignment_offset" ] && \
 		alignment_offset=$(< "$sysfs_alignment_offset") || \
 		alignment_offset=0
+
+	fdisk -l "${mddev}" 2>/dev/null || true
+	lsblk -at 2>/dev/null || true
 
 	# default alignment is 1M, add alignment_offset
 	pv_align=$(( 1048576 + alignment_offset ))
