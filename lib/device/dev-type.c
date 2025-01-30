@@ -1372,11 +1372,23 @@ static unsigned long _dev_topology_attribute(struct dev_types *dt,
 			log_warn("WARNING: Device %s: %s is %lu and is unexpectedly less than sector.",
 				 dev_name(dev), attribute, value);
 			result = 1;
-		} else if ((result > 1) && (result & 0x3)) {
-			log_warn("WARNING: Ignoring %s = %lu for device %s (not divisible by 4KiB).",
-				 attribute, value, dev_name(dev));
-			result = 8;
 		}
+	}
+
+	return result;
+}
+
+static unsigned long _dev_topology_attribute_4k(struct dev_types *dt,
+						const char *attribute,
+						struct device *dev,
+						unsigned long default_value)
+{
+	unsigned long result = _dev_topology_attribute(dt, attribute, dev, default_value);
+
+	if ((result > 1) && (result & 0x3)) {
+		log_warn("WARNING: Ignoring %s = %lu for device %s (not divisible by 4KiB).",
+			 attribute, result << SECTOR_SHIFT, dev_name(dev));
+		result = 8;
 	}
 
 	return result;
@@ -1389,12 +1401,12 @@ unsigned long dev_alignment_offset(struct dev_types *dt, struct device *dev)
 
 unsigned long dev_minimum_io_size(struct dev_types *dt, struct device *dev)
 {
-	return _dev_topology_attribute(dt, "queue/minimum_io_size", dev, 0UL);
+	return _dev_topology_attribute_4k(dt, "queue/minimum_io_size", dev, 0UL);
 }
 
 unsigned long dev_optimal_io_size(struct dev_types *dt, struct device *dev)
 {
-	return _dev_topology_attribute(dt, "queue/optimal_io_size", dev, 0UL);
+	return _dev_topology_attribute_4k(dt, "queue/optimal_io_size", dev, 0UL);
 }
 
 unsigned long dev_discard_max_bytes(struct dev_types *dt, struct device *dev)
