@@ -2973,11 +2973,7 @@ static int _lockd_lv_thin(struct cmd_context *cmd, struct logical_volume *lv,
 		log_error("lockd_lv_thin invalid use of LDLV_CREATING_THIN_VOLUME");
 		return 0;
 	} else {
-		/* non-lvcreate thin locking */
-		if (!strcmp(cmd->name, "lvcreate")) {
-			log_error("lockd_lv_thin from lvcreate undefined case.");
-			return 0;
-		}
+		/* general locking of the thin pool */
 		log_debug("lockd_lv_thin for %s", cmd->name);
 	}
 
