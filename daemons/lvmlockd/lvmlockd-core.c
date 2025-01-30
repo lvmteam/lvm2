@@ -2761,7 +2761,7 @@ static void *lockspace_thread_main(void *arg_in)
 					act->result = rv;
 					add_client_result(act);
 				} else {
-					log_error("%s:%s free_lv not found on dispose list", ls->name, r->name);
+					log_error("%s:%s free_lv not found on dispose list", ls->name, act->lv_uuid);
 					act->result = -ENOENT;
 					add_client_result(act);
 				}
