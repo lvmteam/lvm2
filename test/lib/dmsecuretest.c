@@ -66,10 +66,10 @@ int main (int argc, char *argv[])
 		rot13(aes);
 		snprintf(table, sizeof(table), "%s %s 0 %s %u", cipher, aes, device, sz);
 		memset(aes, 0, sizeof(aes));
-		asm volatile ("" ::: "memory");/* Compiler barrier. */
+		__asm__ volatile ("" ::: "memory");/* Compiler barrier. */
 		(void) dm_task_add_target(dmt, 0, sz, "crypt", table);
 		memset(table, 0, sizeof(table));
-		asm volatile ("" ::: "memory");/* Compiler barrier. */
+		__asm__ volatile ("" ::: "memory");/* Compiler barrier. */
 		(void) dm_task_set_cookie(dmt, &cookie, DM_UDEV_DISABLE_LIBRARY_FALLBACK);
 		(void) dm_task_run(dmt);
 		(void) dm_task_destroy(dmt);
