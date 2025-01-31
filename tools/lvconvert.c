@@ -3822,14 +3822,15 @@ static int _lvconvert_repair_pvs_mirror(struct cmd_context *cmd, struct logical_
 	lp.alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
 	lp.stripes = 1;
 
-	ret = _lvconvert_mirrors_repair(cmd, lv, &lp, use_pvh);
+	if (!(ret = _lvconvert_mirrors_repair(cmd, lv, &lp, use_pvh)))
+		stack;
 
 	if (lp.need_polling) {
 		if (!lv_is_active(lv))
 			log_print_unless_silent("Conversion starts after activation.");
 		else {
 			if (!(idl = _convert_poll_id_list_create(cmd, lv)))
-				return 0;
+				return_0;
 			dm_list_add(&lr->poll_idls, &idl->list);
 		}
 		lr->need_polling = 1;
@@ -3927,7 +3928,10 @@ static int _lvconvert_repair_pvs(struct cmd_context *cmd, struct logical_volume 
 			_remove_missing_empty_pv(lv->vg, failed_pvs);
 	}
 
-	return ret ? ECMD_PROCESSED : ECMD_FAILED;
+	if (!ret)
+		return_ECMD_FAILED;
+
+	return ECMD_PROCESSED;
 }
 
 static int _lvconvert_repair_cachepool_thinpool(struct cmd_context *cmd, struct logical_volume *lv,
