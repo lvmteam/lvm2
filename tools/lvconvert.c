@@ -3874,10 +3874,44 @@ static int _lvconvert_repair_pvs_raid(struct cmd_context *cmd, struct logical_vo
 {
 	struct dm_list *failed_pvs;
 	int do_it;
+	uint32_t failed_cnt = 0;
+	struct lv_segment *raid_seg;
 
 	if (!lv_is_active(lv_lock_holder(lv))) {
-		log_error("%s must be active to perform this operation.", display_lvname(lv));
-		return 0;
+		if (!lv_raid_count_failed_devices(lv, &failed_cnt))
+			return_0;
+
+		if (!failed_cnt) {
+			log_error("Logical volume %s must be active to perform this operation.",
+				  display_lvname(lv));
+			return 0;
+		}
+
+		raid_seg = first_seg(lv);
+
+		if (failed_cnt > raid_seg->segtype->parity_devs) {
+			log_error("Can't clear %u failed superblock(s) in %s volume %s.",
+				  failed_cnt, lvseg_name(raid_seg), display_lvname(lv));
+			log_print_unless_silent("The maximum number of degraded devices allowed is %u.",
+						raid_seg->segtype->parity_devs);
+			return 0;
+		}
+
+		if (!arg_count(cmd, yes_ARG) &&
+		    yes_no_prompt("Attempt to clear %u transiently failed %s superblock(s) in %s? [y/n]: ",
+				  failed_cnt, lvseg_name(raid_seg), display_lvname(lv)) == 'n') {
+			log_error("Logical volume %s with %u transiently failed %s superblock(s) NOT repaired.",
+				  display_lvname(lv), failed_cnt, lvseg_name(raid_seg));
+			return 0;
+		}
+
+		log_verbose("Clearing %u transiently failed %s superblock(s) in %s.",
+			    failed_cnt, lvseg_name(raid_seg), display_lvname(lv));
+
+		if (!lv_raid_clear_failed_devices(lv))
+			return_0;
+
+		return 1;
 	}
 
 	lv_check_transient(lv); /* TODO check this in lib for all commands? */
