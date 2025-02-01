@@ -455,6 +455,13 @@ static inline int lm_rem_lockspace_dlm(struct lockspace *ls, int free_vg)
 	return -1;
 }
 
+static inline int lm_add_resource_dlm(struct lockspace *ls, struct resource *r, int with_lock_nl)
+{
+	if (daemon_test)
+		return 0;
+	return -1;
+}
+
 static inline int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 		struct val_blk *vb_out, int adopt_only, int adopt_ok)
 {
@@ -540,6 +547,7 @@ int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_
 int lm_prepare_lockspace_sanlock(struct lockspace *ls);
 int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok, int nodelay);
 int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg);
+int lm_add_resource_sanlock(struct lockspace *ls, struct resource *r);
 int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		    struct val_blk *vb_out, int *retry, 
 		    int adopt_only, int adopt_ok);
@@ -595,6 +603,11 @@ static inline int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only,
 }
 
 static inline int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg)
+{
+	return -1;
+}
+
+int lm_add_resource_sanlock(struct lockspace *ls, struct resource *r)
 {
 	return -1;
 }
@@ -677,6 +690,7 @@ int lm_init_vg_idm(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
 int lm_prepare_lockspace_idm(struct lockspace *ls);
 int lm_add_lockspace_idm(struct lockspace *ls, int adopt_only, int adopt_ok);
 int lm_rem_lockspace_idm(struct lockspace *ls, int free_vg);
+int lm_add_resource_idm(struct lockspace *ls, struct resource *r);
 int lm_lock_idm(struct lockspace *ls, struct resource *r, int ld_mode,
 		struct val_blk *vb_out, char *lv_uuid, struct pvs *pvs,
 		int adopt_only, int adopt_ok);
@@ -718,6 +732,11 @@ static inline int lm_add_lockspace_idm(struct lockspace *ls, int adopt_only, int
 }
 
 static inline int lm_rem_lockspace_idm(struct lockspace *ls, int free_vg)
+{
+	return -1;
+}
+
+static inline int lm_add_resource_idm(struct lockspace *ls, struct resource *r)
 {
 	return -1;
 }

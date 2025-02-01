@@ -1093,6 +1093,20 @@ static int lm_rem_lockspace(struct lockspace *ls, struct action *act, int free_v
 	return rv;
 }
 
+static int lm_add_resource(struct lockspace *ls, struct resource *r)
+{
+	int rv = -1;
+
+	if (ls->lm_type == LD_LM_DLM)
+		rv = lm_add_resource_dlm(ls, r, 0);
+	else if (ls->lm_type == LD_LM_SANLOCK)
+		rv = lm_add_resource_sanlock(ls, r);
+	else if (ls->lm_type == LD_LM_IDM)
+		rv = lm_add_resource_idm(ls, r);
+
+	return rv;
+}
+
 static int lm_lock(struct lockspace *ls, struct resource *r, int mode, struct action *act,
 		   struct val_blk *vb_out, int *retry, int adopt_only, int adopt_ok)
 {
@@ -2761,8 +2775,22 @@ static void *lockspace_thread_main(void *arg_in)
 					act->result = rv;
 					add_client_result(act);
 				} else {
-					log_error("%s:%s free_lv not found on dispose list", ls->name, act->lv_uuid);
-					act->result = -ENOENT;
+					/* Happens when init_lv was called, but lock was never acquired. */
+					log_debug("%s:%s free_lv lock_args %s not found on dispose list",
+						  ls->name, act->lv_uuid, act->lv_args);
+					if (!(r = alloc_resource())) {
+						rv = -ENOMEM;
+					} else {
+						dm_strncpy(r->name, act->lv_uuid, sizeof(r->name));
+						memcpy(r->lv_args, act->lv_args, MAX_ARGS);
+						r->type = LD_RT_LV;
+						r->mode = LD_LK_UN;
+						lm_add_resource(ls, r);
+						rv = free_lv(ls, r);
+						lm_rem_resource(ls, r);
+						free_resource(r);
+					}
+					act->result = rv;
 					add_client_result(act);
 				}
 				continue;

@@ -490,7 +490,7 @@ out:
 	return rv;
 }
 
-static int lm_add_resource_idm(struct lockspace *ls, struct resource *r)
+int lm_add_resource_idm(struct lockspace *ls, struct resource *r)
 {
 	struct rd_idm *rdi = (struct rd_idm *)r->lm_data;
 

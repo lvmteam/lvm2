@@ -363,7 +363,7 @@ int lm_rem_lockspace_dlm(struct lockspace *ls, int free_vg)
 	return 0;
 }
 
-static int lm_add_resource_dlm(struct lockspace *ls, struct resource *r, int with_lock_nl)
+int lm_add_resource_dlm(struct lockspace *ls, struct resource *r, int with_lock_nl)
 {
 	struct lm_dlm *lmd = (struct lm_dlm *)ls->lm_data;
 	struct rd_dlm *rdd = (struct rd_dlm *)r->lm_data;

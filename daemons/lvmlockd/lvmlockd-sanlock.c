@@ -1100,20 +1100,32 @@ int lm_free_lv_sanlock(struct lockspace *ls, struct resource *r)
 {
 	struct rd_sanlock *rds = (struct rd_sanlock *)r->lm_data;
 	struct sanlk_resource *rs = &rds->rs;
+	uint64_t offset = rds->rs.disks[0].offset;
 	int rv;
 
-	log_debug("%s:%s free_lv_san", ls->name, r->name);
+	log_debug("%s:%s free_lv_san %llu", ls->name, r->name, (unsigned long long)offset);
 
 	if (daemon_test)
 		return 0;
 
 	strcpy_name_len(rs->name, "#unused", SANLK_NAME_LEN);
 
-	rv = sanlock_write_resource(rs, 0, 0, 0);
-	if (rv < 0) {
-		log_error("%s:%s free_lv_san write error %d",
-			  ls->name, r->name, rv);
+	if (!offset) {
+		lock_lv_offset_from_args(r->lv_args, &offset);
+		rds->rs.disks[0].offset = offset;
+		log_debug("%s:%s free_lv_san lock_args offset %llu", ls->name, r->name, (unsigned long long)offset);
 	}
+
+	if (offset < (lms->align_size * LV_LOCK_BEGIN)) {
+		log_error("%s:%s free_lv_san invalid offset %llu",
+			  ls->name, r->name, (unsigned long long)offset);
+		return -1;
+	}
+
+	rv = sanlock_write_resource(rs, 0, 0, 0);
+	if (rv < 0)
+		log_error("%s:%s free_lv_san %llu write error %d",
+			  ls->name, r->name, (unsigned long long)offset, rv);
 
 	return rv;
 }
@@ -1739,7 +1751,7 @@ out:
 	return 0;
 }
 
-static int lm_add_resource_sanlock(struct lockspace *ls, struct resource *r)
+int lm_add_resource_sanlock(struct lockspace *ls, struct resource *r)
 {
 	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
 	struct rd_sanlock *rds = (struct rd_sanlock *)r->lm_data;
