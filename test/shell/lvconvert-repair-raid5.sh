@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2024 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2024-2025 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -24,17 +24,10 @@ SKIP_WITH_LVMPOLLD=1
 #
 aux have_raid 1 8 0 || skip
 
-aux prepare_vg 4
-get_devs
+aux prepare_vg 6
 
-#offset=$(get first_extent_sector "$dev1")
 
-# It's possible small raid arrays do have problems with reporting in-sync.
-# So try bigger size
-RAID_SIZE=8
-
-# RAID1 transient failure check
-lvcreate --type raid5 -i 3 -L $RAID_SIZE -n $lv1 $vg
+lvcreate --type raid5 -i 5 -L8 -n $lv1 $vg
 aux wait_for_sync $vg $lv1
 
 lvs -ao+devices $vg
@@ -43,17 +36,56 @@ lvs -ao+devices $vg
 aux error_dev "$dev2"
 aux error_dev "$dev3"
 
-# deactivate immediately
 lvchange -an $vg
 
 aux enable_dev "$dev2"
 aux enable_dev "$dev3"
 
-# ATM we are failing here with this kernel message:
-#
-# md/raid:mdX: Cannot continue operation (2/4 failed).
-#
-# Raid5 LV cannot be started any more
-should lvchange -ay $vg
+lvconvert --yes --repair $vg/$lv1 -v
+
+lvremove -f $vg
+
+
+# Raid5 transient failure check
+
+lvcreate --type raid5 -i 3 -L8 -n $lv1 $vg
+aux wait_for_sync $vg $lv1
+
+lvs -ao+devices $vg
+
+# fail 2 drives out of 4
+aux error_dev "$dev2"
+aux error_dev "$dev3"
+
+not lvconvert --yes --repair $vg/$lv1
+
+# deactivate immediately
+lvchange -an $vg
+
+# Raid5 cannot activate with only 2 disks
+not lvchange -ay $vg
+
+# also it cannot be repaired
+not lvconvert --yes --repair $vg/$lv1
+
+# restore 1st. failed drive
+aux enable_dev "$dev2"
+
+# Raid5 should be now repairable
+lvconvert --yes --repair $vg/$lv1
+
+# Raid5 volume is working now
+lvchange -ay $vg
+
+# again deactivate
+lvchange -an $vg
+
+# restore 2nd. missing drive
+aux enable_dev "$dev3"
+
+# still repairable
+lvconvert --yes --repair $vg/$lv1
+
+lvchange -ay $vg
 
 vgremove -ff $vg
