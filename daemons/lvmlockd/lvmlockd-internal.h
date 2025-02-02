@@ -399,6 +399,7 @@ int lm_prepare_lockspace_dlm(struct lockspace *ls);
 int lm_add_lockspace_dlm(struct lockspace *ls, int adopt_only, int adopt_ok);
 int lm_purge_locks_dlm(struct lockspace *ls);
 int lm_rem_lockspace_dlm(struct lockspace *ls, int free_vg);
+int lm_add_resource_dlm(struct lockspace *ls, struct resource *r, int with_lock_nl);
 int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 		struct val_blk *vb_out, int adopt_only, int adopt_ok);
 int lm_convert_dlm(struct lockspace *ls, struct resource *r,

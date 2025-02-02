@@ -1099,6 +1099,7 @@ int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_
 int lm_free_lv_sanlock(struct lockspace *ls, struct resource *r)
 {
 	struct rd_sanlock *rds = (struct rd_sanlock *)r->lm_data;
+	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
 	struct sanlk_resource *rs = &rds->rs;
 	uint64_t offset = rds->rs.disks[0].offset;
 	int rv;
