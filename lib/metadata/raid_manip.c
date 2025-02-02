@@ -3234,6 +3234,14 @@ static int _sublv_is_degraded(const struct logical_volume *slv)
 	return !slv || lv_is_partial(slv) || lv_is_virtual(slv);
 }
 
+/* Check if data or meta LV is degraded. */
+static int _raid_leg_degraded(struct lv_segment *raid_seg, uint32_t s)
+{
+	return (_sublv_is_degraded(seg_lv(raid_seg, s)) ||
+		(raid_seg->meta_areas &&
+		 _sublv_is_degraded(seg_metalv(raid_seg, s))));
+}
+
 /* Return failed component SubLV count for @lv. */
 static uint32_t _lv_get_nr_failed_components(const struct logical_volume *lv)
 {
@@ -3241,9 +3249,7 @@ static uint32_t _lv_get_nr_failed_components(const struct logical_volume *lv)
 	struct lv_segment *seg = first_seg(lv);
 
 	for (s = 0; s < seg->area_count; s++)
-		if (_sublv_is_degraded(seg_lv(seg, s)) ||
-		    (seg->meta_areas &&
-		     _sublv_is_degraded(seg_metalv(seg, s))))
+		if (_raid_leg_degraded(seg, s))
 			r++;
 
 	return r;
@@ -6891,8 +6897,7 @@ static int _lv_raid_rebuild_or_replace(struct logical_volume *lv,
 			return 0;
 		}
 
-		if (_sublv_is_degraded(seg_lv(raid_seg, s)) ||
-		    _sublv_is_degraded(seg_metalv(raid_seg, s)) ||
+		if (_raid_leg_degraded(raid_seg, s) ||
 		    lv_is_on_pvs(seg_lv(raid_seg, s), remove_pvs) ||
 		    lv_is_on_pvs(seg_metalv(raid_seg, s), remove_pvs)) {
 			match_count++;
@@ -7270,8 +7275,7 @@ static int _partial_raid_lv_is_redundant(const struct logical_volume *lv)
 			if (!(i % copies))
 				rebuilds_per_group = 0;
 
-			if (_sublv_is_degraded(seg_lv(raid_seg, s)) ||
-			    _sublv_is_degraded(seg_metalv(raid_seg, s)))
+			if (_raid_leg_degraded(raid_seg, s))
 				rebuilds_per_group++;
 
 			if (rebuilds_per_group >= copies) {
