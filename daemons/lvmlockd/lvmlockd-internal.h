@@ -608,7 +608,7 @@ static inline int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg)
 	return -1;
 }
 
-int lm_add_resource_sanlock(struct lockspace *ls, struct resource *r)
+static inline int lm_add_resource_sanlock(struct lockspace *ls, struct resource *r)
 {
 	return -1;
 }
