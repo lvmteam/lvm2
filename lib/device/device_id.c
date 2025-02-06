@@ -1432,12 +1432,20 @@ int device_ids_read(struct cmd_context *cmd)
 	return ret;
 }
 
-#define BACKUP_NAME_LEN 35
-#define BACKUP_NAME_SIZE BACKUP_NAME_LEN+1 /* +1 null byte */
+/*
+ * backup files with version 1-9999 use a 4 digit suffix:
+ * 31 chars + 4 chars (zero padded counter) + null byte
+ *
+ * backup files with version >9999:
+ * 31 chars + 5+ chars (uint32 counter, not zero padded, up to 10 chars) + null byte
+ */
+#define BACKUP_NAME_SIZE 48  /* larger than the longest backup file name */
 
 static int _filter_backup_files(const struct dirent *de)
 {
-	if (strlen(de->d_name) != BACKUP_NAME_LEN)
+	int len = strlen(de->d_name);
+
+	if (len < 35 || len > BACKUP_NAME_SIZE-1)
 		return 0;
 	if (strncmp(de->d_name, "system.devices-", 15))
 		return 0;
@@ -1461,6 +1469,7 @@ static void devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, tim
 	uint32_t low_date = 0, low_time = 0, low_count = 0;
 	uint32_t de_date, de_time, de_count;
 	unsigned int backup_limit = 0, backup_count = 0, remove_count;
+	int namelen;
 	int sort_count;
 	int dir_fd;
 	int i;
@@ -1481,10 +1490,21 @@ static void devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, tim
 	tm = localtime(tp);
 	strftime(datetime_str, sizeof(datetime_str), "%Y%m%d.%H%M%S", tm);
 
-	/* system.devices-YYYYMMDD.HHMMSS.000N (fixed length 35) */
-	if (dm_snprintf(path, sizeof(path), "%s/devices/backup/system.devices-%s.%04u",
-			cmd->system_dir, datetime_str, df_counter) < 0)
-		goto_out;
+	/* arbitrary max for devicesfile_backup_limit setting */
+	if (backup_limit > 5000)
+		backup_limit = 5000;
+
+	if (df_counter < 10000) {
+		/* system.devices-YYYYMMDD.HHMMSS.NNNN (fixed length 35, uses 4 digit zero padded suffix) */
+		if (dm_snprintf(path, sizeof(path), "%s/devices/backup/system.devices-%s.%04u",
+				cmd->system_dir, datetime_str, df_counter) < 0)
+			goto_out;
+	} else {
+		/* system.devices-YYYYMMDD.HHMMSS.NNNNN... (variable length, suffix has no fixed width) */
+		if (dm_snprintf(path, sizeof(path), "%s/devices/backup/system.devices-%s.%u",
+				cmd->system_dir, datetime_str, df_counter) < 0)
+			goto_out;
+	}
 
 	if (!(fp = fopen(path, "w+"))) {
 		log_warn("WARNING: Failed to create backup file %s", path);
@@ -1522,7 +1542,10 @@ static void devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, tim
 	while ((de = readdir(dir))) {
 		if (de->d_name[0] == '.')
 			continue;
-		if (strlen(de->d_name) != BACKUP_NAME_LEN)
+
+		namelen = strlen(de->d_name);
+
+		if (namelen < 35 || namelen > BACKUP_NAME_SIZE-1)
 			continue;
 
 		memset(de_date_str, 0, sizeof(de_date_str));
@@ -1530,16 +1553,22 @@ static void devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, tim
 		memset(de_count_str, 0, sizeof(de_count_str));
 
 		/*
-		 * Save the oldest backup file name.
- 		 * system.devices-YYYYMMDD.HHMMSS.NNNN
+		 * Save the oldest backup file name:
+		 *
+		 * backup files with version 1-9999 have 4 digit suffix:
+		 * system.devices-YYYYMMDD.HHMMSS.NNNN
 		 * 12345678901234567890123456789012345 (len 35)
 		 * date YYYYMMDD is 8 chars 16-23
 		 * time HHMMSS is 6 chars 25-30
 		 * count NNNN is 4 chars 32-35
+		 *
+		 * backup files with version >9999 have
+		 * non-zero-padded variable length suffix:
+		 * system.devices-YYYYMMDD.HHMMSS.NNNNN...
 		 */
 		memcpy(de_date_str, de->d_name+15, 8);
 		memcpy(de_time_str, de->d_name+24, 6);
-		memcpy(de_count_str, de->d_name+31, 4);
+		memcpy(de_count_str, de->d_name+31, namelen - 31);
 
 		de_date = (uint32_t)strtoul(de_date_str, NULL, 10);
 		de_time = (uint32_t)strtoul(de_time_str, NULL, 10);
@@ -1577,7 +1606,7 @@ static void devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, tim
 
 	/* Remove the n oldest files by sorting system.devices-*. */
 	setlocale(LC_COLLATE, "C"); /* Avoid sorting by locales */
-	sort_count = scandir(dirpath, &namelist, _filter_backup_files, alphasort);
+	sort_count = scandir(dirpath, &namelist, _filter_backup_files, versionsort);
 	setlocale(LC_COLLATE, "");
 	if (sort_count < 0) {
 		log_warn("WARNING: Failed to sort backup devices files.");
@@ -1597,6 +1626,7 @@ static void devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, tim
 		free(namelist[i]);
 	}
 	free(namelist);
+
 out:
 	if (fp && fclose(fp))
 		stack;
