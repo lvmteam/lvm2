@@ -1496,7 +1496,7 @@ struct dm_list *clone_pv_list(struct dm_pool *mem, struct dm_list *pvsl);
 
 int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_settings *settings, struct dm_list *pvh,
 			     struct logical_volume *lv_imeta_0);
-int lv_remove_integrity_from_raid(struct logical_volume *lv);
+int lv_remove_integrity_from_raid(struct logical_volume *lv, char **remove_images);
 void lv_clear_integrity_recalculate_metadata(struct logical_volume *lv);
 int lv_has_integrity_recalculate_metadata(struct logical_volume *lv);
 int lv_raid_has_integrity(struct logical_volume *lv);

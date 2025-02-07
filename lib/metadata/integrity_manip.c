@@ -231,7 +231,7 @@ int lv_extend_integrity_in_raid(struct logical_volume *lv, struct dm_list *pvh)
 	return 1;
 }
 
-int lv_remove_integrity_from_raid(struct logical_volume *lv)
+int lv_remove_integrity_from_raid(struct logical_volume *lv, char **remove_images)
 {
 	struct logical_volume *iorig_lvs[DEFAULT_RAID_MAX_IMAGES];
 	struct logical_volume *imeta_lvs[DEFAULT_RAID_MAX_IMAGES];
@@ -241,6 +241,7 @@ int lv_remove_integrity_from_raid(struct logical_volume *lv)
 	struct logical_volume *lv_image;
 	struct logical_volume *lv_iorig;
 	struct logical_volume *lv_imeta;
+	char *max_image_array = remove_images ? *remove_images : NULL;
 	uint32_t area_count, s;
 	int is_active = lv_is_active(lv);
 
@@ -253,11 +254,18 @@ int lv_remove_integrity_from_raid(struct logical_volume *lv)
 		return 0;
 	}
 
+	log_debug("Removing integrity from raid LV %s %s", display_lvname(lv), remove_images ? "partial" : "");
+
 	area_count = seg_top->area_count;
 
 	for (s = 0; s < area_count; s++) {
+		if (max_image_array && !max_image_array[s])
+			continue;
+
 		lv_image = seg_lv(seg_top, s);
 		seg_image = first_seg(lv_image);
+
+		log_debug("Removing integrity layers from %s", lv_image->name);
 
 		if (!(lv_imeta = seg_image->integrity_meta_dev)) {
 			log_error("LV %s segment has no integrity metadata device.", display_lvname(lv));
@@ -293,10 +301,15 @@ int lv_remove_integrity_from_raid(struct logical_volume *lv)
 	}
 
 	for (s = 0; s < area_count; s++) {
+		if (max_image_array && !max_image_array[s])
+			continue;
+
 		lv_iorig = iorig_lvs[s];
 		lv_imeta = imeta_lvs[s];
 
 		if (is_active) {
+			log_debug("Deactivating unused integrity layers %s %s", lv_iorig->name, lv_imeta->name);
+
 			if (!deactivate_lv(cmd, lv_iorig))
 				log_error("Failed to deactivate unused iorig LV %s.", lv_iorig->name);
 
@@ -306,6 +319,8 @@ int lv_remove_integrity_from_raid(struct logical_volume *lv)
 
 		lv_imeta->status &= ~INTEGRITY_METADATA;
 		lv_set_visible(lv_imeta);
+
+		log_debug("Removing unused integrity LVs %s %s", lv_iorig->name, lv_imeta->name);
 
 		if (!lv_remove(lv_iorig))
 			log_error("Failed to remove unused iorig LV %s.", lv_iorig->name);

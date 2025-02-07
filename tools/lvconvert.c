@@ -6479,7 +6479,7 @@ static int _lvconvert_integrity_remove(struct cmd_context *cmd, struct logical_v
 	if (!lockd_lv(cmd, lv, "ex", 0))
 		return_0;
 
-	if (!lv_remove_integrity_from_raid(lv))
+	if (!lv_remove_integrity_from_raid(lv, NULL))
 		return_0;
 
 	log_print_unless_silent("Logical volume %s has removed integrity.", display_lvname(lv));

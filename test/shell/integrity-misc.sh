@@ -214,3 +214,28 @@ lvremove $vg/$lv1
 aux enable_dev "$dev2"
 vgremove -ff $vg
 
+# When disks for raid images are missing, vgreduce --removemissing --force
+# should remove the missing images from the raid LV.
+_prepare_vg
+lvcreate --type raid1 -m2 --raidintegrity y -n $lv1 -l 8 $vg "$dev1" "$dev2" "$dev3"
+aux wait_recalc $vg/${lv1}_rimage_0
+aux wait_recalc $vg/${lv1}_rimage_1
+aux wait_recalc $vg/${lv1}_rimage_2
+aux wait_recalc $vg/$lv1
+_add_new_data_to_mnt
+aux disable_dev "$dev2"
+lvs -a -o+devices,segtype $vg |tee out
+# The vgreduce uses error target for missing image
+vgreduce --removemissing --force $vg
+lvs -a -o+devices,segtype $vg |tee out
+cat out
+not grep "$dev2" out
+grep error out
+_add_more_data_to_mnt
+_verify_data_on_mnt
+umount $mnt
+lvchange -an $vg/$lv1
+lvremove $vg/$lv1
+aux enable_dev "$dev2"
+vgremove -ff $vg
+

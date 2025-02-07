@@ -7226,6 +7226,72 @@ int lv_raid_remove_missing(struct logical_volume *lv)
 	log_debug("Attempting to remove missing devices from %s LV, %s.",
 		  lvseg_name(seg), display_lvname(lv));
 
+	if (lv_raid_has_integrity(lv)) {
+		char max_image_array[DEFAULT_RAID_MAX_IMAGES] = { 0 };
+		char *remove_images = max_image_array;
+		struct logical_volume *lv_image;
+		struct logical_volume *lv_iorig;
+		struct logical_volume *lv_imeta;
+		struct logical_volume *lv_rmeta;
+		struct lv_segment *seg_image;
+		int remove_count = 0;
+		int is_partial;
+
+		/* Remove integrity from any image that is partial. */
+
+		for (s = 0; s < seg->area_count; s++) {
+			if (!(lv_image = seg_lv(seg, s)))
+				continue;
+			if (!(seg_image = first_seg(lv_image)))
+				continue;
+			if (!seg_is_integrity(seg_image))
+				continue;
+			if (!(lv_imeta = seg_image->integrity_meta_dev))
+				continue;
+			if (!(lv_iorig = seg_lv(seg_image, 0)))
+				continue;
+
+			lv_rmeta = seg_is_raid_with_meta(seg_image) ? seg_metalv(seg_image, s) : NULL;
+
+			/*
+			 * Remove integrity from this image if any of the LVs
+			 * for the image are partial (iorig, imeta or rmeta).
+			 * We remove integrity so that the loop below can then
+			 * replace the image with an error segment.
+			 */
+			is_partial = 0;
+
+			if (lv_is_partial(lv_iorig)) {
+				log_debug("Partial raid image %s iorig %s", lv_image->name, lv_iorig->name);
+				is_partial = 1;
+			}
+			if (lv_is_partial(lv_imeta)) {
+				log_debug("Partial raid image %s imeta %s", lv_image->name, lv_imeta->name);
+				is_partial = 1;
+			}
+			if (lv_rmeta && lv_is_partial(lv_rmeta)) {
+				log_debug("Partial raid image %s rmeta %s", lv_image->name, lv_rmeta->name);
+				is_partial = 1;
+			}
+
+			if (!is_partial)
+				continue;
+
+			log_debug("Removing integrity layer from partial raid image %s %s %s",
+				  lv_image->name, lv_iorig->name, lv_imeta->name);
+
+			max_image_array[s] = 1;
+			remove_count++;
+		}
+
+		log_debug("Found %d partial integrity images to remove from %s", remove_count, lv->name);
+
+		if (remove_count && !lv_remove_integrity_from_raid(lv, &remove_images)) {
+			log_error("Failed to remove integrity from partial raid LV %s.", display_lvname(lv));
+			return 0;
+		}
+	}
+
 	/*
 	 * FIXME: Make sure # of compromised components will not affect RAID
 	 */
