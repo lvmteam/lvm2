@@ -871,7 +871,7 @@ static int _insert_dir(const char *dir)
 		if (bsearch(path + 5, _no_scan, DM_ARRAY_SIZE(_no_scan), sizeof(_no_scan[0]),
 			    (int (*)(const void*, const void*))strcmp)) {
 			/* Skip insertion of directories that can't have block devices */
-			log_debug("Skipping \"%s\" (no block devices).", path);
+			log_debug_devs("Skipping \"%s\" (no block devices).", path);
 			return 1;
 		}
 	}
@@ -1161,12 +1161,12 @@ static int _insert(const char *path, const struct stat *info,
 		}
 
 		if (S_ISLNK(tinfo.st_mode)) {
-			log_debug_devs("%s: Symbolic link to directory", path);
+			log_debug_devs("Skipping \"%s\" (symbolic link to directory).", path);
 			return 1;
 		}
 
 		if (info->st_dev != _cache.st_dev) {
-			log_debug_devs("%s: Different filesystem in directory", path);
+			log_debug_devs("Skipping \"%s\" (different filesystem in directory).", path);
 			return 1;
 		}
 
