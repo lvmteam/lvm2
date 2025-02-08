@@ -399,6 +399,59 @@ static int _activate_lv_like_model(struct logical_volume *model,
 }
 
 /*
+ * Inherit tags @from_lv to @to_lv, tags maybe needed for activation
+ */
+static int _inherit_lv_tags(const struct logical_volume *from_lv, struct logical_volume *to_lv)
+{
+	struct dm_str_list *sl;
+
+	if (to_lv && !str_list_match_list(&from_lv->tags, &to_lv->tags, NULL))
+		dm_list_iterate_items(sl, &from_lv->tags)
+			if (!str_list_add(from_lv->vg->cmd->mem, &to_lv->tags, sl->str)) {
+				log_error("Aborting. Unable to inherit tag.");
+				return 0;
+			}
+
+	return 1;
+}
+
+/*
+ * Deactivates and removes an 'orphan' temporary @lv,
+ * which is expected to already have an 'error' segment.
+ * Sets @updated_mda (!NULL) to 1 when LV is removed.
+ * Sets @deactivation_failed (!NULL) to 1 when deactivation fails.
+ *
+ * Note: An external tool might still have the volume open, preventing
+ * immediate deactivation. If deactivation fails (even after retrying),
+ * it is safer to proceed with the command and leave the LV visible.
+ * This allows the user to manually remove it when it is no longer in use.
+ *
+ * Any errors will be detected later in the process, as there will be
+ * more visible LVs than expected.
+ */
+static int _deactivate_and_remove_lv(struct logical_volume *lv,
+				     int *updated_mda,
+				     int *deactivation_failed)
+{
+	if (lv) {
+		/* FIXME: convert to use lv_active_change() */
+		if (!deactivate_lv(lv->vg->cmd, lv)) {
+			/* Note: still returns success here and fails later */
+			log_warn("WARNING: Can't deactivate temporary volume %s.",
+				 display_lvname(lv));
+			if (deactivation_failed)
+				*deactivation_failed = 1;
+		} else if (!lv_remove(lv)) {
+			/* Can't continue with internal metadata problems */
+			return_0;
+		} else if (updated_mda)
+			*updated_mda = 1;
+	}
+
+	return 1;
+}
+
+/*
  * Delete independent/orphan LV, it must acquire lock.
  */
 static int _delete_lv(struct logical_volume *mirror_lv, struct logical_volume *lv,
@@ -805,7 +858,6 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	struct lv_list *lvl;
 	struct dm_list tmp_orphan_lvs;
 	uint32_t orig_removed = num_removed;
-	int reactivate;
 
 	if (removed)
 		*removed = 0;
@@ -969,6 +1021,19 @@ static int _remove_mirror_images(struct logical_volume *lv,
 			return_0;
 	}
 
+	if (!collapse) {
+		dm_list_iterate_items(lvl, &tmp_orphan_lvs) {
+			if (!_inherit_lv_tags(lv, lvl->lv))
+				return_0;
+			if (!replace_lv_with_error_segment(lvl->lv))
+				return_0;
+		}
+	}
+
+	if (!_inherit_lv_tags(lv, temp_layer_lv) ||
+	    !_inherit_lv_tags(lv, detached_log_lv))
+		return_0;
+
 	/*
 	 * To successfully remove these unwanted LVs we need to
 	 * remove the LVs from the mirror set, commit that metadata
@@ -978,17 +1043,35 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		return_0;
 
 	/* Save or delete the 'orphan' LVs */
-	reactivate = lv_is_active(lv_lock_holder(lv));
+	if (lv_is_active(lv_lock_holder(lv))) {
+		if (!collapse) {
+			dm_list_iterate_items(lvl, &tmp_orphan_lvs)
+				if (!_activate_lv_like_model(lv, lvl->lv))
+					return_0;
+		}
+
+		if (temp_layer_lv &&
+		    !_activate_lv_like_model(lv, temp_layer_lv))
+			return_0;
+
+		if (detached_log_lv &&
+		    !_activate_lv_like_model(lv, detached_log_lv))
+			return_0;
+
+		if (!sync_local_dev_names(lv->vg->cmd))
+			stack;
+	}
+
 	if (!collapse) {
 		dm_list_iterate_items(lvl, &tmp_orphan_lvs)
-			if (!_delete_lv(lv, lvl->lv, reactivate))
+			if (!_deactivate_and_remove_lv(lvl->lv, NULL, NULL))
 				return_0;
 	}
 
-	if (temp_layer_lv && !_delete_lv(lv, temp_layer_lv, reactivate))
+	if (!_deactivate_and_remove_lv(temp_layer_lv, NULL, NULL))
 		return_0;
 
-	if (detached_log_lv && !_delete_lv(lv, detached_log_lv, reactivate))
+	if (!_deactivate_and_remove_lv(detached_log_lv, NULL, NULL))
 		return_0;
 
 	/* Mirror with only 1 area is 'in sync'. */

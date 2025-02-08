@@ -87,12 +87,16 @@ int pvmove_update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 		  struct logical_volume *lv_mirr, struct dm_list *lvs_changed)
 {
+	uint32_t visible = vg_visible_lvs(lv_mirr->vg);
+
 	if (!dm_list_empty(lvs_changed) &&
 	    (!_detach_pvmove_mirror(cmd, lv_mirr) ||
 	    !replace_lv_with_error_segment(lv_mirr))) {
 		log_error("ABORTING: Removal of temporary mirror failed");
 		return 0;
 	}
+
+	lv_set_visible(lv_mirr);
 
 	if (!lv_update_and_reload(lv_mirr))
 		return_0;
@@ -118,6 +122,15 @@ int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 	if (!vg_write(vg) || !vg_commit(vg)) {
 		log_error("ABORTING: Failed to write new data locations "
 			  "to disk.");
+		return 0;
+	}
+
+	/* Allows the pvmove operation to complete even if 'orphaned' temporary volumes
+	 * cannot be deactivated due to being held open by another process.
+	 * The user can manually remove these volumes later when they are no longer in use. */
+	if (visible < vg_visible_lvs(lv_mirr->vg)) {
+		log_error("ABORTING: Failed to remove temporary logical volume(s).");
+		log_print_unless_silent("Please remove orphan temporary logical volume(s) when possible.");
 		return 0;
 	}
 
