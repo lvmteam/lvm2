@@ -92,7 +92,8 @@ int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 	if (!dm_list_empty(lvs_changed) &&
 	    (!_detach_pvmove_mirror(cmd, lv_mirr) ||
 	    !replace_lv_with_error_segment(lv_mirr))) {
-		log_error("ABORTING: Removal of temporary mirror failed");
+		log_error("ABORTING: Removal of temporary pvmove mirror %s failed.",
+			  display_lvname(lv_mirr));
 		return 0;
 	}
 
@@ -106,22 +107,22 @@ int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 
 	/* Deactivate mirror LV */
 	if (!deactivate_lv(cmd, lv_mirr)) {
-		log_error("ABORTING: Unable to deactivate temporary logical "
-			  "volume %s.", display_lvname(lv_mirr));
+		log_error("ABORTING: Unable to deactivate temporary volume %s.",
+			  display_lvname(lv_mirr));
 		return 0;
 	}
 
-	log_verbose("Removing temporary pvmove LV");
+	log_verbose("Removing temporary pvmove LV.");
 	if (!lv_remove(lv_mirr)) {
-		log_error("ABORTING: Removal of temporary pvmove LV failed");
+		log_error("ABORTING: Removal of temporary volume %s failed.",
+			  display_lvname(lv_mirr));
 		return 0;
 	}
 
 	/* Store it on disks */
-	log_verbose("Writing out final volume group after pvmove");
+	log_verbose("Writing out final volume group after pvmove.");
 	if (!vg_write(vg) || !vg_commit(vg)) {
-		log_error("ABORTING: Failed to write new data locations "
-			  "to disk.");
+		log_error("ABORTING: Failed to write new data locations to disk.");
 		return 0;
 	}
 
