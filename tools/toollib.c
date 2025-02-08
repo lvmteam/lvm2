@@ -77,6 +77,8 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 		return 0;
 
 	/* Child */
+	init_log_command(find_config_tree_bool(cmd, log_command_names_CFG, NULL), 0);
+
 	if (setsid() == -1)
 		log_error("Background process failed to setsid: %s",
 			  strerror(errno));
