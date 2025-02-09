@@ -969,7 +969,6 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		/* All mirror images are gone.
 		 * It can happen for vgreduce --removemissing. */
 		detached_log_lv = detach_mirror_log(mirrored_seg);
-		lv->status &= ~(MIRROR | MIRRORED | LV_NOTSYNCED);
 		if (!replace_lv_with_error_segment(lv))
 			return_0;
 	} else if (remove_log)

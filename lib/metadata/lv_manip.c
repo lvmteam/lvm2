@@ -1710,7 +1710,7 @@ int replace_lv_with_error_segment(struct logical_volume *lv)
 	 * that suggest it is anything other than "error".
 	 */
 	/* FIXME Check for other flags that need removing */
-	lv->status &= ~(MIRROR|MIRRORED|PVMOVE|LOCKED);
+	lv->status &= ~(MIRROR|MIRRORED|LV_NOTSYNCED|PVMOVE|LOCKED);
 
 	/* FIXME Check for any attached LVs that will become orphans e.g. mirror logs */
 
