@@ -39,8 +39,10 @@ lvextend -L+1 --type linear $vg/$lv1
 lvextend -L+1 --type striped $vg/$lv1
 lvextend -L+1 --type zero $vg/$lv1
 
-lvs -o+segtype,seg_size $vg
+lvs -o+segtype,seg_size,layout,role $vg
 check lv_field $vg/$lv1 seg_count "4"
 check lv_field $vg/$lv1 size "6.00m"
+check lv_field $vg/$lv1 layout "linear,error,zero"
+check lv_field $vg/$lv1 role "public"
 
 vgremove -ff $vg
