@@ -902,7 +902,7 @@ int devno_dm_uuid(struct cmd_context *cmd, int major, int minor,
 	const char *uuid;
 	int r = 0;
 
-	if (major != cmd->dev_types->device_mapper_major)
+	if (major != (int) cmd->dev_types->device_mapper_major)
 		return 0;
 
 	if (dm_devs_cache_use()) {
