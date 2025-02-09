@@ -759,7 +759,7 @@ static int _vdo_snprintf(char **buf, size_t *bufsize, const char *format, ...)
 
 int check_vdo_constrains(struct cmd_context *cmd, const struct vdo_pool_size_config *cfg)
 {
-	static const char _vdo_split[][4] = { "", " and", ",", "," };
+	static const char _vdo_split[][8] = { "", " and", ",", "," };
 	uint64_t req_mb, total_mb, available_mb;
 	uint64_t phy_mb = _round_sectors_to_tib(UINT64_C(268) * cfg->physical_size); // 268 MiB per 1 TiB of physical size
 	uint64_t virt_mb = _round_1024(UINT64_C(1638) * _round_sectors_to_tib(cfg->virtual_size)); // 1.6 MiB per 1 TiB
