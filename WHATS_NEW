@@ -1,5 +1,7 @@
 Version 2.03.31 - 
 ==================
+  Improve mirror split with opened temporary volumes.
+  Improve pvmove finish with opened temporary volumes.
   Ignore reported optimal_io_size not divisible by 4096.
   Fix busy-loop in config reading when read returned 0.
   Fix DM cache preserving logic (2.03.28).
