@@ -97,6 +97,8 @@ enum {
 	LV_TYPE_HISTORY,
 	LV_TYPE_LINEAR,
 	LV_TYPE_STRIPED,
+	LV_TYPE_ERROR,
+	LV_TYPE_ZERO,
 	LV_TYPE_MIRROR,
 	LV_TYPE_RAID,
 	LV_TYPE_THIN,
@@ -154,6 +156,8 @@ static const char _lv_type_names[][24] = {
 	[LV_TYPE_HISTORY] =				"history",
 	[LV_TYPE_LINEAR] =				"linear",
 	[LV_TYPE_STRIPED] =				"striped",
+	[LV_TYPE_ERROR] =				"error",
+	[LV_TYPE_ZERO] =				"zero",
 	[LV_TYPE_MIRROR] =				"mirror",
 	[LV_TYPE_RAID] =				"raid",
 	[LV_TYPE_THIN] =				"thin",
@@ -583,7 +587,7 @@ bad:
 
 int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 		       struct dm_list **layout, struct dm_list **role) {
-	int linear, striped;
+	int linear, striped, error, zero;
 	struct lv_segment *seg;
 	int public_lv = 1;
 
@@ -659,12 +663,16 @@ int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 	 * linear or striped or mixture of these two.
 	 */
 	if (dm_list_empty(*layout)) {
-		linear = striped = 0;
+		linear = striped = error = zero = 0;
 		dm_list_iterate_items(seg, &lv->segments) {
 			if (seg_is_linear(seg))
 				linear = 1;
 			else if (seg_is_striped(seg))
 				striped = 1;
+			else if (seg_is_error(seg))
+				error = 1;
+			else if (seg_is_zero(seg))
+				zero = 1;
 			else {
 				/*
 				 * This should not happen but if it does
@@ -687,7 +695,15 @@ int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 		    !str_list_add_no_dup_check(mem, *layout, _lv_type_names[LV_TYPE_STRIPED]))
 			goto_bad;
 
-		if (!linear && !striped &&
+		if (error &&
+		    !str_list_add_no_dup_check(mem, *layout, _lv_type_names[LV_TYPE_ERROR]))
+			goto_bad;
+
+		if (zero &&
+		    !str_list_add_no_dup_check(mem, *layout, _lv_type_names[LV_TYPE_ZERO]))
+			goto_bad;
+
+		if (!linear && !striped && !error && !zero &&
 		    !str_list_add_no_dup_check(mem, *layout, _lv_type_names[LV_TYPE_UNKNOWN]))
 			goto_bad;
 	}
