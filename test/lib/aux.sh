@@ -325,13 +325,13 @@ prepare_lvmdbusd() {
 
 	echo -n "## checking lvmdbusd IS running..."
 	if which dbus-send &>/dev/null ; then
-	for i in {100..0}; do
+	for i in {200..0}; do
 		dbus-send --system --dest=org.freedesktop.DBus --type=method_call --print-reply /org/freedesktop/DBus org.freedesktop.DBus.ListNames > dbus_services
 		grep -q com.redhat.lvmdbus1 dbus_services && break
 		sleep .1
 	done
 	if [ "$i" -eq 0 ] ; then
-		printf "\nFailed to serve lvm dBus service in 10 seconds.\n"
+		printf "\nFailed to serve lvm dBus service in 20 seconds.\n"
 		sed -e "s,^,## DBUS_SERVICES: ," dbus_services
 		ps aux
 		return 1
