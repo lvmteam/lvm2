@@ -30,6 +30,8 @@
 
 struct lv_segment;
 struct logical_volume;
+struct cmd_context;
+struct profile;
 
 struct lv_segment *first_seg(const struct logical_volume *lv)
 {
@@ -57,7 +59,7 @@ struct logical_volume *origin_from_cow(const struct logical_volume *lv)
 */
 
 /* simple_memccpy() from glibc */
-void *memccpy(void *dest, const void *src, int c, size_t n)
+void *memccpy(void *dest, const void *src, int c, unsigned long n)
 {
 	const char *s = src;
 	char *d = dest;
@@ -90,9 +92,14 @@ void model_FD_ZERO(void *fdset)
 /* Resent Coverity reports quite weird errors... */
 int *__errno_location(void)
 {
+	static int _i = 0;
+	return &_i;
 }
+
 const unsigned short **__ctype_b_loc (void)
 {
+	static const unsigned short *_a[1] = { 0 };
+	return _a;
 }
 
 
