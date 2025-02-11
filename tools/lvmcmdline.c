@@ -2245,8 +2245,8 @@ static int _process_command_line(struct cmd_context *cmd, int *argc, char ***arg
 			log_error("Argument%s%c%s%s cannot be used in interactive mode.",
 				  a->short_opt ? " -" : "",
 				  a->short_opt ? : ' ',
-				  (a->short_opt && a->long_opt) ?
-				  "/" : "", a->long_opt ? : "");
+				  (a->short_opt && a->long_opt[0]) ?
+				  "/" : "", a->long_opt[0] ? a->long_opt : "");
 			return 0;
 		}
 
@@ -2278,8 +2278,8 @@ static int _process_command_line(struct cmd_context *cmd, int *argc, char ***arg
 			log_error("Option%s%c%s%s may not be repeated.",
 				  a->short_opt ? " -" : "",
 				  a->short_opt ? : ' ',
-				  (a->short_opt && a->long_opt) ?
-				  "/" : "", a->long_opt ? : "");
+				  (a->short_opt && a->long_opt[0]) ?
+				  "/" : "", a->long_opt[0] ? a->long_opt : "");
 			return 0;
 		}
 
