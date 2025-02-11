@@ -153,11 +153,11 @@ struct lm_sanlock {
 };
 
 struct rd_sanlock {
+	struct val_blk *vb;
 	union {
 		struct sanlk_resource rs;
 		char buf[sizeof(struct sanlk_resource) + sizeof(struct sanlk_disk)];
 	};
-	struct val_blk *vb;
 };
 
 struct sanlk_resourced {
