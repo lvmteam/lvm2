@@ -210,9 +210,9 @@ void init_pv_min_size(uint64_t sectors)
 	_pv_min_size = sectors;
 }
 
-void set_cmd_name(const char *cmd)
+void set_cmd_name(const char *cmd_name)
 {
-	dm_strncpy(_cmd_name, cmd, sizeof(_cmd_name));
+	dm_strncpy(_cmd_name, cmd_name, sizeof(_cmd_name));
 }
 
 const char *get_cmd_name(void)
