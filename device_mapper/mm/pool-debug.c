@@ -13,7 +13,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "dmlib.h"
+#include "base/memory/zalloc.h"
+#include "device_mapper/misc/dmlib.h"
 #include <assert.h>
 
 struct block {

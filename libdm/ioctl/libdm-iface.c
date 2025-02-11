@@ -15,7 +15,7 @@
 
 #include "libdm/misc/dmlib.h"
 #include "libdm-targets.h"
-#include "libdm-common.h"
+#include "libdm/libdm-common.h"
 
 #include <stddef.h>
 #include <fcntl.h>

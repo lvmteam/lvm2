@@ -14,7 +14,7 @@
  */
 
 #include "libdm/misc/dmlib.h"
-#include "libdm-targets.h"
+#include "libdm/ioctl/libdm-targets.h"
 #include "libdm-common.h"
 #include "libdm/misc/kdev_t.h"
 #include "libdm/misc/dm-ioctl.h"

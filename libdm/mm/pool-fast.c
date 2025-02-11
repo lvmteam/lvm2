@@ -14,9 +14,10 @@
  */
 
 #ifdef VALGRIND_POOL
-#include "memcheck.h"
+#include <memcheck.h>
 #endif
 
+#include "base/memory/zalloc.h"
 #include "libdm/misc/dmlib.h"
 #include <stddef.h>	/* For musl libc */
 #include <malloc.h>

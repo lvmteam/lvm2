@@ -11,7 +11,7 @@
 #include "tools/tool.h"
 
 #include "libdaemon/client/daemon-io.h"
-#include "daemon-server.h"
+#include "libdaemon/server/daemon-server.h"
 #include "lvm-version.h"
 #include "daemons/lvmlockd/lvmlockd-client.h"
 #include "device_mapper/misc/dm-ioctl.h"

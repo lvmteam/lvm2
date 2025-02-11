@@ -13,7 +13,7 @@
 
 #include "tools/tool.h"
 
-#include "daemon-server.h"
+#include "libdaemon/server/daemon-server.h"
 #include "lib/mm/xlate.h"
 
 #include "lvmlockd-internal.h"
