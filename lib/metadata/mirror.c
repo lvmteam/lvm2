@@ -166,7 +166,7 @@ uint32_t adjusted_mirror_region_size(struct cmd_context *cmd,
 	region_max = (uint64_t) extents * extent_size;
 
 	if (region_max < UINT32_MAX && region_size > region_max) {
-		region_size =  UINT64_C(1) << (31 - clz(region_max));
+		region_size =  UINT64_C(1) << (31 - clz(region_max ? : 1));
 		if (!internal)
 			log_print_unless_silent("Using reduced mirror region size of %s",
 						display_size(cmd, region_size));
@@ -1695,7 +1695,7 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 	if (log_count > 1) {
 		/* Kernel requires a mirror to be at least 1 region large. */
 		if (region_size > log_lv->size) {
-			region_size = UINT64_C(1) << (31 - clz(log_lv->size));
+			region_size = UINT64_C(1) << (31 - clz(log_lv->size ? : 1));
 			log_debug("Adjusting region_size to %s for mirrored log.",
 				  display_size(cmd, (uint64_t)region_size));
 		}
