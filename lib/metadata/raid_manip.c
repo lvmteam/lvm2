@@ -4554,9 +4554,9 @@ static struct lv_segment *_convert_striped_to_raid0(struct logical_volume *lv,
 struct possible_takeover_reshape_type {
 	/* First 2 have to stay... */
 	const uint64_t possible_types;
-	const uint32_t options;
 	const uint64_t current_types;
 	const uint32_t current_areas;
+	const uint32_t options;
 };
 
 struct possible_type {
