@@ -80,7 +80,7 @@ static uint64_t _lv_size_bytes_to_integrity_meta_bytes(uint64_t lv_size_bytes, u
 		initial_bytes = 8 * ONE_MB_IN_BYTES;
 	else if (lv_size_bytes <= (4ULL * ONE_GB_IN_BYTES))
 		initial_bytes = 32 * ONE_MB_IN_BYTES;
-	else if (lv_size_bytes > (4ULL * ONE_GB_IN_BYTES))
+	else // if (lv_size_bytes > (4ULL * ONE_GB_IN_BYTES))
 		initial_bytes = 64 * ONE_MB_IN_BYTES;
  out:
 	log_debug("integrity_meta_bytes %llu from lv_size_bytes %llu meta_bytes %llu initial_bytes %llu journal_sectors %u",
