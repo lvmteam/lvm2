@@ -2175,7 +2175,7 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	uint32_t prev_state = *lockd_state;
 	int retries = 0;
 	int result;
-	int ret;
+	int ret = 1;
 
 	/*
 	 * The result of the VG lock request is saved in lockd_state to be
@@ -2302,18 +2302,15 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	/*
 	 * Normal success.
 	 */
-	if (!result) {
-		ret = 1;
+	if (!result)
 		goto out;
-	}
 
 	/*
 	 * The VG has been removed.  This will only happen with a dlm VG
 	 * since a sanlock VG must be stopped everywhere before it's removed.
 	 */
 	if (result == -EREMOVED) {
-		log_error("VG %s lock failed: removed", vg_name);
-		ret = 1;
+		log_warn("VG %s lock failed: removed", vg_name);
 		goto out;
 	}
 
@@ -2323,12 +2320,10 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	 * reading without a sh lock during this period.
 	 */
 	if (result == -ESTARTING) {
-		if (!strcmp(mode, "un")) {
-			ret = 1;
+		if (!strcmp(mode, "un"))
 			goto out;
-		} else if (!strcmp(mode, "sh")) {
+		else if (!strcmp(mode, "sh")) {
 			log_warn("VG %s lock skipped: lock start in progress", vg_name);
-			ret = 1;
 			goto out;
 		} else {
 			log_error("VG %s lock failed: lock start in progress", vg_name);
@@ -2345,12 +2340,10 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	if (result == -EVGKILLED || result == -ELOCKIO) {
 		const char *problem = (result == -ELOCKIO ? "errors" : "failed");
 
-		if (!strcmp(mode, "un")) {
-			ret = 1;
+		if (!strcmp(mode, "un"))
 			goto out;
-		} else if (!strcmp(mode, "sh")) {
+		else if (!strcmp(mode, "sh")) {
 			log_warn("VG %s lock skipped: storage %s for sanlock leases", vg_name, problem);
-			ret = 1;
 			goto out;
 		} else {
 			log_error("VG %s lock failed: storage %s for sanlock leases", vg_name, problem);
@@ -2363,12 +2356,10 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	 * The lock is held by another host, and retries have been unsuccessful.
 	 */
 	if (result == -EAGAIN) {
-		if (!strcmp(mode, "un")) {
-			ret = 1;
+		if (!strcmp(mode, "un"))
 			goto out;
-		} else if (!strcmp(mode, "sh")) {
+		else if (!strcmp(mode, "sh")) {
 			log_warn("VG %s lock skipped: held by other host.", vg_name);
-			ret = 1;
 			goto out;
 		} else {
 			log_error("VG %s lock failed: held by other host.", vg_name);
@@ -2380,7 +2371,6 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	if (result == -EORPHAN) {
 		if (!strcmp(mode, "sh")) {
 			log_warn("VG %s lock skipped: orphan lock needs to be adopted.", vg_name);
-			ret = 1;
 			goto out;
 		} else {
 			log_error("VG %s lock failed: orphan lock needs to be adopted.", vg_name);
@@ -2392,7 +2382,6 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	if (result == -EADOPT_NONE) {
 		if (!strcmp(mode, "sh")) {
 			log_warn("VG %s lock skipped: adopt found no orphan.", vg_name);
-			ret = 1;
 			goto out;
 		} else {
 			log_error("VG %s lock failed: adopt found no orphan.", vg_name);
@@ -2404,7 +2393,6 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	if (result == -EADOPT_RETRY) {
 		if (!strcmp(mode, "sh")) {
 			log_warn("VG %s lock skipped: adopt found other mode.", vg_name);
-			ret = 1;
 			goto out;
 		} else {
 			log_error("VG %s lock failed: adopt found other mode.", vg_name);
@@ -2420,10 +2408,8 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	 * been started yet.)  Decide what to do after the VG is
 	 * read and we can see the lock_type.
 	 */
-	if (result == -ENOLS) {
-		ret = 1;
+	if (result == -ENOLS)
 		goto out;
-	}
 
 	/*
 	 * Another error.  We don't intend to reach here, but
@@ -2431,12 +2417,10 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	 * a helpful message can be printed.
 	 */
 	if (result) {
-		if (!strcmp(mode, "un")) {
-			ret = 1;
+		if (!strcmp(mode, "un"))
 			goto out;
-		} else if (!strcmp(mode, "sh")) {
+		else if (!strcmp(mode, "sh")) {
 			log_warn("VG %s lock skipped: error %d", vg_name, result);
-			ret = 1;
 			goto out;
 		} else {
 			log_error("VG %s lock failed: error %d", vg_name, result);
