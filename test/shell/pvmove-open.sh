@@ -30,6 +30,15 @@ _keep_open()
 	sleep ${2-3} < "$DM_DEV_DIR/mapper/$vg-$1"
 }
 
+_check_msg()
+{
+	# skipping this check for test with lvmpolld
+	# we would need to check 'lvmpolld' messages to get this message
+	test -e LOCAL_LVMPOLLD && return
+
+	grep "$@"
+}
+
 aux target_at_least dm-mirror 1 2 0 || skip
 
 aux prepare_vg 3
@@ -57,7 +66,8 @@ not pvmove --atomic "$dev1" "$dev3" >out 2>&1
 wait
 
 cat out
-grep "ABORTING: Failed" out
+_check_msg "ABORTING: Failed" out
+
 lvs -ao+seg_pe_ranges $vg
 # but LVs were already moved
 check lv_on $vg $lv1 "$dev3"
@@ -86,7 +96,8 @@ wait
 
 cat out
 cat out1
-grep "ABORTING: Failed" out1
+_check_msg "ABORTING: Failed" out1
+
 lvs -ao+seg_pe_ranges $vg
 # hopefully we managed to abort before pvmove finished
 check lv_on $vg $lv1 "$dev1"
@@ -107,7 +118,7 @@ not pvmove --atomic "$dev1" "$dev3" >out 2>&1
 wait
 
 cat out
-grep "ABORTING: Unable to deactivate" out
+_check_msg "ABORTING: Unable to deactivate" out
 
 check lv_field $vg/pvmove0 layout "error"
 check lv_field $vg/pvmove0 role "public"
@@ -128,7 +139,7 @@ not pvmove --atomic "$dev1" "$dev3" >out 2>&1
 wait
 
 cat out
-grep "ABORTING: Unable to deactivate" out
+_check_msg "ABORTING: Unable to deactivate" out
 
 lvremove -f $vg/pvmove0_mimage_0
 lvremove -f $vg/pvmove0_mimage_1
