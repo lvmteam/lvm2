@@ -4553,16 +4553,10 @@ static struct lv_segment *_convert_striped_to_raid0(struct logical_volume *lv,
 
 struct possible_takeover_reshape_type {
 	/* First 2 have to stay... */
-	const uint64_t possible_types;
-	const uint64_t current_types;
-	const uint32_t current_areas;
-	const uint32_t options;
-};
-
-struct possible_type {
-	/* ..to be handed back via this struct */
-	const uint64_t possible_types;
-	const uint32_t options;
+	uint64_t possible_types;
+	uint64_t current_types;
+	uint32_t current_areas;
+	uint32_t options;
 };
 
 static const struct possible_takeover_reshape_type _possible_takeover_reshape_types[] = {
@@ -4679,7 +4673,7 @@ static const struct possible_takeover_reshape_type _possible_takeover_reshape_ty
  */
 static const struct possible_takeover_reshape_type *_get_possible_takeover_reshape_type(const struct lv_segment *seg_from,
 											const struct segment_type *segtype_to,
-											const struct possible_type *last_pt)
+											const struct possible_takeover_reshape_type *last_pt)
 {
 	const struct possible_takeover_reshape_type *lpt = (const struct possible_takeover_reshape_type *) last_pt;
 	const struct possible_takeover_reshape_type *pt = lpt ? lpt + 1 : _possible_takeover_reshape_types;
@@ -4694,12 +4688,12 @@ static const struct possible_takeover_reshape_type *_get_possible_takeover_resha
 	return NULL;
 }
 
-static struct possible_type *_get_possible_type(const struct lv_segment *seg_from,
-						const struct segment_type *segtype_to,
-						uint32_t new_image_count,
-						struct possible_type *last_pt)
+static const struct possible_takeover_reshape_type *_get_possible_type(const struct lv_segment *seg_from,
+								       const struct segment_type *segtype_to,
+								       uint32_t new_image_count,
+								       const struct possible_takeover_reshape_type *last_pt)
 {
-	return (struct possible_type *) _get_possible_takeover_reshape_type(seg_from, segtype_to, last_pt);
+	return _get_possible_takeover_reshape_type(seg_from, segtype_to, last_pt);
 }
 
 /*
@@ -4709,7 +4703,7 @@ static int _get_allowed_conversion_options(const struct lv_segment *seg_from,
 					   const struct segment_type *segtype_to,
 					   uint32_t new_image_count, uint32_t *options)
 {
-	struct possible_type *pt;
+	const struct possible_takeover_reshape_type *pt;
 
 	if ((pt = _get_possible_type(seg_from, segtype_to, new_image_count, NULL))) {
 		*options = pt->options;
@@ -4725,7 +4719,7 @@ static int _get_allowed_conversion_options(const struct lv_segment *seg_from,
 typedef int (*type_flag_fn_t)(uint64_t *processed_segtypes, void *data);
 
 /* Loop through pt->flags calling tfn with argument @data */
-static int _process_type_flags(const struct logical_volume *lv, struct possible_type *pt, uint64_t *processed_segtypes, type_flag_fn_t tfn, void *data)
+static int _process_type_flags(const struct logical_volume *lv, const struct possible_takeover_reshape_type *pt, uint64_t *processed_segtypes, type_flag_fn_t tfn, void *data)
 {
 	unsigned i;
 	uint64_t t;
@@ -4815,7 +4809,7 @@ static int _log_possible_conversion_types(const struct logical_volume *lv, const
 {
 	unsigned possible_conversions = 0;
 	const struct lv_segment *seg = first_seg(lv);
-	struct possible_type *pt = NULL;
+	const struct possible_takeover_reshape_type *pt = NULL;
 	uint64_t processed_segtypes = UINT64_C(0);
 
 	/* Count any possible segment types @seg an be directly converted to */
