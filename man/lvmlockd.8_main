@@ -457,8 +457,8 @@ vgcreate determines that it's creating the first sanlock VG when no other
 sanlock VGs are visible on the system.  It is possible that other sanlock
 VGs do exist, but are not visible when vgcreate checks for them.  In this
 case, vgcreate will create a new sanlock VG with the global lock enabled.
-When the another VG containing a global lock appears, lvmlockd will then
-see more than one VG with a global lock enabled.  LVM commands will report
+When another VG containing a global lock appears, lvmlockd will then see
+more than one VG with a global lock enabled.  LVM commands will report
 that there are duplicate global locks.
 .P
 If the situation arises where more than one sanlock VG contains a global
