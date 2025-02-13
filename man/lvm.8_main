@@ -2,7 +2,7 @@
 .
 .SH NAME
 .
-lvm \(em LVM2 tools
+lvm \(em LVM tools
 .
 .SH SYNOPSIS
 .
@@ -46,10 +46,6 @@ as "vg0/lvol0".  Where a list of VGs is required but is left empty,
 a list of all VGs will be substituted.  Where a list of LVs is required
 but a VG is given, a list of all the LVs in that VG will be substituted.
 So \fBlvdisplay vg0\fP will display all the LVs in "vg0".
-Tags can also be used - see \fB--addtag\fP below.
-.P
-One advantage of using the built-in shell is that configuration
-information gets cached internally between commands.
 .P
 A file containing a simple script with one command per line
 can also be given on the command line.  The script can also be
@@ -130,13 +126,13 @@ Move Physical Extents.
 Remove a Physical Volume.
 .TP
 .B pvresize
-Resize a disk or partition in use by LVM2.
+Resize a disk or partition in use by LVM.
 .TP
 .B pvs
 Report information about Physical Volumes.
 .TP
 .B pvscan
-Scan all disks for Physical Volumes.
+List Physical Volumes.
 .TP
 .B vgcfgbackup
 Backup Volume Group descriptor area.
@@ -149,9 +145,6 @@ Change attributes of a Volume Group.
 .TP
 .B vgck
 Check Volume Group metadata.
-.TP
-.B vgconvert
-Convert Volume Group metadata format.
 .TP
 .B vgcreate
 Create a Volume Group.
@@ -193,7 +186,7 @@ Rename a Volume Group.
 Report information about Volume Groups.
 .TP
 .B vgscan
-Scan all disks for Volume Groups.
+List Volume Groups.
 .TP
 .B vgsplit
 Split a Volume Group into two, moving any logical
@@ -223,10 +216,10 @@ loading \fBlvm.conf\fP(5) and any other configuration files.
 Manage the devices file.
 .TP
 .B lvmdiskscan
-Scan for all devices visible to LVM2.
+Scan for all devices visible to LVM.
 .TP
 .B lvmdump
-Create lvm2 information dumps for diagnostic purposes.
+Create LVM information dumps for diagnostic purposes.
 .TP
 .B lvreduce
 Reduce the size of a Logical Volume.
@@ -244,13 +237,11 @@ Resize a Logical Volume.
 Report information about Logical Volumes.
 .TP
 .B lvscan
-Scan (all disks) for Logical Volumes.
+List Logical Volumes.
 .PD
 .P
-The following LVM1 commands are not implemented in LVM2:
-.BR lvmchange ", " lvmsadc ", " lvmsar ", " pvdata .
 For performance metrics, use \fBdmstats\fP(8) or to manipulate the kernel
-device-mapper driver used by LVM2 directly, use \fBdmsetup\fP(8).
+device-mapper driver used by LVM directly, use \fBdmsetup\fP(8).
 .
 .SH VALID NAMES
 .
@@ -335,6 +326,18 @@ VG and is processed.
 .P
 LV names are unique within a VG.  The name of an historical LV cannot be
 reused until the historical LV has itself been removed or renamed.
+.
+.SH TAGS
+.
+Tags are user-defined strings that can be attached to PVs, VGs and LVs.
+Tags can be displayed with commands pvs/vgs/lvs -o tags.  Certain commands
+will accept a tag name in place of a PV, VG, or LV name.  In these cases,
+the command will operate on each PV/VG/LV with the given tag.  Tags
+should be prefixed with @ to avoid ambiguity.  
+.br
+Characters allowed in tags are:
+.B A-Z a-z 0-9 _ + . - / = ! : # &
+.P
 .
 .SH ALLOCATION
 .
@@ -447,8 +450,8 @@ Name of default command profile to use for LVM commands. This profile
 is overridden by direct use of \fB--commandprofile\fP command line option.
 .TP
 .B LVM_RUN_BY_DMEVENTD
-This variable is normally set by dmeventd plugin to inform lvm2 command
-it is running from dmeventd plugin so lvm2 takes some extra action
+This variable is normally set by dmeventd plugin to inform lvm command
+it is running from dmeventd plugin so lvm takes some extra action
 to avoid communication and deadlocks with dmeventd.
 .TP
 .B LVM_SYSTEM_DIR
