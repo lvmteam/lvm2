@@ -20,6 +20,14 @@
 #include "libdm/misc/dm-logging.h"
 #include "libdm/dm-tools/util.h"
 
+#ifdef __linux__
+#  include "libdm/misc/kdev_t.h"
+#else
+#  define MAJOR(x) major((x))
+#  define MINOR(x) minor((x))
+#  define MKDEV(x,y) makedev((x),(y))
+#endif
+
 #include <ctype.h>
 #include <dirent.h>
 #include <fcntl.h>
@@ -77,14 +85,6 @@ struct option {
        do __result = (long int) (expression);		\
        while (__result == -1L && errno == EINTR);	\
        __result; }))
-#endif
-
-#ifdef __linux__
-#  include "libdm/misc/kdev_t.h"
-#else
-#  define MAJOR(x) major((x))
-#  define MINOR(x) minor((x))
-#  define MKDEV(x,y) makedev((x),(y))
 #endif
 
 #define LINE_SIZE 4096

@@ -17,14 +17,6 @@
 #include "libdm/misc/dm-logging.h"
 #include "util.h"
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/inotify.h>
-#include <dirent.h>
-#include <ctype.h>
-
 #ifdef __linux__
 #  include "libdm/misc/kdev_t.h"
 #else
@@ -32,6 +24,14 @@
 #  define MINOR(x) minor((x))
 #  define MKDEV(x,y) makedev((x),(y))
 #endif
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/inotify.h>
+#include <dirent.h>
+#include <ctype.h>
 
 /* limit to two updates/sec */
 #define FILEMAPD_WAIT_USECS 500000
