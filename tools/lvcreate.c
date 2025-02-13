@@ -897,6 +897,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	ignoreactivationskip_ARG,\
 	ignoremonitoring_ARG,\
 	journal_ARG,\
+	lockopt_ARG,\
 	metadataprofile_ARG,\
 	monitor_ARG,\
 	mirrors_ARG,\
