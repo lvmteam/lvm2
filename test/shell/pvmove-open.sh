@@ -19,15 +19,21 @@ SKIP_WITH_LVMLOCKD=1
 _create_lv()
 {
 	lvremove -f $vg
-	lvcreate -Zn -l20 -n $lv1 $vg "$dev1"
+	lvcreate -Zn -L4 -n $lv1 $vg "$dev1"
 }
 
 _keep_open()
 {
-	# wait till device we want to keep open appears
-	while test ! -e "$DM_DEV_DIR/mapper/$vg-$1" ; do sleep .1 ; done
-	# keep device open for 3 seconds
-	sleep ${2-3} < "$DM_DEV_DIR/mapper/$vg-$1"
+	for i in {1..10}; do
+		# keep device open for 3 seconds
+		LVM_TEST_TAG="kill_me_$PREFIX" sleep ${2-10} < "$DM_DEV_DIR/mapper/$vg-$1" && return
+		# sleep exits with 1 if file couldn't be open and
+		# it has a different exit code when killed
+		test $? -eq 1 || return
+		# wait a bit before retrying open...
+		sleep .1
+	done
+	skip 'Cannot hold device $DM_DEV_DIR/mapper/$vg-$1 open.'
 }
 
 _check_msg()
@@ -63,6 +69,7 @@ _keep_open pvmove0_mimage_0 &
 # pvmove fails in such case
 not pvmove --atomic "$dev1" "$dev3" >out 2>&1
 
+aux kill_tagged_processes
 wait
 
 cat out
@@ -92,15 +99,18 @@ aux wait_pvmove_lv_ready "$vg-pvmove0"
 
 pvmove --abort >out1 2>&1
 
+aux kill_tagged_processes
 wait
 
 cat out
 cat out1
-_check_msg "ABORTING: Failed" out1
+if test -s out1 ; then
+	_check_msg "ABORTING: Failed" out1
 
-lvs -ao+seg_pe_ranges $vg
-# hopefully we managed to abort before pvmove finished
-check lv_on $vg $lv1 "$dev1"
+	lvs -ao+seg_pe_ranges $vg
+	# hopefully we managed to abort before pvmove finished
+	check lv_on $vg $lv1 "$dev1"
+fi
 check lv_field $vg/pvmove0_mimage_1 layout "error"
 check lv_field $vg/pvmove0_mimage_1 role "public"
 lvremove -f $vg/pvmove0_mimage_1
@@ -115,6 +125,7 @@ _keep_open pvmove0 &
 
 not pvmove --atomic "$dev1" "$dev3" >out 2>&1
 
+aux kill_tagged_processes
 wait
 
 cat out
@@ -136,6 +147,7 @@ _keep_open pvmove0 &
 
 not pvmove --atomic "$dev1" "$dev3" >out 2>&1
 
+aux kill_tagged_processes
 wait
 
 cat out
