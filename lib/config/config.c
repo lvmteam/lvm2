@@ -66,11 +66,16 @@ struct config_source {
  * Map each ID to respective definition of the configuration item.
  */
 static const struct cfg_def_item _cfg_def_items[CFG_COUNT + 1] = {
-#define cfg_section(id, name, parent, flags, since_version, deprecated_since_version, deprecation_comment, comment) {id, parent, name, CFG_TYPE_SECTION, {0}, (flags), since_version, {0}, deprecated_since_version, deprecation_comment, comment},
-#define cfg(id, name, parent, flags, type, default_value, since_version, unconfigured_value, deprecated_since_version, deprecation_comment, comment) {id, parent, name, type, {.v_##type = (default_value)}, (flags), since_version, {.v_UNCONFIGURED = (unconfigured_value)}, deprecated_since_version, deprecation_comment, comment},
-#define cfg_runtime(id, name, parent, flags, type, since_version, deprecated_since_version, deprecation_comment, comment) {id, parent, name, type, {.fn_##type = get_default_##id}, (flags) | CFG_DEFAULT_RUN_TIME, since_version, {.fn_UNCONFIGURED = get_default_unconfigured_##id}, deprecated_since_version, (deprecation_comment), comment},
-#define cfg_array(id, name, parent, flags, types, default_value, since_version, unconfigured_value, deprecated_since_version, deprecation_comment, comment) {id, parent, name, CFG_TYPE_ARRAY | (types), {.v_CFG_TYPE_STRING = (default_value)}, (flags), (since_version), {.v_UNCONFIGURED = (unconfigured_value)}, deprecated_since_version, deprecation_comment, comment},
-#define cfg_array_runtime(id, name, parent, flags, types, since_version, deprecated_since_version, deprecation_comment, comment) {id, parent, name, CFG_TYPE_ARRAY | (types), {.fn_CFG_TYPE_STRING = get_default_##id}, (flags) | CFG_DEFAULT_RUN_TIME, (since_version), {.fn_UNCONFIGURED = get_default_unconfigured_##id}, deprecated_since_version, deprecation_comment, comment},
+#define cfg_section(id, name, parent, flags, since_version, deprecated_since_version, deprecation_comment, comment)\
+	{id, parent, name, CFG_TYPE_SECTION, (flags), since_version, deprecated_since_version, {0}, {0}, deprecation_comment, comment},
+#define cfg(id, name, parent, flags, type, default_value, since_version, unconfigured_value, deprecated_since_version, deprecation_comment, comment)\
+	{id, parent, name, type, (flags), since_version, deprecated_since_version, {.v_##type = (default_value)}, {.v_UNCONFIGURED = (unconfigured_value)}, deprecation_comment, comment},
+#define cfg_runtime(id, name, parent, flags, type, since_version, deprecated_since_version, deprecation_comment, comment)\
+	{id, parent, name, type, (flags) | CFG_DEFAULT_RUN_TIME, since_version, deprecated_since_version, {.fn_##type = get_default_##id}, {.fn_UNCONFIGURED = get_default_unconfigured_##id}, (deprecation_comment), comment},
+#define cfg_array(id, name, parent, flags, types, default_value, since_version, unconfigured_value, deprecated_since_version, deprecation_comment, comment)\
+	{id, parent, name, CFG_TYPE_ARRAY | (types), (flags), (since_version), deprecated_since_version, {.v_CFG_TYPE_STRING = (default_value)}, {.v_UNCONFIGURED = (unconfigured_value)}, deprecation_comment, comment},
+#define cfg_array_runtime(id, name, parent, flags, types, since_version, deprecated_since_version, deprecation_comment, comment)\
+	{id, parent, name, CFG_TYPE_ARRAY | (types), (flags) | CFG_DEFAULT_RUN_TIME, (since_version), deprecated_since_version, {.fn_CFG_TYPE_STRING = get_default_##id}, {.fn_UNCONFIGURED = get_default_unconfigured_##id},deprecation_comment, comment},
 #include "lib/config/config_settings.h"
 #undef cfg_section
 #undef cfg

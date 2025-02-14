@@ -134,11 +134,11 @@ typedef struct cfg_def_item {
 	int parent;							/* ID of parent item */
 	const char *name;						/* name of the item in configuration tree */
 	int type;							/* configuration item type (bits of cfg_def_type_t) */
-	cfg_def_value_t default_value;					/* default value (only for settings) */
 	uint16_t flags;							/* configuration item definition flags */
 	uint16_t since_version;						/* version this item appeared in */
-	cfg_def_unconfigured_value_t default_unconfigured_value;	/* default value in terms of @FOO@, pre-configured (only for settings) */
 	uint16_t deprecated_since_version;				/* version since this item is deprecated */
+	cfg_def_value_t default_value;					/* default value (only for settings) */
+	cfg_def_unconfigured_value_t default_unconfigured_value;	/* default value in terms of @FOO@, pre-configured (only for settings) */
 	const char *deprecation_comment;				/* comment about reasons for deprecation and settings that supersede this one */
 	const char *comment;						/* comment */
 	const char *file_preamble;					/* comment text to use at the start of the file */
