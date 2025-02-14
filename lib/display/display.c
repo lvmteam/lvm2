@@ -934,13 +934,13 @@ void display_name_error(name_error_t name_error)
 char yes_no_prompt(const char *prompt, ...)
 {
 	/* Lowercase Yes/No strings */
-	static const char _yes[] = "yes";
-	static const char _no[] = "no";
+	char buf[12] = { 0 };
+	static const char _yes[sizeof(buf)] = "yes";
+	static const char _no[sizeof(buf)] = "no";
 	const char *answer = NULL;
 	int c = silent_mode() ? EOF : 0;
 	int ret = 0, sig = 0;
 	unsigned i = 0;
-	char buf[12];
 	va_list ap;
 
 	sigint_allow();
