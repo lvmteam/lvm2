@@ -198,7 +198,7 @@ unsigned radix_tree_remove_prefix(struct radix_tree *rt, const void *key, size_t
 	const uint8_t *kb = key;
 	const uint8_t *ke = kb + keylen;
 	struct node **pn;
-	unsigned count;
+	unsigned count = 0;
 
 	pn = _lookup(&rt->root, kb, ke);
 
@@ -280,7 +280,7 @@ static void _dump(FILE *out, struct node *n, unsigned indent)
 		fprintf(out, " ");
 
 	if (n->has_value) {
-		fprintf(out, "value: %llu\n", n->value.n);
+		fprintf(out, "value: %lu\n", (unsigned long) n->value.n);
 	} else {
 		fprintf(out, "key: '%c' [0x%02x] %u\n",
 			isprint(n->key) ? n->key : ' ', n->key, indent);
