@@ -384,7 +384,7 @@ void set_pe_align_offset(struct physical_volume *pv, uint64_t data_alignment_off
 int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv);
 
 int check_dev_block_size_for_vg(struct device *dev, const struct volume_group *vg,
-				unsigned int *max_phys_block_size_found);
+				unsigned int *max_logical_block_size_found);
 int check_pv_dev_sizes(struct volume_group *vg);
 uint32_t vg_bad_status_bits(const struct volume_group *vg, uint64_t status);
 int add_pv_to_vg(struct volume_group *vg, const char *pv_name,

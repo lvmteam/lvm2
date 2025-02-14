@@ -1235,7 +1235,7 @@ int dm_stats_get_current_area_offset(const struct dm_stats *dms,
 				     uint64_t *offset);
 
 int dm_stats_get_current_area_len(const struct dm_stats *dms,
-				       uint64_t *start);
+				       uint64_t *len);
 
 /*
  * Return a pointer to the program_id string for region at the current

@@ -36,7 +36,7 @@ struct target *create_target(uint64_t start,
 			     uint64_t len,
 			     const char *type, const char *params);
 
-int add_dev_node(const char *dev_name, uint32_t minor, uint32_t major,
+int add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 		 uid_t uid, gid_t gid, mode_t mode, int check_udev, unsigned rely_on_udev);
 int rm_dev_node(const char *dev_name, int check_udev, unsigned rely_on_udev);
 int rename_dev_node(const char *old_name, const char *new_name,
