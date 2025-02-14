@@ -357,7 +357,7 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 		if (!_maps_buffer || len >= _maps_len) {
 			if (_maps_buffer)
 				_maps_len *= 2;
-			if (!(line = realloc(_maps_buffer, _maps_len))) {
+			if (!_maps_len || !(line = realloc(_maps_buffer, _maps_len))) {
 				log_debug_mem("Allocation of maps buffer failed.");
 				return 0;
 			}

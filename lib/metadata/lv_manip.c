@@ -2631,7 +2631,8 @@ static int _reserve_required_area(struct alloc_handle *ah, struct alloc_state *a
 	/* Expand areas array if needed after an area was split. */
 	if (ix_pva >= alloc_state->areas_size) {
 		alloc_state->areas_size *= 2;
-		if (!(new_state = realloc(alloc_state->areas, sizeof(*alloc_state->areas) * (alloc_state->areas_size)))) {
+		if (!alloc_state->areas_size ||
+		    !(new_state = realloc(alloc_state->areas, sizeof(*alloc_state->areas) * (alloc_state->areas_size)))) {
 			log_error("Memory reallocation for parallel areas failed.");
 			return 0;
 		}
@@ -3424,7 +3425,8 @@ static int _allocate(struct alloc_handle *ah,
 		alloc_state.areas_size += _stripes_per_mimage(prev_lvseg) * prev_lvseg->area_count;
 
 	/* Allocate an array of pv_areas to hold the largest space on each PV */
-	if (!(alloc_state.areas = malloc(sizeof(*alloc_state.areas) * alloc_state.areas_size))) {
+	if (!alloc_state.areas_size ||
+	    !(alloc_state.areas = malloc(sizeof(*alloc_state.areas) * alloc_state.areas_size))) {
 		log_error("Couldn't allocate areas array.");
 		return 0;
 	}
