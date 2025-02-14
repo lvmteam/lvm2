@@ -16,6 +16,8 @@
 #ifndef _LVM_COMMAND_H
 #define _LVM_COMMAND_H
 
+#include "tools/command_enums.h"
+
 #include <stdint.h>
 
 struct cmd_context;

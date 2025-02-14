@@ -51,7 +51,7 @@
 #define CMD_LEN 256
 #define MAX_ARGS 64
 
-#include "command_enums.h"
+#include "command.h"
 
 /* command functions */
 #define xx(a, b...) int a(struct cmd_context *cmd, int argc, char **argv);

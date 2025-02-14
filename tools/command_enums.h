@@ -94,7 +94,6 @@ enum {
 /* Command prints devices file entries that were not found. */
 #define ALTERNATIVE_EXTENTS	 0x00040000
 
-#include "command.h"       /* defines struct command */
 #include "command-count.h" /* defines COMMAND_COUNT */
 
 #endif /* _LVM_COMMAND_ENUMS_H */

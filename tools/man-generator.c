@@ -107,7 +107,7 @@ static inline int dumptype_arg(struct cmd_context *cmd __attribute__((unused)), 
 static inline int headings_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av) { return 0; }
 
 #define MAN_PAGE_GENERATOR
-#include "command_enums.h"
+#include "command.h"
 #include "command.c"
 
 static const size_t _LONG_LINE = 42; /* length of line that needed .nh .. .hy */
