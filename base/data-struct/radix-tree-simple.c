@@ -193,10 +193,10 @@ bool radix_tree_remove(struct radix_tree *rt, const void *key, size_t keylen)
 	return true;
 }
 
-unsigned radix_tree_remove_prefix(struct radix_tree *rt, const void *key, size_t keylen)
+unsigned radix_tree_remove_prefix(struct radix_tree *rt, const void *prefix, size_t prefix_len)
 {
-	const uint8_t *kb = key;
-	const uint8_t *ke = kb + keylen;
+	const uint8_t *kb = prefix;
+	const uint8_t *ke = kb + prefix_len;
 	struct node **pn;
 	unsigned count = 0;
 

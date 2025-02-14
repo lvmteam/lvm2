@@ -64,7 +64,7 @@ struct block {
 /*
  * Ownership of engine passes.  Engine will be destroyed even if this fails.
  */
-struct bcache *bcache_create(sector_t block_size, unsigned nr_cache_blocks,
+struct bcache *bcache_create(sector_t block_sectors, unsigned nr_cache_blocks,
 			     struct io_engine *engine);
 void bcache_destroy(struct bcache *cache);
 

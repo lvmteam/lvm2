@@ -16,11 +16,11 @@
 #include "lib/misc/lib.h"
 #include "lib/device/device.h"
 
-int device_id_list_remove(struct dm_list *list, struct device *dev)
+int device_id_list_remove(struct dm_list *devices, struct device *dev)
 {
 	struct device_id_list *dil;
 
-	dm_list_iterate_items(dil, list) {
+	dm_list_iterate_items(dil, devices) {
 		if (dil->dev == dev) {
 			dm_list_del(&dil->list);
 			return 1;
@@ -29,22 +29,22 @@ int device_id_list_remove(struct dm_list *list, struct device *dev)
 	return 0;
 }
 
-struct device_id_list *device_id_list_find_dev(struct dm_list *list, struct device *dev)
+struct device_id_list *device_id_list_find_dev(struct dm_list *devices, struct device *dev)
 {
 	struct device_id_list *dil;
 
-	dm_list_iterate_items(dil, list) {
+	dm_list_iterate_items(dil, devices) {
 		if (dil->dev == dev)
 			return dil;
 	}
 	return NULL;
 }
 
-int device_list_remove(struct dm_list *list, struct device *dev)
+int device_list_remove(struct dm_list *devices, struct device *dev)
 {
 	struct device_list *devl;
 
-	dm_list_iterate_items(devl, list) {
+	dm_list_iterate_items(devl, devices) {
 		if (devl->dev == dev) {
 			dm_list_del(&devl->list);
 			return 1;
@@ -53,11 +53,11 @@ int device_list_remove(struct dm_list *list, struct device *dev)
 	return 0;
 }
 
-struct device_list *device_list_find_dev(struct dm_list *list, struct device *dev)
+struct device_list *device_list_find_dev(struct dm_list *devices, struct device *dev)
 {
 	struct device_list *devl;
 
-	dm_list_iterate_items(devl, list) {
+	dm_list_iterate_items(devl, devices) {
 		if (devl->dev == dev)
 			return devl;
 	}

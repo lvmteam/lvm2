@@ -814,7 +814,7 @@ struct wipe_params {
 };
 
 /* Zero out LV and/or wipe signatures */
-int wipe_lv(struct logical_volume *lv, struct wipe_params params);
+int wipe_lv(struct logical_volume *lv, struct wipe_params wp);
 
 /* Wipe any signatures and zero first sector on @lv */
 int activate_and_wipe_lv(struct logical_volume *lv, int commit);

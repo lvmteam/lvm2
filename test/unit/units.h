@@ -20,36 +20,36 @@
 //-----------------------------------------------------------------
 
 // Declare the function that adds tests suites here ...
-void bcache_tests(struct dm_list *suites);
-void bcache_utils_tests(struct dm_list *suites);
-void bitset_tests(struct dm_list *suites);
-void config_tests(struct dm_list *suites);
-void dm_list_tests(struct dm_list *suites);
-void dm_hash_tests(struct dm_list *suites);
-void dm_status_tests(struct dm_list *suites);
-void io_engine_tests(struct dm_list *suites);
-void percent_tests(struct dm_list *suites);
-void radix_tree_tests(struct dm_list *suites);
-void regex_tests(struct dm_list *suites);
-void string_tests(struct dm_list *suites);
-void vdo_tests(struct dm_list *suites);
+void bcache_tests(struct dm_list *all_tests);
+void bcache_utils_tests(struct dm_list *all_tests);
+void bitset_tests(struct dm_list *all_tests);
+void config_tests(struct dm_list *all_tests);
+void dm_list_tests(struct dm_list *all_tests);
+void dm_hash_tests(struct dm_list *all_tests);
+void dm_status_tests(struct dm_list *all_tests);
+void io_engine_tests(struct dm_list *all_tests);
+void percent_tests(struct dm_list *all_tests);
+void radix_tree_tests(struct dm_list *all_tests);
+void regex_tests(struct dm_list *all_tests);
+void string_tests(struct dm_list *all_tests);
+void vdo_tests(struct dm_list *all_tests);
 
 // ... and call it in here.
-static inline void register_all_tests(struct dm_list *suites)
+static inline void register_all_tests(struct dm_list *all_tests)
 {
-	bcache_tests(suites);
-	bcache_utils_tests(suites);
-	bitset_tests(suites);
-	config_tests(suites);
-	dm_list_tests(suites);
-	dm_hash_tests(suites);
-	dm_status_tests(suites);
-	io_engine_tests(suites);
-	percent_tests(suites);
-	radix_tree_tests(suites);
-	regex_tests(suites);
-	string_tests(suites);
-	vdo_tests(suites);
+	bcache_tests(all_tests);
+	bcache_utils_tests(all_tests);
+	bitset_tests(all_tests);
+	config_tests(all_tests);
+	dm_list_tests(all_tests);
+	dm_hash_tests(all_tests);
+	dm_status_tests(all_tests);
+	io_engine_tests(all_tests);
+	percent_tests(all_tests);
+	radix_tree_tests(all_tests);
+	regex_tests(all_tests);
+	string_tests(all_tests);
+	vdo_tests(all_tests);
 }
 
 //-----------------------------------------------------------------

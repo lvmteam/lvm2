@@ -114,7 +114,7 @@ out:
 }
 
 void process_event(struct dm_task *dmt,
-		   enum dm_event_mask event __attribute__((unused)),
+		   enum dm_event_mask evmask __attribute__((unused)),
 		   void **user)
 {
 	struct dso_state *state = *user;

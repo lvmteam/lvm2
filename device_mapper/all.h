@@ -191,7 +191,7 @@ struct dm_versions {
 
 int dm_get_library_version(char *version, size_t size);
 int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size);
-int dm_task_get_info(struct dm_task *dmt, struct dm_info *dmi);
+int dm_task_get_info(struct dm_task *dmt, struct dm_info *info);
 
 /*
  * This function returns dm device's UUID based on the value
@@ -1051,7 +1051,7 @@ int dm_tree_node_add_vdo_target(struct dm_tree_node *node,
 				const char *vdo_pool_name,
 				const char *data_uuid,
 				uint64_t data_size,
-				const struct dm_vdo_target_params *param);
+				const struct dm_vdo_target_params *vtp);
 
 /*
  * FIXME Add individual cache policy pairs  <key> = value, like:
@@ -1178,9 +1178,9 @@ void dm_tree_node_set_presuspend_node(struct dm_tree_node *node,
 				      struct dm_tree_node *presuspend_node);
 
 int dm_tree_node_add_target_area(struct dm_tree_node *node,
-				    const char *dev_name,
-				    const char *dlid,
-				    uint64_t offset);
+				 const char *dev_name,
+				 const char *uuid,
+				 uint64_t offset);
 
 /*
  * Only for temporarily-missing raid devices where changes are tracked.
@@ -1590,9 +1590,9 @@ int dm_fclose(FILE *stream);
  * Pointer to the buffer is stored in *buf.
  * Returns -1 on failure leaving buf undefined.
  */
-int dm_asprintf(char **buf, const char *format, ...)
+int dm_asprintf(char **result, const char *format, ...)
     __attribute__ ((format(printf, 2, 3)));
-int dm_vasprintf(char **buf, const char *format, va_list ap)
+int dm_vasprintf(char **result, const char *format, va_list aq)
     __attribute__ ((format(printf, 2, 0)));
 
 /*
@@ -1941,7 +1941,7 @@ void dm_report_free(struct dm_report *rh);
  * Prefix added to each field name with DM_REPORT_OUTPUT_FIELD_NAME_PREFIX
  */
 int dm_report_set_output_field_name_prefix(struct dm_report *rh,
-					   const char *report_prefix);
+					   const char *output_field_name_prefix);
 
 int dm_report_set_selection(struct dm_report *rh, const char *selection);
 
@@ -2081,7 +2081,7 @@ int dm_config_write_one_node_out(const struct dm_config_node *cn, const struct d
 
 struct dm_config_node *dm_config_find_node(const struct dm_config_node *cn, const char *path);
 int dm_config_has_node(const struct dm_config_node *cn, const char *path);
-int dm_config_remove_node(struct dm_config_node *parent, struct dm_config_node *remove);
+int dm_config_remove_node(struct dm_config_node *parent, struct dm_config_node *rem_node);
 const char *dm_config_find_str(const struct dm_config_node *cn, const char *path, const char *fail);
 const char *dm_config_find_str_allow_empty(const struct dm_config_node *cn, const char *path, const char *fail);
 int dm_config_find_int(const struct dm_config_node *cn, const char *path, int fail);
@@ -2113,7 +2113,7 @@ unsigned dm_config_maybe_section(const char *str, unsigned len);
 
 const char *dm_config_parent_name(const struct dm_config_node *n);
 
-struct dm_config_node *dm_config_clone_node_with_mem(struct dm_pool *mem, const struct dm_config_node *node, int siblings);
+struct dm_config_node *dm_config_clone_node_with_mem(struct dm_pool *mem, const struct dm_config_node *cn, int siblings);
 struct dm_config_node *dm_config_create_node(struct dm_config_tree *cft, const char *key);
 struct dm_config_value *dm_config_create_value(struct dm_config_tree *cft);
 struct dm_config_node *dm_config_clone_node(struct dm_config_tree *cft, const struct dm_config_node *cn, int siblings);

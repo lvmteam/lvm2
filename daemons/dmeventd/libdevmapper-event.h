@@ -73,10 +73,10 @@ int dm_event_handler_set_dso(struct dm_event_handler *dmevh, const char *path);
 int dm_event_handler_set_dmeventd_path(struct dm_event_handler *dmevh, const char *dmeventd_path);
 
 /*
- * Identify the device to monitor by exactly one of device_name, uuid or
+ * Identify the device to monitor by exactly one of dev_name, uuid or
  * device number. String arguments are duplicated, see above.
  */
-int dm_event_handler_set_dev_name(struct dm_event_handler *dmevh, const char *device_name);
+int dm_event_handler_set_dev_name(struct dm_event_handler *dmevh, const char *dev_name);
 
 int dm_event_handler_set_uuid(struct dm_event_handler *dmevh, const char *uuid);
 

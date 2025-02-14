@@ -1228,7 +1228,7 @@ static int _opt_synonym_to_standard(const char *cmd_name, int opt)
 	return 0;
 }
 
-static void _add_getopt_arg(int arg_enum, char **optstrp, struct option **longoptsp);
+static void _add_getopt_arg(int opt_enum, char **optstrp, struct option **longoptsp);
 
 /*
  * The valid args for a command name in general is a union of

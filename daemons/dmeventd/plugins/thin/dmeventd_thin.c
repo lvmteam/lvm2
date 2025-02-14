@@ -155,7 +155,7 @@ static int _wait_for_pid(struct dso_state *state)
 }
 
 void process_event(struct dm_task *dmt,
-		   enum dm_event_mask event __attribute__((unused)),
+		   enum dm_event_mask evmask,
 		   void **user)
 {
 	const char *device = dm_task_get_name(dmt);
@@ -179,7 +179,7 @@ void process_event(struct dm_task *dmt,
 		return;
 	}
 
-	if (event & DM_EVENT_DEVICE_ERROR) {
+	if (evmask & DM_EVENT_DEVICE_ERROR) {
 		/* Error -> no need to check and do instant resize */
 		state->data_percent = state->metadata_percent = 0;
 		if (_use_policy(dmt, state))

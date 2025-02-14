@@ -3186,9 +3186,9 @@ int dm_stats_get_current_region_len(const struct dm_stats *dms,
 }
 
 int dm_stats_get_current_region_area_len(const struct dm_stats *dms,
-					 uint64_t *step)
+					 uint64_t *area_len)
 {
-	return dm_stats_get_region_area_len(dms, step, dms->cur_region);
+	return dm_stats_get_region_area_len(dms, area_len, dms->cur_region);
 }
 
 int dm_stats_get_area_start(const struct dm_stats *dms, uint64_t *start,

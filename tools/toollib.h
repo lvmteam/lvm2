@@ -119,7 +119,8 @@ int process_each_vg(struct cmd_context *cmd,
 		    struct processing_handle *handle,
 		    process_single_vg_fn_t process_single_vg);
 
-int process_each_pv(struct cmd_context *cmd, int argc, char **argv, const char *vg_name,
+int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
+		    const char *only_this_vgname,
 		    int all_is_set, uint32_t read_flags,
 		    struct processing_handle *handle,
 		    process_single_pv_fn_t process_single_pv);
@@ -152,7 +153,7 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 
 int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
-			  struct dm_list *arg_lvnames, const struct dm_list *tagsl,
+			  struct dm_list *arg_lvnames, const struct dm_list *tags_in,
 			  int stop_on_error, struct processing_handle *handle,
 			  check_single_lv_fn_t check_single_lv,
 			  process_single_lv_fn_t process_single_lv);

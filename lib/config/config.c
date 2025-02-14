@@ -108,7 +108,7 @@ static inline int _is_file_based_config_source(config_source_t source)
  */
 struct dm_config_tree *config_open(config_source_t source,
 				   const char *filename,
-				   int unused)
+				   int keep_open __attribute__((unused)))
 {
 	struct dm_config_tree *cft = dm_config_create();
 	struct config_source *cs;

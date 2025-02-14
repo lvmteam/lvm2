@@ -69,7 +69,7 @@ int lvm_fclose(FILE *fp, const char *filename);
  * Convert stat->st_ctim  status of last change in nanoseconds
  * uses  st_ctime when not available.
  */
-void lvm_stat_ctim(struct timespec *ts, const struct stat *buf);
+void lvm_stat_ctim(struct timespec *ctim, const struct stat *buf);
 
 /* Inspired by <sys/time.h>  timercmp() macro for timeval */
 #define timespeccmp(tsp, usp, cmp)\

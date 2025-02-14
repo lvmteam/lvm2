@@ -17,9 +17,9 @@
 #define _LVM_DEVICE_ID_H
 
 void free_du(struct dev_use *du);
-void free_dus(struct dm_list *list);
+void free_dus(struct dm_list *dus);
 void free_did(struct dev_id *did);
-void free_dids(struct dm_list *list);
+void free_dids(struct dm_list *ids);
 const char *idtype_to_str(uint16_t idtype);
 uint16_t idtype_from_str(const char *str);
 const char *dev_idtype_for_metadata(struct cmd_context *cmd, struct device *dev);
@@ -69,8 +69,8 @@ int read_sys_block_binary(struct cmd_context *cmd, struct device *dev,
 
 int dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, char **idname_out);
 
-int scsi_type_to_idtype(int wwid_type);
-int nvme_type_to_idtype(int wwid_type);
+int scsi_type_to_idtype(int scsi_type);
+int nvme_type_to_idtype(int nvme_type);
 int idtype_to_scsi_type(int idtype);
 int idtype_to_nvme_type(int idtype);
 void free_wwids(struct dm_list *ids);
