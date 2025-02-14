@@ -1226,7 +1226,7 @@ static int _vgchange_locktype(struct cmd_context *cmd, struct volume_group *vg, 
 	}
 
 	/* ... to lockd type */
-	if (is_lockd_type(lock_type)) {
+	if (lock_type && is_lockd_type(lock_type)) {
 		/*
 		 * For lock_type dlm, lockd_init_vg() will do a single
 		 * vg_write() that sets lock_type, sets lock_args, clears
