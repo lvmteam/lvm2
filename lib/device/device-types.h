@@ -13,6 +13,11 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#ifndef LIB_DEVICE_DEVICE_TYPES_H
+#define LIB_DEVICE_DEVICE_TYPES_H
+
+#include <stdint.h>
+
 typedef struct {
 	const char name[15];
 	const int8_t max_partitions;
@@ -67,3 +72,5 @@ static const dev_known_type_t _dev_known_types[] = {
 	{"VxDMP", 16, "Veritas Dynamic Multipathing"},
 	{"", 0, ""}
 };
+
+#endif

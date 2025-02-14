@@ -13,6 +13,11 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "lib/log/lvm-logging.h"
+#include "tools/errors.h"
+
+struct cmd_context;
+
 int lvmsadc(struct cmd_context *cmd __attribute__((unused)),
 	    int argc __attribute__((unused)),
 	    char **argv __attribute__((unused)))

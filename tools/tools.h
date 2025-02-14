@@ -16,7 +16,9 @@
 #ifndef _LVM_TOOLS_H
 #define _LVM_TOOLS_H
 
+#include "tools/errors.h"
 #include "tools/tool.h"
+#include "tools/toollib.h"
 
 #include "lib/log/lvm-logging.h"
 
@@ -31,7 +33,6 @@
 #include "lib/device/device.h"
 #include "lib/device/device_id.h"
 #include "lib/display/display.h"
-#include "errors.h"
 #include "lib/metadata/metadata-exported.h"
 #include "lib/locking/locking.h"
 #include "lib/misc/lvm-exec.h"
@@ -41,7 +42,6 @@
 #include "lib/metadata/segtype.h"
 #include "lib/datastruct/str_list.h"
 #include "lib/commands/toolcontext.h"
-#include "toollib.h"
 #include "lib/notify/lvmnotify.h"
 #include "lib/label/hints.h"
 

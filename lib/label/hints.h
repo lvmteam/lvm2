@@ -15,6 +15,8 @@
 #ifndef _LVM_HINTS_H
 #define _LVM_HINTS_H
 
+#include "lib/commands/toolcontext.h"
+
 struct hint {
 	struct dm_list list;
 	dev_t devt;

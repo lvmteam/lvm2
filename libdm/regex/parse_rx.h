@@ -16,6 +16,8 @@
 #ifndef _DM_PARSE_REGEX_H
 #define _DM_PARSE_REGEX_H
 
+#include "libdm/misc/dmlib.h"
+
 enum {
 	CAT,
 	STAR,

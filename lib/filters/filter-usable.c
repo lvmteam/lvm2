@@ -15,6 +15,7 @@
 #include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
 #include "lib/filters/filter.h"
+#include "lib/config/config.h"
 #include "lib/activate/activate.h"
 
 static const char _too_small_to_hold_pv_msg[] = "Too small to hold a PV";

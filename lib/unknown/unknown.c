@@ -17,7 +17,6 @@
 #include "lib/commands/toolcontext.h"
 #include "lib/metadata/segtype.h"
 #include "lib/format_text/text_export.h"
-#include "lib/config/config.h"
 
 static int _unknown_text_import(struct lv_segment *seg, const struct dm_config_node *sn)
 {

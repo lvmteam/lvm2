@@ -14,9 +14,9 @@
 
 #include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
-#include "lib/commands/toolcontext.h"
-#include "lib/device/device.h"
 #include "lib/device/dev-type.h"
+#include "lib/device/filesystem.h"
+#include "lib/display/display.h"
 #include "lib/misc/lvm-exec.h"
 #include "lib/activate/dev_manager.h"
 

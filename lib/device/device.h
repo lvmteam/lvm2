@@ -16,8 +16,10 @@
 #ifndef _LVM_DEVICE_H
 #define _LVM_DEVICE_H
 
+#include "base/data-struct/list.h"
 #include "lib/uuid/uuid.h"
 
+#include <stdint.h>
 #include <fcntl.h>
 
 #define DEV_REGULAR		0x00000002	/* Regular file? */

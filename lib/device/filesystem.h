@@ -15,6 +15,9 @@
 #ifndef _FILESYSTEM_H
 #define _FILESYSTEM_H
 
+#include "lib/commands/toolcontext.h"
+#include "lib/device/device.h"
+
 #define FSTYPE_MAX 16
 
 struct fs_info {

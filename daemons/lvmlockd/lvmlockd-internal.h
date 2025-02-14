@@ -13,6 +13,9 @@
 
 #include "base/memory/container_of.h"
 
+#include <stdint.h>
+#include <pthread.h>
+
 #define MAX_NAME 64
 #define MAX_ARGS 64
 

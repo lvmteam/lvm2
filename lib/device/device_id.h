@@ -16,6 +16,9 @@
 #ifndef _LVM_DEVICE_ID_H
 #define _LVM_DEVICE_ID_H
 
+#include "lib/commands/toolcontext.h"
+#include "lib/device/device.h"
+
 void free_du(struct dev_use *du);
 void free_dus(struct dm_list *dus);
 void free_did(struct dev_id *did);

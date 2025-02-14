@@ -8,6 +8,8 @@
 #ifndef _LVM_CLOG_COMPAT_H
 #define _LVM_CLOG_COMPAT_H
 
+#include <stddef.h>
+
 /*
  * The intermachine communication structure version are:
  *	0: Unused
@@ -18,6 +20,8 @@
  *	5: RHEL 6, Current Upstream Format
  */
 #define CLOG_TFR_VERSION 5
+
+struct clog_request;
 
 int clog_request_to_network(struct clog_request *rq);
 int clog_request_from_network(void *data, size_t data_len);

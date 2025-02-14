@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 struct check_item {
 	const char *str;
 	int expected;

@@ -16,6 +16,7 @@
 #include "lib/misc/lib.h"
 #include "lib/device/dev-type.h"
 #include "lib/device/device-types.h"
+#include "lib/device/filesystem.h"
 #include "lib/mm/xlate.h"
 #include "lib/config/config.h"
 #include "lib/metadata/metadata.h"
@@ -23,6 +24,7 @@
 #include "lib/label/label.h"
 #include "lib/commands/toolcontext.h"
 #include "lib/activate/activate.h"
+#include "lib/display/display.h"
 #include "device_mapper/misc/dm-ioctl.h"
 
 #ifdef BLKID_WIPING_SUPPORT

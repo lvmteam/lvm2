@@ -74,7 +74,7 @@ static const struct lv_type _lv_types[LVT_COUNT + 1] = {
 
 static const struct cmd_name cmd_names[CMD_COUNT + 1] = {
 #define cmd(a, b) { # b, a },
-#include "../include/cmds.h"
+#include "include/cmds.h"
 #undef cmd
 };
 

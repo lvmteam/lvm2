@@ -23,6 +23,7 @@
 #include "lib/mm/memlock.h"
 #include "lib/config/defaults.h"
 #include "lib/cache/lvmcache.h"
+#include "lib/display/display.h"
 #include "lib/misc/lvm-signal.h"
 
 #include <assert.h>

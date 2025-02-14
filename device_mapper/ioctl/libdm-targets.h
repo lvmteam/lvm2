@@ -16,6 +16,8 @@
 #ifndef LIB_DMTARGETS_H
 #define LIB_DMTARGETS_H
 
+#include "device_mapper/all.h"
+
 #include <inttypes.h>
 #include <sys/types.h>
 

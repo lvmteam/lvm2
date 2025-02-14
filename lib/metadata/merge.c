@@ -20,6 +20,7 @@
 #include "lib/metadata/pv_alloc.h"
 #include "lib/datastruct/str_list.h"
 #include "lib/metadata/segtype.h"
+#include "lib/display/display.h"
 
 /*
  * Attempt to merge two adjacent segments.

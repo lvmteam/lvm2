@@ -15,6 +15,8 @@
 #ifndef __DMEVENTD_DOT_H__
 #define __DMEVENTD_DOT_H__
 
+#include <stdint.h>
+
 /* FIXME This stuff must be configurable. */
 
 #define	DM_EVENT_FIFO_CLIENT	DEFAULT_DM_RUN_DIR "/dmeventd-client"

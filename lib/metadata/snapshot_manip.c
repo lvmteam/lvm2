@@ -20,6 +20,7 @@
 #include "lib/commands/toolcontext.h"
 #include "lib/metadata/lv_alloc.h"
 #include "lib/activate/activate.h"
+#include "lib/display/display.h"
 
 #define SNAPSHOT_MIN_CHUNKS	3       /* Minimum number of chunks in snapshot */
 

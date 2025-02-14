@@ -14,9 +14,8 @@
 
 #include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
-#include "lib/commands/toolcontext.h"
-#include "lib/device/device.h"
 #include "lib/device/online.h"
+#include "lib/config/defaults.h"
 
 #include <dirent.h>
 

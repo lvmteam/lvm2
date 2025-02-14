@@ -8,6 +8,8 @@
 #ifndef _LINUX_DM_IOCTL_V4_H
 #define _LINUX_DM_IOCTL_V4_H
 
+#include <stdint.h>
+
 #ifdef __linux__
 #  include <linux/types.h>
 #endif

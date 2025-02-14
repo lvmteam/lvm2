@@ -16,6 +16,7 @@
 #ifndef _LVM_SIGNAL_H
 #define _LVM_SIGNAL_H
 
+#include <stdint.h>
 #include <unistd.h>
 
 void remove_ctrl_c_handler(void);

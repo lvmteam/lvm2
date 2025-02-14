@@ -16,6 +16,8 @@
 #ifndef _LVM_WRAPPERS_H
 #define _LVM_WRAPPERS_H
 
+#include <stddef.h>
+
 int udev_init_library_context(void);
 void *udev_get_library_context(void);
 void udev_fin_library_context(void);

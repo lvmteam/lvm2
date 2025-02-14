@@ -25,6 +25,8 @@
 #ifndef _DMEVENTD_LVMWRAP_H
 #define _DMEVENTD_LVMWRAP_H
 
+#include <stddef.h>
+
 struct dm_pool;
 
 int dmeventd_lvm2_init(void);

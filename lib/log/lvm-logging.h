@@ -18,6 +18,8 @@
 
 #include "lib/misc/lvm-file.h"
 
+#include <stdint.h>
+
 __attribute__ ((format(printf, 5, 6)))
 void print_log(int level, const char *file, int line, int dm_errno_or_class,
 	       const char *format, ...);

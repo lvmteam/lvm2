@@ -16,9 +16,10 @@
 #define _LVM_DEV_TYPE_H
 
 #include "lib/device/device.h"
-#include "lib/display/display.h"
+#include "lib/metadata/metadata-exported.h"
 #include "lib/label/label.h"
-#include "lib/device/filesystem.h"
+
+struct fs_info;
 
 #define NUMBER_OF_MAJORS 4096
 

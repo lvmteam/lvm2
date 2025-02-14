@@ -19,6 +19,8 @@
 #include "lib/device/dev-cache.h"
 #include "lib/device/dev-type.h"
 #include "lib/commands/cmd_enum.h"
+#include "lib/log/lvm-logging.h"
+#include "lib/misc/lvm-string.h"
 
 #include <limits.h>
 

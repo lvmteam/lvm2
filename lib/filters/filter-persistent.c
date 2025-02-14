@@ -17,7 +17,6 @@
 #include "base/data-struct/radix-tree.h"
 #include "lib/misc/lib.h"
 #include "lib/filters/filter.h"
-#include "lib/config/config.h"
 
 struct pfilter {
 	struct radix_tree *devices;

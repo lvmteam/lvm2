@@ -39,7 +39,6 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
-#include <stdlib.h>
 
 #ifdef UDEV_SYNC_SUPPORT
 #  include <sys/types.h>

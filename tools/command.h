@@ -16,6 +16,8 @@
 #ifndef _LVM_COMMAND_H
 #define _LVM_COMMAND_H
 
+#include <stdint.h>
+
 struct cmd_context;
 struct logical_volume;
 

@@ -16,6 +16,8 @@
 #ifndef _LVM_GLOBALS_H
 #define _LVM_GLOBALS_H
 
+#include <stdint.h>
+
 #define VERBOSE_BASE_LEVEL _LOG_WARN
 #define SECURITY_LEVEL 0
 #define PV_MIN_SIZE_KB 512

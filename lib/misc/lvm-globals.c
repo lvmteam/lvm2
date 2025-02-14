@@ -15,9 +15,7 @@
 
 #include "lib/misc/lib.h"
 #include "lib/device/device.h"
-#include "lib/misc/lvm-string.h"
 #include "lib/config/defaults.h"
-#include "lib/metadata/metadata-exported.h"
 
 #include <stdarg.h>
 

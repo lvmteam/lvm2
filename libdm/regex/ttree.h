@@ -17,6 +17,7 @@
 #define _DM_TTREE_H
 
 struct ttree;
+struct dm_pool;
 
 struct ttree *ttree_create(struct dm_pool *mem, unsigned int klen);
 

@@ -15,6 +15,7 @@
 #include "lib/activate/activate.h"
 #include "lib/locking/lvmlockd.h"
 #include "lib/cache/lvmcache.h"
+#include "lib/display/display.h"
 #include "daemons/lvmlockd/lvmlockd-client.h"
 
 #include <mntent.h>

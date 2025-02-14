@@ -21,6 +21,8 @@
  */
 #include "lib/commands/cmd_enum.h"
 
+struct arg_values;
+
 /* define the enums for the command line --options, foo_ARG */
 enum {
 #define arg(a, b, c, d, e, f, g) a ,

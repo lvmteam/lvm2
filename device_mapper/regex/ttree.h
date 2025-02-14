@@ -16,6 +16,8 @@
 #ifndef _DM_TTREE_H
 #define _DM_TTREE_H
 
+#include "device_mapper/misc/dmlib.h"
+
 struct ttree;
 
 struct ttree *ttree_create(struct dm_pool *mem, unsigned int klen);

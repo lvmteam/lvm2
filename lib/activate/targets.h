@@ -16,8 +16,12 @@
 #ifndef _LVM_TARGETS_H
 #define _LVM_TARGETS_H
 
+#include <stddef.h>
+#include <stdint.h>
+
 struct dev_manager;
 struct lv_segment;
+struct dm_tree_node;
 
 int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 		       char *params, size_t paramsize, int *pos,

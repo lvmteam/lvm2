@@ -15,7 +15,7 @@
 #ifndef _LVM_UTIL_H
 #define _LVM_UTIL_H
 
-#include <inttypes.h>
+#include "libdm/libdevmapper.h"
 
 /* Use wrapper for checked results */
 static inline __attribute__((warn_unused_result))

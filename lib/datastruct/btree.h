@@ -16,7 +16,10 @@
 #ifndef _LVM_BTREE_H
 #define _LVM_BTREE_H
 
+#include <stdint.h>
+
 struct btree;
+struct dm_pool;
 
 struct btree *btree_create(struct dm_pool *mem);
 

@@ -15,6 +15,9 @@
 #ifndef _ONLINE_H
 #define _ONLINE_H
 
+#include "lib/commands/toolcontext.h"
+#include "lib/device/device.h"
+
 struct pv_online {
 	struct dm_list list;
 	struct device *dev;

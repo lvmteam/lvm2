@@ -14,8 +14,6 @@
 
 #include "base/memory/zalloc.h"
 #include "lib/misc/lib.h"
-#include "lib/commands/toolcontext.h"
-#include "lib/device/device.h"
 #include "lib/device/device_id.h"
 #include "lib/device/dev-type.h"
 #include "lib/label/label.h"
@@ -26,6 +24,7 @@
 #include "lib/datastruct/str_list.h"
 #include "lib/metadata/metadata-exported.h"
 #include "lib/activate/activate.h"
+#include "lib/display/display.h"
 #include "device_mapper/misc/dm-ioctl.h"
 
 #include <sys/stat.h>
