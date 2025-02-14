@@ -345,7 +345,12 @@ static void _lookup_file_count_pvid_files(FILE *fp, const char *vgname, int *pvs
 
 	log_debug("checking all pvid files using lookup file for %s", vgname);
 
+	errno = 0;
 	rewind(fp);
+	if (errno) {
+		/* trace possible failure from rewind() */
+		log_sys_debug("rewind", vgname);
+	}
 
 	while (fgets(line, sizeof(line), fp)) {
 		memcpy(pvid, line, ID_LEN);
