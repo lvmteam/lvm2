@@ -501,7 +501,8 @@ static struct dm_tree_node *_create_dm_tree_node(struct dm_tree *dtree,
 	struct dm_tree_node *node;
 	dev_t dev;
 
-	if (!(node = dm_pool_zalloc(dtree->mem, sizeof(*node))) ||
+	if (!dtree || !dtree->mem ||
+	    !(node = dm_pool_zalloc(dtree->mem, sizeof(*node))) ||
 	    !(node->name = dm_pool_strdup(dtree->mem, name)) ||
 	    !(node->uuid = dm_pool_strdup(dtree->mem, uuid))) {
 		log_error("_create_dm_tree_node alloc failed.");
