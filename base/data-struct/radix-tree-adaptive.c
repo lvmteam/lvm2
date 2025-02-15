@@ -279,7 +279,7 @@ static bool _insert_prefix_chain(struct radix_tree *rt, struct value *v, const u
 		pc->len = i;
 
 		if (!_insert(rt, &pc->child, kb + i, ke, rv)) {
-			free(pc2);
+			free(pc->child.value.ptr);
 			return false;
 		}
 
@@ -293,6 +293,7 @@ static bool _insert_prefix_chain(struct radix_tree *rt, struct value *v, const u
 		if (pc->len == 1) {
 			n4->values[0] = pc->child;
 			free(pc);
+			v->value.ptr = NULL;
 		} else {
 			memmove(pc->prefix, pc->prefix + 1, pc->len - 1);
 			pc->len--;
