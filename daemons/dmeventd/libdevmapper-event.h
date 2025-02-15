@@ -29,19 +29,22 @@
  */
 
 enum dm_event_mask {
-	DM_EVENT_SETTINGS_MASK  = 0x0000FF,
 	DM_EVENT_SINGLE		= 0x000001, /* Report multiple errors just once. */
 	DM_EVENT_MULTI		= 0x000002, /* Report all of them. */
+	DM_EVENT_SETTINGS_MASK  = 0x0000FF,
 
-	DM_EVENT_ERROR_MASK     = 0x00FF00,
 	DM_EVENT_SECTOR_ERROR	= 0x000100, /* Failure on a particular sector. */
 	DM_EVENT_DEVICE_ERROR	= 0x000200, /* Device failure. */
 	DM_EVENT_PATH_ERROR	= 0x000400, /* Failure on an io path. */
 	DM_EVENT_ADAPTOR_ERROR	= 0x000800, /* Failure of a host adaptor. */
+	DM_EVENT_ERROR_MASK     = 0x00FF00,
 
-	DM_EVENT_STATUS_MASK    = 0xFF0000,
 	DM_EVENT_SYNC_STATUS	= 0x010000, /* Mirror synchronization completed/failed. */
 	DM_EVENT_TIMEOUT	= 0x020000, /* Timeout has occurred */
+
+	DM_EVENT_ERROR_AND_TIMEOUT_MASK = 0x02FF00,
+
+	DM_EVENT_STATUS_MASK    = 0xFF0000,
 
 	DM_EVENT_REGISTRATION_PENDING = 0x1000000, /* Monitor thread is setting-up/shutting-down */
 };
