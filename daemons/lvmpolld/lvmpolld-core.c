@@ -390,6 +390,11 @@ static void *fork_and_poll(void *args)
 		goto err;
 	}
 
+	if (!pdlv->cmdargv || !*(pdlv->cmdargv)) {
+		ERROR(ls, "%s: %s", PD_LOG_PREFIX, "Missing command");
+		goto err;
+	}
+
 	DEBUGLOG(ls, "%s: %s", PD_LOG_PREFIX, "cmd line arguments:");
 	debug_print(ls, pdlv->cmdargv);
 	DEBUGLOG(ls, "%s: %s", PD_LOG_PREFIX, "---end---");
